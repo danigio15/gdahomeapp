@@ -83,7 +83,7 @@ configuration:
           tuoi sensori, non tocca la tua configurazione. Non si apre nessuna porta
           verso casa tua: e' questa casa che bussa, e nella risposta trova cosa
           fare. Cosa gli e' stato chiesto e com'e' andata li leggi nel rapporto,
-          nella scheda «Il quadro».
+          nella scheda «Il cruscotto».
       quadro_marchio:
         name: Lascia che la plancia porti il marchio di chi ti ha fatto l'impianto
         description: >-
@@ -133,10 +133,9 @@ configuration:
           Scrivilo sul tuo Home Assistant e non su quello di un cliente: le opzioni
           di un add-on stanno su disco in chiaro e finiscono nei backup.
   gestione:
-    name: Chi tiene il quadro
+    name: Chi gestisce il cruscotto
     description: >-
-      Una casa sola al mondo, e non e' la tua: e' quella di chi il quadro degli installatori lo
-      manda avanti. Lasciala vuota.
+      Una casa sola al mondo, e non e' la tua: e' quella di chi gestisce il cruscotto degli installatori. Lasciala vuota.
     fields:
       chiave:
         name: La chiave per gestire gli installatori

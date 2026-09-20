@@ -183,7 +183,7 @@ test("senza manutenzione aperta il tasto non c'e', e c'e' scritto perche'", () =
   const { ilTasto } = iPezzi();
   const disegnato = ilTasto(UNO, { manutenzione: false }, CASA);
   assert.ok(!disegnato.includes("<button"), "il tasto compare su una casa che non l'ha aperta");
-  assert.match(disegnato, /manutenzione chiusa/);
+  assert.match(disegnato, /manutenzione non attiva/);
 });
 
 test("una casa che non dice niente della manutenzione vale come chiusa", () => {

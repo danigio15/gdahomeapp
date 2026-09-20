@@ -9,7 +9,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
-import { Lavori, TROPPO_TEMPO } from "../src/lavori.js";
+import { Lavori, TROPPO_TEMPO, UN_RIAVVIO_CI_METTE } from "../src/lavori.js";
 
 const ZITTO = { info() {}, attenzione() {}, errore() {} };
 
@@ -22,10 +22,14 @@ const UNO = {
 };
 
 /* Chi sa installare, finto: si ricorda cosa gli e' stato chiesto. */
-function aggiornamentiFinti({ fila = [UNO], quandoInstalla = null } = {}) {
+function aggiornamentiFinti({ fila = [UNO], quandoInstalla = null, quandoRiavvia = null } = {}) {
   const installati = [];
+  let riavvii = 0;
   return {
     installati,
+    get riavvii() {
+      return riavvii;
+    },
     async elenco() {
       return fila;
     },
@@ -33,6 +37,11 @@ function aggiornamentiFinti({ fila = [UNO], quandoInstalla = null } = {}) {
       installati.push(entita);
       if (quandoInstalla) return quandoInstalla(entita);
       return { avviato: true, gia: false, stacca: false };
+    },
+    async riavvia() {
+      riavvii += 1;
+      if (quandoRiavvia) return quandoRiavvia();
+      return { avviato: true };
     },
   };
 }
@@ -69,14 +78,85 @@ test("con la manutenzione chiusa non parte niente, e si scrive perche'", async (
   assert.match(stato.perche, /manutenzione/);
 });
 
-test("un verbo che non e' «installa» non si esegue", async () => {
-  /* Non e' un canale per comandi: e' quel comando li'. */
+test("un verbo che non e' «installa» ne' «riavvia» non si esegue", async () => {
+  /* Non e' un canale per comandi: sono quei due comandi li'. */
   const quali = aggiornamentiFinti();
   const lavori = new Lavori({ aggiornamenti: quali, registro: ZITTO, aperta: () => true });
-  for (const cosa of ["riavvia", "spegni", "call_service", "", "installa_tutto"]) {
+  for (const cosa of ["spegni", "call_service", "", "installa_tutto", "riavvia_tutto"]) {
     await lavori.fai(comando({ cosa, id: `id-${cosa}` }));
   }
   assert.deepEqual(quali.installati, []);
+  assert.equal(quali.riavvii, 0);
+  assert.equal(lavori.stato([UNO]), null);
+});
+
+test("«riavvia» riavvia Home Assistant, e dice che il filo cade", async () => {
+  const quali = aggiornamentiFinti();
+  const lavori = new Lavori({ aggiornamenti: quali, registro: ZITTO, aperta: () => true });
+  await lavori.fai({ id: "r-1", cosa: "riavvia" });
+  assert.equal(quali.riavvii, 1);
+  assert.deepEqual(quali.installati, [], "un riavvio non installa niente");
+  const stato = lavori.stato([UNO]);
+  assert.equal(stato.stato, "in corso");
+  assert.equal(stato.stacca, true, "il filo cade: va detto prima, o la casa sembra morta");
+  assert.equal(stato.cosa, "riavvio di Home Assistant");
+  assert.equal(stato.riavvio, true);
+});
+
+test("un riavvio e' fatto quando la casa risponde di nuovo, passato il tempo di spegnersi", async () => {
+  /* Home Assistant non dice «sono tornato»: risponde di nuovo, e basta. Un
+   * elenco letto subito potrebbe essere l'ultimo di uno che sta chiudendo;
+   * letto dopo il tempo che ci mette a spegnersi, e' uno che e' tornato. */
+  let ora = 1_000_000;
+  const quali = aggiornamentiFinti();
+  const lavori = new Lavori({
+    aggiornamenti: quali,
+    registro: ZITTO,
+    aperta: () => true,
+    adesso: () => ora,
+  });
+  await lavori.fai({ id: "r-2", cosa: "riavvia" });
+  assert.equal(lavori.stato([UNO]).stato, "in corso", "subito dopo non e' ancora tornato");
+  ora += UN_RIAVVIO_CI_METTE / 2;
+  assert.equal(lavori.stato(null).stato, "in corso", "senza elenco non si giudica");
+  ora += UN_RIAVVIO_CI_METTE;
+  assert.equal(
+    lavori.stato(null).stato,
+    "in corso",
+    "il tempo da solo non basta: serve una risposta",
+  );
+  assert.equal(lavori.stato([UNO]).stato, "fatto");
+});
+
+test("con la manutenzione chiusa nemmeno il riavvio parte", async () => {
+  const quali = aggiornamentiFinti();
+  const lavori = new Lavori({ aggiornamenti: quali, registro: ZITTO, aperta: () => false });
+  await lavori.fai({ id: "r-3", cosa: "riavvia" });
+  assert.equal(quali.riavvii, 0);
+  const stato = lavori.stato([UNO]);
+  assert.equal(stato.stato, "non riuscito");
+  assert.match(stato.perche, /manutenzione/);
+});
+
+test("un riavvio che Home Assistant rifiuta si scrive com'e' andato", async () => {
+  const quali = aggiornamentiFinti({
+    quandoRiavvia: () => {
+      throw new Error("permesso negato");
+    },
+  });
+  const lavori = new Lavori({ aggiornamenti: quali, registro: ZITTO, aperta: () => true });
+  await lavori.fai({ id: "r-4", cosa: "riavvia" });
+  const stato = lavori.stato([UNO]);
+  assert.equal(stato.stato, "non riuscito");
+  assert.match(stato.perche, /permesso negato/);
+});
+
+test("lo stesso riavvio chiesto due volte parte una volta sola", async () => {
+  const quali = aggiornamentiFinti();
+  const lavori = new Lavori({ aggiornamenti: quali, registro: ZITTO, aperta: () => true });
+  await lavori.fai({ id: "r-5", cosa: "riavvia" });
+  await lavori.fai({ id: "r-5", cosa: "riavvia" });
+  assert.equal(quali.riavvii, 1);
 });
 
 test("un salto di versione che qui non c'e' piu' non installa una cosa diversa", async () => {

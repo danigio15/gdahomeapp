@@ -11,6 +11,60 @@ fuori. La plancia dentro continua a dire la sua, e si legge dov'è sempre
 stata: nella pastiglia «La plancia» della console. Sono due numeri perché
 sono due cose.
 
+## 1.5.9.12
+
+**Il cruscotto ha una faccia nuova.** Si chiama Aurora: un cielo che sfuma
+dietro tutto, vetro smerigliato sopra, angoli larghi, un carattere solo e
+nessuna scritta in maiuscolo. Non è un ritocco: è ridisegnato da capo per chi
+lo guarda dal telefono in mezzo a un cantiere, e deve leggersi da lontano.
+
+La schermata delle case ha tre pezzi. In cima **l'anello**: tutti gli impianti
+in un cerchio, colorato in proporzione a come stanno, con sotto le tre file —
+offline, da guardare, a posto — che si premono e filtrano. Poi **da guardare
+adesso**: una carta per ogni casa che chiede qualcosa, che scorre di lato; si
+apre e mostra **solo quello che non va**, e «Mostra tutto» apre il resto. In
+fondo **tutti gli impianti**, una mattonella per casa con la linea degli
+ultimi quattordici giorni, che batte quando arriva un rapporto. Una casa si
+apre in un foglio che sale dal basso, con la stessa scheda di prima a
+capitoli; i metri della macchina sono diventati anellini. La barra delle
+schermate sta in cima e ci resta mentre si scorre — e nell'app non lascia più
+quella fascia vuota sopra la testata. Gli avvisi sono una riga in basso, non
+più una finestra del browser.
+
+Il carattere lo serve il cruscotto, da casa sua: il browser di chi apre queste
+pagine — da fuori o dentro Home Assistant — non va a farsi vedere da nessun
+altro, nemmeno per un carattere. Il cruscotto nell'app cambia da solo, senza
+aggiornare l'app: quello che l'app fa vedere è la pagina del cruscotto.
+
+**Chi gestisce il cruscotto vede gli impianti di ogni installatore.** Fino a ieri la
+gestione contava e basta — quanti impianti ha ognuno, non quali. Adesso vede
+di ognuno i nomi che gli ha dato, come stanno, quante entità ha ciascuna, e
+apre la stessa scheda che apre lui: **in sola lettura**, e con la stessa
+grafica. La regola è cambiata di poco e conta molto: le case arrivano alla
+gestione dalla stessa strada da cui arrivano all'installatore, quindi lì non
+arriva una riga che non arrivi anche a lui — i numeri che ogni casa manda da
+sé, e i nomi solo dei dispositivi che non rispondono. E da lì non si tocca
+niente: non si installa, non si riavvia, non si rinomina. Il limite si cambia
+in una riga sotto l'installatore; congelare, rifare la chiave ed eliminare
+chiedono conferma in due tempi, con scritto sotto cosa succede.
+
+**Dal cruscotto si riavvia Home Assistant.** È il tasto per il giorno che
+un'integrazione si impunta e chi ci abita non c'è: prima si telefonava a casa
+per far premere «Riavvia». C'è solo se quella casa ha aperto la manutenzione,
+solo se lì non sta già succedendo altro, e chiede conferma in due tempi. La
+casa lo esegue al prossimo rapporto, come fa per un'installazione — e come per
+un'installazione dice di no da sola se il cruscotto glielo chiedesse senza
+permesso. È il secondo verbo che il cruscotto conosce, dopo «installa», e non ce
+ne sono altri. Serve questa versione dell'add-on in casa: un ponte più vecchio
+il riavvio non lo sa fare, e lo dice.
+
+**E le parole sono quelle giuste.** Tutte le scritte del cruscotto e della
+gestione sono state riviste con termini coerenti: gli impianti sono
+«impianti», gli stati sono «offline», «da verificare» e «in ordine», i tasti
+dicono cosa fanno — «Genera codice», «Salva», «Rimuovi», «Aggiorna» — e le
+conferme in due tempi dicono «Premi ancora per confermare». La sezione degli
+avvisi via web, che nessuno usava, non c'è più.
+
 ## 1.5.9.11
 
 **Nel cruscotto tornano le icone degli aggiornamenti.** Quelle che si vedono

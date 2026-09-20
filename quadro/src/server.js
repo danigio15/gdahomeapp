@@ -12,6 +12,7 @@
  *   GET    /attesa                       la casa resta in linea, e sente subito
  *   GET    /segno/<segno>                l'icona di un aggiornamento, senza chiave
  *   GET    /marchio/<chi>                il logo di un installatore, senza chiave
+ *   GET    /carattere/<nome>.woff2       il carattere delle pagine, senza chiave
  *
  *   GET    /console/                     la pagina dell'installatore
  *   GET    /console/io                   chi sono, quanti ne ho, qual e' il limite
@@ -24,9 +25,15 @@
  *   DELETE /console/inviti/<codice>      annulla il suo
  *   PUT    /console/casa/<casa_…>        il nome, se la casa e' sua
  *   DELETE /console/casa/<casa_…>        non seguirla piu', se e' sua
+ *   POST   /console/casa/<casa_…>/installa   chiedile di installare una cosa
+ *   POST   /console/casa/<casa_…>/riavvia    chiedile di riavviare Home Assistant
+ *   DELETE /console/casa/<casa_…>/installa   ci ripensa, se non e' ancora passata
  *
  *   GET    /gestore/                     la pagina di chi tiene il quadro
- *   GET    /gestore/installatori         chi c'e', e quanti impianti ha ognuno
+ *   GET    /gestore/installatori         chi c'e', quanti impianti ha ognuno e
+ *                                        quante entita' in tutto
+ *   GET    /gestore/installatore/<id>/case   le sue case, come le vede lui
+ *   GET    /gestore/note/<segno>         le note intere di un aggiornamento
  *   POST   /gestore/installatori         aggiungine uno
  *   PUT    /gestore/installatore/<id>    nome e limite
  *   POST   /gestore/installatore/<id>/congela   congelagli l'utenza
@@ -45,7 +52,13 @@
  * loro si fanno concorrenza: i clienti di Rossi non sono affari di Bianchi.
  *
  * Dalla **gestione** entra chi tiene il quadro: aggiunge gli installatori, mette i limiti,
- * e vede **quante** case ha ognuno — non quali. Il conto e' suo, l'elenco no.
+ * e vede le case di ognuno **come le vede lui** — il nome che le ha dato, i
+ * controlli, quante entita' hanno — con la chiave della gestione, e non un
+ * grammo di piu' di quello che arriva all'installatore. Per un pezzo questa
+ * porta contava e basta, «quante, non quali»: adesso chi tiene il quadro
+ * tiene anche i suoi installatori, e per aiutarne uno deve vedere quello
+ * che vede lui. Non tocca niente: da qui non si installa, non si rinomina,
+ * non si toglie. Quello resta a chi la casa l'ha messa.
  *
  * ─── Cosa non c'e' ───────────────────────────────────────────────────────
  *
@@ -459,6 +472,39 @@ export function costruisciIlServer({
       return;
     }
 
+    /* Il carattere delle pagine, servito da qui e non da Google.
+     *
+     * Le due pagine sono scritte in Manrope. Prenderlo da Google Fonts vorrebbe
+     * dire che il browser di ogni installatore — e di chi apre il cruscotto
+     * dentro Home Assistant — va a farsi vedere da una macchina che non e' la
+     * nostra, a ogni pagina: e' la stessa regola delle icone e dei marchi, che
+     * il browser non va a prendere da fuori. I due file stanno in
+     * `quadro/carattere/` con la loro licenza (OFL), e si servono senza
+     * chiave: un carattere non e' un segreto, ed e' un file che la pagina
+     * chiede prima di avere la chiave in mano. Un anno di cache: il nome del
+     * file cambia se cambia il carattere. */
+    const ilCarattere = /^\/carattere\/(manrope-latin(?:-ext)?)\.woff2$/.exec(via);
+    if (ilCarattere && metodo === "GET") {
+      let byte = null;
+      try {
+        byte = readFileSync(new URL(`../carattere/${ilCarattere[1]}.woff2`, import.meta.url));
+      } catch (_nonCE) {
+        byte = null;
+      }
+      if (!byte) {
+        male(risposta, 404, "questo carattere non c'e'");
+        return;
+      }
+      risposta.writeHead(200, {
+        "content-type": "font/woff2",
+        "content-length": byte.length,
+        "cache-control": "public, max-age=31536000, immutable",
+        "x-content-type-options": "nosniff",
+      });
+      risposta.end(byte);
+      return;
+    }
+
     /* Il logo di un installatore, **senza chiave**.
      *
      * Non e' una svista. Questo logo deve arrivare nel browser di chi abita una
@@ -564,7 +610,7 @@ export function costruisciIlServer({
         male(
           risposta,
           401,
-          gestoreAperto ? "la chiave non va bene" : "questo quadro non ha gestore",
+          gestoreAperto ? "la chiave non va bene" : "questo cruscotto non ha gestore",
         );
         return;
       }
@@ -578,6 +624,54 @@ export function costruisciIlServer({
     }
 
     male(risposta, 404, "qui non c'e' niente");
+  }
+
+  /* Le case di un installatore, nella forma in cui le legge la sua pagina.
+   *
+   * Una funzione sola per due porte: la sua (`/console/case`) e quella di chi
+   * tiene il quadro (`/gestore/installatore/<chi>/case`). Cosi' quello che
+   * vede la gestione e' **per costruzione** quello che vede lui — non una
+   * seconda forma che gli somiglia oggi e domani no. */
+  function leCaseDi(chi) {
+    const sue = case_.elenco(chi);
+    return {
+      case: sue,
+      /* Di quali aggiornamenti si hanno le note intere.
+       *
+       * Un elenco a parte e non un campo dentro ogni riga: la riga di un
+       * aggiornamento e' quello che la casa ha mandato, e questo e' quello
+       * che il quadro ha ricevuto — due cose diverse, e mescolarle vorrebbe
+       * dire riscrivere il rapporto di una casa con roba nostra. Serve alla
+       * pagina per far comparire il tasto solo dove c'e' qualcosa da aprire.
+       *
+       * Solo quelli di **queste** case: un elenco di tutti quelli che il
+       * quadro ha sarebbe roba di case di altri, e viaggerebbe a ogni giro. */
+      note: [
+        ...new Set(
+          sue.flatMap((una) =>
+            (una.carta?.aggiornamenti?.elenco || [])
+              .map((uno) => String(uno?.segno || ""))
+              .filter((uno) => segni.note(uno)),
+          ),
+        ),
+      ],
+      /* Le soglie con cui la pagina colora i metri sono **le stesse** con cui
+       * qui si decide se una casa e' da guardare: viaggiano insieme alle case
+       * invece di stare scritte anche nella pagina, perche' due numeri uguali
+       * in due posti sono due numeri che prima o poi diventano diversi. */
+      soglie: { troppoCaldo: TROPPO_CALDO, discoPieno: DISCO_PIENO, discoFinito: DISCO_FINITO },
+    };
+  }
+
+  /* Le note intere di un aggiornamento, quelle che la casa ha preso da Home
+   * Assistant: si rispondono uguali dal retro e dalla gestione. */
+  function rispondiLeNote(risposta, segno) {
+    const dette = segni.note(segno);
+    if (!dette) {
+      male(risposta, 404, "di questo aggiornamento non sono arrivate le note");
+      return;
+    }
+    json(risposta, { note: dette });
   }
 
   async function ilRetro(richiesta, risposta, via, metodo, chi) {
@@ -667,34 +761,7 @@ export function costruisciIlServer({
     }
 
     if (via === "/case" && metodo === "GET") {
-      const sue = case_.elenco(chi);
-      json(risposta, {
-        case: sue,
-        /* Di quali aggiornamenti si hanno le note intere.
-         *
-         * Un elenco a parte e non un campo dentro ogni riga: la riga di un
-         * aggiornamento e' quello che la casa ha mandato, e questo e' quello
-         * che il quadro ha ricevuto — due cose diverse, e mescolarle vorrebbe
-         * dire riscrivere il rapporto di una casa con roba nostra. Serve alla
-         * pagina per far comparire il tasto solo dove c'e' qualcosa da aprire.
-         *
-         * Solo quelli di **queste** case: un elenco di tutti quelli che il
-         * quadro ha sarebbe roba di case di altri, e viaggerebbe a ogni giro. */
-        note: [
-          ...new Set(
-            sue.flatMap((una) =>
-              (una.carta?.aggiornamenti?.elenco || [])
-                .map((uno) => String(uno?.segno || ""))
-                .filter((uno) => segni.note(uno)),
-            ),
-          ),
-        ],
-        /* Le soglie con cui la pagina colora i metri sono **le stesse** con cui
-         * qui si decide se una casa e' da guardare: viaggiano insieme alle case
-         * invece di stare scritte anche nella pagina, perche' due numeri uguali
-         * in due posti sono due numeri che prima o poi diventano diversi. */
-        soglie: { troppoCaldo: TROPPO_CALDO, discoPieno: DISCO_PIENO, discoFinito: DISCO_FINITO },
-      });
+      json(risposta, leCaseDi(chi));
       return;
     }
 
@@ -707,12 +774,7 @@ export function costruisciIlServer({
      * cambia prima di premere «Installa» vuol dire restare dove si e'. */
     const leNote = new RegExp(`^/note/(${SEGNO_VALIDO.source.slice(1, -1)})$`).exec(via);
     if (leNote && metodo === "GET") {
-      const dette = segni.note(leNote[1]);
-      if (!dette) {
-        male(risposta, 404, "di questo aggiornamento non sono arrivate le note");
-        return;
-      }
-      json(risposta, { note: dette });
+      rispondiLeNote(risposta, leNote[1]);
       return;
     }
 
@@ -767,7 +829,10 @@ export function costruisciIlServer({
       return;
     }
 
-    const lavoro = /^\/casa\/(casa_[0-9a-f]{32})\/installa$/.exec(via);
+    /* I due lavori che si chiedono a una casa: installare una cosa, o
+     * riavviare Home Assistant. Stessa strada — si mette in attesa, la casa se
+     * lo porta via al rapporto dopo — e stessa porta per annullare. */
+    const lavoro = /^\/casa\/(casa_[0-9a-f]{32})\/(installa|riavvia)$/.exec(via);
     if (lavoro && metodo === "POST") {
       let detto = {};
       try {
@@ -775,7 +840,7 @@ export function costruisciIlServer({
       } catch (_errore) {
         detto = {};
       }
-      const messo = case_.chiediUnLavoro(lavoro[1], detto, chi);
+      const messo = case_.chiediUnLavoro(lavoro[1], { ...detto, cosa: lavoro[2] }, chi);
       if (!messo) {
         /* Tre no in uno, e si dicono uguale: la casa non e' tua, non ha aperto
          * la manutenzione, o ne sta gia' facendo uno. Il primo dei tre e' il
@@ -785,7 +850,11 @@ export function costruisciIlServer({
         male(risposta, 409, "questo lavoro non si puo' chiedere adesso");
         return;
       }
-      registro.info(`chiesto a ${lavoro[1]}: installa ${messo.nome} ${messo.da} → ${messo.a}`);
+      registro.info(
+        messo.cosa === "riavvia"
+          ? `chiesto a ${lavoro[1]}: riavvia Home Assistant`
+          : `chiesto a ${lavoro[1]}: installa ${messo.nome} ${messo.da} → ${messo.a}`,
+      );
       json(risposta, { chiesto: messo, case: case_.elenco(chi) });
       return;
     }
@@ -821,7 +890,10 @@ export function costruisciIlServer({
      * alla pagina, e chi ha appena aggiunto un installatore vede «0 impianti in tutto»
      * con le righe che dicono altro. Una forma sola non lo lascia succedere. */
     const ilQuadro = () => ({
-      installatori: installatori.elenco((chi) => case_.quante(chi)),
+      installatori: installatori.elenco(
+        (chi) => case_.quante(chi),
+        (chi) => case_.entita(chi),
+      ),
       case: case_.lista.length,
       /* Quelle di un installatore tolto: restano, e continuano a depositare. Senza
        * questo numero il totale non tornerebbe con la somma degli installatori, e non
@@ -831,6 +903,32 @@ export function costruisciIlServer({
 
     if (via === "/installatori" && metodo === "GET") {
       json(risposta, ilQuadro());
+      return;
+    }
+
+    /* Le case di un installatore, come le vede lui.
+     *
+     * La stessa funzione della sua pagina, e quindi la stessa risposta: il
+     * nome che ha dato a ogni casa, lo stato, i controlli, il rapporto con
+     * quante entita' ha. Non c'e' un campo in piu' — se all'installatore una
+     * cosa non arriva, non arriva nemmeno qui. Un installatore che non c'e'
+     * e' un 404, non un elenco vuoto: un elenco vuoto sembrerebbe «nessuna
+     * casa», che e' un'altra risposta. */
+    const leSue = new RegExp(`^/installatore/(${CHI_VALIDO.source.slice(1, -1)})/case$`).exec(via);
+    if (leSue && metodo === "GET") {
+      if (!installatori.quello(leSue[1])) {
+        male(risposta, 404, "questo installatore non c'e'");
+        return;
+      }
+      json(risposta, leCaseDi(leSue[1]));
+      return;
+    }
+
+    /* Le note intere: le stesse che legge l'installatore, con la chiave
+     * della gestione. */
+    const leNote = new RegExp(`^/note/(${SEGNO_VALIDO.source.slice(1, -1)})$`).exec(via);
+    if (leNote && metodo === "GET") {
+      rispondiLeNote(risposta, leNote[1]);
       return;
     }
 

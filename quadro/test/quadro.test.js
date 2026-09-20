@@ -498,12 +498,15 @@ test("gli inviti aperti contano nel limite, se no si fa il pieno in un minuto", 
   }
 });
 
-test("chi tiene il quadro conta le case di ognuno, e non sa quali sono", async () => {
-  /* Il conto e' suo, l'elenco no: sa che quello ne segue due, non chi
-   * sono. Un elenco di nomi di clienti di terzi e' un'altra cosa, e piu'
-   * pesante, che contare licenze. */
+test("chi tiene il quadro vede le case di ognuno come le vede lui, con la sua chiave", async () => {
+  /* Per un pezzo questa porta contava e basta: «quante, non quali». La regola
+   * e' cambiata, e si dice per intero. Chi tiene il quadro tiene anche i suoi
+   * installatori, e per aiutarne uno deve vedere quello che vede lui: il nome
+   * che ha dato a ogni casa, i controlli, quante entita' ha. La stessa
+   * risposta della sua pagina, per costruzione — e non un grammo di piu'.
+   * Quello che non arriva all'installatore non arriva nemmeno qui. */
   const b = await banco({ installatori: 2 });
-  const [rossi] = b.iscritti;
+  const [rossi, bianchi] = b.iscritti;
   try {
     await b.deposita(UNA, await unCodice(b, "", rossi.chiave));
     await b.retro(
@@ -511,16 +514,36 @@ test("chi tiene il quadro conta le case di ognuno, e non sa quali sono", async (
       { method: "PUT", body: JSON.stringify({ nome: "Rossi — via Verdi 12" }) },
       rossi.chiave,
     );
+    await b.deposita(ALTRA, await unCodice(b, "", bianchi.chiave));
 
-    const detto = await (await b.gestore("/installatori")).json();
-    const scritto = JSON.stringify(detto);
-
-    const suo = detto.installatori.find((uno) => uno.chi === rossi.chi);
+    /* L'elenco degli installatori dice quante case e quante entita' in tutto. */
+    const quadro = await (await b.gestore("/installatori")).json();
+    const suo = quadro.installatori.find((uno) => uno.chi === rossi.chi);
     assert.equal(suo.case, 1);
-    assert.equal(suo.nome, "Installatore 1");
-    for (const parola of ["Verdi", "Rossi —", UNA]) {
-      assert.ok(!scritto.includes(parola), `«${parola}» e' arrivata a chi tiene il quadro`);
-    }
+    assert.equal(suo.entita, RAPPORTO.entita.totali);
+
+    /* Le sue case: la stessa forma, e le stesse cose, di `/console/case`. */
+    const dette = await (await b.gestore(`/installatore/${rossi.chi}/case`)).json();
+    const luiVede = await (await b.retro("/case", {}, rossi.chiave)).json();
+    assert.deepEqual(dette, luiVede);
+    assert.equal(dette.case.length, 1);
+    assert.equal(dette.case[0].casa, UNA);
+    assert.equal(dette.case[0].nome, "Rossi — via Verdi 12");
+    assert.equal(dette.case[0].carta.entita.totali, RAPPORTO.entita.totali);
+    assert.ok(dette.case[0].controlli, "i controlli ci sono, come nella sua pagina");
+    assert.ok(dette.case[0].stato?.chiave, "e lo stato");
+
+    /* Ognuno per se', anche visto da sopra: le case di Bianchi non ci sono. */
+    assert.ok(!JSON.stringify(dette).includes(ALTRA), "una casa di un altro e' arrivata");
+
+    /* E' una porta della gestione: la chiave dell'installatore non la apre. */
+    const conLaSua = await fetch(`${b.dove}/gestore/installatore/${rossi.chi}/case`, {
+      headers: { authorization: `Bearer ${rossi.chiave}` },
+    });
+    assert.equal(conLaSua.status, 401);
+
+    /* Un installatore che non c'e' e' un no, non un elenco vuoto. */
+    assert.equal((await b.gestore(`/installatore/inst_${"0".repeat(16)}/case`)).status, 404);
   } finally {
     await b.chiudi();
   }
@@ -885,6 +908,46 @@ test("finche' la casa non ha detto com'e' andata non se ne chiede un altro", asy
       body: JSON.stringify({ nome: "Altro", da: "1", a: "2" }),
     });
     assert.equal(secondo.status, 409);
+  } finally {
+    await b.chiudi();
+  }
+});
+
+test("il riavvio si chiede dal cruscotto, e passa per la stessa porta dell'installazione", async () => {
+  const b = await banco();
+  try {
+    const chiave = await unCodice(b);
+    await b.deposita(UNA, chiave, CON_MANUTENZIONE);
+    const risposta = await b.retro(`/casa/${UNA}/riavvia`, { method: "POST" });
+    assert.equal(risposta.status, 200);
+    const detto = await risposta.json();
+    assert.equal(detto.chiesto.cosa, "riavvia");
+    /* La pagina lo fa vedere come chiesto, e la casa se lo porta via al
+     * rapporto dopo. */
+    assert.equal(detto.case[0].chiesto.cosa, "riavvia");
+    const rapporto = await (await b.deposita(UNA, chiave, CON_MANUTENZIONE)).json();
+    assert.equal(rapporto.fai?.cosa, "riavvia");
+    /* Uno per volta: finche' non e' tornata, non se ne chiede un altro. */
+    assert.equal((await b.retro(`/casa/${UNA}/riavvia`, { method: "POST" })).status, 409);
+  } finally {
+    await b.chiudi();
+  }
+});
+
+test("senza la manutenzione aperta il riavvio e' un no, e non dice niente in piu'", async () => {
+  const b = await banco();
+  try {
+    await b.deposita(UNA, await unCodice(b));
+    assert.equal((await b.retro(`/casa/${UNA}/riavvia`, { method: "POST" })).status, 409);
+    /* E la casa di un altro e' lo stesso no: da un no non si impara che una
+     * matricola esiste. */
+    const c = await banco({ installatori: 2 });
+    try {
+      await c.deposita(ALTRA, await unCodice(c, "", c.iscritti[1].chiave), CON_MANUTENZIONE);
+      assert.equal((await c.retro(`/casa/${ALTRA}/riavvia`, { method: "POST" })).status, 409);
+    } finally {
+      await c.chiudi();
+    }
   } finally {
     await b.chiudi();
   }
