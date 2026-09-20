@@ -75,14 +75,20 @@ const expectedTabs = [
  * Poi: su un tablet appeso al muro le voci stavano strette per niente. Le
  * regole del tocco sono scritte per un telefono — 72 punti a linguetta, 7 alla
  * scritta, e tutte impaccate a sinistra — e un tablet le prendeva uguali, con
- * mezza barra vuota a destra. Da 900 punti di larghezza in su adesso si
- * dividono la riga che c'e'.
+ * mezza barra vuota a destra. Da 900 punti di larghezza in su si divideva la
+ * riga fra le linguette.
+ *
+ * E poi ancora: dividere la riga bastava finche' le sezioni erano poche. Con
+ * ventitre' vuol dire dare a ognuna il suo minimo, e in settantadue punti
+ * «Elettrodomestici» diventa «ELETT…». Adesso ogni linguetta e' larga quanto
+ * la sua parola e la riga scorre; la regola la tiene
+ * `le-scritte-della-barra-non-si-tagliano-sul-tablet.test.js`.
  *
  * Questa impronta non e' una regola: e' una firma. Serve a far vedere che i
  * fogli si sono mossi, e chi la aggiorna deve sapere perche'. */
 const vendoredCssSnapshots = {
-  "dashboard-runtime-it.css": "037c40fba6739bb56149e942a33fc88d60e999b8b81aaa08f0f928998e2ce993",
-  "dashboard-runtime-en.css": "44da756d2402956e2c497c6a519d291d364c43631df13b98198dea52beb07d3f",
+  "dashboard-runtime-it.css": "30834c7e5733e2d6200f848fa00c925d39ef254ed1a67ee568d35691d242df0c",
+  "dashboard-runtime-en.css": "00dbd938460f7c44c59254cb15084669779a6f8ee462912b66e983ce0f4d450f",
 };
 
 for (const file of ["dashboard.html", "dashboard-en.html"]) {

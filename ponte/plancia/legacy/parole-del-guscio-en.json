@@ -3263,28 +3263,28 @@
      ]
     },
     {
-     "riga": 2890,
+     "riga": 2908,
      "via": 1,
      "metti": [
       "/* Power button */"
      ]
     },
     {
-     "riga": 3018,
+     "riga": 3036,
      "via": 1,
      "metti": [
       "  /* Pill tab Overview/Analisi */"
      ]
     },
     {
-     "riga": 3167,
+     "riga": 3185,
      "via": 1,
      "metti": [
       "  /* ── History popup ── */"
      ]
     },
     {
-     "riga": 3228,
+     "riga": 3246,
      "via": 0,
      "metti": [
       "",
@@ -3311,26 +3311,26 @@
      ]
     },
     {
-     "riga": 4376,
+     "riga": 4394,
      "via": 2,
      "metti": [
       ".ed-btn-add:hover { filter: brightness(0.97); transform: translateY(-1px); }"
      ]
     },
     {
-     "riga": 4381,
+     "riga": 4399,
      "via": 2,
      "metti": []
     },
     {
-     "riga": 4552,
+     "riga": 4570,
      "via": 1,
      "metti": [
       "/* ═══ v256: PAGINA CONFIGURATION ═══ */"
      ]
     },
     {
-     "riga": 4576,
+     "riga": 4594,
      "via": 0,
      "metti": [
       "html[data-theme=\"dark\"] .weather-widget { background: linear-gradient(135deg, #101c30 0%, #0b2740 100%); border-color: rgba(148,163,184,0.18); }",
@@ -3338,17 +3338,17 @@
      ]
     },
     {
-     "riga": 4598,
+     "riga": 4616,
      "via": 2,
      "metti": []
     },
     {
-     "riga": 4603,
+     "riga": 4621,
      "via": 2,
      "metti": []
     },
     {
-     "riga": 4693,
+     "riga": 4711,
      "via": 22,
      "metti": []
     }
