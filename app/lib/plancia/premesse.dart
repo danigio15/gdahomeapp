@@ -756,9 +756,13 @@ class Premesse {
   /// La scritta della testata in due pezzi, come la disegna la plancia: il
   /// primo in chiaro e il secondo in azzurro. Un nome di due o piu' parole si
   /// spezza al primo spazio; uno di una parola sola va tutto nel primo, e il
-  /// secondo resta vuoto. La stessa regola di `inDuePezzi` in `marchio.js`.
+  /// secondo resta vuoto. «gdahome» e' l'eccezione, ed e' «gda» e «home»:
+  /// e' il nostro marchio, disegnato cosi'. La stessa regola di `inDuePezzi`
+  /// in `marchio.js`, e deve restare la stessa: la casa manda gli stessi
+  /// nomi all'app e a Home Assistant.
   static List<String> inDuePezzi(String nome) {
     final pulito = nome.replaceAll(RegExp(r'\s+'), ' ').trim();
+    if (pulito == 'gdahome') return ['gda', 'home'];
     final spazio = pulito.indexOf(' ');
     if (spazio <= 0) return [pulito, ''];
     return [pulito.substring(0, spazio), pulito.substring(spazio + 1)];

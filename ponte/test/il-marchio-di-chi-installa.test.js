@@ -19,7 +19,7 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { cheImmagineE, Installatore } from "../src/installatore.js";
-import { laPagina, NOME, vestiDiGdahome } from "../src/marchio.js";
+import { inDuePezzi, laPagina, NOME, vestiDiGdahome } from "../src/marchio.js";
 
 const ZITTO = { debug() {}, info() {}, attenzione() {}, errore() {} };
 const CHI = "inst_0123456789abcdef";
@@ -158,9 +158,12 @@ test("il logo sopravvive a una riaccensione, senza aspettare il quadro", async (
   try {
     await b.suo.dice({ di: "Impianti Rossi", marchio: CHI });
     const dopo = new Installatore({ cartella: b.cartella, registro: ZITTO });
-    /* Il nome torna col primo rapporto; il logo c'e' gia'. */
-    assert.equal(dopo.vestito(), null, "senza nome non si veste niente");
+    /* Il nome torna col primo rapporto; il logo c'e' gia', e si indossa
+     * subito: la plancia esce col suo segno anche se il quadro tace. */
+    assert.deepEqual(dopo.vestito().logo, PNG);
+    assert.equal(dopo.vestito().nome, "");
     await dopo.dice({ di: "Impianti Rossi", marchio: CHI });
+    assert.equal(dopo.vestito().nome, "Impianti Rossi");
     assert.deepEqual(dopo.vestito().logo, PNG);
   } finally {
     b.via();
@@ -202,8 +205,11 @@ test("con un installatore la plancia porta il suo nome e il suo logo", () => {
     suo,
   ).corpo.toString("utf8");
   assert.match(testo, /alt="Impianti Rossi"/);
-  assert.match(testo, /\["Impianti","Rossi"\]\)\[0\]/);
-  assert.match(testo, /\["Impianti","Rossi"\]\)\[1\]/);
+  /* La scritta accanto al logo **non** porta il suo nome nel runtime: quel
+   * file il browser lo tiene un anno, e un installatore si puo' rinominare.
+   * Il nome lo porta la pagina (`__GDAHOME_TESTATA__`); qui resta gdahome. */
+  assert.match(testo, /\(window\.__GDAHOME_TESTATA__\|\|\["gda","home"\]\)\[0\]/);
+  assert.equal(testo.includes('["Impianti","Rossi"]'), false);
 
   /* E il logo: gli stessi byte, col tipo che sono davvero. */
   const logo = vestiDiGdahome("legacy/logo.png", Buffer.from("vecchio"), "image/png", suo);
@@ -211,15 +217,14 @@ test("con un installatore la plancia porta il suo nome e il suo logo", () => {
   assert.equal(logo.tipo, "image/png");
 });
 
-test("un nome di una parola sola non si spezza a meta'", () => {
-  const testo = vestiDiGdahome(IL_RUNTIME, Buffer.from(UN_PEZZO, "utf8"), "text/javascript", {
-    nome: "Elettrotecnica",
-  }).corpo.toString("utf8");
-  assert.match(
-    testo,
-    /\["Elettrotecnica",""\]/,
+test("un nome di una parola sola non si spezza a meta', e il nostro si spezza come si disegna", () => {
+  assert.deepEqual(
+    inDuePezzi("Elettrotecnica"),
+    ["Elettrotecnica", ""],
     "il secondo pezzo resta vuoto invece di prendersi una sillaba",
   );
+  assert.deepEqual(inDuePezzi("Impianti Rossi"), ["Impianti", "Rossi"]);
+  assert.deepEqual(inDuePezzi("gdahome"), ["gda", "home"]);
 });
 
 test("un nome che arriva dal quadro non porta dentro dell'HTML", () => {

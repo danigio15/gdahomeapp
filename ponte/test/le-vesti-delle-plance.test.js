@@ -104,9 +104,17 @@ test("il quadro dice le vesti: si tengono, si scrivono su disco, e le plance le 
     });
     assert.equal(sentite.length, 1);
 
-    /* Riacceso: le vesti ci sono gia', prima di qualunque rapporto. */
+    /* Riacceso: le vesti ci sono gia', prima di qualunque rapporto, e si
+     * indossano subito insieme al logo — il nome arriva col rapporto. */
     const dopo = unInstallatore(cartella);
     assert.deepEqual(dopo.vesti, { primary: { titolo: "Casa Rossi", velo: "Rossi impianti" } });
+    assert.deepEqual(dopo.vestito("primary"), {
+      nome: "",
+      logo: PNG,
+      tipo: "image/png",
+      titolo: "Casa Rossi",
+      velo: "Rossi impianti",
+    });
 
     /* Una risposta senza vesti le toglie, e lo dice a chi ascolta. */
     await suo.dice({ di: "Impianti Rossi", marchio: CHI });
@@ -181,8 +189,10 @@ test("il velo e la testata si rivestono dalla pagina, e il runtime resta JavaScr
   assert.match(vestita, /<b>Rossi impianti<\/b>/);
   assert.match(vestita, /<title>Casa Rossi<\/title>/);
 
-  /* Il runtime: la scritta la sceglie la pagina, col nome di chi installa di
-   * riserva. Ed e' un pezzo di template literal che si valuta davvero. */
+  /* Il runtime: la scritta la sceglie la pagina, e di riserva c'e' solo
+   * gdahome — mai il nome di chi installa, che puo' cambiare mentre il
+   * runtime sta in cache un anno. Ed e' un pezzo di template literal che si
+   * valuta davvero. */
   const runtime = vestiDiGdahome(
     "legacy/dashboard-runtime-it.js",
     Buffer.from('`<span>Dashboard</span><span class="b">MODERN</span>`', "utf8"),
@@ -191,12 +201,12 @@ test("il velo e la testata si rivestono dalla pagina, e il runtime resta JavaScr
   ).corpo.toString("utf8");
   assert.equal(
     runtime,
-    '`<span>${(window.__GDAHOME_TESTATA__||["Impianti","Rossi"])[0]}</span>' +
-      '<span class="b">${(window.__GDAHOME_TESTATA__||["Impianti","Rossi"])[1]}</span>`',
+    '`<span>${(window.__GDAHOME_TESTATA__||["gda","home"])[0]}</span>' +
+      '<span class="b">${(window.__GDAHOME_TESTATA__||["gda","home"])[1]}</span>`',
   );
   const valuta = (testata) =>
     new Function("window", `return ${runtime};`)({ __GDAHOME_TESTATA__: testata });
-  assert.equal(valuta(undefined), '<span>Impianti</span><span class="b">Rossi</span>');
+  assert.equal(valuta(undefined), '<span>gda</span><span class="b">home</span>');
   assert.equal(valuta(["Casa", "Rossi"]), '<span>Casa</span><span class="b">Rossi</span>');
   assert.equal(valuta(["Casa", ""]), '<span>Casa</span><span class="b"></span>');
 });
@@ -216,8 +226,15 @@ test("chi serve la pagina sa le vesti di quella plancia, e l'app le legge nella 
     velo: "Rossi impianti",
     testata: "Casa Rossi",
   });
-  assert.equal(plancia.vestiDi({ profilo: "suocero" }), null);
-  assert.equal(plancia.vestiDi(null), null);
+  /* Senza una scelta, la pagina porta il nome di chi installa: e' la pagina
+   * a dirlo, non il runtime. */
+  assert.deepEqual(plancia.vestiDi({ profilo: "suocero" }), {
+    velo: "Impianti Rossi",
+    testata: "Impianti Rossi",
+  });
+  assert.deepEqual(plancia.vestiDi(null), { velo: "Impianti Rossi", testata: "Impianti Rossi" });
+  const nessuno = new Plancia({ installatore: () => null });
+  assert.equal(nessuno.vestiDi({ profilo: "primary" }), null);
 
   const detta = plancia.descrizione({
     profilo: "primary",
@@ -233,8 +250,8 @@ test("chi serve la pagina sa le vesti di quella plancia, e l'app le legge nella 
     istanza: "gdahome-suocero",
     primaria: false,
   });
-  assert.equal(altra.velo, "");
-  assert.equal(altra.testata, "");
+  assert.equal(altra.velo, "Impianti Rossi");
+  assert.equal(altra.testata, "Impianti Rossi");
 
   /* E la pagina letta sapendo quale plancia e' esce gia' con la sua parola. */
   if (plancia.cE) {

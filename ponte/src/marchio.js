@@ -179,14 +179,13 @@ export function vestiDiGdahome(relativo, corpo, tipo, suo = null, versione = "")
     }
     if (/^legacy\/dashboard-runtime-[a-z]{2}\.js$/.test(quale)) {
       const testo = corpo.toString("utf8");
-      const diSerie = inDuePezzi(chi ? chi.nome : NOME);
       /* Si sostituisce e poi si guarda se e' cambiato qualcosa, invece di
        * chiedere prima «c'e'?»: su un'espressione con la `g`, `test` si
        * ricorda dove era arrivata, e la seconda domanda risponde dal punto
        * sbagliato. Sostituire e confrontare non ha memoria. */
       const fatto = testo
         .replace(L_ALT_DEL_LOGO, `alt="${perUnAttributo(chi ? chi.nome : NOME)}"`)
-        .replace(LA_SCRITTA_DEL_LOGO, `$1${laTestata(0, diSerie)}$2${laTestata(1, diSerie)}$3`);
+        .replace(LA_SCRITTA_DEL_LOGO, `$1${laTestata(0)}$2${laTestata(1)}$3`);
       if (fatto === testo) return { corpo, tipo };
       return { corpo: Buffer.from(fatto, "utf8"), tipo };
     }
@@ -197,17 +196,19 @@ export function vestiDiGdahome(relativo, corpo, tipo, suo = null, versione = "")
 }
 
 /* Un pezzo della scritta della testata, scritto **dentro** il template
- * literal del runtime: il pezzo scelto per questa plancia se la pagina lo
- * porta in testa (`window.__GDAHOME_TESTATA__`, due pezzi, messi dalle
- * premesse), se no quello di serie — il nome di chi installa in due pezzi, o
- * «gda» e «home».
+ * literal del runtime: il pezzo che la pagina porta in testa
+ * (`window.__GDAHOME_TESTATA__`, due pezzi, messi dalle premesse — il nome
+ * scelto per questa plancia, o quello di chi installa), se no «gda» e
+ * «home».
  *
- * Non si puo' scrivere la parola e basta, come si faceva: il runtime e' un
- * file solo per tutte le plance della casa, e il browser lo tiene in cache
- * per un anno. La parola giusta la puo' scegliere solo la pagina, al momento
- * di disegnare, e questa e' la riga che glielo lascia fare. */
-function laTestata(quale, diSerie) {
-  return `\${(window.__GDAHOME_TESTATA__||${JSON.stringify(diSerie)})[${quale}]}`;
+ * Nel runtime non si scrive nessun nome che possa cambiare, nemmeno di
+ * riserva: e' un file solo per tutte le plance della casa, e il browser lo
+ * tiene in cache per un anno. Un installatore rinominato ieri resterebbe
+ * scritto accanto al logo finche' non cambia la plancia. La parola giusta la
+ * porta la pagina, che non sta in cache, ed e' questa la riga che glielo
+ * lascia fare. */
+function laTestata(quale) {
+  return `\${(window.__GDAHOME_TESTATA__||${JSON.stringify(inDuePezzi(NOME))})[${quale}]}`;
 }
 
 /* Chi ha montato l'impianto, se c'e' e se ha qualcosa da far vedere.
@@ -219,14 +220,12 @@ function laTestata(quale, diSerie) {
 function daInstallatore(suo) {
   const nome = perDisegnare(suo?.nome);
   const logo = Buffer.isBuffer(suo?.logo) && suo.logo.length ? suo.logo : null;
-  if (!nome && !logo) return null;
-  return {
-    nome: nome || NOME,
-    logo,
-    tipo: String(suo?.tipo || ""),
-    titolo: perDisegnare(suo?.titolo),
-    velo: perDisegnare(suo?.velo),
-  };
+  const titolo = perDisegnare(suo?.titolo);
+  const velo = perDisegnare(suo?.velo);
+  /* Anche senza nome: dopo un riavvio il nome arriva col primo rapporto, il
+   * logo e i nomi scelti sono gia' sul disco e si indossano subito. */
+  if (!nome && !logo && !titolo && !velo) return null;
+  return { nome: nome || NOME, logo, tipo: String(suo?.tipo || ""), titolo, velo };
 }
 
 /* Il nome di un installatore, ripulito per finire dentro una pagina.
