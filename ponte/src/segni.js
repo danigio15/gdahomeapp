@@ -47,8 +47,16 @@
 
 import { createHash } from "node:crypto";
 
-/** Quanto puo' pesare un'icona per essere mandata. Le vere stanno molto sotto. */
-export const UN_SEGNO_AL_MASSIMO = 24 * 1024;
+/**
+ * Quanto puo' pesare un'icona per essere mandata.
+ *
+ * Erano 24 KiB, «le vere stanno molto sotto». Non tutte: i marchi di Home
+ * Assistant sono PNG da 256 punti, e quelli colorati passano i 24 KiB con
+ * niente. Un'icona sopra il tetto non partiva, e non lo diceva a nessuno.
+ * Adesso il tetto e' quello che il quadro accetta (`QUANTO_GROSSA` in
+ * `quadro/src/segni.js`), e una prova per parte tiene che siano uguali.
+ */
+export const UN_SEGNO_AL_MASSIMO = 64 * 1024;
 
 /**
  * E quanto ne possono pesare in tutto in un rapporto solo, **contati come
@@ -216,6 +224,23 @@ export class Segni {
     }
     /* Nessun indirizzo: quell'aggiornamento un'icona non ce l'ha. */
     if (!dove) return NON_CE_NE;
+    /* ─── Una strada sola, per tutte ──────────────────────────────────────
+     *
+     * Dalla 1.5.9.11 l'icona **di casa** si chiedeva per la strada dell'app,
+     * `ponte/aggiornamenti/logo`; quella dei **marchi** no, se la scaricava
+     * questo modulo per conto suo, con un `fetch` nudo. Due scaricatori per
+     * la stessa icona, e in una casa vera si e' visto cosa succede: nell'app
+     * i loghi di Home Assistant, del sistema e di Frigate c'erano, nel
+     * cruscotto restava la lettera. Quello di qui non portava niente, e non
+     * lo diceva — «oggi non e' arrivata», ogni minuto, per sempre.
+     *
+     * Adesso la strada e' una: se il ponte ha la sua, ci passano tutte —
+     * l'add-on dal Supervisor, quella di casa da Home Assistant, il marchio
+     * dai marchi — con lo stesso scaricatore che serve l'app, che segue il
+     * salto di indirizzo e non ha tetti suoi. Se un'icona si vede nell'app,
+     * si vede nel cruscotto. Le righe qui sotto restano per chi costruisce
+     * un `Segni` senza quella strada, cioe' le prove. */
+    if (this.ilLogoDiCasa) return this._daCasa(entita);
     /* L'icona di un add-on si chiede **al Supervisor**, non a Home Assistant:
      * la' quella strada e' un proxy con le sue regole di permesso, e in una
      * casa vera ha risposto 403 per l'icona di un add-on di un altro. Il
@@ -244,10 +269,7 @@ export class Segni {
      * di casa. Adesso si chiama quella invece di rifarne una piu' povera
      * accanto. Due strade per la stessa icona vuol dire due schermi che ne
      * mostrano una sola, ed e' successo. */
-    if (dove.startsWith("/")) {
-      if (!this.ilLogoDiCasa) return NON_CE_NE;
-      return this._daCasa(entita);
-    }
+    if (dove.startsWith("/")) return NON_CE_NE;
     if (!dove.startsWith(I_MARCHI)) return NON_CE_NE;
     return this._scarica(dove, {});
   }
@@ -263,10 +285,21 @@ export class Segni {
     /* Un no vero — quell'entita' un'icona non ce l'ha — e un no di oggi non
      * sono la stessa cosa: il primo si dice al quadro, il secondo si tace e si
      * riprova. `not_found` e' il primo; tutto il resto e' il secondo. */
-    if (!detta?.success) return detta?.error?.code === "not_found" ? NON_CE_NE : null;
+    if (!detta?.success) {
+      if (detta?.error?.code === "not_found") return NON_CE_NE;
+      /* Un guasto di oggi si scrive nel registro, se no non si sa mai perche'
+       * un'icona non arriva: e' esattamente com'e' rimasta a lungo. */
+      this.registro.info(
+        `l'icona di ${entita} oggi non arriva: ${detta?.error?.message || detta?.error?.code || "?"}`,
+      );
+      return null;
+    }
     const dentro = detta.result ?? {};
     if (Number(dentro.stato) === 404) return NON_CE_NE;
-    if (Number(dentro.stato) !== 200) return null;
+    if (Number(dentro.stato) !== 200) {
+      this.registro.info(`l'icona di ${entita} oggi non arriva: ${dentro.stato}`);
+      return null;
+    }
     /* Compressa non si sa spacchettare da qui, e non serve: si richiede senza
      * gzip. Se arriva compressa lo stesso, si lascia perdere per oggi. */
     if (dentro.compresso) return null;
@@ -282,7 +315,16 @@ export class Segni {
      * arrivata intera ed e' quella. Richiederla ogni minuto non la
      * rimpicciolisce. */
     const tipo = cheImmagineE(byte);
-    return tipo ? { byte, tipo } : NON_CE_NE;
+    if (!tipo) {
+      this.registro.attenzione(
+        `l'icona di ${entita} non si manda: ${byte.length} byte, ` +
+          (byte.length > UN_SEGNO_AL_MASSIMO
+            ? `piu' dei ${UN_SEGNO_AL_MASSIMO} che stanno in un rapporto`
+            : "non e' un'immagine che si sappia mostrare"),
+      );
+      return NON_CE_NE;
+    }
+    return { byte, tipo };
   }
 
   async _scarica(url, intestazioni) {
@@ -291,12 +333,16 @@ export class Segni {
         headers: { ...intestazioni, "accept-encoding": "identity" },
         signal: AbortSignal.timeout(ATTESA),
       });
-      if (!risposta.ok) return null;
+      if (!risposta.ok) {
+        this.registro.info(`il segno da ${url}: ${risposta.status}`);
+        return null;
+      }
       const byte = Buffer.from(await risposta.arrayBuffer());
       const tipo = cheImmagineE(byte);
+      if (!tipo) this.registro.info(`il segno da ${url}: ${byte.length} byte, non si manda`);
       return tipo ? { byte, tipo } : null;
     } catch (errore) {
-      this.registro.debug(`il segno da ${url}: ${errore?.message || errore}`);
+      this.registro.info(`il segno da ${url}: ${errore?.message || errore}`);
       return null;
     }
   }

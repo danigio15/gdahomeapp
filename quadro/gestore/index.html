@@ -2595,6 +2595,8 @@
         margin-top: 8px;
       }
 
+      /* Le due righe che si aprono sotto i tasti: il nome e il limite. */
+      .rigaNome,
       .rigaLimite {
         grid-column: 1 / -1;
         display: flex;
@@ -2604,8 +2606,15 @@
         margin-top: 8px;
       }
 
+      .rigaNome[hidden],
       .rigaLimite[hidden] {
         display: none;
+      }
+
+      .rigaNome input {
+        flex: 1 1 12rem;
+        min-width: 0;
+        font-weight: 700;
       }
 
       .rigaLimite input {
@@ -2613,6 +2622,7 @@
         font-weight: 700;
       }
 
+      .rigaNome .nota,
       .rigaLimite .nota {
         flex-basis: auto;
       }
@@ -3882,6 +3892,17 @@
               </div>
             </div>
             <ul class="case-sue">${leSueCase(uno)}</ul>
+            <div class="rigaNome" data-nome-di="${testo(uno.chi)}" hidden>
+              <input
+                type="text"
+                maxlength="80"
+                value="${testo(uno.nome)}"
+                aria-label="Come si chiama"
+                autocomplete="off"
+              />
+              <button type="button" class="tasto forte" data-salva-nome="${testo(uno.chi)}">Salva</button>
+              <span class="nota">Compare nel suo cruscotto e, sui suoi impianti, in cima alla plancia.</span>
+            </div>
             <div class="rigaLimite" data-limite-di="${testo(uno.chi)}" hidden>
               <input
                 type="number"
@@ -3894,6 +3915,7 @@
               <span class="nota">Zero vuol dire senza limite.</span>
             </div>
             <div class="tasti">
+              <button type="button" class="tasto" data-nome="${testo(uno.chi)}">Rinomina</button>
               <button type="button" class="tasto" data-limite="${testo(uno.chi)}">Limite</button>
               <button type="button" class="tasto" data-rifai="${testo(uno.chi)}">Nuova chiave</button>
               ${
@@ -4386,6 +4408,24 @@
             APPENA_FATTO = null;
             disegna();
           };
+        dove.querySelectorAll("[data-nome]").forEach((tasto) => {
+          tasto.onclick = () => {
+            const riga = dove.querySelector(`[data-nome-di="${tasto.dataset.nome}"]`);
+            if (!riga) return;
+            riga.hidden = !riga.hidden;
+            if (!riga.hidden) riga.querySelector("input")?.select();
+          };
+        });
+        dove.querySelectorAll("[data-salva-nome]").forEach((tasto) => {
+          const chi = tasto.dataset.salvaNome;
+          const casella = dove.querySelector(`[data-nome-di="${chi}"] input`);
+          const salva = () => cambiaIlNome(chi, casella?.value ?? "", tasto);
+          tasto.onclick = salva;
+          if (casella)
+            casella.onkeydown = (evento) => {
+              if (evento.key === "Enter") salva();
+            };
+        });
         dove.querySelectorAll("[data-limite]").forEach((tasto) => {
           tasto.onclick = () => {
             const riga = dove.querySelector(`[data-limite-di="${tasto.dataset.limite}"]`);
@@ -4465,6 +4505,34 @@
             body: JSON.stringify({ soglia: tetto }),
           });
           avvisa(tetto ? `${ilNomeDi(chi)}: limite a ${tetto}` : `${ilNomeDi(chi)}: senza limite`);
+        });
+      }
+
+      /* Rinominare un installatore. Il nome nuovo lo vede lui in cima al suo
+       * cruscotto, e lo vedono i suoi impianti: il quadro lo dice a ogni
+       * rapporto, e la plancia di casa lo mette in cima (`Plance.intestala`,
+       * nel ponte). Vuoto non si accetta: un installatore senza nome e' una
+       * riga che non dice di chi sono gli impianti. */
+      async function cambiaIlNome(chi, nome, tasto) {
+        const pulito = String(nome ?? "")
+          .replace(/\s+/g, " ")
+          .trim()
+          .slice(0, 80);
+        if (!pulito) {
+          avvisa("Serve un nome");
+          return;
+        }
+        const prima = ilNomeDi(chi);
+        await faiEpoi(tasto, async () => {
+          await chiedi(`/installatore/${encodeURIComponent(chi)}`, {
+            method: "PUT",
+            body: JSON.stringify({ nome: pulito }),
+          });
+          avvisa(
+            pulito === prima
+              ? `${pulito}: il nome è lo stesso`
+              : `${prima} adesso si chiama ${pulito}`,
+          );
         });
       }
 

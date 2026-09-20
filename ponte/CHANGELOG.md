@@ -11,6 +11,29 @@ fuori. La plancia dentro continua a dire la sua, e si legge dov'è sempre
 stata: nella pastiglia «La plancia» della console. Sono due numeri perché
 sono due cose.
 
+## 1.5.9.13
+
+**Le icone degli aggiornamenti arrivano tutte nel cruscotto.** Nella 1.5.9.11
+era stata sistemata l'icona che sta in casa; quella dei marchi di Home
+Assistant — Home Assistant stesso, il sistema operativo, Frigate — il rapporto
+se la scaricava per conto suo, con uno scaricatore diverso da quello dell'app,
+e in una casa vera non portava niente, senza dirlo: nell'app i loghi c'erano,
+nel cruscotto restava la lettera. Adesso la strada è una sola, quella
+dell'app: se un'icona si vede nell'app, si vede nel cruscotto. E il tetto per
+un'icona è passato da 24 a 64 KiB, che è quello che il cruscotto accetta: un
+marchio colorato da 256 punti li passava, e non partiva. Quello che non
+arriva, adesso, si legge nel registro dell'add-on.
+
+**Nel cruscotto la fila «tutti» è quella di serie.** Sotto l'anello c'erano
+solo offline, da verificare e in ordine, e a pagina aperta nessuna era accesa:
+non si capiva che si premono. Adesso la prima fila è «tutti», accesa di serie,
+e le altre tre filtrano.
+
+**Dalla gestione si rinomina un installatore.** Il tasto «Rinomina» accanto a
+«Limite»: il nome nuovo compare nel suo cruscotto e, al rapporto dopo, in cima
+alle plance dei suoi impianti. Fino a ieri l'unica via era eliminarlo e
+rifarlo, cioè riabbinare ogni impianto.
+
 ## 1.5.9.12
 
 **Il cruscotto ha una faccia nuova.** Si chiama Aurora: un cielo che sfuma

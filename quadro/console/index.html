@@ -278,6 +278,10 @@
         padding: 6px 0 12px;
       }
 
+      :root[data-dentro] header {
+        padding-top: 14px;
+      }
+
       .testata {
         display: flex;
         align-items: center;
@@ -942,6 +946,11 @@
         --tinta: var(--verde);
         --tinta-soft: var(--verde-soft);
         --tinta-luce: var(--verde-luce);
+      }
+      [data-stato="tutte"] {
+        --tinta: var(--accento);
+        --tinta-soft: var(--accento-soft);
+        --tinta-luce: var(--accento-soft);
       }
 
       /* ─── Da guardare adesso: le carte che scorrono di lato ──────────── */
@@ -2982,7 +2991,11 @@
         return `<div class="giorni${grande ? " grande" : ""}" role="img" aria-label="${testo(dice)}">${celle}</div><div class="giorniDice">${testo(dice)}</div>`;
       }
 
+      /* La prima fila e' «tutti»: e' quella accesa quando si apre la pagina,
+       * e premere una delle altre tre filtra. Senza, a pagina aperta nessuna
+       * fila era accesa, e non si capiva che si premono. */
       const LE_FILE = [
+        ["tutte", "◎", "tutti"],
         ["offline", "■", "offline"],
         ["guardare", "▲", "da verificare"],
         ["posto", "●", "in ordine"],
@@ -3654,7 +3667,7 @@
                   data-stato="${chiave}"
                   aria-pressed="${filtro === chiave}"
                 >
-                  <b>${quanti[chiave]}</b><span><i></i>${testo(parola)}</span>
+                  <b>${chiave === "tutte" ? CASE.length : quanti[chiave]}</b><span><i></i>${testo(parola)}</span>
                 </button>`,
               ).join("")}
             </div>

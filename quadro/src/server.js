@@ -949,7 +949,20 @@ export function costruisciIlServer({
         male(risposta, 404, "questo installatore non c'e'");
         return;
       }
-      if (detto?.nome !== undefined) installatori.rinomina(uno[1], detto.nome);
+      if (detto?.nome !== undefined) {
+        /* Vuoto si rifiuta: un installatore senza nome e' una riga che non
+         * dice di chi sono gli impianti, e il nome finisce anche in cima alle
+         * plance delle sue case. La soglia invece si cambia da sola, e allora
+         * il nome non si tocca. */
+        const nome = String(detto.nome ?? "")
+          .replace(/\s+/g, " ")
+          .trim();
+        if (!nome) {
+          male(risposta, 400, "serve un nome");
+          return;
+        }
+        installatori.rinomina(uno[1], nome);
+      }
       if (detto?.soglia !== undefined) installatori.limite(uno[1], detto.soglia);
       json(risposta, ilQuadro());
       return;
