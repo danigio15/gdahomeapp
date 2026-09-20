@@ -1,10 +1,10 @@
 {
   "it": {
     "apertura": {
-      "durata": 17.25,
+      "durata": 18.25,
       "pezzi": [
         0.8,
-        7.42
+        8.51
       ]
     },
     "dopo-la-consegna": {
@@ -16,11 +16,11 @@
       ]
     },
     "una-domanda-sola": {
-      "durata": 19,
+      "durata": 19.5,
       "pezzi": [
         0.6,
-        5.28,
-        11.6
+        6.05,
+        12.37
       ]
     },
     "come-entra-una-casa": {
@@ -33,19 +33,19 @@
       ]
     },
     "l-elenco": {
-      "durata": 24.75,
+      "durata": 25.5,
       "pezzi": [
         0.6,
-        10.49,
-        15.86
+        11.7,
+        17.07
       ]
     },
     "i-dieci-controlli": {
-      "durata": 28,
+      "durata": 29.25,
       "pezzi": [
         0.6,
-        13.32,
-        19.33
+        14.51,
+        20.53
       ]
     },
     "dentro-una-casa": {
@@ -109,10 +109,10 @@
   },
   "en": {
     "apertura": {
-      "durata": 16.5,
+      "durata": 18,
       "pezzi": [
         0.8,
-        6.97
+        8.31
       ]
     },
     "dopo-la-consegna": {
@@ -124,11 +124,11 @@
       ]
     },
     "una-domanda-sola": {
-      "durata": 17.25,
+      "durata": 19.25,
       "pezzi": [
         0.6,
-        5.1,
-        10.42
+        6.43,
+        11.74
       ]
     },
     "come-entra-una-casa": {
@@ -141,19 +141,19 @@
       ]
     },
     "l-elenco": {
-      "durata": 22.5,
+      "durata": 23.75,
       "pezzi": [
         0.6,
-        10.12,
-        14.11
+        11.44,
+        15.43
       ]
     },
     "i-dieci-controlli": {
-      "durata": 24.25,
+      "durata": 24.75,
       "pezzi": [
         0.6,
-        11.03,
-        16.48
+        11.42,
+        16.86
       ]
     },
     "dentro-una-casa": {
