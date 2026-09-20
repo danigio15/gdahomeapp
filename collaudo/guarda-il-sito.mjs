@@ -254,6 +254,34 @@ for (const misura of MISURE) {
   if (quanto.pagina > quanto.finestra + 1)
     lamenta(`[${misura.nome}] la pagina scorre di lato: ${quanto.pagina} su ${quanto.finestra}`);
 
+  /* Le sezioni si raggiungono dalla barra a tutte le larghezze. Sul computer
+   * le voci stanno in fila; sotto i 940 pixel stanno dietro un tasto, e il
+   * tasto deve esserci, aprirle, e non far scorrere la pagina di lato. Prima
+   * sul telefono sparivano e basta, e dal telefono si arrivava a una sezione
+   * solo scorrendo tutta la pagina. */
+  const tasto = pagina.locator(".menu > summary");
+  const primaVoce = pagina.locator('.navigazione a[href="#contatti"]');
+  if (misura.larghezza > 940) {
+    if (await tasto.isVisible()) lamenta(`[${misura.nome}] c'e' il tasto del menu del telefono`);
+    if (!(await primaVoce.isVisible()))
+      lamenta(`[${misura.nome}] le voci della barra non si vedono`);
+  } else {
+    if (!(await tasto.isVisible())) lamenta(`[${misura.nome}] manca il tasto del menu`);
+    if (await primaVoce.isVisible()) lamenta(`[${misura.nome}] le voci si vedono col menu chiuso`);
+    await tasto.click();
+    if (!(await primaVoce.isVisible())) lamenta(`[${misura.nome}] il menu non si apre`);
+    const aperto = await pagina.evaluate(() => ({
+      pagina: document.documentElement.scrollWidth,
+      finestra: window.innerWidth,
+    }));
+    if (aperto.pagina > aperto.finestra + 1)
+      lamenta(`[${misura.nome}] col menu aperto la pagina scorre di lato`);
+    await primaVoce.click();
+    if (await primaVoce.isVisible())
+      lamenta(`[${misura.nome}] il menu resta aperto dopo la scelta`);
+    await pagina.evaluate(() => window.scrollTo(0, 0));
+  }
+
   const riquadro = await laPlancia(pagina);
   const voci = await riquadro.locator("nav.tabs .tab").count();
   if (voci < 10) lamenta(`[${misura.nome}] la barra della plancia ha ${voci} voci`);

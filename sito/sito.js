@@ -165,6 +165,25 @@
       });
   }
 
+  /* ── Il menu sul telefono ─────────────────────────────────────────────
+   *
+   * Si apre e si chiude da solo, perché è un <details>. Quello che il
+   * browser non fa da sé è richiuderlo quando si è scelta una voce: senza
+   * queste righe il pannello resterebbe aperto sopra la sezione a cui si è
+   * appena arrivati. Senza JavaScript resta aperto, e si chiude col tasto. */
+  var menu = document.querySelector(".menu");
+  if (menu) {
+    var voci = document.querySelectorAll(".navigazione a");
+    for (var v = 0; v < voci.length; v += 1) {
+      voci[v].addEventListener("click", function () {
+        menu.removeAttribute("open");
+      });
+    }
+    document.addEventListener("keydown", function (evento) {
+      if (evento.key === "Escape") menu.removeAttribute("open");
+    });
+  }
+
   /* ── L'ombra sotto la barra ───────────────────────────────────────────── */
   var cappello = document.getElementById("cappello");
   if (cappello) {

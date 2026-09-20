@@ -473,9 +473,71 @@ section {
   justify-content: space-between;
   gap: 16px;
 }
+/* ── Il menu sul telefono ─────────────────────────────────────────────────
+ *
+ * Sul computer il tasto non c'e' e le voci stanno in fila nella barra. Sotto
+ * i 940 pixel le voci non spariscono piu' — sparivano, e dal telefono non si
+ * arrivava a nessuna sezione se non scorrendo tutto — ma stanno dietro un
+ * tasto in fondo alla barra, e si aprono una sotto l'altra, sotto la barra.
+ * E' un <details>: l'attributo `open` lo mette il browser, senza script, e
+ * le voci sono quelle di sempre — `.menu[open] ~ .navigazione` — non una
+ * seconda copia. */
+.menu {
+  display: none;
+}
+.menu > summary {
+  list-style: none;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--bordo);
+  border-radius: 11px;
+  background: var(--carta);
+  color: var(--testo);
+  cursor: pointer;
+}
+.menu > summary::-webkit-details-marker {
+  display: none;
+}
+.menu .menu-aperto,
+.menu[open] .menu-chiuso {
+  display: none;
+}
+.menu[open] .menu-aperto {
+  display: block;
+}
 @media (max-width: 940px) {
+  .menu {
+    display: block;
+    order: 3;
+    flex-shrink: 0;
+  }
+  .attrezzi {
+    order: 2;
+    margin-left: auto;
+  }
   .navigazione {
     display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    flex-direction: column;
+    gap: 2px;
+    margin: 0;
+    padding: 10px 14px 14px;
+    background: var(--carta);
+    border-bottom: 1px solid var(--bordo);
+    box-shadow: var(--ombra-alta);
+  }
+  .menu[open] ~ .navigazione {
+    display: flex;
+  }
+  .navigazione a {
+    padding: 12px 10px;
+    font-size: 1rem;
+    color: var(--testo);
   }
 }
 
