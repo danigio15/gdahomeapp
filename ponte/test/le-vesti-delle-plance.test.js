@@ -60,6 +60,13 @@ test("le vesti si ripuliscono: profili buoni, nomi corti, niente HTML, chiavi in
       primary: { titolo: "Casa Rossi", velo: "b Elettro /b Rossi" },
     },
   );
+  /* «Nuova» — una plancia che la casa deve creare — passa solo se e' vero. */
+  assert.deepEqual(vestiPulite({ taverna: { titolo: "Taverna", nuova: true } }), {
+    taverna: { titolo: "Taverna", velo: "", nuova: true },
+  });
+  assert.deepEqual(vestiPulite({ taverna: { titolo: "Taverna", nuova: "si" } }), {
+    taverna: { titolo: "Taverna", velo: "" },
+  });
   assert.deepEqual(vestiPulite(null), {});
   assert.deepEqual(vestiPulite([]), {});
   assert.deepEqual(vestiPulite("primary"), {});

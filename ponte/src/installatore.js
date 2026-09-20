@@ -100,7 +100,9 @@ export function vestiPulite(grezze) {
     const titolo = unNome(una.titolo);
     const velo = unNome(una.velo);
     if (!titolo && !velo) continue;
-    pulite[profilo] = { titolo, velo };
+    /* `nuova`: una plancia che ancora non c'e', e che la casa deve creare.
+     * Vedi `Plance.vesti`. */
+    pulite[profilo] = { titolo, velo, ...(una.nuova === true ? { nuova: true } : {}) };
     if (Object.keys(pulite).length >= VESTI_AL_MASSIMO) break;
   }
   return pulite;

@@ -46,8 +46,12 @@ scritto in casa, dall'app, resta finché l'installatore non sceglie qualcos'altr
 Per farlo, il rapporto porta anche **profilo e titolo di ogni plancia** — nomi
 di cose in casa, non di chi ci abita — e lo si legge, come tutto il resto,
 nella console dell'add-on. Un impianto con l'add-on precedente non manda
-l'elenco, e il cruscotto lo dice invece di far finta. Dalla gestione le scelte
-si leggono e basta.
+l'elenco, e il cruscotto lo dice invece di far finta. E dallo stesso capitolo
+se ne **aggiunge una**: «Una plancia in più», col suo nome, e la casa la crea
+al rapporto dopo, vuota come una aggiunta dall'app; da quel momento è come le
+altre. Di plance se ne tengono otto, contando quelle in attesa, e da qui non
+se ne toglie nessuna: si toglie da casa. Dalla gestione le scelte si leggono e
+basta.
 
 ## 1.5.9.12
 

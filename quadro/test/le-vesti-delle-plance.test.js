@@ -21,6 +21,8 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { alzaIlQuadro } from "../src/index.js";
+import { PLANCE_AL_MASSIMO } from "../src/case.js";
+import { QUANTE_AL_MASSIMO } from "../../ponte/src/plance.js";
 
 const QUI = dirname(fileURLToPath(import.meta.url));
 const CRUSCOTTO = readFileSync(join(QUI, "..", "console", "index.html"), "utf8");
@@ -250,7 +252,7 @@ test("il cruscotto ha il capitolo «Le plance» con due caselle per plancia; la 
   assert.match(CRUSCOTTO, /function leVestiDellePlance\(casa, c\)/);
   assert.match(CRUSCOTTO, /data-veste-titolo/);
   assert.match(CRUSCOTTO, /data-veste-velo/);
-  assert.match(CRUSCOTTO, /data-salva-veste="\$\{testo\(profilo\)\}"/);
+  assert.match(CRUSCOTTO, /data-salva-veste="\$\{testo\(una\.profilo\)\}"/);
   assert.match(CRUSCOTTO, /\/casa\/\$\{tasto\.dataset\.perCasa\}\/plancia\//);
   /* Quaranta lettere, come il titolo di una plancia nel ponte. */
   assert.match(CRUSCOTTO, /maxlength="40"/);
@@ -259,7 +261,133 @@ test("il cruscotto ha il capitolo «Le plance» con due caselle per plancia; la 
   /* Il tasto non porta `data-casa`: quello apre il foglio di una casa. */
   assert.doesNotMatch(CRUSCOTTO, /data-salva-veste="[^"]*" data-casa=/);
 
+  /* Una plancia in piu' si aggiunge da qui, una in attesa si annulla, e il
+   * conto tiene la stessa misura del ponte. */
+  assert.match(CRUSCOTTO, /data-nuova-plancia="\$\{testo\(casa\.casa\)\}"/);
+  assert.match(CRUSCOTTO, /\/casa\/\$\{tasto\.dataset\.nuovaPlancia\}\/plance`/);
+  assert.match(CRUSCOTTO, /data-annulla-veste="\$\{testo\(una\.profilo\)\}"/);
+  assert.match(CRUSCOTTO, /in attesa che la casa la crei/);
+  assert.match(CRUSCOTTO, new RegExp(`const PLANCE_AL_MASSIMO = ${QUANTE_AL_MASSIMO};`));
+  assert.equal(PLANCE_AL_MASSIMO, QUANTE_AL_MASSIMO);
+
   assert.match(GESTIONE, /<h2>Le plance<\/h2>/);
   assert.match(GESTIONE, /vesti-lette/);
-  assert.doesNotMatch(GESTIONE, /data-salva-veste=|data-veste-titolo|data-veste-velo/);
+  assert.match(GESTIONE, /in attesa che la casa la crei/);
+  assert.doesNotMatch(
+    GESTIONE,
+    /data-salva-veste=|data-veste-titolo|data-veste-velo|data-nuova-plancia|data-annulla-veste/,
+  );
+});
+
+test("una plancia in piu' dal cruscotto: nasce in attesa, la casa la crea, e da li' e' come le altre", async () => {
+  const b = await banco();
+  try {
+    const codice = await b.unCodice();
+    await b.deposita(UNA, codice);
+    const fatta = await b.retro(`/casa/${UNA}/plance`, {
+      method: "POST",
+      body: JSON.stringify({ titolo: "Taverna dei nonni", velo: "Rossi" }),
+    });
+    assert.equal(fatta.status, 200);
+    assert.equal((await fatta.json()).profilo, "taverna-dei-nonni");
+    const risposta = await b.deposita(UNA, codice);
+    assert.deepEqual(risposta.vesti, {
+      "taverna-dei-nonni": { titolo: "Taverna dei nonni", velo: "Rossi", nuova: true },
+    });
+
+    /* Un'altra con lo stesso nome prende un profilo suo, e con gli accenti
+     * si scrive lo stesso. */
+    const seconda = await (
+      await b.retro(`/casa/${UNA}/plance`, {
+        method: "POST",
+        body: JSON.stringify({ titolo: "Taverna dei nonni" }),
+      })
+    ).json();
+    assert.equal(seconda.profilo, "taverna-dei-nonni-2");
+    const terza = await (
+      await b.retro(`/casa/${UNA}/plance`, {
+        method: "POST",
+        body: JSON.stringify({ titolo: "Città!" }),
+      })
+    ).json();
+    assert.equal(terza.profilo, "citta");
+
+    /* I nomi di una in attesa si cambiano, e resta in attesa; svuotata
+     * tutta, la casa non la crea. */
+    await b.vesti(UNA, "taverna-dei-nonni", { titolo: "Taverna", velo: "" });
+    await b.vesti(UNA, "taverna-dei-nonni-2", { titolo: "", velo: "" });
+    await b.vesti(UNA, "citta", {});
+    const dopo = await b.deposita(UNA, codice);
+    assert.deepEqual(dopo.vesti, {
+      "taverna-dei-nonni": { titolo: "Taverna", velo: "", nuova: true },
+    });
+    const senza = await b.vesti(UNA, "taverna-dei-nonni", { titolo: "", velo: "Rossi" });
+    assert.equal(senza.status, 400);
+
+    /* La casa l'ha creata: dal rapporto in cui compare non e' piu' nuova. */
+    const conLaNuova = {
+      ...RAPPORTO,
+      plance: {
+        quante: 3,
+        configurate: 1,
+        elenco: [...RAPPORTO.plance.elenco, { profilo: "taverna-dei-nonni", titolo: "Taverna" }],
+      },
+    };
+    const creata = await b.deposita(UNA, codice, conLaNuova);
+    assert.deepEqual(creata.vesti, { "taverna-dei-nonni": { titolo: "Taverna", velo: "" } });
+    const sua = (await (await b.retro("/case")).json()).case.find((casa) => casa.casa === UNA);
+    assert.deepEqual(sua.vesti, { "taverna-dei-nonni": { titolo: "Taverna", velo: "" } });
+
+    /* E se in casa la tolgono, le sue vesti se ne vanno: non rinasce. */
+    const tolta = await b.deposita(UNA, codice);
+    assert.equal("vesti" in tolta, false);
+  } finally {
+    await b.chiudi();
+  }
+});
+
+test("di plance se ne tengono otto, contando quelle in attesa; e serve il nome", async () => {
+  const b = await banco();
+  try {
+    const codice = await b.unCodice();
+    const sei = {
+      ...RAPPORTO,
+      plance: {
+        quante: 6,
+        configurate: 6,
+        elenco: ["primary", "a", "b", "c", "d", "e"].map((profilo) => ({
+          profilo,
+          titolo: profilo,
+        })),
+      },
+    };
+    await b.deposita(UNA, codice, sei);
+    const aggiungi = (titolo) =>
+      b.retro(`/casa/${UNA}/plance`, { method: "POST", body: JSON.stringify({ titolo }) });
+    assert.equal((await aggiungi("Sette")).status, 200);
+    assert.equal((await aggiungi("Otto")).status, 200);
+    const nona = await aggiungi("Nove");
+    assert.equal(nona.status, 409);
+    assert.match((await nona.json()).errore, /se ne tengono 8/);
+    const muta = await aggiungi("   ");
+    assert.equal(muta.status, 400);
+    assert.match((await muta.json()).errore, /serve il nome/);
+
+    /* Senza l'elenco — l'add-on di ieri — non si aggiunge niente. */
+    await b.deposita(ALTRA, await b.unCodice(), RAPPORTO_DI_IERI);
+    const ieri = await b.retro(`/casa/${ALTRA}/plance`, {
+      method: "POST",
+      body: JSON.stringify({ titolo: "X" }),
+    });
+    assert.equal(ieri.status, 409);
+    /* E una casa che non e' sua nemmeno. */
+    const altrui = await b.retro(
+      `/casa/${UNA}/plance`,
+      { method: "POST", body: JSON.stringify({ titolo: "X" }) },
+      b.iscritti[1].chiave,
+    );
+    assert.equal(altrui.status, 404);
+  } finally {
+    await b.chiudi();
+  }
 });

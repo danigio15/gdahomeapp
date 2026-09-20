@@ -71,6 +71,33 @@ const ilGiorno = (quando) => new Date(quando).toISOString().slice(0, 10);
 /** Com'e' fatto il profilo di una plancia. La stessa regola del ponte. */
 export const PROFILO_VALIDO = /^[a-z0-9][a-z0-9-]{0,40}$/;
 
+/** Quante plance si tengono per casa. La stessa misura del ponte (`QUANTE_AL_MASSIMO`). */
+export const PLANCE_AL_MASSIMO = 8;
+
+/* Il nome del cassetto di una plancia nuova, dal titolo: la stessa regola con
+ * cui lo fa il ponte (`nomeDelCassetto` in `plance.js`), rifatta qui perche'
+ * i nomi scelti hanno bisogno di una chiave prima ancora che la plancia
+ * esista in casa. Minuscole, cifre e trattini; un titolo che non lascia
+ * niente diventa «plancia». Un po' piu' corto di quello del ponte, per
+ * lasciare posto al numero quando due si chiamano uguali. */
+function nomeDelCassetto(titolo, giaPrese) {
+  const radice =
+    String(titolo || "")
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .slice(0, 36) || "plancia";
+  let quale = /^[a-z0-9]/.test(radice) ? radice : `p-${radice}`;
+  let numero = 2;
+  while (giaPrese.has(quale)) {
+    quale = `${radice}-${numero}`;
+    numero += 1;
+  }
+  return quale;
+}
+
 /* Un nome scelto per una plancia, ripulito per finire in una pagina di casa
  * d'altri: via i segni che li' vogliono dire qualcosa, e quaranta lettere al
  * massimo, che e' quanto un titolo di plancia puo' essere lungo nel ponte. */
@@ -146,6 +173,7 @@ export class CaseSeguite {
     una.vistaIl = ora;
     una.carta = carta;
     this._cambiaPadrone(una, di);
+    this._allineaLeVesti(una);
 
     /* La casa ha risposto di quel lavoro: da qui in poi lo stato lo racconta
      * lei, nel rapporto, e questo non serve piu'. Uno solo dei due lo puo'
@@ -230,15 +258,74 @@ export class CaseSeguite {
     const elenco = Array.isArray(una.carta?.plance?.elenco) ? una.carta.plance.elenco : null;
     if (!elenco) return { errore: "senza_elenco" };
     const quale = String(profilo || "");
-    if (!PROFILO_VALIDO.test(quale) || !elenco.some((p) => p?.profilo === quale)) {
+    if (!una.vesti || typeof una.vesti !== "object") una.vesti = {};
+    /* Una che la casa deve ancora creare si veste come le altre: e' il modo
+     * di correggerle il nome prima che nasca. */
+    const inAttesa = una.vesti[quale]?.nuova === true;
+    if (!PROFILO_VALIDO.test(quale) || (!inAttesa && !elenco.some((p) => p?.profilo === quale))) {
       return { errore: "non_ce" };
     }
     const pulite = { titolo: unaVeste(titolo), velo: unaVeste(velo) };
-    if (!una.vesti || typeof una.vesti !== "object") una.vesti = {};
-    if (!pulite.titolo && !pulite.velo) delete una.vesti[quale];
-    else una.vesti[quale] = pulite;
+    if (!pulite.titolo && !pulite.velo) {
+      /* Tutte e due vuote: via la scelta. Per una in attesa vuol dire che la
+       * casa non la crea. */
+      delete una.vesti[quale];
+    } else if (inAttesa && !pulite.titolo) {
+      return { errore: "senza_nome" };
+    } else {
+      una.vesti[quale] = inAttesa ? { ...pulite, nuova: true } : pulite;
+    }
     this.archivio.salva();
     return { vesti: this.leVesti(una) };
+  }
+
+  /**
+   * Una plancia in piu', voluta dal cruscotto.
+   *
+   * Qui nasce solo la **scelta**: il profilo, col titolo e la parola del
+   * velo, segnata `nuova`. La casa la crea al rapporto dopo (`Plance.vesti`
+   * nel ponte), vuota come una aggiunta dall'app, e dal rapporto successivo
+   * compare nell'elenco: a quel punto non e' piu' nuova, ed e' come le altre
+   * (`_allineaLeVesti`). Da qui una plancia non si toglie: si toglie da casa.
+   *
+   * Otto per casa, contando quelle in attesa: la stessa misura del ponte,
+   * che se no la nona la rifiuterebbe in silenzio.
+   */
+  nuovaPlancia(casa, { titolo, velo } = {}, di) {
+    const una = this.quella(casa);
+    if (!una || (di !== TUTTE && una.di !== di)) return { errore: "non_sua" };
+    const elenco = Array.isArray(una.carta?.plance?.elenco) ? una.carta.plance.elenco : null;
+    if (!elenco) return { errore: "senza_elenco" };
+    const nome = unaVeste(titolo);
+    if (!nome) return { errore: "senza_nome" };
+    if (!una.vesti || typeof una.vesti !== "object") una.vesti = {};
+    const inCasa = elenco.map((p) => String(p?.profilo || ""));
+    const inAttesa = Object.entries(una.vesti).filter(
+      ([p, v]) => v?.nuova === true && !inCasa.includes(p),
+    ).length;
+    if (inCasa.length + inAttesa >= PLANCE_AL_MASSIMO) return { errore: "troppe" };
+    const profilo = nomeDelCassetto(nome, new Set([...inCasa, ...Object.keys(una.vesti)]));
+    una.vesti[profilo] = { titolo: nome, velo: unaVeste(velo), nuova: true };
+    this.archivio.salva();
+    return { profilo, vesti: this.leVesti(una) };
+  }
+
+  /* Le vesti seguono la casa. Una plancia voluta dal cruscotto, appena la
+   * casa la manda nell'elenco, non e' piu' nuova; le vesti di una plancia che
+   * la casa non ha piu' se ne vanno, cosi' se in casa la tolgono non rinasce
+   * e qui non resta scritto niente per sempre. Senza elenco — l'add-on di
+   * ieri — non si tocca niente. */
+  _allineaLeVesti(una) {
+    const elenco = Array.isArray(una.carta?.plance?.elenco) ? una.carta.plance.elenco : null;
+    if (!elenco || !una.vesti || typeof una.vesti !== "object") return;
+    const inCasa = new Set(elenco.map((p) => String(p?.profilo || "")));
+    for (const [profilo, veste] of Object.entries(una.vesti)) {
+      if (inCasa.has(profilo)) {
+        if (veste?.nuova) delete veste.nuova;
+      } else if (veste?.nuova !== true) {
+        delete una.vesti[profilo];
+      }
+    }
   }
 
   /** Le vesti da mandare a una casa, o `null` se non ne ha nessuna. */

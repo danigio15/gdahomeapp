@@ -32,7 +32,7 @@
 import { join } from "node:path";
 
 import { Archivio } from "./archivio.js";
-import { PROFILO_PRINCIPALE } from "./configurazione.js";
+import { Configurazione, PROFILO_PRINCIPALE } from "./configurazione.js";
 import { NOME } from "./marchio.js";
 
 /* Come si chiama una plancia: abbastanza per un nome, non per una frase. */
@@ -350,6 +350,41 @@ export class Plance {
     return this.quale(profilo);
   }
 
+  /* Una plancia nuova col profilo gia' deciso: e' la strada del cruscotto,
+   * dove il profilo lo sceglie il quadro con la stessa regola di
+   * `nomeDelCassetto`, cosi' i nomi hanno una chiave prima ancora che la
+   * plancia esista. Nasce vuota come da `aggiungi`, e gia' vestita: il
+   * titolo scelto e' anche il suo titolo di casa, cosi' se un giorno la
+   * scelta sparisce resta com'e' invece di chiamarsi come il profilo.
+   *
+   * Torna `false` se non si puo' — profilo storto o gia' preso, titolo vuoto,
+   * troppe plance — e non e' un errore da mostrare: il cruscotto la vede
+   * restare «in attesa», e il registro dice perche'. */
+  _nasce(profilo, titolo) {
+    const quale = String(profilo || "");
+    const nome = titoloPulito(titolo);
+    if (!Configurazione.profiloBuono(quale) || !nome) return false;
+    if (this.archivio.dati.plance.some((una) => una.profilo === quale)) return false;
+    if (this.quante >= QUANTE_AL_MASSIMO) {
+      this.registro.attenzione(
+        `la plancia «${nome}» voluta da chi segue la casa non nasce: di plance se ne tengono ${QUANTE_AL_MASSIMO}`,
+      );
+      return false;
+    }
+    this.archivio.dati.plance.push({
+      profilo: quale,
+      titolo: nome,
+      creata_il: this.adesso(),
+      utenti: [],
+      solo_admin: false,
+      daInstallatore: nome,
+      titoloDiCasa: nome,
+      scelta: nome,
+    });
+    this.registro.info(`una plancia in piu', voluta da chi segue la casa: «${nome}»`);
+    return true;
+  }
+
   rinomina(profilo, titolo) {
     const una = this.archivio.dati.plance.find((quella) => quella.profilo === String(profilo));
     if (!una) throw new QuellaPlanciaNo("quella plancia non c'e'");
@@ -399,6 +434,13 @@ export class Plance {
    */
   vesti(mappa) {
     let cambiato = false;
+    /* Prima le plance che ancora non ci sono: quelle che chi segue la casa
+     * ha aggiunto dal cruscotto (`nuova`). Nascono una volta — il giro dopo
+     * esistono, e il quadro smette di dirle nuove appena le vede nel
+     * rapporto — e se poi in casa le tolgono non rinascono. */
+    for (const [profilo, una] of Object.entries(mappa || {})) {
+      if (una?.nuova === true && this._nasce(profilo, una.titolo)) cambiato = true;
+    }
     for (const una of this.archivio.dati.plance) {
       const scelto = titoloPulito(mappa?.[una.profilo]?.titolo);
       if (scelto) {

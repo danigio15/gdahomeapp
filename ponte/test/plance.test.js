@@ -371,3 +371,64 @@ test("il titolo che fino a ieri prendeva il nome dell'installatore torna nostro"
     via();
   }
 });
+
+test("una plancia voluta dal cruscotto nasce una volta, gia' vestita, e se in casa la tolgono non rinasce", () => {
+  const { cartella, via } = unPosto();
+  try {
+    const plance = lePlance(cartella);
+    const avvisi = [];
+    plance.quandoCambia = (elenco) => avvisi.push(elenco.map((una) => una.profilo));
+    const mappa = { taverna: { titolo: "Taverna", velo: "Rossi", nuova: true } };
+    assert.equal(plance.vesti(mappa), true);
+    assert.equal(plance.quale("taverna").titolo, "Taverna");
+    assert.equal(plance.quale("taverna").istanza, "gdahome-taverna");
+    assert.deepEqual(avvisi, [["primary", "taverna"]]);
+
+    /* La stessa mappa, il giro dopo: niente da fare. E senza «nuova» — il
+     * quadro l'ha vista nel rapporto — e' una plancia come le altre. */
+    assert.equal(plance.vesti(mappa), false);
+    assert.equal(plance.vesti({ taverna: { titolo: "Taverna" } }), false);
+
+    /* Sparita la scelta, il titolo resta il suo: e' nata con quello. */
+    assert.equal(plance.vesti({}), true);
+    assert.equal(plance.quale("taverna").titolo, "Taverna");
+
+    /* In casa la tolgono: la mappa senza «nuova» non la fa rinascere. */
+    plance.archivio.dati.plance = plance.archivio.dati.plance.filter(
+      (una) => una.profilo !== "taverna",
+    );
+    plance.archivio.salva();
+    assert.equal(plance.vesti({ taverna: { titolo: "Taverna" } }), false);
+    assert.equal(plance.quale("taverna"), null);
+  } finally {
+    via();
+  }
+});
+
+test("dal cruscotto non nasce una plancia storta, senza nome, ne' la nona", () => {
+  const { cartella, via } = unPosto();
+  try {
+    const plance = lePlance(cartella);
+    assert.equal(plance.vesti({ "Taverna!": { titolo: "Taverna", nuova: true } }), false);
+    assert.equal(plance.vesti({ taverna: { titolo: "  ", nuova: true } }), false);
+    assert.equal(plance.quante, 1);
+    /* E la prima non si crea due volte: «nuova» su un profilo che c'e' gia'
+     * e' solo una scelta di titolo. */
+    assert.equal(plance.vesti({ primary: { titolo: "Casa Rossi", nuova: true } }), true);
+    assert.equal(plance.quante, 1);
+    assert.equal(plance.quale().titolo, "Casa Rossi");
+
+    for (let n = 2; n <= QUANTE_AL_MASSIMO; n += 1) plance.aggiungi(`Plancia ${n}`);
+    assert.equal(plance.quante, QUANTE_AL_MASSIMO);
+    /* La scelta della prima resta nella mappa, come nella vita: e' la nona
+     * che non nasce, e non c'e' altro da scrivere. */
+    assert.equal(
+      plance.vesti({ primary: { titolo: "Casa Rossi" }, nona: { titolo: "Nona", nuova: true } }),
+      false,
+    );
+    assert.equal(plance.quale("nona"), null);
+    assert.equal(plance.quante, QUANTE_AL_MASSIMO);
+  } finally {
+    via();
+  }
+});

@@ -680,6 +680,7 @@ L'installatore, tutte dentro `/console/` e tutte con la **sua** chiave:
 | `DELETE /console/inviti/<codice>` | annullalo |
 | `PUT /console/casa/<matricola>` | il nome che le dà l'installatore |
 | `PUT /console/casa/<matricola>/plancia/<profilo>` | i due nomi di una plancia di quella casa: `titolo` (menu laterale e testata della home) e `velo` (la parola all'avvio, col suo logo). Solo una plancia che la casa dice di avere; tutti e due vuoti tolgono la scelta. Tornano alla casa con la risposta al rapporto |
+| `POST /console/casa/<matricola>/plance` | una plancia in più, col suo `titolo` (e `velo`): qui nasce la scelta, segnata `nuova`, e la casa la crea al rapporto dopo, vuota come una aggiunta dall'app. Otto per casa, contando quelle in attesa. Da qui non se ne toglie nessuna |
 | `DELETE /console/casa/<matricola>` | non seguirla più: si butta quello che se ne sa **e** la sua chiave, se no il primo rapporto la fa rinascere tre secondi dopo |
 
 E chi tiene il quadro, dentro `/gestore/` e con la chiave di gestione:

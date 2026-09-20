@@ -1496,13 +1496,27 @@
         flex: none;
       }
 
+      .veste-tasti {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+
+      /* La riga da cui se ne aggiunge una: staccata da quelle che ci sono. */
+      .veste.aggiunta {
+        margin-top: 8px;
+        border-top: 1px dashed var(--linea-forte);
+      }
+
+      .veste input:disabled,
+      .veste .tasto:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
       @media (max-width: 40rem) {
         .veste {
           grid-template-columns: 1fr;
-        }
-
-        .veste .tasto {
-          justify-self: start;
         }
       }
 
@@ -3376,6 +3390,48 @@
             };
           });
         });
+        /* Una in attesa si annulla svuotando le sue vesti: la casa non la
+         * crea. Vale finche' la casa non l'ha creata, cioe' un minuto. */
+        dove.querySelectorAll("[data-annulla-veste]").forEach((tasto) => {
+          tasto.onclick = () =>
+            faiEpoi(tasto, async () => {
+              await chiedi(
+                `/casa/${tasto.dataset.perCasa}/plancia/${encodeURIComponent(tasto.dataset.annullaVeste)}`,
+                { method: "PUT", body: JSON.stringify({ titolo: "", velo: "" }) },
+              );
+              avvisa("Annullata: la casa non la crea");
+            });
+        });
+        /* Una plancia in piu': qui nasce la scelta, la casa la crea al
+         * rapporto dopo e da li' in poi e' una riga come le altre. */
+        dove.querySelectorAll("[data-nuova-plancia]").forEach((tasto) => {
+          const riga = tasto.closest(".veste");
+          const aggiungi = () => {
+            const casella = riga?.querySelector("[data-nuova-titolo]");
+            const titolo = (casella?.value || "").trim();
+            if (!titolo) {
+              casella?.focus();
+              avvisa("Serve il nome della plancia");
+              return;
+            }
+            faiEpoi(tasto, async () => {
+              await chiedi(`/casa/${tasto.dataset.nuovaPlancia}/plance`, {
+                method: "POST",
+                body: JSON.stringify({
+                  titolo,
+                  velo: riga?.querySelector("[data-nuova-velo]")?.value || "",
+                }),
+              });
+              avvisa("Aggiunta: la casa la crea al rapporto dopo");
+            });
+          };
+          tasto.onclick = aggiungi;
+          riga?.querySelectorAll("input").forEach((casella) => {
+            casella.onkeydown = (evento) => {
+              if (evento.key === "Enter") aggiungi();
+            };
+          });
+        });
         /* «Cosa cambia, per intero»: si apre sotto la riga, e si richiude.
          *
          * Il testo si chiede quando serve e non prima: un CHANGELOG per ogni
@@ -4183,6 +4239,10 @@
        * la casa se li porta via col rapporto dopo: qui non si entra in casa,
        * si lascia un biglietto. L'elenco delle plance lo manda l'add-on dalla
        * 1.5.9.13: prima si vede solo quante sono, e allora lo si dice. */
+      /* Quante plance si tengono per casa: la stessa misura del ponte e del
+       * quadro. Qui serve a spegnere «Aggiungi» quando si e' arrivati. */
+      const PLANCE_AL_MASSIMO = 8;
+
       function leVestiDellePlance(casa, c) {
         const elenco = Array.isArray(c.plance?.elenco) ? c.plance.elenco : null;
         if (!elenco) {
@@ -4198,25 +4258,31 @@
           </section>`;
         }
         const vesti = casa.vesti || {};
-        return `
-          <section class="riquadro">
-            <div class="capoRiquadro">
-              <h3>Come si chiamano</h3>
-              <span class="conta">${testo(plurale(elenco.length, "plancia", "plance"))}</span>
-            </div>
-            <p class="minuta">
-              Per ogni plancia due nomi. Il <b>nome della plancia</b> va nel menu laterale di Home Assistant e in cima alla home; il <b>nome all'avvio</b> compare col tuo logo mentre la pagina si apre. Lasciali vuoti e la plancia tiene il nome che ha in casa, e all'avvio mostra il tuo.
-            </p>
-            ${elenco
-              .map((una) => {
-                const profilo = String(una.profilo || "");
-                const sue = vesti[profilo] || {};
-                const inCasa = una.titolo || profilo;
-                return `
-            <div class="veste" data-veste="${testo(profilo)}">
+        const inCasa = new Set(elenco.map((una) => String(una.profilo || "")));
+        /* Prima quelle che la casa ha, poi quelle aggiunte da qui che la casa
+         * deve ancora creare: al rapporto dopo passano di sopra da sole. */
+        const righe = [
+          ...elenco.map((una) => ({
+            profilo: String(una.profilo || ""),
+            titolo: una.titolo || una.profilo,
+            nuova: false,
+          })),
+          ...Object.entries(vesti)
+            .filter(([profilo, sue]) => sue?.nuova === true && !inCasa.has(profilo))
+            .map(([profilo, sue]) => ({ profilo, titolo: sue.titolo || profilo, nuova: true })),
+        ];
+        const alLimite = righe.length >= PLANCE_AL_MASSIMO;
+        const unaRiga = (una) => {
+          const sue = vesti[una.profilo] || {};
+          return `
+            <div class="veste${una.nuova ? " nuova" : ""}" data-veste="${testo(una.profilo)}">
               <div class="veste-capo">
-                <b>${testo(inCasa)}</b>
-                <small>${profilo === "primary" ? "la prima plancia, com'è chiamata in casa" : "com'è chiamata in casa"}</small>
+                <b>${testo(una.titolo)}</b>
+                ${
+                  una.nuova
+                    ? `<span class="pastiglia attenta">in attesa che la casa la crei</span>`
+                    : `<small>${una.profilo === "primary" ? "la prima plancia, com'è chiamata in casa" : "com'è chiamata in casa"}</small>`
+                }
               </div>
               <label>
                 <span>Nome della plancia</span>
@@ -4225,7 +4291,7 @@
                   maxlength="40"
                   data-veste-titolo
                   value="${testo(sue.titolo || "")}"
-                  placeholder="${testo(inCasa)}"
+                  placeholder="${una.nuova ? "" : testo(una.titolo)}"
                   autocomplete="off"
                 />
               </label>
@@ -4240,12 +4306,59 @@
                   autocomplete="off"
                 />
               </label>
-              <button type="button" class="tasto forte" data-salva-veste="${testo(profilo)}" data-per-casa="${testo(casa.casa)}">Salva</button>
+              <div class="veste-tasti">
+                <button type="button" class="tasto forte" data-salva-veste="${testo(una.profilo)}" data-per-casa="${testo(casa.casa)}">Salva</button>
+                ${
+                  una.nuova
+                    ? `<button type="button" class="tasto" data-annulla-veste="${testo(una.profilo)}" data-per-casa="${testo(casa.casa)}">Annulla</button>`
+                    : ""
+                }
+              </div>
             </div>`;
-              })
-              .join("")}
+        };
+        return `
+          <section class="riquadro">
+            <div class="capoRiquadro">
+              <h3>Come si chiamano</h3>
+              <span class="conta">${righe.length} di ${PLANCE_AL_MASSIMO}</span>
+            </div>
+            <p class="minuta">
+              Per ogni plancia due nomi. Il <b>nome della plancia</b> va nel menu laterale di Home Assistant e in cima alla home; il <b>nome all'avvio</b> compare col tuo logo mentre la pagina si apre. Lasciali vuoti e la plancia tiene il nome che ha in casa, e all'avvio mostra il tuo.
+            </p>
+            ${righe.map(unaRiga).join("")}
+            <div class="veste aggiunta">
+              <div class="veste-capo">
+                <b>Una plancia in più</b>
+                <small>${alLimite ? `di plance se ne tengono ${PLANCE_AL_MASSIMO}: questo impianto è al limite` : "nasce vuota, come dall'app, e compare nel menu laterale al rapporto dopo"}</small>
+              </div>
+              <label>
+                <span>Nome della plancia</span>
+                <input
+                  type="text"
+                  maxlength="40"
+                  data-nuova-titolo
+                  placeholder="Es. Taverna"
+                  autocomplete="off"
+                  ${alLimite ? "disabled" : ""}
+                />
+              </label>
+              <label>
+                <span>Nome all'avvio</span>
+                <input
+                  type="text"
+                  maxlength="40"
+                  data-nuova-velo
+                  placeholder="${testo(IO.nome || "gdahome")}"
+                  autocomplete="off"
+                  ${alLimite ? "disabled" : ""}
+                />
+              </label>
+              <div class="veste-tasti">
+                <button type="button" class="tasto forte" data-nuova-plancia="${testo(casa.casa)}" ${alLimite ? "disabled" : ""}>Aggiungi</button>
+              </div>
+            </div>
             <p class="nota" style="margin-top: 14px">
-              Arrivano in casa col rapporto dopo, entro un minuto. Se chi abita la casa rinomina una plancia dall'app, il suo nome resta finché qui non ne scegli un altro.
+              Arrivano in casa col rapporto dopo, entro un minuto. Se chi abita la casa rinomina una plancia dall'app, il suo nome resta finché qui non ne scegli un altro. Una plancia si toglie solo da casa, dall'app o dalla scheda dell'add-on: da qui no.
             </p>
           </section>`;
       }

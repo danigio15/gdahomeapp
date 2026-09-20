@@ -25,6 +25,7 @@
  *   DELETE /console/inviti/<codice>      annulla il suo
  *   PUT    /console/casa/<casa_…>        il nome, se la casa e' sua
  *   PUT    /console/casa/<casa_…>/plancia/<profilo>   i due nomi di una sua plancia
+ *   POST   /console/casa/<casa_…>/plance     una plancia in piu', che la casa crea
  *   DELETE /console/casa/<casa_…>        non seguirla piu', se e' sua
  *   POST   /console/casa/<casa_…>/installa   chiedile di installare una cosa
  *   POST   /console/casa/<casa_…>/riavvia    chiedile di riavviare Home Assistant
@@ -71,7 +72,7 @@
 import { readFileSync } from "node:fs";
 import { createServer } from "node:http";
 
-import { TUTTE } from "./case.js";
+import { TUTTE, PLANCE_AL_MASSIMO } from "./case.js";
 import { CASA_VALIDA, TroppiInviti } from "./chiavi.js";
 import { DISCO_FINITO, DISCO_PIENO, TROPPO_CALDO } from "./controlli.js";
 import { Fattorino, indirizzoBuono } from "./fattorino.js";
@@ -868,8 +869,56 @@ export function costruisciIlServer({
         male(risposta, 404, "questo impianto non ha una plancia con quel profilo");
         return;
       }
+      if (esito.errore === "senza_nome") {
+        male(risposta, 400, "una plancia che la casa deve ancora creare ha bisogno del suo nome");
+        return;
+      }
       registro.info(`${chi} ha vestito la plancia ${veste[2]} di ${veste[1]}`);
       json(risposta, { case: case_.elenco(chi) });
+      return;
+    }
+
+    /* Una plancia in piu', voluta dal cruscotto: qui nasce la scelta, la
+     * casa la crea al rapporto dopo. Vedi `Case.nuovaPlancia`. */
+    const plance = /^\/casa\/(casa_[0-9a-f]{32})\/plance$/.exec(via);
+    if (plance && metodo === "POST") {
+      let detto = {};
+      try {
+        detto = await ilCorpo(richiesta, 4096);
+      } catch (_errore) {
+        detto = {};
+      }
+      const esito = case_.nuovaPlancia(
+        plance[1],
+        { titolo: detto?.titolo, velo: detto?.velo },
+        chi,
+      );
+      if (esito.errore === "non_sua") {
+        male(risposta, 404, "questa casa non la segui tu");
+        return;
+      }
+      if (esito.errore === "senza_elenco") {
+        male(
+          risposta,
+          409,
+          "questo impianto non manda ancora l'elenco delle plance: aggiorna l'add-on gdahome di casa",
+        );
+        return;
+      }
+      if (esito.errore === "senza_nome") {
+        male(risposta, 400, "serve il nome della plancia");
+        return;
+      }
+      if (esito.errore === "troppe") {
+        male(
+          risposta,
+          409,
+          `di plance se ne tengono ${PLANCE_AL_MASSIMO} per impianto, e questo e' al limite`,
+        );
+        return;
+      }
+      registro.info(`${chi} ha aggiunto la plancia ${esito.profilo} a ${plance[1]}`);
+      json(risposta, { profilo: esito.profilo, case: case_.elenco(chi) });
       return;
     }
 

@@ -4213,8 +4213,9 @@
           }
 
           ${
-            /* I nomi che l'installatore ha scelto per le plance: da qui si
-             * leggono e basta, come tutto il resto della scheda. */
+            /* I nomi che l'installatore ha scelto per le plance, e le plance
+             * che ha aggiunto e la casa deve ancora creare: da qui si leggono
+             * e basta, come tutto il resto della scheda. */
             Array.isArray(c.plance?.elenco) && c.plance.elenco.length
               ? `<div class="capitolo">
                    <h2>Le plance</h2>
@@ -4223,12 +4224,29 @@
 
                  <section class="riquadro">
                    <dl class="targa vesti-lette">
-                     ${c.plance.elenco
+                     ${[
+                       ...c.plance.elenco.map((una) => ({
+                         profilo: una.profilo,
+                         titolo: una.titolo || una.profilo,
+                         nuova: false,
+                       })),
+                       ...Object.entries(casa.vesti || {})
+                         .filter(
+                           ([profilo, sue]) =>
+                             sue?.nuova === true &&
+                             !c.plance.elenco.some((una) => una.profilo === profilo),
+                         )
+                         .map(([profilo, sue]) => ({
+                           profilo,
+                           titolo: sue.titolo || profilo,
+                           nuova: true,
+                         })),
+                     ]
                        .map((una) => {
                          const sue = (casa.vesti || {})[una.profilo] || {};
                          return `
                      <div>
-                       <dt>${testo(una.titolo || una.profilo)}</dt>
+                       <dt>${testo(una.titolo)}${una.nuova ? " · in attesa che la casa la crei" : ""}</dt>
                        <dd>
                          nel menu: ${sue.titolo ? `<b>${testo(sue.titolo)}</b>` : "com'è in casa"}<br />
                          all'avvio: ${sue.velo ? `<b>${testo(sue.velo)}</b>` : "il nome dell'installatore"}
@@ -4238,7 +4256,7 @@
                        .join("")}
                    </dl>
                    <p class="nota" style="margin-top: 12px">
-                     Li sceglie l'installatore dal suo cruscotto, plancia per plancia: da qui si leggono e basta.
+                     Li sceglie l'installatore dal suo cruscotto, plancia per plancia, e da lì ne aggiunge di nuove: da qui si leggono e basta.
                    </p>
                  </section>`
               : ""
