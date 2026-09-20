@@ -4170,6 +4170,11 @@ function stampantiModel(states) {
     .reduce((peggio, voce) => (!peggio || voce.quanta < peggio.quanta ? voce : peggio), null);
   return {
     key: "stampanti",
+    /* I due numeri per la fascia sotto il meteo (`come-sta-la-casa.js`), che
+     * il conto non lo rifa': quante hanno qualcosa da dire, e quante di
+     * queste sono ferme. */
+    daDire,
+    ferme: riassunto.ferme.length,
     accent: riassunto.verdetto === "ferma" ? "#dc2626" : daDire ? "#f59e0b" : "#0ea5e9",
     icon: "🖨️",
     label: t("Stampanti", "Printers"),
@@ -4190,6 +4195,7 @@ function stampantiModel(states) {
       name: lettura.nome,
       glyph: disegnoDelCatalogo("printer", 20),
       on: lettura.stampa,
+      daDire: Boolean(lettura.ferma || lettura.piuScarica?.agliSgoccioli),
       tono: lettura.ferma ? "allarme" : lettura.stampa ? "acceso" : lettura.muta ? "" : "quiete",
       value: lettura.piuScarica
         ? `${parolaDelloStatoStampante(lettura)} · ${lettura.piuScarica.quanta}%`

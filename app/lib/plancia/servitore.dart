@@ -232,8 +232,9 @@ class Servitore {
 
   /// La pagina da aprire nel WebView per questo pannello, con la chiave. Da
   /// qui in poi e' questo il pannello che si serve.
-  Uri paginaDi(PannelloDellaPlancia quale) {
+  Uri paginaDi(PannelloDellaPlancia quale, {String casa = ''}) {
     pannello = quale;
+    premesse.casa = casa;
     return radice.replace(
       path: quale.percorsoDellaPagina(lingua),
       queryParameters: {
@@ -250,6 +251,11 @@ class Servitore {
          * sempre, e chi ne ha una sola non vede comparire niente. */
         if (!quale.primario && quale.profilo.isNotEmpty)
           'plancia': quale.profilo,
+        /* E quale casa, per la stessa ragione: due case dello stesso telefono
+         * hanno la stessa pagina, e cambiando casa il riquadro si deve
+         * rifare — con le premesse di quella casa, non con quelle di prima.
+         * Solo se una casa c'e'. */
+        if (casa.isNotEmpty) 'casa': casa,
       },
     );
   }

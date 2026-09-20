@@ -80,6 +80,8 @@ export default Object.freeze({
   "Zones and entry points of the panel": "主机的分区与出入口",
   "from Windows": "来自「窗户」",
   "included here: the counter had already made them before its statistics began": "已计入此处：统计开始之前电表就已经计量过这些电量",
+  "printer to check": "台打印机需检查",
+  "printers to check": "台打印机需检查",
   "shutter up": "卷帘已升起",
   "shutters up": "卷帘已升起",
   "to full": "充满",

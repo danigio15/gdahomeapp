@@ -80,6 +80,8 @@ export default Object.freeze({
   "Zones and entry points of the panel": "Зоны и входы централи",
   "from Windows": "из «Окна»",
   "included here: the counter had already made them before its statistics began": "учтены здесь: счётчик набрал их ещё до начала своей статистики",
+  "printer to check": "принтер требует внимания",
+  "printers to check": "принтеры требуют внимания",
   "shutter up": "ставень поднят",
   "shutters up": "ставни подняты",
   "to full": "до конца",

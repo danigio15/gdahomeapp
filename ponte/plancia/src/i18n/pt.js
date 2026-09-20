@@ -80,6 +80,8 @@ export default Object.freeze({
   "Zones and entry points of the panel": "Zonas e acessos da central",
   "from Windows": "de Janelas",
   "included here: the counter had already made them before its statistics began": "incluídos aqui: o contador já os tinha registado antes de começarem as suas estatísticas",
+  "printer to check": "impressora a verificar",
+  "printers to check": "impressoras a verificar",
   "shutter up": "estore aberto",
   "shutters up": "estores abertos",
   "to full": "até ao fim",

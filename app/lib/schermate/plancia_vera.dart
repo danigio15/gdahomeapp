@@ -454,7 +454,7 @@ class PlanciaVeraState extends State<PlanciaVera> {
     servitore.margini = margini;
     final pagina = _planciaSulWeb.isNotEmpty
         ? Uri.parse(_planciaSulWeb)
-        : servitore.paginaDi(pannello);
+        : servitore.paginaDi(pannello, casa: collegamento.casa?.id ?? '');
 
     if (_pagina != pagina) {
       /* Una pagina nuova — un'altra casa, un'integrazione aggiornata — si

@@ -11,6 +11,37 @@ fuori. La plancia dentro continua a dire la sua, e si legge dov'è sempre
 stata: nella pastiglia «La plancia» della console. Sono due numeri perché
 sono due cose.
 
+## 1.5.9.15
+
+**Nell'app, cambiando casa, la testata della plancia diceva ancora la casa di
+prima.** «Passando da una casa all'altra il titolo resta quello di prima — i
+dati sono quelli giusti — finché non si chiude e si riapre l'app.» Erano due
+cose, e si correggono tutte e due. La plancia scriveva il titolo solo
+all'avvio, da quello che il deposito del browser aveva in quel momento, e la
+configurazione che arrivava dopo dal ponte rifaceva tutto tranne la testata:
+adesso rifà anche lei, e vale dovunque la plancia si apra. E nell'app tutte le
+case tenevano le loro cose nello stesso deposito — la plancia lo chiama col
+nome che le dà il ponte, uguale per ogni casa — quindi la casa al mare partiva
+dalla configurazione di casa: adesso ogni casa ha il suo, e la prima volta si
+riempie da quello di prima, così il tema scelto non si perde, nemmeno per chi
+di casa ne ha una sola.
+
+**Le stampanti sotto il meteo.** «Sulla sezione stampanti riesce a mettere i 4
+colori? che poi va sulla home sotto il meteo quando c'è un sottosoglia?» I
+quattro colori c'erano già — nero, ciano, magenta, giallo, ognuno con la sua
+barra e il suo colore vero, ambra sotto il 25% e rosso sotto il 10% — e la
+tessera Stampanti in Home contava già quante hanno qualcosa da dire. Sotto il
+meteo no: adesso la fascia ha una pastiglia per le stampanti, che compare solo
+quando una è ferma o una cartuccia è agli sgoccioli, rossa se è ferma, e
+toccandola si apre la tessera. Si spegne dalla configurazione della barra come
+le altre voci.
+
+**Il cruscotto dice di chi è il problema quando l'editor non si apre.** «Questo
+quadro non ha la plancia da servire» si leggeva come se mancasse la plancia
+della casa. Manca la copia dei file che il quadro serve nell'editor, e la porta
+`accendi.sh`, da rilanciare una volta sulla macchina del quadro (vedi
+1.5.9.14): adesso lo scrive, e dice a chi chiederlo.
+
 ## 1.5.9.14
 
 **Dal cruscotto si apre l'editor vero della plancia.** Il tasto

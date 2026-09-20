@@ -244,6 +244,32 @@ void main() {
     },
   );
 
+  test('ogni casa ha il suo indirizzo, e la pagina il suo cassetto', () async {
+    /* Due case dello stesso telefono hanno la stessa pagina: senza la casa
+     * nell'indirizzo cambiare casa non rifaceva il riquadro, e la pagina
+     * teneva un deposito solo per tutte — con la testata della casa di
+     * prima, scritta all'avvio. */
+    final senza = servitore.paginaDi(pannello());
+    expect(senza.queryParameters.containsKey('casa'), isFalse);
+    final dove = servitore.paginaDi(pannello(), casa: 'casa_0a1b');
+    expect(dove.queryParameters['casa'], 'casa_0a1b');
+    expect(dove.queryParameters['ingresso'], servitore.chiave);
+    expect(dove, isNot(senza));
+
+    final richiesta = await cliente.getUrl(dove);
+    final risposta = await richiesta.close();
+    final byte = await risposta.fold<List<int>>(
+      [],
+      (tutti, pezzo) => tutti..addAll(pezzo),
+    );
+    final testo = utf8.decode(byte);
+    expect(
+      testo,
+      contains('window.__DASHBOARDMODERN_INSTANCE__="e1-casa_0a1b";'),
+    );
+    expect(testo, contains('var da="cd_e1_",a="cd_e1-casa_0a1b_"'));
+  });
+
   test('la pagina arriva dal ponte, con le premesse in testa e la chiave '
       'nell\'indirizzo', () async {
     final dove = servitore.paginaDi(pannello());

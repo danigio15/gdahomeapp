@@ -80,6 +80,8 @@ export default Object.freeze({
   "Zones and entry points of the panel": "Panelin bölgeleri ve girişleri",
   "from Windows": "Pencereler’den",
   "included here: the counter had already made them before its statistics began": "buraya dahil: sayaç bunları istatistikleri başlamadan önce saymıştı",
+  "printer to check": "yazıcı kontrol edilmeli",
+  "printers to check": "yazıcı kontrol edilmeli",
   "shutter up": "panjur açık",
   "shutters up": "panjur açık",
   "to full": "dolmasına",

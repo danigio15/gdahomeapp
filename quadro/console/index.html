@@ -4134,7 +4134,12 @@
           }
           if (!stato.editor) {
             diciNellEditor(
-              "Questo quadro non ha la plancia da servire: l'editor non si apre.",
+              /* Non e' la plancia della casa, che c'e': e' la copia dei file
+               * della plancia che il quadro serve nell'editor, e sulla sua
+               * macchina la porta `accendi.sh` (`quadro/plancia/`). Chi legge
+               * questo e' un installatore, che il quadro non lo tiene: gli si
+               * dice cosa chiedere, e a chi. */
+              "Il quadro non ha ancora la copia della plancia che serve all'editor: chi tiene il quadro deve rilanciare accendi.sh una volta. La plancia della casa c'è e non c'entra.",
               true,
             );
             return;

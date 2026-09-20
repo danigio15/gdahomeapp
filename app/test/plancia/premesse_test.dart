@@ -18,7 +18,9 @@ Premesse _premesse({
   bool? configurata,
   String velo = '',
   String testata = '',
+  String casa = '',
 }) => Premesse(
+  casa: casa,
   pannello: PannelloDellaPlancia(
     percorso: 'dashboardmodern',
     titolo: 'DashboardModern',
@@ -50,6 +52,50 @@ void main() {
        chi l'ha montata, o gdahome. */
     expect(servita, isNot(contains('__GDAHOME_VELO__')));
     expect(servita, isNot(contains('__GDAHOME_TESTATA__')));
+  });
+
+  test('con la casa nel nome ogni casa ha il suo cassetto, e il primo si '
+      'riempie da quello di prima', () {
+    /* «Passando da una casa all'altra il titolo in testa alla plancia resta
+       quello della casa di prima.» La pagina teneva le sue cose sotto un
+       nome solo per tutte le case — quello del ponte — e all'avvio leggeva
+       la configurazione dell'ultima casa vista. */
+    final servita = _premesse(casa: 'casa_0a1b')
+        .conLePremesse(_pagina, ilWebSocket: 'WebSocket');
+    expect(
+      servita,
+      contains('window.__DASHBOARDMODERN_INSTANCE__="e1-casa_0a1b";'),
+    );
+    /* Il travaso: dal cassetto di prima a quello di questa casa, e solo se
+       questo e' ancora vuoto. Sta nello stesso script delle premesse, in
+       testa, prima che la pagina legga il deposito. */
+    expect(servita, contains('var da="cd_e1_",a="cd_e1-casa_0a1b_"'));
+    expect(servita, contains('if(k&&k.indexOf(a)===0)return;'));
+    expect(
+      servita.indexOf('var da="cd_e1_"'),
+      lessThan(servita.indexOf('</script>')),
+    );
+  });
+
+  test(
+    'senza casa il nome resta quello del ponte, e non si travasa niente',
+    () {
+      final servita = _premesse().conLePremesse(
+        _pagina,
+        ilWebSocket: 'WebSocket',
+      );
+      expect(servita, contains('window.__DASHBOARDMODERN_INSTANCE__="e1";'));
+      expect(servita, isNot(contains('cd_e1_')));
+    },
+  );
+
+  test('nel nome della casa ci vanno solo lettere, numeri e trattini', () {
+    final servita = _premesse(casa: 'casa <1>')
+        .conLePremesse(_pagina, ilWebSocket: 'WebSocket');
+    expect(
+      servita,
+      contains('window.__DASHBOARDMODERN_INSTANCE__="e1-casa1";'),
+    );
   });
 
   test('le vesti scelte per questa plancia vanno in testa, in due pezzi', () {

@@ -673,23 +673,42 @@ function cdOnReady(fn) {
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', fn);
     else fn();
 }
+/* Il marchio — il titolo della pagina, il titolo e il sottotitolo in testa —
+   scritto dov'e'. Lo chiama l'avvio qui sotto, e lo richiama la configurazione
+   condivisa quando arriva dopo (config-persistence-section.js,
+   refreshRuntimeAfterRestore): la pagina parte da quello che il deposito del
+   browser aveva in quel momento, e nell'app con piu' case quel deposito puo'
+   essere di un'altra casa — la testata restava quella di prima finche' non si
+   riapriva l'app. I testi di serie si tengono da parte alla prima scrittura,
+   per tornarci quando la configurazione che arriva un titolo non ce l'ha. */
+function cdApplyBranding() {
+    const C = window.DASHBOARD_CONFIG || {};
+    const wBrand = cdCfg('cd_branding');
+    const brand = Object.keys(wBrand||{}).length ? wBrand : (C.branding || {});
+    const h1 = document.querySelector('header h1');
+    if (!h1) return;
+    const p = document.querySelector('header h1 + p');
+    if (h1.dataset.cdDiSerie === undefined) h1.dataset.cdDiSerie = h1.textContent;
+    if (p && p.dataset.cdDiSerie === undefined) p.dataset.cdDiSerie = p.textContent;
+    if (window.__cdTitoloDiSerie === undefined) window.__cdTitoloDiSerie = document.title;
+    if (brand.title) {
+        document.title = brand.title + ' — Smart Home';
+        h1.textContent = brand.title;
+        if (p) p.textContent = brand.subtitle || p.dataset.cdDiSerie;
+    } else {
+        document.title = window.__cdTitoloDiSerie;
+        h1.textContent = h1.dataset.cdDiSerie;
+        if (p) p.textContent = p.dataset.cdDiSerie;
+    }
+}
 (function applyUserConfig() {
     const C = window.DASHBOARD_CONFIG || {};
     // v256: il wizard UI (localStorage/baked) ha priorità sul config.js
-    const wBrand = cdCfg('cd_branding'), wSect = cdCfg('cd_sections'), wLuci = cdCfg('cd_luci');
-    const brand = Object.keys(wBrand||{}).length ? wBrand : (C.branding || {});
+    const wSect = cdCfg('cd_sections'), wLuci = cdCfg('cd_luci');
     const sect  = Object.keys(wSect||{}).length ? wSect : (C.sections || null);
     const luci  = Object.keys(wLuci||{}).length ? wLuci : (C.luci || null);
     // ── Branding: titolo pagina + header ──
-    if (brand.title) {
-        document.title = brand.title + ' — Smart Home';
-        cdOnReady(() => {
-            const h1 = document.querySelector('header h1');
-            if (h1) h1.textContent = brand.title;
-            const p = document.querySelector('header h1 + p');
-            if (p && brand.subtitle) p.textContent = brand.subtitle;
-        });
-    }
+    cdOnReady(cdApplyBranding);
     // ── Luci: se fornite, sostituiscono completamente quelle di default ──
     if (luci && typeof luci === 'object' && Object.keys(luci).length) {
         Object.keys(LUCI_NAMES).forEach(k => delete LUCI_NAMES[k]);

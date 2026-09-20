@@ -80,6 +80,8 @@ export default Object.freeze({
   "Zones and entry points of the panel": "مناطق لوحة الإنذار ومداخلها",
   "from Windows": "من النوافذ",
   "included here: the counter had already made them before its statistics began": "محسوبة هنا: كان العدّاد قد سجّلها قبل أن تبدأ إحصاءاته",
+  "printer to check": "طابعة تحتاج فحصًا",
+  "printers to check": "طابعات تحتاج فحصًا",
   "shutter up": "ستارة مرفوعة",
   "shutters up": "ستائر مرفوعة",
   "to full": "حتى الاكتمال",

@@ -857,6 +857,12 @@ function refreshRuntimeAfterRestore(remote) {
       ["cdApplyNavVis", () => root.cdApplyNavVis?.()],
       ["buildTempCards", () => root.buildTempCards?.()],
       ["buildClimaCards", () => root.buildClimaCards?.()],
+      /* Il marchio: la testata la scrive l'avvio, da quello che il deposito
+       * del browser aveva in quel momento. Nell'app con piu' case quel
+       * deposito puo' essere di un'altra casa, e la configurazione appena
+       * arrivata e' l'unica che sa il titolo di questa: senza questo passo
+       * restava scritto quello di prima finche' non si riapriva l'app. */
+      ["cdApplyBranding", () => root.cdApplyBranding?.()],
       ["render", () => root.render?.()],
     ],
     { onError: stepReporter(root.console, "configurazione ripristinata") },
