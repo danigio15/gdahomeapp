@@ -127,6 +127,37 @@ export const rotta = (richiesta) => {
 
 /* ─── La porta dell'app ──────────────────────────────────────────────────── */
 
+/* I file della plancia, serviti come si deve.
+ *
+ * Sta in un posto solo perche' a servirli sono in due — la porta dell'app e
+ * quella dell'ingress di Home Assistant — e due copie di questa risposta sono
+ * due copie che prima o poi dicono due cose diverse. E' gia' successo: la
+ * compressione l'aveva solo il filo del telefono, e dall'ingress la plancia
+ * viaggiava in chiaro, nove megabyte e mezzo invece di tre. */
+function serviLaPlancia({ plancia, richiesta, risposta, via }) {
+  if (!plancia?.cE) {
+    male(risposta, 404, "questo add-on non si porta dietro la plancia");
+    return;
+  }
+  const letto = plancia.daServire(via, { accetta: richiesta.headers["accept-encoding"] });
+  if (letto.stato !== 200) {
+    male(risposta, letto.stato, "questo file non c'e'");
+    return;
+  }
+  risposta.writeHead(200, {
+    "content-type": letto.tipo,
+    /* Nell'indirizzo c'e' l'impronta: quello che c'e' non cambia mai, e il
+     * browser se lo puo' tenere. */
+    "cache-control": "public, max-age=31536000, immutable",
+    /* Chi sta in mezzo deve sapere che la risposta cambia con quello che il
+     * browser sa aprire, o un giorno servira' il corpo stretto a chi non lo
+     * sa aprire. */
+    ...(letto.codifica ? { "content-encoding": letto.codifica, vary: "accept-encoding" } : {}),
+    "content-length": letto.corpo.length,
+  });
+  risposta.end(letto.corpo);
+}
+
 export function costruisciLaPortaDellApp({
   ponte,
   portiere,
@@ -211,22 +242,7 @@ export function costruisciLaPortaDellApp({
     /* E i file della plancia. Li chiede la pagina che l'app si compone da se':
      * per nome relativo, a partire dal `<base>` che punta qui. */
     if (metodo === "GET" && via.startsWith(`${BASE}/`)) {
-      if (!plancia?.cE) {
-        male(risposta, 404, "questo add-on non si porta dietro la plancia");
-        return;
-      }
-      const letto = plancia.leggi(via);
-      if (letto.stato !== 200) {
-        male(risposta, letto.stato, "questo file non c'e'");
-        return;
-      }
-      risposta.writeHead(200, {
-        "content-type": letto.tipo,
-        /* Nell'indirizzo c'e' l'impronta: quello che c'e' non cambia mai. */
-        "cache-control": "public, max-age=31536000, immutable",
-        "content-length": letto.corpo.length,
-      });
-      risposta.end(letto.corpo);
+      serviLaPlancia({ plancia, richiesta, risposta, via });
       return;
     }
 
@@ -469,23 +485,7 @@ export function costruisciLaConsole({
      * questi la pagina arriverebbe nuda: il foglio di stile, i moduli e i
      * caratteri li chiede lei, per nome relativo, e da qui. */
     if (via.startsWith(`${BASE}/`)) {
-      if (!plancia?.cE) {
-        male(risposta, 404, "questo add-on non si porta dietro la plancia");
-        return;
-      }
-      const letto = plancia.leggi(via);
-      if (letto.stato !== 200) {
-        male(risposta, letto.stato, "questo file non c'e'");
-        return;
-      }
-      risposta.writeHead(200, {
-        "content-type": letto.tipo,
-        /* Nell'indirizzo c'e' l'impronta: quello che c'e' non cambia mai, e il
-         * browser se lo puo' tenere. */
-        "cache-control": "public, max-age=31536000, immutable",
-        "content-length": letto.corpo.length,
-      });
-      risposta.end(letto.corpo);
+      serviLaPlancia({ plancia, richiesta, risposta, via });
       return;
     }
 

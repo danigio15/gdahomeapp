@@ -247,8 +247,21 @@ class PlanciaDiGdahome extends HTMLElement {
     }
     this._montata = true;
     try {
-      const dove = await this._doveSta();
-      await this._laSessione();
+      /* Le due domande si fanno **insieme**, non una dopo l'altra.
+       *
+       * Sono due giri sul filo verso il Supervisore — dov'e' l'add-on, e una
+       * sessione per entrarci — e non si servono a vicenda: la sessione non
+       * ha bisogno di sapere l'indirizzo. Metterle in fila voleva dire
+       * aspettare la somma dei due invece del piu' lento, e sono i primi due
+       * giri di un'attesa che il tablet vede tutta come schermo fermo.
+       *
+       * `Promise.all` e non due `await`: se una delle due va male salta tutto
+       * il disegno, che e' quello che succedeva anche prima. */
+      /* Prima di tutto: c'e' un add-on da aprire? Chiedere una sessione
+       * d'ingresso per un add-on che non sappiamo nominare e' una sessione
+       * buttata, e per chi la apre non e' gratis. */
+      const slug = this._ilSlug();
+      const [dove] = await Promise.all([this._doveSta(slug), this._laSessione()]);
       this._giro = setInterval(() => {
         this._rinfresca().catch(() => {
           /* Se il rinnovo non riesce si riprova al giro dopo: il riquadro
@@ -272,9 +285,15 @@ class PlanciaDiGdahome extends HTMLElement {
    * dentro c'e' un gettone che Home Assistant puo' rifare, e una Plancia
    * salvata sei mesi fa porterebbe un indirizzo che non esiste piu'. Si chiede
    * al Supervisor ogni volta, come fa il frontend di Home Assistant. */
-  async _doveSta() {
+  /* Quale add-on. Sta per conto suo perche' la domanda si fa **prima** di
+   * mandare qualunque cosa sul filo. */
+  _ilSlug() {
     const slug = String(this._config.addon || "").trim();
     if (!slug) throw new Error("questa tessera non sa quale add-on aprire");
+    return slug;
+  }
+
+  async _doveSta(slug = this._ilSlug()) {
     const detto = await this._hass.callWS({
       type: "supervisor/api",
       endpoint: `/addons/${slug}/info`,
