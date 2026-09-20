@@ -1378,10 +1378,12 @@
 
       /* Le note intere, aperte sotto la riga.
        *
-       * `pre-wrap` e non `pre-line`: un CHANGELOG ha le sue righe vuote e le
-       * sue rientranze, e schiacciarle vuol dire un muro di testo. Il tetto in
-       * altezza c'e' perche' certi ne hanno duecento, e sotto ce ne sono
-       * altri tre da leggere. */
+       * Prima erano un blocco di testo con `pre-wrap`, che teneva le righe
+       * vuote del CHANGELOG ma lasciava in mezzo i cancelletti e gli
+       * asterischi. Adesso il markdown si disegna, come nell'app: le righe
+       * vuote sono lo spazio fra un pezzo e l'altro, e il testo va a capo da
+       * se'. Il tetto in altezza c'e' perche' certi ne hanno duecento, e
+       * sotto ce ne sono altri tre da leggere. */
       .leNote {
         grid-column: 2 / -1;
         margin: 8px 0 2px;
@@ -1392,10 +1394,116 @@
         color: var(--lieve);
         font-size: 0.8rem;
         line-height: 1.6;
-        white-space: pre-wrap;
         overflow-wrap: anywhere;
         max-height: 320px;
         overflow-y: auto;
+      }
+
+      /* Il primo pezzo non spinge in giù e l'ultimo non lascia la coda: i
+       * margini stanno fra un pezzo e l'altro, non contro il bordo. */
+      .leNote > :first-child {
+        margin-top: 0;
+      }
+
+      .leNote > :last-child {
+        margin-bottom: 0;
+      }
+
+      .leNote p {
+        margin: 0 0 10px;
+      }
+
+      .leNote h3,
+      .leNote h4,
+      .leNote h5 {
+        margin: 18px 0 7px;
+        color: var(--notte);
+        line-height: 1.35;
+      }
+
+      .leNote h3 {
+        font-size: 0.97rem;
+      }
+
+      .leNote h4 {
+        font-size: 0.89rem;
+      }
+
+      .leNote h5 {
+        font-size: 0.83rem;
+      }
+
+      /* Il pallino se lo disegna il foglio: un `list-style` normale, con i
+       * rientri che arrivano dal markdown, si porta dietro un `padding` che
+       * qui dentro fa ballare le righe. */
+      .leNote ul {
+        margin: 0 0 10px;
+        padding: 0;
+        list-style: none;
+      }
+
+      .leNote li {
+        position: relative;
+        margin: 0 0 6px;
+        padding-left: 15px;
+      }
+
+      .leNote li::before {
+        content: "";
+        position: absolute;
+        left: 2px;
+        top: 0.6em;
+        width: 5px;
+        height: 5px;
+        border-radius: 50%;
+        background: var(--azzurro);
+      }
+
+      .leNote li.r1 {
+        margin-left: 16px;
+      }
+
+      .leNote li.r2 {
+        margin-left: 32px;
+      }
+
+      .leNote li.r3 {
+        margin-left: 48px;
+      }
+
+      .leNote hr {
+        margin: 12px 0;
+        border: 0;
+        border-top: 1px solid var(--bordo);
+      }
+
+      .leNote code {
+        padding: 1px 5px;
+        border-radius: 5px;
+        background: var(--bordo-tenue);
+        font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+        font-size: 0.92em;
+      }
+
+      /* Il blocco di codice scorre per conto suo: una riga di YAML lunga
+       * mezzo metro non deve allargare tutta la scheda. */
+      .leNote pre {
+        margin: 0 0 12px;
+        padding: 10px 12px;
+        border-radius: 10px;
+        background: var(--bordo-tenue);
+        overflow-x: auto;
+      }
+
+      .leNote pre code {
+        padding: 0;
+        border-radius: 0;
+        background: none;
+        white-space: pre;
+      }
+
+      .leNote a {
+        color: var(--azzurro-scuro);
       }
 
       ul.versi .cambia a {
@@ -2093,6 +2201,212 @@
           (uno) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[uno],
         );
 
+      /* Il CHANGELOG, disegnato come lo disegna l'app.
+       *
+       * Le note di una versione arrivano in markdown, e fino a ieri qui
+       * finivano dentro la pagina **come testo**: un `## 5.3.0` si leggeva
+       * col cancelletto, un elenco di venti righe era un muro, e un
+       * `**Attenzione**` si leggeva con gli asterischi. Le stesse note,
+       * nell'app, si leggono disegnate — `app/lib/vestito/markdown.dart` —
+       * e la stessa cosa mostrata in due modi diversi sono due cose da
+       * spiegare invece di una.
+       *
+       * Percio' qui si fa quello che fa l'app, e **niente di piu'**: titoli,
+       * elenchi, righe che separano, blocchi di codice, e dentro la riga
+       * grassetto, corsivo, codice e link. La regola e' la sua: quello che
+       * non sa disegnare non lo butta, lo lascia scritto com'e'. Una tabella
+       * markdown viene fuori con le sue barre e si capisce; un pezzo mangiato
+       * no, e chi legge non sa nemmeno che gli manca qualcosa.
+       *
+       * E una regola in piu', che l'app non ha bisogno di avere: **prima si
+       * scappa, poi si disegna**. Queste parole non sono nostre — le ha
+       * scritte chi ha fatto l'aggiornamento, cioe' uno di fuori, e da qui
+       * fino alla pagina non c'e' nessun altro che le guardi. I tag li mette
+       * questa funzione e nessun altro: tutto il resto passa da `testo()`
+       * prima di toccare la pagina, e un `<script>` scritto dentro le note
+       * si legge `<script>`. */
+
+      const IL_TITOLO = /^(#{1,6})\s+(.*)$/;
+      const IL_PUNTO = /^(\s*)[-*+]\s+(.*)$/;
+      const LA_RIGA = /^\s*([-*_])\s*\1\s*\1\s*$/;
+      const IL_RECINTO = /^\s*```/;
+
+      /* I rientri scritti per intero, non composti.
+       *
+       * Attaccare il numero al nome — la erre, e poi quanto sta dentro —
+       * funzionerebbe, e lascerebbe nella pagina una erre sola che nessuna
+       * regola veste: la prova che guarda se ogni classe ha il suo stile
+       * legge quello che sta prima del pezzo calcolato, e giustamente si
+       * lamenta. Un elenco di quattro voci costa meno di un'eccezione in
+       * quella prova. Il primo e' vuoto: un punto che non sta dentro niente
+       * non ha bisogno di dirlo. */
+      const I_RIENTRI = ["", ' class="r1"', ' class="r2"', ' class="r3"'];
+
+      /* I segni dentro la riga: grassetto, codice, link, corsivo.
+       *
+       * Un segno aperto e mai chiuso resta il carattere che e': `**` da solo
+       * si legge `**` e non si mangia il resto della riga.
+       *
+       * Nell'app la stessa regola guarda **indietro** — `(?<![A-Za-z0-9])` —
+       * per non fare il corsivo in mezzo a `sensor_di_casa`. Qui no, e non e'
+       * una svista: guardare indietro nelle espressioni regolari non lo sa
+       * fare il browser di un tablet di qualche anno fa, e una regola che non
+       * si sa leggere non e' una riga che si perde, e' tutta la pagina che
+       * non parte. Qui il carattere di prima si prende e si rimette dov'era.
+       * Le due letture danno lo stesso risultato: e' stato provato riga per
+       * riga contro quella dell'app, `*a * b*` compreso. */
+      const I_SEGNI =
+        /\*\*(.+?)\*\*|`([^`]+)`|\[([^\]]+)\]\(([^)\s]+)\)|(^|[^A-Za-z0-9])[*_](?![\s*_])(.*?\S)[*_](?![A-Za-z0-9])/g;
+
+      /* Un link si apre solo se porta sul web.
+       *
+       * `javascript:` e `data:` non sono indirizzi, sono programmi, e nelle
+       * note di un aggiornamento non ci hanno mai niente da fare: quello che
+       * non comincia per http resta scritto com'era, parentesi comprese. */
+      const SOLO_IL_WEB = /^https?:\/\//i;
+
+      /* Il markdown, letto pezzo per pezzo. Non solleva mai e non butta mai
+       * niente: al peggio un pezzo esce come paragrafo. */
+      function iPezziDi(markdown) {
+        const fuori = [];
+        const righe = String(markdown).replace(/\r\n/g, "\n").split("\n");
+        let paragrafo = [];
+        const chiudiIlParagrafo = () => {
+          if (!paragrafo.length) return;
+          fuori.push({ che: "paragrafo", testo: paragrafo.join(" ").trim() });
+          paragrafo = [];
+        };
+        let dentroUnBlocco = false;
+        let blocco = [];
+        for (const riga of righe) {
+          if (IL_RECINTO.test(riga)) {
+            if (dentroUnBlocco) {
+              fuori.push({ che: "blocco", testo: blocco.join("\n") });
+              blocco = [];
+              dentroUnBlocco = false;
+            } else {
+              chiudiIlParagrafo();
+              dentroUnBlocco = true;
+            }
+            continue;
+          }
+          if (dentroUnBlocco) {
+            blocco.push(riga);
+            continue;
+          }
+          if (!riga.trim()) {
+            chiudiIlParagrafo();
+            continue;
+          }
+          if (LA_RIGA.test(riga)) {
+            chiudiIlParagrafo();
+            fuori.push({ che: "riga" });
+            continue;
+          }
+          const titolo = IL_TITOLO.exec(riga);
+          if (titolo) {
+            chiudiIlParagrafo();
+            fuori.push({ che: "titolo", livello: titolo[1].length, testo: titolo[2].trim() });
+            continue;
+          }
+          const punto = IL_PUNTO.exec(riga);
+          if (punto) {
+            chiudiIlParagrafo();
+            /* Due spazi per rientro, come si scrive: tre o quattro contano uno. */
+            fuori.push({
+              che: "punto",
+              testo: punto[2].trim(),
+              rientro: Math.floor(punto[1].length / 2),
+            });
+            continue;
+          }
+          paragrafo.push(riga.trim());
+        }
+        /* Un blocco lasciato aperto — un recinto senza l'altro — non si perde. */
+        if (dentroUnBlocco && blocco.length)
+          fuori.push({ che: "blocco", testo: blocco.join("\n") });
+        chiudiIlParagrafo();
+        return fuori;
+      }
+
+      /* I segni di una riga gia' scappata. Quello che entra e' testo
+       * innocuo, quello che esce ha dentro solo i tag scritti qui. */
+      const iSegniDi = (riga) =>
+        riga.replace(I_SEGNI, (tutto, grassetto, codice, ilTesto, dove, prima, corsivo) => {
+          if (grassetto !== undefined) return `<strong>${grassetto}</strong>`;
+          if (codice !== undefined) return `<code>${codice}</code>`;
+          if (ilTesto !== undefined) {
+            /* Il link si preme, e si apre di fianco. `noreferrer` perche' a
+             * chi ha scritto l'aggiornamento non deve arrivare l'indirizzo
+             * del quadro di nessuno. */
+            if (!SOLO_IL_WEB.test(dove)) return tutto;
+            return `<a href="${dove}" target="_blank" rel="noopener noreferrer">${ilTesto}</a>`;
+          }
+          return `${prima}<em>${corsivo}</em>`;
+        });
+
+      /* Dal titolo di quella versione in giu'.
+       *
+       * Home Assistant, quando gli si chiedono le note di un aggiornamento,
+       * risponde col changelog **intero**. Chi ha appena letto «1.5.9 →
+       * 1.5.10» sulla riga non vuole ricominciare dal principio della storia:
+       * vuole leggere la 1.5.10. Quello che c'era prima del suo titolo si
+       * lascia fuori, le versioni di prima restano sotto — che e' dove si va
+       * a cercarle. Se quel titolo non c'e' non si taglia niente.
+       *
+       * E' la stessa regola dell'app, parola per parola. */
+      const perCercare = (cosa) => String(cosa).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+      function daQuellaVersione(markdown, versione) {
+        const quale = String(versione || "").trim();
+        if (!quale) return markdown;
+        const ilTitoloGiusto = new RegExp(`(^|[^0-9.])${perCercare(quale)}([^0-9.]|$)`);
+        const righe = String(markdown).replace(/\r\n/g, "\n").split("\n");
+        for (let quante = 0; quante < righe.length; quante += 1) {
+          if (/^#{1,6}\s/.test(righe[quante]) && ilTitoloGiusto.test(righe[quante])) {
+            return righe
+              .slice(quante + 1)
+              .join("\n")
+              .trim();
+          }
+        }
+        return markdown;
+      }
+
+      /* Il markdown, disegnato. Dentro non ci finisce un solo carattere di
+       * fuori che non sia passato da `testo()`. */
+      function ilMarkdown(markdown) {
+        let fuori = "";
+        let elenco = false;
+        const chiudiLElenco = () => {
+          if (elenco) fuori += "</ul>";
+          elenco = false;
+        };
+        for (const pezzo of iPezziDi(testo(markdown))) {
+          if (pezzo.che !== "punto") chiudiLElenco();
+          if (pezzo.che === "titolo") {
+            /* `h3` e non `h1`: qui dentro si sta sotto il titolo di una casa,
+             * e chi legge con lo schermo sente i livelli. */
+            const quale = pezzo.livello === 1 ? "h3" : pezzo.livello === 2 ? "h4" : "h5";
+            fuori += `<${quale}>${iSegniDi(pezzo.testo)}</${quale}>`;
+          } else if (pezzo.che === "paragrafo") {
+            fuori += `<p>${iSegniDi(pezzo.testo)}</p>`;
+          } else if (pezzo.che === "punto") {
+            if (!elenco) {
+              fuori += "<ul>";
+              elenco = true;
+            }
+            fuori += `<li${I_RIENTRI[Math.min(3, pezzo.rientro)]}>${iSegniDi(pezzo.testo)}</li>`;
+          } else if (pezzo.che === "riga") {
+            fuori += "<hr />";
+          } else if (pezzo.che === "blocco") {
+            fuori += `<pre><code>${pezzo.testo}</code></pre>`;
+          }
+        }
+        chiudiLElenco();
+        return fuori;
+      }
+
       /* Come va un controllo: verde, rosso, e il terzo.
        *
        * Il terzo e' quello che si scordava. `va` puo' essere `true`, `false` o
@@ -2199,7 +2513,7 @@
           ? ` <button type="button" class="comeUnLink" data-note="${suo}">cosa cambia, per intero</button>`
           : "";
         if (!detto && !dentro) return "";
-        return `<p class="cambia">${detto}${dentro}</p><div class="leNote" data-note-di="${testo(suo)}" hidden></div>`;
+        return `<p class="cambia">${detto}${dentro}</p><div class="leNote" data-note-di="${testo(suo)}" data-note-a="${testo(String(uno.a || ""))}" hidden></div>`;
       }
 
       /* Una riga di aggiornamento: il segno, cosa e', cosa si fa, cosa cambia.
@@ -2552,11 +2866,15 @@
             riquadro.textContent = "…";
             try {
               const detto = await chiedi(`/note/${suo}`);
-              /* `textContent` e non HTML: sono parole scritte da chi ha fatto
-               * l'aggiornamento, cioe' da fuori, e qui dentro non ci si fida
-               * di niente che arrivi da fuori. Il foglio di stile le fa andare
-               * a capo dove erano. */
-              riquadro.textContent = String(detto.note || "").trim();
+              /* Disegnate, e dalla versione nuova in giu': le stesse note,
+               * lette nello stesso modo dell'app. `ilMarkdown` e' l'unico
+               * posto del quadro che mette dentro la pagina roba venuta da
+               * fuori, e prima di metterla la scappa tutta. */
+              const disegnate = ilMarkdown(
+                daQuellaVersione(String(detto.note || "").trim(), riquadro.dataset.noteA || ""),
+              );
+              if (disegnate) riquadro.innerHTML = disegnate;
+              else riquadro.textContent = "le note sono arrivate vuote";
               riquadro.dataset.gia = "sì";
             } catch (errore) {
               if (errore instanceof Congelata) {
@@ -3119,7 +3437,7 @@
        * Le voci hanno la forma che `aggiornamentiDaFare` produce già nel
        * ponte, e due dei suoi campi decidono cosa si vede:
        *
-       *  - `installabile` — un firmware che si porta col cacciavite non ha
+       *  - `installabile` — un firmware che si aggiorna dal suo apparecchio non ha
        *    nessun tasto. Mostrarglielo sarebbe una promessa che non si
        *    mantiene, ed è la regola che il ponte si è già data;
        *  - `stacca` — gdahome e Home Assistant, installandosi, fanno cadere il
@@ -3228,7 +3546,17 @@
        * l'entità: nel rapporto l'entità non c'è, e non c'è apposta. È lo stesso
        * modo con cui la casa ritrova di cosa si sta parlando. */
       function ilTasto(uno, c, casa) {
-        if (!uno.installabile) return '<span class="pastiglia">si porta col cacciavite</span>';
+        /* Le stesse parole dell'app, e non una seconda invenzione.
+         *
+         * Qui c'era scritto «si porta col cacciavite», che nell'app non si
+         * legge da nessuna parte — li' la stessa cosa si chiama «Questo si
+         * aggiorna dal suo apparecchio». Due schermi che raccontano la stessa
+         * cosa con due vocabolari sono due schermi che sembrano di due
+         * programmi diversi, e «col cacciavite» per giunta bisogna indovinarlo.
+         *
+         * Il cacciavite resta nei commenti, dove parliamo fra noi. */
+        if (!uno.installabile)
+          return '<span class="pastiglia">si aggiorna dal suo apparecchio</span>';
         if (eLaStessa(uno, casa?.chiesto))
           return `<button type="button" class="tasto" data-lascia-stare="${testo(casa.casa)}">
             Annulla
@@ -3458,7 +3786,7 @@
           ${indietro
             .map(({ casa, cose }) => {
               const aperta = Boolean(casa.carta.manutenzione);
-              const cacciavite = cose.filter((uno) => !uno.installabile).length;
+              const dalSuoApparecchio = cose.filter((uno) => !uno.installabile).length;
               const daQui = cose.filter((uno) => uno.installabile).length;
 
               return `
@@ -3482,8 +3810,8 @@
                       ? "Questa casa non ha aperto la manutenzione al quadro: da qui non si installa niente, e non è un guasto — è una scelta di chi ci abita. La accende lui, dal suo Home Assistant: Impostazioni › Add-on › gdahome › Configurazione, la casella «Lascia che chi ti ha fatto l'impianto aggiorni da lontano». "
                       : ""
                   }${
-                    cacciavite
-                      ? `${plurale(cacciavite, "si porta", "si portano")} col cacciavite: da qui non ${cacciavite === 1 ? "si installa" : "si installano"}. `
+                    dalSuoApparecchio
+                      ? `${dalSuoApparecchio === 1 ? "Uno si aggiorna" : `${dalSuoApparecchio} si aggiornano`} dal suo apparecchio: da qui non ${dalSuoApparecchio === 1 ? "si installa" : "si installano"}. `
                       : ""
                   }${
                     aperta && daQui

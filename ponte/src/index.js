@@ -310,7 +310,17 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
      * un'integrazione — esattamente come fa per l'app. Non finiscono in ogni
      * rapporto: e' il quadro a dire quali non ha, e partono solo quelle. Il
      * perche' sta in cima a `segni.js`. */
-    segni: new Segni({ aggiornamenti, casa, registro }),
+    segni: new Segni({
+      aggiornamenti,
+      casa,
+      registro,
+      /* L'icona che sta in casa si chiede per **la stessa strada dell'app**, e
+       * non se ne apre una seconda accanto: due strade per la stessa icona
+       * vuol dire due schermi che ne mostrano una sola, ed e' successo — nel
+       * cruscotto restavano le letterine mentre nell'app le icone c'erano. */
+      ilLogoDiCasa: (entita) =>
+        commissioni.rispondi({ id: null, type: "ponte/aggiornamenti/logo", entity_id: entita }),
+    }),
     segniChiesti: () => postino.segniChiesti,
     lavori,
     manutenzione: opzioni.manutenzione,
