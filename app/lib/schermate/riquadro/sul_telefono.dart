@@ -15,6 +15,7 @@ import 'package:webview_flutter_android/webview_flutter_android.dart';
 import 'package:webview_flutter_wkwebview/webview_flutter_wkwebview.dart';
 
 import '../../plancia/premesse.dart' show ilMenuDalTelefono;
+import 'biglietto.dart';
 
 /// Un controllore pronto a caricare la plancia.
 ///
@@ -310,14 +311,19 @@ Future<void> consegnaLaChiave(
   }
 }
 
-/// Apre il cruscotto nel browser del telefono.
+/// Apre il cruscotto nel browser del telefono, col suo biglietto.
 ///
 /// Fuori dall'app il codice non si consegna: quello e' un browser di un
-/// altro, e a una scheda aperta con `launchUrl` non si parla. La pagina lo
-/// chiede da se', una volta, come ha sempre fatto — e per questo la strada
-/// normale e' il riquadro qui dentro, dove il codice arriva da solo.
+/// altro, e a una scheda aperta con `launchUrl` non si parla. Nell'indirizzo
+/// il codice non ci va — finirebbe nella cronologia — e ci va un biglietto,
+/// che vale un minuto e una volta sola (`biglietto.dart`): il cruscotto lo
+/// cambia con il codice appena si apre, e non lo chiede. Se il quadro non
+/// risponde si apre la pagina com'e', e il codice lo chiede lei, come prima.
 Future<void> apriFuori(Uri pagina, String chiave) async {
-  await launchUrl(pagina, mode: LaunchMode.externalApplication);
+  await launchUrl(
+    await conIlBiglietto(pagina, chiave),
+    mode: LaunchMode.externalApplication,
+  );
 }
 
 /// Apre la Configurazione della plancia: la sua pagina, quella vera.

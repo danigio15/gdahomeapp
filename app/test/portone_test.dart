@@ -93,7 +93,7 @@ class _PlanciaFinta extends FabbricaDellaPlancia {
 
 class _ServitoreFinto implements ServitoreDiQuestoSistema {
   @override
-  Uri paginaDi(PannelloDellaPlancia pannello) =>
+  Uri paginaDi(PannelloDellaPlancia pannello, {String casa = ''}) =>
       Uri.parse('http://127.0.0.1:1${pannello.percorsoDellaPagina('it')}');
 
   @override

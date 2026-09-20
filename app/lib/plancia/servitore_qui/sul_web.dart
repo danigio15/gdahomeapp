@@ -140,7 +140,11 @@ const String _ilWebSocketFinto =
 
 /// Quello che alla schermata serve sapere di un servitore, senza `dart:io`.
 abstract interface class ServitoreDiQuestoSistema {
-  Uri paginaDi(PannelloDellaPlancia pannello);
+  /// La pagina da aprire per questo pannello, in questa casa: [casa] e'
+  /// l'identificativo della casa nell'app, e vuoto vuol dire «senza». Con la
+  /// casa la pagina tiene le sue cose a parte, casa per casa
+  /// (`premesse.dart`).
+  Uri paginaDi(PannelloDellaPlancia pannello, {String casa = ''});
 
   /// L'indirizzo di una pagina qualunque servita da qui: serve al ritratto di
   /// una persona, che e' una pagina nostra messa di fianco ai file della
@@ -231,8 +235,9 @@ class _ServitoreSulWeb implements ServitoreDiQuestoSistema {
   }
 
   @override
-  Uri paginaDi(PannelloDellaPlancia quale) {
+  Uri paginaDi(PannelloDellaPlancia quale, {String casa = ''}) {
     premesse.pannello = quale;
+    premesse.casa = casa;
     /* Assoluto, e risolto sulla base del documento.
      *
      * Assoluto perche' il riquadro vuole un indirizzo con lo schema: senza,
@@ -249,8 +254,14 @@ class _ServitoreSulWeb implements ServitoreDiQuestoSistema {
      * stessi file, e chi guarda il riquadro lo rifa' solo quando l'indirizzo
      * cambia. Solo per quelle in piu': la prima tiene l'indirizzo di
      * sempre. */
-    if (quale.primario || quale.profilo.isEmpty) return dove;
-    return dove.replace(queryParameters: {'plancia': quale.profilo});
+    final domande = <String, String>{
+      if (!quale.primario && quale.profilo.isNotEmpty) 'plancia': quale.profilo,
+      /* E quale casa, per la stessa ragione: due case hanno la stessa
+       * pagina, e cambiando casa il riquadro si deve rifare. */
+      if (casa.isNotEmpty) 'casa': casa,
+    };
+    if (domande.isEmpty) return dove;
+    return dove.replace(queryParameters: domande);
   }
 
   @override

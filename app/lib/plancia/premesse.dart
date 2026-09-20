@@ -40,6 +40,7 @@ const String ilMenuDalRiquadro = 'menu';
 class Premesse {
   Premesse({
     this.pannello,
+    this.casa = '',
     this.lingua = 'it',
     this.leggera = false,
     this.margini = (alto: 0.0, basso: 0.0),
@@ -47,6 +48,22 @@ class Premesse {
 
   /// Quale pannello della plancia si sta aprendo: istanza, profilo, primario.
   PannelloDellaPlancia? pannello;
+
+  /// Di quale casa, per il deposito del browser. Vuota vuol dire «senza».
+  ///
+  /// La plancia tiene le sue cose — la configurazione che ha letto, il tema
+  /// scelto — sotto un nome, `cd_<istanza>_…` (`legacy/storage-namespace.js`),
+  /// e l'istanza gliela dice il ponte: «gdahome» per la prima plancia di
+  /// ogni casa. Nell'app le case sono piu' d'una e la pagina e' la stessa,
+  /// quindi due case si trovavano lo stesso cassetto: si apriva la casa al
+  /// mare e la plancia partiva dalla configurazione di casa — testata
+  /// compresa — finche' non arrivava quella giusta dal ponte; e la testata,
+  /// che si scrive all'avvio, restava quella di prima finche' non si
+  /// riapriva l'app. Con la casa nel nome ([istanzaDi]) ogni casa ha il suo
+  /// cassetto. E' l'identificativo interno dell'app, che non si mostra a
+  /// nessuno e qui non lo vede nessuno: sta in un indirizzo locale e in un
+  /// nome del deposito.
+  String casa;
 
   String lingua;
 
@@ -768,6 +785,46 @@ class Premesse {
     return [pulito.substring(0, spazio), pulito.substring(spazio + 1)];
   }
 
+  /// Il nome sotto cui questa pagina tiene le sue cose nel deposito del
+  /// browser: quello del ponte, e la casa se c'e' (vedi [casa]). Nel nome ci
+  /// vanno lettere, numeri e trattini: il resto si toglie.
+  String istanzaDi(PannelloDellaPlancia? quale) {
+    if (quale == null) return '';
+    final id = casa.replaceAll(RegExp('[^A-Za-z0-9_-]'), '');
+    return id.isEmpty ? quale.istanza : '${quale.istanza}-$id';
+  }
+
+  /// Il cassetto della casa, riempito la prima volta da quello di prima.
+  ///
+  /// Fino a ieri il deposito era uno per tutte le case, `cd_<istanza>_…`, e
+  /// ci stanno anche le cose che non viaggiano — il tema scelto, il modo
+  /// della barra. Un cassetto nuovo e vuoto le farebbe perdere a tutti, anche
+  /// a chi di casa ne ha una sola: la prima volta che una casa apre il suo,
+  /// ci si copia dentro quello di prima, com'e'. La configurazione che arriva
+  /// dal ponte lo corregge subito dopo, e la testata la segue
+  /// (`cdApplyBranding`, nel runtime della plancia); il tema resta quello che
+  /// era. Gira prima di `storage-namespace.js`, sul deposito vero: dopo, quel
+  /// nome non lo si vede piu'. Solo se il cassetto della casa e' vuoto: da
+  /// una seconda apertura in poi la casa ha le sue cose, e quelle di prima
+  /// non le vuole.
+  String ilCassettoDellaCasa(PannelloDellaPlancia? quale) {
+    if (quale == null) return '';
+    final nuovo = istanzaDi(quale);
+    if (nuovo == quale.istanza) return '';
+    final da = jsonEncode('cd_${quale.istanza}_');
+    final a = jsonEncode('cd_${nuovo}_');
+    return '(function(){try{'
+        'var da=$da,a=$a,k,i,via=[];'
+        'for(i=0;i<localStorage.length;i+=1){k=localStorage.key(i);'
+        'if(k&&k.indexOf(a)===0)return;}'
+        'for(i=0;i<localStorage.length;i+=1){k=localStorage.key(i);'
+        'if(k&&k.indexOf(da)===0)via.push(k);}'
+        'for(i=0;i<via.length;i+=1)'
+        'localStorage.setItem(a+via[i].slice(da.length),'
+        'localStorage.getItem(via[i]));'
+        '}catch(e){}})();';
+  }
+
   /// La pagina, con in testa quello che le serve sapere.
   ///
   /// [ilWebSocket] e' un pezzo di programma che vale un costruttore di
@@ -781,7 +838,7 @@ class Premesse {
         '<script>'
         'window.__DASHBOARDMODERN_HOSTED__=true;'
         'window.__DASHBOARDMODERN_BRIDGE_WS__=$ilWebSocket;'
-        'window.__DASHBOARDMODERN_INSTANCE__=${jsonEncode(quale?.istanza ?? '')};'
+        'window.__DASHBOARDMODERN_INSTANCE__=${jsonEncode(istanzaDi(quale))};'
         'window.__DASHBOARDMODERN_PROFILE__=${jsonEncode(quale?.profilo ?? 'primary')};'
         'window.__DASHBOARDMODERN_PRIMARY__=${quale?.primario ?? true};'
         'window.__DASHBOARDMODERN_LOCALE__=${jsonEncode(lingua)};'
@@ -800,6 +857,9 @@ class Premesse {
           false => 'window.__GDAHOME_CONFIGURATA__=false;',
           null => '',
         }}'
+        /* Il cassetto di questa casa, se la pagina ha una casa: si riempie
+           da quello di prima, e prima che la pagina lo legga. */
+        '${ilCassettoDellaCasa(quale)}'
         '</script>'
         '${leggera ? stileLeggero : ''}';
     final testa = RegExp(

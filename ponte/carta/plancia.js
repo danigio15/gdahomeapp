@@ -535,12 +535,47 @@ class RiquadroDiGdahome extends HTMLElement {
   connectedCallback() {
     const { foglio } = senzaLaBarra(this, this._config);
     if (foglio) this._barra = foglio;
+    /* La pagina dentro puo' anche chiedere il codice da se' (`chiave?`): si
+     * risponde, e solo a lei. Vedi `_rispondiAllaPagina`. */
+    this._rispondi = (evento) => this._rispondiAllaPagina(evento);
+    if (typeof window.addEventListener === "function")
+      window.addEventListener("message", this._rispondi);
     this._disegna();
   }
 
   disconnectedCallback() {
     this._barra?.remove?.();
     this._barra = null;
+    if (this._rispondi && typeof window.removeEventListener === "function")
+      window.removeEventListener("message", this._rispondi);
+    this._rispondi = null;
+  }
+
+  /* La consegna dall'altro verso: la pagina chiede, la tessera risponde.
+   *
+   * La spinta di `_consegnaLaChiave` indovina il momento con tre colpi; la
+   * pagina, dalla 1.5.9.15, appena si apre senza codice lo chiede a chi la
+   * contiene finche' non arriva. Qui si risponde a lei sola: il messaggio
+   * deve venire dal riquadro di questa tessera e dall'origine del quadro,
+   * e il codice torna a quell'origine e a nessun'altra. */
+  _rispondiAllaPagina(evento) {
+    if (!evento || evento.data?.gdahome !== "chiave?") return;
+    const chiave = String(this._config?.chiave || "");
+    if (!chiave) return;
+    let origine = "";
+    try {
+      origine = new URL(this._config.dove).origin;
+    } catch (_errore) {
+      return;
+    }
+    if (evento.origin !== origine) return;
+    const riquadro = this.shadowRoot?.querySelector?.("iframe");
+    if (!riquadro || evento.source !== riquadro.contentWindow) return;
+    try {
+      evento.source.postMessage({ gdahome: "chiave", chiave }, origine);
+    } catch (_errore) {
+      /* La pagina se n'e' andata: niente da dire a nessuno. */
+    }
   }
 
   /* Il tasto che riapre il menu di Home Assistant.

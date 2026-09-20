@@ -791,6 +791,51 @@ async function api({
     return;
   }
 
+  /* Il biglietto con cui il tasto «Apri il cruscotto» apre una scheda gia'
+   * aperta, senza ribattere la chiave.
+   *
+   * La chiave sta nelle opzioni e da qui continua a non uscire: esce un
+   * **biglietto**, che il quadro cambia con la chiave una volta sola ed entro
+   * un minuto (`quadro/src/biglietti.js`), chiesto al quadro da questa casa
+   * con la sua chiave. Chi apre questa console amministra questo Home
+   * Assistant — la voce e' `panel_admin` — cioe' e' chi dall'app la chiave la
+   * riceve gia' (`commissioni.js`, `_ilQuadro`): la porta non e' piu' larga
+   * di quella. E un biglietto letto e' carta straccia. */
+  if (via === "/api/cruscotto/biglietto" && metodo === "POST") {
+    const chiave = String(opzioni?.chiaveDelCruscotto || "");
+    if (!opzioni?.installatore || !chiave) {
+      json(risposta, { errore: "questa casa non ha un cruscotto da aprire" }, 404);
+      return;
+    }
+    const quadro = String(process.env.PONTE_QUADRO_DOVE || QUADRO_DI_DIFETTO).replace(/\/+$/, "");
+    try {
+      const presa = await fetch(`${quadro}/console/biglietto`, {
+        method: "POST",
+        headers: { authorization: `Bearer ${chiave}` },
+        signal: AbortSignal.timeout(6000),
+      });
+      const detto = await presa.json().catch(() => ({}));
+      const biglietto = String(detto?.biglietto || "");
+      if (!presa.ok || !biglietto) {
+        json(
+          risposta,
+          {
+            errore:
+              presa.status === 401
+                ? "la chiave del cruscotto non apre piu'"
+                : "il quadro non ha dato il biglietto",
+          },
+          502,
+        );
+        return;
+      }
+      json(risposta, { dove: `${quadro}/console/?biglietto=${encodeURIComponent(biglietto)}` });
+    } catch (_errore) {
+      json(risposta, { errore: "il quadro non risponde" }, 502);
+    }
+    return;
+  }
+
   if (via === "/api/quadro" && metodo === "GET") {
     if (!postino || !postino.acceso) {
       json(risposta, { acceso: false });

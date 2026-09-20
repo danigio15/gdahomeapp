@@ -172,8 +172,9 @@ class _StatoDelCruscotto extends State<SchermataDelCruscotto> {
   }
 
   /// Fuori: un collegamento che non e' del quadro va nel browser com'e';
-  /// il cruscotto stesso — il tasto in basso — ci va **col suo codice**,
-  /// dove si puo' (nel browser si', sul telefono no: vedi `riquadro/`).
+  /// il cruscotto stesso — il tasto in basso — ci va **col suo codice**:
+  /// nel browser con un messaggio alla scheda nuova, sul telefono con un
+  /// biglietto nell'indirizzo (vedi `riquadro/`).
   Future<void> _fuori([Uri? quale]) async {
     if (quale != null) {
       await launchUrl(quale, mode: LaunchMode.externalApplication);

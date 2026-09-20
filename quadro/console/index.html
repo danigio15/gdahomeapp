@@ -4134,7 +4134,12 @@
           }
           if (!stato.editor) {
             diciNellEditor(
-              "Questo quadro non ha la plancia da servire: l'editor non si apre.",
+              /* Non e' la plancia della casa, che c'e': e' la copia dei file
+               * della plancia che il quadro serve nell'editor, e sulla sua
+               * macchina la porta `accendi.sh` (`quadro/plancia/`). Chi legge
+               * questo e' un installatore, che il quadro non lo tiene: gli si
+               * dice cosa chiedere, e a chi. */
+              "Il quadro non ha ancora la copia della plancia che serve all'editor: chi tiene il quadro deve rilanciare accendi.sh una volta. La plancia della casa c'è e non c'entra.",
               true,
             );
             return;
@@ -5647,7 +5652,27 @@
         disegna();
       }
 
-      void apri();
+      /* Con un biglietto nell'indirizzo la chiave arriva da quello, e la
+       * pagina non la chiede: vedi in fondo, `entraColBiglietto`. Il
+       * biglietto si toglie dall'indirizzo subito, prima che finisca nella
+       * cronologia: vale una volta sola, ma un indirizzo pulito e' un
+       * indirizzo che si puo' condividere. */
+      const BIGLIETTO = (() => {
+        try {
+          return new URLSearchParams(location.search).get("biglietto") || "";
+        } catch (_niente) {
+          return "";
+        }
+      })();
+      if (BIGLIETTO) {
+        try {
+          history.replaceState(null, "", location.pathname + location.hash);
+        } catch (_niente) {
+          /* Resta nell'indirizzo: vale comunque una volta sola. */
+        }
+      } else {
+        void apri();
+      }
 
       /* Ogni dieci secondi.
        *
@@ -5740,6 +5765,78 @@
         }
         void apri();
       });
+
+      /* Il biglietto dall'app (`riquadro/sul_telefono.dart`). Dal telefono il
+       * tasto «Apri nel browser» apre un browser che non e' il nostro, e a
+       * quella scheda l'app non puo' consegnare niente. La chiave
+       * nell'indirizzo non ci va; ci va un biglietto, che il quadro cambia
+       * con la chiave una volta sola ed entro un minuto (`biglietti.js`). La
+       * chiave che arriva si tratta come una consegnata: se qui ce n'e' gia'
+       * una che apre, resta quella, per la stessa ragione di sopra. Un
+       * biglietto scaduto — la pagina riaperta dalla cronologia — non e' un
+       * errore da mostrare: si chiede la chiave, come sempre. */
+      async function entraColBiglietto(biglietto) {
+        let arrivata = "";
+        try {
+          const risposta = await fetch("entra", {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({ biglietto }),
+          });
+          const corpo = await risposta.json().catch(() => ({}));
+          if (risposta.ok) arrivata = String(corpo.chiave || "").trim();
+        } catch (_niente) {
+          /* Il quadro non risponde: si chiede come sempre. */
+        }
+        if (arrivata) {
+          consegnata = arrivata;
+          if (!chiave) {
+            chiave = arrivata;
+            try {
+              localStorage.setItem(DOVE_STA_LA_CHIAVE, chiave);
+            } catch (_niente) {
+              /* Vale per questa apertura e basta: meglio di non entrare. */
+            }
+          }
+        }
+        void apri();
+      }
+      if (BIGLIETTO) void entraColBiglietto(BIGLIETTO);
+
+      /* E se nessuno la consegna, la si chiede.
+       *
+       * Fin qui la chiave arrivava «a spinta»: chi ospita questa pagina — la
+       * tessera in Home Assistant, l'app — cercava il riquadro e gli mandava
+       * la chiave, al momento giusto, per qualche colpo. Nell'app web quella
+       * spinta non arrivava, e la pagina restava a chiedere la chiave a chi
+       * ce l'aveva gia' in mano. Non e' questa pagina che puo' sapere quando
+       * chi la ospita e' pronto: allora e' lei a chiedere — a chi la
+       * contiene, e a chi l'ha aperta — e chi ha la chiave risponde. La
+       * domanda non porta niente, e va a chiunque: la chiave che torna vale
+       * se apre, e chi potesse mandarne una buona ce l'avrebbe gia'. Si
+       * chiede finche' non arriva, e si smette da soli. */
+      function chiediLaChiaveAChiMiOspita() {
+        if (chiave) return;
+        const ospiti = [];
+        try {
+          if (window.parent && window.parent !== window) ospiti.push(window.parent);
+        } catch (_niente) {}
+        try {
+          if (window.opener) ospiti.push(window.opener);
+        } catch (_niente) {}
+        if (!ospiti.length) return;
+        const domanda = () => {
+          if (chiave) return;
+          for (const ospite of ospiti) {
+            try {
+              ospite.postMessage({ gdahome: "chiave?" }, "*");
+            } catch (_niente) {}
+          }
+        };
+        domanda();
+        for (const fra of [400, 1200, 3000, 7000]) setTimeout(domanda, fra);
+      }
+      if (!BIGLIETTO) chiediLaChiaveAChiMiOspita();
     </script>
   </body>
 </html>

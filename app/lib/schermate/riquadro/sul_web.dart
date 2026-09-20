@@ -156,6 +156,7 @@ Future<void> consegnaLaChiave(
   required Uri pagina,
 }) async {
   if (chiave.isEmpty) return;
+  _rispondiAChiChiedeLaChiave(pagina, chiave);
   final dove = pagina.toString();
   for (final fra in const [0, 100, 300, 700, 1500, 3000, 6000]) {
     if (fra > 0) await Future<void>.delayed(Duration(milliseconds: fra));
@@ -181,6 +182,49 @@ Future<void> consegnaLaChiave(
     _consegnaA(riquadro.contentWindow, chiave, pagina);
     return;
   }
+}
+
+/// E la stessa consegna dall'altro verso: la pagina **chiede**, e qui si
+/// risponde.
+///
+/// La consegna a spinta qui sopra ha un punto debole che dal campo si e'
+/// visto: chi ospita deve trovare il riquadro e indovinare il momento, e
+/// nell'app web una delle due cose non tornava — il cruscotto restava a
+/// chiedere il codice a chi ce l'aveva gia' in mano. Allora la pagina del
+/// quadro, appena si apre senza codice, manda `{gdahome: "chiave?"}` a chi
+/// la contiene e a chi l'ha aperta, finche' qualcuno risponde. Qui si
+/// risponde: a **quella** pagina (`evento.source`), con il codice che vale
+/// per la **sua** origine, e a nessun'altra. Un ascolto solo, per tutta la
+/// vita dell'app; il codice per origine si aggiorna a ogni consegna, cosi'
+/// una pagina riaperta riceve sempre l'ultimo.
+final Map<String, String> _codiciPerOrigine = {};
+bool _rispondo = false;
+
+void _rispondiAChiChiedeLaChiave(Uri pagina, String chiave) {
+  _codiciPerOrigine[pagina.origin] = chiave;
+  if (_rispondo) return;
+  _rispondo = true;
+  web.window.addEventListener(
+    'message',
+    ((web.MessageEvent evento) {
+      try {
+        final detto = evento.data;
+        if (detto == null || !detto.isA<JSObject>()) return;
+        final cosa = (detto as JSObject).getProperty('gdahome'.toJS)?.dartify();
+        if (cosa != 'chiave?') return;
+        final codice = _codiciPerOrigine[evento.origin] ?? '';
+        final fonte = evento.source;
+        if (codice.isEmpty || fonte == null) return;
+        (fonte as web.Window).postMessage(
+          {'gdahome': 'chiave', 'chiave': codice}.jsify(),
+          evento.origin.toJS,
+        );
+      } catch (_) {
+        /* Un messaggio di qualcun altro, o una pagina gia' andata: niente
+         * da rispondere a nessuno. */
+      }
+    }).toJS,
+  );
 }
 
 /// L'attributo in cui il riquadro tiene l'ultimo codice da consegnare.
@@ -238,6 +282,7 @@ void _consegnaA(web.Window? finestra, String chiave, Uri pagina) {
 /// dovrebbe scattare perche' si arriva da un tocco — si ripiega sulla via di
 /// prima, e il codice lo si batte.
 Future<void> apriFuori(Uri pagina, String chiave) async {
+  if (chiave.isNotEmpty) _rispondiAChiChiedeLaChiave(pagina, chiave);
   web.Window? finestra;
   try {
     finestra = web.window.open(pagina.toString(), '_blank');

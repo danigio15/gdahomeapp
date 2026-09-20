@@ -287,6 +287,10 @@ function beginEdit(kind, index) {
     setField("ed-qa-ent", item.entity || "");
     setField("ed-qa-confirm", item.confirm || item.confirmation || "");
     root.edQaTypeChanged?.();
+    /* Un menu a tendina porta anche la voce scelta: la riga delle voci si
+     * riempie dall'entita', e poi ci si rimette quella salvata. */
+    root.edQaEntityChanged?.();
+    setField("ed-qa-option", item.option || "");
   } else if (kind === "climate") {
     setField("ed-cl-type", canonicalClimateType(item.type));
     setField("ed-cl-name", item.name || "");
@@ -394,6 +398,11 @@ function installAddWrappers() {
       next.type = selected;
       next.entity = clean(doc.getElementById("ed-qa-ent")?.value);
       delete next.builtin;
+      /* La voce del menu a tendina, se l'entita' ne ha: la riga e' vuota per
+       * tutte le altre, e allora la voce di prima se ne va. */
+      const voce = clean(doc.getElementById("ed-qa-option")?.value);
+      if (voce) next.option = voce;
+      else delete next.option;
     }
     list[index] = next;
     writeJsonIfChanged("cd_quick_actions", list);

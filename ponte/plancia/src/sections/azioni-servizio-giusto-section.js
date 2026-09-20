@@ -26,8 +26,15 @@
  * predefinite, la richiesta di conferma, la vibrazione — resta al guscio, che
  * lo fa gia' bene: questo modulo gli passa davanti soltanto per i domini che
  * conosce, e per tutti gli altri lo lascia lavorare.
+ *
+ * E un caso in piu', che non e' una parola ma una finestra: un menu a tendina
+ * (`select`, `input_select`) non si accende e non si preme, ha delle voci.
+ * «Nell'azione rapida scena, se si sceglie un'entita' select, mi devi aprire
+ * un popup dove poter selezionare quelle presenti nell'entita'.» Il tasto le
+ * mostra tutte e fa scegliere — o mette direttamente quella fissata
+ * nell'editor, per chi vuole un tasto secco. Il popup sta qui sotto.
  */
-import { allStates, clean, lexicalGlobal, root } from "./shared.js";
+import { allStates, clean, doc, esc, installStyle, lexicalGlobal, root, t } from "./shared.js";
 
 const KEY = "__DASHBOARDMODERN_AZIONI_SERVIZIO__";
 const state = (root[KEY] ||= { installed: false, listeners: false });
@@ -41,6 +48,10 @@ const SERVIZI = Object.freeze({
   button: () => "press",
   input_button: () => "press",
   scene: () => "turn_on",
+  /* Un menu a tendina non si accende: ha delle voci, e il tasto ne mette una
+   * — quella fissata nell'editor (`option`), o quella scelta dal popup. */
+  select: () => "select_option",
+  input_select: () => "select_option",
   /* La serratura non si scambia con un servizio solo: si chiude o si apre, e
    * quale dei due dipende da com'e' messa adesso. */
   lock: (stato) => (clean(stato).toLowerCase() === "locked" ? "unlock" : "lock"),
@@ -64,10 +75,160 @@ export function servizioPerEntita(entity, states = {}) {
   return scelta(states?.[id]?.state) || "";
 }
 
+const E_UN_MENU = /^(select|input_select)\./;
+
+/** Quello che il servizio vuole oltre all'entita': la voce, per un menu. */
+export function datiPerEntita(entity, azione = null) {
+  const id = clean(entity);
+  const dominio = id.includes(".") ? id.split(".")[0].toLowerCase() : "";
+  const voce = clean(azione?.option);
+  if (voce && (dominio === "select" || dominio === "input_select")) return { option: voce };
+  return {};
+}
+
+/** Le voci di un menu a tendina, e quale c'e' adesso. Puro: si prova. */
+export function vociDelMenu(entity, states = {}) {
+  const id = clean(entity);
+  const stato = states?.[id] || null;
+  const voci = Array.isArray(stato?.attributes?.options)
+    ? stato.attributes.options.map(clean).filter(Boolean)
+    : [];
+  return { nome: clean(stato?.attributes?.friendly_name) || id, attuale: clean(stato?.state), voci };
+}
+
+/* ── il popup delle voci ────────────────────────────────────────────────
+ *
+ * La finestra e' una sola e sempre la stessa, come quella della fascia sotto
+ * il meteo: nasce al primo menu e da li' in poi si riempie e si mostra. La
+ * veste — l'intestazione col disegno, il titolo, il tasto che chiude, il
+ * corpo che scorre — e' quella delle altre finestre della plancia, dichiarata
+ * nel foglio dei widget per tutte e tre; qui ci sono solo le righe delle
+ * voci. Quella di adesso e' segnata: si vede quale c'e' senza toccare. */
+const POPUP = "dm-qa-popup";
+const STILE_DEL_POPUP = "dm-qa-popup-style";
+let aperto = null;
+
+function finestra() {
+  let nodo = doc?.getElementById?.(POPUP);
+  if (nodo) return nodo;
+  if (!doc?.body) return null;
+  nodo = doc.createElement("div");
+  nodo.id = POPUP;
+  nodo.hidden = true;
+  nodo.innerHTML = `<article class="dm-widget-detail" data-dm-qa-scheda>
+      <header class="dm-w-head">
+        <button type="button" class="dm-w-close" data-dm-qa-chiudi aria-label="${esc(t("Chiudi", "Close"))}"><span aria-hidden="true">✕</span> ${esc(t("Chiudi", "Close"))}</button>
+        <span class="dm-w-head-ic" aria-hidden="true" data-dm-qa-faccia></span>
+        <strong data-dm-qa-titolo></strong>
+        <small data-dm-qa-sotto></small>
+      </header>
+      <div class="dm-w-body dm-qa-voci" data-dm-qa-voci></div>
+    </article>`;
+  doc.body.append(nodo);
+  installStyle(
+    STILE_DEL_POPUP,
+    `#${POPUP} .dm-qa-voci{display:grid;gap:8px}
+    #${POPUP} .dm-qa-voce{display:flex;align-items:center;gap:10px;width:100%;padding:12px 14px;
+      border-radius:14px;border:1px solid var(--card-border,#e8edf3);
+      background:var(--bg-sculpted,#f8fafc);color:var(--text,#0f172a);
+      font:inherit;font-weight:700;font-size:14px;text-align:start;cursor:pointer}
+    #${POPUP} .dm-qa-voce:active{transform:scale(.98)}
+    #${POPUP} .dm-qa-voce[data-attuale="true"]{border-color:var(--dm-widget-accent,#0ea5e9);
+      background:color-mix(in srgb,var(--dm-widget-accent,#0ea5e9) 12%,var(--card-bg,#fff))}
+    #${POPUP} .dm-qa-voce .dm-qa-spunta{margin-inline-start:auto;font-size:13px;color:var(--dm-widget-accent,#0ea5e9)}
+    #${POPUP} .dm-qa-vuoto{margin:0;font-size:12.5px;color:var(--text-dim,#64748b)}`,
+  );
+  doc.addEventListener("click", onClickPopup);
+  return nodo;
+}
+
+/** Apre il popup con le voci di `entity`: torna `false` se non c'e' una pagina. */
+export function apriIlMenu(entity, azione = null) {
+  const nodo = finestra();
+  if (!nodo) return false;
+  const { nome, attuale, voci } = vociDelMenu(entity, allStates());
+  aperto = { entity, azione };
+  const titolo = nodo.querySelector("[data-dm-qa-titolo]");
+  const sotto = nodo.querySelector("[data-dm-qa-sotto]");
+  const faccia = nodo.querySelector("[data-dm-qa-faccia]");
+  const corpo = nodo.querySelector("[data-dm-qa-voci]");
+  if (titolo) titolo.textContent = clean(azione?.name) || nome;
+  if (sotto)
+    sotto.textContent = voci.length
+      ? t("tocca la voce da mettere", "tap the option to set")
+      : t("questo menu non dice le sue voci", "this menu does not list its options");
+  if (faccia) faccia.textContent = clean(azione?.icon) || "🎚️";
+  if (corpo)
+    corpo.innerHTML = voci.length
+      ? voci
+          .map(
+            (voce) =>
+              `<button type="button" class="dm-qa-voce" data-dm-qa-voce="${esc(voce)}" data-attuale="${voce === attuale}">${esc(voce)}${voce === attuale ? '<span class="dm-qa-spunta" aria-hidden="true">✓</span>' : ""}</button>`,
+          )
+          .join("")
+      : `<p class="dm-qa-vuoto">${esc(nome)}</p>`;
+  nodo.querySelector("[data-dm-qa-scheda]")?.style?.setProperty(
+    "--dm-widget-accent",
+    clean(azione?.color) || "#0ea5e9",
+  );
+  nodo.hidden = false;
+  doc.documentElement?.classList?.add("dm-widget-popup-open");
+  try {
+    root.navigator?.vibrate?.(10);
+  } catch (_errore) {}
+  return true;
+}
+
+export function chiudiIlMenu() {
+  aperto = null;
+  const nodo = doc?.getElementById?.(POPUP);
+  if (nodo) nodo.hidden = true;
+  doc?.documentElement?.classList?.remove("dm-widget-popup-open");
+}
+
+function onClickPopup(event) {
+  const nodo = doc?.getElementById?.(POPUP);
+  if (!nodo || nodo.hidden) return;
+  if (!event.target?.closest?.(`#${POPUP}`)) return;
+  if (event.target.closest("[data-dm-qa-chiudi]") || event.target === nodo) {
+    event.preventDefault();
+    chiudiIlMenu();
+    return;
+  }
+  const tasto = event.target.closest("[data-dm-qa-voce]");
+  if (!tasto || !aperto) return;
+  event.preventDefault();
+  const { entity, azione } = aperto;
+  const voce = clean(tasto.dataset.dmQaVoce);
+  chiudiIlMenu();
+  if (!voce) return;
+  conConferma(azione, () => chiama(entity.split(".")[0], "select_option", entity, { option: voce }));
+}
+
+/* La conferma, se l'azione la chiede, e la vibrazione: le stesse del guscio. */
+function conConferma(azione, fai) {
+  const esegui = () => {
+    try {
+      root.navigator?.vibrate?.(10);
+    } catch (_errore) {}
+    fai();
+  };
+  if (azione?.confirm && typeof root.confermaAzione === "function") {
+    root.confermaAzione({
+      icon: azione.icon || "⚡",
+      title: azione.name,
+      message: azione.confirm,
+      onConfirm: esegui,
+    });
+    return;
+  }
+  esegui();
+}
+
 /* La chiamata, per la stessa strada che usa il guscio: il suo socket e il suo
  * contatore dei messaggi. Non si apre un secondo canale per una cosa che ne
  * ha gia' uno. */
-function chiama(dominio, servizio, entity) {
+function chiama(dominio, servizio, entity, dati = {}) {
   /* La stessa condizione del guscio — «se il socket c'e', manda» — e non una
    * piu' severa: qui si corregge una parola, non si cambia quando la plancia
    * decide di parlare. Un socket chiuso fa fallire l'invio, e il fallimento
@@ -87,7 +248,7 @@ function chiama(dominio, servizio, entity) {
         type: "call_service",
         domain: dominio,
         service: servizio,
-        service_data: { entity_id: entity },
+        service_data: { entity_id: entity, ...dati },
       }),
     );
     return true;
@@ -111,9 +272,13 @@ function avvolgi() {
     } catch (_error) {
       azione = null;
     }
-    /* Quello che il guscio sa gia' fare resta suo: i gruppi di luci, le azioni
-     * predefinite, gli script e le scene dichiarate come tali. */
-    if (!azione || ["luci_group", "builtin", "script", "scene"].includes(azione.type))
+    /* Quello che il guscio sa gia' fare resta suo: i gruppi di luci e le
+     * azioni predefinite. Gli script e le scene no, non piu' per tipo: sotto
+     * «Scena» uno ci mette anche un menu a tendina, e il guscio gli
+     * chiederebbe `scene.turn_on`. Si guarda il dominio dell'entita', e dove
+     * il guscio ha ragione — uno script vero, una scena vera — gli si
+     * ridanno. */
+    if (!azione || ["luci_group", "builtin"].includes(azione.type))
       return originale.call(this, indice);
 
     let entity = clean(azione.entity);
@@ -130,20 +295,14 @@ function avvolgi() {
     // Dove `toggle` e' la risposta giusta non c'e' niente da correggere.
     if (!servizio) return originale.call(this, indice);
 
-    const esegui = () => {
-      root.navigator?.vibrate?.(10);
-      chiama(entity.split(".")[0], servizio, entity);
-    };
-    if (azione.confirm && typeof root.confermaAzione === "function") {
-      root.confermaAzione({
-        icon: azione.icon || "⚡",
-        title: azione.name,
-        message: azione.confirm,
-        onConfirm: esegui,
-      });
+    const dati = datiPerEntita(entity, azione);
+    /* Un menu a tendina senza una voce fissata: la si sceglie adesso, dal
+     * popup, che poi chiama lui il servizio. */
+    if (E_UN_MENU.test(entity) && !dati.option) {
+      apriIlMenu(entity, azione);
       return undefined;
     }
-    esegui();
+    conConferma(azione, () => chiama(entity.split(".")[0], servizio, entity, dati));
     return undefined;
   };
 

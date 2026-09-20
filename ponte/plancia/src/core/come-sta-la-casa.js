@@ -54,6 +54,14 @@ export const VOCI_DELLA_BARRA = Object.freeze([
    * dopo l'antifurto, che e' la notizia piu' grossa delle tre. */
   Object.freeze({ chiave: "porte", tessera: "porte" }),
   Object.freeze({ chiave: "varchi", tessera: "varchi" }),
+  /* Le stampanti, quando hanno qualcosa da dire (#469, e poi la domanda di
+   * chi le usa: «sulla sezione stampanti riesce a mettere i 4 colori? che
+   * poi va sulla home sotto il meteo quando c'e' un sottosoglia?»). I colori
+   * la sezione li aveva; la fascia una voce no. Una cartuccia agli sgoccioli
+   * o una stampante ferma e' una notizia come una finestra aperta — si viene
+   * a sapere prima di mandare in stampa — e sta qui, fra le notizie, non fra
+   * le cose rimaste accese. */
+  Object.freeze({ chiave: "stampanti", tessera: "stampanti" }),
   Object.freeze({ chiave: "luci", tessera: "luci" }),
   Object.freeze({ chiave: "tapparelle", tessera: "tapparelle" }),
   Object.freeze({ chiave: "clima", tessera: "clima" }),
@@ -324,6 +332,27 @@ export function pastiglieDellaCasa(modelli, { barra, posta, misure, adesso } = {
         tinta: pulito(modello.accent),
         valore: pulito(modello.value),
         avviso: Boolean(modello.triggered),
+      });
+      continue;
+    }
+    if (voce.chiave === "stampanti") {
+      /* Il conto lo ha fatto la tessera — quante hanno qualcosa da dire: ferme,
+       * o con una cartuccia agli sgoccioli — e qui si legge: la soglia sta in
+       * un posto solo (`stampanti-model.js`). Con niente da dire, niente
+       * pastiglia: «3 stampanti pronte» occupa spazio per non dire niente.
+       * Un elenco non ce l'ha: toccandola si apre la tessera, che le racconta
+       * una per una con le sue barre. */
+      const conto = Number(modello.daDire) || 0;
+      if (conto < 1) continue;
+      fuori.push({
+        chiave: "stampanti",
+        tessera: voce.tessera,
+        icona: pulito(modello.icon),
+        tinta: pulito(modello.accent),
+        conto,
+        /* Ferma e' rosso, come l'antifurto che suona: e' la stampante che non
+         * stampa. L'inchiostro che finisce si dice col colore della tessera. */
+        avviso: (Number(modello.ferme) || 0) > 0,
       });
       continue;
     }

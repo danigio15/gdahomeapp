@@ -11,7 +11,11 @@ import '../servitore.dart';
 
 /// Quello che alla schermata serve sapere di un servitore.
 abstract interface class ServitoreDiQuestoSistema {
-  Uri paginaDi(PannelloDellaPlancia pannello);
+  /// La pagina da aprire per questo pannello, in questa casa: [casa] e'
+  /// l'identificativo della casa nell'app, e vuoto vuol dire «senza». Con la
+  /// casa la pagina tiene le sue cose a parte, casa per casa
+  /// (`premesse.dart`).
+  Uri paginaDi(PannelloDellaPlancia pannello, {String casa = ''});
 
   /// L'indirizzo di una pagina qualunque servita da qui: serve al ritratto di
   /// una persona, che e' una pagina nostra messa di fianco ai file della
@@ -33,7 +37,8 @@ class _SulTelefono implements ServitoreDiQuestoSistema {
   final Servitore _servitore;
 
   @override
-  Uri paginaDi(PannelloDellaPlancia pannello) => _servitore.paginaDi(pannello);
+  Uri paginaDi(PannelloDellaPlancia pannello, {String casa = ''}) =>
+      _servitore.paginaDi(pannello, casa: casa);
 
   @override
   Uri indirizzoDi(String percorso, {Map<String, String> domande = const {}}) =>
