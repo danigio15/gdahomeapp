@@ -8,7 +8,7 @@ fatti dalla stessa pagina web e dalla stessa cartella:
 | `gdahome-presentazione` | 1280×720 | 2:49 | quello che spiega: cos'è, come si installa l'add-on, come si abbina il telefono, quanto costa (niente) |
 | `gdahome-facebook` | 1080×1080 | 0:47 | il quadrato per il feed di Facebook |
 | `gdahome-tiktok` | 1080×1920 | 0:47 | lo stesso, in piedi, per TikTok — e per Reels e Storie |
-| `gdahome-quadro` | 1280×720 | 4:00 · 3:46 | **il quadro**, ed è l'unico **parlato**: cosa vede chi ha montato l'impianto quando gli si danno in gestione le case, e cosa da lì non vede |
+| `gdahome-quadro` | 1280×720 | 5:03 · 4:36 | **il quadro**, ed è l'unico **parlato**: cosa vede chi ha montato l'impianto quando gli si danno in gestione le case, e cosa da lì non vede |
 
 I primi tre parlano a chi abita una casa. Il quarto parla a chi ne segue
 quaranta, e per questo dice due cose che negli altri non ci sono: cosa si legge
