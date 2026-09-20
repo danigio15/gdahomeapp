@@ -59,8 +59,9 @@ configuration:
           way an update does: it is the home that collects it. What they do not
           see, because it does not travel this way: camera images and streams,
           sensor states, what happens in your home. Know that the names of your
-          rooms and entities leave your home towards their dashboard: you decide,
-          by switching it on.
+          rooms, devices and entities leave your home towards their dashboard,
+          with what each entity can do — not what it is doing: you decide, by
+          switching it on.
       quadro_marchio:
         name: Let the dashboard carry the mark of whoever installed your home
         description: >-

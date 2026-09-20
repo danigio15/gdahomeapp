@@ -25,6 +25,7 @@ import { Chiavi } from "./chiavi.js";
 import { Fattorino } from "./fattorino.js";
 import { Giro } from "./giro.js";
 import { Installatori } from "./installatori.js";
+import { PlanciaServita } from "./plancia-servita.js";
 import { apriIlRegistro } from "./registro.js";
 import { costruisciIlServer } from "./server.js";
 
@@ -42,6 +43,9 @@ export async function alzaIlQuadro({
    * senza non si puo' iscrivere nessuno: un quadro cosi' riceve rapporti di
    * case gia' abbinate e non ne fa entrare di nuove. Va lunga. */
   chiaveDelGestore = process.env.QUADRO_GESTORE || "",
+  /* Dove sta la plancia da servire nell'editor: vuoto, la si cerca accanto a
+   * `src/` e poi nella repository (`plancia-servita.js`). */
+  cartellaDellaPlancia = process.env.QUADRO_PLANCIA || undefined,
 } = {}) {
   const registro = apriIlRegistro(livello);
   const case_ = new CaseSeguite({ cartella });
@@ -50,6 +54,19 @@ export async function alzaIlQuadro({
 
   const fattorino = new Fattorino({ registro });
 
+  /* La plancia per l'editor dentro il cruscotto: quella dell'add-on, che
+   * `accendi.sh` mette accanto a `src/` e che nella repository sta in
+   * `ponte/plancia`. Senza, il cruscotto lo dice e il resto va avanti. */
+  const plancia = new PlanciaServita({ cartella: cartellaDellaPlancia });
+  if (plancia.cE)
+    registro.info(
+      `la plancia per l'editor c'e': ${plancia.file} file, versione ${plancia.versione() || "?"}, impronta ${plancia.impronta}`,
+    );
+  else
+    registro.attenzione(
+      `senza plancia: in ${plancia.cartella} non c'e' niente da servire, e dal cruscotto la Configurazione non si apre`,
+    );
+
   const server = costruisciIlServer({
     case: case_,
     chiavi,
@@ -57,6 +74,7 @@ export async function alzaIlQuadro({
     chiaveDelGestore,
     cartella,
     fattorino,
+    plancia,
     registro,
   });
 
@@ -101,6 +119,7 @@ export async function alzaIlQuadro({
     chiavi,
     installatori,
     giro,
+    plancia,
     registro,
     spegni: () =>
       new Promise((ok) => {

@@ -11,6 +11,46 @@ fuori. La plancia dentro continua a dire la sua, e si legge dov'è sempre
 stata: nella pastiglia «La plancia» della console. Sono due numeri perché
 sono due cose.
 
+## 1.5.9.14
+
+**Dal cruscotto si apre l'editor vero della plancia.** Il tasto
+«Configurazione» nel capitolo «Le plance» non apre più una casella di JSON:
+apre la Configurazione di DashboardModern — quella con «Configura Entità»,
+le stanze, le sezioni, i widget — servita dal quadro in un riquadro sopra il
+cruscotto. La pagina crede di parlare con Home Assistant e parla col quadro,
+che di casa ha soltanto quello che la casa gli ha mandato: com'è fatta la
+plancia e **l'inventario** — quali entità ci sono, come si chiamano, cosa
+sanno fare, in quale stanza stanno, a quale dispositivo appartengono. Mai
+cosa stanno facendo: gli stati escono come «non lo so», le immagini e i
+flussi delle telecamere non escono, un comando a un dispositivo il quadro
+lo rifiuta per nome. Ogni modifica salvata diventa un lavoro che la casa
+ritira appena passa, come prima. Prima di aprire, il cruscotto chiede alla
+casa com'è fatta la plancia **adesso**, e la casa in linea risponde in pochi
+secondi. Serve il terzo interruttore, come prima; accendendolo, adesso escono
+anche i nomi dei dispositivi e le capacità delle entità, e la scheda lo dice.
+Sulla macchina del quadro va rilanciato `accendi.sh` una volta, perché la
+plancia da servire arrivi accanto al quadro.
+
+**Una plancia aggiunta dal cruscotto nasce da sola, in pochi secondi.** Non
+c'è niente da confermare in casa, e non c'era nemmeno prima; ma «in attesa che
+la casa la crei» si leggeva come un permesso da dare, e arrivava col rapporto
+del minuto dopo. Adesso il quadro sveglia la casa in linea appena si preme
+«Aggiungi» — o «Salva» sui nomi — e la casa passa subito: la plancia compare
+nel menu laterale mentre si guarda. Se un impianto ha spento «il marchio di
+chi installa», il cruscotto lo scrive invece di lasciar aspettare una plancia
+che non nasce.
+
+**Il logo dell'installatore si mette anche dalla scheda di un impianto.** Nel
+capitolo «Le plance» c'è lo stesso riquadro della pagina Abbinamento: chi
+l'ha messo all'abbinamento lo ritrova, chi non l'ha messo lo mette da lì. È
+lo stesso logo per tutti i suoi impianti, e lo dice.
+
+**Nell'app web il cruscotto non chiede più il codice.** Il codice sta nella
+scheda dell'add-on, e l'app lo consegnava al riquadro solo sul telefono: nel
+browser si contava sul deposito della pagina, che dentro il riquadro di un
+altro sito è a parte e a volte non dura nemmeno la sessione. Adesso lo
+consegna anche lì, e anche alla scheda che apre il tasto «Apri nel browser».
+
 ## 1.5.9.13
 
 **Le icone degli aggiornamenti arrivano tutte nel cruscotto.** Nella 1.5.9.11

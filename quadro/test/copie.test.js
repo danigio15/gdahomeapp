@@ -1,6 +1,7 @@
 /* Le copie prese dal ponte devono restare identiche.
  *
- * `archivio.js`, `segreti.js` e `registro.js` sono copie di quelli del ponte,
+ * `archivio.js`, `segreti.js`, `registro.js` — e dalla 1.5.9.14 `presa.js`,
+ * `marchio.js`, `inventario.js` e `catalogo.js` — sono copie di quelli del ponte,
  * per lo stesso motivo per cui il centralino ne ha le sue: il ponte e' un
  * add-on, e un add-on si costruisce con la sua cartella come unico contesto —
  * non puo' importare niente che stia fuori da li'.
@@ -20,7 +21,18 @@ const QUI = dirname(fileURLToPath(import.meta.url));
 const QUADRO = join(QUI, "..", "src");
 const PONTE = join(QUI, "..", "..", "ponte", "src");
 
-const COPIATI = ["archivio.js", "segreti.js", "registro.js"];
+const COPIATI = [
+  "archivio.js",
+  "segreti.js",
+  "registro.js",
+  /* Dalla 1.5.9.14, per l'editor della plancia dentro il cruscotto: il
+   * server WebSocket, la vestizione della pagina, il setaccio
+   * dell'inventario e il catalogo delle integrazioni. */
+  "presa.js",
+  "marchio.js",
+  "inventario.js",
+  "catalogo.js",
+];
 
 test("le copie prese dal ponte sono ancora identiche", () => {
   for (const nome of COPIATI) {

@@ -251,6 +251,11 @@ accende il giro che lo tiene aggiornato da solo ogni dieci minuti.
   quadro, e con lui tutti gli installatori che avrebbe dovuto aggiungere. E il
   gettone di lettura non lo richiede nemmeno, se il tramite è già lì: è la
   stessa repository.
+- **Porta accanto al quadro anche la plancia dell'add-on** (`ponte/plancia`,
+  copiata in `quadro/plancia/`): è quella che il cruscotto apre nell'editor
+  della Configurazione. Un quadro messo su prima della 1.5.9.14 non ce l'ha:
+  si rilancia `accendi.sh` una volta, e da lì l'aggiornamento automatico la
+  porta a ogni versione.
 
 ### Sul banco, senza installare niente
 
@@ -467,7 +472,9 @@ e nient'altro.
 persone, stati di sensori, **l'SSID del Wi-Fi**, **l'indirizzo pubblico**,
 posizione, foto, il contenuto delle segnalazioni, e la configurazione della
 plancia — a meno che chi abita la casa non abbia acceso apposta il terzo
-interruttore: allora viaggia, ma **a parte** e mai dentro il rapporto, che ne
+interruttore: allora viaggiano la configurazione e **l'inventario** (i nomi
+delle stanze, dei dispositivi e delle entità, con quello che ogni entità sa
+fare, mai cosa sta facendo), ma **a parte** e mai dentro il rapporto, che ne
 porta solo la revisione (vedi «Configurare la plancia da lontano»). Il quadro
 dice **che c'è da guardare**, e finisce lì: guardare dentro casa è un'altra
 cosa, e non si fa da qui (vedi «Cosa il quadro non può fare»).
@@ -669,7 +676,7 @@ Le vie, davanti:
 | `GET /` | la soglia: cos'è questo indirizzo, in italiano. Chi lo tiene fra i segnalibri prima o poi lo apre nudo |
 | `GET /salute` | se è vivo, **quale versione gira**, quante case segue, e se la console è aperta |
 | `POST /rapporto` | la casa deposita. `x-casa` + la sua chiave; una matricola mai vista nasce qui, senza nome |
-| `POST /plancia` | la casa manda com'è fatta una sua plancia — profilo, revisione, valori — **solo** se nella risposta al rapporto il quadro gliel'ha chiesta (`vuoleLaPlancia`) e solo se ha acceso il terzo interruttore. Senza flussi di telecamere: la casa li toglie prima, il quadro rifiuta quello che ne contiene |
+| `POST /plancia` | la casa manda com'è fatta una sua plancia — profilo, revisione, valori, e i tre numeri della generazione dello scatto — **solo** se nella risposta al rapporto il quadro gliel'ha chiesta (`vuoleLaPlancia`) e solo se ha acceso il terzo interruttore. Senza flussi di telecamere: la casa li toglie prima, il quadro rifiuta quello che ne contiene. Col primo scatto del giro viaggia anche l'**inventario** di casa (`inventario`): entità con le loro capacità, dispositivi, stanze, piani — mai gli stati, che la casa toglie prima di partire e il quadro ritoglie con lo stesso setaccio (`inventario.js`, copia identica nei due programmi) |
 | `GET /plancia/<profilo>?id=…` | la casa ritira la configurazione che le è stata scritta, per identificativo del lavoro `configura` |
 
 L'installatore, tutte dentro `/console/` e tutte con la **sua** chiave:
@@ -688,6 +695,11 @@ L'installatore, tutte dentro `/console/` e tutte con la **sua** chiave:
 | `POST /console/casa/<matricola>/plance` | una plancia in più, col suo `titolo` (e `velo`): qui nasce la scelta, segnata `nuova`, e la casa la crea al rapporto dopo, vuota come una aggiunta dall'app. Otto per casa, contando quelle in attesa. Da qui non se ne toglie nessuna |
 | `GET /console/casa/<matricola>/plancia/<profilo>/configurazione` | com'è fatta quella plancia, come l'ha mandata la casa: lo scatto con revisione e valori, o niente se non è ancora arrivato. Solo se quella casa ha acceso il terzo interruttore |
 | `PUT /console/casa/<matricola>/plancia/<profilo>/configurazione` | scrivila così: i `valori` interi e la `revisioneAttesa`. Diventa un lavoro `configura`, che la casa ritira al rapporto dopo; se in casa nel frattempo è cambiata, la casa rifiuta e lo dice |
+| `POST /console/casa/<matricola>/plancia/<profilo>/rinfresca` | «voglio lo scatto di adesso»: il quadro lo richiede alla casa al passaggio dopo anche a revisione ferma — con l'inventario — e se la casa è in linea la sveglia. È quello che il cruscotto fa aprendo l'editor |
+| `GET /console/casa/<matricola>/plancia/<profilo>/stato` | se lo scatto c'è e di quando, se l'inventario c'è, se la casa è in linea, che versione ha l'editor: senza i valori, per non scaricare megabyte a ogni domanda |
+| `GET /plancia-da-lontano/<matricola>/<profilo>/` | **senza chiave**: la pagina dell'editor della plancia — quella di `ponte/plancia`, con le premesse che dicono di quale casa e quale plancia è — vestita col nome e il logo di chi segue la casa. Solo per una casa che lascia configurare da lontano |
+| `WS /plancia-da-lontano/<matricola>/<profilo>/websocket` | il filo su cui quella pagina parla: **cieco** (`cucitura-cieca.js`). Si entra col codice del cruscotto nel primo messaggio, come si entra in Home Assistant; poi `get_states` e i registri rispondono con l'inventario, `dashboardmodern/config/get` con lo scatto, `dashboardmodern/config/set` mette in coda il lavoro `configura`; a tutto il resto — comandi, flussi, storia, foto, azzeramenti — si dice di no per nome |
+| `GET /dashboardmodern_static/…` | i file della plancia, **senza chiave** e senza marchio, sotto l'impronta del contenuto: un anno di cache |
 | `DELETE /console/casa/<matricola>` | non seguirla più: si butta quello che se ne sa **e** la sua chiave, se no il primo rapporto la fa rinascere tre secondi dopo |
 
 E chi tiene il quadro, dentro `/gestore/` e con la chiave di gestione:
@@ -824,10 +836,34 @@ propria plancia sono due fiducie diverse, e un interruttore solo le avrebbe
 legate per forza.
 
 Nel foglio di un impianto, nel capitolo «Le plance», accanto ai nomi di ogni
-plancia c'è il tasto **Configurazione**: apre com'è fatta — la configurazione
-intera, in JSON, com'è arrivata da casa — e la si riscrive. Al rapporto dopo la
-casa ritira la modifica e la applica, e com'è andata sta nel rapporto, parola
-per parola, come per un aggiornamento.
+plancia c'è il tasto **Configurazione**: apre **l'editor vero della plancia** —
+la Configurazione di DashboardModern, con «Configura Entità», le stanze, le
+sezioni, i widget — in un riquadro sopra il cruscotto. La pagina è quella di
+`ponte/plancia`, servita dal quadro con le sue premesse (`plancia-servita.js`):
+crede di parlare con Home Assistant e parla col quadro, su un filo **cieco**
+(`cucitura-cieca.js`) che di casa ha soltanto quello che la casa gli ha
+mandato. Fino alla 1.5.9.13 era una casella di JSON: si vedeva la
+configurazione intera e la si riscriveva a mano, che per una plancia da
+qualche megabyte non è un modo di lavorare.
+
+Prima di aprire, il cruscotto chiede alla casa com'è fatta la plancia
+**adesso** (`rinfresca`), e la casa in linea risponde in pochi secondi: lo
+scatto e l'inventario di oggi, non quelli di quando la revisione è cambiata
+l'ultima volta. Se la casa non risponde, si apre com'era, e lo si dice. Ogni
+modifica salvata nell'editor diventa un lavoro `configura`, come prima: la
+casa lo ritira appena passa, lo applica, e com'è andata sta nel rapporto —
+e sopra il riquadro, mentre si lavora.
+
+**L'inventario, e perché serve.** Un editor che deve mettere una presa in una
+stanza deve sapere quali prese ci sono e quali stanze. Quindi con lo scatto
+viaggia l'inventario di casa: le entità con l'id, il nome e le **capacità**
+(la classe, l'unità, quali modi sa fare un clima, quanti colori una luce), i
+dispositivi con nome, marca e stanza, le stanze, i piani. Lo fa
+`ponte/src/inventario.js`, e lo rifà — copia identica — `quadro/src/inventario.js`
+su quello che arriva: la lista di quello che passa è chiusa, e quello che non
+c'è in lista non passa. Gli stati escono tutti come «non lo so»; non escono
+l'immagine di una telecamera né il suo indirizzo, non escono i seriali, gli
+indirizzi di rete, le versioni del firmware, la posizione di casa.
 
 **Come viaggia, e perché non dentro il rapporto.** Il rapporto ha un tetto di
 256 KiB e una plancia configurata può pesarne di più. Quindi la configurazione
@@ -853,13 +889,16 @@ casa»). Se in casa la plancia è cambiata nel frattempo — dall'app, da chi ci
 abita — la revisione attesa non torna, e la casa rifiuta: si rilegge e si
 rifà, invece di sovrascrivere il lavoro di qualcun altro.
 
-**Cosa esce da casa, accendendolo.** I nomi delle stanze e delle entità che
-stanno nella plancia: è il prezzo di farsi sistemare la plancia da lontano, e
-sta scritto accanto all'interruttore perché lo decida chi ci abita. Non escono
-le immagini né gli indirizzi dei flussi delle telecamere, non escono gli stati
-dei sensori, non esce niente di quello che succede in casa: il cruscotto
-configura la plancia, non la guarda. Otto plance per casa e otto MiB per
-plancia sono i tetti, uguali nei due programmi.
+**Cosa esce da casa, accendendolo.** I nomi delle stanze, dei dispositivi e
+delle entità, con quello che ogni entità sa fare: è il prezzo di farsi
+sistemare la plancia da lontano, e sta scritto accanto all'interruttore perché
+lo decida chi ci abita. Non escono le immagini né gli indirizzi dei flussi
+delle telecamere, non escono gli stati dei sensori, non esce niente di quello
+che succede in casa: il cruscotto configura la plancia, non la guarda. Sul
+filo cieco un comando a un dispositivo, un flusso, la storia di un sensore,
+una foto, un azzeramento della plancia si sentono dire di no per nome: non
+c'è nessun posto dove passare. Otto plance per casa e otto MiB per plancia
+sono i tetti, uguali nei due programmi.
 
 ## Cosa il quadro non può fare
 
@@ -873,8 +912,10 @@ che non ha:
 
 - **non apre la plancia** — non c'è nessun tasto che porti dentro una casa, e
   non è un tasto dimenticato: il quadro non ha nessun segno con cui entrare;
-- **non vede entità, stanze né persone** — riceve numeri, versioni e nomi di
-  processi, e si ferma lì;
+- **non vede stati, presenze né persone** — riceve numeri, versioni e nomi di
+  processi, e si ferma lì. I nomi delle entità e delle stanze li vede solo
+  dove chi abita la casa ha acceso il terzo interruttore, per l'editor della
+  plancia, e anche lì come inventario: cosa c'è, mai cosa sta facendo;
 - **non tocca niente oltre i suoi verbi** — e solo dove quella casa ha aperto la
   manutenzione; la configurazione della plancia solo dove ha aperto anche
   quella, con l'interruttore suo. Non c'è una riga di comando, non si legge uno

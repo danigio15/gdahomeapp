@@ -108,6 +108,7 @@ async function banco() {
       chiave,
     );
   return {
+    dove,
     gestore,
     retro,
     iscritti,
@@ -266,13 +267,18 @@ test("il cruscotto ha il capitolo «Le plance» con due caselle per plancia; la 
   assert.match(CRUSCOTTO, /data-nuova-plancia="\$\{testo\(casa\.casa\)\}"/);
   assert.match(CRUSCOTTO, /\/casa\/\$\{tasto\.dataset\.nuovaPlancia\}\/plance`/);
   assert.match(CRUSCOTTO, /data-annulla-veste="\$\{testo\(una\.profilo\)\}"/);
-  assert.match(CRUSCOTTO, /in attesa che la casa la crei/);
+  /* Una plancia in attesa non aspetta nessuno: la casa la crea da sola, e
+   * la pastiglia lo dice cosi' — non «in attesa che la casa la crei», che si
+   * leggeva come un permesso da dare. */
+  assert.match(CRUSCOTTO, /in arrivo<\/span>/);
+  assert.match(CRUSCOTTO, /in casa nessuno deve confermare niente/);
+  assert.doesNotMatch(CRUSCOTTO, /in attesa che la casa la crei/);
   assert.match(CRUSCOTTO, new RegExp(`const PLANCE_AL_MASSIMO = ${QUANTE_AL_MASSIMO};`));
   assert.equal(PLANCE_AL_MASSIMO, QUANTE_AL_MASSIMO);
 
   assert.match(GESTIONE, /<h2>Le plance<\/h2>/);
   assert.match(GESTIONE, /vesti-lette/);
-  assert.match(GESTIONE, /in attesa che la casa la crei/);
+  assert.match(GESTIONE, /in arrivo: la casa la crea da sola/);
   assert.doesNotMatch(
     GESTIONE,
     /data-salva-veste=|data-veste-titolo|data-veste-velo|data-nuova-plancia|data-annulla-veste/,
@@ -284,12 +290,21 @@ test("una plancia in piu' dal cruscotto: nasce in attesa, la casa la crea, e da 
   try {
     const codice = await b.unCodice();
     await b.deposita(UNA, codice);
+    /* La casa e' in linea sul filo: appena la plancia si chiede, la si
+     * sveglia perche' passi adesso — e' nella risposta al rapporto che la
+     * trova, e un minuto d'attesa si leggeva come «la casa deve
+     * confermare». */
+    const inLinea = fetch(`${b.dove}/attesa`, {
+      headers: { authorization: `Bearer ${codice}`, "x-casa": UNA },
+    });
+    await new Promise((ok) => setTimeout(ok, 50));
     const fatta = await b.retro(`/casa/${UNA}/plance`, {
       method: "POST",
       body: JSON.stringify({ titolo: "Taverna dei nonni", velo: "Rossi" }),
     });
     assert.equal(fatta.status, 200);
     assert.equal((await fatta.json()).profilo, "taverna-dei-nonni");
+    assert.deepEqual(await (await inLinea).json(), { rapporto: true });
     const risposta = await b.deposita(UNA, codice);
     assert.deepEqual(risposta.vesti, {
       "taverna-dei-nonni": { titolo: "Taverna dei nonni", velo: "Rossi", nuova: true },

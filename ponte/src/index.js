@@ -21,6 +21,7 @@ import { Catalogo } from "./catalogo.js";
 import { Configurazione } from "./configurazione.js";
 import { Ferro } from "./ferro.js";
 import { BASE_DI_CASA, Foto } from "./foto.js";
+import { inventarioSenzaDati } from "./inventario.js";
 import { Plancia } from "./plancia.js";
 import { Plance } from "./plance.js";
 import { PlanceInCasa } from "./plance-in-casa.js";
@@ -310,8 +311,35 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
         return {
           titolo: quale.titolo,
           revisione: Number(dentro?.revision) || 0,
+          /* I tre numeri con cui l'editor capisce se lo scatto e' della sua
+           * generazione: senza, alla prima apertura riscriverebbe la plancia
+           * per «aggiornarla» a una che e' gia' aggiornata. */
+          chiavi: Number(dentro?.keys_revision) || 0,
+          generazione: Number(dentro?.writer_generation) || 0,
+          aggiornataIl: Number(dentro?.updated_at) || 0,
           valori: dentro?.values ?? {},
         };
+      },
+      /* L'inventario di casa per l'editor del cruscotto: cosa c'e', non cosa
+       * succede. Le cinque liste si chiedono a Home Assistant e passano dal
+       * setaccio di `inventario.js`; i piani sono facoltativi, perche' su
+       * una Home Assistant di ieri quel registro non c'e'. */
+      inventario: async () => {
+        const forse = async (comando) => {
+          try {
+            return await casa.chiedi(comando);
+          } catch (_errore) {
+            return [];
+          }
+        };
+        const [stati, entita, dispositivi, stanze, piani] = await Promise.all([
+          casa.chiedi({ type: "get_states" }),
+          casa.chiedi({ type: "config/entity_registry/list" }),
+          casa.chiedi({ type: "config/device_registry/list" }),
+          forse({ type: "config/area_registry/list" }),
+          forse({ type: "config/floor_registry/list" }),
+        ]);
+        return inventarioSenzaDati({ stati, entita, dispositivi, stanze, piani });
       },
     },
     registro,
@@ -358,6 +386,7 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
     lavori,
     manutenzione: opzioni.manutenzione,
     configurazionePlancia: () => opzioni.configurazionePlancia === true,
+    marchioDellInstallatore: opzioni.marchioDellInstallatore === true,
     plance,
     configurazione,
     dispositivi,

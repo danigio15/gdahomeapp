@@ -48,11 +48,25 @@ test("il rapporto dice se il terzo interruttore e' acceso, e allora porta la rev
  * profilo. Dentro c'e' un flusso apposta, per vedere che non parte. */
 const planciaFinta = ({ attiva = true } = {}) => ({
   attiva: () => attiva,
+  /* L'inventario di casa, gia' passato dal setaccio (`inventario.js`): qui
+   * si guarda che parta col primo scatto e con quello soltanto. */
+  inventario: async () => ({
+    stati: [
+      { entity_id: "light.cucina", state: "unknown", attributes: { friendly_name: "Cucina" } },
+    ],
+    entita: [],
+    dispositivi: [],
+    stanze: [{ area_id: "cucina", name: "Cucina" }],
+    piani: [],
+  }),
   scatta: (profilo) =>
-    profilo === "primary"
+    profilo === "primary" || profilo === "suocero"
       ? {
-          titolo: "Casa",
+          titolo: profilo === "primary" ? "Casa" : "Suocero",
           revisione: 12,
+          chiavi: 4,
+          generazione: 2,
+          aggiornataIl: 1700000000000,
           valori: {
             cd_stanze: JSON.stringify([{ name: "Cucina" }]),
             cd_telecamere: JSON.stringify([
@@ -89,8 +103,8 @@ test("quando il quadro chiede una plancia, la casa gliela manda: senza flussi, e
   assert.equal(await postino.manda(), true);
   postino.ferma();
   const mandate = viste.filter((una) => una.dove === "https://quadro.it/plancia");
-  assert.equal(mandate.length, 1, "parte solo la plancia che c'e' e che e' stata chiesta");
-  const [una] = mandate;
+  assert.equal(mandate.length, 2, "partono le plance che ci sono e che sono state chieste");
+  const [una, altra] = mandate;
   assert.equal(una.come.method, "POST");
   assert.equal(una.come.headers.authorization, "Bearer K7M2-9XQF-3BHT-R4VN");
   assert.equal(una.come.headers["x-casa"], "casa_abc");
@@ -98,6 +112,15 @@ test("quando il quadro chiede una plancia, la casa gliela manda: senza flussi, e
   assert.equal(corpo.profilo, "primary");
   assert.equal(corpo.titolo, "Casa");
   assert.equal(corpo.revisione, 12);
+  /* I tre numeri della generazione dello scatto, per l'editor. */
+  assert.equal(corpo.chiavi, 4);
+  assert.equal(corpo.generazione, 2);
+  assert.equal(corpo.aggiornataIl, 1700000000000);
+  /* L'inventario di casa viaggia col primo scatto, e con quello soltanto:
+   * e' lo stesso per tutte le plance. */
+  assert.deepEqual(corpo.inventario.stanze, [{ area_id: "cucina", name: "Cucina" }]);
+  assert.equal(corpo.inventario.stati[0].state, "unknown");
+  assert.equal("inventario" in JSON.parse(altra.come.body), false);
   /* Il flusso non parte: al suo posto una stringa vuota, cosi' la telecamera
    * resta al suo posto e il suo indirizzo resta in casa. */
   const telecamere = JSON.parse(corpo.valori.cd_telecamere);

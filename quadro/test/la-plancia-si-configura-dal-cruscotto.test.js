@@ -289,15 +289,15 @@ test("il cruscotto apre la configurazione dal capitolo «Le plance», e solo dov
   assert.match(capitolo, /const siConfigura = c\.configurazione === true;/);
   assert.match(capitolo, /siConfigura && !una\.nuova/);
   assert.match(capitolo, /data-configura-plancia="\$\{testo\(casa\.casa\)\}"/);
-  assert.match(capitolo, /\$\{aperta \? lEditorDi\(casa, una\) : ""\}/);
+  /* Il tasto apre l'editor vero, in un riquadro sopra la pagina: la casella
+   * di JSON di prima non c'e' piu' (`l-editor-della-plancia-dal-cruscotto`). */
+  assert.match(
+    CRUSCOTTO,
+    /apriLEditor\(tasto\.dataset\.configuraPlancia, tasto\.dataset\.profilo\)/,
+  );
+  assert.doesNotMatch(capitolo, /lEditorDi|textarea/);
   /* Chi non lo permette lo legge, invece di cercare un tasto che non c'e'. */
   assert.match(capitolo, /non ha attivato la <b>configurazione da lontano<\/b>/);
-  /* Le due vie stanno sotto il profilo, perche' quella nuda e' dei nomi. */
-  assert.match(CRUSCOTTO, /\/casa\/\$\{casa\}\/plancia\/\$\{profilo\}\/configurazione`\)/);
-  assert.match(CRUSCOTTO, /\/casa\/\$\{casa\}\/plancia\/\$\{profilo\}\/configurazione`, \{/);
-  /* Si salva in due tempi: e' la plancia di casa d'altri. */
-  const salva = CRUSCOTTO.slice(CRUSCOTTO.indexOf('querySelectorAll("[data-plancia-salva]")'));
-  assert.match(salva.slice(0, 3000), /Premi ancora per confermare/);
   /* E la gestione legge e basta: nessun tasto, nessun editor. */
-  assert.doesNotMatch(GESTIONE, /data-configura-plancia|data-plancia-salva|data-plancia-testo/);
+  assert.doesNotMatch(GESTIONE, /data-configura-plancia|apriLEditor|editor-plancia/);
 });
