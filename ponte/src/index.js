@@ -156,6 +156,19 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
    * `update.` e si manda al telefono, che con tre righe sa quello che nella
    * dashboard si vede col pallino rosso. */
   const aggiornamenti = new Aggiornamenti({ casa, registro });
+  /* Chi c'e' in questa casa, e chi la amministra.
+   *
+   * Non si tiene niente sul disco: si chiede a Home Assistant e la risposta
+   * vale un minuto. Serve a tre cose: disegnare le spunte di «chi la vede»,
+   * rispondere alla sola domanda che l'ingress non sa — «questo utente
+   * amministra?» — e dire al ponte se il telefono che chiede una plancia
+   * riservata a chi amministra ne ha il diritto — e alle commissioni, per
+   * decidere se dare all'app i due codici del quadro.
+   *
+   * Sta **prima** delle commissioni perche' e' loro: dichiararlo dopo e
+   * passarlo lo stesso vuol dire un ponte che non si accende. */
+  const utenti = new UtentiDiCasa({ casa, registro });
+
   const commissioni = new Commissioni({
     casa,
     registro,
@@ -173,18 +186,13 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
      * `_ilQuadro`, e li vede solo chi amministra questa casa. */
     chiaveDelCruscotto: opzioni.chiaveDelCruscotto,
     chiaveDellaGestione: opzioni.chiaveDellaGestione,
+    /* E chi amministra: serve a decidere se quei due codici si danno. Senza,
+     * `_ilQuadro` puo' solo leggere la memoria — che quando la domanda arriva
+     * e' ancora vuota — e non darli mai. */
+    utenti,
     spegnimento,
     aggiornamenti,
   });
-  /* Chi c'e' in questa casa, e chi la amministra.
-   *
-   * Non si tiene niente sul disco: si chiede a Home Assistant e la risposta
-   * vale un minuto. Serve a tre cose: disegnare le spunte di «chi la vede»,
-   * rispondere alla sola domanda che l'ingress non sa — «questo utente
-   * amministra?» — e dire al ponte se il telefono che chiede una plancia
-   * riservata a chi amministra ne ha il diritto. */
-  const utenti = new UtentiDiCasa({ casa, registro });
-
   const ponte = new Ponte({ casa, dispositivi, registro, commissioni, utenti });
 
   /* Le plance fra le «Plance» di Home Assistant, una voce per ognuna.

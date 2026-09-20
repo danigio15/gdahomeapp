@@ -11,6 +11,27 @@ fuori. La plancia dentro continua a dire la sua, e si legge dov'è sempre
 stata: nella pastiglia «La plancia» della console. Sono due numeri perché
 sono due cose.
 
+## 1.5.9.10
+
+**Adesso il codice del cruscotto arriva davvero.** Nella 1.5.9.9 quasi mai:
+il ponte lo dà solo a chi amministra la casa, e per sapere chi amministra
+guarda l'elenco degli utenti — che tiene in memoria e chiede a Home Assistant
+quando serve. Ma l'app quella domanda la fa **una volta sola, nell'istante in
+cui il filo si alza**: cioè esattamente quando quella memoria è ancora vuota.
+Il ponte rispondeva «non so chi sei», il codice non partiva, e siccome l'app
+non lo richiedeva quella sessione restava senza. Riassociare il telefono non
+serviva a niente.
+
+Adesso «non si sa» non è più un no: il ponte va a vedere. Aspettare una volta
+per collegamento non costa niente a nessuno, e chi risponde davvero no resta un
+no. Se Home Assistant non risponde affatto, fra le due si sceglie quella che
+non apre niente.
+
+E l'app non si tiene più quel «niente codice» per tutta la sessione: finché c'è
+una porta di cui sa l'indirizzo ma non il codice riprova, poche volte e poi
+basta — chi non amministra quel codice non lo avrà mai, e continuare a
+chiederlo sarebbe un giro che non finisce.
+
 ## 1.5.9.9
 
 **Dall'app, Cruscotto e Gestione non richiedono più il codice.** Il codice sta
