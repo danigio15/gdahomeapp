@@ -288,6 +288,18 @@ body {
   opacity: 1;
   animation: sparisci 0.32s var(--t2, 0s) ease forwards;
 }
+/* Chi sta in mezzo, cresce, e poi se ne va.
+   Senza questa riga si scriveva `class="cr via"`, e `.cr` porta uno `scale`
+   che **cancella** il `translate(-50%,-50%)` con cui quell'elemento sta in
+   mezzo: lo schermo del film del quadro finiva col suo angolo in alto a
+   sinistra nel centro del palco, sbordava a destra e copriva la didascalia.
+   E' lo stesso inciampo che `cresci-c` e `cresci-cc` esistono per evitare. */
+.cr-cc.via {
+  opacity: 0;
+  animation:
+    cresci-cc 0.5s var(--t, 0s) cubic-bezier(0.2, 0.8, 0.2, 1) forwards,
+    sparisci 0.32s var(--t2, 0s) ease forwards;
+}
 /* Chi arriva e poi se ne va: due animazioni, l'ultima comanda. */
 .ap.via {
   opacity: 0;

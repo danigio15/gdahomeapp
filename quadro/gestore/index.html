@@ -3476,7 +3476,9 @@
                 <b>${
                   chiesto.cosa === "riavvia"
                     ? "Il riavvio di Home Assistant"
-                    : `${testo(chiesto.nome)} ${testo(chiesto.da)} → ${testo(chiesto.a)}`
+                    : chiesto.cosa === "configura"
+                      ? `La configurazione della plancia «${testo(chiesto.nome)}»`
+                      : `${testo(chiesto.nome)} ${testo(chiesto.da)} → ${testo(chiesto.a)}`
                 }</b>
                 è stato richiesto ${testo(daQuanto(chiesto.chiesto))}. Parte al prossimo rapporto di questo impianto: è l'impianto a ritirare il comando, il cruscotto non lo contatta.
               </span>
@@ -3489,7 +3491,9 @@
           return `
             <div class="cartello bene">
               <span class="gettone" aria-hidden="true">✓</span>
-              <span><b>${testo(l.cosa)}</b> ${l.riavvio ? "fatto" : "installato"} ${testo(daQuanto(l.quando))}, dal cruscotto.</span>
+              <span><b>${testo(l.cosa)}</b> ${l.riavvio ? "fatto" : l.configurazione ? "applicata" : "installato"} ${testo(daQuanto(l.quando))}, dal cruscotto.${
+                l.configurazione && l.perche ? ` ${testo(l.perche)}.` : ""
+              }</span>
             </div>`;
         if (l.stato === "non riuscito")
           return `

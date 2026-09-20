@@ -53,6 +53,8 @@
 import { gliAddon, gliApparati, laMacchina, laRete } from "./ferro.js";
 import { ilSegnoDi } from "./segni.js";
 import { ilBackup, leBatterie, leEntita } from "./salute.js";
+import { PROFILI_AL_MASSIMO, profiloBuono, senzaFlussi } from "./plancia-da-lontano.js";
+import { eConfigurata } from "./configurazione.js";
 
 /* Dove sta il quadro.
  *
@@ -294,6 +296,7 @@ export function compila({
   addon = null,
   aggiornamenti = null,
   manutenzione = false,
+  configurazione = false,
   lavoro = null,
   plance = null,
   telefoni = null,
@@ -317,6 +320,11 @@ export function compila({
      * deve poter scrivere «questa casa non ha aperto la manutenzione». Una
      * chiave che manca vorrebbe dire «non lo dice», che e' un'altra cosa. */
     manutenzione: manutenzione === true,
+    /* Il terzo interruttore: la plancia si lascia configurare da lontano. Come
+     * il secondo, sempre presente — il quadro deve poter scrivere «questa casa
+     * non l'ha permesso» — e come il secondo e' garbo, non sicurezza: il no
+     * vero lo dice `lavori.js`. */
+    configurazione: configurazione === true,
   };
   /* Le parti che possono mancare si aggiungono solo se ci sono. Un Supervisor
    * che non ha risposto lascia il rapporto senza `macchina`, e il quadro lo
@@ -376,6 +384,9 @@ export function fabbricaIlRapporto({
   segniChiesti = () => [],
   lavori = null,
   manutenzione = false,
+  /* Se questa casa lascia configurare la plancia da lontano. Una funzione, come
+   * `segniChiesti`: si legge a ogni giro. */
+  configurazionePlancia = () => false,
   plance = null,
   configurazione = null,
   dispositivi = null,
@@ -486,10 +497,16 @@ export function fabbricaIlRapporto({
        * sta qui — sta in `lavori.js`, in casa: un quadro che mandasse il
        * comando lo stesso si sentirebbe rispondere di no da questa parte. */
       manutenzione: manutenzione === true,
+      configurazione: configurazionePlancia() === true,
       /* L'ultimo lavoro chiesto dal quadro, e com'e' andata. `null` quando non
        * ne e' mai stato chiesto nessuno. */
       lavoro: lavori ? lavori.stato(daFare) : null,
-      plance: plance ? lePlance(plance, configurazione) : null,
+      /* Le plance: quante, e quante configurate. Con la casella accesa anche
+       * quali — profilo, titolo, revisione — perche' e' da li' che il quadro
+       * capisce di quali gli manca lo scatto. */
+      plance: plance
+        ? lePlance(plance, configurazione, { conRevisione: configurazionePlancia() === true })
+        : null,
       telefoni: dispositivi ? iTelefoni(dispositivi, adesso) : null,
       fuori: chiamata ? { acceso: Boolean(chiamata.dove), filo: chiamata.accesa === true } : null,
       entita: quelli ? leEntita(quelli, { registri: registriOra }) : null,
@@ -588,22 +605,32 @@ function iConti(daFare, marchi = new Map(), segni = new Map()) {
  * cruscotto, chi installa sceglie il nome che ogni plancia porta nel menu
  * laterale e sul velo d'avvio — il profilo perche' e' la chiave con cui la
  * scelta torna indietro, il titolo perche' senza non si saprebbe quale e'
- * quale. Di quello che una plancia ha **dentro** non parte niente. */
-function lePlance(plance, configurazione) {
+ * quale. Di quello che una plancia ha **dentro** da qui non parte niente:
+ * com'e' fatta viaggia a parte, su `/plancia`, e solo se la casa lo permette
+ * (`configurazione`). In quel caso l'elenco porta anche la **revisione** di
+ * ognuna — il numero con cui il quadro sa se lo scatto che tiene e' ancora
+ * quello — che e' un numero, non un contenuto. */
+function lePlance(plance, configurazione, { conRevisione = false } = {}) {
   const elenco = typeof plance.elenco === "function" ? plance.elenco() : [];
+  const scatto = (profilo) => {
+    try {
+      return configurazione ? (configurazione.leggi(profilo)?.snapshot ?? null) : null;
+    } catch (_errore) {
+      return null;
+    }
+  };
   const nomi = elenco.map((una) => ({
     profilo: String(una.profilo || ""),
     titolo: String(una.titolo || ""),
+    ...(conRevisione ? { revisione: Number(scatto(una.profilo)?.revision) || 0 } : {}),
   }));
   if (!configurazione) return { quante: elenco.length, configurate: 0, elenco: nomi };
-  const configurate = elenco.filter((una) => {
-    try {
-      const dentro = configurazione.leggi(una.profilo);
-      return Boolean(dentro && Object.keys(dentro).length);
-    } catch (_errore) {
-      return false;
-    }
-  }).length;
+  /* Configurata vuol dire con dentro qualcosa: `leggi` risponde sempre un
+   * oggetto, e contare le sue chiavi contava tutte le plance come
+   * configurate. */
+  const configurate = elenco.filter((una) =>
+    eConfigurata(scatto(una.profilo)?.values || {}),
+  ).length;
   return { quante: elenco.length, configurate, elenco: nomi };
 }
 
@@ -670,6 +697,10 @@ export class Postino {
     fabbrica,
     fai = null,
     installatore = null,
+    /* Chi sa com'e' fatta una plancia di questa casa: `attiva()` se la casella
+     * e' accesa, `scatta(profilo)` per averne titolo, revisione e valori. Senza,
+     * al quadro non parte nessuno scatto, chieda quello che vuole. */
+    plancia = null,
     fetch: prendi = globalThis.fetch,
     registro,
     adesso = () => Date.now(),
@@ -693,6 +724,7 @@ export class Postino {
     /* Chi tiene il nome e il marchio di chi segue questa casa. Il quadro li
      * dice rispondendo, e da li' la plancia prende la sua faccia. */
     this.installatore = installatore;
+    this.plancia = plancia;
     this.prendi = prendi;
     this.registro = registro ?? { debug() {}, info() {}, attenzione() {}, errore() {} };
     this.adesso = adesso;
@@ -790,6 +822,68 @@ export class Postino {
         /* Gia' chiuso: e' quello che si voleva. */
       }
     }
+  }
+
+  /**
+   * Manda al quadro com'e' fatta ogni plancia che lui dice di non avere.
+   *
+   * Solo con la casella accesa, e solo i profili che questa casa ha davvero:
+   * un quadro che chiedesse «primary» a una casa che non lo permette riceve
+   * niente, senza nemmeno una riga di registro — e' lui che sbaglia. Passa dal
+   * setaccio: un flusso, se mai ce ne fosse uno, esce vuoto.
+   */
+  async _mandaLePlance(profili) {
+    if (!this.plancia || this.plancia.attiva?.() !== true) return 0;
+    let mandate = 0;
+    for (const profilo of profili.slice(0, PROFILI_AL_MASSIMO)) {
+      if (!profiloBuono(profilo)) continue;
+      const scatto = this.plancia.scatta(profilo);
+      if (!scatto || !scatto.valori || typeof scatto.valori !== "object") continue;
+      const risposta = await this.prendi(`${this.dove}/plancia`, {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          authorization: `Bearer ${this.chiave}`,
+          "x-casa": this.casa,
+        },
+        body: JSON.stringify({
+          profilo,
+          titolo: String(scatto.titolo ?? "").slice(0, 40),
+          revisione: Number(scatto.revisione) || 0,
+          valori: senzaFlussi(scatto.valori),
+        }),
+        signal: AbortSignal.timeout(ATTESA * 3),
+      });
+      if (!risposta.ok)
+        throw new Error(`il quadro ha risposto ${risposta.status} allo scatto di «${profilo}»`);
+      mandate += 1;
+      this.registro.info(`lo scatto della plancia «${profilo}» e' arrivato al quadro`);
+    }
+    return mandate;
+  }
+
+  /**
+   * Ritira dal quadro la configurazione che l'installatore ha scritto per una
+   * plancia: e' il pezzo grosso di un lavoro «configura», che nella risposta
+   * al rapporto non ci sta. Sempre a iniziativa di questa casa, con la sua
+   * chiave, e solo per il lavoro con quell'`id`.
+   */
+  async prendiLaPlanciaChiesta(profilo, id) {
+    if (!profiloBuono(profilo) || !id) return null;
+    const risposta = await this.prendi(
+      `${this.dove}/plancia/${encodeURIComponent(profilo)}?id=${encodeURIComponent(String(id))}`,
+      {
+        method: "GET",
+        headers: {
+          authorization: `Bearer ${this.chiave}`,
+          "x-casa": this.casa,
+        },
+        signal: AbortSignal.timeout(ATTESA * 3),
+      },
+    );
+    if (risposta.status === 404) return null;
+    if (!risposta.ok) throw new Error(`il quadro ha risposto ${risposta.status}`);
+    return await risposta.json();
   }
 
   _riarma() {
@@ -900,6 +994,18 @@ export class Postino {
           await this.installatore.dice(detto);
         } catch (errore) {
           this.registro.debug(`il marchio di chi segue questa casa: ${errore?.message || errore}`);
+        }
+      }
+      /* Le plance di cui il quadro non ha lo scatto, o ne ha uno vecchio: si
+       * mandano adesso, su una porta loro, e solo quelle. Prima del lavoro,
+       * per la stessa ragione del marchio. */
+      if (Array.isArray(detto?.vuoleLaPlancia)) {
+        try {
+          await this._mandaLePlance(detto.vuoleLaPlancia);
+        } catch (errore) {
+          this.registro.attenzione(
+            `lo scatto della plancia non e' partito: ${errore?.message || errore}`,
+          );
         }
       }
 

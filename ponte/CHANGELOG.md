@@ -59,6 +59,35 @@ tornare indietro: la testata della plancia lì non c'è, e la barra in fondo è
 nascosta apposta. Adesso nel riquadro in cima, a sinistra del logo, c'è lo
 stesso ☰ della home, e apre lo stesso menu.
 
+**La plancia si configura dal cruscotto, con un terzo permesso della casa.**
+Accanto ai nomi di ogni plancia, nel capitolo «Le plance», c'è il tasto
+**Configurazione**: apre com'è fatta quella plancia — sezioni, stanze, entità,
+disposizione, la configurazione intera — e la si riscrive; l'impianto ritira la
+modifica al rapporto dopo, e com'è andata si legge nel foglio dell'impianto e
+nella console dell'add-on. Il tasto c'è **solo** dove chi abita la casa ha
+acceso un terzo interruttore nelle opzioni dell'add-on, «Lascia che chi ti ha
+fatto l'impianto configuri la plancia da lontano»: è a parte dalla manutenzione,
+perché lasciar installare un aggiornamento e lasciar rimettere mano alla
+propria plancia sono due cose diverse. Quello che passa è la configurazione; le
+telecamere no: gli indirizzi dei flussi non partono da casa, e una
+configurazione che ne contenesse uno la casa la rifiuta e lo scrive nel
+rapporto. La configurazione viaggia su una strada sua, non dentro il rapporto —
+è la casa che la manda quando il cruscotto dice di non averla, e che passa a
+ritirare quella scritta — e il rapporto porta solo un numero in più per
+plancia, la revisione, così il cruscotto sa se quello che tiene è ancora quello.
+
+**Le icone della barra non spariscono più su iPhone.** «Le icone in basso
+vanno e vengono»: il posto c'era, il nome sotto pure, e in mezzo niente, finché
+non tornavano tutte insieme. Nella 1.5.9.1 si era portata ogni sfumatura dentro
+il suo disegno, e non è bastato — chi l'aveva segnalato ha risposto «uguale a
+prima». Un video guardato fotogramma per fotogramma ha detto perché: fra le
+caselle vuote c'erano anche le emoji, che sfumature non ne hanno. Quello che le
+caselle vuote avevano in comune era il filtro grafico che spegneva le voci a
+riposo, e su iPhone un filtro dentro una barra che scorre si ridipinge quando
+gli pare. Adesso le caselle della barra non hanno filtri, in nessun tema: le
+voci a riposo restano appena spente per opacità, e a dire qual è quella aperta
+ci pensano la pastiglia e il nome.
+
 ## 1.5.9.12
 
 **Il cruscotto ha una faccia nuova.** Si chiama Aurora: un cielo che sfuma

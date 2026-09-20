@@ -11,7 +11,7 @@
  * Qui il tempo non passa, si dice: venticinque fotogrammi al secondo esatti,
  * sempre gli stessi.
  *
- *   node strumenti/video/rendi.mjs                 i tre film, in due lingue
+ *   node strumenti/video/rendi.mjs                 i quattro film, in due lingue
  *   node strumenti/video/rendi.mjs --film tiktok   uno solo
  *   node strumenti/video/rendi.mjs --lingua en     solo l'inglese
  *   node strumenti/video/rendi.mjs --scena il-codice          una scena sola
@@ -23,9 +23,9 @@
  * `-en` in fondo — `gdahome-tiktok-en.mp4` — cosi' i due stanno vicini nella
  * cartella e non si confondono.
  *
- * Il suono non c'e' in nessuno dei tre: le parole stanno scritte sopra. Nei
- * due film per i social c'e' pero' una traccia **muta**, perche' un negozio
- * che riceve un video senza nessuna traccia audio ogni tanto lo rifiuta.
+ * Il suono non c'e' in nessuno: le parole stanno scritte sopra. Nei due film
+ * per i social c'e' pero' una traccia **muta**, perche' un negozio che riceve
+ * un video senza nessuna traccia audio ogni tanto lo rifiuta.
  */
 
 import { createServer } from "node:http";
@@ -49,7 +49,8 @@ const conLaLingua = (nome, lingua) => (lingua === "it" ? nome : `${nome}-${lingu
  *
  * Il lungo e' quello che spiega; i due per i social dicono le stesse cose in
  * quarantasei secondi, e sono **lo stesso film** con due palchi diversi: un
- * quadrato per Facebook, uno in piedi per TikTok.
+ * quadrato per Facebook, uno in piedi per TikTok. Il quarto parla a chi
+ * installa, e non a chi abita: e' l'unico che fa vedere il quadro.
  *
  * `su` e `giu` sono l'aria da lasciare sopra e sotto. Su TikTok quella sotto
  * non e' scelta da noi: li' ci stanno il testo, i tasti e il nome di chi
@@ -63,6 +64,19 @@ const FILM = {
     uscita: "gdahome-presentazione",
     ritmo: "2600k",
     copertina: { scena: "apertura", quando: 3.2 },
+  },
+  /* Il quarto: quello per chi installa. Non parla a chi abita una casa —
+     parla a chi ne segue quaranta — e per questo dice due cose che negli altri
+     non ci sono: cosa si vede dal quadro, e cosa da li' **non si vede**. La
+     seconda meta' e' quella che decide se questo pezzo si puo' dare a
+     qualcuno, e sta nel film per intero. */
+  quadro: {
+    pagina: "quadro.html",
+    largo: 1280,
+    alto: 720,
+    uscita: "gdahome-quadro",
+    ritmo: "2600k",
+    copertina: { scena: "l-elenco", quando: 3.2 },
   },
   facebook: {
     pagina: "social.html",
@@ -279,6 +293,11 @@ async function fabbricaIlQrCode() {
 const TIPI = {
   ".html": "text/html; charset=utf-8",
   ".js": "text/javascript; charset=utf-8",
+  /* I tempi del parlato, che il film del quadro si va a prendere da solo
+     (`parlato-tempi.json`). Senza questa riga si serviva come una roba
+     qualunque: `fetch` lo leggeva lo stesso, ma un file servito col tipo
+     sbagliato e' un guasto che aspetta. */
+  ".json": "application/json; charset=utf-8",
   ".css": "text/css; charset=utf-8",
   ".svg": "image/svg+xml",
   ".png": "image/png",

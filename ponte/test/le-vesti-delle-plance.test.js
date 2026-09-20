@@ -257,7 +257,19 @@ test("il rapporto porta l'elenco delle plance: profilo e titolo, e niente di que
         { profilo: "suocero", titolo: "Suocero", istanza: "gdahome-suocero", utenti: [] },
       ],
     },
-    configurazione: { leggi: (profilo) => (profilo === "primary" ? { a: 1 } : {}) },
+    /* Quello che `Configurazione.leggi` risponde davvero: sempre un foglio,
+     * con dentro lo scatto. Configurata e' quella che nello scatto ha
+     * qualcosa — una stanza — non quella per cui la risposta non e' vuota,
+     * che sono tutte. */
+    configurazione: {
+      leggi: (profilo) => ({
+        profile: profilo,
+        snapshot: {
+          revision: 3,
+          values: profilo === "primary" ? { cd_stanze: JSON.stringify([{ nome: "Cucina" }]) } : {},
+        },
+      }),
+    },
     registro: ZITTO,
   });
   const foglio = await fabbrica();
