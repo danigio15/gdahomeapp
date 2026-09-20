@@ -52,6 +52,8 @@
  * diversa oggi.
  */
 
+import { haFlussi, PLANCIA_MASSIMA, quantoPesa } from "./plancia-da-lontano.js";
+
 /* Dopo quanto un lavoro che non finisce si smette di chiamare «in corso».
  *
  * Un add-on grosso ci mette minuti, Home Assistant Core anche di piu', e un
@@ -81,16 +83,30 @@ const pulito = (valore, quanto = LUNGHEZZA_MASSIMA) =>
 const comeSiChiama = (comando) =>
   comando.cosa === "riavvia"
     ? "riavvio di Home Assistant"
-    : `${comando.nome} ${comando.da} → ${comando.a}`.replace(/\s+/g, " ").trim();
+    : comando.cosa === "configura"
+      ? `configurazione della plancia «${comando.titolo || comando.nome}»`
+      : `${comando.nome} ${comando.da} → ${comando.a}`.replace(/\s+/g, " ").trim();
 
 export class Lavori {
   /**
    * @param {object} opzioni
    * @param {object} opzioni.aggiornamenti chi sa installare
    * @param {() => boolean} opzioni.aperta se la manutenzione e' aperta
+   * @param {object|null} opzioni.plancia chi sa configurare la plancia da lontano:
+   *   `aperta()` se la casa lo permette, `prendi(profilo, id)` per ritirare
+   *   dal cruscotto quello che e' stato scritto, `scrivi(profilo, valori,
+   *   opzioni)` per metterlo nella plancia, `titoloDi(profilo)` per chiamarla
+   *   col suo nome. Senza, il terzo verbo si rifiuta.
    */
-  constructor({ aggiornamenti, registro = null, aperta = () => false, adesso = () => Date.now() }) {
+  constructor({
+    aggiornamenti,
+    registro = null,
+    aperta = () => false,
+    plancia = null,
+    adesso = () => Date.now(),
+  }) {
     this.aggiornamenti = aggiornamenti;
+    this.plancia = plancia;
     this.registro = registro ?? { info() {}, attenzione() {}, errore() {} };
     this.aperta = aperta;
     this.adesso = adesso;
@@ -121,7 +137,12 @@ export class Lavori {
       a: pulito(detto?.a, 40),
     };
     const riavvio = comando.cosa === "riavvia";
-    if (!comando.id || (comando.cosa !== "installa" && !riavvio) || (!riavvio && !comando.nome)) {
+    const configura = comando.cosa === "configura";
+    if (
+      !comando.id ||
+      (comando.cosa !== "installa" && !riavvio && !configura) ||
+      (!riavvio && !comando.nome)
+    ) {
       this.registro.attenzione(`il quadro ha chiesto qualcosa che non si capisce: ${comando.cosa}`);
       return;
     }
@@ -129,7 +150,12 @@ export class Lavori {
      * il quadro non ha fatto in tempo a segnarselo — e un tasto premuto una
      * volta non deve installare due volte. */
     if (this._lavoro?.id === comando.id) return;
-
+    /* Il terzo verbo ha la sua casella, e non passa dalla manutenzione: il
+     * perche' sta in cima a `plancia-da-lontano.js`. */
+    if (configura) {
+      await this._configura(comando);
+      return;
+    }
     if (!this.aperta()) {
       /* Il quadro non dovrebbe nemmeno averlo mandato. Se lo manda lo stesso,
        * qui si dice di no e si scrive perche': una casa che rifiuta in
@@ -248,6 +274,92 @@ export class Lavori {
    * cambia cosa deve leggere chi guarda: gdahome e Home Assistant, mentre si
    * installano, fanno **cadere il filo**. Detto prima e' un'attesa; non detto
    * e' una casa che sembra morta. */
+  /**
+   * Configura la plancia come l'ha scritta l'installatore.
+   *
+   * Non e' un lavoro «in corso»: si ritira, si controlla, si scrive, e l'esito
+   * e' subito quello — fatto o non riuscito — perche' non c'e' nessun Home
+   * Assistant da aspettare. I no sono quattro, e si scrivono tutti nel
+   * rapporto: la casella chiusa, una configurazione che non si e' potuta
+   * ritirare, una che contiene un flusso, una che la plancia rifiuta (vuota
+   * dove prima c'era qualcosa, o scritta su una revisione che in casa non c'e'
+   * piu').
+   */
+  async _configura(comando) {
+    const profilo = comando.nome;
+    comando.titolo = pulito(this.plancia?.titoloDi?.(profilo) ?? "", 40);
+    if (!this.plancia || !this.plancia.aperta?.()) {
+      this.registro.attenzione(
+        `il quadro ha chiesto di configurare la plancia «${profilo}», e questa casa non lo permette: non si fa`,
+      );
+      this._segna(comando, "non riuscito", "la configurazione da lontano e' chiusa in questa casa");
+      return;
+    }
+    let chiesta = null;
+    try {
+      chiesta = await this.plancia.prendi(profilo, comando.id);
+    } catch (errore) {
+      this._segna(
+        comando,
+        "non riuscito",
+        `la configurazione non si e' potuta ritirare dal cruscotto: ${errore?.message || errore}`,
+      );
+      this.registro.attenzione(
+        `la configurazione della plancia non e' arrivata: ${errore?.message || errore}`,
+      );
+      return;
+    }
+    const valori = chiesta?.valori;
+    if (!valori || typeof valori !== "object" || Array.isArray(valori)) {
+      this._segna(comando, "non riuscito", "il cruscotto non aveva nessuna configurazione da dare");
+      return;
+    }
+    if (quantoPesa(valori) > PLANCIA_MASSIMA) {
+      this._segna(comando, "non riuscito", "quella configurazione e' troppo grande");
+      return;
+    }
+    /* La regola che tiene in piedi il permesso: da lontano si sceglie quale
+     * telecamera va dove, non dove sta il suo flusso. */
+    if (haFlussi(valori)) {
+      this._segna(
+        comando,
+        "non riuscito",
+        "conteneva un indirizzo di flusso o un gettone, e da lontano quelli non si toccano",
+      );
+      this.registro.attenzione(
+        `la configurazione della plancia «${profilo}» portava un flusso: rifiutata`,
+      );
+      return;
+    }
+    let esito;
+    try {
+      esito = this.plancia.scrivi(profilo, valori, {
+        expected_revision: chiesta.revisioneAttesa ?? null,
+        updated_at: this.adesso(),
+      });
+    } catch (errore) {
+      this._segna(comando, "non riuscito", String(errore?.message || errore));
+      return;
+    }
+    const stato = String(esito?.status || "");
+    if (stato === "saved" || stato === "unchanged") {
+      this._segna(comando, "fatto", stato === "unchanged" ? "era gia' cosi'" : "");
+      this._lavoro.finitoIl = this.adesso();
+      this.registro.info(`il quadro ha configurato la plancia «${comando.titolo || profilo}»`);
+      return;
+    }
+    const perche =
+      stato === "conflict"
+        ? "la plancia e' cambiata in casa nel frattempo: si rilegge e si riprova"
+        : stato === "refused-empty"
+          ? "una plancia configurata non si svuota da lontano"
+          : "la plancia non l'ha accettata";
+    this._segna(comando, "non riuscito", perche);
+    this.registro.attenzione(
+      `la configurazione della plancia «${profilo}» non e' passata: ${perche}`,
+    );
+  }
+
   _segna(comando, stato, perche, stacca = false) {
     this._lavoro = {
       id: comando.id,
@@ -256,6 +368,7 @@ export class Lavori {
       da: comando.da,
       a: comando.a,
       riavvio: comando.cosa === "riavvia",
+      configurazione: comando.cosa === "configura",
       stato,
       perche,
       stacca,

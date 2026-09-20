@@ -47,6 +47,19 @@ configuration:
           opened towards your home: it is this home that knocks, and in the answer
           it finds what to do. What they asked for and how it went you read in the
           status report, in the "Il cruscotto" tab.
+      quadro_configurazione:
+        name: Let whoever installed your home configure the dashboard from a distance
+        description: >-
+          Leave it off if you do not need it. It is a third switch, separate from
+          maintenance. On, from their dashboard they see how your dashboard is laid
+          out — the sections, the rooms, the entities you put in it, the layout —
+          and they can change it, for instance to put a newly added plug in the
+          right room without coming over. What changes reaches this home the same
+          way an update does: it is the home that collects it. What they do not
+          see, because it does not travel this way: camera images and streams,
+          sensor states, what happens in your home. Know that the names of your
+          rooms and entities leave your home towards their dashboard: you decide,
+          by switching it on.
       quadro_marchio:
         name: Let the dashboard carry the mark of whoever installed your home
         description: >-

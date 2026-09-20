@@ -258,16 +258,25 @@ export class CaseSeguite {
      * che conta lo dice la casa, in `lavori.js`, e lo direbbe lo stesso. Ma
      * mettere in coda un comando che si sa gia' che verra' rifiutato vuol dire
      * far aspettare dieci minuti una risposta che e' gia' scritta. */
-    if (una.carta?.manutenzione !== true) return null;
-    /* Due verbi, e nessun altro. «Installa» si nomina per nome e salto di
+    /* Tre verbi, e nessun altro. «Installa» si nomina per nome e salto di
      * versione; «riavvia» — Home Assistant, tutto — non ha niente da nominare:
-     * e' quella casa, e basta. */
-    if (cosa !== "installa" && cosa !== "riavvia") return null;
+     * e' quella casa, e basta; «configura» nomina la plancia, col suo profilo,
+     * e in `da` porta la revisione su cui l'installatore ha scritto.
+     *
+     * I primi due passano dalla manutenzione. Il terzo ha la sua casella,
+     * `quadro_configurazione`, che la casa dice nel rapporto come dice l'altra:
+     * un permesso a parte, perche' lasciar installare e lasciar rimettere mano
+     * alla propria plancia non sono la stessa cosa. */
+    if (cosa !== "installa" && cosa !== "riavvia" && cosa !== "configura") return null;
+    if (cosa === "configura") {
+      if (una.carta?.configurazione !== true) return null;
+    } else if (una.carta?.manutenzione !== true) return null;
     const quale =
       cosa === "riavvia"
         ? { nome: "", da: "", a: "" }
         : { nome: testo(nome), da: testo(da, 40), a: testo(a, 40) };
     if (cosa === "installa" && (!quale.nome || !quale.a)) return null;
+    if (cosa === "configura" && !quale.nome) return null;
     /* Uno per volta. Quello vecchio scaduto pero' non blocca niente: una casa
      * spenta da un'ora non deve impedire di richiedere la stessa cosa. */
     const ora = this.adesso();

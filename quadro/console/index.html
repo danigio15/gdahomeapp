@@ -729,6 +729,58 @@
         flex-basis: 100%;
       }
 
+      /* Le plance di una casa, una riga ciascuna col tasto accanto al nome, e
+         sotto la riga aperta la casella con la configurazione: e' testo, e si
+         legge in un carattere a passo fisso perche' e' JSON. */
+      .plance {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: grid;
+        gap: 10px;
+      }
+      .plancia-riga {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+      .plancia-riga .nome {
+        font-weight: 700;
+      }
+      .plancia-riga .revisione {
+        color: var(--fioco);
+        font-size: 0.85rem;
+        margin-left: auto;
+      }
+      .plancia-editor {
+        display: grid;
+        gap: 10px;
+      }
+      textarea.configurazione {
+        font:
+          0.82rem/1.45 ui-monospace,
+          SFMono-Regular,
+          Menlo,
+          Consolas,
+          monospace;
+        color: var(--ink);
+        background: var(--vetro-pieno);
+        border: 1px solid var(--linea-forte);
+        border-radius: 14px;
+        padding: 12px 14px;
+        width: 100%;
+        min-height: 20rem;
+        resize: vertical;
+        box-sizing: border-box;
+        white-space: pre;
+      }
+      textarea.configurazione:focus {
+        outline: none;
+        border-color: var(--accento);
+        box-shadow: 0 0 0 3px var(--accento-soft);
+      }
+
       input[type="text"],
       input[type="url"],
       input[type="password"] {
@@ -2573,6 +2625,132 @@
        * rompersi. */
       const staLavorando = (c) => Boolean(c && c.lavoro && c.lavoro.stato === "in corso");
 
+      /* Le plance di una casa: una riga per ognuna, col tasto «Configurazione»
+       * accanto al nome. Solo se quella casa lo permette — e' il terzo
+       * interruttore, `quadro_configurazione`, e la casa lo dice nel rapporto
+       * — se no si contano e basta, e si dice dove si accende. */
+      const lePlanceDi = (casa, c) => {
+        const elenco = Array.isArray(c?.plance?.elenco) ? c.plance.elenco : [];
+        const quante = Number(c?.plance?.quante) || elenco.length;
+        if (c?.configurazione !== true) {
+          return `
+          <section class="riquadro">
+            <div class="capoRiquadro"><h3>Le plance</h3><span class="conta">${quante}</span></div>
+            <p class="nota">
+              Questo impianto non ha attivato la configurazione della plancia da lontano: le plance
+              si contano, non si aprono. Si accende in casa, nelle opzioni dell'add-on.
+            </p>
+          </section>`;
+        }
+        const righe = elenco
+          .map((una) => {
+            const aperta =
+              Boolean(planciaAperta) &&
+              planciaAperta.casa === casa.casa &&
+              planciaAperta.profilo === una.profilo;
+            return `
+              <li class="plancia-riga">
+                <span class="nome">${testo(una.titolo || una.profilo)}</span>
+                <span class="revisione">revisione ${testo(una.revisione)}</span>
+                <button
+                  type="button"
+                  class="tasto${aperta ? " forte" : ""}"
+                  data-configura-plancia="${testo(casa.casa)}"
+                  data-profilo="${testo(una.profilo)}"
+                  aria-pressed="${aperta}"
+                >
+                  Configurazione
+                </button>
+              </li>
+              ${aperta ? lEditorDi(casa, una) : ""}`;
+          })
+          .join("");
+        return `
+          <section class="riquadro">
+            <div class="capoRiquadro"><h3>Le plance</h3><span class="conta">${elenco.length}</span></div>
+            <ul class="plance">${righe}</ul>
+          </section>`;
+      };
+
+      /* La configurazione di una plancia, com'e' arrivata da casa, in una
+       * casella dove si riscrive. E' JSON e si vede come JSON: e' la
+       * configurazione intera, non una sua parte scelta per il video. */
+      const lEditorDi = (casa, una) => {
+        const chiave = `${casa.casa}/${una.profilo}`;
+        const letta = PLANCE_LETTE.get(chiave);
+        const chiesta =
+          casa.chiesto && casa.chiesto.cosa === "configura" && casa.chiesto.nome === una.profilo
+            ? casa.chiesto
+            : null;
+        if (!letta)
+          return `<li class="plancia-editor"><p class="nota">Si legge dal cruscotto…</p></li>`;
+        if (letta.errore)
+          return `<li class="plancia-editor"><p class="nota">${testo(letta.errore)}</p></li>`;
+        const scatto = letta.scatto;
+        if (!scatto) {
+          return `<li class="plancia-editor"><p class="nota">Di questa plancia il cruscotto non ha ancora ricevuto la configurazione: arriva col prossimo rapporto dell'impianto.</p></li>`;
+        }
+        const testoDaMostrare = letta.bozza ?? JSON.stringify(scatto.valori, null, 2);
+        return `
+          <li class="plancia-editor">
+            <p class="nota">
+              Com'era in casa alla revisione <b>${testo(scatto.revisione)}</b>, ricevuta
+              ${testo(daQuanto(scatto.presoIl))}.${
+                chiesta
+                  ? " <b>Una modifica è in attesa</b>: l'impianto la ritira al prossimo rapporto."
+                  : ""
+              }
+            </p>
+            <textarea
+              class="configurazione"
+              data-plancia-testo="${testo(chiave)}"
+              spellcheck="false"
+              aria-label="Configurazione della plancia"
+            >${testo(testoDaMostrare)}</textarea>
+            <div class="azioni">
+              <button
+                type="button"
+                class="tasto forte"
+                data-plancia-salva="${testo(casa.casa)}"
+                data-profilo="${testo(una.profilo)}"
+                data-revisione="${testo(scatto.revisione)}"
+              >
+                Salva
+              </button>
+              <button
+                type="button"
+                class="tasto"
+                data-plancia-ricarica="${testo(casa.casa)}"
+                data-profilo="${testo(una.profilo)}"
+              >
+                Ricarica
+              </button>
+              <button type="button" class="tasto" data-plancia-chiudi>Chiudi</button>
+            </div>
+            <p class="nota">
+              Di qui passa la configurazione: sezioni, stanze, entità, disposizione. Le immagini delle
+              telecamere no — non ci sono, e se ci fossero l'impianto rifiuterebbe la modifica.
+            </p>
+          </li>`;
+      };
+
+      /* Lo scatto di una plancia, letto dal cruscotto una volta e tenuto. */
+      async function leggiLaPlancia(casa, profilo, { forza = false } = {}) {
+        const chiave = `${casa}/${profilo}`;
+        if (!forza && PLANCE_LETTE.has(chiave)) return;
+        try {
+          const detto = await chiedi(`/casa/${casa}/plancia/${profilo}`);
+          PLANCE_LETTE.set(chiave, { scatto: detto.scatto || null });
+        } catch (errore) {
+          if (errore instanceof ChiaveNoNo) {
+            chiedimiLaChiave();
+            return;
+          }
+          PLANCE_LETTE.set(chiave, { errore: errore.message || "non si è potuta leggere" });
+        }
+        disegna();
+      }
+
       /* Se questa riga e' quella che sta succedendo — o quella che si e'
        * appena chiesta. Si confronta per **nome e salto di versione**, che e'
        * l'unico modo che c'e': l'entita' nel rapporto non viaggia, e non
@@ -3005,6 +3183,12 @@
        * salire, cioe' che l'apertura va disegnata con la sua animazione;
        * `chiudendo` che sta scendendo. */
       let foglioAperto = null;
+      /* La plancia aperta nella scheda, se c'e': casa e profilo. E quello che
+         si e' letto dal cruscotto per ogni plancia, con la bozza scritta nella
+         casella — cosi' un ridisegno della pagina, che arriva a ogni rapporto,
+         non porta via quello che si stava scrivendo. */
+      let planciaAperta = null;
+      const PLANCE_LETTE = new Map();
       /* Quale schermata e' stata disegnata l'ultima volta: l'anello si apre
        * con la sua animazione la prima volta che si vede, non a ogni giro da
        * dieci secondi. */
@@ -3360,6 +3544,86 @@
             faiEpoi(tasto, () =>
               chiedi(`/casa/${tasto.dataset.riavvia}/riavvia`, { method: "POST" }),
             );
+          };
+        });
+        dove.querySelectorAll("[data-configura-plancia]").forEach((tasto) => {
+          tasto.onclick = () => {
+            const casa = tasto.dataset.configuraPlancia;
+            const profilo = tasto.dataset.profilo;
+            const gia =
+              Boolean(planciaAperta) &&
+              planciaAperta.casa === casa &&
+              planciaAperta.profilo === profilo;
+            planciaAperta = gia ? null : { casa, profilo };
+            disegna();
+            if (!gia) void leggiLaPlancia(casa, profilo);
+          };
+        });
+        dove.querySelectorAll("[data-plancia-chiudi]").forEach((tasto) => {
+          tasto.onclick = () => {
+            planciaAperta = null;
+            disegna();
+          };
+        });
+        dove.querySelectorAll("[data-plancia-ricarica]").forEach((tasto) => {
+          tasto.onclick = () => {
+            const chiave = `${tasto.dataset.planciaRicarica}/${tasto.dataset.profilo}`;
+            /* Ricaricare butta la bozza: e' quello che si e' premuto. */
+            PLANCE_LETTE.delete(chiave);
+            disegna();
+            void leggiLaPlancia(tasto.dataset.planciaRicarica, tasto.dataset.profilo, {
+              forza: true,
+            });
+          };
+        });
+        dove.querySelectorAll("[data-plancia-testo]").forEach((campo) => {
+          /* La bozza si tiene da parte a ogni tasto: la pagina si ridisegna a
+           * ogni rapporto, e un ridisegno non deve portare via il lavoro. */
+          campo.oninput = () => {
+            const letta = PLANCE_LETTE.get(campo.dataset.planciaTesto);
+            if (letta) letta.bozza = campo.value;
+          };
+        });
+        dove.querySelectorAll("[data-plancia-salva]").forEach((tasto) => {
+          tasto.onclick = () => {
+            const casa = tasto.dataset.planciaSalva;
+            const profilo = tasto.dataset.profilo;
+            const campo = dove.querySelector(`[data-plancia-testo="${casa}/${profilo}"]`);
+            let valori;
+            try {
+              valori = JSON.parse(campo ? campo.value : "");
+            } catch (_errore) {
+              avvisa("questo non è JSON: controlla le parentesi e le virgole");
+              return;
+            }
+            if (!valori || typeof valori !== "object" || Array.isArray(valori)) {
+              avvisa("una configurazione è un oggetto");
+              return;
+            }
+            /* In due tempi, come «Installa» e «Riavvia»: si sta riscrivendo la
+             * plancia di casa di qualcun altro. */
+            if (tasto.dataset.sicuro !== "sì") {
+              tasto.dataset.sicuro = "sì";
+              tasto.textContent = "Premi ancora per confermare";
+              setTimeout(() => {
+                tasto.dataset.sicuro = "";
+                tasto.textContent = "Salva";
+              }, 6000);
+              return;
+            }
+            faiEpoi(tasto, async () => {
+              await chiedi(`/casa/${casa}/plancia/${profilo}`, {
+                method: "PUT",
+                body: JSON.stringify({
+                  valori,
+                  revisioneAttesa: Number(tasto.dataset.revisione) || 0,
+                }),
+              });
+              /* Scritta: la bozza non serve piu', e si rilegge subito com'e'
+               * davvero — con la richiesta in attesa, che la casa ritira al
+               * prossimo rapporto. */
+              await leggiLaPlancia(casa, profilo, { forza: true });
+            });
           };
         });
         dove.querySelectorAll("[data-lascia-stare]").forEach((tasto) => {
@@ -3803,6 +4067,7 @@
        * `foglioAperto` si svuota dopo. Nel mezzo un giro di `disegna` lo
        * ridisegna gia' giu', grazie a `chiudendo`. */
       function chiudiIlFoglio() {
+        planciaAperta = null;
         if (!foglioAperto || foglioAperto.chiudendo) return;
         foglioAperto.chiudendo = true;
         const questo = foglioAperto;
@@ -3929,8 +4194,16 @@
               <span>
                 ${
                   c.manutenzione
-                    ? `Questo cruscotto <b>non entra nell'impianto</b>: non apre la plancia e non vede stanze né persone. Può fare <b>due sole cose</b>, e solo perché questo impianto gliele ha autorizzate: avviare un aggiornamento <b>già in attesa</b> e riavviare Home Assistant. Nient'altro, e nessuna riga di comando.`
-                    : `Questo cruscotto <b>è in sola lettura</b>: non apre la plancia, non modifica niente e non vede entità, stanze né persone. Questo impianto non ha attivato la manutenzione.`
+                    ? `Questo cruscotto <b>non entra nell'impianto</b>: non apre la plancia e non vede stanze né persone. Può fare <b>due sole cose</b>, e solo perché questo impianto gliele ha autorizzate: avviare un aggiornamento <b>già in attesa</b> e riavviare Home Assistant. Nient'altro, e nessuna riga di comando.${
+                        c.configurazione
+                          ? ` Con un <b>terzo permesso</b>, dato a parte, può anche <b>configurare la plancia</b> — le sezioni, le stanze, le entità — senza vederla: le immagini delle telecamere di qui non passano.`
+                          : ""
+                      }`
+                    : `Questo cruscotto <b>è in sola lettura</b>: non apre la plancia, non modifica niente e non vede entità, stanze né persone. Questo impianto non ha attivato la manutenzione.${
+                        c.configurazione
+                          ? ` Ha però dato un permesso a parte: <b>configurare la plancia</b> — le sezioni, le stanze, le entità — senza vederla: le immagini delle telecamere di qui non passano.`
+                          : ""
+                      }`
                 }
               </span>
             </p>
@@ -3953,6 +4226,8 @@
                 : ""
             }
           </section>
+
+          ${lePlanceDi(casa, c)}
 
           <div class="capitolo">
             <h2>Da fare</h2>
@@ -4406,7 +4681,9 @@
                 <b>${
                   chiesto.cosa === "riavvia"
                     ? "Il riavvio di Home Assistant"
-                    : `${testo(chiesto.nome)} ${testo(chiesto.da)} → ${testo(chiesto.a)}`
+                    : chiesto.cosa === "configura"
+                      ? `La configurazione della plancia «${testo(chiesto.nome)}»`
+                      : `${testo(chiesto.nome)} ${testo(chiesto.da)} → ${testo(chiesto.a)}`
                 }</b>
                 è stato richiesto ${testo(daQuanto(chiesto.chiesto))}. Parte al prossimo rapporto di questo impianto: è l'impianto a ritirare il comando, il cruscotto non lo contatta.
               </span>
@@ -4419,7 +4696,9 @@
           return `
             <div class="cartello bene">
               <span class="gettone" aria-hidden="true">✓</span>
-              <span><b>${testo(l.cosa)}</b> ${l.riavvio ? "fatto" : "installato"} ${testo(daQuanto(l.quando))}, dal cruscotto.</span>
+              <span><b>${testo(l.cosa)}</b> ${l.riavvio ? "fatto" : l.configurazione ? "applicata" : "installato"} ${testo(daQuanto(l.quando))}, dal cruscotto.${
+                l.configurazione && l.perche ? ` ${testo(l.perche)}.` : ""
+              }</span>
             </div>`;
         if (l.stato === "non riuscito")
           return `

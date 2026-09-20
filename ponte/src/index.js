@@ -271,6 +271,17 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
     aggiornamenti,
     registro,
     aperta: () => opzioni.manutenzione === true,
+    /* Il terzo verbo: configurare la plancia da lontano, con la sua casella.
+     * Quello che l'installatore ha scritto lo ritira il postino — che nasce qui
+     * sotto, e si chiama solo quando un lavoro arriva — e lo scrive
+     * `configurazione`, con le stesse regole che valgono per un telefono di
+     * casa: la revisione attesa, il rifiuto di svuotare. */
+    plancia: {
+      aperta: () => opzioni.configurazionePlancia === true,
+      prendi: (profilo, id) => postino.prendiLaPlanciaChiesta(profilo, id),
+      scrivi: (profilo, valori, come) => configurazione.scrivi(profilo, valori, come),
+      titoloDi: (profilo) => plance.elenco().find((una) => una.profilo === profilo)?.titolo ?? "",
+    },
   });
 
   const postino = new Postino({
@@ -281,6 +292,21 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
     /* Solo se questa casa lo vuole. Spento, il quadro puo' mandare quello che
      * gli pare: qui non si guarda. */
     installatore: opzioni.marchioDellInstallatore ? installatore : null,
+    /* Com'e' fatta una plancia, per il quadro che ne chiede lo scatto: solo
+     * con la casella accesa, e solo per le plance che questa casa ha. */
+    plancia: {
+      attiva: () => opzioni.configurazionePlancia === true,
+      scatta: (profilo) => {
+        const quale = plance.elenco().find((una) => una.profilo === profilo);
+        if (!quale) return null;
+        const dentro = configurazione.leggi(profilo)?.snapshot ?? null;
+        return {
+          titolo: quale.titolo,
+          revisione: Number(dentro?.revision) || 0,
+          valori: dentro?.values ?? {},
+        };
+      },
+    },
     registro,
   });
 
@@ -324,6 +350,7 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
     segniChiesti: () => postino.segniChiesti,
     lavori,
     manutenzione: opzioni.manutenzione,
+    configurazionePlancia: () => opzioni.configurazionePlancia === true,
     plance,
     configurazione,
     dispositivi,

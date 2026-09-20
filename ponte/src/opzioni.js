@@ -69,6 +69,7 @@ const DOVE_STAVANO = Object.freeze({
   quadro: ["casa", "quadro"],
   quadro_ogni: ["casa", "quadro_ogni"],
   quadro_manutenzione: ["casa", "quadro_manutenzione"],
+  quadro_configurazione: ["casa", "quadro_configurazione"],
   quadro_marchio: ["casa", "quadro_marchio"],
   minuti_del_codice: ["casa", "minuti_del_codice"],
   giorni_di_silenzio: ["casa", "giorni_di_silenzio"],
@@ -311,6 +312,17 @@ export function leggiLeOpzioni(cartella = process.env.PONTE_ARCHIVIO || "/data")
     manutenzione:
       String(process.env.PONTE_MANUTENZIONE ?? scritte.quadro_manutenzione ?? "") === "true" ||
       scritte.quadro_manutenzione === true,
+    /* Il terzo interruttore: lasciarsi configurare la plancia da lontano.
+     *
+     * E' un permesso a parte, e non sta dentro la manutenzione: lasciar
+     * installare un aggiornamento e lasciar rimettere mano alla propria plancia
+     * — le stanze, le entita', la disposizione — sono due cose diverse, e chi
+     * accende questa sa che l'installatore vedra' come e' fatta la sua plancia.
+     * Le immagini delle telecamere no, e non per scelta di chi accende: da
+     * questa strada non passano (`plancia-da-lontano.js`). */
+    configurazionePlancia:
+      String(process.env.PONTE_CONFIGURAZIONE ?? scritte.quadro_configurazione ?? "") === "true" ||
+      scritte.quadro_configurazione === true,
     /* Se la plancia porta il marchio di chi ha montato l'impianto.
      *
      * **Acceso di serie**, ed e' il contrario della manutenzione: quello e' un

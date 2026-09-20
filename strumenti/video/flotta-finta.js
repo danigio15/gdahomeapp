@@ -128,9 +128,46 @@ const iConti = (elenco) => ({
  * scrivere quindici volte gli stessi dodici campi vorrebbe dire quindici
  * posti in cui sbagliarne uno.
  */
+/* Com'e' fatta una plancia, per le case che lasciano configurarla da lontano.
+ *
+ * La **forma** e' quella del prodotto: le chiavi sono quelle che la pagina
+ * conserva (`cd_stanze`, `cd_sections`, `dm_dashboard_state`), e i valori sono
+ * JSON scritto come testo, perche' cosi' li tiene lei. Il **contenuto** e'
+ * inventato come il resto della flotta. Le telecamere ci sono come entita' —
+ * `camera.ingresso` — ed e' esattamente quello che da lontano si configura:
+ * quale telecamera va dove, mai cosa inquadra. */
+export const PLANCIA_FINTA = {
+  dm_schema_version: "4",
+  cd_stanze: JSON.stringify([
+    { id: "soggiorno", name: "Soggiorno" },
+    { id: "cucina", name: "Cucina" },
+    { id: "camera", name: "Camera" },
+    { id: "esterno", name: "Esterno" },
+  ]),
+  cd_sections: JSON.stringify({
+    luci: true,
+    clima: true,
+    energia: true,
+    telecamere: true,
+    robot: false,
+    animali: false,
+  }),
+  dm_dashboard_state: JSON.stringify({
+    schema_version: 4,
+    sections: {
+      energy: { grid: "sensor.rete_potenza", solar: "sensor.fotovoltaico_potenza" },
+      climate: { entities: ["climate.soggiorno", "climate.camera"] },
+      cameras: { entities: ["camera.ingresso", "camera.giardino"] },
+    },
+  }),
+};
+
 const casa = (nome, matricola, come = {}) => ({
   nome,
   matricola,
+  /* Com'e' fatta la sua plancia, se lascia configurarla da lontano: e' quello
+     che una casa vera manda su `/plancia` quando il quadro glielo chiede. */
+  plancia: come.configurazione === true ? (come.plancia ?? PLANCIA_FINTA) : null,
   /* Da quanti giorni e' installata. Serve alla striscia: un giorno in cui
      questa casa non esisteva non si giudica. */
   da: come.da ?? 120,
@@ -147,6 +184,9 @@ const casa = (nome, matricola, come = {}) => ({
     /* Il secondo interruttore, e sta a chi ci abita: di serie e' spento, e
        nelle case di questa flotta lo e' quasi sempre. */
     manutenzione: come.manutenzione === true,
+    /* Il terzo interruttore, a parte dal secondo: lasciar configurare la
+       plancia da lontano. Nella flotta lo ha acceso una casa sola. */
+    configurazione: come.configurazione === true,
     macchina: {
       scheda: "ODROID-N2+",
       cpu: 12,
@@ -369,6 +409,17 @@ export const FLOTTA = [
     },
     manutenzione: true,
     aggiornamenti: [aggiornamento("Z-Wave JS", "1.9.2", "1.10.0", { marchio: "zwavejs" })],
+    /* L'unica casa della flotta che lascia configurare la plancia da lontano:
+       due plance, e il quadro ne riceve com'e' fatta ognuna. */
+    configurazione: true,
+    plance: {
+      quante: 2,
+      configurate: 2,
+      elenco: [
+        { profilo: "primary", titolo: "Casa", revisione: 12 },
+        { profilo: "casa-al-mare", titolo: "Casa al mare", revisione: 3 },
+      ],
+    },
   }),
   casa("Ricci — via Manzoni 21", "casa_0c58d7b3e91a46f2708b5ce3419da62f", {
     da: 205,

@@ -165,6 +165,26 @@ async function ilQuadroConLaFlotta() {
       method: "PUT",
       body: JSON.stringify({ nome: una.nome }),
     });
+    /* E se quella casa lascia configurare la plancia da lontano, manda com'e'
+       fatta ogni sua plancia — e' quello che una casa vera fa al giro dopo,
+       quando il quadro nella risposta le dice quali gli mancano. */
+    if (una.rapporto.configurazione === true && una.plancia) {
+      for (const quale of una.rapporto.plance?.elenco ?? []) {
+        const presa = await fetch(`${dove}/plancia`, {
+          method: "POST",
+          headers: {
+            authorization: `Bearer ${codice}`,
+            "content-type": "application/json",
+            "x-casa": una.matricola,
+          },
+          body: JSON.stringify({ ...quale, valori: una.plancia }),
+        });
+        if (!presa.ok)
+          throw new Error(
+            `${una.nome}: la plancia «${quale.profilo}» non e' stata presa (${presa.status})`,
+          );
+      }
+    }
     scriviIlPassato(quadro, una, una, ora);
   }
 
@@ -263,6 +283,30 @@ async function fotografa() {
     await pagina.getByRole("button", { name: /^Abbina/ }).click();
     await pagina.waitForTimeout(300);
     await scatta("quadro-abbina");
+    /* 9-11. La plancia configurata da lontano, su una casa che lo permette
+          (Lodi, che ha acceso il terzo interruttore): il riquadro «Le plance»
+          col tasto accanto al nome, la configurazione aperta nella casella, e
+          la modifica messa in attesa dopo «Salva». Una casa diversa da quella
+          delle fotografie del film, cosi' quelle restano com'erano. */
+    await pagina.getByRole("button", { name: /^Impianti/ }).click();
+    await pagina.waitForTimeout(300);
+    await pagina.locator("button.mattonella", { hasText: "Lodi" }).click();
+    await pagina.waitForSelector(".foglio-corpo", { timeout: 15000 });
+    await pagina.waitForTimeout(400);
+    await portaInCima("h3", "Le plance");
+    await scatta("quadro-plance");
+    await pagina.locator('[data-configura-plancia][data-profilo="primary"]').click();
+    await pagina.waitForSelector("textarea.configurazione", { timeout: 15000 });
+    await pagina.waitForTimeout(300);
+    await portaInCima("h3", "Le plance");
+    await scatta("quadro-configurazione");
+    const salva = pagina.locator("[data-plancia-salva]");
+    await salva.click();
+    await pagina.waitForTimeout(200);
+    await salva.click();
+    await pagina.waitForTimeout(800);
+    await portaInCima("h3", "Le plance");
+    await scatta("quadro-configurazione-chiesta");
   } finally {
     await browser.close();
     await quadro.spegni();
