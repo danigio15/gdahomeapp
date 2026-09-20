@@ -185,10 +185,14 @@ export class Installatore {
    * installa non ha scelto niente.
    */
   vestito(profilo = "") {
-    if (!this._nome && !this._logo) return null;
+    /* Prima si legge quello che sta gia' sul disco — il logo e le vesti — e
+     * solo dopo si decide se c'e' qualcosa da indossare: dopo un riavvio il
+     * nome arriva col primo rapporto, ma il logo e i nomi scelti ci sono
+     * gia', e la plancia deve uscire vestita al primo colpo. */
     this._dalDisco();
     this._leVestiDalDisco();
     const sue = this._vesti[String(profilo || "")] || null;
+    if (!this._nome && !this._logo && !sue) return null;
     return {
       nome: this._nome,
       logo: this._logo,

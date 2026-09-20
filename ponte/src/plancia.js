@@ -179,8 +179,13 @@ export class Plancia {
   vestiDi(quale) {
     const suo = this.installatore?.(quale?.profilo || "");
     if (!suo) return null;
-    const velo = String(suo.velo || "");
-    const testata = String(suo.titolo || "");
+    /* Quello che si vede, non solo quello che e' stato scelto: senza una
+     * scelta la parola del velo e la scritta della testata sono il nome di
+     * chi installa. Vanno nella pagina, e non nel runtime, perche' il runtime
+     * il browser lo tiene un anno e un installatore si puo' rinominare. */
+    const nome = String(suo.nome || "");
+    const velo = String(suo.velo || "") || nome;
+    const testata = String(suo.titolo || "") || nome;
     if (!velo && !testata) return null;
     return { velo, testata };
   }
