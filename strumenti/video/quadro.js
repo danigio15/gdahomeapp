@@ -291,7 +291,7 @@ scena(
     {
       t: q(2, 9.2),
       testo: t(
-        "<b>Tutti gli impianti</b>, una mattonella per casa: lo stato, da quanto non comunica, e la linea degli ultimi quattordici giorni.",
+        "<b>Tutti gli impianti</b>, una card per casa: lo stato, da quanto non comunica, e la linea degli ultimi quattordici giorni.",
         "<b>All systems</b>, one tile per home: its state, how long since it last reported, and the line of the last fourteen days.",
       ),
     },

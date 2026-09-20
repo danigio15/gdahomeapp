@@ -160,7 +160,7 @@ export const PARLATO = [
         en: "Then the homes to check right now, one card each, saying what's wrong.",
       },
       {
-        it: "E in fondo tutti gli impianti, una mattonella per casa: lo stato, da quanto non comunica, e la linea degli ultimi quattordici giorni.",
+        it: "E in fondo tutti gli impianti, una card per casa: lo stato, da quanto non comunica, e la linea degli ultimi quattordici giorni.",
         en: "And at the bottom every system, one tile per home: its state, how long since it last reported, and the line of the last fourteen days.",
       },
     ],
@@ -170,8 +170,8 @@ export const PARLATO = [
     dopo: 0.6,
     pezzi: [
       {
-        it: "Per ogni impianto il cruscotto esegue dieci controlli, tutti i giorni: la plancia, i telefoni, il collegamento da fuori casa, i collegamenti, gli aggiornamenti, gli add-on, la rete, la macchina, il backup e le batterie.",
-        en: "For every system the dashboard runs ten checks, every day: the dashboard, the phones, access from outside, connections, updates, add-ons, network, machine, backup and batteries.",
+        it: "Per ogni impianto il cruscotto esegue dieci controlli, tutti i giorni: la plancia, i telefoni, il collegamento da fuori casa, i collegamenti, gli aggiornamenti, gli add-on, la rete, la macchina, il backup e le batterie dei dispositivi.",
+        en: "For every system the dashboard runs ten checks, every day: the dashboard, the phones, access from outside, connections, updates, add-ons, network, machine, backup and device batteries.",
       },
       {
         it: "Ogni controllo porta il nome di ciò che verifica: «I collegamenti», non «Sono tutti collegati».",
