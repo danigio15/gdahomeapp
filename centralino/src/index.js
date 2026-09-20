@@ -5,6 +5,7 @@ import { join } from "node:path";
 import { Case } from "./case.js";
 import { ArchivioDellaChat, Chat } from "./chat.js";
 import { Centralino } from "./centralino.js";
+import { Contatti, Postino } from "./posta.js";
 import { apriIlRegistro } from "./registro.js";
 import { costruisciIlServer } from "./server.js";
 import { Sportello } from "./sportello.js";
@@ -41,6 +42,19 @@ export async function alzaIlCentralino({
    * riga in meno: un centralino proprio non e' detto che abbia un sito. */
   ilSito = process.env.NOME_DEL_SITO || "",
   lApp = process.env.NOME_DELL_APP || "",
+  /* La posta del modulo «Contatti» del sito. Il modulo sta su gdahome.org,
+   * cioe' su Caddy, che lo passa qui: `POST /contatto`. La lettera si consegna
+   * a un server di posta che esiste gia' — la casella che risponde — con
+   * utente e password, come farebbe un programma di posta qualunque. Senza
+   * server il modulo risponde «non configurato» e dice a chi scrive dove
+   * scrivere, invece di far finta di aver spedito. */
+  postaServer = process.env.POSTA_SERVER || "",
+  postaPorta = Number(process.env.POSTA_PORTA || 587),
+  postaSicurezza = process.env.POSTA_SICUREZZA || "",
+  postaUtente = process.env.POSTA_UTENTE || "",
+  postaPassword = process.env.POSTA_PASSWORD || "",
+  postaDa = process.env.POSTA_DA || "",
+  postaA = process.env.POSTA_A || "",
 } = {}) {
   const registro = apriIlRegistro(livello);
   const case_ = new Case({ cartella, giorniDiSilenzio });
@@ -56,10 +70,27 @@ export async function alzaIlCentralino({
     archivio: new ArchivioDellaChat(join(cartella, "chat.sqlite")),
     chiaveDellaConsole,
   });
+  const contatti = new Contatti({
+    postino: postaServer
+      ? new Postino({
+          server: postaServer,
+          porta: postaPorta,
+          sicurezza: postaSicurezza,
+          utente: postaUtente,
+          password: postaPassword,
+          miChiamo: ilSito || undefined,
+        })
+      : null,
+    da: postaDa || postaUtente,
+    a: postaA,
+    sito: ilSito,
+    registro,
+  });
   const server = costruisciIlServer({
     centralino,
     sportello,
     chat,
+    contatti,
     registro,
     dove: { sito: ilSito, app: lApp },
   });
@@ -84,6 +115,11 @@ export async function alzaIlCentralino({
       ? `la chat ha ${chat.archivio.quanteLinee()} conversazioni`
       : "la chat riceve, ma la console e' chiusa: manca la chiave",
   );
+  registro.info(
+    contatti.pronto
+      ? `il modulo dei contatti spedisce a ${postaA} passando da ${postaServer}`
+      : "il modulo dei contatti e' spento: manca il server di posta, il mittente o il destinatario",
+  );
 
   const giro = setInterval(() => {
     const andate = case_.potatura();
@@ -101,7 +137,7 @@ export async function alzaIlCentralino({
     chat.archivio.chiudi();
   };
 
-  return { centralino, case: case_, sportello, chat, server, registro, abbassa };
+  return { centralino, case: case_, sportello, chat, contatti, server, registro, abbassa };
 }
 
 if (

@@ -338,7 +338,7 @@ section {
   background: #fbbf24;
 }
 
-:where(a, button, input, summary):focus-visible {
+:where(a, button, input, textarea, summary):focus-visible {
   outline: 2.5px solid var(--azzurro);
   outline-offset: 2px;
   border-radius: 6px;
@@ -384,7 +384,7 @@ section {
   margin-left: auto;
 }
 .navigazione a {
-  padding: 8px 12px;
+  padding: 8px 10px;
   border-radius: 10px;
   text-decoration: none;
   font-size: 0.93rem;
@@ -475,6 +475,17 @@ section {
 }
 @media (max-width: 940px) {
   .navigazione {
+    display: none;
+  }
+}
+
+/* Con sette voci nella barra — «Installatori» e «Contatti» sono arrivate dopo
+ * — fra i 940 e i 1120 pixel il tasto «Installa l'add-on» non ci sta piu' di
+ * fianco al menu. Va via lui e non il menu: lo stesso tasto sta due centimetri
+ * sotto, nella copertina, e il menu e' l'unico modo di arrivare in fondo alla
+ * pagina senza scorrerla tutta. */
+@media (max-width: 1120px) {
+  .cappello .attrezzi .bottone {
     display: none;
   }
 }
@@ -923,6 +934,12 @@ section {
   align-items: flex-start;
   font-size: 0.97rem;
 }
+/* Una parola in grassetto dentro una voce non e' una colonna: la voce e' un
+ * flex per mettere il segno di fianco al testo, e senza questa riga il `<b>`
+ * diventerebbe un pezzo a se', col resto della frase incolonnato accanto. */
+.elenco-segni li > b {
+  display: contents;
+}
 .elenco-segni li::before {
   content: "";
   flex-shrink: 0;
@@ -1154,4 +1171,123 @@ a.scarico:hover {
 .sottobottoni-mezzo {
   text-align: center;
   margin-inline: auto;
+}
+
+/* ── Per chi installa ───────────────────────────────────────────────────── */
+
+/* La stessa lista con le spunte, ma per le cose che il cruscotto NON vede: una
+ * croce, e il rosso del progetto. */
+.elenco-segni.contro li::before {
+  background-color: color-mix(in srgb, var(--male) 14%, transparent);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23e11d48' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 6l12 12M18 6L6 18'/%3E%3C/svg%3E");
+  background-size: 11px;
+}
+.carta .elenco-segni + p {
+  margin-top: 16px;
+}
+
+/* ── Contatti ───────────────────────────────────────────────────────────── */
+
+/* Il modulo a sinistra, largo, e di fianco la scheda che dice a chi serve.
+ * Sul telefono la scheda scende sotto. */
+.contatto {
+  display: grid;
+  grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+  margin-top: 34px;
+}
+.modulo {
+  position: relative;
+  display: grid;
+  gap: 16px;
+  background: var(--carta);
+  border: 1px solid var(--bordo-tenue);
+  border-radius: var(--raggio);
+  padding: 26px;
+  box-shadow: var(--ombra);
+}
+.modulo-riga {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+}
+.campo {
+  display: grid;
+  gap: 6px;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+.campo input,
+.campo textarea {
+  width: 100%;
+  min-width: 0;
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 400;
+  color: var(--testo);
+  background: var(--carta-alta);
+  border: 1px solid var(--bordo);
+  border-radius: var(--raggio-piccolo);
+  padding: 12px 14px;
+  resize: vertical;
+}
+.campo input:focus-visible,
+.campo textarea:focus-visible {
+  outline-offset: 1px;
+  border-radius: var(--raggio-piccolo);
+}
+/* La trappola per i programmi: fuori dallo schermo, non nascosta con
+ * `display: none` — che i programmi sanno leggere — e fuori dal giro del
+ * tabulatore, che una persona non ci deve mai finire. */
+.miele {
+  position: absolute;
+  left: -10000px;
+  top: auto;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+.modulo-piede {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px 18px;
+}
+.modulo-nota {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--testo-lieve);
+  max-width: 40ch;
+}
+.modulo-esito {
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: var(--raggio-piccolo);
+  font-size: 0.95rem;
+  background: color-mix(in srgb, var(--bene) 12%, var(--carta));
+  border: 1px solid color-mix(in srgb, var(--bene) 30%, transparent);
+}
+.modulo-esito.male {
+  background: color-mix(in srgb, var(--male) 9%, var(--carta));
+  border-color: color-mix(in srgb, var(--male) 30%, transparent);
+}
+.modulo[aria-busy="true"] .bottone {
+  opacity: 0.6;
+  pointer-events: none;
+}
+.contatto-a-fianco b {
+  display: block;
+  margin-bottom: 4px;
+}
+.contatto-a-fianco p {
+  margin-bottom: 18px;
+}
+.contatto-a-fianco p:last-child {
+  margin-bottom: 0;
+}
+@media (max-width: 900px) {
+  .contatto {
+    grid-template-columns: 1fr;
+  }
 }

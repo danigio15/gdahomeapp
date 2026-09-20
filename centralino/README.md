@@ -52,6 +52,7 @@ Sul disco finisce l'**impronta** del segreto di ogni casa, mai il segreto.
 | `GET /` | — | la soglia: una pagina che dice cos'e' questo indirizzo e dove si va |
 | `GET /salute` | — | dice solo che e' vivo, e quante case ci sono |
 | `GET /console/` | la chiave, per leggere | la console della chat dell'assistenza |
+| `POST /contatto` | — | il modulo «Contatti» del sito: Caddy lo passa qui, e parte una mail |
 | `WS /casa` | il segreto della casa, dentro il filo | la casa che chiama fuori |
 | `WS /telefono/<casa_…>` | — | un telefono che va alla sua casa |
 | `WS /abbinamento/<impronta>` | — | un telefono che si sta abbinando |
@@ -106,9 +107,47 @@ da Node. Le variabili che legge:
 | `CENTRALINO_DATI` | dove tenere l'elenco delle case (difetto: `./dati`) |
 | `CENTRALINO_SILENZIO` | dopo quanti giorni si dimentica una casa sparita (difetto: 180) |
 | `CENTRALINO_REGISTRO` | `debug`, `info`, `attenzione`, `errore` |
+| `POSTA_SERVER`, `POSTA_PORTA`, … | la posta del modulo dei contatti del sito: sotto |
 
 Davanti ci va un proxy che parla in cifrato — il centralino sta su internet, e
 sopra ci passano i fili delle case.
+
+## Il modulo dei contatti
+
+Su gdahome.org c'e' un modulo per scrivere a chi risponde. Il sito e' fermo —
+due pagine servite da Caddy — e il modulo e' l'unica cosa che non e' un file:
+Caddy lo passa qui, `POST /contatto`, perche' questa e' la macchina che c'e'
+gia'. Il modulo manda `nome`, `email`, `messaggio` e `lingua`, in JSON o come
+modulo HTML; nel secondo caso — chi non ha JavaScript — la risposta e' una
+pagina, nella sua lingua, invece di un JSON.
+
+Quello che arriva parte come una **mail**, consegnata a un server di posta che
+esiste gia' — quello della casella che risponde — con utente e password, come
+farebbe un programma di posta qualunque: `STARTTLS` sulla 587, o TLS da subito
+sulla 465. In chiaro non si parla mai, tranne che con un server di posta su
+questa stessa macchina. Non si tiene in piedi nessun server di posta, e non e'
+pigrizia: una mail che arrivi davvero vuol dire SPF, DKIM e una reputazione da
+difendere, e quelle sono della casella. Chi ha scritto sta nel `Reply-To`, cosi'
+«Rispondi» risponde a lui.
+
+| | |
+|---|---|
+| `POSTA_SERVER` | il server di posta (es. `smtp.mail.me.com`). Vuoto: il modulo e' spento |
+| `POSTA_PORTA` | 587 (STARTTLS) o 465 (TLS). Difetto: 587 |
+| `POSTA_SICUREZZA` | `starttls`, `tls` o `nessuna`; si ricava dalla porta, e `nessuna` vale solo verso `127.0.0.1` |
+| `POSTA_UTENTE`, `POSTA_PASSWORD` | la casella con cui si entra |
+| `POSTA_DA` | il mittente, che di norma e' la casella stessa. Difetto: `POSTA_UTENTE` |
+| `POSTA_A` | a chi arriva: `assistenza@gdahome.org` |
+
+`accendi.sh` li chiede, e si possono lasciare vuoti: il modulo allora **non fa
+finta** — risponde che non e' configurato e dice a chi scrive l'indirizzo a cui
+scrivere. `/salute` porta `posta: true` quando e' acceso.
+
+Il modulo non conserva niente: il messaggio passa e va. Resta in memoria, per
+un'ora, il conto di quante lettere ha mandato ogni indirizzo di rete — cinque —
+per non far spedire cento lettere al minuto a chi ci prova. E un campo che una
+persona non vede, e che i programmi riempiono, fa buttare via il messaggio
+rispondendo lo stesso «partito».
 
 ## Le prove
 

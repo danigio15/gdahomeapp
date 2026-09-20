@@ -5,6 +5,7 @@
  *   GET  /                            la soglia: cos'e' questo indirizzo
  *   GET  /salute                      dice solo che e' vivo
  *   GET  /console/                    la console della chat, e le sue vie
+ *   POST /contatto                    il modulo «Contatti» del sito, che Caddy passa qui
  *   WS   /casa/<casa_…>              una casa che chiama fuori
  *   WS   /telefono/<casa_…>           un telefono che va alla sua casa
  *   WS   /abbinamento/<impronta>      un telefono che si sta abbinando
@@ -61,6 +62,9 @@ export function costruisciIlServer({
   centralino,
   sportello = null,
   chat = null,
+  /* Il modulo dei contatti del sito, e la posta con cui spedisce. Senza, la
+   * via risponde lo stesso e dice che non e' configurata. */
+  contatti = null,
   registro = null,
   acceso = Date.now(),
   /* Come si chiamano il sito e l'app di questo centralino, per la soglia.
@@ -90,7 +94,8 @@ export function costruisciIlServer({
     /* `/salute` dice tre cose, e sono le tre che servono quando qualcosa non
      * va: che e' vivo, da quanto — un numero piccolo dopo che nessuno ha
      * toccato niente vuol dire che si e' riacceso da solo — e se le
-     * segnalazioni hanno il loro gettone. */
+     * segnalazioni hanno il loro gettone. `posta` dice se il modulo dei
+     * contatti del sito ha un server di posta con cui spedire. */
     if (via === "/salute" && richiesta.method === "GET") {
       json(risposta, {
         vivo: true,
@@ -99,6 +104,7 @@ export function costruisciIlServer({
         telefoni: centralino.quantiTelefoni(),
         segnalazioni: Boolean(sportello?.pronto),
         chat: chat ? { linee: chat.archivio.quanteLinee(), console: chat.consoleAperta } : false,
+        posta: Boolean(contatti?.pronto),
       });
       return;
     }
@@ -110,15 +116,17 @@ export function costruisciIlServer({
       return;
     }
 
-    /* Le porte lente, una in fila all'altra: la chat e lo sportello leggono un
-     * corpo, aspettano un archivio o GitHub, e la risposta arriva dopo. La
-     * prima che riconosce la via risponde; se nessuna la riconosce e' un 404.
+    /* Le porte lente, una in fila all'altra: la chat, lo sportello e il modulo
+     * dei contatti leggono un corpo, aspettano un archivio, GitHub o un server
+     * di posta, e la risposta arriva dopo. La prima che riconosce la via
+     * risponde; se nessuna la riconosce e' un 404.
      *
      * L'errore che scappa da qui non racconta niente a chi bussa: il motivo
      * vero finisce nel registro, non nella risposta. */
     (async () => {
       if (chat && (await chat.forseServe(richiesta, risposta, indirizzo))) return;
       if (sportello && (await sportello.forseServe(richiesta, risposta, via))) return;
+      if (contatti && (await contatti.forseServe(richiesta, risposta, via))) return;
       json(risposta, { errore: "qui non c'e' niente" }, 404);
     })().catch((errore) => {
       registro?.errore?.(`una porta e' inciampata: ${errore?.stack || errore}`);

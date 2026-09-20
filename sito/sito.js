@@ -1,8 +1,9 @@
 /* Le poche cose che il sito fa da sé.
  *
- * Sono tre, e due non sono indispensabili: la pagina si legge tutta anche
- * senza JavaScript. La lingua, l'ombra sotto la barra quando si scende, e le
- * schede che compaiono salendo.
+ * Sono quattro, e nessuna è indispensabile: la pagina si legge tutta anche
+ * senza JavaScript. La lingua, l'ombra sotto la barra quando si scende, le
+ * schede che compaiono salendo, e il modulo dei contatti che resta sulla
+ * pagina invece di andarsene.
  *
  * Quello che conta — la plancia — non sta qui: sta nel riquadro, ed è un
  * documento suo con la sua vita.
@@ -118,6 +119,11 @@
     for (var b = 0; b < tasti.length; b += 1) {
       tasti[b].setAttribute("aria-pressed", String(tasti[b].dataset.lingua === lingua));
     }
+    /* Il modulo dei contatti porta con sé la lingua in cui si stava leggendo,
+     * così la pagina di risposta — quella di chi lo manda senza JavaScript, o
+     * il messaggio sotto il tasto — parla la stessa. */
+    var campoLingua = document.querySelector('#modulo-contatti input[name="lingua"]');
+    if (campoLingua) campoLingua.value = lingua;
   }
 
   raccogliLItaliano();
@@ -191,5 +197,102 @@
       { rootMargin: "0px 0px -8% 0px", threshold: 0.06 },
     );
     for (var k = 0; k < daMostrare.length; k++) occhio.observe(daMostrare[k]);
+  }
+
+  /* ── Il modulo dei contatti ───────────────────────────────────────────
+   *
+   * Il modulo è un modulo: senza JavaScript parte lo stesso, e il tramite
+   * risponde con una pagina. Con JavaScript resta sulla pagina: si manda in
+   * JSON e l'esito compare sotto il tasto, nella lingua che si sta leggendo.
+   *
+   * Se il tramite dice che la posta non è configurata, o non risponde, si
+   * dice **dove scrivere**: un modulo che dice «errore» e basta è una porta
+   * chiusa senza il cartello. L'indirizzo lo porta la pagina, in
+   * `data-scrivi`, e sta scritto una volta sola. */
+  var modulo = document.getElementById("modulo-contatti");
+  if (modulo && window.fetch && window.FormData) {
+    var esito = modulo.querySelector(".modulo-esito");
+    var scrivi = modulo.getAttribute("data-scrivi") || "";
+    var PAROLE = {
+      it: {
+        invio: "Sto mandando…",
+        partito: "Il messaggio è partito. Rispondiamo a {email}.",
+        spenta: "Il modulo non è attivo in questo momento: scrivi a {scrivi}.",
+        troppo: "Hai scritto poco fa: aspetta un po' prima di mandare un altro messaggio.",
+        sbagliato: "Controlla il nome, l'email e il messaggio.",
+        nonPartito: "Il messaggio non è partito. Riprova fra poco, oppure scrivi a {scrivi}.",
+      },
+      en: {
+        invio: "Sending…",
+        partito: "Your message is on its way. We answer at {email}.",
+        spenta: "The form is not active right now: write to {scrivi}.",
+        troppo: "You wrote a moment ago: wait a little before sending another message.",
+        sbagliato: "Check the name, the email and the message.",
+        nonPartito: "Your message did not go out. Try again shortly, or write to {scrivi}.",
+      },
+    };
+    var linguaDellaPagina = function () {
+      return document.documentElement.lang === "en" ? "en" : "it";
+    };
+    var detto = function (quale, email) {
+      return PAROLE[linguaDellaPagina()][quale]
+        .replace("{email}", email || "")
+        .replace("{scrivi}", scrivi);
+    };
+    var mostra = function (testo, male) {
+      esito.textContent = testo;
+      esito.classList.toggle("male", Boolean(male));
+      esito.hidden = false;
+    };
+
+    modulo.addEventListener("submit", function (evento) {
+      evento.preventDefault();
+      /* I campi vuoti li dice il browser, con le sue parole e nella sua
+       * lingua: qui non si manda niente finché non sono a posto. */
+      if (modulo.reportValidity && !modulo.reportValidity()) return;
+      var corpo = {};
+      new FormData(modulo).forEach(function (valore, nome) {
+        corpo[nome] = String(valore);
+      });
+      corpo.lingua = linguaDellaPagina();
+
+      modulo.setAttribute("aria-busy", "true");
+      mostra(detto("invio"));
+      fetch(modulo.getAttribute("action"), {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(corpo),
+      })
+        .then(function (risposta) {
+          return risposta
+            .json()
+            .catch(function () {
+              return {};
+            })
+            .then(function (letto) {
+              return { stato: risposta.status, letto: letto };
+            });
+        })
+        .then(function (arrivato) {
+          if (arrivato.stato === 200 && arrivato.letto.inviato) {
+            mostra(detto("partito", corpo.email));
+            modulo.reset();
+          } else if (arrivato.stato === 503) {
+            mostra(detto("spenta"), true);
+          } else if (arrivato.stato === 429) {
+            mostra(detto("troppo"), true);
+          } else if (arrivato.stato === 400) {
+            mostra(detto("sbagliato"), true);
+          } else {
+            mostra(detto("nonPartito"), true);
+          }
+        })
+        .catch(function () {
+          mostra(detto("nonPartito"), true);
+        })
+        .then(function () {
+          modulo.removeAttribute("aria-busy");
+        });
+    });
   }
 })();

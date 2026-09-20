@@ -428,6 +428,37 @@ await prova("i link portano dove dicono", async () => {
   );
 });
 
+/* Il modulo dei contatti e' l'unica cosa della pagina che non e' un file: se
+ * il suo indirizzo cambiasse, o il tasto sparisse, la pagina si aprirebbe
+ * benissimo e nessuno potrebbe piu' scrivere. Qui si guarda che ci sia, che
+ * mandi al tramite, che i tre campi abbiano i nomi che il tramite legge, e che
+ * dal menu si arrivi a lui e alla sezione per chi installa. */
+await prova("il modulo dei contatti c'e', e manda al tramite", async () => {
+  const modulo = await pagina.evaluate(() => {
+    const forma = document.querySelector("#contatti form");
+    if (!forma) return null;
+    return {
+      via: forma.getAttribute("action"),
+      metodo: (forma.getAttribute("method") || "").toLowerCase(),
+      campi: [...forma.querySelectorAll("input, textarea")].map((uno) => uno.name),
+      tasto: Boolean(forma.querySelector('button[type="submit"]')),
+      dalMenu: Boolean(document.querySelector('.navigazione a[href="#contatti"]')),
+      installatori:
+        Boolean(document.querySelector('.navigazione a[href="#installatori"]')) &&
+        Boolean(document.getElementById("installatori")),
+    };
+  });
+  if (!modulo) throw new Error("nella sezione «contatti» non c'e' nessun modulo");
+  if (modulo.via !== "/contatto" || modulo.metodo !== "post")
+    throw new Error(`il modulo manda a ${modulo.metodo} ${modulo.via}`);
+  for (const campo of ["nome", "email", "messaggio"])
+    if (!modulo.campi.includes(campo)) throw new Error(`manca il campo «${campo}»`);
+  if (!modulo.tasto) throw new Error("non c'e' il tasto per mandare");
+  if (!modulo.dalMenu) throw new Error("dal menu non si arriva ai contatti");
+  if (!modulo.installatori)
+    throw new Error("la sezione per chi installa non c'e', o dal menu non ci si arriva");
+});
+
 /* Le schermate dell'app sono il pezzo che regge la copertina: senza di loro
  * chi arriva legge di un'app senza averla mai vista. E un'immagine che non
  * arriva non fa nessun rumore — lascia un buco, e la pagina intorno sta in
