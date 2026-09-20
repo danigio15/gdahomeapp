@@ -40,3 +40,12 @@ test("il tasto c'e' solo con la manutenzione aperta, e mai mentre sta succedendo
 test("un riavvio finito si dice «fatto», non «installato»", () => {
   assert.match(PAGINA, /l\.riavvio \? "fatto" : "installato"/);
 });
+
+test("un riavvio appena chiesto si annuncia col suo nome, non con un salto di versione vuoto", () => {
+  /* `chiesto` per un riavvio non ha nome, `da` ne' `a`: il cartello che li
+   * scrive uguali per tutti direbbe « → », che non e' niente. */
+  const da = PAGINA.indexOf("function ilCartello(");
+  const pezzo = PAGINA.slice(da, PAGINA.indexOf("const l = c.lavoro;", da));
+  assert.match(pezzo, /chiesto\.cosa === "riavvia"/);
+  assert.match(pezzo, /Il riavvio di Home Assistant/);
+});

@@ -3628,7 +3628,11 @@
             <div class="cartello">
               <span class="gettone" aria-hidden="true">◴</span>
               <span>
-                <b>${testo(chiesto.nome)} ${testo(chiesto.da)} → ${testo(chiesto.a)}</b>
+                <b>${
+                  chiesto.cosa === "riavvia"
+                    ? "Il riavvio di Home Assistant"
+                    : `${testo(chiesto.nome)} ${testo(chiesto.da)} → ${testo(chiesto.a)}`
+                }</b>
                 è stato chiesto ${testo(daQuanto(chiesto.chiesto))}. Parte quando questa
                 casa manda il prossimo rapporto — non si bussa alla porta di
                 nessuno, è lei che passa a prenderselo.
