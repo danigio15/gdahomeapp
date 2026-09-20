@@ -121,6 +121,23 @@ Future<void> diciLeMisure(
   required double basso,
 }) async {}
 
+/// Il parcheggio, nel browser: non si fa, e la ragione e' che non serve.
+///
+/// Sul telefono la plancia sta in un WebView che Android compone per conto
+/// suo, e continuare a disegnare sotto una schermata che non la mostra costa
+/// davvero. Nel browser sta in una cornice che, quando l'app mostra un'altra
+/// schermata, il browser non disegna: il lavoro se lo risparmia lui. E se la
+/// scheda intera passa in secondo piano, la plancia se ne accorge da se' —
+/// `document.visibilityState`, che nel browser dice la verita'.
+///
+/// C'e' e non fa niente, come `diciLeMisure`: le due parti dell'app chiamano
+/// le stesse cose, e quale delle due abbia qualcosa da fare lo decide il file,
+/// non chi chiama.
+Future<void> parcheggia(
+  WebViewController controllore,
+  bool parcheggiata,
+) async {}
+
 /// Consegna alla pagina del quadro il codice che apre il cruscotto.
 ///
 /// **Anche nel browser, e non era scontato.** Una stesura di questo file

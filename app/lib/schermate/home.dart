@@ -490,6 +490,11 @@ class _HomeState extends State<Home> {
                           Sezione.plancia => PlanciaVera(
                             key: _plancia,
                             collegamento: collegamento,
+                            /* La plancia e' l'unica sezione che resta al
+                               lavoro anche da spenta: e' una pagina web, e
+                               una pagina web non si accorge da sola che
+                               nessuno la guarda. Glielo si dice. */
+                            visibile: sullaPlancia,
                             fabbrica: widget.plancia,
                             impostazioni: widget.impostazioni,
                             vaiAlleCase: widget.vaiAlleCase,

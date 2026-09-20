@@ -268,6 +268,42 @@ Future<void> diciLeMisure(
   }
 }
 
+/// Dice alla plancia che nessuno la sta guardando, o che qualcuno e' tornato.
+///
+/// La plancia sa gia' mettersi a riposo: dentro Home Assistant, quando si va
+/// su un'altra pagina, chi la ospita le scrive addosso un segno — il
+/// parcheggio — e lei smette di disegnare. Il patto sta scritto in due posti,
+/// `ponte/plancia/src/legacy/host.js` di la' e `shared.js` di qua, e i nomi
+/// sono questi.
+///
+/// Nell'app quel segno non glielo scriveva nessuno. Le altre schermate si
+/// ricevono un `visibile` e si azzittiscono; la plancia no, e restava viva a
+/// pieno ritmo sotto una schermata che non la mostrava: il suo disegno da
+/// settecento righe due volte al secondo, i suoi timer, le sue animazioni.
+/// Non si vedeva, ma si sentiva — il telefono che si scalda con la plancia
+/// aperta, e gli scatti sulle schermate dell'app.
+///
+/// Al ritorno si manda anche un `pageshow`, che e' il modo con cui la plancia
+/// capisce «rimettiti in pari»: e' quello che fa gia' chi la ospita dentro
+/// Home Assistant, e due modi diversi di svegliarla sarebbero due modi da
+/// tenere allineati.
+Future<void> parcheggia(
+  WebViewController controllore,
+  bool parcheggiata,
+) async {
+  final detto = parcheggiata ? 'true' : 'false';
+  try {
+    await controllore.runJavaScript(
+      'window.__DASHBOARDMODERN_PARCHEGGIATA__=$detto;'
+      'window.dispatchEvent(new CustomEvent('
+      '"dashboardmodern:parcheggio",{detail:{parcheggiata:$detto}}));'
+      '${parcheggiata ? '' : 'window.dispatchEvent(new Event("pageshow"));'}',
+    );
+  } catch (_) {
+    /* La pagina non c'e' ancora, o se n'e' andata: al prossimo giro. */
+  }
+}
+
 /// Consegna alla pagina del quadro il codice che apre il cruscotto.
 ///
 /// **La stessa strada della tessera dentro Home Assistant**
