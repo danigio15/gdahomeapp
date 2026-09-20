@@ -26,6 +26,14 @@ non esiste», che è una risposta definitiva: non si richiede più. Ma quelle
 icone esistono eccome, e il ponte le sa prendere da sempre: è la stessa strada
 che usa l'app, che infatti le vede. Adesso la usa anche per il quadro.
 
+Sistemare il ponte però non bastava: il quadro quel «non esiste» se l'era già
+scritto, e non l'avrebbe richiesto mai più. Adesso **un no scade**. Richiederlo
+costa una riga di rapporto e una domanda che la casa si fa in memoria — per un
+firmware che un'icona non ce l'ha davvero il no torna uguale e non viaggia
+niente — e in cambio una risposta sbagliata non resta lì per sempre. È la
+risposta che nessuno rimette mai in discussione: per questo va rimessa in
+discussione ogni tanto.
+
 **Le note di una versione si leggono, invece di leggersi coi cancelletti.**
 «Cosa cambia, per intero» apriva il CHANGELOG così come è scritto: `## 5.3.0`
 col cancelletto davanti, gli elenchi con gli asterischi, il grassetto con le

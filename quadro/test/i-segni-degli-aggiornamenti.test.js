@@ -520,3 +520,72 @@ test("le due copie di «come si fa un segno» dicono la stessa cosa", async () =
    * se no l'icona di ieri resterebbe attaccata a quella di domani. */
   assert.notEqual(delQuadro("Mosquitto broker", "6.5.2"), delQuadro("Mosquitto broker", "6.5.1"));
 });
+
+test("un «quell'icona non esiste» scade, e uno vecchio senza data vale come scaduto", async () => {
+  /* Il no e' la risposta che nessuno rimette mai in discussione, ed e'
+   * esattamente per questo che va rimessa in discussione ogni tanto.
+   *
+   * Il ponte per un pezzo ha detto «non esiste» a ogni icona che stesse
+   * dentro Home Assistant — il Core, il sistema operativo, Frigate, il
+   * firmware del minipc — e qui quel no si scriveva per sempre. Sistemare il
+   * ponte non sarebbe bastato: la cartella se li era gia' segnati. */
+  const { Segni, UN_NO_DURA } = await import("../src/segni.js");
+  const { writeFileSync } = await import("node:fs");
+  const cartella = mkdtempSync(join(tmpdir(), "un-no-"));
+  try {
+    let quando = 1_000_000_000;
+    const segni = new Segni({ cartella, adesso: () => quando });
+    const riga = { nome: "Frigate", a: "0.14.1", senzaLogo: true, senzaNote: true };
+    const quale = ilSegnoDi(riga.nome, riga.a);
+
+    segni.metti([riga]);
+    assert.deepEqual(segni.quelliCheMancano([riga]), [], "appena detto, non si richiede");
+
+    /* Un'ora dopo vale ancora: richiederlo ogni minuto sarebbe il giro che il
+     * no serve a evitare. */
+    quando += 60 * 60 * 1000;
+    assert.deepEqual(segni.quelliCheMancano([riga]), [], "dopo un'ora vale ancora");
+
+    /* Passato il tempo si richiede una volta: se il no e' vero torna uguale. */
+    quando += UN_NO_DURA;
+    assert.deepEqual(segni.quelliCheMancano([riga]), [quale], "scaduto, si richiede");
+
+    /* E la casa lo ridice: da li' riparte il conto, non si richiede piu'. */
+    segni.metti([riga]);
+    assert.deepEqual(segni.quelliCheMancano([riga]), [], "ridetto, riparte il conto");
+
+    /* Un no scritto com'erano scritti prima — un file vuoto — non ha data, e
+     * senza data non c'e' niente da credere: si richiede. */
+    writeFileSync(join(segni.cartella, `${quale}.senza-logo`), "");
+    assert.deepEqual(segni.quelliCheMancano([riga]), [quale], "quello vecchio si richiede");
+  } finally {
+    rmSync(cartella, { recursive: true, force: true });
+  }
+});
+
+test("nominare un segno non allunga la vita al suo «non esiste»", async () => {
+  /* La data del file la rinfresca `_visto` a ogni rapporto che nomina quel
+   * segno — serve alla potatura, che deve buttare quello che nessuno chiede
+   * piu'. Se il no si fidasse di quella, un aggiornamento che una casa ha
+   * sempre in elenco non scadrebbe mai: il no piu' sbagliato, quello che
+   * nessuno rimette in discussione, sarebbe anche quello piu' difficile da
+   * togliere. Percio' la data sta dentro il file. */
+  const { Segni, UN_NO_DURA } = await import("../src/segni.js");
+  const cartella = mkdtempSync(join(tmpdir(), "un-no-visto-"));
+  try {
+    let quando = 1_000_000_000;
+    const segni = new Segni({ cartella, adesso: () => quando });
+    const riga = { nome: "Frigate", a: "0.14.1", senzaLogo: true, senzaNote: true };
+    const quale = ilSegnoDi(riga.nome, riga.a);
+    segni.metti([riga]);
+    /* Il rapporto arriva ogni minuto e lo nomina sempre. */
+    for (let i = 0; i < 200; i += 1) {
+      quando += 60 * 1000;
+      segni.metti([{ nome: riga.nome, a: riga.a }]);
+    }
+    assert.ok(quando - 1_000_000_000 > UN_NO_DURA, "il tempo e' passato davvero");
+    assert.deepEqual(segni.quelliCheMancano([riga]), [quale], "scaduto lo stesso");
+  } finally {
+    rmSync(cartella, { recursive: true, force: true });
+  }
+});

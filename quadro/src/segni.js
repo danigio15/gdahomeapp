@@ -80,6 +80,25 @@ export const NOTE_AL_MASSIMO = 8 * 1024;
  * icone di aggiornamenti fatti l'anno scorso, che nessuno chiedera' mai piu'. */
 export const QUANTI_SE_NE_TENGONO = 500;
 
+/* Quanto dura un «quell'icona non esiste».
+ *
+ * Il no e' una risposta comoda — la casa smette di mandare, il quadro smette
+ * di chiedere — e proprio per questo e' quella che costa di piu' quando e'
+ * sbagliata: nessuno la rimette mai in discussione. E una l'abbiamo avuta
+ * sbagliata per un pezzo. Il ponte rispondeva «non esiste» a ogni icona che
+ * stesse dentro Home Assistant — Frigate, il Core, il sistema operativo, il
+ * firmware del minipc — e qui quel no si scriveva per sempre. Sistemare il
+ * ponte non sarebbe bastato: la cartella se li era gia' segnati, e quelle
+ * icone non sarebbero arrivate mai.
+ *
+ * Quindi un no scade. Richiederlo costa una riga di rapporto e una domanda
+ * che la casa si fa in memoria: per un firmware che un'icona non ce l'ha
+ * davvero, il no torna uguale e non viaggia niente. Due ore e' poco per
+ * pesare e abbastanza perche' una casa appena aggiornata si veda le sue
+ * icone nel giro di un pomeriggio, senza che nessuno vada a cancellare
+ * niente a mano. */
+export const UN_NO_DURA = 2 * 60 * 60 * 1000;
+
 const LE_RAZZE = [
   { coda: "png", mime: "image/png", segno: [0x89, 0x50, 0x4e, 0x47] },
   { coda: "jpg", mime: "image/jpeg", segno: [0xff, 0xd8, 0xff] },
@@ -144,10 +163,32 @@ export class Segni {
    * richiederebbe per sempre.
    *
    * Servono tutt'e tre gli stati, allora: ce l'ho, non ce l'ho, **non
-   * esiste**. Il terzo lo dice la casa — lei sola lo sa — e qui si segna con
-   * un file vuoto. */
+   * esiste**. Il terzo lo dice la casa — lei sola lo sa — e qui si segna in
+   * un file che dice **quando** l'ha detto: un no scade, vedi `UN_NO_DURA`. */
   _hoIlLogo(segno) {
-    return Boolean(this._dove(segno)) || existsSync(join(this.cartella, `${segno}.senza-logo`));
+    return Boolean(this._dove(segno)) || this._ilNoVale(`${segno}.senza-logo`);
+  }
+
+  /* Un «non esiste» ancora buono: scritto, e non da troppo tempo.
+   *
+   * La data sta **dentro** il file e non e' quella del file. Ogni rapporto
+   * che nomina un segno gliela rinfresca (`_visto`, per la potatura), quindi
+   * la data del file dice quando l'ha nominato l'ultima casa — non quando il
+   * no e' stato detto — e un no cosi' non scadrebbe mai.
+   *
+   * Un file vuoto vale come scaduto: sono i no scritti prima che questa data
+   * ci fosse, ed e' esattamente quella la roba da richiedere una volta. Se il
+   * no e' vero torna uguale, col suo orario, e non se ne parla per due ore. */
+  _ilNoVale(nome) {
+    let scritto = "";
+    try {
+      scritto = readFileSync(join(this.cartella, nome), "utf8");
+    } catch (_nonCE) {
+      return false;
+    }
+    const quando = Number(scritto.trim());
+    if (!Number.isFinite(quando) || quando <= 0) return false;
+    return this.adesso() - quando < UN_NO_DURA;
   }
 
   _hoLeNote(segno) {
@@ -211,9 +252,9 @@ export class Segni {
             presi += 1;
           }
         } else if (uno?.senzaLogo === true && !this._hoIlLogo(segno)) {
-          /* «Un'icona non ce n'e'»: un file vuoto che vale come risposta. Da
-           * qui in poi non si richiede piu'. */
-          this._scrivi(`${segno}.senza-logo`, Buffer.alloc(0));
+          /* «Un'icona non ce n'e'»: un file con dentro l'ora in cui e' stato
+           * detto. Da qui non si richiede piu', ma non per sempre. */
+          this._scrivi(`${segno}.senza-logo`, String(this.adesso()));
           presi += 1;
         }
         if (typeof uno?.leNote === "string" && uno.leNote.trim()) {
