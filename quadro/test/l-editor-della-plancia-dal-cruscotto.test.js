@@ -202,7 +202,9 @@ test("la pagina dell'editor si serve per una casa che lo permette, con le premes
     assert.equal(risposta.headers.get("cache-control"), "no-store");
     const pagina = await risposta.text();
     const base = b.plancia.base;
-    assert.ok(pagina.includes(`<base href="${base}/legacy/" />`));
+    /* In relativo, come le vie del cruscotto: un prefisso davanti al quadro
+     * resta davanti ai file e al filo. */
+    assert.ok(pagina.includes(`<base href="../../..${base}/legacy/" />`));
     assert.ok(pagina.includes("window.__DASHBOARDMODERN_HOSTED__=true;"));
     assert.ok(
       pagina.includes(
@@ -211,7 +213,8 @@ test("la pagina dell'editor si serve per una casa che lo permette, con le premes
     );
     assert.ok(pagina.includes('window.__DASHBOARDMODERN_PROFILE__="primary";'));
     assert.ok(pagina.includes("window.__GDAHOME_DA_LONTANO__=true;"));
-    assert.ok(pagina.includes(`/plancia-da-lontano/${UNA}/primary/websocket`));
+    assert.ok(pagina.includes('location.pathname.replace(/\\/+$/,"")+"/websocket"'));
+    assert.ok(!pagina.includes(`"/plancia-da-lontano/${UNA}/primary/websocket"`));
     /* Il codice: dal deposito del cruscotto, o dal cruscotto stesso, mai
      * dall'indirizzo. */
     assert.ok(pagina.includes('localStorage.getItem("gdahome.quadro.chiave")'));
@@ -232,10 +235,9 @@ test("la pagina dell'editor si serve per una casa che lo permette, con le premes
     assert.ok(pagina.includes('window.__GDAHOME_TESTATA__=["Casa","Rossi"];'));
     assert.ok(pagina.includes("<title>Casa Rossi</title>"));
     assert.ok(pagina.includes("<b>Rossi</b>"));
-    /* Una pagina di un'altra plancia, o di un'altra casa, non parla a questo
-     * filo. */
+    /* Una pagina di un'altra plancia sa di esserlo. */
     const altra = await (await fetch(`${b.dove}/plancia-da-lontano/${UNA}/suocero/`)).text();
-    assert.ok(altra.includes(`/plancia-da-lontano/${UNA}/suocero/websocket`));
+    assert.ok(altra.includes('window.__DASHBOARDMODERN_PROFILE__="suocero";'));
   } finally {
     await b.chiudi();
   }

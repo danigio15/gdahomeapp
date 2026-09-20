@@ -106,6 +106,20 @@ class _StatoDelCruscotto extends State<SchermataDelCruscotto> {
   void didUpdateWidget(SchermataDelCruscotto vecchia) {
     super.didUpdateWidget(vecchia);
     _apriSeTocca();
+    /* Il codice arrivato **dopo**. La home lo richiede al ponte finche' non
+     * ce l'ha, e puo' arrivare a riquadro gia' aperto: al `load` della
+     * pagina era vuoto e non si e' consegnato niente. Senza questa riga la
+     * pagina restava a chiederlo a mano con quello giusto gia' in mano. */
+    final controllore = _controllore;
+    final dove = _indirizzo;
+    if (controllore != null &&
+        dove != null &&
+        widget.chiave.isNotEmpty &&
+        widget.chiave != vecchia.chiave) {
+      unawaited(
+        riquadro.consegnaLaChiave(controllore, widget.chiave, pagina: dove),
+      );
+    }
   }
 
   @override

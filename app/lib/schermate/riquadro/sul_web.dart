@@ -161,20 +161,33 @@ Future<void> consegnaLaChiave(
     if (fra > 0) await Future<void>.delayed(Duration(milliseconds: fra));
     final riquadro = _ilRiquadroDi(dove);
     if (riquadro == null) continue;
-    /* Una consegna per riquadro: chi ricarica la pagina la riceve dallo
-     * stesso ascoltatore, sul `load` che segue. */
-    if (riquadro.getAttribute(_consegnato) == chiave) return;
+    /* Il codice sta sull'elemento, e l'ascoltatore lo rilegge da li' a ogni
+     * `load`: cosi' un codice arrivato dopo — la home lo richiede finche'
+     * non ce l'ha — prende il posto di quello di prima senza un secondo
+     * ascoltatore, e una pagina ricaricata riceve sempre l'ultimo. Un
+     * ascoltatore per riquadro, attaccato una volta. */
     riquadro.setAttribute(_consegnato, chiave);
-    void manda() => _consegnaA(riquadro.contentWindow, chiave, pagina);
-    riquadro.addEventListener('load', ((web.Event _) => manda()).toJS);
-    manda();
+    if (!riquadro.hasAttribute(_inAscolto)) {
+      riquadro.setAttribute(_inAscolto, 'sì');
+      riquadro.addEventListener(
+        'load',
+        ((web.Event _) => _consegnaA(
+          riquadro.contentWindow,
+          riquadro.getAttribute(_consegnato) ?? '',
+          pagina,
+        )).toJS,
+      );
+    }
+    _consegnaA(riquadro.contentWindow, chiave, pagina);
     return;
   }
 }
 
-/// L'attributo con cui un riquadro dice che il codice gli e' gia' stato
-/// consegnato — e quale, cosi' un codice cambiato si riconsegna.
+/// L'attributo in cui il riquadro tiene l'ultimo codice da consegnare.
 const String _consegnato = 'data-gdahome-chiave';
+
+/// E quello che dice che l'ascoltatore del `load` c'e' gia'.
+const String _inAscolto = 'data-gdahome-ascolta';
 
 /// Il riquadro che ha aperto quell'indirizzo, se e' gia' nel documento.
 web.HTMLIFrameElement? _ilRiquadroDi(String dove) {
@@ -191,7 +204,7 @@ web.HTMLIFrameElement? _ilRiquadroDi(String dove) {
 /// Tre colpi a distanza crescente, come la tessera: `load` dice che il
 /// documento c'e', non che il suo ascoltatore ci sia gia'.
 void _consegnaA(web.Window? finestra, String chiave, Uri pagina) {
-  if (finestra == null) return;
+  if (finestra == null || chiave.isEmpty) return;
   final origine = pagina.origin;
   void manda() {
     try {

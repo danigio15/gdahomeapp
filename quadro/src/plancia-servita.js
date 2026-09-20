@@ -33,6 +33,8 @@
  * repository si trova da sola in `../ponte/plancia`. I file si servono sotto
  * `/dashboardmodern_static/<impronta>/…` come fa il ponte, e per lo stesso
  * motivo: l'impronta cambia coi file, e il browser puo' tenerseli un anno.
+ * La pagina li chiede in **relativo**, come il cruscotto chiede le sue vie:
+ * un prefisso davanti al quadro resta davanti anche a loro.
  *
  * I file statici escono **senza** il marchio dell'installatore: stanno a un
  * indirizzo solo per tutti e senza chiave, e il logo di uno finirebbe nella
@@ -233,9 +235,12 @@ function questoNo() {
 
 /* ─── Le premesse ────────────────────────────────────────────────────────── */
 
-/* Dove la pagina bussa: la cucitura cieca di **quella** plancia. */
-export const doveIlWebSocket = (casa, profilo) =>
-  `/plancia-da-lontano/${casa}/${profilo}/websocket`;
+/* Gli indirizzi, **relativi**: ne' la base dei file ne' il filo partono dalla
+ * radice del sito. Il cruscotto chiede le sue vie in relativo apposta — cosi'
+ * funziona anche dietro un proxy che lo monta sotto un prefisso — e questa
+ * pagina fa lo stesso: i file stanno tre cartelle sopra di lei
+ * (`/plancia-da-lontano/<casa>/<profilo>/` → `/dashboardmodern_static/…`), e
+ * il filo e' il suo stesso indirizzo con `websocket` in fondo. */
 
 /* Il nome sotto cui la pagina tiene le sue cose nel deposito del browser:
  * uno per casa e per plancia, cosi' due editor aperti su due case non si
@@ -260,11 +265,15 @@ export const istanzaDi = (casa, profilo) => `quadro-${casa}-${profilo}`;
  * da un'altra finestra non e' un codice, qualunque cosa dica.
  *
  * Non nell'indirizzo: un codice nell'indirizzo finisce nei registri di
- * chi sta in mezzo. */
-export function ilWebSocketCieco(dove) {
+ * chi sta in mezzo.
+ *
+ * Il filo sta all'indirizzo della pagina piu' `websocket`, letto dalla
+ * pagina stessa: cosi' un prefisso davanti — un proxy che monta il quadro
+ * sotto una cartella — resta davanti anche al filo. */
+export function ilWebSocketCieco() {
   return (
     "(function(Vera){" +
-    `var dove=(location.protocol==="https:"?"wss://":"ws://")+location.host+${JSON.stringify(dove)};` +
+    'var dove=(location.protocol==="https:"?"wss://":"ws://")+location.host+location.pathname.replace(/\\/+$/,"")+"/websocket";' +
     'var chiave="";' +
     `try{chiave=localStorage.getItem(${JSON.stringify(DOVE_STA_LA_CHIAVE)})||"";}catch(e){}` +
     "var aspettano=[];" +
@@ -365,10 +374,10 @@ export function conLePremesseDaLontano(
 ) {
   const istanza = istanzaDi(casa, profilo);
   const premessa =
-    `<base href="${base.replace(/\/*$/, "/")}legacy/" />` +
+    `<base href="../../..${base.replace(/\/*$/, "/")}legacy/" />` +
     "<script>" +
     "window.__DASHBOARDMODERN_HOSTED__=true;" +
-    `window.__DASHBOARDMODERN_BRIDGE_WS__=${ilWebSocketCieco(doveIlWebSocket(casa, profilo))};` +
+    `window.__DASHBOARDMODERN_BRIDGE_WS__=${ilWebSocketCieco()};` +
     `window.__DASHBOARDMODERN_INSTANCE__=${JSON.stringify(istanza)};` +
     `window.__DASHBOARDMODERN_PROFILE__=${JSON.stringify(profilo)};` +
     `window.__DASHBOARDMODERN_PRIMARY__=${profilo === "primary"};` +
