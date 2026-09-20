@@ -40,22 +40,57 @@ test("la barra in vista ha il fondo pieno, nei due temi", () => {
    * i due modi in cui una barra sta sullo schermo. */
   assert.match(
     barra,
-    /nav\.tabs\.bottom-nav-bar\.visible,\s*\n\s*body\.cd-nav-fixed nav\.tabs\.bottom-nav-bar\{background:#fff!important\}/,
+    /nav\.tabs\.bottom-nav-bar\.visible,\s*\n\s*body\.cd-nav-fixed nav\.tabs\.bottom-nav-bar\{\s*\n\s*background:#fff!important;/,
     "col tema chiaro il fondo non e' pieno",
   );
   assert.match(
     barra,
-    /body\.dark\.cd-nav-fixed nav\.tabs\.bottom-nav-bar\{background:#131c30!important\}/,
+    /body\.dark\.cd-nav-fixed nav\.tabs\.bottom-nav-bar\{\s*\n\s*background:#131c30!important;/,
     "col tema scuro il fondo non e' pieno",
   );
 });
 
 test("e il vetro resta spento: pieno piu' sfocato sarebbe lavoro per niente", () => {
-  /* Il risparmio di beta5 non si tocca. Una barra ritirata non sfoca niente, e
-   * una in vista non ha niente dietro da sfocare. */
+  /* Il risparmio di beta5 non si tocca. Una barra ritirata non sfoca niente. */
   assert.match(
     risparmio,
     /nav\.tabs\.bottom-nav-bar:not\(\.visible\)\{backdrop-filter:none!important/,
-    "la regola che spegne il vetro non c'e' piu'",
+    "la regola che spegne il vetro della barra ritirata non c'e' piu'",
   );
+});
+
+test("e nemmeno la barra in vista sfoca: dietro un muro non c'e' vetro", () => {
+  /* Questa meta' mancava, e per un anno nessuno se n'e' accorto.
+   *
+   * Il fondo della barra in vista e' pieno da sempre — le due regole qui
+   * sopra — ma il vetro smerigliato sotto era rimasto acceso: blur(42px) con
+   * saturate(170%), calcolato dal browser e poi coperto dal fondo opaco.
+   *
+   * Non e' un calcolo che si fa una volta. Un vetro rilegge quello che ha
+   * dietro ogni volta che dietro si muove qualcosa, e dietro c'e' lo sfondo
+   * animato: due macchie larghe mezzo schermo, sfocate cento punti, che si
+   * muovono per sempre. Sfocatura rifatta a ogni fotogramma per niente, anche
+   * a dito fermo.
+   *
+   * Misurato in un browser vero prima e dopo: prima la barra in vista
+   * rispondeva «blur(42px) saturate(1.7)» anche con la Plancia leggera
+   * accesa, adesso risponde «none» sempre. */
+  for (const [tema, sfondo] of [
+    ["chiaro", "#fff"],
+    ["scuro", "#131c30"],
+  ]) {
+    const dove = barra.indexOf(`background:${sfondo}!important;`);
+    assert.notEqual(dove, -1, `il tema ${tema} non mette piu' il fondo pieno`);
+    const regola = barra.slice(dove, barra.indexOf("}", dove));
+    assert.match(
+      regola,
+      /backdrop-filter:none!important/,
+      `nel tema ${tema} la barra in vista sfoca ancora quello che poi copre`,
+    );
+    assert.match(
+      regola,
+      /-webkit-backdrop-filter:none!important/,
+      `nel tema ${tema} manca la scritta col prefisso, e il WebView guarda quella`,
+    );
+  }
 });
