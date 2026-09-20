@@ -401,13 +401,19 @@ jobs:
       # per quello per cui serve davvero: un indirizzo che dice «c'e' la
       # 1.4.32, ed ecco cosa e' cambiato». Senza allegati non ha piu' bisogno
       # della chiave vera, e si fa a ogni etichetta.
+      #
+      # **E nemmeno un link al pacchetto.** Per un pezzo le note mandavano
+      # agli artefatti della corsa, «per chi la sta provando»: e' un link
+      # all'APK con un giro in piu', e chi tiene il progetto ha deciso che
+      # dalle release non ne parte nessuno. Chi prova l'app la prende dalla
+      # prova chiusa del Play Store; chi costruisce sa dove stanno gli
+      # artefatti senza che glielo dica la release.
       - name: La release
         if: github.ref_type == 'tag'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           quale="${GITHUB_REF_NAME#v}"
-          corsa="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
           {
             echo "gdahome $quale: l'add-on per Home Assistant, e l'app."
             echo ""
@@ -421,10 +427,6 @@ jobs:
             echo "installano uno sopra l'altro, e partire da qui vorrebbe dire"
             echo "disinstallare e riabbinare il telefono il giorno che si passa al"
             echo "negozio."
-            echo ""
-            echo "Chi la sta provando trova i pacchetti di questa versione — Android,"
-            echo "iPhone, browser, e l'\`.aab\` per il Play Console — fra gli artefatti"
-            echo "della corsa che l'ha costruita: $corsa"
           } > note.md
           # Una release puo' esserci gia': l'etichetta si puo' spingere da
           # GitHub, e li' la release nasce insieme a lei. In quel caso non si
