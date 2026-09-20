@@ -347,6 +347,9 @@ export class Commissioni {
      * niente: servono a **non farli ribattere**. Il perche' sta su `_ilQuadro`. */
     chiaveDelCruscotto = "",
     chiaveDellaGestione = "",
+    /* Chi c'e' in questa casa, e chi la amministra. Serve a una domanda sola —
+     * `_ilQuadro` — e il perche' sta li'. */
+    utenti = null,
     spegnimento = null,
     aggiornamenti = null,
     ritorno = null,
@@ -371,6 +374,7 @@ export class Commissioni {
     this.gestore = Boolean(gestore);
     this.chiaveDelCruscotto = String(chiaveDelCruscotto || "");
     this.chiaveDellaGestione = String(chiaveDellaGestione || "");
+    this.utenti = utenti;
     this.configurazione = configurazione;
     /* Il catalogo delle integrazioni e le foto: le altre due cose che la
      * plancia chiedeva all'integrazione. */
@@ -457,7 +461,7 @@ export class Commissioni {
     if (tipo === TIPO_PLANCIA) return this._laPlancia(detto, chiChiede, amministra);
     if (PLANCE.has(tipo)) return this._lePlance(detto, chiChiede, amministra);
     if (typeof tipo === "string" && tipo.startsWith("ponte/chat/")) return this._chatDellApp(detto);
-    if (tipo === IL_QUADRO) return this._ilQuadro(detto, amministra);
+    if (tipo === IL_QUADRO) return this._ilQuadro(detto, chiChiede, amministra);
     if (typeof tipo === "string" && tipo.startsWith("ponte/segnalazioni/"))
       return this._segnalazioni(detto);
     if (tipo === CONFIG_GET || tipo === CONFIG_SET || tipo === CONFIG_RESTORE)
@@ -515,7 +519,7 @@ export class Commissioni {
    *
    * La prova qui sotto la tiene al suo posto: chiede senza chat, che e' il
    * caso che prima falliva. */
-  _ilQuadro(detto, amministra = null) {
+  async _ilQuadro(detto, chiChiede = "", amministra = null) {
     /* ─── E il codice, a chi amministra ───────────────────────────────────
      *
      * Il codice sta gia' nella scheda dell'add-on — e' quello che fa esistere
@@ -534,11 +538,41 @@ export class Commissioni {
      * sapesse di chi fosse, che qui risponde `null` — la voce continua a
      * vederla e il codice continua a battersela: com'era ieri. Si chiude, non
      * si apre. */
-    const suo = amministra === true;
+    /* ─── «Non si sa» qui si va a vedere ─────────────────────────────────
+     *
+     * `amministra` arriva da `amministratoreSubito`, che risponde **dalla
+     * memoria**: se l'elenco degli utenti non e' ancora stato chiesto torna
+     * `null`. E' voluto — quella risposta sta sulla strada di ogni comando, e
+     * non puo' fermarsi ad aspettare Home Assistant.
+     *
+     * Questa domanda pero' si fa **una volta per collegamento**, nell'istante
+     * in cui il filo si alza: cioe' esattamente quando quella memoria e' piu'
+     * fredda. Trattare quel `null` come un no voleva dire che il codice non
+     * partiva quasi mai, e siccome l'app la domanda non la rifa', quella
+     * sessione restava senza. E' successo: riassociato il telefono, la pagina
+     * continuava a chiedere il codice.
+     *
+     * Quindi qui il «non si sa» non si prende per un no: si va a vedere, e
+     * aspettare una volta per collegamento non costa niente a nessuno. Chi
+     * risponde davvero no resta un no, e un telefono senza utente addosso —
+     * abbinato prima che il ponte sapesse di chi fosse — torna `false` da se',
+     * senza chiedere niente. */
+    let suo = amministra;
+    if (suo === null && this.utenti?.amministratore) {
+      try {
+        suo = await this.utenti.amministratore(chiChiede);
+      } catch (_errore) {
+        /* Home Assistant che non risponde non e' un no e non e' un si': e'
+         * un'altra volta. Qui pero' una risposta va data, e fra le due si
+         * sceglie quella che non apre niente. */
+        suo = false;
+      }
+    }
+    const puo = suo === true;
     return si(detto?.id ?? null, {
       installatore: this.installatore,
       dove: this.installatore ? `${QUADRO_DI_DIFETTO}/console/` : "",
-      ...(suo && this.installatore && this.chiaveDelCruscotto
+      ...(puo && this.installatore && this.chiaveDelCruscotto
         ? { chiave: this.chiaveDelCruscotto }
         : {}),
       /* E la gestione, che e' l'altra meta' e mancava: il ponte fabbrica gia'
@@ -546,7 +580,7 @@ export class Commissioni {
        * proprio. Non era rotta — non era mai stata fatta. */
       gestore: this.gestore,
       doveGestione: this.gestore ? `${QUADRO_DI_DIFETTO}/gestore/` : "",
-      ...(suo && this.gestore && this.chiaveDellaGestione
+      ...(puo && this.gestore && this.chiaveDellaGestione
         ? { chiaveGestione: this.chiaveDellaGestione }
         : {}),
     });

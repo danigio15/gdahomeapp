@@ -1838,8 +1838,7 @@ test("il codice del cruscotto lo riceve chi amministra, e nessun altro", async (
   assert.equal(altrui.result.chiaveGestione, undefined);
   assert.equal(altrui.result.installatore, true, "e la voce invece sparisce");
 
-  /* E un telefono abbinato prima che il ponte sapesse di chi fosse risponde
-   * «non si sa»: si chiude, non si apre. */
+  /* Senza nessuno a cui chiedere, «non si sa» resta un no. */
   const nonSiSa = await con().rispondi({ id: 3, type: "ponte/quadro/stato" });
   assert.equal(nonSiSa.result.chiave, undefined, "«non si sa» passa per un si'");
   assert.equal(nonSiSa.result.chiaveGestione, undefined);
@@ -1861,4 +1860,76 @@ test("il codice del cruscotto lo riceve chi amministra, e nessun altro", async (
   }).rispondi({ id: 5, type: "ponte/quadro/stato" }, { amministra: true });
   assert.equal(senzaCodice.result.installatore, true);
   assert.equal(senzaCodice.result.chiave, undefined);
+});
+
+test("«non si sa chi chiede» non e' un no: si va a vedere", async () => {
+  /* Il difetto che ha tenuto il codice fermo in casa vera.
+   *
+   * `amministratoreSubito` risponde **dalla memoria**, e se l'elenco degli
+   * utenti non e' ancora stato chiesto torna `null`. E' voluto: quella
+   * risposta sta sulla strada di ogni comando e non puo' fermarsi ad aspettare
+   * Home Assistant.
+   *
+   * Ma questa domanda si fa **una volta per collegamento, nell'istante in cui
+   * il filo si alza** — cioe' esattamente quando quella memoria e' piu'
+   * fredda. Prendendo quel `null` per un no, il codice non partiva quasi mai;
+   * e siccome l'app la domanda non la rifaceva, quella sessione restava senza.
+   * Riassociare il telefono non serviva a niente, ed e' esattamente quello che
+   * e' successo. */
+  let chiesto = 0;
+  const con = (utenti) =>
+    new Commissioni({
+      casa: casaDiProva(),
+      registro: ZITTO,
+      installatore: true,
+      chiaveDelCruscotto: "codice-del-cruscotto",
+      utenti,
+    });
+
+  /* Memoria fredda — `amministra` non arriva — ma chiedendo si scopre che
+   * amministra. */
+  const freddo = con({
+    async amministratore(chi) {
+      chiesto += 1;
+      assert.equal(chi, "utente-di-casa", "chiede di un altro");
+      return true;
+    },
+  });
+  const detta = await freddo.rispondi(
+    { id: 1, type: "ponte/quadro/stato" },
+    { chiChiede: "utente-di-casa" },
+  );
+  assert.equal(chiesto, 1, "non e' andato a vedere");
+  assert.equal(detta.result.chiave, "codice-del-cruscotto");
+
+  /* Chi risponde davvero no resta un no, e non si richiede niente a nessuno:
+   * `amministra` gia' c'e'. */
+  let toccato = 0;
+  const no = con({
+    async amministratore() {
+      toccato += 1;
+      return true;
+    },
+  });
+  const negata = await no.rispondi(
+    { id: 2, type: "ponte/quadro/stato" },
+    { chiChiede: "un-altro", amministra: false },
+  );
+  assert.equal(toccato, 0, "chiede anche quando la risposta ce l'ha gia'");
+  assert.equal(negata.result.chiave, undefined);
+
+  /* E se Home Assistant non risponde, fra le due si sceglie quella che non
+   * apre niente. */
+  const rotto = con({
+    async amministratore() {
+      throw new Error("Home Assistant non risponde");
+    },
+  });
+  const inciampata = await rotto.rispondi(
+    { id: 3, type: "ponte/quadro/stato" },
+    { chiChiede: "utente-di-casa" },
+  );
+  assert.equal(inciampata.success, true, "un guasto di la' porta giu' la risposta");
+  assert.equal(inciampata.result.installatore, true);
+  assert.equal(inciampata.result.chiave, undefined, "un guasto apre la porta");
 });

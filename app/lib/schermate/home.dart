@@ -96,6 +96,21 @@ class _HomeState extends State<Home> {
    * dell'add-on. */
   String _chiave = '';
   String _chiaveGestione = '';
+  /* Quante volte si e' gia' chiesto per questa casa.
+   *
+   * La domanda si fa una volta per casa, e va bene per «questa casa ha il
+   * cruscotto?»: quella risposta non cambia sotto il naso. Per il **codice**
+   * invece puo' cambiare: il ponte lo da' solo a chi amministra, e per saperlo
+   * deve conoscere gli utenti di casa — cosa che nell'istante in cui il filo
+   * si alza puo' ancora non sapere.
+   *
+   * Tenersi quel «niente codice» per sempre vuol dire una pagina che lo chiede
+   * per tutta la sessione anche quando il ponte l'avrebbe dato. Quindi finche'
+   * c'e' una porta senza il suo codice si riprova — poche volte, e poi si
+   * smette: chi non amministra il codice non lo avra' mai, e continuare a
+   * chiederlo sarebbe un giro che non finisce. */
+  static const _quanteVolteSiRichiede = 3;
+  int _chieste = 0;
   String? _chiestoPer;
 
   /* Quanti aggiornamenti aspettano in casa.
@@ -177,8 +192,13 @@ class _HomeState extends State<Home> {
      * la risposta, e una voce di menu rimasta da prima sarebbe una porta che
      * non si apre. */
     final quale = widget.collegamento.casa?.id ?? '';
-    if (_chiestoPer == quale) return;
-    _chiestoPer = quale;
+    if (_chiestoPer != quale) {
+      _chiestoPer = quale;
+      _chieste = 0;
+    } else if (!_mancaUnCodice || _chieste >= _quanteVolteSiRichiede) {
+      return;
+    }
+    _chieste += 1;
     final risponde = await LaConsole(filo).cE();
     /* Cruscotto e Gestione sono la stessa domanda fatta a chi la sa, e il
      * ponte le risponde in un giro solo. */
@@ -198,6 +218,14 @@ class _HomeState extends State<Home> {
       });
     }
   }
+
+  /// Se c'e' una porta di cui si sa l'indirizzo ma non il codice.
+  ///
+  /// E' l'unico caso in cui vale la pena richiedere: la porta c'e', e quello
+  /// che manca il ponte potrebbe darlo appena sa chi sta chiedendo.
+  bool get _mancaUnCodice =>
+      (_cruscotto.isNotEmpty && _chiave.isEmpty) ||
+      (_gestione.isNotEmpty && _chiaveGestione.isEmpty);
 
   /// Quello che una segnalazione porta con se' senza che nessuno lo scriva:
   /// e' la meta' delle domande che chi legge farebbe per prime.
