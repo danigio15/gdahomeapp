@@ -35,6 +35,11 @@ const leggi = (...pezzi) => readFileSync(join(QUI, "..", "..", ...pezzi), "utf8"
 
 /* Dove il quadro le scrive, e come si chiama la cosa nel film. */
 const LE_PAROLE = [
+  /* Il nome del prodotto: la console lo scrive nel titolo della pagina e in
+     testa all'elenco, e nelle fotografie del film si legge. Il film lo ha
+     chiamato «il quadro» per mesi — che e' il nome interno, quello delle
+     cartelle e delle chiavi — e sullo schermo non c'e' mai stato. */
+  ["Cruscotto installatore", ["quadro", "console", "index.html"]],
   ["a posto", ["quadro", "console", "index.html"]],
   ["da guardare", ["quadro", "console", "index.html"]],
   ["Vita del disco", ["quadro", "console", "index.html"]],

@@ -1,7 +1,7 @@
 {
   "it": {
     "apertura": {
-      "durata": 16.5,
+      "durata": 17.25,
       "pezzi": [
         0.8,
         7.42
@@ -16,35 +16,35 @@
       ]
     },
     "una-domanda-sola": {
-      "durata": 16.5,
+      "durata": 16.75,
       "pezzi": [
         0.6,
-        5.12,
-        9.21
+        5.28,
+        9.37
       ]
     },
     "come-entra-una-casa": {
-      "durata": 25.75,
+      "durata": 26,
       "pezzi": [
         0.6,
-        6.28,
-        11.44,
-        17.28
+        6.58,
+        11.74,
+        17.58
       ]
     },
     "l-elenco": {
-      "durata": 14.25,
+      "durata": 14.75,
       "pezzi": [
         0.6,
-        6.22
+        6.53
       ]
     },
     "i-dieci-controlli": {
-      "durata": 16.5,
+      "durata": 16.75,
       "pezzi": [
         0.6,
-        4.95,
-        10.97
+        5.16,
+        11.18
       ]
     },
     "dentro-una-casa": {
@@ -55,12 +55,12 @@
       ]
     },
     "tre-righe-che-contano": {
-      "durata": 28,
+      "durata": 28.5,
       "pezzi": [
         0.6,
         10.28,
         16.72,
-        23.2
+        23.41
       ]
     },
     "gli-aggiornamenti": {
@@ -79,36 +79,36 @@
       ]
     },
     "quando-una-casa-tace": {
-      "durata": 19.25,
+      "durata": 19.75,
       "pezzi": [
         0.6,
-        8.5
+        8.74
       ]
     },
     "cosa-non-puo-fare": {
-      "durata": 27.5,
+      "durata": 27.75,
       "pezzi": [
         0.6,
-        4.78,
-        7.29,
-        10.07,
-        16.28,
-        22.46
+        5.04,
+        7.55,
+        10.32,
+        16.54,
+        22.72
       ]
     },
     "numeri-non-nomi": {
-      "durata": 18.5,
+      "durata": 18.25,
       "pezzi": [
         0.6,
-        5.42,
-        14.2
+        5.12,
+        13.9
       ]
     },
     "chiusura": {
-      "durata": 11,
+      "durata": 11.25,
       "pezzi": [
         0.6,
-        7.22
+        7.43
       ]
     }
   },
@@ -210,11 +210,11 @@
       ]
     },
     "numeri-non-nomi": {
-      "durata": 13.75,
+      "durata": 13.5,
       "pezzi": [
         0.6,
-        4.57,
-        10.69
+        4.42,
+        10.55
       ]
     },
     "chiusura": {

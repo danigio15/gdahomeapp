@@ -7,8 +7,8 @@
  * l'unica cosa finta e' quello che ci scorre dentro.
  *
  * Nessuna di queste righe e' un pezzo del prodotto, e non deve diventarlo: il
- * quadro vero riceve questi numeri da `ponte/src/rapporto.js`, uno ogni
- * quindici minuti, da case vere.
+ * cruscotto vero riceve questi numeri da `ponte/src/rapporto.js`, uno al
+ * minuto (`quadro_ogni`, di serie 1), da case vere.
  *
  * **I numeri sono quelli che il rapporto manda davvero**, con i nomi che hanno
  * la' dentro: cambiarne uno qui per far venire meglio una fotografia

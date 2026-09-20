@@ -147,14 +147,14 @@ scena(
       "Forty homes installed.<br />How are they doing right now?",
     )}</h1>
     <div class="vetro pastiglia ap" style="--t:${q(1, 1.3)}s;border-color:rgba(14,165,233,.45);color:#7dd3fc">
-      ${t("Il quadro · la console web dell'installatore", "The panel · a dashboard for whoever installs them")}
+      ${t("Cruscotto installatore · una pagina sola per tutti i tuoi impianti", "The panel · a dashboard for whoever installs them")}
     </div>
   </div>
   ${didascalia([
     {
       t: q(1, 2.2),
       testo: t(
-        "Il quadro è uno solo ed è ospitato da gdahome: <b>l'installatore non deve mantenere nessun server.</b>",
+        "Il cruscotto è uno solo ed è ospitato da gdahome: <b>l'installatore non deve mantenere nessun server.</b>",
         "One panel, on a gdahome machine. <b>Installers run nothing of their own.</b>",
       ),
     },
@@ -248,7 +248,7 @@ scena(
   <div class="corpo">
     ${ritaglio({ foto: "quadro-abbina", x: 100, y: 222, largo: 650, alto: 436, scala: 0.78, stile: "--t:.45s" })}
     <div class="voci" style="max-width:580px">
-      ${voce(q(0, 0.9), "#38bdf8", "1", t('Apri il quadro con la tua chiave e premi <b>Abbina</b><span class="quando">Non serve nessun server e nessun dominio</span>', 'Open the page with your key and press <b>Pair</b><span class="quando">No server to keep up, no domain</span>'))}
+      ${voce(q(0, 0.9), "#38bdf8", "1", t('Apri il cruscotto con la tua chiave e premi <b>Abbina</b><span class="quando">Non serve nessun server e nessun dominio</span>', 'Open the page with your key and press <b>Pair</b><span class="quando">No server to keep up, no domain</span>'))}
       ${voce(q(1, 1.25), "#38bdf8", "2", t('Il codice si incolla <b>nell\'add-on</b>, in casa del cliente<span class="quando">Può farlo anche il cliente: il codice vale un giorno</span>', "The code goes in the <b>add-on's field</b><span class=\"quando\">At the customer's home — it lives a day, so they can do it</span>"))}
       ${voce(q(2, 1.6), "#38bdf8", "3", t('Al primo collegamento il codice si lega a quell\'impianto<span class="quando">Da quel momento non funziona su nessun altro</span>', 'The first report binds the code to that home<span class="quando">And from then on it\'s no use to any other</span>'))}
     </div>
@@ -289,7 +289,7 @@ scena(
     {
       t: q(0, 1.6),
       testo: t(
-        "Il quadro si apre sul dato che conta: <b>quanti impianti richiedono un intervento adesso.</b>",
+        "Il cruscotto si apre sul dato che conta: <b>quanti impianti richiedono un intervento adesso.</b>",
         "It opens on the number that matters: <b>how many homes need something now.</b>",
       ),
       t2: q(1, 5) - 0.3,
@@ -384,14 +384,14 @@ scena(
     <div class="voci" style="max-width:880px">
       ${voce(q(0, 0.9), "#fcd34d", "1", t('<b>La vita del disco</b><span class="quando">Una memoria eMMC sopporta un numero limitato di scritture. Seguirne il consumo permette di sostituirla prima che si guasti</span>', '<b>Disk life used</b><span class="quando">An eMMC has a number of writes, then it\'s done. Watching it climb means replacing it when you choose</span>'))}
       ${voce(q(1, 1.25), "#fcd34d", "2", t('<b>La tacca a 75°</b><span class="quando">Oltre questa temperatura l\'impianto non si guasta, ma rallenta, ed è difficile capirne il motivo</span>', '<b>The mark at 75°</b><span class="quando">Above it the home doesn\'t break: it gets slow, and nobody knows why</span>'))}
-      ${voce(q(2, 1.6), "#fcd34d", "3", t('<b>Un add-on fermo non è un add-on spento</b><span class="quando">Il quadro segnala solo quelli impostati per avviarsi da soli: se sono fermi, si sono fermati da soli</span>', '<b>A stopped add-on isn\'t a switched-off add-on</b><span class="quando">Only ones set to start on boot count: that one stopped by itself</span>'))}
+      ${voce(q(2, 1.6), "#fcd34d", "3", t('<b>Un add-on fermo non è un add-on spento</b><span class="quando">Il cruscotto segnala solo quelli impostati per avviarsi da soli: se sono fermi, si sono fermati da soli</span>', '<b>A stopped add-on isn\'t a switched-off add-on</b><span class="quando">Only ones set to start on boot count: that one stopped by itself</span>'))}
     </div>
   </div>
   ${didascalia([
     {
       t: q(3, 3),
       testo: t(
-        "Quando un dato non c'è — un NUC con un SSD non lo fornisce — <b>il quadro lo lascia vuoto</b>.",
+        "Quando un dato non c'è — un NUC con un SSD non lo fornisce — <b>il cruscotto lo lascia vuoto</b>.",
         "Where a number isn't there — a NUC with an SSD — <b>nothing is made up</b>.",
       ),
       piccola: true,
@@ -472,7 +472,7 @@ scena(
     {
       t: q(2, 5.8),
       testo: t(
-        "Ogni comando inviato dal quadro resta scritto <b>per esteso</b> nel registro dell'add-on, che il cliente può leggere.",
+        "Ogni comando inviato dal cruscotto resta scritto <b>per esteso</b> nel registro dell'add-on, che il cliente può leggere.",
         "And whatever the panel asked that home is readable <b>word for word</b>, in the add-on's console.",
       ),
       piccola: true,
@@ -492,7 +492,7 @@ scena(
       ${voce(0.45, "#38bdf8", segno("orologio", 19, "#38bdf8"), t('<b>Aspetta due ore, non quarantacinque minuti</b><span class="quando">Un riavvio, un aggiornamento o un router che si riaccende rientrano in questo margine</span>', '<b>Two hours, not forty-five minutes</b><span class="quando">A reboot, an update and a router coming back all fit inside that</span>'))}
       ${voce(0.8, "#38bdf8", "1", t('<b>Avvisa una volta sola</b><span class="quando">Un impianto offline da tre giorni è una notizia sola, non una al giorno</span>', '<b>Once, and once only</b><span class="quando">A home quiet for three days is news, not news every day</span>'))}
       ${voce(1.15, "#38bdf8", segno("mondo", 19, "#38bdf8"), t('<b>Se più impianti smettono di comunicare</b><span class="quando">Otto impianti su dodici non sono otto guasti: è un guasto solo, segnalato una volta</span>', "<b>If many go quiet together</b><span class=\"quando\">Eight out of twelve aren't eight faults: it's one fault, said once</span>"))}
-      ${voce(1.5, "#38bdf8", segno("ponte", 19, "#38bdf8"), t('<b>Se a fermarsi è stato il quadro</b><span class="quando">Se il quadro è rimasto fermo tre ore, quel silenzio non dipende dagli impianti: quel controllo viene ignorato</span>', '<b>If we were the ones away</b><span class="quando">If the panel was down for three hours, that silence is ours: that round says nothing</span>'))}
+      ${voce(1.5, "#38bdf8", segno("ponte", 19, "#38bdf8"), t('<b>Se a fermarsi è stato il cruscotto</b><span class="quando">Se il cruscotto è rimasto fermo tre ore, quel silenzio non dipende dagli impianti: quel controllo viene ignorato</span>', '<b>If we were the ones away</b><span class="quando">If the panel was down for three hours, that silence is ours: that round says nothing</span>'))}
     </div>
   </div>
   ${didascalia([
@@ -513,7 +513,7 @@ scena(
   "cosa-non-puo-fare",
   11,
   (q) => `
-  ${cartello("11", t("Cosa il quadro non può fare", "What it cannot do"), t("il limite, prima di tutto il resto", "the part that comes before all the rest"))}
+  ${cartello("11", t("Cosa il cruscotto non può fare", "What it cannot do"), t("il limite, prima di tutto il resto", "the part that comes before all the rest"))}
   <div class="corpo incolonna">
     ${ritaglio({ foto: "quadro-elenco", x: 548, y: 424, largo: 782, alto: 100, scala: 1.14, stile: "--t:.4s" })}
     <div class="voci" style="max-width:880px;margin-top:6px">
@@ -548,7 +548,7 @@ scena(
   "numeri-non-nomi",
   10,
   (q) => `
-  ${cartello("12", t("Numeri, non nomi", "Numbers, not names"), t("i dati che ogni impianto invia, ogni quindici minuti", "what a home sends, every fifteen minutes"))}
+  ${cartello("12", t("Numeri, non nomi", "Numbers, not names"), t("i dati che ogni impianto invia, in tempo reale", "what a home sends, in real time"))}
   <div class="corpo">
     <div class="vetro foglio cr" style="--t:.4s">{
   <span class="chiave">"casa"</span>: <span class="numero">"casa_a3f19c74e05b…"</span>,
@@ -585,7 +585,7 @@ scena(
     {
       t: q(2, 6.6),
       testo: t(
-        "<b>Il quadro sa cosa c'è nell'impianto, non chi abita la casa.</b>",
+        "<b>Il cruscotto sa cosa c'è nell'impianto, non chi abita la casa.</b>",
         "<b>What's in the box, not who lives in it.</b>",
       ),
     },
@@ -600,7 +600,7 @@ scena(
   (q) => `
   <div class="corpo incolonna">
     <img class="cr" src="${MARCHIO}" width="120" height="120" style="--t:.1s;border-radius:28px" alt="" />
-    <h1 class="titolo medio en" style="--t:.45s">${t("Il quadro", "The panel")}</h1>
+    <h1 class="titolo medio en" style="--t:.45s">${t("Cruscotto installatore", "The panel")}</h1>
     <div class="vetro ap" style="--t:.95s;padding:16px 26px;border-radius:14px;font-family:'DejaVu Sans Mono',monospace;font-size:22px;color:#e6f2ff;border-color:rgba(14,165,233,.4)">
       quadro.gdahome.org
     </div>

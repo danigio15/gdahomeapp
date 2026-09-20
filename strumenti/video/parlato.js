@@ -84,7 +84,7 @@ export const PARLATO = [
         en: "An installer puts gdahome in forty homes. After handover — right now — how are they doing?",
       },
       {
-        it: "A questo serve il quadro: è la console web dell'installatore, ospitata da gdahome. Chi installa non deve mantenere nessun server.",
+        it: "A questo serve il cruscotto installatore: è la console web di chi installa, ospitata da gdahome. Chi installa non deve mantenere nessun server.",
         en: "The panel answers that question. It is the dashboard of whoever installs them, and it runs on a gdahome machine: installers run nothing of their own.",
       },
     ],
@@ -112,7 +112,7 @@ export const PARLATO = [
     dopo: 0.6,
     pezzi: [
       {
-        it: "Il quadro risponde a una domanda sola: quell'impianto, adesso, come sta?",
+        it: "Il cruscotto risponde a una domanda sola: quell'impianto, adesso, come sta?",
         en: "The panel answers one question: that system, right now — how is it?",
       },
       {
@@ -130,7 +130,7 @@ export const PARLATO = [
     dopo: 0.6,
     pezzi: [
       {
-        it: "Per collegare un impianto premi Abbina: il quadro genera un codice valido un giorno.",
+        it: "Per collegare un impianto premi Abbina: il cruscotto genera un codice valido un giorno.",
         en: "To bring a home in, press Pair: out comes a code that lives one day.",
       },
       {
@@ -152,7 +152,7 @@ export const PARLATO = [
     dopo: 0.6,
     pezzi: [
       {
-        it: "Il quadro si apre sul dato che conta: quanti impianti richiedono un intervento adesso.",
+        it: "Il cruscotto si apre sul dato che conta: quanti impianti richiedono un intervento adesso.",
         en: "The panel opens on the number that matters: how many homes need something from you now.",
       },
       {
@@ -166,7 +166,7 @@ export const PARLATO = [
     dopo: 0.6,
     pezzi: [
       {
-        it: "Per ogni impianto il quadro esegue dieci controlli, tutti i giorni.",
+        it: "Per ogni impianto il cruscotto esegue dieci controlli, tutti i giorni.",
         en: "For every home, ten checks, looked at every day.",
       },
       {
@@ -206,11 +206,11 @@ export const PARLATO = [
         en: "The mark at seventy-five degrees: above it the home doesn't break, it gets slow.",
       },
       {
-        it: "Un add-on fermo non è un add-on spento: il quadro segnala solo quelli impostati per avviarsi da soli.",
+        it: "Un add-on fermo non è un add-on spento: il cruscotto segnala solo quelli impostati per avviarsi da soli.",
         en: "And a stopped add-on isn't a switched-off one: only what starts on boot and is down counts.",
       },
       {
-        it: "E quando un dato non c'è, il quadro lo lascia vuoto invece di stimarlo.",
+        it: "E quando un dato non c'è, il cruscotto lo lascia vuoto invece di stimarlo.",
         en: "Where a number isn't there, nothing is made up.",
       },
     ],
@@ -242,7 +242,7 @@ export const PARLATO = [
         en: "Maintenance is a second switch, off out of the box: it's turned on by whoever lives in that home, from the add-on's options.",
       },
       {
-        it: "E ogni comando inviato dal quadro resta scritto per esteso nel registro dell'add-on.",
+        it: "E ogni comando inviato dal cruscotto resta scritto per esteso nel registro dell'add-on.",
         en: "And whatever the panel asked of it is readable word for word, in the add-on's console.",
       },
     ],
@@ -252,11 +252,11 @@ export const PARLATO = [
     dopo: 0.6,
     pezzi: [
       {
-        it: "Quando un impianto smette di comunicare, il quadro invia una notifica dove la leggi davvero: Telegram, Slack o il tuo gestionale.",
+        it: "Quando un impianto smette di comunicare, il cruscotto invia una notifica dove la leggi davvero: Telegram, Slack o il tuo gestionale.",
         en: "When a home stops talking, the panel posts to an address of yours: Telegram, Slack, your own back office.",
       },
       {
-        it: "La parte difficile non è accorgersene, è evitare gli avvisi inutili. Il quadro aspetta due ore, avvisa una volta sola, e se a fermarsi è stato lui non avvisa affatto.",
+        it: "La parte difficile non è accorgersene, è evitare gli avvisi inutili. Il cruscotto aspetta due ore, avvisa una volta sola, e se a fermarsi è stato lui non avvisa affatto.",
         en: "The hard part isn't noticing: it's staying quiet. It waits two hours, says it once, and wakes nobody when the outage was its own.",
       },
     ],
@@ -266,7 +266,7 @@ export const PARLATO = [
     dopo: 0.6,
     pezzi: [
       {
-        it: "E adesso la parte più importante: cosa il quadro non può fare.",
+        it: "E adesso la parte più importante: cosa il cruscotto non può fare.",
         en: "And now the part that comes before all the rest: what the panel cannot do.",
       },
       {
@@ -296,15 +296,15 @@ export const PARLATO = [
     dopo: 0.6,
     pezzi: [
       {
-        it: "Quello che ogni impianto invia, ogni quindici minuti, sono numeri e versioni.",
-        en: "What a home sends, every fifteen minutes, is numbers and versions.",
+        it: "Quello che ogni impianto invia, in tempo reale, sono numeri e versioni.",
+        en: "What a home sends, in real time, is numbers and versions.",
       },
       {
         it: "Restano fuori i nomi delle stanze, i nomi delle persone, gli stati dei sensori, il nome della rete Wi-Fi, l'indirizzo pubblico e le telecamere.",
         en: "Left out are room names, people's names, sensor states, the Wi-Fi name, the public address, cameras.",
       },
       {
-        it: "Il quadro sa cosa c'è nell'impianto, non chi abita la casa.",
+        it: "Il cruscotto sa cosa c'è nell'impianto, non chi abita la casa.",
         en: "What's in the box, not who lives in it.",
       },
     ],
@@ -314,7 +314,7 @@ export const PARLATO = [
     dopo: 0.6,
     pezzi: [
       {
-        it: "Il quadro è uno solo, ospitato da gdahome. All'installatore basta una chiave per aprire la pagina.",
+        it: "Il cruscotto è uno solo, ospitato da gdahome. All'installatore basta una chiave per aprire la pagina.",
         en: "There is one panel, and it runs on a gdahome machine. The installer is handed a key and opens a page.",
       },
       {
