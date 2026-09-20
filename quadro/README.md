@@ -687,6 +687,8 @@ L'installatore, tutte dentro `/console/` e tutte con la **sua** chiave:
 | `GET /console/io` | chi sono, quanti impianti ho, qual è il mio limite |
 | `PUT /console/io/avvisi` | dove mandarmi gli avvisi. Vuoto li spegne |
 | `POST /console/io/avvisi/prova` | mandamene uno adesso, per vedere se arriva |
+| `POST /console/biglietto` | un biglietto per aprire il cruscotto in un altro browser senza ribattere la chiave: vale un minuto e una volta sola. Lo chiede l'app prima di aprire il browser del telefono, e lo mette nell'indirizzo (`?biglietto=`) |
+| `POST /console/entra` | **senza chiave**: il browser consegna il biglietto e riceve la chiave, che da lì resta nel suo deposito come se fosse stata battuta. Scaduto, già usato, o di un installatore tolto nel frattempo: 410 |
 | `GET /console/case` | l'elenco già vestito: stato, spunte e pastiglie **già decisi**, più le tre soglie con cui la pagina colora i metri |
 | `GET` `POST /console/inviti` | i codici in attesa, e uno nuovo |
 | `DELETE /console/inviti/<codice>` | annullalo |

@@ -5652,7 +5652,27 @@
         disegna();
       }
 
-      void apri();
+      /* Con un biglietto nell'indirizzo la chiave arriva da quello, e la
+       * pagina non la chiede: vedi in fondo, `entraColBiglietto`. Il
+       * biglietto si toglie dall'indirizzo subito, prima che finisca nella
+       * cronologia: vale una volta sola, ma un indirizzo pulito e' un
+       * indirizzo che si puo' condividere. */
+      const BIGLIETTO = (() => {
+        try {
+          return new URLSearchParams(location.search).get("biglietto") || "";
+        } catch (_niente) {
+          return "";
+        }
+      })();
+      if (BIGLIETTO) {
+        try {
+          history.replaceState(null, "", location.pathname + location.hash);
+        } catch (_niente) {
+          /* Resta nell'indirizzo: vale comunque una volta sola. */
+        }
+      } else {
+        void apri();
+      }
 
       /* Ogni dieci secondi.
        *
@@ -5745,6 +5765,43 @@
         }
         void apri();
       });
+
+      /* Il biglietto dall'app (`riquadro/sul_telefono.dart`). Dal telefono il
+       * tasto «Apri nel browser» apre un browser che non e' il nostro, e a
+       * quella scheda l'app non puo' consegnare niente. La chiave
+       * nell'indirizzo non ci va; ci va un biglietto, che il quadro cambia
+       * con la chiave una volta sola ed entro un minuto (`biglietti.js`). La
+       * chiave che arriva si tratta come una consegnata: se qui ce n'e' gia'
+       * una che apre, resta quella, per la stessa ragione di sopra. Un
+       * biglietto scaduto — la pagina riaperta dalla cronologia — non e' un
+       * errore da mostrare: si chiede la chiave, come sempre. */
+      async function entraColBiglietto(biglietto) {
+        let arrivata = "";
+        try {
+          const risposta = await fetch("entra", {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({ biglietto }),
+          });
+          const corpo = await risposta.json().catch(() => ({}));
+          if (risposta.ok) arrivata = String(corpo.chiave || "").trim();
+        } catch (_niente) {
+          /* Il quadro non risponde: si chiede come sempre. */
+        }
+        if (arrivata) {
+          consegnata = arrivata;
+          if (!chiave) {
+            chiave = arrivata;
+            try {
+              localStorage.setItem(DOVE_STA_LA_CHIAVE, chiave);
+            } catch (_niente) {
+              /* Vale per questa apertura e basta: meglio di non entrare. */
+            }
+          }
+        }
+        void apri();
+      }
+      if (BIGLIETTO) void entraColBiglietto(BIGLIETTO);
     </script>
   </body>
 </html>

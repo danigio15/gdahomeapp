@@ -96,6 +96,7 @@ import { accetta, eUnaSalita } from "./presa.js";
 import { stessoSegreto } from "./segreti.js";
 import { ilTipoDi, Marchi, QUANTO_GROSSO } from "./marchi.js";
 import { SEGNO_VALIDO, Segni } from "./segni.js";
+import { Biglietti } from "./biglietti.js";
 
 /**
  * Quanto puo' essere grossa un rapporto. Le vere stanno sotto i quattro KiB —
@@ -204,6 +205,9 @@ export function costruisciIlServer({
   chiaveDelGestore = "",
   cartella = "./dati",
   fattorino = new Fattorino(),
+  /* I biglietti con cui l'app apre il cruscotto in un altro browser
+   * (`biglietti.js`): stanno in memoria, e si passano solo per provarli. */
+  biglietti = new Biglietti(),
   /* La plancia da servire dentro il cruscotto, per l'editor: quella
    * dell'add-on, trovata da sola (`plancia-servita.js`). */
   plancia: planciaServita = new PlanciaServita(),
@@ -764,6 +768,27 @@ export function costruisciIlServer({
       return;
     }
 
+    /* Il biglietto consegnato da un browser che la chiave non ce l'ha ancora:
+     * vale un minuto e una volta (`biglietti.js`). Sta PRIMA della soglia
+     * della chiave, perche' la chiave e' proprio quello che chi bussa qui
+     * viene a prendere. La chiave che il biglietto porta si riguarda: un
+     * installatore tolto nel frattempo non entra da qui. */
+    if (via === "/console/entra" && metodo === "POST") {
+      let detto = {};
+      try {
+        detto = await ilCorpo(richiesta, 1024);
+      } catch (_errore) {
+        detto = {};
+      }
+      const preso = biglietti.riscatta(String(detto?.biglietto || ""));
+      if (!preso || !installatori.riconosci(preso.chiave)) {
+        male(risposta, 410, "questo biglietto non vale piu'");
+        return;
+      }
+      json(risposta, { chiave: preso.chiave });
+      return;
+    }
+
     if (via.startsWith("/console/")) {
       const chi = installatori.riconosci(ilSegno(richiesta));
       if (!chi) {
@@ -990,6 +1015,14 @@ export function costruisciIlServer({
     const leNote = new RegExp(`^/note/(${SEGNO_VALIDO.source.slice(1, -1)})$`).exec(via);
     if (leNote && metodo === "GET") {
       rispondiLeNote(risposta, leNote[1]);
+      return;
+    }
+
+    /* Un biglietto per aprire il cruscotto in un altro browser senza
+     * ribattere la chiave: lo chiede l'app prima di aprire il browser del
+     * telefono, e porta la chiave con cui e' stato chiesto — questa. */
+    if (via === "/biglietto" && metodo === "POST") {
+      json(risposta, biglietti.stacca(chi, ilSegno(richiesta)));
       return;
     }
 

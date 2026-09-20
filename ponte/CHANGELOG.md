@@ -36,6 +36,16 @@ quando una è ferma o una cartuccia è agli sgoccioli, rossa se è ferma, e
 toccandola si apre la tessera. Si spegne dalla configurazione della barra come
 le altre voci.
 
+**«Apri nel browser» dal telefono non chiede più la chiave.** Nella 1.5.9.14
+la consegna valeva nell'app web, dove la scheda nuova la apre l'app e le può
+parlare; dal telefono il tasto apre il browser del sistema, a cui l'app non
+può dire niente — e la chiave nell'indirizzo non ci va, che finisce nella
+cronologia. Adesso l'app chiede al quadro un **biglietto**: vale un minuto e
+una volta sola, e lo mette lei nell'indirizzo. Il cruscotto lo consegna al
+quadro, riceve la chiave e la tiene come se fosse stata battuta, e toglie il
+biglietto dall'indirizzo prima che finisca nella cronologia. Chi apre
+l'indirizzo a mano continua a battere la chiave una volta, come prima.
+
 **Il cruscotto dice di chi è il problema quando l'editor non si apre.** «Questo
 quadro non ha la plancia da servire» si leggeva come se mancasse la plancia
 della casa. Manca la copia dei file che il quadro serve nell'editor, e la porta
