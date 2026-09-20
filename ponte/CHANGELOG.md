@@ -20,6 +20,17 @@ il disegno passa dal motore delle icone, come in tutto il resto della
 plancia: un simbolo scelto a mano resta il simbolo, un token diventa il suo
 disegno.
 
+**Il rilascio dice se l'app è arrivata davvero nel negozio.** «L'apk
+dell'ultima release non è arrivato nello store»: il registro scriveva
+«pubblicato» e il lavoro diventava verde, ma quella riga voleva dire soltanto
+che Google aveva accettato la consegna — non che il pacchetto fosse sulla
+pista. Adesso, dopo la consegna, lo strumento riapre una modifica, **riguarda
+la pista** e scrive cosa ci vede: «il negozio conferma: la 1050915 è sulla
+pista «alpha», stato completed». Se non la vede lo dice a chiare lettere, con
+le versioni che invece ci sono, e non finge un rosso: la consegna è andata,
+il pacchetto può essere ancora in lavorazione o in revisione. E `--piste`
+adesso dice anche lo stato di ogni versione, non solo il numero.
+
 **La tessera delle finestre conta anche le tapparelle, e nel nome lo dice**
 (#64). «Ho provato ad associare oltre che alla tapparella anche il sensore
 finestra della stessa, ma facendo così il widget mostra solo 1, ma ci sono 4
