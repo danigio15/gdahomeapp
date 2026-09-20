@@ -53,6 +53,12 @@ altre. Di plance se ne tengono otto, contando quelle in attesa, e da qui non
 se ne toglie nessuna: si toglie da casa. Dalla gestione le scelte si leggono e
 basta.
 
+**Dalla Configurazione della plancia si riapre il menu dell'app.** Nell'app e
+nel browser, aperta la Configurazione dal menu, non c'era più un tasto per
+tornare indietro: la testata della plancia lì non c'è, e la barra in fondo è
+nascosta apposta. Adesso nel riquadro in cima, a sinistra del logo, c'è lo
+stesso ☰ della home, e apre lo stesso menu.
+
 ## 1.5.9.12
 
 **Il cruscotto ha una faccia nuova.** Si chiama Aurora: un cielo che sfuma

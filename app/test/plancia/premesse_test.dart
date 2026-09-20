@@ -268,6 +268,25 @@ void main() {
     expect(servita, contains('Date.now()-premutoIl>=650'));
   });
 
+  test('sulla Configurazione c\'è un ☰ nostro, e apre lo stesso menu', () {
+    /* La testata della plancia sulla Config non c'e', il «← HOME» e' tolto
+     * e la barra in fondo nascosta: senza un tasto nel riquadro in cima si
+     * restava li'. */
+    final servita = _premesse().conLePremesse(
+      _pagina,
+      ilWebSocket: 'WebSocket',
+    );
+    expect(servita, contains('querySelector("#page-config .cfg-hero")'));
+    expect(servita, contains('tasto.className="gdahome-menu"'));
+    expect(servita, contains('setAttribute("aria-label","Apri il menu")'));
+    expect(servita, contains('testata.insertBefore(tasto,testata.firstChild)'));
+    /* Uno solo, anche se il programma gira due volte. */
+    expect(servita, contains('testata.querySelector(".gdahome-menu"))return;'));
+    /* E il suo stile sta nella stessa premessa, coi colori della plancia. */
+    expect(servita, contains('id="gdahome-menu-in-config"'));
+    expect(servita, contains('background:var(--text,#0f172a)'));
+  });
+
   test('la parola del menu non è il nome di una pagina della plancia', () {
     /* Sul telefono la pagina e l'app si parlano su un canale solo: se questa
      * parola fosse anche il nome di una linguetta, andare su quella pagina

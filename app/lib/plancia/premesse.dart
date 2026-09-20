@@ -496,7 +496,29 @@ class Premesse {
   /// [_tenutoPremuto] accende il suo kiosk. Quel tocco si ferma comunque —
   /// il menu della plancia non deve aprirsi nemmeno li' — ma il menu
   /// dell'app non si chiama: chi tiene premuto non ha chiesto il menu.
+  ///
+  /// **E sulla Configurazione un tasto nostro.** Li' la testata della plancia
+  /// non c'e': in cima sta il riquadro col logo e «CONFIGURAZIONE», senza
+  /// nessun ☰. Con la barra in fondo nascosta e il «← HOME» tolto (vedi
+  /// [laConfigFuoriDallaPlancia]) chi apriva la Config dal menu non aveva
+  /// piu' un tasto per riaprirlo: si restava li'. Adesso nel riquadro, a
+  /// sinistra del logo, c'e' lo stesso ☰ della home, e fa la stessa cosa.
+  /// Il riquadro sta scritto nella pagina, non lo disegna il runtime: il
+  /// tasto si mette una volta, appena la pagina c'e'.
   static const String iTreTrattiniApronoIlMenuDellApp =
+      '<style id="gdahome-menu-in-config">'
+      '#page-config .gdahome-menu{flex:0 0 auto;width:42px;height:42px;'
+      'border-radius:50%;border:1px solid var(--card-border,#e2e8f0);'
+      'background:var(--card-bg,#fff);display:flex;flex-direction:column;'
+      'align-items:center;justify-content:center;gap:5px;padding:0;margin:0;'
+      'cursor:pointer;box-shadow:0 4px 12px rgba(15,23,42,.08)}'
+      '#page-config .gdahome-menu span{display:block;width:18px;height:2px;'
+      'border-radius:2px;background:var(--text,#0f172a)}'
+      /* Sui telefoni stretti il riquadro si stringe un po', se no col tasto
+         in piu' «CONFIGURAZIONE» non ci sta piu' su una riga. */
+      '@media (max-width:430px){#page-config .cfg-hero{gap:12px;padding:18px 16px}'
+      '#page-config .cfg-hero-title{font-size:20px}}'
+      '</style>'
       '<script>(function(){'
       /* Le due strade per dirlo all'app sono le stesse della pagina che
          cambia: sul telefono un canale del WebView, nel browser il riquadro
@@ -526,6 +548,24 @@ class Premesse {
       'if(premutoIl&&Date.now()-premutoIl>=$_tenutoPremuto){premutoIl=0;return;}'
       'ilMenu();'
       '},true);'
+      /* Il tasto nel riquadro in cima alla Configurazione: uno solo, a
+         sinistra del logo, e chiama il menu dell'app come quello della home. */
+      'var ilTastoInConfig=function(){'
+      'var testata=document.querySelector("#page-config .cfg-hero");'
+      'if(!testata||testata.querySelector(".gdahome-menu"))return;'
+      'var tasto=document.createElement("button");'
+      'tasto.type="button";'
+      'tasto.className="gdahome-menu";'
+      'tasto.setAttribute("aria-label","Apri il menu");'
+      'tasto.innerHTML="<span></span><span></span><span></span>";'
+      'tasto.addEventListener("click",function(evento){'
+      'evento.preventDefault();evento.stopPropagation();ilMenu();'
+      '});'
+      'testata.insertBefore(tasto,testata.firstChild);'
+      '};'
+      'if(document.readyState==="loading")'
+      'document.addEventListener("DOMContentLoaded",ilTastoInConfig);'
+      'else ilTastoInConfig();'
       '})();</script>';
 
   /// Quanto vuol dire «tenuto premuto»: e' il tempo della plancia, non uno
