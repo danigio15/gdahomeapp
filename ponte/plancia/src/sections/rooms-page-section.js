@@ -139,25 +139,31 @@ export function roomPages() {
  * Qui si trasforma in voci con un nome leggibile: quello di Home Assistant se
  * c'e', altrimenti l'entity_id — brutto da leggere ma mai una bugia. */
 export function assignedItems(mappa = readJson(ROOM_ASSIGN_KEY, {}), states = allStates()) {
-  const voci = new Map();
-  const metti = (entity, stanza, nome, icona) => {
+  /* Due rubinetti, e ognuno sa una cosa diversa.
+   *
+   * L'assegnazione a mano e' una mappa entita' → stanza: sa DOVE, e del nome
+   * non sa niente. «Le tue entita'» sa dove, come si chiama e con che segno.
+   * Prima vinceva la prima arrivata, tutta intera — e siccome la mappa a mano
+   * si legge per prima, un'entita' scritta in tutt'e due perdeva il nome che
+   * le era stato dato, e nella stanza tornava a chiamarsi come la chiama Home
+   * Assistant. Dal campo: «il campo che uso come nome facoltativo potrebbe
+   * anche andare scritto sull'entita' che trovi nella stanza? perche' ora quel
+   * nome va solo sulla lista delle mie entita'». Una casa con un `select`
+   * tedesco in salotto vedeva scritto «Modus».
+   *
+   * Adesso si decide campo per campo: la STANZA la dice la piu' esplicita
+   * delle due — quella scritta a mano, com'era — e il NOME e il SEGNO li dice
+   * l'unica delle due che ce li ha. Non si contendono niente, perche' non
+   * parlano della stessa cosa. */
+  const stanze = new Map();
+  const vestito = new Map();
+  const dove = (entity, stanza) => {
     const id = clean(entity);
     const room_id = clean(stanza);
-    if (!id || !room_id || voci.has(id)) return;
-    voci.set(id, {
-      entity: id,
-      name: clean(nome) || clean(states?.[id]?.attributes?.friendly_name) || id,
-      /* L'icona si scrive dove la riga la cerca gia': `emojiScelta` guarda
-       * `icon`, e accetta solo quello che un glifo lo e' davvero. */
-      icon: clean(icona),
-      /* La classe che Home Assistant scrive sull'entita': e' quello che la
-       * riga sa dire di se' quando nessuna scheda la descrive. */
-      device_class: clean(states?.[id]?.attributes?.device_class),
-      room_id,
-    });
+    if (id && room_id && !stanze.has(id)) stanze.set(id, room_id);
   };
   if (mappa && typeof mappa === "object")
-    for (const [entity, room] of Object.entries(mappa)) metti(entity, room);
+    for (const [entity, room] of Object.entries(mappa)) dove(entity, room);
   /* Le entita' che uno si aggiunge a mano (#504).
    *
    * «Si potrebbero inserire le entità personalizzate nelle stanze tipo
@@ -172,9 +178,24 @@ export function assignedItems(mappa = readJson(ROOM_ASSIGN_KEY, {}), states = al
    * comanda quella scritta dalla tendina della sua riga — e' la piu' esplicita
    * delle due, e comunque una riga sola non diventa due. */
   for (const voce of entitaMie(readJson(CHIAVE_ENTITA_MIE, []))) {
-    metti(voce.entity, voce.room_id, voce.nome, voce.icona);
+    const id = clean(voce.entity);
+    if (!id) continue;
+    dove(id, voce.room_id);
+    if (!vestito.has(id))
+      vestito.set(id, { nome: clean(voce.nome), icona: clean(voce.icona) });
   }
-  return [...voci.values()];
+  return [...stanze].map(([id, room_id]) => ({
+    entity: id,
+    name:
+      clean(vestito.get(id)?.nome) || clean(states?.[id]?.attributes?.friendly_name) || id,
+    /* L'icona si scrive dove la riga la cerca gia': `emojiScelta` guarda
+     * `icon`, e accetta solo quello che un glifo lo e' davvero. */
+    icon: clean(vestito.get(id)?.icona),
+    /* La classe che Home Assistant scrive sull'entita': e' quello che la
+     * riga sa dire di se' quando nessuna scheda la descrive. */
+    device_class: clean(states?.[id]?.attributes?.device_class),
+    room_id,
+  }));
 }
 
 /* Come si chiama ogni blocco, e con che faccia. Le parole stanno qui e non nel

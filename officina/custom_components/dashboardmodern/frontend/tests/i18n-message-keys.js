@@ -1144,6 +1144,7 @@ export const MESSAGE_KEYS = Object.freeze([
   "Discharged this month",
   "Discharged today",
   "Disconnect",
+  "Disconnected devices",
   "Disconnected here. To revoke access entirely, remove it from your authorized apps on github.com too.",
   "Dishwasher",
   "Disk",

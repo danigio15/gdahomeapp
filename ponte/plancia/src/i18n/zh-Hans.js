@@ -898,6 +898,7 @@ export default Object.freeze({
   "Discharged this month": "本月放电量",
   "Discharged today": "今日放电量",
   "Disconnect": "断开连接",
+  "Disconnected devices": "未连接的设备",
   "Disconnected here. To revoke access entirely, remove it from your authorized apps on github.com too.": "已在此断开。若要彻底撤销访问，请同时在 github.com 的已授权应用中移除它。",
   "Dishwasher": "洗碗机",
   "Disk": "硬盘",

@@ -2783,7 +2783,13 @@
        *
        * `dispositivi` e' quanti sono **davvero**, `nomi` quanti se ne mandano:
        * quando il secondo e' piu' corto del primo la differenza si scrive, se
-       * no dodici nomi sembrerebbero tutti quelli che ci sono. */
+       * no un elenco tagliato sembrerebbe tutti quelli che ci sono.
+       *
+       * Qui non si taglia niente: si disegna tutto quello che arriva, e chi
+       * installa li scorre. A tagliare e' il ponte, e il suo tetto sta a
+       * duecento — una guardia contro un rapporto che cresce senza fine, non
+       * una scelta di impaginazione. Questa riga e' quindi il caso raro, e
+       * resta perche' il giorno che capita non deve sparire un numero. */
       function iNomiGiu(c) {
         const nomi = c?.entita?.nomi;
         if (Array.isArray(nomi) && nomi.length) {

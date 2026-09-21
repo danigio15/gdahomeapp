@@ -184,6 +184,22 @@ test("una riga del registro senza entità non viaggia", () => {
 
 /* ── il giro ────────────────────────────────────────────────────────────── */
 
+/* Le regole dei jolly di MQTT, quelle vere.
+ *
+ * `+` copre UN livello, `#` copre tutto quello che resta. Servono qui perché
+ * la casa finta deve rifiutare quello che un broker rifiuterebbe: se consegna
+ * a tutti, una domanda sbagliata sembra una domanda giusta. */
+function copre(argomento, suo) {
+  const chiesti = String(argomento ?? "").split("/");
+  const arrivati = String(suo ?? "").split("/");
+  for (let i = 0; i < chiesti.length; i += 1) {
+    if (chiesti[i] === "#") return true;
+    if (i >= arrivati.length) return false;
+    if (chiesti[i] !== "+" && chiesti[i] !== arrivati[i]) return false;
+  }
+  return chiesti.length === arrivati.length;
+}
+
 function casaFinta({ voci = [], cassetta = "", dispositivi = [], entita = [] } = {}) {
   const detto = [];
   let mandaEvento = null;
@@ -214,8 +230,16 @@ function casaFinta({ voci = [], cassetta = "", dispositivi = [], entita = [] } =
     async ascoltaIl(comando, onEvento) {
       detto.push({ ascoltaIl: comando.type, topic: comando.topic });
       mandaMqtt = onEvento;
-      /* La cassetta risponde subito: il messaggio è già scritto lì dentro. */
-      if (cassetta) queueMicrotask(() => onEvento({ topic: `${cassetta}/bridge/info` }));
+      /* La cassetta risponde subito: il messaggio è già scritto lì dentro —
+       * ma solo a chi ha chiesto un argomento che lo COPRE.
+       *
+       * Questa riga prima non c'era, e la casa finta consegnava a chiunque:
+       * era più generosa di un broker vero, e per questo non si è accorta che
+       * `+/bridge/info` non può far arrivare «casa/zigbee/bridge/info». In
+       * MQTT il `+` copre un livello solo, e una prova che non lo sa è una
+       * prova che dice sì dove la casa dice no. */
+      const suo = `${cassetta}/bridge/info`;
+      if (cassetta && copre(comando.topic, suo)) queueMicrotask(() => onEvento({ topic: suo }));
       return async () => {
         detto.push({ smetti: comando.type });
         mandaMqtt = null;
@@ -243,9 +267,12 @@ test("senza ZHA si chiede alla posta come si chiama la cassetta", async () => {
   const zigbee = new Zigbee({ casa });
   const rete = await zigbee.rete();
   assert.deepEqual(rete, { quale: Z2M, cassetta: "casa/zigbee" });
-  /* Una domanda sola, col jolly: non si tira a indovinare «zigbee2mqtt». */
-  const chiesto = casa.detto.find((uno) => uno.ascoltaIl);
-  assert.equal(chiesto.topic, "+/bridge/info");
+  /* Col jolly, e a due profondità: non si tira a indovinare «zigbee2mqtt», e
+   * un prefisso con le barre dentro deve poter arrivare. In MQTT il `+` copre
+   * un livello solo, quindi `+/bridge/info` «casa/zigbee» non lo prende mai —
+   * ed è il caso di questa prova. */
+  const chiesti = casa.detto.filter((uno) => uno.ascoltaIl).map((uno) => uno.topic);
+  assert.deepEqual(chiesti, ["+/bridge/info", "+/+/bridge/info"]);
   /* E ci si toglie di mezzo: l'abbonamento non resta appeso. */
   assert.equal(
     casa.detto.some((uno) => uno.smetti === "mqtt/subscribe"),
@@ -493,4 +520,54 @@ test("il nome va nel registro di casa, in name_by_user e non sopra il modello", 
   assert.equal((await zigbee.rinomina("", "Boh")).fatto, false);
   assert.equal((await zigbee.rinomina("d1", "   ")).fatto, false);
   zigbee.spegni();
+});
+
+test("e la cassetta col nome semplice si trova lo stesso", () => {
+  /* L'altra metà: «zigbee2mqtt», che è il nome di serie e quello che ha quasi
+   * tutti. La copre la prima domanda, e la seconda non disturba nessuno. */
+  const casa = casaFinta({ cassetta: "zigbee2mqtt" });
+  return new Zigbee({ casa }).rete().then((rete) => {
+    assert.deepEqual(rete, { quale: Z2M, cassetta: "zigbee2mqtt" });
+  });
+});
+
+test("e dice cos'ha visto, invece di lasciare indovinare", async () => {
+  /* La ragione per cui questo esiste: una casa che HA Zigbee e un ponte che
+   * non lo trova erano indistinguibili da una casa che Zigbee non ce l'ha. In
+   * tutt'e due i casi la voce nel menu dell'app non compare, e chi guarda non
+   * ha nessun modo di sapere quale dei due gli è capitato — è il guasto muto,
+   * lo stesso contro cui questo progetto ha già scritto tre volte.
+   *
+   * Dal campo, una serata intera: «su app non esce zigbee», con l'add-on già
+   * alla versione giusta e Zigbee2MQTT in casa. Senza una riga che dica
+   * cos'ha guardato, l'unico modo di rispondere è far fare a chi ha la casa
+   * tre prove dentro Home Assistant. */
+  const zigbee = new Zigbee({ casa: casaFinta({ cassetta: "zigbee2mqtt" }) });
+  const rete = await zigbee.rete();
+  const verbale = zigbee.comeEAndata();
+  assert.equal(rete.quale, Z2M);
+  assert.equal(verbale.quale, Z2M);
+  assert.equal(verbale.cassetta, "zigbee2mqtt");
+  /* Le due righe dicono cos'è successo, a parole: quella di ZHA e quella
+   * della posta. */
+  assert.match(verbale.zha, /ZHA/);
+  assert.match(verbale.posta, /zigbee2mqtt/);
+  /* E quali argomenti ha chiesto, perché è la prima cosa che si vuole sapere
+   * quando non ha trovato niente. */
+  assert.deepEqual(verbale.cassette, ["+/bridge/info", "+/+/bridge/info"]);
+});
+
+test("e quando non trova niente lo dice col perché, non col silenzio", async () => {
+  /* Il caso che conta davvero: nessuna cassetta risponde. Prima di questa
+   * riga la risposta era «nessuna rete» e basta — identica, parola per
+   * parola, a quella di una casa che Zigbee non ce l'ha per davvero. */
+  const zigbee = new Zigbee({ casa: casaFinta({ cassetta: "" }) });
+  const rete = await zigbee.rete();
+  /* «Nessuna rete» si scrive con la stringa vuota: e' la stessa parola con
+   * cui risponde il comando dell'app, e il verbale non se ne inventa una sua. */
+  assert.equal(rete.quale, NESSUNA);
+  const verbale = zigbee.comeEAndata();
+  assert.equal(verbale.quale, NESSUNA);
+  assert.equal(verbale.cassetta, "");
+  assert.match(verbale.posta, /nessuna cassetta/);
 });

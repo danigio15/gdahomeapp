@@ -85,11 +85,27 @@ export const BATTERIA_SCARICA = 20;
 
 /* Quanti nomi si mandano al massimo.
  *
- * Non e' prudenza, e' leggibilita': una casa con quaranta dispositivi giu' ha
- * un guaio che si vede dal numero — e `dispositivi` quel numero lo dice tutto
- * — mentre quaranta pastiglie in fila non le legge nessuno. Dodici stanno in
- * tre righe e bastano a capire **di che roba si tratta**. */
-export const NOMI_MASSIMI = 12;
+ * Erano **dodici**, e la ragione scritta qui era la leggibilita': dodici
+ * pastiglie stanno in tre righe, il numero vero lo dice `dispositivi`, e
+ * quaranta pastiglie in fila non le legge nessuno.
+ *
+ * Sbagliato, e lo dice chi installa: «non escono i nomi completi dei
+ * dispositivi nel cruscotto installatore, inoltre li deve mostrare tutti, non
+ * con la scritta “e altri…” ma senza poterli leggere». Quaranta pastiglie non
+ * si leggono di colpo, e' vero — ma non e' quello che ci si fa: ci si va a
+ * cercare dentro. Chi installa guarda quel riquadro per sapere **quali** cose
+ * sono giu', perche' da li' decide se prendere la macchina: quaranta nomi che
+ * si possono scorrere valgono, «e altri 31» non vale niente. Il conto lo
+ * sapeva gia', gli mancavano i nomi.
+ *
+ * Quindi il tetto resta, ma smette di essere una scelta di impaginazione e
+ * diventa quello che i tetti devono essere: una guardia contro un rapporto che
+ * cresce senza fine. Questo foglio parte **ogni minuto**; duecento nomi sono
+ * qualche chilobyte e li copre qualunque casa vera — la piu' grossa che
+ * abbiamo visto ne aveva quarantatre'. Se un giorno taglia davvero, chi
+ * disegna se ne accorge dal confronto con `dispositivi` e scrive «e altri
+ * tre», che e' il caso per cui quella scritta esiste. */
+export const NOMI_MASSIMI = 200;
 
 /* Le entita' che dicono se un backup e' stato fatto, e quando. Le fa
  * l'integrazione `backup` di Home Assistant, che c'e' di serie. */
@@ -217,11 +233,49 @@ export function leEntita(stati, { quante = NOMI_MASSIMI, registri = null } = {})
   if (!quali) return { totali: null, giu: null, dispositivi: null, nomi: [] };
 
   const dentro = elenco(stati).filter((uno) => quali.diChiE(pulito(uno?.entity_id)));
-  const giu = dentro.filter(nonRisponde);
-  const nomi = iNomi(giu, registri);
+
+  /* Un dispositivo e' giu' quando NESSUNA delle sue entita' risponde.
+   *
+   * Prima bastava che ne tacesse una, e questo e' il guasto che ha fatto
+   * saltare la tessera in casa di chi installa: quarantatre' «dispositivi non
+   * collegati» quasi tutti accesi e funzionanti. La prova sta nella scheda di
+   * uno switch UniFi, «Lato Portico»: stato **Connesso**, in casa, CPU al
+   * 5,7%, memoria al 37,9% — e in fondo all'elenco «Port 1 power cycle» e
+   * «Port 4 power cycle» col tasto grigio. Su quelle due porte non c'e'
+   * attaccato niente, quindi UniFi quei due pulsanti li pubblica
+   * `unavailable`: due entita' su venti, e lo switch finiva fra i guasti.
+   *
+   * La stessa cosa capita dappertutto, e non e' un capriccio di UniFi: il
+   * blocco bambini di un'asciugatrice spenta, il canale di una presa multipla
+   * non usato, la stazione di ricarica di un'auto che non c'e'. Un'integrazione
+   * dice `unavailable` per «adesso questa non si puo' fare», e quello di un
+   * apparecchio acceso e' il caso normale.
+   *
+   * Invece se Home Assistant non raggiunge piu' un apparecchio **tutte** le
+   * sue entita' tacciono insieme: quello e' il guasto, ed e' l'unica cosa che
+   * il riquadro deve dire. Una sola che parla vuol dire che la strada c'e'.
+   *
+   * E i tre numeri restano sulla stessa popolazione, come dice l'intestazione
+   * di questo file: `giu` conta le entita' **di quegli apparecchi li'**, non
+   * tutte quelle mute — se no «8 entita' su 214» parlerebbe di un insieme e i
+   * nomi di un altro. */
+  const mute = new Map();
+  const vive = new Set();
+  for (const uno of dentro) {
+    const suo = quali.diChiE(pulito(uno?.entity_id));
+    if (!nonRisponde(uno)) {
+      vive.add(suo);
+      continue;
+    }
+    const quelle = mute.get(suo);
+    if (quelle) quelle.push(uno);
+    else mute.set(suo, [uno]);
+  }
+  const sue = [...mute].filter(([suo]) => !vive.has(suo)).flatMap(([, quelle]) => quelle);
+  const nomi = iNomi(sue, registri);
   return {
     totali: dentro.length,
-    giu: giu.length,
+    giu: sue.length,
     dispositivi: nomi.length,
     nomi: nomi.slice(0, quante),
   };

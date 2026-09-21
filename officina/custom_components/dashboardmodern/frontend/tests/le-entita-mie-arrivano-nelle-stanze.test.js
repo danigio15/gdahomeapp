@@ -77,6 +77,45 @@ test("l'assegnazione a mano resta, e comanda lei sui doppioni", () => {
   assert.equal(voci[0].room_id, "r-salone");
 });
 
+test("ma il nome che le hai dato non lo porta via, perché lei un nome non ce l'ha", () => {
+  /* Dal campo: «il campo che uso come nome facoltativo potrebbe anche andare
+   * scritto sull'entità che trovi nella stanza? perché ora quel nome va solo
+   * sulla lista delle mie entità».
+   *
+   * I due rubinetti sanno due cose diverse: l'assegnazione a mano è una mappa
+   * entità → stanza e del nome non sa niente, «Le tue entità» sa anche come si
+   * chiama e con che segno. Vinceva la prima arrivata TUTTA INTERA, e siccome
+   * la mappa a mano si legge per prima, un'entità scritta in tutt'e due
+   * perdeva il nome: nella stanza tornava a chiamarsi come la chiama Home
+   * Assistant — su un `select` di un'integrazione tedesca, «Modus».
+   *
+   * Adesso si decide campo per campo: la stanza la dice quella scritta a mano,
+   * il nome e il segno l'unica delle due che ce li ha. */
+  magazzino.clear();
+  scrivi("cd_entita_mie", [
+    {
+      entity: "automation.luci_sera",
+      nome: "Luci sera",
+      icona: "🌙",
+      room_id: "r-cucina",
+    },
+  ]);
+  const voci = assignedItems({ "automation.luci_sera": "r-salone" }, STATI);
+  assert.equal(voci.length, 1);
+  assert.equal(voci[0].room_id, "r-salone", "la stanza resta quella scritta a mano");
+  assert.equal(voci[0].name, "Luci sera", "il nome scelto non si perde per strada");
+  assert.equal(voci[0].icon, "🌙", "e nemmeno il segno");
+});
+
+test("e senza un nome scelto resta quello di Home Assistant", () => {
+  /* Il ripiego non cambia: chi non ha scritto niente nel campo facoltativo
+   * continua a leggere il nome che la casa dà a quell'entità. */
+  magazzino.clear();
+  const voci = assignedItems({ "sensor.pressione": "r-salone" }, STATI);
+  assert.equal(voci[0].name, "Pressione");
+  assert.equal(voci[0].icon, "");
+});
+
 test("chi non ha scritto niente non si ritrova niente", () => {
   magazzino.clear();
   assert.deepEqual(assignedItems({}, STATI), []);

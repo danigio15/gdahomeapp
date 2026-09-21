@@ -355,6 +355,52 @@
     return { corto: frase.corto, lungo: frase.lungo + " (" + detto + ")" };
   }
 
+  /* Che rete Zigbee ha trovato il ponte, e cos'ha visto per dirlo.
+   *
+   * Esiste per una ragione sola: **una casa che ha Zigbee e un ponte che non
+   * lo trova erano indistinguibili da una casa che Zigbee non ce l'ha**. In
+   * tutt'e due i casi la voce «Zigbee» nel menu dell'app non compare, e chi
+   * guarda non ha nessun modo di sapere quale dei due gli e' capitato — ne'
+   * se aspettare, ne' cosa andare a controllare.
+   *
+   * E' lo stesso guasto contro cui questa pagina ha gia' scritto due volte:
+   * il «perche'» del centralino e la provenienza della plancia. Un guasto
+   * muto e' il peggiore che ci sia, e questa riga toglie il silenzio. */
+  function scriviLoZigbee(zigbee) {
+    var blocco = trova("blocco-zigbee");
+    if (!blocco) return;
+    if (!zigbee || !zigbee.chiesto) {
+      /* Il ponte quella domanda non l'ha ancora fatta: la fa quando l'app
+       * chiede «cosa sa fare questa casa». Scrivere «nessuna rete» adesso
+       * vorrebbe dire dire una cosa che non si sa. */
+      blocco.hidden = true;
+      return;
+    }
+    blocco.hidden = false;
+    var righe = [];
+    if (zigbee.quale === "zha") {
+      righe.push(
+        due("La rete e' ZHA, dentro Home Assistant.", "The network is ZHA, inside Home Assistant."),
+      );
+    } else if (zigbee.quale) {
+      righe.push(
+        due("La rete e' Zigbee2MQTT, cassetta «", "The network is Zigbee2MQTT, mailbox \u201C") +
+          zigbee.cassetta +
+          due("».", "\u201D."),
+      );
+    } else {
+      righe.push(
+        due(
+          "Nessuna rete Zigbee: nell'app la voce non compare. Qui sotto cos'ha guardato.",
+          "No Zigbee network: the app does not show the entry. Below, what it looked at.",
+        ),
+      );
+    }
+    if (zigbee.zha) righe.push(zigbee.zha);
+    if (zigbee.posta) righe.push(zigbee.posta);
+    trova("spiega-zigbee").textContent = righe.join(" ");
+  }
+
   /* Come va il filo verso il centralino, in una riga.
    *
    * Va detto qui e non lasciato scoprire in stazione: chi sbaglia l'indirizzo
@@ -1602,6 +1648,7 @@
         var fuori = comeVaIlCentralino(stato.centralino);
         pastiglia("pas-fuori", fuori.come, fuori.corto);
         trova("spiega-centralino").textContent = fuori.lungo;
+        scriviLoZigbee(stato.zigbee);
         /* La versione, sempre a schermo accanto al nome: oggi si leggeva solo
          * dentro una scheda che compare soltanto sugli add-on locali, e a chi
          * l'ha preso dal negozio non la diceva nessuno. */
