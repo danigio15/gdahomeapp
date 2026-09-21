@@ -48,6 +48,13 @@ const STATI = [
     last_updated: IERI,
     attributes: { friendly_name: "Cassetta della posta", device_class: "opening" },
   },
+  /* Le due entita' scelte a mano (#7) e l'interruttore che decide. */
+  {
+    entity_id: "sensor.acqua_serbatoio",
+    state: "64",
+    attributes: { unit_of_measurement: "%", friendly_name: "Acqua serbatoio", icon: "mdi:water" },
+  },
+  { entity_id: "input_boolean.vacanze", state: "off", attributes: { friendly_name: "Vacanze" } },
 ];
 
 const pastiglia = (page, chiave) => page.locator(`#dm-casa-riga [data-dm-casa="${chiave}"]`);
@@ -283,4 +290,93 @@ test("una voce spenta nella scheda Home sparisce dalla riga", async ({ page }, t
 
   await scrivi(page, STATI);
   await expect(page.locator("#dm-casa-riga")).toHaveCount(0, { timeout: 15_000 });
+});
+
+/* ── le entita' scelte a mano (#7) ───────────────────────────────────────── */
+
+/* «La mia idea e' quella di avere la possibilita' di aggiungere nella sezione
+ * sotto al meteo le info di entita' personalizzate, magari scegliere se
+ * visualizzare in base allo stato. Esempio: quando la modalita' vacanze e'
+ * attiva lo mostra altrimenti no.»
+ *
+ * Qui si guarda il giro intero come lo fa una persona: si apre la scheda, si
+ * preme «＋», si scrive l'entita' e quella che decide, si salva, e si va a
+ * vedere se sotto il meteo e' comparso quello che si voleva — e solo quando si
+ * voleva. E' la meta' che le prove del nucleo non possono vedere: fra la
+ * casella e la pastiglia ci sono un documento, una chiave di deposito e un giro
+ * di disegno. */
+const laMia = (page) => page.locator('#dm-casa-riga [data-dm-casa="mia"]');
+
+test("una mia entità si aggiunge dalla scheda e compare solo quando dico io", async ({
+  page,
+}, testInfo) => {
+  await avvia(page, testInfo);
+  await expect(pastiglia(page, "luci")).toBeVisible({ timeout: 20_000 });
+  /* Di serie non ce n'e' nessuna: la fascia resta quella che era. */
+  await expect(laMia(page)).toHaveCount(0);
+
+  await page.evaluate(() => {
+    if (!document.getElementById("editor-modal")?.classList.contains("show")) apriConfigEntita();
+  });
+  await page.locator('.ed-tab[data-tab="sez0"]').first().click();
+  const piu = page.locator("#ed-body [data-dm-casa-mia-piu]");
+  await expect(piu).toBeVisible({ timeout: 15_000 });
+  await piu.click();
+
+  /* La riga nasce aperta: trovarla chiusa vorrebbe dire premere «aggiungi» e
+   * vedere comparire una riga che non si capisce come si riempie. */
+  const riga = page.locator("#ed-body [data-dm-casa-mia]").first();
+  await expect(riga).toHaveCount(1);
+  await expect.poll(() => riga.evaluate((nodo) => nodo.open)).toBe(true);
+
+  await fillEntityFieldByHand(
+    page,
+    '#ed-body [data-dm-casa-mia] [data-dm-casa-mia-campo="entity"]',
+    "sensor.acqua_serbatoio",
+  );
+  await riga.locator('[data-dm-casa-mia-campo="nome"]').fill("Serbatoio");
+  await riga.locator('[data-dm-casa-mia-campo="icona"]').fill("mdi:water");
+  await fillEntityFieldByHand(
+    page,
+    '#ed-body [data-dm-casa-mia] [data-dm-casa-mia-campo="quando"]',
+    "input_boolean.vacanze",
+  );
+  await saveSection(page);
+  /* Lo stato di serie e' «on»: chi indica l'interruttore delle vacanze non deve
+   * anche spiegare che «attiva» vuol dire acceso. */
+  await expect
+    .poll(() =>
+      page.evaluate(() => JSON.parse(localStorage.getItem("cd_barra_casa") || "{}").mie?.[0]),
+    )
+    .toMatchObject({
+      entity: "sensor.acqua_serbatoio",
+      nome: "Serbatoio",
+      quando: "input_boolean.vacanze",
+      stato: "on",
+    });
+  await chiudiLEditor(page);
+
+  /* Vacanze spente: la pastiglia non c'e'. Il sensore risponde benissimo — e'
+   * la condizione a dire di no. */
+  await scrivi(page, STATI);
+  await expect(laMia(page)).toHaveCount(0, { timeout: 15_000 });
+
+  await scrivi(page, [
+    { entity_id: "input_boolean.vacanze", state: "on", attributes: { friendly_name: "Vacanze" } },
+  ]);
+  await expect(laMia(page)).toBeVisible({ timeout: 15_000 });
+  await expect(laMia(page).locator(".dm-casa-testa")).toHaveText("64 %");
+  await expect(laMia(page).locator(".dm-casa-coda")).toHaveText("Serbatoio");
+  await expect(laMia(page)).toHaveAttribute("data-dm-entita", "sensor.acqua_serbatoio");
+
+  /* E un sensore che smette di rispondere non scrive «0»: la pastiglia se ne
+   * va, come tutte le altre voci che non hanno piu' niente da dire. */
+  await scrivi(page, [
+    {
+      entity_id: "sensor.acqua_serbatoio",
+      state: "unavailable",
+      attributes: { unit_of_measurement: "%", friendly_name: "Acqua serbatoio" },
+    },
+  ]);
+  await expect(laMia(page)).toHaveCount(0, { timeout: 15_000 });
 });

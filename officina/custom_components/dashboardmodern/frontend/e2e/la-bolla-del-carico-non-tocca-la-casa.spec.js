@@ -117,9 +117,7 @@ async function apriLEnergia(page, testInfo, quanti, larghezza) {
  * rotta: il primo punto dopo la soglia del guscio, e l'ultimo prima della
  * soglia che il modulo si era scritto da solo. */
 for (const larghezza of [700, 768, 769, 800, 820, 821, 900, 1400]) {
-  test(`a ${larghezza} punti la bolla del carico non tocca la Casa`, async ({
-    page,
-  }, testInfo) => {
+  test(`a ${larghezza} punti la bolla del carico non tocca la Casa`, async ({ page }, testInfo) => {
     test.setTimeout(150_000);
     await apriLEnergia(page, testInfo, 1, larghezza);
     const vuoti = await iVuoti(page);

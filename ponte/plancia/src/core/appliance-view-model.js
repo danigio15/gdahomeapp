@@ -475,9 +475,7 @@ export function createApplianceViewModel(
    * riga qui sotto e' la gemella di `dettoDalloStato`. Resta ristretta ai
    * lettori — un interruttore generico acceso a 0 W continua a valere
    * STANDBY, che e' la prudenza per cui quella regola esiste. */
-  const dettoDalComando = /^media_player\./.test(controlEntity)
-    ? modoDelLettore(controlState)
-    : "";
+  const dettoDalComando = /^media_player\./.test(controlEntity) ? modoDelLettore(controlState) : "";
 
   const explicitRunning =
     dettoDalloStato === "running" ||

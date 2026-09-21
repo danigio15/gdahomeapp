@@ -25,9 +25,18 @@ const CLIMI = [
 const SEME = {
   schema_version: 4,
   sections: {
-    rooms: [], cameras: [], appliances: [], loads: [], lights: [],
-    climate: CLIMI, ev: [], covers: [], pool: {}, irrigation: { zones: [] },
-    energy: {}, entityOverrides: {},
+    rooms: [],
+    cameras: [],
+    appliances: [],
+    loads: [],
+    lights: [],
+    climate: CLIMI,
+    ev: [],
+    covers: [],
+    pool: {},
+    irrigation: { zones: [] },
+    energy: {},
+    entityOverrides: {},
   },
   visibility: { home: true, climate: true },
 };
@@ -58,7 +67,10 @@ async function avvia(page, testInfo) {
                 swing_horizontal_mode: "destra",
               }
             : {}),
-          min_temp: 16, max_temp: 32, target_temp_step: 0.5, hvac_action: "cooling",
+          min_temp: 16,
+          max_temp: 32,
+          target_temp_step: 0.5,
+          hvac_action: "cooling",
         },
       };
     });

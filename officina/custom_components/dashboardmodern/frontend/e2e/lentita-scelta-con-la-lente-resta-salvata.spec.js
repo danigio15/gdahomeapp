@@ -107,7 +107,9 @@ test("l'assistente scelto con la lente resta scritto in configurazione", async (
 
   /* Salvata subito, senza bisogno di uscire dal campo. */
   await expect
-    .poll(() => comeSta(page), { message: "la scelta della lente non e' arrivata in configurazione" })
+    .poll(() => comeSta(page), {
+      message: "la scelta della lente non e' arrivata in configurazione",
+    })
     .toMatchObject({ salvato: "conversation.ollama", nellaCasella: "conversation.ollama" });
 
   /* E il momento in cui la segnalazione se ne accorgeva: si cambia scheda e si

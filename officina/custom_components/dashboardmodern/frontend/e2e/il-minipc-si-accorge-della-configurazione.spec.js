@@ -35,8 +35,18 @@ const STATI = {
 const SEME = {
   schema_version: 4,
   sections: {
-    rooms: [], cameras: [], appliances: [], loads: [], lights: [], climate: [],
-    ev: [], covers: [], pool: {}, irrigation: { zones: [] }, energy: {}, entityOverrides: {},
+    rooms: [],
+    cameras: [],
+    appliances: [],
+    loads: [],
+    lights: [],
+    climate: [],
+    ev: [],
+    covers: [],
+    pool: {},
+    irrigation: { zones: [] },
+    energy: {},
+    entityOverrides: {},
   },
   visibility: { home: true, server: true },
 };

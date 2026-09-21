@@ -107,22 +107,26 @@ test("il MiniPC nascosto dall'elenco delle sezioni resta nascosto", async ({ pag
   await expect(interruttore, "l'elenco delle sezioni non offre il MiniPC").toBeVisible();
 
   await interruttore.click();
-  await expect.poll(() => comeSta(page)).toMatchObject({
-    sezioni: false,
-    /* Il segno: e' la sola cosa che distingue «non la voglio vedere» da «non
-     * l'ho ancora configurata», e prima non lo scriveva nessuno. */
-    aMano: true,
-    voce: "nascosta",
-  });
+  await expect
+    .poll(() => comeSta(page))
+    .toMatchObject({
+      sezioni: false,
+      /* Il segno: e' la sola cosa che distingue «non la voglio vedere» da «non
+       * l'ho ancora configurata», e prima non lo scriveva nessuno. */
+      aMano: true,
+      voce: "nascosta",
+    });
 
   /* E adesso il momento in cui tornava su. */
   await unSalvataggio(page);
   await page.waitForTimeout(1200);
-  await expect.poll(() => comeSta(page), { message: "il MiniPC e' tornato nella barra" }).toMatchObject({
-    sezioni: false,
-    aMano: true,
-    voce: "nascosta",
-  });
+  await expect
+    .poll(() => comeSta(page), { message: "il MiniPC e' tornato nella barra" })
+    .toMatchObject({
+      sezioni: false,
+      aMano: true,
+      voce: "nascosta",
+    });
 });
 
 test("e riaccenderlo dall'elenco lo riporta nella barra", async ({ page }, testInfo) => {

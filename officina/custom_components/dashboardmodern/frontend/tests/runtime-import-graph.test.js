@@ -1295,8 +1295,15 @@ test("production graph is single-owner, acyclic and contains no facade pass-thro
   // continuita'. Scritto due volte, il giorno che un'integrazione dice «secs»
   // lo impara una sola delle due. E' un file in piu' perche' e' un vocabolario,
   // e un vocabolario ha un posto solo.
+  // 365 con le entita' scelte sotto il meteo (#7): la scheda di Home Assistant,
+  // cioe' l'annuncio che attraversa il confine della cornice per aprire il
+  // «more info» di un'entita'. Era scritto dentro la sezione delle Persone, che
+  // lo usa per la mappa di un indirizzo; adesso lo chiedono in due, e la
+  // seconda e' una pastiglia della fascia che una tessera non ce l'ha. Scritto
+  // due volte sarebbero due idee di come si esce dalla cornice, e il giorno che
+  // quel confine cambia lo imparerebbe una sola delle due.
   assert.ok(
-    relative.length <= 364,
+    relative.length <= 365,
     `production graph unexpectedly grew to ${relative.length} modules`,
   );
   assertAcyclic(edges);

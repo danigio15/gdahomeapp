@@ -40,6 +40,10 @@ const SCRITTO_A_SCHERMO = /<(?:small|span|p|b|code|div|strong)[^>]*class="[^"]*\
 const ANCHE_QUESTE_SI_COMPILANO = new Map([
   ["auto-integrazione-section.js", "la scheda che lega un'auto a un'integrazione"],
   ["beta26-real-device-stability-section.js", "le caselle dei carichi figli"],
+  [
+    "come-sta-la-casa-section.js",
+    "la scheda della barra sotto il meteo: le entità scelte a mano, una riga per pastiglia",
+  ],
   ["editor-polish-section.js", "le caselle dei server"],
   ["entity-search-section.js", "il cercatore di entità: l'elenco da cui si sceglie"],
   ["flood-alerts-section.js", "la scheda degli allagamenti"],

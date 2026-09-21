@@ -23,6 +23,14 @@ import { readFile } from "node:fs/promises";
 
 const sezione = await readFile(new URL("../src/sections/people-section.js", import.meta.url), "utf8");
 const modello = await readFile(new URL("../src/core/person-model.js", import.meta.url), "utf8");
+/* Come si esce dalla cornice per aprire la scheda di un'entita' sta scritto una
+ * volta sola: lo chiedono le Persone, per la mappa di un indirizzo, e le
+ * pastiglie scelte a mano sotto il meteo (#7), che una tessera non ce l'hanno.
+ * Scritto due volte sarebbero due idee dello stesso confine. */
+const laScheda = await readFile(
+  new URL("../src/sections/la-scheda-di-home-assistant.js", import.meta.url),
+  "utf8",
+);
 
 test("l'indirizzo sulla card è un collegamento alla mappa", () => {
   assert.match(sezione, /function mappaDi\(indirizzo\)/);
@@ -46,16 +54,18 @@ test("toccare il luogo apre la scheda dell'entità, e non anche la persona", () 
   );
   /* L'annuncio è quello che usa qualunque card di Home Assistant, e parte dal
    * pannello che ospita la cornice: da lì sale fino a chi apre le schede. */
-  assert.match(sezione, /new vista\.CustomEvent\("hass-more-info", \{\s*bubbles: true,\s*composed: true,\s*detail: \{ entityId: id \},/);
-  assert.match(sezione, /cornice\.getRootNode\?\.\(\)\?\.host \|\| cornice/);
+  assert.match(laScheda, /new vista\.CustomEvent\("hass-more-info", \{\s*bubbles: true,\s*composed: true,\s*detail: \{ entityId: id \},/);
+  assert.match(laScheda, /cornice\.getRootNode\?\.\(\)\?\.host \|\| cornice/);
+  /* E le Persone ci arrivano da li', non con una copia loro. */
+  assert.match(sezione, /import \{ apriLaSchedaDellEntita \} from "\.\/la-scheda-di-home-assistant\.js";/);
 });
 
 test("senza Home Assistant intorno non si annuncia a nessuno", () => {
   /* Un annuncio che non arriva a nessuno, con il link annullato, sarebbe un
    * tocco che non fa niente: prima si guarda che ci sia qualcuno. */
-  assert.match(sezione, /function dentroHomeAssistant\(\)/);
-  assert.match(sezione, /root\.parent\?\.document\?\.querySelector\?\.\("home-assistant"\)/);
-  assert.match(sezione, /if \(!id \|\| !dentroHomeAssistant\(\)\) return false;/);
+  assert.match(laScheda, /export function dentroHomeAssistant\(\)/);
+  assert.match(laScheda, /root\.parent\?\.document\?\.querySelector\?\.\("home-assistant"\)/);
+  assert.match(laScheda, /if \(!id \|\| !dentroHomeAssistant\(\)\) return false;/);
 });
 
 test("l'url della mappa si scrive in un posto solo", () => {

@@ -42,8 +42,17 @@ const seme = (prese) => ({
       { id: "r1", name: "Salotto", icon: "🛋️", metadata: {} },
       { id: "r2", name: "Studio", icon: "💻", metadata: {} },
     ],
-    cameras: [], appliances: [], loads: [], lights: [], climate: [], ev: [],
-    covers: [], pool: {}, irrigation: { zones: [] }, energy: {}, entityOverrides: {},
+    cameras: [],
+    appliances: [],
+    loads: [],
+    lights: [],
+    climate: [],
+    ev: [],
+    covers: [],
+    pool: {},
+    irrigation: { zones: [] },
+    energy: {},
+    entityOverrides: {},
     prese,
   },
   visibility: { home: true, prese: true },
@@ -85,7 +94,10 @@ test("il tipo «Popup TUTTE le prese» si offre dove si offre quello delle luci"
     expect(sorgente).toContain("function apriTuttePrese()");
   }
   const moderno = await readFile(
-    new URL("../../../../../ponte/plancia/src/sections/unified-editors-section.js", import.meta.url),
+    new URL(
+      "../../../../../ponte/plancia/src/sections/unified-editors-section.js",
+      import.meta.url,
+    ),
     "utf8",
   );
   expect(moderno).toContain('["builtin_prese", "Prese", "Sockets"]');

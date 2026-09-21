@@ -20,8 +20,17 @@ const SEME = {
   schema_version: 4,
   sections: {
     rooms: [{ id: "r1", name: "Giardino", icon: "🌳", metadata: {} }],
-    cameras: [], appliances: [], loads: [], lights: [], climate: [], ev: [],
-    covers: [], pool: {}, irrigation: { zones: [] }, energy: {}, entityOverrides: {},
+    cameras: [],
+    appliances: [],
+    loads: [],
+    lights: [],
+    climate: [],
+    ev: [],
+    covers: [],
+    pool: {},
+    irrigation: { zones: [] },
+    energy: {},
+    entityOverrides: {},
     prese: PRESE,
   },
   visibility: { home: true, prese: true },
@@ -91,8 +100,7 @@ test("dice quante e quali, e la finestra le elenca", async ({ page }, testInfo) 
   const finestra = page.locator("#dm-widget-popup");
   await expect(finestra).toBeVisible();
   await expect(finestra).toHaveAttribute("data-dm-popup-of", "nonrisponde");
-  for (const nome of ["Pompa piscina", "Luci vialetto"])
-    await expect(finestra).toContainText(nome);
+  for (const nome of ["Pompa piscina", "Luci vialetto"]) await expect(finestra).toContainText(nome);
 });
 
 test("un'entità che non ha ancora un valore non è un guasto", async ({ page }, testInfo) => {

@@ -31,8 +31,18 @@ const PORTE = [
 const SEME = {
   schema_version: 4,
   sections: {
-    rooms: [], cameras: [], appliances: [], loads: [], lights: [], climate: [],
-    ev: [], covers: [], pool: {}, irrigation: { zones: [] }, energy: {}, entityOverrides: {},
+    rooms: [],
+    cameras: [],
+    appliances: [],
+    loads: [],
+    lights: [],
+    climate: [],
+    ev: [],
+    covers: [],
+    pool: {},
+    irrigation: { zones: [] },
+    energy: {},
+    entityOverrides: {},
   },
   visibility: { home: true, porte: true },
 };
@@ -88,7 +98,9 @@ test("il popup offre i tre gesti, col nome di quello che fanno", async ({ page }
   ]);
 });
 
-test("ogni tasto chiama il servizio suo, e sono tre servizi diversi", async ({ page }, testInfo) => {
+test("ogni tasto chiama il servizio suo, e sono tre servizi diversi", async ({
+  page,
+}, testInfo) => {
   test.setTimeout(180_000);
   const finestra = await avvia(page, testInfo);
   await ascolta(page);
