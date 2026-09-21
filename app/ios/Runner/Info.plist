@@ -31,6 +31,11 @@
 	<string>Serve a inquadrare il codice a quadretti che collega l'app alla tua casa, e a scattare una foto da allegare a una segnalazione, se lo chiedi tu.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Serve a scegliere una foto o un video da allegare a una segnalazione, solo quando lo chiedi tu.</string>
+	<!-- Il volto, per aprire l'app (#54). iOS chiede questa riga prima di
+	     lasciar usare Face ID, e la mostra a chi installa. Il volto resta nel
+	     telefono: da qui arriva un sì o un no, e basta. -->
+	<key>NSFaceIDUsageDescription</key>
+	<string>Serve a riconoscerti quando apri gdahome, se accendi il lucchetto. Il tuo volto resta nel telefono: gdahome riceve solo un sì o un no.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Serve solo se registri un video da allegare a una segnalazione.</string>
 	<!-- La casa sta sulla rete di casa, e da iOS 14 arrivarci vuole un

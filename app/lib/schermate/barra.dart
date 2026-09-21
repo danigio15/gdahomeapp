@@ -809,6 +809,13 @@ class _NomeDellaVoce extends StatelessWidget {
 /// opzioni ha la chiave della gestione. E **Zigbee**, che compare solo dove
 /// una rete Zigbee c'e' davvero: in una casa senza ZHA e senza Zigbee2MQTT
 /// quella voce aprirebbe una schermata che non puo' fare niente.
+///
+/// E poi c'e' un taglio di un altro tipo: **Zigbee, Aiutanti e Automazioni
+/// non ci sono affatto nella webapp**. Sono cose che vogliono il telefono —
+/// aprire una rete Zigbee si fa in piedi davanti al dispositivo — e nel
+/// browser sarebbero porte che si aprono su meta' di quello che promettono.
+/// Lo dichiara la sezione stessa (`soloNellApp`), cosi' aggiungerne una
+/// domani vuol dire una parola nel suo elenco e non una riga qui.
 /// (Nella barra laterale di Home Assistant la stessa voce si chiama «Cruscotto
 /// installatore»: li' sta in mezzo ai pannelli di chiunque, e il nome deve
 /// dire di chi e'. Qui no, perche' qui ci si e' gia' dentro.)
@@ -817,12 +824,14 @@ List<Sezione> vociDellaBarra({
   bool conIlCruscotto = false,
   bool conLaGestione = false,
   bool conZigbee = false,
+  bool nellApp = true,
 }) => [
   for (final una in Sezione.values)
     if ((una != Sezione.console || conLaConsole) &&
         (una != Sezione.cruscotto || conIlCruscotto) &&
         (una != Sezione.gestione || conLaGestione) &&
-        (una != Sezione.zigbee || conZigbee))
+        (una != Sezione.zigbee || conZigbee) &&
+        (nellApp || !una.soloNellApp))
       una,
 ];
 

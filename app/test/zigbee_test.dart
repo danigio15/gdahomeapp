@@ -75,6 +75,36 @@ void main() {
     );
   });
 
+  /* E nella webapp non c'è comunque: aprire una rete Zigbee si fa in piedi
+   * davanti al dispositivo, col telefono in una mano, e nel browser sarebbe
+   * una porta che si apre su metà di quello che promette. Con lei se ne
+   * vanno Aiutanti e Automazioni, per la stessa ragione. */
+  test('nella webapp Zigbee, Aiutanti e Automazioni non ci sono', () {
+    final nelBrowser = vociDellaBarra(conZigbee: true, nellApp: false);
+    expect(nelBrowser, isNot(contains(Sezione.zigbee)));
+    expect(nelBrowser, isNot(contains(Sezione.aiutanti)));
+    expect(nelBrowser, isNot(contains(Sezione.automazioni)));
+    /* E il resto c'è tutto: si tolgono tre voci, non si fa un'altra app. */
+    expect(nelBrowser, contains(Sezione.plancia));
+    expect(nelBrowser, contains(Sezione.dispositivi));
+    expect(nelBrowser, contains(Sezione.configurazione));
+    expect(
+      vociDellaBarra(conZigbee: true).length - nelBrowser.length,
+      3,
+      reason: 'nella webapp mancano esattamente quelle tre',
+    );
+  });
+
+  test('e chi è solo dell\'app lo dichiara lei, non la barra', () {
+    /* Aggiungerne una domani vuol dire una parola nel suo elenco, e non una
+     * riga in più dentro il filtro. */
+    expect(Sezione.values.where((una) => una.soloNellApp).toSet(), {
+      Sezione.zigbee,
+      Sezione.aiutanti,
+      Sezione.automazioni,
+    });
+  });
+
   late PonteFinto ponte;
   late Collegamento collegamento;
 

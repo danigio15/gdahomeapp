@@ -212,8 +212,14 @@ class _HomeState extends State<Home> {
     final quadro = await IlCruscotto(filo).dove();
     /* E che rete Zigbee c'e'. La domanda sta qui insieme alle altre perche'
      * e' la stessa domanda — «cosa sa fare questa casa» — e perche' la
-     * risposta decide una voce del menu, come le altre tre. */
-    final rete = await Zigbee(filo).stato();
+     * risposta decide una voce del menu, come le altre tre.
+     *
+     * Nella webapp non si chiede nemmeno: quella voce li' non c'e' comunque, e
+     * una domanda la cui risposta non cambia niente e' un giro sul filo per
+     * niente. */
+    final rete = widget.impostazioni.sulTelefono
+        ? await Zigbee(filo).stato()
+        : StatoDellaRete.nessuna;
     if (!mounted) return;
     if (risponde != _console ||
         rete.rete.siApre != _zigbee ||
@@ -613,6 +619,10 @@ class _HomeState extends State<Home> {
                 conIlCruscotto: _cruscotto.isNotEmpty,
                 conLaGestione: _gestione.isNotEmpty,
                 conZigbee: _zigbee,
+                /* Zigbee, Aiutanti e Automazioni nella webapp non ci sono:
+                 * vogliono il telefono, e nel browser sarebbero porte che si
+                 * aprono su meta' di quello che promettono. */
+                nellApp: widget.impostazioni.sulTelefono,
               ),
               aperta: _sezione,
               daAggiornare: _daAggiornare,

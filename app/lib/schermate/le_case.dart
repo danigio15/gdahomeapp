@@ -5,8 +5,13 @@ import 'package:flutter/material.dart';
 
 import '../casa/casa_conosciuta.dart';
 import '../casa/collegamento.dart';
+import '../casa/il_lucchetto.dart';
+import '../casa/impostazioni.dart';
+import '../casa/la_guardia.dart';
 import '../parole.dart';
 import '../vestito/pezzi.dart';
+import 'il_lucchetto.dart';
+import 'riconoscimento.dart';
 import '../vestito/tema.dart';
 import 'barra.dart' show nomeDelleCase;
 import 'firma.dart';
@@ -16,10 +21,18 @@ class LeCase extends StatelessWidget {
     super.key,
     required this.collegamento,
     required this.aggiungiUnaCasa,
+    required this.impostazioni,
+    required this.guardia,
   });
 
   final Collegamento collegamento;
   final VoidCallback aggiungiUnaCasa;
+
+  /// Dove sta scritto il lucchetto. Da qui si apre la sua scheda, ed e' qui
+  /// che serve: togliere una casa e' una delle tre cose che il lucchetto puo'
+  /// proteggere, e la si fa da questa schermata.
+  final Impostazioni impostazioni;
+  final LaGuardia guardia;
 
   @override
   Widget build(BuildContext context) {
@@ -27,7 +40,27 @@ class LeCase extends StatelessWidget {
     final aperta = collegamento.casa;
 
     return Scaffold(
-      appBar: AppBar(title: Text(nomeDelleCase)),
+      appBar: AppBar(
+        title: Text(nomeDelleCase),
+        actions: [
+          /* Il lucchetto e' dell'app: nella webapp il volto e l'impronta non
+           * ci sono, e una scheda che dice solo «questo non si puo' fare» e'
+           * una porta che non si apre. */
+          if (impostazioni.sulTelefono)
+            IconButton(
+              onPressed: () => Navigator.of(context).push<void>(
+                MaterialPageRoute(
+                  builder: (_) => SchermataDelLucchetto(
+                    impostazioni: impostazioni,
+                    guardia: guardia,
+                  ),
+                ),
+              ),
+              icon: const Icon(Icons.lock_rounded),
+              tooltip: inLingua(it: 'Il lucchetto', en: 'The lock'),
+            ),
+        ],
+      ),
       floatingActionButton: archivio.piena
           ? null
           : FloatingActionButton.extended(
@@ -106,7 +139,31 @@ class LeCase extends StatelessWidget {
       ),
     );
     if (sicuro != true) return;
+    /* E il lucchetto, quando e' acceso su questo: togliere una casa cancella
+     * l'abbinamento, e si rifa' solo col QR davanti a Home Assistant. E' una
+     * delle tre cose che da un telefono trovato aperto non si disfano. */
+    if (!context.mounted) return;
+    if (!await _seIlLucchettoLoChiede(context)) return;
     await collegamento.dimentica(casa.id);
+  }
+
+  /// Se il lucchetto protegge questo momento, lo chiede. `true` per passare.
+  Future<bool> _seIlLucchettoLoChiede(BuildContext contesto) async {
+    final sa = await guardia.cosaSaFare();
+    if (!contesto.mounted) return false;
+    if (!siDeveChiederePrimaDi(
+      PrimaDi.togliereUnaCasa,
+      impostazioni.lucchetto,
+      sa,
+    )) {
+      return true;
+    }
+    return ilFoglietto(
+      contesto,
+      quale: PrimaDi.togliereUnaCasa,
+      conCosa: conCosaSiChiede(impostazioni.lucchetto, sa),
+      chiedi: () => guardia.chiedi(perche: perche(PrimaDi.togliereUnaCasa)),
+    );
   }
 }
 

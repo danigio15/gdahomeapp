@@ -80,6 +80,15 @@ dependencies:
   # sono del sistema. Scriverne uno a mano vorrebbe dire un lettore peggiore di
   # quello che ogni telefono ha gia' dentro.
   mobile_scanner: ^7.4.0
+
+  # Il volto e l'impronta davanti all'app (#54).
+  #
+  # Non e' una libreria che «legge» un'impronta: e' il ponte verso la guardia
+  # che il telefono ha gia' — BiometricPrompt su Android, LocalAuthentication
+  # su iOS — e da quella torna un si' o un no. Il volto e l'impronta restano
+  # nel coprocessore del telefono: non passano di qui, non passano dall'app, e
+  # non arrivano ne' a gdahome ne' alla casa.
+  local_auth: ^2.3.0
   flutter_svg: ^2.3.0
   webview_flutter_web: ^0.2.3+4
   webview_flutter_android: ^4.14.1

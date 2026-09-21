@@ -17,7 +17,9 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'casa/archivio_delle_case.dart';
 import 'casa/cassaforte.dart';
 import 'casa/collegamento.dart';
+import 'casa/il_lucchetto.dart';
 import 'casa/impostazioni.dart';
+import 'casa/la_guardia.dart';
 import 'parole.dart';
 import 'ponte/centralino.dart';
 import 'schermate/aggiungi_casa.dart';
@@ -25,6 +27,7 @@ import 'schermate/home.dart';
 import 'schermate/le_case.dart';
 import 'schermate/misure.dart';
 import 'schermate/plancia_vera.dart';
+import 'schermate/riconoscimento.dart';
 import 'vestito/sfondo.dart';
 import 'vestito/tema.dart';
 
@@ -164,12 +167,16 @@ class Portone extends StatefulWidget {
     this.collegamento,
     this.plancia,
     this.impostazioni,
+    this.guardia,
   });
 
   final Cassaforte? cassaforte;
   final Collegamento? collegamento;
   final FabbricaDellaPlancia? plancia;
   final Impostazioni? impostazioni;
+
+  /// Chi chiede il volto e l'impronta. Nelle prove se ne mette una finta.
+  final LaGuardia? guardia;
 
   @override
   State<Portone> createState() => _PortoneState();
@@ -185,6 +192,11 @@ const quantoSiAspettaPrimaDiRiposare = Duration(seconds: 30);
 
 class _PortoneState extends State<Portone> with WidgetsBindingObserver {
   late final Collegamento _collegamento;
+  /* La guardia del telefono: nel browser e nelle prove non c'e', e allora il
+   * lucchetto non si mette e l'app si apre com'e' sempre stata. */
+  late final LaGuardia _guardia =
+      widget.guardia ??
+      (kIsWeb ? const NessunaGuardia() : LaGuardiaDelTelefono());
   late final FabbricaDellaPlancia _plancia =
       widget.plancia ?? FabbricaDellaPlancia();
   late final Impostazioni _impostazioni =
@@ -195,6 +207,25 @@ class _PortoneState extends State<Portone> with WidgetsBindingObserver {
       );
   bool _pronto = false;
   StreamSubscription<void>? _ascolto;
+
+  /* ─── Il lucchetto (#54) ───────────────────────────────────────────────── */
+
+  /// Il velo e' su: finche' non si passa, l'app non c'e'.
+  bool _chiuso = false;
+
+  /// Con cosa questo telefono puo' rispondere, adesso.
+  Set<ComeRiconosce> _conCosa = const {};
+
+  /// Il telefono non sa proprio rispondere: allora non si propone «Riprova»,
+  /// che non porterebbe da nessuna parte.
+  bool _nonSaFarlo = false;
+
+  /// Quando l'app e' stata lasciata. `null` finche' non se ne va.
+  DateTime? _lasciataIl;
+
+  /// Una domanda per volta: il sistema ne tiene aperta una sola, e chiederne
+  /// due vuol dire la seconda che fallisce da sola.
+  bool _staChiedendo = false;
   /* Se l'app non torna davanti entro questo tempo, il filo si chiude. */
   Timer? _seNonTorna;
 
@@ -234,12 +265,71 @@ class _PortoneState extends State<Portone> with WidgetsBindingObserver {
       _seNonTorna?.cancel();
       _seNonTorna = null;
       _collegamento.sveglia();
+      unawaited(_seSiRichiude());
       return;
     }
+    /* Da quando e' stata lasciata: il lucchetto al ritorno si chiude solo se
+     * e' passato piu' di un minuto, e senza quest'ora non si saprebbe. Si
+     * segna la prima volta che se ne va e non a ogni scossone: `inactive` e
+     * `paused` arrivano tutt'e due, e riscriverla vorrebbe dire un conto che
+     * riparte da zero mentre il telefono e' gia' in tasca. */
+    _lasciataIl ??= DateTime.now();
     _seNonTorna ??= Timer(quantoSiAspettaPrimaDiRiposare, () {
       _seNonTorna = null;
       unawaited(_collegamento.riposa());
     });
+  }
+
+  /* ─── Il lucchetto ─────────────────────────────────────────────────────── */
+
+  /// Il lucchetto all'apertura dell'app.
+  Future<void> _seSiApre() async {
+    final sa = await _guardia.cosaSaFare();
+    if (!mounted) return;
+    if (!siDeveChiedere(_impostazioni.lucchetto, sa)) return;
+    setState(() {
+      _chiuso = true;
+      _conCosa = conCosaSiChiede(_impostazioni.lucchetto, sa);
+    });
+    await _chiedi();
+  }
+
+  /// E tornandoci, se e' stata lasciata abbastanza a lungo.
+  Future<void> _seSiRichiude() async {
+    final lasciata = _lasciataIl;
+    _lasciataIl = null;
+    if (lasciata == null || _chiuso) return;
+    final sa = await _guardia.cosaSaFare();
+    if (!mounted) return;
+    final quanto = DateTime.now().difference(lasciata);
+    if (!siDeveChiedere(_impostazioni.lucchetto, sa, lasciataDa: quanto)) {
+      return;
+    }
+    setState(() {
+      _chiuso = true;
+      _conCosa = conCosaSiChiede(_impostazioni.lucchetto, sa);
+    });
+    await _chiedi();
+  }
+
+  /// Chiede, e apre se si passa.
+  Future<void> _chiedi() async {
+    if (_staChiedendo) return;
+    _staChiedendo = true;
+    try {
+      final andata = await _guardia.chiedi(perche: perche(null));
+      if (!mounted) return;
+      setState(() {
+        /* «Non sa farlo» apre lo stesso, e non e' clemenza: e' che un'app che
+         * non si apre piu' si cura disinstallandola, e con lei se ne va
+         * l'abbinamento. Il velo resta con scritto cosa e' successo finche'
+         * chi guarda non preme «Entra lo stesso». */
+        if (andata == ComeEAndata.si) _chiuso = false;
+        _nonSaFarlo = andata == ComeEAndata.nonSaFarlo;
+      });
+    } finally {
+      _staChiedendo = false;
+    }
   }
 
   Future<void> _accendi() async {
@@ -251,6 +341,10 @@ class _PortoneState extends State<Portone> with WidgetsBindingObserver {
     if (!_collegamento.avviato) await _collegamento.apri();
     if (!mounted) return;
     setState(() => _pronto = true);
+    /* Il lucchetto qui e non prima: si decide su quello che c'e' scritto
+     * nelle impostazioni, e quelle si leggono dal disco. Chiederlo prima
+     * vorrebbe dire chiederlo sempre col lucchetto spento. */
+    unawaited(_seSiApre());
     /* Solo i cambiamenti del collegamento — la casa, lo stato, l'approdo —
      * non quelli delle entita': quelli arrivano decine di volte al secondo,
      * e da qui si ridisegna tutta l'app. */
@@ -291,6 +385,21 @@ class _PortoneState extends State<Portone> with WidgetsBindingObserver {
     if (!_pronto) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
+    /* Il velo sta **sopra** tutto, e non dentro una schermata: sotto non ci
+     * deve essere niente da vedere — non l'elenco delle case, non il nome
+     * della casa aperta, non una plancia che intanto si carica. */
+    if (_chiuso) {
+      return Scaffold(
+        body: IlVeloDelRiconoscimento(
+          conCosa: _conCosa,
+          casa: _collegamento.casa?.nome ?? '',
+          nonSaFarlo: _nonSaFarlo,
+          quandoRiprova: _nonSaFarlo
+              ? () => setState(() => _chiuso = false)
+              : () => unawaited(_chiedi()),
+        ),
+      );
+    }
     if (_collegamento.archivio.vuoto) {
       return AggiungiCasa(
         centralino: centralinoDiDifetto,
@@ -308,6 +417,8 @@ class _PortoneState extends State<Portone> with WidgetsBindingObserver {
             builder: (_) => LeCase(
               collegamento: _collegamento,
               aggiungiUnaCasa: _aggiungiUnaCasa,
+              impostazioni: _impostazioni,
+              guardia: _guardia,
             ),
           ),
         );

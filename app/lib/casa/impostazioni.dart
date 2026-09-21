@@ -8,6 +8,7 @@ import 'dart:convert';
 
 import '../parole.dart';
 import 'dispensa/dispensa.dart';
+import 'il_lucchetto.dart';
 
 class Impostazioni {
   Impostazioni({
@@ -29,6 +30,10 @@ class Impostazioni {
 
   bool _planciaLeggera;
   bool _composizioneIbrida;
+  /* Spento di serie, e non e' pigrizia: acceso di nascosto vorrebbe dire che
+   * chi aggiorna l'app si trova davanti una richiesta che non ha chiesto, su
+   * un telefono che magari il volto non ce l'ha nemmeno registrato. */
+  IlLucchetto _lucchetto = IlLucchetto.spento;
 
   /* Il tema, la tavolozza e la barra della plancia qui non ci sono, e ci
    * sono stati.
@@ -56,6 +61,9 @@ class Impostazioni {
   /// fotogramma. Una plancia che si muove sempre pesa meno cosi'.
   bool get composizioneIbrida => _composizioneIbrida && _android;
 
+  /// Il volto e l'impronta davanti all'app: cosa e' acceso.
+  IlLucchetto get lucchetto => _lucchetto;
+
   bool get sulTelefono => _sulTelefono;
   bool get android => _android;
   bool get caricate => _caricate;
@@ -76,6 +84,9 @@ class Impostazioni {
           if (letto['composizione_ibrida'] is bool) {
             _composizioneIbrida = letto['composizione_ibrida'] as bool;
           }
+          if (letto['lucchetto'] != null) {
+            _lucchetto = IlLucchetto.daQuelloCheCEra(letto['lucchetto']);
+          }
         }
       }
     } catch (_) {
@@ -85,8 +96,16 @@ class Impostazioni {
     _avvisa();
   }
 
-  Future<void> metti({bool? planciaLeggera, bool? composizioneIbrida}) async {
+  Future<void> metti({
+    bool? planciaLeggera,
+    bool? composizioneIbrida,
+    IlLucchetto? lucchetto,
+  }) async {
     var cambiato = false;
+    if (lucchetto != null) {
+      _lucchetto = lucchetto;
+      cambiato = true;
+    }
     if (planciaLeggera != null && planciaLeggera != _planciaLeggera) {
       _planciaLeggera = planciaLeggera;
       cambiato = true;
@@ -102,6 +121,7 @@ class Impostazioni {
       jsonEncode({
         'plancia_leggera': _planciaLeggera,
         'composizione_ibrida': _composizioneIbrida,
+        'lucchetto': _lucchetto.comeSiScrive,
       }),
     );
   }
@@ -114,6 +134,7 @@ class Impostazioni {
     else
       inLingua(it: 'plancia piena', en: 'full dashboard'),
     if (_android) composizioneIbrida ? 'ibrida' : 'tessitura',
+    if (_lucchetto.acceso) inLingua(it: 'lucchetto', en: 'lock'),
   ].join(', ');
 
   void _avvisa() {
