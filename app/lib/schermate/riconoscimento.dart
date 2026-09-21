@@ -350,7 +350,7 @@ class _IRiquadri extends StatelessWidget {
             quale: quali[quale],
             tinta: tinta,
             scuro: scuro,
-            ritardo: Duration(milliseconds: quale * 950),
+            sfasatura: quale * 0.5,
           ),
         ],
       ],
@@ -363,14 +363,22 @@ class _UnRiquadro extends StatefulWidget {
     required this.quale,
     required this.tinta,
     required this.scuro,
-    required this.ritardo,
+    required this.sfasatura,
   });
 
   /// `null` quando non c'e' ne' volto ne' impronta: resta il codice.
   final ComeRiconosce? quale;
   final Color tinta;
   final bool scuro;
-  final Duration ritardo;
+
+  /// Di quanto questo battito e' indietro sull'altro, da zero a uno.
+  ///
+  /// Un numero e non un'attesa: due riquadri che pulsano insieme sembrano un
+  /// lampeggio, due sfasati sembrano due strade che aspettano — ma farlo
+  /// partire in ritardo vorrebbe dire un'attesa gia' partita che non si
+  /// annulla, e un timer appeso a una schermata gia' chiusa. Qui il battito
+  /// parte subito per tutti e due, e a spostarsi e' il punto da cui si legge.
+  final double sfasatura;
 
   @override
   State<_UnRiquadro> createState() => _UnRiquadroState();
@@ -386,11 +394,7 @@ class _UnRiquadroState extends State<_UnRiquadro>
   @override
   void initState() {
     super.initState();
-    /* Sfasati: due riquadri che pulsano insieme sembrano un lampeggio, due
-     * sfasati sembrano due strade che aspettano. */
-    Future<void>.delayed(widget.ritardo, () {
-      if (mounted) _battito.repeat();
-    });
+    _battito.repeat();
   }
 
   @override
@@ -406,7 +410,9 @@ class _UnRiquadroState extends State<_UnRiquadro>
     return AnimatedBuilder(
       animation: _battito,
       builder: (context, figlio) {
-        final quanto = Curves.easeOut.transform(_battito.value);
+        final quanto = Curves.easeOut.transform(
+          (_battito.value + widget.sfasatura) % 1.0,
+        );
         return Container(
           width: 108,
           height: 108,

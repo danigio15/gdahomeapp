@@ -224,6 +224,17 @@ void main() {
       isTrue,
     );
     expect(find.text('Adesso tocca a te'), findsOneWidget);
+    /* L'anello si misura su per quanto era aperta all'inizio, non su quanto
+     * resta adesso: tarandolo su se stesso resterebbe **fermo a pieno** per
+     * tutto il tempo, perché il numero sopra e quello sotto sarebbero sempre
+     * lo stesso. Appena aperta è pieno, ed è giusto. */
+    final anello = tester.widget<CircularProgressIndicator>(
+      find.descendant(
+        of: find.byType(Stack),
+        matching: find.byType(CircularProgressIndicator),
+      ),
+    );
+    expect(anello.value, closeTo(1, 0.05));
     expect(find.text('Sto ascoltando la casa'), findsOneWidget);
     expect(find.text('Richiudi la rete adesso'), findsOneWidget);
     /* Il conto alla rovescia è quello del ponte, non un cronometro locale:

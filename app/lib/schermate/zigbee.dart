@@ -105,6 +105,13 @@ class _SchermataZigbeeState extends State<SchermataZigbee> {
   /// Quello che e' entrato e che si sta sistemando.
   DispositivoEntrato? _suo;
 
+  /// Per quanto era aperta quando si e' cominciato a guardarla.
+  ///
+  /// L'anello si misura su questo e non su quanto resta adesso: tarandolo su
+  /// se stesso resterebbe **fermo a pieno** per tutto il tempo, perche' il
+  /// numero sopra e quello sotto sarebbero sempre lo stesso.
+  int _erano = 0;
+
   /// Un tasto premuto e non ancora finito: si spegne, cosi' non lo si preme
   /// due volte mentre il primo tocco e' ancora per strada.
   bool _inCorso = false;
@@ -157,7 +164,12 @@ class _SchermataZigbeeState extends State<SchermataZigbee> {
     if (!mounted) return;
     setState(() {
       _stato = adesso;
-      if (adesso.aperta && _passo == _Passo.porta) _passo = _Passo.attesa;
+      if (adesso.aperta && _passo == _Passo.porta) {
+        _passo = _Passo.attesa;
+        /* Aperta da prima: il quanto non si sa — l'ha aperta un'altra
+         * sessione — e allora il massimo e' quello che si vede adesso. */
+        _erano = adesso.restano;
+      }
     });
     if (_passo == _Passo.attesa) _ascolta();
   }
@@ -214,6 +226,7 @@ class _SchermataZigbeeState extends State<SchermataZigbee> {
       if (!mounted) return;
       setState(() {
         _stato = adesso;
+        _erano = adesso.restano;
         _passo = _Passo.attesa;
       });
       _ascolta();
@@ -327,6 +340,7 @@ class _SchermataZigbeeState extends State<SchermataZigbee> {
             ),
             _Passo.attesa => _LAttesa(
               stato: _stato,
+              erano: _erano,
               inCorso: _inCorso,
               quandoChiude: _chiudi,
             ),
@@ -464,11 +478,15 @@ class _LaPorta extends StatelessWidget {
 class _LAttesa extends StatelessWidget {
   const _LAttesa({
     required this.stato,
+    required this.erano,
     required this.inCorso,
     required this.quandoChiude,
   });
 
   final StatoDellaRete stato;
+
+  /// Per quanto era aperta all'inizio: e' su questo che si misura l'anello.
+  final int erano;
   final bool inCorso;
   final VoidCallback quandoChiude;
 
@@ -479,7 +497,7 @@ class _LAttesa extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _IlConto(restano: stato.restano),
+        _IlConto(restano: stato.restano, erano: erano),
         const SizedBox(height: 20),
         Scheda(
           padding: const EdgeInsets.all(20),
@@ -574,16 +592,17 @@ class _LAttesa extends StatelessWidget {
 
 /// Il conto alla rovescia, con l'anello che si svuota.
 class _IlConto extends StatelessWidget {
-  const _IlConto({required this.restano});
+  const _IlConto({required this.restano, required this.erano});
 
   final int restano;
 
-  /// Su quanto si misura l'anello.
+  /// Per quanto era aperta all'inizio.
   ///
-  /// Sul piu' lungo visto finora, non su un numero scritto qui: per quanto si
-  /// apra lo decide il ponte, e un anello tarato su quattro minuti davanti a
-  /// una rete aperta per dieci partirebbe mezzo vuoto.
-  static const _quantoAlMassimo = 240;
+  /// Per quanto si apra lo decide il ponte, e un anello tarato su un numero
+  /// scritto qui davanti a una rete aperta per dieci minuti partirebbe mezzo
+  /// vuoto. Zero — non si sa — vale come «pieno»: meglio un anello fermo di
+  /// uno che comincia da meta'.
+  final int erano;
 
   @override
   Widget build(BuildContext context) {
@@ -591,10 +610,9 @@ class _IlConto extends StatelessWidget {
     final testi = Theme.of(context).textTheme;
     final minuti = restano ~/ 60;
     final secondi = (restano % 60).toString().padLeft(2, '0');
-    final quanto = restano <= 0
-        ? 0.0
-        : (restano / (restano > _quantoAlMassimo ? restano : _quantoAlMassimo))
-              .clamp(0.0, 1.0);
+    final quanto = restano <= 0 || erano <= 0
+        ? (restano > 0 ? 1.0 : 0.0)
+        : (restano / erano).clamp(0.0, 1.0);
     return Center(
       child: SizedBox(
         width: 208,
