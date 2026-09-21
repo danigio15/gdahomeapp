@@ -123,6 +123,13 @@ const TYPE_ICONS = Object.freeze({
   scaldabagno: "mdi:water-boiler",
   toaster: "mdi:toaster",
   tostapane: "mdi:toaster",
+  /* I fornelli da banco (#71). I nomi in due lingue perche' questa tabella
+   * legge il nome che l'apparecchio ha in Home Assistant, e quello lo scrive
+   * chi abita la casa: «Friggitrice cucina» e «Air fryer» sono la stessa
+   * macchina. */
+  air_fryer: "mdi:air-fryer",
+  airfryer: "mdi:air-fryer",
+  friggitrice: "mdi:air-fryer",
   coffee_machine: "mdi:coffee-maker",
   coffee_maker: "mdi:coffee-maker",
   caffe: "mdi:coffee-maker",
