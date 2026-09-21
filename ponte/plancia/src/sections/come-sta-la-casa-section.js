@@ -200,6 +200,10 @@ function parolaDelConto(chiave, conto, modello = null) {
     return uno ? t("presa accesa", "socket on") : t("prese accese", "sockets on");
   if (chiave === "porte") return uno ? t("porta aperta", "door open") : t("porte aperte", "doors open");
   if (chiave === "varchi") return uno ? t("varco aperto", "opening open") : t("varchi aperti", "openings open");
+  /* «In una stanza c'e' qualcuno» — la stanza, non il rilevatore: e' il posto
+   * che la tessera conta, ed e' la risposta che uno cerca passando davanti. */
+  if (chiave === "presenza")
+    return uno ? t("stanza occupata", "room busy") : t("stanze occupate", "rooms busy");
   if (chiave === "stampanti")
     return uno
       ? t("stampante da guardare", "printer to check")
@@ -872,6 +876,7 @@ const NOMI_DELLE_VOCI = () => ({
   clima: t("Clima", "Climate"),
   prese: t("Prese", "Sockets"),
   media: t("Musica", "Media"),
+  presenza: t("Presenza", "Presence"),
   temperatura: t("Temperatura", "Temperature"),
   umidita: t("Umidità", "Humidity"),
   pioggia: t("Pioggia adesso", "Rain now"),

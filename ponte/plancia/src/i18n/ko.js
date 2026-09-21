@@ -3293,6 +3293,8 @@ export default Object.freeze({
   "reads": "읽습니다",
   "remaining time": "남은 시간",
   "reply": "답변",
+  "room busy": "방 사용 중",
+  "rooms busy": "방 사용 중",
   "running": "가동 중",
   "says": "의 값",
   "schedule off": "일정 꺼짐",

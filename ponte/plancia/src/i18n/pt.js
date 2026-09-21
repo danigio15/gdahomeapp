@@ -3293,6 +3293,8 @@ export default Object.freeze({
   "reads": "lê",
   "remaining time": "tempo restante",
   "reply": "resposta",
+  "room busy": "divisão ocupada",
+  "rooms busy": "divisões ocupadas",
   "running": "a funcionar",
   "says": "diz",
   "schedule off": "programação desativada",

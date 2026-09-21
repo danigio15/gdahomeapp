@@ -4084,6 +4084,10 @@ function presenzaModel(states) {
       ? conto.nomi.join(" · ")
       : t(`Casa libera · ${conto.liberi}`, `Nobody around · ${conto.liberi}`),
     ring: conto.totale ? Math.round((conto.attivi / conto.totale) * 100) : null,
+    /* I posti occupati, per la pastiglia sotto il meteo (#73). Sono già
+     * raggruppati — una stanza con tre rilevatori è una stanza — e la barra
+     * legge questo campo invece di rifare il conto sulle righe. */
+    occupate: conto.nomi,
     rows: righe.map((riga) => ({
       entity: riga.entity,
       name: riga.name,

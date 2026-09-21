@@ -3293,6 +3293,8 @@ export default Object.freeze({
   "reads": "पढ़ता है",
   "remaining time": "शेष समय",
   "reply": "जवाब",
+  "room busy": "कमरा व्यस्त",
+  "rooms busy": "कमरे व्यस्त",
   "running": "चल रहा है",
   "says": "कहता है",
   "schedule off": "समय-सारणी बंद",

@@ -3293,6 +3293,8 @@ export default Object.freeze({
   "reads": "okur",
   "remaining time": "kalan süre",
   "reply": "yanıt",
+  "room busy": "oda dolu",
+  "rooms busy": "oda dolu",
   "running": "çalışıyor",
   "says": "diyor",
   "schedule off": "program kapalı",

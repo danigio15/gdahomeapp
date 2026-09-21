@@ -3293,6 +3293,8 @@ export default Object.freeze({
   "reads": "读取",
   "remaining time": "剩余时间",
   "reply": "回复",
+  "room busy": "个房间有人",
+  "rooms busy": "个房间有人",
   "running": "运行中",
   "says": "的值是",
   "schedule off": "计划已关",

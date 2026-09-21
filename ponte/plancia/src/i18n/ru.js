@@ -3293,6 +3293,8 @@ export default Object.freeze({
   "reads": "читает",
   "remaining time": "оставшееся время",
   "reply": "ответ",
+  "room busy": "комната занята",
+  "rooms busy": "комнаты заняты",
   "running": "работает",
   "says": "говорит",
   "schedule off": "расписание выключено",

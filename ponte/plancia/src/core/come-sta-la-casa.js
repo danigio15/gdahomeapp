@@ -67,6 +67,15 @@ export const VOCI_DELLA_BARRA = Object.freeze([
   Object.freeze({ chiave: "clima", tessera: "clima" }),
   Object.freeze({ chiave: "prese", tessera: "prese" }),
   Object.freeze({ chiave: "media", tessera: "media" }),
+  /* La presenza (#73): «si potrebbe una pastiglia sotto al meteo?», chiesto
+   * dalla sezione Presenza.
+   *
+   * Sta qui e non fra le notizie di sopra per la stessa ragione per cui la sua
+   * tessera non si accende mai: qualcuno in casa non e' un allarme, e' la
+   * normalita'. E' uno stato della casa come le luci accese e le tapparelle
+   * alzate, e si legge dove si leggono quelli — non dove si legge che
+   * l'antifurto sta suonando. */
+  Object.freeze({ chiave: "presenza", tessera: "presenza" }),
   /* Le due misure stanno in fondo, e non e' un dettaglio (#461).
    *
    * «Sarebbe possibile inserire temperatura e umidita' di sensori personali?
@@ -136,6 +145,15 @@ const ACCESE = Object.freeze({
    * rifiltrano le righe. */
   porte: "open",
   varchi: "open",
+  /* I posti occupati, che la tessera ha gia' contato: una stanza con tre
+   * rilevatori resta una stanza, e rifare quel raggruppamento qui vorrebbe
+   * dire due regole su cosa e' «un posto».
+   *
+   * Sono NOMI di stanze, non righe con un'entita' dentro, e percio' questa
+   * pastiglia non ha l'elenco «tocca per spegnere» che hanno le luci: una
+   * stanza non si spegne. Toccandola si apre la sua tessera, dove le stanze
+   * occupate stanno scritte una per una. */
+  presenza: "occupate",
 });
 
 /** La configurazione della barra, ripulita: quali voci si vedono e la cassetta. */

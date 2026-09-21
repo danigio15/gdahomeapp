@@ -3293,6 +3293,8 @@ export default Object.freeze({
   "reads": "読み取り",
   "remaining time": "残り時間",
   "reply": "返事",
+  "room busy": "部屋に人あり",
+  "rooms busy": "部屋に人あり",
   "running": "稼働中",
   "says": "の値",
   "schedule off": "スケジュール停止",
