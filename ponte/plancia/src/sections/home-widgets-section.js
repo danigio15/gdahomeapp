@@ -42,6 +42,9 @@ import {
 } from "./security-showcase-section.js";
 import { parolaDellaPorta, parolaDiStato } from "./le-parole-di-home-assistant.js";
 import { haOggettoWidget, oggettoWidget } from "../core/oggetti-widget.js";
+import { chiNonRisponde } from "../core/chi-non-risponde.js";
+import { entitaConfigurate } from "../core/entita-configurate.js";
+import { CONFIG_KEYS } from "../core/chiavi-di-configurazione.js";
 import { iconGlyphMarkup } from "./icon-engine-section.js";
 import {
   bricioleDellaSezione,
@@ -3690,6 +3693,29 @@ function rowsDetail(widget) {
     .join("");
 }
 
+/* L'elenco di chi non risponde: nome e da quanto tace, e nient'altro.
+ *
+ * Niente interruttore accanto, e non per dimenticanza: `rowsDetail` disegna
+ * solo le righe comandabili, e queste per definizione non si comandano — un
+ * tasto su una presa irraggiungibile e' un tasto che non fa niente, cioe' la
+ * cosa da cui questa tessera dovrebbe mettere al riparo.
+ *
+ * Nemmeno un tasto «apri sezione»: quello che c'e' da fare — riavvicinare un
+ * ripetitore, togliere e rimettere corrente alla presa — si fa fuori dalla
+ * plancia, e una promessa che la plancia non puo' mantenere e' peggio del
+ * silenzio. */
+function nonRispondeDetail(widget) {
+  return (widget.rows || [])
+    .map((riga) =>
+      rowShell(
+        `<span class="dm-w-glyph" data-on="false" aria-hidden="true">${esc(riga.glyph || "📡")}</span>
+         <span class="dm-w-name">${esc(riga.name)}<small>${esc(riga.entity)}</small></span>
+         <span class="dm-w-pill" data-tono="allarme">${esc(riga.value)}</span>`,
+      ),
+    )
+    .join("");
+}
+
 /* Il lettore, dentro la finestra della tessera (#269).
  *
  * La stessa copertina e gli stessi tasti della pagina, in piccolo: i tasti li
@@ -4992,6 +5018,73 @@ export function paroleDelleFontiMute(quante) {
   return t(`${n} fonti non rispondono`, `${n} sources not responding`);
 }
 
+/* Chi non risponde: la tessera che compare solo quando c'è qualcosa che non va.
+ *
+ * «Un widget che compare quando almeno una delle entità mappate in gdahome
+ * diventa Non Disponibile. Ho dei comandi domotici in giardino che ogni tanto,
+ * causa segnale wifi non sufficiente, vanno in offline: avere l'avviso mi
+ * allerta di ripristinarli per evitare che la pompa ad esempio resti ferma
+ * troppo a lungo» (#33).
+ *
+ * È il guasto più cattivo che una casa domotica abbia, perché è muto: una
+ * presa che sparisce non fa rumore, la sua tessera resta con l'ultimo valore
+ * che aveva, e uno se ne accorge quando la piscina è verde.
+ *
+ * `null` quando risponde tutto, ed è il punto: questa tessera non è una che si
+ * accende e si spegne, è una che NON C'È finché non c'è niente da dire. Una
+ * tessera verde fissa che dice «tutto a posto» diventa invisibile in una
+ * settimana, e il giorno che diventa rossa nessuno la guarda più.
+ *
+ * Non ha una sezione dove andare: quello che c'è da fare — riaccendere il
+ * ripetitore, riavvicinare la presa — si fa fuori dalla plancia. Perciò la
+ * finestra elenca e basta, e non promette un tasto che non esiste. */
+function nonRispondeModel(states) {
+  let configurate = [];
+  try {
+    configurate = [...entitaConfigurate(root, CONFIG_KEYS)];
+  } catch (_errore) {
+    return null;
+  }
+  const fuori = widgetExcludedEntities("nonrisponde");
+  const mute = chiNonRisponde(
+    configurate.filter((entity) => widgetIncludes(entity, fuori)),
+    states,
+    { nomeDi: (entity) => friendlyName(states, entity) },
+  );
+  if (!mute.length) return null;
+  return {
+    key: "nonrisponde",
+    accent: "#dc2626",
+    icon: "📡",
+    alert: true,
+    label: t("Non rispondono", "Not answering"),
+    value: String(mute.length),
+    caption: mute.map((una) => una.nome).join(" · "),
+    ring: null,
+    attiva: true,
+    rows: mute.map((una) => ({
+      glyph: "📡",
+      name: una.nome,
+      entity: una.entity,
+      tono: "allarme",
+      value: daQuandoTace(una.da),
+    })),
+  };
+}
+
+/* Da quanto tace, in parole. Cinque minuti è un riavvio di Home Assistant e
+ * passa da solo; due giorni è una presa da andare a premere — ed è la sola
+ * cosa che distingue le due, quindi si dice. */
+function daQuandoTace(quando) {
+  if (!quando) return t("non risponde", "not answering");
+  const minuti = Math.max(0, Math.round((Date.now() - quando) / 60000));
+  if (minuti < 60) return t(`da ${minuti} min`, `for ${minuti} min`);
+  const ore = Math.round(minuti / 60);
+  if (ore < 48) return t(`da ${ore} h`, `for ${ore} h`);
+  const giorni = Math.round(ore / 24);
+  return t(`da ${giorni} giorni`, `for ${giorni} days`);
+}
+
 function allerteModel(states) {
   const config = readJson(CHIAVE_ALLERTE, {});
   if (!categorieConfigurate(config).length) return null;
@@ -5298,6 +5391,7 @@ export function modelliDelleTessere(states) {
       poolModel(states),
       preseModel(states),
       mediaModel(states),
+      nonRispondeModel(states),
       allerteModel(states),
       rifiutiModel(states),
       vmcModel(states),
@@ -7083,6 +7177,35 @@ function verdettoEFrase(widget) {
       <div class="dm-w-misura"><b>${esc(clean(widget.value))}</b><small>${esc(clean(widget.caption))}</small></div>
     </section>`;
   }
+  /* Chi non risponde ha la sua frase, per la stessa ragione dell'aria (#33).
+   * Il motore generico conta le cose accese e in funzione: sopra due prese
+   * sparite usciva «2 cose, nessuna in funzione», che e' vero di qualcos'altro
+   * — quelle non sono ferme, sono irraggiungibili, e la differenza e' tutta.
+   * Qui il verdetto dice di guardare e la frase dice cosa manca, con da
+   * quanto: cinque minuti e' un riavvio, due giorni e' una presa da andare a
+   * premere. */
+  if (widget?.key === "nonrisponde") {
+    const righe = Array.isArray(widget.rows) ? widget.rows : [];
+    const frase =
+      righe.length === 1
+        ? t(
+            `«${righe[0].name}» non risponde ${righe[0].value}.`,
+            `“${righe[0].name}” is not answering ${righe[0].value}.`,
+          )
+        : t(
+            `${righe.length} cose non rispondono: Home Assistant le ha in casa e non riesce a parlarci.`,
+            `${righe.length} things are not answering: Home Assistant has them but cannot reach them.`,
+          );
+    /* «guarda» e' il tono rosso, ed e' quello giusto: una presa irraggiungibile
+     * non e' una cosa «in corso», e' una cosa rotta. La parola la da' il
+     * nucleo, cosi' resta la stessa di tutte le altre tessere che dicono la
+     * stessa gravita'. */
+    return `<section class="dm-w-racconto" data-dm-verdetto="guarda">
+      <span class="dm-w-verdetto">${esc(parolaDelVerdetto("guarda", t))}</span>
+      <p class="dm-w-frase">${esc(frase)}</p>
+      <div class="dm-w-misura"><b>${esc(clean(widget.value))}</b><small>${esc(t("non rispondono", "not answering"))}</small></div>
+    </section>`;
+  }
   /* La batteria che si carica cambia la domanda della sezione Energia: si
    * vuole sapere quando sara' piena. Il soggetto lo decide chi disegna, che
    * conosce i numeri di adesso, e il motore ci si adegua. */
@@ -7345,6 +7468,7 @@ function detailRows(widget, states) {
     ].includes(widget.key)
   )
     return rowsDetail(widget);
+  if (widget.key === "nonrisponde") return nonRispondeDetail(widget);
   if (widget.key === "media") return mediaDetail(widget);
   if (widget.key === "batterie") return batteriesDetail(widget);
   if (widget.key === "allagamenti") return floodDetail(widget);

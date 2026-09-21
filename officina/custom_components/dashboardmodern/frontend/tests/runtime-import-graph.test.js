@@ -1285,6 +1285,9 @@ test("production graph is single-owner, acyclic and contains no facade pass-thro
   // vuota, e quando manca davvero si dice quale delle due caselle è. Gli altri
   // che toccano quel tasto — la valvola TRV, il clima rapido, la VMC — gli
   // attaccano ciascuno la propria casella, e questa è la loro stessa forma.
+  // 364 con chi non risponde (#33): il modello di «cosa e' andato offline» e
+  // l'elenco delle entita' configurate, che era dentro il cancello degli stati
+  // e adesso e' di tutti e due — una risposta sola per due domande.
   // 362 con le unita' del tempo (#9): «il mio UPS (CyberPower) mostra il tempo
   // residuo in secondi invece dei minuti». L'unita' non e' da chiedere, sta
   // nell'entita' — ma il vocabolario che la legge lo usano in due, chi scrive
@@ -1293,7 +1296,7 @@ test("production graph is single-owner, acyclic and contains no facade pass-thro
   // lo impara una sola delle due. E' un file in piu' perche' e' un vocabolario,
   // e un vocabolario ha un posto solo.
   assert.ok(
-    relative.length <= 362,
+    relative.length <= 364,
     `production graph unexpectedly grew to ${relative.length} modules`,
   );
   assertAcyclic(edges);

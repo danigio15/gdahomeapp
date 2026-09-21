@@ -14,7 +14,13 @@ const energyCalculations = await read("../src/sections/energy-calculations-secti
 const dataContracts = await read("../src/sections/data-contracts-section.js");
 
 test("live HA event gate filters against configured dashboard entities", () => {
-  assert.match(stateGate, /configuredEntities/);
+  /* L'elenco delle entità configurate adesso sta in un modulo suo
+   * (`core/entita-configurate.js`): la stessa risposta serviva a due domande —
+   * quale stato vale un ridisegno, e chi non risponde (#33) — e una copia a
+   * mano di un elenco così resta indietro. Il cancello la chiede, non se la
+   * tiene. */
+  assert.match(stateGate, /entitaConfigurate/);
+  assert.match(stateGate, /from "\.\/entita-configurate\.js"/);
   assert.match(stateGate, /configured\.size && !configured\.has\(id\)/);
 });
 
