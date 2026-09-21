@@ -558,6 +558,8 @@ export const SOURCE_INDEX = Object.freeze({
   "Alberi (facoltativo)": "Tree (optional)",
   "Alcune schede sono elenchi — Luci, Prese, Telecamere — e lì un'entità in più si è sempre potuta aggiungere. Altre sono fatte di caselle con un ruolo preciso: l'Energia ha una rete e un fotovoltaico, la Sicurezza una centrale, e per un sensore in più non c'era posto. Qui c'è: scegli l'entità, in quale scheda farla comparire, come chiamarla e con che icona. Compare in fondo alla pagina che scegli, e quelle che si accendono si accendono.": "Some pages are lists — Lights, Sockets, Cameras — and there you could always add one more entity. Others are made of boxes with a set role: Energy has a grid and a solar array, Security an alarm panel, and there was no place for one more sensor. Here there is: pick the entity, which page it should appear on, what to call it and with which icon. It shows up at the bottom of the page you choose, and the ones that switch, switch.",
   "Alette": "Swing",
+  "Alette orizzontali": "Horizontal swing",
+  "Alette verticali": "Vertical swing",
   "Alimentazione": "Power supply",
   "All'indirizzo manca un segnaposto: servono tutti e tre — {z} per l'ingrandimento, {x} e {y} per il quadratino. Con uno solo si chiederebbe sempre lo stesso pezzo di mondo.": "The address is missing a placeholder: all three are needed — {z} for the zoom, {x} and {y} for the tile. With only one it would always ask for the same piece of the world.",
   "All'uscita c'è": "At the outlet there is",

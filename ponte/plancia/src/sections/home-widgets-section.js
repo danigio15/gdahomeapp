@@ -1002,6 +1002,16 @@ function rigaClima(states, unit) {
      * alette non le muove non dichiara niente, e la riga non compare. */
     alette: elenco(attributi.swing_modes),
     aletta: clean(attributi.swing_mode),
+    /* E le alette orizzontali (#56): «i miei climatizzatori hanno alette sia
+     * verticali che orizzontali, al momento vengono visti solo i comandi per
+     * le alette verticali». Home Assistant pubblica il secondo asse con la
+     * stessa forma del primo — `swing_horizontal_modes` accanto a
+     * `swing_modes` — e lo comanda con `set_swing_horizontal_mode`. Qui,
+     * come sopra, non c'e' nessun motore nuovo: c'e' l'altra meta' di quello
+     * che l'unita' dichiara gia'. Chi ha un asse solo non dichiara il
+     * secondo, e la riga non compare. */
+    aletteOrizzontali: elenco(attributi.swing_horizontal_modes),
+    alettaOrizzontale: clean(attributi.swing_horizontal_mode),
     /* Fin dove il pannello lascia andare l'obiettivo: la scala e' quella che
      * l'unita' dichiara, e la regola sta nel nucleo insieme a quella della
      * pagina Clima — erano due copie della stessa cosa, e una delle due si
@@ -6050,20 +6060,38 @@ function climatePanel(row, solo = false) {
           .join("")}</div>
       </div>`
     : "";
-  const aletteMarkup = row.alette?.length
-    ? `<div class="dm-w-panel-row">
-        <span class="dm-w-panel-lbl">${esc(t("Alette", "Swing"))}</span>
-        <div class="dm-w-chips">${row.alette
+  /* Una riga per asse, e i nomi si qualificano solo quando c'e' da
+   * distinguere: chi ha un asse solo continua a leggere «Alette», come ha
+   * sempre fatto. Il secondo asse dice sempre il suo nome, perche' «Alette»
+   * da solo, su una macchina che muove il getto di lato, direbbe la cosa
+   * sbagliata. */
+  const dueAssi = Boolean(row.alette?.length && row.aletteOrizzontali?.length);
+  const rigaDelleAlette = (voci, scelta, etichetta, campo) =>
+    voci?.length
+      ? `<div class="dm-w-panel-row">
+        <span class="dm-w-panel-lbl">${esc(etichetta)}</span>
+        <div class="dm-w-chips">${voci
           .map(
             (voce) =>
-              `<button type="button" class="dm-w-chip" data-dm-w-swing="${esc(voce)}"
-                 data-dm-w-target="${esc(row.entity)}" data-on="${voce === row.aletta}">${esc(
+              `<button type="button" class="dm-w-chip" ${campo}="${esc(voce)}"
+                 data-dm-w-target="${esc(row.entity)}" data-on="${voce === scelta}">${esc(
                    voce,
                  )}</button>`,
           )
           .join("")}</div>
       </div>`
-    : "";
+      : "";
+  const aletteMarkup = `${rigaDelleAlette(
+    row.alette,
+    row.aletta,
+    dueAssi ? t("Alette verticali", "Vertical swing") : t("Alette", "Swing"),
+    "data-dm-w-swing",
+  )}${rigaDelleAlette(
+    row.aletteOrizzontali,
+    row.alettaOrizzontale,
+    t("Alette orizzontali", "Horizontal swing"),
+    "data-dm-w-swing-h",
+  )}`;
   const azione = NOMI_AZIONE()[row.azione] || "";
   const noteMarkup =
     azione || row.umidita != null
@@ -8535,6 +8563,17 @@ function onClick(event) {
     callHa("climate", "set_swing_mode", {
       entity_id: clean(aletta.dataset.dmWTarget),
       swing_mode: clean(aletta.dataset.dmWSwing),
+    });
+    root.setTimeout?.(schedule, 500);
+    return;
+  }
+  /* L'altro asse ha il suo servizio, non un parametro in piu' di questo. */
+  const alettaOrizzontale = event.target?.closest?.("[data-dm-w-swing-h]");
+  if (alettaOrizzontale) {
+    event.preventDefault();
+    callHa("climate", "set_swing_horizontal_mode", {
+      entity_id: clean(alettaOrizzontale.dataset.dmWTarget),
+      swing_horizontal_mode: clean(alettaOrizzontale.dataset.dmWSwingH),
     });
     root.setTimeout?.(schedule, 500);
     return;
