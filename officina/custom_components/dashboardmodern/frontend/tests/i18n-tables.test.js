@@ -61,6 +61,12 @@ const REACHED_OTHERWISE = new Set([
    * Temperatura e Umidità — che stanno in `src/core/il-grafico-delle-stanze.js`,
    * anche lui fra i cataloghi importati e anche lui con le righe `{ it, en }`. */
   "temperature-trend-section.js",
+  /* E il foglietto «Dove lo metto?» scrive i nomi delle otto sezioni che
+   * possono accogliere un dispositivo appena abbinato: stanno in
+   * `src/core/dove-lo-metto.js` — anche lui fra i cataloghi importati, e con le
+   * righe `{ it, en }` — e sei delle otto le prende a sua volta dall'elenco
+   * delle sezioni, che è dove quella parola sta già. */
+  "dove-lo-metto-section.js",
 ]);
 
 /* L'elenco si legge dal sorgente, non si importa: l'estrattore riscrive i file

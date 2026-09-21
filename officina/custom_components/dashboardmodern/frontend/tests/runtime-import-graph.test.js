@@ -1333,8 +1333,18 @@ test("production graph is single-owner, acyclic and contains no facade pass-thro
   // 371 con la sezione che le disegna, che invece il deposito e il documento li
   // tocca entrambi: legge tre chiavi, ridisegna la scheda del guscio e rimette
   // in fila le righe delle stanze.
+  // 372 con «dove lo metto» (#54): un dispositivo appena abbinato dall'app e'
+  // in Home Assistant e nella plancia non c'e'. In che sezione va — e cosa ci
+  // finira' scritto — e' una regola su un dominio e una classe, e si prova su
+  // un'entita' finta senza un browser. Ci sta anche la forma che ogni sezione
+  // vuole, che e' il motivo per cui questo passo non lo fa l'app: le luci sono
+  // una mappa con le stanze in una mappa a parte, le prese un elenco di righe,
+  // il clima un elenco che porta anche di che tipo e'. Scritte dall'altra
+  // parte sarebbero tre forme scritte due volte.
+  // 373 con il foglietto che le disegna e le salva, che invece il deposito e
+  // il documento li tocca.
   assert.ok(
-    relative.length <= 371,
+    relative.length <= 373,
     `production graph unexpectedly grew to ${relative.length} modules`,
   );
   assertAcyclic(edges);
