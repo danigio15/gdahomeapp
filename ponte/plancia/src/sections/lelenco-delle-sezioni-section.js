@@ -27,6 +27,7 @@
  * proprio: una preferenza scritta due volte è una preferenza che prima o poi
  * si contraddice.
  */
+import { rememberManualVisibility } from "./beta26-real-device-stability-section.js";
 import {
   SEZIONI,
   quanteAccese,
@@ -133,6 +134,30 @@ export function ensureElencoDelleSezioni() {
  * preferenza sola — e vuol dire che il giorno in cui quella scrittura cambia,
  * cambia anche qui senza che nessuno se ne ricordi. */
 function accendiOSpegni(chiave) {
+  /* Prima di girare l'interruttore si lascia detto che a girarlo e' stata una
+   * persona. «Quando seleziono di non vederlo nella barra non scompare, rimane
+   * li'» (#68).
+   *
+   * Nella mappa delle visibilita' un `false` vuol dire due cose opposte: «non
+   * l'ho ancora configurata», che ci scrive la procedura iniziale, oppure «non
+   * la voglio vedere», che ci scrive chi preme. La passata che accende le
+   * sezioni configurate — quella che corre a ogni salvataggio — le
+   * distinguerebbe benissimo, perche' il segno esiste gia'; solo che a
+   * scriverlo era un ascolto sul documento, e quell'ascolto guarda una cosa
+   * sola: se il bottone premuto porta un `data-key`. La fascia verde dentro la
+   * scheda di una sezione ce l'ha; l'interruttore di questo elenco no — porta
+   * il suo `data-dm-sezione-int` — e per giunta qui `edSecTog` lo si chiama a
+   * mano, senza nessun clic che risalga.
+   *
+   * Cosi' una sezione con delle entita' mappate — il MiniPC, misurato — si
+   * spegneva, e al primo salvataggio tornava su. Non si allarga quell'ascolto
+   * con un terzo motivo da indovinare: lo dice chi la decisione ce l'ha in
+   * mano, che e' questo elenco, e lo dice con la stessa funzione che usa la
+   * fascia. In tutt'e due i versi: aver acceso a mano e' una decisione quanto
+   * aver spento, e la riparazione non deve tornare su nessuna delle due. */
+  try {
+    rememberManualVisibility(chiave);
+  } catch (_error) {}
   const finto = doc.createElement("span");
   finto.setAttribute("data-key", chiave);
   try {
