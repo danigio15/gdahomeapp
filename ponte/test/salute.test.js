@@ -37,20 +37,53 @@ const REGISTRI = {
   ],
 };
 
-test("chi non risponde si conta; chi non ha ancora detto niente no", () => {
+test("un apparecchio e' giu' quando tace tutto, non quando tace una sua entita'", () => {
+  /* Il guasto che ha fatto saltare il riquadro in casa di chi installa:
+   * quarantatre' «dispositivi non collegati» quasi tutti accesi. La prova sta
+   * nella scheda di uno switch UniFi — stato «Connesso», in casa, CPU al 5,7%
+   * — con «Port 1 power cycle» e «Port 4 power cycle» col tasto grigio: su
+   * quelle porte non c'e' attaccato niente, quindi UniFi pubblica quei due
+   * pulsanti `unavailable`. Due entita' su venti, e lo switch finiva fra i
+   * guasti.
+   *
+   * Qui la presa del garage ne ha una muta e una che aspetta la prima misura,
+   * e la sonda della cantina una muta e una accesa: nessuna delle due e'
+   * irraggiungibile, e Home Assistant con tutt'e due ci parla. */
   const conto = leEntita(
     [
       stato("light.cucina", "on"),
       stato("sensor.uno", "unavailable"),
       /* `unknown` e' un sensore appena riavviato che aspetta la prima misura:
-       * normalissimo, e non e' un dispositivo sparito. */
+       * normalissimo, e non e' un dispositivo sparito — quindi risponde. */
       stato("sensor.due", "unknown"),
       stato("sensor.tre", "unavailable"),
     ],
     { registri: REGISTRI },
   );
   assert.equal(conto.totali, 4);
+  assert.equal(conto.giu, 0);
+  assert.equal(conto.dispositivi, 0);
+});
+
+test("e quando tacciono tutte, quello si', con le sue entita' contate", () => {
+  /* La sonda della cantina staccata davvero: tutte e due le sue entita' mute
+   * insieme, che e' come si presenta un apparecchio irraggiungibile. La presa
+   * del garage intanto parla, e non deve comparire. */
+  const conto = leEntita(
+    [
+      stato("sensor.uno", "on"),
+      stato("sensor.due", "unavailable"),
+      stato("sensor.tre", "unavailable"),
+      stato("light.cucina", "unavailable"),
+    ],
+    { registri: REGISTRI },
+  );
+  assert.equal(conto.totali, 4);
+  /* Due: le entita' della sonda. Quella muta della presa non si conta, se no
+   * il numero parlerebbe di un insieme e i nomi di un altro. */
   assert.equal(conto.giu, 2);
+  assert.equal(conto.dispositivi, 1);
+  assert.deepEqual(conto.nomi, ["Sonda cantina"]);
 });
 
 test("un aiutante che non risponde non e' un dispositivo non collegato", () => {
@@ -233,13 +266,20 @@ test("una batteria sparita non e' una batteria scarica: la conta gia' l'altra sp
     batteria("sensor.altra", 90),
   ];
   assert.deepEqual(leBatterie(stati), { scariche: 0, piuBassa: 90 });
+  /* E la conta l'altra spia, quella degli apparecchi: la serratura sparita
+   * tace tutta, la sonda accanto parla, e solo la prima finisce nell'elenco.
+   * Due dispositivi e non uno, perche' una sola entita' muta su un apparecchio
+   * che per il resto risponde non e' un guasto. */
   assert.equal(
     leEntita(stati, {
       registri: {
-        dispositivi: [{ id: "d1", name: "Serratura" }],
+        dispositivi: [
+          { id: "d1", name: "Serratura" },
+          { id: "d2", name: "Sonda ingresso" },
+        ],
         entita: [
           { entity_id: "sensor.una", device_id: "d1" },
-          { entity_id: "sensor.altra", device_id: "d1" },
+          { entity_id: "sensor.altra", device_id: "d2" },
         ],
       },
     }).giu,
