@@ -43,6 +43,14 @@ export function tabellaDegliStati() {
     charging: t("In carica", "Charging"),
     heat: t("Riscalda", "Heating"),
     cool: t("Raffresca", "Cooling"),
+    /* Gli altri modi di un condizionatore. Stanno qui e non in chi disegna,
+     * come gli altri: sono stati di Home Assistant, e una seconda tabella per
+     * gli stessi stati e' esattamente il modo in cui la stessa macchina finiva
+     * per dire «Raffredda» in una pagina e «Raffresca» in quella accanto. */
+    heat_cool: t("Automatico", "Auto"),
+    auto: t("Automatico", "Auto"),
+    dry: t("Deumidifica", "Drying"),
+    fan_only: t("Solo ventola", "Fan only"),
     locked: t("Chiuso a chiave", "Locked"),
     unlocked: t("Sbloccato", "Unlocked"),
   };

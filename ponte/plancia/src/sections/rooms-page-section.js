@@ -42,7 +42,8 @@ import {
 } from "../core/room-overview.js";
 import { CHIAVE_VERSI, insiemeInvertiti } from "../core/verso-aperture.js";
 import { apriIlMenu } from "./azioni-servizio-giusto-section.js";
-import { climatePanelMarkup } from "./home-widgets-section.js";
+import { dipingiLeCardDelClima, laCardDelClima } from "./climate-thermal-section.js";
+import { parolaDiStato } from "./le-parole-di-home-assistant.js";
 import { pageCardMarkup } from "./lights-page-section.js";
 import { comandiMediaMarkup } from "./media-player-section.js";
 import { azioniDellaPorta } from "../core/security-door-model.js";
@@ -336,15 +337,10 @@ function nomeVoce(item, states) {
 
 /* Cosa sta facendo, in una parola. La pagina di ogni sezione lo racconta per
  * esteso; qui serve il colpo d'occhio, e per il resto c'e' la sua pagina. */
-/* Come si dicono i modi del clima, che Home Assistant manda in inglese secco. */
-const MODI_CLIMA = Object.freeze({
-  cool: ["Raffredda", "Cooling"],
-  heat: ["Riscalda", "Heating"],
-  heat_cool: ["Automatico", "Auto"],
-  auto: ["Automatico", "Auto"],
-  dry: ["Deumidifica", "Drying"],
-  fan_only: ["Solo ventola", "Fan only"],
-});
+/* I modi del clima si dicono con le parole di tutti: stavano anche qui, e
+ * dicevano «Raffredda» dove la pagina Clima dice «Raffresca» — la stessa
+ * macchina con due parole a due dita di distanza. Adesso la tabella e' una
+ * sola, quella di `le-parole-di-home-assistant.js`. */
 
 /* Cosa sta facendo, in una parola.
  *
@@ -395,8 +391,10 @@ function statoVoce(item, states, blocco = "") {
     if (stato === "opening") return t("In apertura", "Opening");
     if (stato === "closing") return t("In chiusura", "Closing");
   }
-  const modo = MODI_CLIMA[stato];
-  if (blocco === "clima" && modo) return t(modo[0], modo[1]);
+  if (blocco === "clima") {
+    const modo = parolaDiStato(stato);
+    if (modo !== stato) return modo;
+  }
   if (blocco === "media") return cosaSuona(item, states);
   if (stato === "on") return t("Acceso", "On");
   if (stato === "off") return t("Spento", "Off");
@@ -763,7 +761,10 @@ function comandiDellaVoce(item, blocco, states) {
     );
     return riga.muto ? "" : comandiMediaMarkup(riga);
   }
-  if (blocco.key === "clima") return climatePanelMarkup(entity);
+  /* Il clima non passa piu' di qui: nella stanza c'e' la card della pagina
+   * Clima (#11), che i comandi ce li ha suoi — il meno, il piu', lo
+   * spegnimento e il tasto che apre i modi. Il pannello qui dentro era il modo
+   * di dare comandi a una riga che comandi non ne aveva. */
   return "";
 }
 
@@ -808,6 +809,25 @@ export function blockMarkup(blocco, states) {
    * si lascia senza dove, che e' la verita'. Mandare in Home chi non sa dove
    * andare e' stato per un anno il difetto piu' segnalato di questa pagina. */
   const conTab = { ...blocco, tab: TAB_DI[blocco.key] ?? "" };
+  /* Il clima ha la sua card, ed e' quella della pagina Clima (#11): «la tessera
+   * del clima nella stanza ha uno stile diverso da quella della pagina Clima».
+   * Non una somigliante — la stessa funzione, chiamata da qui — senza la riga
+   * della stanza, che dentro la stanza direbbe il nome che c'e' gia' in cima.
+   *
+   * Un'unita' che la configurazione del clima non conosce non ce l'ha: quella
+   * resta una riga come tutte le altre, che e' la verita' su quello che sa la
+   * plancia di lei. */
+  if (blocco.key === "clima") {
+    const aperture = aperturePerEntita();
+    const carte = blocco.voci
+      .map((item) => {
+        const propria = laCardDelClima(entitaVoce(item), { stanza: false });
+        return propria || rowMarkup(item, conTab, states, aperture);
+      })
+      .join("");
+    return `<h2 class="dm-stanze-h"><span>${esc(nomeBlocco(blocco))}</span><span class="dm-stanze-n">${blocco.voci.length}</span></h2>
+    <div class="dm-stanze-grid dm-stanze-grid-clima">${carte}</div>`;
+  }
   const card =
     blocco.key === "luci" || blocco.key === "prese"
       ? blocco.voci
@@ -914,6 +934,11 @@ function paint() {
   if (firma !== state.signature) {
     state.signature = firma;
     wrap.innerHTML = roomPageMarkup(pagine, state.room, states);
+    /* Le card del clima nascono spente: il disegno porta i trattini, i numeri
+     * li mette chi dipinge. E' lo stesso mestiere e lo stesso codice della
+     * pagina Clima (#11), chiamato sul pezzo di documento che questa passata ha
+     * appena scritto. */
+    dipingiLeCardDelClima(wrap);
     return;
   }
   /* Struttura uguale: si riscrivono solo i valori. Rifare l'HTML a ogni giro
@@ -939,6 +964,9 @@ function paint() {
     );
     if (node.textContent !== testo) node.textContent = testo;
   }
+  /* E i gradi delle card del clima, che non sono un `textContent` ma una barra,
+   * una legenda e un colore: li rimette chi li sa mettere. */
+  dipingiLeCardDelClima(wrap);
 }
 
 function repaint() {
@@ -1213,6 +1241,13 @@ function installStyles() {
       #page-stanze .dm-stanze-n{flex:0 0 auto;order:0;padding:2px 9px;border:1px solid var(--divider-color,#dbe4ee);border-radius:999px;font-size:10px;letter-spacing:.6px}
 
       #page-stanze .dm-stanze-grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(min(258px,100%),1fr))}
+      /* Il clima tiene la griglia a tutte le larghezze (#11): sopra i 900px la
+         griglia delle stanze diventa una fila flessibile, e le sue misure sono
+         scritte per la card delle stanze. Quella del clima e' un'altra card — e'
+         quella della pagina Clima — e in quella fila resterebbe senza larghezza,
+         stretta quanto il suo contenuto. */
+      #page-stanze .dm-stanze-grid-clima{display:grid!important;
+        grid-template-columns:repeat(auto-fit,minmax(min(258px,100%),1fr))}
       #page-stanze .dm-stanze-card{position:relative;display:grid;align-content:start;overflow:hidden;border:1px solid var(--divider-color,#dbe4ee);border-radius:22px;background:linear-gradient(180deg,var(--card-bg,#fff) 0%,color-mix(in srgb,#94a3b8 4%,var(--card-bg,#fff)) 100%);box-shadow:0 16px 32px -24px rgba(15,23,42,.45)}
       #page-stanze .dm-stanze-card-row{display:flex;align-items:center;gap:12px;padding:14px}
       #page-stanze .dm-stanze-orb{display:grid;place-items:center;flex:0 0 auto;width:50px;height:50px;border-radius:17px;background:linear-gradient(160deg,var(--secondary-background-color,#eef3f8),color-mix(in srgb,#94a3b8 14%,var(--secondary-background-color,#eef3f8)));font-size:24px;line-height:1}

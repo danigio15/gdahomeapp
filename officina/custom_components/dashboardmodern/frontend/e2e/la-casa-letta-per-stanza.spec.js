@@ -92,8 +92,10 @@ test("ogni stanza porta quello che le appartiene, e le sue luci sono le card ver
   await expect(page.locator("#page-stanze [data-dm-lucip-brightness]")).toHaveCount(2);
   await expect(page.locator("#page-stanze")).toContainText("TV Salotto");
   await expect(page.locator("#page-stanze")).toContainText(/Prese|Plugs/);
-  // E il clima parla italiano, non `cool`.
-  await expect(page.locator("#page-stanze")).toContainText(/Raffredda|Cooling/);
+  // E il clima parla italiano, non `cool` — con la parola di tutti: qui diceva
+  // «Raffredda» e la pagina Clima «Raffresca», la stessa macchina con due
+  // parole a due dita di distanza (#11).
+  await expect(page.locator("#page-stanze")).toContainText(/Raffresca|Cooling/);
   await expect(page.locator("#page-stanze")).toContainText("29.2°");
 
   // Un'altra stanza, un altro contenuto: la cucina ha una luce e un elettrodomestico.
@@ -306,23 +308,34 @@ test("il lettore e il clima si comandano dalla stanza, senza cambiare pagina", a
    * porta alla pagina Musica, e mettere in pausa voleva dire andarsene. */
   await expect(page.locator("#page-stanze")).toHaveClass(/active/);
 
-  /* Il clima porta il suo pannello, quello vero della finestra del Clima. */
-  const clima = page.locator('#page-stanze [data-dm-stanza-entita="climate.salone"]');
-  await expect(clima.locator("[data-dm-w-panel]")).toHaveCount(1);
+  /* Il clima porta la sua card, quella vera della pagina Clima (#11): i comandi
+   * li ha addosso — il meno, il piu' e lo spegnimento — e non sono un pannello
+   * appeso sotto una riga che comandi non ne aveva. */
+  const clima = page.locator('#page-stanze .dm-cl-card[data-dm-cl="climate.salone"]');
+  await expect(clima).toHaveCount(1);
+  await expect(clima.locator(".dm-cl-step")).toHaveCount(2);
+  await expect(clima.locator("[data-dm-cl-pwr]")).toHaveCount(1);
+  /* E alzare di un grado non porta via dalla stanza, come per il lettore. */
+  await clima.locator(".dm-cl-step").nth(1).click();
+  await expect(page.locator("#page-stanze")).toHaveClass(/active/);
 });
 
-/* «Card clima sezione stanze non si vede» (dal campo).
+/* «Card clima sezione stanze non si vede» (dal campo), e poi «la tessera del
+ * clima nella stanza ha uno stile diverso da quella della pagina Clima» (#11).
  *
- * Il pannello c'era — la prova qui sopra lo trovava — ma usciva NUDO: le
- * modalità erano bottoni di sistema squadrati, incolonnati uno sull'altro, e
- * il testo sbordava dalla card. Le sue regole cominciavano tutte con l'elenco
- * delle due finestre che allora lo ospitavano, e dentro la card di una stanza
- * nessuno dei due antenati c'è.
+ * Sono la stessa segnalazione a due mesi di distanza. La prima volta il
+ * pannello usciva NUDO dentro la card della stanza, perché le sue regole
+ * cominciavano tutte con l'elenco delle finestre che allora lo ospitavano. La
+ * seconda volta il pannello era vestito ma la card intorno era un'altra: la
+ * riga generica che la pagina Stanze dà a qualunque cosa.
  *
- * Trovarlo nel documento non basta a dire che si vede: qui si chiede al
- * browser come l'ha disegnato, ed è l'unica domanda che quel difetto sente.
+ * Adesso la card è quella, la stessa funzione chiamata da lì, e il difetto da
+ * temere è sempre lo stesso: i colori di questa card stanno addosso al guscio
+ * della pagina Clima, e un guscio, dentro una stanza, non c'è. Trovarla nel
+ * documento non basta a dire che si vede: qui si chiede al browser come l'ha
+ * disegnata, ed è l'unica domanda che quel difetto sente.
  */
-test("il pannello del clima nella stanza è vestito e sta dentro la card", async ({
+test("la card del clima nella stanza è quella della pagina Clima, e si vede", async ({
   page,
 }, testInfo) => {
   await apri(page, testInfo);
@@ -342,38 +355,39 @@ test("il pannello del clima nella stanza è vestito e sta dentro la card", async
     window.dispatchEvent(new CustomEvent("dashboardmodern:states-ready", { detail: {} }));
   });
   await page.locator('#page-stanze [data-dm-stanza="room-salone"]').click();
-  const clima = page.locator('#page-stanze [data-dm-stanza-entita="climate.salone"]');
-  await expect(clima.locator("[data-dm-w-panel] .dm-w-chip").first()).toBeVisible();
+  const clima = page.locator('#page-stanze .dm-cl-card[data-dm-cl="climate.salone"]');
+  await expect(clima).toBeVisible();
 
-  const visto = await clima.evaluate((card) => {
-    const pannello = card.querySelector("[data-dm-w-panel]");
-    const riga = pannello.querySelector(".dm-w-panel-row");
-    const pastiglia = pannello.querySelector(".dm-w-chip");
-    const etichetta = pannello.querySelector(".dm-w-panel-lbl");
-    const cr = card.getBoundingClientRect();
-    /* Si misura la RIGA e non il pannello: la rientranza è un `padding`, e il
-     * padding non muove il riquadro dell'elemento — muove quello che ci sta
-     * dentro, che è poi quello che si vede. */
-    const pr = riga.getBoundingClientRect();
-    return {
-      riga: getComputedStyle(riga).display,
-      raggio: getComputedStyle(pastiglia).borderRadius,
-      maiuscole: getComputedStyle(etichetta).textTransform,
-      /* Il guscio delle due finestre non deve seguirlo qui: la card c'è già, e
-       * un riquadro dentro il riquadro è una cornice di troppo. */
-      bordo: getComputedStyle(pannello).borderTopWidth,
-      sx: pr.x - cr.x,
-      dx: cr.right - pr.right,
-    };
-  });
-  /* Nudo, la riga era un `div` in blocco e la pastiglia un bottone squadrato:
-   * sono esattamente le due cose che si vedevano nella foto. */
-  expect(visto.riga).toBe("flex");
-  expect(visto.raggio).toBe("999px");
-  expect(visto.maiuscole).toBe("uppercase");
-  expect(visto.bordo).toBe("0px");
-  /* E sta dentro la card, rientrato come tutto il resto invece che attaccato
-   * al bordo — dove l'angolo arrotondato lo tagliava. */
-  expect(visto.sx).toBeGreaterThanOrEqual(10);
-  expect(visto.dx).toBeGreaterThanOrEqual(10);
+  /* I numeri li mette chi dipinge, e nella stanza deve passare di lì come nella
+   * pagina Clima: una card disegnata e mai dipinta resta a trattini. */
+  await expect(clima.locator("[data-dm-cl-target]")).toHaveText(/24/);
+  await expect(clima.locator("[data-dm-cl-ambient]")).toHaveText(/26/);
+
+  /* Si ridomanda finche' non torna una risposta di una card viva: la pagina
+   * Stanze si ridisegna a ogni mazzetto di stati, e una misura presa sul nodo
+   * che il giro precedente ha staccato torna vuota — non sbagliata, vuota. */
+  const comeSiVede = () =>
+    clima.evaluate((card) => {
+      const suo = getComputedStyle(card);
+      const sfondo = suo.getPropertyValue("background-color");
+      const bordo = Number.parseFloat(suo.getPropertyValue("border-top-width"));
+      const raggio = Number.parseFloat(suo.getPropertyValue("border-top-left-radius"));
+      const griglia = card.closest(".dm-stanze-grid");
+      const cr = card.getBoundingClientRect();
+      const gr = griglia?.getBoundingClientRect() || { x: 0, right: 0 };
+      return {
+        /* Senza i suoi nomi di colore la card si disegnerebbe trasparente: e'
+         * esattamente il difetto che la prima segnalazione fotografava. */
+        dipinta: Boolean(sfondo) && sfondo !== "rgba(0, 0, 0, 0)" && bordo > 0 && raggio > 10,
+        /* La riga della stanza: dentro la stanza il suo nome c'e' gia' in
+         * cima, e ripeterlo su ogni card e' rumore. */
+        stanza: card.querySelectorAll(".dm-cl-meta").length,
+        /* E ci sta dentro la griglia, larga come una card e non come il suo
+         * contenuto: sopra i 900px la griglia delle stanze diventa una fila
+         * flessibile, e li' una card che non sia `.dm-stanze-card` resterebbe
+         * senza larghezza. */
+        dentro: cr.x - gr.x >= -0.5 && gr.right - cr.right >= -0.5 && cr.width > 200,
+      };
+    });
+  await expect.poll(comeSiVede).toEqual({ dipinta: true, stanza: 0, dentro: true });
 });
