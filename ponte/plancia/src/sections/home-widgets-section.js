@@ -7689,9 +7689,20 @@ export function renderHomeWidgets() {
      * configurazione azzerata — restava li' aperto sopra una Home vuota, coi
      * comandi di una cosa che non esiste piu', e lo scorrimento della pagina
      * bloccato da lui. Se ne va con quello che raccontava. */
-    if (state.expanded || doc?.documentElement?.classList?.contains("dm-widget-popup-open"))
-      chiudiPopup();
-    else fermaTimerTelecamere();
+    /* Anche qui: si chiude quello che non esiste piu', non quello che e'
+     * soltanto spento nella scheda Widget. Con tutte le tessere spente la
+     * Home non ha griglia — e infatti l'ospite se ne va — ma una finestra
+     * aperta per nome da un'azione rapida (#25) ha ancora cosa raccontare, e
+     * qui veniva richiusa un istante dopo essersi aperta. */
+    const esisteAncora =
+      state.expanded && tutti.some((widget) => widget.key === state.expanded);
+    if (!esisteAncora) {
+      if (state.expanded || doc?.documentElement?.classList?.contains("dm-widget-popup-open"))
+        chiudiPopup();
+      else fermaTimerTelecamere();
+      return false;
+    }
+    sincronizzaPopup(tutti, states);
     return false;
   }
   const mounted = host || ensureHost();
@@ -7759,7 +7770,16 @@ export function renderHomeWidgets() {
     if (mounted.dataset.dmMood !== stato) mounted.dataset.dmMood = stato;
   }
 
-  if (state.expanded && !models.some((widget) => widget.key === state.expanded))
+  /* Una finestra aperta su una tessera che non esiste piu' si chiude: la
+   * tessera aveva dei dati e non ne ha piu', e lasciarla aperta vorrebbe dire
+   * una finestra che racconta il niente.
+   *
+   * Si guarda se la tessera ESISTE, non se e' accesa nella scheda Widget:
+   * quella e' una scelta su cosa mostrare in Home, non su cosa puo' aprire un
+   * tasto. Un'azione rapida che qualcuno ha aggiunto apposta — «Popup TUTTE
+   * le prese» (#25) — apre la sua finestra anche se quella tessera dalla Home
+   * l'ha tolta, e prima veniva richiusa qui il giro dopo. */
+  if (state.expanded && !tutti.some((widget) => widget.key === state.expanded))
     state.expanded = "";
   const grid = mounted.querySelector(".dm-widgets-grid");
   if (!grid) return false;
@@ -7927,7 +7947,12 @@ export function renderHomeWidgets() {
   }
 
   if (cambiato) scorriDidascalie(grid);
-  sincronizzaPopup(models, states);
+  /* Tutti i modelli, non solo quelli accesi nella scheda Widget: la finestra
+   * si apre anche per nome (`apriLaTessera`), e un'azione rapida che qualcuno
+   * ha aggiunto apposta deve fare quello che dice anche se la sua tessera
+   * dalla Home e' stata tolta. Per chi tocca la tessera non cambia niente —
+   * si puo' toccare solo quello che si vede. */
+  sincronizzaPopup(tutti, states);
 
   for (const list of configuredTodoLists()) fetchItems(list.entity);
   aggiornaCalendari();
@@ -8340,6 +8365,35 @@ function sincronizzaTimerTelecamere() {
 }
 
 /* ── interazione ──────────────────────────────────────────────────────── */
+
+/* Aprire una tessera per nome, senza toccarla.
+ *
+ * «Si potrebbe inserire nelle Azioni rapide un popup di tutte le prese?»
+ * (#25). Una finestra delle prese la plancia ce l'ha gia': e' quella della
+ * tessera Prese, con l'elenco, lo stato di ognuna e i suoi comandi. Quello
+ * che mancava era il modo di aprirla da un tasto che non e' la tessera.
+ *
+ * Quindi non una seconda finestra delle prese — che sarebbe la stessa cosa
+ * disegnata due volte, e alla prima modifica se ne aggiusterebbe una sola —
+ * ma una porta: si dice il nome della tessera, e si apre la sua.
+ *
+ * Risponde `false` se quella tessera non c'e': una casa senza prese
+ * configurate non ha niente da mostrare, e chi ha premuto deve poterlo
+ * sapere invece di restare davanti a un tasto che non fa niente. */
+export function apriLaTessera(chiave) {
+  const nome = clean(chiave);
+  if (!nome) return false;
+  let esiste = false;
+  try {
+    esiste = modelliDelleTessere(allStates()).some((tessera) => tessera.key === nome);
+  } catch (_errore) {
+    esiste = false;
+  }
+  if (!esiste) return false;
+  state.expanded = nome;
+  schedule();
+  return true;
+}
 
 function toggleExpand(key) {
   const prossimo = state.expanded === key ? "" : clean(key);
@@ -10204,6 +10258,10 @@ export function installHomeWidgetsSection() {
      * dov'era finche' non cambia qualcos'altro. */
     for (const list of configuredTodoLists()) fetchItems(list.entity, { force: true });
   });
+  /* La porta per aprire una tessera da fuori: la usa l'azione rapida delle
+   * prese, e chiunque altro abbia un tasto che deve mostrare quello che una
+   * tessera mostra gia'. */
+  root.dmApriTessera = apriLaTessera;
   doc.addEventListener("click", onClick);
   bindEscape();
   doc.addEventListener("change", onChange);

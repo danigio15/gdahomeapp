@@ -3551,6 +3551,7 @@ export default Object.freeze({
   "🔌 Connect Home Assistant": "🔌 Home Assistant'ı bağla",
   "🔌 Monitored total": "🔌 İzlenen toplam",
   "🔌 Other": "🔌 Diğer",
+  "🔌 Popup ALL sockets": "🔌 TÜM prizlerle pencere",
   "🔌 Spent on grid": "🔌 Şebekeye harcanan",
   "🔌 Spent this year": "🔌 Bu yıl harcanan",
   "🔍 SENSOR DEBUG": "🔍 SENSÖR TANILAMA",

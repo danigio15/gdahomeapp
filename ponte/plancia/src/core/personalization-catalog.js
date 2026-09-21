@@ -862,6 +862,10 @@ export function actionCatalogMatch(value) {
 export const AZIONI_DI_SERIE = Object.freeze({
   luci: "mdi:lightbulb-group",
   luci_group: "mdi:lightbulb-group",
+  /* Quello del catalogo DELLE AZIONI, non quello dei carichi: da qui si deve
+   * arrivare a un disegno, e un segno che quel catalogo non conosce farebbe
+   * ripiegare sull'emoji di sistema — diversa su ogni telefono. */
+  prese: "mdi:power-plug",
   clima: "mdi:snowflake",
   antifurto: "mdi:shield-home",
   lavatrice: "mdi:washing-machine",

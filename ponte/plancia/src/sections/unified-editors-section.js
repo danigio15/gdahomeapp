@@ -46,6 +46,7 @@ const state = (root[KEY] ||= { installed: false });
  * «multimediale (#269)» — gli sembra una chiamata di funzione. */
 const ACTION_TYPES = Object.freeze([
   ["builtin_luci", "Gestione Luci", "Lights control"],
+  ["builtin_prese", "Prese", "Sockets"],
   ["builtin_clima", "Clima", "Climate"],
   ["builtin_antifurto", "Antifurto", "Alarm"],
   ["builtin_lavatrice", "Lavatrice", "Washing machine"],

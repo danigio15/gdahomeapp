@@ -3551,6 +3551,7 @@ export default Object.freeze({
   "🔌 Connect Home Assistant": "🔌 Home Assistant 연결",
   "🔌 Monitored total": "🔌 계측 합계",
   "🔌 Other": "🔌 기타",
+  "🔌 Popup ALL sockets": "🔌 모든 콘센트 팝업",
   "🔌 Spent on grid": "🔌 계통 전력 지출",
   "🔌 Spent this year": "🔌 올해 지출",
   "🔍 SENSOR DEBUG": "🔍 센서 진단",

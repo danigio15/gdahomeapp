@@ -2261,7 +2261,7 @@ function wzRender() {
             <div style="display:flex; gap:8px; margin-bottom:8px;">
               <select id="wz-qa-type" class="wz-input" style="margin-bottom:0; flex:0 0 44%;" onchange="wzQaTypeChanged()">
                 <option value="luci_group">💡 Popup luci — scegli TU le luci</option>
-                <option value="builtin_luci">💡 Popup TUTTE le luci</option><option value="builtin_clima">❄️ Popup Clima</option>
+                <option value="builtin_luci">💡 Popup TUTTE le luci</option><option value="builtin_prese">🔌 Popup TUTTE le prese</option><option value="builtin_clima">❄️ Popup Clima</option>
                 <option value="builtin_antifurto">🛡️ Popup Antifurto</option><option value="builtin_lavatrice">🧺 Popup Lavatrice</option>
                 <option value="toggle">🔀 Toggle entità</option><option value="script">📜 Script</option><option value="scene">🎬 Scena</option>
               </select>
@@ -3716,6 +3716,7 @@ function editorRenderSezioni() {
               <select id="ed-qa-type" class="ed-input" style="flex:0 0 40%;" onchange="edQaTypeChanged()">
                 <option value="luci_group">💡 Popup luci — scegli TU le luci</option>
                 <option value="builtin_luci">💡 Popup TUTTE le luci</option>
+                <option value="builtin_prese">🔌 Popup TUTTE le prese</option>
                 <option value="builtin_clima">❄️ Popup Clima</option>
                 <option value="builtin_antifurto">🛡️ Popup Antifurto</option>
                 <option value="builtin_lavatrice">🧺 Popup Lavatrice</option>
@@ -4779,8 +4780,23 @@ document.addEventListener('webkitfullscreenchange', syncFullscreenExitState);
 
 /* ═══ v261: AZIONI RAPIDE dinamiche — configurabili da UI (cd_quick_actions) ═══
    Tipi: builtin (popup nativi), toggle (switch/light), script, scene. */
+/* Apre la finestra delle prese: quella della tessera, per nome.
+   Se quella tessera non c'e' — nessuna presa configurata in questa casa — si
+   va dove si configurano, invece di lasciare un tasto che non fa niente. */
+function apriTuttePrese() {
+    try { if (window.dmApriTessera && window.dmApriTessera('prese')) return; } catch(e) {}
+    try {
+        var voce = document.querySelector('.tab[data-tab="prese"]');
+        if (voce && voce.style.display !== 'none') voce.click();
+    } catch(e) {}
+}
 const CD_QA_BUILTINS = {
     luci:      { name: 'Gestione Luci', icon: '💡', color: '#f59e0b', fn: () => apriGestioneLuci(true) },
+    /* Le prese: la finestra e' quella della tessera Prese, non una seconda.
+       La plancia ne ha gia' una — elenco, stato di ognuna, i suoi comandi — e
+       farne un'altra vorrebbe dire la stessa cosa disegnata due volte, con una
+       sola delle due aggiustata alla prima modifica. */
+    prese:     { name: 'Prese', icon: '🔌', color: '#475569', fn: () => apriTuttePrese() },
     clima:     { name: 'Clima',         icon: '❄️', color: '#0ea5e9', fn: () => apriQuickClima() },
     antifurto: { name: 'Antifurto',     icon: '🛡️', color: '#7c3aed', fn: () => apriQuickAntifurto() },
     lavatrice: { name: 'Lavatrice',     icon: '🧺', color: '#0ea5e9', fn: () => apriPopupLavatrice() },

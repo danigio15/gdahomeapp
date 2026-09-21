@@ -3551,6 +3551,7 @@ export default Object.freeze({
   "🔌 Connect Home Assistant": "🔌 Home Assistant に接続",
   "🔌 Monitored total": "🔌 計測対象の合計",
   "🔌 Other": "🔌 その他",
+  "🔌 Popup ALL sockets": "🔌 すべてのコンセントのポップアップ",
   "🔌 Spent on grid": "🔌 系統電力の支出",
   "🔌 Spent this year": "🔌 今年の支出",
   "🔍 SENSOR DEBUG": "🔍 センサー診断",

@@ -241,6 +241,7 @@ export const MESSAGE_KEYS = Object.freeze([
   "🔌 Connect Home Assistant",
   "🔌 Monitored total",
   "🔌 Other",
+  "🔌 Popup ALL sockets",
   "🔌 Spent on grid",
   "🔌 Spent this year",
   "🔍 Search (e.g. water, door, fire)…",

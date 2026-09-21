@@ -3551,6 +3551,7 @@ export default Object.freeze({
   "🔌 Connect Home Assistant": "🔌 Połącz Home Assistanta",
   "🔌 Monitored total": "🔌 Monitorowana suma",
   "🔌 Other": "🔌 Inne",
+  "🔌 Popup ALL sockets": "🔌 Okienko ze WSZYSTKIMI gniazdkami",
   "🔌 Spent on grid": "🔌 Wydane na sieć",
   "🔌 Spent this year": "🔌 Wydane w tym roku",
   "🔍 SENSOR DEBUG": "🔍 DIAGNOSTYKA CZUJNIKÓW",

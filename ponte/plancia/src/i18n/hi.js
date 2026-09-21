@@ -3551,6 +3551,7 @@ export default Object.freeze({
   "🔌 Connect Home Assistant": "🔌 Home Assistant जोड़ें",
   "🔌 Monitored total": "🔌 निगरानी में कुल",
   "🔌 Other": "🔌 अन्य",
+  "🔌 Popup ALL sockets": "🔌 सभी सॉकेट वाला पॉपअप",
   "🔌 Spent on grid": "🔌 ग्रिड पर खर्च",
   "🔌 Spent this year": "🔌 इस साल खर्च",
   "🔍 SENSOR DEBUG": "🔍 सेंसर जाँच",
