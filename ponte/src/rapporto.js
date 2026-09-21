@@ -50,7 +50,7 @@
  * farebbe di chi mantiene l'app il custode dei dati di case di altri.
  */
 
-import { gliAddon, gliApparati, laMacchina, laRete } from "./ferro.js";
+import { gliAddon, gliApparati, laMacchina, laRete, leCaselleDelMiniPc } from "./ferro.js";
 import { ilSegnoDi } from "./segni.js";
 import { ilBackup, leBatterie, leEntita } from "./salute.js";
 import { PROFILI_AL_MASSIMO, profiloBuono, senzaFlussi } from "./plancia-da-lontano.js";
@@ -491,7 +491,25 @@ export function fabbricaIlRapporto({
           : (detto?.host?.operating_system ?? ""),
       },
       macchina: detto
-        ? laMacchina({ os: detto.os, host: detto.host, stati: quelli ?? [], adesso })
+        ? laMacchina({
+            os: detto.os,
+            host: detto.host,
+            stati: quelli ?? [],
+            /* Quali sensori legge la plancia per CPU, RAM e temperatura.
+             *
+             * Chi ha compilato a mano la sezione MiniPC li vedeva sulla
+             * plancia e non nel cruscotto: il ponte cercava solo i nomi di
+             * serie di System Monitor, che in quella casa non ci sono. La
+             * mappatura sta nello scatto della plancia, e il ponte lo tiene
+             * gia' — non si chiede niente a nessuno, si guarda dove e' scritto.
+             *
+             * Vale lo scatto del profilo principale: e' la plancia di casa.
+             * Non c'entra l'interruttore della configurazione, che decide se
+             * lo scatto VIAGGIA al quadro; qui si legge in casa, e fuori va
+             * il numero come e' sempre andato. */
+            mappate: leCaselleDelMiniPc(configurazione?.leggi?.()?.snapshot?.values),
+            adesso,
+          })
         : null,
       rete: detto?.network
         ? laRete({ network: detto.network, filoSu: chiamata?.accesa === true })

@@ -60,6 +60,60 @@ const DOVE_STA = Object.freeze({
   acceso: ["sensor.system_monitor_last_boot", "sensor.last_boot", "sensor.uptime"],
 });
 
+/* E dove le tiene chi le ha mappate a mano.
+ *
+ * La sezione MiniPC della plancia ha una casella per ognuno di quei numeri, e
+ * chi la compila ci mette l'entita' che la SUA casa pubblica — Glances, un
+ * ESPHome, un sensore costruito a mano, un System Monitor con i nomi
+ * cambiati. Quella mappatura il ponte ce l'ha gia': e' dentro lo scatto della
+ * plancia, sotto `cd_entity_overrides`, e la tiene lui (`configurazione.js`).
+ *
+ * Non guardarla voleva dire questo: «ho inserito manualmente i dati della
+ * sezione, ma da cruscotto installatore non escono le informazioni». La
+ * plancia mostrava CPU, RAM e temperatura, e il quadro diceva «non
+ * comunicato» sugli stessi tre numeri — perche' cercava solo i nomi di serie
+ * di System Monitor. Il disco arrivava, e non per fortuna: quello lo dice il
+ * Supervisor e non ha bisogno che nessuno configuri niente.
+ *
+ * Quello che viaggia non cambia: viaggiano i numeri, come prima. Il nome
+ * dell'entita' serve qui, in casa, per sapere quale sensore leggere, e di qui
+ * non esce. */
+const MAPPATE_DA = Object.freeze({
+  cpu: "dm.server_cpu",
+  ram: "dm.server_ram",
+  temperatura: "dm.server_temperatura_cpu",
+});
+
+/**
+ * Le tre caselle del MiniPC, lette dallo scatto di una plancia.
+ *
+ * `valori` e' la mappa chiave→testo dello scatto: i valori sono come li ha
+ * scritti il browser, cioe' JSON dentro una stringa. Uno scatto senza quella
+ * chiave, o scritto male, non e' un errore — e' una casa che quelle caselle
+ * non le ha compilate, e si risponde con niente.
+ */
+export function leCaselleDelMiniPc(valori) {
+  const dentro = valori && typeof valori === "object" ? valori : null;
+  if (!dentro) return {};
+  let mappa = dentro.cd_entity_overrides;
+  if (typeof mappa === "string") {
+    try {
+      mappa = JSON.parse(mappa);
+    } catch (_male) {
+      return {};
+    }
+  }
+  if (!mappa || typeof mappa !== "object") return {};
+  const fuori = {};
+  for (const [quale, casella] of Object.entries(MAPPATE_DA)) {
+    const entita = pulito(mappa[casella]);
+    /* Una casella vuota e una scritta male valgono uguale: non si e' capito
+     * quale sensore leggere, e si ricade sui nomi di serie. */
+    if (entita.includes(".")) fuori[quale] = entita;
+  }
+  return fuori;
+}
+
 const GIORNO = 24 * 60 * 60 * 1000;
 
 const pulito = (valore) => String(valore ?? "").trim();
@@ -111,7 +165,21 @@ export function laScheda(board, sistema = "") {
  * `disk_used`, `disk_free` — e la percentuale si fa qui invece di chiederla,
  * perche' lui quella non la dice.
  */
-export function laMacchina({ os = null, host = null, stati = [], adesso = () => Date.now() } = {}) {
+export function laMacchina({
+  os = null,
+  host = null,
+  stati = [],
+  /* Le caselle che chi abita ha compilato nella plancia, da `leCaselleDelMiniPc`.
+   * Vuote in una casa che non le ha toccate, ed e' il caso di quasi tutte. */
+  mappate = {},
+  adesso = () => Date.now(),
+} = {}) {
+  /* Prima quella che ha scelto chi abita, poi i nomi di serie: chi ha mappato
+   * a mano lo ha fatto perche' i nomi di serie in casa sua non ci sono. */
+  const dove = (quale) => {
+    const scelta = pulito(mappate?.[quale]);
+    return scelta ? [scelta, ...DOVE_STA[quale]] : DOVE_STA[quale];
+  };
   const totale = numero(host?.disk_total);
   const usato = numero(host?.disk_used);
   const liberi = numero(host?.disk_free);
@@ -123,10 +191,10 @@ export function laMacchina({ os = null, host = null, stati = [], adesso = () => 
     scheda: laScheda(os?.board, host?.operating_system),
     /* Tre numeri che ci sono solo dove c'e' System Monitor. `null` non e'
      * zero, e il quadro li mostra diversi. */
-    cpu: percento(daiSensori(stati, DOVE_STA.cpu)?.state),
-    ram: percento(daiSensori(stati, DOVE_STA.ram)?.state),
+    cpu: percento(daiSensori(stati, dove("cpu"))?.state),
+    ram: percento(daiSensori(stati, dove("ram"))?.state),
     temperatura: (() => {
-      const letta = numero(daiSensori(stati, DOVE_STA.temperatura)?.state);
+      const letta = numero(daiSensori(stati, dove("temperatura"))?.state);
       /* Una temperatura di scheda sta fra lo zero e il centocinquanta. Fuori
        * di li' e' un sensore che dice un'altra cosa, o che dice male. */
       return letta === null || letta < -20 || letta > 150 ? null : Math.round(letta);

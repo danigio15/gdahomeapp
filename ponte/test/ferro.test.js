@@ -12,7 +12,15 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
-import { Ferro, gliAddon, gliApparati, laMacchina, laRete, laScheda } from "../src/ferro.js";
+import {
+  Ferro,
+  gliAddon,
+  gliApparati,
+  laMacchina,
+  laRete,
+  laScheda,
+  leCaselleDelMiniPc,
+} from "../src/ferro.js";
 
 const ZITTO = { debug() {}, info() {}, attenzione() {}, errore() {} };
 
@@ -62,6 +70,80 @@ test("con System Monitor i tre numeri arrivano, coi nomi di adesso e con quelli 
     stati: [stato("sensor.processor_use", "9"), stato("sensor.memory_use_percent", "22")],
   });
   assert.deepEqual([vecchi.cpu, vecchi.ram], [9, 22]);
+});
+
+test("chi ha mappato a mano la sezione MiniPC viene letto, e viene letto per primo", () => {
+  /* «Ho inserito manualmente i dati della sezione dal configurazione... da
+   * cruscotto installatore non escono le informazioni.» Quella casa non ha i
+   * nomi di serie: ha i suoi, e la plancia li mostrava gia'. */
+  const mappate = leCaselleDelMiniPc({
+    cd_entity_overrides: JSON.stringify({
+      "dm.server_cpu": "sensor.minipc_carico",
+      "dm.server_ram": "sensor.minipc_memoria",
+      "dm.server_temperatura_cpu": "sensor.package_id_0",
+      /* Le altre caselle della sezione ci sono e non c'entrano: si ignorano. */
+      "dm.server_speedtest_download": "sensor.giu",
+    }),
+  });
+  assert.deepEqual(mappate, {
+    cpu: "sensor.minipc_carico",
+    ram: "sensor.minipc_memoria",
+    temperatura: "sensor.package_id_0",
+  });
+
+  const m = laMacchina({
+    mappate,
+    stati: [
+      stato("sensor.minipc_carico", "14.2"),
+      stato("sensor.minipc_memoria", "62"),
+      stato("sensor.package_id_0", "66"),
+      /* E in casa c'e' anche System Monitor, che dice un'altra cosa: vince
+       * quella scelta da chi abita, che ha mappato apposta. */
+      stato("sensor.system_monitor_processor_use", "3"),
+    ],
+  });
+  assert.deepEqual([m.cpu, m.ram, m.temperatura], [14, 62, 66]);
+});
+
+test("una casella vuota o scritta male ricade sui nomi di serie, invece di perdere il numero", () => {
+  const m = laMacchina({
+    mappate: leCaselleDelMiniPc({
+      cd_entity_overrides: JSON.stringify({ "dm.server_cpu": "", "dm.server_ram": "senza-punto" }),
+    }),
+    stati: [
+      stato("sensor.system_monitor_processor_use", "7"),
+      stato("sensor.system_monitor_memory_use_percent", "21"),
+    ],
+  });
+  assert.deepEqual([m.cpu, m.ram], [7, 21]);
+
+  /* E una casella che punta a un sensore che non risponde non porta via il
+   * numero: dietro c'e' ancora il nome di serie. */
+  const muto = laMacchina({
+    mappate: { cpu: "sensor.sparito" },
+    stati: [
+      stato("sensor.sparito", "unavailable"),
+      stato("sensor.system_monitor_processor_use", "7"),
+    ],
+  });
+  assert.equal(muto.cpu, 7);
+});
+
+test("uno scatto senza mappature non e' un errore: e' una casa che non le ha compilate", () => {
+  assert.deepEqual(leCaselleDelMiniPc(null), {});
+  assert.deepEqual(leCaselleDelMiniPc(undefined), {});
+  assert.deepEqual(leCaselleDelMiniPc({}), {});
+  /* Uno scatto scritto male non fa cadere il rapporto: si guarda altrove. */
+  assert.deepEqual(leCaselleDelMiniPc({ cd_entity_overrides: "{non e' json" }), {});
+  assert.deepEqual(leCaselleDelMiniPc({ cd_entity_overrides: "null" }), {});
+  assert.deepEqual(leCaselleDelMiniPc({ cd_entity_overrides: 42 }), {});
+  /* E lo scatto di una casa che non ha toccato il MiniPC lascia tutto ai
+   * nomi di serie, che e' il comportamento di sempre. */
+  const m = laMacchina({
+    mappate: leCaselleDelMiniPc({ cd_stanze: '[{"name":"Sala"}]' }),
+    stati: [stato("sensor.processor_use", "9")],
+  });
+  assert.equal(m.cpu, 9);
 });
 
 test("un sensore che non risponde non e' un numero: vale come se non ci fosse", () => {

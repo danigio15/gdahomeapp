@@ -161,8 +161,24 @@ test("la pastiglia si corregge nello stesso giro del guscio, non un fotogramma d
    * browser dipinga. */
   const sezione = leggi("sections/minipc-showcase-section.js");
   assert.match(sezione, /wrapFunction\("render", "__dmMinipcRete", \(\) => \{\s*try \{\s*raddrizzaLaRete\(\);/);
-  assert.match(sezione, /correggiDopoIlGuscio\(\);\s*sampleCpu\(\);\s*renderMinipcShowcase\(\);/);
-  assert.match(sezione, /bindAutoHide\(\);\s*correggiDopoIlGuscio\(\);\s*portaAvantiLaCasella\(\);/);
+  /* E l'aggancio si rifa' in tutte e due i posti dove la sezione si mette in
+   * piedi: quando si installa, e a ogni annuncio d'avvio — lo script del
+   * guscio puo' arrivare dopo i moduli, e al primo giro non c'e' niente da
+   * avvolgere. Si pretende che ci sia, non che stia fra due righe precise:
+   * pinnare le righe vicine faceva cadere questa prova ogni volta che in
+   * mezzo si aggiungeva un aggancio. */
+  assert.equal(sezione.split("correggiDopoIlGuscio();").length - 1, 2);
+  assert.match(sezione, /root\.addEventListener\?\.\(eventName, \(\) => \{[\s\S]{0,240}?correggiDopoIlGuscio\(\);/);
+  assert.match(sezione, /state\.installed = true;[\s\S]{0,200}?correggiDopoIlGuscio\(\);/);
+
+  /* La mappatura delle caselle puo' arrivare dopo la pagina (#MiniPC vuoto da
+   * app): quando cambia si ridisegna, o resta scritto NON CONFIGURATO fino a
+   * un'uscita e un rientro. Stessa forma: agganciata dove la mappa cambia. */
+  assert.match(
+    sezione,
+    /wrapFunction\("cdApplyCanonicalOverrides", "__dmMinipcMappatura", \(\) => \{/,
+  );
+  assert.equal(sezione.split("ridisegnaQuandoCambiaLaMappatura();").length - 1, 2);
   /* Il colore del punto si confronta nella forma in cui il browser lo rilegge
    * — «#10b981» diventa «rgb(16, 185, 129)» — e sullo stile vero, perche' il
    * guscio lo riscrive col suo rosso a ogni giro. */
