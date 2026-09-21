@@ -35,6 +35,7 @@ import { Portiere } from "./portiere.js";
 import { Ritorno } from "./ritorno.js";
 import { Segnalazioni } from "./segnalazioni.js";
 import { Spegnimento } from "./spegnimento.js";
+import { Zigbee } from "./zigbee.js";
 import { Aggiornamenti } from "./aggiornamenti.js";
 import { Lavori } from "./lavori.js";
 import { Installatore } from "./installatore.js";
@@ -139,6 +140,10 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
    * cosi' un riavvio nel mezzo della notte non lascia acceso niente. */
   const spegnimento = new Spegnimento({ casa, cartella: opzioni.cartella, registro });
   spegnimento.carica();
+  /* La rete Zigbee di questa casa (#54): l'app non chiede «che rete hai», lo
+   * guarda il ponte. Si costruisce sempre — costa niente finche' nessuno
+   * chiede — e la voce nell'app compare solo dove una rete c'e' davvero. */
+  const zigbee = new Zigbee({ casa, registro });
   /* La chat di assistenza della plancia: quella della dashboard, che non passa
    * da GitHub. Nell'integrazione la fa `chat.py`; qui la fa il ponte, e la
    * finestra dell'assistenza resta la sua senza saperlo. */
@@ -196,6 +201,7 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
      * e' ancora vuota — e non darli mai. */
     utenti,
     spegnimento,
+    zigbee,
     aggiornamenti,
   });
   const ponte = new Ponte({ casa, dispositivi, registro, commissioni, utenti });
@@ -526,6 +532,7 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
     postino.ferma();
     ponte.chiudiTutto();
     spegnimento.chiudi();
+    zigbee.spegni();
     casa.chiudiIlFiloMio();
     await Promise.all([chiudi(app), chiudi(console_)]);
   };

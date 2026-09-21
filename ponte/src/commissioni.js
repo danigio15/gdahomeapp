@@ -351,6 +351,13 @@ export class Commissioni {
      * `_ilQuadro` — e il perche' sta li'. */
     utenti = null,
     spegnimento = null,
+    /* La rete Zigbee di questa casa. Che poi una rete ci sia o no lo dice lui,
+     * rispondendo `quale: ""`: i comandi `ponte/zigbee/` sono di questo ponte
+     * comunque — sono nel suo nome — e non si mandano a Home Assistant, che
+     * non saprebbe cosa farsene. E' l'app a non disegnare la voce nel menu
+     * quando la risposta e' «nessuna»: una porta che non si apre e' peggio di
+     * una porta che non c'e'. */
+    zigbee = null,
     aggiornamenti = null,
     ritorno = null,
     scarica = scaricaDavvero,
@@ -398,6 +405,7 @@ export class Commissioni {
     /* Il conto alla rovescia del clima, che nell'integrazione sta in Home
      * Assistant e qui sta nel ponte. */
     this.spegnimento = spegnimento;
+    this.zigbee = zigbee;
     /* Cosa c'e' da aggiornare, e i due tasti per farlo. In Home Assistant si
      * vede da una pagina che chi usa l'app non apre piu'. */
     this.aggiornamenti = aggiornamenti;
@@ -464,6 +472,7 @@ export class Commissioni {
     if (tipo === IL_QUADRO) return this._ilQuadro(detto, chiChiede, amministra);
     if (typeof tipo === "string" && tipo.startsWith("ponte/segnalazioni/"))
       return this._segnalazioni(detto);
+    if (typeof tipo === "string" && tipo.startsWith("ponte/zigbee/")) return this._zigbee(detto);
     if (tipo === CONFIG_GET || tipo === CONFIG_SET || tipo === CONFIG_RESTORE)
       return this._configurazione(detto);
     if (tipo === DOVE_TORNARE) return this._doveTornare(detto);
@@ -1157,6 +1166,43 @@ export class Commissioni {
       if (errore instanceof ChatHaDettoNo) return no(id, errore.codice, errore.message);
       this.registro.errore(`la console della chat e' andata storta: ${errore?.message || errore}`);
       return no(id, "ponte_chat", "non ha funzionato");
+    }
+  }
+
+  /**
+   * Un dispositivo Zigbee nuovo, dal telefono.
+   *
+   * Quattro domande e nient'altro: com'e' messa la rete, aprila, richiudila,
+   * e dagli un nome. Quello che entra lo sente il ponte da solo (vedi
+   * `zigbee.js`), e chi guarda lo scopre richiedendo lo stato — non c'e' un
+   * annuncio che arriva al telefono, perche' il telefono la schermata ce
+   * l'ha aperta davanti e la puo' chiedere lui.
+   *
+   * Il passo «dove lo metto» non e' qui e non e' dell'app: lo fa la plancia,
+   * che le sue sezioni le conosce. Scriverlo da questa parte vorrebbe dire
+   * scrivere due volte le tre forme diverse che hanno le prese, le luci e i
+   * varchi.
+   */
+  async _zigbee(detto) {
+    const id = detto.id ?? null;
+    const zigbee = this.zigbee;
+    if (!zigbee) return no(id, "unknown_command", `non conosco ${detto.type}`);
+    try {
+      switch (detto.type) {
+        case "ponte/zigbee/stato":
+          return si(id, await zigbee.stato());
+        case "ponte/zigbee/apri":
+          return si(id, await zigbee.apri({ secondi: detto.secondi }));
+        case "ponte/zigbee/chiudi":
+          return si(id, await zigbee.chiudi());
+        case "ponte/zigbee/rinomina":
+          return si(id, await zigbee.rinomina(detto.dispositivo, detto.nome));
+        default:
+          return no(id, "unknown_command", `non conosco ${detto.type}`);
+      }
+    } catch (errore) {
+      this.registro.attenzione(`zigbee: ${errore?.message || errore}`);
+      return no(id, errore?.code || "zigbee_ko", String(errore?.message || errore));
     }
   }
 

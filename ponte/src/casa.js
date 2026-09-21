@@ -276,7 +276,24 @@ Object.assign(Casa.prototype, {
    * l'unita' viene spenta a mano. Torna la funzione che disdice. Se il filo
    * cade l'abbonamento cade con lui — Home Assistant non se lo ricorda — e
    * chi ascolta se ne accorge dalla chiamata a `onCaduto`, se l'ha passata. */
-  async ascolta(eventType, onEvento, { onCaduto = null } = {}) {
+  ascolta(eventType, onEvento, { onCaduto = null } = {}) {
+    return this.ascoltaIl({ type: "subscribe_events", event_type: eventType }, onEvento, {
+      onCaduto,
+    });
+  },
+
+  /**
+   * Lo stesso abbonamento, ma con la domanda scritta da chi chiama.
+   *
+   * Non tutto quello che Home Assistant manda a rate e' un evento del bus:
+   * `mqtt/subscribe` porta i messaggi di un argomento, e serve a scoprire come
+   * si chiama la cassetta di Zigbee2MQTT, che non e' sempre «zigbee2mqtt».
+   * Sotto e' la stessa identica cosa — un `id` che resta aperto e sulla quale
+   * arrivano dei `type: "event"` — e infatti `ascolta` adesso passa di qui:
+   * scritte due volte, il giorno che il filo cade in modo nuovo lo imparerebbe
+   * una sola delle due.
+   */
+  async ascoltaIl(comando, onEvento, { onCaduto = null } = {}) {
     const filo = await this._filoMio();
     this._domande ??= new Map();
     this._ascolti ??= new Map();
@@ -288,7 +305,7 @@ Object.assign(Casa.prototype, {
         fallito(new CasaIrraggiungibile("Home Assistant non ha risposto in tempo"));
       }, ATTESA_DELLA_RISPOSTA);
       this._domande.set(id, { riuscito, fallito, scadenza });
-      if (!filo.manda(JSON.stringify({ id, type: "subscribe_events", event_type: eventType }))) {
+      if (!filo.manda(JSON.stringify({ ...comando, id }))) {
         clearTimeout(scadenza);
         this._domande.delete(id);
         fallito(new CasaIrraggiungibile("il filo del ponte e' caduto"));
