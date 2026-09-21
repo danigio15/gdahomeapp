@@ -1,0 +1,17 @@
+# I provini: le fotografie di `--foto` e i filmati di `--scena`.
+provini/
+
+# **I filmati e le immagini non stanno nella repository.**
+#
+# Ci sono stati, e pesavano quaranta megabyte: i tre film, le copertine di
+# Facebook, le fotografie della plancia. Una repository che chiunque clona non
+# deve portarsi dietro il materiale pubblicitario gia' pubblicato — su
+# Facebook, su TikTok, sul sito — e quello si rifa' con un comando.
+#
+# Qui restano gli **attrezzi**: le pagine, le scene, chi filma. Il materiale lo
+# fa `rendi.mjs`, e quello che esce resta fuori.
+*.mp4
+*.webm
+gdahome-*.png
+plancia-*.png
+qrcode.svg

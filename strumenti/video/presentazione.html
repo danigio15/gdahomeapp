@@ -1,0 +1,395 @@
+<!doctype html>
+<html lang="it">
+  <head>
+    <meta charset="utf-8" />
+    <title>gdahome — presentazione e installazione</title>
+    <!--
+      Il video, scritto come una pagina.
+
+      Ogni scena e' una <section>, e tutto quello che si muove e' un'animazione
+      CSS. Le animazioni stanno **ferme** (`animation-play-state: paused`): a
+      farle andare avanti e' chi filma, che porta l'orologio di ognuna al
+      momento che gli serve e scatta la fotografia. Cosi' il filmato non
+      dipende da quanto e' svelto il computer che lo gira: la stessa pagina
+      girata due volte da' due file identici.
+
+      Le regole per scriverci dentro sono due:
+
+      - **niente animazioni infinite.** Chi filma si accorge di quando in una
+        scena non si muove piu' niente e da li' in poi riusa l'ultimo
+        fotogramma invece di rifarlo: un puntino che pulsa per sempre gli
+        toglie quella scorciatoia e triplica il tempo di ripresa;
+      - **quello che compare dopo parte nascosto**, con `opacity: 0` scritto
+        nel foglio di stile e l'animazione che lo mostra in `forwards`. E' il
+        solo modo perche' due animazioni sulla stessa proprieta' — una che
+        mostra, una che nasconde piu' tardi — non si pestino i piedi.
+    -->
+    <link rel="stylesheet" href="comune.css" />
+    <style>
+      /* Il palco: la misura del filmato. Il fondo sta in `comune.css`, ed e'
+         lo stesso nei due film: qui c'e' solo quanto e' grande. */
+      #palco {
+        width: 1280px;
+        height: 720px;
+      }
+
+      .scena.in-scena {
+        display: block;
+      }
+
+      /* ── Il titolo della scena, in alto a sinistra ──────────────────── */
+      .cartello {
+        position: absolute;
+        left: 64px;
+        top: 34px;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+      }
+      .cartello .numero {
+        width: 34px;
+        height: 34px;
+        border-radius: 11px;
+        background: linear-gradient(150deg, var(--accento), #0369a1);
+        display: grid;
+        place-items: center;
+        font-weight: 800;
+        font-size: 17px;
+        color: #04121f;
+        box-shadow: 0 6px 18px rgba(14, 165, 233, 0.35);
+      }
+      .cartello h2 {
+        margin: 0;
+        font-size: 25px;
+        font-weight: 700;
+        letter-spacing: -0.01em;
+      }
+      .cartello .sotto {
+        margin: 2px 0 0;
+        font-size: 15px;
+        color: var(--tenue);
+        font-weight: 500;
+      }
+
+      /* ── La didascalia in basso ─────────────────────────────────────── */
+      .didascalia {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 30px;
+        text-align: center;
+        padding: 0 120px;
+      }
+      .didascalia p {
+        margin: 0;
+        font-size: 25px;
+        line-height: 1.38;
+        font-weight: 500;
+        color: #dce8fa;
+        text-shadow: 0 2px 14px rgba(0, 0, 0, 0.55);
+      }
+      .didascalia p b {
+        color: #fff;
+        font-weight: 700;
+      }
+      .didascalia p.piccola {
+        font-size: 20px;
+        color: var(--tenue);
+      }
+      /* Le righe della didascalia stanno una sopra l'altra: chi va via non
+         deve spostare chi arriva. */
+      .didascalia .riga {
+        position: absolute;
+        left: 120px;
+        right: 120px;
+        bottom: 0;
+      }
+
+      /* ── La finestra di Home Assistant ──────────────────────────────── */
+      .ha {
+        position: absolute;
+        left: 108px;
+        top: 92px;
+        width: 1064px;
+        height: 500px;
+        border-radius: 16px;
+        overflow: hidden;
+        background: #f4f6f9;
+        color: #212121;
+        box-shadow:
+          0 40px 90px rgba(0, 0, 0, 0.55),
+          0 0 0 1px rgba(255, 255, 255, 0.08);
+        display: grid;
+        grid-template-columns: 212px 1fr;
+      }
+      .ha .barra-lato {
+        background: #fff;
+        border-right: 1px solid #e3e6ea;
+        padding: 10px 0;
+      }
+      .ha .marca {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 16px 14px;
+        font-weight: 700;
+        font-size: 15px;
+        color: #212121;
+      }
+      .ha .marca .tondo {
+        width: 26px;
+        height: 26px;
+        border-radius: 50%;
+        background: #03a9f4;
+        display: grid;
+        place-items: center;
+      }
+      .ha .voce {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 9px 16px;
+        font-size: 14px;
+        font-weight: 500;
+        color: #44739e;
+      }
+      .ha .voce svg {
+        flex: 0 0 auto;
+      }
+      .ha .voce.scelta {
+        color: #03a9f4;
+        background: rgba(3, 169, 244, 0.08);
+        border-right: 3px solid #03a9f4;
+      }
+      .ha .voce.nostra {
+        color: #212121;
+        font-weight: 600;
+      }
+      .ha .capo {
+        padding: 14px 16px 6px;
+        font-size: 11px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: #8e99a6;
+        font-weight: 700;
+      }
+      .ha .testata {
+        height: 58px;
+        background: #fff;
+        border-bottom: 1px solid #e3e6ea;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 18px;
+        font-size: 19px;
+        font-weight: 600;
+      }
+      .ha .corpo {
+        position: relative;
+        height: 442px;
+        overflow: hidden;
+        background: #f4f6f9;
+        padding: 18px;
+      }
+      .ha .tre-punti {
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        color: #5a6b7d;
+      }
+      .griglia-negozio {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 14px;
+      }
+      .titolo-negozio {
+        font-size: 15px;
+        font-weight: 700;
+        color: #3d4b59;
+        margin: 0 0 10px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .bottone-ha {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        background: #03a9f4;
+        color: #fff;
+        border-radius: 8px;
+        padding: 10px 20px;
+        font-size: 14px;
+        font-weight: 600;
+        letter-spacing: 0.01em;
+      }
+      .bottone-ha.vuoto {
+        background: transparent;
+        color: #03a9f4;
+        border: 1px solid rgba(3, 169, 244, 0.5);
+      }
+      .bottone-ha.verde {
+        background: #16a34a;
+      }
+
+      /* Il pannello dei tre puntini. */
+      .tendina {
+        position: absolute;
+        right: 14px;
+        top: 8px;
+        width: 218px;
+        background: #fff;
+        border-radius: 10px;
+        box-shadow: 0 10px 34px rgba(0, 0, 0, 0.24);
+        padding: 6px 0;
+        z-index: 5;
+        transform-origin: top right;
+      }
+      .tendina div {
+        padding: 10px 16px;
+        font-size: 14px;
+      }
+      .tendina div.acceso {
+        background: rgba(3, 169, 244, 0.1);
+        font-weight: 600;
+      }
+
+      /* La finestrella «Archivi». Sta **fuori** dalla finestra di Home
+         Assistant, sopra il suo velo, quindi il colore del testo se lo dice
+         da sola: fuori di li' erediterebbe quello chiaro del palco, e i
+         titoli sparirebbero sul bianco. */
+      .finestrella {
+        color: #212121;
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        width: 560px;
+        background: #fff;
+        border-radius: 14px;
+        box-shadow: 0 24px 70px rgba(0, 0, 0, 0.4);
+        padding: 20px 22px 16px;
+        z-index: 6;
+      }
+      .finestrella h3 {
+        margin: 0 0 6px;
+        font-size: 19px;
+      }
+      .finestrella p {
+        margin: 0 0 14px;
+        font-size: 13px;
+        color: #6b7785;
+      }
+      .casella {
+        border: 1px solid #cfd6de;
+        border-radius: 9px;
+        padding: 11px 13px;
+        font-size: 14px;
+        font-family: "DejaVu Sans Mono", ui-monospace, monospace;
+        color: #212121;
+        background: #fbfcfd;
+        white-space: nowrap;
+        overflow: hidden;
+      }
+      /* Il testo che si scrive da solo.
+         Quanto e' largo e quanti passi fa non stanno qui: sono la lunghezza
+         dell'indirizzo, e quella la sa `scene.js` che lo scrive. Un numero
+         copiato qui e' un numero che il giorno che l'indirizzo cambia taglia
+         l'ultima lettera — ed e' successo: `gdahomeapp` usciva `gdahomeap`. */
+      .casella .testo-scritto {
+        display: inline-block;
+        overflow: hidden;
+        white-space: nowrap;
+        vertical-align: bottom;
+      }
+      .cursore-testo {
+        display: inline-block;
+        width: 2px;
+        height: 17px;
+        background: #03a9f4;
+        vertical-align: -3px;
+      }
+
+      /* Il puntatore. */
+      .puntatore {
+        position: absolute;
+        width: 22px;
+        height: 30px;
+        z-index: 20;
+        filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.5));
+        opacity: 0;
+      }
+      .tocco {
+        position: absolute;
+        width: 74px;
+        height: 74px;
+        border-radius: 50%;
+        border: 3px solid rgba(14, 165, 233, 0.9);
+        background: rgba(14, 165, 233, 0.18);
+        z-index: 19;
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.25);
+        animation: clic 0.62s var(--t, 0s) ease-out forwards;
+      }
+      .pezzo {
+        padding: 26px 24px;
+        text-align: left;
+      }
+      .pezzo h3 {
+        margin: 16px 0 8px;
+        font-size: 23px;
+        font-weight: 700;
+      }
+      .pezzo p {
+        margin: 0;
+        font-size: 17px;
+        line-height: 1.5;
+        color: var(--tenue);
+      }
+      .pezzo .figura {
+        width: 62px;
+        height: 62px;
+        border-radius: 16px;
+        display: grid;
+        place-items: center;
+        background: rgba(14, 165, 233, 0.14);
+        border: 1px solid rgba(14, 165, 233, 0.3);
+      }
+      .pezzo.ambra .figura {
+        background: rgba(245, 158, 11, 0.14);
+        border-color: rgba(245, 158, 11, 0.32);
+      }
+      .pezzo.verde .figura {
+        background: rgba(22, 163, 74, 0.14);
+        border-color: rgba(22, 163, 74, 0.32);
+      }
+
+      .spunta {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        font-size: 19px;
+        color: #dbe7f7;
+        line-height: 1.4;
+      }
+      .spunta .segno {
+        flex: 0 0 auto;
+        width: 26px;
+        height: 26px;
+        border-radius: 50%;
+        background: rgba(22, 163, 74, 0.18);
+        border: 1px solid rgba(22, 163, 74, 0.45);
+        display: grid;
+        place-items: center;
+        margin-top: 2px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="palco"></div>
+    <script type="module" src="scene.js"></script>
+  </body>
+</html>
