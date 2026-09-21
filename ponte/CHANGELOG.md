@@ -11,6 +11,85 @@ fuori. La plancia dentro continua a dire la sua, e si legge dov'è sempre
 stata: nella pastiglia «La plancia» della console. Sono due numeri perché
 sono due cose.
 
+## 1.6.0.1
+
+Sette cose viste provando la 1.6.0 su un telefono e su una casa vera. Nessuna
+funzione nuova: sono tutte correzioni, e due di queste toglievano fiducia a
+quello che la plancia dice.
+
+**Uno switch acceso non è più un «dispositivo non collegato».** Nel cruscotto
+dell'installatore comparivano quarantatré apparecchi giù in una casa in cui
+funzionavano quasi tutti. La prova sta nella scheda di uno switch UniFi:
+stato **Connesso**, in casa, CPU al 5,7%, firmware aggiornato — e in fondo
+all'elenco «Port 1 power cycle» e «Port 4 power cycle» col tasto grigio. Su
+quelle due porte non c'è attaccato niente, quindi UniFi pubblica quei due
+pulsanti come non disponibili. Due entità su venti, e la regola diceva: se
+una tace, il dispositivo è giù. Non è un capriccio di UniFi — il blocco
+bambini di un'asciugatrice spenta, il canale non usato di una presa multipla,
+la ricarica di un'auto che non c'è fanno lo stesso. Adesso un apparecchio è
+giù solo quando **tutte** le sue entità tacciono insieme, che è come si
+presenta davvero uno irraggiungibile: una sola che parla vuol dire che la
+strada c'è.
+
+**Il Report divide per fasce subito, invece di aspettare un giro da Analisi.**
+«Devo cliccare prima su Analisi, poi vado in Panoramica e cambia.» Il conto
+si fa se c'è qualcuno che guarda la Panoramica — sono settecento righe
+chieste al Recorder, e farle per una pagina che nessuno ha davanti sarebbe
+lavoro buttato — ma quella domanda era una fotografia, e rispondeva per
+l'istante in cui la si faceva. Il pacchetto del mese arriva mentre il Report
+si sta ancora aprendo: la risposta era «no», e non si riprovava più. Da qui
+il giro da Analisi, che non era un rimedio ma il dito che dava la seconda
+occasione al posto del codice. E non mancava solo il blocco: finché il conto
+non c'è, «Costo Reale» resta sulla stima invece della spesa contata ora per
+ora — **32,16 € nella tessera e 19,85 € nel blocco**, a tre centimetri di
+distanza. Adesso il pacchetto si mette da parte e si aspetta di essere
+guardati.
+
+**Il ponte dice che rete Zigbee ha trovato, invece di tacere.** Una casa che
+ha Zigbee e un ponte che non lo trova erano indistinguibili da una casa che
+Zigbee non ce l'ha: in tutt'e due i casi la voce nel menu dell'app non
+compare, e chi guarda non sa né quale dei due gli è capitato né cosa andare a
+controllare. Adesso la console dell'add-on lo scrive in una riga, accanto a
+quella del centralino: «la cassetta si chiama zigbee2mqtt», oppure «in 2
+secondi non ha risposto nessuno», oppure «Home Assistant non fa ascoltare
+MQTT». E la cassetta si trova anche quando il suo prefisso ha una barra
+dentro: la funzione che lo legge era preparata per quel caso, ma la domanda
+lo rendeva impossibile — in MQTT il `+` copre un livello solo.
+
+**Nel cruscotto i dispositivi non collegati si leggono tutti.** Erano dodici
+più «e altri 31», e quella scritta non risponde alla domanda per cui quel
+riquadro esiste: chi installa ci va a cercare dentro **quali** cose sono giù,
+perché è da lì che decide se prendere la macchina. Il taglio non era nel
+cruscotto, che disegna tutto quello che gli arriva: era nel ponte, e stava a
+dodici per una ragione di impaginazione. Adesso sta a duecento, che è una
+guardia contro un elenco che cresce senza fine.
+
+**Il nome che dai a un'entità arriva anche nella stanza**, non solo nel suo
+elenco. Le righe di «Altro in questa stanza» le riempiono due rubinetti:
+l'assegnazione a mano, che sa **dove** e del nome non sa niente, e «Le tue
+entità», che sa dove, come si chiama e con che segno. Vinceva la prima
+arrivata, tutta intera — e siccome la mappa a mano si legge per prima,
+un'entità scritta in tutt'e due perdeva il nome che le era stato dato e
+tornava a chiamarsi come la chiama Home Assistant. Adesso si decide campo per
+campo: la stanza la dice quella scritta a mano, il nome e il segno l'unica
+delle due che ce li ha.
+
+**I disegni degli elettrodomestici non abbagliano più al buio.** Il palco su
+cui stanno era una radiale azzurro chiaro su fondo quasi bianco, uguale per
+tutti e due i temi: su una pagina scura diventava una lastra, e il disegno —
+che è bianco e acciaio — ci si perdeva dentro invece di staccarsi. Guardati
+tutti e ventidue prima di toccare: su un palco scuro si leggono meglio, non
+peggio. I palchi erano due, quello a riposo e quello di quando l'apparecchio
+è in funzione, e il secondo al buio era il peggiore.
+
+**Tre cose più piccole, dalla stessa sera.** La tessera «Non rispondono» si
+chiama **Dispositivi non connessi** e ha finalmente un disegno suo: era
+l'unica della Home che ricadeva su un'emoji, e accanto a sei oggetti disegnati
+si vedeva che era più grande e fuori asse. Le didascalie che scorrono sotto le
+tessere vanno a **metà velocità**: andavano a una quindicina di punti al
+secondo, e un tetto sbagliato faceva correre proprio le più lunghe, che sono
+quelle che si fa più fatica a leggere.
+
 ## 1.6.0
 
 Il numero passa a **1.6.0** e non a 1.5.9.17, perché qui non ci sono
