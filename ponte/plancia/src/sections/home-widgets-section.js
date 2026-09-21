@@ -6306,30 +6306,42 @@ function porteDetail(widget, states) {
      * quel gesto lo ascolta il documento intero: e' la stessa mano che apre —
      * stessa conferma, stesso tastierino del PIN, stessa chiamata. Qui non si
      * ricopia niente, si chiede a chi lo sa gia' fare. */
-    /* Qui il tasto e' uno solo, e fa il primo dei gesti che quella porta offre
-     * — quello che si puo' disfare, dove ce ne sono due (#387).
+    /* Tutti i gesti che quella porta offre, non solo il primo.
      *
-     * E si chiama come il gesto che fa. Diceva «Apri» sempre: su una serratura
-     * configurata coi due gesti il tasto sblocca e basta, e chi lo premeva
-     * restava con la porta chiusa e la scritta che gli aveva promesso il
-     * contrario. Il nome adesso arriva dallo stesso elenco da cui arriva la
-     * chiamata, cosi' le due cose non possono piu' separarsi. */
+     * «Per chi ha serrature smart vorrei si potesse gia' dal popup del widget
+     * in prima pagina scegliere fra le 3 funzioni disponibili» (#34). Il
+     * modello le sa da sempre — sblocca, apri, blocca — e la pagina Aperture
+     * le disegna gia' tutte; qui usciva un tasto solo, quindi le altre si
+     * potevano fare soltanto andando nella sezione.
+     *
+     * Ogni tasto si chiama come il gesto che fa e porta lo stesso
+     * `data-dm-door` dei tasti di quella pagina: quel gesto lo ascolta il
+     * documento intero, quindi stessa conferma, stesso tastierino del PIN,
+     * stessa chiamata. Qui non si ricopia niente, si chiede a chi lo sa gia'
+     * fare.
+     *
+     * L'ordine e' quello del modello: prima quello che si puo' disfare
+     * (#387), il blocco in fondo. E il lucchetto del PIN sta solo sui gesti
+     * che il PIN protegge davvero: chiudere non lo chiede. */
     const azioni = azioniDellaPorta(door, stateOf(states, door.entity));
-    const apre = azioni.length > 0;
-    const parola = parolaDelGesto(azioni[0]?.gesto);
-    const invito = door.pin
-      ? `${parola} · ${t("chiede il PIN", "asks for the PIN")}`
-      : parola;
+    const tastoDelGesto = (azione) => {
+      const parola = parolaDelGesto(azione.gesto);
+      const chiede = Boolean(door.pin) && azione.gesto !== "blocca";
+      const invito = chiede ? `${parola} · ${t("chiede il PIN", "asks for the PIN")}` : parola;
+      return `<button type="button" class="dm-w-door" data-dm-door="${esc(door.id)}"
+                data-dm-door-gesto="${esc(azione.gesto)}"
+                title="${esc(invito)}"
+                aria-label="${esc(`${invito}: ${door.name || door.entity}`)}">${esc(parola)}${
+                  chiede ? ' <span aria-hidden="true">🔐</span>' : ""
+                }</button>`;
+    };
     parts.push(
       rowShell(
         `<span class="dm-w-glyph" aria-hidden="true">${iconaPortaMarkup(door.icon)}</span>
          <span class="dm-w-name">${esc(door.name || door.entity)}<small>${esc(label)}</small></span>
          ${
-           apre
-             ? `<button type="button" class="dm-w-door" data-dm-door="${esc(door.id)}"
-                  title="${esc(invito)}" aria-label="${esc(`${invito}: ${door.name || door.entity}`)}">${
-                    door.pin ? "🔐" : "🔓"
-                  }</button>`
+           azioni.length
+             ? `<span class="dm-w-porte-gesti">${azioni.map(tastoDelGesto).join("")}</span>`
              : door.pin
                ? '<span class="dm-w-glyph" aria-hidden="true">🔒</span>'
                : ""
@@ -9438,11 +9450,20 @@ html[data-theme="dark"] :is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-wi
 :is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-row .dm-w-arrows button{width:32px;height:32px}
 /* Il titolo di un gruppo dentro la lista: maiuscoletto spaziato con la sua
    riga sottile, come le altre separazioni della plancia. */
-/* Il tasto che apre una porta: la stessa pastiglia quadrata degli altri
- * comandi di riga, in verde perche' apre. */
+/* I tasti dei gesti di una porta: una pastiglia per gesto, col nome scritto.
+ *
+ * Erano un quadrato con dentro un lucchetto, perche' il tasto era uno solo e
+ * bastava. Con tre gesti (#34) un disegno non basta piu': «sblocca», «apri» e
+ * «blocca» si distinguono solo per la parola, e tre lucchetti uguali in fila
+ * sarebbero tre indovinelli. Quindi la pastiglia si allarga quanto la sua
+ * parola, e la fila va a capo su una riga stretta invece di schiacciarle. */
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-row .dm-w-porte-gesti{
+  display:flex;flex-wrap:wrap;justify-content:flex-end;gap:6px;min-width:0}
 :is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-row .dm-w-door{
-  flex:0 0 36px;width:36px;height:36px;display:grid;place-items:center;
-  border-radius:12px;font-size:16px;cursor:pointer;
+  flex:0 0 auto;min-height:34px;padding:0 11px;display:inline-flex;
+  align-items:center;gap:5px;white-space:nowrap;
+  border-radius:12px;font:inherit;font-size:12.5px;font-weight:800;cursor:pointer;
+  color:var(--text,#0f172a);
   border:1px solid var(--card-border,#e8edf3);background:var(--surface-2,#f8fafc);
   transition:background .18s ease,border-color .18s ease,transform .15s ease}
 :is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-row .dm-w-door:hover{

@@ -42,10 +42,15 @@ test("la doppia conferma si può spegnere, il PIN no", async () => {
   assert.match(porte, /readJson\(SECURITY_DOORS_CONFIRM_KEY, true\) !== false/);
   assert.equal(typeof siChiedeConferma, "function");
   /* Il PIN viene prima e non si spegne da qui: quella è una chiave, non una
-   * conferma, e una porta protetta continua a chiederla. */
+   * conferma, e una porta protetta continua a chiederla.
+   *
+   * Con una sola eccezione, e va nel verso sicuro: il blocco (#34). Il PIN
+   * protegge l'APERTURA; chiudere la propria porta non è mai il verso
+   * pericoloso, e chiedere un codice per farlo sarebbe attrito senza sicurezza
+   * in cambio — col risultato che chi ha fretta la lascia aperta. */
   assert.match(
     porte,
-    /if \(door\.pin\) openKeypad\(door, gesto\);\s*else if \(siChiedeConferma\(\)\) confirmAndOpen\(door, gesto\);/,
+    /if \(door\.pin && gesto !== "blocca"\) openKeypad\(door, gesto\);\s*else if \(siChiedeConferma\(\)\) confirmAndOpen\(door, gesto\);/,
   );
   /* E l'interruttore c'è dove si configurano le aperture. */
   assert.match(leggi("security-doors-editor-section.js"), /data-door-conferma/);

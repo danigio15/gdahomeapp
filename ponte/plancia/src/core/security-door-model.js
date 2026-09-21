@@ -110,6 +110,19 @@ export function gestoDellaPorta(door) {
 
 const CHIAMATA_SBLOCCA = Object.freeze({ domain: "lock", service: "unlock", data: {} });
 const CHIAMATA_APRI = Object.freeze({ domain: "lock", service: "open", data: {} });
+/* E il gesto contrario, che fino a ieri non c'era.
+ *
+ * «Per chi ha serrature smart vorrei si potesse gia' dal popup scegliere fra
+ * le 3 funzioni disponibili: sblocco senza apertura, sblocco completo, blocco»
+ * (#34). Le prime due il modello le sapeva gia' — sono `unlock` e `open` — ma
+ * la terza no: la plancia sapeva aprire e sbloccare e non sapeva CHIUDERE, e
+ * una serratura che si comanda in un verso solo e' meta' comando.
+ *
+ * Non e' una delle scelte di `GESTI_PORTA`: quelle dicono come si apre questa
+ * porta, e chiudere non e' un modo di aprire. Una serratura si puo' sempre
+ * chiudere, quindi il gesto c'e' sempre — per le serrature, e per nient'altro:
+ * un pulsante del citofono non si «richiude». */
+const CHIAMATA_BLOCCA = Object.freeze({ domain: "lock", service: "lock", data: {} });
 
 /**
  * I gesti che questa apertura offre davvero, in ordine: prima quello che si
@@ -128,14 +141,20 @@ export function azioniDellaPorta(door, state = null) {
     const call = doorOpenCall(entity, state, scelto);
     return call ? [{ gesto: "apri", call }] : [];
   }
-  if (!serraturaSaAprire(state)) return [{ gesto: "sblocca", call: CHIAMATA_SBLOCCA }];
-  if (scelto === "sblocca") return [{ gesto: "sblocca", call: CHIAMATA_SBLOCCA }];
+  /* Il blocco chiude la fila, sempre: si legge dopo i gesti che aprono perche'
+   * e' quello che si fa dopo, e perche' il primo tasto della fila resta quello
+   * che si puo' disfare (#387). */
+  const blocca = { gesto: "blocca", call: CHIAMATA_BLOCCA };
+  if (!serraturaSaAprire(state))
+    return [{ gesto: "sblocca", call: CHIAMATA_SBLOCCA }, blocca];
+  if (scelto === "sblocca") return [{ gesto: "sblocca", call: CHIAMATA_SBLOCCA }, blocca];
   if (scelto === "entrambi")
     return [
       { gesto: "sblocca", call: CHIAMATA_SBLOCCA },
       { gesto: "apri", call: CHIAMATA_APRI },
+      blocca,
     ];
-  return [{ gesto: "apri", call: CHIAMATA_APRI }];
+  return [{ gesto: "apri", call: CHIAMATA_APRI }, blocca];
 }
 
 /**
