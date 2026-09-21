@@ -25,6 +25,7 @@ import { installEnergyLoadsEditor } from "./energy-loads-editor-section.js";
 import { installSubloadPopupSection } from "./subload-popup-section.js";
 import { installApplianceDetailPopupSection } from "./appliance-detail-popup-section.js";
 import { installEnergyAnalysisSection } from "./energy-analysis-section.js";
+import { installIPianiSection } from "./i-piani-section.js";
 import { installReportAFasceSection } from "./il-report-a-fasce-section.js";
 import { installHistorySection } from "./history-section.js";
 import { installStoricoConnettivita } from "./storico-connettivita-section.js";
@@ -1140,6 +1141,9 @@ export function installSectionRuntime() {
     /* Una stanza si mostra col suo nome: gli elenchi del guscio scrivevano
      * l'identificativo che la tendina salva. */
     installStanzePerNome();
+    /* I piani della casa, nella scheda Stanze del Config (#17): ordine,
+     * rinomina, segno, e l'avviso quando due stanze si chiamano uguale. */
+    installIPianiSection();
     /* Il radar meteo dentro la finestra delle previsioni: si aggancia al
      * guscio che quella finestra la disegna gia'. */
     installRadarMeteo();

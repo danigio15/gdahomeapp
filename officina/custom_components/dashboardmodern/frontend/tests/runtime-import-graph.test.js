@@ -1324,8 +1324,17 @@ test("production graph is single-owner, acyclic and contains no facade pass-thro
   // Panoramica: quello invece la rete la tocca (chiede le ore) e il documento
   // pure. Tenerli insieme vorrebbe dire non poter provare il conto senza un
   // browser, che e' esattamente la parte che va provata.
+  // 370 con i piani della casa (#17): «mi interessa gestire in maniera puntuale
+  // i piani nella dashboard». L'ordine dei piani, la rinomina che si porta
+  // dietro le sue stanze, il cestino che dice quante ne restano scoperte: sono
+  // regole su tre elenchi che vanno salvati insieme, e si provano su elenchi
+  // finti senza un documento. Scritte dentro la sezione, l'unica prova
+  // possibile sarebbe stata aprire un editor in un browser.
+  // 371 con la sezione che le disegna, che invece il deposito e il documento li
+  // tocca entrambi: legge tre chiavi, ridisegna la scheda del guscio e rimette
+  // in fila le righe delle stanze.
   assert.ok(
-    relative.length <= 369,
+    relative.length <= 371,
     `production graph unexpectedly grew to ${relative.length} modules`,
   );
   assertAcyclic(edges);

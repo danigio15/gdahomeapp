@@ -156,15 +156,96 @@ export function entityOf(item = {}) {
   );
 }
 
-/** Se questa voce appartiene a questa stanza. */
-export function belongsToRoom(item, room) {
+/**
+ * I nomi che in questa casa appartengono a piu' di una stanza.
+ *
+ * «Posso creare bagno primo piano e bagno secondo piano e le entita' poi devono
+ *  funzionare divise, non e' la stessa stanza.»
+ *
+ * Un nome ripetuto non identifica niente, e fingere che lo faccia e' il modo in
+ * cui il bagno di sopra si prende le luci del bagno di sotto. Qui si dice
+ * quali nomi sono in quella condizione, una volta per casa, cosi' chi assegna
+ * lo sa senza doverselo richiedere per ogni voce.
+ */
+export function nomiRipetuti(rooms = []) {
+  const quante = new Map();
+  for (const room of Array.isArray(rooms) ? rooms : []) {
+    /* Le due scritture di UNA stanza si contano una volta sola.
+     *
+     * Un nome si riconosce in due modi — minuscolo e sminuzzato — e su «Camera»
+     * i due modi danno la stessa parola. Contandoli separatamente ogni stanza
+     * faceva due, e una casa di stanze tutte diverse usciva da qui con ogni
+     * nome dichiarato ripetuto: nessuna entita' assegnata per nome sarebbe piu'
+     * arrivata da nessuna parte. */
+    const sue = new Set([lower(room?.name), roomKey(room?.name)].filter(Boolean));
+    for (const chiave of sue) quante.set(chiave, (quante.get(chiave) || 0) + 1);
+  }
+  return new Set([...quante.entries()].filter(([, volte]) => volte > 1).map(([chiave]) => chiave));
+}
+
+/**
+ * Se questa voce appartiene a questa stanza.
+ *
+ * L'identificativo vince sempre: e' l'unica cosa che regge un rinominamento, ed
+ * e' quello che la tendina delle stanze salva da tempo. Il NOME resta come
+ * ripiego — mezza configurazione esistente e' scritta cosi', e le zone
+ * d'irrigazione e gli aspirapolvere hanno solo quello — ma vale soltanto
+ * quando e' il nome di UNA stanza sola.
+ *
+ * Con due stanze omonime la voce non va a nessuna delle due. Prima andava alla
+ * prima, in silenzio, e questo file lo dava per scontato: «la prima che la
+ * reclama se la tiene, e la seconda resta vuota». Su due bagni di due piani
+ * diversi vuol dire mettere l'interruttore di sopra nella stanza di sotto —
+ * uno spegne la luce sbagliata e non capisce perche'. Finire nel raccoglitore
+ * di cio' che non ha stanza e' peggio esteticamente e meglio in tutto il
+ * resto: si vede, e si va a correggerlo. Che due stanze si chiamino uguale
+ * l'editor lo dice a parte, dove lo si sistema.
+ *
+ * `ripetuti` lo prepara `nomiRipetuti` una volta per casa. Senza — e chi chiama
+ * da fuori puo' non averlo — si torna al comportamento di prima, che su una
+ * casa senza omonimie e' identico.
+ */
+export function belongsToRoom(item, room, ripetuti = null) {
   const riferimento = roomRefOf(item);
   if (!riferimento) return false;
   const chiave = roomKey(riferimento);
+  if (riferimento === clean(room?.id)) return true;
+  if (Boolean(chiave) && chiave === roomKey(room?.id)) return true;
+  /* Da qui in giu' si sta riconoscendo una stanza dal NOME. */
+  if (ripetuti?.has(lower(riferimento)) || (chiave && ripetuti?.has(chiave))) return false;
   return (
-    riferimento === clean(room?.id) ||
-    lower(riferimento) === lower(room?.name) ||
-    (Boolean(chiave) && (chiave === roomKey(room?.id) || chiave === roomKey(room?.name)))
+    lower(riferimento) === lower(room?.name) || (Boolean(chiave) && chiave === roomKey(room?.name))
+  );
+}
+
+/**
+ * La stanza che un riferimento nomina, o `null`.
+ *
+ * Stessa regola di `belongsToRoom`, dal verso opposto: chi ha in mano un
+ * riferimento e vuole sapere DI CHI sia, invece di chiederlo stanza per
+ * stanza. L'identificativo vince; il nome vale solo se e' di una sola stanza,
+ * e su un nome diviso in due torna `null` — che vuol dire «non si sa», e non
+ * si sa davvero.
+ *
+ * Serve al piano di una stanza (il guscio lo chiede col nome) e alle tendine,
+ * che su due omonime devono scrivere anche il piano per farle distinguere.
+ */
+export function stanzaDalRiferimento(riferimento, rooms = [], ripetuti = null) {
+  const stanze = Array.isArray(rooms) ? rooms.filter(Boolean) : [];
+  const cercato = clean(riferimento);
+  if (!cercato || !stanze.length) return null;
+  const chiave = roomKey(cercato);
+  const perId = stanze.find(
+    (room) => cercato === clean(room?.id) || (Boolean(chiave) && chiave === roomKey(room?.id)),
+  );
+  if (perId) return perId;
+  const divisi = ripetuti || nomiRipetuti(stanze);
+  if (divisi.has(lower(cercato)) || (chiave && divisi.has(chiave))) return null;
+  return (
+    stanze.find(
+      (room) =>
+        lower(cercato) === lower(room?.name) || (Boolean(chiave) && chiave === roomKey(room?.name)),
+    ) || null
   );
 }
 
@@ -337,6 +418,9 @@ export function roomOverviewModel(input = {}) {
     assigned: array(input.assigned),
   };
 
+  /* I nomi che in questa casa ne identificano piu' di una: si contano una
+   * volta sola, non per ogni voce di ogni blocco. */
+  const ripetuti = nomiRipetuti(stanze);
   const assegnate = new Set();
   const entitaGiaViste = new Set();
   /* Una cosa sola compare una volta sola (#426).
@@ -370,12 +454,8 @@ export function roomOverviewModel(input = {}) {
   const pagine = stanze.map((room) => {
     const blocchi = ROOM_BLOCKS.map((blocco) => {
       const voci = sorgenti[blocco.section].filter((item) => {
-        /* Due stanze con lo stesso nome sono un errore di configurazione, ma
-         * non e' una ragione per far comparire la stessa luce due volte: la
-         * prima che la reclama se la tiene, e la seconda resta vuota — che e'
-         * anche il modo in cui il doppione si nota. */
         if (!nuova(item)) return false;
-        if (!belongsToRoom(item, room)) return false;
+        if (!belongsToRoom(item, room, ripetuti)) return false;
         segna(item);
         return true;
       });
@@ -392,9 +472,9 @@ export function roomOverviewModel(input = {}) {
     };
   });
 
-  /* Cio' che una stanza non ce l'ha, o ce l'ha ma punta a una stanza che non
-   * esiste piu'. Non e' un errore da nascondere: e' la sola occasione di
-   * accorgersene. */
+  /* Cio' che una stanza non ce l'ha, ce l'ha ma punta a una stanza che non
+   * esiste piu', oppure la nomina con un nome che due stanze si dividono. Non
+   * e' un errore da nascondere: e' la sola occasione di accorgersene. */
   const orfane = ROOM_BLOCKS.map((blocco) => ({
     ...blocco,
     voci: sorgenti[blocco.section].filter((item) => {

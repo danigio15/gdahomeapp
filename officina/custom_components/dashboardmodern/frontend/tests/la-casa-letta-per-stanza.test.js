@@ -19,6 +19,8 @@ import { normalizeDevice } from "../src/core/device-model.js";
 import {
   ROOM_BLOCKS,
   belongsToRoom,
+  nomiRipetuti,
+  stanzaDalRiferimento,
   lightItems,
   pickRoomPage,
   roomOverviewModel,
@@ -211,4 +213,92 @@ test("dove si dichiara una stanza, si sceglie: non si scrive", async () => {
   const comune = await readFile(new URL("../src/sections/shared.js", import.meta.url), "utf8");
   const corpo = comune.slice(comune.indexOf("export function roomOptionsMarkup"));
   assert.match(corpo.slice(0, 900), /room\?\.id \|\| room\?\.name/);
+});
+
+/* ── due stanze che si chiamano uguale (#17) ────────────────────────────── */
+
+test("un nome è ripetuto quando è di due stanze, non quando si scrive in due modi", () => {
+  /* Un nome si riconosce in due modi — minuscolo e sminuzzato — e su «Camera»
+   * i due modi danno la stessa parola. Contandoli separatamente ogni stanza
+   * faceva due, e in una casa di stanze tutte diverse nessuna entità assegnata
+   * per nome sarebbe più arrivata da nessuna parte. */
+  assert.deepEqual([...nomiRipetuti([{ name: "Camera" }, { name: "Salone" }])], []);
+  assert.deepEqual([...nomiRipetuti([{ name: "Bagno" }, { name: "bagno " }])], ["bagno"]);
+  assert.deepEqual([...nomiRipetuti([])], []);
+});
+
+test("con due bagni su due piani, l'id assegna e il nome no", () => {
+  /* «Posso creare bagno primo piano e bagno secondo piano e le entità poi
+   * devono funzionare divise, non è la stessa stanza.» */
+  const sotto = { id: "room_c", name: "Bagno", floor: "Piano terra" };
+  const sopra = { id: "room_e", name: "Bagno", floor: "Primo piano" };
+  const ripetuti = nomiRipetuti([sotto, sopra]);
+
+  /* L'identificativo vince sempre, e ognuno va dove deve. */
+  assert.equal(belongsToRoom({ room: "room_e" }, sopra, ripetuti), true);
+  assert.equal(belongsToRoom({ room: "room_e" }, sotto, ripetuti), false);
+
+  /* Il nome diviso in due non assegna a NESSUNA delle due. Prima andava alla
+   * prima, in silenzio: su due bagni di due piani diversi vuol dire mettere
+   * l'interruttore di sopra nella stanza di sotto, e chi lo tocca spegne la
+   * luce sbagliata senza capire perché. Finire nel raccoglitore si vede, e si
+   * va a correggere. */
+  assert.equal(belongsToRoom({ room: "Bagno" }, sotto, ripetuti), false);
+  assert.equal(belongsToRoom({ room: "Bagno" }, sopra, ripetuti), false);
+});
+
+test("in una casa senza omonimie il nome assegna come sempre", () => {
+  const salotto = { id: "room_b", name: "Salone" };
+  const ripetuti = nomiRipetuti([salotto, { id: "room_c", name: "Bagno" }]);
+  assert.equal(belongsToRoom({ room: "Salone" }, salotto, ripetuti), true);
+  assert.equal(belongsToRoom({ room: "salone" }, salotto, ripetuti), true);
+  /* E senza l'elenco in mano — chi chiama da fuori può non averlo — vale la
+   * regola di prima, che su una casa così è la stessa. */
+  assert.equal(belongsToRoom({ room: "Salone" }, salotto), true);
+});
+
+test("le due luci dei due bagni non finiscono tutte nel primo", () => {
+  const stanze = [
+    { id: "room_c", name: "Bagno", floor: "Piano terra" },
+    { id: "room_e", name: "Bagno", floor: "Primo piano" },
+  ];
+  const luci = { "light.bagno_terra": "Luce di sotto", "light.bagno_primo": "Luce di sopra" };
+  const dove = (lightRooms) =>
+    roomOverviewModel({ rooms: stanze, lights: luci, lightRooms }).map((pagina) => [
+      pagina.senzaStanza ? "—" : `${pagina.name} ${pagina.floor}`,
+      (pagina.blocchi.find((blocco) => blocco.key === "luci")?.voci || []).map((voce) => voce.entity),
+    ]);
+
+  /* Scritte con l'id: ognuna al suo posto. */
+  assert.deepEqual(
+    dove({ "light.bagno_terra": "room_c", "light.bagno_primo": "room_e" }),
+    [
+      ["Bagno Piano terra", ["light.bagno_terra"]],
+      ["Bagno Primo piano", ["light.bagno_primo"]],
+    ],
+  );
+
+  /* Scritte col nome: nessuna delle due stanze se le prende, e tutte e due
+   * compaiono nel raccoglitore — che è la sola occasione di accorgersene. */
+  assert.deepEqual(
+    dove({ "light.bagno_terra": "Bagno", "light.bagno_primo": "Bagno" }),
+    [
+      ["Bagno Piano terra", []],
+      ["Bagno Primo piano", []],
+      ["—", ["light.bagno_terra", "light.bagno_primo"]],
+    ],
+  );
+});
+
+test("un riferimento dice di che stanza è, o dice che non si sa", () => {
+  const stanze = [
+    { id: "room_a", name: "Cucina", floor: "Piano terra" },
+    { id: "room_c", name: "Bagno", floor: "Piano terra" },
+    { id: "room_e", name: "Bagno", floor: "Primo piano" },
+  ];
+  assert.equal(stanzaDalRiferimento("room_e", stanze)?.floor, "Primo piano");
+  assert.equal(stanzaDalRiferimento("Cucina", stanze)?.id, "room_a");
+  assert.equal(stanzaDalRiferimento("Bagno", stanze), null, "diviso in due: non si sa");
+  assert.equal(stanzaDalRiferimento("Cantina", stanze), null);
+  assert.equal(stanzaDalRiferimento("", stanze), null);
 });

@@ -50,6 +50,11 @@ import {
   pastiglieDellaStanza,
   stanzePerPiano,
 } from "../core/le-stanze-per-piano.js";
+import {
+  CHIAVE_PIANI,
+  CHIAVE_SEGNI_DEI_PIANI,
+  segnoDelPiano,
+} from "../core/i-piani-della-casa.js";
 import { apriIlMenu } from "./azioni-servizio-giusto-section.js";
 import { dipingiLeCardDelClima, laCardDelClima } from "./climate-thermal-section.js";
 import { parolaDiStato } from "./le-parole-di-home-assistant.js";
@@ -896,12 +901,26 @@ export function blockMarkup(blocco, states) {
 
 /* I piani della casa nell'ordine in cui stanno, quando il guscio lo sa. */
 function iPiani() {
+  const salvati = readJson(CHIAVE_PIANI, []);
+  const dichiarati = Array.isArray(salvati) ? salvati.map(clean).filter(Boolean) : [];
+  if (dichiarati.length) return dichiarati;
+  /* Chi non ha mai aperto il pannello dei piani non ha niente salvato: il
+   * guscio sa comunque quali piani portano addosso le stanze. */
   try {
     const nomi = root.cdFloorNames?.();
     return Array.isArray(nomi) ? nomi.map(clean).filter(Boolean) : [];
   } catch (_error) {
     return [];
   }
+}
+
+/* Il segno scelto per ogni piano. Il posto dove tenerlo c'e' da sempre; fino
+ * al pannello dei piani nessuna casella lo riempiva, e tutti i titoli
+ * portavano la stessa casetta — tre piani con la stessa faccia non aiutano a
+ * capire a che piano si sta guardando. */
+function iSegniDeiPiani() {
+  const mappa = readJson(CHIAVE_SEGNI_DEI_PIANI, {});
+  return mappa && typeof mappa === "object" && !Array.isArray(mappa) ? mappa : {};
 }
 
 const statoDi = (entity, states) => clean(states?.[clean(entity)]?.state);
@@ -1084,7 +1103,7 @@ function tesseraDellaStanza(pagina, conti) {
     </article>`;
 }
 
-function gruppoMarkup(gruppo, conti) {
+function gruppoMarkup(gruppo, conti, segni = {}) {
   const accese = acceseNelPiano(gruppo, conti);
   /* Zero non si scrive: «tutto spento» e' la stessa cosa detta bene, ed e' la
    * risposta che uno cerca guardando le scale. */
@@ -1096,8 +1115,11 @@ function gruppoMarkup(gruppo, conti) {
    * «queste stanno nel piano qui sopra», che e' il contrario di quello che
    * dice. */
   const nome = gruppo.piano || t("Senza piano", "No floor");
+  /* Ogni piano col SUO segno. Le stanze che un piano non ce l'hanno non ne
+   * portano nessuno: un segno inventato le farebbe sembrare un piano. */
+  const segno = gruppo.piano ? `${segnoDelPiano(segni, gruppo.piano)} ` : "";
   const testa = gruppo.intitolare
-    ? `<h2 class="dm-stanze-piano"><span>🏠 ${esc(nome)}</span><small>${esc(riassunto)}</small></h2>`
+    ? `<h2 class="dm-stanze-piano"><span>${esc(segno)}${esc(nome)}</span><small>${esc(riassunto)}</small></h2>`
     : "";
   return `${testa}<div class="dm-stanze-indice-griglia">${gruppo.stanze
     .map((pagina) => tesseraDellaStanza(pagina, conti[pagina.id] || {}))
@@ -1108,13 +1130,14 @@ function gruppoMarkup(gruppo, conti) {
 export function indiceMarkup(pagine, states = {}) {
   const conti = tuttiIConti(pagine, states);
   const gruppi = stanzePerPiano(pagine, { piani: iPiani() });
+  const segni = iSegniDeiPiani();
   const quante = pagine.length === 1 ? t("una stanza", "one room") : `${pagine.length} ${t("stanze", "rooms")}`;
   const piani = gruppi.filter((gruppo) => gruppo.intitolare && gruppo.piano).length;
   const sopra = piani > 1 ? `${piani} ${t("piani", "floors")} · ${quante}` : quante;
   return `<header class="dm-stanze-indice-testa">
       <h1>${esc(t("Le stanze", "The rooms"))}</h1><small>${esc(sopra)}</small>
     </header>
-    ${gruppi.map((gruppo) => gruppoMarkup(gruppo, conti)).join("")}`;
+    ${gruppi.map((gruppo) => gruppoMarkup(gruppo, conti, segni)).join("")}`;
 }
 
 export function roomPageMarkup(pagine, scelta, states = {}) {

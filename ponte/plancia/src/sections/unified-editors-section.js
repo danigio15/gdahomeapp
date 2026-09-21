@@ -15,6 +15,7 @@ import {
   durataScritta,
   normalizzaIMinuti,
 } from "../core/spegnimento-programmato.js";
+import { CHIAVE_PIANI, iPianiDellaCasa } from "../core/i-piani-della-casa.js";
 import { iDodiciMesi, normalizzaIMesi } from "../core/stagione-del-clima.js";
 import {
   quickClimateFieldsMarkup,
@@ -616,6 +617,34 @@ function openShutterEditor(item, index) {
   });
 }
 
+/**
+ * La tendina dei piani, al posto della casella di testo che c'era.
+ *
+ * Scritto a mano, «primo piano» accanto a un «Primo piano» gia' esistente
+ * faceva due piani: la stessa casa finiva divisa in quattro per una lettera.
+ * E un piano si crea nel pannello che sta in cima alla stessa scheda, dove lo
+ * si puo' anche ordinare e rinominare — scriverne uno nuovo da qui vorrebbe
+ * dire due posti per crearli e uno solo per gestirli.
+ *
+ * Il piano che una stanza ha addosso ma che l'elenco non conosce resta nella
+ * tendina, in fondo e selezionato: una configurazione piu' vecchia non deve
+ * perdere il suo piano solo perche' non e' mai passata di qui.
+ */
+function tendinaDeiPiani(scelto) {
+  const suo = clean(scelto);
+  const nomi = iPianiDellaCasa(readJson(CHIAVE_PIANI, []), listFor("room"), {}).map(
+    (piano) => piano.nome,
+  );
+  if (suo && !nomi.includes(suo)) nomi.push(suo);
+  const voci = nomi
+    .map(
+      (nome) =>
+        `<option value="${esc(nome)}"${nome === suo ? " selected" : ""}>${esc(nome)}</option>`,
+    )
+    .join("");
+  return `<select class="ed-input" name="floor"><option value=""${suo ? "" : " selected"}>— ${esc(t("Senza piano", "No floor"))} —</option>${voci}</select>`;
+}
+
 function openRoomEditor(item, index) {
   const initialIcon = clean(item.icon) || "mdi:home";
   const { form, close } = modalShell(
@@ -623,7 +652,7 @@ function openRoomEditor(item, index) {
     t("Modifica stanza", "Edit room"),
     `<label class="ed-slot"><span class="ed-slot-lbl">${t("Nome", "Name")}</span><input class="ed-input" name="name" value="${esc(item.name)}" required></label>
      <label class="ed-slot"><span class="ed-slot-lbl">${t("Icona", "Icon")}</span><span class="dm-unified-icon-row"><span class="dm-unified-icon-preview" data-room-icon-preview aria-hidden="true">${iconMarkup(initialIcon, "🏠", 36)}</span><input class="ed-input" name="icon" value="${esc(initialIcon)}"></span><small>${t("L’anteprima usa lo stesso renderer dell’icona stanza nella dashboard.", "The preview uses the same room-icon renderer as the dashboard.")}</small></label>
-     <label class="ed-slot"><span class="ed-slot-lbl">${t("Piano", "Floor")}</span><input class="ed-input" name="floor" value="${esc(item.floor)}"></label>`,
+     <label class="ed-slot"><span class="ed-slot-lbl">${t("Piano", "Floor")}</span>${tendinaDeiPiani(item.floor)}<small>${t("I piani si creano e si ordinano qui sopra, nella scheda Stanze.", "Floors are created and ordered above, in the Rooms tab.")}</small></label>`,
     "🏠",
   );
   const preview = form.querySelector("[data-room-icon-preview]");

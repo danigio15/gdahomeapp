@@ -16,6 +16,8 @@ import { readFileSync } from "node:fs";
 
 const leggi = (rel) => readFileSync(new URL(`../src/${rel}`, import.meta.url), "utf8");
 
+const { ilPianoDellaStanza: ilPiano } = await import("../src/sections/stanze-per-nome-section.js");
+
 test("un identificativo di stanza diventa il suo nome, dovunque si legga", async () => {
   const { testoConINomi } = await import("../src/sections/stanze-per-nome-section.js");
   const nomi = { room_mt8vpz7m: "Soggiorno", room_mt8vrer0: "Cucina" };
@@ -54,13 +56,33 @@ test("si guarda solo dove un id può uscire, e solo se ce n'è uno", () => {
   assert.match(sorgente, /const daCambiare = \[\];/);
 });
 
-test("il piano si trova anche partendo dall'identificativo", () => {
-  const sorgente = leggi("sections/stanze-per-nome-section.js");
-  /* Il guscio cerca per nome; se non trova, si richiede col nome della stanza
-   * — e le tapparelle di due piani tornano in due gruppi. */
-  assert.match(sorgente, /function cdRoomFloorOf\(riferimento\)/);
-  assert.match(sorgente, /const nome = clean\(roomLabel\(riferimento\)\);/);
-  assert.match(sorgente, /originale\.call\(this, nome\)/);
+test("il piano si trova anche partendo dall'identificativo", async () => {
+  const { ilPianoDellaStanza } = await import("../src/sections/stanze-per-nome-section.js");
+  const stanze = [
+    { id: "room_mt8vpz7m", name: "Soggiorno", floor: "Piano terra" },
+    { id: "room_mt8vrer0", name: "Camera", floor: "Primo piano" },
+  ];
+  /* Il guscio cercava solo per nome, e con un id in mano tornava «nessun
+   * piano»: le tapparelle di una casa a due piani finivano tutte sotto lo
+   * stesso gruppo. */
+  assert.equal(ilPianoDellaStanza("room_mt8vrer0", stanze), "Primo piano");
+  assert.equal(ilPianoDellaStanza("Camera", stanze), "Primo piano");
+  assert.equal(ilPianoDellaStanza("Cantina", stanze), "");
+});
+
+test("con due stanze che si chiamano uguale il piano non si indovina", () => {
+  /* «Posso creare bagno primo piano e bagno secondo piano e le entità poi
+   * devono funzionare divise»: prima si rispondeva col piano della PRIMA,
+   * sempre, e le tapparelle del bagno di sopra finivano sotto il titolo del
+   * piano terra. Un titolo di piano mancante si vede e si corregge; uno
+   * sbagliato si crede. */
+  const stanze = [
+    { id: "room_c", name: "Bagno", floor: "Piano terra" },
+    { id: "room_e", name: "Bagno", floor: "Primo piano" },
+  ];
+  assert.equal(ilPiano("Bagno", stanze), "", "col nome diviso in due non si sa");
+  assert.equal(ilPiano("room_c", stanze), "Piano terra");
+  assert.equal(ilPiano("room_e", stanze), "Primo piano");
 });
 
 test("nella scheda Finestre la stanza sta in alto, e dice di essere la stanza", () => {
