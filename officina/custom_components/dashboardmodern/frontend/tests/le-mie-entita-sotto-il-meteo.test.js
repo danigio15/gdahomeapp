@@ -110,16 +110,26 @@ test("una condizione che non si riesce a leggere vale NO", () => {
 
 /* ── la pastiglia ───────────────────────────────────────────────────────── */
 
-test("la pastiglia esce in fondo, dopo le misure, e porta la sua identità", () => {
+test("la pastiglia sta con le cose accese, prima delle misure, e porta la sua identità", () => {
+  /* «Anche la 7 va là», dove stanno i dispositivi accesi. Erano in fondo,
+   * dietro alle misure, e non era il posto: una lettura che uno ha scelto
+   * apposta la sta cercando, mentre quelle quattro misure sono lo sfondo su
+   * cui si guarda la casa. */
   const misure = { temperatura: { valore: 21.4, unita: "°C", nome: "Fuori" } };
-  const pastiglie = pastiglieDellaCasa([], {
+  const modelloLuci = {
+    key: "luci",
+    icon: "💡",
+    accent: "#f59e0b",
+    on: [{ entity: "light.salone", name: "Salone" }],
+  };
+  const pastiglie = pastiglieDellaCasa([modelloLuci], {
     barra: { mie: [SERBATOIO] },
     misure,
     mie: letto(64, { condizione: "on" }),
   });
   const chiavi = pastiglie.map((pastiglia) => pastiglia.chiave);
-  assert.deepEqual(chiavi, ["temperatura", "mia"]);
-  const [, mia] = pastiglie;
+  assert.deepEqual(chiavi, ["luci", "mia", "temperatura"]);
+  const mia = pastiglie[1];
   /* Una pastiglia per entità: chi disegna le riconosce da qui, e due che si
    * chiamassero uguale sarebbero la stessa disegnata due volte. */
   assert.equal(mia.id, `mia:${SERBATOIO.entity}`);

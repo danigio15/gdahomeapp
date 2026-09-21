@@ -3642,7 +3642,7 @@ export default Object.freeze({
   "The base map is not answering. The rain is there: you can change map under ⚙️ → Weather and radar.": "Mapa podkładowa nie odpowiada. Deszcz jest widoczny: mapę zmienisz w ⚙️ → Pogoda i radar.",
   "ARMED ·": "UZBROJONY ·",
   "Your own entities in the bar": "Twoje encje na pasku",
-  "Besides the ones the house announces by itself, you can add your own: the water in the tank, the days to the next service, how long until a delivery. They sit at the end of the bar, and each one can show up only when it matters — for instance only while holiday mode is on.": "Poza tym, co dom zgłasza sam, możesz dodać własne: woda w zbiorniku, dni do następnego przeglądu, ile zostało do dostawy. Stoją na końcu paska i każda może pokazywać się tylko wtedy, gdy ma znaczenie — na przykład tylko wtedy, gdy włączony jest tryb wakacyjny.",
+  "Besides the ones the house announces by itself, you can add your own: the water in the tank, the days to the next service, how long until a delivery. They sit next to what is on, before the measurements, and each one can show up only when it matters — for instance only while holiday mode is on.": "Poza tym, co dom zgłasza sam, możesz dodać własne: woda w zbiorniku, dni do następnego przeglądu, ile zostało do dostawy. Stoją obok tego, co jest włączone, przed pomiarami, i każda może pokazywać się tylko wtedy, gdy ma znaczenie — na przykład tylko wtedy, gdy włączony jest tryb wakacyjny.",
   "Unnamed pill": "Pigułka bez nazwy",
   "Entity to show": "Encja do pokazania",
   "Name under the value": "Nazwa pod wartością",

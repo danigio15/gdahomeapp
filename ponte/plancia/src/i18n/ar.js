@@ -3642,7 +3642,7 @@ export default Object.freeze({
   "The base map is not answering. The rain is there: you can change map under ⚙️ → Weather and radar.": "خريطة الأساس لا تستجيب. المطر موجود: يمكنك تغيير الخريطة من ⚙️ ← الطقس والرادار.",
   "ARMED ·": "مُفعَّل ·",
   "Your own entities in the bar": "كياناتك في الشريط",
-  "Besides the ones the house announces by itself, you can add your own: the water in the tank, the days to the next service, how long until a delivery. They sit at the end of the bar, and each one can show up only when it matters — for instance only while holiday mode is on.": "إلى جانب ما يعلنه البيت من تلقاء نفسه، يمكنك إضافة ما يخصّك: ماء الخزان، الأيام المتبقية حتى الصيانة القادمة، كم بقي على التسليم. تأتي في آخر الشريط، ويمكن لكل واحدة أن تظهر فقط حين يلزم الأمر — مثلاً فقط أثناء تفعيل وضع العطلة.",
+  "Besides the ones the house announces by itself, you can add your own: the water in the tank, the days to the next service, how long until a delivery. They sit next to what is on, before the measurements, and each one can show up only when it matters — for instance only while holiday mode is on.": "إلى جانب ما يعلنه البيت من تلقاء نفسه، يمكنك إضافة ما يخصّك: ماء الخزان، الأيام المتبقية حتى الصيانة القادمة، كم بقي على التسليم. تأتي إلى جانب ما هو مُشغَّل، قبل القياسات، ويمكن لكل واحدة أن تظهر فقط حين يلزم الأمر — مثلاً فقط أثناء تفعيل وضع العطلة.",
   "Unnamed pill": "حبة بلا اسم",
   "Entity to show": "الكيان الذي يُعرض",
   "Name under the value": "الاسم تحت القيمة",

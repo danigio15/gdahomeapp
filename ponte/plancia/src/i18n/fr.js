@@ -3642,7 +3642,7 @@ export default Object.freeze({
   "The base map is not answering. The rain is there: you can change map under ⚙️ → Weather and radar.": "Le fond de carte ne répond pas. La pluie est bien là : tu peux changer de carte dans ⚙️ → Météo et radar.",
   "ARMED ·": "ARMÉ ·",
   "Your own entities in the bar": "Tes entités dans la bande",
-  "Besides the ones the house announces by itself, you can add your own: the water in the tank, the days to the next service, how long until a delivery. They sit at the end of the bar, and each one can show up only when it matters — for instance only while holiday mode is on.": "En plus de celles que la maison annonce d'elle-même, tu peux ajouter les tiennes : l'eau de la cuve, les jours avant la prochaine révision, le temps restant avant une livraison. Elles se placent en fin de bande, et chacune peut n'apparaître que lorsqu'elle compte — par exemple seulement quand le mode vacances est actif.",
+  "Besides the ones the house announces by itself, you can add your own: the water in the tank, the days to the next service, how long until a delivery. They sit next to what is on, before the measurements, and each one can show up only when it matters — for instance only while holiday mode is on.": "En plus de celles que la maison annonce d'elle-même, tu peux ajouter les tiennes : l'eau de la cuve, les jours avant la prochaine révision, le temps restant avant une livraison. Elles se placent à côté de ce qui est allumé, avant les mesures, et chacune peut n'apparaître que lorsqu'elle compte — par exemple seulement quand le mode vacances est actif.",
   "Unnamed pill": "Pastille sans nom",
   "Entity to show": "Entité à afficher",
   "Name under the value": "Nom sous la valeur",

@@ -3642,7 +3642,7 @@ export default Object.freeze({
   "The base map is not answering. The rain is there: you can change map under ⚙️ → Weather and radar.": "배경 지도가 응답하지 않습니다. 비는 표시되고 있습니다: ⚙️ → 날씨와 레이더에서 지도를 바꿀 수 있습니다.",
   "ARMED ·": "경계 중 ·",
   "Your own entities in the bar": "띠에 넣은 내 엔티티",
-  "Besides the ones the house announces by itself, you can add your own: the water in the tank, the days to the next service, how long until a delivery. They sit at the end of the bar, and each one can show up only when it matters — for instance only while holiday mode is on.": "집이 스스로 알리는 것 외에 직접 넣을 수도 있습니다: 물탱크의 물, 다음 점검까지 남은 날, 배송까지 남은 시간. 띠 끝에 놓이며, 각각 필요할 때만 나타나게 할 수 있습니다 — 예를 들어 휴가 모드가 켜져 있는 동안만.",
+  "Besides the ones the house announces by itself, you can add your own: the water in the tank, the days to the next service, how long until a delivery. They sit next to what is on, before the measurements, and each one can show up only when it matters — for instance only while holiday mode is on.": "집이 스스로 알리는 것 외에 직접 넣을 수도 있습니다: 물탱크의 물, 다음 점검까지 남은 날, 배송까지 남은 시간. 켜져 있는 것들 옆, 측정값 앞에 놓이며, 각각 필요할 때만 나타나게 할 수 있습니다 — 예를 들어 휴가 모드가 켜져 있는 동안만.",
   "Unnamed pill": "이름 없는 알약",
   "Entity to show": "보여줄 엔티티",
   "Name under the value": "값 아래 이름",

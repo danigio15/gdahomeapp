@@ -761,7 +761,7 @@ export const MESSAGE_KEYS = Object.freeze([
   "Being worked on",
   "Below the running threshold and above this = Standby.",
   "Below this percentage a battery counts as needing replacement: it turns colour on the page and enters the count on the Home tile. It applies to the whole house.",
-  "Besides the ones the house announces by itself, you can add your own: the water in the tank, the days to the next service, how long until a delivery. They sit at the end of the bar, and each one can show up only when it matters — for instance only while holiday mode is on.",
+  "Besides the ones the house announces by itself, you can add your own: the water in the tank, the days to the next service, how long until a delivery. They sit next to what is on, before the measurements, and each one can show up only when it matters — for instance only while holiday mode is on.",
   "Black",
   "Blitzortung exposes the count and, separately, the distance of the last strike in km.",
   "Blonde",

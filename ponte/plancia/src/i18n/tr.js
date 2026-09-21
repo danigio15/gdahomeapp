@@ -3642,7 +3642,7 @@ export default Object.freeze({
   "The base map is not answering. The rain is there: you can change map under ⚙️ → Weather and radar.": "Altlık harita yanıt vermiyor. Yağmur görünüyor: haritayı ⚙️ → Hava durumu ve radar altından değiştirebilirsin.",
   "ARMED ·": "KURULU ·",
   "Your own entities in the bar": "Şeritteki kendi varlıkların",
-  "Besides the ones the house announces by itself, you can add your own: the water in the tank, the days to the next service, how long until a delivery. They sit at the end of the bar, and each one can show up only when it matters — for instance only while holiday mode is on.": "Evin kendiliğinden bildirdiklerinin yanına kendi bilgilerini de ekleyebilirsin: depodaki su, bir sonraki bakıma kalan gün, bir teslimata kalan süre. Şeridin sonunda dururlar ve her biri yalnızca gerektiğinde görünebilir — örneğin yalnızca tatil modu açıkken.",
+  "Besides the ones the house announces by itself, you can add your own: the water in the tank, the days to the next service, how long until a delivery. They sit next to what is on, before the measurements, and each one can show up only when it matters — for instance only while holiday mode is on.": "Evin kendiliğinden bildirdiklerinin yanına kendi bilgilerini de ekleyebilirsin: depodaki su, bir sonraki bakıma kalan gün, bir teslimata kalan süre. Açık olanların yanında, ölçümlerden önce dururlar ve her biri yalnızca gerektiğinde görünebilir — örneğin yalnızca tatil modu açıkken.",
   "Unnamed pill": "Adsız hap",
   "Entity to show": "Gösterilecek varlık",
   "Name under the value": "Değerin altındaki ad",

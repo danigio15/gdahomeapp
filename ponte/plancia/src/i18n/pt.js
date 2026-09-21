@@ -3642,7 +3642,7 @@ export default Object.freeze({
   "The base map is not answering. The rain is there: you can change map under ⚙️ → Weather and radar.": "O mapa de fundo não responde. A chuva está lá: podes mudar de mapa em ⚙️ → Meteorologia e radar.",
   "ARMED ·": "ARMADO ·",
   "Your own entities in the bar": "As tuas entidades na barra",
-  "Besides the ones the house announces by itself, you can add your own: the water in the tank, the days to the next service, how long until a delivery. They sit at the end of the bar, and each one can show up only when it matters — for instance only while holiday mode is on.": "Além das que a casa anuncia sozinha, podes acrescentar as tuas: a água do depósito, os dias até à próxima revisão, quanto falta para uma entrega. Ficam no fim da barra, e cada uma pode aparecer só quando interessa — por exemplo só enquanto o modo férias estiver ativo.",
+  "Besides the ones the house announces by itself, you can add your own: the water in the tank, the days to the next service, how long until a delivery. They sit next to what is on, before the measurements, and each one can show up only when it matters — for instance only while holiday mode is on.": "Além das que a casa anuncia sozinha, podes acrescentar as tuas: a água do depósito, os dias até à próxima revisão, quanto falta para uma entrega. Ficam ao lado do que está ligado, antes das medições, e cada uma pode aparecer só quando interessa — por exemplo só enquanto o modo férias estiver ativo.",
   "Unnamed pill": "Pastilha sem nome",
   "Entity to show": "Entidade a mostrar",
   "Name under the value": "Nome por baixo do valor",

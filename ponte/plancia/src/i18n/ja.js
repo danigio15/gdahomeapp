@@ -3642,7 +3642,7 @@ export default Object.freeze({
   "The base map is not answering. The rain is there: you can change map under ⚙️ → Weather and radar.": "ベースマップが応答していません。雨は表示されています。⚙️ → 天気とレーダー で地図を変更できます。",
   "ARMED ·": "警戒中 ·",
   "Your own entities in the bar": "帯に置く自分のエンティティ",
-  "Besides the ones the house announces by itself, you can add your own: the water in the tank, the days to the next service, how long until a delivery. They sit at the end of the bar, and each one can show up only when it matters — for instance only while holiday mode is on.": "家が自分で知らせるものに加えて、自分のものも置けます: タンクの水、次の点検までの日数、配達までの残り時間。帯の末尾に並び、それぞれ必要なときだけ表示できます — たとえば留守モードが入っているあいだだけ。",
+  "Besides the ones the house announces by itself, you can add your own: the water in the tank, the days to the next service, how long until a delivery. They sit next to what is on, before the measurements, and each one can show up only when it matters — for instance only while holiday mode is on.": "家が自分で知らせるものに加えて、自分のものも置けます: タンクの水、次の点検までの日数、配達までの残り時間。点いているものの隣、計測値の前に並び、それぞれ必要なときだけ表示できます — たとえば留守モードが入っているあいだだけ。",
   "Unnamed pill": "名前のないピル",
   "Entity to show": "表示するエンティティ",
   "Name under the value": "値の下の名前",

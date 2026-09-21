@@ -3642,7 +3642,7 @@ export default Object.freeze({
   "The base map is not answering. The rain is there: you can change map under ⚙️ → Weather and radar.": "底图没有响应。降雨是正常显示的：可以在 ⚙️ → 天气与雷达 中更换地图。",
   "ARMED ·": "已布防 ·",
   "Your own entities in the bar": "横条里你自己的实体",
-  "Besides the ones the house announces by itself, you can add your own: the water in the tank, the days to the next service, how long until a delivery. They sit at the end of the bar, and each one can show up only when it matters — for instance only while holiday mode is on.": "除了家里自己报出来的，你还可以加上自己的：水箱里的水、距离下次保养的天数、距离送达还有多久。它们排在横条末尾，每一个都可以只在需要时出现 — 比如只在度假模式开启时。",
+  "Besides the ones the house announces by itself, you can add your own: the water in the tank, the days to the next service, how long until a delivery. They sit next to what is on, before the measurements, and each one can show up only when it matters — for instance only while holiday mode is on.": "除了家里自己报出来的，你还可以加上自己的：水箱里的水、距离下次保养的天数、距离送达还有多久。它们排在开着的东西旁边、测量值之前，每一个都可以只在需要时出现 — 比如只在度假模式开启时。",
   "Unnamed pill": "未命名的药丸",
   "Entity to show": "要显示的实体",
   "Name under the value": "数值下方的名称",

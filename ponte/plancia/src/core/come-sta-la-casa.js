@@ -356,6 +356,64 @@ function ritiriVicini(modello, giorni = QUANDO_VICINO) {
  * pastiglia. Una barra che dice «0 luci accese» occupa spazio per non dire
  * niente.
  */
+/* Le pastiglie scelte a mano (#7), pronte da infilare nella fascia.
+ *
+ * Stanno fra gli stati della casa e le misure: dopo le luci accese, le prese e
+ * la presenza, e prima della temperatura e della pioggia. Erano in fondo a
+ * tutto, dietro alle misure, e non era il posto giusto — «anche la 7 va li'»,
+ * dove stanno le cose accese. Ha ragione: una lettura che uno ha scelto
+ * apposta la sta cercando, e quelle quattro misure sono lo sfondo su cui si
+ * guarda la casa, non la notizia. Davanti restano comunque le notizie che la
+ * fascia annuncia da se'.
+ *
+ * Le entita' le legge la sezione, come tutto qui dentro: arrivano gia' letti
+ * sia il valore sia com'e' adesso la voce che decide. La regola di QUANDO si
+ * vede pero' sta qui, dove si prova senza un documento. */
+function lePastiglieMie(config, mie) {
+  const fuori = [];
+  for (const mia of config.mie) {
+    if (!mia.entity) continue;
+    const letta = mie?.[mia.entity];
+    if (!laMiaSiVede(mia, letta)) continue;
+    /* `?? NaN` non e' uno scrupolo: una lettura che non c'e' arriva `null`, e
+     * `Number(null)` fa ZERO. Senza questo, un'entita' che non risponde
+     * scriverebbe «0» in fascia, che e' la cosa peggiore fra le tre — non dire
+     * niente, dire che non si sa, dire un numero falso. */
+    const numero = Number(letta?.valore ?? NaN);
+    const testo = pulito(letta?.testo);
+    /* Un'entita' che non risponde non scrive «—»: la pastiglia non c'e', come
+     * per tutte le altre voci che non hanno niente da dire. */
+    if (!Number.isFinite(numero) && !testo) continue;
+    /* Il segno puo' essere un disegno del catalogo o un'emoji, e sono due
+     * caselle diverse per chi disegna. Quello scritto nella configurazione
+     * vince su quello che dichiara Home Assistant, che vince sulla stella. */
+    const segno = pulito(mia.icona) || pulito(letta?.icona) || SEGNO_MIO;
+    const disegnato = /^mdi:/i.test(segno);
+    fuori.push({
+      chiave: "mia",
+      /* Una pastiglia per entita', quindi la chiave non basta a dire quale:
+       * chi disegna le riconosce da `id`, e due «mia» con lo stesso id
+       * sarebbero la stessa pastiglia disegnata due volte. */
+      id: `mia:${mia.entity}`,
+      /* L'entita' viaggia con la pastiglia: toccandola si apre la sua scheda
+       * di Home Assistant, che e' dove quella lettura ha la storia lunga. */
+      entity: mia.entity,
+      tessera: "",
+      icona: disegnato ? "" : segno,
+      mdi: disegnato ? segno : "",
+      tinta: pulito(mia.tinta) || TINTA_MIA,
+      valore: Number.isFinite(numero) ? numero : null,
+      /* Un numero si scrive come numero, tutto il resto com'e' scritto: la
+       * parola gia' tradotta la porta la sezione, che e' quella che ha la
+       * tabella delle parole di Home Assistant. */
+      testo,
+      unita: pulito(letta?.unita),
+      nome: pulito(mia.nome) || pulito(letta?.nome) || mia.entity,
+    });
+  }
+  return fuori;
+}
+
 export function pastiglieDellaCasa(modelli, { barra, posta, misure, mie, adesso } = {}) {
   const config = normalizzaBarra(barra);
   const giorni = giorniDelRitiro(config.rifiutiDalleOre, adesso);
@@ -365,7 +423,16 @@ export function pastiglieDellaCasa(modelli, { barra, posta, misure, mie, adesso 
       .map((modello) => [pulito(modello.key), modello]),
   );
   const fuori = [];
+  /* Le tue si infilano quando si arriva alla prima misura, cioe' subito dopo
+   * gli stati della casa. Il posto sta qui e non in `VOCI_DELLA_BARRA` perche'
+   * non sono UNA voce: sono quante ne hai messe, e l'elenco di sopra dice
+   * quali voci esistono, non quante pastiglie escono. */
+  let mieFatte = false;
   for (const voce of VOCI_DELLA_BARRA) {
+    if (MISURE[voce.chiave] && !mieFatte) {
+      mieFatte = true;
+      fuori.push(...lePastiglieMie(config, mie));
+    }
     if (!config.voci[voce.chiave]) continue;
     if (voce.chiave === "posta") {
       if (posta?.arrivata)
@@ -506,56 +573,9 @@ export function pastiglieDellaCasa(modelli, { barra, posta, misure, mie, adesso 
         .filter((voce) => voce.name || voce.entity),
     });
   }
-  /* E in fondo quelle scelte a mano (#7).
-   *
-   * Stanno dopo tutto il resto perche' sono la stessa cosa delle misure fatta
-   * un passo piu' in la': una lettura scelta da chi abita la casa. Chi le ha
-   * messe sa dove sono — in fondo — mentre davanti restano le notizie che la
-   * fascia annuncia da se', che sono quelle che uno non sta cercando.
-   *
-   * Le entita' le legge la sezione, come tutto qui dentro: arrivano gia' letti
-   * sia il valore sia com'e' adesso la voce che decide. La regola di QUANDO si
-   * vede pero' sta qui, dove si prova senza un documento. */
-  for (const mia of config.mie) {
-    if (!mia.entity) continue;
-    const letta = mie?.[mia.entity];
-    if (!laMiaSiVede(mia, letta)) continue;
-    /* `?? NaN` non e' uno scrupolo: una lettura che non c'e' arriva `null`, e
-     * `Number(null)` fa ZERO. Senza questo, un'entita' che non risponde
-     * scriverebbe «0» in fascia, che e' la cosa peggiore fra le tre — non dire
-     * niente, dire che non si sa, dire un numero falso. */
-    const numero = Number(letta?.valore ?? NaN);
-    const testo = pulito(letta?.testo);
-    /* Un'entita' che non risponde non scrive «—»: la pastiglia non c'e', come
-     * per tutte le altre voci che non hanno niente da dire. */
-    if (!Number.isFinite(numero) && !testo) continue;
-    /* Il segno puo' essere un disegno del catalogo o un'emoji, e sono due
-     * caselle diverse per chi disegna. Quello scritto nella configurazione
-     * vince su quello che dichiara Home Assistant, che vince sulla stella. */
-    const segno = pulito(mia.icona) || pulito(letta?.icona) || SEGNO_MIO;
-    const disegnato = /^mdi:/i.test(segno);
-    fuori.push({
-      chiave: "mia",
-      /* Una pastiglia per entita', quindi la chiave non basta a dire quale:
-       * chi disegna le riconosce da `id`, e due «mia» con lo stesso id
-       * sarebbero la stessa pastiglia disegnata due volte. */
-      id: `mia:${mia.entity}`,
-      /* L'entita' viaggia con la pastiglia: toccandola si apre la sua scheda
-       * di Home Assistant, che e' dove quella lettura ha la storia lunga. */
-      entity: mia.entity,
-      tessera: "",
-      icona: disegnato ? "" : segno,
-      mdi: disegnato ? segno : "",
-      tinta: pulito(mia.tinta) || TINTA_MIA,
-      valore: Number.isFinite(numero) ? numero : null,
-      /* Un numero si scrive come numero, tutto il resto com'e' scritto: la
-       * parola gia' tradotta la porta la sezione, che e' quella che ha la
-       * tabella delle parole di Home Assistant. */
-      testo,
-      unita: pulito(letta?.unita),
-      nome: pulito(mia.nome) || pulito(letta?.nome) || mia.entity,
-    });
-  }
+  /* Se le misure sparissero dall'elenco, le tue non si perderebbero dietro a
+   * loro: qui si controlla che siano uscite, e in quel caso vanno in fondo. */
+  if (!mieFatte) fuori.push(...lePastiglieMie(config, mie));
   /* Ogni pastiglia ha un'identita', e per quasi tutte e' la propria chiave: di
    * luci accese ce n'e' una sola. I rifiuti sono l'eccezione — un bidone per
    * pastiglia — e se la scrivono da se'. Chi disegna riconosce le pastiglie da

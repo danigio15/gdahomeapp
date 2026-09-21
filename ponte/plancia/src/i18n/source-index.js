@@ -2440,7 +2440,7 @@ export const SOURCE_INDEX = Object.freeze({
   "Oli esausti": "Used oil",
   "Olio": "Oil",
   "oltre": "over",
-  "Oltre a quelle che la casa annuncia da sé, puoi metterne di tue: l'acqua del serbatoio, i giorni al prossimo tagliando, quanto manca a una consegna. Stanno in fondo alla fascia, e ognuna può comparire solo quando serve — per esempio solo mentre la modalità vacanze è attiva.": "Besides the ones the house announces by itself, you can add your own: the water in the tank, the days to the next service, how long until a delivery. They sit at the end of the bar, and each one can show up only when it matters — for instance only while holiday mode is on.",
+  "Oltre a quelle che la casa annuncia da sé, puoi metterne di tue: l'acqua del serbatoio, i giorni al prossimo tagliando, quanto manca a una consegna. Stanno accanto alle cose accese, prima delle misure, e ognuna può comparire solo quando serve — per esempio solo mentre la modalità vacanze è attiva.": "Besides the ones the house announces by itself, you can add your own: the water in the tank, the days to the next service, how long until a delivery. They sit next to what is on, before the measurements, and each one can show up only when it matters — for instance only while holiday mode is on.",
   "oltre il limite": "over the limit",
   "ONO": "WNW",
   "Operaio": "Worker",

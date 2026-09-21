@@ -3642,7 +3642,7 @@ export default Object.freeze({
   "The base map is not answering. The rain is there: you can change map under ⚙️ → Weather and radar.": "आधार मानचित्र उत्तर नहीं दे रहा। वर्षा दिख रही है: आप ⚙️ → मौसम और रडार में मानचित्र बदल सकते हैं।",
   "ARMED ·": "सक्रिय ·",
   "Your own entities in the bar": "पट्टी में आपकी अपनी इकाइयाँ",
-  "Besides the ones the house announces by itself, you can add your own: the water in the tank, the days to the next service, how long until a delivery. They sit at the end of the bar, and each one can show up only when it matters — for instance only while holiday mode is on.": "घर जो अपने आप बताता है उसके अलावा आप अपनी भी जोड़ सकते हैं: टंकी का पानी, अगली सर्विस में कितने दिन, डिलीवरी में कितना समय बाकी है। ये पट्टी के अंत में रहती हैं, और हर एक सिर्फ़ तभी दिख सकती है जब मायने रखे — जैसे सिर्फ़ तब जब छुट्टी मोड चालू हो।",
+  "Besides the ones the house announces by itself, you can add your own: the water in the tank, the days to the next service, how long until a delivery. They sit next to what is on, before the measurements, and each one can show up only when it matters — for instance only while holiday mode is on.": "घर जो अपने आप बताता है उसके अलावा आप अपनी भी जोड़ सकते हैं: टंकी का पानी, अगली सर्विस में कितने दिन, डिलीवरी में कितना समय बाकी है। ये चालू चीज़ों के पास, मापों से पहले रहती हैं, और हर एक सिर्फ़ तभी दिख सकती है जब मायने रखे — जैसे सिर्फ़ तब जब छुट्टी मोड चालू हो।",
   "Unnamed pill": "बिना नाम की गोली",
   "Entity to show": "दिखाने वाली इकाई",
   "Name under the value": "मान के नीचे का नाम",

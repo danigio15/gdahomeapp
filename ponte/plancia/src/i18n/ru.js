@@ -3642,7 +3642,7 @@ export default Object.freeze({
   "The base map is not answering. The rain is there: you can change map under ⚙️ → Weather and radar.": "Подложка карты не отвечает. Дождь виден: карту можно сменить в ⚙️ → Погода и радар.",
   "ARMED ·": "ПОД ОХРАНОЙ ·",
   "Your own entities in the bar": "Ваши сущности в полосе",
-  "Besides the ones the house announces by itself, you can add your own: the water in the tank, the days to the next service, how long until a delivery. They sit at the end of the bar, and each one can show up only when it matters — for instance only while holiday mode is on.": "Кроме того, о чём дом сообщает сам, можно добавить своё: вода в баке, дни до следующего обслуживания, сколько осталось до доставки. Они стоят в конце полосы, и каждая может появляться только тогда, когда это важно — например, только пока включён режим отпуска.",
+  "Besides the ones the house announces by itself, you can add your own: the water in the tank, the days to the next service, how long until a delivery. They sit next to what is on, before the measurements, and each one can show up only when it matters — for instance only while holiday mode is on.": "Кроме того, о чём дом сообщает сам, можно добавить своё: вода в баке, дни до следующего обслуживания, сколько осталось до доставки. Они стоят рядом с тем, что включено, перед измерениями, и каждая может появляться только тогда, когда это важно — например, только пока включён режим отпуска.",
   "Unnamed pill": "Плашка без названия",
   "Entity to show": "Какую сущность показать",
   "Name under the value": "Название под значением",
