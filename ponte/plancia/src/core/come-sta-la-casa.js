@@ -67,6 +67,15 @@ export const VOCI_DELLA_BARRA = Object.freeze([
   Object.freeze({ chiave: "clima", tessera: "clima" }),
   Object.freeze({ chiave: "prese", tessera: "prese" }),
   Object.freeze({ chiave: "media", tessera: "media" }),
+  /* La presenza (#73): «si potrebbe una pastiglia sotto al meteo?», chiesto
+   * dalla sezione Presenza.
+   *
+   * Sta qui e non fra le notizie di sopra per la stessa ragione per cui la sua
+   * tessera non si accende mai: qualcuno in casa non e' un allarme, e' la
+   * normalita'. E' uno stato della casa come le luci accese e le tapparelle
+   * alzate, e si legge dove si leggono quelli — non dove si legge che
+   * l'antifurto sta suonando. */
+  Object.freeze({ chiave: "presenza", tessera: "presenza" }),
   /* Le due misure stanno in fondo, e non e' un dettaglio (#461).
    *
    * «Sarebbe possibile inserire temperatura e umidita' di sensori personali?
@@ -106,6 +115,99 @@ export const TINTA_UMIDITA = "#0ea5e9";
  * detta due volte, e queste due pastiglie stanno accanto a quella. */
 export const TINTA_PIOGGIA = "#4f46e5";
 
+/* ── le pastiglie scelte a mano (#7) ─────────────────────────────────────── */
+
+/* «Avere la possibilita' di aggiungere nella sezione sotto al meteo le info di
+ * entita' personalizzate, magari scegliere se visualizzare in base allo stato.
+ * Esempio: quando la modalita' vacanze e' attiva lo mostra altrimenti no.»
+ *
+ * Le quattro misure di sopra sono la stessa idea gia' fatta, ma con le
+ * domande scelte da noi: il caldo, l'acqua, la pioggia. Questa e' la stessa
+ * cosa senza il nostro elenco — l'entita' la sceglie chi abita la casa, e con
+ * lei il nome, il segno e il colore.
+ *
+ * La condizione e' la meta' che conta davvero. Una fascia che porta sempre
+ * tutto non e' una fascia, e' un elenco: la regola di tutta la barra e' che
+ * si vede quello che ha qualcosa da dire adesso. Un'entita' scelta a mano non
+ * sa dirlo da se' — un numero c'e' sempre — quindi lo dice un'altra entita',
+ * che e' esattamente come uno ragiona: «questa mi serve quando siamo via».
+ */
+
+/* Quante se ne possono aggiungere. Non e' un limite tecnico ma la larghezza
+ * di uno schermo: la fascia scorre, ma una fila infinita di pastiglie fa
+ * perdere le prime, che sono quelle che la casa annuncia da se'. */
+export const QUANTE_MIE = 6;
+
+/* Il colore di serie: il viola non e' di nessuna tessera, e una pastiglia
+ * scelta a mano non deve sembrare il riassunto di una sezione che non c'e'. */
+export const TINTA_MIA = "#7c3aed";
+
+/* Il segno di serie, quando ne' la configurazione ne' Home Assistant ne danno
+ * uno: la stella e' quella che il motore delle icone mette da se' a un'azione
+ * senza disegno, e vuol dire quello che deve dire — una cosa messa li' da chi
+ * abita la casa. */
+export const SEGNO_MIO = "mdi:star";
+
+/* Con la condizione e senza stato vale «on»: e' quello che dice un
+ * interruttore acceso, cioe' il caso dell'esempio. */
+export const STATO_DI_SERIE = "on";
+
+function normalizzaLaMia(voce) {
+  const dato = voce && typeof voce === "object" && !Array.isArray(voce) ? voce : {};
+  const quando = pulito(dato.quando);
+  return {
+    entity: pulito(dato.entity),
+    nome: pulito(dato.nome),
+    icona: pulito(dato.icona),
+    tinta: pulito(dato.tinta),
+    quando,
+    /* Senza condizione lo stato non vuol dire niente e non si tiene: una
+     * casella piena che non decide niente e' una casella che promette. */
+    stato: quando ? pulito(dato.stato) || STATO_DI_SERIE : "",
+  };
+}
+
+/** Le pastiglie scelte a mano, ripulite: al massimo `QUANTE_MIE`, senza doppie. */
+export function normalizzaLeMie(salvate) {
+  const elenco = Array.isArray(salvate) ? salvate : [];
+  const fuori = [];
+  const gia = new Set();
+  for (const voce of elenco) {
+    if (fuori.length >= QUANTE_MIE) break;
+    const mia = normalizzaLaMia(voce);
+    /* Due righe sulla stessa entita' sono la stessa pastiglia disegnata due
+     * volte, ed e' la ragione per cui l'entita' fa da nome: chi disegna le
+     * riconosce da li'. Le righe ancora vuote passano tutte — sono quelle
+     * appena aggiunte, che l'entita' non ce l'hanno ancora. */
+    if (mia.entity) {
+      if (gia.has(mia.entity)) continue;
+      gia.add(mia.entity);
+    }
+    fuori.push(mia);
+  }
+  return fuori;
+}
+
+/**
+ * Se una pastiglia scelta a mano si vede adesso.
+ *
+ * Senza condizione si vede sempre. Con la condizione si vede quando la voce
+ * che decide sta in quello stato, detto come lo dice Home Assistant e senza
+ * badare alle maiuscole: chi scrive `ON` nella casella intende `on`.
+ *
+ * Una condizione che non si riesce a leggere — l'entita' non c'e', non
+ * risponde — vale NO. Se non si sa se siamo in vacanza, la pastiglia delle
+ * vacanze non si mostra: mostrarla per scrupolo vorrebbe dire dire una cosa
+ * che non si sa.
+ */
+export function laMiaSiVede(mia, letta) {
+  const quando = pulito(mia?.quando);
+  if (!quando) return true;
+  const adesso = pulito(letta?.condizione);
+  if (!adesso) return false;
+  return adesso.toLowerCase() === pulito(mia?.stato).toLowerCase();
+}
+
 /* Le voci che non vengono da una tessera ma da un sensore scelto: quale
  * disegno portano e di che colore. Il valore lo legge la sezione — questo
  * modulo non guarda nessuna entita' — e arriva gia' letto, come la posta. */
@@ -136,6 +238,15 @@ const ACCESE = Object.freeze({
    * rifiltrano le righe. */
   porte: "open",
   varchi: "open",
+  /* I posti occupati, che la tessera ha gia' contato: una stanza con tre
+   * rilevatori resta una stanza, e rifare quel raggruppamento qui vorrebbe
+   * dire due regole su cosa e' «un posto».
+   *
+   * Sono NOMI di stanze, non righe con un'entita' dentro, e percio' questa
+   * pastiglia non ha l'elenco «tocca per spegnere» che hanno le luci: una
+   * stanza non si spegne. Toccandola si apre la sua tessera, dove le stanze
+   * occupate stanno scritte una per una. */
+  presenza: "occupate",
 });
 
 /** La configurazione della barra, ripulita: quali voci si vedono e la cassetta. */
@@ -163,6 +274,9 @@ export function normalizzaBarra(salvato) {
     /* L'ora da cui la pastiglia dei rifiuti guarda a domani (#565). Vuota di
      * serie: la fascia resta quella di prima per chi non ha chiesto niente. */
     rifiutiDalleOre: normalizzaOraDelRitiro(dato.rifiutiDalleOre),
+    /* Le pastiglie scelte a mano (#7). Vuote di serie, come le misure: una
+     * fascia che nessuno ha toccato resta quella che era. */
+    mie: normalizzaLeMie(dato.mie),
   };
 }
 
@@ -242,7 +356,65 @@ function ritiriVicini(modello, giorni = QUANDO_VICINO) {
  * pastiglia. Una barra che dice «0 luci accese» occupa spazio per non dire
  * niente.
  */
-export function pastiglieDellaCasa(modelli, { barra, posta, misure, adesso } = {}) {
+/* Le pastiglie scelte a mano (#7), pronte da infilare nella fascia.
+ *
+ * Stanno fra gli stati della casa e le misure: dopo le luci accese, le prese e
+ * la presenza, e prima della temperatura e della pioggia. Erano in fondo a
+ * tutto, dietro alle misure, e non era il posto giusto — «anche la 7 va li'»,
+ * dove stanno le cose accese. Ha ragione: una lettura che uno ha scelto
+ * apposta la sta cercando, e quelle quattro misure sono lo sfondo su cui si
+ * guarda la casa, non la notizia. Davanti restano comunque le notizie che la
+ * fascia annuncia da se'.
+ *
+ * Le entita' le legge la sezione, come tutto qui dentro: arrivano gia' letti
+ * sia il valore sia com'e' adesso la voce che decide. La regola di QUANDO si
+ * vede pero' sta qui, dove si prova senza un documento. */
+function lePastiglieMie(config, mie) {
+  const fuori = [];
+  for (const mia of config.mie) {
+    if (!mia.entity) continue;
+    const letta = mie?.[mia.entity];
+    if (!laMiaSiVede(mia, letta)) continue;
+    /* `?? NaN` non e' uno scrupolo: una lettura che non c'e' arriva `null`, e
+     * `Number(null)` fa ZERO. Senza questo, un'entita' che non risponde
+     * scriverebbe «0» in fascia, che e' la cosa peggiore fra le tre — non dire
+     * niente, dire che non si sa, dire un numero falso. */
+    const numero = Number(letta?.valore ?? NaN);
+    const testo = pulito(letta?.testo);
+    /* Un'entita' che non risponde non scrive «—»: la pastiglia non c'e', come
+     * per tutte le altre voci che non hanno niente da dire. */
+    if (!Number.isFinite(numero) && !testo) continue;
+    /* Il segno puo' essere un disegno del catalogo o un'emoji, e sono due
+     * caselle diverse per chi disegna. Quello scritto nella configurazione
+     * vince su quello che dichiara Home Assistant, che vince sulla stella. */
+    const segno = pulito(mia.icona) || pulito(letta?.icona) || SEGNO_MIO;
+    const disegnato = /^mdi:/i.test(segno);
+    fuori.push({
+      chiave: "mia",
+      /* Una pastiglia per entita', quindi la chiave non basta a dire quale:
+       * chi disegna le riconosce da `id`, e due «mia» con lo stesso id
+       * sarebbero la stessa pastiglia disegnata due volte. */
+      id: `mia:${mia.entity}`,
+      /* L'entita' viaggia con la pastiglia: toccandola si apre la sua scheda
+       * di Home Assistant, che e' dove quella lettura ha la storia lunga. */
+      entity: mia.entity,
+      tessera: "",
+      icona: disegnato ? "" : segno,
+      mdi: disegnato ? segno : "",
+      tinta: pulito(mia.tinta) || TINTA_MIA,
+      valore: Number.isFinite(numero) ? numero : null,
+      /* Un numero si scrive come numero, tutto il resto com'e' scritto: la
+       * parola gia' tradotta la porta la sezione, che e' quella che ha la
+       * tabella delle parole di Home Assistant. */
+      testo,
+      unita: pulito(letta?.unita),
+      nome: pulito(mia.nome) || pulito(letta?.nome) || mia.entity,
+    });
+  }
+  return fuori;
+}
+
+export function pastiglieDellaCasa(modelli, { barra, posta, misure, mie, adesso } = {}) {
   const config = normalizzaBarra(barra);
   const giorni = giorniDelRitiro(config.rifiutiDalleOre, adesso);
   const perChiave = new Map(
@@ -251,7 +423,16 @@ export function pastiglieDellaCasa(modelli, { barra, posta, misure, adesso } = {
       .map((modello) => [pulito(modello.key), modello]),
   );
   const fuori = [];
+  /* Le tue si infilano quando si arriva alla prima misura, cioe' subito dopo
+   * gli stati della casa. Il posto sta qui e non in `VOCI_DELLA_BARRA` perche'
+   * non sono UNA voce: sono quante ne hai messe, e l'elenco di sopra dice
+   * quali voci esistono, non quante pastiglie escono. */
+  let mieFatte = false;
   for (const voce of VOCI_DELLA_BARRA) {
+    if (MISURE[voce.chiave] && !mieFatte) {
+      mieFatte = true;
+      fuori.push(...lePastiglieMie(config, mie));
+    }
     if (!config.voci[voce.chiave]) continue;
     if (voce.chiave === "posta") {
       if (posta?.arrivata)
@@ -392,6 +573,9 @@ export function pastiglieDellaCasa(modelli, { barra, posta, misure, adesso } = {
         .filter((voce) => voce.name || voce.entity),
     });
   }
+  /* Se le misure sparissero dall'elenco, le tue non si perderebbero dietro a
+   * loro: qui si controlla che siano uscite, e in quel caso vanno in fondo. */
+  if (!mieFatte) fuori.push(...lePastiglieMie(config, mie));
   /* Ogni pastiglia ha un'identita', e per quasi tutte e' la propria chiave: di
    * luci accese ce n'e' una sola. I rifiuti sono l'eccezione — un bidone per
    * pastiglia — e se la scrivono da se'. Chi disegna riconosce le pastiglie da

@@ -1285,6 +1285,9 @@ test("production graph is single-owner, acyclic and contains no facade pass-thro
   // vuota, e quando manca davvero si dice quale delle due caselle è. Gli altri
   // che toccano quel tasto — la valvola TRV, il clima rapido, la VMC — gli
   // attaccano ciascuno la propria casella, e questa è la loro stessa forma.
+  // 364 con chi non risponde (#33): il modello di «cosa e' andato offline» e
+  // l'elenco delle entita' configurate, che era dentro il cancello degli stati
+  // e adesso e' di tutti e due — una risposta sola per due domande.
   // 362 con le unita' del tempo (#9): «il mio UPS (CyberPower) mostra il tempo
   // residuo in secondi invece dei minuti». L'unita' non e' da chiedere, sta
   // nell'entita' — ma il vocabolario che la legge lo usano in due, chi scrive
@@ -1292,8 +1295,56 @@ test("production graph is single-owner, acyclic and contains no facade pass-thro
   // continuita'. Scritto due volte, il giorno che un'integrazione dice «secs»
   // lo impara una sola delle due. E' un file in piu' perche' e' un vocabolario,
   // e un vocabolario ha un posto solo.
+  // 365 con le entita' scelte sotto il meteo (#7): la scheda di Home Assistant,
+  // cioe' l'annuncio che attraversa il confine della cornice per aprire il
+  // «more info» di un'entita'. Era scritto dentro la sezione delle Persone, che
+  // lo usa per la mappa di un indirizzo; adesso lo chiedono in due, e la
+  // seconda e' una pastiglia della fascia che una tessera non ce l'ha. Scritto
+  // due volte sarebbero due idee di come si esce dalla cornice, e il giorno che
+  // quel confine cambia lo imparerebbe una sola delle due.
+  // 366 con le fasce orarie della tariffa (#72): «possibilita' di inserire
+  // prezzi diversi per fasce diverse». Quale fascia e' in vigore adesso, e che
+  // media fa su un mese, e' una regola con un orologio dentro: si prova con un
+  // istante finto e senza un documento, e la sanno in tre — la sezione
+  // Energia, il Report e il costo di un ciclo. Scritta dentro uno dei tre,
+  // sarebbero tre idee di che ora comincia la notte.
+  // 367 con le stanze per piano (#17): come si divide un elenco di stanze fra i
+  // piani della casa, e quali pastiglie merita una stanza dato quello che c'e'
+  // dentro adesso. Sono due regole e non un disegno — l'ordine dei piani, il
+  // titolo che si scrive solo se serve, quali pastiglie comandano e quali
+  // portano dentro — e si provano su un elenco finto, senza un documento.
+  // 368 con il conto delle fasce su un periodo (#72, seconda meta'): quando le
+  // fasce sono nate avevo scritto che su un mese potevano dare solo una stima,
+  // «perche' la plancia sa quanti kWh sono passati, non in che ore». Era una
+  // limitazione mia: il Recorder le ore le tiene, e prenderle una per una e
+  // metterle nella loro fascia e' un conto esatto. E' un file in piu' perche'
+  // e' aritmetica con un orologio dentro — ore, fasce, kilowattora che il
+  // Recorder ha buttato — e si prova con righe finte e senza un documento.
+  // 369 con il blocco che lo disegna, sotto la griglia finanziaria della
+  // Panoramica: quello invece la rete la tocca (chiede le ore) e il documento
+  // pure. Tenerli insieme vorrebbe dire non poter provare il conto senza un
+  // browser, che e' esattamente la parte che va provata.
+  // 370 con i piani della casa (#17): «mi interessa gestire in maniera puntuale
+  // i piani nella dashboard». L'ordine dei piani, la rinomina che si porta
+  // dietro le sue stanze, il cestino che dice quante ne restano scoperte: sono
+  // regole su tre elenchi che vanno salvati insieme, e si provano su elenchi
+  // finti senza un documento. Scritte dentro la sezione, l'unica prova
+  // possibile sarebbe stata aprire un editor in un browser.
+  // 371 con la sezione che le disegna, che invece il deposito e il documento li
+  // tocca entrambi: legge tre chiavi, ridisegna la scheda del guscio e rimette
+  // in fila le righe delle stanze.
+  // 372 con «dove lo metto» (#54): un dispositivo appena abbinato dall'app e'
+  // in Home Assistant e nella plancia non c'e'. In che sezione va — e cosa ci
+  // finira' scritto — e' una regola su un dominio e una classe, e si prova su
+  // un'entita' finta senza un browser. Ci sta anche la forma che ogni sezione
+  // vuole, che e' il motivo per cui questo passo non lo fa l'app: le luci sono
+  // una mappa con le stanze in una mappa a parte, le prese un elenco di righe,
+  // il clima un elenco che porta anche di che tipo e'. Scritte dall'altra
+  // parte sarebbero tre forme scritte due volte.
+  // 373 con il foglietto che le disegna e le salva, che invece il deposito e
+  // il documento li tocca.
   assert.ok(
-    relative.length <= 362,
+    relative.length <= 373,
     `production graph unexpectedly grew to ${relative.length} modules`,
   );
   assertAcyclic(edges);

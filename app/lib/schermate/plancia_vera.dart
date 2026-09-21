@@ -86,6 +86,7 @@ class PlanciaVera extends StatefulWidget {
     super.key,
     required this.collegamento,
     required this.fabbrica,
+    this.visibile = true,
     required this.impostazioni,
     this.vaiAlleCase,
     this.quandoCambiaPagina,
@@ -94,6 +95,15 @@ class PlanciaVera extends StatefulWidget {
 
   final Collegamento collegamento;
   final FabbricaDellaPlancia fabbrica;
+
+  /// Se questa schermata e' quella che si vede.
+  ///
+  /// Le sezioni dell'app restano tutte in piedi anche quando non si guardano —
+  /// la plancia e' una pagina web, e rifarla da capo a ogni ritorno vorrebbe
+  /// dire riaprirla ogni volta — ma restare in piedi non vuol dire restare al
+  /// lavoro. Le altre sezioni un `visibile` ce l'avevano gia'; questa no, ed
+  /// era l'unica che continuava a disegnare per nessuno.
+  final bool visibile;
   final Impostazioni impostazioni;
   final VoidCallback? vaiAlleCase;
 
@@ -204,6 +214,18 @@ class PlanciaVeraState extends State<PlanciaVera> {
     if (!cambiaLaComposizione) _riquadro.currentState?.ricarica();
   }
 
+  @override
+  void didUpdateWidget(PlanciaVera oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    /* Si e' passati a un'altra schermata, o si e' tornati qui: la plancia
+     * deve saperlo. Restare in piedi non vuol dire restare al lavoro. */
+    if (oldWidget.visibile != widget.visibile) _diSeSiVede();
+  }
+
+  void _diSeSiVede() {
+    _riquadro.currentState?.parcheggia(!widget.visibile);
+  }
+
   /// Ricarica la pagina: e' quello che fa toccare di nuovo «Plancia» nella
   /// barra quando ci si e' gia'.
   void ricarica() {
@@ -240,6 +262,19 @@ class PlanciaVeraState extends State<PlanciaVera> {
     if (!mounted) return;
     _laConfigAppenaSiPuo = false;
     _riquadro.currentState?.tornaDallaConfig();
+  }
+
+  /// Passa alla plancia un dispositivo appena abbinato (#54, passo 4).
+  ///
+  /// A decidere in che sezione va e a scriverla e' la plancia: le sue sezioni
+  /// hanno cinque forme diverse, e scriverle dall'app vorrebbe dire scriverle
+  /// due volte. Qui si consegna, e basta.
+  ///
+  /// [dispositivo] e' gia' JSON: lo compone chi lo manda, e da qui in giu'
+  /// non si tocca.
+  void doveLoMetto(String dispositivo) {
+    if (!mounted) return;
+    _riquadro.currentState?.doveLoMetto(dispositivo);
   }
 
   @override
@@ -498,6 +533,10 @@ class PlanciaVeraState extends State<PlanciaVera> {
                   _apertaSenzaCasa = true;
                 }
                 if (!_caricata) setState(() => _caricata = true);
+                /* Una pagina appena aperta non sa niente di quello che le e'
+                   stato detto prima di nascere: se e' nata sotto un'altra
+                   schermata, lo deve sapere adesso. */
+                _diSeSiVede();
                 if (_laConfigAppenaSiPuo) {
                   _laConfigAppenaSiPuo = false;
                   _riquadro.currentState?.apriLaConfig();
@@ -753,6 +792,18 @@ class RiquadroDellaPlanciaState extends State<RiquadroDellaPlancia> {
     }
   }
 
+  /// Mette la plancia a riposo, o la riprende.
+  ///
+  /// Chi la ospita dentro Home Assistant lo fa gia' da un pezzo; l'app non lo
+  /// faceva, e la plancia restava a pieno ritmo sotto una schermata che non la
+  /// mostrava. Vedi `riquadro/sul_telefono.dart`.
+  void parcheggia(bool parcheggiata) {
+    final controllore = _controllore;
+    if (controllore != null) {
+      unawaited(riquadro.parcheggia(controllore, parcheggiata));
+    }
+  }
+
   /// Apre la Config della plancia: la maniglia sta nella pagina, e come si
   /// tira dipende dal sistema — vedi `riquadro/sul_telefono.dart`.
   void apriLaConfig() {
@@ -766,6 +817,15 @@ class RiquadroDellaPlanciaState extends State<RiquadroDellaPlancia> {
     final controllore = _controllore;
     if (controllore != null) {
       unawaited(riquadro.tornaDallaConfig(controllore));
+    }
+  }
+
+  /// Consegna alla pagina un dispositivo appena abbinato: il foglietto «Dove
+  /// lo metto?» lo apre lei.
+  void doveLoMetto(String dispositivo) {
+    final controllore = _controllore;
+    if (controllore != null) {
+      unawaited(riquadro.doveLoMetto(controllore, dispositivo));
     }
   }
 

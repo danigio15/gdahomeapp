@@ -73,11 +73,42 @@ class Premesse {
   /// Quanto prendono le barre del telefono, in punti.
   ({double alto, double basso}) margini;
 
-  /// Lo stile della plancia leggera: vince su tutto con `!important`.
+  /// Lo stile della plancia leggera: ferma le animazioni e toglie i vetri.
+  ///
+  /// Va **in fondo alla pagina** e con quei tre `:not(#nessuno)` attaccati,
+  /// e nessuna delle due cose e' un vezzo: senza, non vinceva.
+  ///
+  /// Com'era prima: una stella in testa al `<head>`. Fra due `!important`
+  /// della stessa origine a decidere e' prima la specificita' e poi l'ordine,
+  /// e una stella vale zero. Perdeva contro tutto quello che ha un selettore
+  /// vero — e il vetro piu' caro della plancia, quello della barra in basso,
+  /// ne ha uno lungo. Cioe': l'interruttore d'emergenza c'era, si accendeva,
+  /// e non toccava proprio la cosa che uno accende l'interruttore per
+  /// togliere. Nessuna prova se n'era accorta perche' nessuna prova lo
+  /// guardava.
+  ///
+  /// `#nessuno` e' un id che in questa pagina non ce l'ha nessuno, quindi
+  /// `:not(#nessuno)` e' vero per tutti; ripetuto tre volte pero' porta la
+  /// specificita' di tre id, e da li' in giu' non c'e' piu' niente che vinca.
+  /// E' un trucco, si vede che e' un trucco, ed e' scritto qui perche' chi lo
+  /// legge fra un anno non lo tolga scambiandolo per una svista.
+  ///
+  /// Il fondale sfocato ha la riga sua: le sue due macchie non hanno un
+  /// `backdrop-filter`, hanno un `filter` — sfocano se stesse, non quello che
+  /// sta dietro — e la stella non le prendeva nemmeno per sbaglio. Sono due
+  /// cerchi larghi mezzo schermo, sfocati cento punti, che si muovono per
+  /// sempre dietro ogni pagina: in plancia leggera si fermano e si sfocano
+  /// di meno, che e' quello che chiede chi accende quell'interruttore.
   static const String stileLeggero =
       '<style id="gdahome-leggera">'
-      '*,*::before,*::after{animation-iteration-count:1!important}'
-      '*{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}'
+      '*:not(#nessuno):not(#nessuno):not(#nessuno),'
+      '*:not(#nessuno):not(#nessuno):not(#nessuno)::before,'
+      '*:not(#nessuno):not(#nessuno):not(#nessuno)::after{'
+      'animation-iteration-count:1!important;'
+      'backdrop-filter:none!important;'
+      '-webkit-backdrop-filter:none!important}'
+      '.animated-mesh-bg,.animated-mesh-bg::before,.animated-mesh-bg::after{'
+      'filter:none!important;animation:none!important}'
       '</style>';
 
   /// Le misure delle barre del telefono, e cosa farne.
@@ -860,8 +891,7 @@ class Premesse {
         /* Il cassetto di questa casa, se la pagina ha una casa: si riempie
            da quello di prima, e prima che la pagina lo legga. */
         '${ilCassettoDellaCasa(quale)}'
-        '</script>'
-        '${leggera ? stileLeggero : ''}';
+        '</script>';
     final testa = RegExp(
       r'<head[^>]*>',
       caseSensitive: false,
@@ -874,6 +904,7 @@ class Premesse {
      * [stileDelleMisure], che spiega perche' in testa perdevano contro lo
      * stile della plancia. */
     final inFondo =
+        '${leggera ? stileLeggero : ''}'
         '$stileDelleMisure$leMisureNellaSuaVariabile$laConfigFuoriDallaPlancia'
         '$iTreTrattiniApronoIlMenuDellApp$laTendaSiAlzaComunque'
         '$lAvvisoAspettaLaConfigurazione';

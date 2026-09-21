@@ -199,10 +199,12 @@ test("la sezione porta l'orologio al nucleo, e la scelta arriva dalla casella", 
   );
   /* Il nucleo non guarda l'orologio da solo: glielo porta chi disegna. */
   assert.match(sezione, /adesso: new Date\(\),/);
-  /* E la casella finisce nella configurazione passando dall'unico normalizzatore. */
+  /* E la casella finisce nella configurazione passando dall'unico
+   * normalizzatore: la legge chi legge il pannello, e chi salva la scrive. */
   assert.match(sezione, /data-dm-casa-ritiro/);
   assert.match(
     sezione,
-    /normalizzaBarra\(\{ voci, posta, rifiutiDalleOre, \.\.\.misure \}\)/,
+    /rifiutiDalleOre: clean\(pannello\.querySelector\("\[data-dm-casa-ritiro\]"\)\?\.value\)/,
   );
+  assert.match(sezione, /writeJsonIfChanged\(CHIAVE_BARRA, normalizzaBarra\(detto\)\)/);
 });

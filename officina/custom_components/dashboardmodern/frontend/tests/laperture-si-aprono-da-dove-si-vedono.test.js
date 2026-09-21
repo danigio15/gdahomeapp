@@ -42,10 +42,15 @@ test("la doppia conferma si può spegnere, il PIN no", async () => {
   assert.match(porte, /readJson\(SECURITY_DOORS_CONFIRM_KEY, true\) !== false/);
   assert.equal(typeof siChiedeConferma, "function");
   /* Il PIN viene prima e non si spegne da qui: quella è una chiave, non una
-   * conferma, e una porta protetta continua a chiederla. */
+   * conferma, e una porta protetta continua a chiederla.
+   *
+   * Con una sola eccezione, e va nel verso sicuro: il blocco (#34). Il PIN
+   * protegge l'APERTURA; chiudere la propria porta non è mai il verso
+   * pericoloso, e chiedere un codice per farlo sarebbe attrito senza sicurezza
+   * in cambio — col risultato che chi ha fretta la lascia aperta. */
   assert.match(
     porte,
-    /if \(door\.pin\) openKeypad\(door, gesto\);\s*else if \(siChiedeConferma\(\)\) confirmAndOpen\(door, gesto\);/,
+    /if \(door\.pin && gesto !== "blocca"\) openKeypad\(door, gesto\);\s*else if \(siChiedeConferma\(\)\) confirmAndOpen\(door, gesto\);/,
   );
   /* E l'interruttore c'è dove si configurano le aperture. */
   assert.match(leggi("security-doors-editor-section.js"), /data-door-conferma/);
@@ -53,10 +58,13 @@ test("la doppia conferma si può spegnere, il PIN no", async () => {
 
 test("un'apertura in una stanza si apre, invece di riportare in Home", () => {
   const stanze = leggi("rooms-page-section.js");
-  /* Un'entità assegnata a mano finisce nel blocco «Altro», e quel blocco
-   * riporta in Home — che per un comando che apre un cancello è la risposta
-   * sbagliata: non si vuole andare da nessuna parte, si vuole aprire. */
-  assert.match(stanze, /altro: "home"/, "il blocco «Altro» porta ancora in Home, ed è giusto");
+  /* Un'entità assegnata a mano finisce nel blocco «Altro». Quel blocco
+   * riportava in Home — che per un comando che apre un cancello è la risposta
+   * sbagliata: non si vuole andare da nessuna parte, si vuole aprire. Adesso
+   * non riporta più da nessuna parte, per nessuna entità: la cura che qui era
+   * stata data alle sole aperture valeva per tutte, e la segnalazione è
+   * tornata identica sulle scene e sui menu a tendina. */
+  assert.match(stanze, /altro: ""/, "il blocco «Altro» è tornato a portare in Home");
   /* La riga di un'apertura porta il segno delle aperture, e da lì in poi è la
    * sezione che le disegna a occuparsene: conferma, PIN e attesa comprese. */
   assert.match(stanze, /data-dm-door="\$\{esc\(porta\.id\)\}"/);

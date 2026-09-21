@@ -148,6 +148,19 @@ export const CHIAVI_PER_SCHEDA = Object.freeze(
   Object.fromEntries(SEZIONI.map((voce) => [voce.scheda, voce.chiave])),
 );
 
+/**
+ * Come si chiama una sezione, nelle due lingue. `null` se non è delle nostre.
+ *
+ * Serve a chi scrive il nome di una sezione fuori dal Config — il foglietto
+ * «Dove lo metto?» ne scrive otto — e serve che sia QUESTO nome: la scheda
+ * delle tapparelle si chiama «Finestre», e un foglietto che dicesse
+ * «Tapparelle» manderebbe a cercare nel Config una scheda che non c'è.
+ */
+export function nomeDellaSezione(chiave) {
+  const voce = SEZIONI.find((una) => una.chiave === pulito(chiave));
+  return voce ? { it: voce.it, en: voce.en } : null;
+}
+
 /** La sezione che si configura in questa scheda, o `null`. */
 export function sezioneDellaScheda(scheda) {
   const id = pulito(scheda);

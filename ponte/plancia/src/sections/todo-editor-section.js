@@ -112,6 +112,12 @@ function catalogoTessere() {
     ["ups", "🔌", t("UPS", "UPS")],
     /* Le allerte (#296): si accende quando una fonte ha qualcosa da dire. */
     ["allerte", "⚠️", t("Allerte", "Alerts")],
+    /* Chi non risponde (#33): l'unica tessera che di solito NON c'è. Compare
+     * quando qualcosa di configurato va offline, e sparisce quando torna. Sta
+     * fra le tessere che si possono spegnere come le altre, perché chi ha una
+     * casa con un'entità cronicamente muta deve poterla zittire — ma di serie
+     * è accesa: un guasto muto è il guasto che dura di più. */
+    ["nonrisponde", "📡", t("Non rispondono", "Not answering")],
     /* La raccolta differenziata (#293): dice cosa mettere fuori stasera. */
     ["rifiuti", "♻️", t("Rifiuti", "Waste")],
     ["varchi", "🚪", t("Varchi", "Openings")],

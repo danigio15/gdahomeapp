@@ -40,7 +40,14 @@
  * e scartare un evento «non configurato» vorrebbe dire lasciare indietro una
  * di quelle. Il passo di mezzo secondo basta da solo a togliere il grosso.
  */
-import { allStates, doc, lexicalGlobal, root, wrapFunction } from "./shared.js";
+import {
+  allStates,
+  doc,
+  lexicalGlobal,
+  planciaVisibile,
+  root,
+  wrapFunction,
+} from "./shared.js";
 
 const KEY = "__DASHBOARDMODERN_GUSCIO_QUANDO_SERVE__";
 const state = (root[KEY] ||= {
@@ -69,8 +76,23 @@ const state = (root[KEY] ||= {
 /** Lo stesso passo del cancello dei moduli (state-event-gate, 500 ms). */
 export const RITARDO_DEL_DISEGNO_MS = 500;
 
+/* Nessuno sta guardando.
+ *
+ * La domanda la fa `planciaVisibile` di `shared.js`, e non si fa in proprio:
+ * i modi di non essere guardati sono due, e questo ne conosceva uno solo.
+ *
+ * Il primo e' la scheda del browser passata in secondo piano, ed e' quello
+ * che si vedeva. Il secondo e' il **parcheggio**: la plancia messa da parte da
+ * chi la ospita quando si va da un'altra parte — un'altra pagina di Home
+ * Assistant, o un'altra schermata dell'app. Li' il documento non e' «hidden»:
+ * e' vivo, sveglio, e fino a ieri rifaceva il suo disegno da settecento righe
+ * due volte al secondo sotto uno schermo dove non si vedeva.
+ *
+ * Diciannove moduli la chiedevano gia' cosi'. Questo — che e' il piu' caro di
+ * tutti — se la chiedeva da se', e per questo era l'unico che non si fermava
+ * mai. */
 function nascosta() {
-  return doc?.visibilityState === "hidden";
+  return !planciaVisibile();
 }
 
 function paginaAttiva(id) {
@@ -486,6 +508,10 @@ export function installGuscioQuandoServe() {
   if (!state.listeners) {
     state.listeners = true;
     doc.addEventListener("visibilitychange", alCambioDiVisibilita);
+    /* E il parcheggio e' l'altra meta' della stessa domanda: chi lo toglie
+     * deve trovare la plancia sveglia, non ferma ad aspettare un cambio di
+     * scheda che non arrivera' mai. */
+    root.addEventListener?.("dashboardmodern:parcheggio", alCambioDiVisibilita);
     root.addEventListener?.("pageshow", alCambioDiVisibilita);
     root.addEventListener?.("pagehide", fermaLeParticelle);
     for (const evento of ["dashboardmodern:legacy-ready", "dashboardmodern:runtime-ready"])

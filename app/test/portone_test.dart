@@ -578,8 +578,14 @@ void main() {
       /* I blocchi che non ci sono ancora si vedono lo stesso, spenti: cosi'
        * si sa dove sta andando l'app. */
       expect(nellaBarra('AIUTANTI'), findsOneWidget);
-      expect(nellaBarra('ZIGBEE'), findsOneWidget);
       expect(nellaBarra('AUTOMAZIONI'), findsOneWidget);
+      /* Zigbee no, e non perche' non sia pronta: perche' **questa casa non ha
+       * una rete Zigbee**. E' la stessa regola della Console e del Cruscotto —
+       * una porta che non si apre e' peggio di una porta che non c'e' — ed e'
+       * l'unica voce dell'elenco che dipende da com'e' fatta la casa invece
+       * che da com'e' fatta l'app. Dove la rete c'e', compare: lo prova
+       * `zigbee_test.dart`. */
+      expect(nellaBarra('ZIGBEE'), findsNothing);
 
       /* Finche' la si scorre non se ne va. La barra si toglie di mezzo da
        * sola dopo qualche secondo, ma cercare la propria sezione fra venti

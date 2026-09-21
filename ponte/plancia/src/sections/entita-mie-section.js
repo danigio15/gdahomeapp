@@ -12,7 +12,9 @@
  * sembrare la sezione un'altra. Compare solo dove ci sono voci — una pagina che
  * non ne ha non guadagna un titolo vuoto.
  */
+import { comandoCheAbilita, comandoDelDispositivo } from "../core/comandi-accanto.js";
 import { CHIAVE_ENTITA_MIE, lettureDellaSezione, sezioniConEntita } from "../core/entita-mie.js";
+import { apriIlMenu } from "./azioni-servizio-giusto-section.js";
 import { parolaDiStato } from "./le-parole-di-home-assistant.js";
 import { oggettoWidget } from "../core/oggetti-widget.js";
 import {
@@ -24,6 +26,7 @@ import {
   installStyle,
   readJson,
   root,
+  siComanda,
   t,
   wrapFunction,
 } from "./shared.js";
@@ -63,17 +66,35 @@ function disegno(riga) {
   return oggettoWidget(riga.comandabile ? "azioni" : "evidenza", "", `mie-${riga.entity}`);
 }
 
+/* Quello che la riga da' al dito, e sono tre cose diverse.
+ *
+ * «Dove nella sezione entita' viene inserita una entita' select, fai aprire
+ * popup dove si sceglie la modalita' di quel select.» Un menu a tendina non ha
+ * due stati da scambiare: ha delle voci. Qui finiva nel «si guarda e basta»
+ * insieme ai sensori, e chi se l'era messo in pagina ci trovava una riga
+ * morta — lo stesso vuoto che c'era nelle stanze e nelle sezioni proprie.
+ *
+ * L'elenco e' quello delle azioni rapide, e non una seconda copia: due elenchi
+ * della stessa cosa, disegnati in due posti, dopo un po' dicono due cose
+ * diverse. */
+function codaMarkup(riga) {
+  const vuoto = `<span class="dm-mie-vuoto" aria-hidden="true"></span>`;
+  if (riga.muto) return vuoto;
+  if (riga.tendina && siComanda(riga.entity))
+    return `<button type="button" class="dm-mie-scegli" data-dm-mie-scegli="${esc(riga.entity)}"
+             title="${esc(t("Scegli", "Choose"))}"
+             aria-label="${esc(t("Scegli", "Choose"))} — ${esc(riga.nome)}">⋮</button>`;
+  if (!riga.comandabile) return vuoto;
+  return `<button type="button" class="dm-mie-lev" data-dm-mie-tocca="${esc(riga.entity)}"
+             role="switch" aria-checked="${riga.acceso}" aria-label="${esc(riga.nome)}"><i></i></button>`;
+}
+
 function rigaMarkup(riga) {
   return `<article class="dm-mie-riga" data-on="${riga.acceso}" data-muta="${riga.muto}">
     <span class="dm-mie-ic" aria-hidden="true">${disegno(riga)}</span>
     <span class="dm-mie-nome"><strong>${esc(riga.nome)}</strong></span>
     <span class="dm-mie-val">${valoreMarkup(riga)}</span>
-    ${
-      riga.comandabile && !riga.muto
-        ? `<button type="button" class="dm-mie-lev" data-dm-mie-tocca="${esc(riga.entity)}"
-             role="switch" aria-checked="${riga.acceso}" aria-label="${esc(riga.nome)}"><i></i></button>`
-        : `<span class="dm-mie-vuoto" aria-hidden="true"></span>`
-    }
+    ${codaMarkup(riga)}
   </article>`;
 }
 
@@ -153,6 +174,17 @@ async function chiamaHa(dominio, servizio, payload) {
 }
 
 function onClick(event) {
+  /* I tre puntini prima della levetta: sono due tasti diversi nella stessa
+   * casella, e chiedere prima la levetta li confonderebbe. */
+  const scegli = event.target?.closest?.("[data-dm-mie-scegli]");
+  if (scegli) {
+    event.preventDefault();
+    const suo = clean(scegli.dataset.dmMieScegli);
+    if (!suo || !siComanda(suo)) return;
+    root.navigator?.vibrate?.(8);
+    apriIlMenu(suo);
+    return;
+  }
   const leva = event.target?.closest?.("[data-dm-mie-tocca]");
   if (!leva) return;
   event.preventDefault();
@@ -165,9 +197,30 @@ function onClick(event) {
    * di stato. */
   const acceso = leva.getAttribute("aria-checked") === "true";
   leva.setAttribute("aria-checked", acceso ? "false" : "true");
-  /* `scene` e `script` non si spengono: si fanno partire. */
-  const servizio = dominio === "scene" || dominio === "script" ? "turn_on" : "toggle";
-  chiamaHa(dominio, servizio, { entity_id: entity });
+  /* Il verbo lo dice chi i verbi li sa.
+   *
+   * Qui c'era la stessa regola scritta a mano che e' stata tolta dalle sezioni
+   * proprie nella #504: «scene e script si fanno partire, tutto il resto si
+   * inverte». Per i sette domini che questa pagina comanda oggi le due regole
+   * dicono parola per parola la stessa cosa — e' stato verificato dominio per
+   * dominio — quindi qui non cambia niente adesso. Cambia domani: il giorno
+   * che qualcuno aggiunge un dominio all'elenco delle comandabili, di la' il
+   * verbo c'e' gia' e qui bisognava ricordarsi di venirlo a scrivere. Un
+   * `button` con `toggle` non da' errore a schermo e non muove niente.
+   *
+   * Sono le stesse due domande delle sezioni proprie, nello stesso ordine: la
+   * levetta chiede il verbo che ABILITA — per un'automazione e' quello, e
+   * abilitarla e' proprio quello che la levetta promette (#552) — e dove
+   * quello non c'e' chiede il verbo di sempre. Quello che `comandi-accanto`
+   * non conosce — una luce, un ventilatore, una sirena — resta roba che si
+   * accende e si spegne, e l'inversione resta. */
+  const comando = comandoCheAbilita({ entity }) ||
+    comandoDelDispositivo({ entity }) || {
+      domain: dominio,
+      service: "toggle",
+      data: { entity_id: entity },
+    };
+  chiamaHa(comando.domain, comando.service, comando.data);
 }
 
 function schedule() {
@@ -223,6 +276,15 @@ function installStyles() {
         background:#cbd5e1;transition:transform .18s ease,background .18s ease}
       .dm-mie-lev[aria-checked="true"]{border-color:rgba(249,115,22,.55)}
       .dm-mie-lev[aria-checked="true"]>i{transform:translateX(19px);background:#f97316}
+      /* I tre puntini di un menu a tendina: stessa colonna della levetta e
+         stessa altezza, cosi' le righe di un blocco restano allineate. Tondo
+         e non a pillola, perche' non e' una cosa che sta accesa o spenta: e'
+         un elenco che si apre. */
+      .dm-mie-scegli{
+        width:30px;height:27px;border-radius:999px;border:1px solid var(--card-border,#e2e8f0);
+        background:var(--bg-sculpted,#f0f4f8);color:var(--text,#0f172a);
+        font-size:17px;font-weight:900;line-height:1;cursor:pointer;padding:0}
+      .dm-mie-scegli:active{transform:scale(.92)}
       .dm-mie-vuoto{display:block;width:46px;height:1px}
     `,
   );

@@ -187,6 +187,50 @@ test("nessuno scarta le aperture guardando le altre sezioni", () => {
 const NUKI = { attributes: { supported_features: LOCK_SUPPORT_OPEN } };
 const SEMPLICE = { attributes: { supported_features: 0 } };
 
+/* I gesti che APRONO, che sono quelli di cui parlano le prove qui sotto.
+ *
+ * Da quando una serratura sa anche chiudersi (#34) l'elenco ne porta uno in
+ * piu', e in fondo. Queste prove pero' dicono un'altra cosa — quale gesto di
+ * APERTURA si offre, e in che ordine — e pinnarci dentro anche il blocco
+ * vorrebbe dire farle cadere a ogni gesto nuovo per una regola che non e' la
+ * loro. Il blocco ha la sua prova, qui sotto. */
+const gestiCheAprono = (porta, stato) =>
+  azioniDellaPorta(porta, stato).filter((azione) => azione.gesto !== "blocca");
+
+test("una serratura si puo' sempre chiudere, e il tasto sta in fondo", () => {
+  /* «Sblocco senza apertura, sblocco completo, blocco» (#34): le prime due il
+   * modello le sapeva, la terza no — sapeva aprire e non sapeva chiudere, che
+   * su una serratura e' meta' comando. */
+  for (const [porta, stato, quanti] of [
+    [{ entity: "lock.portone" }, NUKI, 2],
+    [{ entity: "lock.portone", gesto: "sblocca" }, NUKI, 2],
+    [{ entity: "lock.portone", gesto: "entrambi" }, NUKI, 3],
+    [{ entity: "lock.porta" }, SEMPLICE, 2],
+  ]) {
+    const azioni = azioniDellaPorta(porta, stato);
+    assert.equal(azioni.length, quanti);
+    /* In fondo, non in testa: il primo tasto resta quello che si puo'
+     * disfare (#387), e il blocco e' quello che si fa dopo. */
+    assert.deepEqual(azioni.at(-1), {
+      gesto: "blocca",
+      call: { domain: "lock", service: "lock", data: {} },
+    });
+  }
+});
+
+test("quello che non e' una serratura non impara a chiudersi", () => {
+  /* Un pulsante del citofono non si «richiude», e un cancello si chiude col
+   * suo verso, non col verbo delle serrature. */
+  for (const entity of ["button.citofono", "switch.rele", "cover.cancello", "script.apri"]) {
+    const azioni = azioniDellaPorta({ entity }, null);
+    assert.equal(
+      azioni.some((azione) => azione.gesto === "blocca"),
+      false,
+      `${entity} ha imparato a chiudersi e non doveva`,
+    );
+  }
+});
+
 test("chi non ha scelto niente trova quello che ha sempre avuto", () => {
   /* Cambiare sotto i piedi il tasto del portone a chi lo usa ogni giorno
    * sarebbe un modo di avere ragione a spese sua: senza scelta, si apre. */
@@ -195,7 +239,7 @@ test("chi non ha scelto niente trova quello che ha sempre avuto", () => {
     service: "open",
     data: {},
   });
-  assert.deepEqual(azioniDellaPorta({ entity: "lock.portone" }, NUKI), [
+  assert.deepEqual(gestiCheAprono({ entity: "lock.portone" }, NUKI), [
     { gesto: "apri", call: { domain: "lock", service: "open", data: {} } },
   ]);
 });
@@ -206,13 +250,13 @@ test("scelto lo sblocco, la porta non si scrocca piu'", () => {
     service: "unlock",
     data: {},
   });
-  assert.deepEqual(azioniDellaPorta({ entity: "lock.portone", gesto: "sblocca" }, NUKI), [
+  assert.deepEqual(gestiCheAprono({ entity: "lock.portone", gesto: "sblocca" }, NUKI), [
     { gesto: "sblocca", call: { domain: "lock", service: "unlock", data: {} } },
   ]);
 });
 
 test("con tutti e due i tasti, il primo e' quello che si puo' disfare", () => {
-  const azioni = azioniDellaPorta({ entity: "lock.portone", gesto: "entrambi" }, NUKI);
+  const azioni = gestiCheAprono({ entity: "lock.portone", gesto: "entrambi" }, NUKI);
   assert.deepEqual(
     azioni.map((azione) => [azione.gesto, azione.call.service]),
     [
@@ -232,7 +276,7 @@ test("una serratura che non sa aprire ha un gesto solo, qualunque cosa si scelga
       service: "unlock",
       data: {},
     });
-    assert.deepEqual(azioniDellaPorta({ entity: "lock.porta", gesto: scelta }, SEMPLICE), [
+    assert.deepEqual(gestiCheAprono({ entity: "lock.porta", gesto: scelta }, SEMPLICE), [
       { gesto: "sblocca", call: { domain: "lock", service: "unlock", data: {} } },
     ]);
   }

@@ -14,6 +14,7 @@
 import { VELO_DELLE_FINESTRE, tokenDelVelo } from "../core/il-velo-delle-finestre.js";
 import { fermaRitrattiPersi, installAvatar3dStyle, ritrattoVivo } from "./person-avatar-section.js";
 import { normalizePeople, personViewModel } from "../core/person-model.js";
+import { apriLaSchedaDellEntita } from "./la-scheda-di-home-assistant.js";
 import {
   allStates,
   clean,
@@ -223,49 +224,14 @@ function mappaDi(indirizzo) {
   return clean(indirizzo) ? MAPPA_DI_CASA : "";
 }
 
-/* Il pannello che ospita la plancia, dentro il documento di Home Assistant.
- * La cornice e' figlia della sua ombra: da li' un annuncio con `composed`
- * attraversa il confine e arriva a chi sta sopra. */
-function ospiteDellaPlancia() {
-  try {
-    const cornice = root.frameElement;
-    if (!cornice) return null;
-    return cornice.getRootNode?.()?.host || cornice;
-  } catch (_error) {
-    return null;
-  }
-}
-
-/* Se intorno alla plancia c'e' davvero Home Assistant. Si guarda l'elemento
- * che fa da radice al suo pannello: senza quello non c'e' nessuno che ascolti,
- * e annunciare vorrebbe dire un tocco che non fa niente. */
-function dentroHomeAssistant() {
-  try {
-    return Boolean(root.parent?.document?.querySelector?.("home-assistant"));
-  } catch (_error) {
-    return false;
-  }
-}
-
-/** Apre la scheda dell'entita' in Home Assistant, che porta la sua mappa. */
+/* Apre la scheda dell'entita' in Home Assistant, che porta la sua mappa.
+ *
+ * Come ci si arriva — l'annuncio che attraversa il confine della cornice — lo
+ * sa `la-scheda-di-home-assistant.js`, che e' il posto dove quella strada sta
+ * scritta una volta sola: qui resta il PERCHE', che e' l'indirizzo di una
+ * persona e la mappa che ci sta dietro. */
 export function apriLaMappaDiCasa(entity) {
-  const id = clean(entity);
-  if (!id || !dentroHomeAssistant()) return false;
-  const ospite = ospiteDellaPlancia();
-  const vista = ospite?.ownerDocument?.defaultView;
-  if (!ospite?.dispatchEvent || !vista?.CustomEvent) return false;
-  try {
-    ospite.dispatchEvent(
-      new vista.CustomEvent("hass-more-info", {
-        bubbles: true,
-        composed: true,
-        detail: { entityId: id },
-      }),
-    );
-    return true;
-  } catch (_error) {
-    return false;
-  }
+  return apriLaSchedaDellEntita(entity);
 }
 
 function indirizzoMarkup(view) {

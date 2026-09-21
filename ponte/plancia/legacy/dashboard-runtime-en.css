@@ -1960,25 +1960,38 @@ nav.tabs.bottom-nav-bar .tab.active .text {
  * casa: le scritte si toccano fra loro mentre a destra non c'e' nessuno.
  *
  * Da 900 punti in su, e solo su uno schermo alto abbastanza da non essere un
- * telefono girato, il posto che c'e' glielo si lascia: le linguette crescono
- * fino a riempire la riga invece di accalcarsi, il disegno torna della misura
- * di prima e la scritta si legge. Il tetto si alza, non si toglie: quello che
- * non ci sta si taglia sempre coi puntini. */
+ * telefono girato, il posto che c'e' glielo si lascia.
+ *
+ * La prima cura fu dividere la riga fra le linguette (`flex: 1 1 auto`), e
+ * bastava finche' le sezioni erano poche. Con ventitre' la riga non basta:
+ * dividerla vuol dire dare a ognuna il suo minimo, settantadue punti, e in
+ * settantadue punti «Elettrodomestici» diventa «ELETT…». Su un tablet di casa
+ * se ne leggevano dieci su ventitre' tagliate a meta' — e «GESTI…» non dice
+ * se e' la gestione termica o quella degli installatori.
+ *
+ * Adesso ogni linguetta e' larga quanto la sua parola, ne' piu' ne' meno, e
+ * quello che non ci sta nella riga si raggiunge scorrendo. E' la stessa
+ * scelta del telefono, ma con la scritta grande abbastanza da leggersi:
+ * meglio un dito che scorre di una parola che non si capisce. */
 @media (hover: none) and (pointer: coarse) and (min-width: 900px) and (min-height: 600px) {
     nav.tabs.bottom-nav-bar {
-        gap: 6px !important;
-        padding: 8px 12px !important;
-        justify-content: space-evenly !important;
+        gap: 4px !important;
+        padding: 8px 10px !important;
+        /* Si parte da sinistra. Con le linguette larghe quanto serve la riga
+         * e' quasi sempre piu' lunga dello schermo, e `space-evenly` su una
+         * riga che deborda spinge la prima voce sotto il bordo sinistro. */
+        justify-content: flex-start !important;
     }
 
     nav.tabs.bottom-nav-bar .tab {
-        /* Crescono: e' la riga intera che si divide fra loro, non un posto
-         * fisso ciascuna con l'avanzo lasciato li'. */
-        flex: 1 1 auto !important;
-        min-width: 72px !important;
-        max-width: 132px !important;
-        padding: 10px 10px !important;
+        /* Ognuna si prende quello che le serve: non si stringe sotto la sua
+         * parola, e non si allarga a prendersi il vuoto di fianco. */
+        flex: 0 0 auto !important;
+        min-width: 76px !important;
+        max-width: none !important;
+        padding: 10px 14px !important;
         gap: 6px !important;
+        overflow: visible !important;
     }
 
     nav.tabs.bottom-nav-bar .tab .icon {
@@ -1986,8 +1999,13 @@ nav.tabs.bottom-nav-bar .tab.active .text {
     }
 
     nav.tabs.bottom-nav-bar .tab .text {
-        font-size: 10px !important;
+        font-size: 11px !important;
         letter-spacing: 0.4px !important;
+        /* Niente puntini: qui il posto c'e' per forza, perche' la linguetta e'
+         * nata della misura della sua parola. */
+        max-width: none !important;
+        overflow: visible !important;
+        text-overflow: clip !important;
     }
 }
 

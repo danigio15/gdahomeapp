@@ -633,8 +633,78 @@ function pagesToRender() {
  * successivo: si legge dove vanno tutte, si scrivono tutte, si misurano tutte,
  * si applicano tutte. Due ricalcoli in tutto invece di nove, e la spesa non
  * cresce piu' col numero delle pagine. */
+/* Una pagina aperta, e una sola.
+ *
+ * La regola qui sopra dice che la fascia si vede quando la pagina aperta e' la
+ * Home. E' una frase vera finche' «la pagina aperta» e' una. Ce ne sono due, di
+ * stati, in cui non lo e' — e in tutt'e due la regola risponde male a una
+ * domanda che non ha una risposta sola:
+ *
+ *   - NESSUNA pagina attiva. Ogni sezione nata dopo il guscio si apre cosi':
+ *     toglie l'attivo a tutte le pagine e poi fa
+ *     `ensureXPage()?.classList.add("active")`. Quel punto interrogativo vuol
+ *     dire che se la pagina non nasce — e non nasce quando non trova la sorella
+ *     a cui attaccarsi — non succede niente, e la plancia resta senza nessuna
+ *     pagina aperta. Il guscio intanto ha gia' spento la fascia col suo stile
+ *     in linea; nessuna delle due righe qui sopra si applica, perche' tutt'e
+ *     due chiedono che una pagina attiva ci sia; e il guardiano della testata
+ *     si ferma, perche' cerca la pagina attiva e non la trova.
+ *
+ *   - DUE pagine attive insieme, la Home e un'altra. Allora la seconda riga
+ *     dice «non e' la Home» e spegne la fascia col peso massimo, mentre sotto
+ *     gli occhi c'e' la Home. Il guardiano toglie lo stile in linea, che contro
+ *     un `!important` non vale niente.
+ *
+ * «Quando entro nel widget energia e ritorno nella home spariscono le 3
+ * lineette in alto a sinistra, il nome della Dashboard e sulla destra l'icona
+ * della configurazione. Per farli rientrare, devo chiudere e rilanciare
+ * l'app.» Quel «devo rilanciare l'app» e' la firma di tutt'e due: non e' un
+ * disegno che tarda, e' uno stato senza uscita — misurato, nessuno dei tre
+ * eventi che svegliano il guardiano lo tira fuori.
+ *
+ * Qui non si indovina quale delle due strade l'abbia prodotto, e non si
+ * rincorre un `!important` con un altro: si rimette l'invariante. Una pagina
+ * aperta, e una sola — quella della linguetta accesa, o la Home, che c'e'
+ * sempre. Rimessa quella, la regola qui sopra e lo stile in linea del guscio
+ * tornano a dire la stessa cosa da soli.
+ */
+function laPaginaGiusta(attive) {
+  const acceso = clean(doc.querySelector(".tab.active")?.dataset?.tab);
+  const sua = acceso ? doc.getElementById(`page-${acceso}`) : null;
+  if (sua) return sua;
+  /* Senza una linguetta accesa che porti da qualche parte si torna alla Home:
+   * e' l'unica pagina che c'e' sempre, ed e' quella che il guscio mostra
+   * all'avvio. Se anche quella mancasse, si tiene la prima delle attive — non
+   * e' il posto giusto, ma e' un posto, e meglio di nessuna pagina. */
+  return doc.getElementById("page-home") || attive[0] || null;
+}
+
+export function unaSolaPaginaAperta() {
+  if (!doc) return false;
+  const pagine = [...(doc.querySelectorAll?.(".page") || [])];
+  if (!pagine.length) return false;
+  const attive = pagine.filter((pagina) => pagina.classList.contains("active"));
+  if (attive.length === 1) return false;
+  const scelta = laPaginaGiusta(attive);
+  if (!scelta) return false;
+  for (const pagina of pagine) pagina.classList.toggle("active", pagina === scelta);
+  /* E la linguetta accesa dice la stessa cosa: una barra che indica una
+   * sezione mentre se ne vede un'altra e' il secondo modo di non sapere dove
+   * si e'. Se quella pagina una linguetta non ce l'ha — la configurazione non
+   * ce l'ha — non si tocca niente: spegnerle tutte sarebbe peggio. */
+  const nome = scelta.id.replace(/^page-/, "");
+  const voci = [...(doc.querySelectorAll?.(".tab") || [])];
+  const voce = voci.find((nodo) => clean(nodo.dataset?.tab) === nome);
+  if (voce) for (const nodo of voci) nodo.classList.toggle("active", nodo === voce);
+  return true;
+}
+
 export function renderPageMastheads() {
   if (!doc) return false;
+  /* Prima di disegnare: chi disegna le fasce e' anche chi ha scritto la regola
+   * che le accende, e una regola si mantiene vera solo se qualcuno tiene in
+   * piedi quello che presuppone. */
+  unaSolaPaginaAperta();
   const piani = [];
   for (const page of pagesToRender()) {
     const piano = planMasthead(page);

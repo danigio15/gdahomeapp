@@ -24,6 +24,7 @@
 library;
 
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/foundation.dart' show defaultTargetPlatform, kIsWeb;
 import 'package:flutter/material.dart';
@@ -34,6 +35,7 @@ import '../casa/collegamento.dart';
 import '../casa/console.dart';
 import '../casa/cruscotto.dart';
 import '../casa/impostazioni.dart';
+import '../casa/zigbee.dart';
 import '../misure/lavori.dart';
 import '../parole.dart';
 import '../vestito/marchio.dart';
@@ -48,6 +50,7 @@ import 'diagnostica.dart';
 import 'dispositivi.dart';
 import 'firma.dart';
 import 'menu.dart';
+import 'zigbee.dart';
 import 'misure.dart';
 import 'plancia_vera.dart';
 import 'segnalazioni.dart';
@@ -91,6 +94,10 @@ class _HomeState extends State<Home> {
   /* E dove sta la gestione, per l'unica casa al mondo che tiene il quadro.
    * Stessa regola: vuoto vuol dire che la voce non c'e'. */
   String _gestione = '';
+  /* Se questa casa ha una rete Zigbee da aprire. Falso finche' il ponte non
+   * risponde, cosi' una casa che non ce l'ha non vede mai comparire e sparire
+   * una voce di menu. */
+  bool _zigbee = false;
   /* E i due codici, per chi amministra questa casa: senza, la pagina dentro
    * il riquadro li fa ribattere anche se stanno gia' nella scheda
    * dell'add-on. */
@@ -203,14 +210,26 @@ class _HomeState extends State<Home> {
     /* Cruscotto e Gestione sono la stessa domanda fatta a chi la sa, e il
      * ponte le risponde in un giro solo. */
     final quadro = await IlCruscotto(filo).dove();
+    /* E che rete Zigbee c'e'. La domanda sta qui insieme alle altre perche'
+     * e' la stessa domanda — «cosa sa fare questa casa» — e perche' la
+     * risposta decide una voce del menu, come le altre tre.
+     *
+     * Nella webapp non si chiede nemmeno: quella voce li' non c'e' comunque, e
+     * una domanda la cui risposta non cambia niente e' un giro sul filo per
+     * niente. */
+    final rete = widget.impostazioni.sulTelefono
+        ? await Zigbee(filo).stato()
+        : StatoDellaRete.nessuna;
     if (!mounted) return;
     if (risponde != _console ||
+        rete.rete.siApre != _zigbee ||
         quadro.cruscotto != _cruscotto ||
         quadro.gestione != _gestione ||
         quadro.chiave != _chiave ||
         quadro.chiaveGestione != _chiaveGestione) {
       setState(() {
         _console = risponde;
+        _zigbee = rete.rete.siApre;
         _cruscotto = quadro.cruscotto;
         _gestione = quadro.gestione;
         _chiave = quadro.chiave;
@@ -243,6 +262,24 @@ class _HomeState extends State<Home> {
       'lavori': Lavori.io.riassunto,
       'plancia': widget.impostazioni.riassunto,
     };
+  }
+
+  /// Consegna alla plancia un dispositivo appena abbinato, e ci porta sopra.
+  ///
+  /// I due passi in quest'ordine, e non e' indifferente: la plancia sta in
+  /// un'altra sezione, e un foglietto che si apre su una schermata che non si
+  /// guarda e' un foglietto che nessuno vede. Prima si va li', poi si
+  /// consegna — dopo un fotogramma, perche' fra il cambio di sezione e il
+  /// riquadro che torna a disegnare passa un giro.
+  ///
+  /// A scrivere nella configurazione e' la plancia, con le sue regole: le sue
+  /// sezioni hanno cinque forme diverse, e scriverle da qui vorrebbe dire
+  /// scriverle due volte.
+  void _loMettiNellaPlancia(DispositivoEntrato suo) {
+    _vai(Sezione.plancia);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _plancia.currentState?.doveLoMetto(jsonEncode(suo.perLaPlancia));
+    });
   }
 
   void _vai(Sezione dove) {
@@ -490,6 +527,11 @@ class _HomeState extends State<Home> {
                           Sezione.plancia => PlanciaVera(
                             key: _plancia,
                             collegamento: collegamento,
+                            /* La plancia e' l'unica sezione che resta al
+                               lavoro anche da spenta: e' una pagina web, e
+                               una pagina web non si accorge da sola che
+                               nessuno la guarda. Glielo si dice. */
+                            visibile: sullaPlancia,
                             fabbrica: widget.plancia,
                             impostazioni: widget.impostazioni,
                             vaiAlleCase: widget.vaiAlleCase,
@@ -556,6 +598,13 @@ class _HomeState extends State<Home> {
                             chiave: _chiaveGestione,
                             visibile: _sezione == Sezione.gestione,
                           ),
+                          /* Un dispositivo nuovo dal telefono: la voce
+                           * c'e' solo dove una rete Zigbee c'e' davvero. */
+                          Sezione.zigbee => SchermataZigbee(
+                            collegamento: collegamento,
+                            visibile: _sezione == Sezione.zigbee,
+                            quandoVaMessoNellaPlancia: _loMettiNellaPlancia,
+                          ),
                           _ => _InArrivo(sezione),
                         },
                       ),
@@ -569,6 +618,11 @@ class _HomeState extends State<Home> {
                 conLaConsole: _console,
                 conIlCruscotto: _cruscotto.isNotEmpty,
                 conLaGestione: _gestione.isNotEmpty,
+                conZigbee: _zigbee,
+                /* Zigbee, Aiutanti e Automazioni nella webapp non ci sono:
+                 * vogliono il telefono, e nel browser sarebbero porte che si
+                 * aprono su meta' di quello che promettono. */
+                nellApp: widget.impostazioni.sulTelefono,
               ),
               aperta: _sezione,
               daAggiornare: _daAggiornare,

@@ -74,9 +74,14 @@ test("il tocco su un lettore porta alla Musica, non in Home", async () => {
     sezione.indexOf("export function blockMarkup"),
   );
   assert.match(mappa, /media: "media"/);
-  /* E l'«Altro» resta quello che manda in Home, perché per quello non c'è una
-   * pagina sola dove andare. */
-  assert.match(mappa, /altro: "home"/);
+  /* E l'«Altro» non manda più in Home. Qui stava scritto che «per quello non
+   * c'è una pagina sola dove andare», ed era vero: sbagliata era la
+   * conseguenza. Non avere una destinazione non vuol dire averne una qualsiasi
+   * — vuol dire non andare da nessuna parte, e restare nella stanza in cui si
+   * stava. In Home quella riga non c'è: chi premeva perdeva la stanza e non
+   * trovava niente in cambio. */
+  assert.match(mappa, /altro: ""/);
+  assert.doesNotMatch(mappa, /altro: "home"/);
 });
 
 test("la riga dice cosa suona, non «playing»", async () => {

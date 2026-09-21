@@ -264,6 +264,11 @@ const CATALOG_MODULES = Object.freeze([
   /* Le due misure del grafico delle Temperature — Temperatura e Umidità — che
      le pastiglie sopra il disegno scrivono per dire cosa si sta guardando. */
   "src/core/il-grafico-delle-stanze.js",
+  /* I nomi delle sezioni che possono accogliere un dispositivo appena abbinato
+     — Prese, Le tue entità — che il foglietto «Dove lo metto?» scrive sui suoi
+     tasti. Gli altri sei li prende dall'elenco delle sezioni qui sopra, che è
+     dove quella parola sta già. */
+  "src/core/dove-lo-metto.js",
 ]);
 
 /*

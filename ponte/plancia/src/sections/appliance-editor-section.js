@@ -232,6 +232,50 @@ function inferredPowerEntity(device) {
   );
 }
 
+/* Perche' la card ignorera' il sensore messo in «Potenza istantanea».
+ *
+ * La card mostra i watt, e per mostrarli pretende un sensore che li dichiari:
+ * `unit_of_measurement` W, kW o mW. Un sensore con qualunque altra unita'
+ * viene scartato in silenzio — `powerEntity` resta vuota — e chi l'aveva
+ * mappato vede una card muta senza sapere di aver sbagliato campo: «gli
+ * elettrodomestici non mostrano i consumi» (#47).
+ *
+ * Il caso vero e' quasi sempre uno: l'integrazione porta i kWh e non i watt.
+ * Un contatore di kWh dice quanto ha consumato in tutto, non quanto sta
+ * assorbendo adesso, e sono due domande diverse: qui non serve, nel campo
+ * dell'energia totale si'. Dirlo dove si sbaglia, e dire dove va, e' l'unica
+ * cosa che trasforma una card vuota in una configurazione da correggere.
+ *
+ * Restituisce la frase da mostrare, o "" se non c'e' niente da dire. */
+export function percheLaPotenzaNonSiLegge(entity, states = null) {
+  const id = clean(entity);
+  if (!id) return "";
+  const tutti = states || allStates();
+  const stato = tutti?.[id];
+  if (!stato)
+    return t(
+      "Questa entità non risulta in questa casa.",
+      "This entity is not present in this home.",
+    );
+  const misura = clean(stato?.attributes?.unit_of_measurement);
+  const normale = misura.toLowerCase().replaceAll(" ", "");
+  if (["w", "kw", "mw", "watt", "watts"].includes(normale)) return "";
+  if (["wh", "kwh", "mwh"].includes(normale))
+    return t(
+      "È un contatore di energia (kWh): dice quanto ha consumato in tutto, non quanto assorbe adesso. Qui viene ignorato — va nel campo «Energia totale per storico e Report».",
+      "This is an energy meter (kWh): it says how much it has consumed overall, not how much it is drawing right now. It is ignored here — it belongs in the “Total energy for history and Report” field.",
+    );
+  if (!misura)
+    return t(
+      "Questo sensore non dichiara un'unità di misura: la card mostra solo sensori in W o kW, e questo lo ignora.",
+      "This sensor declares no unit of measurement: the card only shows W or kW sensors, and ignores this one.",
+    );
+  return t(
+    `Questo sensore misura in «${misura}»: la card mostra solo sensori in W o kW, e questo lo ignora.`,
+    `This sensor measures in “${misura}”: the card only shows W or kW sensors, and ignores this one.`,
+  );
+}
+
 /* Se accanto al select «Carico energia» va acceso il suggerimento.
  *
  * Un elettrodomestico con la potenza mappata è esattamente quello che un
@@ -256,8 +300,8 @@ function cumulativeEntity(value) {
   return /(?:^|[._-])(total|totale|lifetime|meter|contatore)(?:[._-]|$)/i.test(entity);
 }
 
-function entityField(name, label, value, help = "") {
-  return `<label class="ed-slot"><span class="ed-slot-lbl">${label}</span><span class="ed-form-row"><input class="ed-input mono" name="${name}" value="${esc(value)}"><button type="button" class="dm-entity-picker" data-pick="${name}" aria-label="${t("Seleziona entità", "Select entity")}">🔍</button></span>${help ? `<small>${help}</small>` : ""}</label>`;
+function entityField(name, label, value, help = "", extra = "") {
+  return `<label class="ed-slot"><span class="ed-slot-lbl">${label}</span><span class="ed-form-row"><input class="ed-input mono" name="${name}" value="${esc(value)}"><button type="button" class="dm-entity-picker" data-pick="${name}" aria-label="${t("Seleziona entità", "Select entity")}">🔍</button></span>${help ? `<small>${help}</small>` : ""}${extra}</label>`;
 }
 
 function numberField(name, label, value, help = "", { step = "0.1", placeholder = "" } = {}) {
@@ -1127,6 +1171,7 @@ export function openApplianceEditor(index) {
   const powerInitial =
     clean(device.power_entity || device.power || device.power_sensor) ||
     inferredPowerEntity(device);
+  const powerMuta = percheLaPotenzaNonSiLegge(powerInitial);
   const modal = doc.createElement("div");
   modal.id = "dm-appliance-editor-modal";
   modal.className = "dm-section-modal";
@@ -1144,7 +1189,7 @@ export function openApplianceEditor(index) {
       <section class="dm-appliance-entity-grid">
         ${entityField("control_entity", t("Entità comando", "Control entity"), controlInitial, t("Switch, light, fan o input_boolean usato dal pulsante Accendi/Spegni.", "Switch, light, fan or input_boolean used by the On/Off button."))}
         <label class="ed-check dm-appliance-switch-off"><input type="checkbox" name="switch_disabled"${device.switch_disabled ? " checked" : ""}> ${t("Senza tasto Accendi/Spegni", "Without the On/Off button")}<small>${t("L'entità comando resta per leggere lo stato, ma la card non mostra l'interruttore: il frigo non si spegne per sbaglio.", "The control entity still reads the state, but the card hides the switch: the fridge cannot be turned off by mistake.")}</small></label>
-        ${entityField("power_entity", t("Potenza istantanea", "Instant power"), powerInitial, t("Sensore W o kW mostrato nella card.", "W or kW sensor shown on the card."))}
+        ${entityField("power_entity", t("Potenza istantanea", "Instant power"), powerInitial, t("Sensore W o kW mostrato nella card.", "W or kW sensor shown on the card."), `<small class="dm-appliance-power-warning" data-dm-power-warning${powerMuta ? "" : " hidden"}>⚠️ ${esc(powerMuta)}</small>`)}
         ${entityField("daily_energy_entity", t("Energia giornaliera", "Daily energy"), device.daily_energy_entity, t("Facoltativa: sostituisce il calcolo del giorno.", "Optional: overrides the daily calculation."))}
         ${entityField("monthly_energy_entity", t("Energia mensile", "Monthly energy"), device.monthly_energy_entity, t("Facoltativa: sostituisce il calcolo del mese corrente.", "Optional: overrides the current-month calculation."))}
         ${entityField("total_energy_entity", t("Energia totale per storico e Report", "Total energy for history and Report"), totalInitial, t("Deve essere un contatore cumulativo kWh con state_class total o total_increasing. Non usare qui il sensore mensile: questo campo serve per ricostruire anche i mesi precedenti.", "This must be a cumulative kWh meter with state_class total or total_increasing. Do not use the monthly sensor here: this field is required to reconstruct previous months."))}
@@ -1181,6 +1226,20 @@ export function openApplianceEditor(index) {
     flowSelect.addEventListener("change", () => {
       flowSuggestion.hidden = Boolean(clean(flowSelect.value)) || !powerInitial;
     });
+  /* L'avviso segue il campo: si scrive a mano e si sceglie con la lente, e
+   * `wzPickEntity` scrive il valore e manda un `change` (#70) — le due strade
+   * arrivano tutte e due qui. */
+  const powerField = form.elements.power_entity;
+  const powerWarning = modal.querySelector("[data-dm-power-warning]");
+  if (powerField && powerWarning) {
+    const ridiLAvviso = () => {
+      const motivo = percheLaPotenzaNonSiLegge(powerField.value);
+      powerWarning.textContent = motivo ? `⚠️ ${motivo}` : "";
+      powerWarning.hidden = !motivo;
+    };
+    powerField.addEventListener("input", ridiLAvviso);
+    powerField.addEventListener("change", ridiLAvviso);
+  }
   modal
     .querySelectorAll("[data-close],[data-cancel]")
     .forEach((button) => button.addEventListener("click", close));
@@ -1384,6 +1443,8 @@ function installStyles() {
     .dm-appl-cmd-error:not(:empty){color:var(--error-color,#dc2626)!important;font-size:12px!important;font-weight:800!important}
     .dm-appliance-flow-suggestion{display:block!important;margin-top:3px!important;color:#16a34a!important;font-weight:750!important}
     .dm-appliance-flow-suggestion[hidden]{display:none!important}
+    .dm-appliance-power-warning{display:block!important;margin-top:3px!important;color:#b45309!important;font-weight:750!important;line-height:1.45!important}
+    .dm-appliance-power-warning[hidden]{display:none!important}
     .dm-appliance-card-fields{margin-top:14px!important;border:1px solid var(--divider-color,#dbe4ee)!important;border-radius:16px!important;background:color-mix(in srgb,var(--secondary-background-color,#f1f5f9) 45%,transparent)!important;overflow:hidden!important}
     .dm-appliance-card-fields>summary{padding:13px 16px!important;font-size:13px!important;font-weight:850!important;cursor:pointer!important;list-style:none!important;user-select:none!important}
     .dm-appliance-card-fields>summary::-webkit-details-marker{display:none!important}

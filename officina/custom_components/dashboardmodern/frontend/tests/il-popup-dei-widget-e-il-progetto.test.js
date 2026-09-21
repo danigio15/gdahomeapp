@@ -85,7 +85,19 @@ test("le letture del popup sono caselle e pillole, non un elenco di righe", () =
   }
   assert.match(WIDGETS, /\.filter\(\(row\) => row\.comando\)/, "rowsDetail tiene solo i comandi");
   assert.match(WIDGETS, /carteDalleRighe/, "le righe di lettura diventano caselle");
-  assert.match(WIDGETS, /"elettrodomestici",\n\]\);/, "anche chi lavora e' una casella");
+  /* Chi entra in `CHIAVI_A_CARTE` disegna le sue letture come caselle. Si
+   * guarda che i due casi di confine ci siano — chi lavora, e il MiniPC, che
+   * e' arrivato per ultimo perche' era l'unico rimasto fuori («sui widget il
+   * mini pc non incolonna bene le scritte») — non che siano in fondo
+   * all'elenco: la riga di prima pretendeva che «elettrodomestici» fosse
+   * l'ULTIMA voce, e cosi' ogni tessera aggiunta dopo faceva cadere una prova
+   * che non parlava di lei. */
+  const aCarte = WIDGETS.slice(
+    WIDGETS.indexOf("const CHIAVI_A_CARTE"),
+    WIDGETS.indexOf("]);", WIDGETS.indexOf("const CHIAVI_A_CARTE")),
+  );
+  for (const chiave of ["elettrodomestici", "minipc", "evidenza", "batterie"])
+    assert.match(aCarte, new RegExp(`"${chiave}",`), `${chiave} non disegna piu' le sue caselle`);
   /* Le pillole arrivano a dodici, e oltre lo dicono: il taglio ha un nome
    * solo — `MISURE_IN_VISTA` — e lo stesso tasto delle misure lo scavalca
    * (#376). Prima era un `.slice(0, 12)` scritto qui e un altro nelle

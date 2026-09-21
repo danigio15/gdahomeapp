@@ -33,6 +33,19 @@
  * un popup dove poter selezionare quelle presenti nell'entita'.» Il tasto le
  * mostra tutte e fa scegliere — o mette direttamente quella fissata
  * nell'editor, per chi vuole un tasto secco. Il popup sta qui sotto.
+ *
+ * Quella finestra non e' piu' solo delle azioni rapide. «Sviluppa la stessa
+ * cosa ovunque»: un menu a tendina si sceglie dalla sua riga nella stanza,
+ * dalla sua riga in una sezione propria e da quella fra le proprie entita', e
+ * tutte e tre aprono questa. La porta si chiama `apriIlMenu`, e chi la apre
+ * senza un'azione dietro — chi chiama con `azione` nullo — vuole dire «solo
+ * l'elenco»: niente conferma da chiedere, niente icona da mettere in testa.
+ *
+ * Sta ancora qui, e non in un modulo suo, per una ragione che si vede dieci
+ * righe piu' in basso: la finestra chiama il servizio per il filo del guscio —
+ * il suo socket e il suo contatore dei messaggi — ed e' la stessa strada che
+ * prende l'azione rapida. Separarle vorrebbe dire o portarsi dietro quella
+ * strada in due posti, o farne prendere una seconda alla finestra.
  */
 import {
   allStates,

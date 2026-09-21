@@ -130,6 +130,9 @@ test("le linguette delle stanze disegnano l'icona, non la scrivono", async ({ pa
     .locator('.tab[data-tab="stanze"]')
     .first()
     .evaluate((n) => n.click());
+  /* La pagina Stanze si apre sull'elenco (#17): la stanza si apre toccandola,
+   * come fa una persona. */
+  await page.locator("#page-stanze .dm-stanze-tessera").first().click();
   const linguette = page.locator("#page-stanze .dm-stanze-tab");
   await expect(linguette.first()).toBeVisible();
   const icone = await linguette.evaluateAll((voci) =>

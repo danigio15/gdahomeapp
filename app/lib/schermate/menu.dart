@@ -73,11 +73,24 @@ enum Sezione {
    * dentro sono le persone. Nella barra di Home Assistant la voce ha
    * `mdi:account-key`, che e' la stessa cosa detta con quello che li' c'e'. */
   gestione('persone', pronta: true),
-  aiutanti('mie'),
-  zigbee('runtime'),
-  automazioni('azioni');
+  /* ─── Quelle che ci sono solo nell'app ────────────────────────────────
+   *
+   * Tre voci vivono **solo su Android e iOS**, e non nella webapp. Non e' una
+   * dimenticanza: sono cose che vogliono il telefono — la rete Zigbee si apre
+   * stando in piedi davanti al dispositivo, col telefono in una mano — e una
+   * copia nel browser sarebbe una porta che si apre su meta' di quello che
+   * promette. Una porta che non si apre e' peggio di una porta che non c'e'. */
+  aiutanti('mie', soloNellApp: true),
+  /* Un dispositivo nuovo, abbinato dal telefono (#54).
+   *
+   * Come la Console e il Cruscotto non e' una voce come le altre: compare
+   * **solo dove una rete Zigbee c'e'**, e chi ce l'ha lo dice il ponte, non
+   * l'app. In una casa senza ZHA e senza Zigbee2MQTT quella voce aprirebbe
+   * una porta che non si apre — vedi `vociDellaBarra`. */
+  zigbee('runtime', pronta: true, soloNellApp: true),
+  automazioni('azioni', soloNellApp: true);
 
-  const Sezione(this.disegno, {this.pronta = false});
+  const Sezione(this.disegno, {this.pronta = false, this.soloNellApp = false});
 
   /// Come si chiama, nella lingua di chi guarda.
   ///
@@ -119,4 +132,10 @@ enum Sezione {
 
   /// `false` finche' quel blocco non e' scritto: la voce si vede, spenta.
   final bool pronta;
+
+  /// `true` per le voci che esistono solo su Android e iOS.
+  ///
+  /// Nella webapp non ci sono proprio: non sono spente, non sono grigie, non
+  /// ci sono. Vedi `vociDellaBarra`.
+  final bool soloNellApp;
 }

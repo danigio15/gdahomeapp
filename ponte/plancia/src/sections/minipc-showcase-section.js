@@ -851,6 +851,40 @@ function correggiDopoIlGuscio() {
   });
 }
 
+/* La mappatura delle caselle puo' arrivare DOPO che la pagina e' gia' aperta.
+ *
+ * «Ho inserito manualmente i dati della sezione dal configurazione, se la apro
+ * vedo vuoto poi chiudo e riapro ed escono; da app sono vuoti.»
+ *
+ * Il guscio la mappa delle caselle se la prende una volta sola, quando il suo
+ * script viene letto: `let ENTITY_OVERRIDES = cdCfg('cd_entity_overrides')`.
+ * Chi la cambia dopo — la configurazione che arriva dal ponte, l'editor che
+ * salva, un altro telefono che sincronizza — non scrive dentro quella mappa:
+ * la SOSTITUISCE, chiamando `cdApplyCanonicalOverrides`. Il guscio da quel
+ * momento legge giusto.
+ *
+ * Solo che nessuno ridisegna. Questa pagina si rifa' quando la casa cambia
+ * stato o quando la si apre, e una mappatura che arriva non e' ne' l'una ne'
+ * l'altra cosa: percio' restava scritto NON CONFIGURATO, coi numeri a
+ * trattino, finche' non si usciva e si rientrava. Nell'app e' il caso
+ * normale, non l'eccezione — li' la configurazione arriva sempre dopo.
+ *
+ * Il rimedio sta dove la mappa cambia, non dove si legge: appena e' cambiata
+ * si chiede al guscio di ridisegnare. Ridisegna lui, non questa sezione, e
+ * cosi' si rimettono in pari anche tutte le altre pagine che leggono le
+ * stesse caselle — nessuna delle quali si accorgeva di niente. */
+function ridisegnaQuandoCambiaLaMappatura() {
+  return wrapFunction("cdApplyCanonicalOverrides", "__dmMinipcMappatura", () => {
+    try {
+      root.render?.();
+    } catch (_error) {}
+    try {
+      raddrizzaLaRete();
+    } catch (_error) {}
+    scheduleMinipcShowcase();
+  });
+}
+
 function pageVisible() {
   return Boolean(doc?.getElementById("page-server")?.classList.contains("active"));
 }
@@ -869,6 +903,7 @@ export function installMinipcShowcaseSection() {
       root.addEventListener?.(eventName, () => {
         bindAutoHide();
         correggiDopoIlGuscio();
+        ridisegnaQuandoCambiaLaMappatura();
         portaAvantiLaCasella();
         scheduleMinipcShowcase();
       });
@@ -899,6 +934,7 @@ export function installMinipcShowcaseSection() {
   state.installed = true;
   bindAutoHide();
   correggiDopoIlGuscio();
+  ridisegnaQuandoCambiaLaMappatura();
   sampleCpu();
   renderMinipcShowcase();
 }

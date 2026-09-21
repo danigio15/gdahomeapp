@@ -463,21 +463,34 @@ export function createApplianceViewModel(
       ? modoDelLettore(configuredState)
       : letturaDelloStato(configuredState);
 
-  const explicitRunning =
-    dettoDalloStato === "running" || (activityBinary && configuredState === "on");
+  /* E cosa dice il lettore messo come interruttore.
+   *
+   * Una TV si mappa dal tasto, non dallo stato: `media_player.tv` finisce in
+   * `control_entity`, e li' fino a ieri nessuno le chiedeva niente. La sua
+   * parola arrivava solo a `genericOn`, che porta a STANDBY: «le tv anche se
+   * accese risultano sempre in stand-by» (#47). Peggio, «standby» non lo
+   * capiva nessuno e la TV in attesa risultava SPENTA.
+   *
+   * La stessa entita' deve dire la stessa cosa da tutte e due le parti: la
+   * riga qui sotto e' la gemella di `dettoDalloStato`. Resta ristretta ai
+   * lettori — un interruttore generico acceso a 0 W continua a valere
+   * STANDBY, che e' la prudenza per cui quella regola esiste. */
+  const dettoDalComando = /^media_player\./.test(controlEntity) ? modoDelLettore(controlState) : "";
 
-  const explicitWaiting = dettoDalloStato === "standby";
+  const explicitRunning =
+    dettoDalloStato === "running" ||
+    dettoDalComando === "running" ||
+    (activityBinary && configuredState === "on");
+
+  const explicitWaiting = dettoDalloStato === "standby" || dettoDalComando === "standby";
 
   const explicitlyOff =
     Boolean(stateEntity) &&
     (dettoDalloStato === "off" || (activityBinary && configuredState === "off"));
-  /* Un lettore che fa da interruttore e' «acceso» in tutti i suoi stati vivi,
-   * non solo quando dice letteralmente «on»: la TV che sta riproducendo e'
-   * accesa quanto quella che dice «on». */
-  const genericOn =
-    configuredState === "on" ||
-    controlState === "on" ||
-    (/^media_player\./.test(controlEntity) && modoDelLettore(controlState) === "running");
+  /* Acceso senza altro da aggiungere: la parola «on» e basta. Gli stati vivi
+   * di un lettore non passano piu' di qui — li dice `dettoDalComando`, che
+   * arriva prima e vale IN FUNZIONE. */
+  const genericOn = configuredState === "on" || controlState === "on";
   const sampledMode =
     unavailable && watts == null
       ? "unavailable"
@@ -524,9 +537,7 @@ export function createApplianceViewModel(
   const canControl = Boolean(controlEntity) && device.switch_disabled !== true;
   /* Il tasto della card dice «Spegni» a un lettore che sta suonando o e' in
    * pausa, non solo a uno che dice «on»: il servizio da chiamare e' quello. */
-  const controlOn =
-    controlState === "on" ||
-    (/^media_player\./.test(controlEntity) && modoDelLettore(controlState) === "running");
+  const controlOn = controlState === "on" || dettoDalComando === "running";
   return Object.freeze({
     id: clean(device.id),
     device,

@@ -268,6 +268,42 @@ Future<void> diciLeMisure(
   }
 }
 
+/// Dice alla plancia che nessuno la sta guardando, o che qualcuno e' tornato.
+///
+/// La plancia sa gia' mettersi a riposo: dentro Home Assistant, quando si va
+/// su un'altra pagina, chi la ospita le scrive addosso un segno — il
+/// parcheggio — e lei smette di disegnare. Il patto sta scritto in due posti,
+/// `ponte/plancia/src/legacy/host.js` di la' e `shared.js` di qua, e i nomi
+/// sono questi.
+///
+/// Nell'app quel segno non glielo scriveva nessuno. Le altre schermate si
+/// ricevono un `visibile` e si azzittiscono; la plancia no, e restava viva a
+/// pieno ritmo sotto una schermata che non la mostrava: il suo disegno da
+/// settecento righe due volte al secondo, i suoi timer, le sue animazioni.
+/// Non si vedeva, ma si sentiva — il telefono che si scalda con la plancia
+/// aperta, e gli scatti sulle schermate dell'app.
+///
+/// Al ritorno si manda anche un `pageshow`, che e' il modo con cui la plancia
+/// capisce «rimettiti in pari»: e' quello che fa gia' chi la ospita dentro
+/// Home Assistant, e due modi diversi di svegliarla sarebbero due modi da
+/// tenere allineati.
+Future<void> parcheggia(
+  WebViewController controllore,
+  bool parcheggiata,
+) async {
+  final detto = parcheggiata ? 'true' : 'false';
+  try {
+    await controllore.runJavaScript(
+      'window.__DASHBOARDMODERN_PARCHEGGIATA__=$detto;'
+      'window.dispatchEvent(new CustomEvent('
+      '"dashboardmodern:parcheggio",{detail:{parcheggiata:$detto}}));'
+      '${parcheggiata ? '' : 'window.dispatchEvent(new Event("pageshow"));'}',
+    );
+  } catch (_) {
+    /* La pagina non c'e' ancora, o se n'e' andata: al prossimo giro. */
+  }
+}
+
 /// Consegna alla pagina del quadro il codice che apre il cruscotto.
 ///
 /// **La stessa strada della tessera dentro Home Assistant**
@@ -355,6 +391,32 @@ Future<void> tornaDallaConfig(WebViewController controllore) async {
     );
   } catch (_) {
     /* La pagina non c'e' ancora: non c'e' nemmeno da dove tornare. */
+  }
+}
+
+/// Passa alla plancia un dispositivo appena abbinato, perche' chieda lei dove
+/// va a finire (#54, passo 4).
+///
+/// La maniglia la mette la plancia stessa — `installDoveLoMettoSection` la
+/// appende a `window` — e a scrivere e' lei: le sue sezioni hanno cinque
+/// forme diverse, e scriverle dall'app vorrebbe dire scriverle due volte.
+///
+/// [dispositivo] arriva **gia' in JSON**, da `ilFoglietto`: qui non si
+/// costruisce niente a mano. Il nome del dispositivo lo scrive chi ha il
+/// telefono in mano e finisce dentro un programma che si esegue, quindi passa
+/// da `jsonEncode`, che le virgolette e le barre le chiude lui.
+Future<void> doveLoMetto(
+  WebViewController controllore,
+  String dispositivo,
+) async {
+  try {
+    await controllore.runJavaScript(
+      'window.gdahomeDoveLoMetto&&window.gdahomeDoveLoMetto($dispositivo)',
+    );
+  } catch (_) {
+    /* La pagina non c'e' ancora, o e' una plancia vecchia che quella maniglia
+     * non ce l'ha: il dispositivo in casa c'e' lo stesso, e la sezione si
+     * sceglie dall'editor come si e' sempre fatto. */
   }
 }
 

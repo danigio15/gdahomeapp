@@ -96,7 +96,9 @@ export function iconaPortaMarkup(icon, size = 22) {
 
 /** Come si chiama un gesto, sul tasto. */
 export function parolaDelGesto(gesto) {
-  return gesto === "sblocca" ? t("Sblocca", "Unlock") : t("Apri", "Open");
+  if (gesto === "sblocca") return t("Sblocca", "Unlock");
+  if (gesto === "blocca") return t("Blocca", "Lock");
+  return t("Apri", "Open");
 }
 
 function dentroLaPorta(door) {
@@ -313,7 +315,7 @@ function paint() {
 
 /* ── the command ──────────────────────────────────────────────────────── */
 
-async function openDoor(door, gesto = "") {
+async function comandaLaPorta(door, gesto = "") {
   if (state.busy.has(door.id)) return;
   const azioni = azioniDellaPorta(door, allStates()[door.entity]);
   const scelta = azioni.find((azione) => azione.gesto === clean(gesto)) || azioni[0];
@@ -331,7 +333,7 @@ async function openDoor(door, gesto = "") {
       await (root.hass || root._hass)?.callService?.(call.domain, call.service, payload);
     }
   } catch (error) {
-    root.console?.error?.("[DashboardModern] door open", error);
+    root.console?.error?.("[DashboardModern] door command", error);
   }
   root.setTimeout?.(() => {
     state.busy.delete(door.id);
@@ -354,13 +356,15 @@ function confirmAndOpen(door, gesto = "") {
         message:
           clean(gesto) === "sblocca"
             ? t("Confermi lo sblocco?", "Confirm unlocking?")
-            : t("Confermi l'apertura?", "Confirm opening?"),
-        onConfirm: () => openDoor(door, gesto),
+            : clean(gesto) === "blocca"
+              ? t("Confermi il blocco?", "Confirm locking?")
+              : t("Confermi l'apertura?", "Confirm opening?"),
+        onConfirm: () => comandaLaPorta(door, gesto),
       });
       return;
     } catch (_error) {}
   }
-  openDoor(door, gesto);
+  comandaLaPorta(door, gesto);
 }
 
 /* ── the keypad ───────────────────────────────────────────────────────── */
@@ -456,7 +460,7 @@ function onKeypadClick(event) {
       /* Il gesto si legge prima di chiudere: chiudendo si dimentica. */
       const gesto = state.gesto;
       closeKeypad();
-      openDoor(door, gesto);
+      comandaLaPorta(door, gesto);
     } else {
       /* PIN sbagliato: si azzera e si resta qui — l'errore va detto dov'e'
        * successo, non con la porta che non si apre e basta. */
@@ -479,13 +483,17 @@ function onClick(event) {
   event.preventDefault();
   const door = doorById(card.dataset.dmDoor);
   if (!door || state.busy.has(door.id)) return;
-  /* Quale dei due gesti: lo dice il tasto, dove ce ne sono due. */
+  /* Quale gesto: lo dice il tasto, dove ce n'e' piu' d'uno. */
   const gesto = clean(card.dataset.dmDoorGesto);
-  if (door.pin) openKeypad(door, gesto);
+  /* Il PIN protegge l'apertura, non la chiusura: chiudere la propria porta non
+   * e' mai il verso pericoloso, e chiedere un codice per farlo sarebbe attrito
+   * senza sicurezza in cambio — col risultato che chi ha fretta la lascia
+   * aperta. */
+  if (door.pin && gesto !== "blocca") openKeypad(door, gesto);
   else if (siChiedeConferma()) confirmAndOpen(door, gesto);
   /* Senza conferma si apre e basta: è la scelta di chi apre il proprio portone
    * dieci volte al giorno. */
-  else openDoor(door, gesto);
+  else comandaLaPorta(door, gesto);
 }
 
 function paginaVisibile() {

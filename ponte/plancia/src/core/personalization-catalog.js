@@ -862,6 +862,10 @@ export function actionCatalogMatch(value) {
 export const AZIONI_DI_SERIE = Object.freeze({
   luci: "mdi:lightbulb-group",
   luci_group: "mdi:lightbulb-group",
+  /* Quello del catalogo DELLE AZIONI, non quello dei carichi: da qui si deve
+   * arrivare a un disegno, e un segno che quel catalogo non conosce farebbe
+   * ripiegare sull'emoji di sistema — diversa su ogni telefono. */
+  prese: "mdi:power-plug",
   clima: "mdi:snowflake",
   antifurto: "mdi:shield-home",
   lavatrice: "mdi:washing-machine",
@@ -932,6 +936,29 @@ const LOAD_APPLIANCE_DEFINITIONS = [
   ["hob", "Piano cottura", "Hob", "mdi:countertop", "🍳", "fornelli induzione piastra"],
   ["hood", "Cappa", "Cooker hood", "mdi:air-filter", "💨", "cappa aspirazione cucina"],
   ["microwave", "Microonde", "Microwave", "mdi:microwave", "🍲", "microonde forno"],
+  /* I fornelli da banco (#71): «mi piacerebbe pilotare la mia friggitrice ad
+   * aria della Philips».
+   *
+   * L'elenco aveva il forno, il piano, la cappa, il microonde, il bollitore e
+   * il barbecue — tutta la cucina tranne quello che si e' comprato mezzo mondo
+   * negli ultimi cinque anni. Chi la friggitrice ce l'ha in Home Assistant, in
+   * plancia doveva chiamarla «Presa»: non un difetto grave, ma il genere di
+   * riga mancante che fa sembrare la plancia una cosa di dieci anni fa.
+   *
+   * Il disegno c'era gia': `appliance-hero-artwork.js` la friggitrice e il
+   * tostapane li sa disegnare da sempre, e nessuno poteva sceglierli — era
+   * solo questa riga a mancare. La pentola multifunzione invece no, e non si
+   * aggiunge: darle il disegno di un'altra cosa sarebbe una voce che mente
+   * appena la si sceglie. */
+  [
+    "air-fryer",
+    "Friggitrice ad aria",
+    "Air fryer",
+    "mdi:air-fryer",
+    "🍟",
+    "friggitrice aria airfryer",
+  ],
+  ["toaster", "Tostapane", "Toaster", "mdi:toaster", "🍞", "tostapane toast pane"],
   ["fridge", "Frigorifero", "Fridge", "mdi:fridge", "🧊", "frigo frigorifero"],
   [
     "freezer",

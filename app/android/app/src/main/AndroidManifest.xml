@@ -17,6 +17,21 @@
          nel browser vibrava, nell'app no, e non si capiva perche'. -->
     <uses-permission android:name="android.permission.VIBRATE" />
 
+    <!-- Il volto e l'impronta davanti all'app (#54): il lucchetto che si
+         accende da Sicurezza.
+
+         `USE_BIOMETRIC` e' un permesso normale — il sistema non chiede niente
+         a nessuno, e a mostrare la finestra e' lui — ma senza questa riga
+         BiometricPrompt non si apre.
+
+         `required="false"` sulla feature perche' senza lettore l'app funziona
+         com'e' sempre stata: il lucchetto non si puo' mettere, e le sue
+         schermate lo dicono invece di offrire un tasto che non fa niente.
+         Senza, il Play Store nasconderebbe l'app a chi ha un telefono senza
+         lettore. -->
+    <uses-permission android:name="android.permission.USE_BIOMETRIC" />
+    <uses-feature android:name="android.hardware.fingerprint" android:required="false" />
+
     <!-- La plancia vera dentro l'app passa da un server locale, su
          127.0.0.1: e' l'unico indirizzo in chiaro che il WebView puo'
          aprire, ed e' scritto in res/xml/network_security_config.xml. -->

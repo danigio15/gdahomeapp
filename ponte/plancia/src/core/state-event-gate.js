@@ -1,7 +1,8 @@
 // DM-FIX-20260812B
+import { entitaConfigurate } from "./entita-configurate.js";
+
 const STATE_EVENT = "dashboardmodern:state-changed";
 const SERVICE_KEY = "DashboardModernEnergyService";
-const ENTITY_ID = /^[a-z_][a-z0-9_]*\.[a-z0-9_]+$/i;
 /* Le caselle di configurazione che questo cancello guarda.
  *
  * Non le sa da se': gliele passa chi lo installa, e sono quelle vere —
@@ -21,38 +22,6 @@ function chiaviDate(chiavi) {
 function makeEvent(root, detail) {
   if (typeof root.CustomEvent === "function") return new root.CustomEvent(STATE_EVENT, { detail });
   return { type: STATE_EVENT, detail };
-}
-
-function collectEntityIds(value, output, depth = 0) {
-  if (depth > 12 || value == null) return;
-  if (typeof value === "string") {
-    const id = value.trim();
-    if (ENTITY_ID.test(id)) output.add(id);
-    return;
-  }
-  if (Array.isArray(value)) {
-    value.forEach((entry) => collectEntityIds(entry, output, depth + 1));
-    return;
-  }
-  if (typeof value === "object") {
-    Object.values(value).forEach((entry) => collectEntityIds(entry, output, depth + 1));
-  }
-}
-
-function collectStoredConfig(root, ids, chiavi) {
-  const storage = root.localStorage;
-  if (!storage?.getItem) return;
-  for (const key of chiavi) {
-    try {
-      const raw = storage.getItem(key);
-      if (!raw) continue;
-      let value = raw;
-      try {
-        value = JSON.parse(raw);
-      } catch (_error) {}
-      collectEntityIds(value, ids);
-    } catch (_error) {}
-  }
 }
 
 /* Quando la configurazione cambia, e non «ogni tanto».
@@ -109,21 +78,6 @@ function osservaLaConfigurazione(root, dimentica, osservate) {
   storage.__dmStateEventGateWatch = true;
 }
 
-function configuredEntities(root, chiavi) {
-  const ids = new Set();
-  try {
-    collectEntityIds(root.DashboardModernModules?.store?.getState?.()?.sections, ids);
-  } catch (_error) {}
-  try {
-    collectEntityIds(root.CD_BAKED_CONFIG, ids);
-  } catch (_error) {}
-  try {
-    collectEntityIds(root.ENTITY_OVERRIDES, ids);
-  } catch (_error) {}
-  collectStoredConfig(root, ids, chiavi);
-  return ids;
-}
-
 /**
  * Discard live updates that are not used anywhere by the dashboard, then
  * coalesce the remaining notifications into a bounded batch. State registries
@@ -147,7 +101,7 @@ export function installStateEventGate(
   let interests = null;
 
   const currentInterests = () => {
-    if (!interests) interests = configuredEntities(root, osservate);
+    if (!interests) interests = entitaConfigurate(root, osservate);
     return interests;
   };
   /* Non si ricalcola qui: si dimentica, e il primo evento che passa lo rifa'.

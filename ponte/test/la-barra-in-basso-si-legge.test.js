@@ -116,31 +116,54 @@ function ilBlocco(foglio, condizione) {
 const IL_TABLET =
   "(hover: none) and (pointer: coarse) and (min-width: 900px) and (min-height: 600px)";
 
-test("su uno schermo che si tocca ma e' largo, le voci si prendono il posto che c'e'", () => {
+/* ── La regola si e' girata, e il perche' va scritto ──────────────────────
+ *
+ * La prima cura fu dividere la riga fra le linguette (`flex: 1 1 auto`) con
+ * un tetto alzato da 72 a 132 punti: su un tablet con poche sezioni bastava.
+ *
+ * Con ventitre' non basta piu', e per un motivo aritmetico. Dividere una riga
+ * fra ventitre' vuol dire dare a ognuna cinquantacinque punti, cioe' meno del
+ * suo minimo: allora si fermano al minimo, settantadue, e in settantadue
+ * punti, tolto il margine, per la scritta ne restano poco piu' di cinquanta.
+ * «Elettrodomestici» a dieci punti di carattere ne chiede centosei. Misurato
+ * su un tablet da 1280: dieci scritte su ventitre' tagliate coi puntini.
+ *
+ * Adesso ogni linguetta e' larga quanto la sua parola e la riga scorre. E'
+ * l'opposto di prima, quindi la prova dice l'opposto: non piu' «crescono
+ * fino a riempire», ma «non si stringono e non hanno tetto». */
+test("su uno schermo che si tocca ma e' largo, ogni voce e' larga quanto la sua parola", () => {
   for (const [lingua, foglio] of iFogli) {
     const blocco = ilBlocco(foglio, IL_TABLET);
     assert.ok(blocco, `in ${lingua} il blocco del tablet non c'e' piu'`);
-    /* Crescono: la riga si divide fra loro invece di lasciare l'avanzo a
-     * destra. Senza il `flex-grow` restano larghe come su un telefono. */
-    assert.match(blocco, /flex:\s*1\s+1\s+auto/, `in ${lingua} le linguette non crescono`);
-    /* E piu' larghe di quanto puo' essere una voce su un telefono (72). */
-    const tetto = blocco.match(/max-width:\s*(\d+)px/);
-    assert.ok(tetto, `in ${lingua} il tetto della linguetta non c'e'`);
-    assert.ok(
-      Number(tetto[1]) > 72,
-      `in ${lingua} il tetto e' ancora quello del telefono (${tetto[1]}px)`,
+    /* Non si dividono la riga: si misurano da se'. */
+    assert.doesNotMatch(
+      blocco,
+      /flex:\s*1\s+1\s+auto/,
+      `in ${lingua} la riga torna a dividersi fra le linguette`,
     );
-    /* Il tetto c'e' ancora, pero': alzato, non tolto. Una voce lunga non si
-     * prende la riga. */
-    assert.doesNotMatch(blocco, /max-width:\s*none/, `in ${lingua} il tetto e' stato tolto`);
-    /* E la scritta torna leggibile: piu' dei 7 punti del telefono. */
+    assert.match(
+      blocco,
+      /flex:\s*0\s+0\s+auto/,
+      `in ${lingua} le linguette non si misurano dalla loro parola`,
+    );
+    /* E nessun tetto: un tetto e' una parola tagliata a una misura decisa
+     * prima di sapere quale parola fosse. */
+    assert.match(blocco, /max-width:\s*none/, `in ${lingua} e' tornato un tetto alla linguetta`);
+    assert.doesNotMatch(
+      blocco,
+      /max-width:\s*\d+px/,
+      `in ${lingua} la linguetta ha di nuovo un tetto in punti`,
+    );
+    /* La scritta resta leggibile: piu' dei 7 punti del telefono, e ora 11. */
     const scritta = blocco.slice(blocco.indexOf(".tab .text"));
     const quanto = scritta.match(/font-size:\s*(\d+)px/);
     assert.ok(quanto, `in ${lingua} la misura della scritta non c'e'`);
     assert.ok(
-      Number(quanto[1]) > 7,
-      `in ${lingua} la scritta e' ancora quella del telefono (${quanto[1]}px)`,
+      Number(quanto[1]) >= 11,
+      `in ${lingua} la scritta e' scesa a ${quanto[1]}px, e sotto gli undici non si legge da un metro`,
     );
+    /* Niente puntini: il posto c'e' per costruzione. */
+    assert.match(scritta, /text-overflow:\s*clip/, `in ${lingua} sono tornati i puntini`);
   }
 });
 

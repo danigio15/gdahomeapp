@@ -151,6 +151,54 @@ export const IL_VELO_SI_RIVESTE =
  * in evidenza, che e' esattamente il disegno che c'era. */
 const LA_SCRITTA_DEL_LOGO = /(>)Dashboard(<\/span><span[^>]*>)MODERN(<\/span>)/g;
 
+/* I due file che portano il nome scritto dentro il programma. */
+const IL_RUNTIME = /^legacy\/dashboard-runtime-[a-z]{2}\.js$/;
+
+/* Se passare di qui cambia qualcosa.
+ *
+ * Serve a chi tiene i file a mente: uno che esce com'e' entrato si puo'
+ * ricordare una volta sola, e le trecentosessantotto cose che la pagina chiede
+ * all'apertura sono quasi tutte di questa razza. Sta scritto qui, accanto a
+ * chi li veste, perche' due elenchi della stessa cosa diventano due elenchi
+ * diversi al primo file nuovo. */
+export function vaVestito(relativo) {
+  const quale = String(relativo || "");
+  return (
+    quale === IL_BUILD_INFO ||
+    quale === IL_LOGO ||
+    quale.endsWith(".html") ||
+    IL_RUNTIME.test(quale)
+  );
+}
+
+/* Se quello che esce dipende da **chi** ha montato l'impianto.
+ *
+ * La differenza con la domanda qui sopra: il numero di versione cambia il
+ * file, ma e' lo stesso per tutti; il logo, la pagina e il runtime cambiano da
+ * un installatore all'altro. I primi si ricordano una volta, i secondi una
+ * volta per installatore. */
+export function dipendeDaChi(relativo) {
+  const quale = String(relativo || "");
+  return quale === IL_LOGO || quale.endsWith(".html") || IL_RUNTIME.test(quale);
+}
+
+/* Una firma corta di come **questo** installatore veste la plancia.
+ *
+ * Serve a chi tiene i file gia' vestiti a mente. Un installatore si abbina e
+ * si toglie mentre il ponte gira — per questo `Plancia` riceve una funzione e
+ * non un oggetto — e un runtime ricordato con il nome di ieri sarebbe il nome
+ * sbagliato oggi. Due vestizioni con la stessa firma danno lo stesso file;
+ * cambiata la firma, quello che era a mente non risponde piu'.
+ *
+ * Del logo basta la misura: l'unico file vestito che si tiene a mente e' il
+ * runtime, e quello prende solo il nome. Il logo si serve com'e' — un png non
+ * si comprime — e la pagina non si tiene mai. */
+export function firmaDelVestito(suo) {
+  const chi = daInstallatore(suo);
+  if (!chi) return "";
+  return [chi.nome, chi.tipo, chi.titolo, chi.velo, chi.logo ? chi.logo.length : 0].join("\u0001");
+}
+
 /* Se un file va vestito, e come.
  *
  * Torna `{corpo, tipo}` — gli stessi che si servirebbero, o quelli nuovi. Non
@@ -159,6 +207,10 @@ const LA_SCRITTA_DEL_LOGO = /(>)Dashboard(<\/span><span[^>]*>)MODERN(<\/span>)/g
  */
 export function vestiDiGdahome(relativo, corpo, tipo, suo = null, versione = "") {
   const quale = String(relativo || "");
+  /* La stragrande maggioranza dei file esce com'e' entrata. Chiederlo prima
+   * non e' un risparmio: e' il modo perche' chi li tiene a mente e chi li
+   * veste non possano dire due cose diverse. */
+  if (!vaVestito(quale)) return { corpo, tipo };
   const chi = daInstallatore(suo);
   try {
     if (quale === IL_BUILD_INFO) {
@@ -177,7 +229,7 @@ export function vestiDiGdahome(relativo, corpo, tipo, suo = null, versione = "")
     if (quale.endsWith(".html")) {
       return { corpo: Buffer.from(laPagina(corpo.toString("utf8"), chi), "utf8"), tipo };
     }
-    if (/^legacy\/dashboard-runtime-[a-z]{2}\.js$/.test(quale)) {
+    if (IL_RUNTIME.test(quale)) {
       const testo = corpo.toString("utf8");
       /* Si sostituisce e poi si guarda se e' cambiato qualcosa, invece di
        * chiedere prima «c'e'?»: su un'espressione con la `g`, `test` si

@@ -523,6 +523,97 @@ function cardMarkup(unit, labels) {
     </article>`;
 }
 
+/* ── la stessa card, anche fuori da questa pagina (#11) ──────────────────── */
+
+/* «La tessera del clima nella stanza ha uno stile diverso da quella della
+ * pagina Clima.»
+ *
+ * Vero, ed erano due cose diverse: qui c'e' una card del clima — il numero
+ * grande dei gradi, la barra fra il minimo e il massimo, l'ambiente sotto, il
+ * meno, il piu' e l'interruttore — e nella stanza c'era la riga che la pagina
+ * Stanze da' a QUALUNQUE cosa: pallino, nome, stato, e sotto il pannello dei
+ * modi. Non erano due disegni del clima in gara: era questo e la sua assenza.
+ *
+ * Vince questo, e non per gusto: e' l'unico che risponde senza aprire niente
+ * alle quattro domande che uno fa a un condizionatore — a quanto sta, quanto
+ * fa in stanza, fra che estremi si muove, e come lo alzo o lo spengo. E ci sta
+ * in una griglia di card strette, perche' e' gia' in una: la pagina Clima le
+ * mette in fila esattamente come la pagina Stanze.
+ *
+ * Non una copia somigliante, pero': la copia torna a divergere al primo
+ * ritocco, che e' il difetto di partenza. E' questa funzione, chiamata da la'.
+ */
+
+/** Il nome della card quando non e' in questa pagina: un id non si ripete. */
+const ALTROVE = "--altrove";
+
+/**
+ * La card del clima di un'entita', pronta da mettere in un'altra pagina.
+ *
+ * `stanza: false` toglie la riga della stanza sotto il nome: dentro la pagina
+ * di una stanza, ripetere il nome della stanza su ogni card e' rumore. Non e'
+ * una seconda versione della card — `cardMarkup` quella riga la salta gia' da
+ * se' quando l'unita' non e' assegnata — e' la stessa casella lasciata vuota.
+ *
+ * Una pompa di calore ha due card qui, una per zona. Fuori di qui no: due card
+ * uguali per la stessa macchina, una accanto all'altra, sono la stessa cosa
+ * detta due volte. Si sceglie la zona in cui e' accesa adesso, e se e' spenta
+ * la prima.
+ */
+export function laCardDelClima(entity, { stanza = true } = {}) {
+  const chiave = clean(entity);
+  if (!chiave) return "";
+  let unita = [];
+  try {
+    unita = climateUnits().filter((voce) => voce.entity === chiave);
+  } catch (_error) {
+    return "";
+  }
+  if (!unita.length) return "";
+  const states = allStates();
+  const scelta = unita.find((voce) => climateReading(voce.entity, states).on) || unita[0];
+  return cardMarkup(
+    {
+      ...scelta,
+      room: stanza ? scelta.room : "",
+      cardId: `${scelta.cardId}${ALTROVE}`,
+    },
+    copy(),
+  );
+}
+
+/**
+ * Ridipinge le card del clima che stanno dentro `dove`.
+ *
+ * Si cercano nel documento e non per nome: chi le ha messe li' sa dove sono, e
+ * un id per card vorrebbe dire che chi disegna la stanza tiene un elenco di
+ * nomi allineato a quello di qui. Torna quante ne ha dipinte, che serve a chi
+ * la prova.
+ */
+export function dipingiLeCardDelClima(dove) {
+  if (!dove?.querySelectorAll) return 0;
+  const carte = dove.querySelectorAll("[data-dm-cl]");
+  if (!carte.length) return 0;
+  let unita = [];
+  try {
+    unita = climateUnits();
+  } catch (_error) {
+    return 0;
+  }
+  const labels = copy();
+  const states = allStates();
+  let dipinte = 0;
+  for (const card of carte) {
+    const entity = clean(card.dataset.dmCl);
+    const zone = clean(card.dataset.dmClZone);
+    const unit = unita.find((voce) => voce.entity === entity && voce.zone === zone);
+    if (!unit) continue;
+    paintCard(card, unit, climateReading(entity, states), labels);
+    dipinte += 1;
+  }
+  return dipinte;
+}
+
 /* Per piano, e dentro il piano per stanza — ma la stanza solo quando serve.
  *
  * Si raggruppava per piano soltanto, e la ragione era buona: con un'unita' per
@@ -1827,19 +1918,27 @@ function climaRapidoCss() {
 
 function climateCss() {
   return `
-.dm-cl-shell,.dm-cl-shell *,.dm-cl-shell *::before,.dm-cl-shell *::after{box-sizing:border-box}
-.dm-cl-shell{
+.dm-cl-shell,.dm-cl-shell *,.dm-cl-shell *::before,.dm-cl-shell *::after,
+.dm-cl-card,.dm-cl-card *,.dm-cl-card *::before,.dm-cl-card *::after{box-sizing:border-box}
+/* I colori e le misure stanno addosso al guscio E alla card (#11).
+   La card adesso va anche dove un guscio non c'e' — dentro la pagina di una
+   stanza — e una card che questi nomi li prendesse dal nonno, fuori di qui, non
+   li troverebbe: un var() senza ripiego non vale bianco, non vale niente, e la
+   card si disegnerebbe trasparente sopra la pagina. */
+.dm-cl-shell,.dm-cl-card{
   --dm-cl-cold:14,165,233;--dm-cl-warm:234,88,12;--dm-cl-off:148,163,184;
   --dm-cl-card:var(--card-bg,#fff);--dm-cl-line:var(--card-border,#e6ecf3);
   --dm-cl-text:var(--text,#0f172a);--dm-cl-dim:var(--text-dim,#64748b);
   --dm-cl-soft:var(--surface-2,#f7f9fc);--dm-cl-sunk:var(--surface-3,#eef2f8);
   --dm-cl-shadow:0 4px 20px rgba(15,23,42,.06),0 1px 4px rgba(15,23,42,.04);
   --dm-cl-zone:var(--dm-cl-cold);
-  display:flex;flex-direction:column;gap:18px;width:100%;max-width:1250px;margin:0 auto;
   color:var(--dm-cl-text)
 }
+.dm-cl-shell{
+  display:flex;flex-direction:column;gap:18px;width:100%;max-width:1250px;margin:0 auto
+}
 .dm-cl-shell[data-dm-cl-zone="caldo"]{--dm-cl-zone:var(--dm-cl-warm)}
-.dm-cl-shell button{font:inherit;color:inherit}
+.dm-cl-shell button,.dm-cl-card button{font:inherit;color:inherit}
 
 /* ── masthead ─────────────────────────────────────────────────────────── */
 .dm-cl-mast{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:2px 2px 0}
@@ -2098,11 +2197,14 @@ html[data-theme="dark"] .dm-cl-knob{box-shadow:0 3px 8px rgba(0,0,0,.45)}
       layout guard (a climate card must not grow past 260px) ───────────── */
 @media(max-width:760px){
   #page-clima .dm-cl-shell .dm-cl-grid{grid-template-columns:1fr!important;gap:12px!important}
-  #page-clima .dm-cl-shell .dm-cl-card{padding:13px 14px 14px!important;gap:9px!important;border-radius:20px!important}
-  #page-clima .dm-cl-shell .dm-cl-target b{font-size:34px!important}
-  #page-clima .dm-cl-shell .dm-cl-spark{display:none!important}
-  #page-clima .dm-cl-shell .dm-cl-rail{height:18px!important}
-  #page-clima .dm-cl-shell .dm-cl-step,#page-clima .dm-cl-shell .dm-cl-pwr{width:34px!important;height:34px!important}
+  /* Sulla card e su quello che ci sta dentro senza chiedere il guscio: la
+     stessa card vive anche nella pagina di una stanza (#11), e sul telefono
+     deve rimpicciolirsi li' come qui. */
+  .dm-cl-card{padding:13px 14px 14px!important;gap:9px!important;border-radius:20px!important}
+  .dm-cl-card .dm-cl-target b{font-size:34px!important}
+  .dm-cl-card .dm-cl-spark{display:none!important}
+  .dm-cl-card .dm-cl-rail{height:18px!important}
+  .dm-cl-card .dm-cl-step,.dm-cl-card .dm-cl-pwr{width:34px!important;height:34px!important}
   #page-clima .dm-cl-shell .clima-page-mode-switch.dm-cl-switch .clima-page-mode-btn{padding:11px 8px!important;font-size:12px!important;letter-spacing:1px!important}
   .dm-cl-summary{width:100%}
   .dm-cl-bulk{flex:1 1 auto}
@@ -2110,7 +2212,7 @@ html[data-theme="dark"] .dm-cl-knob{box-shadow:0 3px 8px rgba(0,0,0,.45)}
 }
 
 @media(prefers-reduced-motion:reduce){
-  .dm-cl-shell *{transition:none!important;animation:none!important}
+  .dm-cl-shell *,.dm-cl-card *{transition:none!important;animation:none!important}
 }
 
 /* La ventilazione meccanica vive in questa pagina, quindi il suo vestito entra

@@ -50,7 +50,14 @@
  * farebbe di chi mantiene l'app il custode dei dati di case di altri.
  */
 
-import { gliAddon, gliApparati, laMacchina, laRete } from "./ferro.js";
+import {
+  gliAddon,
+  gliApparati,
+  iNodiDelCluster,
+  laMacchina,
+  laRete,
+  leCaselleDelMiniPc,
+} from "./ferro.js";
 import { ilSegnoDi } from "./segni.js";
 import { ilBackup, leBatterie, leEntita } from "./salute.js";
 import { PROFILI_AL_MASSIMO, profiloBuono, senzaFlussi } from "./plancia-da-lontano.js";
@@ -291,6 +298,12 @@ export function compila({
   ogni = OGNI_DI_SERIE,
   versioni = {},
   macchina = null,
+  /* Le altre macchine di casa: un cluster Proxmox, un NAS, un secondo mini PC.
+   * Fuori da `macchina` e non dentro, perche' non vengono dal Supervisor: una
+   * casa il cui Supervisor non ha risposto ha ancora i suoi nodi, e
+   * nasconderli insieme alla macchina vorrebbe dire perdere proprio quello
+   * che in quel momento serve guardare. */
+  nodi = null,
   rete = null,
   apparati = null,
   addon = null,
@@ -336,6 +349,7 @@ export function compila({
    * sa leggere: «questa casa non lo dice» e' una risposta, `0` no. */
   const forse = {
     macchina,
+    nodi,
     rete,
     addon,
     aggiornamenti,
@@ -478,6 +492,16 @@ export function fabbricaIlRapporto({
           new Map())
         : new Map();
 
+    /* Lo scatto della plancia si apre una volta per rapporto: lo leggono le
+     * caselle del MiniPC e i nodi, ed e' la stessa risposta. */
+    const scattoDellaPlancia = (() => {
+      let letto;
+      return () => {
+        if (letto === undefined) letto = configurazione?.leggi?.()?.snapshot?.values ?? null;
+        return letto;
+      };
+    })();
+
     return compila({
       casa: identita.casa,
       ogni,
@@ -491,8 +515,32 @@ export function fabbricaIlRapporto({
           : (detto?.host?.operating_system ?? ""),
       },
       macchina: detto
-        ? laMacchina({ os: detto.os, host: detto.host, stati: quelli ?? [], adesso })
+        ? laMacchina({
+            os: detto.os,
+            host: detto.host,
+            stati: quelli ?? [],
+            /* Quali sensori legge la plancia per CPU, RAM e temperatura.
+             *
+             * Chi ha compilato a mano la sezione MiniPC li vedeva sulla
+             * plancia e non nel cruscotto: il ponte cercava solo i nomi di
+             * serie di System Monitor, che in quella casa non ci sono. La
+             * mappatura sta nello scatto della plancia, e il ponte lo tiene
+             * gia' — non si chiede niente a nessuno, si guarda dove e' scritto.
+             *
+             * Vale lo scatto del profilo principale: e' la plancia di casa.
+             * Non c'entra l'interruttore della configurazione, che decide se
+             * lo scatto VIAGGIA al quadro; qui si legge in casa, e fuori va
+             * il numero come e' sempre andato. */
+            mappate: leCaselleDelMiniPc(scattoDellaPlancia()),
+            adesso,
+          })
         : null,
+      /* E le altre macchine, dichiarate nella stessa sezione: la fascia
+       * «Altri nodi» della pagina Server. Chi installa vedeva la macchina di
+       * Home Assistant e non le altre — che sono quelle che si guastano senza
+       * che nessuno se ne accorga. Una casa senza cluster manda un elenco
+       * vuoto, e il cruscotto non disegna niente. */
+      nodi: quelli ? iNodiDelCluster(scattoDellaPlancia(), quelli) : null,
       rete: detto?.network
         ? laRete({ network: detto.network, filoSu: chiamata?.accesa === true })
         : null,

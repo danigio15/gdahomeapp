@@ -19,6 +19,7 @@
  */
 import { applianceArtwork } from "../core/appliance-artwork.js";
 import { importRateEntity, resolveRate } from "../core/energy-calculations.js";
+import { CHIAVE_FASCE, normalizzaLeFasce, prezzoDellaFascia } from "../core/fasce-della-tariffa.js";
 import { applianceHeroArtwork } from "../core/appliance-hero-artwork.js";
 import {
   applianceCardModel,
@@ -175,7 +176,16 @@ function globalPriceKwh() {
       sorgente = null;
     }
   }
-  return resolveRate(sorgente, allStates(), null);
+  const unico = resolveRate(sorgente, allStates(), null);
+  /* E qui la fascia di ADESSO, non la media (#72): un ciclo e' successo a
+   * un'ora precisa, e il conto giusto e' il prezzo di quell'ora. E' la
+   * differenza fra dire «la lavastoviglie di stanotte e' costata 0,31» e dire
+   * «0,20», che e' poi il motivo per cui uno la fa partire di notte.
+   *
+   * Senza prezzo unico non si inventa niente: `null` resta `null` e il costo
+   * del ciclo non si mostra, come prima. */
+  if (unico === null) return null;
+  return prezzoDellaFascia(normalizzaLeFasce(readJson(CHIAVE_FASCE, {})), unico, new Date());
 }
 
 function tracker() {

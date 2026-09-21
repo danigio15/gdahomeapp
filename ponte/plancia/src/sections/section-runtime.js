@@ -25,6 +25,9 @@ import { installEnergyLoadsEditor } from "./energy-loads-editor-section.js";
 import { installSubloadPopupSection } from "./subload-popup-section.js";
 import { installApplianceDetailPopupSection } from "./appliance-detail-popup-section.js";
 import { installEnergyAnalysisSection } from "./energy-analysis-section.js";
+import { installDoveLoMettoSection } from "./dove-lo-metto-section.js";
+import { installIPianiSection } from "./i-piani-section.js";
+import { installReportAFasceSection } from "./il-report-a-fasce-section.js";
 import { installHistorySection } from "./history-section.js";
 import { installStoricoConnettivita } from "./storico-connettivita-section.js";
 import { installTemperatureSection } from "./temperature-section.js";
@@ -851,6 +854,10 @@ export function installSectionRuntime() {
     installSubloadPopupSection();
     installApplianceDetailPopupSection();
     installEnergyAnalysisSection();
+    /* Il blocco delle fasce sotto la griglia finanziaria della Panoramica
+     * (#72): sta qui e non all'ingresso beta perche' le ore del mese le chiede
+     * dalla porta dell'Energia, e all'ingresso beta l'Energia non c'e' ancora. */
+    installReportAFasceSection();
     installHistorySection();
     /* Il periodo anche nella cronologia della connettivita' (#302): l'altro
      * popup dello storico, che il guscio apre sui sette giorni. */
@@ -1135,6 +1142,13 @@ export function installSectionRuntime() {
     /* Una stanza si mostra col suo nome: gli elenchi del guscio scrivevano
      * l'identificativo che la tendina salva. */
     installStanzePerNome();
+    /* I piani della casa, nella scheda Stanze del Config (#17): ordine,
+     * rinomina, segno, e l'avviso quando due stanze si chiamano uguale. */
+    installIPianiSection();
+    /* «Dove lo metto?» (#54): il foglietto che accoglie un dispositivo appena
+     * abbinato dall'app. Il passo 4 e' della plancia perche' le forme delle
+     * sezioni le conosce lei. */
+    installDoveLoMettoSection();
     /* Il radar meteo dentro la finestra delle previsioni: si aggancia al
      * guscio che quella finestra la disegna gia'. */
     installRadarMeteo();

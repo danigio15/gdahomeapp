@@ -2,10 +2,37 @@ import { applianceArtwork } from "../core/appliance-artwork.js";
 import { applianceArtworkType } from "../core/appliance-card-view-model.js";
 import { DEFAULT_EXPORT_RATE, DEFAULT_IMPORT_RATE, importRateEntity, resolveRate } from "../core/energy-calculations.js";
 import { persistEnergyField } from "../core/energy-writer.js";
-import { allStates, clean, doc, formatNumber, installStyle, root, scriviTestoSeCambia, t, wrapFunction } from "./shared.js";
+import {
+  CHIAVE_FASCE,
+  nomeDellaFascia,
+  normalizzaLeFasce,
+  orarioDellaFascia,
+  prezzoMedioDelleFasce,
+  tintaDellaFascia,
+} from "../core/fasce-della-tariffa.js";
+import { salvaLeFasceDellaScheda } from "./beta22-load-slots-hotfix-section.js";
+import { allStates, clean, doc, formatNumber, installStyle, readJson, root, scriviTestoSeCambia, t, wrapFunction } from "./shared.js";
 
 const KEY = "__DASHBOARDMODERN_ENERGY_REPORT_POLISH__";
-const state = (root[KEY] ||= { installed: false, frame: 0, dailyChart: null, legacyDailyChart: null, subscribed: false });
+const state = (root[KEY] ||= { installed: false, frame: 0, dailyChart: null, legacyDailyChart: null, subscribed: false, contoAFasce: null });
+
+/**
+ * Chi sa il conto esatto delle fasce si presenta qui.
+ *
+ * E' il blocco «Come si divide il costo reale», che sta attaccato sotto la
+ * griglia finanziaria: lui le ore del mese le ha chieste al Recorder e sa in
+ * che fascia sono passati quei kilowattora.
+ *
+ * Si presenta invece di essere importato perche' l'import non si puo' fare: il
+ * Report entra nella plancia dall'ingresso beta, che sta a monte della sezione
+ * Energia; il blocco delle fasce l'Energia la usa — le ore le chiede dalla sua
+ * porta — e importarlo da qui chiuderebbe un anello. Chi arriva dopo si
+ * presenta a chi c'era prima: e' l'unico verso che quell'anello non lo chiude.
+ */
+export function registraIlContoAFasce(lettore) {
+  state.contoAFasce = typeof lettore === "function" ? lettore : null;
+  return true;
+}
 
 function model() {
   try { return root.DashboardModernModules?.store?.getSection?.("energy") || {}; } catch (_error) { return {}; }
@@ -51,6 +78,78 @@ function bucketMap(rows = [], daysInMonth = 31) {
     values[day - 1] += Math.max(0, change);
   }
   return values;
+}
+
+/**
+ * Le barre delle fasce: quello che hai COMPRATO quel giorno, diviso per fascia.
+ *
+ * Si aggiungono alle due linee, non le sostituiscono, e la ragione e' che
+ * raccontano un'altra cosa. «Consumo» e' quello che la casa ha usato; le fasce
+ * stanno sotto quello che si e' preso dalla RETE, che con il fotovoltaico e'
+ * sempre meno. Mettere le tre fasce al posto della linea del consumo avrebbe
+ * fatto sembrare che nei giorni di sole si consumasse meno, quando invece si
+ * comprava meno: sarebbe stato un grafico che dice il falso proprio nei giorni
+ * in cui l'impianto lavora bene.
+ *
+ * Le barre stanno dietro — `order` piu' alto — e si impilano fra loro: la
+ * colonna alta quanto i kilowattora comprati, divisa nei colori delle fasce.
+ * Le linee restano davanti e non si impilano, ognuna col suo gruppo.
+ */
+export function barreDelleFasce(giorniDelMese, mese, anno) {
+  const conto = state.contoAFasce?.();
+  const giorni = conto?.report?.giorni;
+  if (!giorni?.length) return [];
+  const quante = conto.report.fasce.length;
+  const per = Array.from({ length: quante }, () =>
+    Array.from({ length: giorniDelMese }, () => 0),
+  );
+  /* La chiave del giorno e' «2026-09-14», e va guardata TUTTA.
+   *
+   * Prendendo solo le ultime due cifre, il 5 ottobre finiva nella colonna del
+   * 5 settembre: il numero del giorno da solo non dice di che mese sia. Nel
+   * giro di tutti i giorni il conto copre un mese solo e la differenza non si
+   * vede mai — ed e' proprio per questo che andava chiusa qui, invece di
+   * aspettare il giorno in cui l'arco cambia e una colonna si gonfia senza che
+   * nessuno capisca perche'. */
+  const suo = `${anno}-${String(mese).padStart(2, "0")}-`;
+  for (const voce of giorni) {
+    const chiave = String(voce?.giorno || "");
+    if (!chiave.startsWith(suo)) continue;
+    const giorno = Number(chiave.slice(suo.length));
+    if (!(giorno >= 1 && giorno <= giorniDelMese)) continue;
+    (voce.per || []).forEach((kwh, indice) => {
+      if (per[indice]) per[indice][giorno - 1] += Math.max(0, Number(kwh) || 0);
+    });
+  }
+  return per.map((valori, indice) => ({
+    label: nomeDellaFascia(indice),
+    /* L'orario viaggia con la serie: nel riquadro che si apre passando sopra
+     * una colonna «F2» da solo non dice niente, «F2 19:00–23:00» si'. */
+    dmOrario: orarioDellaFascia({ voci: conto.report.fasce }, indice),
+    data: valori,
+    type: "bar",
+    stack: "rete",
+    backgroundColor: tintaDellaFascia(quante, indice),
+    borderWidth: 0,
+    order: 2,
+  }));
+}
+
+/* La legenda del grafico sta nel guscio, scritta a mano: quando arrivano le
+ * fasce ci vogliono i loro pallini accanto ai due di sempre. */
+function legendaDellAndamento(fasce) {
+  const legenda = doc?.querySelector("#ed-pane-panoramica .ed-chart-legend");
+  if (!legenda) return false;
+  const voce = (tinta, testo) =>
+    `<div class="ed-legend-item"><div class="ed-legend-dot" style="background:${tinta};"></div>${testo}</div>`;
+  const markup = [
+    voce("#16a34a", t("Produzione", "Production")),
+    voce("#0ea5e9", t("Consumo", "Consumption")),
+    ...fasce.map((serie) => voce(serie.backgroundColor, serie.label)),
+  ].join("");
+  if (legenda.innerHTML !== markup) legenda.innerHTML = markup;
+  legenda.dataset.dmFasce = String(fasce.length);
+  return true;
 }
 
 function realDataPresent(values) {
@@ -116,16 +215,25 @@ export async function renderActualDailyChart(daysInMonth, selMonth, selYear) {
     }
 
     const labels = Array.from({ length: days }, (_, index) => String(index + 1));
+    const fasce = barreDelleFasce(days, month, year);
+    legendaDellAndamento(fasce);
     loading.style.display = "none";
     canvas.style.display = "block";
     canvas.dataset.dmActualHistory = `${year}-${String(month).padStart(2, "0")}`;
+    canvas.dataset.dmFasce = String(fasce.length);
     state.dailyChart = new root.Chart(canvas.getContext("2d"), {
       type: "line",
       data: {
         labels,
         datasets: [
-          { label: t("Produzione", "Production"), data: production, borderColor: "#16a34a", backgroundColor: "rgba(22,163,74,.15)", fill: true, tension: .3, pointRadius: 0, borderWidth: 2 },
-          { label: t("Consumo", "Consumption"), data: consumption, borderColor: "#0ea5e9", backgroundColor: "rgba(14,165,233,.08)", fill: true, tension: .3, pointRadius: 0, borderWidth: 2 },
+          /* Ogni linea nel suo gruppo, e una sola per gruppo: con l'asse
+           * impilato — che serve alle barre — due linee nello stesso gruppo si
+           * sommerebbero, e il consumo apparirebbe sopra la produzione invece
+           * che accanto. Un gruppo con dentro una cosa sola non si somma con
+           * nessuno. */
+          { label: t("Produzione", "Production"), data: production, stack: "sole", order: 0, borderColor: "#16a34a", backgroundColor: "rgba(22,163,74,.15)", fill: true, tension: .3, pointRadius: 0, borderWidth: 2 },
+          { label: t("Consumo", "Consumption"), data: consumption, stack: "casa", order: 1, borderColor: "#0ea5e9", backgroundColor: "rgba(14,165,233,.08)", fill: true, tension: .3, pointRadius: 0, borderWidth: 2 },
+          ...fasce,
         ],
       },
       options: {
@@ -133,8 +241,11 @@ export async function renderActualDailyChart(daysInMonth, selMonth, selYear) {
         maintainAspectRatio: false,
         animation: false,
         interaction: { intersect: false, mode: "index" },
-        plugins: { legend: { display: false }, tooltip: { callbacks: { label: (ctx) => `${ctx.dataset.label}: ${formatNumber(ctx.parsed.y, 2)} kWh` } } },
-        scales: { y: { beginAtZero: true, title: { display: true, text: "kWh" } }, x: { grid: { display: false } } },
+        plugins: { legend: { display: false }, tooltip: { callbacks: { label: (ctx) => `${ctx.dataset.label}${ctx.dataset.dmOrario ? ` ${ctx.dataset.dmOrario}` : ""}: ${formatNumber(ctx.parsed.y, 2)} kWh` } } },
+        scales: {
+          y: { beginAtZero: true, stacked: fasce.length > 0, title: { display: true, text: "kWh" } },
+          x: { stacked: fasce.length > 0, grid: { display: false } },
+        },
       },
     });
     return true;
@@ -234,7 +345,14 @@ function rateRaw(key) {
 function rateOrDefault(key, fallback) {
   const entita = key === "cd_costo_kwh" ? importRateEntity(model()) : "";
   const sorgente = entita ? resolved(entita) : rateRaw(key);
-  return resolveRate(sorgente, allStates(), fallback);
+  const unico = resolveRate(sorgente, allStates(), fallback);
+  /* Le fasce valgono sul prezzo di acquisto e non su quello di vendita: quello
+   * che si vende si vende allo stesso prezzo a qualunque ora. E qui si parla
+   * di mesi e di anni, quindi la media pesata sulle ore — la stessa che usa
+   * `rates()` della sezione Energia, dallo stesso modulo: due medie sulla
+   * stessa bolletta sarebbero due bollette. */
+  if (key !== "cd_costo_kwh") return unico;
+  return prezzoMedioDelleFasce(normalizzaLeFasce(readJson(CHIAVE_FASCE, {})), unico);
 }
 
 function money(value) {
@@ -246,7 +364,22 @@ export function applyFinancialOverview(bundle) {
   const importPrice = rateOrDefault("cd_costo_kwh", DEFAULT_IMPORT_RATE);
   const exportPrice = rateOrDefault("cd_prezzo_immissione", DEFAULT_EXPORT_RATE);
   const data = bundle.month;
-  const importCost = Math.max(0, Number(data.gridImport) || 0) * importPrice;
+  /* La spesa vera, quando le ore del mese si sanno (#72).
+   *
+   * Con le fasce accese `importPrice` e' una media pesata sulle ore che ogni
+   * fascia copre: una stima onesta, ma pur sempre una stima. Il blocco qui
+   * sotto le ore le ha chieste davvero al Recorder e sa in che fascia sono
+   * passati quei kilowattora — e' lo stesso mese e lo stesso contatore, quindi
+   * il suo totale e' questa casella fatta meglio.
+   *
+   * Preferirlo non e' un vezzo: il blocco delle fasce sta attaccato SOTTO
+   * questa griglia e dice «com'e' fatto» il numero che sta qui. Due cifre
+   * diverse per la stessa spesa, a tre centimetri di distanza, sarebbero il
+   * difetto peggiore di tutta la storia. */
+  const aFasce = state.contoAFasce?.() || null;
+  const importCost = aFasce
+    ? Math.max(0, aFasce.euro)
+    : Math.max(0, Number(data.gridImport) || 0) * importPrice;
   const withoutSolar = Math.max(0, Number(data.house) || 0) * importPrice;
   const exportIncome = Math.max(0, Number(data.gridExport) || 0) * exportPrice;
   // "Venduto" is already reported separately. Subtracting that income from
@@ -273,7 +406,7 @@ export function applyFinancialOverview(bundle) {
   }
   const overview = doc?.getElementById("view-panoramica");
   if (overview) {
-    overview.dataset.dmFinancialFormula = "gridImport*importPrice";
+    overview.dataset.dmFinancialFormula = aFasce ? "ore*prezzoDellaFascia" : "gridImport*importPrice";
     overview.dataset.dmImportPrice = String(importPrice);
     overview.dataset.dmExportPrice = String(exportPrice);
   }
@@ -294,6 +427,10 @@ function installCostSettingsOwner() {
     const exportRate = normalize(exportInput);
     root.localStorage?.setItem("cd_costo_kwh", importRate);
     root.localStorage?.setItem("cd_prezzo_immissione", exportRate);
+    /* E le fasce orarie (#72), che stanno nella stessa scheda e rispondono
+     * alla stessa domanda: quanto costa il kWh. Le scrive chi le ha disegnate
+     * — un tasto «salva» che ne salvasse meta' sarebbe peggio di due tasti. */
+    salvaLeFasceDellaScheda();
     /* La scelta «da entita'» del prezzo di acquisto (#217) abita nel modello
      * canonico, non in una chiave sciolta: in modalita' Entita' si salva l'id
      * scelto, in modalita' Numero lo si toglie — e' cosi' che si torna al

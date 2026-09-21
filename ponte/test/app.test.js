@@ -393,8 +393,13 @@ async function unaPortaDellApp({ cartellaDellApp, plancia } = {}) {
   };
 }
 
-/* Una plancia finta, con la stessa forma di quella vera: `cE`, e un `leggi`
- * che risponde per percorso. */
+/* Una plancia finta, con la stessa forma di quella vera: `cE`, un `leggi` che
+ * risponde per percorso, e il `daServire` che usa chi la serve davvero.
+ *
+ * I due ci sono tutti e due apposta: chi guarda un file chiede `leggi`, chi
+ * lo manda a un browser chiede `daServire`, che lo stringe se conviene. Una
+ * finta con solo il primo passava le prove mentre la porta vera chiamava il
+ * secondo, e non lo diceva nessuno. */
 function planciaFinta() {
   return {
     cE: true,
@@ -406,6 +411,11 @@ function planciaFinta() {
       if (via.endsWith(".js"))
         return { stato: 200, tipo: "text/javascript; charset=utf-8", corpo: Buffer.from("//x") };
       return { stato: 404, tipo: "", corpo: Buffer.alloc(0) };
+    },
+    /* Qui non si stringe niente: i corpi sono tre byte, e sotto i 512 la
+     * plancia vera non stringerebbe comunque. */
+    daServire(via) {
+      return this.leggi(via);
     },
   };
 }

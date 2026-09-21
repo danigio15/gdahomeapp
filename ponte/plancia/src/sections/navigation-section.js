@@ -99,9 +99,35 @@ function installStyles() {
        * staccano l'ombra e il suo bordo chiaro, che ci sono gia'.
        *
        * Solo quando e' in vista: tirata fuori, o tenuta ferma da chi l'ha
-       * scelta cosi' nella Config. Ritirata resta come era. */
+       * scelta cosi' nella Config. Ritirata resta come era.
+       *
+       * ── E la sfocatura, che era rimasta accesa sotto un fondo pieno ──────
+       *
+       * Di quel «piena e non sfocata» era stata fatta la prima meta': il fondo
+       * era diventato opaco, e la sfocatura del vetro — blur(42px) con
+       * saturate(170%) — era rimasta dov'era. Un vetro smerigliato dietro un
+       * muro: il browser la calcolava lo stesso, e poi la copriva.
+       *
+       * Non e' un calcolo qualunque. Sfocare quello che sta dietro vuol dire
+       * rifarlo **ogni volta che dietro si muove qualcosa**, e dietro c'e' lo
+       * sfondo animato: due macchie da sessanta e cinquanta per cento dello
+       * schermo, sfocate cento punti, che si muovono per sempre. Sfocatura
+       * ricalcolata a ogni fotogramma per niente, anche a dito fermo, anche su
+       * una pagina che non si tocca da un'ora.
+       *
+       * Non l'aveva mai tolta nessuno perche' la leva d'emergenza — «Plancia
+       * leggera» — non ci arrivava: scrive una stella con dentro
+       * backdrop-filter none, e una stella perde contro un selettore vero
+       * anche fra due important.
+       *
+       * Qui si toglie dove il fondo e' pieno, cioe' dove non si vedeva. La
+       * barra ritirata resta come era: quella la spegne gia' il risparmio di
+       * beta5, e rifarlo sarebbe rifare una cosa fatta. */
       nav.tabs.bottom-nav-bar.visible,
-      body.cd-nav-fixed nav.tabs.bottom-nav-bar{background:#fff!important}
+      body.cd-nav-fixed nav.tabs.bottom-nav-bar{
+        background:#fff!important;
+        backdrop-filter:none!important;
+        -webkit-backdrop-filter:none!important}
       html[data-theme="dark"] nav.tabs.bottom-nav-bar.visible,
       html.dark nav.tabs.bottom-nav-bar.visible,
       body[data-theme="dark"] nav.tabs.bottom-nav-bar.visible,
@@ -109,7 +135,10 @@ function installStyles() {
       html[data-theme="dark"] body.cd-nav-fixed nav.tabs.bottom-nav-bar,
       html.dark body.cd-nav-fixed nav.tabs.bottom-nav-bar,
       body[data-theme="dark"].cd-nav-fixed nav.tabs.bottom-nav-bar,
-      body.dark.cd-nav-fixed nav.tabs.bottom-nav-bar{background:#131c30!important}
+      body.dark.cd-nav-fixed nav.tabs.bottom-nav-bar{
+        background:#131c30!important;
+        backdrop-filter:none!important;
+        -webkit-backdrop-filter:none!important}
       /* «Le icone sono poco leggibili, troppo chiare»: la voce a riposo
        * portava questo grigio al 70% di opacita', che sul bianco della barra
        * fa tre a uno — sotto la soglia di leggibilita'. Piu' scuro e quasi

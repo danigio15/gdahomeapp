@@ -1067,7 +1067,7 @@
      "via": 2,
      "metti": [
       "                <option value=\"luci_group\">💡 Lights popup — YOU pick the lights</option>",
-      "                <option value=\"builtin_luci\">💡 Popup ALL lights</option><option value=\"builtin_clima\">❄️ Popup Clima</option>"
+      "                <option value=\"builtin_luci\">💡 Popup ALL lights</option><option value=\"builtin_prese\">🔌 Popup ALL sockets</option><option value=\"builtin_clima\">❄️ Popup Clima</option>"
      ]
     },
     {
@@ -2011,14 +2011,15 @@
     },
     {
      "riga": 3716,
-     "via": 2,
+     "via": 3,
      "metti": [
       "                <option value=\"luci_group\">💡 Lights popup — YOU pick the lights</option>",
-      "                <option value=\"builtin_luci\">💡 Popup ALL lights</option>"
+      "                <option value=\"builtin_luci\">💡 Popup ALL lights</option>",
+      "                <option value=\"builtin_prese\">🔌 Popup ALL sockets</option>"
      ]
     },
     {
-     "riga": 3729,
+     "riga": 3730,
      "via": 2,
      "metti": [
       "            <div id=\"ed-qa-option-row\" style=\"display:none; gap:6px; align-items:center;\"><span style=\"font-size:11px; color:var(--text-dim); flex:0 0 auto;\">Which option</span><select id=\"ed-qa-option\" class=\"ed-input\" style=\"flex:1;\"></select></div>",
@@ -2026,21 +2027,21 @@
      ]
     },
     {
-     "riga": 3732,
+     "riga": 3733,
      "via": 1,
      "metti": [
       "            <button class=\"ed-btn-add\" onclick=\"edAddQA()\">＋ Add quick action</button>"
      ]
     },
     {
-     "riga": 3736,
+     "riga": 3737,
      "via": 1,
      "metti": [
       "      <details class=\"ed-acc\"><summary class=\"ed-acc-head\">❄️ Climate units <span class=\"ed-acc-n\">${getClimaUnits().length} units</span></summary>"
      ]
     },
     {
-     "riga": 3749,
+     "riga": 3750,
      "via": 2,
      "metti": [
       "              <select id=\"ed-cl-type\" class=\"ed-input\" style=\"flex:0 0 46%;\"><option value=\"clima\">❄️ Air conditioner</option><option value=\"termo\">🔥 Radiator</option></select>",
@@ -2048,7 +2049,7 @@
      ]
     },
     {
-     "riga": 3753,
+     "riga": 3754,
      "via": 2,
      "metti": [
       "            <select id=\"ed-cl-room\" class=\"ed-input\" style=\"margin-bottom:6px;width:100%;\"></select><button class=\"ed-btn-add\" onclick=\"edAddClima()\">＋ Add climate unit</button>",
@@ -2056,21 +2057,21 @@
      ]
     },
     {
-     "riga": 3759,
+     "riga": 3760,
      "via": 1,
      "metti": [
       "      <details class=\"ed-acc\"><summary class=\"ed-acc-head\">📹 Cameras <span class=\"ed-acc-n\">${getCameras().length} cameras</span></summary>"
      ]
     },
     {
-     "riga": 3770,
+     "riga": 3771,
      "via": 1,
      "metti": [
       "            <input id=\"ed-cam-name\" class=\"ed-input\" placeholder=\"Name (e.g. Garden)\">"
      ]
     },
     {
-     "riga": 3772,
+     "riga": 3773,
      "via": 2,
      "metti": [
       "            <input id=\"ed-cam-stream\" class=\"ed-input mono\" placeholder=\"go2rtc stream name (optional, for WebRTC)\"><small style=\"display:block;font-size:11px;color:var(--text-dim,#64748b);margin:2px 2px 0;\">THIS field is what turns WebRTC on: the stream name as written inside go2rtc/Frigate. The camera name is not the lever.</small>",
@@ -2078,7 +2079,7 @@
      ]
     },
     {
-     "riga": 3779,
+     "riga": 3780,
      "via": 2,
      "metti": [
       "          <div class=\"ed-slot-lbl\" style=\"margin-bottom:6px;\">The lights managed by the dashboard. Name them \"Room - Detail\" for automatic grouping.</div>",
@@ -2086,28 +2087,28 @@
      ]
     },
     {
-     "riga": 3782,
+     "riga": 3783,
      "via": 1,
      "metti": [
       "            <input id=\"ed-lu-name\" class=\"ed-input\" style=\"flex:1;\" placeholder=\"Name (e.g. Living Room - Floor lamp)\">"
      ]
     },
     {
-     "riga": 3788,
+     "riga": 3789,
      "via": 1,
      "metti": [
       "          <select id=\"ed-lu-room\" class=\"ed-input\" style=\"margin-bottom:6px;width:100%;\"></select><button class=\"ed-btn-add\" style=\"width:100%;\" onclick=\"edAddLuce()\">＋ Add light</button>"
      ]
     },
     {
-     "riga": 3791,
+     "riga": 3792,
      "via": 1,
      "metti": [
       "      <details class=\"ed-acc\"><summary class=\"ed-acc-head\">📊 Report Analisi <span class=\"ed-acc-n\">${cdCfgList('cd_report_devices').length} entries</span></summary>"
      ]
     },
     {
-     "riga": 3793,
+     "riga": 3794,
      "via": 2,
      "metti": [
       "          <div class=\"ed-slot-lbl\" style=\"margin-bottom:6px;\">The monthly Report entries (Energy → Analysis): free name, icon and entity.</div>",
@@ -2115,21 +2116,21 @@
      ]
     },
     {
-     "riga": 3797,
+     "riga": 3798,
      "via": 1,
      "metti": [
       "            <input id=\"ed-rep2-name\" class=\"ed-input\" style=\"flex:1;\" placeholder=\"Name (e.g. Pool)\">"
      ]
     },
     {
-     "riga": 3803,
+     "riga": 3804,
      "via": 1,
      "metti": [
       "          <button class=\"ed-btn-add\" style=\"width:100%;\" onclick=\"edAddReportDevice2()\">＋ Add Report entry</button>"
      ]
     },
     {
-     "riga": 3817,
+     "riga": 3818,
      "via": 2,
      "metti": [
       "        ? '💡 Give it a name and press Add: you will pick the lights from a searchable list.'",
@@ -2137,77 +2138,77 @@
      ]
     },
     {
-     "riga": 3843,
+     "riga": 3844,
      "via": 1,
      "metti": [
       "    sel.innerHTML = '<option value=\"\">— chosen each time, from the popup —</option>' + voci.map(v => `<option value=\"${esc(v)}\">${esc(v)}</option>`).join('');"
      ]
     },
     {
-     "riga": 3846,
+     "riga": 3847,
      "via": 1,
      "metti": [
       "    if (hint) hint.textContent = '🎚️ This entity is a dropdown: the button opens a popup with its options. Or fix one here.';"
      ]
     },
     {
-     "riga": 3858,
+     "riga": 3859,
      "via": 1,
      "metti": [
       "        edToast('Light group updated');"
      ]
     },
     {
-     "riga": 3871,
+     "riga": 3872,
      "via": 1,
      "metti": [
       "        if (!name) { alert('Name the group (es. Piano Terra)'); return; }"
      ]
     },
     {
-     "riga": 3878,
+     "riga": 3879,
      "via": 1,
      "metti": [
       "            edToast('Light group created');"
      ]
     },
     {
-     "riga": 3889,
+     "riga": 3890,
      "via": 1,
      "metti": [
       "        if (!name || !ent.includes('.')) { alert('Enter a name and entity valida'); return; }"
      ]
     },
     {
-     "riga": 3917,
+     "riga": 3918,
      "via": 1,
      "metti": [
       "    if (!name || (!sw && !pw && !sv)) { alert('Enter a name and at least one entity'); return; }"
      ]
     },
     {
-     "riga": 3927,
+     "riga": 3928,
      "via": 1,
      "metti": [
       "    edToast('Appliance added');"
      ]
     },
     {
-     "riga": 3940,
+     "riga": 3941,
      "via": 1,
      "metti": [
       "    if (!name || !ent.includes('.')) { alert('Enter a name and a valid climate entity'); return; }"
      ]
     },
     {
-     "riga": 3947,
+     "riga": 3948,
      "via": 1,
      "metti": [
       "    edToast('Climate unit added');"
      ]
     },
     {
-     "riga": 3958,
+     "riga": 3959,
      "via": 2,
      "metti": [
       "function dmSaveCameras(cams){ var store=globalThis.DashboardModernModules&&DashboardModernModules.store; if(store) return store.replaceSection('cameras',cams).catch(function(e){ alert('Camera save failed: '+e.message); }); localStorage.setItem('cd_cameras',JSON.stringify(cams)); try{cdMarkDirty();cdSyncPush();}catch(e){} var grid=document.getElementById('cam-grid'); if(grid)grid._sig=''; buildCamCards(); refreshCameras(); try{render();}catch(e){} }",
@@ -2215,21 +2216,21 @@
      ]
     },
     {
-     "riga": 3967,
+     "riga": 3968,
      "via": 1,
      "metti": [
       "    else { edToast('Invalid entity'); return; }"
      ]
     },
     {
-     "riga": 3970,
+     "riga": 3971,
      "via": 1,
      "metti": [
       "    edToast('Saved — reload to apply');"
      ]
     },
     {
-     "riga": 3973,
+     "riga": 3974,
      "via": 11,
      "metti": [
       "/* v0.7.5: SAVE SECTION — on mobile the change event may never fire (open keyboard,",
@@ -2237,47 +2238,47 @@
      ]
     },
     {
-     "riga": 4014,
+     "riga": 4015,
      "via": 2,
      "metti": []
     },
     {
-     "riga": 4030,
+     "riga": 4031,
      "via": 1,
      "metti": [
       "    edToast(bad ? ('⚠️ ' + bad + ' invalid entities skipped — the rest is saved') : (n ? '💾 Section saved (' + n + ' changes) — reload to apply' : '💾 Section saved'));"
      ]
     },
     {
-     "riga": 4038,
+     "riga": 4039,
      "via": 1,
      "metti": [
       "    if (!name || !temp.includes('.')) { alert('Enter a name and temperature sensor'); return; }"
      ]
     },
     {
-     "riga": 4046,
+     "riga": 4047,
      "via": 1,
      "metti": [
       "    edToast('Room added');"
      ]
     },
     {
-     "riga": 4084,
+     "riga": 4085,
      "via": 1,
      "metti": [
       "/* v254: mostra le card \"Editor Plancia\" e \"Configure Entities\" solo agli admin. */"
      ]
     },
     {
-     "riga": 4202,
+     "riga": 4203,
      "via": 1,
      "metti": [
       "    card.appendChild(mkItem('⚙️', 'Configuration / Editor', () => apriConfigEntita()));"
      ]
     },
     {
-     "riga": 4204,
+     "riga": 4205,
      "via": 2,
      "metti": [
       "    card.appendChild(mkItem('🔄', 'Full reset', () => wzResetAll(), '#dc2626'));",
@@ -2285,49 +2286,49 @@
      ]
     },
     {
-     "riga": 4257,
+     "riga": 4258,
      "via": 1,
      "metti": [
       "  document.querySelector('.confirm-btn-cancel').textContent = opts.cancelLabel || 'Cancel';"
      ]
     },
     {
-     "riga": 4298,
+     "riga": 4299,
      "via": 1,
      "metti": [
       "        const txt = isOn ? 'IN FUNZIONE' : 'OFF';"
      ]
     },
     {
-     "riga": 4331,
+     "riga": 4332,
      "via": 1,
      "metti": [
       "  document.getElementById('details-title').innerHTML = window._luciPopupTitle ? ('💡 ' + window._luciPopupTitle.toUpperCase()) : '💡 LIGHTS';"
      ]
     },
     {
-     "riga": 4333,
+     "riga": 4334,
      "via": 1,
      "metti": [
       "  // v255: raggruppo per stanza usando il pattern \"Room - Dettaglio\""
      ]
     },
     {
-     "riga": 4371,
+     "riga": 4372,
      "via": 0,
      "metti": [
       ""
      ]
     },
     {
-     "riga": 4382,
+     "riga": 4383,
      "via": 1,
      "metti": [
       "      <div class=\"lgx-state\">${l.isOn ? 'ON' : 'OFF'}</div>"
      ]
     },
     {
-     "riga": 4386,
+     "riga": 4387,
      "via": 2,
      "metti": [
       "      <div class=\"lgx-bar-l\"><span class=\"lgx-dot ${onCount>0?'active':''}\"></span>${onCount>0 ? '<b>'+onCount+'</b><span>'+(onCount===1?'on':'on')+'</span>' : '<span>All off</span>'}</div>",
@@ -2335,14 +2336,14 @@
      ]
     },
     {
-     "riga": 4411,
+     "riga": 4412,
      "via": 1,
      "metti": [
       "    html += `<div class=\"lgx-zona\">OTHER AREAS</div>`;"
      ]
     },
     {
-     "riga": 4420,
+     "riga": 4421,
      "via": 3,
      "metti": [
       "/* v0.9.7 (#8): incremental refresh of the lights popup — no more full innerHTML",
@@ -2351,26 +2352,33 @@
      ]
     },
     {
-     "riga": 4440,
+     "riga": 4441,
      "via": 1,
      "metti": [
       "    if (st) { const t = isOn ? 'ON' : 'OFF'; if (st.textContent !== t) st.textContent = t; }"
      ]
     },
     {
-     "riga": 4442,
+     "riga": 4443,
      "via": 1,
      "metti": []
     },
     {
-     "riga": 4445,
+     "riga": 4446,
      "via": 1,
      "metti": [
       "    const newBar = `<div class=\"lgx-bar-l\"><span class=\"lgx-dot ${onCount>0?'active':''}\"></span>${onCount>0 ? '<b>'+onCount+'</b><span>on</span>' : '<span>All off</span>'}</div>${onCount>0 ? '<div class=\"lgx-alloff\" onclick=\"event.stopPropagation(); luciTutteOff()\">Turn all off</div>' : ''}`;"
      ]
     },
     {
-     "riga": 4971,
+     "riga": 4798,
+     "via": 1,
+     "metti": [
+      "    prese:     { name: 'Sockets', icon: '🔌', color: '#475569', fn: () => apriTuttePrese() },"
+     ]
+    },
+    {
+     "riga": 4987,
      "via": 3,
      "metti": [
       "/* v292: primo stato REALMENTE mappato di una lista di riferimenti — i \"ghost\"",
@@ -2378,26 +2386,26 @@
      ]
     },
     {
-     "riga": 4988,
+     "riga": 5004,
      "via": 3,
      "metti": []
     },
     {
-     "riga": 5000,
+     "riga": 5016,
      "via": 1,
      "metti": [
       "   L'utente collega i totali \"lifetime\" (gli stessi del tab Energy di HA);"
      ]
     },
     {
-     "riga": 5103,
+     "riga": 5119,
      "via": 1,
      "metti": [
       "                badge.textContent = 'OFF';"
      ]
     },
     {
-     "riga": 5157,
+     "riga": 5173,
      "via": 2,
      "metti": [
       "            if (!isNaN(pw)) { on = pw > 5; st = on ? 'Running' : (sw ? (sw.state === 'on' ? 'Ready' : 'Off') : 'Off'); }",
@@ -2405,28 +2413,28 @@
      ]
     },
     {
-     "riga": 5181,
+     "riga": 5197,
      "via": 1,
      "metti": [
       "function cdRoomFloorOf(roomName){ if(!roomName) return ''; var rs=(typeof getStanze==='function'?getStanze():[]); for(var i=0;i<rs.length;i++){ if(rs[i]&&rs[i].name===roomName) return rs[i].floor||''; } return ''; } function cdGroupCards(items, cardFn){ try { var anyRoom=false; items.forEach(function(u){ if(u&&u.room) anyRoom=true; }); if(!anyRoom) return items.map(cardFn).join(''); var floors=(typeof cdFloorNames==='function'?cdFloorNames():[]); function fIdx(f){ var i=floors.indexOf(f); return i<0?9999:i; } var sorted=items.slice().sort(function(a,b){ var fa=cdRoomFloorOf(a.room), fb=cdRoomFloorOf(b.room); if(fIdx(fa)!==fIdx(fb)) return fIdx(fa)-fIdx(fb); var ra=a.room||'zzzz', rb=b.room||'zzzz'; if(ra!==rb) return ra<rb?-1:1; return 0; }); var out=''; var lastKey=null; sorted.forEach(function(u){ var f=cdRoomFloorOf(u.room); var key=(f||'')+'|'+(u.room||''); if(key!==lastKey){ lastKey=key; var lbl = u.room ? ((f?('🏢 '+f+' · '):'')+'🏠 '+u.room) : '🏠 Senza stanza'; out += '<div style=\"grid-column:1/-1; font-weight:800; opacity:0.75; font-size:13px; letter-spacing:0.5px; padding:8px 2px 0;\">'+lbl+'</div>'; } out += cardFn(u); }); return out; } catch(e){ return items.map(cardFn).join(''); } } function buildClimaCards() {"
      ]
     },
     {
-     "riga": 5192,
+     "riga": 5208,
      "via": 1,
      "metti": [
       "              <div class=\"cp-badge\">OFF</div>"
      ]
     },
     {
-     "riga": 5196,
+     "riga": 5212,
      "via": 1,
      "metti": [
       "              <div class=\"cp-temp-current-wrap\"><span class=\"cp-temp-current-lbl\">Room</span><span class=\"cp-temp-current\">--°</span></div>"
      ]
     },
     {
-     "riga": 5208,
+     "riga": 5224,
      "via": 3,
      "metti": [
       "    if (gF) gF.innerHTML = cdGroupCards(uFreddo, card) || '<div class=\"ed-empty\" style=\"grid-column:1/-1; justify-content:center; flex-wrap:wrap;\">No air conditioner configured</div>';",
@@ -2435,14 +2443,14 @@
      ]
     },
     {
-     "riga": 5230,
+     "riga": 5246,
      "via": 1,
      "metti": [
       "/* The veil lifts when the dashboard is the real one, not when the shell is done."
      ]
     },
     {
-     "riga": 5232,
+     "riga": 5248,
      "via": 7,
      "metti": [
       " * The shell paints its own Home — the big weather block in the middle of the",
@@ -2454,7 +2462,7 @@
      ]
     },
     {
-     "riga": 5240,
+     "riga": 5256,
      "via": 4,
      "metti": [
       " * Now it waits for the modules to take over. If they never do — a module that",
@@ -2463,42 +2471,42 @@
      ]
     },
     {
-     "riga": 5342,
+     "riga": 5358,
      "via": 1,
      "metti": [
       "            console.warn('[Dashboard] New version ' + target + ' but the cache is not updating. Clear the browser/app cache.');"
      ]
     },
     {
-     "riga": 5346,
+     "riga": 5362,
      "via": 1,
      "metti": [
       "        console.log('[Dashboard] Updating ' + DASHBOARD_VERSION + ' \\u2192 ' + target + ': reloading\\u2026');"
      ]
     },
     {
-     "riga": 5358,
+     "riga": 5374,
      "via": 1,
      "metti": [
       "    o.innerHTML = '<div style=\"width:46px; height:46px; border:4px solid ' + (dark ? 'rgba(56,189,248,0.22)' : 'rgba(14,165,233,0.22)') + '; border-top-color:#0ea5e9; border-radius:50%; animation:cdSpin 0.8s linear infinite;\"></div><div style=\"font-size:15px; font-weight:800; letter-spacing:1px; color:' + (dark ? '#7dd3fc' : '#0369a1') + '; text-transform:uppercase;\">Updating to v' + target + '\\u2026</div>';"
      ]
     },
     {
-     "riga": 5361,
+     "riga": 5377,
      "via": 1,
      "metti": [
       "/* immediate check on open: content stays covered by the boot overlay until we know whether to update, so the change is never visible */"
      ]
     },
     {
-     "riga": 5376,
+     "riga": 5392,
      "via": 1,
      "metti": [
       "        /* v0.8.2: a ref is covered also when the period engine derives it from the twin field (day←month) */"
      ]
     },
     {
-     "riga": 5378,
+     "riga": 5394,
      "via": 3,
      "metti": [
       "        if (allUnmapped) {",
@@ -2508,26 +2516,26 @@
      ]
     },
     {
-     "riga": 5384,
+     "riga": 5400,
      "via": 1,
      "metti": []
     },
     {
-     "riga": 5401,
+     "riga": 5417,
      "via": 1,
      "metti": [
       "    b.innerHTML = '<b style=\"font-size:15px;\">👋 Your dashboard is almost ready!</b><br>You have not linked your entities yet, so the cards are hidden.<br><button onclick=\"(window.__DASHBOARDMODERN_HOSTED__ ? apriConfigEntita : apriSetupWizard)()\" style=\"margin-top:12px; width:100%; padding:13px; border:none; border-radius:14px; background:linear-gradient(135deg,#0ea5e9,#0369a1); color:#fff; font-weight:800; font-size:14px; letter-spacing:0.5px; cursor:pointer; box-shadow:0 6px 16px rgba(2,132,199,0.35);\">⚙️ Set up the dashboard</button><br><span style=\"opacity:0.75; font-size:12px; display:block; margin-top:8px;\"></span>';"
      ]
     },
     {
-     "riga": 5467,
+     "riga": 5483,
      "via": 1,
      "metti": [
       "    if (!cam) { list.innerHTML = '<div class=\"cam-popup-error\">⚠️ Camera not found</div>'; return; }"
      ]
     },
     {
-     "riga": 5471,
+     "riga": 5487,
      "via": 4,
      "metti": [
       "/* ═══ v0.9.8: MULTI-STRATEGY CAMERA ENGINE (from Casa Donato) ═══",
@@ -2537,147 +2545,147 @@
      ]
     },
     {
-     "riga": 5490,
+     "riga": 5506,
      "via": 1,
      "metti": [
       "const _DM_CAM_MOTIVI = { 'senza-nome-di-flusso': 'WebRTC: skipped \\u2014 fill in \\u201cgo2rtc stream name\\u201d in the Cameras tab (the camera name is not the lever)', 'browser-senza-webrtc': 'WebRTC: skipped, the browser does not support it', 'browser-senza-hls': 'HLS: skipped, hls.js not loaded', 'telecamera-che-dorme': 'MJPEG: skipped, the camera only streams on demand' };"
      ]
     },
     {
-     "riga": 5495,
+     "riga": 5511,
      "via": 1,
      "metti": [
       "    if (!cam || !cam.entity) { content.innerHTML = '<div class=\"cam-popup-error\">⚠️ Camera without an entity<br><span style=\"font-weight:500;opacity:.85;font-size:12px;text-transform:none;letter-spacing:0;\">The Home Assistant entity is missing in the Cameras tab</span></div>'; return; }"
      ]
     },
     {
-     "riga": 5498,
+     "riga": 5514,
      "via": 1,
      "metti": [
       "        content.innerHTML = `<div class=\"cam-popup-error\">⚠️ Camera offline<br><span style=\"font-weight:500;opacity:.85;font-size:12px;text-transform:none;letter-spacing:0;\">${cam.entity} not responding (state: ${camState || 'unknown'})</span></div>`;"
      ]
     },
     {
-     "riga": 5534,
+     "riga": 5550,
      "via": 1,
      "metti": [
       "    content.innerHTML = '<div class=\"cam-popup-error\">⚠️ Unable to open the camera<br><span style=\"font-weight:500;opacity:.85;font-size:12px;text-transform:none;letter-spacing:0;\">' + righe.map(function (riga) { return String(riga).replace(/</g, '&lt;'); }).join('<br>') + '</span></div>';"
      ]
     },
     {
-     "riga": 5545,
+     "riga": 5561,
      "via": 1,
      "metti": [
       "    content.innerHTML = `<div class=\"cam-popup-body\"><div id=\"video-iframe-container\" class=\"cam-zoom-container\" style=\"position:relative; padding-top:56.25%;\"><video id=\"cam-video\" autoplay playsinline></video><div id=\"cam-audio-mini\" class=\"cam-audio-mini-banner\" onclick=\"dmUnlockAudioWebRTC()\">🔇 Tap per audio</div><div id=\"cam-video-loader\" class=\"cam-video-loader-overlay\"><div class=\"cam-popup-spinner\"></div><div>Connecting WebRTC…</div></div>${_DM_FS_BTNS}</div><button id=\"toggle-fs-main-btn\" class=\"cam-fs-btn\" onclick=\"toggleFullScreenCam()\">🔲 Fullscreen</button></div>`;"
      ]
     },
     {
-     "riga": 5554,
+     "riga": 5570,
      "via": 1,
      "metti": [
       "        setTimeout(() => { if (done) return; done = true; reject(new Error(`WebRTC: no frame within ${Math.round((attesa || 3000) / 1000)}s`)); }, attesa || 3000);"
      ]
     },
     {
-     "riga": 5561,
+     "riga": 5577,
      "via": 1,
      "metti": [
       "    if (!ws || ws.readyState !== WebSocket.OPEN) throw new Error('HA WebSocket not active');"
      ]
     },
     {
-     "riga": 5565,
+     "riga": 5581,
      "via": 1,
      "metti": [
       "        pendingWsCallbacks[reqId] = (m) => { clearTimeout(tid); if (m.success && m.result && m.result.url) resolve(m.result.url); else reject(new Error((m.error && m.error.message) || 'HLS not available')); };"
      ]
     },
     {
-     "riga": 5568,
+     "riga": 5584,
      "via": 1,
      "metti": [
       "    content.innerHTML = `<div class=\"cam-popup-body\"><div id=\"video-iframe-container\" class=\"cam-zoom-container\" style=\"position:relative; padding-top:56.25%;\"><video id=\"cam-hls\" autoplay playsinline controls></video><div id=\"cam-audio-mini\" class=\"cam-audio-mini-banner\" onclick=\"dmUnlockAudio()\">🔇 Tap per audio</div><div id=\"cam-video-loader\" class=\"cam-video-loader-overlay\"><div class=\"cam-popup-spinner\"></div><div>Connecting…</div></div>${_DM_FS_BTNS}</div><button id=\"toggle-fs-main-btn\" class=\"cam-fs-btn\" onclick=\"toggleFullScreenCam()\">🔲 Fullscreen</button><div id=\"cam-audio-panel\" class=\"cam-audio-panel\"><div class=\"cam-audio-panel-row\"><div id=\"cam-audio-status\" class=\"cam-audio-status muted\">🔊 Audio</div><button class=\"cam-audio-toggle-btn\" onclick=\"dmToggleAudio()\" title=\"Mute/unmute\">🔊</button><input id=\"cam-audio-volume\" class=\"cam-audio-volume\" type=\"range\" min=\"0\" max=\"100\" value=\"100\" oninput=\"dmSetVolume(this.value)\"><button class=\"cam-audio-info-btn\" onclick=\"dmToggleDiag(this)\" title=\"Diagnostics\">ℹ</button></div><div id=\"cam-audio-diag\" class=\"cam-audio-diag\">Waiting…</div></div></div>`;"
      ]
     },
     {
-     "riga": 5579,
+     "riga": 5595,
      "via": 1,
      "metti": [
       "    } else { throw new Error('HLS not supported and hls.js missing'); }"
      ]
     },
     {
-     "riga": 5588,
+     "riga": 5604,
      "via": 1,
      "metti": [
       "        setTimeout(() => { if (done) return; done = true; reject(new Error(`HLS: no frame within ${Math.round((attesa || 10000) / 1000)}s`)); }, attesa || 10000);"
      ]
     },
     {
-     "riga": 5600,
+     "riga": 5616,
      "via": 1,
      "metti": [
       "        catch (e) { throw new Error('No MJPEG URL: ' + (e.message || e)); }"
      ]
     },
     {
-     "riga": 5602,
+     "riga": 5618,
      "via": 1,
      "metti": [
       "    content.innerHTML = `<div class=\"cam-popup-body\"><div id=\"video-iframe-container\" class=\"cam-zoom-container\" style=\"position:relative; padding-top:56.25%;\"><img id=\"cam-mjpeg\" src=\"${streamUrl}\" alt=\"${cam.entity}\"><div id=\"cam-video-loader\" class=\"cam-video-loader-overlay\"><div class=\"cam-popup-spinner\"></div><div>Connecting stream…</div></div>${_DM_FS_BTNS}</div><button id=\"toggle-fs-main-btn\" class=\"cam-fs-btn\" onclick=\"toggleFullScreenCam()\">🔲 Fullscreen</button><div class=\"cam-popup-hint\"><span class=\"cam-mode-badge mjpeg\">MJPEG</span> Continuous live stream</div></div>`;"
      ]
     },
     {
-     "riga": 5609,
+     "riga": 5625,
      "via": 1,
      "metti": [
       "        setTimeout(() => { if (done) return; done = true; reject(new Error(`MJPEG: no frame within ${Math.round((attesa || 3000) / 1000)}s`)); }, attesa || 3000);"
      ]
     },
     {
-     "riga": 5620,
+     "riga": 5636,
      "via": 1,
      "metti": [
       "    if (!buildUrl()) { content.innerHTML = `<div class=\"cam-popup-error\">⚠️ Stream unavailable<br><span style=\"font-weight:500;opacity:.85;font-size:12px;text-transform:none;letter-spacing:0;\">Camera ${cam.entity} does not expose snapshots</span></div>`; return; }"
      ]
     },
     {
-     "riga": 5622,
+     "riga": 5638,
      "via": 1,
      "metti": [
       "    content.innerHTML = `<div class=\"cam-popup-body\"><div id=\"video-iframe-container\" class=\"cam-zoom-container\" style=\"position:relative; padding-top:56.25%;\"><img id=\"cam-polling\" alt=\"${cam.entity}\"><div id=\"cam-video-loader\" class=\"cam-video-loader-overlay\"><div class=\"cam-popup-spinner\"></div><div>Loading…</div></div>${_DM_FS_BTNS}</div><button id=\"toggle-fs-main-btn\" class=\"cam-fs-btn\" onclick=\"toggleFullScreenCam()\">🔲 Fullscreen</button><button id=\"cam-audio-activate-btn\" class=\"cam-audio-btn\" onclick=\"dmAttivaAudio()\">🔊 Attiva audio</button><div class=\"cam-popup-hint\"><span class=\"cam-mode-badge polling\">SNAPSHOT</span> Preview ~2 fps · Tap \"Enable audio\" for audio + video</div></div>`;"
      ]
     },
     {
-     "riga": 5629,
+     "riga": 5645,
      "via": 1,
      "metti": [
       "        if (_dmPollFail >= 5) { clearInterval(_dmPollInt); _dmPollInt = null; content.innerHTML = '<div class=\"cam-popup-error\">⚠️ Camera not responding<br><span style=\"font-weight:500;opacity:.85;font-size:12px;text-transform:none;letter-spacing:0;\">5 attempts failed — check the camera connection</span></div>'; return; }"
      ]
     },
     {
-     "riga": 5652,
+     "riga": 5668,
      "via": 1,
      "metti": [
       "    catch (e) { dmCleanupWebRTC(); throw new Error('Unable to sign WebRTC URL: ' + (e.message || e)); }"
      ]
     },
     {
-     "riga": 5660,
+     "riga": 5676,
      "via": 1,
      "metti": [
       "        const tid = setTimeout(() => fail(new Error('WebRTC timeout (10s)')), 10000);"
      ]
     },
     {
-     "riga": 5666,
+     "riga": 5682,
      "via": 1,
      "metti": [
       "            else if (msg.type === 'error') { fail(new Error(msg.value || 'WebRTC server error')); }"
      ]
     },
     {
-     "riga": 5668,
+     "riga": 5684,
      "via": 2,
      "metti": [
       "        camWs.onerror = () => fail(new Error('WebRTC WebSocket unreachable'));",
@@ -2685,14 +2693,14 @@
      ]
     },
     {
-     "riga": 5750,
+     "riga": 5766,
      "via": 1,
      "metti": [
       "        if (!ws || ws.readyState !== WebSocket.OPEN) { reject(new Error('HA WebSocket not active')); return; }"
      ]
     },
     {
-     "riga": 5752,
+     "riga": 5768,
      "via": 2,
      "metti": [
       "        const tid = setTimeout(() => { if (pendingWsCallbacks[reqId]) { delete pendingWsCallbacks[reqId]; reject(new Error('Sign path timeout')); } }, 4000);",
@@ -2700,66 +2708,66 @@
      ]
     },
     {
-     "riga": 5787,
+     "riga": 5803,
      "via": 1,
      "metti": [
       "    if (dg) dg.textContent = 'Tracks: ' + tracks + ' · muted=' + v.muted + ' · vol=' + vol + '% · state=' + v.readyState;"
      ]
     },
     {
-     "riga": 5801,
+     "riga": 5817,
      "via": 1,
      "metti": [
       "    content.innerHTML = '<div class=\"cam-popup-body\"><div class=\"cam-zoom-container\" style=\"position:relative;padding-top:56.25%;\"><div class=\"cam-video-loader-overlay\"><div class=\"cam-popup-spinner\"></div><div>Starting HLS audio…</div></div></div></div>';"
      ]
     },
     {
-     "riga": 5803,
+     "riga": 5819,
      "via": 1,
      "metti": [
       "    catch (e) { content.innerHTML = `<div class=\"cam-popup-error\">⚠️ Audio unavailable<br><span style=\"font-weight:500;opacity:.85;font-size:12px;text-transform:none;letter-spacing:0;\">${e.message || e}</span></div>`; setTimeout(() => { const c = document.getElementById('details-list'); if (c) dmCamPolling(cam, c); }, 3500); }"
      ]
     },
     {
-     "riga": 5850,
+     "riga": 5866,
      "via": 2,
      "metti": []
     },
     {
-     "riga": 5855,
+     "riga": 5871,
      "via": 1,
      "metti": []
     },
     {
-     "riga": 5872,
+     "riga": 5888,
      "via": 1,
      "metti": [
       "                       var nfRadar = document.querySelector('.dm-radar-blocco') ? ' The radar above is a separate thing and works on its own.' : ''; list.innerHTML = `<div style=\"text-align:center; padding:20px; color:var(--text-dim,#64748b); line-height:1.5;\"><strong style=\"display:block; font-size:14px; font-weight:800; color:var(--text,#0f172a); margin-bottom:6px;\">This weather entity has no forecast</strong>It reports the weather right now, not the next days. To see the seven days pick another weather entity under Config › Sections › Weather.${nfRadar}<code style=\"display:block; margin-top:10px; font-size:11px; color:var(--text-dim,#64748b);\">${entityId}</code></div>`;"
      ]
     },
     {
-     "riga": 5884,
+     "riga": 5900,
      "via": 1,
      "metti": [
       "  if(!forecasts || forecasts.length === 0) { var nfRadar = document.querySelector('.dm-radar-blocco') ? ' The radar above is a separate thing and works on its own.' : ''; list.innerHTML = `<div style=\"text-align:center; padding:20px; color:var(--text-dim,#64748b); line-height:1.5;\"><strong style=\"display:block; font-size:14px; font-weight:800; color:var(--text,#0f172a); margin-bottom:6px;\">This weather entity has no forecast</strong>It reports the weather right now, not the next days. To see the seven days pick another weather entity under Config › Sections › Weather.${nfRadar}<code style=\"display:block; margin-top:10px; font-size:11px; color:var(--text-dim,#64748b);\">${currentWeatherEntity || ''}</code></div>`; return; }"
      ]
     },
     {
-     "riga": 5999,
+     "riga": 6015,
      "via": 1,
      "metti": [
       "    if(tipo === 'luci' && st === 'on') items.push({ id, nm, st: 'ON', icon: '💡', canOff: true });"
      ]
     },
     {
-     "riga": 6005,
+     "riga": 6021,
      "via": 1,
      "metti": [
       "      items.push({ id, nm, st: 'OPEN', icon: winIcon, canOff: false });"
      ]
     },
     {
-     "riga": 6067,
+     "riga": 6083,
      "via": 2,
      "metti": [
       "    const labels = { 'alarm_arm_home': 'Arm Home', 'alarm_arm_away': 'Arm Away', 'alarm_arm_night': 'Arm Night', 'alarm_arm_vacation': 'Arm Vacation', 'alarm_arm_custom_bypass': 'Arm Partial', 'alarm_disarm': 'Disarm Alarm' };",
@@ -2767,26 +2775,17 @@
      ]
     },
     {
-     "riga": 6184,
+     "riga": 6200,
      "via": 1,
      "metti": [
       "              const rosa = ['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW'];"
      ]
     },
     {
-     "riga": 6331,
+     "riga": 6347,
      "via": 1,
      "metti": [
       "          el.textContent = items.length ? (on + ' active / ' + items.length) : 'empty — add loads';"
-     ]
-    },
-    {
-     "riga": 6340,
-     "via": 4,
-     "metti": [
-      "      /* v0.8.4 (#6): HOME as in HA's Energy dashboard — balance of the displayed flows:",
-      "         solar − exported + imported + battery discharged − battery charged. The map now",
-      "         always adds up; the mapped entity remains the fallback when pieces are missing. */"
      ]
     },
     {
@@ -2799,19 +2798,28 @@
      ]
     },
     {
-     "riga": 6369,
+     "riga": 6372,
+     "via": 4,
+     "metti": [
+      "      /* v0.8.4 (#6): HOME as in HA's Energy dashboard — balance of the displayed flows:",
+      "         solar − exported + imported + battery discharged − battery charged. The map now",
+      "         always adds up; the mapped entity remains the fallback when pieces are missing. */"
+     ]
+    },
+    {
+     "riga": 6385,
      "via": 1,
      "metti": []
     },
     {
-     "riga": 6527,
+     "riga": 6543,
      "via": 1,
      "metti": [
       "      // Cambia foto idle ↔ plugged"
      ]
     },
     {
-     "riga": 6563,
+     "riga": 6579,
      "via": 2,
      "metti": [
       "      /* v0.8.1: DYNAMIC RAM — % sensors show %, value sensors (MB/GB) show the value",
@@ -2819,63 +2827,63 @@
      ]
     },
     {
-     "riga": 6633,
+     "riga": 6649,
      "via": 1,
      "metti": [
       "              lavFase = lavPw > 5 ? '🌀 Running (' + Math.round(lavPw) + ' W)' : 'Off';"
      ]
     },
     {
-     "riga": 6648,
+     "riga": 6664,
      "via": 1,
      "metti": [
       "          if (btnMainPwr && mainPwrSwitch) { const isOn = mainPwrSwitch.state === 'on'; btnMainPwr.classList.toggle('active', isOn); txtMainPwr.textContent = isOn ? 'ON' : 'OFF'; btnMainPwr.querySelector('.icon').textContent = isOn ? '⚡' : '🔌'; if(isOn) { btnMainPwr.style.setProperty('--btn-col', '#0ea5e9'); btnMainPwr.style.setProperty('--btn-bg', '#e0f2fe'); } else { btnMainPwr.style.setProperty('--btn-col', '#64748b'); btnMainPwr.style.setProperty('--btn-bg', '#fff'); } }"
      ]
     },
     {
-     "riga": 6660,
+     "riga": 6676,
      "via": 1,
      "metti": [
       "      const chiaveState = getRawState('valve.chiave_solare_termico'); const isChiaveOpen = chiaveState === 'open'; setActiveState('syn-v-chiave', isChiaveOpen); updateBoilerBtn('b-c-valvola', isChiaveOpen, 'OPEN', 'CHIUSA'); setTxt('txt-chiave', isChiaveOpen ? 'OPEN' : 'CHIUSA');"
      ]
     },
     {
-     "riga": 6735,
+     "riga": 6751,
      "via": 1,
      "metti": [
       "              text = 'ARMED \\u00B7 ' + String(suMisura.label || '').toUpperCase();"
      ]
     },
     {
-     "riga": 7019,
+     "riga": 7035,
      "via": 1,
      "metti": [
       "      else if (stato === 'off')  { el.classList.add('off');     txt.textContent = 'OFF'; }"
      ]
     },
     {
-     "riga": 7106,
+     "riga": 7122,
      "via": 1,
      "metti": [
       "      show = true; icon = '🛡️'; text = 'Antifurto · Total'; rgb = '225,29,72';  textRgb = '157,23,53';"
      ]
     },
     {
-     "riga": 7234,
+     "riga": 7250,
      "via": 1,
      "metti": [
       "// Apre un popup con 3 bottoni (Total/Notte/Sblocca). Riusa promptPinAndSet"
      ]
     },
     {
-     "riga": 7328,
+     "riga": 7344,
      "via": 1,
      "metti": [
       "// Sensori dispositivi mese corrente → usati anche per mesi precedenti via History"
      ]
     },
     {
-     "riga": 7344,
+     "riga": 7360,
      "via": 4,
      "metti": [
       "/* v0.7.3 fix (#6): now a callable function — adding an entry from the editor",
@@ -2883,49 +2891,49 @@
      ]
     },
     {
-     "riga": 7369,
+     "riga": 7385,
      "via": 3,
      "metti": [
       "const COSTO_KWH  = 0.25;"
      ]
     },
     {
-     "riga": 7421,
+     "riga": 7437,
      "via": 1,
      "metti": [
       "    const guadagnoGSE = immesso * 0.10;                        // stima 0.10€/kWh per energia immessa (GSE)"
      ]
     },
     {
-     "riga": 7424,
+     "riga": 7440,
      "via": 1,
      "metti": [
       "    edSetText('ed-fin-pagato-sub', cons.toFixed(0) + ' kWh × 0.25€');"
      ]
     },
     {
-     "riga": 7426,
+     "riga": 7442,
      "via": 1,
      "metti": [
       "    edSetText('ed-fin-costo-sub', prelevato.toFixed(1) + ' kWh × 0.25€');"
      ]
     },
     {
-     "riga": 7430,
+     "riga": 7446,
      "via": 1,
      "metti": [
       "    edSetText('ed-fin-imm-sub', immesso.toFixed(1) + ' kWh × 0.10€');"
      ]
     },
     {
-     "riga": 7480,
+     "riga": 7496,
      "via": 1,
      "metti": [
       "        /* v0.8.1: all year sensors; if consumption is missing, estimate it from the energy balance */"
      ]
     },
     {
-     "riga": 7509,
+     "riga": 7525,
      "via": 2,
      "metti": [
       "    /* v0.8.1: if yearly statistics yield nothing but the current month does (period engine),",
@@ -2933,14 +2941,14 @@
      ]
     },
     {
-     "riga": 7541,
+     "riga": 7557,
      "via": 1,
      "metti": [
       "    // Mostra subito il prelevato (non richiede History)"
      ]
     },
     {
-     "riga": 7612,
+     "riga": 7628,
      "via": 2,
      "metti": [
       "    /* v0.7.5: \"this week / last week\" only makes sense in the current month —",
@@ -2948,14 +2956,14 @@
      ]
     },
     {
-     "riga": 7648,
+     "riga": 7664,
      "via": 1,
      "metti": [
       "    // Somma kWh di un periodo da History"
      ]
     },
     {
-     "riga": 7770,
+     "riga": 7786,
      "via": 4,
      "metti": [
       "        // ── CURRENT MONTH: period engine (delta from the 1st) ──",
@@ -2965,49 +2973,49 @@
      ]
     },
     {
-     "riga": 7814,
+     "riga": 7830,
      "via": 1,
      "metti": [
       "            // del giorno prima dell'inizio). È il metodo del pannello Energy di HA, esatto sui"
      ]
     },
     {
-     "riga": 7825,
+     "riga": 7841,
      "via": 1,
      "metti": [
       "               Questo è ESATTAMENTE come il pannello Energy di HA calcola i totali, e con contatori"
      ]
     },
     {
-     "riga": 7871,
+     "riga": 7887,
      "via": 1,
      "metti": [
       "               del cumulativo), lascio statsOk=false così parte il fallback History col delta. */"
      ]
     },
     {
-     "riga": 7878,
+     "riga": 7894,
      "via": 1,
      "metti": [
       "        // ── METODO 2: History API (fallback - max ultimi 10 giorni) ──"
      ]
     },
     {
-     "riga": 7904,
+     "riga": 7920,
      "via": 1,
      "metti": [
       "                    // la History può restituire i sensori in ordine diverso: mappo per entity_id"
      ]
     },
     {
-     "riga": 7917,
+     "riga": 7933,
      "via": 1,
      "metti": [
       "            } catch(e) { console.error('History fetch error:', e); }"
      ]
     },
     {
-     "riga": 7921,
+     "riga": 7937,
      "via": 5,
      "metti": [
       "    /* v0.9.5 DEFINITIVE FIX: HOME as HA's Energy panel and the Monthly map.",
@@ -3017,7 +3025,7 @@
      ]
     },
     {
-     "riga": 7933,
+     "riga": 7949,
      "via": 5,
      "metti": [
       "    /* v0.7.5 (#6): DATA COHERENCE — if total consumption is unavailable but the rest is,",
@@ -3028,21 +3036,21 @@
      ]
     },
     {
-     "riga": 7960,
+     "riga": 7976,
      "via": 1,
      "metti": [
       "    edSetText('ed-fin-pagato-sub', cons.toFixed(0) + ' kWh × 0.25€');"
      ]
     },
     {
-     "riga": 7962,
+     "riga": 7978,
      "via": 1,
      "metti": [
       "    edSetText('ed-fin-costo-sub', prelevato.toFixed(1) + ' kWh × 0.25€');"
      ]
     },
     {
-     "riga": 7965,
+     "riga": 7981,
      "via": 2,
      "metti": [
       "    edSetText('ed-fin-imm',    (immesso * 0.10).toFixed(2) + ' €');",
@@ -3050,49 +3058,49 @@
      ]
     },
     {
-     "riga": 7994,
+     "riga": 8010,
      "via": 1,
      "metti": [
       "        /* v0.8.1: past month with no statistics at all → honest note instead of confident zeros */"
      ]
     },
     {
-     "riga": 7996,
+     "riga": 8012,
      "via": 1,
      "metti": [
       "            badgesEl.innerHTML = '<span class=\"ed-badge\" style=\"background:rgba(245,158,11,0.14); color:#b45309;\">⚠️ No statistics available for this month</span>';"
      ]
     },
     {
-     "riga": 8011,
+     "riga": 8027,
      "via": 1,
      "metti": [
       "    // ── Confronto settimanale via History API ───────────────────"
      ]
     },
     {
-     "riga": 8045,
+     "riga": 8061,
      "via": 1,
      "metti": [
       "            list.innerHTML = '<div style=\"text-align:center; padding:26px; color:var(--text-dim); font-weight:800;\">📊 Aggiungi i tuoi dispositivi da ⚙️ → Configure Entities → Carichi → \"Report Analisi — voci\"<br><span style=\"font-weight:600; font-size:12px;\">You can use monthly entities or cumulative TOTALS: months are computed automatically.</span></div>';"
      ]
     },
     {
-     "riga": 8097,
+     "riga": 8113,
      "via": 1,
      "metti": [
       "        // ── METODO 2: History API (fallback - max 10 giorni) ──"
      ]
     },
     {
-     "riga": 8117,
+     "riga": 8133,
      "via": 1,
      "metti": [
       "                console.error('[ED Device List] History error:', e);"
      ]
     },
     {
-     "riga": 8139,
+     "riga": 8155,
      "via": 2,
      "metti": [
       "    /* v0.7.5: if the selected month has neither production nor main consumption but device",
@@ -3100,73 +3108,73 @@
      ]
     },
     {
-     "riga": 8142,
+     "riga": 8158,
      "via": 1,
      "metti": [
       "        ? '<div style=\"padding:10px 14px; margin-bottom:8px; border-radius:14px; background:rgba(245,158,11,0.12); color:#b45309; font-size:11.5px; font-weight:700;\">⚠️ Main production and consumption unavailable for this month: the values below come from meter history and may include earlier periods.</div>'"
      ]
     },
     {
-     "riga": 8163,
+     "riga": 8179,
      "via": 2,
      "metti": []
     },
     {
-     "riga": 8166,
+     "riga": 8182,
      "via": 1,
      "metti": [
       "        list.innerHTML += '<div style=\"padding:10px 14px; margin-top:8px; border-radius:14px; background:rgba(14,165,233,0.08); color:#0369a1; font-size:11.5px; font-weight:700;\">ℹ️ The Report reads Home Assistant <b>Long-Term Statistics</b>. If values stay at zero, make sure the entities have <code>state_class: total_increasing</code> (or <code>total</code>): Developer Tools → Statistics.</div>';"
      ]
     },
     {
-     "riga": 8176,
+     "riga": 8192,
      "via": 1,
      "metti": [
       "/* ═══ v0.8.0: PERIOD ENGINE ═══"
      ]
     },
     {
-     "riga": 8204,
+     "riga": 8220,
      "via": 1,
      "metti": [
       "    if (!service) return Promise.reject(new Error('Canonical Energy service unavailable'));"
      ]
     },
     {
-     "riga": 8260,
+     "riga": 8276,
      "via": 1,
      "metti": [
       "    // ── METODO 2: History API (fallback - solo ultimi 10 giorni di default) ──"
      ]
     },
     {
-     "riga": 8293,
+     "riga": 8309,
      "via": 1,
      "metti": [
       "            console.warn('History API non raggiungibile:', e.message);"
      ]
     },
     {
-     "riga": 8381,
+     "riga": 8397,
      "via": 1,
      "metti": []
     },
     {
-     "riga": 8416,
+     "riga": 8432,
      "via": 1,
      "metti": [
       "    if(!visible.length){ grid.innerHTML='<div style=\"text-align:center; padding:30px; color:var(--text-dim); font-weight:700;\">No room con sensore — aggiungila nel tab Temperatura dell&#39;editor</div>'; return; } grid.innerHTML = tabs + visible.map(r => {"
      ]
     },
     {
-     "riga": 8468,
+     "riga": 8484,
      "via": 1,
      "metti": [
       "    /* v0.7.4: average temperature of each floor in the tabs */"
      ]
     },
     {
-     "riga": 8646,
+     "riga": 8662,
      "via": 6,
      "metti": [
       "                'on':          { label: '🟢 On-Grid',     cls: 'ongrid',       col: '#10b981' },",
@@ -3178,21 +3186,21 @@
      ]
     },
     {
-     "riga": 8737,
+     "riga": 8753,
      "via": 1,
      "metti": [
       "                ${duration ? `<div class=\"srv-event-duration\">Duration: ${duration}</div>` : ''}"
      ]
     },
     {
-     "riga": 8746,
+     "riga": 8762,
      "via": 1,
      "metti": [
       "        timeline.innerHTML = `<div style=\"text-align:center;padding:24px;color:#ef4444;font-weight:800;font-size:12px;\">❌ History non disponibile<br><span style=\"color:var(--text-dim);font-size:10px;\">${e.message}</span></div>`;"
      ]
     },
     {
-     "riga": 8775,
+     "riga": 8791,
      "via": 10,
      "metti": [
       "        'dm.core_005':                    ['❄️ Air conditioner','Salone'],",
@@ -3208,28 +3216,28 @@
      ]
     },
     {
-     "riga": 8807,
+     "riga": 8823,
      "via": 1,
      "metti": [
       "                          '4':'Vel.4', '5':'Vel.5', on:'On', off:'Off' };"
      ]
     },
     {
-     "riga": 9043,
+     "riga": 9059,
      "via": 1,
      "metti": [
       "    // ── History giornaliero del periodo selezionato ──"
      ]
     },
     {
-     "riga": 9081,
+     "riga": 9097,
      "via": 1,
      "metti": [
       "        // ── METODO 2: History API (fallback per ultimi 10 giorni) ──"
      ]
     },
     {
-     "riga": 9180,
+     "riga": 9196,
      "via": 2,
      "metti": [
       "        setTxt('ed-dkpi-picco-sub', 'History N/D');",
@@ -3263,28 +3271,28 @@
      ]
     },
     {
-     "riga": 2890,
+     "riga": 2908,
      "via": 1,
      "metti": [
       "/* Power button */"
      ]
     },
     {
-     "riga": 3018,
+     "riga": 3036,
      "via": 1,
      "metti": [
       "  /* Pill tab Overview/Analisi */"
      ]
     },
     {
-     "riga": 3167,
+     "riga": 3185,
      "via": 1,
      "metti": [
       "  /* ── History popup ── */"
      ]
     },
     {
-     "riga": 3228,
+     "riga": 3246,
      "via": 0,
      "metti": [
       "",
@@ -3311,26 +3319,26 @@
      ]
     },
     {
-     "riga": 4376,
+     "riga": 4394,
      "via": 2,
      "metti": [
       ".ed-btn-add:hover { filter: brightness(0.97); transform: translateY(-1px); }"
      ]
     },
     {
-     "riga": 4381,
+     "riga": 4399,
      "via": 2,
      "metti": []
     },
     {
-     "riga": 4552,
+     "riga": 4570,
      "via": 1,
      "metti": [
       "/* ═══ v256: PAGINA CONFIGURATION ═══ */"
      ]
     },
     {
-     "riga": 4576,
+     "riga": 4594,
      "via": 0,
      "metti": [
       "html[data-theme=\"dark\"] .weather-widget { background: linear-gradient(135deg, #101c30 0%, #0b2740 100%); border-color: rgba(148,163,184,0.18); }",
@@ -3338,17 +3346,17 @@
      ]
     },
     {
-     "riga": 4598,
+     "riga": 4616,
      "via": 2,
      "metti": []
     },
     {
-     "riga": 4603,
+     "riga": 4621,
      "via": 2,
      "metti": []
     },
     {
-     "riga": 4693,
+     "riga": 4711,
      "via": 22,
      "metti": []
     }

@@ -101,6 +101,9 @@ function azzera() {
   stato.frame = 0;
   stato.pendente = false;
   documento.visibilityState = "visible";
+  /* Il parcheggio e' l'altro modo di non essere guardati: si azzera anche
+     quello, o una prova lo lascia acceso per quelle dopo. */
+  globalThis.__DASHBOARDMODERN_PARCHEGGIATA__ = false;
 }
 function scatta(lista) {
   for (const voce of lista.splice(0)) voce.fn();
@@ -146,6 +149,42 @@ test("a scheda nascosta si prende nota e basta; al ritorno si disegna una volta"
   assert.equal(disegni, 1);
   // Un ritorno senza niente in sospeso non disegna.
   ascoltiDelDocumento.get("visibilitychange")();
+  assert.equal(timer.fotogrammi.length, 0);
+});
+
+test("parcheggiata non disegna, e tolta dal parcheggio disegna una volta", () => {
+  /* I modi di non essere guardati sono due, e questo ne conosceva uno solo.
+   *
+   * Il primo e' la scheda del browser in secondo piano, ed e' la prova qui
+   * sopra. Il secondo e' il **parcheggio**: la plancia messa da parte da chi
+   * la ospita quando si va da un'altra parte — un'altra pagina di Home
+   * Assistant, un'altra schermata dell'app. Li' il documento non e' «hidden»:
+   * e' vivo e sveglio, e il disegno del guscio — settecento righe e
+   * settantaquattro getElementById — lo rifaceva due volte al secondo sotto
+   * uno schermo dove non si vedeva.
+   *
+   * Diciannove moduli la domanda la facevano gia' a `planciaVisibile`, che le
+   * conosce tutt'e due. Questo, che e' il piu' caro di tutti, se la faceva da
+   * se': ed era l'unico che non si fermava mai. */
+  azzera();
+  let disegni = 0;
+  globalThis.render = () => {
+    disegni += 1;
+  };
+  globalThis.__DASHBOARDMODERN_PARCHEGGIATA__ = true;
+  for (let evento = 0; evento < 20; evento += 1) globalThis.cdRenderSoon();
+  assert.equal(timer.attese.length, 0, "parcheggiata non arma nessuna attesa");
+  assert.equal(timer.fotogrammi.length, 0, "e non chiede nessun fotogramma");
+  assert.equal(stato.pendente, true, "ma si prende nota di quello che e' passato");
+
+  globalThis.__DASHBOARDMODERN_PARCHEGGIATA__ = false;
+  annuncia("dashboardmodern:parcheggio");
+  assert.equal(timer.fotogrammi.length, 1, "chi la riprende la trova sveglia");
+  scatta(timer.fotogrammi);
+  assert.equal(disegni, 1, "e disegna una volta sola, non venti");
+
+  /* Ripresa due volte non disegna due volte. */
+  annuncia("dashboardmodern:parcheggio");
   assert.equal(timer.fotogrammi.length, 0);
 });
 

@@ -24,6 +24,9 @@
  * spinta in fondo alla pagina al primo riordino.
  */
 import {
+  QUANTE_MIE,
+  STATO_DI_SERIE,
+  TINTA_MIA,
   VOCI_DELLA_BARRA,
   normalizzaBarra,
   passoDellaPosta,
@@ -41,6 +44,7 @@ import { haOggettoWidget, oggettoWidget } from "../core/oggetti-widget.js";
 import { parolaDellaPorta, parolaDiStato } from "./le-parole-di-home-assistant.js";
 import { windowOpenFromState } from "../core/shutter-window.js";
 import { iconGlyphMarkup } from "./icon-engine-section.js";
+import { apriLaSchedaDellEntita } from "./la-scheda-di-home-assistant.js";
 import { CHIAVE_VERSI, apertaSecondoVerso, insiemeInvertiti } from "../core/verso-aperture.js";
 import { parolaDelQuando } from "./rifiuti-section.js";
 import {
@@ -143,6 +147,79 @@ function leMisureAdesso(config, states) {
   };
 }
 
+/* Un'entita' scelta a mano, com'e' adesso (#7).
+ *
+ * Qui non si sa che cosa sara': un numero con la sua unita', una parola, un
+ * orario. Percio' si legge tutto e si dichiara quale delle due cose e': il
+ * numero solo quando lo stato E' un numero per intero, non quando ne comincia
+ * con uno. «12:30» comincia con 12 e non e' dodici, e una lettura letta a
+ * meta' e' peggio di una lettura che manca.
+ *
+ * La parola e' quella tradotta — «Acceso», non `on` — dalla stessa tabella con
+ * cui parla l'elenco di cosa e' acceso: chi guarda la plancia in italiano non
+ * deve trovarsi una parola inglese in mezzo alla fascia.
+ *
+ * Il segno lo dichiara Home Assistant quando ce l'ha (`icon`): un'entita' che
+ * ha gia' la sua faccia se la porta dietro, e chi la vuole diversa la scrive
+ * nella configurazione, che vince.
+ *
+ * Un'entita' che non risponde torna `null`: la pastiglia non compare, come per
+ * tutte le altre voci della fascia.
+ */
+const SOLO_UN_NUMERO = /^-?\d+(?:[.,]\d+)?$/;
+
+export function letturaDellaMia(entity, states) {
+  const id = clean(entity);
+  if (!id) return null;
+  const risolta = clean(root.resolveEntity?.(id) || id);
+  const stato = states?.[risolta] || states?.[id];
+  if (!stato) return null;
+  const grezzo = clean(stato.state);
+  if (!grezzo || /^(unknown|unavailable)$/i.test(grezzo)) return null;
+  const numero = SOLO_UN_NUMERO.test(grezzo) ? Number(grezzo.replace(",", ".")) : NaN;
+  return {
+    valore: Number.isFinite(numero) ? numero : null,
+    testo: Number.isFinite(numero) ? "" : parolaDiStato(grezzo),
+    unita: clean(stato.attributes?.unit_of_measurement),
+    nome: clean(stato.attributes?.friendly_name) || id,
+    icona: clean(stato.attributes?.icon),
+  };
+}
+
+/* Com'e' adesso la voce che decide se una pastiglia si vede.
+ *
+ * Si legge grezza, come la dice Home Assistant: il confronto con quello che
+ * ha scritto chi configura lo fa il nucleo, dove si prova senza un documento.
+ * Un'entita' che non risponde torna stringa vuota, e li' il nucleo dice di
+ * no — non si annuncia la modalita' vacanze quando non si sa se e' attiva. */
+function condizioneDellaMia(entity, states) {
+  const id = clean(entity);
+  if (!id) return "";
+  const risolta = clean(root.resolveEntity?.(id) || id);
+  const stato = states?.[risolta] || states?.[id];
+  const grezzo = clean(stato?.state);
+  return !grezzo || /^(unknown|unavailable)$/i.test(grezzo) ? "" : grezzo;
+}
+
+/**
+ * Le pastiglie scelte a mano, gia' lette: una voce per entita' configurata.
+ *
+ * Esportata perche' la provano: qui si leggono DUE entita' per riga — quella
+ * da mostrare e quella che decide se si vede — e scambiarle vorrebbe dire una
+ * fascia che mostra lo stato dell'interruttore delle vacanze.
+ */
+export function leMieAdesso(config, states) {
+  const fuori = {};
+  for (const mia of config.mie) {
+    if (!mia.entity || fuori[mia.entity]) continue;
+    fuori[mia.entity] = {
+      ...(letturaDellaMia(mia.entity, states) || {}),
+      condizione: condizioneDellaMia(mia.quando, states),
+    };
+  }
+  return fuori;
+}
+
 /* Le due letture della pioggia, per chi le chiede da fuori (#478).
  *
  * L'irrigazione le legge da qui invece di avere due caselle sue: chi ha una
@@ -200,6 +277,10 @@ function parolaDelConto(chiave, conto, modello = null) {
     return uno ? t("presa accesa", "socket on") : t("prese accese", "sockets on");
   if (chiave === "porte") return uno ? t("porta aperta", "door open") : t("porte aperte", "doors open");
   if (chiave === "varchi") return uno ? t("varco aperto", "opening open") : t("varchi aperti", "openings open");
+  /* «In una stanza c'e' qualcuno» — la stanza, non il rilevatore: e' il posto
+   * che la tessera conta, ed e' la risposta che uno cerca passando davanti. */
+  if (chiave === "presenza")
+    return uno ? t("stanza occupata", "room busy") : t("stanze occupate", "rooms busy");
   if (chiave === "stampanti")
     return uno
       ? t("stampante da guardare", "printer to check")
@@ -273,6 +354,20 @@ function paroleDellaPastiglia(pastiglia) {
      * QUALE sensore e' l'unica cosa che il numero da solo non dice. */
     return { testa, coda, titolo: pastiglia.nome ? `${pastiglia.nome} · ${testa}` : `${testa} ${coda}` };
   }
+  if (pastiglia.chiave === "mia") {
+    /* Il numero si scrive come lo scrivono le misure: col decimo se ce l'ha,
+     * intero se e' intero. Qui non si sa che cosa sia — potenza, litri, un
+     * conto di cose — e aggiungere un decimo a un numero tondo lo farebbe
+     * sembrare una misura fine che non e'. */
+    const testa = Number.isFinite(pastiglia.valore)
+      ? `${formatNumber(pastiglia.valore, Number.isInteger(pastiglia.valore) ? 0 : 1)}${
+          pastiglia.unita ? ` ${pastiglia.unita}` : ""
+        }`
+      : pastiglia.testo;
+    /* La coda e' il nome che le ha dato chi l'ha messa li': la pastiglia dice
+     * un numero, e senza il nome quel numero non e' di niente. */
+    return { testa, coda: pastiglia.nome, titolo: `${pastiglia.nome} · ${testa}` };
+  }
   const parola = parolaDelConto(pastiglia.chiave, pastiglia.conto, pastiglia);
   const testa = String(pastiglia.conto);
   const nomi = vociDellaPastiglia(pastiglia)
@@ -338,6 +433,9 @@ function vestiLaPastiglia(nodo, pastiglia) {
     if (nodo.getAttribute(nome) !== valore) nodo.setAttribute(nome, valore);
   };
   attributo("data-tessera", pastiglia.tessera || "");
+  /* L'entita' delle pastiglie scelte a mano (#7): una tessera non ce l'hanno,
+   * e toccandole si apre la loro scheda di Home Assistant. */
+  attributo("data-dm-entita", pastiglia.entity || "");
   attributo("data-avviso", String(Boolean(pastiglia.avviso)));
   attributo("title", titolo);
   attributo("aria-label", titolo);
@@ -516,6 +614,9 @@ export function disegnaComeStaLaCasa(modelli, states) {
     barra: config,
     posta,
     misure: leMisureAdesso(config, states || {}),
+    /* Le entita' scelte a mano, gia' lette anche loro, e con loro com'e'
+     * adesso la voce che decide se si vedono (#7). */
+    mie: leMieAdesso(config, states || {}),
     /* L'ora di adesso: serve a chi ha chiesto che dopo una certa ora la
      * pastiglia dei rifiuti passi al ritiro di domani (#565). L'orologio lo
      * legge la sezione, come tutto quello che viene da fuori: il nucleo fa i
@@ -835,7 +936,15 @@ function onClick(event) {
   const chiave = clean(pastiglia.dataset.dmCasa);
   if (apriLElenco(chiave)) return;
   const tessera = clean(pastiglia.dataset.tessera);
-  if (tessera) doc.querySelector(`#dm-widgets [data-dm-widget="${CSS.escape(tessera)}"]`)?.click();
+  if (tessera) {
+    doc.querySelector(`#dm-widgets [data-dm-widget="${CSS.escape(tessera)}"]`)?.click();
+    return;
+  }
+  /* Una pastiglia scelta a mano non ha una tessera e non ha un elenco: dice
+   * una lettura sola, e chi la tocca vuole saperne di piu' su QUELLA. La
+   * risposta lunga ce l'ha gia' Home Assistant — la storia, i comandi, gli
+   * attributi — e si apre la sua, non una nostra versione piu' povera. */
+  apriLaSchedaDellEntita(pastiglia.dataset.dmEntita);
 }
 
 /* ── la scheda: dove si sceglie cosa si vede ────────────────────────────── */
@@ -872,6 +981,7 @@ const NOMI_DELLE_VOCI = () => ({
   clima: t("Clima", "Climate"),
   prese: t("Prese", "Sockets"),
   media: t("Musica", "Media"),
+  presenza: t("Presenza", "Presence"),
   temperatura: t("Temperatura", "Temperature"),
   umidita: t("Umidità", "Humidity"),
   pioggia: t("Pioggia adesso", "Rain now"),
@@ -917,6 +1027,112 @@ function campoDellOraDelRitiro(scelta) {
           "The bin goes out the evening before. Pick the hour after which the pill stops announcing today's collection — by then already done — and announces tomorrow's instead. If nobody comes tomorrow, the pill does not show up.",
         ),
       )}</small></label>`;
+}
+
+/* ── le pastiglie scelte a mano, nella scheda (#7) ───────────────────────── */
+
+/* Una riga per pastiglia, chiusa quando e' gia' fatta.
+ *
+ * Si apre da se' quella che non ha ancora un'entita': e' quella appena
+ * aggiunta, e trovarla chiusa vorrebbe dire premere «aggiungi» e vedere
+ * comparire una riga vuota che non si capisce come si riempie.
+ *
+ * Il nome della riga e' quello che la pastiglia dira' in fascia, e sotto c'e'
+ * l'entita': sono le due cose con cui uno riconosce la sua fra sei.
+ */
+function rigaDellaMiaMarkup(mia, index) {
+  const entity = clean(mia?.entity);
+  const nome = clean(mia?.nome);
+  const quando = clean(mia?.quando);
+  return `<details class="ed-row dm-casa-ed-mia" data-dm-casa-mia="${index}"${entity ? "" : " open"}>
+    <summary class="dm-casa-ed-mia-testa">
+      <span class="ed-row-main"><strong class="ed-row-new">${esc(
+        nome || t("Pastiglia senza nome", "Unnamed pill"),
+      )}</strong><small class="ed-row-old mono">${esc(
+        entity || t("nessuna entità", "no entity"),
+      )}</small></span>
+      <button type="button" class="ed-del" data-dm-casa-mia-via aria-label="${esc(
+        t("Elimina", "Remove"),
+      )}">🗑️</button>
+    </summary>
+    <label class="ed-slot dm-casa-ed-campo"><span class="ed-slot-lbl">${esc(
+      t("Entità da mostrare", "Entity to show"),
+    )}</span>
+      <span class="ed-form-row"><input class="ed-input mono" data-dm-casa-mia-campo="entity" value="${esc(
+        entity,
+      )}" placeholder="sensor.acqua_serbatoio" autocomplete="off" spellcheck="false"><button type="button" class="dm-entity-picker" data-dm-casa-mia-pick="entity" aria-label="${esc(
+        t("Scegli entità", "Choose entity"),
+      )}">🔍</button></span></label>
+    <label class="ed-slot dm-casa-ed-campo"><span class="ed-slot-lbl">${esc(
+      t("Nome sotto il valore", "Name under the value"),
+    )}</span>
+      <span class="ed-form-row"><input class="ed-input" data-dm-casa-mia-campo="nome" value="${esc(
+        nome,
+      )}" placeholder="${esc(t("lasciandolo vuoto, quello di Home Assistant", "leave empty for the Home Assistant one"))}"></span></label>
+    <div class="ed-form-row dm-casa-ed-mia-faccia">
+      <input class="ed-input ed-icon-input" data-dm-casa-mia-campo="icona" value="${esc(
+        clean(mia?.icona),
+      )}" placeholder="🌴 / mdi:palm-tree" aria-label="${esc(t("Segno", "Icon"))}">
+      <input class="dm-casa-ed-tinta" type="color" data-dm-casa-mia-campo="tinta" value="${esc(
+        clean(mia?.tinta) || TINTA_MIA,
+      )}" aria-label="${esc(t("Colore", "Colour"))}" title="${esc(t("Colore", "Colour"))}">
+    </div>
+    <label class="ed-slot dm-casa-ed-campo"><span class="ed-slot-lbl">${esc(
+      t("Si vede quando questa entità…", "Show it when this entity…"),
+    )}</span>
+      <span class="ed-form-row"><input class="ed-input mono" data-dm-casa-mia-campo="quando" value="${esc(
+        quando,
+      )}" placeholder="input_boolean.vacanze" autocomplete="off" spellcheck="false"><button type="button" class="dm-entity-picker" data-dm-casa-mia-pick="quando" aria-label="${esc(
+        t("Scegli entità", "Choose entity"),
+      )}">🔍</button></span></label>
+    <label class="ed-slot dm-casa-ed-campo"><span class="ed-slot-lbl">${esc(
+      t("…è in questo stato", "…is in this state"),
+    )}</span>
+      <span class="ed-form-row"><input class="ed-input mono" data-dm-casa-mia-campo="stato" value="${esc(
+        clean(mia?.stato),
+      )}" placeholder="${esc(STATO_DI_SERIE)}" autocomplete="off" spellcheck="false"></span>
+      <small>${esc(
+        t(
+          "Lasciando vuota la prima casella la pastiglia si vede sempre. Indicandola, si vede solo mentre quell'entità sta nello stato scritto qui — «on» per un interruttore acceso, che è quello che vale se non scrivi niente.",
+          "Leave the first box empty and the pill always shows. Name an entity and it only shows while that entity is in the state written here — «on» for a switch that is on, which is what applies if you write nothing.",
+        ),
+      )}</small></label>
+  </details>`;
+}
+
+function mieMarkup(config) {
+  const righe = config.mie.map((mia, index) => rigaDellaMiaMarkup(mia, index)).join("");
+  return `<div class="ed-sec-title dm-casa-ed-sep">✨ ${esc(
+    t("Le tue entità nella fascia", "Your own entities in the bar"),
+  )}</div>
+    <div class="ed-intro">${esc(
+      t(
+        "Oltre a quelle che la casa annuncia da sé, puoi metterne di tue: l'acqua del serbatoio, i giorni al prossimo tagliando, quanto manca a una consegna. Stanno accanto alle cose accese, prima delle misure, e ognuna può comparire solo quando serve — per esempio solo mentre la modalità vacanze è attiva.",
+        "Besides the ones the house announces by itself, you can add your own: the water in the tank, the days to the next service, how long until a delivery. They sit next to what is on, before the measurements, and each one can show up only when it matters — for instance only while holiday mode is on.",
+      ),
+    )}</div>
+    <div class="ed-list dm-casa-ed-mie">${
+      righe ||
+      `<div class="ed-empty">${esc(t("Nessuna entità aggiunta", "No entity added"))}</div>`
+    }</div>
+    ${
+      config.mie.length >= QUANTE_MIE
+        ? /* Il numero sta FUORI dalla frase: una chiave con un valore dentro
+           * cambia col valore e non sta in nessun catalogo — e' lo stesso
+           * motivo per cui «2 luci accese» e' diventato un numero e una
+           * parola. */
+          `<div class="ed-empty">${esc(
+            t("Il massimo è", "The most you can have is"),
+          )} ${QUANTE_MIE} — ${esc(
+            t(
+              "la fascia scorre, ma le prime pastiglie sono quelle che la casa annuncia da sé.",
+              "the bar scrolls, but the first pills are the ones the house announces by itself.",
+            ),
+          )}</div>`
+        : `<button type="button" class="ed-btn-add" data-dm-casa-mia-piu>＋ ${esc(
+            t("Aggiungi un'entità", "Add an entity"),
+          )}</button>`
+    }`;
 }
 
 function pannelloMarkup() {
@@ -995,6 +1211,7 @@ function pannelloMarkup() {
         "The two rain ones are for those with a weather station: how hard it is coming down now, and how many millimetres fell today. They are also the ones irrigation looks at — if the rain has already watered the ground, the Irrigation page says so and offers to skip the run — so you name them here once.",
       ),
     )}</div>
+    ${mieMarkup(config)}
     <button type="button" class="ed-save-btn" data-dm-casa-salva>💾 ${esc(
       t("Salva la barra", "Save the bar"),
     )}</button>`;
@@ -1024,9 +1241,49 @@ export function ensurePannelloDellaBarra(body = doc?.getElementById?.("ed-body")
   return true;
 }
 
-/* Il salvataggio legge tutte le caselle in una volta: la scheda si ridisegna
- * appena scritto, e leggerle una per una vorrebbe dire leggerne meta' da un
- * documento che non c'e' piu'. */
+/* Quello che c'e' scritto nel pannello adesso, tutto in una volta.
+ *
+ * Una lettura sola e non una per casella: la scheda si ridisegna appena
+ * scritto, e leggerle una per una vorrebbe dire leggerne meta' da un documento
+ * che non c'e' piu'. La leggono in tre — chi salva, chi aggiunge una pastiglia
+ * e chi ne toglie una — perche' aggiungere e togliere ridisegnano il pannello:
+ * senza passare di qui, quello che uno ha appena scritto e non ha ancora
+ * salvato se ne andrebbe al primo «＋». */
+function quelloCheDiceIlPannello(pannello) {
+  const voci = {};
+  for (const casella of pannello.querySelectorAll("[data-dm-casa-voce]"))
+    voci[clean(casella.dataset.dmCasaVoce)] = casella.checked;
+  const misure = {};
+  for (const casella of pannello.querySelectorAll("[data-dm-casa-misura]"))
+    misure[clean(casella.dataset.dmCasaMisura)] = clean(casella.value);
+  const mie = [];
+  for (const riga of pannello.querySelectorAll("[data-dm-casa-mia]")) {
+    const mia = {};
+    for (const casella of riga.querySelectorAll("[data-dm-casa-mia-campo]"))
+      mia[clean(casella.dataset.dmCasaMiaCampo)] = clean(casella.value);
+    mie.push(mia);
+  }
+  return {
+    voci,
+    posta: clean(pannello.querySelector("[data-dm-casa-posta]")?.value),
+    rifiutiDalleOre: clean(pannello.querySelector("[data-dm-casa-ritiro]")?.value),
+    mie,
+    ...misure,
+  };
+}
+
+/* Scrive la configurazione e ridisegna la scheda. Torna la cassetta di prima,
+ * che e' l'unica cosa che chi chiama deve ancora guardare. */
+function salvaLaBarra(detto) {
+  const prima = configurazione();
+  writeJsonIfChanged(CHIAVE_BARRA, normalizzaBarra(detto));
+  /* Cassetta cambiata: la memoria di quella di prima non vuol dire piu'
+   * niente, e tenerla vorrebbe dire annunciare come «posta arrivata» il primo
+   * scatto del contatto nuovo. Si riparte dal primo sguardo. */
+  if (clean(detto.posta) !== prima.posta) writeJsonIfChanged(CHIAVE_POSTA, {}, { sync: false });
+  ensurePannelloDellaBarra();
+}
+
 function onClickPannello(event) {
   const pannello = event.target?.closest?.("[data-dm-casa-pannello]");
   if (!pannello) return;
@@ -1044,26 +1301,49 @@ function onClickPannello(event) {
     );
     return;
   }
+  /* I due cercatori di una pastiglia scelta a mano: quello dell'entita' da
+   * mostrare e quello della voce che decide se si vede. Sono nella stessa
+   * riga, e la riga dice a quale casella tornare. */
+  const scegliMia = event.target.closest("[data-dm-casa-mia-pick]");
+  if (scegliMia) {
+    event.preventDefault();
+    const campo = clean(scegliMia.dataset.dmCasaMiaPick);
+    root.wzPickEntity?.(
+      scegliMia
+        .closest("[data-dm-casa-mia]")
+        ?.querySelector(`[data-dm-casa-mia-campo="${CSS.escape(campo)}"]`),
+    );
+    return;
+  }
+  if (event.target.closest("[data-dm-casa-mia-piu]")) {
+    event.preventDefault();
+    const detto = quelloCheDiceIlPannello(pannello);
+    /* La riga nuova nasce vuota e con lei il colore di serie: e' una riga da
+     * riempire, non una pastiglia gia' fatta. Resta vuota anche dopo il
+     * ridisegno — `normalizzaLeMie` le righe senza entita' le tiene — ed e'
+     * quello che la fa trovare aperta. */
+    detto.mie.push({ tinta: TINTA_MIA });
+    salvaLaBarra(detto);
+    return;
+  }
+  const togliMia = event.target.closest("[data-dm-casa-mia-via]");
+  if (togliMia) {
+    /* Il tasto sta dentro il `<summary>`, che di suo apre e chiude: senza
+     * fermarlo, togliere una riga aprirebbe anche quella che prende il suo
+     * posto. */
+    event.preventDefault();
+    const riga = togliMia.closest("[data-dm-casa-mia]");
+    const quale = Number(riga?.dataset.dmCasaMia);
+    const detto = quelloCheDiceIlPannello(pannello);
+    if (Number.isInteger(quale) && quale >= 0 && quale < detto.mie.length) {
+      detto.mie.splice(quale, 1);
+      salvaLaBarra(detto);
+    }
+    return;
+  }
   if (!event.target.closest("[data-dm-casa-salva]")) return;
   event.preventDefault();
-  const voci = {};
-  for (const casella of pannello.querySelectorAll("[data-dm-casa-voce]"))
-    voci[clean(casella.dataset.dmCasaVoce)] = casella.checked;
-  const posta = clean(pannello.querySelector("[data-dm-casa-posta]")?.value);
-  const misure = {};
-  for (const casella of pannello.querySelectorAll("[data-dm-casa-misura]"))
-    misure[clean(casella.dataset.dmCasaMisura)] = clean(casella.value);
-  const rifiutiDalleOre = clean(pannello.querySelector("[data-dm-casa-ritiro]")?.value);
-  const prima = configurazione();
-  writeJsonIfChanged(
-    CHIAVE_BARRA,
-    normalizzaBarra({ voci, posta, rifiutiDalleOre, ...misure }),
-  );
-  /* Cassetta cambiata: la memoria di quella di prima non vuol dire piu'
-   * niente, e tenerla vorrebbe dire annunciare come «posta arrivata» il primo
-   * scatto del contatto nuovo. Si riparte dal primo sguardo. */
-  if (posta !== prima.posta) writeJsonIfChanged(CHIAVE_POSTA, {}, { sync: false });
-  ensurePannelloDellaBarra();
+  salvaLaBarra(quelloCheDiceIlPannello(pannello));
   root.edToast?.(t("💾 Barra salvata", "💾 Bar saved"));
 }
 
@@ -1299,6 +1579,28 @@ function stile() {
     #ed-body .dm-casa-ed-ic{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;flex:0 0 24px;font-size:17px}
     #ed-body .dm-casa-ed-ic .dm-oggetto{width:24px;height:24px;display:block}
     #ed-body .dm-casa-ed-campo{display:block;margin-bottom:12px}
+    /* Le pastiglie scelte a mano (#7): una riga per pastiglia, chiusa finche'
+       non la si apre. Il tasto che la toglie sta nella testa, dove sta in
+       tutti gli altri elenchi della scheda. */
+    #ed-body .dm-casa-ed-sep{margin-top:20px}
+    #ed-body .dm-casa-ed-mie{display:grid;gap:8px;margin-bottom:12px}
+    #ed-body .dm-casa-ed-mia{display:block!important;padding:0!important}
+    #ed-body .dm-casa-ed-mia-testa{display:flex;align-items:center;gap:10px;
+      padding:10px 12px;cursor:pointer;list-style:none}
+    #ed-body .dm-casa-ed-mia-testa::-webkit-details-marker{display:none}
+    #ed-body .dm-casa-ed-mia-testa .ed-row-main{flex:1 1 auto;min-width:0}
+    #ed-body .dm-casa-ed-mia[open] .dm-casa-ed-mia-testa{
+      border-bottom:1px solid var(--dm-editor-border,rgba(148,163,184,.28))}
+    #ed-body .dm-casa-ed-mia > .dm-casa-ed-campo,
+    #ed-body .dm-casa-ed-mia > .dm-casa-ed-mia-faccia{margin:12px 12px 0}
+    #ed-body .dm-casa-ed-mia > :last-child{margin-bottom:12px}
+    #ed-body .dm-casa-ed-mia-faccia{display:flex;align-items:center;gap:8px}
+    #ed-body .dm-casa-ed-mia-faccia .ed-icon-input{flex:1 1 auto;min-width:0}
+    /* La casella del colore e' un quadrato, non un campo di testo largo
+       quanto la riga: quello che si sceglie li' e' una tinta sola. */
+    #ed-body .dm-casa-ed-tinta{flex:0 0 44px;width:44px;height:38px;padding:2px;
+      border:1px solid var(--dm-editor-border,rgba(148,163,184,.28));border-radius:10px;
+      background:transparent;cursor:pointer}
   `;
 }
 

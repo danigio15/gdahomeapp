@@ -31,7 +31,7 @@ import {
 
 root.__DM_20260817A__ = true;
 const KEY = "__DASHBOARDMODERN_ENERGY_FLOW_SECTION__";
-const state = (root[KEY] ||= { installed: false, frame: 0 });
+const state = (root[KEY] ||= { installed: false, frame: 0, attesaMisura: 0 });
 
 const COLORS = Object.freeze({
   solar: "#ff9f0a",
@@ -539,6 +539,69 @@ function pruneStale(stage, keep) {
   });
 }
 
+/* Quanto si puo' stringere per starci davvero, oltre a quanto dice il modello.
+ *
+ * Il modello sa QUANTE bolle ci sono e le stringe di conseguenza — otto
+ * scendono a 0,8 — ma non sa quanto e' largo il palco, e non puo' saperlo: e'
+ * una domanda al documento, e quel modulo e' puro. Finche' la riga stretta
+ * copriva i palchi sotto gli 820 la cosa non si vedeva; adesso che la soglia
+ * e' una sola — quella del guscio, 768 — un palco da settecentoventicinque
+ * punti puo' ritrovarsi otto bolle su una riga sola, e otto bolle da
+ * novantadue ne chiedono settecentotrentasei: si sovrappongono di dodici.
+ *
+ * Le bolle stanno a centri equidistanti — `width*(i+1)/(n+1)` — quindi il
+ * passo fra due centri e' la larghezza divisa per quante piu' una, e dentro
+ * quel passo ci deve stare una bolla piu' un dito d'aria. Qui si guarda la
+ * larghezza vera e si stringe quel tanto che basta. Non si ingrandisce mai:
+ * il conto del modello resta il tetto. */
+const ARIA_FRA_BOLLE = 10;
+const QUANTO_STRETTE_AL_MASSIMO = 0.55;
+
+/* Com'e' messa la scena adesso: quanto misura una bolla a riposo e se le bolle
+ * stanno su una riga o su due.
+ *
+ * Sono due cose che decide il foglio di stile, e la stessa domanda si puo'
+ * fare da qui con le stesse identiche parole. Farla in un altro modo —
+ * guardare la larghezza del palco invece di quella della finestra, o scrivere
+ * una terza soglia — vorrebbe dire due risposte alla stessa domanda, che e'
+ * il difetto che questa passata e' venuta a togliere. */
+const SOGLIE = Object.freeze([
+  { quando: "(max-width: 480px)", bolla: 75, stretto: true },
+  { quando: "(max-width: 768px)", bolla: 85, stretto: true },
+]);
+
+function comeSiamoMessi() {
+  for (const soglia of SOGLIE) {
+    try {
+      if (root.matchMedia?.(soglia.quando)?.matches) return soglia;
+    } catch (_errore) {}
+  }
+  return { bolla: 115, stretto: false };
+}
+
+/* Quante bolle stanno nella fila piu' affollata. Sul largo e' una riga sola;
+ * sullo stretto sono due, e trattarle come una vorrebbe dire stringerle alla
+ * meta' di quello che serve — otto bolle da cinquantuno punti al posto di
+ * sessantotto, con la scritta dentro che non si legge piu'. */
+function quanteInFila(nodes, stretto) {
+  const perFila = new Map();
+  for (const nodo of nodes) {
+    const dove = stretto ? nodo.mobile?.top : nodo.desktop?.top;
+    perFila.set(dove, (perFila.get(dove) || 0) + 1);
+  }
+  return perFila.size ? Math.max(...perFila.values()) : 1;
+}
+
+function quantoCiStaNelPalco(stage, model, scala) {
+  const largo = stage?.getBoundingClientRect?.().width || 0;
+  const { bolla, stretto } = comeSiamoMessi();
+  const inFila = quanteInFila(model.nodes, stretto);
+  if (!largo || inFila <= 1) return scala;
+  const passo = largo / (inFila + 1);
+  const ciSta = Math.max(0, passo - ARIA_FRA_BOLLE) / bolla;
+  return Math.max(QUANTO_STRETTE_AL_MASSIMO, Math.min(scala, Number(ciSta.toFixed(3))));
+}
+
 /* Recovered from the Beta 22 dynamic renderer and adapted: it now replaces the
  * fixed topology instead of doubling it, covers the month view as well, and
  * draws its connectors in both the desktop and the mobile viewBox. */
@@ -551,9 +614,10 @@ export function renderDynamicFlowLoads(period, model = stageModel(period)) {
   const desktopSvg = stage.querySelector("svg.desktop-svg") || stage.querySelector("svg");
   const mobileSvg = stage.querySelector("svg.mobile-svg");
   const keep = new Set();
+  const scala = quantoCiStaNelPalco(stage, model, model.scale);
   for (const node of model.nodes) {
     keep.add(node.id);
-    ensureBubble(stage, node, period, model.scale);
+    ensureBubble(stage, node, period, scala);
     ensureArc(desktopSvg, node, "desktop");
     ensureArc(mobileSvg, node, "mobile");
   }
@@ -1028,7 +1092,24 @@ function installStyles() {
     .flow-stage .node.dm-flow-node[data-dm-flow-active="false"]{opacity:.62!important}
     .flow-stage path.dm-flow-arc{stroke-width:var(--dm-flow-width,3px)!important;fill:none!important}
     .flow-stage path.dm-flow-arc.dm-energy-flow-active{animation-duration:var(--dm-flow-duration,.8s)!important}
-    @media(max-width:820px){
+    /* La soglia e' quella del guscio, 768, e non una nostra.
+     *
+     * Qui c'era 820. Sembra un dettaglio e non lo e': il guscio cambia TUTTO a
+     * 768 — l'altezza del palco (da 550 a 750), la misura dei cerchi (la Casa
+     * da 160 a 125, un carico da 115 a 85), l'altezza della Casa (dal 50% al
+     * 46%) e quale dei due disegni si vede — mentre questa riga spostava da
+     * sola le bolle sulla riga stretta. Fra 769 e 820 succedeva che la bolla
+     * salisse al 68% restando grande dentro un palco rimasto alto 550: la
+     * Casa arriva a 360 e la bolla comincia a 317. **Si sovrappongono di
+     * quarantaquattro punti**, misurati, con la linea che spunta di sotto
+     * perche' il disegno mostrato e' ancora quello largo, che porta all'83%.
+     *
+     * «Wallbox sta troppo attaccato a casa»: era questo, e non era attaccato,
+     * era sopra. Il 68% e' giusto dove e' nato — nel palco alto 750 con i
+     * cerchi piccoli lascia cinquantacinque punti di aria — e sbagliato
+     * altrove. Due soglie per una stessa decisione sono due decisioni, e
+     * prima o poi non vanno d'accordo. */
+    @media(max-width:768px){
       .flow-stage .node.dm-flow-node{left:var(--dm-flow-mobile-left,50%)!important;top:var(--dm-flow-mobile-top,83%)!important}
     }
   `,
@@ -1072,6 +1153,22 @@ export function installEnergyFlowSection() {
    * secondo, e solo per le entita' configurate — e il fotogramma si accoda
    * una volta sola: qui non si aggiunge nessun giro di controllo. */
   root.addEventListener?.("dashboardmodern:state-changed", schedule);
+  /* E la finestra che cambia misura, che e' una cosa nuova per questa scena.
+   *
+   * Da quando quanto sono strette le bolle dipende dalla larghezza vera del
+   * palco (vedi `quantoCiStaNelPalco`), girare il tablet cambia la risposta —
+   * e senza questo la nuova risposta arrivava soltanto al cambio di stato
+   * dopo, che in una casa ferma puo' essere fra minuti. Si aspetta che la
+   * mano abbia finito di girare: durante il giro le misure sono di passaggio,
+   * e ridisegnare a ogni passo vorrebbe dire una passata di conti a
+   * fotogramma. */
+  root.addEventListener?.("resize", () => {
+    if (state.attesaMisura) root.clearTimeout?.(state.attesaMisura);
+    state.attesaMisura = root.setTimeout?.(() => {
+      state.attesaMisura = 0;
+      scheduleSettled();
+    }, 160);
+  });
   root.addEventListener?.("dashboardmodern:states-ready", scheduleSettled);
   root.addEventListener?.("dashboardmodern:runtime-ready", scheduleSettled);
   root.addEventListener?.("dashboardmodern:legacy-ready", scheduleSettled);

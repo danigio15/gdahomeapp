@@ -18,7 +18,7 @@
  * raccoglitore delle traduzioni guarda.
  */
 
-import { siPuoAbilitare } from "./comandi-accanto.js";
+import { siPuoAbilitare, siPuoScegliere } from "./comandi-accanto.js";
 import { STATI_ACCESI } from "./stato-acceso.js";
 
 const pulito = (valore) => String(valore ?? "").trim();
@@ -182,6 +182,12 @@ export function letturaDellaVoce(voce, states = {}, resolve = (valore) => valore
      * basta, ed e' la levetta di sempre. Quali siano lo sa
      * `core/comandi-accanto.js`, che dei verbi e' il padrone. */
     avviabile: siPuoAbilitare(entity),
+    /* E un terzo gesto, che non e' ne' accendere ne' far partire: scegliere.
+     * Un `select` non ha due stati da scambiare, ha un elenco di voci — e
+     * finiva nel «si legge e basta», perche' il dominio non e' fra quelli che
+     * si accendono. Chi se l'era messo nella sua sezione ci trovava una riga
+     * morta. Anche questa domanda la fa `core/comandi-accanto.js`. */
+    tendina: siPuoScegliere(entity),
   };
 }
 

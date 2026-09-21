@@ -21,9 +21,11 @@
  * E c'è la metà che non si vede: `cdRoomFloorOf` cerca la stanza per nome, e
  * con un id in mano tornava «nessun piano». Le tapparelle di una casa a due
  * piani finivano tutte insieme sotto lo stesso gruppo. Adesso quella domanda
- * accetta tutt'e due le scritture.
+ * accetta tutt'e due le scritture — e su due stanze che si chiamano uguale non
+ * risponde a caso: vedi `ilPianoDellaStanza` qui sotto.
  */
-import { clean, doc, onEditorRedraw, roomLabel, root, wrapFunction } from "./shared.js";
+import { stanzaDalRiferimento } from "../core/room-overview.js";
+import { clean, doc, onEditorRedraw, roomLabel, root, section, wrapFunction } from "./shared.js";
 
 const KEY = "__DASHBOARDMODERN_STANZE_PER_NOME__";
 const state = (root[KEY] ||= { installed: false, frame: 0 });
@@ -74,19 +76,44 @@ export function raddrizzaLeStanze() {
   return cambiati;
 }
 
-/* Il piano di una stanza, cercandola come è scritta.
+/** L'elenco delle stanze come lo tiene la plancia. */
+function leStanze() {
+  try {
+    const sue = root.getStanze?.();
+    return Array.isArray(sue) ? sue : section("rooms", []);
+  } catch (_errore) {
+    return [];
+  }
+}
+
+/**
+ * Il piano di una stanza, comunque sia scritta.
  *
- * Il guscio la cerca solo per nome; con un id in mano tornava «nessun piano», e
- * i gruppi di una casa a due piani si schiacciavano in uno solo. Si chiede
- * prima come è arrivata, e se non si trova si richiede col nome. */
+ * Il guscio la cerca solo per NOME, e su questo sbagliava due volte. Con un id
+ * in mano tornava «nessun piano», e i gruppi di una casa a due piani si
+ * schiacciavano in uno solo. E con due stanze che si chiamano uguale — il
+ * bagno di sotto e quello di sopra — rispondeva col piano della PRIMA, sempre:
+ * le tapparelle del bagno di sopra finivano sotto il titolo del piano terra.
+ *
+ * Adesso la domanda passa dalla stessa regola con cui si assegnano le entità
+ * (`stanzaDalRiferimento`): l'identificativo vince, il nome vale solo se è di
+ * una stanza sola, e su un nome diviso in due si risponde «non si sa» invece
+ * di indovinare. Un titolo di piano mancante si vede e si corregge; uno
+ * sbagliato si crede.
+ */
+export function ilPianoDellaStanza(riferimento, stanze = leStanze()) {
+  return clean(stanzaDalRiferimento(riferimento, stanze)?.floor);
+}
+
 function insegnaIlPiano() {
   const originale = root.cdRoomFloorOf;
   if (typeof originale !== "function" || originale.__dmStanzePerNome) return false;
   const nostra = function cdRoomFloorOf(riferimento) {
-    const suo = originale.call(this, riferimento);
-    if (suo) return suo;
-    const nome = clean(roomLabel(riferimento));
-    return nome && nome !== clean(riferimento) ? originale.call(this, nome) : suo;
+    const stanze = leStanze();
+    /* Senza stanze in mano non si sa niente di piu' del guscio: si lascia
+     * rispondere lui, che almeno ha i suoi ripieghi. */
+    if (!stanze.length) return originale.call(this, riferimento);
+    return ilPianoDellaStanza(riferimento, stanze);
   };
   nostra.__dmStanzePerNome = true;
   nostra.__dmPrevious = originale;

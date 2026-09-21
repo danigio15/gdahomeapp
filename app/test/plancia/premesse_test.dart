@@ -19,8 +19,10 @@ Premesse _premesse({
   String velo = '',
   String testata = '',
   String casa = '',
+  bool leggera = false,
 }) => Premesse(
   casa: casa,
+  leggera: leggera,
   pannello: PannelloDellaPlancia(
     percorso: 'dashboardmodern',
     titolo: 'DashboardModern',
@@ -403,5 +405,71 @@ void main() {
        * arriva. */
       expect(servita, contains('window.__GDAHOME_CONFIGURATA__;'));
     });
+  });
+
+  /* ── La plancia leggera ───────────────────────────────────────────────
+   *
+   * E' l'interruttore d'emergenza: «Ferma le animazioni che non finiscono mai
+   * e toglie le sfocature dietro le tessere». Per un anno non ha fatto ne'
+   * l'una ne' l'altra cosa dove serviva, e nessuno se n'era accorto perche'
+   * nessuna prova lo guardava.
+   *
+   * Scriveva una stella in testa al `<head>`. Fra due `!important` della
+   * stessa origine decide prima la specificita' e poi l'ordine: una stella
+   * vale zero, e in testa perde anche l'ordine. Doppia sconfitta, e il vetro
+   * piu' caro della plancia — quello della barra in basso, che ha un selettore
+   * lungo — restava acceso.
+   *
+   * Misurato in un browser vero: con la Plancia leggera accesa la barra
+   * rispondeva ancora «blur(42px) saturate(1.7)». Adesso risponde «none».
+   */
+
+  test('la plancia leggera va in fondo, dove si vince', () {
+    final leggera = _premesse(leggera: true)
+        .conLePremesse(_pagina, ilWebSocket: 'WebSocket');
+    expect(leggera, contains('id="gdahome-leggera"'));
+    /* In fondo, non in testa: fra due important uguali vince l'ultimo letto,
+       ed e' la stessa ragione per cui ci sta gia' lo stile delle misure. */
+    final dove = leggera.indexOf('gdahome-leggera');
+    final laTesta = leggera.indexOf('</head>');
+    expect(
+      dove,
+      greaterThan(laTesta),
+      reason: 'lo stile leggero e\' tornato in testa, dove perde',
+    );
+  });
+
+  test('e ha una specificita\' vera, o non toglie niente', () {
+    final leggera = _premesse(leggera: true)
+        .conLePremesse(_pagina, ilWebSocket: 'WebSocket');
+    /* Una stella vale zero e perde contro qualunque selettore vero. I tre
+       :not(#nessuno) portano la specificita' di tre id: da li' in giu' non
+       c'e' piu' niente che vinca. */
+    expect(
+      leggera,
+      contains('*:not(#nessuno):not(#nessuno):not(#nessuno)'),
+      reason: 'senza questi tre, lo stile leggero perde come prima',
+    );
+    expect(leggera, contains('backdrop-filter:none!important'));
+    expect(leggera, contains('-webkit-backdrop-filter:none!important'));
+    expect(leggera, contains('animation-iteration-count:1!important'));
+    /* E il fondale ha la riga sua: le sue macchie non hanno un
+       backdrop-filter, hanno un filter — sfocano se stesse, non quello che
+       sta dietro — e la stella non le prendeva nemmeno per sbaglio. */
+    expect(
+      leggera,
+      contains('.animated-mesh-bg'),
+      reason: 'il fondale sfocato resta acceso anche in plancia leggera',
+    );
+    expect(leggera, contains('filter:none!important'));
+  });
+
+  test('spenta non lascia traccia', () {
+    final normale = _premesse().conLePremesse(
+      _pagina,
+      ilWebSocket: 'WebSocket',
+    );
+    expect(normale, isNot(contains('gdahome-leggera')));
+    expect(normale, isNot(contains(':not(#nessuno)')));
   });
 }

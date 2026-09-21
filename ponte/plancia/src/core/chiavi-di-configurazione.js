@@ -468,6 +468,11 @@ export const CONFIG_KEYS = Object.freeze([
   "cd_hidden_elements",
   "cd_costo_kwh",
   "cd_prezzo_immissione",
+  /* Le fasce orarie della tariffa (#72): quante sono, da che ora comincia
+   * ognuna, quanto costa, e quale vale il fine settimana. Viaggiano come i due
+   * prezzi qui sopra, e per la stessa ragione: un contratto e' della casa, non
+   * del telefono da cui e' stato scritto. */
+  "cd_fasce_kwh",
   /* Le tre della revisione 9, trovate contando chi scrive cosa.
    *
    * `cd_avvisi_icone`: l'icona scelta per ogni avviso. Si sceglieva sul

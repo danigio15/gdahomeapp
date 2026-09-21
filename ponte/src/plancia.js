@@ -21,8 +21,9 @@ import { createHash } from "node:crypto";
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { extname, join, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
+import { gzipSync } from "node:zlib";
 
-import { NOME, vestiDiGdahome } from "./marchio.js";
+import { dipendeDaChi, firmaDelVestito, NOME, vestiDiGdahome } from "./marchio.js";
 import { guardaLaPlancia, inDueParole } from "./provenienza.js";
 
 export const BASE = "/dashboardmodern_static";
@@ -59,6 +60,51 @@ const FISSE = new Set(["avatars", "brands"]);
 /* Un pezzo di percorso e' fatto di lettere, numeri e pochi segni. */
 const PEZZO_BUONO = /^[A-Za-z0-9_\-.@+~]+$/;
 
+/* ── Quello che si stringe, e quello che si tiene a mente ────────────────
+ *
+ * Misurato sulla plancia vera, i trecentosessantotto file che la pagina chiede
+ * all'apertura: **nove megabyte e mezzo** serviti com'erano, **tre** se
+ * compressi. Il sessantotto per cento di roba che non doveva viaggiare.
+ *
+ * Il telefono quel conto lo aveva gia': sul filo i moduli viaggiano a pacchi e
+ * compressi (`commissioni.js`). Dentro Home Assistant invece la pagina li
+ * chiede uno per uno all'ingress, e li chiedeva in chiaro.
+ *
+ * Comprimerli a ogni richiesta pero' e' peggio del male: sempre misurato,
+ * novantaquattro millesimi di filo fermo per leggerli tutti, trecentodieci per
+ * leggerli e stringerli. Node ha un filo solo: quel tempo non e' distribuito,
+ * e' una fila. Per questo si stringe **una volta** e ci si tiene il risultato:
+ * nell'indirizzo c'e' l'impronta del contenuto, quindi finche' l'add-on e'
+ * acceso quei file non cambiano, e leggerli due volte e' leggere due volte la
+ * stessa cosa. */
+
+/* Cosa conviene stringere. Un png, un webp, un woff2 sono gia' compressi:
+ * ripassarci sopra costa filo e non toglie un byte. */
+const DA_STRINGERE = /^(?:text\/|application\/(?:javascript|json)|image\/svg)/i;
+
+/* Sotto questa misura non si stringe: l'intestazione che dice «e' compresso»
+ * e' lunga quanto il risparmio. */
+const ALMENO = 512;
+
+/* Sei e' il compromesso di sempre. Nove toglie un altro due per cento e costa
+ * il doppio del tempo, e qui il tempo e' il filo di tutta la casa. */
+const QUANTO_STRETTO = 6;
+
+/* Quanto si tiene a mente. I tre megabyte compressi che servono all'apertura
+ * ci stanno con l'abbondanza; oltre il tetto non si ricorda piu' niente di
+ * nuovo, e si continua a servire leggendo dal disco. Meglio una plancia lenta
+ * che un add-on che si mangia la memoria di casa. */
+const IL_TETTO = 8 * 1024 * 1024;
+
+/* Chi chiede dice cosa sa aprire. Si guarda solo «gzip», e si rispetta il «non
+ * lo voglio» scritto come `gzip;q=0`, che e' il modo con cui un browser in
+ * difficolta' chiede di essere lasciato in pace. */
+function accettaStretto(accetta) {
+  const detto = String(accetta || "").toLowerCase();
+  if (!detto.includes("gzip")) return false;
+  return !/gzip\s*;\s*q\s*=\s*0(?:\.0+)?(?:\s|,|$)/.test(detto);
+}
+
 export class Plancia {
   constructor({
     cartella = process.env.PONTE_PLANCIA_CARTELLA ||
@@ -74,6 +120,22 @@ export class Plancia {
     this.installatore = installatore;
     this._impronta = null;
     this._provenienza = null;
+    /* Quello che si e' gia' letto, vestito e stretto. Le chiavi sono percorsi
+     * che portano l'impronta dentro: una voce di ieri non puo' rispondere per
+     * un file di oggi, perche' di oggi cambia il percorso. */
+    this._aMente = new Map();
+    this._quantoAMente = 0;
+  }
+
+  /** Quanto si sta tenendo a mente, in byte. Serve alla diagnostica. */
+  get quantoAMente() {
+    return this._quantoAMente;
+  }
+
+  /** Dimentica tutto: la prossima domanda si rilegge dal disco. */
+  dimentica() {
+    this._aMente.clear();
+    this._quantoAMente = 0;
   }
 
   /* C'e' una plancia da servire? Basta che ci sia la pagina. */
@@ -200,25 +262,38 @@ export class Plancia {
    * Con `quale` — la plancia che si sta servendo, quando chi chiede lo sa —
    * la pagina esce gia' con le sue vesti; senza, con quelle di serie, e ci
    * pensano le premesse. */
-  leggi(percorso, quale = null) {
+  /* L'indirizzo chiesto, tradotto in un file vero: `{relativo, tipo, dove}`,
+   * oppure niente se non e' roba nostra.
+   *
+   * Sta per conto suo perche' a chiederselo sono in due — chi legge e chi
+   * serve — e perche' tutti i modi di dire di no stanno qui dentro, in un
+   * posto solo. */
+  _dove(percorso) {
     const pezzi = String(percorso || "")
       .split("?")[0]
       .split("/");
     /* ["", "dashboardmodern_static", <impronta o cartella fissa>, …] */
-    if (pezzi.length < 4 || pezzi[0] !== "" || `/${pezzi[1]}` !== BASE) return questoNo();
+    if (pezzi.length < 4 || pezzi[0] !== "" || `/${pezzi[1]}` !== BASE) return null;
     let relativi;
     if (FISSE.has(pezzi[2])) relativi = pezzi.slice(2);
     else if (pezzi[2] === this.impronta && CON_IMPRONTA.includes(pezzi[3]))
       relativi = pezzi.slice(3);
-    else return questoNo();
+    else return null;
     if (relativi.length < 2 || !relativi.every((uno) => PEZZO_BUONO.test(uno) && uno !== ".."))
-      return questoNo();
+      return null;
 
     const tipo = TIPI[extname(relativi[relativi.length - 1]).toLowerCase()];
-    if (!tipo) return questoNo();
+    if (!tipo) return null;
 
     const dove = resolve(this.cartella, ...relativi);
-    if (!dove.startsWith(this.cartella + sep)) return questoNo();
+    if (!dove.startsWith(this.cartella + sep)) return null;
+    return { relativo: relativi.join("/"), tipo, dove };
+  }
+
+  leggi(percorso, quale = null) {
+    const suo = this._dove(percorso);
+    if (!suo) return questoNo();
+    const { relativo, tipo, dove } = suo;
     try {
       if (!statSync(dove).isFile()) return questoNo();
       /* E qui la plancia prende la faccia di gdahome: il logo, il velo
@@ -230,7 +305,7 @@ export class Plancia {
        * quella dell'anno prossimo, arrivano vestite senza che nessuno
        * rifaccia niente. Vedi `marchio.js`. */
       const vestito = vestiDiGdahome(
-        relativi.join("/"),
+        relativo,
         readFileSync(dove),
         tipo,
         this.installatore?.(quale?.profilo || ""),
@@ -244,6 +319,60 @@ export class Plancia {
     } catch (_errore) {
       return questoNo();
     }
+  }
+
+  /**
+   * Quello che si manda davvero: il corpo gia' vestito, e stretto quando
+   * conviene e chi chiede lo accetta.
+   *
+   * Torna la stessa cosa di `leggi` con una chiave in piu': `codifica` vale
+   * `"gzip"` quando il corpo e' compresso, e non c'e' quando e' com'era. Chi
+   * risponde deve mettere `content-encoding` **e** `vary: accept-encoding`,
+   * o una cache in mezzo alla strada servira' il corpo stretto a chi non sa
+   * aprirlo.
+   *
+   * Chi vuole il file com'e' sul disco continua a chiedere `leggi`: questa e'
+   * la porta di chi serve, quella e' la porta di chi guarda.
+   */
+  daServire(percorso, { quale = null, accetta = "" } = {}) {
+    const suo = this._dove(percorso);
+    if (!suo) return questoNo();
+    /* Un'immagine, un carattere, un file minuscolo: si serve come si e'
+     * sempre fatto, senza passare di qui e senza occupare memoria. */
+    if (!accettaStretto(accetta) || !DA_STRINGERE.test(suo.tipo)) {
+      return this.leggi(percorso, quale);
+    }
+
+    const profilo = quale?.profilo || "";
+    /* Un file che cambia con l'installatore si ricorda per installatore, e la
+     * firma serve perche' l'installatore cambia mentre il ponte gira. */
+    const chiave = dipendeDaChi(suo.relativo)
+      ? `${suo.relativo}\u0000${firmaDelVestito(this.installatore?.(profilo))}`
+      : suo.relativo;
+
+    const gia = this._aMente.get(chiave);
+    if (gia) return { stato: 200, tipo: gia.tipo, corpo: gia.corpo, codifica: "gzip" };
+
+    const letto = this.leggi(percorso, quale);
+    if (letto.stato !== 200 || letto.corpo.length < ALMENO) return letto;
+
+    let stretto;
+    try {
+      stretto = gzipSync(letto.corpo, { level: QUANTO_STRETTO });
+    } catch (_errore) {
+      /* Stringere non e' mai obbligatorio: se va storto si manda com'era. */
+      return letto;
+    }
+    /* E se stringerlo non ha tolto niente, si manda com'era lo stesso: un
+     * corpo compresso piu' lungo dell'originale e' lavoro in piu' per tutti
+     * e due. */
+    if (stretto.length >= letto.corpo.length) return letto;
+
+    if (this._quantoAMente + stretto.length <= IL_TETTO) {
+      this._aMente.set(chiave, { tipo: letto.tipo, corpo: stretto });
+      this._quantoAMente += stretto.length;
+    }
+    return { stato: 200, tipo: letto.tipo, corpo: stretto, codifica: "gzip" };
   }
 
   *_iFile(cartella, relativa) {

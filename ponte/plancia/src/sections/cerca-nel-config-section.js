@@ -49,6 +49,7 @@ const SCHEDA_DELLA_CASELLA = Object.freeze({
   cd_subload_groups: "sez1",
   cd_gruppi_extra: "sez1",
   cd_costo_kwh: "sez1",
+  cd_fasce_kwh: "sez1",
   cd_prezzo_immissione: "sez1",
   cd_ev_cars: "sez2",
   cd_ev_visual: "sez2",
