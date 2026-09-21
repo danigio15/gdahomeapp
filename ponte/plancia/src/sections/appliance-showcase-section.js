@@ -1374,6 +1374,23 @@ function showcaseCss() {
 .dm-ap-power.on{background:#dcfce7;border-color:rgba(34,197,94,.35);color:#15803d}
 /* hero */
 .dm-ap-hero{position:relative;display:grid;place-items:center;height:172px;margin:0 13px;border-radius:18px;background:radial-gradient(120% 90% at 50% 8%,rgba(224,242,254,.65),rgba(241,245,249,.35) 60%,transparent);overflow:hidden}
+/* Il palco al buio.
+ *
+ * «Correggi immagini elettrodomestici che in modalita' dark non si vedono
+ * bene, ma tutte le devi correggere.» Il palco e' uno solo e non cambiava col
+ * tema: una radiale azzurro chiaro su un fondo quasi bianco, che su una
+ * pagina scura diventa una lastra che abbaglia — e il disegno, che e' bianco
+ * e acciaio, ci si perde dentro invece di staccarsi.
+ *
+ * Guardati tutti e ventidue prima di toccare, su un fondo scuro: i corpi sono
+ * bianchi o acciaio, quindi su un palco scuro si leggono MEGLIO, non peggio.
+ * L'unico che ci perde qualcosa e' il piano cottura, che e' vetro nero — ma
+ * nero su scuro e' come sta in cucina, e le corone arancioni lo tengono su.
+ *
+ * Cambia la tinta, non la forma: resta la stessa radiale e resta la luce che
+ * viene dall'alto, che e' quella che fa sembrare un oggetto appoggiato invece
+ * che incollato. */
+[data-theme="dark"] .dm-ap-hero{background:radial-gradient(120% 90% at 50% 8%,rgba(148,197,255,.16),rgba(30,41,59,.34) 60%,transparent)}
 .dm-ap-hero .dm-appliance-art,.dm-ap-hero .dm-appliance-art svg{width:150px;height:150px;display:block}
 .dm-ap-hero .dm-hero-art{display:grid;place-items:center}
 .dm-ap-hero .dm-hero-art svg{width:164px;height:164px;display:block}
@@ -1431,6 +1448,11 @@ function showcaseCss() {
  * scheda, la porta la riga del popup, e lo stato .is-run/.is-standby decide se
  * il meccanismo gira. */
 .dm-ap-mech.is-run .dm-ap-hero{background:radial-gradient(120% 90% at 50% 8%,rgba(186,230,253,.85),rgba(224,242,254,.35) 62%,transparent)}
+/* E quello di quando e' in funzione, che al chiaro si accende di azzurro: al
+ * buio quello era il peggiore dei due — e' il palco della fotografia arrivata
+ * dal campo, col condizionatore acceso. Stessa idea, meno lampada: l'azzurro
+ * si sente e non brucia. */
+[data-theme="dark"] .dm-ap-mech.is-run .dm-ap-hero{background:radial-gradient(120% 90% at 50% 8%,rgba(125,211,252,.26),rgba(30,41,59,.34) 62%,transparent)}
 .dm-ap-mech.is-run.acc-heat .dm-ap-hero{background:radial-gradient(120% 90% at 50% 12%,rgba(254,215,170,.75),rgba(254,226,226,.35) 62%,transparent)}
 /* Idle mechanisms are hidden until the appliance actually runs. */
 .dm-ap-mech:not(.is-run) .dmh-jets,.dm-ap-mech:not(.is-run) .dmh-steam,.dm-ap-mech:not(.is-run) [data-dm-hero="oven"] .dmh-ring{opacity:0}
