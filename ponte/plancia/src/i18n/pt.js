@@ -3654,4 +3654,13 @@ export default Object.freeze({
   "The most you can have is": "O máximo é",
   "the bar scrolls, but the first pills are the ones the house announces by itself.": "a barra desliza, mas as primeiras pastilhas são as que a casa anuncia sozinha.",
   "Add an entity": "Acrescentar uma entidade",
+  "Time-of-use bands": "Escalões horários",
+  "How many bands": "Quantos escalões",
+  "Just one: the price above": "Só um: o preço acima",
+  "Two bands": "Dois escalões",
+  "Three bands": "Três escalões",
+  "Band": "Escalão",
+  "Saturday and Sunday": "Sábado e domingo",
+  "same as weekdays": "igual aos dias úteis",
+  "Each band runs from its hour to the next one, and the last one crosses midnight. A cycle's cost — last night's dishwasher — uses the price of the hour it happened at, which is exact. A month's Report uses the bands averaged by the hours each covers: the dashboard knows how many kWh went through, not at what hours, so there it is an estimate.": "Cada escalão vale desde a sua hora até à seguinte, e o último atravessa a meia-noite. O custo de um ciclo — a máquina de loiça desta noite — usa o preço da hora em que aconteceu, e é exato. O Relatório de um mês usa a média dos escalões ponderada pelas horas que cada um cobre: o painel sabe quantos kWh passaram, não a que horas, por isso ali é uma estimativa.",
 });

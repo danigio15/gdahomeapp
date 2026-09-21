@@ -3654,4 +3654,13 @@ export default Object.freeze({
   "The most you can have is": "الحد الأقصى هو",
   "the bar scrolls, but the first pills are the ones the house announces by itself.": "الشريط يتحرك، لكن الحبات الأولى هي ما يعلنه البيت من تلقاء نفسه.",
   "Add an entity": "أضف كيانًا",
+  "Time-of-use bands": "شرائح التعرفة الزمنية",
+  "How many bands": "كم شريحة",
+  "Just one: the price above": "واحدة فقط: السعر أعلاه",
+  "Two bands": "شريحتان",
+  "Three bands": "ثلاث شرائح",
+  "Band": "شريحة",
+  "Saturday and Sunday": "السبت والأحد",
+  "same as weekdays": "مثل أيام العمل",
+  "Each band runs from its hour to the next one, and the last one crosses midnight. A cycle's cost — last night's dishwasher — uses the price of the hour it happened at, which is exact. A month's Report uses the bands averaged by the hours each covers: the dashboard knows how many kWh went through, not at what hours, so there it is an estimate.": "كل شريحة تسري من ساعتها حتى الشريحة التالية، والأخيرة تعبر منتصف الليل. تكلفة الدورة — غسالة الصحون الليلة — تستخدم سعر الساعة التي جرت فيها، وهذا دقيق. أما تقرير الشهر فيستخدم متوسط الشرائح مرجّحًا بالساعات التي تغطيها كل واحدة: اللوحة تعرف كم كيلوواط ساعة مرّت، لا في أي ساعات، ولذلك هي هناك تقدير.",
 });

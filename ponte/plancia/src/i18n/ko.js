@@ -3654,4 +3654,13 @@ export default Object.freeze({
   "The most you can have is": "최대",
   "the bar scrolls, but the first pills are the ones the house announces by itself.": "띠는 흐르지만, 앞자리는 집이 스스로 알리는 것들입니다.",
   "Add an entity": "엔티티 추가",
+  "Time-of-use bands": "시간대별 요금",
+  "How many bands": "시간대 개수",
+  "Just one: the price above": "하나만: 위의 가격",
+  "Two bands": "두 시간대",
+  "Three bands": "세 시간대",
+  "Band": "시간대",
+  "Saturday and Sunday": "토요일과 일요일",
+  "same as weekdays": "평일과 같게",
+  "Each band runs from its hour to the next one, and the last one crosses midnight. A cycle's cost — last night's dishwasher — uses the price of the hour it happened at, which is exact. A month's Report uses the bands averaged by the hours each covers: the dashboard knows how many kWh went through, not at what hours, so there it is an estimate.": "각 시간대는 자기 시각부터 다음 시각까지이며, 마지막 시간대는 자정을 넘어갑니다. 한 번의 동작 비용 — 오늘 밤 식기세척기 — 은 그것이 일어난 시각의 가격을 쓰므로 정확합니다. 한 달 리포트는 각 시간대가 차지하는 시간으로 가중 평균을 냅니다: 대시보드는 몇 kWh가 지나갔는지는 알아도 몇 시에 지나갔는지는 모르므로, 거기서는 추정입니다.",
 });

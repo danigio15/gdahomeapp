@@ -17,6 +17,7 @@ import {
   mesiDaiGiorni,
 } from "../core/period-service.js";
 import { quotaSolareDelDispositivo } from "../core/quota-solare-del-dispositivo.js";
+import { CHIAVE_FASCE, normalizzaLeFasce, prezzoMedioDelleFasce } from "../core/fasce-della-tariffa.js";
 import { reconcileEnergyBundle } from "./energy-calculations-section.js";
 import {
   DEFAULT_EXPORT_RATE,
@@ -548,8 +549,21 @@ function rates() {
       sorgente = entita;
     }
   }
+  /* Le fasce orarie, quando ci sono (#72).
+   *
+   * Qui il prezzo serve per un PERIODO — il giorno, il mese, l'anno del
+   * Report — e per un periodo le fasce non danno un conto ma una stima: la
+   * plancia sa quanti kWh sono passati, non in che ore. Si prende la media
+   * pesata sulle ore che ogni fascia copre, che e' la stima che non favorisce
+   * nessuna ipotesi. Il prezzo di ADESSO, che invece e' esatto, e' quello che
+   * usa il costo di un ciclo (`appliance-showcase-section`).
+   *
+   * Il prezzo unico resta il ripiego, e non e' una formalita': una fascia
+   * senza il suo numero vale quello, e chi le fasce non le ha non si accorge
+   * di niente. */
+  const unico = resolveRate(sorgente, states, DEFAULT_IMPORT_RATE);
   return {
-    importPrice: resolveRate(sorgente, states, DEFAULT_IMPORT_RATE),
+    importPrice: prezzoMedioDelleFasce(normalizzaLeFasce(readJson(CHIAVE_FASCE, {})), unico),
     exportPrice: resolveRate(read("cd_prezzo_immissione"), states, DEFAULT_EXPORT_RATE),
   };
 }

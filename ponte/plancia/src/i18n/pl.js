@@ -3654,4 +3654,13 @@ export default Object.freeze({
   "The most you can have is": "Maksimum to",
   "the bar scrolls, but the first pills are the ones the house announces by itself.": "pasek przewija się, ale pierwsze pigułki to te, które dom zgłasza sam.",
   "Add an entity": "Dodaj encję",
+  "Time-of-use bands": "Strefy czasowe taryfy",
+  "How many bands": "Ile stref",
+  "Just one: the price above": "Tylko jedna: cena powyżej",
+  "Two bands": "Dwie strefy",
+  "Three bands": "Trzy strefy",
+  "Band": "Strefa",
+  "Saturday and Sunday": "Sobota i niedziela",
+  "same as weekdays": "tak jak w dni robocze",
+  "Each band runs from its hour to the next one, and the last one crosses midnight. A cycle's cost — last night's dishwasher — uses the price of the hour it happened at, which is exact. A month's Report uses the bands averaged by the hours each covers: the dashboard knows how many kWh went through, not at what hours, so there it is an estimate.": "Każda strefa obowiązuje od swojej godziny do następnej, a ostatnia przechodzi przez północ. Koszt cyklu — zmywarka z tej nocy — bierze cenę godziny, w której się odbył, i to jest dokładne. Raport miesięczny bierze średnią stref ważoną godzinami, które każda obejmuje: panel wie, ile kWh przepłynęło, ale nie w jakich godzinach, więc tam jest to szacunek.",
 });

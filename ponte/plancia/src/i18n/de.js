@@ -3654,4 +3654,13 @@ export default Object.freeze({
   "The most you can have is": "Höchstens",
   "the bar scrolls, but the first pills are the ones the house announces by itself.": "die Leiste läuft, aber die ersten Pillen sind die, die das Haus von selbst meldet.",
   "Add an entity": "Entität hinzufügen",
+  "Time-of-use bands": "Zeitzonen-Tarife",
+  "How many bands": "Wie viele Zonen",
+  "Just one: the price above": "Nur eine: der Preis oben",
+  "Two bands": "Zwei Zonen",
+  "Three bands": "Drei Zonen",
+  "Band": "Zone",
+  "Saturday and Sunday": "Samstag und Sonntag",
+  "same as weekdays": "wie an Werktagen",
+  "Each band runs from its hour to the next one, and the last one crosses midnight. A cycle's cost — last night's dishwasher — uses the price of the hour it happened at, which is exact. A month's Report uses the bands averaged by the hours each covers: the dashboard knows how many kWh went through, not at what hours, so there it is an estimate.": "Jede Zone gilt von ihrer Uhrzeit bis zur nächsten, und die letzte läuft über Mitternacht. Die Kosten eines Durchlaufs — die Spülmaschine von heute Nacht — rechnen mit dem Preis der Stunde, in der er lief, und das ist exakt. Der Report eines Monats nimmt die Zonen gewichtet nach den Stunden, die jede abdeckt: das Dashboard weiß, wie viele kWh geflossen sind, nicht zu welchen Stunden — dort ist es also eine Schätzung.",
 });

@@ -3654,4 +3654,13 @@ export default Object.freeze({
   "The most you can have is": "En fazla",
   "the bar scrolls, but the first pills are the ones the house announces by itself.": "şerit kayar, ama ilk haplar evin kendiliğinden bildirdikleridir.",
   "Add an entity": "Bir varlık ekle",
+  "Time-of-use bands": "Zaman dilimli tarife",
+  "How many bands": "Kaç dilim",
+  "Just one: the price above": "Yalnızca bir: yukarıdaki fiyat",
+  "Two bands": "İki dilim",
+  "Three bands": "Üç dilim",
+  "Band": "Dilim",
+  "Saturday and Sunday": "Cumartesi ve pazar",
+  "same as weekdays": "hafta içi ile aynı",
+  "Each band runs from its hour to the next one, and the last one crosses midnight. A cycle's cost — last night's dishwasher — uses the price of the hour it happened at, which is exact. A month's Report uses the bands averaged by the hours each covers: the dashboard knows how many kWh went through, not at what hours, so there it is an estimate.": "Her dilim kendi saatinden bir sonrakine kadar geçerlidir, sonuncusu gece yarısını aşar. Bir çevrimin maliyeti — bu gecenin bulaşık makinesi — gerçekleştiği saatin fiyatını kullanır, bu kesindir. Bir ayın Raporu ise dilimlerin kapsadığı saatlere göre ağırlıklı ortalamasını kullanır: pano kaç kWh geçtiğini bilir, hangi saatlerde geçtiğini bilmez; orada bir tahmindir.",
 });

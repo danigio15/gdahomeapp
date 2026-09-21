@@ -1302,8 +1302,14 @@ test("production graph is single-owner, acyclic and contains no facade pass-thro
   // seconda e' una pastiglia della fascia che una tessera non ce l'ha. Scritto
   // due volte sarebbero due idee di come si esce dalla cornice, e il giorno che
   // quel confine cambia lo imparerebbe una sola delle due.
+  // 366 con le fasce orarie della tariffa (#72): «possibilita' di inserire
+  // prezzi diversi per fasce diverse». Quale fascia e' in vigore adesso, e che
+  // media fa su un mese, e' una regola con un orologio dentro: si prova con un
+  // istante finto e senza un documento, e la sanno in tre — la sezione
+  // Energia, il Report e il costo di un ciclo. Scritta dentro uno dei tre,
+  // sarebbero tre idee di che ora comincia la notte.
   assert.ok(
-    relative.length <= 365,
+    relative.length <= 366,
     `production graph unexpectedly grew to ${relative.length} modules`,
   );
   assertAcyclic(edges);

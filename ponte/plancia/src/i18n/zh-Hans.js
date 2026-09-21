@@ -3654,4 +3654,13 @@ export default Object.freeze({
   "The most you can have is": "最多",
   "the bar scrolls, but the first pills are the ones the house announces by itself.": "横条会滚动，但排在最前面的是家里自己报出来的。",
   "Add an entity": "添加实体",
+  "Time-of-use bands": "分时电价",
+  "How many bands": "分几段",
+  "Just one: the price above": "只有一段：上面的价格",
+  "Two bands": "两段",
+  "Three bands": "三段",
+  "Band": "时段",
+  "Saturday and Sunday": "周六和周日",
+  "same as weekdays": "与工作日相同",
+  "Each band runs from its hour to the next one, and the last one crosses midnight. A cycle's cost — last night's dishwasher — uses the price of the hour it happened at, which is exact. A month's Report uses the bands averaged by the hours each covers: the dashboard knows how many kWh went through, not at what hours, so there it is an estimate.": "每一段从它的时刻起算，到下一段为止，最后一段跨过午夜。一次运行的花费 — 今晚的洗碗机 — 用它发生那个小时的价格，这是准确的。一个月的报表用各段按覆盖小时数加权的平均值：面板知道走了多少 kWh，却不知道是在哪些小时走的，所以那里是一个估算。",
 });

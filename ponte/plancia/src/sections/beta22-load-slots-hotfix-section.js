@@ -14,6 +14,12 @@ import { t } from "./shared.js";
 import { intlLocale } from "../core/i18n.js";
 import { IMPIANTO_SCELTO_KEY, plantAt, plantLoads } from "../core/energy-plants.js";
 import { importRateEntity } from "../core/energy-calculations.js";
+import {
+  CHIAVE_FASCE,
+  ORARI_DI_SERIE,
+  normalizzaLeFasce,
+  oraDeiMinuti,
+} from "../core/fasce-della-tariffa.js";
 import { createEntityPickerField } from "../core/renderers.js";
 import { persistEnergyField } from "../core/energy-writer.js";
 
@@ -398,6 +404,7 @@ function repairEnergyCostEditor() {
       </div>
       <div class="dm-energy-cost-field"><span>${t("Energia venduta", "Sold energy")} <small>€/kWh</small></span><input id="ed-prezzo-imm" class="ed-input" type="number" inputmode="decimal" step="0.001" min="0" value="${escapeHtml(sell)}" placeholder="0,000"></div>
     </div>
+    ${leFasceMarkup()}
     <button type="button" class="ed-save-btn" data-dm-save-energy-costs>💾 ${t("Salva costi", "Save costs")}</button>`;
   /* Il campo entita' e' quello vero, lo stesso dell'editor Carichi: casella
    * piu' lente, e la scelta passa dal selettore canonico del runtime. */
@@ -428,6 +435,9 @@ function repairEnergyCostEditor() {
     bottone.addEventListener("click", () => applicaModalita(bottone.dataset.dmRateMode)),
   );
   applicaModalita(card.dataset.dmImportRateMode);
+  card
+    .querySelector("[data-dm-fasce-quante]")
+    ?.addEventListener("change", () => ridisegnaLeFasce(card));
   card.querySelector("[data-dm-save-energy-costs]")?.addEventListener("click", () => {
     if (typeof root.edSaveCosti === "function") {
       root.edSaveCosti();
@@ -437,6 +447,7 @@ function repairEnergyCostEditor() {
     const exportValue = clean(card.querySelector("#ed-prezzo-imm")?.value);
     root.localStorage?.setItem?.("cd_costo_kwh", importValue);
     root.localStorage?.setItem?.("cd_prezzo_immissione", exportValue);
+    salvaLeFasceDellaScheda();
     /* Anche il ripiego scrive la scelta dove abita: nel modello canonico. */
     const entita = clean(card.querySelector("#ed-costo-kwh-entita")?.value);
     const daEntita = card.dataset.dmImportRateMode === "entity" && entita;
@@ -444,6 +455,152 @@ function repairEnergyCostEditor() {
     root.cdMarkDirty?.();
     root.cdSyncPush?.();
   });
+  return true;
+}
+
+/* ── le fasce orarie della tariffa (#72) ─────────────────────────────────── */
+
+/* «Possibilita' di inserire prezzi diversi per fasce diverse, tipo 2 fasce
+ * impostabili con orario o anche 3 fasce, con la possibilita' di scegliere se
+ * 2 o 3 fasce.»
+ *
+ * Le caselle stanno sotto i due prezzi perche' sono la stessa domanda fatta
+ * piu' in fine: quanto costa il kWh. Di serie sono spente, e chi non le apre
+ * non si accorge di niente — la plancia continua col prezzo unico di sempre.
+ *
+ * La regola di cosa vale quando sta nel nucleo (`core/fasce-della-tariffa.js`),
+ * che si prova senza un documento. Qui ci sono solo le caselle e le parole.
+ */
+function fasceSalvate() {
+  let grezzo = null;
+  try {
+    grezzo = JSON.parse(root.localStorage?.getItem?.(CHIAVE_FASCE) || "null");
+  } catch (_error) {
+    grezzo = null;
+  }
+  return normalizzaLeFasce(grezzo);
+}
+
+/* Il nome di una fascia. Non «F1», che e' il gergo della bolletta italiana e
+ * fuori di li' non vuol dire niente: «Fascia 1» si traduce, e chi la bolletta
+ * ce l'ha davanti le riconosce lo stesso dall'ordine. */
+function nomeDellaFascia(indice) {
+  return `${t("Fascia", "Band")} ${indice + 1}`;
+}
+
+function rigaDellaFasciaMarkup(voce, indice) {
+  const ora = oraDeiMinuti(voce?.dalle ?? 0);
+  const prezzo = voce?.prezzo === null || voce?.prezzo === undefined ? "" : String(voce.prezzo);
+  return `<div class="dm-energy-fascia" data-dm-fascia="${indice}">
+      <span class="dm-energy-fascia-nome">${escapeHtml(nomeDellaFascia(indice))}</span>
+      <label><small>${escapeHtml(t("dalle", "from"))}</small>
+        <input class="ed-input" type="time" data-dm-fascia-dalle value="${escapeHtml(ora)}"></label>
+      <label><small>€/kWh</small>
+        <input class="ed-input" type="number" inputmode="decimal" step="0.001" min="0"
+          data-dm-fascia-prezzo value="${escapeHtml(prezzo)}" placeholder="0,000"></label>
+    </div>`;
+}
+
+function righeDelleFasceMarkup(config) {
+  if (!config.quante) return "";
+  return config.voci.map((voce, indice) => rigaDellaFasciaMarkup(voce, indice)).join("");
+}
+
+function festiviMarkup(config) {
+  if (!config.quante) return "";
+  const voci = config.voci
+    .map(
+      (_voce, indice) =>
+        `<option value="${indice}"${config.festivi === indice ? " selected" : ""}>${escapeHtml(
+          nomeDellaFascia(indice),
+        )}</option>`,
+    )
+    .join("");
+  return `<label class="dm-energy-fascia-festivi"><span>${escapeHtml(
+    t("Sabato e domenica", "Saturday and Sunday"),
+  )}</span>
+    <select class="ed-input" data-dm-fasce-festivi>
+      <option value="-1"${config.festivi < 0 ? " selected" : ""}>${escapeHtml(
+        t("come i giorni feriali", "same as weekdays"),
+      )}</option>${voci}
+    </select></label>`;
+}
+
+function leFasceMarkup() {
+  const config = fasceSalvate();
+  const scelta = (quante, parola) =>
+    `<option value="${quante}"${config.quante === quante ? " selected" : ""}>${escapeHtml(parola)}</option>`;
+  return `<div class="dm-energy-fasce" data-dm-fasce>
+      <div class="ed-sec-title">⏱️ ${escapeHtml(t("Fasce orarie", "Time-of-use bands"))}</div>
+      <label class="dm-energy-fasce-quante"><span>${escapeHtml(
+        t("Quante fasce", "How many bands"),
+      )}</span>
+        <select class="ed-input" data-dm-fasce-quante>
+          ${scelta(0, t("Una sola: il prezzo qui sopra", "Just one: the price above"))}
+          ${scelta(2, t("Due fasce", "Two bands"))}
+          ${scelta(3, t("Tre fasce", "Three bands"))}
+        </select></label>
+      <div class="dm-energy-fasce-righe" data-dm-fasce-righe>${righeDelleFasceMarkup(config)}</div>
+      <div data-dm-fasce-festivi-posto>${festiviMarkup(config)}</div>
+      <small class="dm-energy-fasce-nota">${escapeHtml(
+        t(
+          "Ogni fascia vale dalla sua ora fino a quella dopo, e l'ultima attraversa la mezzanotte. Il costo di un ciclo — la lavastoviglie di stanotte — usa il prezzo dell'ora in cui è successo, che è esatto. Il Report di un mese usa la media delle fasce pesata sulle ore: la plancia sa quanti kWh sono passati, non in che ore, quindi lì è una stima.",
+          "Each band runs from its hour to the next one, and the last one crosses midnight. A cycle's cost — last night's dishwasher — uses the price of the hour it happened at, which is exact. A month's Report uses the bands averaged by the hours each covers: the dashboard knows how many kWh went through, not at what hours, so there it is an estimate.",
+        ),
+      )}</small>
+    </div>`;
+}
+
+/* Cambiando il numero di fasce si ridisegnano le righe, tenendo quello che c'e'
+ * gia' scritto: chi passa da due a tre non deve riscrivere le prime due. */
+function ridisegnaLeFasce(card) {
+  const blocco = card?.querySelector?.("[data-dm-fasce]");
+  if (!blocco) return false;
+  const config = normalizzaLeFasce(leFasceDelleCaselle(blocco));
+  const righe = blocco.querySelector("[data-dm-fasce-righe]");
+  if (righe) righe.innerHTML = righeDelleFasceMarkup(config);
+  const posto = blocco.querySelector("[data-dm-fasce-festivi-posto]");
+  if (posto) posto.innerHTML = festiviMarkup(config);
+  return true;
+}
+
+/* Quello che dicono le caselle adesso, nella forma che il nucleo ripulisce. */
+function leFasceDelleCaselle(blocco) {
+  if (!blocco) return null;
+  const quante = Number(blocco.querySelector("[data-dm-fasce-quante]")?.value) || 0;
+  const voci = [...blocco.querySelectorAll("[data-dm-fascia]")].map((riga) => ({
+    dalle: riga.querySelector("[data-dm-fascia-dalle]")?.value || "",
+    prezzo: riga.querySelector("[data-dm-fascia-prezzo]")?.value || "",
+  }));
+  /* Passando da due fasce a tre la terza casella non c'e' ancora: si prende
+   * l'ora di serie, che e' quella della bolletta italiana, invece di far
+   * nascere una fascia a mezzanotte che nessuno ha chiesto. */
+  while (voci.length < quante)
+    voci.push({ dalle: ORARI_DI_SERIE[quante]?.[voci.length] || "", prezzo: "" });
+  return {
+    quante,
+    voci,
+    festivi: Number(blocco.querySelector("[data-dm-fasce-festivi]")?.value ?? -1),
+  };
+}
+
+/**
+ * Scrive le fasce come stanno nella scheda aperta.
+ *
+ * La chiamano tutti e due quelli che salvano i costi — il padrone canonico in
+ * `energy-report-polish-section` e il ripiego qui sotto — perche' le fasce sono
+ * parte della stessa risposta: quanto costa il kWh. Salvarle con un tasto loro
+ * vorrebbe dire una scheda dove meta' si salva e meta' no.
+ */
+export function salvaLeFasceDellaScheda() {
+  const blocco = doc?.querySelector?.(".dm-energy-cost-card [data-dm-fasce]");
+  if (!blocco) return false;
+  const config = normalizzaLeFasce(leFasceDelleCaselle(blocco));
+  try {
+    root.localStorage?.setItem?.(CHIAVE_FASCE, JSON.stringify(config));
+  } catch (_error) {
+    return false;
+  }
   return true;
 }
 
@@ -558,7 +715,36 @@ function installStyle() {
     .dm-rate-entity-note{display:block;color:var(--text-dim,#64748b);font-weight:600}
     .dm-battery-soc{display:block;margin-top:3px;font-size:12px;font-weight:800;line-height:1.15;color:var(--success-color,#16a34a)}
     .dm-battery-soc[hidden]{display:none!important}
-    @media(max-width:640px){.dm-energy-cost-grid{grid-template-columns:1fr!important}}
+    /* Le fasce orarie (#72): una riga per fascia — il nome, l'ora e il prezzo —
+       con le stesse caselle dei due prezzi qui sopra, perche' sono la stessa
+       domanda fatta piu' in fine. */
+    .dm-energy-fasce{display:grid!important;gap:10px!important;margin-top:16px!important;
+      padding-top:14px!important;border-top:1px solid var(--card-border,rgba(15,23,42,.14))!important}
+    .dm-energy-fasce-quante,.dm-energy-fascia-festivi{display:grid!important;gap:7px!important;
+      color:var(--text,#0f172a)!important;font-weight:700!important}
+    .dm-energy-fasce-righe{display:grid!important;gap:10px!important}
+    /* Il nome prende quello che gli serve e non un dito di piu': lo spazio e'
+       delle due caselle, che sono quelle da riempire. E l'ora ne vuole
+       abbastanza per starci tutta — c'e' chi l'orologio ce l'ha a dodici ore,
+       e «08:00 AM» tagliato a meta' non e' un'ora. */
+    .dm-energy-fascia{display:grid!important;
+      grid-template-columns:minmax(0,auto) minmax(128px,1fr) minmax(96px,1fr)!important;
+      align-items:end!important;gap:12px!important}
+    .dm-energy-fascia-nome{align-self:center!important;min-width:0!important;
+      white-space:nowrap!important;color:var(--text,#0f172a)!important;font-weight:800!important}
+    .dm-energy-fascia label{display:grid!important;gap:5px!important;min-width:0!important}
+    .dm-energy-fascia small{color:var(--text-dim,#64748b)!important;font-size:11px!important;
+      font-weight:800!important;letter-spacing:.6px!important;text-transform:uppercase!important}
+    .dm-energy-fasce .ed-input{display:block!important;box-sizing:border-box!important;
+      width:100%!important;min-width:0!important;min-height:44px!important;padding:9px 11px!important;
+      color:var(--text,#0f172a)!important;background:var(--card-bg,#fff)!important;
+      border:1px solid var(--card-border,rgba(15,23,42,.14))!important;border-radius:12px!important;
+      font-size:15px!important}
+    .dm-energy-fasce-nota{color:var(--text-dim,#64748b)!important;font-size:12px!important;
+      font-weight:600!important;line-height:1.5!important}
+    @media(max-width:640px){.dm-energy-cost-grid{grid-template-columns:1fr!important}
+      .dm-energy-fascia{grid-template-columns:1fr 1fr!important}
+      .dm-energy-fascia-nome{grid-column:1 / -1!important}}
   `;
   doc.head?.append(style);
 }

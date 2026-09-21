@@ -3654,4 +3654,13 @@ export default Object.freeze({
   "The most you can have is": "Het maximum is",
   "the bar scrolls, but the first pills are the ones the house announces by itself.": "de balk schuift, maar de eerste pillen zijn die het huis uit zichzelf meldt.",
   "Add an entity": "Een entiteit toevoegen",
+  "Time-of-use bands": "Tijdtarieven",
+  "How many bands": "Hoeveel tarieven",
+  "Just one: the price above": "Maar één: de prijs hierboven",
+  "Two bands": "Twee tarieven",
+  "Three bands": "Drie tarieven",
+  "Band": "Tarief",
+  "Saturday and Sunday": "Zaterdag en zondag",
+  "same as weekdays": "net als op werkdagen",
+  "Each band runs from its hour to the next one, and the last one crosses midnight. A cycle's cost — last night's dishwasher — uses the price of the hour it happened at, which is exact. A month's Report uses the bands averaged by the hours each covers: the dashboard knows how many kWh went through, not at what hours, so there it is an estimate.": "Elk tarief geldt van zijn uur tot het volgende, en het laatste loopt over middernacht. De kosten van een draaibeurt — de vaatwasser van vannacht — nemen de prijs van het uur waarop het gebeurde, en dat klopt precies. Het Rapport van een maand neemt het gemiddelde van de tarieven, gewogen naar de uren die elk beslaat: het dashboard weet hoeveel kWh erdoor zijn gegaan, niet op welke uren, dus daar is het een schatting.",
 });

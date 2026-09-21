@@ -2,7 +2,9 @@ import { applianceArtwork } from "../core/appliance-artwork.js";
 import { applianceArtworkType } from "../core/appliance-card-view-model.js";
 import { DEFAULT_EXPORT_RATE, DEFAULT_IMPORT_RATE, importRateEntity, resolveRate } from "../core/energy-calculations.js";
 import { persistEnergyField } from "../core/energy-writer.js";
-import { allStates, clean, doc, formatNumber, installStyle, root, scriviTestoSeCambia, t, wrapFunction } from "./shared.js";
+import { CHIAVE_FASCE, normalizzaLeFasce, prezzoMedioDelleFasce } from "../core/fasce-della-tariffa.js";
+import { salvaLeFasceDellaScheda } from "./beta22-load-slots-hotfix-section.js";
+import { allStates, clean, doc, formatNumber, installStyle, readJson, root, scriviTestoSeCambia, t, wrapFunction } from "./shared.js";
 
 const KEY = "__DASHBOARDMODERN_ENERGY_REPORT_POLISH__";
 const state = (root[KEY] ||= { installed: false, frame: 0, dailyChart: null, legacyDailyChart: null, subscribed: false });
@@ -234,7 +236,14 @@ function rateRaw(key) {
 function rateOrDefault(key, fallback) {
   const entita = key === "cd_costo_kwh" ? importRateEntity(model()) : "";
   const sorgente = entita ? resolved(entita) : rateRaw(key);
-  return resolveRate(sorgente, allStates(), fallback);
+  const unico = resolveRate(sorgente, allStates(), fallback);
+  /* Le fasce valgono sul prezzo di acquisto e non su quello di vendita: quello
+   * che si vende si vende allo stesso prezzo a qualunque ora. E qui si parla
+   * di mesi e di anni, quindi la media pesata sulle ore — la stessa che usa
+   * `rates()` della sezione Energia, dallo stesso modulo: due medie sulla
+   * stessa bolletta sarebbero due bollette. */
+  if (key !== "cd_costo_kwh") return unico;
+  return prezzoMedioDelleFasce(normalizzaLeFasce(readJson(CHIAVE_FASCE, {})), unico);
 }
 
 function money(value) {
@@ -294,6 +303,10 @@ function installCostSettingsOwner() {
     const exportRate = normalize(exportInput);
     root.localStorage?.setItem("cd_costo_kwh", importRate);
     root.localStorage?.setItem("cd_prezzo_immissione", exportRate);
+    /* E le fasce orarie (#72), che stanno nella stessa scheda e rispondono
+     * alla stessa domanda: quanto costa il kWh. Le scrive chi le ha disegnate
+     * — un tasto «salva» che ne salvasse meta' sarebbe peggio di due tasti. */
+    salvaLeFasceDellaScheda();
     /* La scelta «da entita'» del prezzo di acquisto (#217) abita nel modello
      * canonico, non in una chiave sciolta: in modalita' Entita' si salva l'id
      * scelto, in modalita' Numero lo si toglie — e' cosi' che si torna al

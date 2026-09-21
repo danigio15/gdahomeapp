@@ -3654,4 +3654,13 @@ export default Object.freeze({
   "The most you can have is": "ज़्यादा से ज़्यादा",
   "the bar scrolls, but the first pills are the ones the house announces by itself.": "पट्टी सरकती है, पर पहली गोलियाँ वही हैं जो घर अपने आप बताता है।",
   "Add an entity": "एक इकाई जोड़ें",
+  "Time-of-use bands": "समय के हिसाब से दरें",
+  "How many bands": "कितनी दरें",
+  "Just one: the price above": "सिर्फ़ एक: ऊपर वाली कीमत",
+  "Two bands": "दो दरें",
+  "Three bands": "तीन दरें",
+  "Band": "दर",
+  "Saturday and Sunday": "शनिवार और रविवार",
+  "same as weekdays": "बाकी दिनों जैसा",
+  "Each band runs from its hour to the next one, and the last one crosses midnight. A cycle's cost — last night's dishwasher — uses the price of the hour it happened at, which is exact. A month's Report uses the bands averaged by the hours each covers: the dashboard knows how many kWh went through, not at what hours, so there it is an estimate.": "हर दर अपने समय से अगली तक चलती है, और आख़िरी आधी रात पार करती है। एक चक्र की लागत — आज रात का डिशवॉशर — उस घंटे की कीमत लेती है जिसमें वह चला, और यह सटीक है। एक महीने की रिपोर्ट दरों का औसत लेती है, हर एक के घंटों के हिसाब से: डैशबोर्ड जानता है कि कितने kWh गुज़रे, किन घंटों में नहीं, इसलिए वहाँ यह एक अनुमान है।",
 });

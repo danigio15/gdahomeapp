@@ -3654,4 +3654,13 @@ export default Object.freeze({
   "The most you can have is": "Максимум —",
   "the bar scrolls, but the first pills are the ones the house announces by itself.": "полоса прокручивается, но первые плашки — те, о которых дом сообщает сам.",
   "Add an entity": "Добавить сущность",
+  "Time-of-use bands": "Тарифные зоны по времени",
+  "How many bands": "Сколько зон",
+  "Just one: the price above": "Только одна: цена выше",
+  "Two bands": "Две зоны",
+  "Three bands": "Три зоны",
+  "Band": "Зона",
+  "Saturday and Sunday": "Суббота и воскресенье",
+  "same as weekdays": "как в будни",
+  "Each band runs from its hour to the next one, and the last one crosses midnight. A cycle's cost — last night's dishwasher — uses the price of the hour it happened at, which is exact. A month's Report uses the bands averaged by the hours each covers: the dashboard knows how many kWh went through, not at what hours, so there it is an estimate.": "Каждая зона действует от своего часа до следующего, а последняя переходит через полночь. Стоимость цикла — посудомойки этой ночью — берёт цену того часа, когда он прошёл, и это точно. Отчёт за месяц берёт среднее по зонам, взвешенное по часам, которые каждая охватывает: панель знает, сколько кВт·ч прошло, но не в какие часы, поэтому там это оценка.",
 });

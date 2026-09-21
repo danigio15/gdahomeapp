@@ -3654,4 +3654,13 @@ export default Object.freeze({
   "The most you can have is": "Le maximum est de",
   "the bar scrolls, but the first pills are the ones the house announces by itself.": "la bande défile, mais les premières pastilles sont celles que la maison annonce d'elle-même.",
   "Add an entity": "Ajouter une entité",
+  "Time-of-use bands": "Tranches horaires",
+  "How many bands": "Combien de tranches",
+  "Just one: the price above": "Une seule : le prix ci-dessus",
+  "Two bands": "Deux tranches",
+  "Three bands": "Trois tranches",
+  "Band": "Tranche",
+  "Saturday and Sunday": "Samedi et dimanche",
+  "same as weekdays": "comme en semaine",
+  "Each band runs from its hour to the next one, and the last one crosses midnight. A cycle's cost — last night's dishwasher — uses the price of the hour it happened at, which is exact. A month's Report uses the bands averaged by the hours each covers: the dashboard knows how many kWh went through, not at what hours, so there it is an estimate.": "Chaque tranche vaut de son heure jusqu'à la suivante, et la dernière traverse minuit. Le coût d'un cycle — le lave-vaisselle de cette nuit — prend le prix de l'heure où il a eu lieu, et c'est exact. Le Rapport d'un mois prend la moyenne des tranches pondérée par les heures que chacune couvre : le tableau de bord sait combien de kWh sont passés, pas à quelles heures — là, c'est donc une estimation.",
 });

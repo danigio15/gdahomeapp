@@ -3654,4 +3654,13 @@ export default Object.freeze({
   "The most you can have is": "上限は",
   "the bar scrolls, but the first pills are the ones the house announces by itself.": "帯は流れますが、先頭に来るのは家が自分で知らせるものです。",
   "Add an entity": "エンティティを追加",
+  "Time-of-use bands": "時間帯別の料金",
+  "How many bands": "時間帯の数",
+  "Just one: the price above": "1つだけ: 上の価格",
+  "Two bands": "2つの時間帯",
+  "Three bands": "3つの時間帯",
+  "Band": "時間帯",
+  "Saturday and Sunday": "土曜と日曜",
+  "same as weekdays": "平日と同じ",
+  "Each band runs from its hour to the next one, and the last one crosses midnight. A cycle's cost — last night's dishwasher — uses the price of the hour it happened at, which is exact. A month's Report uses the bands averaged by the hours each covers: the dashboard knows how many kWh went through, not at what hours, so there it is an estimate.": "各時間帯はその時刻から次の時刻までで、最後の1つは深夜零時をまたぎます。1回分のコスト — 今夜の食洗機 — はそれが動いた時刻の価格を使うので正確です。1か月のレポートは、各時間帯が占める時間で重みづけした平均を使います: ダッシュボードは何kWh流れたかは知っていても、何時に流れたかは知らないので、そこでは見積もりです。",
 });
