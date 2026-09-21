@@ -1,11 +1,11 @@
 {
   "repository": "danigio15/gdahomeapp",
-  "commit": "0f0f8de42cf58ad4a54c45a4300a87bbbadfa1f9",
+  "commit": "764c51f653f6e6be32396a29e6bcb05be8085239",
   "versione": "1.5.9",
-  "portata_il": "2026-09-21T03:21:47.185Z",
+  "portata_il": "2026-09-21T04:09:57.761Z",
   "file": 924,
-  "byte": 18889428,
-  "sigillo": "750d9595d13fe48a77b93ec934186bfcbbdc3ca8d116337cf6205ed308b69f24",
+  "byte": 18895411,
+  "sigillo": "b860b101f7a55e0d9fd76824579f2f7f355089fe09eaac43609cc5c2cf7358ab",
   "firma": "",
   "impronte": {
     "avatars/LICENSE.txt": "e8c7c216d5a15ec564f66c8070b9bbce1b39e20822440af18d4ad735dd9b9e6e",
@@ -823,7 +823,7 @@
     "src/sections/foglio-di-scelta-section.js": "dd6b028f2909b5ea7ef0f404a6d5fe0aaaa6e0182bc4fc938bd330037e23afbf",
     "src/sections/history-section.js": "0ecba744abeb5ff867cc84aaea86c26b479ed53a49e0e3f314066ecb2283ebb6",
     "src/sections/home-blocchi-section.js": "caa964710cddbf891cf4d5c05f761d8bba08facbaf7861c2f6fe6780213f35bb",
-    "src/sections/home-widgets-section.js": "96997e15d8fa1bd014dc60d81345f397ca472a4f26fca8d0dc8ac99b9ae4db37",
+    "src/sections/home-widgets-section.js": "dc68a9d36b3c85002b4a2cd3f3e91b643f532493c40c4c56fe4d64c9bf0aa3e4",
     "src/sections/i18n-section.js": "2683872e64e220aa1d166dc00bdbafd8b5fca839e4141c514a5a850057bd8d1a",
     "src/sections/icon-engine-section.js": "344cc9acc6da59ba738e711623c61461586e1954cbd529c0fa2c517a2c58061b",
     "src/sections/icone-leggibili-section.js": "1b896b02070b859137bb739bd6aacd0367cbc4551d69696245374a00a8e68f84",
@@ -859,7 +859,7 @@
     "src/sections/nodi-editor-section.js": "d22f76b64db2b16d72e574ddd19bd1f66257a8372fa2eccfc2f00e6336033133",
     "src/sections/nodi-section.js": "33f5e084c3f11a8f35cc7334d4e268668ba54ddc4e2433b2464e064b40619c8f",
     "src/sections/orologio-section.js": "0c89c5621f177ca79853fe485ad21c9fc62be493ae2e0a661f6fa6cb9553b35b",
-    "src/sections/page-masthead-section.js": "0d5c71fddfbb8caeba8b95e10c9999d1ed8b4d0f282146d587ec7a5bb3b27268",
+    "src/sections/page-masthead-section.js": "734058f34776000abe7189f1bb2fc8a0fc2a80f2dfad60c067a0533b96f9365f",
     "src/sections/people-editor-section.js": "f54ae4d0c3e4b0936e099f7a819ed967873348e961bb1ff3f72ec4056a67bdc3",
     "src/sections/people-section.js": "e35cbdfb324857cb9262b114826ea9978393775df7bb16d1a80bf5bc67952ddf",
     "src/sections/person-avatar-section.js": "2eadcda90c0386cb2734917b33e7f5f2b442a39b9e0dd6cb227e3675009fbab1",
@@ -929,7 +929,7 @@
     "src/sections/varchi-section.js": "48dfb5515661eb3f00a49c5ba5e47173e40895dbe641072034116cb93d29972f",
     "src/sections/vmc-editor-section.js": "1ba9550f61530cac530c59946bae60f03f373bc19f8144319ca4f595b59e1f79",
     "src/sections/vmc-section.js": "5313a30cd5ddb2fdf0c52ce9e0576977149339cc163d16c21291afb40ed14160",
-    "src/sections/weather-in-masthead-section.js": "c06fc7f1fea4f683b154992c97c3d5523ab6eb0f39a1c1504e02ed6e24100a3f",
+    "src/sections/weather-in-masthead-section.js": "62b7a0d9a517a3d84fe0c0140152e73c9cd8936394daad7c964b0faaa78cbd6b",
     "src/sections/widget-entity-choice-section.js": "176e0c80a26301d15c7bd95c2dd3bf590476c21d3b5aa5424dea59fc0786d002",
     "src/transport/hosted-bridge-guard.js": "77e53478578121b139b595af3b8b5514af320232bc7cb8b4440bc7c18ff27ab3"
   }

@@ -6616,6 +6616,20 @@ const CHIAVI_A_CARTE = new Set([
   "rifiuti",
   "vmc",
   "elettrodomestici",
+  /* «Sui widget il mini pc non incolonna bene le scritte.»
+   *
+   * La tessera del MiniPC legge dieci caselle — CPU, RAM, disco, temperatura,
+   * potenza, download, upload, ping, internet, rete — e in finestra non se ne
+   * vedeva NESSUNA delle otto che sono numeri: c'era il verdetto in cima, le
+   * due che sono acceso/spento come pastiglie, e basta. RAM e disco si
+   * leggevano solo perche' la tessera se li porta appiccicati al numero
+   * grande, in una riga sola, che e' proprio «non incolonnate».
+   *
+   * Il motivo era questo elenco: dice chi disegna le sue letture come caselle
+   * — glifo, numero, nome, una accanto all'altra — e il MiniPC non c'era. Le
+   * sue righe hanno la stessa forma di tutte le altre (`glyph`, `name`,
+   * `value`), quindi qui non serve un caso apposta: basta che ci sia. */
+  "minipc",
 ]);
 
 /* La tessera dell'energia, qualunque impianto racconti.

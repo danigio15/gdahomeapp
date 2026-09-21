@@ -15,7 +15,16 @@
 import { onLocaleChange } from "../core/i18n.js";
 import { translateSource } from "../core/i18n-dom.js";
 import { CHIAVE_ORDINE_BLOCCHI, ilMeteoStaInTestata } from "../core/ordine-dei-blocchi.js";
-import { clean, doc, installStyle, readJson, root, t } from "./shared.js";
+import { unaSolaPaginaAperta } from "./page-masthead-section.js";
+import {
+  clean,
+  doc,
+  installStyle,
+  quandoSiCambiaPagina,
+  readJson,
+  root,
+  t,
+} from "./shared.js";
 
 const KEY = "__DASHBOARDMODERN_WEATHER_MASTHEAD__";
 const STYLE_ID = "dm-weather-masthead-style";
@@ -405,6 +414,20 @@ function riparaIlBloccoASinistra(header) {
 function ripara() {
   const header = testata();
   if (!header) return;
+  /* Prima di guardare la testata si guarda quante pagine sono aperte.
+   *
+   * Questo guardiano ha sempre chiesto «qual e' la pagina attiva?» dando per
+   * scontato che ce ne fosse una. Quando non ce n'e' nessuna, `attiva` e'
+   * nullo e da qui si usciva senza fare niente: la testata spenta dal guscio
+   * restava spenta, e non c'era nessun evento che la riaccendesse. Quando ne
+   * sono due — la Home e un'altra — la riga qui sotto toglie lo stile in
+   * linea, ma la fascia resta spenta da un `!important` che uno stile senza
+   * peso non scavalca. In tutt'e due i casi si usciva dalla plancia e si
+   * rientrava, che e' quello che si e' sentito dire dal campo.
+   *
+   * Non si rincorre nessuno dei due: si rimette una pagina aperta e una sola,
+   * e da li' in poi la domanda ha di nuovo una risposta. */
+  unaSolaPaginaAperta();
   const attiva = doc?.querySelector?.(".page.active");
   if (attiva?.id === "page-home" && header.style.display === "none") {
     header.style.display = "";
@@ -506,6 +529,11 @@ export function installWeatherInMasthead() {
    * che la testata e' stata vista sparire: a fine corsa si controlla. */
   root.addEventListener?.("scrollend", ripara);
   doc.addEventListener?.("visibilitychange", ripara);
+  /* E a ogni cambio di pagina, che e' il momento in cui la testata cambia
+   * stato: era l'unico che mancava, e in una casa tranquilla — nessuno stato
+   * che cambia, nessuno che scorre — fra un cambio di pagina e il battito
+   * dopo possono passare minuti. */
+  quandoSiCambiaPagina(ripara);
   /* La lingua puo' arrivare dopo: il catalogo si scarica, e quando e' pronto
    * le parole del meteo vanno rifatte dal loro originale. */
   for (const eventoEditor of ["dashboardmodern:editor-rendered", "dashboardmodern:legacy-ready"])
