@@ -151,6 +151,23 @@ export function siPuoAbilitare(entity) {
 }
 
 /**
+ * Se quell'entita' si comanda scegliendo, invece che accendendo o premendo.
+ *
+ * E' un `select` o un `input_select`: la sorgente dell'ampli, il programma
+ * della lavatrice, la modalita' della casa. La domanda e' una riga, ma la
+ * facevano gia' in tre posti diversi — le azioni rapide, le stanze, le sezioni
+ * proprie — e tre copie della stessa riga diventano tre risposte diverse il
+ * giorno che nasce un dominio nuovo. La tabella dei generi e' qui sopra, e la
+ * risposta la da' lei.
+ *
+ * Si guarda il dominio e basta: se quel menu le sue voci le dica davvero e'
+ * un'altra domanda, e la fa `vociDelMenu` a chi gli stati ce li ha in mano.
+ */
+export function siPuoScegliere(entity) {
+  return genereDelComando(entity) === "tendina";
+}
+
+/**
  * Il servizio dietro la LEVETTA di un'entita': abilitare e disabilitare.
  *
  * `null` per tutte quelle che una levetta propria non ce l'hanno — la loro

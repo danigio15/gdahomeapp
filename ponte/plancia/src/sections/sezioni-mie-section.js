@@ -21,6 +21,7 @@
  * verde della configurazione, come fanno l'Agenda e la Continuita'.
  */
 import { comandoCheAbilita, comandoDelDispositivo } from "../core/comandi-accanto.js";
+import { apriIlMenu } from "./azioni-servizio-giusto-section.js";
 import {
   CHIAVE_SEZIONI_MIE,
   chiaveDellaSezione,
@@ -39,6 +40,7 @@ import {
   installStyle,
   readJson,
   root,
+  siComanda,
   t,
 } from "./shared.js";
 
@@ -197,7 +199,17 @@ function valoreMarkup(riga) {
  * quattro: la griglia ha quattro colonne, e un quinto figlio andrebbe a capo
  * portandosi dietro l'altezza della tessera. */
 function codaMarkup(riga) {
-  if (!riga.comandabile || riga.muto) return `<span class="dm-mia-vuoto" aria-hidden="true"></span>`;
+  const vuoto = `<span class="dm-mia-vuoto" aria-hidden="true"></span>`;
+  if (riga.muto) return vuoto;
+  /* Il terzo gesto, prima degli altri due perche' esclude gli altri due: un
+   * menu a tendina non si accende e non si fa partire, si sceglie. I tre
+   * puntini aprono l'elenco delle voci — lo stesso delle azioni rapide, non
+   * un secondo elenco della stessa cosa. */
+  if (riga.tendina && siComanda(riga.entity))
+    return `<button type="button" class="dm-mia-parti dm-mia-scegli" data-dm-mia-scegli="${esc(riga.entity)}"
+       title="${esc(t("Scegli", "Choose"))}"
+       aria-label="${esc(t("Scegli", "Choose"))} — ${esc(riga.nome)}">⋮</button>`;
+  if (!riga.comandabile) return vuoto;
   const parti = riga.avviabile
     ? `<button type="button" class="dm-mia-parti" data-dm-mia-parti="${esc(riga.entity)}"
          title="${esc(t("Fai partire adesso", "Run it now"))}"
@@ -311,6 +323,17 @@ function onClick(event) {
     chiamaHa(comando.domain, comando.service, comando.data);
     return;
   }
+  /* I tre puntini di un menu a tendina: aprono l'elenco, non chiamano niente.
+   * A chiamare sara' il popup, quando una voce l'avra' scelta qualcuno. */
+  const scegli = event.target?.closest?.("[data-dm-mia-scegli]");
+  if (scegli) {
+    event.preventDefault();
+    const suo = clean(scegli.dataset.dmMiaScegli);
+    if (!suo || !siComanda(suo)) return;
+    if (root.navigator?.vibrate) root.navigator.vibrate(8);
+    apriIlMenu(suo);
+    return;
+  }
   const leva = event.target?.closest?.("[data-dm-mia-tocca]");
   if (!leva) return;
   event.preventDefault();
@@ -404,6 +427,14 @@ function installStyles() {
         background:linear-gradient(135deg,#38bdf8,#0284c7);
         box-shadow:0 2px 6px rgba(2,132,199,.35)}
       .dm-mia-parti:active{transform:scale(.92)}
+      /* I tre puntini stanno nello stesso tondo del «fai partire» — una riga
+         alta uguale all'altra e' meta' del mestiere — ma non nello stesso
+         colore: quello e' il blu di «adesso parte», e questo e' un elenco che
+         si apre. E il disegno e' stretto e alto: alla misura della freccia si
+         vedrebbe come un granello. */
+      .dm-mia-scegli{
+        font-size:17px;font-weight:900;color:var(--text,#0f172a);
+        background:var(--bg-sculpted,#e2e8f0);box-shadow:none}
       .dm-mia-lev{
         position:relative;width:46px;height:26px;border:0;border-radius:999px;cursor:pointer;
         background:var(--bg-sculpted,#cbd5e1);transition:background .25s ease}
@@ -458,6 +489,7 @@ function installStyles() {
       .dm-mia-lista[data-formato="piccole"] .dm-mia-vuoto{width:0}
       .dm-mia-lista[data-formato="piccole"] .dm-mia-coda{gap:6px}
       .dm-mia-lista[data-formato="piccole"] .dm-mia-parti{width:26px;height:26px;font-size:10px}
+      .dm-mia-lista[data-formato="piccole"] .dm-mia-scegli{font-size:15px}
       @media(max-width:560px){
         .dm-mia-lista[data-formato="piccole"]{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
         .dm-mia-lista[data-formato="piccole"] .dm-mia-riga{

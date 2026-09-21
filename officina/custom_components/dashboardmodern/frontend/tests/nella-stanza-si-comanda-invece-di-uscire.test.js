@@ -161,13 +161,21 @@ test("il tocco sui tre puntini e' loro, non della riga", () => {
 });
 
 test("chi sa i generi resta uno solo", () => {
-  /* «Tendina» e' la parola di `core/comandi-accanto.js` da sempre, e un
-   * secondo elenco di domini qui dentro sarebbe la terza copia della stessa
-   * tabella. */
+  /* «Tendina» e' la parola di `core/comandi-accanto.js` da sempre, e la
+   * domanda la fanno in tre — le stanze, le sezioni proprie, le entita'
+   * proprie — piu' le azioni rapide. Tre copie della stessa riga diventano tre
+   * risposte diverse il giorno che nasce un dominio nuovo, e allora la riga sta
+   * scritta una volta di la'. */
   const sorgente = leggi("sections/rooms-page-section.js");
+  assert.match(sorgente, /siPuoScegliere as puoScegliere/);
   assert.match(
     sorgente,
-    /function siPuoScegliere\(entity\) \{\n\s*return genereDelComando\(entity\) === "tendina" && siComanda\(entity\);/,
+    /function siPuoScegliere\(entity\) \{\n\s*return puoScegliere\(entity\) && siComanda\(entity\);/,
   );
   assert.doesNotMatch(sorgente, /=== "select" \|\| .*=== "input_select"/);
+  /* E di la' la domanda guarda il genere, non un elenco suo di domini. */
+  assert.match(
+    leggi("core/comandi-accanto.js"),
+    /export function siPuoScegliere\(entity\) \{\n\s*return genereDelComando\(entity\) === "tendina";/,
+  );
 });

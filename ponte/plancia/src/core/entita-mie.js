@@ -19,6 +19,7 @@
  * Il modulo è puro: entrano le voci scritte e gli stati di Home Assistant,
  * escono le righe da disegnare. Chi disegna non decide niente.
  */
+import { siPuoScegliere } from "./comandi-accanto.js";
 
 const pulito = (valore) => String(valore ?? "").trim();
 
@@ -125,6 +126,12 @@ export function letturaDellaVoce(voce, states = {}, resolve = (valore) => valore
       !muto &&
       ["on", "open", "home", "playing", "heat", "cool", "unlocked"].includes(grezzo.toLowerCase()),
     comandabile: COMANDABILI.has(dominio),
+    /* E quello che non si accende, ma si sceglie: un `select`, un
+     * `input_select`. Non e' comandabile nel senso della levetta — non ha due
+     * stati — ma non e' neanche roba da guardare e basta: ha delle voci. Il
+     * dominio lo riconosce `core/comandi-accanto.js`, che e' il padrone dei
+     * generi in tutta la plancia. */
+    tendina: siPuoScegliere(entity),
   };
 }
 

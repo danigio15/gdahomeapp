@@ -25,7 +25,11 @@ import { lightCommand, lightView, lightsSignature } from "../core/light-model.js
 import { canonicalClimateType } from "../core/device-model.js";
 import { applianceGlyph } from "../core/appliance-artwork.js";
 import { CHIAVE_MEDIA, letturaDelLettore, lettoriConfigurati } from "../core/media-player.js";
-import { comandoDelDispositivo, genereDelComando } from "../core/comandi-accanto.js";
+import {
+  comandoDelDispositivo,
+  genereDelComando,
+  siPuoScegliere as puoScegliere,
+} from "../core/comandi-accanto.js";
 import { CHIAVE_ENTITA_MIE, entitaMie } from "../core/entita-mie.js";
 import { roomGlyph } from "../core/personalization-catalog.js";
 import {
@@ -642,9 +646,12 @@ function siPuoAvviare(entity) {
  *
  * Il verbo e la domanda le sa gia' `core/comandi-accanto.js`, che un select lo
  * chiama «tendina» da sempre; e l'elenco lo disegna gia' il popup delle azioni
- * rapide. Qui non si inventa niente: si mette il tasto che apre quello. */
+ * rapide. Qui non si inventa niente: si mette il tasto che apre quello.
+ *
+ * Il «si comanda» resta di qua: e' il divieto «si vede ma non si comanda», che
+ * sta nel magazzino di questa casa e non nella tabella dei domini. */
 function siPuoScegliere(entity) {
-  return genereDelComando(entity) === "tendina" && siComanda(entity);
+  return puoScegliere(entity) && siComanda(entity);
 }
 
 /* La riga di una stanza si comanda da qui, non solo da un'altra pagina.
