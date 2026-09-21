@@ -5,6 +5,7 @@
  * chieste al Recorder — sta nella sezione e si prova nel browser.
  */
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import test from "node:test";
 
 import {
@@ -232,4 +233,43 @@ test("senza ore comprate non c'è niente da disegnare", () => {
   assert.equal(ilProfiloDelleOre(profiloDiUnaGiornata(SAGOMA.map(() => 0)), TRE), "");
   assert.equal(ilProfiloDelleOre({ ore: [] }, TRE), "");
   assert.equal(ilProfiloDelleOre(null, TRE), "");
+});
+
+/* ─── Il conto aspetta di essere guardato ───────────────────────────────── */
+
+const SEZIONE = readFileSync(
+  new URL("../src/sections/il-report-a-fasce-section.js", import.meta.url),
+  "utf8",
+);
+
+test("un pacchetto arrivato prima che la Panoramica si veda non si butta", () => {
+  /* Dal campo: «il Report non riporta subito la divisione, devo cliccare
+   * prima su Analisi poi vado in Panoramica e cambia».
+   *
+   * Il conto si fa se c'è qualcuno che guarda, ed è giusto — ma quella
+   * domanda è una fotografia: risponde per l'istante in cui la si fa. Il
+   * pacchetto del mese arriva quando arriva, e se arriva mentre la Panoramica
+   * non è ancora a schermo il conto non si faceva **e non si riprovava**: gli
+   * unici richiami erano i clic sulle linguette, ed è per quello che ci
+   * voleva il giro da Analisi.
+   *
+   * E non mancava solo il blocco: finché il conto non c'è, «Costo Reale»
+   * resta sulla stima invece della spesa contata ora per ora. In una casa
+   * vera, 32,16 € nella tessera e 19,85 € nel blocco — a tre centimetri di
+   * distanza, due cifre diverse per la stessa spesa.
+   *
+   * Il giro vero — le ore chieste al Recorder, la sentinella che scatta —
+   * si prova nel browser, come dice l'intestazione di questo file. Qui si
+   * tiene fermo il contratto: il pacchetto si mette da parte, e si guarda
+   * quando la Panoramica compare. */
+  assert.match(SEZIONE, /state\.aspetta = bundle;/, "il pacchetto va messo da parte");
+  assert.match(
+    SEZIONE,
+    /quandoLaPanoramicaSiVede\(\(\) => \{/,
+    "e qualcuno deve avvisare quando la Panoramica si vede",
+  );
+  /* Una sentinella sola, e si toglie appena ha fatto il suo giro: una che
+   * resta attaccata è un osservatore che vive quanto la pagina. */
+  assert.match(SEZIONE, /if \(state\.sentinella\) return;/);
+  assert.match(SEZIONE, /state\.sentinella\?\.disconnect\(\);/);
 });
