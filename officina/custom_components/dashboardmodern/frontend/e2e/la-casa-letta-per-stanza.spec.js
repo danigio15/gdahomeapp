@@ -76,6 +76,11 @@ async function apri(page, testInfo) {
   );
   await page.locator('.tab[data-tab="stanze"]').first().click();
   await expect(page.locator("#page-stanze")).toHaveClass(/active/);
+  /* La pagina si apre sull'elenco delle stanze (#17), non piu' su una stanza:
+   * queste prove parlano di cosa c'e' DENTRO una stanza, e ci entrano come ci
+   * entra una persona — toccando la sua tessera. */
+  await page.locator('#page-stanze .dm-stanze-tessera[data-dm-stanza="room-salone"]').click();
+  await expect(page.locator("#page-stanze .dm-stanze-tabs")).toHaveCount(1);
 }
 
 test("ogni stanza porta quello che le appartiene, e le sue luci sono le card vere", async ({
@@ -180,7 +185,6 @@ test("una presa assegnata a mano si accende dalla pagina Stanze", async ({ page 
     };
     window.dispatchEvent(new CustomEvent("dashboardmodern:states-ready", { detail: {} }));
   });
-  await page.locator('#page-stanze [data-dm-stanza="room-salone"]').click();
 
   const interruttore = page.locator('#page-stanze [data-dm-stanza-tocca="switch.presa_salone"]');
   await expect(interruttore).toHaveCount(1);
@@ -230,7 +234,6 @@ test("il lettore compare una volta sola, e nel suo blocco", async ({ page }, tes
     };
     window.dispatchEvent(new CustomEvent("dashboardmodern:states-ready", { detail: {} }));
   });
-  await page.locator('#page-stanze [data-dm-stanza="room-salone"]').click();
 
   const righe = page.locator('#page-stanze [data-dm-stanza-entita="media_player.sonos"]');
   await expect(righe).toHaveCount(1);
@@ -288,7 +291,6 @@ test("il lettore e il clima si comandano dalla stanza, senza cambiare pagina", a
     };
     window.dispatchEvent(new CustomEvent("dashboardmodern:states-ready", { detail: {} }));
   });
-  await page.locator('#page-stanze [data-dm-stanza="room-salone"]').click();
 
   const lettore = page.locator('#page-stanze [data-dm-stanza-entita="media_player.sonos"]');
   const pausa = lettore.locator('[data-dm-mp="centro"]');
@@ -354,7 +356,6 @@ test("la card del clima nella stanza è quella della pagina Clima, e si vede", a
     };
     window.dispatchEvent(new CustomEvent("dashboardmodern:states-ready", { detail: {} }));
   });
-  await page.locator('#page-stanze [data-dm-stanza="room-salone"]').click();
   const clima = page.locator('#page-stanze .dm-cl-card[data-dm-cl="climate.salone"]');
   await expect(clima).toBeVisible();
 

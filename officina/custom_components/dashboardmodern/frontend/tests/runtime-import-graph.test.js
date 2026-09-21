@@ -1308,8 +1308,13 @@ test("production graph is single-owner, acyclic and contains no facade pass-thro
   // istante finto e senza un documento, e la sanno in tre — la sezione
   // Energia, il Report e il costo di un ciclo. Scritta dentro uno dei tre,
   // sarebbero tre idee di che ora comincia la notte.
+  // 367 con le stanze per piano (#17): come si divide un elenco di stanze fra i
+  // piani della casa, e quali pastiglie merita una stanza dato quello che c'e'
+  // dentro adesso. Sono due regole e non un disegno — l'ordine dei piani, il
+  // titolo che si scrive solo se serve, quali pastiglie comandano e quali
+  // portano dentro — e si provano su un elenco finto, senza un documento.
   assert.ok(
-    relative.length <= 366,
+    relative.length <= 367,
     `production graph unexpectedly grew to ${relative.length} modules`,
   );
   assertAcyclic(edges);

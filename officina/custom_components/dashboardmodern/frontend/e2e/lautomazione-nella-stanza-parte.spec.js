@@ -110,6 +110,9 @@ test("un'automazione messa in una stanza si vede lì, e da lì parte", async ({ 
 
   await page.locator('.tab[data-tab="stanze"]').first().click();
   await expect(page.locator("#page-stanze")).toHaveClass(/active/);
+  /* La pagina Stanze si apre sull'elenco (#17): la stanza si apre toccandola,
+   * come fa una persona. */
+  await page.locator("#page-stanze .dm-stanze-tessera").first().click();
 
   /* La riga c'è, col nome che le è stato dato. */
   const riga = page.locator('#page-stanze [data-dm-stanza-entita="automation.luci_sera"]').first();

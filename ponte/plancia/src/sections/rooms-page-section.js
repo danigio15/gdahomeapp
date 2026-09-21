@@ -40,7 +40,16 @@ import {
   roomSceneEntities,
   roomSceneSummary,
 } from "../core/room-overview.js";
-import { CHIAVE_VERSI, insiemeInvertiti } from "../core/verso-aperture.js";
+import { CHIAVE_VERSI, apertaSecondoVerso, insiemeInvertiti } from "../core/verso-aperture.js";
+import { windowOpenFromState } from "../core/shutter-window.js";
+import { nonRisponde } from "../core/chi-non-risponde.js";
+import {
+  QUANTO_DURA_LA_DOMANDA,
+  QUANTO_DURA_L_ANNULLA,
+  acceseNelPiano,
+  pastiglieDellaStanza,
+  stanzePerPiano,
+} from "../core/le-stanze-per-piano.js";
 import { apriIlMenu } from "./azioni-servizio-giusto-section.js";
 import { dipingiLeCardDelClima, laCardDelClima } from "./climate-thermal-section.js";
 import { parolaDiStato } from "./le-parole-di-home-assistant.js";
@@ -67,7 +76,18 @@ import {
 } from "./shared.js";
 
 const KEY = "__DASHBOARDMODERN_ROOMS_PAGE__";
-const state = (root[KEY] ||= { installed: false, frame: 0, signature: "", room: "" });
+const state = (root[KEY] ||= {
+  installed: false,
+  frame: 0,
+  signature: "",
+  room: "",
+  /* La domanda aperta su una tessera e l'annulla che resta dopo (#17, parte 3).
+   * Stanno nello stato e non nel documento perche' la pagina si ridisegna al
+   * primo cambio di stato — cioe' proprio quando la luce si spegne — e un
+   * tasto «Annulla» appeso al documento sparirebbe nell'istante in cui serve. */
+  chiesta: null,
+  annulla: null,
+});
 
 export const ROOMS_PAGE_ID = "page-stanze";
 export const ROOMS_TAB = "stanze";
@@ -857,6 +877,246 @@ export function blockMarkup(blocco, states) {
     <div class="dm-stanze-grid">${card}</div>`;
 }
 
+/* ── l'indice: le stanze, un piano alla volta (#17) ──────────────────────── */
+
+/* «Rooms must be displayed in groups based on the selected floor, with the
+ * room icon and name centered. Small icons should appear on the card to
+ * indicate the status or count of lights, climate control, power outlets,
+ * alerts, doors, windows, and temperature.»
+ *
+ * La pagina Stanze si apriva su UNA stanza, con la fila delle linguette in
+ * cima. Con cinque stanze funziona; con venti — ed e' il caso che teneva
+ * aperta anche la #12, «via il limite di 8 stanze» — la fila diventa uno
+ * scorrimento orizzontale in cui si cerca il nome. Adesso la pagina si apre
+ * sull'elenco, diviso per piano, e la stanza si apre toccandola.
+ *
+ * Le pastiglie sulla tessera non sono dati nuovi: e' tutta roba che la pagina
+ * sa gia' per ogni stanza, e che prima si poteva leggere solo entrandoci. Qui
+ * e' disegno; quali pastiglie merita una stanza lo dice il nucleo. */
+
+/* I piani della casa nell'ordine in cui stanno, quando il guscio lo sa. */
+function iPiani() {
+  try {
+    const nomi = root.cdFloorNames?.();
+    return Array.isArray(nomi) ? nomi.map(clean).filter(Boolean) : [];
+  } catch (_error) {
+    return [];
+  }
+}
+
+const statoDi = (entity, states) => clean(states?.[clean(entity)]?.state);
+
+const SI_COMANDA_ACCESO = /^(on|playing|cleaning)$/i;
+const CLIMA_ACCESO = /^(heat|cool|auto|dry|fan_only|heat_cool)$/i;
+/* Una porta che non e' chiusa. «Aperta» per una serratura vuol dire sbloccata,
+ * e per un cancello a meta' corsa vuol dire in movimento: tutte e tre sono la
+ * stessa notizia — non e' chiusa — ed e' quella che si vuole da fuori. */
+const VARCO_APERTO = /^(open|opening|closing|unlocked|on)$/i;
+
+/* Quante cose di un blocco sono accese adesso. */
+function acceseNelBlocco(pagina, chiave, states, prova) {
+  const blocco = (pagina?.blocchi || []).find((voce) => voce.key === chiave);
+  if (!blocco) return 0;
+  let quante = 0;
+  for (const voce of blocco.voci) {
+    const entity = entitaVoce(voce);
+    if (entity && prova(statoDi(entity, states), entity)) quante += 1;
+  }
+  return quante;
+}
+
+/* Le tapparelle e le finestre aperte, col verso giusto: chi ha un contatto che
+ * dice ON da chiuso l'ha gia' dichiarato una volta per tutta la plancia. */
+function varchiAperti(pagina, states, girati) {
+  return acceseNelBlocco(pagina, "coperture", states, (stato, entity) => {
+    const aperto = apertaSecondoVerso(windowOpenFromState(stato), girati.has(entity));
+    return aperto === true;
+  });
+}
+
+/* Le porte e i cancelli di questa stanza che non sono chiusi. Non stanno in un
+ * blocco loro — una porta arriva dov'e' stata assegnata — quindi si guardano
+ * tutte le voci della stanza e si tengono quelle che la sezione Apri porte
+ * conosce. */
+function porteAperte(pagina, states, aperture) {
+  let quante = 0;
+  for (const blocco of pagina?.blocchi || [])
+    for (const voce of blocco.voci) {
+      const entity = entitaVoce(voce);
+      if (!entity || !aperture.has(entity)) continue;
+      if (VARCO_APERTO.test(statoDi(entity, states))) quante += 1;
+    }
+  return quante;
+}
+
+/* Cosa non risponde, in questa stanza. E' lo stesso «non risponde» della
+ * tessera di casa (#33) — solo `unavailable`, non `unknown` — perche' due idee
+ * di «offline» nella stessa plancia divergono al primo caso strano. */
+function muteNellaStanza(pagina, states) {
+  let quante = 0;
+  for (const blocco of pagina?.blocchi || [])
+    for (const voce of blocco.voci) {
+      const entity = entitaVoce(voce);
+      if (entity && nonRisponde(statoDi(entity, states))) quante += 1;
+    }
+  return quante;
+}
+
+/* I gradi della stanza: la prima sonda configurata, che e' quella che la
+ * stanza porta sulla sua riga. Le altre stanno nella stanza aperta, dove c'e'
+ * lo spazio per dire quale sonda e'. */
+function gradiDellaStanza(pagina, states) {
+  const prima = temperatureEntries(pagina).find((voce) => clean(voce.temp));
+  const valore = Number.parseFloat(statoDi(prima?.temp, states).replace(",", "."));
+  return Number.isFinite(valore) ? valore : null;
+}
+
+/** Quello che una stanza ha da dire da fuori, gia' contato. */
+export function contiDellaStanza(pagina, states, aperture = aperturePerEntita()) {
+  const girati = insiemeInvertiti(readJson(CHIAVE_VERSI, []));
+  return {
+    luci: roomSceneSummary(pagina, states).accese,
+    prese: acceseNelBlocco(pagina, "prese", states, (stato) => SI_COMANDA_ACCESO.test(stato)),
+    clima: acceseNelBlocco(pagina, "clima", states, (stato) => CLIMA_ACCESO.test(stato)),
+    finestre: varchiAperti(pagina, states, girati),
+    porte: porteAperte(pagina, states, aperture),
+    mute: muteNellaStanza(pagina, states),
+    gradi: gradiDellaStanza(pagina, states),
+  };
+}
+
+function tuttiIConti(pagine, states) {
+  const aperture = aperturePerEntita();
+  const conti = {};
+  for (const pagina of pagine) conti[pagina.id] = contiDellaStanza(pagina, states, aperture);
+  return conti;
+}
+
+/* La parola di una pastiglia, per chi ascolta invece di guardare. Il numero da
+ * solo non dice di cosa: «3» sotto una lampadina si capisce con gli occhi e
+ * non con le orecchie. */
+function paroleDellaPastiglia(pastiglia) {
+  const uno = pastiglia.conto === 1;
+  if (pastiglia.chiave === "gradi") return t("temperatura", "temperature");
+  if (pastiglia.chiave === "luci")
+    return uno ? t("luce accesa", "light on") : t("luci accese", "lights on");
+  if (pastiglia.chiave === "prese")
+    return uno ? t("presa accesa", "socket on") : t("prese accese", "sockets on");
+  if (pastiglia.chiave === "clima")
+    return uno ? t("unità accesa", "unit on") : t("unità accese", "units on");
+  if (pastiglia.chiave === "finestre")
+    return uno ? t("finestra aperta", "window open") : t("finestre aperte", "windows open");
+  if (pastiglia.chiave === "porte")
+    return uno ? t("porta aperta", "door open") : t("porte aperte", "doors open");
+  return uno ? t("non risponde", "not answering") : t("non rispondono", "not answering");
+}
+
+function pastigliaMarkup(pastiglia) {
+  const testo =
+    pastiglia.chiave === "gradi"
+      ? `${Math.round(pastiglia.valore)}°`
+      : String(pastiglia.conto);
+  const parola = paroleDellaPastiglia(pastiglia);
+  const dentro = `<i aria-hidden="true">${esc(pastiglia.icona)}</i><b>${esc(testo)}</b>
+      <span class="dm-stanze-pill-voce">${esc(parola)}</span>`;
+  const comuni = `class="dm-stanze-pill" data-dm-stanza-pill="${esc(pastiglia.chiave)}"
+      data-dm-comanda="${esc(pastiglia.comanda)}"`;
+  /* Quella che comanda e' un tasto vero (#17, parte 3): con la tastiera ci si
+   * arriva, e chi ascolta sente che e' una cosa che si preme. Le altre sono
+   * scritte, e il tocco scivola sulla tessera, che porta dentro. */
+  if (pastiglia.comanda !== "spegni")
+    return `<span ${comuni} title="${esc(`${testo} ${parola}`)}">${dentro}</span>`;
+  return `<button type="button" ${comuni} data-dm-stanza-spegni="${esc(pastiglia.chiave)}"
+      title="${esc(`${testo} ${parola}`)}" aria-label="${esc(
+        `${t("Spegni", "Turn off")} · ${testo} ${parola}`,
+      )}">${dentro}</button>`;
+}
+
+/* ── la domanda e l'annulla, sulla tessera ───────────────────────────────── */
+
+/* Quanti e come si chiamano, per la frase della domanda. */
+function paroleDaSpegnere(chiave, quante) {
+  const uno = quante === 1;
+  if (chiave === "prese") return uno ? t("presa", "socket") : t("prese", "sockets");
+  return uno ? t("luce", "light") : t("luci", "lights");
+}
+
+function vivo(momento) {
+  return Boolean(momento) && Number(momento.fino) > Date.now();
+}
+
+/* Il velo nero sulla tessera: la domanda, oppure l'annulla dopo il fatto.
+ *
+ * Uno solo alla volta, e sempre lo stesso posto: due riquadri che si
+ * contendono la stessa tessera sarebbero due cose da leggere nello stesso
+ * punto. */
+function veloDellaTessera(pagina, conti) {
+  const chiesta = state.chiesta;
+  if (vivo(chiesta) && chiesta.stanza === pagina.id) {
+    const quante = Math.max(1, Number(conti?.[chiesta.chiave]) || 0);
+    const frase = `${t("Spengo", "Turn off")} ${quante} ${paroleDaSpegnere(chiesta.chiave, quante)}?`;
+    return `<div class="dm-stanze-velo" data-dm-stanza-velo="chiesta">
+        <span>${esc(frase)}</span>
+        <button type="button" data-dm-stanza-conferma="${esc(chiesta.chiave)}">${esc(
+          t("Spegni", "Turn off"),
+        )}</button>
+      </div>`;
+  }
+  const annulla = state.annulla;
+  if (vivo(annulla) && annulla.stanza === pagina.id)
+    return `<div class="dm-stanze-velo" data-dm-stanza-velo="annulla">
+        <span>${esc(t("Spente", "Turned off"))}</span>
+        <button type="button" data-dm-stanza-annulla>${esc(t("Annulla", "Undo"))}</button>
+      </div>`;
+  return "";
+}
+
+function tesseraDellaStanza(pagina, conti) {
+  const nome = pagina.senzaStanza ? t("Senza stanza", "No room") : pagina.name;
+  const icona = pagina.senzaStanza ? "📦" : roomGlyph(pagina.icon) || "🏠";
+  const pastiglie = pastiglieDellaStanza(conti).map(pastigliaMarkup).join("");
+  return `<article class="dm-stanze-tessera" data-dm-stanza="${esc(pagina.id)}" role="button" tabindex="0"
+      aria-label="${esc(nome)}">
+      <span class="dm-stanze-tessera-ic" aria-hidden="true">${esc(icona)}</span>
+      <strong class="dm-stanze-tessera-nome">${esc(nome)}</strong>
+      ${pastiglie ? `<span class="dm-stanze-pills">${pastiglie}</span>` : ""}
+      ${veloDellaTessera(pagina, conti)}
+    </article>`;
+}
+
+function gruppoMarkup(gruppo, conti) {
+  const accese = acceseNelPiano(gruppo, conti);
+  /* Zero non si scrive: «tutto spento» e' la stessa cosa detta bene, ed e' la
+   * risposta che uno cerca guardando le scale. */
+  const riassunto = accese
+    ? `${accese} ${accese === 1 ? t("accesa", "on") : t("accese", "on")}`
+    : t("tutto spento", "all off");
+  /* Le stanze a cui nessuno ha detto il piano si intitolano anche loro, quando
+   * i piani ci sono: un gruppo muto in fondo a un elenco diviso si legge come
+   * «queste stanno nel piano qui sopra», che e' il contrario di quello che
+   * dice. */
+  const nome = gruppo.piano || t("Senza piano", "No floor");
+  const testa = gruppo.intitolare
+    ? `<h2 class="dm-stanze-piano"><span>🏠 ${esc(nome)}</span><small>${esc(riassunto)}</small></h2>`
+    : "";
+  return `${testa}<div class="dm-stanze-indice-griglia">${gruppo.stanze
+    .map((pagina) => tesseraDellaStanza(pagina, conti[pagina.id] || {}))
+    .join("")}</div>`;
+}
+
+/** L'elenco delle stanze, diviso per piano: e' la pagina quando non c'e' una stanza aperta. */
+export function indiceMarkup(pagine, states = {}) {
+  const conti = tuttiIConti(pagine, states);
+  const gruppi = stanzePerPiano(pagine, { piani: iPiani() });
+  const quante = pagine.length === 1 ? t("una stanza", "one room") : `${pagine.length} ${t("stanze", "rooms")}`;
+  const piani = gruppi.filter((gruppo) => gruppo.intitolare && gruppo.piano).length;
+  const sopra = piani > 1 ? `${piani} ${t("piani", "floors")} · ${quante}` : quante;
+  return `<header class="dm-stanze-indice-testa">
+      <h1>${esc(t("Le stanze", "The rooms"))}</h1><small>${esc(sopra)}</small>
+    </header>
+    ${gruppi.map((gruppo) => gruppoMarkup(gruppo, conti)).join("")}`;
+}
+
 export function roomPageMarkup(pagine, scelta, states = {}) {
   if (!pagine.length)
     return `<div class="ed-empty dm-stanze-empty">${esc(
@@ -865,6 +1125,11 @@ export function roomPageMarkup(pagine, scelta, states = {}) {
         "No rooms configured yet. Add them from the editor's Rooms tab: every section can then assign its entities to one.",
       ),
     )}</div>`;
+  /* Senza una stanza scelta si vede l'elenco (#17): e' il punto di partenza
+   * della pagina, e da li' si entra. La fila delle linguette resta dentro la
+   * stanza aperta, dove serve a saltare alla successiva senza tornare
+   * indietro — sull'elenco direbbe due volte la stessa cosa. */
+  if (!clean(scelta)) return indiceMarkup(pagine, states);
   const pagina = pickRoomPage(pagine, scelta);
   const blocchi = pagina.blocchi.map((blocco) => blockMarkup(blocco, states)).join("");
   const vuota = blocchi
@@ -875,7 +1140,9 @@ export function roomPageMarkup(pagine, scelta, states = {}) {
           "Nothing here yet. Entities are assigned from each section's own tab.",
         ),
       )}</div>`;
-  return `${pillsMarkup(pagine, pagina.id)}${sceneMarkup(pagina, states)}${readingMarkup(pagina, states)}${blocchi}${vuota}`;
+  const indietro = `<button type="button" class="dm-stanze-indietro" data-dm-stanze-indice>
+      <span aria-hidden="true">←</span> ${esc(t("Le stanze", "The rooms"))}</button>`;
+  return `${indietro}${pillsMarkup(pagine, pagina.id)}${sceneMarkup(pagina, states)}${readingMarkup(pagina, states)}${blocchi}${vuota}`;
 }
 
 /* ─────────────────────────────────── paint ──────────────────────────────── */
@@ -912,6 +1179,17 @@ function signature(pagine, scelta, states) {
         lightView(entity, { state: states?.[entity], comandabile: siComanda(entity) }),
       ),
     ),
+    /* Sull'elenco cambia tutto quello che le pastiglie dicono, e non e' niente
+     * di quello che sta qui sopra: una luce spenta in un'altra stanza non
+     * cambia ne' il conto delle cose ne' le luci della stanza aperta, ma
+     * cambia la sua tessera. Si prende l'impronta dei conti, e solo quando
+     * l'elenco e' davvero quello che si vede. */
+    clean(scelta) ? "" : JSON.stringify(tuttiIConti(pagine, states)),
+    /* E il velo aperto su una tessera: la domanda e l'annulla nascono e
+     * muoiono senza che cambi nessuno stato della casa. */
+    [state.chiesta?.stanza, state.chiesta?.chiave, state.annulla?.stanza, state.annulla?.chiave]
+      .map((voce) => voce || "")
+      .join("~"),
   ].join("§");
 }
 
@@ -929,7 +1207,11 @@ function paint() {
   if (!paginaVisibile(ROOMS_PAGE_ID)) return;
   const pagine = roomPages();
   const states = allStates();
-  if (!pagine.some((pagina) => pagina.id === state.room)) state.room = pagine[0]?.id || "";
+  /* La stanza scelta resta scelta solo finche' esiste: una stanza cancellata
+   * riporta all'elenco, che e' la verita' su dov'e' finita. Qui prima si
+   * prendeva la prima della lista — era l'unico modo di avere una pagina —
+   * e adesso l'elenco c'e' (#17). */
+  if (state.room && !pagine.some((pagina) => pagina.id === state.room)) state.room = "";
   const firma = signature(pagine, state.room, states);
   if (firma !== state.signature) {
     state.signature = firma;
@@ -983,6 +1265,108 @@ function schedule() {
 }
 
 /* ─────────────────────────────────── ascolto ────────────────────────────── */
+
+/* ── spegnere una stanza da fuori (#17, parte 3) ─────────────────────────── */
+
+/* Cosa si spegne, in quella stanza, premendo quella pastiglia. Le luci le
+ * conta gia' la scena della stanza — e' la stessa domanda — e le prese sono
+ * quelle del loro blocco che rispondono e sono accese. */
+function cosaSiSpegne(pagina, chiave, states) {
+  if (chiave === "luci")
+    return roomSceneEntities(pagina).filter((entity) => {
+      const vista = lightView(entity, {
+        state: states[entity],
+        comandabile: siComanda(entity),
+      });
+      return vista.on && vista.available;
+    });
+  const blocco = (pagina?.blocchi || []).find((voce) => voce.key === chiave);
+  return (blocco?.voci || [])
+    .map((voce) => entitaVoce(voce))
+    .filter(
+      (entity) =>
+        entity && siComanda(entity) && SI_COMANDA_ACCESO.test(statoDi(entity, states)),
+    );
+}
+
+/* Accende o spegne un elenco di entita', ognuna col comando che la sua specie
+ * capisce: una luce si spegne con `light.turn_off`, una presa con quello del
+ * suo dominio. Il lucchetto l'hanno gia' tolto di mezzo i due filtri sopra. */
+function commuta(entita, acceso, states) {
+  for (const entity of entita) {
+    if (entity.startsWith("light.")) {
+      const vista = lightView(entity, {
+        state: states[entity],
+        comandabile: siComanda(entity),
+      });
+      chiamaServizio(lightCommand(vista, { power: acceso }));
+      continue;
+    }
+    const dominio = entity.split(".")[0];
+    chiamaServizio({
+      domain: dominio,
+      service: acceso ? "turn_on" : "turn_off",
+      data: { entity_id: entity },
+    });
+  }
+}
+
+/* Il timer che fa sparire la domanda o l'annulla quando scade. Uno solo: i due
+ * veli non convivono, e due timer vorrebbero dire due risvegli a rimuovere
+ * ognuno il velo dell'altro. */
+function fraQuanto(quanto) {
+  root.clearTimeout?.(state.sveglia);
+  state.sveglia = root.setTimeout?.(() => {
+    state.sveglia = 0;
+    state.signature = "";
+    schedule();
+  }, quanto + 40);
+}
+
+/* «Spengo 3 luci?»: il tocco chiede, non fa.
+ *
+ * «Una tessera che finora si toccava per ENTRARE diventa una tessera con sette
+ * bersagli dentro, e il tocco sbagliato spegne le luci a chi voleva solo
+ * guardare.» La domanda e' la risposta a quel rischio, e costa un tocco in
+ * piu' solo a chi voleva spegnere davvero. */
+function chiediDiSpegnere(stanza, chiave) {
+  state.annulla = null;
+  state.chiesta = { stanza, chiave, fino: Date.now() + QUANTO_DURA_LA_DOMANDA };
+  root.navigator?.vibrate?.(8);
+  fraQuanto(QUANTO_DURA_LA_DOMANDA);
+  state.signature = "";
+  schedule();
+}
+
+function spegniDavvero(stanza, chiave) {
+  const states = allStates();
+  const pagina = pickRoomPage(roomPages(), stanza);
+  const entita = cosaSiSpegne(pagina, chiave, states);
+  commuta(entita, false, states);
+  root.navigator?.vibrate?.(15);
+  state.chiesta = null;
+  /* L'annulla si ricorda COSA ha spento, non «rimetti com'era»: rimettere
+   * com'era vorrebbe dire uno scatto di tutta la stanza, e in mezzo secondo
+   * la casa e' gia' cambiata da sola. Queste sono le entita' che ha toccato
+   * lui, e sono le sole che deve rimettere a posto. */
+  state.annulla = { stanza, chiave, entita, fino: Date.now() + QUANTO_DURA_L_ANNULLA };
+  fraQuanto(QUANTO_DURA_L_ANNULLA);
+  state.signature = "";
+  schedule();
+}
+
+function riaccendi() {
+  const annulla = state.annulla;
+  state.annulla = null;
+  root.clearTimeout?.(state.sveglia);
+  state.sveglia = 0;
+  if (annulla?.entita?.length) {
+    commuta(annulla.entita, true, allStates());
+    root.navigator?.vibrate?.(8);
+  }
+  state.signature = "";
+  schedule();
+}
 
 function runScene(on) {
   const states = allStates();
@@ -1092,6 +1476,48 @@ function handleClick(event) {
    * disparte, come già si fa per l'interruttore dentro la riga. Senza questo
    * la riga porterebbe altrove mentre la conferma si apre. */
   if (event.target?.closest?.("[data-dm-door]")) return;
+  /* Il tasto che torna all'elenco (#17). Sta prima di tutto: e' dentro la
+   * stanza aperta, e da li' in poi nessun'altra regola lo riguarda. */
+  if (event.target?.closest?.("[data-dm-stanze-indice]")) {
+    state.room = "";
+    state.signature = "";
+    root.navigator?.vibrate?.(8);
+    root.scrollTo?.({ top: 0, behavior: "instant" });
+    schedule();
+    return;
+  }
+  /* Le pastiglie che comandano, e i due tasti del velo (#17, parte 3). Stanno
+   * PRIMA della tessera che le contiene: senza uscire qui, ogni tocco su una
+   * pastiglia aprirebbe anche la stanza. */
+  const spegni = event.target?.closest?.("[data-dm-stanza-spegni]");
+  if (spegni) {
+    event.preventDefault();
+    event.stopPropagation();
+    chiediDiSpegnere(
+      clean(spegni.closest("[data-dm-stanza]")?.dataset.dmStanza),
+      clean(spegni.dataset.dmStanzaSpegni),
+    );
+    return;
+  }
+  const conferma = event.target?.closest?.("[data-dm-stanza-conferma]");
+  if (conferma) {
+    event.preventDefault();
+    event.stopPropagation();
+    spegniDavvero(
+      clean(conferma.closest("[data-dm-stanza]")?.dataset.dmStanza),
+      clean(conferma.dataset.dmStanzaConferma),
+    );
+    return;
+  }
+  if (event.target?.closest?.("[data-dm-stanza-annulla]")) {
+    event.preventDefault();
+    event.stopPropagation();
+    riaccendi();
+    return;
+  }
+  /* Le altre pastiglie non comandano: il tocco scivola sulla tessera, che
+   * porta dentro. E' la stessa regola detta nel nucleo — una pastiglia che a
+   * volte comanda e a volte no sarebbe peggio di due disegni diversi. */
   const pillola = event.target?.closest?.("[data-dm-stanza]");
   if (pillola) {
     state.room = pillola.getAttribute("data-dm-stanza") || "";
@@ -1186,7 +1612,11 @@ export function installRoomsPageSection() {
   doc.addEventListener("click", handleClick);
   doc.addEventListener("keydown", (event) => {
     if (event.key !== "Enter" && event.key !== " ") return;
-    if (event.target?.closest?.("[data-dm-stanza-vai]")) handleClick(event);
+    /* E la tessera di una stanza sull'elenco (#17): ha `role="button"` e sta
+     * nel giro della tastiera, quindi Invio e spazio devono aprirla come il
+     * dito. Un bersaglio raggiungibile che non risponde e' una fermata in un
+     * giro che non porta a niente. */
+    if (event.target?.closest?.("[data-dm-stanza-vai],.dm-stanze-tessera")) handleClick(event);
   });
   for (const name of ["render", "cdApplyNavVis"])
     wrapFunction(name, "__dmRoomsPageSection", schedule);
@@ -1241,6 +1671,76 @@ function installStyles() {
       #page-stanze .dm-stanze-n{flex:0 0 auto;order:0;padding:2px 9px;border:1px solid var(--divider-color,#dbe4ee);border-radius:999px;font-size:10px;letter-spacing:.6px}
 
       #page-stanze .dm-stanze-grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(min(258px,100%),1fr))}
+      /* L'elenco delle stanze (#17): la testata, i piani, e la tessera con le
+         sue pastiglie. La tessera e' grande — si tocca per entrare — e le
+         pastiglie sotto sono larghe 44 punti, che e' la misura del pollice:
+         dalla #17 in poi alcune comandano, e un bersaglio piccolo su una cosa
+         che spegne le luci e' un difetto, non un dettaglio. */
+      #page-stanze .dm-stanze-indice-testa{display:flex;align-items:baseline;gap:10px;
+        margin:2px 2px 14px;flex-wrap:wrap}
+      #page-stanze .dm-stanze-indice-testa h1{margin:0;font-size:22px;font-weight:900;
+        letter-spacing:-.4px;color:var(--text,#0f172a)}
+      #page-stanze .dm-stanze-indice-testa small{color:var(--secondary-text-color,#64748b);
+        font-size:12px;font-weight:800;letter-spacing:.4px}
+      #page-stanze .dm-stanze-piano{display:flex;align-items:baseline;gap:10px;
+        margin:18px 2px 10px;font-size:13px;font-weight:900;letter-spacing:.6px;
+        text-transform:uppercase;color:var(--text,#0f172a)}
+      #page-stanze .dm-stanze-piano small{margin-left:auto;font-size:11px;font-weight:800;
+        letter-spacing:.6px;color:var(--secondary-text-color,#94a3b8);text-transform:none}
+      #page-stanze .dm-stanze-indice-griglia{display:grid;gap:12px;
+        grid-template-columns:repeat(auto-fit,minmax(min(258px,100%),1fr))}
+      #page-stanze .dm-stanze-tessera{position:relative;display:grid;gap:10px;
+        justify-items:center;padding:18px 14px 14px;cursor:pointer;
+        border:1px solid var(--divider-color,#dbe4ee);border-radius:22px;
+        background:linear-gradient(180deg,var(--card-bg,#fff) 0%,color-mix(in srgb,#94a3b8 4%,var(--card-bg,#fff)) 100%);
+        box-shadow:0 16px 32px -24px rgba(15,23,42,.45);
+        transition:transform .16s ease,box-shadow .16s ease}
+      #page-stanze .dm-stanze-tessera:active{transform:scale(.985)}
+      #page-stanze .dm-stanze-tessera:focus-visible{outline:2px solid var(--primary-color,#0ea5e9);
+        outline-offset:3px}
+      #page-stanze .dm-stanze-tessera-ic{font-size:34px;line-height:1}
+      #page-stanze .dm-stanze-tessera-nome{font-size:16px;font-weight:900;letter-spacing:-.2px;
+        text-align:center;color:var(--text,#0f172a)}
+      #page-stanze .dm-stanze-pills{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;
+        width:100%}
+      #page-stanze .dm-stanze-pill{display:inline-flex;align-items:center;gap:5px;
+        min-height:44px;min-width:44px;justify-content:center;padding:0 12px;
+        border:1px solid var(--divider-color,#e2e8f0);border-radius:999px;
+        background:var(--surface-2,#f8fafc);color:var(--text,#0f172a);
+        font-size:13px;font-weight:800;line-height:1}
+      #page-stanze .dm-stanze-pill i{font-style:normal;font-size:15px}
+      /* La parola sta nel titolo e per chi ascolta, non a schermo: sulla
+         tessera ci stanno il segno e il numero, e sette parole in fila
+         sarebbero un paragrafo. */
+      #page-stanze .dm-stanze-pill-voce{position:absolute;width:1px;height:1px;overflow:hidden;
+        clip-path:inset(50%);white-space:nowrap}
+      /* Il velo della domanda e quello dell'annulla (#17, parte 3): nero, sopra
+         la tessera, e va via da solo. Uno solo alla volta — due riquadri che si
+         contendono lo stesso posto sarebbero due cose da leggere nello stesso
+         punto — e il tasto e' largo quanto le pastiglie, per la stessa ragione
+         per cui sono larghe cosi'. */
+      #page-stanze .dm-stanze-velo{position:absolute;inset:0;z-index:2;
+        display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;
+        padding:12px;border-radius:22px;text-align:center;
+        background:rgba(15,23,42,.96);color:#f8fafc;
+        font-size:14px;font-weight:800;letter-spacing:-.1px;
+        animation:dm-stanze-velo .16s ease-out}
+      @keyframes dm-stanze-velo{from{opacity:0}to{opacity:1}}
+      #page-stanze .dm-stanze-velo button{min-height:44px;padding:0 16px;cursor:pointer;
+        border:0;border-radius:999px;background:#f8fafc;color:#0f172a;
+        font:inherit;font-weight:900;letter-spacing:.2px}
+      #page-stanze .dm-stanze-velo button:active{transform:scale(.96)}
+      #page-stanze .dm-stanze-velo[data-dm-stanza-velo="annulla"]{background:rgba(15,23,42,.86)}
+      @media(prefers-reduced-motion:reduce){
+        #page-stanze .dm-stanze-velo{animation:none}
+        #page-stanze .dm-stanze-tessera{transition:none}
+      }
+      #page-stanze .dm-stanze-indietro{display:inline-flex;align-items:center;gap:8px;
+        min-height:44px;margin:0 2px 10px;padding:0 14px;cursor:pointer;
+        border:1px solid var(--divider-color,#e2e8f0);border-radius:999px;
+        background:var(--surface-2,#f8fafc);color:var(--text,#0f172a);
+        font-size:13px;font-weight:800;letter-spacing:.3px}
+      #page-stanze .dm-stanze-indietro:active{transform:scale(.97)}
       /* Il clima tiene la griglia a tutte le larghezze (#11): sopra i 900px la
          griglia delle stanze diventa una fila flessibile, e le sue misure sono
          scritte per la card delle stanze. Quella del clima e' un'altra card — e'

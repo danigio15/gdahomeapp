@@ -65,6 +65,9 @@ test("la luce cambia stato quando Home Assistant risponde", async ({ page }, tes
    * aperta — che e' anche l'unico modo in cui una persona vede quella card. */
   await page.locator('.tab[data-tab="stanze"]').first().click();
   await expect(page.locator("#page-stanze")).toHaveClass(/active/);
+  /* La pagina Stanze si apre sull'elenco (#17): la stanza si apre toccandola,
+   * come fa una persona. */
+  await page.locator("#page-stanze .dm-stanze-tessera").first().click();
   await page.waitForTimeout(700);
 
   const carta = '#page-stanze [data-dm-lucip="light.salone"]';

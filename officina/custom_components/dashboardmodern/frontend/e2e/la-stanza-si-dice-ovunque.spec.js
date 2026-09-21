@@ -88,14 +88,18 @@ test.describe("la stanza, ovunque", () => {
       document.getElementById("page-stanze")?.classList.add("active");
       window.dispatchEvent(new CustomEvent("dashboardmodern:state-changed", { detail: {} }));
     });
-    const salone = page.locator('#page-stanze [data-dm-stanza="room-salone"]');
-    await expect(salone).toHaveCount(1);
-    // Il Salone e' gia' la linguetta scelta: e' la prima.
-    await expect(salone).toHaveAttribute("aria-selected", "true");
+    // La pagina si apre sull'elenco (#17): la stanza si apre toccandola.
+    const tessera = page.locator('#page-stanze .dm-stanze-tessera[data-dm-stanza="room-salone"]');
+    await expect(tessera).toHaveCount(1);
+    await tessera.click();
+    // Entrati, il Salone e' la linguetta scelta.
+    await expect(
+      page.locator('#page-stanze .dm-stanze-tab[data-dm-stanza="room-salone"]'),
+    ).toHaveAttribute("aria-selected", "true");
     await expect(page.locator("#page-stanze")).toContainText("Pompa solare");
     // E nell'altra stanza no: una cosa sta dove l'hai messa.
     await page
-      .locator('#page-stanze [data-dm-stanza="room-bagno"]')
+      .locator('#page-stanze .dm-stanze-tab[data-dm-stanza="room-bagno"]')
       .evaluate((nodo) => nodo.click());
     await expect(page.locator("#page-stanze")).not.toContainText("Pompa solare");
   });
