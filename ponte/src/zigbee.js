@@ -66,6 +66,25 @@ export const ATTESA_DELLA_CASSETTA = 2000;
  * prefisso, e la risposta dice quale sia. */
 export const DOVE_SI_CHIEDE = "+/bridge/info";
 
+/* E lo stesso, un piano piu' sotto.
+ *
+ * In MQTT il `+` copre UN livello solo: `+/bridge/info` prende
+ * «zigbee2mqtt/bridge/info» e non prendera' mai «casa/zigbee/bridge/info».
+ * Che e' esattamente l'esempio scritto sopra `prefissoDellaCassetta`, la
+ * funzione che legge il prefisso: lei un prefisso con le barre dentro lo sa
+ * leggere benissimo, ma l'abbonamento non poteva fargliene arrivare uno.
+ * Preparati per un caso che la domanda rendeva impossibile.
+ *
+ * Due domande e non `#`: `#` vorrebbe dire farsi mandare OGNI messaggio di
+ * quella casa per due secondi — su un impianto vero sono migliaia, e per
+ * leggerne uno. Due livelli coprono quello che si usa; chi annida il prefisso
+ * piu' in fondo di cosi' non l'ha ancora fatto nessuno, e se succedera' si
+ * aggiunge una riga a questo elenco. */
+export const DOVE_SI_CHIEDE_ANCORA = "+/+/bridge/info";
+
+/** Tutte le cassette a cui ci si affaccia, in un colpo solo. */
+export const LE_CASSETTE = Object.freeze([DOVE_SI_CHIEDE, DOVE_SI_CHIEDE_ANCORA]);
+
 const pulito = (valore) => String(valore ?? "").trim();
 
 /**
@@ -301,34 +320,44 @@ export class Zigbee {
    * chi ha appena aperto una schermata e' il modo di farla sembrare rotta.
    */
   async _cercaLaCassetta() {
-    let disdici = null;
+    const disdette = [];
+    /* Quante domande non hanno ancora avuto risposta: la scadenza vale per
+     * tutte insieme, ma se TUTTE falliscono — niente MQTT in questa casa — non
+     * si sta li' due secondi ad aspettare nessuno. */
+    let aperte = LE_CASSETTE.length;
     try {
       return await new Promise((risolvi) => {
         const scadenza = setTimeout(() => risolvi(""), ATTESA_DELLA_CASSETTA);
-        this.casa
-          .ascoltaIl({ type: "mqtt/subscribe", topic: DOVE_SI_CHIEDE }, (evento) => {
-            const prefisso = prefissoDellaCassetta(evento?.topic);
-            if (!prefisso) return;
-            clearTimeout(scadenza);
-            risolvi(prefisso);
-          })
-          .then(
-            (smetti) => {
-              disdici = smetti;
-            },
-            () => {
-              /* Niente MQTT in questa casa: nessuna cassetta, e non e' un
-               * guasto — e' una casa che Zigbee2MQTT non ce l'ha. */
-              clearTimeout(scadenza);
-              risolvi("");
-            },
-          );
+        const basta = (prefisso) => {
+          clearTimeout(scadenza);
+          risolvi(prefisso);
+        };
+        for (const topic of LE_CASSETTE) {
+          this.casa
+            .ascoltaIl({ type: "mqtt/subscribe", topic }, (evento) => {
+              const prefisso = prefissoDellaCassetta(evento?.topic);
+              if (prefisso) basta(prefisso);
+            })
+            .then(
+              (smetti) => {
+                disdette.push(smetti);
+              },
+              () => {
+                /* Niente MQTT in questa casa: nessuna cassetta, e non e' un
+                 * guasto — e' una casa che Zigbee2MQTT non ce l'ha. */
+                aperte -= 1;
+                if (aperte <= 0) basta("");
+              },
+            );
+        }
       });
     } finally {
-      try {
-        await disdici?.();
-      } catch (_errore) {
-        /* L'abbonamento e' gia' morto col filo. */
+      for (const disdici of disdette) {
+        try {
+          await disdici?.();
+        } catch (_errore) {
+          /* L'abbonamento e' gia' morto col filo. */
+        }
       }
     }
   }
