@@ -4401,7 +4401,7 @@
             <span>macchina, rete e dispositivi</span>
           </div>
 
-          ${laMacchina(c)} ${laRete(c)} ${gliAddon(c)}
+          ${laMacchina(c)} ${leAltreMacchine(c)} ${laRete(c)} ${gliAddon(c)}
 
           <section class="riquadro">
             <div class="capoRiquadro"><h3>Ultimi quattordici giorni</h3></div>
@@ -4723,6 +4723,16 @@
               come: livello(m.discoVita, DISCO_STANCO, SOGLIE.discoFinito),
             }),
           );
+        /* Una macchina di casa che non sta in piedi e' un'anomalia, e va detta
+         * qui: chi installa guarda questo elenco per primo, e un nodo giu' che
+         * si vede solo aprendo la scheda intera e' un nodo che resta giu'.
+         *
+         * Le due parole restano diverse anche qui, perche' portano a due
+         * lavori diversi: «non risponde» si va a cercare sulla rete, «spento»
+         * si va ad accendere. */
+        const macchineGiu = (Array.isArray(c.nodi) ? c.nodi : []).filter(
+          (uno) => uno.muto || uno.acceso === false,
+        );
         const daInstallare =
           (c.aggiornamenti?.elenco || []).length > 0 || Boolean(casa.chiesto) || Boolean(c.lavoro);
 
@@ -4737,8 +4747,18 @@
               </li>`,
               )
               .join("")}
+            ${macchineGiu
+              .map(
+                (uno) => `
+              <li data-grave="true">
+                <i></i><span><b>${testo(uno.nome)}</b> — ${
+                  uno.muto ? "non risponde" : "spento"
+                }</span>
+              </li>`,
+              )
+              .join("")}
             ${
-              !rotti.length && stato.chiave !== "offline"
+              !rotti.length && !macchineGiu.length && stato.chiave !== "offline"
                 ? `<li><i></i><span>${testo(stato.perché || "Nessuna anomalia.")}</span></li>`
                 : ""
             }
@@ -5081,6 +5101,75 @@
        * sezione «Macchine e rete» della plancia adotta per integrazione: ci
        * sono se chi ci abita li ha spuntati, e dove non sono spuntati qui
        * si dice zero invece di fingere. */
+      /* Le altre macchine di casa: il cluster, il NAS, il secondo mini PC.
+       *
+       * «Nel lato installatore devono comparire anche eventuali macchine
+       * inserite e nodi presenti.» Chi abita le dichiara nella sezione MiniPC
+       * della plancia, e chi installa vedeva solo la macchina di Home
+       * Assistant — cioè non vedeva proprio quelle che si guastano senza che
+       * nessuno se ne accorga, perché su un nodo che non è quello della
+       * plancia nessuno guarda mai.
+       *
+       * Ha la stessa forma della scheda della rete, e non per pigrizia: sono
+       * la stessa cosa da guardare — un elenco di apparati, ognuno con la sua
+       * lucina e quello che dice di sé.
+       *
+       * Una casa senza cluster non ha un riquadro vuoto: non ha un riquadro.
+       * È la stessa regola della plancia, dove la fascia non esiste finché
+       * nessuno ha configurato un nodo. */
+      function leAltreMacchine(c) {
+        const nodi = Array.isArray(c.nodi) ? c.nodi : [];
+        if (!nodi.length) return "";
+        /* «Non risponde» e «spento» sono due guai diversi e si contano
+         * insieme solo qui, nel conto di quanti stanno in piedi: nella riga
+         * restano distinti, perché chi ripara va a cercare due cose diverse. */
+        const giu = nodi.filter((uno) => uno.muto || uno.acceso === false).length;
+        const misura = (valore, che, unita, attenta, male) =>
+          valore === null || valore === undefined
+            ? ""
+            : `<span class="pastiglia ${livello(valore, attenta, male) === "bene" ? "" : "attenta"}"
+                >${testo(che)} ${testo(valore)}${testo(unita)}</span>`;
+        return `
+          <section class="riquadro">
+            <div class="capoRiquadro">
+              <h3>Le altre macchine</h3>
+              <span class="conta">${nodi.length - giu}/${nodi.length} in piedi</span>
+            </div>
+            <ul class="schede">
+              ${nodi
+                .map((uno) => {
+                  const su = !uno.muto && uno.acceso !== false;
+                  return `
+                <li class="${su ? "su" : "giu"}">
+                  <span class="lucina" aria-hidden="true"></span>
+                  <span class="come">${testo(uno.nome)}</span>
+                  ${misura(uno.cpu, "CPU", "%", 70, 90)}
+                  ${misura(uno.ram, "RAM", "%", 75, 90)}
+                  ${misura(uno.disco, "disco", "%", 75, SOGLIE.discoPieno)}
+                  ${misura(uno.temperatura, "", "°", SOGLIE.troppoCaldo - 10, SOGLIE.troppoCaldo)}
+                  <span class="dove">${
+                    uno.muto
+                      ? "non risponde"
+                      : uno.acceso === false
+                        ? "spento"
+                        : uno.acceso === true
+                          ? "acceso"
+                          : "stato non mappato"
+                  }</span>
+                </li>`;
+                })
+                .join("")}
+            </ul>
+            <p class="verdetto">
+              ${
+                giu === 0
+                  ? `${plurale(nodi.length, "altra macchina dichiarata", "altre macchine dichiarate")} in questo impianto, ${nodi.length === 1 ? "in piedi" : "tutte in piedi"}.`
+                  : `${giu} ${giu === 1 ? "macchina non è in piedi" : "macchine non sono in piedi"} su ${nodi.length}. «Non risponde» è la rete o Home Assistant che non riesce a chiedere; «spento» è una macchina che qualcuno ha fermato.`
+              }
+            </p>
+          </section>`;
+      }
+
       function laRete(c) {
         const r = c.rete;
         if (!r)

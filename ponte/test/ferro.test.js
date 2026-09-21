@@ -18,6 +18,7 @@ import {
   gliApparati,
   laMacchina,
   laRete,
+  iNodiDelCluster,
   laScheda,
   leCaselleDelMiniPc,
 } from "../src/ferro.js";
@@ -144,6 +145,126 @@ test("uno scatto senza mappature non e' un errore: e' una casa che non le ha com
     stati: [stato("sensor.processor_use", "9")],
   });
   assert.equal(m.cpu, 9);
+});
+
+/* ── gli altri nodi ────────────────────────────────────────────────────── */
+
+const conNodi = (nodi) => ({ cd_nodi: JSON.stringify(nodi) });
+
+test("le altre macchine di casa arrivano a chi installa, coi loro numeri", () => {
+  /* Un Proxmox con due nodi: il primo dice tutto, il secondo solo se sta su. */
+  const nodi = iNodiDelCluster(
+    conNodi([
+      {
+        id: "n1",
+        nome: "pve1",
+        stato: "binary_sensor.pve1_status",
+        cpu: "sensor.pve1_cpu",
+        ram: "sensor.pve1_ram",
+        disco: "sensor.pve1_disk",
+        temperatura: "sensor.pve1_temp",
+      },
+      { id: "n2", nome: "NAS", stato: "binary_sensor.nas_online" },
+    ]),
+    [
+      stato("binary_sensor.pve1_status", "on"),
+      stato("sensor.pve1_cpu", "23.4", { unit_of_measurement: "%" }),
+      stato("sensor.pve1_ram", "61", { unit_of_measurement: "%" }),
+      stato("sensor.pve1_disk", "44", { unit_of_measurement: "%" }),
+      stato("sensor.pve1_temp", "58", { unit_of_measurement: "°C" }),
+      stato("binary_sensor.nas_online", "off"),
+    ],
+  );
+  assert.deepEqual(nodi, [
+    { nome: "pve1", acceso: true, muto: false, cpu: 23, ram: 61, disco: 44, temperatura: 58 },
+    {
+      nome: "NAS",
+      acceso: false,
+      muto: false,
+      cpu: null,
+      ram: null,
+      disco: null,
+      temperatura: null,
+    },
+  ]);
+  /* Le entita' non escono: servono in casa per sapere cosa leggere. */
+  assert.equal(JSON.stringify(nodi).includes("binary_sensor"), false);
+  assert.equal(JSON.stringify(nodi).includes("sensor.pve1"), false);
+});
+
+test("«non risponde» e «spento» sono due guai diversi, e si dicono diversi", () => {
+  const [muto] = iNodiDelCluster(conNodi([{ nome: "pve2", stato: "binary_sensor.pve2_status" }]), [
+    stato("binary_sensor.pve2_status", "unavailable"),
+  ]);
+  /* Home Assistant non riesce a chiedergli come sta: e' la rete, non il nodo. */
+  assert.equal(muto.muto, true);
+  assert.equal(muto.acceso, null);
+
+  /* E un'entita' che in questa casa non c'e' piu' dice la stessa cosa. */
+  const [sparito] = iNodiDelCluster(
+    conNodi([{ nome: "pve3", stato: "binary_sensor.pve3_status" }]),
+    [],
+  );
+  assert.equal(sparito.muto, true);
+
+  /* Spento e' un'altra cosa: quel nodo qualcuno lo ha fermato. */
+  const [fermo] = iNodiDelCluster(conNodi([{ nome: "pve4", stato: "binary_sensor.pve4_status" }]), [
+    stato("binary_sensor.pve4_status", "off"),
+  ]);
+  assert.deepEqual([fermo.acceso, fermo.muto], [false, false]);
+});
+
+test("un nodo senza nome lo prende da dove lo trova, e mai lo lascia vuoto", () => {
+  const [daHa] = iNodiDelCluster(conNodi([{ stato: "binary_sensor.pve5_status" }]), [
+    stato("binary_sensor.pve5_status", "on", { friendly_name: "Proxmox 5" }),
+  ]);
+  assert.equal(daHa.nome, "Proxmox 5");
+  /* Senza nemmeno quello, resta il pezzo dell'entita': meglio «pve6_status»
+   * che una scheda senza intestazione. */
+  const [daEntita] = iNodiDelCluster(conNodi([{ stato: "binary_sensor.pve6_status" }]), [
+    stato("binary_sensor.pve6_status", "on"),
+  ]);
+  assert.equal(daEntita.nome, "pve6_status");
+});
+
+test("una riga aperta e non compilata non e' un nodo, e otto sono il massimo", () => {
+  assert.deepEqual(iNodiDelCluster(conNodi([{ id: "vuoto", nome: "Senza niente" }]), []), []);
+  /* Il nome da solo non basta: senza entita' non c'e' niente da dire di lui. */
+  const tanti = Array.from({ length: 12 }, (_, i) => ({
+    nome: `n${i}`,
+    stato: `binary_sensor.n${i}`,
+  }));
+  assert.equal(iNodiDelCluster(conNodi(tanti), []).length, 8);
+});
+
+test("una percentuale impossibile e dei gradi impossibili si tacciono", () => {
+  const [nodo] = iNodiDelCluster(
+    conNodi([
+      { nome: "storto", stato: "binary_sensor.s", cpu: "sensor.s_cpu", temperatura: "sensor.s_t" },
+    ]),
+    [
+      stato("binary_sensor.s", "on"),
+      stato("sensor.s_cpu", "180", { unit_of_measurement: "%" }),
+      stato("sensor.s_t", "900", { unit_of_measurement: "°C" }),
+    ],
+  );
+  assert.deepEqual([nodo.cpu, nodo.temperatura], [null, null]);
+
+  /* E i gradi in Fahrenheit si giudicano in Celsius, o un nodo freddo
+   * sembrerebbe caldo: 140 °F sono 60 °C. */
+  const [caldo] = iNodiDelCluster(
+    conNodi([{ nome: "f", stato: "binary_sensor.f", temperatura: "sensor.f_t" }]),
+    [stato("binary_sensor.f", "on"), stato("sensor.f_t", "140", { unit_of_measurement: "°F" })],
+  );
+  assert.equal(caldo.temperatura, 60);
+});
+
+test("una casa senza cluster non manda nodi, e uno scatto storto non fa cadere il rapporto", () => {
+  assert.deepEqual(iNodiDelCluster(null), []);
+  assert.deepEqual(iNodiDelCluster({}), []);
+  assert.deepEqual(iNodiDelCluster({ cd_nodi: "{non e' json" }), []);
+  assert.deepEqual(iNodiDelCluster({ cd_nodi: "null" }), []);
+  assert.deepEqual(iNodiDelCluster({ cd_stanze: "[]" }), []);
 });
 
 test("un sensore che non risponde non e' un numero: vale come se non ci fosse", () => {

@@ -114,6 +114,134 @@ export function leCaselleDelMiniPc(valori) {
   return fuori;
 }
 
+/* ─── Gli altri nodi ──────────────────────────────────────────────────────
+ *
+ * Chi ha un cluster — un Proxmox, due mini PC, un NAS — li dichiara nella
+ * sezione MiniPC della plancia, e quella fascia si chiama «Altri nodi». Fino a
+ * ieri restavano li': chi installa vedeva la macchina di Home Assistant e non
+ * vedeva le altre, che sono esattamente quelle che si guastano senza che
+ * nessuno se ne accorga.
+ *
+ * La forma di un nodo e' quella che scrive la plancia in `cd_nodi`: un nome e
+ * cinque entita', tutte facoltative, perche' non tutte le integrazioni le
+ * pubblicano tutte. Proxmox VE da' lo stato e le percentuali, Glances aggiunge
+ * i gradi, un ping da' solo il su e giu'.
+ *
+ * Queste righe dicono le stesse cose di `plancia/src/core/nodi-del-cluster.js`
+ * e ne sono la gemella: le parole di «acceso», quelle di «spento», il fatto
+ * che «non risponde» e «spento» siano due cose diverse. Sono scritte qui
+ * invece di importare quel modulo perche' il ponte e' un programma a se' e la
+ * plancia gli sta dentro sigillata: farlo dipendere da un file di li' vuol
+ * dire che ri-imbarcare la plancia cambia in silenzio come si comporta il
+ * server. Chi tocca una delle due guardi l'altra — e le prove di tutte e due
+ * pretendono le stesse parole.
+ */
+const NODI_MASSIMI = 8;
+const CAMPI_DEL_NODO = Object.freeze(["stato", "cpu", "ram", "disco", "temperatura"]);
+const NODO_SPENTO = new Set(["off", "false", "disconnected", "not_running"]);
+const NODO_ACCESO = new Set(["on", "true", "home", "connected", "running", "online", "up"]);
+
+/* Tre esiti e non due: un nodo senza entita' di stato non e' spento, e' un
+ * nodo di cui non lo si e' chiesto. */
+function nodoAcceso(stato) {
+  if (!stato) return null;
+  const grezzo = pulito(stato.state).toLowerCase();
+  if (!grezzo || grezzo === "unknown") return null;
+  if (NODO_ACCESO.has(grezzo)) return true;
+  if (NODO_SPENTO.has(grezzo)) return false;
+  return null;
+}
+
+/* I gradi arrivano anche in Fahrenheit, e la soglia e' in Celsius: settanta
+ * gradi Fahrenheit sono ventuno, e confrontarli con settanta vorrebbe dire un
+ * allarme su un nodo freddo. */
+function inCelsius(valore, unita) {
+  return pulito(unita).toLowerCase().replace(/\s+/g, "") === "°f"
+    ? ((valore - 32) * 5) / 9
+    : valore;
+}
+
+function misuraDelNodo(stati, entity, { gradi = false } = {}) {
+  const id = pulito(entity);
+  if (!id) return null;
+  const uno = (Array.isArray(stati) ? stati : []).find(
+    (quello) => pulito(quello?.entity_id) === id,
+  );
+  if (!uno) return null;
+  const valore = numero(String(uno.state ?? "").replace(",", "."));
+  if (valore === null) return null;
+  const unita = pulito(uno.attributes?.unit_of_measurement);
+  const inScala = gradi ? inCelsius(valore, unita) : valore;
+  /* Una percentuale fuori dallo zero-cento non e' una percentuale; dei gradi
+   * fuori dal meno venti-centocinquanta sono un sensore che dice un'altra
+   * cosa. In tutti e due i casi si tace invece di scrivere un numero storto. */
+  if (gradi ? inScala < -20 || inScala > 150 : valore < 0 || valore > 100) return null;
+  return Math.round(gradi ? inScala : valore);
+}
+
+/**
+ * Gli altri nodi del cluster, letti dallo scatto di una plancia.
+ *
+ * `valori` e' la mappa chiave→testo dello scatto, `stati` il `get_states`.
+ * Una casa senza cluster risponde con un elenco vuoto, ed e' quasi tutte.
+ *
+ * Quello che esce: il nome che ha scelto chi abita, se il nodo risponde, e i
+ * quattro numeri che ha mappato. Le ENTITA' non escono — servono qui per
+ * sapere cosa leggere, e di qui non vanno da nessuna parte.
+ */
+export function iNodiDelCluster(valori, stati = []) {
+  const dentro = valori && typeof valori === "object" ? valori : null;
+  if (!dentro) return [];
+  let elenco = dentro.cd_nodi;
+  if (typeof elenco === "string") {
+    try {
+      elenco = JSON.parse(elenco);
+    } catch (_male) {
+      return [];
+    }
+  }
+  if (!Array.isArray(elenco)) return [];
+  const fuori = [];
+  for (const [indice, riga] of elenco.entries()) {
+    if (fuori.length >= NODI_MASSIMI) break;
+    const nodo = riga && typeof riga === "object" && !Array.isArray(riga) ? riga : {};
+    const caselle = {
+      stato: pulito(nodo.stato),
+      cpu: pulito(nodo.cpu),
+      ram: pulito(nodo.ram),
+      disco: pulito(nodo.disco),
+      temperatura: pulito(nodo.temperatura),
+    };
+    /* Una riga aperta e non ancora compilata non e' un nodo: sulla plancia non
+     * si disegna, e qui non si manda. */
+    if (!CAMPI_DEL_NODO.some((campo) => caselle[campo])) continue;
+    const suo = caselle.stato
+      ? (Array.isArray(stati) ? stati : []).find(
+          (quello) => pulito(quello?.entity_id) === caselle.stato,
+        ) || null
+      : null;
+    fuori.push({
+      nome:
+        pulito(nodo.nome || nodo.name) ||
+        pulito(suo?.attributes?.friendly_name) ||
+        caselle.stato.split(".")[1] ||
+        pulito(nodo.id) ||
+        `nodo ${indice + 1}`,
+      acceso: nodoAcceso(suo),
+      /* «Non risponde» e «e' spento» sono due guai diversi: il primo e' la
+       * rete o Home Assistant, il secondo e' un nodo che qualcuno ha fermato.
+       * Chi installa deve poterli distinguere, o va a cercare la cosa
+       * sbagliata. */
+      muto: Boolean(caselle.stato) && (!suo || pulito(suo.state).toLowerCase() === "unavailable"),
+      cpu: misuraDelNodo(stati, caselle.cpu),
+      ram: misuraDelNodo(stati, caselle.ram),
+      disco: misuraDelNodo(stati, caselle.disco),
+      temperatura: misuraDelNodo(stati, caselle.temperatura, { gradi: true }),
+    });
+  }
+  return fuori;
+}
+
 const GIORNO = 24 * 60 * 60 * 1000;
 
 const pulito = (valore) => String(valore ?? "").trim();
