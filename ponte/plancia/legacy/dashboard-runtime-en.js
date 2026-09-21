@@ -2749,7 +2749,7 @@ function wzPickIcon(sel) {
 }
 function cdSetIcon(sel, e) {
     const el = document.querySelector(sel);
-    if (el) { el.value = e; try { el.dispatchEvent(new Event('change')); } catch(_) {} }
+    if (el) { el.value = e; try { el.dispatchEvent(new Event('change', { bubbles: true })); } catch(_) {} }
     const ov = document.getElementById('cd-icon-picker'); if (ov) ov.remove();
 }
 
@@ -2849,7 +2849,7 @@ function cdEpFilter(q) {
 function cdEpChoose(id) {
     const ref = window._cdEpRef;
     document.getElementById('cd-entpick')?.remove();
-    if (ref && ref.nodeType === 1) { ref.value = id; try { ref.dispatchEvent(new Event('change')); } catch(e) {} return; } if (ref && ref.startsWith('#')) { const el = document.getElementById(ref.slice(1)); if (el) el.value = id; return; }
+    if (ref && ref.nodeType === 1) { ref.value = id; try { ref.dispatchEvent(new Event('change', { bubbles: true })); } catch(e) {} return; } if (ref && ref.startsWith('#')) { const el = document.getElementById(ref.slice(1)); if (el) el.value = id; return; }
     if (ref === '__qa__') { const qa = document.getElementById('wz-qa-ent'); if (qa) qa.value = id; return; }
     if (ref === '__ed_qa__') { const qa = document.getElementById('ed-qa-ent'); if (qa) { qa.value = id; edQaEntityChanged(); } return; }
     const inp = document.querySelector(`input[data-ref="${ref}"]`);
