@@ -1313,8 +1313,19 @@ test("production graph is single-owner, acyclic and contains no facade pass-thro
   // dentro adesso. Sono due regole e non un disegno — l'ordine dei piani, il
   // titolo che si scrive solo se serve, quali pastiglie comandano e quali
   // portano dentro — e si provano su un elenco finto, senza un documento.
+  // 368 con il conto delle fasce su un periodo (#72, seconda meta'): quando le
+  // fasce sono nate avevo scritto che su un mese potevano dare solo una stima,
+  // «perche' la plancia sa quanti kWh sono passati, non in che ore». Era una
+  // limitazione mia: il Recorder le ore le tiene, e prenderle una per una e
+  // metterle nella loro fascia e' un conto esatto. E' un file in piu' perche'
+  // e' aritmetica con un orologio dentro — ore, fasce, kilowattora che il
+  // Recorder ha buttato — e si prova con righe finte e senza un documento.
+  // 369 con il blocco che lo disegna, sotto la griglia finanziaria della
+  // Panoramica: quello invece la rete la tocca (chiede le ore) e il documento
+  // pure. Tenerli insieme vorrebbe dire non poter provare il conto senza un
+  // browser, che e' esattamente la parte che va provata.
   assert.ok(
-    relative.length <= 367,
+    relative.length <= 369,
     `production graph unexpectedly grew to ${relative.length} modules`,
   );
   assertAcyclic(edges);

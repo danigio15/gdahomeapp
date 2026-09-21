@@ -7,7 +7,25 @@ import { salvaLeFasceDellaScheda } from "./beta22-load-slots-hotfix-section.js";
 import { allStates, clean, doc, formatNumber, installStyle, readJson, root, scriviTestoSeCambia, t, wrapFunction } from "./shared.js";
 
 const KEY = "__DASHBOARDMODERN_ENERGY_REPORT_POLISH__";
-const state = (root[KEY] ||= { installed: false, frame: 0, dailyChart: null, legacyDailyChart: null, subscribed: false });
+const state = (root[KEY] ||= { installed: false, frame: 0, dailyChart: null, legacyDailyChart: null, subscribed: false, contoAFasce: null });
+
+/**
+ * Chi sa il conto esatto delle fasce si presenta qui.
+ *
+ * E' il blocco «Come si divide il costo reale», che sta attaccato sotto la
+ * griglia finanziaria: lui le ore del mese le ha chieste al Recorder e sa in
+ * che fascia sono passati quei kilowattora.
+ *
+ * Si presenta invece di essere importato perche' l'import non si puo' fare: il
+ * Report entra nella plancia dall'ingresso beta, che sta a monte della sezione
+ * Energia; il blocco delle fasce l'Energia la usa — le ore le chiede dalla sua
+ * porta — e importarlo da qui chiuderebbe un anello. Chi arriva dopo si
+ * presenta a chi c'era prima: e' l'unico verso che quell'anello non lo chiude.
+ */
+export function registraIlContoAFasce(lettore) {
+  state.contoAFasce = typeof lettore === "function" ? lettore : null;
+  return true;
+}
 
 function model() {
   try { return root.DashboardModernModules?.store?.getSection?.("energy") || {}; } catch (_error) { return {}; }
@@ -255,7 +273,22 @@ export function applyFinancialOverview(bundle) {
   const importPrice = rateOrDefault("cd_costo_kwh", DEFAULT_IMPORT_RATE);
   const exportPrice = rateOrDefault("cd_prezzo_immissione", DEFAULT_EXPORT_RATE);
   const data = bundle.month;
-  const importCost = Math.max(0, Number(data.gridImport) || 0) * importPrice;
+  /* La spesa vera, quando le ore del mese si sanno (#72).
+   *
+   * Con le fasce accese `importPrice` e' una media pesata sulle ore che ogni
+   * fascia copre: una stima onesta, ma pur sempre una stima. Il blocco qui
+   * sotto le ore le ha chieste davvero al Recorder e sa in che fascia sono
+   * passati quei kilowattora — e' lo stesso mese e lo stesso contatore, quindi
+   * il suo totale e' questa casella fatta meglio.
+   *
+   * Preferirlo non e' un vezzo: il blocco delle fasce sta attaccato SOTTO
+   * questa griglia e dice «com'e' fatto» il numero che sta qui. Due cifre
+   * diverse per la stessa spesa, a tre centimetri di distanza, sarebbero il
+   * difetto peggiore di tutta la storia. */
+  const aFasce = state.contoAFasce?.() || null;
+  const importCost = aFasce
+    ? Math.max(0, aFasce.euro)
+    : Math.max(0, Number(data.gridImport) || 0) * importPrice;
   const withoutSolar = Math.max(0, Number(data.house) || 0) * importPrice;
   const exportIncome = Math.max(0, Number(data.gridExport) || 0) * exportPrice;
   // "Venduto" is already reported separately. Subtracting that income from
@@ -282,7 +315,7 @@ export function applyFinancialOverview(bundle) {
   }
   const overview = doc?.getElementById("view-panoramica");
   if (overview) {
-    overview.dataset.dmFinancialFormula = "gridImport*importPrice";
+    overview.dataset.dmFinancialFormula = aFasce ? "ore*prezzoDellaFascia" : "gridImport*importPrice";
     overview.dataset.dmImportPrice = String(importPrice);
     overview.dataset.dmExportPrice = String(exportPrice);
   }

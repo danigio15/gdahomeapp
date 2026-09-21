@@ -366,7 +366,7 @@ function buildPeriodRecord(plans, values) {
  * piani e le domande adesso sono due cose separate: qui si dice COSA serve, e
  * chi legge mette insieme tutto quello che condivide lo stesso arco di tempo
  * in una domanda sola (vedi `loadAtomicEnergyBundle`). */
-function pianiDelleFonti(kind) {
+export function pianiDelleFonti(kind) {
   return sourcePlans(
     energyModel(),
     kind,
@@ -527,21 +527,31 @@ function valoriPerEntita(plans, valori) {
   return values;
 }
 
-function rates() {
-  const read = (key) => {
-    const configured = root.cdCfg?.(key);
-    if (configured !== undefined && configured !== null && configured !== "") return configured;
-    return root.localStorage?.getItem(key);
-  };
-  /* I default del guscio vivono in `resolveRate`, e solo la': il modulo
-   * partiva da zero, il guscio dai suoi numeri, e nel Report gli euro si
-   * alternavano tra calcolati e «0,00». Chi salva un costo suo lo vince
-   * comunque; lo zero esplicito il salvataggio non lo scrive. Il prezzo di
-   * acquisto puo' anche essere un'entita' scelta nel modello canonico: in
-   * quel caso si legge il suo stato, che si aggiorna da solo. */
-  const states = allStates();
+function letturaDelGuscio(key) {
+  const configured = root.cdCfg?.(key);
+  if (configured !== undefined && configured !== null && configured !== "") return configured;
+  return root.localStorage?.getItem(key);
+}
+
+/**
+ * Il prezzo di un kWh comprato, PRIMA che le fasce ci mettano bocca.
+ *
+ * I default del guscio vivono in `resolveRate`, e solo la': il modulo partiva
+ * da zero, il guscio dai suoi numeri, e nel Report gli euro si alternavano tra
+ * calcolati e «0,00». Chi salva un costo suo lo vince comunque; lo zero
+ * esplicito il salvataggio non lo scrive. Il prezzo di acquisto puo' anche
+ * essere un'entita' scelta nel modello canonico: in quel caso si legge il suo
+ * stato, che si aggiorna da solo.
+ *
+ * Questo numero ha tre lettori — questa sezione, il Report e il blocco delle
+ * fasce — e ognuno ci fa una cosa diversa: chi lo pesa sulle ore, chi lo usa
+ * come ripiego per una fascia senza numero, chi lo confronta con la spesa
+ * vera. La lettura pero' e' una sola: scritta tre volte, il giorno che il
+ * prezzo cambia casa lo imparerebbe uno solo dei tre.
+ */
+export function prezzoUnicoDiAcquisto() {
   const entita = importRateEntity(section("energy", {}));
-  let sorgente = read("cd_costo_kwh");
+  let sorgente = letturaDelGuscio("cd_costo_kwh");
   if (entita) {
     try {
       sorgente = clean(root.resolveEntity?.(entita) || entita);
@@ -549,6 +559,12 @@ function rates() {
       sorgente = entita;
     }
   }
+  return resolveRate(sorgente, allStates(), DEFAULT_IMPORT_RATE);
+}
+
+function rates() {
+  const read = letturaDelGuscio;
+  const states = allStates();
   /* Le fasce orarie, quando ci sono (#72).
    *
    * Qui il prezzo serve per un PERIODO — il giorno, il mese, l'anno del
@@ -561,7 +577,7 @@ function rates() {
    * Il prezzo unico resta il ripiego, e non e' una formalita': una fascia
    * senza il suo numero vale quello, e chi le fasce non le ha non si accorge
    * di niente. */
-  const unico = resolveRate(sorgente, states, DEFAULT_IMPORT_RATE);
+  const unico = prezzoUnicoDiAcquisto();
   return {
     importPrice: prezzoMedioDelleFasce(normalizzaLeFasce(readJson(CHIAVE_FASCE, {})), unico),
     exportPrice: resolveRate(read("cd_prezzo_immissione"), states, DEFAULT_EXPORT_RATE),

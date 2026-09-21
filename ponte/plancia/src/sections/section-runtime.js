@@ -25,6 +25,7 @@ import { installEnergyLoadsEditor } from "./energy-loads-editor-section.js";
 import { installSubloadPopupSection } from "./subload-popup-section.js";
 import { installApplianceDetailPopupSection } from "./appliance-detail-popup-section.js";
 import { installEnergyAnalysisSection } from "./energy-analysis-section.js";
+import { installReportAFasceSection } from "./il-report-a-fasce-section.js";
 import { installHistorySection } from "./history-section.js";
 import { installStoricoConnettivita } from "./storico-connettivita-section.js";
 import { installTemperatureSection } from "./temperature-section.js";
@@ -851,6 +852,10 @@ export function installSectionRuntime() {
     installSubloadPopupSection();
     installApplianceDetailPopupSection();
     installEnergyAnalysisSection();
+    /* Il blocco delle fasce sotto la griglia finanziaria della Panoramica
+     * (#72): sta qui e non all'ingresso beta perche' le ore del mese le chiede
+     * dalla porta dell'Energia, e all'ingresso beta l'Energia non c'e' ancora. */
+    installReportAFasceSection();
     installHistorySection();
     /* Il periodo anche nella cronologia della connettivita' (#302): l'altro
      * popup dello storico, che il guscio apre sui sette giorni. */
