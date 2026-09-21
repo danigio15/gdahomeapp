@@ -291,6 +291,7 @@ export class Zigbee {
   async rete({ forza = false } = {}) {
     const ora = this.adesso();
     if (!forza && this._rete && ora - this._reteChiestaIl < QUANTO_SI_RICORDA) return this._rete;
+    this._verbale = { zha: "", posta: "" };
     const zha = await this._ceZha();
     /* La cassetta si cerca solo se ZHA non c'e': con ZHA in casa la risposta
      * e' gia' decisa, e affacciarsi alla posta sarebbe un giro per niente. */
@@ -300,11 +301,60 @@ export class Zigbee {
     return this._rete;
   }
 
+  /**
+   * Cos'ha visto, l'ultima volta che ha guardato.
+   *
+   * Serve a una cosa sola, ed e' la ragione per cui esiste: **una casa che ha
+   * Zigbee e un ponte che non lo trova erano indistinguibili da una casa che
+   * Zigbee non ce l'ha**. In tutt'e due i casi la voce nel menu non compare, e
+   * chi guarda non ha nessun modo di sapere quale dei due gli e' capitato.
+   *
+   * E' lo stesso guasto contro cui questo progetto ha gia' scritto tre volte:
+   * quello muto. La console del ponte dice gia' perche' il centralino non
+   * risponde e da dove viene la plancia; questa riga le sta accanto, e risponde
+   * a «ho Zigbee in casa: perche' il tasto non c'e'?».
+   *
+   * Niente di segreto: il nome della cassetta e' un prefisso MQTT scelto da chi
+   * ha installato, e sta nella scheda dell'add-on di Zigbee2MQTT.
+   */
+  comeEAndata() {
+    const verbale = this._verbale || { zha: "", posta: "" };
+    return {
+      quale: this._rete?.quale || "",
+      cassetta: this._rete?.cassetta || "",
+      chiesto: this._reteChiestaIl || 0,
+      zha: verbale.zha,
+      posta: verbale.posta,
+      cassette: [...LE_CASSETTE],
+    };
+  }
+
+  /* Una riga del verbale.
+   *
+   * L'ultima scritta vince, e non la prima: le prime erano annunci — «mi
+   * affaccio su…» — e coprivano il risultato, che e' l'unica cosa che chi
+   * legge sta cercando. Una prova nuova l'ha trovato subito. */
+  _scrivi(dove, cosa) {
+    this._verbale ??= { zha: "", posta: "" };
+    this._verbale[dove] = cosa;
+  }
+
   async _ceZha() {
     try {
       const voci = await this.casa.chiedi({ type: "config_entries/get", domain: ZHA });
-      return ceZha(voci);
-    } catch (_errore) {
+      const quante = Array.isArray(voci) ? voci.length : 0;
+      const ce = ceZha(voci);
+      this._scrivi(
+        "zha",
+        !quante
+          ? "l'integrazione ZHA in questa casa non c'e'"
+          : ce
+            ? `ZHA c'e' ed e' in piedi (${quante} voci)`
+            : `ZHA c'e' ma non e' caricata (${quante} voci): antenna staccata, o integrazione in errore`,
+      );
+      return ce;
+    } catch (errore) {
+      this._scrivi("zha", `Home Assistant non ha risposto su ZHA: ${errore?.message || errore}`);
       /* Una casa che non conosce quella domanda e' una casa senza ZHA: e'
        * Home Assistant stesso a rispondere, e se non sa rispondere quella
        * integrazione non c'e'. */
@@ -327,7 +377,13 @@ export class Zigbee {
     let aperte = LE_CASSETTE.length;
     try {
       return await new Promise((risolvi) => {
-        const scadenza = setTimeout(() => risolvi(""), ATTESA_DELLA_CASSETTA);
+        const scadenza = setTimeout(() => {
+          this._scrivi(
+            "posta",
+            `nessuna cassetta: in ${ATTESA_DELLA_CASSETTA / 1000} secondi non ha risposto nessuno su ${LE_CASSETTE.join(" ne' su ")}`,
+          );
+          risolvi("");
+        }, ATTESA_DELLA_CASSETTA);
         const basta = (prefisso) => {
           clearTimeout(scadenza);
           risolvi(prefisso);
@@ -336,16 +392,24 @@ export class Zigbee {
           this.casa
             .ascoltaIl({ type: "mqtt/subscribe", topic }, (evento) => {
               const prefisso = prefissoDellaCassetta(evento?.topic);
-              if (prefisso) basta(prefisso);
+              if (prefisso) {
+                this._scrivi("posta", `la cassetta si chiama «${prefisso}», sentita su ${topic}`);
+                basta(prefisso);
+              }
             })
             .then(
               (smetti) => {
                 disdette.push(smetti);
               },
-              () => {
+              (errore) => {
                 /* Niente MQTT in questa casa: nessuna cassetta, e non e' un
                  * guasto — e' una casa che Zigbee2MQTT non ce l'ha. */
                 aperte -= 1;
+                if (aperte <= 0)
+                  this._scrivi(
+                    "posta",
+                    `nessuna cassetta: Home Assistant non fa ascoltare MQTT (${errore?.message || errore})`,
+                  );
                 if (aperte <= 0) basta("");
               },
             );

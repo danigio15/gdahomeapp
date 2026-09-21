@@ -423,6 +423,9 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
   const console_ = costruisciLaConsole({
     ponte,
     casa,
+    /* Cos'ha trovato guardando la rete Zigbee: la console lo scrive, cosi'
+     * chi la voce «Zigbee» nell'app non la vede sa perche'. */
+    zigbee,
     dispositivi,
     abbinamento,
     opzioni,

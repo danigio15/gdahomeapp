@@ -530,3 +530,44 @@ test("e la cassetta col nome semplice si trova lo stesso", () => {
     assert.deepEqual(rete, { quale: Z2M, cassetta: "zigbee2mqtt" });
   });
 });
+
+test("e dice cos'ha visto, invece di lasciare indovinare", async () => {
+  /* La ragione per cui questo esiste: una casa che HA Zigbee e un ponte che
+   * non lo trova erano indistinguibili da una casa che Zigbee non ce l'ha. In
+   * tutt'e due i casi la voce nel menu dell'app non compare, e chi guarda non
+   * ha nessun modo di sapere quale dei due gli è capitato — è il guasto muto,
+   * lo stesso contro cui questo progetto ha già scritto tre volte.
+   *
+   * Dal campo, una serata intera: «su app non esce zigbee», con l'add-on già
+   * alla versione giusta e Zigbee2MQTT in casa. Senza una riga che dica
+   * cos'ha guardato, l'unico modo di rispondere è far fare a chi ha la casa
+   * tre prove dentro Home Assistant. */
+  const zigbee = new Zigbee({ casa: casaFinta({ cassetta: "zigbee2mqtt" }) });
+  const rete = await zigbee.rete();
+  const verbale = zigbee.comeEAndata();
+  assert.equal(rete.quale, Z2M);
+  assert.equal(verbale.quale, Z2M);
+  assert.equal(verbale.cassetta, "zigbee2mqtt");
+  /* Le due righe dicono cos'è successo, a parole: quella di ZHA e quella
+   * della posta. */
+  assert.match(verbale.zha, /ZHA/);
+  assert.match(verbale.posta, /zigbee2mqtt/);
+  /* E quali argomenti ha chiesto, perché è la prima cosa che si vuole sapere
+   * quando non ha trovato niente. */
+  assert.deepEqual(verbale.cassette, ["+/bridge/info", "+/+/bridge/info"]);
+});
+
+test("e quando non trova niente lo dice col perché, non col silenzio", async () => {
+  /* Il caso che conta davvero: nessuna cassetta risponde. Prima di questa
+   * riga la risposta era «nessuna rete» e basta — identica, parola per
+   * parola, a quella di una casa che Zigbee non ce l'ha per davvero. */
+  const zigbee = new Zigbee({ casa: casaFinta({ cassetta: "" }) });
+  const rete = await zigbee.rete();
+  /* «Nessuna rete» si scrive con la stringa vuota: e' la stessa parola con
+   * cui risponde il comando dell'app, e il verbale non se ne inventa una sua. */
+  assert.equal(rete.quale, NESSUNA);
+  const verbale = zigbee.comeEAndata();
+  assert.equal(verbale.quale, NESSUNA);
+  assert.equal(verbale.cassetta, "");
+  assert.match(verbale.posta, /nessuna cassetta/);
+});

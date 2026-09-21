@@ -340,6 +340,13 @@ export function costruisciLaPortaDellApp({
 export function costruisciLaConsole({
   ponte,
   casa,
+  /* La rete Zigbee di questa casa, per dire nella console cos'ha trovato.
+   *
+   * Sta qui per la stessa ragione per cui ci sta il «perche'» del centralino:
+   * una casa che ha Zigbee e un ponte che non lo trova erano indistinguibili
+   * da una casa che Zigbee non ce l'ha — in tutt'e due i casi la voce nel menu
+   * dell'app non compare, e chi guarda non sa quale dei due gli e' capitato. */
+  zigbee,
   dispositivi,
   abbinamento,
   opzioni,
@@ -399,6 +406,7 @@ export function costruisciLaConsole({
           risposta,
           ponte,
           casa,
+          zigbee,
           dispositivi,
           abbinamento,
           opzioni,
@@ -749,6 +757,8 @@ async function api({
   risposta,
   ponte,
   casa,
+  /* Cos'ha trovato guardando la rete Zigbee: `/api/stato` lo scrive. */
+  zigbee,
   dispositivi,
   abbinamento,
   opzioni,
@@ -1062,6 +1072,14 @@ async function api({
        * La console lo chiede per sapere se mostrare il link o tacere: un link
        * che porta a un 404 e' peggio di nessun link. */
       app: Boolean(opzioni.app && existsSync(opzioni.app)),
+      /* Che rete Zigbee ha trovato, e cos'ha visto per dirlo.
+       *
+       * Non e' il comando dell'app — quello passa dal filo — e' il verbale
+       * dell'ultima occhiata, per chi la voce «Zigbee» non la vede e vuole
+       * sapere perche'. Niente di segreto: il nome della cassetta e' un
+       * prefisso MQTT, e sta scritto nella scheda dell'add-on di
+       * Zigbee2MQTT. */
+      zigbee: zigbee?.comeEAndata ? zigbee.comeEAndata() : null,
       /* Da dove viene la plancia che questo ponte serve, e se e' intatta.
        *
        * Sta in questa pagina e non nascosto in un registro perche' e' la
