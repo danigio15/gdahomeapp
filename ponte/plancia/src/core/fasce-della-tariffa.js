@@ -139,10 +139,29 @@ export function fasciaInVigore(config, adesso = new Date()) {
   const istante = adesso instanceof Date && !Number.isNaN(adesso.getTime()) ? adesso : new Date();
   const giorno = istante.getDay();
   if (fasce.festivi >= 0 && (giorno === 0 || giorno === 6)) return fasce.festivi;
-  const minuti = istante.getHours() * 60 + istante.getMinutes();
+  return fasciaDelleOre(fasce, istante.getHours() * 60 + istante.getMinutes());
+}
+
+/**
+ * Quale fascia copre quel momento della GIORNATA, senza guardare che giorno e'.
+ *
+ * E' la meta' oraria della regola qui sopra, e serve da sola a chi parla di
+ * un'ora e non di un istante — il profilo delle ventiquattro ore, che dice a
+ * che ora si compra: li' «le 19» non sono ne' un mercoledi' ne' una domenica,
+ * sono le 19 di tutto il mese.
+ *
+ * Vale l'ULTIMA fascia gia' cominciata, e prima della prima si torna indietro
+ * all'ultima: la fascia della notte comincia la sera e finisce la mattina
+ * dopo, e fra le due c'e' la mezzanotte.
+ */
+export function fasciaDelleOre(config, minuti) {
+  const fasce = config && Array.isArray(config.voci) ? config : normalizzaLeFasce(config);
+  if (!fasce.quante || !fasce.voci.length) return -1;
+  const dentro = Number(minuti);
+  if (!Number.isFinite(dentro)) return -1;
   let scelta = fasce.voci.length - 1;
   for (let indice = 0; indice < fasce.voci.length; indice += 1)
-    if (fasce.voci[indice].dalle <= minuti) scelta = indice;
+    if (fasce.voci[indice].dalle <= dentro) scelta = indice;
   return scelta;
 }
 

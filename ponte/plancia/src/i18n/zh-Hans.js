@@ -3686,4 +3686,6 @@ export default Object.freeze({
   "single rate": "单一电价",
   "the same as a single rate": "与单一电价相同",
   "With a single rate": "按单一电价",
+  "The hour you buy most": "买电最多的时段",
+  "When you buy from the grid": "什么时候从电网买电",
 });

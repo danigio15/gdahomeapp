@@ -3686,4 +3686,6 @@ export default Object.freeze({
   "single rate": "tarifa única",
   "the same as a single rate": "o mesmo que com uma tarifa única",
   "With a single rate": "Com uma tarifa única",
+  "The hour you buy most": "A hora em que compra mais",
+  "When you buy from the grid": "A que horas compra da rede",
 });

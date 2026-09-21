@@ -3686,4 +3686,6 @@ export default Object.freeze({
   "single rate": "単一料金",
   "the same as a single rate": "単一料金と同じ",
   "With a single rate": "単一料金の場合",
+  "The hour you buy most": "最も多く買う時間帯",
+  "When you buy from the grid": "何時に系統から買っているか",
 });

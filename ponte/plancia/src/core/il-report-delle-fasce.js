@@ -23,6 +23,7 @@
  */
 
 import {
+  fasciaDelleOre,
   fasciaInVigore,
   leFasceValgono,
   normalizzaLeFasce,
@@ -130,15 +131,29 @@ export function reportDelleFasce(righe, fasceSalvate, { prezzoUnico = 0, totale 
   const ore = kwhPerOra(righe);
   const kwhPerFascia = vuoto(quante);
   const perGiorno = new Map();
+  /* E il profilo della giornata: quanti kilowattora, e quanti euro, in ognuna
+   * delle ventiquattro ore sommando tutte le volte che quell'ora e' passata
+   * nel periodo. Risponde a «a che ora compro», che e' l'altra domanda dietro
+   * le fasce: quella del costo si legge in bolletta, questa no. */
+  const perOra = Array.from({ length: 24 }, () => ({ kwh: 0, euro: 0 }));
   let spiegati = 0;
   for (const ora of ore) {
-    const quale = fasciaInVigore(config, new Date(ora.quando));
+    const quando = new Date(ora.quando);
+    const quale = fasciaInVigore(config, quando);
     if (quale < 0) continue;
     kwhPerFascia[quale] += ora.kwh;
     spiegati += ora.kwh;
     const giorno = giornoDi(ora.quando);
     if (!perGiorno.has(giorno)) perGiorno.set(giorno, vuoto(quante));
     perGiorno.get(giorno)[quale] += ora.kwh;
+    /* L'ora del giorno prende il prezzo della fascia in cui quell'ora e'
+     * passata DAVVERO, weekend compreso: la colonna delle 15 di un mese con
+     * quattro sabati costa quanto e' costata, non quanto sarebbe costata se
+     * fossero stati tutti mercoledi'. */
+    const casella = perOra[quando.getHours()];
+    if (!casella) continue;
+    casella.kwh += ora.kwh;
+    casella.euro += ora.kwh * prezzoDi(quale);
   }
 
   /* I kilowattora che il periodo ha ma le ore non spiegano.
@@ -176,6 +191,17 @@ export function reportDelleFasce(righe, fasceSalvate, { prezzoUnico = 0, totale 
       quota: spiegati > 0 ? (kwhPerFascia[indice] / spiegati) * 100 : 0,
     })),
     giorni,
+    /* Le ventiquattro ore, sempre tutte e ventiquattro e sempre in ordine:
+     * chi disegna il profilo non deve rimettere a posto i buchi. La fascia e'
+     * quella FERIALE di quell'ora — una colonna ha un colore solo, e il sabato
+     * non puo' tingerla a meta' — mentre i kilowattora e gli euro sono quelli
+     * veri, weekend compreso. */
+    ore: perOra.map((casella, ora) => ({
+      ora,
+      kwh: casella.kwh,
+      euro: casella.euro,
+      fascia: fasciaDelleOre(config, ora * 60),
+    })),
     kwh,
     euro,
     /* Il confronto che risponde alla domanda vera: le fasce mi convengono?

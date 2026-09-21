@@ -3686,4 +3686,6 @@ export default Object.freeze({
   "single rate": "تعرفة موحدة",
   "the same as a single rate": "مثل التعرفة الموحدة",
   "With a single rate": "بتعرفة موحدة",
+  "The hour you buy most": "الساعة التي تشتري فيها أكثر",
+  "When you buy from the grid": "متى تشتري من الشبكة",
 });

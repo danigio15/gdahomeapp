@@ -3686,4 +3686,6 @@ export default Object.freeze({
   "single rate": "एकल दर",
   "the same as a single rate": "एकल दर के बराबर",
   "With a single rate": "एकल दर पर",
+  "The hour you buy most": "जिस घंटे सबसे ज़्यादा खरीदते हैं",
+  "When you buy from the grid": "ग्रिड से किस समय खरीदते हैं",
 });

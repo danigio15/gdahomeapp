@@ -3686,4 +3686,6 @@ export default Object.freeze({
   "single rate": "Einheitstarif",
   "the same as a single rate": "genauso viel wie bei einem Einheitstarif",
   "With a single rate": "Mit einem Einheitstarif",
+  "The hour you buy most": "Die Stunde mit dem meisten Bezug",
+  "When you buy from the grid": "Wann du aus dem Netz beziehst",
 });

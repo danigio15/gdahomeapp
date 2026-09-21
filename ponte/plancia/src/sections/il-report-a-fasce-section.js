@@ -185,18 +185,91 @@ export function ilBloccoDelleFasce(report, config, periodo) {
     <div class="dm-fasce-nota">${nota}</div>`;
 }
 
+/**
+ * Il profilo delle ventiquattro ore, come markup.
+ *
+ * Risponde all'altra domanda dietro le fasce. Quanto costa si legge in
+ * bolletta; a che ora si compra no, e sapendolo si decide — la lavastoviglie
+ * alle undici di sera invece che alle quattro del pomeriggio, l'auto in carica
+ * dopo mezzanotte. Ventiquattro colonne, alte quanto i kilowattora presi dalla
+ * rete in quell'ora di tutto il mese, colorate come la fascia che le copre.
+ *
+ * Sta in ANALISI e non in Panoramica, e non e' una questione di spazio: la
+ * Panoramica dice com'e' andato il mese, l'Analisi dice perche'. Qui si viene
+ * per capire dove intervenire, e questa e' l'unica tessera che lo dice a
+ * un'ora precisa.
+ *
+ * Le colonne non hanno numeri sopra: ventiquattro numeri da quattro cifre non
+ * si leggono. Il numero sta sotto, e riguarda l'ora che conta — quella in cui
+ * si compra di piu' — perche' e' da quella che si comincia a spostare.
+ */
+export function ilProfiloDelleOre(report, config) {
+  const ore = report?.ore;
+  if (!Array.isArray(ore) || !ore.length) return "";
+  const quante = config?.voci?.length || 0;
+  const massimo = ore.reduce((alto, ora) => Math.max(alto, ora.kwh), 0);
+  if (!(massimo > 0)) return "";
+
+  const colonne = ore
+    .map((ora) => {
+      const alta = Math.max(2, Math.round((ora.kwh / massimo) * 100));
+      const tinta = ora.fascia >= 0 ? tintaDellaFascia(quante, ora.fascia) : "#94a3b8";
+      const nome = ora.fascia >= 0 ? nomeDellaFascia(ora.fascia) : "";
+      return `<span class="dm-profilo-colonna" style="height:${alta}%;background:${tinta}" title="${String(ora.ora).padStart(2, "0")}:00 ${esc(nome)} · ${formatNumber(ora.kwh, 2)} kWh · ${soldi(ora.euro)}"></span>`;
+    })
+    .join("");
+
+  /* Le tacche: ogni tre ore, che e' la piu' fitta che si legge su un telefono
+   * senza sovrapporsi. */
+  const tacche = [0, 3, 6, 9, 12, 15, 18, 21]
+    .map((ora) => `<span>${String(ora).padStart(2, "0")}</span>`)
+    .join("");
+
+  const pallini = (config?.voci || [])
+    .map(
+      (_voce, indice) =>
+        `<span class="dm-profilo-voce"><i style="background:${tintaDellaFascia(quante, indice)}"></i>${esc(nomeDellaFascia(indice))} ${esc(orarioDellaFascia(config, indice))}</span>`,
+    )
+    .join("");
+
+  const punta = ore.reduce((alta, ora) => (ora.kwh > alta.kwh ? ora : alta), ore[0]);
+  const nomePunta = punta.fascia >= 0 ? `${nomeDellaFascia(punta.fascia)} · ` : "";
+  const dettaglio = `${String(punta.ora).padStart(2, "0")}:00 · ${nomePunta}${formatNumber(punta.kwh, 1)} kWh · ${soldi(punta.euro)}`;
+
+  return `
+    <div class="dm-profilo-testata">
+      <div class="dm-profilo-titolo">🕐 ${esc(t("A che ora compri dalla rete", "When you buy from the grid"))}</div>
+      <div class="dm-profilo-legenda">${pallini}</div>
+    </div>
+    <div class="dm-profilo-grafico">${colonne}</div>
+    <div class="dm-profilo-tacche">${tacche}</div>
+    <div class="dm-profilo-punta">
+      <span>${esc(t("L'ora in cui compri di più", "The hour you buy most"))}</span>
+      <b>${esc(dettaglio)}</b>
+    </div>`;
+}
+
 /* ── il giro alla rete ─────────────────────────────────────────────────── */
 
 function laConfigurazione() {
   return normalizzaLeFasce(readJson(CHIAVE_FASCE, {}));
 }
 
-function ilPannelloSiVede() {
-  const pannello = doc?.getElementById("ed-pane-panoramica");
-  if (!pannello) return false;
-  if (pannello.hidden || pannello.style.display === "none") return false;
-  const report = doc?.getElementById("view-panoramica");
-  return !report || report.classList.contains("active") || report.style.display !== "none";
+/* C'e' qualcuno che sta guardando il Report?
+ *
+ * La domanda e' sul REPORT, non sulla linguetta: il blocco del costo sta in
+ * Panoramica e il profilo delle ore in Analisi, e sono lo stesso conto. Se si
+ * guardasse solo la Panoramica, chi apre il Report direttamente su Analisi non
+ * vedrebbe mai il profilo — e' proprio la meta' che si trova li'.
+ *
+ * `checkVisibility` e' la domanda giusta e la sanno i browser di oggi; dove non
+ * c'e' basta `offsetParent`, che su una vista nascosta — `display: none`, che
+ * e' come il guscio nasconde le viste — e' vuoto. */
+function ilReportSiVede() {
+  const vista = doc?.getElementById("view-panoramica");
+  if (!vista) return false;
+  if (typeof vista.checkVisibility === "function") return Boolean(vista.checkVisibility());
+  return Boolean(vista.offsetParent);
 }
 
 function ilBlocco(crea = false) {
@@ -215,8 +288,26 @@ function ilBlocco(crea = false) {
   return blocco;
 }
 
+/* Il profilo va fra il confronto settimanale e l'elenco dei dispositivi, ed e'
+ * l'ordine del racconto: il confronto dice se hai usato piu' o meno, il profilo
+ * dice QUANDO, l'elenco dice COSA. */
+function ilProfilo(crea = false) {
+  const prima = doc?.querySelector("#ed-pane-analisi .ed-weekly-card");
+  if (!prima) return null;
+  let riquadro = doc.getElementById("dm-fasce-profilo");
+  if (!riquadro) {
+    if (!crea) return null;
+    riquadro = doc.createElement("div");
+    riquadro.id = "dm-fasce-profilo";
+    riquadro.className = "dm-fasce-profilo";
+  }
+  if (riquadro.previousElementSibling !== prima) prima.after(riquadro);
+  return riquadro;
+}
+
 function togliIlBlocco() {
   doc?.getElementById("dm-fasce-report")?.remove();
+  doc?.getElementById("dm-fasce-profilo")?.remove();
   state.report = null;
   state.chiave = "";
 }
@@ -233,7 +324,24 @@ export function ilCostoAFasce(periodo = selectedPeriod()) {
   return { euro: state.report.euro, kwh: state.report.kwh, report: state.report };
 }
 
+function disegnaIlProfilo(report, config) {
+  const markup = report ? ilProfiloDelleOre(report, config) : "";
+  const riquadro = ilProfilo(Boolean(markup));
+  if (!riquadro) return false;
+  if (!markup) {
+    riquadro.remove();
+    return false;
+  }
+  riquadro.innerHTML = markup;
+  riquadro.dataset.dmFasce = String(config.voci.length);
+  return true;
+}
+
 function disegna(report, config, periodo) {
+  /* Il profilo vive nell'altra linguetta e ha il suo posto: si disegna sempre,
+   * anche a linguetta chiusa, cosi' chi ci arriva lo trova gia' li' invece di
+   * vederlo comparire un attimo dopo. */
+  disegnaIlProfilo(report, config);
   const blocco = ilBlocco(Boolean(report));
   if (!blocco) return false;
   if (!report) {
@@ -262,7 +370,7 @@ export async function aggiornaIlReportDelleFasce(bundle, { forza = false } = {})
     togliIlBlocco();
     return false;
   }
-  if (!forza && !ilPannelloSiVede()) return false;
+  if (!forza && !ilReportSiVede()) return false;
 
   const periodo = selectedPeriod();
   const fonti = pianiDelleFonti("month");
@@ -353,7 +461,20 @@ function foglio() {
        * gli euro. La pastiglia della fascia tiene tutte e due le righe, cosi'
        * si capisce a colpo d'occhio dove finisce una fascia e comincia
        * l'altra. */
+      .dm-fasce-profilo{margin:0 0 16px!important;padding:16px 18px!important;border-radius:20px!important;background:var(--card-background-color,#fff)!important;border:1px solid var(--divider-color,#e2e8f0)!important;display:grid!important;gap:9px!important}
+      .dm-profilo-testata{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:12px!important;flex-wrap:wrap!important}
+      .dm-profilo-titolo{font-size:14px!important;font-weight:900!important;color:var(--primary-text-color,#0f172a)!important}
+      .dm-profilo-legenda{display:flex!important;gap:12px!important;flex-wrap:wrap!important;font-size:11px!important;font-weight:800!important;color:var(--secondary-text-color,#64748b)!important}
+      .dm-profilo-voce{display:inline-flex!important;align-items:center!important;gap:5px!important}
+      .dm-profilo-voce i{display:block!important;width:9px!important;height:9px!important;border-radius:999px!important}
+      .dm-profilo-grafico{display:grid!important;grid-template-columns:repeat(24,1fr)!important;align-items:end!important;gap:3px!important;height:96px!important;padding:0 1px!important}
+      .dm-profilo-colonna{display:block!important;width:100%!important;border-radius:4px 4px 2px 2px!important;min-height:2px!important}
+      .dm-profilo-tacche{display:grid!important;grid-template-columns:repeat(8,1fr)!important;font-size:10px!important;font-weight:800!important;color:var(--secondary-text-color,#64748b)!important;opacity:.75!important}
+      .dm-profilo-punta{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:10px!important;flex-wrap:wrap!important;padding:9px 12px!important;border-radius:13px!important;background:var(--secondary-background-color,#eef2f7)!important;font-size:12px!important;font-weight:800!important;color:var(--secondary-text-color,#64748b)!important}
+      .dm-profilo-punta b{color:var(--primary-text-color,#0f172a)!important}
       @media (max-width:760px){
+        .dm-profilo-grafico{height:78px!important;gap:2px!important}
+        .dm-profilo-punta{flex-direction:column!important;align-items:flex-start!important;gap:2px!important}
         .dm-fasce-riga{grid-template-columns:34px minmax(0,1fr) auto auto!important;gap:3px 10px!important}
         .dm-fasce-nome{grid-column:1!important;grid-row:1/3!important;align-self:start!important}
         .dm-fasce-ore{grid-column:2!important;grid-row:1!important}
@@ -372,13 +493,14 @@ function agganci() {
   root.addEventListener?.("dashboardmodern:period-bundle", (evento) => {
     aggiornaIlReportDelleFasce(evento?.detail);
   });
-  /* Chi torna sulla Panoramica dopo essere stato in Analisi trova il blocco
-   * gia' pronto — il conto e' in memoria — ma il guscio puo' aver ridisegnato
-   * il pannello nel frattempo, e allora il blocco va rimesso al suo posto. */
+  /* Chi cambia linguetta trova il suo pezzo gia' pronto — il conto e' in
+   * memoria — ma il guscio puo' aver ridisegnato il pannello nel frattempo, e
+   * allora il blocco e il profilo vanno rimessi al loro posto. Tutte e due le
+   * linguette, perche' il conto e' lo stesso e i pezzi sono uno per parte. */
   doc?.addEventListener(
     "click",
     (evento) => {
-      if (!evento.target?.closest?.("#ed-tab-pan")) return;
+      if (!evento.target?.closest?.("#ed-tab-pan,#ed-tab-ana")) return;
       root.setTimeout?.(
         () => aggiornaIlReportDelleFasce(root.__DASHBOARDMODERN_RUNTIME_ROOT__?.bundle),
         0,

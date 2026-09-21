@@ -3686,4 +3686,6 @@ export default Object.freeze({
   "single rate": "единая ставка",
   "the same as a single rate": "столько же, сколько при единой ставке",
   "With a single rate": "При единой ставке",
+  "The hour you buy most": "Час наибольшего потребления из сети",
+  "When you buy from the grid": "В какие часы вы берёте из сети",
 });

@@ -12,7 +12,10 @@ import {
   orarioDellaFascia,
   tintaDellaFascia,
 } from "../src/core/fasce-della-tariffa.js";
-import { ilBloccoDelleFasce } from "../src/sections/il-report-a-fasce-section.js";
+import {
+  ilBloccoDelleFasce,
+  ilProfiloDelleOre,
+} from "../src/sections/il-report-a-fasce-section.js";
 
 const TRE = {
   quante: 3,
@@ -181,4 +184,52 @@ test("ogni giorno del mese finisce nella sua colonna, divisa per fascia", async 
    * grafico resta quello di sempre. */
   polish.registraIlContoAFasce(null);
   assert.deepEqual(polish.barreDelleFasce(30, 9, 2026), []);
+});
+
+/* ── il profilo delle ventiquattro ore ──────────────────────────────────── */
+
+const SAGOMA = [
+  0.6, 0.5, 0.45, 0.4, 0.4, 0.5, 0.9, 1.6, 2.1, 1.7, 1.3, 1.5, 1.9, 1.4, 1.1, 1.0, 1.2, 1.8, 2.6,
+  3.4, 3.1, 2.2, 1.5, 0.9,
+];
+
+function profiloDiUnaGiornata(sagoma = SAGOMA) {
+  const fasciaDi = (ora) => (ora >= 8 && ora < 19 ? 0 : ora >= 19 && ora < 23 ? 1 : 2);
+  const prezzo = [0.35, 0.28, 0.2];
+  return {
+    ore: sagoma.map((kwh, ora) => ({
+      ora,
+      kwh,
+      euro: kwh * prezzo[fasciaDi(ora)],
+      fascia: fasciaDi(ora),
+    })),
+  };
+}
+
+test("il profilo ha una colonna per ogni ora, colorata come la sua fascia", () => {
+  const markup = ilProfiloDelleOre(profiloDiUnaGiornata(), TRE);
+  assert.equal(markup.match(/dm-profilo-colonna/g).length, 24);
+  /* La più alta è al 100%, e nessuna scende sotto i due punti: un'ora in cui
+   * hai comprato pochissimo deve restare visibile, altrimenti non si distingue
+   * da un'ora in cui non hai comprato niente. */
+  assert.ok(markup.includes("height:100%"));
+  assert.ok(!/height:0%/.test(markup));
+  /* Le tre fasce ci sono tutte e tre, e ognuna col suo colore. */
+  for (const tinta of ["#f97316", "#8b5cf6", "#1d4ed8"])
+    assert.ok(markup.includes(`background:${tinta}`), `manca ${tinta}`);
+});
+
+test("il profilo dice l'ora in cui compri di più, con la sua fascia e la sua spesa", () => {
+  const markup = ilProfiloDelleOre(profiloDiUnaGiornata(), TRE);
+  /* Il picco della sagoma è alle 19: 3,4 kWh in F2 a 0,28 €/kWh. */
+  assert.ok(markup.includes("19:00 · F2 · 3,4 kWh · 0,95 €"), markup.slice(-400));
+});
+
+test("senza ore comprate non c'è niente da disegnare", () => {
+  /* Una casa che in tutto il mese non ha preso niente dalla rete — o un mese
+   * di cui il Recorder non ha più nessuna ora — non merita ventiquattro
+   * colonne vuote: il riquadro non si scrive proprio. */
+  assert.equal(ilProfiloDelleOre(profiloDiUnaGiornata(SAGOMA.map(() => 0)), TRE), "");
+  assert.equal(ilProfiloDelleOre({ ore: [] }, TRE), "");
+  assert.equal(ilProfiloDelleOre(null, TRE), "");
 });

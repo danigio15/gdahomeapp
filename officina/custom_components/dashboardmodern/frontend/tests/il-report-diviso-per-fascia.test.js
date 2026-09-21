@@ -228,3 +228,45 @@ test("una fascia senza prezzo usa quello unico, e lo dice", () => {
   assert.equal(r.fasce[1].suo, false);
   assert.equal(r.fasce[1].prezzo, 0.25);
 });
+
+/* ── il profilo delle ventiquattro ore ──────────────────────────────────── */
+
+test("ogni ora del giorno dice quanto si compra e quanto costa", () => {
+  const r = reportDelleFasce(GIORNATA, FASCE, { prezzoUnico: 0.3, totale: 9 });
+  /* Sempre tutte e ventiquattro e sempre in ordine: chi disegna il profilo non
+   * deve rimettere a posto i buchi. */
+  assert.equal(r.ore.length, 24);
+  assert.deepEqual(
+    r.ore.map((o) => o.ora),
+    Array.from({ length: 24 }, (_, indice) => indice),
+  );
+  /* L'una e le due di notte sono F3, le dieci sono F1, le 21 sono F2. */
+  const alle = (ora) => r.ore[ora];
+  assert.equal(alle(1).kwh, 1);
+  assert.equal(alle(1).fascia, 2);
+  assert.equal(Number(alle(1).euro.toFixed(3)), 0.2);
+  assert.equal(alle(10).kwh, 3);
+  assert.equal(alle(10).fascia, 0);
+  assert.equal(Number(alle(10).euro.toFixed(3)), 1.05);
+  assert.equal(alle(21).kwh, 4);
+  assert.equal(alle(21).fascia, 1);
+  /* Un'ora in cui non è passato niente resta a zero, non sparisce. */
+  assert.equal(alle(15).kwh, 0);
+  assert.equal(alle(15).fascia, 0);
+
+  /* Le ore e le fasce raccontano gli stessi kilowattora. */
+  const dalleOre = r.ore.reduce((somma, ora) => somma + ora.kwh, 0);
+  assert.equal(Number(dalleOre.toFixed(6)), Number(r.misurato.kwh.toFixed(6)));
+});
+
+test("la colonna di un'ora ha un colore solo, ma il prezzo del giorno in cui è passata", () => {
+  /* Sabato pomeriggio: l'ora delle 15 è in F1 da calendario, ma quel sabato la
+   * regola dei festivi la mette in F3. La colonna resta F1 — una colonna non
+   * si può tingere a metà — e gli euro sono quelli veri, cioè F3. */
+  const SABATO = new Date("2026-09-26T00:00:00").getTime();
+  const sabato = (h, somma) => ({ start: new Date(SABATO + h * 3600000).toISOString(), sum: somma });
+  const r = reportDelleFasce([sabato(14, 100), sabato(15, 102)], FASCE, { prezzoUnico: 0.3 });
+  assert.equal(r.ore[15].kwh, 2);
+  assert.equal(r.ore[15].fascia, 0, "la colonna è quella feriale");
+  assert.equal(Number(r.ore[15].euro.toFixed(3)), 0.4, "il prezzo è quello del sabato");
+});

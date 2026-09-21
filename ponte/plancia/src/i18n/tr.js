@@ -3686,4 +3686,6 @@ export default Object.freeze({
   "single rate": "tek tarife",
   "the same as a single rate": "tek tarifeyle aynı",
   "With a single rate": "Tek tarifeyle",
+  "The hour you buy most": "En çok çektiğin saat",
+  "When you buy from the grid": "Şebekeden hangi saatte alıyorsun",
 });
