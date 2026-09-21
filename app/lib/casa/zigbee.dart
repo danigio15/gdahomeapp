@@ -30,6 +30,8 @@
 /// peggio di una porta che non c'e'.
 library;
 
+import 'dart:async';
+
 import '../parole.dart';
 import '../ponte/errori.dart';
 import '../ponte/filo.dart';
@@ -277,16 +279,47 @@ class Zigbee {
   /// Il primo arriva subito e non dopo un secondo: chi apre la schermata deve
   /// vedere qualcosa mentre la apre, non un buco che si riempie dopo.
   ///
+  /// Il battito e' un timer, e si spegne **nell'istante** in cui chi ascolta
+  /// smette. Scritto come generatore — `yield`, e poi un'attesa — sarebbe
+  /// stato piu' corto e sbagliato: un'attesa gia' partita non si annulla, e
+  /// quel timer resta appeso fino a che non scade anche se la schermata e'
+  /// gia' chiusa. Nelle prove dei widget e' un errore secco; nell'app e' un
+  /// giro sul filo per una schermata che nessuno guarda piu'.
+  ///
   /// Una richiesta che va storta non chiude il flusso e non si vede: il filo
   /// che cade e torna e' la normalita' di un telefono, e una schermata che si
   /// arrende al primo singhiozzo sarebbe una schermata che si arrende sempre.
   /// A dire che e' finita e' solo chi ascolta, smettendo.
-  Stream<StatoDellaRete> mentreAspetti({Duration ogni = ognUnSecondo}) async* {
-    yield await stato();
-    while (true) {
-      await Future<void>.delayed(ogni);
-      yield await stato();
+  Stream<StatoDellaRete> mentreAspetti({Duration ogni = ognUnSecondo}) {
+    late StreamController<StatoDellaRete> fila;
+    Timer? battito;
+    /* Una domanda per volta: su una rete lenta il giro puo' durare piu' di un
+     * secondo, e senza questa riga si accavallerebbero — la casa riceverebbe
+     * domande che nessuno aspetta piu'. */
+    var inCorso = false;
+
+    Future<void> unGiro() async {
+      if (inCorso || fila.isClosed) return;
+      inCorso = true;
+      try {
+        final adesso = await stato();
+        if (!fila.isClosed) fila.add(adesso);
+      } finally {
+        inCorso = false;
+      }
     }
+
+    fila = StreamController<StatoDellaRete>(
+      onListen: () {
+        unawaited(unGiro());
+        battito = Timer.periodic(ogni, (_) => unawaited(unGiro()));
+      },
+      onCancel: () {
+        battito?.cancel();
+        battito = null;
+      },
+    );
+    return fila.stream;
   }
 }
 

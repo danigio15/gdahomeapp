@@ -74,7 +74,13 @@ enum Sezione {
    * `mdi:account-key`, che e' la stessa cosa detta con quello che li' c'e'. */
   gestione('persone', pronta: true),
   aiutanti('mie'),
-  zigbee('runtime'),
+  /* Un dispositivo nuovo, abbinato dal telefono (#54).
+   *
+   * Come la Console e il Cruscotto non e' una voce come le altre: compare
+   * **solo dove una rete Zigbee c'e'**, e chi ce l'ha lo dice il ponte, non
+   * l'app. In una casa senza ZHA e senza Zigbee2MQTT quella voce aprirebbe
+   * una porta che non si apre — vedi `vociDellaBarra`. */
+  zigbee('runtime', pronta: true),
   automazioni('azioni');
 
   const Sezione(this.disegno, {this.pronta = false});

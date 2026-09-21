@@ -806,7 +806,9 @@ class _NomeDellaVoce extends StatelessWidget {
 /// installa, che compare solo dove le opzioni del ponte hanno acceso
 /// `installatore`, cioe' sul suo Home Assistant e non in casa di un cliente —
 /// e per **Gestione**, che compare in una casa sola al mondo: quella che nelle
-/// opzioni ha la chiave della gestione.
+/// opzioni ha la chiave della gestione. E **Zigbee**, che compare solo dove
+/// una rete Zigbee c'e' davvero: in una casa senza ZHA e senza Zigbee2MQTT
+/// quella voce aprirebbe una schermata che non puo' fare niente.
 /// (Nella barra laterale di Home Assistant la stessa voce si chiama «Cruscotto
 /// installatore»: li' sta in mezzo ai pannelli di chiunque, e il nome deve
 /// dire di chi e'. Qui no, perche' qui ci si e' gia' dentro.)
@@ -814,11 +816,13 @@ List<Sezione> vociDellaBarra({
   bool conLaConsole = false,
   bool conIlCruscotto = false,
   bool conLaGestione = false,
+  bool conZigbee = false,
 }) => [
   for (final una in Sezione.values)
     if ((una != Sezione.console || conLaConsole) &&
         (una != Sezione.cruscotto || conIlCruscotto) &&
-        (una != Sezione.gestione || conLaGestione))
+        (una != Sezione.gestione || conLaGestione) &&
+        (una != Sezione.zigbee || conZigbee))
       una,
 ];
 

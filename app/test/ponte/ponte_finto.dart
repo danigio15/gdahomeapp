@@ -146,6 +146,7 @@ class PonteFinto {
              *
              * Chi aggiunge una famiglia di comandi la aggiunge qui. */
             tipo.startsWith('ponte/quadro/') ||
+            tipo.startsWith('ponte/zigbee/') ||
             tipo.startsWith('ponte/aggiornamenti/'))) {
       chieste.add(detto);
       _manda(presa, {'id': id, ..._segnalazione(detto)});
@@ -415,6 +416,31 @@ class PonteFinto {
   bool lInstallatore = false;
   String ilCodiceDelCruscotto = '';
 
+  /* ─── La rete Zigbee (#54) ────────────────────────────────────────────── */
+
+  /// Che rete c'e': `''` per nessuna, `'zha'` o `'z2m'`.
+  String laReteZigbee = '';
+
+  /// Per quanto si apre, quando non lo dice chi la apre.
+  int quantoRestaApertaZigbee = 240;
+
+  /// Chi e' entrato da quando e' aperta. Le prove ce li mettono a mano: qui
+  /// non c'e' nessuna rete vera da cui possa entrare qualcuno.
+  final List<Map<String, dynamic>> entratiInZigbee = [];
+
+  /// Chi e' stato rinominato, e come. Serve a provare che il nome e' arrivato
+  /// dove doveva, invece di fidarsi della risposta.
+  final Map<String, String> rinominatiInZigbee = {};
+
+  int _zigbeeApertaFinoA = 0;
+
+  int _adesso() => DateTime.now().millisecondsSinceEpoch ~/ 1000;
+
+  int _quantoRestaZigbee() {
+    final resta = _zigbeeApertaFinoA - _adesso();
+    return resta > 0 ? resta : 0;
+  }
+
   /// La coda di chi risponde: le linee, e per ognuna il suo filo.
   final List<Map<String, dynamic>> conversazioni = [];
   final Map<String, List<Map<String, dynamic>>> fili = {};
@@ -578,6 +604,61 @@ class PonteFinto {
           'La chat di assistenza passa parole. Una foto si allega a una '
               'segnalazione.',
         );
+      /* ─── La rete Zigbee (#54) ─────────────────────────────────────────
+       *
+       * Come nel ponte vero: `apri` e `chiudi` non rispondono «no» a una casa
+       * senza rete — rispondono «si'» con dentro `fatto: false` e il motivo. E'
+       * il caso che il cliente deve intercettare, e qui si puo' provare. */
+      case 'ponte/zigbee/stato':
+        return si({
+          'quale': laReteZigbee,
+          'aperta': _zigbeeApertaFinoA > _adesso(),
+          'restano': _quantoRestaZigbee(),
+          'entrati': entratiInZigbee,
+        });
+      case 'ponte/zigbee/apri':
+        if (laReteZigbee.isEmpty) {
+          return si({
+            'fatto': false,
+            'perche': 'questa casa non ha una rete Zigbee',
+          });
+        }
+        final quanto = (detto['secondi'] as int?) ?? quantoRestaApertaZigbee;
+        _zigbeeApertaFinoA = _adesso() + quanto;
+        entratiInZigbee.clear();
+        return si({'fatto': true, 'quale': laReteZigbee, 'restano': quanto});
+      case 'ponte/zigbee/chiudi':
+        _zigbeeApertaFinoA = 0;
+        if (laReteZigbee.isEmpty) {
+          return si({
+            'fatto': false,
+            'perche': 'questa casa non ha una rete Zigbee',
+          });
+        }
+        return si({'fatto': true});
+      case 'ponte/zigbee/rinomina':
+        final quale = (detto['dispositivo'] as String? ?? '').trim();
+        final come = (detto['nome'] as String? ?? '').trim();
+        if (quale.isEmpty) {
+          return si({'fatto': false, 'perche': 'quale dispositivo?'});
+        }
+        if (come.isEmpty) {
+          return si({'fatto': false, 'perche': 'il nome e\' vuoto'});
+        }
+        for (final uno in entratiInZigbee) {
+          if (uno['id'] == quale) uno['nome'] = come;
+        }
+        rinominatiInZigbee[quale] = come;
+        return si({
+          'fatto': true,
+          'dispositivo': {
+            'id': quale,
+            'nome': come,
+            'marca': 'IKEA',
+            'modello': 'TRADFRI bulb E27',
+            'tramite': laReteZigbee == 'zha' ? 'zha' : 'mqtt',
+          },
+        });
       case 'ponte/quadro/stato':
         return si({
           'installatore': lInstallatore,
