@@ -2,7 +2,14 @@ import { applianceArtwork } from "../core/appliance-artwork.js";
 import { applianceArtworkType } from "../core/appliance-card-view-model.js";
 import { DEFAULT_EXPORT_RATE, DEFAULT_IMPORT_RATE, importRateEntity, resolveRate } from "../core/energy-calculations.js";
 import { persistEnergyField } from "../core/energy-writer.js";
-import { CHIAVE_FASCE, normalizzaLeFasce, prezzoMedioDelleFasce } from "../core/fasce-della-tariffa.js";
+import {
+  CHIAVE_FASCE,
+  nomeDellaFascia,
+  normalizzaLeFasce,
+  orarioDellaFascia,
+  prezzoMedioDelleFasce,
+  tintaDellaFascia,
+} from "../core/fasce-della-tariffa.js";
 import { salvaLeFasceDellaScheda } from "./beta22-load-slots-hotfix-section.js";
 import { allStates, clean, doc, formatNumber, installStyle, readJson, root, scriviTestoSeCambia, t, wrapFunction } from "./shared.js";
 
@@ -73,6 +80,78 @@ function bucketMap(rows = [], daysInMonth = 31) {
   return values;
 }
 
+/**
+ * Le barre delle fasce: quello che hai COMPRATO quel giorno, diviso per fascia.
+ *
+ * Si aggiungono alle due linee, non le sostituiscono, e la ragione e' che
+ * raccontano un'altra cosa. «Consumo» e' quello che la casa ha usato; le fasce
+ * stanno sotto quello che si e' preso dalla RETE, che con il fotovoltaico e'
+ * sempre meno. Mettere le tre fasce al posto della linea del consumo avrebbe
+ * fatto sembrare che nei giorni di sole si consumasse meno, quando invece si
+ * comprava meno: sarebbe stato un grafico che dice il falso proprio nei giorni
+ * in cui l'impianto lavora bene.
+ *
+ * Le barre stanno dietro — `order` piu' alto — e si impilano fra loro: la
+ * colonna alta quanto i kilowattora comprati, divisa nei colori delle fasce.
+ * Le linee restano davanti e non si impilano, ognuna col suo gruppo.
+ */
+export function barreDelleFasce(giorniDelMese, mese, anno) {
+  const conto = state.contoAFasce?.();
+  const giorni = conto?.report?.giorni;
+  if (!giorni?.length) return [];
+  const quante = conto.report.fasce.length;
+  const per = Array.from({ length: quante }, () =>
+    Array.from({ length: giorniDelMese }, () => 0),
+  );
+  /* La chiave del giorno e' «2026-09-14», e va guardata TUTTA.
+   *
+   * Prendendo solo le ultime due cifre, il 5 ottobre finiva nella colonna del
+   * 5 settembre: il numero del giorno da solo non dice di che mese sia. Nel
+   * giro di tutti i giorni il conto copre un mese solo e la differenza non si
+   * vede mai — ed e' proprio per questo che andava chiusa qui, invece di
+   * aspettare il giorno in cui l'arco cambia e una colonna si gonfia senza che
+   * nessuno capisca perche'. */
+  const suo = `${anno}-${String(mese).padStart(2, "0")}-`;
+  for (const voce of giorni) {
+    const chiave = String(voce?.giorno || "");
+    if (!chiave.startsWith(suo)) continue;
+    const giorno = Number(chiave.slice(suo.length));
+    if (!(giorno >= 1 && giorno <= giorniDelMese)) continue;
+    (voce.per || []).forEach((kwh, indice) => {
+      if (per[indice]) per[indice][giorno - 1] += Math.max(0, Number(kwh) || 0);
+    });
+  }
+  return per.map((valori, indice) => ({
+    label: nomeDellaFascia(indice),
+    /* L'orario viaggia con la serie: nel riquadro che si apre passando sopra
+     * una colonna «F2» da solo non dice niente, «F2 19:00–23:00» si'. */
+    dmOrario: orarioDellaFascia({ voci: conto.report.fasce }, indice),
+    data: valori,
+    type: "bar",
+    stack: "rete",
+    backgroundColor: tintaDellaFascia(quante, indice),
+    borderWidth: 0,
+    order: 2,
+  }));
+}
+
+/* La legenda del grafico sta nel guscio, scritta a mano: quando arrivano le
+ * fasce ci vogliono i loro pallini accanto ai due di sempre. */
+function legendaDellAndamento(fasce) {
+  const legenda = doc?.querySelector("#ed-pane-panoramica .ed-chart-legend");
+  if (!legenda) return false;
+  const voce = (tinta, testo) =>
+    `<div class="ed-legend-item"><div class="ed-legend-dot" style="background:${tinta};"></div>${testo}</div>`;
+  const markup = [
+    voce("#16a34a", t("Produzione", "Production")),
+    voce("#0ea5e9", t("Consumo", "Consumption")),
+    ...fasce.map((serie) => voce(serie.backgroundColor, serie.label)),
+  ].join("");
+  if (legenda.innerHTML !== markup) legenda.innerHTML = markup;
+  legenda.dataset.dmFasce = String(fasce.length);
+  return true;
+}
+
 function realDataPresent(values) {
   return values.some((value) => Number.isFinite(value) && value > 0);
 }
@@ -136,16 +215,25 @@ export async function renderActualDailyChart(daysInMonth, selMonth, selYear) {
     }
 
     const labels = Array.from({ length: days }, (_, index) => String(index + 1));
+    const fasce = barreDelleFasce(days, month, year);
+    legendaDellAndamento(fasce);
     loading.style.display = "none";
     canvas.style.display = "block";
     canvas.dataset.dmActualHistory = `${year}-${String(month).padStart(2, "0")}`;
+    canvas.dataset.dmFasce = String(fasce.length);
     state.dailyChart = new root.Chart(canvas.getContext("2d"), {
       type: "line",
       data: {
         labels,
         datasets: [
-          { label: t("Produzione", "Production"), data: production, borderColor: "#16a34a", backgroundColor: "rgba(22,163,74,.15)", fill: true, tension: .3, pointRadius: 0, borderWidth: 2 },
-          { label: t("Consumo", "Consumption"), data: consumption, borderColor: "#0ea5e9", backgroundColor: "rgba(14,165,233,.08)", fill: true, tension: .3, pointRadius: 0, borderWidth: 2 },
+          /* Ogni linea nel suo gruppo, e una sola per gruppo: con l'asse
+           * impilato — che serve alle barre — due linee nello stesso gruppo si
+           * sommerebbero, e il consumo apparirebbe sopra la produzione invece
+           * che accanto. Un gruppo con dentro una cosa sola non si somma con
+           * nessuno. */
+          { label: t("Produzione", "Production"), data: production, stack: "sole", order: 0, borderColor: "#16a34a", backgroundColor: "rgba(22,163,74,.15)", fill: true, tension: .3, pointRadius: 0, borderWidth: 2 },
+          { label: t("Consumo", "Consumption"), data: consumption, stack: "casa", order: 1, borderColor: "#0ea5e9", backgroundColor: "rgba(14,165,233,.08)", fill: true, tension: .3, pointRadius: 0, borderWidth: 2 },
+          ...fasce,
         ],
       },
       options: {
@@ -153,8 +241,11 @@ export async function renderActualDailyChart(daysInMonth, selMonth, selYear) {
         maintainAspectRatio: false,
         animation: false,
         interaction: { intersect: false, mode: "index" },
-        plugins: { legend: { display: false }, tooltip: { callbacks: { label: (ctx) => `${ctx.dataset.label}: ${formatNumber(ctx.parsed.y, 2)} kWh` } } },
-        scales: { y: { beginAtZero: true, title: { display: true, text: "kWh" } }, x: { grid: { display: false } } },
+        plugins: { legend: { display: false }, tooltip: { callbacks: { label: (ctx) => `${ctx.dataset.label}${ctx.dataset.dmOrario ? ` ${ctx.dataset.dmOrario}` : ""}: ${formatNumber(ctx.parsed.y, 2)} kWh` } } },
+        scales: {
+          y: { beginAtZero: true, stacked: fasce.length > 0, title: { display: true, text: "kWh" } },
+          x: { stacked: fasce.length > 0, grid: { display: false } },
+        },
       },
     });
     return true;

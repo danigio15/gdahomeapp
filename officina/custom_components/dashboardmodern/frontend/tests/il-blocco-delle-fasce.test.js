@@ -8,11 +8,11 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
-  ilBloccoDelleFasce,
   nomeDellaFascia,
   orarioDellaFascia,
   tintaDellaFascia,
-} from "../src/sections/il-report-a-fasce-section.js";
+} from "../src/core/fasce-della-tariffa.js";
+import { ilBloccoDelleFasce } from "../src/sections/il-report-a-fasce-section.js";
 
 const TRE = {
   quante: 3,
@@ -51,14 +51,14 @@ test("l'ultima fascia arriva alla prima, non a mezzanotte", () => {
   assert.equal(orarioDellaFascia(TRE, 9), "");
 });
 
-test("l'azzurro è la fascia che costa meno, con due fasce come con tre", () => {
+test("il blu è la fascia che costa meno, con due fasce come con tre", () => {
   /* La scala va dalla più cara alla più economica. Con due fasce si prendono i
-   * due estremi invece dei primi due, così «l'azzurro è la notte» vale in tutti
-   * e due i casi invece di dipendere da quante sono. */
+   * due estremi invece dei primi due, così «il blu è la notte» vale in tutti e
+   * due i casi invece di dipendere da quante sono. */
   assert.equal(tintaDellaFascia(3, 0), "#f97316");
-  assert.equal(tintaDellaFascia(3, 2), "#0ea5e9");
+  assert.equal(tintaDellaFascia(3, 2), "#1d4ed8");
   assert.equal(tintaDellaFascia(2, 0), "#f97316");
-  assert.equal(tintaDellaFascia(2, 1), "#0ea5e9");
+  assert.equal(tintaDellaFascia(2, 1), "#1d4ed8");
   assert.equal(nomeDellaFascia(0), "F1");
   assert.equal(nomeDellaFascia(2), "F3");
 });
@@ -72,7 +72,11 @@ test("il blocco dice quanto, di cosa e con che prezzo, fascia per fascia", () =>
    * cosa. */
   assert.ok(markup.includes("width:44.70%"));
   assert.ok(markup.includes("background:#f97316"));
-  assert.ok(markup.includes("background:#0ea5e9"));
+  assert.ok(markup.includes("background:#1d4ed8"));
+  /* E non l'azzurro della linea del consumo, che nell'andamento giornaliero
+   * sta accanto a queste colonne: due pallini identici per due cose diverse
+   * sono il modo più rapido di far leggere un grafico al contrario. */
+  assert.ok(!markup.includes("#0ea5e9"));
 });
 
 test("una fascia senza il suo prezzo lo dichiara", () => {
@@ -127,4 +131,54 @@ test("il blocco dice quanta parte è misurata e quanta è stimata", () => {
 test("senza report non si disegna niente", () => {
   assert.equal(ilBloccoDelleFasce(null, TRE, SETTEMBRE), "");
   assert.equal(ilBloccoDelleFasce(REPORT, { quante: 0, voci: [] }, SETTEMBRE), "");
+});
+
+/* ── le colonne dell'andamento giornaliero ──────────────────────────────── */
+
+test("ogni giorno del mese finisce nella sua colonna, divisa per fascia", async () => {
+  const polish = await import("../src/sections/energy-report-polish-section.js");
+  polish.registraIlContoAFasce(() => ({
+    euro: 3,
+    kwh: 10,
+    report: {
+      fasce: [
+        { indice: 0, dalle: 480 },
+        { indice: 1, dalle: 1140 },
+        { indice: 2, dalle: 1380 },
+      ],
+      giorni: [
+        { giorno: "2026-09-01", per: [2, 1, 0.5], kwh: 3.5 },
+        { giorno: "2026-09-14", per: [1, 0, 2], kwh: 3 },
+        /* Il 5 ottobre non è il 5 settembre: la chiave del giorno va guardata
+         * tutta, non solo le ultime due cifre. */
+        { giorno: "2026-10-05", per: [9, 9, 9], kwh: 27 },
+        { giorno: "2025-09-05", per: [7, 7, 7], kwh: 21 },
+      ],
+    },
+  }));
+
+  const serie = polish.barreDelleFasce(30, 9, 2026);
+  assert.deepEqual(
+    serie.map((s) => [s.label, s.type, s.stack, s.backgroundColor]),
+    [
+      ["F1", "bar", "rete", "#f97316"],
+      ["F2", "bar", "rete", "#8b5cf6"],
+      ["F3", "bar", "rete", "#1d4ed8"],
+    ],
+  );
+  assert.equal(serie[0].data.length, 30);
+  assert.equal(serie[0].data[0], 2);
+  assert.equal(serie[2].data[0], 0.5);
+  assert.equal(serie[0].data[13], 1);
+  assert.equal(serie[2].data[13], 2);
+  /* Né il 5 ottobre né il 5 settembre dell'anno prima gonfiano la colonna 5. */
+  assert.equal(serie[0].data[4], 0);
+  /* L'orario viaggia con la serie: «F2» da solo, nel riquadro che si apre
+   * passando sopra una colonna, non dice niente. */
+  assert.equal(serie[1].dmOrario, "19:00–23:00");
+
+  /* Senza un conto a fasce in mano non ci sono colonne da aggiungere, e il
+   * grafico resta quello di sempre. */
+  polish.registraIlContoAFasce(null);
+  assert.deepEqual(polish.barreDelleFasce(30, 9, 2026), []);
 });

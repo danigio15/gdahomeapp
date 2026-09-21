@@ -15,18 +15,21 @@
  * configurazione e l'istante, esce il prezzo. Chi chiama porta il suo orologio,
  * come dappertutto nel nucleo.
  *
- * ── Quello che questo modulo NON puo' sapere ──────────────────────────────
+ * ── Quello che questo modulo non sa, e chi lo sa ──────────────────────────
  *
  * Il prezzo di ADESSO e' esatto: si guarda che ora e', si legge la fascia. Il
- * costo di un PERIODO — la bolletta del mese, il report della settimana — non
- * lo e', e non puo' esserlo: la plancia sa quanti kWh sono passati, non in che
- * ore sono passati. Per saperlo servirebbero i contatori per fascia, che chi
- * li ha se li e' installati e chi non li ha non li ha.
+ * costo di un PERIODO qui non lo e': entra un numero di kilowattora e basta,
+ * e da quello si puo' solo fare la media delle fasce PESATA SULLE ORE che
+ * ognuna copre — la stima che non favorisce nessuna ipotesi, e che chi la usa
+ * dichiara a parole.
  *
- * Allora il periodo si fa con la media delle fasce PESATA SULLE ORE che
- * ognuna copre, che e' la stima onesta: chi consuma uniformemente la trova
- * giusta, chi sposta tutto di notte la trova alta, e nessuno dei due la trova
- * spacciata per un conto esatto — la scheda lo dice a parole.
+ * Qui c'era scritto che quel costo NON POTEVA essere esatto, «perche' la
+ * plancia sa quanti kWh sono passati, non in che ore». Era una limitazione di
+ * chi scriveva, non una limitazione vera: il Recorder le ore le tiene, e
+ * `il-report-delle-fasce.js` gliele chiede e mette ognuna nella sua fascia.
+ * Dove le ore ci sono il conto e' esatto; dove il Recorder le ha buttate si
+ * torna alla media pesata, e il report dice quanta parte e' l'una e quanta
+ * l'altra.
  */
 
 const pulito = (valore) => String(valore ?? "").trim();
@@ -189,4 +192,54 @@ export function prezzoMedioDelleFasce(config, ripiego) {
     minuti.reduce((somma, quanti, indice) => somma + quanti * prezzo(indice), 0) / 1440;
   if (fasce.festivi < 0) return feriale;
   return (feriale * 5 + prezzo(fasce.festivi) * 2) / 7;
+}
+
+/* ── come si presenta una fascia ─────────────────────────────────────────── */
+
+/* Le tinte, dalla piu' cara alla piu' economica.
+ *
+ * L'arancio e' quello di «Costo Reale» nel Report — la fascia di giorno e' la
+ * spesa che quella casella racconta — e il blu cupo e' la notte. Con due fasce
+ * si prendono i due estremi e non i primi due, cosi' «il blu e' quella che
+ * costa meno» vale in tutti e due i casi invece di dipendere da quante sono.
+ *
+ * Il blu della notte e' scuro e non azzurro, ed e' una scelta e non un gusto:
+ * nell'andamento giornaliero le colonne delle fasce stanno accanto alla linea
+ * del consumo, che e' azzurra da sempre. Con l'azzurro chiaro la legenda
+ * avrebbe avuto due pallini identici per due cose diverse — «Consumo» e «F3» —
+ * ed e' il modo piu' rapido di far leggere un grafico al contrario.
+ *
+ * Stanno qui, con la regola che dice che ore sono, perche' una fascia si
+ * riconosce dal colore prima che dal numero e la si incontra in tre posti: il
+ * blocco del costo reale, le barre dell'andamento giornaliero e il profilo
+ * delle ventiquattro ore. Tre tavolozze vorrebbero dire che la stessa fascia
+ * cambia colore passando da una tessera all'altra della stessa schermata. */
+export const TINTE_DELLE_FASCE = Object.freeze({
+  2: Object.freeze(["#f97316", "#1d4ed8"]),
+  3: Object.freeze(["#f97316", "#8b5cf6", "#1d4ed8"]),
+});
+
+export function tintaDellaFascia(quante, indice) {
+  const scala = TINTE_DELLE_FASCE[quante] || TINTE_DELLE_FASCE[3];
+  return scala[indice] || scala[scala.length - 1];
+}
+
+/** «F1», «F2», «F3» — il nome che sta scritto in bolletta. */
+export function nomeDellaFascia(indice) {
+  return `F${Number(indice) + 1}`;
+}
+
+/**
+ * L'orario di una fascia, come si legge: «08:00–19:00».
+ *
+ * L'ultima arriva a quella dopo di lei, che e' la prima: e' la fascia che
+ * attraversa la mezzanotte, e scriverla «23:00–24:00» sarebbe dire il falso
+ * proprio sulla fascia che di solito dura di piu'.
+ */
+export function orarioDellaFascia(config, indice) {
+  const voci = config?.voci || [];
+  const suo = voci[indice];
+  if (!suo) return "";
+  const dopo = voci[indice + 1] || voci[0];
+  return `${oraDeiMinuti(suo.dalle)}–${oraDeiMinuti(dopo.dalle)}`;
 }

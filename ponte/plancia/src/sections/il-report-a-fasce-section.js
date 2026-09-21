@@ -41,8 +41,10 @@ import { DEFAULT_IMPORT_RATE } from "../core/energy-calculations.js";
 import {
   CHIAVE_FASCE,
   leFasceValgono,
+  nomeDellaFascia,
   normalizzaLeFasce,
-  oraDeiMinuti,
+  orarioDellaFascia,
+  tintaDellaFascia,
 } from "../core/fasce-della-tariffa.js";
 import { reportDelleFasce } from "../core/il-report-delle-fasce.js";
 import { periodRange } from "../core/period-service.js";
@@ -53,7 +55,11 @@ import {
   prezzoUnicoDiAcquisto,
   secchielliNellArco,
 } from "./energy-section.js";
-import { applyFinancialOverview, registraIlContoAFasce } from "./energy-report-polish-section.js";
+import {
+  applyFinancialOverview,
+  registraIlContoAFasce,
+  renderActualDailyChart,
+} from "./energy-report-polish-section.js";
 import {
   clean,
   doc,
@@ -78,44 +84,8 @@ const state = (root[KEY] ||= {
   periodo: null,
 });
 
-/* Le tinte delle fasce: dalla piu' cara alla piu' economica.
- *
- * L'arancio e' quello di «Costo Reale» nella griglia qui sopra — la fascia di
- * giorno e' la spesa che quella casella racconta — e l'azzurro e' la notte.
- * Con due fasce si prendono i due estremi, cosi' «l'azzurro e' quella che
- * costa meno» vale in tutti e due i casi invece di dipendere da quante sono. */
-const TINTE = Object.freeze({
-  2: Object.freeze(["#f97316", "#0ea5e9"]),
-  3: Object.freeze(["#f97316", "#8b5cf6", "#0ea5e9"]),
-});
-
 /** Quanto si tiene buono un conto del mese in corso: un quarto d'ora. */
 export const SCADENZA_DEL_CONTO_MS = 15 * 60_000;
-
-export function tintaDellaFascia(quante, indice) {
-  const scala = TINTE[quante] || TINTE[3];
-  return scala[indice] || scala[scala.length - 1];
-}
-
-/** «F1», «F2», «F3» — il nome che sta scritto in bolletta. */
-export function nomeDellaFascia(indice) {
-  return `F${indice + 1}`;
-}
-
-/**
- * L'orario di una fascia, come si legge: «08:00–19:00».
- *
- * L'ultima arriva a quella dopo di lei, che e' la prima: e' la fascia che
- * attraversa la mezzanotte, e scriverla «23:00–24:00» sarebbe dire il falso
- * proprio sulla fascia che di solito dura di piu'.
- */
-export function orarioDellaFascia(config, indice) {
-  const voci = config?.voci || [];
-  const suo = voci[indice];
-  if (!suo) return "";
-  const dopo = voci[indice + 1] || voci[0];
-  return `${oraDeiMinuti(suo.dalle)}–${oraDeiMinuti(dopo.dalle)}`;
-}
 
 function soldi(valore) {
   return `${formatNumber(Math.max(0, Number(valore) || 0), 2)} €`;
@@ -332,10 +302,16 @@ export async function aggiornaIlReportDelleFasce(bundle, { forza = false } = {})
     state.chiave = chiave;
     state.letto = Date.now();
     const disegnato = disegna(report, config, periodo);
-    /* «Costo Reale» adesso puo' essere esatta: chi la scrive la rifaccia. La
-     * casella resta sua — qui non ci si scrive — e il conto glielo si porta
-     * col lettore che gli abbiamo lasciato all'avvio. */
-    if (report && bundle?.month) applyFinancialOverview(bundle);
+    /* Adesso il Report puo' dire due cose che prima non sapeva, e le dice lui:
+     * «Costo Reale» diventa la spesa esatta invece della stima, e le colonne
+     * dell'andamento giornaliero si dividono nei colori delle fasce. Le due
+     * cose restano sue — qui non si scrive ne' in quella casella ne' in quel
+     * grafico — e il conto glielo si porta col lettore lasciato all'avvio. */
+    if (report) {
+      if (bundle?.month) applyFinancialOverview(bundle);
+      const giorni = new Date(periodo.year, periodo.month, 0).getDate();
+      renderActualDailyChart(giorni, periodo.month, periodo.year);
+    }
     return disegnato;
   } catch (errore) {
     if (giro === state.giro) {
