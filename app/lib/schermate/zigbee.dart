@@ -69,9 +69,20 @@ class SchermataZigbee extends StatefulWidget {
     super.key,
     required this.collegamento,
     required this.visibile,
+    this.quandoVaMessoNellaPlancia,
   });
 
   final Collegamento collegamento;
+
+  /// Come si consegna il dispositivo alla plancia, perche' chieda lei dove va.
+  ///
+  /// E' un incarico e non una cosa fatta qui: la plancia sta in un'altra
+  /// sezione, dentro un riquadro che questa schermata non ha. Chi tiene
+  /// tutt'e due — la home — sa come passare dall'una all'altra.
+  ///
+  /// Nullo vuol dire che non si puo' consegnare — la schermata da sola, in una
+  /// prova — e allora il tasto non si disegna invece di non fare niente.
+  final void Function(DispositivoEntrato suo)? quandoVaMessoNellaPlancia;
 
   /// Se e' questa la sezione che si guarda.
   ///
@@ -258,6 +269,19 @@ class _SchermataZigbeeState extends State<SchermataZigbee> {
     }
   }
 
+  /// Lo consegna alla plancia, che chiede lei dove va a finire.
+  ///
+  /// Solo se il dispositivo ha portato dentro almeno un'entita': il foglietto
+  /// della plancia decide la sezione da quelle, e aprirlo su un dispositivo
+  /// che non ne ha vorrebbe dire un foglietto che non sa cosa proporre — e
+  /// che non potrebbe scrivere niente nemmeno se glielo si dicesse a mano.
+  void Function()? get _consegna {
+    final suo = _suo;
+    final consegna = widget.quandoVaMessoNellaPlancia;
+    if (suo == null || consegna == null || suo.entita.isEmpty) return null;
+    return () => consegna(suo);
+  }
+
   /// Ricomincia da capo, per il prossimo.
   void _unAltro() {
     setState(() {
@@ -312,7 +336,11 @@ class _SchermataZigbeeState extends State<SchermataZigbee> {
               inCorso: _inCorso,
               quandoConferma: _chiamalo,
             ),
-            _Passo.fatto => _Fatto(suo: _suo, quandoUnAltro: _unAltro),
+            _Passo.fatto => _Fatto(
+              suo: _suo,
+              quandoUnAltro: _unAltro,
+              quandoLoMette: _consegna,
+            ),
           },
         ],
       ),
@@ -746,10 +774,18 @@ class _IlNome extends StatelessWidget {
 
 /// Il passo 4: fatto.
 class _Fatto extends StatelessWidget {
-  const _Fatto({required this.suo, required this.quandoUnAltro});
+  const _Fatto({
+    required this.suo,
+    required this.quandoUnAltro,
+    required this.quandoLoMette,
+  });
 
   final DispositivoEntrato? suo;
   final VoidCallback quandoUnAltro;
+
+  /// Nullo quando alla plancia non si puo' consegnare: allora si dice cosa
+  /// fare a mano, invece di un tasto che non fa niente.
+  final VoidCallback? quandoLoMette;
 
   @override
   Widget build(BuildContext context) {
@@ -816,17 +852,29 @@ class _Fatto extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               Text(
-                inLingua(
-                  it:
-                      'In casa c\'è, ma nella plancia non si vede ancora: '
-                      'aprila e te lo chiede lei dove metterlo — Luci, Prese, '
-                      'Clima — facendoti vedere prima cosa scrive.',
-                  en:
-                      'It is in the home, but the dashboard does not show it '
-                      'yet: open it and it will ask you where it goes — '
-                      'Lights, Sockets, Climate — showing you first what it '
-                      'will write.',
-                ),
+                quandoLoMette == null
+                    ? inLingua(
+                        it:
+                            'In casa c\'è, ma nella plancia non si vede '
+                            'ancora: la sezione gliela dai dalla '
+                            'Configurazione, quando vuoi.',
+                        en:
+                            'It is in the home, but the dashboard does not '
+                            'show it yet: you give it a section from Config, '
+                            'whenever you like.',
+                      )
+                    : inLingua(
+                        it:
+                            'In casa c\'è, ma nella plancia non si vede '
+                            'ancora. Te lo chiede lei dove metterlo — Luci, '
+                            'Prese, Clima — facendoti vedere prima cosa '
+                            'scrive.',
+                        en:
+                            'It is in the home, but the dashboard does not '
+                            'show it yet. It will ask you where it goes — '
+                            'Lights, Sockets, Climate — showing you first '
+                            'what it will write.',
+                      ),
                 style: testi.bodyMedium?.copyWith(
                   color: colori.onSurfaceVariant,
                 ),
@@ -835,9 +883,26 @@ class _Fatto extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 18),
-        FilledButton(
+        if (quandoLoMette != null) ...[
+          FilledButton(
+            onPressed: quandoLoMette,
+            style: FilledButton.styleFrom(
+              minimumSize: const Size.fromHeight(54),
+            ),
+            child: Text(
+              inLingua(
+                it: 'Adesso mettilo nella plancia',
+                en: 'Now put it on the dashboard',
+              ),
+            ),
+          ),
+          const SizedBox(height: 10),
+        ],
+        OutlinedButton(
           onPressed: quandoUnAltro,
-          style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(54)),
+          style: OutlinedButton.styleFrom(
+            minimumSize: const Size.fromHeight(52),
+          ),
           child: Text(
             inLingua(it: 'Aggiungine un altro', en: 'Add another one'),
           ),

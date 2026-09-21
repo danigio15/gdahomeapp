@@ -657,6 +657,14 @@ class PonteFinto {
             'marca': 'IKEA',
             'modello': 'TRADFRI bulb E27',
             'tramite': laReteZigbee == 'zha' ? 'zha' : 'mqtt',
+            /* Le entita' che ha portato dentro: senza, il passo dopo — il
+             * foglietto della plancia — non saprebbe cosa proporre. */
+            'entita':
+                entratiInZigbee.firstWhere(
+                  (uno) => uno['id'] == quale,
+                  orElse: () => <String, dynamic>{},
+                )['entita'] ??
+                const <Map<String, String>>[],
           },
         });
       case 'ponte/quadro/stato':

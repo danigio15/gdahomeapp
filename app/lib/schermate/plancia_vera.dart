@@ -264,6 +264,19 @@ class PlanciaVeraState extends State<PlanciaVera> {
     _riquadro.currentState?.tornaDallaConfig();
   }
 
+  /// Passa alla plancia un dispositivo appena abbinato (#54, passo 4).
+  ///
+  /// A decidere in che sezione va e a scriverla e' la plancia: le sue sezioni
+  /// hanno cinque forme diverse, e scriverle dall'app vorrebbe dire scriverle
+  /// due volte. Qui si consegna, e basta.
+  ///
+  /// [dispositivo] e' gia' JSON: lo compone chi lo manda, e da qui in giu'
+  /// non si tocca.
+  void doveLoMetto(String dispositivo) {
+    if (!mounted) return;
+    _riquadro.currentState?.doveLoMetto(dispositivo);
+  }
+
   @override
   Widget build(BuildContext context) {
     final collegamento = widget.collegamento;
@@ -804,6 +817,15 @@ class RiquadroDellaPlanciaState extends State<RiquadroDellaPlancia> {
     final controllore = _controllore;
     if (controllore != null) {
       unawaited(riquadro.tornaDallaConfig(controllore));
+    }
+  }
+
+  /// Consegna alla pagina un dispositivo appena abbinato: il foglietto «Dove
+  /// lo metto?» lo apre lei.
+  void doveLoMetto(String dispositivo) {
+    final controllore = _controllore;
+    if (controllore != null) {
+      unawaited(riquadro.doveLoMetto(controllore, dispositivo));
     }
   }
 

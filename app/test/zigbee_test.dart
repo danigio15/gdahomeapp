@@ -22,6 +22,7 @@ import 'package:gdahome/casa/archivio_delle_case.dart';
 import 'package:gdahome/casa/cassaforte.dart';
 import 'package:gdahome/casa/collegamento.dart';
 import 'package:gdahome/ponte/sonda.dart';
+import 'package:gdahome/casa/zigbee.dart';
 import 'package:gdahome/schermate/barra.dart';
 import 'package:gdahome/schermate/menu.dart';
 import 'package:gdahome/schermate/zigbee.dart';
@@ -253,6 +254,84 @@ void main() {
      * e chi ha appena finito deve sapere che c'è un passo in più. */
     expect(find.text('Gli manca una sezione'), findsOneWidget);
     expect(find.text('Aggiungine un altro'), findsOneWidget);
+  });
+
+  testWidgets('finito, si consegna alla plancia quello che è entrato', (
+    tester,
+  ) async {
+    /* Il passo 4: chi scrive nella configurazione è la plancia, e da qui si
+     * consegna. Le entità viaggiano tutte: quale delle sei dica cos'è
+     * l'oggetto lo sa lei, che le sue sezioni le conosce. */
+    await unaCasa(tester);
+    DispositivoEntrato? consegnato;
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: temaChiaro(),
+        home: Scaffold(
+          body: SchermataZigbee(
+            collegamento: collegamento,
+            visibile: true,
+            quandoVaMessoNellaPlancia: (suo) => consegnato = suo,
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    await respira(tester);
+    await premi(tester, 'Apri la rete');
+    await respira(tester);
+    ponte.entratiInZigbee.add({
+      'id': 'dev-1',
+      'nome': 'TS0121',
+      'entita': [
+        {'entity': 'switch.ts0121', 'classe': 'outlet', 'categoria': ''},
+      ],
+    });
+    await respira(tester, volte: 6);
+    await tester.enterText(find.byType(TextField), 'Presa lavatrice');
+    await tester.pump();
+    await premi(tester, 'Chiamalo così');
+    await respira(tester);
+
+    await premi(tester, 'Adesso mettilo nella plancia');
+    await tester.pump();
+    expect(consegnato, isNotNull);
+    expect(consegnato!.nome, 'Presa lavatrice');
+    expect(consegnato!.entita.first.entity, 'switch.ts0121');
+  });
+
+  testWidgets('un dispositivo senza entità non si consegna', (tester) async {
+    /* Il foglietto della plancia decide la sezione dalle entità: aprirlo su un
+     * dispositivo che non ne ha vorrebbe dire un foglietto che non sa cosa
+     * proporre e non potrebbe scrivere niente. Il tasto non c'è, e la nota
+     * dice cosa fare invece. */
+    await unaCasa(tester);
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: temaChiaro(),
+        home: Scaffold(
+          body: SchermataZigbee(
+            collegamento: collegamento,
+            visibile: true,
+            quandoVaMessoNellaPlancia: (_) {},
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    await respira(tester);
+    await premi(tester, 'Apri la rete');
+    await respira(tester);
+    ponte.entratiInZigbee.add({'id': 'dev-1', 'nome': 'TS0121'});
+    await respira(tester, volte: 6);
+    await tester.enterText(find.byType(TextField), 'Qualcosa');
+    await tester.pump();
+    await premi(tester, 'Chiamalo così');
+    await respira(tester);
+
+    expect(find.text('È a posto'), findsOneWidget);
+    expect(find.text('Adesso mettilo nella plancia'), findsNothing);
+    expect(find.textContaining('dalla Configurazione'), findsOneWidget);
   });
 
   testWidgets('senza un nome il tasto non si preme', (tester) async {

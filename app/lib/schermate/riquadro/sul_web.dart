@@ -2,6 +2,7 @@
 library;
 
 import 'dart:async';
+import 'dart:convert';
 import 'dart:js_interop';
 import 'dart:js_interop_unsafe';
 
@@ -335,6 +336,40 @@ Future<void> apriLaConfig(WebViewController controllore, Uri pagina) async =>
 /// Riporta la plancia dov'era prima della Configurazione.
 Future<void> tornaDallaConfig(WebViewController controllore) async =>
     _tira('gdahomeTornaDallaConfig', 'torna-dalla-config');
+
+/// Passa alla plancia un dispositivo appena abbinato (#54, passo 4).
+///
+/// Qui non si tira nessuna maniglia: si **bussa**, e basta. Il foglietto della
+/// plancia un messaggio se lo aspetta gia' — e' la strada con cui il guscio
+/// parla col suo ospite — e quella strada attraversa le origini, mentre
+/// chiamare una funzione dentro un riquadro di un'altra origine no.
+///
+/// Il messaggio si manda **a tutti i riquadri**: quello della plancia lo
+/// riconosce dal marchio e dall'azione, gli altri lo lasciano cadere. E dal
+/// di la' si guarda che arrivi dal proprio ospite: e' la stessa regola con cui
+/// gia' oggi si passano le premesse.
+Future<void> doveLoMetto(
+  WebViewController controllore,
+  String dispositivo,
+) async {
+  final detto = <String, Object?>{
+    'source': 'dashboardmodern-host',
+    'action': 'dove-lo-metto',
+    'dispositivo': jsonDecode(dispositivo),
+  };
+  final riquadri = web.document.querySelectorAll('iframe');
+  for (var quale = 0; quale < riquadri.length; quale += 1) {
+    final uno = riquadri.item(quale);
+    if (uno == null || !uno.isA<web.HTMLIFrameElement>()) continue;
+    final dentro = (uno as web.HTMLIFrameElement).contentWindow;
+    if (dentro == null) continue;
+    try {
+      dentro.postMessage(detto.jsify(), '*'.toJS);
+    } catch (_) {
+      /* Un riquadro che non si lascia parlare non e' il nostro. */
+    }
+  }
+}
 
 /// Tira una delle maniglie che il servitore ha messo nella pagina servita.
 ///

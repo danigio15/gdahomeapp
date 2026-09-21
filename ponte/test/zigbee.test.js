@@ -124,7 +124,14 @@ test("un dispositivo si presenta col nome che gli ha dato chi lo guarda", () => 
       model: "TS0121",
       primary_config_entry_domain: "mqtt",
     }),
-    { id: "d1", nome: "Presa lavatrice", marca: "TuYa", modello: "TS0121", tramite: "mqtt" },
+    {
+      id: "d1",
+      nome: "Presa lavatrice",
+      marca: "TuYa",
+      modello: "TS0121",
+      tramite: "mqtt",
+      entita: [],
+    },
   );
   /* Appena entrato non ce l'ha ancora, e si presenta col suo modello: è
    * proprio per questo che il passo dopo chiede un nome. */
@@ -132,9 +139,52 @@ test("un dispositivo si presenta col nome che gli ha dato chi lo guarda", () => 
   assert.equal(comeSiPresenta({}).nome, "");
 });
 
+test("e porta dentro le sue entità, che sono quelle che dicono cos'è", () => {
+  /* Senza queste il passo dopo non si può fare: il foglietto «Dove lo metto?»
+   * della plancia decide la sezione dall'ENTITÀ, e di un dispositivo senza
+   * entità non sa dire niente. */
+  const presa = comeSiPresenta({ id: "d1", name: "TS0121" }, [
+    { entity_id: "switch.ts0121", original_device_class: "outlet", device_id: "d1" },
+    {
+      entity_id: "sensor.ts0121_power",
+      device_class: "power",
+      original_device_class: "energy",
+      device_id: "d1",
+    },
+    {
+      entity_id: "sensor.ts0121_rssi",
+      original_device_class: "signal_strength",
+      entity_category: "diagnostic",
+      device_id: "d1",
+    },
+  ]);
+  assert.deepEqual(presa.entita, [
+    { entity: "switch.ts0121", classe: "outlet", categoria: "" },
+    /* La classe cambiata a mano vince su quella di fabbrica: chi l'ha
+     * corretta l'ha corretta per un motivo. */
+    { entity: "sensor.ts0121_power", classe: "power", categoria: "" },
+    { entity: "sensor.ts0121_rssi", classe: "signal_strength", categoria: "diagnostic" },
+  ]);
+});
+
+test("una riga del registro senza entità non viaggia", () => {
+  /* Non è teoria: un'entità disabilitata o appena cancellata può restare nel
+   * registro senza `entity_id`, e una voce senza nome dall'altra parte
+   * diventa una riga vuota in un elenco. */
+  const suo = comeSiPresenta({ id: "d1" }, [
+    { entity_id: "light.uno", device_id: "d1" },
+    { device_id: "d1" },
+    null,
+  ]);
+  assert.deepEqual(
+    suo.entita.map((una) => una.entity),
+    ["light.uno"],
+  );
+});
+
 /* ── il giro ────────────────────────────────────────────────────────────── */
 
-function casaFinta({ voci = [], cassetta = "", dispositivi = [] } = {}) {
+function casaFinta({ voci = [], cassetta = "", dispositivi = [], entita = [] } = {}) {
   const detto = [];
   let mandaEvento = null;
   let mandaMqtt = null;
@@ -150,6 +200,7 @@ function casaFinta({ voci = [], cassetta = "", dispositivi = [] } = {}) {
       detto.push(comando);
       if (comando.type === "config_entries/get") return voci;
       if (comando.type === "config/device_registry/list") return dispositivi;
+      if (comando.type === "config/entity_registry/list") return entita;
       return null;
     },
     async ascolta(evento, onEvento) {
@@ -247,6 +298,58 @@ test("chi entra finisce nell'elenco, col suo nome, una volta sola", async () => 
   assert.equal(stato.entrati[0].marca, "TuYa");
   assert.equal(stato.aperta, true);
   assert.ok(stato.restano > 0 && stato.restano <= 30);
+  zigbee.spegni();
+});
+
+test("chi entra porta con sé le sue entità, e solo le sue", async () => {
+  const casa = casaFinta({
+    voci: [{ domain: "zha", state: "loaded" }],
+    dispositivi: [{ id: "d1", name: "TS0121" }],
+    entita: [
+      { entity_id: "switch.ts0121", original_device_class: "outlet", device_id: "d1" },
+      { entity_id: "sensor.ts0121_power", original_device_class: "power", device_id: "d1" },
+      /* Di un altro dispositivo: non deve viaggiare con questo. */
+      { entity_id: "light.salone", device_id: "d2" },
+    ],
+  });
+  const zigbee = new Zigbee({ casa });
+  await zigbee.apri({ secondi: 30 });
+  await casa.mandaEvento({ action: "create", device_id: "d1" });
+
+  const suo = (await zigbee.stato()).entrati[0];
+  assert.deepEqual(
+    suo.entita.map((una) => una.entity),
+    ["switch.ts0121", "sensor.ts0121_power"],
+  );
+  zigbee.spegni();
+});
+
+test("e se ne ricorda dopo la rinomina, senza richiedere il registro", async () => {
+  /* Un cambio di nome non crea e non toglie entità: richiedere tutto il
+   * registro per rileggere una cosa che si sa già sarebbe un giro per niente.
+   * E senza ricordarsele, il comando che serve al passo dopo perderebbe per
+   * strada proprio quello che al passo dopo serve. */
+  const casa = casaFinta({
+    voci: [{ domain: "zha", state: "loaded" }],
+    dispositivi: [{ id: "d1", name: "TS0121" }],
+    entita: [{ entity_id: "switch.ts0121", original_device_class: "outlet", device_id: "d1" }],
+  });
+  const zigbee = new Zigbee({ casa });
+  await zigbee.apri({ secondi: 30 });
+  await casa.mandaEvento({ action: "create", device_id: "d1" });
+  const quanti = casa.detto.filter((uno) => uno.type === "config/entity_registry/list").length;
+
+  const detto = await zigbee.rinomina("d1", "Presa lavatrice");
+  assert.equal(detto.fatto, true);
+  assert.deepEqual(
+    detto.dispositivo.entita.map((una) => una.entity),
+    ["switch.ts0121"],
+  );
+  assert.equal(
+    casa.detto.filter((uno) => uno.type === "config/entity_registry/list").length,
+    quanti,
+    "il registro non si richiede per una rinomina",
+  );
   zigbee.spegni();
 });
 

@@ -208,6 +208,62 @@ void main() {
     expect(stato.entrati.last.id, '');
   });
 
+  /* ─── cosa si consegna alla plancia ────────────────────────────────────── */
+
+  test('il dispositivo porta con sé le sue entità', () async {
+    ponte.laReteZigbee = 'zha';
+    await zigbee.apri();
+    ponte.entratiInZigbee.add({
+      'id': 'dev-1',
+      'nome': 'TS0121',
+      'entita': [
+        {'entity': 'switch.ts0121', 'classe': 'outlet', 'categoria': ''},
+        {
+          'entity': 'sensor.ts0121_rssi',
+          'classe': 'signal_strength',
+          'categoria': 'diagnostic',
+        },
+      ],
+    });
+    final suo = (await zigbee.stato()).entrati.first;
+    expect(suo.entita, hasLength(2));
+    expect(suo.entita.first.entity, 'switch.ts0121');
+    expect(suo.entita.first.classe, 'outlet');
+    expect(suo.entita.last.categoria, 'diagnostic');
+  });
+
+  test('e le consegna alla plancia tutte, non solo la prima', () {
+    /* Quale delle sei dica cos'è l'oggetto lo sa la plancia, che le sue
+     * sezioni le conosce: da qui si passano tutte, e si sceglie di là. */
+    const suo = DispositivoEntrato(
+      id: 'dev-1',
+      nome: 'Presa lavatrice',
+      marca: 'TuYa',
+      modello: 'TS0121',
+      tramite: 'zha',
+      entita: [
+        UnEntita(entity: 'switch.ts0121', classe: 'outlet', categoria: ''),
+        UnEntita(entity: 'sensor.ts0121_w', classe: 'power', categoria: ''),
+      ],
+    );
+    final detto = suo.perLaPlancia;
+    expect(detto['nome'], 'Presa lavatrice');
+    expect(detto['entity'], 'switch.ts0121');
+    expect(detto['entita'], hasLength(2));
+  });
+
+  test('un dispositivo senza entità non ha niente da consegnare', () {
+    const nudo = DispositivoEntrato(
+      id: 'x',
+      nome: 'X',
+      marca: '',
+      modello: '',
+      tramite: '',
+    );
+    expect(nudo.entita, isEmpty);
+    expect(nudo.perLaPlancia['entity'], '');
+  });
+
   test('col filo giù non si solleva: non c\'è nessuna rete, e basta', () async {
     await filo.chiudi();
     final stato = await zigbee.stato();

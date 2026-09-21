@@ -73,6 +73,42 @@ enum LaRete {
   }
 }
 
+/// Un'entita' del dispositivo, ridotta a quello che serve a decidere.
+///
+/// Su una rete Zigbee entra un dispositivo, e un dispositivo ne porta cinque o
+/// sei. L'app non sceglie quale conta: le passa tutte alla plancia, che le sue
+/// sezioni le conosce. Qui servono solo a viaggiare.
+class UnEntita {
+  const UnEntita({
+    required this.entity,
+    required this.classe,
+    required this.categoria,
+  });
+
+  factory UnEntita.daQuelloCheDice(Map<Object?, Object?> detto) => UnEntita(
+    entity: _testo(detto['entity']),
+    classe: _testo(detto['classe']),
+    categoria: _testo(detto['categoria']),
+  );
+
+  /// L'identificativo: `light.lampadario_cucina`.
+  final String entity;
+
+  /// Cosa misura o cosa comanda: `outlet`, `temperature`, `door`.
+  final String classe;
+
+  /// `diagnostic` o `config` per quelle che Home Assistant stesso marca come
+  /// roba di servizio. Su una presa smart sono cinque su sei.
+  final String categoria;
+
+  /// Come la vuole il foglietto della plancia.
+  Map<String, String> get perLaPlancia => {
+    'entity': entity,
+    'classe': classe,
+    'categoria': categoria,
+  };
+}
+
 /// Un dispositivo appena entrato, come lo presenta il ponte.
 ///
 /// [marca] e [modello] non sono decorazione: sulla schermata del nome servono
@@ -85,16 +121,24 @@ class DispositivoEntrato {
     required this.marca,
     required this.modello,
     required this.tramite,
+    this.entita = const [],
   });
 
-  factory DispositivoEntrato.daQuelloCheDice(Map<Object?, Object?> detto) =>
-      DispositivoEntrato(
-        id: _testo(detto['id']),
-        nome: _testo(detto['nome']),
-        marca: _testo(detto['marca']),
-        modello: _testo(detto['modello']),
-        tramite: _testo(detto['tramite']),
-      );
+  factory DispositivoEntrato.daQuelloCheDice(Map<Object?, Object?> detto) {
+    final sue = detto['entita'];
+    return DispositivoEntrato(
+      id: _testo(detto['id']),
+      nome: _testo(detto['nome']),
+      marca: _testo(detto['marca']),
+      modello: _testo(detto['modello']),
+      tramite: _testo(detto['tramite']),
+      entita: [
+        if (sue is List)
+          for (final una in sue)
+            if (una is Map<Object?, Object?>) UnEntita.daQuelloCheDice(una),
+      ],
+    );
+  }
 
   /// L'identificativo nel registro di Home Assistant.
   final String id;
@@ -112,9 +156,27 @@ class DispositivoEntrato {
   /// essere un Matter, e dirlo e' meglio che lasciarlo credere.
   final String tramite;
 
+  /// Quello che ha portato dentro: cinque o sei, su una presa smart.
+  ///
+  /// Non si sceglie qui quale conta: a saperlo e' la plancia, che sa che una
+  /// lampadina va nelle Luci e un contatto di porta nei Varchi. Da qui si
+  /// passano tutte.
+  final List<UnEntita> entita;
+
   /// Marca e modello in una riga, saltando quello che non si sa.
   String get comeSiRiconosce =>
       [marca, modello].where((pezzo) => pezzo.isNotEmpty).join(' · ');
+
+  /// Come lo vuole il foglietto «Dove lo metto?» della plancia.
+  ///
+  /// L'entita' in cima e' quella che il foglietto guarda per prima quando non
+  /// ne arriva un elenco; l'elenco pero' c'e', ed e' quello che gli fa
+  /// scegliere la sezione giusta fra le sei che un dispositivo porta.
+  Map<String, Object?> get perLaPlancia => {
+    'entity': entita.isEmpty ? '' : entita.first.entity,
+    'nome': nome,
+    'entita': [for (final una in entita) una.perLaPlancia],
+  };
 }
 
 /// Quello che il ponte dice della rete, adesso.

@@ -188,7 +188,7 @@ export function eUnoNuovo(evento) {
  * di solito si chiama col suo modello — «TS0121» — ed e' proprio per questo che
  * il passo dopo chiede un nome.
  */
-export function comeSiPresenta(dispositivo = {}) {
+export function comeSiPresenta(dispositivo = {}, entita = []) {
   const nome = pulito(dispositivo.name_by_user) || pulito(dispositivo.name);
   return {
     id: pulito(dispositivo.id),
@@ -201,6 +201,43 @@ export function comeSiPresenta(dispositivo = {}) {
      * la rete Zigbee era aperta puo' comunque essere un Matter, e dirlo e'
      * meglio che lasciarlo credere. */
     tramite: pulito(dispositivo.primary_config_entry_domain),
+    /* E cosa ha portato dentro.
+     *
+     * Senza questa riga il passo dopo non si puo' fare: il foglietto «Dove lo
+     * metto?» della plancia decide la sezione dall'ENTITA' — una lampadina va
+     * nelle Luci, un `binary_sensor` di porta nei Varchi — e di un dispositivo
+     * senza entita' non sa dire niente. Qui invece arrivano tutte, e quale
+     * delle sei decide lo sa la plancia, che le sue sezioni le conosce. */
+    entita: (Array.isArray(entita) ? entita : [])
+      .map(comeSiPresentaUnEntita)
+      .filter((una) => una.entity),
+  };
+}
+
+/**
+ * Un'entita' del dispositivo, ridotta a quello che serve a decidere.
+ *
+ * Tre campi e non la riga intera del registro: quello che viaggia lo legge la
+ * plancia per scegliere una sezione, e il resto — l'area, le opzioni, le
+ * capacita' — non c'entra e non deve uscire di casa.
+ *
+ * La classe puo' essere stata cambiata a mano da chi ha la casa
+ * (`device_class`) o essere quella con cui l'integrazione l'ha creata
+ * (`original_device_class`). Si guardano tutte e due, in quest'ordine:
+ * chi l'ha corretta a mano l'ha corretta per un motivo.
+ */
+export function comeSiPresentaUnEntita(voce) {
+  /* Col punto interrogativo e non con un `= {}`: quel ripiego vale per
+   * l'argomento che manca, non per uno che c'e' e vale `null`. Una riga nulla
+   * nel registro — e da un elenco che arriva dalla rete ne puo' arrivare una —
+   * faceva saltare l'intero elenco di chi e' entrato, cioe' proprio la cosa
+   * che la schermata sta aspettando. */
+  return {
+    entity: pulito(voce?.entity_id),
+    classe: pulito(voce?.device_class) || pulito(voce?.original_device_class),
+    /* Diagnostica o configurazione: la plancia le salta, e sono quelle che su
+     * una presa smart sono cinque su sei. */
+    categoria: pulito(voce?.entity_category),
   };
 }
 
@@ -387,8 +424,29 @@ export class Zigbee {
       /* Il nome non si sa: resta l'identificativo, e il passo dopo lo chiede
        * comunque. Meglio un dispositivo senza nome di un dispositivo perso. */
     }
-    this._entrati.push(comeSiPresenta(dispositivo));
+    this._entrati.push(comeSiPresenta(dispositivo, await this._cosaHaPortato(id)));
     this.registro.info(`zigbee: e' entrato ${id}`);
+  }
+
+  /**
+   * Le entita' che quel dispositivo ha creato entrando.
+   *
+   * Una presa smart ne pubblica cinque, un sensore di presenza tre: e' da
+   * quelle che la plancia capisce cos'e' l'oggetto, e senza non si puo' fare
+   * il passo che lo mette in una sezione.
+   *
+   * Il registro si chiede una volta per dispositivo entrato — non a ogni
+   * domanda di stato, che ne arriva una al secondo — e se non risponde si
+   * resta senza: il nome glielo si da' lo stesso, e la sezione si sceglie a
+   * mano dalla plancia come si e' sempre fatto.
+   */
+  async _cosaHaPortato(id) {
+    try {
+      const tutte = await this.casa.chiedi({ type: "config/entity_registry/list" });
+      return (Array.isArray(tutte) ? tutte : []).filter((una) => pulito(una?.device_id) === id);
+    } catch (_errore) {
+      return [];
+    }
   }
 
   /**
@@ -419,9 +477,15 @@ export class Zigbee {
      * dopo mostra il nome nuovo senza dover richiedere tutto. */
     const suo = this._entrati.find((uno) => uno.id === quale);
     if (suo) suo.nome = come;
+    /* Le entita' NON si richiedono: sono quelle raccolte quando e' entrato, e
+     * un cambio di nome non ne crea e non ne toglie. Richiedere il registro
+     * intero per rileggere una cosa che si sa gia' sarebbe un giro per
+     * niente — e senza, chi risponde a questo comando perderebbe per strada
+     * proprio quello che serve al passo dopo. */
+    const risposta = comeSiPresenta(dispositivo || { id: quale, name_by_user: come });
     return {
       fatto: true,
-      dispositivo: comeSiPresenta(dispositivo || { id: quale, name_by_user: come }),
+      dispositivo: { ...risposta, entita: suo?.entita ?? risposta.entita },
     };
   }
 

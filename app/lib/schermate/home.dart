@@ -24,6 +24,7 @@
 library;
 
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/foundation.dart' show defaultTargetPlatform, kIsWeb;
 import 'package:flutter/material.dart';
@@ -255,6 +256,24 @@ class _HomeState extends State<Home> {
       'lavori': Lavori.io.riassunto,
       'plancia': widget.impostazioni.riassunto,
     };
+  }
+
+  /// Consegna alla plancia un dispositivo appena abbinato, e ci porta sopra.
+  ///
+  /// I due passi in quest'ordine, e non e' indifferente: la plancia sta in
+  /// un'altra sezione, e un foglietto che si apre su una schermata che non si
+  /// guarda e' un foglietto che nessuno vede. Prima si va li', poi si
+  /// consegna — dopo un fotogramma, perche' fra il cambio di sezione e il
+  /// riquadro che torna a disegnare passa un giro.
+  ///
+  /// A scrivere nella configurazione e' la plancia, con le sue regole: le sue
+  /// sezioni hanno cinque forme diverse, e scriverle da qui vorrebbe dire
+  /// scriverle due volte.
+  void _loMettiNellaPlancia(DispositivoEntrato suo) {
+    _vai(Sezione.plancia);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _plancia.currentState?.doveLoMetto(jsonEncode(suo.perLaPlancia));
+    });
   }
 
   void _vai(Sezione dove) {
@@ -578,6 +597,7 @@ class _HomeState extends State<Home> {
                           Sezione.zigbee => SchermataZigbee(
                             collegamento: collegamento,
                             visibile: _sezione == Sezione.zigbee,
+                            quandoVaMessoNellaPlancia: _loMettiNellaPlancia,
                           ),
                           _ => _InArrivo(sezione),
                         },

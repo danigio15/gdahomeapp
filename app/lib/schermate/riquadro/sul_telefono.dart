@@ -394,6 +394,32 @@ Future<void> tornaDallaConfig(WebViewController controllore) async {
   }
 }
 
+/// Passa alla plancia un dispositivo appena abbinato, perche' chieda lei dove
+/// va a finire (#54, passo 4).
+///
+/// La maniglia la mette la plancia stessa — `installDoveLoMettoSection` la
+/// appende a `window` — e a scrivere e' lei: le sue sezioni hanno cinque
+/// forme diverse, e scriverle dall'app vorrebbe dire scriverle due volte.
+///
+/// [dispositivo] arriva **gia' in JSON**, da `ilFoglietto`: qui non si
+/// costruisce niente a mano. Il nome del dispositivo lo scrive chi ha il
+/// telefono in mano e finisce dentro un programma che si esegue, quindi passa
+/// da `jsonEncode`, che le virgolette e le barre le chiude lui.
+Future<void> doveLoMetto(
+  WebViewController controllore,
+  String dispositivo,
+) async {
+  try {
+    await controllore.runJavaScript(
+      'window.gdahomeDoveLoMetto&&window.gdahomeDoveLoMetto($dispositivo)',
+    );
+  } catch (_) {
+    /* La pagina non c'e' ancora, o e' una plancia vecchia che quella maniglia
+     * non ce l'ha: il dispositivo in casa c'e' lo stesso, e la sezione si
+     * sceglie dall'editor come si e' sempre fatto. */
+  }
+}
+
 /// Il riquadro che mostra il WebView.
 ///
 /// Su Android, con [ibrido], il riquadro lo compone il sistema per conto suo
