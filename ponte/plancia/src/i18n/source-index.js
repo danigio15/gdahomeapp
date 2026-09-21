@@ -2886,6 +2886,7 @@ export const SOURCE_INDEX = Object.freeze({
   "Scaricata questo mese": "Discharged this month",
   "Scarico e centrifuga": "Drain and spin",
   "Scarsa": "Poor",
+  "Scegli": "Choose",
   "Scegli con 🔍, oppure scrivi l'entità: dominio.nome": "Pick with 🔍, or type the entity: domain.name",
   "Scegli cosa deve premere": "Pick what it has to press",
   "Scegli da Elettrodomestici": "Pick from Appliances",

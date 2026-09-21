@@ -646,6 +646,7 @@ export default Object.freeze({
   "Chlorine": "Cloro",
   "Chlorine / Redox": "Cloro / Redox",
   "Chlorine / redox probe": "Sonda de cloro / redox",
+  "Choose": "Escolher",
   "Choose a car brand.": "Escolhe uma marca de carro.",
   "Choose a group and enter the load name.": "Escolhe um grupo e escreve o nome da carga.",
   "Choose a model.": "Escolha um modelo.",

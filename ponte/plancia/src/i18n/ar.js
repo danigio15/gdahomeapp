@@ -646,6 +646,7 @@ export default Object.freeze({
   "Chlorine": "الكلور",
   "Chlorine / Redox": "الكلور / الأكسدة والاختزال",
   "Chlorine / redox probe": "مجس الكلور / الأكسدة والاختزال",
+  "Choose": "اختيار",
   "Choose a car brand.": "اختر ماركة سيارة.",
   "Choose a group and enter the load name.": "اختر مجموعة واكتب اسم الحِمل.",
   "Choose a model.": "اختر طرازًا.",

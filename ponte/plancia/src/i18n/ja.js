@@ -646,6 +646,7 @@ export default Object.freeze({
   "Chlorine": "塩素",
   "Chlorine / Redox": "塩素 / 酸化還元電位",
   "Chlorine / redox probe": "塩素・酸化還元センサー",
+  "Choose": "選択",
   "Choose a car brand.": "自動車のメーカーを選んでください。",
   "Choose a group and enter the load name.": "グループを選び、負荷の名前を入力してください。",
   "Choose a model.": "モデルを選んでください。",

@@ -37,6 +37,7 @@ import {
   roomSceneSummary,
 } from "../core/room-overview.js";
 import { CHIAVE_VERSI, insiemeInvertiti } from "../core/verso-aperture.js";
+import { apriIlMenu } from "./azioni-servizio-giusto-section.js";
 import { climatePanelMarkup } from "./home-widgets-section.js";
 import { pageCardMarkup } from "./lights-page-section.js";
 import { comandiMediaMarkup } from "./media-player-section.js";
@@ -631,6 +632,21 @@ function siPuoAvviare(entity) {
   return genereDelComando(entity) === "tasto" && siComanda(entity);
 }
 
+/* E quello che non si accende e non si fa partire: si sceglie.
+ *
+ * «Dentro la stanza se metto una entita per vedere solo lo stato usando le mie
+ * entita, fa uguale, se premo esce dalla finestra.» Un select — la sorgente
+ * dell'ampli, il programma della lavatrice, l'attivita' del telecomando — non
+ * ha una levetta e non ha un tasto: ha un elenco di voci, e quello che si
+ * vuole fare e' sceglierne una.
+ *
+ * Il verbo e la domanda le sa gia' `core/comandi-accanto.js`, che un select lo
+ * chiama «tendina» da sempre; e l'elenco lo disegna gia' il popup delle azioni
+ * rapide. Qui non si inventa niente: si mette il tasto che apre quello. */
+function siPuoScegliere(entity) {
+  return genereDelComando(entity) === "tendina" && siComanda(entity);
+}
+
 /* La riga di una stanza si comanda da qui, non solo da un'altra pagina.
  *
  * «Le cose che compaiono nella sezione Stanze non sono comandabili: se clicco
@@ -690,8 +706,24 @@ function rowMarkup(item, blocco, states, aperture = aperturePerEntita(), sotto =
         `<button type="button" class="dm-stanze-avvia" data-dm-stanza-avvia="${esc(entity)}" aria-label="${esc(
           t("Avvia", "Run"),
         )} ${esc(nomeVoce(item, states))}"><span aria-hidden="true">✦</span></button>`
-      : `<span class="dm-stanze-vai" aria-hidden="true">›</span>`;
-  return `<article class="dm-stanze-card dm-stanze-voce" data-dm-stanza-vai="${esc(blocco.tab)}" data-dm-stanza-entita="${esc(entity)}" role="button" tabindex="0">
+      : siPuoScegliere(entity)
+        ? /* Tre puntini in colonna: e' il segno di «c'e' un elenco», e non la
+           * stella di «questo parte adesso». Due gesti diversi non possono
+           * portare lo stesso disegno. */
+          `<button type="button" class="dm-stanze-avvia dm-stanze-scegli" data-dm-stanza-scegli="${esc(entity)}" aria-label="${esc(
+            t("Scegli", "Choose"),
+          )} ${esc(nomeVoce(item, states))}"><span aria-hidden="true">⋮</span></button>`
+        : blocco.tab
+          ? `<span class="dm-stanze-vai" aria-hidden="true">›</span>`
+          : "";
+  /* Una riga che non porta da nessuna parte non si veste da tasto: niente
+   * `role`, niente `tabindex`, niente chevron. Un tasto che non fa niente e'
+   * peggio di nessun tasto, e con la tastiera e' anche una fermata in piu' in
+   * un giro che non porta a niente. */
+  const dove = blocco.tab
+    ? ` data-dm-stanza-vai="${esc(blocco.tab)}" role="button" tabindex="0"`
+    : "";
+  return `<article class="dm-stanze-card dm-stanze-voce" data-dm-stanza-entita="${esc(entity)}"${dove}>
     <div class="dm-stanze-card-row">
       <span class="dm-stanze-orb">${esc(iconaVoce(item, blocco))}</span>
       <span class="dm-stanze-title"><b>${esc(nomeVoce(item, states))}</b><s data-dm-stanza-stato="${esc(entity)}" data-dm-stanza-blocco="${esc(blocco.key)}">${esc(statoVoce(item, states, blocco.key))}</s></span>
@@ -747,14 +779,28 @@ const TAB_DI = Object.freeze({
   carichi: "energy",
   robot: "robot",
   irrigazione: "irrigazione",
-  // Un'entita' assegnata a mano puo' venire da qualunque parte: il tocco la
-  // riporta in Home, che e' l'unico posto che le contiene tutte.
-  altro: "home",
+  /* Un'entita' assegnata a mano non ha una pagina sua, e per un anno il tocco
+   * l'ha riportata in Home. «L'unico posto che le contiene tutte» era il modo
+   * gentile di dire «da nessuna parte»: chi premeva perdeva la stanza in cui
+   * stava e non trovava niente in cambio, perche' in Home quella riga non c'e'.
+   *
+   * E' lo stesso difetto gia' corretto tre volte — le aperture (#275), i
+   * lettori (#405), le telecamere (#503) — e ogni volta la cura e' stata dare
+   * una destinazione vera. Qui una destinazione vera non c'e', e allora non ci
+   * si va: la riga resta una riga, si legge, e quello che ha da comandare lo
+   * comanda con la levetta, la stella o i puntini che ha accanto.
+   *
+   * Vuoto e non «home»: lo legge `blockMarkup`, e una riga senza dove non si
+   * disegna nemmeno come un tasto. */
+  altro: "",
 });
 
 export function blockMarkup(blocco, states) {
   if (!blocco.voci.length) return "";
-  const conTab = { ...blocco, tab: TAB_DI[blocco.key] || "home" };
+  /* Un genere che la tabella non conosce non si manda in Home per ripiego:
+   * si lascia senza dove, che e' la verita'. Mandare in Home chi non sa dove
+   * andare e' stato per un anno il difetto piu' segnalato di questa pagina. */
+  const conTab = { ...blocco, tab: TAB_DI[blocco.key] ?? "" };
   const card =
     blocco.key === "luci" || blocco.key === "prese"
       ? blocco.voci
@@ -1062,6 +1108,23 @@ function handleClick(event) {
     chiamaServizio(comando);
     return;
   }
+  /* E il tasto che apre l'elenco di un select. Come i due qui sopra: il tocco
+   * e' suo, non della riga.
+   *
+   * L'elenco lo disegna il popup delle azioni rapide, che le voci di un select
+   * le sa gia' leggere e scrivere. Chiamarlo da qui vuol dire che la finestra
+   * e' una sola: due elenchi della stessa cosa, disegnati in due posti, dopo
+   * un po' dicono due cose diverse. */
+  const scegli = event.target?.closest?.("[data-dm-stanza-scegli]");
+  if (scegli) {
+    event.preventDefault();
+    event.stopPropagation();
+    const entity = clean(scegli.getAttribute("data-dm-stanza-scegli"));
+    if (!entity || !siComanda(entity)) return;
+    root.navigator?.vibrate?.(8);
+    apriIlMenu(entity);
+    return;
+  }
   /* Un tocco su un comando non e' un tocco sulla card (#467): i tasti del
    * lettore e il pannello del clima stanno DENTRO la riga, e la riga porta
    * altrove. Senza questo, mettere in pausa cambiava pagina. Chi esegue quei
@@ -1176,6 +1239,12 @@ function installStyles() {
         background:color-mix(in srgb,var(--primary-color,#0ea5e9) 10%,var(--surface-2,#f8fafc))}
       #page-stanze .dm-stanze-avvia:active{transform:scale(.94)}
       #page-stanze .dm-stanze-avvia:focus-visible{outline:2px solid var(--primary-color,#0ea5e9);outline-offset:2px}
+      /* Il tasto che apre l'elenco di un menu a tendina: lo stesso tondo, lo
+         stesso posto, perche' una riga alta uguale all'altra e' meta' del
+         mestiere. Cambia solo il disegno dentro — tre puntini invece della
+         stella — e i tre puntini sono stretti e alti: alla misura della
+         stella si vedono come un granello. */
+      #page-stanze .dm-stanze-scegli{font-size:19px;font-weight:900;letter-spacing:0}
       @media (prefers-reduced-motion:reduce){
         #page-stanze .dm-stanze-avvia{transition:none}
         #page-stanze .dm-stanze-avvia:active{transform:none}

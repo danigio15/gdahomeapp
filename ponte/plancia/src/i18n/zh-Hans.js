@@ -646,6 +646,7 @@ export default Object.freeze({
   "Chlorine": "余氯",
   "Chlorine / Redox": "余氯 / 氧化还原电位",
   "Chlorine / redox probe": "余氯 / 氧化还原探头",
+  "Choose": "选择",
   "Choose a car brand.": "请选择汽车品牌。",
   "Choose a group and enter the load name.": "请选择分组并填写负载名称。",
   "Choose a model.": "请选择一个型号。",

@@ -646,6 +646,7 @@ export default Object.freeze({
   "Chlorine": "염소",
   "Chlorine / Redox": "염소 / 산화환원",
   "Chlorine / redox probe": "염소 / 산화환원 센서",
+  "Choose": "선택",
   "Choose a car brand.": "자동차 브랜드를 선택하세요.",
   "Choose a group and enter the load name.": "그룹을 선택하고 부하 이름을 입력하세요.",
   "Choose a model.": "모델을 선택하세요.",

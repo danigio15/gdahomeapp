@@ -866,6 +866,7 @@ export const MESSAGE_KEYS = Object.freeze([
   "Chlorine",
   "Chlorine / Redox",
   "Chlorine / redox probe",
+  "Choose",
   "Choose a car brand.",
   "Choose a group and enter the load name.",
   "Choose a model.",
