@@ -16,6 +16,7 @@ import test from "node:test";
 
 import { chiNonRisponde, nonRisponde } from "../src/core/chi-non-risponde.js";
 import { entitaConfigurate } from "../src/core/entita-configurate.js";
+import { haOggettoWidget, oggettoWidget } from "../src/core/oggetti-widget.js";
 
 const sezione = await readFile(
   new URL("../src/sections/home-widgets-section.js", import.meta.url),
@@ -100,4 +101,37 @@ test("la tessera non c'è finché non c'è niente da dire", () => {
   assert.match(sezione, /if \(!mute\.length\) return null;/);
   /* E si può spegnere dalla scheda Widget come tutte le altre. */
   assert.match(sezione, /widgetExcludedEntities\("nonrisponde"\)/);
+});
+
+test("la tessera si chiama «Dispositivi non connessi»", () => {
+  /* «Cambia nome in dispositivi non connessi.» «Non rispondono» dice cosa
+   * stanno facendo — cioè niente — e per saperlo bisogna già sapere di chi si
+   * parla; «Dispositivi non connessi» dice di CHI si parla e cosa gli manca,
+   * che è la domanda di chi legge il titolo prima del numero.
+   *
+   * La riga «non risponde» accanto a ogni nome resta: lì il soggetto c'è già
+   * scritto sopra, e ripetere «non connesso» per ognuno sarebbe la stessa
+   * parola tre volte in tre centimetri. */
+  assert.match(sezione, /label: t\("Dispositivi non connessi", "Disconnected devices"\)/);
+  assert.doesNotMatch(sezione, /t\("Non rispondono", "Not answering"\)/);
+});
+
+test("e si disegna da sé, come tutte le altre tessere della Home", () => {
+  /* Dal campo, col telefono in mano: «icona non rispondono non allineata».
+   *
+   * Era l'unica tessera della Home senza un oggetto suo: ricadeva sul motore
+   * delle icone, cioè su un'emoji. Un'emoji la disegna il sistema, con le sue
+   * proporzioni e la sua linea di base, e accanto a sei oggetti nostri — tutti
+   * in una griglia di 32×32 con la stessa luce — si vedeva che era più grande
+   * e fuori asse.
+   *
+   * Questa prova non guarda i pixel: guarda che la tessera passi dalla strada
+   * dei disegni invece che da quella del ripiego, che è la differenza da cui
+   * lo storto nasceva. */
+  assert.equal(haOggettoWidget("nonrisponde"), true);
+  /* E il disegno è disegnato davvero, non una stringa vuota che passa il
+   * controllo: la sbarra rossa che taglia le onde è la cosa che si legge. */
+  const disegno = oggettoWidget("nonrisponde");
+  assert.match(disegno, /viewBox="0 0 32 32"/);
+  assert.match(disegno, /stroke="#dc2626"/);
 });

@@ -898,6 +898,7 @@ export default Object.freeze({
   "Discharged this month": "Bu ay boşalan",
   "Discharged today": "Bugün boşalan",
   "Disconnect": "Bağlantıyı kes",
+  "Disconnected devices": "Bağlantısı kesilen cihazlar",
   "Disconnected here. To revoke access entirely, remove it from your authorized apps on github.com too.": "Burada bağlantı kesildi. Erişimi tümüyle kaldırmak için github.com'daki yetkili uygulamalardan da çıkar.",
   "Dishwasher": "Bulaşık makinesi",
   "Disk": "Disk",

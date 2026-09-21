@@ -898,6 +898,7 @@ export default Object.freeze({
   "Discharged this month": "Rozładowane w tym miesiącu",
   "Discharged today": "Rozładowane dzisiaj",
   "Disconnect": "Odłącz",
+  "Disconnected devices": "Niepodłączone urządzenia",
   "Disconnected here. To revoke access entirely, remove it from your authorized apps on github.com too.": "Odłączono tutaj. Aby całkiem cofnąć dostęp, usuń go też z autoryzowanych aplikacji na github.com.",
   "Dishwasher": "Zmywarka",
   "Disk": "Dysk",

@@ -85,11 +85,27 @@ export const BATTERIA_SCARICA = 20;
 
 /* Quanti nomi si mandano al massimo.
  *
- * Non e' prudenza, e' leggibilita': una casa con quaranta dispositivi giu' ha
- * un guaio che si vede dal numero — e `dispositivi` quel numero lo dice tutto
- * — mentre quaranta pastiglie in fila non le legge nessuno. Dodici stanno in
- * tre righe e bastano a capire **di che roba si tratta**. */
-export const NOMI_MASSIMI = 12;
+ * Erano **dodici**, e la ragione scritta qui era la leggibilita': dodici
+ * pastiglie stanno in tre righe, il numero vero lo dice `dispositivi`, e
+ * quaranta pastiglie in fila non le legge nessuno.
+ *
+ * Sbagliato, e lo dice chi installa: «non escono i nomi completi dei
+ * dispositivi nel cruscotto installatore, inoltre li deve mostrare tutti, non
+ * con la scritta “e altri…” ma senza poterli leggere». Quaranta pastiglie non
+ * si leggono di colpo, e' vero — ma non e' quello che ci si fa: ci si va a
+ * cercare dentro. Chi installa guarda quel riquadro per sapere **quali** cose
+ * sono giu', perche' da li' decide se prendere la macchina: quaranta nomi che
+ * si possono scorrere valgono, «e altri 31» non vale niente. Il conto lo
+ * sapeva gia', gli mancavano i nomi.
+ *
+ * Quindi il tetto resta, ma smette di essere una scelta di impaginazione e
+ * diventa quello che i tetti devono essere: una guardia contro un rapporto che
+ * cresce senza fine. Questo foglio parte **ogni minuto**; duecento nomi sono
+ * qualche chilobyte e li copre qualunque casa vera — la piu' grossa che
+ * abbiamo visto ne aveva quarantatre'. Se un giorno taglia davvero, chi
+ * disegna se ne accorge dal confronto con `dispositivi` e scrive «e altri
+ * tre», che e' il caso per cui quella scritta esiste. */
+export const NOMI_MASSIMI = 200;
 
 /* Le entita' che dicono se un backup e' stato fatto, e quando. Le fa
  * l'integrazione `backup` di Home Assistant, che c'e' di serie. */

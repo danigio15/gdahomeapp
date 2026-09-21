@@ -339,6 +339,33 @@ const OGGETTI = Object.freeze({
     <rect x="14.5" y="11.4" width="3" height="8.2" rx="1.5" fill="#fff"/>
     <circle cx="16" cy="22.8" r="1.7" fill="#fff"/>`,
 
+  /* I dispositivi non connessi (#33): l'apparecchio con le sue onde, e la
+   * sbarra che le taglia.
+   *
+   * Era l'unica tessera della Home senza un disegno suo: ricadeva sul motore
+   * delle icone, cioe' su un'emoji, e un'emoji non e' disegnata qui dentro —
+   * ha le sue proporzioni e la sua linea di base, e accanto a sei oggetti
+   * nostri si vedeva che era piu' grande e fuori asse. Dal campo, col
+   * telefono in mano: «icona non rispondono non allineata».
+   *
+   * Non un triangolo: quello e' l'avviso, e ce l'ha gia' la tessera accanto.
+   * Qui la cosa da riconoscere e' l'apparecchio attaccato al muro che ha
+   * smesso di parlare, e la sbarra e' il segno che tutti leggono senza una
+   * parola. Le onde restano grigie e non rosse: il rosso e' della sbarra, che
+   * e' la notizia — le onde sono quello che non c'e' piu'. */
+  nonrisponde: `<defs>
+      <linearGradient id="dmoMutoC" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#e2e8f0"/><stop offset=".55" stop-color="#94a3b8"/>
+        <stop offset="1" stop-color="#475569"/></linearGradient></defs>
+    ${OMBRA(16, 27.8, 7.6)}
+    <g fill="none" stroke="#94a3b8" stroke-width="2.1" stroke-linecap="round">
+      <path d="M11.9 14.7a5.8 5.8 0 0 1 8.2 0"/>
+      <path d="M8.3 11.1a10.9 10.9 0 0 1 15.4 0"/></g>
+    <rect x="10.2" y="17.8" width="11.6" height="8.4" rx="2.4" fill="url(#dmoMutoC)"/>
+    <path d="M12.4 19.9h7.2" stroke="#fff" stroke-opacity=".5" stroke-width="1.2"/>
+    <path d="M7.7 24.3 24.3 7.7" stroke="#fff" stroke-opacity=".92" stroke-width="4.4" stroke-linecap="round"/>
+    <path d="M7.7 24.3 24.3 7.7" stroke="#dc2626" stroke-width="2.6" stroke-linecap="round"/>`,
+
   /* La raccolta differenziata (#293): il bidone verde col coperchio e il
    * simbolo del riciclo sul fianco. Verde perche' e' il colore che sta sui
    * bidoni, non quello del semaforo. */

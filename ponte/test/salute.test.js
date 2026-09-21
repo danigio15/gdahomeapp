@@ -181,6 +181,22 @@ test("i nomi hanno un tetto, e quanti sono davvero si sa lo stesso", () => {
   assert.equal(conto.nomi.length, 12);
 });
 
+test("ma di serie una casa vera li manda tutti, non i primi dodici", () => {
+  /* Dal campo, da chi installa: «non escono i nomi completi dei dispositivi
+   * nel cruscotto installatore, inoltre li deve mostrare tutti, non con la
+   * scritta “e altri…” ma senza poterli leggere».
+   *
+   * Il tetto di serie era dodici, e su una casa con quarantatre' apparecchi
+   * giu' il riquadro diceva dodici nomi e «e altri 31». Il conto c'era; i
+   * nomi no — e chi deve decidere se prendere la macchina ha bisogno di
+   * quelli, perche' e' da li' che si capisce se e' una presa sola o mezza
+   * casa. */
+  const stati = Array.from({ length: 43 }, (_, i) => stato(`sensor.n${i}`, "unavailable"));
+  const conto = leEntita(stati, { registri: tanti(43) });
+  assert.equal(conto.dispositivi, 43);
+  assert.equal(conto.nomi.length, 43, "col tetto di serie non se ne deve perdere nessuno");
+});
+
 test("un dispositivo senza nome cade sull'entita', invece di sparire", () => {
   /* Il dispositivo c'e' — sta nel registro — e solo il suo nome e' vuoto: qui
    * il ripiego ci sta, perche' la domanda «e' un dispositivo?» ha gia' avuto

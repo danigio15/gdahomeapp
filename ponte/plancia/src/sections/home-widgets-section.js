@@ -5061,7 +5061,7 @@ function nonRispondeModel(states) {
     accent: "#dc2626",
     icon: "📡",
     alert: true,
-    label: t("Non rispondono", "Not answering"),
+    label: t("Dispositivi non connessi", "Disconnected devices"),
     value: String(mute.length),
     caption: mute.map((una) => una.nome).join(" · "),
     ring: null,
@@ -8309,6 +8309,27 @@ function sincronizzaPopup(models, states) {
  * del testo, cosi' due parole scorrono in fretta e una fila di nomi con
  * calma. Chi ci sta resta fermo: niente da leggere in movimento senza
  * motivo. */
+/* Quanto ci mette a scorrere, da quanto testo avanza.
+ *
+ * Una sola andatura per tutte le righe che scorrono, ed e' il punto di
+ * scriverla qui: erano due conti quasi uguali in due posti — `eccesso / 11` e
+ * `eccesso / 12` — cioe' due nastri affiancati che vanno a due velocita'
+ * diverse, che si vede e non si sa perche'.
+ *
+ * Adesso e' lenta. Dal campo, col telefono in mano: «le scritte scorrevoli
+ * sotto le card vanno troppo veloci, devono andare lentamente per poterle
+ * leggere». Andava a una quindicina di punti al secondo, che su una tessera
+ * larga mezzo schermo vuol dire un nome intero che passa in un secondo e
+ * mezzo: si fa in tempo a vedere che e' passato qualcosa, non a leggerlo.
+ * Dimezzata.
+ *
+ * La durata cresce con la distanza, e quello tiene la VELOCITA' costante: una
+ * didascalia lunga il doppio ci mette il doppio, invece di scorrere il doppio
+ * piu' in fretta. Il tetto sta alto apposta — a 18 secondi quello vecchio
+ * tornava a correre proprio sulle didascalie piu' lunghe, che sono quelle che
+ * si fa piu' fatica a leggere. */
+const durataDelloScorrimento = (eccesso) => Math.min(60, Math.max(8, eccesso / 6));
+
 /* Una riga sola che scorre, quando non ci sta.
  *
  * Il nastro delle tessere misura il figlio dentro il padre; qui il testo sta
@@ -8330,7 +8351,7 @@ function scorriUnaRiga(riga) {
   if (eccesso > 4) {
     nastro.dataset.dmScroll = "true";
     nastro.style.setProperty("--dm-scroll-x", `${-eccesso - 2}px`);
-    nastro.style.setProperty("--dm-scroll-dur", `${Math.min(22, Math.max(7, eccesso / 11))}s`);
+    nastro.style.setProperty("--dm-scroll-dur", `${durataDelloScorrimento(eccesso)}s`);
     return true;
   }
   delete nastro.dataset.dmScroll;
@@ -8363,7 +8384,7 @@ function scorriDidascalie(grid) {
     if (eccesso > 4) {
       nastro.dataset.dmScroll = "true";
       nastro.style.setProperty("--dm-scroll-x", `${-eccesso - 2}px`);
-      nastro.style.setProperty("--dm-scroll-dur", `${Math.min(18, Math.max(6, eccesso / 12))}s`);
+      nastro.style.setProperty("--dm-scroll-dur", `${durataDelloScorrimento(eccesso)}s`);
       mossi += 1;
     } else if (nastro.dataset.dmScroll) {
       delete nastro.dataset.dmScroll;

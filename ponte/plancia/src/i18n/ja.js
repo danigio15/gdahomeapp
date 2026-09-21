@@ -898,6 +898,7 @@ export default Object.freeze({
   "Discharged this month": "今月の放電量",
   "Discharged today": "今日の放電量",
   "Disconnect": "連携を解除",
+  "Disconnected devices": "未接続の機器",
   "Disconnected here. To revoke access entirely, remove it from your authorized apps on github.com too.": "ここでは解除しました。アクセスを完全に取り消すには、github.com の認可済みアプリからも削除してください。",
   "Dishwasher": "食洗機",
   "Disk": "ディスク",

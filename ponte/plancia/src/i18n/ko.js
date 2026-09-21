@@ -898,6 +898,7 @@ export default Object.freeze({
   "Discharged this month": "이번 달 방전량",
   "Discharged today": "오늘 방전량",
   "Disconnect": "연결 해제",
+  "Disconnected devices": "연결이 끊긴 기기",
   "Disconnected here. To revoke access entirely, remove it from your authorized apps on github.com too.": "여기서 연결을 끊었습니다. 접근을 완전히 취소하려면 github.com의 승인된 앱에서도 제거하세요.",
   "Dishwasher": "식기세척기",
   "Disk": "디스크",

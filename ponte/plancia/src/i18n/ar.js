@@ -898,6 +898,7 @@ export default Object.freeze({
   "Discharged this month": "المُفرَّغ هذا الشهر",
   "Discharged today": "المُفرَّغ اليوم",
   "Disconnect": "فصل",
+  "Disconnected devices": "الأجهزة غير المتصلة",
   "Disconnected here. To revoke access entirely, remove it from your authorized apps on github.com too.": "تم الفصل من هنا. ولإلغاء الوصول تمامًا، احذفه أيضًا من التطبيقات المصرّح لها في github.com.",
   "Dishwasher": "غسالة الصحون",
   "Disk": "القرص",

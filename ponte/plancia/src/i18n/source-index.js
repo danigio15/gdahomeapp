@@ -1257,6 +1257,7 @@ export const SOURCE_INDEX = Object.freeze({
   "Dispositivi": "Devices",
   "Dispositivi accesi": "Powered on",
   "Dispositivi dentro il carico": "Appliances inside the load",
+  "Dispositivi non connessi": "Disconnected devices",
   "Dispositivo": "Device",
   "Dispositivo aggiunto": "Appliance added",
   "Dispositivo collegato": "Linked device",
