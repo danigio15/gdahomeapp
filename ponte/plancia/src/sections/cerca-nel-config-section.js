@@ -15,6 +15,7 @@
  * scrivendo dentro.
  */
 import { cercaNelConfig } from "../core/cerca-nel-config.js";
+import { isRetiredEditorSlot } from "../core/editor-slots.js";
 import { SECTION_KEYS } from "../core/migrations.js";
 import { CONFIG_KEYS } from "./config-persistence-section.js";
 import { clean, doc, esc, installStyle, onEditorRedraw, readJson, root, t } from "./shared.js";
@@ -95,7 +96,6 @@ const SCHEDA_DELLA_CASELLA = Object.freeze({
   cd_home_blocchi: "sez0",
   cd_barra_casa: "sez0",
   cd_evidenza: "sez0",
-  cd_entity_overrides: "sez6",
   cd_meteo_entita_proprie: "sez0",
   cd_radar_meteo: "sez0",
   cd_sections: "visib",
@@ -124,7 +124,6 @@ const SCHEDA_DELLA_SEZIONE = Object.freeze({
   irrigation: "irr",
   robots: "robot",
   sockets: "prese",
-  entityOverrides: "sez6",
 });
 
 /* Le caselle vecchie che il magazzino dei moduli rispecchia.
@@ -149,18 +148,86 @@ function magazzino() {
   return fuori;
 }
 
+/* Le entita' mappate a mano non abitano tutte nella stessa scheda.
+ *
+ * `cd_entity_overrides` — e la sua gemella `entityOverrides` nel magazzino —
+ * tengono la mappatura di TUTTA la plancia: `dm.energy_*`, `dm.ev_*`,
+ * `dm.security_*`, `dm.server_*`. Erano in tabella come «MiniPC», che e' la
+ * scheda dove si mappano a mano le macchine in piu' — giusto per
+ * `dm.server_*` e sbagliato per tutti gli altri.
+ *
+ * Dal campo, cercando «ventola»: il risultato usciva «MiniPC ·
+ * dm.energy_interruttore_ventola_inverter», e un tocco portava nella scheda
+ * del MiniPC, dove di ventole non se ne parla. Chi cerca dove mettere
+ * l'entita' della ventola e finisce nel MiniPC conclude — giustamente — che
+ * quella casella non c'e'.
+ *
+ * La scheda di una casella mappata la dice la CASELLA, non il cassetto in cui
+ * sta: `dm.energy_*` e' Energia, `dm.ev_*` sono i Veicoli.
+ *
+ * L'ordine qui sotto non e' inventato: e' quello delle fisarmoniche che il
+ * guscio disegna in `editorRenderSezioni`, che le apre una per scheda — la
+ * prima e' Home in `sez0`, la seconda Energia in `sez1`, e via cosi'. E' una
+ * domanda diversa da quella di `core/editor-slots.js`, che dice quale SEZIONE
+ * della plancia possiede una casella: le due risposte coincidono quasi
+ * sempre, e dove non coincidono ha ragione questa, perche' qui si sta dicendo
+ * dove si va a scrivere, non chi legge.
+ *
+ * Due assenze sono volute. La `dm.lavatrice_*` sta nella fisarmonica che
+ * sarebbe `sez5`, e una linguetta `sez5` non esiste in nessuna lingua: quelle
+ * caselle si aprono dal popup della lavatrice, non da una scheda. Le caselle
+ * in pensione (`isRetiredEditorSlot`) stanno in una fisarmonica che il guscio
+ * disegna e poi nasconde: chi ce le ha mappate le trova ancora scritte, ma il
+ * salto porterebbe davanti a una riga invisibile.
+ *
+ * Quando la famiglia non si riconosce non si indovina: il risultato esce
+ * senza salto. Un salto nella scheda sbagliata e' peggio di nessun salto —
+ * manda a cercare dove non c'e' niente, ed e' esattamente il danno da cui si
+ * viene. */
+const SCHEDA_DELLO_SLOT = Object.freeze({
+  "dm.home_": "sez0",
+  "dm.energy_": "sez1",
+  "dm.ev_": "sez2",
+  "dm.boiler_": "sez3",
+  "dm.security_": "sez4",
+  "dm.server_": "sez6",
+});
+
+const CASSETTI_DELLE_MAPPATURE = new Set(["cd_entity_overrides", "entityOverrides"]);
+
+/* La casella mappata sta nel NOME del campo, non nella strada.
+ *
+ * La ricerca scende fino alla foglia: per `{ "dm.energy_x": "switch.y" }` la
+ * strada finisce sul cassetto e il nome della casella esce in `campo`. Si
+ * guarda prima li', e la coda della strada resta come seconda possibilita'
+ * per il giorno in cui un valore mappato fosse a sua volta un oggetto. */
+function schedaDiUnaCasellaMappata(esito) {
+  const casella = [clean(esito?.campo), clean(esito?.percorso?.at?.(-1))].find((una) =>
+    una.startsWith("dm."),
+  );
+  if (!casella || isRetiredEditorSlot(casella)) return "";
+  return Object.entries(SCHEDA_DELLO_SLOT).find(([inizio]) => casella.startsWith(inizio))?.[1] || "";
+}
+
 /* Quale scheda apre questo risultato.
  *
  * Dal magazzino dei moduli la dice la sezione in cui si e' finiti — il pezzo
  * di strada subito dopo `sections` — e dalle caselle vecchie la dice la
  * tabella qui sopra. Se nessuno dei due la sa, il risultato esce lo stesso
- * senza salto: non trovare e' peggio che non saper saltare. */
-function schedaDelRisultato(esito) {
+ * senza salto: non trovare e' peggio che non saper saltare.
+ *
+ * Esce di qui perche' e' l'unica regola di questo pezzo che si puo' sbagliare
+ * in silenzio: un salto nel posto sbagliato si vede solo aprendo la scheda. */
+export function schedaDelRisultato(esito) {
   if (esito.chiave === "dm_dashboard_state") {
     const dopo = esito.percorso?.indexOf?.("sections");
     const sezione = dopo >= 0 ? clean(esito.percorso[dopo + 1]) : "";
+    /* Il cassetto delle mappature sta dentro il magazzino come gli altri, ma
+     * la sua scheda la dice la casella. */
+    if (CASSETTI_DELLE_MAPPATURE.has(sezione)) return schedaDiUnaCasellaMappata(esito);
     return SCHEDA_DELLA_SEZIONE[sezione] || "";
   }
+  if (CASSETTI_DELLE_MAPPATURE.has(esito.chiave)) return schedaDiUnaCasellaMappata(esito);
   return SCHEDA_DELLA_CASELLA[esito.chiave] || "";
 }
 
