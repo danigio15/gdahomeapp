@@ -40,6 +40,15 @@ confronta con le tre costanti del ponte e cade se una delle tre non torna —
 come `marchio.test.js` fa con i numeri di versione. Rimessa la parola
 vecchia, la prova diventa rossa; e' stata provata in tutt'e due i versi.
 
+E c'e' un secondo motivo per cui e' passato, che vale la pena scrivere: **le
+prove dell'app usavano la stessa parola sbagliata**. Il ponte finto di
+`app/test/` rispondeva `z2m`, perche' l'ha scritto chi ha scritto anche
+l'elenco. Un ponte finto che parla la lingua inventata da chi lo interroga
+non prova niente — e' lo stesso sbaglio della casa finta che consegnava i
+messaggi MQTT a chiunque, «piu' generosa di un broker vero», scoperto due
+versioni fa. Adesso il ponte finto dice `zigbee2mqtt`, che e' quello che dice
+il ponte vero.
+
 **E nella stanza esce l'icona dell'azione rapida, e la finestra si intitola
 come la riga.** Il nome era arrivato, il resto no.
 

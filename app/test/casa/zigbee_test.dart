@@ -69,7 +69,7 @@ void main() {
   });
 
   test('con Zigbee2MQTT pure, ed è un\'altra rete', () async {
-    ponte.laReteZigbee = 'z2m';
+    ponte.laReteZigbee = 'zigbee2mqtt';
     final stato = await zigbee.stato();
     expect(stato.rete, LaRete.z2m);
     expect(stato.rete.nome, 'Zigbee2MQTT');
@@ -176,7 +176,7 @@ void main() {
   /* ─── chi è entrato ────────────────────────────────────────────────────── */
 
   test('chi è entrato arriva dentro lo stato, con quello che si sa', () async {
-    ponte.laReteZigbee = 'z2m';
+    ponte.laReteZigbee = 'zigbee2mqtt';
     await zigbee.apri();
     ponte.entratiInZigbee.add({
       'id': 'dev-9',
