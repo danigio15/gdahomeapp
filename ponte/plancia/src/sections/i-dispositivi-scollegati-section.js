@@ -34,6 +34,7 @@ import {
   mettiDaParte,
   TESSERA_SCOLLEGATI,
 } from "../core/i-dispositivi-scollegati.js";
+import { iDispositiviRicordati } from "../core/i-dispositivi-di-home-assistant.js";
 import { entitaConfigurate } from "../core/entita-configurate.js";
 import { CONFIG_KEYS } from "./config-persistence-section.js";
 import {
@@ -78,11 +79,17 @@ export function elenco() {
   } catch (_errore) {
     configurate = [];
   }
+  /* Le due mappe dei registri: di chi e' un'entita', e come si chiama quel
+   * qualcuno. Chi disegna i registri non li ha — li lascia qui chi ce li ha.
+   * Senza, l'elenco torna riga per riga come prima. */
+  const { di, nomi } = iDispositiviRicordati();
   return iDispositiviScollegati({
     configurate,
     states,
     escluse: widgetPreferences().excluded,
     nomeDi: (entity) => nomeDi(states, entity),
+    di,
+    nomi,
   });
 }
 
@@ -99,14 +106,31 @@ function daQuandoTace(quando) {
   return t(`da ${giorni} giorni`, `for ${giorni} days`);
 }
 
+/* Cosa si legge sotto il nome.
+ *
+ * Di un dispositivo, quante delle sue entita' tacciono: il suo identificativo
+ * e' una stringa di trentadue cifre esadecimali che non dice niente a nessuno,
+ * mentre «4 entità» dice quanto e' grosso il silenzio. Di un'entita' sciolta —
+ * una che un dispositivo non ce l'ha — resta il suo identificativo, che li'
+ * e' l'unica cosa che la individua. */
+function sottoLaRiga(una) {
+  const quante = Array.isArray(una.entita) ? una.entita.length : 1;
+  if (!una.dispositivo) return una.entity;
+  return quante === 1 ? t("1 entità", "1 entity") : t(`${quante} entità`, `${quante} entities`);
+}
+
 function rigaViva(una) {
+  /* Il cestino porta con se' tutte le entita' mute di quella riga: mettere da
+   * parte un dispositivo e lasciarne fuori una vorrebbe dire ritrovarselo al
+   * giro dopo, con dentro quella. */
+  const quali = (Array.isArray(una.entita) ? una.entita : [una.entity]).join(" ");
   return `<div class="ed-row ${BLOCCO}-riga">
     <div class="${BLOCCO}-segno" aria-hidden="true">📡</div>
     <div class="ed-row-main ${BLOCCO}-testo">
       <div class="ed-row-new">${esc(una.nome)}</div>
-      <div class="ed-row-old mono">${esc(una.entity)} · ${esc(daQuandoTace(una.da))}</div>
+      <div class="ed-row-old mono">${esc(sottoLaRiga(una))} · ${esc(daQuandoTace(una.da))}</div>
     </div>
-    <button type="button" class="ed-del ${BLOCCO}-via" data-dm-scollegati-via="${esc(una.entity)}"
+    <button type="button" class="ed-del ${BLOCCO}-via" data-dm-scollegati-via="${esc(quali)}"
       aria-label="${esc(t("Non avvisarmi più per questo", "Stop warning me about this"))}">🗑️</button>
   </div>`;
 }
@@ -200,14 +224,15 @@ function onClick(event) {
   const tasto = event.target?.closest?.("[data-dm-scollegati-via]");
   if (!tasto || activeTab() !== SCOLLEGATI_TAB) return;
   event.preventDefault();
-  const entita = clean(tasto.dataset.dmScollegatiVia);
-  if (!entita) return;
+  const entita = clean(tasto.dataset.dmScollegatiVia).split(/\s+/).filter(Boolean);
+  if (!entita.length) return;
   const nome = clean(tasto.closest(`.${BLOCCO}-riga`)?.querySelector(".ed-row-new")?.textContent);
   /* Non si torna indietro, quindi si chiede. Nella domanda c'è scritto cosa
    * vuol dire davvero: non «tolgo la riga», ma «non te lo dico più». */
+  const quale = nome || entita[0];
   const domanda = t(
-    `Tolgo «${nome || entita}» dall'avviso dei dispositivi non connessi? Non si torna indietro.`,
-    `Remove “${nome || entita}” from the disconnected devices warning? This cannot be undone.`,
+    `Tolgo «${quale}» dall'avviso dei dispositivi non connessi? Non si torna indietro.`,
+    `Remove “${quale}” from the disconnected devices warning? This cannot be undone.`,
   );
   if (root.confirm && !root.confirm(domanda)) return;
   salvaLeEscluse(mettiDaParte(widgetPreferences().excluded, entita));
@@ -226,7 +251,7 @@ export function ensureScollegatiTab() {
   const linguetta = doc.createElement("button");
   linguetta.className = "ed-tab";
   linguetta.dataset.tab = SCOLLEGATI_TAB;
-  linguetta.textContent = `📡 ${t("Scollegati", "Disconnected")}`;
+  linguetta.textContent = `📡 ${t("Dispositivi non connessi", "Disconnected devices")}`;
   linguetta.addEventListener("click", () => root.editorSwitch?.(SCOLLEGATI_TAB));
   const prima = linguette.querySelector('.ed-tab[data-tab="runtime"]');
   if (prima) prima.before(linguetta);

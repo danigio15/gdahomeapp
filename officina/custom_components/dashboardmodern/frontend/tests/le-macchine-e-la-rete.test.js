@@ -18,6 +18,7 @@
  */
 
 import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
 import test from "node:test";
 import {
   candidateDaChiedere,
@@ -230,4 +231,42 @@ test("senza niente da mostrare non si mostra niente", () => {
   );
   assert.equal(macchineConfigurate(STATI, SCELTE, PIATTAFORME), true);
   assert.deepEqual(contoDelleMacchine(), { su: 0, giu: 0, muti: 0, totale: 0, fermi: [] });
+});
+
+/* Il segno di una macchina è un disegno, non la parola «server».
+ *
+ * Dal campo, con lo scatto: nella scheda MiniPC, sotto «Macchine e container»,
+ * dentro la scatola dell'icona di ogni riga si leggeva **server** scritto per
+ * lungo, sovrapposto al nome della macchina.
+ *
+ * È un residuo della #74. Lì le emoji sono state tolte — la scatola e le tacche
+ * del segnale cambiavano faccia da un telefono all'altro — e `glifo` è
+ * diventato il NOME di un disegno del catalogo, come dice il nucleo in testa
+ * alla tabella delle famiglie. Chi disegna però ha continuato a stamparlo
+ * com'era, con `esc()`: e un nome stampato è una parola.
+ */
+test("il glifo di una macchina è un nome del catalogo, e il catalogo lo sa disegnare", async () => {
+  const { FAMIGLIE } = await import("../src/core/macchine-e-rete.js");
+  const { disegnoDelCatalogo } = await import("../src/core/catalogo-disegni.js");
+  for (const famiglia of Object.values(FAMIGLIE))
+    assert.ok(
+      disegnoDelCatalogo(famiglia.glifo, 22),
+      `il catalogo deve saper disegnare «${famiglia.glifo}»: se no in pagina resta la parola`,
+    );
+});
+
+test("la sezione disegna quel nome invece di stamparlo", async () => {
+  const sezione = await readFile(
+    new URL("../src/sections/macchine-e-rete-section.js", import.meta.url),
+    "utf8",
+  );
+  assert.match(sezione, /class="dm-macchina-ic"[^>]*>\$\{segnoMarkup\(riga\)\}/);
+  assert.doesNotMatch(
+    sezione,
+    /class="dm-macchina-ic"[^>]*>\$\{esc\(riga\.glifo\)\}/,
+    "stampare il nome del disegno mette «server» dentro la scatola dell'icona",
+  );
+  /* Un'emoji messa a mano da chi configura resta stampata com'è: il catalogo
+   * non la conosce, e va bene così. */
+  assert.match(sezione, /disegnoDelCatalogo\(riga\.glifo, 22\) \|\| esc\(riga\.glifo\)/);
 });

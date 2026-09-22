@@ -56,6 +56,7 @@ import {
   root,
   t,
 } from "./shared.js";
+import { disegnoDelCatalogo } from "../core/catalogo-disegni.js";
 import { nomeDaHomeAssistant } from "./editor-slots-section.js";
 
 const KEY = "__DASHBOARDMODERN_MACCHINE__";
@@ -176,9 +177,25 @@ function comandiMarkup(riga) {
   </span>`;
 }
 
+/* Il segno di una macchina: un disegno del catalogo, non una parola.
+ *
+ * `glifo` e' il NOME di un disegno — «server», «router» — e non un'emoji: lo
+ * dice il nucleo, e lo dice dalla #74, quando le emoji sono state tolte perche'
+ * la scatola e le tacche del segnale cambiavano faccia da un telefono
+ * all'altro. Qui pero' quel nome si stampava com'era, `esc(riga.glifo)`: nella
+ * scatola dell'icona si leggeva **«server»** scritto per lungo, sopra il nome
+ * della macchina.
+ *
+ * Chi configura puo' mettercene uno suo, e se non e' del catalogo resta la
+ * parola: un'emoji incollata a mano e' esattamente quello che va stampato
+ * com'e'. */
+function segnoMarkup(riga) {
+  return disegnoDelCatalogo(riga.glifo, 22) || esc(riga.glifo);
+}
+
 function rigaMarkup(riga) {
   return `<article class="dm-macchina" data-stato="${esc(riga.stato || "muto")}">
-    <span class="dm-macchina-ic" aria-hidden="true">${esc(riga.glifo)}</span>
+    <span class="dm-macchina-ic" aria-hidden="true">${segnoMarkup(riga)}</span>
     <div class="dm-macchina-testo">
       <strong>${esc(riga.name)}</strong>
     </div>
@@ -321,6 +338,9 @@ function installStyles() {
     ${P} .dm-macchina[data-stato="muto"]{--dm-macchina:#94a3b8}
     ${P} .dm-macchina-ic{display:grid;place-items:center;width:40px;height:40px;border-radius:12px;
       font-size:18px;background:color-mix(in srgb,var(--dm-macchina,#94a3b8) 20%,transparent)}
+    /* Il disegno sta dentro la scatola e non la sfonda: un'emoji si ferma da
+       se' alla sua riga di testo, un SVG no. */
+    ${P} .dm-macchina-ic svg{width:22px;height:22px;display:block}
     ${P} .dm-macchina-testo{display:grid;gap:2px;min-width:0}
     ${P} .dm-macchina-testo strong{font-size:13.5px;font-weight:900;color:var(--text,#0f172a);
       overflow:hidden;text-overflow:ellipsis;white-space:nowrap}

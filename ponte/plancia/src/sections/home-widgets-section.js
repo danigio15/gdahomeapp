@@ -43,6 +43,7 @@ import {
 import { parolaDellaPorta, parolaDiStato } from "./le-parole-di-home-assistant.js";
 import { haOggettoWidget, oggettoWidget } from "../core/oggetti-widget.js";
 import { iDispositiviScollegati } from "../core/i-dispositivi-scollegati.js";
+import { iDispositiviRicordati } from "../core/i-dispositivi-di-home-assistant.js";
 import { entitaConfigurate } from "../core/entita-configurate.js";
 import { CONFIG_KEYS } from "../core/chiavi-di-configurazione.js";
 import { iconGlyphMarkup } from "./icon-engine-section.js";
@@ -5083,11 +5084,14 @@ function nonRispondeModel(states) {
    * «Scollegati» della configurazione, dove si toglie una riga col cestino.
    * Con due copie, il giorno che si scostano, il cestino toglierebbe dalla
    * scheda una cosa che la tessera continua a dire. */
+  const { di, nomi } = iDispositiviRicordati();
   const { adesso: mute } = iDispositiviScollegati({
     configurate,
     states,
     escluse: widgetPreferences().excluded,
     nomeDi: (entity) => friendlyName(states, entity),
+    di,
+    nomi,
   });
   if (!mute.length) return null;
   return {
