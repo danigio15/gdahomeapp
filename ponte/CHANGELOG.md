@@ -11,7 +11,10 @@ fuori. La plancia dentro continua a dire la sua, e si legge dov'è sempre
 stata: nella pastiglia «La plancia» della console. Sono due numeri perché
 sono due cose.
 
-## 1.6.0.4
+## 1.6.0.5
+
+Una correzione sola, e un numero nuovo perché la 1.6.0.4 era già arrivata
+nelle case senza di lei.
 
 **La pagina Musica sta dentro lo schermo di un telefono.** «Si riesce ad
 impaginare o per telefono o per tablet? perché oltre che sborda, non scorre
@@ -32,6 +35,8 @@ una larga quanto il figlio più largo. Su uno schermo da 320 px quella colonna
 veniva 220 dove ce n'erano 162, e la card taglia quello che le esce perché le
 serve per il fondale sfocato della copertina: il di più spariva, senza modo
 di riprenderselo.
+
+## 1.6.0.4
 
 **Una casa senza pannelli non legge più numeri finti (#82).** «Uno switch che
 tolga completamente la gestione energetica casa con fotovoltaico, pulendo da
