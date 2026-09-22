@@ -213,7 +213,9 @@ void main() {
      * che dicono la stessa frase sarebbero un codice solo. */
     expect(
       detto,
-      isNot(spiegaLErrore(const ComandoRifiutato('x', codice: 'unknown_command'))),
+      isNot(
+        spiegaLErrore(const ComandoRifiutato('x', codice: 'unknown_command')),
+      ),
     );
   });
 }
