@@ -78,6 +78,11 @@ import {
   writeJsonIfChanged,
 } from "./shared.js";
 import { disegnoDelCatalogo } from "../core/catalogo-disegni.js";
+import { normalizePeople } from "../core/person-model.js";
+import {
+  CHIAVE_RISERVATE,
+  telecamereVisibili,
+} from "../core/telecamere-riservate.js";
 import { iconGlyphMarkup } from "./icon-engine-section.js";
 
 const KEY = "__DASHBOARDMODERN_SECURITY_SHOWCASE__";
@@ -230,6 +235,29 @@ export function securityCameras() {
   return Array.isArray(values) ? values : [];
 }
 
+/* Le persone di casa, per sapere se c'e' qualcuno. Sono quelle della sezione
+ * Persone: chi non l'ha compilata non ha nessuna telecamera riservata, e
+ * questa riga non la legge nessuno. */
+function personeDiCasa() {
+  return normalizePeople(readJson("cd_people", []));
+}
+
+/**
+ * Le telecamere **da disegnare adesso**, che non sono sempre quelle configurate.
+ *
+ * `securityCameras()` resta l'elenco intero, e deve restarlo: e' quello che
+ * l'editor mostra, e una telecamera che si nasconde da sola non si potrebbe
+ * piu' riconfigurare. Quello che cambia col momento e' questo, e lo chiama
+ * chi disegna (#81).
+ */
+export function telecamereDaMostrare(cameras = securityCameras(), states = allStates()) {
+  return telecamereVisibili(cameras, {
+    config: readJson(CHIAVE_RISERVATE, {}),
+    persone: personeDiCasa(),
+    states,
+  });
+}
+
 export function cameraSlug(camera, index) {
   if (typeof root.camSlug === "function") {
     try {
@@ -269,7 +297,7 @@ export function cameraOffline(entity, states = allStates()) {
   return OFFLINE_STATES.has(value);
 }
 
-function cameraModels(cameras = securityCameras()) {
+function cameraModels(cameras = telecamereDaMostrare()) {
   return cameras.map((camera, index) => {
     const entity = clean(camera?.entity || camera?.camera_entity || camera?.cam);
     const name = clean(camera?.name) || entity || `CAM ${index + 1}`;

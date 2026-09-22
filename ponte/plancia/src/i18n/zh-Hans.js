@@ -3742,4 +3742,9 @@ export default Object.freeze({
   "it measures temperature": "它测量温度",
   "it tells whether someone is there": "它告诉你有没有人",
   "it tells whether the room is busy": "它告诉你房间里有没有人在",
+  "A camera inside the house is there to watch the house while you are out. Tick the ones you only want to see when nobody is home: while someone is in, they disappear from every page, and the frame is not even fetched. Whoever comes back makes them vanish at once, not at the next page change.": "装在家里的摄像头，是为了在你不在家时看住家。勾选那些你只想在家里没人时才看到的摄像头：只要有人在家，它们就会从所有页面上消失，连画面都不会去取。有人回家时它们立刻消失，不必等到下次切换页面。",
+  "At least one person is needed in the People section: that is where “is anybody home” is answered. While there is none, a ticked camera would stay hidden forever — which is why the tick is off.": "「人员」部分至少需要一个人：家里有没有人，答案就是从那里得来的。一个人也没有时，勾选的摄像头会永远隐藏下去——所以这里的勾选是关闭的。",
+  "Configure a camera above first: the privacy is its own.": "请先在上面配置一个摄像头：隐私是它自己的事。",
+  "Private cameras": "私密摄像头",
+  "The soil sensor is right above. Add the irrigation zones from the editor to see the lawn too.": "土壤传感器就在上方。在编辑器中添加灌溉分区，就能同时看到草坪。",
 });

@@ -46,6 +46,56 @@ Adesso la casa finta imbusta come Home Assistant, e la forma nuda **non passa
 piu'**: era il travestimento del guasto, e accettarla vorrebbe dire lasciare
 la porta aperta al prossimo. Col codice di prima sei prove diventano rosse.
 
+**Una telecamera che si vede solo quando in casa non c'è nessuno (#81).**
+«Tipo io ne ho una interna ma vorrei si potesse vedere solo se a casa non
+c'è nessuno per una questione di privacy.»
+
+Nella scheda Sicurezza, sotto le telecamere, c'è una spunta per telecamera.
+Spuntata, quella telecamera si vede soltanto a casa vuota: mentre qualcuno è
+in casa sparisce dalla pagina Sicurezza, dalla stanza in cui è stata messa e
+dal giro dei fotogrammi — **il fotogramma non viene nemmeno scaricato**, che
+su una telecamera interna è la differenza fra nasconderla e coprirla con un
+foglio. Chi rientra la fa sparire subito, non al prossimo cambio pagina: è
+la stessa presenza che già fa ridisegnare la plancia.
+
+Chi c'è in casa lo dicono le persone della sezione Persone: `home` vuol dire
+dentro, tutto il resto — `not_home`, una zona col nome, l'ufficio — vuol
+dire fuori. E se non si sa (nessuna persona configurata, o nessuna delle
+loro entità che risponde) **la telecamera resta nascosta**. Fra i due
+sbagli possibili — una telecamera nascosta a chi poteva vederla, e una
+telecamera accesa in salotto mentre qualcuno ci passa davanti — il primo si
+scopre subito e si rimedia con una spunta, il secondo non lo scopri mai.
+Per questo la spunta si offre solo dove almeno una persona c'è, e dove non
+c'è lo dice invece di far finta di niente.
+
+La scelta viaggia fra i dispositivi, come tutta la configurazione della
+casa: se restasse su un telefono, la telecamera nascosta lì resterebbe
+accesa sul tablet in cucina — cioè proprio sullo schermo davanti a cui si
+passa.
+
+**L'umidità del terreno si vede anche senza elettrovalvole (#80).** «Quella
+umidità terreno in realtà già è presente ma se inserisco solo quella entità
+non esce nei widget.»
+
+La funzione c'era per intero — il sensore in configurazione, il misuratore
+con la banda ideale, la soglia che salta l'irrigazione a terreno bagnato — e
+quello che non andava era l'**ordine** in cui si guardavano le cose, nello
+stesso modo in due posti. Sia la tessera della Home sia la pagina
+Irrigazione uscivano su «nessuna zona» prima di arrivare a leggere il
+sensore. Chi ha due sonde nel vaso e nessuna valvola non vedeva niente, e
+non aveva modo di capire perché. Adesso il sensore si legge prima del
+verdetto: senza zone il misuratore si disegna lo stesso, sopra l'invito ad
+aggiungere le zone.
+
+**La mattonella della gestione conta i dispositivi, non le entità.** Diceva
+«Entità 2496 · 49 non rispondono» tre centimetri sotto una riga che dice «7
+dispositivi non collegati». Non sono in disaccordo — sono 49 entità mute
+dentro 7 apparecchi — ma chi legge non ha modo di saperlo, e quei 49 non li
+può nemmeno andare a vedere: da una casa viaggiano solo i nomi dei
+dispositivi, mai quelli delle entità. Adesso quando qualcosa è giù la
+mattonella dice i dispositivi, che è il numero che si può aprire.
+
+
 ## 1.6.0.3
 
 **La voce «Zigbee» nell'app c'e', in una casa con Zigbee2MQTT.** Era una

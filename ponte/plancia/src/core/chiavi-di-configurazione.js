@@ -252,7 +252,17 @@
  * il fronte di salita, e va ricordato perche' dopo non si puo' piu' leggere.
  * E' un fatto della casa come il ritiro: la posta e' arrivata per tutti, non
  * per il vetro che l'ha vista per primo. */
-export const CONFIG_KEYS_REVISION = 52;
+/* La revisione 53 aggiunge le telecamere riservate (`cd_telecamere_riservate`,
+ * #81): «vorrei si potesse vedere solo se a casa non c'e' nessuno per una
+ * questione di privacy». Quali telecamere si guardano solo a casa vuota e' una
+ * scelta della CASA, e di quelle che ci vivono dentro: non del vetro da cui e'
+ * stata spuntata. Se non viaggiasse, la telecamera nascosta sul telefono
+ * resterebbe accesa sul tablet in cucina — cioe' proprio su quello davanti a
+ * cui si passa — e la spunta non garantirebbe niente. Fra tutte le caselle di
+ * questo elenco e' quella che sbagliata fa il danno peggiore, perche' il danno
+ * non lo vedi: la telecamera che si e' voluta nascondere continua a riprendere
+ * il salotto su uno schermo che nessuno sta guardando. */
+export const CONFIG_KEYS_REVISION = 53;
 
 // Complete shared dashboard configuration snapshot. Runtime counters/timers and
 // true per-device preferences (connection credentials, theme/navbar mode) stay
@@ -515,4 +525,7 @@ export const CONFIG_KEYS = Object.freeze([
    * telefono, che quel giro non l'aveva mai fatto, se lo rimetteva da solo. Il
    * fumo aveva gia' avuto la sua correzione; l'acqua era rimasta indietro. */
   "cd_allag_rilevato",
+  /* Le telecamere che si vedono solo a casa vuota (#81). La ragione per cui
+   * sta qui e' scritta accanto alla revisione 53. */
+  "cd_telecamere_riservate",
 ]);

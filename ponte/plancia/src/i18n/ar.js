@@ -3742,4 +3742,9 @@ export default Object.freeze({
   "it measures temperature": "يقيس درجة الحرارة",
   "it tells whether someone is there": "يخبرك إن كان هناك أحد",
   "it tells whether the room is busy": "يخبرك إن كانت الغرفة مشغولة",
+  "A camera inside the house is there to watch the house while you are out. Tick the ones you only want to see when nobody is home: while someone is in, they disappear from every page, and the frame is not even fetched. Whoever comes back makes them vanish at once, not at the next page change.": "الكاميرا داخل المنزل موجودة لمراقبة المنزل أثناء غيابك. أشِّر على الكاميرات التي تريد رؤيتها فقط عندما لا يكون أحد في المنزل: ما دام أحدٌ بالداخل تختفي من كل الصفحات، ولا تُجلب الصورة أصلاً. ومن يعود إلى المنزل يجعلها تختفي فوراً، لا عند تغيير الصفحة التالي.",
+  "At least one person is needed in the People section: that is where “is anybody home” is answered. While there is none, a ticked camera would stay hidden forever — which is why the tick is off.": "يلزم شخص واحد على الأقل في قسم الأشخاص: من هناك تُعرف الإجابة عن «هل يوجد أحد في المنزل؟». وما دام لا يوجد أحد، ستبقى الكاميرا المؤشَّر عليها مخفية إلى الأبد — ولهذا فالتأشير معطَّل.",
+  "Configure a camera above first: the privacy is its own.": "اضبط أولاً كاميرا في الأعلى: الخصوصية خاصة بها.",
+  "Private cameras": "كاميرات خاصة",
+  "The soil sensor is right above. Add the irrigation zones from the editor to see the lawn too.": "مستشعر التربة موجود في الأعلى مباشرة. أضِف مناطق الري من المحرِّر لرؤية العشب أيضاً.",
 });

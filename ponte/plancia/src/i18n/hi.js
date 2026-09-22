@@ -3742,4 +3742,9 @@ export default Object.freeze({
   "it measures temperature": "यह तापमान मापता है",
   "it tells whether someone is there": "यह बताता है कि कोई है या नहीं",
   "it tells whether the room is busy": "यह बताता है कि कमरा भरा है या नहीं",
+  "A camera inside the house is there to watch the house while you are out. Tick the ones you only want to see when nobody is home: while someone is in, they disappear from every page, and the frame is not even fetched. Whoever comes back makes them vanish at once, not at the next page change.": "घर के अंदर लगा कैमरा इसलिए होता है कि आपके बाहर रहने पर घर पर नज़र रखे। उन्हें चुनें जिन्हें आप सिर्फ़ घर खाली होने पर देखना चाहते हैं: जब तक कोई घर में है, वे हर पेज से गायब रहते हैं और तस्वीर तक नहीं लाई जाती। जो लौटता है, उसके आते ही वे तुरंत गायब हो जाते हैं, अगली बार पेज बदलने पर नहीं।",
+  "At least one person is needed in the People section: that is where “is anybody home” is answered. While there is none, a ticked camera would stay hidden forever — which is why the tick is off.": "लोग अनुभाग में कम से कम एक व्यक्ति चाहिए: «घर में कोई है क्या» का जवाब वहीं से मिलता है। जब तक कोई नहीं है, चुना हुआ कैमरा हमेशा के लिए छिपा रहेगा — इसीलिए यह विकल्प बंद है।",
+  "Configure a camera above first: the privacy is its own.": "पहले ऊपर एक कैमरा कॉन्फ़िगर करें: निजता उसी की है।",
+  "Private cameras": "निजी कैमरे",
+  "The soil sensor is right above. Add the irrigation zones from the editor to see the lawn too.": "मिट्टी का सेंसर ठीक ऊपर है। लॉन भी देखने के लिए एडिटर से सिंचाई ज़ोन जोड़ें।",
 });

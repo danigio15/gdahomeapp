@@ -3742,4 +3742,9 @@ export default Object.freeze({
   "it measures temperature": "он измеряет температуру",
   "it tells whether someone is there": "он говорит, есть ли кто-то",
   "it tells whether the room is busy": "он говорит, занята ли комната",
+  "A camera inside the house is there to watch the house while you are out. Tick the ones you only want to see when nobody is home: while someone is in, they disappear from every page, and the frame is not even fetched. Whoever comes back makes them vanish at once, not at the next page change.": "Камера внутри дома нужна, чтобы следить за домом, пока вас нет. Отметьте те, которые хотите видеть только в пустом доме: пока кто-то дома, они исчезают со всех страниц, и кадр даже не загружается. Тот, кто возвращается, заставляет их исчезнуть сразу, а не при следующей смене страницы.",
+  "At least one person is needed in the People section: that is where “is anybody home” is answered. While there is none, a ticked camera would stay hidden forever — which is why the tick is off.": "В разделе «Люди» нужен хотя бы один человек: именно оттуда известно, есть ли кто-то дома. Пока никого нет, отмеченная камера осталась бы скрытой навсегда — поэтому отметка выключена.",
+  "Configure a camera above first: the privacy is its own.": "Сначала настройте камеру выше: приватность принадлежит ей.",
+  "Private cameras": "Приватные камеры",
+  "The soil sensor is right above. Add the irrigation zones from the editor to see the lawn too.": "Датчик почвы — прямо выше. Добавьте зоны полива в редакторе, чтобы увидеть и газон.",
 });

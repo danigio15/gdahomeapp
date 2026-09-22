@@ -3742,4 +3742,9 @@ export default Object.freeze({
   "it measures temperature": "mide la temperatura",
   "it tells whether someone is there": "dice si hay alguien",
   "it tells whether the room is busy": "dice si la habitación está ocupada",
+  "A camera inside the house is there to watch the house while you are out. Tick the ones you only want to see when nobody is home: while someone is in, they disappear from every page, and the frame is not even fetched. Whoever comes back makes them vanish at once, not at the next page change.": "Una cámara dentro de casa está para vigilar la casa mientras no estás. Marca las que solo quieres ver con la casa vacía: mientras haya alguien dentro desaparecen de todas las páginas, y ni siquiera se descarga el fotograma. Quien vuelve las hace desaparecer al instante, no al cambiar de página.",
+  "At least one person is needed in the People section: that is where “is anybody home” is answered. While there is none, a ticked camera would stay hidden forever — which is why the tick is off.": "Hace falta al menos una persona en la sección Personas: de ahí sale la respuesta a «¿hay alguien en casa?». Mientras no haya ninguna, una cámara marcada quedaría oculta para siempre, y por eso la casilla está desactivada.",
+  "Configure a camera above first: the privacy is its own.": "Configura antes una cámara aquí arriba: la privacidad es suya.",
+  "Private cameras": "Cámaras privadas",
+  "The soil sensor is right above. Add the irrigation zones from the editor to see the lawn too.": "El sensor de suelo está justo arriba. Añade las zonas de riego desde el editor para ver también el césped.",
 });

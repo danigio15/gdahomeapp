@@ -3742,4 +3742,9 @@ export default Object.freeze({
   "it measures temperature": "온도를 측정합니다",
   "it tells whether someone is there": "사람이 있는지 알려 줍니다",
   "it tells whether the room is busy": "방이 사용 중인지 알려 줍니다",
+  "A camera inside the house is there to watch the house while you are out. Tick the ones you only want to see when nobody is home: while someone is in, they disappear from every page, and the frame is not even fetched. Whoever comes back makes them vanish at once, not at the next page change.": "집 안의 카메라는 집을 비운 사이 집을 지켜보기 위한 것입니다. 아무도 없을 때만 보고 싶은 카메라를 선택하세요. 누군가 집에 있는 동안에는 모든 페이지에서 사라지고, 화면조차 받아 오지 않습니다. 누군가 돌아오면 다음 페이지로 넘어갈 때가 아니라 그 즉시 사라집니다.",
+  "At least one person is needed in the People section: that is where “is anybody home” is answered. While there is none, a ticked camera would stay hidden forever — which is why the tick is off.": "사람 섹션에 최소 한 명이 필요합니다. 집에 누가 있는지는 거기에서 알 수 있습니다. 아무도 등록되지 않은 동안에는 선택한 카메라가 영영 숨겨진 채로 남기 때문에, 선택이 꺼져 있습니다.",
+  "Configure a camera above first: the privacy is its own.": "먼저 위에서 카메라를 설정하세요. 사생활 설정은 그 카메라의 것입니다.",
+  "Private cameras": "비공개 카메라",
+  "The soil sensor is right above. Add the irrigation zones from the editor to see the lawn too.": "토양 센서는 바로 위에 있습니다. 잔디도 보려면 편집기에서 관수 구역을 추가하세요.",
 });

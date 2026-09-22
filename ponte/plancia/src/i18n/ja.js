@@ -3742,4 +3742,9 @@ export default Object.freeze({
   "it measures temperature": "温度を測ります",
   "it tells whether someone is there": "人がいるかどうかを知らせます",
   "it tells whether the room is busy": "部屋が使われているかどうかを知らせます",
+  "A camera inside the house is there to watch the house while you are out. Tick the ones you only want to see when nobody is home: while someone is in, they disappear from every page, and the frame is not even fetched. Whoever comes back makes them vanish at once, not at the next page change.": "家の中のカメラは、留守のあいだ家を見守るためにあります。誰もいないときだけ見たいカメラにチェックを入れてください。誰かが在宅のあいだはすべてのページから消え、映像の取得すら行われません。帰宅した人がいれば、次のページ移動を待たずにその場で消えます。",
+  "At least one person is needed in the People section: that is where “is anybody home” is answered. While there is none, a ticked camera would stay hidden forever — which is why the tick is off.": "「人」のセクションに少なくとも一人が必要です。在宅かどうかは、そこから分かります。一人もいないあいだはチェックしたカメラが永久に隠れたままになるため、チェックを無効にしています。",
+  "Configure a camera above first: the privacy is its own.": "まず上でカメラを設定してください。プライバシーはそのカメラのものです。",
+  "Private cameras": "プライベートカメラ",
+  "The soil sensor is right above. Add the irrigation zones from the editor to see the lawn too.": "土壌センサーはすぐ上にあります。芝生も見るには、エディターから散水ゾーンを追加してください。",
 });

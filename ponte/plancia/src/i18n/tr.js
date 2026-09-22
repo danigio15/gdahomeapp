@@ -3742,4 +3742,9 @@ export default Object.freeze({
   "it measures temperature": "sıcaklığı ölçüyor",
   "it tells whether someone is there": "birinin olup olmadığını söylüyor",
   "it tells whether the room is busy": "odanın dolu olup olmadığını söylüyor",
+  "A camera inside the house is there to watch the house while you are out. Tick the ones you only want to see when nobody is home: while someone is in, they disappear from every page, and the frame is not even fetched. Whoever comes back makes them vanish at once, not at the next page change.": "Evin içindeki bir kamera, siz dışarıdayken evi gözetlemek içindir. Yalnızca evde kimse yokken görmek istediklerinizi işaretleyin: evde biri varken tüm sayfalardan kaybolurlar ve görüntü indirilmez bile. Eve dönen biri onları anında kaybeder, bir sonraki sayfa değişiminde değil.",
+  "At least one person is needed in the People section: that is where “is anybody home” is answered. While there is none, a ticked camera would stay hidden forever — which is why the tick is off.": "Kişiler bölümünde en az bir kişi gerekir: «evde biri var mı» sorusunun yanıtı oradan gelir. Hiç kişi yokken işaretlenmiş bir kamera sonsuza dek gizli kalırdı — bu yüzden işaret kapalı.",
+  "Configure a camera above first: the privacy is its own.": "Önce yukarıda bir kamera yapılandırın: gizlilik ona aittir.",
+  "Private cameras": "Özel kameralar",
+  "The soil sensor is right above. Add the irrigation zones from the editor to see the lawn too.": "Toprak sensörü hemen yukarıda. Çimi de görmek için düzenleyiciden sulama bölgelerini ekleyin.",
 });

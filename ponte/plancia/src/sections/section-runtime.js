@@ -56,6 +56,7 @@ import { installConnectionRecoverySection } from "./connection-recovery-section.
 import { installAlarmModesEditorSection } from "./alarm-modes-editor-section.js";
 import { installAntifurtoSuMisuraEditorSection } from "./antifurto-su-misura-editor-section.js";
 import { installRilevamentiEditorSection } from "./rilevamenti-editor-section.js";
+import { installTelecamereRiservateEditorSection } from "./telecamere-riservate-editor-section.js";
 import { installQuickClimateEditorSection } from "./quick-climate-editor-section.js";
 import { installVmcEditor } from "./vmc-editor-section.js";
 import { installAssistSection } from "./assist-section.js";
@@ -927,6 +928,9 @@ export function installSectionRuntime() {
     installAlarmModesEditorSection();
     installAntifurtoSuMisuraEditorSection();
     installRilevamentiEditorSection();
+    /* La spunta «solo a casa vuota» sta sotto le telecamere, e delle telecamere
+     * parla: dopo i rilevamenti, che stanno gia' li'. */
+    installTelecamereRiservateEditorSection();
     installClimateThermalSection();
     /* Le voci termiche del popup Caldo: dopo chi disegna il popup, cosi' il
      * pannello passa di mano una volta sola. */

@@ -1343,8 +1343,16 @@ test("production graph is single-owner, acyclic and contains no facade pass-thro
   // parte sarebbero tre forme scritte due volte.
   // 373 con il foglietto che le disegna e le salva, che invece il deposito e
   // il documento li tocca.
+  // 374 con la regola della telecamera riservata (#81): quali telecamere si
+  // vedono solo a casa vuota, e cosa si fa quando chi c'e' in casa non si sa.
+  // E' una decisione sulla privacy che vale su tre pagine diverse, e scritta
+  // dentro una di quelle le altre due l'avrebbero riscritta a modo loro. Qui
+  // si prova su elenchi finti — nessuna persona, una persona fuori, una che
+  // non risponde — e la prova che «non si sa» nasconde sta in una riga sola.
+  // 375 con il foglietto delle spunte, che invece il deposito e il documento
+  // li tocca entrambi e va dove stanno le telecamere.
   assert.ok(
-    relative.length <= 373,
+    relative.length <= 375,
     `production graph unexpectedly grew to ${relative.length} modules`,
   );
   assertAcyclic(edges);
