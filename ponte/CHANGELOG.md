@@ -47,6 +47,23 @@ sarebbe peggio del silenzio. E siccome adesso la rete si guarda comunque, il
 riquadro «Zigbee» nella console dell'add-on si riempie da se' invece di
 aspettare che qualcuno passi dall'app.
 
+**Nella stanza, il nome glielo da' anche l'azione rapida.** «Leggo ancora
+modus… sono azioni rapide, scene, queste — non modus.» La 1.6.0.1 aveva
+corretto meta' del guasto: nella stanza il nome se lo prende da «Le tue
+entita'» invece che da Home Assistant. Ma i rubinetti che un nome ce l'hanno
+sono due, e il secondo non lo guardava nessuno — chi un'azione rapida ce l'ha
+non ha nessun motivo di riscrivere la stessa entita' in un'altra scheda per
+darle lo stesso nome. Il nome stava li', e nella stanza la riga continuava a
+chiamarsi «Modus»: e' il `select` di un'integrazione tedesca, e vuol dire
+«modalita'».
+
+Adesso il nome e il segno arrivano anche dalle Azioni rapide. Dove ci sono
+tutt'e due vince quello di «Le tue entita'», che di mestiere fa proprio dare
+un nome a un'entita'; l'azione rapida il nome ce l'ha per fare un tasto, e
+vale dove l'altro non c'e'. E un'azione rapida da sola in nessuna stanza ci
+va: il nome lo presta, la riga non la crea — se no la pagina Stanze si
+riempirebbe di tasti della Home che nessuno ha messo li'.
+
 **Le «Novita'» nel Play Store raccontano la 1.6.0.** Sotto la 1.6.0 e sotto
 la 1.6.0.1 c'era il testo della 1.5.4 — «Il numero dell'app e quello di casa
 tornano uguali. Qui dentro non cambia niente» — perche' quei due file non li

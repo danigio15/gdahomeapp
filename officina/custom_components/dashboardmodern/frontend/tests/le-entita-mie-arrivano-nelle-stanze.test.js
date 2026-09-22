@@ -107,6 +107,58 @@ test("ma il nome che le hai dato non lo porta via, perché lei un nome non ce l'
   assert.equal(voci[0].icon, "🌙", "e nemmeno il segno");
 });
 
+test("e il nome glielo può dare anche l'azione rapida, che è dove l'ha scritto", () => {
+  /* Dal campo, la seconda volta, con la foto della stanza davanti: «Leggo
+   * ancora modus… sono azioni rapide, scene, queste, non modus».
+   *
+   * La prima correzione aveva guardato un rubinetto solo, «Le tue entità», e
+   * lì quel nome non c'era: chi un'azione rapida ce l'ha non ha nessun motivo
+   * di riscrivere la stessa entità in un'altra scheda per darle lo stesso
+   * nome. Il nome che aveva scritto stava nell'azione rapida, e nella stanza
+   * la riga continuava a chiamarsi come la chiama Home Assistant — «Modus»,
+   * che è il `select` di un'integrazione tedesca. */
+  magazzino.clear();
+  scrivi("cd_quick_actions", [
+    { type: "toggle", name: "Serata", icon: "🌆", entity: "select.modus" },
+  ]);
+  const voci = assignedItems({ "select.modus": "r-salone" }, STATI);
+  assert.equal(voci.length, 1);
+  assert.equal(voci[0].name, "Serata");
+  assert.equal(voci[0].icon, "🌆");
+  assert.equal(voci[0].room_id, "r-salone");
+});
+
+test("ma un'azione rapida da sola in nessuna stanza ci va", () => {
+  /* Una stanza un'azione rapida non ce l'ha: il nome lo presta, la riga non la
+   * crea. Se no la pagina Stanze si riempirebbe di tasti della Home che
+   * nessuno ha messo lì. */
+  magazzino.clear();
+  scrivi("cd_quick_actions", [{ name: "Serata", entity: "select.modus" }]);
+  assert.deepEqual(assignedItems({}, STATI), []);
+});
+
+test("e «Le tue entità» resta la più forte delle due", () => {
+  /* Sono tutt'e due nomi scritti da chi ha la casa, ma non fanno lo stesso
+   * mestiere: «Le tue entità» dà un nome A QUELL'ENTITÀ, l'azione rapida lo dà
+   * a un tasto della Home. Dove ci sono tutt'e due, vince quello dell'entità. */
+  magazzino.clear();
+  scrivi("cd_entita_mie", [{ entity: "select.modus", nome: "Termostato", icona: "🌡️" }]);
+  scrivi("cd_quick_actions", [{ name: "Serata", icon: "🌆", entity: "select.modus" }]);
+  const voci = assignedItems({ "select.modus": "r-salone" }, STATI);
+  assert.equal(voci[0].name, "Termostato");
+  assert.equal(voci[0].icon, "🌡️");
+});
+
+test("un'azione integrata non presta nessun nome: un'entità non ce l'ha", () => {
+  magazzino.clear();
+  scrivi("cd_quick_actions", [{ type: "builtin", builtin: "scenes", name: "Scene" }]);
+  const voci = assignedItems({ "sensor.pressione": "r-salone" }, STATI);
+  assert.equal(voci[0].name, "Pressione");
+  /* E una configurazione storta non fa cadere la pagina. */
+  scrivi("cd_quick_actions", "non una lista");
+  assert.equal(assignedItems({ "sensor.pressione": "r-salone" }, STATI)[0].name, "Pressione");
+});
+
 test("e senza un nome scelto resta quello di Home Assistant", () => {
   /* Il ripiego non cambia: chi non ha scritto niente nel campo facoltativo
    * continua a leggere il nome che la casa dà a quell'entità. */
