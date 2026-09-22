@@ -13,6 +13,26 @@ sono due cose.
 
 ## 1.6.0.4
 
+**La pagina Musica sta dentro lo schermo di un telefono.** «Si riesce ad
+impaginare o per telefono o per tablet? perché oltre che sborda, non scorre
+per andare a lato.»
+
+Erano due guasti. Il primo si vedeva nella tendina: etichetta e tendina
+stavano affiancate per forza, e quei nomi non li sceglie nessuno qui — li
+manda l'integrazione, e SmartThings scrive «Formato di ingresso del
+segnale». Su un telefono l'etichetta si impilava su tre righe e alla tendina
+restavano cento pixel: dentro si leggeva «No input co», e il resto non si
+poteva andare a prendere, perché una tendina non si scorre di lato. Adesso
+quando affiancate non ci stanno la tendina va a capo e si prende la riga
+intera.
+
+Il secondo era il «sborda», e stava più a monte: la colonna del testo della
+card era una griglia senza colonne dichiarate, e una griglia così se ne fa
+una larga quanto il figlio più largo. Su uno schermo da 320 px quella colonna
+veniva 220 dove ce n'erano 162, e la card taglia quello che le esce perché le
+serve per il fondale sfocato della copertina: il di più spariva, senza modo
+di riprenderselo.
+
 **Una casa senza pannelli non legge più numeri finti (#82).** «Uno switch che
 tolga completamente la gestione energetica casa con fotovoltaico, pulendo da
 info errate la pagina energia.»
