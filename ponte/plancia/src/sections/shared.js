@@ -3,6 +3,10 @@ import { disegnoDelCatalogo } from "../core/catalogo-disegni.js";
 import { canonicalClimateType } from "../core/device-model.js";
 import { isCumulativeEnergyEntity } from "../core/period-service.js";
 import {
+  dispositiviDalGuscio,
+  ricordaIDispositivi,
+} from "../core/i-dispositivi-di-home-assistant.js";
+import {
   ricordaLeStanze,
   stanzaRicordata,
   stanzeDalGuscio,
@@ -439,6 +443,10 @@ export function lexicalGlobal(name) {
 
 /* Che i registri vivi siano gia' stati messi da parte in questo caricamento. */
 let stanzeGiaRicordate = false;
+/* E di chi e' ogni entita': la stessa manovra, dallo stesso registro vivo e
+ * una volta sola per caricamento. Serve all'avviso dei dispositivi non
+ * connessi, che conta per dispositivo e non per entita'. */
+let dispositiviGiaRicordati = false;
 
 /* In che stanza di Home Assistant sta un'entita'.
  *
@@ -487,6 +495,10 @@ export function stanzaDiHomeAssistant(entity) {
     if (!stanzeGiaRicordate) {
       stanzeGiaRicordate = true;
       ricordaLeStanze(stanzeDalGuscio(wiz));
+    }
+    if (!dispositiviGiaRicordati) {
+      dispositiviGiaRicordati = true;
+      ricordaIDispositivi(dispositiviDalGuscio(wiz));
     }
     const area = riga.a || (riga.d ? wiz?.devArea?.[riga.d] : "");
     const nome = area ? clean(wiz?.areaNames?.[area]) : "";

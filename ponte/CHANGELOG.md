@@ -11,6 +11,45 @@ fuori. La plancia dentro continua a dire la sua, e si legge dov'è sempre
 stata: nella pastiglia «La plancia» della console. Sono due numeri perché
 sono due cose.
 
+## 1.6.0.6
+
+**I dispositivi non connessi si contano per dispositivo, non per entità.** «Non
+devi mettere le entità ma i dispositivi non connessi, così come li mostri nel
+cruscotto installatore.»
+
+Nell'elenco finivano «Asciugatrice Child lock», «Boiler Child lock»,
+«Condizionatori Child lock»: quattro elettrodomestici che rispondono benissimo,
+di ognuno dei quali tace una sola entità — quella serratura bambini che
+l'integrazione pubblica sempre e che è `unavailable` quando la macchina non sta
+lavorando. Cioè l'avviso diceva il vero su cose che non interessano, che è il
+modo esatto in cui un avviso si impara a ignorare.
+
+Nel cruscotto dell'installatore quei `child_lock` non compaiono, perché il
+ponte la regola giusta ce l'ha da sempre: si raggruppa per dispositivo, e un
+dispositivo è giù **solo se tacciono tutte le sue entità**. Adesso la plancia fa
+la stessa, non una somigliante. Le entità che parlano si guardano in tutta la
+casa e non solo fra quelle mappate qui: se di un'asciugatrice è configurata la
+sola serratura bambini, a dire che la macchina sta bene sono le altre. Il
+cestino mette da parte tutte le entità di quel dispositivo in un colpo, e quello
+che si scrive restano entità — così le voci già messe da parte continuano a
+valere.
+
+**La scheda si chiama «Dispositivi non connessi»**, come la tessera in Home.
+
+**Le fasce nel dettaglio del dispositivo tornano quando si apre ANALISI.** «Si
+vedono nella parte panoramica ma dentro analisi quando seleziono i dispositivi
+non le vedo.» Il blocco si toglie quando la scheda non si vede — un conto a ore
+chiesto per una scheda che nessuno guarda è carico sul Recorder regalato — e a
+rimetterlo doveva essere il click sulla linguetta. Quel click si ascoltava su
+`#ed-tab-disp`, che in questa plancia non esiste: le linguette di Energia sono
+`ed-tab-pan` e `ed-tab-ana`. Così il blocco tornava solo cambiando apparecchio
+nella tendina, cioè il gesto che non si fa quando l'apparecchio è già scelto.
+
+**Nel MiniPC, sotto «Macchine e container», si leggeva «server» al posto
+dell'icona.** Dalla 1.6.0 quel campo è il nome di un disegno del catalogo e non
+un'emoji; chi disegna ha continuato a stamparlo com'era, e un nome stampato è
+una parola.
+
 ## 1.6.0.5
 
 Una correzione sola, e un numero nuovo perché la 1.6.0.4 era già arrivata

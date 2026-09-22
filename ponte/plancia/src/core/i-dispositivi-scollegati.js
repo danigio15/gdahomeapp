@@ -43,7 +43,7 @@
  * È puro: entrano le entità configurate, gli stati e l'elenco delle escluse;
  * esce cosa mostrare.
  */
-import { chiNonRisponde } from "./chi-non-risponde.js";
+import { chiNonRispondePerDispositivo } from "./chi-non-risponde.js";
 import { escluseDellaTessera, leggiLaVoce, togliDallaTessera } from "./fuori-dai-widget.js";
 
 const pulito = (valore) => String(valore ?? "").trim();
@@ -69,6 +69,8 @@ export function iDispositiviScollegati({
   states = {},
   escluse = [],
   nomeDi = null,
+  di = null,
+  nomi = null,
 } = {}) {
   const fuori = escluseDellaTessera(escluse, TESSERA_SCOLLEGATI);
   /* `entitaConfigurate` torna un insieme, non un elenco: si srotola. Ma un
@@ -80,10 +82,15 @@ export function iDispositiviScollegati({
     : configurate && typeof configurate[Symbol.iterator] === "function"
       ? [...configurate]
       : [];
-  const adesso = chiNonRisponde(
+  /* Per dispositivo, non per entita': un'asciugatrice che risponde non e' un
+   * dispositivo non connesso solo perche' tace la sua serratura bambini. La
+   * regola sta in `chi-non-risponde.js` ed e' la stessa del ponte, cioe' la
+   * stessa che vede il cruscotto dell'installatore. Senza le mappe dei registri
+   * torna da se' riga per riga, come prima. */
+  const adesso = chiNonRispondePerDispositivo(
     tutte.filter((entity) => !fuori.has(pulito(entity))),
     states,
-    { nomeDi },
+    { nomeDi, di, nomi },
   );
   /* Solo le voci firmate da questa tessera. Una voce nuda tiene un'entità
    * fuori da TUTTE le tessere, e l'ha scritta un altro interruttore: dirla
@@ -119,6 +126,16 @@ export function iDispositiviScollegati({
   };
 }
 
-/** L'elenco delle escluse con dentro anche questa. Non toglie mai niente. */
+/* L'elenco delle escluse con dentro anche queste. Non toglie mai niente.
+ *
+ * Una riga adesso e' un dispositivo, e un dispositivo ha piu' entita' mute:
+ * metterlo da parte vuol dire metterle da parte tutte, se no tornerebbe al
+ * giro dopo per quelle rimaste. Ma quello che si scrive restano **entita'**, e
+ * non dispositivi: cosi' le voci gia' scritte da prima continuano a valere, e
+ * una casa che i registri non li ha — dove non si raggruppa — si comporta
+ * uguale. */
 export const mettiDaParte = (escluse, entita) =>
-  togliDallaTessera(escluse, TESSERA_SCOLLEGATI, entita);
+  (Array.isArray(entita) ? entita : [entita]).reduce(
+    (elenco, una) => togliDallaTessera(elenco, TESSERA_SCOLLEGATI, una),
+    escluse,
+  );

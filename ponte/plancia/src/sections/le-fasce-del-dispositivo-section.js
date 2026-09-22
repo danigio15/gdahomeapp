@@ -384,12 +384,25 @@ export function installLeFasceDelDispositivo() {
   root.addEventListener?.("dashboardmodern:period-bundle", () =>
     root.queueMicrotask?.(() => rifai()),
   );
-  /* E chi arriva sulla scheda cliccando la linguetta la trova gia' pronta: il
-   * conto e' in memoria, ma il guscio puo' aver ridisegnato il pannello. */
+  /* E chi arriva sulla scheda cliccando la linguetta la trova gia' pronta.
+   *
+   * La linguetta e' «Analisi», ed e' li' che sta il dettaglio del dispositivo.
+   * Qui c'era scritto «#ed-tab-disp», che in questa plancia non esiste: le
+   * linguette di Energia sono due, `ed-tab-pan` e `ed-tab-ana`, e una scheda
+   * chiamata «disp» non c'e' mai stata. Quindi l'aggancio non scattava mai, e
+   * il blocco spariva per davvero: stando in Panoramica la scheda non si vede,
+   * `rifai` toglie il riquadro, e tornando su Analisi non lo rimetteva
+   * nessuno. Riappariva solo cambiando apparecchio nella tendina — cioe' il
+   * gesto che non si fa, perche' l'apparecchio e' gia' scelto da prima.
+   *
+   * Si ascoltano tutt'e due le linguette e non solo quella giusta: a decidere
+   * se il blocco ci va e' `rifai`, che guarda se la scheda si vede, e cosi'
+   * anche tornare in Panoramica passa di li' invece di lasciare il riquadro
+   * appeso a una scheda nascosta. */
   doc.addEventListener(
     "click",
     (evento) => {
-      if (!evento.target?.closest?.("#ed-tab-disp,[data-ed-tab=\"disp\"]")) return;
+      if (!evento.target?.closest?.(".ed-inner-tab,#ed-tab-ana,#ed-tab-pan")) return;
       root.setTimeout?.(() => rifai(), 0);
     },
     true,

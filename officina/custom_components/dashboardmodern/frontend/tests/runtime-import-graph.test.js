@@ -1390,8 +1390,15 @@ test("production graph is single-owner, acyclic and contains no facade pass-thro
   // 100 % e' sbagliato anche in una casa che i pannelli ce li ha, se le manca
   // il contatore di rete. Le risposte stanno da sole e si provano senza una
   // casa; a nasconderle sono la pagina e il grafico, che gia' c'erano.
+  // 387 con la memoria di chi e' ogni entita': l'avviso dei dispositivi non
+  // connessi conta per dispositivo — un'asciugatrice che risponde non e' un
+  // dispositivo giu' solo perche' tace la sua serratura bambini — e chi
+  // disegna il registro di Home Assistant non ce l'ha. Chiederlo e' costata la
+  // #553, quindi si ricorda: due mappe piatte lasciate da chi i registri li ha
+  // gia' in mano, esattamente come si fa per le stanze nel file accanto. Sta
+  // da solo, non prende la rete, e si prova senza una casa.
   assert.ok(
-    relative.length <= 386,
+    relative.length <= 387,
     `production graph unexpectedly grew to ${relative.length} modules`,
   );
   assertAcyclic(edges);

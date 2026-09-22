@@ -1,5 +1,6 @@
 /* DashboardModern custom panel and companion Lovelace dashboard registration. */
 import { LEGACY_VARIANTS, legacyVariantForLocale, mountLegacyHost } from "./src/legacy/host.js";
+import { ricordaIDispositiviDiHomeAssistant } from "./src/core/i-dispositivi-di-home-assistant.js";
 import { ricordaLeStanzeDiHomeAssistant } from "./src/core/le-stanze-di-home-assistant.js";
 
 
@@ -179,6 +180,10 @@ export class DashboardModernPanel extends HTMLElement {
      * monta una volta sola. Costa tre confronti quando non c'e' niente di
      * nuovo. */
     ricordaLeStanzeDiHomeAssistant(value);
+    /* E di chi e' ogni entita', per lo stesso motivo e dallo stesso posto:
+     * l'avviso dei dispositivi non connessi conta per dispositivo, e chi
+     * disegna il registro non ce l'ha. */
+    ricordaIDispositiviDiHomeAssistant(value);
     this.bootstrap();
   }
 
