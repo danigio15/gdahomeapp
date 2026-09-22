@@ -1365,8 +1365,14 @@ test("production graph is single-owner, acyclic and contains no facade pass-thro
   // perche' quello del motore racconta gia' un'altra storia. Tocca il
   // documento e il deposito: la riga della scelta, il disegno su ogni riga
   // dell'elenco, e le quattro caselle che una moto non ha.
+  // 380 con le fasce dentro la scheda del dispositivo (#111): il conto —
+  // quanto prende un apparecchio in ognuna delle fasce, e quanta parte di
+  // quello viene dal sole invece che dalla rete — e il giro che lo chiede e
+  // lo disegna. Il conto sta da solo e non tocca ne' la rete ne' l'orologio,
+  // perche' e' quello che si prova senza una casa; il giro tocca il
+  // documento e il Recorder.
   assert.ok(
-    relative.length <= 378,
+    relative.length <= 380,
     `production graph unexpectedly grew to ${relative.length} modules`,
   );
   assertAcyclic(edges);
