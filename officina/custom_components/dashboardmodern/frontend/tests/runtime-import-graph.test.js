@@ -1360,8 +1360,13 @@ test("production graph is single-owner, acyclic and contains no facade pass-thro
   // 377 con la scheda che le disegna tutte e quattro, che invece il deposito e
   // il documento li tocca: la riga con la matita e il cestino, la pastiglia,
   // la striscia dei disegni, il salva e la migrazione alla prima apertura.
+  // 378 con la scelta Auto / Moto (#75): il mezzo non e' il motore — una moto
+  // puo' essere elettrica o a benzina come un'auto — e sta in un modulo suo
+  // perche' quello del motore racconta gia' un'altra storia. Tocca il
+  // documento e il deposito: la riga della scelta, il disegno su ogni riga
+  // dell'elenco, e le quattro caselle che una moto non ha.
   assert.ok(
-    relative.length <= 377,
+    relative.length <= 378,
     `production graph unexpectedly grew to ${relative.length} modules`,
   );
   assertAcyclic(edges);

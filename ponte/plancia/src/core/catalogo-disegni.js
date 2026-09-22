@@ -62,6 +62,12 @@ const CORPI = Object.freeze({
 
   ev: `${PANNELLO}<path ${SCOCCA} d="M20 56l6-16a8 8 0 0 1 7-5h26a8 8 0 0 1 7 5l6 16v14a5 5 0 0 1-5 5h-4a5 5 0 0 1-5-5v-3H34v3a5 5 0 0 1-5 5h-4a5 5 0 0 1-5-5z"/><path ${FRONTALE} d="M30 42h36l4 11H26z"/><circle ${VETRO} cx="32" cy="62" r="4"/><circle ${VETRO} cx="64" cy="62" r="4"/><path ${CALDO} d="M50 14l-9 14h7l-3 11 11-15h-7z"/>`,
 
+  /* La moto (#75): di profilo, perche' una moto vista di fronte non la
+   * riconosce nessuno. Tutto a masse piene e niente tratti sottili — a
+   * trentaquattro pixel, che e' la misura vera nella riga della scheda, un
+   * tratto da tre si perde e resta una bicicletta. */
+  moto: `${PANNELLO}<circle ${SCOCCA} cx="30" cy="68" r="16"/><circle ${SPENTO} cx="30" cy="68" r="6.5"/><circle ${SCOCCA} cx="68" cy="68" r="16"/><circle ${SPENTO} cx="68" cy="68" r="6.5"/><path ${SCOCCA} d="M30 68 46 44h14l10 24H56l-7-10H40z"/><path ${SCOCCA} d="M36 41h26a5 5 0 0 1 5 5v8H36a5 5 0 0 1-5-5v-3a5 5 0 0 1 5-5z"/><rect ${ACCENTO} x="28" y="32" width="22" height="9" rx="4.5"/><path ${SCOCCA} d="M64 30h18a3.5 3.5 0 0 1 0 7h-7l-4 29h-7l5-33a3.5 3.5 0 0 1 3.5-3z"/>`,
+
   water: `${PANNELLO}<path ${VETRO} d="M48 12c14 18 22 29 22 38a22 22 0 0 1-44 0c0-9 8-20 22-38Z"/><path ${TRATTO_CHIARO} d="M37 52c0 8 5 13 11 14"/>`,
 
   camera: `${PANNELLO}<rect ${SCOCCA} x="12" y="28" width="56" height="40" rx="9"/><path ${SCOCCA} d="M68 42l16-9v30l-16-9z"/><circle ${FRONTALE} cx="34" cy="48" r="12"/><circle ${VETRO} cx="34" cy="48" r="6"/><circle ${ACCENTO} cx="57" cy="37" r="3.2"/>`,
@@ -391,6 +397,13 @@ const CORPI = Object.freeze({
 /* I nomi con cui il resto della plancia chiede la stessa cosa. Un disegno solo,
  * tanti nomi: «luce», «light», «lights» sono la stessa lampadina. */
 const ALIAS = Object.freeze({
+  /* La moto, chiamata come la chiama chi la cerca. */
+  motorcycle: "moto",
+  motorbike: "moto",
+  motorino: "moto",
+  scooter: "moto",
+  auto: "ev",
+  car: "ev",
   /* I programmi della lavatrice, chiamati come li chiama chi li usa. */
   cotone: "wash-cotton",
   cotton: "wash-cotton",

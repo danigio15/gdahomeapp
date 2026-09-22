@@ -65,6 +65,51 @@ export function capacitaDellaBatteria(car = {}) {
   return Number.isFinite(letto) && letto > 0 ? letto : null;
 }
 
+/* Auto o moto (#75).
+ *
+ * «Sarebbe carino poter scegliere tra auto e moto.» La pagina Auto e' nata per
+ * un'automobile e lo dice dappertutto: il titolo, il disegno, le caselle. Una
+ * moto ha la stessa colonnina, la stessa batteria e lo stesso odometro — le
+ * entita' sono le stesse — ma non ha portiere, non ha finestrini e non ha un
+ * bagagliaio, e vedersele chiedere in configurazione e' vedersi chiedere di
+ * mappare qualcosa che non esiste.
+ *
+ * Il mezzo NON e' il motore: una moto puo' essere elettrica, a benzina o
+ * ibrida esattamente come un'auto, e tenerli sulla stessa tendina vorrebbe
+ * dire sei voci per due domande. Sono due campi, e si scelgono uno sotto
+ * l'altro.
+ *
+ * Vuoto vuol dire auto, per la stessa ragione per cui vuoto vuol dire
+ * elettrica: e' quello che ogni veicolo configurato finora e', e non gli si
+ * chiede di dichiararlo. */
+export const MEZZO_FIELD = "mezzo";
+
+/** I mezzi che si possono dichiarare. Il primo e' quello che si assume. */
+export const MEZZI = Object.freeze(["auto", "moto"]);
+
+/** Il mezzo dichiarato: `"moto"`, oppure vuoto, che vuol dire auto. */
+export function mezzoDelVeicolo(valore) {
+  return clean(valore).toLowerCase() === "moto" ? "moto" : "";
+}
+
+/** Se questo veicolo e' una moto. */
+export const eUnaMoto = (car = {}) => mezzoDelVeicolo(car?.[MEZZO_FIELD]) === "moto";
+
+/* Il mezzo dichiarato da chi non ha nessun profilo, come per il motore.
+ *
+ * Chi ha una moto sola compila le caselle `dm.ev_*` nella mappatura generale
+ * della plancia e non preme mai «Salva veicolo»: senza questa casella la sua
+ * scelta non avrebbe dove andare, e la pagina continuerebbe a raccontare
+ * un'automobile. Vale SOLO quando profili non ce ne sono, perche' con dei
+ * profili comanda il veicolo: in un garage possono starci una moto e un'auto,
+ * e una risposta sola per tutti e due sarebbe falsa per uno dei due. */
+export const MEZZO_DI_CASA_KEY = "cd_ev_mezzo";
+
+/** Che mezzo e' quello di cui si sta parlando: la vettura, o la plancia. */
+export function mezzoInUso(car, diCasa = "") {
+  return car ? mezzoDelVeicolo(car[MEZZO_FIELD]) : mezzoDelVeicolo(diCasa);
+}
+
 /* Tutto cio' che appartiene a un'auto, oltre alla mappatura.
  *
  * Serviva un elenco perche' il runtime risalvava il profilo sostituendolo con
@@ -80,6 +125,7 @@ export const VEHICLE_FIELDS = Object.freeze([
   "model",
   "icon",
   "tipo",
+  MEZZO_FIELD,
   VEHICLE_CAPACITY_FIELD,
   VEHICLE_PHOTO_FIELDS.idle,
   VEHICLE_PHOTO_FIELDS.plugged,
@@ -196,6 +242,7 @@ export function normalizeVehicle(input = {}, index = 0) {
     model: clean(source.model),
     icon: clean(source.icon),
     tipo: tipoMotore(source.tipo),
+    [MEZZO_FIELD]: mezzoDelVeicolo(source[MEZZO_FIELD]),
     [VEHICLE_CAPACITY_FIELD]: clean(source[VEHICLE_CAPACITY_FIELD]),
     [VEHICLE_OVERRIDES_FIELD]: Object.fromEntries(
       Object.entries(overrides)

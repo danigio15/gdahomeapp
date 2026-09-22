@@ -132,6 +132,7 @@ import { installWidgetEntityChoiceSection } from "./widget-entity-choice-section
 import { installEvShowcaseSection } from "./ev-showcase-section.js";
 import { installEvStatoETargetSection } from "./ev-stato-e-target-section.js";
 import { installAutoTermica } from "./auto-termica-section.js";
+import { installAutoOMoto } from "./auto-o-moto-section.js";
 import { installEditorSlotsSection } from "./editor-slots-section.js";
 import { installConfigUniformitySection } from "./config-uniformity-section.js";
 import { installSolarThermalDesignSection } from "./solar-thermal-design-section.js";
@@ -1089,6 +1090,7 @@ export function installSectionRuntime() {
      * sue caselle entrano nella stessa scheda, e il suo quadro prende il
      * posto di quello della ricarica quando il motore non e' elettrico. */
     installAutoTermica();
+    installAutoOMoto();
     installSolarThermalDesignSection();
     /* Dopo il disegno del solare: le linguette e le due scene nuove gli si
      * mettono accanto, e per farlo devono trovarlo gia' al suo posto. */

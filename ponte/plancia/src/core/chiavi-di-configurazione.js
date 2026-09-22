@@ -262,7 +262,14 @@
  * questo elenco e' quella che sbagliata fa il danno peggiore, perche' il danno
  * non lo vedi: la telecamera che si e' voluta nascondere continua a riprendere
  * il salotto su uno schermo che nessuno sta guardando. */
-export const CONFIG_KEYS_REVISION = 53;
+/* La revisione 54 aggiunge il mezzo dichiarato da chi non ha profili
+ * (`cd_ev_mezzo`, #75): «sarebbe carino poter scegliere tra auto e moto». Va
+ * con `cd_ev_motore` e `cd_ev_kwh` e per la stessa ragione — e' quello che si
+ * sa del veicolo e non delle sue entita'. Chi ha una moto sola e la dichiara
+ * dal telefono deve ritrovarla dichiarata sul tablet in cucina: se no la
+ * pagina racconta una moto su un vetro e un'automobile sull'altro, con le
+ * stesse identiche entita' dietro. */
+export const CONFIG_KEYS_REVISION = 54;
 
 // Complete shared dashboard configuration snapshot. Runtime counters/timers and
 // true per-device preferences (connection credentials, theme/navbar mode) stay
@@ -393,6 +400,11 @@ export const CONFIG_KEYS = Object.freeze([
    * tempo di fine carica si conta da lei, e un numero scritto sul computer che
    * sul telefono non c'e' fa uscire due tempi diversi per la stessa carica. */
   "cd_ev_kwh",
+  /* E se quel veicolo e' un'auto o una moto (#75). Non e' il motore — una moto
+   * puo' essere elettrica o a benzina come un'automobile — ed e' della casa
+   * allo stesso modo: il garage e' uno solo, e quello che c'e' dentro non
+   * cambia col vetro da cui lo si guarda. */
+  "cd_ev_mezzo",
   /* `cd_ev_image` e `cd_ev_image_plugged` non stanno piu' qui.
    *
    * Sono le due caselle da cui il disegno legge la foto dell'auto attiva: non
