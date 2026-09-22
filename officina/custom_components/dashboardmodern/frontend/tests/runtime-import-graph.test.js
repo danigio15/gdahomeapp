@@ -1380,8 +1380,13 @@ test("production graph is single-owner, acyclic and contains no facade pass-thro
   // esiste». L'elenco delle caselle risponde all'altra domanda, «dove lo
   // metto», e non ribatte a mano nessun nome: li prende da dove i nomi gia'
   // stanno. Sta da solo e si prova senza una casa.
+  // 385 con la scheda «Scollegati» (#104): l'elenco di chi in questa casa non
+  // risponde, con un cestino che toglie una riga dall'avviso per sempre. La
+  // regola di chi ci finisce sta da sola e si prova senza una casa — ed e' la
+  // stessa che legge la tessera della Home, perche' due elenchi sarebbero due
+  // verita'; la scheda tocca il documento e il deposito.
   assert.ok(
-    relative.length <= 383,
+    relative.length <= 385,
     `production graph unexpectedly grew to ${relative.length} modules`,
   );
   assertAcyclic(edges);

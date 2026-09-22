@@ -325,6 +325,16 @@ export function ensureEntityChoices() {
       row.querySelector(`[${CHOICE_ATTRIBUTE}]`)?.remove();
       continue;
     }
+    /* Nemmeno una riga della scheda «Scollegati»: li' la scelta c'e' gia', ed
+     * e' il cestino. Due comandi che scrivono nello stesso posto sono due
+     * comandi che si contraddicono — l'interruttore toglieva senza chiedere
+     * quello che il cestino toglie solo dopo aver chiesto, e lo rimetteva
+     * dentro dove il cestino promette «per sempre». Si riconosce dalla classe
+     * della riga: e' struttura, non parole. */
+    if (row.matches(".dm-scollegati-riga")) {
+      row.querySelector(`[${CHOICE_ATTRIBUTE}]`)?.remove();
+      continue;
+    }
     const entities = entitiesOfRow(row);
     if (!entities.length) continue;
     const { tessera, fuori } = perTessera(row);

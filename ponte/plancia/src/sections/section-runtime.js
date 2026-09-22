@@ -120,6 +120,7 @@ import { installAutoIntegrazione } from "./auto-integrazione-section.js";
 import { installEnergiaCerchiStorico } from "./energia-cerchi-storico-section.js";
 import { installRobotEditorSection } from "./robot-editor-section.js";
 import { installAnimaliEditorSection } from "./animali-editor-section.js";
+import { installScollegatiSection } from "./i-dispositivi-scollegati-section.js";
 import { installEditorEntrySection } from "./editor-entry-section.js";
 import { installEvSection } from "./ev-section.js";
 import { installMediaPickerSection } from "./media-picker-section.js";
@@ -1078,6 +1079,10 @@ export function installSectionRuntime() {
     /* Il ponte dei widget sta sotto le persone in Home: si installa dopo,
      * cosi' trova gia' il suo ancoraggio. */
     installHomeWidgetsSection();
+    /* La scheda degli scollegati legge la stessa regola della tessera «non
+     * connessi», e da lei prende anche l'elenco delle escluse: si installa
+     * dopo, cosi' quando disegna la prima volta quel modulo c'e' gia'. */
+    installScollegatiSection();
     installTodoEditorSection();
     installWidgetEntityChoiceSection();
     /* Il backup arriva per ultimo fra le schede: raccoglie le chiavi che gli

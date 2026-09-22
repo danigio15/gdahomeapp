@@ -47,8 +47,13 @@ export const TAB_SECTION_KEYS = CHIAVI_PER_SCHEDA;
 /* Tabs that hold no configuration to save: diagnostics is read-only, the
  * visibility tab has its own single control, and Backup acts with its own
  * buttons — «Scarica», «Ripristina e ricarica» — so a "Save section" under it
- * would be a button that saves nothing. */
-const NO_SAVE_TABS = new Set(["runtime", "visib", "export", "rileva", "backup"]);
+ * would be a button that saves nothing.
+ *
+ * E «Scollegati», che non e' una scheda da compilare: l'elenco lo riempie la
+ * plancia, e il cestino scrive subito. Un tasto verde in fondo, li', fa
+ * credere che finche' non lo si preme non sia successo niente — mentre e' gia'
+ * successo tutto. */
+const NO_SAVE_TABS = new Set(["runtime", "visib", "export", "rileva", "backup", "scollegati"]);
 
 /* What counts as "save this section". Add buttons, profile buttons and the
  * visibility banner are not saves, however much their label looks like one:

@@ -42,7 +42,7 @@ import {
 } from "./security-showcase-section.js";
 import { parolaDellaPorta, parolaDiStato } from "./le-parole-di-home-assistant.js";
 import { haOggettoWidget, oggettoWidget } from "../core/oggetti-widget.js";
-import { chiNonRisponde } from "../core/chi-non-risponde.js";
+import { iDispositiviScollegati } from "../core/i-dispositivi-scollegati.js";
 import { entitaConfigurate } from "../core/entita-configurate.js";
 import { CONFIG_KEYS } from "../core/chiavi-di-configurazione.js";
 import { iconGlyphMarkup } from "./icon-engine-section.js";
@@ -5079,12 +5079,16 @@ function nonRispondeModel(states) {
   } catch (_errore) {
     return null;
   }
-  const fuori = widgetExcludedEntities("nonrisponde");
-  const mute = chiNonRisponde(
-    configurate.filter((entity) => widgetIncludes(entity, fuori)),
+  /* La regola e' una sola, e sta nel nucleo: la stessa che disegna la scheda
+   * «Scollegati» della configurazione, dove si toglie una riga col cestino.
+   * Con due copie, il giorno che si scostano, il cestino toglierebbe dalla
+   * scheda una cosa che la tessera continua a dire. */
+  const { adesso: mute } = iDispositiviScollegati({
+    configurate,
     states,
-    { nomeDi: (entity) => friendlyName(states, entity) },
-  );
+    escluse: widgetPreferences().excluded,
+    nomeDi: (entity) => friendlyName(states, entity),
+  });
   if (!mute.length) return null;
   return {
     key: "nonrisponde",

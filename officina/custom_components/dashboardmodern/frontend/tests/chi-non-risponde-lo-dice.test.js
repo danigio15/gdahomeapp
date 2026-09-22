@@ -99,8 +99,13 @@ test("la tessera non c'è finché non c'è niente da dire", () => {
    * solo quando serve guardarla. */
   assert.match(sezione, /function nonRispondeModel\(states\) \{/);
   assert.match(sezione, /if \(!mute\.length\) return null;/);
-  /* E si può spegnere dalla scheda Widget come tutte le altre. */
-  assert.match(sezione, /widgetExcludedEntities\("nonrisponde"\)/);
+  /* E chi non si vuole più sentire resta fuori. La regola non è qui: sta in
+   * `core/i-dispositivi-scollegati.js`, ed è la stessa che disegna la scheda
+   * «Scollegati» della configurazione, dove si toglie una riga col cestino.
+   * Con due copie, il giorno che si scostano, il cestino toglierebbe dalla
+   * scheda una cosa che la tessera continua a dire. */
+  assert.match(sezione, /const \{ adesso: mute \} = iDispositiviScollegati\(/);
+  assert.match(sezione, /escluse: widgetPreferences\(\)\.excluded/);
 });
 
 test("la tessera si chiama «Dispositivi non connessi»", () => {

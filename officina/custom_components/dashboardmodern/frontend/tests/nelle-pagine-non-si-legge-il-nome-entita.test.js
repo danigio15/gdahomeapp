@@ -47,6 +47,10 @@ const ANCHE_QUESTE_SI_COMPILANO = new Map([
   ["editor-polish-section.js", "le caselle dei server"],
   ["entity-search-section.js", "il cercatore di entità: l'elenco da cui si sceglie"],
   ["flood-alerts-section.js", "la scheda degli allagamenti"],
+  [
+    "i-dispositivi-scollegati-section.js",
+    "la scheda «Scollegati»: non si compila — l'elenco lo mette la plancia — ma e' una scheda della configurazione, e li' l'identificativo e' il punto. E' l'unica cosa che distingue due prese chiamate uguale, ed e' come si riconosce un'entita' rimasta scritta da un'integrazione tolta: quella non e' un dispositivo da andare a premere, e' configurazione da ripulire",
+  ],
   ["lights-alerts-section.js", "la scheda delle luci"],
   ["prese-section.js", "la scheda delle prese"],
   [
