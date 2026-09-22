@@ -766,7 +766,18 @@ function installStyles() {
          tasto che si cerca, e sulla copertina deve restare il suo colore. */
       .dm-mp-card[data-arte="true"] .dm-mp-tasto:not([data-dm-mp="centro"]){
         color:#f8fafc;background:rgba(248,250,252,.14);border-color:rgba(248,250,252,.24)}
-      .dm-mp-testo{display:grid;gap:5px;min-width:0}
+      /* La colonna è dichiarata, e non lasciata all'«auto».
+
+         Una griglia senza colonne scritte se ne fa una implicita larga quanto il
+         figlio più largo, e i figli qui dentro sono una tendina con dentro «Dolby
+         Digital Plus 5.1» e un nome di entità lungo una riga: su un telefono la
+         colonna veniva 220px dove ce n'erano 162, e siccome la card taglia quello
+         che esce («overflow:hidden», che le serve per il fondale sfocato) il di
+         più spariva — senza modo di andarlo a prendere, perché la pagina non
+         scorre di lato. «minmax(0,1fr)» dice che quella colonna non può crescere
+         oltre lo spazio che ha, e il testo lungo si accorcia o va a capo come
+         ognuno di questi pezzi sa già fare. */
+      .dm-mp-testo{display:grid;grid-template-columns:minmax(0,1fr);gap:5px;min-width:0}
       .dm-mp-dove{
         font-size:10.5px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;
         color:var(--text-dim,#64748b);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -802,7 +813,16 @@ function installStyles() {
       .dm-mp-percento{
         font-size:10.5px;font-weight:800;color:var(--text-dim,#64748b);
         font-variant-numeric:tabular-nums;flex:0 0 34px;text-align:right}
-      .dm-mp-sorgente{display:flex;align-items:center;gap:9px;margin-top:8px}
+      /* Etichetta e tendina sulla stessa riga finché ci stanno, e quando non
+         ci stanno la tendina va a capo e si prende la riga intera.
+
+         Tenute affiancate per forza, un nome lungo — «Formato di ingresso del
+         segnale», che è il nome che ci mette l'integrazione, non uno scelto qui —
+         si impilava su tre righe e alla tendina restavano cento pixel: dentro ci
+         si leggeva «No input co», e il resto non si raggiungeva in nessun modo,
+         perché una tendina non si scorre di lato. */
+      .dm-mp-sorgente{
+        display:flex;align-items:center;flex-wrap:wrap;gap:9px;row-gap:4px;margin-top:8px}
       /* Quello che sta accanto (#451): i tasti dell'integrazione e le sue
          letture, sotto i comandi del brano. */
       .dm-mp-cmds{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
@@ -834,7 +854,7 @@ function installStyles() {
         font-size:10.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;
         color:var(--text-dim,#64748b)}
       .dm-mp-sorgente select{
-        flex:1 1 auto;min-width:0;padding:7px 10px;border-radius:11px;font-size:12px;font-weight:700;
+        flex:1 1 150px;min-width:0;padding:7px 10px;border-radius:11px;font-size:12px;font-weight:700;
         color:var(--text,#0f172a);
         background:var(--card-background-color,#fff);border:1px solid var(--card-border,#e2e8f0)}
       /* La finestra di un lettore solo (#460): il fondo sfocato e la card in
