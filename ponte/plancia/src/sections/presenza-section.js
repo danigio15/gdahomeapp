@@ -26,6 +26,7 @@ import {
 import { prossimoCambioDelDaQuando, quantoTempoInParole } from "../core/da-quanto.js";
 import {
   allStates,
+  disegnoDiCasa,
   doc,
   esc,
   installStyle,
@@ -194,7 +195,7 @@ function daQuandoMarkup(riga) {
 
 function rigaMarkup(riga) {
   return `<article class="dm-presenza" data-presenza="${esc(riga.stato || "muto")}">
-    <span class="dm-presenza-ic" aria-hidden="true">${esc(riga.glifo)}</span>
+    <span class="dm-presenza-ic" aria-hidden="true">${disegnoDiCasa(riga.glifo, { misura: 30, ripiego: "motion" })}</span>
     <div class="dm-presenza-testo">
       <strong>${esc(riga.name)}</strong>
       ${daQuandoMarkup(riga)}
@@ -361,6 +362,9 @@ function installStyles() {
     ${P} .dm-presenza-ic{
       display:grid;place-items:center;width:44px;height:44px;border-radius:14px;font-size:20px;
       background:color-mix(in srgb,var(--dm-presenza,#94a3b8) 22%,transparent)}
+    /* Il disegno del catalogo al posto dell'emoji (#74). */
+    ${P} .dm-presenza-ic .dm-catalogo-art{display:grid;place-items:center;line-height:0}
+    ${P} .dm-presenza-ic svg{display:block;width:30px;height:30px}
     ${P} .dm-presenza-testo{display:grid;gap:2px;min-width:0}
     ${P} .dm-presenza-testo strong{font-size:14px;font-weight:900;color:var(--text,#0f172a);
       overflow:hidden;text-overflow:ellipsis;white-space:nowrap}

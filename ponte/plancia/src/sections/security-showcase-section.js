@@ -65,6 +65,7 @@ import {
   activeLocale,
   allStates,
   clean,
+  disegnoDiCasa,
   doc,
   english,
   esc,
@@ -78,6 +79,11 @@ import {
   writeJsonIfChanged,
 } from "./shared.js";
 import { disegnoDelCatalogo } from "../core/catalogo-disegni.js";
+import { normalizePeople } from "../core/person-model.js";
+import {
+  CHIAVE_RISERVATE,
+  telecamereVisibili,
+} from "../core/telecamere-riservate.js";
 import { iconGlyphMarkup } from "./icon-engine-section.js";
 
 const KEY = "__DASHBOARDMODERN_SECURITY_SHOWCASE__";
@@ -230,6 +236,29 @@ export function securityCameras() {
   return Array.isArray(values) ? values : [];
 }
 
+/* Le persone di casa, per sapere se c'e' qualcuno. Sono quelle della sezione
+ * Persone: chi non l'ha compilata non ha nessuna telecamera riservata, e
+ * questa riga non la legge nessuno. */
+function personeDiCasa() {
+  return normalizePeople(readJson("cd_people", []));
+}
+
+/**
+ * Le telecamere **da disegnare adesso**, che non sono sempre quelle configurate.
+ *
+ * `securityCameras()` resta l'elenco intero, e deve restarlo: e' quello che
+ * l'editor mostra, e una telecamera che si nasconde da sola non si potrebbe
+ * piu' riconfigurare. Quello che cambia col momento e' questo, e lo chiama
+ * chi disegna (#81).
+ */
+export function telecamereDaMostrare(cameras = securityCameras(), states = allStates()) {
+  return telecamereVisibili(cameras, {
+    config: readJson(CHIAVE_RISERVATE, {}),
+    persone: personeDiCasa(),
+    states,
+  });
+}
+
 export function cameraSlug(camera, index) {
   if (typeof root.camSlug === "function") {
     try {
@@ -269,7 +298,7 @@ export function cameraOffline(entity, states = allStates()) {
   return OFFLINE_STATES.has(value);
 }
 
-function cameraModels(cameras = securityCameras()) {
+function cameraModels(cameras = telecamereDaMostrare()) {
   return cameras.map((camera, index) => {
     const entity = clean(camera?.entity || camera?.camera_entity || camera?.cam);
     const name = clean(camera?.name) || entity || `CAM ${index + 1}`;
@@ -418,13 +447,13 @@ function pastigliaDellaZona(riga) {
    * sarebbe la bugia tranquillizzante che quella pagina evita gia'. */
   const come = riga.stato === "attivo" ? "attiva" : riga.stato === "libero" ? "libera" : "muta";
   return `<span class="dm-sec-zona" data-stato="${esc(come)}" title="${esc(riga.entity)}">
-    <i aria-hidden="true">${riga.glifo}</i><b>${esc(riga.name)}</b></span>`;
+    <i aria-hidden="true">${disegnoDiCasa(riga.glifo, { misura: 20, ripiego: "motion" })}</i><b>${esc(riga.name)}</b></span>`;
 }
 
 function pastigliaDellIngresso(riga) {
   const come = riga.stato === "aperto" ? "aperto" : riga.stato === "chiuso" ? "chiuso" : "muto";
   return `<span class="dm-sec-zona" data-stato="${esc(come)}" title="${esc(riga.entity)}">
-    <i aria-hidden="true">${riga.glifo}</i><b>${esc(riga.name)}</b></span>`;
+    <i aria-hidden="true">${disegnoDiCasa(riga.glifo, { misura: 20, ripiego: "door" })}</i><b>${esc(riga.name)}</b></span>`;
 }
 
 function riquadroDelleZone(zone, ingressi, labels) {
@@ -1328,7 +1357,8 @@ function securityCss() {
 .dm-sec-zone-righe{display:flex;gap:7px;flex-wrap:wrap}
 .dm-sec-zona{display:inline-flex;align-items:center;gap:6px;padding:6px 11px;border-radius:999px;font-size:11.5px;font-weight:800;border:1px solid var(--card-border,#e2e8f0);background:var(--card-background-color,#fff)}
 .dm-sec-zona i{font-style:normal;line-height:1;display:inline-flex}
-.dm-sec-zona i svg{width:15px;height:15px}
+.dm-sec-zona i .dm-catalogo-art{display:inline-flex;line-height:0}
+.dm-sec-zona i svg{width:15px;height:15px;display:block}
 .dm-sec-zona[data-stato="attiva"],.dm-sec-zona[data-stato="aperto"]{
   border-color:color-mix(in srgb,#dc2626 42%,transparent);
   background:color-mix(in srgb,#dc2626 13%,var(--card-bg,#fff));color:#b91c1c}

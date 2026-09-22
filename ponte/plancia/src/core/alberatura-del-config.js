@@ -182,6 +182,11 @@ export const SCHEDE = Object.freeze({
 
   /* ── 🖥️ Macchine e rete ────────────────────────────────────────────── */
   sez6: { famiglia: "macchine", posizione: 10 }, // Server, container, rete
+  /* Chi in questa casa non risponde piu'. Sta con le macchine e la rete
+   * perche' e' li' che si va a vedere quando qualcosa non si raggiunge, e
+   * perche' la ragione vera e' quasi sempre una di quelle: un ripetitore
+   * spento, un wifi che non arriva in fondo al giardino. */
+  scollegati: { famiglia: "macchine", posizione: 20 },
 });
 
 /** Di che famiglia è questa scheda. Una che non si conosce va in fondo. */

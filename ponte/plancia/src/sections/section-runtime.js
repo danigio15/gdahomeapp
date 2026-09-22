@@ -56,6 +56,7 @@ import { installConnectionRecoverySection } from "./connection-recovery-section.
 import { installAlarmModesEditorSection } from "./alarm-modes-editor-section.js";
 import { installAntifurtoSuMisuraEditorSection } from "./antifurto-su-misura-editor-section.js";
 import { installRilevamentiEditorSection } from "./rilevamenti-editor-section.js";
+import { installTelecamereRiservateEditorSection } from "./telecamere-riservate-editor-section.js";
 import { installQuickClimateEditorSection } from "./quick-climate-editor-section.js";
 import { installVmcEditor } from "./vmc-editor-section.js";
 import { installAssistSection } from "./assist-section.js";
@@ -119,6 +120,7 @@ import { installAutoIntegrazione } from "./auto-integrazione-section.js";
 import { installEnergiaCerchiStorico } from "./energia-cerchi-storico-section.js";
 import { installRobotEditorSection } from "./robot-editor-section.js";
 import { installAnimaliEditorSection } from "./animali-editor-section.js";
+import { installScollegatiSection } from "./i-dispositivi-scollegati-section.js";
 import { installEditorEntrySection } from "./editor-entry-section.js";
 import { installEvSection } from "./ev-section.js";
 import { installMediaPickerSection } from "./media-picker-section.js";
@@ -131,6 +133,9 @@ import { installWidgetEntityChoiceSection } from "./widget-entity-choice-section
 import { installEvShowcaseSection } from "./ev-showcase-section.js";
 import { installEvStatoETargetSection } from "./ev-stato-e-target-section.js";
 import { installAutoTermica } from "./auto-termica-section.js";
+import { installAutoOMoto } from "./auto-o-moto-section.js";
+import { installLeFasceDelDispositivo } from "./le-fasce-del-dispositivo-section.js";
+import { installLaVentolaDellInverter } from "./la-ventola-dell-inverter-section.js";
 import { installEditorSlotsSection } from "./editor-slots-section.js";
 import { installConfigUniformitySection } from "./config-uniformity-section.js";
 import { installSolarThermalDesignSection } from "./solar-thermal-design-section.js";
@@ -927,6 +932,9 @@ export function installSectionRuntime() {
     installAlarmModesEditorSection();
     installAntifurtoSuMisuraEditorSection();
     installRilevamentiEditorSection();
+    /* La spunta «solo a casa vuota» sta sotto le telecamere, e delle telecamere
+     * parla: dopo i rilevamenti, che stanno gia' li'. */
+    installTelecamereRiservateEditorSection();
     installClimateThermalSection();
     /* Le voci termiche del popup Caldo: dopo chi disegna il popup, cosi' il
      * pannello passa di mano una volta sola. */
@@ -1071,6 +1079,10 @@ export function installSectionRuntime() {
     /* Il ponte dei widget sta sotto le persone in Home: si installa dopo,
      * cosi' trova gia' il suo ancoraggio. */
     installHomeWidgetsSection();
+    /* La scheda degli scollegati legge la stessa regola della tessera «non
+     * connessi», e da lei prende anche l'elenco delle escluse: si installa
+     * dopo, cosi' quando disegna la prima volta quel modulo c'e' gia'. */
+    installScollegatiSection();
     installTodoEditorSection();
     installWidgetEntityChoiceSection();
     /* Il backup arriva per ultimo fra le schede: raccoglie le chiavi che gli
@@ -1085,6 +1097,9 @@ export function installSectionRuntime() {
      * sue caselle entrano nella stessa scheda, e il suo quadro prende il
      * posto di quello della ricarica quando il motore non e' elettrico. */
     installAutoTermica();
+    installAutoOMoto();
+    installLeFasceDelDispositivo();
+    installLaVentolaDellInverter();
     installSolarThermalDesignSection();
     /* Dopo il disegno del solare: le linguette e le due scene nuove gli si
      * mettono accanto, e per farlo devono trovarlo gia' al suo posto. */

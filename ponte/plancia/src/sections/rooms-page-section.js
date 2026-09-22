@@ -32,6 +32,8 @@ import {
 } from "../core/comandi-accanto.js";
 import { CHIAVE_ENTITA_MIE, entitaMie } from "../core/entita-mie.js";
 import { roomGlyph } from "../core/personalization-catalog.js";
+import { normalizePeople } from "../core/person-model.js";
+import { CHIAVE_RISERVATE, telecamereVisibili } from "../core/telecamere-riservate.js";
 import {
   ROOM_ASSIGN_KEY,
   ROOM_BLOCKS,
@@ -122,7 +124,16 @@ export function roomSources() {
     /* I lettori (#405): la loro scheda la stanza la chiede gia', e qui si
      * legge dall'altro lato — com'e' per le luci e per le telecamere. */
     media: lettoriConfigurati(readJson(CHIAVE_MEDIA, null)),
-    cameras: lista("cameras", "cd_cameras"),
+    /* Le telecamere che si possono vedere adesso, non tutte quelle
+     * configurate: una riservata — «si vede solo se a casa non c'e' nessuno»
+     * (#81) — dentro una stanza sarebbe la stessa immagine dello stesso
+     * salotto, entrata da un'altra porta. Nascondersi in un posto solo non e'
+     * nascondersi. */
+    cameras: telecamereVisibili(lista("cameras", "cd_cameras"), {
+      config: readJson(CHIAVE_RISERVATE, {}),
+      persone: normalizePeople(readJson("cd_people", [])),
+      states: allStates(),
+    }),
     loads: lista("loads", "cd_loads"),
     robots: lista("robots", "cd_robot"),
     irrigation: section("irrigation", null) || readJson("cd_irrigazione", {}),

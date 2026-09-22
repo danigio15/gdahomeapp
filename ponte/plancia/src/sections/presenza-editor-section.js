@@ -1,267 +1,129 @@
-/* La scheda della presenza in configurazione (#432).
+/* La scheda della presenza in configurazione (#432, #74).
  *
- * Non c'è niente da compilare per cominciare: un sensore di movimento o di
- * presenza lo dichiara Home Assistant col suo `device_class`, e la pagina
- * Presenza compare da sola. Questa scheda serve alle tre cose che il
- * rilevamento non può sapere:
+ * Aveva lo stesso difetto dei Varchi, ed era la stessa scheda: l'elenco lo
+ * faceva Home Assistant — tutto quello che si chiamava «motion» o
+ * «occupancy» — il cestino escludeva invece di cancellare, e l'escluso restava
+ * scritto sotto in «Tolti dai conti».
  *
- *   · un sensore etichettato «motion» che la casa non la guarda — quello del
- *     cortile, quello del vialetto — e non deve contare fra le stanze;
- *   · un rilevatore che nessuno ha etichettato, e che quindi non viene trovato;
- *   · un nome. «Motion 3C» non dice a nessuno di quale stanza si parla, ed è
- *     esattamente la cosa che quella pagina esiste per dire.
- *
- * È la stessa forma della scheda dei Varchi, perché è lo stesso problema:
- * l'elenco lo fa Home Assistant, e qui si corregge. Ogni gesto si salva
- * subito — chi tocca queste caselle sta rispondendo a una domanda, e aspettare
- * un tasto vorrebbe solo dire perdere la risposta chiudendo la scheda.
+ * Adesso è una scheda dichiarata come le altre. La scheda è letteralmente la
+ * stessa, `scheda-dichiarata-section.js`; qui c'è solo quello che dei
+ * rilevatori è davvero proprio.
  */
-import { CHIAVE_PRESENZA, normalizzaPresenza, presenzaDiCasa } from "../core/presenza-in-casa.js";
-import { PRESENZA_TAB, renderPresenza } from "./presenza-section.js";
 import {
-  allStates,
-  clean,
-  doc,
-  esc,
-  installStyle,
-  onEditorRedraw,
-  readJson,
-  root,
-  stanzaDiHomeAssistant,
-  t,
-  writeJsonIfChanged,
-} from "./shared.js";
+  CHIAVE_PRESENZA,
+  presenzaDiCasa,
+  rilevatoriDaImportare,
+} from "../core/presenza-in-casa.js";
+import { PRESENZA_TAB, renderPresenza } from "./presenza-section.js";
+import { costruisciSchedaDichiarata } from "./scheda-dichiarata-section.js";
+import { allStates, stanzaDiHomeAssistant, t } from "./shared.js";
 import { nomeDaHomeAssistant } from "./editor-slots-section.js";
-
-const KEY = "__DASHBOARDMODERN_PRESENZA_EDITOR__";
-const state = (root[KEY] ||= { installed: false });
 
 export const PRESENZA_EDITOR_TAB = PRESENZA_TAB;
 
-function configurazione() {
-  return normalizzaPresenza(readJson(CHIAVE_PRESENZA, {}));
-}
+/* I disegni: i due modi di rilevare, chi si rileva, e le stanze piu' comuni —
+ * perche' un rilevatore uno lo chiama col nome della stanza, non del sensore. */
+export const DISEGNI_DEL_RILEVATORE = Object.freeze([
+  "motion",
+  "radar",
+  "person",
+  "pet",
+  "room-living",
+  "room-bedroom",
+  "room-kids",
+  "room-bathroom",
+  "room-hallway",
+  "room-entrance",
+  "room-kitchen",
+  "room-office",
+  "room-garage",
+  "room-cellar",
+  "room-garden",
+]);
 
-function salva(prossima) {
-  writeJsonIfChanged(CHIAVE_PRESENZA, prossima);
-  renderPresenza();
-  ridisegna();
-}
+const scheda = costruisciSchedaDichiarata({
+  nome: "presenza",
+  chiave: CHIAVE_PRESENZA,
+  tab: PRESENZA_EDITOR_TAB,
+  disegni: DISEGNI_DEL_RILEVATORE,
+  ripiego: "motion",
+  ridisegnaPagina: renderPresenza,
 
-function activeTab() {
-  return clean(doc?.querySelector?.(".ed-tab.active")?.dataset?.tab);
-}
-
-function ridisegna() {
-  const body = doc?.getElementById("ed-body");
-  if (body) delete body.dataset.dmPresenzaEditor;
-  ensurePresenzaEditor();
-}
-
-/* ── il disegno della scheda ──────────────────────────────────────────── */
-
-function rigaMarkup(riga, scelte) {
-  const aggiunto = scelte.aggiunte.includes(riga.entity);
-  return `<article class="ed-row dm-presenza-ed-riga" data-presenza="${esc(riga.stato || "muto")}">
-    <span class="dm-presenza-ed-ic" aria-hidden="true">${esc(riga.glifo)}</span>
-    <div class="ed-row-main dm-presenza-ed-testo">
-      <input class="ed-input dm-presenza-ed-nome" value="${esc(riga.name)}"
-        data-dm-presenza-nome="${esc(riga.entity)}" aria-label="${esc(t("Nome", "Name"))}">
-      <small class="ed-row-old mono">${esc(riga.entity)}${aggiunto ? ` · ${esc(t("aggiunto a mano", "added by hand"))}` : ""}</small>
-    </div>
-    <button type="button" class="ed-del dm-presenza-ed-togli" data-dm-presenza-escludi="${esc(riga.entity)}"
-      title="${esc(t("Togli dall'elenco", "Drop from the list"))}"
-      aria-label="${esc(t("Togli dall'elenco", "Drop from the list"))}">🗑️</button>
-  </article>`;
-}
-
-function fuoriMarkup(scelte) {
-  if (!scelte.escluse.length) return "";
-  return `<div class="dm-presenza-ed-elenco">${scelte.escluse
-    .map(
-      (entity) =>
-        `<span class="dm-presenza-ed-fuori">${esc(entity)}<button type="button" class="ed-del" data-dm-presenza-riprendi="${esc(entity)}" aria-label="${esc(t("Rimetti", "Put back"))}">✕</button></span>`,
-    )
-    .join("")}</div>`;
-}
-
-function schedaMarkup() {
-  const scelte = configurazione();
-  const states = allStates();
-  /* Le escluse si tolgono DOPO, non prima: chieste senza, il modello le
-   * riporta con nome e stato, e qui sotto compaiono nella riga dei tolti con
-   * il loro identificativo. Chiedendo l'elenco già filtrato non ci sarebbe
-   * modo di rimetterle dentro. */
-  const righe = presenzaDiCasa(
-    states,
-    { ...scelte, escluse: [] },
-    (entity) => nomeDaHomeAssistant(entity, states),
-    stanzaDiHomeAssistant,
-  ).filter((riga) => !scelte.escluse.includes(riga.entity));
-  return `<div class="ed-intro">${esc(
-    t(
-      "I sensori di movimento e di presenza li dichiara Home Assistant da sé, e la pagina Presenza compare da sola: in cima in quante stanze c'è qualcuno, sotto una carta per rilevatore con da quanto sta così. Qui si corregge quel rilevamento — si toglie il sensore del cortile che la casa non la guarda, si aggiunge uno che non viene trovato, e si dà un nome a chi si chiama «Motion 3C».",
-      "Home Assistant declares motion and presence sensors itself, and the Presence page appears on its own: how many rooms have someone in them on top, and one card per detector below with how long it has been that way. Here you correct that — drop the yard sensor that is not watching the house, add one that is not found, and give a name to whatever is called “Motion 3C”.",
+  parole: {
+    linguetta: `👁️ ${t("Presenza", "Presence")}`,
+    intro: t(
+      "I rilevatori di presenza. Ogni riga è un rilevatore — l'entità, il nome che vuoi tu, il disegno — e la pagina Presenza mostra queste: in cima quante stanze hanno qualcuno dentro, sotto una card per rilevatore con da quanto è così.",
+      "The presence detectors. Each row is a detector — the entity, the name you want, the drawing — and the Presence page shows these: how many rooms have someone in them on top, and one card per detector below with how long it has been that way.",
     ),
-  )}</div>
+    vuoto: t("Nessun rilevatore configurato", "No detector configured"),
+    aggiungi: t("Aggiungi rilevatore", "Add detector"),
+    nuovo: t("Rilevatore nuovo", "New detector"),
+    senzaNome: t("Rilevatore senza nome", "Unnamed detector"),
+    salva: t("Salva rilevatore", "Save detector"),
+    salvato: `👁️ ${t("Rilevatore salvato", "Detector saved")}`,
+    etichettaEntita: t("Entità del rilevatore", "Detector entity"),
+    segnaposto: "binary_sensor.movimento_corridoio",
+    aiutoEntita: t(
+      "Il sensore che dice se c'è qualcuno: binary_sensor.* di classe motion, occupancy o presence.",
+      "The sensor that says whether someone is there: a binary_sensor.* of class motion, occupancy or presence.",
+    ),
+    segnapostoNome: t("Corridoio", "Hallway"),
+    aiutoNome: t("«Motion 3C» non dice quale stanza è.", "“Motion 3C” does not say which room it is."),
+    muta: t(
+      "Finché non scegli l'entità questo rilevatore non si vede: né nella pagina, né nel conto delle stanze occupate.",
+      "Until you pick the entity this detector is nowhere: not on the page, not in the count of occupied rooms.",
+    ),
+    importa: (quanti) =>
+      t(
+        `Prendi gli ${quanti} rilevatori che Home Assistant ha trovato`,
+        `Take the ${quanti} detectors Home Assistant found`,
+      ),
+    presi: (quanti) =>
+      t(`👁️ ${quanti} rilevatori aggiunti`, `👁️ ${quanti} detectors added`),
+    notaImporta: t(
+      "Li mette qui come righe, una volta sola: da lì in poi sono tuoi — li rinomini, gli dai il disegno, e quelli che elimini non tornano più.",
+      "It puts them here as rows, once: from then on they are yours — rename them, give them a drawing, and the ones you remove do not come back.",
+    ),
+  },
 
-  <label class="ed-slot dm-presenza-ed-campo"><span class="ed-slot-lbl">${esc(t("Aggiungi un rilevatore che non viene trovato", "Add a detector that is not found"))}</span>
-    <span class="ed-form-row"><input id="dm-presenza-aggiungi" class="ed-input mono" placeholder="binary_sensor.movimento_salone"
-      autocomplete="off" spellcheck="false"><button type="button" class="dm-entity-picker"
-      data-dm-presenza-pick="dm-presenza-aggiungi" aria-label="${esc(t("Scegli entità", "Choose entity"))}">🔍</button>
-      <button type="button" class="ed-btn-add" data-dm-presenza-aggiungi>${esc(t("Aggiungi", "Add"))}</button></span>
-    <small>${esc(t("Un rilevatore che Home Assistant non ha etichettato — un template fatto in casa, un varco usato come sentinella — non viene trovato: qui gli si dice che guarda una stanza.", "A detector Home Assistant has not labelled — a template of your own, an opening used as a tripwire — is not found: here you say it watches a room."))}</small>
-  </label>
+  leggi(elenco) {
+    const states = allStates();
+    return new Map(
+      presenzaDiCasa(
+        states,
+        { righe: elenco },
+        (entity) => nomeDaHomeAssistant(entity, states),
+        stanzaDiHomeAssistant,
+      ).map((riga) => [riga.entity, riga]),
+    );
+  },
 
-  <div class="ed-slot-lbl dm-presenza-ed-titolo">${esc(t("I rilevatori di casa", "The detectors at home"))}</div>
-  ${
-    righe.length
-      ? `<div class="ed-list dm-presenza-ed-lista">${righe.map((riga) => rigaMarkup(riga, scelte)).join("")}</div>`
-      : `<div class="ed-empty">${esc(t("Nessun rilevatore trovato", "No detector found"))}</div>`
-  }
-  ${scelte.escluse.length ? `<div class="ed-slot-lbl dm-presenza-ed-titolo">${esc(t("Tolti dai conti", "Dropped from the count"))}</div>` : ""}
-  ${fuoriMarkup(scelte)}`;
-}
+  daImportare(config) {
+    const states = allStates();
+    return rilevatoriDaImportare(states, config, (entity) => nomeDaHomeAssistant(entity, states));
+  },
 
+  statoDellaRiga: (letta) =>
+    letta?.stato === "attivo" ? "attiva" : letta?.stato === "libero" ? "bene" : "muta",
+  didascalia: (letta) =>
+    letta?.stato === "attivo"
+      ? t("occupato", "occupied")
+      : letta?.stato === "libero"
+        ? t("libero", "free")
+        : "",
+});
+
+/* I tre nomi con cui il resto della plancia chiama questa scheda. Sono
+ * funzioni dichiarate, non scorciatoie a una costante: il pacchetto si prova
+ * cercando `function install...`, ed e' giusto che si possa. */
 export function ensurePresenzaEditor() {
-  const body = doc?.getElementById("ed-body");
-  if (!body || activeTab() !== PRESENZA_EDITOR_TAB) return false;
-  if (body.dataset.dmPresenzaEditor === "true") return false;
-  body.dataset.dmPresenzaEditor = "true";
-  body.innerHTML = `<div class="dm-presenza-ed">${schedaMarkup()}</div>`;
-  return true;
+  return scheda.disegnaScheda();
 }
-
 export function ensurePresenzaEditorTab() {
-  const tabs = doc?.querySelector(".ed-tab")?.parentElement;
-  if (!tabs || tabs.querySelector(`.ed-tab[data-tab="${PRESENZA_EDITOR_TAB}"]`)) return false;
-  const tab = doc.createElement("button");
-  tab.className = "ed-tab";
-  tab.dataset.tab = PRESENZA_EDITOR_TAB;
-  tab.textContent = `🏃 ${t("Presenza", "Presence")}`;
-  tab.addEventListener("click", () => root.editorSwitch?.(PRESENZA_EDITOR_TAB));
-  const prima = tabs.querySelector('.ed-tab[data-tab="runtime"]');
-  if (prima) prima.before(tab);
-  else tabs.append(tab);
-  return true;
+  return scheda.disegnaLinguetta();
 }
-
-/* ── i gesti ──────────────────────────────────────────────────────────── */
-
-function onClick(event) {
-  const body = doc?.getElementById("ed-body");
-  if (!body || activeTab() !== PRESENZA_EDITOR_TAB || !body.contains(event.target)) return;
-  const scelte = configurazione();
-
-  const lente = event.target.closest("[data-dm-presenza-pick]");
-  if (lente) {
-    event.preventDefault();
-    const campo = body.querySelector(`#${CSS.escape(clean(lente.dataset.dmPresenzaPick))}`);
-    if (campo) root.wzPickEntity?.(campo);
-    return;
-  }
-
-  if (event.target.closest("[data-dm-presenza-aggiungi]")) {
-    event.preventDefault();
-    const entity = clean(body.querySelector("#dm-presenza-aggiungi")?.value);
-    if (!entity.includes(".")) return;
-    salva({
-      ...scelte,
-      aggiunte: [...new Set([...scelte.aggiunte, entity])],
-      escluse: scelte.escluse.filter((voce) => voce !== entity),
-    });
-    root.edToast?.(t("🏃 Rilevatore aggiunto alla presenza", "🏃 Detector added to presence"));
-    return;
-  }
-
-  const togli = event.target.closest("[data-dm-presenza-escludi]");
-  if (togli) {
-    event.preventDefault();
-    const entity = clean(togli.dataset.dmPresenzaEscludi);
-    salva({
-      ...scelte,
-      escluse: [...new Set([...scelte.escluse, entity])],
-      aggiunte: scelte.aggiunte.filter((voce) => voce !== entity),
-    });
-    return;
-  }
-
-  const rimetti = event.target.closest("[data-dm-presenza-riprendi]");
-  if (rimetti) {
-    event.preventDefault();
-    const entity = clean(rimetti.dataset.dmPresenzaRiprendi);
-    salva({ ...scelte, escluse: scelte.escluse.filter((voce) => voce !== entity) });
-    return;
-  }
-}
-
-/* Il nome si salva mentre lo si scrive, e la scheda NON si ridisegna: un
- * ridisegno a ogni lettera porterebbe via il cursore dalla casella. */
-function onInput(event) {
-  const campo = event.target?.closest?.("[data-dm-presenza-nome]");
-  if (!campo) return;
-  const entity = clean(campo.dataset.dmPresenzaNome);
-  if (!entity) return;
-  const scelte = configurazione();
-  const nomi = { ...scelte.nomi };
-  const scritto = clean(campo.value);
-  if (scritto) nomi[entity] = scritto;
-  else delete nomi[entity];
-  writeJsonIfChanged(CHIAVE_PRESENZA, { ...scelte, nomi });
-  renderPresenza();
-}
-
-function installStyles() {
-  installStyle(
-    "dm-presenza-editor-style",
-    `
-    #ed-body .dm-presenza-ed{display:grid!important;gap:12px!important}
-    #ed-body .dm-presenza-ed-titolo{margin-top:6px!important}
-    #ed-body .dm-presenza-ed-lista{display:grid!important;gap:8px!important}
-    #ed-body .dm-presenza-ed-riga{
-      display:grid!important;grid-template-columns:40px minmax(0,1fr) 40px!important;
-      align-items:center!important;gap:10px!important;
-      border-left:4px solid var(--dm-presenza,#94a3b8)!important}
-    #ed-body .dm-presenza-ed-riga[data-presenza="attivo"]{--dm-presenza:#2563eb}
-    #ed-body .dm-presenza-ed-riga[data-presenza="libero"]{--dm-presenza:#16a34a}
-    #ed-body .dm-presenza-ed-riga[data-presenza="muto"]{--dm-presenza:#94a3b8}
-    #ed-body .dm-presenza-ed-ic{
-      display:grid!important;place-items:center!important;width:40px!important;height:40px!important;
-      border-radius:12px!important;font-size:18px!important;
-      background:color-mix(in srgb,var(--dm-presenza,#94a3b8) 20%,transparent)!important}
-    #ed-body .dm-presenza-ed-testo{display:grid!important;gap:4px!important;min-width:0!important}
-    #ed-body .dm-presenza-ed-nome{width:100%!important;min-width:0!important}
-    #ed-body .dm-presenza-ed-elenco{display:flex!important;flex-wrap:wrap!important;gap:8px!important}
-    #ed-body .dm-presenza-ed-fuori{
-      display:inline-flex!important;align-items:center!important;gap:6px!important;
-      padding:4px 6px 4px 12px!important;border-radius:999px!important;font-size:11.5px!important;
-      font-weight:800!important;font-family:ui-monospace,monospace!important;
-      background:var(--secondary-background-color,#eef2f7)!important;color:var(--text,#0f172a)!important}
-    `,
-  );
-}
-
 export function installPresenzaEditor() {
-  if (!doc || state.installed) return false;
-  state.installed = true;
-  installStyles();
-  ensurePresenzaEditorTab();
-  onEditorRedraw("__dmPresenzaEditor", () => {
-    root.queueMicrotask?.(() => {
-      ensurePresenzaEditorTab();
-      ensurePresenzaEditor();
-    });
-  });
-  doc.addEventListener("click", onClick);
-  doc.addEventListener("input", onInput);
-  for (const evento of ["dashboardmodern:legacy-ready", "dashboardmodern:editor-rendered"])
-    root.addEventListener?.(evento, () => {
-      root.queueMicrotask?.(() => {
-        ensurePresenzaEditorTab();
-        ensurePresenzaEditor();
-      });
-    });
-  return true;
+  return scheda.installa();
 }
 
 installPresenzaEditor();

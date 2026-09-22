@@ -40,7 +40,11 @@
  * l'identificativo reso leggibile — è `nomeDellEntita`, che vale per ogni
  * entità della plancia.
  */
-import { batterieDiCasa } from "../core/batterie-di-casa.js";
+import {
+  CHIAVE_BATTERIE,
+  batterieDiCasa,
+  batterieDichiarate,
+} from "../core/batterie-di-casa.js";
 import { entitaSorvegliate } from "./home-widgets-section.js";
 import { allStates, lexicalGlobal, nomeDellEntita, readJson } from "./shared.js";
 
@@ -56,13 +60,34 @@ export const CHIAVE_NOMI_SCELTI = "cd_avvisi_names_extra";
  * una volta e non una per riga.
  */
 export function nomeDellaBatteria(entity, states = allStates(), nomi = null) {
+  /* Il nome scritto nella riga dichiarata batte tutto: e' quello che uno ha
+   * battuto guardando la batteria, e la mappa vecchia dei nomi resta solo per
+   * chi non ha ancora dichiarato niente (#74). */
+  const suo = mappaDelleRighe().get(entity)?.name;
+  if (suo) return suo;
   const scelti = nomi || readJson(CHIAVE_NOMI_SCELTI, {}) || {};
   return nomeDellEntita(entity, scelti?.[entity], states);
+}
+
+/** Le righe dichiarate per entita': nome e disegno, quando ci sono. */
+export function mappaDelleRighe() {
+  return new Map(
+    (batterieDichiarate(readJson(CHIAVE_BATTERIE, {})) || []).map((riga) => [riga.entity, riga]),
+  );
+}
+
+/** Il disegno scelto per questa batteria, se ne ha uno. */
+export function disegnoDellaBatteria(entity, righe = mappaDelleRighe()) {
+  return righe.get(entity)?.icon || "";
 }
 
 /** Le batterie sorvegliate adesso, come le vede tutta la plancia. */
 export function batterieSorvegliate() {
   try {
+    /* Dichiarate vuol dire dichiarate: il gruppo del guscio non le rimette
+     * dentro, e l'elenco vuoto resta vuoto (#74). */
+    const dichiarate = batterieDichiarate(readJson(CHIAVE_BATTERIE, {}));
+    if (dichiarate) return dichiarate.map((riga) => riga.entity);
     const tolte = readJson("cd_gruppi_removed", {});
     let vive = [];
     try {

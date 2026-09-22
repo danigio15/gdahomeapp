@@ -44,6 +44,7 @@ import { CHIAVE_VARCHI, varchiDiCasa } from "../core/varchi-di-casa.js";
 import {
   allStates,
   clean,
+  disegnoDiCasa,
   doc,
   esc,
   installStyle,
@@ -168,7 +169,7 @@ function pastiglieDaScegliere(righe, scelte, campo) {
       (riga) => `<button type="button" class="dm-area-voce" data-area-voce="${esc(riga.entity)}"
         data-area-campo="${esc(campo)}" data-on="${dentro.has(riga.entity)}"
         aria-pressed="${dentro.has(riga.entity)}" title="${esc(riga.entity)}">
-        <i aria-hidden="true">${riga.glifo}</i><span>${esc(riga.name)}</span></button>`,
+        <i aria-hidden="true">${disegnoDiCasa(riga.glifo, { misura: 20, ripiego: "door" })}</i><span>${esc(riga.name)}</span></button>`,
     )
     .join("");
 }
@@ -498,7 +499,8 @@ function installStyles() {
       border:1px solid var(--card-border,#e2e8f0);background:var(--card-background-color,#fff);
       color:inherit}
     #ed-body .dm-area-voce i{font-style:normal;line-height:1;display:inline-flex}
-    #ed-body .dm-area-voce i svg{width:15px;height:15px}
+    #ed-body .dm-area-voce i .dm-catalogo-art{display:inline-flex;line-height:0}
+    #ed-body .dm-area-voce i svg{width:15px;height:15px;display:block}
     #ed-body .dm-area-voce[data-on="true"]{border-color:var(--primary-color,#0ea5e9);
       box-shadow:0 0 0 1px var(--primary-color,#0ea5e9) inset}
     #ed-body .dm-area-voce[data-on="false"]{opacity:.5}`,

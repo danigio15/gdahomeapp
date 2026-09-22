@@ -830,19 +830,42 @@ function renderIrrigation() {
   if (!head || !grid) return;
   const config = irrigationConfig();
 
+  /* Senza zone, ma con un sensore del terreno che risponde, c'e' comunque
+   * qualcosa da far vedere.
+   *
+   * «Quella umidità terreno in realtà già è presente ma se inserisco solo
+   * quella entità non esce nei widget.» Il misuratore del terreno lo disegna
+   * `programMarkup`, che sta DOPO questo return: chi ha due sonde nel vaso e
+   * nessuna elettrovalvola trovava «Nessuna zona configurata» e un editor in
+   * cui aveva gia' messo tutto quello che ha. Il prato senza zone non si puo'
+   * disegnare — quello resta com'era — ma il misuratore si'. */
   if (!config.zones.length) {
-    if (state.irrigationSignature !== "empty" || !head.querySelector(".dm-scene-empty")) {
-      state.irrigationSignature = "empty";
-      head.innerHTML = emptyState(
-        "🌱",
-        t("Nessuna zona configurata", "No zone configured"),
-        t(
-          "Aggiungi le zone di irrigazione dall'editor per vedere il prato.",
-          "Add the irrigation zones from the editor to see the lawn.",
-        ),
-      );
+    const soloTerreno = soilMoisture(config).reading != null;
+    const firma = soloTerreno ? "empty+soil" : "empty";
+    if (state.irrigationSignature !== firma || !head.querySelector(".dm-scene-empty")) {
+      state.irrigationSignature = firma;
+      head.innerHTML =
+        (soloTerreno ? soilGaugeMarkup(config) : "") +
+        emptyState(
+          "🌱",
+          t("Nessuna zona configurata", "No zone configured"),
+          soloTerreno
+            ? t(
+                "Il sensore del terreno lo vedi qui sopra. Aggiungi le zone di irrigazione dall'editor per vedere anche il prato.",
+                "The soil sensor is right above. Add the irrigation zones from the editor to see the lawn too.",
+              )
+            : t(
+                "Aggiungi le zone di irrigazione dall'editor per vedere il prato.",
+                "Add the irrigation zones from the editor to see the lawn.",
+              ),
+        );
       grid.innerHTML = "";
     }
+    /* Anche qui i numeri devono restare vivi: e' `syncIrrigationValues` a
+     * riscrivere il misuratore a ogni giro, e la firma non cambia quando
+     * cambia soltanto la lettura. Uscendo prima, il terreno sarebbe rimasto
+     * fermo al primo valore letto. */
+    if (soloTerreno) syncIrrigationValues(head, grid, config);
     return;
   }
 

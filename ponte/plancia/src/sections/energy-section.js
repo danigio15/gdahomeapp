@@ -17,6 +17,10 @@ import {
   mesiDaiGiorni,
 } from "../core/period-service.js";
 import { quotaSolareDelDispositivo } from "../core/quota-solare-del-dispositivo.js";
+import {
+  cEIlFotovoltaico,
+  siPuoDireLAutosufficienza,
+} from "../core/il-fotovoltaico-di-questa-casa.js";
 import { CHIAVE_FASCE, normalizzaLeFasce, prezzoMedioDelleFasce } from "../core/fasce-della-tariffa.js";
 import { reconcileEnergyBundle } from "./energy-calculations-section.js";
 import {
@@ -950,21 +954,61 @@ function financial(data, bundle) {
   };
 }
 
+/* Quello che si vede e quello che si nasconde (#82).
+ *
+ * Una casa senza pannelli leggeva «Produzione FV 0,0 kWh» — che non e'
+ * produzione zero, e' che i pannelli non ci sono — e «Autosufficienza 100 %»,
+ * che e' il numero sbagliato vero: `(consumo − prelievo) / consumo` con il
+ * prelievo a zero perche' nemmeno il contatore di rete e' configurato. Una
+ * casa che prende tutto dalla rete leggeva di essere autosufficiente, e il
+ * consumo — l'unica cosa che misurava davvero — si perdeva in mezzo.
+ *
+ * Nascondere si dice con una classe, mai togliendo il nodo: il guscio e gli
+ * altri moduli scrivono dentro queste caselle a ogni pacchetto, e un nodo che
+ * non c'e' piu' li farebbe scrivere nel vuoto. */
+function mostra(nodo, si) {
+  if (!nodo) return;
+  nodo.classList?.toggle?.("dm-senza-fv", !si);
+}
+
+const ilRiquadroDi = (id) => doc?.getElementById(id)?.closest?.(".ed-kpi-item");
+
 function applyReportOverview(bundle) {
   const data = bundle.month;
   const auto = autonomy(data);
+  const impianto = energyModel();
+  const ilSole = cEIlFotovoltaico(impianto);
+  /* L'autosufficienza vuole tutte e tre le misure, e non basta la spunta: il
+   * 100 % e' sbagliato anche in una casa CHE HA i pannelli, se le manca il
+   * contatore di rete. */
+  const lAutosufficienza = siPuoDireLAutosufficienza(impianto);
+  mostra(ilRiquadroDi("ed-kpi-prod"), ilSole);
+  mostra(ilRiquadroDi("ed-kpi-auto"), lAutosufficienza);
+  mostra(doc?.querySelector?.(".ed-auto-row"), lAutosufficienza);
   setHtml("ed-kpi-prod", `${formatNumber(data.solar)} <small>kWh</small>`);
   setHtml("ed-kpi-cons", `${formatNumber(data.house)} <small>kWh</small>`);
   setHtml("ed-kpi-auto", `${auto} <small>%</small>`);
   const chips = doc?.getElementById("ed-yoy-chips");
   if (chips) {
     const value = [
-      `<span class="ed-yoy-chip">☀️ ${kwh(data.solar)}</span>`,
+      ilSole ? `<span class="ed-yoy-chip">☀️ ${kwh(data.solar)}</span>` : "",
       `<span class="ed-yoy-chip">🏠 ${kwh(data.house)}</span>`,
       `<span class="ed-yoy-chip">⚡ ${kwh(data.gridImport)} ${t("da Rete", "from Grid")}</span>`,
     ].join("");
     scriviSeCambia(chips, value);
   }
+  /* Senza pannelli, quattro delle cinque caselle dei soldi sono tautologie:
+   * «Senza FV» e' esattamente quello che si paga, il risparmio e' zero per
+   * definizione, l'immesso non esiste e la CO2 evitata nemmeno. Resta il costo
+   * reale, che e' l'unico numero vero — ed e' quello che la segnalazione
+   * chiedeva di lasciare in piedi insieme al consumo e alle fasce. */
+  for (const id of ["ed-fin-pagato", "ed-fin-risp", "ed-fin-imm", "ed-fin-co2"])
+    mostra(doc?.getElementById(id)?.closest?.(".ed-fin-card"), ilSole);
+  /* La griglia e' scritta a cinque colonne dentro l'attributo `style`: con una
+   * casella sola resterebbe schiacciata nel primo quinto, con quattro buchi
+   * accanto. Il conto delle colonne lo rifa' il foglio, che sull'attributo
+   * vince con `!important`. */
+  doc?.querySelector?.(".ed-fin-grid")?.classList?.toggle?.("dm-solo-il-costo", !ilSole);
   const money = financial(data, bundle);
   setText("ed-fin-pagato", `${formatNumber(money.withoutSolar, 2)} €`);
   setText("ed-fin-pagato-sub", kwh(data.house));
@@ -2279,6 +2323,19 @@ function installObserver() {
 }
 
 function installStyles() {
+  /* Quello che in questa casa non esiste non si vede (#82).
+   *
+   * Si spegne con una classe e non togliendo il nodo: il guscio e gli altri
+   * moduli scrivono dentro queste caselle a ogni pacchetto, e un nodo sparito
+   * li manderebbe a scrivere nel vuoto — che e' il modo silenzioso di rompere
+   * una pagina. */
+  installStyle(
+    "dm-senza-fotovoltaico-style",
+    `
+      #page-energia .dm-senza-fv{display:none!important}
+      #page-energia .ed-fin-grid.dm-solo-il-costo{grid-template-columns:1fr!important}
+    `,
+  );
   installStyle(
     "dm-energy-section-style",
     `

@@ -30,6 +30,8 @@ export const SOGLIA_PREDEFINITA = 20;
  * della casa e' scarica, che e' un avviso che non si guarda piu'. */
 export const SOGLIA_MASSIMA = 90;
 
+import { conLaRiga, conLeRighe, righeDichiarate, senzaLaRiga } from "./elenco-dichiarato.js";
+
 const pulito = (valore) => String(valore ?? "").trim();
 
 const numero = (valore) => {
@@ -75,6 +77,29 @@ export function eUnaBatteria(stato) {
  *
  * E' puro: gli stati arrivano da fuori, e non si guarda nessun magazzino.
  */
+/* ── L'ELENCO DICHIARATO (#74) ────────────────────────────────────────────
+ *
+ * La regola sta in `elenco-dichiarato.js`, ed e' la stessa dei Varchi, della
+ * Presenza e delle Macchine: una riga la metti tu, e quando la elimini e'
+ * eliminata. Qui le righe stanno dentro `cd_batterie`, accanto alla soglia,
+ * perche' quella chiave era gia' la configurazione delle batterie e non
+ * c'era motivo di aprirne una seconda.
+ */
+export { conLaRiga, conLeRighe, righeDichiarate, senzaLaRiga };
+
+/**
+ * Le batterie da sorvegliare, quando questa casa le ha dichiarate.
+ *
+ * Torna `null` se non le ha dichiarate: la' comanda ancora il rilevamento di
+ * prima — il gruppo del guscio piu' le aggiunte, meno le tolte — perche' chi
+ * non apre mai la configurazione non deve vedersi sparire la pagina per un
+ * aggiornamento.
+ */
+export function batterieDichiarate(config) {
+  const righe = righeDichiarate(config);
+  return righe ? righe.filter((riga) => riga.entity) : null;
+}
+
 export function batterieDiCasa({ configurate = [], stati = {}, tolte = [] } = {}) {
   const elenco = (lista) => (Array.isArray(lista) ? lista.map(pulito).filter(Boolean) : []);
   const fuori = new Set(elenco(tolte));

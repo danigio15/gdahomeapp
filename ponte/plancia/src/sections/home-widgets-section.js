@@ -42,7 +42,7 @@ import {
 } from "./security-showcase-section.js";
 import { parolaDellaPorta, parolaDiStato } from "./le-parole-di-home-assistant.js";
 import { haOggettoWidget, oggettoWidget } from "../core/oggetti-widget.js";
-import { chiNonRisponde } from "../core/chi-non-risponde.js";
+import { iDispositiviScollegati } from "../core/i-dispositivi-scollegati.js";
 import { entitaConfigurate } from "../core/entita-configurate.js";
 import { CONFIG_KEYS } from "../core/chiavi-di-configurazione.js";
 import { iconGlyphMarkup } from "./icon-engine-section.js";
@@ -283,6 +283,7 @@ import {
   allStates,
   chiediAHomeAssistant,
   clean,
+  disegnoDiCasa,
   doc,
   esc,
   formatNumber,
@@ -3628,7 +3629,19 @@ function irrigationModel(states) {
     const entity = clean(zona?.entity);
     return entity && widgetIncludes(entity, fuori);
   });
-  if (!attive.length) return null;
+  /* Il sensore del terreno si legge PRIMA di decidere se la tessera esce.
+   *
+   * «Quella umidità terreno in realtà già è presente ma se inserisco solo
+   * quella entità non esce nei widget.» Qui c'era `if (!attive.length) return
+   * null` e il sensore si leggeva due righe sotto: la tessera pretendeva
+   * almeno una zona, e chi ha due sonde nel vaso e nessuna elettrovalvola non
+   * ha niente da configurare e non vedeva niente. Non era una funzione che
+   * manca — c'era gia' tutta — era l'ordine in cui si guardavano le cose. */
+  const terreno = clean(config.soilEnt || config.soil_entity);
+  const umidita = terreno && widgetIncludes(terreno, fuori) ? numOf(states, terreno) : null;
+  /* Senza zone E senza un sensore che risponde non c'e' niente da dire. Con
+   * una delle due, si'. */
+  if (!attive.length && umidita == null) return null;
   /* Una zona che irriga non dice sempre «on».
    *
    * Le zone su una valvola — `valve.*`, che la plancia accetta — dicono «open»
@@ -3636,8 +3649,6 @@ function irrigationModel(states) {
    * la tessera diceva che non stava irrigando niente proprio mentre l'acqua
    * usciva. */
   const inFunzione = attive.filter((zona) => zonaInFunzione(states, zona));
-  const terreno = clean(config.soilEnt || config.soil_entity);
-  const umidita = terreno && widgetIncludes(terreno, fuori) ? numOf(states, terreno) : null;
   return {
     key: "irrigazione",
     accent: "#10b981",
@@ -3660,13 +3671,30 @@ function irrigationModel(states) {
      * analisi — che cerca un booleano — leggeva tutte le zone come ferme
      * proprio mentre l'acqua usciva. Il testo e' per gli occhi, `on` per i
      * conti: due mestieri, due campi. */
-    rows: attive.map((zona) => ({
-      glyph: "🌱",
-      name: clean(zona.name) || clean(zona.entity),
-      on: zonaInFunzione(states, zona),
-      entity: clean(zona.entity),
-      value: zonaInFunzione(states, zona) ? t("in funzione", "running") : t("ferma", "idle"),
-    })),
+    rows: [
+      ...attive.map((zona) => ({
+        glyph: "🌱",
+        name: clean(zona.name) || clean(zona.entity),
+        on: zonaInFunzione(states, zona),
+        entity: clean(zona.entity),
+        value: zonaInFunzione(states, zona) ? t("in funzione", "running") : t("ferma", "idle"),
+      })),
+      /* E il terreno fra le righe, quando c'e'.
+       *
+       * Senza questa, chi ha il solo sensore apriva una tessera vuota: il
+       * numero in copertina e niente dentro. E' una misura, non un comando —
+       * `carteDalleRighe` la mette fra «Le misure», dov'e' il suo posto. */
+      ...(umidita == null
+        ? []
+        : [
+            {
+              glyph: "💦",
+              name: t("Umidità terreno", "Soil moisture"),
+              entity: terreno,
+              value: `${Math.round(umidita)}%`,
+            },
+          ]),
+    ],
   };
 }
 
@@ -4091,7 +4119,9 @@ function presenzaModel(states) {
     rows: righe.map((riga) => ({
       entity: riga.entity,
       name: riga.name,
-      glyph: riga.glifo,
+      /* La riga della tessera vuole il markup del disegno, non il suo nome
+       * (#74): `glyph` qui dentro si stampa com'e'. */
+      glyph: disegnoDiCasa(riga.glifo, { misura: 20, ripiego: "motion" }),
       on: riga.stato === "attivo",
       /* Il tono dice il colore della pastiglia senza sapere di cosa parla: chi
        * rileva qualcuno è una cosa che sta succedendo — non un allarme, che è
@@ -5049,12 +5079,16 @@ function nonRispondeModel(states) {
   } catch (_errore) {
     return null;
   }
-  const fuori = widgetExcludedEntities("nonrisponde");
-  const mute = chiNonRisponde(
-    configurate.filter((entity) => widgetIncludes(entity, fuori)),
+  /* La regola e' una sola, e sta nel nucleo: la stessa che disegna la scheda
+   * «Scollegati» della configurazione, dove si toglie una riga col cestino.
+   * Con due copie, il giorno che si scostano, il cestino toglierebbe dalla
+   * scheda una cosa che la tessera continua a dire. */
+  const { adesso: mute } = iDispositiviScollegati({
+    configurate,
     states,
-    { nomeDi: (entity) => friendlyName(states, entity) },
-  );
+    escluse: widgetPreferences().excluded,
+    nomeDi: (entity) => friendlyName(states, entity),
+  });
   if (!mute.length) return null;
   return {
     key: "nonrisponde",

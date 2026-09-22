@@ -3732,12 +3732,20 @@
       /* ─── Disegnare ──────────────────────────────────────────────────── */
 
       function disegna() {
-        const alLimite = INSTALLATORI.filter((uno) => uno.pieno).length;
         document.getElementById("sottotitolo").textContent =
           `${plurale(INSTALLATORI.length, "installatore", "installatori")} · ${plurale(CASE, "impianto", "impianti")}`;
 
         doveNav.innerHTML = [
-          ["installatori", "Installatori", alLimite],
+          /* La linguetta di una raccolta non porta pastiglia, come «Impianti»
+             nel cruscotto: la pastiglia qui dentro vuol dire «guarda che c'e'
+             qualcosa da fare», e sulla parola «Installatori» si legge in un
+             modo solo — quanti installatori ci sono.
+             Ci stava il conto di quelli al limite, e diceva «Installatori 1»
+             a un gestore che ne ha due, con la testata sopra che diceva «2
+             installatori» e l'elenco sotto «Gli installatori 2». Quel conto
+             non si e' perso: sta due volte in questa stessa schermata, nel
+             titolone e nella casella «al limite», che sono i suoi posti. */
+          ["installatori", "Installatori", 0],
           ["aggiungi", "Aggiungi", 0],
         ]
           .map(
@@ -4105,12 +4113,34 @@
         ];
 
         const numeri = [
-          [
-            "Entità",
-            cE(c.entita?.totali) ? numero(c.entita.totali) : "—",
-            quantiGiu(c) > 0 ? `${quantiGiu(c)} non rispondono` : "rispondono tutte",
-            quantiGiu(c) > 0 ? "male" : "",
-          ],
+          /* Quando qualcosa e' giu', il numero grande sono i DISPOSITIVI.
+           *
+           * Qui c'era il totale delle entita' col numero di quelle mute
+           * sotto — «Entità 2496 · 49 non rispondono» — e sopra, nella riga
+           * del riepilogo, «7 dispositivi non collegati». Due numeri diversi
+           * a tre centimetri di distanza per la stessa cosa: non sono in
+           * disaccordo, sono 49 entita' mute dentro 7 apparecchi, ma chi
+           * legge non ha modo di saperlo. E i 49 non li puo' nemmeno andare a
+           * vedere: da una casa viaggiano solo i nomi dei DISPOSITIVI, mai
+           * quelli delle entita'. Un numero che non si puo' aprire non serve.
+           *
+           * Il cruscotto questa mattonella ce l'ha gia' cosi' (`console/
+           * index.html`, «Dispositivi non collegati»): era rimasta indietro
+           * soltanto la gestione. Quando non c'e' niente giu' resta il totale
+           * delle entita', che li' e' un'informazione e non un allarme. */
+          quantiGiu(c) > 0
+            ? [
+                "Dispositivi non collegati",
+                numero(c.entita?.dispositivi ?? quantiGiu(c)),
+                cE(c.entita?.totali) ? `su ${numero(c.entita.totali)} entità in casa` : "",
+                "male",
+              ]
+            : [
+                "Entità",
+                cE(c.entita?.totali) ? numero(c.entita.totali) : "—",
+                "rispondono tutte",
+                "",
+              ],
           [
             "Batteria più bassa dei dispositivi",
             cE(c.batterie?.piuBassa) ? `${c.batterie.piuBassa}%` : "—",

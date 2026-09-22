@@ -215,7 +215,30 @@ test("togliere una chiave non alza la revisione", async () => {
    * dichiarato — la cassetta tornerebbe piena da sola, e chi ha detto «l'ho
    * presa» dovrebbe dirlo una seconda volta. L'arrivo è il fronte di salita, e
    * va ricordato perché dopo non si può più leggere. */
-  assert.equal(CONFIG_KEYS_REVISION, 52);
+  /* E la 53 con le telecamere riservate (#81, `cd_telecamere_riservate`):
+   * «vorrei si potesse vedere solo se a casa non c'è nessuno per una questione
+   * di privacy». Questa è la chiave che sbagliata fa il danno peggiore, e il
+   * danno non si vede: se non viaggiasse, la telecamera nascosta sul telefono
+   * resterebbe accesa sul tablet in cucina — cioè proprio sullo schermo davanti
+   * a cui si passa — e chi ha messo la spunta crederebbe di essere al riparo
+   * senza esserlo. Quali telecamere si guardano solo a casa vuota è una scelta
+   * della casa e di chi ci vive, non del vetro da cui è stata spuntata. */
+  /* E la 54 col mezzo dichiarato da chi non ha profili (#75, `cd_ev_mezzo`):
+   * «sarebbe carino poter scegliere tra auto e moto». Chi ha una moto sola non
+   * crea un profilo — compila le `dm.ev_*` della plancia e basta — e la sua
+   * scelta non ha nessun veicolo su cui posarsi: senza questa chiave viaggia
+   * tutto il resto della pagina e non viaggia il fatto che quel veicolo è una
+   * moto, cioè la pagina racconterebbe una moto sul telefono e un'automobile
+   * sul tablet, con le stesse identiche entità dietro. */
+  assert.equal(CONFIG_KEYS_REVISION, 54);
+  assert.ok(
+    CONFIG_KEYS.includes("cd_ev_mezzo"),
+    "la moto dichiarata qui deve restare una moto anche sul tablet in cucina",
+  );
+  assert.ok(
+    CONFIG_KEYS.includes("cd_telecamere_riservate"),
+    "la telecamera nascosta qui deve restare nascosta anche sul tablet in cucina",
+  );
   assert.ok(
     CONFIG_KEYS.includes("cd_posta_ritirata"),
     "la posta presa è un fatto della casa, non del vetro da cui l'hanno detto",

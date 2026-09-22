@@ -2,11 +2,13 @@ import { eUnaFotoDaEntita, fotoDallEntita } from "../core/foto-da-entita.js";
 import { carBrandVisual } from "../core/personalization-catalog.js";
 import { eDellaWallbox, eTargetDiCasa } from "../core/wallbox-device-binding.js";
 import {
+  MEZZO_FIELD,
   VEHICLE_KEY_FIELD,
   VEHICLE_OVERRIDES_FIELD,
   VEHICLE_PHOTO_FIELDS,
   conLeCaselleScritte,
   laVetturaDelleCaselle,
+  mezzoDelVeicolo,
   nuovoVeicolo,
   pickVehicle,
   storedVehicles,
@@ -937,7 +939,7 @@ function ensureCarListDecor() {
       matita.dataset.evEdit = bottone.dataset.idx || "";
       matita.style.cssText = "flex:0 0 auto;margin-right:6px;";
       matita.textContent = "✏️";
-      matita.setAttribute("aria-label", t("Modifica questa auto", "Edit this car"));
+      matita.setAttribute("aria-label", t("Modifica questo veicolo", "Edit this vehicle"));
       matita.addEventListener("click", () => {
         const indice = Number.parseInt(matita.dataset.evEdit, 10);
         if (!Number.isFinite(indice)) return;
@@ -988,10 +990,10 @@ function ensureCarListDecor() {
     const nomeAperta = clean(elencoAuto[apertaIndice]?.name);
     const nuova = chiaveAperta === "" || (!nomeAperta && apertaIndice < 0);
     const testoSalva = nuova
-      ? `💾 ${t("Salva la nuova auto", "Save the new car")}`
+      ? `💾 ${t("Salva il nuovo veicolo", "Save the new vehicle")}`
       : nomeAperta
         ? `💾 ${t("Salva le modifiche a", "Save changes to")} ${nomeAperta}`
-        : `💾 ${t("Salva auto", "Save car")}`;
+        : `💾 ${t("Salva veicolo", "Save vehicle")}`;
     if (salva.textContent !== testoSalva) salva.textContent = testoSalva;
     salva.dataset.evSaveCar = "true";
     const rigaNome = salva.parentElement;
@@ -1001,7 +1003,7 @@ function ensureCarListDecor() {
       aggiungi.className = "ed-btn-add";
       aggiungi.dataset.evAddNew = "true";
       aggiungi.style.cssText = "display:block;width:100%;margin:12px 0 8px;";
-      aggiungi.textContent = `＋ ${t("Nuova auto", "New car")}`;
+      aggiungi.textContent = `＋ ${t("Nuovo veicolo", "New vehicle")}`;
       aggiungi.addEventListener("click", () => {
         const campo = doc.getElementById("ed-evcar-name");
         if (!campo) return;
@@ -1060,8 +1062,8 @@ function ensureCarListDecor() {
   );
   if (intro) {
     const testo = `🚗 ${t(
-      "Tre gesti, e basta: ＋ Nuova auto apre una scheda vuota, la ✏️ apre un'auto già salvata, l'interruttore la accende o la spegne nella sezione EV. Sotto si compila nome, marca, modello, entità e le due foto — e il salvataggio è uno solo: dice se sta creando o modificando, e in fondo alla sezione porta le stesse parole. Quale auto guardare si sceglie dalle linguette della sezione, non da qui.",
-      "Three gestures, no more: ＋ New car opens an empty card, the ✏️ opens a car you already saved, the switch turns it on or off in the EV section. Below you fill in name, brand, model, entities and both photos — and there is a single save: it says whether it is creating or editing, and the one at the bottom of the section carries the same words. Which car you look at is picked from the section's own tabs, not from here.",
+      "Tre gesti, e basta: ＋ Nuovo veicolo apre una scheda vuota, la ✏️ apre un veicolo già salvato, l'interruttore lo accende o lo spegne nella sezione EV. Sotto si dice se è un'auto o una moto, e si compila nome, marca, modello, entità e le due foto — il salvataggio è uno solo: dice se sta creando o modificando, e in fondo alla sezione porta le stesse parole. Quale veicolo guardare si sceglie dalle linguette della sezione, non da qui.",
+      "Three gestures, no more: ＋ New vehicle opens an empty card, the ✏️ opens a vehicle you already saved, the switch turns it on or off in the EV section. Below you say whether it is a car or a motorcycle, and you fill in name, brand, model, entities and both photos — there is a single save: it says whether it is creating or editing, and the one at the bottom of the section carries the same words. Which vehicle you look at is picked from the section's own tabs, not from here.",
     )}`;
     if (clean(intro.textContent) !== clean(testo)) intro.textContent = testo;
   }
@@ -1218,9 +1220,24 @@ export function editingKey() { return state.evEditingUid ?? null; }
  * alibi. «Salva foto» li scriveva sulla vettura appena aperta, ed e' il «le
  * foto si mischiano» tornato dal campo. Adesso il promemoria sta qui, dove la
  * risposta cambia, e nessun chiamante puo' dimenticarsene. */
+/* La scheda cambia veicolo, e lo dice.
+ *
+ * Qui dentro c'e' l'unico momento in cui la scheda smette di parlare di un
+ * veicolo e comincia a parlarne un altro: la matita, il «＋», il salvataggio.
+ * Chi disegna qualcosa che appartiene al VEICOLO e non alle sue caselle — il
+ * mezzo (#75), il motore, la capacita' della batteria — deve riallinearsi
+ * proprio adesso, e finche' nessuno glielo diceva doveva indovinarlo da un
+ * ridisegno che per la matita non arriva.
+ *
+ * Costava caro: aprendo una moto con la matita la scelta diceva «Auto», e un
+ * tocco su quella risposta sbagliata la salvava sopra quella giusta. Un
+ * annuncio, e chi deve riallinearsi si riallinea. */
+export const EVENTO_VEICOLO_IN_SCHEDA = "dashboardmodern:ev-card-subject";
+
 function setEditingKey(value) {
   if (state.evEditingUid === value) return;
   state.evEditingUid = value;
+  root.dispatchEvent?.(new CustomEvent(EVENTO_VEICOLO_IN_SCHEDA, { detail: { uid: value } }));
   if (typeof root.queueMicrotask === "function") root.queueMicrotask(scheduleEvSync);
   else scheduleEvSync();
 }
@@ -1747,6 +1764,12 @@ function installLegacyWrappers() {
        * vettura aperta. Senza tendina (modulo non caricato) non si tocca. */
       const tendinaMotore = doc?.querySelector?.("#ed-body select[data-ev-tipo]");
       const motore = tendinaMotore ? { tipo: tipoMotore(tendinaMotore.value) } : {};
+      /* E il mezzo (#75), per la stessa strada e per la stessa ragione: e'
+       * l'altra cosa che si sa del VEICOLO e non delle sue entita'. Si legge
+       * dal documento e non dal modulo che la disegna, cosi' questa sezione
+       * non deve importare chi importa lei. */
+      const sceltaMezzo = doc?.querySelector?.("#ed-body [data-ev-mezzo-riga]");
+      const mezzo = sceltaMezzo ? { [MEZZO_FIELD]: mezzoDelVeicolo(sceltaMezzo.dataset.dmMezzo) } : {};
 
       const bersaglioEsplicito = Boolean(
         bersaglio && sessioneEsplicita && uidDi(bersaglio) === uidDi(sessioneEsplicita),
@@ -1759,6 +1782,7 @@ function installLegacyWrappers() {
           [VEHICLE_OVERRIDES_FIELD]: mappatura,
           ...rinomina,
           ...motore,
+          ...mezzo,
           /* Marca e modello: sull'auto che si sta modificando si scrivono
            * sempre, sulle altre solo se sono nude.
            *
@@ -1780,6 +1804,7 @@ function installLegacyWrappers() {
           [VEHICLE_OVERRIDES_FIELD]: mappatura,
           ...vestito,
           ...motore,
+          ...mezzo,
         };
         rimesse = salvaAuto([...elenco, nata]);
         salvata = rimesse.find((car) => uidDi(car) === nata[VEHICLE_KEY_FIELD]) || null;

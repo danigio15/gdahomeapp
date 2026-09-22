@@ -64,6 +64,42 @@ export function minutiDellOra(valore) {
   return ore * 60 + minuti;
 }
 
+/* Da dove comincia una fascia, comunque sia scritto (#110).
+ *
+ * «Nella selezione delle fasce orarie se cambio ora non salva, ritorna di
+ * nuovo a quella impostata per default.»
+ *
+ * Questa e' la riga che glielo faceva fare, e non era il salvataggio: era la
+ * RILETTURA. L'ora di una fascia viaggia in due forme diverse, e per due
+ * ragioni buone.
+ *
+ * La casella dell'editor e' un `<input type="time">`, e quello che ne esce e'
+ * una stringa: «21:30». Il resto del nucleo invece conta in MINUTI dalla
+ * mezzanotte — `fasciaDelleOre` confronta numeri, non parole — e quindi la
+ * forma normalizzata, quella che si salva e che viaggia fra i dispositivi,
+ * tiene i minuti: 1290.
+ *
+ * `normalizzaLeFasce` pero' leggeva solo la prima forma. Rileggendo il proprio
+ * salvataggio — un numero — `minutiDellOra(1290)` tornava `null`, perche'
+ * «1290» non e' un orario, e la fascia ripiegava sull'orario DI SERIE. Cioe':
+ * la configurazione salvata veniva buttata e rimpiazzata con quella di
+ * fabbrica, a ogni apertura della scheda.
+ *
+ * Non si vedeva perche' quasi sempre il ripiego indovinava: finche' le ore
+ * erano quelle di serie, il valore buttato e quello rimesso erano lo stesso
+ * numero. Bastava cambiarne una perche' la coincidenza finisse — ed e'
+ * esattamente il gesto che lo ha fatto uscire. In tutta la vita di questa
+ * funzione, un'ora diversa da quella di fabbrica non e' MAI stata riletta.
+ *
+ * La regola e' il tipo, non le cifre: un numero sono minuti, una stringa e'
+ * un orario. Non c'e' ambiguita' da nessuna parte — il JSON i tipi se li
+ * tiene — e non serve indovinare se «8» siano le otto o otto minuti. */
+export function minutiDiUnaFascia(valore) {
+  if (typeof valore === "number")
+    return Number.isInteger(valore) && valore >= 0 && valore <= 1439 ? valore : null;
+  return minutiDellOra(valore);
+}
+
 /** Il contrario: 510 si scrive «08:30». */
 export function oraDeiMinuti(minuti) {
   const tutti = Number(minuti);
@@ -94,7 +130,7 @@ export function normalizzaLeFasce(salvato) {
   const voci = [];
   for (let indice = 0; indice < quante; indice += 1) {
     const voce = salvate[indice] && typeof salvate[indice] === "object" ? salvate[indice] : {};
-    const dalle = minutiDellOra(voce.dalle);
+    const dalle = minutiDiUnaFascia(voce.dalle);
     voci.push({
       dalle: dalle === null ? minutiDellOra(ORARI_DI_SERIE[quante]?.[indice]) || 0 : dalle,
       prezzo: prezzoPulito(voce.prezzo),

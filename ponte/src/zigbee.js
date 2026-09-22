@@ -200,6 +200,112 @@ export function comeSiApre({ quale, cassetta = "" }, secondi = QUANTO_RESTA_APER
   return null;
 }
 
+/* Lo stesso ordine, ma per servizio.
+ *
+ * ZHA espone due strade per la stessa cosa, e sono due API diverse per
+ * natura. `zha/permit` e' un comando sul filo: e' l'API INTERNA, quella che
+ * usa il pannello di ZHA dentro Home Assistant, e cambia quando quel pannello
+ * cambia. `zha.permit` e' un SERVIZIO: sta in Strumenti per sviluppatori →
+ * Azioni, lo chiamano le automazioni di chiunque, ed e' la superficie
+ * pubblica — quelle si rompono molto piu' di rado, perche' romperle
+ * significa rompere le automazioni di tutti.
+ *
+ * Per questo il servizio si prova per PRIMO. Dal campo, su una casa
+ * aggiornatissima: la scheda diceva «ZHA» — quindi ZHA c'era, e il ponte
+ * l'aveva trovata — ma «Apri la rete» tornava indietro con `unknown_command`,
+ * e la rete non si apriva. «Non mi fa aprire la rete.» Il comando sul filo
+ * non c'era piu'.
+ *
+ * Quello sul filo resta come seconda strada, e non per scrupolo: su una casa
+ * dove il servizio non c'e' — o dove chiamarlo non e' permesso — e' l'unica
+ * che resta, ed e' quella con cui questa funzione ha funzionato finche' ha
+ * funzionato.
+ *
+ * Il comando per posta di Zigbee2MQTT di strade ne ha una sola — passa gia'
+ * per `mqtt.publish`, che e' un servizio — e qui torna `null`. */
+export function comeSiApreColServizio({ quale }, secondi = QUANTO_RESTA_APERTA) {
+  if (quale !== ZHA) return null;
+  return {
+    type: "call_service",
+    domain: "zha",
+    service: "permit",
+    service_data: { duration: perQuanto(secondi) },
+  };
+}
+
+/** E il ripiego per richiudere: lo stesso servizio, con zero. */
+export function comeSiChiudeColServizio({ quale }) {
+  if (quale !== ZHA) return null;
+  return {
+    type: "call_service",
+    domain: "zha",
+    service: "permit",
+    service_data: { duration: 0 },
+  };
+}
+
+/* Come si chiama una strada, quando la si deve nominare a qualcuno.
+ *
+ * Un servizio si chiama `dominio.servizio` — e' cosi' che lo si cerca in Home
+ * Assistant — e un comando sul filo si chiama col suo tipo. Sta qui perche' lo
+ * dicono in due: il registro dell'add-on e l'avviso sul telefono, e due modi
+ * di chiamare la stessa cosa manderebbero a cercare due cose diverse. */
+export const comeSiChiama = (comando) =>
+  comando?.type === "call_service" ? `${comando.domain}.${comando.service}` : comando?.type || "";
+
+/** Le strade per aprire, nell'ordine in cui si provano. */
+export function leStradePerAprire(rete, secondi = QUANTO_RESTA_APERTA) {
+  return [comeSiApreColServizio(rete, secondi), comeSiApre(rete, secondi)].filter(Boolean);
+}
+
+/** E quelle per richiudere, nello stesso ordine. */
+export function leStradePerChiudere(rete) {
+  return [comeSiChiudeColServizio(rete), comeSiChiude(rete)].filter(Boolean);
+}
+
+/* L'errore di quando Home Assistant non accetta il comando della rete.
+ *
+ * Ha un codice suo, e serve: l'app mostra un avviso diverso per ogni codice, e
+ * finche' da qui usciva il `unknown_command` di Home Assistant l'app leggeva
+ * «il ponte non sa fare questa cosa» e mandava ad aggiornare l'add-on. Dal
+ * campo, con l'add-on aggiornato e la scheda ZHA piena in cima alla stessa
+ * schermata: «da un messaggio di aggiornare ma in realta' e' tutto
+ * aggiornato». Aveva ragione, e a sbagliare era il codice.
+ *
+ * `unknown_command` vuol dire «chi ha ricevuto questa domanda non la
+ * conosce». Rilanciandolo al telefono si cambiava chi ha ricevuto la domanda:
+ * quello era Home Assistant, non il ponte. */
+export class ZigbeeNonAccettato extends Error {
+  constructor(strade = [], detto = "") {
+    const nomi = strade.map(comeSiChiama).filter(Boolean).join(" ne' ");
+    /* Le parole di Home Assistant si portano dietro.
+     *
+     * Chi legge l'avviso sul telefono e' la stessa persona che deve capire
+     * perche' la rete non si apre, e «non accetta» da solo non basta:
+     * «unauthorized» e «unknown command» mandano a guardare due cose diverse.
+     * Senza, l'unico posto dove leggerlo sarebbe il registro dell'add-on, che
+     * chi ha il problema quasi mai va ad aprire. */
+    super(
+      `Home Assistant non accetta ${nomi || "il comando della rete Zigbee"}` +
+        (detto ? ` (${detto})` : ""),
+    );
+    this.code = "zigbee_non_accettato";
+  }
+}
+
+/* Quando un rifiuto vuol dire «questo comando qui non c'e'».
+ *
+ * Home Assistant risponde `unknown_command` per un comando sul filo che non
+ * conosce, e `not_found` / `service_not_found` per un servizio che non ha.
+ * Sono le tre facce della stessa cosa, e sono l'unica ragione per cui vale la
+ * pena riprovare per un'altra strada: un rifiuto qualunque — la rete che non
+ * si apre, il coordinatore staccato — riprovandolo darebbe solo lo stesso
+ * rifiuto due volte e il doppio dell'attesa. */
+const NON_CE_QUEL_COMANDO = new Set(["unknown_command", "not_found", "service_not_found"]);
+
+export const eUnComandoCheNonCe = (errore) =>
+  NON_CE_QUEL_COMANDO.has(String(errore?.code || "").trim());
+
 /** E quello che la richiude subito: la stessa strada, con zero al posto del tempo. */
 export function comeSiChiude({ quale, cassetta = "" }) {
   if (quale === ZHA) return { type: "zha/permit", duration: 0 };
@@ -222,9 +328,28 @@ export function comeSiChiude({ quale, cassetta = "" }) {
  * Il registro annuncia anche le modifiche e le cancellazioni, e un dispositivo
  * rinominato non e' un dispositivo nuovo: chi guarda la schermata dell'attesa
  * vedrebbe entrare qualcosa che era gia' in casa.
+ *
+ * ── La busta ───────────────────────────────────────────────────────────────
+ *
+ * Quello che arriva e' l'evento **come lo manda Home Assistant**, che i suoi
+ * dati se li tiene in una busta:
+ *
+ *     { event_type: "device_registry_updated",
+ *       data: { action: "create", device_id: "..." },
+ *       origin, time_fired, context }
+ *
+ * Qui si leggeva `evento.action` e `evento.device_id`, cioe' fuori dalla
+ * busta: sempre `undefined`, sempre «no», e **nessun dispositivo e' mai stato
+ * annunciato** — ne' con Zigbee2MQTT ne' con ZHA. Dal campo: «il pairing lo fa
+ * partire l'app, ma poi non vede che lo ha trovato».
+ *
+ * Lo stesso abbonamento, in `spegnimento.js`, la busta la apre
+ * (`const dati = evento?.data`). Erano due letture della stessa cosa, e una
+ * sola era giusta.
  */
 export function eUnoNuovo(evento) {
-  return pulito(evento?.action).toLowerCase() === "create" && Boolean(pulito(evento?.device_id));
+  const dati = evento?.data;
+  return pulito(dati?.action).toLowerCase() === "create" && Boolean(pulito(dati?.device_id));
 }
 
 /**
@@ -541,7 +666,7 @@ export class Zigbee {
     if (!comando) return { fatto: false, perche: "questa casa non ha una rete Zigbee" };
     this._entrati = [];
     await this._ascolta();
-    await this.casa.chiedi(comando);
+    await this._ordina(leStradePerAprire(rete, secondi));
     const quanto = perQuanto(secondi);
     this._apertaFinoA = this.adesso() + quanto * 1000;
     clearTimeout(this._chiudiDaSola);
@@ -560,9 +685,42 @@ export class Zigbee {
     const comando = comeSiChiude(rete);
     this._scaduta();
     if (!comando) return { fatto: false, perche: "questa casa non ha una rete Zigbee" };
-    await this.casa.chiedi(comando);
+    await this._ordina(leStradePerChiudere(rete));
     this.registro.info("zigbee: rete richiusa");
     return { fatto: true };
+  }
+
+  /* L'ordine, per le strade che ci sono.
+   *
+   * Si provano in fila. Una strada che Home Assistant non ha — il comando
+   * sconosciuto, il servizio che non esiste — non e' un guasto: e' solo
+   * questa casa che quella strada non ce l'ha, e si passa alla prossima.
+   * Qualunque altro rifiuto invece ferma tutto: se il coordinatore non
+   * risponde, non risponde anche per la seconda strada, e chi ha premuto il
+   * tasto aspetterebbe il doppio per lo stesso «no».
+   *
+   * Se nessuna strada c'e', l'errore che esce dice di chi e': non e' il ponte
+   * a essere vecchio — il ponte questo comando lo conosce, l'ha appena
+   * eseguito — e' Home Assistant che non lo accetta. Rilanciare
+   * `unknown_command` cosi' com'era mandava chi legge ad aggiornare la cosa
+   * sbagliata. */
+  async _ordina(strade) {
+    if (!strade.length) return null;
+    let ultimo = "";
+    for (const [quale, comando] of strade.entries()) {
+      try {
+        const fatto = await this.casa.chiedi(comando);
+        if (quale > 0) this.registro.info(`zigbee: fatto con ${comeSiChiama(comando)}`);
+        return fatto;
+      } catch (errore) {
+        if (!eUnComandoCheNonCe(errore)) throw errore;
+        this.registro.info(
+          `zigbee: questa casa non ha ${comeSiChiama(comando)}, provo la prossima`,
+        );
+        ultimo = String(errore?.message || errore?.code || "");
+      }
+    }
+    throw new ZigbeeNonAccettato(strade, ultimo);
   }
 
   _scaduta() {
@@ -593,7 +751,7 @@ export class Zigbee {
 
   async _entrato(evento) {
     if (!eUnoNuovo(evento)) return;
-    const id = pulito(evento.device_id);
+    const id = pulito(evento.data?.device_id);
     if (this._entrati.some((uno) => uno.id === id)) return;
     let dispositivo = { id };
     try {

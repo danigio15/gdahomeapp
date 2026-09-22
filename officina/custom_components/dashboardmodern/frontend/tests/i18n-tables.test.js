@@ -67,6 +67,12 @@ const REACHED_OTHERWISE = new Set([
    * righe `{ it, en }` — e sei delle otto le prende a sua volta dall'elenco
    * delle sezioni, che è dove quella parola sta già. */
   "dove-lo-metto-section.js",
+  /* E la ricerca nel Config scrive i nomi delle caselle che trova. Quelli del
+   * raffreddamento stanno in `src/core/le-caselle-del-config.js` — anche lui
+   * fra i cataloghi importati, con le righe `[it, en]` — e gli altri non sono
+   * scritti da nessuna parte: li mieta dal guscio, che li tiene in italiano
+   * soltanto e li passa cosi' come sono. */
+  "cerca-nel-config-section.js",
 ]);
 
 /* L'elenco si legge dal sorgente, non si importa: l'estrattore riscrive i file
