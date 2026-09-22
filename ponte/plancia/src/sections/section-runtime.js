@@ -134,6 +134,7 @@ import { installEvStatoETargetSection } from "./ev-stato-e-target-section.js";
 import { installAutoTermica } from "./auto-termica-section.js";
 import { installAutoOMoto } from "./auto-o-moto-section.js";
 import { installLeFasceDelDispositivo } from "./le-fasce-del-dispositivo-section.js";
+import { installLaVentolaDellInverter } from "./la-ventola-dell-inverter-section.js";
 import { installEditorSlotsSection } from "./editor-slots-section.js";
 import { installConfigUniformitySection } from "./config-uniformity-section.js";
 import { installSolarThermalDesignSection } from "./solar-thermal-design-section.js";
@@ -1093,6 +1094,7 @@ export function installSectionRuntime() {
     installAutoTermica();
     installAutoOMoto();
     installLeFasceDelDispositivo();
+    installLaVentolaDellInverter();
     installSolarThermalDesignSection();
     /* Dopo il disegno del solare: le linguette e le due scene nuove gli si
      * mettono accanto, e per farlo devono trovarlo gia' al suo posto. */

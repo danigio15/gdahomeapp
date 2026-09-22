@@ -1371,8 +1371,12 @@ test("production graph is single-owner, acyclic and contains no facade pass-thro
   // lo disegna. Il conto sta da solo e non tocca ne' la rete ne' l'orologio,
   // perche' e' quello che si prova senza una casa; il giro tocca il
   // documento e il Recorder.
+  // 382 col tasto della ventola dell'inverter (#112): il guscio mandava a
+  // Home Assistant il nome della casella al posto dell'entita' mappata, e
+  // non succedeva niente. Cosa mandare sta da solo e si prova senza una
+  // casa; il giro tocca il documento e la presa verso Home Assistant.
   assert.ok(
-    relative.length <= 380,
+    relative.length <= 382,
     `production graph unexpectedly grew to ${relative.length} modules`,
   );
   assertAcyclic(edges);
