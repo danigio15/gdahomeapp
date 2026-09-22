@@ -15,13 +15,24 @@
  * scrivendo dentro.
  */
 import { cercaNelConfig } from "../core/cerca-nel-config.js";
+import { cercaFraLeCaselle, leCaselleDelConfig } from "../core/le-caselle-del-config.js";
 import { isRetiredEditorSlot } from "../core/editor-slots.js";
 import { SECTION_KEYS } from "../core/migrations.js";
 import { CONFIG_KEYS } from "./config-persistence-section.js";
-import { clean, doc, esc, installStyle, onEditorRedraw, readJson, root, t } from "./shared.js";
+import {
+  activeLocale,
+  clean,
+  doc,
+  esc,
+  installStyle,
+  onEditorRedraw,
+  readJson,
+  root,
+  t,
+} from "./shared.js";
 
 const KEY = "__DASHBOARDMODERN_CERCA_CONFIG__";
-const state = (root[KEY] ||= { installed: false, parola: "", aperta: false });
+const state = (root[KEY] ||= { installed: false, parola: "", aperta: false, raccolte: null });
 
 const BARRA = "dm-cerca-config";
 const STILE = "dm-cerca-config-style";
@@ -262,19 +273,151 @@ function installaLoStile() {
     .${BARRA}-dove{font-size:11px!important;font-weight:800!important;letter-spacing:.02em!important;color:var(--secondary-text-color,#64748b)!important}
     .${BARRA}-testo{font-size:13.5px!important;font-weight:750!important;overflow-wrap:anywhere!important}
     .${BARRA}-testo mark{padding:0 1px!important;border-radius:3px!important;background:#fde68a!important;color:#0f172a!important}
+    /* Il secondo gruppo si vede che e' un'altra risposta: sopra c'e' quello
+       che e' scritto, qui c'e' dove si scrive. */
+    .${BARRA}-titolo{margin:8px 2px 0!important;font-size:11px!important;font-weight:900!important;letter-spacing:.06em!important;text-transform:uppercase!important;color:var(--secondary-text-color,#64748b)!important}
+    .${BARRA}-casella{border-style:dashed!important;background:transparent!important}
+    /* La riga accesa dopo il salto: venti caselle uguali, e questa e' quella. */
+    .${BARRA}-accesa{outline:2px solid #f59e0b!important;outline-offset:2px!important;border-radius:10px!important}
     html[data-theme="dark"] .${BARRA}{background:var(--card-background-color,#111827)!important}
     `,
   );
 }
 
+/* Due nomi sono lo stesso nome se lo sono togliendo i disegnini e gli
+ * accenti: la linguetta dice «Home» e la fisarmonica «🏠 Home». */
+const senzaFronzoli = (valore) =>
+  clean(valore)
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^\p{Letter}\p{Number}]+/gu, "")
+    .toLowerCase();
+
+const stessoNome = (uno, altro) => {
+  const a = senzaFronzoli(uno);
+  const b = senzaFronzoli(altro);
+  return Boolean(a) && a === b;
+};
+
+/* Le caselle del guscio, chieste al guscio.
+ *
+ * `CD_SLOTS` e' un `const` dentro il copione del guscio e da fuori non
+ * esiste — `globalThis.CD_SLOTS` e' `undefined`, provato. Ma
+ * `editorRenderSezioni()` si', ed e' una funzione pura che torna il disegno
+ * di TUTTE le fisarmoniche in una volta, con le etichette vere: quelle di
+ * casa e quelle che la persona si e' rinominata. Si chiede a lei e si legge
+ * il risultato in un contenitore staccato, senza toccare la pagina.
+ *
+ * Centoventi righe di HTML non si rifanno a ogni lettera battuta: si tengono
+ * finche' il Config non si ridisegna, che e' anche quando le etichette
+ * possono essere cambiate. */
+function mietiDalGuscio() {
+  if (state.raccolte) return state.raccolte;
+  let disegno = "";
+  try {
+    disegno = String(root.editorRenderSezioni?.() || "");
+  } catch (_errore) {
+    return [];
+  }
+  if (!disegno || !doc?.createElement) return [];
+  const staccato = doc.createElement("div");
+  staccato.innerHTML = disegno;
+  const fuori = [];
+  for (const fisarmonica of staccato.querySelectorAll("details.ed-acc")) {
+    /* Il titolo e' il primo pezzo di testo del sommario: dopo c'e' «12
+     * entita'», che e' un conto e non un nome. */
+    const dove = clean(fisarmonica.querySelector("summary")?.firstChild?.textContent);
+    for (const slot of fisarmonica.querySelectorAll(".ed-slot")) {
+      const ref = clean(slot.querySelector("input[data-ref]")?.dataset?.ref);
+      const nome = clean(
+        slot.querySelector(".wz-lbl-edit")?.getAttribute?.("value") ||
+          slot.querySelector(".ed-slot-lbl")?.textContent,
+      );
+      if (ref && nome) fuori.push({ ref, nome, dove });
+    }
+  }
+  state.raccolte = fuori;
+  return fuori;
+}
+
+/* La casella a cui un risultato appartiene, con lo stesso nome che le da'
+ * l'elenco delle caselle.
+ *
+ * Serve a non dire due volte la stessa cosa: se «Interruttore ventola» e' gia'
+ * uscito fra i valori — perche' ci si e' scritto dentro — non ha senso
+ * ripeterlo sotto «dove si configura». Le mappature a mano si riconoscono dal
+ * nome del campo, che e' il `dm.*`; il modello energia dall'ultimo pezzo di
+ * strada piu' il campo, che e' esattamente come si chiamano li' dentro. */
+function laCasellaDelRisultato(esito) {
+  const campo = clean(esito?.campo);
+  if (campo.startsWith("dm.")) return campo;
+  const strada = esito?.percorso;
+  if (!Array.isArray(strada)) return "";
+  const dopo = strada.indexOf("energy");
+  if (dopo < 0 || !campo) return "";
+  const gruppo = clean(strada[strada.length - 1]);
+  return gruppo && gruppo !== "energy" ? `${gruppo}.${campo}` : "";
+}
+
+/* Aprire la casella, non soltanto la sua scheda.
+ *
+ * Una scheda sola non basta piu' da quando Energia ha quattro maschere dentro:
+ * chi cerca la ventola e finisce su FLUSSI ED ENTITA' ha fatto meta' strada e
+ * non lo sa. Si apre la scheda, poi la maschera — che adesso dice come si
+ * chiama — e poi si accende la riga, che e' l'unico modo di dire «e' questa»
+ * a chi ha davanti venti caselle uguali.
+ *
+ * I tre passi sono sfalsati perche' ognuno aspetta che il precedente abbia
+ * ridisegnato: il guscio riscrive il corpo, e cercare dentro quello di prima
+ * non trova niente. */
+function laCasellaInPagina(id) {
+  const nome = clean(id);
+  if (nome.startsWith("dm.")) return doc?.querySelector?.(`input[data-ref="${CSS.escape(nome)}"]`);
+  const punto = nome.indexOf(".");
+  if (punto < 0) return null;
+  return doc?.getElementById?.(`dm-energy-${nome.slice(0, punto)}-${nome.slice(punto + 1)}`);
+}
+
+function accendiLaCasella(id) {
+  const campo = laCasellaInPagina(id);
+  const riga = campo?.closest?.(".ed-slot") || campo;
+  if (!riga) return;
+  riga.scrollIntoView?.({ block: "center", behavior: "smooth" });
+  riga.classList?.add?.(`${BARRA}-accesa`);
+  root.setTimeout?.(() => riga.classList?.remove?.(`${BARRA}-accesa`), 2400);
+}
+
+function apriLaCasella(una) {
+  try {
+    root.editorSwitch?.(una.scheda);
+  } catch (_errore) {}
+  root.setTimeout?.(() => {
+    if (una.pannello)
+      doc?.querySelector?.(`.ed-inner-tab[data-energy-tab="${una.pannello}"]`)?.click?.();
+    root.setTimeout?.(() => accendiLaCasella(una.id), 160);
+  }, 160);
+}
+
 /* La parola, evidenziata dentro il risultato: si vede subito perche' quella
- * riga e' uscita. */
-function conLaParolaAccesa(testo, parola) {
+ * riga e' uscita.
+ *
+ * Qui non si puo' usare `esc`, che prima di tutto TAGLIA gli spazi ai bordi:
+ * i bordi di questi tre pezzi stanno in mezzo a una frase, e «Potenza ventola»
+ * spezzato in «Potenza » e «ventola» tornava «Potenzaventola». Non si vedeva
+ * finche' si cercavano solo entita', che spazi non ne hanno; si e' visto il
+ * giorno che si sono cercati i nomi delle caselle, che sono parole vere. */
+const escSenzaTagliare = (valore) =>
+  String(valore ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll('"', "&quot;");
+
+export function conLaParolaAccesa(testo, parola) {
   const dove = testo.toLowerCase().indexOf(parola.toLowerCase());
-  if (dove < 0) return esc(testo);
-  return `${esc(testo.slice(0, dove))}<mark>${esc(testo.slice(dove, dove + parola.length))}</mark>${esc(
-    testo.slice(dove + parola.length),
-  )}`;
+  if (dove < 0) return escSenzaTagliare(testo);
+  return `${escSenzaTagliare(testo.slice(0, dove))}<mark>${escSenzaTagliare(
+    testo.slice(dove, dove + parola.length),
+  )}</mark>${escSenzaTagliare(testo.slice(dove + parola.length))}`;
 }
 
 function disegnaGliEsiti(contenitore, parola) {
@@ -289,7 +432,15 @@ function disegnaGliEsiti(contenitore, parola) {
     return 0;
   }
   const esiti = cercaNelConfig(parola, magazzino());
-  if (!esiti.length) {
+  /* Le caselle gia' uscite fra i valori non si ripetono: la risposta e' la
+   * stessa, e dirla due volte fa sembrare che siano due posti. */
+  const dette = new Set(esiti.map(laCasellaDelRisultato).filter(Boolean));
+  const caselle = cercaFraLeCaselle(
+    parola,
+    leCaselleDelConfig(mietiDalGuscio()),
+    activeLocale(),
+  ).filter((una) => !dette.has(una.id));
+  if (!esiti.length && !caselle.length) {
     contenitore.innerHTML = `<p class="${BARRA}-vuoto">${esc(
       t("Nessuna configurazione contiene questa parola.", "No configuration contains this word."),
     )}</p>`;
@@ -326,7 +477,39 @@ function disegnaGliEsiti(contenitore, parola) {
       });
     contenitore.append(riga);
   }
-  return esiti.length;
+  /* E sotto, la seconda domanda.
+   *
+   * «Dove l'ho messo» si risponde coi valori, qui sopra. «Dove lo metto» si
+   * risponde con le caselle, che esistono anche da vuote — ed e' la domanda
+   * di chi sta configurando, cioe' di quasi tutti quelli che aprono questa
+   * barra. Finche' c'era solo la prima, una casella mai riempita rispondeva
+   * «Nessuna configurazione contiene questa parola», che si legge in un modo
+   * solo: quella casella non c'e'. */
+  if (caselle.length) {
+    const titolo = doc.createElement("p");
+    titolo.className = `${BARRA}-titolo`;
+    titolo.textContent = t("Dove si configura", "Where it is configured");
+    contenitore.append(titolo);
+  }
+  for (const una of caselle.slice(0, 20)) {
+    const nome = nomeDellaScheda(una.scheda);
+    const riga = doc.createElement("button");
+    riga.type = "button";
+    riga.className = `${BARRA}-esito ${BARRA}-casella`;
+    riga.dataset.salta = "si";
+    riga.dataset.casella = una.id;
+    /* «Home · 🏠 Home» non e' una strada, e' una parola detta due volte: la
+     * fisarmonica si chiama come la scheda che la contiene, e allora il nome
+     * basta una volta. */
+    const dove = [nome, stessoNome(nome, una.dove) ? "" : una.dove].filter(Boolean).join(" · ");
+    riga.innerHTML = `<span class="${BARRA}-dove">${esc(dove)}</span><span class="${BARRA}-testo">${conLaParolaAccesa(
+      t(una.it, una.en),
+      clean(parola),
+    )}</span>`;
+    riga.addEventListener("click", () => apriLaCasella(una));
+    contenitore.append(riga);
+  }
+  return esiti.length + caselle.length;
 }
 
 /* La barra sta in cima a tutto, fuori dal corpo della scheda.
@@ -402,7 +585,12 @@ export function installCercaNelConfigSection() {
   /* La configurazione nasce quando la si apre, e si ridisegna a ogni cambio di
    * scheda: ci si rimette in coda a quel giro, che e' la strada con cui tutti
    * i moduli stanno dietro al guscio. */
-  onEditorRedraw("__dmCercaNelConfig", () => ensureBarraDiRicerca());
+  onEditorRedraw("__dmCercaNelConfig", () => {
+    /* Il raccolto delle etichette si butta a ogni ridisegno: e' il momento in
+     * cui una rinomina puo' essere appena successa. */
+    state.raccolte = null;
+    ensureBarraDiRicerca();
+  });
   return true;
 }
 

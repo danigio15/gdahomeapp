@@ -269,6 +269,10 @@ const CATALOG_MODULES = Object.freeze([
      tasti. Gli altri sei li prende dall'elenco delle sezioni qui sopra, che è
      dove quella parola sta già. */
   "src/core/dove-lo-metto.js",
+  /* I nomi delle cinque caselle del raffreddamento — Interruttore ventola,
+     Temperatura batteria — che la ricerca nel Config scrive per dire dove si
+     configura una cosa che non e' ancora stata configurata. */
+  "src/core/le-caselle-del-config.js",
 ]);
 
 /*

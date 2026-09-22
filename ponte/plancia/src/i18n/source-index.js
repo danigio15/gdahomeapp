@@ -1281,6 +1281,7 @@ export const SOURCE_INDEX = Object.freeze({
   "Dove lo metto?": "Where does it go?",
   "Dove non c'è colore non piove.": "No colour means no rain.",
   "Dove piove adesso": "Where it is raining now",
+  "Dove si configura": "Where it is configured",
   "Dove si legge se è inserito": "Where to read if it is armed",
   "Due fasce": "Two bands",
   "Due scatti della stessa auto: la plancia mostra quello con il cavo attaccato mentre è in ricarica e l'altro nel resto del tempo. Basta la prima: senza la seconda resta sempre quella.": "Two shots of the same car: the dashboard shows the plugged-in one while it charges and the other one the rest of the time. The first is enough — without the second it simply stays.",

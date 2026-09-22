@@ -108,7 +108,10 @@ export function renderDeviceCard(document, target, device, states = {}, rooms = 
   return card;
 }
 
-const ENERGY_GROUPS = [
+/* Esportata perche' e' l'elenco delle caselle della maschera Flussi, e chi
+ * cerca nel config deve poterle nominare senza riscriverle: una seconda copia
+ * sarebbe un secondo padrone, e invecchierebbe alla prima casella aggiunta. */
+export const ENERGY_GROUPS = [
   [
     "house",
     "Casa",
@@ -626,6 +629,16 @@ export function renderEnergyEditor(
     reportButton.classList.toggle("active", name === "report");
     handlers.onTabChange?.(name);
   };
+  /* Ogni linguetta dice come si chiama.
+   *
+   * Serve a chi deve aprirne una da fuori — la ricerca nel config ci porta chi
+   * cerca una casella che sta qui dentro — e il nome scritto e' l'unica altra
+   * cosa che le distingue: cercarle per quello vorrebbe dire scriverle una
+   * seconda volta, in due lingue, e sbagliare il giorno che una si rinomina. */
+  flowsButton.dataset.energyTab = "flows";
+  settingsButton.dataset.energyTab = "settings";
+  loadsButton.dataset.energyTab = "loads";
+  reportButton.dataset.energyTab = "report";
   flowsButton.addEventListener("click", () => selectTab("flows"));
   settingsButton.addEventListener("click", () => selectTab("settings"));
   loadsButton.addEventListener("click", () => selectTab("loads"));

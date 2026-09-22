@@ -98,6 +98,7 @@ export default Object.freeze({
   "What lights the card up": "ما الذي يضيء البطاقة",
   "One tap picks it: while that entity is on, the appliance card and its Home tile take on a colour so you notice them. None is picked by default — a fridge opened to get the milk is not a fault — but the garage freezer door, or the washing machine finishing, belong here.": "لمسة واحدة تختاره: ما دام هذا الكيان قيد التشغيل، تكتسي بطاقة الجهاز ومربّعه في الرئيسية لونًا كي تلاحظهما. لا شيء مختار افتراضيًا — ثلاجة فُتحت لأخذ الحليب ليست عطلًا — لكن باب مجمّد المرأب، أو انتهاء الغسالة، مكانهما هنا.",
   "What to show in the window": "ما الذي يظهر في النافذة",
+  "Where it is configured": "أين يُضبَط",
   "Which band it draws in": "في أيّ شريحة يستهلك",
   "Which rooms show up on Home, with the temperature and how many things are on: one tap takes you into the room. As many as you like; none ticked means no block at all.": "أي الغرف تظهر في الواجهة، مع درجة الحرارة وعدد الأشياء المشغّلة: لمسة واحدة تأخذك إلى الغرفة. بقدر ما تشاء؛ وإذا لم تختر أيّاً فلا يظهر القسم إطلاقاً.",
   "Windows and shutters": "النوافذ والستائر",

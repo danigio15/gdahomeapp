@@ -1375,8 +1375,13 @@ test("production graph is single-owner, acyclic and contains no facade pass-thro
   // Home Assistant il nome della casella al posto dell'entita' mappata, e
   // non succedeva niente. Cosa mandare sta da solo e si prova senza una
   // casa; il giro tocca il documento e la presa verso Home Assistant.
+  // 383 con le caselle che la ricerca sa nominare (#114): cercare fra i
+  // valori risponde a «dove l'ho messo», e a casella vuota risponde «non
+  // esiste». L'elenco delle caselle risponde all'altra domanda, «dove lo
+  // metto», e non ribatte a mano nessun nome: li prende da dove i nomi gia'
+  // stanno. Sta da solo e si prova senza una casa.
   assert.ok(
-    relative.length <= 382,
+    relative.length <= 383,
     `production graph unexpectedly grew to ${relative.length} modules`,
   );
   assertAcyclic(edges);

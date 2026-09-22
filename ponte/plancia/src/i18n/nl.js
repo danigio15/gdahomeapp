@@ -98,6 +98,7 @@ export default Object.freeze({
   "What lights the card up": "Wat de kaart laat oplichten",
   "One tap picks it: while that entity is on, the appliance card and its Home tile take on a colour so you notice them. None is picked by default — a fridge opened to get the milk is not a fault — but the garage freezer door, or the washing machine finishing, belong here.": "Eén tik kiest hem: zolang die entiteit aan staat, krijgen de apparaatkaart en de tegel op Home een kleur zodat ze opvallen. Standaard is er geen gekozen — een koelkast die je opent voor de melk is geen storing — maar de deur van de vriezer in de garage, of het einde van het wasprogramma, horen hier.",
   "What to show in the window": "Wat in het venster te zien is",
+  "Where it is configured": "Waar het wordt ingesteld",
   "Which band it draws in": "In welke tariefzone het verbruikt",
   "Which rooms show up on Home, with the temperature and how many things are on: one tap takes you into the room. As many as you like; none ticked means no block at all.": "Welke kamers op Home verschijnen, met de temperatuur en hoeveel dingen aan staan: één tik brengt je in de kamer. Zoveel als je wilt; niets aangevinkt betekent geen blok.",
   "Windows and shutters": "Ramen en rolluiken",

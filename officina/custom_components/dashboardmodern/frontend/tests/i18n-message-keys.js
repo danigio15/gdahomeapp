@@ -3696,6 +3696,7 @@ export const MESSAGE_KEYS = Object.freeze([
   "When you buy from the grid",
   "Where",
   "Where does it go?",
+  "Where it is configured",
   "Where it is raining now",
   "Where the heat is going is told by how it sits: to the heating or to the hot water.",
   "Where to read if it is armed",

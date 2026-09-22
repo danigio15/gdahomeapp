@@ -98,6 +98,7 @@ export default Object.freeze({
   "What lights the card up": "카드를 켜는 것",
   "One tap picks it: while that entity is on, the appliance card and its Home tile take on a colour so you notice them. None is picked by default — a fridge opened to get the milk is not a fault — but the garage freezer door, or the washing machine finishing, belong here.": "한 번 누르면 선택됩니다. 그 엔티티가 켜져 있는 동안 가전 카드와 홈의 타일에 색이 들어와 눈에 띕니다. 기본값은 아무것도 선택하지 않음입니다 — 우유를 꺼내려고 연 냉장고는 고장이 아니니까요 — 하지만 차고 냉동고 문이나 세탁기 종료는 여기에 넣습니다.",
   "What to show in the window": "창에 표시할 항목",
+  "Where it is configured": "설정하는 곳",
   "Which band it draws in": "어느 요금 구간에서 쓰는지",
   "Which rooms show up on Home, with the temperature and how many things are on: one tap takes you into the room. As many as you like; none ticked means no block at all.": "홈에 어느 방을 보일지: 온도와 켜져 있는 개수를 함께 보여 주고, 한 번 누르면 그 방으로 들어갑니다. 원하는 만큼; 하나도 고르지 않으면 블록 자체가 없습니다.",
   "Windows and shutters": "창문과 셔터",

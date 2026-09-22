@@ -98,6 +98,7 @@ export default Object.freeze({
   "What lights the card up": "什么会点亮卡片",
   "One tap picks it: while that entity is on, the appliance card and its Home tile take on a colour so you notice them. None is picked by default — a fridge opened to get the milk is not a fault — but the garage freezer door, or the washing machine finishing, belong here.": "轻点即可选中：只要该实体处于开启状态，电器卡片和它在首页的磁贴就会着色，好让你注意到。默认一个都不选——为了拿牛奶打开的冰箱不是故障——但车库冰柜的门，或者洗衣机结束，就该放在这里。",
   "What to show in the window": "窗口中显示哪些内容",
+  "Where it is configured": "在哪里配置",
   "Which band it draws in": "在哪个电价时段用电",
   "Which rooms show up on Home, with the temperature and how many things are on: one tap takes you into the room. As many as you like; none ticked means no block at all.": "主页上显示哪些房间，带上温度和有多少东西开着；点一下就进入该房间。想放几个都行；一个都不选就没有这个板块。",
   "Windows and shutters": "门窗与卷帘",
