@@ -96,6 +96,53 @@ dispositivi, mai quelli delle entità. Adesso quando qualcosa è giù la
 mattonella dice i dispositivi, che è il numero che si può aprire.
 
 
+**I Varchi si dichiarano, non si autocompilano (#74).** «Sezione varchi
+attuale non ha alcuna possibilità di inserire icone. Inoltre è differente
+dalle altre sezioni in quanto si autocompila, cosa che avevo detto già di
+eliminare, e sotto compaiono ancora quelle che ho eliminato da sopra.»
+
+Tre difetti, ed erano lo stesso difetto: quella scheda non era una scheda,
+era un **rilevamento con delle correzioni sopra**. L'elenco lo faceva Home
+Assistant — tutto quello che si chiamava «door» o «window» — il cestino non
+cancellava ma ESCLUDEVA, e l'escluso restava scritto sotto in «Tolti dai
+conti». Di suo, chi abita la casa poteva solo cambiare il nome.
+
+Adesso è come Porte e cancelli, come i Carichi, come tutte le altre: **una
+riga per varco**, e dentro la riga le tre cose che un varco ha — l'entità, il
+nome, il disegno. La metti tu, e quando la elimini è eliminata. Via «Tolti dai
+conti».
+
+**Quello che c'era non si perde.** Alla prima apertura la scheda scrive come
+righe esattamente quello che la pagina mostrava un attimo prima: i nomi già
+dati, senza quelli già tolti, col disegno che viene dalla classe. E una
+finestra nuova non entra più da sola — è il punto di tutto — ma nemmeno si
+deve cercare a mano: il tasto in fondo dice quanti contatti Home Assistant ha
+trovato che qui dentro non ci sono, e li mette come righe. Una volta sola.
+
+**E dichiarandola, entra anche quello che il rilevamento non trovava.** Il
+rilevamento guarda solo i `binary_sensor.*`: un basculante che in Home
+Assistant è un `cover.*` non lo trovava, e non c'era modo di metterlo.
+
+**Dieci disegni nuovi, e niente più emoji di sistema.** «Icone sempre quelle
+del catalogo nostro, se non presenti queste creale.» I varchi avevano quattro
+emoji scelte dalla classe — porta, finestra, casa diroccata, cartello di
+lavori — che cambiano faccia da un telefono all'altro, e la casa diroccata
+come portone del garage non la riconosceva nessuno. Adesso ce ne sono tredici
+fra cui scegliere, tutti disegnati con la tavolozza degli elettrodomestici:
+finestra, porta-finestra, portone, basculante, lucernario, botola,
+scorrevole, sbarra, varco generico — più il radar di presenza, che arriva con
+loro. Il disegno si vede anche nella pagina Varchi, nella vetrina della
+Sicurezza e nella scheda delle aree d'allarme, che leggono lo stesso elenco.
+
+**E i due comandi della pastiglia dell'entità stavano male.** Su un campo che
+l'etichetta ce l'ha già — cioè ogni riga dichiarata, quindi anche Porte e
+cancelli e i Carichi di oggi — il 🗑 Elimina restava da solo su una riga sua e
+la ✏️ sbordava dal suo quadrato da 36 pixel. Adesso sono gemelli, sotto la
+pastiglia, sulla stessa riga. Nella stessa passata è sparito un difetto più
+silenzioso: un entity_id lungo apriva la riga in larghezza invece di
+accorciarsi con i puntini, e quello che sbordava veniva tagliato via.
+
+
 ## 1.6.0.3
 
 **La voce «Zigbee» nell'app c'e', in una casa con Zigbee2MQTT.** Era una

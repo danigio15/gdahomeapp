@@ -26,6 +26,7 @@ import { prossimoCambioDelDaQuando, quantoTempoInParole } from "../core/da-quant
 import {
   allStates,
   clean,
+  disegnoDiCasa,
   doc,
   esc,
   installStyle,
@@ -211,7 +212,7 @@ function daQuandoMarkup(riga) {
 
 function rigaMarkup(riga) {
   return `<article class="dm-varco" data-varco="${esc(riga.stato || "muto")}">
-    <span class="dm-varco-ic" aria-hidden="true">${esc(riga.glifo)}</span>
+    <span class="dm-varco-ic" aria-hidden="true">${disegnoDiCasa(riga.glifo, { misura: 30, ripiego: "door" })}</span>
     <div class="dm-varco-testo">
       <strong>${esc(riga.name)}</strong>
       ${daQuandoMarkup(riga)}
@@ -365,6 +366,10 @@ function installStyles() {
     ${P} .dm-varco-ic{
       display:grid;place-items:center;width:44px;height:44px;border-radius:14px;font-size:20px;
       background:color-mix(in srgb,var(--dm-varco,#94a3b8) 22%,transparent)}
+    /* Il disegno del catalogo al posto dell'emoji (#74): la casella resta
+       quella, cambia quello che ci sta dentro. */
+    ${P} .dm-varco-ic .dm-catalogo-art{display:grid;place-items:center;line-height:0}
+    ${P} .dm-varco-ic svg{display:block;width:30px;height:30px}
     ${P} .dm-varco-testo{display:grid;gap:2px;min-width:0}
     ${P} .dm-varco-testo strong{font-size:14px;font-weight:900;color:var(--text,#0f172a);
       overflow:hidden;text-overflow:ellipsis;white-space:nowrap}

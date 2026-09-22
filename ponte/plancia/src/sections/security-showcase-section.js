@@ -65,6 +65,7 @@ import {
   activeLocale,
   allStates,
   clean,
+  disegnoDiCasa,
   doc,
   english,
   esc,
@@ -452,7 +453,7 @@ function pastigliaDellaZona(riga) {
 function pastigliaDellIngresso(riga) {
   const come = riga.stato === "aperto" ? "aperto" : riga.stato === "chiuso" ? "chiuso" : "muto";
   return `<span class="dm-sec-zona" data-stato="${esc(come)}" title="${esc(riga.entity)}">
-    <i aria-hidden="true">${riga.glifo}</i><b>${esc(riga.name)}</b></span>`;
+    <i aria-hidden="true">${disegnoDiCasa(riga.glifo, { misura: 20, ripiego: "door" })}</i><b>${esc(riga.name)}</b></span>`;
 }
 
 function riquadroDelleZone(zone, ingressi, labels) {
@@ -1356,7 +1357,8 @@ function securityCss() {
 .dm-sec-zone-righe{display:flex;gap:7px;flex-wrap:wrap}
 .dm-sec-zona{display:inline-flex;align-items:center;gap:6px;padding:6px 11px;border-radius:999px;font-size:11.5px;font-weight:800;border:1px solid var(--card-border,#e2e8f0);background:var(--card-background-color,#fff)}
 .dm-sec-zona i{font-style:normal;line-height:1;display:inline-flex}
-.dm-sec-zona i svg{width:15px;height:15px}
+.dm-sec-zona i .dm-catalogo-art{display:inline-flex;line-height:0}
+.dm-sec-zona i svg{width:15px;height:15px;display:block}
 .dm-sec-zona[data-stato="attiva"],.dm-sec-zona[data-stato="aperto"]{
   border-color:color-mix(in srgb,#dc2626 42%,transparent);
   background:color-mix(in srgb,#dc2626 13%,var(--card-bg,#fff));color:#b91c1c}

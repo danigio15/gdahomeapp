@@ -109,18 +109,42 @@ test("la Home, la pagina e la scheda leggono lo stesso elenco", () => {
   assert.ok(!sorgente("../src/sections/home-widgets-section.js").includes("contattiDelleFinestre"));
 });
 
-test("la scheda salva solo la configurazione dei Varchi, non una copia delle Finestre", () => {
-  /* Elencare i contatti delle Finestre e poi riscriverli fra gli «aggiunti»
-   * ne farebbe una copia, che il giorno che si cambia la riga delle Finestre
-   * non si aggiorna più. Quello che si mostra è la lista riunita; quello che
-   * si scrive è solo la propria. */
+test("la scheda scrive righe, e non tocca più le scelte di prima", () => {
+  /* Questa prova ha preso il posto di «la scheda salva solo la configurazione
+   * dei Varchi, non una copia delle Finestre», che guardava un difetto che il
+   * modello dichiarato (#74) non può più avere.
+   *
+   * Prima la scheda scriveva `aggiunte` ed `escluse` su un oggetto che ERA la
+   * lista riunita — quella coi contatti delle Finestre dentro — e riscriverli
+   * ne faceva una copia che il giorno dopo non si aggiornava. Adesso la scheda
+   * scrive una cosa sola, `righe`, e la lista riunita la legge soltanto per
+   * proporre cosa manca: la copia non ha più dove farsi.
+   *
+   * Quello che resta da tenere fermo è che nessuno torni a scrivere le scelte
+   * di prima: sono il ripiego di chi non ha ancora dichiarato niente, e una
+   * scheda che le riscrivesse le terrebbe in vita per sempre. */
   const scheda = sorgente("../src/sections/varchi-editor-section.js");
-  assert.match(scheda, /function configurazioneSalvata\(\)/);
-  for (const dentro of scheda.split(/\n(?=function |export function )/)) {
-    if (!/writeJsonIfChanged\(CHIAVE_VARCHI|salva\(\{/.test(dentro)) continue;
+  for (const vecchia of ["escluse", "aggiunte", "nomi:"]) {
     assert.ok(
-      !/\bconst scelte = configurazione\(\)/.test(dentro),
-      "chi salva deve partire da configurazioneSalvata()",
+      !new RegExp(`salva\\([^)]*${vecchia}`).test(scheda),
+      `la scheda non deve più scrivere ${vecchia}`,
     );
   }
+  /* E la lista riunita si legge, ma solo per la proposta. */
+  assert.match(scheda, /function daPrendere\(\)[\s\S]*?varchiConLeFinestre\(/);
+});
+
+test("una riga dichiarata non si autocompila e non si riprende quello che elimini", () => {
+  /* La segnalazione, in una riga: «si autocompila, cosa che avevo detto già di
+   * eliminare, e sotto compaiono ancora quelle che ho eliminato da sopra». */
+  const stati = {
+    "binary_sensor.finestra_camera": aperto("Finestra camera"),
+    "binary_sensor.finestra_sala": aperto("Finestra sala"),
+  };
+  const dichiarata = { righe: [{ entity: "binary_sensor.finestra_sala", name: "Sala" }] };
+  assert.deepEqual(
+    varchiDiCasa(stati, varchiConLeFinestre(dichiarata, FINESTRE), new Set()).map((r) => r.entity),
+    ["binary_sensor.finestra_sala"],
+    "nemmeno i contatti delle Finestre rientrano da soli, una volta dichiarato l'elenco",
+  );
 });

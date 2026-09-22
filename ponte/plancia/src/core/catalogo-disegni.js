@@ -337,6 +337,55 @@ const CORPI = Object.freeze({
 
   /* I cursori: l'antifurto su misura, quello che uno si e' scritto da se'. */
   sliders: `${PANNELLO}<path ${TRATTO} d="M18 28h60M18 48h60M18 68h60"/><circle ${SCOCCA} cx="34" cy="28" r="9"/><circle ${SCOCCA} cx="62" cy="48" r="9"/><circle ${ACCENTO} cx="42" cy="68" r="9"/>`,
+
+  /* ── I VARCHI (#74) ──────────────────────────────────────────────────────
+   *
+   * «Icone sempre quelle del catalogo nostro, se non presenti queste creale.»
+   *
+   * La scheda dei varchi metteva addosso a ogni contatto un'emoji di sistema —
+   * porta, finestra, casa diroccata, cartello di lavori — scelta dalla classe
+   * che Home Assistant aveva dato al sensore. Erano quattro segni per tutte le
+   * aperture di una casa, cambiavano faccia da un telefono all'altro, e la
+   * casa diroccata come portone del garage non la riconosceva nessuno.
+   *
+   * Qui ce ne sono dieci, fatti con la stessa tavolozza di tutti gli altri, e
+   * chi configura un varco se li sceglie invece di subirli. */
+
+  /* La finestra: due ante vetrate, la maniglia in mezzo e il davanzale. */
+  window: `${PANNELLO}<rect ${SCOCCA} x="14" y="12" width="68" height="62" rx="9"/><rect ${VETRO} x="22" y="20" width="24" height="46" rx="4"/><rect ${VETRO} x="50" y="20" width="24" height="46" rx="4"/><path ${TRATTO_CHIARO} d="M27 31h14M55 31h14"/><rect ${ACCENTO} x="44" y="38" width="8" height="12" rx="3"/><rect ${SCOCCA} x="12" y="78" width="72" height="7" rx="3.5"/>`,
+
+  /* La porta-finestra: come la finestra, ma arriva a terra. */
+  "french-window": `${PANNELLO}<rect ${SCOCCA} x="19" y="8" width="58" height="80" rx="8"/><rect ${VETRO} x="26" y="15" width="20" height="66" rx="4"/><rect ${VETRO} x="50" y="15" width="20" height="66" rx="4"/><path ${TRATTO_CHIARO} d="M30 30h12M54 30h12M30 50h12M54 50h12"/><rect ${ACCENTO} x="44" y="42" width="8" height="13" rx="3"/>`,
+
+  /* Il portone: due ante a pannelli, il sopraluce e i due pomoli. */
+  "front-door": `${PANNELLO}<rect ${SCOCCA} x="15" y="8" width="66" height="80" rx="9"/><rect ${VETRO} x="22" y="15" width="52" height="11" rx="4"/><rect ${FRONTALE} x="22" y="30" width="25" height="51" rx="5"/><rect ${FRONTALE} x="49" y="30" width="25" height="51" rx="5"/><path ${TRATTO} d="M28 39h13M55 39h13M28 51h13M55 51h13"/><circle ${ACCENTO} cx="43" cy="62" r="3.2"/><circle ${ACCENTO} cx="53" cy="62" r="3.2"/>`,
+
+  /* Il basculante del garage: il tetto a spiovente e le sezioni. */
+  "garage-door": `${PANNELLO}<path ${SCOCCA} d="M8 42 48 15l40 27v40a4 4 0 0 1-4 4H12a4 4 0 0 1-4-4z"/><rect ${FRONTALE} x="19" y="48" width="58" height="34" rx="4"/><path ${TRATTO} d="M19 57h58M19 65h58M19 73h58"/><rect ${ACCENTO} x="41" y="36" width="14" height="6" rx="3"/>`,
+
+  /* Il lucernario: la finestra inclinata sulla falda, con la luce che entra.
+   * Il vetro segue la pendenza del tetto — e' quello che lo distingue da una
+   * finestra qualunque, e a trenta pixel e' l'unica cosa che si legge. */
+  skylight: `${PANNELLO}<path ${SCOCCA} d="M48 28 86 84H10z"/><path ${FRONTALE} d="M59 45 75 68 61 78 45 54z"/><path ${VETRO} d="M61 50 71 65 61 72 50 56z"/><path ${TRATTO} d="M67 56 53 66"/><path ${TRATTO_ACCENTO} d="M48 17v-7M30 26l-5-6M66 26l5-6"/>`,
+
+  /* La botola: il coperchio alzato sopra il vano, con l'anello per tirarlo. */
+  hatch: `${PANNELLO}<path ${SCOCCA} d="M9 46h78v32a7 7 0 0 1-7 7H16a7 7 0 0 1-7-7z"/><rect ${SPENTO} x="18" y="54" width="60" height="23" rx="4"/><path ${TRATTO_CHIARO} d="M28 62h40"/><path ${FRONTALE} d="M22 41 55 11l24 9-33 21z"/><path ${TRATTO} d="M22 41 55 11l24 9-33 21z"/><circle ${ACCENTO} cx="64" cy="27" r="4.5"/>`,
+
+  /* La porta scorrevole: l'anta che scorre sul binario, e da che parte va. */
+  "sliding-door": `${PANNELLO}<rect ${SCOCCA} x="9" y="12" width="78" height="9" rx="4.5"/><rect ${SCOCCA} x="11" y="26" width="38" height="58" rx="6"/><rect ${FRONTALE} x="17" y="32" width="26" height="46" rx="4"/><rect ${SCOCCA} x="45" y="26" width="38" height="58" rx="6"/><rect ${VETRO} x="51" y="32" width="26" height="46" rx="4"/><path ${TRATTO_ACCENTO} d="M23 55h14m0 0-5-5m5 5-5 5"/>`,
+
+  /* La sbarra del passo carraio: il palo e l'asta a bande, alzata. */
+  barrier: `${PANNELLO}<rect ${SCOCCA} x="14" y="42" width="19" height="42" rx="5"/><rect ${ACCENTO} x="18" y="49" width="11" height="9" rx="3"/><g transform="rotate(-24 23.5 44)"><rect ${SCOCCA} x="30" y="37" width="52" height="13" rx="6.5"/><rect ${FRONTALE} x="37" y="40" width="10" height="7" rx="2.5"/><rect ${FRONTALE} x="53" y="40" width="10" height="7" rx="2.5"/><rect ${FRONTALE} x="69" y="40" width="9" height="7" rx="2.5"/></g>`,
+
+  /* Il varco e basta: l'arco vuoto, per quello che un nome preciso non ce l'ha.
+   * E' il ripiego della classe `opening`, che in Home Assistant vuol dire
+   * «un'apertura, e non ti dico quale». */
+  doorway: `${PANNELLO}<path ${SCOCCA} d="M15 86V46a33 33 0 0 1 66 0v40H66V46a18 18 0 0 0-36 0v40z"/><path ${VETRO} d="M30 46a18 18 0 0 1 36 0v40H30z"/><path ${TRATTO} d="M40 64h15m0 0-6-6m6 6-6 6"/>`,
+
+  /* Il radar di presenza: il sensore a muro e le onde che manda.
+   * Non e' un varco, ma arriva con loro: la scheda Presenza aveva lo stesso
+   * problema, e un mmWave disegnato come un occhio non lo riconosce nessuno. */
+  radar: `${PANNELLO}<rect ${SCOCCA} x="26" y="12" width="44" height="26" rx="8"/><circle ${VETRO} cx="48" cy="25" r="7"/><path ${TRATTO_ACCENTO} d="M30 52a26 26 0 0 1 36 0"/><path ${TRATTO_ACCENTO} d="M24 66a38 38 0 0 1 48 0"/><path ${TRATTO_ACCENTO} d="M18 80a50 50 0 0 1 60 0"/>`,
 });
 
 /* I nomi con cui il resto della plancia chiede la stessa cosa. Un disegno solo,
@@ -470,6 +519,29 @@ const ALIAS = Object.freeze({
   aggiorna: "refresh",
   restart: "refresh",
   riavvia: "refresh",
+  /* I varchi (#74). Le quattro classi con cui Home Assistant dichiara
+   * un'apertura entrano da qui: sono i nomi che arrivano dal rilevamento,
+   * e senza di loro una casa appena importata resterebbe senza disegni. */
+  garage_door: "garage-door",
+  garage: "garage-door",
+  opening: "doorway",
+  varco: "doorway",
+  finestra: "window",
+  porta: "door",
+  portone: "front-door",
+  "porta-finestra": "french-window",
+  portafinestra: "french-window",
+  scorrevole: "sliding-door",
+  basculante: "garage-door",
+  sezionale: "garage-door",
+  lucernario: "skylight",
+  velux: "skylight",
+  botola: "hatch",
+  sbarra: "barrier",
+  cancello: "gate",
+  tapparella: "shutters",
+  presenza: "radar",
+  mmwave: "radar",
 });
 
 const pulito = (valore) =>

@@ -36,6 +36,41 @@ function sorgenti() {
   return fuori;
 }
 
+/* Quello che sta dentro `${…}` e' JavaScript, non CSS.
+ *
+ * Il setaccio legge i template literal e cerca `selettore { prop: valore }`.
+ * Un'interpolazione porta dentro graffe e due punti suoi — basta una chiamata
+ * con un oggetto, `${disegno(voce, { misura: 20 })}`, e il setaccio ci legge
+ * una regola: selettore «disegno(voce», proprieta' «misura», valore «20». Tre
+ * file che chiamano la stessa funzione con misure diverse diventavano tre
+ * padroni in disaccordo su una regola che non esiste.
+ *
+ * Qui ogni interpolazione diventa un segno opaco: graffe, due punti e punti e
+ * virgola tolti, il resto tenuto. Cosi' `${P} .dm-x{...}` resta una regola col
+ * suo selettore — e `${P}` di un file resta diverso da `${Q}` di un altro,
+ * che e' quello che serve perche' il conto sia giusto. */
+function senzaInterpolazioni(css) {
+  let fuori = "";
+  let i = 0;
+  while (i < css.length) {
+    const apre = css.indexOf("${", i);
+    if (apre < 0) {
+      fuori += css.slice(i);
+      break;
+    }
+    fuori += css.slice(i, apre);
+    let livello = 1;
+    let j = apre + 2;
+    for (; j < css.length && livello > 0; j++) {
+      if (css[j] === "{") livello += 1;
+      else if (css[j] === "}") livello -= 1;
+    }
+    fuori += `\u0001${css.slice(apre + 2, j - 1).replace(/[{}:;]/g, " ")}\u0001`;
+    i = j;
+  }
+  return fuori;
+}
+
 /* Spezza il CSS in pezzi, ognuno col contesto della at-rule che lo contiene. */
 function pezziConContesto(css) {
   const pezzi = [];
@@ -69,7 +104,9 @@ function censimento() {
   const decisioni = new Map();
   for (const { nome, testo } of sorgenti()) {
     for (const blocco of testo.matchAll(/`([^`\\]|\\.)*`/g)) {
-      const css = blocco[0].slice(1, -1).replace(/\/\*[\s\S]*?\*\//g, "");
+      const css = senzaInterpolazioni(
+        blocco[0].slice(1, -1).replace(/\/\*[\s\S]*?\*\//g, ""),
+      );
       if (!/[.#:\w][^{}]*\{[^{}]*:[^{}]*\}/.test(css)) continue;
       for (const { ctx, corpo } of pezziConContesto(css)) {
         for (const regola of corpo.matchAll(/([^{}@][^{}]*)\{([^{}]*)\}/g)) {

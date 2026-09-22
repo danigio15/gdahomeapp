@@ -1,4 +1,5 @@
 // DM-FIX-20260812B
+import { disegnoDelCatalogo } from "../core/catalogo-disegni.js";
 import { canonicalClimateType } from "../core/device-model.js";
 import { isCumulativeEnergyEntity } from "../core/period-service.js";
 import {
@@ -1006,6 +1007,26 @@ export function iconGlyphHtml(icon, { size = 26, fallback = "🔌", kind = "acti
     if (legacy && legacy !== token) return legacy;
   } catch (_error) {}
   return esc(fallback);
+}
+
+/**
+ * Il disegno di una voce, con il catalogo di casa davanti a tutto (#74).
+ *
+ * «Icone sempre quelle del catalogo nostro»: chi ha un disegno nostro lo
+ * usa — `door`, `window`, `garage-door` — e solo chi non ce l'ha ripiega su
+ * `iconGlyphHtml`, che sa il mestiere dei token `mdi:` e dei glifi scritti a
+ * mano. Senza questo passaggio un nome del catalogo finiva stampato com'e':
+ * sopra il nome della porta si leggeva la parola «door».
+ *
+ * `ripiego` e' un'altra chiave del catalogo, non un'emoji: e' il disegno che
+ * va bene per quella sezione quando la voce non ne ha ancora scelto uno.
+ */
+export function disegnoDiCasa(token, { misura = 26, ripiego = "" } = {}) {
+  const nostro = disegnoDelCatalogo(token, misura);
+  if (nostro) return nostro;
+  const scorta = ripiego ? disegnoDelCatalogo(ripiego, misura) : "";
+  if (!clean(token)) return scorta;
+  return iconGlyphHtml(token, { size: misura, fallback: "" }) || scorta;
 }
 
 export function afterResult(result, callback) {
