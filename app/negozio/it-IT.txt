@@ -1,5 +1,9 @@
-Il numero dell'app e quello di casa tornano uguali.
+Un dispositivo Zigbee lo abbini dall'app, senza aprire Home Assistant: l'app apre la rete, aspetta, e la plancia ti chiede in che stanza metterlo.
 
-Qui dentro non cambia niente: questa versione allinea il numero dell'app a quello dell'add-on, che è dove stanno le novità — le voci del cruscotto che adesso restano nella barra laterale, e il rapporto a chi ti ha montato l'impianto che parte ogni minuto invece che ogni quarto d'ora.
+Davanti all'app ci puoi mettere il volto o l'impronta.
 
-Chi arriva da più indietro trova anche le sette segnalazioni chiuse, il radar del meteo, e «Cosa cambia» che si legge qui dentro.
+Il kWh può costare diverso a ore diverse, e la spesa del mese si divide per fascia: contata ora per ora, non stimata.
+
+Le stanze si aprono divise per piano, e una tessera avvisa quando qualcosa non risponde.
+
+La plancia dentro Home Assistant si apre in tre secondi invece che in dieci.

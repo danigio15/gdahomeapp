@@ -1,5 +1,9 @@
-The app's number and your home's match again.
+Pair a Zigbee device from the app, without opening Home Assistant: the app opens the network, waits, and the dashboard asks which room to put it in.
 
-Nothing changes in here: this version lines the app's number up with the add-on's, which is where the news is — the panel entries that now stay in the sidebar, and the report to whoever installed your home going out every minute instead of every quarter of an hour.
+Put your face or your fingerprint in front of the app.
 
-Coming from further back you also get seven reports closed, the weather radar, and "What's new" read in here.
+A kWh can cost different amounts at different hours, and the month's spend splits by time band: counted hour by hour, not estimated.
+
+Rooms open grouped by floor, and a card warns when something stops answering.
+
+The dashboard inside Home Assistant opens in three seconds instead of ten.
