@@ -28,6 +28,8 @@ import {
   comeSiChiude,
   comeSiChiudeColServizio,
   comeSiPresenta,
+  leStradePerAprire,
+  leStradePerChiudere,
   eUnComandoCheNonCe,
   eUnoNuovo,
   laReteDiCasa,
@@ -361,7 +363,10 @@ test("si ascolta PRIMA di aprire: chi è già in attesa entra subito", async () 
   const zigbee = new Zigbee({ casa });
   await zigbee.apri({ secondi: 30 });
   const ordine = casa.detto.map((uno) => uno.ascolta || uno.type).filter(Boolean);
-  assert.deepEqual(ordine, ["config_entries/get", "device_registry_updated", "zha/permit"]);
+  /* La prima strada di ZHA è il servizio `zha.permit`, non il comando sul
+   * filo: quello che questa prova tiene fermo è che l'ascolto venga PRIMA
+   * dell'ordine, qualunque strada sia. */
+  assert.deepEqual(ordine, ["config_entries/get", "device_registry_updated", "call_service"]);
   zigbee.spegni();
 });
 
@@ -833,11 +838,38 @@ test("si riprova solo per un comando che non c'è, non per un rifiuto qualunque"
   assert.equal(eUnComandoCheNonCe(null), false);
 });
 
-test("se il filo non ha zha/permit, la rete si apre col servizio", async () => {
+test("la prima strada di ZHA è il servizio: è l'API pubblica", () => {
+  /* `zha/permit` è l'API INTERNA — quella del pannello di ZHA dentro Home
+   * Assistant — e cambia quando quel pannello cambia. `zha.permit` è un
+   * servizio: sta in Strumenti per sviluppatori → Azioni e lo chiamano le
+   * automazioni di chiunque. Rompere un servizio vuol dire rompere le
+   * automazioni di tutti, e infatti i servizi si rompono molto più di rado.
+   *
+   * Dal campo, su una casa aggiornatissima: «non mi fa aprire la rete», con
+   * la scheda ZHA piena tre centimetri sopra. Il comando sul filo non c'era
+   * più. */
+  const strade = leStradePerAprire({ quale: ZHA }, 120);
+  assert.equal(strade.length, 2);
+  assert.equal(strade[0].type, "call_service");
+  assert.equal(strade[0].domain, "zha");
+  assert.equal(strade[0].service, "permit");
+  assert.equal(strade[1].type, "zha/permit", "e quella sul filo resta, seconda");
+  /* Zigbee2MQTT di strade ne ha una sola: passa già per un servizio. */
+  const posta = leStradePerAprire({ quale: Z2M, cassetta: "zigbee2mqtt" }, 120);
+  assert.equal(posta.length, 1);
+  assert.equal(posta[0].domain, "mqtt");
+  /* E dove rete non ce n'è, nessuna. */
+  assert.deepEqual(leStradePerAprire({ quale: NESSUNA }), []);
+  assert.deepEqual(leStradePerChiudere({ quale: NESSUNA }), []);
+});
+
+test("se il servizio non c'è, la rete si apre col comando sul filo", async () => {
   const casa = casaFinta({
     voci: [{ domain: "zha", state: "loaded" }],
     rifiuta: (comando) =>
-      comando.type === "zha/permit" ? rifiuto("unknown_command", "unknown command") : null,
+      comando.type === "call_service" && comando.domain === "zha"
+        ? rifiuto("service_not_found", "service not found")
+        : null,
   });
   const zigbee = new Zigbee({ casa });
   const esito = await zigbee.apri({ secondi: 60 });
@@ -850,9 +882,9 @@ test("se il filo non ha zha/permit, la rete si apre col servizio", async () => {
     (uno) => uno.type === "zha/permit" || (uno.type === "call_service" && uno.domain === "zha"),
   );
   assert.equal(strade.length, 2);
-  assert.equal(strade[0].type, "zha/permit");
-  assert.equal(strade[1].service, "permit");
-  assert.equal(strade[1].service_data.duration, 60);
+  assert.equal(strade[0].service, "permit");
+  assert.equal(strade[1].type, "zha/permit");
+  assert.equal(strade[1].duration, 60);
   await zigbee.chiudi();
 });
 
@@ -891,7 +923,7 @@ test("un rifiuto che non è «non ce l'ho» esce com'è, senza riprovare", async
   const casa = casaFinta({
     voci: [{ domain: "zha", state: "loaded" }],
     rifiuta: (comando) =>
-      comando.type === "zha/permit"
+      comando.type === "call_service" && comando.domain === "zha"
         ? rifiuto("home_assistant_error", "il coordinatore non risponde")
         : null,
   });
@@ -901,10 +933,11 @@ test("un rifiuto che non è «non ce l'ho» esce com'è, senza riprovare", async
     (errore) => errore,
   );
   assert.equal(male?.code, "home_assistant_error");
-  /* E il servizio non si è nemmeno provato: l'antenna staccata resta staccata
-   * anche per la seconda strada, e chi aspetta aspetterebbe il doppio. */
+  /* E la seconda strada non si è nemmeno provata: l'antenna staccata resta
+   * staccata anche per quella, e chi aspetta aspetterebbe il doppio per lo
+   * stesso «no». */
   assert.equal(
-    casa.detto.some((uno) => uno.type === "call_service" && uno.domain === "zha"),
+    casa.detto.some((uno) => uno.type === "zha/permit"),
     false,
   );
 });
@@ -918,7 +951,11 @@ test("l'app ha una spiegazione per questo codice, e non manda ad aggiornare", ()
     fileURLToPath(new URL("../../app/lib/casa/segnalazioni.dart", import.meta.url)),
     "utf8",
   );
-  const suo = dart.indexOf("ComandoRifiutato(codice: 'zigbee_non_accettato')");
+  /* Il codice, non la forma esatta della riga: il ramo può prendersi anche la
+   * spiegazione — `(codice: '…', :final spiegazione)` — e una prova che
+   * guarda la punteggiatura invece di quello che garantisce si rompe al primo
+   * ritocco e non protegge da niente. */
+  const suo = dart.indexOf("codice: 'zigbee_non_accettato'");
   assert.ok(suo > 0, "l'app deve conoscere il codice che il ponte manda");
   const spiegazione = dart.slice(suo, dart.indexOf("ComandoRifiutato(codice:", suo + 10));
   assert.match(spiegazione, /Home Assistant/);

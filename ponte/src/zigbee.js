@@ -200,22 +200,28 @@ export function comeSiApre({ quale, cassetta = "" }, secondi = QUANTO_RESTA_APER
   return null;
 }
 
-/* Lo stesso ordine, ma per servizio: il ripiego quando il comando sul filo
- * non c'e'.
+/* Lo stesso ordine, ma per servizio.
  *
- * ZHA espone due strade per la stessa cosa. Una e' il comando sul filo,
- * `zha/permit`, ed e' quella che si prova per prima perche' risponde subito e
- * dice se e' andata. L'altra e' il servizio `zha.permit`, che e' quello che
- * chiunque chiamerebbe da un'automazione.
+ * ZHA espone due strade per la stessa cosa, e sono due API diverse per
+ * natura. `zha/permit` e' un comando sul filo: e' l'API INTERNA, quella che
+ * usa il pannello di ZHA dentro Home Assistant, e cambia quando quel pannello
+ * cambia. `zha.permit` e' un SERVIZIO: sta in Strumenti per sviluppatori →
+ * Azioni, lo chiamano le automazioni di chiunque, ed e' la superficie
+ * pubblica — quelle si rompono molto piu' di rado, perche' romperle
+ * significa rompere le automazioni di tutti.
  *
- * Servono tutte e due perche' non tutte le case hanno tutte e due. Dal campo,
- * su una casa aggiornatissima: la scheda diceva «ZHA» — quindi ZHA c'era, e
- * il ponte l'aveva trovata — ma «Apri la rete» tornava indietro con
- * `unknown_command`, cioe' Home Assistant quel comando sul filo non lo
- * conosceva. Il servizio invece c'e' da sempre, e cambia molto piu' di rado di
- * un'API sul filo: e' il ripiego giusto.
+ * Per questo il servizio si prova per PRIMO. Dal campo, su una casa
+ * aggiornatissima: la scheda diceva «ZHA» — quindi ZHA c'era, e il ponte
+ * l'aveva trovata — ma «Apri la rete» tornava indietro con `unknown_command`,
+ * e la rete non si apriva. «Non mi fa aprire la rete.» Il comando sul filo
+ * non c'era piu'.
  *
- * Il comando per posta di Zigbee2MQTT non ha bisogno di ripieghi — passa gia'
+ * Quello sul filo resta come seconda strada, e non per scrupolo: su una casa
+ * dove il servizio non c'e' — o dove chiamarlo non e' permesso — e' l'unica
+ * che resta, ed e' quella con cui questa funzione ha funzionato finche' ha
+ * funzionato.
+ *
+ * Il comando per posta di Zigbee2MQTT di strade ne ha una sola — passa gia'
  * per `mqtt.publish`, che e' un servizio — e qui torna `null`. */
 export function comeSiApreColServizio({ quale }, secondi = QUANTO_RESTA_APERTA) {
   if (quale !== ZHA) return null;
@@ -238,6 +244,25 @@ export function comeSiChiudeColServizio({ quale }) {
   };
 }
 
+/* Come si chiama una strada, quando la si deve nominare a qualcuno.
+ *
+ * Un servizio si chiama `dominio.servizio` — e' cosi' che lo si cerca in Home
+ * Assistant — e un comando sul filo si chiama col suo tipo. Sta qui perche' lo
+ * dicono in due: il registro dell'add-on e l'avviso sul telefono, e due modi
+ * di chiamare la stessa cosa manderebbero a cercare due cose diverse. */
+export const comeSiChiama = (comando) =>
+  comando?.type === "call_service" ? `${comando.domain}.${comando.service}` : comando?.type || "";
+
+/** Le strade per aprire, nell'ordine in cui si provano. */
+export function leStradePerAprire(rete, secondi = QUANTO_RESTA_APERTA) {
+  return [comeSiApreColServizio(rete, secondi), comeSiApre(rete, secondi)].filter(Boolean);
+}
+
+/** E quelle per richiudere, nello stesso ordine. */
+export function leStradePerChiudere(rete) {
+  return [comeSiChiudeColServizio(rete), comeSiChiude(rete)].filter(Boolean);
+}
+
 /* L'errore di quando Home Assistant non accetta il comando della rete.
  *
  * Ha un codice suo, e serve: l'app mostra un avviso diverso per ogni codice, e
@@ -251,11 +276,19 @@ export function comeSiChiudeColServizio({ quale }) {
  * conosce». Rilanciandolo al telefono si cambiava chi ha ricevuto la domanda:
  * quello era Home Assistant, non il ponte. */
 export class ZigbeeNonAccettato extends Error {
-  constructor(comando, ripiego) {
-    const strade = [comando, ripiego ? `${ripiego.domain}.${ripiego.service}` : ""]
-      .filter(Boolean)
-      .join(" ne' ");
-    super(`Home Assistant non accetta ${strade || "il comando della rete Zigbee"}`);
+  constructor(strade = [], detto = "") {
+    const nomi = strade.map(comeSiChiama).filter(Boolean).join(" ne' ");
+    /* Le parole di Home Assistant si portano dietro.
+     *
+     * Chi legge l'avviso sul telefono e' la stessa persona che deve capire
+     * perche' la rete non si apre, e «non accetta» da solo non basta:
+     * «unauthorized» e «unknown command» mandano a guardare due cose diverse.
+     * Senza, l'unico posto dove leggerlo sarebbe il registro dell'add-on, che
+     * chi ha il problema quasi mai va ad aprire. */
+    super(
+      `Home Assistant non accetta ${nomi || "il comando della rete Zigbee"}` +
+        (detto ? ` (${detto})` : ""),
+    );
     this.code = "zigbee_non_accettato";
   }
 }
@@ -633,7 +666,7 @@ export class Zigbee {
     if (!comando) return { fatto: false, perche: "questa casa non ha una rete Zigbee" };
     this._entrati = [];
     await this._ascolta();
-    await this._ordina(comando, comeSiApreColServizio(rete, secondi));
+    await this._ordina(leStradePerAprire(rete, secondi));
     const quanto = perQuanto(secondi);
     this._apertaFinoA = this.adesso() + quanto * 1000;
     clearTimeout(this._chiudiDaSola);
@@ -652,37 +685,42 @@ export class Zigbee {
     const comando = comeSiChiude(rete);
     this._scaduta();
     if (!comando) return { fatto: false, perche: "questa casa non ha una rete Zigbee" };
-    await this._ordina(comando, comeSiChiudeColServizio(rete));
+    await this._ordina(leStradePerChiudere(rete));
     this.registro.info("zigbee: rete richiusa");
     return { fatto: true };
   }
 
-  /* L'ordine, per la strada che c'e'.
+  /* L'ordine, per le strade che ci sono.
    *
-   * Si prova quella buona; se Home Assistant risponde che QUEL comando non ce
-   * l'ha, si prova l'altra. Se non c'e' un'altra, o se anche l'altra dice la
-   * stessa cosa, l'errore che esce dice di chi e': non e' il ponte a essere
-   * vecchio — il ponte questo comando lo conosce, l'ha appena eseguito — e'
-   * Home Assistant che non lo accetta. Rilanciare `unknown_command` cosi'
-   * com'era mandava chi legge ad aggiornare la cosa sbagliata. */
-  async _ordina(comando, ripiego) {
-    try {
-      return await this.casa.chiedi(comando);
-    } catch (errore) {
-      if (!eUnComandoCheNonCe(errore)) throw errore;
-      if (ripiego) {
-        try {
-          const fatto = await this.casa.chiedi(ripiego);
-          this.registro.info(
-            "zigbee: Home Assistant non ha il comando sul filo, fatto col servizio",
-          );
-          return fatto;
-        } catch (secondo) {
-          if (!eUnComandoCheNonCe(secondo)) throw secondo;
-        }
+   * Si provano in fila. Una strada che Home Assistant non ha — il comando
+   * sconosciuto, il servizio che non esiste — non e' un guasto: e' solo
+   * questa casa che quella strada non ce l'ha, e si passa alla prossima.
+   * Qualunque altro rifiuto invece ferma tutto: se il coordinatore non
+   * risponde, non risponde anche per la seconda strada, e chi ha premuto il
+   * tasto aspetterebbe il doppio per lo stesso «no».
+   *
+   * Se nessuna strada c'e', l'errore che esce dice di chi e': non e' il ponte
+   * a essere vecchio — il ponte questo comando lo conosce, l'ha appena
+   * eseguito — e' Home Assistant che non lo accetta. Rilanciare
+   * `unknown_command` cosi' com'era mandava chi legge ad aggiornare la cosa
+   * sbagliata. */
+  async _ordina(strade) {
+    if (!strade.length) return null;
+    let ultimo = "";
+    for (const [quale, comando] of strade.entries()) {
+      try {
+        const fatto = await this.casa.chiedi(comando);
+        if (quale > 0) this.registro.info(`zigbee: fatto con ${comeSiChiama(comando)}`);
+        return fatto;
+      } catch (errore) {
+        if (!eUnComandoCheNonCe(errore)) throw errore;
+        this.registro.info(
+          `zigbee: questa casa non ha ${comeSiChiama(comando)}, provo la prossima`,
+        );
+        ultimo = String(errore?.message || errore?.code || "");
       }
-      throw new ZigbeeNonAccettato(comando?.type, ripiego);
     }
+    throw new ZigbeeNonAccettato(strade, ultimo);
   }
 
   _scaduta() {

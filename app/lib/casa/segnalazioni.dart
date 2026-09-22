@@ -365,15 +365,15 @@ String spiegaLErrore(Object errore) => switch (errore) {
    * non lo accetta. Dal campo, con l'add-on aggiornato e la scheda ZHA piena
    * a tre centimetri dall'avviso: «da un messaggio di aggiornare ma in realta'
    * e' tutto aggiornato». */
-  ComandoRifiutato(codice: 'zigbee_non_accettato') => inLingua(
+  ComandoRifiutato(codice: 'zigbee_non_accettato', :final spiegazione) => inLingua(
     it:
         'Home Assistant non ha accettato il comando per aprire la rete: '
         'controlla che ZHA (o Zigbee2MQTT) sia acceso e che l\'antenna sia '
-        'collegata. Non è l\'add-on: questa cosa la sa fare.',
+        'collegata. Non è l\'add-on: questa cosa la sa fare. $spiegazione',
     en:
         'Home Assistant refused the command to open the network: check that '
         'ZHA (or Zigbee2MQTT) is running and the radio is plugged in. It\'s '
-        'not the add-on: it does know how to do this.',
+        'not the add-on: it does know how to do this. $spiegazione',
   ),
   ComandoRifiutato(codice: 'unknown_command') => inLingua(
     it:
