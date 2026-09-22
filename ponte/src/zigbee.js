@@ -811,6 +811,28 @@ export class Zigbee {
       device_id: quale,
       name_by_user: come,
     });
+    /* E adesso si CONTROLLA, invece di fidarsi.
+     *
+     * Dal campo: «ho cambiato nome… in Home Assistant non ha cambiato il nome
+     * in quello scelto», e la schermata intanto diceva «Adesso si chiama cosi',
+     * e con quel nome lo vedono la plancia e Home Assistant». Una promessa non
+     * verificata, e la peggiore specie: chi la legge smette di controllare.
+     *
+     * Home Assistant a un rifiuto risponde male e `chiedi` solleva — quella
+     * strada e' coperta. Quello che non era coperto e' un «si'» che non ha
+     * fatto quello che diceva: un `device_id` che esiste ma non e' quello che
+     * uno guarda, un campo che quella versione non accetta. Si rilegge la
+     * riga dalla risposta, e se il nome non e' quello si dice che non e'
+     * andata — con dentro quello che Home Assistant ha davvero, che e'
+     * l'unica cosa che poi fa capire perche'. */
+    const scritto = pulito(dispositivo?.name_by_user);
+    if (scritto !== come)
+      return {
+        fatto: false,
+        perche: scritto
+          ? `Home Assistant ha accettato ma quel dispositivo si chiama «${scritto}»`
+          : "Home Assistant ha accettato senza scrivere il nome",
+      };
     /* E lo si aggiorna anche nell'elenco di chi sta guardando: la schermata
      * dopo mostra il nome nuovo senza dover richiedere tutto. */
     const suo = this._entrati.find((uno) => uno.id === quale);
