@@ -11,6 +11,66 @@ fuori. La plancia dentro continua a dire la sua, e si legge dov'è sempre
 stata: nella pastiglia «La plancia» della console. Sono due numeri perché
 sono due cose.
 
+## 1.6.0.2
+
+**La riga dello Zigbee esce da sola, nel registro dell'add-on.** La 1.6.0.1
+aveva messo in piedi il rimedio al guasto muto — il ponte scrive cos'ha
+trovato guardando la rete Zigbee, invece di lasciare indovinare — ma il
+rimedio era muto anche lui. Quella riga la riempiva `rete()`, e `rete()`
+partiva la prima volta quando qualcuno apriva la schermata Zigbee nell'app:
+finche' nessuno la apriva, il riquadro della console restava nascosto e nel
+registro non compariva niente. Solo che chi quella schermata non ce l'ha —
+perche' la voce nel menu non compare, **che e' esattamente la domanda** — non
+puo' aprirla per scoprire perche' non compare. Un cerchio, e dal campo si e'
+chiuso cosi': «Ho aggiornato app ma niente, nei log non e' uscito».
+
+Adesso la rete la si guarda all'accensione, e la riga va nel registro
+dell'add-on insieme alle altre — accanto a «Home Assistant risponde», a «5
+dispositivi abbinati», a «il centralino ci conosce». Il registro e' il primo
+posto dove si guarda quando una cosa non c'e', ed e' dove il ponte dice gia'
+tutto il resto di se'. Dice una cosa sola di tre:
+
+- `la rete Zigbee di questa casa e' ZHA`
+- `la rete Zigbee di questa casa e' Zigbee2MQTT, nella cassetta «zigbee2mqtt»`
+- `nessuna rete Zigbee: nell'app la voce «Zigbee» non comparira' — <perche'>`
+
+La terza porta con se' tutt'e due le ragioni, quella di ZHA e quella della
+posta, perche' e' l'unica riga che quella persona leggera': se il motivo non
+ci sta dentro, non sta da nessuna parte. Ed e' scritta come un avviso, non
+come una riga qualunque, per chi il registro lo scorre cercando cosa non va.
+
+Se la prima occhiata non trova niente si riguarda dopo mezzo minuto e dopo
+due: all'accensione Home Assistant sta spesso ancora partendo, e l'add-on di
+Zigbee2MQTT parte per conto suo, a volte dopo di noi. Scrivere «nessuna rete
+Zigbee» in una casa che ce l'ha, e non correggerlo piu' fino al riavvio dopo,
+sarebbe peggio del silenzio. E siccome adesso la rete si guarda comunque, il
+riquadro «Zigbee» nella console dell'add-on si riempie da se' invece di
+aspettare che qualcuno passi dall'app.
+
+**Nella stanza, il nome glielo da' anche l'azione rapida.** «Leggo ancora
+modus… sono azioni rapide, scene, queste — non modus.» La 1.6.0.1 aveva
+corretto meta' del guasto: nella stanza il nome se lo prende da «Le tue
+entita'» invece che da Home Assistant. Ma i rubinetti che un nome ce l'hanno
+sono due, e il secondo non lo guardava nessuno — chi un'azione rapida ce l'ha
+non ha nessun motivo di riscrivere la stessa entita' in un'altra scheda per
+darle lo stesso nome. Il nome stava li', e nella stanza la riga continuava a
+chiamarsi «Modus»: e' il `select` di un'integrazione tedesca, e vuol dire
+«modalita'».
+
+Adesso il nome e il segno arrivano anche dalle Azioni rapide. Dove ci sono
+tutt'e due vince quello di «Le tue entita'», che di mestiere fa proprio dare
+un nome a un'entita'; l'azione rapida il nome ce l'ha per fare un tasto, e
+vale dove l'altro non c'e'. E un'azione rapida da sola in nessuna stanza ci
+va: il nome lo presta, la riga non la crea — se no la pagina Stanze si
+riempirebbe di tasti della Home che nessuno ha messo li'.
+
+**Le «Novita'» nel Play Store raccontano la 1.6.0.** Sotto la 1.6.0 e sotto
+la 1.6.0.1 c'era il testo della 1.5.4 — «Il numero dell'app e quello di casa
+tornano uguali. Qui dentro non cambia niente» — perche' quei due file non li
+aveva piu' toccati nessuno da marzo. Chi apriva la scheda dell'app sul
+telefono leggeva quello, davanti alla versione con l'abbinamento Zigbee, il
+volto o l'impronta, le fasce orarie e le stanze per piano.
+
 ## 1.6.0.1
 
 Sette cose viste provando la 1.6.0 su un telefono e su una casa vera. Nessuna

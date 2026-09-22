@@ -21,6 +21,7 @@ import {
   Zigbee,
   ceZha,
   comeSiApre,
+  comeSiDiceNelRegistro,
   comeSiChiude,
   comeSiPresenta,
   eUnoNuovo,
@@ -570,4 +571,112 @@ test("e quando non trova niente lo dice col perché, non col silenzio", async ()
   assert.equal(verbale.quale, NESSUNA);
   assert.equal(verbale.cassetta, "");
   assert.match(verbale.posta, /nessuna cassetta/);
+});
+
+/* ── e lo dice nel registro, che e' dove si guarda ───────────────────────── */
+
+test("la riga del registro dice quale rete c'è, e col nome della cassetta", () => {
+  assert.deepEqual(comeSiDiceNelRegistro({ rete: { quale: ZHA, cassetta: "" } }), {
+    grave: false,
+    riga: "la rete Zigbee di questa casa e' ZHA",
+  });
+  assert.deepEqual(comeSiDiceNelRegistro({ rete: { quale: Z2M, cassetta: "casa/zigbee" } }), {
+    grave: false,
+    riga: "la rete Zigbee di questa casa e' Zigbee2MQTT, nella cassetta «casa/zigbee»",
+  });
+});
+
+test("e quando non c'è niente la riga porta con sé tutt'e due i perché", () => {
+  /* È l'unica riga che quella persona leggerà: se il motivo non ci sta dentro,
+   * non sta da nessuna parte. Sono due perché e non uno — ZHA e la posta —
+   * perché la rete si cerca in due posti e sapere quale dei due ha risposto
+   * male è metà della risposta. */
+  const { grave, riga } = comeSiDiceNelRegistro({
+    rete: { quale: NESSUNA, cassetta: "" },
+    verbale: {
+      zha: "l'integrazione ZHA in questa casa non c'e'",
+      posta: "nessuna cassetta: Home Assistant non fa ascoltare MQTT (mqtt non configurato)",
+    },
+  });
+  /* Va scritta come un avviso, non come una riga qualunque: chi scorre il
+   * registro cercando cosa non va deve poterla vedere senza leggerlo tutto. */
+  assert.equal(grave, true);
+  assert.match(riga, /nessuna rete Zigbee/);
+  assert.match(riga, /la voce «Zigbee» non comparira'/);
+  assert.match(riga, /ZHA in questa casa non c'e'/);
+  assert.match(riga, /non fa ascoltare MQTT/);
+});
+
+test("all'accensione la riga esce da sola, senza che nessuno apra l'app", async () => {
+  /* Il guasto vero, quello che ha tenuto in piedi una serata intera: il
+   * riquadro della console si riempiva soltanto DOPO che qualcuno avesse
+   * aperto la schermata Zigbee nell'app — perché è lì che `rete()` partiva la
+   * prima volta. Ma chi quella schermata non ce l'ha, perché la voce nel menu
+   * non compare, non può aprirla per sapere perché non compare. Il rimedio al
+   * silenzio era muto anche lui. */
+  const dette = [];
+  const registro = {
+    info: (cosa) => dette.push(["info", cosa]),
+    attenzione: (cosa) => dette.push(["attenzione", cosa]),
+    errore: () => {},
+  };
+  const zigbee = new Zigbee({ casa: casaFinta({ cassetta: "zigbee2mqtt" }), registro });
+  await zigbee.dilloAlRegistro([]);
+  assert.deepEqual(dette, [
+    ["info", "la rete Zigbee di questa casa e' Zigbee2MQTT, nella cassetta «zigbee2mqtt»"],
+  ]);
+});
+
+test("e se la casa sta ancora partendo si riguarda, invece di dire una cosa falsa", async () => {
+  /* All'accensione dell'add-on Home Assistant sta spesso ancora partendo, e
+   * quello di Zigbee2MQTT parte per conto suo — a volte dopo di noi. Guardare
+   * una volta sola vorrebbe dire scrivere «nessuna rete Zigbee» in una casa
+   * che ce l'ha, e non correggerlo più fino al riavvio dopo.
+   *
+   * La casa di questa prova è una casa che si accende in ritardo: alla prima
+   * domanda la posta non c'è, alla seconda sì. */
+  let accesa = false;
+  const casa = {
+    async chiedi() {
+      return [];
+    },
+    async ascoltaIl(comando, onEvento) {
+      if (accesa && copre(comando.topic, "zigbee2mqtt/bridge/info"))
+        queueMicrotask(() => onEvento({ topic: "zigbee2mqtt/bridge/info" }));
+      return async () => {};
+    },
+  };
+  const dette = [];
+  const registro = {
+    info: (cosa) => dette.push(cosa),
+    attenzione: (cosa) => dette.push(cosa),
+    errore: () => {},
+  };
+  /* L'attesa la mette la prova, così non si sta lì mezzo minuto: è per questo
+   * che si passa dal di fuori invece di stare scritta dentro il codice. */
+  const zigbee = new Zigbee({
+    casa,
+    registro,
+    aspetta: async () => {
+      accesa = true;
+    },
+  });
+  await zigbee.dilloAlRegistro([30_000]);
+  /* Una riga sola, e quella giusta: la prima passata non scrive niente. */
+  assert.deepEqual(dette, [
+    "la rete Zigbee di questa casa e' Zigbee2MQTT, nella cassetta «zigbee2mqtt»",
+  ]);
+});
+
+test("e chi si sta spegnendo non scrive più niente", async () => {
+  /* Un ritentativo in coda mentre l'add-on si abbassa: la riga arriverebbe
+   * dopo «il ponte si abbassa», e direbbe di una casa che non c'è più. */
+  const dette = [];
+  const zigbee = new Zigbee({
+    casa: casaFinta({}),
+    registro: { info: (cosa) => dette.push(cosa), attenzione: (cosa) => dette.push(cosa) },
+    aspetta: async () => zigbee.spegni(),
+  });
+  await zigbee.dilloAlRegistro([30_000]);
+  assert.deepEqual(dette, []);
 });

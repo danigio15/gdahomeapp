@@ -495,6 +495,17 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
   if (saluto.viva) registro.info("Home Assistant risponde");
   else registro.attenzione(`Home Assistant non risponde: ${saluto.perche}`);
 
+  /* E che rete Zigbee c'e' in questa casa.
+   *
+   * Qui e non solo nella console: la console il suo riquadro lo riempiva
+   * soltanto **dopo** che qualcuno avesse aperto la schermata Zigbee nell'app,
+   * e chi quella schermata non ce l'ha — perche' la voce nel menu non compare,
+   * che e' la domanda — non poteva aprirla per sapere perche' non compare.
+   *
+   * Non si aspetta: sono due secondi di posta, e se la casa sta ancora
+   * partendo si riguarda da se' fra mezzo minuto. */
+  void zigbee.dilloAlRegistro();
+
   /* Le voci fra le Plance.
    *
    * Non si aspetta, e si riprova: all'avvio dell'add-on Home Assistant sta

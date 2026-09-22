@@ -138,7 +138,13 @@ export function roomPages() {
  * La mappa e' `entita' -> stanza` e la scrive l'assegnatore in configurazione.
  * Qui si trasforma in voci con un nome leggibile: quello di Home Assistant se
  * c'e', altrimenti l'entity_id — brutto da leggere ma mai una bugia. */
-export function assignedItems(mappa = readJson(ROOM_ASSIGN_KEY, {}), states = allStates()) {
+export const CHIAVE_AZIONI_RAPIDE = "cd_quick_actions";
+
+export function assignedItems(
+  mappa = readJson(ROOM_ASSIGN_KEY, {}),
+  states = allStates(),
+  azioni = readJson(CHIAVE_AZIONI_RAPIDE, []),
+) {
   /* Due rubinetti, e ognuno sa una cosa diversa.
    *
    * L'assegnazione a mano e' una mappa entita' → stanza: sa DOVE, e del nome
@@ -184,6 +190,29 @@ export function assignedItems(mappa = readJson(ROOM_ASSIGN_KEY, {}), states = al
     if (!vestito.has(id))
       vestito.set(id, { nome: clean(voce.nome), icona: clean(voce.icona) });
   }
+  /* E le Azioni rapide: il terzo rubinetto, quello che mancava.
+   *
+   * Un'azione rapida ha un nome che l'ha scritto chi l'ha fatta — «Scena
+   * serata», «Tapparelle giu'» — e comanda un'entita'. Se quella stessa
+   * entita' e' assegnata anche a una stanza, nella stanza usciva col nome di
+   * Home Assistant: dal campo, «Modus», che e' come si chiama in tedesco il
+   * `select` di un termostato. «Leggo ancora modus: sono azioni rapide,
+   * scene, queste — non modus.»
+   *
+   * La prima volta si era guardato solo «Le tue entita'», e li' quel nome non
+   * c'era: chi un'azione rapida ce l'ha non ha nessun motivo di riscrivere la
+   * stessa entita' anche in un'altra scheda per darle lo stesso nome.
+   *
+   * Viene dopo «Le tue entita'», che di mestiere fa proprio dare un nome a
+   * un'entita'; l'azione rapida il nome ce l'ha per fare un tasto, e vale dove
+   * l'altro non c'e'. E non mette niente in nessuna stanza — una stanza
+   * un'azione rapida non ce l'ha — percio' qui si tocca solo il vestito. */
+  if (Array.isArray(azioni))
+    for (const azione of azioni) {
+      const id = clean(azione?.entity);
+      if (!id || vestito.has(id)) continue;
+      vestito.set(id, { nome: clean(azione?.name), icona: clean(azione?.icon) });
+    }
   return [...stanze].map(([id, room_id]) => ({
     entity: id,
     name:
