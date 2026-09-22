@@ -138,6 +138,34 @@ export function laReteDiCasa({ zha = false, cassetta = "" } = {}) {
   return { quale: NESSUNA, cassetta: "" };
 }
 
+/**
+ * La riga che va nel registro dell'add-on, da quello che si e' visto.
+ *
+ * Sta qui, fuori dal giro, perche' e' la sola parte di questa storia che si
+ * puo' provare senza una casa — ed e' la parte che conta: **una casa che ha
+ * Zigbee e un ponte che non lo trova devono essere distinguibili da una casa
+ * che Zigbee non ce l'ha**. Quando non si trova niente, la riga porta con se'
+ * tutt'e due le ragioni — quella di ZHA e quella della posta — perche' chi
+ * legge il registro non ha nessun altro posto dove andarle a prendere.
+ */
+export function comeSiDiceNelRegistro({ rete, verbale } = {}) {
+  const quale = rete?.quale || NESSUNA;
+  if (quale === ZHA) return { grave: false, riga: "la rete Zigbee di questa casa e' ZHA" };
+  if (quale === Z2M) {
+    return {
+      grave: false,
+      riga: `la rete Zigbee di questa casa e' Zigbee2MQTT, nella cassetta «${rete?.cassetta || ""}»`,
+    };
+  }
+  const perche = [verbale?.zha, verbale?.posta].filter(Boolean).join("; ");
+  return {
+    grave: true,
+    riga:
+      "nessuna rete Zigbee: nell'app la voce «Zigbee» non comparira'" +
+      (perche ? ` — ${perche}` : ""),
+  };
+}
+
 /** Quanti secondi si tiene aperta: dentro i limiti, e mai a caso. */
 export function perQuanto(secondi) {
   const quanti = Number(secondi);
@@ -271,11 +299,35 @@ export function comeSiPresentaUnEntita(voce) {
  */
 export const QUANTO_SI_RICORDA = 60_000;
 
+/* Quanto si aspetta prima di riguardare, quando all'accensione non si trova
+ * niente.
+ *
+ * All'accensione dell'add-on Home Assistant sta spesso ancora partendo, e
+ * l'add-on di Zigbee2MQTT parte per conto suo — a volte dopo di noi. Una casa
+ * che al primo colpo dice «nessuna» non e' una casa senza Zigbee: e' una casa
+ * che non ha ancora finito di accendersi, e scriverlo nel registro una volta
+ * sola vorrebbe dire dire una cosa falsa e non correggerla piu'. */
+export const ATTESE = Object.freeze([30_000, 120_000]);
+
+/* L'attesa fra un tentativo e l'altro.
+ *
+ * `unref` e' voluto: un ritentativo in coda non deve tenere sveglio un add-on
+ * che si sta spegnendo. Sotto le prove costa che il giro finisca prima della
+ * promessa, e per questo si sostituisce dal di fuori invece di togliere dal
+ * codice vero una cosa che al codice vero serve. */
+const ASPETTA = (quanto) =>
+  new Promise((ok) => {
+    const giro = setTimeout(ok, quanto);
+    giro.unref?.();
+  });
+
 export class Zigbee {
-  constructor({ casa, registro = null, adesso = () => Date.now() } = {}) {
+  constructor({ casa, registro = null, adesso = () => Date.now(), aspetta = ASPETTA } = {}) {
     this.casa = casa;
     this.registro = registro ?? { info() {}, attenzione() {}, errore() {} };
     this.adesso = adesso;
+    this.aspetta = aspetta;
+    this._fermo = false;
     this._rete = null;
     this._reteChiestaIl = 0;
     /* I dispositivi entrati da quando si sta guardando. L'elenco e' di chi
@@ -327,6 +379,41 @@ export class Zigbee {
       posta: verbale.posta,
       cassette: [...LE_CASSETTE],
     };
+  }
+
+  /**
+   * Lo scrive nel registro dell'add-on, all'accensione.
+   *
+   * La console lo diceva gia' — ma solo a chi ci fosse passato **dopo** che
+   * qualcuno avesse aperto la schermata Zigbee nell'app. Finche' nessuno
+   * chiedeva, `rete()` non partiva mai, `chiesto` restava a zero e il riquadro
+   * della console stava nascosto. E chi quella schermata non ce l'ha — perche'
+   * la voce nel menu non compare, che e' esattamente la domanda — non poteva
+   * aprirla per scoprire perche' non compare. Un cerchio: il rimedio al
+   * silenzio era muto anche lui.
+   *
+   * Il registro invece e' il primo posto dove si guarda quando una cosa non
+   * c'e', ed e' dove il ponte dice gia' tutto il resto: se Home Assistant
+   * risponde, quanti dispositivi sono abbinati, se il centralino ci conosce.
+   * Questa riga sta li' in mezzo, e c'e' **sempre** — anche nelle case in cui
+   * quella schermata non la aprira' mai nessuno.
+   *
+   * Non si aspetta il suo esito per accendere il ponte: sono due secondi di
+   * posta, e una riga di registro non vale il ritardo di tutto il resto.
+   */
+  async dilloAlRegistro(attese = ATTESE) {
+    let rete = await this.rete({ forza: true });
+    for (const quanto of attese) {
+      if (this._fermo || rete.quale !== NESSUNA) break;
+      await this.aspetta(quanto);
+      if (this._fermo) return rete;
+      rete = await this.rete({ forza: true });
+    }
+    if (this._fermo) return rete;
+    const { grave, riga } = comeSiDiceNelRegistro({ rete, verbale: this._verbale });
+    if (grave) this.registro.attenzione(riga);
+    else this.registro.info(riga);
+    return rete;
   }
 
   /* Una riga del verbale.
@@ -584,6 +671,7 @@ export class Zigbee {
 
   /** Smette di ascoltare e spegne il timer: serve a spegnere per bene. */
   spegni() {
+    this._fermo = true;
     this._scaduta();
   }
 }
