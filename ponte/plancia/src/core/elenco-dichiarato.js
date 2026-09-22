@@ -31,8 +31,18 @@
 
 const pulito = (valore) => String(valore ?? "").trim();
 
+/* I campi in piu' che una sezione puo' tenere per riga.
+ *
+ * Tre cose ce le hanno tutte — entita', nome, disegno — e una quarta ce l'ha
+ * solo chi ne ha bisogno: le Macchine tengono a quale famiglia appartiene la
+ * riga, le Batterie le due soglie di ricarica. Passano di qui per NOME, non
+ * «tutto quello che c'e' nell'oggetto»: un elenco esplicito e' l'unica forma
+ * che dice cosa si salva, e cosa invece e' roba di passaggio che non deve
+ * finire nel deposito.
+ */
+
 /** Una riga dichiarata, ripulita. Torna `null` se non e' una riga. */
-export function rigaPulita(voce) {
+export function rigaPulita(voce, inPiu = []) {
   if (!voce || typeof voce !== "object") return null;
   const entity = pulito(voce.entity);
   const name = pulito(voce.name);
@@ -42,20 +52,23 @@ export function rigaPulita(voce) {
    * righe vuote. Col solo nome invece resta: e' una riga cominciata e non
    * finita, e la scheda lo dice. */
   if (!entity && !name) return null;
-  return { entity, name, icon };
+  const riga = { entity, name, icon };
+  for (const campo of Array.isArray(inPiu) ? inPiu : [])
+    if (voce[campo] !== undefined && voce[campo] !== null) riga[campo] = voce[campo];
+  return riga;
 }
 
 /**
  * Le righe dichiarate, oppure `null` se questa casa non ne ha mai dichiarate.
  * `null` non e' l'elenco vuoto: vedi il capitolo qui sopra.
  */
-export function righeDichiarate(stored) {
+export function righeDichiarate(stored, inPiu = []) {
   const dato = stored && typeof stored === "object" && !Array.isArray(stored) ? stored : {};
   if (!Array.isArray(dato.righe)) return null;
   const viste = new Set();
   const righe = [];
   for (const voce of dato.righe) {
-    const riga = rigaPulita(voce);
+    const riga = rigaPulita(voce, inPiu);
     if (!riga) continue;
     /* La stessa entita' due volte sarebbe la stessa cosa contata due volte, e
      * in cima alla pagina il conto direbbe un numero sbagliato — che e'
@@ -68,23 +81,26 @@ export function righeDichiarate(stored) {
 }
 
 /** La configurazione con questa riga al suo posto, pronta da salvare. */
-export function conLaRiga(config, indice, riga) {
-  const righe = [...(righeDichiarate(config) || [])];
-  const pulita = rigaPulita(riga) || { entity: "", name: "", icon: "" };
+export function conLaRiga(config, indice, riga, inPiu = []) {
+  const righe = [...(righeDichiarate(config, inPiu) || [])];
+  const pulita = rigaPulita(riga, inPiu) || { entity: "", name: "", icon: "" };
   if (indice >= 0 && indice < righe.length) righe[indice] = pulita;
   else righe.push(pulita);
   return { ...(config && typeof config === "object" ? config : {}), righe };
 }
 
 /** La configurazione senza questa riga. Eliminata vuol dire eliminata. */
-export function senzaLaRiga(config, indice) {
-  const righe = (righeDichiarate(config) || []).filter((_riga, posto) => posto !== indice);
+export function senzaLaRiga(config, indice, inPiu = []) {
+  const righe = (righeDichiarate(config, inPiu) || []).filter((_riga, posto) => posto !== indice);
   return { ...(config && typeof config === "object" ? config : {}), righe };
 }
 
 /** La configurazione con queste righe in fondo: e' quello che fa l'importazione. */
-export function conLeRighe(config, aggiunte) {
-  const righe = [...(righeDichiarate(config) || []), ...(Array.isArray(aggiunte) ? aggiunte : [])];
+export function conLeRighe(config, aggiunte, inPiu = []) {
+  const righe = [
+    ...(righeDichiarate(config, inPiu) || []),
+    ...(Array.isArray(aggiunte) ? aggiunte : []),
+  ];
   return { ...(config && typeof config === "object" ? config : {}), righe };
 }
 

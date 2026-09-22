@@ -124,8 +124,17 @@ export function costruisciSchedaDichiarata(scheda) {
   const marchio = `dmScheda${nome[0].toUpperCase()}${nome.slice(1)}`;
 
   const configurazione = () => readJson(chiave, {}) || {};
-  const righe = () => righeDichiarate(configurazione());
+  const inPiu = scheda.inPiu || [];
+  const righe = () => righeDichiarate(configurazione(), inPiu);
   const activeTab = () => clean(doc?.querySelector?.(".ed-tab.active")?.dataset?.tab);
+  /* Dove sta questa scheda.
+   *
+   * Tre delle quattro hanno una linguetta tutta loro e si prendono il corpo
+   * dell'editor. La quarta — le Macchine — e' un BLOCCO appeso in fondo alla
+   * scheda del MiniPC, perche' le macchine di casa stanno la'. E' l'unica
+   * differenza di forma fra le quattro, ed e' una riga: chi ha `ancora` si
+   * attacca a quel nodo invece di possedere `#ed-body`. */
+  const dentroLaScheda = () => (scheda.visibile ? scheda.visibile() : activeTab() === tab);
 
   function salva(prossima) {
     writeJsonIfChanged(chiave, prossima);
@@ -133,8 +142,11 @@ export function costruisciSchedaDichiarata(scheda) {
   }
 
   function ridisegna() {
-    const body = doc?.getElementById("ed-body");
-    if (body) delete body.dataset[marchio];
+    if (scheda.ancora) doc?.getElementById?.(scheda.ancora)?.remove();
+    else {
+      const body = doc?.getElementById("ed-body");
+      if (body) delete body.dataset[marchio];
+    }
     disegnaScheda();
   }
 
@@ -172,14 +184,32 @@ export function costruisciSchedaDichiarata(scheda) {
   /* La prima apertura scrive quello che la pagina gia' mostrava: nessuna casa
    * si ritrova la scheda vuota per un aggiornamento. */
   function migraSeServe() {
-    if (righeDichiarate(configurazione()) !== null) return false;
-    salva(conLeRighe(configurazione(), daPrendere()));
+    if (righeDichiarate(configurazione(), inPiu) !== null) return false;
+    salva(conLeRighe(configurazione(), daPrendere(), inPiu));
     return true;
   }
 
   function disegnaScheda() {
     const body = doc?.getElementById("ed-body");
-    if (!body || activeTab() !== tab) return false;
+    if (scheda.ancora) {
+      if (!body || !dentroLaScheda()) {
+        doc?.getElementById?.(scheda.ancora)?.remove();
+        return false;
+      }
+      if (doc.getElementById(scheda.ancora)) return false;
+      migraSeServe();
+      scheda.primaDiDisegnare?.();
+      const casella = doc.createElement("div");
+      casella.id = scheda.ancora;
+      casella.className = "dm-dich-scheda";
+      casella.dataset.dmDichSezione = nome;
+      for (const [attributo, valore] of Object.entries(scheda.attributi || {}))
+        casella.setAttribute(attributo, valore);
+      casella.innerHTML = schedaMarkup();
+      body.append(casella);
+      return true;
+    }
+    if (!body || !dentroLaScheda()) return false;
     migraSeServe();
     if (body.dataset[marchio] === "true") return false;
     body.dataset[marchio] = "true";
@@ -188,6 +218,8 @@ export function costruisciSchedaDichiarata(scheda) {
   }
 
   function disegnaLinguetta() {
+    /* Chi sta dentro la scheda di un'altra non ha una linguetta sua. */
+    if (scheda.ancora) return false;
     const tabs = doc?.querySelector(".ed-tab")?.parentElement;
     if (!tabs || tabs.querySelector(`.ed-tab[data-tab="${tab}"]`)) return false;
     const linguetta = doc.createElement("button");
@@ -212,16 +244,22 @@ export function costruisciSchedaDichiarata(scheda) {
       body.querySelector(
         `[data-dm-dich-campo="${quale}"][data-dm-dich-riga="${indice}"]`,
       );
-    return {
+    const fuori = {
       entity: clean(campo("entity")?.value ?? riga.entity),
       name: clean(campo("name")?.value ?? riga.name),
       icon: clean(campo("icon")?.value ?? riga.icon) || scheda.ripiego,
     };
+    /* I campi in piu' si tengono com'erano, a meno che la sezione non ne
+     * legga uno dal documento: e' lei che sa dove li ha messi. */
+    for (const nome of inPiu) if (riga[nome] !== undefined) fuori[nome] = riga[nome];
+    return scheda.bozzaInPiu ? scheda.bozzaInPiu(fuori, body, indice) : fuori;
   }
 
   function onClick(event) {
-    const body = doc?.getElementById("ed-body");
-    if (!body || activeTab() !== tab || !body.contains(event.target)) return;
+    const body = scheda.ancora
+      ? doc?.getElementById?.(scheda.ancora)
+      : doc?.getElementById("ed-body");
+    if (!body || !dentroLaScheda() || !body.contains(event.target)) return;
 
     const lente = event.target.closest("[data-dm-dich-pick]");
     if (lente) {
@@ -240,10 +278,12 @@ export function costruisciSchedaDichiarata(scheda) {
        * salvasse da solo, chi ha appena scritto il nome e poi tocca l'icona si
        * vedrebbe tornare il nome di prima al ridisegno. */
       salva(
-        conLaRiga(configurazione(), indice, {
-          ...bozza(body, indice),
-          icon: clean(icona.dataset.dmDichIcona),
-        }),
+        conLaRiga(
+          configurazione(),
+          indice,
+          { ...bozza(body, indice), icon: clean(icona.dataset.dmDichIcona) },
+          inPiu,
+        ),
       );
       ridisegna();
       return;
@@ -257,7 +297,7 @@ export function costruisciSchedaDichiarata(scheda) {
        * ha battuto il nome e poi tocca la matita non ha detto «butta via», ha
        * detto «ho finito». */
       if (stato.aperto === indice) {
-        salva(conLaRiga(configurazione(), indice, bozza(body, indice)));
+        salva(conLaRiga(configurazione(), indice, bozza(body, indice), inPiu));
         stato.aperto = -1;
       } else stato.aperto = indice;
       ridisegna();
@@ -269,7 +309,7 @@ export function costruisciSchedaDichiarata(scheda) {
       event.preventDefault();
       const indice = Number(elimina.dataset.dmDichElimina);
       if (!Number.isInteger(indice)) return;
-      salva(senzaLaRiga(configurazione(), indice));
+      salva(senzaLaRiga(configurazione(), indice, inPiu));
       if (stato.aperto === indice) stato.aperto = -1;
       else if (stato.aperto > indice) stato.aperto -= 1;
       ridisegna();
@@ -281,7 +321,7 @@ export function costruisciSchedaDichiarata(scheda) {
       event.preventDefault();
       const indice = Number(salvaRiga.dataset.dmDichSalva);
       if (!Number.isInteger(indice)) return;
-      salva(conLaRiga(configurazione(), indice, bozza(body, indice)));
+      salva(conLaRiga(configurazione(), indice, bozza(body, indice), inPiu));
       stato.aperto = -1;
       ridisegna();
       root.edToast?.(parole.salvato);
@@ -291,11 +331,12 @@ export function costruisciSchedaDichiarata(scheda) {
     if (event.target.closest("[data-dm-dich-aggiungi]")) {
       event.preventDefault();
       salva(
-        conLaRiga(configurazione(), -1, {
-          entity: "",
-          name: parole.nuovo,
-          icon: scheda.ripiego,
-        }),
+        conLaRiga(
+          configurazione(),
+          -1,
+          { entity: "", name: parole.nuovo, icon: scheda.ripiego, ...(scheda.rigaNuova || {}) },
+          inPiu,
+        ),
       );
       stato.aperto = (righe() || []).length - 1;
       ridisegna();
@@ -306,7 +347,7 @@ export function costruisciSchedaDichiarata(scheda) {
       event.preventDefault();
       const mancano = daPrendere();
       if (!mancano.length) return;
-      salva(conLeRighe(configurazione(), mancano));
+      salva(conLeRighe(configurazione(), mancano, inPiu));
       ridisegna();
       root.edToast?.(parole.presi(mancano.length));
     }
@@ -405,6 +446,28 @@ export function installaStile() {
     #ed-body .dm-dich-piu>summary{font-size:11.5px!important;font-weight:800!important;color:var(--text-dim,#64748b)!important;cursor:pointer!important}
     #ed-body .dm-dich-piu[open]{display:grid!important;gap:8px!important}
     #ed-body .dm-dich-piu>small{display:block!important;font-size:11px!important;line-height:1.5!important;color:var(--text-dim,#64748b)!important;margin:6px 0 2px!important}
+    /* Il blocco che sta dentro la scheda di un'altra: le Macchine, appese in
+       fondo al MiniPC. Ha bisogno di staccarsi da quello che ha sopra. */
+    #ed-body .dm-dich-scheda[id]{margin-top:14px!important}
+    #ed-body .dm-macchina-ed-fascia{
+      display:grid!important;gap:8px!important;padding:10px!important;
+      border:1px solid var(--divider-color,#dbe4ee)!important;border-radius:14px!important}
+    #ed-body .dm-macchina-ed-fascia-lbl{
+      font-size:10.5px!important;font-weight:900!important;letter-spacing:.05em!important;
+      text-transform:uppercase!important;color:var(--text-dim,#64748b)!important}
+    #ed-body .dm-macchina-ed-int{
+      display:grid!important;grid-template-columns:20px minmax(0,1fr) auto!important;
+      align-items:center!important;gap:10px!important;padding:8px 10px!important;
+      border-radius:12px!important;cursor:pointer!important;
+      background:var(--secondary-background-color,#f1f5f9)!important}
+    #ed-body .dm-macchina-ed-int input{width:18px!important;height:18px!important;margin:0!important}
+    #ed-body .dm-macchina-ed-int-nome{
+      display:grid!important;gap:1px!important;min-width:0!important;font-size:13px!important;font-weight:800!important}
+    #ed-body .dm-macchina-ed-int-nome small{
+      font-size:10px!important;font-weight:700!important;color:var(--text-dim,#64748b)!important;
+      overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important}
+    #ed-body .dm-macchina-ed-int-conto{
+      font-size:11.5px!important;font-weight:800!important;color:var(--text-dim,#64748b)!important;white-space:nowrap!important}
     `,
   );
   return true;

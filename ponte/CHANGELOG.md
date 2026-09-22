@@ -119,10 +119,6 @@ finestra nuova non entra più da sola — è il punto di tutto — ma nemmeno si
 deve cercare a mano: il tasto in fondo dice quanti contatti Home Assistant ha
 trovato che qui dentro non ci sono, e li mette come righe. Una volta sola.
 
-**E dichiarandola, entra anche quello che il rilevamento non trovava.** Il
-rilevamento guarda solo i `binary_sensor.*`: un basculante che in Home
-Assistant è un `cover.*` non lo trovava, e non c'era modo di metterlo.
-
 **Dieci disegni nuovi, e niente più emoji di sistema.** «Icone sempre quelle
 del catalogo nostro, se non presenti queste creale.» I varchi avevano quattro
 emoji scelte dalla classe — porta, finestra, casa diroccata, cartello di
@@ -134,7 +130,7 @@ scorrevole, sbarra, varco generico — più il radar di presenza, che arriva con
 loro. Il disegno si vede anche nella pagina Varchi, nella vetrina della
 Sicurezza e nella scheda delle aree d'allarme, che leggono lo stesso elenco.
 
-**E la Presenza è diventata la stessa scheda.** Non «la stessa forma»
+**E adesso sono tutte e quattro la stessa scheda.** Non «la stessa forma»
 scritta due volte: proprio lo stesso file. I rilevatori avevano lo stesso
 difetto dei varchi — l'elenco lo faceva Home Assistant, il cestino escludeva
 invece di cancellare, e sotto c'era «Tolti dai conti» — e adesso hanno la
@@ -144,6 +140,18 @@ stessa scheda sarebbero quattro schede che fra sei mesi non si comportano più
 alla stessa maniera, che è esattamente come ci siamo arrivati la prima volta.
 Anche i due disegni della presenza erano emoji: adesso sono quindici fra cui
 scegliere, col radar per chi ha un mmWave.
+
+Le **Batterie** e le **Macchine** hanno la stessa scheda, con le loro due cose
+in più: la soglia di casa e le soglie di ricarica da una parte, la scelta
+delle integrazioni dall'altra. Le integrazioni spuntate restano e fanno ancora
+il loro mestiere — da quali marche si adotta — ma adesso decidono cosa viene
+**proposto**, non cosa si vede: quello che si vede è quello che hai scritto.
+Le macchine hanno in più la fascia, macchina o pezzo di rete, che prima si
+deduceva dalla classe e adesso la scegli tu.
+
+**E dichiarando entra anche quello che il rilevamento non trovava.** Il
+rilevamento dei varchi guarda solo i `binary_sensor.*`: un basculante che in
+Home Assistant è un `cover.*` non lo trovava, e non c'era modo di metterlo.
 
 **E i due comandi della pastiglia dell'entità stavano male.** Su un campo che
 l'etichetta ce l'ha già — cioè ogni riga dichiarata, quindi anche Porte e

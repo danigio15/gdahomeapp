@@ -83,18 +83,22 @@ test("la mappa dei nomi si passa gia' letta, e vale lo stesso", () => {
 test("la pagina, la scheda e la tessera chiedono lo stesso nome", () => {
   const pagina = leggi("sections/batterie-section.js");
   const scheda = leggi("sections/batterie-editor-section.js");
+  const elenco = leggi("sections/batterie-elenco-section.js");
   const ponte = leggi("sections/home-widgets-section.js");
-  // Nessuna delle tre torna a chiedere il nome solo a Home Assistant.
+  // Nessuna delle due torna a chiedere il nome solo a Home Assistant.
   for (const [dove, fonte] of [
     ["la pagina", pagina],
     ["la scheda", scheda],
   ]) {
     assert.doesNotMatch(fonte, /nomeDaHomeAssistant/, `${dove} salta il nome scelto`);
-    assert.match(fonte, /nomeDellaBatteria\(entity, states, nomi\)/);
+    assert.match(fonte, /nomeDellaBatteria\(/, `${dove} non chiede piu' il nome a chi lo sa`);
   }
+  /* E chi lo sa adesso guarda prima la riga dichiarata (#74): il nome scritto
+   * lì è quello che uno ha battuto guardando la batteria, e la mappa vecchia
+   * resta solo per chi non ha ancora dichiarato niente. */
+  assert.match(elenco, /mappaDelleRighe\(\)\.get\(entity\)\?\.name/);
   // La chiave dei nomi ha un padrone solo: la scheda non se la riscrive.
-  assert.match(scheda, /const CHIAVE_NOMI = CHIAVE_NOMI_SCELTI;/);
-  assert.equal((scheda.match(/"cd_avvisi_names_extra"/g) || []).length, 0);
+  assert.equal((scheda.match(/cd_nomi_scelti|cd_avvisi_names_extra/g) || []).length, 0);
   // E la tessera non ha piu' una copia della regola.
   assert.match(ponte, /return nomeDellEntita\(entity, readJson\("cd_avvisi_names_extra", \{\}\)\?\.\[entity\], states\);/);
 });

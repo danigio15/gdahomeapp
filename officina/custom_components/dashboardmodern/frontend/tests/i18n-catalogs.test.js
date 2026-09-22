@@ -222,6 +222,9 @@ const LOCALE_IDENTITIES = {
   ]),
   fr: new Set([
     "Animal",
+    /* «Machines» s'écrit pareil des deux côtés: c'est le même mot, pas une
+     * traduction oubliée. */
+    "machines",
     /* La modulation d'une chaudière se dit comme en anglais. */
     "Modulation (%)",
     /* Le train, sa destination: les mêmes mots des deux côtés de la Manche. */
@@ -361,6 +364,9 @@ const LOCALE_IDENTITIES = {
     "Volume",
   ]),
   nl: new Set([
+    /* «Machines» is in het Nederlands hetzelfde woord: geen vergeten
+     * vertaling, maar een toevallige samenval. */
+    "machines",
     /* Een node van een cluster heet in het Nederlands ook gewoon node — wie
      * Proxmox beheert zegt geen «knooppunt» — enkelvoud en meervoud gelijk aan
      * het Engels. */
