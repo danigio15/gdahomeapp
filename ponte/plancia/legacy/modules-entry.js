@@ -30,7 +30,7 @@ import { renderPreseEditor } from "../src/sections/prese-section.js";
 import { apri as apriAssistenza } from "../src/sections/assistenza-section.js";
 import { getDeviceDisplayName, getDeviceVisual, normalizeDevice } from "../src/core/device-model.js";
 import { createEnergyReportRows, createEntityPickerField, createRenderCoordinator, loadPopupMetrics, renderDeviceCard, renderEnergyEditor } from "../src/core/renderers.js";
-import { energyWriteInFlight, flushEnergyWrites, persistEnergyField, persistSignedSource } from "../src/core/energy-writer.js";
+import { energyWriteInFlight, flushEnergyWrites, persistEnergyField, persistIlFotovoltaico, persistSignedSource } from "../src/core/energy-writer.js";
 import { IMPIANTO_SCELTO_KEY, plantAt, plantModel } from "../src/core/energy-plants.js";
 import { SCHEMA_VERSION } from "../src/core/device-model.js";
 import { BUILD_INFO } from "./build-info.js";
@@ -339,6 +339,16 @@ function renderEnergyEditorTab(target) {
        * aggiunti dopo (contatori totali, SOC) avevano gia' salvato, e le
        * modifiche non ancora salvate sparivano cambiando sezione. */
       onChange: (group, key, value) => persistEnergyField(store, group, key, value, impiantoAperto()),
+      /* La spunta del fotovoltaico (#82). La pagina Energia si rifa' da sola
+       * al prossimo pacchetto di stati; la maschera si ridisegna qui, perche'
+       * quello che la spunta cambia — le caselle spente sotto di lei — sta in
+       * questa maschera e non altrove. */
+      onFotovoltaico: async (acceso) => {
+        await persistIlFotovoltaico(store, acceso);
+        await flushEnergyWrites();
+        renderEnergyEditorTab(target);
+        mountCurrentEditor("energy", target);
+      },
       onSignedChange: (group, signed) => persistSignedSource(store, group, signed, impiantoAperto()),
       /* Dichiarare la sorgente unica spegne le caselle dei due versi: la
        * maschera va ridisegnata dal modello appena salvato, non indovinata. */

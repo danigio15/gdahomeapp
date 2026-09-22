@@ -1385,8 +1385,13 @@ test("production graph is single-owner, acyclic and contains no facade pass-thro
   // regola di chi ci finisce sta da sola e si prova senza una casa — ed e' la
   // stessa che legge la tessera della Home, perche' due elenchi sarebbero due
   // verita'; la scheda tocca il documento e il deposito.
+  // 386 con la spunta del fotovoltaico (#82): «se in questa casa i pannelli ci
+  // sono» e «se l'autosufficienza si puo' dire» sono due domande, non una — il
+  // 100 % e' sbagliato anche in una casa che i pannelli ce li ha, se le manca
+  // il contatore di rete. Le risposte stanno da sole e si provano senza una
+  // casa; a nasconderle sono la pagina e il grafico, che gia' c'erano.
   assert.ok(
-    relative.length <= 385,
+    relative.length <= 386,
     `production graph unexpectedly grew to ${relative.length} modules`,
   );
   assertAcyclic(edges);

@@ -2,6 +2,7 @@ import { applianceArtwork } from "../core/appliance-artwork.js";
 import { applianceArtworkType } from "../core/appliance-card-view-model.js";
 import { DEFAULT_EXPORT_RATE, DEFAULT_IMPORT_RATE, importRateEntity, resolveRate } from "../core/energy-calculations.js";
 import { persistEnergyField } from "../core/energy-writer.js";
+import { cEIlFotovoltaico } from "../core/il-fotovoltaico-di-questa-casa.js";
 import {
   CHIAVE_FASCE,
   nomeDellaFascia,
@@ -137,13 +138,15 @@ export function barreDelleFasce(giorniDelMese, mese, anno) {
 
 /* La legenda del grafico sta nel guscio, scritta a mano: quando arrivano le
  * fasce ci vogliono i loro pallini accanto ai due di sempre. */
-function legendaDellAndamento(fasce) {
+function legendaDellAndamento(fasce, ilSole = true) {
   const legenda = doc?.querySelector("#ed-pane-panoramica .ed-chart-legend");
   if (!legenda) return false;
   const voce = (tinta, testo) =>
     `<div class="ed-legend-item"><div class="ed-legend-dot" style="background:${tinta};"></div>${testo}</div>`;
   const markup = [
-    voce("#16a34a", t("Produzione", "Production")),
+    /* La voce «Produzione» segue la sua linea: se la linea non si disegna,
+       una legenda che la nomina promette un colore che nel grafico non c'e'. */
+    ilSole ? voce("#16a34a", t("Produzione", "Production")) : "",
     voce("#0ea5e9", t("Consumo", "Consumption")),
     ...fasce.map((serie) => voce(serie.backgroundColor, serie.label)),
   ].join("");
@@ -216,7 +219,8 @@ export async function renderActualDailyChart(daysInMonth, selMonth, selYear) {
 
     const labels = Array.from({ length: days }, (_, index) => String(index + 1));
     const fasce = barreDelleFasce(days, month, year);
-    legendaDellAndamento(fasce);
+    const ilSole = cEIlFotovoltaico(model());
+    legendaDellAndamento(fasce, ilSole);
     loading.style.display = "none";
     canvas.style.display = "block";
     canvas.dataset.dmActualHistory = `${year}-${String(month).padStart(2, "0")}`;
@@ -231,7 +235,12 @@ export async function renderActualDailyChart(daysInMonth, selMonth, selYear) {
            * sommerebbero, e il consumo apparirebbe sopra la produzione invece
            * che accanto. Un gruppo con dentro una cosa sola non si somma con
            * nessuno. */
-          { label: t("Produzione", "Production"), data: production, stack: "sole", order: 0, borderColor: "#16a34a", backgroundColor: "rgba(22,163,74,.15)", fill: true, tension: .3, pointRadius: 0, borderWidth: 2 },
+          /* La produzione esce dal grafico dove i pannelli non ci sono (#82):
+             una linea piatta sullo zero, con la sua voce in legenda, dice
+             «oggi non ha prodotto» a una casa che non produce mai. */
+          ...(ilSole
+            ? [{ label: t("Produzione", "Production"), data: production, stack: "sole", order: 0, borderColor: "#16a34a", backgroundColor: "rgba(22,163,74,.15)", fill: true, tension: .3, pointRadius: 0, borderWidth: 2 }]
+            : []),
           { label: t("Consumo", "Consumption"), data: consumption, stack: "casa", order: 1, borderColor: "#0ea5e9", backgroundColor: "rgba(14,165,233,.08)", fill: true, tension: .3, pointRadius: 0, borderWidth: 2 },
           ...fasce,
         ],
