@@ -222,9 +222,28 @@ export function comeSiChiude({ quale, cassetta = "" }) {
  * Il registro annuncia anche le modifiche e le cancellazioni, e un dispositivo
  * rinominato non e' un dispositivo nuovo: chi guarda la schermata dell'attesa
  * vedrebbe entrare qualcosa che era gia' in casa.
+ *
+ * ── La busta ───────────────────────────────────────────────────────────────
+ *
+ * Quello che arriva e' l'evento **come lo manda Home Assistant**, che i suoi
+ * dati se li tiene in una busta:
+ *
+ *     { event_type: "device_registry_updated",
+ *       data: { action: "create", device_id: "..." },
+ *       origin, time_fired, context }
+ *
+ * Qui si leggeva `evento.action` e `evento.device_id`, cioe' fuori dalla
+ * busta: sempre `undefined`, sempre «no», e **nessun dispositivo e' mai stato
+ * annunciato** — ne' con Zigbee2MQTT ne' con ZHA. Dal campo: «il pairing lo fa
+ * partire l'app, ma poi non vede che lo ha trovato».
+ *
+ * Lo stesso abbonamento, in `spegnimento.js`, la busta la apre
+ * (`const dati = evento?.data`). Erano due letture della stessa cosa, e una
+ * sola era giusta.
  */
 export function eUnoNuovo(evento) {
-  return pulito(evento?.action).toLowerCase() === "create" && Boolean(pulito(evento?.device_id));
+  const dati = evento?.data;
+  return pulito(dati?.action).toLowerCase() === "create" && Boolean(pulito(dati?.device_id));
 }
 
 /**
@@ -593,7 +612,7 @@ export class Zigbee {
 
   async _entrato(evento) {
     if (!eUnoNuovo(evento)) return;
-    const id = pulito(evento.device_id);
+    const id = pulito(evento.data?.device_id);
     if (this._entrati.some((uno) => uno.id === id)) return;
     let dispositivo = { id };
     try {

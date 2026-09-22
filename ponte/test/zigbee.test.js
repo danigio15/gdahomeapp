@@ -109,12 +109,29 @@ test("la si richiude dalla stessa strada, con zero al posto del tempo", () => {
 
 test("un dispositivo rinominato non è un dispositivo nuovo", () => {
   /* Il registro annuncia anche le modifiche e le cancellazioni: chi guarda
-   * l'attesa vedrebbe entrare qualcosa che era già in casa. */
-  assert.equal(eUnoNuovo({ action: "create", device_id: "abc" }), true);
-  assert.equal(eUnoNuovo({ action: "update", device_id: "abc" }), false);
-  assert.equal(eUnoNuovo({ action: "remove", device_id: "abc" }), false);
-  assert.equal(eUnoNuovo({ action: "create" }), false);
+   * l'attesa vedrebbe entrare qualcosa che era già in casa.
+   *
+   * L'evento arriva IMBUSTATO, come lo manda Home Assistant: fuori che evento
+   * è, dentro `data` i suoi dati. Qui si scriveva la forma nuda — comoda da
+   * leggere e mai vista in casa — e il codice la leggeva allo stesso modo:
+   * due errori che si davano ragione, e in una casa vera `eUnoNuovo` diceva
+   * sempre no. */
+  const bus = (dati) => ({
+    event_type: "device_registry_updated",
+    data: dati,
+    origin: "LOCAL",
+    time_fired: "2026-09-22T05:29:00.000Z",
+    context: { id: "01", parent_id: null, user_id: null },
+  });
+  assert.equal(eUnoNuovo(bus({ action: "create", device_id: "abc" })), true);
+  assert.equal(eUnoNuovo(bus({ action: "update", device_id: "abc" })), false);
+  assert.equal(eUnoNuovo(bus({ action: "remove", device_id: "abc" })), false);
+  assert.equal(eUnoNuovo(bus({ action: "create" })), false);
+  assert.equal(eUnoNuovo(bus(null)), false);
   assert.equal(eUnoNuovo(null), false);
+  /* E la forma nuda non passa piu': era il travestimento del guasto, e
+   * accettarla vorrebbe dire lasciare la porta aperta al prossimo. */
+  assert.equal(eUnoNuovo({ action: "create", device_id: "abc" }), false);
 });
 
 test("un dispositivo si presenta col nome che gli ha dato chi lo guarda", () => {
@@ -224,7 +241,26 @@ function casaFinta({ voci = [], cassetta = "", dispositivi = [], entita = [] } =
     },
     async ascolta(evento, onEvento) {
       detto.push({ ascolta: evento });
-      mandaEvento = onEvento;
+      /* La busta, come la manda Home Assistant.
+       *
+       * Qui la casa finta consegnava i dati nudi — `{action, device_id}` — e
+       * cioè la forma che si aspettava il codice invece di quella che arriva
+       * davvero: Home Assistant i dati di un evento del bus li mette in
+       * `event.data`, e fuori ci scrive di che evento si tratta. Con la forma
+       * comoda `eUnoNuovo` diceva sempre sì nelle prove e sempre no in casa,
+       * e nessun dispositivo è mai stato annunciato a nessuno.
+       *
+       * È lo stesso sbaglio della casa finta che consegnava i messaggi MQTT
+       * ignorando i caratteri jolly, e del ponte finto dell'app che rispondeva
+       * `z2m`. Un finto più accomodante dell'originale non prova niente. */
+      mandaEvento = (dati) =>
+        onEvento({
+          event_type: evento,
+          data: dati,
+          origin: "LOCAL",
+          time_fired: new Date().toISOString(),
+          context: { id: "01", parent_id: null, user_id: null },
+        });
       return async () => {
         detto.push({ smetti: evento });
         mandaEvento = null;

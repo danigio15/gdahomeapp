@@ -11,6 +11,41 @@ fuori. La plancia dentro continua a dire la sua, e si legge dov'è sempre
 stata: nella pastiglia «La plancia» della console. Sono due numeri perché
 sono due cose.
 
+## 1.6.0.4
+
+**Il dispositivo che entra nella rete Zigbee viene annunciato.** «Il pairing
+lo fa partire l'app, ma poi non vede che lo ha trovato»: la rete si apriva,
+il conto alla rovescia scorreva, il dispositivo entrava davvero in
+Zigbee2MQTT — e la schermata restava su «Sto ascoltando la casa» fino alla
+fine.
+
+Non era ne' Zigbee2MQTT ne' un ritardo: **non e' mai stato annunciato
+niente**, a nessuno, in nessuna casa, nemmeno con ZHA. Gli eventi del bus
+Home Assistant li manda in una busta — fuori che evento e', dentro `data` i
+suoi dati:
+
+```
+{ event_type: "device_registry_updated",
+  data: { action: "create", device_id: "..." } }
+```
+
+`eUnoNuovo` leggeva `evento.action` e `evento.device_id`, cioe' **fuori dalla
+busta**: sempre `undefined`, sempre «no». Lo stesso abbonamento in
+`spegnimento.js` la busta la apre da sempre (`const dati = evento?.data`):
+erano due letture della stessa cosa, e una sola era giusta.
+
+Le prove non se ne sono accorte perche' la casa finta consegnava i dati nudi
+— la forma comoda, quella che si aspettava il codice — invece della busta
+vera. E' la **terza** volta in tre giorni: la casa finta che consegnava i
+messaggi MQTT ignorando i caratteri jolly, il ponte finto dell'app che
+rispondeva `z2m`, e adesso questa. Un finto piu' accomodante dell'originale
+non prova niente, e due errori che si danno ragione a vicenda passano
+qualunque corsa verde.
+
+Adesso la casa finta imbusta come Home Assistant, e la forma nuda **non passa
+piu'**: era il travestimento del guasto, e accettarla vorrebbe dire lasciare
+la porta aperta al prossimo. Col codice di prima sei prove diventano rosse.
+
 ## 1.6.0.3
 
 **La voce «Zigbee» nell'app c'e', in una casa con Zigbee2MQTT.** Era una
