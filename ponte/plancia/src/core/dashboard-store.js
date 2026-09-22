@@ -18,7 +18,7 @@ import {
   SECTION_KEYS,
 } from "./migrations.js";
 import { sectionForEditorSlot } from "./editor-slots.js";
-import { projectEnergySlots } from "./energy-projection.js";
+import { adoptEnergySlots, projectEnergySlots } from "./energy-projection.js";
 import { IMPIANTO_SCELTO_KEY, plantModel } from "./energy-plants.js";
 import { applySignedSources } from "./signed-energy.js";
 
@@ -391,7 +391,33 @@ export class DashboardStore {
     }
     const section = Object.entries(SECTION_KEYS).find(([, storageKey]) => storageKey === key)?.[0];
     if (!section) return Promise.resolve();
+    if (section === "entityOverrides") return this.adoptLegacyEntityOverrides(value);
     return this.replaceSection(section, value);
+  }
+  /* Le mappature a mano che arrivano da fuori passano prima dal modello energia.
+   *
+   * Chi scrive `cd_entity_overrides` — la procedura guidata alla fine, il
+   * rilevamento automatico, gli editor storici del guscio — non sa niente del
+   * modello energia: mette tutto li' dentro e se ne va. Se si adotta soltanto
+   * la sezione, il `persist` che segue proietta il modello (vuoto) sopra le
+   * mappature e cancella ogni `dm.energy_*` appena arrivato. Una casa nuova
+   * finiva la procedura guidata con la scheda Energia gia' vuota.
+   *
+   * Si travasa prima e si adotta dopo, in due gesti distinti perche' ognuno
+   * deve possedere la sua chiave mentre scrive. Quando non c'e' niente da
+   * travasare — ed e' il caso di ogni scrittura che non riguarda l'energia —
+   * `adoptEnergySlots` torna lo stesso oggetto e qui non succede niente. */
+  async adoptLegacyEntityOverrides(value) {
+    const overrides = value && typeof value === "object" && !Array.isArray(value) ? value : {};
+    const corrente = this.state.sections.energy || {};
+    const adottato = adoptEnergySlots(corrente, overrides);
+    if (adottato !== corrente)
+      await this.transact(
+        "energy",
+        "adopt-legacy-slots",
+        () => (this.state.sections.energy = adottato),
+      );
+    return this.replaceSection("entityOverrides", value);
   }
   /* Le sezioni su cui la persona si e' espressa di persona.
    *

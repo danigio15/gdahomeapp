@@ -165,6 +165,46 @@ const normalizedToken = (value) =>
     .replace(/[^a-z0-9]+/g, "_")
     .replace(/^_+|_+$/g, "");
 
+/* Quello che arriva mappato a mano, e il modello non ha, lo prende il modello.
+ *
+ * `projectEnergySlots` proietta: il modello e' la verita' e i `dm.energy_*`
+ * sono la sua ombra, quindi uno slot che il modello non copre viene tolto.
+ * Giusto finche' la mappatura NASCE dal modello — e' cosi' che si svuota un
+ * campo. Sbagliato quando la mappatura arriva da fuori ed e' l'unica copia che
+ * esiste: li' quel `delete` non e' una proiezione, e' una perdita.
+ *
+ * Succedeva alla prima configurazione di ogni casa. La procedura guidata e il
+ * rilevamento automatico scrivono in un colpo solo dentro `cd_entity_overrides`
+ * tutto quello che hanno trovato; il negozio lo adottava, proiettava, e un
+ * microtask dopo di ⚡ Energia non restava niente — mentre `dm.ev_*` e
+ * `dm.server_*`, che nessuno proietta, sopravvivevano. Il ricaricamento che la
+ * procedura fa subito dopo non rimedia: quando `migrateV3ToV4` va a leggere
+ * `cd_entity_overrides` per travasarlo nel modello, li' dentro non c'e' piu'
+ * niente da travasare.
+ *
+ * Qui si travasa prima. Non si sovrascrive mai cio' che il modello ha gia':
+ * fra le due copie ha ragione il modello, che e' la sola a sapere di impianti.
+ * E si scrive in cima, cioe' nel primo impianto, perche' una mappatura a mano
+ * di impianti non sa niente — la stessa scelta che fa la migrazione.
+ *
+ * Torna lo stesso oggetto quando non c'e' niente da adottare, cosi' chi chiama
+ * sa con un confronto se e' cambiato qualcosa. */
+export function adoptEnergySlots(energy = {}, overrides = {}) {
+  const oggetto = (valore) => valore && typeof valore === "object" && !Array.isArray(valore);
+  const sorgente = oggetto(energy) ? energy : {};
+  const mappate = oggetto(overrides) ? overrides : {};
+  let fuori = sorgente;
+  for (const [path, slot] of Object.entries(ENERGY_SLOT_MAP)) {
+    const entita = configured(mappate[slot]);
+    if (!entita) continue;
+    const [group, key] = path.split(".");
+    if (configured(fuori[group]?.[key])) continue;
+    if (fuori === sorgente) fuori = { ...sorgente };
+    fuori[group] = { ...(oggetto(fuori[group]) ? fuori[group] : {}), [key]: entita };
+  }
+  return fuori;
+}
+
 export function projectEnergySlots(energy = {}, overrides = {}) {
   const result = { ...overrides };
   const totalPaths = new Set(TOTAL_ENERGY_ALIASES.map((definition) => definition.path));
