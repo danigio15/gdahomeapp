@@ -30078,9 +30078,9 @@ J.d(a.h(0,"tipo"),"chat")
 return new A.oU(s,r,q,p,n,j,m)},
 a22(a){if(!t.f.b(a))throw A.c(B.nA)
 return A.b3q(A.mM(a,t.N,t.z))},
-hN(a){var s,r,q,p
+hN(a){var s,r,q,p,o=null
 A:{s=a instanceof A.k5
-r=null
+r=o
 if(s){r=a.b
 q=r
 q="senza_centralino"===q}else q=!1
@@ -30097,6 +30097,10 @@ if(q){q=A.n("The relay doesn't recognise this home: gdahome at home has to conne
 break A}if(s)q="note_non_date"===r
 else q=!1
 if(q){q=A.n("Home Assistant didn't provide notes for this version: it may be an older version, or a device that can't tell them.","Home Assistant non ha dato le note di questa versione: pu\xf2 essere una versione pi\xf9 vecchia, o un apparecchio che non le sa dire.")
+break A}if(s)q="zigbee_non_accettato"===r
+else q=!1
+if(q){p=a.a
+q=A.n("Home Assistant refused the command to open the network: check that ZHA (or Zigbee2MQTT) is running and the radio is plugged in. It's not the add-on: it does know how to do this. "+p,"Home Assistant non ha accettato il comando per aprire la rete: controlla che ZHA (o Zigbee2MQTT) sia acceso e che l'antenna sia collegata. Non \xe8 l'add-on: questa cosa la sa fare. "+p)
 break A}if(s)q="unknown_command"===r
 else q=!1
 if(q){q=A.n("gdahome at home is older than the app and can't do this yet: update the add-on in Home Assistant.","gdahome in casa \xe8 pi\xf9 vecchio dell'app e questa cosa non la sa ancora fare: aggiorna l'add-on in Home Assistant.")
@@ -114002,9 +114006,9 @@ else{k=a6.rx
 k=m.b_(k==null?a6.k3:k)}k=A.Z(q,a5,a5,a5,a5,k,a5,a5)
 q=a7.w
 j=A.Z(A.n("This app","Questa app"),a5,a5,a5,a5,q,a5,a5)
-i=n.$2(A.n("Version","Versione"),"1.6.0 (1060003)")
+i=n.$2(A.n("Version","Versione"),"1.6.0 (1060004)")
 h=A.n("Package","Pacchetto")
-h=n.$2(h,"58-e8e35f4")
+h=n.$2(h,"59-6c25960")
 g=A.n("Relay","Centralino")
 f=$.aj1()
 f=f==null?a5:f.a
@@ -114336,7 +114340,7 @@ $S:11}
 A.FU.prototype={
 I(a){var s,r,q=null,p=A.G(a).ax,o=$.aj1(),n=o==null?q:o.a
 if(n==null)n=A.n("no relay","nessun centralino")
-o=this.d?"gdahome 1.6.0 (1060003) \xb7 "+n:"gdahome 1.6.0 (1060003)"
+o=this.d?"gdahome 1.6.0 (1060004) \xb7 "+n:"gdahome 1.6.0 (1060004)"
 s=A.G(a).ok.Q
 if(s==null)s=q
 else{r=p.rx
@@ -114412,7 +114416,7 @@ case 1:return A.p(q,r)}})
 return A.q($async$uK,r)},
 aks(){var s,r,q=null,p=this.a.c,o=t.N
 o=A.x(o,o)
-o.m(0,"app","58-e8e35f4")
+o.m(0,"app","59-6c25960")
 o.m(0,"sistema","web")
 s=p.Q
 s=s==null?q:s.b
