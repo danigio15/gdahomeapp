@@ -3732,12 +3732,20 @@
       /* ─── Disegnare ──────────────────────────────────────────────────── */
 
       function disegna() {
-        const alLimite = INSTALLATORI.filter((uno) => uno.pieno).length;
         document.getElementById("sottotitolo").textContent =
           `${plurale(INSTALLATORI.length, "installatore", "installatori")} · ${plurale(CASE, "impianto", "impianti")}`;
 
         doveNav.innerHTML = [
-          ["installatori", "Installatori", alLimite],
+          /* La linguetta di una raccolta non porta pastiglia, come «Impianti»
+             nel cruscotto: la pastiglia qui dentro vuol dire «guarda che c'e'
+             qualcosa da fare», e sulla parola «Installatori» si legge in un
+             modo solo — quanti installatori ci sono.
+             Ci stava il conto di quelli al limite, e diceva «Installatori 1»
+             a un gestore che ne ha due, con la testata sopra che diceva «2
+             installatori» e l'elenco sotto «Gli installatori 2». Quel conto
+             non si e' perso: sta due volte in questa stessa schermata, nel
+             titolone e nella casella «al limite», che sono i suoi posti. */
+          ["installatori", "Installatori", 0],
           ["aggiungi", "Aggiungi", 0],
         ]
           .map(
