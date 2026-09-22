@@ -134,6 +134,17 @@ scorrevole, sbarra, varco generico — più il radar di presenza, che arriva con
 loro. Il disegno si vede anche nella pagina Varchi, nella vetrina della
 Sicurezza e nella scheda delle aree d'allarme, che leggono lo stesso elenco.
 
+**E la Presenza è diventata la stessa scheda.** Non «la stessa forma»
+scritta due volte: proprio lo stesso file. I rilevatori avevano lo stesso
+difetto dei varchi — l'elenco lo faceva Home Assistant, il cestino escludeva
+invece di cancellare, e sotto c'era «Tolti dai conti» — e adesso hanno la
+riga, la pastiglia, la striscia dei disegni e il tasto d'importazione dei
+varchi, perché li disegna lo stesso pezzo di codice. Quattro copie della
+stessa scheda sarebbero quattro schede che fra sei mesi non si comportano più
+alla stessa maniera, che è esattamente come ci siamo arrivati la prima volta.
+Anche i due disegni della presenza erano emoji: adesso sono quindici fra cui
+scegliere, col radar per chi ha un mmWave.
+
 **E i due comandi della pastiglia dell'entità stavano male.** Su un campo che
 l'etichetta ce l'ha già — cioè ogni riga dichiarata, quindi anche Porte e
 cancelli e i Carichi di oggi — il 🗑 Elimina restava da solo su una riga sua e

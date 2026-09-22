@@ -283,6 +283,7 @@ import {
   allStates,
   chiediAHomeAssistant,
   clean,
+  disegnoDiCasa,
   doc,
   esc,
   formatNumber,
@@ -4118,7 +4119,9 @@ function presenzaModel(states) {
     rows: righe.map((riga) => ({
       entity: riga.entity,
       name: riga.name,
-      glyph: riga.glifo,
+      /* La riga della tessera vuole il markup del disegno, non il suo nome
+       * (#74): `glyph` qui dentro si stampa com'e'. */
+      glyph: disegnoDiCasa(riga.glifo, { misura: 20, ripiego: "motion" }),
       on: riga.stato === "attivo",
       /* Il tono dice il colore della pastiglia senza sapere di cosa parla: chi
        * rileva qualcuno è una cosa che sta succedendo — non un allarme, che è

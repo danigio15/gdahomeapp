@@ -29,6 +29,8 @@
  * chiama.
  */
 
+import { conLaRiga, conLeRighe, righeDichiarate, senzaLaRiga } from "./elenco-dichiarato.js";
+
 const pulito = (valore) => String(valore ?? "").trim();
 
 /** Dove si scrive la configurazione della presenza. */
@@ -39,18 +41,26 @@ export const CHIAVE_PRESENZA = "cd_presenza";
  * che vibra non è qualcuno che passa. */
 export const CLASSI_DELLA_PRESENZA = Object.freeze(["motion", "occupancy", "presence", "moving"]);
 
-/* Il disegno di un rilevatore. Chi dice «c'è qualcuno» e chi dice «si è
- * mosso» non sono la stessa notizia, e vederlo si capisce prima di leggerlo. */
+/* Il disegno di serie di un rilevatore, dalla classe di Home Assistant.
+ *
+ * Erano due emoji di sistema, e «icone sempre quelle del catalogo nostro»
+ * (#74): cambiano faccia da un telefono all'altro, e un mmWave disegnato come
+ * un omino che corre non lo riconosce nessuno. Adesso sono nomi del catalogo
+ * di casa, e sono solo il punto di partenza: il disegno vero lo sceglie chi
+ * configura la riga.
+ *
+ * Chi dice «c'e' qualcuno» e chi dice «si e' mosso» non sono la stessa
+ * notizia, e vederlo si capisce prima di leggerlo. */
 const DISEGNI = Object.freeze({
-  motion: "🏃",
-  moving: "🏃",
-  occupancy: "🧍",
-  presence: "🧍",
+  motion: "motion",
+  moving: "motion",
+  occupancy: "person",
+  presence: "radar",
 });
 
-/** Il disegno di un rilevatore, dalla classe che Home Assistant gli ha dato. */
+/** Il disegno di serie di un rilevatore, dalla classe di Home Assistant. */
 export function disegnoDelRilevatore(classe) {
-  return DISEGNI[pulito(classe)] || "🏃";
+  return DISEGNI[pulito(classe)] || "motion";
 }
 
 /**
@@ -96,23 +106,59 @@ export function normalizzaPresenza(stored) {
   return { escluse: elenco(dato.escluse), aggiunte: elenco(dato.aggiunte), nomi };
 }
 
+/* ── L'ELENCO DICHIARATO (#74) ────────────────────────────────────────────
+ *
+ * La regola sta in `elenco-dichiarato.js`, ed è la stessa dei Varchi, delle
+ * Batterie e delle Macchine: una riga la metti tu, e quando la elimini è
+ * eliminata. Qui si riespone com'è, così chi legge la presenza trova tutto da
+ * una porta sola. */
+export { conLaRiga, conLeRighe, righeDichiarate, senzaLaRiga };
+
+/**
+ * I rilevatori che il rilevamento proporrebbe adesso.
+ *
+ * Serve a due cose, ed è la stessa risposta: il ripiego di chi non ha mai
+ * dichiarato niente, e quello che scrive il tasto «prendi quelli che Home
+ * Assistant ha trovato». Porta dentro i nomi già scritti e lascia fuori quelli
+ * già esclusi: chi aggiorna non deve rifare un lavoro che aveva già fatto.
+ */
+export function rilevatoriDaImportare(states = {}, config, nomeDi = (entity) => entity) {
+  const scelte = normalizzaPresenza(config);
+  const righe = [];
+  for (const [entity, stato] of Object.entries(states || {})) {
+    if (scelte.escluse.includes(entity)) continue;
+    const aggiunto = scelte.aggiunte.includes(entity);
+    if (!aggiunto && !eUnRilevatore(entity, stato)) continue;
+    righe.push({
+      entity,
+      name: scelte.nomi[entity] || pulito(nomeDi(entity)) || entity,
+      icon: disegnoDelRilevatore(pulito(stato?.attributes?.device_class) || "motion"),
+    });
+  }
+  return righe.sort((a, b) => a.name.localeCompare(b.name));
+}
+
 /**
  * Se questa entità è un rilevatore di questa casa.
  *
- * Lo dice Home Assistant col `device_class`, e lo dice chi ha la casa: uno
- * escluso non è un rilevatore per questa plancia, uno aggiunto lo è anche se
- * Home Assistant non lo dichiara.
+ * Lo dice la riga che qualcuno ha scritto nella scheda. Finché nessuno ne ha
+ * scritte, lo dice il rilevamento di prima.
  */
 export function eUnRilevatoreDiCasa(entity, stato, config) {
   const id = pulito(entity);
+  if (!id) return false;
+  const dichiarate = righeDichiarate(config);
+  if (dichiarate) return dichiarate.some((riga) => riga.entity === id);
   const scelte = normalizzaPresenza(config);
   if (scelte.escluse.includes(id)) return false;
   if (scelte.aggiunte.includes(id)) return id.includes(".");
   return eUnRilevatore(id, stato);
 }
 
-/** Se c'è qualcosa da mostrare: almeno un rilevatore leggibile in casa. */
+/** Se c'è qualcosa da mostrare: almeno un rilevatore con la sua entità. */
 export function presenzaConfigurata(states = {}, config) {
+  const dichiarate = righeDichiarate(config);
+  if (dichiarate) return dichiarate.some((riga) => riga.entity);
   return Object.entries(states || {}).some(([entity, stato]) =>
     eUnRilevatoreDiCasa(entity, stato, config),
   );
@@ -150,24 +196,36 @@ export function presenzaDiCasa(
   nomeDi = (entity) => entity,
   stanzaDi = () => "",
 ) {
+  const dichiarate = righeDichiarate(config);
   const scelte = normalizzaPresenza(config);
-  const righe = [];
-  for (const [entity, stato] of Object.entries(states || {})) {
-    if (!eUnRilevatoreDiCasa(entity, stato, config)) continue;
+  const letta = (entity, nome, icona) => {
+    const stato = states?.[entity];
     const classe = pulito(stato?.attributes?.device_class) || "motion";
-    righe.push({
+    return {
       entity,
-      name: scelte.nomi[entity] || pulito(nomeDi(entity)) || entity,
+      name: pulito(nome) || pulito(nomeDi(entity)) || entity,
       /* La stanza di Home Assistant, quando la sa: e' l'identita' del posto,
        * e serve al conto qui sotto. */
       stanza: pulito(stanzaDi(entity)),
       classe,
-      glifo: disegnoDelRilevatore(classe),
+      glifo: pulito(icona) || disegnoDelRilevatore(classe),
       stabile: eUnaPresenzaStabile(classe),
       stato: comeStaIlRilevatore(stato),
       da: istanteDelCambio(stato),
-    });
-  }
+    };
+  };
+
+  const righe = dichiarate
+    ? /* Una riga cominciata e non finita — c'e' il nome, manca l'entita' — sta
+       * nella scheda e lo dice, ma sulla pagina non ci va: nel conto delle
+       * stanze occupate sarebbe una sorveglianza inventata. */
+      dichiarate
+        .filter((riga) => riga.entity)
+        .map((riga) => letta(riga.entity, riga.name, riga.icon))
+    : Object.entries(states || {})
+        .filter(([entity, stato]) => eUnRilevatoreDiCasa(entity, stato, config))
+        .map(([entity]) => letta(entity, scelte.nomi[entity], ""));
+
   const peso = (riga) => (riga.stato === "attivo" ? 0 : riga.stato === "" ? 1 : 2);
   return righe.sort((a, b) => peso(a) - peso(b) || a.name.localeCompare(b.name));
 }

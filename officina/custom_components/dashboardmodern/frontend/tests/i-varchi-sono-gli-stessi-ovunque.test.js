@@ -131,7 +131,7 @@ test("la scheda scrive righe, e non tocca più le scelte di prima", () => {
     );
   }
   /* E la lista riunita si legge, ma solo per la proposta. */
-  assert.match(scheda, /function daPrendere\(\)[\s\S]*?varchiConLeFinestre\(/);
+  assert.match(scheda, /daImportare\(config\)[\s\S]*?varchiConLeFinestre\(/);
 });
 
 test("una riga dichiarata non si autocompila e non si riprende quello che elimini", () => {

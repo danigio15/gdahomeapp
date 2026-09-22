@@ -186,41 +186,51 @@ const scheda = readFileSync(
  * obbliga a smettere di spiegare, che è il prezzo più caro che si possa
  * pagare per una prova. */
 const codice = scheda.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
+/* La scheda vera: il markup e i gesti stanno qui, uguali per tutte e quattro. */
+const comune = readFileSync(
+  new URL("../src/sections/scheda-dichiarata-section.js", import.meta.url),
+  "utf8",
+).replace(/\/\*[\s\S]*?\*\//g, "");
 
 test("la scheda ha la forma delle altre, non più quella del rilevamento", () => {
-  /* «Le sezioni si devono comportare tutte alla stessa maniera.» Qui si conta
-   * che ci siano le parti che fanno quella forma, e che non ci sia più quello
-   * che la rompeva. */
+  /* «Le sezioni si devono comportare tutte alla stessa maniera.» Non «come le
+   * altre» per modo di dire: la scheda è letteralmente la stessa per tutte e
+   * quattro, e qui si conta che ci siano le parti che fanno quella forma. */
   for (const pezzo of [
-    "data-dm-varco-aggiungi", // il ＋ che mancava: la riga la metti tu
-    "data-dm-varco-elimina", // il cestino che elimina davvero
-    "data-dm-varco-apri", // la matita che apre la riga
-    "data-dm-varco-salva", // il 💾, come in Porte e cancelli
-    "dm-varco-ed-icone", // la striscia dei disegni, che non c'era
+    "data-dm-dich-aggiungi", // il ＋ che mancava: la riga la metti tu
+    "data-dm-dich-elimina", // il cestino che elimina davvero
+    "data-dm-dich-apri", // la matita che apre la riga
+    "data-dm-dich-salva", // il 💾, come in Porte e cancelli
+    "dm-dich-icone", // la striscia dei disegni, che non c'era
     "ed-btn-import", // «prendi quelli che Home Assistant ha trovato»
+    "migraSeServe", // la prima apertura non perde quello che c'era
   ]) {
-    assert.ok(scheda.includes(pezzo), `alla scheda manca ${pezzo}`);
+    assert.ok(comune.includes(pezzo), `alla scheda condivisa manca ${pezzo}`);
   }
+  /* E quello che la rompeva non c'è più, né nella scheda condivisa né qui. */
   for (const via of [
     "Tolti dai conti", // l'elenco degli esclusi, che è la segnalazione
-    "data-dm-varco-escludi",
-    "data-dm-varco-riprendi",
-    "dm-varco-ed-fuori",
+    "escludi",
+    "riprendi",
   ]) {
     assert.ok(!codice.includes(via), `«${via}» doveva sparire dalla scheda`);
+    assert.ok(!comune.includes(via), `«${via}» doveva sparire dalla scheda condivisa`);
   }
 });
 
 test("il campo dell'entità è quello che diventa pastiglia, non una lente e basta", () => {
   /* «Vedo ancora la lente: guarda le sezioni e vedi che la lente per la
    * ricerca entità non c'è.» La lente si scrive lo stesso — è la guardia che
-   * la riconosce e la trasforma — ma deve stare accanto a un input `mono` con
-   * un `placeholder` che sa di entità, che è quello che fa scattare la
-   * trasformazione. Senza, resta una lente per sempre. */
-  const campo = scheda.slice(scheda.indexOf("Entità del contatto"), scheda.indexOf("Nome", scheda.indexOf("Entità del contatto")));
+   * la riconosce e la trasforma in pastiglia — ma deve stare accanto a un
+   * input `mono` con un `placeholder` che sa di entità, che è quello che fa
+   * scattare la trasformazione. Senza, resta una lente per sempre. */
+  const campo = comune.slice(comune.indexOf("etichettaEntita"), comune.indexOf("Nome\", \"Name"));
   assert.match(campo, /class="ed-input mono"/, "senza «mono» la guardia non lo riconosce");
-  assert.match(campo, /placeholder="binary_sensor\./, "il placeholder dice che è un'entità");
+  assert.match(campo, /placeholder="\$\{esc\(parole\.segnaposto\)\}"/, "il segnaposto lo porta la sezione");
   assert.match(campo, /class="dm-entity-picker"/, "la lente è quella che diventa pastiglia");
+  /* E il segnaposto dei varchi dice che è un'entità, che è quello che la
+   * guardia legge quando la casella è ancora vuota. */
+  assert.match(scheda, /segnaposto: "binary_sensor\./);
 });
 
 test("i disegni della striscia sono tutti disegni veri", () => {

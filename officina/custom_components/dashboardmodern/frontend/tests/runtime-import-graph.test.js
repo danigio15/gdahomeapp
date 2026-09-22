@@ -1351,8 +1351,17 @@ test("production graph is single-owner, acyclic and contains no facade pass-thro
   // non risponde — e la prova che «non si sa» nasconde sta in una riga sola.
   // 375 con il foglietto delle spunte, che invece il deposito e il documento
   // li tocca entrambi e va dove stanno le telecamere.
+  // 376 con la regola dell'elenco dichiarato (#74): cosa vuol dire dichiarare
+  // una riga, e la differenza fra «non lo so» e «non ne voglio nessuno». E'
+  // la stessa per le quattro schede che si autocompilavano, e scritta quattro
+  // volte sarebbero quattro regole che fra sei mesi divergono — che e' come
+  // ci si e' arrivati la prima volta. Si prova su elenchi finti, senza un
+  // documento.
+  // 377 con la scheda che le disegna tutte e quattro, che invece il deposito e
+  // il documento li tocca: la riga con la matita e il cestino, la pastiglia,
+  // la striscia dei disegni, il salva e la migrazione alla prima apertura.
   assert.ok(
-    relative.length <= 375,
+    relative.length <= 377,
     `production graph unexpectedly grew to ${relative.length} modules`,
   );
   assertAcyclic(edges);

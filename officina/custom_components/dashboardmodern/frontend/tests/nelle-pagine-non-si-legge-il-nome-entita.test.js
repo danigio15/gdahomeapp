@@ -49,6 +49,10 @@ const ANCHE_QUESTE_SI_COMPILANO = new Map([
   ["flood-alerts-section.js", "la scheda degli allagamenti"],
   ["lights-alerts-section.js", "la scheda delle luci"],
   ["prese-section.js", "la scheda delle prese"],
+  [
+    "scheda-dichiarata-section.js",
+    "la scheda che Varchi, Batterie, Presenza e Macchine usano tutte e quattro: e' una scheda, anche se non ha «editor» nel nome",
+  ],
   ["smoke-alerts-section.js", "la scheda del fumo"],
 ]);
 
@@ -80,12 +84,23 @@ test("quelle che si compilano invece lo scrivono ancora", () => {
     "presenza-editor-section.js",
     "macchine-editor-section.js",
     "entita-mie-editor-section.js",
-  ])
-    assert.match(
-      sorgente(quale),
-      /mono/,
+  ]) {
+    const testo = sorgente(quale);
+    /* Quattro di queste la casella non la scrivono più da sé: la disegna la
+     * scheda condivisa (#74), e la garanzia sta lì. Vale l'una o l'altra, mai
+     * nessuna delle due. */
+    const sua = /mono/.test(testo);
+    const delegata = testo.includes('from "./scheda-dichiarata-section.js"');
+    assert.ok(
+      sua || delegata,
       `${quale}: la scheda non fa più vedere quale entità si sta mappando`,
     );
+  }
+  assert.match(
+    sorgente("scheda-dichiarata-section.js"),
+    /class="ed-input mono"/,
+    "la scheda condivisa deve far vedere quale entità si sta mappando",
+  );
 });
 
 test("le sei pagine e le due finestre, una per una", () => {

@@ -447,7 +447,7 @@ function pastigliaDellaZona(riga) {
    * sarebbe la bugia tranquillizzante che quella pagina evita gia'. */
   const come = riga.stato === "attivo" ? "attiva" : riga.stato === "libero" ? "libera" : "muta";
   return `<span class="dm-sec-zona" data-stato="${esc(come)}" title="${esc(riga.entity)}">
-    <i aria-hidden="true">${riga.glifo}</i><b>${esc(riga.name)}</b></span>`;
+    <i aria-hidden="true">${disegnoDiCasa(riga.glifo, { misura: 20, ripiego: "motion" })}</i><b>${esc(riga.name)}</b></span>`;
 }
 
 function pastigliaDellIngresso(riga) {

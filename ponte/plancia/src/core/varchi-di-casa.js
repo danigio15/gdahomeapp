@@ -29,6 +29,7 @@
  * contraddicono.
  */
 
+import { conLaRiga, conLeRighe, righeDichiarate, senzaLaRiga } from "./elenco-dichiarato.js";
 import { contactEntity, inferriataEntity } from "./shutter-window.js";
 import { CLASSI_DEL_VARCO, comeStaIlVarco, eUnVarco } from "./varchi-in-configurazione.js";
 
@@ -132,78 +133,14 @@ export function varchiConLeFinestre(config, righeDelleFinestre) {
  *
  * «La sezione si autocompila, cosa che avevo detto gia' di eliminare, e sotto
  *  compaiono ancora quelle che ho eliminato da sopra. Va cambiata per tutte
- *  quelle che hanno questa cosa: le sezioni si devono comportare tutte alla
- *  stessa maniera.»
+ *  quelle che hanno questa cosa.»
  *
- * Questa scheda elencava da se' tutto quello che Home Assistant chiamava
- * «door» o «window», e il cestino non cancellava: ESCLUDEVA, e l'escluso
- * restava scritto in un elenco «Tolti dai conti» sotto. Due difetti in uno —
- * una riga che non hai messo tu, e una che hai tolto e continui a vedere.
- *
- * Adesso e' come Porte e cancelli, come i Carichi, come tutte le altre: una
- * riga la metti tu, e quando la elimini e' eliminata.
- *
- * ── Chi non ha mai aperto la scheda ───────────────────────────────────────
- *
- * `righe` assente vuol dire «questa casa non ha ancora dichiarato niente», e
- * la' si continua a leggere il rilevamento di prima: chi non apre mai la
- * configurazione non deve vedersi sparire la pagina Varchi da sotto i piedi
- * per un aggiornamento. `righe` presente — anche VUOTO — vuol dire «ha
- * dichiarato», e allora comanda quello e basta. E' la differenza fra «non lo
- * so» e «non ne voglio nessuno», ed e' la riga che fa si' che cancellando
- * l'ultimo varco non tornino tutti.
+ * La regola — cosa vuol dire dichiarare, e la differenza fra «non lo so» e
+ * «non ne voglio nessuno» — sta in `elenco-dichiarato.js`, perche' e' la
+ * stessa per tutte e quattro le schede che avevano questo difetto. Qui si
+ * riespone com'e', cosi' chi legge i varchi trova tutto da una porta sola.
  */
-
-/** Una riga dichiarata, ripulita. Torna `null` se non e' una riga. */
-function rigaPulita(voce) {
-  if (!voce || typeof voce !== "object") return null;
-  const entity = clean(voce.entity);
-  const name = clean(voce.name);
-  const icon = clean(voce.icon);
-  /* Una riga senza entita' e senza nome non e' una riga: e' un `+ Aggiungi`
-   * premuto per sbaglio, e riscriverla ogni volta vorrebbe dire una scheda che
-   * si riempie di righe vuote. Con il nome invece resta: e' una riga cominciata
-   * e non finita, e la scheda lo dice. */
-  if (!entity && !name) return null;
-  return { entity, name, icon };
-}
-
-/**
- * Le righe dichiarate da questa casa, oppure `null` se non ne ha mai
- * dichiarate. `null` non e' l'elenco vuoto: vedi il capitolo qui sopra.
- */
-export function righeDichiarate(stored) {
-  const dato = stored && typeof stored === "object" && !Array.isArray(stored) ? stored : {};
-  if (!Array.isArray(dato.righe)) return null;
-  const viste = new Set();
-  const righe = [];
-  for (const voce of dato.righe) {
-    const riga = rigaPulita(voce);
-    if (!riga) continue;
-    /* La stessa entita' due volte sarebbe la stessa porta contata due volte,
-     * e in cima alla pagina il conto degli aperti direbbe un numero sbagliato.
-     * Vince la prima, che e' quella che si e' scritta prima. */
-    if (riga.entity && viste.has(riga.entity)) continue;
-    if (riga.entity) viste.add(riga.entity);
-    righe.push(riga);
-  }
-  return righe;
-}
-
-/** La configurazione con questa riga scritta al suo posto, pronta da salvare. */
-export function conLaRiga(config, indice, riga) {
-  const righe = [...(righeDichiarate(config) || [])];
-  const pulita = rigaPulita(riga) || { entity: "", name: "", icon: "" };
-  if (indice >= 0 && indice < righe.length) righe[indice] = pulita;
-  else righe.push(pulita);
-  return { ...(config && typeof config === "object" ? config : {}), righe };
-}
-
-/** La configurazione senza questa riga. Eliminata vuol dire eliminata. */
-export function senzaLaRiga(config, indice) {
-  const righe = (righeDichiarate(config) || []).filter((_riga, posto) => posto !== indice);
-  return { ...(config && typeof config === "object" ? config : {}), righe };
-}
+export { conLaRiga, conLeRighe, righeDichiarate, senzaLaRiga };
 
 /**
  * Le righe che il rilevamento proporrebbe adesso.
