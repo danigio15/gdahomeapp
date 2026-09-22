@@ -25,6 +25,7 @@ import {
   fasciaInVigore,
   leFasceValgono,
   minutiDellOra,
+  minutiDiUnaFascia,
   normalizzaLeFasce,
   oraDeiMinuti,
   prezzoDellaFascia,
@@ -58,6 +59,95 @@ test("un'ora si legge e si riscrive, e quello che non è un'ora non lo diventa",
   assert.equal(oraDeiMinuti(0), "00:00");
   for (const storta of ["", "24:00", "8:60", "-1", "otto", null, undefined])
     assert.equal(minutiDellOra(storta), null, `«${storta}» non è un'ora`);
+});
+
+/* ── quello che si salva si deve poter rileggere (#110) ─────────────────── */
+
+test("un numero sono minuti, una stringa è un orario: il tipo, non le cifre", () => {
+  /* L'ora di una fascia viaggia in due forme, e tutt'e due sono giuste.
+   *
+   * La casella dell'editor è un `<input type="time">` e ne esce una stringa:
+   * «21:30». Il resto del nucleo conta in minuti dalla mezzanotte — 
+   * `fasciaDelleOre` confronta numeri, non parole — e quindi la forma
+   * normalizzata, quella che si salva e che viaggia fra i dispositivi, tiene
+   * i minuti: 1290.
+   *
+   * La regola è il TIPO, e non serve indovinare: il JSON i tipi se li tiene,
+   * e «8» non deve mai voler dire due cose. */
+  assert.equal(minutiDiUnaFascia(1290), 1290, "un numero sono già minuti");
+  assert.equal(minutiDiUnaFascia(0), 0, "mezzanotte è zero, e zero è un'ora");
+  assert.equal(minutiDiUnaFascia(1439), 1439, "le 23:59 sono l'ultimo minuto");
+  assert.equal(minutiDiUnaFascia("21:30"), 1290, "una stringa è un orario");
+  /* Fuori misura, o non un numero intero: niente. */
+  for (const storto of [1440, -1, 8.5, Number.NaN, Infinity])
+    assert.equal(minutiDiUnaFascia(storto), null, `${storto} non sono minuti`);
+  /* E la stringa «1290» resta quello che era: non è un orario. Chi legge il
+   * tipo non ha bisogno di questa distinzione, ma chi legge le cifre sì — ed
+   * è il motivo per cui si legge il tipo. */
+  assert.equal(minutiDellOra("1290"), null);
+  assert.equal(minutiDiUnaFascia("1290"), null);
+});
+
+test("normalizzare due volte dà lo stesso risultato di normalizzare una volta", () => {
+  /* La legge che questo nucleo aveva rotto, e che è la ragione per cui il
+   * guasto è durato: «nella selezione delle fasce orarie se cambio ora non
+   * salva, ritorna di nuovo a quella impostata per default».
+   *
+   * Non era il salvataggio: era la rilettura. `normalizzaLeFasce` salvava i
+   * minuti e li rileggeva come se fossero un orario, quindi rileggendo il
+   * PROPRIO salvataggio non riconosceva niente e ripiegava sull'orario di
+   * fabbrica — cioè buttava la configurazione salvata a ogni apertura della
+   * scheda.
+   *
+   * Non si vedeva perché il ripiego quasi sempre indovinava: finché le ore
+   * erano quelle di serie, il valore buttato e quello rimesso erano lo stesso
+   * numero. Bastava cambiarne una.
+   *
+   * Una funzione che non sa rileggere quello che scrive è rotta per
+   * definizione, e questa riga lo dice una volta per tutte. */
+  const casi = [
+    { quante: 3, voci: [{ dalle: "08:00", prezzo: 0.3 }, { dalle: "21:30", prezzo: 0.2 }, { dalle: "23:00", prezzo: 0.1 }], festivi: 2 },
+    { quante: 2, voci: [{ dalle: "07:15", prezzo: 0.28 }, { dalle: "22:45" }] },
+    { quante: 2, voci: [{ dalle: "00:00", prezzo: 0.2 }, { dalle: "12:00", prezzo: 0.3 }], festivi: -1 },
+    { quante: 3, voci: [] },
+    { quante: 0 },
+    null,
+  ];
+  for (const caso of casi) {
+    const una = normalizzaLeFasce(caso);
+    const due = normalizzaLeFasce(una);
+    assert.deepEqual(due, una, `normalizzare due volte cambia ${JSON.stringify(caso)}`);
+    /* E anche passando dal JSON, che è la strada vera: si salva una stringa e
+     * si rilegge un oggetto, ed è lì che il tipo si sarebbe potuto perdere. */
+    const dalDeposito = normalizzaLeFasce(JSON.parse(JSON.stringify(una)));
+    assert.deepEqual(dalDeposito, una, `il giro dal deposito cambia ${JSON.stringify(caso)}`);
+  }
+});
+
+test("un'ora cambiata resta cambiata, e non torna a quella di fabbrica", () => {
+  /* Il gesto della segnalazione, in tre righe: si parte dalle ore di serie,
+   * se ne cambia una, si salva, si rilegge. */
+  const diSerie = normalizzaLeFasce({
+    quante: 3,
+    voci: ORARI_DI_SERIE[3].map((dalle) => ({ dalle, prezzo: 0.25 })),
+    festivi: 2,
+  });
+  assert.deepEqual(diSerie.voci.map((v) => oraDeiMinuti(v.dalle)), ["08:00", "19:00", "23:00"]);
+
+  /* La Fascia 2 alle 21:30, come l'ha scritta lui nella casella. */
+  const cambiata = normalizzaLeFasce({
+    ...diSerie,
+    voci: diSerie.voci.map((voce, indice) => (indice === 1 ? { ...voce, dalle: "21:30" } : voce)),
+  });
+  const salvato = JSON.parse(JSON.stringify(cambiata));
+  const riletto = normalizzaLeFasce(salvato);
+  assert.deepEqual(
+    riletto.voci.map((v) => oraDeiMinuti(v.dalle)),
+    ["08:00", "21:30", "23:00"],
+    "l'ora cambiata deve sopravvivere al salvataggio",
+  );
+  /* E soprattutto NON deve essere tornata quella di fabbrica. */
+  assert.notEqual(oraDeiMinuti(riletto.voci[1].dalle), ORARI_DI_SERIE[3][1]);
 });
 
 /* ── la configurazione ──────────────────────────────────────────────────── */
