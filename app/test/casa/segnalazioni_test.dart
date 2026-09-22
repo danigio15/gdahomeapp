@@ -185,4 +185,35 @@ void main() {
     );
     expect(spiegaLErrore(const ComandoRifiutato('boh')), 'boh');
   });
+
+  /* Il rifiuto di Home Assistant non e' il ponte che e' vecchio.
+   *
+   * Dal campo, con l'add-on aggiornato: la schermata Zigbee diceva in cima
+   * «gdahome in casa e' piu' vecchio dell'app: aggiorna l'add-on», e tre
+   * centimetri sotto mostrava la scheda ZHA piena — «e' la rete che c'e' in
+   * questa casa». Le due cose non potevano essere vere insieme.
+   *
+   * La catena: premendo «Apri la rete» il ponte manda a Home Assistant
+   * `zha/permit`; se Home Assistant quel comando sul filo non ce l'ha
+   * risponde `unknown_command`, e il ponte lo rilanciava tale e quale.
+   * `unknown_command` vuol dire «chi ha ricevuto questa domanda non la
+   * conosce», e rilanciandolo si cambiava chi l'aveva ricevuta: era Home
+   * Assistant, non il ponte.
+   *
+   * Adesso il ponte manda un codice suo, e qui si tiene fermo che l'app lo
+   * conosca e che non mandi ad aggiornare niente. */
+  test('un rifiuto di Home Assistant non manda ad aggiornare l\'add-on', () {
+    final detto = spiegaLErrore(
+      const ComandoRifiutato('x', codice: 'zigbee_non_accettato'),
+    );
+    expect(detto, contains('Home Assistant'));
+    expect(detto, contains('ZHA'));
+    expect(detto, isNot(contains('aggiorna l\'add-on')));
+    /* E resta diverso da quello che il ponte dice di se stesso: due codici
+     * che dicono la stessa frase sarebbero un codice solo. */
+    expect(
+      detto,
+      isNot(spiegaLErrore(const ComandoRifiutato('x', codice: 'unknown_command'))),
+    );
+  });
 }

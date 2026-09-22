@@ -318,6 +318,31 @@ export function si(id, result) {
   return { id, type: "result", success: true, result };
 }
 
+/* Il codice di Home Assistant non e' il codice del ponte.
+ *
+ * `unknown_command` vuol dire una cosa sola: «chi ha ricevuto questa domanda
+ * non la conosce». Il ponte lo usa per le domande che arrivano a LUI e che non
+ * sa fare, e l'app lo traduce cosi': «gdahome in casa e' piu' vecchio
+ * dell'app, aggiorna l'add-on».
+ *
+ * Ma il ponte, per rispondere, fa a sua volta delle domande a Home Assistant,
+ * e anche Home Assistant risponde `unknown_command` per quello che non
+ * conosce. Rilanciando quel codice al telefono si cambiava chi aveva ricevuto
+ * la domanda — era Home Assistant, non il ponte — e l'app mandava ad
+ * aggiornare la cosa sbagliata.
+ *
+ * Dal campo, sulla schermata Zigbee con l'add-on aggiornato: «da un messaggio
+ * di aggiornare ma in realta' e' tutto aggiornato», con la scheda ZHA piena a
+ * tre centimetri dall'avviso. Aveva ragione, e a sbagliare era il codice.
+ *
+ * Questa e' la regola, e sta in un posto solo: un comando che il ponte ha
+ * riconosciuto ed eseguito non puo' rispondere «non lo conosco», qualunque
+ * cosa sia andata storta dentro. */
+export function codiceDelPonte(errore, invece) {
+  const suo = String(errore?.code || "").trim();
+  return !suo || suo === "unknown_command" ? invece : suo;
+}
+
 export function no(id, code, message) {
   return { id, type: "result", success: false, error: { code, message } };
 }
@@ -1202,7 +1227,11 @@ export class Commissioni {
       }
     } catch (errore) {
       this.registro.attenzione(`zigbee: ${errore?.message || errore}`);
-      return no(id, errore?.code || "zigbee_ko", String(errore?.message || errore));
+      return no(
+        id,
+        codiceDelPonte(errore, "zigbee_non_accettato"),
+        String(errore?.message || errore),
+      );
     }
   }
 
@@ -1418,7 +1447,7 @@ export class Commissioni {
       this.registro.attenzione(`catalogo non costruito: ${errore?.message || errore}`);
       return no(
         id,
-        errore?.code || "ponte_catalogo",
+        codiceDelPonte(errore, "ponte_catalogo"),
         String(errore?.message || "non ha funzionato"),
       );
     }

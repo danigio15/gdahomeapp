@@ -23,9 +23,12 @@ import {
   Zigbee,
   ceZha,
   comeSiApre,
+  comeSiApreColServizio,
   comeSiDiceNelRegistro,
   comeSiChiude,
+  comeSiChiudeColServizio,
   comeSiPresenta,
+  eUnComandoCheNonCe,
   eUnoNuovo,
   laReteDiCasa,
   perQuanto,
@@ -220,7 +223,21 @@ function copre(argomento, suo) {
   return chiesti.length === arrivati.length;
 }
 
-function casaFinta({ voci = [], cassetta = "", dispositivi = [], entita = [] } = {}) {
+/* Un rifiuto di Home Assistant, come arriva davvero: un errore col suo
+ * codice. E' la forma che `casa.js` costruisce da `{success:false, error}`. */
+function rifiuto(code, message = "no") {
+  const errore = new Error(message);
+  errore.code = code;
+  return errore;
+}
+
+function casaFinta({
+  voci = [],
+  cassetta = "",
+  dispositivi = [],
+  entita = [],
+  rifiuta = null,
+} = {}) {
   const detto = [];
   let mandaEvento = null;
   let mandaMqtt = null;
@@ -234,6 +251,10 @@ function casaFinta({ voci = [], cassetta = "", dispositivi = [], entita = [] } =
     },
     async chiedi(comando) {
       detto.push(comando);
+      /* La casa finta che dice di no a quello che la casa vera non accetta:
+       * e' l'unico modo di provare il ripiego senza una casa. */
+      const male = rifiuta?.(comando);
+      if (male) throw male;
       if (comando.type === "config_entries/get") return voci;
       if (comando.type === "config/device_registry/list") return dispositivi;
       if (comando.type === "config/entity_registry/list") return entita;
@@ -758,4 +779,187 @@ test("le due parole del filo sono le stesse di qua e di la'", () => {
   assert.equal(dellApp.zha, ZHA);
   assert.equal(dellApp.z2m, Z2M);
   assert.equal(dellApp.nessuna, NESSUNA);
+});
+
+/* ── quando Home Assistant non accetta il comando ─────────────────────────
+ *
+ * Dal campo, con l'add-on aggiornato: la schermata Zigbee mostrava in cima
+ * «gdahome in casa è più vecchio dell'app: aggiorna l'add-on», e tre
+ * centimetri sotto la scheda ZHA piena — «È la rete che c'è in questa casa».
+ * Le due cose non potevano essere vere insieme: se il ponte non sapesse fare
+ * lo Zigbee, la scheda ZHA non ci sarebbe.
+ *
+ * La catena: «Apri la rete» → il ponte manda a Home Assistant `zha/permit` →
+ * Home Assistant risponde `unknown_command` perché quel comando sul filo non
+ * ce l'ha → il ponte rilanciava quel codice tale e quale → l'app lo leggeva
+ * come il PROPRIO codice, quello che vuol dire «il ponte è vecchio».
+ *
+ * `unknown_command` vuol dire «chi ha ricevuto questa domanda non la
+ * conosce». Rilanciandolo si cambiava chi l'aveva ricevuta.
+ */
+
+test("ZHA ha due strade per lo stesso ordine: il filo e il servizio", () => {
+  assert.deepEqual(comeSiApreColServizio({ quale: ZHA }, 120), {
+    type: "call_service",
+    domain: "zha",
+    service: "permit",
+    service_data: { duration: 120 },
+  });
+  assert.deepEqual(comeSiChiudeColServizio({ quale: ZHA }), {
+    type: "call_service",
+    domain: "zha",
+    service: "permit",
+    service_data: { duration: 0 },
+  });
+  /* Il tempo passa dallo stesso filtro della strada principale: un ripiego
+   * che apre per un tempo diverso da quello chiesto non è lo stesso ordine. */
+  assert.equal(comeSiApreColServizio({ quale: ZHA }, 99_999).service_data.duration, AL_PIU_APERTA);
+  /* Zigbee2MQTT passa già per un servizio — `mqtt.publish` — e di ripieghi
+   * non ne ha bisogno. */
+  assert.equal(comeSiApreColServizio({ quale: Z2M }), null);
+  assert.equal(comeSiChiudeColServizio({ quale: NESSUNA }), null);
+});
+
+test("si riprova solo per un comando che non c'è, non per un rifiuto qualunque", () => {
+  /* Le tre facce della stessa cosa: un comando sul filo che non c'è, e un
+   * servizio che non c'è, detto nei due modi in cui Home Assistant lo dice. */
+  for (const codice of ["unknown_command", "not_found", "service_not_found"])
+    assert.equal(eUnComandoCheNonCe(rifiuto(codice)), true, codice);
+  /* Tutto il resto no: riprovarlo darebbe lo stesso rifiuto due volte e il
+   * doppio dell'attesa a chi ha premuto il tasto. */
+  for (const codice of ["home_assistant_error", "unauthorized", "zigbee_ko", ""])
+    assert.equal(eUnComandoCheNonCe(rifiuto(codice)), false, codice || "(vuoto)");
+  assert.equal(eUnComandoCheNonCe(new Error("senza codice")), false);
+  assert.equal(eUnComandoCheNonCe(null), false);
+});
+
+test("se il filo non ha zha/permit, la rete si apre col servizio", async () => {
+  const casa = casaFinta({
+    voci: [{ domain: "zha", state: "loaded" }],
+    rifiuta: (comando) =>
+      comando.type === "zha/permit" ? rifiuto("unknown_command", "unknown command") : null,
+  });
+  const zigbee = new Zigbee({ casa });
+  const esito = await zigbee.apri({ secondi: 60 });
+  /* È andata: chi ha premuto il tasto vede il conto alla rovescia, non un
+   * avviso rosso. */
+  assert.equal(esito.fatto, true);
+  assert.equal(esito.restano, 60);
+  /* E si sono provate le due strade, in quest'ordine. */
+  const strade = casa.detto.filter(
+    (uno) => uno.type === "zha/permit" || (uno.type === "call_service" && uno.domain === "zha"),
+  );
+  assert.equal(strade.length, 2);
+  assert.equal(strade[0].type, "zha/permit");
+  assert.equal(strade[1].service, "permit");
+  assert.equal(strade[1].service_data.duration, 60);
+  await zigbee.chiudi();
+});
+
+test("se non c'è nessuna delle due, l'errore dice di chi è", async () => {
+  const casa = casaFinta({
+    voci: [{ domain: "zha", state: "loaded" }],
+    /* Le due strade e basta: `config_entries/get` porta anche lui
+     * `domain: "zha"` — è la domanda con cui il ponte scopre che ZHA c'è — e
+     * rifiutando anche quello si proverebbe una casa senza rete, che è
+     * un'altra prova. */
+    rifiuta: (comando) =>
+      comando.type === "zha/permit" || (comando.type === "call_service" && comando.domain === "zha")
+        ? rifiuto("unknown_command", "unknown command")
+        : null,
+  });
+  const zigbee = new Zigbee({ casa });
+  const male = await zigbee.apri({ secondi: 60 }).then(
+    () => null,
+    (errore) => errore,
+  );
+  assert.ok(male, "doveva fallire");
+  /* Questo è il punto di tutta la correzione: NON esce `unknown_command`.
+   *
+   * Quel codice, arrivato al telefono, vuol dire «il ponte è più vecchio
+   * dell'app: aggiorna l'add-on» — e l'add-on non c'entra niente: il ponte
+   * `ponte/zigbee/apri` lo conosce, l'ha appena eseguito. */
+  assert.notEqual(male.code, "unknown_command");
+  assert.equal(male.code, "zigbee_non_accettato");
+  assert.match(male.message, /Home Assistant/);
+  assert.match(male.message, /zha\/permit/);
+  assert.match(male.message, /zha\.permit/);
+  await zigbee.chiudi().catch(() => {});
+});
+
+test("un rifiuto che non è «non ce l'ho» esce com'è, senza riprovare", async () => {
+  const casa = casaFinta({
+    voci: [{ domain: "zha", state: "loaded" }],
+    rifiuta: (comando) =>
+      comando.type === "zha/permit"
+        ? rifiuto("home_assistant_error", "il coordinatore non risponde")
+        : null,
+  });
+  const zigbee = new Zigbee({ casa });
+  const male = await zigbee.apri({ secondi: 60 }).then(
+    () => null,
+    (errore) => errore,
+  );
+  assert.equal(male?.code, "home_assistant_error");
+  /* E il servizio non si è nemmeno provato: l'antenna staccata resta staccata
+   * anche per la seconda strada, e chi aspetta aspetterebbe il doppio. */
+  assert.equal(
+    casa.detto.some((uno) => uno.type === "call_service" && uno.domain === "zha"),
+    false,
+  );
+});
+
+test("l'app ha una spiegazione per questo codice, e non manda ad aggiornare", () => {
+  /* Le due metà stanno in due linguaggi e nessun compilatore le guarda
+   * insieme — come per i nomi delle reti, qui sopra. Un codice che il ponte
+   * manda e l'app non conosce finisce nel mucchio degli sconosciuti, che è
+   * esattamente il mucchio da cui questo guasto è uscito. */
+  const dart = readFileSync(
+    fileURLToPath(new URL("../../app/lib/casa/segnalazioni.dart", import.meta.url)),
+    "utf8",
+  );
+  const suo = dart.indexOf("ComandoRifiutato(codice: 'zigbee_non_accettato')");
+  assert.ok(suo > 0, "l'app deve conoscere il codice che il ponte manda");
+  const spiegazione = dart.slice(suo, dart.indexOf("ComandoRifiutato(codice:", suo + 10));
+  assert.match(spiegazione, /Home Assistant/);
+  assert.doesNotMatch(
+    spiegazione,
+    /aggiorna l'add-on|update the add-on/i,
+    "questo codice non deve mandare ad aggiornare l'add-on: l'add-on non c'entra",
+  );
+});
+
+test("la regola sta in un posto solo, e vale per ogni comando girato a casa", async () => {
+  const { codiceDelPonte } = await import("../src/commissioni.js");
+  /* Il codice di Home Assistant che dice «non conosco questa domanda» non
+   * puo' uscire dal ponte: là fuori vuol dire un'altra cosa — «il ponte è
+   * più vecchio dell'app» — e manda ad aggiornare l'add-on. */
+  assert.equal(
+    codiceDelPonte({ code: "unknown_command" }, "zigbee_non_accettato"),
+    "zigbee_non_accettato",
+  );
+  assert.equal(codiceDelPonte({}, "ponte_catalogo"), "ponte_catalogo");
+  assert.equal(codiceDelPonte(null, "ponte_catalogo"), "ponte_catalogo");
+  assert.equal(codiceDelPonte({ code: "   " }, "ponte_catalogo"), "ponte_catalogo");
+  /* Tutti gli altri passano: sono rifiuti veri, e dicono cosa è successo. */
+  assert.equal(codiceDelPonte({ code: "unauthorized" }, "x"), "unauthorized");
+  assert.equal(codiceDelPonte({ code: "home_assistant_error" }, "x"), "home_assistant_error");
+
+  /* E nessuna risposta al telefono prende il codice da un errore così com'è.
+   *
+   * È la forma esatta del guasto: `no(id, errore?.code || "...")`. Leggere
+   * `unknown_command` da un errore va benissimo — serve a capire che in
+   * questa casa l'integrazione non c'è — ma rimandarlo INDIETRO cambia chi
+   * ha ricevuto la domanda, e manda ad aggiornare la cosa sbagliata. Chi ne
+   * scriverà un'altra fra sei mesi lo scoprirà qui invece che dal campo. */
+  const fonte = readFileSync(
+    fileURLToPath(new URL("../src/commissioni.js", import.meta.url)),
+    "utf8",
+  );
+  const rimandati = [...fonte.matchAll(/\bno\(\s*[\w.?]+\s*,\s*errore\?\.code/g)];
+  assert.deepEqual(
+    rimandati.map((una) => una[0]),
+    [],
+    "un no() non prende il codice da un errore: passa da codiceDelPonte",
+  );
 });

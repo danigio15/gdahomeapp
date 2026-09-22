@@ -200,6 +200,79 @@ export function comeSiApre({ quale, cassetta = "" }, secondi = QUANTO_RESTA_APER
   return null;
 }
 
+/* Lo stesso ordine, ma per servizio: il ripiego quando il comando sul filo
+ * non c'e'.
+ *
+ * ZHA espone due strade per la stessa cosa. Una e' il comando sul filo,
+ * `zha/permit`, ed e' quella che si prova per prima perche' risponde subito e
+ * dice se e' andata. L'altra e' il servizio `zha.permit`, che e' quello che
+ * chiunque chiamerebbe da un'automazione.
+ *
+ * Servono tutte e due perche' non tutte le case hanno tutte e due. Dal campo,
+ * su una casa aggiornatissima: la scheda diceva «ZHA» — quindi ZHA c'era, e
+ * il ponte l'aveva trovata — ma «Apri la rete» tornava indietro con
+ * `unknown_command`, cioe' Home Assistant quel comando sul filo non lo
+ * conosceva. Il servizio invece c'e' da sempre, e cambia molto piu' di rado di
+ * un'API sul filo: e' il ripiego giusto.
+ *
+ * Il comando per posta di Zigbee2MQTT non ha bisogno di ripieghi — passa gia'
+ * per `mqtt.publish`, che e' un servizio — e qui torna `null`. */
+export function comeSiApreColServizio({ quale }, secondi = QUANTO_RESTA_APERTA) {
+  if (quale !== ZHA) return null;
+  return {
+    type: "call_service",
+    domain: "zha",
+    service: "permit",
+    service_data: { duration: perQuanto(secondi) },
+  };
+}
+
+/** E il ripiego per richiudere: lo stesso servizio, con zero. */
+export function comeSiChiudeColServizio({ quale }) {
+  if (quale !== ZHA) return null;
+  return {
+    type: "call_service",
+    domain: "zha",
+    service: "permit",
+    service_data: { duration: 0 },
+  };
+}
+
+/* L'errore di quando Home Assistant non accetta il comando della rete.
+ *
+ * Ha un codice suo, e serve: l'app mostra un avviso diverso per ogni codice, e
+ * finche' da qui usciva il `unknown_command` di Home Assistant l'app leggeva
+ * «il ponte non sa fare questa cosa» e mandava ad aggiornare l'add-on. Dal
+ * campo, con l'add-on aggiornato e la scheda ZHA piena in cima alla stessa
+ * schermata: «da un messaggio di aggiornare ma in realta' e' tutto
+ * aggiornato». Aveva ragione, e a sbagliare era il codice.
+ *
+ * `unknown_command` vuol dire «chi ha ricevuto questa domanda non la
+ * conosce». Rilanciandolo al telefono si cambiava chi ha ricevuto la domanda:
+ * quello era Home Assistant, non il ponte. */
+export class ZigbeeNonAccettato extends Error {
+  constructor(comando, ripiego) {
+    const strade = [comando, ripiego ? `${ripiego.domain}.${ripiego.service}` : ""]
+      .filter(Boolean)
+      .join(" ne' ");
+    super(`Home Assistant non accetta ${strade || "il comando della rete Zigbee"}`);
+    this.code = "zigbee_non_accettato";
+  }
+}
+
+/* Quando un rifiuto vuol dire «questo comando qui non c'e'».
+ *
+ * Home Assistant risponde `unknown_command` per un comando sul filo che non
+ * conosce, e `not_found` / `service_not_found` per un servizio che non ha.
+ * Sono le tre facce della stessa cosa, e sono l'unica ragione per cui vale la
+ * pena riprovare per un'altra strada: un rifiuto qualunque — la rete che non
+ * si apre, il coordinatore staccato — riprovandolo darebbe solo lo stesso
+ * rifiuto due volte e il doppio dell'attesa. */
+const NON_CE_QUEL_COMANDO = new Set(["unknown_command", "not_found", "service_not_found"]);
+
+export const eUnComandoCheNonCe = (errore) =>
+  NON_CE_QUEL_COMANDO.has(String(errore?.code || "").trim());
+
 /** E quello che la richiude subito: la stessa strada, con zero al posto del tempo. */
 export function comeSiChiude({ quale, cassetta = "" }) {
   if (quale === ZHA) return { type: "zha/permit", duration: 0 };
@@ -560,7 +633,7 @@ export class Zigbee {
     if (!comando) return { fatto: false, perche: "questa casa non ha una rete Zigbee" };
     this._entrati = [];
     await this._ascolta();
-    await this.casa.chiedi(comando);
+    await this._ordina(comando, comeSiApreColServizio(rete, secondi));
     const quanto = perQuanto(secondi);
     this._apertaFinoA = this.adesso() + quanto * 1000;
     clearTimeout(this._chiudiDaSola);
@@ -579,9 +652,37 @@ export class Zigbee {
     const comando = comeSiChiude(rete);
     this._scaduta();
     if (!comando) return { fatto: false, perche: "questa casa non ha una rete Zigbee" };
-    await this.casa.chiedi(comando);
+    await this._ordina(comando, comeSiChiudeColServizio(rete));
     this.registro.info("zigbee: rete richiusa");
     return { fatto: true };
+  }
+
+  /* L'ordine, per la strada che c'e'.
+   *
+   * Si prova quella buona; se Home Assistant risponde che QUEL comando non ce
+   * l'ha, si prova l'altra. Se non c'e' un'altra, o se anche l'altra dice la
+   * stessa cosa, l'errore che esce dice di chi e': non e' il ponte a essere
+   * vecchio — il ponte questo comando lo conosce, l'ha appena eseguito — e'
+   * Home Assistant che non lo accetta. Rilanciare `unknown_command` cosi'
+   * com'era mandava chi legge ad aggiornare la cosa sbagliata. */
+  async _ordina(comando, ripiego) {
+    try {
+      return await this.casa.chiedi(comando);
+    } catch (errore) {
+      if (!eUnComandoCheNonCe(errore)) throw errore;
+      if (ripiego) {
+        try {
+          const fatto = await this.casa.chiedi(ripiego);
+          this.registro.info(
+            "zigbee: Home Assistant non ha il comando sul filo, fatto col servizio",
+          );
+          return fatto;
+        } catch (secondo) {
+          if (!eUnComandoCheNonCe(secondo)) throw secondo;
+        }
+      }
+      throw new ZigbeeNonAccettato(comando?.type, ripiego);
+    }
   }
 
   _scaduta() {
