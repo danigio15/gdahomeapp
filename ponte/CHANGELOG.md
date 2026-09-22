@@ -13,6 +13,122 @@ sono due cose.
 
 ## 1.6.0.4
 
+**Una casa senza pannelli non legge più numeri finti (#82).** «Uno switch che
+tolga completamente la gestione energetica casa con fotovoltaico, pulendo da
+info errate la pagina energia.»
+
+Senza impianto la pagina Energia mostrava lo stesso «Produzione FV 0,0 kWh» —
+che non è produzione zero, è che i pannelli non ci sono — e «Autosufficienza
+100 %», che è il numero sbagliato vero: viene da `(consumo − prelievo) /
+consumo`, e con il prelievo a `0` perché nemmeno il contatore di rete è
+configurato, una casa che prende tutto dalla rete leggeva di essere
+autosufficiente. Il consumo, l'unica cosa che quella casa misura davvero, si
+perdeva in mezzo ai due numeri finti.
+
+Sono due domande e non una: **il 100 % è sbagliato anche in una casa che i
+pannelli ce li ha**, se le manca il contatore di rete, perché quel conto vuole
+tutte e due le misure. Adesso la produzione sparisce dove i pannelli non ci
+sono, e l'autosufficienza dove non si può dire — spenta o accesa che sia la
+spunta.
+
+Di solito non c'è niente da chiedere: senza nemmeno un'entità di produzione la
+risposta la sa già la configurazione. La spunta **«Impianto fotovoltaico»**, in
+cima al riquadro ☀️ Fotovoltaico, serve a chi i pannelli ce li ha e questa
+pagina non la vuole. Spegnendola vanno via anche il sole dalla riga del mese,
+la linea «Produzione» dal grafico giornaliero e quattro delle cinque caselle
+dei soldi — «Senza FV» è esattamente quello che si paga, il risparmio è zero
+per definizione, l'immesso non esiste e la CO₂ evitata nemmeno. Restano
+consumo, costo reale e fasce orarie. Le entità scritte in configurazione non si
+toccano: chi rimette la spunta le ritrova dov'erano.
+
+**Una scheda «Scollegati» nel config, con un cestino.** La tessera
+«Dispositivi non connessi» compare in Home quando qualcosa smette di
+rispondere, e finché resta muta va bene così. Il guaio è quando dice il vero su
+una cosa che non interessa — un'integrazione tolta che lascia l'entità scritta,
+la presa dell'albero di Natale a gennaio — perché allora l'avviso si impara a
+ignorare, e un avviso che si ignora è peggio di nessun avviso.
+
+Adesso quell'elenco si apre anche in configurazione, sotto **Macchine e rete**,
+con accanto a ogni riga un cestino. Le righe le mette la plancia: non c'è
+niente da aggiungere. Il cestino chiede conferma e poi toglie quel dispositivo
+dall'avviso **per sempre** — le righe tolte restano scritte in fondo alla
+scheda, senza cestino, e dicono se in casa quell'entità esiste ancora: un
+dispositivo silenziato e una configurazione rimasta indietro sono due cose
+diverse. L'elenco è uno solo: la scheda e la tessera leggono la stessa regola.
+
+**La ricerca nel config sa anche dove si scrive.** «La casella c'è ma manca nel
+config dove inserire l'entità.» La casella c'era davvero, ed erano due cose
+insieme.
+
+La ricerca camminava solo sui valori **già salvati**, e una casella vuota non
+ha valore: chi cercava «ventola» prima di averci scritto qualcosa si sentiva
+rispondere «Nessuna configurazione contiene questa parola», che si legge in un
+modo solo. Adesso i risultati sono due gruppi: quello che è scritto, e sotto
+**«Dove si configura»**, le caselle — che esistono anche da vuote. Il tocco
+apre la scheda, la maschera giusta e accende la riga, che è l'unico modo di
+dire «è questa» a chi ha davanti venti caselle uguali.
+
+E il salto portava nel posto sbagliato: le entità mappate a mano finivano tutte
+attribuite al **MiniPC**, perché stanno in un cassetto solo. Chi cercava dove
+mettere la ventola atterrava in una scheda dove di ventole non se ne parla, e
+concludeva — giustamente — che quella casella non esiste.
+
+**Le entità di Energia sparivano appena scritte.** Trovato inseguendo la
+ventola. Alla fine della procedura guidata tutto quello che il rilevamento
+aveva trovato veniva scritto in un colpo solo, e un attimo dopo di ⚡ Energia
+non restava niente: delle sei mappature ne sopravvivevano due, e le quattro di
+Energia sparivano con il modello ancora vuoto. Nemmeno il ricaricamento
+rimediava. Adesso quello che arriva mappato a mano entra nel modello **prima**
+che la plancia lo riproietti, e svuotare un campo continua a svuotarlo.
+
+**Il tasto della ventola dell'inverter manda un ordine vero.** Mandava a Home
+Assistant il nome della casella invece dell'entità mappata, e non succedeva
+niente. La potenza si vedeva — quella si legge, e leggere funzionava — e il
+tasto no: è il modo più confondente di essere rotti. L'entità si scrive in
+**Energia → IMPOSTAZIONI → 🌡️ Temperature e raffreddamento → «Interruttore
+ventola»**.
+
+**L'ora di una fascia oraria cambiata torna a quella di prima.** «Nella
+selezione delle fasce orarie se cambio ora non salva, ritorna di nuovo a quella
+impostata per default.» Le fasce scrivevano i minuti e rileggevano le ore: la
+funzione non sapeva rileggere quello che scriveva, e alla riapertura ricadeva
+sull'ora di fabbrica. Un'ora diversa da quelle di serie **non era mai
+sopravvissuta a una riapertura**: sembrava a posto solo finché le ore erano
+ancora quelle di default, perché il ripiego indovinava giusto.
+
+**Le fasce dentro il dettaglio del dispositivo (#111).** «Mi aggiungi anche nel
+dispositivo le fasce per capire quanto quel dispositivo assorbe di più e in
+quale fascia.» Nella finestra di un apparecchio, sotto i costi, adesso c'è
+quanto ha preso in ognuna delle tre fasce e quanto è costato. I kWh li conta
+tutti; **gli euro contano solo quello che è venuto dalla rete**, ora per ora,
+perché il sole a nessuna ora ha un prezzo.
+
+**La rete Zigbee si apre davvero, e il rifiuto non è più colpa dell'add-on.**
+«No perché non mi fa aprire la rete.» Erano due cose. La prima: quando Home
+Assistant rifiutava il comando, la plancia diceva «gdahome in casa è più
+vecchio dell'app, aggiorna l'add-on» — e mandava ad aggiornare una cosa che era
+già aggiornata. Adesso il messaggio riporta le parole di Home Assistant e dice
+di controllare che ZHA o Zigbee2MQTT siano accesi e l'antenna collegata.
+
+La seconda: con ZHA la rete **non si apriva**. Si chiedeva prima per una via
+interna che Home Assistant ha riscritto, e solo dopo col servizio `zha.permit`,
+che è l'API pubblica e non è mai cambiata. Adesso si prova prima quella.
+
+**Un veicolo è un'auto o una moto, e la scheda lo chiede (#75).** «Molti di noi
+smanettoni hanno anche una moto connessa, sarebbe carino avere una sezione
+MOTO.» Nella scheda dei Veicoli c'è la scelta **Auto / Moto**, sopra il motore
+e indipendente da lui: una moto può essere elettrica, a benzina o ibrida come
+un'auto. Scegliendo Moto la card prende il disegno della moto, il titolo della
+pagina lo dice, e le quattro caselle che una moto non ha — portiere, finestrini,
+bagagliaio, cofano — spariscono dalla configurazione. Chi non tocca niente non
+vede cambiare niente: vuoto vuol dire auto.
+
+**La linguetta «Installatori» della gestione diceva 1 a chi ne ha due.** Il
+numero non era sbagliato, era un altro numero: contava gli installatori **al
+limite**. Ma una pastiglia appoggiata alla parola «Installatori» si legge in un
+modo solo, e quel conto quella schermata lo dice già due volte. Adesso la
+linguetta di una raccolta non porta pastiglia, come «Impianti» nel cruscotto.
+
 **Il dispositivo che entra nella rete Zigbee viene annunciato.** «Il pairing
 lo fa partire l'app, ma poi non vede che lo ha trovato»: la rete si apriva,
 il conto alla rovescia scorreva, il dispositivo entrava davvero in
