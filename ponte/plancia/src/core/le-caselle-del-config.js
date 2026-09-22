@@ -47,10 +47,7 @@ const pulito = (valore) => String(valore ?? "").trim();
 
 /** Senza accenti e senza maiuscole: «Città» e «citta» sono la stessa parola. */
 export const appiattisci = (valore) =>
-  pulito(valore)
-    .normalize("NFKD")
-    .replace(/[̀-ͯ]/g, "")
-    .toLowerCase();
+  pulito(valore).normalize("NFKD").replace(/[̀-ͯ]/g, "").toLowerCase();
 
 /* La scheda del config che tiene ogni famiglia di slot del guscio.
  *

@@ -54,7 +54,12 @@
  */
 
 import { perMomento, quotaDiRete } from "./quota-solare-del-dispositivo.js";
-import { fasciaDelleOre, fasciaInVigore, leFasceValgono, normalizzaLeFasce } from "./fasce-della-tariffa.js";
+import {
+  fasciaDelleOre,
+  fasciaInVigore,
+  leFasceValgono,
+  normalizzaLeFasce,
+} from "./fasce-della-tariffa.js";
 
 const numero = (valore) => {
   const letto = Number(valore);

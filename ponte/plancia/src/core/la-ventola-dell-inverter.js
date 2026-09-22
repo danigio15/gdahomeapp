@@ -76,7 +76,8 @@ export function ilComandoDellaVentola(entita) {
   if (id.startsWith("dm.")) return { si: false, perche: "non-mappata" };
   const punto = id.indexOf(".");
   const dominio = punto > 0 ? id.slice(0, punto).toLowerCase() : "";
-  if (!dominio || punto === id.length - 1) return { si: false, perche: "non-un-entita", entita: id };
+  if (!dominio || punto === id.length - 1)
+    return { si: false, perche: "non-un-entita", entita: id };
   if (soloLettura.has(dominio)) return { si: false, perche: "non-si-comanda", entita: id };
   return {
     si: true,

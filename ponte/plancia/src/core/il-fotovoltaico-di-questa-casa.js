@@ -95,9 +95,7 @@ const cEIlPrelievoDaRete = (impianto) =>
  */
 export function siPuoDireLAutosufficienza(impianto) {
   return (
-    cEIlFotovoltaico(impianto) &&
-    gruppoScritto(impianto, "house") &&
-    cEIlPrelievoDaRete(impianto)
+    cEIlFotovoltaico(impianto) && gruppoScritto(impianto, "house") && cEIlPrelievoDaRete(impianto)
   );
 }
 
