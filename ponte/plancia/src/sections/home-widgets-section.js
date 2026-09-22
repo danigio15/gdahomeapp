@@ -3628,7 +3628,19 @@ function irrigationModel(states) {
     const entity = clean(zona?.entity);
     return entity && widgetIncludes(entity, fuori);
   });
-  if (!attive.length) return null;
+  /* Il sensore del terreno si legge PRIMA di decidere se la tessera esce.
+   *
+   * «Quella umidità terreno in realtà già è presente ma se inserisco solo
+   * quella entità non esce nei widget.» Qui c'era `if (!attive.length) return
+   * null` e il sensore si leggeva due righe sotto: la tessera pretendeva
+   * almeno una zona, e chi ha due sonde nel vaso e nessuna elettrovalvola non
+   * ha niente da configurare e non vedeva niente. Non era una funzione che
+   * manca — c'era gia' tutta — era l'ordine in cui si guardavano le cose. */
+  const terreno = clean(config.soilEnt || config.soil_entity);
+  const umidita = terreno && widgetIncludes(terreno, fuori) ? numOf(states, terreno) : null;
+  /* Senza zone E senza un sensore che risponde non c'e' niente da dire. Con
+   * una delle due, si'. */
+  if (!attive.length && umidita == null) return null;
   /* Una zona che irriga non dice sempre «on».
    *
    * Le zone su una valvola — `valve.*`, che la plancia accetta — dicono «open»
@@ -3636,8 +3648,6 @@ function irrigationModel(states) {
    * la tessera diceva che non stava irrigando niente proprio mentre l'acqua
    * usciva. */
   const inFunzione = attive.filter((zona) => zonaInFunzione(states, zona));
-  const terreno = clean(config.soilEnt || config.soil_entity);
-  const umidita = terreno && widgetIncludes(terreno, fuori) ? numOf(states, terreno) : null;
   return {
     key: "irrigazione",
     accent: "#10b981",
@@ -3660,13 +3670,30 @@ function irrigationModel(states) {
      * analisi — che cerca un booleano — leggeva tutte le zone come ferme
      * proprio mentre l'acqua usciva. Il testo e' per gli occhi, `on` per i
      * conti: due mestieri, due campi. */
-    rows: attive.map((zona) => ({
-      glyph: "🌱",
-      name: clean(zona.name) || clean(zona.entity),
-      on: zonaInFunzione(states, zona),
-      entity: clean(zona.entity),
-      value: zonaInFunzione(states, zona) ? t("in funzione", "running") : t("ferma", "idle"),
-    })),
+    rows: [
+      ...attive.map((zona) => ({
+        glyph: "🌱",
+        name: clean(zona.name) || clean(zona.entity),
+        on: zonaInFunzione(states, zona),
+        entity: clean(zona.entity),
+        value: zonaInFunzione(states, zona) ? t("in funzione", "running") : t("ferma", "idle"),
+      })),
+      /* E il terreno fra le righe, quando c'e'.
+       *
+       * Senza questa, chi ha il solo sensore apriva una tessera vuota: il
+       * numero in copertina e niente dentro. E' una misura, non un comando —
+       * `carteDalleRighe` la mette fra «Le misure», dov'e' il suo posto. */
+      ...(umidita == null
+        ? []
+        : [
+            {
+              glyph: "💦",
+              name: t("Umidità terreno", "Soil moisture"),
+              entity: terreno,
+              value: `${Math.round(umidita)}%`,
+            },
+          ]),
+    ],
   };
 }
 

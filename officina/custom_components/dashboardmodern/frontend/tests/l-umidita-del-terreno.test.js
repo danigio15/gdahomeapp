@@ -68,3 +68,37 @@ test("le caselle stanno nella scheda Irrigazione e il salvataggio le conserva", 
   // Vuoto vuol dire «niente sensore», mai zero.
   assert.match(source, /delete next\.soilEnt/);
 });
+
+/* ── e si vede anche senza una sola elettrovalvola ─────────────────────── */
+
+test("il sensore da solo basta: né la pagina né la tessera pretendono le zone", () => {
+  /* Dal campo, segnalazione #80: «Potresti integrare un widget con i sensori
+   * umidità terreno così da vederli in plancia?» — e poi, guardando: «quella
+   * umidità terreno in realtà già è presente ma se inserisco solo quella
+   * entità non esce nei widget».
+   *
+   * Non mancava la funzione: c'era tutta. Mancava l'ordine in cui si
+   * guardavano le cose. In tutt'e due i posti il codice usciva PRIMA di
+   * leggere il sensore, perché nessuna zona voleva dire niente da disegnare —
+   * e chi ha due sonde nel vaso e nessuna elettrovalvola non ha niente da
+   * configurare, quindi non vedeva niente e non poteva nemmeno capire perché.
+   */
+  const home = readFileSync(join(SRC, "sections/home-widgets-section.js"), "utf8");
+  /* Nella tessera il sensore si legge prima del verdetto, e il verdetto
+   * chiede tutt'e due le assenze. */
+  assert.match(
+    home,
+    /const umidita = terreno && widgetIncludes\(terreno, fuori\) \? numOf\(states, terreno\) : null;\s*\n[\s\S]{0,220}?if \(!attive\.length && umidita == null\) return null;/,
+  );
+  assert.doesNotMatch(home, /if \(!attive\.length\) return null;/);
+  /* E il terreno finisce anche fra le righe, se no la tessera si apriva vuota:
+   * il numero in copertina e niente dentro. */
+  assert.match(home, /name: t\("Umidità terreno", "Soil moisture"\),/);
+
+  /* Nella pagina, il misuratore esce sopra l'«aggiungi le zone». */
+  assert.match(source, /const soloTerreno = soilMoisture\(config\)\.reading != null;/);
+  assert.match(source, /\(soloTerreno \? soilGaugeMarkup\(config\) : ""\) \+/);
+  /* E resta vivo: la firma non cambia quando cambia solo la lettura, quindi
+   * senza questa riga il numero si fermava al primo valore letto. */
+  assert.match(source, /if \(soloTerreno\) syncIrrigationValues\(head, grid, config\);/);
+});
