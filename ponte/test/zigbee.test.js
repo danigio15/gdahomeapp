@@ -10,6 +10,8 @@
  */
 import assert from "node:assert/strict";
 import test from "node:test";
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 
 import {
   ATTESA_DELLA_CASSETTA,
@@ -679,4 +681,45 @@ test("e chi si sta spegnendo non scrive più niente", async () => {
   });
   await zigbee.dilloAlRegistro([30_000]);
   assert.deepEqual(dette, []);
+});
+
+/* ── e l'app cerca la stessa parola che il ponte manda ───────────────────── */
+
+test("le due parole del filo sono le stesse di qua e di la'", () => {
+  /* Il guasto per cui è nata questa prova, e che è arrivato fino a una casa
+   * vera senza farsi vedere.
+   *
+   * «Su app non esce zigbee», per giorni, in una casa che Zigbee ce l'ha. Il
+   * ponte la rete la trovava e lo scriveva pure nel registro — «la rete Zigbee
+   * di questa casa e' Zigbee2MQTT, nella cassetta zigbee2mqtt» — e l'app
+   * continuava a non disegnare la voce nel menu.
+   *
+   * Perché le due parole erano diverse. Il ponte manda `zigbee2mqtt`; l'app,
+   * nell'elenco `LaRete`, cercava l'abbreviazione `z2m`. Un confronto fra due
+   * parole diverse non torna mai: la risposta finiva in `LaRete.nessuna`,
+   * `siApre` diceva di no, e `barra.dart` la voce non la metteva.
+   *
+   * Con ZHA le due parole sono la stessa — `zha` di qua e `zha` di là — e
+   * infatti quella metà funzionava. È il modo in cui un guasto del genere
+   * passa le prove: metà del codice è giusta, e la si prova.
+   *
+   * Le due metà stanno in due linguaggi, e nessun compilatore le guarda
+   * insieme. Le guarda questa prova, che legge i due file e confronta le
+   * parole — come `marchio.test.js` fa con i numeri di versione. */
+  const dart = readFileSync(
+    fileURLToPath(new URL("../../app/lib/casa/zigbee.dart", import.meta.url)),
+    "utf8",
+  );
+  /* `nome('parola')`: la parola fra apici è quella che viaggia sul filo. */
+  const dellApp = Object.fromEntries(
+    [...dart.matchAll(/^ {2}(zha|z2m|nessuna)\('([^']*)'\)[;,]$/gm)].map((una) => [una[1], una[2]]),
+  );
+  assert.deepEqual(
+    Object.keys(dellApp).sort(),
+    ["nessuna", "z2m", "zha"],
+    "l'elenco LaRete dell'app non si legge piu' come prima: questa prova va rifatta",
+  );
+  assert.equal(dellApp.zha, ZHA);
+  assert.equal(dellApp.z2m, Z2M);
+  assert.equal(dellApp.nessuna, NESSUNA);
 });

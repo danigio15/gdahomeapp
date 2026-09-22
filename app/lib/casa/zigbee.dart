@@ -45,7 +45,18 @@ enum LaRete {
   zha('zha'),
 
   /// Il programma a parte, che parla per posta (MQTT).
-  z2m('z2m');
+  ///
+  /// La parola e' `zigbee2mqtt` e non `z2m`, perche' e' quella che **manda il
+  /// ponte**: `Z2M` in `ponte/src/zigbee.js`. Qui c'era scritta l'abbreviazione,
+  /// e un confronto fra due parole diverse non torna mai: in una casa con
+  /// Zigbee2MQTT `stato()` rispondeva `zigbee2mqtt`, questo elenco non lo
+  /// riconosceva, `LaRete.nessuna` diceva che una rete non c'e' e la voce
+  /// «Zigbee» nel menu non compariva. Con ZHA invece le due parole erano la
+  /// stessa, e li' funzionava — che e' il motivo per cui il guasto e' arrivato
+  /// fino a una casa vera senza farsi vedere prima.
+  ///
+  /// Una prova tiene ferme tutt'e due (`ponte/test/zigbee.test.js`).
+  z2m('zigbee2mqtt');
 
   const LaRete(this.comeLaChiamaIlPonte);
 

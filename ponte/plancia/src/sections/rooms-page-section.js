@@ -69,6 +69,7 @@ import {
   clean,
   doc,
   esc,
+  iconGlyphHtml,
   installStyle,
   paginaVisibile,
   quandoSiCambiaPagina,
@@ -277,9 +278,20 @@ const ICONE_CLIMA = Object.freeze({ termo: "🔥", pompa: "♨️", clima: "❄�
  * accetta solo quello che un glifo lo e' davvero: qualcosa fuori dall'ASCII. */
 const UN_GLIFO = /[^\u0000-\u007f]/;
 
-const emojiScelta = (item) => {
+export const segnoScelto = (item) => {
   const scritta = clean(item?.emoji_icon) || clean(item?.icon);
-  return UN_GLIFO.test(scritta) ? scritta : "";
+  if (UN_GLIFO.test(scritta)) return scritta;
+  /* E un token del catalogo, che il motore delle icone sa disegnare.
+   *
+   * Prima qui passava solo il glifo, e un `mdi:` veniva buttato: l'icona che
+   * uno aveva scelto per la sua azione rapida non arrivava mai nella stanza,
+   * e la riga si prendeva il segno dedotto dal dominio — su un `select`, la
+   * lavagnetta. Dal campo, con la foto: «deve uscire icona dell'azione
+   * rapida». Il token si sa disegnare da quando c'e' `iconGlyphHtml`; quello
+   * che non si sa ancora scrivere e' la terza forma, la CHIAVE di un disegno
+   * del catalogo («washer»), che stampata com'e' sarebbe la parola «washer»
+   * sopra il nome. Quella continua a non passare di qui. */
+  return /^mdi:/i.test(scritta) ? scritta : "";
 };
 
 /* Che faccia ha una cosa assegnata a mano (#426).
@@ -370,7 +382,7 @@ export function glifoDellaVoce(item) {
 }
 
 export function iconaVoce(item, blocco) {
-  const propria = emojiScelta(item);
+  const propria = segnoScelto(item);
   if (propria) return propria;
   if (blocco.key === "clima") return ICONE_CLIMA[canonicalClimateType(item?.type)] || "❄️";
   if (blocco.key === "elettrodomestici")
@@ -383,6 +395,18 @@ export function iconaVoce(item, blocco) {
     );
   if (blocco.key === "altro") return glifoDellaVoce(item) || iconaBlocco(blocco);
   return iconaBlocco(blocco);
+}
+
+/* Il segno di una riga, gia' pronto da mettere nel markup.
+ *
+ * `iconaVoce` torna una parola: un glifo — che si scrive com'e' — oppure un
+ * token `mdi:`, che si disegna. Stampare un token vorrebbe dire la scritta
+ * «mdi:tune» sopra il nome, ed e' lo sbaglio contro cui `iconGlyphHtml`
+ * esiste. Lei la differenza la sa, e scappa con `esc` quello che non e' un
+ * token: da qui esce markup, e un simbolo scelto a mano puo' contenere di
+ * tutto. */
+function segnoDaDisegnare(item, blocco) {
+  return iconGlyphHtml(iconaVoce(item, blocco), { size: 22, fallback: iconaBlocco(blocco) });
 }
 
 /* Il nome di una voce, comunque sia stata configurata: quello scelto, quello
@@ -769,7 +793,7 @@ function rowMarkup(item, blocco, states, aperture = aperturePerEntita(), sotto =
     const parola = parolaDelGesto(azioniDellaPorta(porta, states?.[porta.entity])[0]?.gesto);
     return `<article class="dm-stanze-card dm-stanze-voce dm-stanze-apertura" data-dm-door="${esc(porta.id)}" role="button" tabindex="0">
     <div class="dm-stanze-card-row">
-      <span class="dm-stanze-orb">${esc(iconaVoce(item, blocco))}</span>
+      <span class="dm-stanze-orb">${segnoDaDisegnare(item, blocco)}</span>
       <span class="dm-stanze-title"><b>${esc(clean(porta.name) || nomeVoce(item, states))}</b><s>${esc(
         porta.pin ? `${parola} — ${t("chiede il PIN", "asks for the PIN")}` : parola,
       )}</s></span>
@@ -790,7 +814,15 @@ function rowMarkup(item, blocco, states, aperture = aperturePerEntita(), sotto =
         ? /* Tre puntini in colonna: e' il segno di «c'e' un elenco», e non la
            * stella di «questo parte adesso». Due gesti diversi non possono
            * portare lo stesso disegno. */
-          `<button type="button" class="dm-stanze-avvia dm-stanze-scegli" data-dm-stanza-scegli="${esc(entity)}" aria-label="${esc(
+          /* Il tasto si porta dietro nome e segno della riga: il popup e' lo
+           * stesso delle Azioni rapide, e quando lo apre il tasto della Home
+           * gli arriva l'azione — nome scelto, icona scelta. Da qui non gli
+           * arrivava niente, e la finestra ripiegava sul nome di Home
+           * Assistant e sulla sua faccia di serie: dal campo, una finestra
+           * intitolata «MODUS» aperta da una riga che si chiama «prova».
+           * Sono due parole gia' calcolate qui sopra: costano zero, e senza
+           * di loro il popup non ha nessun modo di sapere chi lo ha aperto. */
+          `<button type="button" class="dm-stanze-avvia dm-stanze-scegli" data-dm-stanza-scegli="${esc(entity)}" data-dm-stanza-nome="${esc(nomeVoce(item, states))}" data-dm-stanza-segno="${esc(segnoScelto(item))}" aria-label="${esc(
             t("Scegli", "Choose"),
           )} ${esc(nomeVoce(item, states))}"><span aria-hidden="true">⋮</span></button>`
         : blocco.tab
@@ -805,7 +837,7 @@ function rowMarkup(item, blocco, states, aperture = aperturePerEntita(), sotto =
     : "";
   return `<article class="dm-stanze-card dm-stanze-voce" data-dm-stanza-entita="${esc(entity)}"${dove}>
     <div class="dm-stanze-card-row">
-      <span class="dm-stanze-orb">${esc(iconaVoce(item, blocco))}</span>
+      <span class="dm-stanze-orb">${segnoDaDisegnare(item, blocco)}</span>
       <span class="dm-stanze-title"><b>${esc(nomeVoce(item, states))}</b><s data-dm-stanza-stato="${esc(entity)}" data-dm-stanza-blocco="${esc(blocco.key)}">${esc(statoVoce(item, states, blocco.key))}</s></span>
       ${tocco}
     </div>
@@ -1656,7 +1688,14 @@ function handleClick(event) {
     const entity = clean(scegli.getAttribute("data-dm-stanza-scegli"));
     if (!entity || !siComanda(entity)) return;
     root.navigator?.vibrate?.(8);
-    apriIlMenu(entity);
+    /* Il popup vuole un'azione, e da qui gliene si da' una fatta di due
+     * campi: come si chiama questa riga e che segno porta. Sono gli stessi
+     * due che il tasto della Home gli passa, ed e' l'unico modo che ha la
+     * finestra di intitolarsi come la cosa che uno ha toccato. */
+    apriIlMenu(entity, {
+      name: clean(scegli.getAttribute("data-dm-stanza-nome")),
+      icon: clean(scegli.getAttribute("data-dm-stanza-segno")),
+    });
     return;
   }
   /* Un tocco su un comando non e' un tocco sulla card (#467): i tasti del

@@ -11,6 +11,56 @@ fuori. La plancia dentro continua a dire la sua, e si legge dov'è sempre
 stata: nella pastiglia «La plancia» della console. Sono due numeri perché
 sono due cose.
 
+## 1.6.0.3
+
+**La voce «Zigbee» nell'app c'e', in una casa con Zigbee2MQTT.** Era una
+parola sola, e stava scritta in due modi.
+
+La riga nuova del registro, dalla casa di chi l'ha segnalato, ha detto in un
+colpo cos'era: `la rete Zigbee di questa casa e' Zigbee2MQTT, nella cassetta
+«zigbee2mqtt»`. Il ponte la rete la trovava — la trovava dalla 1.6.0 — e
+l'app continuava a non disegnare la voce nel menu. Quindi il guasto non era
+nel cercare: era in chi ascolta la risposta.
+
+Sul filo il ponte manda `quale: "zigbee2mqtt"` (`Z2M`, in
+`ponte/src/zigbee.js`). L'app, nel suo elenco `LaRete`, cercava
+l'abbreviazione — `z2m`. Due parole diverse non tornano mai: la risposta
+finiva in `LaRete.nessuna`, `siApre` diceva che una rete non c'e', e
+`barra.dart` la voce non la metteva. Esattamente lo stesso disegno di una
+casa che Zigbee non ce l'ha — che e' il motivo per cui dal di fuori non si
+poteva distinguere, ed e' il guasto che la 1.6.0.2 ha reso visibile.
+
+Con ZHA le due parole erano la stessa, `zha` di qua e `zha` di la', e quella
+meta' funzionava. E' cosi' che un guasto del genere passa le prove: meta' del
+codice e' giusta, e la si prova.
+
+Le due meta' stanno in due linguaggi e nessun compilatore le guarda insieme.
+Adesso le guarda una prova: legge l'elenco `LaRete` dal file Dart, lo
+confronta con le tre costanti del ponte e cade se una delle tre non torna —
+come `marchio.test.js` fa con i numeri di versione. Rimessa la parola
+vecchia, la prova diventa rossa; e' stata provata in tutt'e due i versi.
+
+**E nella stanza esce l'icona dell'azione rapida, e la finestra si intitola
+come la riga.** Il nome era arrivato, il resto no.
+
+L'icona, perche' qui passava soltanto un **glifo** — qualcosa fuori
+dall'ASCII — e l'editor delle Azioni rapide di serie ci mette un token del
+catalogo, `mdi:qualcosa`. Buttato quello, la riga si prendeva il segno che
+sa dedurre dal dominio: su un `select`, la lavagnetta. La regola aveva la
+sua ragione, ed era vera quando e' stata scritta: quella riga era testo, e
+un token stampato com'e' sarebbe stata la scritta «mdi:tune» sopra il nome.
+Adesso il segno lo mette `iconGlyphHtml`, che la differenza fra un glifo e
+un token la sa ed e' nata per questo. La terza forma continua a non passare
+— su qualche riga `icon` e' la CHIAVE di un disegno del catalogo,
+«washer» — perche' quella a video sarebbe davvero la parola «washer».
+
+Il titolo, perche' la finestra delle voci e' **la stessa** che apre il tasto
+delle Azioni rapide nella Home, e di la' le arriva l'azione: nome scelto,
+icona scelta. Da qui non le arrivava niente, e ripiegava sul nome di Home
+Assistant e sulla sua faccia di serie — una finestra intitolata «MODUS»
+aperta da una riga che si chiama «prova». Adesso il tasto dei tre puntini si
+porta dietro quei due campi, che erano gia' calcolati una riga sopra.
+
 ## 1.6.0.2
 
 **La riga dello Zigbee esce da sola, nel registro dell'add-on.** La 1.6.0.1
