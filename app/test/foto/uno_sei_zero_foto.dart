@@ -243,7 +243,7 @@ void main() {
   Future<Collegamento> unaCasa(WidgetTester tester, PonteFinto ponte) async {
     late Collegamento collegamento;
     await tester.runAsync(() async {
-      ponte.laReteZigbee = 'z2m';
+      ponte.laReteZigbee = 'zigbee2mqtt';
       final archivio = ArchivioDelleCase(CassaforteInMemoria());
       await archivio.aggiungi(
         nome: 'Villa Rosa',

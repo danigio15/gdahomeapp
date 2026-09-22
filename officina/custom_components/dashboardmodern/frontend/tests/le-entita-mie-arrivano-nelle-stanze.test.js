@@ -31,7 +31,9 @@ globalThis.localStorage = {
 };
 globalThis.document = undefined;
 
-const { assignedItems } = await import("../src/sections/rooms-page-section.js");
+const { assignedItems, iconaVoce, segnoScelto } = await import(
+  "../src/sections/rooms-page-section.js"
+);
 
 const leggi = (nome) => readFileSync(new URL(`../src/${nome}`, import.meta.url), "utf8");
 
@@ -175,6 +177,52 @@ test("chi non ha scritto niente non si ritrova niente", () => {
   /* Una configurazione storta non fa cadere la pagina delle stanze. */
   scrivi("cd_entita_mie", "non una lista");
   assert.deepEqual(assignedItems({}, STATI), []);
+});
+
+/* ── il segno, e la finestra che si intitola come la riga ──────────────── */
+
+test("il segno di un'azione rapida arriva nella stanza anche quando è un mdi:", () => {
+  /* Dal campo, con la foto: «deve uscire icona dell'azione rapida». Il nome
+   * era arrivato, il segno no — e non per caso: qui passava soltanto un
+   * glifo, cioè qualcosa fuori dall'ASCII, e l'editor delle Azioni rapide di
+   * serie ci mette un token del catalogo (`mdi:...`). Buttato quello, la riga
+   * si prendeva il segno dedotto dal dominio: su un `select`, la lavagnetta. */
+  assert.equal(segnoScelto({ icon: "mdi:tune" }), "mdi:tune");
+  assert.equal(segnoScelto({ icon: "🌆" }), "🌆");
+  assert.equal(segnoScelto({ emoji_icon: "🌙", icon: "mdi:tune" }), "🌙");
+  /* La terza forma continua a non passare: `icon` su qualche riga è la CHIAVE
+   * di un disegno del catalogo, e stampata com'è sarebbe la parola «washer»
+   * sopra il nome. */
+  assert.equal(segnoScelto({ icon: "washer" }), "");
+  assert.equal(segnoScelto({}), "");
+});
+
+test("e iconaVoce lo porta fino alla riga", () => {
+  magazzino.clear();
+  scrivi("cd_quick_actions", [{ name: "Serata", icon: "mdi:tune", entity: "select.modus" }]);
+  const voci = assignedItems({ "select.modus": "r-salone" }, STATI);
+  assert.equal(voci[0].icon, "mdi:tune");
+  assert.equal(iconaVoce(voci[0], { key: "altro" }), "mdi:tune");
+});
+
+test("la finestra delle voci si intitola come la riga che l'ha aperta", () => {
+  /* La stessa finestra la aprono il tasto della Home e la riga della stanza.
+   * Dalla Home le arriva l'azione — nome scelto, icona scelta — e si intitola
+   * giusta; dalla stanza non le arrivava niente, e ripiegava sul nome di Home
+   * Assistant: una finestra intitolata «MODUS» aperta da una riga che si
+   * chiama «prova». I due campi sono già calcolati dove si disegna il tasto:
+   * ci vanno addosso, e il gestore glieli ripassa. */
+  const sorgente = leggi("sections/rooms-page-section.js");
+  assert.match(sorgente, /data-dm-stanza-nome="\$\{esc\(nomeVoce\(item, states\)\)\}"/);
+  assert.match(sorgente, /data-dm-stanza-segno="\$\{esc\(segnoScelto\(item\)\)\}"/);
+  assert.match(
+    sorgente,
+    /apriIlMenu\(entity, \{\s*name: clean\(scegli\.getAttribute\("data-dm-stanza-nome"\)\),\s*icon: clean\(scegli\.getAttribute\("data-dm-stanza-segno"\)\),\s*\}\);/,
+  );
+  /* E il segno si disegna, non si stampa: `iconGlyphHtml` sa la differenza fra
+   * un glifo e un token, ed è la ragione per cui esiste. */
+  assert.doesNotMatch(sorgente, /\$\{esc\(iconaVoce\(item, blocco\)\)\}/);
+  assert.match(sorgente, /<span class="dm-stanze-orb">\$\{segnoDaDisegnare\(item, blocco\)\}<\/span>/);
 });
 
 /* ── e quello che si fa partire, parte ───────────────────────────────── */

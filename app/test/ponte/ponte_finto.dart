@@ -418,7 +418,13 @@ class PonteFinto {
 
   /* ─── La rete Zigbee (#54) ────────────────────────────────────────────── */
 
-  /// Che rete c'e': `''` per nessuna, `'zha'` o `'z2m'`.
+  /// Che rete c'e': `''` per nessuna, `'zha'` o `'zigbee2mqtt'`.
+  ///
+  /// Sono le parole che manda il ponte vero (`Z2M` in `ponte/src/zigbee.js`),
+  /// non quelle che l'app si e' data per comodita'. Qui c'era scritto `'z2m'`,
+  /// e un ponte finto che parla la lingua inventata da chi lo interroga non
+  /// prova niente: e' cosi' che la voce «Zigbee» e' rimasta invisibile per due
+  /// versioni in tutte le case con Zigbee2MQTT, con le prove verdi.
   String laReteZigbee = '';
 
   /// Per quanto si apre, quando non lo dice chi la apre.

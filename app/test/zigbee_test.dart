@@ -204,7 +204,7 @@ void main() {
   testWidgets('con Zigbee2MQTT la schermata è la stessa, la rete no', (
     tester,
   ) async {
-    await unaCasa(tester, rete: 'z2m');
+    await unaCasa(tester, rete: 'zigbee2mqtt');
     await apri(tester);
     expect(find.text('Zigbee2MQTT'), findsOneWidget);
     expect(find.text('Apri la rete'), findsOneWidget);
