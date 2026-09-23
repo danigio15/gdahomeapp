@@ -418,3 +418,17 @@ test("nell'avviso non si assegnano stanze: la tendina lì non ci va", async () =
     "le righe dei non connessi restano fuori",
   );
 });
+
+test("nella finestra non si legge né l'identificativo né la maniglia del dispositivo", async () => {
+  /* Visto rendendo la finestra: sotto «Presa giardino» c'era scritto
+   * `dispositivo:giard1`, che non è nemmeno un'entità — è la maniglia con cui
+   * il raggruppamento tiene insieme le entità mute di quell'apparecchio.
+   * Prima ci finiva l'identificativo, che è rimasto da quando ogni riga era
+   * un'entità; in tutt'e due i casi è la stessa regola: «non voglio vedere il
+   * nome entità». Gli identificativi stanno nelle schede della
+   * configurazione, non nelle pagine. */
+  const sorgente = await read("src/sections/home-widgets-section.js");
+  const finestra = /function nonRispondeDetail\(widget\) \{[\s\S]*?\n\}/.exec(sorgente);
+  assert.ok(finestra, "la finestra dei non connessi deve esserci");
+  assert.doesNotMatch(finestra[0], /riga\.entity/, "l'identificativo non si stampa");
+});

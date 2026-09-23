@@ -3733,12 +3733,25 @@ function rowsDetail(widget) {
  * ripetitore, togliere e rimettere corrente alla presa — si fa fuori dalla
  * plancia, e una promessa che la plancia non puo' mantenere e' peggio del
  * silenzio. */
+/* Sotto il nome non ci va l'identificativo.
+ *
+ * Qui c'era, ed era rimasto da quando ogni riga era un'entita': «Pompa
+ * piscina» e sotto `switch.pompa`. Da quando le righe sono dispositivi (#111)
+ * quel posto stampava `dispositivo:a1b2c3…`, che non e' nemmeno un'entita' —
+ * e' la maniglia con cui questo codice tiene insieme le sue entita' mute, e
+ * non vuol dire niente per nessuno.
+ *
+ * Ma non si toglie perche' era diventato brutto: si toglie perche' e' la
+ * regola di questa plancia. «Non voglio vedere il nome entita'»: gli
+ * identificativi stanno nelle schede della configurazione, dove uno li cerca,
+ * e non nelle pagine, dove uno guarda. Quello che serve qui e' il nome e da
+ * quanto tace: la presa da andare a premere si riconosce da come si chiama. */
 function nonRispondeDetail(widget) {
   return (widget.rows || [])
     .map((riga) =>
       rowShell(
         `<span class="dm-w-glyph" data-on="false" aria-hidden="true">${esc(riga.glyph || "📡")}</span>
-         <span class="dm-w-name">${esc(riga.name)}<small>${esc(riga.entity)}</small></span>
+         <span class="dm-w-name">${esc(riga.name)}</span>
          <span class="dm-w-pill" data-tono="allarme">${esc(riga.value)}</span>`,
       ),
     )
