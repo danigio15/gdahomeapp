@@ -421,3 +421,94 @@ test("con «rifai» il giro parte, e poi si rilegge", async () => {
   assert.ok(casa.detto.some((uno) => uno.type === "zha/topology/update"));
   assert.ok(casa.detto.some((uno) => uno.type === "zha/devices"));
 });
+
+/* ── I disegni veri ───────────────────────────────────────────────────────
+ *
+ * «La mappa deve essere fatta con icona dispositivi reali.»
+ *
+ * I disegni non si inventano: sono i centoventiquattro del catalogo della
+ * plancia, quelli che si vedono sulle tessere e nelle schede. Una presa deve
+ * essere la stessa presa dappertutto, se no in una casa ci sono due lingue.
+ *
+ * Quale disegno tocca a chi si sceglie dal nome, che è imperfetto e si sa —
+ * ma è l'unica cosa che le due reti dicono tutte e due allo stesso modo. I due
+ * casi qui sotto sono sbagli veri, visti rendendo la mappa e non leggendo il
+ * codice: sono il motivo per cui queste prove esistono.
+ */
+
+import { ilDisegnoDi } from "../src/mappa-zigbee.js";
+
+test("il nome dice l'oggetto, e la stanza non glielo ruba", () => {
+  /* «Presa garage» è una presa che sta in garage, non una porta di garage.
+   * Con le stanze davanti nell'elenco si prendeva il basculante — e un'icona
+   * sbagliata è peggio di un'icona generica, perché la prima la si crede. */
+  assert.equal(ilDisegnoDi({ nome: "Presa garage", tipo: TERMINALE }), "socket");
+  assert.equal(ilDisegnoDi({ nome: "Portone garage", tipo: TERMINALE }), "garage-door");
+  assert.equal(ilDisegnoDi({ nome: "Luce cantina", tipo: TERMINALE }), "lights");
+});
+
+test("i nostri sono prefissi: «termostat» aggancia «Termostato»", () => {
+  /* Col confine di parola anche in coda, «Termostato cucina» e «Finestra
+   * salotto» restavano senza disegno: la regola c'era e non scattava mai. */
+  assert.equal(ilDisegnoDi({ nome: "Termostato cucina", tipo: TERMINALE }), "thermometer");
+  assert.equal(ilDisegnoDi({ nome: "Finestra salotto", tipo: TERMINALE }), "window");
+  assert.equal(ilDisegnoDi({ nome: "Ripetitore taverna", tipo: ROUTER }), "router");
+  assert.equal(ilDisegnoDi({ nome: "Telecomando salotto", tipo: TERMINALE }), "toggle");
+});
+
+test("chi non si riconosce prende il neutro del suo mestiere, non uno a caso", () => {
+  assert.equal(ilDisegnoDi({ nome: "Coso 3", tipo: TERMINALE }), "sliders");
+  assert.equal(ilDisegnoDi({ nome: "Coso 4", tipo: ROUTER }), "socket");
+  assert.equal(ilDisegnoDi({ nome: "Coso 5", tipo: COORDINATORE }), "router");
+});
+
+test("ogni disegno che nominiamo esiste davvero nel catalogo", async () => {
+  /* Un nome sbagliato qui non si vedrebbe come errore: uscirebbe un pallino
+   * vuoto, e nessuno saprebbe perché. */
+  const { chiaviDisegnate } = await import("../plancia/src/core/catalogo-disegni.js");
+  const cE = new Set(chiaviDisegnate());
+  const nomi = [
+    "Presa",
+    "Luce",
+    "Fumo",
+    "Movimento",
+    "Allagamento",
+    "Termostato",
+    "Radiatore",
+    "Serratura",
+    "Telecomando",
+    "Campanello",
+    "Telecamera",
+    "Altoparlante",
+    "Ripetitore",
+    "Pompa",
+    "Irrigazione",
+    "Caminetto",
+    "Vibrazione",
+    "Tapparella",
+    "Finestra",
+    "Portone garage",
+    "Cancello",
+    "Porta",
+    "Coso",
+  ];
+  for (const nome of nomi)
+    for (const tipo of [COORDINATORE, ROUTER, TERMINALE]) {
+      const disegno = ilDisegnoDi({ nome, tipo });
+      assert.ok(cE.has(disegno), `«${nome}» chiede «${disegno}», che nel catalogo non c'è`);
+    }
+});
+
+test("il disegno finisce dentro la mappa, e non in uno «span» che l'SVG non sa", () => {
+  /* Il catalogo consegna il disegno dentro uno `<span>`: dentro un SVG non ci
+   * può stare, e `foreignObject` su `flutter_svg` sarebbe un buco bianco sul
+   * telefono. Si tiene l'`<svg>` di dentro, che annidato è SVG valido. */
+  const svg = laMappaDisegnata([
+    { id: "c", nome: "Antenna", tipo: COORDINATORE, vicini: [{ id: "p", qualita: 200 }] },
+    { id: "p", nome: "Presa cucina", tipo: ROUTER, vicini: [{ id: "c", qualita: 200 }] },
+  ]);
+  assert.ok(!svg.includes("<span"), "nessuno span dentro la figura");
+  assert.ok(!svg.includes("foreignObject"));
+  assert.match(svg, /data-dm-art="socket"/, "la presa ha il disegno della presa");
+  assert.match(svg, /data-dm-art="router"/, "e l'antenna quello dell'antenna");
+});

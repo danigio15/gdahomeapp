@@ -4,50 +4,65 @@
   <line x1="40" y1="906" x2="860" y2="906" stroke="#475569" stroke-width="1" stroke-opacity=".4"/>
        <text x="450" y="932" text-anchor="middle" font-size="13" fill="#94a3b8">Di questi la rete non ha visto nessun collegamento</text>
   <g><g>
-      <circle cx="450.0" cy="450.0" r="26" fill="#a78bfa" stroke="#0b1220" stroke-width="3"/>
-      <text x="450" y="493.0" text-anchor="middle" font-size="13" font-weight="700" fill="#e2e8f0">Antenna</text>
+      <circle cx="450.0" cy="450.0" r="34" fill="#0b1220" stroke="#a78bfa" stroke-width="4"/>
+      <svg data-dm-art="router" x="424.5" y="424.5" width="51" height="51" viewBox="0 0 96 96" role="img" aria-hidden="true" focusable="false"><rect class="dm-art-panel" x="3" y="3" width="90" height="90" rx="20" fill="#e0f2fe"/><path class="dm-art-highlight" fill="#ffffff" opacity=".75" d="M15 13h66a10 10 0 0 1 10 10v8C70 18 42 17 5 39V23A10 10 0 0 1 15 13Z"/><rect fill="#0f2942" x="14" y="52" width="68" height="26" rx="9"/><circle fill="#22c55e" cx="27" cy="65" r="3.4"/><circle fill="#0ea5e9" cx="39" cy="65" r="3.4"/><path fill="none" stroke="#0f2942" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M62 52V34M74 52V38"/><path fill="none" stroke="#0ea5e9" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M30 40c5-6 12-10 20-10M24 30c8-9 18-14 30-14"/></svg>
+      <text x="450" y="503.0" text-anchor="middle" font-size="13" font-weight="700" fill="#e2e8f0">Antenna</text>
     </g><g>
-      <circle cx="450.0" cy="265.0" r="17" fill="#38bdf8" stroke="#0b1220" stroke-width="3"/>
-      <text x="450" y="299.0" text-anchor="middle" font-size="13" font-weight="700" fill="#e2e8f0">Presa cucina</text>
+      <circle cx="450.0" cy="265.0" r="27" fill="#0b1220" stroke="#38bdf8" stroke-width="4"/>
+      <svg data-dm-art="socket" x="429.8" y="244.8" width="40.5" height="40.5" viewBox="0 0 96 96" role="img" aria-hidden="true" focusable="false"><rect class="dm-art-panel" x="3" y="3" width="90" height="90" rx="20" fill="#e0f2fe"/><path class="dm-art-highlight" fill="#ffffff" opacity=".75" d="M15 13h66a10 10 0 0 1 10 10v8C70 18 42 17 5 39V23A10 10 0 0 1 15 13Z"/><rect fill="#0f2942" x="18" y="18" width="60" height="60" rx="16"/><circle fill="#f8fafc" cx="48" cy="48" r="21"/><circle fill="#0f2942" cx="39" cy="44" r="4"/><circle fill="#0f2942" cx="57" cy="44" r="4"/><rect fill="#0f2942" x="44" y="56" width="8" height="6" rx="3"/></svg>
+      <text x="450" y="311.0" text-anchor="middle" font-size="13" font-weight="700" fill="#e2e8f0">Presa cucina</text>
     </g><g>
-      <circle cx="635.0" cy="450.0" r="17" fill="#38bdf8" stroke="#0b1220" stroke-width="3"/>
-      <text x="635" y="484.0" text-anchor="middle" font-size="13" font-weight="700" fill="#e2e8f0">Presa salotto</text>
+      <circle cx="635.0" cy="450.0" r="27" fill="#0b1220" stroke="#38bdf8" stroke-width="4"/>
+      <svg data-dm-art="socket" x="614.8" y="429.8" width="40.5" height="40.5" viewBox="0 0 96 96" role="img" aria-hidden="true" focusable="false"><rect class="dm-art-panel" x="3" y="3" width="90" height="90" rx="20" fill="#e0f2fe"/><path class="dm-art-highlight" fill="#ffffff" opacity=".75" d="M15 13h66a10 10 0 0 1 10 10v8C70 18 42 17 5 39V23A10 10 0 0 1 15 13Z"/><rect fill="#0f2942" x="18" y="18" width="60" height="60" rx="16"/><circle fill="#f8fafc" cx="48" cy="48" r="21"/><circle fill="#0f2942" cx="39" cy="44" r="4"/><circle fill="#0f2942" cx="57" cy="44" r="4"/><rect fill="#0f2942" x="44" y="56" width="8" height="6" rx="3"/></svg>
+      <text x="635" y="496.0" text-anchor="middle" font-size="13" font-weight="700" fill="#e2e8f0">Presa salotto</text>
     </g><g>
-      <circle cx="450.0" cy="635.0" r="17" fill="#38bdf8" stroke="#0b1220" stroke-width="3"/>
-      <text x="450" y="669.0" text-anchor="middle" font-size="13" font-weight="700" fill="#e2e8f0">Ripetitore</text><text x="450" y="685.0" text-anchor="middle" font-size="13" font-weight="700" fill="#e2e8f0">taverna</text>
+      <circle cx="450.0" cy="635.0" r="27" fill="#0b1220" stroke="#38bdf8" stroke-width="4"/>
+      <svg data-dm-art="router" x="429.8" y="614.8" width="40.5" height="40.5" viewBox="0 0 96 96" role="img" aria-hidden="true" focusable="false"><rect class="dm-art-panel" x="3" y="3" width="90" height="90" rx="20" fill="#e0f2fe"/><path class="dm-art-highlight" fill="#ffffff" opacity=".75" d="M15 13h66a10 10 0 0 1 10 10v8C70 18 42 17 5 39V23A10 10 0 0 1 15 13Z"/><rect fill="#0f2942" x="14" y="52" width="68" height="26" rx="9"/><circle fill="#22c55e" cx="27" cy="65" r="3.4"/><circle fill="#0ea5e9" cx="39" cy="65" r="3.4"/><path fill="none" stroke="#0f2942" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M62 52V34M74 52V38"/><path fill="none" stroke="#0ea5e9" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M30 40c5-6 12-10 20-10M24 30c8-9 18-14 30-14"/></svg>
+      <text x="450" y="681.0" text-anchor="middle" font-size="13" font-weight="700" fill="#e2e8f0">Ripetitore</text><text x="450" y="697.0" text-anchor="middle" font-size="13" font-weight="700" fill="#e2e8f0">taverna</text>
     </g><g>
-      <circle cx="265.0" cy="450.0" r="17" fill="#38bdf8" stroke="#0b1220" stroke-width="3"/>
-      <text x="265" y="484.0" text-anchor="middle" font-size="13" font-weight="700" fill="#e2e8f0">Presa garage</text>
+      <circle cx="265.0" cy="450.0" r="27" fill="#0b1220" stroke="#38bdf8" stroke-width="4"/>
+      <svg data-dm-art="socket" x="244.8" y="429.8" width="40.5" height="40.5" viewBox="0 0 96 96" role="img" aria-hidden="true" focusable="false"><rect class="dm-art-panel" x="3" y="3" width="90" height="90" rx="20" fill="#e0f2fe"/><path class="dm-art-highlight" fill="#ffffff" opacity=".75" d="M15 13h66a10 10 0 0 1 10 10v8C70 18 42 17 5 39V23A10 10 0 0 1 15 13Z"/><rect fill="#0f2942" x="18" y="18" width="60" height="60" rx="16"/><circle fill="#f8fafc" cx="48" cy="48" r="21"/><circle fill="#0f2942" cx="39" cy="44" r="4"/><circle fill="#0f2942" cx="57" cy="44" r="4"/><rect fill="#0f2942" x="44" y="56" width="8" height="6" rx="3"/></svg>
+      <text x="265" y="496.0" text-anchor="middle" font-size="13" font-weight="700" fill="#e2e8f0">Presa garage</text>
     </g><g>
-      <circle cx="510.6" cy="151.1" r="12" fill="#4ade80" stroke="#0b1220" stroke-width="3"/>
-      <text x="510.6" y="180.1" text-anchor="middle" font-size="13" font-weight="700" fill="#e2e8f0">🔋 Termostato</text><text x="510.6" y="196.1" text-anchor="middle" font-size="13" font-weight="700" fill="#e2e8f0">cucina</text>
+      <circle cx="510.6" cy="151.1" r="22" fill="#0b1220" stroke="#4ade80" stroke-width="4"/>
+      <svg data-dm-art="thermometer" x="494.1" y="134.6" width="33" height="33" viewBox="0 0 96 96" role="img" aria-hidden="true" focusable="false"><rect class="dm-art-panel" x="3" y="3" width="90" height="90" rx="20" fill="#e0f2fe"/><path class="dm-art-highlight" fill="#ffffff" opacity=".75" d="M15 13h66a10 10 0 0 1 10 10v8C70 18 42 17 5 39V23A10 10 0 0 1 15 13Z"/><rect fill="#0f2942" x="40" y="12" width="16" height="46" rx="8"/><circle fill="#0f2942" cx="48" cy="68" r="16"/><circle fill="#0ea5e9" cx="48" cy="68" r="9"/><rect fill="#0ea5e9" x="45" y="32" width="6" height="30" rx="3"/><path fill="none" stroke="#0f2942" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M62 26h8M62 36h8M62 46h8"/></svg>
+      <text x="510.6" y="192.1" text-anchor="middle" font-size="13" font-weight="700" fill="#e2e8f0">🔋 Termostato</text><text x="510.6" y="208.1" text-anchor="middle" font-size="13" font-weight="700" fill="#e2e8f0">cucina</text>
     </g><g>
-      <circle cx="381.1" cy="109.9" r="12" fill="#4ade80" stroke="#0b1220" stroke-width="3"/>
-      <text x="381.1" y="138.9" text-anchor="middle" font-size="13" font-weight="700" fill="#e2e8f0">🔋 Porta ingresso</text>
+      <circle cx="381.1" cy="109.9" r="22" fill="#0b1220" stroke="#4ade80" stroke-width="4"/>
+      <svg data-dm-art="front-door" x="364.6" y="93.4" width="33" height="33" viewBox="0 0 96 96" role="img" aria-hidden="true" focusable="false"><rect class="dm-art-panel" x="3" y="3" width="90" height="90" rx="20" fill="#e0f2fe"/><path class="dm-art-highlight" fill="#ffffff" opacity=".75" d="M15 13h66a10 10 0 0 1 10 10v8C70 18 42 17 5 39V23A10 10 0 0 1 15 13Z"/><rect fill="#0f2942" x="15" y="8" width="66" height="80" rx="9"/><rect fill="#8be2ff" x="22" y="15" width="52" height="11" rx="4"/><rect fill="#f8fafc" x="22" y="30" width="25" height="51" rx="5"/><rect fill="#f8fafc" x="49" y="30" width="25" height="51" rx="5"/><path fill="none" stroke="#0f2942" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M28 39h13M55 39h13M28 51h13M55 51h13"/><circle fill="#0ea5e9" cx="43" cy="62" r="3.2"/><circle fill="#0ea5e9" cx="53" cy="62" r="3.2"/></svg>
+      <text x="381.1" y="150.9" text-anchor="middle" font-size="13" font-weight="700" fill="#e2e8f0">🔋 Porta ingresso</text>
     </g><g>
-      <circle cx="622.2" cy="198.3" r="12" fill="#4ade80" stroke="#0b1220" stroke-width="3"/>
-      <text x="622.2" y="227.3" text-anchor="middle" font-size="13" font-weight="700" fill="#e2e8f0">🔋 Fumo cucina</text>
+      <circle cx="622.2" cy="198.3" r="22" fill="#0b1220" stroke="#4ade80" stroke-width="4"/>
+      <svg data-dm-art="smoke" x="605.7" y="181.8" width="33" height="33" viewBox="0 0 96 96" role="img" aria-hidden="true" focusable="false"><rect class="dm-art-panel" x="3" y="3" width="90" height="90" rx="20" fill="#e0f2fe"/><path class="dm-art-highlight" fill="#ffffff" opacity=".75" d="M15 13h66a10 10 0 0 1 10 10v8C70 18 42 17 5 39V23A10 10 0 0 1 15 13Z"/><rect fill="#0f2942" x="18" y="56" width="60" height="26" rx="10"/><rect fill="#0ea5e9" x="27" y="65" width="10" height="8" rx="4"/><path fill="none" stroke="#0f2942" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M36 46c0-8 10-8 10-16s-8-8-8-14M56 46c0-6 8-7 8-14"/></svg>
+      <text x="622.2" y="239.3" text-anchor="middle" font-size="13" font-weight="700" fill="#e2e8f0">🔋 Fumo cucina</text>
     </g><g>
-      <circle cx="748.9" cy="510.6" r="12" fill="#4ade80" stroke="#0b1220" stroke-width="3"/>
-      <text x="748.9" y="539.6" text-anchor="middle" font-size="13" font-weight="700" fill="#e2e8f0">🔋 Telecomando</text><text x="748.9" y="555.6" text-anchor="middle" font-size="13" font-weight="700" fill="#e2e8f0">salotto</text>
+      <circle cx="748.9" cy="510.6" r="22" fill="#0b1220" stroke="#4ade80" stroke-width="4"/>
+      <svg data-dm-art="toggle" x="732.4" y="494.1" width="33" height="33" viewBox="0 0 96 96" role="img" aria-hidden="true" focusable="false"><rect class="dm-art-panel" x="3" y="3" width="90" height="90" rx="20" fill="#e0f2fe"/><path class="dm-art-highlight" fill="#ffffff" opacity=".75" d="M15 13h66a10 10 0 0 1 10 10v8C70 18 42 17 5 39V23A10 10 0 0 1 15 13Z"/><rect fill="#0f2942" x="12" y="32" width="72" height="34" rx="17"/><circle fill="#f8fafc" cx="66" cy="49" r="12"/><circle fill="#0ea5e9" cx="66" cy="49" r="5"/><path fill="none" stroke="#f8fafc" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M26 43v12"/></svg>
+      <text x="748.9" y="551.6" text-anchor="middle" font-size="13" font-weight="700" fill="#e2e8f0">🔋 Telecomando</text><text x="748.9" y="567.6" text-anchor="middle" font-size="13" font-weight="700" fill="#e2e8f0">salotto</text>
     </g><g>
-      <circle cx="790.1" cy="381.1" r="12" fill="#4ade80" stroke="#0b1220" stroke-width="3"/>
-      <text x="892" y="410.1" text-anchor="end" font-size="13" font-weight="700" fill="#e2e8f0">🔋 Finestra salotto</text>
+      <circle cx="790.1" cy="381.1" r="22" fill="#0b1220" stroke="#4ade80" stroke-width="4"/>
+      <svg data-dm-art="window" x="773.6" y="364.6" width="33" height="33" viewBox="0 0 96 96" role="img" aria-hidden="true" focusable="false"><rect class="dm-art-panel" x="3" y="3" width="90" height="90" rx="20" fill="#e0f2fe"/><path class="dm-art-highlight" fill="#ffffff" opacity=".75" d="M15 13h66a10 10 0 0 1 10 10v8C70 18 42 17 5 39V23A10 10 0 0 1 15 13Z"/><rect fill="#0f2942" x="14" y="12" width="68" height="62" rx="9"/><rect fill="#8be2ff" x="22" y="20" width="24" height="46" rx="4"/><rect fill="#8be2ff" x="50" y="20" width="24" height="46" rx="4"/><path fill="none" stroke="#f8fafc" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M27 31h14M55 31h14"/><rect fill="#0ea5e9" x="44" y="38" width="8" height="12" rx="3"/><rect fill="#0f2942" x="12" y="78" width="72" height="7" rx="3.5"/></svg>
+      <text x="892" y="422.1" text-anchor="end" font-size="13" font-weight="700" fill="#e2e8f0">🔋 Finestra salotto</text>
     </g><g>
-      <circle cx="389.4" cy="748.9" r="12" fill="#4ade80" stroke="#0b1220" stroke-width="3"/>
-      <text x="389.4" y="777.9" text-anchor="middle" font-size="13" font-weight="700" fill="#e2e8f0">🔋 Allagamento</text><text x="389.4" y="793.9" text-anchor="middle" font-size="13" font-weight="700" fill="#e2e8f0">taverna</text>
+      <circle cx="389.4" cy="748.9" r="22" fill="#0b1220" stroke="#4ade80" stroke-width="4"/>
+      <svg data-dm-art="water" x="372.9" y="732.4" width="33" height="33" viewBox="0 0 96 96" role="img" aria-hidden="true" focusable="false"><rect class="dm-art-panel" x="3" y="3" width="90" height="90" rx="20" fill="#e0f2fe"/><path class="dm-art-highlight" fill="#ffffff" opacity=".75" d="M15 13h66a10 10 0 0 1 10 10v8C70 18 42 17 5 39V23A10 10 0 0 1 15 13Z"/><path fill="#8be2ff" d="M48 12c14 18 22 29 22 38a22 22 0 0 1-44 0c0-9 8-20 22-38Z"/><path fill="none" stroke="#f8fafc" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M37 52c0 8 5 13 11 14"/></svg>
+      <text x="389.4" y="789.9" text-anchor="middle" font-size="13" font-weight="700" fill="#e2e8f0">🔋 Allagamento</text><text x="389.4" y="805.9" text-anchor="middle" font-size="13" font-weight="700" fill="#e2e8f0">taverna</text>
     </g><g>
-      <circle cx="518.9" cy="790.1" r="12" fill="#4ade80" stroke="#0b1220" stroke-width="3"/>
-      <text x="518.9" y="819.1" text-anchor="middle" font-size="13" font-weight="700" fill="#e2e8f0">🔋 Movimento</text><text x="518.9" y="835.1" text-anchor="middle" font-size="13" font-weight="700" fill="#e2e8f0">taverna</text>
+      <circle cx="518.9" cy="790.1" r="22" fill="#0b1220" stroke="#4ade80" stroke-width="4"/>
+      <svg data-dm-art="motion" x="502.4" y="773.6" width="33" height="33" viewBox="0 0 96 96" role="img" aria-hidden="true" focusable="false"><rect class="dm-art-panel" x="3" y="3" width="90" height="90" rx="20" fill="#e0f2fe"/><path class="dm-art-highlight" fill="#ffffff" opacity=".75" d="M15 13h66a10 10 0 0 1 10 10v8C70 18 42 17 5 39V23A10 10 0 0 1 15 13Z"/><circle fill="#0f2942" cx="52" cy="22" r="8"/><path fill="#0f2942" d="M44 34h10l9 18-8 4-5-9-3 15 11 12v13h-9V78l-13-13 5-24-9 6-6-8z"/><path fill="none" stroke="#0ea5e9" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M74 30c5 6 5 14 0 20M20 30c-5 6-5 14 0 20"/></svg>
+      <text x="518.9" y="831.1" text-anchor="middle" font-size="13" font-weight="700" fill="#e2e8f0">🔋 Movimento</text><text x="518.9" y="847.1" text-anchor="middle" font-size="13" font-weight="700" fill="#e2e8f0">taverna</text>
     </g><g>
-      <circle cx="151.1" cy="389.4" r="12" fill="#4ade80" stroke="#0b1220" stroke-width="3"/>
-      <text x="151.1" y="418.4" text-anchor="middle" font-size="13" font-weight="700" fill="#e2e8f0">Portone garage</text>
+      <circle cx="151.1" cy="389.4" r="22" fill="#0b1220" stroke="#4ade80" stroke-width="4"/>
+      <svg data-dm-art="garage-door" x="134.6" y="372.9" width="33" height="33" viewBox="0 0 96 96" role="img" aria-hidden="true" focusable="false"><rect class="dm-art-panel" x="3" y="3" width="90" height="90" rx="20" fill="#e0f2fe"/><path class="dm-art-highlight" fill="#ffffff" opacity=".75" d="M15 13h66a10 10 0 0 1 10 10v8C70 18 42 17 5 39V23A10 10 0 0 1 15 13Z"/><path fill="#0f2942" d="M8 42 48 15l40 27v40a4 4 0 0 1-4 4H12a4 4 0 0 1-4-4z"/><rect fill="#f8fafc" x="19" y="48" width="58" height="34" rx="4"/><path fill="none" stroke="#0f2942" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M19 57h58M19 65h58M19 73h58"/><rect fill="#0ea5e9" x="41" y="36" width="14" height="6" rx="3"/></svg>
+      <text x="151.1" y="430.4" text-anchor="middle" font-size="13" font-weight="700" fill="#e2e8f0">Portone garage</text>
     </g><g>
-      <circle cx="300.0" cy="976.0" r="12" fill="#fb923c" stroke="#0b1220" stroke-width="3"/>
-      <text x="300" y="1005.0" text-anchor="middle" font-size="13" font-weight="700" fill="#e2e8f0">🔋 Sensore cantina</text>
+      <circle cx="300.0" cy="976.0" r="22" fill="#0b1220" stroke="#fb923c" stroke-width="4"/>
+      <svg data-dm-art="sliders" x="283.5" y="959.5" width="33" height="33" viewBox="0 0 96 96" role="img" aria-hidden="true" focusable="false"><rect class="dm-art-panel" x="3" y="3" width="90" height="90" rx="20" fill="#e0f2fe"/><path class="dm-art-highlight" fill="#ffffff" opacity=".75" d="M15 13h66a10 10 0 0 1 10 10v8C70 18 42 17 5 39V23A10 10 0 0 1 15 13Z"/><path fill="none" stroke="#0f2942" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M18 28h60M18 48h60M18 68h60"/><circle fill="#0f2942" cx="34" cy="28" r="9"/><circle fill="#0f2942" cx="62" cy="48" r="9"/><circle fill="#0ea5e9" cx="42" cy="68" r="9"/></svg>
+      <text x="300" y="1017.0" text-anchor="middle" font-size="13" font-weight="700" fill="#e2e8f0">🔋 Sensore cantina</text>
     </g><g>
-      <circle cx="600.0" cy="976.0" r="12" fill="#fb923c" stroke="#0b1220" stroke-width="3"/>
-      <text x="600" y="1005.0" text-anchor="middle" font-size="13" font-weight="700" fill="#e2e8f0">Presa albero</text>
+      <circle cx="600.0" cy="976.0" r="22" fill="#0b1220" stroke="#fb923c" stroke-width="4"/>
+      <svg data-dm-art="socket" x="583.5" y="959.5" width="33" height="33" viewBox="0 0 96 96" role="img" aria-hidden="true" focusable="false"><rect class="dm-art-panel" x="3" y="3" width="90" height="90" rx="20" fill="#e0f2fe"/><path class="dm-art-highlight" fill="#ffffff" opacity=".75" d="M15 13h66a10 10 0 0 1 10 10v8C70 18 42 17 5 39V23A10 10 0 0 1 15 13Z"/><rect fill="#0f2942" x="18" y="18" width="60" height="60" rx="16"/><circle fill="#f8fafc" cx="48" cy="48" r="21"/><circle fill="#0f2942" cx="39" cy="44" r="4"/><circle fill="#0f2942" cx="57" cy="44" r="4"/><rect fill="#0f2942" x="44" y="56" width="8" height="6" rx="3"/></svg>
+      <text x="600" y="1017.0" text-anchor="middle" font-size="13" font-weight="700" fill="#e2e8f0">Presa albero</text>
     </g></g>
   <g><circle cx="28" cy="30" r="8" fill="#a78bfa"/><text x="46" y="35" font-size="13" fill="#94a3b8">Antenna</text><circle cx="28" cy="56" r="8" fill="#38bdf8"/><text x="46" y="61" font-size="13" fill="#94a3b8">Ripetitore</text><circle cx="28" cy="82" r="8" fill="#4ade80"/><text x="46" y="87" font-size="13" fill="#94a3b8">A batteria o in fondo</text><circle cx="28" cy="108" r="8" fill="#fb923c"/><text x="46" y="113" font-size="13" fill="#94a3b8">Nessun collegamento visto</text></g>
 </svg>

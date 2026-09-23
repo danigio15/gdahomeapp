@@ -50,3 +50,14 @@ stanno in una fascia a parte con scritto perché.
   volta sola, con la misura **peggiore** dei due versi, perché un filo vale
   quanto il suo verso più debole
 - 🔋 accanto al nome: va a batteria
+
+I pallini sono **disegni veri**: i 124 del catalogo della plancia, gli stessi
+delle tessere e delle schede. Il disegno dice *che cosa è* quell'apparecchio,
+l'anello colorato *che mestiere fa* nella rete — due domande diverse, e chi
+apre la mappa le fa tutte e due.
+
+Quale disegno tocca a chi si sceglie dal nome, che è imperfetto e si sa:
+«Fumo cucina» becca il rilevatore, «Coso 3» no e prende il neutro del suo
+mestiere. La strada giusta è un'altra e sta segnata nel codice — le classi che
+Home Assistant dà alle entità (`device_class: smoke`), che sono un fatto e non
+una parola scelta.

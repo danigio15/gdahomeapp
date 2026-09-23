@@ -40,6 +40,7 @@
  * l'ultimo posto dove ci si puo' permettere di indovinare.
  */
 
+import { disegnoDelCatalogo } from "../plancia/src/core/catalogo-disegni.js";
 import { COORDINATORE, ROUTER } from "./zigbee.js";
 
 /* La tela. Novecento di larghezza perche' su un telefono si scala a larghezza
@@ -150,6 +151,106 @@ const VESTI = {
   },
 };
 
+/* ── Che cosa e', quel pallino ────────────────────────────────────────────
+ *
+ * «La mappa deve essere fatta con icona dispositivi reali.»
+ *
+ * I disegni ci sono gia': sono i centoventiquattro del catalogo della plancia,
+ * quelli che si vedono sulle tessere e nelle schede. Usare quelli e non
+ * disegnarne altri non e' pigrizia — e' che una presa deve essere la stessa
+ * presa dappertutto, se no in una casa ci sono due lingue.
+ *
+ * ── Come si sceglie quale ────────────────────────────────────────────────
+ *
+ * Dal nome che gli ha messo chi abita, e in due lingue. E' un modo imperfetto
+ * e si sa: «Fumo cucina» becca il rilevatore di fumo, «Coso 3» no.
+ *
+ * E' pero' quello che si puo' fare **adesso**, perche' e' l'unica cosa che le
+ * due reti dicono tutte e due allo stesso modo. La strada giusta e' un'altra e
+ * sta segnata: le classi che Home Assistant da' alle entita' —
+ * `device_class: smoke`, `device_class: door` — che sono un fatto e non una
+ * parola scelta. Il ponte quei registri adesso li ha in mano (`registri.js`),
+ * quindi e' un lavoro che si fa; questa riga esiste perche' una mappa a
+ * pallini colorati non aspetti quel lavoro.
+ *
+ * Chi non si riconosce non prende un disegno a caso: prende quello neutro del
+ * suo mestiere. Un'icona sbagliata e' peggio di un'icona generica — la prima
+ * la si crede.
+ */
+const DAL_NOME = [
+  /* L'ordine conta, e conta due volte.
+   *
+   * Prima l'OGGETTO, poi il POSTO. «Presa garage» e' una presa che sta in
+   * garage, non una porta di garage — e con le stanze davanti si prendeva il
+   * basculante. Visto rendendo la mappa: un'icona sbagliata e' peggio di
+   * un'icona generica, perche' la prima la si crede.
+   *
+   * E niente confine di parola in coda: i nostri sono **prefissi**, e
+   * «termostat» seguito da una «o» non e' un confine. Con il `\b` finale
+   * «Termostato cucina» e «Finestra salotto» restavano senza disegno — un'ora
+   * di lavoro che non si vedeva. */
+  [/\b(pres[ae]|plug|socket|spin[ae]|ciabatt)/, "socket"],
+  [/\b(luc[ei]|lamp|light|faretto|strisci|led)/, "lights"],
+  [/\b(fumo|smoke|co2|gas|monossid)/, "smoke"],
+  [/\b(movimento|motion|presenz|presence|pir|radar|occupanc)/, "motion"],
+  [/\b(allagament|acqua|water|perdit|leak|flood|umidit)/, "water"],
+  [/\b(termostat|thermostat|temperatur|clima|termo)/, "thermometer"],
+  [/\b(radiator|calorifer|valvol|trv)/, "radiator"],
+  [/\b(serratur|lock|chiave)/, "lock"],
+  [/\b(telecomand|remote|pulsant|button|interrutt|switch|scena)/, "toggle"],
+  [/\b(campanell|bell|suoneri|doorbell)/, "bell"],
+  [/\b(telecamer|camera|videocamer)/, "camera"],
+  [/\b(altoparlant|speaker|cass[ae])/, "speaker"],
+  [/\b(ripetitor|repeater|extender|router)/, "router"],
+  [/\b(pomp[ae]|pump)/, "pump"],
+  [/\b(irrigazion|irrigation)/, "irrigation"],
+  [/\b(caminett|stuf[ae]|fireplace)/, "fireplace"],
+  [/\b(vibrazion|vibration|urto)/, "warning"],
+  [/\b(tapparell|persian|serrand|shutter|tend[ae]|curtain)/, "shutters"],
+  [/\b(finestr|window|velux|lucernar)/, "window"],
+  /* Il basculante: o si chiama cosi', o e' una porta che sta in garage. Il
+   * solo «garage» non basta — vedi sopra. */
+  [
+    /\b(basculant)|\b(port[ae]|porton|serrand).*garage|garage.*\b(port[ae]|porton|basculant)/,
+    "garage-door",
+  ],
+  [/\b(cancell|gate)/, "gate"],
+  [/\b(port[ae]|porton|front.?door|door|ingress)/, "front-door"],
+];
+
+/** Il disegno di un apparecchio: dal nome, e se non si sa dal suo mestiere. */
+export function ilDisegnoDi(nodo = {}) {
+  const scritto = pulito(nodo?.nome).toLowerCase();
+  for (const [come, disegno] of DAL_NOME) if (come.test(scritto)) return disegno;
+  /* Niente si riconosce: il neutro del mestiere. L'antenna e' l'apparecchio
+   * che tiene la rete, un ripetitore a corrente e' quasi sempre una presa, e
+   * di un terminale sconosciuto non si puo' dire altro che «e' una cosa che si
+   * regola» — che e' vero di tutti e non e' falso di nessuno. */
+  if (nodo?.tipo === COORDINATORE) return "router";
+  if (nodo?.tipo === ROUTER) return "socket";
+  return "sliders";
+}
+
+/* Il disegno pronto da mettere nella mappa.
+ *
+ * Il catalogo lo consegna dentro uno `<span>`, che dentro un SVG non ci puo'
+ * stare: si tiene l'`<svg>` di dentro e gli si dice dove andare. Un `<svg>`
+ * dentro un altro `<svg>` e' SVG valido, e `flutter_svg` lo disegna — a
+ * differenza di `foreignObject`, che avrebbe voluto dire un buco bianco sul
+ * telefono. */
+function ilDisegnoPosato(nodo, lato) {
+  const quale = ilDisegnoDi(nodo);
+  const markup = disegnoDelCatalogo(quale, lato);
+  const dentro = markup.replace(/^<span[^>]*>/, "").replace(/<\/span>$/, "");
+  if (!dentro.startsWith("<svg")) return "";
+  const x = (nodo.x - lato / 2).toFixed(1);
+  const y = (nodo.y - lato / 2).toFixed(1);
+  /* Il nome del disegno si riporta sull'`<svg>`: sullo `<span>` che si butta
+   * c'era, e senza la figura non sa piu' dire cosa ha disegnato — ne' a chi la
+   * legge, ne' a una prova. */
+  return dentro.replace("<svg ", `<svg data-dm-art="${quale}" x="${x}" y="${y}" `);
+}
+
 /** Il colore di un nodo, dal suo mestiere. */
 function tinta(nodo, veste) {
   if (nodo.solo) return veste.solo;
@@ -158,11 +259,15 @@ function tinta(nodo, veste) {
   return veste.terminale;
 }
 
-/** Quanto e' grosso un pallino: l'antenna si vede da lontano. */
+/* Quanto e' grosso un apparecchio sulla mappa: l'antenna si vede da lontano.
+ *
+ * E' il raggio dell'anello; il disegno ci sta dentro. I numeri sono cresciuti
+ * quando i pallini sono diventati disegni: dodici pixel bastavano a un
+ * pallino, a una presa disegnata no — si vedeva una macchia. */
 function quantoGrosso(nodo) {
-  if (nodo.tipo === COORDINATORE) return 26;
-  if (nodo.tipo === ROUTER) return 17;
-  return 12;
+  if (nodo.tipo === COORDINATORE) return 34;
+  if (nodo.tipo === ROUTER) return 27;
+  return 22;
 }
 
 /* ── I fili ────────────────────────────────────────────────────────────── */
@@ -340,11 +445,16 @@ function ilNodo(nodo, veste) {
   const scritte = righe
     .map(
       (riga, quale) =>
-        `<text x="${doveScrive}" y="${(nodo.y + raggio + 17 + quale * 16).toFixed(1)}" text-anchor="${ancora}" font-size="13" font-weight="700" fill="${veste.scritta}">${quale === 0 ? segno : ""}${esc(riga)}</text>`,
+        `<text x="${doveScrive}" y="${(nodo.y + raggio + 19 + quale * 16).toFixed(1)}" text-anchor="${ancora}" font-size="13" font-weight="700" fill="${veste.scritta}">${quale === 0 ? segno : ""}${esc(riga)}</text>`,
     )
     .join("");
+  /* Due cose sullo stesso pallino, e non e' un doppione: il **disegno** dice
+   * che cos'e' quell'apparecchio, l'**anello** che mestiere fa nella rete.
+   * Sono due domande diverse — «cos'e'» e «regge qualcosa?» — e chi apre la
+   * mappa le fa tutte e due. */
   return `<g>
-      <circle cx="${nodo.x.toFixed(1)}" cy="${nodo.y.toFixed(1)}" r="${raggio}" fill="${colore}" stroke="${veste.bordo}" stroke-width="3"/>
+      <circle cx="${nodo.x.toFixed(1)}" cy="${nodo.y.toFixed(1)}" r="${raggio}" fill="${veste.fondo}" stroke="${colore}" stroke-width="4"/>
+      ${ilDisegnoPosato(nodo, raggio * 1.5)}
       ${scritte}
     </g>`;
 }
