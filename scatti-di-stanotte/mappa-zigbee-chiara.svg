@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 1080" width="900" height="1080" font-family="system-ui, -apple-system, Segoe UI, Roboto, sans-serif">
+  <rect width="900" height="1080" fill="#f8fafc"/>
+  <g><line x1="450.0" y1="450.0" x2="450.0" y2="265.0" stroke="#94a3b8" stroke-width="3.4" stroke-opacity="0.85" stroke-linecap="round"/><line x1="450.0" y1="450.0" x2="635.0" y2="450.0" stroke="#94a3b8" stroke-width="3.4" stroke-opacity="0.85" stroke-linecap="round"/><line x1="450.0" y1="450.0" x2="450.0" y2="635.0" stroke="#94a3b8" stroke-width="2.2" stroke-opacity="0.6" stroke-linecap="round"/><line x1="450.0" y1="450.0" x2="265.0" y2="450.0" stroke="#94a3b8" stroke-width="1.2" stroke-opacity="0.4" stroke-linecap="round" stroke-dasharray="6 5"/><line x1="450.0" y1="265.0" x2="510.6" y2="151.1" stroke="#94a3b8" stroke-width="3.4" stroke-opacity="0.85" stroke-linecap="round"/><line x1="450.0" y1="265.0" x2="381.1" y2="109.9" stroke="#94a3b8" stroke-width="3.4" stroke-opacity="0.85" stroke-linecap="round"/><line x1="450.0" y1="265.0" x2="622.2" y2="198.3" stroke="#94a3b8" stroke-width="2.2" stroke-opacity="0.6" stroke-linecap="round"/><line x1="635.0" y1="450.0" x2="748.9" y2="510.6" stroke="#94a3b8" stroke-width="3.4" stroke-opacity="0.85" stroke-linecap="round"/><line x1="635.0" y1="450.0" x2="790.1" y2="381.1" stroke="#94a3b8" stroke-width="2.2" stroke-opacity="0.6" stroke-linecap="round"/><line x1="450.0" y1="635.0" x2="389.4" y2="748.9" stroke="#94a3b8" stroke-width="2.2" stroke-opacity="0.6" stroke-linecap="round"/><line x1="450.0" y1="635.0" x2="518.9" y2="790.1" stroke="#94a3b8" stroke-width="2.2" stroke-opacity="0.6" stroke-linecap="round"/><line x1="265.0" y1="450.0" x2="151.1" y2="389.4" stroke="#94a3b8" stroke-width="2.2" stroke-opacity="0.6" stroke-linecap="round"/></g>
+  <line x1="40" y1="906" x2="860" y2="906" stroke="#94a3b8" stroke-width="1" stroke-opacity=".4"/>
+       <text x="450" y="932" text-anchor="middle" font-size="13" fill="#64748b">Di questi la rete non ha visto nessun collegamento</text>
+  <g><g>
+      <circle cx="450.0" cy="450.0" r="26" fill="#7c3aed" stroke="#ffffff" stroke-width="3"/>
+      <text x="450" y="493.0" text-anchor="middle" font-size="13" font-weight="700" fill="#0f172a">Antenna</text>
+    </g><g>
+      <circle cx="450.0" cy="265.0" r="17" fill="#0ea5e9" stroke="#ffffff" stroke-width="3"/>
+      <text x="450" y="299.0" text-anchor="middle" font-size="13" font-weight="700" fill="#0f172a">Presa cucina</text>
+    </g><g>
+      <circle cx="635.0" cy="450.0" r="17" fill="#0ea5e9" stroke="#ffffff" stroke-width="3"/>
+      <text x="635" y="484.0" text-anchor="middle" font-size="13" font-weight="700" fill="#0f172a">Presa salotto</text>
+    </g><g>
+      <circle cx="450.0" cy="635.0" r="17" fill="#0ea5e9" stroke="#ffffff" stroke-width="3"/>
+      <text x="450" y="669.0" text-anchor="middle" font-size="13" font-weight="700" fill="#0f172a">Ripetitore</text><text x="450" y="685.0" text-anchor="middle" font-size="13" font-weight="700" fill="#0f172a">taverna</text>
+    </g><g>
+      <circle cx="265.0" cy="450.0" r="17" fill="#0ea5e9" stroke="#ffffff" stroke-width="3"/>
+      <text x="265" y="484.0" text-anchor="middle" font-size="13" font-weight="700" fill="#0f172a">Presa garage</text>
+    </g><g>
+      <circle cx="510.6" cy="151.1" r="12" fill="#22c55e" stroke="#ffffff" stroke-width="3"/>
+      <text x="510.6" y="180.1" text-anchor="middle" font-size="13" font-weight="700" fill="#0f172a">🔋 Termostato</text><text x="510.6" y="196.1" text-anchor="middle" font-size="13" font-weight="700" fill="#0f172a">cucina</text>
+    </g><g>
+      <circle cx="381.1" cy="109.9" r="12" fill="#22c55e" stroke="#ffffff" stroke-width="3"/>
+      <text x="381.1" y="138.9" text-anchor="middle" font-size="13" font-weight="700" fill="#0f172a">🔋 Porta ingresso</text>
+    </g><g>
+      <circle cx="622.2" cy="198.3" r="12" fill="#22c55e" stroke="#ffffff" stroke-width="3"/>
+      <text x="622.2" y="227.3" text-anchor="middle" font-size="13" font-weight="700" fill="#0f172a">🔋 Fumo cucina</text>
+    </g><g>
+      <circle cx="748.9" cy="510.6" r="12" fill="#22c55e" stroke="#ffffff" stroke-width="3"/>
+      <text x="748.9" y="539.6" text-anchor="middle" font-size="13" font-weight="700" fill="#0f172a">🔋 Telecomando</text><text x="748.9" y="555.6" text-anchor="middle" font-size="13" font-weight="700" fill="#0f172a">salotto</text>
+    </g><g>
+      <circle cx="790.1" cy="381.1" r="12" fill="#22c55e" stroke="#ffffff" stroke-width="3"/>
+      <text x="892" y="410.1" text-anchor="end" font-size="13" font-weight="700" fill="#0f172a">🔋 Finestra salotto</text>
+    </g><g>
+      <circle cx="389.4" cy="748.9" r="12" fill="#22c55e" stroke="#ffffff" stroke-width="3"/>
+      <text x="389.4" y="777.9" text-anchor="middle" font-size="13" font-weight="700" fill="#0f172a">🔋 Allagamento</text><text x="389.4" y="793.9" text-anchor="middle" font-size="13" font-weight="700" fill="#0f172a">taverna</text>
+    </g><g>
+      <circle cx="518.9" cy="790.1" r="12" fill="#22c55e" stroke="#ffffff" stroke-width="3"/>
+      <text x="518.9" y="819.1" text-anchor="middle" font-size="13" font-weight="700" fill="#0f172a">🔋 Movimento</text><text x="518.9" y="835.1" text-anchor="middle" font-size="13" font-weight="700" fill="#0f172a">taverna</text>
+    </g><g>
+      <circle cx="151.1" cy="389.4" r="12" fill="#22c55e" stroke="#ffffff" stroke-width="3"/>
+      <text x="151.1" y="418.4" text-anchor="middle" font-size="13" font-weight="700" fill="#0f172a">Portone garage</text>
+    </g><g>
+      <circle cx="300.0" cy="976.0" r="12" fill="#f97316" stroke="#ffffff" stroke-width="3"/>
+      <text x="300" y="1005.0" text-anchor="middle" font-size="13" font-weight="700" fill="#0f172a">🔋 Sensore cantina</text>
+    </g><g>
+      <circle cx="600.0" cy="976.0" r="12" fill="#f97316" stroke="#ffffff" stroke-width="3"/>
+      <text x="600" y="1005.0" text-anchor="middle" font-size="13" font-weight="700" fill="#0f172a">Presa albero</text>
+    </g></g>
+  <g><circle cx="28" cy="30" r="8" fill="#7c3aed"/><text x="46" y="35" font-size="13" fill="#64748b">Antenna</text><circle cx="28" cy="56" r="8" fill="#0ea5e9"/><text x="46" y="61" font-size="13" fill="#64748b">Ripetitore</text><circle cx="28" cy="82" r="8" fill="#22c55e"/><text x="46" y="87" font-size="13" fill="#64748b">A batteria o in fondo</text><circle cx="28" cy="108" r="8" fill="#f97316"/><text x="46" y="113" font-size="13" fill="#64748b">Nessun collegamento visto</text></g>
+</svg>

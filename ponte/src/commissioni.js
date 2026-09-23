@@ -61,6 +61,7 @@ import { I_MARCHI, QuestoNoNo } from "./aggiornamenti.js";
 import { CentralinoHaDettoNo, SenzaCentralino } from "./segnalazioni.js";
 import { SegnalazioniDellaPlancia } from "./segnalazioni-della-plancia.js";
 import { laVede, QuellaPlanciaNo, TroppePlance } from "./plance.js";
+import { iFili, laMappaDisegnata } from "./mappa-zigbee.js";
 
 /* Quando chi chiede non ha nessuna plancia. Non e' un guasto ed e' l'app a
  * scriverlo, percio' il codice e' uno suo e non uno di Home Assistant. */
@@ -1260,6 +1261,18 @@ export class Commissioni {
           return si(id, await zigbee.apri({ secondi: detto.secondi }));
         case "ponte/zigbee/chiudi":
           return si(id, await zigbee.chiudi());
+        /* La mappa: le righe le prende la rete, il disegno lo fa chi disegna,
+         * e qui i due si mettono insieme. `scuro` perche' l'app ha due vesti e
+         * una mappa nera su nero non si vede: chi la chiede sa in quale sta. */
+        case "ponte/zigbee/mappa": {
+          const detta = await zigbee.mappa({ rifai: detto.rifai === true });
+          if (!detta.righe.length) return si(id, { ...detta, fili: [], svg: "" });
+          return si(id, {
+            ...detta,
+            fili: iFili(detta.righe),
+            svg: laMappaDisegnata(detta.righe, { scuro: detto.scuro === true }),
+          });
+        }
         case "ponte/zigbee/elenco":
           return si(id, await zigbee.elenco());
         /* La targa sta in `targa` e non in `id`: `id` e' il numero del

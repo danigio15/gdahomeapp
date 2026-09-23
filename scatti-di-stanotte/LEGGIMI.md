@@ -28,3 +28,25 @@ segna dove finisce il riquadro.
 - **dopo**: 99 px → 99 px, **ferma**
 
 I singoli scatti stanno accanto, se servono interi.
+
+## `mappa-zigbee-chiara.png` / `mappa-zigbee-scura.png`
+
+La mappa della rete Zigbee, disegnata dal ponte e mostrata dall'app con
+`flutter_svg`: **un disegno solo** invece di uno in Dart e uno in JavaScript
+che il giorno che cambiano dicono cose diverse. Accanto ci sono gli `.svg`,
+che sono quello che viaggia davvero.
+
+La rete finta è fatta apposta coi casi che contano: un'antenna, quattro
+ripetitori a corrente, nove cose a batteria, **un ramo debole** (il garage,
+LQI 35 — tratteggiato e pallido) e **due che non parlano con nessuno**, che
+stanno in una fascia a parte con scritto perché.
+
+- al centro l'antenna, intorno i ripetitori, fuori chi sta in fondo a un ramo:
+  è la forma che una rete Zigbee **ha**, non una disposizione scelta
+- un terminale si mette all'angolo del ripetitore con cui parla, e se ne parla
+  con più d'uno a quello che sente meglio: il filo è corto e si vede a colpo
+  d'occhio quale ramo regge quale pezzo di casa
+- lo spessore e il tratteggio dicono la qualità; un collegamento si conta una
+  volta sola, con la misura **peggiore** dei due versi, perché un filo vale
+  quanto il suo verso più debole
+- 🔋 accanto al nome: va a batteria

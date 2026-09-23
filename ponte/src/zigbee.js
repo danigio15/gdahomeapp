@@ -548,6 +548,110 @@ export function leStradePerEliminare(rete, chi) {
   return [comeSiEliminaColServizio(rete, chi), comeSiElimina(rete, chi)].filter(Boolean);
 }
 
+/* ── La mappa ──────────────────────────────────────────────────────────────
+ *
+ * «Crea inoltre la possibilita' di mostrare la mappa di collegamento dei
+ * dispositivi.»
+ *
+ * Chiedere a una rete Zigbee con chi parla ognuno **non e' una lettura**: e'
+ * un giro di domande che il coordinatore fa a ogni ripetitore, uno alla volta,
+ * e su una rete di venti cose ci mette da mezzo minuto a un minuto. Mentre lo
+ * fa la rete e' occupata, e i comandi passano piu' lenti.
+ *
+ * Per questo la mappa non si disegna da sola quando si apre la schermata: la
+ * si chiede, e chi la chiede lo sa. Aprire la sezione Zigbee non deve
+ * rallentare le luci di casa.
+ *
+ * E per questo, quando si puo', si guarda quello che si sa gia': ZHA i vicini
+ * se li tiene scritti dall'ultima volta che ha guardato, e vale la pena
+ * mostrarli — con l'ora in cui sono stati visti — invece di far aspettare un
+ * minuto chi voleva solo dare un'occhiata.
+ *
+ * Zigbee2MQTT no: nella cassetta dei dispositivi i vicini non ci sono affatto,
+ * quindi li' una mappa senza chiedere non esiste, e si dice invece di
+ * disegnarne una vuota.
+ */
+
+/* Quanto si aspetta la mappa. Un minuto e mezzo: su una rete grossa il giro
+ * dei vicini ci mette un minuto buono, e scadere prima vorrebbe dire far
+ * aspettare la gente per niente e poi dirle che non e' arrivata. */
+export const ATTESA_DELLA_MAPPA = 90_000;
+
+/** Le due cassette della mappa: dove si chiede, e dove risponde. */
+export function leCassetteDellaMappa(cassetta) {
+  const prefisso = pulito(cassetta);
+  if (!prefisso) return null;
+  return {
+    chiedi: `${prefisso}/bridge/request/networkmap`,
+    risponde: `${prefisso}/bridge/response/networkmap`,
+  };
+}
+
+/**
+ * Come si chiede alla rete di guardarsi.
+ *
+ * Su ZHA e' un comando che fa partire il giro; i vicini poi si leggono
+ * dall'elenco, come sempre. Su Zigbee2MQTT e' un messaggio imbucato, e la
+ * risposta torna in un'altra cassetta.
+ *
+ * `routes: false` e non true: i percorsi sono un'altra cosa — chi passa per
+ * dove — e costano un secondo giro di domande. Qui serve chi vede chi.
+ */
+export function comeSiChiedeLaMappa({ quale, cassetta = "" } = {}) {
+  if (quale === ZHA) return { type: "zha/topology/update" };
+  const cassette = leCassetteDellaMappa(cassetta);
+  if (quale === Z2M && cassette)
+    return {
+      type: "call_service",
+      domain: "mqtt",
+      service: "publish",
+      service_data: {
+        topic: cassette.chiedi,
+        payload: JSON.stringify({ type: "raw", routes: false }),
+      },
+    };
+  return null;
+}
+
+/**
+ * Le righe, da come Zigbee2MQTT scrive la mappa.
+ *
+ * Lui la da' in due pezzi — i nodi da una parte, i collegamenti dall'altra —
+ * e qui tornano insieme, perche' il resto di questo file ragiona per righe che
+ * si portano dietro i propri vicini.
+ */
+export function leRigheDallaMappaDiZ2M(detto) {
+  const dentro = detto?.data?.value || detto?.value || detto || {};
+  const nodi = Array.isArray(dentro?.nodes) ? dentro.nodes : [];
+  const fili = Array.isArray(dentro?.links) ? dentro.links : [];
+  const righe = new Map();
+  for (const nodo of nodi) {
+    const id = pulito(nodo?.ieeeAddr).toLowerCase();
+    if (!id) continue;
+    righe.set(id, {
+      id,
+      nome: pulito(nodo?.friendlyName) || id,
+      marca: "",
+      modello: "",
+      tipo: ilTipo(nodo?.type),
+      potenza: "",
+      tace: null,
+      quando: "",
+      dispositivo: "",
+      vicini: [],
+    });
+  }
+  for (const filo of fili) {
+    const da = pulito(filo?.source?.ieeeAddr).toLowerCase();
+    const a = pulito(filo?.target?.ieeeAddr).toLowerCase();
+    if (!da || !a) continue;
+    const quanto = Number(filo?.linkquality ?? filo?.lqi);
+    const qualita = Number.isFinite(quanto) ? quanto : null;
+    righe.get(da)?.vicini.push({ id: a, qualita });
+  }
+  return [...righe.values()].sort((una, altra) => una.nome.localeCompare(altra.nome));
+}
+
 export function eUnoNuovo(evento) {
   const dati = evento?.data;
   return pulito(dati?.action).toLowerCase() === "create" && Boolean(pulito(dati?.device_id));
@@ -1110,6 +1214,115 @@ export class Zigbee {
         righe: dopo.righe,
       };
     return { fatto: true, righe: dopo.righe };
+  }
+
+  /**
+   * La mappa: chi parla con chi, disegnata.
+   *
+   * Senza `rifai` si mostra quello che la rete sa gia' — su ZHA sono i vicini
+   * dell'ultima volta che ha guardato — e si apre subito. Con `rifai` si fa
+   * partire il giro vero, che dura, e chi lo chiede lo sa.
+   *
+   * Su Zigbee2MQTT quello che si sa gia' non esiste: nella cassetta dei
+   * dispositivi i vicini non ci sono. Li' senza `rifai` si dice, invece di
+   * disegnare una mappa vuota che sembrerebbe una rete a pezzi.
+   */
+  async mappa({ rifai = false } = {}) {
+    const rete = await this.rete();
+    if (rete.quale === NESSUNA)
+      return { quale: NESSUNA, righe: [], perche: "in questa casa non c'e' una rete Zigbee" };
+    try {
+      const righe =
+        rete.quale === ZHA ? await this._mappaDiZha(rifai) : await this._mappaDiZ2M(rete, rifai);
+      if (!righe.length)
+        return {
+          quale: rete.quale,
+          righe: [],
+          perche:
+            rete.quale === Z2M && !rifai
+              ? "questa rete i collegamenti non li tiene scritti: la mappa va chiesta"
+              : "la rete non ha ancora guardato con chi parla ognuno",
+        };
+      /* Escono le righe coi loro vicini, e basta: a disegnare ci pensa
+       * `mappa-zigbee.js`, che di rete non sa niente. Se il disegno lo facesse
+       * questo file, i due moduli si importerebbero a vicenda — e chi tocca
+       * una rete Zigbee non deve trascinarsi dietro un generatore di SVG. */
+      return { quale: rete.quale, righe, perche: "" };
+    } catch (errore) {
+      this.registro?.info?.(`zigbee: la mappa non si legge: ${errore?.message || errore}`);
+      return { quale: rete.quale, righe: [], perche: ilPerche(errore) };
+    }
+  }
+
+  async _mappaDiZha(rifai) {
+    if (rifai) {
+      /* Il giro parte e basta: ZHA non risponde quando ha finito, scrive i
+       * vicini man mano nel suo registro. Si aspetta un po' e si rilegge — e
+       * se il giro non e' finito si vede quello che ha fatto finora, che e'
+       * meglio di niente. */
+      try {
+        await this.casa.chiedi(comeSiChiedeLaMappa({ quale: ZHA }));
+      } catch (errore) {
+        if (!eUnComandoCheNonCe(errore)) throw errore;
+        this.registro?.info?.(
+          "zigbee: questa casa non sa rifare la topologia, mostro quella che c'e'",
+        );
+      }
+    }
+    return lElencoDellaRete(ZHA, await this.casa.chiedi(comeSiChiedeLElenco({ quale: ZHA })));
+  }
+
+  async _mappaDiZ2M(rete, rifai) {
+    if (!rifai) return [];
+    const cassette = leCassetteDellaMappa(rete.cassetta);
+    if (!cassette) return [];
+    let smetti = null;
+    try {
+      return await new Promise((risolvi, rifiuta) => {
+        const scadenza = setTimeout(
+          () => rifiuta(new Error("la rete non ha finito di guardarsi in un minuto e mezzo")),
+          ATTESA_DELLA_MAPPA,
+        );
+        this.casa
+          .ascoltaIl({ type: "mqtt/subscribe", topic: cassette.risponde }, (evento) => {
+            clearTimeout(scadenza);
+            let detto = evento?.payload;
+            if (typeof detto === "string") {
+              try {
+                detto = JSON.parse(detto);
+              } catch (_errore) {
+                detto = null;
+              }
+            }
+            risolvi(leRigheDallaMappaDiZ2M(detto));
+          })
+          .then(
+            async (disdici) => {
+              smetti = disdici;
+              /* Si chiede DOPO essersi messi in ascolto: fra la domanda e
+               * l'orecchio passano dei millisecondi, e una risposta che arriva
+               * in mezzo si perde. E' la stessa ragione per cui si ascolta
+               * prima di aprire la rete. */
+              try {
+                await this.casa.chiedi(comeSiChiedeLaMappa(rete));
+              } catch (errore) {
+                clearTimeout(scadenza);
+                rifiuta(errore);
+              }
+            },
+            (errore) => {
+              clearTimeout(scadenza);
+              rifiuta(errore);
+            },
+          );
+      });
+    } finally {
+      try {
+        await smetti?.();
+      } catch (_errore) {
+        /* L'abbonamento e' gia' morto col filo. */
+      }
+    }
   }
 
   async rinomina(id, nome) {

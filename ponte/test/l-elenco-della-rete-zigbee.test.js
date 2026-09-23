@@ -256,3 +256,168 @@ test("senza targa non si tocca niente", async () => {
   assert.equal(fuori.fatto, false);
   assert.equal(casa.detto.length, 0, "non si chiede nemmeno che rete c'è");
 });
+
+/* ── E la mappa ──────────────────────────────────────────────────────────
+ *
+ * «Crea inoltre la possibilità di mostrare la mappa di collegamento dei
+ * dispositivi.»
+ *
+ * Chiedere a una rete Zigbee con chi parla ognuno non è una lettura: è un giro
+ * di domande che il coordinatore fa a ogni ripetitore, uno alla volta, e su
+ * una rete di venti cose ci mette fino a un minuto. Mentre lo fa la rete è
+ * occupata. Per questo la mappa **si chiede**, e non si disegna da sola
+ * aprendo la schermata — se no aprire la sezione Zigbee rallenterebbe le luci
+ * di casa.
+ */
+
+import {
+  ATTESA_DELLA_MAPPA,
+  comeSiChiedeLaMappa,
+  leCassetteDellaMappa,
+  leRigheDallaMappaDiZ2M,
+} from "../src/zigbee.js";
+import { aCapo, DEBOLE, iFili, iNodi, laMappaDisegnata } from "../src/mappa-zigbee.js";
+
+test("a ZHA si dice di guardarsi, a Zigbee2MQTT si imbuca la domanda", () => {
+  assert.deepEqual(comeSiChiedeLaMappa({ quale: ZHA }), { type: "zha/topology/update" });
+  const z2m = comeSiChiedeLaMappa({ quale: Z2M, cassetta: "zigbee2mqtt" });
+  assert.equal(z2m.service_data.topic, "zigbee2mqtt/bridge/request/networkmap");
+  const chiesto = JSON.parse(z2m.service_data.payload);
+  assert.equal(chiesto.type, "raw");
+  /* I percorsi no: sono un'altra domanda — chi passa per dove — e costano un
+   * secondo giro. Qui serve chi vede chi. */
+  assert.equal(chiesto.routes, false);
+  assert.deepEqual(leCassetteDellaMappa("casa/zigbee"), {
+    chiedi: "casa/zigbee/bridge/request/networkmap",
+    risponde: "casa/zigbee/bridge/response/networkmap",
+  });
+  assert.equal(leCassetteDellaMappa(""), null);
+  assert.equal(ATTESA_DELLA_MAPPA, 90_000);
+});
+
+test("la mappa di Zigbee2MQTT arriva in due pezzi, e tornano insieme", () => {
+  const righe = leRigheDallaMappaDiZ2M({
+    data: {
+      value: {
+        nodes: [
+          { ieeeAddr: "0x01", friendlyName: "Antenna", type: "Coordinator" },
+          { ieeeAddr: "0x02", friendlyName: "Presa cucina", type: "Router" },
+        ],
+        links: [{ source: { ieeeAddr: "0x02" }, target: { ieeeAddr: "0x01" }, linkquality: 190 }],
+      },
+    },
+  });
+  assert.equal(righe.length, 2);
+  const presa = righe.find((una) => una.nome === "Presa cucina");
+  assert.deepEqual(presa.vicini, [{ id: "0x01", qualita: 190 }]);
+});
+
+test("un collegamento si conta una volta sola, con la misura peggiore", () => {
+  /* La radio non è simmetrica: A può sentire B benissimo e B non sentire A.
+   * Un filo vale quanto il suo verso più debole — se si disegnasse la media,
+   * un ramo che in un verso non regge sembrerebbe buono. */
+  const fili = iFili([
+    { id: "a", nome: "A", vicini: [{ id: "b", qualita: 200 }] },
+    { id: "b", nome: "B", vicini: [{ id: "a", qualita: 40 }] },
+  ]);
+  assert.equal(fili.length, 1);
+  assert.equal(fili[0].qualita, 40);
+  assert.ok(fili[0].qualita < DEBOLE, "e sotto la soglia si disegna tratteggiato");
+});
+
+test("un vicino che nell'elenco non c'è non si disegna", () => {
+  /* Sarebbe un pallino senza nome, e in una mappa un pallino senza nome non
+   * dice niente. */
+  assert.deepEqual(iFili([{ id: "a", nome: "A", vicini: [{ id: "fantasma", qualita: 200 }] }]), []);
+});
+
+test("chi non parla con nessuno sta in fondo, e non finge di essere attaccato", () => {
+  const righe = [
+    { id: "c", nome: "Antenna", tipo: "coordinatore", vicini: [{ id: "r", qualita: 200 }] },
+    { id: "r", nome: "Ripetitore", tipo: "router", vicini: [{ id: "c", qualita: 200 }] },
+    { id: "s", nome: "Sensore muto", tipo: "terminale", vicini: [] },
+  ];
+  const { nodi } = iNodi(righe);
+  const solo = nodi.find((uno) => uno.id === "s");
+  assert.equal(solo.solo, true);
+  /* Sta sotto il quadrato dei cerchi, nella fascia sua. */
+  assert.ok(solo.y > 900, "fuori dal quadrato dei collegamenti");
+  assert.equal(nodi.find((uno) => uno.id === "c").solo, false);
+});
+
+test("il nome va a capo invece di essere tagliato", () => {
+  /* Con una riga sola «Termostato cucina» diventava «Termostato cuc…», e un
+   * nome tagliato in una mappa che serve a riconoscere le cose è un nome che
+   * non serve. */
+  assert.deepEqual(aCapo("Termostato cucina"), ["Termostato", "cucina"]);
+  assert.deepEqual(aCapo("Antenna"), ["Antenna"]);
+  /* Oltre le due righe si taglia davvero. */
+  const tante = aCapo("Sensore di movimento della taverna di sotto");
+  assert.equal(tante.length, 2);
+  assert.ok(tante[1].endsWith("…"));
+  /* E una parola sola più lunga di una riga si taglia, non si spezza a metà. */
+  assert.equal(aCapo("Elettrodomesticissimo")[0].endsWith("…"), true);
+});
+
+test("il disegno è un SVG, e un nome con dentro una parentesi angolare non lo rompe", () => {
+  const svg = laMappaDisegnata([
+    {
+      id: "c",
+      nome: 'Antenna <"del" & garage>',
+      tipo: "coordinatore",
+      vicini: [{ id: "r", qualita: 9 }],
+    },
+    { id: "r", nome: "Ripetitore", tipo: "router", vicini: [{ id: "c", qualita: 9 }] },
+  ]);
+  assert.match(svg, /^<svg xmlns="http:\/\/www\.w3\.org\/2000\/svg"/);
+  assert.match(svg, /<\/svg>$/);
+  assert.ok(!svg.includes('<"del"'), "il nome va scappato: lo scrive chi abita");
+  assert.match(svg, /&amp;/);
+});
+
+test("le due vesti danno due fondi diversi, e nessuna scritta nera su nero", () => {
+  const righe = [
+    { id: "c", nome: "Antenna", tipo: "coordinatore", vicini: [{ id: "r", qualita: 9 }] },
+    { id: "r", nome: "R", tipo: "router", vicini: [{ id: "c", qualita: 9 }] },
+  ];
+  assert.match(laMappaDisegnata(righe, { scuro: false }), /fill="#f8fafc"/);
+  assert.match(laMappaDisegnata(righe, { scuro: true }), /fill="#0b1220"/);
+});
+
+test("senza rifare, su Zigbee2MQTT la mappa si dice invece di inventarla", async () => {
+  /* Nella cassetta dei dispositivi i vicini non ci sono affatto: disegnare
+   * una mappa vuota sembrerebbe una rete a pezzi. */
+  const casa = {
+    async chiedi(comando) {
+      if (comando.type === "config_entries/get") return [];
+      return null;
+    },
+    async ascoltaIl(comando, onEvento) {
+      if (comando.topic.includes("bridge/info"))
+        queueMicrotask(() => onEvento({ topic: "zigbee2mqtt/bridge/info" }));
+      return async () => {};
+    },
+  };
+  const fuori = await new Zigbee({ casa, registro: zitto }).mappa();
+  assert.equal(fuori.quale, Z2M);
+  assert.deepEqual(fuori.righe, []);
+  assert.match(fuori.perche, /va chiesta/);
+});
+
+test("su ZHA la mappa si vede anche senza rifare il giro", async () => {
+  const casa = casaConZha();
+  const fuori = await new Zigbee({ casa, registro: zitto }).mappa();
+  assert.equal(fuori.righe.length, 3);
+  assert.equal(fuori.perche, "");
+  assert.ok(
+    !casa.detto.some((uno) => uno.type === "zha/topology/update"),
+    "senza «rifai» non si fa aspettare nessuno",
+  );
+});
+
+test("con «rifai» il giro parte, e poi si rilegge", async () => {
+  const casa = casaConZha();
+  await new Zigbee({ casa, registro: zitto }).mappa({ rifai: true });
+  assert.ok(casa.detto.some((uno) => uno.type === "zha/topology/update"));
+  assert.ok(casa.detto.some((uno) => uno.type === "zha/devices"));
+});
