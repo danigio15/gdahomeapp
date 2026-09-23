@@ -41,6 +41,44 @@ export function isFloodSensor(entityId, stato) {
   return clean(stato?.attributes?.device_class).toLowerCase() === "moisture";
 }
 
+/**
+ * Se un'entita' di questa lista si puo' leggere come una sonda.
+ *
+ * `isFloodSensor` e' la regola del RILEVAMENTO: cosa la casa si prende da sola
+ * al primo avvio. Li' si e' stretti apposta — `device_class: moisture` e
+ * basta — perche' prendersi qualcosa di piu' vorrebbe dire mettere in mano a
+ * chi abita un elenco che non ha scelto.
+ *
+ * Questa e' la regola di CHI GUARDA, e non puo' essere la stessa: in questa
+ * lista finisce anche quello che una persona ci mette dalla scheda degli
+ * avvisi, dove fra i gruppi c'e' anche «Allagamenti» — compreso un sensore
+ * fatto in casa, che la classe non la dichiara affatto e che e' una sonda per
+ * chi ce l'ha messo.
+ *
+ * Quindi: e' una sonda un `binary_sensor` che dice di essere di umidita', o
+ * che non dice niente. Uno che dice di essere UN'ALTRA COSA — `safety`,
+ * `problem`, `motion` — non lo e'.
+ *
+ * Dal campo, ed e' il motivo per cui questa riga esiste: «continua ad uscire
+ * questo allarme bagnato ma non c'e' nessuna entita' allarme, sono 5 i sensori
+ * configurati, questo 6 non esiste». Il sesto era un avviso finito nel gruppo
+ * Allagamenti, e la tessera lo leggeva come legge tutti — acceso vuol dire
+ * bagnato — cosi' un antifurto inserito diceva «C'e' acqua».
+ *
+ * Non si cancella niente: quella voce resta nella scheda della configurazione,
+ * dove adesso porta scritto che una sonda non e', col cestino accanto. Qui si
+ * decide solo cosa la tessera ha il diritto di chiamare sonda.
+ */
+export function puoEssereUnaSonda(entityId, stato) {
+  if (!clean(entityId).startsWith("binary_sensor.")) return false;
+  /* Senza stato non e' una sonda che si possa leggere: e' una riga rimasta in
+   * lista dopo che il dispositivo e' stato tolto, e contarla fra le sonde che
+   * «hanno risposto» sarebbe dire il falso sul numero. */
+  if (!stato) return false;
+  const classe = clean(stato?.attributes?.device_class).toLowerCase();
+  return !classe || classe === "moisture";
+}
+
 /** Bagnato o asciutto: `on` e' bagnato, come per ogni binary_sensor. */
 export const floodIsWet = (stato) => clean(stato?.state).toLowerCase() === "on";
 

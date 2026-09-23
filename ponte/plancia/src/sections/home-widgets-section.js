@@ -270,7 +270,7 @@ import {
 import { normalizeRobots, robotStateLabel, robotView } from "../core/robot-model.js";
 import { passoDellUnita, scalaDellUnita } from "../core/scala-clima.js";
 import { configuredLightGroups } from "./lights-alerts-section.js";
-import { floodEntities, floodIsWet } from "./flood-alerts-section.js";
+import { floodEntities, floodIsWet, puoEssereUnaSonda } from "./flood-alerts-section.js";
 import {
   SMOKE_ICON,
   nomeDelRilevatore,
@@ -4439,6 +4439,15 @@ function floodModel(states) {
   const fuori = widgetExcludedEntities("allagamenti");
   const rows = entities
     .filter((entity) => widgetIncludes(entity, fuori))
+    /* E solo quello che una sonda lo e' davvero.
+     *
+     * In questa lista ci finisce anche quello che una persona ci mette dalla
+     * scheda degli avvisi, dove fra i gruppi c'e' «Allagamenti»: un antifurto
+     * inserito diceva «C'e' acqua», perche' qui acceso vuol dire bagnato. Chi
+     * dichiara di essere un'altra cosa non si legge come sonda — la regola,
+     * e il perche', stanno in `puoEssereUnaSonda`. Dalla configurazione non
+     * sparisce: la' e' scritto che sonda non e', e c'e' il cestino. */
+    .filter((entity) => puoEssereUnaSonda(entity, stateOf(states, entity)))
     .map((entity) => ({
       entity,
       name: friendlyName(states, entity),

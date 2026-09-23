@@ -86,6 +86,15 @@ esiste. Adesso dice «Non c'è in Home Assistant»: sono due guasti diversi e si
 riparano in due posti diversi, uno col dispositivo in mano e l'altro nella
 scheda della configurazione.
 
+**Un avviso finito nel gruppo Allagamenti non diventa più una sonda bagnata.**
+La tessera leggeva tutto quello che c'era in quella lista allo stesso modo —
+acceso vuol dire bagnato — e un antifurto inserito faceva dire alla casa «C'è
+acqua». Adesso nella tessera è una sonda chi dichiara umidità o chi non
+dichiara niente (il sensore fatto in casa resta); chi dichiara di essere
+un'altra cosa — `safety`, `problem`, `motion` — resta nella configurazione ma
+fuori dal conto. La regola del rilevamento automatico non cambia: quella è
+stretta apposta.
+
 **E nella scheda degli Allagamenti si vede quale voce non è una sonda.** «Non
 c'è nessuna entità allarme, sono 5 i sensori configurati, questo 6 non esiste»:
 il sesto stava nella lista — ce l'aveva messo la scheda degli avvisi, col nome
