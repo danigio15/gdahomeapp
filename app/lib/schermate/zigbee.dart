@@ -1529,14 +1529,31 @@ class _LaMappaDellaReteZigbeeState extends State<LaMappaDellaReteZigbee> {
               if (_mappa.cE)
                 Scheda(
                   padding: const EdgeInsets.all(10),
-                  /* Si puo' avvicinare e spostare: su un telefono una rete di
-                   * venti cose sta in uno schermo solo se si rimpicciolisce
-                   * tanto da non leggere piu' i nomi. */
-                  child: InteractiveViewer(
-                    maxScale: 4,
-                    child: SvgPicture.string(
-                      _mappa.figura,
-                      fit: BoxFit.contain,
+                  /* Alta quanto decidiamo noi, non quanto e' grande il
+                   * disegno.
+                   *
+                   * Dentro una lista l'altezza non e' misurata: un disegno
+                   * si prende quella che vuole, e il tasto «Rifai il giro»
+                   * finisce tanto piu' in basso quanto piu' e' alta la
+                   * figura — con un disegno senza misure scritte dentro
+                   * sparisce proprio, perche' la lista costruisce solo
+                   * quello che sta nello schermo. Cosi' invece il tasto sta
+                   * sempre subito sotto la mappa, su qualsiasi telefono e
+                   * con qualsiasi rete.
+                   *
+                   * Meta' schermo e' la misura: la mappa si legge, e sotto
+                   * si vede che c'e' dell'altro da leggere. */
+                  child: SizedBox(
+                    height: MediaQuery.sizeOf(context).height * 0.5,
+                    /* Si puo' avvicinare e spostare: su un telefono una rete
+                     * di venti cose sta in uno schermo solo se si
+                     * rimpicciolisce tanto da non leggere piu' i nomi. */
+                    child: InteractiveViewer(
+                      maxScale: 4,
+                      child: SvgPicture.string(
+                        _mappa.figura,
+                        fit: BoxFit.contain,
+                      ),
                     ),
                   ),
                 )

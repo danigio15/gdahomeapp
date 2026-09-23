@@ -133,7 +133,7 @@ void main() {
   ) async {
     await unaCasa(tester);
     await apri(tester);
-    expect(find.text('Ce ne sono 3'), findsOneWidget);
+    expect(find.text('CE NE SONO 3'), findsOneWidget);
     expect(find.text('Antenna'), findsOneWidget);
     expect(find.text('Presa cucina'), findsOneWidget);
     /* Sotto il nome c'è marca e modello: è quello che fa dire «ah, è quello»
@@ -166,7 +166,7 @@ void main() {
       await ponte.spegni();
     });
     await apri(tester);
-    expect(find.textContaining('Ce ne sono'), findsNothing);
+    expect(find.textContaining('CE NE SONO'), findsNothing);
   });
 
   testWidgets('toccando una riga si apre la sua scheda, e si torna indietro', (
@@ -231,10 +231,14 @@ void main() {
     await premi(tester, find.text('Porta ingresso'));
     await premi(tester, find.text('Togli dalla rete'));
     await premi(tester, find.text('Toglilo'));
+    /* La scheda si chiude scorrendo via, e finche' scorre sta ancora in
+     * pagina: senza aspettare che finisca si troverebbe il nome di uno che
+     * non c'e' piu' e si direbbe che e' un errore dell'app. */
+    await tester.pump(const Duration(milliseconds: 400));
     expect(ponte.inReteZigbee.length, 2);
     /* E tornando indietro l'elenco si è già rifatto: una riga rimasta lì
      * sarebbe una bugia. */
-    expect(find.text('Ce ne sono 2'), findsOneWidget);
+    expect(find.text('CE NE SONO 2'), findsOneWidget);
     expect(find.text('Porta ingresso'), findsNothing);
   });
 

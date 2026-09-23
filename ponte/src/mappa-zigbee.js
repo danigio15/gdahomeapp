@@ -234,21 +234,50 @@ export function ilDisegnoDi(nodo = {}) {
 /* Il disegno pronto da mettere nella mappa.
  *
  * Il catalogo lo consegna dentro uno `<span>`, che dentro un SVG non ci puo'
- * stare: si tiene l'`<svg>` di dentro e gli si dice dove andare. Un `<svg>`
- * dentro un altro `<svg>` e' SVG valido, e `flutter_svg` lo disegna — a
- * differenza di `foreignObject`, che avrebbe voluto dire un buco bianco sul
- * telefono. */
+ * stare: si tiene l'`<svg>` di dentro, gli si toglie l'involucro e si mette il
+ * contenuto in un `<g>` spostato e rimpicciolito al punto giusto.
+ *
+ * ─── Perche' non un `<svg>` dentro l'altro ───────────────────────────────
+ *
+ * Perche' sul telefono non si vedeva. Un `<svg>` annidato e' SVG valido e il
+ * browser lo disegna — la mappa nella console si vedeva benissimo — ma
+ * `flutter_svg`, che e' quello che la disegna nell'app, gli `<svg>` dentro
+ * agli `<svg>` li **salta**: uscivano gli anelli colorati, i fili e i nomi, e
+ * dentro ogni anello il vuoto. Cioe' proprio le icone dei dispositivi veri,
+ * che sono la ragione per cui questa mappa e' fatta cosi'.
+ *
+ * Non si e' scoperto leggendo: si e' scoperto **fotografando la schermata**.
+ * La prova qui sotto misura i pixel colorati dentro gli anelli, che e'
+ * l'unica cosa che sa distinguere un disegno che c'e' da uno che manca.
+ *
+ * Un `<g transform="translate(...) scale(...)">` lo disegnano tutti e due, e
+ * fa la stessa cosa: sposta e rimpicciolisce quello che ha dentro. */
 function ilDisegnoPosato(nodo, lato) {
   const quale = ilDisegnoDi(nodo);
   const markup = disegnoDelCatalogo(quale, lato);
   const dentro = markup.replace(/^<span[^>]*>/, "").replace(/<\/span>$/, "");
   if (!dentro.startsWith("<svg")) return "";
-  const x = (nodo.x - lato / 2).toFixed(1);
-  const y = (nodo.y - lato / 2).toFixed(1);
-  /* Il nome del disegno si riporta sull'`<svg>`: sullo `<span>` che si butta
+  const apre = dentro.match(/^<svg\b[^>]*>/);
+  if (!apre) return "";
+  const misure = apre[0].match(
+    /viewBox="\s*(-?[\d.]+)[\s,]+(-?[\d.]+)[\s,]+(-?[\d.]+)[\s,]+(-?[\d.]+)\s*"/,
+  );
+  if (!misure) return "";
+  const daX = Number(misure[1]);
+  const daY = Number(misure[2]);
+  const suoLargo = Number(misure[3]);
+  const suoAlto = Number(misure[4]);
+  if (!(suoLargo > 0) || !(suoAlto > 0)) return "";
+  const corpo = dentro.slice(apre[0].length).replace(/<\/svg>\s*$/, "");
+  /* Il piu' grande dei due lati: cosi' un disegno non quadrato ci sta dentro
+   * tutto invece di uscire dall'anello da una parte. */
+  const quanto = lato / Math.max(suoLargo, suoAlto);
+  const x = (nodo.x - lato / 2 - daX * quanto).toFixed(2);
+  const y = (nodo.y - lato / 2 - daY * quanto).toFixed(2);
+  /* Il nome del disegno si riporta sul `<g>`: sullo `<span>` che si butta
    * c'era, e senza la figura non sa piu' dire cosa ha disegnato — ne' a chi la
    * legge, ne' a una prova. */
-  return dentro.replace("<svg ", `<svg data-dm-art="${quale}" x="${x}" y="${y}" `);
+  return `<g data-dm-art="${quale}" transform="translate(${x} ${y}) scale(${quanto.toFixed(4)})">${corpo}</g>`;
 }
 
 /** Il colore di un nodo, dal suo mestiere. */

@@ -585,3 +585,48 @@ test("un dispositivo che questa casa non ha si dice, invece di uno vuoto", async
   assert.equal(detta.success, false);
   assert.equal(detta.error.code, "not_found");
 });
+
+/* ─── Che le icone si vedano anche nell'app ─────────────────────────────────
+ *
+ * «La mappa deve essere fatta con icona dispositivi reali.»
+ *
+ * Le icone c'erano, e nel browser si vedevano: erano un `<svg>` dentro
+ * l'altro, che e' SVG valido. Sul telefono pero' la mappa usciva con gli
+ * anelli colorati vuoti — `flutter_svg` gli `<svg>` annidati li salta. Si e'
+ * scoperto guardando lo scatto della schermata, non il codice.
+ *
+ * Qui si difende la forma che disegnano tutti e due: niente `<svg>` dentro
+ * l'`<svg>`, e ogni apparecchio col suo disegno messo in un `<g>` spostato. */
+test("i disegni non sono «svg» annidati: quelli sul telefono non si vedono", () => {
+  const svg = laMappaDisegnata([
+    { id: "0x00", nome: "Antenna", tipo: "coordinatore", vicini: [{ id: "0x01" }] },
+    { id: "0x01", nome: "Presa cucina", tipo: "router", vicini: [{ id: "0x00" }] },
+  ]);
+  /* Uno solo: quello che apre il documento. */
+  assert.equal(svg.match(/<svg/g).length, 1);
+  assert.equal(svg.includes("</svg>"), true);
+});
+
+test("ogni apparecchio porta il suo disegno, spostato e ridotto al punto giusto", () => {
+  const svg = laMappaDisegnata([
+    { id: "0x00", nome: "Antenna", tipo: "coordinatore", vicini: [{ id: "0x01" }] },
+    { id: "0x01", nome: "Presa cucina", tipo: "router", vicini: [{ id: "0x00" }] },
+    { id: "0x02", nome: "Porta ingresso", tipo: "terminale", vicini: [{ id: "0x01" }] },
+  ]);
+  const gruppi = [
+    ...svg.matchAll(
+      /<g data-dm-art="([^"]+)" transform="translate\(([-\d.]+) ([-\d.]+)\) scale\(([\d.]+)\)"/g,
+    ),
+  ];
+  assert.equal(gruppi.length, 3);
+  assert.deepEqual(
+    gruppi.map((uno) => uno[1]),
+    ["router", "socket", "front-door"],
+  );
+  /* Rimpicciolito, non ingrandito: i disegni del catalogo sono grandi
+   * novantasei e un anello e' largo poche decine. */
+  for (const uno of gruppi) {
+    const quanto = Number(uno[4]);
+    assert.equal(quanto > 0 && quanto < 1, true, `scala fuori posto: ${quanto}`);
+  }
+});
