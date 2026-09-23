@@ -118,6 +118,31 @@ test("la scansione della pagina Temperature gira solo a pagina a schermo, un gir
   );
 });
 
+test("il pallino «sono vivo» lampeggia invece di respirare", () => {
+  /* Respirando, una dissolvenza continua scrive un valore nuovo a ogni
+   * fotogramma, e un valore nuovo a ogni fotogramma vuol dire ridipingere a
+   * ogni fotogramma: questo pallino da otto pixel si portava via un quinto
+   * della CPU della pagina, per sempre. Misurato a pagina aperta e senza
+   * toccare niente, contando le rasterizzazioni del browser in cinque
+   * secondi: 900 e 24% di un core respirando, 27 e 5% a passi, 12 e 4%
+   * spento del tutto.
+   *
+   * Le altre cure sono state provate tutte e non curano — «will-change»
+   * (anche caricato col foglio: iniettato dopo non conta, un'animazione gia'
+   * partita non ci ripensa), togliere la prospettiva, togliere l'ombra,
+   * pulsare nella sola opacita'. Tutte 900 rasterizzazioni. Quello che cambia
+   * le cose e' smettere di interpolare, ed e' il motivo per cui il LED della
+   * torre qui accanto, che lampeggia a passi da sempre, non e' mai costato
+   * niente. */
+  const sezione = leggi("sections/minipc-showcase-section.js");
+  assert.match(sezione, /animation-name:dmSrvxPulsa!important/);
+  assert.match(sezione, /animation-timing-function:steps\(1,end\)!important/);
+  assert.match(sezione, /@keyframes dmSrvxPulsa\{0%,49%\{opacity:1\}50%,100%\{opacity:\.45\}\}/);
+  /* Con un nome suo, non riscrivendo «pulseDot»: quello muove altri nove
+   * pallini su altre pagine, e quelli restano come sono. */
+  assert.equal(/@keyframes pulseDot/.test(sezione), false);
+});
+
 test("le due macchie dello sfondo sono sfumate, non sfocate", () => {
   /* Qui prima si difendeva «will-change:transform» sulle due macchie, messo
    * per la CPU del mini PC. Misurato sulla plancia servita col freno della

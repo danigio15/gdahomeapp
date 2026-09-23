@@ -1035,10 +1035,47 @@ function minipcShowcaseCss() {
   border:1px solid rgba(var(--srvx-live-rgb),.32)!important;
   color:var(--srvx-live)!important;padding:8px 15px!important
 }
+/* Il pallino «sono vivo» lampeggia invece di respirare.
+ *
+ * Respirava: una dissolvenza continua, «pulseDot», che a ogni fotogramma
+ * scrive un valore nuovo di «transform» e «opacity». Un valore nuovo a ogni
+ * fotogramma vuol dire **ridipingere** a ogni fotogramma, e questo pallino da
+ * otto pixel si portava via un quinto della CPU della pagina, per sempre.
+ *
+ * Misurato con la pagina aperta e nessuno che tocca niente, contando il lavoro
+ * di rasterizzazione del browser in cinque secondi:
+ *
+ *   come respirava      900 rasterizzazioni   24% di un core
+ *   a passi              27                    5%
+ *   spento del tutto     12                    4%
+ *
+ * Cioe' quasi come spegnerlo, ma il pallino c'e' ancora e continua a dire che
+ * la macchina risponde.
+ *
+ * ─── Perche' «a passi» e non un'altra cura ───────────────────────────────
+ *
+ * Perche' le altre non curano, e sono state provate tutte, con la misura in
+ * mano: «will-change» (anche scritto qui nel foglio, che carica con la pagina
+ * — iniettato dopo non conta, un'animazione gia' partita non ci ripensa),
+ * togliere la prospettiva del riquadro, togliere l'ombra, pulsare nella sola
+ * opacita' senza ingrandire. Tutte: 900 rasterizzazioni, 24%.
+ *
+ * Quello che cambia le cose e' **smettere di interpolare**. Il LED della torre
+ * qui accanto lampeggia gia' cosi' da sempre («steps(1,end)») e non ridipinge
+ * mai: cambia quattro volte in due secondi e mezzo invece di sessanta volte al
+ * secondo. Non e' un trucco di un browser: quello che si interpola va
+ * ridipinto, quello che salta no.
+ *
+ * L'animazione prende un nome suo invece di riscrivere «pulseDot», che nella
+ * plancia muove altri nove pallini su altre pagine: quelli restano come sono
+ * finche' non si decide anche per loro. */
 #page-server.dm-srvx .srv-hero-dot{
   background:var(--srvx-live)!important;
-  box-shadow:0 0 0 4px rgba(var(--srvx-live-rgb),.16)!important
+  box-shadow:0 0 0 4px rgba(var(--srvx-live-rgb),.16)!important;
+  animation-name:dmSrvxPulsa!important;
+  animation-timing-function:steps(1,end)!important
 }
+@keyframes dmSrvxPulsa{0%,49%{opacity:1}50%,100%{opacity:.45}}
 
 /* ── the 3D scene ─────────────────────────────────────────────────────── */
 #page-server.dm-srvx .srv-hero-metrics{
