@@ -21,6 +21,6 @@
   "devDependencies": {
     "@playwright/test": "^1.54.1",
     "esbuild": "^0.28.2",
-    "prettier": "^3.3.0"
+    "prettier": "^3.9.8"
   }
 }
