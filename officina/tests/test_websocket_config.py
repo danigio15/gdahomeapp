@@ -481,3 +481,56 @@ async def test_la_foto_si_decodifica_fuori_dal_loop(
         2,
     )
     assert codice == "invalid_data"
+
+
+async def test_senza_plance_la_foto_la_carica_solo_l_amministratore(
+    hass: HomeAssistant, tmp_path: Any
+) -> None:
+    """Senza nessuna plancia installata `_authorized` apre a tutti.
+
+    Va bene per leggere, non per scrivere sul disco di casa: chi non e'
+    amministratore non carica niente.
+    """
+    import base64
+
+    from custom_components.dashboardmodern.websocket_api import TYPE_WWW_UPLOAD
+
+    hass.config.config_dir = str(tmp_path)
+    foto = {
+        "type": TYPE_WWW_UPLOAD,
+        "filename": "foto.png",
+        "data": base64.b64encode(b"\x89PNG\r\n\x1a\n" + b"\x00" * 16).decode(),
+    }
+    codice, _ = await _errore(hass, StubConnection(hass, is_admin=False), foto, 1)
+    assert codice == websocket_api.const.ERR_UNAUTHORIZED
+    assert not (tmp_path / "www" / "dashboardmodern").exists()
+    esito = await _command(hass, StubConnection(hass), foto, 2)
+    assert esito == {"path": "/local/dashboardmodern/foto.png"}
+
+
+async def test_la_cartella_piena_si_dice_e_non_si_scrive(
+    hass: HomeAssistant, tmp_path: Any, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Oltre il tetto della cartella la risposta e' un errore che si legge."""
+    import base64
+
+    from custom_components.dashboardmodern import www_files
+    from custom_components.dashboardmodern.websocket_api import TYPE_WWW_UPLOAD
+
+    hass.config.config_dir = str(tmp_path)
+    _plancia(hass)
+    png = b"\x89PNG\r\n\x1a\n" + b"\x00" * 16
+    monkeypatch.setattr(www_files, "MAX_FOLDER_BYTES", len(png))
+    foto = {
+        "type": TYPE_WWW_UPLOAD,
+        "filename": "foto.png",
+        "data": base64.b64encode(png).decode(),
+    }
+    ospite = StubConnection(hass, is_admin=False)
+    assert await _command(hass, ospite, foto, 1) == {
+        "path": "/local/dashboardmodern/foto.png"
+    }
+    codice, _ = await _errore(hass, ospite, foto, 2)
+    assert codice == "quota_exceeded"
+    cartella = tmp_path / "www" / "dashboardmodern"
+    assert sorted(p.name for p in cartella.iterdir()) == ["foto.png"]

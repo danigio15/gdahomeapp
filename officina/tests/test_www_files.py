@@ -11,6 +11,8 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
+import pytest
+
 from custom_components.dashboardmodern.www_files import MAX_ENTRIES, list_www_folder
 
 
@@ -196,3 +198,38 @@ def test_un_byte_nullo_nel_percorso_non_e_un_traceback(tmp_path: Path) -> None:
     (tmp_path / "www").mkdir()
     assert list_www_folder(str(tmp_path / "www"), "x\x00y") is None
     assert list_www_folder(str(tmp_path / "www\x00"), "")["available"] is False
+
+
+def test_la_cartella_dei_caricamenti_ha_un_tetto(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Dieci megabyte alla volta, senza tetto, riempiono il disco di casa.
+
+    Il limite per foto non basta: chi puo' caricare puo' caricare all'infinito,
+    e il disco e' quello dove Home Assistant tiene database e backup. La
+    cartella dei caricamenti ha un tetto in byte e uno in file; oltre, la foto
+    non si scrive e il chiamante lo dice.
+    """
+    from custom_components.dashboardmodern import www_files
+
+    monkeypatch.setattr(www_files, "MAX_FOLDER_BYTES", len(PNG) * 2 + 1)
+    assert www_files.save_www_upload(str(tmp_path), "a.png", PNG) is not None
+    assert www_files.save_www_upload(str(tmp_path), "b.png", PNG) is not None
+    with pytest.raises(www_files.QuotaSuperata):
+        www_files.save_www_upload(str(tmp_path), "c.png", PNG)
+    cartella = tmp_path / www_files.UPLOAD_FOLDER
+    assert sorted(p.name for p in cartella.iterdir()) == ["a.png", "b.png"]
+
+    monkeypatch.setattr(www_files, "MAX_FOLDER_BYTES", 10**9)
+    monkeypatch.setattr(www_files, "MAX_FOLDER_FILES", 2)
+    with pytest.raises(www_files.QuotaSuperata):
+        www_files.save_www_upload(str(tmp_path), "d.png", PNG)
+    assert not (cartella / "d.png").exists()
+
+
+def test_il_tetto_di_serie_e_ragionevole() -> None:
+    """Abbastanza per le foto di una plancia, niente di piu'."""
+    from custom_components.dashboardmodern import www_files
+
+    assert www_files.MAX_UPLOAD_BYTES <= www_files.MAX_FOLDER_BYTES <= 500 * 1024 * 1024
+    assert 0 < www_files.MAX_FOLDER_FILES <= 1000

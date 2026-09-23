@@ -6,6 +6,7 @@ import {
   doc,
   english,
   esc,
+  jsArg,
   installStyle,
   onEditorRedraw,
   readJson,
@@ -176,15 +177,15 @@ export function renderCanonicalLightsEditor() {
           const name = group.lights[id] || allStates()?.[id]?.attributes?.friendly_name || id;
           const meta = lightMeta(id);
           return `<article class="ed-row dm-light-row" data-light-entity="${esc(id)}">
-            <span class="dm-light-order"><button type="button" class="ed-del" ${index === 0 ? "disabled" : ""} onclick="dmLightMove('${esc(id)}',-1)" aria-label="${t("Sposta su", "Move up")}">▲</button><button type="button" class="ed-del" ${index === group.entities.length - 1 ? "disabled" : ""} onclick="dmLightMove('${esc(id)}',1)" aria-label="${t("Sposta giù", "Move down")}">▼</button></span>
+            <span class="dm-light-order"><button type="button" class="ed-del" ${index === 0 ? "disabled" : ""} onclick="dmLightMove(${jsArg(id)},-1)" aria-label="${t("Sposta su", "Move up")}">▲</button><button type="button" class="ed-del" ${index === group.entities.length - 1 ? "disabled" : ""} onclick="dmLightMove(${jsArg(id)},1)" aria-label="${t("Sposta giù", "Move down")}">▼</button></span>
             <div class="ed-row-main"><div class="ed-row-new">${meta.glyph} ${esc(name)}</div><div class="ed-row-old mono">${esc(id)}</div><div class="dm-light-badges">${meta.badges}</div></div>
-            <select class="ed-input dm-light-room" data-light-entity="${esc(id)}" onchange="dmLightSetRoom('${esc(id)}',this.value)">${roomOptions(assignments[id])}</select>
-            <button type="button" class="ed-del dm-light-edit" onclick="dmOpenLightEditor('${esc(id)}')" aria-label="${t("Modifica luce", "Edit light")}">✏️</button>
-            <button type="button" class="ed-del" onclick="dmLuceDel('${esc(id)}')" aria-label="${t("Elimina luce", "Delete light")}">🗑️</button>
+            <select class="ed-input dm-light-room" data-light-entity="${esc(id)}" onchange="dmLightSetRoom(${jsArg(id)},this.value)">${roomOptions(assignments[id])}</select>
+            <button type="button" class="ed-del dm-light-edit" onclick="dmOpenLightEditor(${jsArg(id)})" aria-label="${t("Modifica luce", "Edit light")}">✏️</button>
+            <button type="button" class="ed-del" onclick="dmLuceDel(${jsArg(id)})" aria-label="${t("Elimina luce", "Delete light")}">🗑️</button>
           </article>`;
         })
         .join("");
-      return `<section class="dm-light-group" data-light-room="${esc(group.room)}"><header class="ed-acc-head"><span>🏠 ${esc(group.room)} · ${group.entities.length}</span><span class="dm-light-room-order"><button type="button" class="ed-del" ${groupIndex === 0 ? "disabled" : ""} onclick="dmLightRoomMove('${esc(group.room)}',-1)">▲</button><button type="button" class="ed-del" ${groupIndex === groups.length - 1 ? "disabled" : ""} onclick="dmLightRoomMove('${esc(group.room)}',1)">▼</button></span></header><div class="ed-list">${rows}</div></section>`;
+      return `<section class="dm-light-group" data-light-room="${esc(group.room)}"><header class="ed-acc-head"><span>🏠 ${esc(group.room)} · ${group.entities.length}</span><span class="dm-light-room-order"><button type="button" class="ed-del" ${groupIndex === 0 ? "disabled" : ""} onclick="dmLightRoomMove(${jsArg(group.room)},-1)">▲</button><button type="button" class="ed-del" ${groupIndex === groups.length - 1 ? "disabled" : ""} onclick="dmLightRoomMove(${jsArg(group.room)},1)">▼</button></span></header><div class="ed-list">${rows}</div></section>`;
     })
     .join("");
   return `<div class="ed-intro">${t("Sono mostrate solo le stanze che contengono almeno una luce. Modifica apre tutti i dati della luce, non una finestra del browser. Le pastiglie dicono cosa sa fare ogni luce — RGB, bianco regolabile, dimmer o solo acceso/spento — ed è quello che comanda i controlli nel popup.", "Only rooms containing a light are shown. Edit opens all light fields, not a browser prompt. The pills say what each light can do — RGB, tunable white, dimmer or plain on/off — and that is what drives the controls in the popup.")}</div>${body}${add}`;

@@ -1041,7 +1041,14 @@ function disegnoTuttoSuo(nome, disegno, dove) {
 export function oggettoWidget(chiave, ripiego = "", dove = "") {
   const nome = nomeDelDisegno(chiave);
   const disegno = OGGETTI[nome];
-  if (!disegno) return String(ripiego || "");
+  /* Il ripiego e' un simbolo scritto in configurazione: testo, non markup. */
+  if (!disegno)
+    return String(ripiego || "")
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#39;");
   const suo = dove ? disegnoTuttoSuo(nome, disegno, dove) : disegno;
   return `<svg class="${CLASSE_DELL_OGGETTO}" viewBox="0 0 32 32" aria-hidden="true" focusable="false">${conRipiegoDiColore(suo)}</svg>`;
 }

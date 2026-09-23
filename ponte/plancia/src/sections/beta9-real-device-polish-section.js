@@ -115,7 +115,7 @@ function rebuildTemperatureRoomOptions(form, select) {
       ? (t(" — configurata", " — configured"))
       : "";
     const labelIcon = icon && !icon.startsWith("mdi:") ? `${icon} ` : "";
-    return `<option value="${esc(id)}" ${id === current ? "selected" : ""}>${labelIcon}${esc(room.name || id)}${marker}</option>`;
+    return `<option value="${esc(id)}" ${id === current ? "selected" : ""}>${esc(labelIcon)}${esc(room.name || id)}${marker}</option>`;
   }).join("");
   if (select.dataset.dmRoomOptionsSignature !== options) {
     select.innerHTML = options;

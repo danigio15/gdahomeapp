@@ -252,7 +252,7 @@ function renderEnergyEditorTab(target) {
           <div class="ed-form dm-energy-cost-card" data-dm-import-rate-mode="${entitaPrezzo ? "entity" : "number"}"><div class="ed-sec-title">💶 ${t("energyCost")}</div>
           <div class="ed-hint">${t("energyRates")}</div>
           <div class="dm-rate-mode" role="group"><button type="button" class="dm-rate-mode-btn" data-dm-rate-mode="number">${t("rateNumber")}</button><button type="button" class="dm-rate-mode-btn" data-dm-rate-mode="entity">${t("rateEntity")}</button></div>
-          <div class="ed-form-row"><input id="ed-costo-kwh" class="ed-input" type="number" step="0.001" min="0" placeholder="€/kWh prelevato" value="${globalThis.cdCfg?.("cd_costo_kwh") || ""}"><input id="ed-prezzo-imm" class="ed-input" type="number" step="0.001" min="0" placeholder="€/kWh immesso" value="${globalThis.cdCfg?.("cd_prezzo_immissione") || ""}"></div>
+          <div class="ed-form-row"><input id="ed-costo-kwh" class="ed-input" type="number" step="0.001" min="0" placeholder="€/kWh prelevato" value="${esc(globalThis.cdCfg?.("cd_costo_kwh") || "")}"><input id="ed-prezzo-imm" class="ed-input" type="number" step="0.001" min="0" placeholder="€/kWh immesso" value="${esc(globalThis.cdCfg?.("cd_prezzo_immissione") || "")}"></div>
           <span data-dm-rate-entity-slot hidden></span><small class="dm-rate-entity-note" data-dm-rate-entity-note hidden></small>
           <button class="ed-save-btn" onclick="edSaveCosti()">💾 ${t("saveCosts")}</button></div>`;
         const card = settings.querySelector(".dm-energy-cost-card");
@@ -412,7 +412,15 @@ globalThis.addEventListener?.("dashboardmodern:energy-plant-changed", async () =
   mountCurrentEditor("energy", body);
 });
 
-const esc = (value) => String(value ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;");
+/* Testo e attributi, fra virgolette doppie o semplici: tutti e cinque i
+ * caratteri, perche' i valori arrivano dalla configurazione di casa. */
+const esc = (value) =>
+  String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
 export function createEntityField({ id, label, value = "", placeholder = "sensor.entity", domain = "", optional = true } = {}) {
   const domainAttr = domain ? ` data-domain="${esc(domain)}"` : "";
   const opt = optional ? ` <span class="ed-acc-n">${t("optional")}</span>` : "";

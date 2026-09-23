@@ -141,7 +141,7 @@ test("anche la finestra rapida del banner prende la fila dalla centrale", () => 
   assert.match(pezzo, /alarmActiveButton\(stateObj\)/);
   /* Il tasto chiama il tastierino di sempre, con il servizio della sua
    * modalita': nessun servizio scritto a mano. */
-  assert.match(pezzo, /promptPinAndSet\('\$\{voce\.service\}'\)/);
+  assert.match(pezzo, /promptPinAndSet\(\$\{jsArg\(voce\.service\)\}\)/);
   assert.doesNotMatch(pezzo, /alarm_arm_/);
   /* E si rimette dietro alla plancia storica, che quella finestra la ridisegna
    * a ogni apertura e a ogni cambio di stato della centrale. */

@@ -2550,6 +2550,7 @@ export default Object.freeze({
   "Tap to open Energy": "المس لفتح الطاقة",
   "Tap to put it back on the chart": "انقر لإعادته إلى الرسم البياني",
   "Tap to rename": "انقر لإعادة التسمية",
+  "Tap to rename the label": "انقر لإعادة تسمية العنوان",
   "Tap to turn on · cooling 26°C · auto fan": "انقر للتشغيل · تبريد 26°م · مروحة تلقائية",
   "Tapping a room": "عند لمس غرفة",
   "Target": "الهدف",

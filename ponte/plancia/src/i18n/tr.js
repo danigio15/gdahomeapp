@@ -2550,6 +2550,7 @@ export default Object.freeze({
   "Tap to open Energy": "Enerji'yi açmak için dokunun",
   "Tap to put it back on the chart": "Grafiğe geri koymak için dokunun",
   "Tap to rename": "Adını değiştirmek için dokunun",
+  "Tap to rename the label": "Etiketi yeniden adlandırmak için dokunun",
   "Tap to turn on · cooling 26°C · auto fan": "Açmak için dokun · soğutma 26 °C · fan oto",
   "Tapping a room": "Bir odaya dokununca",
   "Target": "Hedef",

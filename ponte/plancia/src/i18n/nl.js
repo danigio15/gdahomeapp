@@ -2550,6 +2550,7 @@ export default Object.freeze({
   "Tap to open Energy": "Tik om Energie te openen",
   "Tap to put it back on the chart": "Tik om hem terug in de grafiek te zetten",
   "Tap to rename": "Tik om te hernoemen",
+  "Tap to rename the label": "Tik om het label te hernoemen",
   "Tap to turn on · cooling 26°C · auto fan": "Tik om in te schakelen · koelen 26 °C · ventilator auto",
   "Tapping a room": "Bij het aantikken van een kamer",
   "Target": "Streefwaarde",

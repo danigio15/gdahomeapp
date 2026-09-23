@@ -2550,6 +2550,7 @@ export default Object.freeze({
   "Tap to open Energy": "点按打开能源",
   "Tap to put it back on the chart": "点按以放回图表",
   "Tap to rename": "点一下改名",
+  "Tap to rename the label": "点一下给标签改名",
   "Tap to turn on · cooling 26°C · auto fan": "点按开启 · 制冷 26°C · 自动风速",
   "Tapping a room": "点一个房间时",
   "Target": "目标值",

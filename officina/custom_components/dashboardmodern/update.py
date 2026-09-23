@@ -37,6 +37,14 @@ previous version — and kept offering the update just made — for ever. So the
 install tells HACS, in HACS's own record, with the same label HACS would write
 (`annuncia_a_hacs`).
 
+Since September 2026 nothing publishes the integration's releases any more:
+the repository they came from is gone, and the project lives in gdahome. With
+`RELEASE_REPOSITORY` empty the entity is simply not created — updating is a
+manual job, or HACS's. The code stays, because the day a real release source
+exists again it is one line away; and even then no zip is installed unless its
+sha256, published in the same release, matches, and unless its version is
+newer than the one on disk.
+
 Nothing here is required for the dashboard to work. If the panel has no way out
 to the internet the check simply finds nothing and says nothing: no repeated
 errors in the log, no entity going unavailable, no retry storm. And whoever
@@ -45,6 +53,8 @@ wants it off can turn it off from the integration's options.
 
 from __future__ import annotations
 
+import hashlib
+import hmac
 import io
 import json
 import logging
@@ -70,6 +80,8 @@ from .const import (
     NAME,
     OPTION_CHECK_UPDATES,
     RELEASE_ASSET,
+    RELEASE_ASSET_SHA256,
+    RELEASE_REPOSITORY,
     RELEASES_URL,
     REPOSITORY,
     UPDATE_SCAN_INTERVAL,
@@ -97,6 +109,8 @@ _CARTELLA = Path(__file__).resolve().parent
 # deve nemmeno finire in memoria.
 _DOWNLOAD_TIMEOUT = 300
 _MAX_ZIP = 200 * 1024 * 1024
+# L'impronta e' una riga: qualche centinaio di byte bastano e avanzano.
+_MAX_IMPRONTA = 4096
 
 # Home Assistant refuses to show a summary longer than this, so it is cut here
 # rather than by the frontend.
@@ -217,11 +231,45 @@ def newer(latest: str, installed: str) -> bool:
     )
 
 
-def installa_da_zip(cartella: Path, dati: bytes, versione: str) -> None:
+def impronta_pubblicata(testo: str) -> str | None:
+    """L'impronta sha256 scritta nel file che accompagna lo zip, o `None`.
+
+    Il formato e' quello di `sha256sum`: le 64 cifre esadecimali in testa,
+    poi il nome del file. Si accetta anche la sola impronta. Un file che non
+    comincia cosi' non e' un'impronta, e senza impronta non si installa.
+    """
+    pezzi = str(testo or "").strip().split()
+    if not pezzi:
+        return None
+    impronta = pezzi[0].lower()
+    if len(impronta) != 64 or any(c not in "0123456789abcdef" for c in impronta):
+        return None
+    return impronta
+
+
+def versione_installata(cartella: Path) -> str:
+    """La versione che dice il manifest a terra, o stringa vuota."""
+    try:
+        manifesto = json.loads((cartella / "manifest.json").read_text("utf-8"))
+    except (OSError, ValueError):
+        return ""
+    if not isinstance(manifesto, dict):
+        return ""
+    return normalize_version(manifesto.get("version"))
+
+
+def installa_da_zip(
+    cartella: Path, dati: bytes, versione: str, *, impronta: str
+) -> None:
     """Replace the integration folder with the release zip's content.
 
     Prima si controlla, poi si muove, e ogni mossa e' reversibile:
 
+    - lo zip deve avere l'impronta sha256 pubblicata nella sua release: un
+      file diverso da quello pubblicato non si apre nemmeno;
+    - la versione deve essere piu' nuova di quella a terra: nessuno puo'
+      riportare indietro l'integrazione a una versione con difetti gia'
+      corretti, nemmeno con uno zip autentico;
     - nessun nome nello zip puo' uscire dalla cartella (`..`, percorsi
       assoluti): un archivio che ci prova non tocca un solo file;
     - lo zip deve contenere il `manifest.json` di QUESTA integrazione, con la
@@ -233,6 +281,17 @@ def installa_da_zip(cartella: Path, dati: bytes, versione: str) -> None:
 
     Gira nell'executor: qui dentro e' tutto disco, niente loop.
     """
+    attesa = impronta_pubblicata(impronta)
+    if attesa is None:
+        raise ValueError("la release non pubblica un'impronta sha256 leggibile")
+    if not hmac.compare_digest(hashlib.sha256(dati).hexdigest(), attesa):
+        raise ValueError("lo zip non corrisponde all'impronta pubblicata")
+    a_terra = versione_installata(cartella)
+    if not a_terra or not newer(versione, a_terra):
+        raise ValueError(
+            f"la versione {versione!r} non e' piu' nuova di quella installata "
+            f"({a_terra or 'sconosciuta'})"
+        )
     with zipfile.ZipFile(io.BytesIO(dati)) as archivio:
         nomi = archivio.namelist()
         for nome in nomi:
@@ -338,16 +397,21 @@ class DashboardModernReleaseCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         # release senza — non dovrebbe succedere, il flusso di rilascio lo
         # carica sempre — lascia il tasto a spiegare la strada di HACS.
         asset_url = ""
+        sha256_url = ""
         for asset in payload.get("assets") or []:
-            if isinstance(asset, dict) and asset.get("name") == RELEASE_ASSET:
+            if not isinstance(asset, dict):
+                continue
+            if asset.get("name") == RELEASE_ASSET:
                 asset_url = str(asset.get("browser_download_url") or "")
-                break
+            elif asset.get("name") == RELEASE_ASSET_SHA256:
+                sha256_url = str(asset.get("browser_download_url") or "")
         self._last = {
             "version": version,
             "url": payload.get("html_url")
-            or f"https://github.com/{REPOSITORY}/releases",
+            or f"https://github.com/{RELEASE_REPOSITORY}/releases",
             "notes": str(payload.get("body") or ""),
             "asset_url": asset_url,
+            "sha256_url": sha256_url,
         }
         return self._last
 
@@ -356,6 +420,11 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Add the update entity, once, for the plancia that came first."""
+    # Nessuna repository pubblica piu' le release (vedi `RELEASE_REPOSITORY`):
+    # senza una fonte vera non si chiede niente a nessuno, e l'entita' non
+    # nasce. Si aggiorna a mano o da HACS.
+    if not RELEASES_URL:
+        return
     if not entry.options.get(OPTION_CHECK_UPDATES, True):
         return
     # La versione installata la dice il manifest, e a leggerlo e' il caricatore
@@ -491,13 +560,16 @@ class DashboardModernUpdate(
                 )
             )
         asset_url = str(dati_release.get("asset_url") or "")
-        if not asset_url:
+        sha256_url = str(dati_release.get("sha256_url") or "")
+        if not asset_url or not sha256_url:
             raise HomeAssistantError(
                 self._frase(
-                    "La release non pubblica il suo zip: aggiorna da HACS "
-                    "(menu ⋮ → «Aggiorna informazioni», poi «Aggiorna»).",
-                    "The release does not publish its zip: update from HACS "
-                    "(⋮ menu → “Update information”, then “Update”).",
+                    "La release non pubblica il suo zip e la sua impronta: "
+                    "aggiorna da HACS (menu ⋮ → «Aggiorna informazioni», poi "
+                    "«Aggiorna»).",
+                    "The release does not publish its zip and its checksum: "
+                    "update from HACS (⋮ menu → “Update information”, then "
+                    "“Update”).",
                 )
             )
 
@@ -526,6 +598,19 @@ class DashboardModernUpdate(
                             )
                         )
                     dati = await risposta.read()
+                async with session.get(sha256_url, timeout=_TIMEOUT) as risposta:
+                    if risposta.status != 200:
+                        raise HomeAssistantError(
+                            self._frase(
+                                f"GitHub ha risposto {risposta.status} "
+                                "scaricando l'impronta dello zip.",
+                                f"GitHub answered {risposta.status} while "
+                                "downloading the zip checksum.",
+                            )
+                        )
+                    impronta = (await risposta.content.read(_MAX_IMPRONTA)).decode(
+                        "ascii", "replace"
+                    )
             except HomeAssistantError:
                 raise
             except Exception as errore:
@@ -544,7 +629,9 @@ class DashboardModernUpdate(
                 )
             try:
                 await self.hass.async_add_executor_job(
-                    installa_da_zip, _CARTELLA, dati, destinazione
+                    lambda: installa_da_zip(
+                        _CARTELLA, dati, destinazione, impronta=impronta
+                    )
                 )
             except (ValueError, OSError, zipfile.BadZipFile) as errore:
                 raise HomeAssistantError(
@@ -567,7 +654,7 @@ class DashboardModernUpdate(
         # HACS lo si avvisa noi: da solo non se ne accorge mai (vedi sopra).
         try:
             if await annuncia_a_hacs(
-                self.hass.data.get("hacs"), REPOSITORY, destinazione
+                self.hass.data.get("hacs"), RELEASE_REPOSITORY, destinazione
             ):
                 _LOGGER.debug("HACS riallineato alla versione %s", destinazione)
         except Exception:  # noqa: BLE001 - il registro di HACS non e' nostro: se cambia forma l'installazione resta buona
@@ -611,7 +698,9 @@ class DashboardModernUpdate(
     def release_url(self) -> str | None:
         """Where the release is written up."""
         return (self.coordinator.data or {}).get("url") or (
-            f"https://github.com/{REPOSITORY}/releases"
+            f"https://github.com/{RELEASE_REPOSITORY}/releases"
+            if RELEASE_REPOSITORY
+            else None
         )
 
     @property

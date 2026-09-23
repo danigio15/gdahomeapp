@@ -13,6 +13,7 @@ restituisce un dizionario, e cosi' si puo' provare senza avviare niente.
 from __future__ import annotations
 
 import os
+import threading
 from pathlib import Path
 from typing import Any
 
@@ -135,6 +136,42 @@ MAX_UPLOAD_BYTES = 10 * 1024 * 1024
 # La sottocartella dove finiscono i caricamenti, per non sparpagliare.
 UPLOAD_FOLDER = "dashboardmodern"
 
+# Quanto puo' contenere in tutto quella cartella. Dieci megabyte a foto non
+# bastano a proteggere il disco: dieci megabyte alla volta, per sempre, lo
+# riempiono lo stesso — e il disco e' quello di Home Assistant, dove stanno il
+# database e i backup. Duecento megabyte e cinquecento file sono molte piu'
+# foto di quante una plancia ne mostri; oltre, chi vuole di piu' le copia in
+# `www` a mano, dove decide lui.
+MAX_FOLDER_BYTES = 200 * 1024 * 1024
+MAX_FOLDER_FILES = 500
+
+# Il controllo dello spazio e la scrittura stanno insieme: due caricamenti in
+# parallelo vedrebbero entrambi lo spazio libero e lo supererebbero in due.
+_SCRITTURA = threading.Lock()
+
+
+class QuotaSuperata(Exception):
+    """La cartella dei caricamenti e' piena: la foto non si scrive."""
+
+
+def _occupato(cartella: Path) -> tuple[int, int]:
+    """Byte e file gia' presenti nella cartella dei caricamenti."""
+    totale = 0
+    quanti = 0
+    try:
+        with os.scandir(cartella) as voci:
+            for voce in voci:
+                try:
+                    if voce.is_file(follow_symlinks=False):
+                        totale += voce.stat(follow_symlinks=False).st_size
+                        quanti += 1
+                except OSError:
+                    continue
+    except FileNotFoundError:
+        return 0, 0
+    return totale, quanti
+
+
 _NOME_BUONO = frozenset("abcdefghijklmnopqrstuvwxyz0123456789._-")
 
 
@@ -176,7 +213,8 @@ def save_www_upload(root: str, filename: str, payload: bytes) -> dict[str, Any] 
     Restituisce ``None`` per un file che non e' un'immagine o e' troppo
     grande: il chiamante lo traduce in un errore parlante. Un nome gia' preso
     non si sovrascrive — si numera, perche' una foto caricata ieri non deve
-    sparire sotto quella di oggi.
+    sparire sotto quella di oggi. Solleva ``QuotaSuperata`` quando la cartella
+    ha gia' raggiunto il suo tetto (``MAX_FOLDER_BYTES``/``MAX_FOLDER_FILES``).
     """
     nome = _sanitize_name(filename)
     if Path(nome).suffix not in UPLOAD_SUFFIXES:
@@ -190,7 +228,18 @@ def save_www_upload(root: str, filename: str, payload: bytes) -> dict[str, Any] 
         return None
     base = Path(root)
     cartella = base / UPLOAD_FOLDER
-    cartella.mkdir(parents=True, exist_ok=True)
+    with _SCRITTURA:
+        cartella.mkdir(parents=True, exist_ok=True)
+        occupati, quanti = _occupato(cartella)
+        if occupati + len(payload) > MAX_FOLDER_BYTES or quanti + 1 > MAX_FOLDER_FILES:
+            raise QuotaSuperata
+        return _scrivi(base, cartella, nome, payload)
+
+
+def _scrivi(
+    base: Path, cartella: Path, nome: str, payload: bytes
+) -> dict[str, Any] | None:
+    """Il file, con un nome libero: la parte che gira sotto `_SCRITTURA`."""
     contatore = 2
     destinazione = cartella / nome
     while True:

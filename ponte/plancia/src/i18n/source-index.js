@@ -3505,6 +3505,7 @@ export const SOURCE_INDEX = Object.freeze({
   "tocca per dire che l'hai ritirata": "tap to say you have collected it",
   "Tocca per rimetterla nel grafico": "Tap to put it back on the chart",
   "Tocca per rinominare": "Tap to rename",
+  "Tocca per rinominare l'etichetta": "Tap to rename the label",
   "Tocca per toglierla dal grafico": "Tap to drop it from the chart",
   "Tocca un apparecchio per aprire la sua scheda.": "Tap an appliance to open its card.",
   "Tocca un sensore": "Tap a sensor",

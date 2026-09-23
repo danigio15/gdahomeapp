@@ -71,26 +71,42 @@ export function legacyVariantForLocale(locale) {
 }
 
 function escapeAttribute(value) {
-  return String(value ?? "").replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+/* Un valore scritto dentro lo <script> del preludio. JSON.stringify da solo
+ * non basta: una stringa che contiene `</script>` chiuderebbe il blocco prima
+ * del tempo, e il resto diventerebbe HTML. Con `<` scritto \u003c il valore
+ * resta lo stesso per JavaScript e il parser HTML non ci vede niente. */
+function scriptValue(value) {
+  return JSON.stringify(value)
+    .replace(/</g, "\\u003c")
+    .replace(/\u2028/g, "\\u2028")
+    .replace(/\u2029/g, "\\u2029");
 }
 
 function injectHostedPrelude(html, { baseUrl, instanceId, primary, configProfile, locale, utente }) {
   const prelude = `<base href="${escapeAttribute(baseUrl)}"><script>(function(){
     const p=parent;
     const bridge=p&&p.__DASHBOARDMODERN_BRIDGE_WS__;
-    window.__DASHBOARDMODERN_INSTANCE__=${JSON.stringify(instanceId)};
-    window.__DASHBOARDMODERN_PROFILE__=${JSON.stringify(configProfile || "")};
+    window.__DASHBOARDMODERN_INSTANCE__=${scriptValue(instanceId)};
+    window.__DASHBOARDMODERN_PROFILE__=${scriptValue(configProfile || "")};
     window.__DASHBOARDMODERN_PRIMARY__=${primary !== false};
     window.__DASHBOARDMODERN_HOSTED__=true;
     /* The Home Assistant profile language of the signed-in user. Set before the
        first dashboard script runs so the i18n engine detects it on its first
        read and nothing paints in the shell's own language first. */
-    window.__DASHBOARDMODERN_LOCALE__=${JSON.stringify(locale || "")};
+    window.__DASHBOARDMODERN_LOCALE__=${scriptValue(locale || "")};
     /* Chi e' collegato (#344): l'identificativo dell'utente di Home Assistant,
        e nient'altro di lui. Serve all'agenda per mostrare a ognuno i suoi
        calendari; la plancia, dentro il pannello, questo dato non ha modo di
        chiederlo — il ponte porta solo Home Assistant, non chi lo sta usando. */
-    window.__DASHBOARDMODERN_UTENTE__=${JSON.stringify(utente || "")};
+    window.__DASHBOARDMODERN_UTENTE__=${scriptValue(utente || "")};
     window.__DASHBOARDMODERN_BRIDGED__=typeof bridge==='function';
     /* The document lives at about:srcdoc, where location.reload() lands on a
        blank page in the Home Assistant WebView. Anything that needs a fresh

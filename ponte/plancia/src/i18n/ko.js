@@ -2550,6 +2550,7 @@ export default Object.freeze({
   "Tap to open Energy": "탭하여 에너지 열기",
   "Tap to put it back on the chart": "탭하여 차트에 다시 표시",
   "Tap to rename": "눌러서 이름 바꾸기",
+  "Tap to rename the label": "눌러서 라벨 이름 바꾸기",
   "Tap to turn on · cooling 26°C · auto fan": "탭하면 켜집니다 · 냉방 26°C · 풍량 자동",
   "Tapping a room": "방을 누르면",
   "Target": "설정값",
