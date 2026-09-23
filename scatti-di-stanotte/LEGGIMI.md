@@ -213,22 +213,28 @@ a sei. I numeri assoluti non sono quelli del tuo tablet; i rapporti sì.
 **L'avvio dell'app prima della casa** — l'icona toccata, la schermata delle
 case — non è misurato qui: serve un telefono vero, e qui non c'è.
 
-## Il pallino «sono vivo»: lampeggia invece di respirare
+## I pallini che pulsano: lampeggiano invece di respirare
 
-`pallino-acceso.png` e `pallino-smorzato.png` sono i due momenti del lampeggio,
-sullo stesso pallino: stessa misura, solo più chiaro e più spento. Prima invece
-cresceva e si smorzava con una dissolvenza continua.
+`pallini-prima-e-dopo.png` — ogni pallino nei due momenti, il più acceso e il
+più smorzato, presi dalla plancia servita.
+
+Guarda la **prima riga**, il pallino della connessione in testata: prima, da
+acceso a smorzato, **cresceva del 40%** — si vede benissimo. Adesso la misura è
+sempre la stessa e cambia solo quanto è acceso. Sulle pastiglie piccole (MiniPC,
+editor) la differenza quasi non si nota; lì il pallino è 8 px.
 
 Un pallino da otto pixel si portava via **un quinto della CPU della pagina**,
-per sempre. Perché una dissolvenza continua scrive un valore nuovo a ogni
-fotogramma, e un valore nuovo a ogni fotogramma vuol dire ridipingere a ogni
-fotogramma.
+per sempre: una dissolvenza continua scrive un valore nuovo a ogni fotogramma, e
+un valore nuovo a ogni fotogramma vuol dire ridipingere a ogni fotogramma.
 
 | | rasterizzazioni in 5 s | CPU |
 |---|---|---|
 | come respirava | 900 | 24% di un core |
 | **a passi** | **27** | **5%** |
 | spento del tutto | 12 | 4% |
+
+A pagina aperta, con nessuno che tocca niente, dopo tutte le correzioni:
+**Home 4%, MiniPC 4%, Energia 1%** — partivano da 100%.
 
 ### Il `will-change` non c'entrava — provato in sei modi
 
@@ -243,15 +249,15 @@ fotogramma.
 
 La terza riga è quella onesta: la prima misura l'avevo fatta iniettando il
 `will-change` *dopo*, e un'animazione già partita non ricalcola se può stare su
-un livello suo. Rifatta come si deve: identica. Il livello in più il browser lo
-crea davvero (29 → 30), ma il lavoro non cambia di un'unità.
+un livello suo. Rifatta come si deve: identica.
 
 Quello che cambia le cose è **smettere di interpolare**. Il LED della torre,
 due centimetri più in là, lampeggia a passi da sempre e non è mai costato
-niente: cambia 4 volte in 2,6 secondi invece di 60 volte al secondo. Non è un
-trucco di questo browser — quello che si interpola va ridipinto, quello che
-salta no.
+niente. Non è un trucco di questo browser — quello che si interpola va
+ridipinto, quello che salta no.
 
-L'animazione ha un nome suo (`dmSrvxPulsa`) e non riscrive `pulseDot`, che
-nella plancia muove **altri nove pallini** su altre pagine. Farli a passi tutti
-varrebbe poco adesso: la Home passa da 6% a 3%, Energia è già all'1%.
+L'andatura sta **dentro** i fotogrammi di `pulseDot`, non sui selettori: così
+vale per tutta la dozzina di pallini che usano quell'animazione — la
+connessione in testata, le due card «Rete e impianto», l'orologio dell'editor,
+i LED delle lampadine accese — senza doverli elencare, e quello che nasce
+domani nasce già a posto.

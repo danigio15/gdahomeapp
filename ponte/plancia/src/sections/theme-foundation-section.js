@@ -147,6 +147,53 @@ export function installThemeFoundationSection() {
      * Niente «will-change»: senza la sfocatura non c'e' piu' niente di caro da
      * tenere da parte, e una scatola larga il doppio promossa a livello sono
      * decine di megabyte di memoria su un tablet, per niente. */
+    /* I pallini «sono vivo» lampeggiano invece di respirare.
+     *
+     * Sono una dozzina in giro per la plancia e portano tutti la stessa
+     * animazione: quello della connessione in testata, quello della pagina
+     * MiniPC e le due card «Rete e impianto», quello dell'orologio
+     * nell'editor, i LED delle lampadine accese nella pagina Luci.
+     *
+     * Respiravano: una dissolvenza continua che cresce e si smorza, cioe' un
+     * valore nuovo a ogni fotogramma — e un valore nuovo a ogni fotogramma
+     * vuol dire **ridipingere** a ogni fotogramma. Un pallino da otto pixel si
+     * portava via un quinto della CPU della pagina dove stava, per sempre.
+     *
+     * Misurato a pagina aperta e senza toccare niente, contando le
+     * rasterizzazioni del browser in cinque secondi:
+     *
+     *   come respirava   900 rasterizzazioni   24% di un core
+     *   a passi           27                    5%
+     *   spento del tutto  12                    4%
+     *
+     * Cioe' quasi come spegnerlo, ma il pallino c'e' ancora e continua a dire
+     * che qualcosa risponde.
+     *
+     * ─── Le cure che non curano ───────────────────────────────────────────
+     *
+     * Provate tutte, con la misura in mano: «will-change» (anche scritto in un
+     * foglio che carica con la pagina — iniettato dopo non conta,
+     * un'animazione gia' partita non ci ripensa), togliere la prospettiva del
+     * riquadro, togliere l'ombra, pulsare nella sola opacita' senza
+     * ingrandire. Tutte: 900 rasterizzazioni, 24%.
+     *
+     * Quello che cambia le cose e' **smettere di interpolare**. Il LED della
+     * torre del MiniPC lampeggia a passi da sempre e non e' mai costato
+     * niente: cambia quattro volte in due secondi e mezzo invece di sessanta
+     * volte al secondo. Non e' un trucco di un browser — quello che si
+     * interpola va ridipinto, quello che salta no.
+     *
+     * L'andatura sta **dentro** i fotogrammi e non sui selettori: cosi' vale
+     * per tutti quelli che usano questa animazione senza doverli elencare, e
+     * il giorno che ne nasce uno nuovo nasce gia' a posto. Si perde
+     * l'ingrandimento: adesso i pallini si accendono e si smorzano, non
+     * crescono piu'. */
+    @keyframes pulseDot{
+      0%{animation-timing-function:steps(1,end);opacity:1}
+      50%{animation-timing-function:steps(1,end);opacity:.45}
+      100%{opacity:.45}
+    }
+
     .animated-mesh-bg::before,.animated-mesh-bg::after{
       filter:none!important;
       animation:none!important;
