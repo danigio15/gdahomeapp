@@ -898,12 +898,17 @@ export function costruisciIlServer({
       risposta.writeHead(200, {
         "content-type": "text/html; charset=utf-8",
         "cache-control": "no-store",
-        /* Questa pagina sta dentro il cruscotto e basta: nessun altro la puo'
-         * mettere in un riquadro. Gli script sono i suoi, scritti dentro e
-         * fra i file della plancia, e la politica piu' stretta di cosi' non
-         * la regge senza riscriverla. */
-        "content-security-policy": "object-src 'none'; frame-ancestors 'self'",
-        "x-frame-options": "SAMEORIGIN",
+        /* Questa pagina sta dentro il cruscotto, e il cruscotto sta spesso
+         * dentro Home Assistant o dentro l'app: il browser guarda **tutti**
+         * quelli che la contengono, non solo il primo, e con `'self'` la
+         * rifiutava appena il cruscotto non era la pagina di sopra. Quindi le
+         * stesse origini del cruscotto. Senza il gettone, che arriva solo dal
+         * cruscotto e dalla sua origine, questa pagina non apre niente.
+         * Gli script sono i suoi, scritti dentro e fra i file della plancia,
+         * e la politica piu' stretta di cosi' non la regge senza riscriverla. */
+        "content-security-policy": `object-src 'none'; frame-ancestors ${
+          ospiti.length ? `'self' ${ospiti.join(" ")}` : "*"
+        }`,
       });
       risposta.end(
         planciaServita.pagina({

@@ -233,9 +233,11 @@ test("la pagina dell'editor si serve per una casa che lo permette, con le premes
     assert.ok(pagina.includes('type:"auth",access_token:gettone'));
     assert.ok(pagina.includes("evento.origin!==location.origin"));
     assert.ok(pagina.includes("evento.source!==window.parent"));
-    /* Chi la contiene e basta, e nessun altro la mette in un riquadro. */
-    assert.match(risposta.headers.get("content-security-policy"), /frame-ancestors 'self'/);
-    assert.equal(risposta.headers.get("x-frame-options"), "SAMEORIGIN");
+    /* Sta dentro il cruscotto, e il cruscotto dentro Home Assistant: il
+     * browser guarda tutti quelli che la contengono, quindi valgono le stesse
+     * origini del cruscotto. Il gettone arriva solo da lui. */
+    assert.match(risposta.headers.get("content-security-policy"), /frame-ancestors \*/);
+    assert.equal(risposta.headers.get("x-frame-options"), null);
     /* La Configurazione e basta. */
     assert.ok(pagina.includes('id="gdahome-da-lontano"'));
     assert.ok(
