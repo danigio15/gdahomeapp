@@ -6024,7 +6024,12 @@
         if (!daChiCiTiene(evento.source)) return;
         const arrivata = String(detto.chiave || "").trim();
         if (!arrivata) return;
-        if (!origineFidata(String(evento.origin || ""))) {
+        /* Chi ci tiene **dentro** un riquadro e' la voce dell'add-on in Home
+         * Assistant, il cui indirizzo e' diverso in ogni casa: quella chiave
+         * si prende. Si offre soltanto quella di una finestra che ci ha
+         * aperti da un altro sito. */
+        const daDentro = window.parent !== window && evento.source === window.parent;
+        if (!daDentro && !origineFidata(String(evento.origin || ""))) {
           /* Da un'origine che non si conosce: si offre, non si prende. */
           if (chiave) return;
           offerta = { chiave: arrivata, origine: String(evento.origin || "") };

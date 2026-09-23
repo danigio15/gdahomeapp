@@ -42,9 +42,19 @@ test("la risposta si prende solo da chi ci tiene, e da un'origine nuova solo dop
   /* Prima si prendeva da chiunque: una pagina qualunque che mettesse il
    * cruscotto in un riquadro gli poteva consegnare la sua chiave, e chi
    * guardava lavorava in un cruscotto non suo. */
-  const ascolto = CRUSCOTTO.slice(CRUSCOTTO.indexOf('addEventListener("message"')).slice(0, 1400);
+  const ascolto = CRUSCOTTO.slice(CRUSCOTTO.indexOf('addEventListener("message"')).slice(0, 2000);
   assert.match(ascolto, /if \(!daChiCiTiene\(evento\.source\)\) return;/);
-  assert.match(ascolto, /if \(!origineFidata\(String\(evento\.origin \|\| ""\)\)\) \{/);
+  /* Chi ci tiene dentro un riquadro e' la voce di Home Assistant, da un
+   * indirizzo diverso in ogni casa: da li' si prende. Si offre soltanto quella
+   * di una finestra di un altro sito che ci ha aperti. */
+  assert.match(
+    ascolto,
+    /const daDentro = window\.parent !== window && evento\.source === window\.parent;/,
+  );
+  assert.match(
+    ascolto,
+    /if \(!daDentro && !origineFidata\(String\(evento\.origin \|\| ""\)\)\) \{/,
+  );
   /* Da un'origine nuova si offre, con scritto da dove viene, e non si prende. */
   assert.match(
     ascolto,
