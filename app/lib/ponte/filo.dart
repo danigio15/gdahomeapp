@@ -413,6 +413,11 @@ class Filo {
     try {
       dove = await _trovaLApprodo();
     } catch (errore) {
+      /* Una bussata che nel frattempo ne ha una piu' nuova davanti non ha
+       * niente da dire a nessuno: il filo, i tentativi e chi aspetta sono
+       * della nuova. Rispondere qui vorrebbe dire far fallire l'attesa di
+       * un `apri` fatto dopo, con l'esito di prima. */
+      if (mia != _bussate) return;
       /* Nessun indirizzo risponde. I tentativi vanno avanti — il telefono puo'
        * essere in galleria, e fra un minuto no — ma **la prima volta chi
        * aspetta lo viene a sapere subito**, e con la spiegazione vera.
@@ -478,6 +483,7 @@ class Filo {
        * dentro il cifrato: vedi `_arrivato`, e in cima a `stretta.dart`. */
       presa = await stringiLaMano(sotto, chi: chi, chiaveDelFilo: chiave);
     } on TimeoutException {
+      if (mia != _bussate) return;
       /* Una presa che non si apre e non fallisce e' un silenzio, non una
        * risposta: chi aspetta non lo viene a sapere: il giro dopo, quasi
        * sempre, la presa si apre — e un telefono che si ricollega da solo non
@@ -490,6 +496,8 @@ class Filo {
       );
       return;
     } catch (errore) {
+      /* Come sopra: l'esito di una bussata superata non e' di nessuno. */
+      if (mia != _bussate) return;
       /* Prima di tutto: e' la casa che non risponde, o e' il telefono che non
        * ha ancora rete? Dopo mezz'ora in tasca e' quasi sempre il secondo, e
        * si risolve riprovando fra un attimo. */

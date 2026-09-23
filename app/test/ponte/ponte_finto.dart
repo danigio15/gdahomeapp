@@ -53,6 +53,11 @@ class PonteFinto {
   /// cifrato invece che in chiaro.
   bool staccatoConLaChiave = false;
 
+  /// Quando c'e', la casa decide cosa rispondere a chi bussa e poi aspetta
+  /// questo prima di dirlo. Serve a far arrivare due risposte nell'ordine
+  /// che vuole la prova, qualunque sia la velocita' della macchina.
+  Completer<void>? cancello;
+
   /// Il codice di abbinamento vivo, come se la console l'avesse appena fatto.
   /// `null` vuol dire nessuno.
   String? codiceVivo;
@@ -1229,7 +1234,11 @@ class TelefonoCollegato {
       return;
     }
 
-    if (!_ponte.conosceIlTelefono && !_ponte.staccatoConLaChiave) {
+    final rifiuta = !_ponte.conosceIlTelefono && !_ponte.staccatoConLaChiave;
+    final cancello = _ponte.cancello;
+    if (cancello != null) await cancello.future;
+
+    if (rifiuta) {
       _presa.add(
         jsonEncode({
           'v': versioneDelProtocollo,
