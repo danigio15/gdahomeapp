@@ -149,6 +149,8 @@ export function installThemeFoundationSection() {
      * decine di megabyte di memoria su un tablet, per niente. */
     .animated-mesh-bg::before,.animated-mesh-bg::after{
       filter:none!important;
+      animation:none!important;
+      transform:scale(2)!important;
       background:radial-gradient(closest-side,
         rgb(var(--dm-macchia) / 1) 0%,
         rgb(var(--dm-macchia) / .98) 17%,
@@ -161,15 +163,36 @@ export function installThemeFoundationSection() {
     .animated-mesh-bg::after{--dm-macchia:224 242 254}
     html[data-theme="dark"] .animated-mesh-bg::before{--dm-macchia:14 42 28}
     html[data-theme="dark"] .animated-mesh-bg::after{--dm-macchia:11 39 64}
-    /* Lo stesso viaggio di prima, col doppio di scatola: la sfumatura finisce
-     * dove finisce la scatola, la sfocatura invece sbordava. */
-    @keyframes floatBlob{
-      0%{transform:translate(0,0) scale(2)}
-      100%{transform:translate(8vw,6vh) scale(2.3)}
-    }
-    @media (prefers-reduced-motion:reduce){
-      .animated-mesh-bg::before,.animated-mesh-bg::after{animation-play-state:paused!important}
-    }
+    /* ─── E perche' adesso stanno ferme ───────────────────────────────────
+     *
+     * Tolta la sfocatura, il costo che restava era il **movimento**: le due
+     * macchie stanno dietro tutto, e mentre scorrono tutto quello che ci sta
+     * sopra va ricomposto.
+     *
+     * A pagina aperta e senza che nessuno tocchi niente, quanta CPU si mangia
+     * la plancia ferma — misurato leggendo il tempo di tutti i processi di
+     * Chromium, non solo del filo principale:
+     *
+     *   Home       14% di un core -> 7%
+     *   MiniPC     78%            -> 27%
+     *   Energia    43%            ->  1%
+     *
+     * E «will-change: transform», riprovato qui con la sfumatura al posto
+     * della sfocatura, continua a non cambiare niente: 14 e 14, 78 e 74.
+     *
+     * Quello che si perde: uno scorrimento di otto centesimi di schermo in
+     * venticinque secondi, su un alone pastello mezzo trasparente. Per
+     * rivederlo si tolgono le due righe «animation» e «transform» qui sopra e
+     * si rimettono i fotogrammi del viaggio:
+     *
+     *   @keyframes floatBlob{
+     *     0%{transform:translate(0,0) scale(2)}
+     *     100%{transform:translate(8vw,6vh) scale(2.3)}
+     *   }
+     *
+     * Lo «scale(2)» resta in tutti e due i casi: la sfumatura finisce dove
+     * finisce la scatola, mentre la sfocatura sbordava, e il doppio di
+     * scatola rimette il disegno dov'era. */
   `);
   return true;
 }

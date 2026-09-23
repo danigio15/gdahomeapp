@@ -142,17 +142,25 @@ test("le due macchie dello sfondo sono sfumate, non sfocate", () => {
   for (const tinta of ["220 252 231", "224 242 254", "14 42 28", "11 39 64"]) {
     assert.match(sezione, new RegExp(`--dm-macchia:${tinta}`));
   }
-  /* La sfumatura finisce dove finisce la scatola, la sfocatura sbordava: il
-   * doppio di scatola rimette il disegno dov'era. */
-  assert.match(sezione, /@keyframes floatBlob\{\s*0%\{transform:translate\(0,0\) scale\(2\)\}\s*100%\{transform:translate\(8vw,6vh\) scale\(2\.3\)\}/);
+  /* E stanno ferme. Tolta la sfocatura, il costo che restava era il
+   * movimento: le macchie stanno dietro tutto, e mentre scorrono tutto quello
+   * che ci sta sopra va ricomposto. A pagina aperta e senza toccare niente,
+   * contando la CPU di tutti i processi del browser: Home 14% -> 7%, MiniPC
+   * 78% -> 27%, Energia 43% -> 1%.
+   *
+   * Lo «scale(2)» resta perche' la sfumatura finisce dove finisce la scatola
+   * mentre la sfocatura sbordava: il doppio di scatola rimette il disegno
+   * dov'era. */
+  assert.match(sezione, /animation:none!important;/);
+  assert.match(sezione, /transform:scale\(2\)!important;/);
   /* Niente piu' «will-change»: senza la sfocatura non c'e' niente di caro da
    * tenere da parte, e una scatola larga il doppio promossa a livello sono
    * decine di megabyte per niente. */
   assert.equal(/will-change:transform\}/.test(sezione), false);
-  assert.match(
-    sezione,
-    /@media \(prefers-reduced-motion:reduce\)\{\s*\.animated-mesh-bg::before,\.animated-mesh-bg::after\{animation-play-state:paused!important\}/,
-  );
+  /* E niente piu' «prefers-reduced-motion» per queste due: metteva in pausa
+   * un'animazione che adesso non parte. Chi chiede meno movimento lo trova
+   * gia' fermo, che e' quello che aveva chiesto. */
+  assert.equal(/animation-play-state:paused/.test(sezione), false);
 });
 
 test("i colori dei tubi dell'Energia non si riscrivono a ogni passata", () => {

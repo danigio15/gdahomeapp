@@ -143,3 +143,66 @@ quanto è grande.
 Qui però la cura si vede, e non la decido io: a sinistra com'è adesso, dietro
 non si legge niente; a destra col velo più coperto e senza sfocatura, dietro si
 intravede. Sono due effetti diversi. Dimmi tu.
+
+## Rimisurate: la #49 (CPU) e l'avvio
+
+### #49 — non era «al caricamento»: era per sempre
+
+La plancia **ferma**, a pagina aperta, con nessuno che tocca niente. È il tempo
+di CPU di *tutti* i processi di Chromium in dieci secondi, non solo del filo
+principale — il disegno non sta lì, e guardando solo quello sembrerebbe che non
+costi niente.
+
+| pagina | prima | con la sfumatura | e con le macchie ferme |
+|---|---|---|---|
+| Home | **100% di un core** | 14% | **7%** |
+| MiniPC | **100%** | 78% | **27%** |
+| Energia | — | 43% | **1%** |
+
+Cioè: la plancia si mangiava un core intero, su ogni pagina, per sempre, senza
+che nessuno la usasse. Non al caricamento — sempre.
+
+Due cose, non una:
+
+1. la **sfocatura** delle due macchie (già sistemata, sopra);
+2. il loro **movimento**: stanno dietro tutto, e mentre scorrono tutto quello
+   che ci sta sopra va ricomposto. Adesso stanno ferme. Si perde uno
+   scorrimento di 8 centesimi di schermo in 25 secondi su un alone pastello
+   mezzo trasparente; nel codice c'è scritto come rimetterlo.
+
+### Cosa resta sulla pagina MiniPC, e non lo decido io
+
+Quel 27% che avanza è tutto di due animazioni, misurate una per una:
+
+- il **pallino che pulsa** in alto (`pulseDot`): da 27% a **5%**
+- più il **LED di attività** della torre: da 5% a **1%**
+
+Sono due cose che *dicono qualcosa* — «sono vivo», «sta passando roba» — e
+toglierle cambia quello che la pagina racconta. Promuoverle a livello composito
+(`will-change`) qui non cambia niente, ma **questa prova non può dirlo**: il
+browser di prova disegna senza scheda grafica, e la promozione serve proprio
+alla scheda grafica. Sul tuo tablet potrebbe bastare. Dimmi tu se provarlo.
+
+### L'avvio
+
+| | prima pittura | caricata | e quando si calma |
+|---|---|---|---|
+| senza freno, prima | 76 ms | 1426 ms | **mai** |
+| senza freno, adesso | 100 ms | 1428 ms | **2,5 s** |
+| freno 6×, prima | 448 ms | 3452 ms | **mai** |
+| freno 6×, adesso | 568 ms | 3619 ms | **6,7 s** |
+
+**Il tempo di caricamento non cambia**, ed è onesto dirlo: la correzione non
+rende la plancia più svelta ad aprirsi. Cambia quello che succede dopo: prima
+non si calmava **mai** — in venti secondi non c'era un solo secondo senza un
+fotogramma lungo. Adesso si calma.
+
+È probabile che «ci mette dieci secondi» sia questo: non il caricamento, ma il
+fatto che finché il filo del disegno è sempre occupato niente risponde quando
+lo tocchi.
+
+⚠️ Tutte queste misure sono Chromium senza scheda grafica, col freno della CPU
+a sei. I numeri assoluti non sono quelli del tuo tablet; i rapporti sì.
+
+**L'avvio dell'app prima della casa** — l'icona toccata, la schermata delle
+case — non è misurato qui: serve un telefono vero, e qui non c'è.
