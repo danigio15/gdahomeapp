@@ -139,6 +139,34 @@ function ilPiuCorto(nomi) {
  * Serve al cestino: mettere da parte un dispositivo vuol dire mettere da parte
  * le sue, e cosi' l'elenco delle escluse resta fatto di entita' — come era
  * prima, e come restano leggibili quelle gia' scritte.
+ *
+ * ── E quelle che un dispositivo non ce l'hanno restano fuori (#111) ──────
+ *
+ * «Dagli ultimi aggiornamenti ricevo allerta di 68 cose che non rispondono,
+ * fanno parte di package esistenti, i sensori sono tipicamente input boolean,
+ * datetime, automation, input Number, script ecc. Ma secondo me funzionano.
+ * Perche' questa allerta "dispositivi non connessi"?»
+ *
+ * Perche' l'elenco raggruppava per dispositivo quelle che un dispositivo ce
+ * l'hanno, e le altre le lasciava passare una per una. Cioe' faceva una regola
+ * SOMIGLIANTE a quella del cruscotto installatore, non la stessa: li'
+ * (`ponte/src/salute.js`) si guardano solo le entita' che un dispositivo ce
+ * l'hanno, e le altre non entrano nemmeno nel conto. Ed e' proprio la regola
+ * che era stata chiesta: «cosi' come li mostri nel cruscotto installatore».
+ *
+ * La differenza non e' formale. Un aiutante, un'automazione, uno script, un
+ * sensore template non hanno un apparecchio dietro e non hanno una strada che
+ * possa cadere: non esiste niente da andare a premere. Se stanno
+ * `unavailable` e' un'altra cosa — un package che non carica, un'entita'
+ * rinominata, una ricaricata in corso — cioe' configurazione da correggere,
+ * che e' il guaio che questo file tiene fuori fin dalla prima riga. Chiamarli
+ * «dispositivi non connessi» e' l'avviso che dice il vero su cose che non
+ * interessano: sessantotto righe, e la presa del giardino in mezzo che non la
+ * trova piu' nessuno.
+ *
+ * Senza le mappe dei registri non si puo' distinguere, e allora non si toglie
+ * niente: torna riga per riga come prima. Un avviso un po' piu' grossolano e'
+ * meglio di un avviso che non c'e'.
  */
 export function chiNonRispondePerDispositivo(
   entita,
@@ -161,10 +189,9 @@ export function chiNonRispondePerDispositivo(
   const fuori = [];
   for (const una of sciolte) {
     const suo = pulito(diChiE[una.entity]);
-    if (!suo) {
-      fuori.push(una);
-      continue;
-    }
+    /* Un dispositivo non ce l'ha: non e' un dispositivo non connesso. Il
+     * perche' sta in cima, ed e' la #111. */
+    if (!suo) continue;
     /* Il dispositivo parla da un'altra bocca: il guasto non e' suo. */
     if (parla.has(suo)) continue;
     const gia = perDispositivo.get(suo);
@@ -185,7 +212,7 @@ export function chiNonRispondePerDispositivo(
       entita: quelle.map((una) => una.entity),
     });
   }
-  return fuori
-    .map((una) => (una.entita ? una : { ...una, entita: [una.entity] }))
-    .sort((una, altra) => una.nome.localeCompare(altra.nome));
+  /* Ogni riga qui e' un dispositivo, e `entita` ce l'ha gia': da quando le
+   * sciolte restano fuori non c'e' piu' niente da rivestire. */
+  return fuori.sort((una, altra) => una.nome.localeCompare(altra.nome));
 }

@@ -160,8 +160,8 @@ function rigaMessaDaParte(una) {
 function corpo({ adesso, messiDaParte }) {
   const intro = `<div class="ed-intro">${esc(
     t(
-      "Le cose che Home Assistant ha in casa e non riesce a raggiungere. Questo elenco lo riempie la plancia da sé: non c'è niente da aggiungere. Il cestino toglie un dispositivo dall'avviso, e il campanello lì sotto ce lo rimette.",
-      "The things Home Assistant has but cannot reach. The dashboard fills this list by itself: there is nothing to add. The bin removes a device from the warning, and the bell below puts it back.",
+      "I dispositivi che Home Assistant ha in casa e non riesce a raggiungere: un apparecchio ci finisce quando tacciono tutte le sue entità. Aiutanti, automazioni e script non ci sono: non hanno un apparecchio dietro, e se tacciono è configurazione da correggere. Questo elenco lo riempie la plancia da sé: non c'è niente da aggiungere. Il cestino toglie un dispositivo dall'avviso, e il campanello lì sotto ce lo rimette.",
+      "The devices Home Assistant has but cannot reach: a device lands here when every one of its entities goes silent. Helpers, automations and scripts are not here: they have no device behind them, and when they go quiet that is configuration to fix. The dashboard fills this list by itself: there is nothing to add. The bin removes a device from the warning, and the bell below puts it back.",
     ),
   )}</div>`;
   const vive = adesso.length
