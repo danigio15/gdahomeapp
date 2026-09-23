@@ -4848,13 +4848,11 @@
        * richiederlo qui vorrebbe dire scriverlo due volte, con la seconda che
        * fa pensare che la prima non abbia funzionato.
        *
-       * Si accetta solo dalla propria origine, e solo da chi ci contiene o ci
-       * ha aperto. Prima non si guardava da dove arrivasse, col ragionamento
-       * che una chiave vale se e' buona e basta; ma una pagina qualunque
-       * poteva consegnare **la sua**, buona, e far lavorare chi guarda dentro
-       * una gestione non sua. Questa pagina in un riquadro non ci sta (il
-       * server lo vieta) e la chiave della gestione non la tiene nessun Home
-       * Assistant: una consegna vera puo' venire solo da qui.
+       * Si accetta solo da chi ci contiene o ci ha aperto, da qualunque
+       * origine: l'indirizzo di un Home Assistant e' diverso in ogni casa, e
+       * la voce della barra laterale la chiave la consegna da li'. Non apre
+       * niente di piu' di quello che apre battendola: la chiave della gestione
+       * e' una sola, e una chiave sbagliata qui dentro non entra.
        *
        * Se una chiave c'e' gia' non si tocca: chi l'ha battuta a mano in
        * questa scheda ha deciso lui, e una consegna che gliela cambia sotto
@@ -4866,7 +4864,6 @@
       addEventListener("message", (evento) => {
         const detto = evento?.data;
         if (!detto || detto.gdahome !== "chiave") return;
-        if (evento.origin !== location.origin) return;
         const daChi = evento.source;
         if (
           !daChi ||

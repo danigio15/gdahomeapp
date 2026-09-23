@@ -260,8 +260,8 @@ export function gliOspiti(detti = process.env.QUADRO_OSPITI || "") {
  * Gli script sono quelli del file e basta, per impronta; niente `<object>`,
  * niente `<base>` che cambi da dove si leggono gli indirizzi relativi, niente
  * moduli spediti altrove. Chi puo' metterla in un riquadro dipende dalla
- * pagina: la gestione nessuno; il cruscotto chi ce lo mette davvero (vedi
- * `gliOspiti`). */
+ * pagina — il cruscotto e la gestione stanno tutti e due in una voce della
+ * barra laterale di Home Assistant — e si stringe a chi li elenca `gliOspiti`. */
 function laPolitica(html, { riquadro }) {
   return [
     "default-src 'self'",
@@ -1800,12 +1800,7 @@ export function costruisciIlServer({
                  * tessera di Home Assistant e nell'app, e l'indirizzo di un
                  * Home Assistant e' diverso in ogni casa. Se chi tiene il
                  * quadro li elenca (`QUADRO_OSPITI`) si stringe a quelli. */
-                riquadro:
-                  quale === PAGINA
-                    ? ospiti.length
-                      ? `'self' ${ospiti.join(" ")}`
-                      : "*"
-                    : "'none'",
+                riquadro: ospiti.length ? `'self' ${ospiti.join(" ")}` : "*",
               }),
             };
       if (quale === PAGINA) pagina = foglio;
@@ -1819,7 +1814,6 @@ export function costruisciIlServer({
       "content-type": "text/html; charset=utf-8",
       "cache-control": "no-store",
       "content-security-policy": foglio.politica,
-      ...(quale === PAGINA ? {} : { "x-frame-options": "DENY" }),
     });
     risposta.end(foglio.corpo);
   }

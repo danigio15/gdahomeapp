@@ -272,14 +272,14 @@ test("le pagine hanno la loro politica, e ogni risposta le testate di serie", as
     assert.match(politica, /base-uri 'none'/);
     assert.match(politica, /script-src 'sha256-[A-Za-z0-9+/=]+'/, "gli script per impronta");
     assert.doesNotMatch(politica, /script-src[^;]*unsafe-inline/);
-    /* Il cruscotto sta dentro la tessera di Home Assistant: si lascia mettere
-     * in un riquadro. La gestione no. */
+    /* Il cruscotto e la gestione stanno dentro una voce della barra laterale
+     * di Home Assistant: si lasciano mettere in un riquadro. */
     assert.match(politica, /frame-ancestors \*/);
     assert.equal(cruscotto.headers.get("x-content-type-options"), "nosniff");
     assert.equal(cruscotto.headers.get("referrer-policy"), "no-referrer");
     const gestione = await fetch(`${b.dove}/gestore/`);
-    assert.match(gestione.headers.get("content-security-policy"), /frame-ancestors 'none'/);
-    assert.equal(gestione.headers.get("x-frame-options"), "DENY");
+    assert.match(gestione.headers.get("content-security-policy"), /frame-ancestors \*/);
+    assert.equal(gestione.headers.get("x-frame-options"), null);
     /* Le testate di serie anche su una risposta JSON qualunque. */
     const salute = await fetch(`${b.dove}/salute`);
     assert.equal(salute.headers.get("x-content-type-options"), "nosniff");
