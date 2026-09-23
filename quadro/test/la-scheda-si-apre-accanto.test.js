@@ -91,6 +91,30 @@ for (const [chi, pagina] of Object.entries(PAGINE)) {
     assert.equal(scheda, elenco, "la scheda non sta sulla riga dell'elenco");
   });
 
+  test(`${chi}: l'elenco sta in squadra con quello che ha sopra`, () => {
+    /* Il difetto per nome, ed era mio: alla colonna che scorre avevo dato un
+     * respiro di cinque pixel per lato, perche' l'ombra e il sollevamento di
+     * una riga non si tagliassero sul bordo. Ripreso col margine negativo il
+     * contenuto tornava a posto, ma la colonna cominciava cinque pixel prima
+     * di tutto il resto — il riquadro in cima a 126, l'elenco a 121 — e si
+     * vedeva. Il respiro adesso sta solo sopra e sotto, e questa prova e' la
+     * sola cosa che se ne accorge se qualcuno lo rimette di lato. */
+    const foglio = laffiancata(pagina);
+    const colonna = regola(foglio, "#dove > .colonna-elenco");
+    for (const quale of ["padding", "margin"]) {
+      const scritto = new RegExp(`\\n\\s*${quale}: ([^;]+);`).exec(colonna)?.[1];
+      assert.ok(scritto, `alla colonna manca «${quale}»`);
+      const pezzi = scritto.trim().split(/\s+/);
+      assert.equal(pezzi.length, 2, `«${quale}: ${scritto}» non e' «sopra-sotto destra-sinistra»`);
+      assert.equal(pezzi[1], "0", `«${quale}» sposta la colonna di lato: ${scritto}`);
+    }
+
+    /* E il titolo in cima non porta il suo stacco: le due colonne devono
+     * cominciare alla stessa altezza, e con lo stacco la prima riga
+     * dell'elenco restava sessanta pixel piu' in basso della scheda. */
+    assert.match(regola(foglio, "#dove > .colonna-elenco > .voce"), /margin-top: 0;/);
+  });
+
   test(`${chi}: accanto non c'e' piu' il velo`, () => {
     assert.match(regola(laffiancata(pagina), "#dove > .velo"), /display: none;/);
   });

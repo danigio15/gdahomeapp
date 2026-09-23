@@ -2638,10 +2638,32 @@
           overflow-y: auto;
           overscroll-behavior: contain;
           scrollbar-width: thin;
-          /* L'ombra e il sollevamento di una scheda non si tagliano sul
-             bordo del riquadro che scorre. */
-          padding: 3px 5px;
-          margin: -3px -5px;
+          /* Il respiro per il sollevamento e l'ombra sta **solo** sopra e
+             sotto, ed e' ripreso dal margine: di lato spostava la colonna
+             cinque pixel fuori da tutto il resto — il riquadro in cima
+             cominciava a 126, l'elenco a 121, e si vedeva. */
+          padding: 4px 0;
+          margin: -4px 0;
+        }
+
+        /* Le due colonne cominciano alla stessa altezza.
+           Il titolo di una raccolta si stacca da quello che ha sopra, e in
+           mezzo alla pagina e' giusto; in cima a una colonna no — lasciava
+           la prima riga dell'elenco sessanta pixel piu' in basso del bordo
+           della scheda accanto. E il rientro di due pixel lo portava fuori
+           squadro con le righe sotto. */
+        #dove > .colonna-elenco > :first-child,
+        /* Il titolo, e non «il primo figlio»: nel cruscotto il primo figlio
+           e' il blocco «Da verificare ora», che qui e' nascosto — nascosto ma
+           primo, e il margine glielo toglieva a lui mentre il titolo vero
+           restava sessanta pixel piu' in basso. Di titoli in cima alla
+           colonna ce n'e' uno solo, in tutt'e due le pagine. */
+        #dove > .colonna-elenco > .voce {
+          margin-top: 0;
+        }
+
+        #dove > .colonna-elenco .voce {
+          margin-inline: 0;
         }
 
         #dove > .riquadro.larga {
