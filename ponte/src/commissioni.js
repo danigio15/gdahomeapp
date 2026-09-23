@@ -1260,6 +1260,13 @@ export class Commissioni {
           return si(id, await zigbee.apri({ secondi: detto.secondi }));
         case "ponte/zigbee/chiudi":
           return si(id, await zigbee.chiudi());
+        case "ponte/zigbee/elenco":
+          return si(id, await zigbee.elenco());
+        /* La targa sta in `targa` e non in `id`: `id` e' il numero del
+         * messaggio, e leggerlo qui vorrebbe dire provare a togliere dalla
+         * rete un apparecchio che si chiama «7». */
+        case "ponte/zigbee/elimina":
+          return si(id, await zigbee.elimina(detto.targa));
         case "ponte/zigbee/rinomina":
           return si(id, await zigbee.rinomina(detto.dispositivo, detto.nome));
         default:
