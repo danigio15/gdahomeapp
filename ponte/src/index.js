@@ -583,22 +583,24 @@ const chiudi = (server) => new Promise((ok) => server.close(ok));
 
 /* Avviato a mano — cioe' dall'add-on — invece che importato da una prova. */
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  /* Un errore che nessuno ha raccolto: si scrive, e si esce.
+  /* Un errore che nessuno ha raccolto: si scrive, e si resta in piedi.
    *
-   * Tirare avanti dopo un errore del genere vorrebbe dire un ponte a meta' —
-   * un server che non risponde piu', un filo che nessuno riapre — che da fuori
-   * sembra acceso. Meglio uscire pulito: il Supervisor lo vede (`watchdog`
-   * nel manifesto) e lo riaccende. Le domande storte che arrivano da fuori non
-   * devono mai arrivare fin qui: le ferma chi le riceve. */
-  const muori = (come) => (errore) => {
+   * Uscire sarebbe piu' pulito solo se qualcuno riaccendesse il ponte, e
+   * nessuno lo fa: l'add-on non ha un `watchdog` — la porta dell'app si
+   * sceglie nella scheda, e un controllo su una porta fissa fallirebbe sempre
+   * per chi l'ha cambiata — e un ponte uscito resta spento finche' qualcuno
+   * non se ne accorge. Meglio un errore scritto nel registro e le porte
+   * aperte. Le domande storte che arrivano da fuori non devono comunque
+   * arrivare fin qui: le ferma chi le riceve. */
+  const scrivi = (come) => (errore) => {
     try {
       process.stderr.write(`[ponte] ${come}: ${errore?.stack || errore}\n`);
-    } finally {
-      process.exit(1);
+    } catch (_ancora) {
+      /* Nemmeno il registro: non c'e' altro da fare. */
     }
   };
-  process.on("uncaughtException", muori("errore non raccolto"));
-  process.on("unhandledRejection", muori("promessa rifiutata senza nessuno che ascolta"));
+  process.on("uncaughtException", scrivi("errore non raccolto"));
+  process.on("unhandledRejection", scrivi("promessa rifiutata senza nessuno che ascolta"));
   const avviato = await alzaIlPonte();
   for (const segnale of ["SIGTERM", "SIGINT"]) {
     process.on(segnale, () => {

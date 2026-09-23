@@ -115,15 +115,28 @@ test("un estraneo che sbaglia non chiude la porta a chi ha il codice", () => {
   assert.ok(a.consuma(codice, { da: "192.168.1.20" }), "il codice buono non e' entrato");
 });
 
-test("tanti estranei insieme chiudono la porta a tutti, ma ce ne vogliono tanti", () => {
+test("tanti estranei insieme chiudono la porta a chi prova, non a chi ha il codice", () => {
+  /* Il tetto di tutti insieme si riempie anche da fuori: se valesse per
+   * tutti, bloccherebbe proprio chi sta davanti allo schermo col codice. Vale
+   * per chi ha gia' sbagliato; chi non ha ancora provato passa, e chi il
+   * codice lo presenta giusto entra. */
   const a = new Abbinamento({ adesso: orologio().adesso });
   const { codice } = a.nuovo();
   for (let i = 0; i < 49; i += 1) a.sbagliato(`estraneo ${i}`);
-  assert.equal(a.bloccato("192.168.1.20"), null);
-  a.sbagliato("l'ultimo");
-  assert.notEqual(a.bloccato("192.168.1.20"), null);
-  assert.throws(() => a.consuma(codice, { da: "192.168.1.20" }), TroppiTentativi);
+  a.sbagliato("192.168.1.30");
   assert.notEqual(a.stato().bloccatoFinoA, null);
+  assert.notEqual(a.bloccato("192.168.1.30"), null, "chi ha gia' sbagliato aspetta");
+  assert.notEqual(a.bloccato("estraneo 3"), null);
+  assert.equal(a.bloccato("192.168.1.20"), null, "chi non ha provato no");
+  assert.ok(a.consuma(codice, { da: "192.168.1.30" }), "e il codice giusto entra");
+});
+
+test("un IPv6 conta per la sua rete /64, non per il singolo indirizzo", () => {
+  const a = new Abbinamento({ adesso: orologio().adesso });
+  a.nuovo();
+  for (let i = 1; i <= 5; i += 1) a.sbagliato(`2001:db8:1:2::${i}`);
+  assert.notEqual(a.bloccato("2001:db8:1:2:ffff::9"), null);
+  assert.equal(a.bloccato("2001:db8:1:3::1"), null);
 });
 
 test("chi bussa da mille posti non riempie la memoria", () => {

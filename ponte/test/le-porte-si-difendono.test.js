@@ -241,6 +241,23 @@ test("il logo si serve col tipo dei suoi byte, e come immagine e basta", async (
   }
 });
 
+test("i fili senza nome si contano per rete /64, e la casa ha i suoi posti", () => {
+  const salite = new SaliteSenzaNome({ perIndirizzo: 2, inTutto: 3, inCasa: 2, attesa: 1000 });
+  const unaPresa = () => ({ chiudi() {}, socket: { once() {} } });
+  salite.tieni(unaPresa(), "2001:db8:1:2::1");
+  salite.tieni(unaPresa(), "2001:db8:1:2::abcd");
+  assert.equal(salite.cePosto("2001:db8:1:2:ffff::1"), false, "stessa rete /64");
+  salite.tieni(unaPresa(), "2001:db8:9:9::1");
+  assert.equal(salite.cePosto("198.51.100.7"), false, "da fuori la fila e' piena");
+  /* Ma il telefono sul divano entra lo stesso. */
+  for (const inCasa of ["192.168.1.20", "10.0.0.5", "::ffff:172.16.3.4", "fe80::1", "fd00::5"]) {
+    assert.equal(salite.cePosto(inCasa), true, inCasa);
+  }
+  salite.tieni(unaPresa(), "192.168.1.20");
+  salite.tieni(unaPresa(), "192.168.1.21");
+  assert.equal(salite.cePosto("192.168.1.22"), false, "anche la fila di casa ha un tetto");
+});
+
 test("i fili senza nome hanno un tetto, per indirizzo e in tutto, e un tempo", (contesto) => {
   contesto.mock.timers.enable({ apis: ["setTimeout"] });
   const salite = new SaliteSenzaNome({ perIndirizzo: 2, inTutto: 3, attesa: 1000 });

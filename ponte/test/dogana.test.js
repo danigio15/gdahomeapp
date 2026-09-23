@@ -81,7 +81,6 @@ test("chi amministra passa con il resto; chi non amministra solo con l'elenco", 
     { type: "recorder/statistics_during_period" },
     { type: "camera/webrtc/offer" },
     { type: "frontend/get_user_data", key: "x" },
-    { type: "dashboardmodern/qualcosa" },
     { type: "auth/sign_path", path: "/api/camera_proxy_stream/camera.porta" },
   ];
   for (const detto of perTutti) {
@@ -344,4 +343,100 @@ test("la pagina di chi non amministra passa dalla dogana come un telefono", asyn
   await nessuno.cucitura.avvia();
   nessuno.presa.onMessaggio(JSON.stringify({ id: 5, type: "config/entity_registry/update" }));
   assert.deepEqual(nessuno.allaCasa, []);
+});
+
+/* ─── Quello che una revisione ha trovato ───────────────────────────────── */
+
+test("nelle vie REST le percentuali e le barre doppie non passano, e le maiuscole non ingannano", () => {
+  for (const [metodo, percorso, amministra] of [
+    ["POST", "/api/services/hass%69o/addon_stdin", true],
+    ["POST", "/api/services/hass%69o/addon_stdin", false],
+    ["POST", "/api/services/homeassist%61nt/restart", false],
+    ["POST", "/api/%63onfig/automation/config/x", false],
+    ["POST", "/api/templat%65", false],
+    ["GET", "/api/hass%69o/addons", true],
+    ["GET", "/api/%61uth/x", true],
+    ["POST", "/api/services/shell%5Fcommand/x", true],
+    ["GET", "/api//hassio/addons", true],
+    ["GET", "/api/HASSIO/addons", true],
+    ["POST", "/api/services/SHELL_COMMAND/x", true],
+    ["POST", "/api/Template", false],
+  ]) {
+    assert.ok(perLaVia({ metodo, percorso, amministra }), `${metodo} ${percorso} ${amministra}`);
+  }
+  /* La domanda dopo il `?` resta com'e'. */
+  assert.equal(perLaVia({ percorso: "/api/calendars/calendar.x?start=2025-01-01T00%3A00Z" }), null);
+});
+
+test("in un elenco i comandi della plancia e del ponte non vanno a Home Assistant", () => {
+  for (const amministra of [false, true]) {
+    const detto = passaLaDogana(
+      JSON.stringify([
+        { id: 1, type: "dashboardmodern/config/set", snapshot: { values: {} } },
+        { id: 2, type: "dashboardmodern/config/restore", revision: 1 },
+        { id: 3, type: "dashboardmodern/chat/queue" },
+        { id: 4, type: "dashboardmodern/www/upload" },
+        { id: 5, type: "ponte/plance/togli", profilo: "x" },
+        { id: 6, type: "get_states" },
+      ]),
+      { amministra },
+    );
+    assert.deepEqual(detto.passa, [JSON.stringify({ id: 6, type: "get_states" })]);
+    assert.deepEqual(
+      detto.rifiuti.map((uno) => [uno.id, uno.error.code]),
+      [1, 2, 3, 4, 5].map((id) => [id, "unauthorized"]),
+    );
+  }
+  /* E da solo, un comando della plancia che il ponte non ha preso non va a
+   * Home Assistant per chi non amministra; un `ponte/…` per nessuno. */
+  assert.ok(perche({ type: "dashboardmodern/config/set" }, { amministra: false }));
+  assert.ok(perche({ type: "ponte/qualunque" }, { amministra: true }));
+});
+
+test("chi non amministra chiama solo i servizi delle cose di casa", () => {
+  for (const [dominio, servizio] of [
+    ["light", "turn_on"],
+    ["switch", "toggle"],
+    ["cover", "open_cover"],
+    ["climate", "set_temperature"],
+    ["lock", "unlock"],
+    ["alarm_control_panel", "alarm_disarm"],
+    ["vacuum", "start"],
+    ["input_boolean", "toggle"],
+    ["select", "select_option"],
+    ["script", "inserisci_antifurto"],
+    ["scene", "turn_on"],
+    ["todo", "add_item"],
+    ["weather", "get_forecasts"],
+    ["calendar", "get_events"],
+    ["homeassistant", "toggle"],
+  ]) {
+    assert.equal(servizioVietato(dominio, servizio), null, `${dominio}.${servizio}`);
+  }
+  for (const [dominio, servizio] of [
+    ["frontend", "set_theme"],
+    ["group", "set"],
+    ["input_boolean", "reload"],
+    ["scene", "create"],
+    ["scene", "apply"],
+    ["automation", "reload"],
+    ["camera", "snapshot"],
+    ["camera", "record"],
+    ["homeassistant", "restart"],
+    ["tts", "clear_cache"],
+    ["counter_non_esiste", "x"],
+    ["system_log", "clear"],
+    ["zone", "reload"],
+    ["", "turn_on"],
+  ]) {
+    assert.ok(servizioVietato(dominio, servizio), `${dominio}.${servizio}`);
+    assert.ok(
+      perLaVia({ metodo: "POST", percorso: `/api/services/${dominio || "x"}/${servizio}` }) ||
+        !dominio,
+      `REST ${dominio}.${servizio}`,
+    );
+  }
+  /* Chi amministra: tutto tranne quello che non passa per nessuno. */
+  assert.equal(servizioVietato("frontend", "set_theme", { amministra: true }), null);
+  assert.ok(servizioVietato("hassio", "addon_start", { amministra: true }));
 });

@@ -11,6 +11,7 @@
  * e' sempre quello che qualcuno si e' dimenticato aperto.
  */
 
+import { gruppoDellIndirizzo } from "./presa.js";
 import { codiceNuovo, codicePulito, impronta, stessoSegreto } from "./segreti.js";
 
 const MINUTO = 60 * 1000;
@@ -132,7 +133,10 @@ export class Abbinamento {
    *
    * `da` e' chi bussa: i tentativi sbagliati si contano anche per lui. */
   consuma(scritto, { da = "?" } = {}) {
-    const bloccatoFinoA = this.bloccato(da);
+    /* Qui conta solo il tetto di chi bussa: chi arriva a `consuma` il codice
+     * lo sta presentando, e il tetto di tutti insieme — che si riempie anche
+     * da fuori — non deve lasciare fuori proprio chi ce l'ha in mano. */
+    const bloccatoFinoA = this._suoBlocco(gruppoDellIndirizzo(da));
     if (bloccatoFinoA) throw new TroppiTentativi("troppi tentativi", bloccatoFinoA);
 
     this._scadenza();
@@ -163,7 +167,7 @@ export class Abbinamento {
   sbagliato(da = "?") {
     const ora = this.adesso();
     this._sbagliati.push(ora);
-    const chi = String(da);
+    const chi = gruppoDellIndirizzo(da);
     const suoi = this._perChi.get(chi) ?? [];
     suoi.push(ora);
     /* Tolto e rimesso: cosi' l'ordine della mappa e' quello dell'ultimo
@@ -175,22 +179,30 @@ export class Abbinamento {
     }
   }
 
-  /* Fino a quando `da` deve aspettare, o `null` se puo' provare. Vale il
-   * tetto suo e quello di tutti insieme, quale dei due scade dopo. */
+  /* Fino a quando `da` deve aspettare, o `null` se puo' provare.
+   *
+   * Il tetto suo vale sempre. Quello di tutti insieme vale solo per chi ha
+   * gia' sbagliato di recente: si riempie anche da fuori, a raffica, e se
+   * valesse per tutti bloccherebbe proprio chi sta davanti allo schermo col
+   * codice giusto e non ha ancora provato. Gli IPv6 si contano per `/64`. */
   bloccato(da = "?") {
+    const chi = gruppoDellIndirizzo(da);
+    const suo = this._suoBlocco(chi);
+    if (!this._perChi.has(chi)) return suo;
+    const tutti = this._bloccatoFinoA();
+    if (tutti == null) return suo;
+    if (suo == null) return tutti;
+    return Math.max(tutti, suo);
+  }
+
+  _suoBlocco(chi) {
     const ora = this.adesso();
-    const chi = String(da);
     const suoi = (this._perChi.get(chi) ?? []).filter(
       (quando) => ora - quando < FINESTRA_DEI_TENTATIVI,
     );
     if (suoi.length) this._perChi.set(chi, suoi);
     else this._perChi.delete(chi);
-
-    const tutti = this._bloccatoFinoA();
-    const suo = suoi.length >= TENTATIVI_PER_CHI ? suoi[0] + FINESTRA_DEI_TENTATIVI : null;
-    if (tutti == null) return suo;
-    if (suo == null) return tutti;
-    return Math.max(tutti, suo);
+    return suoi.length >= TENTATIVI_PER_CHI ? suoi[0] + FINESTRA_DEI_TENTATIVI : null;
   }
 
   _scadenza() {

@@ -61,10 +61,6 @@ arch:
 init: false
 startup: application
 boot: auto
-# Se il ponte cade, il Supervisor se ne accorge e lo riaccende. Il ponte, a un
-# errore che nessuno ha raccolto, scrive nel registro ed esce pulito invece di
-# restare acceso a meta' (`src/index.js`): questa riga e' l'altra meta'.
-watchdog: "tcp://[HOST]:[PORT:8098]"
 
 # La console, dietro l'autenticazione di Home Assistant.
 ingress: true

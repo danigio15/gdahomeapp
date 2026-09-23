@@ -724,3 +724,32 @@ test("chi apre il filo e non si presenta viene chiuso", async (contesto) => {
   assert.equal(presa.chiusaCon?.codice, 1008);
   assert.equal(ponte.quantiCollegati(), 0);
 });
+
+test("un elenco di comandi non porta a Home Assistant quelli della plancia", async () => {
+  /* Un elenco non passa dalle commissioni, che le riconoscono uno per uno:
+   * senza questa regola un `dashboardmodern/config/set` dentro un elenco
+   * finiva a Home Assistant, dove l'integrazione lo avrebbe eseguito come se
+   * l'avesse chiesto il Supervisor. */
+  const b = await banco({}, { utenti: utentiFinti, conLePlance: true });
+  try {
+    const t = await dentroCome(b, NON_AMMINISTRA);
+    t.presa.send(
+      JSON.stringify([
+        { id: 1, type: "dashboardmodern/config/set", snapshot: { values: {} } },
+        { id: 2, type: "ponte/plance/togli", profilo: "primary" },
+        { id: 3, type: "get_states" },
+      ]),
+    );
+    assert.equal((await laRisposta(t, 1)).error.code, "unauthorized");
+    assert.equal((await laRisposta(t, 2)).error.code, "unauthorized");
+    assert.equal((await laRisposta(t, 3)).success, true);
+    assert.deepEqual(
+      b.ha.arrivati.map((detto) => detto.type),
+      ["get_states"],
+    );
+    assert.equal(b.plance.elenco().length, 1, "e la plancia e' ancora li'");
+    t.chiudi();
+  } finally {
+    await b.spegni();
+  }
+});

@@ -153,27 +153,76 @@ const EVENTI_PER_TUTTI = new Set([
   "dashboardmodern_chat",
 ]);
 
-/* I servizi che chi non amministra non chiama: quelli che in Home Assistant
- * sono da amministratore, e quelli che cambiano la macchina invece della
- * casa. */
-const DOMINI_DI_CHI_AMMINISTRA = new Set([
-  "homeassistant",
-  "recorder",
-  "system_log",
-  "logger",
-  "backup",
-  "update",
-  "zha",
-  "zwave_js",
-  "mqtt",
-  "cloud",
-  "rest_command",
-  "hassio",
+/* I servizi che chi non amministra puo' chiamare: un elenco di domini, non
+ * un elenco di divieti.
+ *
+ * In Home Assistant un servizio «da amministratore» guarda chi lo chiama. Qui
+ * chi lo chiama, per Home Assistant, e' sempre il Supervisor — cioe' un
+ * amministratore — quindi quel controllo non scatta mai, e un elenco di
+ * divieti sarebbe sempre un passo indietro rispetto ai domini che esistono.
+ * Allora si dice cosa passa: i domini delle cose di casa — quelli che la
+ * plancia e l'app chiamano, prendendo il dominio dall'entita' che toccano — e
+ * per qualcuno solo i servizi che usano la casa e non la cambiano. `true`
+ * vuol dire tutti i servizi del dominio (tranne i `reload`); un insieme vuol
+ * dire solo quelli. */
+const DOMINI_PER_TUTTI = new Map([
+  ["light", true],
+  ["switch", true],
+  ["cover", true],
+  ["climate", true],
+  ["fan", true],
+  ["lock", true],
+  ["alarm_control_panel", true],
+  ["media_player", true],
+  ["vacuum", true],
+  ["lawn_mower", true],
+  ["valve", true],
+  ["water_heater", true],
+  ["humidifier", true],
+  ["siren", true],
+  ["button", true],
+  ["input_boolean", true],
+  ["input_number", true],
+  ["input_select", true],
+  ["input_text", true],
+  ["input_datetime", true],
+  ["input_button", true],
+  ["number", true],
+  ["select", true],
+  ["text", true],
+  ["date", true],
+  ["time", true],
+  ["datetime", true],
+  ["scene", new Set(["turn_on"])],
+  /* Gli script e le automazioni li ha scritti chi amministra: farli partire
+   * e' usarli, riscriverli no. */
+  ["script", true],
+  ["automation", new Set(["trigger", "turn_on", "turn_off", "toggle"])],
+  ["remote", true],
+  ["timer", true],
+  ["counter", true],
+  ["todo", true],
+  ["calendar", new Set(["get_events", "create_event"])],
+  ["weather", new Set(["get_forecasts", "get_forecast"])],
+  ["notify", true],
+  ["persistent_notification", new Set(["create", "dismiss", "dismiss_all"])],
+  ["conversation", new Set(["process"])],
+  /* Di una telecamera si usa il flusso; salvare un'istantanea o registrare
+   * scrive file sul disco di Home Assistant, e quello no. */
+  [
+    "camera",
+    new Set([
+      "turn_on",
+      "turn_off",
+      "enable_motion_detection",
+      "disable_motion_detection",
+      "play_stream",
+    ]),
+  ],
+  /* Di `homeassistant` resta quello che una tessera fa: accendere, spegnere,
+   * invertire, ridomandare lo stato. */
+  ["homeassistant", new Set(["turn_on", "turn_off", "toggle", "update_entity"])],
 ]);
-
-/* Di `homeassistant` a chi non amministra resta quello che una tessera fa:
- * accendere, spegnere, invertire, ridomandare lo stato. */
-const DI_HOMEASSISTANT_PER_TUTTI = new Set(["turn_on", "turn_off", "toggle", "update_entity"]);
 
 /* ─── Le firme degli indirizzi ─────────────────────────────────────────── */
 
@@ -236,15 +285,16 @@ export function servizioVietato(dominio, servizio, { amministra = false } = {}) 
   const quale = String(servizio || "")
     .trim()
     .toLowerCase();
-  if (!suo || !quale) return null;
+  /* Senza dominio o servizio, Home Assistant risponde di no da se'; ma chi
+   * non amministra non gli fa nemmeno la domanda. */
+  if (!suo || !quale) return amministra ? null : "servizio non valido";
   if (DOMINI_MAI.has(suo)) return `i servizi di ${suo} non passano dal ponte`;
   if (amministra) return null;
-  if (suo === "homeassistant" && DI_HOMEASSISTANT_PER_TUTTI.has(quale)) return null;
-  if (DOMINI_DI_CHI_AMMINISTRA.has(suo)) return `${suo}.${quale} e' per chi amministra la casa`;
-  /* Ricaricare la configurazione e' da amministratore in qualunque dominio. */
-  if (quale === "reload" || quale.startsWith("reload_"))
-    return `${suo}.${quale} e' per chi amministra la casa`;
-  return null;
+  const permessi = DOMINI_PER_TUTTI.get(suo);
+  const passa =
+    (permessi === true && quale !== "reload" && !quale.startsWith("reload_")) ||
+    (permessi instanceof Set && permessi.has(quale));
+  return passa ? null : `${suo}.${quale} e' per chi amministra la casa`;
 }
 
 /**
@@ -262,6 +312,10 @@ export function perche(detto, { amministra = false } = {}) {
   if (!tipo) return "messaggio senza tipo";
 
   if (cominciaCon(tipo, MAI)) return `${tipo} non passa dal ponte`;
+  /* I comandi del ponte non vanno mai a Home Assistant: se arrivano fin qui
+   * nessuno li ha riconosciuti — per esempio perche' viaggiavano dentro un
+   * elenco — e girarli vorrebbe dire saltare le regole di chi li fa. */
+  if (tipo.startsWith("ponte/")) return `${tipo} non passa di qui`;
   if (tipo.startsWith("auth/") && !DI_AUTH_PASSA.has(tipo)) return `${tipo} non passa dal ponte`;
 
   if (tipo === "call_service") {
@@ -276,7 +330,11 @@ export function perche(detto, { amministra = false } = {}) {
 
   if (admin) return null;
 
-  if (tipo.startsWith(DELLA_PLANCIA)) return null;
+  /* I comandi della plancia li fa il ponte (`commissioni.js`), con le sue
+   * regole su chi puo' cosa. Uno che arriva fin qui non l'ha preso lui, e a
+   * Home Assistant — dove un'integrazione lo eseguirebbe come se l'avesse
+   * chiesto il Supervisor — non va. */
+  if (tipo.startsWith(DELLA_PLANCIA)) return `${tipo} e' per chi amministra la casa`;
   if (!PER_TUTTI.has(tipo)) return `${tipo} e' per chi amministra la casa`;
   if (tipo === "subscribe_events" && !EVENTI_PER_TUTTI.has(String(detto.event_type || "")))
     return "quell'evento e' per chi amministra la casa";
@@ -319,7 +377,14 @@ export function passaLaDogana(testo, { amministra = false } = {}) {
   const rifiuti = [];
   for (const uno of elenco) {
     if (uno && typeof uno === "object" && uno.type === "auth") continue;
-    const no = perche(uno, { amministra });
+    /* In un elenco un comando della plancia o del ponte non e' passato dal
+     * ponte, che li riconosce uno per uno: non va a Home Assistant per
+     * nessuno. */
+    const tipo = typeof uno?.type === "string" ? uno.type : "";
+    const no =
+      Array.isArray(letto) && (tipo.startsWith(DELLA_PLANCIA) || tipo.startsWith("ponte/"))
+        ? `${tipo} non passa dentro un elenco`
+        : perche(uno, { amministra });
     if (no) {
       const id = uno && typeof uno === "object" ? (uno.id ?? null) : null;
       rifiuti.push(unNo(id, no));
@@ -370,7 +435,14 @@ const sottoLaVia = (percorso, via) =>
 export function perLaVia({ metodo = "GET", percorso = "", amministra = false } = {}) {
   const admin = amministra === true;
   if (!percorsoSenzaTrucchi(percorso)) return "percorso non valido";
-  const via = percorso.split("?")[0].replace(/\/+$/, "") || "/";
+  const grezza = percorso.split("?")[0];
+  /* Nessuna percentuale e nessuna barra doppia nel percorso di una via REST.
+   * Home Assistant le scioglie prima di decidere dove andare, e allora i
+   * controlli qui sotto — fatti sulle lettere — guarderebbero una strada e la
+   * richiesta ne farebbe un'altra. L'app e la plancia queste vie le chiedono
+   * gia' sciolte; la parte dopo il `?` resta com'e'. */
+  if (grezza.includes("%") || grezza.includes("//")) return "percorso non valido";
+  const via = grezza.replace(/\/+$/, "").toLowerCase() || "/";
   const verbo = String(metodo || "GET").toUpperCase();
   /* L'icona di un add-on e' l'unica cosa del Supervisor che passa: e' un
    * disegno, Home Assistant la mostra a chiunque sia entrato, e la chiede
