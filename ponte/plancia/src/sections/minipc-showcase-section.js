@@ -1140,7 +1140,24 @@ function minipcShowcaseCss() {
   width:var(--srvx-bar-w);height:var(--dm-srvx-h,6px);
   background:none!important;border:0!important;box-shadow:none!important;padding:0!important;
   transform-style:preserve-3d;cursor:pointer;
-  transition:height .9s cubic-bezier(.2,.8,.25,1)
+  /* Quanto dura la crescita della colonna, e perche' e' corta.
+   *
+   * Dal campo: «la torre 3d va a scatti quando si clicca e non apre subito il
+   * popup storico». «height» e' una proprieta' che rifa' il calcolo della
+   * pagina a ogni fotogramma, e qui la rifa' su una scatola con
+   * «preserve-3d» e sei facce dentro: e' il filo del disegno occupato per
+   * tutta la durata, e in quel tempo il tocco sembra non rispondere.
+   *
+   * La cura vera sarebbe animare «transform» invece di «height». Non e' fatta
+   * qui apposta: le facce di sopra e di sotto portano uno spostamento in
+   * pixel fissi che uno «scaleY» moltiplicherebbe, e una scena 3D si
+   * sistema guardandola, non a memoria.
+   *
+   * Quello che si puo' fare senza toccare un pixel di geometria e'
+   * accorciare la finestra in cui quel costo si paga. Non toglie lo scatto:
+   * lo fa durare un terzo. E se un giorno la colonna passa a «transform»,
+   * questa riga torna lunga senza che cambi altro. */
+  transition:height .34s cubic-bezier(.2,.8,.25,1)
 }
 #page-server.dm-srvx .dm-srvx-bar{--w:var(--srvx-bar-w);--h:100%;--d:var(--srvx-bar-d)}
 #page-server.dm-srvx .dm-srvx-bar .dm-srvx-f{background:var(--dm-srvx-col,#94a3b8)}
@@ -1234,7 +1251,8 @@ function minipcShowcaseCss() {
   position:absolute;right:0;top:var(--dm-srvx-last,50%);
   width:8px;height:8px;margin:-4px -4px 0 0;border-radius:50%;background:var(--srvx-live);
   box-shadow:0 0 0 3px rgba(var(--srvx-live-rgb),.2);
-  transition:top .6s cubic-bezier(.2,.8,.25,1)
+  /* Stessa ragione della colonna, e lo stesso rimedio parziale. */
+  transition:top .28s cubic-bezier(.2,.8,.25,1)
 }
 
 /* ── section headings ─────────────────────────────────────────────────── */
@@ -1287,7 +1305,9 @@ function minipcShowcaseCss() {
   position:absolute;top:50%;left:var(--dm-srvx-temp,0%);width:14px;height:14px;margin:-7px 0 0 -7px;
   border-radius:50%;background:var(--srvx-surface);border:3px solid var(--srvx-text);
   box-shadow:0 4px 10px -3px rgba(10,26,44,.6);
-  transition:left 1.1s cubic-bezier(.2,.8,.25,1)
+  /* Un secondo e un decimo di «left» animato era la piu' lunga delle tre,
+     e finiva per sovrapporsi a tutte e due le altre. */
+  transition:left .34s cubic-bezier(.2,.8,.25,1)
 }
 #page-server.dm-srvx .dm-srvx-scale-ends{
   position:relative;display:flex;justify-content:space-between;font-size:9px;font-weight:800;

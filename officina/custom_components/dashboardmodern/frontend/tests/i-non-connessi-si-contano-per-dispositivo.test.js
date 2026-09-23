@@ -31,7 +31,11 @@ import {
   dispositiviDalGuscio,
   nonSiSaNiente,
 } from "../src/core/i-dispositivi-di-home-assistant.js";
-import { iDispositiviScollegati, mettiDaParte } from "../src/core/i-dispositivi-scollegati.js";
+import {
+  iDispositiviScollegati,
+  mettiDaParte,
+  rimettiInElenco,
+} from "../src/core/i-dispositivi-scollegati.js";
 
 const ROOT = new URL("../", import.meta.url);
 const read = (path) => readFile(new URL(path, ROOT), "utf8");
@@ -225,4 +229,115 @@ test("chi ha i registri li lascia scritti, da tutt'e tre le parti", async () => 
   /* E il guscio storico, che i registri se li tiene in `WIZ`. */
   const condiviso = await read("src/sections/shared.js");
   assert.match(condiviso, /ricordaIDispositivi\(dispositiviDalGuscio\(wiz\)\)/);
+});
+
+/* ── E il modo di tornare indietro ────────────────────────────────────────
+ *
+ * «Non vedo i dispositivi e non c'è nulla per poter inserire nuovamente i
+ * dispositivi.»
+ *
+ * Il cestino era a senso unico per scelta, e lo diceva: «Dall'avviso non
+ * tornano». Il ragionamento reggeva finché nessuno lo premeva per sbaglio o
+ * per provare — e chi prova preme tutto. Dopo quattro tocchi la sezione è
+ * vuota, l'avviso non arriva più, e non c'è nessun gesto che rimetta le cose
+ * come stavano: l'unica strada era andare a mano dentro `cd_widgets.excluded`,
+ * che è esattamente il posto dove chi abita non deve mai dover entrare.
+ */
+
+test("quello che il cestino ha tolto, il campanello lo rimette", () => {
+  const escluse = mettiDaParte([], ["switch.presa_giardino", "sensor.presa_giardino_potenza"]);
+  const dopo = rimettiInElenco(escluse, [
+    "switch.presa_giardino",
+    "sensor.presa_giardino_potenza",
+  ]);
+  assert.deepEqual(dopo, [], "l'elenco torna esattamente com'era");
+  /* E il dispositivo torna nell'avviso, perché è ancora muto. */
+  const { adesso } = iDispositiviScollegati({
+    configurate: CONFIGURATE,
+    states: STATI,
+    escluse: dopo,
+    di: DI,
+    nomi: NOMI,
+  });
+  assert.ok(adesso.some((una) => una.dispositivo === "giard1"));
+});
+
+test("il campanello non lascia in piedi quello che lo renderebbe un tasto morto", () => {
+  /* Una voce NUDA — senza il nome della tessera davanti — tiene un'entità
+   * fuori da tutte le tessere, questa compresa: `escluseDellaTessera` la conta
+   * per qualunque chiave. Lasciandola lì, il campanello sarebbe un tasto che
+   * si preme e non succede niente, che è il modo peggiore di rispondere a «non
+   * c'è nulla per rimetterli». Quindi se ne va anche quella. */
+  const escluse = ["switch.presa_giardino", "nonrisponde|switch.presa_giardino"];
+  assert.deepEqual(rimettiInElenco(escluse, "switch.presa_giardino"), []);
+
+  /* Ma la scelta di un'ALTRA tessera resta dov'è: quella l'ha scritta un altro
+   * interruttore, e questa sezione non parla per lui. */
+  const altrove = ["porte|switch.presa_giardino", "nonrisponde|switch.presa_giardino"];
+  assert.deepEqual(rimettiInElenco(altrove, "switch.presa_giardino"), [
+    "porte|switch.presa_giardino",
+  ]);
+});
+
+test("i messi da parte si contano per dispositivo, come quelli vivi", () => {
+  const escluse = mettiDaParte([], ["switch.presa_giardino", "sensor.presa_giardino_potenza"]);
+  const { messiDaParte } = iDispositiviScollegati({
+    configurate: CONFIGURATE,
+    states: STATI,
+    escluse,
+    di: DI,
+    nomi: NOMI,
+  });
+  assert.equal(messiDaParte.length, 1, "una riga sola, non una per entità");
+  const presa = messiDaParte[0];
+  assert.equal(presa.nome, "Presa giardino");
+  assert.equal(presa.dispositivo, "giard1");
+  assert.deepEqual(presa.entita.sort(), [
+    "sensor.presa_giardino_potenza",
+    "switch.presa_giardino",
+  ]);
+  /* Il campanello di quella riga le riporta indietro tutte insieme: rimetterne
+   * una sola vorrebbe dire ritrovarsi il dispositivo nell'avviso con dentro
+   * mezze entità, e l'altra metà ancora zitta in fondo. */
+  assert.deepEqual(rimettiInElenco(escluse, presa.entita), []);
+});
+
+test("senza le mappe i messi da parte restano riga per riga, com'erano", () => {
+  const escluse = mettiDaParte([], ["switch.presa_giardino", "sensor.presa_giardino_potenza"]);
+  const { messiDaParte } = iDispositiviScollegati({
+    configurate: CONFIGURATE,
+    states: STATI,
+    escluse,
+  });
+  assert.equal(messiDaParte.length, 2);
+  for (const una of messiDaParte) assert.deepEqual(una.entita, [una.entity]);
+});
+
+test("un'entità che questa casa non ha più si distingue, anche raggruppata", () => {
+  const escluse = mettiDaParte([], ["switch.roba_vecchia"]);
+  const { messiDaParte } = iDispositiviScollegati({
+    configurate: CONFIGURATE,
+    states: STATI,
+    escluse,
+    di: DI,
+    nomi: NOMI,
+  });
+  assert.equal(messiDaParte.length, 1);
+  assert.equal(messiDaParte[0].cE, false, "Home Assistant non ce l'ha: è configurazione vecchia");
+});
+
+test("la sezione ha il tasto che rimette, e non promette più l'irreparabile", async () => {
+  const scheda = await read("src/sections/i-dispositivi-scollegati-section.js");
+  assert.match(scheda, /data-dm-scollegati-torna=/, "ogni riga messa da parte ha il suo tasto");
+  assert.match(scheda, /rimettiInElenco\(widgetPreferences\(\)\.excluded, entita\)/);
+  assert.doesNotMatch(
+    scheda,
+    /Dall'avviso non tornano/,
+    "quella frase adesso sarebbe falsa",
+  );
+  assert.doesNotMatch(
+    scheda,
+    /Non si torna indietro/,
+    "e anche questa: indietro si torna",
+  );
 });

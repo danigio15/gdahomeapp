@@ -82,3 +82,81 @@ test("il riquadro si rifà tornando su Analisi, non solo cambiando apparecchio",
   assert.match(sezione, /evento\.target\?\.id === "ed-dev-selector"/);
   assert.match(sezione, /"dashboardmodern:period-bundle"/);
 });
+
+/* ── E il blocco che parla di un altro apparecchio ─────────────────────────
+ *
+ * «Le fasce per dispositivo non si aggiorna in base al dispositivo
+ * selezionato: se metto ad esempio wallbox esce boiler.»
+ *
+ * Il giro e' uno per volta — sono tre entita' chieste a ore, e due giri
+ * insieme sono due fette di Recorder in contemporanea — e quel «uno per
+ * volta» era scritto `if (state.inCorso) return false`: la domanda che
+ * arrivava mentre si aspettava non veniva rimandata, veniva **buttata**.
+ *
+ * Quindi: si guarda il boiler, il suo giro parte, si cambia tendina sulla
+ * wallbox mentre quello e' ancora per aria — e la domanda della wallbox non
+ * parte proprio. Torna la risposta del boiler, disegna il boiler, e li'
+ * resta: l'evento della tendina e' gia' passato, e nessuno lo rifa'.
+ *
+ * Due regole, e ci vogliono tutt'e due. Chi arriva mentre si aspetta si mette
+ * in coda invece di sparire; e una risposta si disegna solo se la tendina
+ * mostra ancora l'apparecchio per cui era partita — se no, per un istante, il
+ * blocco direbbe «Boiler» sotto la scheda della wallbox, che e' il falso
+ * detto con dei numeri veri accanto.
+ *
+ * Si legge il sorgente, come le tre prove qui sopra: il giro alla rete vuole
+ * il Recorder e il guscio di Energia, e in questa cartella non ci sono. Quello
+ * che si difende qui e' che le due regole ci siano scritte — il caso che le ha
+ * fatte nascere non lascia traccia in nessuna funzione pura.
+ */
+
+test("la domanda che arriva mentre si aspetta si mette in coda, non si perde", async () => {
+  const sezione = await read("src/sections/le-fasce-del-dispositivo-section.js");
+  const dentro = sezione.match(/if \(state\.inCorso\) \{([\s\S]*?)\n  \}/);
+  assert.ok(dentro, "il giro deve restare uno per volta");
+  assert.match(
+    dentro[1],
+    /state\.dopo = true/,
+    "chi trova il giro occupato deve segnarsi, non sparire",
+  );
+  /* E chi finisce deve guardare se c'è qualcuno in coda. */
+  assert.match(sezione, /if \(state\.dopo\) \{\s*\n\s*state\.dopo = false;/);
+  assert.match(sezione, /state\.dopo = false;[\s\S]{0,400}rifai\(true\)/);
+});
+
+test("non si disegna il conto di un apparecchio che non è più quello scelto", async () => {
+  const sezione = await read("src/sections/le-fasce-del-dispositivo-section.js");
+  /* Fra il `disegna` della risposta e la riga sopra ci deve stare il
+   * confronto con quello che la tendina mostra **adesso**, riletto dal
+   * documento: il valore preso prima dell'attesa e' proprio quello che non
+   * vale piu'. */
+  const finale = sezione.match(
+    /state\.letto = Date\.now\(\);([\s\S]*?)return disegna\(detto, config, nome\);/,
+  );
+  assert.ok(finale, "la risposta deve finire con un disegno");
+  assert.match(
+    finale[1],
+    /getElementById\("ed-dev-selector"\)\?\.value\) !== scelto\) return false;/,
+    "prima di disegnare si rilegge la tendina",
+  );
+});
+
+test("cambiando apparecchio il blocco vecchio si toglie subito", async () => {
+  const sezione = await read("src/sections/le-fasce-del-dispositivo-section.js");
+  assert.match(
+    sezione,
+    /if \(state\.chiave && state\.chiave !== chiave\) togliIlRiquadro\(\);/,
+    "un blocco che parla di un altro apparecchio non resta appeso ad aspettare",
+  );
+});
+
+test("la chiave del conto tiene dentro l'apparecchio, se no due si confondono", async () => {
+  const { chiaveDelConto } = await import(
+    "../src/sections/le-fasce-del-dispositivo-section.js"
+  );
+  const periodo = { year: 2026, month: 9 };
+  assert.notEqual(
+    chiaveDelConto("sensor.wallbox", periodo, 0.3),
+    chiaveDelConto("sensor.boiler", periodo, 0.3),
+  );
+});
