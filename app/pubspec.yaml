@@ -79,7 +79,7 @@ dependencies:
   # la messa a fuoco, la luce che cambia, e sotto ci stanno MLKit e Vision, che
   # sono del sistema. Scriverne uno a mano vorrebbe dire un lettore peggiore di
   # quello che ogni telefono ha gia' dentro.
-  mobile_scanner: ^7.4.0
+  mobile_scanner: ^7.4.2
 
   # Il volto e l'impronta davanti all'app (#54).
   #
