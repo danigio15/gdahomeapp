@@ -24,8 +24,9 @@ on:
         required: false
         default: ""
 
+# Di serie si legge e basta: scrive solo il lavoro che sposta il segno.
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: il-tramite
@@ -35,20 +36,31 @@ jobs:
   manda:
     name: Sposta il segno
     runs-on: ubuntu-latest
+    # Il segno e' la produzione: chi lo sposta passa dall'ambiente
+    # `produzione`, che il proprietario protegge nelle impostazioni della
+    # repository (chi puo' approvare, da quali rami).
+    environment: produzione
+    permissions:
+      contents: write
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
         with:
           fetch-depth: 0
 
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
           node-version: "22"
 
+      # Quello che arriva da fuori — la casella, il titolo del commit — passa
+      # sempre da una variabile, mai scritto dentro lo script: cosi' resta
+      # testo, qualunque cosa ci sia dentro.
       - name: Quale commit
         id: quale
+        env:
+          SCELTO: ${{ inputs.commit }}
         run: |
           set -euo pipefail
-          scelto="${{ inputs.commit }}"
+          scelto="$SCELTO"
           if [ -z "$scelto" ]; then
             # Quello su cui gira questa corsa: il bottone si preme dal ramo
             # principale, quindi e' l'ultimo commit di main. Chiederlo a
@@ -56,35 +68,53 @@ jobs:
             # dietro; `HEAD` no.
             scelto="$(git rev-parse HEAD)"
           fi
-          git rev-parse --verify "$scelto^{commit}" >/dev/null || {
+          # Un commit si scrive in esadecimale, o come nome di un ramo o di
+          # un'etichetta: niente trattini davanti, che git leggerebbe come
+          # opzioni.
+          case "$scelto" in
+            -*)
+              echo "«$scelto» non e' un commit di questa repository." >&2
+              exit 1
+              ;;
+          esac
+          git rev-parse --verify --end-of-options "$scelto^{commit}" >/dev/null || {
             echo "«$scelto» non e' un commit di questa repository." >&2
             exit 1
           }
-          intero="$(git rev-parse "$scelto^{commit}")"
+          intero="$(git rev-parse --verify --end-of-options "$scelto^{commit}")"
           echo "sha=$intero" >>"$GITHUB_OUTPUT"
           echo "corto=${intero:0:8}" >>"$GITHUB_OUTPUT"
-          echo "titolo=$(git log -1 --format=%s "$intero")" >>"$GITHUB_OUTPUT"
 
       - name: Le prove del tramite, su quel commit
+        env:
+          SHA: ${{ steps.quale.outputs.sha }}
         run: |
           set -euo pipefail
-          git checkout --quiet "${{ steps.quale.outputs.sha }}"
+          git checkout --quiet "$SHA"
           cd centralino && node --test test/*.test.js
 
       - name: Sposta il segno
+        env:
+          SHA: ${{ steps.quale.outputs.sha }}
         run: |
           set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git tag -f tramite "${{ steps.quale.outputs.sha }}"
+          git tag -f tramite "$SHA"
           git push -f origin tramite
 
       - name: Cosa e' successo
+        env:
+          SHA: ${{ steps.quale.outputs.sha }}
+          CORTO: ${{ steps.quale.outputs.corto }}
         run: |
+          # Il titolo si rilegge qui da git, e si scrive com'e' con `printf`:
+          # e' testo di chi ha scritto il commit, non un pezzo di script.
+          titolo="$(git log -1 --format=%s "$SHA")"
           {
-            echo "## Il segno e' sulla \`${{ steps.quale.outputs.corto }}\`"
+            printf '## Il segno e%s sulla `%s`\n' "'" "$CORTO"
             echo
-            echo "> ${{ steps.quale.outputs.titolo }}"
+            printf '> %s\n' "$titolo"
             echo
             echo "La macchina se ne accorge entro dieci minuti, scarica quella"
             echo "versione, la prova, e solo se le prove passano si riavvia."

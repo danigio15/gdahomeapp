@@ -1,0 +1,35 @@
+# Chi tiene d'occhio le versioni di quello che il progetto prende da fuori.
+#
+# Le azioni dei workflow sono fissate al commit, non all'etichetta: un'etichetta
+# si puo' spostare, un commit no. Il prezzo e' che nessuno le aggiorna piu' da
+# se' — e qui entra questo file: una volta alla settimana guarda se c'e' una
+# versione nuova e apre una richiesta di modifica col commit nuovo e il suo
+# numero accanto, da leggere e accettare come tutte le altre.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      azioni:
+        patterns: ["*"]
+
+  # Le dipendenze di npm: solo dove ce ne sono. Il ponte, il centralino e il
+  # quadro non ne hanno e non ne devono avere.
+  - package-ecosystem: npm
+    directories:
+      - /
+      - /collaudo
+      - /nuvola
+      - /officina
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+
+  # E quelle dell'app.
+  - package-ecosystem: pub
+    directory: /app
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5

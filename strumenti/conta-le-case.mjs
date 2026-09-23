@@ -176,8 +176,7 @@ async function ilTraffico(repository, gettone, prendi = globalThis.fetch) {
     throw new Error(
       "GitHub non ha accettato il gettone (401). Non e' un permesso che manca: " +
         "quel gettone e' scaduto, revocato, o nel segreto c'e' dentro uno spazio " +
-        "o un ritorno a capo. Se esiste `GETTONE_CONTI` vince lui su " +
-        "`GETTONE_SEGNALAZIONI`, quindi guarda prima quello.",
+        "o un ritorno a capo. Il gettone e' quello del segreto `GETTONE_CONTI`.",
     );
   }
   if (risposta.status === 403 || risposta.status === 404) {
