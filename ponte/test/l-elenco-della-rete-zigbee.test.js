@@ -437,6 +437,7 @@ test("con «rifai» il giro parte, e poi si rilegge", async () => {
  */
 
 import { ilDisegnoDi } from "../src/mappa-zigbee.js";
+import { Commissioni } from "../src/commissioni.js";
 
 test("il nome dice l'oggetto, e la stanza non glielo ruba", () => {
   /* «Presa garage» è una presa che sta in garage, non una porta di garage.
@@ -511,4 +512,76 @@ test("il disegno finisce dentro la mappa, e non in uno «span» che l'SVG non sa
   assert.ok(!svg.includes("foreignObject"));
   assert.match(svg, /data-dm-art="socket"/, "la presa ha il disegno della presa");
   assert.match(svg, /data-dm-art="router"/, "e l'antenna quello dell'antenna");
+});
+
+test("di un dispositivo che c'è già si sanno le entità, per la plancia", async () => {
+  /* È la riga che rende vero il tasto «Mettilo nella plancia» partendo
+   * dall'elenco invece che dall'abbinamento: il foglietto «Dove lo metto?»
+   * decide la sezione dall'ENTITÀ — una lampadina va nelle Luci, un contatto
+   * di porta nei Varchi — e di un dispositivo senza entità non sa dire niente.
+   *
+   * Le entità stanno nei registri, che questo ponte legge già per il rapporto:
+   * nessuna domanda in più a Home Assistant. */
+  const { Registri } = await import("../src/registri.js");
+  const casa = {
+    async chiedi(comando) {
+      if (comando.type === "config/device_registry/list")
+        return [{ id: "dev-porta", name: "Aqara MCCGQ11LM", name_by_user: "Porta ingresso" }];
+      if (comando.type === "config/entity_registry/list")
+        return [
+          {
+            entity_id: "binary_sensor.porta_ingresso",
+            device_id: "dev-porta",
+            device_class: "door",
+          },
+          {
+            entity_id: "sensor.porta_batteria",
+            device_id: "dev-porta",
+            entity_category: "diagnostic",
+          },
+          { entity_id: "light.altro", device_id: "dev-altro" },
+        ];
+      return null;
+    },
+  };
+  const commissioni = new Commissioni({
+    casa: { async chiedi() {} },
+    registro: zitto,
+    registri: new Registri({ casa }),
+  });
+  const detta = await commissioni.rispondi({
+    id: 4,
+    type: "ponte/zigbee/dimmi",
+    dispositivo: "dev-porta",
+  });
+  assert.equal(detta.success, true);
+  const suo = detta.result.dispositivo;
+  assert.equal(suo.nome, "Porta ingresso");
+  assert.equal(suo.entita.length, 2, "le sue, e non quelle di un altro");
+  assert.equal(suo.entita[0].classe, "door");
+  /* La diagnostica arriva lo stesso: a saltarla è la plancia, che le sue
+   * sezioni le conosce. Deciderlo qui vorrebbe dire due posti che scelgono. */
+  assert.equal(suo.entita[1].categoria, "diagnostic");
+});
+
+test("un dispositivo che questa casa non ha si dice, invece di uno vuoto", async () => {
+  const { Registri } = await import("../src/registri.js");
+  const commissioni = new Commissioni({
+    casa: { async chiedi() {} },
+    registro: zitto,
+    registri: new Registri({
+      casa: {
+        async chiedi() {
+          return [];
+        },
+      },
+    }),
+  });
+  const detta = await commissioni.rispondi({
+    id: 5,
+    type: "ponte/zigbee/dimmi",
+    dispositivo: "dev-fantasma",
+  });
+  assert.equal(detta.success, false);
+  assert.equal(detta.error.code, "not_found");
 });

@@ -62,6 +62,7 @@ import { CentralinoHaDettoNo, SenzaCentralino } from "./segnalazioni.js";
 import { SegnalazioniDellaPlancia } from "./segnalazioni-della-plancia.js";
 import { laVede, QuellaPlanciaNo, TroppePlance } from "./plance.js";
 import { iFili, laMappaDisegnata } from "./mappa-zigbee.js";
+import { comeSiPresenta } from "./zigbee.js";
 
 /* Quando chi chiede non ha nessuna plancia. Non e' un guasto ed e' l'app a
  * scriverlo, percio' il codice e' uno suo e non uno di Home Assistant. */
@@ -211,6 +212,7 @@ const NIENTE_BOZZE =
  * Escono due mappe e nient'altro: di chi e' ogni entita', e come si chiama
  * quel qualcuno. **Nessuno stato.** */
 const REGISTRI = "ponte/registri";
+const DIMMI_IL_DISPOSITIVO = "ponte/zigbee/dimmi";
 
 /* La chat di assistenza della dashboard: quattro comandi sono di chi chiede, e
  * li fa il ponte per ogni casa. */
@@ -525,6 +527,11 @@ export class Commissioni {
     if (tipo === IL_QUADRO) return this._ilQuadro(detto, chiChiede, amministra);
     if (typeof tipo === "string" && tipo.startsWith("ponte/segnalazioni/"))
       return this._segnalazioni(detto);
+    /* Prima del giro `ponte/zigbee/`, perche' questo non e' un comando
+     * alla rete: si chiama cosi' per chi sta dall'altra parte, ma legge
+     * i registri e basta. Dentro `_zigbee` un ponte senza rete Zigbee
+     * risponderebbe «non conosco» a una domanda a cui sa rispondere. */
+    if (tipo === DIMMI_IL_DISPOSITIVO) return this._dimmiIlDispositivo(detto);
     if (typeof tipo === "string" && tipo.startsWith("ponte/zigbee/")) return this._zigbee(detto);
     if (tipo === REGISTRI) return this._registri(detto);
     if (tipo === CONFIG_GET || tipo === CONFIG_SET || tipo === CONFIG_RESTORE)
@@ -566,6 +573,42 @@ export class Commissioni {
     const id = detto?.id ?? null;
     if (!this.registri) return no(id, "unknown_command", `non conosco ${detto?.type}`);
     return si(id, await this.registri.leMappe());
+  }
+
+  /* Un dispositivo che c'e' gia', presentato come quelli appena entrati:
+   * serve a metterlo nella plancia partendo dall'elenco invece che
+   * dall'abbinamento.
+   *
+   * Senza questo il tasto «Mettilo nella plancia» sarebbe un tasto che si
+   * preme e non succede niente: il foglietto «Dove lo metto?» decide la
+   * sezione dall'ENTITA' — una lampadina va nelle Luci, un contatto di porta
+   * nei Varchi — e di un dispositivo senza entita' non sa dire niente. Le
+   * entita' stanno nei registri, che questo ponte legge gia' per il rapporto:
+   * nessuna domanda in piu' a Home Assistant.
+   */
+  async _dimmiIlDispositivo(detto) {
+    const id = detto?.id ?? null;
+    const quale = String(detto?.dispositivo ?? "").trim();
+    if (!quale) return no(id, "not_found", "quale dispositivo?");
+    if (!this.registri) return no(id, "unknown_command", `non conosco ${detto?.type}`);
+    try {
+      const { dispositivi, entita } = await this.registri.chiedi();
+      const suo = (Array.isArray(dispositivi) ? dispositivi : []).find(
+        (uno) => String(uno?.id ?? "") === quale,
+      );
+      if (!suo) return no(id, "not_found", "quel dispositivo questa casa non ce l'ha");
+      const sue = (Array.isArray(entita) ? entita : []).filter(
+        (una) => String(una?.device_id ?? "") === quale,
+      );
+      return si(id, { dispositivo: comeSiPresenta(suo, sue) });
+    } catch (errore) {
+      this.registro.attenzione(`zigbee: ${errore?.message || errore}`);
+      return no(
+        id,
+        codiceDelPonte(errore, "zigbee_non_accettato"),
+        String(errore?.message || errore),
+      );
+    }
   }
 
   /* Se questa casa ha il cruscotto di chi installa, la gestione del quadro, o
