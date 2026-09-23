@@ -118,15 +118,37 @@ test("la scansione della pagina Temperature gira solo a pagina a schermo, un gir
   );
 });
 
-test("lo sfondo animato sta sul suo livello e si ferma per chi riduce le animazioni", () => {
-  /* Le due righe stanno nella fondazione del tema: sono di quel genere —
-   * un livello e un colore che valgono per tutta la plancia — e il modulo di
-   * stabilita' che le portava non faceva altro. */
+test("le due macchie dello sfondo sono sfumate, non sfocate", () => {
+  /* Qui prima si difendeva «will-change:transform» sulle due macchie, messo
+   * per la CPU del mini PC. Misurato sulla plancia servita col freno della
+   * CPU a sei, quel livello **non cambia niente**: 15 fotogrammi al secondo
+   * con, 15 senza. Nemmeno fermare l'animazione basta — resta a 17. A costare
+   * e' il «filter: blur(100px)» su mezzo schermo, che si rifa' ogni volta che
+   * qualcosa sopra si ridisegna.
+   *
+   * Scritta come sfumatura radiale invece che come sfocatura, la stessa
+   * figura si disegna una volta sola: 60 al secondo. Questa prova difende
+   * quello — che il blur non torni, e che gli stop restino quelli della
+   * gaussiana, perche' e' li' che sta la somiglianza. */
   const sezione = leggi("sections/theme-foundation-section.js");
-  assert.match(
-    sezione,
-    /\.animated-mesh-bg::before,\.animated-mesh-bg::after\{will-change:transform\}/,
-  );
+  assert.match(sezione, /\.animated-mesh-bg::before,\.animated-mesh-bg::after\{\s*filter:none!important;/);
+  assert.match(sezione, /background:radial-gradient\(closest-side,/);
+  for (const passo of ["1\\) 0%", "\\.98\\) 17%", "\\.84\\) 34%", "\\.5\\) 50%", "\\.16\\) 66%", "\\.02\\) 83%", "0\\) 100%"]) {
+    assert.match(sezione, new RegExp(`rgb\\(var\\(--dm-macchia\\) / ${passo}`));
+  }
+  /* Le quattro tinte: due di giorno e due di notte. Senza quelle di notte il
+   * tema scuro ricadrebbe sul colore pieno del guscio — un disco dal bordo
+   * netto invece di un alone. */
+  for (const tinta of ["220 252 231", "224 242 254", "14 42 28", "11 39 64"]) {
+    assert.match(sezione, new RegExp(`--dm-macchia:${tinta}`));
+  }
+  /* La sfumatura finisce dove finisce la scatola, la sfocatura sbordava: il
+   * doppio di scatola rimette il disegno dov'era. */
+  assert.match(sezione, /@keyframes floatBlob\{\s*0%\{transform:translate\(0,0\) scale\(2\)\}\s*100%\{transform:translate\(8vw,6vh\) scale\(2\.3\)\}/);
+  /* Niente piu' «will-change»: senza la sfocatura non c'e' niente di caro da
+   * tenere da parte, e una scatola larga il doppio promossa a livello sono
+   * decine di megabyte per niente. */
+  assert.equal(/will-change:transform\}/.test(sezione), false);
   assert.match(
     sezione,
     /@media \(prefers-reduced-motion:reduce\)\{\s*\.animated-mesh-bg::before,\.animated-mesh-bg::after\{animation-play-state:paused!important\}/,

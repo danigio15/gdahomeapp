@@ -98,3 +98,48 @@ telefono non si disegna, diventa rossa.
 
 *(Nello scatto la pila accanto ai nomi esce come un rettangolo vuoto: è
 l'emoji, che nel carattere della prova non c'è. Sul telefono si vede.)*
+
+## `sfondo-sfocatura-contro-sfumatura.png` e `velo-del-popup-la-scelta.png`
+
+### La plancia andava a 15 fotogrammi al secondo, ferma
+
+«La torre 3d va a scatti quando si clicca e non apre subito il popup storico»
+(#125). Non era la torre e non era il clic: **ogni pagina** della plancia, con
+nessuno che la tocca, stava a 15 fotogrammi al secondo. Il clic si notava
+soltanto perché è il momento in cui uno si aspetta una risposta.
+
+A mangiarsi tutto sono le due macchie di sfondo: larghe mezzo schermo, con un
+`filter: blur(100px)` che il browser rifà in continuazione.
+
+Misurato sulla plancia servita, col freno della CPU a sei:
+
+| | al secondo | fotogramma peggiore |
+|---|---|---|
+| Home, prima | 18 | 67 ms |
+| Home, dopo | **60** | 17 ms |
+| MiniPC, prima | 15 | 167 ms |
+| MiniPC, dopo | **59** | 50 ms |
+| il clic sul prisma, prima | 17 fotogrammi in 1,5 s | 183 ms |
+| il clic sul prisma, dopo | 39 | 133 ms |
+
+Le cure che **non** curano, misurate: `will-change: transform` (c'era già, per
+questo stesso motivo) lascia tutto com'era, e fermare l'animazione porta a 17.
+Non è il movimento che costa, è la sfocatura.
+
+`sfondo-sfocatura-contro-sfumatura.png` è il perché la cura non si vede: una
+sfocatura di un cerchio pieno **è già** una sfumatura radiale, e scritta come
+tale — con gli stop presi dalla curva di una gaussiana, non a occhio — le due
+figure non si distinguono. A colore pieno, che è il caso peggiore; nella
+plancia sono pastello al 50%.
+
+### Quello che resta, ed è una scelta tua
+
+`velo-del-popup-la-scelta.png`. Il velo dei popup ha un
+`backdrop-filter: blur(20px)` su tutto lo schermo, e finché il popup è aperto
+costa **metà dei fotogrammi**: 39 al secondo con, 87 senza. Il raggio non
+c'entra — 12, 8 o 4 px costano uguale: è avere un `backdrop-filter`, non
+quanto è grande.
+
+Qui però la cura si vede, e non la decido io: a sinistra com'è adesso, dietro
+non si legge niente; a destra col velo più coperto e senza sfocatura, dietro si
+intravede. Sono due effetti diversi. Dimmi tu.

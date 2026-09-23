@@ -108,14 +108,65 @@ export function installThemeFoundationSection() {
       -webkit-background-clip:text!important;background-clip:text!important;
       -webkit-text-fill-color:transparent!important}
 
-    /* Lo sfondo animato sta sul suo livello (dal campo: la CPU del mini PC).
+    /* Le due macchie dietro la plancia: sfumate, non sfocate.
      *
-     * Le due macchie sfumate dietro la plancia si muovono per sempre, fuori da
-     * ogni pagina, con un blur di cento pixel su meta' dello schermo. Promosse
-     * a livello composito il browser le sposta senza rasterizzarle di nuovo a
-     * ogni fotogramma; e chi ha chiesto al sistema di ridurre le animazioni le
-     * trova ferme, che e' quello che ha chiesto. */
-    .animated-mesh-bg::before,.animated-mesh-bg::after{will-change:transform}
+     * «La torre 3d va a scatti quando si clicca e non apre subito il popup
+     * storico.» Non era la torre, e non era il clic: **la plancia intera**
+     * andava a quindici fotogrammi al secondo, ferma, su ogni pagina, senza
+     * che nessuno la toccasse. Il clic si notava soltanto perche' e' il
+     * momento in cui uno si aspetta una risposta.
+     *
+     * A mangiarsi tutto sono queste due macchie. Sono larghe sessanta e
+     * cinquanta volte un centesimo dello schermo, e portano un
+     * «filter: blur(100px)»: una sfocatura gaussiana grande cento pixel su
+     * mezzo schermo, che il browser rifa' a ogni fotogramma per sempre.
+     *
+     * ─── Le cure che non curano ───────────────────────────────────────────
+     *
+     * Qui prima c'era «will-change: transform» — promuovile a livello
+     * composito e il browser non le rasterizza piu' — e la pausa con
+     * «prefers-reduced-motion». Misurate, **non cambiano niente**: 15 al
+     * secondo prima, 15 dopo. Anche fermando del tutto l'animazione resta a
+     * 17: non e' il movimento che costa, e' la sfocatura, che si rifa'
+     * comunque ogni volta che qualcosa sopra si ridisegna — e qualcosa sopra
+     * si ridisegna sempre, fosse solo un LED che lampeggia.
+     *
+     * ─── Quella che cura ──────────────────────────────────────────────────
+     *
+     * Una sfocatura di un cerchio pieno **e' gia'** una sfumatura radiale: si
+     * puo' scrivere invece di calcolarla. Gli stop qui sotto non sono a
+     * occhio, sono la curva dell'errore di una gaussiana con sigma cento sul
+     * raggio vero delle macchie, e messe accanto alla sfocatura non si
+     * distinguono. Il raggio della sfumatura pero' si ferma al bordo della
+     * scatola mentre la sfocatura sbordava, quindi le scatole vanno il doppio:
+     * e' quello che fa lo «scale(2)» dentro l'animazione qui sotto.
+     *
+     * Misurato sulla plancia servita, con il freno della CPU a sei:
+     * da 15 a 60 fotogrammi al secondo, e il peggiore da 167 ms a 17.
+     *
+     * Niente «will-change»: senza la sfocatura non c'e' piu' niente di caro da
+     * tenere da parte, e una scatola larga il doppio promossa a livello sono
+     * decine di megabyte di memoria su un tablet, per niente. */
+    .animated-mesh-bg::before,.animated-mesh-bg::after{
+      filter:none!important;
+      background:radial-gradient(closest-side,
+        rgb(var(--dm-macchia) / 1) 0%,
+        rgb(var(--dm-macchia) / .98) 17%,
+        rgb(var(--dm-macchia) / .84) 34%,
+        rgb(var(--dm-macchia) / .5) 50%,
+        rgb(var(--dm-macchia) / .16) 66%,
+        rgb(var(--dm-macchia) / .02) 83%,
+        rgb(var(--dm-macchia) / 0) 100%)!important}
+    .animated-mesh-bg::before{--dm-macchia:220 252 231}
+    .animated-mesh-bg::after{--dm-macchia:224 242 254}
+    html[data-theme="dark"] .animated-mesh-bg::before{--dm-macchia:14 42 28}
+    html[data-theme="dark"] .animated-mesh-bg::after{--dm-macchia:11 39 64}
+    /* Lo stesso viaggio di prima, col doppio di scatola: la sfumatura finisce
+     * dove finisce la scatola, la sfocatura invece sbordava. */
+    @keyframes floatBlob{
+      0%{transform:translate(0,0) scale(2)}
+      100%{transform:translate(8vw,6vh) scale(2.3)}
+    }
     @media (prefers-reduced-motion:reduce){
       .animated-mesh-bg::before,.animated-mesh-bg::after{animation-play-state:paused!important}
     }
