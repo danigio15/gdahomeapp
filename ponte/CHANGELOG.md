@@ -11,6 +11,49 @@ fuori. La plancia dentro continua a dire la sua, e si legge dov'è sempre
 stata: nella pastiglia «La plancia» della console. Sono due numeri perché
 sono due cose.
 
+## 1.6.1
+
+**Zigbee: si vede chi c'è già in rete, e la mappa.** «Voglio vedere elenco
+completo dei dispositivi e poterli eliminare e eventualmente associare
+dispositivi già esistenti nella plancia. Crea inoltre la possibilità di
+mostrare la mappa di collegamento.»
+
+Sotto i tasti dell'abbinamento adesso c'è l'elenco di chi c'è già, con marca,
+modello e la pila per chi va a batteria. Da ogni riga si apre la sua scheda: si
+rinomina, si manda nella plancia, si toglie dalla rete — e prima di togliere si
+dice **la parte che costa**, cioè che per rimetterlo lo si riabbina da qui. Di
+un ripetitore si dice anche che tiene su la rete per gli altri.
+
+«Guarda la rete» apre la **mappa**: al centro l'antenna, intorno i ripetitori,
+fuori chi sta in fondo a un ramo — che è la forma che una rete Zigbee *ha*, non
+una disposizione scelta. Lo spessore e il tratteggio dicono quanto è buono ogni
+collegamento, e chi non parla con nessuno sta in fondo con scritto perché. I
+pallini sono i disegni veri del catalogo: il disegno dice *cos'è*
+quell'apparecchio, l'anello colorato *che mestiere fa* nella rete.
+
+**Sul telefono la mappa usciva vuota.** Gli anelli, i fili e i nomi c'erano, e
+dentro ogni anello niente: proprio le icone dei dispositivi. Erano un `<svg>`
+dentro l'altro — un modo valido, che nel browser si vede — e `flutter_svg`
+quelli li salta. Nessuna prova se ne era accorta perché guardavano tutte il
+*testo* della figura, e il testo era giusto: si è visto fotografando la
+schermata.
+
+**La plancia si mangiava un core intero, ferma.** La segnalazione diceva «la
+torre 3d va a scatti quando si clicca»: non era la torre e non era il clic —
+ogni pagina, con nessuno che la tocca, stava al cento per cento di un core, per
+sempre. Il clic si notava soltanto perché è il momento in cui uno si aspetta
+una risposta.
+
+Erano tre cose: la sfocatura da cento pixel delle due macchie di sfondo,
+rifatta in continuazione; il loro movimento, che obbliga a ricomporre tutto
+quello che ci sta sopra; e i pallini che pulsano, che respirando scrivevano un
+valore nuovo a ogni fotogramma. Adesso le macchie sono una sfumatura e stanno
+ferme, e i pallini lampeggiano invece di respirare. A pagina aperta e senza
+toccare niente: **Home 4%, MiniPC 4%, Energia 1%**.
+
+Si vede cambiare due cose: lo sfondo non scorre più, e i pallini non crescono
+più — cambia solo quanto sono accesi.
+
 ## 1.6.0.6
 
 **I dispositivi non connessi si contano per dispositivo, non per entità.** «Non
