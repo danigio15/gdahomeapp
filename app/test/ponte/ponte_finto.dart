@@ -48,6 +48,28 @@ class PonteFinto {
   /// via, e la casa non ha piu' la sua chiave del filo.
   bool conosceIlTelefono = true;
 
+  /// Insieme a `conosceIlTelefono = false`: la casa ha staccato il telefono
+  /// ma della sua chiave del filo ha ancora memoria, e glielo dice dentro il
+  /// cifrato invece che in chiaro.
+  bool staccatoConLaChiave = false;
+
+  /// Il codice di abbinamento vivo, come se la console l'avesse appena fatto.
+  /// `null` vuol dire nessuno.
+  String? codiceVivo;
+
+  /// Quello che la casa dice di se', a chi si abbina: dove tornare.
+  Map<String, dynamic>? ritorno;
+
+  /// Quando e' `true`, la casa ha gia' tutti i telefoni che puo' avere, e chi
+  /// si abbina se lo sente dire dentro il cifrato.
+  bool casaPiena = false;
+
+  /// Le conferme arrivate da chi si abbinava, aperte.
+  final List<Map<String, dynamic>> conferme = [];
+
+  /// Le prime parole in chiaro, come sono arrivate.
+  final List<Map<String, dynamic>> strette = [];
+
   /// Quando e' `true`, non risponde ai comandi: e' Home Assistant che tace.
   bool muto = false;
 
@@ -1091,7 +1113,22 @@ class TelefonoCollegato {
       try {
         dentro = await _busta!.apri(testo);
       } on BustaGuasta {
-        await chiudi();
+        /* Abbinandosi, una conferma che non si apre e' un codice sbagliato, e
+         * il no va in chiaro: come `ponte/src/portiere.js`. */
+        if (_abbinando) {
+          _presa.add(
+            jsonEncode({
+              'v': versioneDelProtocollo,
+              'no': 'codice sbagliato',
+              'motivo': 'codice',
+            }),
+          );
+        }
+        unawaited(chiudi());
+        return;
+      }
+      if (_abbinando) {
+        await _laConferma(dentro);
         return;
       }
       _ponte._detto(this, dentro);
@@ -1099,7 +1136,14 @@ class TelefonoCollegato {
     }
 
     final detto = jsonDecode(testo) as Map<String, dynamic>;
-    if (!_ponte.conosceIlTelefono) {
+    _ponte.strette.add(detto);
+
+    if (detto.containsKey('abbina')) {
+      await _perAbbinare(detto);
+      return;
+    }
+
+    if (!_ponte.conosceIlTelefono && !_ponte.staccatoConLaChiave) {
       _presa.add(
         jsonEncode({
           'v': versioneDelProtocollo,
@@ -1107,7 +1151,7 @@ class TelefonoCollegato {
           'riabbina': true,
         }),
       );
-      await chiudi();
+      unawaited(chiudi());
       return;
     }
 
@@ -1119,8 +1163,7 @@ class TelefonoCollegato {
       delTelefono: sua,
       dellaCasa: mia.pubblica,
       apertura: base64.decode(detto['apertura'] as String),
-      /* Chi si sta abbinando la chiave del filo non ce l'ha ancora. */
-      chiaveDelFilo: detto['abbina'] == true ? null : chiaveBuona,
+      chiaveDelFilo: chiaveBuona,
     );
     _presa.add(
       jsonEncode({
@@ -1136,7 +1179,104 @@ class TelefonoCollegato {
       io: DaChi.casa,
       comprime: _ponte.conosceIlGzip && detto['gzip'] == true,
     );
+    if (!_ponte.conosceIlTelefono) {
+      /* Staccato, e detto dove lo puo' dire solo chi ha la chiave. */
+      _ponte._manda(this, {
+        'type': 'auth_invalid',
+        'message': 'questo telefono è stato staccato da questa casa',
+      });
+      unawaited(chiudi());
+      return;
+    }
     _ponte._manda(this, {'type': 'auth_required', 'ha_version': 'gdahome'});
+  }
+
+  /* ─── L'abbinamento, come lo fa il portiere ─────────────────────────── */
+
+  /* Qui dentro si e' nella coda di chi riceve: chiudere **aspettando** la
+   * coda vorrebbe dire aspettare se stessi. Si chiude senza aspettare, e la
+   * chiusura parte comunque dopo quello che si e' messo in coda. */
+
+  bool _abbinando = false;
+  String _telefono = '';
+  String _casa = '';
+
+  Future<void> _perAbbinare(Map<String, dynamic> detto) async {
+    void no(String perche, String motivo) {
+      _presa.add(
+        jsonEncode({
+          'v': versioneDelProtocollo,
+          'no': perche,
+          'motivo': motivo,
+        }),
+      );
+      unawaited(chiudi());
+    }
+
+    if (detto['abbina'] != versioneDellAbbinamento) {
+      no('aggiorna l\'app', 'aggiorna');
+      return;
+    }
+    final codice = _ponte.codiceVivo;
+    if (codice == null) {
+      no('nessun codice di abbinamento è attivo', 'nessuno');
+      return;
+    }
+    final mia = await coppiaEffimera();
+    final sua = base64.decode(detto['mia'] as String);
+    final chiave = await chiaveDiSessione(
+      miaPrivata: mia.privata,
+      suaPubblica: sua,
+      delTelefono: sua,
+      dellaCasa: mia.pubblica,
+      apertura: base64.decode(detto['apertura'] as String),
+      codice: codice,
+    );
+    _abbinando = true;
+    _telefono = detto['mia'] as String;
+    _casa = mia.inBase64;
+    _presa.add(
+      jsonEncode({
+        'v': versioneDelProtocollo,
+        'pronto': true,
+        'mia': mia.inBase64,
+      }),
+    );
+    _busta = Busta(chiave, io: DaChi.casa);
+  }
+
+  Future<void> _laConferma(String dentro) async {
+    final detto = jsonDecode(dentro) as Map<String, dynamic>;
+    _ponte.conferme.add(detto);
+    if (detto['t'] != 'conferma' ||
+        detto['telefono'] != _telefono ||
+        detto['casa'] != _casa) {
+      _ponte._manda(this, {
+        't': 'no',
+        'perche': 'conferma sbagliata',
+        'motivo': 'codice',
+      });
+      unawaited(chiudi());
+      return;
+    }
+    if (_ponte.casaPiena) {
+      _ponte._manda(this, {
+        't': 'no',
+        'perche': 'sono gia\' abbinati 10 dispositivi',
+        'motivo': 'telefoni',
+      });
+      unawaited(chiudi());
+      return;
+    }
+    _ponte.codiceVivo = null;
+    _ponte._manda(this, {
+      't': 'ecco',
+      'segno': segnoBuono,
+      'chiave': chiaveBuona,
+      'dispositivo': {'id': chiBuono, 'nome': detto['nome']},
+      'ritorno': _ponte.ritorno,
+    });
+    unawaited(chiudi());
   }
 
   /// Scrive solo se dall'altra parte c'e' ancora qualcuno.

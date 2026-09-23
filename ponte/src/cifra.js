@@ -16,26 +16,31 @@
  * chiave si deriva da li'. Il centralino non ha niente da cui partire.
  *
  * **Durante l'abbinamento** il segno non c'e' ancora: e' proprio quello che si
- * sta per consegnare. Li' si fa uno scambio di chiavi effimero (X25519): il
- * centralino vede passare due chiavi pubbliche e non puo' ricavarne il
- * segreto condiviso. Un centralino che *guarda* non capisce niente.
+ * sta per consegnare. Quello che le due punte hanno in comune, li', e' il
+ * **codice**: la casa lo ha fabbricato, il telefono lo ha letto dal QR code.
+ * Al centralino non passa mai — passa la sua impronta, che serve a
+ * instradare — e quindi e' il codice stesso a fare da segreto condiviso.
  *
- * Il limite, detto chiaro perche' vada scritto e non scoperto: un centralino
- * riscritto per **attaccare** — non che guarda, ma che si mette in mezzo —
- * potrebbe intromettersi nell'abbinamento di un telefono nuovo. I telefoni
- * gia' abbinati restano al sicuro comunque, perche' il loro segno non e' mai
- * passato di li'.
+ * La stretta di mano dell'abbinamento (la seconda versione, `abbina: 2`)
+ * mescola nella chiave lo scambio effimero X25519 **e il codice**. Non la
+ * sua impronta: quella il centralino la conosce, e una chiave fatta con
+ * quella non difenderebbe da lui. Chi sta in mezzo senza il codice arriva a
+ * un'altra chiave, e la prima busta non si apre.
  *
- * Il QR code ha tolto meta' del problema. Il codice adesso e' di
- * sedici lettere — ottanta bit — e la sua impronta, che e' l'unica cosa che
- * arriva al centralino, non si prova piu' a raffica in casa propria: otto
- * lettere erano quaranta bit, e quaranta bit cadono in qualche minuto.
+ * Poi c'e' la conferma: la prima busta del telefono ripete le due chiavi
+ * pubbliche, e la casa consegna segno e chiave **solo dopo** averla aperta e
+ * averci trovato le chiavi giuste. Un codice sbagliato, o qualcuno in mezzo,
+ * falliscono li', prima che esca qualcosa di utile, e il tentativo si conta.
  *
- * L'altra meta' e' ancora qui: questa stretta di mano non e' autenticata, e
- * chi sta in mezzo puo' farne due invece di lasciarne passare una. Si chiude
- * legandola al codice stesso — usarlo come chiave del filo dell'abbinamento —
- * e adesso che il codice e' lungo si puo' fare davvero: chi sta in mezzo non
- * ce l'ha, e non lo indovina. E' la prossima cosa da fare qui dentro.
+ * Perche' basta un codice e non serve un protocollo apposta per le parole
+ * corte (un PAKE): il codice e' di sedici lettere, ottanta bit. Chi vedesse
+ * passare la conferma e volesse provare i codici uno per uno a casa sua ne
+ * avrebbe per molto piu' dei cinque minuti in cui il codice vale. Con un
+ * codice corto non sarebbe cosi', ed e' uno dei motivi per cui e' lungo.
+ *
+ * La prima versione — scambio effimero e basta, codice dentro il cifrato —
+ * difendeva da chi guarda ma non da chi si mette in mezzo, e la casa adesso
+ * la rifiuta dicendo di aggiornare l'app.
  */
 
 import {
@@ -50,13 +55,20 @@ import {
 } from "node:crypto";
 import { gunzipSync, gzipSync } from "node:zlib";
 
+import { codicePulito } from "./segreti.js";
+
 /* Il numero di versione viaggia in chiaro nella prima riga. Serve a poter
  * cambiare idea fra qualche anno senza che le due punte si fraintendano in
  * silenzio: chi non riconosce la versione dice di no invece di provarci. */
 export const VERSIONE = 1;
 
+/* La versione della stretta di mano dell'abbinamento, dentro la prima riga
+ * (`abbina: 2`). La prima versione era `abbina: true`, e non era legata al
+ * codice: una casa di adesso la rifiuta. */
+export const VERSIONE_DELL_ABBINAMENTO = 2;
+
 const ETICHETTA_FILO = "gdahome/filo/v1";
-const ETICHETTA_ABBINAMENTO = "gdahome/abbinamento/v1";
+const ETICHETTA_ABBINAMENTO = "gdahome/abbinamento/v2";
 
 /* ─── La compressione, prima della cifratura ──────────────────────────────
  *
@@ -79,7 +91,17 @@ const ETICHETTA_ABBINAMENTO = "gdahome/abbinamento/v1";
  * arrivera'.
  *
  * Sotto la soglia non si comprime: un evento da trecento byte compresso non
- * e' piu' piccolo, e' solo piu' lento. */
+ * e' piu' piccolo, e' solo piu' lento.
+ *
+ * Una cosa da sapere, detta per non doverla riscoprire: comprimere prima di
+ * cifrare fa si' che la lunghezza di una busta dipenda un poco da quello che
+ * c'e' dentro. In teoria, chi potesse far entrare testo suo nello stesso
+ * messaggio di un segreto e misurare le buste molte volte ne ricaverebbe
+ * qualcosa. Qui il rischio e' teorico — i segreti veri (segno, chiave del
+ * filo) non viaggiano mai compressi: l'abbinamento non comprime, e il segno
+ * che entra sta in una busta piccola, sotto la soglia — e il formato resta
+ * com'e'. Se un giorno dentro le buste finissero segreti accanto a testo
+ * scelto da altri, la cura e' non comprimere quei messaggi. */
 export const SOGLIA_DI_COMPRESSIONE = 1024;
 
 /* Oltre questo, dentro una busta non c'e' la casa: c'e' una bomba. Vale
@@ -142,11 +164,17 @@ function nonce(daChi, contatore) {
  *
  *   - lo **scambio effimero**: chi guarda passare non ricava niente, e chi
  *     ruba le chiavi conservate domani non legge quello di ieri;
- *   - la **chiave del filo**: chi si mettesse in mezzo per davvero non puo'
- *     fabbricarla, perche' non ce l'ha. Nell'abbinamento non c'e' ancora, e
- *     li' quella difesa manca — e' scritto in cima al file;
+ *   - un **segreto che il centralino non ha**: la chiave del filo, per un
+ *     telefono gia' abbinato, o il codice, per uno che si sta abbinando. Chi
+ *     si mettesse in mezzo per davvero non puo' fabbricarlo, e arriva a
+ *     un'altra chiave;
  *   - l'**apertura**: sedici byte di caso a ogni collegamento, cosi' due
  *     collegamenti non riusano mai gli stessi nonce con la stessa chiave.
+ *
+ * Uno dei due segreti ci deve essere, e uno solo: senza, la chiave verrebbe
+ * dal solo scambio effimero, che e' la stretta di mano di una volta e non
+ * difende da chi sta in mezzo. Quella non si fabbrica piu', nemmeno per
+ * sbaglio.
  */
 export function chiaveDiSessione({
   miaPrivata,
@@ -155,7 +183,11 @@ export function chiaveDiSessione({
   dellaCasa,
   apertura,
   chiaveDelFilo = null,
+  codice = null,
 }) {
+  if (Boolean(chiaveDelFilo) === Boolean(codice)) {
+    throw new Error("serve la chiave del filo oppure il codice, e uno solo dei due");
+  }
   const daLloScambio = diffieHellman({
     privateKey: miaPrivata,
     publicKey: createPublicKey({
@@ -164,9 +196,13 @@ export function chiaveDiSessione({
       format: "der",
     }),
   });
-  const materia = chiaveDelFilo
-    ? Buffer.concat([daLloScambio, Buffer.from(chiaveDelFilo, "hex")])
-    : daLloScambio;
+  /* Il codice entra **ripulito** — maiuscole, niente spazi ne' trattini —
+   * perche' le due punte lo devono scrivere allo stesso modo byte per byte,
+   * ed e' il modo in cui lo ripuliscono tutte e due. */
+  const segreto = chiaveDelFilo
+    ? Buffer.from(chiaveDelFilo, "hex")
+    : Buffer.from(codicePulito(codice), "utf8");
+  const materia = Buffer.concat([daLloScambio, segreto]);
   /* Le due chiavi pubbliche entrano nel sale in un ordine fisso: cosi' le due
    * punte arrivano alla stessa chiave, e la chiave dipende da *quale* stretta
    * di mano e' stata. */
@@ -189,8 +225,8 @@ export function aperturaNuova() {
   return randomBytes(16);
 }
 
-/* Una coppia di chiavi effimera per l'abbinamento. Vive quanto la stretta di
- * mano e poi si butta. */
+/* Una coppia di chiavi effimera. Vive quanto la stretta di mano e poi si
+ * butta. */
 export function coppiaEffimera() {
   const { publicKey, privateKey } = generateKeyPairSync("x25519");
   return {

@@ -86,23 +86,58 @@ test("un codice nuovo spegne quello di prima", () => {
   assert.ok(a.consuma(secondo), "il codice buono non e' entrato");
 });
 
-test("dieci tentativi sbagliati chiudono la porta, e il tempo la riapre", () => {
+test("cinque tentativi sbagliati chiudono la porta a chi li ha fatti, e il tempo la riapre", () => {
   const tempo = orologio();
   const a = new Abbinamento({ adesso: tempo.adesso });
   a.nuovo();
-  for (let i = 0; i < 10; i += 1) assert.throws(() => a.consuma("SBAGLIATO"), CodiceSbagliato);
-  assert.throws(() => a.consuma("SBAGLIATO"), TroppiTentativi);
-  assert.notEqual(a.stato().bloccatoFinoA, null);
+  const da = { da: "192.168.1.66" };
+  for (let i = 0; i < 5; i += 1) assert.throws(() => a.consuma("SBAGLIATO", da), CodiceSbagliato);
+  assert.throws(() => a.consuma("SBAGLIATO", da), TroppiTentativi);
+  assert.notEqual(a.bloccato(da.da), null);
 
   tempo.avanti(15 * MINUTO + 1);
+  assert.equal(a.bloccato(da.da), null);
   const { codice } = a.nuovo();
-  assert.ok(a.consuma(codice), "il codice buono non e' entrato");
+  assert.ok(a.consuma(codice, da), "il codice buono non e' entrato");
+});
+
+test("un estraneo che sbaglia non chiude la porta a chi ha il codice", () => {
+  /* Prima i tentativi si contavano tutti insieme: dieci errori di chiunque
+   * bloccavano l'abbinamento per un quarto d'ora anche a chi stava davanti
+   * allo schermo col codice vero. */
+  const a = new Abbinamento({ adesso: orologio().adesso });
+  const { codice } = a.nuovo();
+  for (let i = 0; i < 20; i += 1) {
+    assert.throws(() => a.consuma("SBAGLIATO", { da: "estraneo" }), /codice|troppi/);
+  }
+  assert.notEqual(a.bloccato("estraneo"), null, "lui si' che aspetta");
+  assert.equal(a.bloccato("192.168.1.20"), null);
+  assert.ok(a.consuma(codice, { da: "192.168.1.20" }), "il codice buono non e' entrato");
+});
+
+test("tanti estranei insieme chiudono la porta a tutti, ma ce ne vogliono tanti", () => {
+  const a = new Abbinamento({ adesso: orologio().adesso });
+  const { codice } = a.nuovo();
+  for (let i = 0; i < 49; i += 1) a.sbagliato(`estraneo ${i}`);
+  assert.equal(a.bloccato("192.168.1.20"), null);
+  a.sbagliato("l'ultimo");
+  assert.notEqual(a.bloccato("192.168.1.20"), null);
+  assert.throws(() => a.consuma(codice, { da: "192.168.1.20" }), TroppiTentativi);
+  assert.notEqual(a.stato().bloccatoFinoA, null);
+});
+
+test("chi bussa da mille posti non riempie la memoria", () => {
+  const a = new Abbinamento({ adesso: orologio().adesso });
+  a.nuovo();
+  for (let i = 0; i < 5000; i += 1) a.sbagliato(`da ${i}`);
+  assert.ok(a._perChi.size <= 1000);
 });
 
 test("chi fabbrica un codice non paga per chi ha bussato prima", () => {
   const a = new Abbinamento({ adesso: orologio().adesso });
   a.nuovo();
-  for (let i = 0; i < 9; i += 1) assert.throws(() => a.consuma("SBAGLIATO"), CodiceSbagliato);
+  for (let i = 0; i < 5; i += 1) assert.throws(() => a.consuma("SBAGLIATO"), CodiceSbagliato);
+  assert.throws(() => a.consuma("SBAGLIATO"), TroppiTentativi);
   const { codice } = a.nuovo();
   assert.equal(a.stato().tentativiSbagliati, 0);
   assert.ok(a.consuma(codice), "il codice buono non e' entrato");

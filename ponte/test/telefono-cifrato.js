@@ -5,11 +5,24 @@
  * questo file e il codice Dart divergono, il telefono vero non entra.
  */
 
-import { aperturaNuova, Busta, chiaveDiSessione, coppiaEffimera, VERSIONE } from "../src/cifra.js";
+import {
+  aperturaNuova,
+  Busta,
+  chiaveDiSessione,
+  coppiaEffimera,
+  VERSIONE,
+  VERSIONE_DELL_ABBINAMENTO,
+} from "../src/cifra.js";
 
+/* Tre modi di presentarsi:
+ *
+ *   - `chi` e `chiave`: un telefono gia' abbinato;
+ *   - `codice`: un telefono che si abbina, con la stretta di mano legata al
+ *     codice (`abbina: 2`). Dopo `dentro` si manda `conferma(...)`;
+ *   - `abbina: true`: l'app di prima, che una casa di adesso rifiuta. */
 export function telefonoCifrato(
   indirizzo,
-  { chi = null, chiave = null, abbina = false, gzip = false } = {},
+  { chi = null, chiave = null, codice = null, abbina = false, gzip = false } = {},
 ) {
   const presa = new WebSocket(indirizzo);
   const mia = coppiaEffimera();
@@ -23,6 +36,7 @@ export function telefonoCifrato(
   let pezzi = "";
   let laStretta = null;
   let guasta = null;
+  let sua = null;
 
   const dentro = new Promise((riuscito, fallito) => {
     laStretta = { riuscito, fallito };
@@ -32,7 +46,11 @@ export function telefonoCifrato(
     presa.send(
       JSON.stringify({
         v: VERSIONE,
-        ...(abbina ? { abbina: true } : { chi }),
+        ...(codice != null
+          ? { abbina: VERSIONE_DELL_ABBINAMENTO }
+          : abbina
+            ? { abbina: true }
+            : { chi }),
         apertura: apertura.toString("base64"),
         mia: mia.pubblica.toString("base64"),
         /* Un telefono che sa aprire il gzip lo dice; uno vecchio no. */
@@ -54,6 +72,7 @@ export function telefonoCifrato(
         laStretta.fallito(new Error(detto.no));
         return;
       }
+      sua = detto.mia;
       busta = new Busta(
         chiaveDiSessione({
           miaPrivata: mia.privata,
@@ -61,7 +80,7 @@ export function telefonoCifrato(
           delTelefono: mia.pubblica,
           dellaCasa: Buffer.from(detto.mia, "base64"),
           apertura,
-          chiaveDelFilo: chiave,
+          ...(codice != null ? { codice } : { chiaveDelFilo: chiave }),
         }),
         /* Si comprime verso la casa solo se la casa ha detto di saperlo
          * aprire: e' la stessa regola dell'app vera. */
@@ -76,6 +95,13 @@ export function telefonoCifrato(
      * e in tutti e due i casi andare avanti sarebbe peggio che fermarsi. */
     if (testo.startsWith("|")) {
       pezzi += testo.slice(1);
+      return;
+    }
+    /* Una riga in chiaro dopo la stretta: e' il no di un abbinamento con un
+     * codice sbagliato, che non si puo' dire in una busta. Una busta non
+     * comincia mai con una graffa: in base64 non c'e'. */
+    if (testo.startsWith("{")) {
+      inChiaro.push(JSON.parse(testo));
       return;
     }
     const intero = pezzi ? pezzi + testo : testo;
@@ -109,6 +135,19 @@ export function telefonoCifrato(
       return guasta;
     },
     manda: (cosa) => presa.send(busta.chiudi(JSON.stringify(cosa))),
+    /* La conferma dell'abbinamento: le due chiavi pubbliche, come le ha viste
+     * il telefono, e chi e'. */
+    conferma: (altro = {}) =>
+      presa.send(
+        busta.chiudi(
+          JSON.stringify({
+            t: "conferma",
+            telefono: mia.pubblica.toString("base64"),
+            casa: sua,
+            ...altro,
+          }),
+        ),
+      ),
     get quantiTelai() {
       return quantiTelai;
     },

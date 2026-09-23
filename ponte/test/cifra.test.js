@@ -18,9 +18,18 @@ import {
   coppiaEffimera,
   SOGLIA_DI_COMPRESSIONE,
 } from "../src/cifra.js";
+import { impronta } from "../src/segreti.js";
 
-/* Una stretta di mano intera, come succede a ogni collegamento. */
-function unaStretta({ chiaveDelFilo = null, apertura = aperturaNuova() } = {}) {
+/* Un codice come quelli della console: sedici lettere dell'alfabeto buono. */
+const CODICE = "ABCDEFGHJKMNPQRS";
+
+/* Una stretta di mano intera, come succede a ogni collegamento. Senza chiave
+ * del filo e' quella di un abbinamento, col codice. */
+function unaStretta({
+  chiaveDelFilo = null,
+  codice = chiaveDelFilo ? null : CODICE,
+  apertura = aperturaNuova(),
+} = {}) {
   const telefono = coppiaEffimera();
   const casa = coppiaEffimera();
   const comune = {
@@ -28,6 +37,7 @@ function unaStretta({ chiaveDelFilo = null, apertura = aperturaNuova() } = {}) {
     dellaCasa: casa.pubblica,
     apertura,
     chiaveDelFilo,
+    codice,
   };
   return {
     telefono,
@@ -61,14 +71,34 @@ test("le due punte arrivano alla stessa chiave senza mai mandarsela", () => {
   assert.equal(stretta.daDentroIlTelefono.length, 32);
 });
 
-test("funziona anche senza la chiave del filo, che e' il caso dell'abbinamento", () => {
+test("nell'abbinamento la chiave viene dal codice, e le due punte ci arrivano uguali", () => {
   const stretta = unaStretta();
   assert.deepEqual(stretta.daDentroIlTelefono, stretta.daDentroLaCasa);
 });
 
+test("senza chiave del filo e senza codice una chiave non si fa piu'", () => {
+  /* Era la stretta di mano dell'abbinamento di prima: il solo scambio
+   * effimero, che non difende da chi sta in mezzo. Non deve poter tornare
+   * nemmeno per sbaglio. */
+  const telefono = coppiaEffimera();
+  const casa = coppiaEffimera();
+  const comune = {
+    miaPrivata: telefono.privata,
+    suaPubblica: casa.pubblica,
+    delTelefono: telefono.pubblica,
+    dellaCasa: casa.pubblica,
+    apertura: aperturaNuova(),
+  };
+  assert.throws(() => chiaveDiSessione(comune));
+  assert.throws(() =>
+    chiaveDiSessione({ ...comune, chiaveDelFilo: chiaveDelFiloNuova(), codice: CODICE }),
+  );
+});
+
 test("chi ha visto passare le due chiavi pubbliche non ricava niente", () => {
   /* E' quello che vede il centralino: due chiavi pubbliche e l'apertura. Con
-   * quelle sole non si arriva alla chiave comune. */
+   * quelle sole non si arriva alla chiave comune — nemmeno sapendo il
+   * codice, che qui gli si regala. */
   const stretta = unaStretta();
   const chiGuarda = coppiaEffimera();
   const indovinata = chiaveDiSessione({
@@ -77,8 +107,58 @@ test("chi ha visto passare le due chiavi pubbliche non ricava niente", () => {
     delTelefono: stretta.telefono.pubblica,
     dellaCasa: stretta.casa.pubblica,
     apertura: stretta.apertura,
+    codice: CODICE,
   });
   assert.notDeepEqual(stretta.daDentroLaCasa, indovinata);
+});
+
+test("chi si mette in mezzo a un abbinamento senza il codice arriva a un'altra chiave", () => {
+  /* Il centralino l'impronta del codice la conosce — e' su quella che
+   * instrada — e fa lui la stretta di mano con la casa, con una chiave
+   * effimera sua. Tutto quello che gli manca e' il codice, e senza quello la
+   * sua chiave e quella della casa non coincidono: la conferma non si apre. */
+  const inMezzo = coppiaEffimera();
+  const casa = coppiaEffimera();
+  const apertura = aperturaNuova();
+  const comune = { delTelefono: inMezzo.pubblica, dellaCasa: casa.pubblica, apertura };
+  const dellaCasa = chiaveDiSessione({
+    ...comune,
+    miaPrivata: casa.privata,
+    suaPubblica: inMezzo.pubblica,
+    codice: CODICE,
+  });
+  const sua = chiaveDiSessione({
+    ...comune,
+    miaPrivata: inMezzo.privata,
+    suaPubblica: casa.pubblica,
+    /* L'impronta al posto del codice: e' tutto quello che ha. */
+    codice: impronta(CODICE),
+  });
+  assert.notDeepEqual(dellaCasa, sua);
+  assert.throws(
+    () => new Busta(dellaCasa, { io: "casa" }).apri(new Busta(sua).chiudi("{}")),
+    BustaGuasta,
+  );
+});
+
+test("il codice battuto a mano da' la stessa chiave del codice inquadrato", () => {
+  const telefono = coppiaEffimera();
+  const casa = coppiaEffimera();
+  const apertura = aperturaNuova();
+  const comune = { delTelefono: telefono.pubblica, dellaCasa: casa.pubblica, apertura };
+  const inquadrato = chiaveDiSessione({
+    ...comune,
+    miaPrivata: telefono.privata,
+    suaPubblica: casa.pubblica,
+    codice: CODICE,
+  });
+  const battuto = chiaveDiSessione({
+    ...comune,
+    miaPrivata: casa.privata,
+    suaPubblica: telefono.pubblica,
+    codice: "abcd-efgh jkmn-pqrs",
+  });
+  assert.deepEqual(inquadrato, battuto);
 });
 
 test("chi si mettesse in mezzo per davvero non passa, se c'e' la chiave del filo", () => {

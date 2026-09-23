@@ -15,11 +15,26 @@ import { codiceNuovo, codicePulito, impronta, stessoSegreto } from "./segreti.js
 
 const MINUTO = 60 * 1000;
 
-/* Il codice non si indovina, ma nessuno deve poterci provare a raffica: dopo
- * dieci tentativi sbagliati in un quarto d'ora la porta resta chiusa finche'
- * la finestra non passa, e la console lo vede. */
-const TENTATIVI_MASSIMI = 10;
+/* Il codice non si indovina, ma nessuno deve poterci provare a raffica.
+ *
+ * I tentativi si contano **per chi bussa** — l'indirizzo da cui arriva, o
+ * quello che dice il centralino — e poi tutti insieme. Contarli solo tutti
+ * insieme, come si faceva, voleva dire che dieci tentativi sbagliati di un
+ * estraneo chiudevano la porta anche a chi aveva il codice vero in mano e
+ * stava davanti allo schermo. Cosi' chi sbaglia si chiude la porta da solo, e
+ * gli altri no.
+ *
+ * Il tetto di tutti insieme resta, ma alto: e' una rete sotto la rete. Il
+ * codice e' di ottanta bit e vive cinque minuti, e non e' il tetto a
+ * renderlo difficile da indovinare. */
+const TENTATIVI_PER_CHI = 5;
+const TENTATIVI_MASSIMI = 50;
 const FINESTRA_DEI_TENTATIVI = 15 * MINUTO;
+
+/* Quanti «chi» diversi si ricordano al massimo. Chi bussa puo' dire di essere
+ * chiunque — passando dal centralino l'indirizzo lo dice il centralino — e
+ * un elenco senza fondo sarebbe un altro modo di riempire la memoria. */
+const CHI_RICORDATI = 1000;
 
 /* L'identificativo di un utente di Home Assistant: trentadue cifre
  * esadecimali. Tenere solo quella forma vuol dire che nessuno ci scrive dentro
@@ -36,7 +51,9 @@ export class Abbinamento {
     this.minutiDelCodice = minutiDelCodice;
     this.adesso = adesso;
     this._codice = null;
+    /* Quando, tutti insieme; e quando, per chi. */
     this._sbagliati = [];
+    this._perChi = new Map();
   }
 
   /* Fabbrica un codice nuovo e spegne quello di prima.
@@ -73,6 +90,7 @@ export class Abbinamento {
     /* Un codice nuovo azzera i tentativi: chi lo ha appena fabbricato sta
      * guardando lo schermo, e non deve pagare per chi ha bussato prima. */
     this._sbagliati = [];
+    this._perChi.clear();
     return { codice, scadeIl: this._codice.scadeIl, utente: this._codice.utente };
   }
 
@@ -110,16 +128,18 @@ export class Abbinamento {
 
   /* Consuma il codice. Solleva con un motivo leggibile invece di tornare
    * `false`: chi chiama deve poter dire all'utente *perche'* non e' entrato,
-   * e «codice sbagliato» e «troppi tentativi» sono due cose diverse. */
-  consuma(scritto) {
-    const bloccatoFinoA = this._bloccatoFinoA();
+   * e «codice sbagliato» e «troppi tentativi» sono due cose diverse.
+   *
+   * `da` e' chi bussa: i tentativi sbagliati si contano anche per lui. */
+  consuma(scritto, { da = "?" } = {}) {
+    const bloccatoFinoA = this.bloccato(da);
     if (bloccatoFinoA) throw new TroppiTentativi("troppi tentativi", bloccatoFinoA);
 
     this._scadenza();
     if (!this._codice) throw new CodiceSbagliato("nessun codice di abbinamento e' attivo");
 
     if (!stessoSegreto(this._codice.impronta, impronta(codicePulito(scritto)))) {
-      this._sbagliati.push(this.adesso());
+      this.sbagliato(da);
       throw new CodiceSbagliato("codice sbagliato");
     }
 
@@ -133,13 +153,51 @@ export class Abbinamento {
     const utente = this._codice.utente;
     this._codice = null;
     this._sbagliati = [];
+    this._perChi.clear();
     return { utente };
+  }
+
+  /* Un tentativo andato male che non e' passato da `consuma`: e' la stretta
+   * di mano dell'abbinamento, dove il codice non viaggia e un codice
+   * sbagliato si vede da una busta che non si apre. Conta uguale. */
+  sbagliato(da = "?") {
+    const ora = this.adesso();
+    this._sbagliati.push(ora);
+    const chi = String(da);
+    const suoi = this._perChi.get(chi) ?? [];
+    suoi.push(ora);
+    /* Tolto e rimesso: cosi' l'ordine della mappa e' quello dell'ultimo
+     * tentativo, e quando e' piena se ne va chi non si fa vivo da piu' tempo. */
+    this._perChi.delete(chi);
+    this._perChi.set(chi, suoi);
+    while (this._perChi.size > CHI_RICORDATI) {
+      this._perChi.delete(this._perChi.keys().next().value);
+    }
+  }
+
+  /* Fino a quando `da` deve aspettare, o `null` se puo' provare. Vale il
+   * tetto suo e quello di tutti insieme, quale dei due scade dopo. */
+  bloccato(da = "?") {
+    const ora = this.adesso();
+    const chi = String(da);
+    const suoi = (this._perChi.get(chi) ?? []).filter(
+      (quando) => ora - quando < FINESTRA_DEI_TENTATIVI,
+    );
+    if (suoi.length) this._perChi.set(chi, suoi);
+    else this._perChi.delete(chi);
+
+    const tutti = this._bloccatoFinoA();
+    const suo = suoi.length >= TENTATIVI_PER_CHI ? suoi[0] + FINESTRA_DEI_TENTATIVI : null;
+    if (tutti == null) return suo;
+    if (suo == null) return tutti;
+    return Math.max(tutti, suo);
   }
 
   _scadenza() {
     if (this._codice && this._codice.scadeIl <= this.adesso()) this._codice = null;
   }
 
+  /* Il blocco di tutti insieme. */
   _bloccatoFinoA() {
     const ora = this.adesso();
     this._sbagliati = this._sbagliati.filter((quando) => ora - quando < FINESTRA_DEI_TENTATIVI);

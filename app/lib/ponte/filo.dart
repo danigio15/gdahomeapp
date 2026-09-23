@@ -375,7 +375,9 @@ class Filo {
   ///
   ///  - **torna**: si e' dentro;
   ///  - **[SegnoRifiutato]**: il telefono e' stato staccato dalla console, e
-  ///    non si riprova perche' riprovare non cambierebbe niente;
+  ///    non si riprova perche' riprovare non cambierebbe niente. Lo si crede
+  ///    solo quando la casa lo dice dentro il cifrato (`auth_invalid`): un
+  ///    «non ti conosco» in chiaro e' un [RifiutoNonFirmato], e si riprova;
   ///  - **[PonteIrraggiungibile]**: non si trova la casa. Arriva **appena** il
   ///    primo giro di ricerca ha finito, con la spiegazione di chi ha cercato,
   ///    non dopo [entro] con una spiegazione nostra; [entro] resta come rete
@@ -469,13 +471,12 @@ class Filo {
         unawaited(sotto.chiudi());
         return;
       }
+      /* Un «non ti conosco» detto qui, prima della stretta, e' in chiaro e
+       * non lo firma nessuno: arriva come [RifiutoNonFirmato], e finisce
+       * nell'ultimo `catch` come ogni altro intoppo — si dice, e si riprova.
+       * Spegnere il filo per sempre lo puo' solo `auth_invalid`, che arriva
+       * dentro il cifrato: vedi `_arrivato`, e in cima a `stretta.dart`. */
       presa = await stringiLaMano(sotto, chi: chi, chiaveDelFilo: chiave);
-    } on SegnoRifiutato catch (errore) {
-      /* La casa dice che questo telefono non lo conosce piu'. Non e' una
-       * caduta: ribussare non cambierebbe niente, e chi guarda lo schermo deve
-       * sapere che va riabbinato. */
-      _segnoNonVale(errore.spiegazione);
-      return;
     } on TimeoutException {
       /* Una presa che non si apre e non fallisce e' un silenzio, non una
        * risposta: chi aspetta non lo viene a sapere: il giro dopo, quasi
