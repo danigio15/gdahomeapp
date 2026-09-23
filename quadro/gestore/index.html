@@ -2850,6 +2850,9 @@
       let INSTALLATORI = [];
       let CASE = 0;
       let ORFANE = 0;
+      /* I numeri del servizio: quelli del quadro e, se sta sulla stessa
+       * macchina, quelli del tramite (`/gestore/salute`). */
+      let SALUTE = null;
       /* Le case di ogni installatore, come le vede lui: la matricola → quello
        * che risponde `/installatore/<chi>/case`, cioe' le case, di quali
        * aggiornamenti ci sono le note intere, e le soglie dei metri. */
@@ -3706,6 +3709,57 @@
       async function carica() {
         prendi(await chiedi("/installatori"));
         await caricaLeCase();
+        /* I numeri non sono essenziali: se non arrivano, la pagina va avanti
+         * e lo dice nel suo riquadro. Una chiave rifiutata invece si dice. */
+        try {
+          SALUTE = await chiedi("/salute");
+        } catch (male) {
+          if (male instanceof ChiaveNoNo) throw male;
+          SALUTE = null;
+        }
+      }
+
+      /* Da quanto e' acceso, in parole: i secondi del tramite. */
+      function daQuantoAcceso(secondi) {
+        const s = Number(secondi);
+        if (!Number.isFinite(s) || s < 0) return "";
+        if (s < 3600) return `${Math.max(1, Math.round(s / 60))} min`;
+        if (s < 86400) return `${Math.round(s / 3600)} ore`;
+        const giorni = Math.round(s / 86400);
+        return `${giorni} ${giorni === 1 ? "giorno" : "giorni"}`;
+      }
+
+      /* Il riquadro «Il servizio»: quello che prima si leggeva su /salute da
+       * fuori, e che da fuori adesso non esce piu'. */
+      function ilServizio() {
+        if (!SALUTE) return "";
+        const riga = (nome, valore) =>
+          `<div class="fila ferma"><b>${testo(valore)}</b><span>${testo(nome)}</span></div>`;
+        const siNo = (cosa) => (cosa ? "accesa" : "spenta");
+        const t = SALUTE.tramite;
+        const delTramite = !t
+          ? `<p class="minuta">Il tramite non risponde da questa macchina: se sta su un'altra, i suoi numeri si leggono lì con <code>curl -s http://127.0.0.1:8099/salute</code>.</p>`
+          : `<div class="file">
+               ${/* già HTML */ riga("case collegate", Number(t.case) || 0)}
+               ${/* già HTML */ riga("telefoni collegati", Number(t.telefoni) || 0)}
+               ${/* già HTML */ riga("conversazioni di assistenza", Number(t.chat) || 0)}
+             </div>
+             <p class="minuta">
+               ${t.vivo ? "Acceso" : "Non risponde"}${t.accesoDa !== null ? ` da ${testo(daQuantoAcceso(t.accesoDa))}` : ""} ·
+               segnalazioni ${testo(siNo(t.segnalazioni))} · console dell'assistenza ${testo(siNo(t.console))} ·
+               posta ${testo(siNo(t.posta))}
+             </p>`;
+        return `
+          <section class="riquadro" style="margin-top: 14px">
+            <div class="capoRiquadro"><h3>Il servizio</h3></div>
+            <p class="minuta"><b>Il quadro</b>${SALUTE.versione ? ` · versione ${testo(SALUTE.versione)}` : ""}</p>
+            <div class="file">
+              ${/* già HTML */ riga("case seguite", Number(SALUTE.case) || 0)}
+              ${/* già HTML */ riga("installatori", Number(SALUTE.installatori) || 0)}
+            </div>
+            <p class="minuta" style="margin-top: 12px"><b>Il tramite</b></p>
+            ${/* già HTML */ delTramite}
+          </section>`;
       }
 
       /* Da quanto un installatore non apre il suo cruscotto, in parole. */
@@ -3886,6 +3940,8 @@
           </section>
 
           ${laChiaveNuova()}
+
+          ${/* già HTML */ ilServizio()}
 
           <div class="voce">
             <h2>Gli installatori</h2>

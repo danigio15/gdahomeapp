@@ -318,6 +318,9 @@ export function costruisciIlServer({
   frenoDelleProve = new Freno({ quanti: 3, ogni: 60 * 1000 }),
   /* Chi puo' tenere il cruscotto in un riquadro: vedi `gliOspiti`. */
   ospiti = gliOspiti(),
+  /* Dove chiedere i numeri del tramite, per la gestione. Vuoto: non si
+   * chiedono. */
+  saluteDelTramite = "",
   registro = { debug() {}, info() {}, attenzione() {}, errore() {} },
 }) {
   /* La gestione si apre solo dove c'e' una chiave vera. Senza, questo quadro
@@ -1060,6 +1063,33 @@ export function costruisciIlServer({
     };
   }
 
+  /* I numeri del tramite, per la gestione: quante case e quanti telefoni
+   * sono collegati adesso, e cosa e' acceso. Solo numeri e si' o no, presi uno
+   * per uno: quello che risponde il tramite non arriva alla pagina cosi'
+   * com'e'. Se non risponde entro due secondi, o non c'e', si dice `null` e la
+   * pagina lo scrive. */
+  async function iNumeriDelTramite() {
+    if (!saluteDelTramite) return null;
+    try {
+      const presa = await fetch(saluteDelTramite, { signal: AbortSignal.timeout(2000) });
+      if (!presa.ok) return null;
+      const detto = await presa.json();
+      const numero = (cosa) => (Number.isFinite(Number(cosa)) ? Number(cosa) : null);
+      return {
+        vivo: detto?.vivo === true,
+        accesoDa: numero(detto?.acceso_da),
+        case: numero(detto?.case),
+        telefoni: numero(detto?.telefoni),
+        segnalazioni: detto?.segnalazioni === true,
+        chat: numero(detto?.chat?.linee),
+        console: detto?.chat?.console === true,
+        posta: detto?.posta === true,
+      };
+    } catch (_errore) {
+      return null;
+    }
+  }
+
   /* Le prove che una casa porta, oltre alla sua chiave: servono solo il
    * giorno che cambia installatore (`chiavi.riconosci`). */
   function leProve(richiesta) {
@@ -1632,7 +1662,7 @@ export function costruisciIlServer({
     }
 
     if (via === "/salute" && metodo === "GET") {
-      json(risposta, laSalute());
+      json(risposta, { ...laSalute(), tramite: await iNumeriDelTramite() });
       return;
     }
 

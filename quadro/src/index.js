@@ -52,6 +52,10 @@ export async function alzaIlQuadro({
   /* Dove sta la plancia da servire nell'editor: vuoto, la si cerca accanto a
    * `src/` e poi nella repository (`plancia-servita.js`). */
   cartellaDellaPlancia = process.env.QUADRO_PLANCIA || undefined,
+  /* Dove il tramite dice i suoi numeri, se sta su questa stessa macchina:
+   * la gestione li mostra accanto a quelli del quadro. Chiesti da qui, il
+   * tramite li dice per intero; da fuori non li dice a nessuno. */
+  saluteDelTramite = process.env.QUADRO_TRAMITE_SALUTE ?? "http://127.0.0.1:8099/salute",
 } = {}) {
   const registro = apriIlRegistro(livello);
   const case_ = new CaseSeguite({ cartella });
@@ -82,6 +86,7 @@ export async function alzaIlQuadro({
     fattorino,
     plancia,
     registro,
+    saluteDelTramite,
   });
 
   /* Il giro degli avvisi: quello che fa lavorare il quadro mentre nessuno lo
