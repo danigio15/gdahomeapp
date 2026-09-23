@@ -1,9 +1,5 @@
-Pair a Zigbee device from the app, without opening Home Assistant: the app opens the network, waits, and the dashboard asks which room to put it in.
+Security update: install it together with gdahome 1.6.1 in Home Assistant.
 
-Put your face or your fingerprint in front of the app.
+Pairing a new phone is protected by the QR code even while the keys are exchanged. Phones already paired keep working.
 
-A kWh can cost different amounts at different hours, and the month's spend splits by time band: counted hour by hour, not estimated.
-
-Rooms open grouped by floor, and a card warns when something stops answering.
-
-The dashboard inside Home Assistant opens in three seconds instead of ten.
+The face or fingerprint lock covers every screen, including the ones opened on top of your home.

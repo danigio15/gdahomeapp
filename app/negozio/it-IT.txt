@@ -1,9 +1,5 @@
-Un dispositivo Zigbee lo abbini dall'app, senza aprire Home Assistant: l'app apre la rete, aspetta, e la plancia ti chiede in che stanza metterlo.
+Aggiornamento di sicurezza: installalo insieme a gdahome 1.6.1 in Home Assistant.
 
-Davanti all'app ci puoi mettere il volto o l'impronta.
+L'abbinamento di un telefono nuovo è protetto dal codice del QR anche mentre si scambiano le chiavi. I telefoni già abbinati continuano a funzionare.
 
-Il kWh può costare diverso a ore diverse, e la spesa del mese si divide per fascia: contata ora per ora, non stimata.
-
-Le stanze si aprono divise per piano, e una tessera avvisa quando qualcosa non risponde.
-
-La plancia dentro Home Assistant si apre in tre secondi invece che in dieci.
+Il lucchetto con volto o impronta copre ogni schermata, anche quelle aperte sopra la casa.

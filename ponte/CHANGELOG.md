@@ -11,6 +11,30 @@ fuori. La plancia dentro continua a dire la sua, e si legge dov'è sempre
 stata: nella pastiglia «La plancia» della console. Sono due numeri perché
 sono due cose.
 
+## 1.6.1
+
+**Un aggiornamento di sicurezza: va installato.** Rivista una per una tutte le
+strade da cui si entra in gdahome — l'add-on, l'app, il centralino, il quadro
+degli installatori — e chiuse quelle che lasciavano fare più del dovuto.
+Aggiorna l'add-on **e** l'app.
+
+Cosa si nota:
+
+- **Per abbinare un telefono nuovo servono l'add-on e l'app di questa
+  versione.** Il codice del QR adesso protegge anche lo scambio delle chiavi,
+  e l'abbinamento non passa più in chiaro nemmeno in casa. I telefoni già
+  abbinati continuano a funzionare come prima, senza fare niente.
+- **La console di gdahome è solo per chi amministra Home Assistant.** Gli
+  altri utenti di casa continuano a vedere e usare la plancia; non ne cambiano
+  la configurazione e non fabbricano codici di abbinamento.
+- **Un telefono intestato a chi non amministra** usa la casa — luci, clima,
+  tapparelle, telecamere, scene — ma non tocca le impostazioni di Home
+  Assistant.
+- **L'add-on si aggiorna solo dalle versioni pubblicate**, mai a una più
+  vecchia di quella che ha.
+- **Il logo di chi ti ha fatto l'impianto** si accetta solo come immagine
+  (PNG, JPEG, WebP).
+
 ## 1.6.0.6
 
 **I dispositivi non connessi si contano per dispositivo, non per entità.** «Non
