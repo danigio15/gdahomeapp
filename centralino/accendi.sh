@@ -847,15 +847,17 @@ $NOME_DEL_TRAMITE {
 	# indirizzo, e due indirizzi vorrebbero dire due abbinamenti da fare.
 	# Quello che il browser non deve fare con queste pagine: indovinare il tipo
 	# di un file invece di credere a quello detto, mettere l'app o la console
-	# dentro un riquadro di un altro sito, lasciare che una finestra aperta da
-	# qui metta le mani su questa. Alla console il tramite aggiunge da se' le
+	# dentro un riquadro di un altro sito, lasciare che una pagina di un altro
+	# sito che apre l'app ne tenga la maniglia. Le finestre che apre l'app si'
+	# (\`allow-popups\`): e' cosi' che consegna il codice al cruscotto del quadro.
+	# Alla console il tramite aggiunge da se' le
 	# regole sugli script; all'app no, perche' Flutter nel browser ne ha
 	# bisogno di larghe, e qui si mette solo quello che non la rompe.
 	header /app/* {
 		X-Content-Type-Options nosniff
 		X-Frame-Options DENY
 		Content-Security-Policy "frame-ancestors 'none'"
-		Cross-Origin-Opener-Policy same-origin
+		Cross-Origin-Opener-Policy same-origin-allow-popups
 	}
 	header /console* {
 		X-Content-Type-Options nosniff

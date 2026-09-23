@@ -123,7 +123,7 @@ jobs:
               '  X-Content-Type-Options: nosniff' \
               "  Content-Security-Policy: frame-ancestors 'none'" \
               '  X-Frame-Options: DENY' \
-              '  Cross-Origin-Opener-Policy: same-origin' \
+              '  Cross-Origin-Opener-Policy: same-origin-allow-popups' \
               '  Referrer-Policy: no-referrer' \
               > nuvola/pubblico/_headers
           else

@@ -119,7 +119,7 @@ const PER_LA_CONSOLE = Object.freeze({
 const PER_L_APP_WEB = Object.freeze({
   "x-content-type-options": "nosniff",
   "referrer-policy": "same-origin",
-  "cross-origin-opener-policy": "same-origin",
+  "cross-origin-opener-policy": "same-origin-allow-popups",
   "content-security-policy": "frame-ancestors 'self'",
 });
 

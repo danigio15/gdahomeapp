@@ -202,7 +202,7 @@ test("una cartella chiesta come file non fa cadere il ponte", async () => {
     const pagina = await fetch(`${dove}/app/`);
     assert.equal(pagina.status, 200);
     assert.equal(pagina.headers.get("x-content-type-options"), "nosniff");
-    assert.equal(pagina.headers.get("cross-origin-opener-policy"), "same-origin");
+    assert.equal(pagina.headers.get("cross-origin-opener-policy"), "same-origin-allow-popups");
     assert.equal(pagina.headers.get("referrer-policy"), "same-origin");
     assert.equal(pagina.headers.get("content-security-policy"), "frame-ancestors 'self'");
     const salute = await fetch(`${dove}/salute`);

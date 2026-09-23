@@ -233,7 +233,10 @@ test("il firewall apre SSH prima di accendersi, e non rompe quello che c'e' gia'
 
 test("il tramite ascolta solo da qui, e Caddy mette le intestazioni a app e console", () => {
   const blocco = /^\$NOME_DEL_TRAMITE \{$([\s\S]*?)^\}$/m.exec(ACCENDI);
-  assert.match(blocco[1], /header \/app\/\* \{[\s\S]*?Cross-Origin-Opener-Policy same-origin/);
+  assert.match(
+    blocco[1],
+    /header \/app\/\* \{[\s\S]*?Cross-Origin-Opener-Policy same-origin-allow-popups/,
+  );
   assert.match(blocco[1], /header \/app\/\* \{[\s\S]*?frame-ancestors 'none'/);
   assert.match(blocco[1], /header \/console\* \{[\s\S]*?X-Frame-Options DENY/);
   /* E nessuno parla col tramite se non da questa macchina. */
