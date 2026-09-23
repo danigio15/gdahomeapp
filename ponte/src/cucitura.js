@@ -12,11 +12,17 @@
  *
  * **Non c'e' niente da autenticare, e non e' una dimenticanza.** Questa presa
  * sta sulla porta dell'ingress, e sull'ingress arriva solo chi e' gia' entrato
- * in Home Assistant: il Supervisor non lascia passare nessun altro. Chi bussa
- * qui e' quindi qualcuno che in quella casa e' gia' dentro, e chiedergli un
- * secondo segno sarebbe chiedergli di autenticarsi due volte per la stessa
- * stanza. La porta dell'app e' un'altra cosa — e' esposta, e li' il segno
- * serve.
+ * in Home Assistant: il Supervisor non lascia passare nessun altro, e il
+ * server non accetta niente che non arrivi dal Supervisor (`server.js`). Chi
+ * bussa qui e' quindi qualcuno che in quella casa e' gia' dentro, e
+ * chiedergli un secondo segno sarebbe chiedergli di autenticarsi due volte per
+ * la stessa stanza. La porta dell'app e' un'altra cosa — e' esposta, e li' il
+ * segno serve.
+ *
+ * **Ma essere dentro non vuol dire amministrare.** Il filo verso Home
+ * Assistant e' aperto col segno del Supervisor, e chi apre la plancia puo'
+ * essere un utente qualunque della casa: quello che manda passa dalla dogana
+ * (`dogana.js`), con le regole di chi e'.
  *
  * **Niente rinumerazione.** Ogni pagina si prende un filo suo verso Home
  * Assistant, come ogni telefono (`ponte.js`): i numeri dei messaggi sono i
@@ -33,6 +39,7 @@
 
 import { CasaIrraggiungibile } from "./casa.js";
 import { eUnaCommissione, no } from "./commissioni.js";
+import { passaLaDogana } from "./dogana.js";
 import { NOME } from "./marchio.js";
 
 function leggi(testo) {
@@ -73,6 +80,9 @@ export class Cucitura {
     this.quale = quale;
     this.filo = null;
     this.chiusa = false;
+    /* Se chi guarda amministra, chiesto a Home Assistant quando il filo si
+     * alza: vedi `_amministra`. */
+    this._amministraAllaStretta = false;
     presa.onMessaggio = (testo) => this._dallaPagina(testo);
     presa.onChiusa = () => this._laPaginaSeNEAndata();
   }
@@ -84,6 +94,13 @@ export class Cucitura {
    * manda nessuno — glielo dice `__DASHBOARDMODERN_HOSTED__` — e resterebbe
    * ad aspettare per sempre. */
   async avvia() {
+    if (this.chiGuarda && this.utenti?.amministratore) {
+      try {
+        this._amministraAllaStretta = (await this.utenti.amministratore(this.chiGuarda)) === true;
+      } catch (_errore) {
+        this._amministraAllaStretta = false;
+      }
+    }
     try {
       this.filo = await this.casa.apriIlFilo({
         onMessaggio: (dallaCasa) => this._allaPagina(dallaCasa),
@@ -123,7 +140,26 @@ export class Cucitura {
         return;
       }
     }
-    if (!this.filo?.manda(testo)) this.chiudi(1011, "il filo con la casa e' caduto");
+    const { passa, rifiuti } = passaLaDogana(testo, { amministra: this._amministra() });
+    for (const no of rifiuti) this._manda(no);
+    for (const uno of passa) {
+      if (!this.filo?.manda(uno)) {
+        this.chiudi(1011, "il filo con la casa e' caduto");
+        return;
+      }
+    }
+  }
+
+  /* Se chi guarda amministra la casa. Chi non si sa chi sia — l'ingress che
+   * non ha detto niente — non amministra: una porta che si apre quando non si
+   * sa niente non e' una porta. Si preferisce la risposta fresca di
+   * `utenti.js`, se c'e', a quella avuta quando il filo si e' alzato. */
+  _amministra() {
+    const chi = this.chiGuarda || "";
+    if (!chi) return false;
+    const subito = this.utenti?.amministratoreSubito?.(chi);
+    if (subito === true || subito === false) return subito;
+    return this._amministraAllaStretta === true;
   }
 
   /* Quali comandi fa il ponte invece di girarli. E' la stessa domanda che fa
@@ -145,6 +181,7 @@ export class Cucitura {
       ? this.commissioni.rispondi(detto, {
           chiChiede: this.chiGuarda || "",
           amministra: this.utenti?.amministratoreSubito?.(this.chiGuarda || "") ?? null,
+          puoAmministrare: this._amministra(),
         })
       : Promise.resolve(no(detto.id ?? null, "unknown_command", "questo ponte non lo sa fare"));
     risposta

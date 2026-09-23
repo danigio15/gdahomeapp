@@ -539,7 +539,10 @@ test("i comandi zigbee esistono solo dove una rete c'è", async () => {
   assert.equal(stato.result.quale, ZHA);
   assert.equal(stato.result.aperta, false);
 
-  const aperta = await con.rispondi({ id: 3, type: "ponte/zigbee/apri", secondi: 45 });
+  const aperta = await con.rispondi(
+    { id: 3, type: "ponte/zigbee/apri", secondi: 45 },
+    { puoAmministrare: true },
+  );
   assert.equal(aperta.success, true);
   assert.equal(aperta.result.restano, 45);
 

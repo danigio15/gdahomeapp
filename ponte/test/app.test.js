@@ -26,6 +26,9 @@ const QUI = dirname(fileURLToPath(import.meta.url));
 const CONSOLE = join(dirname(QUI), "console");
 const APP_VERA = join(dirname(QUI), "app");
 
+/* Chi apre la console nelle prove: l'ingress lo dice, e amministra. */
+const CHI_AMMINISTRA = "chi-amministra";
+
 /* Una console con dentro il minimo che le serve: qui non si prova ne' la casa
  * ne' l'abbinamento, si prova una cartella servita. */
 async function unaConsole({ cartellaDellApp, chat } = {}) {
@@ -38,12 +41,20 @@ async function unaConsole({ cartellaDellApp, chat } = {}) {
     chat,
     cartellaDellaConsole: CONSOLE,
     cartellaDellApp,
+    /* Le prove bussano da qui, non dal proxy dell'ingress. */
+    proxyDellIngress: ["127.0.0.1"],
+    utenti: { amministratore: async (chi) => chi === CHI_AMMINISTRA },
   });
   await new Promise((ok) => server.listen(0, "127.0.0.1", ok));
   const dove = `http://127.0.0.1:${server.address().port}`;
   return {
     dove,
-    chiedi: (via, opzioni) => fetch(`${dove}${via}`, { redirect: "manual", ...opzioni }),
+    chiedi: (via, opzioni = {}) =>
+      fetch(`${dove}${via}`, {
+        redirect: "manual",
+        ...opzioni,
+        headers: { "x-remote-user-id": CHI_AMMINISTRA, ...(opzioni.headers || {}) },
+      }),
     spegni: () => new Promise((ok) => server.close(ok)),
   };
 }

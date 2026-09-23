@@ -6,20 +6,19 @@
  * telefono.
  *
  * `app` e' la porta su cui bussa il telefono, ed e' l'unica che puo' finire
- * esposta a internet. Quello che si puo' fare da li' e' scritto in tre righe:
- * chiedere se il ponte e' vivo, presentare un codice di abbinamento, aprire il
- * filo con un segno gia' avuto. Nient'altro esiste su quella porta.
+ * esposta a internet. Quello che si puo' fare da li' e' scritto in poche
+ * righe: chiedere se il ponte e' vivo, prendere i file dell'app e della
+ * plancia, aprire il filo — dove ci si abbina con un codice, o si entra con
+ * un segno gia' avuto. Nient'altro esiste su quella porta.
  */
 
 import { QUADRO_DI_DIFETTO } from "./rapporto.js";
 import { createReadStream, existsSync, statSync } from "node:fs";
 import { createServer } from "node:http";
-import { extname, join, normalize } from "node:path";
+import { extname, join, normalize, sep } from "node:path";
 
-import { CodiceSbagliato, TroppiTentativi } from "./abbinamento.js";
-import { TroppiDispositivi } from "./dispositivi.js";
 import { invito } from "./invito.js";
-import { accetta, eUnaSalita } from "./presa.js";
+import { accetta, eUnaSalita, SaliteSenzaNome } from "./presa.js";
 import { BASE } from "./plancia.js";
 import { laVede, vedeQualcosa } from "./plance.js";
 import { Cucitura } from "./cucitura.js";
@@ -28,7 +27,7 @@ import { conLePremesse, linguaPulita, paginaDellaLingua } from "./premesse.js";
 import { qrInSvg } from "./qr.js";
 import { impronta } from "./segreti.js";
 
-/* Un corpo piu' grande di cosi' non e' un abbinamento. */
+/* Un corpo piu' grande di cosi' non e' una richiesta della console. */
 const CORPO_MASSIMO = 4 * 1024;
 
 const TIPI = Object.freeze({
@@ -65,10 +64,10 @@ const TIPI = Object.freeze({
  * non sa niente e non gli serve.
  *
  * Perche' l'origine aperta qui non e' un buco, detto per esteso: su questa
- * porta ogni sportello vuole o un codice di abbinamento valido — che vive
- * cinque minuti, si usa una volta, e nasce solo dietro l'autenticazione di
- * Home Assistant — o un segno gia' avuto, che viaggia nel corpo e non in un
- * biscotto. Non c'e' nessuna autorita' implicita: niente cookie, niente
+ * porta ci sono file pubblici e il filo, e il filo vuole o un codice di
+ * abbinamento valido — che vive cinque minuti, si usa una volta, e nasce solo
+ * dietro l'autenticazione di Home Assistant — o un segno gia' avuto, che
+ * viaggia dentro la stretta di mano e non in un biscotto. Non c'e' nessuna autorita' implicita: niente cookie, niente
  * sessione del browser, niente che una pagina qualunque possa sfruttare per
  * conto di chi la guarda. Una pagina cattiva con queste intestazioni puo' fare
  * esattamente quello che puo' gia' fare `curl`, cioe' bussare senza sapere
@@ -76,7 +75,7 @@ const TIPI = Object.freeze({
  * l'origine. */
 const PER_IL_BROWSER = Object.freeze({
   "access-control-allow-origin": "*",
-  "access-control-allow-methods": "GET, POST, OPTIONS",
+  "access-control-allow-methods": "GET, OPTIONS",
   "access-control-allow-headers": "content-type",
   "access-control-max-age": "600",
 });
@@ -92,6 +91,84 @@ function json(risposta, corpo, stato = 200) {
 }
 
 const male = (risposta, stato, perche) => json(risposta, { errore: perche }, stato);
+
+/* ─── Le intestazioni che valgono per tutti ──────────────────────────────── */
+
+/* Chi riceve un file lo legge per quello che diciamo che e', e non per quello
+ * che gli sembra: senza `nosniff` un browser che «annusa» puo' prendere per
+ * pagina un file che pagina non e'. E nessun indirizzo di casa esce verso
+ * altri siti come provenienza. */
+const PER_TUTTI = Object.freeze({
+  "x-content-type-options": "nosniff",
+  "referrer-policy": "no-referrer",
+});
+
+/* La console e la plancia servita dall'ingress: Home Assistant le mette in un
+ * riquadro della sua pagina, che sta sulla stessa origine. Nessun altro sito
+ * le puo' incorniciare. Qui niente regole sugli script: la plancia ne ha di
+ * scritti dentro la pagina, e una regola che li ferma e' una plancia bianca. */
+const PER_LA_CONSOLE = Object.freeze({
+  ...PER_TUTTI,
+  "content-security-policy": "frame-ancestors 'self'",
+});
+
+/* gdahome nel browser. Sotto l'ingress il percorso contiene un gettone, e
+ * non deve uscire verso altri siti come provenienza; la finestra non si
+ * lascia agganciare da pagine di altri siti che la aprono; e la incornicia
+ * solo Home Assistant, dalla stessa origine. */
+const PER_L_APP_WEB = Object.freeze({
+  "x-content-type-options": "nosniff",
+  "referrer-policy": "same-origin",
+  "cross-origin-opener-policy": "same-origin",
+  "content-security-policy": "frame-ancestors 'self'",
+});
+
+/* Un'immagine non e' una pagina: se qualcuno la apre da sola, non ci gira
+ * niente dentro. */
+const PER_LE_IMMAGINI = Object.freeze({
+  "content-security-policy": "default-src 'none'; sandbox",
+});
+
+function mettiLeIntestazioni(risposta, quali) {
+  for (const [nome, valore] of Object.entries(quali)) risposta.setHeader(nome, valore);
+}
+
+/* ─── Chi puo' bussare alla porta dell'ingress ───────────────────────────── */
+
+/* Il proxy dell'ingress, come lo chiama il Supervisor: e' l'unico che deve
+ * arrivare alla console. */
+export const PROXY_DELL_INGRESS = "172.30.32.2";
+
+/* Se questa connessione arriva dal proxy dell'ingress.
+ *
+ * La porta della console e' in ascolto su tutta la rete dell'add-on, e la
+ * rete fra gli add-on non e' l'ingress: un altro contenitore potrebbe bussare
+ * qui da se', scrivere lui `X-Remote-User-Id` e farsi passare per chiunque.
+ * Allora si guarda **da dove** arriva, prima di credere a quello che dice.
+ * L'indirizzo si puo' dare a mano solo da codice — le prove girano su
+ * `127.0.0.1` — e una lista vuota non fa entrare nessuno. */
+export function daLIngress(indirizzo, ammessi = [PROXY_DELL_INGRESS]) {
+  const elenco = (Array.isArray(ammessi) ? ammessi : [ammessi])
+    .map((uno) => String(uno || "").trim())
+    .filter(Boolean);
+  if (!elenco.length) return false;
+  const suo = String(indirizzo || "")
+    .trim()
+    .replace(/^::ffff:/i, "");
+  return Boolean(suo) && elenco.includes(suo);
+}
+
+/* Il prefisso dell'ingress, se e' uno vero.
+ *
+ * Lo scrive il Supervisor, ma finisce dentro una pagina — nel `<base>` e
+ * nell'indirizzo del WebSocket — e una cosa che finisce in una pagina si
+ * guarda prima: solo `/api/hassio_ingress/<gettone>`, lettere e numeri. Tutto
+ * il resto vale come nessun prefisso. */
+const PREFISSO_BUONO = /^\/api\/hassio_ingress\/[A-Za-z0-9_-]{1,128}$/;
+export function prefissoDellIngress(richiesta) {
+  const detto = String(richiesta?.headers?.["x-ingress-path"] || "").replace(/\/+$/, "");
+  return PREFISSO_BUONO.test(detto) ? detto : "";
+}
 
 async function corpoDiJson(richiesta) {
   let quanto = 0;
@@ -120,7 +197,7 @@ export const rotta = (richiesta) => {
    * modo giusto di toglierlo: cercare a mano un pezzo noto dentro il percorso
    * non funziona, perche' il prefisso comincia a sua volta con `/api/`. */
   const intero = new URL(richiesta.url || "/", "http://ponte").pathname;
-  const prefisso = String(richiesta.headers?.["x-ingress-path"] || "");
+  const prefisso = prefissoDellIngress(richiesta);
   if (prefisso && intero.startsWith(prefisso)) return intero.slice(prefisso.length) || "/";
   return intero;
 };
@@ -146,6 +223,8 @@ function serviLaPlancia({ plancia, richiesta, risposta, via }) {
   }
   risposta.writeHead(200, {
     "content-type": letto.tipo,
+    ...PER_TUTTI,
+    ...(/^image\//i.test(String(letto.tipo || "")) ? PER_LE_IMMAGINI : {}),
     /* Nell'indirizzo c'e' l'impronta: quello che c'e' non cambia mai, e il
      * browser se lo puo' tenere. */
     "cache-control": "public, max-age=31536000, immutable",
@@ -159,13 +238,8 @@ function serviLaPlancia({ plancia, richiesta, risposta, via }) {
 }
 
 export function costruisciLaPortaDellApp({
-  ponte,
   portiere,
-  dispositivi,
-  abbinamento,
   registro,
-  chiamata,
-  ritorno,
   /* I file dell'app e quelli della plancia, serviti anche da qui.
    *
    * **Perche' da qui, che e' la porta esposta.** In un browser di casa gdahome
@@ -192,8 +266,11 @@ export function costruisciLaPortaDellApp({
    * filo un segno lo vuole. */
   cartellaDellApp = "",
   plancia = null,
+  /* Quanti fili senza nome si tengono aperti: vedi `SaliteSenzaNome`. */
+  salite = new SaliteSenzaNome(),
 }) {
   const server = createServer(async (richiesta, risposta) => {
+    mettiLeIntestazioni(risposta, PER_TUTTI);
     /* Qui, e **solo** qui.
      *
      * La prima versione le metteva dentro la funzione che scrive le risposte,
@@ -208,7 +285,6 @@ export function costruisciLaPortaDellApp({
 
     const via = rotta(richiesta);
     const metodo = String(richiesta.method || "").toUpperCase();
-    const da = richiesta.socket.remoteAddress || "?";
 
     /* Il browser, prima di una POST con un corpo JSON, chiede il permesso.
      * Va risposto, e va risposto senza toccare niente. */
@@ -232,6 +308,7 @@ export function costruisciLaPortaDellApp({
         risposta.end();
         return;
       }
+      mettiLeIntestazioni(risposta, PER_L_APP_WEB);
       servi(risposta, cartellaDellApp, via.slice("/app".length), {
         deposito: true,
         richiesta,
@@ -246,72 +323,20 @@ export function costruisciLaPortaDellApp({
       return;
     }
 
+    /* «Ci sei?» e basta. Quanti telefoni ha questa casa e quanti ne sono
+     * collegati non sono affari di chi bussa a una porta esposta: l'app legge
+     * solo `vivo`, e la console quei numeri li ha per conto suo. */
     if (metodo === "GET" && via === "/salute") {
-      json(risposta, {
-        vivo: true,
-        dispositivi: dispositivi.quanti(),
-        collegati: ponte.quantiCollegati(),
-      });
+      json(risposta, { vivo: true });
       return;
     }
 
-    if (metodo === "POST" && via === "/abbinamento") {
-      let corpo;
-      try {
-        corpo = await corpoDiJson(richiesta);
-      } catch (errore) {
-        male(risposta, 400, errore.message);
-        return;
-      }
-      let perChi = "";
-      try {
-        /* `consuma` dice **per chi** era il codice: il telefono si intesta a
-         * quello li', e da quel momento vede le plance che vede lui. */
-        perChi = abbinamento.consuma(corpo.codice)?.utente || "";
-      } catch (errore) {
-        if (errore instanceof TroppiTentativi) {
-          registro.attenzione(`troppi tentativi di abbinamento da ${da}`);
-          male(risposta, 429, "troppi tentativi: riprova piu' tardi");
-          return;
-        }
-        if (errore instanceof CodiceSbagliato) {
-          registro.attenzione(`codice di abbinamento sbagliato da ${da}`);
-          male(risposta, 403, errore.message);
-          return;
-        }
-        throw errore;
-      }
-      try {
-        const { dispositivo, segno, chiave } = dispositivi.abbina({
-          nome: corpo.nome,
-          sistema: corpo.sistema,
-          utente: perChi,
-        });
-        /* Il codice e' stato speso: l'attesa al centralino non serve piu', e
-         * lasciarla aperta vorrebbe dire tenere una via buona per qualcosa che
-         * non esiste piu'. */
-        chiamata?.chiudiLAbbinamento();
-        registro.info(`abbinato «${dispositivo.nome}»`);
-        /* Il segno **e** la chiave del filo: sono due cose diverse e servono
-         * tutte e due. Senza la chiave il telefono farebbe la stretta di mano
-         * e poi non capirebbe una parola.
-         *
-         * E il ritorno: dove ribussare domani. Chi si e' abbinato battendo
-         * un QR code non ha mai visto un indirizzo. */
-        json(
-          risposta,
-          { segno, chiave, dispositivo, ritorno: (await ritorno?.cosaDire()) ?? null },
-          201,
-        );
-      } catch (errore) {
-        if (errore instanceof TroppiDispositivi) {
-          male(risposta, 409, errore.message);
-          return;
-        }
-        throw errore;
-      }
-      return;
-    }
+    /* Qui c'era `POST /abbinamento`: il codice in un corpo HTTP, e in
+     * risposta il segno e la chiave del filo. Sulla rete di casa quella
+     * risposta viaggiava in chiaro, e chi stava sulla stessa rete si portava
+     * via tutto. Adesso ci si abbina solo sul filo, dentro la stretta di mano
+     * legata al codice (`portiere.js`), e questa porta non abbina piu'
+     * nessuno. */
 
     male(risposta, 404, "qui non c'e' niente");
   });
@@ -321,15 +346,32 @@ export function costruisciLaPortaDellApp({
       socket.end("HTTP/1.1 404 Not Found\r\n\r\n");
       return;
     }
+    /* Quanti fili ancora senza nome ci sono, da qui e in tutto: oltre un
+     * certo numero chi bussa aspetta fuori. Un telefono vero si presenta nel
+     * primo secondo e smette subito di contare. */
+    const da = socket.remoteAddress || "?";
+    if (!salite.cePosto(da)) {
+      socket.end("HTTP/1.1 503 Service Unavailable\r\n\r\n");
+      return;
+    }
     const presa = accetta(richiesta, socket, {
       /* Se chi legge inciampa, il filo cade: il motivo va nel registro, se no
        * si vede un telefono che si scollega e non si sa perche'. */
       onGuasto: (errore) => registro.errore(`un telefono: ${errore?.stack || errore}`),
     });
+    if (presa) salite.tieni(presa, da);
     /* Anche in casa si passa dal portiere: la rete di casa non e' cifrata, e
      * chi ci sta sopra non deve poter leggere piu' di chi sta sul centralino.
      * E soprattutto: cosi' l'app ha **una strada sola** invece di due. */
-    if (presa) portiere.accogli(presa, { da: socket.remoteAddress || "?" });
+    if (presa) portiere.accogli(presa, { da });
+  });
+  /* Un errore sulla presa di chi bussa e' suo, non del ponte. */
+  server.on("clientError", (_errore, socket) => {
+    try {
+      socket.end("HTTP/1.1 400 Bad Request\r\n\r\n");
+    } catch (_ancora) {
+      socket.destroy();
+    }
   });
 
   return server;
@@ -384,6 +426,8 @@ export function costruisciLaConsole({
   aggiornamento,
   cartellaDellaConsole,
   cartellaDellApp,
+  /* Da dove arriva l'ingress: vedi `daLIngress`. Si cambia solo nelle prove. */
+  proxyDellIngress = [PROXY_DELL_INGRESS],
 }) {
   /* Un registro c'e' sempre, anche quando non gliene danno uno.
    *
@@ -393,11 +437,38 @@ export function costruisciLaConsole({
    * risposta non viene mai chiusa, e chi ha chiamato aspetta per sempre. Un
    * pezzo che manca deve dare un 500, non una rotella che gira. */
   const registro = scritto ?? { info() {}, attenzione() {}, errore() {} };
+  /* Se chi guarda amministra la casa. Lo sa Home Assistant, e se non lo sa
+   * dire la risposta e' no: la console fabbrica codici e stacca telefoni. */
+  const amministra = async (richiesta) => {
+    const chi = chiGuarda(richiesta);
+    if (!chi || !utenti?.amministratore) return false;
+    try {
+      return (await utenti.amministratore(chi)) === true;
+    } catch (_errore) {
+      return false;
+    }
+  };
+
   const server = createServer(async (richiesta, risposta) => {
+    mettiLeIntestazioni(risposta, PER_LA_CONSOLE);
+    if (!daLIngress(richiesta.socket?.remoteAddress, proxyDellIngress)) {
+      male(risposta, 403, "qui si entra solo da Home Assistant");
+      return;
+    }
     const via = rotta(richiesta);
     const metodo = String(richiesta.method || "").toUpperCase();
 
     if (via.startsWith("/api/")) {
+      /* Tutto quello che sta sotto `/api/` e' roba di chi amministra: i
+       * codici di abbinamento, i telefoni, le plance, l'aggiornamento, il
+       * quadro. Home Assistant di serie apre questa pagina solo a chi
+       * amministra; ma l'ingress si puo' aprire anche da un'altra strada, e
+       * quello che conta e' chi c'e' dall'altra parte, non da dove e'
+       * passato. */
+      if (!(await amministra(richiesta))) {
+        male(risposta, 403, "questa pagina e' per chi amministra la casa");
+        return;
+      }
       try {
         await api({
           via,
@@ -458,6 +529,7 @@ export function costruisciLaConsole({
         risposta.end();
         return;
       }
+      mettiLeIntestazioni(risposta, PER_L_APP_WEB);
       servi(risposta, cartellaDellApp, via.slice("/app".length), {
         deposito: true,
         richiesta,
@@ -497,7 +569,22 @@ export function costruisciLaConsole({
       return;
     }
 
+    /* La pagina della console, a chi non amministra, non si serve: gli si
+     * dice perche'. I suoi fogli e i suoi disegni si', che non contengono
+     * niente. */
+    if ((via === "/" || via === "" || via === "/index.html") && !(await amministra(richiesta))) {
+      soloChiAmministra(risposta);
+      return;
+    }
+
     servi(risposta, cartellaDellaConsole, via);
+  });
+  server.on("clientError", (_errore, socket) => {
+    try {
+      socket.end("HTTP/1.1 400 Bad Request\r\n\r\n");
+    } catch (_ancora) {
+      socket.destroy();
+    }
   });
 
   /* Il WebSocket della plancia servita qui.
@@ -507,6 +594,10 @@ export function costruisciLaConsole({
    * prende un filo suo, come ogni telefono: i numeri dei messaggi sono i suoi
    * e non c'e' niente da rinumerare. */
   server.on("upgrade", (richiesta, socket) => {
+    if (!daLIngress(socket.remoteAddress, proxyDellIngress)) {
+      socket.end("HTTP/1.1 403 Forbidden\r\n\r\n");
+      return;
+    }
     if (rotta(richiesta) !== "/plancia/api/websocket" || !eUnaSalita(richiesta)) {
       socket.end("HTTP/1.1 404 Not Found\r\n\r\n");
       return;
@@ -603,6 +694,43 @@ function laPortaChiusa(risposta, quale, perche = "utenti") {
       : "In questa casa questa plancia la vedono solo alcuni utenti."
   } Chi amministra la casa puo' cambiarlo dalla pagina di <b>gdahome</b>, alla
   voce &laquo;Le plance&raquo;.</p>
+</main></body></html>`;
+  const byte = Buffer.from(pagina, "utf8");
+  risposta.writeHead(403, {
+    "content-type": "text/html; charset=utf-8",
+    "cache-control": "no-store",
+    "content-length": byte.length,
+  });
+  risposta.end(byte);
+}
+
+/* La console, a chi non amministra: una pagina che lo dice, e non un
+ * errore. Chi l'ha aperta e' dentro Home Assistant, e deve sapere a chi
+ * chiedere. */
+function soloChiAmministra(risposta) {
+  const pagina = `<!doctype html>
+<html lang="it"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>gdahome</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { margin: 0; min-height: 100vh; display: grid; place-items: center;
+    background: #f2f4f7; color: #101317;
+    font: 15px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  main { max-width: 26rem; margin: 24px; padding: 26px 28px; border-radius: 20px;
+    background: #fff; box-shadow: 0 1px 3px rgba(16,24,40,.09); text-align: center; }
+  h1 { margin: 0 0 10px; font-size: 1.2rem; }
+  p { margin: 0; color: #5b6471; }
+  @media (prefers-color-scheme: dark) {
+    body { background: #10141a; color: #e8ebf0; }
+    main { background: #1a1f27; }
+    p { color: #9aa4b2; }
+  }
+</style></head>
+<body><main>
+  <h1>Solo per gli amministratori</h1>
+  <p>Questa pagina abbina i telefoni e cambia la casa: la apre chi amministra
+  Home Assistant.</p>
 </main></body></html>`;
   const byte = Buffer.from(pagina, "utf8");
   risposta.writeHead(403, {
@@ -726,7 +854,7 @@ async function laPlanciaServita({
   /* Il prefisso dell'ingress: Home Assistant lo dice, e va scritto dentro la
    * pagina — nel `<base>` e nell'indirizzo del WebSocket — perche' la pagina
    * da sola non lo puo' indovinare. */
-  const davanti = String(richiesta.headers["x-ingress-path"] || "");
+  const davanti = prefissoDellIngress(richiesta);
   const pagina = conLePremesse(letto.corpo.toString("utf8"), {
     base: `${davanti}${plancia.base}/legacy`,
     quale,
@@ -1339,8 +1467,19 @@ function loHaGia(richiesta, contrassegno) {
  * riscarica niente per niente. */
 function servi(risposta, cartella, via, { deposito = false, richiesta = null } = {}) {
   const chiesto = via === "/" || via === "" ? "/index.html" : via;
-  const dentro = normalize(join(cartella, chiesto));
-  if (!dentro.startsWith(normalize(cartella)) || !existsSync(dentro)) {
+  const radice = normalize(cartella).replace(/[\\/]+$/, "");
+  const dentro = normalize(join(radice, chiesto));
+  /* Dentro la cartella vuol dire dentro: `/app-vecchia` comincia come `/app`
+   * ma e' un'altra cartella, per questo il confronto si fa con la barra. E
+   * solo un file vero: una cartella chiesta come file fa inciampare chi la
+   * legge, e il ponte non deve cadere per una domanda storta. */
+  let eUnFile = false;
+  try {
+    eUnFile = statSync(dentro).isFile();
+  } catch (_errore) {
+    eUnFile = false;
+  }
+  if (!dentro.startsWith(radice + sep) || !eUnFile) {
     male(risposta, 404, "qui non c'e' niente");
     return;
   }
@@ -1362,5 +1501,13 @@ function servi(risposta, cartella, via, { deposito = false, richiesta = null } =
      * tenersela. */
     ...(quanto === null ? {} : { "content-length": quanto }),
   });
-  createReadStream(dentro).pipe(risposta);
+  const flusso = createReadStream(dentro);
+  /* Un file che sparisce o non si lascia leggere a meta' strada: si chiude
+   * la risposta e basta. Senza, l'errore non lo raccoglie nessuno e porta giu'
+   * tutto il processo. */
+  flusso.on("error", () => {
+    if (!risposta.headersSent) male(risposta, 404, "qui non c'e' niente");
+    else risposta.destroy();
+  });
+  flusso.pipe(risposta);
 }

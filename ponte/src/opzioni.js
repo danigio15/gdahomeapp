@@ -195,6 +195,20 @@ export function leggiLeOpzioni(cartella = process.env.PONTE_ARCHIVIO || "/data")
         : String(process.env.PONTE_CENTRALINO || scritte.centralino || CENTRALINO_DI_DIFETTO),
     portaDellApp: numero(scritte.porta_app, DIFETTO.porta_app),
     portaDellaConsole: numero(process.env.PONTE_PORTA_CONSOLE, 8099),
+    /* Da dove puo' arrivare chi bussa alla console: nell'add-on solo il proxy
+     * dell'ingress del Supervisor (`server.js`), e non si cambia dalla
+     * scheda. `PONTE_PROXY_INGRESS` e' per il banco — il collaudo accende il
+     * ponte fuori dal Supervisor e bussa da `127.0.0.1` — ed e' una variabile
+     * d'ambiente, che dentro l'add-on non scrive nessuno. Piu' indirizzi si
+     * separano con la virgola. Non detto, vale quello del Supervisor. */
+    ...(process.env.PONTE_PROXY_INGRESS
+      ? {
+          proxyDellIngress: String(process.env.PONTE_PROXY_INGRESS)
+            .split(",")
+            .map((uno) => uno.trim())
+            .filter(Boolean),
+        }
+      : {}),
     dispositiviMassimi: numero(scritte.dispositivi_massimi, DIFETTO.dispositivi_massimi),
     minutiDelCodice: numero(scritte.minuti_del_codice, DIFETTO.minuti_del_codice),
     giorniDiSilenzio: numero(scritte.giorni_di_silenzio, DIFETTO.giorni_di_silenzio),

@@ -44,6 +44,16 @@
 import { Canale } from "./canale.js";
 import { Chiamante } from "./chiamante.js";
 
+/* Quanto puo' essere grande un messaggio che arriva dal centralino.
+ *
+ * Su questo filo viaggiano i messaggi di **tutti** i telefoni che entrano da
+ * fuori, e un messaggio troppo grande non chiude il filo di quel telefono:
+ * chiude quello della casa intera. Il megabyte di serie era stretto — una foto
+ * caricata dalla plancia, un allegato di una segnalazione, dentro la sua busta
+ * cifrata, ci arrivano vicino — e allora un telefono solo staccava tutti gli
+ * altri. Quattro megabyte stanno larghi, e restano un tetto. */
+export const DAL_CENTRALINO = 4 * 1024 * 1024;
+
 const SECONDO = 1000;
 
 /* Oltre questa non si aspetta di piu' fra un tentativo e l'altro. */
@@ -145,7 +155,9 @@ export class Chiamata {
        * l'indirizzo. Non e' un segreto: serve a instradare, e quello che fa
        * entrare — il segreto — resta dentro il primo messaggio, dove il
        * centralino lo confronta con quello che ha in casa. */
-      presa = new this.Presa(`${this.dove}/casa/${this.identita.casa}`);
+      presa = new this.Presa(`${this.dove}/casa/${this.identita.casa}`, {
+        messaggioMassimo: DAL_CENTRALINO,
+      });
     } catch (errore) {
       this._caduta(`non riesco ad aprire il filo: ${errore?.message || errore}`);
       return;
@@ -240,7 +252,13 @@ export class Chiamata {
       case "apri": {
         const canale = new Canale(numero, this);
         this.canali.set(numero, canale);
-        this.portiere.accogli(canale, { da: `centralino ${detto.da ?? ""}`.trim() });
+        /* Da quale porta del centralino e' entrato: quella dei telefoni gia'
+         * abbinati non abbina nessuno. Un centralino di ieri non lo dice, e
+         * allora vale com'era. */
+        this.portiere.accogli(canale, {
+          da: `centralino ${detto.da ?? ""}`.trim(),
+          abbina: detto.via !== "telefono",
+        });
         return;
       }
       case "d": {

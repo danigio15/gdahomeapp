@@ -40,7 +40,7 @@ import { Aggiornamenti } from "./aggiornamenti.js";
 import { Lavori } from "./lavori.js";
 import { Installatore } from "./installatore.js";
 import { apriIlRegistro } from "./registro.js";
-import { costruisciLaConsole, costruisciLaPortaDellApp } from "./server.js";
+import { costruisciLaConsole, costruisciLaPortaDellApp, PROXY_DELL_INGRESS } from "./server.js";
 
 /* Ogni quanto si guarda se qualche telefono e' sparito da troppo tempo. */
 const POTATURA = 6 * 60 * 60 * 1000;
@@ -301,6 +301,9 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
   const postino = new Postino({
     ...(opzioni.quadro ?? {}),
     casa: identita.casa,
+    /* Il segreto della casa per il quadro, e l'ultima chiave buona: in
+     * `/data`, dove il ponte tiene le sue cose. */
+    cartella: opzioni.cartella,
     ogni: opzioni.quadroOgni,
     fai: (detto) => lavori.fai(detto),
     /* Solo se questa casa lo vuole. Spento, il quadro puo' mandare quello che
@@ -406,13 +409,8 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
   });
 
   const app = costruisciLaPortaDellApp({
-    ponte,
     portiere,
-    dispositivi,
-    abbinamento,
     registro,
-    chiamata,
-    ritorno,
     /* I file — dell'app e della plancia — anche da questa porta: e' l'unica
      * che si raggiunge dalla rete di casa, ed e' quella che fa aprire gdahome
      * in un browser senza fare il giro del centralino. La pagina della
@@ -466,6 +464,9 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
      * dentro: l'unico posto da cui chi non ha un computer puo' aggiornare. */
     aggiornamento,
     cartellaDellaConsole: opzioni.console,
+    /* Da dove arriva l'ingress del Supervisor: l'unico che puo' bussare alla
+     * console. Nelle prove e' `127.0.0.1`; nell'add-on non si cambia. */
+    proxyDellIngress: opzioni.proxyDellIngress ?? [PROXY_DELL_INGRESS],
     /* E gdahome da aprire in un browser, se questo add-on se la porta dietro.
      * E' il link: chi ha l'add-on ha gia' l'app, e non deve installare
      * niente da nessuna parte. */
@@ -582,6 +583,22 @@ const chiudi = (server) => new Promise((ok) => server.close(ok));
 
 /* Avviato a mano — cioe' dall'add-on — invece che importato da una prova. */
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  /* Un errore che nessuno ha raccolto: si scrive, e si esce.
+   *
+   * Tirare avanti dopo un errore del genere vorrebbe dire un ponte a meta' —
+   * un server che non risponde piu', un filo che nessuno riapre — che da fuori
+   * sembra acceso. Meglio uscire pulito: il Supervisor lo vede (`watchdog`
+   * nel manifesto) e lo riaccende. Le domande storte che arrivano da fuori non
+   * devono mai arrivare fin qui: le ferma chi le riceve. */
+  const muori = (come) => (errore) => {
+    try {
+      process.stderr.write(`[ponte] ${come}: ${errore?.stack || errore}\n`);
+    } finally {
+      process.exit(1);
+    }
+  };
+  process.on("uncaughtException", muori("errore non raccolto"));
+  process.on("unhandledRejection", muori("promessa rifiutata senza nessuno che ascolta"));
   const avviato = await alzaIlPonte();
   for (const segnale of ["SIGTERM", "SIGINT"]) {
     process.on(segnale, () => {

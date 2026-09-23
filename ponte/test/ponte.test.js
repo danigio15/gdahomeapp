@@ -19,7 +19,7 @@ import { join } from "node:path";
 import { accetta } from "../src/presa.js";
 import { Casa } from "../src/casa.js";
 import { Dispositivi } from "../src/dispositivi.js";
-import { Ponte, SEGNO_DEL_MUCCHIO } from "../src/ponte.js";
+import { ATTESA_DEL_SEGNO, Ponte, SEGNO_DEL_MUCCHIO } from "../src/ponte.js";
 import { Plance } from "../src/plance.js";
 import { Commissioni, NIENTE_PER_TE } from "../src/commissioni.js";
 
@@ -73,7 +73,7 @@ async function casaFinta({ rifiutaIlSegno = false, muta = false } = {}) {
 
 async function banco(
   opzioniDellaCasa = {},
-  { da = "prova", mucchio = false, conLePlance = false } = {},
+  { da = "prova", mucchio = false, conLePlance = false, utenti = null } = {},
 ) {
   const cartella = mkdtempSync(join(tmpdir(), "ponte-prova-"));
   const ha = await casaFinta(opzioniDellaCasa);
@@ -90,7 +90,7 @@ async function banco(
         registro,
       })
     : undefined;
-  const ponte = new Ponte({ casa, dispositivi, registro, commissioni });
+  const ponte = new Ponte({ casa, dispositivi, registro, commissioni, utenti });
 
   const server = createServer((_r, risposta) => risposta.end());
   server.on("upgrade", (richiesta, socket) => {
@@ -598,4 +598,129 @@ test("e un telefono intestato a chi la vede la apre", async () => {
   } finally {
     await b.spegni();
   }
+});
+
+/* ─── La dogana, sul filo vero ───────────────────────────────────────────── */
+
+/* Chi amministra, per un `utenti.js` finto: lui si', lei no. */
+const AMMINISTRA = "c".repeat(32);
+const NON_AMMINISTRA = "d".repeat(32);
+const utentiFinti = {
+  amministratore: async (chi) => chi === AMMINISTRA,
+  amministratoreSubito: (chi) => chi === AMMINISTRA,
+};
+
+async function dentroCome(b, utente) {
+  const { segno } = b.dispositivi.abbina({ nome: "telefono", sistema: "ios", utente });
+  const t = telefono(b.indirizzo);
+  await t.aperta;
+  await t.aspetta("auth_required");
+  t.manda({ type: "auth", access_token: segno });
+  await t.aspetta("auth_ok");
+  return t;
+}
+
+const laRisposta = async (t, id) => {
+  await attendi(() => t.detti.find((uno) => uno.id === id));
+  return t.detti.find((uno) => uno.id === id);
+};
+
+test("un telefono di chi non amministra non si fa un gettone, e non tocca gli utenti", async () => {
+  const b = await banco({}, { utenti: utentiFinti });
+  try {
+    const t = await dentroCome(b, NON_AMMINISTRA);
+    t.manda({ id: 1, type: "auth/long_lived_access_token", client_name: "x", lifespan: 3650 });
+    t.manda({ id: 2, type: "config/auth/list" });
+    t.manda({ id: 3, type: "call_service", domain: "homeassistant", service: "restart" });
+    t.manda({ id: 4, type: "subscribe_events" });
+    t.manda({ id: 5, type: "get_states" });
+    t.manda({ id: 6, type: "call_service", domain: "light", service: "turn_on" });
+    for (const id of [1, 2, 3, 4]) {
+      const no = await laRisposta(t, id);
+      assert.deepEqual(
+        { type: no.type, success: no.success, code: no.error.code },
+        { type: "result", success: false, code: "unauthorized" },
+        `il ${id} doveva essere rifiutato`,
+      );
+    }
+    /* Quello che serve a guardare e usare la casa passa com'era. */
+    assert.equal((await laRisposta(t, 5)).success, true);
+    assert.equal((await laRisposta(t, 6)).success, true);
+    assert.deepEqual(
+      b.ha.arrivati.map((detto) => detto.type).sort(),
+      ["call_service", "get_states"],
+      "a Home Assistant e' arrivato solo quello che passa",
+    );
+    t.chiudi();
+  } finally {
+    await b.spegni();
+  }
+});
+
+test("chi amministra passa quasi con tutto, ma le credenziali e il Supervisor no", async () => {
+  const b = await banco({}, { utenti: utentiFinti });
+  try {
+    const t = await dentroCome(b, AMMINISTRA);
+    t.manda({ id: 1, type: "config/entity_registry/update", entity_id: "light.x" });
+    t.manda({ id: 2, type: "auth/long_lived_access_token", client_name: "x", lifespan: 1 });
+    t.manda({ id: 3, type: "supervisor/api", endpoint: "/addons/self/info", method: "get" });
+    t.manda({ id: 4, type: "call_service", domain: "hassio", service: "addon_stdin" });
+    t.manda({ id: 5, type: "call_service", domain: "shell_command", service: "qualunque" });
+    assert.equal((await laRisposta(t, 1)).success, true);
+    for (const id of [2, 3, 4, 5]) {
+      assert.equal((await laRisposta(t, id)).error.code, "unauthorized", `il ${id}`);
+    }
+    assert.deepEqual(
+      b.ha.arrivati.map((detto) => detto.type),
+      ["config/entity_registry/update"],
+    );
+    t.chiudi();
+  } finally {
+    await b.spegni();
+  }
+});
+
+test("un telefono di prima, senza nessuno addosso, vale come chi amministra", async () => {
+  const b = await banco({}, { utenti: utentiFinti });
+  try {
+    const t = await dentroCome(b, "");
+    t.manda({ id: 1, type: "config/entity_registry/update", entity_id: "light.x" });
+    t.manda({ id: 2, type: "config/auth/list" });
+    assert.equal((await laRisposta(t, 1)).success, true);
+    assert.equal((await laRisposta(t, 2)).error.code, "unauthorized");
+    t.chiudi();
+  } finally {
+    await b.spegni();
+  }
+});
+
+test("chi non si sa se amministra non amministra: senza `utenti` un telefono intestato non passa", async () => {
+  const b = await banco();
+  try {
+    const t = await dentroCome(b, NON_AMMINISTRA);
+    t.manda({ id: 1, type: "config/entity_registry/update", entity_id: "light.x" });
+    assert.equal((await laRisposta(t, 1)).error.code, "unauthorized");
+    t.chiudi();
+  } finally {
+    await b.spegni();
+  }
+});
+
+test("chi apre il filo e non si presenta viene chiuso", async (contesto) => {
+  contesto.mock.timers.enable({ apis: ["setTimeout", "setInterval"] });
+  const presa = {
+    manda() {},
+    ping() {},
+    chiusaCon: null,
+    chiudi(codice, motivo) {
+      this.chiusaCon = { codice, motivo };
+    },
+  };
+  const ponte = new Ponte({ casa: {}, dispositivi: {}, registro: null });
+  ponte.accogli(presa);
+  contesto.mock.timers.tick(ATTESA_DEL_SEGNO - 1);
+  assert.equal(presa.chiusaCon, null);
+  contesto.mock.timers.tick(2);
+  assert.equal(presa.chiusaCon?.codice, 1008);
+  assert.equal(ponte.quantiCollegati(), 0);
 });

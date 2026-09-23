@@ -49,6 +49,8 @@
 import { mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
+import { cheImmagineE } from "./marchio.js";
+
 /** Come e' fatta la matricola di un installatore. La stessa del quadro. */
 export const CHI_VALIDO = /^inst_[0-9a-f]{16}$/;
 
@@ -108,32 +110,10 @@ export function vestiPulite(grezze) {
   return pulite;
 }
 
-const LE_RAZZE = [
-  { tipo: "image/png", coda: "png", segno: [0x89, 0x50, 0x4e, 0x47] },
-  { tipo: "image/jpeg", coda: "jpg", segno: [0xff, 0xd8, 0xff] },
-  { tipo: "image/webp", coda: "webp", segno: [0x52, 0x49, 0x46, 0x46] },
-];
-
-/**
- * Che immagine e' questa, guardando come comincia.
- *
- * Torna `{tipo, coda}` o `null`. E' lo stesso controllo che fa il quadro
- * accettandola, rifatto qui: fra le due macchine c'e' una rete, e un controllo
- * da una parte sola non e' un controllo.
- *
- * @param {Buffer} byte il file com'e' arrivato
- */
-export function cheImmagineE(byte) {
-  if (!Buffer.isBuffer(byte) || byte.length < 4 || byte.length > QUANTO_GROSSO) return null;
-  for (const una of LE_RAZZE) {
-    if (una.segno.every((quanto, dove) => byte[dove] === quanto)) return una;
-  }
-  const testa = byte.subarray(0, 512).toString("utf8").trimStart();
-  if (/^<(\?xml|!--|svg)[\s>]/i.test(testa) && /<svg[\s>]/i.test(testa)) {
-    return { tipo: "image/svg+xml", coda: "svg" };
-  }
-  return null;
-}
+/* Che immagine e' questa, guardando come comincia: sta in `marchio.js`, che
+ * e' chi la serve, e si riprende da li'. Una regola sola per chi la accetta e
+ * per chi la serve. */
+export { cheImmagineE };
 
 export class Installatore {
   constructor({
@@ -262,6 +242,8 @@ export class Installatore {
     this._logo = null;
     this._tipo = "";
     this._presoIl = 0;
+    /* L'SVG si butta anche se non si accetta piu': un ponte di ieri puo'
+     * averne lasciato uno in `/data`. */
     for (const coda of ["png", "jpg", "webp", "svg"]) {
       rmSync(join(this.cartella, `marchio.${coda}`), { force: true });
     }

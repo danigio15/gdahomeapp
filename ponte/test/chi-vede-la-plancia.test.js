@@ -551,14 +551,14 @@ test("e non si puo' nemmeno rinominare o togliere quella di un altro", async () 
 
     const rinomina = await commissioni.rispondi(
       { id: 1, type: "ponte/plance/rinomina", profilo: "primary", titolo: "mia adesso" },
-      { chiChiede: IO },
+      { puoAmministrare: true, chiChiede: IO },
     );
     assert.equal(rinomina.success, false);
     assert.equal(rinomina.error.code, NIENTE_PER_TE);
 
     const togli = await commissioni.rispondi(
       { id: 2, type: "ponte/plance/togli", profilo: "primary" },
-      { chiChiede: IO },
+      { puoAmministrare: true, chiChiede: IO },
     );
     assert.equal(togli.success, false);
     assert.equal(togli.error.code, NIENTE_PER_TE);

@@ -61,6 +61,7 @@ import { I_MARCHI, QuestoNoNo } from "./aggiornamenti.js";
 import { CentralinoHaDettoNo, SenzaCentralino } from "./segnalazioni.js";
 import { SegnalazioniDellaPlancia } from "./segnalazioni-della-plancia.js";
 import { laVede, QuellaPlanciaNo, TroppePlance } from "./plance.js";
+import { perLaVia, percorsoSenzaTrucchi } from "./dogana.js";
 
 /* Quando chi chiede non ha nessuna plancia. Non e' un guasto ed e' l'app a
  * scriverlo, percio' il codice e' uno suo e non uno di Home Assistant. */
@@ -227,6 +228,34 @@ const CHIAVE_VECCHIA = "dashboardmodern_integration_config";
 const NUMERO_MODERNO = 700000;
 
 const METODI = new Set(["GET", "POST", "PUT", "DELETE"]);
+
+/* Le commissioni che cambiano la casa o la macchina, e non solo la plancia
+ * che uno sta guardando: aggiungere e togliere plance, installare e
+ * riavviare, aprire la rete Zigbee, riscrivere la configurazione che vale per
+ * tutti, e la coda di chi risponde alle chat di tutte le case. Le fa solo chi
+ * amministra — come in Home Assistant, dove le stesse cose stanno dietro la
+ * voce da amministratore. Chi non amministra riceve un no ben scritto, e la
+ * plancia se lo tiene come si tiene un salvataggio non riuscito. */
+const SOLO_CHI_AMMINISTRA = new Set([
+  "ponte/plance/aggiungi",
+  "ponte/plance/rinomina",
+  "ponte/plance/togli",
+  "ponte/aggiornamenti/installa",
+  "ponte/aggiornamenti/riavvia",
+  "ponte/zigbee/apri",
+  "ponte/zigbee/chiudi",
+  "ponte/zigbee/rinomina",
+  "dashboardmodern/config/set",
+  "dashboardmodern/config/restore",
+  "dashboardmodern/chat/queue",
+  "dashboardmodern/chat/open",
+  "dashboardmodern/chat/answer",
+  "dashboardmodern/chat/drop",
+  "ponte/console/coda",
+  "ponte/console/apri",
+  "ponte/console/rispondi",
+  "ponte/console/butta",
+]);
 
 /* Un file della plancia sta sotto il megabyte; una risposta di Home Assistant
  * — lo storico di un mese — puo' essere molto di piu'. Oltre questo non e'
@@ -485,11 +514,18 @@ export class Commissioni {
    * varrebbe solo dentro Home Assistant.
    *
    * `null` o vuoto vuol dire «non si sa chi chiede», e chi non si sa vede
-   * tutto: e' come sono i telefoni abbinati prima di oggi. */
-  async rispondi(detto, { chiChiede = "", amministra = null } = {}) {
+   * tutto: e' come sono i telefoni abbinati prima di oggi.
+   *
+   * `puoAmministrare` e' un'altra domanda, e la decide chi sta sul filo
+   * (`ponte.js`, `cucitura.js`): se chi chiede puo' fare le cose da
+   * amministratore. Vale solo se e' `true`: chi non lo dice, non lo puo'. */
+  async rispondi(detto, { chiChiede = "", amministra = null, puoAmministrare = false } = {}) {
     const id = detto?.id ?? null;
     const tipo = detto?.type;
-    if (tipo === TIPO) return this._http(detto, chiChiede, amministra);
+    if (SOLO_CHI_AMMINISTRA.has(tipo) && puoAmministrare !== true) {
+      return no(id, "unauthorized", "questo lo fa solo chi amministra la casa");
+    }
+    if (tipo === TIPO) return this._http(detto, chiChiede, amministra, puoAmministrare);
     if (tipo === TIPO_MOLTI) return this._molti(detto, chiChiede, amministra);
     if (tipo === TIPO_PLANCIA) return this._laPlancia(detto, chiChiede, amministra);
     if (PLANCE.has(tipo)) return this._lePlance(detto, chiChiede, amministra);
@@ -1560,13 +1596,22 @@ export class Commissioni {
     return si(id, { file });
   }
 
-  async _http(detto, chiChiede = "", amministra = null) {
+  async _http(detto, chiChiede = "", amministra = null, puoAmministrare = false) {
     const id = detto?.id ?? null;
     const metodo = String(detto.metodo ?? "GET").toUpperCase();
     if (!METODI.has(metodo)) return no(id, "not_allowed", `il metodo ${metodo} non passa di qui`);
 
+    /* Il percorso, guardato due volte: le lettere ammesse, e che non ci siano
+     * `..` ne' barre o punti scritti in percentuale — sciolti quante volte
+     * serve. `new URL` le scioglierebbe lui, e la strada uscirebbe da dove
+     * doveva stare. */
     const percorso = detto.percorso;
-    if (typeof percorso !== "string" || !PERCORSO_BUONO.test(percorso) || percorso.includes("..")) {
+    if (
+      typeof percorso !== "string" ||
+      !PERCORSO_BUONO.test(percorso) ||
+      percorso.includes("..") ||
+      !percorsoSenzaTrucchi(percorso)
+    ) {
       return no(id, "not_allowed", "percorso non valido");
     }
 
@@ -1624,6 +1669,13 @@ export class Commissioni {
       return no(id, "not_allowed", "di qui passano solo /api/, /dashboardmodern_static/ e /local/");
     }
 
+    /* Le vie REST di Home Assistant passano dalla stessa dogana dei messaggi
+     * sul filo: il segno che le apre e' quello del Supervisor. */
+    if (percorso.startsWith("/api/")) {
+      const vietata = perLaVia({ metodo, percorso, amministra: puoAmministrare === true });
+      if (vietata) return no(id, "unauthorized", vietata);
+    }
+
     const intestazioni = { ...dove.intestazioni, "accept-encoding": "identity" };
     const tipoDelCorpo = detto.tipo;
     if (corpo && typeof tipoDelCorpo === "string") intestazioni["content-type"] = tipoDelCorpo;
@@ -1659,15 +1711,19 @@ export class Commissioni {
       /* Il filo con Home Assistant passa di qui: `/api/websocket` non e' una
        * cosa che si scarica. */
       if (percorso === "/api/websocket" || percorso.startsWith("/api/websocket?")) return null;
+      const url = dentroLaVia(this.casa.indirizzo, percorso, "/api/");
+      if (!url) return null;
       return {
-        url: `${this.casa.indirizzo}${percorso}`,
+        url,
         intestazioni: { authorization: `Bearer ${this.casa.segno}` },
         insicuro: false,
       };
     }
     if (percorso.startsWith("/dashboardmodern_static/")) {
       const base = await this.casa.doveStaLaPlancia();
-      return { url: `${base}${percorso}`, intestazioni: {}, insicuro: base.startsWith("https:") };
+      const url = dentroLaVia(base, percorso, "/dashboardmodern_static/");
+      if (!url) return null;
+      return { url, intestazioni: {}, insicuro: base.startsWith("https:") };
     }
     return null;
   }
@@ -1685,6 +1741,28 @@ export class Commissioni {
     if (prossimo) prossimo();
     else this._inCorso -= 1;
   }
+}
+
+/* L'indirizzo intero, e solo se resta dove deve.
+ *
+ * Il percorso e' gia' stato guardato, ma quello che conta e' dove va a finire
+ * la richiesta: si compone l'indirizzo, lo si fa leggere a `new URL` — che e'
+ * quello che poi usera' chi scarica — e si guarda che sia rimasto sulla stessa
+ * macchina e sotto la stessa cartella. Se no `null`, e non si va da nessuna
+ * parte. */
+export function dentroLaVia(base, percorso, sotto) {
+  let radice;
+  let intero;
+  try {
+    radice = new URL(String(base));
+    intero = new URL(`${String(base).replace(/\/+$/, "")}${percorso}`);
+  } catch (_errore) {
+    return null;
+  }
+  const prefisso = `${radice.pathname.replace(/\/+$/, "")}${sotto}`;
+  if (intero.origin !== radice.origin) return null;
+  if (!intero.pathname.startsWith(prefisso)) return null;
+  return intero.toString();
 }
 
 /* Il corpo in base64, compresso se e' testo. Chi lo riceve guarda

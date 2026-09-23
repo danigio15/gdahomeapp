@@ -206,9 +206,10 @@ Un codice di abbinamento **nasce solo dalla pagina**. Sulla porta esposta non
 c'è nessuna via per farne nascere uno: da lì si può soltanto presentarne uno che
 esiste già. È la differenza fra un ponte e una porta aperta.
 
-Le tre vie della porta dell'app: `GET /salute` dice che è vivo, `POST
-/abbinamento` scambia un codice valido con un segno — una volta sola — e `WS
-/casa` apre il filo. Sul filo l'add-on **si presenta come Home Assistant**:
+Le due vie della porta dell'app: `GET /salute` dice che è vivo, e `WS /casa`
+apre il filo. Anche l'abbinamento passa da lì: il telefono presenta il codice
+dentro una stretta di mano cifrata con il codice stesso, e il segno esce solo
+dentro quella — mai in chiaro, nemmeno in casa. Sul filo l'add-on **si presenta come Home Assistant**:
 manda `auth_required`, aspetta `auth` col proprio segno al posto di quello di
 Home Assistant, risponde `auth_ok`, e da lì in poi non guarda più dentro a
 niente. Qualunque codice che sa parlare con Home Assistant funziona di qui
