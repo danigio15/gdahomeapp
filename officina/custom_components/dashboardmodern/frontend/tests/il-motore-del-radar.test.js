@@ -418,8 +418,22 @@ test("il tetto lo dice la casella, e uno zero vuol dire «nessun tetto»", () =>
   /* Zero non e' vuoto: e' la scelta di chi ha un servizio che a quel livello
    * risponde eccome, e non deve pagare un numero misurato a casa d'altri. */
   assert.equal(zoomDellaPioggia({ zoomPioggia: "0" }, "rainviewer"), null);
-  /* Un servizio scritto a mano non ha un tetto che si sappia. */
-  assert.equal(zoomDellaPioggia({}, "modello"), null);
+  /* Un servizio scritto a mano non ha un tetto che si sappia — e proprio per
+   * questo ne prende uno (#109).
+   *
+   * Qui prima tornava `null`, cioè «nessun tetto», e la pioggia si chiedeva al
+   * livello della mappa: fino a dodici. È il caso di chi ha la plancia da più
+   * tempo, perché prima della tendina l'indirizzo si incollava a mano e quelle
+   * configurazioni portano ancora `servizio: "modello"`; e quello che tornava
+   * da lassù era il quadratino con dentro stampato «Zoom Level Not Supported».
+   * Non sapere quanto regge un servizio non è un motivo per chiedergli tutto:
+   * si parte dal numero cauto che conosciamo, e la casella lo alza o lo toglie. */
+  assert.equal(zoomDellaPioggia({}, "modello"), 7);
+  assert.equal(zoomDellaPioggia({}, "un-servizio-che-non-esiste"), 7);
+  /* E la casella comanda anche qui: chi ha un indirizzo che a nove risponde
+   * eccome scrive nove, o uno zero e non ha più tetto. */
+  assert.equal(zoomDellaPioggia({ zoomPioggia: "9" }, "modello"), 9);
+  assert.equal(zoomDellaPioggia({ zoomPioggia: "0" }, "modello"), null);
 });
 
 /* ── «ho inserito il link con l'indirizzo e non lo legge nemmeno» ───────── */
