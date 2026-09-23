@@ -1,4 +1,4 @@
-Security update: install it together with gdahome 1.6.1 in Home Assistant.
+Security update: install it together with gdahome 1.6.2 in Home Assistant.
 
 Pairing a new phone is protected by the QR code even while the keys are exchanged. Phones already paired keep working.
 
