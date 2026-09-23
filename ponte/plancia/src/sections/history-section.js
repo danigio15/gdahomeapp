@@ -714,6 +714,30 @@ export async function openHistory(event, entityId, name, range = ORE_DI_SERIE) {
       setLoading("empty");
       return true;
     }
+    /* Una lettura sola non e' un grafico, ed e' peggio di nessun grafico.
+     *
+     * Dal campo: «non si apre storico dei dati». Il popup si apriva davvero, e
+     * dentro c'era una griglia con l'asse dei valori giusto — 33,0-37,0 per un
+     * disco al 35 % — e nessuna linea, e una sola etichetta dell'ora. Sembrava
+     * rotto, e non lo era: il Recorder di quell'entita' aveva un campione
+     * solo, e una linea fra un punto e se stesso non si disegna.
+     *
+     * Chi guarda non ha modo di distinguerlo da un guasto, quindi lo si dice.
+     * Si contano gli ISTANTI e non le righe: un'entita' che riporta lo stesso
+     * valore dieci volte nello stesso secondo ha dieci righe e un punto solo,
+     * e disegnerebbe la stessa griglia vuota. */
+    const istanti = new Set(rows.map((riga) => riga.time));
+    if (istanti.size < 2) {
+      modal.dataset.dmHistoryLoaded = "una-sola";
+      setLoading(
+        "empty",
+        t(
+          "Di questo c'è una lettura sola: il Recorder non ne ha ancora una storia da disegnare.",
+          "There is a single reading for this: the Recorder has no history to draw yet.",
+        ),
+      );
+      return true;
+    }
     if (!renderChart(entity, state.currentName, rows, intervallo)) {
       modal.dataset.dmHistoryLoaded = "empty";
       setLoading("empty");

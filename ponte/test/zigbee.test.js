@@ -259,6 +259,16 @@ function casaFinta({
       if (male) throw male;
       if (comando.type === "config_entries/get") return voci;
       if (comando.type === "config/device_registry/list") return dispositivi;
+      /* La rinomina risponde come risponde Home Assistant: la riga aggiornata.
+       * Prima questa finta rispondeva `null`, e cosi' la prova non poteva
+       * accorgersi di un «si'» che non aveva scritto niente — che e' proprio
+       * il guasto arrivato dal campo. */
+      if (comando.type === "config/device_registry/update") {
+        const riga = dispositivi.find((uno) => uno.id === comando.device_id);
+        if (!riga) return null;
+        if ("name_by_user" in comando) riga.name_by_user = comando.name_by_user;
+        return { ...riga };
+      }
       if (comando.type === "config/entity_registry/list") return entita;
       return null;
     },
@@ -587,6 +597,68 @@ test("il nome va nel registro di casa, in name_by_user e non sopra il modello", 
 
   assert.equal((await zigbee.rinomina("", "Boh")).fatto, false);
   assert.equal((await zigbee.rinomina("d1", "   ")).fatto, false);
+  zigbee.spegni();
+});
+
+/* «Ho cambiato nome… in Home Assistant non ha cambiato il nome in quello
+ * scelto» — e intanto la schermata diceva «Adesso si chiama cosi', e con quel
+ * nome lo vedono la plancia e Home Assistant».
+ *
+ * Il rifiuto era gia' coperto: Home Assistant risponde male e `chiedi`
+ * solleva. Quello che non era coperto e' il «si'» che non fa quello che dice —
+ * un `device_id` che esiste ma non e' quello che uno guarda, un campo che
+ * quella versione non accetta. Li' il ponte rispondeva `fatto: true` e l'app,
+ * che controlla `fatto` davvero, non aveva niente da controllare.
+ *
+ * Una promessa non verificata e' la peggiore specie di guasto: chi la legge
+ * smette di controllare. */
+test("un «si'» che non ha scritto il nome non e' una rinomina riuscita", async () => {
+  const casa = casaFinta({
+    voci: [{ domain: "zha", state: "loaded" }],
+    dispositivi: [{ id: "d1", name: "TS0121" }],
+    entita: [{ entity_id: "switch.ts0121", original_device_class: "outlet", device_id: "d1" }],
+  });
+  /* Una casa che dice sempre di si' e non scrive niente: e' la forma del
+   * guasto arrivato dal campo. */
+  const vera = casa.chiedi;
+  casa.chiedi = async (comando) =>
+    comando.type === "config/device_registry/update"
+      ? { id: "d1", name: "TS0121" }
+      : vera.call(casa, comando);
+  const zigbee = new Zigbee({ casa });
+  await zigbee.apri({ secondi: 30 });
+  await casa.mandaEvento({ action: "create", device_id: "d1" });
+
+  const esito = await zigbee.rinomina("d1", "Presa lavatrice");
+  assert.equal(esito.fatto, false);
+  assert.match(esito.perche, /nome/);
+  /* E l'elenco di chi sta guardando non si inventa il nome nuovo: quello che
+   * si vede resta quello che c'e' davvero in casa. */
+  assert.equal((await zigbee.stato()).entrati[0].nome, "TS0121");
+  zigbee.spegni();
+});
+
+/* E quando Home Assistant scrive un nome DIVERSO da quello chiesto — succede
+ * se due schermate si accavallano — lo si dice, col nome che c'e' davvero:
+ * senza, si resterebbe convinti di averlo chiamato in un altro modo. */
+test("e se in casa si chiama in un altro modo, lo dice col nome vero", async () => {
+  const casa = casaFinta({
+    voci: [{ domain: "zha", state: "loaded" }],
+    dispositivi: [{ id: "d1", name: "TS0121" }],
+    entita: [{ entity_id: "switch.ts0121", original_device_class: "outlet", device_id: "d1" }],
+  });
+  const vera = casa.chiedi;
+  casa.chiedi = async (comando) =>
+    comando.type === "config/device_registry/update"
+      ? { id: "d1", name: "TS0121", name_by_user: "Presa cucina" }
+      : vera.call(casa, comando);
+  const zigbee = new Zigbee({ casa });
+  await zigbee.apri({ secondi: 30 });
+  await casa.mandaEvento({ action: "create", device_id: "d1" });
+
+  const esito = await zigbee.rinomina("d1", "Presa lavatrice");
+  assert.equal(esito.fatto, false);
+  assert.match(esito.perche, /Presa cucina/);
   zigbee.spegni();
 });
 

@@ -347,6 +347,311 @@ export function comeSiChiude({ quale, cassetta = "" }) {
  * (`const dati = evento?.data`). Erano due letture della stessa cosa, e una
  * sola era giusta.
  */
+/* ── Chi c'e' nella rete ───────────────────────────────────────────────────
+ *
+ * «Voglio vedere elenco completo dei dispositivi e poterli eliminare.»
+ *
+ * Le due reti l'elenco lo danno in due modi diversi, e non e' un dettaglio da
+ * nascondere sotto al tappeto: ZHA risponde a una domanda sul filo, come fa
+ * per tutto; Zigbee2MQTT invece lo tiene **scritto in una cassetta** —
+ * `<prefisso>/bridge/devices`, un messaggio ritenuto, cioe' uno che il broker
+ * consegna appena ti affacci, senza doverlo chiedere a nessuno. E' la stessa
+ * cassetta da cui il ponte ha gia' imparato come si chiama la rete.
+ *
+ * Quello che esce di qui pero' e' una forma sola, perche' chi disegna non deve
+ * sapere quale delle due reti ha in casa. Se lo sapesse, ogni schermata
+ * andrebbe scritta due volte, e il giorno che una delle due cambia le due
+ * schermate direbbero cose diverse.
+ *
+ * ── Cosa esce, e cosa no ─────────────────────────────────────────────────
+ *
+ * Esce l'anagrafe di un apparecchio: la sua targa, come si chiama, di che
+ * marca e modello e', se fa da ponte per gli altri o sta in fondo a un ramo,
+ * se va a corrente o a batteria, e quanto e' buono il collegamento. **Non
+ * esce nessuno stato**: che cosa sta facendo adesso quella presa non e' roba
+ * di questa porta.
+ */
+
+/* Perche' non e' andata, in una riga, per chi guarda una schermata.
+ *
+ * Il messaggio di `ZigbeeNonAccettato` dice gia' quali strade si sono provate
+ * e cosa ha risposto l'ultima: e' quello che serve a capire. Per tutto il
+ * resto vale il messaggio dell'errore, e per gli errori muti una frase che
+ * almeno non e' vuota. */
+const ilPerche = (errore) =>
+  String(errore?.message || errore?.code || "").trim() || "non ha funzionato";
+
+/** La targa di un apparecchio Zigbee, come la scrivono tutti e due: l'IEEE. */
+const targa = (valore) =>
+  String(valore ?? "")
+    .trim()
+    .toLowerCase();
+
+/* Il tipo, in parole nostre. Sono tre e sono sempre quelli, in tutt'e due le
+ * reti: chi tiene la rete, chi la ripete, e chi sta in fondo a un ramo. */
+export const COORDINATORE = "coordinatore";
+export const ROUTER = "router";
+export const TERMINALE = "terminale";
+
+function ilTipo(detto) {
+  const scritto = String(detto ?? "")
+    .trim()
+    .toLowerCase();
+  if (scritto.includes("coordinator")) return COORDINATORE;
+  if (scritto.includes("router")) return ROUTER;
+  return TERMINALE;
+}
+
+/* A corrente o a batteria.
+ *
+ * Non si indovina dal tipo: un router va sempre a corrente — e' il motivo per
+ * cui puo' fare da ponte — ma un terminale puo' essere tutti e due, e sapere
+ * quali vanno a batteria e' la meta' del mestiere quando una rete fa i
+ * capricci. ZHA lo dice con `power_source`, Zigbee2MQTT con
+ * `power_source` dentro la definizione. Chi non lo dice resta «non si sa», che
+ * e' diverso da «a corrente». */
+export function laPotenza(detto) {
+  const scritto = String(detto ?? "")
+    .trim()
+    .toLowerCase();
+  if (!scritto) return "";
+  if (scritto.includes("battery")) return "batteria";
+  if (scritto.includes("mains") || scritto.includes("dc source")) return "rete";
+  return "";
+}
+
+/** Una riga dell'elenco di ZHA, nella forma di casa. */
+export function laRigaDiZha(riga = {}) {
+  const id = targa(riga?.ieee);
+  if (!id) return null;
+  return {
+    id,
+    nome: String(riga?.user_given_name || riga?.name || "").trim() || id,
+    marca: String(riga?.manufacturer || "").trim(),
+    modello: String(riga?.model || "").trim(),
+    tipo: ilTipo(riga?.device_type),
+    potenza: laPotenza(riga?.power_source),
+    /* Da quando non si fa sentire, in millisecondi. ZHA scrive l'ultima volta
+     * che l'ha sentito; chi non l'ha mai sentito resta «non si sa». */
+    tace: null,
+    quando: String(riga?.last_seen || "").trim(),
+    /* Il dispositivo di Home Assistant, quando ZHA lo dice: e' il filo che
+     * lega questa riga a quello che la plancia gia' conosce. */
+    dispositivo: String(riga?.device_reg_id || "").trim(),
+    /* Con chi parla. ZHA lo scrive quando la topologia e' stata guardata; se
+     * non c'e', l'elenco vale lo stesso e la mappa non si disegna. */
+    vicini: iVicini(riga?.neighbors),
+  };
+}
+
+/** E una riga di Zigbee2MQTT, che di quelle cose ne sa qualcuna in piu'. */
+export function laRigaDiZ2M(riga = {}) {
+  const id = targa(riga?.ieee_address);
+  if (!id) return null;
+  const definizione = riga?.definition || {};
+  return {
+    id,
+    nome: String(riga?.friendly_name || "").trim() || id,
+    marca: String(definizione?.vendor || riga?.manufacturer || "").trim(),
+    modello: String(definizione?.model || riga?.model_id || "").trim(),
+    tipo: ilTipo(riga?.type),
+    potenza: laPotenza(riga?.power_source),
+    tace: null,
+    quando: "",
+    dispositivo: "",
+    vicini: [],
+  };
+}
+
+/* I vicini, come li scrive ZHA: chi e' e quanto si sentono. Quello che serve
+ * a disegnare una mappa e nient'altro. */
+function iVicini(detti) {
+  if (!Array.isArray(detti)) return [];
+  const fuori = [];
+  for (const uno of detti) {
+    const id = targa(uno?.ieee);
+    if (!id) continue;
+    const quanto = Number(uno?.lqi);
+    fuori.push({ id, qualita: Number.isFinite(quanto) ? quanto : null });
+  }
+  return fuori;
+}
+
+/**
+ * L'elenco intero, da come lo scrive la rete che c'e'.
+ *
+ * Ordinato per nome e non per targa: una targa non la riconosce nessuno, e
+ * chi apre quella schermata cerca «la presa del garage».
+ */
+export function lElencoDellaRete(quale, detto) {
+  const righe = Array.isArray(detto) ? detto : [];
+  const come = quale === ZHA ? laRigaDiZha : laRigaDiZ2M;
+  return righe
+    .map((riga) => come(riga))
+    .filter(Boolean)
+    .sort((una, altra) => una.nome.localeCompare(altra.nome));
+}
+
+/** Come si chiede l'elenco a ZHA: una domanda sul filo, come le altre. */
+export function comeSiChiedeLElenco({ quale } = {}) {
+  return quale === ZHA ? { type: "zha/devices" } : null;
+}
+
+/** E la cassetta dove Zigbee2MQTT lo tiene gia' scritto. */
+export function laCassettaDellElenco(cassetta) {
+  const prefisso = String(cassetta ?? "").trim();
+  return prefisso ? `${prefisso}/bridge/devices` : "";
+}
+
+/**
+ * Come si toglie un apparecchio dalla rete.
+ *
+ * Non si «cancella»: si dice alla rete di lasciarlo andare. Quello che
+ * succede dopo e' che Home Assistant se ne accorge e toglie anche le sue
+ * entita' — e infatti la conferma non si legge da questa risposta, ma
+ * dall'elenco riguardato dopo. La rinomina ha gia' insegnato cosa vale un
+ * «si'» che nessuno ha controllato.
+ */
+export function comeSiElimina({ quale, cassetta = "" }, chi) {
+  const id = targa(chi);
+  if (!id) return null;
+  if (quale === ZHA) return { type: "zha/remove", ieee: id };
+  if (quale === Z2M && cassetta)
+    return {
+      type: "call_service",
+      domain: "mqtt",
+      service: "publish",
+      service_data: {
+        topic: `${cassetta}/bridge/request/device/remove`,
+        /* `force` no, e non e' prudenza eccessiva: forzare toglie la riga
+         * dalla cassetta senza che l'apparecchio lo sappia, e quello resta
+         * appeso alla rete a cercare un coordinatore che non gli risponde
+         * piu'. Si forza quando il garbato ha gia' fallito, e allora lo si
+         * chiede per iscritto — non di nascosto, al primo tocco. */
+        payload: JSON.stringify({ id, force: false }),
+      },
+    };
+  return null;
+}
+
+/* E per servizio, dove il servizio c'e'. Stessa ragione di `comeSiApre`: il
+ * servizio e' la superficie pubblica e si rompe molto piu' di rado del comando
+ * interno, quindi si prova per primo. */
+export function comeSiEliminaColServizio({ quale }, chi) {
+  const id = targa(chi);
+  if (quale !== ZHA || !id) return null;
+  return { type: "call_service", domain: "zha", service: "remove", service_data: { ieee: id } };
+}
+
+/** Le strade per togliere uno, nell'ordine in cui si provano. */
+export function leStradePerEliminare(rete, chi) {
+  return [comeSiEliminaColServizio(rete, chi), comeSiElimina(rete, chi)].filter(Boolean);
+}
+
+/* ── La mappa ──────────────────────────────────────────────────────────────
+ *
+ * «Crea inoltre la possibilita' di mostrare la mappa di collegamento dei
+ * dispositivi.»
+ *
+ * Chiedere a una rete Zigbee con chi parla ognuno **non e' una lettura**: e'
+ * un giro di domande che il coordinatore fa a ogni ripetitore, uno alla volta,
+ * e su una rete di venti cose ci mette da mezzo minuto a un minuto. Mentre lo
+ * fa la rete e' occupata, e i comandi passano piu' lenti.
+ *
+ * Per questo la mappa non si disegna da sola quando si apre la schermata: la
+ * si chiede, e chi la chiede lo sa. Aprire la sezione Zigbee non deve
+ * rallentare le luci di casa.
+ *
+ * E per questo, quando si puo', si guarda quello che si sa gia': ZHA i vicini
+ * se li tiene scritti dall'ultima volta che ha guardato, e vale la pena
+ * mostrarli — con l'ora in cui sono stati visti — invece di far aspettare un
+ * minuto chi voleva solo dare un'occhiata.
+ *
+ * Zigbee2MQTT no: nella cassetta dei dispositivi i vicini non ci sono affatto,
+ * quindi li' una mappa senza chiedere non esiste, e si dice invece di
+ * disegnarne una vuota.
+ */
+
+/* Quanto si aspetta la mappa. Un minuto e mezzo: su una rete grossa il giro
+ * dei vicini ci mette un minuto buono, e scadere prima vorrebbe dire far
+ * aspettare la gente per niente e poi dirle che non e' arrivata. */
+export const ATTESA_DELLA_MAPPA = 90_000;
+
+/** Le due cassette della mappa: dove si chiede, e dove risponde. */
+export function leCassetteDellaMappa(cassetta) {
+  const prefisso = pulito(cassetta);
+  if (!prefisso) return null;
+  return {
+    chiedi: `${prefisso}/bridge/request/networkmap`,
+    risponde: `${prefisso}/bridge/response/networkmap`,
+  };
+}
+
+/**
+ * Come si chiede alla rete di guardarsi.
+ *
+ * Su ZHA e' un comando che fa partire il giro; i vicini poi si leggono
+ * dall'elenco, come sempre. Su Zigbee2MQTT e' un messaggio imbucato, e la
+ * risposta torna in un'altra cassetta.
+ *
+ * `routes: false` e non true: i percorsi sono un'altra cosa — chi passa per
+ * dove — e costano un secondo giro di domande. Qui serve chi vede chi.
+ */
+export function comeSiChiedeLaMappa({ quale, cassetta = "" } = {}) {
+  if (quale === ZHA) return { type: "zha/topology/update" };
+  const cassette = leCassetteDellaMappa(cassetta);
+  if (quale === Z2M && cassette)
+    return {
+      type: "call_service",
+      domain: "mqtt",
+      service: "publish",
+      service_data: {
+        topic: cassette.chiedi,
+        payload: JSON.stringify({ type: "raw", routes: false }),
+      },
+    };
+  return null;
+}
+
+/**
+ * Le righe, da come Zigbee2MQTT scrive la mappa.
+ *
+ * Lui la da' in due pezzi — i nodi da una parte, i collegamenti dall'altra —
+ * e qui tornano insieme, perche' il resto di questo file ragiona per righe che
+ * si portano dietro i propri vicini.
+ */
+export function leRigheDallaMappaDiZ2M(detto) {
+  const dentro = detto?.data?.value || detto?.value || detto || {};
+  const nodi = Array.isArray(dentro?.nodes) ? dentro.nodes : [];
+  const fili = Array.isArray(dentro?.links) ? dentro.links : [];
+  const righe = new Map();
+  for (const nodo of nodi) {
+    const id = pulito(nodo?.ieeeAddr).toLowerCase();
+    if (!id) continue;
+    righe.set(id, {
+      id,
+      nome: pulito(nodo?.friendlyName) || id,
+      marca: "",
+      modello: "",
+      tipo: ilTipo(nodo?.type),
+      potenza: "",
+      tace: null,
+      quando: "",
+      dispositivo: "",
+      vicini: [],
+    });
+  }
+  for (const filo of fili) {
+    const da = pulito(filo?.source?.ieeeAddr).toLowerCase();
+    const a = pulito(filo?.target?.ieeeAddr).toLowerCase();
+    if (!da || !a) continue;
+    const quanto = Number(filo?.linkquality ?? filo?.lqi);
+    const qualita = Number.isFinite(quanto) ? quanto : null;
+    righe.get(da)?.vicini.push({ id: a, qualita });
+  }
+  return [...righe.values()].sort((una, altra) => una.nome.localeCompare(altra.nome));
+}
+
 export function eUnoNuovo(evento) {
   const dati = evento?.data;
   return pulito(dati?.action).toLowerCase() === "create" && Boolean(pulito(dati?.device_id));
@@ -801,6 +1106,225 @@ export class Zigbee {
    * l'unica cosa che dice cos'e' quell'oggetto quando fra un anno non ci si
    * ricorda piu'.
    */
+  /**
+   * Chi c'e' nella rete, tutto, in una forma sola.
+   *
+   * Le due reti rispondono in due modi — ZHA a una domanda, Zigbee2MQTT con
+   * un messaggio gia' scritto in una cassetta — e chi disegna non deve
+   * saperlo: se lo sapesse, ogni schermata andrebbe scritta due volte.
+   *
+   * Senza rete in casa torna un elenco vuoto e il perche'. Non si solleva: una
+   * schermata che si apre su una casa senza Zigbee deve dire «qui non c'e'
+   * niente», non rompersi.
+   */
+  async elenco() {
+    const rete = await this.rete();
+    if (rete.quale === NESSUNA)
+      return { quale: NESSUNA, righe: [], perche: "in questa casa non c'e' una rete Zigbee" };
+    try {
+      const righe =
+        rete.quale === ZHA ? await this._elencoDiZha() : await this._elencoDallaCassetta(rete);
+      return { quale: rete.quale, righe, perche: "" };
+    } catch (errore) {
+      this.registro?.info?.(`zigbee: l'elenco non si legge: ${errore?.message || errore}`);
+      return { quale: rete.quale, righe: [], perche: ilPerche(errore) };
+    }
+  }
+
+  async _elencoDiZha() {
+    const detto = await this.casa.chiedi(comeSiChiedeLElenco({ quale: ZHA }));
+    return lElencoDellaRete(ZHA, detto);
+  }
+
+  /* L'elenco di Zigbee2MQTT sta in una cassetta, ritenuto: chi si affaccia lo
+   * riceve subito, senza chiedere niente a nessuno. Si aspetta quanto si
+   * aspetta per sapere come si chiama la rete — se in quel tempo non arriva,
+   * quella cassetta non e' scritta e l'elenco non c'e'. */
+  async _elencoDallaCassetta(rete) {
+    const topic = laCassettaDellElenco(rete.cassetta);
+    if (!topic) return [];
+    let smetti = null;
+    try {
+      return await new Promise((risolvi, rifiuta) => {
+        const scadenza = setTimeout(
+          () => rifiuta(new Error("la cassetta dell'elenco non risponde")),
+          ATTESA_DELLA_CASSETTA,
+        );
+        this.casa
+          .ascoltaIl({ type: "mqtt/subscribe", topic }, (evento) => {
+            clearTimeout(scadenza);
+            let detto = evento?.payload;
+            if (typeof detto === "string") {
+              try {
+                detto = JSON.parse(detto);
+              } catch (_errore) {
+                detto = [];
+              }
+            }
+            risolvi(lElencoDellaRete(Z2M, detto));
+          })
+          .then(
+            (disdici) => {
+              smetti = disdici;
+            },
+            (errore) => {
+              clearTimeout(scadenza);
+              rifiuta(errore);
+            },
+          );
+      });
+    } finally {
+      try {
+        await smetti?.();
+      } catch (_errore) {
+        /* L'abbonamento e' gia' morto col filo. */
+      }
+    }
+  }
+
+  /**
+   * Toglie un apparecchio dalla rete, e poi guarda se e' andato via davvero.
+   *
+   * La conferma non si legge dalla risposta al comando: nessuna delle due reti
+   * la da' per quello che e' successo dopo — ZHA risponde appena ha mandato
+   * l'ordine, e Zigbee2MQTT risponde che ha imbucato il messaggio. Quello che
+   * conta e' che nell'elenco quella riga non ci sia piu', e l'unico modo di
+   * saperlo e' riguardarlo. La rinomina ha gia' insegnato quanto vale un «si'»
+   * che nessuno ha controllato.
+   */
+  async elimina(chi) {
+    const id = pulito(chi).toLowerCase();
+    if (!id) return { fatto: false, perche: "quale dispositivo?" };
+    const rete = await this.rete();
+    const strade = leStradePerEliminare(rete, id);
+    if (!strade.length)
+      return { fatto: false, perche: "in questa casa non c'e' una rete Zigbee da cui toglierlo" };
+    try {
+      await this._ordina(strade);
+    } catch (errore) {
+      return { fatto: false, perche: ilPerche(errore) };
+    }
+    /* E adesso si guarda. Se la rete ce l'ha ancora, non e' andata — e si dice
+     * cosi', invece di dire «fatto» su una cosa che non e' successa. */
+    const dopo = await this.elenco();
+    if (dopo.righe.some((una) => una.id === id))
+      return {
+        fatto: false,
+        perche: "la rete ha accettato l'ordine ma quel dispositivo e' ancora li'",
+        righe: dopo.righe,
+      };
+    return { fatto: true, righe: dopo.righe };
+  }
+
+  /**
+   * La mappa: chi parla con chi, disegnata.
+   *
+   * Senza `rifai` si mostra quello che la rete sa gia' — su ZHA sono i vicini
+   * dell'ultima volta che ha guardato — e si apre subito. Con `rifai` si fa
+   * partire il giro vero, che dura, e chi lo chiede lo sa.
+   *
+   * Su Zigbee2MQTT quello che si sa gia' non esiste: nella cassetta dei
+   * dispositivi i vicini non ci sono. Li' senza `rifai` si dice, invece di
+   * disegnare una mappa vuota che sembrerebbe una rete a pezzi.
+   */
+  async mappa({ rifai = false } = {}) {
+    const rete = await this.rete();
+    if (rete.quale === NESSUNA)
+      return { quale: NESSUNA, righe: [], perche: "in questa casa non c'e' una rete Zigbee" };
+    try {
+      const righe =
+        rete.quale === ZHA ? await this._mappaDiZha(rifai) : await this._mappaDiZ2M(rete, rifai);
+      if (!righe.length)
+        return {
+          quale: rete.quale,
+          righe: [],
+          perche:
+            rete.quale === Z2M && !rifai
+              ? "questa rete i collegamenti non li tiene scritti: la mappa va chiesta"
+              : "la rete non ha ancora guardato con chi parla ognuno",
+        };
+      /* Escono le righe coi loro vicini, e basta: a disegnare ci pensa
+       * `mappa-zigbee.js`, che di rete non sa niente. Se il disegno lo facesse
+       * questo file, i due moduli si importerebbero a vicenda — e chi tocca
+       * una rete Zigbee non deve trascinarsi dietro un generatore di SVG. */
+      return { quale: rete.quale, righe, perche: "" };
+    } catch (errore) {
+      this.registro?.info?.(`zigbee: la mappa non si legge: ${errore?.message || errore}`);
+      return { quale: rete.quale, righe: [], perche: ilPerche(errore) };
+    }
+  }
+
+  async _mappaDiZha(rifai) {
+    if (rifai) {
+      /* Il giro parte e basta: ZHA non risponde quando ha finito, scrive i
+       * vicini man mano nel suo registro. Si aspetta un po' e si rilegge — e
+       * se il giro non e' finito si vede quello che ha fatto finora, che e'
+       * meglio di niente. */
+      try {
+        await this.casa.chiedi(comeSiChiedeLaMappa({ quale: ZHA }));
+      } catch (errore) {
+        if (!eUnComandoCheNonCe(errore)) throw errore;
+        this.registro?.info?.(
+          "zigbee: questa casa non sa rifare la topologia, mostro quella che c'e'",
+        );
+      }
+    }
+    return lElencoDellaRete(ZHA, await this.casa.chiedi(comeSiChiedeLElenco({ quale: ZHA })));
+  }
+
+  async _mappaDiZ2M(rete, rifai) {
+    if (!rifai) return [];
+    const cassette = leCassetteDellaMappa(rete.cassetta);
+    if (!cassette) return [];
+    let smetti = null;
+    try {
+      return await new Promise((risolvi, rifiuta) => {
+        const scadenza = setTimeout(
+          () => rifiuta(new Error("la rete non ha finito di guardarsi in un minuto e mezzo")),
+          ATTESA_DELLA_MAPPA,
+        );
+        this.casa
+          .ascoltaIl({ type: "mqtt/subscribe", topic: cassette.risponde }, (evento) => {
+            clearTimeout(scadenza);
+            let detto = evento?.payload;
+            if (typeof detto === "string") {
+              try {
+                detto = JSON.parse(detto);
+              } catch (_errore) {
+                detto = null;
+              }
+            }
+            risolvi(leRigheDallaMappaDiZ2M(detto));
+          })
+          .then(
+            async (disdici) => {
+              smetti = disdici;
+              /* Si chiede DOPO essersi messi in ascolto: fra la domanda e
+               * l'orecchio passano dei millisecondi, e una risposta che arriva
+               * in mezzo si perde. E' la stessa ragione per cui si ascolta
+               * prima di aprire la rete. */
+              try {
+                await this.casa.chiedi(comeSiChiedeLaMappa(rete));
+              } catch (errore) {
+                clearTimeout(scadenza);
+                rifiuta(errore);
+              }
+            },
+            (errore) => {
+              clearTimeout(scadenza);
+              rifiuta(errore);
+            },
+          );
+      });
+    } finally {
+      try {
+        await smetti?.();
+      } catch (_errore) {
+        /* L'abbonamento e' gia' morto col filo. */
+      }
+    }
+  }
+
   async rinomina(id, nome) {
     const quale = pulito(id);
     const come = pulito(nome).slice(0, 80);
@@ -811,6 +1335,28 @@ export class Zigbee {
       device_id: quale,
       name_by_user: come,
     });
+    /* E adesso si CONTROLLA, invece di fidarsi.
+     *
+     * Dal campo: «ho cambiato nome… in Home Assistant non ha cambiato il nome
+     * in quello scelto», e la schermata intanto diceva «Adesso si chiama cosi',
+     * e con quel nome lo vedono la plancia e Home Assistant». Una promessa non
+     * verificata, e la peggiore specie: chi la legge smette di controllare.
+     *
+     * Home Assistant a un rifiuto risponde male e `chiedi` solleva — quella
+     * strada e' coperta. Quello che non era coperto e' un «si'» che non ha
+     * fatto quello che diceva: un `device_id` che esiste ma non e' quello che
+     * uno guarda, un campo che quella versione non accetta. Si rilegge la
+     * riga dalla risposta, e se il nome non e' quello si dice che non e'
+     * andata — con dentro quello che Home Assistant ha davvero, che e'
+     * l'unica cosa che poi fa capire perche'. */
+    const scritto = pulito(dispositivo?.name_by_user);
+    if (scritto !== come)
+      return {
+        fatto: false,
+        perche: scritto
+          ? `Home Assistant ha accettato ma quel dispositivo si chiama «${scritto}»`
+          : "Home Assistant ha accettato senza scrivere il nome",
+      };
     /* E lo si aggiorna anche nell'elenco di chi sta guardando: la schermata
      * dopo mostra il nome nuovo senza dover richiedere tutto. */
     const suo = this._entrati.find((uno) => uno.id === quale);

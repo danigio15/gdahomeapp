@@ -267,7 +267,12 @@ test("le commissioni che cambiano la casa le fa solo chi amministra", async () =
     plance: { elenco: () => [], aggiungi: () => ({ profilo: "x" }) },
     configurazione: { leggi: () => ({}), scrivi: () => ({ status: "saved" }) },
     aggiornamenti: { installa: async () => ({ avviato: true }), riavvia: async () => ({}) },
-    zigbee: { apri: async () => ({}), chiudi: async () => ({}), rinomina: async () => ({}) },
+    zigbee: {
+      apri: async () => ({}),
+      chiudi: async () => ({}),
+      rinomina: async () => ({}),
+      elimina: async () => ({}),
+    },
   });
   for (const detto of [
     { type: "ponte/plance/aggiungi", titolo: "x" },
@@ -275,6 +280,7 @@ test("le commissioni che cambiano la casa le fa solo chi amministra", async () =
     { type: "ponte/aggiornamenti/installa", entity_id: "update.x" },
     { type: "ponte/aggiornamenti/riavvia" },
     { type: "ponte/zigbee/apri" },
+    { type: "ponte/zigbee/elimina", targa: "0x00124b0001" },
     { type: "dashboardmodern/config/set", snapshot: { values: {} } },
     { type: "ponte/console/coda" },
   ]) {

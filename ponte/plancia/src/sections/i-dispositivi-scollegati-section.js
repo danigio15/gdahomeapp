@@ -32,6 +32,7 @@
 import {
   iDispositiviScollegati,
   mettiDaParte,
+  rimettiInElenco,
   TESSERA_SCOLLEGATI,
 } from "../core/i-dispositivi-scollegati.js";
 import { iDispositiviRicordati } from "../core/i-dispositivi-di-home-assistant.js";
@@ -142,20 +143,25 @@ function rigaMessaDaParte(una) {
   const nota = una.cE
     ? t("non avvisa più", "no longer warns")
     : t("non è più in questa casa", "no longer in this house");
+  /* Il tasto riporta indietro tutte le entità di quella riga, come il cestino
+   * le aveva portate via tutte insieme. */
+  const quali = (Array.isArray(una.entita) ? una.entita : [una.entity]).join(" ");
   return `<div class="ed-row ${BLOCCO}-riga ${BLOCCO}-fuori">
     <div class="${BLOCCO}-segno" aria-hidden="true">🔕</div>
     <div class="ed-row-main ${BLOCCO}-testo">
       <div class="ed-row-new">${esc(una.nome)}</div>
-      <div class="ed-row-old mono">${esc(una.entity)} · ${esc(nota)}</div>
+      <div class="ed-row-old mono">${esc(sottoLaRiga(una))} · ${esc(nota)}</div>
     </div>
+    <button type="button" class="ed-del ${BLOCCO}-torna" data-dm-scollegati-torna="${esc(quali)}"
+      aria-label="${esc(t("Avvisami di nuovo per questo", "Warn me about this again"))}">🔔</button>
   </div>`;
 }
 
 function corpo({ adesso, messiDaParte }) {
   const intro = `<div class="ed-intro">${esc(
     t(
-      "Le cose che Home Assistant ha in casa e non riesce a raggiungere. Questo elenco lo riempie la plancia da sé: non c'è niente da aggiungere. Il cestino toglie un dispositivo dall'avviso per sempre.",
-      "The things Home Assistant has but cannot reach. The dashboard fills this list by itself: there is nothing to add. The bin removes a device from the warning for good.",
+      "Le cose che Home Assistant ha in casa e non riesce a raggiungere. Questo elenco lo riempie la plancia da sé: non c'è niente da aggiungere. Il cestino toglie un dispositivo dall'avviso, e il campanello lì sotto ce lo rimette.",
+      "The things Home Assistant has but cannot reach. The dashboard fills this list by itself: there is nothing to add. The bin removes a device from the warning, and the bell below puts it back.",
     ),
   )}</div>`;
   const vive = adesso.length
@@ -172,8 +178,8 @@ function corpo({ adesso, messiDaParte }) {
       )}</div>
       <div class="ed-hint">${esc(
         t(
-          "Restano scritti qui perché si sappia che ci sono. Dall'avviso non tornano.",
-          "They stay written here so you know they exist. They do not come back to the warning.",
+          "Restano scritti qui perché si sappia che ci sono. Col campanello tornano nell'avviso, se sono ancora muti.",
+          "They stay written here so you know they exist. The bell puts them back in the warning, if they are still silent.",
         ),
       )}</div>
       <div class="ed-list ${BLOCCO}-list">${messiDaParte.map(rigaMessaDaParte).join("")}</div>`
@@ -227,17 +233,35 @@ function onClick(event) {
   const entita = clean(tasto.dataset.dmScollegatiVia).split(/\s+/).filter(Boolean);
   if (!entita.length) return;
   const nome = clean(tasto.closest(`.${BLOCCO}-riga`)?.querySelector(".ed-row-new")?.textContent);
-  /* Non si torna indietro, quindi si chiede. Nella domanda c'è scritto cosa
-   * vuol dire davvero: non «tolgo la riga», ma «non te lo dico più». */
+  /* Si chiede lo stesso, ma la domanda dice il vero: prima prometteva «non si
+   * torna indietro», e adesso indietro si torna — col campanello qui sotto. Il
+   * senso resta quello, e non è «tolgo la riga»: è «non te lo dico più». */
   const quale = nome || entita[0];
   const domanda = t(
-    `Tolgo «${quale}» dall'avviso dei dispositivi non connessi? Non si torna indietro.`,
-    `Remove “${quale}” from the disconnected devices warning? This cannot be undone.`,
+    `Tolgo «${quale}» dall'avviso dei dispositivi non connessi? Resta qui sotto, e da lì si rimette.`,
+    `Remove “${quale}” from the disconnected devices warning? It stays below, and can be put back from there.`,
   );
   if (root.confirm && !root.confirm(domanda)) return;
   salvaLeEscluse(mettiDaParte(widgetPreferences().excluded, entita));
   ridisegna();
   root.edToast?.(t("🔕 Non avviso più per questo", "🔕 No longer warning about this"));
+}
+
+/* E il campanello: rimette nell'avviso quello che il cestino ne aveva tolto.
+ *
+ * Senza domanda, al contrario del cestino: questo gesto non toglie niente a
+ * nessuno, e se è stato premuto per sbaglio basta il cestino per disfarlo. Una
+ * conferma davanti a una cosa che si disfa da sé è una conferma che si impara
+ * a premere senza leggerla. */
+function onTorna(event) {
+  const tasto = event.target?.closest?.("[data-dm-scollegati-torna]");
+  if (!tasto || activeTab() !== SCOLLEGATI_TAB) return;
+  event.preventDefault();
+  const entita = clean(tasto.dataset.dmScollegatiTorna).split(/\s+/).filter(Boolean);
+  if (!entita.length) return;
+  salvaLeEscluse(rimettiInElenco(widgetPreferences().excluded, entita));
+  ridisegna();
+  root.edToast?.(t("🔔 Torna nell'avviso", "🔔 Back in the warning"));
 }
 
 /* La voce nella barra della configurazione.
@@ -287,6 +311,7 @@ export function installScollegatiSection() {
   installStyles();
   ensureScollegatiTab();
   doc.addEventListener("click", onClick);
+  doc.addEventListener("click", onTorna);
   onEditorRedraw("__dmScollegati", () => {
     root.queueMicrotask?.(() => {
       ensureScollegatiTab();

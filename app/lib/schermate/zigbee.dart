@@ -26,11 +26,27 @@
 /// direbbe «2:58» anche a rete gia' richiusa — l'app messa in tasca, il
 /// telefono che dorme, il ponte riavviato — e sarebbe la cosa peggiore:
 /// qualcuno che preme il tasto di una presa davanti a una porta chiusa.
+///
+/// ─── E chi c'e' gia' (#128) ───────────────────────────────────────────────
+///
+/// «Voglio vedere elenco completo dei dispositivi e poterli eliminare, e
+/// mostrare la mappa di collegamento.»
+///
+/// Sotto il tasto per aggiungerne uno c'e' adesso chi c'e' gia': si tocca una
+/// riga e si apre la sua scheda — rinomina, togli dalla rete — e in cima c'e'
+/// la porta per la mappa.
+///
+/// Quelle due sono **pagine spinte sopra**, non passi. E' la differenza che
+/// conta: i quattro passi vanno in un verso solo e da loro non si torna
+/// indietro, mentre da una scheda e da una mappa si torna sempre — ci si e'
+/// andati a guardare qualcosa. Un «indietro» che ha senso vuole una pagina;
+/// un «indietro» che non ce l'ha non deve esistere.
 library;
 
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 import '../casa/collegamento.dart';
 import '../casa/segnalazioni.dart' show spiegaLErrore;
@@ -102,6 +118,12 @@ class _SchermataZigbeeState extends State<SchermataZigbee> {
   StatoDellaRete _stato = StatoDellaRete.nessuna;
   _Passo _passo = _Passo.porta;
 
+  /* Chi c'e' gia' nella rete. Si chiede quando si sta sulla porta — e' li'
+   * che si vede — e non mentre si aspetta qualcuno che entra: in quel momento
+   * la rete ha altro da fare. */
+  ChiCEInRete _chiCE = ChiCEInRete.vuoto;
+  bool _elencoInCorso = false;
+
   /// Quello che e' entrato e che si sta sistemando.
   DispositivoEntrato? _suo;
 
@@ -172,6 +194,7 @@ class _SchermataZigbeeState extends State<SchermataZigbee> {
       }
     });
     if (_passo == _Passo.attesa) _ascolta();
+    if (_passo == _Passo.porta) _chiediLElenco();
   }
 
   /// Chiede lo stato una volta al secondo, finche' si aspetta.
@@ -213,6 +236,24 @@ class _SchermataZigbeeState extends State<SchermataZigbee> {
   }
 
   /* ─── i tasti ──────────────────────────────────────────────────────────── */
+
+  /* L'elenco di chi c'e'.
+   *
+   * Non solleva e non mostra errori: se non si puo' leggere, sotto al tasto
+   * non compare niente — che e' esattamente com'era prima che questo elenco
+   * esistesse. Un errore rosso su una cosa che nessuno ha chiesto e' peggio
+   * di una riga che manca. */
+  Future<void> _chiediLElenco() async {
+    final filo = _presa;
+    if (filo == null || _elencoInCorso) return;
+    _elencoInCorso = true;
+    try {
+      final letto = await Zigbee(filo).elenco();
+      if (mounted) setState(() => _chiCE = letto);
+    } finally {
+      _elencoInCorso = false;
+    }
+  }
 
   Future<void> _apri() async {
     final zigbee = _zigbee;
@@ -295,6 +336,44 @@ class _SchermataZigbeeState extends State<SchermataZigbee> {
     return () => consegna(suo);
   }
 
+  /* Le due pagine che si aprono sopra questa. Tornando indietro l'elenco si
+   * richiede: da una scheda si puo' essere tornati dopo aver rinominato o
+   * tolto qualcosa, e una riga rimasta com'era sarebbe una bugia. */
+  Future<void> _apriLaScheda(NellaRete suo) async {
+    final filo = _presa;
+    if (filo == null) return;
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute(
+        builder: (_) => SchedaDelDispositivoZigbee(
+          suo: suo,
+          zigbee: Zigbee(filo),
+          /* Le entita' si chiedono al momento, e non si mettono nell'elenco:
+           * sarebbero sei righe per riga per una cosa che si guarda solo
+           * aprendo una scheda. Senza, «Mettilo nella plancia» sarebbe un
+           * tasto che si preme e non succede niente — il foglietto «Dove lo
+           * metto?» la sezione la decide dall'entita'. */
+          quandoVaMessoNellaPlancia: widget.quandoVaMessoNellaPlancia == null
+              ? null
+              : () async {
+                  final intero = await Zigbee(filo).dimmi(suo.dispositivo);
+                  if (mounted) widget.quandoVaMessoNellaPlancia!(intero);
+                },
+        ),
+      ),
+    );
+    if (mounted) await _chiediLElenco();
+  }
+
+  Future<void> _guardaLaRete() async {
+    final filo = _presa;
+    if (filo == null) return;
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute(
+        builder: (_) => LaMappaDellaReteZigbee(zigbee: Zigbee(filo)),
+      ),
+    );
+  }
+
   /// Ricomincia da capo, per il prossimo.
   void _unAltro() {
     setState(() {
@@ -303,6 +382,9 @@ class _SchermataZigbeeState extends State<SchermataZigbee> {
       _nome.text = '';
       _passo = _Passo.porta;
     });
+    /* E si rilegge chi c'e': ne e' appena entrato uno, e tornare su una porta
+     * che non lo elenca vorrebbe dire dubitare di averlo abbinato davvero. */
+    _chiediLElenco();
   }
 
   /* ─── il disegno ───────────────────────────────────────────────────────── */
@@ -337,6 +419,9 @@ class _SchermataZigbeeState extends State<SchermataZigbee> {
               rete: _stato.rete,
               inCorso: _inCorso,
               quandoApre: _apri,
+              chiCE: _chiCE,
+              quandoSiApreLaScheda: _apriLaScheda,
+              quandoSiGuardaLaRete: _guardaLaRete,
             ),
             _Passo.attesa => _LAttesa(
               stato: _stato,
@@ -370,11 +455,21 @@ class _LaPorta extends StatelessWidget {
     required this.rete,
     required this.inCorso,
     required this.quandoApre,
+    required this.chiCE,
+    required this.quandoSiApreLaScheda,
+    required this.quandoSiGuardaLaRete,
   });
 
   final LaRete rete;
   final bool inCorso;
   final VoidCallback quandoApre;
+
+  /// Chi c'e' gia' nella rete. Vuoto finche' il ponte non ha risposto, e
+  /// allora sotto al tasto non c'e' niente: com'era prima.
+  final ChiCEInRete chiCE;
+
+  final void Function(NellaRete suo) quandoSiApreLaScheda;
+  final VoidCallback quandoSiGuardaLaRete;
 
   @override
   Widget build(BuildContext context) {
@@ -438,9 +533,44 @@ class _LaPorta extends StatelessWidget {
                   inLingua(it: 'Apri la rete', en: 'Open the network'),
                 ),
               ),
+              /* La mappa sta qui e non piu' in basso: e' l'altra cosa che si
+               * viene a fare in questa sezione quando qualcosa non va, e
+               * cercarla in fondo a una pagina vorrebbe dire non trovarla. */
+              const SizedBox(height: 10),
+              OutlinedButton.icon(
+                onPressed: quandoSiGuardaLaRete,
+                style: OutlinedButton.styleFrom(
+                  minimumSize: const Size.fromHeight(48),
+                ),
+                icon: const Icon(Icons.hub_outlined),
+                label: Text(
+                  inLingua(it: 'Guarda la rete', en: 'Look at the network'),
+                ),
+              ),
             ],
           ),
         ),
+        if (chiCE.righe.isNotEmpty) ...[
+          const SizedBox(height: 18),
+          Insegna(
+            inLingua(
+              it: 'Ce ne sono ${chiCE.righe.length}',
+              en: '${chiCE.righe.length} are already here',
+            ),
+          ),
+          Scheda(
+            padding: const EdgeInsets.symmetric(vertical: 4),
+            child: Column(
+              children: [
+                for (final uno in chiCE.righe)
+                  _UnaRigaDellaRete(
+                    suo: uno,
+                    quandoSiApre: () => quandoSiApreLaScheda(uno),
+                  ),
+              ],
+            ),
+          ),
+        ],
         const SizedBox(height: 18),
         Insegna(inLingua(it: 'Prima di cominciare', en: 'Before you start')),
         Scheda(
@@ -1001,6 +1131,499 @@ class _Avviso extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/* ═══ Chi c'e' gia' nella rete (#128) ═══════════════════════════════════════
+ *
+ * Una riga, una scheda e una mappa. Stanno in fondo a questo file e non in uno
+ * loro perche' sono la stessa sezione: chi apre lo Zigbee viene a fare quattro
+ * cose — aggiungerne uno, guardare chi c'e', toglierne uno, vedere come e'
+ * messa la rete — e tenerle vicine e' quello che le fa sembrare una cosa sola.
+ */
+
+/// Una riga dell'elenco: chi e', che mestiere fa, e come sta messo.
+class _UnaRigaDellaRete extends StatelessWidget {
+  const _UnaRigaDellaRete({required this.suo, required this.quandoSiApre});
+
+  final NellaRete suo;
+  final VoidCallback quandoSiApre;
+
+  @override
+  Widget build(BuildContext context) {
+    final colori = Theme.of(context).colorScheme;
+    final testi = Theme.of(context).textTheme;
+    return ListTile(
+      onTap: quandoSiApre,
+      leading: Cerchietto(
+        icona: suo.eLAntenna
+            ? Icons.settings_input_antenna_rounded
+            : suo.reggeGliAltri
+            ? Icons.wifi_tethering_rounded
+            : Icons.sensors_rounded,
+        lato: 40,
+      ),
+      title: Text(suo.nome, style: testi.titleSmall),
+      subtitle: Text(
+        suo.comeSiDice,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: testi.bodySmall?.copyWith(color: colori.onSurfaceVariant),
+      ),
+      /* La batteria si dice, e si dice solo quando la rete lo dice: «non si
+       * sa» non diventa «a corrente». */
+      trailing: suo.vaABatteria
+          ? Icon(
+              Icons.battery_std_rounded,
+              size: 18,
+              color: colori.onSurfaceVariant,
+            )
+          : const Icon(Icons.chevron_right_rounded),
+    );
+  }
+}
+
+/// La scheda di un apparecchio che nella rete c'e' gia'.
+///
+/// Tre cose, in ordine di quanto costano se si sbaglia: mettilo nella plancia,
+/// rinominalo, toglilo dalla rete. L'ultima sta in fondo, staccata, e chiede
+/// conferma.
+class SchedaDelDispositivoZigbee extends StatefulWidget {
+  const SchedaDelDispositivoZigbee({
+    super.key,
+    required this.suo,
+    required this.zigbee,
+    this.quandoVaMessoNellaPlancia,
+  });
+
+  final NellaRete suo;
+  final Zigbee zigbee;
+
+  /// Nullo quando non si puo' consegnare alla plancia: allora il tasto non si
+  /// disegna, invece di esserci e non fare niente.
+  final Future<void> Function()? quandoVaMessoNellaPlancia;
+
+  @override
+  State<SchedaDelDispositivoZigbee> createState() =>
+      _SchedaDelDispositivoZigbeeState();
+}
+
+class _SchedaDelDispositivoZigbeeState
+    extends State<SchedaDelDispositivoZigbee> {
+  late final TextEditingController _nome = TextEditingController(
+    text: widget.suo.nome,
+  );
+  bool _inCorso = false;
+  String? _perche;
+
+  @override
+  void dispose() {
+    _nome.dispose();
+    super.dispose();
+  }
+
+  Future<void> _rinomina() async {
+    final come = _nome.text.trim();
+    if (come.isEmpty || come == widget.suo.nome) return;
+    setState(() {
+      _inCorso = true;
+      _perche = null;
+    });
+    try {
+      await widget.zigbee.rinomina(widget.suo.dispositivo, come);
+      if (mounted) Navigator.of(context).pop();
+    } catch (errore) {
+      if (mounted) setState(() => _perche = spiegaLErrore(errore));
+    } finally {
+      if (mounted) setState(() => _inCorso = false);
+    }
+  }
+
+  Future<void> _togli() async {
+    final sicuro = await showDialog<bool>(
+      context: context,
+      builder: (dentro) => AlertDialog(
+        title: Text(
+          inLingua(
+            it: 'Togliere «${widget.suo.nome}» dalla rete?',
+            en: 'Remove “${widget.suo.nome}” from the network?',
+          ),
+        ),
+        content: Text(
+          /* Si dice cosa succede davvero, e si dice la parte che costa: non
+           * «vuoi procedere», ma «per rimetterlo serve tornare qui col
+           * dispositivo in mano». */
+          widget.suo.reggeGliAltri
+              ? inLingua(
+                  it:
+                      'Questo tiene su la rete per gli altri: togliendolo, '
+                      'quello che ci passava dovrà trovarsi un\'altra strada, '
+                      'e qualcosa può restare zitto per un po\'. Per '
+                      'rimetterlo bisogna riabbinarlo da qui, col dispositivo '
+                      'in mano.',
+                  en:
+                      'This one carries the network for the others: remove '
+                      'it and whatever passed through it has to find another '
+                      'way, so something may go quiet for a while. Putting it '
+                      'back means pairing it again from here, with the device '
+                      'in your hand.',
+                )
+              : inLingua(
+                  it:
+                      'Sparisce dalla rete e da Home Assistant. Per rimetterlo '
+                      'bisogna riabbinarlo da qui, col dispositivo in mano.',
+                  en:
+                      'It goes from the network and from Home Assistant. '
+                      'Putting it back means pairing it again from here, with '
+                      'the device in your hand.',
+                ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dentro).pop(false),
+            child: Text(inLingua(it: 'Lascia stare', en: 'Leave it')),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dentro).pop(true),
+            child: Text(inLingua(it: 'Toglilo', en: 'Remove it')),
+          ),
+        ],
+      ),
+    );
+    if (sicuro != true || !mounted) return;
+    setState(() {
+      _inCorso = true;
+      _perche = null;
+    });
+    try {
+      await widget.zigbee.elimina(widget.suo.targa);
+      if (mounted) Navigator.of(context).pop();
+    } catch (errore) {
+      if (mounted) setState(() => _perche = spiegaLErrore(errore));
+    } finally {
+      if (mounted) setState(() => _inCorso = false);
+    }
+  }
+
+  /* Prima si chiedono le entita' — un giro sul filo che puo' andare storto —
+   * e solo se arriva si chiude la pagina. Chiudendo prima, un errore si
+   * mostrerebbe su una schermata che non c'e' piu'. */
+  Future<void> _mettiNellaPlancia() async {
+    setState(() {
+      _inCorso = true;
+      _perche = null;
+    });
+    try {
+      await widget.quandoVaMessoNellaPlancia!();
+      if (mounted) Navigator.of(context).pop();
+    } catch (errore) {
+      if (mounted) setState(() => _perche = spiegaLErrore(errore));
+    } finally {
+      if (mounted) setState(() => _inCorso = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colori = Theme.of(context).colorScheme;
+    final testi = Theme.of(context).textTheme;
+    final suo = widget.suo;
+    return Scaffold(
+      appBar: AppBar(title: Text(suo.nome)),
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: _quantoLarga),
+          child: ListView(
+            padding: const EdgeInsets.all(16),
+            children: [
+              Scheda(
+                padding: const EdgeInsets.all(18),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(suo.comeSiDice, style: testi.titleSmall),
+                    const SizedBox(height: 6),
+                    Text(
+                      [
+                        if (suo.eLAntenna)
+                          inLingua(
+                            it: 'È l\'antenna della rete',
+                            en: 'It is the network antenna',
+                          )
+                        else if (suo.reggeGliAltri)
+                          inLingua(
+                            it: 'Fa da ponte per gli altri',
+                            en: 'It relays for the others',
+                          )
+                        else
+                          inLingua(
+                            it: 'Sta in fondo a un ramo',
+                            en: 'It sits at the end of a branch',
+                          ),
+                        if (suo.vaABatteria)
+                          inLingua(it: 'va a batteria', en: 'battery powered'),
+                      ].join(' · '),
+                      style: testi.bodySmall?.copyWith(
+                        color: colori.onSurfaceVariant,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    /* La targa in chiaro: e' quello che si incolla in una
+                     * segnalazione, e l'unica cosa che le due reti chiamano
+                     * allo stesso modo. */
+                    SelectableText(
+                      suo.targa,
+                      style: testi.bodySmall?.copyWith(
+                        color: colori.onSurfaceVariant,
+                        fontFeatures: const [],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 18),
+              Insegna(inLingua(it: 'Come si chiama', en: 'What it is called')),
+              Scheda(
+                padding: const EdgeInsets.all(18),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    TextField(
+                      controller: _nome,
+                      enabled: !_inCorso,
+                      textInputAction: TextInputAction.done,
+                      onSubmitted: (_) => _rinomina(),
+                      decoration: InputDecoration(
+                        labelText: inLingua(it: 'Nome', en: 'Name'),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    FilledButton(
+                      onPressed: _inCorso ? null : _rinomina,
+                      child: Text(
+                        inLingua(it: 'Salva il nome', en: 'Save the name'),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (widget.quandoVaMessoNellaPlancia != null &&
+                  suo.dispositivo.isNotEmpty) ...[
+                const SizedBox(height: 18),
+                OutlinedButton.icon(
+                  onPressed: _inCorso ? null : _mettiNellaPlancia,
+                  style: OutlinedButton.styleFrom(
+                    minimumSize: const Size.fromHeight(50),
+                  ),
+                  icon: const Icon(Icons.dashboard_customize_outlined),
+                  label: Text(
+                    inLingua(
+                      it: 'Mettilo nella plancia',
+                      en: 'Put it on the dashboard',
+                    ),
+                  ),
+                ),
+              ],
+              if (_perche != null) ...[
+                const SizedBox(height: 14),
+                Text(
+                  _perche!,
+                  style: testi.bodyMedium?.copyWith(color: colori.error),
+                ),
+              ],
+              const SizedBox(height: 28),
+              /* In fondo e staccato: e' l'unica cosa di questa pagina che non
+               * si disfa premendo di nuovo. */
+              TextButton.icon(
+                onPressed: _inCorso ? null : _togli,
+                style: TextButton.styleFrom(foregroundColor: colori.error),
+                icon: const Icon(Icons.link_off_rounded),
+                label: Text(
+                  inLingua(
+                    it: 'Togli dalla rete',
+                    en: 'Remove from the network',
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// La mappa della rete: chi parla con chi.
+///
+/// ─── Perche' c'e' un tasto e non si disegna da sola ──────────────────────
+///
+/// Perche' chiederla alla rete **non e' una lettura**: e' un giro di domande
+/// che il coordinatore fa a ogni ripetitore, uno alla volta, e su una rete di
+/// venti cose ci mette fino a un minuto — durante il quale la rete e'
+/// occupata e i comandi passano piu' lenti. Una mappa che si rifa' da sola a
+/// ogni apertura vorrebbe dire le luci di casa piu' lente ogni volta che
+/// qualcuno guarda questa pagina.
+///
+/// Quindi all'apertura si mostra quello che la rete sa gia', e il giro vero lo
+/// fa partire chi lo chiede, sapendo che dura.
+///
+/// ─── Perche' il disegno arriva gia' fatto ────────────────────────────────
+///
+/// Lo fa il ponte, e qui si mostra. Disegnarlo in Dart vorrebbe dire la stessa
+/// geometria scritta due volte — una qui e una nella plancia, che e'
+/// JavaScript — e due mappe che il giorno che una cambia dicono cose diverse.
+class LaMappaDellaReteZigbee extends StatefulWidget {
+  const LaMappaDellaReteZigbee({super.key, required this.zigbee});
+
+  final Zigbee zigbee;
+
+  @override
+  State<LaMappaDellaReteZigbee> createState() => _LaMappaDellaReteZigbeeState();
+}
+
+class _LaMappaDellaReteZigbeeState extends State<LaMappaDellaReteZigbee> {
+  LaMappaDellaRete _mappa = LaMappaDellaRete.vuota;
+  bool _inCorso = false;
+  bool _letta = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_letta) {
+      _letta = true;
+      _chiedi(rifai: false);
+    }
+  }
+
+  Future<void> _chiedi({required bool rifai}) async {
+    if (_inCorso) return;
+    setState(() => _inCorso = true);
+    /* La veste si legge adesso e non quando si e' costruita la pagina: chi
+     * cambia tema col telefono in mano deve vedere la mappa cambiare col
+     * resto, non restare con un fondo bianco in una schermata scura. */
+    final scuro = Theme.of(context).brightness == Brightness.dark;
+    final letta = await widget.zigbee.mappa(rifai: rifai, scuro: scuro);
+    if (!mounted) return;
+    setState(() {
+      _mappa = letta;
+      _inCorso = false;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colori = Theme.of(context).colorScheme;
+    final testi = Theme.of(context).textTheme;
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(inLingua(it: 'La rete', en: 'The network')),
+      ),
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 760),
+          child: ListView(
+            padding: const EdgeInsets.all(16),
+            children: [
+              if (_mappa.cE)
+                Scheda(
+                  padding: const EdgeInsets.all(10),
+                  /* Alta quanto decidiamo noi, non quanto e' grande il
+                   * disegno.
+                   *
+                   * Dentro una lista l'altezza non e' misurata: un disegno
+                   * si prende quella che vuole, e il tasto «Rifai il giro»
+                   * finisce tanto piu' in basso quanto piu' e' alta la
+                   * figura — con un disegno senza misure scritte dentro
+                   * sparisce proprio, perche' la lista costruisce solo
+                   * quello che sta nello schermo. Cosi' invece il tasto sta
+                   * sempre subito sotto la mappa, su qualsiasi telefono e
+                   * con qualsiasi rete.
+                   *
+                   * Meta' schermo e' la misura: la mappa si legge, e sotto
+                   * si vede che c'e' dell'altro da leggere. */
+                  child: SizedBox(
+                    height: MediaQuery.sizeOf(context).height * 0.5,
+                    /* Si puo' avvicinare e spostare: su un telefono una rete
+                     * di venti cose sta in uno schermo solo se si
+                     * rimpicciolisce tanto da non leggere piu' i nomi. */
+                    child: InteractiveViewer(
+                      maxScale: 4,
+                      child: SvgPicture.string(
+                        _mappa.figura,
+                        fit: BoxFit.contain,
+                      ),
+                    ),
+                  ),
+                )
+              else if (!_inCorso)
+                StatoVuoto(
+                  dentroUnaLista: true,
+                  icona: Icons.hub_outlined,
+                  titolo: inLingua(
+                    it: 'La mappa non c\'è ancora',
+                    en: 'There is no map yet',
+                  ),
+                  sotto: _mappa.perche.isNotEmpty
+                      ? _mappa.perche
+                      : inLingua(
+                          it:
+                              'La rete non ha ancora guardato con chi parla '
+                              'ognuno.',
+                          en:
+                              'The network has not yet looked at who talks to '
+                              'whom.',
+                        ),
+                ),
+              if (_inCorso) ...[
+                const SizedBox(height: 24),
+                const Center(child: CircularProgressIndicator()),
+                const SizedBox(height: 14),
+                Text(
+                  inLingua(
+                    it:
+                        'La rete si sta guardando: il coordinatore chiede a '
+                        'ogni ripetitore, uno alla volta. Può volerci un '
+                        'minuto.',
+                    en:
+                        'The network is looking at itself: the coordinator '
+                        'asks each repeater, one at a time. It can take a '
+                        'minute.',
+                  ),
+                  textAlign: TextAlign.center,
+                  style: testi.bodySmall?.copyWith(
+                    color: colori.onSurfaceVariant,
+                  ),
+                ),
+              ],
+              const SizedBox(height: 18),
+              FilledButton.icon(
+                onPressed: _inCorso ? null : () => _chiedi(rifai: true),
+                style: FilledButton.styleFrom(
+                  minimumSize: const Size.fromHeight(52),
+                ),
+                icon: const Icon(Icons.refresh_rounded),
+                label: Text(inLingua(it: 'Rifai il giro', en: 'Look again')),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                inLingua(
+                  it:
+                      'Mentre la rete si guarda i comandi passano più lenti: '
+                      'è un giro che si fa quando serve, non a ogni apertura.',
+                  en:
+                      'While the network looks at itself commands run '
+                      'slower: it is a round you do when you need it, not on '
+                      'every visit.',
+                ),
+                style: testi.bodySmall?.copyWith(
+                  color: colori.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

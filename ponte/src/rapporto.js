@@ -66,6 +66,7 @@ import { ilBackup, leBatterie, leEntita } from "./salute.js";
 import { PROFILI_AL_MASSIMO, profiloBuono, senzaFlussi } from "./plancia-da-lontano.js";
 import { eConfigurata } from "./configurazione.js";
 import { Archivio } from "./archivio.js";
+import { Registri } from "./registri.js";
 
 /* Dove sta il quadro.
  *
@@ -162,18 +163,6 @@ const IL_FILO_RALLENTA_FINO_A = 12;
  * registro e non fa male a nessuno. Quando il quadro fa il suo mestiere questa
  * riga non si accorge nemmeno di esistere. */
 const IL_FILO_ALMENO = 1_000;
-
-/* Quanto si tengono da parte i registri di Home Assistant.
- *
- * Servono a dare un nome ai dispositivi che non rispondono, e cambiano quando
- * qualcuno aggiunge o ribattezza un apparecchio — cioe' quasi mai. Il rapporto
- * parte ogni minuto: richiederli ogni volta vorrebbe dire duemila righe di
- * registro al minuto per due nomi che sono gli stessi di un'ora fa.
- *
- * Cinque minuti e' il ritardo massimo con cui un dispositivo appena
- * ribattezzato si vede col nome nuovo, e nessuno ribattezza una presa
- * guardando il cronometro. */
-const REGISTRI_DURANO = 5 * 60 * 1000;
 
 /* Quanto si aspetta prima del primo rapporto.
  *
@@ -418,6 +407,9 @@ export function fabbricaIlRapporto({
   plance = null,
   configurazione = null,
   dispositivi = null,
+  /* L'anagrafe della casa, condivisa con chi risponde alla plancia. Vedi
+   * `registri.js`. */
+  registri = null,
   chiamata = null,
   versioni = {},
   ogni = OGNI_DI_SERIE,
@@ -438,27 +430,16 @@ export function fabbricaIlRapporto({
     }
   };
 
-  /* I due registri, tenuti da parte per cinque minuti. Stanno qui e non in una
-   * classe perche' li vuole un pezzo solo del rapporto, e una classe in piu'
-   * per due `Map` e' una classe in piu' da tenere a mente.
+  /* I due registri li tiene `registri.js`, tenuti da parte cinque minuti, e li
+   * tiene **per tutti**: il rapporto ogni minuto, e la plancia a ogni
+   * caricamento. Due copie vorrebbero dire due letture pesanti invece di una,
+   * e due momenti diversi in cui la casa si e' guardata.
    *
-   * Uno dei due che non risponde li butta tutti e due: senza quello delle
-   * entita' non si sa di chi e' un'entita', senza quello dei dispositivi non
-   * si sa come si chiama un dispositivo, e mezza risposta darebbe nomi a
-   * meta'. `iNomi` sa gia' cavarsela senza, con i nomi delle entita'. */
-  let registri = null;
-  let registriLettiIl = 0;
-  const iRegistri = async () => {
-    const ora = adesso();
-    if (registri && ora - registriLettiIl < REGISTRI_DURANO) return registri;
-    const [dispositivi, entita] = await Promise.all([
-      casa.chiedi({ type: "config/device_registry/list" }),
-      casa.chiedi({ type: "config/entity_registry/list" }),
-    ]);
-    registri = { dispositivi, entita };
-    registriLettiIl = adesso();
-    return registri;
-  };
+   * Senza — un ponte vecchio, una prova che non lo passa — il rapporto se li
+   * legge da se', come ha sempre fatto: e' l'unico pezzo che li usa, e restare
+   * senza vorrebbe dire nomi di entita' al posto dei nomi di dispositivo. */
+  const anagrafe = registri ?? new Registri({ casa, registro, adesso });
+  const iRegistri = () => anagrafe.chiedi();
 
   return async () => {
     const [detto, stati, daFare, registriOra] = await Promise.all([

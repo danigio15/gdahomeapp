@@ -1397,8 +1397,17 @@ test("production graph is single-owner, acyclic and contains no facade pass-thro
   // #553, quindi si ricorda: due mappe piatte lasciate da chi i registri li ha
   // gia' in mano, esattamente come si fa per le stanze nel file accanto. Sta
   // da solo, non prende la rete, e si prova senza una casa.
+  // 388 con chi quelle due mappe le chiede al ponte. Dentro Home Assistant a
+  // lasciarle e' il pannello; nell'app non le lasciava nessuno — il guscio
+  // storico i registri li carica solo dopo il rilevamento automatico, e il
+  // nome del dispositivo non lo tiene affatto (`WIZ.devNames` non esiste) — e
+  // sul telefono l'avviso tornava a contare le entita'. Il ponte i registri
+  // ce li ha gia' in mano, letti per il rapporto: glieli si chiedono una
+  // volta per caricamento, e solo dove il ponte c'e'. E' l'unico modulo di
+  // questa storia che tocca la rete, ed e' per questo che sta da solo:
+  // `core/i-dispositivi-di-home-assistant.js` una prova la tiene pulita.
   assert.ok(
-    relative.length <= 387,
+    relative.length <= 388,
     `production graph unexpectedly grew to ${relative.length} modules`,
   );
   assertAcyclic(edges);

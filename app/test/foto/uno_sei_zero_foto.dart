@@ -55,6 +55,31 @@ Future<void> _iCaratteri() async {
     }
     await carica.load();
   }
+  /* E il carattere che chiedono le figure del ponte.
+   *
+   * La mappa della rete e' un SVG e dentro dice
+   * `font-family="system-ui, -apple-system, …"` — una fila di nomi, come si
+   * scrive sul web: prendi il primo che trovi.
+   *
+   * `flutter_svg` pero' quella fila non la legge come una fila: la prende
+   * **tutta intera** come se fosse il nome di un carattere solo, e un
+   * carattere che si chiama cosi' non esiste da nessuna parte. Sul telefono
+   * non e' un guaio — non trovandolo si ripiega sul carattere di sistema, e i
+   * nomi si leggono — ma in una prova si ripiega su quello finto, che disegna
+   * ogni lettera come un rettangolo pieno: i nomi dei dispositivi uscivano
+   * come barrette nere.
+   *
+   * Non e' un guasto della mappa: e' che qui il carattere di sistema non c'e'.
+   * Gli si da' l'Inter dell'app con quel nome lungo, e lo scatto torna a
+   * raccontare quello che si vede in mano. */
+  const comeChiedeIlPonte =
+      'system-ui, -apple-system, Segoe UI, Roboto, sans-serif';
+  final suo = File('assets/carattere/Inter-600.ttf');
+  if (suo.existsSync()) {
+    await (FontLoader(
+      comeChiedeIlPonte,
+    )..addFont(suo.readAsBytes().then((b) => b.buffer.asByteData()))).load();
+  }
   final radice = Platform.environment['FLUTTER_ROOT'];
   if (radice == null || radice.isEmpty) return;
   final icone = File(
@@ -80,6 +105,112 @@ class _GuardiaFinta implements LaGuardia {
   @override
   Future<ComeEAndata> chiedi({required String perche}) async => ComeEAndata.si;
 }
+
+/// Una rete come quella di una casa vera: l'antenna, tre ripetitori a
+/// corrente, e sei cose a batteria in fondo ai rami.
+///
+/// Sono gli stessi dispositivi che disegna la mappa qui accanto
+/// (`la-rete-di-casa.svg`): elenco e mappa devono raccontare la stessa casa,
+/// se no lo scatto mostra due case diverse.
+final _inRete = <Map<String, Object?>>[
+  {
+    'id': '0x0000',
+    'nome': 'Antenna',
+    'marca': 'Nabu Casa',
+    'modello': 'SkyConnect',
+    'tipo': 'coordinatore',
+    'potenza': 'rete',
+    'dispositivo': 'dev-antenna',
+  },
+  {
+    'id': '0x1a2b',
+    'nome': 'Presa cucina',
+    'marca': 'Xiaomi',
+    'modello': 'ZNCZ12LM',
+    'tipo': 'router',
+    'potenza': 'rete',
+    'dispositivo': 'dev-presa-cucina',
+  },
+  {
+    'id': '0x3c4d',
+    'nome': 'Lampadario salotto',
+    'marca': 'IKEA',
+    'modello': 'TRADFRI bulb E27',
+    'tipo': 'router',
+    'potenza': 'rete',
+    'dispositivo': 'dev-lampadario',
+  },
+  {
+    'id': '0x5e6f',
+    'nome': 'Presa garage',
+    'marca': 'Shelly',
+    'modello': 'Plug S',
+    'tipo': 'router',
+    'potenza': 'rete',
+    'dispositivo': 'dev-presa-garage',
+  },
+  {
+    'id': '0x7a8b',
+    'nome': 'Porta ingresso',
+    'marca': 'Aqara',
+    'modello': 'MCCGQ11LM',
+    'tipo': 'terminale',
+    'potenza': 'batteria',
+    'dispositivo': 'dev-porta',
+  },
+  {
+    'id': '0x9c0d',
+    'nome': 'Finestra cucina',
+    'marca': 'Aqara',
+    'modello': 'MCCGQ11LM',
+    'tipo': 'terminale',
+    'potenza': 'batteria',
+    'dispositivo': 'dev-finestra',
+  },
+  {
+    'id': '0xaab1',
+    'nome': 'Termostato salotto',
+    'marca': 'Moes',
+    'modello': 'BRT-100',
+    'tipo': 'terminale',
+    'potenza': 'batteria',
+    'dispositivo': 'dev-termostato',
+  },
+  {
+    'id': '0xbbc2',
+    'nome': 'Movimento corridoio',
+    'marca': 'Sonoff',
+    'modello': 'SNZB-03',
+    'tipo': 'terminale',
+    'potenza': 'batteria',
+    'dispositivo': 'dev-movimento',
+  },
+  {
+    'id': '0xccd3',
+    'nome': 'Basculante garage',
+    'marca': 'Aqara',
+    'modello': 'MCCGQ11LM',
+    'tipo': 'terminale',
+    'potenza': 'batteria',
+    'dispositivo': 'dev-basculante',
+  },
+  {
+    'id': '0xdde4',
+    'nome': 'Perdita lavanderia',
+    'marca': 'Aqara',
+    'modello': 'SJCGQ11LM',
+    'tipo': 'terminale',
+    'potenza': 'batteria',
+    'dispositivo': 'dev-perdita',
+  },
+];
+
+/// La mappa come la disegna **il ponte**, non una figura rifatta qui.
+///
+/// Il file lo scrive il disegnatore vero — `ponte/src/mappa-zigbee.js` — sui
+/// dispositivi qui sopra. Rifarla a mano in Dart vorrebbe dire fotografare una
+/// mappa che nell'app non si vede mai.
+String _laMappa() => File('test/foto/la-rete-di-casa.svg').readAsStringSync();
 
 void main() {
   setUpAll(() async {
@@ -329,5 +460,84 @@ void main() {
     await premi(tester, 'Chiamalo così');
     await respira(tester);
     await scatta(tester, 'zigbee-4-fatto');
+  });
+
+  /* ─── Zigbee: chi c'e' gia', la sua scheda, la mappa (#128) ────────────── */
+  //
+  // «Voglio vedere elenco completo dei dispositivi e poterli eliminare e
+  // eventualmente associare dispositivi gia' esistenti nella plancia. Crea
+  // inoltre la possibilita' di mostrare la mappa di collegamento.»
+  //
+  // Anche qui non si disegna niente a mano: si apre la sezione con una rete
+  // gia' popolata e si preme dove preme una persona.
+
+  testWidgets('Zigbee: chi c\'è già, la scheda e la mappa', (tester) async {
+    quantoGrande(tester);
+    late PonteFinto ponte;
+    await tester.runAsync(() async => ponte = await PonteFinto.alza());
+    ponte.inReteZigbee.addAll(_inRete);
+    ponte.mappaZigbee = _laMappa();
+    /* Le entita' del dispositivo che si apre: sono quelle che fanno decidere
+     * al foglietto «Dove lo metto?» in che sezione va. */
+    ponte.entitaDelDispositivoZigbee['dev-porta'] = [
+      {
+        'entity': 'binary_sensor.porta_ingresso',
+        'classe': 'door',
+        'categoria': '',
+      },
+      {
+        'entity': 'sensor.porta_ingresso_battery',
+        'classe': 'battery',
+        'categoria': 'diagnostic',
+      },
+    ];
+    final collegamento = await unaCasa(tester, ponte);
+    addTearDown(() async {
+      await collegamento.chiudi();
+      await ponte.spegni();
+    });
+
+    await tester.pumpWidget(
+      vestita(
+        Scaffold(
+          body: SchermataZigbee(
+            collegamento: collegamento,
+            visibile: true,
+            quandoVaMessoNellaPlancia: (_) {},
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    await respira(tester);
+    await ilMarchioSiCarica(tester);
+    /* Scorsa fin sotto il tasto: l'elenco sta li', e in cima si vedrebbe solo
+     * la porta dell'abbinamento che e' gia' nello scatto 1. */
+    await tester.drag(find.byType(ListView), const Offset(0, -330));
+    await tester.pumpAndSettle();
+    await scatta(tester, 'zigbee-5-elenco');
+
+    await premi(tester, 'Porta ingresso');
+    await tester.pumpAndSettle();
+    await respira(tester);
+    await scatta(tester, 'zigbee-6-scheda');
+
+    await premi(tester, 'Togli dalla rete');
+    await tester.pumpAndSettle();
+    await scatta(tester, 'zigbee-7-togli');
+
+    await premi(tester, 'Lascia stare');
+    await tester.pumpAndSettle();
+    /* Indietro dalla scheda, e poi la mappa. */
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+    await premi(tester, 'Guarda la rete');
+    /* A passi di tempo **vero** e non con `pumpAndSettle`: dentro una prova
+     * l'orologio lo muoviamo noi, e «aspetta che si fermi tutto» lo sposta
+     * avanti a manciate — passando il tempo che l'app si da' per avere la
+     * mappa. Lo scatto usciva con «Home Assistant non ha risposto in tempo»
+     * su una rete che aveva risposto benissimo. */
+    await respira(tester, volte: 6);
+    await scatta(tester, 'zigbee-8-mappa');
   });
 }

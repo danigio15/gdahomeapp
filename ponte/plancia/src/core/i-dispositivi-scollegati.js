@@ -40,11 +40,33 @@
  * dà fastidio, mentre dà fastidio — e tiene la sezione grande quanto il guaio
  * invece di farla crescere per sempre.
  *
+ * ── E si torna indietro ─────────────────────────────────────────────────
+ *
+ * «Non vedo i dispositivi e non c'è nulla per poter inserire nuovamente i
+ * dispositivi.»
+ *
+ * Il cestino era a senso unico, e c'era scritto: «Dall'avviso non tornano». Il
+ * ragionamento era che si mette da parte quello che dà fastidio, e quello che
+ * dà fastidio non lo si rivuole. Ma si preme anche per sbaglio, e si preme per
+ * provare: uno tocca il cestino su quattro righe per vedere cosa fa, e resta
+ * con una sezione vuota e nessun modo di riempirla. Una scelta che non si può
+ * disfare costa molto di più di quanto valga tenere corto l'elenco.
+ *
+ * Quindi `rimettiInElenco` è l'esatto contrario di `mettiDaParte`, e le righe
+ * messe da parte si vedono col loro tasto. L'elenco resta grande quanto il
+ * guaio lo stesso: quello che torna nell'avviso ci torna solo se è ancora
+ * muto, perché l'avviso lo rifà `chiNonRispondePerDispositivo` da capo.
+ *
  * È puro: entrano le entità configurate, gli stati e l'elenco delle escluse;
  * esce cosa mostrare.
  */
 import { chiNonRispondePerDispositivo } from "./chi-non-risponde.js";
-import { escluseDellaTessera, leggiLaVoce, togliDallaTessera } from "./fuori-dai-widget.js";
+import {
+  escluseDellaTessera,
+  leggiLaVoce,
+  rimettiNellaTessera,
+  togliDallaTessera,
+} from "./fuori-dai-widget.js";
 
 const pulito = (valore) => String(valore ?? "").trim();
 
@@ -97,7 +119,7 @@ export function iDispositiviScollegati({
    * qui, in una sezione che parla di questa tessera, direbbe che l'ha messa da
    * parte chi non l'ha messa. */
   const viste = new Set();
-  const messiDaParte = [];
+  const sciolte = [];
   for (const voce of Array.isArray(escluse) ? escluse : []) {
     const letta = leggiLaVoce(voce);
     if (letta?.chiave !== TESSERA_SCOLLEGATI) continue;
@@ -111,7 +133,7 @@ export function iDispositiviScollegati({
       nome = "";
     }
     const stato = states?.[entity];
-    messiDaParte.push({
+    sciolte.push({
       entity,
       nome: nome || pulito(stato?.attributes?.friendly_name) || entity,
       /* Se in questa casa esiste ancora. Senza stato non è «offline»: è
@@ -122,8 +144,49 @@ export function iDispositiviScollegati({
   }
   return {
     adesso,
-    messiDaParte: messiDaParte.sort((una, altra) => una.nome.localeCompare(altra.nome)),
+    messiDaParte: perDispositivo(sciolte, di, nomi).sort((una, altra) =>
+      una.nome.localeCompare(altra.nome),
+    ),
   };
+}
+
+/* Anche qui per dispositivo, e per la stessa ragione delle righe vive: quello
+ * che si è messo da parte era un dispositivo, e ritrovarselo spezzato in
+ * quattro entità vorrebbe dire quattro tasti per rimettere a posto una cosa
+ * sola — e tre righe che restano lì a dire che il lavoro non è finito.
+ *
+ * Quello che si scrive restano entità, come prima: queste righe le tengono
+ * tutte, e il tasto le rimette tutte insieme. Senza le mappe dei registri
+ * ognuna resta per conto suo, com'era prima che i dispositivi si sapessero. */
+function perDispositivo(sciolte, di, nomi) {
+  const diChiE = di && typeof di === "object" ? di : {};
+  if (!Object.keys(diChiE).length) return sciolte.map((una) => ({ ...una, entita: [una.entity] }));
+  const nomeDelDispositivo = nomi && typeof nomi === "object" ? nomi : {};
+  const insieme = new Map();
+  const fuori = [];
+  for (const una of sciolte) {
+    const suo = pulito(diChiE[una.entity]);
+    if (!suo) {
+      fuori.push({ ...una, entita: [una.entity] });
+      continue;
+    }
+    const gia = insieme.get(suo);
+    if (gia) {
+      gia.entita.push(una.entity);
+      /* Il dispositivo c'è ancora se ce n'è almeno una: è lui che si cerca,
+       * non la singola entità. */
+      gia.cE = gia.cE || una.cE;
+    } else {
+      insieme.set(suo, {
+        entity: `dispositivo:${suo}`,
+        dispositivo: suo,
+        nome: pulito(nomeDelDispositivo[suo]) || una.nome,
+        cE: una.cE,
+        entita: [una.entity],
+      });
+    }
+  }
+  return [...fuori, ...insieme.values()];
 }
 
 /* L'elenco delle escluse con dentro anche queste. Non toglie mai niente.
@@ -137,5 +200,17 @@ export function iDispositiviScollegati({
 export const mettiDaParte = (escluse, entita) =>
   (Array.isArray(entita) ? entita : [entita]).reduce(
     (elenco, una) => togliDallaTessera(elenco, TESSERA_SCOLLEGATI, una),
+    escluse,
+  );
+
+/* E l'elenco senza queste: il contrario esatto di qui sopra.
+ *
+ * Toglie solo le voci firmate da questa tessera. La stessa entità può essere
+ * fuori anche da un'altra — o fuori da tutte, con una voce nuda scritta da un
+ * altro interruttore — e quelle non sono di questa sezione: rimettere un
+ * dispositivo nell'avviso dei non connessi non vuol dire rimetterlo in Home. */
+export const rimettiInElenco = (escluse, entita) =>
+  (Array.isArray(entita) ? entita : [entita]).reduce(
+    (elenco, una) => rimettiNellaTessera(elenco, TESSERA_SCOLLEGATI, una),
     escluse,
   );

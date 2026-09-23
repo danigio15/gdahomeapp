@@ -90,6 +90,18 @@ export const ALLOWED_MESSAGE_TYPES = Object.freeze([
   "calendar/event/create",
   "calendar/event/update",
   "calendar/event/delete",
+  // L'anagrafe della casa, chiesta al ponte (#33, seconda meta'): di chi e'
+  // ogni entita', e come si chiama quel qualcuno. Serve all'avviso dei
+  // dispositivi non connessi, che conta per dispositivo e non per entita'.
+  //
+  // Comincia per «ponte/» perche' la fa il ponte e non Home Assistant, e la
+  // plancia la manda **solo quando e' il ponte a ospitarla**: dentro il
+  // pannello le due mappe gliele ha gia' lasciate il pannello stesso, che i
+  // registri li riceve per conto suo. Sta qui lo stesso — la regola e' che in
+  // questo elenco ci sia tutto quello che la plancia puo' spedire, se no il
+  // giorno che parte davvero muore con «Message type not permitted through
+  // the bridge» e nessuno capisce perche'.
+  "ponte/registri",
   // Le segnalazioni. Stessa ragione dell'upload, e una in piu': la chiave del
   // manutentore sta nelle opzioni del config entry e la chiamata verso il
   // relay la fa il backend, quindi qui passa la domanda e non il segreto.
