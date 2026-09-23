@@ -38,6 +38,7 @@ import {
   esc,
   finite,
   formatNumber,
+  ilContoEsattoDelleFasce,
   installStyle,
   lexicalGlobal,
   onEditorRedraw,
@@ -1010,11 +1011,28 @@ function applyReportOverview(bundle) {
    * vince con `!important`. */
   doc?.querySelector?.(".ed-fin-grid")?.classList?.toggle?.("dm-solo-il-costo", !ilSole);
   const money = financial(data, bundle);
+  /* Il conto esatto batte la stima, quando c'e'.
+   *
+   * «Gli importi dei costi energia non coincidono con il riquadro sotto.» Qui
+   * «Costo Reale» era i kilowattora del mese per la MEDIA PESATA delle fasce —
+   * una stima, perche' di un mese si sa quanta energia e' passata ma non in
+   * che ore. Il blocco attaccato subito sotto le ore le ha chieste al Recorder
+   * e fa il conto vero: due numeri diversi per la stessa spesa, a tre
+   * centimetri di distanza.
+   *
+   * A scrivere questa casella siamo in due — anche la rifinitura del Report — e
+   * lei il conto esatto lo chiedeva gia'. Vinceva chi passava per ultima, e
+   * passava per ultima la stima. Adesso lo chiedono tutte e due, allo stesso
+   * registro. E il risparmio segue il costo: se no diceva di aver risparmiato
+   * meno di quanto il conto vero dice. */
+  const aFasce = ilContoEsattoDelleFasce();
+  const costoDiRete = aFasce ? Math.max(0, Number(aFasce.euro) || 0) : money.realCost;
+  const risparmiato = Math.max(0, money.withoutSolar - costoDiRete);
   setText("ed-fin-pagato", `${formatNumber(money.withoutSolar, 2)} €`);
   setText("ed-fin-pagato-sub", kwh(data.house));
-  setText("ed-fin-costo", `${formatNumber(money.realCost, 2)} €`);
+  setText("ed-fin-costo", `${formatNumber(costoDiRete, 2)} €`);
   setText("ed-fin-costo-sub", `${kwh(data.gridImport)} ${t("dalla rete", "from grid")}`);
-  setText("ed-fin-risp", `${formatNumber(money.saved, 2)} €`);
+  setText("ed-fin-risp", `${formatNumber(risparmiato, 2)} €`);
   setText("ed-fin-imm", `${formatNumber(money.exportIncome, 2)} €`);
   setText("ed-auto-big", `${auto}%`);
   setText("ed-auto-ring-val", `${auto}%`);

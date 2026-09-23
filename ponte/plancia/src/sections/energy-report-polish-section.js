@@ -12,7 +12,7 @@ import {
   tintaDellaFascia,
 } from "../core/fasce-della-tariffa.js";
 import { salvaLeFasceDellaScheda } from "./beta22-load-slots-hotfix-section.js";
-import { allStates, clean, doc, formatNumber, installStyle, readJson, root, scriviTestoSeCambia, t, wrapFunction } from "./shared.js";
+import { allStates, clean, doc, formatNumber, installStyle, readJson, registraIlContoDelleFasce, root, scriviTestoSeCambia, t, wrapFunction } from "./shared.js";
 
 const KEY = "__DASHBOARDMODERN_ENERGY_REPORT_POLISH__";
 const state = (root[KEY] ||= { installed: false, frame: 0, dailyChart: null, legacyDailyChart: null, subscribed: false, contoAFasce: null });
@@ -32,6 +32,10 @@ const state = (root[KEY] ||= { installed: false, frame: 0, dailyChart: null, leg
  */
 export function registraIlContoAFasce(lettore) {
   state.contoAFasce = typeof lettore === "function" ? lettore : null;
+  /* E lo stesso lettore va nel registro condiviso: quella casella la scrive
+   * anche la sezione dell'Energia, e prima delle due vinceva chi passava per
+   * ultima — cioe' la stima. Vedi «shared.js». */
+  registraIlContoDelleFasce(lettore);
   return true;
 }
 
