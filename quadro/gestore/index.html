@@ -2805,12 +2805,46 @@
         document.documentElement.dataset.dentro = "sì";
       }
 
+      /* Le immagini che non arrivano, tolte: un ascolto solo per tutta la
+       * pagina, in cattura perche' l'errore di un'immagine non sale. */
+      document.addEventListener(
+        "error",
+        (evento) => {
+          const chi = evento.target;
+          if (chi instanceof HTMLImageElement && chi.dataset.seNonArriva === "via") chi.remove();
+        },
+        true,
+      );
+
       const DOVE_STA_LA_CHIAVE = "gdahome.quadro.gestore";
+      /* La chiave si tiene nel deposito **di questa scheda**, non del
+       * browser: chiusa la scheda, se ne va.
+       *
+       * Stava nel deposito del browser, per sempre, e da li' la leggeva
+       * qualunque pagina servita da questa stessa origine — compresa quella
+       * dell'editor della plancia, che e' codice di un altro progetto. Il
+       * prezzo, detto: aprendo una scheda nuova la chiave si ribatte, o la
+       * consegna chi ci tiene dentro (la tessera in Home Assistant, l'app).
+       *
+       * Quella che le versioni di prima avevano lasciato nel browser si porta
+       * in questa scheda una volta sola, e dal browser si toglie. */
       let chiave = "";
       try {
-        chiave = localStorage.getItem(DOVE_STA_LA_CHIAVE) || "";
+        chiave = sessionStorage.getItem(DOVE_STA_LA_CHIAVE) || "";
       } catch (_niente) {
-        /* Finestra anonima: si richiede a ogni apertura. */
+        /* Deposito bloccato: si chiede a ogni apertura. */
+      }
+      try {
+        const diPrima = localStorage.getItem(DOVE_STA_LA_CHIAVE);
+        if (diPrima !== null) {
+          if (!chiave && diPrima) {
+            chiave = diPrima;
+            sessionStorage.setItem(DOVE_STA_LA_CHIAVE, chiave);
+          }
+          localStorage.removeItem(DOVE_STA_LA_CHIAVE);
+        }
+      } catch (_niente) {
+        /* Niente da portare, o un deposito che non si lascia toccare. */
       }
 
       let INSTALLATORI = [];
@@ -2938,7 +2972,7 @@
           const altri = Math.max(0, quanti - nomi.length);
           return (
             nomi.map((uno) => `<span>${testo(uno)}</span>`).join("") +
-            (altri ? `<span class="eAltri">e altri ${altri}</span>` : "")
+            (altri ? `<span class="eAltri">e altri ${Number(altri)}</span>` : "")
           );
         }
         return (c?.entita?.impronte || []).map((una) => `<span>#${testo(una)}</span>`).join("");
@@ -3084,16 +3118,16 @@
        * innocuo, quello che esce ha dentro solo i tag scritti qui. */
       const iSegniDi = (riga) =>
         riga.replace(I_SEGNI, (tutto, grassetto, codice, ilTesto, dove, prima, corsivo) => {
-          if (grassetto !== undefined) return `<strong>${grassetto}</strong>`;
-          if (codice !== undefined) return `<code>${codice}</code>`;
+          if (grassetto !== undefined) return `<strong>${/* già HTML */ grassetto}</strong>`;
+          if (codice !== undefined) return `<code>${/* già HTML */ codice}</code>`;
           if (ilTesto !== undefined) {
             /* Il link si preme, e si apre di fianco. `noreferrer` perche' a
              * chi ha scritto l'aggiornamento non deve arrivare l'indirizzo
              * del quadro di nessuno. */
             if (!SOLO_IL_WEB.test(dove)) return tutto;
-            return `<a href="${dove}" target="_blank" rel="noopener noreferrer">${ilTesto}</a>`;
+            return `<a href="${/* già HTML */ dove}" target="_blank" rel="noopener noreferrer">${/* già HTML */ ilTesto}</a>`;
           }
-          return `${prima}<em>${corsivo}</em>`;
+          return `${/* già HTML */ prima}<em>${/* già HTML */ corsivo}</em>`;
         });
 
       /* Dal titolo di quella versione in giu'.
@@ -3151,7 +3185,7 @@
           } else if (pezzo.che === "riga") {
             fuori += "<hr />";
           } else if (pezzo.che === "blocco") {
-            fuori += `<pre><code>${pezzo.testo}</code></pre>`;
+            fuori += `<pre><code>${/* già HTML */ pezzo.testo}</code></pre>`;
           }
         }
         chiudiLElenco();
@@ -3174,6 +3208,10 @@
        * un disegno, e da solo non dice niente. */
       const A_PAROLE = { bene: "in ordine", male: "anomalia", ignoto: "non rilevato" };
 
+      /* Di chi sono le icone degli aggiornamenti che si disegnano: di chi
+       * segue la casa aperta nel foglio. */
+      const diChiSonoLeIcone = () => foglioAperto?.chi;
+
       /* Il segno di un aggiornamento: il logo di chi lo porta, o l'iniziale.
        *
        * Tre casi, in ordine. La roba nostra porta il bollo del quadro, che e'
@@ -3183,7 +3221,7 @@
        * che su un quadratino rotto. Chi non ce l'ha resta sull'iniziale, che
        * e' quello che fa gia' l'app.
        *
-       * `onerror` toglie l'immagine e scopre la lettera che sta sotto. */
+       * Se l'immagine non arriva si toglie, e scopre la lettera che sta sotto. */
       function ilSegnoDi(uno) {
         if (uno.nostra)
           return '<span class="bollo" aria-hidden="true"><i></i><i class="mezzo"></i><i></i></span>';
@@ -3212,7 +3250,7 @@
          * dentro un indirizzo, e chi lo compone e' questa riga. Un controllo
          * solo, dall'altra parte di una rete, non e' un controllo. */
         if (!/^[0-9a-f]{16}$/.test(String(uno.segno || "")))
-          return `<span class="segno">${primo}</span>`;
+          return `<span class="segno">${/* già HTML */ primo}</span>`;
         /* La lettera resta sotto: finche' l'icona non e' arrivata — il primo
          * giro dopo che un aggiornamento compare — la riga si legge lo stesso,
          * e se non arrivera' mai si legge per sempre. */
@@ -3227,11 +3265,20 @@
          * romperebbe dietro un proxy che monta il quadro sotto un prefisso.
          * Con il punto punto si conta dalla pagina, e vale in tutt'e due i
          * casi. */
-        return `<span class="segno">${primo}<img
-          src="../segno/${uno.segno}"
+        /* Con davanti l'installatore: le icone stanno nella sua cartella
+         * (`src/segni.js`), e l'indirizzo lo dice. */
+        const diChi = String(diChiSonoLeIcone() || "");
+        if (!/^inst_[0-9a-f]{16}$/.test(diChi))
+          return `<span class="segno">${/* già HTML */ primo}</span>`;
+        /* Un'icona che non arriva si toglie, e sotto resta la lettera: lo fa
+         * l'ascolto in cima allo script, e non un `onerror` scritto
+         * dentro il tag — la politica della pagina lascia girare solo gli
+         * script che sono nel file. */
+        return `<span class="segno">${/* già HTML */ primo}<img
+          src="../segno/${testo(diChi)}/${testo(uno.segno)}"
           alt=""
           loading="lazy"
-          onerror="this.remove()"
+          data-se-non-arriva="via"
         /></span>`;
       }
 
@@ -3261,10 +3308,10 @@
         const suo = String(uno.segno || "");
         const note = /^[0-9a-f]{16}$/.test(suo) && CON_LE_NOTE.has(suo);
         const dentro = note
-          ? ` <button type="button" class="comeUnLink" data-note="${suo}">cosa cambia, per intero</button>`
+          ? ` <button type="button" class="comeUnLink" data-note="${testo(suo)}">cosa cambia, per intero</button>`
           : "";
         if (!detto && !dentro) return "";
-        return `<p class="cambia">${detto}${dentro}</p><div class="leNote" data-note-di="${testo(suo)}" data-note-a="${testo(String(uno.a || ""))}" hidden></div>`;
+        return `<p class="cambia">${/* già HTML */ detto}${/* già HTML */ dentro}</p><div class="leNote" data-note-di="${testo(suo)}" data-note-a="${testo(String(uno.a || ""))}" hidden></div>`;
       }
 
       /* Una riga di aggiornamento: il segno, cosa e', cosa si fa, cosa cambia.
@@ -3286,13 +3333,13 @@
               <b>${testo(uno.nome)}</b>
               <span class="salto">${testo(uno.da)} → ${testo(uno.a)}</span>
             </span>
-            <span class="fare">${fare}</span>
+            <span class="fare">${/* già HTML */ fare}</span>
             ${cosaCambia(uno)}
           </li>`;
       }
 
       const spia = (stato) =>
-        `<span class="pastiglia ${stato.chiave}"><span aria-hidden="true">${stato.segno}</span>${testo(stato.parola)}</span>`;
+        `<span class="pastiglia ${testo(stato.chiave)}"><span aria-hidden="true">${testo(stato.segno)}</span>${testo(stato.parola)}</span>`;
 
       /* La striscia: `P` giorno pieno, `M` a metà, `V` offline, spazio «non c'era
        * ancora». */
@@ -3313,7 +3360,7 @@
             : vuoti === 0
               ? "14 giorni, sempre online"
               : `14 giorni · offline ${plurale(vuoti, "volta", "volte")}`;
-        return `<div class="giorni${grande ? " grande" : ""}" role="img" aria-label="${testo(dice)}">${celle}</div><div class="giorniDice">${testo(dice)}</div>`;
+        return `<div class="giorni${grande ? " grande" : ""}" role="img" aria-label="${testo(dice)}">${/* già HTML */ celle}</div><div class="giorniDice">${testo(dice)}</div>`;
       }
 
       const TINTA_DI = {
@@ -3332,9 +3379,9 @@
         const quanto = (Math.max(0, Math.min(100, Number(valore) || 0)) / 100) * C;
         const fine = `${quanto.toFixed(2)} ${(C - quanto).toFixed(2)}`;
         return `<svg viewBox="0 0 64 64" aria-hidden="true">
-          <circle cx="32" cy="32" r="${r}" class="traccia" />
-          <circle cx="32" cy="32" r="${r}" class="arco" stroke="var(--${TINTA_DI[come] || "verde"})"
-            stroke-dasharray="${animato ? `0 ${C.toFixed(2)}` : fine}"${animato ? ` data-fine="${fine}"` : ""} /></svg>`;
+          <circle cx="32" cy="32" r="${Number(r)}" class="traccia" />
+          <circle cx="32" cy="32" r="${Number(r)}" class="arco" stroke="var(--${TINTA_DI[come] || "verde"})"
+            stroke-dasharray="${animato ? `0 ${C.toFixed(2)}` : /* già HTML */ fine}"${animato ? ` data-fine="${/* già HTML */ fine}"` : ""} /></svg>`;
       }
 
       /* Gli archi disegnati a zero si aprono al frame dopo: cosi' la
@@ -3368,7 +3415,7 @@
         return `
           <div class="anellino">
             <div class="cerchio">
-              ${anellino(quanto, come, animato)}<b class="${come === "bene" ? "" : come}">${testo(valore)}${testo(unita)}</b>
+              ${anellino(quanto, come, animato)}<b class="${come === "bene" ? "" : testo(come)}">${testo(valore)}${testo(unita)}</b>
             </div>
             <span>${testo(che)}</span>
             ${sotto ? `<small>${testo(sotto)}</small>` : ""}
@@ -3454,9 +3501,9 @@
                 .join(" · ")}${cE(c.sistema) || cE(m.accesaDa) ? "." : ""}
               ${
                 m.discoVita !== null && m.discoVita >= DISCO_STANCO
-                  ? `Il disco è consumato al ${m.discoVita}%: su queste schede è il primo componente a guastarsi, meglio sostituirlo per tempo.`
+                  ? `Il disco è consumato al ${testo(m.discoVita)}%: su queste schede è il primo componente a guastarsi, meglio sostituirlo per tempo.`
                   : m.temperatura >= SOGLIE.troppoCaldo
-                    ? `Sopra i ${SOGLIE.troppoCaldo}° la scheda riduce la velocità da sola: l'impianto non si guasta, ma rallenta.`
+                    ? `Sopra i ${Number(SOGLIE.troppoCaldo)}° la scheda riduce la velocità da sola: l'impianto non si guasta, ma rallenta.`
                     : "Nessun valore fuori soglia."
               }
             </p>
@@ -3560,7 +3607,7 @@
                   ${una.principale ? '<span class="pastiglia bene">principale</span>' : ""}
                   ${
                     una.tipo === "wifi" && una.su && una.segnale !== null
-                      ? `<span class="pastiglia ${una.segnale < SEGNALE_DEBOLE ? "attenta" : ""}">segnale ${una.segnale}%</span>`
+                      ? `<span class="pastiglia ${una.segnale < SEGNALE_DEBOLE ? "attenta" : ""}">segnale ${testo(una.segnale)}%</span>`
                       : ""
                   }
                   <span class="dove">${una.su ? testo(una.ip) : "non attiva"}</span>
@@ -3574,7 +3621,7 @@
                   ? "Nessun apparato di rete monitorato in questo impianto: nella plancia, sezione «Macchine e rete», si seleziona l'integrazione del router e i ripetitori compaiono da soli."
                   : r.sorvegliate.giu === 0
                     ? `${plurale(r.sorvegliate.quante, "apparato monitorato", "apparati monitorati")}, tutti raggiungibili.`
-                    : `${r.sorvegliate.giu} ${r.sorvegliate.giu === 1 ? "apparato" : "apparati"} su ${r.sorvegliate.quante} non rispondono.`
+                    : `${testo(r.sorvegliate.giu)} ${r.sorvegliate.giu === 1 ? "apparato" : "apparati"} su ${testo(r.sorvegliate.quante)} non rispondono.`
               }
             </p>
           </section>`;
@@ -3590,13 +3637,13 @@
           <section class="riquadro">
             <div class="capoRiquadro">
               <h3>Gli add-on</h3>
-              <span class="conta">${a.accesi}/${a.quanti} accesi</span>
+              <span class="conta">${testo(a.accesi)}/${testo(a.quanti)} accesi</span>
             </div>
             <div class="addon">
               ${a.elenco
                 .map((uno) => {
                   const come = uno.su ? "" : uno.allAvvio ? "fermo" : "apposta";
-                  return `<span class="uno ${come}"
+                  return `<span class="uno ${testo(come)}"
                     ><span class="puntino" aria-hidden="true"></span>${testo(uno.nome)}${
                       uno.su ? "" : uno.allAvvio ? " · fermo" : " · spento manualmente"
                     }</span>`;
@@ -3713,9 +3760,9 @@
         const quanto = posti > 0 ? Math.min(1, usati / posti) * C : 0;
         const fine = `${quanto.toFixed(2)} ${(C - quanto).toFixed(2)}`;
         return `<svg viewBox="0 0 140 140" aria-hidden="true">
-          <circle cx="70" cy="70" r="${r}" class="traccia" />
-          <circle cx="70" cy="70" r="${r}" class="arco" stroke="var(--accento)" stroke-linecap="round"
-            stroke-dasharray="${animato ? `0 ${C.toFixed(2)}` : fine}"${animato ? ` data-fine="${fine}"` : ""} /></svg>`;
+          <circle cx="70" cy="70" r="${Number(r)}" class="traccia" />
+          <circle cx="70" cy="70" r="${Number(r)}" class="arco" stroke="var(--accento)" stroke-linecap="round"
+            stroke-dasharray="${animato ? `0 ${C.toFixed(2)}` : /* già HTML */ fine}"${animato ? ` data-fine="${/* già HTML */ fine}"` : ""} /></svg>`;
       }
 
       /* I metri degli installatori si riempiono al frame dopo, come gli archi. */
@@ -3750,8 +3797,8 @@
         ]
           .map(
             ([quale, parola, quanti]) => `
-            <button type="button" data-schermata="${quale}" aria-pressed="${schermata === quale}">
-              ${LE_ICONE[quale]}<span>${testo(parola)}</span>${quanti ? `<span class="quanti">${quanti}</span>` : ""}
+            <button type="button" data-schermata="${testo(quale)}" aria-pressed="${schermata === quale}">
+              ${LE_ICONE[quale]}<span>${testo(parola)}</span>${quanti ? `<span class="quanti">${Number(quanti)}</span>` : ""}
             </button>`,
           )
           .join("");
@@ -3818,11 +3865,11 @@
             <div class="anello">
               ${anelloDeiPosti(usati, posti, animaIMetri)}
               <div class="dentro">
-                <b>${CASE}</b><span>${CASE === 1 ? "impianto" : "impianti"}</span>
+                <b>${Number(CASE)}</b><span>${CASE === 1 ? "impianto" : "impianti"}</span>
               </div>
             </div>
             <div>
-              <h2 class="titolo-flotta">${titolo}</h2>
+              <h2 class="titolo-flotta">${/* già HTML */ titolo}</h2>
               <p class="sotto-flotta">
                 ${numero(entitaTotali)} entità in totale${
                   tutteLeCase.length
@@ -3832,9 +3879,9 @@
               </p>
             </div>
             <div class="file">
-              <div class="fila ferma" data-stato="posto"><b>${aPosto}</b><span><i></i>in ordine</span></div>
-              <div class="fila ferma" data-stato="limite"><b>${alLimite}</b><span><i></i>al limite</span></div>
-              <div class="fila ferma" data-stato="congelato"><b>${congelati}</b><span><i></i>sospesi</span></div>
+              <div class="fila ferma" data-stato="posto"><b>${Number(aPosto)}</b><span><i></i>in ordine</span></div>
+              <div class="fila ferma" data-stato="limite"><b>${Number(alLimite)}</b><span><i></i>al limite</span></div>
+              <div class="fila ferma" data-stato="congelato"><b>${Number(congelati)}</b><span><i></i>sospesi</span></div>
             </div>
           </section>
 
@@ -3899,7 +3946,7 @@
               ? 100
               : 0;
         return `
-          <section class="vetro installatore" data-stato="${stato.come}" data-installatore="${testo(uno.chi)}">
+          <section class="vetro installatore" data-stato="${testo(stato.come)}" data-installatore="${testo(uno.chi)}">
             <div class="tondo">
               ${
                 uno.marchio
@@ -3915,13 +3962,13 @@
             <div class="posti">
               <div class="conto">
                 <span>
-                  <b>${quante}</b> ${quante === 1 ? "impianto" : "impianti"} ·
+                  <b>${Number(quante)}</b> ${quante === 1 ? "impianto" : "impianti"} ·
                   <b>${numero(uno.entita)}</b> entità
                 </span>
-                <span>${uno.soglia > 0 ? `su ${uno.soglia} posti` : "senza limite"}</span>
+                <span>${uno.soglia > 0 ? `su ${Number(uno.soglia)} posti` : "senza limite"}</span>
               </div>
               <div class="metro">
-                <i style="width: ${animaIMetri ? 0 : quota}%"${animaIMetri ? ` data-fine="${quota}%"` : ""}></i>
+                <i style="width: ${Number(animaIMetri ? 0 : quota)}%"${animaIMetri ? ` data-fine="${Number(quota)}%"` : ""}></i>
               </div>
             </div>
             <ul class="case-sue">${leSueCase(uno)}</ul>
@@ -3976,7 +4023,7 @@
             const c = casa.carta || {};
             return `
               <li
-                data-stato="${casa.stato.chiave}"
+                data-stato="${testo(casa.stato.chiave)}"
                 data-apri-casa="${testo(casa.casa)}"
                 data-di="${testo(uno.chi)}"
                 role="button"
@@ -4055,13 +4102,13 @@
         const c = casa.carta || {};
         const su = foglioAperto.appena || foglioAperto.chiudendo ? "" : " su";
         return `
-          <div class="velo${su}" data-chiudi></div>
+          <div class="velo${/* già HTML */ su}" data-chiudi></div>
           <div
-            class="foglio${su}"
+            class="foglio${/* già HTML */ su}"
             role="dialog"
             aria-modal="true"
             aria-labelledby="foglio-titolo"
-            data-stato="${casa.stato.chiave}"
+            data-stato="${testo(casa.stato.chiave)}"
           >
             <div class="presa"><i></i></div>
             <div class="foglio-testa">
@@ -4193,7 +4240,7 @@
                   ([che, quanto, sotto, come]) => `
                 <div>
                   <dt>${testo(che)}</dt>
-                  <dd class="${come}">${testo(quanto)}<small>${testo(sotto)}</small></dd>
+                  <dd class="${testo(come)}">${testo(quanto)}<small>${testo(sotto)}</small></dd>
                 </div>`,
                 )
                 .join("")}
@@ -4351,7 +4398,7 @@
           return `
             <section class="riquadro">
               <div class="capoRiquadro"><h3>Gli aggiornamenti</h3></div>
-              ${cartello}
+              ${/* già HTML */ cartello}
               <p class="nota">
                 ${
                   quanti > 0
@@ -4366,7 +4413,7 @@
               <h3>Gli aggiornamenti</h3>
               <span class="conta">${plurale(elenco.length, "in attesa", "in attesa")}</span>
             </div>
-            ${cartello}
+            ${/* già HTML */ cartello}
             <ul class="versi">
               ${elenco
                 .map((uno) =>
@@ -4477,7 +4524,8 @@
           };
         });
         /* «Cosa cambia, per intero»: le note si chiedono quando servono, a
-         * `/gestore/note/<segno>`, e si disegnano come nel cruscotto. */
+         * `/gestore/installatore/<chi>/note/<segno>` — sono nella cartella di
+         * chi segue la casa — e si disegnano come nel cruscotto. */
         dove.querySelectorAll("[data-note]").forEach((tasto) => {
           tasto.onclick = async () => {
             const suo = tasto.dataset.note;
@@ -4493,7 +4541,9 @@
             if (riquadro.dataset.gia === "sì") return;
             riquadro.textContent = "…";
             try {
-              const detto = await chiedi(`/note/${suo}`);
+              const detto = await chiedi(
+                `/installatore/${encodeURIComponent(foglioAperto?.chi || "")}/note/${suo}`,
+              );
               const disegnate = ilMarkdown(
                 daQuellaVersione(String(detto.note || "").trim(), riquadro.dataset.noteA || ""),
               );
@@ -4693,7 +4743,7 @@
         const entra = () => {
           chiave = casella.value.trim();
           try {
-            localStorage.setItem(DOVE_STA_LA_CHIAVE, chiave);
+            sessionStorage.setItem(DOVE_STA_LA_CHIAVE, chiave);
           } catch (_niente) {
             /* Si resta con quella in memoria, e si richiede alla prossima. */
           }
@@ -4720,7 +4770,7 @@
             if (consegnata && consegnata !== chiave) {
               chiave = consegnata;
               try {
-                localStorage.setItem(DOVE_STA_LA_CHIAVE, chiave);
+                sessionStorage.setItem(DOVE_STA_LA_CHIAVE, chiave);
               } catch (_niente) {
                 /* Vale per questa apertura e basta. */
               }
@@ -4798,30 +4848,38 @@
        * richiederlo qui vorrebbe dire scriverlo due volte, con la seconda che
        * fa pensare che la prima non abbia funzionato.
        *
-       * Non si controlla da quale origine arriva, e non e' una svista: chi ci
-       * tiene dentro e' Home Assistant, e l'indirizzo di un Home Assistant e'
-       * diverso in ogni casa — non c'e' nessun elenco da scrivere qui. Quello
-       * che regge e' che il messaggio non **da'** accesso: porta una chiave,
-       * che vale se e' buona e non vale se non lo e'. Chi potesse mandarne una
-       * buona ce l'avrebbe gia'.
+       * Si accetta solo dalla propria origine, e solo da chi ci contiene o ci
+       * ha aperto. Prima non si guardava da dove arrivasse, col ragionamento
+       * che una chiave vale se e' buona e basta; ma una pagina qualunque
+       * poteva consegnare **la sua**, buona, e far lavorare chi guarda dentro
+       * una gestione non sua. Questa pagina in un riquadro non ci sta (il
+       * server lo vieta) e la chiave della gestione non la tiene nessun Home
+       * Assistant: una consegna vera puo' venire solo da qui.
        *
        * Se una chiave c'e' gia' non si tocca: chi l'ha battuta a mano in
-       * questo browser ha deciso lui, e una consegna che gliela cambia sotto
+       * questa scheda ha deciso lui, e una consegna che gliela cambia sotto
        * e' un modo di non far entrare piu' nessuno. La consegna si ricorda
-       * anche quando non si usa: serve se quella tenuta nel browser viene
-       * rifiutata. Il perche' per esteso sta nel cruscotto, dove il guasto si
-       * e' visto per primo. */
+       * anche quando non si usa: serve se quella tenuta viene rifiutata. Il
+       * perche' per esteso sta nel cruscotto, dove il guasto si e' visto per
+       * primo. */
       let consegnata = "";
       addEventListener("message", (evento) => {
         const detto = evento?.data;
         if (!detto || detto.gdahome !== "chiave") return;
+        if (evento.origin !== location.origin) return;
+        const daChi = evento.source;
+        if (
+          !daChi ||
+          (daChi !== window.opener && (window.parent === window || daChi !== window.parent))
+        )
+          return;
         const arrivata = String(detto.chiave || "").trim();
         if (!arrivata) return;
         consegnata = arrivata;
         if (chiave) return;
         chiave = arrivata;
         try {
-          localStorage.setItem(DOVE_STA_LA_CHIAVE, chiave);
+          sessionStorage.setItem(DOVE_STA_LA_CHIAVE, chiave);
         } catch (_niente) {
           /* Vale per questa apertura e basta: meglio di non entrare. */
         }

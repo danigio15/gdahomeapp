@@ -34,6 +34,12 @@ const POTATURA = 60 * 60 * 1000;
 
 export async function alzaIlQuadro({
   porta = Number(process.env.QUADRO_PORTA || 8100),
+  /* Dove ascolta. Di serie **solo su questa macchina**: davanti c'e' Caddy,
+   * che parla TLS e passa qui in chiaro, e il quadro in chiaro sulla rete non
+   * lo deve raggiungere nessun altro — con dentro chiavi e nomi di clienti.
+   * Chi lo mette dietro un altro proxy, su un'altra macchina, lo dice qui
+   * (`QUADRO_ASCOLTO=0.0.0.0`) sapendo cosa fa. */
+  ascolto = process.env.QUADRO_ASCOLTO || "127.0.0.1",
   cartella = process.env.QUADRO_DATI || "./dati",
   livello = process.env.QUADRO_REGISTRO || "info",
   /* La chiave di gestione: quella di chi **tiene** il quadro.
@@ -85,14 +91,14 @@ export async function alzaIlQuadro({
 
   await new Promise((riuscito, fallito) => {
     server.once("error", fallito);
-    server.listen(porta, "0.0.0.0", () => {
+    server.listen(porta, ascolto, () => {
       server.removeListener("error", fallito);
       riuscito();
     });
   });
 
   const vera = server.address().port;
-  registro.info(`il quadro ascolta sulla ${vera}`);
+  registro.info(`il quadro ascolta su ${ascolto}:${vera}`);
   registro.info(
     `${installatori.lista.length} installatori, ${case_.lista.length} case seguite, ` +
       `${chiavi.elenco().length} codici in attesa`,
@@ -129,6 +135,12 @@ export async function alzaIlQuadro({
          * richieste in corso finiscano, e quelle per definizione non
          * finiscono da sole. */
         server.lasciaAndareIFili?.();
+        /* Quello che l'archivio delle case teneva da scrivere, adesso. */
+        try {
+          case_.salvaSeServe();
+        } catch (_errore) {
+          /* Al massimo si perde il conto di un rapporto. */
+        }
         server.close(ok);
       }),
   };

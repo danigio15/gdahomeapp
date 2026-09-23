@@ -202,7 +202,7 @@ export class Installatori {
   /**
    * Che razza di marchio ha, o stringa vuota.
    *
-   * Qui dentro ci sta **una parola** — `png`, `svg` — e non l'immagine: i byte
+   * Qui dentro ci sta **una parola** — `png`, `jpg` — e non l'immagine: i byte
    * stanno in un file per conto loro (`marchi.js`), perche' questo archivio si
    * rilegge a ogni richiesta e si riscrive per cambiare una soglia.
    */

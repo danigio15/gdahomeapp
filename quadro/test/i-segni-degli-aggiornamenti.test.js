@@ -95,6 +95,9 @@ async function banco() {
   return {
     ...acceso,
     dove,
+    /* L'installatore: le icone stanno nella sua cartella, e l'indirizzo lo
+     * porta davanti (`/segno/<inst_…>/<segno>`). */
+    chi: suo.chi,
     retro,
     gestore,
     unCodice,
@@ -158,7 +161,7 @@ test("l'icona si serve dall'indirizzo del quadro, e senza chiave", async () => {
 
     /* Senza chiave: quel disegno deve arrivare nel browser di chi installa, e
      * sedici cifre esadecimali non si indovinano. */
-    const presa = await fetch(`${b.dove}/segno/${SEGNO}`);
+    const presa = await fetch(`${b.dove}/segno/${b.chi}/${SEGNO}`);
     assert.equal(presa.status, 200);
     assert.equal(presa.headers.get("content-type"), "image/png");
     assert.equal(presa.headers.get("x-content-type-options"), "nosniff");
@@ -166,8 +169,8 @@ test("l'icona si serve dall'indirizzo del quadro, e senza chiave", async () => {
     assert.deepEqual(Buffer.from(await presa.arrayBuffer()), PNG);
 
     /* Un segno che non c'e' e' un 404, non un mezzo disegno. */
-    assert.equal((await fetch(`${b.dove}/segno/${"0".repeat(16)}`)).status, 404);
-    assert.equal((await fetch(`${b.dove}/segno/non-un-segno`)).status, 404);
+    assert.equal((await fetch(`${b.dove}/segno/${b.chi}/${"0".repeat(16)}`)).status, 404);
+    assert.equal((await fetch(`${b.dove}/segno/${b.chi}/non-un-segno`)).status, 404);
   } finally {
     await b.chiudi();
   }
@@ -185,7 +188,7 @@ test("quello che non e' un'immagine non diventa un'immagine", async () => {
       codice,
       rapporto({ logo: Buffer.from("<html>ciao</html>").toString("base64") }),
     );
-    assert.equal((await fetch(`${b.dove}/segno/${SEGNO}`)).status, 404);
+    assert.equal((await fetch(`${b.dove}/segno/${b.chi}/${SEGNO}`)).status, 404);
     /* E siccome non l'ha presa, la richiede: non si segna «arrivata». */
     const dopo = await (await b.deposita(UNA, codice, rapporto())).json();
     assert.deepEqual(dopo.manca, [SEGNO]);
@@ -252,10 +255,13 @@ test("chi tiene il quadro legge le stesse note, con la chiave della gestione", a
       codice,
       rapporto({ leNote: "## 6.5.1\n\n- una cosa\n- un'altra", senzaLogo: true }),
     );
-    const dette = await (await b.gestore(`/note/${SEGNO}`)).json();
+    const dette = await (await b.gestore(`/installatore/${b.chi}/note/${SEGNO}`)).json();
     assert.match(dette.note, /una cosa/);
-    assert.equal((await fetch(`${b.dove}/gestore/note/${SEGNO}`)).status, 401);
-    assert.equal((await b.gestore(`/note/${"0".repeat(16)}`)).status, 404);
+    assert.equal(
+      (await fetch(`${b.dove}/gestore/installatore/${b.chi}/note/${SEGNO}`)).status,
+      401,
+    );
+    assert.equal((await b.gestore(`/installatore/${b.chi}/note/${"0".repeat(16)}`)).status, 404);
   } finally {
     await b.chiudi();
   }
@@ -348,7 +354,7 @@ test("una casa non puo' avvelenare l'icona che vedono gli altri installatori", a
       },
     });
     /* Niente si e' scritto sotto il segno di Mosquitto. */
-    assert.equal((await fetch(`${b.dove}/segno/${SEGNO}`)).status, 404);
+    assert.equal((await fetch(`${b.dove}/segno/${b.chi}/${SEGNO}`)).status, 404);
     const dette = await b.retro(`/note/${SEGNO}`);
     assert.equal(dette.status, 404, "le note avvelenate si leggono");
   } finally {
@@ -391,7 +397,7 @@ test("«questa icona non esiste» si dice una volta, e non si richiede piu'", as
     const dopo = await (await b.deposita(UNA, codice, rapporto())).json();
     assert.equal(dopo.manca, undefined, "richiede per sempre una cosa che non c'e'");
     /* E resta un 404: «non esiste» non e' un'immagine vuota. */
-    assert.equal((await fetch(`${b.dove}/segno/${SEGNO}`)).status, 404);
+    assert.equal((await fetch(`${b.dove}/segno/${b.chi}/${SEGNO}`)).status, 404);
   } finally {
     await b.chiudi();
   }
@@ -453,7 +459,7 @@ test("un rapporto pieno di icone fino al tetto della casa non si becca un 413", 
     assert.equal(risposta.status, 200);
     /* E le icone ci sono davvero. */
     const suo = ilSegnoDi("Applicazione 0", "2.0.0");
-    assert.equal((await fetch(`${b.dove}/segno/${suo}`)).status, 200);
+    assert.equal((await fetch(`${b.dove}/segno/${b.chi}/${suo}`)).status, 200);
   } finally {
     await b.chiudi();
   }

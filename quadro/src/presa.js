@@ -393,6 +393,14 @@ export class Presa {
     this._avvisa();
   }
 
+  /* Chi sta sopra dice che su questo filo si e' presentato qualcuno con un
+   * segno buono: vedi `SaliteSenzaNome`. */
+  presentata() {
+    const avvisa = this._quandoPresentata;
+    this._quandoPresentata = null;
+    avvisa?.();
+  }
+
   /* L'avviso di chiusura parte una volta sola: `close` sul socket arriva anche
    * dopo un `chiudi()` nostro, e chi ascolta non deve contarlo due volte. */
   _avvisa() {
@@ -403,5 +411,64 @@ export class Presa {
     } catch (_errore) {
       /* Chi ascolta ha sbagliato: non e' un motivo per far cadere il ponte. */
     }
+  }
+}
+
+/* ─── I fili senza nome ────────────────────────────────────────────────────
+ *
+ * Fra la salita a WebSocket e il segno buono un filo non e' di nessuno: e'
+ * una presa aperta, un po' di memoria, e — finche' nessuno la chiude — un
+ * posto occupato. Un telefono vero passa di qui in un secondo; chi apre mille
+ * fili e poi tace li terrebbe tutti per sempre, perche' la presa non ha
+ * nessuna scadenza sua (`setTimeout(0)` qui sopra, apposta: un telefono
+ * collegato puo' stare zitto per ore).
+ *
+ * Allora i fili senza nome si contano, da ogni indirizzo e in tutto, e hanno
+ * un tempo per presentarsi. Chi si presenta smette di contare; chi non lo fa
+ * in tempo viene chiuso. Oltre il tetto, chi bussa aspetta fuori. */
+export const SENZA_NOME_PER_INDIRIZZO = 20;
+export const SENZA_NOME_IN_TUTTO = 200;
+export const ATTESA_DEL_NOME = 15_000;
+
+export class SaliteSenzaNome {
+  constructor({
+    perIndirizzo = SENZA_NOME_PER_INDIRIZZO,
+    inTutto = SENZA_NOME_IN_TUTTO,
+    attesa = ATTESA_DEL_NOME,
+  } = {}) {
+    this.perIndirizzo = perIndirizzo;
+    this.inTutto = inTutto;
+    this.attesa = attesa;
+    this.quanti = 0;
+    this._daDove = new Map();
+  }
+
+  cePosto(da) {
+    if (this.quanti >= this.inTutto) return false;
+    return (this._daDove.get(String(da)) || 0) < this.perIndirizzo;
+  }
+
+  tieni(presa, da) {
+    const chi = String(da);
+    this.quanti += 1;
+    this._daDove.set(chi, (this._daDove.get(chi) || 0) + 1);
+    let fatto = false;
+    const lascia = () => {
+      if (fatto) return;
+      fatto = true;
+      clearTimeout(scadenza);
+      this.quanti -= 1;
+      const restano = (this._daDove.get(chi) || 1) - 1;
+      if (restano > 0) this._daDove.set(chi, restano);
+      else this._daDove.delete(chi);
+    };
+    const scadenza = setTimeout(() => {
+      if (fatto) return;
+      lascia();
+      presa.chiudi(1008, "troppo tempo senza presentarsi");
+    }, this.attesa);
+    scadenza.unref?.();
+    presa._quandoPresentata = lascia;
+    presa.socket?.once?.("close", lascia);
   }
 }

@@ -66,3 +66,66 @@ export class Biglietti {
     for (const [codice, dati] of this.aperti) if (dati.scade <= ora) this.aperti.delete(codice);
   }
 }
+
+/* ─── Il gettone dell'editor della plancia ────────────────────────────────
+ *
+ * L'editor della plancia (`plancia-servita.js`) e' una pagina che il quadro
+ * serve ma che non ha scritto lui: e' DashboardModern, con i suoi moduli. Per
+ * entrare sul suo filo le serve di dire chi e', e fino a ieri lo diceva con
+ * **la chiave del cruscotto**, letta dal deposito del browser. Quella chiave
+ * apre tutto: le case, gli inviti, i lavori.
+ *
+ * Adesso le si da' un gettone suo: il cruscotto lo chiede al quadro con la
+ * chiave (`POST /console/casa/<casa>/plancia/<profilo>/gettone`) e lo passa
+ * alla pagina. Vale mezz'ora, per **quella** casa e **quella** plancia, e
+ * apre il filo di quella plancia e nient'altro: nessuna via del cruscotto lo
+ * riconosce.
+ */
+
+/** Quanto vale un gettone dell'editor. */
+export const GETTONE_DURA = 30 * 60 * 1000;
+
+/** Quanti gettoni aperti puo' avere uno stesso installatore. */
+export const GETTONI_PER_UNO = 20;
+
+export class GettoniDellEditor {
+  constructor({ adesso = () => Date.now(), nuovo = () => randomBytes(16).toString("hex") } = {}) {
+    this.adesso = adesso;
+    this.nuovo = nuovo;
+    this.aperti = new Map();
+  }
+
+  /** Un gettone per `chi`, buono per questa casa e questa plancia. */
+  dai(chi, casa, profilo) {
+    this._butta();
+    const suoi = [...this.aperti].filter(([, uno]) => uno.chi === chi).map(([gettone]) => gettone);
+    for (const vecchio of suoi.slice(0, Math.max(0, suoi.length - GETTONI_PER_UNO + 1)))
+      this.aperti.delete(vecchio);
+    const gettone = this.nuovo();
+    const scade = this.adesso() + GETTONE_DURA;
+    this.aperti.set(gettone, { chi, casa, profilo, scade });
+    return { gettone, scade };
+  }
+
+  /**
+   * Di chi e' questo gettone, se vale per questa casa e questa plancia; se no
+   * `null`. Non si consuma: la pagina dell'editor riapre il filo quando cade,
+   * e deve poter rientrare finche' il gettone vale.
+   */
+  riconosci(gettone, casa, profilo) {
+    this._butta();
+    const suo = this.aperti.get(String(gettone ?? ""));
+    if (!suo || suo.casa !== casa || suo.profilo !== profilo) return null;
+    return suo.chi;
+  }
+
+  /** Via tutti quelli di uno: la sua chiave e' cambiata, o non c'e' piu'. */
+  dimentica(chi) {
+    for (const [gettone, uno] of this.aperti) if (uno.chi === chi) this.aperti.delete(gettone);
+  }
+
+  _butta() {
+    const ora = this.adesso();
+    for (const [gettone, dati] of this.aperti) if (dati.scade <= ora) this.aperti.delete(gettone);
+  }
+}

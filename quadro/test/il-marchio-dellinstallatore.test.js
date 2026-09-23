@@ -8,7 +8,7 @@
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { mkdtempSync, rmSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -17,6 +17,7 @@ import { cheRazzaE, ilTipoDi, Marchi, QUANTO_GROSSO } from "../src/marchi.js";
 const CHI = "inst_0123456789abcdef";
 const PNG = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 0]);
 const JPG = Buffer.from([0xff, 0xd8, 0xff, 0xe0, 0, 0, 0, 0]);
+const WEBP = Buffer.concat([Buffer.from("RIFF"), Buffer.alloc(4), Buffer.from("WEBPVP8 ")]);
 const SVG = Buffer.from('<svg xmlns="http://www.w3.org/2000/svg"><rect /></svg>', "utf8");
 
 function banco() {
@@ -33,7 +34,14 @@ test("si guarda come comincia il file, non come si chiama", () => {
    * firma sopra. */
   assert.equal(cheRazzaE(PNG), "png");
   assert.equal(cheRazzaE(JPG), "jpg");
-  assert.equal(cheRazzaE(SVG), "svg");
+  assert.equal(cheRazzaE(WEBP), "webp");
+  /* Le firme intere: `RIFF` da solo e' anche un WAV, e quattro byte di PNG
+   * senza gli altri quattro non sono un PNG. */
+  assert.equal(
+    cheRazzaE(Buffer.concat([Buffer.from("RIFF"), Buffer.alloc(4), Buffer.from("WAVE")])),
+    "",
+  );
+  assert.equal(cheRazzaE(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0, 0, 0, 0])), "");
   assert.equal(cheRazzaE(Buffer.from("MZ un eseguibile", "utf8")), "");
   assert.equal(cheRazzaE(Buffer.from("%PDF-1.7", "utf8")), "");
   assert.equal(cheRazzaE(Buffer.from("<html><body>ciao</body></html>", "utf8")), "");
@@ -41,19 +49,33 @@ test("si guarda come comincia il file, non come si chiama", () => {
   assert.equal(cheRazzaE("non un buffer"), "");
 });
 
-test("un SVG si riconosce anche se comincia con la dichiarazione o un commento", () => {
-  /* E' testo: puo' cominciare con dei bianchi, con `<?xml`, o con un commento
-   * messo da chi l'ha esportato. Guardare il primo byte non basta. */
+test("un SVG non si accetta piu', comunque cominci", () => {
+  /* Si accettava, e dentro un SVG puo' starci un programma: un logo in PNG
+   * fa lo stesso lavoro e non ha niente da disinnescare. Vale per tutte le
+   * forme con cui un SVG puo' cominciare. */
+  assert.equal(cheRazzaE(SVG), "");
   for (const prima of ['<?xml version="1.0"?>', "<!-- fatto con Inkscape -->", "\n  "]) {
-    assert.equal(cheRazzaE(Buffer.from(`${prima}<svg viewBox="0 0 1 1"></svg>`, "utf8")), "svg");
+    assert.equal(cheRazzaE(Buffer.from(`${prima}<svg viewBox="0 0 1 1"></svg>`, "utf8")), "");
   }
-  /* Ma un file che si limita a nominare un `<svg>` dentro dell'altro non lo e'. */
-  assert.equal(cheRazzaE(Buffer.from("<html><p>un svg</p></html>", "utf8")), "");
+  const b = banco();
+  try {
+    assert.equal(b.marchi.metti(CHI, SVG), "", "un SVG non si mette");
+    /* E uno messo prima, quando si accettava, non esce piu'. */
+    mkdirSync(b.marchi.cartella, { recursive: true });
+    writeFileSync(join(b.marchi.cartella, `${CHI}.svg`), SVG);
+    assert.equal(b.marchi.leggi(CHI, "svg"), null);
+    /* E togliendo il marchio se ne va anche lui. */
+    b.marchi.togli(CHI);
+    assert.equal(existsSync(join(b.marchi.cartella, `${CHI}.svg`)), false);
+  } finally {
+    b.chiudi();
+  }
 });
 
 test("il tipo con cui si serve e' quello della razza, e per le altre non c'e'", () => {
   assert.equal(ilTipoDi("png"), "image/png");
-  assert.equal(ilTipoDi("svg"), "image/svg+xml");
+  assert.equal(ilTipoDi("webp"), "image/webp");
+  assert.equal(ilTipoDi("svg"), "");
   assert.equal(ilTipoDi("exe"), "");
   assert.equal(ilTipoDi(""), "");
 });
@@ -71,14 +93,14 @@ test("si mette, si rilegge, si toglie", () => {
 });
 
 test("cambiando razza non restano due file", () => {
-  /* Da PNG a SVG: se il vecchio non si togliesse, in cartella ne resterebbero
+  /* Da PNG a JPEG: se il vecchio non si togliesse, in cartella ne resterebbero
    * due e il giorno che uno li guarda non saprebbe quale vale. */
   const b = banco();
   try {
     b.marchi.metti(CHI, PNG);
-    assert.equal(b.marchi.metti(CHI, SVG, "png"), "svg");
+    assert.equal(b.marchi.metti(CHI, JPG, "png"), "jpg");
     assert.equal(b.marchi.leggi(CHI, "png"), null);
-    assert.deepEqual(b.marchi.leggi(CHI, "svg"), SVG);
+    assert.deepEqual(b.marchi.leggi(CHI, "jpg"), JPG);
   } finally {
     b.chiudi();
   }

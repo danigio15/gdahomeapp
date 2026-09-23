@@ -88,7 +88,11 @@ test("e se un giorno il tetto taglia davvero, il numero vero non si perde", () =
   const detto = leEntita(giuPerFinta(40), { quante: 12, registri: iRegistri(40) });
   assert.equal(detto.dispositivi, 40);
   assert.equal(detto.nomi.length, 12);
-  assert.match(CONSOLE, /e altri \$\{altri\}/, "la console non scrive quanti ne restano fuori");
+  assert.match(
+    CONSOLE,
+    /e altri \$\{Number\(altri\)\}/,
+    "la console non scrive quanti ne restano fuori",
+  );
 });
 
 /* ─── I controlli leggono lo stesso numero della console ──────────────────── */

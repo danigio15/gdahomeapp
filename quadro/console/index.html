@@ -3,6 +3,9 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!-- Le origini da cui si prende una chiave consegnata senza chiedere: le
+         scrive il quadro (QUADRO_OSPITI), e vuote vuol dire solo questa. -->
+    <meta name="gdahome-ospiti" content="" />
     <title>Cruscotto installatore</title>
     <!--
       IL QUADRO — LA CONSOLE DI CHI INSTALLA.
@@ -2620,13 +2623,50 @@
         document.documentElement.dataset.dentro = "sì";
       }
 
+      /* Le immagini che non arrivano, tolte: un ascolto solo per tutta la
+       * pagina, in cattura perche' l'errore di un'immagine non sale. */
+      document.addEventListener(
+        "error",
+        (evento) => {
+          const chi = evento.target;
+          if (chi instanceof HTMLImageElement && chi.dataset.seNonArriva === "via") chi.remove();
+        },
+        true,
+      );
+
       const DOVE_STA_LA_CHIAVE = "gdahome.quadro.chiave";
 
+      /* La chiave si tiene nel deposito **di questa scheda**, non del
+       * browser: chiusa la scheda, se ne va.
+       *
+       * Stava nel deposito del browser, per sempre, e da li' la leggeva
+       * qualunque pagina servita da questa stessa origine — compresa quella
+       * dell'editor della plancia, che e' codice di un altro progetto. Il
+       * prezzo, detto: aprendo una scheda nuova la chiave si ribatte, o la
+       * consegna chi ci tiene dentro (la tessera in Home Assistant, l'app).
+       *
+       * Quella che le versioni di prima avevano lasciato nel browser si porta
+       * in questa scheda una volta sola, e dal browser si toglie. */
       let chiave = "";
+      /* Una chiave consegnata da un'origine che la pagina non conosce, in
+       * attesa che chi guarda dica di si' (vedi l'ascolto dei messaggi, in fondo). */
+      let offerta = null;
       try {
-        chiave = localStorage.getItem(DOVE_STA_LA_CHIAVE) || "";
+        chiave = sessionStorage.getItem(DOVE_STA_LA_CHIAVE) || "";
       } catch (_niente) {
-        /* Finestra anonima, deposito bloccato: si chiede a ogni apertura. */
+        /* Deposito bloccato: si chiede a ogni apertura. */
+      }
+      try {
+        const diPrima = localStorage.getItem(DOVE_STA_LA_CHIAVE);
+        if (diPrima !== null) {
+          if (!chiave && diPrima) {
+            chiave = diPrima;
+            sessionStorage.setItem(DOVE_STA_LA_CHIAVE, chiave);
+          }
+          localStorage.removeItem(DOVE_STA_LA_CHIAVE);
+        }
+      } catch (_niente) {
+        /* Niente da portare, o un deposito che non si lascia toccare. */
       }
 
       let CASE = [];
@@ -2708,6 +2748,15 @@
       /* Il codice a gruppi di quattro: il server lo scrive gia' cosi', e questa
        * riga c'e' perche' una vecchia versione non lo faceva. */
       const laRiga = (codice) => String(codice);
+
+      /* I codici fatti in questa pagina, per nome (`inv_…`). Il quadro li
+       * tiene per impronta e nell'elenco ridice solo le ultime quattro
+       * lettere: il codice intero si vede quando lo si fa, e se si ricarica
+       * la pagina prima di averlo copiato se ne fa un altro. */
+      const APPENA_FATTI = new Map();
+      const ilCodiceDi = (uno) =>
+        APPENA_FATTI.get(String(uno?.id || "")) || (uno?.codice ? laRiga(uno.codice) : "");
+      const ilCodiceNascosto = (uno) => `••••-••••-••••-${String(uno?.finale || "????")}`;
 
       const plurale = (quanti, uno, molti) => `${quanti} ${quanti === 1 ? uno : molti}`;
 
@@ -2797,7 +2846,7 @@
           const altri = Math.max(0, quanti - nomi.length);
           return (
             nomi.map((uno) => `<span>${testo(uno)}</span>`).join("") +
-            (altri ? `<span class="eAltri">e altri ${altri}</span>` : "")
+            (altri ? `<span class="eAltri">e altri ${Number(altri)}</span>` : "")
           );
         }
         return (c?.entita?.impronte || []).map((una) => `<span>#${testo(una)}</span>`).join("");
@@ -2943,16 +2992,16 @@
        * innocuo, quello che esce ha dentro solo i tag scritti qui. */
       const iSegniDi = (riga) =>
         riga.replace(I_SEGNI, (tutto, grassetto, codice, ilTesto, dove, prima, corsivo) => {
-          if (grassetto !== undefined) return `<strong>${grassetto}</strong>`;
-          if (codice !== undefined) return `<code>${codice}</code>`;
+          if (grassetto !== undefined) return `<strong>${/* già HTML */ grassetto}</strong>`;
+          if (codice !== undefined) return `<code>${/* già HTML */ codice}</code>`;
           if (ilTesto !== undefined) {
             /* Il link si preme, e si apre di fianco. `noreferrer` perche' a
              * chi ha scritto l'aggiornamento non deve arrivare l'indirizzo
              * del quadro di nessuno. */
             if (!SOLO_IL_WEB.test(dove)) return tutto;
-            return `<a href="${dove}" target="_blank" rel="noopener noreferrer">${ilTesto}</a>`;
+            return `<a href="${/* già HTML */ dove}" target="_blank" rel="noopener noreferrer">${/* già HTML */ ilTesto}</a>`;
           }
-          return `${prima}<em>${corsivo}</em>`;
+          return `${/* già HTML */ prima}<em>${/* già HTML */ corsivo}</em>`;
         });
 
       /* Dal titolo di quella versione in giu'.
@@ -3010,7 +3059,7 @@
           } else if (pezzo.che === "riga") {
             fuori += "<hr />";
           } else if (pezzo.che === "blocco") {
-            fuori += `<pre><code>${pezzo.testo}</code></pre>`;
+            fuori += `<pre><code>${/* già HTML */ pezzo.testo}</code></pre>`;
           }
         }
         chiudiLElenco();
@@ -3033,6 +3082,10 @@
        * un disegno, e da solo non dice niente. */
       const A_PAROLE = { bene: "in ordine", male: "anomalia", ignoto: "non rilevato" };
 
+      /* Di chi sono le icone degli aggiornamenti che si disegnano: le sue,
+       * di chi guarda. */
+      const diChiSonoLeIcone = () => IO.chi;
+
       /* Il segno di un aggiornamento: il logo di chi lo porta, o l'iniziale.
        *
        * Tre casi, in ordine. La roba nostra porta il bollo del quadro, che e'
@@ -3042,7 +3095,7 @@
        * che su un quadratino rotto. Chi non ce l'ha resta sull'iniziale, che
        * e' quello che fa gia' l'app.
        *
-       * `onerror` toglie l'immagine e scopre la lettera che sta sotto. */
+       * Se l'immagine non arriva si toglie, e scopre la lettera che sta sotto. */
       function ilSegnoDi(uno) {
         if (uno.nostra)
           return '<span class="bollo" aria-hidden="true"><i></i><i class="mezzo"></i><i></i></span>';
@@ -3071,7 +3124,7 @@
          * dentro un indirizzo, e chi lo compone e' questa riga. Un controllo
          * solo, dall'altra parte di una rete, non e' un controllo. */
         if (!/^[0-9a-f]{16}$/.test(String(uno.segno || "")))
-          return `<span class="segno">${primo}</span>`;
+          return `<span class="segno">${/* già HTML */ primo}</span>`;
         /* La lettera resta sotto: finche' l'icona non e' arrivata — il primo
          * giro dopo che un aggiornamento compare — la riga si legge lo stesso,
          * e se non arrivera' mai si legge per sempre. */
@@ -3086,11 +3139,20 @@
          * romperebbe dietro un proxy che monta il quadro sotto un prefisso.
          * Con il punto punto si conta dalla pagina, e vale in tutt'e due i
          * casi. */
-        return `<span class="segno">${primo}<img
-          src="../segno/${uno.segno}"
+        /* Con davanti l'installatore: le icone stanno nella sua cartella
+         * (`src/segni.js`), e l'indirizzo lo dice. */
+        const diChi = String(diChiSonoLeIcone() || "");
+        if (!/^inst_[0-9a-f]{16}$/.test(diChi))
+          return `<span class="segno">${/* già HTML */ primo}</span>`;
+        /* Un'icona che non arriva si toglie, e sotto resta la lettera: lo fa
+         * l'ascolto in cima allo script, e non un `onerror` scritto
+         * dentro il tag — la politica della pagina lascia girare solo gli
+         * script che sono nel file. */
+        return `<span class="segno">${/* già HTML */ primo}<img
+          src="../segno/${testo(diChi)}/${testo(uno.segno)}"
           alt=""
           loading="lazy"
-          onerror="this.remove()"
+          data-se-non-arriva="via"
         /></span>`;
       }
 
@@ -3120,10 +3182,10 @@
         const suo = String(uno.segno || "");
         const note = /^[0-9a-f]{16}$/.test(suo) && CON_LE_NOTE.has(suo);
         const dentro = note
-          ? ` <button type="button" class="comeUnLink" data-note="${suo}">cosa cambia, per intero</button>`
+          ? ` <button type="button" class="comeUnLink" data-note="${testo(suo)}">cosa cambia, per intero</button>`
           : "";
         if (!detto && !dentro) return "";
-        return `<p class="cambia">${detto}${dentro}</p><div class="leNote" data-note-di="${testo(suo)}" data-note-a="${testo(String(uno.a || ""))}" hidden></div>`;
+        return `<p class="cambia">${/* già HTML */ detto}${/* già HTML */ dentro}</p><div class="leNote" data-note-di="${testo(suo)}" data-note-a="${testo(String(uno.a || ""))}" hidden></div>`;
       }
 
       /* Una riga di aggiornamento: il segno, cosa e', cosa si fa, cosa cambia.
@@ -3145,13 +3207,13 @@
               <b>${testo(uno.nome)}</b>
               <span class="salto">${testo(uno.da)} → ${testo(uno.a)}</span>
             </span>
-            <span class="fare">${fare}</span>
+            <span class="fare">${/* già HTML */ fare}</span>
             ${cosaCambia(uno)}
           </li>`;
       }
 
       const spia = (stato) =>
-        `<span class="pastiglia ${stato.chiave}"><span aria-hidden="true">${stato.segno}</span>${testo(stato.parola)}</span>`;
+        `<span class="pastiglia ${testo(stato.chiave)}"><span aria-hidden="true">${testo(stato.segno)}</span>${testo(stato.parola)}</span>`;
 
       /* La striscia: `P` giorno pieno, `M` a metà, `V` offline, spazio «non c'era
        * ancora». */
@@ -3172,7 +3234,7 @@
             : vuoti === 0
               ? "14 giorni, sempre online"
               : `14 giorni · offline ${plurale(vuoti, "volta", "volte")}`;
-        return `<div class="giorni${grande ? " grande" : ""}" role="img" aria-label="${testo(dice)}">${celle}</div><div class="giorniDice">${testo(dice)}</div>`;
+        return `<div class="giorni${grande ? " grande" : ""}" role="img" aria-label="${testo(dice)}">${/* già HTML */ celle}</div><div class="giorniDice">${testo(dice)}</div>`;
       }
 
       /* La prima fila e' «tutti»: e' quella accesa quando si apre la pagina,
@@ -3270,8 +3332,8 @@
         ]
           .map(
             ([quale, parola, quanti]) => `
-            <button type="button" data-schermata="${quale}" aria-pressed="${schermata === quale}">
-              ${LE_ICONE[quale]}<span>${testo(parola)}</span>${quanti ? `<span class="quanti">${quanti}</span>` : ""}
+            <button type="button" data-schermata="${testo(quale)}" aria-pressed="${schermata === quale}">
+              ${LE_ICONE[quale]}<span>${testo(parola)}</span>${quanti ? `<span class="quanti">${Number(quanti)}</span>` : ""}
             </button>`,
           )
           .join("");
@@ -3411,12 +3473,17 @@
          * detto di sì, se no si vedrebbe una cosa che non è successa. */
         dove.querySelectorAll("[data-fai]").forEach((tasto) => {
           tasto.onclick = () =>
-            faiEpoi(tasto, () =>
-              chiedi("/inviti", {
+            faiEpoi(tasto, async () => {
+              const fatto = await chiedi("/inviti", {
                 method: "POST",
                 body: JSON.stringify({ per: dove.querySelector("#per-chi")?.value || "" }),
-              }),
-            );
+              });
+              /* Il codice intero si vede adesso e basta: il quadro ne tiene
+               * l'impronta. Lo si ricorda in questa pagina, finche' resta
+               * aperta, per poterlo copiare. */
+              if (fatto?.id && fatto?.codice)
+                APPENA_FATTI.set(String(fatto.id), String(fatto.codice));
+            });
         });
         dove.querySelectorAll("[data-annulla]").forEach((tasto) => {
           tasto.onclick = () =>
@@ -3789,13 +3856,13 @@
           const lungo = (quanti[chiave] / tutte) * C;
           const visibile = Math.max(0, lungo - (quanti[chiave] ? 3 : 0));
           const fine = `${visibile.toFixed(2)} ${(C - visibile).toFixed(2)}`;
-          const arco = `<circle cx="70" cy="70" r="${r}" class="arco" stroke="var(--${TINTA_DI[chiave]})"
-            stroke-dasharray="${animato ? `0 ${C.toFixed(2)}` : fine}"${animato ? ` data-fine="${fine}"` : ""}
+          const arco = `<circle cx="70" cy="70" r="${Number(r)}" class="arco" stroke="var(--${TINTA_DI[chiave]})"
+            stroke-dasharray="${animato ? `0 ${C.toFixed(2)}` : /* già HTML */ fine}"${animato ? ` data-fine="${/* già HTML */ fine}"` : ""}
             stroke-dashoffset="${(-inizio).toFixed(2)}" />`;
           inizio += lungo;
           return arco;
         });
-        return `<svg viewBox="0 0 140 140" aria-hidden="true"><circle cx="70" cy="70" r="${r}" class="traccia" />${archi.join("")}</svg>`;
+        return `<svg viewBox="0 0 140 140" aria-hidden="true"><circle cx="70" cy="70" r="${Number(r)}" class="traccia" />${archi.join("")}</svg>`;
       }
 
       /* Un anellino: un valore in centesimi, colorato come va. */
@@ -3805,9 +3872,9 @@
         const quanto = (Math.max(0, Math.min(100, Number(valore) || 0)) / 100) * C;
         const fine = `${quanto.toFixed(2)} ${(C - quanto).toFixed(2)}`;
         return `<svg viewBox="0 0 64 64" aria-hidden="true">
-          <circle cx="32" cy="32" r="${r}" class="traccia" />
-          <circle cx="32" cy="32" r="${r}" class="arco" stroke="var(--${TINTA_DI[come] || "verde"})"
-            stroke-dasharray="${animato ? `0 ${C.toFixed(2)}` : fine}"${animato ? ` data-fine="${fine}"` : ""} /></svg>`;
+          <circle cx="32" cy="32" r="${Number(r)}" class="traccia" />
+          <circle cx="32" cy="32" r="${Number(r)}" class="arco" stroke="var(--${TINTA_DI[come] || "verde"})"
+            stroke-dasharray="${animato ? `0 ${C.toFixed(2)}` : /* già HTML */ fine}"${animato ? ` data-fine="${/* già HTML */ fine}"` : ""} /></svg>`;
       }
 
       /* Gli archi disegnati a zero si aprono al frame dopo: cosi' la
@@ -3849,16 +3916,16 @@
         if (validi.length === 1) {
           /* Una casa di oggi: un punto solo, dove sta oggi. Domani sara' una
            * linea. */
-          return `<span class="linea" aria-hidden="true">${punto}</span>`;
+          return `<span class="linea" aria-hidden="true">${/* già HTML */ punto}</span>`;
         }
         const via = validi
           .map(([i, p], n) => `${n ? "L" : "M"}${x(i).toFixed(1)} ${y(p).toFixed(1)}`)
           .join(" ");
         const area = `${via} L${x(ui).toFixed(1)} ${A} L${x(validi[0][0]).toFixed(1)} ${A} Z`;
         return `<span class="linea" aria-hidden="true"><svg class="linea-viva" viewBox="0 0 ${L} ${A}" preserveAspectRatio="none">
-          <path d="${area}" fill="${tinta}" opacity="0.12" />
-          <path d="${via}" fill="none" stroke="${tinta}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke" />
-        </svg>${punto}</span>`;
+          <path d="${/* già HTML */ area}" fill="${/* già HTML */ tinta}" opacity="0.12" />
+          <path d="${/* già HTML */ via}" fill="none" stroke="${/* già HTML */ tinta}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke" />
+        </svg>${/* già HTML */ punto}</span>`;
       }
 
       /* ─── Schermata: le case ─────────────────────────────────────────── */
@@ -3870,7 +3937,7 @@
         if (!quanti.offline && !quanti.guardare)
           return tutte === 1
             ? "L'unico impianto è in ordine."
-            : `Tutto in ordine, <em>tutti e ${tutte}</em>.`;
+            : `Tutto in ordine, <em>tutti e ${Number(tutte)}</em>.`;
         const altri =
           quanti.posto === 0
             ? ""
@@ -3879,9 +3946,9 @@
               : ", gli altri in ordine";
         if (quanti.offline)
           return `<em>${plurale(quanti.offline, "impianto offline", "impianti offline")}</em>${
-            quanti.guardare ? `, ${quanti.guardare} da verificare` : altri
+            quanti.guardare ? `, ${Number(quanti.guardare)} da verificare` : /* già HTML */ altri
           }.`;
-        return `<em>${plurale(quanti.guardare, "impianto da verificare", "impianti da verificare")}</em>${altri}.`;
+        return `<em>${plurale(quanti.guardare, "impianto da verificare", "impianti da verificare")}</em>${/* già HTML */ altri}.`;
       }
 
       /* Tre pezzi, dall'alto: l'anello con le tre file che filtrano, le carte
@@ -3925,11 +3992,11 @@
                 <button
                   type="button"
                   class="fila"
-                  data-filtro="${chiave}"
-                  data-stato="${chiave}"
+                  data-filtro="${testo(chiave)}"
+                  data-stato="${testo(chiave)}"
                   aria-pressed="${filtro === chiave}"
                 >
-                  <b>${chiave === "tutte" ? CASE.length : quanti[chiave]}</b><span><i></i>${testo(parola)}</span>
+                  <b>${Number(chiave === "tutte" ? CASE.length : quanti[chiave])}</b><span><i></i>${testo(parola)}</span>
                 </button>`,
               ).join("")}
             </div>
@@ -3983,8 +4050,8 @@
           <button
             type="button"
             class="vetro carta"
-            data-stato="${stato.chiave}"
-            data-casa="${indice}"
+            data-stato="${testo(stato.chiave)}"
+            data-casa="${Number(indice)}"
             data-solo-guai="sì"
           >
             <span class="stato"><i></i>${testo(stato.parola)}</span>
@@ -4009,8 +4076,8 @@
           <button
             type="button"
             class="mattonella${arrivato ? " arrivato" : ""}"
-            data-stato="${stato.chiave}"
-            data-casa="${indice}"
+            data-stato="${testo(stato.chiave)}"
+            data-casa="${Number(indice)}"
             aria-current="${foglioAperto?.casa === casa.casa}"
           >
             <span class="nome">${ilNomeDi(casa)}</span>
@@ -4040,13 +4107,13 @@
         const soloGuai = foglioAperto.soloGuai && casa.stato.chiave !== "posto";
         const su = foglioAperto.appena || foglioAperto.chiudendo ? "" : " su";
         return `
-          <div class="velo${su}" data-chiudi></div>
+          <div class="velo${/* già HTML */ su}" data-chiudi></div>
           <div
-            class="foglio${su}"
+            class="foglio${/* già HTML */ su}"
             role="dialog"
             aria-modal="true"
             aria-labelledby="foglio-titolo"
-            data-stato="${casa.stato.chiave}"
+            data-stato="${testo(casa.stato.chiave)}"
           >
             <div class="presa"><i></i></div>
             <div class="foglio-testa">
@@ -4088,8 +4155,12 @@
        * Prima di aprirla si chiede all'impianto com'è fatta **adesso** — e
        * cosa c'è in casa, senza cosa succede — e si aspetta che arrivi: pochi
        * secondi se la casa è in linea. Se non arriva si apre com'era, e lo si
-       * dice. Il codice al riquadro con un messaggio, alla propria origine: la
-       * pagina lo usa per entrare sul suo filo, e non sta nell'indirizzo. */
+       * dice. Al riquadro va un **gettone**, con un messaggio, alla propria
+       * origine: la pagina lo usa per entrare sul suo filo, e non sta
+       * nell'indirizzo. Non la chiave: la pagina dell'editor e' codice della
+       * plancia, e la chiave che apre tutto questo cruscotto non le serve.
+       * Il gettone vale mezz'ora, per questa casa e questa plancia soltanto
+       * (`src/biglietti.js`). */
       const editorPlancia = document.getElementById("editor-plancia");
       const editorRiquadro = document.getElementById("editor-riquadro");
       let editorAperto = null;
@@ -4155,6 +4226,11 @@
               ? ""
               : `L'impianto non ha risposto: si apre com'era ${daQuanto(stato.scatto.presoIl)}${stato.inventario ? "" : ", e senza l'elenco di cosa c'è in casa"}.`,
           );
+          const { gettone } = await chiedi(`/casa/${casa}/plancia/${profilo}/gettone`, {
+            method: "POST",
+          });
+          if (editorAperto !== apertura) return;
+          apertura.gettone = String(gettone || "");
           editorRiquadro.src = `../plancia-da-lontano/${casa}/${profilo}/`;
         } catch (errore) {
           if (errore instanceof ChiaveNoNo) {
@@ -4175,16 +4251,20 @@
       }
       document.getElementById("chiudi-editor").onclick = chiudiLEditor;
 
-      /* Il codice al riquadro, appena la pagina c'è: tre colpi, come fa la
+      /* Il gettone al riquadro, appena la pagina c'è: tre colpi, come fa la
        * tessera dentro Home Assistant, e alla propria origine soltanto. */
       editorRiquadro.addEventListener("load", () => {
-        if (!editorAperto || !chiave) return;
+        if (!editorAperto?.gettone) return;
         const finestra = editorRiquadro.contentWindow;
         if (!finestra) return;
         for (const fra of [0, 300, 1500]) {
           setTimeout(() => {
+            if (!editorAperto?.gettone) return;
             try {
-              finestra.postMessage({ gdahome: "chiave", chiave }, location.origin);
+              finestra.postMessage(
+                { gdahome: "gettone", gettone: editorAperto.gettone },
+                location.origin,
+              );
             } catch (_niente) {
               /* La pagina se n'è andata: non c'è niente da dire a nessuno. */
             }
@@ -4305,7 +4385,7 @@
               </div>
               <div>
                 <dt>Telefoni</dt>
-                <dd>${c.telefoni ? `${c.telefoni.abbinati} abbinati · ${c.telefoni.visti7gg} attivi negli ultimi 7 giorni` : "—"}</dd>
+                <dd>${c.telefoni ? `${testo(c.telefoni.abbinati)} abbinati · ${testo(c.telefoni.visti7gg)} attivi negli ultimi 7 giorni` : "—"}</dd>
               </div>
             </dl>
             <div class="azioni">
@@ -4418,7 +4498,7 @@
                   ([che, quanto, sotto, come]) => `
                 <div>
                   <dt>${testo(che)}</dt>
-                  <dd class="${come}">${testo(quanto)}<small>${testo(sotto)}</small></dd>
+                  <dd class="${testo(come)}">${testo(quanto)}<small>${testo(sotto)}</small></dd>
                 </div>`,
                 )
                 .join("")}
@@ -4644,8 +4724,8 @@
               <h3>Come si chiamano</h3>
               <span class="conta">${righe.length} di ${PLANCE_AL_MASSIMO}</span>
             </div>
-            ${ilLogo}
-            ${senzaMarchio}
+            ${/* già HTML */ ilLogo}
+            ${/* già HTML */ senzaMarchio}
             <p class="minuta">
               Per ogni plancia due nomi. Il <b>nome della plancia</b> va nel menu laterale di Home Assistant e in cima alla home; il <b>nome all'avvio</b> compare col tuo logo mentre la pagina si apre. Lasciali vuoti e la plancia tiene il nome che ha in casa, e all'avvio mostra il tuo.${
                 siConfigura
@@ -4748,7 +4828,7 @@
             ${rotti
               .map(
                 (uno) => `
-              <li data-grave="${GRAVI.has(uno.cosa)}">
+              <li data-grave="${GRAVI.has(uno.cosa) ? "true" : "false"}">
                 <i></i><span><b>${testo(uno.cosa)}</b> — ${testo(uno.dettaglio)}</span>
               </li>`,
               )
@@ -4771,7 +4851,7 @@
           </ul>
           ${
             anelli.length
-              ? `<div class="tre-anelli" style="grid-template-columns: repeat(${Math.min(3, anelli.length)}, 1fr)">
+              ? `<div class="tre-anelli" style="grid-template-columns: repeat(${Number(Math.min(3, anelli.length))}, 1fr)">
                    ${anelli.join("")}
                  </div>`
               : ""
@@ -4812,7 +4892,7 @@
         return `
           <div class="anellino">
             <div class="cerchio">
-              ${anellino(quanto, come, animato)}<b class="${come === "bene" ? "" : come}">${testo(valore)}${testo(unita)}</b>
+              ${anellino(quanto, come, animato)}<b class="${come === "bene" ? "" : testo(come)}">${testo(valore)}${testo(unita)}</b>
             </div>
             <span>${testo(che)}</span>
             ${sotto ? `<small>${testo(sotto)}</small>` : ""}
@@ -4898,9 +4978,9 @@
                 .join(" · ")}${cE(c.sistema) || cE(m.accesaDa) ? "." : ""}
               ${
                 m.discoVita !== null && m.discoVita >= DISCO_STANCO
-                  ? `Il disco è consumato al ${m.discoVita}%: su queste schede è il primo componente a guastarsi, meglio sostituirlo per tempo.`
+                  ? `Il disco è consumato al ${testo(m.discoVita)}%: su queste schede è il primo componente a guastarsi, meglio sostituirlo per tempo.`
                   : m.temperatura >= SOGLIE.troppoCaldo
-                    ? `Sopra i ${SOGLIE.troppoCaldo}° la scheda riduce la velocità da sola: l'impianto non si guasta, ma rallenta.`
+                    ? `Sopra i ${Number(SOGLIE.troppoCaldo)}° la scheda riduce la velocità da sola: l'impianto non si guasta, ma rallenta.`
                     : "Nessun valore fuori soglia."
               }
             </p>
@@ -4949,7 +5029,7 @@
           return `
             <section class="riquadro">
               <div class="capoRiquadro"><h3>Gli aggiornamenti</h3></div>
-              ${cartello}
+              ${/* già HTML */ cartello}
               ${
                 quanti > 0
                   ? `<div class="limite" style="margin-top: 16px">
@@ -4968,7 +5048,7 @@
               <h3>Gli aggiornamenti</h3>
               <span class="conta">${plurale(elenco.length, "in attesa", "in attesa")}</span>
             </div>
-            ${cartello}
+            ${/* già HTML */ cartello}
             <ul class="versi">
               ${elenco
                 .map((uno) =>
@@ -5139,7 +5219,7 @@
           <section class="riquadro">
             <div class="capoRiquadro">
               <h3>Le altre macchine</h3>
-              <span class="conta">${nodi.length - giu}/${nodi.length} in piedi</span>
+              <span class="conta">${Number(nodi.length - giu)}/${nodi.length} in piedi</span>
             </div>
             <ul class="schede">
               ${nodi
@@ -5170,7 +5250,7 @@
               ${
                 giu === 0
                   ? `${plurale(nodi.length, "altra macchina dichiarata", "altre macchine dichiarate")} in questo impianto, ${nodi.length === 1 ? "in piedi" : "tutte in piedi"}.`
-                  : `${giu} ${giu === 1 ? "macchina non è in piedi" : "macchine non sono in piedi"} su ${nodi.length}. «Non risponde» è la rete o Home Assistant che non riesce a chiedere; «spento» è una macchina che qualcuno ha fermato.`
+                  : `${Number(giu)} ${giu === 1 ? "macchina non è in piedi" : "macchine non sono in piedi"} su ${nodi.length}. «Non risponde» è la rete o Home Assistant che non riesce a chiedere; «spento» è una macchina che qualcuno ha fermato.`
               }
             </p>
           </section>`;
@@ -5199,7 +5279,7 @@
                   ${una.principale ? '<span class="pastiglia bene">principale</span>' : ""}
                   ${
                     una.tipo === "wifi" && una.su && una.segnale !== null
-                      ? `<span class="pastiglia ${una.segnale < SEGNALE_DEBOLE ? "attenta" : ""}">segnale ${una.segnale}%</span>`
+                      ? `<span class="pastiglia ${una.segnale < SEGNALE_DEBOLE ? "attenta" : ""}">segnale ${testo(una.segnale)}%</span>`
                       : ""
                   }
                   <span class="dove">${una.su ? testo(una.ip) : "non attiva"}</span>
@@ -5213,7 +5293,7 @@
                   ? "Nessun apparato di rete monitorato in questo impianto: nella plancia, sezione «Macchine e rete», si seleziona l'integrazione del router e i ripetitori compaiono da soli."
                   : r.sorvegliate.giu === 0
                     ? `${plurale(r.sorvegliate.quante, "apparato monitorato", "apparati monitorati")}, tutti raggiungibili.`
-                    : `${r.sorvegliate.giu} ${r.sorvegliate.giu === 1 ? "apparato" : "apparati"} su ${r.sorvegliate.quante} non rispondono.`
+                    : `${testo(r.sorvegliate.giu)} ${r.sorvegliate.giu === 1 ? "apparato" : "apparati"} su ${testo(r.sorvegliate.quante)} non rispondono.`
               }
             </p>
           </section>`;
@@ -5229,13 +5309,13 @@
           <section class="riquadro">
             <div class="capoRiquadro">
               <h3>Gli add-on</h3>
-              <span class="conta">${a.accesi}/${a.quanti} accesi</span>
+              <span class="conta">${testo(a.accesi)}/${testo(a.quanti)} accesi</span>
             </div>
             <div class="addon">
               ${a.elenco
                 .map((uno) => {
                   const come = uno.su ? "" : uno.allAvvio ? "fermo" : "apposta";
-                  return `<span class="uno ${come}"
+                  return `<span class="uno ${testo(come)}"
                     ><span class="puntino" aria-hidden="true"></span>${testo(uno.nome)}${
                       uno.su ? "" : uno.allAvvio ? " · fermo" : " · spento manualmente"
                     }</span>`;
@@ -5325,7 +5405,7 @@
               <section class="riquadro mucchio">
                 <div class="capoRiquadro">
                   <h3>
-                    <button type="button" class="comeUnLink" data-casa="${CASE.indexOf(casa)}">
+                    <button type="button" class="comeUnLink" data-casa="${Number(CASE.indexOf(casa))}">
                       ${testo(casa.nome)}
                     </button>
                   </h3>
@@ -5343,7 +5423,7 @@
                       : ""
                   }${
                     dalSuoApparecchio
-                      ? `${dalSuoApparecchio === 1 ? "Uno si aggiorna" : `${dalSuoApparecchio} si aggiornano`} dal suo apparecchio: da qui non ${dalSuoApparecchio === 1 ? "si installa" : "si installano"}. `
+                      ? `${dalSuoApparecchio === 1 ? "Uno si aggiorna" : `${Number(dalSuoApparecchio)} si aggiornano`} dal suo apparecchio: da qui non ${dalSuoApparecchio === 1 ? "si installa" : "si installano"}. `
                       : ""
                   }${
                     aperta && daQui
@@ -5401,14 +5481,27 @@
               <section class="riquadro tinto">
                 <div class="capoRiquadro"><h3>Codice attivo</h3></div>
                 ${
-                  primo
+                  primo && ilCodiceDi(primo)
                     ? `<div class="codice">
-                        <span class="cifre">${testo(laRiga(primo.codice))}</span>
-                        <button type="button" class="tasto copia" data-copia="${testo(laRiga(primo.codice))}">Copia</button>
+                        <span class="cifre">${testo(ilCodiceDi(primo))}</span>
+                        <button type="button" class="tasto copia" data-copia="${testo(ilCodiceDi(primo))}">Copia</button>
+                      </div>`
+                    : ""
+                }
+                ${
+                  primo && !ilCodiceDi(primo)
+                    ? `<div class="codice">
+                        <span class="cifre">${testo(ilCodiceNascosto(primo))}</span>
                       </div>
+                      <p class="nota">Il codice intero si vede solo quando lo generi: se non l'hai copiato, generane un altro e revoca questo.</p>`
+                    : ""
+                }
+                ${
+                  primo
+                    ? `
                       <div class="scadenza">
                         <span class="battito" aria-hidden="true"></span>
-                        Scade fra <b data-orologio="${primo.scadeFra}">—</b> · generato ${testo(daQuanto(primo.fattoIl))}
+                        Scade fra <b data-orologio="${Number(primo.scadeFra)}">—</b> · generato ${testo(daQuanto(primo.fattoIl))}
                       </div>`
                     : `<p class="nota" style="margin: 16px 0 12px">
                         Nessun codice attivo. Generane uno e invialo a chi abita la casa: vale un giorno, e va inserito nella configurazione dell'add-on gdahome. L'abbinamento avviene da solo al primo rapporto.
@@ -5437,11 +5530,11 @@
                 ${
                   quanteRestano() === 0
                     ? `<p class="minuta" style="margin-top: 16px">
-                         <b>Hai raggiunto il limite di ${IO.soglia} impianti.</b> Per aggiungerne altri serve alzarlo: contatta chi gestisce il cruscotto. I codici già generati restano validi, e gli impianti che segui continuano a funzionare.
+                         <b>Hai raggiunto il limite di ${Number(IO.soglia)} impianti.</b> Per aggiungerne altri serve alzarlo: contatta chi gestisce il cruscotto. I codici già generati restano validi, e gli impianti che segui continuano a funzionare.
                        </p>`
                     : quanteRestano() !== null && quanteRestano() <= 3
                       ? `<p class="minuta" style="margin-top: 16px">
-                           Restano <b>${quanteRestano()}</b> posti prima del limite di ${IO.soglia}. I codici attivi contano.
+                           Restano <b>${Number(quanteRestano())}</b> posti prima del limite di ${Number(IO.soglia)}. I codici attivi contano.
                          </p>`
                       : ""
                 }
@@ -5517,13 +5610,13 @@
                     (uno) => `
                     <li>
                       <span class="che">
-                        <b class="mono">${testo(laRiga(uno.codice))}</b>
+                        <b class="mono">${testo(ilCodiceDi(uno) || ilCodiceNascosto(uno))}</b>
                         <span>${uno.per ? `${testo(uno.per)} · ` : ""}generato ${testo(daQuanto(uno.fattoIl))}</span>
                       </span>
                       <span class="pastiglia attenta">
-                        scade fra <b data-orologio="${uno.scadeFra}">—</b>
+                        scade fra <b data-orologio="${Number(uno.scadeFra)}">—</b>
                       </span>
-                      <button type="button" class="tasto male" data-annulla="${testo(uno.codice)}"> Revoca </button>
+                      <button type="button" class="tasto male" data-annulla="${testo(uno.id || uno.codice)}"> Revoca </button>
                     </li>`,
                   ).join("")}
                 </ul>
@@ -5647,9 +5740,13 @@
         ticchettio = setInterval(gira, 1000);
       }
 
-      /* La chiave: si chiede una volta e resta nel browser. Chi guarda questo
-       * quadro lo apre tutti i giorni, e ribattere una chiave lunga tutti i
-       * giorni finisce con una chiave corta. */
+      /* La chiave: si chiede una volta e resta in questa scheda (vedi dove si
+       * legge, in cima). Chi ci tiene dentro — Home Assistant, l'app — la
+       * consegna da se', e allora non si chiede proprio.
+       *
+       * Se una consegna e' arrivata da un'origine che questa pagina non
+       * conosce, la si offre qui: un tasto con scritto da dove viene, e la si
+       * usa solo se chi guarda lo preme (vedi l'ascolto dei messaggi, in fondo). */
       function chiedimiLaChiave(perché = "") {
         doveNav.innerHTML = "";
         dove.innerHTML = `
@@ -5659,19 +5756,45 @@
               ${
                 perché
                   ? testo(perché)
-                  : "Te l'ha consegnata chi gestisce il cruscotto. Resta in questo browser e non esce da qui."
+                  : "Te l'ha consegnata chi gestisce il cruscotto. Resta in questa scheda finché non la chiudi, e non esce da qui."
               }
             </p>
             <div class="azioni">
               <input type="password" id="la-chiave" placeholder="Chiave" aria-label="La chiave" />
               <button type="button" class="tasto forte" id="entra">Accedi</button>
             </div>
+            ${
+              offerta
+                ? `<p class="nota" style="margin-top: 16px">
+                     La pagina che contiene questo cruscotto (<b class="mono">${testo(offerta.origine)}</b>) ti consegna una chiave. Usala solo se quella pagina è la tua: Home Assistant di casa, o l'app.
+                   </p>
+                   <div class="azioni">
+                     <button type="button" class="tasto" id="usa-la-consegnata">Entra con quella chiave</button>
+                   </div>`
+                : ""
+            }
           </section>`;
+        dove.querySelector("#usa-la-consegnata")?.addEventListener("click", () => {
+          if (!offerta) return;
+          /* Si' detto una volta vale per quell'origine, in questo browser:
+           * la prossima consegna da li' entra senza chiedere. */
+          fidati(offerta.origine);
+          const presa = offerta.chiave;
+          offerta = null;
+          consegnata = presa;
+          chiave = presa;
+          try {
+            sessionStorage.setItem(DOVE_STA_LA_CHIAVE, chiave);
+          } catch (_niente) {
+            /* Vale per questa apertura e basta. */
+          }
+          void apri();
+        });
         const casella = dove.querySelector("#la-chiave");
         const entra = () => {
           chiave = casella.value.trim();
           try {
-            localStorage.setItem(DOVE_STA_LA_CHIAVE, chiave);
+            sessionStorage.setItem(DOVE_STA_LA_CHIAVE, chiave);
           } catch (_niente) {
             /* Vale per questa sessione e basta: meglio di non entrare. */
           }
@@ -5734,7 +5857,7 @@
           if (errore instanceof ChiaveNoNo && consegnata && consegnata !== chiave) {
             chiave = consegnata;
             try {
-              localStorage.setItem(DOVE_STA_LA_CHIAVE, chiave);
+              sessionStorage.setItem(DOVE_STA_LA_CHIAVE, chiave);
             } catch (_niente) {
               /* Vale per questa apertura e basta. */
             }
@@ -5817,44 +5940,105 @@
        * richiederlo qui vorrebbe dire scriverlo due volte, con la seconda che
        * fa pensare che la prima non abbia funzionato.
        *
-       * Non si controlla da quale origine arriva, e non e' una svista: chi ci
-       * tiene dentro e' Home Assistant, e l'indirizzo di un Home Assistant e'
-       * diverso in ogni casa — non c'e' nessun elenco da scrivere qui. Quello
-       * che regge e' che il messaggio non **da'** accesso: porta una chiave,
-       * che vale se e' buona e non vale se non lo e'. Chi potesse mandarne una
-       * buona ce l'avrebbe gia'.
+       * ─── Da chi si accetta ───────────────────────────────────────────────
+       *
+       * Solo da chi ci contiene (`parent`) o da chi ci ha aperto (`opener`):
+       * un messaggio da un'altra finestra non e' una consegna, qualunque cosa
+       * dica.
+       *
+       * E l'origine conta. Prima non si guardava, col ragionamento che una
+       * chiave consegnata vale se e' buona e basta. Ma una pagina qualunque
+       * che mettesse questo cruscotto in un riquadro poteva consegnargli **la
+       * sua** chiave, buona, e far lavorare chi guarda dentro un cruscotto non
+       * suo senza che se ne accorga. Quindi una consegna si prende da sola
+       * solo da questa origine, da quelle che chi tiene il quadro ha scritto
+       * (`QUADRO_OSPITI`, che il server mette nella pagina) e da quelle a cui
+       * chi guarda ha gia' detto di si' in questo browser. Da un'origine
+       * nuova — l'indirizzo di un Home Assistant e' diverso in ogni casa — si
+       * offre con un tasto, con scritto da dove viene, e si usa solo se lo si
+       * preme (`chiedimiLaChiave`).
        *
        * Se una chiave c'e' gia' non si tocca: chi l'ha battuta a mano in
-       * questo browser ha deciso lui, e una consegna che gliela cambia sotto
+       * questa scheda ha deciso lui, e una consegna che gliela cambia sotto
        * e' un modo di non far entrare piu' nessuno.
        *
        * **Ma si tiene da parte lo stesso.** Qui c'era un guasto, e si vedeva
        * cosi': tolto un installatore e messo un altro, chi apriva questa
        * pagina si sentiva dire «la chiave non va bene» e se la vedeva chiedere
        * a mano — con quella giusta gia' scritta nella scheda dell'add-on, a
-       * due centimetri di distanza.
-       *
-       * Il motivo: nel browser era rimasta la chiave di prima, quella
-       * dell'installatore tolto. Non essendo vuota, la consegna veniva
-       * scartata; quella morta veniva provata, rifiutata, e la pagina
-       * chiedeva aiuto a chi non poteva darne — la chiave nuova ce l'aveva la
-       * scheda, non la persona.
+       * due centimetri di distanza. Nel browser era rimasta la chiave di
+       * prima, quella dell'installatore tolto: non essendo vuota, la consegna
+       * veniva scartata; quella morta veniva provata, rifiutata, e la pagina
+       * chiedeva aiuto a chi non poteva darne.
        *
        * Adesso la consegna si ricorda sempre, e serve quando quella tenuta
        * viene rifiutata: si prova quella, una volta, prima di disturbare
        * qualcuno. Chi l'ha battuta a mano resta padrone finche' la sua
        * funziona, che e' quello che questa riga voleva dire. */
+      const OSPITI_FIDATI = "gdahome.quadro.ospiti";
+      const OSPITI_SCRITTI = String(
+        document.querySelector('meta[name="gdahome-ospiti"]')?.getAttribute("content") || "",
+      )
+        .split(/\s+/)
+        .filter(Boolean);
+      const gliConfermati = () => {
+        try {
+          const detti = JSON.parse(localStorage.getItem(OSPITI_FIDATI) || "[]");
+          return Array.isArray(detti) ? detti.map(String) : [];
+        } catch (_niente) {
+          return [];
+        }
+      };
+      function fidati(origine) {
+        try {
+          const detti = gliConfermati().filter((una) => una !== origine);
+          localStorage.setItem(OSPITI_FIDATI, JSON.stringify([origine, ...detti].slice(0, 20)));
+        } catch (_niente) {
+          /* Non si ricorda: la prossima volta si richiede. */
+        }
+      }
+      /* Un'origine scritta come `https://*.dominio` vale per tutti quelli sotto. */
+      const combacia = (origine, scritta) =>
+        scritta.includes("*.")
+          ? origine.startsWith(scritta.slice(0, scritta.indexOf("*"))) &&
+            origine.endsWith(scritta.slice(scritta.indexOf("*") + 1))
+          : origine === scritta;
+      const origineFidata = (origine) =>
+        origine === location.origin ||
+        OSPITI_SCRITTI.some((scritta) => combacia(origine, scritta)) ||
+        gliConfermati().includes(origine);
+      const daChiCiTiene = (sorgente) => {
+        try {
+          if (window.parent && window.parent !== window && sorgente === window.parent) return true;
+        } catch (_niente) {}
+        try {
+          if (window.opener && sorgente === window.opener) return true;
+        } catch (_niente) {}
+        return false;
+      };
+
       let consegnata = "";
       addEventListener("message", (evento) => {
         const detto = evento?.data;
         if (!detto || detto.gdahome !== "chiave") return;
+        if (!daChiCiTiene(evento.source)) return;
         const arrivata = String(detto.chiave || "").trim();
         if (!arrivata) return;
+        if (!origineFidata(String(evento.origin || ""))) {
+          /* Da un'origine che non si conosce: si offre, non si prende. */
+          if (chiave) return;
+          offerta = { chiave: arrivata, origine: String(evento.origin || "") };
+          lasciaChiMiHaAperto();
+          chiedimiLaChiave();
+          return;
+        }
+        /* Avuta la chiave, chi ci ha aperto non serve piu'. */
+        lasciaChiMiHaAperto();
         consegnata = arrivata;
         if (chiave) return;
         chiave = arrivata;
         try {
-          localStorage.setItem(DOVE_STA_LA_CHIAVE, chiave);
+          sessionStorage.setItem(DOVE_STA_LA_CHIAVE, chiave);
         } catch (_niente) {
           /* Vale per questa apertura e basta: meglio di non entrare. */
         }
@@ -5888,7 +6072,7 @@
           if (!chiave) {
             chiave = arrivata;
             try {
-              localStorage.setItem(DOVE_STA_LA_CHIAVE, chiave);
+              sessionStorage.setItem(DOVE_STA_LA_CHIAVE, chiave);
             } catch (_niente) {
               /* Vale per questa apertura e basta: meglio di non entrare. */
             }
@@ -5910,8 +6094,23 @@
        * domanda non porta niente, e va a chiunque: la chiave che torna vale
        * se apre, e chi potesse mandarne una buona ce l'avrebbe gia'. Si
        * chiede finche' non arriva, e si smette da soli. */
+      /* La finestra che ci ha aperto (l'app, con `window.open`) serve per una
+       * cosa sola: consegnare la chiave. Avuta — o smesso di aspettarla — la
+       * si lascia andare, cosi' questa pagina non tiene in mano una finestra
+       * dell'app per tutto il tempo che resta aperta. */
+      function lasciaChiMiHaAperto() {
+        try {
+          if (window.opener) window.opener = null;
+        } catch (_niente) {
+          /* Non si lascia toccare: resta com'e'. */
+        }
+      }
+
       function chiediLaChiaveAChiMiOspita() {
-        if (chiave) return;
+        if (chiave) {
+          lasciaChiMiHaAperto();
+          return;
+        }
         const ospiti = [];
         try {
           if (window.parent && window.parent !== window) ospiti.push(window.parent);
@@ -5930,6 +6129,9 @@
         };
         domanda();
         for (const fra of [400, 1200, 3000, 7000]) setTimeout(domanda, fra);
+        /* Dopo l'ultima domanda, un po' di margine per la risposta, e poi
+         * chi ci ha aperto si lascia andare anche se non ha risposto. */
+        setTimeout(lasciaChiMiHaAperto, 10000);
       }
       if (!BIGLIETTO) chiediLaChiaveAChiMiOspita();
     </script>

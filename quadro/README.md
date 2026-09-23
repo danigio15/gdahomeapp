@@ -182,8 +182,10 @@ sed -n 's/^QUADRO_GESTORE=//p' /etc/quadro/ambiente
 curl https://quadro.gdahome.org/salute
 ```
 
-Risponde
-`{"vivo":true,"versione":"26bad09","case":0,"installatori":0,"gestore":true}`.
+Da fuori risponde `{"vivo":true}` e basta. Per intero —
+`{"vivo":true,"versione":"26bad09","case":0,"installatori":0,"gestore":true}`
+— lo dice a chi è sulla macchina (`curl 127.0.0.1:8100/salute`) e alla
+gestione, con la sua chiave, su `/gestore/salute`.
 Le cose da guardare in quella riga:
 
 | | |
@@ -268,6 +270,8 @@ QUADRO_GESTORE='qualcosa di lungo e a caso' npm run avvia
 |---|---|
 | `QUADRO_GESTORE` | la chiave di **gestione**, almeno sedici caratteri: aggiunge gli installatori e mette i limiti. Senza, non si può aggiungere nessuno — le case già abbinate continuano a depositare, e il quadro lo dice all'accensione e su `/salute` |
 | `QUADRO_PORTA` | `8100` |
+| `QUADRO_ASCOLTO` | dove ascolta: di serie `127.0.0.1`, perché davanti c'è Caddy. `0.0.0.0` solo dietro un altro proxy, sapendo cosa si fa |
+| `QUADRO_OSPITI` | le origini che possono tenere il cruscotto in un riquadro e consegnargli la chiave senza chiedere (separate da spazi o virgole, anche `https://*.dominio`). Vuoto: in un riquadro lo mette chiunque, ma una chiave consegnata da un'origine nuova si usa solo dopo un «sì» di chi guarda, che il browser ricorda |
 | `QUADRO_DATI` | dove tiene i suoi file, `./dati` |
 | `QUADRO_REGISTRO` | quanto parla: `debug`, `info`, `attenzione`, `errore` |
 
@@ -674,8 +678,9 @@ Le vie, davanti:
 | | |
 |---|---|
 | `GET /` | la soglia: cos'è questo indirizzo, in italiano. Chi lo tiene fra i segnalibri prima o poi lo apre nudo |
-| `GET /salute` | se è vivo, **quale versione gira**, quante case segue, e se la console è aperta |
-| `POST /rapporto` | la casa deposita. `x-casa` + la sua chiave; una matricola mai vista nasce qui, senza nome |
+| `GET /salute` | se è vivo, e da fuori nient'altro. Da questa macchina (senza `x-forwarded-for`) anche **quale versione gira**, quante case segue, e se la console è aperta |
+| `GET /segno/<inst_…>/<segno>` | **senza chiave**: l'icona vera di un aggiornamento, dalla cartella di quell'installatore — quello che manda una sua casa lo vede lui e nessun altro |
+| `POST /rapporto` | la casa deposita. `x-casa` + la sua chiave; una matricola mai vista nasce qui, senza nome. Si tiene la **forma** del rapporto (`forma-del-rapporto.js`): numeri, parole tagliate, elenchi col tetto, niente campi sconosciuti. Sei di fila, poi uno ogni venti secondi: oltre, 429 con `retry-after`. Una casa già legata cambia installatore solo se lo dimostra: col suo segreto (`x-casa-segreto`, che il quadro impara la prima volta che arriva con una chiave buona) o col codice di prima (`x-chiave-prima`) |
 | `POST /plancia` | la casa manda com'è fatta una sua plancia — profilo, revisione, valori, e i tre numeri della generazione dello scatto — **solo** se nella risposta al rapporto il quadro gliel'ha chiesta (`vuoleLaPlancia`) e solo se ha acceso il terzo interruttore. Senza flussi di telecamere: la casa li toglie prima, il quadro rifiuta quello che ne contiene. Col primo scatto del giro viaggia anche l'**inventario** di casa (`inventario`): entità con le loro capacità, dispositivi, stanze, piani — mai gli stati, che la casa toglie prima di partire e il quadro ritoglie con lo stesso setaccio (`inventario.js`, copia identica nei due programmi) |
 | `GET /plancia/<profilo>?id=…` | la casa ritira la configurazione che le è stata scritta, per identificativo del lavoro `configura` |
 
@@ -691,16 +696,17 @@ L'installatore, tutte dentro `/console/` e tutte con la **sua** chiave:
 | `POST /console/entra` | **senza chiave**: il browser consegna il biglietto e riceve la chiave, che da lì resta nel suo deposito come se fosse stata battuta. Scaduto, già usato, o di un installatore tolto nel frattempo: 410 |
 | `GET /console/case` | l'elenco già vestito: stato, spunte e pastiglie **già decisi**, più le tre soglie con cui la pagina colora i metri |
 | `GET` `POST /console/inviti` | i codici in attesa, e uno nuovo |
-| `DELETE /console/inviti/<codice>` | annullalo |
+| `DELETE /console/inviti/<inv_…>` | annullalo. I codici si tengono per impronta: l'intero si vede solo quando lo si fa, poi nell'elenco restano il nome (`inv_…`) e le ultime quattro lettere |
 | `PUT /console/casa/<matricola>` | il nome che le dà l'installatore |
 | `PUT /console/casa/<matricola>/plancia/<profilo>` | i due nomi di una plancia di quella casa: `titolo` (menu laterale e testata della home) e `velo` (la parola all'avvio, col suo logo). Solo una plancia che la casa dice di avere; tutti e due vuoti tolgono la scelta. Tornano alla casa con la risposta al rapporto |
 | `POST /console/casa/<matricola>/plance` | una plancia in più, col suo `titolo` (e `velo`): qui nasce la scelta, segnata `nuova`, e la casa la crea al rapporto dopo, vuota come una aggiunta dall'app. Otto per casa, contando quelle in attesa. Da qui non se ne toglie nessuna |
 | `GET /console/casa/<matricola>/plancia/<profilo>/configurazione` | com'è fatta quella plancia, come l'ha mandata la casa: lo scatto con revisione e valori, o niente se non è ancora arrivato. Solo se quella casa ha acceso il terzo interruttore |
 | `PUT /console/casa/<matricola>/plancia/<profilo>/configurazione` | scrivila così: i `valori` interi e la `revisioneAttesa`. Diventa un lavoro `configura`, che la casa ritira al rapporto dopo; se in casa nel frattempo è cambiata, la casa rifiuta e lo dice |
 | `POST /console/casa/<matricola>/plancia/<profilo>/rinfresca` | «voglio lo scatto di adesso»: il quadro lo richiede alla casa al passaggio dopo anche a revisione ferma — con l'inventario — e se la casa è in linea la sveglia. È quello che il cruscotto fa aprendo l'editor |
+| `POST /console/casa/<matricola>/plancia/<profilo>/gettone` | il gettone per l'editor di quella plancia: vale mezz'ora, per quella casa e quella plancia, e apre solo il filo dell'editor. Il cruscotto lo passa alla pagina dell'editor al posto della sua chiave |
 | `GET /console/casa/<matricola>/plancia/<profilo>/stato` | se lo scatto c'è e di quando, se l'inventario c'è, se la casa è in linea, che versione ha l'editor: senza i valori, per non scaricare megabyte a ogni domanda |
 | `GET /plancia-da-lontano/<matricola>/<profilo>/` | **senza chiave**: la pagina dell'editor della plancia — quella di `ponte/plancia`, con le premesse che dicono di quale casa e quale plancia è — vestita col nome e il logo di chi segue la casa. Solo per una casa che lascia configurare da lontano |
-| `WS /plancia-da-lontano/<matricola>/<profilo>/websocket` | il filo su cui quella pagina parla: **cieco** (`cucitura-cieca.js`). Si entra col codice del cruscotto nel primo messaggio, come si entra in Home Assistant; poi `get_states` e i registri rispondono con l'inventario, `dashboardmodern/config/get` con lo scatto, `dashboardmodern/config/set` mette in coda il lavoro `configura`; a tutto il resto — comandi, flussi, storia, foto, azzeramenti — si dice di no per nome |
+| `WS /plancia-da-lontano/<matricola>/<profilo>/websocket` | il filo su cui quella pagina parla: **cieco** (`cucitura-cieca.js`). Si entra col **gettone** dell'editor nel primo messaggio, come si entra in Home Assistant (la chiave del cruscotto qui non vale); poi `get_states` e i registri rispondono con l'inventario, `dashboardmodern/config/get` con lo scatto, `dashboardmodern/config/set` mette in coda il lavoro `configura`; a tutto il resto — comandi, flussi, storia, foto, azzeramenti — si dice di no per nome |
 | `GET /dashboardmodern_static/…` | i file della plancia, **senza chiave** e senza marchio, sotto l'impronta del contenuto: un anno di cache |
 | `DELETE /console/casa/<matricola>` | non seguirla più: si butta quello che se ne sa **e** la sua chiave, se no il primo rapporto la fa rinascere tre secondi dopo |
 
