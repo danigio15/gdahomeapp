@@ -41,6 +41,7 @@ import { Lavori } from "./lavori.js";
 import { Installatore } from "./installatore.js";
 import { apriIlRegistro } from "./registro.js";
 import { costruisciLaConsole, costruisciLaPortaDellApp } from "./server.js";
+import { Registri } from "./registri.js";
 
 /* Ogni quanto si guarda se qualche telefono e' sparito da troppo tempo. */
 const POTATURA = 6 * 60 * 60 * 1000;
@@ -179,9 +180,17 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
    * passarlo lo stesso vuol dire un ponte che non si accende. */
   const utenti = new UtentiDiCasa({ casa, registro });
 
+  /* L'anagrafe della casa: quali dispositivi ci sono, come si chiamano, di chi
+   * e' ogni entita'. Si legge una volta e la usano in due — il rapporto al
+   * quadro e la plancia che la chiede — perche' e' la risposta piu' pesante che
+   * Home Assistant sappia dare, e leggerla due volte sarebbe leggerla due
+   * volte. Il perche' sta in cima a `registri.js`. */
+  const registri = new Registri({ casa, registro });
+
   const commissioni = new Commissioni({
     casa,
     registro,
+    registri,
     plancia,
     plance,
     configurazione,
@@ -370,6 +379,7 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
     identita,
     casa,
     ferro,
+    registri,
     aggiornamenti,
     /* Le icone vere degli aggiornamenti e le loro note intere, per il quadro.
      *

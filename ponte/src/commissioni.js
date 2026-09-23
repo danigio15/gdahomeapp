@@ -189,6 +189,28 @@ const NELLA_CONSOLE = "La coda di chi risponde sta nella console dell'app.";
 const NIENTE_BOZZE =
   "Da qui una segnalazione o parte o non si scrive: non ci sono bozze da buttare.";
 
+/* L'anagrafe della casa, per chi disegna.
+ *
+ * «Non devi mettere le entita' ma i dispositivi non connessi, cosi' come li
+ * mostri nel cruscotto installatore.»
+ *
+ * Il cruscotto quei dispositivi li sa perche' glieli manda questo ponte, che i
+ * registri li legge gia' per il rapporto. La plancia no: chi disegna i
+ * registri non li ha, e chiederli a Home Assistant e' la porta che la #553 ha
+ * chiuso. Dentro Home Assistant glieli lascia il pannello; nell'app non glieli
+ * lasciava nessuno, e l'avviso tornava a contare le entita'.
+ *
+ * Quindi li passa il ponte, che ce li ha gia' in mano e li tiene da parte
+ * cinque minuti: nessuna domanda in piu' a Home Assistant, e una risposta
+ * sola per caricamento. Comincia per `ponte/` perche' e' roba di questo ponte
+ * e non un comando di Home Assistant travestito: dentro Home Assistant la
+ * plancia se lo sente dire «non conosco», ed e' la risposta giusta — li' i
+ * registri ce li ha gia'.
+ *
+ * Escono due mappe e nient'altro: di chi e' ogni entita', e come si chiama
+ * quel qualcuno. **Nessuno stato.** */
+const REGISTRI = "ponte/registri";
+
 /* La chat di assistenza della dashboard: quattro comandi sono di chi chiede, e
  * li fa il ponte per ogni casa. */
 const CHAT_STATO = "dashboardmodern/chat/state";
@@ -384,6 +406,10 @@ export class Commissioni {
      * una porta che non c'e'. */
     zigbee = null,
     aggiornamenti = null,
+    /* L'anagrafe della casa — di chi e' ogni entita', e come si chiama quel
+     * qualcuno. E' la stessa che legge il rapporto, e la tiene `registri.js`:
+     * una sola, per non leggere due volte la stessa cosa pesante. */
+    registri = null,
     ritorno = null,
     scarica = scaricaDavvero,
     insieme = INSIEME,
@@ -431,6 +457,7 @@ export class Commissioni {
      * Assistant e qui sta nel ponte. */
     this.spegnimento = spegnimento;
     this.zigbee = zigbee;
+    this.registri = registri;
     /* Cosa c'e' da aggiornare, e i due tasti per farlo. In Home Assistant si
      * vede da una pagina che chi usa l'app non apre piu'. */
     this.aggiornamenti = aggiornamenti;
@@ -498,6 +525,7 @@ export class Commissioni {
     if (typeof tipo === "string" && tipo.startsWith("ponte/segnalazioni/"))
       return this._segnalazioni(detto);
     if (typeof tipo === "string" && tipo.startsWith("ponte/zigbee/")) return this._zigbee(detto);
+    if (tipo === REGISTRI) return this._registri(detto);
     if (tipo === CONFIG_GET || tipo === CONFIG_SET || tipo === CONFIG_RESTORE)
       return this._configurazione(detto);
     if (tipo === DOVE_TORNARE) return this._doveTornare(detto);
@@ -525,6 +553,18 @@ export class Commissioni {
       return si(id, tipo === "frontend/get_user_data" ? { value: null } : null);
     }
     return no(id, "unknown_command", `non conosco ${tipo}`);
+  }
+
+  /* Le due mappe dell'anagrafe, per la plancia che le ha chieste.
+   *
+   * Non si cade mai: senza registri escono vuote, e chi le ha chieste torna a
+   * contare le entita' come faceva prima che questa porta esistesse. Un avviso
+   * un po' piu' grossolano e' meglio di una plancia che non si apre.
+   */
+  async _registri(detto) {
+    const id = detto?.id ?? null;
+    if (!this.registri) return no(id, "unknown_command", `non conosco ${detto?.type}`);
+    return si(id, await this.registri.leMappe());
   }
 
   /* Se questa casa ha il cruscotto di chi installa, la gestione del quadro, o
