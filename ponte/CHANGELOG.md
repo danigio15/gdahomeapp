@@ -11,6 +11,57 @@ fuori. La plancia dentro continua a dire la sua, e si legge dov'è sempre
 stata: nella pastiglia «La plancia» della console. Sono due numeri perché
 sono due cose.
 
+## 1.6.3
+
+**Energia: «Costo Reale» e il riquadro sotto dicevano due cifre per la stessa
+spesa.** In Panoramica il costo era stimato da una media, mentre «Come si
+divide il costo reale» lo faceva ora per ora con le fasce — due conti diversi
+sullo stesso consumo, e chi guardava la schermata vedeva due numeri e non
+sapeva quale credere. Adesso il numero è uno: quello a fasce, quando le fasce
+ci sono. Sopra e sotto si legge la stessa cifra, e il risparmio si conta da
+quella.
+
+**La «Gestione installatori» si chiama Cruscotto gdahome.** Nella barra
+laterale di Home Assistant, nel titolo della scheda e in cima alla pagina.
+
+**Il riquadro «Il servizio» si legge a colpo d'occhio.** Erano due paragrafi
+in grassetto e cinque caselle stirate per tutta la larghezza, col numero in
+alto a sinistra e mezzo riquadro vuoto accanto. Adesso ogni macchina — il
+quadro, il tramite — ha la sua testa, con il suo disegno e la pastiglia che
+dice come sta; i conti sono mattonelle larghe quanto serve; e gli interruttori
+del tramite sono pastiglie con la spia, una per uno.
+
+**E adesso dice quando il quadro ha smesso di aggiornarsi da sé.** Quel
+segnale arrivava già — sei giri a vuoto di fila, e `/salute` lo dice — e la
+pagina lo buttava via. È la cosa per cui quel riquadro esiste, perché un
+quadro fermo non lo scopre nessun altro: si legge nella pastiglia, che diventa
+ambra, e sotto da quanto è fermo e perché.
+
+**La scheda di una casa si apre accanto all'elenco, non sopra.** «Case a
+sinistra e se clicco mi apre il dettaglio affianco, non il popup: non mi piace
+il popup.»
+
+Il foglio che sale dal basso è giusto sul telefono, dove non c'è spazio per
+due cose insieme. Su uno schermo largo si pagava due volte: copriva l'elenco da
+cui eri appena partito — con un velo sfocato sopra — e per passare alla casa
+dopo toccava chiudere, ritrovare il punto, riaprire. Da quattordici pollici in
+su le due pagine del quadro diventano elenco a sinistra e scheda accanto, con
+la casa aperta riconoscibile dal bordo, e l'elenco che resta fermo mentre si
+legge. Sotto quella misura non cambia niente: telefono e tablet in verticale
+restano col foglio che sale, identico a prima.
+
+Nel cruscotto dell'installatore l'elenco diventa un elenco vero: una riga per
+impianto, il nome e lo stato sulla stessa linea. Alte com'erano nella griglia a
+due colonne, otto impianti riempivano due schermi.
+
+**E i margini tornano in squadra.** Tre disallineamenti, trovati misurando e
+non guardando: la colonna dell'elenco cominciava cinque pixel prima di tutto il
+resto; dentro la scheda i titoli stavano quattro pixel più a destra delle carte
+che intitolano — questo c'era da sempre, e col foglio largo quanto un telefono
+non lo notava nessuno; e il titolo della raccolta era finito attaccato alla
+carta sopra. Corretti tutti e tre, in tutte e due le pagine, e il quarto anche
+sul telefono.
+
 ## 1.6.2
 
 **Aggiorna l'add-on e l'app insieme.** Questa versione cambia il modo in cui

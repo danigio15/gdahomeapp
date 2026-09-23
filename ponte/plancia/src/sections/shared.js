@@ -1231,6 +1231,55 @@ export function scriviSeCambia(nodo, markup) {
 export { attributoSeCambia, classeSeCambia } from "../core/scrivere-se-cambia.js";
 
 /* Lo stesso, per un testo semplice. */
+/* ── Il conto esatto delle fasce, per chi scrive i soldi ──────────────────
+ *
+ * «Gli importi dei costi energia non coincidono con il riquadro sotto.»
+ *
+ * La casella «Costo Reale» e il blocco «Come si divide il costo reale» stanno
+ * a tre centimetri l'una dall'altro e dicevano due cifre diverse per la stessa
+ * spesa — stessi kilowattora, soldi diversi. Non era un conto sbagliato: erano
+ * due conti, tutti e due giusti per quello che sapevano.
+ *
+ * La casella faceva una **stima**: i kilowattora del mese per la media pesata
+ * delle fasce, perche' di un mese intero si sa quanta energia e' passata ma
+ * non in che ore. Il blocco sotto invece le ore le ha chieste al Recorder, sa
+ * in che fascia e' passato ogni kilowattora, e fa il **conto esatto**.
+ *
+ * Il conto esatto e' quello giusto, e chi scrive la casella deve preferirlo.
+ * Il problema era che a scrivere quella casella sono in due — la sezione
+ * dell'Energia e la rifinitura del Report — e solo una delle due sapeva
+ * chiedere. L'ultima che passava vinceva, e vinceva la stima.
+ *
+ * Il registro sta qui, che e' il posto che vedono tutti e non chiude anelli:
+ * la sezione delle fasce non si puo' importare (usa l'Energia, e l'Energia
+ * importerebbe lei), quindi chi sa il conto si presenta invece di farsi
+ * chiamare.
+ */
+const IL_CONTO = "__dmContoDelleFasce";
+
+export function registraIlContoDelleFasce(lettore) {
+  root[IL_CONTO] = typeof lettore === "function" ? lettore : null;
+  return true;
+}
+
+/**
+ * Il conto esatto del mese scelto, o niente.
+ *
+ * Niente vuol dire «non c'e' un conto per QUESTO mese», e chi chiede torna
+ * alla sua stima: e' il caso di chi apre un mese vecchio, di cui il Recorder
+ * le ore non le tiene piu'.
+ */
+export function ilContoEsattoDelleFasce(periodo) {
+  try {
+    const lettore = root[IL_CONTO];
+    if (typeof lettore !== "function") return null;
+    const conto = periodo === undefined ? lettore() : lettore(periodo);
+    return conto && Number.isFinite(Number(conto.euro)) ? conto : null;
+  } catch (_error) {
+    return null;
+  }
+}
+
 export function scriviTestoSeCambia(nodo, testo) {
   if (!nodo) return false;
   const valore = String(testo ?? "");
