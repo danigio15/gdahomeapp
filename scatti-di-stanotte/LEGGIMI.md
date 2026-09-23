@@ -61,3 +61,40 @@ Quale disegno tocca a chi si sceglie dal nome, che è imperfetto e si sa:
 mestiere. La strada giusta è un'altra e sta segnata nel codice — le classi che
 Home Assistant dà alle entità (`device_class: smoke`), che sono un fatto e non
 una parola scelta.
+
+## `zigbee-elenco-della-rete.png` e gli altri tre
+
+Questi non sono il browser: sono **l'app**, disegnata da Flutter a 390×844 con
+i caratteri veri, e non sono disegnati a mano — si apre la sezione Zigbee
+contro un ponte finto e si preme dove preme una persona.
+
+- **`zigbee-elenco-della-rete.png`** — sotto i tasti c'è chi c'è già, con
+  quanti sono. Ogni riga: nome, marca e modello sotto, e la pila per chi va a
+  batteria. Da qui si entra.
+- **`zigbee-scheda-dispositivo.png`** — la scheda di uno: si rinomina, si
+  manda nella plancia, si toglie dalla rete. «Sta in fondo a un ramo · va a
+  batteria» e la targa, per riconoscerlo.
+- **`zigbee-togli-dalla-rete.png`** — prima di togliere si dice **la parte che
+  costa**: per rimetterlo lo si riabbina da qui. E di un ripetitore si dice
+  anche che tiene su la rete per gli altri.
+- **`zigbee-mappa-nell-app.png`** — la mappa, quella dei due `.svg` qui sopra,
+  **dentro l'app**: si allarga con due dita e si rifà il giro.
+
+### La mappa nell'app era vuota, e non si vedeva da qui
+
+Gli `.svg` qui sopra sono sempre stati giusti, e nel browser si sono sempre
+visti. Sul telefono no: i disegni erano un `<svg>` dentro l'altro — SVG valido,
+che i browser disegnano — e `flutter_svg` gli `<svg>` annidati li **salta**.
+Nell'app uscivano gli anelli colorati, i fili e i nomi, e dentro ogni anello il
+vuoto: proprio le icone dei dispositivi, che sono il motivo per cui la mappa è
+fatta così.
+
+Nessuna prova se ne era accorta perché tutte guardavano il **testo** dell'SVG,
+e il testo era giusto. Si è visto fotografando la schermata.
+
+Adesso ogni disegno è un `<g>` spostato e ridotto, che disegnano tutti e due, e
+una prova nuova conta **i pixel dentro gli anelli**: se torna una forma che sul
+telefono non si disegna, diventa rossa.
+
+*(Nello scatto la pila accanto ai nomi esce come un rettangolo vuoto: è
+l'emoji, che nel carattere della prova non c'è. Sul telefono si vede.)*
