@@ -47,6 +47,15 @@ si trovava ancora lì quasi sempre. Adesso si guarda per dodici secondi, e solo
 se dopo c'è ancora si dice — dicendo anche cosa fare, perché quasi sempre è un
 apparecchio che dorme e l'ordine di uscire non lo sente finché non si sveglia.
 
+**Negli aggiornamenti mancava proprio la nostra icona.** Nel cruscotto Duck
+DNS, Git pull e Home Assistant Core avevano il loro marchio e gdahome una «G».
+Il modo in cui l'icona viaggia funziona — la casa la prende dal Supervisor e la
+manda col rapporto — ma in un rapporto un'icona ci sta fino a 64 KiB, e la
+nostra ne pesava 102: sopra quel peso il ponte non dice «oggi non ce l'ho», dice
+«un'icona non ce l'ha», e il quadro se lo segna e non la richiede più. Era
+l'unica icona sopra il tetto di tutta la casa. Adesso pesa 28 KiB, sempre 256
+per 256, e una prova guarda il file vero perché non succeda di nuovo.
+
 **La finestra di una tessera ci sta dentro la sua card.** «Aggiusta i margini
 del popup allagamenti, non entra all'interno tutto»: negli Allagamenti
 «Asciutto» finiva oltre il bordo destro e il titoletto «LO STATO» spariva a
