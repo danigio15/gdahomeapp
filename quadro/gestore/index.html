@@ -549,7 +549,9 @@
         justify-content: space-between;
         flex-wrap: wrap;
         gap: 2px 12px;
-        margin: 24px 4px 10px;
+        /* Di lato niente: il titolo di un capitolo sta in riga con le carte
+           che intitola, e i quattro pixel di rientro lo portavano fuori. */
+        margin: 24px 0 10px;
       }
 
       .titolone {
@@ -1258,10 +1260,17 @@
         font-size: 1.3rem;
       }
 
+      /* Venti, come la testata e i tasti.
+       *
+       * Erano sedici, e dentro la scheda i bordi sinistri erano due: il nome
+       * della casa e i titoli dei capitoli a venti, le carte che quei titoli
+       * intitolano a sedici. Quattro pixel. Con il foglio che saliva dal
+       * basso, largo quanto un telefono, non li notava nessuno; da quando la
+       * scheda sta accanto a un elenco allineato, si vedono. */
       .foglio-corpo {
         overflow-y: auto;
         overscroll-behavior: contain;
-        padding: 4px 16px 24px;
+        padding: 4px 20px 24px;
         -webkit-overflow-scrolling: touch;
       }
 

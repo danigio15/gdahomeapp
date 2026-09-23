@@ -115,6 +115,39 @@ for (const [chi, pagina] of Object.entries(PAGINE)) {
     assert.match(regola(foglio, "#dove > .colonna-elenco > .voce"), /margin-top: 0;/);
   });
 
+  test(`${chi}: dentro la scheda c'e' un bordo sinistro solo`, () => {
+    /* Il difetto per nome: la testata e i tasti rientravano di venti, il
+     * corpo di sedici, e il titolo di un capitolo si riprendeva i quattro
+     * mancanti col suo margine. Risultato: il nome della casa e i titoli a
+     * venti, le carte che quei titoli intitolano a sedici. Quattro pixel.
+     * Col foglio che saliva dal basso, largo quanto un telefono, non li
+     * notava nessuno; da quando la scheda sta accanto a un elenco allineato,
+     * si vedono — ed e' da li' che e' arrivata la segnalazione.
+     *
+     * Non serve un browser per accorgersene: e' un numero scritto tre volte
+     * nello stesso foglio, e le tre volte devono dire la stessa cosa. */
+    const dilato = (selettore) => {
+      const scritto = /\n\s*padding: ([^;]+);/.exec(regola(pagina, selettore))?.[1];
+      assert.ok(scritto, `a «${selettore}» manca il padding`);
+      const pezzi = scritto.trim().split(/\s+/);
+      /* «sopra destra-sinistra sotto» o «sopra destra sotto sinistra». */
+      return pezzi.length === 4 ? [pezzi[1], pezzi[3]] : [pezzi[1], pezzi[1]];
+    };
+    const tutti = [
+      ...dilato("      .foglio-testa"),
+      ...dilato("      .foglio-corpo"),
+      ...dilato("      .foglio-tasti"),
+    ];
+    assert.equal(
+      new Set(tutti).size,
+      1,
+      `la scheda rientra di misure diverse: ${[...new Set(tutti)].join(", ")}`,
+    );
+
+    /* E il titolo di un capitolo non si riprende niente di lato. */
+    assert.match(regola(pagina, "      .capitolo"), /margin: \d+px 0 \d+px;/);
+  });
+
   test(`${chi}: accanto non c'e' piu' il velo`, () => {
     assert.match(regola(laffiancata(pagina), "#dove > .velo"), /display: none;/);
   });
