@@ -41,7 +41,7 @@ dependencies:
   # Il segno del ponte va nel portachiavi del sistema — Keychain sull'iPhone,
   # Keystore su Android — non in un file di preferenze, che su Android si legge
   # da fuori con un telefono sbloccato.
-  flutter_secure_storage: ^9.2.0
+  flutter_secure_storage: ^11.2.0
 
   # La plancia che gia' esiste, dentro l'app.
   webview_flutter: ^4.10.0
