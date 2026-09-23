@@ -30,6 +30,7 @@
  */
 
 import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
 import test from "node:test";
 import {
   autorizzazioneInutile,
@@ -185,4 +186,33 @@ test("una mappatura che non c'è, o che si arrabbia, non ferma la richiesta", ()
   );
   /* Una mappatura che risponde con un'altra casella virtuale non ha risposto. */
   assert.equal(conLEntitaVera(indirizzo, () => "dm.qualcos_altro"), null);
+});
+
+/* «Non si apre storico dei dati.»
+ *
+ * Il popup si apriva davvero — e questo è il punto. Dentro c'era una griglia
+ * con l'asse dei valori giusto, 33,0–37,0 per un disco al 35 %, nessuna linea
+ * e una sola etichetta dell'ora. Da fuori è indistinguibile da un guasto; da
+ * dentro non lo era: il Recorder di quell'entità aveva un campione solo, e una
+ * linea fra un punto e se stesso non si disegna.
+ *
+ * Il caso «nessun dato» era già coperto e dice 📭. Scoperto era quello in
+ * mezzo: dati sì, ma un istante solo. Si contano gli ISTANTI e non le righe,
+ * perché un'entità che riporta lo stesso valore dieci volte nello stesso
+ * secondo ha dieci righe e un punto solo — e disegnerebbe la stessa griglia
+ * vuota.
+ */
+test("una lettura sola lo dice, invece di disegnare una griglia vuota", async () => {
+  const sorgente = await readFile(
+    new URL("../src/sections/history-section.js", import.meta.url),
+    "utf8",
+  );
+  /* Si guardano gli istanti distinti, non `rows.length`: è la differenza fra
+   * accorgersene e non accorgersene. */
+  assert.match(sorgente, /new Set\(rows\.map\(\(riga\) => riga\.time\)\)/);
+  assert.match(sorgente, /istanti\.size < 2/);
+  assert.match(sorgente, /una lettura sola/);
+  /* E resta distinto da «nessun dato», che è un'altra cosa e ha già la sua
+   * riga: senza dati non c'è niente da aspettarsi, con un dato solo sì. */
+  assert.match(sorgente, /if \(!rows\.length\) \{/);
 });
