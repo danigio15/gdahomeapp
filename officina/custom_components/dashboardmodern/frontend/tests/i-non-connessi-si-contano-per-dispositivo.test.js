@@ -341,3 +341,23 @@ test("la sezione ha il tasto che rimette, e non promette più l'irreparabile", a
     "e anche questa: indietro si torna",
   );
 });
+
+test("nell'avviso non si assegnano stanze: la tendina lì non ci va", async () => {
+  /* Visto rendendo la scheda: la riga di un'entità sciolta — una che un
+   * dispositivo non ce l'ha — si prendeva la scelta della stanza, perché
+   * `room-assign-section` passa su ogni riga dell'editor e attacca la tendina
+   * a quelle che nominano una sola entità. Le righe raggruppate per
+   * dispositivo dicono «2 entità» e non ne nominavano nessuna, quindi la
+   * tendina non gliela metteva: la stessa scheda con due facce.
+   *
+   * Questa scheda è un avviso, non un posto dove si configura: chiedere la
+   * stanza accanto a un guasto è chiedere di sistemare una cosa che non
+   * c'entra. L'eccezione è scritta accanto a quella delle persone, che una
+   * stanza non ce l'hanno. */
+  const stanze = await read("src/sections/room-assign-section.js");
+  assert.match(
+    stanze,
+    /row\.matches\("\.dm-people-row, \.dm-scollegati-riga"\)\) continue;/,
+    "le righe dei non connessi restano fuori",
+  );
+});
