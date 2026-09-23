@@ -1,5 +1,5 @@
-Aggiornamento di sicurezza: installalo insieme a gdahome 1.6.2 in Home Assistant.
+Aggiorna anche gdahome in Home Assistant alla 1.6.2: per abbinare un telefono nuovo servono tutti e due.
 
-L'abbinamento di un telefono nuovo è protetto dal codice del QR anche mentre si scambiano le chiavi. I telefoni già abbinati continuano a funzionare.
+I telefoni già abbinati continuano a funzionare come prima.
 
 Il lucchetto con volto o impronta copre ogni schermata, anche quelle aperte sopra la casa.

@@ -13,27 +13,20 @@ sono due cose.
 
 ## 1.6.2
 
-**Un aggiornamento di sicurezza: va installato.** Rivista una per una tutte le
-strade da cui si entra in gdahome — l'add-on, l'app, il centralino, il quadro
-degli installatori — e chiuse quelle che lasciavano fare più del dovuto.
-Aggiorna l'add-on **e** l'app.
+**Aggiorna l'add-on e l'app insieme.** Questa versione cambia il modo in cui
+un telefono si abbina, e i due pezzi devono parlare la stessa lingua.
 
-Cosa si nota:
-
-- **Per abbinare un telefono nuovo servono l'add-on e l'app di questa
-  versione.** Il codice del QR adesso protegge anche lo scambio delle chiavi,
-  e l'abbinamento non passa più in chiaro nemmeno in casa. I telefoni già
-  abbinati continuano a funzionare come prima, senza fare niente.
-- **La console di gdahome è solo per chi amministra Home Assistant.** Gli
-  altri utenti di casa continuano a vedere e usare la plancia; non ne cambiano
-  la configurazione e non fabbricano codici di abbinamento.
+- **Abbinare un telefono nuovo** vuole l'add-on e l'app di questa versione.
+  I telefoni già abbinati continuano a funzionare come prima, senza fare
+  niente.
+- **La console di gdahome la apre chi amministra Home Assistant.** Gli altri
+  utenti di casa continuano a vedere e usare la plancia; non ne cambiano la
+  configurazione e non fanno codici di abbinamento.
 - **Un telefono intestato a chi non amministra** usa la casa — luci, clima,
-  tapparelle, telecamere, scene — ma non tocca le impostazioni di Home
-  Assistant.
-- **L'add-on si aggiorna solo dalle versioni pubblicate**, mai a una più
-  vecchia di quella che ha.
-- **Il logo di chi ti ha fatto l'impianto** si accetta solo come immagine
-  (PNG, JPEG, WebP).
+  tapparelle, telecamere, scene — ma non le impostazioni di Home Assistant.
+- **L'add-on si aggiorna dalle versioni pubblicate**, e mai a una più vecchia
+  di quella che ha.
+- **Il logo di chi ti ha fatto l'impianto** si carica come PNG, JPEG o WebP.
 
 ## 1.6.1
 
