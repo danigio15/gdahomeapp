@@ -114,6 +114,7 @@ import { SEGNO_VALIDO, Segni } from "./segni.js";
 import { Biglietti, GettoniDellEditor } from "./biglietti.js";
 import { laFormaDel, leRigheDeiSegni } from "./forma-del-rapporto.js";
 import { Freno } from "./freno.js";
+import { daChiSiConta, eDaQui } from "./indirizzo.js";
 
 /**
  * Quanto puo' essere grossa un rapporto. Le vere stanno sotto i quattro KiB —
@@ -279,11 +280,10 @@ function laPolitica(html, { riquadro }) {
 
 /* Chi bussa da questa stessa macchina, e non per conto di un altro: senza
  * `x-forwarded-for`, che Caddy mette sempre a chi viene da fuori. */
-const daQui = (richiesta) => {
-  const da = String(richiesta.socket?.remoteAddress || "");
-  const locale = da === "127.0.0.1" || da === "::1" || da === "::ffff:127.0.0.1";
-  return locale && !richiesta.headers["x-forwarded-for"] && !richiesta.headers.forwarded;
-};
+const daQui = (richiesta) =>
+  eDaQui(richiesta.socket?.remoteAddress) &&
+  !richiesta.headers["x-forwarded-for"] &&
+  !richiesta.headers.forwarded;
 
 /* Quante porte dell'editor si tengono aperte prima che dicano chi sono. Un
  * WebSocket costa poco, ma mille che non dicono niente per quindici secondi
@@ -428,9 +428,18 @@ export function costruisciIlServer({
       socket.end("HTTP/1.1 404 Not Found\r\n\r\n");
       return;
     }
+    /* Una casa che non c'e', o che non lascia configurare da lontano, non ha
+     * nessun editor: la porta non si apre nemmeno, e non occupa posto. */
+    if (case_.quella(salita[1])?.carta?.configurazione !== true) {
+      socket.end("HTTP/1.1 404 Not Found\r\n\r\n");
+      return;
+    }
     /* Un tetto a chi sta sul filo senza aver ancora detto chi e', in tutto e
-     * per indirizzo, e uno a tutti gli editor aperti. */
-    const da = socket.remoteAddress || "?";
+     * per indirizzo, e uno a tutti gli editor aperti. L'indirizzo e' quello
+     * vero, non quello di Caddy (`indirizzo.js`): contato per socket, dietro
+     * Caddy sarebbe lo stesso per tutti, e quattro porte mute aperte da uno
+     * solo chiuderebbero l'editor a chiunque. */
+    const da = daChiSiConta(richiesta);
     const muti = [...cuciture].filter((una) => !una.chi);
     if (
       cuciture.size >= EDITOR_AL_MASSIMO ||

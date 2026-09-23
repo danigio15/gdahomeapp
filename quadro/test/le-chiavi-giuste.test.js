@@ -384,6 +384,36 @@ test("una casa di prima, che il segreto non lo manda, cambia padrone con la chia
   }
 });
 
+test("una casa che ha perso il suo segreto si riabbina con la chiave di prima", () => {
+  /* Un ripristino, un add-on reinstallato: la casa si e' fatta un segreto
+   * nuovo. Con la chiave che usava fino a ieri dimostra lo stesso di essere
+   * lei, e da li' vale il segreto nuovo. */
+  const b = leChiavi();
+  try {
+    const vecchia = b.chiavi.fai({ di: UNO });
+    assert.equal(b.chiavi.riconosci(UNA_CASA, vecchia, IL_SUO), true);
+    const nuovo = { segreto: "n".repeat(64) };
+    const invito = b.chiavi.fai({ di: UN_ALTRO });
+    assert.equal(
+      b.chiavi.riconosci(UNA_CASA, invito, nuovo),
+      false,
+      "col segreto nuovo e basta no",
+    );
+    assert.equal(
+      b.chiavi.riconosci(UNA_CASA, invito, { ...nuovo, chiavePrima: vecchia }),
+      true,
+      "con la chiave di prima si'",
+    );
+    assert.equal(b.chiavi.diChiE(UNA_CASA), UN_ALTRO);
+    /* Da adesso vale il segreto nuovo, e quello vecchio no. */
+    b.chiavi.stacca(UNA_CASA);
+    assert.equal(b.chiavi.riconosci(UNA_CASA, b.chiavi.fai({ di: UNO }), IL_SUO), false);
+    assert.equal(b.chiavi.riconosci(UNA_CASA, b.chiavi.fai({ di: UNO }), nuovo), true);
+  } finally {
+    b.via();
+  }
+});
+
 test("una casa staccata si riprende con un invito; ma se il suo segreto e' noto, lo vuole", () => {
   const b = leChiavi();
   try {

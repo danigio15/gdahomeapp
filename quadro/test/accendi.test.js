@@ -274,3 +274,16 @@ test("il giro degli aggiornamenti non esce piu' zitto quando non ce la fa", () =
    * giro, l'ora non arriverebbe mai e `/salute` resterebbe zitta per sempre. */
   assert.match(ACCENDI, /head -1 "\\?\$FOGLIETTO"/, "la data del primo fallimento non si tiene");
 });
+
+test("si ferma su un systemd senza LoadCredential, prima di toccare qualunque cosa", () => {
+  /* `quadro-prepara` riceve il gettone con `LoadCredential` (systemd 247). Su
+   * uno piu' vecchio non partirebbe: meglio fermarsi prima di aver sostituito
+   * l'`aggiorna.sh` che funziona. */
+  const controllo = ACCENDI.indexOf("((SYSTEMD < 247))");
+  assert.ok(controllo > 0, "non si guarda la versione di systemd");
+  assert.match(ACCENDI, /systemctl --version/);
+  for (const dopo of ["apt-get install", 'cat >"$DOVE/aggiorna.sh"', "LoadCredential="]) {
+    const dove = ACCENDI.indexOf(dopo);
+    assert.ok(dove > controllo, `«${dopo}» arriva prima del controllo di systemd`);
+  }
+});

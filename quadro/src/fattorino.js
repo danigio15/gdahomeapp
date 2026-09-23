@@ -73,6 +73,10 @@ export const indirizzoBuono = (dove) => {
  * rimando (`301`, `302`) non si segue: portarebbe da un'altra parte senza
  * passare di qui. */
 const VIETATE = new BlockList();
+/* Le reti IPv6 in un elenco a parte: `BlockList` guarda un IPv4 anche contro
+ * le reti IPv6 che lo contengono (`::ffff:0:0/96`), e allora tutti gli IPv4
+ * risulterebbero vietati. */
+const VIETATE_6 = new BlockList();
 for (const [rete, quanti] of [
   ["0.0.0.0", 8],
   ["10.0.0.0", 8],
@@ -95,6 +99,12 @@ for (const [rete, quanti] of [
 for (const [rete, quanti] of [
   ["::", 128],
   ["::1", 128],
+  /* Tutte le forme in cui un IPv4 viaggia dentro un IPv6 — compatibile,
+   * mappato, tradotto, NAT64 — portano a un IPv4 che qui non si guarda: si
+   * vietano per intero. Un avviso vero ha un indirizzo IPv6 suo, o un IPv4. */
+  ["::", 96],
+  ["::ffff:0:0", 96],
+  ["::ffff:0:0:0", 96],
   ["64:ff9b::", 96],
   ["64:ff9b:1::", 48],
   ["100::", 64],
@@ -106,7 +116,7 @@ for (const [rete, quanti] of [
   ["fec0::", 10],
   ["ff00::", 8],
 ]) {
-  VIETATE.addSubnet(rete, quanti, "ipv6");
+  VIETATE_6.addSubnet(rete, quanti, "ipv6");
 }
 
 /** Questo indirizzo IP e' di quelli dove un avviso non va? */
@@ -117,10 +127,9 @@ export function eVietato(indirizzo) {
   const tipo = isIP(detto);
   if (!tipo) return true;
   if (tipo === 6) {
-    /* Un IPv4 vestito da IPv6 (`::ffff:127.0.0.1`) si guarda da IPv4. */
-    const dentro = /^::ffff:(\d+\.\d+\.\d+\.\d+)$/i.exec(detto);
-    if (dentro) return eVietato(dentro[1]);
-    return VIETATE.check(detto, "ipv6");
+    /* Un IPv4 vestito da IPv6 (`::ffff:1.2.3.4`, `::ffff:0:1.2.3.4`,
+     * `64:ff9b::1.2.3.4`) e' vietato comunque: sta nelle reti qui sopra. */
+    return VIETATE_6.check(detto, "ipv6");
   }
   return VIETATE.check(detto, "ipv4");
 }

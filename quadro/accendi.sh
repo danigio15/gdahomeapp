@@ -117,6 +117,23 @@ if [[ "$SOLO_CONTROLLO" != si ]]; then
   esac
 fi
 
+# systemd almeno 247: chi scarica e prova le versioni nuove riceve il gettone
+# di lettura con `LoadCredential`, che prima non c'era. Con uno piu' vecchio il
+# servizio `quadro-prepara` non partirebbe, e il giro degli aggiornamenti
+# resterebbe fermo per sempre. Si guarda **qui**, prima di toccare niente:
+# l'`aggiorna.sh` di prima resta al suo posto e continua a fare il suo lavoro.
+SYSTEMD="$(systemctl --version 2>/dev/null | awk 'NR == 1 { print $2 }' | grep -Eo '^[0-9]+' || true)"
+if [[ -z "$SYSTEMD" ]]; then
+  male "Qui non trovo systemd, e il quadro gira come suo servizio."
+elif ((SYSTEMD < 247)); then
+  male "Qui c'e' systemd $SYSTEMD, e serve almeno il 247." \
+    "Lo scaricamento delle versioni nuove gira senza privilegi e riceve il" \
+    "gettone con LoadCredential, che prima del 247 non c'e'. Debian 11 e" \
+    "Ubuntu 22.04 vanno gia' bene. Non ho toccato niente."
+else
+  bene "systemd $SYSTEMD"
+fi
+
 # Il nome punta qui?
 #
 # Si controlla **prima** di installare, perche' senza questo Caddy non riesce a

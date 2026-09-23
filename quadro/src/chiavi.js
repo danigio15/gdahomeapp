@@ -315,7 +315,8 @@ export class Chiavi {
     const invito = this.inviti.find((uno) => stessoSegreto(uno.impronta, segno));
     if (!invito) return false;
 
-    if (!this._eLei(casa, segreto, prove?.chiavePrima)) return false;
+    const lei = this._eLei(casa, segreto, prove?.chiavePrima);
+    if (!lei) return false;
 
     this.archivio.dati.inviti = this.inviti.filter((uno) => uno !== invito);
     /* Via la chiave di prima di questa casa, se ce n'era una: riabbinarsi vuol
@@ -331,7 +332,14 @@ export class Chiavi {
       natoIl: this.adesso(),
       per: invito.per,
     });
-    if (segreto && !this.segreti[casa]) this.segreti[casa] = impronta(segreto);
+    /* Il segreto: si impara se non lo si sapeva. Se la casa e' passata con
+     * la chiave di prima e un segreto diverso da quello noto — ha perso il suo
+     * e se n'e' fatto un altro — vale quello nuovo; se non ne ha mandato
+     * nessuno, quello vecchio si dimentica, e si reimpara alla prossima. */
+    if (lei === "con-la-chiave-di-prima") {
+      if (segreto) this.segreti[casa] = impronta(segreto);
+      else delete this.segreti[casa];
+    } else if (segreto && !this.segreti[casa]) this.segreti[casa] = impronta(segreto);
     this.archivio.salva();
     return true;
   }
@@ -341,16 +349,27 @@ export class Chiavi {
   }
 
   /* Puo' questa casa legarsi a un invito nuovo? Si', se non e' di nessuno e
-   * non ha un segreto conosciuto; altrimenti solo con una prova. */
+   * non ha un segreto conosciuto; altrimenti solo con una prova: il segreto
+   * che il quadro conosce, **o** la chiave con cui e' legata adesso.
+   *
+   * Tutte e due, e non solo il segreto: una casa che ha perso il suo file —
+   * un ripristino, un add-on reinstallato — si e' fatta un segreto nuovo, e
+   * senza la seconda strada non si riabbinerebbe piu'. La chiave di prima
+   * prova lo stesso che e' lei: e' quella che usava fino a ieri.
+   *
+   * Torna `false`, `"col-segreto"`, `"con-la-chiave-di-prima"` o `"libera"`. */
   _eLei(casa, segreto, chiavePrima) {
     const suo = this.segreti[casa];
-    if (suo) return Boolean(segreto) && stessoSegreto(suo, impronta(segreto));
+    if (suo && segreto && stessoSegreto(suo, impronta(segreto))) return "col-segreto";
     const legata = this.chiavi.filter((una) => una.casa === casa);
-    if (!legata.length) return true;
     const prima = String(chiavePrima ?? "");
-    if (prima.length < 8) return false;
-    const segnoDiPrima = impronta(brutto(prima));
-    return legata.some((una) => stessoSegreto(una.impronta, segnoDiPrima));
+    if (legata.length && prima.length >= 8) {
+      const segnoDiPrima = impronta(brutto(prima));
+      if (legata.some((una) => stessoSegreto(una.impronta, segnoDiPrima)))
+        return "con-la-chiave-di-prima";
+    }
+    if (!suo && !legata.length) return "libera";
+    return false;
   }
 
   /** Di chi e' questa casa, secondo l'invito con cui e' entrata. */

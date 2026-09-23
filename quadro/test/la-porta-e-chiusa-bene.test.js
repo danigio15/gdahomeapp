@@ -10,6 +10,8 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { existsSync, mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
+import { randomBytes } from "node:crypto";
+import { request as httpRequest } from "node:http";
 import { join } from "node:path";
 
 import { alzaIlQuadro } from "../src/index.js";
@@ -183,27 +185,80 @@ test("le plance di una casa hanno un tetto, e in memoria ne restano aperte poche
 
 /* ─── Le porte dell'editor che non dicono chi sono ────────────────────── */
 
-test("le porte dell'editor aperte senza dire chi si e' hanno un tetto", async () => {
+/* Una salita a WebSocket fatta a mano, per poterle mettere addosso
+ * l'intestazione che mette Caddy. Torna lo stato della risposta: 101 se si
+ * apre, e la presa resta aperta finche' non la si chiude. */
+function sali(porta, via, testate = {}) {
+  return new Promise((ok) => {
+    const richiesta = httpRequest({
+      host: "127.0.0.1",
+      port: porta,
+      path: via,
+      headers: {
+        connection: "Upgrade",
+        upgrade: "websocket",
+        "sec-websocket-version": "13",
+        "sec-websocket-key": randomBytes(16).toString("base64"),
+        ...testate,
+      },
+    });
+    richiesta.on("upgrade", (risposta, presa) => ok({ stato: 101, presa }));
+    richiesta.on("response", (risposta) => {
+      risposta.resume();
+      ok({ stato: risposta.statusCode });
+    });
+    richiesta.on("error", () => ok({ stato: 0 }));
+    richiesta.end();
+  });
+}
+
+test("le porte dell'editor aperte senza dire chi si e' hanno un tetto, per indirizzo vero", async () => {
   const b = await banco();
-  const fili = [];
+  const prese = [];
   try {
-    const apri = () =>
-      new Promise((ok) => {
-        const ws = new WebSocket(
-          `ws://127.0.0.1:${b.porta}/plancia-da-lontano/${UNA}/primary/websocket`,
-        );
-        fili.push(ws);
-        ws.addEventListener("open", () => ok("aperto"), { once: true });
-        ws.addEventListener("error", () => ok("rifiutato"), { once: true });
-      });
+    const rossi = await b.iscrivi("Rossi");
+    const via = `/plancia-da-lontano/${UNA}/primary/websocket`;
+    /* Una casa che non c'e' non ha editor: la porta non si apre nemmeno. */
+    assert.equal((await sali(b.porta, via)).stato, 404);
+    const codice = await b.unCodice(rossi.chiave);
+    await b.deposita(UNA, codice, { configurazione: false });
+    assert.equal((await sali(b.porta, via)).stato, 404, "e nemmeno una che non lo permette");
+    await b.deposita(UNA, codice, { configurazione: true });
+
+    const apri = async (testate) => {
+      const detto = await sali(b.porta, via, testate);
+      if (detto.presa) prese.push(detto.presa);
+      return detto.stato;
+    };
+    /* Da fuori passa tutto da Caddy: il socket e' sempre 127.0.0.1, e
+     * l'indirizzo vero e' l'ultimo di `x-forwarded-for`. */
+    const da = (chi) => ({ "x-forwarded-for": `10.9.9.9, ${chi}` });
     const esiti = [];
-    for (let i = 0; i < 6; i += 1) esiti.push(await apri());
-    /* Dallo stesso indirizzo se ne tengono quattro, e il resto aspetta fuori. */
-    assert.deepEqual(esiti, ["aperto", "aperto", "aperto", "aperto", "rifiutato", "rifiutato"]);
+    for (let i = 0; i < 6; i += 1) esiti.push(await apri(da("203.0.113.7")));
+    assert.deepEqual(esiti, [101, 101, 101, 101, 503, 503], "dallo stesso se ne tengono quattro");
+    /* Un altro, sempre dietro Caddy, entra lo stesso: il tetto non e' di tutti. */
+    assert.equal(await apri(da("198.51.100.4")), 101);
+    /* E un IPv6 si conta per /64: cambiare le ultime cifre non da' altri posti. */
+    const sei = [];
+    for (let i = 1; i <= 5; i += 1) sei.push(await apri(da(`2001:db8:1:2::${i}`)));
+    assert.deepEqual(sei, [101, 101, 101, 101, 503]);
   } finally {
-    for (const ws of fili) ws.close();
+    for (const presa of prese) presa.destroy();
     await b.chiudi();
   }
+});
+
+test("l'indirizzo vero: x-forwarded-for si crede solo da questa macchina", async () => {
+  const { daChi, perContare } = await import("../src/indirizzo.js");
+  const da = (remoteAddress, xff) => ({
+    socket: { remoteAddress },
+    headers: xff ? { "x-forwarded-for": xff } : {},
+  });
+  assert.equal(daChi(da("127.0.0.1", "1.1.1.1, 203.0.113.7")), "203.0.113.7", "l'ultimo, di Caddy");
+  assert.equal(daChi(da("203.0.113.9", "1.1.1.1")), "203.0.113.9", "da fuori non si crede");
+  assert.equal(daChi(da("127.0.0.1", "non un indirizzo")), "127.0.0.1");
+  assert.equal(perContare("2001:db8:1:2:aaaa::1"), "2001:db8:1:2::/64");
+  assert.equal(perContare("::ffff:198.51.100.4"), "198.51.100.4");
 });
 
 /* ─── Le testate ──────────────────────────────────────────────────────── */
@@ -290,6 +345,11 @@ test("un avviso non va a un indirizzo di dentro, nemmeno passando da un nome", a
     "fe80::1",
     "fd12::1",
     "::ffff:127.0.0.1",
+    /* E ogni IPv4 vestito da IPv6, anche di fuori: mappato, tradotto, NAT64. */
+    "::ffff:8.8.8.8",
+    "::ffff:0:8.8.8.8",
+    "64:ff9b::808:808",
+    "::8.8.8.8",
   ]) {
     assert.equal(eVietato(vietato), true, vietato);
   }
