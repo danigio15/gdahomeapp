@@ -140,9 +140,15 @@ costa **metà dei fotogrammi**: 39 al secondo con, 87 senza. Il raggio non
 c'entra — 12, 8 o 4 px costano uguale: è avere un `backdrop-filter`, non
 quanto è grande.
 
-Qui però la cura si vede, e non la decido io: a sinistra com'è adesso, dietro
-non si legge niente; a destra col velo più coperto e senza sfocatura, dietro si
-intravede. Sono due effetti diversi. Dimmi tu.
+Qui però la cura si vede: a sinistra com'è adesso, dietro non si legge niente;
+a destra col velo più coperto e senza sfocatura, dietro si intravede. Sono due
+effetti diversi.
+
+**Deciso: il velo resta com'è.** Il vetro smerigliato è quello che deve essere,
+e mezza dozzina di fotogrammi mentre un popup è aperto è un prezzo che si paga
+volentieri. La misura resta scritta qui perché è un fatto — non perché sia una
+cosa da fare: chi la ritrova fra sei mesi sappia che è già stata guardata e
+decisa, e non ricominci.
 
 ## Rimisurate: la #49 (CPU) e l'avvio
 
