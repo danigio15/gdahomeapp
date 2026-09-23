@@ -134,10 +134,12 @@ andarla a prendere altrove.
 
 Gli allegati non sono allegati di GitHub — l'API non ha un modo di attaccare un
 file a una issue — quindi si **committano** sotto `allegati/<numero>/`, e
-restano nella storia di git. `GITHUB_REPO_ALLEGATI` esiste per questo: il
-giorno che la repository diventasse pesante, i file si spostano da li' — un
-ramo a parte, un'altra repository — senza toccare una riga di programma.
-Lasciandola vuota vale quella delle issue.
+restano nella storia di git. Per questo vanno sul ramo `allegati`
+(`GITHUB_RAMO_ALLEGATI`), che il centralino crea da solo al primo allegato: il
+ramo principale e' quello che Home Assistant scarica, e le foto li' non ci
+devono finire. Meglio ancora una repository a parte solo per gli allegati, da
+scrivere in `GITHUB_REPO_ALLEGATI`: e' un passo da fare a mano, e toglie al
+gettone ogni permesso di scrivere file nella repository del progetto.
 
 Un token a grana fine con **Issues: Read and write** e **Contents: Read and
 write**. Il bottone **Il centralino** prova tutte e due le cose prima di

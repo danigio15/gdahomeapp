@@ -63,11 +63,18 @@ Future<ServitoreDiQuestoSistema?> alzaIlServitore({
   required String lingua,
 }) async {
   final supporto = await getApplicationSupportDirectory();
-  final servitore = Servitore(
-    filo: filo,
-    cartella: Directory('${supporto.path}/plancia'),
-    lingua: lingua,
-  );
+  final cartella = Directory('${supporto.path}/plancia');
+  /* Il deposito di prima era uno solo per tutte le case, e stava qui in
+   * cima: adesso ogni casa ha il suo, sotto `case/` (vedi [Servitore]).
+   * Quello vecchio non lo legge piu' nessuno, e si toglie. */
+  for (final vecchia in const ['dashboardmodern_static', 'local']) {
+    try {
+      await Directory('${cartella.path}/$vecchia').delete(recursive: true);
+    } catch (_) {
+      /* Non c'era, o non si lascia togliere: non la legge comunque nessuno. */
+    }
+  }
+  final servitore = Servitore(filo: filo, cartella: cartella, lingua: lingua);
   /* La porta e' quella di casa: cosi' la plancia si ritrova la sua
    * configurazione anche quando riapre l'app senza rete. Vedi [portaDiCasa]. */
   await servitore.alza(porta: portaDiCasa);

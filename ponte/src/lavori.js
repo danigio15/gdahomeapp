@@ -62,7 +62,13 @@
  * diversa oggi.
  */
 
-import { conIFlussiDiCasa, haFlussi, PLANCIA_MASSIMA, quantoPesa } from "./plancia-da-lontano.js";
+import {
+  conIFlussiDiCasa,
+  haFlussi,
+  nonSiScriveDaLontano,
+  PLANCIA_MASSIMA,
+  quantoPesa,
+} from "./plancia-da-lontano.js";
 
 /* Dopo quanto un lavoro che non finisce si smette di chiamare «in corso».
  *
@@ -326,6 +332,17 @@ export class Lavori {
     }
     if (quantoPesa(valori) > PLANCIA_MASSIMA) {
       this._segna(comando, "non riuscito", "quella configurazione e' troppo grande");
+      return;
+    }
+    /* La seconda difesa, prima di scrivere: solo le voci della plancia, di
+     * grandezze da configurazione, e nessun testo che somigli a un pezzo di
+     * pagina. Il perche' del no va nel rapporto, come per i flussi. */
+    const nonVa = nonSiScriveDaLontano(valori);
+    if (nonVa) {
+      this._segna(comando, "non riuscito", nonVa);
+      this.registro.attenzione(
+        `la configurazione della plancia «${profilo}» arrivata dal quadro e' rifiutata: ${nonVa}`,
+      );
       return;
     }
     /* La regola che tiene in piedi il permesso: da lontano si sceglie quale

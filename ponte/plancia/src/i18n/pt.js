@@ -2550,6 +2550,7 @@ export default Object.freeze({
   "Tap to open Energy": "Toque para abrir Energia",
   "Tap to put it back on the chart": "Toque para a repor no gráfico",
   "Tap to rename": "Toca para renomear",
+  "Tap to rename the label": "Toca para renomear a etiqueta",
   "Tap to turn on · cooling 26°C · auto fan": "Toca para ligar · frio 26 °C · ventilador automático",
   "Tapping a room": "Ao tocar num compartimento",
   "Target": "Objetivo",

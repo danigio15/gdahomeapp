@@ -145,6 +145,7 @@ export class CaseSeguite {
   deposita(casa, carta, di = null) {
     const ora = this.adesso();
     let una = this.quella(casa);
+    const nuova = !una;
     if (!una) {
       una = {
         casa,
@@ -190,8 +191,48 @@ export class CaseSeguite {
     if ("collaudataIl" in una) delete una.collaudataIl;
 
     this._potaIGiorni(una, ora);
-    this.archivio.salva();
+    /* Fra poco e non adesso: vedi `_salvaFraPoco`. Una casa nuova pero' si
+     * scrive subito, perche' e' la cosa che chi installa sta aspettando. */
+    if (nuova) this.salva();
+    else this._salvaFraPoco();
     return una;
+  }
+
+  /* Scrive fra poco invece che adesso: le scritture che arrivano nel
+   * frattempo si sommano in una sola.
+   *
+   * Un rapporto cambia questo archivio ogni minuto per ogni casa, e
+   * riscriverlo tutto, sincrono, a ogni rapporto voleva dire che quaranta case
+   * facevano quaranta riscritture al minuto dello stesso file — e che chi
+   * mandava rapporti a raffica teneva il disco occupato. Se il processo cade
+   * in mezzo si perde al massimo il conto di qualche rapporto, non l'archivio,
+   * che resta quello scritto per ultimo. Ogni altra modifica — un nome, un
+   * lavoro chiesto — si scrive subito, e si porta dietro anche questa. */
+  _salvaFraPoco(quanto = 5000) {
+    if (this._fraPoco) return;
+    this._fraPoco = setTimeout(() => {
+      this._fraPoco = null;
+      try {
+        this.archivio.salva();
+      } catch (_errore) {
+        /* Al giro dopo si riprova: quello in memoria e' quello buono. */
+      }
+    }, quanto);
+    this._fraPoco.unref?.();
+  }
+
+  /** Scrive adesso, e toglie di mezzo quello che doveva scrivere fra poco. */
+  salva() {
+    if (this._fraPoco) {
+      clearTimeout(this._fraPoco);
+      this._fraPoco = null;
+    }
+    this.archivio.salva();
+  }
+
+  /** Se c'e' una scrittura in sospeso, la fa adesso: serve spegnendo. */
+  salvaSeServe() {
+    if (this._fraPoco) this.salva();
   }
 
   /**
@@ -275,7 +316,7 @@ export class CaseSeguite {
     } else {
       una.vesti[quale] = inAttesa ? { ...pulite, nuova: true } : pulite;
     }
-    this.archivio.salva();
+    this.salva();
     return { vesti: this.leVesti(una) };
   }
 
@@ -306,7 +347,7 @@ export class CaseSeguite {
     if (inCasa.length + inAttesa >= PLANCE_AL_MASSIMO) return { errore: "troppe" };
     const profilo = nomeDelCassetto(nome, new Set([...inCasa, ...Object.keys(una.vesti)]));
     una.vesti[profilo] = { titolo: nome, velo: unaVeste(velo), nuova: true };
-    this.archivio.salva();
+    this.salva();
     return { profilo, vesti: this.leVesti(una) };
   }
 
@@ -346,7 +387,7 @@ export class CaseSeguite {
     una.nome = String(nome ?? "")
       .trim()
       .slice(0, 80);
-    this.archivio.salva();
+    this.salva();
     return true;
   }
 
@@ -355,7 +396,7 @@ export class CaseSeguite {
     this.archivio.dati.case = this.lista.filter(
       (una) => !(una.casa === casa && (di === TUTTE || una.di === di)),
     );
-    if (this.lista.length !== prima) this.archivio.salva();
+    if (this.lista.length !== prima) this.salva();
     return this.lista.length !== prima;
   }
 
@@ -443,7 +484,7 @@ export class CaseSeguite {
       chiesto: ora,
       mandato: null,
     };
-    this.archivio.salva();
+    this.salva();
     /* E se quella casa e' li' che aspetta, lo sa adesso. Dopo il salvataggio:
      * chi si sveglia va a rileggere, e deve trovare quello che c'e' scritto. */
     try {
@@ -481,11 +522,11 @@ export class CaseSeguite {
     const ora = this.adesso();
     if (ora - una.lavoro.chiesto > UN_LAVORO_ASPETTA) {
       una.lavoro = null;
-      this.archivio.salva();
+      this.salva();
       return null;
     }
     una.lavoro.mandato = ora;
-    this.archivio.salva();
+    this.salva();
     const { id, cosa, nome, da, a } = una.lavoro;
     return { id, cosa, nome, da, a };
   }
@@ -495,7 +536,7 @@ export class CaseSeguite {
     const una = this.quella(casa);
     if (!una || (di !== TUTTE && una.di !== di) || !una.lavoro) return false;
     una.lavoro = null;
-    this.archivio.salva();
+    this.salva();
     return true;
   }
 
@@ -504,7 +545,7 @@ export class CaseSeguite {
     const una = this.quella(casa);
     if (!una) return false;
     una.avvisataIl = quando;
-    this.archivio.salva();
+    this.salva();
     return true;
   }
 
@@ -524,7 +565,7 @@ export class CaseSeguite {
     const prima = this.lista.length;
     this.archivio.dati.case = this.lista.filter((una) => una.di !== di);
     const andate = prima - this.lista.length;
-    if (andate) this.archivio.salva();
+    if (andate) this.salva();
     return andate;
   }
 

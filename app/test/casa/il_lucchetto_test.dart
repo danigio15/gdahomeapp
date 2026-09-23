@@ -244,4 +244,29 @@ void main() {
       isFalse,
     );
   });
+
+  test('allentare un lucchetto acceso si riconosce, stringerlo no', () {
+    const acceso = IlLucchetto(
+      allAvvio: true,
+      alRitorno: true,
+      prima: {PrimaDi.ilCruscotto},
+    );
+    expect(siAllenta(acceso, IlLucchetto.spento), isTrue);
+    expect(siAllenta(acceso, acceso.con(allAvvio: false)), isTrue);
+    expect(siAllenta(acceso, acceso.con(alRitorno: false)), isTrue);
+    expect(
+      siAllenta(acceso, acceso.davanti(PrimaDi.ilCruscotto, false)),
+      isTrue,
+    );
+    expect(
+      siAllenta(acceso, acceso.con(conIlVolto: false, conLImpronta: false)),
+      isTrue,
+      reason: 'senza nessun modo di chiedere il lucchetto e\' spento',
+    );
+    /* Stringere non chiede: e' la stessa persona che l'ha acceso. */
+    expect(siAllenta(acceso, acceso.davanti(PrimaDi.iComandi, true)), isFalse);
+    expect(siAllenta(acceso, acceso), isFalse);
+    /* E un lucchetto spento non ha niente da allentare. */
+    expect(siAllenta(IlLucchetto.spento, IlLucchetto.spento), isFalse);
+  });
 }

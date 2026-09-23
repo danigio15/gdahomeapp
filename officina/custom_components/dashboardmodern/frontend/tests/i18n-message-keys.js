@@ -3104,6 +3104,7 @@ export const MESSAGE_KEYS = Object.freeze([
   "Tap to open Energy",
   "Tap to put it back on the chart",
   "Tap to rename",
+  "Tap to rename the label",
   "tap to say you have collected it",
   "Tap to turn on · cooling 26°C · auto fan",
   "Tapping a room",

@@ -2550,6 +2550,7 @@ export default Object.freeze({
   "Tap to open Energy": "Zum Öffnen von Energie tippen",
   "Tap to put it back on the chart": "Tippen, um sie ins Diagramm zurückzuholen",
   "Tap to rename": "Zum Umbenennen tippen",
+  "Tap to rename the label": "Zum Umbenennen der Beschriftung tippen",
   "Tap to turn on · cooling 26°C · auto fan": "Zum Einschalten tippen · Kühlen 26 °C · Lüfter auto",
   "Tapping a room": "Beim Antippen eines Raums",
   "Target": "Sollwert",

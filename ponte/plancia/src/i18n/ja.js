@@ -2550,6 +2550,7 @@ export default Object.freeze({
   "Tap to open Energy": "タップしてエネルギーを開く",
   "Tap to put it back on the chart": "タップしてグラフに戻します",
   "Tap to rename": "タップで名前を変更",
+  "Tap to rename the label": "タップでラベル名を変更",
   "Tap to turn on · cooling 26°C · auto fan": "タップでオン · 冷房 26°C · 風量自動",
   "Tapping a room": "部屋に触れると",
   "Target": "設定値",

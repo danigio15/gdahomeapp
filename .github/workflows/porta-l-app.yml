@@ -24,18 +24,21 @@ on:
         required: false
         default: ""
 
-# Qui si scrive nella repository: e' l'unico modo perche' l'app costruita
-# arrivi dentro l'add-on senza passare da un computer.
+# Di serie si legge e basta; il lavoro qui sotto scrive nella repository, ed
+# e' l'unico modo perche' l'app costruita arrivi dentro l'add-on senza passare
+# da un computer.
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   porta:
     name: Costruisci e porta dentro
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
-      - uses: actions/checkout@v6
-      - uses: subosito/flutter-action@v2
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
         with:
           channel: stable
           cache: true
@@ -71,6 +74,8 @@ jobs:
         working-directory: ponte
 
       - name: Salvala nella repository
+        env:
+          CORSA: ${{ github.run_number }}
         run: |
           if git diff --quiet -- ponte/app; then
             echo "### Niente da cambiare" >> "$GITHUB_STEP_SUMMARY"
@@ -81,7 +86,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add ponte/app
-          git commit -m "gdahome dentro l'add-on, dalla corsa ${{ github.run_number }}"
+          git commit -m "gdahome dentro l'add-on, dalla corsa $CORSA"
           # Non un `git push` secco: mentre si costruiva il ramo puo' essersi
           # mosso, e un rifiuto qui butterebbe via la costruzione.
           strumenti/spingi.sh

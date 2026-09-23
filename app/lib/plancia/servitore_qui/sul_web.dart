@@ -32,6 +32,7 @@ import 'package:web/web.dart' as web;
 
 import '../../ponte/errori.dart';
 import '../../ponte/filo.dart';
+import '../chi_parla.dart';
 import '../cucitura.dart';
 import '../pannello.dart';
 import '../precarichi.dart';
@@ -81,62 +82,6 @@ Future<Uint8List> apriIlGzip(Uint8List byte) async {
   final letto = await aperta.arrayBuffer().toDart;
   return letto.toDart.asUint8List();
 }
-
-/// Il WebSocket finto, che la plancia usa credendo sia quello vero.
-///
-/// La plancia ospitata apre il filo e aspetta `auth_ok`; qui `send` e
-/// `onmessage` passano dalla pagina che ospita. Si dichiarano anche
-/// `addEventListener` e le costanti, perche' la plancia usa tutti e due i
-/// modi — le proprieta' `on*` in un punto, gli ascoltatori in un altro — e
-/// mancarne uno vuol dire una plancia che parte e non riceve mai niente.
-const String _ilWebSocketFinto =
-    '(function(){'
-    'function Finto(_indirizzo,_protocolli){'
-    'var io=this;'
-    'this.readyState=0;this.url="gdahome://plancia";'
-    'this.onopen=null;this.onmessage=null;this.onclose=null;this.onerror=null;'
-    'this._ascolti={};'
-    'Finto._aperti.push(this);'
-    'this._chiama=function(che,evento){'
-    'var suo=io["on"+che];if(suo)try{suo.call(io,evento);}catch(e){}'
-    'var altri=io._ascolti[che]||[];'
-    'for(var i=0;i<altri.length;i++)try{altri[i].call(io,evento);}catch(e){}'
-    '};'
-    'setTimeout(function(){'
-    'if(io.readyState!==0)return;'
-    'io.readyState=1;io._chiama("open",{type:"open"});'
-    'parent.postMessage({che:"gdahome/ws-apri"},"*");'
-    '},0);'
-    '}'
-    'Finto._aperti=[];'
-    'Finto.prototype.addEventListener=function(che,quale){'
-    '(this._ascolti[che]=this._ascolti[che]||[]).push(quale);};'
-    'Finto.prototype.removeEventListener=function(che,quale){'
-    'var altri=this._ascolti[che]||[];var dove=altri.indexOf(quale);'
-    'if(dove>=0)altri.splice(dove,1);};'
-    'Finto.prototype.send=function(testo){'
-    'if(this.readyState!==1)return;'
-    'parent.postMessage({che:"gdahome/ws-su",testo:String(testo)},"*");};'
-    'Finto.prototype.close=function(){'
-    'if(this.readyState>=2)return;'
-    'this.readyState=3;'
-    'this._chiama("close",{type:"close",code:1000,wasClean:true});};'
-    'Finto.CONNECTING=0;Finto.OPEN=1;Finto.CLOSING=2;Finto.CLOSED=3;'
-    'Finto.prototype.CONNECTING=0;Finto.prototype.OPEN=1;'
-    'Finto.prototype.CLOSING=2;Finto.prototype.CLOSED=3;'
-    'window.addEventListener("message",function(evento){'
-    'var detto=evento.data;if(!detto)return;'
-    'if(detto.che==="gdahome/ws-giu"){'
-    'for(var i=0;i<Finto._aperti.length;i++){'
-    'var uno=Finto._aperti[i];if(uno.readyState!==1)continue;'
-    'uno._chiama("message",{type:"message",data:detto.testo});}}'
-    'else if(detto.che==="gdahome/ws-chiudi"){'
-    'for(var j=0;j<Finto._aperti.length;j++){'
-    'var due=Finto._aperti[j];if(due.readyState>=2)continue;'
-    'due.readyState=3;'
-    'due._chiama("close",{type:"close",code:1006,wasClean:false});}}'
-    '});'
-    'return Finto;})()';
 
 /// Quello che alla schermata serve sapere di un servitore, senza `dart:io`.
 abstract interface class ServitoreDiQuestoSistema {
@@ -225,12 +170,16 @@ class _ServitoreSulWeb implements ServitoreDiQuestoSistema {
     } catch (_) {
       return false;
     }
+    /* Due strade, e ognuna porta solo le sue cose: dal service worker le
+     * domande dei file, dalla finestra il WebSocket del riquadro. Chi sia
+     * davvero a parlare si guarda messaggio per messaggio (`chi_parla.dart`).
+     */
     _dalLavoratore = web.EventStreamProviders.messageEvent
         .forTarget(lavoratori)
-        .listen(_arrivato);
+        .listen((evento) => _arrivato(evento, _daUnLavoratore(evento)));
     _dalRiquadro = web.EventStreamProviders.messageEvent
         .forTarget(web.window)
-        .listen(_arrivato);
+        .listen((evento) => _arrivato(evento, _daUnRiquadro(evento)));
     return true;
   }
 
@@ -286,9 +235,45 @@ class _ServitoreSulWeb implements ServitoreDiQuestoSistema {
 
   /* ─── Quello che arriva ─────────────────────────────────────────────────*/
 
-  void _arrivato(web.MessageEvent evento) {
+  /// Il nostro service worker: un lavoratore, e quello della plancia.
+  DaChi _daUnLavoratore(web.MessageEvent evento) {
+    final fonte = evento.source;
+    if (fonte == null || !fonte.isA<web.ServiceWorker>()) return DaChi.altro;
+    final lui = fonte as web.ServiceWorker;
+    return lui.scriptURL.split('?').first.endsWith('/plancia-sw.js')
+        ? DaChi.lavoratore
+        : DaChi.altro;
+  }
+
+  /// Un riquadro di questa pagina: la finestra che ha scritto e' proprio
+  /// quella che sta dentro uno dei nostri `iframe`. Un'altra scheda, o la
+  /// pagina che ha aperto questa, non lo e'.
+  DaChi _daUnRiquadro(web.MessageEvent evento) {
+    final fonte = evento.source;
+    if (fonte == null) return DaChi.altro;
+    final riquadri = web.document.querySelectorAll('iframe');
+    for (var quale = 0; quale < riquadri.length; quale += 1) {
+      final uno = riquadri.item(quale);
+      if (uno == null || !uno.isA<web.HTMLIFrameElement>()) continue;
+      final dentro = (uno as web.HTMLIFrameElement).contentWindow;
+      if (dentro != null && dentro.strictEquals(fonte).toDart) {
+        return DaChi.riquadro;
+      }
+    }
+    return DaChi.altro;
+  }
+
+  void _arrivato(web.MessageEvent evento, DaChi chi) {
     final detto = evento.data.dartify();
     if (detto is! Map) return;
+    if (!siAscolta(
+      che: detto['che'],
+      chi: chi,
+      origine: evento.origin,
+      mia: web.window.location.origin,
+    )) {
+      return;
+    }
     switch (detto['che']) {
       /* Dal service worker: un file da servire. */
       case 'gdahome/chiedi':
@@ -369,7 +354,7 @@ extension on _ServitoreSulWeb {
       if (tipo.startsWith('text/html')) {
         final letta = utf8.decode(corpo, allowMalformed: true);
         corpo = utf8.encode(
-          premesse.conLePremesse(letta, ilWebSocket: _ilWebSocketFinto),
+          premesse.conLePremesse(letta, ilWebSocket: ilWebSocketDelRiquadro),
         );
         tipo = 'text/html; charset=utf-8';
         /* E adesso i moduli, prima che il browser li chieda. Vedi
@@ -601,18 +586,28 @@ class _VersoIlRiquadro implements VersoLaPagina {
   Future<void> chiudi() async => _aTutti({'che': 'gdahome/ws-chiudi'});
 
   /* A tutti i riquadri della pagina: ce n'e' uno solo — la plancia — e
-   * cercarlo per nome vorrebbe dire legarsi a come il riquadro e' fatto. */
+   * cercarlo per nome vorrebbe dire legarsi a come il riquadro e' fatto.
+   *
+   * Ma solo **sulla nostra origine**: il messaggio lo riceve un riquadro che
+   * mostra una pagina servita da qui, e nessun altro — non il cruscotto del
+   * quadro, non una pagina che nel frattempo il riquadro ha aperto altrove.
+   * Dentro ci sono le risposte della casa. */
   void _aTutti(Map<String, Object?> cosa) {
+    final mia = web.window.location.origin;
     final riquadri = web.document.querySelectorAll('iframe');
     for (var quale = 0; quale < riquadri.length; quale += 1) {
       final uno = riquadri.item(quale);
       /* `is` non basta: fra due tipi che vivono in JavaScript risponde sempre
        * di si' senza guardare cosa c'e' davvero sotto. */
       if (uno == null || !uno.isA<web.HTMLIFrameElement>()) continue;
-      (uno as web.HTMLIFrameElement).contentWindow?.postMessage(
-        cosa.jsify(),
-        '*'.toJS,
-      );
+      try {
+        (uno as web.HTMLIFrameElement).contentWindow?.postMessage(
+          cosa.jsify(),
+          mia.toJS,
+        );
+      } catch (_) {
+        /* Un riquadro che non si lascia parlare non e' il nostro. */
+      }
     }
   }
 }

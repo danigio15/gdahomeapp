@@ -125,22 +125,25 @@ test("the page keeps every hook the legacy climate runtime writes into", () => {
   ])
     assert.ok(source.includes(hook), hook);
   // Zone switching, the service calls and the HVAC/fan popup stay legacy.
-  assert.match(source, /setClimaPageMode\('\$\{zone\}'\)/);
-  assert.match(source, /setTemp\('\$\{entity\}', 'down'\)/);
-  assert.match(source, /setTemp\('\$\{entity\}', 'up'\)/);
+  // The entity goes in as a JSON string escaped for the attribute (jsArg): an
+  // apostrophe turned into &#39; would be decoded before the handler runs.
+  assert.match(source, /const entity = jsArg\(unit\.entity\)/);
+  assert.match(source, /setClimaPageMode\(\$\{jsArg\(zone\)\}\)/);
+  assert.match(source, /setTemp\(\$\{entity\}, 'down'\)/);
+  assert.match(source, /setTemp\(\$\{entity\}, 'up'\)/);
   // The card also says which tab it lives in, so a heat pump switched on from
   // the Caldo tab starts heating instead of resuming its last mode.
-  assert.match(source, /toggleClima\('\$\{entity\}', '\$\{unit\.zone\}'\)/);
+  assert.match(source, /toggleClima\(\$\{entity\}, \$\{zona\}\)/);
   // The card itself keeps an onclick carrying the entity, which is what
   // cdAutoHide() reads to hide units the user never mapped.
-  assert.match(source, /onclick="apriClimaPopup\('\$\{entity\}', event\)"/);
+  assert.match(source, /onclick="apriClimaPopup\(\$\{entity\}, event\)"/);
 });
 
 test("HVAC and fan modes are one click away from the card", () => {
   // The request that drove this redesign: a visible control that opens the
   // HVAC/fan panel instead of hiding it behind a tap on the card body.
   assert.match(source, /class="dm-cl-modes"/);
-  assert.match(source, /event\.stopPropagation\(\); apriClimaPopup\('\$\{entity\}'\)/);
+  assert.match(source, /event\.stopPropagation\(\); apriClimaPopup\(\$\{entity\}\)/);
   // The button reads the active mode, so it says "Freddo · Auto" and not just "Modalità".
   assert.match(source, /data-dm-cl-mode-cap/);
   assert.match(source, /function modeCaption/);

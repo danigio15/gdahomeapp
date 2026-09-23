@@ -12,9 +12,11 @@
  * ─── Chi entra ──────────────────────────────────────────────────────────
  *
  * Il primo messaggio dev'essere quello con cui la pagina si presenta a Home
- * Assistant, `{type: "auth", access_token}`, e il segno e' il codice del
- * cruscotto: glielo mette il WebSocket che le premesse le hanno dato
- * (`plancia-servita.js`). Da li' si sa chi e' — un installatore — e si
+ * Assistant, `{type: "auth", access_token}`, e il segno e' il **gettone**
+ * dell'editor (`biglietti.js`), che il cruscotto chiede per questa casa e
+ * questa plancia e passa alla pagina: glielo mette il WebSocket che le
+ * premesse le hanno dato (`plancia-servita.js`). La chiave del cruscotto qui
+ * non entra. Da li' si sa chi e' — un installatore — e si
  * guarda se questa casa e' sua e se lascia configurare la plancia da lontano:
  * le stesse due domande delle vie HTTP del cruscotto. Chi non passa si sente
  * dire `auth_invalid`, che la pagina sa leggere, e il filo si chiude.
@@ -70,7 +72,8 @@ export class CucituraCieca {
     profilo,
     scatti,
     case: case_,
-    /* Chi ha questa chiave: `installatori.riconosci`. */
+    /* Di chi e' questo gettone, per questa casa e questa plancia: vedi
+     * `GettoniDellEditor` in `biglietti.js`. */
     riconosci,
     congelato = () => false,
     registro = { info() {}, attenzione() {}, errore() {} },
@@ -99,7 +102,7 @@ export class CucituraCieca {
     presa.onMessaggio = (testo) => this._dallaPagina(testo);
     presa.onChiusa = () => this._laPaginaSeNEAndata();
     this._orologio = setTimeout(() => {
-      if (!this.chi) this._fuori("il codice del cruscotto non e' arrivato");
+      if (!this.chi) this._fuori("il gettone dell'editor non e' arrivato");
     }, aspettaLaChiave);
     this._orologio.unref?.();
   }

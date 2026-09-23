@@ -36,6 +36,18 @@ import { accetta } from "../src/presa.js";
 import { alzaIlPonte } from "../src/index.js";
 
 const SEGNO_DEL_SUPERVISOR = "segno-del-supervisor";
+
+/* Chi amministra questa casa finta (Giovanni, qui sotto). La pagina di
+ * gdahome e le sue vie `/api/` sono sue: le prove che le usano bussano come
+ * lui, se non dicono altro. */
+const CHI_AMMINISTRA = "a1b2c3d4e5f60718293a4b5c6d7e8f90";
+const fetch = (dove, opzioni = {}) =>
+  /\/api\//.test(new URL(dove).pathname) && !opzioni.headers?.["x-remote-user-id"]
+    ? globalThis.fetch(dove, {
+        ...opzioni,
+        headers: { "x-remote-user-id": CHI_AMMINISTRA, ...(opzioni.headers || {}) },
+      })
+    : globalThis.fetch(dove, opzioni);
 const PREFISSO = "/api/hassio_ingress/un-gettone-qualunque";
 
 /* Una Home Assistant finta che risponde a tutto: `auth`, e poi qualunque
@@ -141,6 +153,8 @@ async function banco() {
     giorniDiSilenzio: 90,
     registro: "errore",
     console: fileURLToPath(new URL("../console", import.meta.url)),
+    /* Le prove bussano da qui, non dal proxy dell'ingress. */
+    proxyDellIngress: ["127.0.0.1"],
   });
   const consolle = `http://127.0.0.1:${avviato.console.address().port}`;
   return {

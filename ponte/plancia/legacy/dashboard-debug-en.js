@@ -41,7 +41,7 @@ function updateDebug() {
         } else {
             const ago = Math.round((Date.now() - new Date(s.last_updated).getTime()) / 60000);
             const col = ago > 60 ? '#f59e0b' : '#34d399';
-            html += `<div style="color:${col}">✅ ${label}: <strong>${s.state}</strong> <span style="color:#94a3b8;font-size:10px;">(${ago}min fa · ${eid})</span></div>`;
+            html += `<div style="color:${col}">✅ ${label}: <strong>${String(s.state).replace(/[&<>"']/g, (c) => '&#' + c.charCodeAt(0) + ';')}</strong> <span style="color:#94a3b8;font-size:10px;">(${ago}min fa · ${eid})</span></div>`;
         }
     });
     panel.innerHTML = html;

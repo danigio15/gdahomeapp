@@ -325,6 +325,36 @@ test("il telefono che si abbina arriva alla casa giusta, e il codice qui non pas
   }
 });
 
+test("la casa sa da quale porta e' entrato il telefono", async () => {
+  const b = await banco();
+  try {
+    const casa = unaCasa(b.dove);
+    await casa.entra();
+
+    const gia = unTelefono(b.dove, `/telefono/${casa.id}`);
+    await gia.aperta;
+    await attendi(() => casa.canali().length === 1);
+
+    casa.manda({ t: "apri-abbinamento", impronta: impronta("ABCD2345") });
+    await attendi(() => b.centralino.abbinamenti.size === 1);
+    const nuovo = unTelefono(b.dove, `/abbinamento/${impronta("ABCD2345")}`);
+    await nuovo.aperta;
+    await attendi(() => casa.canali().length === 2);
+
+    const aperti = casa.detti.filter((uno) => uno.t === "apri");
+    assert.deepEqual(
+      aperti.map((uno) => uno.via),
+      ["telefono", "abbinamento"],
+    );
+
+    gia.chiudi();
+    nuovo.chiudi();
+    casa.chiudi();
+  } finally {
+    await b.spegni();
+  }
+});
+
 test("un'impronta che nessuno ha registrato non porta da nessuna parte", async () => {
   const b = await banco();
   try {

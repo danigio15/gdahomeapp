@@ -36,6 +36,24 @@ const String ilMenuDalTelefono = 'gdahome:menu';
 /// messaggio fatto a oggetto: `{gdahome: "menu"}`.
 const String ilMenuDalRiquadro = 'menu';
 
+/// Un valore scritto come JavaScript, **dentro uno `<script>`**.
+///
+/// `jsonEncode` da solo non basta: fa una stringa giusta per JavaScript, ma
+/// il browser lo `<script>` lo chiude al primo `</script>` che trova, anche
+/// in mezzo a una stringa — e da li' in poi quello che segue e' pagina. I
+/// nomi che finiscono qui arrivano dal ponte, e il ponte non e' questo file.
+/// Allora `<`, `>` e `&` si scrivono con il loro numero (`\u003c`…), che per
+/// JavaScript e' la stessa lettera e per l'HTML non e' niente; e cosi' anche i
+/// due a capo di Unicode, che dentro una stringa di JavaScript vecchio non
+/// possono stare.
+String perLoScript(Object? valore) =>
+    jsonEncode(valore)
+        .replaceAll('<', r'\u003c')
+        .replaceAll('>', r'\u003e')
+        .replaceAll('&', r'\u0026')
+        .replaceAll('\u2028', r'\u2028')
+        .replaceAll('\u2029', r'\u2029');
+
 /// Le premesse di una pagina della plancia.
 class Premesse {
   Premesse({
@@ -797,8 +815,8 @@ class Premesse {
     String pulito(String cosa) => cosa.replaceAll(RegExp('[<>]'), '');
     final velo = pulito(quale.velo);
     final testata = pulito(quale.testata);
-    return '${velo.isEmpty ? '' : 'window.__GDAHOME_VELO__=${jsonEncode(velo)};'}'
-        '${testata.isEmpty ? '' : 'window.__GDAHOME_TESTATA__=${jsonEncode(inDuePezzi(testata))};'}';
+    return '${velo.isEmpty ? '' : 'window.__GDAHOME_VELO__=${perLoScript(velo)};'}'
+        '${testata.isEmpty ? '' : 'window.__GDAHOME_TESTATA__=${perLoScript(inDuePezzi(testata))};'}';
   }
 
   /// La scritta della testata in due pezzi, come la disegna la plancia: il
@@ -842,8 +860,8 @@ class Premesse {
     if (quale == null) return '';
     final nuovo = istanzaDi(quale);
     if (nuovo == quale.istanza) return '';
-    final da = jsonEncode('cd_${quale.istanza}_');
-    final a = jsonEncode('cd_${nuovo}_');
+    final da = perLoScript('cd_${quale.istanza}_');
+    final a = perLoScript('cd_${nuovo}_');
     return '(function(){try{'
         'var da=$da,a=$a,k,i,via=[];'
         'for(i=0;i<localStorage.length;i+=1){k=localStorage.key(i);'
@@ -869,10 +887,10 @@ class Premesse {
         '<script>'
         'window.__DASHBOARDMODERN_HOSTED__=true;'
         'window.__DASHBOARDMODERN_BRIDGE_WS__=$ilWebSocket;'
-        'window.__DASHBOARDMODERN_INSTANCE__=${jsonEncode(istanzaDi(quale))};'
-        'window.__DASHBOARDMODERN_PROFILE__=${jsonEncode(quale?.profilo ?? 'primary')};'
+        'window.__DASHBOARDMODERN_INSTANCE__=${perLoScript(istanzaDi(quale))};'
+        'window.__DASHBOARDMODERN_PROFILE__=${perLoScript(quale?.profilo ?? 'primary')};'
         'window.__DASHBOARDMODERN_PRIMARY__=${quale?.primario ?? true};'
-        'window.__DASHBOARDMODERN_LOCALE__=${jsonEncode(lingua)};'
+        'window.__DASHBOARDMODERN_LOCALE__=${perLoScript(lingua)};'
         'window.__GDAHOME__=true;'
         /* Le vesti di questa plancia, se chi ha montato l'impianto le ha
            scelte: la parola del velo e la scritta della testata, in due

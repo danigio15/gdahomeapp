@@ -38,6 +38,42 @@ Premesse _premesse({
 );
 
 void main() {
+  test('un nome che arriva dal ponte non chiude lo script delle premesse', () {
+    /* Il profilo, l'istanza e la lingua arrivano da fuori. Scritti con
+     * `jsonEncode` e basta, un `</script>` dentro il nome chiudeva lo script
+     * a meta', e il resto del nome diventava pagina. */
+    const cattivo = '</script><script>window.preso=1</script>';
+    final servita = Premesse(
+      pannello: PannelloDellaPlancia(
+        percorso: 'dashboardmodern',
+        titolo: 'DashboardModern',
+        base: '/dashboardmodern_static/abc123',
+        istanza: 'e1$cattivo',
+        profilo: cattivo,
+        primario: false,
+        varianti: const ['dashboard.html'],
+      ),
+    ).conLePremesse(_pagina, ilWebSocket: 'WebSocket');
+    final testa = servita.substring(0, servita.indexOf('<title>'));
+    /* Uno `<script>` solo in testa, e chiuso una volta sola: quello nostro. */
+    expect('<script'.allMatches(testa), hasLength(1));
+    expect('</script'.allMatches(testa), hasLength(1));
+    expect(testa, isNot(contains('<script>window.preso')));
+    expect(
+      testa,
+      contains(r'window.__DASHBOARDMODERN_PROFILE__="\u003c/script\u003e'),
+    );
+  });
+
+  test(
+    'perLoScript: per JavaScript e\' la stessa stringa, per l\'HTML niente',
+    () {
+      expect(perLoScript('a</b>&c'), r'"a\u003c/b\u003e\u0026c"');
+      expect(perLoScript('uno\u2028due\u2029'), r'"uno\u2028due\u2029"');
+      expect(perLoScript(['<']), r'["\u003c"]');
+    },
+  );
+
   test('in testa ci va quello che la plancia deve sapere', () {
     final servita = _premesse().conLePremesse(
       _pagina,

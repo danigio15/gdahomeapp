@@ -44,8 +44,16 @@ const ATTESA = 30000;
 self.addEventListener("install", () => self.skipWaiting());
 self.addEventListener("activate", (evento) => evento.waitUntil(self.clients.claim()));
 
-/* Le risposte dell'app arrivano qui. */
+/* Le risposte dell'app arrivano qui.
+ *
+ * Solo dall'app: una finestra della nostra origine che non sia la plancia.
+ * La plancia sta sulla stessa origine, ma le risposte non le da' lei — e un
+ * file che rispondesse a nome dell'app finirebbe in un'altra pagina. */
 self.addEventListener("message", (evento) => {
+  const mittente = evento.source;
+  if (!mittente || mittente.type !== "window" || !mittente.url) return;
+  if (new URL(mittente.url).origin !== self.location.origin) return;
+  if (mittente.url.includes("/dashboardmodern_static/")) return;
   const detto = evento.data;
   if (!detto || detto.che !== "gdahome/file") return;
   const chi = inAttesa.get(detto.numero);

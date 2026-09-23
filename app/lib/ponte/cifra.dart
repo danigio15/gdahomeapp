@@ -32,6 +32,14 @@ export 'compressione/compressione.dart' show gzipDisponibile;
 /// Il numero di versione viaggia in chiaro nella prima riga.
 const int versioneDelProtocollo = 1;
 
+/// La versione della stretta di mano dell'abbinamento (`abbina: 2`).
+///
+/// La prima era `abbina: true`, e la chiave veniva dal solo scambio
+/// effimero: difendeva da chi guarda, non da chi si mette in mezzo. Questa
+/// mescola nella chiave anche il codice, e una casa di adesso rifiuta
+/// l'altra. Vedi `ponte/src/cifra.js`.
+const int versioneDellAbbinamento = 2;
+
 /// Da quanti caratteri in su una busta si comprime, se l'altra punta sa
 /// aprirla. Sotto, un evento compresso non e' piu' piccolo: e' solo piu'
 /// lento. Vedi `compressione/compressione.dart`.
@@ -43,7 +51,7 @@ const int sogliaDiCompressione = 1024;
 const int apertaMassima = 16 * 1024 * 1024;
 
 const String _etichettaFilo = 'gdahome/filo/v1';
-const String _etichettaAbbinamento = 'gdahome/abbinamento/v1';
+const String _etichettaAbbinamento = 'gdahome/abbinamento/v2';
 
 /// L'involucro con cui una chiave pubblica X25519 viaggia sul filo.
 ///
@@ -141,12 +149,16 @@ Uint8List _spogliaSpki(List<int> vestita) {
 ///
 ///  - lo **scambio effimero**: chi guarda passare non ricava niente, e chi
 ///    rubasse le chiavi conservate domani non leggerebbe quello di ieri;
-///  - la **chiave del filo**, che le due punte si sono dette all'abbinamento e
-///    che al centralino non e' mai passata: chi si mettesse in mezzo per
-///    davvero non puo' fabbricarla. Nell'abbinamento non c'e' ancora, e li'
-///    quella difesa manca;
+///  - un **segreto che il centralino non ha**: la chiave del filo, che le due
+///    punte si sono dette all'abbinamento, oppure — mentre ci si abbina — il
+///    codice stesso. Il codice, non la sua impronta: l'impronta il centralino
+///    la conosce, perche' e' su quella che instrada. Chi si mettesse in mezzo
+///    per davvero non ha ne' l'una ne' l'altro, e arriva a un'altra chiave;
 ///  - l'**apertura**: sedici byte di caso a ogni collegamento, cosi' due
 ///    collegamenti non riusano mai gli stessi nonce con la stessa chiave.
+///
+/// Ci vuole uno dei due segreti, e uno solo: senza, la chiave verrebbe dal
+/// solo scambio effimero, che era la stretta di mano di una volta.
 Future<SecretKey> chiaveDiSessione({
   required SimpleKeyPair miaPrivata,
   required List<int> suaPubblica,
@@ -154,7 +166,13 @@ Future<SecretKey> chiaveDiSessione({
   required List<int> dellaCasa,
   required List<int> apertura,
   String? chiaveDelFilo,
+  String? codice,
 }) async {
+  if ((chiaveDelFilo == null) == (codice == null)) {
+    throw ArgumentError(
+      'serve la chiave del filo oppure il codice, e uno solo dei due',
+    );
+  }
   final comune = await _x25519.sharedSecretKey(
     keyPair: miaPrivata,
     remotePublicKey: SimplePublicKey(
@@ -164,7 +182,12 @@ Future<SecretKey> chiaveDiSessione({
   );
   final materia = <int>[
     ...await comune.extractBytes(),
-    if (chiaveDelFilo != null) ..._daEsadecimale(chiaveDelFilo),
+    if (chiaveDelFilo != null)
+      ..._daEsadecimale(chiaveDelFilo)
+    else
+      /* Ripulito, come lo ripulisce il ponte: le due punte lo devono
+       * scrivere uguale byte per byte. */
+      ...utf8.encode(codicePulito(codice!)),
   ];
   /* Le due chiavi pubbliche entrano nel sale in un ordine fisso: cosi' le due
    * punte arrivano alla stessa chiave. */
@@ -177,6 +200,16 @@ Future<SecretKey> chiaveDiSessione({
     ),
   );
 }
+
+/// Il codice come lo batte la gente: minuscole, spazi, trattini.
+///
+/// Sta qui perche' il codice entra nella chiave dell'abbinamento, e li' deve
+/// essere scritto esattamente come lo scrive il ponte (`codicePulito` in
+/// `ponte/src/segreti.js`). Serve anche all'impronta: «abcd-2345» e
+/// «ABCD2345» devono dare la stessa, o il centralino non riconosce
+/// l'abbinamento.
+String codicePulito(String scritto) =>
+    scritto.toUpperCase().replaceAll(RegExp(r'[^0-9A-Z]'), '');
 
 Uint8List aperturaNuova() {
   final caso = Random.secure();

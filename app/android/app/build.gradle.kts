@@ -14,16 +14,21 @@ plugins {
 // quattro righe sono quelle di sempre — `storeFile`, `storePassword`,
 // `keyAlias`, `keyPassword`.
 //
-// **Se non c'e' si firma con la chiave di prova e si va avanti.** Un pacchetto
-// firmato di prova si installa e funziona; un lavoro che si ferma perche'
-// manca un segreto ferma anche chi vuole solo provare l'app. Quale delle due
-// ha firmato lo dice il riepilogo della corsa, che e' il posto dove si guarda.
+// **Se non c'e', un pacchetto «release» non si fa**, a meno che chi costruisce
+// non chieda apposta la firma di prova (`GDAHOME_FIRMA_DI_PROVA=si`
+// nell'ambiente). La chiave di prova sta nella repository, e la sua parola
+// e' scritta qui sotto: un pacchetto firmato con lei lo puo' rifare chiunque.
+// Per questo quello che esce firmato di prova non si chiama come l'app vera
+// — ha `.prova` in fondo al nome — e non si installa mai sopra di lei ne'
+// arriva ai suoi dati. Quale delle due ha firmato lo dice il riepilogo della
+// corsa, che e' il posto dove si guarda.
 val chiaveVera =
     Properties().apply {
         val dove = rootProject.file("chiave.properties")
         if (dove.exists()) dove.inputStream().use { load(it) }
     }
 val cELaChiaveVera = chiaveVera.getProperty("storeFile") != null
+val firmaDiProvaChiesta = System.getenv("GDAHOME_FIRMA_DI_PROVA") == "si"
 
 android {
     // La chiave con cui si firmano i pacchetti di prova.
@@ -40,8 +45,9 @@ android {
     // pacchetto nuovo si installa sopra e non gli si chiede piu' niente.
     //
     // Non e' un segreto e non protegge niente: firma soltanto i pacchetti di
-    // prova, quelli che si passano a mano. Il giorno che si va sui negozi
-    // servira' una chiave vera, tenuta fuori di qui.
+    // prova, quelli che si passano a mano, e che si chiamano
+    // `com.gdahome.gdahome.prova` — un'app a parte da quella vera, che si
+    // firma solo con la chiave tenuta fuori di qui.
     signingConfigs {
         getByName("debug") {
             storeFile = file("chiave-di-prova.jks")
@@ -86,9 +92,38 @@ android {
     }
 
     buildTypes {
+        // Quello che si costruisce per lavorarci (`flutter run`) e' firmato di
+        // prova: si chiama come un pacchetto di prova.
+        getByName("debug") {
+            applicationIdSuffix = ".prova"
+        }
         release {
-            // La vera quando c'e', quella di prova quando no.
-            signingConfig = signingConfigs.getByName(if (cELaChiaveVera) "vera" else "debug")
+            if (cELaChiaveVera) {
+                signingConfig = signingConfigs.getByName("vera")
+            } else {
+                // Firmato di prova solo se chiesto, e mai col nome vero. Se non
+                // e' chiesto, qui sotto il pacchetto si ferma prima di partire.
+                signingConfig = signingConfigs.getByName("debug")
+                applicationIdSuffix = ".prova"
+                versionNameSuffix = "-prova"
+            }
+        }
+    }
+}
+
+// Un «release» senza chiave vera e senza firma di prova chiesta si ferma
+// **subito**, con un messaggio che dice cosa fare — non dopo sei minuti di
+// costruzione, e soprattutto non con un pacchetto firmato di prova che
+// qualcuno potrebbe scambiare per quello vero.
+if (!cELaChiaveVera && !firmaDiProvaChiesta) {
+    tasks.matching { it.name == "preReleaseBuild" }.configureEach {
+        doFirst {
+            throw GradleException(
+                "Manca la chiave vera (android/chiave.properties). Un pacchetto " +
+                    "release non si firma con la chiave di prova. Per un " +
+                    "pacchetto da provare, che si chiama com.gdahome.gdahome.prova, " +
+                    "costruisci con GDAHOME_FIRMA_DI_PROVA=si nell'ambiente.",
+            )
         }
     }
 }

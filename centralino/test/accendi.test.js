@@ -71,28 +71,191 @@ test("e anche i pezzi che scrive sulla macchina", () => {
   }
 });
 
+/* Prima un solo script — `scarica.sh`, da root — scaricava, provava e
+ * scambiava. Adesso sono due: `prepara.sh` scarica e prova senza privilegi,
+ * e lascia la versione in `uscita/pronto` solo se le prove passano;
+ * `scambia.sh`, da root, prende soltanto quello che e' li'. «Prima si prova»
+ * vuol dire allora due cose: che in `prepara.sh` la prova viene prima di
+ * lasciare la versione pronta, e che il giro chiama la preparazione prima
+ * dello scambio. */
 test("si prova prima di scambiare, non dopo", () => {
-  const scarica = pezziScritti().find((uno) => uno.dove.endsWith("scarica.sh"));
-  assert.ok(scarica, "non trovo lo script che scarica");
-  const prova = scarica.testo.indexOf("node --test");
-  const scambio = scarica.testo.indexOf('mv "$DOVE/centralino.nuovo"');
+  const prepara = pezziScritti().find((uno) => uno.dove.endsWith("prepara.sh"));
+  assert.ok(prepara, "non trovo lo script che prepara");
+  const prova = prepara.testo.indexOf("node --test");
+  const pronta = prepara.testo.indexOf('mv "$nuovo" "$USCITA/pronto"');
   assert.ok(prova >= 0, "lo script non prova niente");
-  assert.ok(scambio >= 0, "lo script non scambia niente");
-  assert.ok(
-    prova < scambio,
-    "le prove girano dopo lo scambio: una versione rotta avrebbe gia' preso il posto",
-  );
+  assert.ok(pronta >= 0, "lo script non lascia pronto niente");
+  assert.ok(prova < pronta, "la versione e' pronta prima di essere provata");
+
+  const giro = pezziScritti().find((uno) => uno.dove.endsWith("aggiorna.sh"));
+  const prima = giro.testo.indexOf("systemctl start tramite-prepara.service");
+  const dopo = giro.testo.indexOf('"$DOVE/scambia.sh"');
+  assert.ok(prima >= 0 && dopo >= 0 && prima < dopo, "il giro scambia senza aver preparato");
 });
 
 test("lo scambio tocca solo quello che cambia, non gli script di fianco", () => {
-  const scarica = pezziScritti().find((uno) => uno.dove.endsWith("scarica.sh"));
+  const scambia = pezziScritti().find((uno) => uno.dove.endsWith("scambia.sh"));
+  assert.ok(scambia, "non trovo lo script che scambia");
   /* Se spostasse la cartella intera si porterebbe via anche se stesso, e il
    * secondo aggiornamento non troverebbe piu' niente da eseguire. */
   assert.doesNotMatch(
-    scarica.testo,
+    scambia.testo,
     /mv "\$DOVE" /,
     "sposta la cartella intera: si porta via anche gli script",
   );
+});
+
+test("il codice che arriva da fuori non gira da root", () => {
+  /* Le prove e lo strumento che finisce il sito sono codice appena
+   * scaricato. Girano in `prepara.sh`, dentro un servizio con un utente suo;
+   * quello che resta a root — il giro e lo scambio — non esegue niente di
+   * quello che arriva: copia e riavvia. */
+  const pezzi = pezziScritti();
+  const prepara = pezzi.find((uno) => uno.dove.endsWith("prepara.sh"));
+  assert.match(prepara.testo, /node --test/);
+  assert.match(prepara.testo, /porta-nel-sito\.mjs/);
+  for (const quale of ["aggiorna.sh", "scambia.sh"]) {
+    const pezzo = pezzi.find((uno) => uno.dove.endsWith(quale));
+    assert.ok(pezzo, `non trovo ${quale}`);
+    const codice = pezzo.testo
+      .split("\n")
+      .filter((riga) => !riga.trim().startsWith("#"))
+      .join("\n");
+    assert.doesNotMatch(codice, /\bnode\b/, `${quale} esegue node da root`);
+    assert.doesNotMatch(codice, /\bcurl\b|\btar\b/, `${quale} scarica da root`);
+  }
+
+  const servizio =
+    /cat >\/etc\/systemd\/system\/tramite-prepara\.service <<FINE\n([\s\S]*?)\nFINE\n/.exec(
+      ACCENDI,
+    );
+  assert.ok(servizio, "non trovo il servizio che prepara");
+  for (const riga of [
+    /^User=\$AGGIORNATORE$/m,
+    /^NoNewPrivileges=yes$/m,
+    /^ProtectSystem=strict$/m,
+    /^ReadWritePaths=\$LAVORO\/lavoro \$LAVORO\/uscita$/m,
+    /^CapabilityBoundingSet=$/m,
+    /^LoadCredential=lettura:\$CONFIGURAZIONE\/lettura$/m,
+    /^ExecStart=\$DOVE\/prepara\.sh$/m,
+  ]) {
+    assert.match(servizio[1], riga);
+  }
+  /* E l'utente che prepara non e' ne' root ne' quello del servizio. */
+  assert.match(ACCENDI, /^AGGIORNATORE="tramite-aggiorna"$/m);
+  /* La cartella sopra `uscita` e' di root: chi prepara non puo' metterci al
+   * posto un collegamento. */
+  assert.match(ACCENDI, /^install -d -m 755 "\$LAVORO"$/m);
+});
+
+/* `scambia.sh` fatto girare davvero, in una cartella della prova: prende la
+ * versione pronta, e rifiuta quella con un collegamento dentro. */
+function unoScambio() {
+  const pezzo = pezziScritti().find((uno) => uno.dove.endsWith("scambia.sh"));
+  const cartella = mkdtempSync(join(tmpdir(), "scambia-"));
+  const script = join(cartella, "scambia.sh");
+  writeFileSync(script, pezzo.testo, { mode: 0o700 });
+  const uscita = join(cartella, "uscita");
+  const dove = join(cartella, "opt");
+  const pronto = join(uscita, "pronto");
+  execFileSync("mkdir", ["-p", join(pronto, "centralino", "src"), join(pronto, "app"), dove]);
+  writeFileSync(join(pronto, "centralino", "src", "index.js"), "// nuovo\n");
+  writeFileSync(join(pronto, "app", "index.html"), "<p>app</p>\n");
+  writeFileSync(join(pronto, "versione"), "a".repeat(40));
+  execFileSync("mkdir", ["-p", join(dove, "centralino")]);
+  writeFileSync(join(dove, "centralino", "vecchio.js"), "// vecchio\n");
+  writeFileSync(join(dove, "scambia.sh"), "# io resto\n");
+  return {
+    cartella,
+    pronto,
+    dove,
+    lancia: () => execFileSync(script, [uscita, dove], { encoding: "utf8", stdio: "pipe" }),
+    via: () => rmSync(cartella, { recursive: true, force: true }),
+  };
+}
+
+test("lo scambio porta dentro la versione pronta, e lascia stare gli script", () => {
+  const banco = unoScambio();
+  try {
+    banco.lancia();
+    assert.equal(readFileSync(join(banco.dove, "versione"), "utf8"), "a".repeat(40));
+    assert.equal(
+      readFileSync(join(banco.dove, "centralino", "src", "index.js"), "utf8"),
+      "// nuovo\n",
+    );
+    assert.throws(() => readFileSync(join(banco.dove, "centralino", "vecchio.js")));
+    assert.equal(readFileSync(join(banco.dove, "scambia.sh"), "utf8"), "# io resto\n");
+    /* Quello che era pronto e' stato preso: il giro dopo non lo riprende. */
+    assert.throws(() => readFileSync(join(banco.pronto, "versione")));
+  } finally {
+    banco.via();
+  }
+});
+
+test("e una versione pronta con un collegamento dentro non entra", () => {
+  const banco = unoScambio();
+  try {
+    execFileSync("ln", ["-s", "/etc/hostname", join(banco.pronto, "app", "furbo")]);
+    assert.throws(() => banco.lancia(), /collegamenti simbolici/);
+    /* E quello che c'era resta. */
+    assert.equal(
+      readFileSync(join(banco.dove, "centralino", "vecchio.js"), "utf8"),
+      "// vecchio\n",
+    );
+    assert.throws(() => readFileSync(join(banco.dove, "versione")));
+  } finally {
+    banco.via();
+  }
+});
+
+test("Node arriva da un repository firmato, non da uno script dato a bash", () => {
+  assert.doesNotMatch(ACCENDI, /\|\s*bash\b/, "qualcosa scaricato finisce dritto in bash");
+  assert.match(ACCENDI, /signed-by=\/etc\/apt\/keyrings\/nodesource\.gpg/);
+});
+
+test("il firewall apre SSH prima di accendersi, e non rompe quello che c'e' gia'", () => {
+  const acceso = ACCENDI.indexOf("ufw --force enable");
+  const ssh = ACCENDI.lastIndexOf('ufw allow "$porta_ssh/tcp"', acceso);
+  assert.ok(acceso >= 0, "non accende nessun firewall");
+  assert.ok(ssh >= 0 && ssh < acceso, "accende il firewall prima di aprire SSH");
+  /* Solo le porte del web, oltre a SSH. */
+  const aperte = [...ACCENDI.matchAll(/ufw allow (\S+)/g)].map((una) => una[1]);
+  assert.deepEqual(
+    [...new Set(aperte)].sort(),
+    ['"$porta_ssh/tcp"', "443/tcp", "443/udp", "80/tcp"].sort(),
+  );
+  /* Un firewall che c'e' gia' non si riaccende da capo, e si puo' dire di
+   * lasciarlo stare. */
+  assert.match(ACCENDI, /ufw status 2>\/dev\/null \| grep -q '\^Status: active'/);
+  assert.match(ACCENDI, /elif altre_regole; then/);
+  assert.match(ACCENDI, /TRAMITE_FIREWALL:-si/);
+});
+
+test("il tramite ascolta solo da qui, e Caddy mette le intestazioni a app e console", () => {
+  const blocco = /^\$NOME_DEL_TRAMITE \{$([\s\S]*?)^\}$/m.exec(ACCENDI);
+  assert.match(
+    blocco[1],
+    /header \/app\/\* \{[\s\S]*?Cross-Origin-Opener-Policy same-origin-allow-popups/,
+  );
+  assert.match(blocco[1], /header \/app\/\* \{[\s\S]*?frame-ancestors 'none'/);
+  assert.match(blocco[1], /header \/console\* \{[\s\S]*?X-Frame-Options DENY/);
+  /* E nessuno parla col tramite se non da questa macchina. */
+  assert.doesNotMatch(ACCENDI, /CENTRALINO_INDIRIZZO=0\.0\.0\.0/);
+});
+
+test("la chiave scelta a mano e' lunga almeno trentadue caratteri", () => {
+  const chiave = pezziScritti().find((uno) => uno.dove.endsWith("tramite-chiave"));
+  assert.match(chiave.testo, /-lt 32 \]/);
+});
+
+test("gli allegati vanno su un ramo loro, e rilanciare non lo cambia", () => {
+  assert.ok(
+    ACCENDI.includes(
+      'RAMO_ALLEGATI="${RAMO_ALLEGATI:-$(gia_scritto "$CONFIGURAZIONE/ambiente" GITHUB_RAMO_ALLEGATI)}"',
+    ),
+  );
+  assert.match(ACCENDI, /RAMO_ALLEGATI="\$\{RAMO_ALLEGATI:-allegati\}"/);
+  assert.match(ACCENDI, /printf 'GITHUB_RAMO_ALLEGATI=%s\\n' "\$RAMO_ALLEGATI"/);
 });
 
 test("il servizio non gira da root, e scrive solo nei suoi dati", () => {
@@ -243,18 +406,16 @@ test("e non chiede di nuovo i gettoni che sono gia' sulla macchina", () => {
 });
 
 test("il sito viaggia con tutto il resto, e ha il suo nome davanti", () => {
-  const scarica = pezziScritti().find((uno) => uno.dove.endsWith("scarica.sh"));
-  assert.match(
-    scarica.testo,
-    /cp -a "\$radice\/sito" "\$DOVE\/sito\.nuovo"/,
-    "non porta dentro il sito",
-  );
-  assert.match(scarica.testo, /mv "\$DOVE\/sito\.nuovo" "\$DOVE\/sito"/, "non scambia il sito");
+  const prepara = pezziScritti().find((uno) => uno.dove.endsWith("prepara.sh"));
+  const scambia = pezziScritti().find((uno) => uno.dove.endsWith("scambia.sh"));
+  assert.match(prepara.testo, /cp -a "\$radice\/sito" "\$nuovo\/sito"/, "non porta dentro il sito");
+  assert.match(scambia.testo, /mv "\$arrivo\/sito" "\$DOVE\/sito"/, "non scambia il sito");
 
   /* Una versione che non ha la cartella del sito non deve svuotare un nome
    * pubblico: se non c'e', resta quello di prima. */
-  assert.match(scarica.testo, /if \[ -d "\$radice\/sito" \]; then/);
-  assert.doesNotMatch(scarica.testo, /mkdir -p "\$DOVE\/sito\.nuovo"/);
+  assert.match(prepara.testo, /if \[ -d "\$radice\/sito" \]; then/);
+  assert.match(scambia.testo, /if \[ -d "\$arrivo\/sito" \]; then/);
+  assert.doesNotMatch(scambia.testo, /mkdir -p "\$arrivo\/sito"/);
 
   /* E davanti ci sta Caddy, col nome nudo e col `www` che manda la'. */
   assert.match(ACCENDI, /^\$NOME_DEL_SITO \{$/m);
@@ -615,5 +776,39 @@ test("il gettone non si scrive dalla riga di comando, e lo dice", () => {
     assert.equal(banco.gettoneNelFile(), INTERO, "l'ha pure scritto");
   } finally {
     banco.via();
+  }
+});
+
+test("con un systemd troppo vecchio si ferma subito, prima di toccare niente", () => {
+  /* Il servizio che prepara riceve i segreti con `LoadCredential`, che c'e'
+   * dalla 247. Il controllo deve venire prima di installare e prima di
+   * riscrivere gli script di una macchina gia' accesa. */
+  const controllo = ACCENDI.indexOf('[[ "${SYSTEMD_VERSIONE:-0}" -ge 247 ]]');
+  assert.ok(controllo >= 0, "non guarda la versione di systemd");
+  for (const dopo of ["apt-get update", 'cat >"$DOVE/prepara.sh"', 'cat >"$DOVE/aggiorna.sh"']) {
+    const dove = ACCENDI.indexOf(dopo);
+    assert.ok(dove > controllo, `«${dopo}» viene prima del controllo di systemd`);
+  }
+});
+
+test("la porta SSH della sessione in corso resta aperta anche se sshd non la dice", () => {
+  const funzione = /^porte_ssh\(\) \{\n[\s\S]*?\n\}$/m.exec(ACCENDI);
+  assert.ok(funzione, "non trovo porte_ssh");
+  const cartella = mkdtempSync(join(tmpdir(), "porte-"));
+  try {
+    const script = join(cartella, "porte.sh");
+    writeFileSync(script, `${funzione[0]}\nporte_ssh\n`);
+    /* Senza sshd sulla macchina della prova: resta la sessione. */
+    const lancia = (ssh) =>
+      execFileSync("bash", [script], {
+        encoding: "utf8",
+        env: { PATH: "/usr/bin:/bin", ...(ssh ? { SSH_CONNECTION: ssh } : {}) },
+      });
+    const porte = lancia("198.51.100.1 50022 203.0.113.9 2222").split(/\s+/).filter(Boolean);
+    assert.ok(porte.includes("2222"), `la porta della sessione manca: ${porte}`);
+    /* E senza niente, la 22 di sempre. */
+    assert.equal(lancia("").trim(), "22");
+  } finally {
+    rmSync(cartella, { recursive: true, force: true });
   }
 });

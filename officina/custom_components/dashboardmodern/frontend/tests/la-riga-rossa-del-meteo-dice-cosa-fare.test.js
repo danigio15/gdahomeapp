@@ -61,11 +61,12 @@ test("l'entità di cui si parla resta scritta, che serve a chi segnala", async (
   const fonte = await guscio("it");
   /* Due punti diversi, e due modi di sapere di chi si parla: quello che apre
    * le previsioni ha l'entità in mano, quello che le disegna vuote la legge
-   * dalla variabile del guscio. */
-  assert.match(fonte, /\$\{entityId\}<\/code>/);
+   * dalla variabile del guscio. L'entita' viene dalla configurazione: si
+   * scrive come testo, passando da cdEsc. */
+  assert.match(fonte, /\$\{cdEsc\(entityId\)\}<\/code>/);
   assert.match(
     fonte,
-    /\$\{currentWeatherEntity \|\| ""\}<\/code>|\$\{currentWeatherEntity \|\| ''\}<\/code>/,
+    /\$\{cdEsc\(currentWeatherEntity \|\| ""\)\}<\/code>|\$\{cdEsc\(currentWeatherEntity \|\| ''\)\}<\/code>/,
   );
 });
 

@@ -2550,6 +2550,7 @@ export default Object.freeze({
   "Tap to open Energy": "Нажмите, чтобы открыть «Энергия»",
   "Tap to put it back on the chart": "Нажмите, чтобы вернуть на график",
   "Tap to rename": "Нажмите, чтобы переименовать",
+  "Tap to rename the label": "Нажмите, чтобы переименовать подпись",
   "Tap to turn on · cooling 26°C · auto fan": "Нажмите, чтобы включить · охлаждение 26 °C · вентилятор авто",
   "Tapping a room": "При касании комнаты",
   "Target": "Уставка",

@@ -65,6 +65,56 @@ void main() {
     },
   );
 
+  test(
+    'un «non ti conosco» in chiaro non spegne il filo: si dice, e si riprova',
+    () async {
+      /* Scritto prima della stretta di mano, non lo firma nessuno: il
+       * centralino, o chi risponde all'indirizzo di casa, lo potrebbe dire
+       * uguale. Se bastasse a staccare il telefono per sempre, basterebbe una
+       * riga per staccarlo. */
+      ponte.conosceIlTelefono = false;
+      final filo = filoCon();
+
+      await expectLater(
+        filo.apri(),
+        throwsA(
+          isA<RifiutoNonFirmato>().having(
+            (e) => e.spiegazione,
+            'spiegazione',
+            contains('riabbinalo'),
+          ),
+        ),
+      );
+
+      final quantiSubito = ponte.collegamenti;
+      await Future<void>.delayed(const Duration(milliseconds: 400));
+      expect(
+        ponte.collegamenti,
+        greaterThan(quantiSubito),
+        reason: 'deve continuare a bussare',
+      );
+
+      /* E quando la casa torna a riconoscerlo, si rientra da soli. */
+      ponte.conosceIlTelefono = true;
+      await filo.apri();
+      expect(filo.dentro, isTrue);
+      await filo.chiudi();
+    },
+  );
+
+  test('un telefono staccato che la casa riconosce lo sa dentro il cifrato, e non riprova', () async {
+    ponte
+      ..conosceIlTelefono = false
+      ..staccatoConLaChiave = true;
+    final filo = filoCon();
+
+    await expectLater(filo.apri(), throwsA(isA<SegnoRifiutato>()));
+    final quantiSubito = ponte.collegamenti;
+    await Future<void>.delayed(const Duration(milliseconds: 400));
+    expect(ponte.collegamenti, quantiSubito, reason: 'non deve ribussare');
+    await filo.chiudi();
+  });
+
   test('un telefono staccato mentre è collegato viene buttato fuori', () async {
     final filo = filoCon();
     await filo.apri();

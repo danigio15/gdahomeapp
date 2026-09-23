@@ -50,7 +50,7 @@ Sul disco finisce l'**impronta** del segreto di ogni casa, mai il segreto.
 | | | |
 |---|---|---|
 | `GET /` | — | la soglia: una pagina che dice cos'e' questo indirizzo e dove si va |
-| `GET /salute` | — | dice solo che e' vivo, e quante case ci sono |
+| `GET /salute` | — | da fuori dice solo che e' vivo e da quanto; da dentro la macchina anche quante case ci sono |
 | `GET /console/` | la chiave, per leggere | la console della chat dell'assistenza |
 | `POST /contatto` | — | il modulo «Contatti» del sito: Caddy lo passa qui, e parte una mail |
 | `WS /casa` | il segreto della casa, dentro il filo | la casa che chiama fuori |
@@ -104,9 +104,16 @@ da Node. Le variabili che legge:
 | | |
 |---|---|
 | `CENTRALINO_PORTA` | su quale porta ascoltare (difetto: 8099) |
+| `CENTRALINO_INDIRIZZO` | su quale indirizzo ascoltare (difetto: `127.0.0.1`; davanti c'e' Caddy) |
 | `CENTRALINO_DATI` | dove tenere l'elenco delle case (difetto: `./dati`) |
 | `CENTRALINO_SILENZIO` | dopo quanti giorni si dimentica una casa sparita (difetto: 180) |
 | `CENTRALINO_REGISTRO` | `debug`, `info`, `attenzione`, `errore` |
+| `CENTRALINO_CASE_NUOVE_PER_INDIRIZZO`, `…_IN_TUTTO` | quante case possono nascere in un'ora (difetto: 20 e 500) |
+| `CENTRALINO_SCRITTURE_PER_INDIRIZZO`, `…_IN_TUTTO` | quante scritture verso GitHub in un'ora (difetto: 90 e 600; il tetto in tutto non vale per le case nate da piu' di una settimana) |
+| `GITHUB_RAMO_ALLEGATI` | il ramo dove si committano foto e video (`accendi.sh` scrive `allegati`) |
+| `CHIAVE_CONSOLE` | la chiave della console: almeno 32 caratteri, se no la console resta chiusa |
+| `CHAT_SOLO_CASE_CONOSCIUTE` | `1`: una linea della chat nasce solo con nome e segreto di una casa del filo |
+| `CONTATTO_ORIGINI` | da quali origini si manda il modulo (difetto: `https://<sito>` e `https://www.<sito>`) |
 | `POSTA_SERVER`, `POSTA_PORTA`, … | la posta del modulo dei contatti del sito: sotto |
 
 Davanti ci va un proxy che parla in cifrato — il centralino sta su internet, e

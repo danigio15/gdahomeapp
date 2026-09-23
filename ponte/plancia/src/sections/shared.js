@@ -54,8 +54,21 @@ export const t = (it, en) => {
 };
 /* Translate a string that only exists in English (no Italian counterpart). */
 export const tr = (en) => translate(en, getLocale());
+/* Tutti e cinque i caratteri: i valori arrivano da Home Assistant e dalla
+ * configurazione condivisa, e finiscono sia nel testo sia dentro attributi
+ * fra virgolette doppie o semplici. */
 export const esc = (value) =>
-  clean(value).replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll('"', "&quot;");
+  clean(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+/* Un valore dentro un gestore scritto nell'HTML, onclick="f(…)": prima
+ * diventa una stringa JavaScript, poi un attributo. Si scrive senza apici
+ * intorno — li porta lui. Un apice sostituito con &#39; non basta: il browser
+ * lo rimette a posto prima di eseguire il gestore. */
+export const jsArg = (value) => esc(JSON.stringify(String(value ?? "")));
 
 export function readClimateUnits() {
   let values;

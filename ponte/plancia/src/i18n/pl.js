@@ -2550,6 +2550,7 @@ export default Object.freeze({
   "Tap to open Energy": "Dotknij, aby otworzyć Energię",
   "Tap to put it back on the chart": "Dotknij, aby przywrócić na wykres",
   "Tap to rename": "Dotknij, aby zmienić nazwę",
+  "Tap to rename the label": "Dotknij, aby zmienić nazwę etykiety",
   "Tap to turn on · cooling 26°C · auto fan": "Dotknij, aby włączyć · chłodzenie 26 °C · wentylator auto",
   "Tapping a room": "Po dotknięciu pokoju",
   "Target": "Wartość zadana",

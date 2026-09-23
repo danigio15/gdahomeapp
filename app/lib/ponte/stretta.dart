@@ -17,10 +17,32 @@
 /// e non c'e' niente dentro che gli serva.
 ///
 ///     telefono → casa   {v:1, chi:"dm_…", apertura:"…", mia:"…", gzip:true}   telefono noto
-///     telefono → casa   {v:1, abbina:true, apertura:"…", mia:"…", gzip:true}  telefono nuovo
+///     telefono → casa   {v:1, abbina:2, apertura:"…", mia:"…"}              telefono nuovo
 ///     casa → telefono   {v:1, pronto:true, mia:"…", gzip:true, mucchio:true}
 ///     casa → telefono   {v:1, no:"…"}                              e basta
-///     casa → telefono   {v:1, no:"…", riabbina:true}               non ti conosco piu'
+///     casa → telefono   {v:1, no:"…", riabbina:true}               non ti conosco
+///     casa → telefono   {v:1, no:"…", motivo:"…"}                  l'abbinamento non parte
+///
+/// **Il `riabbina` in chiaro non e' una sentenza.** E' in chiaro, e chi sta
+/// in mezzo — il centralino, o chi risponde all'indirizzo di casa — lo puo'
+/// scrivere uguale. Se bastasse quello a spegnere il filo per sempre, bastava
+/// una riga per staccare un telefono da una casa. Percio' qui diventa
+/// [RifiutoNonFirmato]: un intoppo, detto con parole che fanno pensare a un
+/// telefono staccato, e il filo continua a riprovare. La sentenza vera — il
+/// telefono e' stato staccato dalla console — arriva **dentro il cifrato**,
+/// dove la puo' scrivere solo chi ha la chiave del filo: e' `auth_invalid`,
+/// e la legge `filo.dart`. Il ponte la manda cosi' quando della chiave di un
+/// telefono staccato ha ancora memoria; quando non ce l'ha, resta il no in
+/// chiaro, e l'app dice «forse» invece di cancellare.
+///
+/// **L'abbinamento** (`abbina: 2`) fa la chiave con lo scambio effimero **e**
+/// col codice, e dopo il `pronto` il telefono manda la conferma — le due
+/// chiavi pubbliche, dentro una busta chiusa con quella chiave. La casa
+/// consegna segno e chiave del filo solo se la conferma si apre: vuol dire
+/// che il codice qui e la' e' lo stesso, e che nessuno si e' messo in mezzo.
+/// Se non si apre, la casa lo dice in chiaro (`{v:1, no:"…", motivo:"codice"}`)
+/// — non c'e' una chiave in comune con cui dirlo — ed e' l'unica riga in
+/// chiaro che si ascolta dopo la stretta. Vedi `ponte/src/portiere.js`.
 ///
 /// `gzip: true` dice «so aprire una busta compressa»: chi manda comprime solo
 /// se l'altro l'ha detto, e chi non lo dice — un ponte vecchio, l'app nel
@@ -41,6 +63,7 @@ import 'dart:typed_data';
 
 import 'package:cryptography/cryptography.dart';
 
+import '../parole.dart';
 import 'cifra.dart';
 import 'errori.dart';
 import 'presa.dart';
@@ -69,21 +92,27 @@ const int interoMassimo = 16 * 1024 * 1024;
 
 /// Stringe la mano e torna una presa che cifra da sola.
 ///
-/// Con [chi] e [chiaveDelFilo] e' un telefono gia' abbinato che torna. Senza,
-/// e' un telefono nuovo che si sta abbinando: li' la chiave del filo non c'e'
-/// ancora — e' proprio quella che sta per ricevere — e la stretta di mano
-/// difende da chi *guarda* ma non da chi si mette in mezzo per davvero. E'
-/// scritto in `ponte/src/cifra.js`, e vale la pena saperlo invece di
-/// scoprirlo.
-Future<PresaAperta> stringiLaMano(
+/// Con [chi] e [chiaveDelFilo] e' un telefono gia' abbinato che torna. Con
+/// [codice] e' un telefono nuovo che si sta abbinando: la chiave del filo non
+/// c'e' ancora — e' proprio quella che sta per ricevere — e al suo posto la
+/// chiave si fa col codice. Chi sta in mezzo, senza il codice, arriva a
+/// un'altra chiave. Dopo la stretta, chi si abbina manda la conferma: vedi
+/// `abbinamento.dart`.
+Future<PresaCifrata> stringiLaMano(
   Presa sotto, {
   String? chi,
   String? chiaveDelFilo,
+  String? codice,
   Duration entro = attesaDellaStretta,
 }) async {
+  final perAbbinarsi = codice != null;
   final mia = await coppiaEffimera();
   final apertura = aperturaNuova();
-  final cifrata = PresaCifrata._(sotto);
+  final cifrata = PresaCifrata._(
+    sotto,
+    miaPubblica: mia.inBase64,
+    perAbbinarsi: perAbbinarsi,
+  );
 
   cifrata._ascolta(
     laPrima: (detto) async {
@@ -94,18 +123,30 @@ Future<PresaAperta> stringiLaMano(
       }
       final no = detto['no'];
       if (no is String) {
-        /* Una bandierina e non una frase: il telefono ci *fa* qualcosa —
-         * smette di riprovare e manda l'utente a riabbinare — e farlo
-         * dipendere dal testo vorrebbe dire romperlo il giorno che qualcuno
-         * riscrive la frase. */
+        /* Una bandierina e non una frase: il telefono ci *fa* qualcosa, e
+         * farlo dipendere dal testo vorrebbe dire romperlo il giorno che
+         * qualcuno riscrive la frase. */
+        if (perAbbinarsi) throw rifiutoDellAbbinamento(detto, no);
         throw detto['riabbina'] == true
-            ? SegnoRifiutato(no)
+            ? RifiutoNonFirmato(
+                inLingua(
+                  it:
+                      'la casa dice di non conoscere più questo telefono. Se '
+                      'l\'hai staccato dalla console, riabbinalo; se no, '
+                      'riprovo da solo',
+                  en:
+                      'your home says it no longer knows this phone. If you '
+                      'removed it from the console, pair it again; otherwise '
+                      'I\'ll keep trying',
+                ),
+              )
             : StrettaRifiutata(no);
       }
       final sua = detto['mia'];
       if (detto['pronto'] != true || sua is! String) {
         throw const StrettaRifiutata('la casa non ha stretto la mano');
       }
+      cifrata._suaPubblica = sua;
 
       return chiaveDiSessione(
         miaPrivata: mia.privata,
@@ -113,7 +154,8 @@ Future<PresaAperta> stringiLaMano(
         delTelefono: mia.pubblica,
         dellaCasa: base64.decode(sua),
         apertura: apertura,
-        chiaveDelFilo: chiaveDelFilo,
+        chiaveDelFilo: perAbbinarsi ? null : chiaveDelFilo,
+        codice: codice,
       );
     },
   );
@@ -121,11 +163,13 @@ Future<PresaAperta> stringiLaMano(
   sotto.manda(
     jsonEncode({
       'v': versioneDelProtocollo,
-      if (chi != null) 'chi': chi else 'abbina': true,
+      if (perAbbinarsi) 'abbina': versioneDellAbbinamento else 'chi': chi,
       'apertura': base64.encode(apertura),
       'mia': mia.inBase64,
-      /* Sul telefono si'; nel browser no, e non lo si dice. */
-      if (gzipDisponibile) 'gzip': true,
+      /* Sul telefono si'; nel browser no, e non lo si dice. Abbinandosi
+       * nemmeno: passano il segno e la chiave, e per quattro righe non serve
+       * a niente. */
+      if (gzipDisponibile && !perAbbinarsi) 'gzip': true,
       /* Un mucchio di eventi in un messaggio solo: qui si sa spacchettare, e
        * si dice sempre — nel browser come sul telefono. Il ponte lo fa solo
        * passando dal centralino, che e' dove ogni messaggio e' una richiesta
@@ -143,12 +187,61 @@ Future<PresaAperta> stringiLaMano(
   return cifrata;
 }
 
+/// Il no della casa a chi si stava abbinando, come cosa sua.
+///
+/// `motivo` lo dice il ponte apposta per questo (vedi
+/// `ponte/src/portiere.js`). Un `riabbina` invece, a chi si sta abbinando, lo
+/// dice solo un ponte di prima di questa stretta di mano: non sa cosa sia
+/// `abbina: 2`, e lo prende per un telefono che non conosce.
+ErroreDelPonte rifiutoDellAbbinamento(Map<String, dynamic> detto, String no) {
+  switch (detto['motivo']) {
+    case 'codice':
+    case 'nessuno':
+      return CodiceRifiutato(no);
+    case 'tentativi':
+      return TroppiTentativi(no);
+    case 'telefoni':
+      return TroppiDispositivi(no);
+    case 'aggiorna':
+      return StrettaRifiutata(no);
+  }
+  if (detto['riabbina'] == true) {
+    return StrettaRifiutata(
+      inLingua(
+        it:
+            'gdahome su questa casa è di una versione vecchia: aggiornalo in '
+            'Home Assistant, poi riprova',
+        en:
+            'gdahome on this home is an old version: update it in Home '
+            'Assistant, then try again',
+      ),
+    );
+  }
+  return StrettaRifiutata(no);
+}
+
 /// Una presa qualunque, per chi ci parla sopra. Sotto, ogni messaggio e' una
 /// busta.
 class PresaCifrata implements PresaAperta {
-  PresaCifrata._(this._sotto);
+  PresaCifrata._(
+    this._sotto, {
+    required this.miaPubblica,
+    this.perAbbinarsi = false,
+  });
 
   final Presa _sotto;
+
+  /// La chiave pubblica effimera di qua, in base64, com'e' andata sul filo.
+  final String miaPubblica;
+
+  /// Quella della casa, come e' arrivata nel `pronto`.
+  String? get suaPubblica => _suaPubblica;
+  String? _suaPubblica;
+
+  /// Se questa e' la presa di un abbinamento. Li', dopo la stretta, si
+  /// ascolta anche una riga in chiaro: il no a una conferma che non si e'
+  /// aperta.
+  final bool perAbbinarsi;
   final _uscita = StreamController<Uint8List>();
   final _pronta = Completer<void>();
 
@@ -270,6 +363,26 @@ class PresaCifrata implements PresaAperta {
   Future<void> _apri(String testo) async {
     if (_chiusa) return;
     _caratteriArrivati += testo.length;
+
+    /* Una busta non comincia mai con una graffa — in base64 non c'e' — e
+     * una riga che comincia cosi', abbinandosi, e' il no della casa a una
+     * conferma che non si e' aperta. In chiaro, e quindi buono solo per
+     * fermarsi: non porta niente, e fermarsi e' comunque quello che si fa. */
+    if (perAbbinarsi && testo.startsWith('{')) {
+      Object? letto;
+      try {
+        letto = jsonDecode(testo);
+      } catch (_) {
+        letto = null;
+      }
+      final no = letto is Map<String, dynamic> ? letto['no'] : null;
+      _finita(
+        no is String
+            ? rifiutoDellAbbinamento(letto as Map<String, dynamic>, no)
+            : const FiloCaduto('la casa ha risposto qualcosa che non capisco'),
+      );
+      return;
+    }
 
     if (testo.startsWith('|')) {
       _pezzi.write(testo.substring(1));

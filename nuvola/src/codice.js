@@ -27,6 +27,18 @@ export class Codice {
 
     if (via === "/apri" && richiesta.method === "POST") {
       const { casa } = await richiesta.json();
+      /* Un'impronta gia' presa da un'altra casa, e ancora nel suo tempo,
+       * resta sua. Chi arriva secondo con la stessa impronta non ha
+       * fabbricato lui quel codice — sono ottanta bit di caso — e
+       * lasciarglielo riscrivere vorrebbe dire mandare a lui il telefono che
+       * si sta abbinando all'altra. La stessa casa invece lo rinnova quando
+       * vuole. */
+      const scritto = await this.state.storage.get(["casa", "scadeIl"]);
+      const di = scritto.get("casa");
+      const fino = scritto.get("scadeIl");
+      if (di && di !== casa && fino > Date.now()) {
+        return new Response(null, { status: 409 });
+      }
       await this.state.storage.put({ casa, scadeIl: Date.now() + VIVE });
       /* Un allarme lo cancella da solo: un abbinamento scaduto non deve
        * restare in giro ad aspettare che qualcuno lo guardi. */

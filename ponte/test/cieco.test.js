@@ -197,10 +197,10 @@ test("nemmeno l'abbinamento passa in chiaro: ne' il codice, ne' il segno consegn
     await attendi(() => c.centralino.abbinamenti.size === 1);
 
     const telefono = telefonoCifrato(`${c.doveIlCentralino}/abbinamento/${impronta(codice)}`, {
-      abbina: true,
+      codice,
     });
     await telefono.dentro;
-    telefono.manda({ codice, nome: "telefono nuovo", sistema: "ios" });
+    telefono.conferma({ nome: "telefono nuovo", sistema: "ios" });
     const ecco = await telefono.aspetta("ecco");
 
     assert.match(ecco.segno, /^[0-9a-f]{64}$/);
@@ -226,10 +226,10 @@ test("il segno appena consegnato apre davvero la porta", async () => {
     await attendi(() => c.centralino.abbinamenti.size === 1);
 
     const abbinante = telefonoCifrato(`${c.doveIlCentralino}/abbinamento/${impronta(codice)}`, {
-      abbina: true,
+      codice,
     });
     await abbinante.dentro;
-    abbinante.manda({ codice, nome: "telefono nuovo", sistema: "ios" });
+    abbinante.conferma({ nome: "telefono nuovo", sistema: "ios" });
     const ecco = await abbinante.aspetta("ecco");
     await abbinante.chiusa;
 
@@ -255,14 +255,22 @@ test("un codice sbagliato non consegna niente", async () => {
     c.chiamata.apriLAbbinamento(impronta(codice));
     await attendi(() => c.centralino.abbinamenti.size === 1);
 
+    /* Instradato giusto — l'impronta e' quella vera — ma con un altro codice
+     * in mano: e' chi sta in mezzo, che l'impronta la conosce e il codice no.
+     * La stretta di mano va, perche' e' in chiaro; la conferma non si apre. */
     const telefono = telefonoCifrato(`${c.doveIlCentralino}/abbinamento/${impronta(codice)}`, {
-      abbina: true,
+      codice: "SBAGLIATO2345678",
     });
     await telefono.dentro;
-    telefono.manda({ codice: "SBAGLIA2", nome: "furbo" });
-    const no = await telefono.aspetta("no");
-    assert.match(no.perche, /codice sbagliato/);
+    telefono.conferma({ nome: "furbo" });
+    await telefono.chiusa;
+
+    const no = telefono.inChiaro.find((uno) => uno.no);
+    assert.match(no.no, /codice sbagliato/);
+    assert.equal(no.motivo, "codice");
+    assert.equal(telefono.detti.length, 0, "nessuna busta per lui");
     assert.equal(c.dispositivi.quanti(), 0);
+    assert.equal(c.abbinamento.stato().tentativiSbagliati, 1, "e il tentativo si e' contato");
   } finally {
     await c.spegni();
   }

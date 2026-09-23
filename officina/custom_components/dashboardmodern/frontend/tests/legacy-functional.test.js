@@ -27,6 +27,12 @@ function functionSource(source, name) {
   throw new Error(`unterminated ${name}`);
 }
 
+/* Le funzioni del runtime che scrivono HTML passano i valori da cdEsc/cdJs:
+ * chi le prova da sole se le porta dietro. */
+const ESCAPE_HELPERS = ["cdEsc", "cdJs", "cdUrlOk", "cdUrl", "cdColor"];
+const escapeHelpers = (source) =>
+  ESCAPE_HELPERS.map((name) => functionSource(source, name)).join("\n");
+
 for (const [file, labels] of [
   ["dashboard.html", { overview: "Panoramica", none: "Nessuna stanza" }],
   ["dashboard-en.html", { overview: "Overview", none: "No room" }],
@@ -133,7 +139,7 @@ for (const [file, labels] of [
     };
     vm.createContext(context);
     vm.runInContext(
-      `${functionSource(source, "renderApplianceSection")};this.run=renderApplianceSection`,
+      `${escapeHelpers(source)};${functionSource(source, "renderApplianceSection")};this.run=renderApplianceSection`,
       context,
     );
     context.run(true);
@@ -193,11 +199,13 @@ for (const [file, labels] of [
     };
     vm.createContext(context);
     vm.runInContext(
-      `${functionSource(source, "cdApplMainCard")};this.card=cdApplMainCard`,
+      `${escapeHelpers(source)};${functionSource(source, "cdApplMainCard")};this.card=cdApplMainCard`,
       context,
     );
     const controlled = context.card({ name: "Oven", switch_entity: "switch.oven" });
-    assert.match(controlled, /cdApplEntTog\('switch\.oven',this\)/);
+    /* L'entita' arriva come stringa JSON dentro l'attributo: le virgolette
+     * sono &quot;, che il browser rimette a posto prima di eseguire. */
+    assert.match(controlled, /cdApplEntTog\(&quot;switch\.oven&quot;,this\)/);
     assert.match(controlled, /event\.stopPropagation\(\)/);
     assert.match(controlled, /class="appl-action-btn on"/);
     const sensorOnly = context.card({ name: "Meter", entities: ["sensor.meter_power"] });

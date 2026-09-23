@@ -231,6 +231,21 @@ bool siDeveChiedere(
   return lucchetto.alRitorno && lasciataDa >= quantoPuoStareFuori;
 }
 
+/// Se passare da [prima] a [dopo] allenta un lucchetto acceso.
+///
+/// Spegnerlo, togliere l'apertura o il ritorno, togliere uno dei momenti:
+/// sono le cose che chi ha in mano un telefono trovato aperto farebbe per
+/// primo, e per questo si chiedono come si chiede all'apertura. Stringere
+/// invece — accendere un momento in piu' — non chiede niente: e' la stessa
+/// persona che si e' gia' fatta riconoscere per accenderlo.
+bool siAllenta(IlLucchetto prima, IlLucchetto dopo) {
+  if (!prima.acceso) return false;
+  if (!dopo.acceso) return true;
+  if (prima.allAvvio && !dopo.allAvvio) return true;
+  if (prima.alRitorno && !dopo.alRitorno) return true;
+  return prima.prima.difference(dopo.prima).isNotEmpty;
+}
+
 /// Se prima di quella cosa bisogna farsi riconoscere.
 bool siDeveChiederePrimaDi(
   PrimaDi quale,

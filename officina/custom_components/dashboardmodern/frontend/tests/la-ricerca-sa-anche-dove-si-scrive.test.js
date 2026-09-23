@@ -174,12 +174,16 @@ test("la parola accesa non si mangia gli spazi intorno", () => {
 test("e continua a non far passare marcatori", () => {
   /* L'evidenziatore scrive dentro `innerHTML`: quello che taglia via gli
    * spazi era anche quello che rendeva innocuo il testo. */
-  /* Le stesse tre sostituzioni di `esc`, nemmeno una di meno: la copia serve
-   * a non tagliare gli spazi, non a discostarsi. Il `>` non ci sta nemmeno
-   * lì — con il `<` già spento non apre niente. */
-  assert.equal(conLaParolaAccesa('<b>"x" & y</b>', "zzz"), '&lt;b>&quot;x&quot; &amp; y&lt;/b>');
+  /* Le stesse sostituzioni di `esc`, nemmeno una di meno: la copia serve a
+   * non tagliare gli spazi, non a discostarsi. Adesso sono cinque, anche `>`
+   * e l'apice, come in `esc`. */
   assert.equal(
-    conLaParolaAccesa('<i>ventola</i>', "ventola"),
-    "&lt;i><mark>ventola</mark>&lt;/i>",
+    conLaParolaAccesa('<b>"x" & y</b>', "zzz"),
+    "&lt;b&gt;&quot;x&quot; &amp; y&lt;/b&gt;",
   );
+  assert.equal(
+    conLaParolaAccesa("<i>ventola</i>", "ventola"),
+    "&lt;i&gt;<mark>ventola</mark>&lt;/i&gt;",
+  );
+  assert.equal(conLaParolaAccesa("l'x", "zzz"), "l&#39;x");
 });

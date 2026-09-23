@@ -43,8 +43,21 @@ const _chiaveDelFilo =
 
 const _chiaveConFilo =
     '5cb44d084c48418f7bd77c21182baa3e2fb6ac9c3233ec147652043eb44f2ea8';
-const _chiaveSenzaFilo =
-    '3aa495af127807135cc85804e6482c4ae59748898c21660042fe9bb4b5b52595';
+/* L'abbinamento: la chiave fatta col codice (`gdahome/abbinamento/v2`). */
+const _codice = 'ABCDEFGHJKMNPQRS';
+const _chiaveDellAbbinamento =
+    '195c9a0d2ed81839e1a1f97bd56309cce3bd290e9e0568646f1da357c9ba68ba';
+
+/* La conferma dell'abbinamento, chiusa dal telefono del Node con quella
+ * chiave: la prima busta che la casa apre, e l'unica che decide se il segno
+ * esce. */
+const _conferma =
+    '{"t":"conferma","telefono":"$_pubblicaTelefono","casa":"$_pubblicaCasa"}';
+const _confermaChiusa =
+    'AAAAAAAAAAAAAAAA9gmRLaTqK0z9O00Lj9s4tfwm9an5M12SJoMhKbMBEb/A8FqQB2UL8FEF'
+    '68fcO7fQemaPpRYXgERCzHo7x+iAtaG0/ghq4tkUe5cX7/ocvfcJ8o+aoXjv6TnnLFnoA5EB'
+    'go7QoP0fySJ+9YivboZgCKGiP2kmMJX/k+9f4Vdx7fuCK/pEFPSCO+XAdQDgW78mKGZcCGYW'
+    'q74NX+zJW1lAtFthIg8Xl9kOYHvLX4zEGoY=';
 
 const _testoDalTelefono = '{"type":"auth","access_token":"segno"}';
 const _testoDallaCasa = '{"type":"auth_required"}';
@@ -78,9 +91,49 @@ void main() {
       },
     );
 
-    test('e quella dell\'abbinamento, dove il filo non c\'è ancora', () async {
-      final chiave = await _chiaveDelVettore();
-      expect(_inEsadecimale(await chiave.extractBytes()), _chiaveSenzaFilo);
+    test('e quella dell\'abbinamento, fatta col codice', () async {
+      final chiave = await _chiaveDelVettore(codice: _codice);
+      expect(
+        _inEsadecimale(await chiave.extractBytes()),
+        _chiaveDellAbbinamento,
+      );
+    });
+
+    test('il codice battuto a mano dà la stessa chiave', () async {
+      final chiave = await _chiaveDelVettore(codice: 'abcd-efgh jkmn-pqrs');
+      expect(
+        _inEsadecimale(await chiave.extractBytes()),
+        _chiaveDellAbbinamento,
+      );
+    });
+
+    test('la conferma si chiude uguale a quella del Node', () async {
+      final busta = Busta(
+        await _chiaveDelVettore(codice: _codice),
+        io: DaChi.telefono,
+      );
+      expect(await busta.chiudi(_conferma), _confermaChiusa);
+    });
+
+    test('con l\'impronta al posto del codice la chiave è un\'altra', () async {
+      /* E' tutto quello che ha il centralino: se bastasse, l'abbinamento non
+       * lo difenderebbe da lui. */
+      final chiave = await _chiaveDelVettore(
+        codice: await _improntaDi(_codice),
+      );
+      expect(
+        _inEsadecimale(await chiave.extractBytes()),
+        isNot(_chiaveDellAbbinamento),
+      );
+    });
+
+    test('senza filo e senza codice una chiave non si fa più', () async {
+      /* Era la stretta di mano dell'abbinamento di prima. */
+      await expectLater(_chiaveDelVettore(), throwsArgumentError);
+      await expectLater(
+        _chiaveDelVettore(chiaveDelFilo: _chiaveDelFilo, codice: _codice),
+        throwsArgumentError,
+      );
     });
 
     test('le due punte arrivano alla stessa chiave partendo da capi opposti', () async {
@@ -440,6 +493,7 @@ void main() {
           delTelefono: mia.pubblica,
           dellaCasa: storta,
           apertura: aperturaNuova(),
+          chiaveDelFilo: _chiaveDelFilo,
         ),
         throwsA(isA<ChiaveStorta>()),
       );
@@ -454,6 +508,7 @@ void main() {
           delTelefono: mia.pubblica,
           dellaCasa: Uint8List(10),
           apertura: aperturaNuova(),
+          chiaveDelFilo: _chiaveDelFilo,
         ),
         throwsA(isA<ChiaveStorta>()),
       );
@@ -485,7 +540,10 @@ String _unaCasaGrande() => jsonEncode({
   ],
 });
 
-Future<SecretKey> _chiaveDelVettore({String? chiaveDelFilo}) async {
+Future<SecretKey> _chiaveDelVettore({
+  String? chiaveDelFilo,
+  String? codice,
+}) async {
   final telefono = await coppiaDalloScalare(_daEsadecimale(_scalareTelefono));
   return chiaveDiSessione(
     miaPrivata: telefono.privata,
@@ -494,7 +552,13 @@ Future<SecretKey> _chiaveDelVettore({String? chiaveDelFilo}) async {
     dellaCasa: base64.decode(_pubblicaCasa),
     apertura: base64.decode(_apertura),
     chiaveDelFilo: chiaveDelFilo,
+    codice: codice,
   );
+}
+
+Future<String> _improntaDi(String codice) async {
+  final fatta = await Sha256().hash(utf8.encode(codice));
+  return _inEsadecimale(fatta.bytes);
 }
 
 Uint8List _daEsadecimale(String testo) {

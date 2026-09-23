@@ -23,14 +23,31 @@
 import { join } from "node:path";
 
 import { Archivio } from "./archivio.js";
+import { Freno } from "./freno.js";
+import { daChi } from "./indirizzo.js";
 import {
   ALLEGATO_MASSIMO,
   CORPO_MASSIMO,
   GitHub,
   GitHubNonRisponde,
   RichiestaSbagliata,
+  SCRITTURE_ALLORA,
   Segnalazioni,
 } from "./segnalazioni.js";
+
+/* Quante scritture verso GitHub in un'ora, da uno stesso indirizzo (in
+ * IPv6: da una stessa rete /64) e in tutto. Il limite di ogni casa sta nelle
+ * segnalazioni; questi due stanno sopra, per chi di case ne ha tante — o se
+ * le fabbrica. Il tetto in tutto e' anche quello che tiene il gettone lontano
+ * dai limiti di GitHub.
+ *
+ * Il tetto in tutto vale solo per le case **giovani**. Chi volesse riempirlo
+ * dovrebbe farlo con case nuove — fabbricarle costa poco — e se valesse per
+ * tutte, fermerebbe anche quelle che scrivono da mesi. Una casa nata da piu'
+ * di una settimana ha solo il suo limite e quello del suo indirizzo. */
+export const SCRITTURE_PER_INDIRIZZO = Math.round(SCRITTURE_ALLORA * 1.5);
+export const SCRITTURE_IN_TUTTO = 600;
+export const CASA_ANZIANA = 7 * 24 * 60 * 60 * 1000;
 
 /* `/casa/<casa_…>/segnalazioni`, piu' il numero e la coda quando ci sono. */
 export const VIA_DELLE_SEGNALAZIONI =
@@ -82,16 +99,36 @@ export class Sportello {
     /* Dove vanno foto e video: un'altra repository, se si vuole. Vuota vuol
      * dire «la stessa delle issue», che e' come stava prima. */
     repoAllegati = "",
+    /* E su quale ramo: vuoto vuol dire quello principale. Vedi
+     * `segnalazioni.js`, dove c'e' il perche'. */
+    ramoAllegati = "",
+    scritturePerIndirizzo = SCRITTURE_PER_INDIRIZZO,
+    scrittureInTutto = SCRITTURE_IN_TUTTO,
     fetch: prendi = globalThis.fetch,
     adesso = () => Date.now(),
+    registro = null,
   }) {
     this.case = case_;
     this.cartella = cartella;
     this.gettone = gettone;
     this.repo = repo;
     this.repoAllegati = repoAllegati;
+    this.ramoAllegati = ramoAllegati;
     this.prendi = prendi;
     this.adesso = adesso;
+    this.registro = registro;
+    this.perIndirizzo = new Freno({ perChi: scritturePerIndirizzo, adesso });
+    this.inTutto = new Freno({ inTutto: scrittureInTutto, adesso });
+  }
+
+  /* Una scrittura in piu', se c'e' posto. Il tetto in tutto non ferma le
+   * case anziane (vedi sopra), ma le conta lo stesso. */
+  _concedi(chi, anziana) {
+    if (!this.perIndirizzo.cePosto(chi)) return false;
+    if (!anziana && !this.inTutto.cePosto()) return false;
+    this.perIndirizzo.conta(chi);
+    this.inTutto.conta();
+    return true;
   }
 
   _github() {
@@ -99,6 +136,7 @@ export class Sportello {
       token: this.gettone,
       repo: this.repo,
       repoAllegati: this.repoAllegati,
+      ramoAllegati: this.ramoAllegati,
       fetch: this.prendi,
     });
   }
@@ -130,11 +168,15 @@ export class Sportello {
       return;
     }
 
+    const nata = Number(this.case.quella?.(casa)?.natoIl || 0);
+    const anziana = nata > 0 && this.adesso() - nata >= CASA_ANZIANA;
     const segnalazioni = new Segnalazioni({
       storage: new MagazzinoDellaCasa(this.cartella, casa),
       github: this._github(),
       casa,
       adesso: this.adesso,
+      freno: async (chi) => this._concedi(chi, anziana),
+      chi: daChi(richiesta),
     });
     const metodo = richiesta.method;
 
@@ -177,7 +219,18 @@ export class Sportello {
         );
         return;
       }
-      json(risposta, { errore: "centralino", spiegazione: String(errore?.message || errore) }, 500);
+      /* Il motivo vero va nel registro, non nella risposta: quello che esce
+       * di qui lo legge chiunque bussi, e un errore interno racconta com'e'
+       * fatta la macchina. */
+      this.registro?.errore?.(`lo sportello e' inciampato: ${errore?.stack || errore}`);
+      json(
+        risposta,
+        {
+          errore: "centralino",
+          spiegazione: "Il centralino ha avuto un problema: riprova fra poco.",
+        },
+        500,
+      );
     }
   }
 }

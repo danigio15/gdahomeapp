@@ -216,3 +216,39 @@ test("i flussi di casa restano al loro posto quando il quadro riscrive la planci
     { entity: "camera.ingresso", name: "Portone", rtsp: "rtsp://u:p@192.168.1.9/ingresso" },
   ]);
 });
+
+test("dal quadro arrivano solo voci della plancia, e senza pezzi di pagina", async () => {
+  /* La seconda difesa, prima di scrivere: la plancia i testi li scrive con le
+   * sue cautele, ma quello che non ha forma di configurazione qui non entra. */
+  const cattive = [
+    [{ ...VALORI, qualunque_chiave: "x" }, /non conosce/],
+    [{ ...VALORI, cd_nota: "<img src=x onerror=alert(1)>" }, /markup o del programma/],
+    [{ ...VALORI, cd_link: "javascript:alert(1)" }, /markup o del programma/],
+    /* Scritto con le sequenze di JSON dentro un testo JSON: fuori non si
+     * vede, dentro si'. */
+    [
+      { ...VALORI, cd_stanze: '[{"name":"\\u003cscript\\u003ex()\\u003c/script\\u003e"}]' },
+      /markup/,
+    ],
+    [{ ...VALORI, cd_grande: "x".repeat(2 * 1024 * 1024 + 1) }, /troppo grande/],
+  ];
+  for (const [valori, perche] of cattive) {
+    const plancia = planciaFinta({ chiesta: { valori, revisioneAttesa: 12 } });
+    const lavori = lavoriCon(plancia);
+    await lavori.fai(comando());
+    assert.deepEqual(plancia.scritte, [], "non si scrive niente");
+    const stato = lavori.stato([]);
+    assert.equal(stato.stato, "non riuscito");
+    assert.match(stato.perche, perche);
+  }
+  /* Un `>` o un `<` che non apre niente, in una nota, passa. */
+  const plancia = planciaFinta({
+    chiesta: {
+      valori: { ...VALORI, cd_nota: "se fuori < 5 gradi e dentro > 20" },
+      revisioneAttesa: 12,
+    },
+  });
+  const lavori = lavoriCon(plancia);
+  await lavori.fai(comando());
+  assert.equal(plancia.scritte.length, 1);
+});

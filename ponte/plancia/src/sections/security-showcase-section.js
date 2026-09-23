@@ -69,6 +69,7 @@ import {
   doc,
   english,
   esc,
+  jsArg,
   installStyle,
   readJson,
   restyleOnLocaleChange,
@@ -629,7 +630,7 @@ function vesteLaFinestraRapida() {
   griglia.innerHTML = tasti
     .map(
       (voce) => `<button class="qa-alarm-btn${voce.mode === acceso ? " active" : ""}"
-        data-mode="${voce.mode}" onclick="promptPinAndSet('${voce.service}')">
+        data-mode="${esc(voce.mode)}" onclick="promptPinAndSet(${jsArg(voce.service)})">
         <span class="qa-alarm-btn-icon">${disegnoDelTastoAntifurto(voce, 26)}</span>
         <span class="qa-alarm-btn-name">${esc(voce.label)}</span>
         <span class="qa-alarm-btn-sub">${esc(voce.hint)}</span>
@@ -723,7 +724,7 @@ function syncModes(shell, labels) {
 
 function modeButton(voce) {
   const { mode, service, label, hint } = voce;
-  return `<button type="button" class="alarm-mode-btn dm-sec-mode" data-mode="${mode}" onclick="promptPinAndSet('${service}')">
+  return `<button type="button" class="alarm-mode-btn dm-sec-mode" data-mode="${esc(mode)}" onclick="promptPinAndSet(${jsArg(service)})">
       <span class="dm-sec-mode-ic" aria-hidden="true">${disegnoDelTastoAntifurto(voce, 22)}</span>
       <span class="dm-sec-mode-tx">${esc(label)}</span>
       <span class="dm-sec-mode-hint">${esc(hint)}</span>

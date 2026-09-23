@@ -51,10 +51,10 @@ import { inDuePezzi, laPagina, vestiDiGdahome } from "./marchio.js";
 
 export const BASE = "/dashboardmodern_static";
 
-/* Dove il cruscotto tiene il codice nel deposito del browser: la pagina
- * dell'editor sta sulla stessa origine e lo legge da li'. **La stessa riga**
- * di `DOVE_STA_LA_CHIAVE` in `console/index.html`. */
-export const DOVE_STA_LA_CHIAVE = "gdahome.quadro.chiave";
+/* Come si chiama il messaggio con cui il cruscotto passa alla pagina il suo
+ * gettone (`biglietti.js`, `GettoniDellEditor`). **La stessa parola** di
+ * `apriLEditor` in `console/index.html`. */
+export const IL_GETTONE = "gettone";
 
 const QUI = dirname(fileURLToPath(import.meta.url));
 
@@ -251,21 +251,23 @@ export const istanzaDi = (casa, profilo) => `quadro-${casa}-${profilo}`;
  *
  * Il ponte da' alla pagina un WebSocket che va a un indirizzo fisso e basta
  * (`premesse.js`, `ilWebSocket`): li' sull'ingress non c'e' niente da
- * autenticare. Qui si': la cucitura cieca vuole il codice del cruscotto, e
- * la pagina della plancia non ne sa niente. Quindi il WebSocket che le si
- * da' lo manda **lui**, come primo messaggio, nella forma che Home Assistant
- * stesso usa (`{type: "auth", access_token}`), e finche' non l'ha mandato
- * tiene da parte quello che la pagina vorrebbe dire.
+ * autenticare. Qui si': la cucitura cieca vuole sapere chi e', e la pagina
+ * della plancia non ne sa niente. Quindi il WebSocket che le si da' lo dice
+ * **lui**, come primo messaggio, nella forma che Home Assistant stesso usa
+ * (`{type: "auth", access_token}`), e finche' non l'ha detto tiene da parte
+ * quello che la pagina vorrebbe dire.
  *
- * Il codice lo prende dal deposito del browser — la pagina sta sulla stessa
- * origine del cruscotto, che ce l'ha messo — e, se li' non c'e' (una
- * finestra anonima), lo aspetta dal cruscotto, che glielo consegna con un
- * `postMessage` appena il riquadro e' caricato: la stessa forma della
- * tessera dentro Home Assistant. Solo dalla propria origine: un messaggio
- * da un'altra finestra non e' un codice, qualunque cosa dica.
+ * Quello che manda non e' la chiave del cruscotto: e' un **gettone** che vale
+ * mezz'ora, per questa casa e questa plancia soltanto (`biglietti.js`). Glielo
+ * consegna il cruscotto che la contiene, con un `postMessage`, appena il
+ * riquadro e' caricato. Si accetta solo da chi la contiene (`parent`) e dalla
+ * propria origine: un messaggio da un'altra finestra non e' un gettone,
+ * qualunque cosa dica. Dal deposito del browser non si legge niente: questa
+ * pagina e' codice di un altro progetto, e la chiave che apre tutto il
+ * cruscotto non deve passarle per le mani.
  *
- * Non nell'indirizzo: un codice nell'indirizzo finisce nei registri di
- * chi sta in mezzo.
+ * Non nell'indirizzo: un gettone nell'indirizzo finisce nei registri di chi
+ * sta in mezzo.
  *
  * Il filo sta all'indirizzo della pagina piu' `websocket`, letto dalla
  * pagina stessa: cosi' un prefisso davanti — un proxy che monta il quadro
@@ -274,22 +276,22 @@ export function ilWebSocketCieco() {
   return (
     "(function(Vera){" +
     'var dove=(location.protocol==="https:"?"wss://":"ws://")+location.host+location.pathname.replace(/\\/+$/,"")+"/websocket";' +
-    'var chiave="";' +
-    `try{chiave=localStorage.getItem(${JSON.stringify(DOVE_STA_LA_CHIAVE)})||"";}catch(e){}` +
+    'var gettone="";' +
     "var aspettano=[];" +
     'addEventListener("message",function(evento){' +
     "var detto=evento&&evento.data;" +
-    'if(!detto||detto.gdahome!=="chiave"||!detto.chiave||evento.origin!==location.origin)return;' +
-    "chiave=String(detto.chiave);" +
+    `if(!detto||detto.gdahome!==${JSON.stringify(IL_GETTONE)}||!detto.gettone)return;` +
+    "if(evento.origin!==location.origin||evento.source!==window.parent||window.parent===window)return;" +
+    "gettone=String(detto.gettone);" +
     "var da=aspettano.splice(0);for(var i=0;i<da.length;i+=1)da[i]();" +
     "});" +
     "function Cucita(_indirizzo,protocolli){" +
     "var vera=protocolli===undefined?new Vera(dove):new Vera(dove,protocolli);" +
     "var manda=vera.send.bind(vera);var dentro=false;var coda=[];" +
     "var entra=function(){if(vera.readyState!==1)return;" +
-    'manda(JSON.stringify({type:"auth",access_token:chiave}));dentro=true;' +
+    'manda(JSON.stringify({type:"auth",access_token:gettone}));dentro=true;' +
     "var c=coda.splice(0);for(var i=0;i<c.length;i+=1)manda(c[i]);};" +
-    'vera.addEventListener("open",function(){if(chiave)entra();else aspettano.push(entra);});' +
+    'vera.addEventListener("open",function(){if(gettone)entra();else aspettano.push(entra);});' +
     "vera.send=function(testo){if(dentro)return manda(testo);coda.push(testo);};" +
     "return vera;}" +
     "Cucita.prototype=Vera.prototype;" +

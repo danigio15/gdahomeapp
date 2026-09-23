@@ -24,6 +24,14 @@ const SEGNO_DEL_SUPERVISOR = "segno-finto-del-supervisor";
 
 const INDIRIZZO_DI_CASA = "192.168.1.50";
 
+/* Chi c'e' in casa, per Home Assistant finta: chi amministra, e un ospite. */
+const CHI_AMMINISTRA = "a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0";
+const UN_OSPITE = "b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1";
+const GLI_UTENTI = [
+  { id: CHI_AMMINISTRA, name: "Io", is_owner: true, group_ids: ["system-admin"] },
+  { id: UN_OSPITE, name: "Ospite", is_owner: false, group_ids: ["system-users"] },
+];
+
 async function casaFinta() {
   const prese = [];
   const server = createServer((richiesta, risposta) => {
@@ -49,6 +57,12 @@ async function casaFinta() {
     const presa = accetta(richiesta, socket, {
       onMessaggio: (testo) => {
         const detto = JSON.parse(testo);
+        if (detto.type === "config/auth/list") {
+          presa.manda(
+            JSON.stringify({ id: detto.id, type: "result", success: true, result: GLI_UTENTI }),
+          );
+          return;
+        }
         if (detto.type !== "auth") return;
         presa.manda(
           JSON.stringify(
@@ -96,6 +110,8 @@ async function banco({ quadro = null, installatore = false, chiaveDelCruscotto =
     quadroOgni: 15,
     installatore,
     chiaveDelCruscotto,
+    /* Le prove bussano da qui, non dal proxy dell'ingress. */
+    proxyDellIngress: ["127.0.0.1"],
   });
 
   const app = `http://127.0.0.1:${avviato.app.address().port}`;
@@ -119,10 +135,32 @@ async function banco({ quadro = null, installatore = false, chiaveDelCruscotto =
   };
 }
 
+/* Un telefono che si abbina **sul filo**, come fa l'app: la stretta di mano
+ * legata al codice, la conferma, e dentro la busta il segno e la chiave. Sulla
+ * porta dell'app non c'e' piu' nessun `POST /abbinamento`. */
+async function abbinaSulFilo(b, codice, { nome = "telefono", sistema = "" } = {}) {
+  const telefono = telefonoCifrato(`${b.filo}/casa`, { codice });
+  try {
+    await telefono.dentro;
+    telefono.conferma({ nome, sistema });
+    return await telefono.aspetta("ecco");
+  } finally {
+    telefono.chiudi();
+    await telefono.chiusa;
+  }
+}
+
+/* Di serie si bussa come chi amministra, che e' chi la console la apre: le
+ * prove di chi non amministra lo dicono da se'. Alla porta dell'app questa
+ * riga non dice niente, e non conta. */
 const prendi = (via, opzioni = {}) =>
   fetch(via, {
     ...opzioni,
-    headers: { "content-type": "application/json", ...(opzioni.headers || {}) },
+    headers: {
+      "content-type": "application/json",
+      "x-remote-user-id": CHI_AMMINISTRA,
+      ...(opzioni.headers || {}),
+    },
   });
 
 /* ─── Il taglio del prefisso dell'ingress ────────────────────────────────── */
@@ -147,8 +185,9 @@ test("la porta dell'app dice solo se e' viva", async () => {
     const risposta = await prendi(`${b.app}/salute`);
     assert.equal(risposta.status, 200);
     const detto = await risposta.json();
-    assert.equal(detto.vivo, true);
-    assert.equal(detto.dispositivi, 0);
+    /* Solo «ci sono»: quanti telefoni ha la casa, e quanti sono collegati,
+     * a chi bussa a una porta esposta non si dice. */
+    assert.deepEqual(detto, { vivo: true });
   } finally {
     await b.spegni();
   }
@@ -186,12 +225,7 @@ test("il codice della console abbina il telefono, e vale una volta sola", async 
      * centralino, e quel campo resta vuoto. */
     assert.equal(invito, `gdahome|1|${codice}||${INDIRIZZO_DI_CASA}:${b.app.split(":").pop()}`);
 
-    const risposta = await prendi(`${b.app}/abbinamento`, {
-      method: "POST",
-      body: JSON.stringify({ codice, nome: "iPhone di Anna", sistema: "ios" }),
-    });
-    assert.equal(risposta.status, 201);
-    const fatto = await risposta.json();
+    const fatto = await abbinaSulFilo(b, codice, { nome: "iPhone di Anna", sistema: "ios" });
     assert.match(fatto.segno, /^[0-9a-f]{64}$/);
     assert.equal(fatto.dispositivo.nome, "iPhone di Anna");
 
@@ -203,49 +237,29 @@ test("il codice della console abbina il telefono, e vale una volta sola", async 
     /* Questo banco non ha centralino: si dice, invece di far finta. */
     assert.equal(fatto.ritorno.centralino, null);
 
-    const seconda = await prendi(`${b.app}/abbinamento`, {
-      method: "POST",
-      body: JSON.stringify({ codice, nome: "un altro" }),
-    });
-    assert.equal(seconda.status, 403);
+    /* Il codice e' speso: un secondo telefono con lo stesso non entra. */
+    await assert.rejects(abbinaSulFilo(b, codice, { nome: "un altro" }));
     assert.equal(b.dispositivi.quanti(), 1);
   } finally {
     await b.spegni();
   }
 });
 
-test("un codice sbagliato non abbina, e dopo dieci tentativi la porta si chiude", async () => {
+test("sulla porta dell'app non ci si abbina piu' per HTTP", async () => {
+  /* Il segno e la chiave del filo in una risposta HTTP in chiaro, sulla rete
+   * di casa: era la strada vecchia, e non c'e' piu'. */
   const b = await banco();
   try {
-    await prendi(`${b.consolle}/api/codice`, { method: "POST" });
-    for (let i = 0; i < 10; i += 1) {
-      const risposta = await prendi(`${b.app}/abbinamento`, {
-        method: "POST",
-        body: JSON.stringify({ codice: "SBAGLIA2" }),
-      });
-      assert.equal(risposta.status, 403);
-    }
-    const undicesima = await prendi(`${b.app}/abbinamento`, {
+    const { codice } = await (await prendi(`${b.consolle}/api/codice`, { method: "POST" })).json();
+    const risposta = await prendi(`${b.app}/abbinamento`, {
       method: "POST",
-      body: JSON.stringify({ codice: "SBAGLIA2" }),
+      body: JSON.stringify({ codice, nome: "vecchia app" }),
     });
-    assert.equal(undicesima.status, 429);
+    assert.equal(risposta.status, 404);
+    const detto = await risposta.text();
+    assert.ok(!/segno|chiave/.test(detto));
     assert.equal(b.dispositivi.quanti(), 0);
-  } finally {
-    await b.spegni();
-  }
-});
-
-test("un corpo che non e' JSON, o troppo grande, non passa", async () => {
-  const b = await banco();
-  try {
-    const storto = await prendi(`${b.app}/abbinamento`, { method: "POST", body: "non json" });
-    assert.equal(storto.status, 400);
-    const enorme = await prendi(`${b.app}/abbinamento`, {
-      method: "POST",
-      body: JSON.stringify({ codice: "A".repeat(10_000) }),
-    });
-    assert.equal(enorme.status, 400);
+    assert.equal(b.abbinamento.stato().attivo, true, "e il codice non si e' consumato");
   } finally {
     await b.spegni();
   }
@@ -258,11 +272,7 @@ test("oltre il numero massimo la console non fabbrica piu' codici", async () => 
       const { codice } = await (
         await prendi(`${b.consolle}/api/codice`, { method: "POST" })
       ).json();
-      const risposta = await prendi(`${b.app}/abbinamento`, {
-        method: "POST",
-        body: JSON.stringify({ codice, nome: `telefono ${i}` }),
-      });
-      assert.equal(risposta.status, 201);
+      await abbinaSulFilo(b, codice, { nome: `telefono ${i}` });
     }
     const troppi = await prendi(`${b.consolle}/api/codice`, { method: "POST" });
     assert.equal(troppi.status, 409);
@@ -281,9 +291,9 @@ test("il browser riceve il permesso di parlare, e la console no", async () => {
     const salute = await prendi(`${b.app}/salute`);
     assert.equal(salute.headers.get("access-control-allow-origin"), "*");
 
-    const permesso = await prendi(`${b.app}/abbinamento`, { method: "OPTIONS" });
+    const permesso = await prendi(`${b.app}/salute`, { method: "OPTIONS" });
     assert.equal(permesso.status, 204);
-    assert.match(permesso.headers.get("access-control-allow-methods") || "", /POST/);
+    assert.match(permesso.headers.get("access-control-allow-methods") || "", /GET/);
     assert.match(permesso.headers.get("access-control-allow-headers") || "", /content-type/);
 
     /* La console no: ci arriva solo Home Assistant, e una pagina di un altro
@@ -300,7 +310,7 @@ test("la richiesta di permesso non consuma niente e non abbina nessuno", async (
   try {
     await prendi(`${b.consolle}/api/codice`, { method: "POST" });
     for (let i = 0; i < 5; i += 1) {
-      await prendi(`${b.app}/abbinamento`, { method: "OPTIONS" });
+      await prendi(`${b.app}/casa`, { method: "OPTIONS" });
     }
     assert.equal(b.abbinamento.stato().attivo, true, "il codice e' ancora buono");
     assert.equal(b.abbinamento.stato().tentativiSbagliati, 0);
@@ -316,12 +326,10 @@ test("abbinato dalla console, il telefono entra dal filo e parla con la casa", a
   const b = await banco();
   try {
     const { codice } = await (await prendi(`${b.consolle}/api/codice`, { method: "POST" })).json();
-    const { segno, chiave, dispositivo } = await (
-      await prendi(`${b.app}/abbinamento`, {
-        method: "POST",
-        body: JSON.stringify({ codice, nome: "Pixel", sistema: "android" }),
-      })
-    ).json();
+    const { segno, chiave, dispositivo } = await abbinaSulFilo(b, codice, {
+      nome: "Pixel",
+      sistema: "android",
+    });
 
     /* Anche in casa si passa dal portiere, quindi si parla cifrato: una strada
      * sola invece di due. */
@@ -388,12 +396,7 @@ test("la console stacca un telefono e ne butta giu' il filo", async () => {
   const b = await banco();
   try {
     const { codice } = await (await prendi(`${b.consolle}/api/codice`, { method: "POST" })).json();
-    const { segno, chiave, dispositivo } = await (
-      await prendi(`${b.app}/abbinamento`, {
-        method: "POST",
-        body: JSON.stringify({ codice, nome: "via" }),
-      })
-    ).json();
+    const { segno, chiave, dispositivo } = await abbinaSulFilo(b, codice, { nome: "via" });
 
     const telefono = telefonoCifrato(`${b.filo}/casa`, { chi: dispositivo.id, chiave });
     await telefono.dentro;
@@ -408,10 +411,18 @@ test("la console stacca un telefono e ne butta giu' il filo", async () => {
     assert.equal((await staccato.json()).filiChiusi, 1);
     await telefono.chiusa;
 
-    /* E con quel telefono non si rientra: il portiere non lo conosce piu'. */
+    /* E con quel telefono non si rientra. Il portiere se ne ricorda la
+     * chiave, e glielo dice **dentro** il cifrato — un no che solo la casa
+     * puo' scrivere (`dispositivi.chiaveRevocataDi`). */
+    assert.equal(b.dispositivi.chiaveRevocataDi(dispositivo.id), chiave);
     const riprova = telefonoCifrato(`${b.filo}/casa`, { chi: dispositivo.id, chiave });
-    await assert.rejects(riprova.dentro, /riabbina/);
-    await riprova.chiusa;
+    try {
+      await riprova.dentro;
+      assert.equal((await riprova.aspetta("auth_invalid")).type, "auth_invalid");
+    } finally {
+      riprova.chiudi();
+      await riprova.chiusa;
+    }
   } finally {
     await b.spegni();
   }
@@ -421,12 +432,7 @@ test("la console rinomina, e annulla un codice", async () => {
   const b = await banco();
   try {
     const { codice } = await (await prendi(`${b.consolle}/api/codice`, { method: "POST" })).json();
-    const { dispositivo } = await (
-      await prendi(`${b.app}/abbinamento`, {
-        method: "POST",
-        body: JSON.stringify({ codice, nome: "prima" }),
-      })
-    ).json();
+    const { dispositivo } = await abbinaSulFilo(b, codice, { nome: "prima" });
 
     const rinominato = await prendi(`${b.consolle}/api/dispositivi/${dispositivo.id}`, {
       method: "PATCH",

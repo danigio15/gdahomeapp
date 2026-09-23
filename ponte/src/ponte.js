@@ -12,16 +12,20 @@
  * Supervisor, e da quel momento passa i messaggi da una parte all'altra senza
  * guardarci dentro.
  *
- * Cosa vuol dire questo per la sicurezza, detto chiaro: un telefono abbinato
- * puo' fare in Home Assistant quello che puo' fare il ponte, cioe' tutto. Per
- * questo un codice di abbinamento nasce solo dietro l'autenticazione di Home
- * Assistant, dura cinque minuti, si usa una volta, e ogni telefono si stacca
- * da solo dalla console.
+ * Cosa vuol dire questo per la sicurezza, detto chiaro: il filo verso Home
+ * Assistant e' aperto col segno del Supervisor, che la' e' un amministratore.
+ * Per questo quello che il telefono manda passa dalla dogana (`dogana.js`):
+ * chi amministra la casa passa con quasi tutto, chi non la amministra con
+ * quello che serve a guardarla e usarla, e le credenziali e il Supervisor non
+ * passano per nessuno. E per questo un codice di abbinamento nasce solo dietro
+ * l'autenticazione di Home Assistant, dura cinque minuti, si usa una volta, e
+ * ogni telefono si stacca da solo dalla console.
  */
 
 import { CasaIrraggiungibile } from "./casa.js";
 import { Chiacchieroni } from "./chiacchieroni.js";
 import { eUnaCommissione, no } from "./commissioni.js";
+import { passaLaDogana } from "./dogana.js";
 import { NOME } from "./marchio.js";
 
 /* Quanti messaggi al secondo puo' mandare un telefono.
@@ -45,6 +49,11 @@ const RAFFICA = 600;
  * che se n'e' andato. */
 const BATTITO = 30_000;
 const SILENZIO_MASSIMO = 90_000;
+
+/* Quanto si aspetta che un telefono si presenti. Un telefono vero lo fa nel
+ * primo mezzo secondo; chi apre il filo e poi tace sta solo occupando un
+ * posto. */
+export const ATTESA_DEL_SEGNO = 15_000;
 
 /* ─── Il mucchio: perche' esiste ──────────────────────────────────────────
  *
@@ -172,6 +181,10 @@ class Collegamento {
     this.ultimoGettone = Date.now();
     this.vistoIl = Date.now();
     this.battito = null;
+    this._presentati = null;
+    /* Se chi sta dall'altra parte amministra la casa, deciso alla stretta di
+     * mano: vedi `_amministra`. */
+    this._amministraAllaStretta = false;
     /* Gli eventi si raggruppano solo se tutte e due le cose sono vere: il
      * telefono sa spacchettare un mucchio (l'ha detto nella stretta di mano)
      * e questo filo passa dal centralino, dove ogni messaggio e' una
@@ -194,6 +207,26 @@ class Collegamento {
     /* Come Home Assistant: la prima parola la dice il server. */
     this.presa.manda(JSON.stringify({ type: "auth_required", ha_version: NOME }));
     this.battito = setInterval(() => this._controlla(), BATTITO);
+    this._presentati = setTimeout(() => {
+      if (!this.dispositivo) this.chiudi(1008, "troppo tempo senza presentarsi");
+    }, ATTESA_DEL_SEGNO);
+    this._presentati.unref?.();
+  }
+
+  /* Se chi sta su questo filo amministra la casa.
+   *
+   * Un telefono senza nessun utente addosso e' stato abbinato prima che i
+   * telefoni si intestassero a qualcuno — e un codice, allora, lo fabbricava
+   * solo chi amministra: resta com'era. Per gli altri si guarda la risposta
+   * fresca di `utenti.js`, se c'e', e se no quella avuta alla stretta di mano.
+   * «Non si sa» non e' un si'. */
+  _amministra() {
+    const utente = this.dispositivo?.utente || "";
+    if (!this.dispositivo) return false;
+    if (!utente) return true;
+    const subito = this.ponte.utenti?.amministratoreSubito?.(utente);
+    if (subito === true || subito === false) return subito;
+    return this._amministraAllaStretta === true;
   }
 
   _controlla() {
@@ -226,7 +259,15 @@ class Collegamento {
           return;
         }
       }
-      if (!this.filo?.manda(testo)) this.chiudi(1011, "il filo con la casa e' caduto");
+      /* Tutto il resto va a Home Assistant, passando dalla dogana. */
+      const { passa, rifiuti } = passaLaDogana(testo, { amministra: this._amministra() });
+      for (const no of rifiuti) this.presa.manda(JSON.stringify(no));
+      for (const uno of passa) {
+        if (!this.filo?.manda(uno)) {
+          this.chiudi(1011, "il filo con la casa e' caduto");
+          return;
+        }
+      }
       return;
     }
 
@@ -265,6 +306,7 @@ class Collegamento {
       ? commissioni.rispondi(detto, {
           chiChiede,
           amministra: this.ponte.utenti?.amministratoreSubito?.(chiChiede) ?? null,
+          puoAmministrare: this._amministra(),
         })
       : Promise.resolve(no(detto.id ?? null, "unknown_command", "questo ponte non lo sa fare"));
     risposta
@@ -301,6 +343,18 @@ class Collegamento {
       return;
     }
 
+    /* Chi amministra, chiesto una volta adesso: dopo, sul filo, si risponde
+     * subito e si guarda la memoria (`_amministra`). Se Home Assistant non lo
+     * sa dire, qui vale no. */
+    if (dispositivo.utente) {
+      try {
+        this._amministraAllaStretta =
+          (await this.ponte.utenti?.amministratore?.(dispositivo.utente)) === true;
+      } catch (_errore) {
+        this._amministraAllaStretta = false;
+      }
+    }
+
     /* Fra l'`await` e qui il telefono puo' essersene andato. */
     if (this.chiuso) {
       this.filo.chiudi();
@@ -308,6 +362,10 @@ class Collegamento {
     }
 
     this.dispositivo = dispositivo;
+    if (this._presentati) clearTimeout(this._presentati);
+    /* La presa vera, sotto quella cifrata, sa che adesso e' di qualcuno: chi
+     * conta i fili ancora senza nome (`presa.js`) smette di contarla. */
+    for (let presa = this.presa; presa; presa = presa.sotto) presa.presentata?.();
     this.ponte.registro?.info?.(`${dispositivo.nome} e' entrato da ${this.da}`);
     this.presa.manda(JSON.stringify({ type: "auth_ok", ha_version: NOME }));
   }
@@ -385,6 +443,7 @@ class Collegamento {
     this._svuotaIlMucchio();
     this.chiuso = true;
     if (this.battito) clearInterval(this.battito);
+    if (this._presentati) clearTimeout(this._presentati);
     this.filo?.chiudi();
     this.presa.chiudi(codice, motivo);
     this.ponte.collegamenti.delete(this);

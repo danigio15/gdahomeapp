@@ -68,7 +68,7 @@ test("the redesigned alarm panel keeps every legacy runtime hook", () => {
   ])
     assert.ok(source.includes(hook), hook);
   for (const service of ["alarm_arm_away", "alarm_arm_night", "alarm_disarm"])
-    assert.match(source, new RegExp(`promptPinAndSet\\('\\$\\{service\\}'\\)|${service}`));
+    assert.match(source, new RegExp(`promptPinAndSet\\(\\$\\{jsArg\\(service\\)\\}\\)|${service}`));
   assert.match(source, /promptPinAndSet/);
   // The timer element is hidden/shown through the legacy `.show` class.
   assert.match(source, /\.dm-sec-timer\.show/);

@@ -301,19 +301,34 @@ test("i tre comandi sul filo, e quello che risponde un ponte che non li sa fare"
   assert.equal(elenco.result.aggiornamenti.length, 4);
   assert.equal(elenco.result.aggiornamenti[0].entita, "update.dashboardmodern_update");
 
-  const messo = await commissioni.rispondi({
+  /* Installare e' da chi amministra: chi non lo dice, non lo puo'. */
+  const daChiNonAmministra = await commissioni.rispondi({
     id: 2,
     type: "ponte/aggiornamenti/installa",
     entity_id: "update.dashboardmodern_update",
   });
+  assert.equal(daChiNonAmministra.success, false);
+  assert.equal(daChiNonAmministra.error.code, "unauthorized");
+
+  const messo = await commissioni.rispondi(
+    {
+      id: 2,
+      type: "ponte/aggiornamenti/installa",
+      entity_id: "update.dashboardmodern_update",
+    },
+    { puoAmministrare: true },
+  );
   assert.equal(messo.success, true);
   assert.equal(messo.result.avviato, true);
 
-  const storto = await commissioni.rispondi({
-    id: 3,
-    type: "ponte/aggiornamenti/installa",
-    entity_id: "sensor.niente",
-  });
+  const storto = await commissioni.rispondi(
+    {
+      id: 3,
+      type: "ponte/aggiornamenti/installa",
+      entity_id: "sensor.niente",
+    },
+    { puoAmministrare: true },
+  );
   assert.equal(storto.success, false);
   assert.equal(storto.error.code, "not_found");
 

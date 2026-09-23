@@ -40,7 +40,12 @@ import { dirname, extname, join, normalize } from "node:path";
 import { fileURLToPath } from "node:url";
 import { chromium } from "playwright";
 
-import { alzaLaCasaFinta, SCATTO_DEMO, SEGNO_DEL_SUPERVISOR } from "./casa-finta.js";
+import {
+  alzaLaCasaFinta,
+  AMMINISTRATORE_DEL_COLLAUDO,
+  SCATTO_DEMO,
+  SEGNO_DEL_SUPERVISOR,
+} from "./casa-finta.js";
 import { alzaIlCentralinoFinto, CHIAVE_DELLA_CONSOLE } from "./centralino-finto.js";
 
 const QUI = dirname(fileURLToPath(import.meta.url));
@@ -364,6 +369,9 @@ async function main() {
       PONTE_ARCHIVIO: archivio,
       PONTE_CONSOLE: join(PONTE, "console"),
       PONTE_PORTA_CONSOLE: String(portaDellaConsole),
+      /* La console risponde solo al proxy dell'ingress di Home Assistant: al
+       * banco il proxy e' questo script, da questa macchina. */
+      PONTE_PROXY_INGRESS: "127.0.0.1",
       SUPERVISOR_TOKEN: SEGNO_DEL_SUPERVISOR,
       PONTE_CASA: `http://127.0.0.1:${portaDellaCasa}`,
       /* E il Supervisor: in casa e' `http://supervisor`, e il ponte ci va
@@ -429,7 +437,10 @@ async function main() {
   {
     const risposta = await fetch(`http://127.0.0.1:${portaDellaConsole}/api/plance`, {
       method: "POST",
-      headers: { "content-type": "application/json" },
+      headers: {
+        "content-type": "application/json",
+        "x-remote-user-id": AMMINISTRATORE_DEL_COLLAUDO,
+      },
       body: JSON.stringify({ titolo: "Casa al mare" }),
     });
     const detto = await risposta.json();
@@ -446,7 +457,11 @@ async function main() {
    * punta. Il codice vive uno per volta: prima il suo, poi quello dell'app. */
   const codiceDelServitore = (
     await (
-      await fetch(`http://127.0.0.1:${portaDellaConsole}/api/codice`, { method: "POST" })
+      await fetch(`http://127.0.0.1:${portaDellaConsole}/api/codice`, {
+        method: "POST",
+        /* Quello che l'ingress aggiunge: chi e' entrato in Home Assistant. */
+        headers: { "x-remote-user-id": AMMINISTRATORE_DEL_COLLAUDO },
+      })
     ).json()
   ).codice;
   const paginaDellaPlancia = await accendiIlServitore({
@@ -458,7 +473,11 @@ async function main() {
 
   /* 4. Il codice di abbinamento dell'app, dalla console — come in casa. */
   const { codice } = await (
-    await fetch(`http://127.0.0.1:${portaDellaConsole}/api/codice`, { method: "POST" })
+    await fetch(`http://127.0.0.1:${portaDellaConsole}/api/codice`, {
+      method: "POST",
+      /* Quello che l'ingress aggiunge: chi e' entrato in Home Assistant. */
+      headers: { "x-remote-user-id": AMMINISTRATORE_DEL_COLLAUDO },
+    })
   ).json();
   racconta(`codice di abbinamento: ${codice}`);
 

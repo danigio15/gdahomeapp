@@ -34,11 +34,22 @@
 
     <!-- La plancia vera dentro l'app passa da un server locale, su
          127.0.0.1: e' l'unico indirizzo in chiaro che il WebView puo'
-         aprire, ed e' scritto in res/xml/network_security_config.xml. -->
+         aprire, ed e' scritto in res/xml/network_security_config.xml.
+
+         Niente copie di sicurezza, ne' nella nuvola ne' da un telefono
+         all'altro: dentro l'app ci sono il segno della casa e la chiave del
+         filo, e una copia li porterebbe fuori dal telefono. Tanto non
+         servirebbero: sono cifrati con una chiave che sta nel portachiavi del
+         telefono e non se ne va con la copia. Su un telefono nuovo si
+         riabbina, come e' giusto. `allowBackup` vale fino ad Android 11,
+         `dataExtractionRules` da Android 12 in poi. -->
     <application
         android:label="gdahome"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
+        android:allowBackup="false"
+        android:fullBackupContent="false"
+        android:dataExtractionRules="@xml/regole_delle_copie"
         android:networkSecurityConfig="@xml/network_security_config">
         <activity
             android:name=".MainActivity"

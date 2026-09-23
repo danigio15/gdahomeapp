@@ -13,7 +13,7 @@
  *                                        plancia, se il quadro gliel'ha chiesto
  *   GET    /plancia/<profilo>?id=…       e ritira quella che le e' stata scritta
  *   GET    /attesa                       la casa resta in linea, e sente subito
- *   GET    /segno/<segno>                l'icona di un aggiornamento, senza chiave
+ *   GET    /segno/<inst_…>/<segno>       l'icona di un aggiornamento, senza chiave
  *   GET    /marchio/<chi>                il logo di un installatore, senza chiave
  *   GET    /carattere/<nome>.woff2       il carattere delle pagine, senza chiave
  *
@@ -25,7 +25,7 @@
  *   GET    /console/note/<segno>         le note intere di un aggiornamento
  *   GET    /console/inviti               i **suoi** codici in attesa
  *   POST   /console/inviti               fanne uno, se il limite lo consente
- *   DELETE /console/inviti/<codice>      annulla il suo
+ *   DELETE /console/inviti/<inv_…>       annulla il suo
  *   PUT    /console/casa/<casa_…>        il nome, se la casa e' sua
  *   PUT    /console/casa/<casa_…>/plancia/<profilo>   i due nomi di una sua plancia
  *   POST   /console/casa/<casa_…>/plance     una plancia in piu', che la casa crea
@@ -37,6 +37,7 @@
  *   PUT    /console/casa/<casa_…>/plancia/<profilo>/configurazione   scrivila cosi', al prossimo rapporto
  *   POST   /console/casa/<casa_…>/plancia/<profilo>/rinfresca   chiedi alla casa lo scatto di adesso
  *   GET    /console/casa/<casa_…>/plancia/<profilo>/stato       se lo scatto c'e', e di quando
+ *   POST   /console/casa/<casa_…>/plancia/<profilo>/gettone     il gettone per l'editor di quella plancia
  *
  *   GET    /plancia-da-lontano/<casa_…>/<profilo>/            la pagina dell'editor della plancia
  *   WS     /plancia-da-lontano/<casa_…>/<profilo>/websocket   e il filo su cui parla, cieco
@@ -46,7 +47,8 @@
  *   GET    /gestore/installatori         chi c'e', quanti impianti ha ognuno e
  *                                        quante entita' in tutto
  *   GET    /gestore/installatore/<id>/case   le sue case, come le vede lui
- *   GET    /gestore/note/<segno>         le note intere di un aggiornamento
+ *   GET    /gestore/installatore/<id>/note/<segno>   le note intere, come le legge lui
+ *   GET    /gestore/salute               /salute per intero: versione, conti, aggiornamenti
  *   POST   /gestore/installatori         aggiungine uno
  *   PUT    /gestore/installatore/<id>    nome e limite
  *   POST   /gestore/installatore/<id>/congela   congelagli l'utenza
@@ -73,18 +75,31 @@
  * che vede lui. Non tocca niente: da qui non si installa, non si rinomina,
  * non si toglie. Quello resta a chi la casa l'ha messa.
  *
- * ─── Cosa non c'e' ───────────────────────────────────────────────────────
+ * ─── Cosa arriva in una casa, e da dove ─────────────────────────────────
  *
- * Non c'e' nessuna via che entri in una casa, e non e' una dimenticanza:
- * questo pezzo riceve numeri e li mostra. Per entrare in una casa serve un
- * abbinamento, e quello lo da' chi ci abita.
+ * Qui c'era scritto che non c'e' nessuna via che entri in una casa. Non e'
+ * piu' vero, e va detto com'e': da qui si chiede a una casa di **installare**
+ * un aggiornamento, di **riavviare** Home Assistant, di **configurare** una
+ * plancia, di vestirla e di crearne una. Nessuno di questi bussa alla casa: la
+ * casa passa a prenderseli nella risposta al suo rapporto, o sul filo di
+ * `/attesa` che apre lei.
+ *
+ * E ognuno sta dietro un interruttore **della casa**, non di qui: la
+ * manutenzione per installare e riavviare, `quadro_configurazione` per la
+ * plancia, il marchio per le vesti. Li accende chi ci abita, dalla scheda
+ * dell'add-on, e il no che conta lo dice la casa (`ponte/src/lavori.js`) —
+ * questo quadro lo sa e non chiede quello che verrebbe rifiutato, ma non e'
+ * lui a decidere. Una casa con gli interruttori spenti da qui riceve solo il
+ * nome dell'installatore.
  */
 
 import { readFileSync } from "node:fs";
 import { createServer } from "node:http";
 
+import { createHash } from "node:crypto";
+
 import { TUTTE, PLANCE_AL_MASSIMO } from "./case.js";
-import { CASA_VALIDA, TroppiInviti } from "./chiavi.js";
+import { CASA_VALIDA, INVITO_VALIDO, TroppiInviti } from "./chiavi.js";
 import { DISCO_FINITO, DISCO_PIENO, TROPPO_CALDO } from "./controlli.js";
 import { Fattorino, indirizzoBuono } from "./fattorino.js";
 import { comeVaLAggiornamento, laVersioneCheGira } from "./mi-aggiorno.js";
@@ -96,7 +111,10 @@ import { accetta, eUnaSalita } from "./presa.js";
 import { stessoSegreto } from "./segreti.js";
 import { ilTipoDi, Marchi, QUANTO_GROSSO } from "./marchi.js";
 import { SEGNO_VALIDO, Segni } from "./segni.js";
-import { Biglietti } from "./biglietti.js";
+import { Biglietti, GettoniDellEditor } from "./biglietti.js";
+import { laFormaDel, leRigheDeiSegni } from "./forma-del-rapporto.js";
+import { Freno } from "./freno.js";
+import { daChiSiConta, eDaQui } from "./indirizzo.js";
 
 /**
  * Quanto puo' essere grossa un rapporto. Le vere stanno sotto i quattro KiB —
@@ -141,8 +159,6 @@ const QUANTO_SI_ASPETTA = 50 * 1000;
 
 const PAGINA = new URL("../console/index.html", import.meta.url);
 const PAGINA_DEL_GESTORE = new URL("../gestore/index.html", import.meta.url);
-let pagina;
-let paginaDelGestore;
 
 export function json(risposta, corpo, stato = 200) {
   /* L'a capo in fondo non e' un vezzo: `/salute` si guarda **col curl da un
@@ -198,6 +214,84 @@ async function iByte(richiesta, massimo) {
 
 class TroppoGrosso extends Error {}
 
+/* ─── Le testate di sicurezza ─────────────────────────────────────────────
+ *
+ * Su ogni risposta, due righe che non costano niente: il browser non indovina
+ * il tipo di un file (`nosniff`) e, andando da qui a un'altra parte, non si
+ * porta dietro l'indirizzo da cui viene (`no-referrer`) — negli indirizzi di
+ * questo quadro ci sono matricole di case.
+ *
+ * Le pagine hanno in piu' la loro politica (`laPolitica`), e HSTS la mette
+ * Caddy, che e' quello che parla TLS (`accendi.sh`). */
+function testateDiSerie(risposta) {
+  risposta.setHeader("x-content-type-options", "nosniff");
+  risposta.setHeader("referrer-policy", "no-referrer");
+}
+
+/* L'impronta di ogni `<script>` scritto dentro una pagina, per la politica:
+ * cosi' gira quello che c'e' nel file, e un pezzo di pagina iniettato da fuori
+ * no. Si calcola sul file com'e', una volta. */
+function leImpronteDegliScript(html) {
+  const impronte = [];
+  const cerca = /<script(\s[^>]*)?>([\s\S]*?)<\/script>/gi;
+  let uno;
+  while ((uno = cerca.exec(html)) !== null) {
+    if (/\ssrc\s*=/i.test(uno[1] || "")) continue;
+    impronte.push(`'sha256-${createHash("sha256").update(uno[2], "utf8").digest("base64")}'`);
+  }
+  return impronte;
+}
+
+/* Le origini che possono tenere il cruscotto dentro un riquadro, e passargli
+ * la chiave: `QUADRO_OSPITI`, separate da spazi o virgole. Vuoto vuol dire
+ * «chiunque lo metta in un riquadro» — e' il caso della tessera dentro Home
+ * Assistant, il cui indirizzo e' diverso in ogni casa — e allora una chiave
+ * consegnata da un'origine che non e' questa la pagina la usa solo dopo che
+ * chi guarda ha detto di si' (vedi `console/index.html`). */
+export function gliOspiti(detti = process.env.QUADRO_OSPITI || "") {
+  return String(detti)
+    .split(/[\s,]+/)
+    .map((una) => una.trim().replace(/\/+$/, ""))
+    .filter((una) => /^https?:\/\/(\*\.)?[a-z0-9.-]+(:\d{1,5})?$/i.test(una));
+}
+
+/* La politica di una pagina.
+ *
+ * Gli script sono quelli del file e basta, per impronta; niente `<object>`,
+ * niente `<base>` che cambi da dove si leggono gli indirizzi relativi, niente
+ * moduli spediti altrove. Chi puo' metterla in un riquadro dipende dalla
+ * pagina: la gestione nessuno; il cruscotto chi ce lo mette davvero (vedi
+ * `gliOspiti`). */
+function laPolitica(html, { riquadro }) {
+  return [
+    "default-src 'self'",
+    `script-src ${leImpronteDegliScript(html).join(" ") || "'none'"}`,
+    "style-src 'self' 'unsafe-inline'",
+    "img-src 'self' data:",
+    "font-src 'self'",
+    "connect-src 'self'",
+    "frame-src 'self'",
+    "object-src 'none'",
+    "base-uri 'none'",
+    "form-action 'self'",
+    `frame-ancestors ${riquadro}`,
+  ].join("; ");
+}
+
+/* Chi bussa da questa stessa macchina, e non per conto di un altro: senza
+ * `x-forwarded-for`, che Caddy mette sempre a chi viene da fuori. */
+const daQui = (richiesta) =>
+  eDaQui(richiesta.socket?.remoteAddress) &&
+  !richiesta.headers["x-forwarded-for"] &&
+  !richiesta.headers.forwarded;
+
+/* Quante porte dell'editor si tengono aperte prima che dicano chi sono. Un
+ * WebSocket costa poco, ma mille che non dicono niente per quindici secondi
+ * l'uno sono mille prese aperte per niente. */
+export const EDITOR_MUTI_AL_MASSIMO = 16;
+export const EDITOR_MUTI_PER_UNO = 4;
+export const EDITOR_AL_MASSIMO = 64;
+
 export function costruisciIlServer({
   case: case_,
   chiavi,
@@ -211,6 +305,19 @@ export function costruisciIlServer({
   /* La plancia da servire dentro il cruscotto, per l'editor: quella
    * dell'add-on, trovata da sola (`plancia-servita.js`). */
   plancia: planciaServita = new PlanciaServita(),
+  /* I gettoni dell'editor della plancia (`biglietti.js`): in memoria. */
+  gettoni = new GettoniDellEditor(),
+  /* Il freno dei rapporti, casa per casa: sei di fila, poi uno ogni venti
+   * secondi. Una casa manda un rapporto al minuto, e qualcuno in piu' quando
+   * il cruscotto la sveglia: sotto questo passo non ci arriva mai. */
+  frenoDeiRapporti = new Freno({ quanti: 6, ogni: 20 * 1000 }),
+  /* E quello delle plance e del filo tenuto aperto, che sono piu' fitti. */
+  frenoDellePlance = new Freno({ quanti: 12, ogni: 15 * 1000 }),
+  frenoDellAttesa = new Freno({ quanti: 20, ogni: 5 * 1000 }),
+  /* E quello delle prove degli avvisi, installatore per installatore. */
+  frenoDelleProve = new Freno({ quanti: 3, ogni: 60 * 1000 }),
+  /* Chi puo' tenere il cruscotto in un riquadro: vedi `gliOspiti`. */
+  ospiti = gliOspiti(),
   registro = { debug() {}, info() {}, attenzione() {}, errore() {} },
 }) {
   /* La gestione si apre solo dove c'e' una chiave vera. Senza, questo quadro
@@ -218,12 +325,23 @@ export function costruisciIlServer({
    * inutile, e va detto all'accensione invece di farlo scoprire dalla pagina. */
   const gestoreAperto = String(chiaveDelGestore).length >= 16;
 
+  /* Le due pagine, lette al primo che le chiede (`laPagina`). */
+  let pagina;
+  let paginaDelGestore;
+
   /* I loghi degli installatori. Un file per uno, fuori dall'archivio: il
    * perche' sta in cima a `marchi.js`. */
   const marchi = new Marchi({ cartella });
   /* Le icone vere degli aggiornamenti e le loro note intere, come le manda la
-   * casa. Il perche' sta in cima a `segni.js`. */
-  const segni = new Segni({ cartella });
+   * casa: una cartella per installatore. Il perche' sta in cima a `segni.js`.
+   * Quella di tutti, delle versioni di prima, si svuota adesso. */
+  const segniDi = (chi) => new Segni({ cartella, di: chi });
+  try {
+    new Segni({ cartella }).sgombraLaVecchia();
+  } catch (_errore) {
+    /* Una cartella che non si svuota non ferma il quadro: non la legge piu'
+     * nessuno. */
+  }
   /* Le plance delle case che si lasciano configurare da lontano: gli scatti
    * che arrivano da casa e le richieste che aspettano di essere ritirate. */
   const scatti = new PlanceDelleCase({ cartella });
@@ -271,6 +389,7 @@ export function costruisciIlServer({
   };
 
   const server = createServer((richiesta, risposta) => {
+    testateDiSerie(risposta);
     servi(richiesta, risposta).catch((errore) => {
       registro.errore(`il quadro e' inciampato: ${errore?.message || errore}`);
       if (!risposta.headersSent) male(risposta, 500, "qualcosa e' andato storto");
@@ -286,6 +405,12 @@ export function costruisciIlServer({
   /* E gli editor aperti: un WebSocket aperto tiene su il server come una
    * richiesta aperta. */
   const cuciture = new Set();
+  /* Il tempo per mandare la richiesta intera, e le intestazioni: chi le manda
+   * una lettera al minuto tiene una presa aperta per niente. Il filo di
+   * `/attesa` non c'entra: quello e' la **risposta** che tarda, e la richiesta
+   * e' arrivata tutta subito. */
+  server.requestTimeout = 60 * 1000;
+  server.headersTimeout = 20 * 1000;
   server.lasciaAndareIFili = () => {
     for (const casa of [...aspettano.keys()]) sveglia(casa, {});
     for (const una of [...cuciture]) una.chiudi(1001, "il quadro si spegne");
@@ -294,13 +419,34 @@ export function costruisciIlServer({
   /* Il filo dell'editor della plancia: la pagina crede di parlare con Home
    * Assistant, e parla con la cucitura cieca (`cucitura-cieca.js`), che di
    * casa ha solo quello che la casa le ha mandato. Chi e' lo dice il primo
-   * messaggio, col codice del cruscotto. */
+   * messaggio, col gettone dell'editor (`biglietti.js`). */
   server.on("upgrade", (richiesta, socket, testa) => {
     const via = new URL(richiesta.url || "/", "http://quadro").pathname;
     const salita =
       /^\/plancia-da-lontano\/(casa_[0-9a-f]{32})\/([a-z0-9][a-z0-9-]{0,40})\/websocket$/.exec(via);
     if (!salita || !eUnaSalita(richiesta)) {
       socket.end("HTTP/1.1 404 Not Found\r\n\r\n");
+      return;
+    }
+    /* Una casa che non c'e', o che non lascia configurare da lontano, non ha
+     * nessun editor: la porta non si apre nemmeno, e non occupa posto. */
+    if (case_.quella(salita[1])?.carta?.configurazione !== true) {
+      socket.end("HTTP/1.1 404 Not Found\r\n\r\n");
+      return;
+    }
+    /* Un tetto a chi sta sul filo senza aver ancora detto chi e', in tutto e
+     * per indirizzo, e uno a tutti gli editor aperti. L'indirizzo e' quello
+     * vero, non quello di Caddy (`indirizzo.js`): contato per socket, dietro
+     * Caddy sarebbe lo stesso per tutti, e quattro porte mute aperte da uno
+     * solo chiuderebbero l'editor a chiunque. */
+    const da = daChiSiConta(richiesta);
+    const muti = [...cuciture].filter((una) => !una.chi);
+    if (
+      cuciture.size >= EDITOR_AL_MASSIMO ||
+      muti.length >= EDITOR_MUTI_AL_MASSIMO ||
+      muti.filter((una) => una.da === da).length >= EDITOR_MUTI_PER_UNO
+    ) {
+      socket.end("HTTP/1.1 503 Service Unavailable\r\n\r\n");
       return;
     }
     const presa = accetta(richiesta, socket, {
@@ -313,10 +459,12 @@ export function costruisciIlServer({
       profilo: salita[2],
       scatti,
       case: case_,
-      riconosci: (segno) => installatori.riconosci(segno),
+      /* Il gettone di questa casa e di questa plancia, e nient'altro: la
+       * chiave del cruscotto qui non entra (`biglietti.js`). */
+      riconosci: (segno) => gettoni.riconosci(segno, salita[1], salita[2]),
       congelato: (chi) => installatori.congelato(chi),
       registro,
-      da: socket.remoteAddress || "?",
+      da,
     });
     cuciture.add(cucitura);
     const eraChiusa = presa.onChiusa;
@@ -338,29 +486,15 @@ export function costruisciIlServer({
     const metodo = richiesta.method || "GET";
 
     if ((via === "/salute" || via === "/salute/") && metodo === "GET") {
-      /* Se il quadro non riesce piu' ad aggiornarsi, lo dice **qui**.
+      /* Da fuori dice solo che e' vivo.
        *
-       * Qui e non nel registro, perche' questa riga qualcuno la guarda: e'
-       * quella che si apre dopo averlo acceso, e quella che si riapre quando
-       * si sospetta qualcosa. Il registro di una macchina che funziona non lo
-       * apre nessuno, ed e' esattamente il posto dove un guasto silenzioso
-       * resterebbe in silenzio.
-       *
-       * E non compare quasi mai: ci vogliono sei giri di fila andati a vuoto.
-       * Un campo che c'e' sempre si smette di leggere. */
-      const fermo = comeVaLAggiornamento({ cartella });
-      /* E **quale versione gira**, che era la cosa che non si poteva sapere da
-       * nessuna parte: questa riga risponde a «si e' aggiornato?» senza dover
-       * entrare nella macchina a leggere un registro. */
-      const versione = laVersioneCheGira();
-      json(risposta, {
-        vivo: true,
-        ...(versione ? { versione } : {}),
-        case: case_.lista.length,
-        installatori: installatori.lista.length,
-        gestore: gestoreAperto,
-        ...(fermo ? { nonMiAggiorno: fermo } : {}),
-      });
+       * Diceva anche quale versione gira, quante case e quanti installatori ci
+       * sono e se si sta aggiornando: tutte cose utili a chi tiene il quadro,
+       * e a chi lo guarda da fuori per sapere cosa c'e' dietro. Adesso quelle
+       * righe le legge chi e' su questa macchina (`curl 127.0.0.1:8100/salute`,
+       * che e' quello che si fa dopo averla accesa) e la gestione, con la sua
+       * chiave, su `/gestore/salute`. */
+      json(risposta, daQui(richiesta) ? laSalute() : { vivo: true });
       return;
     }
 
@@ -394,8 +528,15 @@ export function costruisciIlServer({
         male(risposta, 400, "questa non e' una matricola");
         return;
       }
-      if (!chiavi.riconosci(casa, ilSegno(richiesta))) {
+      if (!chiavi.riconosci(casa, ilSegno(richiesta), leProve(richiesta))) {
         male(risposta, 403, "questa chiave non apre niente");
+        return;
+      }
+      /* Il freno si guarda **dopo** la chiave: se no chiunque sappia una
+       * matricola potrebbe consumare i gettoni di quella casa al posto suo. */
+      const fraQuanto = frenoDellAttesa.passa(casa);
+      if (fraQuanto) {
+        frenato(risposta, fraQuanto);
         return;
       }
       /* Quello che c'e' gia' non fa aspettare nessuno. */
@@ -440,12 +581,17 @@ export function costruisciIlServer({
         male(risposta, 400, "questa non e' una matricola");
         return;
       }
-      if (!chiavi.riconosci(casa, ilSegno(richiesta))) {
+      if (!chiavi.riconosci(casa, ilSegno(richiesta), leProve(richiesta))) {
         male(risposta, 403, "questa chiave non apre niente");
         return;
       }
       if (case_.quella(casa)?.carta?.configurazione !== true) {
         male(risposta, 409, "questa casa non lascia configurare la plancia da lontano");
+        return;
+      }
+      const fraQuanto = frenoDellePlance.passa(casa);
+      if (fraQuanto) {
+        frenato(risposta, fraQuanto);
         return;
       }
       let scatto;
@@ -490,7 +636,7 @@ export function costruisciIlServer({
         male(risposta, 400, "questa non e' una matricola");
         return;
       }
-      if (!chiavi.riconosci(casa, ilSegno(richiesta))) {
+      if (!chiavi.riconosci(casa, ilSegno(richiesta), leProve(richiesta))) {
         male(risposta, 403, "questa chiave non apre niente");
         return;
       }
@@ -510,11 +656,18 @@ export function costruisciIlServer({
         male(risposta, 400, "questa non e' una matricola");
         return;
       }
-      if (!chiavi.riconosci(casa, ilSegno(richiesta))) {
+      if (!chiavi.riconosci(casa, ilSegno(richiesta), leProve(richiesta))) {
         /* Non si distingue «chiave sbagliata» da «chiave di un'altra casa»:
          * chi bussa con una chiave che non e' sua non deve imparare niente da
          * come gli si dice di no. */
         male(risposta, 403, "questa chiave non apre niente");
+        return;
+      }
+      /* Il freno: vedi `frenoDeiRapporti`. Dopo la chiave, per lo stesso
+       * motivo di `/attesa`. */
+      const fraQuanto = frenoDeiRapporti.passa(casa);
+      if (fraQuanto) {
+        frenato(risposta, fraQuanto);
         return;
       }
       let carta;
@@ -534,6 +687,12 @@ export function costruisciIlServer({
        * questa casa: lo dice l'invito con cui e' entrata. */
       const prima = case_.quella(casa);
       const di = chiavi.diChiE(casa);
+      /* Si tiene la **forma** del rapporto, non il rapporto com'e' arrivato:
+       * numeri che sono numeri, parole tagliate, elenchi col tetto, e niente
+       * campi che qui non si conoscono (`forma-del-rapporto.js`). E' quello
+       * che finisce nell'archivio e nella pagina di chi installa. */
+      const grezzo = carta;
+      carta = laFormaDel(grezzo);
       case_.deposita(casa, { ...carta, casa }, di);
       if (!prima) registro.info(`una casa nuova si e' presentata: ${casa}`);
       /* Nella risposta torna **il nome dell'installatore**, che la casa non ha modo
@@ -572,9 +731,13 @@ export function costruisciIlServer({
        * manda solo quello che il quadro le dice di non avere, e il quadro lo
        * sa guardando i suoi file. Un quadro che li perde li richiede da se'; una
        * casa che si riavvia non rimanda niente che sia gia' arrivato. */
-      const elenco = carta?.aggiornamenti?.elenco;
-      segni.metti(elenco);
-      const manca = segni.quelliCheMancano(elenco);
+      /* Nella cartella di **chi segue questa casa**, e in quella soltanto:
+       * quello che manda una sua casa lo vede lui e nessun altro. Una casa
+       * senza nessuno non scrive niente. */
+      const suoi = suo ? segniDi(suo.chi) : null;
+      const elenco = leRigheDeiSegni(grezzo);
+      if (suoi) suoi.metti(elenco);
+      const manca = suoi ? suoi.quelliCheMancano(elenco) : [];
       /* E le vesti delle sue plance: i nomi che chi la segue ha scelto per
        * ognuna, se ne ha scelti. Assenti vuol dire «nessuno», e la casa lo
        * legge cosi': quello che era vestito si sveste. */
@@ -607,9 +770,12 @@ export function costruisciIlServer({
     /* `quale` e non `ilSegno`: quel nome e' gia' preso, ed e' la funzione che
      * legge la chiave dall'intestazione. Chiamandolo cosi' la si oscurava, e
      * da li' in poi **ogni** via che chiede una chiave rispondeva 500. */
-    const quale = new RegExp(`^/segno/(${SEGNO_VALIDO.source.slice(1, -1)})$`).exec(via);
+    /* Con davanti l'installatore: la cartella e' la sua (vedi `segni.js`). */
+    const quale = new RegExp(
+      `^/segno/(${CHI_VALIDO.source.slice(1, -1)})/(${SEGNO_VALIDO.source.slice(1, -1)})$`,
+    ).exec(via);
     if (quale && metodo === "GET") {
-      const suo = segni.leggi(quale[1]);
+      const suo = installatori.quello(quale[1]) ? segniDi(quale[1]).leggi(quale[2]) : null;
       if (!suo) {
         male(risposta, 404, "questo aggiornamento non ha un'icona");
         return;
@@ -729,6 +895,12 @@ export function costruisciIlServer({
       risposta.writeHead(200, {
         "content-type": "text/html; charset=utf-8",
         "cache-control": "no-store",
+        /* Questa pagina sta dentro il cruscotto e basta: nessun altro la puo'
+         * mettere in un riquadro. Gli script sono i suoi, scritti dentro e
+         * fra i file della plancia, e la politica piu' stretta di cosi' non
+         * la regge senza riscriverla. */
+        "content-security-policy": "object-src 'none'; frame-ancestors 'self'",
+        "x-frame-options": "SAMEORIGIN",
       });
       risposta.end(
         planciaServita.pagina({
@@ -866,6 +1038,43 @@ export function costruisciIlServer({
     male(risposta, 404, "qui non c'e' niente");
   }
 
+  /* La salute per intero: per chi e' sulla macchina e per la gestione.
+   *
+   * Se il quadro non riesce piu' ad aggiornarsi, lo dice **qui**: e' la riga
+   * che si apre dopo averlo acceso, e quella che si riapre quando si sospetta
+   * qualcosa. Il registro di una macchina che funziona non lo apre nessuno.
+   * E non compare quasi mai: ci vogliono sei giri di fila andati a vuoto.
+   *
+   * E **quale versione gira**: risponde a «si e' aggiornato?» senza dover
+   * entrare nella macchina a leggere un registro. */
+  function laSalute() {
+    const fermo = comeVaLAggiornamento({ cartella });
+    const versione = laVersioneCheGira();
+    return {
+      vivo: true,
+      ...(versione ? { versione } : {}),
+      case: case_.lista.length,
+      installatori: installatori.lista.length,
+      gestore: gestoreAperto,
+      ...(fermo ? { nonMiAggiorno: fermo } : {}),
+    };
+  }
+
+  /* Le prove che una casa porta, oltre alla sua chiave: servono solo il
+   * giorno che cambia installatore (`chiavi.riconosci`). */
+  function leProve(richiesta) {
+    return {
+      segreto: String(richiesta.headers["x-casa-segreto"] || ""),
+      chiavePrima: String(richiesta.headers["x-chiave-prima"] || ""),
+    };
+  }
+
+  /* Un 429 con scritto fra quanto riprovare. */
+  function frenato(risposta, secondi) {
+    risposta.setHeader("retry-after", String(secondi));
+    male(risposta, 429, "troppe richieste: riprova fra poco");
+  }
+
   /* Le case di un installatore, nella forma in cui le legge la sua pagina.
    *
    * Una funzione sola per due porte: la sua (`/console/case`) e quella di chi
@@ -891,7 +1100,7 @@ export function costruisciIlServer({
           sue.flatMap((una) =>
             (una.carta?.aggiornamenti?.elenco || [])
               .map((uno) => String(uno?.segno || ""))
-              .filter((uno) => segni.note(uno)),
+              .filter((uno) => segniDi(chi).note(uno)),
           ),
         ),
       ],
@@ -905,8 +1114,8 @@ export function costruisciIlServer({
 
   /* Le note intere di un aggiornamento, quelle che la casa ha preso da Home
    * Assistant: si rispondono uguali dal retro e dalla gestione. */
-  function rispondiLeNote(risposta, segno) {
-    const dette = segni.note(segno);
+  function rispondiLeNote(risposta, chi, segno) {
+    const dette = segniDi(chi).note(segno);
     if (!dette) {
       male(risposta, 404, "di questo aggiornamento non sono arrivate le note");
       return;
@@ -964,7 +1173,7 @@ export function costruisciIlServer({
           400,
           byte.length > QUANTO_GROSSO
             ? "questa immagine e' troppo grossa"
-            : "si accettano PNG, JPEG, WEBP e SVG, e questa non e' nessuno dei quattro",
+            : "si accettano PNG, JPEG e WEBP, e questa non e' nessuno dei tre",
         );
         return;
       }
@@ -989,6 +1198,13 @@ export function costruisciIlServer({
         male(risposta, 400, "prima serve un indirizzo dove mandarli");
         return;
       }
+      /* Poche per volta: e' un tasto per vedere se funziona, non un modo di
+       * far bussare questa macchina a raffica da qualche parte. */
+      const fraQuanto = frenoDelleProve.passa(chi);
+      if (fraQuanto) {
+        frenato(risposta, fraQuanto);
+        return;
+      }
       const arrivato = await fattorino.porta(io.avvisi, {
         tipo: "prova",
         case: [],
@@ -996,7 +1212,11 @@ export function costruisciIlServer({
           "Questa e' una prova del quadro di gdahome. " +
           "Se la stai leggendo, gli avvisi arrivano dove devono.",
       });
-      json(risposta, { arrivato });
+      /* Si' o no, e nient'altro: ne' il codice che ha risposto chi riceve,
+       * ne' perche' non e' partito. Un indirizzo che non si accetta, uno che
+       * non risponde e uno che dice di no si dicono uguale — da qui non si
+       * deve poter imparare cosa c'e' dietro un indirizzo. */
+      json(risposta, { arrivato: arrivato === true });
       return;
     }
 
@@ -1014,7 +1234,7 @@ export function costruisciIlServer({
      * cambia prima di premere «Installa» vuol dire restare dove si e'. */
     const leNote = new RegExp(`^/note/(${SEGNO_VALIDO.source.slice(1, -1)})$`).exec(via);
     if (leNote && metodo === "GET") {
-      rispondiLeNote(risposta, leNote[1]);
+      rispondiLeNote(risposta, chi, leNote[1]);
       return;
     }
 
@@ -1046,14 +1266,18 @@ export function costruisciIlServer({
           quante: case_.quante(chi),
         });
         registro.info("un codice nuovo, buono per una casa e per un giorno");
-        json(risposta, { codice, inviti: chiavi.elenco(chi) });
+        /* Il codice intero esce **adesso e basta**: nell'archivio c'e' la sua
+         * impronta, e nell'elenco solo le ultime lettere. L'`id` serve alla
+         * pagina per sapere quale riga e' questa. */
+        json(risposta, { codice, id: chiavi.ultimoFatto, inviti: chiavi.elenco(chi) });
       } catch (errore) {
         male(risposta, errore instanceof TroppiInviti ? 409 : 500, String(errore?.message));
       }
       return;
     }
 
-    const invito = /^\/inviti\/([A-Za-z0-9-]{8,40})$/.exec(via);
+    /* Col suo nome (`inv_…`), o col codice intero di una volta. */
+    const invito = /^\/inviti\/(inv_[0-9a-f]{16}|[A-Za-z0-9-]{8,40})$/.exec(via);
     if (invito && metodo === "DELETE") {
       json(risposta, { annullato: chiavi.annulla(invito[1], chi), inviti: chiavi.elenco(chi) });
       return;
@@ -1180,6 +1404,25 @@ export function costruisciIlServer({
      * sveglia la casa perche' passi subito. La risposta dice cosa c'e' gia'
      * — lo scatto di prima, se c'e', e di quando — e se la casa era in
      * linea: chi apre l'editor sa cosa aspettarsi. */
+    /* Il gettone per l'editor di questa plancia: lo chiede il cruscotto con
+     * la sua chiave, e lo passa alla pagina dell'editor al posto della
+     * chiave (`biglietti.js`). Solo per una casa sua che lo permette. */
+    const perLEditor =
+      /^\/casa\/(casa_[0-9a-f]{32})\/plancia\/([a-z0-9][a-z0-9-]{0,40})\/gettone$/.exec(via);
+    if (perLEditor && metodo === "POST") {
+      const sua = case_.quella(perLEditor[1]);
+      if (!sua || sua.di !== chi) {
+        male(risposta, 404, "qui non c'e' niente");
+        return;
+      }
+      if (sua.carta?.configurazione !== true) {
+        male(risposta, 409, "questo impianto non lascia configurare la plancia da lontano");
+        return;
+      }
+      json(risposta, gettoni.dai(chi, perLEditor[1], perLEditor[2]));
+      return;
+    }
+
     const rinfresco =
       /^\/casa\/(casa_[0-9a-f]{32})\/plancia\/([a-z0-9][a-z0-9-]{0,40})\/(rinfresca|stato)$/.exec(
         via,
@@ -1374,11 +1617,22 @@ export function costruisciIlServer({
       return;
     }
 
-    /* Le note intere: le stesse che legge l'installatore, con la chiave
-     * della gestione. */
-    const leNote = new RegExp(`^/note/(${SEGNO_VALIDO.source.slice(1, -1)})$`).exec(via);
+    /* Le note intere: le stesse che legge l'installatore, dalla sua
+     * cartella, con la chiave della gestione. */
+    const leNote = new RegExp(
+      `^/installatore/(${CHI_VALIDO.source.slice(1, -1)})/note/(${SEGNO_VALIDO.source.slice(1, -1)})$`,
+    ).exec(via);
     if (leNote && metodo === "GET") {
-      rispondiLeNote(risposta, leNote[1]);
+      if (!installatori.quello(leNote[1])) {
+        male(risposta, 404, "questo installatore non c'e'");
+        return;
+      }
+      rispondiLeNote(risposta, leNote[1], leNote[2]);
+      return;
+    }
+
+    if (via === "/salute" && metodo === "GET") {
+      json(risposta, laSalute());
       return;
     }
 
@@ -1453,6 +1707,7 @@ export function costruisciIlServer({
       }
       const suoi = chiavi.toglieTutto(chi);
       const quante = case_.toglieTutto(chi);
+      gettoni.dimentica(chi);
       marchi.togli(chi, installatori.quello(chi)?.marchio || "");
       const chiuso = installatori.togli(chi);
       registro.info(
@@ -1498,6 +1753,8 @@ export function costruisciIlServer({
         male(risposta, 404, "questo installatore non c'e'");
         return;
       }
+      /* Una chiave nuova chiude anche gli editor aperti con quella di prima. */
+      gettoni.dimentica(chiave[1]);
       registro.info(`chiave rifatta per ${chiave[1]}: quella di prima non apre piu'`);
       json(risposta, { chiave: nuova });
       return;
@@ -1515,14 +1772,42 @@ export function costruisciIlServer({
   }
 
   function laPagina(risposta, quale = PAGINA, chiamata = "console") {
-    /* Lette dal disco al primo che le chiede, e poi tenute in memoria. */
+    /* Lette dal disco al primo che le chiede, e poi tenute in memoria, con la
+     * loro politica gia' fatta. */
     let foglio = quale === PAGINA ? pagina : paginaDelGestore;
     if (foglio === undefined) {
+      let testo = null;
       try {
-        foglio = readFileSync(quale);
+        testo = readFileSync(quale, "utf8");
       } catch (_errore) {
-        foglio = null;
+        testo = null;
       }
+      if (testo !== null && quale === PAGINA) {
+        /* Gli ospiti scritti dentro la pagina, dove la pagina li legge: da
+         * quelle origini una chiave consegnata si prende senza chiedere. */
+        testo = testo.replace(
+          /<meta name="gdahome-ospiti" content="[^"]*"/,
+          `<meta name="gdahome-ospiti" content="${ospiti.join(" ").replace(/[^a-z0-9:/.* -]/gi, "")}"`,
+        );
+      }
+      foglio =
+        testo === null
+          ? null
+          : {
+              corpo: Buffer.from(testo, "utf8"),
+              politica: laPolitica(testo, {
+                /* La gestione non sta dentro niente. Il cruscotto si': nella
+                 * tessera di Home Assistant e nell'app, e l'indirizzo di un
+                 * Home Assistant e' diverso in ogni casa. Se chi tiene il
+                 * quadro li elenca (`QUADRO_OSPITI`) si stringe a quelli. */
+                riquadro:
+                  quale === PAGINA
+                    ? ospiti.length
+                      ? `'self' ${ospiti.join(" ")}`
+                      : "*"
+                    : "'none'",
+              }),
+            };
       if (quale === PAGINA) pagina = foglio;
       else paginaDelGestore = foglio;
     }
@@ -1530,12 +1815,13 @@ export function costruisciIlServer({
       male(risposta, 404, `la pagina della ${chiamata} non c'e'`);
       return;
     }
-    const pagina_ = foglio;
     risposta.writeHead(200, {
       "content-type": "text/html; charset=utf-8",
       "cache-control": "no-store",
+      "content-security-policy": foglio.politica,
+      ...(quale === PAGINA ? {} : { "x-frame-options": "DENY" }),
     });
-    risposta.end(pagina_);
+    risposta.end(foglio.corpo);
   }
 }
 

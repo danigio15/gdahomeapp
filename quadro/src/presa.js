@@ -393,6 +393,14 @@ export class Presa {
     this._avvisa();
   }
 
+  /* Chi sta sopra dice che su questo filo si e' presentato qualcuno con un
+   * segno buono: vedi `SaliteSenzaNome`. */
+  presentata() {
+    const avvisa = this._quandoPresentata;
+    this._quandoPresentata = null;
+    avvisa?.();
+  }
+
   /* L'avviso di chiusura parte una volta sola: `close` sul socket arriva anche
    * dopo un `chiudi()` nostro, e chi ascolta non deve contarlo due volte. */
   _avvisa() {
@@ -403,5 +411,141 @@ export class Presa {
     } catch (_errore) {
       /* Chi ascolta ha sbagliato: non e' un motivo per far cadere il ponte. */
     }
+  }
+}
+
+/* ─── I fili senza nome ────────────────────────────────────────────────────
+ *
+ * Fra la salita a WebSocket e il segno buono un filo non e' di nessuno: e'
+ * una presa aperta, un po' di memoria, e — finche' nessuno la chiude — un
+ * posto occupato. Un telefono vero passa di qui in un secondo; chi apre mille
+ * fili e poi tace li terrebbe tutti per sempre, perche' la presa non ha
+ * nessuna scadenza sua (`setTimeout(0)` qui sopra, apposta: un telefono
+ * collegato puo' stare zitto per ore).
+ *
+ * Allora i fili senza nome si contano, da ogni indirizzo e in tutto, e hanno
+ * un tempo per presentarsi. Chi si presenta smette di contare; chi non lo fa
+ * in tempo viene chiuso. Oltre il tetto, chi bussa aspetta fuori. */
+export const SENZA_NOME_PER_INDIRIZZO = 20;
+export const SENZA_NOME_IN_TUTTO = 200;
+/* I posti tenuti da parte per la rete di casa: chi riempie la fila da fuori
+ * non deve lasciare fuori il telefono sul divano. */
+export const SENZA_NOME_IN_CASA = 50;
+export const ATTESA_DEL_NOME = 15_000;
+
+/* L'indirizzo scritto come si legge un IPv6: otto gruppi, senza `::`. `null`
+ * se non e' un IPv6. */
+function gruppiIPv6(indirizzo) {
+  const senzaZona = indirizzo.split("%")[0];
+  if (!senzaZona.includes(":")) return null;
+  const [prima, dopo = null] = senzaZona.split("::");
+  if (senzaZona.split("::").length > 2) return null;
+  const testa = prima ? prima.split(":") : [];
+  const coda = dopo === null ? [] : dopo ? dopo.split(":") : [];
+  const mancano = 8 - testa.length - coda.length;
+  if (dopo === null ? mancano !== 0 : mancano < 0) return null;
+  const tutti = [...testa, ...Array(Math.max(mancano, 0)).fill("0"), ...coda];
+  if (!tutti.every((pezzo) => /^[0-9a-f]{1,4}$/i.test(pezzo))) return null;
+  return tutti.map((pezzo) => Number.parseInt(pezzo, 16));
+}
+
+/**
+ * Chi bussa, per contarlo: l'indirizzo, ma un IPv6 per la sua rete `/64`.
+ *
+ * Una casa, o un fornitore, da' a una macchina un `/64` intero: contare gli
+ * indirizzi uno per uno vorrebbe dire dare a chi ne ha diciotto trilioni
+ * diciotto trilioni di tentativi. Un IPv4 scritto alla IPv6 (`::ffff:…`) e'
+ * un IPv4. Quello che non e' un indirizzo — «centralino …» — resta com'e'.
+ */
+export function gruppoDellIndirizzo(da) {
+  const detto = String(da ?? "")
+    .trim()
+    .toLowerCase();
+  const spazio = detto.lastIndexOf(" ");
+  const davanti = spazio === -1 ? "" : detto.slice(0, spazio + 1);
+  const indirizzo = (spazio === -1 ? detto : detto.slice(spazio + 1)).replace(/^\[|\]$/g, "");
+  const quattro = /^::ffff:(\d{1,3}(?:\.\d{1,3}){3})$/.exec(indirizzo);
+  if (quattro) return davanti + quattro[1];
+  const gruppi = gruppiIPv6(indirizzo);
+  if (!gruppi) return detto;
+  return `${davanti}${gruppi
+    .slice(0, 4)
+    .map((pezzo) => pezzo.toString(16))
+    .join(":")}::/64`;
+}
+
+/* Se l'indirizzo e' della rete di casa: le reti private, il loopback, i
+ * link-local, e gli IPv6 locali (ULA). */
+export function eInCasa(da) {
+  const indirizzo = String(da ?? "")
+    .trim()
+    .toLowerCase()
+    .replace(/^::ffff:/, "");
+  const quattro = /^(\d{1,3})\.(\d{1,3})\.\d{1,3}\.\d{1,3}$/.exec(indirizzo);
+  if (quattro) {
+    const [a, b] = [Number(quattro[1]), Number(quattro[2])];
+    return (
+      a === 10 ||
+      a === 127 ||
+      (a === 172 && b >= 16 && b <= 31) ||
+      (a === 192 && b === 168) ||
+      (a === 169 && b === 254)
+    );
+  }
+  const gruppi = gruppiIPv6(indirizzo);
+  if (!gruppi) return false;
+  if (gruppi.slice(0, 7).every((pezzo) => pezzo === 0) && gruppi[7] === 1) return true;
+  return (gruppi[0] & 0xffc0) === 0xfe80 || (gruppi[0] & 0xfe00) === 0xfc00;
+}
+
+export class SaliteSenzaNome {
+  constructor({
+    perIndirizzo = SENZA_NOME_PER_INDIRIZZO,
+    inTutto = SENZA_NOME_IN_TUTTO,
+    inCasa = SENZA_NOME_IN_CASA,
+    attesa = ATTESA_DEL_NOME,
+  } = {}) {
+    this.perIndirizzo = perIndirizzo;
+    this.inTutto = inTutto;
+    this.inCasa = inCasa;
+    this.attesa = attesa;
+    /* Due file: quella di fuori e quella di casa, ognuna col suo tetto. */
+    this._quanti = { fuori: 0, casa: 0 };
+    this._daDove = new Map();
+  }
+
+  get quanti() {
+    return this._quanti.fuori + this._quanti.casa;
+  }
+
+  cePosto(da) {
+    const fila = eInCasa(da) ? "casa" : "fuori";
+    if (this._quanti[fila] >= (fila === "casa" ? this.inCasa : this.inTutto)) return false;
+    return (this._daDove.get(gruppoDellIndirizzo(da)) || 0) < this.perIndirizzo;
+  }
+
+  tieni(presa, da) {
+    const chi = gruppoDellIndirizzo(da);
+    const fila = eInCasa(da) ? "casa" : "fuori";
+    this._quanti[fila] += 1;
+    this._daDove.set(chi, (this._daDove.get(chi) || 0) + 1);
+    let fatto = false;
+    const lascia = () => {
+      if (fatto) return;
+      fatto = true;
+      clearTimeout(scadenza);
+      this._quanti[fila] -= 1;
+      const restano = (this._daDove.get(chi) || 1) - 1;
+      if (restano > 0) this._daDove.set(chi, restano);
+      else this._daDove.delete(chi);
+    };
+    const scadenza = setTimeout(() => {
+      if (fatto) return;
+      lascia();
+      presa.chiudi(1008, "troppo tempo senza presentarsi");
+    }, this.attesa);
+    scadenza.unref?.();
+    presa._quandoPresentata = lascia;
+    presa.socket?.once?.("close", lascia);
   }
 }

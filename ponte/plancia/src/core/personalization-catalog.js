@@ -254,6 +254,9 @@ export const ROOM_GLYPHS = Object.freeze({
 export function directEmoji(value) {
   const token = clean(value);
   if (!token || token.startsWith("mdi:")) return "";
+  /* Un'emoji non ha mai dentro i caratteri del markup: chi li porta non e' un
+   * simbolo, e' un pezzo di pagina, e qui torna il ripiego del catalogo. */
+  if (/[<>&"'`]/.test(token)) return "";
   return /[^\p{L}\p{N}\s:_-]/u.test(token) && token.length <= 12 ? token : "";
 }
 
@@ -769,6 +772,16 @@ export function brandMatch(value) {
  * dicesse. Non e' un dettaglio estetico — e' la plancia che afferma una cosa
  * falsa sulla macchina di qualcuno. Quando non si sa, si dicono le iniziali di
  * quello che e' stato scritto: e' onesto, e si legge. */
+/* La marca scritta a mano finisce in un attributo e dentro il disegno: la si
+ * scrive come testo, non come pezzo di pagina. */
+const testoSicuro = (value) =>
+  String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+
 function brandFallback(value, safeSize) {
   const nome = String(value ?? "").trim();
   /* Nessuna marca scelta non e' «marca sconosciuta».
@@ -783,7 +796,7 @@ function brandFallback(value, safeSize) {
     return `<span class="dm-car-brand" data-brand="" data-brand-source="empty" aria-hidden="true" style="width:${safeSize}px;height:${safeSize}px;display:grid;place-items:center;font-size:${Math.round(safeSize * 0.62)}px">🚗</span>`;
   const initials = (nome.slice(0, 2) || "?").toUpperCase();
   const fontSize = initials.length > 2 ? 10 : initials.length === 2 ? 13 : 16;
-  return `<span class="dm-car-brand" data-brand="" data-brand-source="unknown" title="${nome}" style="width:${safeSize}px;height:${safeSize}px"><span data-brand-logo=""><svg width="${safeSize}" height="${safeSize}" viewBox="0 0 48 48" aria-hidden="true"><rect x="3" y="3" width="42" height="42" rx="14" fill="currentColor" opacity=".12"/><circle cx="24" cy="24" r="15.5" fill="none" stroke="currentColor" stroke-width="2.4" opacity=".9"/><text x="24" y="28.5" text-anchor="middle" font-size="${fontSize}" font-family="system-ui,sans-serif" font-weight="900" fill="currentColor">${initials}</text></svg></span></span>`;
+  return `<span class="dm-car-brand" data-brand="" data-brand-source="unknown" title="${testoSicuro(nome)}" style="width:${safeSize}px;height:${safeSize}px"><span data-brand-logo=""><svg width="${safeSize}" height="${safeSize}" viewBox="0 0 48 48" aria-hidden="true"><rect x="3" y="3" width="42" height="42" rx="14" fill="currentColor" opacity=".12"/><circle cx="24" cy="24" r="15.5" fill="none" stroke="currentColor" stroke-width="2.4" opacity=".9"/><text x="24" y="28.5" text-anchor="middle" font-size="${fontSize}" font-family="system-ui,sans-serif" font-weight="900" fill="currentColor">${testoSicuro(initials)}</text></svg></span></span>`;
 }
 
 export function carBrandVisual(value, size = 48) {

@@ -81,6 +81,9 @@ async function banco() {
           authorization: `Bearer ${chiave}`,
           "content-type": "application/json",
           "x-casa": casa,
+          /* Il segreto che la casa si fa da se' (`chiavi.riconosci`): e' con
+           * questo che, cambiando installatore, dimostra di essere lei. */
+          "x-casa-segreto": `il-segreto-di-${casa}`,
         },
         body: JSON.stringify(RAPPORTO),
       }),

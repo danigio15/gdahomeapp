@@ -18,6 +18,9 @@
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { mkdtempSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 
 import {
   CodiceIllegibile,
@@ -27,6 +30,7 @@ import {
   ogniQuanto,
   perchePreciso,
   Postino,
+  secondiDiFreno,
 } from "../src/rapporto.js";
 import { gliAddon, laMacchina, laRete } from "../src/ferro.js";
 import { ilBackup, leBatterie, leEntita } from "../src/salute.js";
@@ -981,4 +985,121 @@ test("il segno di un aggiornamento viaggia dentro la sua riga", async () => {
   assert.match(riga.segno, /^[0-9a-f]{16}$/);
   /* E l'entita' non passa: direbbe chi ci abita e in quale stanza. */
   assert.equal(JSON.stringify(carta).includes("update.mosquitto_broker"), false);
+});
+
+/* ─── Chi e' questa casa, per il quadro ─────────────────────────────────── */
+
+test("ogni richiesta al quadro porta il segreto della casa, lo stesso dopo un riavvio", async () => {
+  const cartella = mkdtempSync(join(tmpdir(), "postino-segreto-"));
+  try {
+    const viste = [];
+    const unPostino = () =>
+      new Postino({
+        dove: "https://quadro.it",
+        chiave: "chiave-di-adesso",
+        casa: "casa_abc",
+        cartella,
+        fabbrica: () => ({}),
+        registro: ZITTO,
+        fetch: async (dove, come) => {
+          viste.push({ dove, come });
+          return { ok: true, status: 200, json: async () => ({}) };
+        },
+      });
+    const primo = unPostino();
+    assert.equal(await primo.manda(), true);
+    primo.ferma();
+    const segreto = viste[0].come.headers["x-casa-segreto"];
+    assert.match(segreto, /^[0-9a-f]{64}$/);
+    /* Il segreto non e' la chiave, e non sta nel corpo. */
+    assert.notEqual(segreto, "chiave-di-adesso");
+    assert.ok(!String(viste[0].come.body).includes(segreto));
+
+    const secondo = unPostino();
+    assert.equal(await secondo.manda(), true);
+    secondo.ferma();
+    assert.equal(viste.at(-1).come.headers["x-casa-segreto"], segreto, "lo stesso di prima");
+  } finally {
+    rmSync(cartella, { recursive: true, force: true });
+  }
+});
+
+test("cambiato il codice, si manda anche quello di prima finche' il nuovo non risponde", async () => {
+  const cartella = mkdtempSync(join(tmpdir(), "postino-prima-"));
+  try {
+    const viste = [];
+    /* Solo i rapporti: il filo tenuto aperto parte da se', e qui non conta. */
+    const ultimo = () => viste.filter((una) => una.dove.endsWith("/rapporto")).at(-1).come;
+    let risponde = true;
+    const unPostino = (chiave) =>
+      new Postino({
+        dove: "https://quadro.it",
+        chiave,
+        casa: "casa_abc",
+        cartella,
+        fabbrica: () => ({}),
+        registro: ZITTO,
+        fetch: async (dove, come) => {
+          viste.push({ dove, come });
+          return risponde
+            ? { ok: true, status: 200, json: async () => ({}) }
+            : { ok: false, status: 403, json: async () => ({}) };
+        },
+      });
+    const vecchio = unPostino("codice-vecchio");
+    await vecchio.manda();
+    vecchio.ferma();
+    assert.equal(ultimo().headers["x-chiave-prima"], undefined);
+
+    risponde = false;
+    const nuovo = unPostino("codice-nuovo");
+    await nuovo.manda();
+    assert.equal(ultimo().headers["x-chiave-prima"], "codice-vecchio");
+    risponde = true;
+    await nuovo.manda();
+    assert.equal(ultimo().headers["x-chiave-prima"], "codice-vecchio");
+    /* Il nuovo ha avuto risposta: quello di prima non serve piu'. */
+    await nuovo.manda();
+    nuovo.ferma();
+    assert.equal(ultimo().headers["x-chiave-prima"], undefined);
+  } finally {
+    rmSync(cartella, { recursive: true, force: true });
+  }
+});
+
+test("un 429 del quadro si rispetta: si aspetta quanto dice, senza raddoppiare", async () => {
+  let ora = 1_000_000;
+  let bussate = 0;
+  const postino = new Postino({
+    dove: "https://quadro.it",
+    chiave: "chiave-lunga-abbastanza",
+    casa: "casa_abc",
+    fabbrica: () => ({}),
+    registro: ZITTO,
+    adesso: () => ora,
+    fetch: async () => {
+      bussate += 1;
+      return {
+        ok: false,
+        status: 429,
+        headers: new Headers({ "retry-after": "120" }),
+        json: async () => ({}),
+      };
+    },
+  });
+  assert.equal(await postino.manda(), false);
+  assert.equal(bussate, 1);
+  assert.match(postino.ultimoEsito.perche, /120 secondi/);
+  /* Non e' un quadro spento: non si rallenta come per un guasto. */
+  assert.equal(postino._quanteVoltePerNiente, 0);
+  /* Prima dei due minuti non si bussa. */
+  ora += 60_000;
+  assert.equal(await postino.manda(), false);
+  assert.equal(bussate, 1);
+  ora += 61_000;
+  await postino.manda();
+  assert.equal(bussate, 2);
+  postino.ferma();
+  assert.equal(secondiDiFreno("abc"), 60);
+  assert.equal(secondiDiFreno("999999"), 3600);
 });

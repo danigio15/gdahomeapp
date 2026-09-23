@@ -55,3 +55,16 @@ nuvola/pubblico/
 /collaudo/_*
 # La plancia che accendi.sh copia accanto al quadro sulla macchina: qui e in ponte/plancia.
 quadro/plancia/
+
+# ─── Segreti, in qualunque forma arrivino ─────────────────────────────────
+# Le chiavi dei negozi (quella dell'App Store Connect e' un `.p8`, i
+# certificati un `.p12`), i file d'ambiente, e i credenziali che Google e
+# Firebase danno da scaricare. Nessuno di questi serve alla repository, e
+# tutti farebbero danni se ci finissero dentro.
+*.p8
+*.p12
+.env
+.env.*
+google-services.json
+GoogleService-Info.plist
+*service-account*.json

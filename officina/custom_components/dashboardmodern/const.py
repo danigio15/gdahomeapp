@@ -5,13 +5,35 @@ from __future__ import annotations
 DOMAIN = "dashboardmodern"
 NAME = "Dashboard Modern v2"
 
-# Where the releases are published, and where the update entity goes looking.
+# La repository storica del progetto: le segnalazioni e i collegamenti della
+# scheda puntano ancora qui.
 REPOSITORY = "danigio15/dashboardmodern-v2"
-RELEASES_URL = f"https://api.github.com/repos/{REPOSITORY}/releases/latest"
+
+# Da dove arrivano le release dell'integrazione — VUOTO, e di proposito.
+#
+# Le release uscivano da `danigio15/dashboardmodern-v2`, e quella repository
+# non esiste piu': il progetto vive in gdahome (`officina/`), e da li' nessun
+# flusso pubblica piu' lo zip dell'integrazione. Un controllo che va a chiedere
+# «l'ultima release» a un indirizzo che nessuno tiene piu' e' un controllo che
+# crede a chiunque un giorno risponda da quell'indirizzo — e il tasto
+# «Installa» di quella risposta avrebbe scritto codice dentro Home Assistant.
+# Finche' qui non c'e' una repository che pubblica davvero, l'entita' di
+# aggiornamento non nasce: si aggiorna a mano, o da HACS.
+RELEASE_REPOSITORY = ""
+RELEASES_URL = (
+    f"https://api.github.com/repos/{RELEASE_REPOSITORY}/releases/latest"
+    if RELEASE_REPOSITORY
+    else ""
+)
 
 # Lo zip che ogni release pubblica: lo stesso identico file che installerebbe
 # HACS (hacs.json: zip_release). Il tasto «Installa» scarica questo.
 RELEASE_ASSET = "dashboardmodern.zip"
+
+# E accanto, nella stessa release, la sua impronta: `sha256sum` dello zip,
+# nel formato di sempre («<64 cifre esadecimali>  dashboardmodern.zip»). Senza
+# impronta, o con un'impronta che non torna, non si installa niente.
+RELEASE_ASSET_SHA256 = f"{RELEASE_ASSET}.sha256"
 
 # Half an hour. HACS gives a custom repository — one added by URL, which is how
 # this integration is installed — forty-eight hours, and does not even look at

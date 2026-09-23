@@ -253,13 +253,16 @@ test("una chiave di cruscotto nella casella dell'abbinamento si riconosce, e lo 
  * sembrava che il codice fosse stato buttato via per niente.
  */
 
-import { mkdtempSync, rmSync } from "node:fs";
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { Chiavi } from "../src/chiavi.js";
 
 const UNA_CASA = "casa_6cb8c2b4f6e1c0a9d8e7f6a5b4c3d2e1";
 const UNO = "inst_1111111111111111";
 const UN_ALTRO = "inst_2222222222222222";
+/* Il segreto che la casa si fa da se' e manda in `x-casa-segreto`: e' la
+ * prova che, cambiando installatore, e' proprio lei. */
+const IL_SUO = { segreto: "s".repeat(64) };
 
 function leChiavi() {
   const cartella = mkdtempSync(join(tmpdir(), "chiavi-"));
@@ -273,10 +276,16 @@ function leChiavi() {
 test("una casa riabbinata passa al nuovo installatore, non resta al vecchio", () => {
   const b = leChiavi();
   try {
-    assert.equal(b.chiavi.riconosci(UNA_CASA, b.chiavi.fai({ di: UNO, per: "Pippo" })), true);
+    assert.equal(
+      b.chiavi.riconosci(UNA_CASA, b.chiavi.fai({ di: UNO, per: "Pippo" }), IL_SUO),
+      true,
+    );
     assert.equal(b.chiavi.diChiE(UNA_CASA), UNO);
 
-    assert.equal(b.chiavi.riconosci(UNA_CASA, b.chiavi.fai({ di: UN_ALTRO, per: "Marco" })), true);
+    assert.equal(
+      b.chiavi.riconosci(UNA_CASA, b.chiavi.fai({ di: UN_ALTRO, per: "Marco" }), IL_SUO),
+      true,
+    );
     assert.equal(b.chiavi.diChiE(UNA_CASA), UN_ALTRO, "la casa e' rimasta al padrone di prima");
     assert.equal(
       b.chiavi.chiavi.filter((una) => una.casa === UNA_CASA).length,
@@ -294,8 +303,11 @@ test("la chiave di prima, dopo il riabbinamento, non apre piu'", () => {
   const b = leChiavi();
   try {
     const vecchia = b.chiavi.fai({ di: UNO, per: "Pippo" });
-    b.chiavi.riconosci(UNA_CASA, vecchia);
-    b.chiavi.riconosci(UNA_CASA, b.chiavi.fai({ di: UN_ALTRO, per: "Marco" }));
+    b.chiavi.riconosci(UNA_CASA, vecchia, IL_SUO);
+    assert.equal(
+      b.chiavi.riconosci(UNA_CASA, b.chiavi.fai({ di: UN_ALTRO, per: "Marco" }), IL_SUO),
+      true,
+    );
     assert.equal(b.chiavi.riconosci(UNA_CASA, vecchia), false);
   } finally {
     b.via();
@@ -321,6 +333,140 @@ test("le doppie gia' fatte si riparano da sole al primo rapporto", () => {
     assert.ok(nuova);
   } finally {
     b.via();
+  }
+});
+
+test("un invito solo non porta via una casa che e' gia' di qualcuno", () => {
+  /* La matricola di una casa non e' un segreto: la sa chi la seguiva prima,
+   * sta negli indirizzi dell'editor e nelle intestazioni. Se bastasse un
+   * invito nuovo e quella matricola, chiunque potrebbe prendersi la casa di
+   * un altro, e quella vera al rapporto dopo si sentirebbe dire di no. */
+  const b = leChiavi();
+  try {
+    const sua = b.chiavi.fai({ di: UNO, per: "Pippo" });
+    assert.equal(b.chiavi.riconosci(UNA_CASA, sua, IL_SUO), true);
+
+    const dellAltro = b.chiavi.fai({ di: UN_ALTRO, per: "Marco" });
+    assert.equal(b.chiavi.riconosci(UNA_CASA, dellAltro), false, "senza prova");
+    assert.equal(
+      b.chiavi.riconosci(UNA_CASA, dellAltro, { segreto: "x".repeat(64) }),
+      false,
+      "con un segreto che non e' il suo",
+    );
+    assert.equal(b.chiavi.diChiE(UNA_CASA), UNO, "la casa e' ancora di chi la seguiva");
+    assert.equal(b.chiavi.riconosci(UNA_CASA, sua), true, "e la sua chiave apre ancora");
+    /* L'invito rifiutato non si e' bruciato: resta buono per la casa giusta. */
+    assert.equal(b.chiavi.elenco(UN_ALTRO).length, 1);
+    assert.equal(b.chiavi.riconosci(UNA_CASA, dellAltro, IL_SUO), true, "col suo segreto si'");
+    assert.equal(b.chiavi.diChiE(UNA_CASA), UN_ALTRO);
+  } finally {
+    b.via();
+  }
+});
+
+test("una casa di prima, che il segreto non lo manda, cambia padrone con la chiave vecchia", () => {
+  /* Un ponte che non manda ancora `x-casa-segreto` puo' dimostrare di essere
+   * lei con il codice che usava fino a ieri (`x-chiave-prima`). */
+  const b = leChiavi();
+  try {
+    const vecchia = b.chiavi.fai({ di: UNO, per: "Pippo" });
+    assert.equal(b.chiavi.riconosci(UNA_CASA, vecchia), true);
+    const nuova = b.chiavi.fai({ di: UN_ALTRO, per: "Marco" });
+    assert.equal(b.chiavi.riconosci(UNA_CASA, nuova), false);
+    assert.equal(
+      b.chiavi.riconosci(UNA_CASA, nuova, { chiavePrima: "ABCD-EFGH-JKMN-PQRS" }),
+      false,
+    );
+    assert.equal(b.chiavi.riconosci(UNA_CASA, nuova, { chiavePrima: vecchia }), true);
+    assert.equal(b.chiavi.diChiE(UNA_CASA), UN_ALTRO);
+  } finally {
+    b.via();
+  }
+});
+
+test("una casa che ha perso il suo segreto si riabbina con la chiave di prima", () => {
+  /* Un ripristino, un add-on reinstallato: la casa si e' fatta un segreto
+   * nuovo. Con la chiave che usava fino a ieri dimostra lo stesso di essere
+   * lei, e da li' vale il segreto nuovo. */
+  const b = leChiavi();
+  try {
+    const vecchia = b.chiavi.fai({ di: UNO });
+    assert.equal(b.chiavi.riconosci(UNA_CASA, vecchia, IL_SUO), true);
+    const nuovo = { segreto: "n".repeat(64) };
+    const invito = b.chiavi.fai({ di: UN_ALTRO });
+    assert.equal(
+      b.chiavi.riconosci(UNA_CASA, invito, nuovo),
+      false,
+      "col segreto nuovo e basta no",
+    );
+    assert.equal(
+      b.chiavi.riconosci(UNA_CASA, invito, { ...nuovo, chiavePrima: vecchia }),
+      true,
+      "con la chiave di prima si'",
+    );
+    assert.equal(b.chiavi.diChiE(UNA_CASA), UN_ALTRO);
+    /* Da adesso vale il segreto nuovo, e quello vecchio no. */
+    b.chiavi.stacca(UNA_CASA);
+    assert.equal(b.chiavi.riconosci(UNA_CASA, b.chiavi.fai({ di: UNO }), IL_SUO), false);
+    assert.equal(b.chiavi.riconosci(UNA_CASA, b.chiavi.fai({ di: UNO }), nuovo), true);
+  } finally {
+    b.via();
+  }
+});
+
+test("una casa staccata si riprende con un invito; ma se il suo segreto e' noto, lo vuole", () => {
+  const b = leChiavi();
+  try {
+    b.chiavi.riconosci(UNA_CASA, b.chiavi.fai({ di: UNO }), IL_SUO);
+    b.chiavi.stacca(UNA_CASA);
+    /* Staccata, non e' di nessuno: ma il segreto resta, e chi la conosceva
+     * non se la riprende senza. */
+    assert.equal(b.chiavi.riconosci(UNA_CASA, b.chiavi.fai({ di: UNO })), false);
+    assert.equal(b.chiavi.riconosci(UNA_CASA, b.chiavi.fai({ di: UN_ALTRO }), IL_SUO), true);
+  } finally {
+    b.via();
+  }
+});
+
+test("gli inviti si tengono per impronta, e quelli in chiaro di prima si convertono", () => {
+  const b = leChiavi();
+  try {
+    const codice = b.chiavi.fai({ di: UNO, per: "Pippo" });
+    const scritto = readFileSync(join(b.cartella, "chiavi.json"), "utf8");
+    assert.ok(!scritto.includes(codice), "il codice in chiaro sta nel file");
+    assert.ok(!scritto.includes(codice.replace(/-/g, "")));
+    const [riga] = b.chiavi.elenco(UNO);
+    assert.equal(riga.codice, undefined, "l'elenco non ridice il codice intero");
+    assert.equal(riga.finale, codice.replace(/-/g, "").slice(-4));
+    assert.match(riga.id, /^inv_[0-9a-f]{16}$/);
+    /* Si revoca col nome. */
+    assert.equal(b.chiavi.annulla(riga.id, UNO), true);
+    assert.equal(b.chiavi.riconosci(UNA_CASA, codice), false);
+  } finally {
+    b.via();
+  }
+  /* Un file scritto da una versione di prima, col codice in chiaro. */
+  const cartella = mkdtempSync(join(tmpdir(), "chiavi-"));
+  try {
+    const vecchio = "ABCD-EFGH-JKMN-PQRS";
+    writeFileSync(
+      join(cartella, "chiavi.json"),
+      JSON.stringify({
+        inviti: [
+          { codice: vecchio, di: UNO, per: "", fattoIl: Date.now(), scadeIl: Date.now() + 60000 },
+        ],
+        chiavi: [],
+      }),
+    );
+    const chiavi = new Chiavi({ cartella });
+    const ora = readFileSync(join(cartella, "chiavi.json"), "utf8");
+    assert.ok(!ora.includes("ABCD"), "all'accensione il codice in chiaro se ne va dal file");
+    assert.equal(chiavi.elenco(UNO)[0].finale, "PQRS");
+    /* E il codice che il cliente ha in mano funziona ancora. */
+    assert.equal(chiavi.riconosci(UNA_CASA, vecchio), true);
+    assert.equal(chiavi.diChiE(UNA_CASA), UNO);
+  } finally {
+    rmSync(cartella, { recursive: true, force: true });
   }
 });
 

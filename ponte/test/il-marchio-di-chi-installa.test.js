@@ -13,7 +13,7 @@
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -172,7 +172,9 @@ test("il logo sopravvive a una riaccensione, senza aspettare il quadro", async (
 
 test("si riconosce l'immagine da come comincia, non da come si chiama", () => {
   assert.equal(cheImmagineE(PNG).tipo, "image/png");
-  assert.equal(cheImmagineE(Buffer.from('<svg xmlns="x"></svg>', "utf8")).tipo, "image/svg+xml");
+  /* L'SVG no: e' un documento, e si servirebbe dalla stessa origine della
+   * plancia. */
+  assert.equal(cheImmagineE(Buffer.from('<svg xmlns="x"></svg>', "utf8")), null);
   assert.equal(cheImmagineE(Buffer.from("MZ un eseguibile", "utf8")), null);
   assert.equal(cheImmagineE(Buffer.alloc(200 * 1024, 0x89)), null, "troppo grosso");
   assert.equal(cheImmagineE(null), null);
@@ -325,5 +327,44 @@ test("la plancia non dichiara piu' una versione sua, vecchia di quattordici giri
       dentro,
       `«${storta}» e' passata`,
     );
+  }
+});
+
+test("un logo che non e' un'immagine vera non esce col tipo che dice di avere", () => {
+  const SVG = Buffer.from('<svg xmlns="http://www.w3.org/2000/svg"><script>x()</script></svg>');
+  /* Un SVG arrivato da un quadro di ieri, o un file che dice di essere quello
+   * che non e': al suo posto il nostro, col tipo del nostro. */
+  const vestito = vestiDiGdahome("legacy/logo.png", Buffer.from("il nostro"), "image/png", {
+    nome: "Impianti Rossi",
+    logo: SVG,
+    tipo: "image/svg+xml",
+  });
+  assert.notEqual(vestito.tipo, "image/svg+xml");
+  assert.ok(!vestito.corpo.equals(SVG));
+  /* Un PNG vero si serve come PNG, qualunque tipo dica chi l'ha mandato. */
+  const vero = vestiDiGdahome("legacy/logo.png", Buffer.from("il nostro"), "image/png", {
+    nome: "Impianti Rossi",
+    logo: PNG,
+    tipo: "image/svg+xml",
+  });
+  assert.equal(vero.tipo, "image/png");
+  assert.ok(vero.corpo.equals(PNG));
+  /* E un RIFF che non e' un WebP non e' un WebP. */
+  assert.equal(cheImmagineE(Buffer.from("RIFF\u0000\u0000\u0000\u0000WAVEfmt ")), null);
+  assert.equal(
+    cheImmagineE(Buffer.from("RIFF\u0000\u0000\u0000\u0000WEBPVP8 ")).tipo,
+    "image/webp",
+  );
+});
+
+test("un SVG in /data, lasciato da un ponte di ieri, non si rilegge come logo", () => {
+  const cartella = mkdtempSync(join(tmpdir(), "marchio-svg-"));
+  try {
+    mkdirSync(join(cartella, "installatore"), { recursive: true });
+    writeFileSync(join(cartella, "installatore", "marchio.svg"), '<svg xmlns="x"></svg>');
+    const installatore = new Installatore({ cartella, registro: ZITTO });
+    assert.equal(installatore.vestito()?.logo ?? null, null);
+  } finally {
+    rmSync(cartella, { recursive: true, force: true });
   }
 });

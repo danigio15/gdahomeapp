@@ -410,7 +410,9 @@ const escSenzaTagliare = (valore) =>
   String(valore ?? "")
     .replaceAll("&", "&amp;")
     .replaceAll("<", "&lt;")
-    .replaceAll('"', "&quot;");
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
 
 export function conLaParolaAccesa(testo, parola) {
   const dove = testo.toLowerCase().indexOf(parola.toLowerCase());
