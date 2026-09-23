@@ -1363,6 +1363,230 @@
         display: none;
       }
 
+      /* ─── Affiancate: l'elenco a sinistra, la scheda accanto ─────────
+       *
+       * «Case a sinistra e se clicco mi apre il dettaglio affianco, non il
+       * popup: non mi piace il popup.»
+       *
+       * Il foglio che sale dal basso e' giusto sul telefono, dove non c'e'
+       * spazio per due cose insieme. Su uno schermo largo e' una scelta
+       * pagata due volte: copre l'elenco da cui sei appena partito — con un
+       * velo sfocato addosso — e per passare alla casa dopo tocca chiuderlo,
+       * ritrovare il punto, e riaprire. Da quattordici pollici in su la
+       * scheda sta accanto: l'elenco resta li' dove'era, si passa da una
+       * casa all'altra con un colpo solo, e quella aperta si riconosce dal
+       * bordo.
+       *
+       * Non cambia niente del programma che disegna la scheda: e' lo stesso
+       * `ilFoglio()`, lo stesso `ilDettaglio()`, gli stessi tasti. Cambia
+       * dove sta, e lo dice il foglio di stile. Sotto la soglia — telefono,
+       * tablet in verticale — resta il foglio che sale, identico a prima.
+       */
+      .scheda-vuota {
+        display: none;
+      }
+
+      @media (min-width: 62rem) {
+        /* Col foglio accanto non c'e' piu' niente sopra la pagina, e la
+           pagina deve tornare a scorrere: sotto la soglia il foglio la
+           blocca apposta, perche' li' e' lui che scorre. */
+        body.col-foglio {
+          overflow: visible;
+        }
+
+        #dove {
+          display: grid;
+          grid-template-columns: minmax(300px, 32%) minmax(0, 1fr);
+          column-gap: 16px;
+          align-items: start;
+        }
+
+        #dove > * {
+          grid-column: 1 / -1;
+        }
+
+        /* Il riquadro dell'anello parla di tutti gli impianti, non di uno:
+           sta in cima, largo quanto la pagina. Come tutto quello che puo'
+           venire dopo di lui e prima dell'elenco. */
+        #dove > .anello-scheda {
+          grid-column: 1 / -1;
+          grid-row: 1;
+        }
+
+        /* Una riga numerata, e non quella che tocca.
+           Fra l'anello e l'elenco ci possono stare una chiave appena
+           generata, un riquadro, o niente: contando le righe, l'elenco e la
+           sua scheda finirebbero su due righe diverse il giorno che una di
+           quelle compare. Le righe vuote in mezzo non occupano niente,
+           perche' fra una riga e l'altra non c'e' spazio. */
+
+        /* L'elenco resta fermo mentre la scheda scorre.
+         *
+         * Il primo tentativo faceva il contrario — scheda attaccata in alto,
+         * elenco che scorre — e non si attaccava niente: `sticky` si muove
+         * dentro la sua riga di griglia, e la scheda era **alta quanto la
+         * riga**. Gioco zero, e se ne andava su con la pagina, col titolo che
+         * finiva sotto la barra. Girata: la riga e' alta quanto la scheda, che
+         * e' quasi sempre la piu' lunga, e il gioco ce l'ha l'elenco. Il
+         * giorno che e' l'elenco a essere piu' lungo, si attacca la scheda: e'
+         * la stessa regola, e va bene in tutt'e due i versi.
+         *
+         * Il tetto e lo scorrimento suo servono a chi ha quaranta impianti:
+         * senza, l'elenco sarebbe piu' alto dello schermo e non si
+         * attaccherebbe piu' niente. */
+        #dove > .colonna-elenco {
+          grid-column: 1;
+          grid-row: 9;
+          min-width: 0;
+          position: sticky;
+          top: 66px;
+          max-height: calc(100vh - 80px);
+          max-height: calc(100dvh - 80px);
+          overflow-y: auto;
+          overscroll-behavior: contain;
+          scrollbar-width: thin;
+          /* L'ombra e il sollevamento di una mattonella non si tagliano sul
+             bordo del riquadro che scorre. */
+          padding: 3px 5px;
+          margin: -3px -5px;
+        }
+
+        #dove > .scheda-vuota,
+        #dove > .foglio {
+          grid-column: 2;
+          grid-row: 9;
+        }
+
+        /* Due mattonelle affiancate in trecento pixel non ci stanno: qui
+           l'elenco e' un elenco, una riga per impianto.
+           E una riga sta bassa: il nome e lo stato sulla stessa linea, il
+           quando sotto, la linea dei quattordici giorni sottile. Alte come
+           nella griglia a due colonne, otto impianti riempivano due schermi,
+           e un elenco che non ci sta in uno schermo non e' piu' un elenco. */
+        #dove > .colonna-elenco .mattonelle {
+          grid-template-columns: minmax(0, 1fr);
+          gap: 8px;
+        }
+
+        #dove > .colonna-elenco .mattonella {
+          display: grid;
+          grid-template-columns: minmax(0, 1fr) auto;
+          grid-template-areas:
+            "nome stato"
+            "quando quando"
+            "linea linea";
+          align-items: center;
+          gap: 2px 10px;
+          padding: 11px 13px 9px;
+        }
+
+        #dove > .colonna-elenco .mattonella .nome {
+          grid-area: nome;
+          min-height: 0;
+          -webkit-line-clamp: 1;
+          font-size: 0.94rem;
+        }
+
+        #dove > .colonna-elenco .mattonella .riga {
+          grid-area: stato;
+          font-size: 0.8rem;
+        }
+
+        #dove > .colonna-elenco .mattonella .quando {
+          grid-area: quando;
+          margin-top: 0;
+        }
+
+        #dove > .colonna-elenco .mattonella .linea {
+          grid-area: linea;
+          height: 18px;
+          margin-top: 4px;
+        }
+
+        /* «Da verificare ora» qui direbbe due volte la stessa cosa: l'elenco
+           sotto e' gia' ordinato con le offline in cima, e il perche' adesso
+           si legge nella scheda accanto, aperta. */
+        #dove > .colonna-elenco .da-verificare {
+          display: none;
+        }
+
+        /* Il velo copriva quello che adesso si vuole continuare a vedere. */
+        #dove > .velo {
+          display: none;
+        }
+
+        /* Il foglio smette di essere un foglio: niente piu' `fixed`, niente
+           salita dal basso, e si attacca in alto mentre l'elenco scorre. */
+        /* La scheda cresce quanto le serve e scorre con la pagina: dentro non
+           ha piu' una barra di scorrimento sua, che in un riquadro dentro un
+           riquadro e' una barra di troppo. Si attacca sotto quella delle
+           schermate solo quando e' lei la piu' corta. */
+        #dove > .foglio {
+          position: sticky;
+          top: 66px;
+          left: auto;
+          bottom: auto;
+          width: auto;
+          max-height: none;
+          border: 1px solid var(--vetro-bordo);
+          border-radius: var(--r);
+          box-shadow: var(--ombra);
+          transform: none;
+          transition: none;
+          padding-bottom: 0;
+        }
+
+        #dove > .foglio .foglio-corpo {
+          overflow: visible;
+        }
+
+        #dove > .foglio.su {
+          transform: none;
+        }
+
+        /* La presa si tira col pollice, e accanto non c'e' niente da tirare. */
+        #dove > .foglio .presa {
+          display: none;
+        }
+
+        /* Il nome della casa resta in vista mentre si legge la sua scheda:
+           scorrendo in fondo ai controlli, senza, non si sa piu' di chi si
+           sta leggendo. */
+        #dove > .foglio .foglio-testa {
+          position: sticky;
+          top: 0;
+          z-index: 1;
+          padding-top: 18px;
+          background: var(--ground);
+          border-radius: var(--r) var(--r) 0 0;
+        }
+
+        /* Il posto della scheda quando non se n'e' aperta nessuna: se restasse
+           vuoto, la pagina sembrerebbe finita a meta'. */
+        #dove > .scheda-vuota {
+          display: grid;
+          align-content: center;
+          justify-items: center;
+          gap: 6px;
+          min-height: 320px;
+          padding: 40px 24px;
+          border: 1px dashed var(--linea-forte);
+          border-radius: var(--r);
+          text-align: center;
+          color: var(--ink-3);
+        }
+
+        #dove > .scheda-vuota b {
+          font-size: 1rem;
+          font-weight: 800;
+          color: var(--ink-2);
+        }
+
+        body.col-foglio #dove > .scheda-vuota {
+          display: none;
+        }
+      }
+
       /* Quello che non va, e basta: e' la prima cosa che si vede aprendo
          una casa da «Da guardare adesso». */
       .guai {
@@ -4002,35 +4226,44 @@
             </div>
           </section>
 
-          ${
-            chiedono.length && filtro === "tutte"
-              ? `<div class="voce">
-                   <h2>Da verificare ora</h2>
-                   <span>${plurale(chiedono.length, "impianto", "impianti")}</span>
-                 </div>
-                 <div class="scorri">
-                   ${chiedono.map((r) => unaCarta(r.una, r.indice, r.stato)).join("")}
-                 </div>`
-              : ""
-          }
+          <div class="colonna-elenco">
+            ${
+              chiedono.length && filtro === "tutte"
+                ? `<div class="da-verificare">
+                     <div class="voce">
+                       <h2>Da verificare ora</h2>
+                       <span>${plurale(chiedono.length, "impianto", "impianti")}</span>
+                     </div>
+                     <div class="scorri">
+                       ${chiedono.map((r) => unaCarta(r.una, r.indice, r.stato)).join("")}
+                     </div>
+                   </div>`
+                : ""
+            }
 
-          <div class="voce">
-            <h2>${filtro === "tutte" ? "Tutti gli impianti" : IL_TITOLO_DELLA_FILA[filtro]}</h2>
-            <span>${viste.length} su ${CASE.length}</span>
+            <div class="voce">
+              <h2>${filtro === "tutte" ? "Tutti gli impianti" : IL_TITOLO_DELLA_FILA[filtro]}</h2>
+              <span>${viste.length} su ${CASE.length}</span>
+            </div>
+            ${
+              !CASE.length
+                ? `<div class="vetro vuoto">
+                     <b>Ancora nessun impianto</b> Da «Abbinamento» si genera un codice, e il primo impianto compare qui da solo.
+                   </div>`
+                : viste.length
+                  ? `<div class="mattonelle">
+                       ${viste.map((r) => unaCasa(r.una, r.indice, r.stato)).join("")}
+                     </div>`
+                  : `<div class="vetro vuoto">
+                       <b>Nessun impianto in questo gruppo</b> Premi di nuovo il filtro per vederli tutti.
+                     </div>`
+            }
           </div>
-          ${
-            !CASE.length
-              ? `<div class="vetro vuoto">
-                   <b>Ancora nessun impianto</b> Da «Abbinamento» si genera un codice, e il primo impianto compare qui da solo.
-                 </div>`
-              : viste.length
-                ? `<div class="mattonelle">
-                     ${viste.map((r) => unaCasa(r.una, r.indice, r.stato)).join("")}
-                   </div>`
-                : `<div class="vetro vuoto">
-                     <b>Nessun impianto in questo gruppo</b> Premi di nuovo il filtro per vederli tutti.
-                   </div>`
-          }
+
+          <div class="scheda-vuota">
+            <b>Scegli un impianto</b>
+            <span>La sua scheda si apre qui, accanto all'elenco.</span>
+          </div>
         `;
       }
 

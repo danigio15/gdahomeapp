@@ -1080,6 +1080,15 @@
         box-shadow: var(--ombra-alta);
       }
 
+      /* La riga della casa aperta: col foglio che sale non serviva — era
+         sopra, e si vedeva — ma con la scheda accanto l'elenco resta li' e
+         bisogna riconoscere quale si sta leggendo. */
+      .case-sue li[aria-current="true"] {
+        box-shadow:
+          0 0 0 2px var(--accento),
+          var(--ombra);
+      }
+
       .mattonella[aria-current="true"] {
         box-shadow:
           0 0 0 2px var(--accento),
@@ -2431,19 +2440,19 @@
        * browser conta le colonne sul tetto e non sul minimo, e sul telefono
        * ne veniva fuori una sola per riga. Largo e stretto li divide una
        * soglia, non il secondo numero. */
-      .mattonelle {
+      .servizio-conti {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
         gap: 8px;
       }
 
       @media (min-width: 36rem) {
-        .mattonelle {
+        .servizio-conti {
           grid-template-columns: repeat(auto-fill, minmax(196px, 1fr));
         }
       }
 
-      .mattonella {
+      .servizio-conto {
         min-width: 0;
         display: flex;
         flex-direction: column;
@@ -2454,7 +2463,7 @@
         border: 1px solid var(--vetro-bordo);
       }
 
-      .mattonella-ic {
+      .servizio-conto-ic {
         width: 27px;
         height: 27px;
         display: grid;
@@ -2464,36 +2473,36 @@
         color: var(--tinta);
       }
 
-      .mattonella-ic svg {
+      .servizio-conto-ic svg {
         width: 15px;
         height: 15px;
       }
 
-      .mattonella b {
+      .servizio-conto b {
         font-size: 1.5rem;
         font-weight: 800;
         letter-spacing: -0.035em;
         line-height: 1;
       }
 
-      .mattonella span {
+      .servizio-conto span {
         font-size: 0.76rem;
         font-weight: 600;
         color: var(--ink-2);
         line-height: 1.25;
       }
 
-      .mattonella.blu {
+      .servizio-conto.blu {
         --tinta: var(--accento);
         --tinta-soft: var(--accento-soft);
       }
 
-      .mattonella.verde {
+      .servizio-conto.verde {
         --tinta: var(--verde);
         --tinta-soft: var(--verde-soft);
       }
 
-      .mattonella.ambra {
+      .servizio-conto.ambra {
         --tinta: var(--ambra);
         --tinta-soft: var(--ambra-soft);
       }
@@ -2545,6 +2554,182 @@
 
       .interruttore[data-acceso="sì"] b {
         color: var(--verde);
+      }
+
+      /* ─── Affiancate: l'elenco a sinistra, la scheda accanto ─────────
+       *
+       * «Case a sinistra e se clicco mi apre il dettaglio affianco, non il
+       * popup: non mi piace il popup.»
+       *
+       * Il foglio che sale dal basso e' giusto sul telefono, dove non c'e'
+       * spazio per due cose insieme. Su uno schermo largo e' una scelta
+       * pagata due volte: copre l'elenco da cui sei appena partito — con un
+       * velo sfocato addosso — e per passare alla casa dopo tocca chiuderlo,
+       * ritrovare il punto, e riaprire. Da quattordici pollici in su la
+       * scheda sta accanto: l'elenco resta li' dove'era, si passa da una
+       * casa all'altra con un colpo solo, e quella aperta si riconosce dal
+       * bordo.
+       *
+       * Non cambia niente del programma che disegna la scheda: e' lo stesso
+       * `ilFoglio()`, lo stesso `ilDettaglio()`, gli stessi tasti. Cambia
+       * dove sta, e lo dice il foglio di stile. Sotto la soglia — telefono,
+       * tablet in verticale — resta il foglio che sale, identico a prima.
+       */
+      .scheda-vuota {
+        display: none;
+      }
+
+      @media (min-width: 62rem) {
+        /* Col foglio accanto non c'e' piu' niente sopra la pagina, e la
+           pagina deve tornare a scorrere: sotto la soglia il foglio la
+           blocca apposta, perche' li' e' lui che scorre. */
+        body.col-foglio {
+          overflow: visible;
+        }
+
+        #dove {
+          display: grid;
+          grid-template-columns: minmax(300px, 32%) minmax(0, 1fr);
+          column-gap: 16px;
+          align-items: start;
+        }
+
+        #dove > * {
+          grid-column: 1 / -1;
+        }
+
+        /* Il riquadro dell'anello parla di tutti gli impianti, non di uno:
+           sta in cima, largo quanto la pagina. Come tutto quello che puo'
+           venire dopo di lui e prima dell'elenco. */
+        #dove > .anello-scheda {
+          grid-column: 1 / -1;
+          grid-row: 1;
+        }
+
+        /* Una riga numerata, e non quella che tocca.
+           Fra l'anello e l'elenco ci possono stare una chiave appena
+           generata, un riquadro, o niente: contando le righe, l'elenco e la
+           sua scheda finirebbero su due righe diverse il giorno che una di
+           quelle compare. Le righe vuote in mezzo non occupano niente,
+           perche' fra una riga e l'altra non c'e' spazio. */
+
+        /* L'elenco resta fermo mentre la scheda scorre.
+         *
+         * Il primo tentativo faceva il contrario — scheda attaccata in alto,
+         * elenco che scorre — e non si attaccava niente: `sticky` si muove
+         * dentro la sua riga di griglia, e la scheda era **alta quanto la
+         * riga**. Gioco zero, e se ne andava su con la pagina, col titolo che
+         * finiva sotto la barra. Girata: la riga e' alta quanto la scheda, che
+         * e' quasi sempre la piu' lunga, e il gioco ce l'ha l'elenco. Il
+         * giorno che e' l'elenco a essere piu' lungo, si attacca la scheda: e'
+         * la stessa regola, e va bene in tutt'e due i versi.
+         *
+         * Il tetto e lo scorrimento suo servono a chi ha quaranta impianti:
+         * senza, l'elenco sarebbe piu' alto dello schermo e non si
+         * attaccherebbe piu' niente. */
+        #dove > .colonna-elenco {
+          grid-column: 1;
+          grid-row: 9;
+          min-width: 0;
+          position: sticky;
+          top: 66px;
+          max-height: calc(100vh - 80px);
+          max-height: calc(100dvh - 80px);
+          overflow-y: auto;
+          overscroll-behavior: contain;
+          scrollbar-width: thin;
+          /* L'ombra e il sollevamento di una scheda non si tagliano sul
+             bordo del riquadro che scorre. */
+          padding: 3px 5px;
+          margin: -3px -5px;
+        }
+
+        #dove > .riquadro.larga {
+          grid-column: 1 / -1;
+          grid-row: 10;
+        }
+
+        #dove > .scheda-vuota,
+        #dove > .foglio {
+          grid-column: 2;
+          grid-row: 9;
+        }
+
+        /* Il velo copriva quello che adesso si vuole continuare a vedere. */
+        #dove > .velo {
+          display: none;
+        }
+
+        /* Il foglio smette di essere un foglio: niente piu' `fixed`, niente
+           salita dal basso, e si attacca in alto mentre l'elenco scorre. */
+        /* La scheda cresce quanto le serve e scorre con la pagina: dentro non
+           ha piu' una barra di scorrimento sua, che in un riquadro dentro un
+           riquadro e' una barra di troppo. Si attacca sotto quella delle
+           schermate solo quando e' lei la piu' corta. */
+        #dove > .foglio {
+          position: sticky;
+          top: 66px;
+          left: auto;
+          bottom: auto;
+          width: auto;
+          max-height: none;
+          border: 1px solid var(--vetro-bordo);
+          border-radius: var(--r);
+          box-shadow: var(--ombra);
+          transform: none;
+          transition: none;
+          padding-bottom: 0;
+        }
+
+        #dove > .foglio .foglio-corpo {
+          overflow: visible;
+        }
+
+        #dove > .foglio.su {
+          transform: none;
+        }
+
+        /* La presa si tira col pollice, e accanto non c'e' niente da tirare. */
+        #dove > .foglio .presa {
+          display: none;
+        }
+
+        /* Il nome della casa resta in vista mentre si legge la sua scheda:
+           scorrendo in fondo ai controlli, senza, non si sa piu' di chi si
+           sta leggendo. */
+        #dove > .foglio .foglio-testa {
+          position: sticky;
+          top: 0;
+          z-index: 1;
+          padding-top: 18px;
+          background: var(--ground);
+          border-radius: var(--r) var(--r) 0 0;
+        }
+
+        /* Il posto della scheda quando non se n'e' aperta nessuna: se restasse
+           vuoto, la pagina sembrerebbe finita a meta'. */
+        #dove > .scheda-vuota {
+          display: grid;
+          align-content: center;
+          justify-items: center;
+          gap: 6px;
+          min-height: 320px;
+          padding: 40px 24px;
+          border: 1px dashed var(--linea-forte);
+          border-radius: var(--r);
+          text-align: center;
+          color: var(--ink-3);
+        }
+
+        #dove > .scheda-vuota b {
+          font-size: 1rem;
+          font-weight: 800;
+          color: var(--ink-2);
+        }
+
+        body.col-foglio #dove > .scheda-vuota {
+          display: none;
+        }
       }
 
       /* Le tre file qui contano e basta: non filtrano niente. */
@@ -3938,8 +4123,8 @@
         if (!SALUTE) return "";
 
         const mattonella = (tinta, disegno, valore, nome) =>
-          `<div class="mattonella ${testo(tinta)}">
-             <span class="mattonella-ic" aria-hidden="true">${LE_ICONE[disegno]}</span>
+          `<div class="servizio-conto ${testo(tinta)}">
+             <span class="servizio-conto-ic" aria-hidden="true">${LE_ICONE[disegno]}</span>
              <b>${testo(valore)}</b><span>${testo(nome)}</span>
            </div>`;
 
@@ -3975,7 +4160,7 @@
                 ? `<p class="minuta">Fermo da ${testo(oreInParole(fermo.ore))} — ${testo(fermo.perche || "non si sa perche'")}.</p>`
                 : ""
             }
-            <div class="mattonelle">
+            <div class="servizio-conti">
               ${/* già HTML */ mattonella("blu", "casa", Number(SALUTE.case) || 0, "case seguite")}
               ${/* già HTML */ mattonella("verde", "installatori", Number(SALUTE.installatori) || 0, "installatori")}
             </div>
@@ -3997,7 +4182,7 @@
                    t.vivo ? "acceso" : "non risponde",
                  )
                }
-               <div class="mattonelle">
+               <div class="servizio-conti">
                  ${/* già HTML */ mattonella("blu", "casa", Number(t.case) || 0, "case collegate")}
                  ${/* già HTML */ mattonella("verde", "telefono", Number(t.telefoni) || 0, "telefoni collegati")}
                  ${/* già HTML */ mattonella("ambra", "chat", Number(t.chat) || 0, "conversazioni di assistenza")}
@@ -4217,19 +4402,26 @@
 
           ${/* già HTML */ ilServizio()}
 
-          <div class="voce">
-            <h2>Gli installatori</h2>
-            <span>${INSTALLATORI.length}</span>
+          <div class="colonna-elenco">
+            <div class="voce">
+              <h2>Gli installatori</h2>
+              <span>${INSTALLATORI.length}</span>
+            </div>
+            ${
+              INSTALLATORI.length
+                ? `<div class="installatori">${INSTALLATORI.map(unInstallatore).join("")}</div>`
+                : `<div class="vetro vuoto">
+                     <b>Ancora nessun installatore</b> Il primo si aggiunge da «Aggiungi»: nome, limite, e viene generata la sua chiave.
+                   </div>`
+            }
           </div>
-          ${
-            INSTALLATORI.length
-              ? `<div class="installatori">${INSTALLATORI.map(unInstallatore).join("")}</div>`
-              : `<div class="vetro vuoto">
-                   <b>Ancora nessun installatore</b> Il primo si aggiunge da «Aggiungi»: nome, limite, e viene generata la sua chiave.
-                 </div>`
-          }
 
-          <section class="riquadro" style="margin-top: 14px">
+          <div class="scheda-vuota">
+            <b>Scegli un impianto</b>
+            <span>La sua scheda si apre qui, accanto all'elenco.</span>
+          </div>
+
+          <section class="riquadro larga" style="margin-top: 14px">
             <div class="capoRiquadro"><h3>Cosa si vede da qui</h3></div>
             <p class="minuta">
               <b>Quello che vede l'installatore, e niente di più.</b> Gli impianti di ognuno arrivano dalla stessa strada da cui arrivano a lui: i numeri che ogni impianto invia da sé, i titoli delle sue plance, e i nomi solo dei dispositivi che non rispondono. Nessuna persona, nessuna stanza, nessuno stato di sensori. E da qui si guarda soltanto: non si installa, non si riavvia, non si rinomina. L'impianto è suo, e la sua chiave resta sua.
@@ -4358,6 +4550,7 @@
                 data-di="${testo(uno.chi)}"
                 role="button"
                 tabindex="0"
+                aria-current="${foglioAperto?.casa === casa.casa && foglioAperto?.chi === uno.chi}"
               >
                 <i class="punto"></i>
                 <span class="nome">${
