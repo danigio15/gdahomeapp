@@ -213,7 +213,9 @@ function ensureFloodEditorRows() {
       return (
         `<div class="ed-row" data-dm-flood-row="${esc(id)}">` +
         `<div class="ed-row-main"><div class="ed-row-new">${esc(nome)}</div>` +
-        `<div class="ed-row-old mono">${esc(id)}</div></div>` +
+        `<div class="ed-row-old mono">${esc(id)}</div>` +
+        seNonEUnaSonda(id, states) +
+        `</div>` +
         `<div class="ed-del" data-dm-flood-del="${esc(id)}">🗑️</div></div>`
       );
     })
@@ -224,6 +226,35 @@ function ensureFloodEditorRows() {
     `<div class="ed-acc-body"><div class="ed-list">${righe}</div></div>`;
   scriviSeCambia(acc, markup);
   return true;
+}
+
+/* Quando in questa lista c'e' dentro qualcosa che una sonda non e'.
+ *
+ * Dal campo, con lo scatto del popup: «continua ad uscire questo allarme
+ * bagnato ma non c'e' nessuna entita' allarme, sono 5 i sensori configurati,
+ * questo 6 non esiste». Il sesto esisteva eccome — stava in questa lista — ma
+ * non era una sonda: era un'entita' aggiunta al gruppo Allagamenti dalla
+ * scheda degli avvisi, col suo nome scritto a mano. La tessera la legge come
+ * legge tutte le altre — acceso vuol dire bagnato — e quindi diceva «Bagnato»
+ * di una cosa che non misura acqua.
+ *
+ * Toglierla d'ufficio sarebbe peggio: c'e' chi mette in questa lista un
+ * sensore fatto in casa che la classe non la dichiara, ed e' una scelta sua.
+ * Quello che mancava e' che si vedesse. Qui si vede, e si vede nel posto
+ * giusto: la scheda che si compila, dove l'identificativo c'e' gia' e dove
+ * accanto c'e' il cestino per toglierla.
+ *
+ * Due casi, e sono diversi: uno che in Home Assistant non c'e' piu' (un
+ * dispositivo tolto, e la riga rimasta) e uno che c'e' ma di acqua non parla. */
+function seNonEUnaSonda(id, states) {
+  const suo = states?.[id];
+  const perche = !suo
+    ? t("in Home Assistant non c'è", "not in Home Assistant")
+    : isFloodSensor(id, suo)
+      ? ""
+      : t("non è un sensore di allagamento", "not a flood sensor");
+  if (!perche) return "";
+  return `<div class="ed-hint" data-dm-flood-dubbia="true">⚠️ ${esc(perche)}</div>`;
 }
 
 /* Il cestino e' quello del runtime: sa gia' distinguere una voce aggiunta

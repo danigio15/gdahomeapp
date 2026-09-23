@@ -56,6 +56,14 @@ nostra ne pesava 102: sopra quel peso il ponte non dice «oggi non ce l'ho», di
 l'unica icona sopra il tetto di tutta la casa. Adesso pesa 28 KiB, sempre 256
 per 256, e una prova guarda il file vero perché non succeda di nuovo.
 
+**E nella scheda degli Allagamenti si vede quale voce non è una sonda.** «Non
+c'è nessuna entità allarme, sono 5 i sensori configurati, questo 6 non esiste»:
+il sesto stava nella lista — ce l'aveva messo la scheda degli avvisi, col nome
+scritto a mano — ma non era una sonda, e la tessera lo leggeva come legge tutti
+(acceso vuol dire bagnato). Toglierlo d'ufficio sarebbe peggio, perché c'è chi
+in quella lista mette un sensore fatto in casa che la classe non la dichiara:
+adesso la riga lo dice, accanto al cestino che la toglie.
+
 **La finestra di una tessera ci sta dentro la sua card.** «Aggiusta i margini
 del popup allagamenti, non entra all'interno tutto»: negli Allagamenti
 «Asciutto» finiva oltre il bordo destro e il titoletto «LO STATO» spariva a
