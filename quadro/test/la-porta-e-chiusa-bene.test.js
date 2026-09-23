@@ -272,14 +272,14 @@ test("le pagine hanno la loro politica, e ogni risposta le testate di serie", as
     assert.match(politica, /base-uri 'none'/);
     assert.match(politica, /script-src 'sha256-[A-Za-z0-9+/=]+'/, "gli script per impronta");
     assert.doesNotMatch(politica, /script-src[^;]*unsafe-inline/);
-    /* Il cruscotto sta dentro la tessera di Home Assistant: si lascia mettere
-     * in un riquadro. La gestione no. */
+    /* Il cruscotto e la gestione stanno dentro una voce della barra laterale
+     * di Home Assistant: si lasciano mettere in un riquadro. */
     assert.match(politica, /frame-ancestors \*/);
     assert.equal(cruscotto.headers.get("x-content-type-options"), "nosniff");
     assert.equal(cruscotto.headers.get("referrer-policy"), "no-referrer");
     const gestione = await fetch(`${b.dove}/gestore/`);
-    assert.match(gestione.headers.get("content-security-policy"), /frame-ancestors 'none'/);
-    assert.equal(gestione.headers.get("x-frame-options"), "DENY");
+    assert.match(gestione.headers.get("content-security-policy"), /frame-ancestors \*/);
+    assert.equal(gestione.headers.get("x-frame-options"), null);
     /* Le testate di serie anche su una risposta JSON qualunque. */
     const salute = await fetch(`${b.dove}/salute`);
     assert.equal(salute.headers.get("x-content-type-options"), "nosniff");
@@ -425,6 +425,60 @@ test("/salute da fuori dice solo che e' vivo; per intero da qui e dalla gestione
     const dallaGestione = await (await b.gestore("/salute")).json();
     assert.equal(dallaGestione.installatori, 1);
     assert.equal((await fetch(`${b.dove}/gestore/salute`)).status, 401);
+  } finally {
+    await b.chiudi();
+  }
+});
+
+test("la gestione vede anche i numeri del tramite, presi uno per uno", async () => {
+  const { createServer } = await import("node:http");
+  const tramite = createServer((_q, r) => {
+    r.writeHead(200, { "content-type": "application/json" });
+    r.end(
+      JSON.stringify({
+        vivo: true,
+        acceso_da: 120,
+        case: 131,
+        telefoni: 4,
+        segnalazioni: true,
+        chat: { linee: 5, console: true },
+        posta: false,
+        /* Quello che non e' nell'elenco non passa. */
+        altro: "<img src=x onerror=alert(1)>",
+      }),
+    );
+  });
+  await new Promise((ok) => tramite.listen(0, "127.0.0.1", ok));
+  const b = await banco({ saluteDelTramite: `http://127.0.0.1:${tramite.address().port}/salute` });
+  try {
+    const detto = await (await b.gestore("/salute")).json();
+    assert.deepEqual(detto.tramite, {
+      vivo: true,
+      accesoDa: 120,
+      case: 131,
+      telefoni: 4,
+      segnalazioni: true,
+      chat: 5,
+      console: true,
+      posta: false,
+    });
+    /* Da fuori, niente: ne' del quadro ne' del tramite. */
+    const daFuori = await (
+      await fetch(`${b.dove}/salute`, { headers: { "x-forwarded-for": "203.0.113.9" } })
+    ).json();
+    assert.deepEqual(daFuori, { vivo: true });
+  } finally {
+    await b.chiudi();
+    await new Promise((ok) => tramite.close(ok));
+  }
+});
+
+test("senza tramite su questa macchina la gestione lo dice, e non si ferma", async () => {
+  const b = await banco({ saluteDelTramite: "http://127.0.0.1:1/salute" });
+  try {
+    const detto = await (await b.gestore("/salute")).json();
+    assert.equal(detto.tramite, null);
+    assert.equal(detto.vivo, true);
   } finally {
     await b.chiudi();
   }

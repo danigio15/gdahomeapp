@@ -260,8 +260,8 @@ export function gliOspiti(detti = process.env.QUADRO_OSPITI || "") {
  * Gli script sono quelli del file e basta, per impronta; niente `<object>`,
  * niente `<base>` che cambi da dove si leggono gli indirizzi relativi, niente
  * moduli spediti altrove. Chi puo' metterla in un riquadro dipende dalla
- * pagina: la gestione nessuno; il cruscotto chi ce lo mette davvero (vedi
- * `gliOspiti`). */
+ * pagina — il cruscotto e la gestione stanno tutti e due in una voce della
+ * barra laterale di Home Assistant — e si stringe a chi li elenca `gliOspiti`. */
 function laPolitica(html, { riquadro }) {
   return [
     "default-src 'self'",
@@ -318,6 +318,9 @@ export function costruisciIlServer({
   frenoDelleProve = new Freno({ quanti: 3, ogni: 60 * 1000 }),
   /* Chi puo' tenere il cruscotto in un riquadro: vedi `gliOspiti`. */
   ospiti = gliOspiti(),
+  /* Dove chiedere i numeri del tramite, per la gestione. Vuoto: non si
+   * chiedono. */
+  saluteDelTramite = "",
   registro = { debug() {}, info() {}, attenzione() {}, errore() {} },
 }) {
   /* La gestione si apre solo dove c'e' una chiave vera. Senza, questo quadro
@@ -1060,6 +1063,33 @@ export function costruisciIlServer({
     };
   }
 
+  /* I numeri del tramite, per la gestione: quante case e quanti telefoni
+   * sono collegati adesso, e cosa e' acceso. Solo numeri e si' o no, presi uno
+   * per uno: quello che risponde il tramite non arriva alla pagina cosi'
+   * com'e'. Se non risponde entro due secondi, o non c'e', si dice `null` e la
+   * pagina lo scrive. */
+  async function iNumeriDelTramite() {
+    if (!saluteDelTramite) return null;
+    try {
+      const presa = await fetch(saluteDelTramite, { signal: AbortSignal.timeout(2000) });
+      if (!presa.ok) return null;
+      const detto = await presa.json();
+      const numero = (cosa) => (Number.isFinite(Number(cosa)) ? Number(cosa) : null);
+      return {
+        vivo: detto?.vivo === true,
+        accesoDa: numero(detto?.acceso_da),
+        case: numero(detto?.case),
+        telefoni: numero(detto?.telefoni),
+        segnalazioni: detto?.segnalazioni === true,
+        chat: numero(detto?.chat?.linee),
+        console: detto?.chat?.console === true,
+        posta: detto?.posta === true,
+      };
+    } catch (_errore) {
+      return null;
+    }
+  }
+
   /* Le prove che una casa porta, oltre alla sua chiave: servono solo il
    * giorno che cambia installatore (`chiavi.riconosci`). */
   function leProve(richiesta) {
@@ -1632,7 +1662,7 @@ export function costruisciIlServer({
     }
 
     if (via === "/salute" && metodo === "GET") {
-      json(risposta, laSalute());
+      json(risposta, { ...laSalute(), tramite: await iNumeriDelTramite() });
       return;
     }
 
@@ -1800,12 +1830,7 @@ export function costruisciIlServer({
                  * tessera di Home Assistant e nell'app, e l'indirizzo di un
                  * Home Assistant e' diverso in ogni casa. Se chi tiene il
                  * quadro li elenca (`QUADRO_OSPITI`) si stringe a quelli. */
-                riquadro:
-                  quale === PAGINA
-                    ? ospiti.length
-                      ? `'self' ${ospiti.join(" ")}`
-                      : "*"
-                    : "'none'",
+                riquadro: ospiti.length ? `'self' ${ospiti.join(" ")}` : "*",
               }),
             };
       if (quale === PAGINA) pagina = foglio;
@@ -1819,7 +1844,6 @@ export function costruisciIlServer({
       "content-type": "text/html; charset=utf-8",
       "cache-control": "no-store",
       "content-security-policy": foglio.politica,
-      ...(quale === PAGINA ? {} : { "x-frame-options": "DENY" }),
     });
     risposta.end(foglio.corpo);
   }
