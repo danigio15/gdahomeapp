@@ -72,6 +72,9 @@ const KEY = "__DASHBOARDMODERN_FASCE_DEL_DISPOSITIVO__";
 const state = (root[KEY] ||= {
   installed: false,
   inCorso: false,
+  /* Qualcuno ha chiesto mentre si aspettava: appena torna la risposta si
+   * riparte. Vedi il giro alla rete, piu' sotto. */
+  dopo: false,
   giro: 0,
   chiave: "",
   letto: 0,
@@ -301,7 +304,31 @@ export async function aggiornaLeFasceDelDispositivo({ forza = false } = {}) {
   const chiave = chiaveDelConto(scelto, periodo, unico);
   const fresco = chiave === state.chiave && Date.now() - state.letto < SCADENZA_MS;
   if (!forza && fresco && state.detto) return disegna(state.detto, config, nome);
-  if (state.inCorso) return false;
+
+  /* Quello che c'e' appeso adesso parla di un altro apparecchio, o di un
+   * altro mese: si toglie subito, senza aspettare la risposta.
+   *
+   * Un blocco intestato «Boiler» sotto la scheda della wallbox e' peggio di
+   * nessun blocco — dice il falso, e lo dice con dei numeri veri accanto, che
+   * e' il modo piu' convincente di dirlo. Per il tempo del giro non c'e'
+   * niente, e chi guarda capisce di stare aspettando. */
+  if (state.chiave && state.chiave !== chiave) togliIlRiquadro();
+
+  /* Uno per volta, ma l'ultimo vince.
+   *
+   * Qui c'era `if (state.inCorso) return false;`, e buttava via la domanda
+   * appena arrivata. Cambiando apparecchio mentre il giro di quello di prima
+   * era ancora per aria, la domanda nuova non partiva proprio, e il blocco
+   * restava quello vecchio: «se metto ad esempio wallbox esce boiler». Il
+   * boiler era il giro partito prima; la wallbox una domanda mai fatta.
+   *
+   * Uno per volta resta — sono tre entita' chieste a ore, e due giri insieme
+   * sono due fette di Recorder in contemporanea — ma chi arriva mentre si
+   * aspetta si mette in coda invece di sparire. */
+  if (state.inCorso) {
+    state.dopo = true;
+    return false;
+  }
 
   const giro = ++state.giro;
   state.inCorso = true;
@@ -326,6 +353,11 @@ export async function aggiornaLeFasceDelDispositivo({ forza = false } = {}) {
     state.detto = detto;
     state.chiave = chiave;
     state.letto = Date.now();
+    /* Fra la domanda e la risposta la tendina puo' essere cambiata. Il conto
+     * si tiene lo stesso — e' buono, ed e' di quell'apparecchio — ma non si
+     * disegna: a disegnare ci pensa il giro che sta gia' in coda, con
+     * l'apparecchio che c'e' adesso. */
+    if (clean(doc.getElementById("ed-dev-selector")?.value) !== scelto) return false;
     return disegna(detto, config, nome);
   } catch (errore) {
     if (giro === state.giro) {
@@ -334,7 +366,15 @@ export async function aggiornaLeFasceDelDispositivo({ forza = false } = {}) {
     }
     return false;
   } finally {
-    if (giro === state.giro) state.inCorso = false;
+    if (giro === state.giro) {
+      state.inCorso = false;
+      if (state.dopo) {
+        state.dopo = false;
+        /* Fuori da questo giro e non qui dentro: dieci cambi di tendina di
+         * fila diventerebbero dieci chiamate una dentro l'altra. */
+        root.setTimeout?.(() => rifai(true), 0);
+      }
+    }
   }
 }
 

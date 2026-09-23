@@ -440,6 +440,21 @@ class PonteFinto {
 
   int _zigbeeApertaFinoA = 0;
 
+  /// Chi c'e' nella rete Zigbee, come lo scrive il ponte vero: una forma sola
+  /// per ZHA e per Zigbee2MQTT.
+  final List<Map<String, Object?>> inReteZigbee = [];
+
+  /// Cosa risponde il ponte alla mappa. Vuota vuol dire «la rete non ha
+  /// ancora guardato con chi parla ognuno», che e' un caso vero e va provato.
+  String mappaZigbee = '';
+
+  /// Le mappe chieste col giro vero, per contarle: quel giro dura fino a un
+  /// minuto, e una schermata che lo fa partire da sola sarebbe un guaio.
+  int mappeRifatte = 0;
+
+  /// Le entita' di ogni dispositivo gia' in rete, per `ponte/zigbee/dimmi`.
+  final Map<String, List<Map<String, Object?>>> entitaDelDispositivoZigbee = {};
+
   int _adesso() => DateTime.now().millisecondsSinceEpoch ~/ 1000;
 
   int _quantoRestaZigbee() {
@@ -642,6 +657,77 @@ class PonteFinto {
           });
         }
         return si({'fatto': true});
+      case 'ponte/zigbee/elenco':
+        if (laReteZigbee.isEmpty) {
+          return si({
+            'quale': '',
+            'righe': <Object?>[],
+            'perche': 'in questa casa non c\'e\' una rete Zigbee',
+          });
+        }
+        return si({
+          'quale': laReteZigbee,
+          'righe': List.of(inReteZigbee),
+          'perche': '',
+        });
+      case 'ponte/zigbee/elimina':
+        final targa = (detto['targa'] as String? ?? '').trim();
+        if (targa.isEmpty) {
+          return si({'fatto': false, 'perche': 'quale dispositivo?'});
+        }
+        /* Il ponte vero non si fida della rete: riguarda l'elenco e risponde
+         * con quello di **dopo**. Qui si fa uguale — una finta piu'
+         * accomodante dell'originale non prova niente. */
+        final prima = inReteZigbee.length;
+        inReteZigbee.removeWhere((uno) => uno['id'] == targa);
+        if (inReteZigbee.length == prima) {
+          return si({
+            'fatto': false,
+            'perche': 'la rete ha accettato l\'ordine ma quel dispositivo e\' ancora li\'',
+            'righe': List.of(inReteZigbee),
+          });
+        }
+        return si({'fatto': true, 'righe': List.of(inReteZigbee)});
+      case 'ponte/zigbee/dimmi':
+        final quale = (detto['dispositivo'] as String? ?? '').trim();
+        if (quale.isEmpty) return no('not_found', 'quale dispositivo?');
+        final riga = inReteZigbee.firstWhere(
+          (uno) => uno['dispositivo'] == quale,
+          orElse: () => <String, Object?>{},
+        );
+        if (riga.isEmpty) {
+          return no('not_found', 'quel dispositivo questa casa non ce l\'ha');
+        }
+        return si({
+          'dispositivo': {
+            'id': quale,
+            'nome': riga['nome'],
+            'marca': riga['marca'],
+            'modello': riga['modello'],
+            'tramite': 'zha',
+            /* Le entita' che il ponte vero pesca dai registri. Senza queste,
+             * il foglietto «Dove lo metto?» non saprebbe che sezione
+             * proporre — ed e' esattamente quello che questa risposta serve a
+             * provare. */
+            'entita': entitaDelDispositivoZigbee[quale] ?? <Object?>[],
+          },
+        });
+      case 'ponte/zigbee/mappa':
+        if (detto['rifai'] == true) mappeRifatte += 1;
+        if (mappaZigbee.isEmpty) {
+          return si({
+            'quale': laReteZigbee,
+            'righe': <Object?>[],
+            'svg': '',
+            'perche': 'la rete non ha ancora guardato con chi parla ognuno',
+          });
+        }
+        return si({
+          'quale': laReteZigbee,
+          'righe': List.of(inReteZigbee),
+          'svg': mappaZigbee,
+          'perche': '',
+        });
       case 'ponte/zigbee/rinomina':
         final quale = (detto['dispositivo'] as String? ?? '').trim();
         final come = (detto['nome'] as String? ?? '').trim();

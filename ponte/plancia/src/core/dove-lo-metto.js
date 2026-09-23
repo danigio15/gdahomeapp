@@ -28,6 +28,7 @@
  * prese, e per accorgersene deve passare dall'editor.
  */
 
+import { conLeRighe, righeDichiarate } from "./elenco-dichiarato.js";
 import { nomeDellaSezione } from "./lelenco-delle-sezioni.js";
 
 const pulito = (valore) => String(valore ?? "").trim();
@@ -360,7 +361,7 @@ export function comeLoScrivo(quale, voce = {}) {
  * tiene la sua entita' — e si aggiorna invece, perche' chi rifa' il giro sta
  * correggendo qualcosa, non creando un doppione.
  */
-export function laVoceDaScrivere(quale, voce = {}, dentro = {}) {
+export function laVoceDaScrivere(quale, voce = {}, dentro = {}, daImportare = []) {
   const suo = sezione(quale);
   const entita = pulito(voce.entity);
   if (!suo || !entita) return null;
@@ -410,30 +411,43 @@ export function laVoceDaScrivere(quale, voce = {}, dentro = {}) {
     return { cd_tapparelle: tapparelle };
   }
 
-  /* Porte, finestre e serrature, e i rilevatori di presenza: due cassetti
-   * fatti allo stesso modo, e sono la QUARTA forma. Non un elenco di righe:
-   * un foglietto di correzioni — «questa e' un varco anche se Home Assistant
-   * non lo dice», «questa no» — piu' i nomi che uno gli ha dato. Aggiungere
-   * vuol dire scrivere nella colonna «aggiunte» e togliere da «escluse», che
-   * e' il modo di cambiare idea su qualcosa che si era scartato. */
+  /* Porte, finestre e serrature, e i rilevatori di presenza: la QUARTA forma,
+   * ed e' un ELENCO DICHIARATO di righe — non piu' il foglietto di correzioni
+   * che erano fino alla #74-C e alla #74-D.
+   *
+   * Qui il foglietto si scriveva ancora, e per questo «l'ho aggiunto in
+   * Presenza e salvato, ma non l'ho ritrovato nella sezione»: la scrittura
+   * riusciva e finiva nel posto vecchio, mentre la scheda guarda `righe` e
+   * senza quelle dice «Nessun rilevatore configurato». Un salvataggio che
+   * riesce e non si vede e' peggio di uno che fallisce, perche' non lo si
+   * rifa'.
+   *
+   * Quando la sezione non e' ancora dichiarata si portano dentro anche i
+   * rilevatori che Home Assistant ha gia' trovato — `daImportare`, che e'
+   * quello che prende il bottone «Prendi gli N» della scheda. Senza, mettere
+   * un dispositivo dichiarerebbe la sezione con dentro lui solo, e i
+   * settantuno che oggi si vedono da soli sparirebbero: una riga aggiunta che
+   * ne toglie settanta. */
   if (suo.chiave === "varchi" || suo.chiave === "presenza") {
     const cassetto = suo.chiavi[0];
     const dato = dentro[cassetto] && typeof dentro[cassetto] === "object" ? dentro[cassetto] : {};
-    const dentroGia = Array.isArray(dato.aggiunte) ? dato.aggiunte : [];
-    const escluse = (Array.isArray(dato.escluse) ? dato.escluse : []).filter(
-      (una) => pulito(una) !== entita,
-    );
-    const aggiunte = dentroGia.some((una) => pulito(una) === entita)
-      ? [...dentroGia]
-      : [...dentroGia, entita];
-    return {
-      [cassetto]: {
-        ...dato,
-        escluse,
-        aggiunte,
-        nomi: { ...(dato.nomi && typeof dato.nomi === "object" ? dato.nomi : {}), [entita]: nome },
-      },
-    };
+    const riga = { entity: entita, name: nome, icon: pulito(voce.icona) || pulito(voce.icon) };
+    const gia = righeDichiarate(dato);
+    if (gia === null) {
+      /* Mai dichiarata: si dichiara adesso, con dentro quello che ci sarebbe
+       * gia' stato piu' questo. Le doppie le toglie chi legge — `righeDichiarate`
+       * tiene la prima di ogni entita' — ma si filtra lo stesso, cosi' il
+       * deposito non porta in giro una riga che non conta. */
+      const trovate = (Array.isArray(daImportare) ? daImportare : []).filter(
+        (una) => pulito(una?.entity) !== entita,
+      );
+      return { [cassetto]: conLeRighe(dato, [...trovate, riga]) };
+    }
+    const dove = gia.findIndex((una) => pulito(una?.entity) === entita);
+    const righe = [...gia];
+    if (dove >= 0) righe[dove] = { ...righe[dove], ...riga, icon: riga.icon || righe[dove].icon };
+    else righe.push(riga);
+    return { [cassetto]: { ...dato, righe } };
   }
 
   /* La temperatura e l'umidita' sono la QUINTA forma, e la piu' diversa: non

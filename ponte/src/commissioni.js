@@ -61,6 +61,8 @@ import { I_MARCHI, QuestoNoNo } from "./aggiornamenti.js";
 import { CentralinoHaDettoNo, SenzaCentralino } from "./segnalazioni.js";
 import { SegnalazioniDellaPlancia } from "./segnalazioni-della-plancia.js";
 import { laVede, QuellaPlanciaNo, TroppePlance } from "./plance.js";
+import { iFili, laMappaDisegnata } from "./mappa-zigbee.js";
+import { comeSiPresenta } from "./zigbee.js";
 
 /* Quando chi chiede non ha nessuna plancia. Non e' un guasto ed e' l'app a
  * scriverlo, percio' il codice e' uno suo e non uno di Home Assistant. */
@@ -188,6 +190,29 @@ const TICKET_DI_CHI_RISPONDE = new Set([
 const NELLA_CONSOLE = "La coda di chi risponde sta nella console dell'app.";
 const NIENTE_BOZZE =
   "Da qui una segnalazione o parte o non si scrive: non ci sono bozze da buttare.";
+
+/* L'anagrafe della casa, per chi disegna.
+ *
+ * «Non devi mettere le entita' ma i dispositivi non connessi, cosi' come li
+ * mostri nel cruscotto installatore.»
+ *
+ * Il cruscotto quei dispositivi li sa perche' glieli manda questo ponte, che i
+ * registri li legge gia' per il rapporto. La plancia no: chi disegna i
+ * registri non li ha, e chiederli a Home Assistant e' la porta che la #553 ha
+ * chiuso. Dentro Home Assistant glieli lascia il pannello; nell'app non glieli
+ * lasciava nessuno, e l'avviso tornava a contare le entita'.
+ *
+ * Quindi li passa il ponte, che ce li ha gia' in mano e li tiene da parte
+ * cinque minuti: nessuna domanda in piu' a Home Assistant, e una risposta
+ * sola per caricamento. Comincia per `ponte/` perche' e' roba di questo ponte
+ * e non un comando di Home Assistant travestito: dentro Home Assistant la
+ * plancia se lo sente dire «non conosco», ed e' la risposta giusta — li' i
+ * registri ce li ha gia'.
+ *
+ * Escono due mappe e nient'altro: di chi e' ogni entita', e come si chiama
+ * quel qualcuno. **Nessuno stato.** */
+const REGISTRI = "ponte/registri";
+const DIMMI_IL_DISPOSITIVO = "ponte/zigbee/dimmi";
 
 /* La chat di assistenza della dashboard: quattro comandi sono di chi chiede, e
  * li fa il ponte per ogni casa. */
@@ -384,6 +409,10 @@ export class Commissioni {
      * una porta che non c'e'. */
     zigbee = null,
     aggiornamenti = null,
+    /* L'anagrafe della casa — di chi e' ogni entita', e come si chiama quel
+     * qualcuno. E' la stessa che legge il rapporto, e la tiene `registri.js`:
+     * una sola, per non leggere due volte la stessa cosa pesante. */
+    registri = null,
     ritorno = null,
     scarica = scaricaDavvero,
     insieme = INSIEME,
@@ -431,6 +460,7 @@ export class Commissioni {
      * Assistant e qui sta nel ponte. */
     this.spegnimento = spegnimento;
     this.zigbee = zigbee;
+    this.registri = registri;
     /* Cosa c'e' da aggiornare, e i due tasti per farlo. In Home Assistant si
      * vede da una pagina che chi usa l'app non apre piu'. */
     this.aggiornamenti = aggiornamenti;
@@ -497,7 +527,13 @@ export class Commissioni {
     if (tipo === IL_QUADRO) return this._ilQuadro(detto, chiChiede, amministra);
     if (typeof tipo === "string" && tipo.startsWith("ponte/segnalazioni/"))
       return this._segnalazioni(detto);
+    /* Prima del giro `ponte/zigbee/`, perche' questo non e' un comando
+     * alla rete: si chiama cosi' per chi sta dall'altra parte, ma legge
+     * i registri e basta. Dentro `_zigbee` un ponte senza rete Zigbee
+     * risponderebbe «non conosco» a una domanda a cui sa rispondere. */
+    if (tipo === DIMMI_IL_DISPOSITIVO) return this._dimmiIlDispositivo(detto);
     if (typeof tipo === "string" && tipo.startsWith("ponte/zigbee/")) return this._zigbee(detto);
+    if (tipo === REGISTRI) return this._registri(detto);
     if (tipo === CONFIG_GET || tipo === CONFIG_SET || tipo === CONFIG_RESTORE)
       return this._configurazione(detto);
     if (tipo === DOVE_TORNARE) return this._doveTornare(detto);
@@ -525,6 +561,54 @@ export class Commissioni {
       return si(id, tipo === "frontend/get_user_data" ? { value: null } : null);
     }
     return no(id, "unknown_command", `non conosco ${tipo}`);
+  }
+
+  /* Le due mappe dell'anagrafe, per la plancia che le ha chieste.
+   *
+   * Non si cade mai: senza registri escono vuote, e chi le ha chieste torna a
+   * contare le entita' come faceva prima che questa porta esistesse. Un avviso
+   * un po' piu' grossolano e' meglio di una plancia che non si apre.
+   */
+  async _registri(detto) {
+    const id = detto?.id ?? null;
+    if (!this.registri) return no(id, "unknown_command", `non conosco ${detto?.type}`);
+    return si(id, await this.registri.leMappe());
+  }
+
+  /* Un dispositivo che c'e' gia', presentato come quelli appena entrati:
+   * serve a metterlo nella plancia partendo dall'elenco invece che
+   * dall'abbinamento.
+   *
+   * Senza questo il tasto «Mettilo nella plancia» sarebbe un tasto che si
+   * preme e non succede niente: il foglietto «Dove lo metto?» decide la
+   * sezione dall'ENTITA' — una lampadina va nelle Luci, un contatto di porta
+   * nei Varchi — e di un dispositivo senza entita' non sa dire niente. Le
+   * entita' stanno nei registri, che questo ponte legge gia' per il rapporto:
+   * nessuna domanda in piu' a Home Assistant.
+   */
+  async _dimmiIlDispositivo(detto) {
+    const id = detto?.id ?? null;
+    const quale = String(detto?.dispositivo ?? "").trim();
+    if (!quale) return no(id, "not_found", "quale dispositivo?");
+    if (!this.registri) return no(id, "unknown_command", `non conosco ${detto?.type}`);
+    try {
+      const { dispositivi, entita } = await this.registri.chiedi();
+      const suo = (Array.isArray(dispositivi) ? dispositivi : []).find(
+        (uno) => String(uno?.id ?? "") === quale,
+      );
+      if (!suo) return no(id, "not_found", "quel dispositivo questa casa non ce l'ha");
+      const sue = (Array.isArray(entita) ? entita : []).filter(
+        (una) => String(una?.device_id ?? "") === quale,
+      );
+      return si(id, { dispositivo: comeSiPresenta(suo, sue) });
+    } catch (errore) {
+      this.registro.attenzione(`zigbee: ${errore?.message || errore}`);
+      return no(
+        id,
+        codiceDelPonte(errore, "zigbee_non_accettato"),
+        String(errore?.message || errore),
+      );
+    }
   }
 
   /* Se questa casa ha il cruscotto di chi installa, la gestione del quadro, o
@@ -1220,6 +1304,25 @@ export class Commissioni {
           return si(id, await zigbee.apri({ secondi: detto.secondi }));
         case "ponte/zigbee/chiudi":
           return si(id, await zigbee.chiudi());
+        /* La mappa: le righe le prende la rete, il disegno lo fa chi disegna,
+         * e qui i due si mettono insieme. `scuro` perche' l'app ha due vesti e
+         * una mappa nera su nero non si vede: chi la chiede sa in quale sta. */
+        case "ponte/zigbee/mappa": {
+          const detta = await zigbee.mappa({ rifai: detto.rifai === true });
+          if (!detta.righe.length) return si(id, { ...detta, fili: [], svg: "" });
+          return si(id, {
+            ...detta,
+            fili: iFili(detta.righe),
+            svg: laMappaDisegnata(detta.righe, { scuro: detto.scuro === true }),
+          });
+        }
+        case "ponte/zigbee/elenco":
+          return si(id, await zigbee.elenco());
+        /* La targa sta in `targa` e non in `id`: `id` e' il numero del
+         * messaggio, e leggerlo qui vorrebbe dire provare a togliere dalla
+         * rete un apparecchio che si chiama «7». */
+        case "ponte/zigbee/elimina":
+          return si(id, await zigbee.elimina(detto.targa));
         case "ponte/zigbee/rinomina":
           return si(id, await zigbee.rinomina(detto.dispositivo, detto.nome));
         default:

@@ -304,31 +304,37 @@ test("ogni sezione porta le due meta' del nome, e quelle del Config sono le sue"
 
 /* ── le due forme nuove: il foglietto e la stanza ───────────────────────── */
 
-test("una porta si aggiunge al foglietto dei varchi, e si toglie dagli scarti", () => {
-  /* Non un elenco di righe: un foglietto di correzioni — «questa è un varco
-   * anche se Home Assistant non lo dice», «questa no» — più i nomi. */
+test("una porta si aggiunge alle righe dei varchi, non al foglietto di prima", () => {
+  /* Era un foglietto di correzioni — «questa è un varco anche se Home
+   * Assistant non lo dice», «questa no». Dalla #74-C è un ELENCO DICHIARATO
+   * di righe, ed è lì che la scheda guarda: scrivendo ancora il foglietto, il
+   * salvataggio riusciva e la scheda continuava a dire «nessuno». */
   const scritto = laVoceDaScrivere(
     "varchi",
     { entity: "binary_sensor.porta", nome: "Porta d'ingresso" },
-    { cd_varchi: { escluse: ["binary_sensor.porta"], aggiunte: [], nomi: {} } },
+    { cd_varchi: { righe: [] } },
   );
-  assert.deepEqual(scritto.cd_varchi.aggiunte, ["binary_sensor.porta"]);
-  /* Toglierla dagli scarti è il modo di cambiare idea su qualcosa che si era
-   * scartato: restandoci, l'aggiunta non varrebbe niente. */
-  assert.deepEqual(scritto.cd_varchi.escluse, []);
-  assert.equal(scritto.cd_varchi.nomi["binary_sensor.porta"], "Porta d'ingresso");
-  /* Rifarlo non la scrive due volte. */
+  assert.deepEqual(
+    scritto.cd_varchi.righe.map((una) => una.entity),
+    ["binary_sensor.porta"],
+  );
+  assert.equal(scritto.cd_varchi.righe[0].name, "Porta d'ingresso");
+  /* Rifarlo non la scrive due volte: resta una riga, col nome nuovo. */
   const ancora = laVoceDaScrivere("varchi", { entity: "binary_sensor.porta", nome: "Porta" }, scritto);
-  assert.equal(ancora.cd_varchi.aggiunte.length, 1);
+  assert.equal(ancora.cd_varchi.righe.length, 1);
+  assert.equal(ancora.cd_varchi.righe[0].name, "Porta");
 });
 
-test("un rilevatore di presenza passa dallo stesso foglietto, nel suo cassetto", () => {
+test("un rilevatore di presenza passa dalla stessa forma, nel suo cassetto", () => {
   const scritto = laVoceDaScrivere(
     "presenza",
     { entity: "binary_sensor.movimento", nome: "Corridoio" },
-    {},
+    { cd_presenza: { righe: [] } },
   );
-  assert.deepEqual(scritto.cd_presenza.aggiunte, ["binary_sensor.movimento"]);
+  assert.deepEqual(
+    scritto.cd_presenza.righe.map((una) => una.entity),
+    ["binary_sensor.movimento"],
+  );
   assert.equal("cd_varchi" in scritto, false);
 });
 

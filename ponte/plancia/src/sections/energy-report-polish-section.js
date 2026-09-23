@@ -514,6 +514,30 @@ function installStyles() {
     #ed-device-list .ed-dev-icon[data-dm-artwork]{display:grid!important;place-items:center!important;width:58px!important;height:58px!important;min-width:58px!important;padding:0!important;border-radius:17px!important;background:transparent!important;overflow:hidden!important}
     #ed-device-list .ed-dev-icon[data-dm-artwork] .dm-appliance-art,#ed-device-list .ed-dev-icon[data-dm-artwork] svg{display:block!important;width:56px!important;height:56px!important;max-width:56px!important;max-height:56px!important}
     #ed-daily-canvas[data-dm-actual-history]{min-height:250px!important}
+
+    /* La riga sotto «Mese / Anno» non cresce quando arrivano le pastiglie.
+     *
+     * «C'e' qualcosa che si aggiorna con layout differenti: la riga sotto a
+     * mese e anno prima ha una grafica poi cambia.» Misurato: a 412 px di
+     * larghezza la riga del periodo passa da 77 a 96 pixel nel momento in cui
+     * il pacchetto arriva e le tre pastiglie vengono scritte. Su schermo largo
+     * non si muove di un pixel, e per questo non si vede da un computer: li'
+     * le pastiglie stanno in fila con le due tendine («margin-left:auto»),
+     * mentre sotto ai 640 px la riga diventa una colonna e loro si prendono un
+     * rigo tutto loro — un rigo che al primo disegno non c'e' ancora.
+     *
+     * Venti pixel: e' alta cosi' una pastiglia — quattro di margine sopra,
+     * dodici di testo a dieci punti, quattro sotto. Si tiene il posto
+     * da subito invece di riempirlo dopo, e cosi' quello che sta sotto non
+     * scende piu'. La misura la difende una prova che apre la pagina larga 412
+     * e confronta la riga vuota con la riga piena: il giorno che la pastiglia
+     * cambia altezza, quella prova cade insieme a questa riga.
+     *
+     * Vuoto non si scrive niente, e non si mette nessun «—»: un numero finto
+     * sotto al mese si legge come un numero. */
+    @media (max-width:640px){
+      #ed-yoy-chips{min-height:20px!important}
+    }
   `);
 }
 

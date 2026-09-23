@@ -108,17 +108,138 @@ export function installThemeFoundationSection() {
       -webkit-background-clip:text!important;background-clip:text!important;
       -webkit-text-fill-color:transparent!important}
 
-    /* Lo sfondo animato sta sul suo livello (dal campo: la CPU del mini PC).
+    /* Le due macchie dietro la plancia: sfumate, non sfocate.
      *
-     * Le due macchie sfumate dietro la plancia si muovono per sempre, fuori da
-     * ogni pagina, con un blur di cento pixel su meta' dello schermo. Promosse
-     * a livello composito il browser le sposta senza rasterizzarle di nuovo a
-     * ogni fotogramma; e chi ha chiesto al sistema di ridurre le animazioni le
-     * trova ferme, che e' quello che ha chiesto. */
-    .animated-mesh-bg::before,.animated-mesh-bg::after{will-change:transform}
-    @media (prefers-reduced-motion:reduce){
-      .animated-mesh-bg::before,.animated-mesh-bg::after{animation-play-state:paused!important}
+     * «La torre 3d va a scatti quando si clicca e non apre subito il popup
+     * storico.» Non era la torre, e non era il clic: **la plancia intera**
+     * andava a quindici fotogrammi al secondo, ferma, su ogni pagina, senza
+     * che nessuno la toccasse. Il clic si notava soltanto perche' e' il
+     * momento in cui uno si aspetta una risposta.
+     *
+     * A mangiarsi tutto sono queste due macchie. Sono larghe sessanta e
+     * cinquanta volte un centesimo dello schermo, e portano un
+     * «filter: blur(100px)»: una sfocatura gaussiana grande cento pixel su
+     * mezzo schermo, che il browser rifa' a ogni fotogramma per sempre.
+     *
+     * ─── Le cure che non curano ───────────────────────────────────────────
+     *
+     * Qui prima c'era «will-change: transform» — promuovile a livello
+     * composito e il browser non le rasterizza piu' — e la pausa con
+     * «prefers-reduced-motion». Misurate, **non cambiano niente**: 15 al
+     * secondo prima, 15 dopo. Anche fermando del tutto l'animazione resta a
+     * 17: non e' il movimento che costa, e' la sfocatura, che si rifa'
+     * comunque ogni volta che qualcosa sopra si ridisegna — e qualcosa sopra
+     * si ridisegna sempre, fosse solo un LED che lampeggia.
+     *
+     * ─── Quella che cura ──────────────────────────────────────────────────
+     *
+     * Una sfocatura di un cerchio pieno **e' gia'** una sfumatura radiale: si
+     * puo' scrivere invece di calcolarla. Gli stop qui sotto non sono a
+     * occhio, sono la curva dell'errore di una gaussiana con sigma cento sul
+     * raggio vero delle macchie, e messe accanto alla sfocatura non si
+     * distinguono. Il raggio della sfumatura pero' si ferma al bordo della
+     * scatola mentre la sfocatura sbordava, quindi le scatole vanno il doppio:
+     * e' quello che fa lo «scale(2)» dentro l'animazione qui sotto.
+     *
+     * Misurato sulla plancia servita, con il freno della CPU a sei:
+     * da 15 a 60 fotogrammi al secondo, e il peggiore da 167 ms a 17.
+     *
+     * Niente «will-change»: senza la sfocatura non c'e' piu' niente di caro da
+     * tenere da parte, e una scatola larga il doppio promossa a livello sono
+     * decine di megabyte di memoria su un tablet, per niente. */
+    /* I pallini «sono vivo» lampeggiano invece di respirare.
+     *
+     * Sono una dozzina in giro per la plancia e portano tutti la stessa
+     * animazione: quello della connessione in testata, quello della pagina
+     * MiniPC e le due card «Rete e impianto», quello dell'orologio
+     * nell'editor, i LED delle lampadine accese nella pagina Luci.
+     *
+     * Respiravano: una dissolvenza continua che cresce e si smorza, cioe' un
+     * valore nuovo a ogni fotogramma — e un valore nuovo a ogni fotogramma
+     * vuol dire **ridipingere** a ogni fotogramma. Un pallino da otto pixel si
+     * portava via un quinto della CPU della pagina dove stava, per sempre.
+     *
+     * Misurato a pagina aperta e senza toccare niente, contando le
+     * rasterizzazioni del browser in cinque secondi:
+     *
+     *   come respirava   900 rasterizzazioni   24% di un core
+     *   a passi           27                    5%
+     *   spento del tutto  12                    4%
+     *
+     * Cioe' quasi come spegnerlo, ma il pallino c'e' ancora e continua a dire
+     * che qualcosa risponde.
+     *
+     * ─── Le cure che non curano ───────────────────────────────────────────
+     *
+     * Provate tutte, con la misura in mano: «will-change» (anche scritto in un
+     * foglio che carica con la pagina — iniettato dopo non conta,
+     * un'animazione gia' partita non ci ripensa), togliere la prospettiva del
+     * riquadro, togliere l'ombra, pulsare nella sola opacita' senza
+     * ingrandire. Tutte: 900 rasterizzazioni, 24%.
+     *
+     * Quello che cambia le cose e' **smettere di interpolare**. Il LED della
+     * torre del MiniPC lampeggia a passi da sempre e non e' mai costato
+     * niente: cambia quattro volte in due secondi e mezzo invece di sessanta
+     * volte al secondo. Non e' un trucco di un browser — quello che si
+     * interpola va ridipinto, quello che salta no.
+     *
+     * L'andatura sta **dentro** i fotogrammi e non sui selettori: cosi' vale
+     * per tutti quelli che usano questa animazione senza doverli elencare, e
+     * il giorno che ne nasce uno nuovo nasce gia' a posto. Si perde
+     * l'ingrandimento: adesso i pallini si accendono e si smorzano, non
+     * crescono piu'. */
+    @keyframes pulseDot{
+      0%{animation-timing-function:steps(1,end);opacity:1}
+      50%{animation-timing-function:steps(1,end);opacity:.45}
+      100%{opacity:.45}
     }
+
+    .animated-mesh-bg::before,.animated-mesh-bg::after{
+      filter:none!important;
+      animation:none!important;
+      transform:scale(2)!important;
+      background:radial-gradient(closest-side,
+        rgb(var(--dm-macchia) / 1) 0%,
+        rgb(var(--dm-macchia) / .98) 17%,
+        rgb(var(--dm-macchia) / .84) 34%,
+        rgb(var(--dm-macchia) / .5) 50%,
+        rgb(var(--dm-macchia) / .16) 66%,
+        rgb(var(--dm-macchia) / .02) 83%,
+        rgb(var(--dm-macchia) / 0) 100%)!important}
+    .animated-mesh-bg::before{--dm-macchia:220 252 231}
+    .animated-mesh-bg::after{--dm-macchia:224 242 254}
+    html[data-theme="dark"] .animated-mesh-bg::before{--dm-macchia:14 42 28}
+    html[data-theme="dark"] .animated-mesh-bg::after{--dm-macchia:11 39 64}
+    /* ─── E perche' adesso stanno ferme ───────────────────────────────────
+     *
+     * Tolta la sfocatura, il costo che restava era il **movimento**: le due
+     * macchie stanno dietro tutto, e mentre scorrono tutto quello che ci sta
+     * sopra va ricomposto.
+     *
+     * A pagina aperta e senza che nessuno tocchi niente, quanta CPU si mangia
+     * la plancia ferma — misurato leggendo il tempo di tutti i processi di
+     * Chromium, non solo del filo principale:
+     *
+     *   Home       14% di un core -> 7%
+     *   MiniPC     78%            -> 27%
+     *   Energia    43%            ->  1%
+     *
+     * E «will-change: transform», riprovato qui con la sfumatura al posto
+     * della sfocatura, continua a non cambiare niente: 14 e 14, 78 e 74.
+     *
+     * Quello che si perde: uno scorrimento di otto centesimi di schermo in
+     * venticinque secondi, su un alone pastello mezzo trasparente. Per
+     * rivederlo si tolgono le due righe «animation» e «transform» qui sopra e
+     * si rimettono i fotogrammi del viaggio:
+     *
+     *   @keyframes floatBlob{
+     *     0%{transform:translate(0,0) scale(2)}
+     *     100%{transform:translate(8vw,6vh) scale(2.3)}
+     *   }
+     *
+     * Lo «scale(2)» resta in tutti e due i casi: la sfumatura finisce dove
+     * finisce la scatola, mentre la sfocatura sbordava, e il doppio di
+     * scatola rimette il disegno dov'era. */
   `);
   return true;
 }
