@@ -11,6 +11,50 @@ fuori. La plancia dentro continua a dire la sua, e si legge dov'è sempre
 stata: nella pastiglia «La plancia» della console. Sono due numeri perché
 sono due cose.
 
+## 1.6.4
+
+**La mappa della rete Zigbee, su una casa vera, non si leggeva.** «La mappa
+dopo vari tentativi si è caricata ma non si vede nulla e non si può né fare
+zoom né niente.» Erano due cose, e tutte e due si vedono solo misurando.
+
+Il disegno aveva due cerchi di misura fissa, tarati su una dozzina di
+apparecchi: su un cerchio di centottantacinque pixel ci stanno milleduecento
+pixel di circonferenza, e quarantacinque ripetitori larghi cinquantaquattro ne
+vogliono duemilaquattrocento. Contate: centoventitré coppie di anelli uno sopra
+l'altro e sessantanove coppie di scritte accavallate. Adesso il raggio lo detta
+la rete — a ognuno spetta il pezzo di cerchio che il suo nome occupa — e su
+ottanta apparecchi le coppie sovrapposte sono zero. Una casa piccola ha la
+mappa di sempre: sotto il minimo non si scende.
+
+E nell'app la figura non si poteva ingrandire perché stava dentro una lista,
+che il dito se lo prende lei, e col margine di spostamento a zero — il valore
+di serie — anche ingrandendo non c'era niente da portare al centro. Adesso si
+tocca e si apre in una pagina sua: si ingrandisce con le dita o con i tasti, si
+sposta dove si vuole, e un tasto la rimette intera.
+
+**E la rete si legge anche a righe, che su un telefono è la cosa che serve.**
+Sotto la mappa c'è «Chi regge chi»: l'antenna, ogni ripetitore, cosa gli sta
+appeso e quanto tiene il filo — buono, discreto, debole. Un disegno grande due
+metri di schermo si scorre male; un elenco lo scorre chiunque. Lo conta lo
+stesso modulo che disegna la mappa, quindi le due cose non possono dire cose
+diverse.
+
+**Togliendo un dispositivo dalla rete usciva «la rete ha accettato l'ordine ma
+quel dispositivo è ancora lì» — e invece stava andando via.** Un ordine Zigbee
+viaggia via radio: il coordinatore lo manda, l'apparecchio se ne va, e l'elenco
+si riscrive dopo. Si rileggeva nell'istante in cui l'ordine partiva, quindi lo
+si trovava ancora lì quasi sempre. Adesso si guarda per dodici secondi, e solo
+se dopo c'è ancora si dice — dicendo anche cosa fare, perché quasi sempre è un
+apparecchio che dorme e l'ordine di uscire non lo sente finché non si sveglia.
+
+**La finestra di una tessera ci sta dentro la sua card.** «Aggiusta i margini
+del popup allagamenti, non entra all'interno tutto»: negli Allagamenti
+«Asciutto» finiva oltre il bordo destro e il titoletto «LO STATO» spariva a
+sinistra. Non era degli allagamenti — sul telefono sbordavano anche il fumo e
+le tapparelle, e tutte e sei le finestre avevano dieci pixel di margine invece
+dei quindici del loro foglio. I nomi lunghi, nelle righe, non si tagliano più a
+metà di una lettera: vanno a capo.
+
 ## 1.6.3
 
 **Energia: «Costo Reale» e il riquadro sotto dicevano due cifre per la stessa

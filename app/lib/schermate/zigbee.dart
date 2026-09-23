@@ -1512,6 +1512,14 @@ class _LaMappaDellaReteZigbeeState extends State<LaMappaDellaReteZigbee> {
     });
   }
 
+  void _apriInGrande() {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => _LaMappaInGrande(figura: _mappa.figura),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final colori = Theme.of(context).colorScheme;
@@ -1526,38 +1534,29 @@ class _LaMappaDellaReteZigbeeState extends State<LaMappaDellaReteZigbee> {
           child: ListView(
             padding: const EdgeInsets.all(16),
             children: [
-              if (_mappa.cE)
-                Scheda(
-                  padding: const EdgeInsets.all(10),
-                  /* Alta quanto decidiamo noi, non quanto e' grande il
-                   * disegno.
-                   *
-                   * Dentro una lista l'altezza non e' misurata: un disegno
-                   * si prende quella che vuole, e il tasto «Rifai il giro»
-                   * finisce tanto piu' in basso quanto piu' e' alta la
-                   * figura — con un disegno senza misure scritte dentro
-                   * sparisce proprio, perche' la lista costruisce solo
-                   * quello che sta nello schermo. Cosi' invece il tasto sta
-                   * sempre subito sotto la mappa, su qualsiasi telefono e
-                   * con qualsiasi rete.
-                   *
-                   * Meta' schermo e' la misura: la mappa si legge, e sotto
-                   * si vede che c'e' dell'altro da leggere. */
-                  child: SizedBox(
-                    height: MediaQuery.sizeOf(context).height * 0.5,
-                    /* Si puo' avvicinare e spostare: su un telefono una rete
-                     * di venti cose sta in uno schermo solo se si
-                     * rimpicciolisce tanto da non leggere piu' i nomi. */
-                    child: InteractiveViewer(
-                      maxScale: 4,
-                      child: SvgPicture.string(
-                        _mappa.figura,
-                        fit: BoxFit.contain,
-                      ),
-                    ),
-                  ),
-                )
-              else if (!_inCorso)
+              if (_mappa.cE) ...[
+                /* Qui il disegno e' un'anteprima, e si tocca per aprirlo.
+                 *
+                 * Prima stava dentro questa lista, con un InteractiveViewer
+                 * addosso, e non si poteva ne' ingrandire ne' spostare: la
+                 * lista e la figura si contendono lo stesso dito — il
+                 * trascinamento verso l'alto lo prende la lista, che e' quello
+                 * che ci si aspetta da una lista — e il margine di
+                 * spostamento, di serie, e' zero: anche ingrandendo non c'e'
+                 * niente da portare al centro. Dal campo: «non si puo' ne'
+                 * fare zoom ne' niente».
+                 *
+                 * Ingrandire vuole una pagina sua, dove il dito non serve ad
+                 * altro. Qui resta la forma della rete a colpo d'occhio, e
+                 * sotto ci sono i rami in parole, che sul telefono sono la
+                 * cosa che si legge davvero. */
+                _IlDisegnoInPiccolo(
+                  figura: _mappa.figura,
+                  quandoSiApre: _apriInGrande,
+                ),
+                const SizedBox(height: 18),
+                _IRamiDellaRete(mappa: _mappa),
+              ] else if (!_inCorso)
                 StatoVuoto(
                   dentroUnaLista: true,
                   icona: Icons.hub_outlined,
@@ -1624,6 +1623,307 @@ class _LaMappaDellaReteZigbeeState extends State<LaMappaDellaReteZigbee> {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Il disegno in piccolo, che si tocca per aprirlo.
+///
+/// Non si ingrandisce qui dentro: qui dice solo «la rete e' fatta cosi'». Chi
+/// vuole leggere i nomi tocca, e ingrandisce dove ingrandire e' l'unica cosa
+/// che si fa.
+class _IlDisegnoInPiccolo extends StatelessWidget {
+  const _IlDisegnoInPiccolo({required this.figura, required this.quandoSiApre});
+
+  final String figura;
+  final VoidCallback quandoSiApre;
+
+  @override
+  Widget build(BuildContext context) {
+    final colori = Theme.of(context).colorScheme;
+    final testi = Theme.of(context).textTheme;
+    return Scheda(
+      padding: const EdgeInsets.all(10),
+      quandoPremuta: quandoSiApre,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          SizedBox(
+            height: 230,
+            child: SvgPicture.string(figura, fit: BoxFit.contain),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.zoom_in_rounded,
+                size: 18,
+                color: colori.onSurfaceVariant,
+              ),
+              const SizedBox(width: 6),
+              Text(
+                inLingua(
+                  it: 'Tocca per aprirla e ingrandire',
+                  en: 'Tap to open it and zoom in',
+                ),
+                style: testi.bodySmall?.copyWith(
+                  color: colori.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Quanto e' buono un filo, in una parola.
+///
+/// Le due soglie sono quelle del disegno (`DEBOLE` e `BUONO` in
+/// `mappa-zigbee.js`), e per la stessa ragione: sotto cinquanta e' un filo che
+/// si spezza appena qualcuno accende il microonde, sopra centocinquanta e'
+/// solido. Qui diventano una parola perche' un numero da zero a
+/// duecentocinquantacinque non lo sa leggere nessuno.
+String comeVaIlFilo(int? quanto) {
+  if (quanto == null) return inLingua(it: 'non si sa', en: 'not known');
+  if (quanto < 50) return inLingua(it: 'debole', en: 'weak');
+  if (quanto < 150) return inLingua(it: 'discreto', en: 'fair');
+  return inLingua(it: 'buono', en: 'good');
+}
+
+/// La rete in parole: l'antenna, ogni ripetitore, e cosa gli sta appeso.
+///
+/// E' la stessa cosa del disegno, scritta in righe. Su uno schermo grande il
+/// disegno dice di piu' — la forma della rete si vede tutta insieme — ma su un
+/// telefono una casa con ottanta apparecchi disegnata non si legge, e un
+/// elenco si scorre.
+class _IRamiDellaRete extends StatelessWidget {
+  const _IRamiDellaRete({required this.mappa});
+
+  final LaMappaDellaRete mappa;
+
+  @override
+  Widget build(BuildContext context) {
+    final colori = Theme.of(context).colorScheme;
+    final testi = Theme.of(context).textTheme;
+    if (mappa.rami.isEmpty && mappa.soli.isEmpty) {
+      return const SizedBox.shrink();
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(left: 4, bottom: 8),
+          child: Text(
+            inLingua(it: 'Chi regge chi', en: 'Who carries whom'),
+            style: testi.titleSmall,
+          ),
+        ),
+        for (final ramo in mappa.rami) ...[
+          _UnRamoDellaRete(ramo: ramo),
+          const SizedBox(height: 10),
+        ],
+        if (mappa.soli.isNotEmpty) ...[
+          const SizedBox(height: 6),
+          Padding(
+            padding: const EdgeInsets.only(left: 4, bottom: 8),
+            child: Text(
+              inLingua(
+                it: 'Di questi la rete non ha visto nessun collegamento',
+                en: 'The network has seen no link for these',
+              ),
+              style: testi.bodySmall?.copyWith(color: colori.onSurfaceVariant),
+            ),
+          ),
+          Scheda(
+            padding: const EdgeInsets.symmetric(vertical: 4),
+            child: Column(
+              children: [
+                for (final uno in mappa.soli)
+                  ListTile(
+                    dense: true,
+                    leading: Icon(
+                      Icons.link_off_rounded,
+                      color: colori.error,
+                      size: 20,
+                    ),
+                    title: Text(uno.nome, style: testi.bodyMedium),
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+/// Un ramo: chi lo regge in cima, e sotto cosa ci sta appeso.
+class _UnRamoDellaRete extends StatelessWidget {
+  const _UnRamoDellaRete({required this.ramo});
+
+  final UnRamo ramo;
+
+  @override
+  Widget build(BuildContext context) {
+    final colori = Theme.of(context).colorScheme;
+    final testi = Theme.of(context).textTheme;
+    final quanti = ramo.appesi.length;
+    return Scheda(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          ListTile(
+            leading: Cerchietto(
+              icona: ramo.capo.eLAntenna
+                  ? Icons.settings_input_antenna_rounded
+                  : Icons.wifi_tethering_rounded,
+              lato: 40,
+            ),
+            title: Text(ramo.capo.nome, style: testi.titleSmall),
+            subtitle: Text(
+              [
+                quanti == 0
+                    ? inLingua(it: 'niente appeso', en: 'nothing hanging')
+                    : quanti == 1
+                    ? inLingua(it: '1 appeso', en: '1 hanging')
+                    : inLingua(it: '$quanti appesi', en: '$quanti hanging'),
+                /* L'antenna non e' appesa a nessuno: la sua misura non esiste,
+                 * e scriverne una sarebbe inventarla. */
+                if (!ramo.capo.eLAntenna)
+                  inLingua(
+                    it: 'verso l\'antenna: ${comeVaIlFilo(ramo.capo.qualita)}',
+                    en: 'to the antenna: ${comeVaIlFilo(ramo.capo.qualita)}',
+                  ),
+              ].join(' · '),
+              style: testi.bodySmall?.copyWith(color: colori.onSurfaceVariant),
+            ),
+          ),
+          for (final appeso in ramo.appesi)
+            Padding(
+              padding: const EdgeInsets.only(left: 24),
+              child: ListTile(
+                dense: true,
+                leading: Icon(
+                  appeso.vaABatteria
+                      ? Icons.battery_std_rounded
+                      : Icons.sensors_rounded,
+                  size: 20,
+                  color: colori.onSurfaceVariant,
+                ),
+                title: Text(appeso.nome, style: testi.bodyMedium),
+                trailing: Text(
+                  comeVaIlFilo(appeso.qualita),
+                  style: testi.bodySmall?.copyWith(
+                    color: colori.onSurfaceVariant,
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+/// La mappa a tutto schermo: qui il dito serve solo a lei.
+///
+/// Tre cose che prima non funzionavano, e che qui funzionano perche' non c'e'
+/// una lista intorno:
+///
+///  - il margine di spostamento e' infinito, se no un disegno grande quanto la
+///    finestra non si puo' muovere di un pixel — di serie e' zero, e «zero»
+///    vuol dire «non uscire dai tuoi bordi», che a disegno intero visibile
+///    significa non muoversi affatto;
+///  - si arriva a dodici volte invece di quattro, perche' una casa con ottanta
+///    apparecchi disegnata intera ha i nomi alti due pixel;
+///  - e c'e' un tasto per tornare com'era, perche' da ingranditi ci si perde e
+///    ritrovare il centro con le dita e' un lavoro.
+class _LaMappaInGrande extends StatefulWidget {
+  const _LaMappaInGrande({required this.figura});
+
+  final String figura;
+
+  @override
+  State<_LaMappaInGrande> createState() => _LaMappaInGrandeState();
+}
+
+class _LaMappaInGrandeState extends State<_LaMappaInGrande> {
+  static const double _ilMinimo = 0.5;
+  static const double _ilMassimo = 12;
+
+  final TransformationController _dove = TransformationController();
+  Size _quadro = Size.zero;
+
+  @override
+  void dispose() {
+    _dove.dispose();
+    super.dispose();
+  }
+
+  /// Ingrandisce (o rimpicciolisce) tenendo fermo quello che sta al centro:
+  /// e' quello che fa il tasto, ed e' l'unica cosa che non fa perdere il
+  /// segno.
+  void _verso(double quanto) {
+    if (_quadro == Size.zero) return;
+    final centro = Offset(_quadro.width / 2, _quadro.height / 2);
+    final punto = _dove.toScene(centro);
+    final adesso = _dove.value.getMaxScaleOnAxis();
+    final vuole = (adesso * quanto).clamp(_ilMinimo, _ilMassimo);
+    setState(() {
+      _dove.value = Matrix4.identity()
+        ..translateByDouble(centro.dx, centro.dy, 0, 1)
+        ..scaleByDouble(vuole, vuole, vuole, 1)
+        ..translateByDouble(-punto.dx, -punto.dy, 0, 1);
+    });
+  }
+
+  void _comEra() => setState(() => _dove.value = Matrix4.identity());
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(inLingua(it: 'La mappa', en: 'The map')),
+        actions: [
+          IconButton(
+            onPressed: () => _verso(1 / 1.6),
+            icon: const Icon(Icons.zoom_out_rounded),
+            tooltip: inLingua(it: 'Rimpicciolisci', en: 'Zoom out'),
+          ),
+          IconButton(
+            onPressed: () => _verso(1.6),
+            icon: const Icon(Icons.zoom_in_rounded),
+            tooltip: inLingua(it: 'Ingrandisci', en: 'Zoom in'),
+          ),
+          IconButton(
+            onPressed: _comEra,
+            icon: const Icon(Icons.fit_screen_rounded),
+            tooltip: inLingua(it: 'Tutta intera', en: 'Fit to screen'),
+          ),
+        ],
+      ),
+      body: LayoutBuilder(
+        builder: (context, misure) {
+          _quadro = Size(misure.maxWidth, misure.maxHeight);
+          return InteractiveViewer(
+            transformationController: _dove,
+            /* Senza questo non si sposta: il margine di serie e' zero, e un
+             * disegno che ci sta tutto nella finestra non ha dove andare. */
+            boundaryMargin: const EdgeInsets.all(double.infinity),
+            minScale: _ilMinimo,
+            maxScale: _ilMassimo,
+            child: SizedBox(
+              width: misure.maxWidth,
+              height: misure.maxHeight,
+              child: SvgPicture.string(widget.figura, fit: BoxFit.contain),
+            ),
+          );
+        },
       ),
     );
   }

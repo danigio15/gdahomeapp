@@ -475,6 +475,12 @@ class PonteFinto {
   /// ancora guardato con chi parla ognuno», che e' un caso vero e va provato.
   String mappaZigbee = '';
 
+  /// La rete a rami, come la conta il ponte: l'antenna, i ripetitori, e cosa
+  /// gli sta appeso. Sul telefono e' la cosa che si legge davvero, e quindi e'
+  /// una cosa che le prove devono poter far arrivare.
+  List<Map<String, Object?>> ramiZigbee = const [];
+  List<Map<String, Object?>> soliZigbee = const [];
+
   /// Le mappe chieste col giro vero, per contarle: quel giro dura fino a un
   /// minuto, e una schermata che lo fa partire da sola sarebbe un guaio.
   int mappeRifatte = 0;
@@ -753,6 +759,8 @@ class PonteFinto {
           'quale': laReteZigbee,
           'righe': List.of(inReteZigbee),
           'svg': mappaZigbee,
+          'rami': List.of(ramiZigbee),
+          'soli': List.of(soliZigbee),
           'perche': '',
         });
       case 'ponte/zigbee/rinomina':

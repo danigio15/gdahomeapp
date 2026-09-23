@@ -28,9 +28,14 @@
  * corrente e fanno da ponte; fuori i terminali, che stanno a batteria e
  * parlano con un router solo.
  *
- * Un terminale si mette all'angolo del router con cui parla — cosi' il filo
- * e' corto e si vede a colpo d'occhio quale ramo regge quale pezzo di casa —
- * e se parla con piu' d'uno, a quello che sente meglio.
+ * Un terminale sta dalla parte del router con cui parla — cosi' il filo e'
+ * corto e si vede a colpo d'occhio quale ramo regge quale pezzo di casa — e
+ * se parla con piu' d'uno, dalla parte di quello che sente meglio.
+ *
+ * I cerchi non hanno una misura fissa: ognuno e' largo quanto serve a far
+ * stare chi ci sta sopra. Una casa con dodici apparecchi ha gli stessi cerchi
+ * di sempre; una con ottanta ha cerchi piu' larghi invece di ottanta pallini
+ * uno sopra l'altro. E' la differenza fra una mappa e una macchia.
  *
  * ─── E chi non parla con nessuno ─────────────────────────────────────────
  *
@@ -43,9 +48,11 @@
 import { disegnoDelCatalogo } from "../plancia/src/core/catalogo-disegni.js";
 import { COORDINATORE, ROUTER } from "./zigbee.js";
 
-/* La tela. Novecento di larghezza perche' su un telefono si scala a larghezza
- * schermo e le scritte restano leggibili. */
-export const LATO = 900;
+/* La tela piu' piccola. Novecento di larghezza: sotto questa misura non si
+ * scende, perche' una rete di tre cose disegnata su una tela piccola sarebbe
+ * tre pallini enormi. Sopra si sale, e quanto lo dice la rete: vedi
+ * `quantoVuole`. */
+export const LATO_MINIMO = 900;
 
 /* In fondo, una fascia per chi non parla con nessuno. C'e' solo quando serve:
  * una rete tutta collegata non deve portarsi dietro un'area vuota.
@@ -54,19 +61,49 @@ export const LATO = 900;
  * esattamente sopra quella riga — visto rendendo la mappa, non leggendola. */
 const FASCIA_DEI_SOLI = 180;
 
-/* I due cerchi. Il primo largo abbastanza da non incollare i router
- * all'antenna, il secondo da lasciare aria alle scritte dei terminali. */
-const RAGGIO_ROUTER = 185;
-const RAGGIO_TERMINALI = 305;
-
-/* Quanto si sposta un terminale dentro o fuori rispetto ai suoi fratelli.
+/* I due cerchi, e quanto sono larghi.
  *
- * Due terminali sullo stesso ripetitore, alla stessa distanza e a un ventaglio
- * di poco piu' di un quinto di radiante, stanno a novanta pixel l'uno
- * dall'altro — e una scritta di diciotto lettere e' larga centotrenta. Si
- * accavallavano. Mettendoli a due distanze diverse le scritte passano una
- * sopra l'altra invece che una dentro l'altra. */
-const SFALSA = 42;
+ * Erano due numeri fissi — centottantacinque e trecentocinque — e per una casa
+ * con dodici apparecchi andavano bene. In una casa vera con ottanta no: su un
+ * cerchio di centottantacinque ci stanno milleduecento pixel di circonferenza,
+ * e quarantacinque ripetitori larghi cinquantaquattro ne vogliono
+ * duemilaquattrocento. Il risultato, misurato, erano centoventitre coppie di
+ * anelli uno sopra l'altro e sessantanove coppie di scritte accavallate: dal
+ * campo, «non si vede nulla».
+ *
+ * Adesso il raggio lo detta la rete: a ognuno spetta il pezzo di circonferenza
+ * che gli serve — vedi `quantoVuole` — e il raggio e' quello che fa stare
+ * tutti i pezzi in un giro. Una casa piccola non se ne accorge, perche' sotto
+ * il minimo non si scende ed e' lo stesso disegno di prima; una casa grande
+ * ottiene un cerchio grande invece di un groviglio.
+ *
+ * ─── E perche' non si sfalsa piu' ────────────────────────────────────────
+ *
+ * Prima i vicini di cerchio stavano a due distanze diverse, uno dentro e uno
+ * fuori, per far passare le scritte una sopra l'altra. Misurando si vede che
+ * non basta: in alto lo spostamento verso il centro e la curva del cerchio si
+ * annullano a vicenda — «Presa lavatrice» e «Presa forno» finivano a dodici
+ * pixel d'altezza l'una dall'altra invece di quarantadue — e due scritte
+ * larghe cento a ottantotto pixel di distanza si mangiano lo stesso.
+ *
+ * Dando a ognuno il posto che occupa davvero il problema non si pone: nessuno
+ * puo' finire addosso al vicino, perche' il vicino comincia dove finisce lui.
+ */
+const RAGGIO_ROUTER_MINIMO = 185;
+/* Fra il cerchio dei ripetitori e quello dei terminali: abbastanza da lasciar
+ * finire le scritte del cerchio di dentro prima che cominci quello di fuori. */
+const STACCO_FRA_I_CERCHI = 120;
+/* Quanta tela si lascia oltre l'ultimo cerchio, perche' le scritte ci stiano
+ * senza toccare il bordo. */
+const ORLO_DELLA_TELA = 130;
+/* Quanto e' larga una lettera del nome, a tredici pixel e in grassetto. Non si
+ * misura — qui non c'e' un browser — e non serve che sia esatta: serve che non
+ * sia per difetto, perche' una stima stretta rimette le scritte una sull'altra.
+ * Il segno della batteria vale come tre lettere. */
+const LARGA_UNA_LETTERA = 7.4;
+const LARGO_IL_SEGNO = 22;
+/* L'aria fra una scritta e quella di fianco. */
+const ARIA_FRA_I_NOMI = 14;
 
 /* Quanto spazio vuole una scritta ai bordi prima di uscire dalla tela. */
 const MARGINE_DELLA_SCRITTA = 110;
@@ -293,7 +330,7 @@ function tinta(nodo, veste) {
  * E' il raggio dell'anello; il disegno ci sta dentro. I numeri sono cresciuti
  * quando i pallini sono diventati disegni: dodici pixel bastavano a un
  * pallino, a una presa disegnata no — si vedeva una macchia. */
-function quantoGrosso(nodo) {
+export function quantoGrosso(nodo) {
   if (nodo.tipo === COORDINATORE) return 34;
   if (nodo.tipo === ROUTER) return 27;
   return 22;
@@ -337,6 +374,159 @@ export function iFili(righe = []) {
 /* ── Dove va ognuno ────────────────────────────────────────────────────── */
 
 /**
+ * Quanto pezzo di cerchio vuole un apparecchio: il suo nome, o il suo anello
+ * se il nome e' piu' corto dell'anello.
+ */
+export function quantoVuole(nodo) {
+  const lettere = Math.max(...aCapo(nodo?.nome).map((riga) => riga.length), 1);
+  const scritta = lettere * LARGA_UNA_LETTERA + (nodo?.potenza === "batteria" ? LARGO_IL_SEGNO : 0);
+  return Math.max(2 * quantoGrosso(nodo ?? {}) + 14, scritta + ARIA_FRA_I_NOMI);
+}
+
+/**
+ * Quanta circonferenza vogliono, tutti insieme. Diviso due pi greco e' il
+ * raggio piu' piccolo che li fa stare senza toccarsi.
+ */
+export function ilGiro(elenco = []) {
+  return elenco.reduce((tutto, nodo) => tutto + quantoVuole(nodo), 0);
+}
+
+/** Il raggio di un cerchio che deve reggere questi, e non meno di `minimo`. */
+function ilRaggio(elenco, minimo) {
+  return Math.max(minimo, Math.round(ilGiro(elenco) / (2 * Math.PI)));
+}
+
+/**
+ * Li mette sul cerchio, ognuno largo quanto vuole.
+ *
+ * Si parte da sopra perche' una mappa che comincia da sinistra sembra storta,
+ * e ognuno sta in mezzo al SUO pezzo: cosi' chi ha un nome corto non si porta
+ * dietro lo spazio di chi ce l'ha lungo. Quando il cerchio e' piu' largo del
+ * necessario — una casa piccola, dove comanda il raggio minimo — l'aria in
+ * piu' si divide fra tutti nella stessa proporzione, e nessuno resta appiccicato
+ * al vicino con mezzo cerchio vuoto di fianco.
+ */
+function posaliSulCerchio(elenco, raggio, centroX, centroY) {
+  const giro = ilGiro(elenco) || 1;
+  const angoli = new Map();
+  let finQui = 0;
+  for (const nodo of elenco) {
+    const suo = quantoVuole(nodo);
+    const angolo = -Math.PI / 2 + ((finQui + suo / 2) / giro) * 2 * Math.PI;
+    finQui += suo;
+    angoli.set(nodo.id, angolo);
+    nodo.x = centroX + raggio * Math.cos(angolo);
+    nodo.y = centroY + raggio * Math.sin(angolo);
+  }
+  return angoli;
+}
+
+/**
+ * Chi regge chi: per ogni terminale, il ripetitore su cui sta davvero.
+ *
+ * Un terminale a batteria parla con uno solo — e' il suo ramo — ma la rete a
+ * volte ne vede due, perche' la radio non e' un filo. Si prende quello che
+ * sente meglio: e' il ramo su cui sta, non quello che potrebbe avere.
+ *
+ * La regola sta scritta qui una volta e la leggono tutti e due: il disegno,
+ * per sapere da che parte mettere un terminale, e l'elenco dei rami, per
+ * sapere sotto chi scriverlo. Scriverla due volte vorrebbe dire una mappa e un
+ * elenco che dicono cose diverse della stessa casa.
+ */
+export function chiReggeChi(righe = [], fili = iFili(righe)) {
+  const per = new Map(righe.map((riga) => [pulito(riga.id), riga]));
+  const vicinato = new Map();
+  for (const filo of fili) {
+    if (!vicinato.has(filo.da)) vicinato.set(filo.da, []);
+    if (!vicinato.has(filo.a)) vicinato.set(filo.a, []);
+    vicinato.get(filo.da).push({ id: filo.a, qualita: filo.qualita });
+    vicinato.get(filo.a).push({ id: filo.da, qualita: filo.qualita });
+  }
+  const regge = (id) => {
+    const suo = per.get(id);
+    return suo?.tipo === ROUTER || suo?.tipo === COORDINATORE;
+  };
+  const padri = new Map();
+  for (const riga of righe) {
+    const id = pulito(riga.id);
+    if (!id || riga.tipo === COORDINATORE || riga.tipo === ROUTER) continue;
+    const suoi = (vicinato.get(id) || [])
+      .filter((uno) => regge(uno.id))
+      .sort((una, altra) => (altra.qualita ?? -1) - (una.qualita ?? -1));
+    if (suoi[0]) padri.set(id, suoi[0].id);
+  }
+  return padri;
+}
+
+/**
+ * La rete a rami, in parole: l'antenna, ogni ripetitore, e cosa gli sta
+ * appeso.
+ *
+ * ─── Perche' esiste, visto che c'e' gia' il disegno ──────────────────────
+ *
+ * Perche' una casa con ottanta apparecchi, disegnata, e' larga due metri di
+ * schermo: sul telefono o si guarda tutta e non si legge niente, o si legge un
+ * pezzo per volta e ci si perde. Dal campo: «non si vede nulla».
+ *
+ * Un elenco invece il telefono lo sa fare da sempre: scorre. Dice le stesse
+ * cose — chi regge chi, e quanto bene — senza chiedere a nessuno di
+ * ingrandire. Il disegno resta, e resta la cosa giusta su uno schermo grande:
+ * e' la forma della rete a colpo d'occhio, che un elenco non da'.
+ *
+ * Non e' un secondo modo di calcolare: e' lo stesso `chiReggeChi` del disegno,
+ * scritto in righe invece che in cerchi.
+ */
+export function iRami(righe = [], fili = iFili(righe)) {
+  const padri = chiReggeChi(righe, fili);
+  const per = new Map(righe.map((riga) => [pulito(riga.id), riga]));
+  const quanto = new Map();
+  for (const filo of fili) {
+    quanto.set(`${filo.da}~${filo.a}`, filo.qualita);
+    quanto.set(`${filo.a}~${filo.da}`, filo.qualita);
+  }
+  const attaccato = new Set([...fili.flatMap((filo) => [filo.da, filo.a])]);
+
+  const voce = (riga, padre) => ({
+    id: pulito(riga.id),
+    nome: pulito(riga.nome) || pulito(riga.id),
+    tipo: riga.tipo,
+    potenza: riga.potenza,
+    qualita: padre ? (quanto.get(`${pulito(riga.id)}~${padre}`) ?? null) : null,
+  });
+
+  const appesiA = new Map();
+  for (const [figlio, padre] of padri) {
+    if (!appesiA.has(padre)) appesiA.set(padre, []);
+    const suo = per.get(figlio);
+    if (suo) appesiA.get(padre).push(voce(suo, padre));
+  }
+
+  const antenna = righe.find((riga) => riga.tipo === COORDINATORE);
+  const rami = [];
+  for (const riga of righe) {
+    const id = pulito(riga.id);
+    if (riga.tipo !== COORDINATORE && riga.tipo !== ROUTER) continue;
+    if (!attaccato.has(id)) continue;
+    rami.push({
+      ...voce(riga, riga.tipo === ROUTER && antenna ? pulito(antenna.id) : null),
+      appesi: appesiA.get(id) || [],
+    });
+  }
+  /* Prima l'antenna, poi i rami piu' carichi: chi apre questo elenco cerca «di
+   * chi e' figlio quel sensore», e i rami grossi sono quelli dove si guarda. */
+  rami.sort((uno, altro) => {
+    if ((uno.tipo === COORDINATORE) !== (altro.tipo === COORDINATORE))
+      return uno.tipo === COORDINATORE ? -1 : 1;
+    return altro.appesi.length - uno.appesi.length;
+  });
+
+  const soli = righe
+    .filter((riga) => !attaccato.has(pulito(riga.id)))
+    .map((riga) => voce(riga, null));
+  return { rami, soli };
+}
+
+/**
  * I nodi, col posto assegnato.
  *
  * Torna anche chi non ha nessun collegamento: quelli non stanno su nessun
@@ -356,12 +546,6 @@ export function iNodi(righe = [], fili = iFili(righe)) {
    * quelli senza collegamenti: se non ce n'e' nessuno, la fascia non c'e' e i
    * cerchi stanno in mezzo alla tela. */
   const banda = soloDiQualcuno.length ? FASCIA_DEI_SOLI : 0;
-  /* I cerchi stanno in un quadrato tutto loro, e la fascia viene DOPO, sotto.
-   * Prima la fascia si mangiava l'altezza del quadrato e sotto restava mezza
-   * tela vuota — visto rendendo, non leggendo. */
-  const alta = LATO + banda;
-  const centroX = LATO / 2;
-  const centroY = LATO / 2;
 
   const nodi = righe.map((riga) => ({
     id: pulito(riga.id),
@@ -369,8 +553,8 @@ export function iNodi(righe = [], fili = iFili(righe)) {
     tipo: riga.tipo,
     potenza: riga.potenza,
     solo: !vicinato.has(pulito(riga.id)),
-    x: centroX,
-    y: centroY,
+    x: 0,
+    y: 0,
   }));
   const per = new Map(nodi.map((nodo) => [nodo.id, nodo]));
 
@@ -379,46 +563,47 @@ export function iNodi(righe = [], fili = iFili(righe)) {
   const router = attaccati.filter((nodo) => nodo.tipo === ROUTER);
   const terminali = attaccati.filter((nodo) => nodo.tipo !== COORDINATORE && nodo.tipo !== ROUTER);
 
+  /* I due raggi, dettati da quanti sono e da quanto sono lunghi i nomi. Il
+   * cerchio di fuori sta comunque staccato da quello di dentro: se i terminali
+   * sono pochi e i ripetitori tanti, e' il primo a decidere dove comincia il
+   * secondo. */
+  const raggioRouter = ilRaggio(router, RAGGIO_ROUTER_MINIMO);
+  const raggioTerminali = ilRaggio(terminali, raggioRouter + STACCO_FRA_I_CERCHI);
+  const piuLontano = terminali.length ? raggioTerminali : raggioRouter;
+  /* I cerchi stanno in un quadrato tutto loro, e la fascia viene DOPO, sotto.
+   * Prima la fascia si mangiava l'altezza del quadrato e sotto restava mezza
+   * tela vuota — visto rendendo, non leggendo. */
+  const lato = Math.max(LATO_MINIMO, 2 * Math.round(piuLontano + ORLO_DELLA_TELA));
+  const alta = lato + banda;
+  const centroX = lato / 2;
+  const centroY = lato / 2;
+  for (const nodo of nodi) {
+    nodo.x = centroX;
+    nodo.y = centroY;
+  }
+
   if (antenna) {
     antenna.x = centroX;
     antenna.y = centroY;
   }
 
-  /* I router sul primo cerchio, a distanza uguale. Si parte da sopra perche'
-   * una mappa che comincia da sinistra sembra storta. */
-  const angoli = new Map();
-  router.forEach((nodo, quale) => {
-    const angolo = -Math.PI / 2 + (2 * Math.PI * quale) / Math.max(1, router.length);
-    angoli.set(nodo.id, angolo);
-    nodo.x = centroX + RAGGIO_ROUTER * Math.cos(angolo);
-    nodo.y = centroY + RAGGIO_ROUTER * Math.sin(angolo);
-  });
+  const angoli = posaliSulCerchio(router, raggioRouter, centroX, centroY);
 
   /* E i terminali fuori, ognuno vicino a chi lo regge. Chi ne ha piu' d'uno
-   * va da quello che sente meglio: e' il ramo su cui sta davvero. */
-  const quanti = new Map();
-  for (const nodo of terminali) {
-    const suoi = (vicinato.get(nodo.id) || [])
-      .filter((uno) => angoli.has(uno.id))
-      .sort((una, altra) => (altra.qualita ?? -1) - (una.qualita ?? -1));
-    const padre = suoi[0]?.id;
-    const base = padre !== undefined ? angoli.get(padre) : -Math.PI / 2;
-    /* Piu' terminali sullo stesso router si aprono a ventaglio, invece di
-     * finire uno sopra l'altro. */
-    const gia = quanti.get(padre ?? "~") ?? 0;
-    quanti.set(padre ?? "~", gia + 1);
-    /* Il ventaglio parte da mezzo passo e non da zero: col primo terminale
-     * esattamente all'angolo del suo ripetitore, i due finivano alla stessa
-     * altezza e le due scritte una sopra l'altra — «Presa salotto» e
-     * «Telecomando salotto» erano illeggibili. */
-    const apertura = 0.4 * (gia % 2 === 0 ? 1 : -1) * (Math.floor(gia / 2) + 0.5);
-    const angolo = base + apertura;
-    /* Uno dentro e uno fuori, a turno: e' quello che tiene le scritte
-     * separate quando un ripetitore ne regge quattro. */
-    const raggio = RAGGIO_TERMINALI + (gia % 2 === 0 ? 0 : SFALSA);
-    nodo.x = centroX + raggio * Math.cos(angolo);
-    nodo.y = centroY + raggio * Math.sin(angolo);
-  }
+   * va da quello che sente meglio: e' il ramo su cui sta davvero.
+   *
+   * «Vicino», pero', non «esattamente all'angolo». Il ventaglio a un quinto di
+   * radiante era un angolo fisso, e un angolo fisso su un cerchio grande e' un
+   * arco enorme: con quarantacinque ripetitori i terminali di uno finivano in
+   * mezzo a quelli di tre rami piu' in la'. Adesso si mettono in fila
+   * nell'ordine dei loro ripetitori e si spartiscono il cerchio di fuori: chi
+   * regge quattro cose se le ritrova tutte e quattro di fronte, e nessuno
+   * finisce addosso al ramo del vicino. */
+  const padri = chiReggeChi(righe, fili);
+  const inFila = [...terminali].sort(
+    (uno, altro) => voluto(uno, angoli, padri) - voluto(altro, angoli, padri),
+  );
+  posaliSulCerchio(inFila, raggioTerminali, centroX, centroY);
 
   /* Chi non parla con nessuno: in fondo, in fila, dove non finge di essere
    * attaccato a niente. */
@@ -427,12 +612,19 @@ export function iNodi(righe = [], fili = iFili(righe)) {
     const perRiga = Math.max(1, Math.min(soli.length, 4));
     const colonna = quale % perRiga;
     const riga = Math.floor(quale / perRiga);
-    const largo = LATO / (perRiga + 1);
+    const largo = lato / (perRiga + 1);
     nodo.x = largo * (colonna + 1);
-    nodo.y = LATO + 76 + riga * 64;
+    nodo.y = lato + 76 + riga * 64;
   });
 
-  return { nodi, per, fili, alta, banda, centroX, centroY };
+  return { nodi, per, fili, lato, alta, banda, centroX, centroY };
+}
+
+/* L'angolo che un terminale vorrebbe: quello del ripetitore che lo regge. Chi
+ * non ne ha uno sul cerchio parte da sopra, come i ripetitori. */
+function voluto(nodo, angoli, padri) {
+  const padre = padri.get(nodo.id);
+  return padre !== undefined && angoli.has(padre) ? angoli.get(padre) : -Math.PI / 2;
 }
 
 /* ── Il disegno ────────────────────────────────────────────────────────── */
@@ -450,7 +642,7 @@ function ilFilo(filo, per, veste) {
   return `<line x1="${da.x.toFixed(1)}" y1="${da.y.toFixed(1)}" x2="${a.x.toFixed(1)}" y2="${a.y.toFixed(1)}" stroke="${veste.filo}" stroke-width="${grosso}" stroke-opacity="${velo}" stroke-linecap="round"${tratto}/>`;
 }
 
-function ilNodo(nodo, veste) {
+function ilNodo(nodo, veste, lato) {
   const raggio = quantoGrosso(nodo);
   const colore = tinta(nodo, veste);
   /* Vicino a un bordo la scritta si ancora dalla parte giusta, invece di
@@ -459,11 +651,11 @@ function ilNodo(nodo, veste) {
   const ancora =
     nodo.x < MARGINE_DELLA_SCRITTA
       ? "start"
-      : nodo.x > LATO - MARGINE_DELLA_SCRITTA
+      : nodo.x > lato - MARGINE_DELLA_SCRITTA
         ? "end"
         : "middle";
   const doveScrive =
-    ancora === "start" ? 8 : ancora === "end" ? LATO - 8 : Number(nodo.x.toFixed(1));
+    ancora === "start" ? 8 : ancora === "end" ? lato - 8 : Number(nodo.x.toFixed(1));
   /* La batteria si dice con un segno e non con un colore: i colori dicono gia'
    * il mestiere, e due cose sullo stesso canale non si leggono piu'. */
   /* La batteria si dice con un segno accanto al nome e non sotto: sotto
@@ -497,7 +689,7 @@ function ilNodo(nodo, veste) {
 export function laMappaDisegnata(righe = [], { scuro = false } = {}) {
   const veste = scuro ? VESTI.scura : VESTI.chiara;
   const fili = iFili(righe);
-  const { nodi, per, alta, banda } = iNodi(righe, fili);
+  const { nodi, per, lato, alta, banda } = iNodi(righe, fili);
   const soli = nodi.filter((nodo) => nodo.solo);
 
   const legenda = [
@@ -517,15 +709,15 @@ export function laMappaDisegnata(righe = [], { scuro = false } = {}) {
   /* La riga di stacco e la frase stanno DENTRO la fascia, sotto il quadrato
    * dei cerchi: prima la frase cadeva sopra l'ultimo ramo. */
   const laFascia = soli.length
-    ? `<line x1="40" y1="${LATO + 6}" x2="${LATO - 40}" y2="${LATO + 6}" stroke="${veste.filo}" stroke-width="1" stroke-opacity=".4"/>
-       <text x="${LATO / 2}" y="${LATO + 32}" text-anchor="middle" font-size="13" fill="${veste.sotto}">Di questi la rete non ha visto nessun collegamento</text>`
+    ? `<line x1="40" y1="${lato + 6}" x2="${lato - 40}" y2="${lato + 6}" stroke="${veste.filo}" stroke-width="1" stroke-opacity=".4"/>
+       <text x="${lato / 2}" y="${lato + 32}" text-anchor="middle" font-size="13" fill="${veste.sotto}">Di questi la rete non ha visto nessun collegamento</text>`
     : "";
 
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${LATO} ${alta}" width="${LATO}" height="${alta}" font-family="system-ui, -apple-system, Segoe UI, Roboto, sans-serif">
-  <rect width="${LATO}" height="${alta}" fill="${veste.fondo}"/>
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${lato} ${alta}" width="${lato}" height="${alta}" font-family="system-ui, -apple-system, Segoe UI, Roboto, sans-serif">
+  <rect width="${lato}" height="${alta}" fill="${veste.fondo}"/>
   <g>${fili.map((filo) => ilFilo(filo, per, veste)).join("")}</g>
   ${laFascia}
-  <g>${nodi.map((nodo) => ilNodo(nodo, veste)).join("")}</g>
+  <g>${nodi.map((nodo) => ilNodo(nodo, veste, lato)).join("")}</g>
   <g>${legenda}</g>
 </svg>`;
 }

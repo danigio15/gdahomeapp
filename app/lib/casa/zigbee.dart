@@ -332,34 +332,122 @@ class ChiCEInRete {
   final String perche;
 }
 
+/// Un apparecchio dentro la mappa: come lo racconta l'elenco dei rami.
+///
+/// [qualita] e' quanto e' buono il filo verso chi lo regge, da zero a
+/// duecentocinquantacinque. Nullo vuol dire che la rete non l'ha detto — ed e'
+/// diverso da zero, che vorrebbe dire «non si sentono».
+class NelRamo {
+  const NelRamo({
+    required this.targa,
+    required this.nome,
+    required this.tipo,
+    required this.potenza,
+    required this.qualita,
+  });
+
+  factory NelRamo.daQuelloCheDice(Map<Object?, Object?> detto) => NelRamo(
+    targa: _testo(detto['id']),
+    nome: _testo(detto['nome']),
+    tipo: _testo(detto['tipo']),
+    potenza: _testo(detto['potenza']),
+    qualita: detto['qualita'] is num
+        ? (detto['qualita']! as num).toInt()
+        : null,
+  );
+
+  final String targa;
+  final String nome;
+  final String tipo;
+  final String potenza;
+  final int? qualita;
+
+  bool get vaABatteria => potenza == 'batteria';
+  bool get eLAntenna => tipo == 'coordinatore';
+}
+
+/// Un ramo della rete: l'antenna o un ripetitore, e cosa gli sta appeso.
+class UnRamo {
+  const UnRamo({required this.capo, required this.appesi});
+
+  factory UnRamo.daQuelloCheDice(Map<Object?, Object?> detto) {
+    final elenco = detto['appesi'];
+    return UnRamo(
+      capo: NelRamo.daQuelloCheDice(detto),
+      appesi: [
+        if (elenco is List)
+          for (final uno in elenco)
+            if (uno is Map<Object?, Object?>) NelRamo.daQuelloCheDice(uno),
+      ],
+    );
+  }
+
+  final NelRamo capo;
+  final List<NelRamo> appesi;
+}
+
 /// La mappa: la figura, e con chi parla ognuno.
 ///
 /// La figura la disegna il ponte e arriva gia' fatta — un SVG — perche' sia
 /// una sola: disegnarla qui in Dart e nella plancia in JavaScript vorrebbe
 /// dire due mappe che il giorno che una cambia dicono cose diverse.
+///
+/// ─── E perche' arrivano anche i rami, se c'e' gia' il disegno ────────────
+///
+/// Perche' una casa con ottanta apparecchi, disegnata, e' larga due metri di
+/// schermo: dal campo, «non si vede nulla». I rami sono le stesse cose scritte
+/// in righe — chi regge chi, e quanto bene — e un elenco il telefono lo sa
+/// scorrere. Li conta lo stesso modulo del disegno, quindi le due cose non
+/// possono dirsi diverse.
 class LaMappaDellaRete {
   const LaMappaDellaRete({
     required this.figura,
     required this.quanti,
+    required this.rami,
+    required this.soli,
     required this.perche,
   });
 
   factory LaMappaDellaRete.daQuelloCheDice(Map<Object?, Object?> detto) {
     final righe = detto['righe'];
+    final rami = detto['rami'];
+    final soli = detto['soli'];
     return LaMappaDellaRete(
       figura: _testo(detto['svg']),
       quanti: righe is List ? righe.length : 0,
+      rami: [
+        if (rami is List)
+          for (final uno in rami)
+            if (uno is Map<Object?, Object?>) UnRamo.daQuelloCheDice(uno),
+      ],
+      soli: [
+        if (soli is List)
+          for (final uno in soli)
+            if (uno is Map<Object?, Object?>) NelRamo.daQuelloCheDice(uno),
+      ],
       perche: _testo(detto['perche']),
     );
   }
 
-  static const vuota = LaMappaDellaRete(figura: '', quanti: 0, perche: '');
+  static const vuota = LaMappaDellaRete(
+    figura: '',
+    quanti: 0,
+    rami: [],
+    soli: [],
+    perche: '',
+  );
 
   /// Il disegno, pronto da mostrare. Vuoto quando non c'e' una mappa.
   final String figura;
 
   /// Quanti apparecchi ci sono dentro.
   final int quanti;
+
+  /// La rete a righe: l'antenna per prima, poi i rami piu' carichi.
+  final List<UnRamo> rami;
+
+  /// Chi non parla con nessuno: nel disegno sta in fondo, qui in fondo uguale.
+  final List<NelRamo> soli;
 
   /// Perche' non c'e', quando non c'e'.
   final String perche;
@@ -486,6 +574,8 @@ class Zigbee {
       return LaMappaDellaRete(
         figura: '',
         quanti: 0,
+        rami: const [],
+        soli: const [],
         perche: spiegaLErrore(errore),
       );
     }

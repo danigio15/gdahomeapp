@@ -62,7 +62,7 @@ import { CentralinoHaDettoNo, SenzaCentralino } from "./segnalazioni.js";
 import { SegnalazioniDellaPlancia } from "./segnalazioni-della-plancia.js";
 import { laVede, QuellaPlanciaNo, TroppePlance } from "./plance.js";
 import { perLaVia, percorsoSenzaTrucchi } from "./dogana.js";
-import { iFili, laMappaDisegnata } from "./mappa-zigbee.js";
+import { iFili, iRami, laMappaDisegnata } from "./mappa-zigbee.js";
 import { comeSiPresenta } from "./zigbee.js";
 
 /* Quando chi chiede non ha nessuna plancia. Non e' un guasto ed e' l'app a
@@ -1346,10 +1346,18 @@ export class Commissioni {
          * una mappa nera su nero non si vede: chi la chiede sa in quale sta. */
         case "ponte/zigbee/mappa": {
           const detta = await zigbee.mappa({ rifai: detto.rifai === true });
-          if (!detta.righe.length) return si(id, { ...detta, fili: [], svg: "" });
+          if (!detta.righe.length)
+            return si(id, { ...detta, fili: [], rami: [], soli: [], svg: "" });
+          const fili = iFili(detta.righe);
+          /* Il disegno E i rami in parole. Il primo e' la forma della rete a
+           * colpo d'occhio, i secondi si leggono sul telefono senza
+           * ingrandire: una casa con ottanta apparecchi disegnata e' larga due
+           * metri di schermo. Li conta lo stesso modulo, quindi non possono
+           * dire cose diverse. */
           return si(id, {
             ...detta,
-            fili: iFili(detta.righe),
+            fili,
+            ...iRami(detta.righe, fili),
             svg: laMappaDisegnata(detta.righe, { scuro: detto.scuro === true }),
           });
         }

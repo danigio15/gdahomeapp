@@ -182,20 +182,29 @@ test("senza rete non si toglie niente da nessuna parte", () => {
 
 /* ── E il giro vero, con una casa finta ────────────────────────────────── */
 
-function casaConZha({ righe = DA_ZHA, toglie = null } = {}) {
+/* `toglie: false` e' una rete che non lo toglie mai; `dopoQuantiSguardi` e' una
+ * rete che ci mette un po' — che e' quello che fa una rete vera, perche'
+ * l'ordine viaggia via radio e l'elenco si riscrive dopo. */
+function casaConZha({ righe = DA_ZHA, toglie = null, dopoQuantiSguardi = 0 } = {}) {
   const detto = [];
   let dentro = righe.slice();
+  let daTogliere = null;
+  let sguardi = 0;
   return {
     detto,
     async chiedi(comando) {
       detto.push(comando);
       if (comando.type === "config_entries/get") return [{ domain: "zha", state: "loaded" }];
-      if (comando.type === "zha/devices") return dentro;
+      if (comando.type === "zha/devices") {
+        if (daTogliere !== null && sguardi++ >= dopoQuantiSguardi) {
+          dentro = dentro.filter((una) => una.ieee.toLowerCase() !== daTogliere);
+          daTogliere = null;
+        }
+        return dentro;
+      }
       if (comando.domain === "zha" && comando.service === "remove") {
         if (toglie === false) return null;
-        dentro = dentro.filter(
-          (una) => una.ieee.toLowerCase() !== comando.service_data.ieee.toLowerCase(),
-        );
+        daTogliere = comando.service_data.ieee.toLowerCase();
         return null;
       }
       return null;
@@ -205,6 +214,10 @@ function casaConZha({ righe = DA_ZHA, toglie = null } = {}) {
     },
   };
 }
+
+/* Nelle prove non si aspetta davvero: il tempo vero lo mette la rete, e qui la
+ * rete e' finta. */
+const subito = async () => {};
 
 test("l'elenco arriva davvero, passando per il giro", async () => {
   const casa = casaConZha();
@@ -232,22 +245,47 @@ test("in una casa senza Zigbee l'elenco è vuoto e lo dice, invece di rompersi",
 
 test("tolto uno, l'elenco che torna non ce l'ha più", async () => {
   const casa = casaConZha();
-  const zigbee = new Zigbee({ casa, registro: zitto });
+  const zigbee = new Zigbee({ casa, registro: zitto, aspetta: subito });
   const fuori = await zigbee.elimina("00:15:8D:00:0A:BB:CC:DD");
   assert.equal(fuori.fatto, true);
   assert.ok(!fuori.righe.some((una) => una.nome === "Sensore cantina"));
   assert.equal(fuori.righe.length, 2);
 });
 
-test("se la rete dice sì e non lo toglie, non si dice «fatto»", async () => {
+test("chi esce dopo qualche secondo è uscito: non si annuncia un guaio che non c'è", async () => {
+  /* Dal campo, con lo scatto: «Ho provato ad eliminare un dispositivo ma e
+   * uscito questo messaggio» — e il messaggio diceva che era ancora lì. Lo
+   * era: l'elenco veniva riletto nell'istante in cui l'ordine partiva, e un
+   * ordine Zigbee viaggia via radio. Un minuto dopo non c'era più.
+   *
+   * Qui la rete finta lo toglie al terzo sguardo, come farebbe una vera. */
+  const casa = casaConZha({ dopoQuantiSguardi: 3 });
+  const fuori = await new Zigbee({ casa, registro: zitto, aspetta: subito }).elimina(
+    "00:15:8D:00:0A:BB:CC:DD",
+  );
+  assert.equal(fuori.fatto, true, fuori.perche);
+  assert.equal(fuori.righe.length, 2);
+});
+
+test("se la rete dice sì e non lo toglie mai, non si dice «fatto» — e si dice cosa fare", async () => {
   /* È la lezione della rinomina, applicata prima che costi una segnalazione:
    * nessuna delle due reti conferma quello che è successo dopo — rispondono
    * di aver mandato l'ordine. L'unica conferma è riguardare l'elenco. */
   const casa = casaConZha({ toglie: false });
-  const fuori = await new Zigbee({ casa, registro: zitto }).elimina("00:15:8D:00:0A:BB:CC:DD");
+  const fuori = await new Zigbee({ casa, registro: zitto, aspetta: subito }).elimina(
+    "00:15:8D:00:0A:BB:CC:DD",
+  );
   assert.equal(fuori.fatto, false);
-  assert.match(fuori.perche, /ancora li/);
   assert.equal(fuori.righe.length, 3);
+  /* E la frase non si ferma a «non è andata»: dice quant'è che si guarda,
+   * perché quasi sempre succede, e cosa può fare chi ha il telefono in mano. */
+  assert.match(fuori.perche, /ancora nell'elenco/);
+  assert.match(fuori.perche, /12 secondi/);
+  assert.match(fuori.perche, /dorme/);
+  assert.match(fuori.perche, /sveglialo/);
+  /* E si è guardato più di una volta: guardare una volta sola è il difetto. */
+  const sguardi = casa.detto.filter((uno) => uno.type === "zha/devices").length;
+  assert.ok(sguardi > 1, `si è guardato ${sguardi} volta`);
 });
 
 test("senza targa non si tocca niente", async () => {
@@ -276,7 +314,17 @@ import {
   leCassetteDellaMappa,
   leRigheDallaMappaDiZ2M,
 } from "../src/zigbee.js";
-import { aCapo, DEBOLE, iFili, iNodi, laMappaDisegnata } from "../src/mappa-zigbee.js";
+import {
+  aCapo,
+  DEBOLE,
+  iFili,
+  iNodi,
+  iRami,
+  laMappaDisegnata,
+  LATO_MINIMO,
+  quantoGrosso,
+  quantoVuole,
+} from "../src/mappa-zigbee.js";
 
 test("a ZHA si dice di guardarsi, a Zigbee2MQTT si imbuca la domanda", () => {
   assert.deepEqual(comeSiChiedeLaMappa({ quale: ZHA }), { type: "zha/topology/update" });
@@ -337,12 +385,167 @@ test("chi non parla con nessuno sta in fondo, e non finge di essere attaccato", 
     { id: "r", nome: "Ripetitore", tipo: "router", vicini: [{ id: "c", qualita: 200 }] },
     { id: "s", nome: "Sensore muto", tipo: "terminale", vicini: [] },
   ];
-  const { nodi } = iNodi(righe);
+  const { nodi, lato } = iNodi(righe);
   const solo = nodi.find((uno) => uno.id === "s");
   assert.equal(solo.solo, true);
-  /* Sta sotto il quadrato dei cerchi, nella fascia sua. */
-  assert.ok(solo.y > 900, "fuori dal quadrato dei collegamenti");
+  /* Sta sotto il quadrato dei cerchi, nella fascia sua. Il confronto e' col
+   * lato del quadrato e non con novecento: il quadrato adesso cresce con la
+   * rete, e un numero scritto a mano qui direbbe il vero solo per le case
+   * piccole. */
+  assert.ok(solo.y > lato, "fuori dal quadrato dei collegamenti");
   assert.equal(nodi.find((uno) => uno.id === "c").solo, false);
+});
+
+/* ─── Che una rete vera ci stia ─────────────────────────────────────────────
+ *
+ * Dal campo, con lo scatto: «La mappa dopo vari tentativi si e caricata ma non
+ * si vede nulla». Quella casa ha ottanta apparecchi, e i due cerchi erano due
+ * numeri fissi tarati su una dozzina: quarantacinque ripetitori su un cerchio
+ * di centottantacinque hanno ventisei pixel di arco a testa ed erano larghi
+ * cinquantaquattro. Misurato: centoventitre coppie di anelli uno sopra
+ * l'altro.
+ *
+ * Questa prova non guarda il disegno: misura le distanze. E' l'unica cosa che
+ * sa distinguere una mappa da una macchia. */
+function unaReteDa(quantiRouter, quantiTerminali) {
+  const righe = [
+    { id: "0x0000", nome: "Antenna", tipo: COORDINATORE, potenza: "corrente", vicini: [] },
+  ];
+  for (let quale = 0; quale < quantiRouter; quale++) {
+    righe.push({
+      id: `0xr${quale}`,
+      nome: `Presa della stanza ${quale}`,
+      tipo: ROUTER,
+      potenza: "corrente",
+      vicini: [{ id: "0x0000", qualita: 180 }],
+    });
+    righe[0].vicini.push({ id: `0xr${quale}`, qualita: 180 });
+  }
+  for (let quale = 0; quale < quantiTerminali; quale++) {
+    const padre = `0xr${quale % Math.max(1, quantiRouter)}`;
+    righe.push({
+      id: `0xt${quale}`,
+      nome: `Sensore perdita acqua numero ${quale}`,
+      tipo: TERMINALE,
+      potenza: "batteria",
+      vicini: [{ id: padre, qualita: 120 }],
+    });
+    righe.find((una) => una.id === padre)?.vicini.push({ id: `0xt${quale}`, qualita: 120 });
+  }
+  return righe;
+}
+
+test("ottanta apparecchi non si impilano: i cerchi crescono con la rete", () => {
+  const { nodi, lato } = iNodi(unaReteDa(45, 34));
+  const attaccati = nodi.filter((uno) => !uno.solo);
+  let addosso = 0;
+  for (let i = 0; i < attaccati.length; i++)
+    for (let j = i + 1; j < attaccati.length; j++) {
+      const uno = attaccati[i];
+      const altro = attaccati[j];
+      const quanto = Math.hypot(uno.x - altro.x, uno.y - altro.y);
+      if (quanto < quantoGrosso(uno) + quantoGrosso(altro)) addosso++;
+    }
+  assert.equal(addosso, 0, "due anelli uno sopra l'altro");
+  /* E la tela e' cresciuta: con ottanta apparecchi non ci si sta in novecento,
+   * e fingere di si' e' proprio il difetto segnalato. */
+  assert.ok(lato > LATO_MINIMO, `la tela e' rimasta ${lato}`);
+  /* Nessuno esce dal foglio. */
+  for (const nodo of nodi) {
+    assert.ok(nodo.x >= 0 && nodo.x <= lato, `${nodo.nome} e' fuori di lato`);
+    assert.ok(nodo.y >= 0, `${nodo.nome} e' sopra il foglio`);
+  }
+});
+
+test("e i nomi non si mangiano: ognuno ha sul cerchio il posto che occupa", () => {
+  /* Il posto che uno vuole e' il suo nome piu' un po' d'aria. Due vicini di
+   * cerchio devono stare almeno alla meta' della somma dei loro posti: e'
+   * esattamente la condizione che rende impossibile a due scritte toccarsi. */
+  const { nodi } = iNodi(unaReteDa(45, 34));
+  const cerchio = nodi.filter((uno) => uno.tipo === ROUTER);
+  const inGiro = [...cerchio].sort(
+    (uno, altro) => Math.atan2(uno.y, uno.x) - Math.atan2(altro.y, altro.x),
+  );
+  for (let quale = 1; quale < inGiro.length; quale++) {
+    const uno = inGiro[quale - 1];
+    const altro = inGiro[quale];
+    const serve = (quantoVuole(uno) + quantoVuole(altro)) / 2;
+    const quanto = Math.hypot(uno.x - altro.x, uno.y - altro.y);
+    /* La corda e' un filo piu' corta dell'arco: il novanta per cento di quello
+     * che serve e' la stessa condizione, senza pretendere che una retta sia
+     * lunga come una curva. */
+    assert.ok(quanto > serve * 0.9, `«${uno.nome}» e «${altro.nome}» a ${Math.round(quanto)}px`);
+  }
+});
+
+test("la rete si legge anche a righe: l'antenna, i rami, e cosa gli sta appeso", () => {
+  /* Il disegno di una casa con ottanta apparecchi e' largo due metri di
+   * schermo: sul telefono o si guarda tutto e non si legge niente, o si legge
+   * un pezzo per volta e ci si perde. Le stesse cose scritte in righe le
+   * scorre chiunque — ed e' lo stesso conto del disegno, non un secondo. */
+  const righe = [
+    { id: "0x00", nome: "Antenna", tipo: COORDINATORE, potenza: "corrente", vicini: [] },
+    {
+      id: "0x01",
+      nome: "Presa cucina",
+      tipo: ROUTER,
+      potenza: "corrente",
+      vicini: [{ id: "0x00", qualita: 200 }],
+    },
+    {
+      id: "0x02",
+      nome: "Presa garage",
+      tipo: ROUTER,
+      potenza: "corrente",
+      vicini: [{ id: "0x00", qualita: 60 }],
+    },
+    /* Questo ne vede due: sta sul ramo di chi sente meglio, non sull'altro. */
+    {
+      id: "0x03",
+      nome: "Fumo cucina",
+      tipo: TERMINALE,
+      potenza: "batteria",
+      vicini: [
+        { id: "0x02", qualita: 40 },
+        { id: "0x01", qualita: 180 },
+      ],
+    },
+    {
+      id: "0x04",
+      nome: "Termostato cucina",
+      tipo: TERMINALE,
+      potenza: "batteria",
+      vicini: [{ id: "0x01", qualita: 150 }],
+    },
+    { id: "0x05", nome: "Sensore muto", tipo: TERMINALE, potenza: "batteria", vicini: [] },
+  ];
+  const { rami, soli } = iRami(righe);
+  /* Prima l'antenna, poi i rami piu' carichi: chi apre questo elenco cerca di
+   * chi e' figlio un sensore, e i rami grossi sono dove si guarda. */
+  assert.deepEqual(
+    rami.map((uno) => uno.nome),
+    ["Antenna", "Presa cucina", "Presa garage"],
+  );
+  const cucina = rami.find((uno) => uno.nome === "Presa cucina");
+  assert.deepEqual(
+    cucina.appesi.map((uno) => uno.nome),
+    ["Fumo cucina", "Termostato cucina"],
+  );
+  /* La misura del filo verso chi lo regge viaggia con lui: e' quella che dice
+   * se un ramo tiene o no. */
+  assert.equal(cucina.appesi[0].qualita, 180);
+  assert.equal(cucina.qualita, 200);
+  assert.equal(rami.find((uno) => uno.nome === "Presa garage").appesi.length, 0);
+  assert.deepEqual(
+    soli.map((uno) => uno.nome),
+    ["Sensore muto"],
+  );
+});
+
+test("una casa piccola ha la mappa di sempre: la tela non cresce per niente", () => {
+  /* La correzione non deve cambiare quello che gia' andava bene. */
+  const { lato } = iNodi(unaReteDa(6, 8));
+  assert.equal(lato, LATO_MINIMO);
 });
 
 test("il nome va a capo invece di essere tagliato", () => {

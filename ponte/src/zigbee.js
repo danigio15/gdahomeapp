@@ -739,6 +739,25 @@ export const QUANTO_SI_RICORDA = 60_000;
  * sola vorrebbe dire dire una cosa falsa e non correggerla piu'. */
 export const ATTESE = Object.freeze([30_000, 120_000]);
 
+/* Quante volte si riguarda se e' uscito davvero, e ogni quanto.
+ *
+ * Togliere da una rete Zigbee non e' cancellare una riga da un elenco: e' un
+ * ordine che viaggia via radio. Il coordinatore lo manda, l'apparecchio se ne
+ * va, e l'elenco si riscrive DOPO — un secondo o due se e' a corrente e
+ * sveglio, di piu' se dorme.
+ *
+ * Guardare subito vuol dire quasi sempre trovarcelo ancora, e annunciare «non
+ * e' andata» di una cosa che stava andando benissimo. E' successo dal campo,
+ * con un sensore SONOFF: «la rete ha accettato l'ordine ma quel dispositivo e'
+ * ancora li'» — e un minuto dopo non c'era piu'.
+ *
+ * Otto sguardi a un secondo e mezzo fanno dodici secondi: abbastanza perche'
+ * un apparecchio sveglio esca, poco abbastanza da non lasciare qualcuno con
+ * una rotellina che gira senza fine. Chi dorme ci mette di piu' di cosi', e
+ * per quello c'e' la frase. */
+export const QUANTE_VOLTE_SI_RIGUARDA = 8;
+export const OGNI_QUANTO_SI_RIGUARDA = 1500;
+
 /* L'attesa fra un tentativo e l'altro.
  *
  * `unref` e' voluto: un ritentativo in coda non deve tenere sveglio un add-on
@@ -750,6 +769,23 @@ const ASPETTA = (quanto) =>
     const giro = setTimeout(ok, quanto);
     giro.unref?.();
   });
+
+/* Quando dopo l'attesa e' ancora li'.
+ *
+ * Dire «non e' andata» e basta lascia chi legge davanti a un muro: ha premuto
+ * «Toglilo», ha aspettato, e non sa se ha sbagliato lui, se e' rotto, o se
+ * deve solo riprovare. Quasi sempre e' la terza — l'apparecchio dorme, e un
+ * apparecchio che dorme l'ordine di uscire non lo sente finche' non si sveglia
+ * — e allora si dice quella, e si dice come si sveglia. */
+export function perCheNonEUscito() {
+  const secondi = Math.round((QUANTE_VOLTE_SI_RIGUARDA * OGNI_QUANTO_SI_RIGUARDA) / 1000);
+  return (
+    `l'ordine e' partito, ma dopo ${secondi} secondi quel dispositivo e' ancora nell'elenco. ` +
+    "Di solito vuol dire che dorme: se va a batteria, sveglialo — premi un tasto, apri e chiudi " +
+    "il contatto — e riprova; se va a corrente, stacca e riattacca. Se esce da solo piu' tardi, " +
+    "dall'elenco sparisce senza fare altro"
+  );
+}
 
 export class Zigbee {
   constructor({ casa, registro = null, adesso = () => Date.now(), aspetta = ASPETTA } = {}) {
@@ -1204,13 +1240,28 @@ export class Zigbee {
     } catch (errore) {
       return { fatto: false, perche: ilPerche(errore) };
     }
-    /* E adesso si guarda. Se la rete ce l'ha ancora, non e' andata — e si dice
-     * cosi', invece di dire «fatto» su una cosa che non e' successa. */
-    const dopo = await this.elenco();
+    /* E adesso si guarda — ma non una volta sola, e non subito.
+     *
+     * L'ordine viaggia via radio e l'elenco si riscrive dopo: chiedendolo
+     * nell'istante in cui si e' mandato l'ordine ci si trova ancora tutto come
+     * prima, e si annuncia un fallimento che non c'e'. Si riguarda finche' non
+     * e' uscito, o finche' non e' passato il tempo che ci mette uno sveglio. */
+    let dopo = await this.elenco();
+    for (
+      let giro = 0;
+      giro < QUANTE_VOLTE_SI_RIGUARDA && dopo.righe.some((una) => una.id === id);
+      giro++
+    ) {
+      await this.aspetta(OGNI_QUANTO_SI_RIGUARDA);
+      dopo = await this.elenco();
+    }
+    /* Se dopo tutto questo c'e' ancora, non e' andata — e si dice cosi',
+     * invece di dire «fatto» su una cosa che non e' successa. Con dentro
+     * l'unica cosa che chi sta li' col telefono in mano puo' fare. */
     if (dopo.righe.some((una) => una.id === id))
       return {
         fatto: false,
-        perche: "la rete ha accettato l'ordine ma quel dispositivo e' ancora li'",
+        perche: perCheNonEUscito(),
         righe: dopo.righe,
       };
     return { fatto: true, righe: dopo.righe };
