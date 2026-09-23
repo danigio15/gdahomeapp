@@ -800,6 +800,116 @@ void main() {
     },
   );
 
+  /// Come [prendi], con le intestazioni: sia quelle che si mandano sia
+  /// quelle che tornano.
+  Future<HttpClientResponse> chiedi(
+    String percorso, {
+    Map<String, String> con = const {},
+  }) async {
+    final richiesta = await cliente.getUrl(
+      servitore.radice.replace(path: percorso),
+    );
+    richiesta.cookies.add(Cookie('gdahome', servitore.chiave));
+    con.forEach(richiesta.headers.set);
+    final risposta = await richiesta.close();
+    await risposta.drain<void>();
+    return risposta;
+  }
+
+  test(
+    'ogni casa ha il suo deposito: un file di una non si serve all\'altra',
+    () async {
+      /* Due case con la stessa versione della plancia hanno gli stessi
+     * percorsi. Col deposito unico, il file preso dalla prima si serviva
+     * anche alla seconda, qualunque cosa ci fosse dentro. */
+      servitore.paginaDi(pannello(), casa: 'casa_uno');
+      final (_, _, dallaPrima) = await prendi('$_base/src/core/uno.js');
+      expect(utf8.decode(dallaPrima), _modulo);
+
+      ponte.file['$_base/src/core/uno.js'] = (
+        'text/javascript; charset=utf-8',
+        utf8.encode('export const due = 2;\n'),
+      );
+      servitore.paginaDi(pannello(), casa: 'casa_due');
+      final (stato, _, dallaSeconda) = await prendi('$_base/src/core/uno.js');
+      expect(stato, 200);
+      expect(utf8.decode(dallaSeconda), 'export const due = 2;\n');
+
+      /* Due cartelle, e nessuna delle due in cima. */
+      expect(servitore.deposito.path, contains('/case/'));
+      expect(
+        File('${cartella.path}$_base/src/core/uno.js').existsSync(),
+        isFalse,
+      );
+
+      /* E tornando alla prima, il suo. */
+      servitore.paginaDi(pannello(), casa: 'casa_uno');
+      final (_, _, ancoraLaPrima) = await prendi('$_base/src/core/uno.js');
+      expect(utf8.decode(ancoraLaPrima), _modulo);
+    },
+  );
+
+  test('il nome della cartella di una casa è sempre un nome e basta', () {
+    for (final casa in ['casa_0a1b', '../../su', 'a/b', '.', 'è casa']) {
+      final nome = cartellaDellaCasa(casa);
+      expect(nome, matches(RegExp(r'^[A-Za-z0-9_-]+$')), reason: casa);
+    }
+    expect(cartellaDellaCasa('a'), isNot(cartellaDellaCasa('b')));
+  });
+
+  test('il WebView richiede sempre, e col segno della casa', () async {
+    /* Il WebView e' uno per tutte le case. Tenere un modulo «per sempre»
+     * voleva dire che il file di una casa restava a rispondere anche per
+     * l'altra, senza passare di qui. */
+    servitore.paginaDi(pannello(), casa: 'casa_uno');
+    final prima = await chiedi('$_base/src/core/uno.js');
+    expect(prima.statusCode, 200);
+    expect(prima.headers.value('cache-control'), 'no-cache');
+    final segno = prima.headers.value('etag');
+    expect(segno, isNotNull);
+
+    /* Stessa casa, stesso segno: «uguale», senza nemmeno il file. */
+    final dinuovo = await chiedi(
+      '$_base/src/core/uno.js',
+      con: {'if-none-match': segno!},
+    );
+    expect(dinuovo.statusCode, 304);
+    expect(ponte.commissioni, hasLength(1));
+
+    /* Un'altra casa: il segno non vale piu', e il file si rimanda. */
+    servitore.paginaDi(pannello(), casa: 'casa_due');
+    final altra = await chiedi(
+      '$_base/src/core/uno.js',
+      con: {'if-none-match': segno},
+    );
+    expect(altra.statusCode, 200);
+    expect(altra.headers.value('etag'), isNot(segno));
+  });
+
+  test(
+    'le foto di casa non si tengono: il nome lo sceglie chi le carica',
+    () async {
+      final (_, _, prima) = await prendi('/local/mia auto.png');
+      expect(prima, [137, 80, 78, 71, 4, 5, 6, 7]);
+      ponte.file['/local/mia auto.png'] = ('image/png', [137, 80, 78, 71, 9]);
+      final (_, _, dopo) = await prendi('/local/mia auto.png');
+      expect(dopo, [137, 80, 78, 71, 9]);
+      final risposta = await chiedi('/local/mia auto.png');
+      expect(risposta.headers.value('cache-control'), 'no-store');
+      expect(Directory('${cartella.path}/local').existsSync(), isFalse);
+    },
+  );
+
+  test('su questa porta non si registra nessun service worker', () async {
+    /* Resterebbe li' anche per le pagine delle altre case. */
+    final risposta = await chiedi(
+      '$_base/src/core/uno.js',
+      con: {'service-worker': 'script'},
+    );
+    expect(risposta.statusCode, 404);
+    expect(ponte.commissioni, isEmpty);
+  });
+
   test('la seconda volta non si chiede più niente', () async {
     /* Il percorso ha dentro l'impronta della plancia: quello che c'e' non
      * cambia mai, e un file preso una volta vale finche' esiste. Il pacco

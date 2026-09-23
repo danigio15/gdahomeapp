@@ -12,6 +12,10 @@ import 'dart:io';
 
 const String segnoDelSupervisor = 'segno-finto-del-supervisor';
 
+/// L'utente di Home Assistant a nome del quale la prova usa la console del
+/// ponte. Nel mondo vero lo dice l'ingress con `X-Remote-User-Id`.
+const String amministratoreDellaProva = 'utente-che-amministra';
+
 class CasaFinta {
   CasaFinta._(this._server);
 
@@ -62,6 +66,28 @@ class CasaFinta {
       final buono = detto['access_token'] == segnoDelSupervisor;
       _manda(presa, buono ? {'type': 'auth_ok'} : {'type': 'auth_invalid'});
       if (!buono) presa.close();
+      return;
+    }
+
+    /* Chi c'e' in casa: il ponte lo chiede per sapere chi amministra, e la
+     * sua console si apre solo a un amministratore. Qui ce n'e' uno solo, ed
+     * e' quello a nome del quale la prova preme i bottoni della console. */
+    if (detto['type'] == 'config/auth/list') {
+      _manda(presa, {
+        'id': detto['id'],
+        'type': 'result',
+        'success': true,
+        'result': [
+          {
+            'id': amministratoreDellaProva,
+            'name': 'Chi prova',
+            'is_owner': true,
+            'is_active': true,
+            'system_generated': false,
+            'group_ids': ['system-admin'],
+          },
+        ],
+      });
       return;
     }
 

@@ -84,19 +84,20 @@ class _SchermataDelLucchettoState extends State<SchermataDelLucchetto> {
   /// rotto alla prossima apertura dell'app — col telefono in mano e nessuna
   /// voglia di capire perche'. Qui si chiede subito, e se non si passa
   /// l'interruttore torna dov'era.
+  ///
+  /// E **spegnerlo lo chiede anche lui**, quando e' acceso: un lucchetto che
+  /// si toglie con una levetta non chiude niente — chi trova il telefono
+  /// aperto lo spegne, e alla prossima apertura l'app e' sua.
   Future<void> _accendi(bool acceso, IlLucchetto Function(bool) come) async {
-    if (!acceso || _lucchetto.acceso) {
+    if (_lucchetto.acceso) {
+      await _cambia(come(acceso));
+      return;
+    }
+    if (!acceso) {
       await _metti(come(acceso));
       return;
     }
-    final andata = await widget.guardia.chiedi(perche: perche(null));
-    if (!mounted) return;
-    if (andata != ComeEAndata.si) {
-      /* Non si e' passati: non si accende niente, e si rilegge cosa sa fare il
-       * telefono — puo' essere cambiato proprio adesso. */
-      await _cosaSaFare();
-      return;
-    }
+    if (!await _passa(perAllentare: false)) return;
     final adesso = come(acceso);
     /* E si accendono i due momenti suggeriti, se nessuno li ha ancora toccati:
      * il campo nasce vuoto — se no un'app appena installata chiederebbe il
@@ -108,6 +109,32 @@ class _SchermataDelLucchettoState extends State<SchermataDelLucchetto> {
           ? adesso.con(prima: IlLucchetto.daAccendereLaPrimaVolta)
           : adesso,
     );
+  }
+
+  /// Un cambiamento qualunque: se allenta un lucchetto acceso, prima si
+  /// chiede ([siAllenta]); se lo stringe, si fa e basta.
+  Future<void> _cambia(IlLucchetto nuovo) async {
+    if (siAllenta(_lucchetto, nuovo) && !await _passa(perAllentare: true)) {
+      return;
+    }
+    await _metti(nuovo);
+  }
+
+  /// Chiede al telefono. Passa col riconoscimento. Per allentare passa anche
+  /// quando il telefono non sa proprio rispondere — niente lettore, niente
+  /// registrato — che e' lo stesso caso in cui l'app all'apertura entra lo
+  /// stesso: un lucchetto che non si puo' ne' aprire ne' togliere si cura
+  /// solo disinstallando. Per accendere no: un lucchetto che nessuno sa
+  /// aprire non si mette.
+  Future<bool> _passa({required bool perAllentare}) async {
+    final andata = await widget.guardia.chiedi(perche: perche(null));
+    if (!mounted) return false;
+    if (andata == ComeEAndata.si) return true;
+    if (perAllentare && andata == ComeEAndata.nonSaFarlo) return true;
+    /* Non si e' passati: non cambia niente, e si rilegge cosa sa fare il
+     * telefono — puo' essere cambiato proprio adesso. */
+    await _cosaSaFare();
+    return false;
   }
 
   @override
@@ -215,7 +242,7 @@ class _SchermataDelLucchettoState extends State<SchermataDelLucchetto> {
                   acceso: _lucchetto.conIlVolto,
                   telefono: _telefono,
                   quandoCambia: (acceso) =>
-                      _metti(_lucchetto.con(conIlVolto: acceso)),
+                      _cambia(_lucchetto.con(conIlVolto: acceso)),
                 ),
                 const Divider(height: 1, indent: 16, endIndent: 16),
                 _ConCosa(
@@ -223,7 +250,7 @@ class _SchermataDelLucchettoState extends State<SchermataDelLucchetto> {
                   acceso: _lucchetto.conLImpronta,
                   telefono: _telefono,
                   quandoCambia: (acceso) =>
-                      _metti(_lucchetto.con(conLImpronta: acceso)),
+                      _cambia(_lucchetto.con(conLImpronta: acceso)),
                 ),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 4, 16, 14),

@@ -14,6 +14,7 @@ import 'package:webview_flutter/webview_flutter.dart';
 import 'package:webview_flutter_android/webview_flutter_android.dart';
 import 'package:webview_flutter_wkwebview/webview_flutter_wkwebview.dart';
 
+import '../../casa/fuori.dart';
 import '../../plancia/premesse.dart' show ilMenuDalTelefono;
 import 'biglietto.dart';
 
@@ -228,8 +229,7 @@ List<String> _iTipi(List<String> chiesti) => [
 /// andare: e' un file che la pagina ha fatto, e lo apre lei.
 Future<void> _fuori(String indirizzo) async {
   final dove = Uri.tryParse(indirizzo);
-  if (dove == null) return;
-  if (dove.scheme != 'http' && dove.scheme != 'https') return;
+  if (dove == null || !siApreFuori(dove)) return;
   try {
     await launchUrl(dove, mode: LaunchMode.externalApplication);
   } catch (_) {
@@ -356,6 +356,7 @@ Future<void> consegnaLaChiave(
 /// cambia con il codice appena si apre, e non lo chiede. Se il quadro non
 /// risponde si apre la pagina com'e', e il codice lo chiede lei, come prima.
 Future<void> apriFuori(Uri pagina, String chiave) async {
+  if (!siApreFuori(pagina)) return;
   await launchUrl(
     await conIlBiglietto(pagina, chiave),
     mode: LaunchMode.externalApplication,

@@ -12,6 +12,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:web/web.dart' as web;
 import 'package:webview_flutter/webview_flutter.dart';
 
+import '../../casa/fuori.dart';
 import '../../plancia/premesse.dart' show ilMenuDalRiquadro;
 
 /// Un controllore pronto a caricare una pagina. Sul web sa fare solo quello:
@@ -82,6 +83,11 @@ void _ascoltaIlRiquadro(
   web.window.addEventListener(
     'message',
     ((web.MessageEvent evento) {
+      /* Solo da un riquadro di questa pagina: un'altra finestra — la pagina
+       * che ha aperto l'app, una scheda aperta da lei — non apre il menu e
+       * non sposta la plancia. L'origine qui non si guarda: nel collaudo la
+       * plancia arriva da una porta sua. */
+      if (!_daUnNostroRiquadro(evento)) return;
       final detto = evento.data;
       if (detto == null || !detto.isA<JSObject>()) return;
       final oggetto = detto as JSObject;
@@ -103,6 +109,21 @@ void _ascoltaIlRiquadro(
       }
     }).toJS,
   );
+}
+
+/// Se chi ha scritto e' la finestra dentro uno degli `iframe` di questa
+/// pagina.
+bool _daUnNostroRiquadro(web.MessageEvent evento) {
+  final fonte = evento.source;
+  if (fonte == null) return false;
+  final riquadri = web.document.querySelectorAll('iframe');
+  for (var quale = 0; quale < riquadri.length; quale += 1) {
+    final uno = riquadri.item(quale);
+    if (uno == null || !uno.isA<web.HTMLIFrameElement>()) continue;
+    final dentro = (uno as web.HTMLIFrameElement).contentWindow;
+    if (dentro != null && dentro.strictEquals(fonte).toDart) return true;
+  }
+  return false;
 }
 
 /// Sul web un `iframe` non si ricarica: si riapre la pagina.
@@ -299,8 +320,23 @@ void _consegnaA(web.Window? finestra, String chiave, Uri pagina) {
 /// Se il browser la scheda non la apre — un blocco dei popup, che qui non
 /// dovrebbe scattare perche' si arriva da un tocco — si ripiega sulla via di
 /// prima, e il codice lo si batte.
+///
+/// La maniglia si tiene **solo quando c'e' un codice da consegnare**, e solo
+/// verso un quadro in `https` (lo decide chi chiama, `eUnQuadroSicuro`):
+/// senza codice la scheda si apre con `noopener`, come un collegamento
+/// qualunque. Con la maniglia la pagina aperta sa chi l'ha aperta, e per
+/// questo qui nessun messaggio si accetta da una finestra che non sia quella
+/// giusta (`servitore_qui/sul_web.dart`).
 Future<void> apriFuori(Uri pagina, String chiave) async {
+  if (!siApreFuori(pagina)) return;
   if (chiave.isNotEmpty) _rispondiAChiChiedeLaChiave(pagina, chiave);
+  /* Senza il codice non serve la maniglia: la scheda si apre come un
+   * collegamento qualunque, `noopener` e `noreferrer` — non sa chi l'ha
+   * aperta e non la puo' toccare. */
+  if (chiave.isEmpty) {
+    await launchUrl(pagina, mode: LaunchMode.externalApplication);
+    return;
+  }
   web.Window? finestra;
   try {
     finestra = web.window.open(pagina.toString(), '_blank');

@@ -57,6 +57,8 @@ void main() {
       '   ',
       'quadro.gdahome.org',
       'javascript:alert(1)',
+      /* In chiaro no: a questa pagina si consegna il codice. */
+      'http://quadro.gdahome.org/console/',
     ]) {
       await tester.pumpWidget(_conLaSchermata(dove: storto, visibile: true));
       await tester.pump();

@@ -19,6 +19,7 @@ import 'casa/cassaforte.dart';
 import 'casa/collegamento.dart';
 import 'casa/il_lucchetto.dart';
 import 'casa/impostazioni.dart';
+import 'casa/la_finestra.dart';
 import 'casa/la_guardia.dart';
 import 'parole.dart';
 import 'ponte/centralino.dart';
@@ -46,7 +47,7 @@ import 'vestito/tema.dart';
 /// nella versione che va sui telefoni questa riga non c'e' proprio.
 const bool _perIlCollaudo = bool.fromEnvironment('COLLAUDO');
 
-void main() {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   /* **Niente app a tutto schermo.**
    *
@@ -74,7 +75,15 @@ void main() {
     for (final quale in WidgetsBinding.instance.platformDispatcher.locales)
       quale.languageCode,
   ]);
-  runApp(const AppDiCasa());
+  /* Le impostazioni si leggono **prima** del primo disegno: dentro c'e' il
+   * lucchetto, e l'app deve sapere se va coperta prima di mostrare la casa.
+   * E' un file piccolo, e intanto si vede la schermata d'avvio del sistema. */
+  final impostazioni = Impostazioni(
+    sulTelefono: !kIsWeb,
+    android: !kIsWeb && defaultTargetPlatform == TargetPlatform.android,
+  );
+  await impostazioni.carica();
+  runApp(AppDiCasa(impostazioni: impostazioni));
 }
 
 class AppDiCasa extends StatefulWidget {
@@ -83,6 +92,7 @@ class AppDiCasa extends StatefulWidget {
     this.cassaforte,
     this.collegamento,
     this.plancia,
+    this.impostazioni,
   });
 
   /// Sostituibili nelle prove, dove il portachiavi, la rete e il WebView non
@@ -91,11 +101,18 @@ class AppDiCasa extends StatefulWidget {
   final Collegamento? collegamento;
   final FabbricaDellaPlancia? plancia;
 
+  /// Le impostazioni gia' lette: le legge `main`, prima del primo disegno.
+  final Impostazioni? impostazioni;
+
   @override
   State<AppDiCasa> createState() => _AppDiCasaState();
 }
 
 class _AppDiCasaState extends State<AppDiCasa> with WidgetsBindingObserver {
+  /// Il velo del lucchetto, quando c'e'. Lo decide il portone, e si disegna
+  /// qui, sopra il navigatore: vedi [SopraTutto].
+  final _velo = ValueNotifier<Widget?>(null);
+
   @override
   void initState() {
     super.initState();
@@ -105,6 +122,7 @@ class _AppDiCasaState extends State<AppDiCasa> with WidgetsBindingObserver {
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    _velo.dispose();
     super.dispose();
   }
 
@@ -149,15 +167,60 @@ class _AppDiCasaState extends State<AppDiCasa> with WidgetsBindingObserver {
       /* Il fondo vivo sta qui, sotto tutte le schermate e una volta sola: se
        * lo mettesse ogni pagina, gli aloni ripartirebbero da capo a ogni
        * cambio di pagina, e sarebbe un lampo invece di un cielo. */
-      builder: (context, schermata) =>
-          SfondoVivo(child: schermata ?? const SizedBox.shrink()),
+      builder: (context, schermata) => SopraTutto(
+        velo: _velo,
+        child: SfondoVivo(child: schermata ?? const SizedBox.shrink()),
+      ),
       home: Portone(
         cassaforte: widget.cassaforte,
         collegamento: widget.collegamento,
         plancia: widget.plancia,
+        impostazioni: widget.impostazioni,
       ),
     );
   }
+}
+
+/// Il velo del lucchetto sta **sopra il navigatore**, non dentro una pagina.
+///
+/// Prima stava al posto della home: copriva la home e basta. Con una pagina
+/// aperta sopra — l'elenco delle case, le impostazioni, la plancia — il velo
+/// si alzava sotto di lei, e la pagina restava li' a farsi guardare. Qui sta
+/// sopra tutto quello che il navigatore tiene, e quando c'e' quello che sta
+/// sotto non si disegna nemmeno: resta vivo, ma fuori scena, e non lo trova
+/// neanche chi legge lo schermo a voce.
+///
+/// Il portone lo trova risalendo ([di]); dove non lo trova — una prova che
+/// lo monta da solo — il velo lo disegna lui al posto della home, come prima.
+class SopraTutto extends InheritedWidget {
+  SopraTutto({super.key, required this.velo, required Widget child})
+    : super(
+        child: ValueListenableBuilder<Widget?>(
+          valueListenable: velo,
+          child: child,
+          builder: (context, sopra, sotto) => Stack(
+            fit: StackFit.expand,
+            children: [
+              Offstage(
+                offstage: sopra != null,
+                child: TickerMode(
+                  enabled: sopra == null,
+                  child: sotto ?? const SizedBox.shrink(),
+                ),
+              ),
+              sopra ?? const SizedBox.shrink(),
+            ],
+          ),
+        ),
+      );
+
+  final ValueNotifier<Widget?> velo;
+
+  static ValueNotifier<Widget?>? di(BuildContext context) =>
+      context.getInheritedWidgetOfExactType<SopraTutto>()?.velo;
+
+  @override
+  bool updateShouldNotify(SopraTutto vecchio) => velo != vecchio.velo;
 }
 
 class Portone extends StatefulWidget {
@@ -213,6 +276,18 @@ class _PortoneState extends State<Portone> with WidgetsBindingObserver {
   /// Il velo e' su: finche' non si passa, l'app non c'e'.
   bool _chiuso = false;
 
+  /// Il velo e' su perche' l'app non e' davanti: senza chiedere niente, e
+  /// solo col lucchetto acceso. E' quello che si vede nell'elenco delle app
+  /// recenti, al posto della casa.
+  bool _coperto = false;
+
+  /// Dove si alza il velo, se c'e' chi lo disegna sopra il navigatore.
+  ValueNotifier<Widget?>? _sopra;
+
+  /// Le impostazioni lette dal disco: il lucchetto si decide su di loro.
+  late final Future<void> _caricate;
+  StreamSubscription<void>? _ascoltoDelleImpostazioni;
+
   /// Con cosa questo telefono puo' rispondere, adesso.
   Set<ComeRiconosce> _conCosa = const {};
 
@@ -234,7 +309,14 @@ class _PortoneState extends State<Portone> with WidgetsBindingObserver {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     Misure.io.accendi();
-    unawaited(_impostazioni.carica());
+    /* Gia' lette da `main`, di solito: allora non si rileggono, e il
+     * lucchetto si decide subito. */
+    _caricate = _impostazioni.caricate
+        ? Future<void>.value()
+        : _impostazioni.carica();
+    _ascoltoDelleImpostazioni = _impostazioni.cambiamenti.listen(
+      (_) => unawaited(_laFinestra()),
+    );
     _collegamento =
         widget.collegamento ??
         Collegamento(
@@ -268,6 +350,13 @@ class _PortoneState extends State<Portone> with WidgetsBindingObserver {
       unawaited(_seSiRichiude());
       return;
     }
+    /* Col lucchetto acceso, il velo si mette **appena** l'app smette di
+     * essere davanti — non al ritorno. Al ritorno sarebbe tardi: il sistema
+     * ha gia' fatto l'istantanea per l'elenco delle app recenti, e dentro
+     * c'era la casa. Si toglie tornando, se non c'e' niente da chiedere. */
+    if (_lucchettoInUso && !_coperto && stato != AppLifecycleState.detached) {
+      _cambiaIlVelo(() => _coperto = true);
+    }
     /* Da quando e' stata lasciata: il lucchetto al ritorno si chiude solo se
      * e' passato piu' di un minuto, e senza quest'ora non si saprebbe. Si
      * segna la prima volta che se ne va e non a ogni scossone: `inactive` e
@@ -282,34 +371,100 @@ class _PortoneState extends State<Portone> with WidgetsBindingObserver {
 
   /* ─── Il lucchetto ─────────────────────────────────────────────────────── */
 
-  /// Il lucchetto all'apertura dell'app.
-  Future<void> _seSiApre() async {
+  /// Se il lucchetto chiude qualcosa quando si entra o si torna: e' allora
+  /// che l'app, lasciata, si copre.
+  bool get _lucchettoInUso {
+    final lucchetto = _impostazioni.lucchetto;
+    return lucchetto.acceso && (lucchetto.allAvvio || lucchetto.alRitorno);
+  }
+
+  /// La finestra riservata finche' il lucchetto e' in uso (vedi
+  /// `la_finestra.dart`).
+  bool? _riservata;
+  Future<void> _laFinestra() async {
+    final adesso = _lucchettoInUso;
+    if (adesso == _riservata) return;
+    _riservata = adesso;
+    await finestraRiservata(adesso);
+  }
+
+  /// Un cambiamento del velo: lo stato, e subito dopo chi lo disegna. Nello
+  /// stesso giro, perche' fra le due cose non passi un fotogramma con la
+  /// casa scoperta.
+  void _cambiaIlVelo(VoidCallback cosa) {
+    setState(cosa);
+    _mostraIlVelo();
+  }
+
+  void _mostraIlVelo() {
+    final sopra = _sopra;
+    if (sopra == null) return;
+    sopra.value = (_chiuso || _coperto) && _pronto ? _ilVelo() : null;
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _sopra ??= SopraTutto.di(context);
+  }
+
+  /// Quello che si vede quando il velo e' su.
+  Widget _ilVelo() {
+    if (!_chiuso) {
+      /* Solo coperta: nessuna domanda, e niente da leggere. */
+      return const Scaffold(body: SizedBox.expand());
+    }
+    return Scaffold(
+      body: IlVeloDelRiconoscimento(
+        conCosa: _conCosa,
+        casa: _collegamento.casa?.nome ?? '',
+        nonSaFarlo: _nonSaFarlo,
+        quandoRiprova: _nonSaFarlo
+            ? () => _cambiaIlVelo(() => _chiuso = false)
+            : () => unawaited(_chiedi()),
+      ),
+    );
+  }
+
+  /// Il lucchetto all'apertura dell'app: se va chiesto, e con che cosa.
+  ///
+  /// Si decide **prima** di mostrare qualunque cosa: prima la home si
+  /// disegnava, e il velo arrivava un attimo dopo — il tempo di chiedere al
+  /// telefono cosa sa fare — con la casa gia' a schermo.
+  Future<Set<ComeRiconosce>?> _daChiedereAllApertura() async {
+    if (!_impostazioni.lucchetto.allAvvio) return null;
     final sa = await _guardia.cosaSaFare();
-    if (!mounted) return;
-    if (!siDeveChiedere(_impostazioni.lucchetto, sa)) return;
-    setState(() {
-      _chiuso = true;
-      _conCosa = conCosaSiChiede(_impostazioni.lucchetto, sa);
-    });
-    await _chiedi();
+    if (!siDeveChiedere(_impostazioni.lucchetto, sa)) return null;
+    return conCosaSiChiede(_impostazioni.lucchetto, sa);
   }
 
   /// E tornandoci, se e' stata lasciata abbastanza a lungo.
+  ///
+  /// Il velo che copriva l'app mentre era via si toglie **qui**, a decisione
+  /// presa, e non appena l'app torna: nel mezzo — il tempo di chiedere al
+  /// telefono cosa sa fare — la casa resterebbe scoperta.
   Future<void> _seSiRichiude() async {
     final lasciata = _lasciataIl;
     _lasciataIl = null;
-    if (lasciata == null || _chiuso) return;
-    final sa = await _guardia.cosaSaFare();
-    if (!mounted) return;
-    final quanto = DateTime.now().difference(lasciata);
-    if (!siDeveChiedere(_impostazioni.lucchetto, sa, lasciataDa: quanto)) {
-      return;
+    Set<ComeRiconosce>? conCosa;
+    if (lasciata != null && !_chiuso && _impostazioni.lucchetto.alRitorno) {
+      final sa = await _guardia.cosaSaFare();
+      if (!mounted) return;
+      final quanto = DateTime.now().difference(lasciata);
+      if (siDeveChiedere(_impostazioni.lucchetto, sa, lasciataDa: quanto)) {
+        conCosa = conCosaSiChiede(_impostazioni.lucchetto, sa);
+      }
     }
-    setState(() {
-      _chiuso = true;
-      _conCosa = conCosaSiChiede(_impostazioni.lucchetto, sa);
+    if (!mounted) return;
+    final daChiedere = conCosa;
+    _cambiaIlVelo(() {
+      _coperto = false;
+      if (daChiedere != null) {
+        _chiuso = true;
+        _conCosa = daChiedere;
+      }
     });
-    await _chiedi();
+    if (daChiedere != null) await _chiedi();
   }
 
   /// Chiede, e apre se si passa.
@@ -319,7 +474,7 @@ class _PortoneState extends State<Portone> with WidgetsBindingObserver {
     try {
       final andata = await _guardia.chiedi(perche: perche(null));
       if (!mounted) return;
-      setState(() {
+      _cambiaIlVelo(() {
         /* «Non sa farlo» apre lo stesso, e non e' clemenza: e' che un'app che
          * non si apre piu' si cura disinstallandola, e con lei se ne va
          * l'abbinamento. Il velo resta con scritto cosa e' successo finche'
@@ -339,17 +494,44 @@ class _PortoneState extends State<Portone> with WidgetsBindingObserver {
      * ricostruzione vorrebbe dire buttare giu' il filo ogni volta che gira lo
      * schermo. */
     if (!_collegamento.avviato) await _collegamento.apri();
+    /* Il lucchetto si decide su quello che c'e' scritto nelle impostazioni,
+     * che `main` ha gia' letto dal disco. E si decide **insieme** a «pronto»,
+     * nello stesso giro: la home non si disegna nemmeno una volta prima di
+     * sapere se va coperta. */
+    final conCosa = await _daChiedereAllApertura();
     if (!mounted) return;
-    setState(() => _pronto = true);
-    /* Il lucchetto qui e non prima: si decide su quello che c'e' scritto
-     * nelle impostazioni, e quelle si leggono dal disco. Chiederlo prima
-     * vorrebbe dire chiederlo sempre col lucchetto spento. */
-    unawaited(_seSiApre());
+    unawaited(_laFinestra());
+    _cambiaIlVelo(() {
+      _pronto = true;
+      if (conCosa != null) {
+        _chiuso = true;
+        _conCosa = conCosa;
+      }
+    });
+    if (conCosa != null) unawaited(_chiedi());
+    /* Le impostazioni non c'erano ancora — le legge `main`, e qui si arriva
+     * senza solo dove l'app la monta qualcun altro, come le prove: si e'
+     * aperto con quello che c'era, e quando arrivano si decide di nuovo. */
+    if (!_impostazioni.caricate) {
+      unawaited(
+        _caricate.then((_) async {
+          if (!mounted || _chiuso) return;
+          unawaited(_laFinestra());
+          final tardi = await _daChiedereAllApertura();
+          if (!mounted || tardi == null || _chiuso) return;
+          _cambiaIlVelo(() {
+            _chiuso = true;
+            _conCosa = tardi;
+          });
+          await _chiedi();
+        }),
+      );
+    }
     /* Solo i cambiamenti del collegamento — la casa, lo stato, l'approdo —
      * non quelli delle entita': quelli arrivano decine di volte al secondo,
      * e da qui si ridisegna tutta l'app. */
     _ascolto = _collegamento.cambiamenti.listen((_) {
-      if (mounted) setState(() {});
+      if (mounted) _cambiaIlVelo(() {});
     });
   }
 
@@ -358,6 +540,12 @@ class _PortoneState extends State<Portone> with WidgetsBindingObserver {
     WidgetsBinding.instance.removeObserver(this);
     _seNonTorna?.cancel();
     _ascolto?.cancel();
+    _ascoltoDelleImpostazioni?.cancel();
+    /* Il velo e' di questo portone: andandosene, non resta a coprire. */
+    final sopra = _sopra;
+    if (sopra != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => sopra.value = null);
+    }
     Misure.io.spegni();
     _impostazioni.chiudi();
     _collegamento.chiudi();
@@ -387,19 +575,12 @@ class _PortoneState extends State<Portone> with WidgetsBindingObserver {
     }
     /* Il velo sta **sopra** tutto, e non dentro una schermata: sotto non ci
      * deve essere niente da vedere — non l'elenco delle case, non il nome
-     * della casa aperta, non una plancia che intanto si carica. */
-    if (_chiuso) {
-      return Scaffold(
-        body: IlVeloDelRiconoscimento(
-          conCosa: _conCosa,
-          casa: _collegamento.casa?.nome ?? '',
-          nonSaFarlo: _nonSaFarlo,
-          quandoRiprova: _nonSaFarlo
-              ? () => setState(() => _chiuso = false)
-              : () => unawaited(_chiedi()),
-        ),
-      );
-    }
+     * della casa aperta, non una plancia che intanto si carica. Lo disegna
+     * [SopraTutto], sopra il navigatore, e quello che sta sotto — la home,
+     * e le pagine aperte sopra di lei — resta vivo ma non si disegna: cosi'
+     * tornando la plancia e' ancora li', e non si ricarica. Qui il velo si
+     * disegna solo dove [SopraTutto] non c'e', al posto della home. */
+    if ((_chiuso || _coperto) && _sopra == null) return _ilVelo();
     if (_collegamento.archivio.vuoto) {
       return AggiungiCasa(
         centralino: centralinoDiDifetto,

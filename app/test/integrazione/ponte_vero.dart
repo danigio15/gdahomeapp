@@ -103,6 +103,9 @@ class PonteVero {
         /* Il segno del Supervisor: nel mondo vero glielo da' Home Assistant. */
         'SUPERVISOR_TOKEN': segnoDelSupervisor,
         'PONTE_CASA': casa.indirizzo,
+        /* La console risponde solo al proxy dell'ingress di Home Assistant:
+         * al banco il proxy e' la prova stessa, da questa macchina. */
+        'PONTE_PROXY_INGRESS': '127.0.0.1',
       },
     );
 
@@ -190,6 +193,9 @@ class PonteVero {
     final cliente = HttpClient();
     try {
       final richiesta = await cliente.openUrl(metodo, Uri.parse(dove));
+      /* Quello che l'ingress aggiunge a ogni richiesta: chi e' entrato in
+       * Home Assistant. Sulla porta dell'app non conta niente. */
+      richiesta.headers.set('X-Remote-User-Id', amministratoreDellaProva);
       final risposta = await richiesta.close();
       final corpo = await risposta.transform(utf8.decoder).join();
       final letto = jsonDecode(corpo);

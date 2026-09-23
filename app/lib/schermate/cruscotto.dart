@@ -43,6 +43,7 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
+import '../casa/fuori.dart';
 import '../parole.dart';
 import 'riquadro/qui.dart' as riquadro;
 
@@ -98,7 +99,9 @@ class _StatoDelCruscotto extends State<SchermataDelCruscotto> {
   Uri? get _indirizzo {
     final quale = Uri.tryParse(widget.dove.trim());
     if (quale == null || quale.host.isEmpty) return null;
-    if (quale.scheme != 'https' && quale.scheme != 'http') return null;
+    /* Solo `https`: a questa pagina si consegna il codice (vedi
+     * [eUnQuadroSicuro]). */
+    if (!eUnQuadroSicuro(quale)) return null;
     return quale;
   }
 
@@ -177,7 +180,9 @@ class _StatoDelCruscotto extends State<SchermataDelCruscotto> {
   /// biglietto nell'indirizzo (vedi `riquadro/`).
   Future<void> _fuori([Uri? quale]) async {
     if (quale != null) {
-      await launchUrl(quale, mode: LaunchMode.externalApplication);
+      if (siApreFuori(quale)) {
+        await launchUrl(quale, mode: LaunchMode.externalApplication);
+      }
       return;
     }
     final dove = _indirizzo;

@@ -19,6 +19,8 @@ import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 
+import '../../casa/fuori.dart';
+
 /// L'indirizzo da aprire: [pagina] col biglietto, o [pagina] e basta.
 Future<Uri> conIlBiglietto(
   Uri pagina,
@@ -27,6 +29,9 @@ Future<Uri> conIlBiglietto(
   Duration entro = const Duration(seconds: 6),
 }) async {
   if (chiave.isEmpty) return pagina;
+  /* La chiave viaggia solo cifrata: a un quadro in `http` non si manda — la
+   * vedrebbe chiunque stia in mezzo — e la pagina si apre com'e'. */
+  if (!eUnQuadroSicuro(pagina)) return pagina;
   /* La via sta accanto alla pagina: `…/console/` porta a
    * `…/console/biglietto`. Senza la barra in fondo `resolve` salirebbe di
    * un gradino, e la via non c'e'. */
