@@ -889,10 +889,14 @@ class _IlNome extends StatelessWidget {
                   inLingua(
                     it:
                         'Il nome di fabbrica era «$diFabbrica». Questo lo '
-                        'vedrai tu in casa, e lo vede anche Home Assistant.',
+                        'vedrai tu in casa, e lo vedono anche Home Assistant e '
+                        'la rete Zigbee. È il momento buono per darglielo: '
+                        'adesso non lo usa ancora nessuno.',
                     en:
                         'Its factory name was “$diFabbrica”. This one is what '
-                        'you will see at home, and Home Assistant too.',
+                        'you will see at home, and so do Home Assistant and '
+                        'the Zigbee network. Now is the good moment to give '
+                        'it: nothing is using it yet.',
                   ),
                   style: testi.bodySmall?.copyWith(
                     color: colori.onSurfaceVariant,
@@ -1224,9 +1228,54 @@ class _SchedaDelDispositivoZigbeeState
     super.dispose();
   }
 
+  /* Rinominare non e' mettere un'etichetta.
+   *
+   * Il nome della rete e' l'indirizzo della cassetta su cui l'apparecchio
+   * scrive: cambiandolo, Home Assistant rifa' le sue entita' con
+   * identificativi nuovi, e quelle di prima restano li' vuote. Su un
+   * dispositivo appena entrato non costa niente — non lo usa ancora nessuno —
+   * su uno che sta in una sezione da mesi significa rimettere a posto quella
+   * sezione.
+   *
+   * Non si decide al posto di chi guarda e non si nasconde: si dice prima, con
+   * le parole di quello che succede davvero. */
   Future<void> _rinomina() async {
     final come = _nome.text.trim();
     if (come.isEmpty || come == widget.suo.nome) return;
+    final sicuro = await showDialog<bool>(
+      context: context,
+      builder: (dentro) => AlertDialog(
+        title: Text(inLingua(it: 'Chiamarlo «$come»?', en: 'Call it "$come"?')),
+        content: Text(
+          inLingua(
+            it:
+                'Il nome cambia anche dentro la rete Zigbee, ed è lì che '
+                'serve: è quello che si legge in Home Assistant e qui '
+                'nell\'elenco. Home Assistant però rifà le sue entità con '
+                'identificativi nuovi: se questo dispositivo è già usato in '
+                'una sezione della plancia, quella sezione va rimessa a '
+                'posto.',
+            en:
+                'The name changes inside the Zigbee network too, and that is '
+                'where it counts: it is what you read in Home Assistant and '
+                'here in the list. Home Assistant will rebuild its entities '
+                'with new identifiers, though: if this device is already used '
+                'in a dashboard section, that section has to be fixed.',
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dentro).pop(false),
+            child: Text(inLingua(it: 'Lascia stare', en: 'Leave it')),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dentro).pop(true),
+            child: Text(inLingua(it: 'Rinominalo', en: 'Rename it')),
+          ),
+        ],
+      ),
+    );
+    if (sicuro != true || !mounted) return;
     setState(() {
       _inCorso = true;
       _perche = null;

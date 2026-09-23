@@ -19,12 +19,15 @@ import test from "node:test";
 import {
   comeSiChiedeLElenco,
   comeSiElimina,
+  comeSiRinomina,
   COORDINATORE,
   laCassettaDellElenco,
   laPotenza,
   laRigaDiZ2M,
   laRigaDiZha,
   lElencoDellaRete,
+  ilDispositivoDellaTarga,
+  leCifreDellaTarga,
   leStradePerEliminare,
   ROUTER,
   TERMINALE,
@@ -832,4 +835,181 @@ test("ogni apparecchio porta il suo disegno, spostato e ridotto al punto giusto"
     const quanto = Number(uno[4]);
     assert.equal(quanto > 0 && quanto < 1, true, `scala fuori posto: ${quanto}`);
   }
+});
+
+/* ── Il nome, dentro Zigbee2MQTT ───────────────────────────────────────────
+ *
+ * Dal campo, con quattro scatti: «ho associato dispositivo zigbee... il nome
+ * del dispositivo nella sezione zigbee sia su home assistant che su app non
+ * risulta modificato». In Presenza si leggeva «Presenza salone» — quello se
+ * l'era preso la plancia — e nell'elenco Zigbee e dentro Zigbee2MQTT restava
+ * `0x0cae5ffffec141a9`.
+ *
+ * Erano due nomi, e se ne scriveva uno solo: `name_by_user` nel registro di
+ * Home Assistant. Il `friendly_name` della rete — quello con cui Zigbee2MQTT
+ * lo chiama nella sua cassetta, nella sua pagina e in ogni messaggio — non lo
+ * sapeva nessuno.
+ */
+
+/* Una casa con Zigbee2MQTT: la cassetta risponde, l'elenco sta li' dentro, e
+ * il rinomina lo si vede arrivare. */
+function casaConZ2M({ accetta = true, dispositivi = null } = {}) {
+  const detto = [];
+  const dentro = DA_Z2M.map((una) => ({ ...una }));
+  dentro.push({
+    ieee_address: "0x0cae5ffffec141a9",
+    friendly_name: "0x0cae5ffffec141a9",
+    type: "EndDevice",
+    power_source: "Battery",
+    definition: { vendor: "SONOFF", model: "SNZB-06P" },
+  });
+  const registro = dispositivi ?? [
+    {
+      id: "dev-presenza",
+      name: "SONOFF SNZB-06P",
+      name_by_user: "",
+      identifiers: [["mqtt", "zigbee2mqtt_0x0cae5ffffec141a9"]],
+      connections: [["mac", "0c:ae:5f:ff:fe:c1:41:a9"]],
+    },
+  ];
+  return {
+    detto,
+    dentro,
+    async chiedi(comando) {
+      detto.push(comando);
+      if (comando.type === "config_entries/get") return [];
+      if (comando.type === "config/device_registry/list") return registro;
+      if (comando.type === "config/device_registry/update") {
+        const suo = registro.find((uno) => uno.id === comando.device_id);
+        if (suo) suo.name_by_user = comando.name_by_user;
+        return suo ?? null;
+      }
+      if (comando.type === "call_service" && comando.domain === "mqtt") {
+        const topic = String(comando.service_data?.topic || "");
+        if (accetta && topic.endsWith("/bridge/request/device/rename")) {
+          const detta = JSON.parse(comando.service_data.payload);
+          const suo = dentro.find((una) => una.ieee_address === detta.from);
+          if (suo) suo.friendly_name = detta.to;
+        }
+        return null;
+      }
+      return null;
+    },
+    async ascoltaIl(comando, onEvento) {
+      const topic = String(comando?.topic || "");
+      if (topic.includes("bridge/info"))
+        queueMicrotask(() => onEvento({ topic: "zigbee2mqtt/bridge/info" }));
+      if (topic.includes("bridge/devices"))
+        queueMicrotask(() => onEvento({ topic, payload: JSON.stringify(dentro) }));
+      return async () => {};
+    },
+  };
+}
+
+test("l'indirizzo si riconosce comunque lo scrivano", () => {
+  /* Zigbee2MQTT lo scrive `0x…`, il registro di Home Assistant coi due punti:
+   * è lo stesso indirizzo, e le sedici cifre sono la cosa che si confronta. */
+  assert.equal(leCifreDellaTarga("0x0cae5ffffec141a9"), "0cae5ffffec141a9");
+  assert.equal(leCifreDellaTarga("0c:ae:5f:ff:fe:c1:41:a9"), "0cae5ffffec141a9");
+  assert.equal(leCifreDellaTarga("zigbee2mqtt_0x0cae5ffffec141a9"), "0cae5ffffec141a9");
+  /* Quello che indirizzo non è non diventa un indirizzo per caso. */
+  assert.equal(leCifreDellaTarga("presa cucina"), "");
+  assert.equal(leCifreDellaTarga(""), "");
+
+  const registro = [
+    { id: "dev-altro", identifiers: [["mqtt", "zigbee2mqtt_0x1111111111111111"]] },
+    { id: "dev-mio", connections: [["mac", "0c:ae:5f:ff:fe:c1:41:a9"]] },
+  ];
+  assert.equal(ilDispositivoDellaTarga(registro, "0x0cae5ffffec141a9"), "dev-mio");
+  assert.equal(ilDispositivoDellaTarga(registro, "0x9999999999999999"), "");
+});
+
+test("a Zigbee2MQTT il nome si dice sulla sua cassetta, a ZHA non serve", () => {
+  const ordine = comeSiRinomina(
+    { quale: Z2M, cassetta: "zigbee2mqtt" },
+    "0x0cae5ffffec141a9",
+    "Presenza salone",
+  );
+  assert.equal(ordine.service_data.topic, "zigbee2mqtt/bridge/request/device/rename");
+  assert.deepEqual(JSON.parse(ordine.service_data.payload), {
+    from: "0x0cae5ffffec141a9",
+    to: "Presenza salone",
+  });
+  /* Su ZHA il nome della rete È il nome del dispositivo di Home Assistant:
+   * scriverlo due volte vorrebbe dire inventarsi una cassetta che non c'è. */
+  assert.equal(comeSiRinomina({ quale: ZHA }, "0x00", "Presenza salone"), null);
+  assert.equal(comeSiRinomina({ quale: Z2M, cassetta: "" }, "0x00", "Presenza salone"), null);
+  assert.equal(comeSiRinomina({ quale: Z2M, cassetta: "zigbee2mqtt" }, "0x00", ""), null);
+});
+
+test("su Zigbee2MQTT la riga dell'elenco porta il dispositivo di Home Assistant", async () => {
+  /* Senza, nella scheda di un dispositivo «rinominalo» e «mettilo nella
+   * plancia» non hanno su cosa lavorare: su una casa Zigbee2MQTT quei due
+   * tasti non hanno mai funzionato, perché quel campo lo riempiva solo ZHA. */
+  const casa = casaConZ2M();
+  const fuori = await new Zigbee({ casa, registro: zitto, aspetta: subito }).elenco();
+  assert.equal(fuori.quale, Z2M);
+  const suo = fuori.righe.find((una) => una.id === "0x0cae5ffffec141a9");
+  assert.equal(suo.dispositivo, "dev-presenza");
+});
+
+test("rinominando, il nome arriva anche dentro Zigbee2MQTT", async () => {
+  const casa = casaConZ2M();
+  const zigbee = new Zigbee({ casa, registro: zitto, aspetta: subito });
+  const fuori = await zigbee.rinomina("dev-presenza", "Presenza salone");
+  assert.equal(fuori.fatto, true, fuori.perche);
+  /* In Home Assistant, come prima. */
+  assert.ok(
+    casa.detto.some(
+      (uno) =>
+        uno.type === "config/device_registry/update" && uno.name_by_user === "Presenza salone",
+    ),
+  );
+  /* E nella rete, che è la parte che mancava. */
+  const ordine = casa.detto.find(
+    (uno) => uno.service_data?.topic === "zigbee2mqtt/bridge/request/device/rename",
+  );
+  assert.ok(ordine, "a Zigbee2MQTT non è arrivato niente");
+  assert.deepEqual(JSON.parse(ordine.service_data.payload), {
+    from: "0x0cae5ffffec141a9",
+    to: "Presenza salone",
+  });
+  /* E adesso la rete lo chiama così davvero: è la conferma, e non il «sì»
+   * della risposta — quello dice solo che la domanda è arrivata. */
+  assert.equal(
+    casa.dentro.find((una) => una.ieee_address === "0x0cae5ffffec141a9").friendly_name,
+    "Presenza salone",
+  );
+});
+
+test("se la rete il nome non lo prende, non si dice «fatto» — e si dice cosa è cambiato", async () => {
+  /* Metà lavoro fatto è la cosa più difficile da raccontare, e la più
+   * importante: in Home Assistant il nome è cambiato davvero, dentro
+   * Zigbee2MQTT no. Chi legge deve sapere tutte e due le cose. */
+  const casa = casaConZ2M({ accetta: false });
+  const fuori = await new Zigbee({ casa, registro: zitto, aspetta: subito }).rinomina(
+    "dev-presenza",
+    "Presenza salone",
+  );
+  assert.equal(fuori.fatto, false);
+  assert.match(fuori.perche, /e' cambiato in Home Assistant/);
+  assert.match(fuori.perche, /Zigbee2MQTT/);
+  /* E si è guardato più di una volta prima di dirlo. */
+  const sguardi = casa.detto.filter((uno) => uno.type === "config_entries/get").length;
+  assert.ok(sguardi >= 1);
+});
+
+test("un dispositivo che la rete non conosce si dice, invece di tacere", async () => {
+  /* Un dispositivo di Home Assistant che con Zigbee non c'entra niente — una
+   * telecamera wifi — non ha nessun indirizzo da mandare a Zigbee2MQTT: il
+   * nome in Home Assistant cambia lo stesso, e il resto si dice. */
+  const casa = casaConZ2M({
+    dispositivi: [{ id: "dev-camera", name: "Telecamera", identifiers: [["onvif", "cam-1"]] }],
+  });
+  const fuori = await new Zigbee({ casa, registro: zitto, aspetta: subito }).rinomina(
+    "dev-camera",
+    "Telecamera giardino",
+  );
+  assert.equal(fuori.fatto, false);
+  assert.match(fuori.perche, /non si sa l'indirizzo Zigbee/);
 });

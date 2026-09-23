@@ -56,6 +56,28 @@ nostra ne pesava 102: sopra quel peso il ponte non dice «oggi non ce l'ho», di
 l'unica icona sopra il tetto di tutta la casa. Adesso pesa 28 KiB, sempre 256
 per 256, e una prova guarda il file vero perché non succeda di nuovo.
 
+**Il nome di un dispositivo Zigbee adesso arriva anche alla rete.** «Ho
+associato dispositivo zigbee… il nome nella sezione zigbee, sia su Home
+Assistant che su app, non risulta modificato.» Erano due nomi e se ne scriveva
+uno solo: l'etichetta nel registro di Home Assistant. Il `friendly_name` di
+Zigbee2MQTT — quello con cui la rete lo chiama nella sua cassetta, nella sua
+pagina e in ogni messaggio che manda — non lo sapeva nessuno, e restava
+l'indirizzo (`0x0cae5ffffec141a9`). Adesso si scrivono tutti e due, e non ci si
+fida del «sì»: si riguarda la cassetta finché il nome nuovo non c'è.
+
+Rinominare, però, non è mettere un'etichetta: il nome della rete è l'indirizzo
+della cassetta, e cambiandolo Home Assistant rifà le entità con identificativi
+nuovi. La schermata lo dice prima di farlo, con le parole di quello che
+succede — e nell'abbinamento lo dice al momento giusto, quando il dispositivo è
+appena entrato e non lo usa ancora nessuno.
+
+**E su Zigbee2MQTT la riga dell'elenco porta il suo dispositivo di Home
+Assistant.** Lo riempiva solo ZHA: su una casa Zigbee2MQTT, nella scheda di un
+dispositivo, «rinominalo» e «mettilo nella plancia» non avevano su cosa
+lavorare — non hanno mai funzionato. Il filo c'era già ed è l'indirizzo: si
+incrocia col registro dei dispositivi, che il ponte legge una volta e si
+ricorda per mezzo minuto.
+
 **E nella scheda degli Allagamenti si vede quale voce non è una sonda.** «Non
 c'è nessuna entità allarme, sono 5 i sensori configurati, questo 6 non esiste»:
 il sesto stava nella lista — ce l'aveva messo la scheda degli avvisi, col nome

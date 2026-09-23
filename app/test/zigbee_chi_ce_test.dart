@@ -210,6 +210,26 @@ void main() {
     expect(ponte.inReteZigbee.length, 3, reason: 'non si è tolto niente');
   });
 
+  testWidgets('rinominare chiede conferma, e dice che le entità si rifanno', (
+    tester,
+  ) async {
+    /* Dal campo, con quattro scatti: «il nome del dispositivo nella sezione
+     * zigbee sia su home assistant che su app non risulta modificato». Il nome
+     * si scriveva solo in Home Assistant; adesso va anche dentro la rete, che
+     * è dove serve — e rinominare lì non è mettere un'etichetta: Home
+     * Assistant rifà le entità con identificativi nuovi. Si dice prima. */
+    await unaCasa(tester);
+    await apri(tester);
+    await premi(tester, find.text('Porta ingresso'));
+    await tester.enterText(find.byType(TextField).first, 'Porta di casa');
+    await tester.pump();
+    await premi(tester, find.text('Salva il nome'));
+    expect(find.textContaining('rifà le sue entità'), findsOneWidget);
+    /* E si può dire di no: chi dice di no non ha rinominato niente. */
+    await premi(tester, find.text('Lascia stare'));
+    expect(ponte.rinominatiInZigbee, isEmpty);
+  });
+
   testWidgets('chi regge gli altri lo dice, prima di toglierlo', (
     tester,
   ) async {
