@@ -23,14 +23,25 @@
 import { join } from "node:path";
 
 import { Archivio } from "./archivio.js";
+import { Freno } from "./freno.js";
+import { daChi } from "./indirizzo.js";
 import {
   ALLEGATO_MASSIMO,
   CORPO_MASSIMO,
   GitHub,
   GitHubNonRisponde,
   RichiestaSbagliata,
+  SCRITTURE_ALLORA,
   Segnalazioni,
 } from "./segnalazioni.js";
+
+/* Quante scritture verso GitHub in un'ora, da uno stesso indirizzo e in
+ * tutto. Il limite di ogni casa sta nelle segnalazioni; questi due stanno
+ * sopra, per chi di case ne ha tante — o se le fabbrica. Il tetto in tutto e'
+ * anche quello che tiene il gettone lontano dai limiti di GitHub: se lo
+ * finisse una casa sola, le altre resterebbero senza. */
+export const SCRITTURE_PER_INDIRIZZO = SCRITTURE_ALLORA * 2;
+export const SCRITTURE_IN_TUTTO = 300;
 
 /* `/casa/<casa_…>/segnalazioni`, piu' il numero e la coda quando ci sono. */
 export const VIA_DELLE_SEGNALAZIONI =
@@ -82,16 +93,29 @@ export class Sportello {
     /* Dove vanno foto e video: un'altra repository, se si vuole. Vuota vuol
      * dire «la stessa delle issue», che e' come stava prima. */
     repoAllegati = "",
+    /* E su quale ramo: vuoto vuol dire quello principale. Vedi
+     * `segnalazioni.js`, dove c'e' il perche'. */
+    ramoAllegati = "",
+    scritturePerIndirizzo = SCRITTURE_PER_INDIRIZZO,
+    scrittureInTutto = SCRITTURE_IN_TUTTO,
     fetch: prendi = globalThis.fetch,
     adesso = () => Date.now(),
+    registro = null,
   }) {
     this.case = case_;
     this.cartella = cartella;
     this.gettone = gettone;
     this.repo = repo;
     this.repoAllegati = repoAllegati;
+    this.ramoAllegati = ramoAllegati;
     this.prendi = prendi;
     this.adesso = adesso;
+    this.registro = registro;
+    this.freno = new Freno({
+      perChi: scritturePerIndirizzo,
+      inTutto: scrittureInTutto,
+      adesso,
+    });
   }
 
   _github() {
@@ -99,6 +123,7 @@ export class Sportello {
       token: this.gettone,
       repo: this.repo,
       repoAllegati: this.repoAllegati,
+      ramoAllegati: this.ramoAllegati,
       fetch: this.prendi,
     });
   }
@@ -135,6 +160,8 @@ export class Sportello {
       github: this._github(),
       casa,
       adesso: this.adesso,
+      freno: async (chi) => this.freno.concedi(chi),
+      chi: daChi(richiesta),
     });
     const metodo = richiesta.method;
 
@@ -177,7 +204,18 @@ export class Sportello {
         );
         return;
       }
-      json(risposta, { errore: "centralino", spiegazione: String(errore?.message || errore) }, 500);
+      /* Il motivo vero va nel registro, non nella risposta: quello che esce
+       * di qui lo legge chiunque bussi, e un errore interno racconta com'e'
+       * fatta la macchina. */
+      this.registro?.errore?.(`lo sportello e' inciampato: ${errore?.stack || errore}`);
+      json(
+        risposta,
+        {
+          errore: "centralino",
+          spiegazione: "Il centralino ha avuto un problema: riprova fra poco.",
+        },
+        500,
+      );
     }
   }
 }

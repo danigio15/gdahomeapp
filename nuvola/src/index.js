@@ -42,6 +42,7 @@
 
 export { Casa } from "./casa.js";
 export { Codice } from "./codice.js";
+export { Freno } from "./freno.js";
 
 import { quellaCasa, quelCodice } from "./dove.js";
 import { CASA_VALIDA, IMPRONTA_VALIDA } from "./nomi.js";

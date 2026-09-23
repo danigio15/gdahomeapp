@@ -39,22 +39,45 @@ class_name = "Casa"
 name = "CODICI"
 class_name = "Codice"
 
+# Il freno: uno solo per tutto il centralino. Conta quello che da dentro una
+# casa non si vede — quante case sono nate nell'ultima ora, quante
+# segnalazioni sono partite in tutto — e dice «basta» quando e' troppo.
+[[durable_objects.bindings]]
+name = "FRENO"
+class_name = "Freno"
+
 # SQLite invece di key-value: e' quello che il piano gratuito permette.
 [[migrations]]
 tag = "v1"
 new_sqlite_classes = ["Casa", "Codice"]
+
+# Il freno e' arrivato dopo, e un oggetto nuovo vuole una migrazione sua: le
+# migrazioni gia' fatte non si riscrivono.
+[[migrations]]
+tag = "v2"
+new_sqlite_classes = ["Freno"]
 
 [observability]
 enabled = true
 
 # Le segnalazioni e la chat di assistenza diventano issue di GitHub in questa
 # repository. Il gettone che le scrive e' un segreto e NON sta qui: e' il
-# segreto `GITHUB_SEGNALAZIONI` del worker (un token a grana fine con
-# «Issues: lettura e scrittura» sulla sola repository qui sotto), e ce lo
-# porta il bottone «Il centralino» su Actions dal segreto
-# `GETTONE_SEGNALAZIONI` della repository, o `npx wrangler secret put
-# GITHUB_SEGNALAZIONI` da un terminale. Senza gettone il centralino risponde
-# «segnalazioni non configurate», e l'app lo dice.
+# segreto `GITHUB_SEGNALAZIONI` del worker, e ce lo porta il bottone «Il
+# centralino» su Actions dal segreto `GETTONE_SEGNALAZIONI` della
+# repository, o `npx wrangler secret put GITHUB_SEGNALAZIONI` da un
+# terminale. Senza gettone il centralino risponde «segnalazioni non
+# configurate», e l'app lo dice.
+#
+# Il gettone deve essere **a grana fine** (Fine-grained token), con accesso
+# alle sole repository qui sotto e ai soli permessi che servono: «Issues:
+# Read and write» su GITHUB_REPO, «Contents: Read and write» su
+# GITHUB_REPO_ALLEGATI. Un token classico apre tutte le repository di chi
+# lo ha fatto, ed e' proprio quello che non deve succedere.
+#
+# Quante case nuove e quante scritture verso GitHub all'ora: i numeri di
+# serie stanno in `src/casa.js`, e si cambiano da qui aggiungendo sotto
+# [vars] CASE_NUOVE_PER_INDIRIZZO, CASE_NUOVE_IN_TUTTO,
+# SCRITTURE_PER_INDIRIZZO, SCRITTURE_IN_TUTTO.
 [vars]
 # Dove finiscono le segnalazioni: le **issue** nella repository del progetto,
 # perche' e' li' che la gente le cerca — e chi apre gdahomeapp le trova, senza
@@ -68,14 +91,24 @@ GITHUB_REPO = "danigio15/gdahomeapp"
 # allegati di GitHub — l'API non ha un modo di attaccare un file a una issue —
 # quindi si **committano** dentro la repository, sotto `allegati/<numero>/`, e
 # restano nella storia di git. E questa e' la repository che Home Assistant
-# clona per installare l'add-on: se un giorno diventa pesante, questa riga e'
-# il posto dove si sposta — un ramo a parte, o un'altra repository — senza
-# toccare una riga di programma.
+# clona per installare l'add-on.
 #
-# Il gettone vuole «Issues: Read and write» **e** «Contents: Read and write»
-# su questa. Il bottone «Il centralino» su Actions le prova tutte e due prima
-# di accendere niente.
+# Per questo vanno su un **ramo a parte**, `allegati` (qui sotto): stanno
+# nella stessa repository, si aprono dalla segnalazione, ma non finiscono nel
+# ramo principale che Home Assistant scarica. Il ramo lo crea il centralino
+# al primo allegato, partendo dalla punta del ramo principale.
+#
+# **Da fare a mano, ed e' la cosa migliore:** una repository a parte solo per
+# gli allegati (per esempio `danigio15/gdahome-allegati`), scritta qui sotto
+# al posto di questa, col gettone che puo' scrivere su quella e solo «Issues»
+# su gdahomeapp. Cosi' il gettone non puo' scrivere nemmeno un file nella
+# repository del progetto — dove sta il codice che finisce nelle case.
+#
+# Il gettone vuole «Issues: Read and write» su GITHUB_REPO **e** «Contents:
+# Read and write» su questa. Il bottone «Il centralino» su Actions le prova
+# tutte e due prima di accendere niente.
 GITHUB_REPO_ALLEGATI = "danigio15/gdahomeapp"
+GITHUB_RAMO_ALLEGATI = "allegati"
 
 # gdahome da aprire in un browser, servita da qui.
 #

@@ -9,3 +9,7 @@ export const quellaCasa = (env, id) => env.CASE.get(env.CASE.idFromName(`casa:${
 
 export const quelCodice = (env, impronta) =>
   env.CODICI.get(env.CODICI.idFromName(`codice:${impronta}`));
+
+/* Il freno e' uno solo per tutto il centralino: conta quello che da dentro
+ * una casa non si vede — quante case nuove, quante scritture, in tutto. */
+export const quelFreno = (env) => env.FRENO.get(env.FRENO.idFromName("freno"));

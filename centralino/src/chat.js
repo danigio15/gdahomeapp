@@ -32,6 +32,8 @@ import { mkdirSync } from "node:fs";
 import { dirname } from "node:path";
 import { DatabaseSync } from "node:sqlite";
 
+import { Freno } from "./freno.js";
+import { daChi } from "./indirizzo.js";
 import { impronta, stessoSegreto } from "./segreti.js";
 import { tagliaBene } from "./testo.js";
 import { corpoDi } from "./sportello.js";
@@ -48,6 +50,10 @@ export const LIMITI = Object.freeze({
    * identificativo nuovo a ogni richiesta prenderebbe sempre il ramo «linea
    * assente», dove quel limite non viene nemmeno guardato. */
   nuoveAllOra: 60,
+  /* E quante da uno stesso indirizzo: il tetto di sopra e' di tutti, e chi
+   * lo riempisse da solo chiuderebbe la porta a chi chiede aiuto davvero.
+   * Una casa vera apre una linea sola, una volta. */
+  nuovePerIndirizzo: 5,
   /* Una chat di assistenza non e' un archivio: oltre questi, i piu' vecchi se
    * ne vanno. */
   storia: 200,
@@ -67,10 +73,19 @@ const ORA = 60 * 60 * 1000;
  * al minuto, e una parola che uno si ricorda cade in mezz'ora. Con il freno ne
  * passano dieci ogni quarto d'ora, e non cade piu' niente.
  *
- * Si conta per indirizzo e non in totale: un totale unico vorrebbe dire che
- * chiunque, provando a caso, chiude fuori anche chi risponde. */
+ * Si conta per indirizzo, e in piu' c'e' un tetto in tutto. Il conto per
+ * indirizzo da solo non ferma chi prova da mille indirizzi — dieci a testa
+ * sono diecimila all'ora. Il tetto in tutto e' largo apposta: chi lo riempie
+ * chiude fuori per un po' anche chi risponde, ed e' il prezzo di non lasciar
+ * provare all'infinito. Chi ha la macchina in mano la riapre riavviando. */
 const SBAGLI_PRIMA_DI_CHIUDERE = 10;
 const QUANTO_RESTA_CHIUSA = 15 * 60 * 1000;
+export const SBAGLI_IN_TUTTO_ALL_ORA = 200;
+
+/* Quanto deve essere lunga la chiave della console perche' la console si
+ * apra. Quella che fa la macchina e' di quarantotto caratteri; una scelta a
+ * mano deve arrivare almeno a trentadue. */
+export const CHIAVE_MINIMA = 32;
 
 export const LINEA_VALIDA = /^casa_[0-9a-f]{32}$/;
 
@@ -313,6 +328,11 @@ export class ArchivioDellaChat {
 
 /* ─── Gli sportelli ──────────────────────────────────────────────────────── */
 
+/* Due chiavi si confrontano per impronta, non per come sono scritte: le
+ * impronte sono sempre lunghe uguale, e il confronto non racconta niente —
+ * nemmeno quanto e' lunga la chiave vera. */
+const stessaChiave = (una, altra) => stessoSegreto(impronta(una), impronta(altra));
+
 /* Le risposte della chat non concedono nessuna origine, e non e' una
  * dimenticanza: da qui passano il ponte — che parla dal server di Home
  * Assistant — e la console, che sta sullo stesso indirizzo. Un browser di
@@ -335,35 +355,61 @@ function chiaveDellaRichiesta(richiesta) {
 }
 
 export class Chat {
-  constructor({ archivio, chiaveDellaConsole = "", adesso = () => Date.now() }) {
+  constructor({
+    archivio,
+    chiaveDellaConsole = "",
+    adesso = () => Date.now(),
+    /* Le case che il centralino conosce, per non lasciar nascere una linea
+     * col nome di una casa a chi non ne ha il segreto. Vedi `_puoNascere`. */
+    case: case_ = null,
+    /* Se `true`, una linea nasce **solo** col nome e il segreto di una casa
+     * che si e' gia' presentata dal filo. Spento di serie: oggi il ponte
+     * scrive in chat con un nome e un segreto suoi, diversi da quelli del
+     * filo, e con l'interruttore acceso nessuna linea nuova nascerebbe. */
+    soloCaseConosciute = false,
+    sbagliInTutto = SBAGLI_IN_TUTTO_ALL_ORA,
+    nuovePerIndirizzo = LIMITI.nuovePerIndirizzo,
+  }) {
     this.archivio = archivio;
     this.chiaveDellaConsole = String(chiaveDellaConsole || "");
     this.adesso = adesso;
+    this.case = case_;
+    this.soloCaseConosciute = Boolean(soloCaseConosciute);
     /* Chi ha sbagliato, quante volte, e fino a quando resta fuori. Sta in
      * memoria e basta: un riavvio la azzera, ed e' giusto — chi riavvia il
      * tramite e' chi ce l'ha in mano. */
     this._sbagli = new Map();
+    this._sbagliInTutto = new Freno({ inTutto: sbagliInTutto, adesso });
+    this._lineeNuove = new Freno({ perChi: nuovePerIndirizzo, adesso });
   }
 
-  /* Da dove bussa davvero.
-   *
-   * Davanti c'e' Caddy, quindi il socket dice sempre 127.0.0.1 e contare per
-   * socket vorrebbe dire contare tutti insieme. Caddy **aggiunge in coda** a
-   * `x-forwarded-for` l'indirizzo di chi ha bussato: l'ultimo della lista e'
-   * quello vero, quelli prima li puo' aver scritti chiunque. */
+  /* Da dove bussa davvero: la regola e' quella di tutte le porte, in
+   * `indirizzo.js`. Prima qui si credeva a `x-forwarded-for` chiunque lo
+   * portasse, e bastava scriverci un indirizzo nuovo a ogni tentativo per
+   * non essere mai contati. */
   _daDove(richiesta) {
-    const pezzi = String(richiesta.headers["x-forwarded-for"] || "")
-      .split(",")
-      .map((uno) => uno.trim())
-      .filter(Boolean);
-    return pezzi.length ? pezzi[pezzi.length - 1] : richiesta.socket?.remoteAddress || "?";
+    return daChi(richiesta);
   }
 
   _chiusaPer(da) {
+    if (!this._sbagliInTutto.cePosto()) return QUANTO_RESTA_CHIUSA;
     const segnato = this._sbagli.get(da);
     if (!segnato) return 0;
     const quanto = segnato.chiusaFino - this.adesso();
     return quanto > 0 ? quanto : 0;
+  }
+
+  /* Se una linea nuova puo' nascere con questo nome e questo segreto.
+   *
+   * Il nome di una linea e' quello che la casa si da'. Se e' il nome di una
+   * casa che il centralino conosce dal filo, la linea nasce solo col segreto
+   * di quella casa: se no chi conosce l'identificativo di una casa — che non
+   * e' un segreto, viaggia negli indirizzi — potrebbe aprire lui la linea a
+   * suo nome, e chi risponde crederebbe di parlare con lei. */
+  _puoNascere(id, segreto) {
+    if (!this.case) return !this.soloCaseConosciute;
+    if (this.case.quella?.(id)) return this.case.verifica(id, segreto);
+    return !this.soloCaseConosciute;
   }
 
   _unoSbagliato(da) {
@@ -382,6 +428,7 @@ export class Chat {
       segnato.chiusaFino = ora + QUANTO_RESTA_CHIUSA;
     }
     this._sbagli.set(da, segnato);
+    this._sbagliInTutto.conta();
   }
 
   /* Se la console si puo' aprire. Senza chiave lo sportello della casa
@@ -389,7 +436,7 @@ export class Chat {
    * genere di cosa che va detta in `/salute` invece di scoprirla il giorno in
    * cui qualcuno chiede aiuto. */
   get consoleAperta() {
-    return this.chiaveDellaConsole.length >= 16;
+    return this.chiaveDellaConsole.length >= CHIAVE_MINIMA;
   }
 
   /* Torna `true` se la via era sua — risposta gia' mandata — e `false` se non
@@ -451,7 +498,10 @@ export class Chat {
       const testo = testoPulito(corpo?.testo, LIMITI.testo);
       if (!testo) return male(risposta, 400, "messaggio vuoto");
       if (stato === "assente") {
+        if (!this._puoNascere(id, segreto)) return male(risposta, 403, "segreto sbagliato");
         if (this.archivio.troppeLineeNuove())
+          return male(risposta, 429, "troppe conversazioni nuove");
+        if (!this._lineeNuove.concedi(daChi(richiesta)))
           return male(risposta, 429, "troppe conversazioni nuove");
         this.archivio.apriLaLinea(id, segreto, note);
       } else {
@@ -503,7 +553,7 @@ export class Chat {
     }
 
     const chiave = chiaveDellaRichiesta(richiesta);
-    if (!this.consoleAperta || !stessoSegreto(chiave, this.chiaveDellaConsole)) {
+    if (!this.consoleAperta || !stessaChiave(chiave, this.chiaveDellaConsole)) {
       this._unoSbagliato(da);
       return male(risposta, 403, "chiave sbagliata");
     }
