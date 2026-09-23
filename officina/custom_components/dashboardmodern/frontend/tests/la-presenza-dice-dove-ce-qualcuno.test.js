@@ -13,6 +13,7 @@ import { readFile } from "node:fs/promises";
 import test from "node:test";
 
 import { chiaveDelDisegno } from "../src/core/catalogo-disegni.js";
+import { parolaDelRilevatore } from "../src/sections/presenza-section.js";
 import { stanzaDiHomeAssistant } from "../src/sections/shared.js";
 
 import {
@@ -24,6 +25,7 @@ import {
   stanzeDaiRegistri,
 } from "../src/core/le-stanze-di-home-assistant.js";
 import {
+  ASSENTE,
   CHIAVE_PRESENZA,
   CLASSI_DELLA_PRESENZA,
   comeStaIlRilevatore,
@@ -109,7 +111,15 @@ test("un rilevatore muto non è una stanza vuota", () => {
   assert.equal(comeStaIlRilevatore(rilevatore("off")), "libero");
   assert.equal(comeStaIlRilevatore(rilevatore("unavailable")), "");
   assert.equal(comeStaIlRilevatore(rilevatore("unknown")), "");
-  assert.equal(comeStaIlRilevatore(null), "");
+  /* E «non c'è» non è «non risponde»: uno stato che non esiste affatto è una
+   * riga che punta a un'entità che Home Assistant non ha — un dispositivo
+   * tolto e rimesso, un identificativo cambiato sotto i piedi. Dal campo, un
+   * sensore appena abbinato che diceva «Non risponde da 2 minuti» mandava a
+   * guardare la batteria e il segnale di una cosa che non c'era.
+   *
+   * Si riparano in due posti diversi, quindi si dicono con due parole. */
+  assert.equal(comeStaIlRilevatore(null), ASSENTE);
+  assert.equal(comeStaIlRilevatore(undefined), ASSENTE);
   /* `last_changed` e non `last_updated`: il secondo si muove anche quando
    * cambia solo un attributo, e direbbe «libera da un minuto» di una stanza
    * vuota da ieri. */
@@ -617,4 +627,29 @@ test("chi disegna legge la stanza anche a `WIZ` vuoto, e quando c'è la lascia s
     else delete globalThis.localStorage;
     dimenticaLeStanze();
   }
+});
+
+test("una riga che punta a un'entità che non c'è lo dice, invece di dire «non risponde»", () => {
+  /* Le due frasi mandano in due posti diversi: «non risponde» col dispositivo
+   * in mano, «non c'è» nella scheda della configurazione. */
+  const righe = presenzaDiCasa(
+    { "binary_sensor.salone": rilevatore("on") },
+    {
+      righe: [
+        { entity: "binary_sensor.salone", name: "Salone" },
+        { entity: "binary_sensor.sparito", name: "Presenza salone" },
+      ],
+    },
+  );
+  const sparito = righe.find((una) => una.entity === "binary_sensor.sparito");
+  assert.equal(sparito.stato, ASSENTE);
+  assert.equal(parolaDelRilevatore(sparito), "Non c'è in Home Assistant");
+  /* E quella vera resta quella vera. */
+  const vero = righe.find((una) => una.entity === "binary_sensor.salone");
+  assert.equal(vero.stato, "attivo");
+  assert.equal(parolaDelRilevatore(vero), "Movimento");
+  /* Nel conto delle stanze una sorveglianza che manca non è una stanza
+   * libera: sarebbe una casa che sembra più tranquilla di com'è. */
+  const conto = contoDellaPresenza(righe);
+  assert.equal(conto.liberi, 0);
 });

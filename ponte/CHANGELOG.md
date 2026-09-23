@@ -78,6 +78,14 @@ lavorare — non hanno mai funzionato. Il filo c'era già ed è l'indirizzo: si
 incrocia col registro dei dispositivi, che il ponte legge una volta e si
 ricorda per mezzo minuto.
 
+**E «non risponde» non si dice più di una riga che punta a un'entità che non
+c'è.** Nella Presenza, un rilevatore che Home Assistant non ha affatto —
+un'entità cambiata sotto i piedi, un dispositivo tolto e rimesso — diceva «Non
+risponde», che manda a guardare la batteria e il segnale di una cosa che non
+esiste. Adesso dice «Non c'è in Home Assistant»: sono due guasti diversi e si
+riparano in due posti diversi, uno col dispositivo in mano e l'altro nella
+scheda della configurazione.
+
 **E nella scheda degli Allagamenti si vede quale voce non è una sonda.** «Non
 c'è nessuna entità allarme, sono 5 i sensori configurati, questo 6 non esiste»:
 il sesto stava nella lista — ce l'aveva messo la scheda degli avvisi, col nome

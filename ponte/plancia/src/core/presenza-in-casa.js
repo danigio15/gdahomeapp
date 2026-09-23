@@ -168,8 +168,26 @@ export function presenzaConfigurata(states = {}, config) {
  * vuota: è una sorveglianza che manca, ed è una notizia diversa. */
 const MUTI = new Set(["unavailable", "unknown", "none", ""]);
 
-/** Come sta un rilevatore: `attivo`, `libero`, o «» quando non risponde. */
+/* E «non c'è» non è «non risponde».
+ *
+ * Dal campo: un sensore appena abbinato, messo in Presenza, che diceva «Non
+ * risponde da 2 minuti» — e chi legge va a guardare la batteria, il segnale,
+ * la distanza dal ripetitore. Quella frase però la dice anche una riga che
+ * punta a un'entità che in Home Assistant NON C'È: un dispositivo tolto e
+ * rimesso, un identificativo cambiato sotto i piedi. Sono due guasti diversi e
+ * si riparano in due posti diversi — uno col dispositivo in mano, l'altro
+ * nella scheda della configurazione — e dirli con la stessa parola manda a
+ * cercare dalla parte sbagliata.
+ *
+ * La distinzione la faceva già il clima (`modo-del-clima.js`: «muto» quando lo
+ * stato c'è e non dice niente, «assente» quando lo stato non c'è affatto).
+ * Qui è la stessa, con le stesse due parole. */
+export const ASSENTE = "assente";
+
+/** Come sta un rilevatore: `attivo`, `libero`, `assente`, o «» se non risponde. */
 export function comeStaIlRilevatore(stato) {
+  /* Nessuno stato affatto: quell'entità Home Assistant non ce l'ha. */
+  if (stato === null || stato === undefined) return ASSENTE;
   const grezzo = pulito(stato?.state).toLowerCase();
   if (MUTI.has(grezzo)) return "";
   return grezzo === "on" ? "attivo" : "libero";
@@ -226,7 +244,11 @@ export function presenzaDiCasa(
         .filter(([entity, stato]) => eUnRilevatoreDiCasa(entity, stato, config))
         .map(([entity]) => letta(entity, scelte.nomi[entity], ""));
 
-  const peso = (riga) => (riga.stato === "attivo" ? 0 : riga.stato === "" ? 1 : 2);
+  /* Prima chi rileva qualcuno, poi le sorveglianze che mancano — mute o
+   * assenti, che sono due modi di non guardare — e in fondo le stanze libere,
+   * che sono la quiete. */
+  const peso = (riga) =>
+    riga.stato === "attivo" ? 0 : riga.stato === "" || riga.stato === ASSENTE ? 1 : 2;
   return righe.sort((a, b) => peso(a) - peso(b) || a.name.localeCompare(b.name));
 }
 

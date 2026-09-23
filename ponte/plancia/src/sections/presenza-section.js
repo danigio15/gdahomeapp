@@ -17,6 +17,7 @@
  * famiglia di sensori, e chi ha imparato una pagina non deve impararne due.
  */
 import {
+  ASSENTE,
   CHIAVE_PRESENZA,
   contoDellaPresenza,
   presenzaConfigurata,
@@ -145,6 +146,9 @@ export function parolaDelRilevatore(riga) {
   if (riga?.stato === "attivo")
     return riga?.stabile ? t("Occupato", "Occupied") : t("Movimento", "Movement");
   if (riga?.stato === "libero") return riga?.stabile ? t("Libero", "Free") : t("Fermo", "Still");
+  /* «Non c'è» e «non risponde» non sono la stessa notizia: la prima si ripara
+   * nella scheda della configurazione, la seconda col dispositivo in mano. */
+  if (riga?.stato === ASSENTE) return t("Non c'è in Home Assistant", "Not in Home Assistant");
   return t("Non risponde", "Not answering");
 }
 
@@ -359,6 +363,10 @@ function installStyles() {
     ${P} .dm-presenza[data-presenza="attivo"]{--dm-presenza:#2563eb}
     ${P} .dm-presenza[data-presenza="libero"]{--dm-presenza:#16a34a}
     ${P} .dm-presenza[data-presenza="muto"]{--dm-presenza:#94a3b8}
+    /* Chi non c'e' piu' in Home Assistant: lo stesso grigio di chi non
+       risponde — sono tutt'e due una sorveglianza che manca — e la parola in
+       fondo alla riga dice quale delle due. */
+    ${P} .dm-presenza[data-presenza="assente"]{--dm-presenza:#94a3b8}
     ${P} .dm-presenza-ic{
       display:grid;place-items:center;width:44px;height:44px;border-radius:14px;font-size:20px;
       background:color-mix(in srgb,var(--dm-presenza,#94a3b8) 22%,transparent)}
