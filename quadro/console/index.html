@@ -1408,6 +1408,16 @@
           grid-template-columns: minmax(300px, 32%) minmax(0, 1fr);
           column-gap: 16px;
           align-items: start;
+          /* Lo stacco fra il riquadro in cima e la riga delle due colonne.
+             E' quello che la pagina usa gia' fra una carta e il titolo che
+             viene dopo — `.voce`, ventisei — e non un numero nuovo: prima
+             quel vuoto lo faceva proprio lo stacco del titolo, e togliendolo
+             per allineare le due colonne l'ho tolto anche alla pagina. La
+             scritta «Tutti gli impianti» finiva attaccata alla carta sopra:
+             fondo della carta a 424, titolo a 424. Zero.
+             Un `row-gap` qui non si puo' usare: la riga e' la nona, e il
+             vuoto si conterebbe otto volte. */
+          --stacco-affianco: 26px;
         }
 
         #dove > * {
@@ -1458,8 +1468,11 @@
              sotto, ed e' ripreso dal margine: di lato spostava la colonna
              cinque pixel fuori da tutto il resto — il riquadro in cima
              cominciava a 126, l'elenco a 121, e si vedeva. */
+          /* Il respiro di quattro sopra e sotto si toglie dal margine, cosi'
+             il contenuto della colonna comincia esattamente dove comincia la
+             scheda accanto. */
           padding: 4px 0;
-          margin: -4px 0;
+          margin: calc(var(--stacco-affianco) - 4px) 0 -4px;
         }
 
         /* Le due colonne cominciano alla stessa altezza.
@@ -1486,6 +1499,7 @@
         #dove > .foglio {
           grid-column: 2;
           grid-row: 9;
+          margin-top: var(--stacco-affianco);
         }
 
         /* Due mattonelle affiancate in trecento pixel non ci stanno: qui
