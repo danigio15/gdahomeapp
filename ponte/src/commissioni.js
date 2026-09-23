@@ -561,7 +561,7 @@ export class Commissioni {
     if (tipo === TIPO_PLANCIA) return this._laPlancia(detto, chiChiede, amministra);
     if (PLANCE.has(tipo)) return this._lePlance(detto, chiChiede, amministra);
     if (typeof tipo === "string" && tipo.startsWith("ponte/chat/")) return this._chatDellApp(detto);
-    if (tipo === IL_QUADRO) return this._ilQuadro(detto, chiChiede, amministra);
+    if (tipo === IL_QUADRO) return this._ilQuadro(detto, chiChiede, amministra, puoAmministrare);
     if (typeof tipo === "string" && tipo.startsWith("ponte/segnalazioni/"))
       return this._segnalazioni(detto);
     /* Prima del giro `ponte/zigbee/`, perche' questo non e' un comando
@@ -674,7 +674,7 @@ export class Commissioni {
    *
    * La prova qui sotto la tiene al suo posto: chiede senza chat, che e' il
    * caso che prima falliva. */
-  async _ilQuadro(detto, chiChiede = "", amministra = null) {
+  async _ilQuadro(detto, chiChiede = "", amministra = null, puoAmministrare = false) {
     /* ─── E il codice, a chi amministra ───────────────────────────────────
      *
      * Il codice sta gia' nella scheda dell'add-on — e' quello che fa esistere
@@ -712,7 +712,29 @@ export class Commissioni {
      * risponde davvero no resta un no, e un telefono senza utente addosso —
      * abbinato prima che il ponte sapesse di chi fosse — torna `false` da se',
      * senza chiedere niente. */
+    /* ─── E il telefono che un utente addosso non ce l'ha ─────────────
+     *
+     * «Su Home Assistant funziona; da app mi richiede i codici sia
+     * installatore che gestore.»
+     *
+     * `amministra` nasce da `amministratoreSubito(chiChiede)`, e `chiChiede`
+     * per un telefono abbinato prima che i telefoni si intestassero a qualcuno
+     * e' la stringa vuota: quella funzione la conta per un no, e il codice non
+     * partiva. Solo che lo stesso filo, alla dogana, i comandi da
+     * amministratore li passa — un telefono senza utente addosso e' stato
+     * abbinato con un codice che allora lo fabbricava solo chi amministra, e
+     * `_amministra()` in `ponte.js` risponde di si'. Due risposte diverse alla
+     * stessa domanda sullo stesso filo, e quella piu' stretta toccava proprio
+     * alla cosa che la scheda dell'add-on aveva gia' in mano: le due pagine si
+     * aprivano nell'app e chiedevano un codice che era li' da sempre.
+     *
+     * Quella risposta arriva qui come `puoAmministrare`, ed e' l'unica che il
+     * ponte da': si guarda quella. Non apre niente di nuovo — e' lo stesso
+     * filo che i comandi riservati li passa gia' — e dentro Home Assistant non
+     * cambia nulla, perche' li' «non si sa chi guarda» vale no
+     * (`cucitura.js`) e `puoAmministrare` arriva falso. */
     let suo = amministra;
+    if (suo !== true && puoAmministrare === true) suo = true;
     if (suo === null && this.utenti?.amministratore) {
       try {
         suo = await this.utenti.amministratore(chiChiede);
