@@ -124,6 +124,18 @@ if [[ "$SOLO_CONTROLLO" == no ]]; then
     "Lo script installa i pacchetti con apt, e qui apt non c'e'." \
     "Rifai la macchina scegliendo Ubuntu, l'ultima con scritto LTS."
   bene "Debian o Ubuntu, e sono root"
+
+  # Il servizio che prepara le versioni nuove riceve i suoi due segreti da
+  # systemd (`LoadCredential`), e systemd lo sa fare dalla 247 in poi: Debian
+  # 11, Ubuntu 22.04. Su uno piu' vecchio quel servizio non partirebbe, e il
+  # tramite resterebbe senza aggiornamenti — quindi ci si ferma qui, prima di
+  # toccare niente, e non a meta'.
+  SYSTEMD_VERSIONE="$(systemctl --version 2>/dev/null | awk 'NR == 1 { print $2 }' | tr -cd '0-9')"
+  [[ "${SYSTEMD_VERSIONE:-0}" -ge 247 ]] || male \
+    "Questa macchina ha systemd ${SYSTEMD_VERSIONE:-sconosciuto}, e serve almeno il 247." \
+    "Vuol dire un sistema troppo vecchio: Debian 11 o Ubuntu 22.04 in su." \
+    "Non ho cambiato niente. Rifai la macchina con un Ubuntu LTS recente."
+  bene "systemd $SYSTEMD_VERSIONE"
 fi
 
 # L'indirizzo di questa macchina visto da fuori. Serve a confrontarlo coi nomi:
@@ -415,8 +427,16 @@ bene "gli aggiornamenti di sicurezza si installano da soli, senza riavvii a sorp
 porte_ssh() {
   local trovate=""
   if command -v sshd >/dev/null 2>&1; then
-    trovate="$(sshd -T 2>/dev/null | awk '$1 == "port" { print $2 }' | sort -u | tr '\n' ' ')"
+    trovate="$(sshd -T 2>/dev/null | awk '$1 == "port" { print $2 }' | tr '\n' ' ')"
   fi
+  # E quella da cui si e' collegati adesso, se si e' su SSH: fosse anche una
+  # che sshd non dice — l'SSH acceso da un socket di systemd, per esempio —
+  # chiudere quella vuol dire chiudersi fuori.
+  if [[ -n "${SSH_CONNECTION:-}" ]]; then
+    trovate="$trovate $(awk '{ print $4 }' <<<"$SSH_CONNECTION")"
+  fi
+  trovate="$(tr ' ' '\n' <<<"$trovate" | grep -E '^[0-9]+$' | sort -u | tr '\n' ' ' || true)"
+  trovate="${trovate% }"
   printf '%s' "${trovate:-22}"
 }
 

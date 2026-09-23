@@ -19,7 +19,7 @@ import { Case } from "../src/case.js";
 import { ArchivioDellaChat, Chat } from "../src/chat.js";
 import { Centralino, MESSAGGIO_DEL_TELEFONO } from "../src/centralino.js";
 import { Freno } from "../src/freno.js";
-import { daChi, eDaDentro } from "../src/indirizzo.js";
+import { daChi, eDaDentro, reteDi } from "../src/indirizzo.js";
 import { alzaIlCentralino } from "../src/index.js";
 import { Contatti } from "../src/posta.js";
 import { costruisciIlServer } from "../src/server.js";
@@ -438,6 +438,20 @@ test("l'indirizzo passato si crede solo da questa macchina, per tutte le porte",
   assert.equal(eDaDentro(con("198.51.100.4")), false);
 });
 
+test("in IPv6 si conta la rete /64, e un IPv4 scritto alla IPv6 e' un IPv4", () => {
+  assert.equal(reteDi("203.0.113.7"), "203.0.113.7");
+  assert.equal(reteDi("::ffff:203.0.113.7"), "203.0.113.7");
+  assert.equal(reteDi("2001:db8:1:2:3:4:5:6"), "2001:db8:1:2::/64");
+  assert.equal(reteDi("2001:0db8:0001:0002::9"), "2001:db8:1:2::/64");
+  assert.equal(reteDi("2001:db8::1"), "2001:db8:0:0::/64");
+  assert.equal(reteDi(reteDi("2001:db8:1:2::9")), "2001:db8:1:2::/64");
+  const freno = new Freno({ perChi: 2 });
+  assert.equal(freno.concedi("2001:db8:1:2::1"), true);
+  assert.equal(freno.concedi("2001:db8:1:2::2"), true);
+  assert.equal(freno.concedi("2001:db8:1:2:ffff::3"), false, "stessa rete, stesso conto");
+  assert.equal(freno.concedi("2001:db8:1:3::1"), true);
+});
+
 test("il freno conta per indirizzo e in tutto, e chi e' fermato non allunga l'attesa", () => {
   let ora = 0;
   const freno = new Freno({ perChi: 2, inTutto: 3, adesso: () => ora });
@@ -476,8 +490,18 @@ test("i tentativi sbagliati hanno un tetto anche in tutto, non solo per indirizz
     for (const da of ["203.0.113.1", "203.0.113.2", "203.0.113.3"]) {
       assert.equal((await prova(da)).status, 403);
     }
-    /* Un indirizzo nuovo, e anche con la chiave giusta: la porta e' chiusa. */
-    assert.equal((await prova("203.0.113.4", "c".repeat(40))).status, 429);
+    /* Il tetto e' pieno: chi ha la chiave giusta entra lo stesso, se no
+     * chiunque provando a caso terrebbe fuori chi risponde. */
+    assert.equal((await prova("203.0.113.4", "c".repeat(40))).status, 200);
+    /* Ma da adesso un indirizzo nuovo ha un tentativo solo: al primo
+     * sbagliato resta fuori, anche con la chiave giusta. */
+    assert.equal((await prova("203.0.113.5")).status, 403);
+    assert.equal((await prova("203.0.113.5")).status, 429);
+    assert.equal((await prova("203.0.113.5", "c".repeat(40))).status, 429);
+    /* E in IPv6 si conta la rete: cambiare indirizzo dentro lo stesso /64
+     * non ricomincia il conto. */
+    assert.equal((await prova("2001:db8:1:2::1")).status, 403);
+    assert.equal((await prova("2001:db8:1:2::ffff")).status, 429);
   } finally {
     await b.spegni();
     archivio.chiudi();
@@ -674,6 +698,24 @@ test("un guasto dello sportello non racconta niente a chi bussa: il motivo va ne
     const detto = await risposta.json();
     assert.doesNotMatch(JSON.stringify(detto), /ECONNREFUSED|10\.1\.2\.3/);
     assert.match(s.errori.join("\n"), /ECONNREFUSED/);
+  } finally {
+    await s.via();
+  }
+});
+
+test("il tetto delle scritture in tutto non ferma una casa nata da settimane", async () => {
+  let numero = 1;
+  const prendi = async () =>
+    new Response(
+      JSON.stringify({ number: numero++, html_url: "https://github.esempio/1", created_at: "x" }),
+      { status: 201, headers: { "content-type": "application/json" } },
+    );
+  const tra = 8 * 24 * 60 * 60 * 1000;
+  const s = await unoSportello({ scrittureInTutto: 1, adesso: () => Date.now() + tra }, prendi);
+  try {
+    /* Il tetto in tutto e' uno, e la casa ne fa due: e' nata otto giorni fa. */
+    assert.equal((await s.apri("203.0.113.1")).status, 201);
+    assert.equal((await s.apri("203.0.113.2")).status, 201);
   } finally {
     await s.via();
   }

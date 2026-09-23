@@ -775,3 +775,37 @@ test("il gettone non si scrive dalla riga di comando, e lo dice", () => {
     banco.via();
   }
 });
+
+test("con un systemd troppo vecchio si ferma subito, prima di toccare niente", () => {
+  /* Il servizio che prepara riceve i segreti con `LoadCredential`, che c'e'
+   * dalla 247. Il controllo deve venire prima di installare e prima di
+   * riscrivere gli script di una macchina gia' accesa. */
+  const controllo = ACCENDI.indexOf('[[ "${SYSTEMD_VERSIONE:-0}" -ge 247 ]]');
+  assert.ok(controllo >= 0, "non guarda la versione di systemd");
+  for (const dopo of ["apt-get update", 'cat >"$DOVE/prepara.sh"', 'cat >"$DOVE/aggiorna.sh"']) {
+    const dove = ACCENDI.indexOf(dopo);
+    assert.ok(dove > controllo, `«${dopo}» viene prima del controllo di systemd`);
+  }
+});
+
+test("la porta SSH della sessione in corso resta aperta anche se sshd non la dice", () => {
+  const funzione = /^porte_ssh\(\) \{\n[\s\S]*?\n\}$/m.exec(ACCENDI);
+  assert.ok(funzione, "non trovo porte_ssh");
+  const cartella = mkdtempSync(join(tmpdir(), "porte-"));
+  try {
+    const script = join(cartella, "porte.sh");
+    writeFileSync(script, `${funzione[0]}\nporte_ssh\n`);
+    /* Senza sshd sulla macchina della prova: resta la sessione. */
+    const lancia = (ssh) =>
+      execFileSync("bash", [script], {
+        encoding: "utf8",
+        env: { PATH: "/usr/bin:/bin", ...(ssh ? { SSH_CONNECTION: ssh } : {}) },
+      });
+    const porte = lancia("198.51.100.1 50022 203.0.113.9 2222").split(/\s+/).filter(Boolean);
+    assert.ok(porte.includes("2222"), `la porta della sessione manca: ${porte}`);
+    /* E senza niente, la 22 di sempre. */
+    assert.equal(lancia("").trim(), "22");
+  } finally {
+    rmSync(cartella, { recursive: true, force: true });
+  }
+});

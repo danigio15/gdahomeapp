@@ -4,6 +4,9 @@
  * chat, il modulo dei contatti, i tentativi della chiave della console — e la
  * regola e' sempre la stessa, quindi sta qui una volta sola.
  *
+ * «Per indirizzo» vuol dire per rete in IPv6 — i primi 64 bit, vedi
+ * `reteDi` — se no chi ha un /64 cambierebbe indirizzo a ogni tentativo.
+ *
  * Due conti e non uno. Quello **per indirizzo** ferma chi insiste da solo
  * senza toccare gli altri; quello **in tutto** ferma chi arriva da mille
  * indirizzi diversi, che il primo conto non vede nemmeno. Il secondo e' piu'
@@ -14,6 +17,8 @@
  * che non si sono fatti vivi nell'ultima finestra se ne vanno alla prima
  * pulita.
  */
+
+import { reteDi } from "./indirizzo.js";
 
 export const UN_ORA = 60 * 60 * 1000;
 
@@ -33,7 +38,8 @@ export class Freno {
   }
 
   /* Se c'e' ancora posto, senza contarlo. */
-  cePosto(chi = "?") {
+  cePosto(indirizzo = "?") {
+    const chi = reteDi(indirizzo);
     const ora = this.adesso();
     this._pota(ora);
     if (this._tutti.length >= this.inTutto) return false;
@@ -52,7 +58,8 @@ export class Freno {
 
   /* Conta una volta, e basta: per chi decide dopo — i tentativi sbagliati
    * si contano solo quando si sa che erano sbagliati. */
-  conta(chi = "?") {
+  conta(indirizzo = "?") {
+    const chi = reteDi(indirizzo);
     const ora = this.adesso();
     this._tutti.push(ora);
     const suoi = (this._perChi.get(chi) || []).filter((una) => ora - una < this.finestra);
@@ -62,8 +69,8 @@ export class Freno {
 
   /* Dimentica uno solo: chi entra con la chiave giusta si porta via i suoi
    * sbagli. Il conto in tutto invece resta, perche' e' di tutti. */
-  dimentica(chi = "?") {
-    this._perChi.delete(chi);
+  dimentica(indirizzo = "?") {
+    this._perChi.delete(reteDi(indirizzo));
   }
 
   _pota(ora) {

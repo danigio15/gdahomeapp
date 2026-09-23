@@ -25,7 +25,7 @@ import { createServer } from "node:http";
 
 import { CASA_VALIDA } from "./case.js";
 import { MESSAGGIO_DEL_TELEFONO, MESSAGGIO_MASSIMO } from "./centralino.js";
-import { daChi, eDaDentro } from "./indirizzo.js";
+import { daChi, eDaDentro, reteDi } from "./indirizzo.js";
 import { accetta, eUnaSalita } from "./presa.js";
 import { laSoglia } from "./soglia.js";
 import { json } from "./sportello.js";
@@ -218,13 +218,16 @@ export function costruisciIlServer({
      * per indirizzo, ed e' quello che la casa si vede dire all'apertura di un
      * canale — lo stesso che le dice il centralino sulla nuvola. */
     const da = daChi(richiesta);
-    if (centralino.cePostoPer && !centralino.cePostoPer(da)) {
+    /* I fili si contano per rete (in IPv6 un /64 intero e' di una persona
+     * sola), ma alla casa si dice l'indirizzo com'e'. */
+    const rete = reteDi(da);
+    if (centralino.cePostoPer && !centralino.cePostoPer(rete)) {
       socket.end("HTTP/1.1 503 Service Unavailable\r\nretry-after: 30\r\n\r\n");
       return;
     }
     const contaLaPresa = (presa) => {
       if (!presa || !centralino.unaPresaIn) return presa;
-      const andata = centralino.unaPresaIn(da);
+      const andata = centralino.unaPresaIn(rete);
       socket.once("close", andata);
       return presa;
     };

@@ -12,7 +12,16 @@
  * minuti non sarebbe un limite.
  */
 
+import { reteDi } from "./rete.js";
+
 const UN_ORA = 60 * 60 * 1000;
+
+/* Un tetto che non c'e' — `null`, perche' in JSON l'infinito non si scrive —
+ * vuol dire nessun tetto. */
+const tetto = (valore) =>
+  valore === null || valore === undefined || !Number.isFinite(Number(valore))
+    ? Infinity
+    : Number(valore);
 
 /* Oltre questi, un conto non si allunga: serve a dire «pieno», non a tenere
  * la storia. */
@@ -51,7 +60,8 @@ export class Freno {
       String(cosa)
         .replace(/[^a-z-]/g, "")
         .slice(0, 20) || "altro";
-    const suo = `${tipo}|${String(chi).slice(0, 64)}`;
+    /* In IPv6 si conta la rete /64, non l'indirizzo: vedi `rete.js`. */
+    const suo = `${tipo}|${reteDi(chi).slice(0, 64)}`;
     const tutti = `${tipo}|*`;
     const recenti = (valore) =>
       (Array.isArray(valore) ? valore : []).filter((quando) => adesso - quando < UN_ORA);
@@ -59,7 +69,7 @@ export class Freno {
     const scritto = await this.state.storage.get([suo, tutti]);
     const suoi = recenti(scritto.get(suo));
     const diTutti = recenti(scritto.get(tutti));
-    if (diTutti.length >= Number(inTutto) || suoi.length >= Number(perChi)) return false;
+    if (diTutti.length >= tetto(inTutto) || suoi.length >= tetto(perChi)) return false;
 
     suoi.push(adesso);
     diTutti.push(adesso);

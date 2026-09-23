@@ -38,7 +38,7 @@ import { hostname } from "node:os";
 import { connect as apriCifrato } from "node:tls";
 
 import { Freno } from "./freno.js";
-import { daChi } from "./indirizzo.js";
+import { daChi, reteDi } from "./indirizzo.js";
 import { RichiestaSbagliata } from "./segnalazioni.js";
 import { byteDi } from "./sportello.js";
 
@@ -661,7 +661,7 @@ export class Contatti {
       });
       return;
     }
-    if (!this.inTutto.cePosto() || !this._concedi(daChi(richiesta))) {
+    if (!this.inTutto.cePosto() || !this._concedi(reteDi(daChi(richiesta)))) {
       rispondi(429, { errore: "troppo_spesso", spiegazione: "Troppe lettere in un'ora." });
       return;
     }

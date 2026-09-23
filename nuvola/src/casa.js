@@ -95,8 +95,15 @@ const VISITA_SUL_DISCO = 24 * 60 * 60 * 1000;
  * vedono. Si cambiano dalle variabili del Worker. */
 const CASE_NUOVE_PER_INDIRIZZO = 20;
 const CASE_NUOVE_IN_TUTTO = 500;
-const SCRITTURE_PER_INDIRIZZO = 120;
-const SCRITTURE_IN_TUTTO = 300;
+const SCRITTURE_PER_INDIRIZZO = 90;
+const SCRITTURE_IN_TUTTO = 600;
+
+/* Il tetto delle scritture in tutto vale solo per le case giovani: chi
+ * volesse riempirlo lo farebbe con case nuove, che costano poco, e non deve
+ * poter fermare quelle che scrivono da mesi. Una casa nata da piu' di una
+ * settimana — o da prima che si tenesse la data — ha solo il suo limite e
+ * quello della sua rete. */
+const CASA_ANZIANA = 7 * 24 * 60 * 60 * 1000;
 
 /* «Non per la rete, per la politica»: chi lo riceve lo legge come definitivo e
  * smette di riprovare, invece di girare a vuoto per sempre. */
@@ -403,7 +410,7 @@ export class Casa {
         chiudi(presa, RIPROVA_PIU_TARDI, "troppe case nuove: riprova piu' tardi");
         return;
       }
-      await this.state.storage.put("impronta", sua);
+      await this.state.storage.put({ impronta: sua, natoIl: Date.now() });
     } else if (!stessaImpronta(conosciuta, sua)) {
       this._rifiuta(presa, "non ti riconosco");
       return;
@@ -566,6 +573,8 @@ export class Casa {
       repoAllegati: this.env.GITHUB_REPO_ALLEGATI,
       ramoAllegati: this.env.GITHUB_RAMO_ALLEGATI,
     });
+    const nata = await this.state.storage.get("natoIl");
+    const anziana = typeof nata !== "number" || Date.now() - nata >= CASA_ANZIANA;
     const segnalazioni = new Segnalazioni({
       storage: this.state.storage,
       github,
@@ -574,7 +583,7 @@ export class Casa {
       freno: (chi) =>
         this._frenoConcede("scrittura", chi, {
           perChi: numeroDa(this.env?.SCRITTURE_PER_INDIRIZZO, SCRITTURE_PER_INDIRIZZO),
-          inTutto: numeroDa(this.env?.SCRITTURE_IN_TUTTO, SCRITTURE_IN_TUTTO),
+          inTutto: anziana ? null : numeroDa(this.env?.SCRITTURE_IN_TUTTO, SCRITTURE_IN_TUTTO),
         }),
     });
     const metodo = richiesta.method;

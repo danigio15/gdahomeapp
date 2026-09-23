@@ -109,7 +109,7 @@ da Node. Le variabili che legge:
 | `CENTRALINO_SILENZIO` | dopo quanti giorni si dimentica una casa sparita (difetto: 180) |
 | `CENTRALINO_REGISTRO` | `debug`, `info`, `attenzione`, `errore` |
 | `CENTRALINO_CASE_NUOVE_PER_INDIRIZZO`, `…_IN_TUTTO` | quante case possono nascere in un'ora (difetto: 20 e 500) |
-| `CENTRALINO_SCRITTURE_PER_INDIRIZZO`, `…_IN_TUTTO` | quante scritture verso GitHub in un'ora (difetto: 120 e 300) |
+| `CENTRALINO_SCRITTURE_PER_INDIRIZZO`, `…_IN_TUTTO` | quante scritture verso GitHub in un'ora (difetto: 90 e 600; il tetto in tutto non vale per le case nate da piu' di una settimana) |
 | `GITHUB_RAMO_ALLEGATI` | il ramo dove si committano foto e video (`accendi.sh` scrive `allegati`) |
 | `CHIAVE_CONSOLE` | la chiave della console: almeno 32 caratteri, se no la console resta chiusa |
 | `CHAT_SOLO_CASE_CONOSCIUTE` | `1`: una linea della chat nasce solo con nome e segreto di una casa del filo |

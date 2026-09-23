@@ -35,13 +35,19 @@ import {
   Segnalazioni,
 } from "./segnalazioni.js";
 
-/* Quante scritture verso GitHub in un'ora, da uno stesso indirizzo e in
- * tutto. Il limite di ogni casa sta nelle segnalazioni; questi due stanno
- * sopra, per chi di case ne ha tante — o se le fabbrica. Il tetto in tutto e'
- * anche quello che tiene il gettone lontano dai limiti di GitHub: se lo
- * finisse una casa sola, le altre resterebbero senza. */
-export const SCRITTURE_PER_INDIRIZZO = SCRITTURE_ALLORA * 2;
-export const SCRITTURE_IN_TUTTO = 300;
+/* Quante scritture verso GitHub in un'ora, da uno stesso indirizzo (in
+ * IPv6: da una stessa rete /64) e in tutto. Il limite di ogni casa sta nelle
+ * segnalazioni; questi due stanno sopra, per chi di case ne ha tante — o se
+ * le fabbrica. Il tetto in tutto e' anche quello che tiene il gettone lontano
+ * dai limiti di GitHub.
+ *
+ * Il tetto in tutto vale solo per le case **giovani**. Chi volesse riempirlo
+ * dovrebbe farlo con case nuove — fabbricarle costa poco — e se valesse per
+ * tutte, fermerebbe anche quelle che scrivono da mesi. Una casa nata da piu'
+ * di una settimana ha solo il suo limite e quello del suo indirizzo. */
+export const SCRITTURE_PER_INDIRIZZO = Math.round(SCRITTURE_ALLORA * 1.5);
+export const SCRITTURE_IN_TUTTO = 600;
+export const CASA_ANZIANA = 7 * 24 * 60 * 60 * 1000;
 
 /* `/casa/<casa_…>/segnalazioni`, piu' il numero e la coda quando ci sono. */
 export const VIA_DELLE_SEGNALAZIONI =
@@ -111,11 +117,18 @@ export class Sportello {
     this.prendi = prendi;
     this.adesso = adesso;
     this.registro = registro;
-    this.freno = new Freno({
-      perChi: scritturePerIndirizzo,
-      inTutto: scrittureInTutto,
-      adesso,
-    });
+    this.perIndirizzo = new Freno({ perChi: scritturePerIndirizzo, adesso });
+    this.inTutto = new Freno({ inTutto: scrittureInTutto, adesso });
+  }
+
+  /* Una scrittura in piu', se c'e' posto. Il tetto in tutto non ferma le
+   * case anziane (vedi sopra), ma le conta lo stesso. */
+  _concedi(chi, anziana) {
+    if (!this.perIndirizzo.cePosto(chi)) return false;
+    if (!anziana && !this.inTutto.cePosto()) return false;
+    this.perIndirizzo.conta(chi);
+    this.inTutto.conta();
+    return true;
   }
 
   _github() {
@@ -155,12 +168,14 @@ export class Sportello {
       return;
     }
 
+    const nata = Number(this.case.quella?.(casa)?.natoIl || 0);
+    const anziana = nata > 0 && this.adesso() - nata >= CASA_ANZIANA;
     const segnalazioni = new Segnalazioni({
       storage: new MagazzinoDellaCasa(this.cartella, casa),
       github: this._github(),
       casa,
       adesso: this.adesso,
-      freno: async (chi) => this.freno.concedi(chi),
+      freno: async (chi) => this._concedi(chi, anziana),
       chi: daChi(richiesta),
     });
     const metodo = richiesta.method;

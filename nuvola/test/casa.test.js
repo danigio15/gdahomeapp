@@ -370,3 +370,83 @@ test("la casa sa da quale porta e' entrato il telefono", async () => {
   await c.telefono("203.0.113.2", "abbinamento");
   assert.equal(vera.detti().at(-1).via, "abbinamento");
 });
+
+test("il freno conta le reti IPv6 intere, e un tetto che non c'e' non ferma", async () => {
+  const freno = new Freno({ storage: archivioFinto() });
+  const chiedi = (chi, inTutto = 100) =>
+    freno.concedi({ cosa: "casa", chi, perChi: 1, inTutto, adesso: 1_000_000 });
+  assert.equal(await chiedi("2001:db8:1:2::1"), true);
+  assert.equal(await chiedi("2001:db8:1:2::abcd"), false, "stesso /64");
+  assert.equal(await chiedi("::ffff:198.51.100.3"), true);
+  assert.equal(await chiedi("198.51.100.3"), false, "e' lo stesso IPv4");
+  /* `null` e' come arriva l'infinito in JSON: nessun tetto in tutto. */
+  const largo = new Freno({ storage: archivioFinto() });
+  for (let i = 0; i < 5; i += 1) {
+    assert.equal(
+      await largo.concedi({ cosa: "x", chi: `10.0.0.${i}`, perChi: 1, inTutto: null }),
+      true,
+    );
+  }
+});
+
+function frenoCheDiceNo(chieste) {
+  return {
+    idFromName: (nome) => nome,
+    get: () => ({
+      fetch: async (_via, { body }) => {
+        chieste.push(JSON.parse(body));
+        return Response.json({ si: false });
+      },
+    }),
+  };
+}
+
+test("una casa gia' conosciuta rientra sempre, anche col tetto delle case nuove pieno", async () => {
+  const chieste = [];
+  const c = unaCasa();
+  const prima = await c.entra(await c.bussa());
+  assert.equal(prima.detti().at(-1).t, "bene");
+  c.casa.env = { FRENO: frenoCheDiceNo(chieste) };
+  const dopo = await c.entra(await c.bussa());
+  assert.equal(dopo.detti().at(-1).t, "bene");
+  assert.equal(chieste.length, 0, "non ha nemmeno chiesto al freno");
+});
+
+test("il tetto delle scritture in tutto non vale per le case nate da piu' di una settimana", async () => {
+  const chieste = [];
+  const c = unaCasa({
+    GITHUB_SEGNALAZIONI: "g",
+    GITHUB_REPO: "x/y",
+    FRENO: {
+      idFromName: (nome) => nome,
+      get: () => ({
+        fetch: async (_via, { body }) => {
+          chieste.push(JSON.parse(body));
+          return Response.json({ si: false });
+        },
+      }),
+    },
+  });
+  /* Entra senza freno, poi il freno arriva: la casa c'era gia'. */
+  const env = c.casa.env;
+  c.casa.env = {};
+  await c.entra(await c.bussa());
+  c.casa.env = env;
+  const apri = () =>
+    c.casa.fetch(
+      new Request(`https://centralino/casa/${c.id}/segnalazioni`, {
+        method: "POST",
+        headers: { authorization: `Casa ${c.segreto}`, "cf-connecting-ip": "2001:db8::5" },
+        body: JSON.stringify({ titolo: "t", corpo: "c" }),
+      }),
+    );
+
+  /* Appena nata: il tetto in tutto vale. */
+  await apri();
+  assert.equal(typeof chieste.at(-1).inTutto, "number");
+  /* Nata otto giorni fa: solo quello della sua rete. */
+  await c.state.storage.put("natoIl", Date.now() - 8 * 24 * 60 * 60 * 1000);
+  await apri();
+  assert.equal(chieste.at(-1).inTutto, null);
+  assert.equal(chieste.at(-1).cosa, "scrittura");
+});

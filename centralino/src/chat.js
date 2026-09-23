@@ -33,7 +33,7 @@ import { dirname } from "node:path";
 import { DatabaseSync } from "node:sqlite";
 
 import { Freno } from "./freno.js";
-import { daChi } from "./indirizzo.js";
+import { daChi, reteDi } from "./indirizzo.js";
 import { impronta, stessoSegreto } from "./segreti.js";
 import { tagliaBene } from "./testo.js";
 import { corpoDi } from "./sportello.js";
@@ -73,11 +73,16 @@ const ORA = 60 * 60 * 1000;
  * al minuto, e una parola che uno si ricorda cade in mezz'ora. Con il freno ne
  * passano dieci ogni quarto d'ora, e non cade piu' niente.
  *
- * Si conta per indirizzo, e in piu' c'e' un tetto in tutto. Il conto per
- * indirizzo da solo non ferma chi prova da mille indirizzi — dieci a testa
- * sono diecimila all'ora. Il tetto in tutto e' largo apposta: chi lo riempie
- * chiude fuori per un po' anche chi risponde, ed e' il prezzo di non lasciar
- * provare all'infinito. Chi ha la macchina in mano la riapre riavviando. */
+ * Si conta per indirizzo (per rete, in IPv6: vedi `indirizzo.js`), e in
+ * piu' c'e' un tetto in tutto. Il conto per indirizzo da solo non ferma chi
+ * prova da mille indirizzi — dieci a testa sono diecimila all'ora.
+ *
+ * Il tetto in tutto pero' **non chiude fuori chi ha la chiave**: se lo
+ * facesse, chiunque provando a caso da tanti indirizzi terrebbe la console
+ * chiusa a chi risponde. Quando e' pieno cambia la regola per gli sbagli:
+ * invece di dieci tentativi per indirizzo se ne concede uno, e al primo
+ * sbagliato quell'indirizzo resta fuori un quarto d'ora. Chi ha la chiave
+ * giusta, da un indirizzo che non ha sbagliato, entra come sempre. */
 const SBAGLI_PRIMA_DI_CHIUDERE = 10;
 const QUANTO_RESTA_CHIUSA = 15 * 60 * 1000;
 export const SBAGLI_IN_TUTTO_ALL_ORA = 200;
@@ -388,11 +393,10 @@ export class Chat {
    * portasse, e bastava scriverci un indirizzo nuovo a ogni tentativo per
    * non essere mai contati. */
   _daDove(richiesta) {
-    return daChi(richiesta);
+    return reteDi(daChi(richiesta));
   }
 
   _chiusaPer(da) {
-    if (!this._sbagliInTutto.cePosto()) return QUANTO_RESTA_CHIUSA;
     const segnato = this._sbagli.get(da);
     if (!segnato) return 0;
     const quanto = segnato.chiusaFino - this.adesso();
@@ -423,7 +427,8 @@ export class Chat {
     }
     const segnato = this._sbagli.get(da) ?? { quanti: 0, chiusaFino: 0 };
     segnato.quanti += 1;
-    if (segnato.quanti >= SBAGLI_PRIMA_DI_CHIUDERE) {
+    const inAllarme = !this._sbagliInTutto.cePosto();
+    if (inAllarme || segnato.quanti >= SBAGLI_PRIMA_DI_CHIUDERE) {
       segnato.quanti = 0;
       segnato.chiusaFino = ora + QUANTO_RESTA_CHIUSA;
     }
@@ -501,7 +506,7 @@ export class Chat {
         if (!this._puoNascere(id, segreto)) return male(risposta, 403, "segreto sbagliato");
         if (this.archivio.troppeLineeNuove())
           return male(risposta, 429, "troppe conversazioni nuove");
-        if (!this._lineeNuove.concedi(daChi(richiesta)))
+        if (!this._lineeNuove.concedi(reteDi(daChi(richiesta))))
           return male(risposta, 429, "troppe conversazioni nuove");
         this.archivio.apriLaLinea(id, segreto, note);
       } else {
