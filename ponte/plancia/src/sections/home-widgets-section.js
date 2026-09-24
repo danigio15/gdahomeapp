@@ -1478,7 +1478,12 @@ function aggiornamentiModel(states) {
      * senza niente sotto: «ci sono aggiornamenti ma la card resta spenta»
      * (#540). Il colore ambra ce l'aveva gia', non lo accendeva nessuno. */
     attiva: true,
-    label: t("Aggiornamenti", "Updates"),
+    /* «Con aggiornamenti da eseguire il testo dovrebbe essere Aggiornamenti
+     * pendenti» (#108). Questa tessera esiste solo quando c'e' qualcosa da
+     * fare, quindi «Aggiornamenti» da solo era il nome di una sezione dove
+     * serviva una notizia: il numero accanto dice quanti, la parola adesso
+     * dice che aspettano. */
+    label: t("Aggiornamenti pendenti", "Pending updates"),
     value: String(fila.length),
     /* Si nomina il primo — la plancia quando c'e', che e' quella per cui
      * questa tessera e' stata chiesta — e si dice a che versione va. Gli altri

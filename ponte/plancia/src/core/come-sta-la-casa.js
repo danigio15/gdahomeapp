@@ -62,6 +62,22 @@ export const VOCI_DELLA_BARRA = Object.freeze([
    * a sapere prima di mandare in stampa — e sta qui, fra le notizie, non fra
    * le cose rimaste accese. */
   Object.freeze({ chiave: "stampanti", tessera: "stampanti" }),
+  /* Gli aggiornamenti che aspettano (#108).
+   *
+   * «Magari potrebbe accendere in home in alto direttamente, magari nella
+   * barra sotto il meteo?» La tessera c'era gia' e compare solo quando c'e'
+   * qualcosa da fare; quello che mancava e' che la stessa notizia si vedesse
+   * senza scorrere.
+   *
+   * Sta qui, in fondo alle notizie e prima delle cose rimaste accese, perche'
+   * un aggiornamento in attesa e' qualcosa che e' successo — come una cartuccia
+   * agli sgoccioli — e non uno stato della casa come le luci. Ma e' l'ultima
+   * delle notizie, e non e' un dettaglio: l'antifurto, una finestra aperta e
+   * una stampante ferma si guardano adesso, un aggiornamento si fa con calma.
+   *
+   * Rossa non diventa mai: nella tessera e' ambra apposta, e due colori diversi
+   * per lo stesso fatto sarebbero due fatti. */
+  Object.freeze({ chiave: "aggiornamenti", tessera: "aggiornamenti" }),
   Object.freeze({ chiave: "luci", tessera: "luci" }),
   Object.freeze({ chiave: "tapparelle", tessera: "tapparelle" }),
   Object.freeze({ chiave: "clima", tessera: "clima" }),
@@ -534,6 +550,32 @@ export function pastiglieDellaCasa(modelli, { barra, posta, misure, mie, adesso 
         /* Ferma e' rosso, come l'antifurto che suona: e' la stampante che non
          * stampa. L'inchiostro che finisce si dice col colore della tessera. */
         avviso: (Number(modello.ferme) || 0) > 0,
+      });
+      continue;
+    }
+    if (voce.chiave === "aggiornamenti") {
+      /* Il conto e' quello che la tessera ha gia' fatto. Non si rifiltra qui:
+       * chi ha messo un aggiornamento fuori dalla tessera lo ha messo fuori da
+       * quella notizia, e la pastiglia e' la stessa notizia detta in breve.
+       *
+       * La tessera nasce solo quando c'e' qualcosa da fare, quindi arrivare
+       * qui vuol dire gia' «almeno uno» — ma il conto si guarda lo stesso:
+       * una pastiglia che dicesse zero sarebbe un posto occupato per dire che
+       * non e' successo niente. */
+      const righe = Array.isArray(modello.aggiornamenti) ? modello.aggiornamenti : [];
+      const conto = righe.length || Number(modello.value) || 0;
+      if (conto < 1) continue;
+      fuori.push({
+        chiave: "aggiornamenti",
+        tessera: voce.tessera,
+        icona: pulito(modello.icon),
+        tinta: pulito(modello.accent),
+        conto,
+        /* I nomi di cosa aspetta: finiscono nel titolo e nell'elenco che si
+         * apre toccandola, come per le luci accese. */
+        voci: righe
+          .map((riga) => ({ entity: pulito(riga?.entity), name: pulito(riga?.nome) }))
+          .filter((una) => una.name || una.entity),
       });
       continue;
     }
