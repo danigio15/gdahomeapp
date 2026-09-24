@@ -115719,9 +115719,9 @@ else{k=a6.rx
 k=m.aT(k==null?a6.k3:k)}k=A.V(q,a5,a5,a5,a5,k,a5,a5)
 q=a7.w
 j=A.V(A.k("This app","Questa app"),a5,a5,a5,a5,q,a5,a5)
-i=n.$2(A.k("Version","Versione"),"1.6.4 (1060403)")
+i=n.$2(A.k("Version","Versione"),"1.6.4 (1060404)")
 h=A.k("Package","Pacchetto")
-h=n.$2(h,"68-fbb0690")
+h=n.$2(h,"69-259ab40")
 g=A.k("Relay","Centralino")
 f=$.ajT()
 f=f==null?a5:f.a
@@ -116054,7 +116054,7 @@ $S:11}
 A.Gg.prototype={
 G(a){var s,r,q=null,p=A.z(a).ax,o=$.ajT(),n=o==null?q:o.a
 if(n==null)n=A.k("no relay","nessun centralino")
-o=this.d?"gdahome 1.6.4 (1060403) \xb7 "+n:"gdahome 1.6.4 (1060403)"
+o=this.d?"gdahome 1.6.4 (1060404) \xb7 "+n:"gdahome 1.6.4 (1060404)"
 s=A.z(a).ok.Q
 if(s==null)s=q
 else{r=p.rx
@@ -116130,7 +116130,7 @@ case 1:return A.o(q,r)}})
 return A.p($async$v4,r)},
 alE(){var s,r,q=null,p=this.a.c,o=t.N
 o=A.x(o,o)
-o.m(0,"app","68-fbb0690")
+o.m(0,"app","69-259ab40")
 o.m(0,"sistema","web")
 s=p.Q
 s=s==null?q:s.b
