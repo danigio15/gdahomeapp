@@ -26,6 +26,17 @@
 # «la produzione sta qui adesso» — ma `v1.5.9.1` dice «la 1.5.9.1 e' questa»,
 # e spostarlo vorrebbe dire che chi ha scaricato ieri e chi scarica oggi hanno
 # in mano due cose diverse con lo stesso nome.
+#
+# ─── Quindi prima si prova il negozio ────────────────────────────────────
+#
+# Proprio perche' non si sposta: se il Play Console rifiuta il pacchetto —
+# succede, e non per come e' costruito ma per cosa c'e' scritto nel manifesto
+# — l'etichetta e' gia' spesa, e correggere vuol dire una versione nuova e
+# tutto il giro da rifare. Dieci minuti prima costano molto meno: «L'app da
+# provare» su `main`, con la pista nella casella `negozio` e
+# `prova_del_negozio` spuntato, fa tutto il viaggio e poi butta la modifica.
+# Quando quello e' verde, si viene qui. `app/negozio/LEGGIMI.md` lo racconta
+# per intero, con la frase con cui Google ha rimandato indietro la 1.6.4.1.
 name: L'etichetta
 
 on:

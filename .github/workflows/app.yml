@@ -27,8 +27,9 @@ on:
       prova_del_negozio:
         description: >-
           Fa tutto il giro del negozio e poi butta la modifica, senza
-          pubblicare niente. Serve la prima volta, per vedere che il
-          credenziale funzioni.
+          pubblicare niente. Si spunta prima di ogni rilascio, lanciando su
+          main: e' l'unico modo di sapere che Google prende il pacchetto
+          senza averci gia' speso un'etichetta.
         type: boolean
         required: false
         default: false
