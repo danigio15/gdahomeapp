@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Le parole di gdahome in auto.
+     Stanno qui e non nel codice perche' in macchina le legge chi guida, e un
+     giorno andranno tradotte come tutto il resto: un file suo si traduce, una
+     stringa dentro una schermata no. -->
+<resources>
+    <string name="auto_titolo">gdahome</string>
+    <string name="auto_persone">Chi c\'è in casa</string>
+    <string name="auto_azioni">Azioni rapide</string>
+    <string name="auto_in_casa">In casa</string>
+    <string name="auto_fuori">Fuori</string>
+    <string name="auto_adesso">Aggiornato adesso</string>
+    <string name="auto_non_si_sa_quando">Non si sa di quando è</string>
+    <string name="auto_da_minuti">Di %1$d minuti fa</string>
+    <string name="auto_da_ore">Di %1$d ore fa</string>
+    <string name="auto_senza_foto">gdahome non ha ancora mandato niente all\'auto. Apri l\'app sul telefono una volta: da lì in poi la trovi qui.</string>
+    <string name="auto_senza_fotovoltaico">Nessun impianto</string>
+    <string name="auto_senza_fotovoltaico_sotto">In questa casa il fotovoltaico non è configurato</string>
+    <string name="auto_senza_persone">Nessuna persona configurata nella plancia</string>
+    <string name="auto_senza_azioni">Nessuna azione rapida configurata nella plancia</string>
+    <string name="auto_comando_partito">%1$s: parte appena l\'app è in linea</string>
+    <string name="auto_comando_non_parte">%1$s: non sono riuscito a scriverlo</string>
+</resources>

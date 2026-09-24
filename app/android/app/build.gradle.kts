@@ -137,3 +137,14 @@ kotlin {
 flutter {
     source = "../.."
 }
+
+/* gdahome in auto (prova).
+ *
+ * `app` e' la libreria dei modelli — liste, pannelli, griglie — e
+ * `app-projected` e' quella che li fa arrivare ad Android Auto, cioe' allo
+ * schermo della macchina comandato dal telefono. Senza la seconda il servizio
+ * si compila e in auto non compare. */
+dependencies {
+    implementation("androidx.car.app:app:1.4.0")
+    implementation("androidx.car.app:app-projected:1.4.0")
+}
