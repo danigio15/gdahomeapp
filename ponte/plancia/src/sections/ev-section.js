@@ -5,6 +5,8 @@ import {
   MEZZO_FIELD,
   VEHICLE_KEY_FIELD,
   VEHICLE_OVERRIDES_FIELD,
+  laMappaViva,
+  leCaselleDaAdottare,
   VEHICLE_PHOTO_FIELDS,
   conLeCaselleScritte,
   laVetturaDelleCaselle,
@@ -317,37 +319,77 @@ export function applyVehicleAsset() {
  * vettura appena salvata. */
 function rimettiInUso(auto, indice) {
   if (!auto || !Number.isInteger(indice) || indice < 0) return false;
-  const mappa = (auto.ov || auto.overrides || {});
+  applicaLaMappaDellAuto(auto);
+  root.localStorage?.setItem("cd_ev_car_active", String(indice));
+  return true;
+}
+
+/* La mappa viva dice quello che dice l'auto in uso.
+ *
+ * Questa parte stava dentro `rimettiInUso`, che fa due cose: applicare la
+ * mappa e segnare quale auto e' in uso. All'avvio serve solo la prima — chi e'
+ * in uso lo dice gia' la casella, e riscriverla la riporterebbe al formato
+ * vecchio (un numero invece di una chiave). Separarle e' quello che permette
+ * di riapplicare senza scegliere niente. */
+function applicaLaMappaDellAuto(auto) {
+  if (!auto) return false;
   try {
-    const salvate = readJson("cd_entity_overrides", {}) || {};
-    const prossime = {};
-    for (const [chiave, valore] of Object.entries(salvate))
-      /* La colonnina non e' una delle auto.
-       *
-       * Qui si buttava ogni `dm.ev_*` e si riscriveva con quelle del profilo:
-       * giusto per la vettura — le sue caselle sono sue — e sbagliato per la
-       * wallbox, che e' della casa. Chi la mappava nella scheda Entita' se la
-       * vedeva sparire al primo cambio d'auto, e chi ha due macchine doveva
-       * riscriverla su tutte e due. La potenza che la colonnina sta erogando
-       * e' la stessa qualunque macchina sia attaccata.
-       *
-       * Se pero' il profilo ne porta una — perche' l'ha catturata un
-       * salvataggio di prima — quella vince: e' la riga qui sotto, e vuol dire
-       * che nessuno perde quello che aveva. */
-      if (!String(chiave).startsWith("dm.ev_") || eDellaWallbox(chiave))
-        prossime[chiave] = valore;
-    /* La mappa del profilo non tocca la colonnina: e' di casa, e quello che il
-     * profilo ne porta e' una copia vecchia raccolta prima di questa regola.
-     * Una casella di casa VUOTA pero' si lascia riempire dal profilo: chi ha
-     * il target di carica solo dall'auto — una Tesla senza evcc — lo mette in
-     * uso cosi', e non toglie niente a nessuno. */
-    for (const [chiave, valore] of Object.entries(mappa))
-      if (!eDellaWallbox(chiave) || !clean(prossime[chiave])) prossime[chiave] = valore;
+    const prossime = laMappaViva(readJson("cd_entity_overrides", {}) || {}, auto.ov || auto.overrides || {});
     writeJsonIfChanged("cd_entity_overrides", prossime);
     root.cdApplyCanonicalOverrides?.(prossime);
   } catch (_error) {}
-  root.localStorage?.setItem("cd_ev_car_active", String(indice));
   return true;
+}
+
+/* All'avvio l'auto in uso torna dentro la mappa viva.
+ *
+ * La pagina dell'auto disegna da UNA mappa — `cd_entity_overrides` — e ogni
+ * vettura tiene la sua copia nel profilo. Le due si allineavano in un momento
+ * solo: quando si salva un veicolo o si preme «Usa». A un ricaricamento della
+ * pagina nessuno riapplicava niente, e nella mappa viva restava quello che
+ * c'era: le caselle della colonnina, che sono di casa e nessuno le cancella, e
+ * delle entita' della vettura nemmeno una.
+ *
+ * Il risultato, dal campo, era una configurazione che si legge piena — «B10
+ * attiva, 13 entita' mappate» — e una pagina vuota: batteria a zero, autonomia
+ * e odometro a «—», mentre tensione e temperatura della colonnina si vedevano
+ * benissimo. Sono esattamente le due meta' di questa storia.
+ *
+ * Lo stesso buco era gia' stato tappato per le FOTO — `seedActiveProfilePhotos`,
+ * e il suo commento dice la stessa frase: «a un ricaricamento della pagina
+ * pero' nessuno la tocca». Alle entita' quella pezza non e' mai arrivata.
+ *
+ * ── Con una vettura sola, prima si adotta ─────────────────────────────────
+ *
+ * Chi ha una macchina sola ha sempre mappato le sue entita' dove capitava:
+ * nella scheda Entita' (che scrive nella mappa viva) o nel pannello del
+ * veicolo (che scrive nel profilo). Con una vettura sola le due cose sono la
+ * stessa cosa, e quello che sta solo di qua o solo di la' e' suo comunque:
+ * prima si travasa nel profilo cio' che il profilo non ha, poi si applica. Se
+ * no riapplicare un profilo a meta' cancellerebbe quello che c'era.
+ *
+ * Da due vetture in su NON si adotta niente: nella mappa viva potrebbero
+ * esserci le entita' dell'ALTRA auto — e' proprio quello che ci mette il
+ * cambio d'auto — e adottarle vorrebbe dire dare a questa vettura i sensori di
+ * quella. Li' comanda il profilo, che e' il contratto di sempre. */
+export function seedActiveProfileOverrides() {
+  const elenco = profiles();
+  if (!elenco.length) return false;
+  const attiva = activeVehicle(elenco);
+  if (!attiva) return false;
+  if (elenco.length === 1) {
+    const ov = attiva.ov || attiva.overrides || {};
+    const adottate = leCaselleDaAdottare(caselleDiCasa(), ov);
+    if (Object.keys(adottate).length) {
+      const sua = { ...ov, ...adottate };
+      const rimesse = updateVehicle(elenco, uidDi(attiva), { [VEHICLE_OVERRIDES_FIELD]: sua });
+      if (rimesse !== elenco) {
+        salvaAuto(rimesse);
+        return applicaLaMappaDellAuto(activeVehicle(rimesse) || { ...attiva, ov: sua });
+      }
+    }
+  }
+  return applicaLaMappaDellAuto(attiva);
 }
 
 /* Scrive nei campi `dm.ev_*` del modulo quello che dice `quale`.
@@ -2105,14 +2147,15 @@ export function installEvSection() {
   root.queueMicrotask?.(installLegacyWrappers);
   root.setTimeout?.(installLegacyWrappers, 0);
   seedActiveProfilePhotos();
+  seedActiveProfileOverrides();
   scheduleEvSync();
   if (!state.installed) {
     state.installed=true;
     doc.addEventListener("click",(event)=>{if(event.target?.closest?.('[data-tab="ev"],[data-page="ev"],.ed-tab[data-tab="sez2"],.ed-acc-head'))root.setTimeout?.(scheduleEvSync,0);},true);
-    for (const eventName of ["dashboardmodern:legacy-ready","dashboardmodern:runtime-ready","pageshow"]) root.addEventListener?.(eventName,()=>{installLegacyWrappers();seedActiveProfilePhotos();scheduleEvSyncSettled();bindEditorEntryPoints();});
+    for (const eventName of ["dashboardmodern:legacy-ready","dashboardmodern:runtime-ready","pageshow"]) root.addEventListener?.(eventName,()=>{installLegacyWrappers();seedActiveProfilePhotos();seedActiveProfileOverrides();scheduleEvSyncSettled();bindEditorEntryPoints();});
     /* La configurazione condivisa arriva dopo l'avvio e riscrive le caselle
      * con quello che aveva l'altro dispositivo: anche li' vale il profilo. */
-    root.addEventListener?.("dashboardmodern:persistence-restored",()=>{seedActiveProfilePhotos();scheduleEvSync();});
+    root.addEventListener?.("dashboardmodern:persistence-restored",()=>{seedActiveProfilePhotos();seedActiveProfileOverrides();scheduleEvSync();});
     root.addEventListener?.("dashboardmodern:state-changed",(event)=>{ if (stateChangeAffectsEv(event)) scheduleEvSync(); });
   }
 }
