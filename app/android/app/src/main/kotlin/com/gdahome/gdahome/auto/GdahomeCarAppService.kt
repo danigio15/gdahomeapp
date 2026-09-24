@@ -25,6 +25,9 @@ import androidx.car.app.CarAppService
 import androidx.car.app.Session
 import androidx.car.app.SessionInfo
 import androidx.car.app.validation.HostValidator
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.LifecycleOwner
 
 class GdahomeCarAppService : CarAppService() {
     /* Chi puo' collegarsi: in sviluppo tutti, in produzione solo gli ospiti
@@ -44,13 +47,33 @@ class GdahomeCarAppService : CarAppService() {
 }
 
 class SessioneInAuto : Session() {
-    override fun onCreateScreen(intent: android.content.Intent) = LaCasaInAuto(carContext)
-
     /* Finita la sessione — si spegne la macchina, si stacca il cavo — il
      * motore Dart non serve piu'. Lasciarlo acceso vorrebbe dire un pezzo di
-     * app in piedi in tasca per niente, e la batteria la paga chi guida. */
-    override fun onDestroy(owner: androidx.lifecycle.LifecycleOwner) {
-        IlPonteDellAuto.spegni()
-        super.onDestroy(owner)
+     * app in piedi in tasca per niente, e la batteria la paga chi guida.
+     *
+     * Ci si mette **in ascolto**, e non si sovrascrive niente: una `Session`
+     * non e' un osservatore del proprio ciclo di vita, e' il suo padrone —
+     * `LifecycleOwner` — e un `onDestroy` da sovrascrivere non ce l'ha. La
+     * prima stesura di questo file lo dava per scontato, e la costruzione
+     * dell'APK si e' fermata proprio qui: «'onDestroy' overrides nothing».
+     * Da questa parte il Kotlin non lo compila nessuno — l'SDK di Android in
+     * macchina non c'e' — quindi adesso a costruirlo sono le Prove, a ogni
+     * spinta, e un errore come quello si vede prima di un rilascio e non
+     * dentro. */
+    init {
+        lifecycle.addObserver(
+            object : LifecycleEventObserver {
+                override fun onStateChanged(
+                    source: LifecycleOwner,
+                    event: Lifecycle.Event,
+                ) {
+                    if (event == Lifecycle.Event.ON_DESTROY) {
+                        IlPonteDellAuto.spegni()
+                    }
+                }
+            }
+        )
     }
+
+    override fun onCreateScreen(intent: android.content.Intent) = LaCasaInAuto(carContext)
 }

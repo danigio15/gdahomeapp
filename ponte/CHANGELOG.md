@@ -11,6 +11,21 @@ fuori. La plancia dentro continua a dire la sua, e si legge dov'è sempre
 stata: nella pastiglia «La plancia» della console. Sono due numeri perché
 sono due cose.
 
+## 1.6.4.1
+
+**L'app della 1.6.4 non è mai uscita.** Il pacchetto per il telefono non si
+costruiva: il pezzo nuovo che porta gdahome in macchina si metteva in ascolto
+della sessione dell'auto sovrascrivendo un metodo che in quella libreria non
+esiste, e la costruzione si fermava lì — con l'etichetta già messa e il
+negozio già aperto a mano. In casa non cambia niente, la 1.6.4 dell'add-on è
+quella giusta: cambia che adesso c'è anche l'app.
+
+**E la rete che mancava.** Le prove guardavano il Dart — `flutter analyze`,
+`flutter test` — e il codice nativo di Android non lo costruiva nessuno fino
+al rilascio. Adesso a ogni modifica il pacchetto per Android si costruisce per
+davvero: un errore come quello si vede subito, non dentro una versione già
+etichettata.
+
 ## 1.6.4
 
 **gdahome sale in macchina.** Android Auto mostra i suoi modelli — un pannello,
