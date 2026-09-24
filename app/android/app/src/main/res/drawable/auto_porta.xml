@@ -1,13 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Il cancello, il portone, il garage: quello che si apre arrivando.
-     Bianca e piena apposta: in macchina la tinta la mette l'ospite, secondo il
-     tema chiaro o scuro dell'auto, e un disegno gia' colorato non si tinge. -->
+<!-- Il cancello, il portone, il garage: quello che si apre arrivando. -->
+<!-- Bianco e pieno apposta: in macchina la tinta la mette l'ospite, secondo il
+     tema chiaro o scuro dell'auto, e un disegno gia' colorato non si tinge.
+     Percio' qui dentro una tinta non ci va: il colore lo decide un posto solo,
+     e quel posto e' il `CarIcon` nel codice.
+
+     128dp e non 24: e' la misura che Google chiede per i segni in auto, perche'
+     gli schermi delle macchine vanno dal display del cruscotto al tablet in
+     mezzo e il segno viene ingrandito. Il disegno resta lo stesso — le curve
+     sono scritte in un riquadro di 24 e si allargano da sole. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
-    android:width="24dp"
-    android:height="24dp"
+    android:width="128dp"
+    android:height="128dp"
     android:viewportWidth="24"
-    android:viewportHeight="24"
-    android:tint="#FFFFFFFF">
+    android:viewportHeight="24">
     <path
         android:fillColor="#FFFFFFFF"
         android:pathData="M12,2L2,9v2h20V9L12,2z" />

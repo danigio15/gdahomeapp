@@ -35,6 +35,18 @@ Cosa è cambiato, e contro quale criterio:
 | `IU-1` — immagini solo se servono | l'icona dell'app ripetuta su ogni tessera, che non distingueva il cancello dalla luce | un disegno per genere — porta, varco, luce, presa — e un fulmine per le azioni |
 | `TH-1` — chiaro e scuro | un bitmap a colori, che non si tinge | disegni vettoriali bianchi, tinti dall'auto con `CarColor.DEFAULT` |
 
+I disegni sono da **128dp**, che è la misura che Google chiede per i segni in
+auto: gli schermi delle macchine vanno dal display stretto del cruscotto al
+tablet in mezzo, e il segno viene ingrandito. Sono vettoriali, quindi il
+disegno è sempre lo stesso — le curve stanno in un riquadro di 24 e si
+allargano da sole — ma la misura dichiarata è quella che l'ospite guarda per
+decidere quanto ingrandire senza sgranare.
+
+La tinta la mette l'auto, e la mette **anche sulle immagini grandi**: nella
+griglia il `CarIcon` porta il colore qualunque sia la misura dell'immagine, e
+per questo dentro i file dei disegni una tinta non c'è. Il colore lo decide un
+posto solo.
+
 Quello che **non** si fa guidando, e che infatti non c'è: scegliere quali
 dispositivi mostrare, creare o modificare scene, regolare i gradi di un
 termostato. Sono le tre cose che `IT-1` vieta, e si fanno tutte sul telefono.
