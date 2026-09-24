@@ -1,5 +1,5 @@
-Aggiorna anche gdahome in Home Assistant alla 1.6.2: per abbinare un telefono nuovo servono tutti e due.
+gdahome sale in macchina. Con Android Auto, sullo schermo dell'auto trovi quanto tira la casa e quanto fa il sole, chi è rientrato, e i tasti delle azioni rapide — che premono davvero, anche a schermo spento.
+
+Aggiorna anche gdahome in Home Assistant alla 1.6.4: la fotografia che l'auto legge la lascia la plancia, e in macchina si vede solo con tutti e due.
 
 I telefoni già abbinati continuano a funzionare come prima.
-
-Il lucchetto con volto o impronta copre ogni schermata, anche quelle aperte sopra la casa.
