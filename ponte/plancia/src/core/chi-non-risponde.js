@@ -126,6 +126,49 @@ function ilPiuCorto(nomi) {
   return scelto;
 }
 
+/* I domini che un dispositivo non ce l'hanno MAI.
+ *
+ * La regola della #111 — chi non ha un apparecchio dietro non e' un
+ * dispositivo non connesso — la si applicava guardando il registro dei
+ * dispositivi: se l'entita' non sta nel registro, fuori. Giusto, ma vale solo
+ * quando il registro c'e'. Senza, si tornava a contare riga per riga e gli
+ * aiutanti rientravano tutti — cioe' esattamente le sessantotto righe della
+ * segnalazione, in una casa che il registro non ce l'ha ancora o non e'
+ * riuscita a chiederlo.
+ *
+ * Questi dieci domini pero' non hanno bisogno di nessun registro per sapere
+ * cosa sono: un `input_boolean` e' un aiutante scritto in un file di
+ * configurazione, un'`automation` e' una regola, uno `script` e' una sequenza.
+ * Dietro non c'e' niente da andare a premere, e non c'e' registro che possa
+ * dire il contrario. Quando stanno `unavailable` e' un'altra cosa — un package
+ * che non carica, una ricaricata in corso — cioe' configurazione da
+ * correggere, che e' il guaio che questo file tiene fuori dalla prima riga.
+ *
+ * L'elenco e' dichiarato e corto apposta: dice cosa NON e' un apparecchio, e
+ * ogni voce e' una cosa che Home Assistant chiama «helper» o «automazione». */
+export const SENZA_DISPOSITIVO = Object.freeze([
+  "automation",
+  "counter",
+  "input_boolean",
+  "input_button",
+  "input_datetime",
+  "input_number",
+  "input_select",
+  "input_text",
+  "schedule",
+  "script",
+  "scene",
+  "timer",
+]);
+
+const SENZA = new Set(SENZA_DISPOSITIVO);
+
+/** Se quell'entita' e' di un dominio che un apparecchio non ce l'ha mai. */
+export function senzaDispositivo(entity) {
+  const punto = pulito(entity).indexOf(".");
+  return punto > 0 && SENZA.has(pulito(entity).slice(0, punto).toLowerCase());
+}
+
 /**
  * Chi non risponde, raggruppato per dispositivo.
  *
@@ -173,7 +216,9 @@ export function chiNonRispondePerDispositivo(
   states = {},
   { nomeDi = null, di = null, nomi = null } = {},
 ) {
-  const sciolte = chiNonRisponde(entita, states, { nomeDi });
+  const sciolte = chiNonRisponde(entita, states, { nomeDi }).filter(
+    (una) => !senzaDispositivo(una.entity),
+  );
   const diChiE = di && typeof di === "object" ? di : {};
   if (!Object.keys(diChiE).length) return sciolte;
 

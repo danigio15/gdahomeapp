@@ -317,6 +317,33 @@ const STALE_MS = 30000;
 /* Quanto si aspetta prima di richiedere le voci a una lista che ha appena
  * risposto con un errore — o non ha risposto affatto. */
 const RETRY_MS = 20000;
+
+/* Quanto si aspetta una richiesta prima di darla per morta.
+ *
+ * «Solo su iPhone ogni volta che apro HA il widget agenda non carica gli
+ * eventi; devo cliccare sul widget e fare apri selezione e dopo va, ma appena
+ * richiudo mi fa lo stesso difetto» (#122).
+ *
+ * `inflight` diceva «la sto gia' chiedendo, non chiederla due volte»: giusto,
+ * e si spegneva quando la risposta arrivava o falliva. Su iOS pero' c'e' un
+ * terzo esito che non e' nessuno dei due — l'app va in secondo piano, la
+ * pagina viene sospesa, e la richiesta in volo muore senza risolvere e senza
+ * rompere. Quella promessa non torna mai, `inflight` resta acceso, e da quel
+ * momento nessuno chiede piu' niente: il widget resta vuoto per tutta la
+ * sessione, e riaprendo la app e' ancora li', acceso.
+ *
+ * Quindi non un contrassegno ma un ORARIO: dopo mezzo minuto quella richiesta
+ * si considera persa e se ne puo' fare un'altra. Mezzo minuto e' lungo per una
+ * chiamata che di solito torna in mezzo secondo, e corto abbastanza da non
+ * farsi accorgere. */
+const IN_VOLO_MS = 30000;
+
+/** Se una richiesta partita a quell'ora e' ancora viva, o e' da dare per persa. */
+export function ancoraInVolo(scheda, adesso = Date.now()) {
+  if (!scheda?.inflight) return false;
+  const da = Number(scheda.inVoloDa) || 0;
+  return da > 0 && adesso - da < IN_VOLO_MS;
+}
 /* Un appuntamento non cambia ogni mezzo minuto come una lista della spesa:
  * cinque minuti bastano, e sono cinque richieste l'ora invece di centoventi. */
 const CALENDARIO_STALE_MS = 300000;
@@ -337,11 +364,11 @@ const state = (root[KEY] ||= {
    * impedisce alla finestra di aprirsi al primo disegno su un avviso acceso
    * da stamattina. */
   avvisiVisti: null,
-  lists: new Map(), // entity -> { items, fetchedAt, inflight }
+  lists: new Map(), // entity -> { items, fetchedAt, inflight, inVoloDa }
   /* Gli eventi letti, per calendario (#259). Stanno accanto alle liste ToDo e
    * non dentro: sono due servizi diversi e due risposte diverse, e mescolarle
    * vorrebbe dire una mappa in cui meta' delle voci ha campi che non usa. */
-  calendari: new Map(), // entity -> { eventi, fetchedAt, inflight, failedAt }
+  calendari: new Map(), // entity -> { eventi, fetchedAt, inflight, inVoloDa, failedAt }
   cameraTimer: 0,
   cameraUrls: new Map(), // entity -> object URL della tessera, MAI quelli del muro
   /* Quali righe hanno il pannello della rotella aperto. Sta qui e non nel
@@ -486,7 +513,7 @@ function numOf(states, entity) {
 function record(entity) {
   let value = state.lists.get(entity);
   if (!value) {
-    value = { items: null, fetchedAt: 0, inflight: false, failedAt: 0 };
+    value = { items: null, fetchedAt: 0, inflight: false, inVoloDa: 0, failedAt: 0 };
     state.lists.set(entity, value);
   }
   return value;
@@ -507,7 +534,7 @@ function avvisaLAgenda() {
 async function fetchItems(entity, { force = false } = {}) {
   const cache = record(entity);
   const now = Date.now();
-  if (cache.inflight) return;
+  if (ancoraInVolo(cache, now)) return;
   if (!force && cache.items && now - cache.fetchedAt < STALE_MS) return;
   /* Una richiesta fallita non ha lasciato voci, e senza voci la guardia dello
    * scaduto non ferma nessuno: col socket giu' il disegno richiedeva, la
@@ -515,6 +542,7 @@ async function fetchItems(entity, { force = false } = {}) {
    * a ogni fotogramma. Dopo un errore si aspetta prima di riprovare. */
   if (!force && !cache.items && now - cache.failedAt < RETRY_MS) return;
   cache.inflight = true;
+  cache.inVoloDa = now;
   let riuscita = false;
   try {
     const result = await chiediAHomeAssistant({
@@ -550,7 +578,7 @@ async function fetchItems(entity, { force = false } = {}) {
 function schedaCalendario(entity) {
   let valore = state.calendari.get(entity);
   if (!valore) {
-    valore = { eventi: null, fetchedAt: 0, inflight: false, failedAt: 0 };
+    valore = { eventi: null, fetchedAt: 0, inflight: false, inVoloDa: 0, failedAt: 0 };
     state.calendari.set(entity, valore);
   }
   return valore;
@@ -628,13 +656,14 @@ async function eventiDallaPortaHttp(entity, da, a) {
 async function fetchEventi(entity, { force = false } = {}) {
   const scheda = schedaCalendario(entity);
   const adesso = Date.now();
-  if (scheda.inflight) return;
+  if (ancoraInVolo(scheda, adesso)) return;
   if (!force && scheda.eventi && adesso - scheda.fetchedAt < CALENDARIO_STALE_MS) return;
   /* Come per le liste: dopo un errore si aspetta, o col socket giu' il disegno
    * chiederebbe, la richiesta fallirebbe, il fallimento farebbe ridisegnare, e
    * il giro ripartirebbe a ogni fotogramma. */
   if (!force && !scheda.eventi && adesso - scheda.failedAt < RETRY_MS) return;
   scheda.inflight = true;
+  scheda.inVoloDa = adesso;
   let riuscita = false;
   const fino = adesso + GIORNI_AVANTI * 86400000;
   try {
@@ -10537,6 +10566,30 @@ export function installHomeWidgetsSection() {
    * prese, e chiunque altro abbia un tasto che deve mostrare quello che una
    * tessera mostra gia'. */
   root.dmApriTessera = apriLaTessera;
+  /* Tornando in primo piano, quello che era per aria si da' per perso.
+   *
+   * Su iOS l'app di Home Assistant sospende la pagina quando va dietro, e le
+   * richieste in volo muoiono senza rispondere: al ritorno ci sono schede che
+   * si credono ancora in attesa di una risposta che non arrivera' mai. La
+   * scadenza qui sopra le libera comunque, ma dopo mezzo minuto; chi riapre la
+   * app vuole vedere la sua agenda adesso, non fra trenta secondi.
+   *
+   * `pageshow` e `visibilitychange` sono i due momenti in cui il telefono
+   * dice «eccomi». Li' si spegne il contrassegno e si dimentica l'ultimo
+   * fallimento, cosi' il primo disegno utile richiede davvero. */
+  const tornatiInPrimoPiano = () => {
+    for (const scheda of [...state.lists.values(), ...state.calendari.values()]) {
+      if (!scheda) continue;
+      scheda.inflight = false;
+      scheda.inVoloDa = 0;
+      scheda.failedAt = 0;
+    }
+    schedule();
+  };
+  root.addEventListener?.("pageshow", tornatiInPrimoPiano);
+  doc.addEventListener?.("visibilitychange", () => {
+    if (doc.visibilityState === "visible") tornatiInPrimoPiano();
+  });
   doc.addEventListener("click", onClick);
   bindEscape();
   doc.addEventListener("change", onChange);

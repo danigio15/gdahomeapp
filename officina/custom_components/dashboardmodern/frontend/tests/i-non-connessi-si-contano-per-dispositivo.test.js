@@ -182,13 +182,23 @@ test("la plancia e il cruscotto installatore contano la stessa popolazione", asy
   );
 });
 
-test("senza le mappe si torna riga per riga, come prima che i registri ci fossero", () => {
+test("senza le mappe si torna riga per riga, meno gli aiutanti (#111)", () => {
+  /* Senza registro si torna riga per riga, come prima: raggruppare per un
+   * dispositivo che non si sa quale sia vorrebbe dire inventarlo.
+   *
+   * Con una differenza, ed e' la #111: gli aiutanti restano fuori comunque.
+   * Un `input_boolean` non ha bisogno di nessun registro per sapere che dietro
+   * non ha niente da andare a premere, e in una casa senza registro erano
+   * proprio loro a riempire l'elenco — sessantotto righe, con in mezzo la
+   * presa del giardino che non la trovava piu' nessuno. */
   const senza = chiNonRispondePerDispositivo(CONFIGURATE, STATI, {});
   const prima = chiNonRisponde(CONFIGURATE, STATI);
   assert.deepEqual(
     senza.map((una) => una.entity),
-    prima.map((una) => una.entity),
+    prima.map((una) => una.entity).filter((entity) => !entity.startsWith("input_boolean.")),
   );
+  /* E quello che resta e' tutto roba con un apparecchio dietro. */
+  assert.ok(senza.length > 0, "la presa muta del giardino deve restare");
 });
 
 test("il dispositivo è irraggiungibile da quando ha smesso l'ultima delle sue", () => {
@@ -431,4 +441,71 @@ test("nella finestra non si legge né l'identificativo né la maniglia del dispo
   const finestra = /function nonRispondeDetail\(widget\) \{[\s\S]*?\n\}/.exec(sorgente);
   assert.ok(finestra, "la finestra dei non connessi deve esserci");
   assert.doesNotMatch(finestra[0], /riga\.entity/, "l'identificativo non si stampa");
+});
+
+/* E senza il registro dei dispositivi la regola vale lo stesso (#111).
+ *
+ * «Dagli ultimi aggiornamenti ricevo allerta di 68 cose che non rispondono,
+ * fanno parte di package esistenti, i sensori sono tipicamente input boolean,
+ * datetime, automation, input Number, script ecc. Ma secondo me funzionano.»
+ *
+ * La regola c'era gia': chi non ha un apparecchio dietro non e' un dispositivo
+ * non connesso. Ma la si applicava guardando il registro — se l'entita' non
+ * sta li' dentro, fuori — e senza registro si tornava a contare riga per riga.
+ * In una casa che il registro non ce l'ha (o non e' ancora arrivato) le
+ * sessantotto righe tornavano tutte, con in mezzo la presa del giardino che
+ * non la trovava piu' nessuno.
+ *
+ * Un `input_boolean` pero' non ha bisogno di nessun registro per sapere cos'e':
+ * e' un aiutante scritto in un file, e dietro non c'e' niente da andare a
+ * premere. Quei domini restano fuori comunque.
+ */
+
+test("senza registro, aiutanti e automazioni non sono «dispositivi non connessi»", async () => {
+  const { chiNonRispondePerDispositivo } = await import("../src/core/chi-non-risponde.js");
+  const stati = {
+    "switch.presa_giardino": { state: "unavailable", last_changed: "2026-09-24T10:00:00Z" },
+    "automation.luci_di_sera": { state: "unavailable" },
+    "input_boolean.vacanza": { state: "unavailable" },
+    "input_number.soglia": { state: "unavailable" },
+    "script.buonanotte": { state: "unavailable" },
+    "scene.cinema": { state: "unavailable" },
+    "timer.lavatrice": { state: "unavailable" },
+    "sensor.frigo_temperatura": { state: "unavailable" },
+  };
+  const detto = chiNonRispondePerDispositivo(Object.keys(stati), stati);
+  assert.deepEqual(
+    detto.map((una) => una.entity),
+    ["sensor.frigo_temperatura", "switch.presa_giardino"],
+    "restano solo le cose che un apparecchio dietro ce l'hanno",
+  );
+});
+
+test("col registro non cambia niente: la regola è la stessa, detta una volta", async () => {
+  const { chiNonRispondePerDispositivo } = await import("../src/core/chi-non-risponde.js");
+  const stati = {
+    "switch.presa_giardino": { state: "unavailable", last_changed: "2026-09-24T10:00:00Z" },
+    "automation.luci_di_sera": { state: "unavailable" },
+  };
+  const detto = chiNonRispondePerDispositivo(Object.keys(stati), stati, {
+    di: { "switch.presa_giardino": "dev-presa" },
+    nomi: { "dev-presa": "Presa giardino" },
+  });
+  assert.deepEqual(
+    detto.map((una) => una.nome),
+    ["Presa giardino"],
+  );
+});
+
+test("l'elenco dei domini senza apparecchio è dichiarato, non indovinato", async () => {
+  const { SENZA_DISPOSITIVO, senzaDispositivo } = await import("../src/core/chi-non-risponde.js");
+  assert.ok(SENZA_DISPOSITIVO.includes("automation"));
+  assert.ok(SENZA_DISPOSITIVO.includes("input_boolean"));
+  assert.ok(SENZA_DISPOSITIVO.includes("script"));
+  /* E quelli che un apparecchio ce l'hanno non ci stanno dentro. */
+  for (const dominio of ["switch", "sensor", "light", "climate", "camera", "lock"])
+    assert.ok(!SENZA_DISPOSITIVO.includes(dominio), `${dominio} può avere un apparecchio dietro`);
+  assert.equal(senzaDispositivo("script.buonanotte"), true);
+  assert.equal(senzaDispositivo("switch.presa"), false);
+  assert.equal(senzaDispositivo("senza_punto"), false);
 });
