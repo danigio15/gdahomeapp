@@ -125,3 +125,42 @@ Object? _prova(String detto) {
     return null;
   }
 }
+
+/// Il file in cui l'auto lascia scritto cosa e' stato premuto.
+///
+/// Il servizio dell'auto con la casa non parla: non ha il filo e non ha le
+/// chiavi, e dargliele vorrebbe dire due posti che sanno entrare in casa.
+/// Scrive cosa e' stato premuto, e lo esegue l'app.
+const String nomeDelComando = 'gdahome-auto-comando.json';
+
+/// Quanto vale un comando. Due minuti.
+///
+/// «Apri il cancello» premuto in macchina e' una cosa che si vuole ADESSO: se
+/// l'app lo trova un'ora dopo — il telefono in tasca, l'app mai riaperta — non
+/// e' piu' quello che uno voleva, ed eseguirlo vorrebbe dire aprire il cancello
+/// a casa vuota senza che nessuno l'abbia chiesto in quel momento. Scaduto si
+/// butta, e non si fa niente: e' il verso giusto in cui sbagliare.
+const int quantoValeIlComandoMs = 2 * 60 * 1000;
+
+/// Il segno del tasto che l'auto ha chiesto, o `null` se non c'e' da premere.
+///
+/// Non solleva mai: un file mezzo scritto, un JSON storto, un momento che non
+/// e' un momento valgono tutti «non premere». Un comando che non si capisce non
+/// si indovina — dall'altra parte c'e' un cancello.
+String? ilComandoDellAuto(String detto, {required int adesso}) {
+  if (detto.isEmpty || detto.length > 4096) return null;
+  final letto = _prova(detto);
+  if (letto is! Map<String, Object?>) return null;
+  final id = _pulito(letto['azione'], fino: _quantoLungo * 2);
+  if (id.isEmpty) return null;
+  final quando = letto['quando'];
+  /* Senza un momento non si esegue: un comando che non dice quando e' stato
+   * premuto non si puo' far scadere, e uno che non scade prima o poi parte al
+   * momento sbagliato. */
+  if (quando is! int || quando <= 0) return null;
+  if (adesso - quando > quantoValeIlComandoMs) return null;
+  /* E uno scritto nel futuro non e' un comando: e' un orologio che e' andato
+   * avanti, o qualcosa che non torna. */
+  if (quando - adesso > quantoValeIlComandoMs) return null;
+  return id;
+}

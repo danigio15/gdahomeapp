@@ -387,6 +387,16 @@ Future<void> tornaDallaConfig(WebViewController controllore) async =>
 /// riconosce dal marchio e dall'azione, gli altri lo lasciano cadere. E dal
 /// di la' si guarda che arrivi dal proprio ospite: e' la stessa regola con cui
 /// gia' oggi si passano le premesse.
+/// Come e' andata la richiesta di premere un tasto per conto dell'auto. Nel
+/// browser non arriva mai nessuna richiesta: c'e' perche' la firma e' una sola.
+enum ComeEAndataInAuto { fatto, no, aspetta }
+
+/// Nel browser non c'e' nessuna auto che abbia chiesto niente.
+Future<ComeEAndataInAuto> premiPerLAuto(
+  WebViewController controllore,
+  String segno,
+) async => ComeEAndataInAuto.no;
+
 Future<void> doveLoMetto(
   WebViewController controllore,
   String dispositivo,

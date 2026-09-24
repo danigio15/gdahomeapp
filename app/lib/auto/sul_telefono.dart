@@ -40,3 +40,31 @@ Future<bool> lasciaLaFotoAllAuto(String detto, {required String casa}) async {
     return false;
   }
 }
+
+/// Il comando che l'auto ha lasciato, se ce n'e' uno da eseguire adesso.
+///
+/// Si toglie il file PRIMA di tornare, e si torna quello che c'era dentro: se
+/// l'app muore mentre lo esegue, al riavvio non lo trova piu' e non lo rifa'.
+/// Un cancello aperto due volte e' meglio di un cancello aperto ogni volta che
+/// l'app si riapre — e con questo ordine non succede ne' l'uno ne' l'altro.
+///
+/// Anche un comando scaduto si toglie: resterebbe li' a farsi ritrovare a ogni
+/// apertura, e ogni volta verrebbe buttato via di nuovo.
+Future<String?> prendiIlComandoDellAuto() async {
+  try {
+    final cartella = await getApplicationSupportDirectory();
+    final file = File('${cartella.path}/$nomeDelComando');
+    if (!await file.exists()) return null;
+    final detto = await file.readAsString();
+    await file.delete();
+    return ilComandoDellAuto(
+      detto,
+      adesso: DateTime.now().millisecondsSinceEpoch,
+    );
+  } catch (_) {
+    /* Non c'era, non si e' letto, non si e' tolto: non si preme niente. In
+     * macchina si e' gia' visto che il comando parte quando l'app e' in linea,
+     * e questa volta non lo era. */
+    return null;
+  }
+}

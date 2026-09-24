@@ -8,3 +8,6 @@ library;
 /// Sempre `false`: non c'era niente dove scriverla.
 Future<bool> lasciaLaFotoAllAuto(String detto, {required String casa}) async =>
     false;
+
+/// Sempre `null`: nessuna auto ha lasciato niente da premere.
+Future<String?> prendiIlComandoDellAuto() async => null;

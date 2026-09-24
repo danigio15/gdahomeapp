@@ -147,4 +147,68 @@ void main() {
     );
     expect(storto['quando'] as int, greaterThanOrEqualTo(prima));
   });
+
+  group('il comando che torna dall\'auto', () {
+    const adesso = 1790000000000;
+    String scritto(String azione, int quando) =>
+        jsonEncode({'azione': azione, 'quando': quando});
+
+    test('un comando appena premuto si esegue', () {
+      expect(
+        ilComandoDellAuto(scritto('1|Cancello', adesso - 3000), adesso: adesso),
+        '1|Cancello',
+      );
+    });
+
+    test('un comando vecchio si butta invece di aprire il cancello', () {
+      /* «Apri il cancello» premuto in macchina e' una cosa che si vuole
+         ADESSO. Trovato un'ora dopo — il telefono in tasca, l'app mai
+         riaperta — non e' piu' quello che uno voleva, ed eseguirlo vorrebbe
+         dire aprire il cancello a casa vuota. */
+      expect(
+        ilComandoDellAuto(
+          scritto('1|Cancello', adesso - quantoValeIlComandoMs - 1),
+          adesso: adesso,
+        ),
+        isNull,
+      );
+      /* E uno scritto nel futuro non e' un comando: e' un orologio che e'
+         andato avanti, o qualcosa che non torna. */
+      expect(
+        ilComandoDellAuto(
+          scritto('1|Cancello', adesso + quantoValeIlComandoMs + 1),
+          adesso: adesso,
+        ),
+        isNull,
+      );
+    });
+
+    test('senza un momento non si esegue', () {
+      /* Un comando che non dice quando e' stato premuto non si puo' far
+         scadere, e uno che non scade prima o poi parte al momento sbagliato. */
+      for (final detto in <String>[
+        jsonEncode({'azione': '1|Cancello'}),
+        jsonEncode({'azione': '1|Cancello', 'quando': 'ieri'}),
+        jsonEncode({'azione': '1|Cancello', 'quando': 0}),
+      ]) {
+        expect(ilComandoDellAuto(detto, adesso: adesso), isNull, reason: detto);
+      }
+    });
+
+    test('quello che non si capisce non si indovina', () {
+      /* Dall\'altra parte c\'e\' un cancello. */
+      for (final detto in <String>[
+        '',
+        'ciao',
+        '{',
+        '[]',
+        'null',
+        jsonEncode({'quando': adesso}),
+        jsonEncode({'azione': '  ', 'quando': adesso}),
+        'x' * 5000,
+      ]) {
+        expect(ilComandoDellAuto(detto, adesso: adesso), isNull, reason: detto);
+      }
+    });
+  });
 }

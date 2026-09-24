@@ -14,6 +14,7 @@ import {
   MISURE_AL_MASSIMO,
   eInCasa,
   firmaDellaFoto,
+  ilTastoDelComando,
   laFotoPerLAuto,
 } from "../src/core/la-foto-per-lauto.js";
 
@@ -114,32 +115,46 @@ test("chi è nascosto in Home resta nascosto anche in auto", () => {
   assert.deepEqual(foto.persone, [{ nome: "Gio", inCasa: true }]);
 });
 
-test("le azioni sono sei, con l'id che serve a premerle", () => {
-  const azioni = Array.from({ length: 9 }, (_, i) => ({
-    id: `a${i}`,
-    name: `Azione ${i}`,
-    icon: "💡",
-  }));
+test("le azioni sono sei, col posto e il nome nel segno", () => {
+  const azioni = Array.from({ length: 9 }, (_, i) => ({ name: `Azione ${i}`, icon: "💡" }));
   const foto = laFotoPerLAuto({ azioni });
   assert.equal(foto.azioni.length, AZIONI_AL_MASSIMO);
   /* Le prime sei: sono quelle che chi ha la casa ha messo davanti. */
-  assert.deepEqual(foto.azioni[0], { id: "a0", nome: "Azione 0", segno: "💡" });
-  assert.equal(foto.azioni.at(-1).id, "a5");
+  assert.deepEqual(foto.azioni[0], { id: "0|Azione 0", nome: "Azione 0", segno: "💡" });
+  assert.equal(foto.azioni.at(-1).id, "5|Azione 5");
 });
 
-test("un tasto che non si può premere non si disegna", () => {
-  /* Senza id non si può chiedere niente, e un tasto che si preme e non fa
-   * niente è peggio di un tasto che non c'è: in macchina si preme e si torna
-   * a guardare la strada, non si controlla se è successo. */
+test("un tasto senza nome non si disegna, e non sposta gli altri", () => {
+  /* Un tasto muto in macchina non si preme: si preme quello sbagliato accanto.
+   * Ma il posto di chi viene dopo resta quello dell'elenco vero, o premere
+   * «Cancello» aprirebbe un'altra cosa. */
   const foto = laFotoPerLAuto({
-    azioni: [
-      { id: "", name: "Muta" },
-      { id: "vera", name: "Vera" },
-      { id: "vera", name: "La stessa due volte" },
-      { id: "senza-nome", name: " " },
-    ],
+    azioni: [{ name: " " }, { name: "Cancello", icon: "🚧" }],
   });
-  assert.deepEqual(foto.azioni, [{ id: "vera", nome: "Vera", segno: "" }]);
+  assert.deepEqual(foto.azioni, [{ id: "1|Cancello", nome: "Cancello", segno: "🚧" }]);
+});
+
+test("il comando torna al tasto giusto, o a nessuno", () => {
+  const azioni = [
+    { name: "Buonanotte", icon: "🌙" },
+    { name: "Cancello", icon: "🚧" },
+  ];
+  assert.deepEqual(ilTastoDelComando("1|Cancello", azioni), { posto: 1, nome: "Cancello" });
+  assert.deepEqual(ilTastoDelComando("0|Buonanotte", azioni), { posto: 0, nome: "Buonanotte" });
+
+  /* Riordinate: in macchina c'era scritto «Cancello» al posto 1, adesso al
+   * posto 1 c'è un'altra cosa. Non si preme niente — un tasto che fa un'altra
+   * cosa è peggio di un tasto che non fa niente, e nessuno se ne accorge
+   * finché non è successo. */
+  assert.equal(ilTastoDelComando("1|Cancello", [azioni[1], azioni[0]]), null);
+  /* Cancellata. */
+  assert.equal(ilTastoDelComando("1|Cancello", [azioni[0]]), null);
+  /* Rinominata. */
+  assert.equal(ilTastoDelComando("1|Cancello", [azioni[0], { name: "Portone" }]), null);
+  /* E niente di storto passa. */
+  for (const storto of ["", " ", "1", "Cancello", "1|", "|Cancello", null, undefined])
+    assert.equal(ilTastoDelComando(storto, azioni), null, `${storto}`);
+  assert.equal(ilTastoDelComando("1|Cancello", null), null);
 });
 
 test("la fotografia porta il momento in cui è stata scattata", () => {
@@ -189,7 +204,7 @@ test("quello che esce è la forma che l'auto sa leggere", () => {
     energia: ENERGIA,
     persone: [{ name: "Gio", entity: "person.gio" }],
     states: { "person.gio": { state: "home" } },
-    azioni: [{ id: "buonanotte", name: "Buonanotte", icon: "🌙" }],
+    azioni: [{ name: "Buonanotte", icon: "🌙" }],
   });
   for (const campo of ["casa", "quando", "fotovoltaico", "persone", "azioni"])
     assert.match(auto, new RegExp(`"${campo}"`), `l'auto deve leggere ${campo}`);

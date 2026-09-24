@@ -191,3 +191,46 @@ test("fuori dall'app non si prepara niente", async ({ page }, testInfo) => {
   expect(await page.evaluate(() => window.gdahomeFotoInAuto ?? null)).toBeNull();
   expect(await guardaAdesso(page, 1_000_000)).toBe(false);
 });
+
+test("il tasto premuto in macchina preme quello giusto, o nessuno", async ({ page }, testInfo) => {
+  await conLAuto(page);
+  await apriLaCasa(page, testInfo);
+
+  /* `qaRun` e' la funzione che preme un'azione rapida in Home. Prima si
+     pretende che ci sia DAVVERO: e' la maniglia che la sezione chiama, e una
+     prova che la sostituisce senza guardare direbbe di sì anche il giorno che
+     quella funzione cambia nome. */
+  expect(await page.evaluate(() => typeof window.qaRun)).toBe("function");
+  /* E poi si sostituisce, per guardare con che posto viene chiamata invece di
+     far partire davvero un servizio verso una casa che non c'è. */
+  await page.evaluate(() => {
+    window.__premuti = [];
+    window.qaRun = (posto) => window.__premuti.push(posto);
+  });
+  const premi = (id) => page.evaluate((segno) => window.gdahomeFotoInAuto.premi(segno), id);
+  const premuti = () => page.evaluate(() => window.__premuti);
+
+  expect(await premi("1|Cancello")).toBe(true);
+  expect(await premuti()).toEqual([1]);
+  expect(await premi("0|Buonanotte")).toBe(true);
+  expect(await premuti()).toEqual([1, 0]);
+
+  /* Riordinate da quando la fotografia e' partita: in macchina c'era scritto
+     «Cancello» al posto 1, adesso al posto 1 c'e' un'altra cosa. Non si preme
+     niente — un tasto che fa un'altra cosa e' peggio di un tasto che non fa
+     niente, e in macchina nessuno guarda se e' partito quello giusto. */
+  await page.evaluate((azioni) => {
+    localStorage.setItem("cd_quick_actions", JSON.stringify([azioni[1], azioni[0]]));
+    window.getQuickActions = () => [azioni[1], azioni[0]];
+  }, AZIONI);
+  expect(await premi("1|Cancello")).toBe(false);
+  expect(await premuti()).toEqual([1, 0]);
+  /* Ma quello che si e' spostato si trova al posto nuovo. */
+  expect(await premi("0|Cancello")).toBe(true);
+  expect(await premuti()).toEqual([1, 0, 0]);
+
+  /* E niente di storto preme qualcosa. */
+  for (const storto of ["", "1", "Cancello", "9|Cancello", "1|", "|Cancello"])
+    expect(await premi(storto), storto).toBe(false);
+  expect(await premuti()).toEqual([1, 0, 0]);
+});

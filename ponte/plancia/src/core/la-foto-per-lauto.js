@@ -101,20 +101,53 @@ function lePersone(persone, states) {
   return fuori;
 }
 
-function leAzioni(azioni) {
+/* I tasti, col loro posto.
+ *
+ * Un'azione rapida un nome suo con cui chiamarla non ce l'ha: la plancia le
+ * preme per posto nell'elenco — `qaRun(3)` — e il posto da solo non basta a
+ * chi torna dall'auto. Fra la fotografia e il tasto premuto qualcuno può aver
+ * riordinato l'elenco, e allora il terzo posto non è più la stessa azione: in
+ * macchina si preme «Cancello» e in casa parte «Buonanotte», che è il modo
+ * peggiore di sbagliare perché nessuno se ne accorge finché non è successo.
+ *
+ * Quindi il segno porta tutt'e due: «3|Cancello». Chi esegue lo confronta con
+ * l'elenco di adesso, e se non torna non preme niente — un tasto che non fa
+ * quello che c'è scritto è peggio di un tasto che non fa niente.
+ *
+ * Il posto è quello dell'elenco VERO, non di questa lista: una voce saltata
+ * qui — una senza nome — non deve spostare di uno tutti quelli che vengono
+ * dopo. Per questo si conta sull'indice di chi entra, non su quanti ne sono
+ * usciti. E per la stessa ragione il segno lo fa questo file e lo legge questo
+ * file: sono i due capi della stessa cosa. */
+function iTastiColPosto(azioni) {
   const fuori = [];
-  const viste = new Set();
-  for (const azione of Array.isArray(azioni) ? azioni : []) {
+  for (const [posto, azione] of (Array.isArray(azioni) ? azioni : []).entries()) {
     if (fuori.length >= AZIONI_AL_MASSIMO) break;
-    const id = pulito(azione?.id);
     const nome = pulito(azione?.name);
-    /* Senza un id non si può chiedere niente, e un tasto che si preme e non fa
-     * niente è peggio di un tasto che non c'è. */
-    if (!id || !nome || viste.has(id)) continue;
-    viste.add(id);
-    fuori.push({ id, nome, segno: pulito(azione?.icon) });
+    /* Senza un nome non c'è niente da scrivere sul tasto, e un tasto muto in
+     * macchina non si preme: si preme quello sbagliato accanto. */
+    if (!nome) continue;
+    fuori.push({ posto, id: `${posto}|${nome}`, nome, segno: pulito(azione?.icon) });
   }
   return fuori;
+}
+
+function leAzioni(azioni) {
+  return iTastiColPosto(azioni).map(({ id, nome, segno }) => ({ id, nome, segno }));
+}
+
+/**
+ * Quale tasto dell'elenco di ADESSO ha chiesto l'auto, o `null`.
+ *
+ * `null` vuol dire «non premere»: l'elenco è cambiato da quando la fotografia
+ * è partita, e quello che in macchina c'era scritto adesso non c'è più o sta
+ * altrove. Meglio un tasto che non fa niente di un tasto che fa un'altra cosa.
+ */
+export function ilTastoDelComando(id, azioni = []) {
+  const quale = pulito(id);
+  if (!quale) return null;
+  const tasto = iTastiColPosto(azioni).find((uno) => uno.id === quale);
+  return tasto ? { posto: tasto.posto, nome: tasto.nome } : null;
 }
 
 /**

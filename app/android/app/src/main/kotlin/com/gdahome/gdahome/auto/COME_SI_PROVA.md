@@ -63,13 +63,40 @@ riordinato l'elenco, e allora il terzo posto non è più la stessa azione: col
 nome accanto, chi esegue può controllare di premere quella che in macchina
 c'era scritta — e, se non torna, non premere niente.
 
+## Come torna indietro il comando
+
+L'auto lascia scritto `filesDir/gdahome-auto-comando.json`
+(`IlComandoLasciato.kt`): il segno del tasto e il momento in cui è stato
+premuto. Il servizio con la casa non parla, e non deve — due posti che sanno
+entrare in casa sono uno di troppo.
+
+Lo esegue l'app. `app/lib/auto/` legge il file, lo **toglie prima di tornare**
+— un comando si esegue una volta sola, e un file che resta lì si fa ritrovare
+a ogni apertura — e passa il segno alla plancia, che è quella che le azioni
+rapide ce le ha. La plancia lo confronta con l'elenco di adesso: se qualcuno
+le ha riordinate da quando la fotografia è partita, non preme niente. Un tasto
+che fa un'altra cosa è peggio di un tasto che non fa niente, e in macchina
+nessuno guarda se è partito quello giusto.
+
+Quando si preme si guarda: alla pagina arrivata e ogni volta che si torna
+sulla schermata della plancia. Sono i due momenti in cui l'app diventa «viva»
+per chi ha premuto in macchina.
+
+**Un comando vale due minuti** (`quantoValeIlComandoMs`). «Apri il cancello»
+premuto in macchina è una cosa che si vuole adesso: trovato un'ora dopo — il
+telefono in tasca, l'app mai riaperta — non è più quello che uno voleva, ed
+eseguirlo vorrebbe dire aprire il cancello a casa vuota. Scaduto si butta e
+non si fa niente: è il verso giusto in cui sbagliare. Per questo il tasto in
+macchina dice «parte appena apri gdahome sul telefono, entro due minuti», e
+non «è partito».
+
 ## Cosa manca ancora
 
-**I comandi non tornano ancora indietro.** L'auto lascia scritto
-`gdahome-auto-comando.json` (`IlComandoLasciato.kt`), ma nessuno lo legge: il
-pezzo che manca sta nell'app, l'unica che il filo con la casa ce l'ha, e deve
-eseguirlo appena è viva controllando il nome. Il servizio in auto con la casa
-non parla, e non deve: due posti che sanno entrare in casa sono uno di troppo.
+**L'app deve essere viva.** Android Auto tiene su il processo, ma non la parte
+Flutter: se l'app è chiusa il comando resta scritto e scade. Perché parta con
+lo schermo del telefono spento servirebbe un ponte che non passa dalla
+schermata — un motore Flutter senza interfaccia, o un servizio che tiene il
+filo — ed è un pezzo suo.
 
 ## Come si guarda davvero
 

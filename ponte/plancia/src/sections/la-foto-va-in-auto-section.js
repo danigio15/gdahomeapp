@@ -33,7 +33,11 @@
  * azioni sono le azioni rapide. Una seconda scelta per l'auto sarebbe una
  * seconda verità sulla stessa casa.
  */
-import { AZIONI_AL_MASSIMO, firmaDellaFoto, laFotoPerLAuto } from "../core/la-foto-per-lauto.js";
+import {
+  firmaDellaFoto,
+  ilTastoDelComando,
+  laFotoPerLAuto,
+} from "../core/la-foto-per-lauto.js";
 import { normalizePeople } from "../core/person-model.js";
 import { carteDalleRighe, modelliDelleTessere } from "./home-widgets-section.js";
 import { allStates, clean, doc, readJson, root } from "./shared.js";
@@ -90,26 +94,23 @@ function lEnergia(states) {
   };
 }
 
-/* Le azioni rapide non hanno un nome loro con cui chiamarle: la plancia le
- * preme per posto nell'elenco (`qaRun(3)`). Il posto da solo però non basta a
- * chi torna dall'auto: fra la fotografia e il tasto premuto qualcuno può aver
- * riordinato l'elenco, e allora il terzo posto non è più la stessa azione. Nel
- * segno ci va anche il nome, così chi esegue può controllare di premere quella
- * che in macchina c'era scritta — e, se non torna, non premere niente. */
-function leAzioni() {
-  let elenco = [];
+/* L'elenco delle azioni rapide, com'è adesso.
+ *
+ * Si passa al nucleo così com'è, senza tagliarlo e senza scartare niente: il
+ * posto di un tasto è il posto in QUESTO elenco, ed è quello che il nucleo
+ * scrive nel segno e rilegge quando il comando torna dall'auto. Scremarlo qui
+ * vorrebbe dire due conti del posto, e due conti del posto significano premere
+ * il tasto accanto. */
+function lElencoDelleAzioni() {
   try {
     const dal = root.getQuickActions?.();
-    elenco = Array.isArray(dal) ? dal : readJson("cd_quick_actions", []);
+    if (Array.isArray(dal)) return dal;
   } catch (_errore) {
-    elenco = readJson("cd_quick_actions", []);
+    /* Il guscio storico non c'è ancora: il deposito sì, ed è lo stesso
+     * elenco. */
   }
-  if (!Array.isArray(elenco)) return [];
-  return elenco.slice(0, AZIONI_AL_MASSIMO).map((azione, posto) => ({
-    id: `${posto}|${clean(azione?.name)}`,
-    name: clean(azione?.name),
-    icon: clean(azione?.icon),
-  }));
+  const scritto = readJson("cd_quick_actions", []);
+  return Array.isArray(scritto) ? scritto : [];
 }
 
 /** La fotografia di adesso, o `null` se non c'è niente da mandare. */
@@ -119,7 +120,7 @@ export function fotografaLaCasa(adesso = Date.now()) {
     energia: lEnergia(states),
     persone: normalizePeople(readJson("cd_people", [])),
     states,
-    azioni: leAzioni(),
+    azioni: lElencoDelleAzioni(),
     adesso,
   });
 }
@@ -157,6 +158,28 @@ export function laFotoVaInAuto(adesso = Date.now()) {
   return true;
 }
 
+/**
+ * Preme il tasto che l'auto ha chiesto. Torna `true` se l'ha premuto.
+ *
+ * Chi chiama è l'app, con dentro il segno che l'auto ha lasciato scritto. Il
+ * confronto con l'elenco di adesso lo fa il nucleo: se qualcuno ha riordinato
+ * le azioni rapide da quando la fotografia è partita, non si preme niente —
+ * un tasto che fa un'altra cosa è peggio di un tasto che non fa niente, e in
+ * macchina nessuno guarda se è partito quello giusto.
+ */
+export function premiPerLAuto(id) {
+  const tasto = ilTastoDelComando(id, lElencoDelleAzioni());
+  if (!tasto) return false;
+  try {
+    /* È lo stesso tasto della Home, premuto dalla stessa funzione: la conferma
+     * che un'azione può chiedere, e i servizi che chiama, restano quelli. */
+    root.qaRun?.(tasto.posto);
+  } catch (_errore) {
+    return false;
+  }
+  return true;
+}
+
 export function installLaFotoVaInAuto() {
   /* Fuori dall'app non c'è niente da installare: nessun timer, nessuna
    * lettura delle tessere. */
@@ -167,7 +190,7 @@ export function installLaFotoVaInAuto() {
    * — e la prova che la pretende sulla pagina vera invece di aspettare il
    * battito. C'è solo dentro l'app: dove non c'è il canale, non c'è nemmeno
    * questa. */
-  root.gdahomeFotoInAuto = { adesso: laFotoVaInAuto, foto: fotografaLaCasa };
+  root.gdahomeFotoInAuto = { adesso: laFotoVaInAuto, foto: fotografaLaCasa, premi: premiPerLAuto };
   laFotoVaInAuto();
   state.timer = root.setInterval?.(() => laFotoVaInAuto(), OGNI_MS) || 0;
   for (const evento of ["dashboardmodern:legacy-ready", "dashboardmodern:persistence-restored"])
