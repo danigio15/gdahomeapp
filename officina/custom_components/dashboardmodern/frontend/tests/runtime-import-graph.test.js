@@ -1421,8 +1421,16 @@ test("production graph is single-owner, acyclic and contains no facade pass-thro
   // perché a decidere la forma sono in due: qui e il Kotlin dall'altra parte,
   // e una prova che li tiene allineati deve poter chiamare il nucleo senza
   // un documento e senza un canale.
+  // 394 con l'elenco di tutto quello che un elettrodomestico legge (#107):
+  // `core/le-entita-dellapparecchio.js`. L'elenco esisteva gia', scritto a
+  // mano accanto a chi decide se un cambio di stato riguarda quelle schede, e
+  // aveva dentro meta' delle caselle: la porta del frigo cambiava e la scheda
+  // non si rifaceva. Sta in un modulo perche' a leggerlo sono in due — il
+  // ridisegno e una prova che rilegge i modelli e pretende di ritrovarci ogni
+  // casella — e un elenco scritto accanto a campi che legge qualcun altro si
+  // scolla sempre.
   assert.ok(
-    relative.length <= 393,
+    relative.length <= 394,
     `production graph unexpectedly grew to ${relative.length} modules`,
   );
   assertAcyclic(edges);

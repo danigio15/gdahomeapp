@@ -1,6 +1,7 @@
 // DM-FIX-20260815A
 import { applianceArtwork, canonicalArtworkType } from "../core/appliance-artwork.js";
 import { createApplianceViewModel, onRunHoldExpiry } from "../core/appliance-view-model.js";
+import { entitaDegliApparecchi } from "../core/le-entita-dellapparecchio.js";
 import { isCumulativeEnergyEntity, resolveEntity } from "../core/period-service.js";
 import { runtimeMetrics } from "../core/runtime-metrics.js";
 import { iconGlyphMarkup } from "./icon-engine-section.js";
@@ -213,27 +214,16 @@ function eventEntityIds(event) {
   return new Set((Array.isArray(values) ? values : [values]).map(clean).filter(Boolean));
 }
 
+/* Le entita' di tutti gli apparecchi configurati.
+ *
+ * L'elenco stava scritto qui, a mano, e aveva dentro l'interruttore, lo stato,
+ * la potenza e i contatori dell'energia — non la porta, non la temperatura,
+ * non l'anomalia, e nemmeno le letture e i comandi scelti a mano. Serve a
+ * decidere se un cambio di stato riguarda queste schede, quindi una casella
+ * che manca qui e' una casella che sulla scheda non si aggiorna mai (#107).
+ * Adesso l'elenco e' uno solo, e sta accanto ai campi che lo compongono. */
 function applianceEntityIds() {
-  const ids = new Set();
-  devices().forEach((device) => {
-    for (const value of [
-      device.control_entity,
-      device.state_entity,
-      device.status_entity,
-      device.power_entity,
-      device.energy_entity,
-      device.daily_energy_entity,
-      device.monthly_energy_entity,
-      device.total_energy_entity,
-      device.history_entity,
-      device.report_entity,
-      ...(device.entities || []),
-    ]) {
-      const id = configuredEntity(value);
-      if (id) ids.add(id);
-    }
-  });
-  return ids;
+  return entitaDegliApparecchi(devices());
 }
 
 export function stateChangeAffectsAppliances(event) {
