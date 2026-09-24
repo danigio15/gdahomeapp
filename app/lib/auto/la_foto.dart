@@ -63,7 +63,12 @@ List<Map<String, Object?>> _elenco(Object? dal) =>
 /// sbaglia non deve poter fermare l'app. Un `null` vuol dire «non scrivo», e
 /// l'auto continua a leggere quella di prima finche' non invecchia — che e'
 /// meglio di un file mezzo scritto, e molto meglio di un'eccezione.
-String? laFotoDaScrivere(String detto, {required String casa, int? adesso}) {
+String? laFotoDaScrivere(
+  String detto, {
+  required String casa,
+  bool daSola = true,
+  int? adesso,
+}) {
   if (detto.isEmpty || detto.length > _quantoGrande) return null;
   final letto = _prova(detto);
   if (letto is! Map<String, Object?>) return null;
@@ -84,7 +89,7 @@ String? laFotoDaScrivere(String detto, {required String casa, int? adesso}) {
     persone.add({'nome': nome, 'inCasa': riga['inCasa'] == true});
   }
 
-  final azioni = <Map<String, String>>[];
+  final azioni = <Map<String, Object>>[];
   for (final riga in _elenco(letto['azioni'])) {
     if (azioni.length >= azioniAlMassimo) break;
     final id = _pulito(riga['id'], fino: _quantoLungo * 2);
@@ -94,6 +99,13 @@ String? laFotoDaScrivere(String detto, {required String casa, int? adesso}) {
       'id': id,
       'nome': nome,
       'segno': _pulito(riga['segno'], fino: 8),
+      /* Se parte da sola a schermo spento. Lo dicono in due: la plancia, che
+       * sa cos'e' l'azione, e questo telefono, che sa se c'e' il lucchetto —
+       * col lucchetto acceso non parte niente senza che l'app sia stata
+       * aperta, ed e' il senso del lucchetto. Il tasto in macchina lo scrive,
+       * perche' «e' partito» su una cosa che parte fra mezz'ora e' la bugia
+       * peggiore che possa dire un cruscotto. */
+      'subito': daSola && riga['subito'] == true,
     });
   }
 
@@ -163,4 +175,98 @@ String? ilComandoDellAuto(String detto, {required int adesso}) {
    * avanti, o qualcosa che non torna. */
   if (quando - adesso > quantoValeIlComandoMs) return null;
   return id;
+}
+
+/// Il file in cui l'app tiene le ricette dei tasti.
+///
+/// **Non e' quello che legge l'auto.** Nel file dell'auto ci vanno i nomi, e
+/// nomi e basta: un cruscotto in macchina non ha niente da farsene di
+/// `switch.cancello_ingresso`. Qui invece c'e' quello che serve a eseguire, e
+/// lo legge solo l'app — la cartella e' privata dell'app, e nessun'altra la
+/// apre.
+const String nomeDelleRicette = 'gdahome-auto-ricette.json';
+
+/// Cosa fa un tasto, quando puo' farlo da solo.
+class RicettaDellAzione {
+  const RicettaDellAzione({
+    required this.id,
+    required this.dominio,
+    required this.servizio,
+    required this.entita,
+    this.dati = const {},
+  });
+
+  /// Lo stesso segno che sta nella fotografia: «3|Cancello».
+  final String id;
+  final String dominio;
+  final String servizio;
+  final String entita;
+
+  /// Quello che il servizio vuole oltre all'entita' — la voce di un menu.
+  final Map<String, Object?> dati;
+
+  Map<String, Object?> get comeSiScrive => {
+    'id': id,
+    'dominio': dominio,
+    'servizio': servizio,
+    'entita': entita,
+    if (dati.isNotEmpty) 'dati': dati,
+  };
+}
+
+/// Le ricette che stanno dentro quello che la plancia ha mandato.
+///
+/// Si rileggono campo per campo come tutto il resto: quello che arriva da una
+/// pagina non si copia come viene, e qui dentro c'e' il nome di un servizio che
+/// poi si chiama davvero. Non solleva mai.
+List<RicettaDellAzione> leRicetteDaScrivere(String detto) {
+  if (detto.isEmpty || detto.length > _quantoGrande) return const [];
+  final letto = _prova(detto);
+  if (letto is! Map<String, Object?>) return const [];
+  final fuori = <RicettaDellAzione>[];
+  for (final riga in _elenco(letto['ricette'])) {
+    if (fuori.length >= azioniAlMassimo) break;
+    final id = _pulito(riga['id'], fino: _quantoLungo * 2);
+    final dominio = _pulito(riga['dominio'], fino: 48);
+    final servizio = _pulito(riga['servizio'], fino: 48);
+    final entita = _pulito(riga['entita'], fino: _quantoLungo * 2);
+    if (id.isEmpty ||
+        dominio.isEmpty ||
+        servizio.isEmpty ||
+        !entita.contains('.')) {
+      continue;
+    }
+    /* Una voce sola, e una stringa: e' l'unico dato che un'azione rapida porta
+     * oltre all'entita'. Quello che non e' scritto qui non arriva a Home
+     * Assistant, ed e' voluto. */
+    final dati = riga['dati'];
+    final voce = dati is Map ? _pulito(dati['option']) : '';
+    fuori.add(
+      RicettaDellAzione(
+        id: id,
+        dominio: dominio,
+        servizio: servizio,
+        entita: entita,
+        dati: voce.isEmpty ? const {} : {'option': voce},
+      ),
+    );
+  }
+  return fuori;
+}
+
+/// Come si scrivono sul disco, tutte insieme.
+String leRicetteScritte(List<RicettaDellAzione> ricette) => jsonEncode({
+  'ricette': [for (final una in ricette) una.comeSiScrive],
+});
+
+/// La ricetta di questo segno, fra quelle scritte. `null` se non c'e': il
+/// tasto premuto in macchina non e' uno di quelli che partono da soli, o
+/// l'elenco e' cambiato da quando la fotografia e' partita.
+RicettaDellAzione? laRicettaDi(String id, List<RicettaDellAzione> ricette) {
+  final quale = id.trim();
+  if (quale.isEmpty) return null;
+  for (final una in ricette) {
+    if (una.id == quale) return una;
+  }
+  return null;
 }

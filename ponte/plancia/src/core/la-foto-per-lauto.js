@@ -101,6 +101,58 @@ function lePersone(persone, states) {
   return fuori;
 }
 
+/* Quello che un tasto non si può fare da solo, a schermo spento.
+ *
+ * Un'azione rapida premuta in macchina la esegue l'app, e l'app può essere
+ * chiusa: in quel caso non c'è nessuno schermo, nessuno che guarda e nessuno a
+ * cui chiedere. Alcune azioni quel mondo non lo reggono, e vanno lasciate
+ * indietro invece di eseguirle a metà:
+ *
+ * — quelle che aprono qualcosa nella plancia (un pannello delle luci, una voce
+ *   del guscio): senza plancia non c'è niente da aprire;
+ * — quelle con una domanda di conferma: la conferma è il segno che chi l'ha
+ *   messa voleva essere guardato in faccia prima, e a schermo spento quella
+ *   domanda non la vede nessuno;
+ * — il menu a tendina senza una voce fissata: la voce si sceglie, e scegliere
+ *   vuol dire un dito su uno schermo;
+ * — la serratura e il lettore, perché lì il servizio giusto dipende da com'è
+ *   messa l'entità ADESSO. La ricetta invece è scritta prima, e una ricetta
+ *   che congela lo stato di mezz'ora fa chiuderebbe una porta che intanto
+ *   qualcuno ha aperto.
+ *
+ * Quelle restano com'erano: partono quando l'app torna viva, e il tasto in
+ * macchina lo dice. */
+const DIPENDE_DA_ADESSO = new Set(["lock", "media_player"]);
+const CHIEDE_UNA_VOCE = new Set(["select", "input_select"]);
+const NON_ESCE_DALLA_PLANCIA = new Set(["builtin", "luci_group"]);
+
+/**
+ * Come si esegue questo tasto senza nessuno che guardi, o `null`.
+ *
+ * `risolvi` dice quale entità è davvero — la plancia ha le sue sostituzioni —
+ * e quale servizio vuole: sono due cose che sa la sezione, e che qui non si
+ * rifanno. Quello che si decide qui è se si può eseguire da soli, che è una
+ * scelta, non un conto.
+ */
+export function laRicettaDellAzione(azione, risolvi) {
+  if (!azione) return null;
+  const tipo = pulito(azione.type).toLowerCase();
+  if (NON_ESCE_DALLA_PLANCIA.has(tipo)) return null;
+  if (pulito(azione.confirm)) return null;
+  const risolta = typeof risolvi === "function" ? risolvi(azione) : null;
+  const entita = pulito(risolta?.entita);
+  if (!entita.includes(".")) return null;
+  const dominio =
+    tipo === "script" ? "script" : tipo === "scene" ? "scene" : entita.split(".")[0].toLowerCase();
+  if (DIPENDE_DA_ADESSO.has(dominio)) return null;
+  const dati = risolta?.dati && typeof risolta.dati === "object" ? { ...risolta.dati } : {};
+  if (CHIEDE_UNA_VOCE.has(dominio) && !pulito(dati.option)) return null;
+  const servizio =
+    pulito(risolta?.servizio) ||
+    (dominio === "script" || dominio === "scene" ? "turn_on" : "toggle");
+  return { dominio, servizio, entita, dati };
+}
+
 /* I tasti, col loro posto.
  *
  * Un'azione rapida un nome suo con cui chiamarla non ce l'ha: la plancia le
@@ -119,7 +171,7 @@ function lePersone(persone, states) {
  * dopo. Per questo si conta sull'indice di chi entra, non su quanti ne sono
  * usciti. E per la stessa ragione il segno lo fa questo file e lo legge questo
  * file: sono i due capi della stessa cosa. */
-function iTastiColPosto(azioni) {
+function iTastiColPosto(azioni, risolvi) {
   const fuori = [];
   for (const [posto, azione] of (Array.isArray(azioni) ? azioni : []).entries()) {
     if (fuori.length >= AZIONI_AL_MASSIMO) break;
@@ -127,13 +179,40 @@ function iTastiColPosto(azioni) {
     /* Senza un nome non c'è niente da scrivere sul tasto, e un tasto muto in
      * macchina non si preme: si preme quello sbagliato accanto. */
     if (!nome) continue;
-    fuori.push({ posto, id: `${posto}|${nome}`, nome, segno: pulito(azione?.icon) });
+    fuori.push({
+      posto,
+      id: `${posto}|${nome}`,
+      nome,
+      segno: pulito(azione?.icon),
+      ricetta: laRicettaDellAzione(azione, risolvi),
+    });
   }
   return fuori;
 }
 
-function leAzioni(azioni) {
-  return iTastiColPosto(azioni).map(({ id, nome, segno }) => ({ id, nome, segno }));
+function leAzioni(azioni, risolvi) {
+  return iTastiColPosto(azioni, risolvi).map(({ id, nome, segno, ricetta }) => ({
+    id,
+    nome,
+    segno,
+    /* Se parte da sola o se aspetta l'app. Lo dice il tasto in macchina, e
+     * dirlo è il punto: «è partito» su una cosa che parte fra mezz'ora è la
+     * bugia peggiore che possa dire un cruscotto. */
+    subito: Boolean(ricetta),
+  }));
+}
+
+/**
+ * Le ricette dei tasti che possono partire da soli.
+ *
+ * Non finiscono nel file che legge l'auto: lì ci vanno i nomi, e nomi e basta.
+ * Queste stanno in un file dell'app, che è l'unica che poi le esegue — e
+ * l'unica che ha di che farlo.
+ */
+export function leRicettePerLAuto(azioni, risolvi) {
+  return iTastiColPosto(azioni, risolvi)
+    .filter((tasto) => tasto.ricetta)
+    .map((tasto) => ({ id: tasto.id, ...tasto.ricetta }));
 }
 
 /**
@@ -163,6 +242,7 @@ export function laFotoPerLAuto({
   persone = [],
   states = {},
   azioni = [],
+  risolvi = null,
   adesso = Date.now(),
 } = {}) {
   const foto = {
@@ -170,7 +250,7 @@ export function laFotoPerLAuto({
     quando: Number.isFinite(adesso) ? adesso : Date.now(),
     fotovoltaico: leMisure(energia),
     persone: lePersone(persone, states),
-    azioni: leAzioni(azioni),
+    azioni: leAzioni(azioni, risolvi),
   };
   if (!foto.fotovoltaico.length && !foto.persone.length && !foto.azioni.length) return null;
   return foto;

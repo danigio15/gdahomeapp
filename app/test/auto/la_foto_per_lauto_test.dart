@@ -34,7 +34,12 @@ void main() {
       {'nome': 'Gio', 'inCasa': true},
     ]);
     expect(foto['azioni'], [
-      {'id': '0|Buonanotte', 'nome': 'Buonanotte', 'segno': '🌙'},
+      {
+        'id': '0|Buonanotte',
+        'nome': 'Buonanotte',
+        'segno': '🌙',
+        'subito': false,
+      },
     ]);
   });
 
@@ -110,7 +115,7 @@ void main() {
       {'nome': 'Solare', 'valore': '485 W'},
     ]);
     expect(foto['azioni'], [
-      {'id': '1|Vera', 'nome': 'Vera', 'segno': ''},
+      {'id': '1|Vera', 'nome': 'Vera', 'segno': '', 'subito': false},
     ]);
     /* Chi non dice se e' in casa non e' in casa: in macchina si legge «fuori»,
        che e' la risposta prudente delle due. */
@@ -209,6 +214,94 @@ void main() {
       ]) {
         expect(ilComandoDellAuto(detto, adesso: adesso), isNull, reason: detto);
       }
+    });
+  });
+
+  group('le ricette dei tasti che partono da soli', () {
+    const mandata =
+        '{"persone":[{"nome":"Gio"}],'
+        '"azioni":[{"id":"0|Cancello","nome":"Cancello","subito":true}],'
+        '"ricette":[{"id":"0|Cancello","dominio":"switch","servizio":"toggle",'
+        '"entita":"switch.cancello"}]}';
+
+    test('le ricette non finiscono nel file che legge l\'auto', () {
+      /* Là dentro ci vanno i nomi, e nomi e basta: un cruscotto in macchina
+         non ha niente da farsene di «switch.cancello». A tenerle fuori è la
+         rilettura campo per campo, non un ricordarsene. */
+      final scritta = laFotoDaScrivere(mandata, casa: 'Casa')!;
+      expect(scritta.contains('switch.cancello'), isFalse);
+      expect(scritta.contains('ricette'), isFalse);
+      expect(scritta.contains('Cancello'), isTrue);
+    });
+
+    test('col lucchetto acceso niente parte da solo', () {
+      /* Chi l'ha messo ha detto che in casa non si entra senza che sia lui a
+         tenere il telefono: un tasto premuto in macchina da uno schermo che
+         non chiede niente sarebbe la porta di dietro di quella serratura. */
+      final con = _letto(laFotoDaScrivere(mandata, casa: 'Casa'));
+      expect((con['azioni']! as List).first, containsPair('subito', true));
+      final senza = _letto(
+        laFotoDaScrivere(mandata, casa: 'Casa', daSola: false),
+      );
+      expect((senza['azioni']! as List).first, containsPair('subito', false));
+    });
+
+    test('una ricetta a metà non si esegue a metà', () {
+      /* Quello che arriva da una pagina non si copia come viene: qui dentro
+         c'è il nome di un servizio che poi si chiama davvero. */
+      for (final rotta in <String>[
+        '{"ricette":[{"dominio":"switch","servizio":"toggle","entita":"switch.x"}]}',
+        '{"ricette":[{"id":"0|X","servizio":"toggle","entita":"switch.x"}]}',
+        '{"ricette":[{"id":"0|X","dominio":"switch","entita":"switch.x"}]}',
+        '{"ricette":[{"id":"0|X","dominio":"switch","servizio":"toggle","entita":"senzapunto"}]}',
+        '{"ricette":"tante"}',
+        '{}',
+      ]) {
+        expect(leRicetteDaScrivere(rotta), isEmpty, reason: rotta);
+      }
+    });
+
+    test('della ricetta passa solo quello che serve a chiamare', () {
+      const con =
+          '{"ricette":[{"id":"0|Modo","dominio":"select",'
+          '"servizio":"select_option","entita":"select.modo",'
+          '"dati":{"option":"Notte","altro":"non passa"}}]}';
+      final ricette = leRicetteDaScrivere(con);
+      expect(ricette.length, 1);
+      expect(ricette.first.dati, {'option': 'Notte'});
+      expect(leRicetteScritte(ricette).contains('non passa'), isFalse);
+    });
+
+    test('scritte e rilette dicono la stessa cosa', () {
+      final ricette = leRicetteDaScrivere(mandata);
+      final tornate = leRicetteDaScrivere(leRicetteScritte(ricette));
+      expect(tornate.length, ricette.length);
+      expect(tornate.first.id, '0|Cancello');
+      expect(tornate.first.entita, 'switch.cancello');
+      expect(tornate.first.servizio, 'toggle');
+      expect(tornate.first.dominio, 'switch');
+    });
+
+    test('si trova per segno, e solo quello giusto', () {
+      final ricette = leRicetteDaScrivere(mandata);
+      expect(laRicettaDi('0|Cancello', ricette)?.entita, 'switch.cancello');
+      /* Riordinate, o rinominate: non si esegue niente. */
+      expect(laRicettaDi('1|Cancello', ricette), isNull);
+      expect(laRicettaDi('0|Portone', ricette), isNull);
+      expect(laRicettaDi('', ricette), isNull);
+    });
+
+    test('più di sei ricette non se ne scrivono', () {
+      final tante = List.generate(
+        9,
+        (i) =>
+            '{"id":"$i|A$i","dominio":"switch","servizio":"toggle",'
+            '"entita":"switch.a$i"}',
+      ).join(',');
+      expect(
+        leRicetteDaScrivere('{"ricette":[$tante]}').length,
+        azioniAlMassimo,
+      );
     });
   });
 }

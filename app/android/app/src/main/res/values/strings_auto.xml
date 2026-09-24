@@ -22,6 +22,7 @@
          comando lo esegue l'app, e l'app lo esegue solo se e' viva. Detto
          cosi' chi preme sa cosa aspettarsi; «e' partito» sarebbe una bugia
          tutte le volte che l'app e' chiusa. -->
+    <string name="auto_comando_fatto">%1$s: fatto</string>
     <string name="auto_comando_partito">%1$s: parte appena apri gdahome sul telefono, entro due minuti</string>
     <string name="auto_comando_non_parte">%1$s: non sono riuscito a scriverlo</string>
 </resources>

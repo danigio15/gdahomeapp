@@ -45,7 +45,21 @@ data class Persona(val nome: String, val inCasa: Boolean)
  * non e' piu' la stessa azione: chi esegue controlla, e se non torna non preme
  * niente. Qui l'id non si guarda: si porta di la' com'e'.
  */
-data class Azione(val id: String, val nome: String, val segno: String)
+data class Azione(
+    val id: String,
+    val nome: String,
+    val segno: String,
+    /**
+     * Se parte da sola, anche con l'app chiusa e lo schermo spento.
+     *
+     * Lo dicono in due, ed e' il telefono a scriverlo: la plancia sa cos'e'
+     * l'azione — una con una conferma da mostrare, o un menu da far scegliere,
+     * qualcuno che guardi ce lo vuole — e il telefono sa se c'e' il lucchetto,
+     * che quando c'e' non fa partire niente senza che l'app sia stata aperta.
+     * Qui non si decide: si legge, e si scrive la cosa giusta sul tasto.
+     */
+    val subito: Boolean,
+)
 
 data class FotoDellaCasa(
     val casa: String,
@@ -118,7 +132,17 @@ private fun leAzioni(json: JSONObject): List<Azione> {
         val id = voce.optString("id", "").trim()
         val nome = voce.optString("nome", "").trim()
         if (id.isNotEmpty() && nome.isNotEmpty()) {
-            fuori.add(Azione(id, nome, voce.optString("segno", "").trim()))
+            fuori.add(
+                Azione(
+                    id = id,
+                    nome = nome,
+                    segno = voce.optString("segno", "").trim(),
+                    /* Non scritto vale «no»: una fotografia di un'app piu'
+                     * vecchia di questo campo non deve promettere che il tasto
+                     * parte da solo. */
+                    subito = voce.optBoolean("subito", false),
+                ),
+            )
         }
     }
     return fuori

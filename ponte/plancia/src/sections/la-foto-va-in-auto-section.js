@@ -37,7 +37,9 @@ import {
   firmaDellaFoto,
   ilTastoDelComando,
   laFotoPerLAuto,
+  leRicettePerLAuto,
 } from "../core/la-foto-per-lauto.js";
+import { datiPerEntita, servizioPerEntita } from "./azioni-servizio-giusto-section.js";
 import { normalizePeople } from "../core/person-model.js";
 import { carteDalleRighe, modelliDelleTessere } from "./home-widgets-section.js";
 import { allStates, clean, doc, readJson, root } from "./shared.js";
@@ -113,6 +115,30 @@ function lElencoDelleAzioni() {
   return Array.isArray(scritto) ? scritto : [];
 }
 
+/* Cos'è davvero l'entità di un'azione, e che servizio vuole.
+ *
+ * Due cose che la plancia sa e il nucleo no: le sostituzioni di entità — chi
+ * ha rimappato una luce a mano — e la tabella dei servizi giusti, quella che
+ * sa che un `button` si preme e non si accende. Sono le stesse che usa il
+ * tasto in Home: se qui se ne facesse una copia, il tasto in macchina e il
+ * tasto in casa farebbero due cose diverse sulla stessa azione. */
+function comeSiEsegue(states) {
+  return (azione) => {
+    const scritta = clean(azione?.entity);
+    let entita = scritta;
+    try {
+      entita = clean(root.resolveEntity?.(scritta)) || scritta;
+    } catch (_errore) {
+      entita = scritta;
+    }
+    return {
+      entita,
+      servizio: servizioPerEntita(entita, states),
+      dati: datiPerEntita(entita, azione),
+    };
+  };
+}
+
 /** La fotografia di adesso, o `null` se non c'è niente da mandare. */
 export function fotografaLaCasa(adesso = Date.now()) {
   const states = allStates();
@@ -121,6 +147,7 @@ export function fotografaLaCasa(adesso = Date.now()) {
     persone: normalizePeople(readJson("cd_people", [])),
     states,
     azioni: lElencoDelleAzioni(),
+    risolvi: comeSiEsegue(states),
     adesso,
   });
 }
@@ -146,7 +173,16 @@ export function laFotoVaInAuto(adesso = Date.now()) {
   const firma = firmaDellaFoto(foto);
   if (firma === state.firma && adesso - state.quando < RINFRESCA_MS) return false;
   try {
-    canale.postMessage(JSON.stringify(foto));
+    /* Le ricette viaggiano accanto alla fotografia, non dentro: nel file che
+     * legge l'auto ci vanno i nomi, e nomi e basta. Chi scrive il file le
+     * rilegge campo per campo e le mette da un'altra parte — è quella
+     * rilettura che le tiene fuori, non un ricordarsene. */
+    canale.postMessage(
+      JSON.stringify({
+        ...foto,
+        ricette: leRicettePerLAuto(lElencoDelleAzioni(), comeSiEsegue(allStates())),
+      }),
+    );
   } catch (_errore) {
     /* Il canale c'è ma non ha preso: si riproverà al giro dopo, e intanto la
      * firma resta quella di prima — così il prossimo tentativo riparte da

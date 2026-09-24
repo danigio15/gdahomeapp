@@ -224,13 +224,22 @@ class StatoDellaCasa {
   }
 
   /// Accende, spegne, o inverte. Torna quando Home Assistant ha risposto.
+  ///
+  /// [dominio] quasi sempre non si passa: e' quello dell'entita', ed e' la
+  /// risposta giusta. Si passa quando l'entita' e il servizio stanno in due
+  /// domini diversi — una scena chiamata da un tasto dichiarato «scena», dove
+  /// il servizio e' `scene.turn_on` — e li' indovinarlo dall'entita' vorrebbe
+  /// dire chiamare un servizio che non esiste.
   Future<void> comanda(
     String servizio,
     String suChe, {
     Map<String, dynamic>? con,
+    String? dominio,
   }) => _filo.chiedi({
     'type': 'call_service',
-    'domain': suChe.split('.').first,
+    'domain': dominio?.trim().isNotEmpty == true
+        ? dominio!.trim()
+        : suChe.split('.').first,
     'service': servizio,
     'target': {'entity_id': suChe},
     if (con != null) 'service_data': con,

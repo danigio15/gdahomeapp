@@ -16,6 +16,8 @@ import {
   firmaDellaFoto,
   ilTastoDelComando,
   laFotoPerLAuto,
+  laRicettaDellAzione,
+  leRicettePerLAuto,
 } from "../src/core/la-foto-per-lauto.js";
 
 const leggi = (quale) => readFileSync(new URL(quale, import.meta.url), "utf8");
@@ -120,7 +122,12 @@ test("le azioni sono sei, col posto e il nome nel segno", () => {
   const foto = laFotoPerLAuto({ azioni });
   assert.equal(foto.azioni.length, AZIONI_AL_MASSIMO);
   /* Le prime sei: sono quelle che chi ha la casa ha messo davanti. */
-  assert.deepEqual(foto.azioni[0], { id: "0|Azione 0", nome: "Azione 0", segno: "💡" });
+  assert.deepEqual(foto.azioni[0], {
+    id: "0|Azione 0",
+    nome: "Azione 0",
+    segno: "💡",
+    subito: false,
+  });
   assert.equal(foto.azioni.at(-1).id, "5|Azione 5");
 });
 
@@ -131,7 +138,9 @@ test("un tasto senza nome non si disegna, e non sposta gli altri", () => {
   const foto = laFotoPerLAuto({
     azioni: [{ name: " " }, { name: "Cancello", icon: "🚧" }],
   });
-  assert.deepEqual(foto.azioni, [{ id: "1|Cancello", nome: "Cancello", segno: "🚧" }]);
+  assert.deepEqual(foto.azioni, [
+    { id: "1|Cancello", nome: "Cancello", segno: "🚧", subito: false },
+  ]);
 });
 
 test("il comando torna al tasto giusto, o a nessuno", () => {
@@ -211,4 +220,142 @@ test("quello che esce è la forma che l'auto sa leggere", () => {
   for (const campo of Object.keys(foto.fotovoltaico[0])) assert.match(auto, new RegExp(`"${campo}"`));
   for (const campo of Object.keys(foto.persone[0])) assert.match(auto, new RegExp(`"${campo}"`));
   for (const campo of Object.keys(foto.azioni[0])) assert.match(auto, new RegExp(`"${campo}"`));
+});
+
+/* ── Quello che può partire a schermo spento ─────────────────────────────── */
+
+/* La plancia sa cos'è un'azione; il nucleo decide se può partire da sola. Quel
+ * «da sola» vuol dire: nessuno che guardi, nessuno a cui chiedere, e uno
+ * schermo spento in tasca. */
+const RISOLVI = (azione) => ({
+  entita: azione.entity || "",
+  servizio: azione.servizio || "",
+  dati: azione.dati || {},
+});
+
+test("un tasto normale parte da solo, con la sua ricetta", () => {
+  assert.deepEqual(
+    laRicettaDellAzione({ name: "Cancello", entity: "switch.cancello" }, RISOLVI),
+    { dominio: "switch", servizio: "toggle", entita: "switch.cancello", dati: {} },
+  );
+  /* Il servizio giusto lo dice la plancia, che ha la sua tabella: qui non se
+   * ne fa una seconda. */
+  assert.deepEqual(
+    laRicettaDellAzione(
+      { name: "Campanello", entity: "button.campanello", servizio: "press" },
+      RISOLVI,
+    ),
+    { dominio: "button", servizio: "press", entita: "button.campanello", dati: {} },
+  );
+  /* Uno script dichiarato tale chiama `script.turn_on`, e il dominio non si
+   * indovina dall'entità: indovinandolo si chiamerebbe un servizio che non
+   * esiste. */
+  assert.deepEqual(
+    laRicettaDellAzione({ name: "Notte", type: "script", entity: "script.notte" }, RISOLVI),
+    { dominio: "script", servizio: "turn_on", entita: "script.notte", dati: {} },
+  );
+});
+
+test("una conferma vuol dire che qualcuno deve guardare", () => {
+  /* La conferma è il segno che chi l'ha messa voleva essere guardato in faccia
+   * prima: a schermo spento quella domanda non la vede nessuno, e saltarla
+   * sarebbe toglierla. */
+  assert.equal(
+    laRicettaDellAzione(
+      { name: "Cancello", entity: "switch.cancello", confirm: "Apro il cancello?" },
+      RISOLVI,
+    ),
+    null,
+  );
+});
+
+test("quello che apre qualcosa nella plancia non parte da solo", () => {
+  /* Senza plancia non c'è niente da aprire. */
+  for (const tipo of ["builtin", "luci_group"])
+    assert.equal(
+      laRicettaDellAzione({ name: "X", type: tipo, entity: "light.x" }, RISOLVI),
+      null,
+      tipo,
+    );
+  /* E senza un'entità non c'è niente da chiamare. */
+  assert.equal(laRicettaDellAzione({ name: "X" }, RISOLVI), null);
+  assert.equal(laRicettaDellAzione({ name: "X", entity: "senzapunto" }, RISOLVI), null);
+  assert.equal(laRicettaDellAzione(null, RISOLVI), null);
+});
+
+test("il menu parte solo se la voce è già scelta", () => {
+  /* Scegliere vuol dire un dito su uno schermo. */
+  assert.equal(
+    laRicettaDellAzione(
+      { name: "Modo", entity: "select.modo", servizio: "select_option" },
+      RISOLVI,
+    ),
+    null,
+  );
+  assert.deepEqual(
+    laRicettaDellAzione(
+      {
+        name: "Notte",
+        entity: "select.modo",
+        servizio: "select_option",
+        dati: { option: "Notte" },
+      },
+      RISOLVI,
+    ),
+    {
+      dominio: "select",
+      servizio: "select_option",
+      entita: "select.modo",
+      dati: { option: "Notte" },
+    },
+  );
+});
+
+test("serratura e lettore aspettano l'app, perché dipendono da adesso", () => {
+  /* Lì il servizio giusto dipende da com'è messa l'entità ADESSO, e la ricetta
+   * è scritta prima: una ricetta che congela lo stato di mezz'ora fa
+   * chiuderebbe una porta che intanto qualcuno ha aperto. */
+  for (const entita of ["lock.ingresso", "media_player.salotto"])
+    assert.equal(
+      laRicettaDellAzione({ name: "X", entity: entita, servizio: "lock" }, RISOLVI),
+      null,
+      entita,
+    );
+});
+
+test("la fotografia dice quali tasti partono da soli, e le ricette stanno fuori", () => {
+  const azioni = [
+    { name: "Cancello", icon: "🚧", entity: "switch.cancello" },
+    { name: "Portone", icon: "🚪", entity: "lock.portone" },
+    { name: "Luci", icon: "💡", entity: "light.tutte", confirm: "Spengo tutto?" },
+  ];
+  const foto = laFotoPerLAuto({ azioni, risolvi: RISOLVI });
+  assert.deepEqual(foto.azioni, [
+    { id: "0|Cancello", nome: "Cancello", segno: "🚧", subito: true },
+    { id: "1|Portone", nome: "Portone", segno: "🚪", subito: false },
+    { id: "2|Luci", nome: "Luci", segno: "💡", subito: false },
+  ]);
+  /* Nel file che legge l'auto ci vanno i nomi, e nomi e basta: un cruscotto in
+   * macchina non ha niente da farsene di «switch.cancello». */
+  assert.doesNotMatch(JSON.stringify(foto), /switch\.cancello/);
+
+  const ricette = leRicettePerLAuto(azioni, RISOLVI);
+  assert.deepEqual(ricette, [
+    {
+      id: "0|Cancello",
+      dominio: "switch",
+      servizio: "toggle",
+      entita: "switch.cancello",
+      dati: {},
+    },
+  ]);
+});
+
+test("senza sapere come si esegue, nessun tasto promette di partire da solo", () => {
+  /* È la risposta prudente: chi non ha passato il modo di eseguire non ha
+   * detto che si può, e un tasto che promette e non fa è peggio di uno che
+   * dice di aspettare. */
+  const foto = laFotoPerLAuto({ azioni: [{ name: "Cancello", entity: "switch.cancello" }] });
+  assert.equal(foto.azioni[0].subito, false);
+  assert.deepEqual(leRicettePerLAuto([{ name: "Cancello", entity: "switch.cancello" }]), []);
 });

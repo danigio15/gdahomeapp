@@ -24,14 +24,23 @@ import 'la_foto.dart';
 /// Prima in un file accanto e poi si rinomina: l'auto legge quando le pare —
 /// e' un altro processo — e senza questo passaggio un giorno le capiterebbe di
 /// leggerne meta'. Il rinomina, sullo stesso disco, e' una cosa sola.
-Future<bool> lasciaLaFotoAllAuto(String detto, {required String casa}) async {
-  final scritta = laFotoDaScrivere(detto, casa: casa);
+Future<bool> lasciaLaFotoAllAuto(
+  String detto, {
+  required String casa,
+  bool daSola = true,
+}) async {
+  final scritta = laFotoDaScrivere(detto, casa: casa, daSola: daSola);
   if (scritta == null) return false;
   try {
     final cartella = await getApplicationSupportDirectory();
     final mezzo = File('${cartella.path}/$nomeDelFile.mezzo');
     await mezzo.writeAsString(scritta, flush: true);
     await mezzo.rename('${cartella.path}/$nomeDelFile');
+    /* Le ricette vanno in un file loro, e non in quello dell'auto: la' dentro
+     * ci vanno i nomi, e nomi e basta. Col lucchetto acceso non se ne scrive
+     * nessuna — niente parte da solo, e una ricetta che nessuno eseguira' e'
+     * solo un elenco di entita' in piu' sul disco. */
+    await _leRicette(cartella, daSola ? leRicetteDaScrivere(detto) : const []);
     return true;
   } catch (_) {
     /* Il disco pieno, un permesso, la cartella che non c'e': in macchina si
@@ -66,5 +75,36 @@ Future<String?> prendiIlComandoDellAuto() async {
      * macchina si e' gia' visto che il comando parte quando l'app e' in linea,
      * e questa volta non lo era. */
     return null;
+  }
+}
+
+Future<void> _leRicette(
+  Directory cartella,
+  List<RicettaDellAzione> ricette,
+) async {
+  final file = File('${cartella.path}/$nomeDelleRicette');
+  try {
+    if (ricette.isEmpty) {
+      if (await file.exists()) await file.delete();
+      return;
+    }
+    final mezzo = File('${file.path}.mezzo');
+    await mezzo.writeAsString(leRicetteScritte(ricette), flush: true);
+    await mezzo.rename(file.path);
+  } catch (_) {
+    /* Senza ricette i tasti aspettano l'app, che e' quello che facevano
+     * prima: non e' un motivo per non scrivere la fotografia. */
+  }
+}
+
+/// Le ricette scritte, per chi deve eseguire un comando.
+Future<List<RicettaDellAzione>> leRicetteDellAuto() async {
+  try {
+    final cartella = await getApplicationSupportDirectory();
+    final file = File('${cartella.path}/$nomeDelleRicette');
+    if (!await file.exists()) return const [];
+    return leRicetteDaScrivere(await file.readAsString());
+  } catch (_) {
+    return const [];
   }
 }

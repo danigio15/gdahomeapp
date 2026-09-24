@@ -90,13 +90,61 @@ non si fa niente: è il verso giusto in cui sbagliare. Per questo il tasto in
 macchina dice «parte appena apri gdahome sul telefono, entro due minuti», e
 non «è partito».
 
-## Cosa manca ancora
+## A schermo spento
 
-**L'app deve essere viva.** Android Auto tiene su il processo, ma non la parte
-Flutter: se l'app è chiusa il comando resta scritto e scade. Perché parta con
-lo schermo del telefono spento servirebbe un ponte che non passa dalla
-schermata — un motore Flutter senza interfaccia, o un servizio che tiene il
-filo — ed è un pezzo suo.
+Android Auto tiene su il **processo** dell'app — il servizio dell'auto gira lì
+dentro — ma non la parte Flutter. Con l'app chiusa il comando restava scritto e
+scadeva, e chi aveva premuto «Cancello» guidando doveva poi prendere il telefono
+e aprire gdahome: esattamente quello che in macchina non si vuole fare.
+
+`IlPonteDellAuto.kt` accende un **motore Flutter senza schermo** sul secondo
+ingresso `inAuto` (`lib/main.dart` → `lib/auto/in_auto.dart`), e quello esegue.
+Il telefono resta spento e in mano non compare niente. Il filo con la casa resta
+uno solo, ed è quello di Dart: il Kotlin con la casa continua a non parlare, ed
+è la ragione per cui si accende un motore invece di riscrivere la stretta di
+mano qui.
+
+Il motore resta acceso finché Android Auto è attaccato, e a ogni tasto premuto
+arriva un colpetto sul canale `gdahome/auto/guarda`. Accenderne uno per ogni
+pressione vorrebbe dire far ripartire tutto — macchina virtuale, plugin,
+cassaforte — per un `call_service`. La sessione, finendo, lo spegne.
+
+### Le ricette
+
+Senza schermo non c'è plancia, e senza plancia non c'è `qaRun`. Quello che
+un'azione rapida **vuol dire** — quale entità davvero, quale servizio, quale
+voce mettere in un menu — lo sa la plancia, e rifarlo in Dart sarebbe una
+seconda tabella dei servizi che il giorno che si scosta fa partire la cosa
+sbagliata.
+
+Quindi la plancia, mentre è aperta, lascia scritte le ricette dei tasti che
+possono partire da soli, in un file suo (`gdahome-auto-ricette.json`). **Non è
+quello che legge l'auto**: lì dentro ci sono i nomi delle entità, e in macchina
+non servono. A tenerle fuori dal file dell'auto è la rilettura campo per campo
+di `la_foto.dart`, non un ricordarsene.
+
+### Cosa NON parte da solo
+
+| | perché |
+|---|---|
+| una con una conferma | la conferma è il segno che chi l'ha messa voleva essere guardato in faccia prima |
+| un menu senza voce fissata | scegliere vuol dire un dito su uno schermo |
+| serratura, lettore | lì il servizio giusto dipende da com'è messa l'entità **adesso**, e una ricetta scritta prima congelerebbe lo stato di mezz'ora fa |
+| quelle che aprono qualcosa nella plancia | senza plancia non c'è niente da aprire |
+| **tutte, col lucchetto acceso** | chi l'ha messo ha detto che in casa non si entra senza che sia lui a tenere il telefono |
+
+Quelle restano come prima: partono quando l'app torna viva. E il tasto in
+macchina lo dice — «fatto» per le une, «parte appena apri gdahome sul telefono»
+per le altre — perché `subito` viaggia con ogni azione dentro la fotografia.
+
+## Cosa non si è potuto provare qui
+
+Il Kotlin di questa cartella **non è mai stato compilato**: in questo contenitore
+non c'è l'SDK di Android e i server di Google non si raggiungono, quindi non si
+può né costruire l'APK né far girare il Desktop Head Unit. Quello che è provato
+davvero è tutto il resto: il nucleo della plancia, lo scrittore e l'esecutore in
+Dart, e nel browser vero che dal canale escono la fotografia e le ricette
+giuste. Il primo `flutter build apk` va fatto su una macchina con l'SDK.
 
 ## Come si guarda davvero
 

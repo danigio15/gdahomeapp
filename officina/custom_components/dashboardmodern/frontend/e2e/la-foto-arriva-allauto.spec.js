@@ -22,6 +22,10 @@ const PERSONE = [
 const AZIONI = [
   { name: "Buonanotte", icon: "🌙", type: "scene", entity: "scene.buonanotte" },
   { name: "Cancello", icon: "🚧", type: "script", entity: "script.cancello" },
+  /* Una che qualcuno che guardi ce lo vuole: la conferma è il segno che chi
+     l'ha messa voleva essere guardato in faccia prima, e a schermo spento
+     quella domanda non la vede nessuno. */
+  { name: "Spegni tutto", icon: "💡", entity: "light.tutte", confirm: "Spengo tutto?" },
 ];
 
 const SEME = {
@@ -147,11 +151,50 @@ test("dentro l'app la fotografia parte, e porta quello che si legge guidando", a
   ]);
 
   /* E i tasti, col posto e il nome nell'id: fra la fotografia e il tasto
-   * premuto qualcuno può aver riordinato l'elenco. */
+   * premuto qualcuno può aver riordinato l'elenco. `subito` dice quali partono
+   * anche a schermo spento — e quella con la conferma non è fra loro. */
   expect(foto.azioni).toEqual([
-    { id: "0|Buonanotte", nome: "Buonanotte", segno: "🌙" },
-    { id: "1|Cancello", nome: "Cancello", segno: "🚧" },
+    { id: "0|Buonanotte", nome: "Buonanotte", segno: "🌙", subito: true },
+    { id: "1|Cancello", nome: "Cancello", segno: "🚧", subito: true },
+    { id: "2|Spegni tutto", nome: "Spegni tutto", segno: "💡", subito: false },
   ]);
+});
+
+test("le ricette viaggiano accanto, non dentro", async ({ page }, testInfo) => {
+  await conLAuto(page);
+  await apriLaCasa(page, testInfo);
+
+  await guardaAdesso(page, 1_000_000);
+  const mandato = JSON.parse(await page.evaluate(() => window.__fotoRicevute.at(-1)));
+
+  /* Quello che serve a eseguire senza plancia: il dominio non si indovina
+     dall'entità — una scena chiamata da un tasto dichiarato «scena» vuole
+     `scene.turn_on` — e il servizio è quello della tabella della plancia, non
+     una seconda copia. La conferma non ha ricetta: qualcuno che guardi ce lo
+     vuole. */
+  expect(mandato.ricette).toEqual([
+    {
+      id: "0|Buonanotte",
+      dominio: "scene",
+      servizio: "turn_on",
+      entita: "scene.buonanotte",
+      dati: {},
+    },
+    {
+      id: "1|Cancello",
+      dominio: "script",
+      servizio: "turn_on",
+      entita: "script.cancello",
+      dati: {},
+    },
+  ]);
+
+  /* E la fotografia — quella che poi diventa il file dell'auto — gli id delle
+     entità non li ha: là dentro ci vanno i nomi, e nomi e basta. */
+  const foto = { ...mandato };
+  delete foto.ricette;
+  expect(JSON.stringify(foto)).not.toContain("scene.buonanotte");
+  expect(JSON.stringify(foto)).not.toContain("script.cancello");
 });
 
 test("se non cambia niente non si rimanda, e se cambia sì", async ({ page }, testInfo) => {

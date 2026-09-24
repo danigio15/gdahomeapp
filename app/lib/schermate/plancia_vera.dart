@@ -562,6 +562,13 @@ class PlanciaVeraState extends State<PlanciaVera> {
                 auto.lasciaLaFotoAllAuto(
                   foto,
                   casa: collegamento.casa?.nome ?? '',
+                  /* Col lucchetto acceso niente parte da solo: chi l'ha messo
+                     ha detto che in casa non si entra senza che sia lui a
+                     tenere il telefono, e un tasto premuto in macchina da uno
+                     schermo che non chiede niente sarebbe la porta di dietro
+                     di quella stessa serratura. Le azioni restano tutte lì:
+                     partono aprendo l'app, dove il lucchetto si apre. */
+                  daSola: !widget.impostazioni.lucchetto.acceso,
                 ),
               ),
             ),

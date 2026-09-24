@@ -45,4 +45,12 @@ class GdahomeCarAppService : CarAppService() {
 
 class SessioneInAuto : Session() {
     override fun onCreateScreen(intent: android.content.Intent) = LaCasaInAuto(carContext)
+
+    /* Finita la sessione — si spegne la macchina, si stacca il cavo — il
+     * motore Dart non serve piu'. Lasciarlo acceso vorrebbe dire un pezzo di
+     * app in piedi in tasca per niente, e la batteria la paga chi guida. */
+    override fun onDestroy(owner: androidx.lifecycle.LifecycleOwner) {
+        IlPonteDellAuto.spegni()
+        super.onDestroy(owner)
+    }
 }
