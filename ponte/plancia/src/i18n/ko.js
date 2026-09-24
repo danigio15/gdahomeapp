@@ -49,6 +49,7 @@ export default Object.freeze({
   "Install this update": "이 업데이트 설치",
   "Installing": "설치 중",
   "It changes the drawing, the page title and the fields you see. A motorcycle has no doors, windows, boot or bonnet: those fields go away, and whatever was mapped to them stays.": "그림과 페이지 제목, 그리고 보이는 항목이 바뀝니다. 오토바이에는 문도 창문도 트렁크도 보닛도 없으므로 그 항목들은 사라지고, 적어 둔 내용은 그대로 남습니다.",
+  "It is the same switch as the list under Settings → Widgets, where you also choose the order of the tiles.": "설정 → 위젯 목록에 있는 것과 같은 스위치입니다. 타일의 순서도 거기서 정합니다.",
   "Load to watch": "감시할 부하",
   "Lock": "잠금",
   "Motorcycle": "오토바이",

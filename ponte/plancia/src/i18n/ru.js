@@ -49,6 +49,7 @@ export default Object.freeze({
   "Install this update": "Установить это обновление",
   "Installing": "Установка",
   "It changes the drawing, the page title and the fields you see. A motorcycle has no doors, windows, boot or bonnet: those fields go away, and whatever was mapped to them stays.": "Меняет рисунок, заголовок страницы и видимые поля. У мотоцикла нет дверей, стёкол, багажника и капота: эти поля исчезают, а то, что в них было указано, сохраняется.",
+  "It is the same switch as the list under Settings → Widgets, where you also choose the order of the tiles.": "Это тот же переключатель, что и в списке в разделе «Настройки → Виджеты», где также выбирается порядок плиток.",
   "Load to watch": "Нагрузка под наблюдением",
   "Lock": "Заблокировать",
   "Motorcycle": "Мотоцикл",

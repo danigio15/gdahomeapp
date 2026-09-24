@@ -49,6 +49,7 @@ export default Object.freeze({
   "Install this update": "Deze update installeren",
   "Installing": "Bezig met installeren",
   "It changes the drawing, the page title and the fields you see. A motorcycle has no doors, windows, boot or bonnet: those fields go away, and whatever was mapped to them stays.": "Verandert de tekening, de paginatitel en de velden die je ziet. Een motorfiets heeft geen deuren, ramen, kofferbak of motorkap: die velden verdwijnen, en wat erin stond blijft bewaard.",
+  "It is the same switch as the list under Settings → Widgets, where you also choose the order of the tiles.": "Het is dezelfde schakelaar als in de lijst onder Instellingen → Widgets, waar je ook de volgorde van de tegels kiest.",
   "Load to watch": "Te bewaken belasting",
   "Lock": "Vergrendelen",
   "Motorcycle": "Motorfiets",

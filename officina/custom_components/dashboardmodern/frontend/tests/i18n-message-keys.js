@@ -1748,6 +1748,7 @@ export const MESSAGE_KEYS = Object.freeze([
   "It is fine as it is",
   "It is only used to say how long is left to charge: from the missing percentage and the charger's power. Left empty it counts 70 kWh, which is what the dashboard has always assumed — with a different battery the time comes out wrong in proportion.",
   "It is slow or it heats the machine",
+  "It is the same switch as the list under Settings → Widgets, where you also choose the order of the tiles.",
   "it is what it looks like",
   "it measures humidity",
   "it measures temperature",

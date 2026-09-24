@@ -49,6 +49,7 @@ export default Object.freeze({
   "Install this update": "安装此更新",
   "Installing": "正在安装",
   "It changes the drawing, the page title and the fields you see. A motorcycle has no doors, windows, boot or bonnet: those fields go away, and whatever was mapped to them stays.": "会改变图示、页面标题和显示的字段。摩托车没有车门、车窗、后备箱和引擎盖：这些字段会消失，已经填过的内容仍然保留。",
+  "It is the same switch as the list under Settings → Widgets, where you also choose the order of the tiles.": "这就是“配置 → 小组件”列表里的那个开关，磁贴的顺序也在那里选。",
   "Load to watch": "要监视的负载",
   "Lock": "上锁",
   "Motorcycle": "摩托车",

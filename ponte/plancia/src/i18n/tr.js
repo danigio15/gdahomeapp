@@ -49,6 +49,7 @@ export default Object.freeze({
   "Install this update": "Bu güncellemeyi yükle",
   "Installing": "Yükleniyor",
   "It changes the drawing, the page title and the fields you see. A motorcycle has no doors, windows, boot or bonnet: those fields go away, and whatever was mapped to them stays.": "Çizimi, sayfa başlığını ve görünen alanları değiştirir. Motosikletin kapısı, camı, bagajı ve kaputu yoktur: bu alanlar kaybolur, içlerine yazılmış olan ise durur.",
+  "It is the same switch as the list under Settings → Widgets, where you also choose the order of the tiles.": "Ayarlar → Widget'lar altındaki listedeki anahtarın aynısıdır; orada kartların sırasını da seçersin.",
   "Load to watch": "İzlenecek yük",
   "Lock": "Kilitle",
   "Motorcycle": "Motosiklet",

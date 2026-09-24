@@ -49,6 +49,7 @@ export default Object.freeze({
   "Install this update": "تثبيت هذا التحديث",
   "Installing": "جارٍ التثبيت",
   "It changes the drawing, the page title and the fields you see. A motorcycle has no doors, windows, boot or bonnet: those fields go away, and whatever was mapped to them stays.": "يغيّر الرسم وعنوان الصفحة والحقول الظاهرة. الدراجة النارية ليس لها أبواب ولا نوافذ ولا صندوق ولا غطاء محرك: تختفي تلك الحقول، ويبقى ما كُتب فيها.",
+  "It is the same switch as the list under Settings → Widgets, where you also choose the order of the tiles.": "هو نفسه المفتاح الموجود في القائمة ضمن الإعدادات ← الودجات، حيث تختار أيضًا ترتيب البطاقات.",
   "Load to watch": "الحمل المراد مراقبته",
   "Lock": "قفل",
   "Motorcycle": "دراجة نارية",

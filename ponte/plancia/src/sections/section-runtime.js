@@ -58,6 +58,7 @@ import { installAntifurtoSuMisuraEditorSection } from "./antifurto-su-misura-edi
 import { installRilevamentiEditorSection } from "./rilevamenti-editor-section.js";
 import { installTelecamereRiservateEditorSection } from "./telecamere-riservate-editor-section.js";
 import { installTelecamereSpenteEditorSection } from "./telecamere-si-spengono-editor-section.js";
+import { installTesseraDallaSchedaSection } from "./la-tessera-si-accende-dalla-scheda-section.js";
 import { installQuickClimateEditorSection } from "./quick-climate-editor-section.js";
 import { installVmcEditor } from "./vmc-editor-section.js";
 import { installAssistSection } from "./assist-section.js";
@@ -938,6 +939,7 @@ export function installSectionRuntime() {
      * parla: dopo i rilevamenti, che stanno gia' li'. */
     installTelecamereRiservateEditorSection();
     installTelecamereSpenteEditorSection();
+    installTesseraDallaSchedaSection();
     installClimateThermalSection();
     /* Le voci termiche del popup Caldo: dopo chi disegna il popup, cosi' il
      * pannello passa di mano una volta sola. */

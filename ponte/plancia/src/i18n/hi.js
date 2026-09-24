@@ -49,6 +49,7 @@ export default Object.freeze({
   "Install this update": "यह अपडेट इंस्टॉल करें",
   "Installing": "इंस्टॉल हो रहा है",
   "It changes the drawing, the page title and the fields you see. A motorcycle has no doors, windows, boot or bonnet: those fields go away, and whatever was mapped to them stays.": "यह चित्र, पृष्ठ का शीर्षक और दिखने वाले खाने बदल देता है। मोटरसाइकिल में दरवाज़े, खिड़कियाँ, डिक्की या बोनट नहीं होते: वे खाने हट जाते हैं, और उनमें जो भरा था वह बना रहता है।",
+  "It is the same switch as the list under Settings → Widgets, where you also choose the order of the tiles.": "यह वही स्विच है जो कॉन्फ़िगरेशन → विजेट की सूची में है, जहाँ टाइलों का क्रम भी चुना जाता है।",
   "Load to watch": "निगरानी में रखा जाने वाला भार",
   "Lock": "लॉक करें",
   "Motorcycle": "मोटरसाइकिल",

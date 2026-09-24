@@ -1411,8 +1411,12 @@ test("production graph is single-owner, acyclic and contains no facade pass-thro
   // `core/le-telecamere-si-vedono.js` perché a leggerla sono in due — la
   // pagina e la scheda — e due copie prima o poi dicono due cose; la scheda
   // sta nel suo modulo come le altre due che parlano di telecamere.
+  // 391 con la riga «Si vede in Home» dentro la scheda del MiniPC (#114):
+  // l'interruttore c'era, in un'altra linguetta, e quello che mancava era il
+  // cartello. È un modulo suo come le altre schede, e scrive la stessa chiave
+  // che legge l'elenco del Widget — una porta in più, non una seconda verità.
   assert.ok(
-    relative.length <= 390,
+    relative.length <= 391,
     `production graph unexpectedly grew to ${relative.length} modules`,
   );
   assertAcyclic(edges);

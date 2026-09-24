@@ -49,6 +49,7 @@ export default Object.freeze({
   "Install this update": "Zainstaluj tę aktualizację",
   "Installing": "Instalowanie",
   "It changes the drawing, the page title and the fields you see. A motorcycle has no doors, windows, boot or bonnet: those fields go away, and whatever was mapped to them stays.": "Zmienia rysunek, tytuł strony i widoczne pola. Motocykl nie ma drzwi, szyb, bagażnika ani maski: te pola znikają, a to, co było w nich wpisane, zostaje.",
+  "It is the same switch as the list under Settings → Widgets, where you also choose the order of the tiles.": "To ten sam przełącznik co na liście w Konfiguracja → Widżety, gdzie wybiera się też kolejność kafelków.",
   "Load to watch": "Obciążenie do pilnowania",
   "Lock": "Zablokuj",
   "Motorcycle": "Motocykl",

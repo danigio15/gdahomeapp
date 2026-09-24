@@ -49,6 +49,7 @@ export default Object.freeze({
   "Install this update": "このアップデートをインストール",
   "Installing": "インストール中",
   "It changes the drawing, the page title and the fields you see. A motorcycle has no doors, windows, boot or bonnet: those fields go away, and whatever was mapped to them stays.": "絵とページの見出し、表示される欄が変わります。バイクにはドアも窓もトランクもボンネットもありません。その欄は消えますが、入力した内容はそのまま残ります。",
+  "It is the same switch as the list under Settings → Widgets, where you also choose the order of the tiles.": "設定 → ウィジェットの一覧にあるスイッチと同じものです。並び順もそこで選べます。",
   "Load to watch": "監視する負荷",
   "Lock": "施錠",
   "Motorcycle": "バイク",
