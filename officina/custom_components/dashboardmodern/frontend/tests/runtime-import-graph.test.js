@@ -1406,8 +1406,13 @@ test("production graph is single-owner, acyclic and contains no facade pass-thro
   // volta per caricamento, e solo dove il ponte c'e'. E' l'unico modulo di
   // questa storia che tocca la rete, ed e' per questo che sta da solo:
   // `core/i-dispositivi-di-home-assistant.js` una prova la tiene pulita.
+  // 390 con l'interruttore che toglie il riquadro delle telecamere da
+  // Sicurezza (#113): la regola di cosa valga «non l'ho mai toccato» sta in
+  // `core/le-telecamere-si-vedono.js` perché a leggerla sono in due — la
+  // pagina e la scheda — e due copie prima o poi dicono due cose; la scheda
+  // sta nel suo modulo come le altre due che parlano di telecamere.
   assert.ok(
-    relative.length <= 388,
+    relative.length <= 390,
     `production graph unexpectedly grew to ${relative.length} modules`,
   );
   assertAcyclic(edges);

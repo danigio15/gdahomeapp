@@ -49,6 +49,10 @@ import {
   ingressiDellaCentrale,
   zoneDellaCentrale,
 } from "../core/le-zone-della-centrale.js";
+import {
+  CHIAVE_TELECAMERE_IN_SICUREZZA,
+  leTelecamereSiVedono,
+} from "../core/le-telecamere-si-vedono.js";
 import { CHIAVE_PRESENZA, contoDellaPresenza, presenzaDiCasa } from "../core/presenza-in-casa.js";
 import { CHIAVE_VARCHI, contoDeiVarchi, varchiDiCasa } from "../core/varchi-di-casa.js";
 import {
@@ -891,6 +895,19 @@ export function renderSecurity() {
   grid.hidden = total === 0;
   shell.querySelector(".dm-sec-cctv")?.classList.toggle("is-empty", total === 0);
 
+  /* E il riquadro intero, per chi telecamere non ne vuole (#113).
+   *
+   * Si nasconde, non si smette di costruire: lo scheletro si scrive una volta
+   * sola all'apertura della pagina, e l'interruttore si tocca mentre la pagina
+   * e' gia' li'. Costruire meno vorrebbe dire una pagina che si accorge del
+   * cambio solo ricaricandola. La pastiglia in cima parla delle stesse
+   * telecamere e se ne va con loro. */
+  const siVedono = leTelecamereSiVedono(readJson(CHIAVE_TELECAMERE_IN_SICUREZZA, null));
+  const cctv = shell.querySelector(".dm-sec-cctv");
+  if (cctv) cctv.hidden = !siVedono;
+  const pastiglia = shell.querySelector("[data-dm-cctv-pill]");
+  if (pastiglia) pastiglia.hidden = !siVedono;
+
   const meta = shell.querySelector("[data-dm-cam-meta]");
   if (meta) {
     const channels = total === 1 ? labels.channelsOne : labels.channels(total);
@@ -1434,6 +1451,14 @@ function securityCss() {
 
 /* ── cameras ─────────────────────────────────────────────────────────── */
 .dm-sec-cctv{display:flex;flex-direction:column;gap:14px}
+/* E quando si toglie, si toglie davvero (#113).
+   Una regola nostra col «display» batte l'attributo «hidden» del browser, che
+   vale solo finche' nessuno dice il contrario: senza queste due righe il
+   riquadro restava esattamente dov'era, con l'attributo addosso. Lo stesso
+   inciampo del radar nella finestra del meteo, e si e' rivisto qui perche' la
+   prova sul browser vero lo ha guardato. */
+.dm-sec-cctv[hidden]{display:none}
+.dm-sec-pill[hidden]{display:none}
 .dm-sec-cctv-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:0 4px}
 .dm-sec-cctv-ic{
   width:32px;height:32px;flex:0 0 32px;display:grid;place-items:center;border-radius:10px;
