@@ -131,7 +131,7 @@ test("non si disegna il conto di un apparecchio che non è più quello scelto", 
    * documento: il valore preso prima dell'attesa e' proprio quello che non
    * vale piu'. */
   const finale = sezione.match(
-    /state\.letto = Date\.now\(\);([\s\S]*?)return disegna\(detto, config, nome\);/,
+    /state\.letto = Date\.now\(\);([\s\S]*?)const fatto = disegna\(detto, config, nome\);/,
   );
   assert.ok(finale, "la risposta deve finire con un disegno");
   assert.match(
@@ -257,4 +257,71 @@ test("i tre euro del mese vengono tutti dalla stessa fonte", async () => {
   assert.match(energia, /"ed-dkpi-mese-eur", `€ \$\{formatNumber\(risparmioMese \+ spesaMese, 2\)\}`/);
   assert.match(energia, /"ed-dkpi-risp-eur", `\+ \$\{formatNumber\(risparmioMese, 2\)\}/);
   assert.match(energia, /"ed-dkpi-costo-eur", `- \$\{formatNumber\(spesaMese, 2\)\}/);
+});
+
+/* «Le fasce continuano a non uscire nella sezione analisi dei dispositivi.»
+ *
+ * Terzo giro sullo stesso blocco, e stavolta la causa era sotto le altre due:
+ * il posto in cui si appende. Lo cercava in due modi e dal campo hanno fallito
+ * tutti e due.
+ *
+ * Il primo guardava l'elemento subito dopo il titolo dell'anno, aspettandosi
+ * la riga delle tessere. Sulla wallbox li' c'e' il riquadro verde dei
+ * kilowattora che il contatore aveva gia' fatto prima delle statistiche — sul
+ * boiler no, e infatti sul boiler il blocco si vedeva.
+ *
+ * Il secondo, il ripiego, diceva `.ed-dev-cost-row:last-of-type`. In CSS
+ * `:last-of-type` vuol dire ULTIMO ELEMENTO DI QUEL TAG fra i fratelli, non
+ * ultimo con quella classe: dopo le tessere ci sono le righe «Spartizione
+ * misurata/stimata», che sono `div` anche loro, e quel selettore non trovava
+ * mai niente. Due modi che si somigliano e nessuno dei due dice quello che
+ * serve — verificato in un browser vero, con la forma esatta della scheda.
+ */
+
+test("il posto del blocco è l'ultima riga di tessere, contata", async () => {
+  const sezione = await read("src/sections/le-fasce-del-dispositivo-section.js");
+  const dentro = sezione.match(/function ilRiquadro\(crea = false\) \{([\s\S]*?)if \(!ultimo\) return null;/);
+  assert.ok(dentro, "ilRiquadro deve cercarsi un posto");
+  assert.match(
+    dentro[1],
+    /querySelectorAll\?\.\("\.ed-dev-cost-row"\)/,
+    "le righe di tessere si contano tutte",
+  );
+  assert.match(dentro[1], /righe\[righe\.length - 1\]/, "e si prende l'ultima");
+  /* E i due modi che hanno fallito non tornano: `:last-of-type` non vuol dire
+   * «l'ultima con questa classe», e il titolo dell'anno non ha per forza le
+   * tessere subito sotto. */
+  assert.ok(
+    !/querySelector[^\n]*last-of-type/.test(sezione),
+    "«:last-of-type» guarda il tag, non la classe: non trovava mai la riga",
+  );
+  assert.ok(!sezione.includes("ed-dkpi-year-lbl"), "dopo il titolo dell'anno può esserci dell'altro");
+});
+
+test("il blocco sta sotto la riga della provenienza, non fra lei e le sue tessere", async () => {
+  const sezione = await read("src/sections/le-fasce-del-dispositivo-section.js");
+  assert.match(
+    sezione,
+    /const strada = ultimo\.nextElementSibling;[\s\S]{0,200}classList\?\.contains\("dm-ed-strada"\) \? strada : ultimo/,
+    "quel posto è della riga «Spartizione…»: il blocco va dopo",
+  );
+  /* E la scheda si riprende le copie rimaste: erano tre in fila sullo schermo
+   * di casa, una per ogni ridisegno che non trovava piu' la sua. */
+  const energia = await read("src/sections/energy-section.js");
+  assert.match(
+    energia,
+    /while \(riga\.nextElementSibling\?\.classList\?\.contains\("dm-ed-strada"\)\)\s*\n?\s*riga\.nextElementSibling\.remove\(\);/,
+    "le righe doppie si tolgono",
+  );
+});
+
+test("il conto misurato si passa alla scheda dopo aver disegnato, non prima", async () => {
+  const sezione = await read("src/sections/le-fasce-del-dispositivo-section.js");
+  const coda = sezione.match(/const fatto = disegna\(detto, config, nome\);([\s\S]*?)return fatto;/);
+  assert.ok(coda, "prima si disegna il proprio blocco");
+  assert.match(
+    coda[1],
+    /segnaIlContoMisurato\(scelto, periodo/,
+    "e solo dopo si passa il conto alla scheda, che si ridipinge",
+  );
 });

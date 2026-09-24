@@ -285,6 +285,14 @@ function parolaDelConto(chiave, conto, modello = null) {
     return uno
       ? t("stampante da guardare", "printer to check")
       : t("stampanti da guardare", "printers to check");
+  /* «Credo che con aggiornamenti da eseguire il testo dovrebbe essere
+   * Aggiornamenti pendenti» (#108): la parola che manca e' «in attesa». La
+   * pastiglia esiste solo quando c'e' qualcosa da fare, e dirlo e' proprio il
+   * suo mestiere. */
+  if (chiave === "aggiornamenti")
+    return uno
+      ? t("aggiornamento in attesa", "update pending")
+      : t("aggiornamenti in attesa", "updates pending");
   return uno ? t("in riproduzione", "playing") : t("in riproduzione", "playing");
 }
 
@@ -976,6 +984,7 @@ const NOMI_DELLE_VOCI = () => ({
   porte: t("Apri porte", "Openers"),
   varchi: t("Varchi", "Openings"),
   stampanti: t("Stampanti", "Printers"),
+  aggiornamenti: t("Aggiornamenti", "Updates"),
   luci: t("Luci", "Lights"),
   tapparelle: t("Finestre", "Windows"),
   clima: t("Clima", "Climate"),
