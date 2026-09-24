@@ -37,6 +37,9 @@ import {
   wrapFunction,
 } from "./shared.js";
 import { disegnoDelCatalogo } from "../core/catalogo-disegni.js";
+/* La tendina delle voci: quella delle azioni rapide, non una seconda. Due
+ * tendine nella stessa plancia sono due comportamenti da tenere allineati. */
+import { apriIlMenu } from "./azioni-servizio-giusto-section.js";
 
 const KEY = "__DASHBOARDMODERN_ANIMALI__";
 const state = (root[KEY] ||= { installed: false, frame: 0, firma: "" });
@@ -355,8 +358,14 @@ function letturaMarkup(voce) {
 }
 
 function azioneMarkup(azione) {
+  /* Chi si sceglie porta i puntini: un tasto che apre una tendina e un tasto
+   * che fa la cosa sono due gesti diversi, e chi guarda deve poterlo sapere
+   * prima di toccarlo. */
+  const scelta = azione.modo === "scegli";
+  const parola = parolaAzione(azione.chiave);
   return `<button type="button" class="dm-animale-tasto" data-dm-animale-azione="${esc(azione.entita)}"
-    title="${esc(parolaAzione(azione.chiave))}"><span aria-hidden="true">${esc(azione.glifo)}</span><span>${esc(parolaAzione(azione.chiave))}</span></button>`;
+    data-dm-animale-modo="${esc(azione.modo || "premi")}"
+    title="${esc(parola)}"><span aria-hidden="true">${esc(azione.glifo)}</span><span>${esc(scelta ? `${parola}…` : parola)}</span></button>`;
 }
 
 /* Una fascia per dispositivo, col suo titolo (#373).
@@ -557,7 +566,17 @@ function premiIlTasto(evento) {
   const tasto = evento.target?.closest?.("[data-dm-animale-azione]");
   if (!tasto || tasto.disabled) return;
   evento.preventDefault();
-  const chiamata = pressioneDellAzione(tasto.dataset.dmAnimaleAzione);
+  const quale = tasto.dataset.dmAnimaleAzione;
+  /* La tendina non si preme: si apre, e la voce la sceglie chi guarda. E' la
+   * stessa finestra delle azioni rapide — una sola, per non avere due tendine
+   * che si comportano diverso nella stessa plancia. */
+  if (tasto.dataset.dmAnimaleModo === "scegli") {
+    /* Il nome e il disegno li porta gia' il tasto: riderivarli dalla chiave
+     * vorrebbe dire due posti che devono dire la stessa parola. */
+    apriIlMenu(quale, { name: tasto.title, icon: tasto.firstElementChild?.textContent || "🍽️" });
+    return;
+  }
+  const chiamata = pressioneDellAzione(quale);
   if (!chiamata) return;
   tasto.disabled = true;
   root.setTimeout?.(() => {
