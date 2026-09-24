@@ -14,9 +14,9 @@
 package com.gdahome.gdahome.auto
 
 import androidx.car.app.CarContext
-import androidx.car.app.CarToast
 import androidx.car.app.Screen
 import androidx.car.app.model.Action
+import androidx.car.app.model.CarColor
 import androidx.car.app.model.CarIcon
 import androidx.car.app.model.GridItem
 import androidx.car.app.model.GridTemplate
@@ -36,12 +36,19 @@ class LeAzioniInAuto(context: CarContext) : Screen(context) {
             elenco.addItem(
                 GridItem.Builder()
                     .setTitle(azione.nome)
+                    /* Il fulmine, non il logo dell'app. Un'azione rapida non
+                     * e' un dispositivo e non deve sembrarlo — questa e'
+                     * un'altra schermata — e sei volte lo stesso logo non
+                     * distingueva niente da niente. La tinta la mette l'auto,
+                     * secondo il tema di adesso. */
                     .setImage(
                         CarIcon.Builder(
-                            IconCompat.createWithResource(carContext, R.mipmap.ic_launcher),
-                        ).build(),
+                            IconCompat.createWithResource(carContext, R.drawable.auto_azione),
+                        ).setTint(CarColor.DEFAULT).build(),
                     )
-                    .setOnClickListener { chiedi(azione) }
+                    .setOnClickListener {
+                        premiEDillo(carContext, azione.id, azione.nome, azione.subito)
+                    }
                     .build(),
             )
         }
@@ -50,28 +57,5 @@ class LeAzioniInAuto(context: CarContext) : Screen(context) {
             .setTitle(carContext.getString(R.string.auto_azioni))
             .setHeaderAction(Action.BACK)
             .build()
-    }
-
-    private fun chiedi(azione: Azione) {
-        val scritto = lasciaIlComando(carContext, azione.id)
-        /* Scritto il comando, si sveglia l'app: un motore Dart senza schermo,
-         * che lo esegue subito. Il telefono resta spento e in mano non compare
-         * niente — vedi `IlPonteDellAuto`. */
-        if (scritto) IlPonteDellAuto.sveglia(carContext)
-        /* E il tasto dice quello che succede davvero, che non e' lo stesso per
-         * tutte: una con una conferma da mostrare, o un menu da far scegliere,
-         * qualcuno che guardi ce lo vuole, e quella aspetta l'app. «E' partito»
-         * detto su una cosa che parte fra mezz'ora e' la bugia peggiore che
-         * possa dire un cruscotto. */
-        val parole = when {
-            !scritto -> R.string.auto_comando_non_parte
-            azione.subito -> R.string.auto_comando_fatto
-            else -> R.string.auto_comando_partito
-        }
-        CarToast.makeText(
-            carContext,
-            carContext.getString(parole, azione.nome),
-            CarToast.LENGTH_LONG,
-        ).show()
     }
 }

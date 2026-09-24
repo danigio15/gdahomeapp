@@ -9,9 +9,39 @@ schermate, disegnate con i modelli di Android — in auto non si disegna:
 
 | schermata | modello | cosa dice |
 |---|---|---|
-| `LaCasaInAuto` | `PaneTemplate` | fino a tre misure del fotovoltaico, da quando sono, e i due tasti |
-| `LePersoneInAuto` | `ListTemplate` | chi è in casa e chi è fuori |
+| `LaCasaInAuto` | `GridTemplate` | **i dispositivi di casa**, com'è messo ognuno, e un tocco per girarlo |
 | `LeAzioniInAuto` | `GridTemplate` | sei azioni rapide, e non una di più |
+| `ComeStaLaCasa` | `ListTemplate` | da quando è la fotografia, il fotovoltaico e chi è in casa |
+
+## Perché sono fatte così
+
+La categoria dichiarata è `IOT`, e un pacchetto che dichiara Android Auto si
+porta dietro **una seconda revisione** — quella dei criteri di qualità per
+l'auto — attaccata a ogni caricamento. Le prime versioni con l'auto dentro non
+sono mai uscite dal Play Console: l'ultima pubblicata era l'ultima senza.
+
+Le due cose che Google mette davanti a tutte fra quelle che un'app di questa
+categoria può fare guidando sono **vedere com'è messo un dispositivo** e
+**accenderlo o spegnerlo con un tocco** (`IT-1`). Qui prima non ce n'era
+nessuna delle due: c'erano tre numeri del fotovoltaico, chi è in casa e sei
+tasti — informazioni sulla casa, non dispositivi.
+
+Cosa è cambiato, e contro quale criterio:
+
+| criterio | cos'era | cos'è |
+|---|---|---|
+| `IT-1` | nessuno stato di dispositivo, niente da commutare | la prima schermata è la griglia dei dispositivi, con lo stato e il tocco |
+| `PC-1` — niente fuori dal tipo dichiarato | due schermate su tre erano energia e presenze | il sole e le persone stanno dietro il tasto «Casa», e non definiscono più l'app |
+| `IU-1` — immagini solo se servono | l'icona dell'app ripetuta su ogni tessera, che non distingueva il cancello dalla luce | un disegno per genere — porta, varco, luce, presa — e un fulmine per le azioni |
+| `TH-1` — chiaro e scuro | un bitmap a colori, che non si tinge | disegni vettoriali bianchi, tinti dall'auto con `CarColor.DEFAULT` |
+
+Quello che **non** si fa guidando, e che infatti non c'è: scegliere quali
+dispositivi mostrare, creare o modificare scene, regolare i gradi di un
+termostato. Sono le tre cose che `IT-1` vieta, e si fanno tutte sul telefono.
+
+Fuori dalla griglia restano la serratura e il lettore: il servizio giusto
+dipende da com'è messa l'entità **adesso**, e una ricetta scritta mezz'ora fa
+chiuderebbe una porta che intanto qualcuno ha aperto.
 
 ## Come ci arriva la fotografia
 
@@ -22,9 +52,15 @@ ha lei in mano, aggiornati, dentro il suo riquadro.
 Il giro è questo, e ha tre pezzi:
 
 1. `ponte/plancia/src/core/la-foto-per-lauto.js` decide **cosa** ci entra e
-   quanto: tre misure, sei tasti, e `null` quando non c'è niente da mostrare.
-2. `ponte/plancia/src/sections/la-foto-va-in-auto-section.js` legge la tessera
-   Energia, le persone e le azioni rapide, e manda dal canale `gdahomeAuto`.
+   quanto: sei dispositivi, tre misure, sei tasti, e `null` quando non c'è
+   niente da mostrare. Dei dispositivi sceglie anche l'ordine — davanti le
+   porte e i varchi, che sono quello che si preme arrivando, dietro le luci e
+   le prese rimaste **accese**, che sono la domanda opposta.
+2. `ponte/plancia/src/sections/la-foto-va-in-auto-section.js` legge le tessere
+   di Sicurezza, Varchi, Luci e Prese per i dispositivi, la tessera Energia, le
+   persone e le azioni rapide, e manda dal canale `gdahomeAuto`. Nessuna
+   configurazione nuova: quello che è nascosto in Home è nascosto anche qui,
+   perché i modelli arrivano già scremati.
    Quel canale lo registra l'app (`app/lib/schermate/riquadro/sul_telefono.dart`):
    nel browser e dentro Home Assistant non c'è, e lì la sezione non fa niente.
 3. `app/lib/auto/` rilegge quello che è arrivato campo per campo — non lo copia
@@ -44,11 +80,24 @@ La forma è questa:
 {
   "casa": "Casa di Giovanni",
   "quando": 1758700000000,
+  "dispositivi": [
+    { "id": "cover.cancello", "nome": "Cancello", "genere": "porta", "acceso": false, "stato": "Chiuso" },
+    { "id": "light.salone", "nome": "Salone", "genere": "luce", "acceso": true, "stato": "Accesa" }
+  ],
   "fotovoltaico": [{ "nome": "Dal sole adesso", "valore": "4,2 kW" }],
   "persone": [{ "nome": "Giovanni", "inCasa": true }],
   "azioni": [{ "id": "0|Cancello", "nome": "Cancello", "segno": "🚧" }]
 }
 ```
+
+Anche lo `stato` di un dispositivo è **già scritto**: «Aperto», «Accesa», nella
+lingua di chi guarda. Lo scrive la tessera che quella parola la mostra già in
+casa — due parole diverse per lo stesso stato, una in macchina e una sul divano,
+sono due stati per chi le legge.
+
+L'`id` di un dispositivo è la sua entità, e non ha bisogno del giro del
+«posto|nome»: un'entità un nome suo ce l'ha. Per la stessa ragione non si pesta
+con quello di un tasto, che la barra ce l'ha sempre dentro.
 
 I numeri sono **già scritti**, non grezzi: `"4,2 kW"` e non `4200`. Sono le
 stesse righe che la finestra dell'Energia mostra in casa, con dentro la

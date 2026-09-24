@@ -41,6 +41,18 @@ const String nomeDelFile = 'gdahome-auto.json';
 const int misureAlMassimo = 3;
 const int azioniAlMassimo = 6;
 
+/// Quanti dispositivi entrano nella griglia. Sei, come i tasti: e' quello che
+/// l'auto mostra in una schermata.
+const int dispositiviAlMassimo = 6;
+
+/// Quante ricette si tengono in tutto.
+///
+/// Dodici e non sei: adesso ne arrivano di due specie nello stesso elenco — i
+/// tasti rapidi e i dispositivi — e un tetto da sei le tagliava a meta'. Chi
+/// le taglia non se ne accorge: in macchina si preme un cancello e non succede
+/// niente, perche' la sua ricetta era la settima.
+const int ricetteAlMassimo = azioniAlMassimo + dispositiviAlMassimo;
+
 /// Quanto lungo puo' essere un nome che arriva dalla pagina. In auto uno
 /// lungo viene tagliato dal modello di Android comunque.
 const int _quantoLungo = 64;
@@ -82,6 +94,23 @@ String? laFotoDaScrivere(
     misure.add({'nome': nome, 'valore': valore});
   }
 
+  /* I dispositivi di casa: quello che in macchina si guarda e si preme. Sono
+   * la ragione per cui questa fotografia esiste, e stanno per primi. */
+  final dispositivi = <Map<String, Object>>[];
+  for (final riga in _elenco(letto['dispositivi'])) {
+    if (dispositivi.length >= dispositiviAlMassimo) break;
+    final id = _pulito(riga['id'], fino: _quantoLungo * 2);
+    final nome = _pulito(riga['nome']);
+    if (id.isEmpty || nome.isEmpty) continue;
+    dispositivi.add({
+      'id': id,
+      'nome': nome,
+      'genere': _pulito(riga['genere'], fino: 16),
+      'acceso': riga['acceso'] == true,
+      'stato': _pulito(riga['stato']),
+    });
+  }
+
   final persone = <Map<String, Object>>[];
   for (final riga in _elenco(letto['persone'])) {
     final nome = _pulito(riga['nome']);
@@ -112,7 +141,12 @@ String? laFotoDaScrivere(
   /* Senza niente da mostrare non si scrive: un file vuoto farebbe credere
    * all'auto di avere una fotografia quando non ce l'ha, e chi guarda non
    * avrebbe modo di accorgersene. */
-  if (misure.isEmpty && persone.isEmpty && azioni.isEmpty) return null;
+  if (dispositivi.isEmpty &&
+      misure.isEmpty &&
+      persone.isEmpty &&
+      azioni.isEmpty) {
+    return null;
+  }
 
   /* Il momento lo dice la pagina, che e' quella che ha guardato gli stati. Se
    * non l'ha detto — o ha detto una cosa che non e' un momento — vale adesso:
@@ -124,6 +158,7 @@ String? laFotoDaScrivere(
     'quando': quando is int && quando > 0
         ? quando
         : (adesso ?? DateTime.now().millisecondsSinceEpoch),
+    'dispositivi': dispositivi,
     'fotovoltaico': misure,
     'persone': persone,
     'azioni': azioni,
@@ -225,7 +260,7 @@ List<RicettaDellAzione> leRicetteDaScrivere(String detto) {
   if (letto is! Map<String, Object?>) return const [];
   final fuori = <RicettaDellAzione>[];
   for (final riga in _elenco(letto['ricette'])) {
-    if (fuori.length >= azioniAlMassimo) break;
+    if (fuori.length >= ricetteAlMassimo) break;
     final id = _pulito(riga['id'], fino: _quantoLungo * 2);
     final dominio = _pulito(riga['dominio'], fino: 48);
     final servizio = _pulito(riga['servizio'], fino: 48);

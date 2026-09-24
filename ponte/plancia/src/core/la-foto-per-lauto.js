@@ -219,7 +219,10 @@ export function laRicettaDelDispositivo(entita, risolvi) {
   if (!vera.includes(".")) return null;
   const dominio = vera.split(".")[0].toLowerCase();
   if (NON_SI_COMMUTA_AL_BUIO.has(dominio) || !SI_COMMUTANO.has(dominio)) return null;
-  return { dominio, servizio: "toggle", entita: vera, dati: { entity_id: vera } };
+  /* `dati` resta vuoto: il bersaglio lo porta `entita`, ed è da lì che chi
+   * esegue lo prende. Ripeterlo qui dentro vorrebbe dire lo stesso nome in due
+   * campi, e il giorno che uno dei due cambia non si sa quale vale. */
+  return { dominio, servizio: "toggle", entita: vera, dati: {} };
 }
 
 /**

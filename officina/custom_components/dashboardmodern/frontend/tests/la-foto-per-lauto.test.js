@@ -484,7 +484,7 @@ test("quelli che si commutano davvero hanno la loro ricetta", () => {
       dominio: entita.split(".")[0],
       servizio: "toggle",
       entita,
-      dati: { entity_id: entita },
+      dati: {},
     });
   }
   assert.equal(laRicettaDelDispositivo("niente"), null);

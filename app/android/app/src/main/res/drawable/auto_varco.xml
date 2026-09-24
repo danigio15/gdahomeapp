@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Una finestra: i varchi della plancia. Quattro ante, cosi' si riconosce
+     anche piccola e di sfuggita. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24"
+    android:tint="#FFFFFFFF">
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:fillType="evenOdd"
+        android:pathData="M3,2v20h18V2H3zM5,4h6v7H5V4zM13,4h6v7h-6V4zM5,13h6v7H5V13zM13,13h6v7h-6V13z" />
+</vector>

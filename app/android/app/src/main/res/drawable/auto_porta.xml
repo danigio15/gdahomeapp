@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Il cancello, il portone, il garage: quello che si apre arrivando.
+     Bianca e piena apposta: in macchina la tinta la mette l'ospite, secondo il
+     tema chiaro o scuro dell'auto, e un disegno gia' colorato non si tinge. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24"
+    android:tint="#FFFFFFFF">
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M12,2L2,9v2h20V9L12,2z" />
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:fillType="evenOdd"
+        android:pathData="M4,12v10h16V12H4zM6,14h12v2H6V14zM6,17h12v2H6V17z" />
+</vector>
