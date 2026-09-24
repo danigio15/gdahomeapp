@@ -46,6 +46,29 @@ export const MISURE_AL_MASSIMO = 3;
  * davanti. */
 export const AZIONI_AL_MASSIMO = 6;
 
+/* Quanti dispositivi entrano nella griglia. Sei, come le azioni: è quello che
+ * Android mostra in una schermata, e il settimo vorrebbe dire scorrere. */
+export const DISPOSITIVI_AL_MASSIMO = 6;
+
+/* I generi che vanno in auto, nell'ordine in cui contano guidando.
+ *
+ * Non è un ordine alfabetico ed è la parte che decide se questa griglia serve
+ * o no. Davanti le porte e i varchi, perché quello si preme **arrivando** — il
+ * cancello è la ragione per cui uno prende in mano il telefono in macchina, e
+ * se sta in fondo alla griglia tanto vale non averla. Dietro le luci e le
+ * prese, che sono la domanda opposta: sono partito e ho lasciato acceso?
+ *
+ * Questo è anche il motivo per cui di luci e prese entrano solo quelle
+ * ACCESE. Una casa ha quaranta luci e la griglia ne mostra sei: mostrarne sei
+ * a caso, spente, vorrebbe dire sei tasti che non rispondono a nessuna
+ * domanda. Quelle accese invece sono poche e sono esattamente quelle che uno
+ * cerca. Porte e varchi no: quelli si vogliono tutti, aperti o chiusi, perché
+ * il tasto serve proprio quando è chiuso. */
+export const GENERI_IN_AUTO = Object.freeze(["porta", "varco", "luce", "presa"]);
+
+/* I generi di cui entra tutto, e non solo quello che è acceso. */
+const SI_VOGLIONO_TUTTI = new Set(["porta", "varco"]);
+
 /* La parola con cui Home Assistant dice che una persona è a casa. È la stessa
  * per `person.*` e per `device_tracker.*`, ed è l'unica che conta: «not_home»,
  * il nome di una zona o un `unknown` vogliono dire tutti «non è qui». */
@@ -153,6 +176,97 @@ export function laRicettaDellAzione(azione, risolvi) {
   return { dominio, servizio, entita, dati };
 }
 
+/* ── I dispositivi ───────────────────────────────────────────────────────
+ *
+ * «View current device state» e «simple, one-touch on/off controls» sono le
+ * due cose che Google mette per prime fra quello che un'app di questa
+ * categoria può fare guidando, e finché in auto c'erano tre numeri e chi è in
+ * casa, non ce n'era nessuna delle due: erano informazioni sulla casa, non
+ * dispositivi da guardare e premere.
+ *
+ * Qui non si sceglie niente di nuovo, come per tutto il resto: le porte sono
+ * quelle di Sicurezza, i varchi quelli dei Varchi, le luci e le prese quelle
+ * delle loro tessere. Chi le ha nascoste in Home le ha nascoste anche qui,
+ * perché arrivano già scremate.
+ *
+ * Le parole — «Aperto», «Accesa» — arrivano fatte, come i numeri del
+ * fotovoltaico: la tessera le scrive già nella lingua di chi guarda, e
+ * riscriverle qui vorrebbe dire una seconda traduzione della stessa cosa. */
+
+/* Un dispositivo che non si comanda dal telefono non si comanda nemmeno
+ * dall'auto, e questi due generi non si comandano **a scatola chiusa**: la
+ * serratura e il lettore vogliono il servizio giusto per com'è messa l'entità
+ * ADESSO, e una ricetta scritta mezz'ora fa chiuderebbe una porta che intanto
+ * qualcuno ha aperto. È la stessa regola dei tasti, per la stessa ragione. */
+const NON_SI_COMMUTA_AL_BUIO = new Set(["lock", "media_player"]);
+
+/* Quelli che hanno un acceso e uno spento, e che `toggle` sa girare. Un
+ * `button` non è un dispositivo: non ha uno stato da guardare, e in questa
+ * griglia il suo posto sarebbe una bugia. */
+const SI_COMMUTANO = new Set(["light", "switch", "input_boolean", "fan", "cover"]);
+
+/**
+ * Come si commuta questo dispositivo senza nessuno che guardi, o `null`.
+ *
+ * `null` vuol dire che nella griglia non ci va: un tasto che non commuta
+ * niente, in macchina, è un tasto che si preme due volte guardandolo.
+ */
+export function laRicettaDelDispositivo(entita, risolvi) {
+  const scritta = pulito(entita);
+  if (!scritta.includes(".")) return null;
+  const risolta = typeof risolvi === "function" ? risolvi(scritta) : null;
+  const vera = pulito(risolta?.entita) || scritta;
+  if (!vera.includes(".")) return null;
+  const dominio = vera.split(".")[0].toLowerCase();
+  if (NON_SI_COMMUTA_AL_BUIO.has(dominio) || !SI_COMMUTANO.has(dominio)) return null;
+  /* `dati` resta vuoto: il bersaglio lo porta `entita`, ed è da lì che chi
+   * esegue lo prende. Ripeterlo qui dentro vorrebbe dire lo stesso nome in due
+   * campi, e il giorno che uno dei due cambia non si sa quale vale. */
+  return { dominio, servizio: "toggle", entita: vera, dati: {} };
+}
+
+/**
+ * I dispositivi che vanno in auto, nell'ordine in cui contano.
+ *
+ * Entrano già scritti: `entity`, `nome`, `genere`, `acceso`, `stato` (la
+ * parola) e `comando` (se questa casa lo lascia comandare). Qui si decide
+ * QUALI e QUANTI, che è una scelta; le parole e gli stati li ha fatti chi
+ * disegna le tessere, che è un conto già fatto bene una volta.
+ */
+export function iDispositiviPerLAuto(candidati = [], risolvi = null) {
+  const perGenere = new Map(GENERI_IN_AUTO.map((genere) => [genere, []]));
+  const visti = new Set();
+  for (const grezzo of Array.isArray(candidati) ? candidati : []) {
+    const genere = pulito(grezzo?.genere).toLowerCase();
+    const posto = perGenere.get(genere);
+    if (!posto) continue;
+    const entity = pulito(grezzo?.entity);
+    const nome = pulito(grezzo?.nome);
+    /* Senza nome non c'è niente da scrivere sul tasto, e due righe sulla
+     * stessa entità sono lo stesso tasto disegnato due volte: una luce che
+     * sta in due gruppi resta una luce sola. */
+    if (!entity || !nome || visti.has(entity)) continue;
+    /* «Si vede ma non si comanda» vale anche qui. */
+    if (grezzo?.comando === false) continue;
+    const acceso = grezzo?.acceso === true;
+    /* Di luci e prese entra solo quello che è acceso: il perché sta scritto
+     * accanto a `GENERI_IN_AUTO`. */
+    if (!SI_VOGLIONO_TUTTI.has(genere) && !acceso) continue;
+    const ricetta = laRicettaDelDispositivo(entity, risolvi);
+    if (!ricetta) continue;
+    visti.add(entity);
+    posto.push({ id: entity, nome, genere, acceso, stato: pulito(grezzo?.stato), ricetta });
+  }
+  const fuori = [];
+  for (const genere of GENERI_IN_AUTO) {
+    for (const uno of perGenere.get(genere) || []) {
+      if (fuori.length >= DISPOSITIVI_AL_MASSIMO) return fuori;
+      fuori.push(uno);
+    }
+  }
+  return fuori;
+}
+
 /* I tasti, col loro posto.
  *
  * Un'azione rapida un nome suo con cui chiamarla non ce l'ha: la plancia le
@@ -216,6 +330,18 @@ export function leRicettePerLAuto(azioni, risolvi) {
 }
 
 /**
+ * Le ricette dei dispositivi, con la stessa forma di quelle dei tasti.
+ *
+ * Viaggiano nello stesso elenco: chi le esegue non ha bisogno di sapere se
+ * dietro c'è un tasto o una luce, e due elenchi vorrebbero dire due strade per
+ * la stessa cosa. Gli identificativi non si pestano — quello di un tasto ha
+ * sempre la barra dentro («3|Cancello»), quello di un dispositivo è un'entità.
+ */
+export function leRicetteDeiDispositivi(candidati = [], risolvi = null) {
+  return iDispositiviPerLAuto(candidati, risolvi).map((uno) => ({ id: uno.id, ...uno.ricetta }));
+}
+
+/**
  * Quale tasto dell'elenco di ADESSO ha chiesto l'auto, o `null`.
  *
  * `null` vuol dire «non premere»: l'elenco è cambiato da quando la fotografia
@@ -242,17 +368,32 @@ export function laFotoPerLAuto({
   persone = [],
   states = {},
   azioni = [],
+  dispositivi = [],
   risolvi = null,
+  risolviEntita = null,
   adesso = Date.now(),
 } = {}) {
   const foto = {
     casa: pulito(casa),
     quando: Number.isFinite(adesso) ? adesso : Date.now(),
+    /* I dispositivi per primi: sono la ragione per cui questa fotografia
+     * esiste, e in auto è la prima schermata. */
+    dispositivi: iDispositiviPerLAuto(dispositivi, risolviEntita).map(
+      /* La ricetta non ci va: nel file che legge l'auto vanno i nomi e gli
+       * stati, e nient'altro. Quella viaggia a parte, come per i tasti. */
+      ({ id, nome, genere, acceso, stato }) => ({ id, nome, genere, acceso, stato }),
+    ),
     fotovoltaico: leMisure(energia),
     persone: lePersone(persone, states),
     azioni: leAzioni(azioni, risolvi),
   };
-  if (!foto.fotovoltaico.length && !foto.persone.length && !foto.azioni.length) return null;
+  if (
+    !foto.dispositivi.length &&
+    !foto.fotovoltaico.length &&
+    !foto.persone.length &&
+    !foto.azioni.length
+  )
+    return null;
   return foto;
 }
 
@@ -264,5 +405,11 @@ export function laFotoPerLAuto({
  * cambiasse solo lui, cambierebbe a ogni giro. */
 export function firmaDellaFoto(foto) {
   if (!foto) return "";
-  return JSON.stringify([foto.casa, foto.fotovoltaico, foto.persone, foto.azioni]);
+  return JSON.stringify([
+    foto.casa,
+    foto.dispositivi,
+    foto.fotovoltaico,
+    foto.persone,
+    foto.azioni,
+  ]);
 }

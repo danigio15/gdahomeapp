@@ -291,17 +291,117 @@ void main() {
       expect(laRicettaDi('', ricette), isNull);
     });
 
-    test('più di sei ricette non se ne scrivono', () {
+    test('un elenco di ricette senza fine si ferma dove deve', () {
+      /* Il tetto era sei, come i tasti, e aveva ragione finche' le ricette
+         erano solo dei tasti. Adesso nello stesso elenco viaggiano anche
+         quelle dei dispositivi — sei piu' sei — e un tetto da sei le tagliava
+         via tutte: in macchina si premeva un cancello e non succedeva niente,
+         perche' la sua ricetta era la settima. */
       final tante = List.generate(
-        9,
+        30,
         (i) =>
             '{"id":"$i|A$i","dominio":"switch","servizio":"toggle",'
             '"entita":"switch.a$i"}',
       ).join(',');
       expect(
         leRicetteDaScrivere('{"ricette":[$tante]}').length,
-        azioniAlMassimo,
+        ricetteAlMassimo,
       );
     });
+  });
+
+  /* ── I dispositivi ────────────────────────────────────────────────────
+   *
+   * Sono la ragione per cui questa fotografia esiste: in macchina un'app di
+   * categoria IOT deve far vedere com'e' messo un dispositivo e lasciarlo
+   * girare con un tocco. Qui si prova che arrivano dall'altra parte come sono
+   * partiti, e che chi si sbaglia non fa comparire in auto qualcosa che in
+   * casa non c'e'.
+   */
+
+  const conDispositivi =
+      '{"quando":1700000000000,'
+      '"dispositivi":[{"id":"cover.cancello","nome":"Cancello","genere":"porta","acceso":false,"stato":"Chiuso"}]}';
+
+  test('i dispositivi arrivano nel file, campo per campo', () {
+    final foto = _letto(laFotoDaScrivere(conDispositivi, casa: 'Casa mia'));
+    expect(foto['dispositivi'], [
+      {
+        'id': 'cover.cancello',
+        'nome': 'Cancello',
+        'genere': 'porta',
+        'acceso': false,
+        'stato': 'Chiuso',
+      },
+    ]);
+  });
+
+  test('coi soli dispositivi la fotografia si scrive lo stesso', () {
+    /* Prima serviva almeno un numero, una persona o un tasto: una casa fatta
+       di soli varchi e luci non avrebbe avuto niente in macchina, proprio
+       mentre quella e' l'unica cosa che l'auto vuole. */
+    expect(laFotoDaScrivere(conDispositivi, casa: 'Casa mia'), isNotNull);
+    expect(laFotoDaScrivere('{"quando":1}', casa: 'Casa mia'), isNull);
+  });
+
+  test(
+    'una riga senza nome o senza identificativo non diventa una tessera',
+    () {
+      final foto = _letto(
+        laFotoDaScrivere(
+          '{"dispositivi":['
+          '{"id":"light.a"},'
+          '{"nome":"Senza id"},'
+          '{"id":"light.b","nome":"Buona"}]}',
+          casa: 'C',
+        ),
+      );
+      expect(foto['dispositivi'], [
+        {
+          'id': 'light.b',
+          'nome': 'Buona',
+          'genere': '',
+          'acceso': false,
+          'stato': '',
+        },
+      ]);
+    },
+  );
+
+  test('sei e non di piu', () {
+    final tante = List.generate(
+      9,
+      (i) => '{"id":"light.n$i","nome":"N$i"}',
+    ).join(',');
+    final foto = _letto(
+      laFotoDaScrivere('{"dispositivi":[$tante]}', casa: 'C'),
+    );
+    expect((foto['dispositivi'] as List).length, dispositiviAlMassimo);
+  });
+
+  test('«acceso» e un si o un no, non quello che arriva', () {
+    final foto = _letto(
+      laFotoDaScrivere(
+        '{"dispositivi":[{"id":"light.a","nome":"A","acceso":"si"}]}',
+        casa: 'C',
+      ),
+    );
+    expect((foto['dispositivi'] as List).first, containsPair('acceso', false));
+  });
+
+  test('le ricette adesso sono di due specie, e ci stanno tutte', () {
+    /* Sei tasti piu' sei dispositivi: col tetto vecchio da sei, le ricette dei
+       dispositivi venivano tagliate via tutte — e in macchina si premeva un
+       cancello e non succedeva niente. */
+    final righe = <String>[
+      for (var i = 0; i < 6; i++)
+        '{"id":"$i|Tasto $i","dominio":"script","servizio":"turn_on","entita":"script.t$i"}',
+      for (var i = 0; i < 6; i++)
+        '{"id":"light.d$i","dominio":"light","servizio":"toggle","entita":"light.d$i"}',
+    ];
+    final ricette = leRicetteDaScrivere('{"ricette":[${righe.join(',')}]}');
+    expect(ricette.length, ricetteAlMassimo);
+    expect(ricette.length, 12);
+    expect(ricette.last.entita, 'light.d5');
   });
 }

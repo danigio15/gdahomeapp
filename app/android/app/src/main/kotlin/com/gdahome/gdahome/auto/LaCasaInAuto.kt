@@ -1,104 +1,123 @@
-/* La prima schermata: quanto sole c'e', e dove si va da qui.
+/* La prima schermata: i dispositivi di casa, e un tocco per girarli.
  *
- * Un pannello e non una lista. Il modello `Pane` mette in alto due righe
- * grosse — quelle si leggono in un colpo d'occhio, ed e' l'unica cosa che ha
- * senso guardare da fermi a un semaforo — e sotto i tasti per le altre due
- * schermate. Una lista di dodici voci in auto e' una lista che si scorre, e
- * scorrere si fa da fermi.
+ * ── Perche' proprio questa, e per prima ─────────────────────────────────
  *
- * ── Quando la fotografia non c'e' o e' vecchia ──────────────────────────
+ * La categoria dichiarata e' `IOT`, e le due cose che Google mette davanti a
+ * tutte fra quelle che un'app cosi' puo' fare guidando sono vedere com'e'
+ * messo un dispositivo e accenderlo o spegnerlo con un tocco. Qui prima
+ * c'erano tre numeri del fotovoltaico e i tasti per altre due schermate:
+ * informazioni sulla casa, non dispositivi da guardare e da premere. Erano
+ * anche quello che la revisione dell'auto guardava per prima, e non trovava.
  *
- * Si dice. Un cruscotto che mostra numeri di mezz'ora fa facendo credere che
- * siano adesso e' peggio di un cruscotto vuoto: chi guarda non ha modo di
- * accorgersene, e magari decide di non passare da casa. Senza fotografia si
- * scrive che l'app non ha ancora mandato niente; con una vecchia si scrive di
- * quando e'.
+ * Una griglia e non una lista, e sei tessere: in macchina il segno grosso si
+ * riconosce di sfuggita, la riga di testo no. Quali sei le ha gia' scelte la
+ * plancia — davanti le porte e i varchi, che sono quello che si preme
+ * arrivando, dietro le luci e le prese rimaste accese — e qui non si riordina
+ * niente: chi decide cosa conta e' chi conosce la casa.
+ *
+ * ── Il segno dice cos'e', non chi l'ha fatto ────────────────────────────
+ *
+ * Prima ogni tessera portava l'icona dell'app, sei volte la stessa: non
+ * distingueva il cancello dalla luce del salone, ed era proprio quello che
+ * `IU-1` non vuole vedere. Adesso ogni genere ha il suo disegno, bianco e
+ * pieno, e la tinta la mette l'ospite secondo il tema chiaro o scuro
+ * dell'auto.
+ *
+ * ── Il sole e chi c'e' in casa ──────────────────────────────────────────
+ *
+ * Non spariscono: si spostano dietro il tasto «Casa», in alto. Non sono
+ * dispositivi, e tenerle come prime schermate voleva dire un'app che si
+ * dichiara IOT e poi mostra un cruscotto dell'energia — cioe' quello che
+ * `PC-1` chiama una funzione fuori dal tipo dichiarato.
  */
 package com.gdahome.gdahome.auto
 
 import androidx.car.app.CarContext
 import androidx.car.app.Screen
 import androidx.car.app.model.Action
+import androidx.car.app.model.ActionStrip
+import androidx.car.app.model.CarColor
 import androidx.car.app.model.CarIcon
-import androidx.car.app.model.MessageTemplate
-import androidx.car.app.model.Pane
-import androidx.car.app.model.PaneTemplate
-import androidx.car.app.model.Row
+import androidx.car.app.model.GridItem
+import androidx.car.app.model.GridTemplate
+import androidx.car.app.model.ItemList
 import androidx.car.app.model.Template
 import androidx.core.graphics.drawable.IconCompat
 import com.gdahome.gdahome.R
-import java.util.concurrent.TimeUnit
 
 class LaCasaInAuto(context: CarContext) : Screen(context) {
 
     override fun onGetTemplate(): Template {
         val foto = leggiLaFoto(carContext)
-            ?: return nienteAncora()
-
-        val pane = Pane.Builder()
-        /* Il fotovoltaico: le righe che l'app ha mandato, al massimo tre. In
-         * auto la quarta non si legge — si guarda, non si studia. */
-        for (misura in foto.fotovoltaico.take(3)) {
-            pane.addRow(
-                Row.Builder()
-                    .setTitle(misura.valore)
-                    .addText(misura.nome)
+        val elenco = ItemList.Builder()
+        val dispositivi = foto?.dispositivi.orEmpty()
+        if (dispositivi.isEmpty()) {
+            elenco.setNoItemsMessage(
+                carContext.getString(
+                    if (foto == null) R.string.auto_senza_foto else R.string.auto_senza_dispositivi,
+                ),
+            )
+        }
+        for (uno in dispositivi) {
+            elenco.addItem(
+                GridItem.Builder()
+                    .setTitle(uno.nome)
+                    /* Com'e' messo adesso, sotto il nome: e' meta' di quello
+                     * per cui questa schermata esiste. La parola arriva gia'
+                     * scritta dalla plancia, nella lingua di chi guarda.
+                     *
+                     * Se manca si mette uno spazio invece di niente: in una
+                     * griglia una tessera senza la riga sotto e' piu' bassa
+                     * delle altre, e sei tessere di due altezze diverse si
+                     * leggono peggio di sei uguali con una riga vuota. */
+                    .setText(uno.stato.ifBlank { " " })
+                    .setImage(ilSegno(uno.genere))
+                    .setOnClickListener { premiEDillo(carContext, uno.id, uno.nome, true) }
                     .build(),
             )
         }
-        if (foto.fotovoltaico.isEmpty()) {
-            pane.addRow(
-                Row.Builder()
-                    .setTitle(carContext.getString(R.string.auto_senza_fotovoltaico))
-                    .addText(carContext.getString(R.string.auto_senza_fotovoltaico_sotto))
-                    .build(),
+        return GridTemplate.Builder()
+            .setSingleList(elenco.build())
+            .setTitle(
+                foto?.casa?.ifBlank { null } ?: carContext.getString(R.string.auto_dispositivi),
             )
-        }
-
-        /* Da quanto e' quella fotografia: sotto i numeri, sempre, anche quando
-         * e' fresca. Un'ora scritta si controlla; una mancante si indovina. */
-        pane.addRow(
-            Row.Builder()
-                .setTitle(quandoInParole(foto))
-                .build(),
-        )
-
-        pane.addAction(
-            Action.Builder()
-                .setTitle(carContext.getString(R.string.auto_persone))
-                .setOnClickListener { screenManager.push(LePersoneInAuto(carContext)) }
-                .build(),
-        )
-        pane.addAction(
-            Action.Builder()
-                .setTitle(carContext.getString(R.string.auto_azioni))
-                .setOnClickListener { screenManager.push(LeAzioniInAuto(carContext)) }
-                .build(),
-        )
-
-        return PaneTemplate.Builder(pane.build())
-            .setTitle(foto.casa.ifBlank { carContext.getString(R.string.auto_titolo) })
             .setHeaderAction(Action.APP_ICON)
+            .setActionStrip(iDueTasti())
             .build()
     }
 
-    private fun nienteAncora(): Template =
-        MessageTemplate.Builder(carContext.getString(R.string.auto_senza_foto))
-            .setTitle(carContext.getString(R.string.auto_titolo))
-            .setIcon(CarIcon.Builder(IconCompat.createWithResource(carContext, R.mipmap.ic_launcher)).build())
-            .setHeaderAction(Action.APP_ICON)
+    /* I due tasti in alto. Due e non tre: la barra in macchina e' stretta, e
+     * questa schermata ne ha bisogno di due — quello che fa partire le cose
+     * scritte a mano, e quello che racconta la casa. */
+    private fun iDueTasti(): ActionStrip =
+        ActionStrip.Builder()
+            .addAction(
+                Action.Builder()
+                    .setTitle(carContext.getString(R.string.auto_azioni_breve))
+                    .setOnClickListener { screenManager.push(LeAzioniInAuto(carContext)) }
+                    .build(),
+            )
+            .addAction(
+                Action.Builder()
+                    .setTitle(carContext.getString(R.string.auto_casa_breve))
+                    .setOnClickListener { screenManager.push(ComeStaLaCasa(carContext)) }
+                    .build(),
+            )
             .build()
 
-    private fun quandoInParole(foto: FotoDellaCasa): String {
-        val adesso = System.currentTimeMillis()
-        if (!foto.vecchia(adesso)) return carContext.getString(R.string.auto_adesso)
-        if (foto.quando <= 0L) return carContext.getString(R.string.auto_non_si_sa_quando)
-        val minuti = TimeUnit.MILLISECONDS.toMinutes(adesso - foto.quando)
-        val ore = TimeUnit.MILLISECONDS.toHours(adesso - foto.quando)
-        return if (ore >= 1L) {
-            carContext.getString(R.string.auto_da_ore, ore)
-        } else {
-            carContext.getString(R.string.auto_da_minuti, minuti)
+    private fun ilSegno(genere: String): CarIcon {
+        val disegno = when (genere) {
+            "porta" -> R.drawable.auto_porta
+            "varco" -> R.drawable.auto_varco
+            "presa" -> R.drawable.auto_presa
+            else -> R.drawable.auto_luce
         }
+        return CarIcon.Builder(IconCompat.createWithResource(carContext, disegno))
+            /* La tinta la sceglie l'auto: `DEFAULT` vuol dire «quella giusta
+             * per il tema di adesso», ed e' il modo in cui una sola icona
+             * bianca serve il chiaro e lo scuro senza due disegni da tenere
+             * allineati. */
+            .setTint(CarColor.DEFAULT)
+            .build()
     }
 }

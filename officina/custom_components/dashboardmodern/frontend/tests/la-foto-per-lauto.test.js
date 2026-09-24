@@ -17,6 +17,10 @@ import {
   ilTastoDelComando,
   laFotoPerLAuto,
   laRicettaDellAzione,
+  DISPOSITIVI_AL_MASSIMO,
+  iDispositiviPerLAuto,
+  laRicettaDelDispositivo,
+  leRicetteDeiDispositivi,
   leRicettePerLAuto,
 } from "../src/core/la-foto-per-lauto.js";
 
@@ -217,7 +221,8 @@ test("quello che esce è la forma che l'auto sa leggere", () => {
   });
   for (const campo of ["casa", "quando", "fotovoltaico", "persone", "azioni"])
     assert.match(auto, new RegExp(`"${campo}"`), `l'auto deve leggere ${campo}`);
-  for (const campo of Object.keys(foto.fotovoltaico[0])) assert.match(auto, new RegExp(`"${campo}"`));
+  for (const campo of Object.keys(foto.fotovoltaico[0]))
+    assert.match(auto, new RegExp(`"${campo}"`));
   for (const campo of Object.keys(foto.persone[0])) assert.match(auto, new RegExp(`"${campo}"`));
   for (const campo of Object.keys(foto.azioni[0])) assert.match(auto, new RegExp(`"${campo}"`));
 });
@@ -234,10 +239,12 @@ const RISOLVI = (azione) => ({
 });
 
 test("un tasto normale parte da solo, con la sua ricetta", () => {
-  assert.deepEqual(
-    laRicettaDellAzione({ name: "Cancello", entity: "switch.cancello" }, RISOLVI),
-    { dominio: "switch", servizio: "toggle", entita: "switch.cancello", dati: {} },
-  );
+  assert.deepEqual(laRicettaDellAzione({ name: "Cancello", entity: "switch.cancello" }, RISOLVI), {
+    dominio: "switch",
+    servizio: "toggle",
+    entita: "switch.cancello",
+    dati: {},
+  });
   /* Il servizio giusto lo dice la plancia, che ha la sua tabella: qui non se
    * ne fa una seconda. */
   assert.deepEqual(
@@ -358,4 +365,183 @@ test("senza sapere come si esegue, nessun tasto promette di partire da solo", ()
   const foto = laFotoPerLAuto({ azioni: [{ name: "Cancello", entity: "switch.cancello" }] });
   assert.equal(foto.azioni[0].subito, false);
   assert.deepEqual(leRicettePerLAuto([{ name: "Cancello", entity: "switch.cancello" }]), []);
+});
+
+/* ── I dispositivi (la categoria IOT) ────────────────────────────────────
+ *
+ * «View current device state» e «simple, one-touch on/off controls» sono le
+ * due cose che Google mette per prime fra quello che un'app di questa
+ * categoria può fare guidando. Finché in auto c'erano tre numeri e chi è in
+ * casa, non ce n'era nessuna delle due — ed è la ragione per cui la revisione
+ * non passava.
+ *
+ * Qui si prova la scelta, che è l'unica cosa che questo nucleo decide: quali
+ * dispositivi entrano, in che ordine, e quali restano fuori. Le parole e gli
+ * stati arrivano già scritti dalle tessere, come i numeri del fotovoltaico.
+ */
+
+const CANCELLO = {
+  entity: "cover.cancello",
+  nome: "Cancello",
+  genere: "porta",
+  acceso: false,
+  stato: "Chiuso",
+};
+const FINESTRA = {
+  entity: "cover.finestra_cucina",
+  nome: "Finestra cucina",
+  genere: "varco",
+  acceso: true,
+  stato: "Aperto",
+};
+const SALONE = {
+  entity: "light.salone",
+  nome: "Salone",
+  genere: "luce",
+  acceso: true,
+  stato: "Accesa",
+};
+const CANTINA = {
+  entity: "light.cantina",
+  nome: "Cantina",
+  genere: "luce",
+  acceso: false,
+  stato: "Spenta",
+};
+
+const idDi = (elenco) => elenco.map((uno) => uno.id);
+
+test("una porta entra anche chiusa: il tasto serve proprio quando è chiusa", () => {
+  const [uno, ...altri] = iDispositiviPerLAuto([CANCELLO]);
+  assert.deepEqual(altri, []);
+  assert.equal(uno.id, "cover.cancello");
+  assert.equal(uno.nome, "Cancello");
+  assert.equal(uno.genere, "porta");
+  assert.equal(uno.acceso, false);
+  assert.equal(uno.stato, "Chiuso");
+});
+
+test("una luce spenta no: sarebbe un tasto che non risponde a nessuna domanda", () => {
+  /* Una casa ha quaranta luci e la griglia ne mostra sei. Quelle accese sono
+   * poche e sono quelle che uno cerca partendo; sei spente a caso sono sei
+   * tasti buttati. */
+  assert.deepEqual(idDi(iDispositiviPerLAuto([SALONE, CANTINA])), ["light.salone"]);
+});
+
+test("l'ordine è quello che conta guidando: prima quello che si apre", () => {
+  /* Il cancello è la ragione per cui uno prende in mano il telefono in
+   * macchina. Se sta in fondo alla griglia, la griglia non serve. */
+  const dentro = iDispositiviPerLAuto([SALONE, FINESTRA, CANCELLO]);
+  assert.deepEqual(idDi(dentro), ["cover.cancello", "cover.finestra_cucina", "light.salone"]);
+});
+
+test("sei e non di più, e si tagliano gli ultimi, non i primi", () => {
+  const tante = Array.from({ length: 9 }, (_v, i) => ({
+    ...SALONE,
+    entity: `light.stanza_${i}`,
+    nome: `Stanza ${i}`,
+  }));
+  const dentro = iDispositiviPerLAuto([CANCELLO, ...tante]);
+  assert.equal(dentro.length, DISPOSITIVI_AL_MASSIMO);
+  assert.equal(dentro[0].id, "cover.cancello");
+  assert.equal(dentro.at(-1).id, "light.stanza_4");
+});
+
+test("la stessa luce in due gruppi resta una luce sola", () => {
+  assert.deepEqual(idDi(iDispositiviPerLAuto([SALONE, { ...SALONE, nome: "Salone (bis)" }])), [
+    "light.salone",
+  ]);
+});
+
+test("quello che questa casa non lascia comandare non diventa un tasto", () => {
+  assert.deepEqual(iDispositiviPerLAuto([{ ...CANCELLO, comando: false }]), []);
+});
+
+test("una serratura resta fuori: il servizio giusto dipende da com'è messa adesso", () => {
+  /* È la stessa regola dei tasti rapidi, per la stessa ragione: una ricetta
+   * scritta mezz'ora fa chiuderebbe una porta che intanto qualcuno ha aperto.
+   * E un `lock` un `toggle` non ce l'ha proprio. */
+  assert.deepEqual(iDispositiviPerLAuto([{ ...CANCELLO, entity: "lock.portone" }]), []);
+  assert.equal(laRicettaDelDispositivo("lock.portone"), null);
+  assert.equal(laRicettaDelDispositivo("media_player.salotto"), null);
+});
+
+test("un tasto non è un dispositivo: non ha uno stato da guardare", () => {
+  assert.equal(laRicettaDelDispositivo("button.riavvia"), null);
+  assert.equal(laRicettaDelDispositivo("scene.buonanotte"), null);
+  assert.equal(laRicettaDelDispositivo("sensor.temperatura"), null);
+});
+
+test("quelli che si commutano davvero hanno la loro ricetta", () => {
+  for (const entita of [
+    "light.salone",
+    "switch.presa",
+    "input_boolean.modo_notte",
+    "fan.camera",
+    "cover.cancello",
+  ]) {
+    assert.deepEqual(laRicettaDelDispositivo(entita), {
+      dominio: entita.split(".")[0],
+      servizio: "toggle",
+      entita,
+      dati: {},
+    });
+  }
+  assert.equal(laRicettaDelDispositivo("niente"), null);
+  assert.equal(laRicettaDelDispositivo(""), null);
+});
+
+test("la sostituzione di entità vale anche qui", () => {
+  /* Chi ha rimappato una luce a mano la ha rimappata per tutta la plancia, e
+   * l'auto non è un posto dove quella scelta si dimentica. */
+  const risolvi = (entita) =>
+    entita === "light.salone" ? { entita: "light.salone_vero" } : { entita };
+  assert.equal(laRicettaDelDispositivo("light.salone", risolvi).entita, "light.salone_vero");
+  assert.equal(iDispositiviPerLAuto([SALONE], risolvi)[0].ricetta.entita, "light.salone_vero");
+});
+
+test("nel file che legge l'auto vanno i nomi, non le ricette", () => {
+  /* Come per i tasti: il file dell'auto porta quello che si legge e si preme,
+   * e non una riga che dica come si entra in casa. */
+  const foto = laFotoPerLAuto({ dispositivi: [CANCELLO, SALONE], adesso: 1 });
+  assert.equal(foto.dispositivi.length, 2);
+  for (const uno of foto.dispositivi) {
+    assert.deepEqual(Object.keys(uno).sort(), ["acceso", "genere", "id", "nome", "stato"]);
+    assert.equal(uno.ricetta, undefined);
+  }
+  assert.ok(!JSON.stringify(foto).includes("toggle"));
+});
+
+test("le ricette dei dispositivi viaggiano nello stesso elenco dei tasti", () => {
+  const ricette = leRicetteDeiDispositivi([CANCELLO, SALONE]);
+  assert.deepEqual(
+    ricette.map((una) => una.id),
+    ["cover.cancello", "light.salone"],
+  );
+  assert.equal(ricette[0].servizio, "toggle");
+  /* E gli identificativi non si pestano con quelli dei tasti, che la barra ce
+   * l'hanno sempre dentro. */
+  for (const una of ricette) assert.ok(!una.id.includes("|"));
+});
+
+test("con i soli dispositivi la fotografia c'è: non serve altro per essere utile", () => {
+  const foto = laFotoPerLAuto({ dispositivi: [CANCELLO], adesso: 7 });
+  assert.ok(foto);
+  assert.deepEqual(foto.fotovoltaico, []);
+  assert.deepEqual(foto.persone, []);
+  assert.deepEqual(foto.azioni, []);
+  /* E senza niente resta `null`: un file vuoto farebbe credere all'auto di
+   * avere una fotografia quando non ce l'ha. */
+  assert.equal(laFotoPerLAuto({ adesso: 7 }), null);
+});
+
+test("un cancello che si apre fa rimandare la fotografia", () => {
+  /* Se la firma non li guardasse, in macchina si leggerebbe «Chiuso» su un
+   * cancello aperto finché non cambia qualcos'altro. */
+  const chiuso = laFotoPerLAuto({ dispositivi: [CANCELLO], adesso: 1 });
+  const aperto = laFotoPerLAuto({
+    dispositivi: [{ ...CANCELLO, acceso: true, stato: "Aperto" }],
+    adesso: 1,
+  });
+  assert.notEqual(firmaDellaFoto(chiuso), firmaDellaFoto(aperto));
 });

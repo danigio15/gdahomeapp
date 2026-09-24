@@ -4,8 +4,16 @@
      giorno andranno tradotte come tutto il resto: un file suo si traduce, una
      stringa dentro una schermata no. -->
 <resources>
-    <string name="auto_titolo">gdahome</string>
-    <string name="auto_persone">Chi c\'è in casa</string>
+    <!-- La prima schermata: i dispositivi di casa, con com'e' messo ognuno e un
+         tocco per girarlo. Sono le due cose che un'app di questa categoria puo'
+         fare guidando, ed e' per questo che stanno davanti a tutto. -->
+    <string name="auto_dispositivi">Dispositivi</string>
+    <string name="auto_senza_dispositivi">Nessun dispositivo da comandare. Apri gdahome sul telefono e configura varchi, luci o prese: da lì in poi li trovi qui.</string>
+    <!-- I due tasti in alto: corti, perché in macchina la barra è stretta. -->
+    <string name="auto_azioni_breve">Azioni</string>
+    <string name="auto_casa_breve">Casa</string>
+    <string name="auto_come_sta">Come sta la casa</string>
+    <string name="auto_senza_niente_da_dire">Non c\'è ancora niente da dire su questa casa</string>
     <string name="auto_azioni">Azioni rapide</string>
     <string name="auto_in_casa">In casa</string>
     <string name="auto_fuori">Fuori</string>
@@ -14,9 +22,6 @@
     <string name="auto_da_minuti">Di %1$d minuti fa</string>
     <string name="auto_da_ore">Di %1$d ore fa</string>
     <string name="auto_senza_foto">gdahome non ha ancora mandato niente all\'auto. Apri l\'app sul telefono una volta: da lì in poi la trovi qui.</string>
-    <string name="auto_senza_fotovoltaico">Nessun impianto</string>
-    <string name="auto_senza_fotovoltaico_sotto">In questa casa il fotovoltaico non è configurato</string>
-    <string name="auto_senza_persone">Nessuna persona configurata nella plancia</string>
     <string name="auto_senza_azioni">Nessuna azione rapida configurata nella plancia</string>
     <!-- Quello che il tasto promette deve essere quello che succede: il
          comando lo esegue l'app, e l'app lo esegue solo se e' viva. Detto

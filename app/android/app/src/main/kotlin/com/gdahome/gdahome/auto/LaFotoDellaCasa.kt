@@ -31,6 +31,32 @@ private const val NOME_DEL_FILE = "gdahome-auto.json"
 /** Oltre questo la fotografia e' vecchia e lo si dice. Mezz'ora. */
 const val QUANTO_VALE_MS = 30L * 60L * 1000L
 
+/**
+ * Un dispositivo di casa: quello che si guarda e si preme guidando.
+ *
+ * Sono le due cose che un'app di categoria IOT puo' fare in macchina — vedere
+ * com'e' messo un dispositivo, e accenderlo o spegnerlo con un tocco — e
+ * finche' in auto c'erano i numeri del fotovoltaico e chi e' in casa non ce
+ * n'era nessuna delle due.
+ *
+ * Lo [stato] arriva gia' scritto — «Aperto», «Accesa» — nella lingua di chi
+ * guarda: lo scrive la plancia, che quella parola la mostra gia' in casa. Due
+ * parole diverse per lo stesso stato, una in macchina e una sul divano, sono
+ * due stati per chi le legge.
+ *
+ * Il [genere] dice quale segno mettere: porta, varco, luce, presa. Non e' una
+ * decorazione — in una griglia di sei tessere il segno e' l'unica cosa che si
+ * legge di sfuggita, e sei volte lo stesso logo dell'app non distingue il
+ * cancello dalla luce del salone.
+ */
+data class Dispositivo(
+    val id: String,
+    val nome: String,
+    val genere: String,
+    val acceso: Boolean,
+    val stato: String,
+)
+
 data class Misura(val nome: String, val valore: String)
 
 data class Persona(val nome: String, val inCasa: Boolean)
@@ -64,6 +90,7 @@ data class Azione(
 data class FotoDellaCasa(
     val casa: String,
     val quando: Long,
+    val dispositivi: List<Dispositivo>,
     val fotovoltaico: List<Misura>,
     val persone: List<Persona>,
     val azioni: List<Azione>,
@@ -89,10 +116,42 @@ fun leggiLaFoto(context: Context): FotoDellaCasa? {
     return FotoDellaCasa(
         casa = json.optString("casa", ""),
         quando = json.optLong("quando", 0L),
+        dispositivi = iDispositivi(json),
         fotovoltaico = leMisure(json),
         persone = lePersone(json),
         azioni = leAzioni(json),
     )
+}
+
+/* Sei, come i tasti: e' quello che la griglia mostra in una schermata, e il
+ * settimo vorrebbe dire scorrere — una cosa che si fa da fermi. Quali sei li
+ * ha gia' scelti la plancia, che sa cosa c'e' in casa; qui si legge e basta,
+ * e questo tetto e' solo la rete di sicurezza se un giorno di la' ne
+ * arrivassero di piu'. */
+const val DISPOSITIVI_AL_MASSIMO = 6
+
+private fun iDispositivi(json: JSONObject): List<Dispositivo> {
+    val elenco = json.optJSONArray("dispositivi") ?: return emptyList()
+    val fuori = mutableListOf<Dispositivo>()
+    for (i in 0 until elenco.length()) {
+        if (fuori.size >= DISPOSITIVI_AL_MASSIMO) break
+        val voce = elenco.optJSONObject(i) ?: continue
+        val id = voce.optString("id", "").trim()
+        val nome = voce.optString("nome", "").trim()
+        /* Senza nome non c'e' niente da scrivere sulla tessera, e senza
+         * identificativo non c'e' niente da premere. */
+        if (id.isEmpty() || nome.isEmpty()) continue
+        fuori.add(
+            Dispositivo(
+                id = id,
+                nome = nome,
+                genere = voce.optString("genere", "").trim().lowercase(),
+                acceso = voce.optBoolean("acceso", false),
+                stato = voce.optString("stato", "").trim(),
+            ),
+        )
+    }
+    return fuori
 }
 
 private fun leMisure(json: JSONObject): List<Misura> {
