@@ -1415,8 +1415,14 @@ test("production graph is single-owner, acyclic and contains no facade pass-thro
   // l'interruttore c'era, in un'altra linguetta, e quello che mancava era il
   // cartello. È un modulo suo come le altre schede, e scrive la stessa chiave
   // che legge l'elenco del Widget — una porta in più, non una seconda verità.
+  // 393 con la fotografia che l'auto legge: il nucleo
+  // `core/la-foto-per-lauto.js` decide cosa ci sta e quanto — tre misure, sei
+  // tasti — e la sezione legge la plancia e la passa al telefono. Sono due
+  // perché a decidere la forma sono in due: qui e il Kotlin dall'altra parte,
+  // e una prova che li tiene allineati deve poter chiamare il nucleo senza
+  // un documento e senza un canale.
   assert.ok(
-    relative.length <= 391,
+    relative.length <= 393,
     `production graph unexpectedly grew to ${relative.length} modules`,
   );
   assertAcyclic(edges);
@@ -1502,6 +1508,17 @@ test("production graph is single-owner, acyclic and contains no facade pass-thro
    * ferma da solo quando l'ultimo se ne va. Una plancia senza timer
    * programmati non si sveglia mai.
    *
+   * Il dodicesimo e' la fotografia che l'auto legge. Il servizio di Android
+   * Auto vive nello stesso processo dell'app ma non parla con la casa — due
+   * posti che sanno entrare in casa sono uno di troppo — e legge un file che
+   * l'app gli lascia. Nessun evento della plancia dice «adesso la fotografia
+   * e' vecchia»: il tempo passa e basta, e una schermata che mostra i watt di
+   * mezz'ora fa facendo credere che siano adesso e' peggio di una vuota.
+   * Stessa disciplina di tutti gli altri, e piu' stretta: il timer si accende
+   * solo se il canale dell'app c'e' — nel browser e dentro Home Assistant
+   * questa sezione non fa proprio niente — sta zitto mentre la pagina non si
+   * vede, e manda solo quando la firma di quello che c'e' da dire cambia.
+   *
    * These are the intervals production is allowed, and they are named here so
    * another one cannot arrive unnoticed. */
   const intervals = [...graph.entries()].filter(([, source]) =>
@@ -1514,6 +1531,7 @@ test("production graph is single-owner, acyclic and contains no facade pass-thro
       "src/sections/english-runtime-strings-section.js",
       "src/sections/home-widgets-section.js",
       "src/sections/il-guscio-disegna-quando-serve-section.js",
+      "src/sections/la-foto-va-in-auto-section.js",
       "src/sections/live-ui-section.js",
       "src/sections/media-player-section.js",
       "src/sections/people-section.js",

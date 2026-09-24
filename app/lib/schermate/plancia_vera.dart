@@ -23,6 +23,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
+import '../auto/qui.dart' as auto;
 import '../casa/collegamento.dart';
 import '../casa/impostazioni.dart';
 import '../parole.dart';
@@ -69,6 +70,7 @@ class FabbricaDellaPlancia {
     ({double alto, double basso}) margini = (alto: 0, basso: 0),
     void Function(String pagina)? quandoCambiaPagina,
     void Function()? quandoChiedeIlMenu,
+    void Function(String foto)? quandoFotografaLaCasa,
   }) => RiquadroDellaPlancia(
     key: chiave,
     pagina: pagina,
@@ -78,6 +80,7 @@ class FabbricaDellaPlancia {
     quandoFallisce: quandoFallisce,
     quandoCambiaPagina: quandoCambiaPagina,
     quandoChiedeIlMenu: quandoChiedeIlMenu,
+    quandoFotografaLaCasa: quandoFotografaLaCasa,
   );
 }
 
@@ -547,6 +550,14 @@ class PlanciaVeraState extends State<PlanciaVera> {
               },
               quandoCambiaPagina: widget.quandoCambiaPagina,
               quandoChiedeIlMenu: widget.quandoChiedeIlMenu,
+              /* Il nome della casa lo mette qui l'app: la plancia sa di essere
+                 una plancia, non sa di quale delle case dell'app e'. */
+              quandoFotografaLaCasa: (foto) => unawaited(
+                auto.lasciaLaFotoAllAuto(
+                  foto,
+                  casa: collegamento.casa?.nome ?? '',
+                ),
+              ),
             ),
           ),
         ),
@@ -599,6 +610,7 @@ class RiquadroDellaPlancia extends StatefulWidget {
     required this.quandoFallisce,
     this.quandoCambiaPagina,
     this.quandoChiedeIlMenu,
+    this.quandoFotografaLaCasa,
     this.ibrido = false,
     this.margini = (alto: 0, basso: 0),
   });
@@ -620,6 +632,12 @@ class RiquadroDellaPlancia extends StatefulWidget {
 
   /// La pagina chiede il menu dell'app, dalla stessa strada.
   final void Function()? quandoChiedeIlMenu;
+
+  /// La plancia ha fotografato la casa per Android Auto: due numeri, chi c'e'
+  /// in casa, i tasti. Arriva da un canale suo — vedi `riquadro/sul_telefono`
+  /// — e passando di qui diventa un file che l'auto legge. Senza questo, il
+  /// canale non si registra affatto, e la plancia non prepara niente.
+  final void Function(String foto)? quandoFotografaLaCasa;
 
   @override
   State<RiquadroDellaPlancia> createState() => RiquadroDellaPlanciaState();
@@ -748,6 +766,7 @@ class RiquadroDellaPlanciaState extends State<RiquadroDellaPlancia> {
       faScrivere: _laPaginaFaScrivere,
       quandoCambiaPagina: widget.quandoCambiaPagina,
       quandoChiedeIlMenu: widget.quandoChiedeIlMenu,
+      quandoFotografaLaCasa: widget.quandoFotografaLaCasa,
       /* Lo stesso fondo dell'app: sotto la pagina, finche' non arriva, non
        * si vede un lampo di un altro colore. */
       sfondo: Theme.of(context).colorScheme.surface,

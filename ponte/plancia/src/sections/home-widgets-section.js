@@ -6853,7 +6853,13 @@ const eUnaTesseraEnergia = (chiave) =>
 const famigliaDellaTessera = (chiave) =>
   eUnaTesseraEnergia(chiave) ? "energia" : clean(chiave);
 
-function carteDalleRighe(widget) {
+/* Esportata perche' la legge anche chi prepara la fotografia per l'auto: in
+ * macchina si mostrano le stesse righe che mostra la finestra qui — «Casa
+ * 725 W», «Solare 485 W» — con dentro la conversione da kW, il verso della
+ * batteria e la parola nella lingua di chi guarda. Rifare quel conto la'
+ * vorrebbe dire una seconda aritmetica dell'energia, e il giorno che si
+ * scostano in macchina si legge un numero e in casa un altro. */
+export function carteDalleRighe(widget) {
   /* Una tessera «a se'» delle evidenze si disegna come la tessera madre, e
    * cosi' anche quella di una sezione propria: sono entrambe un pugno di
    * entita' scelte a mano, col loro nome e il loro valore. */

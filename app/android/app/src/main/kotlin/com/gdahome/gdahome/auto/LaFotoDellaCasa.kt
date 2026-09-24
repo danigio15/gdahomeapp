@@ -35,6 +35,16 @@ data class Misura(val nome: String, val valore: String)
 
 data class Persona(val nome: String, val inCasa: Boolean)
 
+/**
+ * Un tasto della griglia.
+ *
+ * L'[id] e' «posto|nome» — «0|Cancello» — e non un nome di entita'. Le azioni
+ * rapide un nome loro con cui chiamarle non ce l'hanno: la plancia le preme per
+ * posto nell'elenco. Il nome gli sta accanto perche' fra la fotografia e il
+ * tasto premuto qualcuno puo' aver riordinato l'elenco, e allora il terzo posto
+ * non e' piu' la stessa azione: chi esegue controlla, e se non torna non preme
+ * niente. Qui l'id non si guarda: si porta di la' com'e'.
+ */
 data class Azione(val id: String, val nome: String, val segno: String)
 
 data class FotoDellaCasa(
