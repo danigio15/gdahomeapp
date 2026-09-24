@@ -11,6 +11,21 @@ fuori. La plancia dentro continua a dire la sua, e si legge dov'è sempre
 stata: nella pastiglia «La plancia» della console. Sono due numeri perché
 sono due cose.
 
+## 1.6.4.2
+
+**Il negozio rifiutava il pacchetto.** Costruito bene, firmato bene, e il Play
+Console lo rimandava indietro: nel manifesto c'erano dichiarate insieme due
+cose che si somigliano solo nel nome. Android **Auto** è l'app che gira sul
+telefono e in macchina ci arriva proiettata — è quello che gdahome fa; Android
+**Automotive** è il sistema che sta dentro l'auto. Google non lascia dichiarare
+tutte e due, e ha ragione: sono due prodotti diversi. Ne resta una, quella
+vera.
+
+E le «Novità» che il negozio mostra a chi installa l'app parlavano ancora della
+1.6.2: adesso raccontano la macchina.
+
+In casa non cambia niente.
+
 ## 1.6.4.1
 
 **L'app della 1.6.4 non è mai uscita.** Il pacchetto per il telefono non si

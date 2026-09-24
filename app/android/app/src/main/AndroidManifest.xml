@@ -105,12 +105,23 @@
             android:value="1" />
     </application>
 
-    <!-- `required="false"`: l'app resta quella di sempre su un telefono che in
-         macchina non ci va mai. Senza questa riga il Play Store la nasconderebbe
-         a chi non ha un'auto compatibile. -->
-    <uses-feature
-        android:name="android.hardware.type.automotive"
-        android:required="false" />
+    <!-- Qui **non** c'e' `android.hardware.type.automotive`, e non e' una
+         dimenticanza: sono due cose diverse, e il negozio non le lascia
+         dichiarare insieme.
+
+         Quella riga e' di Android **Automotive**, il sistema che sta dentro
+         l'auto. gdahome fa Android **Auto**: gira sul telefono, e in macchina
+         ci arriva proiettata — la dichiara il `com.google.android.gms.car.application`
+         qui sopra, e basta quello. Dichiarate tutt'e due, il Play Console
+         rifiuta il pacchetto:
+
+           «The app cannot declare 'android.hardware.type.automotive' device
+            feature and 'com.google.android.gms.car.application' metadata at
+            the same time.»
+
+         E' costato un caricamento (la 1.6.4.1, prima corsa). Nessuna
+         `uses-feature` serve: l'app resta quella di sempre su ogni telefono, e
+         chi ha l'auto compatibile ci trova anche la macchina. -->
     <!-- Required to query activities that can process text, see:
          https://developer.android.com/training/package-visibility and
          https://developer.android.com/reference/android/content/Intent#ACTION_PROCESS_TEXT.
