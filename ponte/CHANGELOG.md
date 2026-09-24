@@ -11,6 +11,33 @@ fuori. La plancia dentro continua a dire la sua, e si legge dov'è sempre
 stata: nella pastiglia «La plancia» della console. Sono due numeri perché
 sono due cose.
 
+## 1.6.4.3
+
+**L'auto mappata che la pagina non mostrava.** In configurazione la vettura
+c'era — «attiva, 13 entità mappate» — e la pagina dell'auto era vuota:
+batteria a zero, autonomia e odometro a «—». Si vedevano solo tensione e
+temperatura della colonnina, ed è quello che ha spiegato il resto. La pagina
+non legge i profili: legge una mappa sola, e ogni vettura ne tiene la sua
+copia. Le due si allineavano soltanto salvando un veicolo o premendo «Usa»;
+riaprendo la plancia nessuno riapplicava niente, e lì restavano le caselle
+della colonnina — che sono di casa e nessuno cancella. Adesso l'auto in uso
+torna al suo posto anche all'avvio, e con una vettura sola quello che avevi
+mappato altrove viene adottato invece che perso.
+
+**Le fasce del dispositivo al primo colpo.** Sceglievi il boiler e il riquadro
+non compariva; bisognava passare da un altro apparecchio e tornare indietro.
+La scheda, appena toccata la linguetta, non è ancora aperta: il blocco non si
+disegnava e buttava anche il conto appena fatto. Adesso il conto resta, e dopo
+il tocco si riprova finché la scheda c'è.
+
+**I nomi nelle card dei Varchi.** Su una riga sola, con «NON RISPONDE»
+accanto, di un nome vero restavano sei lettere. Vanno su due righe, e la
+pastiglia dello stato va a capo anche lei.
+
+**La card dei sensori della stanza** porta il nome della stanza quando la
+sonda è una sola: il nome della sonda serve a distinguerne tre, non a
+ribattezzare il Salone.
+
 ## 1.6.4.2
 
 **Il negozio rifiutava il pacchetto.** Costruito bene, firmato bene, e il Play
