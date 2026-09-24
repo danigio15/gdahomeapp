@@ -11,6 +11,47 @@ fuori. La plancia dentro continua a dire la sua, e si legge dov'è sempre
 stata: nella pastiglia «La plancia» della console. Sono due numeri perché
 sono due cose.
 
+## 1.6.5
+
+**Un numero solo.** Da qui in avanti l'add-on in casa e l'app sul telefono
+dicono la stessa cosa: fino a ieri la casa leggeva 1.6.4.4 e il negozio 1.6.4.2,
+e due numeri per la stessa versione sono due versioni per chi li guarda.
+
+**Gli aiutanti non sono dispositivi non connessi.** «68 dispositivi non
+connessi», e non erano dispositivi: erano automazioni, contatori, scene,
+script, timer e le caselle `input_*`, che un dispositivo da andare a premere
+non ce l'hanno. La regola c'era già ma valeva solo dove Home Assistant manda le
+mappe dei registri; dove non le manda — o per un'entità che a nessun
+dispositivo appartiene — rientravano tutti. Adesso è scritta una volta sola e
+vale nella tessera, nella sezione e nel cruscotto dell'installatore.
+
+**L'Agenda su iPhone si riempie appena riapri.** «Ogni volta che apro HA il
+widget agenda non carica gli eventi; devo cliccare sul widget e fare apri
+selezione, e appena richiudo mi fa lo stesso difetto.» Non era il calendario.
+Quando l'app va in secondo piano, iOS sospende la pagina e la richiesta che era
+per aria muore senza rispondere e senza rompere: la scheda restava «in attesa»
+di una risposta che non sarebbe mai arrivata, e da lì in poi nessun disegno
+chiedeva più niente. Adesso una richiesta persa scade da sé dopo mezzo minuto, e
+al rientro in primo piano si libera subito — l'agenda è già lì. Vale anche per
+le liste ToDo, che avevano lo stesso identico difetto.
+
+**La porta del frigo cambia e la card se ne accorge.** «Lo stato della marcia
+funziona e cambia, quello delle porte no.» La lettura della porta era giusta —
+riaprendo la pagina la pastiglia c'era — ma la scheda non si rifaceva mai.
+Quali entità facciano ridisegnare le card degli elettrodomestici era scritto in
+un elenco a parte, e quell'elenco aveva dentro l'interruttore, lo stato, la
+potenza e i contatori dell'energia: non la porta, non le temperature, non il
+tempo che manca, non l'anomalia, e nemmeno le letture, i comandi e le voci
+scelte in «Cosa accende la card». Adesso è uno solo e sta accanto alle caselle
+che lo compongono.
+
+**Aggiornamenti pendenti, e si vedono in cima.** La tessera compare solo quando
+c'è qualcosa da fare, ma si chiamava col nome di una sezione: adesso dice
+«Aggiornamenti pendenti», e la stessa notizia ha la sua pastiglia nella barra
+sotto il meteo — in fondo alle notizie, perché un aggiornamento si fa con
+calma. Toccandola si vede cosa aspetta. Si spegne dalla sua spunta in
+«Barra sotto il meteo», come tutte le altre.
+
 ## 1.6.4.4
 
 **I due euro della scheda del dispositivo adesso si parlano.** In alto il costo
