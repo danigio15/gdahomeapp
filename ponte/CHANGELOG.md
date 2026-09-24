@@ -13,6 +13,72 @@ sono due cose.
 
 ## 1.6.4
 
+**gdahome sale in macchina.** Android Auto mostra i suoi modelli — un pannello,
+una lista, una griglia — e li disegna lui col carattere e i colori dell'auto:
+non c'è la plancia, c'è il poco che si guarda guidando. Quanto tira la casa e
+quanto fa il sole, chi è rientrato, e i tasti delle azioni rapide.
+
+I numeri non li rifà nessuno: sono le stesse righe che la finestra
+dell'Energia mostra in casa, con dentro la conversione da kW e la parola nella
+lingua di chi guarda. Il servizio in auto con la casa non parla — due posti che
+sanno entrare in casa sono uno di troppo: la plancia lascia al telefono una
+fotografia, e l'auto legge quella. Se il telefono non ne ha ancora mandata una,
+in macchina si legge che non è arrivata: mai un numero inventato al posto di
+uno vero.
+
+E i tasti premono davvero, **anche a schermo spento**. Premuto in macchina, il
+comando lo esegue l'app senza che nulla compaia in mano. Non tutto può partire
+da solo, e quello che non può lo dice il tasto: un'azione con una conferma
+vuole qualcuno che guardi, un menu vuole un dito che sceglie, e una serratura
+non si comanda su uno stato di mezz'ora fa. Col lucchetto acceso non parte
+niente senza aprire l'app, che è il senso del lucchetto.
+
+**Da app la casa chiedeva due volte i codici.** «Su Home Assistant funziona, da
+app mi richiede codici sia installatore che gestore.» Fra tutti i comandi che
+l'app fa al ponte, uno solo non guardava la chiave che l'app gli stava già
+passando: quello che chiede lo stato del quadro. Bastava quello per rifare la
+domanda a chi aveva già risposto.
+
+**Il radar diceva «Zoom Level Not Supported» sopra un indirizzo scritto a
+mano.** L'ingrandimento della pioggia ha un tetto, diverso da servizio a
+servizio, e per un indirizzo battuto a mano non lo guardava nessuno. Adesso lo
+guarda — e anche il tasto «Prova», che provava a un ingrandimento che poi non
+si usava e quindi rispondeva su una cosa diversa da quella che si vedeva.
+
+**Sessantotto dispositivi non connessi che erano uno.** La tessera contava
+anche gli aiutanti — i numeri e gli interruttori che uno si crea in Home
+Assistant — e quelli un dispositivo non ce l'hanno: non sono un dispositivo
+che non risponde. Su una casa vera: da 68 a 1. E la finestra ha smesso di
+stampare la maniglia del dispositivo, che è roba da scheda, non da pagina.
+
+**Il tasto del feed manuale non compariva.** Un pulsante che nessuno ha mai
+premuto sta su `unknown`, e chi disegnava lo prendeva per rotto e lo
+nascondeva — per sempre, perché finché non si preme non cambia stato. E un
+menu a tendina disegnava un tasto che non faceva niente: adesso apre le voci e
+se ne sceglie una.
+
+**Le telecamere si tolgono da Sicurezza senza perdere l'allarme.** Chi non ne
+ha una poteva solo spegnere Sicurezza intera, e perdere anche i varchi e
+l'antifurto, che con le telecamere non c'entrano. Adesso c'è un interruttore
+sotto le telecamere, e spegnerlo non cancella niente: si riaccende e tornano
+dov'erano.
+
+**Prima di inserire l'allarme, la plancia dice cosa è ancora aperto.** Si
+inseriva e poi si scopriva la finestra del bagno dal telefono, da fuori.
+
+**«Si vede in Home» adesso è scritto anche dentro la scheda del MiniPC.**
+L'interruttore c'era, in Configurazione → Widget, e non lo trovava nessuno: è
+lo stesso, scritto dove uno lo cerca.
+
+**Nel flusso dell'Energia le linee passavano sopra le bolle degli altri
+carichi.** Sul telefono, dal quinto carico in poi, le file diventano due e
+stavano incolonnate: la linea verso una bolla di sotto attraversava quella di
+sopra, e sembrava che il boiler fosse attaccato alla lavatrice. Adesso le file
+si sfalsano come i mattoni di un muro e ogni linea scende nel suo varco. Nello
+stesso giro la seconda fila è salita di sessantasette punti: i suoi numeri
+finivano sotto la barra dell'app, e per leggerli bisognava scorrere senza
+sapere che ci fosse qualcosa da scorrere.
+
 **La mappa della rete Zigbee, su una casa vera, non si leggeva.** «La mappa
 dopo vari tentativi si è caricata ma non si vede nulla e non si può né fare
 zoom né niente.» Erano due cose, e tutte e due si vedono solo misurando.
