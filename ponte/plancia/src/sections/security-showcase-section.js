@@ -1036,6 +1036,95 @@ function nominaIlTastierino(modo) {
   if (riquadro) riquadro.textContent = clean(modo?.nome) || clean(modo?.entita);
 }
 
+/* ── prima di inserire, cosa e' ancora aperto (#116) ─────────────────────
+ *
+ * «Possibilita' di inserire i sensori dell'allarme nella sezione in modo che
+ * se provo ad attivare l'allarme e ho una finestra aperta mi segnali quale e'
+ * aperta.»
+ *
+ * I sensori si dichiarano gia': sono gli «Ingressi di quest'area» della
+ * centrale, e la pagina li elenca sotto «Ingressi» con lo stesso nome e lo
+ * stesso stato che hanno nei Varchi. Quello che mancava e' il momento in cui
+ * servono davvero — il tocco sul tasto d'inserimento — perche' una finestra
+ * aperta la si scopriva dalla centrale che rifiuta, o peggio da un allarme che
+ * suona alle tre di notte.
+ *
+ * Si aggancia `promptPinAndSet` e non i tasti. Le file di tasti sono tre — la
+ * pagina, la tessera della Home, la finestra rapida del banner — e passano
+ * tutte di qui: chi decide cosa succede quando si preme deve essere uno solo,
+ * ed e' la stessa ragione per cui i tasti li disegna un posto solo.
+ *
+ * ── Cosa si controlla, e cosa no ────────────────────────────────────────
+ *
+ * Solo gli inserimenti veri: `alarm_arm_*`. Lo sblocco no — una finestra
+ * aperta non e' un motivo per non disinserire, e chiederlo sarebbe una domanda
+ * in mezzo a chi sta rientrando. E nemmeno i tasti scritti a mano (#413), che
+ * un servizio della centrale non lo chiamano affatto: di quelli non sappiamo
+ * se inseriscono, e chiedere «c'e' una finestra aperta» davanti a un tasto che
+ * accende il giardino sarebbe rumore.
+ *
+ * E si controllano gli ingressi che la centrale ha DICHIARATO, non tutti i
+ * varchi di casa. E' la regola di `le-zone-della-centrale.js`, decisa dal
+ * campo: «in zone sicurezza non devi rilevare tu e mettere tutto». Chi non ne
+ * ha dichiarato nessuno non vede nessuna domanda, ed e' voluto — una domanda
+ * su porte che non c'entrano con quella centrale la si impara a saltare.
+ *
+ * ── E non impedisce mai ─────────────────────────────────────────────────
+ *
+ * Chiede, e se si risponde di si' inserisce. Uno puo' voler inserire con la
+ * finestra del bagno aperta apposta; e una plancia che si mette di traverso
+ * fra chi esce di casa e il suo antifurto e' peggio del guaio che voleva
+ * evitare. Se la conferma del guscio non c'e', si passa: mai bloccare.
+ */
+const INSERISCE = /^alarm_arm_/i;
+
+/* Gli ingressi della centrale che si sta guardando, aperti adesso. La regola di
+ * cosa conti per «aperto» e' quella dei Varchi, e sta in un posto solo. */
+function ingressiApertiAdesso() {
+  const lista = centraliDiCasa();
+  const centrale = lista.find((riga) => riga.corrente === true) || lista[0] || {};
+  return contoDeiVarchi(ingressiDellaCentrale(righeDeiVarchi(), centrale)).aperte;
+}
+
+function agganciaIlControlloDegliIngressi() {
+  const nome = "promptPinAndSet";
+  const originale = root[nome];
+  if (typeof originale !== "function" || originale.__dmIngressiAperti) return false;
+  function avvolta(...argomenti) {
+    if (!INSERISCE.test(clean(argomenti[0]))) return originale.apply(this, argomenti);
+    let aperti = [];
+    try {
+      aperti = ingressiApertiAdesso();
+    } catch (_errore) {
+      aperti = [];
+    }
+    if (!aperti.length || typeof root.confermaAzione !== "function")
+      return originale.apply(this, argomenti);
+    const quali = aperti
+      .map((riga) => clean(riga?.name))
+      .filter(Boolean)
+      .join(", ");
+    try {
+      root.confermaAzione({
+        icon: "\u{1F6AA}",
+        title: t("C'è ancora qualcosa di aperto", "Something is still open"),
+        message: t(
+          `Aperti adesso: ${quali}. Inserisco lo stesso?`,
+          `Open right now: ${quali}. Arm anyway?`,
+        ),
+        onConfirm: () => originale.apply(this, argomenti),
+      });
+      return undefined;
+    } catch (_errore) {
+      return originale.apply(this, argomenti);
+    }
+  }
+  avvolta.__dmIngressiAperti = true;
+  avvolta.__dmPrecedente = originale;
+  root[nome] = avvolta;
+  return true;
+}
+
 function agganciaIModiSuMisura() {
   const nome = "promptPinAndSet";
   const originale = root[nome];
@@ -1171,6 +1260,7 @@ export function installSecurityShowcaseSection() {
   installOverrides();
   agganciaIModiSuMisura();
   agganciaIlCodiceDeiModiSuMisura();
+  agganciaIlControlloDegliIngressi();
   agganciaLaFinestraRapida();
   if (!state.listeners) {
     state.listeners = true;
@@ -1188,6 +1278,7 @@ export function installSecurityShowcaseSection() {
         installOverrides();
         agganciaIModiSuMisura();
         agganciaIlCodiceDeiModiSuMisura();
+        agganciaIlControlloDegliIngressi();
         agganciaLaFinestraRapida();
         renderSecurity();
       });

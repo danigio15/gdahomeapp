@@ -112,3 +112,36 @@ test("the camera wall is only rebuilt when the configured cameras change", () =>
   assert.match(sync, /grid\._sig = signature/);
   assert.match(sync, /cam-card:not\(\.dm-cam\)/);
 });
+
+/* ── «se provo ad attivare l'allarme e ho una finestra aperta» (#116) ───── */
+
+test("prima di inserire si dice cosa è ancora aperto, e non si blocca niente", async () => {
+  const sorgente = source;
+  /* Si aggancia `promptPinAndSet` e non i tasti: le file di tasti sono tre —
+   * la pagina, la tessera della Home, la finestra rapida del banner — e
+   * passano tutte di lì. Chi decide cosa succede quando si preme deve essere
+   * uno solo. */
+  assert.match(sorgente, /function agganciaIlControlloDegliIngressi\(\)/);
+  assert.match(sorgente, /const nome = "promptPinAndSet";[\s\S]{0,200}__dmIngressiAperti/);
+  assert.match(sorgente, /agganciaIlControlloDegliIngressi\(\);/);
+
+  /* Solo gli inserimenti veri. Lo sblocco no — una finestra aperta non è un
+   * motivo per non disinserire — e nemmeno i tasti scritti a mano, che un
+   * servizio della centrale non lo chiamano affatto. */
+  assert.match(sorgente, /const INSERISCE = \/\^alarm_arm_\/i;/);
+
+  /* Gli ingressi sono quelli DICHIARATI dalla centrale, non tutti i varchi di
+   * casa: è la regola di `le-zone-della-centrale.js`, e una domanda su porte
+   * che non c'entrano la si impara a saltare. */
+  assert.match(
+    sorgente,
+    /contoDeiVarchi\(ingressiDellaCentrale\(righeDeiVarchi\(\), centrale\)\)\.aperte/,
+  );
+
+  /* E non impedisce mai: se la conferma del guscio non c'è, si passa. */
+  assert.match(
+    sorgente,
+    /if \(!aperti\.length \|\| typeof root\.confermaAzione !== "function"\)\s*\n?\s*return originale\.apply/,
+  );
+  assert.match(sorgente, /onConfirm: \(\) => originale\.apply\(this, argomenti\)/);
+});
