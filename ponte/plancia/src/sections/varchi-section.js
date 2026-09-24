@@ -371,12 +371,24 @@ function installStyles() {
     ${P} .dm-varco-ic .dm-catalogo-art{display:grid;place-items:center;line-height:0}
     ${P} .dm-varco-ic svg{display:block;width:30px;height:30px}
     ${P} .dm-varco-testo{display:grid;gap:2px;min-width:0}
+    /* Il nome su due righe, e la pastiglia che gli lascia il posto.
+     *
+     * Su una riga sola, con «NON RISPONDE» accanto che si prende novanta
+     * pixel, di un nome di casa vera restavano sei lettere: «Leapmo…»,
+     * «Sensore Port…». E sono nomi che si somigliano — quattro contatti
+     * «Sensore Porta/finestra ...» diventano quattro card identiche, che e'
+     * peggio di un nome tagliato: e' un nome che non dice piu' quale.
+     *
+     * Due righe bastano quasi sempre, e la pastiglia dello stato va a capo
+     * anche lei invece di mangiarsi la colonna del nome. */
     ${P} .dm-varco-testo strong{font-size:14px;font-weight:900;color:var(--text,#0f172a);
-      overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+      display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;
+      overflow:hidden;overflow-wrap:anywhere;line-height:1.25}
     ${P} .dm-varco-testo small{font-size:10.5px;font-weight:700;color:var(--text-dim,#64748b);
       overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
     ${P} .dm-varco-stato{
       font-size:11px;font-weight:900;letter-spacing:.03em;text-transform:uppercase;
+      max-width:74px;text-align:right;line-height:1.25;
       color:color-mix(in srgb,var(--dm-varco,#94a3b8) 78%,var(--text,#0f172a))}
     @media(max-width:520px){${P} .dm-varchi-elenco{grid-template-columns:1fr}}
     `,

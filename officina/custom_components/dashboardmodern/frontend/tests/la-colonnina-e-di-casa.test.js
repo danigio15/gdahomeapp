@@ -20,6 +20,7 @@ import {
   eDellaWallbox,
   legaLaWallboxAlDispositivo,
 } from "../src/core/wallbox-device-binding.js";
+import { laMappaViva } from "../src/core/vehicle-model.js";
 
 const RADICE = dirname(dirname(fileURLToPath(import.meta.url)));
 
@@ -110,10 +111,16 @@ test("mettere in uso un'auto non porta via la colonnina", () => {
    * caselle della colonnina adesso restano, e quelle dell'auto no: e' la
    * differenza fra una cosa della casa e una di una macchina. */
   const sorgente = readFileSync(join(RADICE, "src/sections/ev-section.js"), "utf8");
-  assert.match(
-    sorgente,
-    /if \(!String\(chiave\)\.startsWith\("dm\.ev_"\) \|\| eDellaWallbox\(chiave\)\)/,
+  /* La regola adesso sta nel modello — `laMappaViva` — e da li' la usano tutti
+   * e due i momenti in cui una vettura va in uso: il tocco su «Usa» e l'avvio
+   * della plancia, che prima non riapplicava niente. Essendo una funzione
+   * pura, non la si legge piu': la si prova. */
+  const prossima = laMappaViva(
+    { "dm.ev_batteria_auto": "sensor.altra_auto", "dm.ev_potenza_wallbox": "sensor.wallbox" },
+    { "dm.ev_batteria_auto": "sensor.questa_auto" },
   );
+  assert.equal(prossima["dm.ev_potenza_wallbox"], "sensor.wallbox");
+  assert.equal(prossima["dm.ev_batteria_auto"], "sensor.questa_auto");
   assert.match(
     sorgente,
     /import \{ eDellaWallbox, eTargetDiCasa \} from "\.\.\/core\/wallbox-device-binding\.js"/,

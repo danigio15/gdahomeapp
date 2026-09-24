@@ -662,7 +662,7 @@ export function sceneMarkup(pagina, states) {
  * nella configurazione stanno sulla riga della stanza stessa. Per questo la
  * card sta qui e non fra le voci: quelle sono cose dentro la stanza, questa e'
  * la stanza. */
-function readingMarkup(pagina, states) {
+export function readingMarkup(pagina, states) {
   /* Una stanza puo' avere piu' di una coppia di sensori.
    *
    * La scheda Temperature lo permette da tempo — «la stessa stanza puo' essere
@@ -685,8 +685,17 @@ function readingMarkup(pagina, states) {
   return associazioni
     .map((voce) => {
       /* Col nome suo se ce l'ha: con tre righe uguali non si saprebbe quale
-       * sonda sta dicendo cosa. */
-      const titolo = clean(voce.name) || clean(pagina.name);
+       * sonda sta dicendo cosa.
+       *
+       * Ma con UNA sonda sola non c'e' niente da distinguere, e quel nome non
+       * e' scelto: lo riempie Home Assistant col nome del dispositivo, che e'
+       * quello che gli ha dato chi l'ha abbinato — e nel Salone di questa casa
+       * si legge «Salown». La card parla della stanza; quando la stanza ha una
+       * sonda sola, porta il nome della stanza, che quello lo ha scritto chi
+       * usa la plancia. Da due in su tornano i nomi delle sonde, perche' li'
+       * servono davvero. */
+      const titolo =
+        associazioni.length > 1 ? clean(voce.name) || clean(pagina.name) : clean(pagina.name) || clean(voce.name);
       return `<article class="dm-stanze-card dm-stanze-clima">
     <div class="dm-stanze-card-row">
       <span class="dm-stanze-orb">🌡️</span>

@@ -30,6 +30,7 @@
  */
 
 import { prossimoIdentificativo, segnoPiuAlto } from "./segno-progressivo.js";
+import { eDellaWallbox } from "./wallbox-device-binding.js";
 
 const clean = (value) => String(value ?? "").trim();
 
@@ -650,4 +651,51 @@ export function ragioneDelRifiuto(messaggio) {
   const testo = String(messaggio ?? "").trim();
   if (!testo) return "";
   return PAROLE_DEL_RIFIUTO.find((voce) => voce.segni.test(testo))?.chiave || "";
+}
+
+/* ── La mappa viva, quella da cui la pagina disegna ──────────────────────── */
+
+/* La pagina dell'auto non legge i profili: legge UNA mappa,
+ * `cd_entity_overrides`, dove ogni `dm.ev_*` dice quale sensore risponde a
+ * cosa. Il profilo della vettura ne tiene la sua copia, e le due si allineano
+ * quando un'auto va in uso. Qui c'e' la regola di quell'allineamento, fuori da
+ * ogni archiviazione: entrano due oggetti, esce il terzo.
+ *
+ * Due cose non sono dell'auto e restano dove sono: tutto quello che non e' un
+ * `dm.ev_*` — la mappa viva la condividono tutte le sezioni — e le caselle
+ * della colonnina, che e' della casa. La potenza che eroga e' la stessa
+ * qualunque macchina ci sia attaccata, e chi ha due auto non deve mapparla due
+ * volte. Se pero' la vettura ne porta una e la casa non ce l'ha, quella entra:
+ * chi ha il target di carica solo dall'auto — una Tesla senza evcc — lo mette
+ * in uso cosi'. */
+export function laMappaViva(viva = {}, ov = {}) {
+  const prossime = {};
+  for (const [chiave, valore] of Object.entries(viva || {}))
+    if (!String(chiave).startsWith("dm.ev_") || eDellaWallbox(chiave)) prossime[chiave] = valore;
+  for (const [chiave, valore] of Object.entries(ov || {}))
+    if (!eDellaWallbox(chiave) || !clean(prossime[chiave])) prossime[chiave] = valore;
+  return prossime;
+}
+
+/* Cosa la mappa viva ha e il profilo no.
+ *
+ * Serve a una vettura sola. Chi ha una macchina sola ha mappato le sue entita'
+ * dove capitava — nella scheda Entita', che scrive nella mappa viva, o nel
+ * pannello del veicolo, che scrive nel profilo — e con una vettura sola le due
+ * cose sono la stessa: quello che sta solo di qua e' suo comunque. Si travasa
+ * nel profilo prima di riapplicarlo, se no riapplicare un profilo a meta'
+ * cancellerebbe quello che c'era.
+ *
+ * Da due vetture in su non si adotta niente e questa funzione non si chiama:
+ * nella mappa viva possono esserci le entita' dell'ALTRA auto — ce le mette il
+ * cambio d'auto — e adottarle vorrebbe dire dare a questa i sensori di quella.
+ */
+export function leCaselleDaAdottare(viva = {}, ov = {}) {
+  const fuori = {};
+  for (const [chiave, valore] of Object.entries(viva || {})) {
+    if (!String(chiave).startsWith("dm.ev_") || eDellaWallbox(chiave)) continue;
+    if (!clean(valore) || clean(ov?.[chiave])) continue;
+    fuori[chiave] = valore;
+  }
+  return fuori;
 }
