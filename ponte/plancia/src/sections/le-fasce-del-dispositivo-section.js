@@ -208,11 +208,26 @@ export function ilBloccoDelDispositivo(detto, config, nome = "") {
 /* Sotto le due tessere dell'anno: sono l'ultima cosa della scheda prima del
  * grafico, e il blocco parla dello stesso periodo di cui parla la card. */
 function ilRiquadro(crea = false) {
-  const titolo = doc?.getElementById("ed-dkpi-year-lbl");
-  const dopo = titolo?.closest?.("div")?.nextElementSibling;
-  const ultimo = dopo?.classList?.contains("ed-dev-cost-row")
-    ? dopo
-    : doc?.querySelector?.("#ed-dev-kpi-row ~ .ed-dev-cost-row:last-of-type");
+  /* L'ultima riga di tessere, e si chiede cosi' e basta.
+   *
+   * Prima si cercava in due modi, e dal campo hanno fallito tutti e due.
+   *
+   * Il primo guardava l'elemento subito dopo il titolo dell'anno: sulla
+   * wallbox li' c'e' il riquadro verde dei kilowattora che il contatore aveva
+   * gia' fatto prima delle statistiche, e sul boiler no. Da qui il blocco che
+   * compariva su un apparecchio e non sull'altro.
+   *
+   * Il secondo, il ripiego, diceva `.ed-dev-cost-row:last-of-type` — e
+   * `:last-of-type` in CSS vuol dire **ultimo elemento di quel TAG** fra i
+   * fratelli, non ultimo con quella classe. Dopo le tessere ci sono le righe
+   * «Spartizione misurata/stimata», che sono `div` anche loro: l'ultimo `div`
+   * non e' mai la riga delle tessere, e quel selettore non trovava niente.
+   * Provato in un browser vero, con la forma esatta della scheda di casa.
+   *
+   * Due modi che si somigliano, e nessuno dei due dice quello che serve. Le
+   * righe di tessere si contano, e l'ultima e' l'ultima. */
+  const righe = doc?.querySelectorAll?.(".ed-dev-cost-row");
+  const ultimo = righe?.length ? righe[righe.length - 1] : null;
   if (!ultimo) return null;
   let riquadro = doc.getElementById("dm-fasce-dispositivo");
   if (!riquadro) {
@@ -221,10 +236,19 @@ function ilRiquadro(crea = false) {
     riquadro.id = "dm-fasce-dispositivo";
     riquadro.className = "dm-fasce-report dm-fasce-dispositivo";
   }
-  /* Sempre subito dopo l'ultima riga di tessere, anche quando il guscio
-   * ridisegna la scheda e rimette i figli al loro posto. Il grafico dei sette
-   * giorni resta sotto: viene dopo nel documento. */
-  if (riquadro.previousElementSibling !== ultimo) ultimo.after(riquadro);
+  /* Sotto la riga della provenienza, non fra lei e le sue tessere.
+   *
+   * «Spartizione misurata ora per ora» la scrive la scheda subito dopo le
+   * tessere di cui parla, e la ritrova guardando li'. Mettendocisi in mezzo,
+   * il blocco gliela faceva perdere: la scheda ne creava una nuova a ogni
+   * ridisegno, e sullo schermo di casa se ne sono viste tre in fila. Due
+   * inquilini per lo stesso posto, che a turno si spingevano.
+   *
+   * Quel posto e' suo: il blocco va dopo. Il grafico dei giorni resta sotto,
+   * perche' viene dopo nel documento. */
+  const strada = ultimo.nextElementSibling;
+  const ancora = strada?.classList?.contains("dm-ed-strada") ? strada : ultimo;
+  if (riquadro.previousElementSibling !== ancora) ancora.after(riquadro);
   return riquadro;
 }
 
@@ -377,18 +401,22 @@ export async function aggiornaLeFasceDelDispositivo({ forza = false } = {}) {
      * contro 12,58 €, sugli stessi kilowattora e a dieci centimetri di
      * distanza sulla stessa schermata.
      *
-     * Si passa il conto e basta: a scrivere nella card resta la card. */
-    if (detto)
-      segnaIlContoMisurato(scelto, periodo, {
-        euro: detto.euro,
-        valoreDelSole: detto.valoreDelSole,
-      });
+     * Si passa il conto e basta: a scrivere nella card resta la card. E lo si
+     * passa DOPO aver disegnato il proprio blocco, perche' quel passaggio fa
+     * ridipingere la scheda — e una ridipintura in mezzo al proprio lavoro e'
+     * il modo piu' rapido di non finirlo. */
     /* Fra la domanda e la risposta la tendina puo' essere cambiata. Il conto
      * si tiene lo stesso — e' buono, ed e' di quell'apparecchio — ma non si
      * disegna: a disegnare ci pensa il giro che sta gia' in coda, con
      * l'apparecchio che c'e' adesso. */
     if (clean(doc.getElementById("ed-dev-selector")?.value) !== scelto) return false;
-    return disegna(detto, config, nome);
+    const fatto = disegna(detto, config, nome);
+    if (detto)
+      segnaIlContoMisurato(scelto, periodo, {
+        euro: detto.euro,
+        valoreDelSole: detto.valoreDelSole,
+      });
+    return fatto;
   } catch (errore) {
     if (giro === state.giro) {
       root.console?.warn?.("[dashboardmodern] ore non lette per le fasce del dispositivo", errore);

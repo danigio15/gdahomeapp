@@ -1508,6 +1508,17 @@ function scriviLaStrada(ancora, misurata) {
     riga.className = "dm-ed-strada";
     tessere.after(riga);
   }
+  /* E le copie che si erano accumulate se ne vanno.
+   *
+   * Questa riga si ritrova guardando subito sotto le sue tessere. Quando li'
+   * in mezzo ci finiva qualcun altro — il blocco delle fasce, che per un po'
+   * si e' appeso nello stesso posto — non la si trovava piu' e se ne creava
+   * una nuova a ogni ridisegno: sullo schermo di casa se ne sono viste tre in
+   * fila, tutte uguali. Adesso il posto e' di nuovo uno solo, e quelle
+   * rimaste in piedi si tolgono di mezzo qui, senza aspettare un
+   * ricaricamento della pagina. */
+  while (riga.nextElementSibling?.classList?.contains("dm-ed-strada"))
+    riga.nextElementSibling.remove();
   riga.classList.toggle("dm-ed-strada-stimata", !misurata);
   scriviTestoSeCambia(
     riga,
