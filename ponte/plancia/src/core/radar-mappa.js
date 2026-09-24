@@ -163,7 +163,25 @@ export function zoomDellaPioggia(config = {}, servizio = "") {
   const scritto = numero(config?.zoomPioggia);
   if (scritto !== null)
     return scritto <= 0 ? null : Math.max(ZOOM_MINIMO, Math.min(ZOOM_MASSIMO, Math.round(scritto)));
-  return numero(SERVIZI_RADAR[stringa(servizio)]?.zoomMassimo);
+  const suo = numero(SERVIZI_RADAR[stringa(servizio)]?.zoomMassimo);
+  /* E di un servizio che non e' in elenco — un indirizzo scritto a mano — si
+   * sa ancora meno, non di piu'.
+   *
+   * Qui «non lo conosco» valeva «nessun tetto», e quello era il caso di chi ha
+   * la plancia da piu' tempo: prima della tendina l'indirizzo della pioggia si
+   * incollava a mano, e quelle configurazioni portano ancora
+   * `servizio: "modello"`. La pioggia si chiedeva al livello della mappa — fino
+   * a dodici — e tornava tutta «Zoom Level Not Supported» stampato dentro
+   * (#109): la mappa coperta di scritte, cioe' esattamente il difetto che il
+   * tetto e' nato per togliere, lasciato in piedi per chi non ha scelto dalla
+   * tendina.
+   *
+   * Non sapere quanto regge un servizio non e' un motivo per chiedergli tutto:
+   * si parte dal numero cauto che conosciamo — quello del servizio di serie —
+   * e chi ha un servizio che a nove risponde eccome lo alza dalla casella, o
+   * lo toglie del tutto con uno zero. Il numero effettivo si legge li' dentro,
+   * come suggerimento della casella: non e' una regola nascosta. */
+  return suo === null ? numero(SERVIZI_RADAR[SERVIZIO_DI_SERIE]?.zoomMassimo) : suo;
 }
 
 /**

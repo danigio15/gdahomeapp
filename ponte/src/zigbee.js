@@ -534,6 +534,84 @@ export function comeSiElimina({ quale, cassetta = "" }, chi) {
   return null;
 }
 
+/**
+ * Come si dice a Zigbee2MQTT che quello adesso si chiama cosi'.
+ *
+ * ─── Perche' non basta rinominarlo in Home Assistant ─────────────────────
+ *
+ * Perche' sono due nomi, e chi guarda ne vede due. Il nome di Home Assistant
+ * (`name_by_user`) e' un'etichetta che sta nel registro dei dispositivi; il
+ * nome della rete (`friendly_name`) e' quello con cui Zigbee2MQTT lo chiama
+ * nella sua cassetta, nella sua pagina e in ogni messaggio che manda. Finche'
+ * si scriveva solo il primo, dal campo si vedeva questo: in Presenza «Presenza
+ * salone», nell'elenco Zigbee e dentro Zigbee2MQTT `0x0cae5ffffec141a9`.
+ * «Il nome del dispositivo non risulta modificato.» Giusto: non lo era.
+ *
+ * ─── Quello che costa ────────────────────────────────────────────────────
+ *
+ * Il nome della rete non e' un'etichetta: e' l'indirizzo della cassetta.
+ * Cambiandolo, Zigbee2MQTT scrive su un'altra cassetta e Home Assistant rifa'
+ * le entita' con identificativi nuovi — quelle di prima restano li' orfane, e
+ * quello che le usava nella plancia va rimesso a posto.
+ *
+ * Non si nasconde e non si decide al posto di chi guarda: lo dice la schermata
+ * prima di farlo, e chi preme sa cosa succede. Appena entrato non costa niente
+ * — nessuno lo usa ancora — ed e' il momento in cui si rinomina quasi sempre.
+ */
+export function comeSiRinomina({ quale, cassetta = "" } = {}, chi, come) {
+  const id = targa(chi);
+  const nome = String(come ?? "").trim();
+  if (quale !== Z2M || !cassetta || !id || !nome) return null;
+  return {
+    type: "call_service",
+    domain: "mqtt",
+    service: "publish",
+    service_data: {
+      topic: `${cassetta}/bridge/request/device/rename`,
+      /* `from` con l'indirizzo e non col nome di adesso: l'indirizzo non
+       * cambia mai, il nome e' proprio la cosa che si sta cambiando — e se
+       * quello che abbiamo in mano fosse vecchio di un minuto, il rinomina
+       * andrebbe a vuoto senza dirlo. */
+      payload: JSON.stringify({ from: id, to: nome }),
+    },
+  };
+}
+
+/* Le cifre di un indirizzo IEEE, da qualunque forma arrivi.
+ *
+ * Le due reti lo scrivono in due modi — `0x0cae5ffffec141a9` per Zigbee2MQTT,
+ * `0c:ae:5f:ff:fe:c1:41:a9` per il registro di Home Assistant — e sono lo
+ * stesso indirizzo. Sedici cifre esadecimali: quelle si confrontano. */
+export function leCifreDellaTarga(valore) {
+  const pulite = String(valore ?? "")
+    .toLowerCase()
+    .replace(/0x/g, "")
+    .replace(/[^0-9a-f]/g, "");
+  return pulite.length >= 16 ? pulite.slice(-16) : "";
+}
+
+/**
+ * Il dispositivo di Home Assistant che porta questo indirizzo.
+ *
+ * Zigbee2MQTT, al contrario di ZHA, nella sua cassetta il dispositivo di Home
+ * Assistant non lo scrive: la riga esce con `dispositivo` vuoto, e senza quello
+ * la scheda dell'elenco non puo' ne' rinominare ne' consegnare alla plancia —
+ * su una casa Zigbee2MQTT quei due tasti non hanno mai funzionato.
+ *
+ * Il filo che lega le due cose c'e' gia', ed e' l'indirizzo: Home Assistant lo
+ * scrive negli `identifiers` (`zigbee2mqtt_0x…`) o nelle `connections` (il
+ * `mac`, coi due punti). Si guarda li'.
+ */
+export function ilDispositivoDellaTarga(dispositivi, chi) {
+  const cerco = leCifreDellaTarga(chi);
+  if (!cerco) return "";
+  for (const uno of Array.isArray(dispositivi) ? dispositivi : []) {
+    const pezzi = [...(uno?.identifiers ?? []), ...(uno?.connections ?? [])].flat();
+    if (pezzi.some((pezzo) => leCifreDellaTarga(pezzo) === cerco)) return pulito(uno?.id);
+  }
+  return "";
+}
+
 /* E per servizio, dove il servizio c'e'. Stessa ragione di `comeSiApre`: il
  * servizio e' la superficie pubblica e si rompe molto piu' di rado del comando
  * interno, quindi si prova per primo. */
@@ -729,6 +807,11 @@ export function comeSiPresentaUnEntita(voce) {
  */
 export const QUANTO_SI_RICORDA = 60_000;
 
+/* E quanto si ricorda il registro dei dispositivi di Home Assistant. Meno:
+ * quello cambia quando ne entra o ne esce uno, ed e' proprio mentre si sta
+ * guardando questa schermata che succede. */
+export const QUANTO_SI_RICORDANO_I_DISPOSITIVI = 30_000;
+
 /* Quanto si aspetta prima di riguardare, quando all'accensione non si trova
  * niente.
  *
@@ -738,6 +821,34 @@ export const QUANTO_SI_RICORDA = 60_000;
  * che non ha ancora finito di accendersi, e scriverlo nel registro una volta
  * sola vorrebbe dire dire una cosa falsa e non correggerla piu'. */
 export const ATTESE = Object.freeze([30_000, 120_000]);
+
+/* Quante volte si riguarda se il nome nuovo e' arrivato, e ogni quanto.
+ *
+ * Meno del togliere, e per una ragione: togliere e' un ordine che viaggia via
+ * radio e aspetta che un apparecchio si svegli, rinominare e' una scrittura
+ * che Zigbee2MQTT fa in casa sua. Quattro sguardi a un secondo bastano; di
+ * piu' vorrebbe dire una rotellina che gira per niente. */
+export const QUANTE_VOLTE_SI_GUARDA_IL_NOME = 4;
+export const OGNI_QUANTO_SI_GUARDA_IL_NOME = 1000;
+
+/* Quante volte si riguarda se e' uscito davvero, e ogni quanto.
+ *
+ * Togliere da una rete Zigbee non e' cancellare una riga da un elenco: e' un
+ * ordine che viaggia via radio. Il coordinatore lo manda, l'apparecchio se ne
+ * va, e l'elenco si riscrive DOPO — un secondo o due se e' a corrente e
+ * sveglio, di piu' se dorme.
+ *
+ * Guardare subito vuol dire quasi sempre trovarcelo ancora, e annunciare «non
+ * e' andata» di una cosa che stava andando benissimo. E' successo dal campo,
+ * con un sensore SONOFF: «la rete ha accettato l'ordine ma quel dispositivo e'
+ * ancora li'» — e un minuto dopo non c'era piu'.
+ *
+ * Otto sguardi a un secondo e mezzo fanno dodici secondi: abbastanza perche'
+ * un apparecchio sveglio esca, poco abbastanza da non lasciare qualcuno con
+ * una rotellina che gira senza fine. Chi dorme ci mette di piu' di cosi', e
+ * per quello c'e' la frase. */
+export const QUANTE_VOLTE_SI_RIGUARDA = 8;
+export const OGNI_QUANTO_SI_RIGUARDA = 1500;
 
 /* L'attesa fra un tentativo e l'altro.
  *
@@ -750,6 +861,23 @@ const ASPETTA = (quanto) =>
     const giro = setTimeout(ok, quanto);
     giro.unref?.();
   });
+
+/* Quando dopo l'attesa e' ancora li'.
+ *
+ * Dire «non e' andata» e basta lascia chi legge davanti a un muro: ha premuto
+ * «Toglilo», ha aspettato, e non sa se ha sbagliato lui, se e' rotto, o se
+ * deve solo riprovare. Quasi sempre e' la terza — l'apparecchio dorme, e un
+ * apparecchio che dorme l'ordine di uscire non lo sente finche' non si sveglia
+ * — e allora si dice quella, e si dice come si sveglia. */
+export function perCheNonEUscito() {
+  const secondi = Math.round((QUANTE_VOLTE_SI_RIGUARDA * OGNI_QUANTO_SI_RIGUARDA) / 1000);
+  return (
+    `l'ordine e' partito, ma dopo ${secondi} secondi quel dispositivo e' ancora nell'elenco. ` +
+    "Di solito vuol dire che dorme: se va a batteria, sveglialo — premi un tasto, apri e chiudi " +
+    "il contatto — e riprova; se va a corrente, stacca e riattacca. Se esce da solo piu' tardi, " +
+    "dall'elenco sparisce senza fare altro"
+  );
+}
 
 export class Zigbee {
   constructor({ casa, registro = null, adesso = () => Date.now(), aspetta = ASPETTA } = {}) {
@@ -767,6 +895,10 @@ export class Zigbee {
     this._disdici = null;
     this._chiudiDaSola = null;
     this._apertaFinoA = 0;
+    /* Il registro dei dispositivi di Home Assistant, e quando lo si e' letto:
+     * serve a legare una riga di Zigbee2MQTT a quello che la plancia conosce. */
+    this._dispositivi = null;
+    this._dispositiviIl = 0;
   }
 
   /** Quale rete c'e'. La risposta si tiene un minuto. */
@@ -1124,11 +1256,54 @@ export class Zigbee {
     try {
       const righe =
         rete.quale === ZHA ? await this._elencoDiZha() : await this._elencoDallaCassetta(rete);
-      return { quale: rete.quale, righe, perche: "" };
+      return { quale: rete.quale, righe: await this._colDispositivo(righe), perche: "" };
     } catch (errore) {
       this.registro?.info?.(`zigbee: l'elenco non si legge: ${errore?.message || errore}`);
       return { quale: rete.quale, righe: [], perche: ilPerche(errore) };
     }
+  }
+
+  /* Il dispositivo di Home Assistant, per le righe che non ce l'hanno.
+   *
+   * ZHA lo scrive da se' (`device_reg_id`); Zigbee2MQTT no, e le sue righe
+   * uscivano con quel campo vuoto. Non e' un dettaglio: e' il filo che lega la
+   * riga dell'elenco a quello che la plancia conosce, e senza, nella scheda di
+   * un dispositivo, «rinominalo» e «mettilo nella plancia» non hanno su cosa
+   * lavorare — su una casa Zigbee2MQTT quei due tasti non hanno mai funzionato.
+   *
+   * Il filo c'e' gia' ed e' l'indirizzo: si incrocia col registro. */
+  async _colDispositivo(righe) {
+    const elenco = Array.isArray(righe) ? righe : [];
+    if (!elenco.some((una) => !pulito(una?.dispositivo))) return elenco;
+    const tutti = await this._iDispositivi();
+    if (!tutti.length) return elenco;
+    return elenco.map((una) =>
+      pulito(una?.dispositivo)
+        ? una
+        : { ...una, dispositivo: ilDispositivoDellaTarga(tutti, una?.id) },
+    );
+  }
+
+  /* Il registro dei dispositivi, tenuto un attimo.
+   *
+   * L'elenco si richiede spesso — quando si toglie uno si riguarda nove volte
+   * di fila — e il registro dei dispositivi in mezzo minuto non cambia. Senza
+   * questa memoria, ogni sguardo sarebbe una domanda in piu' a Home Assistant
+   * per rileggere le stesse righe. */
+  async _iDispositivi() {
+    const adesso = this.adesso();
+    if (this._dispositivi && adesso - this._dispositiviIl < QUANTO_SI_RICORDANO_I_DISPOSITIVI)
+      return this._dispositivi;
+    try {
+      const tutti = await this.casa.chiedi({ type: "config/device_registry/list" });
+      this._dispositivi = Array.isArray(tutti) ? tutti : [];
+    } catch (_errore) {
+      /* Un registro che non risponde non e' un elenco perso: e' un elenco
+       * senza il filo verso la plancia, che e' quello che c'era prima. */
+      this._dispositivi = [];
+    }
+    this._dispositiviIl = adesso;
+    return this._dispositivi;
   }
 
   async _elencoDiZha() {
@@ -1204,16 +1379,100 @@ export class Zigbee {
     } catch (errore) {
       return { fatto: false, perche: ilPerche(errore) };
     }
-    /* E adesso si guarda. Se la rete ce l'ha ancora, non e' andata — e si dice
-     * cosi', invece di dire «fatto» su una cosa che non e' successa. */
-    const dopo = await this.elenco();
+    /* E adesso si guarda — ma non una volta sola, e non subito.
+     *
+     * L'ordine viaggia via radio e l'elenco si riscrive dopo: chiedendolo
+     * nell'istante in cui si e' mandato l'ordine ci si trova ancora tutto come
+     * prima, e si annuncia un fallimento che non c'e'. Si riguarda finche' non
+     * e' uscito, o finche' non e' passato il tempo che ci mette uno sveglio. */
+    let dopo = await this.elenco();
+    for (
+      let giro = 0;
+      giro < QUANTE_VOLTE_SI_RIGUARDA && dopo.righe.some((una) => una.id === id);
+      giro++
+    ) {
+      await this.aspetta(OGNI_QUANTO_SI_RIGUARDA);
+      dopo = await this.elenco();
+    }
+    /* Se dopo tutto questo c'e' ancora, non e' andata — e si dice cosi',
+     * invece di dire «fatto» su una cosa che non e' successa. Con dentro
+     * l'unica cosa che chi sta li' col telefono in mano puo' fare. */
     if (dopo.righe.some((una) => una.id === id))
       return {
         fatto: false,
-        perche: "la rete ha accettato l'ordine ma quel dispositivo e' ancora li'",
+        perche: perCheNonEUscito(),
         righe: dopo.righe,
       };
     return { fatto: true, righe: dopo.righe };
+  }
+
+  /**
+   * Il nome dentro Zigbee2MQTT. Torna `null` quando e' andata — o quando non
+   * c'era niente da fare, che per ZHA e' sempre — e l'esito da dire quando no.
+   *
+   * Non ci si fida del «si'», come per il togliere: Zigbee2MQTT risponde di
+   * aver ricevuto la domanda, non di averla fatta. L'unica conferma e'
+   * ritrovare quel nome nella sua cassetta.
+   */
+  async _rinominaNellaRete(dispositivo, come) {
+    const rete = await this.rete();
+    if (rete.quale !== Z2M) return null;
+    const suo = leCifreDellaTarga(
+      [...(dispositivo?.identifiers ?? []), ...(dispositivo?.connections ?? [])]
+        .flat()
+        .find((pezzo) => leCifreDellaTarga(pezzo)) ?? "",
+    );
+    if (!suo)
+      return {
+        fatto: false,
+        perche:
+          "il nome e' cambiato in Home Assistant, ma di quel dispositivo non si sa " +
+          "l'indirizzo Zigbee: dentro Zigbee2MQTT resta quello di prima",
+      };
+    /* L'indirizzo nella forma in cui lo scrive Zigbee2MQTT. */
+    const targaSua = `0x${suo}`;
+    const ordine = comeSiRinomina(rete, targaSua, come);
+    if (!ordine)
+      return {
+        fatto: false,
+        perche:
+          "il nome e' cambiato in Home Assistant, ma a Zigbee2MQTT non si sa come dirlo: " +
+          "dentro la rete resta quello di prima",
+      };
+    try {
+      await this.casa.chiedi(ordine);
+      /* Rinominato, Zigbee2MQTT rifa' le entita' e con loro il dispositivo:
+       * quello che si ricordava non vale piu'. */
+      this._dispositivi = null;
+    } catch (errore) {
+      return {
+        fatto: false,
+        perche: `il nome e' cambiato in Home Assistant, ma la rete non l'ha preso: ${ilPerche(errore)}`,
+      };
+    }
+    let dopo = await this.elenco();
+    for (
+      let giro = 0;
+      giro < QUANTE_VOLTE_SI_GUARDA_IL_NOME && !this._siChiama(dopo, targaSua, come);
+      giro++
+    ) {
+      await this.aspetta(OGNI_QUANTO_SI_GUARDA_IL_NOME);
+      dopo = await this.elenco();
+    }
+    if (this._siChiama(dopo, targaSua, come)) return null;
+    return {
+      fatto: false,
+      perche:
+        "il nome e' cambiato in Home Assistant ma non dentro Zigbee2MQTT: " +
+        "di solito vuol dire che quel nome li' e' gia' di un altro",
+    };
+  }
+
+  _siChiama(elenco, targaSua, come) {
+    const cerco = leCifreDellaTarga(targaSua);
+    return (elenco?.righe ?? []).some(
+      (una) => leCifreDellaTarga(una.id) === cerco && pulito(una.nome) === come,
+    );
   }
 
   /**
@@ -1357,6 +1616,13 @@ export class Zigbee {
           ? `Home Assistant ha accettato ma quel dispositivo si chiama «${scritto}»`
           : "Home Assistant ha accettato senza scrivere il nome",
       };
+    /* E adesso anche alla rete, che e' l'altro nome.
+     *
+     * Su ZHA non serve: la' il nome della rete E' il nome del dispositivo di
+     * Home Assistant, e quello e' appena stato scritto. Su Zigbee2MQTT sono
+     * due, e senza questo pezzo il secondo resta l'indirizzo per sempre. */
+    const allaRete = await this._rinominaNellaRete(dispositivo, come);
+    if (allaRete) return allaRete;
     /* E lo si aggiorna anche nell'elenco di chi sta guardando: la schermata
      * dopo mostra il nome nuovo senza dover richiedere tutto. */
     const suo = this._entrati.find((uno) => uno.id === quale);

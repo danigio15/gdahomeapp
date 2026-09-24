@@ -42,6 +42,7 @@ WebViewController costruisciIlControllore({
   Future<String> Function(String domanda, String diSerie)? faScrivere,
   void Function(String pagina)? quandoCambiaPagina,
   void Function()? quandoChiedeIlMenu,
+  void Function(String foto)? quandoFotografaLaCasa,
 }) {
   final PlatformWebViewControllerCreationParams parametri;
   if (WebViewPlatform.instance is WebKitWebViewPlatform) {
@@ -77,6 +78,25 @@ WebViewController costruisciIlControllore({
    * dalla parola: quella del menu non e' il nome di nessuna pagina, e non
    * potra' esserlo (`premesse.dart`). Il nome del canale e' quello che la
    * pagina cerca. */
+  /* Il canale della fotografia per l'auto, e perche' e' un canale a parte.
+   *
+   * Di la' passano nomi di pagine: una fotografia mandata di la' un'app
+   * vecchia la prenderebbe per il nome di una pagina, e il menu resterebbe
+   * senza voce accesa. Ma la ragione vera e' l'altro verso — e' la PAGINA che
+   * guarda se questo canale c'e' prima di preparare qualcosa: nel browser,
+   * dentro Home Assistant e su un'app di prima non c'e', e li' la plancia non
+   * legge le tessere, non conta le persone e non accende nessun timer.
+   * Registrarlo qui e' quindi anche il modo di dire alla plancia «in questa
+   * macchina c'e' un'auto che ascolta». */
+  if (quandoFotografaLaCasa != null) {
+    unawaited(
+      controllore.addJavaScriptChannel(
+        'gdahomeAuto',
+        onMessageReceived: (messaggio) =>
+            quandoFotografaLaCasa(messaggio.message),
+      ),
+    );
+  }
   if (quandoCambiaPagina != null || quandoChiedeIlMenu != null) {
     unawaited(
       controllore.addJavaScriptChannel(
@@ -418,6 +438,54 @@ Future<void> doveLoMetto(
     /* La pagina non c'e' ancora, o e' una plancia vecchia che quella maniglia
      * non ce l'ha: il dispositivo in casa c'e' lo stesso, e la sezione si
      * sceglie dall'editor come si e' sempre fatto. */
+  }
+}
+
+/// Come e' andata la richiesta di premere un tasto per conto dell'auto.
+enum ComeEAndataInAuto {
+  /// Premuto. Il comando e' finito, e non si ripete.
+  fatto,
+
+  /// La pagina c'e' e ha detto di no: l'elenco delle azioni rapide e' cambiato
+  /// da quando la fotografia e' partita, e quel tasto adesso non c'e' piu' o
+  /// sta altrove. Non si riprova: riprovare non lo fa tornare.
+  no,
+
+  /// La pagina non ha ancora la maniglia. Non vuol dire no: le sezioni della
+  /// plancia si installano mentre la pagina arriva, e chi chiede troppo presto
+  /// non trova niente. Si riprova fra poco.
+  aspetta,
+}
+
+/// Chiede alla plancia di premere il tasto che l'auto ha chiesto.
+///
+/// Il confronto con l'elenco di adesso lo fa la pagina, non l'app: le azioni
+/// rapide stanno nella sua configurazione, e chi le preme e' la sua `qaRun` —
+/// con la conferma che un'azione puo' chiedere e i servizi che chiama. Se da
+/// quando la fotografia e' partita qualcuno le ha riordinate, la pagina non
+/// preme niente: un tasto che fa un'altra cosa e' peggio di un tasto che non
+/// fa niente.
+///
+/// Il segno passa da [jsonEncode]: dentro c'e' il nome di un'azione, scritto
+/// da chi ha la casa, e finisce dentro un programma che si esegue.
+Future<ComeEAndataInAuto> premiPerLAuto(
+  WebViewController controllore,
+  String segno,
+) async {
+  try {
+    final detta = await controllore.runJavaScriptReturningResult(
+      '(function(){var q=window.gdahomeFotoInAuto;'
+      'if(!q||!q.premi)return "aspetta";'
+      'return q.premi(${jsonEncode(segno)})?"fatto":"no";})()',
+    );
+    final risposta = detta.toString();
+    if (risposta.contains('fatto')) return ComeEAndataInAuto.fatto;
+    if (risposta.contains('aspetta')) return ComeEAndataInAuto.aspetta;
+    return ComeEAndataInAuto.no;
+  } catch (_) {
+    /* La pagina non c'e' ancora, o e' una plancia piu' vecchia di questa
+     * maniglia: si aspetta, e se non arriva il comando scade da solo. */
+    return ComeEAndataInAuto.aspetta;
   }
 }
 

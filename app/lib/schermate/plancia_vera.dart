@@ -23,6 +23,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
+import '../auto/qui.dart' as auto;
 import '../casa/collegamento.dart';
 import '../casa/impostazioni.dart';
 import '../parole.dart';
@@ -69,6 +70,7 @@ class FabbricaDellaPlancia {
     ({double alto, double basso}) margini = (alto: 0, basso: 0),
     void Function(String pagina)? quandoCambiaPagina,
     void Function()? quandoChiedeIlMenu,
+    void Function(String foto)? quandoFotografaLaCasa,
   }) => RiquadroDellaPlancia(
     key: chiave,
     pagina: pagina,
@@ -78,6 +80,7 @@ class FabbricaDellaPlancia {
     quandoFallisce: quandoFallisce,
     quandoCambiaPagina: quandoCambiaPagina,
     quandoChiedeIlMenu: quandoChiedeIlMenu,
+    quandoFotografaLaCasa: quandoFotografaLaCasa,
   );
 }
 
@@ -224,6 +227,12 @@ class PlanciaVeraState extends State<PlanciaVera> {
 
   void _diSeSiVede() {
     _riquadro.currentState?.parcheggia(!widget.visibile);
+    /* Tornando qui si guarda se in macchina e' stato premuto qualcosa: e'
+       uno dei due momenti in cui l'app diventa «in linea» per chi ha premuto,
+       ed e' quello che la schermata dell'auto ha promesso. */
+    if (widget.visibile) {
+      unawaited(_riquadro.currentState?.ilComandoDellAuto() ?? Future.value());
+    }
   }
 
   /// Ricarica la pagina: e' quello che fa toccare di nuovo «Plancia» nella
@@ -547,6 +556,21 @@ class PlanciaVeraState extends State<PlanciaVera> {
               },
               quandoCambiaPagina: widget.quandoCambiaPagina,
               quandoChiedeIlMenu: widget.quandoChiedeIlMenu,
+              /* Il nome della casa lo mette qui l'app: la plancia sa di essere
+                 una plancia, non sa di quale delle case dell'app e'. */
+              quandoFotografaLaCasa: (foto) => unawaited(
+                auto.lasciaLaFotoAllAuto(
+                  foto,
+                  casa: collegamento.casa?.nome ?? '',
+                  /* Col lucchetto acceso niente parte da solo: chi l'ha messo
+                     ha detto che in casa non si entra senza che sia lui a
+                     tenere il telefono, e un tasto premuto in macchina da uno
+                     schermo che non chiede niente sarebbe la porta di dietro
+                     di quella stessa serratura. Le azioni restano tutte lì:
+                     partono aprendo l'app, dove il lucchetto si apre. */
+                  daSola: !widget.impostazioni.lucchetto.acceso,
+                ),
+              ),
             ),
           ),
         ),
@@ -599,6 +623,7 @@ class RiquadroDellaPlancia extends StatefulWidget {
     required this.quandoFallisce,
     this.quandoCambiaPagina,
     this.quandoChiedeIlMenu,
+    this.quandoFotografaLaCasa,
     this.ibrido = false,
     this.margini = (alto: 0, basso: 0),
   });
@@ -621,6 +646,12 @@ class RiquadroDellaPlancia extends StatefulWidget {
   /// La pagina chiede il menu dell'app, dalla stessa strada.
   final void Function()? quandoChiedeIlMenu;
 
+  /// La plancia ha fotografato la casa per Android Auto: due numeri, chi c'e'
+  /// in casa, i tasti. Arriva da un canale suo — vedi `riquadro/sul_telefono`
+  /// — e passando di qui diventa un file che l'auto legge. Senza questo, il
+  /// canale non si registra affatto, e la plancia non prepara niente.
+  final void Function(String foto)? quandoFotografaLaCasa;
+
   @override
   State<RiquadroDellaPlancia> createState() => RiquadroDellaPlanciaState();
 }
@@ -630,6 +661,11 @@ class RiquadroDellaPlanciaState extends State<RiquadroDellaPlancia> {
    * colore del fondo — non in `initState`, dove il tema non si puo' ancora
    * leggere — e da li' resta lo stesso per tutta la vita del riquadro. */
   WebViewController? _controllore;
+
+  /// Il tasto che l'auto ha chiesto, mentre si prova a premerlo. Serve a non
+  /// partire due volte: si torna su questa schermata anche mentre il primo
+  /// giro sta ancora aspettando che la pagina abbia la sua maniglia.
+  String? _ilTastoDellAuto;
 
   /// Cosa e' di casa. La plancia sta tutta sul servitore: dentro il riquadro
   /// ci va lei e nient'altro. Un indirizzo di fuori non si carica qui — se lo
@@ -748,6 +784,7 @@ class RiquadroDellaPlanciaState extends State<RiquadroDellaPlancia> {
       faScrivere: _laPaginaFaScrivere,
       quandoCambiaPagina: widget.quandoCambiaPagina,
       quandoChiedeIlMenu: widget.quandoChiedeIlMenu,
+      quandoFotografaLaCasa: widget.quandoFotografaLaCasa,
       /* Lo stesso fondo dell'app: sotto la pagina, finche' non arriva, non
        * si vede un lampo di un altro colore. */
       sfondo: Theme.of(context).colorScheme.surface,
@@ -802,6 +839,38 @@ class RiquadroDellaPlanciaState extends State<RiquadroDellaPlancia> {
     if (controllore != null) {
       unawaited(riquadro.parcheggia(controllore, parcheggiata));
     }
+  }
+
+  /// Esegue il tasto che l'auto ha lasciato scritto, se ce n'e' uno.
+  ///
+  /// Si guarda quando la pagina e' arrivata e ogni volta che si torna su
+  /// questa schermata: sono i due momenti in cui l'app diventa «viva» dal
+  /// punto di vista di chi ha premuto in macchina, ed e' quello che la
+  /// schermata dell'auto promette — «parte appena l'app e' in linea».
+  ///
+  /// Il file lo toglie chi lo legge, prima di tornare: cosi' non si riesegue
+  /// al giro dopo. Se il comando e' vecchio si butta e non si preme niente:
+  /// «apri il cancello» di un'ora fa non e' piu' quello che uno voleva.
+  Future<void> ilComandoDellAuto() async {
+    if (_ilTastoDellAuto != null) return;
+    final segno = await auto.prendiIlComandoDellAuto();
+    if (segno == null || segno.isEmpty || !mounted) return;
+    _ilTastoDellAuto = segno;
+    /* Le sezioni della plancia si installano mentre la pagina arriva, e chi
+       chiede troppo presto non trova la maniglia. Il file intanto e' gia'
+       tolto — un comando si esegue una volta sola, e un file che resta li' si
+       fa ritrovare a ogni apertura — quindi il segno si tiene in mano e si
+       riprova qualche volta. Se l'app muore nel frattempo il comando si
+       perde, ed e' il verso giusto in cui perderlo. */
+    for (var prova = 0; prova < 6 && mounted; prova += 1) {
+      final controllore = _controllore;
+      if (controllore != null) {
+        final andata = await riquadro.premiPerLAuto(controllore, segno);
+        if (andata != riquadro.ComeEAndataInAuto.aspetta) break;
+      }
+      await Future<void>.delayed(const Duration(milliseconds: 400));
+    }
+    _ilTastoDellAuto = null;
   }
 
   /// Apre la Config della plancia: la maniglia sta nella pagina, e come si

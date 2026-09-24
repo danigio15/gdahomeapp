@@ -57,6 +57,9 @@ import { installAlarmModesEditorSection } from "./alarm-modes-editor-section.js"
 import { installAntifurtoSuMisuraEditorSection } from "./antifurto-su-misura-editor-section.js";
 import { installRilevamentiEditorSection } from "./rilevamenti-editor-section.js";
 import { installTelecamereRiservateEditorSection } from "./telecamere-riservate-editor-section.js";
+import { installTelecamereSpenteEditorSection } from "./telecamere-si-spengono-editor-section.js";
+import { installTesseraDallaSchedaSection } from "./la-tessera-si-accende-dalla-scheda-section.js";
+import { installLaFotoVaInAuto } from "./la-foto-va-in-auto-section.js";
 import { installQuickClimateEditorSection } from "./quick-climate-editor-section.js";
 import { installVmcEditor } from "./vmc-editor-section.js";
 import { installAssistSection } from "./assist-section.js";
@@ -936,6 +939,12 @@ export function installSectionRuntime() {
     /* La spunta «solo a casa vuota» sta sotto le telecamere, e delle telecamere
      * parla: dopo i rilevamenti, che stanno gia' li'. */
     installTelecamereRiservateEditorSection();
+    installTelecamereSpenteEditorSection();
+    installTesseraDallaSchedaSection();
+    /* La fotografia per Android Auto: legge le tessere che la Home ha gia'
+     * costruito, quindi si installa dopo di loro. Fuori dall'app non fa
+     * niente — il canale non c'e'. */
+    installLaFotoVaInAuto();
     installClimateThermalSection();
     /* Le voci termiche del popup Caldo: dopo chi disegna il popup, cosi' il
      * pannello passa di mano una volta sola. */

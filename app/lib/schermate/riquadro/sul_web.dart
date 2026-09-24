@@ -22,7 +22,9 @@ import '../../plancia/premesse.dart' show ilMenuDalRiquadro;
 /// della pagina.
 /// I tre dialoghi (`dice`, `chiede`, `faScrivere`) qui non si passano: in un
 /// `iframe` li fa il browser, come li farebbe alla plancia dentro Home
-/// Assistant. Stanno nella firma perche' la firma e' una sola.
+/// Assistant. Stanno nella firma perche' la firma e' una sola. Per la stessa
+/// ragione c'e' `quandoFotografaLaCasa` e qui non si usa: quella fotografia
+/// la legge Android Auto, e in un browser Android Auto non c'e'.
 WebViewController costruisciIlControllore({
   required void Function() quandoCaricata,
   required void Function(String perche) quandoFallisce,
@@ -33,6 +35,7 @@ WebViewController costruisciIlControllore({
   Future<String> Function(String domanda, String diSerie)? faScrivere,
   void Function(String pagina)? quandoCambiaPagina,
   void Function()? quandoChiedeIlMenu,
+  void Function(String foto)? quandoFotografaLaCasa,
 }) {
   final controllore = WebViewController();
   /* Chi va avvisato quando la pagina «arriva». Si tiene da parte perche'
@@ -384,6 +387,16 @@ Future<void> tornaDallaConfig(WebViewController controllore) async =>
 /// riconosce dal marchio e dall'azione, gli altri lo lasciano cadere. E dal
 /// di la' si guarda che arrivi dal proprio ospite: e' la stessa regola con cui
 /// gia' oggi si passano le premesse.
+/// Come e' andata la richiesta di premere un tasto per conto dell'auto. Nel
+/// browser non arriva mai nessuna richiesta: c'e' perche' la firma e' una sola.
+enum ComeEAndataInAuto { fatto, no, aspetta }
+
+/// Nel browser non c'e' nessuna auto che abbia chiesto niente.
+Future<ComeEAndataInAuto> premiPerLAuto(
+  WebViewController controllore,
+  String segno,
+) async => ComeEAndataInAuto.no;
+
 Future<void> doveLoMetto(
   WebViewController controllore,
   String dispositivo,

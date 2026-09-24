@@ -270,7 +270,7 @@ import {
 import { normalizeRobots, robotStateLabel, robotView } from "../core/robot-model.js";
 import { passoDellUnita, scalaDellUnita } from "../core/scala-clima.js";
 import { configuredLightGroups } from "./lights-alerts-section.js";
-import { floodEntities, floodIsWet } from "./flood-alerts-section.js";
+import { floodEntities, floodIsWet, puoEssereUnaSonda } from "./flood-alerts-section.js";
 import {
   SMOKE_ICON,
   nomeDelRilevatore,
@@ -3733,12 +3733,25 @@ function rowsDetail(widget) {
  * ripetitore, togliere e rimettere corrente alla presa — si fa fuori dalla
  * plancia, e una promessa che la plancia non puo' mantenere e' peggio del
  * silenzio. */
+/* Sotto il nome non ci va l'identificativo.
+ *
+ * Qui c'era, ed era rimasto da quando ogni riga era un'entita': «Pompa
+ * piscina» e sotto `switch.pompa`. Da quando le righe sono dispositivi (#111)
+ * quel posto stampava `dispositivo:a1b2c3…`, che non e' nemmeno un'entita' —
+ * e' la maniglia con cui questo codice tiene insieme le sue entita' mute, e
+ * non vuol dire niente per nessuno.
+ *
+ * Ma non si toglie perche' era diventato brutto: si toglie perche' e' la
+ * regola di questa plancia. «Non voglio vedere il nome entita'»: gli
+ * identificativi stanno nelle schede della configurazione, dove uno li cerca,
+ * e non nelle pagine, dove uno guarda. Quello che serve qui e' il nome e da
+ * quanto tace: la presa da andare a premere si riconosce da come si chiama. */
 function nonRispondeDetail(widget) {
   return (widget.rows || [])
     .map((riga) =>
       rowShell(
         `<span class="dm-w-glyph" data-on="false" aria-hidden="true">${esc(riga.glyph || "📡")}</span>
-         <span class="dm-w-name">${esc(riga.name)}<small>${esc(riga.entity)}</small></span>
+         <span class="dm-w-name">${esc(riga.name)}</span>
          <span class="dm-w-pill" data-tono="allarme">${esc(riga.value)}</span>`,
       ),
     )
@@ -4439,6 +4452,15 @@ function floodModel(states) {
   const fuori = widgetExcludedEntities("allagamenti");
   const rows = entities
     .filter((entity) => widgetIncludes(entity, fuori))
+    /* E solo quello che una sonda lo e' davvero.
+     *
+     * In questa lista ci finisce anche quello che una persona ci mette dalla
+     * scheda degli avvisi, dove fra i gruppi c'e' «Allagamenti»: un antifurto
+     * inserito diceva «C'e' acqua», perche' qui acceso vuol dire bagnato. Chi
+     * dichiara di essere un'altra cosa non si legge come sonda — la regola,
+     * e il perche', stanno in `puoEssereUnaSonda`. Dalla configurazione non
+     * sparisce: la' e' scritto che sonda non e', e c'e' il cestino. */
+    .filter((entity) => puoEssereUnaSonda(entity, stateOf(states, entity)))
     .map((entity) => ({
       entity,
       name: friendlyName(states, entity),
@@ -6831,7 +6853,13 @@ const eUnaTesseraEnergia = (chiave) =>
 const famigliaDellaTessera = (chiave) =>
   eUnaTesseraEnergia(chiave) ? "energia" : clean(chiave);
 
-function carteDalleRighe(widget) {
+/* Esportata perche' la legge anche chi prepara la fotografia per l'auto: in
+ * macchina si mostrano le stesse righe che mostra la finestra qui — «Casa
+ * 725 W», «Solare 485 W» — con dentro la conversione da kW, il verso della
+ * batteria e la parola nella lingua di chi guarda. Rifare quel conto la'
+ * vorrebbe dire una seconda aritmetica dell'energia, e il giorno che si
+ * scostano in macchina si legge un numero e in casa un altro. */
+export function carteDalleRighe(widget) {
   /* Una tessera «a se'» delle evidenze si disegna come la tessera madre, e
    * cosi' anche quella di una sezione propria: sono entrambe un pugno di
    * entita' scelte a mano, col loro nome e il loro valore. */
@@ -9405,6 +9433,21 @@ html[data-theme="dark"] :is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-wi
 :is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-vai:active{transform:none}
 :is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-body{
   padding:16px 18px 20px;display:grid;gap:9px;
+  /* Una colonna che sa restringersi.
+   *
+   * Senza questa riga la colonna della griglia e' «auto», e una colonna auto
+   * e' larga almeno quanto il piu' largo dei suoi contenuti: una riga con
+   * dentro «Sensore perdita acqua lavello casa Umidita'» chiedeva
+   * quattrocentoquaranta pixel dentro una finestra che ne ha trecentotrenta,
+   * e la colonna glieli dava. Da li' in poi il corpo aveva centocinque pixel
+   * di troppo — e siccome scorre in verticale, di traverso scorreva anche —
+   * quindi «Asciutto» stava fuori dalla card a destra e il titoletto «LO
+   * STATO» spariva a sinistra appena si toccava. Dal campo: «non entra
+   * all'interno tutto».
+   *
+   * Con minmax(0,1fr) il minimo della colonna e' zero: la larghezza la decide
+   * la finestra, e quello che c'e' dentro si adatta. */
+  grid-template-columns:minmax(0,1fr);
   /* L'altezza minima azzerata perche' un figlio di colonna flex, per difetto,
      non scende sotto il proprio contenuto: senza, la lista non si accorcia mai
      e non c'e' niente da scorrere. */
@@ -9590,8 +9633,20 @@ html[data-theme="dark"] :is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-wi
 :is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-row .dm-w-glyph[data-on="false"]{filter:grayscale(1);opacity:.5}
 /* Il nome pesa piu' di quello che ha sotto: prima erano quasi uguali e la riga
    si leggeva tutta insieme, senza un ordine. */
+/* E va a capo invece di finire tagliato.
+ *
+ * Il nome eredita «white-space:nowrap» con i puntini di coda, ma i puntini
+ * qui non arrivano mai: .dm-w-name e' una griglia — dentro ci stanno il nome
+ * e la riga piccola sotto — e text-overflow non vale su un contenitore di
+ * griglia. Il risultato era un nome tagliato a meta' di una lettera: «Sensore
+ * acqua zanzare Um». Visto rendendo, non leggendo.
+ *
+ * Nella finestra lo spazio in verticale c'e', ed e' il posto dove i nomi si
+ * leggono per intero: si va a capo. In griglia, dove la riga e' alta
+ * quarantadue pixel e basta, resta come prima. */
 :is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-row .dm-w-name{
-  gap:2px;font-size:14px;font-weight:800;letter-spacing:.1px}
+  gap:2px;font-size:14px;font-weight:800;letter-spacing:.1px;
+  white-space:normal;overflow:visible;overflow-wrap:anywhere}
 :is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-row .dm-w-name small{
   font-size:11px;font-weight:700;letter-spacing:.2px;color:var(--text-dim,#94a3b8)}
 /* I numeri in Oswald, come tutti i numeri della plancia, e incolonnabili. */
@@ -10104,7 +10159,19 @@ ${tokenDellaCarta(":is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-po
 :is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-w-close:not(.dm-widget-detail .dm-w-close){
   flex:0 0 28px;width:28px;height:28px;display:grid;place-items:center;border:0;border-radius:9px;
   background:var(--surface-3,#f1f5f9);color:var(--text-dim,#64748b);font-size:12px;cursor:pointer}
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-w-body{display:grid;gap:2px;padding:0 10px 12px}
+/* Il corpo della tessera aperta DENTRO la griglia, e solo quello.
+ *
+ * Qui c'era anche il popup, e siccome questa riga sta in fondo al foglio
+ * vinceva a parita' di peso su quella del popup scritta piu' su: la finestra
+ * aveva dieci pixel di margine invece dei diciotto (tredici sul telefono) e
+ * due pixel fra una riga e l'altra invece di nove. I margini stretti della
+ * segnalazione erano questi — la regola di una tessera in griglia applicata a
+ * una finestra a tutto schermo.
+ *
+ * Il dettaglio dentro la griglia non esiste piu' da quando e' diventato un
+ * popup (si veda «Il dettaglio e' un popup, non una tendina»): questa riga
+ * resta per la forma, ma non deve piu' passare di la'. */
+#dm-widgets .dm-w-body{display:grid;gap:2px;padding:0 10px 12px}
 :is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-w-row{
   display:flex;align-items:center;gap:11px;min-height:42px;padding:5px 8px;border-radius:12px;
   animation:none;

@@ -25,6 +25,7 @@ import {
   dentroOFuori,
   minutiDa,
   normalizzaAnimali,
+  comeSiAziona,
   pressioneDellAzione,
   proponiCaselle,
   specieDalNome,
@@ -474,6 +475,81 @@ test("la pressione si descrive, e ogni dominio ha il suo servizio", () => {
   // Un sensore non si preme: dirlo è meglio che chiamare un servizio inventato.
   assert.equal(pressioneDellAzione("sensor.pulisci"), null);
   assert.equal(pressioneDellAzione("non-un-id"), null);
+});
+
+/* ── «imposto l'entità per il feed manuale ma non compare» (#112) ───────── */
+
+test("un tasto mai premuto si offre lo stesso: «unknown» non è «non risponde»", () => {
+  /* Il blocco che non si apriva da solo. In Home Assistant lo stato di un
+   * `button` è il momento dell'ultima pressione: finché nessuno l'ha premuto
+   * quel momento non c'è, cioè `unknown`. Qui si guardava la stessa regola
+   * delle LETTURE, che `unknown` e `unavailable` li mette insieme — giusto per
+   * un livello di cibo, che senza valore non si può stampare; sbagliato per un
+   * tasto. Il tasto non compariva; non comparendo non si poteva premere; non
+   * essendo premuto restava `unknown`. Chi collegava un distributore appena
+   * installato vedeva la casella compilata e la scheda vuota, per sempre. */
+  const nuovo = vistaAnimale(
+    { nome: "Micio", cibo_eroga: "button.petkit_manual_feed" },
+    { "button.petkit_manual_feed": stato("unknown") },
+    ORA,
+  );
+  assert.deepEqual(
+    nuovo.azioni.map((voce) => voce.chiave),
+    ["cibo_eroga"],
+  );
+  /* E `unavailable` resta un no: quello è l'unico modo in cui Home Assistant
+   * dice «non riesco a parlarci». */
+  const rotto = vistaAnimale(
+    { nome: "Micio", cibo_eroga: "button.petkit_manual_feed" },
+    { "button.petkit_manual_feed": stato("unavailable") },
+    ORA,
+  );
+  assert.deepEqual(rotto.azioni, []);
+});
+
+test("una porzione che si sceglie è una tendina, non un tasto", () => {
+  /* «Dovrebbe apparire un popup o un menu a tendina come su HA»: su parecchi
+   * distributori l'erogazione manuale non è un tasto, è una porzione che si
+   * sceglie, e Home Assistant la pubblica come `select`. Prima il tasto si
+   * disegnava lo stesso e non faceva niente — `pressioneDellAzione` tornava
+   * `null` e chi premeva non otteneva nulla, senza che nulla lo dicesse. */
+  assert.deepEqual(comeSiAziona("select.petkit_porzione"), {
+    modo: "scegli",
+    dominio: "select",
+    servizio: "select_option",
+    dati: { entity_id: "select.petkit_porzione" },
+  });
+  assert.equal(comeSiAziona("input_select.porzione").modo, "scegli");
+  assert.equal(comeSiAziona("button.pulisci").modo, "premi");
+  /* Una tendina non si preme: non si saprebbe quale voce mettere. */
+  assert.equal(pressioneDellAzione("select.petkit_porzione"), null);
+
+  const vista = vistaAnimale(
+    { nome: "Micio", cibo_eroga: "select.petkit_porzione" },
+    { "select.petkit_porzione": stato("2") },
+    ORA,
+  );
+  assert.equal(vista.azioni[0].modo, "scegli", "la scheda deve sapere che si sceglie");
+});
+
+test("quello che non si sa azionare non diventa un tasto", () => {
+  /* Un sensore in quella casella prima disegnava un tasto morto: adesso non
+   * c'è, che è la stessa regola scritta in cima a questo blocco. */
+  const vista = vistaAnimale(
+    { nome: "Micio", cibo_eroga: "sensor.qualcosa" },
+    { "sensor.qualcosa": stato("on") },
+    ORA,
+  );
+  assert.deepEqual(vista.azioni, []);
+});
+
+test("la scheda apre la tendina invece di premere, e usa quella delle azioni rapide", () => {
+  const sorgente = readFileSync(
+    new URL("../src/sections/animali-section.js", import.meta.url),
+    "utf8",
+  );
+  assert.match(sorgente, /import \{ apriIlMenu \} from "\.\/azioni-servizio-giusto-section\.js"/);
+  assert.match(sorgente, /dmAnimaleModo === "scegli"[\s\S]{0,240}apriIlMenu\(quale/);
 });
 
 test("i consumabili contati in giorni avvisano prima di finire", () => {

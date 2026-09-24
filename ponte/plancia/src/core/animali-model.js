@@ -30,6 +30,11 @@ const minuscolo = (valore) => pulito(valore).toLowerCase();
 /* Gli stati con cui Home Assistant dice «non lo so». */
 const MUTI = /^(unknown|unavailable|none|null|)$/i;
 
+/* La sola parola con cui Home Assistant dice «non riesco a parlarci». Serve ai
+ * TASTI, che non vanno tolti per un `unknown`: il perche' sta su `vistaAnimale`
+ * e in fondo e' la #112. */
+const NON_RISPONDE = /^unavailable$/i;
+
 /** La chiave in cui vive la configurazione degli animali. */
 export const CHIAVE_ANIMALI = "cd_animali";
 
@@ -301,15 +306,29 @@ export const AZIONI = Object.freeze([
 
 export const CHIAVI_AZIONI = Object.freeze(AZIONI.map((voce) => voce.chiave));
 
-/* Il servizio con cui si preme un tasto, dal dominio dell'entita'.
+/* Come si aziona questa entita': si preme, o si sceglie fra le sue voci.
+ *
+ * «Ho impostato l'entita' giusta ma non compare nella scheda, dovrebbe
+ * apparire un popup o un menu a tendina come su HA» (#112).
+ *
+ * Qui si sapeva solo premere, e un'erogazione manuale spesso non e' un tasto:
+ * su parecchi distributori la porzione si sceglie, e Home Assistant la
+ * pubblica come `select` con le sue voci. Una tendina non si puo' premere — non
+ * si saprebbe quale voce mettere — quindi non e' un tasto con un servizio
+ * diverso: e' un altro gesto, e si dice qui in modo che chi disegna sappia
+ * quale dei due offrire.
  *
  * Si descrive, non si esegue: chi ha la connessione la chiama, e cosi' «cosa
- * succede se premo» si prova a tavolino. */
-export function pressioneDellAzione(entita) {
+ * succede se premo» si prova a tavolino. Un dominio che non sa fare ne' l'una
+ * ne' l'altra cosa torna `null`, e chi disegna non lo mette: un tasto che si
+ * preme e non fa niente e' peggio di un tasto che non c'e'. */
+export function comeSiAziona(entita) {
   const id = pulito(entita);
   const punto = id.indexOf(".");
   if (punto <= 0) return null;
   const dominio = id.slice(0, punto).toLowerCase();
+  if (dominio === "select" || dominio === "input_select")
+    return { modo: "scegli", dominio, servizio: "select_option", dati: { entity_id: id } };
   const servizio =
     dominio === "button" || dominio === "input_button"
       ? "press"
@@ -317,7 +336,16 @@ export function pressioneDellAzione(entita) {
         ? "turn_on"
         : "";
   if (!servizio) return null;
-  return { dominio, servizio, dati: { entity_id: id } };
+  return { modo: "premi", dominio, servizio, dati: { entity_id: id } };
+}
+
+/* Il servizio con cui si PREME un tasto. Chi sceglie da una tendina non passa
+ * di qui: quella vuole sapere anche quale voce, e questa funzione non ce
+ * l'ha. */
+export function pressioneDellAzione(entita) {
+  const come = comeSiAziona(entita);
+  if (come?.modo !== "premi") return null;
+  return { dominio: come.dominio, servizio: come.servizio, dati: come.dati };
 }
 
 export const CHIAVI_CAMPI = Object.freeze(CAMPI.map((campo) => campo.chiave));
@@ -761,18 +789,35 @@ export function vistaAnimale(animale = {}, states = {}, adesso = 0) {
     soglie,
     letture,
     /* I tasti che questa scheda puo' offrire: solo quelli che hanno davvero
-     * un'entita' dietro, e solo se quell'entita' risponde. Un tasto che si
-     * preme e non fa niente e' peggio di un tasto che non c'e'. */
+     * un'entita' dietro, che si sappia azionare, e che risponda. Un tasto che
+     * si preme e non fa niente e' peggio di un tasto che non c'e'.
+     *
+     * «Risponda» pero' vuol dire `unavailable`, e NON `unknown` (#112).
+     *
+     * Qui si guardava `MUTI`, che i due li mette insieme — e per una lettura ci
+     * sta, perche' un livello di cibo senza valore non si puo' stampare. Per un
+     * tasto no, ed e' un blocco che non si apre da solo: in Home Assistant lo
+     * stato di un `button` e' il momento dell'ultima pressione, e finche'
+     * nessuno l'ha premuto quel momento non c'e', cioe' `unknown`. Il tasto
+     * quindi non compariva; e non comparendo non si poteva premere; e non
+     * essendo premuto restava `unknown`. Chi collegava un distributore appena
+     * installato vedeva la casella compilata e la scheda vuota, per sempre.
+     *
+     * `unavailable` invece e' l'unica parola con cui Home Assistant dice «non
+     * riesco a parlarci», ed e' la stessa distinzione che questa plancia fa
+     * dappertutto (`core/chi-non-risponde.js`). */
     azioni: AZIONI.filter((azione) => {
       const entita = suo[azione.chiave];
-      if (!entita || !entita.includes(".")) return false;
+      if (!entita || !comeSiAziona(entita)) return false;
       const stato = states?.[entita];
-      return Boolean(stato) && !MUTI.test(pulito(stato.state));
+      return Boolean(stato) && !NON_RISPONDE.test(pulito(stato.state));
     }).map((azione) => ({
       chiave: azione.chiave,
       gruppo: azione.gruppo,
       glifo: azione.glifo,
       entita: suo[azione.chiave],
+      /* «Premi» o «scegli»: chi disegna non riguarda il dominio. */
+      modo: comeSiAziona(suo[azione.chiave]).modo,
     })),
     /* Dentro, fuori, o non si sa: la porta col microchip lo dice meglio del
      * collare, che dice solo dove il collare crede di essere. */

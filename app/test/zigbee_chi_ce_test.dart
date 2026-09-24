@@ -210,6 +210,26 @@ void main() {
     expect(ponte.inReteZigbee.length, 3, reason: 'non si è tolto niente');
   });
 
+  testWidgets('rinominare chiede conferma, e dice che le entità si rifanno', (
+    tester,
+  ) async {
+    /* Dal campo, con quattro scatti: «il nome del dispositivo nella sezione
+     * zigbee sia su home assistant che su app non risulta modificato». Il nome
+     * si scriveva solo in Home Assistant; adesso va anche dentro la rete, che
+     * è dove serve — e rinominare lì non è mettere un'etichetta: Home
+     * Assistant rifà le entità con identificativi nuovi. Si dice prima. */
+    await unaCasa(tester);
+    await apri(tester);
+    await premi(tester, find.text('Porta ingresso'));
+    await tester.enterText(find.byType(TextField).first, 'Porta di casa');
+    await tester.pump();
+    await premi(tester, find.text('Salva il nome'));
+    expect(find.textContaining('rifà le sue entità'), findsOneWidget);
+    /* E si può dire di no: chi dice di no non ha rinominato niente. */
+    await premi(tester, find.text('Lascia stare'));
+    expect(ponte.rinominatiInZigbee, isEmpty);
+  });
+
   testWidgets('chi regge gli altri lo dice, prima di toglierlo', (
     tester,
   ) async {
@@ -293,5 +313,105 @@ void main() {
     await premi(tester, find.text('Rifai il giro'));
     expect(ponte.mappeRifatte, 1);
     expect(find.textContaining('non ha ancora guardato'), findsNothing);
+  });
+
+  /* ── Che sul telefono la mappa si legga ────────────────────────────────
+   *
+   * Dal campo, con lo scatto: «La mappa dopo vari tentativi si e caricata ma
+   * non si vede nulla e non si puo ne fare zoom ne niente». Erano due cose: il
+   * disegno di una casa con ottanta apparecchi e' largo due metri di schermo —
+   * e quello si e' corretto nel ponte, dove si disegna — e qui dentro non si
+   * poteva ingrandire, perche' la figura stava in una lista che si prende il
+   * dito.
+   *
+   * Qui si difende quello che si e' fatto di conseguenza: la figura si apre in
+   * una pagina sua, dove il dito serve solo a lei, e sotto ci sono i rami in
+   * parole, che su un telefono sono la cosa che si legge davvero. */
+  void conIRami() {
+    ponte.mappaZigbee =
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10">'
+        '<circle cx="5" cy="5" r="4" fill="#7c3aed"/></svg>';
+    ponte.ramiZigbee = [
+      {
+        'id': '0x00',
+        'nome': 'Antenna',
+        'tipo': 'coordinatore',
+        'potenza': 'rete',
+        'qualita': null,
+        'appesi': <Object?>[],
+      },
+      {
+        'id': '0x01',
+        'nome': 'Presa cucina',
+        'tipo': 'router',
+        'potenza': 'rete',
+        'qualita': 200,
+        'appesi': [
+          {
+            'id': '0x02',
+            'nome': 'Porta ingresso',
+            'tipo': 'terminale',
+            'potenza': 'batteria',
+            'qualita': 30,
+          },
+        ],
+      },
+    ];
+    ponte.soliZigbee = [
+      {
+        'id': '0x09',
+        'nome': 'Sensore terrazzo',
+        'tipo': 'terminale',
+        'potenza': 'batteria',
+        'qualita': null,
+      },
+    ];
+  }
+
+  testWidgets('la rete si legge anche a righe: chi regge chi, e quanto bene', (
+    tester,
+  ) async {
+    await unaCasa(tester);
+    conIRami();
+    await apri(tester);
+    await premi(tester, find.text('Guarda la rete'));
+    expect(find.text('Chi regge chi'), findsOneWidget);
+    /* Piu' d'uno: gli stessi nomi stanno anche nell'elenco dei dispositivi, che
+     * e' la pagina da cui si e' arrivati. Qui conta che ci siano. */
+    expect(find.text('Presa cucina'), findsAtLeastNWidgets(1));
+    expect(find.text('Porta ingresso'), findsAtLeastNWidgets(1));
+    /* Un filo sotto cinquanta e' un filo che si spezza appena qualcuno accende
+     * il microonde: si dice in una parola, perche' un numero da zero a
+     * duecentocinquantacinque non lo legge nessuno. */
+    expect(find.text('debole'), findsOneWidget);
+    /* E chi non parla con nessuno sta in fondo, come nel disegno. */
+    expect(find.text('Sensore terrazzo'), findsOneWidget);
+  });
+
+  testWidgets('il disegno si apre in una pagina sua, dove si ingrandisce', (
+    tester,
+  ) async {
+    await unaCasa(tester);
+    conIRami();
+    await apri(tester);
+    await premi(tester, find.text('Guarda la rete'));
+    /* Nella pagina della rete la figura non si ingrandisce: e' un'anteprima, e
+     * il dito serve alla lista. */
+    expect(find.byType(InteractiveViewer), findsNothing);
+    await premi(tester, find.textContaining('Tocca per aprirla'));
+    /* Aperta, invece, c'e' solo lei — e i tre tasti per muoversi. */
+    expect(find.byType(InteractiveViewer), findsOneWidget);
+    /* Per il nome e non per l'icona: l'icona dell'ingrandimento sta anche
+     * sull'anteprima, nella pagina di sotto. */
+    expect(find.byTooltip('Ingrandisci'), findsOneWidget);
+    expect(find.byTooltip('Rimpicciolisci'), findsOneWidget);
+    expect(find.byTooltip('Tutta intera'), findsOneWidget);
+    /* E si sposta davvero: senza margine infinito un disegno grande quanto la
+     * finestra non si muove di un pixel, che e' il difetto segnalato. */
+    final viewer = tester.widget<InteractiveViewer>(
+      find.byType(InteractiveViewer),
+    );
+    expect(viewer.boundaryMargin, const EdgeInsets.all(double.infinity));
+    expect(viewer.maxScale, greaterThan(4));
   });
 }

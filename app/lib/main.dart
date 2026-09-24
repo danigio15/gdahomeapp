@@ -14,6 +14,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
+import 'auto/in_auto.dart' as auto;
 import 'casa/archivio_delle_case.dart';
 import 'casa/cassaforte.dart';
 import 'casa/collegamento.dart';
@@ -46,6 +47,15 @@ import 'vestito/tema.dart';
 /// `bool.fromEnvironment` si decide quando si costruisce, non quando si gira:
 /// nella versione che va sui telefoni questa riga non c'e' proprio.
 const bool _perIlCollaudo = bool.fromEnvironment('COLLAUDO');
+
+/// Il secondo ingresso dell'app: il comando che l'auto ha lasciato scritto,
+/// eseguito senza schermo (`auto/in_auto.dart`).
+///
+/// Sta qui e non li' perche' e' li' che Flutter lo cerca: `DartEntrypoint` con
+/// un nome solo guarda in `package:gdahome/main.dart`. Il lavoro e' tutto
+/// nell'altro file; questa e' la porta.
+@pragma('vm:entry-point')
+Future<void> inAuto() => auto.inAuto();
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();

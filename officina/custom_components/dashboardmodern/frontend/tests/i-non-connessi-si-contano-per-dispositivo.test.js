@@ -118,11 +118,68 @@ test("un dispositivo con tutte le entità mute è una riga sola, col suo nome", 
   );
 });
 
-test("un'entità senza dispositivo resta una riga per conto suo", () => {
+/* ── «68 dispositivi non connessi» (#111) ──────────────────────────────────
+ *
+ * «Dagli ultimi aggiornamenti ricevo allerta di 68 cose che non rispondono,
+ * fanno parte di package esistenti, i sensori sono tipicamente input boolean,
+ * datetime, automation, input Number, script ecc. Ma secondo me funzionano.»
+ *
+ * Qui sopra c'era la prova opposta — «un'entità senza dispositivo resta una
+ * riga per conto suo» — e teneva in piedi esattamente quelle sessantotto
+ * righe. Il raggruppamento per dispositivo era arrivato per togliere i
+ * `child_lock`, e alle entità sciolte non aveva guardato: restavano una per
+ * una, come prima. Cioè una regola SOMIGLIANTE a quella del cruscotto
+ * installatore, non la stessa — e la stessa era proprio quello che era stato
+ * chiesto.
+ *
+ * Un aiutante, un'automazione, uno script, un sensore template non hanno un
+ * apparecchio dietro e non hanno una strada che possa cadere: non c'è niente
+ * da andare a premere. Se stanno `unavailable` è configurazione da
+ * correggere, che è l'altro guaio — quello che questo elenco tiene fuori fin
+ * dalla prima riga. */
+
+test("un'entità che un dispositivo non ce l'ha non è un dispositivo non connesso", () => {
   const fuori = chiNonRispondePerDispositivo(CONFIGURATE, STATI, { di: DI, nomi: NOMI });
-  const sola = fuori.find((una) => una.entity === "input_boolean.vacanza");
-  assert.ok(sola, "un input_boolean un dispositivo non ce l'ha: non si può raggruppare");
-  assert.deepEqual(sola.entita, ["input_boolean.vacanza"]);
+  assert.ok(
+    !fuori.some((una) => una.entity === "input_boolean.vacanza"),
+    "un input_boolean muto non è un dispositivo non connesso",
+  );
+  /* E la presa del giardino, che un dispositivo ce l'ha e tace tutta, resta:
+   * togliere il rumore non vuol dire togliere l'avviso. */
+  assert.ok(fuori.some((una) => una.dispositivo === "giard1"));
+});
+
+test("gli aiutanti di una casa intera non riempiono più l'avviso", () => {
+  /* La casa della segnalazione, in piccolo: un package di aiutanti muti e una
+   * presa vera giù in mezzo. Prima erano cinque righe e la presa era l'ultima;
+   * adesso è l'unica. */
+  const stati = { ...STATI };
+  const configurate = [...CONFIGURATE];
+  for (const quale of [
+    "input_boolean.vacanza",
+    "input_datetime.sveglia",
+    "input_number.soglia",
+    "automation.luci_sera",
+    "script.buonanotte",
+  ]) {
+    stati[quale] = muta(quale);
+    if (!configurate.includes(quale)) configurate.push(quale);
+  }
+  const fuori = chiNonRispondePerDispositivo(configurate, stati, { di: DI, nomi: NOMI });
+  assert.equal(fuori.length, 1, "una riga sola: la presa del giardino");
+  assert.equal(fuori[0].dispositivo, "giard1");
+});
+
+test("la plancia e il cruscotto installatore contano la stessa popolazione", async () => {
+  /* Due regole per la stessa domanda sono due verità, e il giorno che si
+   * scostano nessuno sa quale guardare: il ponte guarda solo le entità che un
+   * dispositivo ce l'hanno, e da qui in avanti anche la plancia. */
+  const salute = await readFile(new URL("../../../../ponte/src/salute.js", ROOT), "utf8");
+  assert.match(
+    salute,
+    /elenco\(stati\)\.filter\(\(uno\) => quali\.diChiE\(/,
+    "se il ponte smette di contare solo le entità di un dispositivo, questa prova lo deve dire",
+  );
 });
 
 test("senza le mappe si torna riga per riga, come prima che i registri ci fossero", () => {
@@ -360,4 +417,18 @@ test("nell'avviso non si assegnano stanze: la tendina lì non ci va", async () =
     /row\.matches\("\.dm-people-row, \.dm-scollegati-riga"\)\) continue;/,
     "le righe dei non connessi restano fuori",
   );
+});
+
+test("nella finestra non si legge né l'identificativo né la maniglia del dispositivo", async () => {
+  /* Visto rendendo la finestra: sotto «Presa giardino» c'era scritto
+   * `dispositivo:giard1`, che non è nemmeno un'entità — è la maniglia con cui
+   * il raggruppamento tiene insieme le entità mute di quell'apparecchio.
+   * Prima ci finiva l'identificativo, che è rimasto da quando ogni riga era
+   * un'entità; in tutt'e due i casi è la stessa regola: «non voglio vedere il
+   * nome entità». Gli identificativi stanno nelle schede della
+   * configurazione, non nelle pagine. */
+  const sorgente = await read("src/sections/home-widgets-section.js");
+  const finestra = /function nonRispondeDetail\(widget\) \{[\s\S]*?\n\}/.exec(sorgente);
+  assert.ok(finestra, "la finestra dei non connessi deve esserci");
+  assert.doesNotMatch(finestra[0], /riga\.entity/, "l'identificativo non si stampa");
 });

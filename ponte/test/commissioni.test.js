@@ -1993,3 +1993,52 @@ test("«non si sa chi chiede» non e' un no: si va a vedere", async () => {
   assert.equal(inciampata.result.installatore, true);
   assert.equal(inciampata.result.chiave, undefined, "un guasto apre la porta");
 });
+
+test("il telefono senza utente addosso amministra: il codice gli arriva", async () => {
+  /* «Su Home Assistant funziona; da app mi richiede i codici sia installatore
+   * che gestore.»
+   *
+   * Il ponte ha gia' una risposta sola alla domanda «questo filo amministra?»,
+   * e la da' `_amministra()` in `ponte.js`: un telefono **senza nessun utente
+   * addosso** — abbinato con un codice che allora lo fabbricava solo chi
+   * amministra — amministra. E' quella risposta che apre i comandi riservati
+   * alla dogana, e arriva qui come `puoAmministrare`.
+   *
+   * Qui pero' non si guardava: si guardava `amministra`, che nasce da
+   * `amministratoreSubito(chiChiede)` — e per un telefono senza utente
+   * `chiChiede` e' la stringa vuota, che quella funzione conta per un no.
+   * Cioe' lo stesso filo passava i comandi da amministratore e si sentiva
+   * negare il codice: le due pagine si aprivano e chiedevano la chiave che la
+   * scheda dell'add-on aveva gia'.
+   *
+   * Dentro Home Assistant non cambia niente, e si vede da `cucitura.js`: li'
+   * «non si sa chi guarda» vale no, e `puoAmministrare` arriva falso. */
+  const con = new Commissioni({
+    casa: casaDiProva(),
+    registro: ZITTO,
+    installatore: true,
+    gestore: true,
+    chiaveDelCruscotto: "codice-del-cruscotto",
+    chiaveDellaGestione: "codice-della-gestione",
+  });
+
+  /* Com'e' fatta la domanda che arriva da un telefono senza utente: `ponte.js`
+   * manda la stringa vuota, `amministratoreSubito("")` risponde no, e
+   * `_amministra()` risponde si'. */
+  const detta = await con.rispondi(
+    { id: 1, type: "ponte/quadro/stato" },
+    { chiChiede: "", amministra: false, puoAmministrare: true },
+  );
+  assert.equal(detta.result.chiave, "codice-del-cruscotto");
+  assert.equal(detta.result.chiaveGestione, "codice-della-gestione");
+
+  /* E chi non amministra resta fuori, che e' il motivo per cui questa porta
+   * e' stretta: di la' c'e' l'elenco dei clienti di qualcuno. */
+  const altrui = await con.rispondi(
+    { id: 2, type: "ponte/quadro/stato" },
+    { chiChiede: "un-altro", amministra: false, puoAmministrare: false },
+  );
+  assert.equal(altrui.result.chiave, undefined);
+  assert.equal(altrui.result.chiaveGestione, undefined);
+  assert.equal(altrui.result.installatore, true, "e la voce invece sparisce");
+});

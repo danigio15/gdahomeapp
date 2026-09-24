@@ -14,6 +14,7 @@
  * Adesso la strada e' una sola: quella che gia' funzionava.
  */
 
+import { readFileSync } from "node:fs";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
@@ -206,4 +207,32 @@ test("un'icona che non ci sta si dice nel registro, e non si richiede ogni minut
     detto.some((riga) => /piu' dei \d+ che stanno in un rapporto/.test(riga)),
     `il registro non dice perche': ${JSON.stringify(detto)}`,
   );
+});
+
+test("l'icona di gdahome ci sta in un rapporto: è l'unica che dipende da noi", async () => {
+  /* Dal campo, con lo scatto del cruscotto: «negli aggiornamenti non esce
+   * icona gdahome, cioè proprio la nostra». Duck DNS, Git pull, Home Assistant
+   * Core avevano il loro marchio; gdahome la lettera «G».
+   *
+   * Non era il modo in cui il dato viaggia — quello funziona, e lo dicono le
+   * prove qui sopra. Era il file: `ponte/icon.png` pesava centodue kilobyte,
+   * il tetto di quello che sta in un rapporto è sessantaquattro, e sopra il
+   * tetto il ponte non dice «oggi non ce l'ho» ma «un'icona non ce l'ha» —
+   * che il quadro si segna **per sempre**, e non la richiede mai più. Le icone
+   * degli altri add-on stanno tutte sotto il tetto: la nostra era l'unica
+   * sopra, e per questo era l'unica che mancava.
+   *
+   * Questa prova guarda il file vero e non una finta, perché è il file vero
+   * che parte: è l'unico modo di accorgersene il giorno che qualcuno rifà il
+   * disegno e lo salva grosso. */
+  const { cheImmagineE, UN_SEGNO_AL_MASSIMO } = await import("../src/segni.js");
+  const byte = readFileSync(new URL("../icon.png", import.meta.url));
+  assert.ok(
+    byte.length <= UN_SEGNO_AL_MASSIMO,
+    `la nostra icona pesa ${byte.length} byte e in un rapporto ne stanno ${UN_SEGNO_AL_MASSIMO}: ` +
+      "nel cruscotto resterebbe la lettera, per sempre",
+  );
+  /* E si sa ancora leggere: un'icona sotto il tetto ma di una razza che non si
+   * sa mostrare finirebbe nello stesso posto. */
+  assert.equal(cheImmagineE(byte), "image/png");
 });

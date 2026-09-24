@@ -19,12 +19,15 @@ import test from "node:test";
 import {
   comeSiChiedeLElenco,
   comeSiElimina,
+  comeSiRinomina,
   COORDINATORE,
   laCassettaDellElenco,
   laPotenza,
   laRigaDiZ2M,
   laRigaDiZha,
   lElencoDellaRete,
+  ilDispositivoDellaTarga,
+  leCifreDellaTarga,
   leStradePerEliminare,
   ROUTER,
   TERMINALE,
@@ -182,20 +185,29 @@ test("senza rete non si toglie niente da nessuna parte", () => {
 
 /* ── E il giro vero, con una casa finta ────────────────────────────────── */
 
-function casaConZha({ righe = DA_ZHA, toglie = null } = {}) {
+/* `toglie: false` e' una rete che non lo toglie mai; `dopoQuantiSguardi` e' una
+ * rete che ci mette un po' — che e' quello che fa una rete vera, perche'
+ * l'ordine viaggia via radio e l'elenco si riscrive dopo. */
+function casaConZha({ righe = DA_ZHA, toglie = null, dopoQuantiSguardi = 0 } = {}) {
   const detto = [];
   let dentro = righe.slice();
+  let daTogliere = null;
+  let sguardi = 0;
   return {
     detto,
     async chiedi(comando) {
       detto.push(comando);
       if (comando.type === "config_entries/get") return [{ domain: "zha", state: "loaded" }];
-      if (comando.type === "zha/devices") return dentro;
+      if (comando.type === "zha/devices") {
+        if (daTogliere !== null && sguardi++ >= dopoQuantiSguardi) {
+          dentro = dentro.filter((una) => una.ieee.toLowerCase() !== daTogliere);
+          daTogliere = null;
+        }
+        return dentro;
+      }
       if (comando.domain === "zha" && comando.service === "remove") {
         if (toglie === false) return null;
-        dentro = dentro.filter(
-          (una) => una.ieee.toLowerCase() !== comando.service_data.ieee.toLowerCase(),
-        );
+        daTogliere = comando.service_data.ieee.toLowerCase();
         return null;
       }
       return null;
@@ -205,6 +217,10 @@ function casaConZha({ righe = DA_ZHA, toglie = null } = {}) {
     },
   };
 }
+
+/* Nelle prove non si aspetta davvero: il tempo vero lo mette la rete, e qui la
+ * rete e' finta. */
+const subito = async () => {};
 
 test("l'elenco arriva davvero, passando per il giro", async () => {
   const casa = casaConZha();
@@ -232,22 +248,47 @@ test("in una casa senza Zigbee l'elenco è vuoto e lo dice, invece di rompersi",
 
 test("tolto uno, l'elenco che torna non ce l'ha più", async () => {
   const casa = casaConZha();
-  const zigbee = new Zigbee({ casa, registro: zitto });
+  const zigbee = new Zigbee({ casa, registro: zitto, aspetta: subito });
   const fuori = await zigbee.elimina("00:15:8D:00:0A:BB:CC:DD");
   assert.equal(fuori.fatto, true);
   assert.ok(!fuori.righe.some((una) => una.nome === "Sensore cantina"));
   assert.equal(fuori.righe.length, 2);
 });
 
-test("se la rete dice sì e non lo toglie, non si dice «fatto»", async () => {
+test("chi esce dopo qualche secondo è uscito: non si annuncia un guaio che non c'è", async () => {
+  /* Dal campo, con lo scatto: «Ho provato ad eliminare un dispositivo ma e
+   * uscito questo messaggio» — e il messaggio diceva che era ancora lì. Lo
+   * era: l'elenco veniva riletto nell'istante in cui l'ordine partiva, e un
+   * ordine Zigbee viaggia via radio. Un minuto dopo non c'era più.
+   *
+   * Qui la rete finta lo toglie al terzo sguardo, come farebbe una vera. */
+  const casa = casaConZha({ dopoQuantiSguardi: 3 });
+  const fuori = await new Zigbee({ casa, registro: zitto, aspetta: subito }).elimina(
+    "00:15:8D:00:0A:BB:CC:DD",
+  );
+  assert.equal(fuori.fatto, true, fuori.perche);
+  assert.equal(fuori.righe.length, 2);
+});
+
+test("se la rete dice sì e non lo toglie mai, non si dice «fatto» — e si dice cosa fare", async () => {
   /* È la lezione della rinomina, applicata prima che costi una segnalazione:
    * nessuna delle due reti conferma quello che è successo dopo — rispondono
    * di aver mandato l'ordine. L'unica conferma è riguardare l'elenco. */
   const casa = casaConZha({ toglie: false });
-  const fuori = await new Zigbee({ casa, registro: zitto }).elimina("00:15:8D:00:0A:BB:CC:DD");
+  const fuori = await new Zigbee({ casa, registro: zitto, aspetta: subito }).elimina(
+    "00:15:8D:00:0A:BB:CC:DD",
+  );
   assert.equal(fuori.fatto, false);
-  assert.match(fuori.perche, /ancora li/);
   assert.equal(fuori.righe.length, 3);
+  /* E la frase non si ferma a «non è andata»: dice quant'è che si guarda,
+   * perché quasi sempre succede, e cosa può fare chi ha il telefono in mano. */
+  assert.match(fuori.perche, /ancora nell'elenco/);
+  assert.match(fuori.perche, /12 secondi/);
+  assert.match(fuori.perche, /dorme/);
+  assert.match(fuori.perche, /sveglialo/);
+  /* E si è guardato più di una volta: guardare una volta sola è il difetto. */
+  const sguardi = casa.detto.filter((uno) => uno.type === "zha/devices").length;
+  assert.ok(sguardi > 1, `si è guardato ${sguardi} volta`);
 });
 
 test("senza targa non si tocca niente", async () => {
@@ -276,7 +317,17 @@ import {
   leCassetteDellaMappa,
   leRigheDallaMappaDiZ2M,
 } from "../src/zigbee.js";
-import { aCapo, DEBOLE, iFili, iNodi, laMappaDisegnata } from "../src/mappa-zigbee.js";
+import {
+  aCapo,
+  DEBOLE,
+  iFili,
+  iNodi,
+  iRami,
+  laMappaDisegnata,
+  LATO_MINIMO,
+  quantoGrosso,
+  quantoVuole,
+} from "../src/mappa-zigbee.js";
 
 test("a ZHA si dice di guardarsi, a Zigbee2MQTT si imbuca la domanda", () => {
   assert.deepEqual(comeSiChiedeLaMappa({ quale: ZHA }), { type: "zha/topology/update" });
@@ -337,12 +388,167 @@ test("chi non parla con nessuno sta in fondo, e non finge di essere attaccato", 
     { id: "r", nome: "Ripetitore", tipo: "router", vicini: [{ id: "c", qualita: 200 }] },
     { id: "s", nome: "Sensore muto", tipo: "terminale", vicini: [] },
   ];
-  const { nodi } = iNodi(righe);
+  const { nodi, lato } = iNodi(righe);
   const solo = nodi.find((uno) => uno.id === "s");
   assert.equal(solo.solo, true);
-  /* Sta sotto il quadrato dei cerchi, nella fascia sua. */
-  assert.ok(solo.y > 900, "fuori dal quadrato dei collegamenti");
+  /* Sta sotto il quadrato dei cerchi, nella fascia sua. Il confronto e' col
+   * lato del quadrato e non con novecento: il quadrato adesso cresce con la
+   * rete, e un numero scritto a mano qui direbbe il vero solo per le case
+   * piccole. */
+  assert.ok(solo.y > lato, "fuori dal quadrato dei collegamenti");
   assert.equal(nodi.find((uno) => uno.id === "c").solo, false);
+});
+
+/* ─── Che una rete vera ci stia ─────────────────────────────────────────────
+ *
+ * Dal campo, con lo scatto: «La mappa dopo vari tentativi si e caricata ma non
+ * si vede nulla». Quella casa ha ottanta apparecchi, e i due cerchi erano due
+ * numeri fissi tarati su una dozzina: quarantacinque ripetitori su un cerchio
+ * di centottantacinque hanno ventisei pixel di arco a testa ed erano larghi
+ * cinquantaquattro. Misurato: centoventitre coppie di anelli uno sopra
+ * l'altro.
+ *
+ * Questa prova non guarda il disegno: misura le distanze. E' l'unica cosa che
+ * sa distinguere una mappa da una macchia. */
+function unaReteDa(quantiRouter, quantiTerminali) {
+  const righe = [
+    { id: "0x0000", nome: "Antenna", tipo: COORDINATORE, potenza: "corrente", vicini: [] },
+  ];
+  for (let quale = 0; quale < quantiRouter; quale++) {
+    righe.push({
+      id: `0xr${quale}`,
+      nome: `Presa della stanza ${quale}`,
+      tipo: ROUTER,
+      potenza: "corrente",
+      vicini: [{ id: "0x0000", qualita: 180 }],
+    });
+    righe[0].vicini.push({ id: `0xr${quale}`, qualita: 180 });
+  }
+  for (let quale = 0; quale < quantiTerminali; quale++) {
+    const padre = `0xr${quale % Math.max(1, quantiRouter)}`;
+    righe.push({
+      id: `0xt${quale}`,
+      nome: `Sensore perdita acqua numero ${quale}`,
+      tipo: TERMINALE,
+      potenza: "batteria",
+      vicini: [{ id: padre, qualita: 120 }],
+    });
+    righe.find((una) => una.id === padre)?.vicini.push({ id: `0xt${quale}`, qualita: 120 });
+  }
+  return righe;
+}
+
+test("ottanta apparecchi non si impilano: i cerchi crescono con la rete", () => {
+  const { nodi, lato } = iNodi(unaReteDa(45, 34));
+  const attaccati = nodi.filter((uno) => !uno.solo);
+  let addosso = 0;
+  for (let i = 0; i < attaccati.length; i++)
+    for (let j = i + 1; j < attaccati.length; j++) {
+      const uno = attaccati[i];
+      const altro = attaccati[j];
+      const quanto = Math.hypot(uno.x - altro.x, uno.y - altro.y);
+      if (quanto < quantoGrosso(uno) + quantoGrosso(altro)) addosso++;
+    }
+  assert.equal(addosso, 0, "due anelli uno sopra l'altro");
+  /* E la tela e' cresciuta: con ottanta apparecchi non ci si sta in novecento,
+   * e fingere di si' e' proprio il difetto segnalato. */
+  assert.ok(lato > LATO_MINIMO, `la tela e' rimasta ${lato}`);
+  /* Nessuno esce dal foglio. */
+  for (const nodo of nodi) {
+    assert.ok(nodo.x >= 0 && nodo.x <= lato, `${nodo.nome} e' fuori di lato`);
+    assert.ok(nodo.y >= 0, `${nodo.nome} e' sopra il foglio`);
+  }
+});
+
+test("e i nomi non si mangiano: ognuno ha sul cerchio il posto che occupa", () => {
+  /* Il posto che uno vuole e' il suo nome piu' un po' d'aria. Due vicini di
+   * cerchio devono stare almeno alla meta' della somma dei loro posti: e'
+   * esattamente la condizione che rende impossibile a due scritte toccarsi. */
+  const { nodi } = iNodi(unaReteDa(45, 34));
+  const cerchio = nodi.filter((uno) => uno.tipo === ROUTER);
+  const inGiro = [...cerchio].sort(
+    (uno, altro) => Math.atan2(uno.y, uno.x) - Math.atan2(altro.y, altro.x),
+  );
+  for (let quale = 1; quale < inGiro.length; quale++) {
+    const uno = inGiro[quale - 1];
+    const altro = inGiro[quale];
+    const serve = (quantoVuole(uno) + quantoVuole(altro)) / 2;
+    const quanto = Math.hypot(uno.x - altro.x, uno.y - altro.y);
+    /* La corda e' un filo piu' corta dell'arco: il novanta per cento di quello
+     * che serve e' la stessa condizione, senza pretendere che una retta sia
+     * lunga come una curva. */
+    assert.ok(quanto > serve * 0.9, `«${uno.nome}» e «${altro.nome}» a ${Math.round(quanto)}px`);
+  }
+});
+
+test("la rete si legge anche a righe: l'antenna, i rami, e cosa gli sta appeso", () => {
+  /* Il disegno di una casa con ottanta apparecchi e' largo due metri di
+   * schermo: sul telefono o si guarda tutto e non si legge niente, o si legge
+   * un pezzo per volta e ci si perde. Le stesse cose scritte in righe le
+   * scorre chiunque — ed e' lo stesso conto del disegno, non un secondo. */
+  const righe = [
+    { id: "0x00", nome: "Antenna", tipo: COORDINATORE, potenza: "corrente", vicini: [] },
+    {
+      id: "0x01",
+      nome: "Presa cucina",
+      tipo: ROUTER,
+      potenza: "corrente",
+      vicini: [{ id: "0x00", qualita: 200 }],
+    },
+    {
+      id: "0x02",
+      nome: "Presa garage",
+      tipo: ROUTER,
+      potenza: "corrente",
+      vicini: [{ id: "0x00", qualita: 60 }],
+    },
+    /* Questo ne vede due: sta sul ramo di chi sente meglio, non sull'altro. */
+    {
+      id: "0x03",
+      nome: "Fumo cucina",
+      tipo: TERMINALE,
+      potenza: "batteria",
+      vicini: [
+        { id: "0x02", qualita: 40 },
+        { id: "0x01", qualita: 180 },
+      ],
+    },
+    {
+      id: "0x04",
+      nome: "Termostato cucina",
+      tipo: TERMINALE,
+      potenza: "batteria",
+      vicini: [{ id: "0x01", qualita: 150 }],
+    },
+    { id: "0x05", nome: "Sensore muto", tipo: TERMINALE, potenza: "batteria", vicini: [] },
+  ];
+  const { rami, soli } = iRami(righe);
+  /* Prima l'antenna, poi i rami piu' carichi: chi apre questo elenco cerca di
+   * chi e' figlio un sensore, e i rami grossi sono dove si guarda. */
+  assert.deepEqual(
+    rami.map((uno) => uno.nome),
+    ["Antenna", "Presa cucina", "Presa garage"],
+  );
+  const cucina = rami.find((uno) => uno.nome === "Presa cucina");
+  assert.deepEqual(
+    cucina.appesi.map((uno) => uno.nome),
+    ["Fumo cucina", "Termostato cucina"],
+  );
+  /* La misura del filo verso chi lo regge viaggia con lui: e' quella che dice
+   * se un ramo tiene o no. */
+  assert.equal(cucina.appesi[0].qualita, 180);
+  assert.equal(cucina.qualita, 200);
+  assert.equal(rami.find((uno) => uno.nome === "Presa garage").appesi.length, 0);
+  assert.deepEqual(
+    soli.map((uno) => uno.nome),
+    ["Sensore muto"],
+  );
+});
+
+test("una casa piccola ha la mappa di sempre: la tela non cresce per niente", () => {
+  /* La correzione non deve cambiare quello che gia' andava bene. */
+  const { lato } = iNodi(unaReteDa(6, 8));
+  assert.equal(lato, LATO_MINIMO);
 });
 
 test("il nome va a capo invece di essere tagliato", () => {
@@ -629,4 +835,181 @@ test("ogni apparecchio porta il suo disegno, spostato e ridotto al punto giusto"
     const quanto = Number(uno[4]);
     assert.equal(quanto > 0 && quanto < 1, true, `scala fuori posto: ${quanto}`);
   }
+});
+
+/* ── Il nome, dentro Zigbee2MQTT ───────────────────────────────────────────
+ *
+ * Dal campo, con quattro scatti: «ho associato dispositivo zigbee... il nome
+ * del dispositivo nella sezione zigbee sia su home assistant che su app non
+ * risulta modificato». In Presenza si leggeva «Presenza salone» — quello se
+ * l'era preso la plancia — e nell'elenco Zigbee e dentro Zigbee2MQTT restava
+ * `0x0cae5ffffec141a9`.
+ *
+ * Erano due nomi, e se ne scriveva uno solo: `name_by_user` nel registro di
+ * Home Assistant. Il `friendly_name` della rete — quello con cui Zigbee2MQTT
+ * lo chiama nella sua cassetta, nella sua pagina e in ogni messaggio — non lo
+ * sapeva nessuno.
+ */
+
+/* Una casa con Zigbee2MQTT: la cassetta risponde, l'elenco sta li' dentro, e
+ * il rinomina lo si vede arrivare. */
+function casaConZ2M({ accetta = true, dispositivi = null } = {}) {
+  const detto = [];
+  const dentro = DA_Z2M.map((una) => ({ ...una }));
+  dentro.push({
+    ieee_address: "0x0cae5ffffec141a9",
+    friendly_name: "0x0cae5ffffec141a9",
+    type: "EndDevice",
+    power_source: "Battery",
+    definition: { vendor: "SONOFF", model: "SNZB-06P" },
+  });
+  const registro = dispositivi ?? [
+    {
+      id: "dev-presenza",
+      name: "SONOFF SNZB-06P",
+      name_by_user: "",
+      identifiers: [["mqtt", "zigbee2mqtt_0x0cae5ffffec141a9"]],
+      connections: [["mac", "0c:ae:5f:ff:fe:c1:41:a9"]],
+    },
+  ];
+  return {
+    detto,
+    dentro,
+    async chiedi(comando) {
+      detto.push(comando);
+      if (comando.type === "config_entries/get") return [];
+      if (comando.type === "config/device_registry/list") return registro;
+      if (comando.type === "config/device_registry/update") {
+        const suo = registro.find((uno) => uno.id === comando.device_id);
+        if (suo) suo.name_by_user = comando.name_by_user;
+        return suo ?? null;
+      }
+      if (comando.type === "call_service" && comando.domain === "mqtt") {
+        const topic = String(comando.service_data?.topic || "");
+        if (accetta && topic.endsWith("/bridge/request/device/rename")) {
+          const detta = JSON.parse(comando.service_data.payload);
+          const suo = dentro.find((una) => una.ieee_address === detta.from);
+          if (suo) suo.friendly_name = detta.to;
+        }
+        return null;
+      }
+      return null;
+    },
+    async ascoltaIl(comando, onEvento) {
+      const topic = String(comando?.topic || "");
+      if (topic.includes("bridge/info"))
+        queueMicrotask(() => onEvento({ topic: "zigbee2mqtt/bridge/info" }));
+      if (topic.includes("bridge/devices"))
+        queueMicrotask(() => onEvento({ topic, payload: JSON.stringify(dentro) }));
+      return async () => {};
+    },
+  };
+}
+
+test("l'indirizzo si riconosce comunque lo scrivano", () => {
+  /* Zigbee2MQTT lo scrive `0x…`, il registro di Home Assistant coi due punti:
+   * è lo stesso indirizzo, e le sedici cifre sono la cosa che si confronta. */
+  assert.equal(leCifreDellaTarga("0x0cae5ffffec141a9"), "0cae5ffffec141a9");
+  assert.equal(leCifreDellaTarga("0c:ae:5f:ff:fe:c1:41:a9"), "0cae5ffffec141a9");
+  assert.equal(leCifreDellaTarga("zigbee2mqtt_0x0cae5ffffec141a9"), "0cae5ffffec141a9");
+  /* Quello che indirizzo non è non diventa un indirizzo per caso. */
+  assert.equal(leCifreDellaTarga("presa cucina"), "");
+  assert.equal(leCifreDellaTarga(""), "");
+
+  const registro = [
+    { id: "dev-altro", identifiers: [["mqtt", "zigbee2mqtt_0x1111111111111111"]] },
+    { id: "dev-mio", connections: [["mac", "0c:ae:5f:ff:fe:c1:41:a9"]] },
+  ];
+  assert.equal(ilDispositivoDellaTarga(registro, "0x0cae5ffffec141a9"), "dev-mio");
+  assert.equal(ilDispositivoDellaTarga(registro, "0x9999999999999999"), "");
+});
+
+test("a Zigbee2MQTT il nome si dice sulla sua cassetta, a ZHA non serve", () => {
+  const ordine = comeSiRinomina(
+    { quale: Z2M, cassetta: "zigbee2mqtt" },
+    "0x0cae5ffffec141a9",
+    "Presenza salone",
+  );
+  assert.equal(ordine.service_data.topic, "zigbee2mqtt/bridge/request/device/rename");
+  assert.deepEqual(JSON.parse(ordine.service_data.payload), {
+    from: "0x0cae5ffffec141a9",
+    to: "Presenza salone",
+  });
+  /* Su ZHA il nome della rete È il nome del dispositivo di Home Assistant:
+   * scriverlo due volte vorrebbe dire inventarsi una cassetta che non c'è. */
+  assert.equal(comeSiRinomina({ quale: ZHA }, "0x00", "Presenza salone"), null);
+  assert.equal(comeSiRinomina({ quale: Z2M, cassetta: "" }, "0x00", "Presenza salone"), null);
+  assert.equal(comeSiRinomina({ quale: Z2M, cassetta: "zigbee2mqtt" }, "0x00", ""), null);
+});
+
+test("su Zigbee2MQTT la riga dell'elenco porta il dispositivo di Home Assistant", async () => {
+  /* Senza, nella scheda di un dispositivo «rinominalo» e «mettilo nella
+   * plancia» non hanno su cosa lavorare: su una casa Zigbee2MQTT quei due
+   * tasti non hanno mai funzionato, perché quel campo lo riempiva solo ZHA. */
+  const casa = casaConZ2M();
+  const fuori = await new Zigbee({ casa, registro: zitto, aspetta: subito }).elenco();
+  assert.equal(fuori.quale, Z2M);
+  const suo = fuori.righe.find((una) => una.id === "0x0cae5ffffec141a9");
+  assert.equal(suo.dispositivo, "dev-presenza");
+});
+
+test("rinominando, il nome arriva anche dentro Zigbee2MQTT", async () => {
+  const casa = casaConZ2M();
+  const zigbee = new Zigbee({ casa, registro: zitto, aspetta: subito });
+  const fuori = await zigbee.rinomina("dev-presenza", "Presenza salone");
+  assert.equal(fuori.fatto, true, fuori.perche);
+  /* In Home Assistant, come prima. */
+  assert.ok(
+    casa.detto.some(
+      (uno) =>
+        uno.type === "config/device_registry/update" && uno.name_by_user === "Presenza salone",
+    ),
+  );
+  /* E nella rete, che è la parte che mancava. */
+  const ordine = casa.detto.find(
+    (uno) => uno.service_data?.topic === "zigbee2mqtt/bridge/request/device/rename",
+  );
+  assert.ok(ordine, "a Zigbee2MQTT non è arrivato niente");
+  assert.deepEqual(JSON.parse(ordine.service_data.payload), {
+    from: "0x0cae5ffffec141a9",
+    to: "Presenza salone",
+  });
+  /* E adesso la rete lo chiama così davvero: è la conferma, e non il «sì»
+   * della risposta — quello dice solo che la domanda è arrivata. */
+  assert.equal(
+    casa.dentro.find((una) => una.ieee_address === "0x0cae5ffffec141a9").friendly_name,
+    "Presenza salone",
+  );
+});
+
+test("se la rete il nome non lo prende, non si dice «fatto» — e si dice cosa è cambiato", async () => {
+  /* Metà lavoro fatto è la cosa più difficile da raccontare, e la più
+   * importante: in Home Assistant il nome è cambiato davvero, dentro
+   * Zigbee2MQTT no. Chi legge deve sapere tutte e due le cose. */
+  const casa = casaConZ2M({ accetta: false });
+  const fuori = await new Zigbee({ casa, registro: zitto, aspetta: subito }).rinomina(
+    "dev-presenza",
+    "Presenza salone",
+  );
+  assert.equal(fuori.fatto, false);
+  assert.match(fuori.perche, /e' cambiato in Home Assistant/);
+  assert.match(fuori.perche, /Zigbee2MQTT/);
+  /* E si è guardato più di una volta prima di dirlo. */
+  const sguardi = casa.detto.filter((uno) => uno.type === "config_entries/get").length;
+  assert.ok(sguardi >= 1);
+});
+
+test("un dispositivo che la rete non conosce si dice, invece di tacere", async () => {
+  /* Un dispositivo di Home Assistant che con Zigbee non c'entra niente — una
+   * telecamera wifi — non ha nessun indirizzo da mandare a Zigbee2MQTT: il
+   * nome in Home Assistant cambia lo stesso, e il resto si dice. */
+  const casa = casaConZ2M({
+    dispositivi: [{ id: "dev-camera", name: "Telecamera", identifiers: [["onvif", "cam-1"]] }],
+  });
+  const fuori = await new Zigbee({ casa, registro: zitto, aspetta: subito }).rinomina(
+    "dev-camera",
+    "Telecamera giardino",
+  );
+  assert.equal(fuori.fatto, false);
+  assert.match(fuori.perche, /non si sa l'indirizzo Zigbee/);
 });

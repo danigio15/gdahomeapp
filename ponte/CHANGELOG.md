@@ -11,6 +11,172 @@ fuori. La plancia dentro continua a dire la sua, e si legge dov'è sempre
 stata: nella pastiglia «La plancia» della console. Sono due numeri perché
 sono due cose.
 
+## 1.6.4
+
+**gdahome sale in macchina.** Android Auto mostra i suoi modelli — un pannello,
+una lista, una griglia — e li disegna lui col carattere e i colori dell'auto:
+non c'è la plancia, c'è il poco che si guarda guidando. Quanto tira la casa e
+quanto fa il sole, chi è rientrato, e i tasti delle azioni rapide.
+
+I numeri non li rifà nessuno: sono le stesse righe che la finestra
+dell'Energia mostra in casa, con dentro la conversione da kW e la parola nella
+lingua di chi guarda. Il servizio in auto con la casa non parla — due posti che
+sanno entrare in casa sono uno di troppo: la plancia lascia al telefono una
+fotografia, e l'auto legge quella. Se il telefono non ne ha ancora mandata una,
+in macchina si legge che non è arrivata: mai un numero inventato al posto di
+uno vero.
+
+E i tasti premono davvero, **anche a schermo spento**. Premuto in macchina, il
+comando lo esegue l'app senza che nulla compaia in mano. Non tutto può partire
+da solo, e quello che non può lo dice il tasto: un'azione con una conferma
+vuole qualcuno che guardi, un menu vuole un dito che sceglie, e una serratura
+non si comanda su uno stato di mezz'ora fa. Col lucchetto acceso non parte
+niente senza aprire l'app, che è il senso del lucchetto.
+
+**Da app la casa chiedeva due volte i codici.** «Su Home Assistant funziona, da
+app mi richiede codici sia installatore che gestore.» Fra tutti i comandi che
+l'app fa al ponte, uno solo non guardava la chiave che l'app gli stava già
+passando: quello che chiede lo stato del quadro. Bastava quello per rifare la
+domanda a chi aveva già risposto.
+
+**Il radar diceva «Zoom Level Not Supported» sopra un indirizzo scritto a
+mano.** L'ingrandimento della pioggia ha un tetto, diverso da servizio a
+servizio, e per un indirizzo battuto a mano non lo guardava nessuno. Adesso lo
+guarda — e anche il tasto «Prova», che provava a un ingrandimento che poi non
+si usava e quindi rispondeva su una cosa diversa da quella che si vedeva.
+
+**Sessantotto dispositivi non connessi che erano uno.** La tessera contava
+anche gli aiutanti — i numeri e gli interruttori che uno si crea in Home
+Assistant — e quelli un dispositivo non ce l'hanno: non sono un dispositivo
+che non risponde. Su una casa vera: da 68 a 1. E la finestra ha smesso di
+stampare la maniglia del dispositivo, che è roba da scheda, non da pagina.
+
+**Il tasto del feed manuale non compariva.** Un pulsante che nessuno ha mai
+premuto sta su `unknown`, e chi disegnava lo prendeva per rotto e lo
+nascondeva — per sempre, perché finché non si preme non cambia stato. E un
+menu a tendina disegnava un tasto che non faceva niente: adesso apre le voci e
+se ne sceglie una.
+
+**Le telecamere si tolgono da Sicurezza senza perdere l'allarme.** Chi non ne
+ha una poteva solo spegnere Sicurezza intera, e perdere anche i varchi e
+l'antifurto, che con le telecamere non c'entrano. Adesso c'è un interruttore
+sotto le telecamere, e spegnerlo non cancella niente: si riaccende e tornano
+dov'erano.
+
+**Prima di inserire l'allarme, la plancia dice cosa è ancora aperto.** Si
+inseriva e poi si scopriva la finestra del bagno dal telefono, da fuori.
+
+**«Si vede in Home» adesso è scritto anche dentro la scheda del MiniPC.**
+L'interruttore c'era, in Configurazione → Widget, e non lo trovava nessuno: è
+lo stesso, scritto dove uno lo cerca.
+
+**Nel flusso dell'Energia le linee passavano sopra le bolle degli altri
+carichi.** Sul telefono, dal quinto carico in poi, le file diventano due e
+stavano incolonnate: la linea verso una bolla di sotto attraversava quella di
+sopra, e sembrava che il boiler fosse attaccato alla lavatrice. Adesso le file
+si sfalsano come i mattoni di un muro e ogni linea scende nel suo varco. Nello
+stesso giro la seconda fila è salita di sessantasette punti: i suoi numeri
+finivano sotto la barra dell'app, e per leggerli bisognava scorrere senza
+sapere che ci fosse qualcosa da scorrere.
+
+**La mappa della rete Zigbee, su una casa vera, non si leggeva.** «La mappa
+dopo vari tentativi si è caricata ma non si vede nulla e non si può né fare
+zoom né niente.» Erano due cose, e tutte e due si vedono solo misurando.
+
+Il disegno aveva due cerchi di misura fissa, tarati su una dozzina di
+apparecchi: su un cerchio di centottantacinque pixel ci stanno milleduecento
+pixel di circonferenza, e quarantacinque ripetitori larghi cinquantaquattro ne
+vogliono duemilaquattrocento. Contate: centoventitré coppie di anelli uno sopra
+l'altro e sessantanove coppie di scritte accavallate. Adesso il raggio lo detta
+la rete — a ognuno spetta il pezzo di cerchio che il suo nome occupa — e su
+ottanta apparecchi le coppie sovrapposte sono zero. Una casa piccola ha la
+mappa di sempre: sotto il minimo non si scende.
+
+E nell'app la figura non si poteva ingrandire perché stava dentro una lista,
+che il dito se lo prende lei, e col margine di spostamento a zero — il valore
+di serie — anche ingrandendo non c'era niente da portare al centro. Adesso si
+tocca e si apre in una pagina sua: si ingrandisce con le dita o con i tasti, si
+sposta dove si vuole, e un tasto la rimette intera.
+
+**E la rete si legge anche a righe, che su un telefono è la cosa che serve.**
+Sotto la mappa c'è «Chi regge chi»: l'antenna, ogni ripetitore, cosa gli sta
+appeso e quanto tiene il filo — buono, discreto, debole. Un disegno grande due
+metri di schermo si scorre male; un elenco lo scorre chiunque. Lo conta lo
+stesso modulo che disegna la mappa, quindi le due cose non possono dire cose
+diverse.
+
+**Togliendo un dispositivo dalla rete usciva «la rete ha accettato l'ordine ma
+quel dispositivo è ancora lì» — e invece stava andando via.** Un ordine Zigbee
+viaggia via radio: il coordinatore lo manda, l'apparecchio se ne va, e l'elenco
+si riscrive dopo. Si rileggeva nell'istante in cui l'ordine partiva, quindi lo
+si trovava ancora lì quasi sempre. Adesso si guarda per dodici secondi, e solo
+se dopo c'è ancora si dice — dicendo anche cosa fare, perché quasi sempre è un
+apparecchio che dorme e l'ordine di uscire non lo sente finché non si sveglia.
+
+**Negli aggiornamenti mancava proprio la nostra icona.** Nel cruscotto Duck
+DNS, Git pull e Home Assistant Core avevano il loro marchio e gdahome una «G».
+Il modo in cui l'icona viaggia funziona — la casa la prende dal Supervisor e la
+manda col rapporto — ma in un rapporto un'icona ci sta fino a 64 KiB, e la
+nostra ne pesava 102: sopra quel peso il ponte non dice «oggi non ce l'ho», dice
+«un'icona non ce l'ha», e il quadro se lo segna e non la richiede più. Era
+l'unica icona sopra il tetto di tutta la casa. Adesso pesa 28 KiB, sempre 256
+per 256, e una prova guarda il file vero perché non succeda di nuovo.
+
+**Il nome di un dispositivo Zigbee adesso arriva anche alla rete.** «Ho
+associato dispositivo zigbee… il nome nella sezione zigbee, sia su Home
+Assistant che su app, non risulta modificato.» Erano due nomi e se ne scriveva
+uno solo: l'etichetta nel registro di Home Assistant. Il `friendly_name` di
+Zigbee2MQTT — quello con cui la rete lo chiama nella sua cassetta, nella sua
+pagina e in ogni messaggio che manda — non lo sapeva nessuno, e restava
+l'indirizzo (`0x0cae5ffffec141a9`). Adesso si scrivono tutti e due, e non ci si
+fida del «sì»: si riguarda la cassetta finché il nome nuovo non c'è.
+
+Rinominare, però, non è mettere un'etichetta: il nome della rete è l'indirizzo
+della cassetta, e cambiandolo Home Assistant rifà le entità con identificativi
+nuovi. La schermata lo dice prima di farlo, con le parole di quello che
+succede — e nell'abbinamento lo dice al momento giusto, quando il dispositivo è
+appena entrato e non lo usa ancora nessuno.
+
+**E su Zigbee2MQTT la riga dell'elenco porta il suo dispositivo di Home
+Assistant.** Lo riempiva solo ZHA: su una casa Zigbee2MQTT, nella scheda di un
+dispositivo, «rinominalo» e «mettilo nella plancia» non avevano su cosa
+lavorare — non hanno mai funzionato. Il filo c'era già ed è l'indirizzo: si
+incrocia col registro dei dispositivi, che il ponte legge una volta e si
+ricorda per mezzo minuto.
+
+**E «non risponde» non si dice più di una riga che punta a un'entità che non
+c'è.** Nella Presenza, un rilevatore che Home Assistant non ha affatto —
+un'entità cambiata sotto i piedi, un dispositivo tolto e rimesso — diceva «Non
+risponde», che manda a guardare la batteria e il segnale di una cosa che non
+esiste. Adesso dice «Non c'è in Home Assistant»: sono due guasti diversi e si
+riparano in due posti diversi, uno col dispositivo in mano e l'altro nella
+scheda della configurazione.
+
+**Un avviso finito nel gruppo Allagamenti non diventa più una sonda bagnata.**
+La tessera leggeva tutto quello che c'era in quella lista allo stesso modo —
+acceso vuol dire bagnato — e un antifurto inserito faceva dire alla casa «C'è
+acqua». Adesso nella tessera è una sonda chi dichiara umidità o chi non
+dichiara niente (il sensore fatto in casa resta); chi dichiara di essere
+un'altra cosa — `safety`, `problem`, `motion` — resta nella configurazione ma
+fuori dal conto. La regola del rilevamento automatico non cambia: quella è
+stretta apposta.
+
+**E nella scheda degli Allagamenti si vede quale voce non è una sonda.** «Non
+c'è nessuna entità allarme, sono 5 i sensori configurati, questo 6 non esiste»:
+il sesto stava nella lista — ce l'aveva messo la scheda degli avvisi, col nome
+scritto a mano — ma non era una sonda, e la tessera lo leggeva come legge tutti
+(acceso vuol dire bagnato). Toglierlo d'ufficio sarebbe peggio, perché c'è chi
+in quella lista mette un sensore fatto in casa che la classe non la dichiara:
+adesso la riga lo dice, accanto al cestino che la toglie.
+
+**La finestra di una tessera ci sta dentro la sua card.** «Aggiusta i margini
+del popup allagamenti, non entra all'interno tutto»: negli Allagamenti
+«Asciutto» finiva oltre il bordo destro e il titoletto «LO STATO» spariva a
+sinistra. Non era degli allagamenti — sul telefono sbordavano anche il fumo e
+le tapparelle, e tutte e sei le finestre avevano dieci pixel di margine invece
+dei quindici del loro foglio. I nomi lunghi, nelle righe, non si tagliano più a
+metà di una lettera: vanno a capo.
+
 ## 1.6.3
 
 **Energia: «Costo Reale» e il riquadro sotto dicevano due cifre per la stessa

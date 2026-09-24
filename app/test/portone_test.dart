@@ -70,6 +70,9 @@ class _PlanciaFinta extends FabbricaDellaPlancia {
   /// E quello che direbbe premendo i suoi tre trattini.
   void Function()? chiedeIlMenu;
 
+  /// E la fotografia che lascerebbe all'auto.
+  void Function(String foto)? fotografaLaCasa;
+
   @override
   Widget riquadro(
     Uri pagina, {
@@ -80,9 +83,11 @@ class _PlanciaFinta extends FabbricaDellaPlancia {
     ({double alto, double basso}) margini = (alto: 0, basso: 0),
     void Function(String pagina)? quandoCambiaPagina,
     void Function()? quandoChiedeIlMenu,
+    void Function(String foto)? quandoFotografaLaCasa,
   }) {
     cambioPagina = quandoCambiaPagina;
     chiedeIlMenu = quandoChiedeIlMenu;
+    fotografaLaCasa = quandoFotografaLaCasa;
     return _RiquadroFinto(
       key: chiave,
       pagina: pagina,

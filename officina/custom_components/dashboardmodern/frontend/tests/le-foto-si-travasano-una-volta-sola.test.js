@@ -230,7 +230,17 @@ test("togliere una chiave non alza la revisione", async () => {
    * tutto il resto della pagina e non viaggia il fatto che quel veicolo è una
    * moto, cioè la pagina racconterebbe una moto sul telefono e un'automobile
    * sul tablet, con le stesse identiche entità dietro. */
-  assert.equal(CONFIG_KEYS_REVISION, 54);
+  /* E la 55 con l'interruttore del riquadro delle telecamere (#113,
+   * `cd_telecamere_in_sicurezza`): «possibilità di togliere la sezione se uno
+   * non dispone di telecamere». Anche questa è una scelta della casa: chi
+   * telecamere non ne ha non le vuole vedere né sul tablet in cucina né sul
+   * telefono, e senza questa chiave dovrebbe rispegnerle su ogni vetro — cioè
+   * un interruttore che sembra non funzionare. */
+  assert.equal(CONFIG_KEYS_REVISION, 55);
+  assert.ok(
+    CONFIG_KEYS.includes("cd_telecamere_in_sicurezza"),
+    "il riquadro spento qui deve restare spento anche sul tablet in cucina",
+  );
   assert.ok(
     CONFIG_KEYS.includes("cd_ev_mezzo"),
     "la moto dichiarata qui deve restare una moto anche sul tablet in cucina",

@@ -78,7 +78,39 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
+
+        <!-- gdahome in auto (prova).
+
+             In macchina non si disegna: Android Auto mostra i suoi modelli —
+             liste, pannelli, griglie — e li impagina lui. Qui non c'e' la
+             plancia, c'e' il poco che serve guidando: quanto sole c'e', chi e'
+             in casa, e i tasti che uno tocca davvero.
+
+             La categoria e' `IOT`, che e' quello che questa app e'. Dichiararne
+             un'altra per entrare dove non si entrerebbe vorrebbe dire una
+             revisione passata dicendo una cosa falsa. -->
+        <service
+            android:name=".auto.GdahomeCarAppService"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="androidx.car.app.CarAppService" />
+                <category android:name="androidx.car.app.category.IOT" />
+            </intent-filter>
+        </service>
+        <meta-data
+            android:name="com.google.android.gms.car.application"
+            android:resource="@xml/automotive_app_desc" />
+        <meta-data
+            android:name="androidx.car.app.minCarApiLevel"
+            android:value="1" />
     </application>
+
+    <!-- `required="false"`: l'app resta quella di sempre su un telefono che in
+         macchina non ci va mai. Senza questa riga il Play Store la nasconderebbe
+         a chi non ha un'auto compatibile. -->
+    <uses-feature
+        android:name="android.hardware.type.automotive"
+        android:required="false" />
     <!-- Required to query activities that can process text, see:
          https://developer.android.com/training/package-visibility and
          https://developer.android.com/reference/android/content/Intent#ACTION_PROCESS_TEXT.
