@@ -34,6 +34,7 @@ const SEME = {
     pool: {},
     irrigation: { zones: [] },
     energy: {
+      house: { power: "sensor.casa_w" },
       solar: { power: "sensor.fv_w" },
       grid: { power: "sensor.rete_w" },
       battery: { power: "sensor.batt_w" },
@@ -63,6 +64,7 @@ test("sei carichi: le file si sfalsano e le linee passano nei varchi", async ({
       };
       STATES[id] = _RAW_STATES[id];
     };
+    scrivi("sensor.casa_w", 1240);
     scrivi("sensor.fv_w", 4180);
     scrivi("sensor.rete_w", -2940);
     scrivi("sensor.batt_w", 0);
@@ -153,6 +155,47 @@ test("sei carichi: le file si sfalsano e le linee passano nei varchi", async ({
       }
     }
   }
+
+  /* E la barra dell'app non copre i numeri dell'ultima fila.
+   *
+   * La barra galleggia in fondo allo schermo e sta sopra tutto: sul telefono
+   * arriva a coprire l'ultimo pezzo del palco. Con una fila sola i carichi non
+   * la toccano — il disegno è nato così — ma la seconda, che nasce dal quinto
+   * carico in poi, ci finiva dentro col numero. Chi apriva Energia vedeva i
+   * watt dei suoi ultimi carichi coperti, e per leggerli doveva scorrere senza
+   * sapere che ci fosse qualcosa da scorrere. */
+  const laBarra = await page.evaluate(() => {
+    const barra =
+      document.querySelector("nav.tabs.bottom-nav-bar") || document.querySelector("nav.tabs");
+    if (!barra || getComputedStyle(barra).position !== "fixed") return null;
+    const stage = document.querySelector(".flow-stage").getBoundingClientRect();
+    const numeri = [...document.querySelectorAll(".flow-stage .node.n-load .dm-flow-value")]
+      .map((nodo) => nodo.getBoundingClientRect())
+      .filter((riga) => riga.width > 0);
+    return {
+      comincia: barra.getBoundingClientRect().top,
+      ultimoNumero: Math.max(...numeri.map((riga) => riga.bottom)),
+      casa: document.querySelector("#n-home")?.getBoundingClientRect().bottom ?? null,
+      /* Solo quelle disegnate: la scena si porta dietro i cerchi fissi del
+         guscio storico, spenti, e un rettangolo di misura zero falserebbe il
+         conto senza dirlo. */
+      primaFila: Math.min(
+        ...[...document.querySelectorAll(".flow-stage .node.n-load[data-dm-flow-node]")]
+          .map((nodo) => nodo.getBoundingClientRect())
+          .filter((riga) => riga.width > 0)
+          .map((riga) => riga.top),
+      ),
+      alto: stage.height,
+    };
+  });
+  expect(laBarra, "la barra in basso deve esserci, o questa prova non prova niente").not.toBeNull();
+  expect(
+    laBarra.ultimoNumero,
+    "il numero dell'ultima fila finisce sotto la barra dell'app",
+  ).toBeLessThanOrEqual(laBarra.comincia);
+  /* E salendo non sono andate a finire addosso alla Casa. */
+  expect(laBarra.casa, "la Casa deve essere disegnata").not.toBeNull();
+  expect(laBarra.primaFila, "la prima fila tocca la Casa").toBeGreaterThan(laBarra.casa);
 
   await palco.screenshot({
     path: process.env.SCATTO_FLUSSI || "/tmp/flussi-dopo.png",

@@ -56,6 +56,25 @@ const MOBILE = Object.freeze({
   homeY: 460,
   rowY: [680, 850],
   rowTop: [68, 85],
+  /* Con DUE file i cerchi salgono, e l'aria se la tolgono fra loro.
+   *
+   * La barra dell'app sul telefono galleggia in fondo allo schermo, e sopra un
+   * palco alto 640 punti arriva a coprirne gli ultimi 134: misurato, copre da
+   * 506 in giu'. Con una fila sola i carichi finiscono a 469 e non la toccano —
+   * il disegno e' nato cosi'. La seconda fila, che nasce dal quinto carico in
+   * poi, cadeva a 509-578: sotto la barra, col numero dentro. Chi apriva
+   * Energia vedeva i watt dei suoi ultimi carichi coperti, e per leggerli
+   * doveva scorrere senza sapere che ci fosse qualcosa da scorrere.
+   *
+   * Lo spazio si trova senza rimpicciolire niente e senza toccare la meta' di
+   * sopra — Solare, Rete, Batteria e Casa restano dove sono. Fra Casa e la
+   * prima fila c'erano 43 punti di aria, e fra le due file altri 40: sono
+   * quaranta e passa piu' del necessario, e messi insieme bastano. Le file
+   * salgono di 67 punti e i numeri tornano sopra la barra.
+   *
+   * Con una fila sola non cambia niente, ed e' voluto: chi ha quattro carichi
+   * o meno non deve accorgersi di questa riga. */
+  dueFile: { rowY: [620, 750], rowTop: [62, 75] },
   perRow: 4,
 });
 
@@ -233,6 +252,9 @@ export function flowStageLayout(count, variant = "desktop") {
   const sizes = rowsFor(count, geometry);
   const positions = [];
   const primaFila = sizes[0] || 0;
+  /* Dove stanno le file: piu' in alto quando sono due, cosi' la seconda non
+   * finisce sotto la barra dell'app. Il perche' sta accanto a `dueFile`. */
+  const righe = sizes.length > 1 && geometry.dueFile ? geometry.dueFile : geometry;
   sizes.forEach((size, rowIndex) => {
     for (let column = 0; column < size; column += 1) {
       /* La prima fila spartisce la larghezza; quelle sotto si sfalsano nei
@@ -243,15 +265,15 @@ export function flowStageLayout(count, variant = "desktop") {
           : sfalsata(geometry.width, primaFila, size, column);
       /* Chi sta sotto deve scavalcare la fila di sopra: la sua linea si
        * raddrizza prima di arrivarci. Il perche' sta in `connectorPath`. */
-      const oltre = rowIndex === 0 ? null : geometry.rowY[rowIndex - 1];
+      const oltre = rowIndex === 0 ? null : righe.rowY[rowIndex - 1];
       positions.push({
         index: positions.length,
         row: rowIndex,
         left: round((x / geometry.width) * 100, 3),
-        top: geometry.rowTop[rowIndex],
+        top: righe.rowTop[rowIndex],
         x: round(x, 1),
-        y: geometry.rowY[rowIndex],
-        path: connectorPath(geometry, round(x, 1), geometry.rowY[rowIndex], oltre),
+        y: righe.rowY[rowIndex],
+        path: connectorPath(geometry, round(x, 1), righe.rowY[rowIndex], oltre),
       });
     }
   });

@@ -86,9 +86,11 @@ test("mobile wraps onto a second row instead of crushing eight bubbles into one"
     eight.map(({ row }) => row),
     [0, 0, 0, 0, 1, 1, 1, 1],
   );
+  /* Con due file i cerchi salgono: la seconda, giu' dov'era, finiva sotto la
+   * barra dell'app. Il perche' sta accanto a `dueFile`, e la prova sotto. */
   assert.deepEqual(
     eight.map(({ top }) => top),
-    [68, 68, 68, 68, 85, 85, 85, 85],
+    [62, 62, 62, 62, 75, 75, 75, 75],
   );
   assert.ok(eight.every(({ path }) => path.startsWith("M 500 460 ")));
   const five = flowStageLayout(5, "mobile");
@@ -170,9 +172,13 @@ test("la linea che scavalca una fila arriva dritta sulla sua verticale (#118)", 
    * non fosse ancora arrivata alla sua x, si mangerebbe il mezzo passo dello
    * sfalsamento e tornerebbe a sfiorare la bolla di sopra. */
   const sei = flowStageLayout(6, "mobile");
+  /* L'altezza della prima fila si chiede al disegno, non si scrive qui: le
+   * file si sono gia' spostate una volta, e una prova che se la ricorda a
+   * memoria misura il posto sbagliato senza dirlo. */
+  const primaFila = sei.find(({ row }) => row === 0).y;
   for (const bolla of sei.filter(({ row }) => row > 0)) {
     const [, , , cx, , x1] = bolla.path.match(/^M (\S+) (\S+) Q (\S+) (\S+) (\S+) (\S+)$/);
-    const punto = puntiDelConnettore(bolla.path).find(([, y]) => y >= 680);
+    const punto = puntiDelConnettore(bolla.path).find(([, y]) => y >= primaFila);
     /* Due unita' su mille di sfrido: la linea qui si campiona a passi, e il
      * punto di comando si scrive con un decimale. La regola e' «dritta», non
      * «dritta al millesimo». */
@@ -189,6 +195,56 @@ test("la linea che scavalca una fila arriva dritta sulla sua verticale (#118)", 
     if (!bolla.path.includes("Q")) continue;
     const [, , , cx, , x1] = bolla.path.match(/^M (\S+) (\S+) Q (\S+) (\S+) (\S+) (\S+)$/);
     assert.equal(Number(cx), Number(x1));
+  }
+});
+
+/* La barra dell'app sul telefono galleggia in fondo allo schermo e arriva a
+ * coprire gli ultimi 134 punti del palco: misurato, copre da 506 in giu' su un
+ * palco alto 640. Qui si lavora in centesimi, che e' come sono scritte le
+ * altezze delle file. */
+const DOVE_ARRIVA_LA_BARRA = (506 / 640) * 100;
+/* Mezza bolla, in centesimi dell'altezza del palco: 75 punti di diametro
+ * ristretti da `flowNodeScale`, su 640. */
+const MEZZA_BOLLA = (quanti) => ((75 * flowNodeScale(quanti)) / 2 / 640) * 100;
+
+test("con due file i numeri dell'ultima restano sopra la barra dell'app", () => {
+  /* Il numero di un carico sta in fondo alla bolla, ma dentro: sotto di lui
+   * resta un quarto di cerchio. Quello che deve stare sopra la barra e' il
+   * numero — se finisce sotto, chi apre Energia vede i watt dei suoi ultimi
+   * carichi coperti, e per leggerli deve scorrere senza sapere che ci sia
+   * qualcosa da scorrere. */
+  for (let quanti = 5; quanti <= FLOW_MAX_LOADS; quanti += 1) {
+    const bolle = flowStageLayout(quanti, "mobile");
+    const ultima = Math.max(...bolle.map(({ top }) => top));
+    const fondoDelNumero = ultima + MEZZA_BOLLA(quanti) * 0.45;
+    assert.ok(
+      fondoDelNumero <= DOVE_ARRIVA_LA_BARRA,
+      `con ${quanti} carichi il numero dell'ultima fila arriva a ` +
+        `${fondoDelNumero.toFixed(1)}, e la barra comincia a ` +
+        `${DOVE_ARRIVA_LA_BARRA.toFixed(1)}`,
+    );
+  }
+});
+
+test("le file salgono solo quando sono due, e non si toccano (#118)", () => {
+  /* Chi ha quattro carichi o meno non deve accorgersi di questa riga: li' la
+   * fila e' una, e sta dov'e' sempre stata. */
+  for (let quanti = 1; quanti <= 4; quanti += 1)
+    assert.ok(
+      flowStageLayout(quanti, "mobile").every(({ top }) => top === 68),
+      `con ${quanti} carichi la fila deve restare al 68`,
+    );
+
+  /* E salendo non si accavallano fra loro: fra i due centri ci deve stare una
+   * bolla intera piu' un dito d'aria. */
+  for (let quanti = 5; quanti <= FLOW_MAX_LOADS; quanti += 1) {
+    const file = [...new Set(flowStageLayout(quanti, "mobile").map(({ top }) => top))];
+    assert.equal(file.length, 2, `con ${quanti} carichi le file devono essere due`);
+    assert.ok(
+      file[1] - file[0] > MEZZA_BOLLA(quanti) * 2,
+      `con ${quanti} carichi le due file distano ${(file[1] - file[0]).toFixed(1)}, ` +
+        `e una bolla e' alta ${(MEZZA_BOLLA(quanti) * 2).toFixed(1)}`,
+    );
   }
 });
 
