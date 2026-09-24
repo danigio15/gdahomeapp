@@ -11,6 +11,39 @@ fuori. La plancia dentro continua a dire la sua, e si legge dov'è sempre
 stata: nella pastiglia «La plancia» della console. Sono due numeri perché
 sono due cose.
 
+## 1.6.6
+
+**In macchina si vedono i dispositivi, e si premono.** Fino a ieri gdahome in
+auto apriva tre numeri del fotovoltaico e due tasti per altre due schermate:
+informazioni sulla casa, non roba da premere. Adesso la prima cosa che si vede
+è la griglia dei dispositivi — sei, col nome, com'è messo ognuno e un tocco per
+girarlo. Davanti le porte e i varchi, che sono quello che si preme arrivando;
+dietro le luci e le prese rimaste accese, che sono la domanda opposta: sono
+partito e ho lasciato acceso?
+
+Quali sei li sceglie la plancia, e non si sceglie niente di nuovo: le porte
+sono quelle di Sicurezza, i varchi quelli dei Varchi, luci e prese quelle delle
+loro tessere. Anche le parole («Aperto», «Accesa») arrivano fatte da lì — due
+parole diverse per lo stesso stato, una in macchina e una sul divano, sarebbero
+due stati per chi le legge.
+
+**Il sole e chi c'è in casa non spariscono:** stanno dietro il tasto «Casa», in
+alto, e sono diventati una schermata sola invece di due. In macchina i tocchi
+si contano.
+
+Fuori dalla griglia restano la serratura e il lettore, apposta: il comando
+giusto dipende da com'è messa l'entità **adesso**, e una ricetta scritta
+mezz'ora fa chiuderebbe una porta che intanto qualcuno ha aperto.
+
+**Perché tutto questo.** La categoria con cui l'app si presenta all'auto è
+`IOT`, e le due cose che Google mette davanti a tutte per un'app così sono
+vedere com'è messo un dispositivo e accenderlo o spegnerlo con un tocco. Non
+ce n'era nessuna delle due, ed è il motivo per cui dalla 1.6.4 in poi — la
+prima con l'auto dentro — le revisioni del negozio non passavano più.
+
+Dentro casa non cambia niente: la plancia, il ponte e il cruscotto sono quelli
+della 1.6.5.
+
 ## 1.6.5
 
 **Un numero solo.** Da qui in avanti l'add-on in casa e l'app sul telefono
