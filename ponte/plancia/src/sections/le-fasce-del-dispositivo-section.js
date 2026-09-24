@@ -54,6 +54,7 @@ import {
   leOreDalRecorder,
   pianiDelleFonti,
   prezzoUnicoDiAcquisto,
+  segnaIlContoMisurato,
   secchielliNellArco,
 } from "./energy-section.js";
 import {
@@ -366,6 +367,22 @@ export async function aggiornaLeFasceDelDispositivo({ forza = false } = {}) {
     state.detto = detto;
     state.chiave = chiave;
     state.letto = Date.now();
+    /* E il conto vero lo sa anche la scheda qui sopra.
+     *
+     * I due euro della card — «risparmiato grazie al FV» e «speso dalla rete»
+     * — li faceva con la media delle fasce pesata sulle ore della settimana,
+     * che e' la sola cosa che si possa dire senza sapere in che ore
+     * l'apparecchio ha consumato. Qui quelle ore ci sono, appena chieste al
+     * Recorder: su una wallbox che carica di notte la differenza era 20,19 €
+     * contro 12,58 €, sugli stessi kilowattora e a dieci centimetri di
+     * distanza sulla stessa schermata.
+     *
+     * Si passa il conto e basta: a scrivere nella card resta la card. */
+    if (detto)
+      segnaIlContoMisurato(scelto, periodo, {
+        euro: detto.euro,
+        valoreDelSole: detto.valoreDelSole,
+      });
     /* Fra la domanda e la risposta la tendina puo' essere cambiata. Il conto
      * si tiene lo stesso — e' buono, ed e' di quell'apparecchio — ma non si
      * disegna: a disegnare ci pensa il giro che sta gia' in coda, con

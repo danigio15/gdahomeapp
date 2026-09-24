@@ -217,3 +217,44 @@ test("dopo il tocco sulla linguetta si riprova più di una volta", async () => {
     "l'ultima passata deve arrivare dopo che il guscio ha aperto la scheda",
   );
 });
+
+/* E i tre euro del mese vengono da una fonte sola.
+ *
+ * «Il costo riportato in alto non si trova con quello riportato sotto dalle
+ * fasce.» In alto la stima al prezzo medio, sotto la misura ora per ora: due
+ * conti diversi sulla stessa scheda, a dieci centimetri uno dall'altro.
+ *
+ * Adesso il blocco, appena ha il conto vero, lo passa alla card — e a
+ * scrivere nella card resta la card: chi misura non tocca il documento. Qui si
+ * difende quel passaggio, e che i tre euro del mese (il totale, il
+ * risparmiato, lo speso) escano tutti e tre dalla stessa fonte: se uno solo
+ * restasse la stima, la somma in cima non tornerebbe piu' con le due tessere
+ * sotto, che e' il difetto di prima rifatto piu' piccolo.
+ */
+
+test("il blocco passa alla scheda il conto misurato, e non le scrive dentro", async () => {
+  const sezione = await read("src/sections/le-fasce-del-dispositivo-section.js");
+  assert.match(
+    sezione,
+    /segnaIlContoMisurato\(scelto, periodo, \{\s*euro: detto\.euro,\s*valoreDelSole: detto\.valoreDelSole,/,
+    "il conto si passa: euro dalla rete e valore del sole, per quell'apparecchio e quel mese",
+  );
+  /* Le due caselle della card non le tocca nessun altro. */
+  assert.ok(!sezione.includes("ed-dkpi-costo-eur"), "nel documento della card scrive la card");
+  assert.ok(!sezione.includes("ed-dkpi-risp-eur"));
+});
+
+test("i tre euro del mese vengono tutti dalla stessa fonte", async () => {
+  const energia = await read("src/sections/energy-section.js");
+  assert.match(
+    energia,
+    /const misurato = ilContoMisurato\(entity, bundle\.period\);/,
+    "la card chiede se qualcuno ha misurato questo apparecchio in questo mese",
+  );
+  assert.match(energia, /risparmioMese = misurato \? misurato\.valoreDelSole :/);
+  assert.match(energia, /spesaMese = misurato \? misurato\.euro :/);
+  /* Il totale in cima e' la somma delle due tessere, non un terzo conto. */
+  assert.match(energia, /"ed-dkpi-mese-eur", `€ \$\{formatNumber\(risparmioMese \+ spesaMese, 2\)\}`/);
+  assert.match(energia, /"ed-dkpi-risp-eur", `\+ \$\{formatNumber\(risparmioMese, 2\)\}/);
+  assert.match(energia, /"ed-dkpi-costo-eur", `- \$\{formatNumber\(spesaMese, 2\)\}/);
+});

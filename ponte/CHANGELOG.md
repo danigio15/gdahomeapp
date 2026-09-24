@@ -11,6 +11,23 @@ fuori. La plancia dentro continua a dire la sua, e si legge dov'è sempre
 stata: nella pastiglia «La plancia» della console. Sono due numeri perché
 sono due cose.
 
+## 1.6.4.4
+
+**I due euro della scheda del dispositivo adesso si parlano.** In alto il costo
+del mese, sotto il conto delle fasce, e non si trovavano: sulla wallbox 34,69 €
+contro 12,58 €. Nessuno dei due era un errore di somma — erano due conti
+diversi detti con la stessa parola. In alto tutto il consumo al **prezzo medio**
+delle fasce, pesato sulle ore della settimana; sotto solo i kilowattora presi
+davvero dalla rete, ai prezzi delle fasce vere, **ora per ora**. Su una
+macchina che carica di notte la stima sbagliava del sessanta per cento.
+
+Adesso, quando le ore si conoscono — è il blocco delle fasce che le chiede — la
+scheda usa quelle: quanto è costato alla rete e quanto ha risparmiato il sole,
+ciascuno al prezzo dell'ora in cui è successo. Il totale in cima è la somma
+delle due tessere sotto, non un terzo conto. Chi le fasce non le ha continua a
+leggere la stima di prima, che resta l'unica cosa vera che si possa dire senza
+sapere le ore.
+
 ## 1.6.4.3
 
 **L'auto mappata che la pagina non mostrava.** In configurazione la vettura

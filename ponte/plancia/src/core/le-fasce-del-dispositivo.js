@@ -189,6 +189,13 @@ export function leFasceDelDispositivo(
     /* Quanto avrebbe speso con una tariffa unica, sugli stessi kilowattora
      * presi dalla rete: e' la domanda vera dietro le fasce. Senza quel prezzo
      * non c'e' confronto da fare, e chi disegna non scrive la riga. */
+    /* Quanto valgono i kilowattora arrivati dal sole, alle ore in cui sono
+     * arrivati: e' quello che l'apparecchio non ha pagato, ed e' il numero che
+     * la scheda del dispositivo chiama «risparmiato grazie al FV». Li' lo si
+     * stimava col prezzo medio delle fasce sulla settimana — con una wallbox
+     * che carica di notte quel prezzo e' quasi il doppio di quello vero — e
+     * qui invece il prezzo e' quello dell'ora in cui il sole e' entrato. */
+    valoreDelSole: fasce.reduce((somma, fascia) => somma + fascia.sole * fascia.prezzo, 0),
     unico: unico > 0 ? { prezzo: unico, euro: dallaRete_ * unico } : null,
     risparmio: unico > 0 ? dallaRete_ * unico - euro : null,
     /* Quanta parte dei suoi kilowattora si e' potuta dividere fra sole e
