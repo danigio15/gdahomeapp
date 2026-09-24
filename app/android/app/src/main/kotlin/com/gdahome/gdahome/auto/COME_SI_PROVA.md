@@ -219,5 +219,17 @@ adb forward tcp:5277 tcp:5277 && ./desktop-head-unit
 ```
 
 Gli scatti in `scatti-di-stanotte/auto-*.png` sono **disegni alla misura vera**
-dello schermo (1024×578), non fotografie di una macchina: servono a decidere
-cosa ci va e cosa no, non a dire che funziona.
+dello schermo (1024×578, i file sono al doppio), non fotografie di una
+macchina: servono a decidere cosa ci va e cosa no, non a dire che funziona.
+I segni dentro sono quelli veri — stesse curve dei file in `res/drawable`.
+
+| file | schermata |
+|---|---|
+| `auto-1-dispositivi.png` | la griglia dei dispositivi, con i due tasti in alto |
+| `auto-2-come-sta.png` | il sole e le persone, dietro il tasto «Casa» |
+| `auto-3-azioni.png` | le azioni rapide, col fulmine |
+| `auto-4-senza-foto.png` | quando l'app non ha ancora mandato niente |
+
+**Per il Play Console non servono questi.** La scheda di Android Auto vuole
+scatti veri dell'app che gira, presi col Desktop Head Unit o da una macchina:
+un disegno fatto a mano, per quanto giusto, lì è una dichiarazione falsa.
