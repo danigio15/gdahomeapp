@@ -1582,6 +1582,52 @@ function scriviLAmmanco(bundle, source) {
   return true;
 }
 
+/* Il conto MISURATO di un apparecchio, quando qualcuno lo sa.
+ *
+ * La scheda del dispositivo scrive due euro — «risparmiato grazie al FV» e
+ * «speso dalla rete» — e li faceva con un prezzo solo: la media delle fasce
+ * pesata sulle ore della settimana. E' una stima onesta finche' non si sa in
+ * che ore quell'apparecchio ha consumato: la plancia sa quanti kilowattora
+ * sono passati, non quando.
+ *
+ * Il blocco delle fasce, pero', quelle ore le chiede davvero al Recorder, e
+ * per lo stesso apparecchio e lo stesso mese sa il conto vero, fascia per
+ * fascia. Su una wallbox che carica di notte le due cose non si somigliano
+ * nemmeno: 20,19 € stimati contro 12,58 € veri, sugli stessi kilowattora. Uno
+ * dei due numeri era sbagliato, e stavano sulla stessa scheda a dieci
+ * centimetri uno dall'altro — dal campo: «il costo riportato in alto non si
+ * trova con quello riportato sotto dalle fasce».
+ *
+ * Adesso, quando la misura c'e', comanda lei. La scheda resta l'unica a
+ * scrivere quei numeri — chi misura non tocca il documento, passa il conto e
+ * basta — e senza misura non cambia niente: chi le fasce non le ha continua a
+ * leggere la stima di sempre.
+ */
+function chiaveDelContoMisurato(entita, periodo) {
+  return `${clean(entita)}~${Number(periodo?.year) || 0}-${Number(periodo?.month) || 0}`;
+}
+
+export function segnaIlContoMisurato(entita, periodo, conto) {
+  if (!clean(entita) || !conto) return false;
+  const conti = (state.contiMisurati ||= new Map());
+  const chiave = chiaveDelContoMisurato(entita, periodo);
+  const prima = conti.get(chiave);
+  const adesso = {
+    euro: finite(conto.euro),
+    valoreDelSole: finite(conto.valoreDelSole),
+  };
+  if (prima && prima.euro === adesso.euro && prima.valoreDelSole === adesso.valoreDelSole)
+    return false;
+  conti.set(chiave, adesso);
+  /* La scheda e' gia' dipinta con la stima: si ridipinge adesso che si sa. */
+  return applyDeviceDetail(state.bundle);
+}
+
+/** Il conto misurato di questo apparecchio in questo mese, se qualcuno l'ha fatto. */
+function ilContoMisurato(entita, periodo) {
+  return state.contiMisurati?.get(chiaveDelContoMisurato(entita, periodo)) || null;
+}
+
 function applyDeviceDetail(bundle) {
   const selector = doc?.getElementById("ed-dev-selector");
   const entity = clean(selector?.value);
@@ -1635,8 +1681,18 @@ function applyDeviceDetail(bundle) {
   const monthSplit = quotaDaScrivere(bundle, source, "month", monthValue);
   const yearSplit = quotaDaScrivere(bundle, source, "year", yearValue);
 
+  /* Il conto del mese: misurato se qualcuno l'ha misurato, stimato se no.
+   *
+   * I tre euro del mese sono lo stesso conto diviso in due — quello che il
+   * sole ha risparmiato e quello che la rete ha preso — e la somma sta in
+   * cima. Vengono dalla stessa fonte tutti e tre, o non tornerebbero fra
+   * loro: e' esattamente il difetto che questa riga chiude. */
+  const misurato = ilContoMisurato(entity, bundle.period);
+  const risparmioMese = misurato ? misurato.valoreDelSole : monthSplit.solar * importPrice;
+  const spesaMese = misurato ? misurato.euro : monthSplit.grid * importPrice;
+
   setText("ed-dkpi-mese", `${formatNumber(monthValue, 1)} kWh`);
-  setText("ed-dkpi-mese-eur", `€ ${formatNumber(monthValue * importPrice, 2)}`);
+  setText("ed-dkpi-mese-eur", `€ ${formatNumber(risparmioMese + spesaMese, 2)}`);
   setText("ed-dkpi-media", days ? `${formatNumber(monthValue / days, 2)} kWh` : "—");
   /* Il picco, con la virgola come tutto il resto della card.
    *
@@ -1654,12 +1710,12 @@ function applyDeviceDetail(bundle) {
       );
   }
   setText("ed-dkpi-media-sub", t("Media/giorno", "Daily average"));
-  setText("ed-dkpi-risp-eur", `+ ${formatNumber(monthSplit.solar * importPrice, 2)} €`);
+  setText("ed-dkpi-risp-eur", `+ ${formatNumber(risparmioMese, 2)} €`);
   setText(
     "ed-dkpi-risp-kwh",
     `${formatNumber(monthSplit.solar, 1)} kWh ${t("da FV", "from solar")}`,
   );
-  setText("ed-dkpi-costo-eur", `- ${formatNumber(monthSplit.grid * importPrice, 2)} €`);
+  setText("ed-dkpi-costo-eur", `- ${formatNumber(spesaMese, 2)} €`);
   setText(
     "ed-dkpi-costo-kwh",
     `${formatNumber(monthSplit.grid, 1)} kWh ${t("dalla rete", "from grid")}`,

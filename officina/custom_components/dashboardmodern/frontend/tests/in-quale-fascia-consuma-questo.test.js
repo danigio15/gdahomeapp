@@ -191,3 +191,52 @@ test("una fascia senza prezzo suo ripiega sulla tariffa unica, e lo dichiara", (
   assert.equal(detto.fasce[1].prezzo, 0.25);
   assert.ok(Math.abs(detto.euro - 1) < 1e-9);
 });
+
+/* «Il costo riportato in alto del dispositivo inerente al mese non si trova
+ * con quello riportato sotto dalle fasce.»
+ *
+ * Dal campo, con lo scatto della wallbox: in alto 192,4 kWh e 34,69 €, sotto
+ * 12,58 €. Nessuno dei due era un errore di somma — erano due conti diversi
+ * detti con la stessa parola. In alto TUTTO il consumo al prezzo medio delle
+ * fasce pesato sulle ore della settimana (0,1804 €/kWh in quella casa); sotto
+ * solo i 111,9 kWh presi dalla rete, ai prezzi delle fasce vere, ora per ora.
+ * Su una macchina che carica di notte la stima sbagliava del sessanta per
+ * cento.
+ *
+ * La scheda adesso, quando la misura c'e', la usa. E per usarla le serve anche
+ * il valore del sole alle ore in cui il sole e' entrato: e' il numero che
+ * chiama «risparmiato grazie al FV», e senza quello i tre euro del mese
+ * verrebbero da due fonti diverse — che e' esattamente il difetto di prima,
+ * rifatto dentro una card sola.
+ */
+test("il sole vale il prezzo dell'ora in cui è entrato, non la media della settimana", () => {
+  /* Mercoledì 4 marzo: due kilowattora di giorno, metà dal sole, e cinque di
+   * notte tutti dalla rete. */
+  const ore = {
+    dispositivo: [ora(4, 10, 2), ora(4, 23, 5)],
+    casa: [ora(4, 10, 10), ora(4, 23, 10)],
+    /* Di giorno la casa prende dalla rete solo la metà: l'altra è sole. */
+    rete: [ora(4, 10, 5), ora(4, 23, 10)],
+  };
+  const detto = leFasceDelDispositivo(ore, TRE, { prezzoUnico: 0.25 });
+  /* Un kilowattora dal sole, ed è entrato in F1, che costa 0,30. */
+  assert.ok(Math.abs(detto.sole - 1) < 1e-9);
+  assert.ok(Math.abs(detto.valoreDelSole - 0.3) < 1e-9);
+  /* E quello preso dalla rete costa il prezzo delle sue ore: uno in F1 e
+   * cinque in F3. */
+  assert.ok(Math.abs(detto.euro - (1 * 0.3 + 5 * 0.1)) < 1e-9);
+  /* I due numeri sono la stessa storia divisa in due, e insieme fanno quello
+   * che l'apparecchio sarebbe costato tutto dalla rete: è la riga in cima
+   * alla scheda. */
+  assert.ok(Math.abs(detto.valoreDelSole + detto.euro - (2 * 0.3 + 5 * 0.1)) < 1e-9);
+});
+
+test("senza sole il valore del sole è zero, e la card non cambia niente", () => {
+  const ore = {
+    dispositivo: [ora(4, 23, 5)],
+    casa: [ora(4, 23, 10)],
+    rete: [ora(4, 23, 10)],
+  };
+  const detto = leFasceDelDispositivo(ore, TRE, { prezzoUnico: 0.25 });
+  assert.equal(detto.valoreDelSole, 0);
+});
