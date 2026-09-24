@@ -37,12 +37,13 @@ import {
   firmaDellaFoto,
   ilTastoDelComando,
   laFotoPerLAuto,
+  leRicetteDeiDispositivi,
   leRicettePerLAuto,
 } from "../core/la-foto-per-lauto.js";
 import { datiPerEntita, servizioPerEntita } from "./azioni-servizio-giusto-section.js";
 import { normalizePeople } from "../core/person-model.js";
 import { carteDalleRighe, modelliDelleTessere } from "./home-widgets-section.js";
-import { allStates, clean, doc, readJson, root } from "./shared.js";
+import { allStates, clean, doc, readJson, root, t } from "./shared.js";
 
 const KEY = "__DASHBOARDMODERN_FOTO_IN_AUTO__";
 const state = (root[KEY] ||= { installed: false, timer: 0, firma: "", quando: 0 });
@@ -70,18 +71,23 @@ function ilCanale() {
  * in auto ne entra una: la prima, che è quella dell'impianto principale. Tre
  * misure sono già il massimo che si legge a colpo d'occhio; sei, divise fra
  * due impianti, sarebbero una tabella. */
-function laTesseraDellEnergia(states) {
-  let tessere = [];
+function leTessere(states) {
   try {
-    tessere = modelliDelleTessere(states) || [];
+    return modelliDelleTessere(states) || [];
   } catch (_errore) {
-    return null;
+    return [];
   }
-  return tessere.find((tessera) => /^energia(_|$)/.test(clean(tessera?.key))) || null;
 }
 
-function lEnergia(states) {
-  const tessera = laTesseraDellEnergia(states);
+/* Una tessera per chiave. Col suffisso quando c'è: due contatori vogliono dire
+ * `energia` ed `energia_zona_notte`, e in auto ne entra la prima. */
+function laTessera(tessere, chiave) {
+  const quale = new RegExp(`^${chiave}(_|$)`);
+  return (tessere || []).find((tessera) => quale.test(clean(tessera?.key))) || null;
+}
+
+function lEnergia(tessere) {
+  const tessera = laTessera(tessere, "energia");
   if (!tessera) return null;
   let carte = [];
   try {
@@ -94,6 +100,75 @@ function lEnergia(states) {
     valore: clean(tessera.value),
     righe: carte.map((carta) => ({ nome: clean(carta?.etichetta), valore: clean(carta?.valore) })),
   };
+}
+
+/* ── I dispositivi che vanno in auto ─────────────────────────────────────
+ *
+ * Arrivano dalle tessere della Home, e non da una configurazione nuova: le
+ * porte sono quelle di Sicurezza, i varchi quelli dei Varchi, le luci e le
+ * prese quelle delle loro tessere. Chi le ha nascoste in Home le ha nascoste
+ * anche qui, perché i modelli arrivano già scremati.
+ *
+ * Quali entrano e in che ordine lo decide il nucleo. Qui si fa l'altra metà:
+ * si legge com'è messa ognuna adesso e si scrive la parola nella lingua di chi
+ * guarda — «Aperto», «Accesa» — che è la stessa cosa che fanno le tessere, e
+ * dove la tessera l'ha già scritta si prende la sua invece di rifarla. */
+const E_APERTO = /^(on|open|opened|unlocked)$/;
+
+function comEMessa(entity, states) {
+  return E_APERTO.test(clean(states?.[clean(entity)]?.state).toLowerCase());
+}
+
+/* Le quattro tessere che parlano di cose che si aprono e si accendono, col
+ * genere che il nucleo si aspetta e il campo in cui ognuna tiene le sue righe.
+ * Le porte le tengono in `doors` e non in `rows`, che è come nasce quella
+ * tessera: qui si legge dove sono, non si cambia come sono fatte. */
+const DA_DOVE = Object.freeze([
+  { chiave: "porte", genere: "porta", campo: "doors" },
+  { chiave: "varchi", genere: "varco", campo: "rows" },
+  { chiave: "luci", genere: "luce", campo: "rows" },
+  { chiave: "prese", genere: "presa", campo: "rows" },
+]);
+
+function laParola(genere, acceso, riga) {
+  /* Quella della tessera, quando ce l'ha: è già tradotta, ed è la stessa che
+   * si legge in casa. Due parole diverse per lo stesso stato, una in macchina
+   * e una sul divano, sono due stati per chi le legge. */
+  const sua = clean(riga?.value);
+  if (sua) return sua;
+  if (genere === "porta" || genere === "varco") {
+    return acceso ? t("Aperto", "Open") : t("Chiuso", "Closed");
+  }
+  return acceso ? t("Accesa", "On") : t("Spenta", "Off");
+}
+
+/** I dispositivi di casa, come li vede l'auto: nome, genere, stato, parola. */
+export function iDispositiviDiCasa(tessere, states) {
+  const fuori = [];
+  for (const { chiave, genere, campo } of DA_DOVE) {
+    const tessera = laTessera(tessere, chiave);
+    const righe = Array.isArray(tessera?.[campo]) ? tessera[campo] : [];
+    for (const riga of righe) {
+      const entity = clean(riga?.entity);
+      if (!entity) continue;
+      /* `on` la tessera ce l'ha quasi sempre, ed è già il conto giusto per
+       * quella sezione — un varco socchiuso, una tapparella a metà. Dove non
+       * c'è si guarda lo stato grezzo, che è l'unica cosa che resta. */
+      const acceso = typeof riga?.on === "boolean" ? riga.on : comEMessa(entity, states);
+      fuori.push({
+        entity,
+        nome: clean(riga?.name),
+        genere,
+        acceso,
+        stato: laParola(genere, acceso, riga),
+        /* «Si vede ma non si comanda»: la stessa scelta che in Home spegne
+           l'interruttore sulla riga. Dove la tessera non si pronuncia, si
+           lascia decidere al nucleo. */
+        comando: riga?.comando,
+      });
+    }
+  }
+  return fuori;
 }
 
 /* L'elenco delle azioni rapide, com'è adesso.
@@ -139,17 +214,56 @@ function comeSiEsegue(states) {
   };
 }
 
+/* Come si chiama davvero un'entità: chi ha rimappato una luce a mano l'ha
+ * rimappata per tutta la plancia, e l'auto non è il posto dove quella scelta
+ * si dimentica. È la stessa `resolveEntity` che usa il resto della Home. */
+function comeSiChiamaDavvero() {
+  return (entita) => {
+    const scritta = clean(entita);
+    try {
+      return { entita: clean(root.resolveEntity?.(scritta)) || scritta };
+    } catch (_errore) {
+      return { entita: scritta };
+    }
+  };
+}
+
+/* La fotografia e le ricette nascono nella stessa passata.
+ *
+ * Costruire le tessere della Home costa, e le guardano in tre: il
+ * fotovoltaico, i dispositivi e le ricette dei dispositivi. Farlo una volta e
+ * portarsi dietro il risultato è la differenza fra una passata e tre, ogni
+ * volta che qualcosa in casa cambia. */
+function laPassata(adesso) {
+  const states = allStates();
+  const tessere = leTessere(states);
+  const dispositivi = iDispositiviDiCasa(tessere, states);
+  const azioni = lElencoDelleAzioni();
+  const risolviEntita = comeSiChiamaDavvero();
+  const risolvi = comeSiEsegue(states);
+  return {
+    foto: laFotoPerLAuto({
+      dispositivi,
+      energia: lEnergia(tessere),
+      persone: normalizePeople(readJson("cd_people", [])),
+      states,
+      azioni,
+      risolvi,
+      risolviEntita,
+      adesso,
+    }),
+    /* Le ricette dei tasti e quelle dei dispositivi nello stesso elenco: chi
+     * le esegue non ha bisogno di sapere cosa c'è dietro. */
+    ricette: [
+      ...leRicettePerLAuto(azioni, risolvi),
+      ...leRicetteDeiDispositivi(dispositivi, risolviEntita),
+    ],
+  };
+}
+
 /** La fotografia di adesso, o `null` se non c'è niente da mandare. */
 export function fotografaLaCasa(adesso = Date.now()) {
-  const states = allStates();
-  return laFotoPerLAuto({
-    energia: lEnergia(states),
-    persone: normalizePeople(readJson("cd_people", [])),
-    states,
-    azioni: lElencoDelleAzioni(),
-    risolvi: comeSiEsegue(states),
-    adesso,
-  });
+  return laPassata(adesso).foto;
 }
 
 /**
@@ -168,7 +282,7 @@ export function laFotoVaInAuto(adesso = Date.now()) {
    * prima — e se e' troppo vecchia l'auto lo dice invece di spacciarla per
    * adesso. */
   if (doc?.hidden === true) return false;
-  const foto = fotografaLaCasa(adesso);
+  const { foto, ricette } = laPassata(adesso);
   if (!foto) return false;
   const firma = firmaDellaFoto(foto);
   if (firma === state.firma && adesso - state.quando < RINFRESCA_MS) return false;
@@ -177,12 +291,7 @@ export function laFotoVaInAuto(adesso = Date.now()) {
      * legge l'auto ci vanno i nomi, e nomi e basta. Chi scrive il file le
      * rilegge campo per campo e le mette da un'altra parte — è quella
      * rilettura che le tiene fuori, non un ricordarsene. */
-    canale.postMessage(
-      JSON.stringify({
-        ...foto,
-        ricette: leRicettePerLAuto(lElencoDelleAzioni(), comeSiEsegue(allStates())),
-      }),
-    );
+    canale.postMessage(JSON.stringify({ ...foto, ricette }));
   } catch (_errore) {
     /* Il canale c'è ma non ha preso: si riproverà al giro dopo, e intanto la
      * firma resta quella di prima — così il prossimo tentativo riparte da
