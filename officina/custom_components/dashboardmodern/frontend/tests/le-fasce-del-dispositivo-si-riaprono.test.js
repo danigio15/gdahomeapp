@@ -160,3 +160,60 @@ test("la chiave del conto tiene dentro l'apparecchio, se no due si confondono", 
     chiaveDelConto("sensor.boiler", periodo, 0.3),
   );
 });
+
+/* «Seleziono la prima volta boiler e non lo porta: seleziono un altro
+ * dispositivo, poi ritorno su boiler e lo carica.»
+ *
+ * Il giro dopo quello della linguetta sbagliata, e lo stesso blocco. Il click
+ * adesso si sente — si ascolta in CATTURA, cioe' prima che il guscio faccia
+ * qualunque cosa — e un istante dopo la scheda del dispositivo non si vede
+ * ancora: il guscio la deve ancora aprire. `rifai` la trova chiusa, e faceva
+ * due cose sbagliate insieme: non disegnava (giusto) e buttava via il conto
+ * appena fatto (sbagliato). Nessuno ripassava, e il blocco tornava solo
+ * cambiando apparecchio nella tendina — che e' il gesto raccontato dal campo.
+ *
+ * Riscegliere lo STESSO apparecchio non genera nessun evento: per questo
+ * bisognava passare da un altro e tornare indietro.
+ *
+ * Due regole, e ci vogliono tutt'e due: la scheda chiusa non fa dimenticare il
+ * conto, e dopo il tocco si riprova piu' di una volta, perche' quando il
+ * guscio avra' finito di aprirla non lo dice nessuno.
+ */
+
+test("la scheda che non si vede toglie il riquadro ma non butta il conto", async () => {
+  const sezione = await read("src/sections/le-fasce-del-dispositivo-section.js");
+  const chiusa = sezione.match(/if \(!scelto \|\| !laSchedaSiVede\(\)\) \{([\s\S]*?)\n  \}/);
+  assert.ok(chiusa, "la sezione deve fermarsi quando la scheda non si vede");
+  assert.match(
+    chiusa[1],
+    /togliIlRiquadro\(false\)/,
+    "scheda chiusa: si toglie il riquadro, il conto resta in tasca",
+  );
+  /* E il ripiego deve esistere per davvero: `false` senza un `scorda` che lo
+   * legga sarebbe una rassicurazione scritta e basta. */
+  const togli = sezione.match(/function togliIlRiquadro\(([^)]*)\) \{([\s\S]*?)\n\}/);
+  assert.ok(togli, "togliIlRiquadro deve esserci");
+  assert.match(togli[1], /scorda/, "togliIlRiquadro deve poter NON scordare");
+  assert.match(
+    togli[2],
+    /if \(!scorda\) return;[\s\S]*state\.detto = null/,
+    "con scorda a false il conto non si azzera",
+  );
+});
+
+test("dopo il tocco sulla linguetta si riprova più di una volta", async () => {
+  const sezione = await read("src/sections/le-fasce-del-dispositivo-section.js");
+  const dopoIlClick = sezione.match(
+    /closest\?\.\("\.ed-inner-tab[^"]*"\)\) return;([\s\S]*?)\n    \},/,
+  );
+  assert.ok(dopoIlClick, "il click sulle linguette deve fare qualcosa");
+  const attese = [...dopoIlClick[1].matchAll(/\b(\d+)\b/g)].map((trovato) => Number(trovato[1]));
+  assert.ok(
+    attese.length > 1,
+    "una passata sola torna quando la scheda e' ancora chiusa: ce ne vuole piu' d'una",
+  );
+  assert.ok(
+    Math.max(...attese) >= 250,
+    "l'ultima passata deve arrivare dopo che il guscio ha aperto la scheda",
+  );
+});

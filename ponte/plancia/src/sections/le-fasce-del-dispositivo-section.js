@@ -227,8 +227,19 @@ function ilRiquadro(crea = false) {
   return riquadro;
 }
 
-function togliIlRiquadro() {
+/* Via il riquadro. E `scorda` dice se se ne va anche il conto.
+ *
+ * Sono due cose diverse e le si confondeva. Quando la scheda non si vede —
+ * si e' appena toccata la linguetta e il guscio non l'ha ancora aperta — il
+ * conto fatto un attimo prima e' ancora buono: e' dello stesso apparecchio e
+ * dello stesso mese. Buttandolo, il ritorno sulla scheda voleva un altro giro
+ * al Recorder, e nell'attesa non c'era niente da vedere.
+ *
+ * Si scorda quando il conto NON vale piu': un altro apparecchio, un altro
+ * mese, le fasce spente, un giro finito male. */
+function togliIlRiquadro(scorda = true) {
   doc?.getElementById("dm-fasce-dispositivo")?.remove();
+  if (!scorda) return;
   state.detto = null;
   state.chiave = "";
 }
@@ -289,7 +300,9 @@ export async function aggiornaLeFasceDelDispositivo({ forza = false } = {}) {
   const selettore = doc.getElementById("ed-dev-selector");
   const scelto = clean(selettore?.value);
   if (!scelto || !laSchedaSiVede()) {
-    togliIlRiquadro();
+    /* Non si vede: il riquadro non ci va, ma il conto resta in tasca — al
+     * ritorno si ridisegna senza chiedere niente a nessuno. */
+    togliIlRiquadro(false);
     return false;
   }
 
@@ -443,7 +456,21 @@ export function installLeFasceDelDispositivo() {
     "click",
     (evento) => {
       if (!evento.target?.closest?.(".ed-inner-tab,#ed-tab-ana,#ed-tab-pan")) return;
-      root.setTimeout?.(() => rifai(), 0);
+      /* Tre volte, e non una.
+       *
+       * Il tocco si sente in cattura — prima che il guscio faccia qualunque
+       * cosa — e subito dopo la scheda non si vede ancora: `rifai` trovava
+       * tutto chiuso, non disegnava niente, e li' finiva. Il blocco tornava
+       * solo cambiando apparecchio nella tendina, ed e' il gesto che dal
+       * campo si e' dovuto inventare: «seleziono boiler e non lo porta, ne
+       * scelgo un altro e torno su boiler, e allora lo carica».
+       *
+       * Quando la scheda si apra non lo dice nessuno, quindi si riprova:
+       * subito, dopo un quarto di secondo e dopo un secondo scarso. Le
+       * passate in piu' non costano niente — trovano il conto gia' fatto e al
+       * massimo riappendono il riquadro — e quella buona e' la prima che
+       * trova la scheda aperta. */
+      for (const fra of [0, 250, 900]) root.setTimeout?.(() => rifai(), fra);
     },
     true,
   );
