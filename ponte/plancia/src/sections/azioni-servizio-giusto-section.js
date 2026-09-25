@@ -47,6 +47,7 @@
  * prende l'azione rapida. Separarle vorrebbe dire o portarsi dietro quella
  * strada in due posti, o farne prendere una seconda alla finestra.
  */
+import { SA } from "../core/media-player.js";
 import {
   allStates,
   clean,
@@ -82,11 +83,27 @@ const SERVIZI = Object.freeze({
    * voleva: spegne la cassa. Da un tasto con sopra la copertina del disco che
    * sta girando (#269) ci si aspetta la pausa — e da un lettore spento, che si
    * accenda, perche' mettere in pausa una cassa spenta non da' errore e non fa
-   * niente. */
-  media_player: (stato) =>
-    ["off", "standby", "unavailable", "unknown", ""].includes(clean(stato).toLowerCase())
-      ? "turn_on"
-      : "media_play_pause",
+   * niente.
+   *
+   * Con un'eccezione, che e' una TV (#132). Un televisore la pausa non ce l'ha
+   * — non riproduce niente di suo, fa vedere quello che gli arriva
+   * dall'HDMI — e su quello, da acceso, `media_play_pause` e' di nuovo il
+   * servizio che Home Assistant accetta e non esegue: lo stesso tasto rotto
+   * del portone, in un altro dominio. Se il lettore non dichiara la pausa
+   * (`MediaPlayerEntityFeature.PAUSE` o `PLAY`), l'unica cosa sensata da un
+   * tasto premuto su un televisore acceso e' spegnerlo. */
+  media_player: (stato, attributi) => {
+    if (["off", "standby", "unavailable", "unknown", ""].includes(clean(stato).toLowerCase()))
+      return "turn_on";
+    /* Le bandiere vengono da `core/media-player.js`, che e' dove stanno gia':
+     * sono i valori di `MediaPlayerEntityFeature`, del protocollo e non di
+     * questa plancia, e riscriverli qui vorrebbe dire due tabelle da tenere
+     * d'accordo. Zero vuol dire che il lettore non ha dichiarato niente, e su
+     * un'assenza non si decide: resta la pausa, com'era. */
+    const bandiere = Number(attributi?.supported_features) || 0;
+    if (bandiere && !(bandiere & SA.PAUSA) && !(bandiere & SA.SUONA)) return "turn_off";
+    return "media_play_pause";
+  },
 });
 
 /** Il servizio giusto per questa entita', o "" se `toggle` va gia' bene. */
@@ -95,7 +112,8 @@ export function servizioPerEntita(entity, states = {}) {
   const dominio = id.includes(".") ? id.split(".")[0].toLowerCase() : "";
   const scelta = SERVIZI[dominio];
   if (!scelta) return "";
-  return scelta(states?.[id]?.state) || "";
+  const stato = states?.[id];
+  return scelta(stato?.state, stato?.attributes) || "";
 }
 
 const E_UN_MENU = /^(select|input_select)\./;

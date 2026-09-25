@@ -81,3 +81,37 @@ test("un lettore che non risponde non offre tasti che non funzionerebbero", () =
   assert.equal(muto.muto, true);
   assert.equal(ilTastoCentrale(muto), "");
 });
+
+/* ── e la stessa cosa da un'azione rapida ────────────────────────────────── */
+
+/* Chi mette la TV fra le azioni rapide preme un tasto solo, e quel tasto deve
+ * fare qualcosa. `azioni-servizio-giusto-section.js` esiste apposta — «da fuori
+ * sembra un tasto rotto» e' la frase con cui comincia — e il lettore era
+ * l'ultimo caso in cui la regola non arrivava fino in fondo: da acceso
+ * chiamava `media_play_pause` anche a chi la pausa non ce l'ha. */
+
+test("l'azione rapida su una TV accesa la spegne, invece di non fare niente", async () => {
+  const { servizioPerEntita } = await import(
+    "../src/sections/azioni-servizio-giusto-section.js"
+  );
+  const accesa = { [TV]: { state: "on", attributes: { supported_features: SOLO_TV } } };
+  assert.equal(servizioPerEntita(TV, accesa), "turn_off");
+});
+
+test("e su una cassa resta la pausa", async () => {
+  const { servizioPerEntita } = await import(
+    "../src/sections/azioni-servizio-giusto-section.js"
+  );
+  const suona = { [TV]: { state: "playing", attributes: { supported_features: CASSA } } };
+  assert.equal(servizioPerEntita(TV, suona), "media_play_pause");
+});
+
+test("un lettore che non dichiara niente resta com'era", async () => {
+  /* Su un'assenza non si decide: `supported_features` a zero vuol dire che
+   * quel lettore non ha detto cosa sa fare, non che non sappia fare niente. */
+  const { servizioPerEntita } = await import(
+    "../src/sections/azioni-servizio-giusto-section.js"
+  );
+  assert.equal(servizioPerEntita(TV, { [TV]: { state: "playing" } }), "media_play_pause");
+  assert.equal(servizioPerEntita(TV, { [TV]: { state: "off" } }), "turn_on");
+});
