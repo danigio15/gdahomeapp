@@ -11,6 +11,18 @@ fuori. La plancia dentro continua a dire la sua, e si legge dov'è sempre
 stata: nella pastiglia «La plancia» della console. Sono due numeri perché
 sono due cose.
 
+## 1.6.7
+
+**Stesse cose della 1.6.6, con un numero nuovo.** La 1.6.6 era stata caricata
+sulla pista chiusa e li' si e' fermata: il negozio la tiene come «non ancora
+mandata in revisione», e il suo numero — una volta usato — non si puo' riusare
+su un'altra pista. Questa e' la stessa identica versione col numero avanti di
+uno, per poterla portare sulla pista interna, che non aspetta la revisione.
+
+Dentro non cambia niente rispetto alla 1.6.6: in macchina si vedono i
+dispositivi e si premono, il sole e le persone stanno dietro il tasto «Casa»,
+e dentro casa plancia, ponte e cruscotto sono quelli di prima.
+
 ## 1.6.6
 
 **In macchina si vedono i dispositivi, e si premono.** Fino a ieri gdahome in
