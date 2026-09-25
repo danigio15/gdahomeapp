@@ -26,10 +26,20 @@ package com.gdahome.gdahome.auto
 
 import android.content.Context
 import android.content.pm.ApplicationInfo
+import android.location.Location
+import android.os.Handler
+import android.os.Looper
+import androidx.car.app.AppManager
 import androidx.car.app.CarAppService
+import androidx.car.app.CarContext
+import androidx.car.app.CarToast
 import androidx.car.app.Session
 import androidx.car.app.SessionInfo
+import androidx.car.app.model.Action
+import androidx.car.app.model.Alert
+import androidx.car.app.model.CarText
 import androidx.car.app.validation.HostValidator
+import androidx.car.app.versioning.CarAppApiLevels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
@@ -105,13 +115,17 @@ class NavigatoreCarAppService : CarAppService() {
 
     override fun onCreate() {
         super.onCreate()
-        GdanavInAuto.casa = { LaCasaInAuto(it) }
+        /* Il tasto con la casa, sulla mappa: i comandi rapidi scelti sul
+         * telefono. Dietro, i dispositivi di sempre. */
+        GdanavInAuto.casa = { IComandiInAuto(it) }
     }
 
     override fun onCreateSession(sessionInfo: SessionInfo): Session = SessioneNavigatore()
 }
 
 class SessioneNavigatore : SessioneGdanav({ IlNavigatoreInAuto.salito(it) }) {
+    private val arrivo = ArrivoACasa { carContext }
+
     /* Come `SessioneInAuto`: finita la sessione, il motore dei comandi della
      * casa non serve piu'. Quello dell'app no — e' anche del telefono. */
     init {
@@ -121,12 +135,114 @@ class SessioneNavigatore : SessioneGdanav({ IlNavigatoreInAuto.salito(it) }) {
                     source: LifecycleOwner,
                     event: Lifecycle.Event,
                 ) {
-                    if (event == Lifecycle.Event.ON_DESTROY) {
-                        IlPonteDellAuto.spegni()
-                        IlNavigatoreInAuto.sceso()
+                    when (event) {
+                        Lifecycle.Event.ON_START -> arrivo.guarda()
+                        Lifecycle.Event.ON_DESTROY -> {
+                            arrivo.smetti()
+                            IlPonteDellAuto.spegni()
+                            IlNavigatoreInAuto.sceso()
+                        }
+                        else -> {}
                     }
                 }
             }
         )
+    }
+}
+
+/**
+ * «Quasi a casa»: a 500 metri da Casa lo schermo dell'auto propone il comando
+ * scelto sul telefono per l'arrivo (di solito il cancello).
+ *
+ * Dove si e' e dov'e' Casa li sa gdanav (`PonteAuto.qui`, `PonteAuto.casa()`).
+ * Si propone solo **arrivando**: dopo essere stati ad almeno un chilometro, e
+ * una volta per arrivo. Partendo da casa, o girando nel quartiere, nessuno
+ * vuole un avviso a ogni curva.
+ */
+class ArrivoACasa(private val auto: () -> CarContext) {
+    private val orologio = Handler(Looper.getMainLooper())
+    private var lontano = false
+    private var attivo = false
+
+    private val giro = object : Runnable {
+        override fun run() {
+            if (!attivo) return
+            runCatching { controlla() }
+            orologio.postDelayed(this, OGNI_MS)
+        }
+    }
+
+    fun guarda() {
+        if (attivo) return
+        attivo = true
+        orologio.post(giro)
+    }
+
+    fun smetti() {
+        attivo = false
+        orologio.removeCallbacks(giro)
+    }
+
+    private fun controlla() {
+        val qui = PonteAuto.qui ?: return
+        val casa = PonteAuto.casa() ?: return
+        val metri = FloatArray(1)
+        Location.distanceBetween(qui[0], qui[1], casa.lat, casa.lon, metri)
+        val distanza = metri[0]
+        if (distanza > LONTANO_M) {
+            lontano = true
+            return
+        }
+        if (!lontano || distanza > VICINO_M) return
+        lontano = false
+        val carContext = auto()
+        val comando = leggiIComandi(carContext).arrivo ?: return
+        proponi(carContext, comando)
+    }
+
+    private fun proponi(carContext: CarContext, comando: ComandoInAuto) {
+        if (carContext.carAppApiLevel < CarAppApiLevels.LEVEL_5) {
+            /* Un'auto vecchia non sa mostrare un avviso coi tasti: glielo si
+             * dice, e il comando resta dietro il tasto con la casa. */
+            CarToast.makeText(
+                carContext,
+                carContext.getString(R.string.auto_quasi_a_casa) + " · " + comando.nome,
+                CarToast.LENGTH_LONG,
+            ).show()
+            return
+        }
+        val gestore = carContext.getCarService(AppManager::class.java)
+        val avviso = Alert.Builder(
+            ID_AVVISO,
+            CarText.create(carContext.getString(R.string.auto_quasi_a_casa)),
+            DURATA_MS,
+        )
+            .setSubtitle(CarText.create(comando.nome))
+            .setIcon(ilSegno(carContext, comando.genere))
+            .addAction(
+                Action.Builder()
+                    .setTitle(carContext.getString(R.string.auto_arrivo_fai))
+                    .setOnClickListener {
+                        premiEDillo(carContext, comando.id, comando.nome, true)
+                        gestore.dismissAlert(ID_AVVISO)
+                    }
+                    .build(),
+            )
+            .addAction(
+                Action.Builder()
+                    .setTitle(carContext.getString(R.string.auto_arrivo_non_ora))
+                    .setOnClickListener { gestore.dismissAlert(ID_AVVISO) }
+                    .build(),
+            )
+            .build()
+        gestore.showAlert(avviso)
+    }
+
+    companion object {
+        private const val OGNI_MS = 5_000L
+        private const val VICINO_M = 500f
+        private const val LONTANO_M = 1_000f
+        private const val DURATA_MS = 15_000L
+        private const val ID_AVVISO = 4_242
     }
 }

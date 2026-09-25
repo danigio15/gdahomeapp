@@ -17,6 +17,7 @@ import 'dart:io';
 
 import 'package:path_provider/path_provider.dart';
 
+import 'i_comandi.dart';
 import 'la_foto.dart';
 
 /// Scrive la fotografia, se c'e' da scriverla. Torna `true` se l'ha scritta.
@@ -97,13 +98,66 @@ Future<void> _leRicette(
   }
 }
 
-/// Le ricette scritte, per chi deve eseguire un comando.
+/// Le ricette scritte, per chi deve eseguire un comando: quelle della
+/// plancia e quelle dei comandi rapidi scelti per il navigatore.
 Future<List<RicettaDellAzione>> leRicetteDellAuto() async {
+  final dellaPlancia = await _quelleDellaPlancia();
+  return [...dellaPlancia, ...(await leggiIComandi()).ricette];
+}
+
+Future<List<RicettaDellAzione>> _quelleDellaPlancia() async {
   try {
     final cartella = await getApplicationSupportDirectory();
     final file = File('${cartella.path}/$nomeDelleRicette');
     if (!await file.exists()) return const [];
     return leRicetteDaScrivere(await file.readAsString());
+  } catch (_) {
+    return const [];
+  }
+}
+
+/// I comandi rapidi scelti per l'auto; `null` se non si e' mai scelto
+/// niente (e allora si propongono i primi, vedi `iPrimiComandi`).
+Future<IComandiScelti?> leggiIComandiSeCi() async {
+  try {
+    final cartella = await getApplicationSupportDirectory();
+    final file = File('${cartella.path}/$nomeDeiComandi');
+    if (!await file.exists()) return null;
+    return IComandiScelti.leggi(await file.readAsString());
+  } catch (_) {
+    return null;
+  }
+}
+
+Future<IComandiScelti> leggiIComandi() async =>
+    await leggiIComandiSeCi() ?? const IComandiScelti();
+
+/// Scrive i comandi scelti, dove li trova anche il servizio dell'auto. Come
+/// la fotografia: prima un file a parte, poi al suo posto, perche' l'auto
+/// non legga mai un file a meta'.
+Future<bool> scriviIComandi(IComandiScelti scelti) async {
+  try {
+    final cartella = await getApplicationSupportDirectory();
+    final mezzo = File('${cartella.path}/$nomeDeiComandi.mezzo');
+    await mezzo.writeAsString(scelti.comeSiScrive, flush: true);
+    await mezzo.rename('${cartella.path}/$nomeDeiComandi');
+    return true;
+  } catch (_) {
+    return false;
+  }
+}
+
+/// Le azioni rapide della plancia che partono da sole, dall'ultima
+/// fotografia lasciata all'auto.
+Future<List<ComandoRapido>> leAzioniRapide() async {
+  try {
+    final cartella = await getApplicationSupportDirectory();
+    final foto = File('${cartella.path}/$nomeDelFile');
+    if (!await foto.exists()) return const [];
+    return leAzioniDellaPlancia(
+      await foto.readAsString(),
+      await _quelleDellaPlancia(),
+    );
   } catch (_) {
     return const [];
   }

@@ -23,6 +23,7 @@ import 'package:gdanav_app/gdanav_app.dart';
 import '../../casa/collegamento.dart';
 import '../../parole.dart';
 import '../../vestito/pezzi.dart';
+import '../comandi_in_auto.dart';
 import 'la_vettura.dart';
 
 /// Il portachiavi di gdanav: un altro scomparto da quello della casa.
@@ -206,6 +207,28 @@ class _IlNavigatoreState extends State<IlNavigatore>
           navigatore: widget.navigatore,
           menuOspite: widget.menuOspite,
           apriIlMenu: widget.apriIlMenu,
+          /* I comandi di casa per l'auto si scelgono dal menu del
+           * navigatore: e' li' che si pensa all'auto. La schermata e' di
+           * gdahome, col suo vestito, sopra tutto. */
+          vociOspite: [
+            VoceOspite(
+              icona: Icons.bolt_rounded,
+              titolo: inLingua(
+                it: 'Comandi rapidi in auto',
+                en: 'Quick commands in car',
+              ),
+              sotto: inLingua(
+                it: 'Il tasto con la casa, sulla mappa in auto',
+                en: 'The home button on the car map',
+              ),
+              apri: () => Navigator.of(context, rootNavigator: true).push(
+                MaterialPageRoute<void>(
+                  builder: (_) =>
+                      ComandiInAuto(collegamento: widget.collegamento),
+                ),
+              ),
+            ),
+          ],
         );
       },
     );
