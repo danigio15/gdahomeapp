@@ -68,7 +68,10 @@ android {
     }
 
     namespace = "com.gdahome.gdahome"
-    compileSdk = flutter.compileSdkVersion
+    // Almeno la 37: la vuole il Bluetooth del navigatore (reactive_ble, dentro
+    // gdanav). Compilare con una piu' nuova non cambia i telefoni supportati:
+    // quelli li decidono minSdk e targetSdk.
+    compileSdk = maxOf(flutter.compileSdkVersion, 37)
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
