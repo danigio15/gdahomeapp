@@ -3,7 +3,11 @@ import {
   flowRecorderEntity,
   flowStageModel,
 } from "../core/energy-flow-topology.js";
-import { allocateSourceFlows, batteryReadout } from "../core/energy-flow-truth.js";
+import {
+  allocateSourceFlows,
+  batteryReadout,
+  laQuadraturaNonTorna,
+} from "../core/energy-flow-truth.js";
 import { specchioDeiCerchi } from "../core/energy-loads-config.js";
 import { applySignedSources, wattsFromState } from "../core/signed-energy.js";
 import { vehicleBatteryEntity } from "./ev-section.js";
@@ -25,6 +29,7 @@ import {
   root,
   scriviTestoSeCambia,
   section,
+  t,
   wrapFunction,
   writeIconGlyph,
 } from "./shared.js";
@@ -706,6 +711,84 @@ function instantSourceFlows() {
   });
 }
 
+/* Il controllo di quadratura, e perche' parla solo alla seconda lettura (#134).
+ *
+ * «Vedo tutto ma il flusso verso casa non va.» Il giudizio sta nel nucleo —
+ * `laQuadraturaNonTorna`, che e' aritmetica e si prova a tavolino — e qui si
+ * fa l'unica cosa che il nucleo non puo' fare: guardare due volte.
+ *
+ * Una lavatrice che parte fa saltare il consumo di casa prima che il contatore
+ * della rete se ne accorga, e per un istante i conti non tornano davvero. Un
+ * avviso che grida su quell'istante manda a cercare un guasto che non c'e', ed
+ * e' lo stesso sbaglio che l'avviso delle statistiche ha gia' fatto una volta:
+ * li' si e' imparato che una lettura sola non distingue un difetto da un
+ * respiro, e la cura e' la stessa — si parla di quello che c'e' ancora al giro
+ * dopo.
+ *
+ * Le altre tre guardie stanno nel nucleo, dove si possono provare.
+ */
+function loSbilancioDaDire() {
+  const detto = laQuadraturaNonTorna({
+    solar: potenzaViva(SORGENTI_ISTANTANEE.solar),
+    grid: potenzaViva(SORGENTI_ISTANTANEE.grid),
+    battery: potenzaViva(SORGENTI_ISTANTANEE.battery),
+    home: potenzaViva(SORGENTI_ISTANTANEE.home),
+  });
+  const cera = state.sbilancioDiPrima;
+  state.sbilancioDiPrima = Boolean(detto);
+  return cera && detto ? detto : null;
+}
+
+/* Chi e' il sospettato lo dice il DISEGNO, non una frase.
+ *
+ * Il nucleo sa distinguere la batteria dalla rete, e una frase per ognuna —
+ * piu' quella per quando non si sa — sarebbe tre frasi intere in tredici
+ * lingue per dire una cosa che un cerchio segnato dice meglio e senza parole.
+ * Cosi' la nota resta una sola e vale per tutti i casi, e il cerchio da
+ * guardare si illumina da se'.
+ */
+const BOLLE_SOSPETTABILI = Object.freeze([
+  ["battery", "n-battery"],
+  ["grid", "n-grid"],
+]);
+
+function disegnaLoSbilancio() {
+  const scope = scopeFor("");
+  if (!scope) return false;
+  const detto = loSbilancioDaDire();
+  for (const [quale, id] of BOLLE_SOSPETTABILI) {
+    const bolla = scope.querySelector(`#${id}`);
+    if (!bolla) continue;
+    const suo = Boolean(detto) && detto.chi === quale;
+    if (bolla.hasAttribute("data-dm-sbilancio") !== suo)
+      bolla.toggleAttribute("data-dm-sbilancio", suo);
+  }
+  let nota = scope.querySelector("[data-dm-flow-sbilancio]");
+  if (!detto) {
+    nota?.remove();
+    return false;
+  }
+  if (!nota) {
+    nota = doc.createElement("div");
+    nota.setAttribute("data-dm-flow-sbilancio", "");
+    nota.className = "dm-flow-sbilancio";
+    scope.append(nota);
+  }
+  /* I numeri stanno FUORI dalle frasi: «entrano X e ne escono Y» si smonta in
+   * tredici lingue, due frasi intere con due numeri accanto no. E' la stessa
+   * regola del riquadro delle fasce, scritta li' per esteso. */
+  scriviTestoSeCambia(
+    nota,
+    `⚠️ ${t("I conti non tornano", "The numbers do not add up")} · ${Math.round(
+      detto.entra,
+    )} W → ${Math.round(detto.esce)} W. ${t(
+      "Esce più corrente di quanta ne entra: di solito è il verso di un sensore al contrario, e si cambia nella scheda Energia.",
+      "More power is going out than coming in: usually a sensor's direction is reversed, and it is changed in the Energy tab.",
+    )}`,
+  );
+  return true;
+}
+
 function instantEdgeValue(node, flussi) {
   const id = String(node?.id || "").toLowerCase();
   if (id.includes("grid-battery")) return flussi.gridToBattery;
@@ -896,6 +979,7 @@ export function refreshEnergyFlows() {
    * la freccia — sullo zero, o sull'impianto che una batteria non ce l'ha —
    * lasciava inciso il numero di prima, e cambiando impianto si leggeva la
    * carica dell'altra casa. «—» senza lettura, «0 W» da ferma. */
+  disegnaLoSbilancio();
   const batteria = potenzaViva(SORGENTI_ISTANTANEE.battery);
   const testo = batteria === null ? "—" : (batteryReadout(batteria) ?? "0 W");
   for (const id of ["v-battery", "m-v-battery"]) {
@@ -1040,6 +1124,21 @@ function installStyles() {
     "dm-energy-flow-section-style",
     `
     ${regolaDelleBolleVecchie()}
+    /* La nota di quando i conti non tornano (#134), e il cerchio sospettato.
+     *
+     * La nota sta sotto la mappa e non sopra: chi apre questa pagina viene
+     * per il disegno, e un cartello in cima glielo copre. L'ambra e non il
+     * rosso perche' non e' un guasto — l'impianto sta funzionando benissimo,
+     * e' un numero che arriva girato — e il rosso qui dentro e' gia' la
+     * tinta di un'altra cosa.
+     *
+     * Il cerchio si segna con un anello tratteggiato dello stesso colore,
+     * cosi' chi legge la nota sa dove guardare senza che la nota debba
+     * nominarlo: tre frasi diverse per dire «la batteria» o «la rete»
+     * sarebbero tre frasi in tredici lingue per quello che un anello dice
+     * meglio. */
+    .dm-flow-sbilancio{margin:10px 12px 2px!important;padding:9px 12px!important;border-radius:12px!important;background:color-mix(in srgb,#f59e0b 12%,transparent)!important;border:1px solid color-mix(in srgb,#f59e0b 42%,transparent)!important;color:var(--primary-text-color,#0f172a)!important;font-size:12px!important;line-height:1.5!important}
+    [data-dm-sbilancio]{outline:2px dashed #f59e0b!important;outline-offset:3px!important;border-radius:50%!important}
     .dm-energy-flow-active{display:inline!important;visibility:visible!important;opacity:1!important;filter:drop-shadow(0 0 6px color-mix(in srgb,var(--dm-flow-color) 52%,transparent))!important;transition:stroke .18s ease,fill .18s ease,opacity .18s ease!important}
     /* Un collegamento spento non si disegna affatto.
      *
