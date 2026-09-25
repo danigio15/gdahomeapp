@@ -147,7 +147,7 @@ test("un telefono che non dice niente viene chiuso, e libera il suo posto", asyn
     await attendi(() => casa.canali().length === 1);
     await muto.chiusa;
     await attendi(() => casa.detti().some((uno) => uno.t === "chiudi"));
-    assert.equal(b.centralino.quantiTelefoni(), 0);
+    assert.equal(b.centralino.quantiCollegamenti(), 0);
 
     /* Uno che parla subito invece resta, anche dopo quel tempo. */
     const parla = unFilo(`${b.dove}/telefono/${casa.id}`);
@@ -155,7 +155,7 @@ test("un telefono che non dice niente viene chiuso, e libera il suo posto", asyn
     parla.manda("ciao");
     await new Promise((ok) => setTimeout(ok, 300));
     assert.equal(parla.chiusura(), null);
-    assert.equal(b.centralino.quantiTelefoni(), 1);
+    assert.equal(b.centralino.quantiCollegamenti(), 1);
     parla.chiudi();
     casa.chiudi();
   } finally {
@@ -354,7 +354,8 @@ test("/salute da fuori dice solo che e' vivo e da quanto", async () => {
     /* Da dentro, cioe' senza passare da Caddy, dice tutto. */
     const daDentro = await (await fetch(`${b.http}/salute`)).json();
     assert.equal(daDentro.case, 0);
-    assert.equal(daDentro.telefoni, 0);
+    assert.equal(daDentro.collegamenti, 0);
+    assert.equal(daDentro.app, 0);
   } finally {
     await b.spegni();
   }

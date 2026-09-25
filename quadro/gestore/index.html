@@ -4229,7 +4229,8 @@
                }
                <div class="servizio-conti">
                  ${/* già HTML */ mattonella("blu", "casa", Number(t.case) || 0, "case collegate")}
-                 ${/* già HTML */ mattonella("verde", "telefono", Number(t.telefoni) || 0, "telefoni collegati")}
+                 ${/* già HTML */ mattonella("verde", "filo", Number(t.collegamenti) || 0, "collegamenti aperti")}
+                 ${/* già HTML */ mattonella("verde", "telefono", Number(t.app) || 0, "app aperte")}
                  ${/* già HTML */ mattonella("ambra", "chat", Number(t.chat) || 0, "conversazioni di assistenza")}
                </div>
                <div class="interruttori">
@@ -4291,6 +4292,7 @@
         casa: '<svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M3.4 8.4 10 3.1l6.6 5.3V16a1.2 1.2 0 0 1-1.2 1.2H4.6A1.2 1.2 0 0 1 3.4 16z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M8.2 17.2v-4.4h3.6v4.4" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>',
         telefono:
           '<svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><rect x="5.6" y="2.3" width="8.8" height="15.4" rx="2.3" stroke="currentColor" stroke-width="1.8"/><path d="M8.7 5.1h2.6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>',
+        filo: '<svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M8.3 11.7a3 3 0 0 0 4.3 0l2.6-2.6a3 3 0 0 0-4.3-4.3l-1 1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M11.7 8.3a3 3 0 0 0-4.3 0l-2.6 2.6a3 3 0 0 0 4.3 4.3l1-1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>',
         chat: '<svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M17 10.3c0 3-3.1 5.5-7 5.5-.8 0-1.6-.1-2.3-.3L3.6 17l1.2-3.1A5 5 0 0 1 3 10.3c0-3 3.1-5.5 7-5.5s7 2.5 7 5.5z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>',
       };
 

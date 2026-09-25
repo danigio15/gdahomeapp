@@ -430,6 +430,30 @@ test("/salute da fuori dice solo che e' vivo; per intero da qui e dalla gestione
   }
 });
 
+test("col tramite vecchio, che dice ancora «telefoni», il numero non si perde", async () => {
+  /* «Cosa significa 22 telefoni? L'app non è presente in 22 dispositivi.»
+   *
+   * Non lo era: quel numero contava i canali aperti in quell'istante. Adesso
+   * si chiama col suo nome, ma il tramite e il quadro si aggiornano ognuno per
+   * conto suo — e per il tempo in cui uno è avanti e l'altro indietro, la
+   * mattonella deve dire il numero vecchio invece di restare a zero. */
+  const { createServer } = await import("node:http");
+  const vecchio = createServer((_q, r) => {
+    r.writeHead(200, { "content-type": "application/json" });
+    r.end(JSON.stringify({ vivo: true, acceso_da: 60, case: 3, telefoni: 9 }));
+  });
+  await new Promise((ok) => vecchio.listen(0, "127.0.0.1", ok));
+  const b = await banco({ saluteDelTramite: `http://127.0.0.1:${vecchio.address().port}/salute` });
+  try {
+    const detto = await (await b.gestore("/salute")).json();
+    assert.equal(detto.tramite.collegamenti, 9, "il numero vecchio vale come collegamenti");
+    assert.equal(detto.tramite.app, null, "ma le app quel tramite non le sa, e non se le inventa");
+  } finally {
+    await b.chiudi();
+    vecchio.close();
+  }
+});
+
 test("la gestione vede anche i numeri del tramite, presi uno per uno", async () => {
   const { createServer } = await import("node:http");
   const tramite = createServer((_q, r) => {
@@ -439,7 +463,8 @@ test("la gestione vede anche i numeri del tramite, presi uno per uno", async () 
         vivo: true,
         acceso_da: 120,
         case: 131,
-        telefoni: 4,
+        collegamenti: 22,
+        app: 7,
         segnalazioni: true,
         chat: { linee: 5, console: true },
         posta: false,
@@ -456,7 +481,8 @@ test("la gestione vede anche i numeri del tramite, presi uno per uno", async () 
       vivo: true,
       accesoDa: 120,
       case: 131,
-      telefoni: 4,
+      collegamenti: 22,
+      app: 7,
       segnalazioni: true,
       chat: 5,
       console: true,

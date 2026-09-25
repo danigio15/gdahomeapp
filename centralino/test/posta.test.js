@@ -312,7 +312,11 @@ test("in chiaro si parla solo con questa macchina, e un server che non c'e' e' u
 
 /* ─── La porta ───────────────────────────────────────────────────────────── */
 
-const centralinoFinto = { quanteCase: () => 0, quantiTelefoni: () => 0 };
+const centralinoFinto = {
+  quanteCase: () => 0,
+  quantiCollegamenti: () => 0,
+  quanteAppAperte: () => 0,
+};
 
 async function banco({ posta = null, a = "assistenza@gdahome.org", lettereAllOra, adesso } = {}) {
   const contatti = new Contatti({
