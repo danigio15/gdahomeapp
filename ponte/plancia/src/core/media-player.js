@@ -274,6 +274,39 @@ export function orologio(secondi) {
 }
 
 /**
+ * Che faccia ha il tasto centrale adesso, o niente (#132).
+ *
+ * «Ho collegato le TV a Home Assistant, sarebbe possibile usarle anche qua per
+ * spegnerle, accenderle?» Si poteva già — il tasto centrale su un lettore
+ * spento chiama `turn_on` — ma diceva «Riproduci» e portava il triangolo della
+ * musica, e su un televisore spento quel triangolo non si legge come «accendi»:
+ * si legge come un tasto che riprenderà qualcosa, e chi non sa cosa riprenderà
+ * non lo preme.
+ *
+ * E c'è il caso peggiore. Un televisore che dichiara di saper solo accendersi,
+ * spegnersi e cambiare sorgente — cioè quasi tutti — di pausa non ne ha, e su
+ * quello, da acceso, il triangolo chiamava `media_play_pause`: un servizio che
+ * non dà errore e non fa niente. Un tasto rotto, che è esattamente quello che
+ * la testa di `media-player-section.js` dice di non voler disegnare mai. La
+ * regola c'era e il tasto centrale ne era fuori.
+ *
+ * Quindi qui si decide, e si decide con quello che il lettore ha dichiarato:
+ *
+ *  · spento e sa accendersi  → `accendi`, col segno dell'alimentazione;
+ *  · acceso e sa la pausa    → `pausa` o `suona`, come prima;
+ *  · tutto il resto          → niente, e in mezzo alla fila non c'è nulla.
+ *
+ * Il terzo caso non lascia scoperto niente: un televisore acceso che non sa
+ * mettersi in pausa lo si spegne col tasto accanto, che c'è già.
+ */
+export function ilTastoCentrale(lettura) {
+  if (!lettura) return "";
+  if (lettura.spento) return lettura.puo?.accendi ? "accendi" : "";
+  if (!lettura.puo?.pausa) return "";
+  return lettura.suona ? "pausa" : "suona";
+}
+
+/**
  * Il servizio da chiamare per il comando chiesto.
  *
  * Il tasto centrale è uno solo e fa tre cose diverse a seconda di com'è messo
