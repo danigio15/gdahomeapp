@@ -1,5 +1,5 @@
-gdahome comes along for the drive. With Android Auto, your car screen shows what the house is drawing and what the sun is making, who is home, and your quick action buttons — and they really do press, even with the screen off.
+gdahome comes along for the drive. With Android Auto, your car screen shows your devices: doors and gates to open as you arrive, lights and plugs left on as you leave, and one tap to switch them. Behind the «Home» button, what the sun is making and who is home.
 
-Also update gdahome in Home Assistant to 1.6.4: the snapshot the car reads is left there by the dashboard, so you need both.
+Also update gdahome in Home Assistant to 1.6.8: what the car reads is prepared by the dashboard, so you need both.
 
 Phones already paired keep working as before.

@@ -1,5 +1,5 @@
-gdahome sale in macchina. Con Android Auto, sullo schermo dell'auto trovi quanto tira la casa e quanto fa il sole, chi è rientrato, e i tasti delle azioni rapide — che premono davvero, anche a schermo spento.
+gdahome sale in macchina. Con Android Auto, sullo schermo dell'auto trovi i tuoi dispositivi: porte e varchi da aprire arrivando, luci e prese rimaste accese partendo, e un tocco per girarli. Dietro il tasto «Casa», quanto fa il sole e chi è rientrato.
 
-Aggiorna anche gdahome in Home Assistant alla 1.6.4: la fotografia che l'auto legge la lascia la plancia, e in macchina si vede solo con tutti e due.
+Aggiorna anche gdahome in Home Assistant alla 1.6.8: quello che l'auto legge lo prepara la plancia, e in macchina si vede solo con tutti e due.
 
 I telefoni già abbinati continuano a funzionare come prima.
