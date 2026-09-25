@@ -26,6 +26,8 @@
  *    non si vede, ma `editorRenderSezioni()` e' una funzione su `globalThis`
  *    e torna tutte le fisarmoniche in un colpo — comprese le etichette che la
  *    persona si e' rinominata;
+ *  · le cinque della barra sotto il meteo escono da `come-sta-la-casa.js`,
+ *    che e' anche dove le legge la sezione che le disegna;
  *  · restano dichiarate qui le cinque del raffreddamento, che il guscio
  *    disegna da `legacy/modules-entry.js` e non espone a nessuno. Una prova
  *    le tiene allineate a `COOLING_SLOT_MAP`: se ne nasce una sesta, o una
@@ -40,6 +42,7 @@
  * sarebbe «sez5», e una linguetta «sez5» non esiste in nessuna lingua.
  */
 import { COOLING_SLOT_MAP } from "./energy-projection.js";
+import { IL_RIQUADRO_IN_ITALIANO, LE_CASELLE_DELLA_BARRA } from "./come-sta-la-casa.js";
 import { isRetiredEditorSlot } from "./editor-slots.js";
 import { ENERGY_GROUPS } from "./renderers.js";
 
@@ -151,10 +154,36 @@ export function leCaselleDelGuscio(raccolte = []) {
   return fuori;
 }
 
+/**
+ * Le caselle della barra sotto il meteo (#131).
+ *
+ * «Non riesco a configurare un sensore pioggia.» Il pannello della barra non
+ * e' ne' del guscio ne' di Energia — se lo disegna la sua sezione, in fondo
+ * alla scheda Home — quindi le sue cinque caselle non passavano da nessuna
+ * delle due strade di qui sopra, e la ricerca non le nominava. Chi cercava
+ * «pioggia» leggeva «Nessuna configurazione contiene questa parola», che e'
+ * esattamente il difetto per cui questo file esiste, capitato una seconda
+ * volta in un altro pannello.
+ *
+ * `dm-casa.<chiave>` non e' la chiave con cui il valore sta su disco — la
+ * barra si salva tutta insieme, in un oggetto solo — ma qui serve un `id` che
+ * non possa scontrarsi con quelli del guscio, e che dica da dove viene
+ * leggendolo.
+ */
+export function leCaselleDellaBarra(righe = LE_CASELLE_DELLA_BARRA) {
+  return (Array.isArray(righe) ? righe : []).map((una) =>
+    casella(`dm-casa.${una.chiave}`, una.it, una.en, "sez0", "", IL_RIQUADRO_IN_ITALIANO),
+  );
+}
+
 /** Tutte insieme, senza ripetizioni: la prima che nomina un `id` se lo tiene. */
 export function leCaselleDelConfig(raccolte = [], gruppi = ENERGY_GROUPS) {
   const viste = new Set();
-  return [...leCaselleDellEnergia(gruppi), ...leCaselleDelGuscio(raccolte)].filter((una) => {
+  return [
+    ...leCaselleDellEnergia(gruppi),
+    ...leCaselleDellaBarra(),
+    ...leCaselleDelGuscio(raccolte),
+  ].filter((una) => {
     if (viste.has(una.id)) return false;
     viste.add(una.id);
     return true;

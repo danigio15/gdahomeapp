@@ -273,6 +273,11 @@ const CATALOG_MODULES = Object.freeze([
      Temperatura batteria — che la ricerca nel Config scrive per dire dove si
      configura una cosa che non e' ancora stata configurata. */
   "src/core/le-caselle-del-config.js",
+  /* I nomi delle cinque caselle della barra sotto il meteo — Intensità della
+     pioggia, Sensore della cassetta della posta — che il pannello in fondo
+     alla scheda Home scrive sopra ogni casella, e che la ricerca nel Config
+     scrive per mandare chi le cerca dove si compilano (#131). */
+  "src/core/come-sta-la-casa.js",
 ]);
 
 /*
