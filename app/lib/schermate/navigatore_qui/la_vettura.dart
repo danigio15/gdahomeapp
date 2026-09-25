@@ -25,6 +25,7 @@ import 'package:gdanav_app/gdanav_app.dart';
 
 import '../../casa/collegamento.dart';
 import '../../casa/entita.dart';
+import '../../plancia/cucitura.dart' show laPlanciaHaScritto;
 
 /// La vettura come la racconta la configurazione della plancia.
 class LaVettura {
@@ -266,10 +267,17 @@ class LaVettura {
   };
 }
 
-/// Tiene la fonte gdahome di gdanav al passo con la casa: rilegge la
-/// configurazione quando il filo si riapre (e ogni tanto, se qualcuno ha
-/// cambiato auto nella plancia), e a ogni cambiamento degli stati manda la
-/// lettura nuova.
+/// Tiene la fonte gdahome di gdanav al passo con la casa.
+///
+/// I dati dell'auto arrivano a ogni cambiamento degli stati, subito. L'auto
+/// stessa — quale, e di che modello — sta nella configurazione della plancia,
+/// e il ponte non avvisa quando cambia: la si rilegge
+/// - **subito**, quando la plancia dentro l'app la scrive (un'auto cambiata
+///   nella sezione Auto: `laPlanciaHaScritto`, dalla cucitura);
+/// - quando il filo si riapre, quando si torna nell'app e quando si apre il
+///   navigatore ([rileggi], dalla schermata);
+/// - e ogni minuto, per quello che si cambia da un altro telefono o dal
+///   browser.
 class IlFiloDellaVettura {
   IlFiloDellaVettura(this.collegamento, this.fonte);
 
@@ -277,8 +285,8 @@ class IlFiloDellaVettura {
   final SorgenteGdahome fonte;
 
   /// Ogni quanto si rilegge la configurazione anche senza motivi: un'auto
-  /// cambiata nella plancia non avvisa nessuno.
-  static const ogni = Duration(minutes: 5);
+  /// cambiata dal browser o da un altro telefono non avvisa nessuno.
+  static const ogni = Duration(minutes: 1);
 
   LaVettura? _vettura;
   StatoAuto? _mandata;
@@ -290,8 +298,9 @@ class IlFiloDellaVettura {
   void avvia() {
     _ascolti
       ..add(collegamento.cambiamenti.listen((_) => _comeVa()))
-      ..add(collegamento.entitaCambiate.listen((_) => _aggiorna()));
-    _orologio = Timer.periodic(ogni, (_) => _rileggi());
+      ..add(collegamento.entitaCambiate.listen((_) => _aggiorna()))
+      ..add(laPlanciaHaScritto.listen((_) => rileggi()));
+    _orologio = Timer.periodic(ogni, (_) => rileggi());
     _comeVa();
   }
 
@@ -308,11 +317,13 @@ class IlFiloDellaVettura {
   void _comeVa() {
     final dentro = collegamento.dentro;
     fonte.collegamento(dentro);
-    if (dentro && !_dentro) unawaited(_rileggi());
+    if (dentro && !_dentro) unawaited(rileggi());
     _dentro = dentro;
   }
 
-  Future<void> _rileggi() async {
+  /// Rilegge la configurazione della plancia: quale auto, e con quali
+  /// sensori. Se nel frattempo l'auto e' cambiata, gdanav lo sa adesso.
+  Future<void> rileggi() async {
     final filo = collegamento.filo;
     if (filo == null || !collegamento.dentro || _spento) return;
     try {
@@ -331,7 +342,7 @@ class IlFiloDellaVettura {
       _aggiorna();
     } catch (_) {
       /* La configurazione non e' arrivata: resta quella di prima, e si
-       * riprova alla prossima riapertura del filo o fra cinque minuti. */
+       * riprova alla prossima occasione, al piu' fra un minuto. */
     }
   }
 

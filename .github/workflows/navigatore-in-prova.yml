@@ -42,7 +42,10 @@ jobs:
         with:
           channel: stable
           cache: true
-      - run: flutter pub get
+      # Sempre l'ultimo gdanav del ramo scritto in app/pubspec.yaml: lo
+      # schermo e l'Android Auto di gdanav cambiano spesso, e il pacchetto da
+      # provare deve avere quelli di adesso, non quelli del lucchetto.
+      - run: flutter pub upgrade gdanav_app
 
       # La chiave con cui si caricano i pacchetti di gdanav: quella
       # d'anteprima, che sta nella sua repository (pubblica). Non si copia

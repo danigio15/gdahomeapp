@@ -117,12 +117,14 @@ class IlNavigatore extends StatefulWidget {
   State<IlNavigatore> createState() => _IlNavigatoreState();
 }
 
-class _IlNavigatoreState extends State<IlNavigatore> {
+class _IlNavigatoreState extends State<IlNavigatore>
+    with WidgetsBindingObserver {
   IlFiloDellaVettura? _filo;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _seguiLaCasa();
   }
 
@@ -130,11 +132,23 @@ class _IlNavigatoreState extends State<IlNavigatore> {
   void didUpdateWidget(IlNavigatore prima) {
     super.didUpdateWidget(prima);
     /* Un'altra casa, un'altra plancia, forse un'altra auto. */
-    if (prima.collegamento != widget.collegamento) _seguiLaCasa();
+    if (prima.collegamento != widget.collegamento) {
+      _seguiLaCasa();
+    } else if (widget.visibile && !prima.visibile) {
+      /* Si apre il navigatore: l'auto dev'essere quella di adesso. */
+      unawaited(_filo?.rileggi());
+    }
+  }
+
+  /* Si torna nell'app: l'auto puo' essere cambiata altrove intanto. */
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState stato) {
+    if (stato == AppLifecycleState.resumed) unawaited(_filo?.rileggi());
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _filo?.ferma();
     super.dispose();
   }

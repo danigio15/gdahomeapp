@@ -111,6 +111,9 @@ dependencies:
     git:
       url: https://github.com/danigio15/gdanav.git
       path: packages/gdanav_app
+      # Il ramo di gdanav dove vive oggi il pacchetto; quando e' unito, `main`.
+      # Il commit preciso sta in pubspec.lock, e lo porta avanti il workflow
+      # «Aggiorna gdanav».
       ref: claude/blissful-ride-jazzct
 
 dev_dependencies:
