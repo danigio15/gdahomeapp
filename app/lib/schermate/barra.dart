@@ -810,9 +810,10 @@ class _NomeDellaVoce extends StatelessWidget {
 /// una rete Zigbee c'e' davvero: in una casa senza ZHA e senza Zigbee2MQTT
 /// quella voce aprirebbe una schermata che non puo' fare niente.
 ///
-/// E poi c'e' un taglio di un altro tipo: **Zigbee, Aiutanti e Automazioni
-/// non ci sono affatto nella webapp**. Sono cose che vogliono il telefono —
-/// aprire una rete Zigbee si fa in piedi davanti al dispositivo — e nel
+/// E poi c'e' un taglio di un altro tipo: **Navigatore, Zigbee, Aiutanti e
+/// Automazioni non ci sono affatto nella webapp**. Sono cose che vogliono il
+/// telefono — aprire una rete Zigbee si fa in piedi davanti al dispositivo,
+/// e si guida col GPS e la voce del telefono — e nel
 /// browser sarebbero porte che si aprono su meta' di quello che promettono.
 /// Lo dichiara la sezione stessa (`soloNellApp`), cosi' aggiungerne una
 /// domani vuol dire una parola nel suo elenco e non una riga qui.

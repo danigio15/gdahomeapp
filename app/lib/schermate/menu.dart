@@ -36,6 +36,11 @@ import '../parole.dart';
 enum Sezione {
   plancia('home', pronta: true),
   dispositivi('widget', pronta: true),
+  /* Il navigatore: gdanav, dentro l'app (`navigatore_qui/`). Solo sul
+   * telefono: vuole il GPS, la voce e l'auto, e nel browser non ce n'e'. Il
+   * disegno e' quello dell'auto elettrica della plancia, che e' l'auto per
+   * cui gdanav e' fatto. */
+  navigatore('ev', pronta: true, soloNellApp: true),
   configurazione('impostazioni', pronta: true),
   comeVaLApp('minipc', pronta: true),
   /* Cosa c'e' da aggiornare in casa.
@@ -75,7 +80,8 @@ enum Sezione {
   gestione('persone', pronta: true),
   /* ─── Quelle che ci sono solo nell'app ────────────────────────────────
    *
-   * Tre voci vivono **solo su Android e iOS**, e non nella webapp. Non e' una
+   * Tre voci vivono **solo su Android e iOS**, e non nella webapp — quattro
+   * col Navigatore, che sta piu' su vicino ai Dispositivi. Non e' una
    * dimenticanza: sono cose che vogliono il telefono — la rete Zigbee si apre
    * stando in piedi davanti al dispositivo, col telefono in una mano — e una
    * copia nel browser sarebbe una porta che si apre su meta' di quello che
@@ -105,6 +111,7 @@ enum Sezione {
   String get titolo => switch (this) {
     Sezione.plancia => inLingua(it: 'Plancia', en: 'Dashboard'),
     Sezione.dispositivi => inLingua(it: 'Dispositivi', en: 'Devices'),
+    Sezione.navigatore => inLingua(it: 'Navigatore', en: 'Navigator'),
     Sezione.configurazione => inLingua(it: 'Configurazione', en: 'Config'),
     Sezione.comeVaLApp => inLingua(it: 'Come va l\'app', en: 'App health'),
     Sezione.aggiornamenti => inLingua(it: 'Aggiornamenti', en: 'Updates'),

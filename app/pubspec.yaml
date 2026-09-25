@@ -41,7 +41,7 @@ dependencies:
   # Il segno del ponte va nel portachiavi del sistema — Keychain sull'iPhone,
   # Keystore su Android — non in un file di preferenze, che su Android si legge
   # da fuori con un telefono sbloccato.
-  flutter_secure_storage: ^9.2.0
+  flutter_secure_storage: ^10.3.1
 
   # La plancia che gia' esiste, dentro l'app.
   webview_flutter: ^4.10.0
@@ -99,6 +99,19 @@ dependencies:
   # serve la plancia, e i messaggi fra l'app e il riquadro. Sul telefono
   # questo pacchetto non entra in gioco.
   web: ^1.1.0
+
+  # Il navigatore: gdanav, dentro l'app come una sua sezione (solo sul
+  # telefono: nella webapp non c'e'). Viene dalla sua repository, dove lo
+  # schermo di gdanav sta in un pacchetto apposta; la sua app lo usa uguale.
+  #
+  # Porta con se' quello che gli serve — la mappa (MapLibre), la posizione,
+  # la voce, il Bluetooth per il dongle OBD — e i permessi Android relativi.
+  # Android Auto invece resta quello di gdahome.
+  gdanav_app:
+    git:
+      url: https://github.com/danigio15/gdanav.git
+      path: packages/gdanav_app
+      ref: claude/blissful-ride-jazzct
 
 dev_dependencies:
   flutter_test:

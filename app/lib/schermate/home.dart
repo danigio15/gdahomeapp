@@ -50,6 +50,7 @@ import 'diagnostica.dart';
 import 'dispositivi.dart';
 import 'firma.dart';
 import 'menu.dart';
+import 'navigatore_qui/qui.dart';
 import 'zigbee.dart';
 import 'misure.dart';
 import 'plancia_vera.dart';
@@ -346,7 +347,16 @@ class _HomeState extends State<Home> {
    * Nel browser non si tocca niente: quel tasto e' del browser, e l'app che
    * se lo prende e' una pagina da cui non si esce piu'. Li' il menu si apre
    * dai tre trattini della plancia e dal ☰. */
+  /// Il navigatore dentro la sezione di gdanav: le sue schermate si chiudono
+  /// col tasto Indietro prima di tutto il resto.
+  final _navigatore = GlobalKey<NavigatorState>();
+
   void _indietro() {
+    if (_sezione == Sezione.navigatore &&
+        (_navigatore.currentState?.canPop() ?? false)) {
+      _navigatore.currentState!.maybePop();
+      return;
+    }
     final barra = _barra.currentState;
     if (barra == null) return;
     if (!barra.aperta) {
@@ -545,6 +555,12 @@ class _HomeState extends State<Home> {
                             collegamento: collegamento,
                             visibile: _sezione == Sezione.dispositivi,
                           ),
+                          /* gdanav: si accende la prima volta che ci si
+                           * entra, e poi resta acceso come le altre. */
+                          Sezione.navigatore => IlNavigatore(
+                            visibile: _sezione == Sezione.navigatore,
+                            navigatore: _navigatore,
+                          ),
                           /* La Configurazione qui non ha una schermata: la
                            * voce apre la pagina della plancia, dentro il
                            * riquadro, e la fila mostra quello. Il posto resta
@@ -619,7 +635,8 @@ class _HomeState extends State<Home> {
                 conIlCruscotto: _cruscotto.isNotEmpty,
                 conLaGestione: _gestione.isNotEmpty,
                 conZigbee: _zigbee,
-                /* Zigbee, Aiutanti e Automazioni nella webapp non ci sono:
+                /* Navigatore, Zigbee, Aiutanti e Automazioni nella webapp non
+                 * ci sono:
                  * vogliono il telefono, e nel browser sarebbero porte che si
                  * aprono su meta' di quello che promettono. */
                 nellApp: widget.impostazioni.sulTelefono,
