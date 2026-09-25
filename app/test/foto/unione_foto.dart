@@ -28,9 +28,9 @@ import 'package:gdahome/casa/cassaforte.dart';
 import 'package:gdahome/casa/collegamento.dart';
 import 'package:gdahome/ponte/sonda.dart';
 import 'package:gdahome/schermate/barra.dart';
+import 'package:gdahome/schermate/comandi_in_auto.dart';
 import 'package:gdahome/schermate/menu.dart';
 import 'package:gdahome/schermate/navigatore_qui/qui.dart';
-import 'package:gdahome/vestito/oggetti.dart';
 import 'package:gdahome/vestito/tema.dart';
 import 'package:gdanav_app/gdanav_app.dart';
 import 'package:gdanav_app/schermate/fonte_gdahome.dart';
@@ -278,135 +278,6 @@ Widget _sfondo() => Positioned.fill(
   ),
 );
 
-/* ── I comandi rapidi in auto (prova) ────────────────────────────────── */
-
-class _ComandiInAuto extends StatelessWidget {
-  const _ComandiInAuto();
-
-  @override
-  Widget build(BuildContext context) {
-    final colori = Theme.of(context).colorScheme;
-    Widget riga(
-      String disegno,
-      String nome,
-      String sotto, {
-      bool acceso = true,
-      bool maniglia = true,
-    }) => ListTile(
-      contentPadding: const EdgeInsets.only(left: 6, right: 8),
-      leading: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            Icons.drag_indicator_rounded,
-            color: maniglia ? colori.outline : Colors.transparent,
-          ),
-          const SizedBox(width: 4),
-          Container(
-            width: 40,
-            height: 40,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: colori.surfaceContainer,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Oggetto(disegno, lato: 24),
-          ),
-        ],
-      ),
-      title: Text(
-        nome,
-        style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
-      ),
-      subtitle: Text(sotto),
-      trailing: Switch(value: acceso, onChanged: (_) {}),
-    );
-    return Scaffold(
-      appBar: AppBar(
-        leading: const BackButton(),
-        title: const Text('Comandi rapidi in auto'),
-      ),
-      body: ListView(
-        padding: const EdgeInsets.only(bottom: 24),
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 4, 20, 12),
-            child: Text(
-              'Quelli dietro il tasto con la casa, in Android Auto e '
-              'CarPlay. Fino a 6, in quest\'ordine: tieni premuto e sposta.',
-              style: TextStyle(color: colori.onSurfaceVariant, height: 1.4),
-            ),
-          ),
-          Card(
-            margin: const EdgeInsets.symmetric(horizontal: 12),
-            child: Column(
-              children: [
-                riga('varchi', 'Apri il cancello', 'Cancello · dalla plancia'),
-                riga('aperture', 'Garage', 'Porta · apri e chiudi'),
-                riga('evidenza', 'Arrivo a casa', 'Scena'),
-                riga('luci', 'Luci ingresso', 'Luce · accendi e spegni'),
-                riga('sicurezza', 'Allarme', 'Disinserisci · chiede conferma'),
-                riga('clima', 'Clima soggiorno', 'Termostato · 21°'),
-              ],
-            ),
-          ),
-          const Padding(
-            padding: EdgeInsets.fromLTRB(20, 18, 20, 6),
-            child: Text(
-              'ALTRE AZIONI DELLA PLANCIA',
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w800,
-                letterSpacing: 1,
-              ),
-            ),
-          ),
-          Card(
-            margin: const EdgeInsets.symmetric(horizontal: 12),
-            child: Column(
-              children: [
-                riga(
-                  'todo',
-                  'Buonanotte',
-                  'Scena',
-                  acceso: false,
-                  maniglia: false,
-                ),
-                riga(
-                  'irrigazione',
-                  'Irrigazione giardino',
-                  'Azione rapida',
-                  acceso: false,
-                  maniglia: false,
-                ),
-              ],
-            ),
-          ),
-          Card(
-            margin: const EdgeInsets.fromLTRB(12, 16, 12, 0),
-            color: Colori.notte,
-            child: SwitchListTile(
-              value: true,
-              onChanged: (_) {},
-              title: const Text(
-                'Quasi a casa: proponi il cancello',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              subtitle: const Text(
-                'A 500 m da Casa, un avviso sullo schermo dell\'auto',
-                style: TextStyle(color: Colors.white70),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 /* ── Le fotografie ───────────────────────────────────────────────────── */
 
 void main() {
@@ -617,10 +488,45 @@ void main() {
   });
 
   testWidgets('domani: i comandi rapidi in auto', (tester) async {
-    tester.view.physicalSize = const Size(1170, 2532);
-    tester.view.devicePixelRatio = 3;
-    addTearDown(tester.view.reset);
-    await tester.pumpWidget(telefono(const _ComandiInAuto()));
+    await unaCasa(tester);
+    ponte.entita = [
+      _ent('cover.cancello', 'Cancello', classe: 'gate', stato: 'closed'),
+      _ent('cover.box', 'Garage', classe: 'garage', stato: 'closed'),
+      _ent('scene.arrivo', 'Arrivo a casa', stato: 'scening'),
+      _ent('scene.buonanotte', 'Buonanotte', stato: 'scening'),
+      _ent('light.ingresso', 'Luci ingresso'),
+      _ent('lock.porta', 'Porta di casa', stato: 'locked'),
+      _ent('switch.irrigazione', 'Irrigazione giardino'),
+    ];
+    await tester.runAsync(() async {
+      await collegamento.chiudi();
+      await collegamento.apri();
+      await collegamento.serveLaCasa();
+    });
+    await tester.pumpWidget(
+      telefono(
+        ComandiInAuto(
+          collegamento: collegamento,
+          leggi: () async => null,
+          scrivi: (_) async => true,
+          azioni: () async => const [],
+        ),
+      ),
+    );
+    await tester.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 500)),
+    );
+    await tester.pumpAndSettle();
     await laFoto(tester, 'domani-comandi');
   });
 }
+
+Map<String, dynamic> _ent(
+  String id,
+  String nome, {
+  String stato = 'off',
+  String? classe,
+}) => {
+  ...PonteFinto.unaEntita(id, stato, nome: nome),
+  'attributes': {'friendly_name': nome, 'device_class': ?classe},
+};

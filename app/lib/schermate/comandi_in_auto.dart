@@ -385,7 +385,8 @@ class _Riga extends StatelessWidget {
       ),
       subtitle: Text(
         [
-          comando.provenienza,
+          /* «Cancello · Cancello» non dice niente due volte. */
+          if (comando.provenienza != comando.nome) comando.provenienza,
           if (comando.conferma)
             inLingua(it: 'chiede conferma', en: 'asks to confirm'),
         ].where((t) => t.isNotEmpty).join(' · '),
