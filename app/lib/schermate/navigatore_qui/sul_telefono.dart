@@ -20,8 +20,10 @@ import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:gdanav_app/gdanav_app.dart';
 
+import '../../casa/collegamento.dart';
 import '../../parole.dart';
 import '../../vestito/pezzi.dart';
+import 'la_vettura.dart';
 
 /// Il portachiavi di gdanav: un altro scomparto da quello della casa.
 ///
@@ -36,6 +38,11 @@ const _portachiavi = FlutterSecureStorage(
     accessibility: KeychainAccessibility.first_unlock_this_device,
   ),
 );
+
+/// La fonte «gdahome» di gdanav: l'auto della sezione Auto della plancia,
+/// coi dati in tempo reale dalla casa. Una sola, come gdanav; la riempie
+/// `IlFiloDellaVettura`, finche' la home c'e' (`la_vettura.dart`).
+final _vettura = SorgenteGdahome();
 
 /* Uno per tutta l'app, e non uno per schermata: la guida, la posizione e le
  * segnalazioni sono cose che stanno accese, e due copie parlerebbero in due. */
@@ -55,6 +62,7 @@ Future<bool> _conLAuto = Future.value(false);
 Future<GdanavApp> accendiIlNavigatore() => _acceso ??= () async {
   return preparaGdanav(
     portachiavi: _portachiavi,
+    gdahome: _vettura,
     /* Lo schermo dell'auto di gdanav si accende solo nella versione col
      * navigatore in auto; nella gdahome di sempre Android Auto e' la casa. */
     conLAuto: await _conLAuto,
@@ -90,7 +98,12 @@ class IlNavigatore extends StatefulWidget {
     super.key,
     required this.visibile,
     required this.navigatore,
+    this.collegamento,
   });
+
+  /// La casa di adesso: da li' l'auto della plancia arriva a gdanav, anche
+  /// con la sezione chiusa (e gdanav la trova pronta quando si accende).
+  final Collegamento? collegamento;
 
   /// Se la sezione e' quella aperta: finche' non lo e' mai stata, gdanav
   /// resta spento.
@@ -105,6 +118,35 @@ class IlNavigatore extends StatefulWidget {
 }
 
 class _IlNavigatoreState extends State<IlNavigatore> {
+  IlFiloDellaVettura? _filo;
+
+  @override
+  void initState() {
+    super.initState();
+    _seguiLaCasa();
+  }
+
+  @override
+  void didUpdateWidget(IlNavigatore prima) {
+    super.didUpdateWidget(prima);
+    /* Un'altra casa, un'altra plancia, forse un'altra auto. */
+    if (prima.collegamento != widget.collegamento) _seguiLaCasa();
+  }
+
+  @override
+  void dispose() {
+    _filo?.ferma();
+    super.dispose();
+  }
+
+  void _seguiLaCasa() {
+    _filo?.ferma();
+    _filo = switch (widget.collegamento) {
+      final c? => IlFiloDellaVettura(c, _vettura)..avvia(),
+      null => null,
+    };
+  }
+
   @override
   Widget build(BuildContext context) {
     if (!widget.visibile && _acceso == null) return const SizedBox.shrink();

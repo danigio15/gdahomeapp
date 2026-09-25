@@ -560,6 +560,8 @@ class _HomeState extends State<Home> {
                           Sezione.navigatore => IlNavigatore(
                             visibile: _sezione == Sezione.navigatore,
                             navigatore: _navigatore,
+                            /* L'auto della plancia va a gdanav da qui. */
+                            collegamento: collegamento,
                           ),
                           /* La Configurazione qui non ha una schermata: la
                            * voce apre la pagina della plancia, dentro il

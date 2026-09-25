@@ -6,14 +6,18 @@ library;
 
 import 'package:flutter/widgets.dart';
 
+import '../../casa/collegamento.dart';
+
 class IlNavigatore extends StatelessWidget {
   const IlNavigatore({
     super.key,
     required this.visibile,
     required this.navigatore,
+    this.collegamento,
   });
 
   final bool visibile;
+  final Collegamento? collegamento;
   final GlobalKey<NavigatorState> navigatore;
 
   @override
