@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Se questa e' la versione col navigatore in auto: no. La versione col
+     navigatore (GDAHOME_NAVIGATORE=si) lo rimette a vero con le sue risorse,
+     in src/navigatore. Vedi auto/IlNavigatoreInAuto.kt. -->
+<resources>
+    <bool name="navigatore_in_auto">false</bool>
+</resources>

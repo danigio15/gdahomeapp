@@ -1,0 +1,103 @@
+# gdahome col navigatore in auto, da provare nel test interno di gdanav.
+#
+# E' gdahome con gdanav dentro, e in Android Auto parte dalla mappa di gdanav
+# con la casa dietro un tasto (servizio di navigazione, non IOT). Prima di
+# chiederlo nella scheda di gdahome lo si prova in quella di gdanav, che di
+# navigazione e' gia': per questo esce come `it.gdanav.gdanav`, firmato con la
+# chiave d'anteprima di gdanav, con cui si caricano i suoi pacchetti.
+#
+# Gira solo sui rami `claude/**`, e da solo non pubblica niente: l'AAB e l'APK
+# restano fra gli artefatti della corsa. La gdahome di sempre non cambia —
+# vedi `GDAHOME_NAVIGATORE` in `app/android/app/build.gradle.kts`.
+name: Navigatore in prova
+
+on:
+  push:
+    branches: ["claude/**"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: navigatore-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  pacchetto:
+    name: gdahome col navigatore, per il test interno di gdanav
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: app
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4.9.1
+        with:
+          distribution: temurin
+          java-version: "21"
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+
+      # La chiave con cui si caricano i pacchetti di gdanav: quella
+      # d'anteprima, che sta nella sua repository (pubblica). Non si copia
+      # qui: si prende da li' a ogni corsa, e non entra mai in questa.
+      - name: La chiave di gdanav
+        run: |
+          curl -sSfL -o android/app/gdanav-anteprima.jks \
+            https://raw.githubusercontent.com/danigio15/gdanav/main/app/android/app/anteprima.jks
+
+      # Il numero che chiede il Play Store deve crescere sempre, e nella
+      # scheda di gdanav lo decidono le corse delle sue Prove (il numero della
+      # corsa). Si prende l'ultimo e si aggiunge uno: cosi' questo pacchetto
+      # sta sopra tutti quelli di gdanav caricati finora.
+      - name: Il numero
+        id: numero
+        run: |
+          ultimo=$(curl -sSf "https://api.github.com/repos/danigio15/gdanav/actions/workflows/prove.yml/runs?per_page=1" \
+            | python3 -c "import sys,json; print(json.load(sys.stdin)['workflow_runs'][0]['run_number'])")
+          numero=$((ultimo + 1))
+          echo "numero=$numero" >> "$GITHUB_OUTPUT"
+          echo "Ultima corsa di gdanav: $ultimo. Questo pacchetto: $numero."
+
+      - name: I pacchetti
+        env:
+          GDAHOME_NAVIGATORE: si
+          NUMERO: ${{ steps.numero.outputs.numero }}
+          CORSA: ${{ github.run_number }}
+          # Le chiavi facoltative di gdanav (traffico TomTom, Open Charge
+          # Map), se questa repository le ha fra i segreti con lo stesso nome.
+          TOMTOM: ${{ secrets.GDANAV_TOMTOM_CHIAVE }}
+          OCM: ${{ secrets.GDANAV_OCM_CHIAVE }}
+        run: |
+          export GDANAV_CHIAVE="$PWD/android/app/gdanav-anteprima.jks"
+          VERSIONE="navigatore-$CORSA-${GITHUB_SHA:0:7}"
+          comuni=(--release --build-number="$NUMERO" --dart-define=VERSIONE="$VERSIONE"
+            --dart-define=GDANAV_TOMTOM_CHIAVE="$TOMTOM" --dart-define=GDANAV_OCM_CHIAVE="$OCM")
+          # Per il Play Store: il Premium di gdanav si compra (o si ritrova).
+          flutter build appbundle "${comuni[@]}"
+          cp build/app/outputs/bundle/release/app-release.aab ../gdahome-navigatore.aab
+          # Da installare a mano: il Premium di gdanav gia' sbloccato, come
+          # l'APK d'anteprima di gdanav.
+          flutter build apk "${comuni[@]}" --dart-define=GDANAV_TUTTO_SBLOCCATO=true
+          cp build/app/outputs/flutter-apk/app-release.apk ../gdahome-navigatore.apk
+          {
+            echo "### gdahome col navigatore in auto"
+            echo ""
+            echo "- \`gdahome-navigatore.aab\`: da caricare nel Play Console di **gdanav**, test interno (numero $NUMERO)."
+            echo "- \`gdahome-navigatore.apk\`: da installare a mano, Premium di gdanav sbloccato."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: gdahome-navigatore
+          path: |
+            gdahome-navigatore.aab
+            gdahome-navigatore.apk
+          if-no-files-found: error
+          retention-days: 30

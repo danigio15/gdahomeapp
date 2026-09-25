@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- La versione col navigatore in auto (GDAHOME_NAVIGATORE=si).
+
+     Si aggiunge al manifesto di sempre e ne cambia una cosa sola: il servizio
+     dell'auto. Quello della casa (IOT) si toglie, e al suo posto c'e' quello
+     di gdanav (NAVIGATION), che parte dalla mappa e porta alla casa con un
+     tasto. Un'app, in auto, ha una categoria sola.
+
+     E' la versione da provare nel test interno di gdanav: la gdahome di
+     sempre, e la sua scheda sul Play Store, non la vedono. -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+    <!-- Android Auto per la navigazione: la mappa disegnata dall'app, e i
+         dati dell'auto (batteria, velocita', contachilometri) quando li
+         passa. Come nell'app gdanav. -->
+    <uses-permission android:name="androidx.car.app.NAVIGATION_TEMPLATES" />
+    <uses-permission android:name="androidx.car.app.ACCESS_SURFACE" />
+    <uses-permission android:name="com.google.android.gms.permission.CAR_FUEL" />
+    <uses-permission android:name="com.google.android.gms.permission.CAR_SPEED" />
+    <uses-permission android:name="com.google.android.gms.permission.CAR_MILEAGE" />
+
+    <application>
+        <service
+            android:name="com.gdahome.gdahome.auto.GdahomeCarAppService"
+            tools:node="remove" />
+        <service
+            android:name="com.gdahome.gdahome.auto.NavigatoreCarAppService"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="androidx.car.app.CarAppService" />
+                <category android:name="androidx.car.app.category.NAVIGATION" />
+            </intent-filter>
+        </service>
+    </application>
+</manifest>

@@ -19,3 +19,6 @@ class IlNavigatore extends StatelessWidget {
   @override
   Widget build(BuildContext context) => const SizedBox.shrink();
 }
+
+/// Nel browser non c'e' nessuna auto da ascoltare.
+void ascoltaLAuto() {}

@@ -28,6 +28,7 @@ import 'schermate/aggiungi_casa.dart';
 import 'schermate/home.dart';
 import 'schermate/le_case.dart';
 import 'schermate/misure.dart';
+import 'schermate/navigatore_qui/qui.dart' as navigatore;
 import 'schermate/plancia_vera.dart';
 import 'schermate/riconoscimento.dart';
 import 'vestito/sfondo.dart';
@@ -93,6 +94,9 @@ Future<void> main() async {
     android: !kIsWeb && defaultTargetPlatform == TargetPlatform.android,
   );
   await impostazioni.carica();
+  /* Il navigatore in auto, dove c'e': se si sale in macchina, gdanav si
+   * accende anche senza aprire la sua sezione. */
+  navigatore.ascoltaLAuto();
   runApp(AppDiCasa(impostazioni: impostazioni));
 }
 
