@@ -1,0 +1,898 @@
+/// Le fotografie dell'unione con gdanav: com'e' l'app oggi e come sara'.
+///
+/// Non e' una prova, come `aggiornamenti_foto.dart`: e' un attrezzo per
+/// guardare. Si lancia a mano:
+///
+/// ```sh
+/// cd app && flutter test --update-goldens test/foto/unione_foto.dart
+/// ```
+///
+/// e le fotografie finiscono in `collaudo/foto/unione/`, che la repository
+/// non tiene. Le schermate sono quelle vere — la barra, i caratteri, i
+/// disegni, gdanav — tranne due cose che sul banco non ci sono: la plancia,
+/// che e' una pagina web e qui e' la sua fotografia (`docs/immagini`), e la
+/// mappa, che e' nativa e qui e' un disegno di strade.
+library;
+
+import 'dart:async';
+import 'dart:io';
+import 'dart:ui' as ui;
+import 'dart:ui' show AccessibilityFeatures;
+
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show EventChannel, FontLoader;
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:gdahome/casa/archivio_delle_case.dart';
+import 'package:gdahome/casa/cassaforte.dart';
+import 'package:gdahome/casa/collegamento.dart';
+import 'package:gdahome/ponte/sonda.dart';
+import 'package:gdahome/schermate/barra.dart';
+import 'package:gdahome/schermate/firma.dart';
+import 'package:gdahome/schermate/menu.dart';
+import 'package:gdahome/vestito/marchio.dart';
+import 'package:gdahome/vestito/oggetti.dart';
+import 'package:gdahome/vestito/tema.dart';
+import 'package:gdanav_app/gdanav_app.dart';
+import 'package:gdanav_app/schermate/fonte_gdahome.dart';
+import 'package:gdanav_app/stato/archivio.dart';
+import 'package:gdanav_app/stato/gestore_auto.dart';
+import 'package:gdanav_app/stato/gestore_consumo.dart';
+import 'package:gdanav_app/stato/gestore_guida.dart';
+import 'package:gdanav_app/stato/gestore_posizione.dart';
+import 'package:gdanav_app/stato/gestore_viaggio.dart';
+import 'package:gdanav_app/stato/voce.dart';
+import 'package:gdanav_app/tema.dart';
+
+import '../ponte/ponte_finto.dart';
+
+class _SenzaMovimento implements AccessibilityFeatures {
+  const _SenzaMovimento();
+  @override
+  bool get accessibleNavigation => false;
+  @override
+  bool get boldText => false;
+  @override
+  bool get disableAnimations => true;
+  @override
+  bool get highContrast => false;
+  @override
+  bool get invertColors => false;
+  @override
+  bool get onOffSwitchLabels => false;
+  @override
+  bool get reduceMotion => true;
+  @override
+  bool get autoPlayAnimatedImages => false;
+  @override
+  bool get autoPlayVideos => false;
+  @override
+  bool get deterministicCursor => false;
+  @override
+  bool get supportsAnnounce => false;
+}
+
+Future<void> _iCaratteri() async {
+  final famiglie = {
+    'Inter': ['400', '500', '600', '700', '800', '900'],
+    'Oswald': ['200', '400', '700'],
+  };
+  for (final famiglia in famiglie.entries) {
+    final carica = FontLoader(famiglia.key);
+    for (final peso in famiglia.value) {
+      carica.addFont(
+        File('assets/carattere/${famiglia.key}-$peso.ttf')
+            .readAsBytes()
+            .then((b) => b.buffer.asByteData()),
+      );
+    }
+    await carica.load();
+  }
+  final radice = Platform.environment['FLUTTER_ROOT'] ?? '';
+  /* gdanav scrive in Roboto, come Android: quello del motore di Flutter. */
+  final roboto = FontLoader('Roboto');
+  for (final nome in ['Roboto-Regular', 'Roboto-Medium']) {
+    final f = File(
+      '$radice/engine/src/flutter/txt/third_party/fonts/$nome.ttf',
+    );
+    if (f.existsSync()) {
+      roboto.addFont(f.readAsBytes().then((b) => b.buffer.asByteData()));
+    }
+  }
+  await roboto.load();
+  final icone = File(
+    '$radice/bin/cache/artifacts/material_fonts/MaterialIcons-Regular.otf',
+  );
+  if (icone.existsSync()) {
+    await (FontLoader(
+      'MaterialIcons',
+    )..addFont(icone.readAsBytes().then((b) => b.buffer.asByteData()))).load();
+  }
+}
+
+class _VoceZitta implements Voce {
+  @override
+  Future<void> parla(String frase) async {}
+  @override
+  Future<void> zitta() async {}
+}
+
+/* ── La mappa: un disegno di strade al posto di quella nativa ────────── */
+
+class _Strade extends CustomPainter {
+  const _Strade();
+
+  @override
+  void paint(Canvas tela, Size s) {
+    tela.drawRect(Offset.zero & s, Paint()..color = const Color(0xFFEDF1F4));
+    final verde = Paint()..color = const Color(0xFFD5EDDC);
+    tela.drawRRect(
+      RRect.fromLTRBR(40, 380, 170, 470, const Radius.circular(14)),
+      verde,
+    );
+    tela.drawRRect(
+      RRect.fromLTRBR(250, 560, 370, 650, const Radius.circular(14)),
+      verde,
+    );
+    final acqua = Paint()..color = const Color(0xFFCFE3F3);
+    tela.drawPath(
+      Path()
+        ..moveTo(0, 700)
+        ..quadraticBezierTo(180, 660, s.width, 740)
+        ..lineTo(s.width, 790)
+        ..quadraticBezierTo(180, 710, 0, 750)
+        ..close(),
+      acqua,
+    );
+    void strada(List<Offset> p, double w, [Color c = Colors.white]) {
+      final path = Path()..moveTo(p.first.dx, p.first.dy);
+      for (final q in p.skip(1)) {
+        path.lineTo(q.dx, q.dy);
+      }
+      tela.drawPath(
+        path,
+        Paint()
+          ..color = c
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = w
+          ..strokeCap = StrokeCap.round
+          ..strokeJoin = StrokeJoin.round,
+      );
+    }
+
+    strada([const Offset(-20, 330), Offset(s.width + 20, 280)], 20);
+    strada([const Offset(90, -20), const Offset(150, 900)], 14);
+    strada([const Offset(300, -20), const Offset(255, 900)], 12);
+    strada([const Offset(-20, 560), Offset(s.width + 20, 600)], 10);
+    strada([const Offset(-20, 180), Offset(s.width + 20, 210)], 8);
+    strada(
+      const [
+        Offset(140, 640),
+        Offset(128, 520),
+        Offset(200, 510),
+        Offset(262, 520),
+        Offset(270, 420),
+        Offset(282, 300),
+        Offset(296, 210),
+      ],
+      7,
+      const Color(0xFF1E88E5),
+    );
+    tela.drawCircle(
+      const Offset(296, 210),
+      9,
+      Paint()..color = const Color(0xFFE53935),
+    );
+    tela.drawCircle(const Offset(140, 640), 13, Paint()..color = Colors.white);
+    tela.drawPath(
+      Path()
+        ..moveTo(140, 630)
+        ..lineTo(148, 650)
+        ..lineTo(140, 645)
+        ..lineTo(132, 650)
+        ..close(),
+      Paint()..color = const Color(0xFF1E88E5),
+    );
+  }
+
+  @override
+  bool shouldRepaint(_Strade vecchio) => false;
+}
+
+/* ── gdanav vero, coi gestori veri e la mappa disegnata ──────────────── */
+
+Future<GdanavApp> _gdanav(WidgetTester tester, SorgenteGdahome? casa) async {
+  FlutterSecureStorage.setMockInitialValues({});
+  /* Android Auto sul banco non c'e': collegato ma zitto. */
+  tester.binding.defaultBinaryMessenger.setMockStreamHandler(
+    const EventChannel('gdanav/auto'),
+    MockStreamHandler.inline(onListen: (_, _) {}),
+  );
+  final archivio = Archivio();
+  final auto = GestoreAuto(archivio: archivio, gdahome: casa);
+  await tester.runAsync(auto.avvia);
+  final consumo = GestoreConsumo(archivio);
+  await tester.runAsync(() => consumo.carica(auto.veicolo.id));
+  final viaggio = GestoreViaggio(
+    archivio: archivio,
+    auto: auto,
+    consumo: consumo,
+    posizione: () async => null,
+  );
+  final guida = GestoreGuida(
+    viaggio: viaggio,
+    auto: auto,
+    posizioni: () => const Stream.empty(),
+    voce: _VoceZitta(),
+    consumo: consumo,
+  );
+  final posizione = GestorePosizione(
+    archivio: archivio,
+    letture: () => const Stream.empty(),
+  );
+  await tester.runAsync(posizione.carica);
+  return GdanavApp(
+    archivio: archivio,
+    auto: auto,
+    viaggio: viaggio,
+    guida: guida,
+    posizione: posizione,
+    consumo: consumo,
+    mappa: (_, _) => const CustomPaint(painter: _Strade(), size: Size.infinite),
+  );
+}
+
+SorgenteGdahome _laZoe() => SorgenteGdahome()
+  ..descrivi(
+    const AutoDiGdahome(
+      nome: 'La Zoe',
+      marca: 'Renault',
+      modello: 'Zoe R135',
+      kwh: 52,
+    ),
+  )
+  ..collegamento(true)
+  ..manda(
+    StatoAuto(
+      sorgente: TipoSorgente.gdahome,
+      letto: DateTime.now(),
+      batteria: 72,
+      autonomiaKm: 250,
+      inCarica: false,
+      temperaturaEsternaC: 19,
+    ),
+  );
+
+/* ── La plancia: la sua fotografia ───────────────────────────────────── */
+
+const _laPlancia = '../docs/immagini/1-la-plancia.png';
+
+/* Decodificata una volta, all'inizio, nel tempo vero: dentro una prova il
+ * tempo e' finto e un'immagine da disco non arriverebbe mai. */
+late ui.Image _plancia;
+
+Widget _sfondo() => Positioned.fill(
+  child: RawImage(
+    image: _plancia,
+    fit: BoxFit.cover,
+    alignment: Alignment.topCenter,
+  ),
+);
+
+/* ── La barra ridisegnata (prova) ────────────────────────────────────── */
+
+/// La proposta: le stesse voci, in tre gruppi, e gdanav in testa come una
+/// tessera viva — l'auto della plancia, la batteria, quanto a casa.
+class _BarraNuova extends StatelessWidget {
+  const _BarraNuova({required this.collegamento, this.sulNavigatore = false});
+
+  final Collegamento collegamento;
+
+  /// Aperta sopra gdanav: la tessera e' quella scelta.
+  final bool sulNavigatore;
+
+  @override
+  Widget build(BuildContext context) {
+    final colori = Theme.of(context).colorScheme;
+    Widget gruppo(String nome) => Padding(
+      padding: const EdgeInsets.fromLTRB(20, 14, 12, 6),
+      child: Text(
+        nome,
+        style: TextStyle(
+          fontSize: 9.5,
+          fontWeight: FontWeight.w800,
+          letterSpacing: 1.2,
+          color: colori.onSurfaceVariant,
+        ),
+      ),
+    );
+    Widget voce(
+      String disegno,
+      String nome, {
+      bool scelta = false,
+      int quanti = 0,
+    }) => Container(
+      height: 40,
+      margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 1),
+      padding: const EdgeInsets.symmetric(horizontal: 11),
+      decoration: BoxDecoration(
+        color: scelta ? colori.onSurface : null,
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Row(
+        children: [
+          Oggetto(disegno, lato: 21, quantoSpento: scelta ? 0 : 0.28),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              nome.toUpperCase(),
+              style: TextStyle(
+                fontSize: 10.5,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 0.6,
+                color: scelta
+                    ? colori.surface
+                    : colori.onSurface.withValues(alpha: 0.78),
+              ),
+            ),
+          ),
+          if (quanti > 0)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(
+                color: Colori.ambraScura,
+                borderRadius: BorderRadius.circular(999),
+              ),
+              child: Text(
+                '$quanti',
+                style: const TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w800,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+
+    return Container(
+      width: 236,
+      decoration: BoxDecoration(
+        color: colori.surface.withValues(alpha: 0.96),
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.8)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.10),
+            blurRadius: 30,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(18, 16, 12, 6),
+            child: Row(
+              children: [
+                const Marchio(lato: 30),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        collegamento.casa?.nome ?? 'Casa',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const Row(
+                        children: [
+                          CircleAvatar(
+                            radius: 3.5,
+                            backgroundColor: Colori.bene,
+                          ),
+                          SizedBox(width: 5),
+                          Text('In casa', style: TextStyle(fontSize: 11.5)),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                const Icon(Icons.unfold_more_rounded, size: 20),
+              ],
+            ),
+          ),
+          /* gdanav: la tessera viva. */
+          Container(
+            margin: const EdgeInsets.fromLTRB(10, 10, 10, 2),
+            padding: const EdgeInsets.fromLTRB(14, 12, 12, 12),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(20),
+              color: Colori.notte,
+              border: sulNavigatore
+                  ? Border.all(color: Colori.accento, width: 2.5)
+                  : null,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      width: 30,
+                      height: 30,
+                      decoration: BoxDecoration(
+                        color: Colori.accento,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(
+                        Icons.navigation_rounded,
+                        size: 18,
+                        color: Colori.notte,
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    const Expanded(
+                      child: Text(
+                        'GDANAV',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 1,
+                        ),
+                      ),
+                    ),
+                    Container(
+                      width: 30,
+                      height: 30,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(
+                        Icons.tune_rounded,
+                        size: 17,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                const Row(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      '72%',
+                      style: TextStyle(
+                        fontFamily: 'Oswald',
+                        fontSize: 28,
+                        height: 1,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF4ADE80),
+                      ),
+                    ),
+                    SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'La Zoe · 250 km',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    for (final (icona, testo) in [
+                      (Icons.home_rounded, 'Casa 12′'),
+                      (Icons.work_rounded, 'Lavoro 25′'),
+                    ]) ...[
+                      Expanded(
+                        child: Container(
+                          height: 30,
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(icona, size: 14, color: Colors.white),
+                              const SizedBox(width: 4),
+                              Text(
+                                testo,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      if (icona == Icons.home_rounded) const SizedBox(width: 6),
+                    ],
+                  ],
+                ),
+              ],
+            ),
+          ),
+          gruppo('CASA'),
+          voce('home', 'Plancia', scelta: !sulNavigatore),
+          voce('widget', 'Dispositivi'),
+          voce('impostazioni', 'Configurazione'),
+          voce('aggiornamenti', 'Aggiornamenti', quanti: 2),
+          gruppo('AIUTO'),
+          voce('segnalazioni', 'Segnalazioni'),
+          voce('assistenza', 'Assistenza'),
+          voce('minipc', 'Come va l\'app'),
+          gruppo('AVANZATE'),
+          voce('runtime', 'Zigbee'),
+          voce('mie', 'Aiutanti'),
+          voce('azioni', 'Automazioni'),
+          const Padding(
+            padding: EdgeInsets.only(bottom: 10),
+            child: Firma(spazioSopra: 6, conIlCentralino: false),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/* ── I comandi rapidi in auto (prova) ────────────────────────────────── */
+
+class _ComandiInAuto extends StatelessWidget {
+  const _ComandiInAuto();
+
+  @override
+  Widget build(BuildContext context) {
+    final colori = Theme.of(context).colorScheme;
+    Widget riga(
+      String disegno,
+      String nome,
+      String sotto, {
+      bool acceso = true,
+      bool maniglia = true,
+    }) => ListTile(
+      contentPadding: const EdgeInsets.only(left: 6, right: 8),
+      leading: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            Icons.drag_indicator_rounded,
+            color: maniglia ? colori.outline : Colors.transparent,
+          ),
+          const SizedBox(width: 4),
+          Container(
+            width: 40,
+            height: 40,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: colori.surfaceContainer,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Oggetto(disegno, lato: 24),
+          ),
+        ],
+      ),
+      title: Text(
+        nome,
+        style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
+      ),
+      subtitle: Text(sotto),
+      trailing: Switch(value: acceso, onChanged: (_) {}),
+    );
+    return Scaffold(
+      appBar: AppBar(
+        leading: const BackButton(),
+        title: const Text('Comandi rapidi in auto'),
+      ),
+      body: ListView(
+        padding: const EdgeInsets.only(bottom: 24),
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 4, 20, 12),
+            child: Text(
+              'Quelli dietro il tasto con la casa, in Android Auto e '
+              'CarPlay. Fino a 6, in quest\'ordine: tieni premuto e sposta.',
+              style: TextStyle(color: colori.onSurfaceVariant, height: 1.4),
+            ),
+          ),
+          Card(
+            margin: const EdgeInsets.symmetric(horizontal: 12),
+            child: Column(
+              children: [
+                riga('varchi', 'Apri il cancello', 'Cancello · dalla plancia'),
+                riga('aperture', 'Garage', 'Porta · apri e chiudi'),
+                riga('evidenza', 'Arrivo a casa', 'Scena'),
+                riga('luci', 'Luci ingresso', 'Luce · accendi e spegni'),
+                riga('sicurezza', 'Allarme', 'Disinserisci · chiede conferma'),
+                riga('clima', 'Clima soggiorno', 'Termostato · 21°'),
+              ],
+            ),
+          ),
+          const Padding(
+            padding: EdgeInsets.fromLTRB(20, 18, 20, 6),
+            child: Text(
+              'ALTRE AZIONI DELLA PLANCIA',
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 1,
+              ),
+            ),
+          ),
+          Card(
+            margin: const EdgeInsets.symmetric(horizontal: 12),
+            child: Column(
+              children: [
+                riga(
+                  'todo',
+                  'Buonanotte',
+                  'Scena',
+                  acceso: false,
+                  maniglia: false,
+                ),
+                riga(
+                  'irrigazione',
+                  'Irrigazione giardino',
+                  'Azione rapida',
+                  acceso: false,
+                  maniglia: false,
+                ),
+              ],
+            ),
+          ),
+          Card(
+            margin: const EdgeInsets.fromLTRB(12, 16, 12, 0),
+            color: Colori.notte,
+            child: SwitchListTile(
+              value: true,
+              onChanged: (_) {},
+              title: const Text(
+                'Quasi a casa: proponi il cancello',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              subtitle: const Text(
+                'A 500 m da Casa, un avviso sullo schermo dell\'auto',
+                style: TextStyle(color: Colors.white70),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/* ── Le fotografie ───────────────────────────────────────────────────── */
+
+void main() {
+  late PonteFinto ponte;
+  late Collegamento collegamento;
+
+  setUpAll(() async {
+    TestWidgetsFlutterBinding.ensureInitialized();
+    await _iCaratteri();
+    final codec = await ui.instantiateImageCodec(
+      File(_laPlancia).readAsBytesSync(),
+    );
+    _plancia = (await codec.getNextFrame()).image;
+  });
+
+  Future<void> unaCasa(WidgetTester tester) async {
+    tester.platformDispatcher.accessibilityFeaturesTestValue =
+        const _SenzaMovimento();
+    tester.view.physicalSize = const Size(1170, 2532);
+    tester.view.devicePixelRatio = 3;
+    addTearDown(tester.view.reset);
+    await tester.runAsync(() async {
+      ponte = await PonteFinto.alza();
+      final archivio = ArchivioDelleCase(CassaforteInMemoria());
+      await archivio.aggiungi(
+        nome: 'Casa',
+        segno: segnoBuono,
+        identificativo: chiBuono,
+        chiave: chiaveBuona,
+        inCasa: ponte.indirizzo,
+      );
+      collegamento = Collegamento(
+        archivio: archivio,
+        sonda: Sonda(bussa: (dove) async => dove == ponte.indirizzo.salute),
+      );
+      await collegamento.apri();
+    });
+    addTearDown(() async {
+      await tester.runAsync(() async {
+        await collegamento.chiudi();
+        await ponte.spegni();
+      });
+    });
+  }
+
+  Future<void> laFoto(WidgetTester tester, String nome) async {
+    /* Le immagini da disco arrivano nel tempo vero. */
+    await tester.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 400)),
+    );
+    for (var i = 0; i < 6; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+    await expectLater(
+      find.byKey(const ValueKey('foto')),
+      matchesGoldenFile('../../../collaudo/foto/unione/$nome.png'),
+    );
+  }
+
+  Widget telefono(Widget dentro, {ThemeData? tema}) => MaterialApp(
+    debugShowCheckedModeBanner: false,
+    theme: tema ?? temaChiaro(),
+    home: RepaintBoundary(key: const ValueKey('foto'), child: dentro),
+  );
+
+  testWidgets('oggi: il menu di gdahome', (tester) async {
+    await unaCasa(tester);
+    final chiave = GlobalKey<BarraDelleSezioniState>();
+    await tester.pumpWidget(
+      telefono(
+        Scaffold(
+          body: Stack(
+            children: [
+              _sfondo(),
+              BarraDelleSezioni(
+                key: chiave,
+                /* Come su main: senza il navigatore. */
+                sezioni: vociDellaBarra(conZigbee: true)
+                    .where((s) => s != Sezione.navigatore)
+                    .toList(),
+                aperta: Sezione.plancia,
+                vai: (_) {},
+                vaiAlleCase: () {},
+                collegamento: collegamento,
+                daAggiornare: 2,
+                sopraLaPlancia: true,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    chiave.currentState!.apri();
+    await laFoto(tester, 'oggi-menu');
+  });
+
+  testWidgets('domani: il menu ridisegnato, con gdanav', (tester) async {
+    await unaCasa(tester);
+    await tester.pumpWidget(
+      telefono(
+        Scaffold(
+          body: Stack(
+            children: [
+              _sfondo(),
+              Positioned.fill(
+                child: ColoredBox(color: Colors.black.withValues(alpha: 0.18)),
+              ),
+              Positioned(
+                left: 10,
+                top: 44,
+                child: _BarraNuova(collegamento: collegamento),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    await laFoto(tester, 'domani-menu');
+  });
+
+  testWidgets('oggi: gdanav da solo', (tester) async {
+    tester.view.physicalSize = const Size(1170, 2532);
+    tester.view.devicePixelRatio = 3;
+    addTearDown(tester.view.reset);
+    tester.view.padding = const FakeViewPadding(top: 141, bottom: 60);
+    final app = await _gdanav(tester, null);
+    await tester.pumpWidget(
+      MaterialApp(
+        debugShowCheckedModeBanner: false,
+        theme: temaGdanav(Brightness.light),
+        home: RepaintBoundary(
+          key: const ValueKey('foto'),
+          child: app.schermata(),
+        ),
+      ),
+    );
+    await laFoto(tester, 'oggi-gdanav');
+  });
+
+  testWidgets('domani: gdanav dentro gdahome, con l\'auto della plancia', (
+    tester,
+  ) async {
+    await unaCasa(tester);
+    tester.view.padding = const FakeViewPadding(top: 141, bottom: 60);
+    final app = await _gdanav(tester, _laZoe());
+    /* A tutto schermo, come la plancia: il ☰ di gdanav apre la barra di
+     * gdahome, come fanno i tre trattini della plancia. */
+    await tester.pumpWidget(telefono(Scaffold(body: GdanavDentro(app: app))));
+    await laFoto(tester, 'domani-gdanav');
+  });
+
+  testWidgets('domani: la barra di gdahome aperta sopra gdanav', (
+    tester,
+  ) async {
+    await unaCasa(tester);
+    tester.view.padding = const FakeViewPadding(top: 141, bottom: 60);
+    final app = await _gdanav(tester, _laZoe());
+    await tester.pumpWidget(
+      telefono(
+        Scaffold(
+          body: Stack(
+            children: [
+              Positioned.fill(child: GdanavDentro(app: app)),
+              Positioned.fill(
+                child: ColoredBox(color: Colors.black.withValues(alpha: 0.25)),
+              ),
+              Positioned(
+                left: 10,
+                top: 54,
+                child: _BarraNuova(
+                  collegamento: collegamento,
+                  sulNavigatore: true,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    await laFoto(tester, 'domani-gdanav-menu');
+  });
+
+  testWidgets('domani: la fonte gdahome, dentro gdanav', (tester) async {
+    tester.view.physicalSize = const Size(1170, 2532);
+    tester.view.devicePixelRatio = 3;
+    addTearDown(tester.view.reset);
+    final app = await _gdanav(tester, _laZoe());
+    await tester.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 100)),
+    );
+    await tester.pumpWidget(
+      MaterialApp(
+        debugShowCheckedModeBanner: false,
+        theme: temaGdanav(Brightness.light),
+        home: RepaintBoundary(
+          key: const ValueKey('foto'),
+          child: Scaffold(
+            body: SafeArea(child: FonteGdahome(gestore: app.auto)),
+          ),
+        ),
+      ),
+    );
+    await laFoto(tester, 'domani-gdanav-fonte');
+  });
+
+  testWidgets('domani: i comandi rapidi in auto', (tester) async {
+    tester.view.physicalSize = const Size(1170, 2532);
+    tester.view.devicePixelRatio = 3;
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(telefono(const _ComandiInAuto()));
+    await laFoto(tester, 'domani-comandi');
+  });
+}
