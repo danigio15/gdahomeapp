@@ -269,7 +269,7 @@ test("nelle Azioni rapide il tasto prende la copertina, e il tocco mette in paus
 
   /* E al tocco: pausa, non `toggle` — che spegnerebbe la cassa. */
   const servizi = leggi("sections/azioni-servizio-giusto-section.js");
-  assert.match(servizi, /media_player: \(stato\) =>/);
+  assert.match(servizi, /media_player: \(stato, attributi\) =>/);
   assert.match(servizi, /"media_play_pause"/);
   const { servizioPerEntita } = await import("../src/sections/azioni-servizio-giusto-section.js");
   assert.equal(

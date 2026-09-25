@@ -120,10 +120,29 @@ export class Centralino {
     return this.collegate.size;
   }
 
-  quantiTelefoni() {
+  /* Quanti fili sono aperti adesso, in tutto.
+   *
+   * Si chiamava `quantiTelefoni`, e non erano telefoni: e' il numero di CANALI
+   * aperti in questo istante. Lo stesso telefono con l'app aperta e una scheda
+   * del browser ne tiene due, e ci finiscono dentro anche i fili di chi si sta
+   * abbinando, che un telefono abbinato non lo e' ancora. Chi leggeva
+   * «22 telefoni collegati» capiva «l'app e' su 22 telefoni», che e' un'altra
+   * cosa e non e' vera. */
+  quantiCollegamenti() {
     let quanti = 0;
     for (const casa of this.collegate.values()) quanti += casa.canali.size;
     return quanti;
+  }
+
+  /* E quante di quelle sono davvero l'app aperta: i fili entrati da
+   * `/telefono/<casa>`, cioe' chi e' gia' abbinato e sta guardando. Restano
+   * fuori gli abbinamenti in corso. Resta un conto di adesso, non di quanti
+   * hanno l'app installata: quello il centralino non lo sa e non lo tiene. */
+  quanteAppAperte() {
+    let quante = 0;
+    for (const casa of this.collegate.values())
+      for (const canale of casa.canali.values()) if (canale.via === "telefono") quante += 1;
+    return quante;
   }
 
   /* ─── Quanti fili ────────────────────────────────────────────────────── */
@@ -420,7 +439,9 @@ class CasaCollegata {
       return null;
     }
     const numero = this.prossimoCanale++;
-    const canale = { numero, presa: presaDelTelefono, da };
+    /* `via` si tiene anche qui, non solo mandato alla casa: e' l'unico modo di
+     * distinguere poi un'app aperta da un abbinamento in corso. */
+    const canale = { numero, presa: presaDelTelefono, da, via };
     this.canali.set(numero, canale);
 
     presaDelTelefono.onMessaggio = (testo, eraTesto = typeof testo === "string") => {

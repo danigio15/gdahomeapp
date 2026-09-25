@@ -131,6 +131,77 @@ export const TINTA_UMIDITA = "#0ea5e9";
  * detta due volte, e queste due pastiglie stanno accanto a quella. */
 export const TINTA_PIOGGIA = "#4f46e5";
 
+/* Le caselle della barra che vogliono un'entita', col nome che portano addosso
+ * nell'editor (#131).
+ *
+ * «Non riesco a configurare un sensore pioggia che mi allerta quando fuori
+ * piove.» La casella c'era — sta qui sotto, penultima — e chi la cercava
+ * scrivendo «pioggia» nella ricerca del Config si sentiva rispondere «Nessuna
+ * configurazione contiene questa parola». E' la stessa storia della ventola,
+ * raccontata in cima a `le-caselle-del-config.js`: la ricerca cammina sui
+ * valori salvati, una casella mai riempita un valore non ce l'ha, e «non
+ * trovo» si legge in un modo solo — quella cosa non si puo' fare.
+ *
+ * Il nome sta qui e non nella sezione perche' lo leggono in due: la sezione,
+ * che disegna la casella, e la ricerca, che deve saperla nominare anche
+ * quando quella casella non e' mai stata aperta. Ribatterlo di la' vorrebbe
+ * dire due nomi per la stessa casella, e il giorno che uno dei due cambia la
+ * ricerca manda dove non c'e' piu' niente — che fa piu' danno di una ricerca
+ * che non trova.
+ *
+ * `esempio` e' il grigino dentro la casella vuota. Vale la pena averlo qui
+ * accanto al nome: e' la seconda meta' della stessa risposta — come si chiama
+ * quella casella, e che faccia ha l'entita' che ci va dentro.
+ */
+export const LE_CASELLE_DELLA_BARRA = Object.freeze([
+  Object.freeze({
+    chiave: "posta",
+    it: "Sensore della cassetta della posta",
+    en: "Mailbox contact sensor",
+    esempio: "binary_sensor.cassetta_posta",
+  }),
+  Object.freeze({
+    chiave: "temperatura",
+    it: "Sensore della temperatura",
+    en: "Temperature sensor",
+    esempio: "sensor.temperatura_esterna",
+  }),
+  Object.freeze({
+    chiave: "umidita",
+    it: "Sensore dell'umidità",
+    en: "Humidity sensor",
+    esempio: "sensor.umidita_esterna",
+  }),
+  Object.freeze({
+    chiave: "pioggia",
+    it: "Intensità della pioggia",
+    en: "Rain rate",
+    esempio: "sensor.stazione_rain_rate",
+  }),
+  Object.freeze({
+    chiave: "pioggiaOggi",
+    it: "Pioggia caduta oggi",
+    en: "Rain fallen today",
+    esempio: "sensor.stazione_pioggia_giornaliera",
+  }),
+]);
+
+/* Come si chiama il riquadro che le contiene: e' la strada che la ricerca
+ * mostra sotto il nome della casella, ed e' anche il titolo che la sezione
+ * scrive in cima al pannello. Uno solo, come i nomi qui sopra.
+ *
+ * La coppia sta dentro un array e non in `{ it, en }` perche' e' cosi' che
+ * l'estrattore del corpus riconosce una tabella tenuta a chiave — la stessa
+ * forma di `IL_RAFFREDDAMENTO`, per lo stesso motivo. Scritta nell'altro modo
+ * finiva fuori dal corpus, e la mezza frase inglese restava nei cataloghi
+ * senza che nessuno la reclamasse. */
+export const IL_RIQUADRO_DELLA_BARRA = Object.freeze({
+  barra: ["Barra sotto il meteo", "Bar under the weather"],
+});
+
+/** I due pezzi, per chi ne vuole uno solo senza contare le caselle. */
+export const [IL_RIQUADRO_IN_ITALIANO, IL_RIQUADRO_IN_INGLESE] = IL_RIQUADRO_DELLA_BARRA.barra;
+
 /* ── le pastiglie scelte a mano (#7) ─────────────────────────────────────── */
 
 /* «Avere la possibilita' di aggiungere nella sezione sotto al meteo le info di

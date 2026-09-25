@@ -11,6 +11,48 @@ fuori. La plancia dentro continua a dire la sua, e si legge dov'è sempre
 stata: nella pastiglia «La plancia» della console. Sono due numeri perché
 sono due cose.
 
+## 1.6.8
+
+**L'avviso «Statistiche a lungo termine mancanti» non parla più alla prima
+lettura.** Era la frase che manda a controllare i sensori, e la si scriveva
+appena una casella tornava vuota — ma vuota non vuol dire sconfigurata: vuol
+dire che il Recorder non ha risposto *adesso*, cosa che succede proprio quando
+l'add-on è appena ripartito e il database è ancora freddo. Cioè nel momento in
+cui uno apre la plancia dopo un aggiornamento. Un attimo dopo la stessa domanda
+si riempie, l'avviso sparisce da solo, e chi l'ha letto è già andato a cercare
+un guasto che non c'era. Adesso parla solo di quello che manca due letture di
+fila.
+
+**Il sensore della pioggia si trova, cercandolo.** Le due caselle — intensità
+e millimetri caduti oggi — ci sono da sempre in Home → «Barra sotto il meteo»,
+e sono le stesse che guarda l'Irrigazione. Ma la ricerca nella configurazione
+cammina sui valori già salvati, e una casella mai riempita un valore non ce
+l'ha: chi cercava «pioggia» leggeva «Nessuna configurazione contiene questa
+parola», che si legge in un modo solo. Adesso la ricerca porta dritto alle
+caselle anche da vuote, sotto «Dove si configura» — e con loro tutte e cinque
+quelle della barra, compresa la cassetta della posta.
+
+**La TV si accende dal tasto che dice «Accendi».** Una TV si mette fra i
+lettori, e accenderla si poteva già — ma il tasto mostrava il triangolo di
+«Riproduci», che su un televisore spento non si legge come «accendi». Peggio:
+un televisore che la pausa non ce l'ha — quasi tutti, perché non riproduce
+niente di suo — da acceso rispondeva a quel triangolo con un servizio che Home
+Assistant accetta e non esegue. Adesso il tasto in mezzo dice quello che fa:
+«Accendi» se è spenta, la pausa solo a chi la pausa ce l'ha, e niente dove non
+c'è niente da premere. Anche l'azione rapida su una TV accesa adesso la spegne
+invece di non fare nulla.
+
+**Il contatore totale tolto resta tolto.** Nella scheda di un elettrodomestico,
+svuotare la casella del contatore totale e salvare: riaprendo, il valore era
+tornato. Non era il salvataggio — era la riapertura, che se la casella la
+trovava vuota se la ricompilava da sola pescando fra le altre entità. Adesso
+una scelta fatta resta fatta, anche quando la scelta è «nessuna».
+
+**Nel cruscotto, «telefoni collegati» non erano telefoni.** Diceva 22 dove i
+telefoni con l'app erano molti meno: contava i *collegamenti* aperti verso il
+centralino, che sono un'altra cosa. Adesso sono due numeri, e dicono quello che
+sono: **collegamenti aperti** e **app aperte**.
+
 ## 1.6.7
 
 **Stesse cose della 1.6.6, con un numero nuovo.** La 1.6.6 era stata caricata

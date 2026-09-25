@@ -3176,6 +3176,8 @@ export const SOURCE_INDEX = Object.freeze({
   "Sensore o calendario del ritiro": "Collection sensor or calendar",
   "Sensore pompa solare": "Solar pump sensor",
   "Sensore probabilità pioggia": "Rain probability sensor",
+  "Sensore temperatura": "Temperature sensor",
+  "Sensore umidità": "Humidity sensor",
   "Sensore umidità terreno": "Soil moisture sensor",
   "Sensore W o kW mostrato nella card.": "W or kW sensor shown on the card.",
   "Sensori del telefono": "Phone sensors",

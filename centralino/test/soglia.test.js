@@ -23,7 +23,11 @@ import { laSoglia, nomePulito } from "../src/soglia.js";
 
 /* Il centralino qui non serve: la soglia non gli chiede niente. Quello che
  * serve e' che `/salute` risponda, per la prova che guarda le altre vie. */
-const centralinoFinto = { quanteCase: () => 0, quantiTelefoni: () => 0 };
+const centralinoFinto = {
+  quanteCase: () => 0,
+  quantiCollegamenti: () => 0,
+  quanteAppAperte: () => 0,
+};
 
 async function banco(dove = {}) {
   const server = costruisciIlServer({ centralino: centralinoFinto, dove });

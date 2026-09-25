@@ -20,6 +20,7 @@
 import {
   CHIAVE_MEDIA,
   comandoDelLettore,
+  ilTastoCentrale,
   letturaDelLettore,
   lettureDeiLettori,
   lettoriConfigurati,
@@ -178,6 +179,10 @@ const GLIFI = Object.freeze({
   suona: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7.5 4.9v14.2a.9.9 0 0 0 1.38.76l11-7.1a.9.9 0 0 0 0-1.52l-11-7.1a.9.9 0 0 0-1.38.76Z" fill="currentColor"/></svg>`,
   pausa: `<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6.6" y="4.8" width="4.2" height="14.4" rx="1.6" fill="currentColor"/><rect x="13.2" y="4.8" width="4.2" height="14.4" rx="1.6" fill="currentColor"/></svg>`,
   spegni: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.6v7.6" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"/><path d="M6.9 6.7a7.2 7.2 0 1 0 10.2 0" stroke="currentColor" stroke-width="2.1" fill="none" stroke-linecap="round"/></svg>`,
+  /* Accendi e spegni portano lo stesso segno, perche' il segno
+   * dell'alimentazione e' uno solo: quello che cambia e' cosa c'e' scritto
+   * sotto le dita e cosa succede premendo. */
+  accendi: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.6v7.6" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"/><path d="M6.9 6.7a7.2 7.2 0 1 0 10.2 0" stroke="currentColor" stroke-width="2.1" fill="none" stroke-linecap="round"/></svg>`,
   muto: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.4h3.4L12 5.2v13.6L7.4 14.6H4Z" fill="currentColor"/><path d="m16 9.6 4.4 4.8M20.4 9.6 16 14.4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>`,
   voce: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.4h3.4L12 5.2v13.6L7.4 14.6H4Z" fill="currentColor"/><path d="M15.6 9.2a4 4 0 0 1 0 5.6M18.3 6.8a7.6 7.6 0 0 1 0 10.4" stroke="currentColor" stroke-width="1.9" fill="none" stroke-linecap="round"/></svg>`,
 });
@@ -189,11 +194,22 @@ const GLIFI = Object.freeze({
  * la finestra della tessera in Home, che e' l'altro posto da cui si comanda la
  * musica. Un secondo disegno con un secondo gestore vorrebbe dire due modi di
  * mettere in pausa, e prima o poi due modi diversi. */
+/* Come si chiama il tasto centrale, quando c'e'. Il nucleo dice quale dei tre
+ * e', qui si scrive la parola e si sceglie il segno. */
+const NOMI_DEL_CENTRO = {
+  accendi: () => t("Accendi", "Turn on"),
+  pausa: () => t("Pausa", "Pause"),
+  suona: () => t("Riproduci", "Play"),
+};
+
 export function comandiMediaMarkup(riga) {
-  const centro = riga.suona ? GLIFI.pausa : GLIFI.suona;
+  /* Quale tasto centrale, o nessuno: il perche' sta in `ilTastoCentrale`.
+   * Su un televisore che di pausa non ne ha, in mezzo alla fila non c'e'
+   * niente — meglio del triangolo che chiamava un servizio che non fa nulla. */
+  const centro = ilTastoCentrale(riga);
   return `<div class="dm-mp-comandi">
     ${riga.puo.precedente ? tastoMarkup(riga, "precedente", t("Brano precedente", "Previous track"), GLIFI.precedente) : ""}
-    ${tastoMarkup(riga, "centro", riga.suona ? t("Pausa", "Pause") : t("Riproduci", "Play"), centro)}
+    ${centro ? tastoMarkup(riga, "centro", NOMI_DEL_CENTRO[centro](), GLIFI[centro]) : ""}
     ${riga.puo.successivo ? tastoMarkup(riga, "successivo", t("Brano successivo", "Next track"), GLIFI.successivo) : ""}
     ${riga.puo.spegni && !riga.spento ? tastoMarkup(riga, "spegni", t("Spegni", "Turn off"), GLIFI.spegni) : ""}
   </div>`;
