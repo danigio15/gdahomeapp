@@ -14,10 +14,14 @@ class IlNavigatore extends StatelessWidget {
     required this.visibile,
     required this.navigatore,
     this.collegamento,
+    this.menuOspite,
+    this.apriIlMenu,
   });
 
   final bool visibile;
   final Collegamento? collegamento;
+  final VoidCallback? menuOspite;
+  final ValueNotifier<bool>? apriIlMenu;
   final GlobalKey<NavigatorState> navigatore;
 
   @override
@@ -26,3 +30,11 @@ class IlNavigatore extends StatelessWidget {
 
 /// Nel browser non c'e' nessuna auto da ascoltare.
 void ascoltaLAuto() {}
+
+/// Nel browser la tessera non c'e': non c'e' il navigatore.
+Widget? laTesseraDelNavigatore({
+  required bool scelta,
+  required VoidCallback apri,
+  required VoidCallback impostazioni,
+  Object? fonte,
+}) => null;

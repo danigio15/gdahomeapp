@@ -65,7 +65,11 @@ const _daSola = Duration(seconds: 4);
 const _dopoLaScelta = Duration(milliseconds: 700);
 
 /// Quanto e' larga la barra, e quanto sta indietro quando e' fuori.
-const double _larghezzaDellaBarra = 192;
+///
+/// Piu' larga di prima (era 192): in testa c'e' la tessera di gdanav, con la
+/// batteria dell'auto e i tasti Casa e Lavoro, e in 192 punti i due tasti non
+/// ci stanno affiancati.
+const double _larghezzaDellaBarra = 232;
 const double _fuori = _larghezzaDellaBarra + 24;
 
 class BarraDelleSezioni extends StatefulWidget {
@@ -79,7 +83,14 @@ class BarraDelleSezioni extends StatefulWidget {
     this.sopraLaPlancia = false,
     this.daParte = const LaPlanciaDaParte(),
     this.daAggiornare = 0,
+    this.tessera,
   });
+
+  /// La tessera in testa, sotto la casa: gdanav, vivo — l'auto della plancia,
+  /// la batteria, Casa e Lavoro (`navigatore_qui/`). Quando c'e', la voce del
+  /// navigatore non si ripete fra le righe. Chi la mette chiama
+  /// [BarraDelleSezioniState.sceltaFatta] quando la si tocca.
+  final Widget? tessera;
 
   /* Quanti aggiornamenti aspettano di essere fatti.
    *
@@ -184,16 +195,52 @@ class BarraDelleSezioniState extends State<BarraDelleSezioni>
 
   void _portaSullaScelta() {
     if (!_scorrimento.hasClients) return;
-    final dove = widget.sezioni.indexOf(widget.aperta);
-    if (dove < 0) return;
+    var sopra = 0.0;
+    var trovata = false;
+    for (final riga in _righe) {
+      if (riga.sezione == widget.aperta) {
+        trovata = true;
+        break;
+      }
+      sopra += riga.titolo != null
+          ? _TitoloDelGruppo.altezza
+          : _Voce.altezza + _Voce.spazio;
+    }
+    if (!trovata) return;
     const passo = _Voce.altezza + _Voce.spazio;
     final schermo = MediaQuery.sizeOf(context).height;
-    final meta = (dove * passo) - (schermo / 2) + (passo / 2);
+    final meta = sopra - (schermo / 2) + (passo / 2);
     _scorrimento.jumpTo(meta.clamp(0, _scorrimento.position.maxScrollExtent));
   }
 
-  void _scelta(Sezione dove) {
+  /// Si e' scelto qualcosa fuori dalle righe (la tessera): la barra si toglie
+  /// di mezzo come dopo una voce.
+  void sceltaFatta() {
     if (!_resta) _rimanda(_dopoLaScelta);
+  }
+
+  /// Le righe della barra, coi titoli dei gruppi: prima quelle della casa,
+  /// poi l'aiuto, poi le avanzate. Un gruppo senza voci non si scrive.
+  List<({GruppoDellaBarra? titolo, Sezione? sezione})> get _righe {
+    final righe = <({GruppoDellaBarra? titolo, Sezione? sezione})>[];
+    for (final gruppo in GruppoDellaBarra.values) {
+      final sue = [
+        for (final una in widget.sezioni)
+          if (una.gruppo == gruppo &&
+              !(una == Sezione.navigatore && widget.tessera != null))
+            una,
+      ];
+      if (sue.isEmpty) continue;
+      righe.add((titolo: gruppo, sezione: null));
+      for (final una in sue) {
+        righe.add((titolo: null, sezione: una));
+      }
+    }
+    return righe;
+  }
+
+  void _scelta(Sezione dove) {
+    sceltaFatta();
     /* Anche la voce **gia' segnata**: se un tocco serve o no non lo decide la
      * barra.
      *
@@ -342,25 +389,41 @@ class BarraDelleSezioniState extends State<BarraDelleSezioni>
                                     trattieni: _trattieni,
                                     lascia: _lascia,
                                   ),
+                                if (widget.tessera case final t?) t,
                                 Flexible(
-                                  child: ListView.separated(
-                                    controller: _scorrimento,
-                                    shrinkWrap: true,
-                                    padding: const EdgeInsets.symmetric(
-                                      vertical: 8,
-                                    ),
-                                    itemCount: widget.sezioni.length,
-                                    separatorBuilder: (_, _) =>
-                                        const SizedBox(height: _Voce.spazio),
-                                    itemBuilder: (context, posto) {
-                                      final sezione = widget.sezioni[posto];
-                                      return _Voce(
-                                        sezione: sezione,
-                                        scelta: sezione == widget.aperta,
-                                        quandoPremuta: () => _scelta(sezione),
-                                        quanti: sezione == Sezione.aggiornamenti
-                                            ? widget.daAggiornare
-                                            : 0,
+                                  child: Builder(
+                                    builder: (context) {
+                                      final righe = _righe;
+                                      return ListView.builder(
+                                        controller: _scorrimento,
+                                        shrinkWrap: true,
+                                        padding: const EdgeInsets.only(
+                                          bottom: 8,
+                                        ),
+                                        itemCount: righe.length,
+                                        itemBuilder: (context, posto) {
+                                          final riga = righe[posto];
+                                          if (riga.titolo case final g?) {
+                                            return _TitoloDelGruppo(g.titolo);
+                                          }
+                                          final sezione = riga.sezione!;
+                                          return Padding(
+                                            padding: const EdgeInsets.only(
+                                              bottom: _Voce.spazio,
+                                            ),
+                                            child: _Voce(
+                                              sezione: sezione,
+                                              scelta: sezione == widget.aperta,
+                                              quandoPremuta: () =>
+                                                  _scelta(sezione),
+                                              quanti:
+                                                  sezione ==
+                                                      Sezione.aggiornamenti
+                                                  ? widget.daAggiornare
+                                                  : 0,
+                                            ),
+                                          );
+                                        },
                                       );
                                     },
                                   ),
@@ -715,6 +778,39 @@ class _Voce extends StatelessWidget {
                 ),
                 if (quanti > 0) ...[const SizedBox(width: 6), _Quanti(quanti)],
               ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Il titolo di un gruppo: minuto, spaziato, grigio. Dice dove si e', non
+/// chiede di essere letto.
+class _TitoloDelGruppo extends StatelessWidget {
+  const _TitoloDelGruppo(this.testo);
+
+  static const double altezza = 32;
+
+  final String testo;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: altezza,
+      child: Align(
+        alignment: Alignment.bottomLeft,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 0, 12, 7),
+          child: Text(
+            testo.toUpperCase(),
+            style: TextStyle(
+              fontSize: 9.5,
+              height: 1,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 1.2,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
           ),
         ),

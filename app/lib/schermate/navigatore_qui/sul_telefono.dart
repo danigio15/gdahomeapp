@@ -63,6 +63,9 @@ Future<GdanavApp> accendiIlNavigatore() => _acceso ??= () async {
   return preparaGdanav(
     portachiavi: _portachiavi,
     gdahome: _vettura,
+    /* Niente Premium nell'app unita: tutto sbloccato, niente negozio. I
+     * pagamenti si decidono prima del rilascio. */
+    senzaPremium: true,
     /* Lo schermo dell'auto di gdanav si accende solo nella versione col
      * navigatore in auto; nella gdahome di sempre Android Auto e' la casa. */
     conLAuto: await _conLAuto,
@@ -99,7 +102,16 @@ class IlNavigatore extends StatefulWidget {
     required this.visibile,
     required this.navigatore,
     this.collegamento,
+    this.menuOspite,
+    this.apriIlMenu,
   });
+
+  /// Il menu di gdahome: lo apre il tasto in alto a sinistra di gdanav, come
+  /// i tre trattini della plancia.
+  final VoidCallback? menuOspite;
+
+  /// Per aprire le impostazioni di gdanav da fuori (la tessera della barra).
+  final ValueNotifier<bool>? apriIlMenu;
 
   /// La casa di adesso: da li' l'auto della plancia arriva a gdanav, anche
   /// con la sezione chiusa (e gdanav la trova pronta quando si accende).
@@ -189,8 +201,256 @@ class _IlNavigatoreState extends State<IlNavigatore>
         if (app == null) {
           return const Center(child: CircularProgressIndicator());
         }
-        return GdanavDentro(app: app, navigatore: widget.navigatore);
+        return GdanavDentro(
+          app: app,
+          navigatore: widget.navigatore,
+          menuOspite: widget.menuOspite,
+          apriIlMenu: widget.apriIlMenu,
+        );
       },
+    );
+  }
+}
+
+/// Porta a Casa (o al Lavoro), dalla tessera della barra: accende gdanav se
+/// non c'e', e se il posto e' stato scelto calcola il viaggio. Se non e'
+/// stato scelto, basta aprire il navigatore: li' lo si imposta.
+Future<void> portamiA({required bool casa}) async {
+  final app = await accendiIlNavigatore();
+  final luoghi = app.luoghi;
+  final dove = casa ? luoghi?.casa : luoghi?.lavoro;
+  if (dove == null) return;
+  await luoghi?.usato(dove.luogo);
+  await app.viaggio.vaiA(dove.luogo);
+}
+
+/// La tessera di gdanav in testa alla barra di gdahome: viva.
+///
+/// Dice l'auto della plancia — batteria, nome, autonomia — coi dati che la
+/// casa manda in tempo reale, e ha i due viaggi di tutti i giorni a un tocco.
+/// Toccata apre il navigatore; il tasto a destra apre le sue impostazioni.
+///
+/// [fonte] e' per le fotografie e le prove: di solito e' la fonte gdahome
+/// dell'app, quella che riempie `IlFiloDellaVettura`.
+Widget? laTesseraDelNavigatore({
+  required bool scelta,
+  required VoidCallback apri,
+  required VoidCallback impostazioni,
+  SorgenteGdahome? fonte,
+}) => _LaTessera(
+  scelta: scelta,
+  apri: apri,
+  impostazioni: impostazioni,
+  fonte: fonte ?? _vettura,
+);
+
+class _LaTessera extends StatelessWidget {
+  const _LaTessera({
+    required this.scelta,
+    required this.apri,
+    required this.impostazioni,
+    required this.fonte,
+  });
+
+  final bool scelta;
+  final VoidCallback apri;
+  final VoidCallback impostazioni;
+  final SorgenteGdahome fonte;
+
+  static const _notte = Color(0xFF0F172A);
+  static const _accento = Color(0xFF0EA5E9);
+  static const _verde = Color(0xFF4ADE80);
+
+  @override
+  Widget build(BuildContext context) {
+    return ListenableBuilder(
+      listenable: fonte,
+      builder: (context, _) {
+        final auto = fonte.auto;
+        final ultima = fonte.ultima;
+        final km = ultima?.autonomiaKm;
+        final sotto = auto == null
+            ? inLingua(it: 'Tocca per navigare', en: 'Tap to navigate')
+            : [auto.etichetta, if (km != null) '${km.round()} km'].join(' · ');
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(10, 8, 10, 2),
+          child: Material(
+            color: _notte,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+              side: scelta
+                  ? const BorderSide(color: _accento, width: 2.5)
+                  : BorderSide.none,
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: InkWell(
+              onTap: apri,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(14, 12, 10, 12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          width: 30,
+                          height: 30,
+                          decoration: BoxDecoration(
+                            color: _accento,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: const Icon(
+                            Icons.navigation_rounded,
+                            size: 18,
+                            color: _notte,
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        const Expanded(
+                          child: Text(
+                            'GDANAV',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 1,
+                            ),
+                          ),
+                        ),
+                        IconButton(
+                          tooltip: inLingua(
+                            it: 'Impostazioni del navigatore',
+                            en: 'Navigator settings',
+                          ),
+                          onPressed: impostazioni,
+                          style: IconButton.styleFrom(
+                            backgroundColor: Colors.white.withValues(
+                              alpha: 0.1,
+                            ),
+                            minimumSize: const Size(34, 34),
+                            fixedSize: const Size(34, 34),
+                            padding: EdgeInsets.zero,
+                          ),
+                          icon: const Icon(
+                            Icons.tune_rounded,
+                            size: 18,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        if (ultima != null) ...[
+                          Text(
+                            '${ultima.batteria.round()}%',
+                            style: const TextStyle(
+                              fontFamily: 'Oswald',
+                              fontSize: 28,
+                              height: 1,
+                              fontWeight: FontWeight.w700,
+                              color: _verde,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                        ],
+                        Expanded(
+                          child: Text(
+                            sotto,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 12.5,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _Viaggio(
+                            icona: Icons.home_rounded,
+                            testo: inLingua(it: 'A casa', en: 'Home'),
+                            quando: () {
+                              apri();
+                              unawaited(portamiA(casa: true));
+                            },
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: _Viaggio(
+                            icona: Icons.work_rounded,
+                            testo: inLingua(it: 'Al lavoro', en: 'Work'),
+                            quando: () {
+                              apri();
+                              unawaited(portamiA(casa: false));
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _Viaggio extends StatelessWidget {
+  const _Viaggio({
+    required this.icona,
+    required this.testo,
+    required this.quando,
+  });
+
+  final IconData icona;
+  final String testo;
+  final VoidCallback quando;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.white.withValues(alpha: 0.1),
+      borderRadius: BorderRadius.circular(10),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(10),
+        onTap: quando,
+        child: SizedBox(
+          height: 32,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icona, size: 14, color: Colors.white),
+              const SizedBox(width: 4),
+              Flexible(
+                child: Text(
+                  testo,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

@@ -580,8 +580,20 @@ void main() {
       expect(nellaBarra('in casa'), findsOneWidget);
       expect(nellaBarra('PLANCIA'), findsOneWidget);
       expect(nellaBarra('DISPOSITIVI'), findsOneWidget);
+      /* In tre gruppi: la casa, l'aiuto, le avanzate. */
+      expect(nellaBarra('CASA'), findsOneWidget);
       /* I blocchi che non ci sono ancora si vedono lo stesso, spenti: cosi'
-       * si sa dove sta andando l'app. */
+       * si sa dove sta andando l'app. Stanno in fondo, fra le avanzate: si
+       * scorre fin li'. */
+      await tester.scrollUntilVisible(
+        nellaBarra('AUTOMAZIONI'),
+        80,
+        scrollable: find.descendant(
+          of: find.byType(BarraDelleSezioni),
+          matching: find.byType(Scrollable),
+        ),
+      );
+      expect(nellaBarra('AVANZATE'), findsOneWidget);
       expect(nellaBarra('AIUTANTI'), findsOneWidget);
       expect(nellaBarra('AUTOMAZIONI'), findsOneWidget);
       /* Zigbee no, e non perche' non sia pronta: perche' **questa casa non ha

@@ -28,9 +28,8 @@ import 'package:gdahome/casa/cassaforte.dart';
 import 'package:gdahome/casa/collegamento.dart';
 import 'package:gdahome/ponte/sonda.dart';
 import 'package:gdahome/schermate/barra.dart';
-import 'package:gdahome/schermate/firma.dart';
 import 'package:gdahome/schermate/menu.dart';
-import 'package:gdahome/vestito/marchio.dart';
+import 'package:gdahome/schermate/navigatore_qui/qui.dart';
 import 'package:gdahome/vestito/oggetti.dart';
 import 'package:gdahome/vestito/tema.dart';
 import 'package:gdanav_app/gdanav_app.dart';
@@ -279,281 +278,6 @@ Widget _sfondo() => Positioned.fill(
   ),
 );
 
-/* ── La barra ridisegnata (prova) ────────────────────────────────────── */
-
-/// La proposta: le stesse voci, in tre gruppi, e gdanav in testa come una
-/// tessera viva — l'auto della plancia, la batteria, quanto a casa.
-class _BarraNuova extends StatelessWidget {
-  const _BarraNuova({required this.collegamento, this.sulNavigatore = false});
-
-  final Collegamento collegamento;
-
-  /// Aperta sopra gdanav: la tessera e' quella scelta.
-  final bool sulNavigatore;
-
-  @override
-  Widget build(BuildContext context) {
-    final colori = Theme.of(context).colorScheme;
-    Widget gruppo(String nome) => Padding(
-      padding: const EdgeInsets.fromLTRB(20, 14, 12, 6),
-      child: Text(
-        nome,
-        style: TextStyle(
-          fontSize: 9.5,
-          fontWeight: FontWeight.w800,
-          letterSpacing: 1.2,
-          color: colori.onSurfaceVariant,
-        ),
-      ),
-    );
-    Widget voce(
-      String disegno,
-      String nome, {
-      bool scelta = false,
-      int quanti = 0,
-    }) => Container(
-      height: 40,
-      margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 1),
-      padding: const EdgeInsets.symmetric(horizontal: 11),
-      decoration: BoxDecoration(
-        color: scelta ? colori.onSurface : null,
-        borderRadius: BorderRadius.circular(14),
-      ),
-      child: Row(
-        children: [
-          Oggetto(disegno, lato: 21, quantoSpento: scelta ? 0 : 0.28),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              nome.toUpperCase(),
-              style: TextStyle(
-                fontSize: 10.5,
-                fontWeight: FontWeight.w800,
-                letterSpacing: 0.6,
-                color: scelta
-                    ? colori.surface
-                    : colori.onSurface.withValues(alpha: 0.78),
-              ),
-            ),
-          ),
-          if (quanti > 0)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-              decoration: BoxDecoration(
-                color: Colori.ambraScura,
-                borderRadius: BorderRadius.circular(999),
-              ),
-              child: Text(
-                '$quanti',
-                style: const TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w800,
-                  color: Colors.white,
-                ),
-              ),
-            ),
-        ],
-      ),
-    );
-
-    return Container(
-      width: 236,
-      decoration: BoxDecoration(
-        color: colori.surface.withValues(alpha: 0.96),
-        borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.8)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.10),
-            blurRadius: 30,
-            offset: const Offset(0, 10),
-          ),
-        ],
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(18, 16, 12, 6),
-            child: Row(
-              children: [
-                const Marchio(lato: 30),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        collegamento.casa?.nome ?? 'Casa',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      const Row(
-                        children: [
-                          CircleAvatar(
-                            radius: 3.5,
-                            backgroundColor: Colori.bene,
-                          ),
-                          SizedBox(width: 5),
-                          Text('In casa', style: TextStyle(fontSize: 11.5)),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                const Icon(Icons.unfold_more_rounded, size: 20),
-              ],
-            ),
-          ),
-          /* gdanav: la tessera viva. */
-          Container(
-            margin: const EdgeInsets.fromLTRB(10, 10, 10, 2),
-            padding: const EdgeInsets.fromLTRB(14, 12, 12, 12),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(20),
-              color: Colori.notte,
-              border: sulNavigatore
-                  ? Border.all(color: Colori.accento, width: 2.5)
-                  : null,
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      width: 30,
-                      height: 30,
-                      decoration: BoxDecoration(
-                        color: Colori.accento,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: const Icon(
-                        Icons.navigation_rounded,
-                        size: 18,
-                        color: Colori.notte,
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    const Expanded(
-                      child: Text(
-                        'GDANAV',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: 1,
-                        ),
-                      ),
-                    ),
-                    Container(
-                      width: 30,
-                      height: 30,
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: const Icon(
-                        Icons.tune_rounded,
-                        size: 17,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 10),
-                const Row(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text(
-                      '72%',
-                      style: TextStyle(
-                        fontFamily: 'Oswald',
-                        fontSize: 28,
-                        height: 1,
-                        fontWeight: FontWeight.w700,
-                        color: Color(0xFF4ADE80),
-                      ),
-                    ),
-                    SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        'La Zoe · 250 km',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 12.5,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    for (final (icona, testo) in [
-                      (Icons.home_rounded, 'Casa 12′'),
-                      (Icons.work_rounded, 'Lavoro 25′'),
-                    ]) ...[
-                      Expanded(
-                        child: Container(
-                          height: 30,
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(icona, size: 14, color: Colors.white),
-                              const SizedBox(width: 4),
-                              Text(
-                                testo,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      if (icona == Icons.home_rounded) const SizedBox(width: 6),
-                    ],
-                  ],
-                ),
-              ],
-            ),
-          ),
-          gruppo('CASA'),
-          voce('home', 'Plancia', scelta: !sulNavigatore),
-          voce('widget', 'Dispositivi'),
-          voce('impostazioni', 'Configurazione'),
-          voce('aggiornamenti', 'Aggiornamenti', quanti: 2),
-          gruppo('AIUTO'),
-          voce('segnalazioni', 'Segnalazioni'),
-          voce('assistenza', 'Assistenza'),
-          voce('minipc', 'Come va l\'app'),
-          gruppo('AVANZATE'),
-          voce('runtime', 'Zigbee'),
-          voce('mie', 'Aiutanti'),
-          voce('azioni', 'Automazioni'),
-          const Padding(
-            padding: EdgeInsets.only(bottom: 10),
-            child: Firma(spazioSopra: 6, conIlCentralino: false),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 /* ── I comandi rapidi in auto (prova) ────────────────────────────────── */
 
 class _ComandiInAuto extends StatelessWidget {
@@ -779,27 +503,40 @@ void main() {
     await laFoto(tester, 'oggi-menu');
   });
 
+  /// La barra vera, aperta, con la tessera vera di gdanav.
+  Widget laBarra({required bool sulNavigatore}) {
+    final chiave = GlobalKey<BarraDelleSezioniState>();
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) => chiave.currentState?.apri(),
+    );
+    return BarraDelleSezioni(
+      key: chiave,
+      sezioni: vociDellaBarra(conZigbee: true),
+      aperta: sulNavigatore ? Sezione.navigatore : Sezione.plancia,
+      vai: (_) {},
+      vaiAlleCase: () {},
+      collegamento: collegamento,
+      daAggiornare: 2,
+      sopraLaPlancia: !sulNavigatore,
+      tessera: laTesseraDelNavigatore(
+        scelta: sulNavigatore,
+        apri: () {},
+        impostazioni: () {},
+        fonte: _laZoe(),
+      ),
+    );
+  }
+
   testWidgets('domani: il menu ridisegnato, con gdanav', (tester) async {
     await unaCasa(tester);
     await tester.pumpWidget(
       telefono(
         Scaffold(
-          body: Stack(
-            children: [
-              _sfondo(),
-              Positioned.fill(
-                child: ColoredBox(color: Colors.black.withValues(alpha: 0.18)),
-              ),
-              Positioned(
-                left: 10,
-                top: 44,
-                child: _BarraNuova(collegamento: collegamento),
-              ),
-            ],
-          ),
+          body: Stack(children: [_sfondo(), laBarra(sulNavigatore: false)]),
         ),
       ),
     );
+    await tester.pumpAndSettle();
     await laFoto(tester, 'domani-menu');
   });
 
@@ -846,22 +583,13 @@ void main() {
           body: Stack(
             children: [
               Positioned.fill(child: GdanavDentro(app: app)),
-              Positioned.fill(
-                child: ColoredBox(color: Colors.black.withValues(alpha: 0.25)),
-              ),
-              Positioned(
-                left: 10,
-                top: 54,
-                child: _BarraNuova(
-                  collegamento: collegamento,
-                  sulNavigatore: true,
-                ),
-              ),
+              laBarra(sulNavigatore: true),
             ],
           ),
         ),
       ),
     );
+    await tester.pumpAndSettle();
     await laFoto(tester, 'domani-gdanav-menu');
   });
 

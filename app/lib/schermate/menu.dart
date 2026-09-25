@@ -39,7 +39,10 @@ enum Sezione {
   /* Il navigatore: gdanav, dentro l'app (`navigatore_qui/`). Solo sul
    * telefono: vuole il GPS, la voce e l'auto, e nel browser non ce n'e'. Il
    * disegno e' quello dell'auto elettrica della plancia, che e' l'auto per
-   * cui gdanav e' fatto. */
+   * cui gdanav e' fatto.
+   *
+   * Nella barra non e' una riga come le altre: e' la tessera in testa, viva,
+   * con l'auto della plancia (vedi `BarraDelleSezioni.tessera`). */
   navigatore('ev', pronta: true, soloNellApp: true),
   configurazione('impostazioni', pronta: true),
   comeVaLApp('minipc', pronta: true),
@@ -111,7 +114,9 @@ enum Sezione {
   String get titolo => switch (this) {
     Sezione.plancia => inLingua(it: 'Plancia', en: 'Dashboard'),
     Sezione.dispositivi => inLingua(it: 'Dispositivi', en: 'Devices'),
-    Sezione.navigatore => inLingua(it: 'Navigatore', en: 'Navigator'),
+    /* Il suo nome, e non «Navigatore»: e' un'app che c'e' anche da sola, e
+     * chi la conosce la cerca con quel nome. */
+    Sezione.navigatore => 'gdanav',
     Sezione.configurazione => inLingua(it: 'Configurazione', en: 'Config'),
     Sezione.comeVaLApp => inLingua(it: 'Come va l\'app', en: 'App health'),
     Sezione.aggiornamenti => inLingua(it: 'Aggiornamenti', en: 'Updates'),
@@ -133,6 +138,19 @@ enum Sezione {
     Sezione.automazioni => inLingua(it: 'Automazioni', en: 'Automations'),
   };
 
+  /// In quale gruppo della barra sta.
+  GruppoDellaBarra get gruppo => switch (this) {
+    Sezione.plancia ||
+    Sezione.dispositivi ||
+    Sezione.navigatore ||
+    Sezione.configurazione ||
+    Sezione.aggiornamenti => GruppoDellaBarra.casa,
+    Sezione.comeVaLApp ||
+    Sezione.segnalazioni ||
+    Sezione.assistenza => GruppoDellaBarra.aiuto,
+    _ => GruppoDellaBarra.avanzate,
+  };
+
   /// Il disegno della sezione: lo stesso della plancia, per nome. Vedi
   /// `vestito/oggetti.dart`.
   final String disegno;
@@ -145,4 +163,22 @@ enum Sezione {
   /// Nella webapp non ci sono proprio: non sono spente, non sono grigie, non
   /// ci sono. Vedi `vociDellaBarra`.
   final bool soloNellApp;
+}
+
+/// I gruppi della barra, dall'alto in basso.
+///
+/// Quattordici voci una sotto l'altra si leggono tutte uguali, e quelle di
+/// ogni giorno — la plancia, i dispositivi — stanno in mezzo a quelle di una
+/// volta al mese. In tre gruppi si trova prima quello che si cerca: la casa,
+/// l'aiuto, e le cose da installatore.
+enum GruppoDellaBarra {
+  casa,
+  aiuto,
+  avanzate;
+
+  String get titolo => switch (this) {
+    GruppoDellaBarra.casa => inLingua(it: 'Casa', en: 'Home'),
+    GruppoDellaBarra.aiuto => inLingua(it: 'Aiuto', en: 'Help'),
+    GruppoDellaBarra.avanzate => inLingua(it: 'Avanzate', en: 'Advanced'),
+  };
 }
