@@ -1,14 +1,14 @@
-# gdahome col navigatore in auto, da provare nel test interno di gdanav.
+# gdahome col navigatore in auto, da provare nel test interno di gdahome.
 #
-# E' gdahome con gdanav dentro, e in Android Auto parte dalla mappa di gdanav
-# con la casa dietro un tasto (servizio di navigazione, non IOT). Prima di
-# chiederlo nella scheda di gdahome lo si prova in quella di gdanav, che di
-# navigazione e' gia': per questo esce come `it.gdanav.gdanav`, firmato con la
-# chiave d'anteprima di gdanav, con cui si caricano i suoi pacchetti.
+# E' gdahome — la plancia, il menu, la casa — con gdanav dentro come sezione,
+# e in Android Auto parte dalla mappa del navigatore con la casa dietro un
+# tasto (servizio di navigazione, non IOT). Stesso nome della gdahome di
+# sempre (`com.gdahome.gdahome`) e stessa chiave vera: si carica nel test
+# interno di gdahome, e la gdahome di produzione non cambia finche' non lo
+# si decide. Vedi `GDAHOME_NAVIGATORE` in `app/android/app/build.gradle.kts`.
 #
 # Gira solo sui rami `claude/**`, e da solo non pubblica niente: l'AAB e l'APK
-# restano fra gli artefatti della corsa. La gdahome di sempre non cambia —
-# vedi `GDAHOME_NAVIGATORE` in `app/android/app/build.gradle.kts`.
+# restano fra gli artefatti della corsa.
 name: Navigatore in prova
 
 on:
@@ -25,7 +25,7 @@ concurrency:
 
 jobs:
   pacchetto:
-    name: gdahome col navigatore, per il test interno di gdanav
+    name: gdahome col navigatore in auto, per il test interno
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -47,26 +47,48 @@ jobs:
       # provare deve avere quelli di adesso, non quelli del lucchetto.
       - run: flutter pub upgrade gdanav_app
 
-      # La chiave con cui si caricano i pacchetti di gdanav: quella
-      # d'anteprima, che sta nella sua repository (pubblica). Non si copia
-      # qui: si prende da li' a ogni corsa, e non entra mai in questa.
-      - name: La chiave di gdanav
+      # La chiave vera di gdahome, dagli stessi segreti dei rilasci (app.yml).
+      # Senza, il pacchetto si firma di prova e si chiama
+      # `com.gdahome.gdahome.prova`: si installa, ma nel Play Console non si
+      # carica.
+      - name: La chiave
+        id: chiave
+        env:
+          CHIAVE: ${{ secrets.CHIAVE_ANDROID }}
+          PAROLA: ${{ secrets.CHIAVE_ANDROID_PASSWORD }}
+          PAROLA_DELLA_CHIAVE: ${{ secrets.CHIAVE_ANDROID_KEY_PASSWORD }}
+          COME_SI_CHIAMA: ${{ secrets.CHIAVE_ANDROID_ALIAS }}
         run: |
-          curl -sSfL -o android/app/gdanav-anteprima.jks \
-            https://raw.githubusercontent.com/danigio15/gdanav/main/app/android/app/anteprima.jks
+          if [ -z "$CHIAVE" ] || [ -z "$PAROLA" ]; then
+            echo "vera=no" >> "$GITHUB_OUTPUT"
+            echo "GDAHOME_FIRMA_DI_PROVA=si" >> "$GITHUB_ENV"
+            echo "::warning::Mancano i segreti della chiave vera: pacchetto firmato di prova (com.gdahome.gdahome.prova), non caricabile nel Play Console."
+            exit 0
+          fi
+          dove="$RUNNER_TEMP/chiave.jks"
+          printf '%s' "$CHIAVE" | tr -d '[:space:]' | base64 -d > "$dove"
+          {
+            echo "storeFile=$dove"
+            echo "storePassword=$PAROLA"
+            echo "keyAlias=${COME_SI_CHIAMA:-gdahome}"
+            echo "keyPassword=${PAROLA_DELLA_CHIAVE:-$PAROLA}"
+          } > android/chiave.properties
+          echo "vera=si" >> "$GITHUB_OUTPUT"
 
-      # Il numero che chiede il Play Store deve crescere sempre, e nella
-      # scheda di gdanav lo decidono le corse delle sue Prove (il numero della
-      # corsa). Si prende l'ultimo e si aggiunge uno: cosi' questo pacchetto
-      # sta sopra tutti quelli di gdanav caricati finora.
+      # Il numero che chiede il Play Store deve crescere sempre. Si parte da
+      # quello della versione in pubspec (1.6.7 → 1060700) e si aggiunge il
+      # numero di questa corsa: sta sopra la versione caricata, e sotto la
+      # prossima (1.6.8 → 1060800) finche' le corse sono meno di cento.
       - name: Il numero
         id: numero
         run: |
-          ultimo=$(curl -sSf "https://api.github.com/repos/danigio15/gdanav/actions/workflows/prove.yml/runs?per_page=1" \
-            | python3 -c "import sys,json; print(json.load(sys.stdin)['workflow_runs'][0]['run_number'])")
-          numero=$((ultimo + 1))
+          base=$(sed -n 's/^version: .*+\([0-9]*\).*/\1/p' pubspec.yaml)
+          numero=$((base + GITHUB_RUN_NUMBER))
+          if [ "$GITHUB_RUN_NUMBER" -ge 100 ]; then
+            echo "::warning::Cento corse: il numero $numero raggiunge quello della prossima versione. Alza la versione in pubspec.yaml."
+          fi
           echo "numero=$numero" >> "$GITHUB_OUTPUT"
-          echo "Ultima corsa di gdanav: $ultimo. Questo pacchetto: $numero."
+          echo "Versione in pubspec: $base. Questo pacchetto: $numero."
 
       - name: I pacchetti
         env:
@@ -77,23 +99,24 @@ jobs:
           # Map), se questa repository le ha fra i segreti con lo stesso nome.
           TOMTOM: ${{ secrets.GDANAV_TOMTOM_CHIAVE }}
           OCM: ${{ secrets.GDANAV_OCM_CHIAVE }}
+          VERA: ${{ steps.chiave.outputs.vera }}
         run: |
-          export GDANAV_CHIAVE="$PWD/android/app/gdanav-anteprima.jks"
           VERSIONE="navigatore-$CORSA-${GITHUB_SHA:0:7}"
           comuni=(--release --build-number="$NUMERO" --dart-define=VERSIONE="$VERSIONE"
             --dart-define=GDANAV_TOMTOM_CHIAVE="$TOMTOM" --dart-define=GDANAV_OCM_CHIAVE="$OCM")
-          # Per il Play Store: il Premium di gdanav si compra (o si ritrova).
           flutter build appbundle "${comuni[@]}"
           cp build/app/outputs/bundle/release/app-release.aab ../gdahome-navigatore.aab
-          # Da installare a mano: il Premium di gdanav gia' sbloccato, come
-          # l'APK d'anteprima di gdanav.
-          flutter build apk "${comuni[@]}" --dart-define=GDANAV_TUTTO_SBLOCCATO=true
+          flutter build apk "${comuni[@]}"
           cp build/app/outputs/flutter-apk/app-release.apk ../gdahome-navigatore.apk
           {
             echo "### gdahome col navigatore in auto"
             echo ""
-            echo "- \`gdahome-navigatore.aab\`: da caricare nel Play Console di **gdanav**, test interno (numero $NUMERO)."
-            echo "- \`gdahome-navigatore.apk\`: da installare a mano, Premium di gdanav sbloccato."
+            if [ "$VERA" = "si" ]; then
+              echo "- \`gdahome-navigatore.aab\`: da caricare nel Play Console di **gdahome**, test interno (numero $NUMERO)."
+              echo "- \`gdahome-navigatore.apk\`: da installare a mano, sopra la gdahome di sempre."
+            else
+              echo "Firmato **di prova** (mancano i segreti della chiave vera): com.gdahome.gdahome.prova, da installare a mano; nel Play Console non si carica."
+            fi
           } >> "$GITHUB_STEP_SUMMARY"
 
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2

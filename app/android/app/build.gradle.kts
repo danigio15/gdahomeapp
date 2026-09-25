@@ -30,18 +30,14 @@ val chiaveVera =
 val cELaChiaveVera = chiaveVera.getProperty("storeFile") != null
 val firmaDiProvaChiesta = System.getenv("GDAHOME_FIRMA_DI_PROVA") == "si"
 
-// La versione col navigatore in auto (`GDAHOME_NAVIGATORE=si`): da provare
-// nel test interno di **gdanav**, non di gdahome.
+// La versione col navigatore in auto (`GDAHOME_NAVIGATORE=si`).
 //
-// E' gdahome com'e', con gdanav dentro, ma in auto parte dalla mappa di gdanav
-// e la casa sta dietro un tasto: il servizio dell'auto e' di navigazione, e
-// non IOT. Prima di chiedere a Google di approvarlo nella scheda di gdahome
-// lo si prova nella scheda di gdanav, che di navigazione e' gia': per questo
-// si chiama come gdanav (`it.gdanav.gdanav`) e si firma con la chiave con cui
-// si caricano i pacchetti di gdanav — quella d'anteprima della sua
-// repository, che il workflow scarica li' accanto (`GDANAV_CHIAVE`). La
-// gdahome di sempre non cambia di una riga: senza la variabile, niente di
-// questo si accende. Le differenze stanno tutte in `src/navigatore`.
+// E' gdahome com'e', con gdanav dentro, ma in Android Auto parte dalla mappa
+// del navigatore e la casa sta dietro un tasto: il servizio dell'auto e' di
+// navigazione, e non IOT. Stesso nome e stessa firma della gdahome di sempre
+// (la chiave vera, se c'e'): e' la stessa app, da provare nel test interno
+// prima di farla diventare quella di tutti. Le differenze stanno tutte in
+// `src/navigatore`; senza la variabile non si accende niente.
 val colNavigatore = System.getenv("GDAHOME_NAVIGATORE") == "si"
 
 android {
@@ -68,14 +64,6 @@ android {
             storePassword = "gdahome"
             keyAlias = "gdahome"
             keyPassword = "gdahome"
-        }
-        if (colNavigatore) {
-            create("gdanav") {
-                storeFile = file(System.getenv("GDANAV_CHIAVE") ?: "gdanav-anteprima.jks")
-                storePassword = "gdanav-anteprima"
-                keyAlias = "gdanav"
-                keyPassword = "gdanav-anteprima"
-            }
         }
         if (cELaChiaveVera) {
             create("vera") {
@@ -114,7 +102,6 @@ android {
         // flag during build.
         versionCode = flutter.versionCode
         versionName = flutter.versionName
-        if (colNavigatore) applicationId = "it.gdanav.gdanav"
     }
 
     if (colNavigatore) {
@@ -131,9 +118,7 @@ android {
             applicationIdSuffix = ".prova"
         }
         release {
-            if (colNavigatore) {
-                signingConfig = signingConfigs.getByName("gdanav")
-            } else if (cELaChiaveVera) {
+            if (cELaChiaveVera) {
                 signingConfig = signingConfigs.getByName("vera")
             } else {
                 // Firmato di prova solo se chiesto, e mai col nome vero. Se non
@@ -150,7 +135,7 @@ android {
 // **subito**, con un messaggio che dice cosa fare — non dopo sei minuti di
 // costruzione, e soprattutto non con un pacchetto firmato di prova che
 // qualcuno potrebbe scambiare per quello vero.
-if (!cELaChiaveVera && !firmaDiProvaChiesta && !colNavigatore) {
+if (!cELaChiaveVera && !firmaDiProvaChiesta) {
     tasks.matching { it.name == "preReleaseBuild" }.configureEach {
         doFirst {
             throw GradleException(

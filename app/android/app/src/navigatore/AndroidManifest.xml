@@ -6,8 +6,8 @@
      di gdanav (NAVIGATION), che parte dalla mappa e porta alla casa con un
      tasto. Un'app, in auto, ha una categoria sola.
 
-     E' la versione da provare nel test interno di gdanav: la gdahome di
-     sempre, e la sua scheda sul Play Store, non la vedono. -->
+     E' la stessa gdahome, da provare nel test interno prima di farla
+     diventare quella di tutti: la gdahome di produzione non cambia. -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
     <!-- Android Auto per la navigazione: la mappa disegnata dall'app, e i
