@@ -15,6 +15,7 @@ restano gli attrezzi, e il materiale si rifà con un comando
 | `gdahome-facebook` | 1080×1080 | 0:47 | il quadrato per il feed di Facebook |
 | `gdahome-tiktok` | 1080×1920 | 0:47 | lo stesso, in piedi, per TikTok — e per Reels e Storie |
 | `gdahome-novita` | 1080×1920 | 0:34 | **le novità di una versione**, tutto in dissolvenza; `gdahome-novita-quadrato` è lo stesso per il feed |
+| `gdahome-gdanav` | 1080×1920 | 0:29 | **gdanav**, il navigatore dentro gdahome; `gdahome-gdanav-quadrato` per il feed |
 
 | immagine | misura | dove va |
 |---|---|---|
@@ -48,6 +49,7 @@ non lo prende.
 node strumenti/video/rendi.mjs                 tutti i filmati, nelle due lingue
 node strumenti/video/rendi.mjs --film tiktok   uno solo (due lingue)
 node strumenti/video/rendi.mjs --film novita   le novità della versione
+node strumenti/video/rendi.mjs --film gdanav   la presentazione di gdanav
 node strumenti/video/rendi.mjs --lingua en     solo l'inglese
 node strumenti/video/rendi.mjs --copertine     le immagini ferme di Facebook
 ```
@@ -83,7 +85,9 @@ mentre va.
 | `pezzi.js` | i pezzi condivisi: il marchio, i disegnini, il telefono, **la plancia**, e il palco che chi filma va a cercare |
 | `presentazione.html` + `scene.js` | il film lungo: quindici scene, disposte a coordinate |
 | `social.html` + `social.js` | il film corto: sette scene, disposte **a colonna** |
+| `carte.css` + `dissolvenza.js` | il motore dei film fatti di carte: come sono vestite, e come si sciolgono l'una nell'altra |
 | `novita.html` + `novita.js` | le novità di una versione: **una scena sola**, con le carte in dissolvenza una sopra l'altra |
+| `gdanav.html` + `gdanav.js` | la presentazione di gdanav, con lo stesso motore: cambiano solo le carte |
 | `copertine.html` + `copertine.js` | le copertine di Facebook e l'immagine del profilo, ferme |
 | `plancia-vera.mjs` + `casa-finta.js` | fotografano **la plancia vera**, quella di `ponte/plancia/` |
 | `plancia-telefono.png`, `-tablet`, `-computer` (e `-en`) | le fotografie, che finiscono negli schermi delle copertine |

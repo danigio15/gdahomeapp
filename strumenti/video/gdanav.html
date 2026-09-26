@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="it">
+  <head>
+    <meta charset="utf-8" />
+    <title>gdanav — il navigatore, dentro gdahome</title>
+    <!--
+      La presentazione di gdanav: corta, e tutta in dissolvenza.
+
+      Stesso vestito e stesso motore del film delle novità — `carte.css` per
+      come sono fatte le carte, `dissolvenza.js` per come si passano il
+      testimone. Qui dentro c'è solo la misura del palco; cosa dicono le carte
+      sta in `gdanav.js`.
+    -->
+    <link rel="stylesheet" href="comune.css" />
+    <link rel="stylesheet" href="carte.css" />
+    <style>
+      /* La misura del palco: quadrato per il feed, in piedi per TikTok. */
+      #palco {
+        width: 1080px;
+        height: var(--alto, 1920px);
+      }
+
+      .scena.in-scena {
+        display: block;
+      }
+
+      /* Il logo di gdanav non è quadrato come quello di casa: è tondo e vive
+         su fondo scuro, quindi niente angoli arrotondati addosso. */
+      .marchio-gdanav {
+        border-radius: 50%;
+        box-shadow:
+          0 30px 70px rgba(0, 0, 0, 0.55),
+          0 0 0 2px rgba(56, 189, 248, 0.25);
+      }
+    </style>
+  </head>
+  <body>
+    <div id="palco"></div>
+    <script type="module" src="gdanav.js"></script>
+  </body>
+</html>

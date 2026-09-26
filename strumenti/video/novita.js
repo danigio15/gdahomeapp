@@ -5,41 +5,15 @@
  * niente introduzione: la prima carta e' gia' il numero della versione, e la
  * seconda e' gia' una novita'.
  *
- * **Tutto in dissolvenza.** Le carte stanno una sopra l'altra (`novita.html`)
- * e si passano il testimone sovrapponendosi: mentre una svanisce, l'altra e'
- * gia' a meta' strada. Un film di sole scritte che sbattono da una all'altra
- * stanca in dieci secondi; le stesse scritte che si sciolgono l'una
- * nell'altra si guardano fino in fondo.
- *
- * I tempi non si scrivono a mano: ogni carta dice **quanto resta**, e da li'
- * si contano l'inizio e la fine di tutte. Cambiare una durata in mezzo non
- * costringe a rifare i conti di quelle dopo.
+ * **Tutto in dissolvenza**: le carte stanno una sopra l'altra e si passano il
+ * testimone sovrapponendosi. Come funziona sta in `dissolvenza.js`; qui c'e'
+ * solo cosa dicono le carte, e quanto restano su.
  */
 
-import { MARCHIO, mettiInScena, oggetto, segno, STILI, t } from "./pezzi.js";
+import { inDissolvenza, misuraIlPalco } from "./dissolvenza.js";
+import { MARCHIO, mettiInScena, oggetto, segno, t } from "./pezzi.js";
 
-/* Il palco, come per i social: quadrato per il feed, in piedi per TikTok. */
-const misure = new URLSearchParams(location.search);
-const dimmi = (nome, difetto) => misure.get(nome) ?? difetto;
-const radice = document.documentElement.style;
-radice.setProperty("--alto", `${dimmi("alto", 1920)}px`);
-radice.setProperty("--su", `${dimmi("su", 90)}px`);
-radice.setProperty("--giu", `${dimmi("giu", 90)}px`);
-
-/* Quanto dura una dissolvenza, e di quanto le due carte si sovrappongono.
- *
- * Mezzo secondo e' la misura che si sente come «sfuma» invece che come
- * «cambia»; un quarto di sovrapposizione e' quello che toglie il buio in
- * mezzo senza che le due scritte si leggano insieme. */
-const DISSOLVENZA = 0.55;
-const SOVRAPPOSTE = 0.3;
-
-/* Il respiro: la carta cresce di un filo mentre sta su. Fermo, un testo
-   grande sembra una diapositiva; cosi' sembra ripreso. */
-STILI.push(`@keyframes respiro{from{transform:scale(1)}to{transform:scale(1.045)}}`);
-
-/* La barra che avanza: quanto manca alla fine, senza numeri. */
-STILI.push(`@keyframes avanza{from{width:0}to{width:100%}}`);
+misuraIlPalco();
 
 /* ── Le carte ─────────────────────────────────────────────────────────────
  *
@@ -190,43 +164,8 @@ const CARTE = [
   },
 ];
 
-/* ── I tempi ──────────────────────────────────────────────────────────────
- *
- * Ogni carta comincia a comparire mentre quella prima sta ancora svanendo: il
- * suo inizio e' la fine della precedente **meno** la sovrapposizione. Contati
- * qui una volta, invece che scritti a mano nove volte. */
-let orologio = 0;
-const CONTENUTO = CARTE.map(({ resta, dentro }) => {
-  const da = orologio;
-  const viaA = da + DISSOLVENZA + resta;
-  orologio = viaA + DISSOLVENZA - SOVRAPPOSTE;
-  return `
-    <div class="carta-novita" style="
-         opacity:0;
-         animation:appari ${DISSOLVENZA}s ${da}s ease both,
-                   sparisci ${DISSOLVENZA}s ${viaA}s ease forwards,
-                   respiro ${(viaA - da + DISSOLVENZA).toFixed(2)}s ${da}s linear both">
-      ${dentro()}
-    </div>`;
-}).join("");
+const { contenuto, durata } = inDissolvenza(CARTE, {
+  testata: "gdahome <b>1.6.0</b>",
+});
 
-/* Un attimo di coda dopo l'ultima dissolvenza: un film che finisce sull'ultimo
-   fotogramma della sfumatura sembra tagliato. */
-const DURATA = Number((orologio + SOVRAPPOSTE + 0.4).toFixed(2));
-
-/* La testata e la barra stanno su dalla seconda carta all'ultima: sulla prima
-   il numero e' gia' grande in mezzo allo schermo, e sull'ultima c'e' di nuovo.
-   Ripeterlo li' sarebbe dirlo due volte nello stesso fotogramma. */
-const ENTRA_LA_TESTATA = Number((CARTE[0].resta + DISSOLVENZA).toFixed(2));
-const ESCE_LA_TESTATA = Number((DURATA - CARTE[CARTE.length - 1].resta - 1).toFixed(2));
-
-const CORNICE = `
-  <div class="testata ap via" style="--t:${ENTRA_LA_TESTATA}s;--t2:${ESCE_LA_TESTATA}s">
-    <img src="${MARCHIO}" width="44" height="44" style="border-radius:12px" alt="" />
-    <span>gdahome <b>1.6.0</b></span>
-  </div>
-  <div class="barra ap via" style="--t:${ENTRA_LA_TESTATA}s;--t2:${ESCE_LA_TESTATA}s">
-    <div style="animation:avanza ${(ESCE_LA_TESTATA - ENTRA_LA_TESTATA).toFixed(2)}s ${ENTRA_LA_TESTATA}s linear both"></div>
-  </div>`;
-
-mettiInScena([{ nome: "novita", durata: DURATA, contenuto: () => CONTENUTO + CORNICE }]);
+mettiInScena([{ nome: "novita", durata, contenuto: () => contenuto }]);

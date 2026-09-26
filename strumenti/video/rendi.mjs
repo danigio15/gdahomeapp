@@ -87,6 +87,27 @@ const FILM = {
     muto: true,
     copertina: { scena: "novita", quando: 1.6 },
   },
+  /* gdanav: stessa macchina delle novita', altre carte. */
+  gdanav: {
+    pagina: "gdanav.html",
+    largo: 1080,
+    alto: 1920,
+    posa: { su: 240, giu: 400 },
+    uscita: "gdahome-gdanav",
+    ritmo: "4200k",
+    muto: true,
+    copertina: { scena: "gdanav", quando: 1.8 },
+  },
+  "gdanav-quadrato": {
+    pagina: "gdanav.html",
+    largo: 1080,
+    alto: 1080,
+    posa: { su: 80, giu: 80 },
+    uscita: "gdahome-gdanav-quadrato",
+    ritmo: "3400k",
+    muto: true,
+    copertina: { scena: "gdanav", quando: 1.8 },
+  },
   "novita-quadrato": {
     pagina: "novita.html",
     largo: 1080,

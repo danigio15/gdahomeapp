@@ -1,0 +1,161 @@
+/* Le carte in dissolvenza, e la cornice intorno.
+ *
+ * Lo stesso vestito per tutti i film fatti di carte che si sciolgono l'una
+ * nell'altra — le novita' di una versione, la presentazione di gdanav — perche'
+ * sono lo stesso film con dentro parole diverse, e due copie di queste regole
+ * sarebbero due posti dove aggiustare lo stesso spazio.
+ *
+ * Quello che resta alla pagina e' solo quanto e' grande il palco.
+ *
+ * Si chiamano `.carta-film` e non `.carta` perche' `.carta` c'e' gia' in
+ * `comune.css`, ed e' un'altra cosa: la scheda bianca dentro le finestre di
+ * Home Assistant del film lungo. Chiamarle uguale le vestiva di bianco.
+ */
+
+/* Le carte: tutte nello stesso posto, una sopra l'altra. Quello che si
+     vede in un dato momento lo decide l'opacita', non l'ordine. */
+.carta-film {
+  position: absolute;
+  left: 0;
+  right: 0;
+  /* Sopra c'è la testata, sotto la barra che avanza: le carte stanno
+       in mezzo, e non ci passano sopra. */
+  top: calc(var(--su, 90px) + 104px);
+  bottom: calc(var(--giu, 90px) + 76px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 26px;
+  padding: 0 90px;
+  text-align: center;
+}
+
+.carta-film .disegno {
+  width: 152px;
+  height: 152px;
+  border-radius: 42px;
+  display: grid;
+  place-items: center;
+  margin-bottom: 6px;
+}
+
+.occhiello {
+  margin: 0;
+  font-size: 30px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.titolone {
+  margin: 0;
+  font-size: 86px;
+  line-height: 1.05;
+  font-weight: 800;
+  letter-spacing: -0.035em;
+}
+
+.titolone.piccolo {
+  font-size: 68px;
+}
+
+.sottotitolone {
+  margin: 0;
+  font-size: 38px;
+  line-height: 1.4;
+  font-weight: 500;
+  color: var(--tenue);
+  max-width: 860px;
+}
+
+.sottotitolone b {
+  color: #eef4ff;
+  font-weight: 700;
+}
+
+/* La testata e la barra: le due cose che restano ferme per tutto il
+     film. Senza, un seguito di scritte che si sciolgono una nell'altra non
+     si capisce quanto dura — e chi guarda non sa se sono tre carte o
+     quindici. */
+.testata {
+  position: absolute;
+  left: 90px;
+  right: 90px;
+  top: var(--su, 90px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  font-size: 34px;
+  font-weight: 600;
+  color: #9db0cc;
+}
+
+.testata b {
+  color: #e6f2ff;
+  font-weight: 800;
+}
+
+.barra {
+  position: absolute;
+  left: 90px;
+  right: 90px;
+  bottom: var(--giu, 90px);
+  height: 7px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.11);
+  overflow: hidden;
+}
+
+.barra div {
+  height: 100%;
+  width: 0;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #38bdf8, #fcd34d);
+}
+
+/* Il numero della versione, in apertura. */
+.versione {
+  margin: 0;
+  font-size: 168px;
+  line-height: 1;
+  font-weight: 900;
+  letter-spacing: -0.05em;
+  background: linear-gradient(120deg, #7dd3fc 10%, #fcd34d 90%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* L'elenco rapido delle cose minori: una riga sola, in due colonne. */
+/* Una colonna sola: in due, una voce che va a capo e l'altra no fanno
+     righe storte, e in un video che dura tre secondi si vede solo quello. */
+.spicciole {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 18px;
+  width: 100%;
+  max-width: 720px;
+  margin-top: 4px;
+  font-size: 31px;
+  font-weight: 600;
+  color: #dbe7f7;
+  text-align: left;
+}
+
+.spicciole div {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.riga-finale {
+  display: inline-flex;
+  align-items: center;
+  gap: 16px;
+  padding: 18px 34px;
+  border-radius: 999px;
+  font-size: 34px;
+  font-weight: 700;
+}
