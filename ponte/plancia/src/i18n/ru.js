@@ -3831,4 +3831,9 @@ export default Object.freeze({
   "🔔 Back in the warning": "🔔 Снова в предупреждении",
   "Warn me about this again": "Снова предупреждать об этом",
   "There is a single reading for this: the Recorder has no history to draw yet.": "Здесь всего одно показание: у Recorder пока нет истории, которую можно нарисовать.",
+  "${esclusioni.esclusi} bypassed": "${esclusioni.esclusi} в обходе",
+  "1 bypassed": "1 в обходе",
+  "Alarm bypass": "Обход охраны",
+  "Bypass switch": "Переключатель обхода",
+  "Alarm panels publish a switch next to each contact that tells the panel to ignore it: that is what you need to arm the alarm with a window left open on purpose. Write it here and the shield to bypass this opening shows up on the Openings page. On means bypassed. Leave it empty and this opening is only watched, as before.": "Охранные панели публикуют рядом с каждым датчиком переключатель, который велит панели не смотреть на него: именно это и нужно, чтобы поставить охрану с намеренно открытым окном. Впишите его здесь, и на странице «Проёмы» появится щит, которым этот проём берётся в обход. Включено значит в обходе. Оставьте пустым — и этот проём будет только наблюдаться, как прежде.",
 });

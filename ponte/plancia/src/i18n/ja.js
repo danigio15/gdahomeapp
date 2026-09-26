@@ -3831,4 +3831,9 @@ export default Object.freeze({
   "🔔 Back in the warning": "🔔 通知に戻しました",
   "Warn me about this again": "これをまた知らせる",
   "There is a single reading for this: the Recorder has no history to draw yet.": "これは読み取りが 1 件だけです。Recorder にはまだ描ける履歴がありません。",
+  "${esclusioni.esclusi} bypassed": "${esclusioni.esclusi}件 バイパス中",
+  "1 bypassed": "1件 バイパス中",
+  "Alarm bypass": "警報のバイパス",
+  "Bypass switch": "バイパスのスイッチ",
+  "Alarm panels publish a switch next to each contact that tells the panel to ignore it: that is what you need to arm the alarm with a window left open on purpose. Write it here and the shield to bypass this opening shows up on the Openings page. On means bypassed. Leave it empty and this opening is only watched, as before.": "警報盤は接点ごとに、その接点を見ないよう盤に伝えるスイッチを公開します。わざと窓を開けたまま警報をセットしたいときに必要なのがこれです。ここに書くと、開口部のページにこの開口部をバイパスする盾が出ます。オンはバイパス中の意味です。空のままにすれば、この開口部は今までどおり見るだけになります。",
 });

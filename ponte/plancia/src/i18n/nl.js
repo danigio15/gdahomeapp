@@ -3831,4 +3831,9 @@ export default Object.freeze({
   "🔔 Back in the warning": "🔔 Terug in de waarschuwing",
   "Warn me about this again": "Mij hier weer over waarschuwen",
   "There is a single reading for this: the Recorder has no history to draw yet.": "Hiervan is er één enkele meting: de Recorder heeft nog geen geschiedenis om te tekenen.",
+  "${esclusioni.esclusi} bypassed": "${esclusioni.esclusi} overbrugd",
+  "1 bypassed": "1 overbrugd",
+  "Alarm bypass": "Alarmoverbrugging",
+  "Bypass switch": "Overbruggingsschakelaar",
+  "Alarm panels publish a switch next to each contact that tells the panel to ignore it: that is what you need to arm the alarm with a window left open on purpose. Write it here and the shield to bypass this opening shows up on the Openings page. On means bypassed. Leave it empty and this opening is only watched, as before.": "Alarmcentrales publiceren naast elk contact een schakelaar die de centrale vertelt dat contact te negeren: dat is wat je nodig hebt om het alarm in te schakelen met een raam dat je opzettelijk open laat. Schrijf hem hier en op de pagina Openingen verschijnt het schild om deze opening te overbruggen. Aan betekent overbrugd. Laat hem leeg en deze opening wordt alleen bekeken, zoals eerst.",
 });

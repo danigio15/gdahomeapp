@@ -3831,4 +3831,9 @@ export default Object.freeze({
   "🔔 Back in the warning": "🔔 Z powrotem w ostrzeżeniu",
   "Warn me about this again": "Znowu mnie o tym ostrzegaj",
   "There is a single reading for this: the Recorder has no history to draw yet.": "Jest tylko jeden odczyt: Recorder nie ma jeszcze historii do narysowania.",
+  "${esclusioni.esclusi} bypassed": "${esclusioni.esclusi} zablokowane",
+  "1 bypassed": "1 zablokowane",
+  "Alarm bypass": "Blokada w alarmie",
+  "Bypass switch": "Przełącznik blokady",
+  "Alarm panels publish a switch next to each contact that tells the panel to ignore it: that is what you need to arm the alarm with a window left open on purpose. Write it here and the shield to bypass this opening shows up on the Openings page. On means bypassed. Leave it empty and this opening is only watched, as before.": "Centrale alarmowe udostępniają przy każdym czujniku przełącznik, który mówi centrali, żeby go nie pilnowała: to właśnie jest potrzebne, żeby uzbroić alarm z celowo otwartym oknem. Wpisz go tutaj, a na stronie Otwory pojawi się tarcza blokująca ten otwór. Włączony znaczy zablokowany. Zostaw puste i ten otwór będzie tylko obserwowany, jak dotąd.",
 });

@@ -3831,4 +3831,9 @@ export default Object.freeze({
   "🔔 Back in the warning": "🔔 알림에 다시 표시",
   "Warn me about this again": "이 항목을 다시 알림",
   "There is a single reading for this: the Recorder has no history to draw yet.": "이 항목은 측정값이 하나뿐입니다. Recorder에 아직 그릴 기록이 없습니다.",
+  "${esclusioni.esclusi} bypassed": "${esclusioni.esclusi}개 바이패스",
+  "1 bypassed": "1개 바이패스",
+  "Alarm bypass": "경보 바이패스",
+  "Bypass switch": "바이패스 스위치",
+  "Alarm panels publish a switch next to each contact that tells the panel to ignore it: that is what you need to arm the alarm with a window left open on purpose. Write it here and the shield to bypass this opening shows up on the Openings page. On means bypassed. Leave it empty and this opening is only watched, as before.": "경보 패널은 접점마다 그 접점을 보지 말라고 패널에 알리는 스위치를 함께 내보냅니다. 창문을 일부러 열어 둔 채로 경보를 설정할 때 필요한 것이 바로 이것입니다. 여기에 적으면 개구부 페이지에 이 개구부를 바이패스하는 방패가 나타납니다. 켜짐은 바이패스를 뜻합니다. 비워 두면 이 개구부는 전처럼 지켜보기만 합니다.",
 });

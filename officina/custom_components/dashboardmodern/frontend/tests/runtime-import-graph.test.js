@@ -1429,8 +1429,16 @@ test("production graph is single-owner, acyclic and contains no facade pass-thro
   // ridisegno e una prova che rilegge i modelli e pretende di ritrovarci ogni
   // casella — e un elenco scritto accanto a campi che legge qualcun altro si
   // scolla sempre.
+  // 395 con l'esclusione di un varco dall'antifurto (#136):
+  // `core/l-esclusione-del-varco.js`. Quale interruttore si propone, cosa vuol
+  // dire acceso e cosa si manda sono decisioni che a leggerle sono in tre — la
+  // pagina Varchi che disegna lo scudo, la scheda che tiene la casella, e la
+  // fila delle zone in Sicurezza che dice quali ingressi sono esclusi — e su un
+  // antifurto tre copie di una regola di segno vogliono dire una porta
+  // sorvegliata mentre la si crede esclusa. Sta in un modulo suo, senza DOM e
+  // senza parole, perche' e' anche l'unico modo di provarla a tavolino.
   assert.ok(
-    relative.length <= 394,
+    relative.length <= 395,
     `production graph unexpectedly grew to ${relative.length} modules`,
   );
   assertAcyclic(edges);

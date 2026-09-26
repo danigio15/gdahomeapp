@@ -30,6 +30,7 @@
  */
 
 import { conLaRiga, conLeRighe, righeDichiarate, senzaLaRiga } from "./elenco-dichiarato.js";
+import { CAMPO_ESCLUSIONE, comeStaLEsclusione } from "./l-esclusione-del-varco.js";
 import { contactEntity, inferriataEntity } from "./shutter-window.js";
 import { CLASSI_DEL_VARCO, comeStaIlVarco, eUnVarco } from "./varchi-in-configurazione.js";
 
@@ -37,6 +38,12 @@ const clean = (valore) => String(valore ?? "").trim();
 
 /** Dove si scrive la configurazione dei varchi. */
 export const CHIAVE_VARCHI = "cd_varchi";
+
+/* Il campo in piu' che una riga di varco si tiene: l'interruttore che lo
+ * esclude dall'antifurto (#136). Passa per nome dall'elenco dichiarato, come la
+ * famiglia delle Macchine, perche' un elenco esplicito e' l'unica forma che
+ * dice cosa si salva e cosa e' roba di passaggio. */
+export const CAMPI_IN_PIU = Object.freeze([CAMPO_ESCLUSIONE]);
 
 /** Le classi che contano come varco: le stesse del rilevamento, non una copia. */
 export { CLASSI_DEL_VARCO };
@@ -179,7 +186,7 @@ export function varchiDaImportare(states = {}, config, nomeDi = (entity) => enti
 export function eUnVarcoDiCasa(entity, stato, config) {
   const id = clean(entity);
   if (!id) return false;
-  const dichiarate = righeDichiarate(config);
+  const dichiarate = righeDichiarate(config, CAMPI_IN_PIU);
   if (dichiarate) return dichiarate.some((riga) => riga.entity === id);
   const scelte = normalizzaVarchi(config);
   if (scelte.escluse.includes(id)) return false;
@@ -189,7 +196,7 @@ export function eUnVarcoDiCasa(entity, stato, config) {
 
 /** Se c'e' qualcosa da mostrare: almeno un varco con la sua entita'. */
 export function varchiConfigurati(states = {}, config) {
-  const dichiarate = righeDichiarate(config);
+  const dichiarate = righeDichiarate(config, CAMPI_IN_PIU);
   if (dichiarate) return dichiarate.some((riga) => riga.entity);
   return Object.entries(states || {}).some(([entity, stato]) =>
     eUnVarcoDiCasa(entity, stato, config),
@@ -221,17 +228,26 @@ export function istanteDelCambio(stato) {
  * niente in cambio.
  */
 export function varchiDiCasa(states = {}, config, invertiti, nomeDi = (entity) => entity) {
-  const dichiarate = righeDichiarate(config);
+  const dichiarate = righeDichiarate(config, CAMPI_IN_PIU);
   const scelte = normalizzaVarchi(config);
-  const letta = (entity, nome, icona) => {
+  const letta = (entity, nome, icona, esclusione) => {
     const stato = states?.[entity];
     const classe = clean(stato?.attributes?.device_class) || "door";
+    const interruttore = clean(esclusione);
     return {
       entity,
       name: clean(nome) || clean(nomeDi(entity)) || entity,
       classe,
       glifo: clean(icona) || disegnoDelVarco(classe),
       stato: comeStaIlVarco(entity, stato, invertiti),
+      /* Escluso dall'antifurto, o no (#136). Sono due campi e non uno perche'
+       * sono due domande diverse: `esclusione` dice se questo varco si PUO'
+       * escludere — cioe' se qualcuno gli ha scritto l'interruttore — e
+       * `escluso` come sta adesso. Un varco che si puo' escludere e il cui
+       * interruttore non risponde ha il primo e non il secondo, ed e' proprio
+       * il caso in cui non si disegna nessun tasto. */
+      esclusione: interruttore,
+      escluso: comeStaLEsclusione(interruttore, states),
       /* Da quando sta cosi' (#406): «l'ultima apertura o cambio stato». Sotto
        * il nome c'era l'entity_id, che chi guarda la pagina non ha mai
        * chiesto — «volendo il nome del sensore potrebbe essere obsoleto». Qui
@@ -247,7 +263,7 @@ export function varchiDiCasa(states = {}, config, invertiti, nomeDi = (entity) =
        * mostrare, e nel conto degli aperti sarebbe un muto inventato. */
       dichiarate
         .filter((riga) => riga.entity)
-        .map((riga) => letta(riga.entity, riga.name, riga.icon))
+        .map((riga) => letta(riga.entity, riga.name, riga.icon, riga[CAMPO_ESCLUSIONE]))
     : Object.entries(states || {})
         .filter(([entity, stato]) => eUnVarcoDiCasa(entity, stato, config))
         .map(([entity]) => letta(entity, scelte.nomi[entity], ""));

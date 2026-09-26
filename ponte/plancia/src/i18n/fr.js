@@ -3831,4 +3831,9 @@ export default Object.freeze({
   "🔔 Back in the warning": "🔔 De retour dans l'alerte",
   "Warn me about this again": "M'avertir de nouveau pour ceci",
   "There is a single reading for this: the Recorder has no history to draw yet.": "Il n'y a qu'un seul relevé pour cela : le Recorder n'a pas encore d'historique à tracer.",
+  "${esclusioni.esclusi} bypassed": "${esclusioni.esclusi} isolés",
+  "1 bypassed": "1 isolé",
+  "Alarm bypass": "Isolation alarme",
+  "Bypass switch": "Interrupteur d'isolation",
+  "Alarm panels publish a switch next to each contact that tells the panel to ignore it: that is what you need to arm the alarm with a window left open on purpose. Write it here and the shield to bypass this opening shows up on the Openings page. On means bypassed. Leave it empty and this opening is only watched, as before.": "Les centrales d'alarme publient à côté de chaque contact un interrupteur qui dit à la centrale de ne pas le surveiller : c'est ce qu'il faut pour armer l'alarme avec une fenêtre laissée ouverte exprès. Écris-le ici et le bouclier qui isole cette ouverture apparaît sur la page Ouvertures. Allumé veut dire isolé. Laisse-le vide et cette ouverture est seulement surveillée, comme avant.",
 });

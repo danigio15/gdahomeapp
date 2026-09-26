@@ -3831,4 +3831,9 @@ export default Object.freeze({
   "🔔 Back in the warning": "🔔 चेतावनी में वापस",
   "Warn me about this again": "इसके बारे में फिर से चेतावनी दें",
   "There is a single reading for this: the Recorder has no history to draw yet.": "इसका केवल एक ही रीडिंग है: Recorder के पास अभी बनाने लायक इतिहास नहीं है।",
+  "${esclusioni.esclusi} bypassed": "${esclusioni.esclusi} बायपास",
+  "1 bypassed": "1 बायपास",
+  "Alarm bypass": "अलार्म बायपास",
+  "Bypass switch": "बायपास स्विच",
+  "Alarm panels publish a switch next to each contact that tells the panel to ignore it: that is what you need to arm the alarm with a window left open on purpose. Write it here and the shield to bypass this opening shows up on the Openings page. On means bypassed. Leave it empty and this opening is only watched, as before.": "अलार्म पैनल हर कॉन्टैक्ट के साथ एक स्विच देते हैं जो पैनल से कहता है कि उसे अनदेखा कर दे: जान-बूझकर खुली छोड़ी गई खिड़की के साथ अलार्म लगाने के लिए यही चाहिए। इसे यहाँ लिखो और «खुलने वाले हिस्से» पेज पर इस हिस्से को बायपास करने की ढाल दिखने लगेगी। चालू का मतलब बायपास। इसे खाली छोड़ दो और यह हिस्सा पहले की तरह सिर्फ़ देखा जाता रहेगा।",
 });

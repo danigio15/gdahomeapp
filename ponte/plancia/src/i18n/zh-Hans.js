@@ -3831,4 +3831,9 @@ export default Object.freeze({
   "🔔 Back in the warning": "🔔 已放回提醒",
   "Warn me about this again": "重新提醒我这个",
   "There is a single reading for this: the Recorder has no history to draw yet.": "这一项只有一条读数：Recorder 还没有可以绘制的历史。",
+  "${esclusioni.esclusi} bypassed": "${esclusioni.esclusi} 个旁路",
+  "1 bypassed": "1 个旁路",
+  "Alarm bypass": "报警旁路",
+  "Bypass switch": "旁路开关",
+  "Alarm panels publish a switch next to each contact that tells the panel to ignore it: that is what you need to arm the alarm with a window left open on purpose. Write it here and the shield to bypass this opening shows up on the Openings page. On means bypassed. Leave it empty and this opening is only watched, as before.": "报警主机会在每个触点旁边发布一个开关，告诉主机不要看它：故意开着一扇窗还要布防时，需要的就是它。把它写在这里，门窗页面上就会出现给这个门窗旁路的盾牌。打开表示旁路。留空，这个门窗就只被看着，和以前一样。",
 });
