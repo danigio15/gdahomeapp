@@ -138,7 +138,7 @@ se no ogni comando farebbe il giro del mondo per arrivare a tre metri.
 | | dove sta | cosa fa |
 |---|---|---|
 | **il ponte** | [`ponte/`](ponte/README.md) | l'add-on: fa entrare l'app da dentro e da fuori casa, serve la plancia, tiene la configurazione |
-| **l'app** | [`app/`](app/README.md) | Flutter, per Android, iPhone e browser: si abbina, si collega, comanda |
+| **l'app** | [`app/`](app/README.md) | Flutter, per Android, iPhone e browser: si abbina, si collega, comanda ([iPhone e CarPlay](docs/IPHONE.md)) |
 | **la plancia** | `ponte/plancia/` | i file di DashboardModern che il ponte serve dal disco, **con la sua licenza** |
 | **l'officina** | [`officina/`](officina/LEGGIMI.md) | il resto del progetto DashboardModern: gli attrezzi che costruiscono la plancia, le sue prove, i suoi documenti |
 | **il centralino** | [`nuvola/`](nuvola/README.md), [`centralino/`](centralino/README.md) | fa incontrare un telefono e la sua casa, senza capire niente di quello che si dicono |
