@@ -30,6 +30,16 @@ vuole la sua spunta, viaggia per ultima e in un giro suo, così se il negozio la
 nega — e a un account nuovo la nega finché la prova chiusa non è finita — quello
 che era già andato sulle altre resta dov'è.
 
+**E la prova ha già trovato qualcosa.** Chieste tre piste, il negozio ha preso
+`internal` e `alpha` e su `beta` — che nella console non è mai stata preparata —
+ha risposto «500, Internal error». Stando tutte nella stessa modifica quel 500
+si è portato via anche le due che erano andate: in un rilascio vero non avrebbe
+pubblicato niente, per colpa di una pista che non c'entrava. Adesso la prima
+pista viaggia col caricamento e le altre una per una, così quella che non prende
+resta l'unica che non prende. In prova invece vanno tutte insieme, ed è voluto:
+una prova serve a scoprire la pista che il negozio non vuole prima di spenderci
+sopra un'etichetta, e per scoprirla bisogna chiedergliele tutte.
+
 Dentro non cambia niente: è la stessa 1.6.10, con un numero nuovo perché
 un'etichetta non si sposta.
 
