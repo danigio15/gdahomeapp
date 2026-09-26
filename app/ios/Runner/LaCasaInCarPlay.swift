@@ -143,22 +143,17 @@ enum LaCasaInCarPlay {
   static func comandi(_ controllore: CPInterfaceController) -> CPTemplate {
     let scelti = iComandi().comandi
     if scelti.isEmpty {
-      return CPInformationTemplate(
-        title: "Comandi rapidi",
-        layout: .leading,
-        items: [
-          CPInformationItem(
-            title: nil,
-            detail: "Nessun comando scelto. Sul telefono: gdanav, menu, Comandi rapidi in auto."
-          )
-        ],
-        actions: [
-          CPTextButton(title: "Dispositivi", textStyle: .normal) { [weak controllore] _ in
-            guard let controllore else { return }
-            controllore.pushTemplate(dispositivi(controllore), animated: true, completion: nil)
-          }
-        ]
-      )
+      /* Un elenco vuoto e non `CPInformationTemplate`: un'app di navigazione
+       * (carplay-maps) non lo puo' usare, e CarPlay la chiuderebbe. */
+      let t = CPListTemplate(title: "Comandi rapidi", sections: [])
+      t.emptyViewTitleVariants = ["Nessun comando scelto. Sul telefono: gdanav, menu, Comandi rapidi in auto."]
+      t.trailingNavigationBarButtons = [
+        CPBarButton(title: "Dispositivi") { [weak controllore] _ in
+          guard let controllore else { return }
+          controllore.pushTemplate(dispositivi(controllore), animated: true, completion: nil)
+        }
+      ]
+      return t
     }
     let tasti = scelti.prefix(8).map { c in
       CPGridButton(titleVariants: [c.nome], image: segno(c.genere)) { [weak controllore] _ in
