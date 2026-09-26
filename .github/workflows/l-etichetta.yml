@@ -52,6 +52,15 @@ on:
         description: "Su quale commit (vuoto: l'ultimo di main)"
         required: false
         default: ""
+      solo_le_note:
+        description: >-
+          Non mette nessuna etichetta: riscrive soltanto le note della release
+          di un'etichetta che c'e' gia', prendendole dal CHANGELOG. Serve per
+          le versioni rimaste senza release, e per rimediare a una release
+          nata col testo sbagliato. Va scritto anche il nome qui sopra.
+        type: boolean
+        required: false
+        default: false
 
 # Di serie si legge e basta: scrive solo il lavoro che spinge l'etichetta.
 permissions:
@@ -77,6 +86,7 @@ jobs:
         env:
           NOME: ${{ inputs.nome }}
           COMMIT: ${{ inputs.commit }}
+          SOLO_LE_NOTE: ${{ inputs.solo_le_note }}
         run: |
           set -euo pipefail
 
@@ -119,8 +129,21 @@ jobs:
             exit 1
           fi
 
+          # Le due strade si guardano la stessa cosa da due parti opposte:
+          # mettere un'etichetta vuole che non ci sia, riscriverne le note
+          # vuole che ci sia.
           if git rev-parse --verify "refs/tags/$nome" >/dev/null 2>&1; then
-            echo "::error::«$nome» c'e' gia', e un'etichetta di versione non si sposta."
+            if [ "$SOLO_LE_NOTE" != "true" ]; then
+              echo "::error::«$nome» c'e' gia', e un'etichetta di versione non si sposta."
+              echo "::error::Per rifarne solo le note, spunta «solo_le_note»."
+              exit 1
+            fi
+            # Le note si riscrivono su quello che l'etichetta indica davvero,
+            # non sull'ultimo commit di main: sono due cose diverse, e la
+            # seconda direbbe una bugia.
+            sha="$(git rev-parse --verify "refs/tags/$nome^{commit}")"
+          elif [ "$SOLO_LE_NOTE" = "true" ]; then
+            echo "::error::«$nome» non c'e': le note di un'etichetta che non esiste non si scrivono."
             exit 1
           fi
 
@@ -131,6 +154,7 @@ jobs:
       # I valori del passo prima arrivano come variabili, e mai scritti dentro
       # lo script: il titolo di un commit e' testo di chi l'ha scritto.
       - name: Mettila
+        if: ${{ !inputs.solo_le_note }}
         env:
           NOME: ${{ steps.quale.outputs.nome }}
           SHA: ${{ steps.quale.outputs.sha }}
@@ -141,7 +165,45 @@ jobs:
           git tag -a "$NOME" -m "gdahome $NOME" "$SHA"
           git push origin "refs/tags/$NOME"
 
+      # La release nasce con l'etichetta, e non dopo.
+      #
+      # Prima la scriveva «L'app da provare» lanciata sull'etichetta, e cosi'
+      # una release esisteva solo se qualcuno faceva anche quel giro: la
+      # `v1.6.9` e la `v1.6.10` hanno l'etichetta e non hanno la release,
+      # perche' quelle due corse erano state annullate. Ma «questa versione
+      # esiste, ed ecco cosa cambia» e' esattamente quello che fa un'etichetta,
+      # e non ha niente a che vedere col negozio.
+      #
+      # Le note le prende dal CHANGELOG **di quel commit**, non dal disco: una
+      # release rifatta a distanza di giorni deve raccontare quello che c'era
+      # dentro allora.
+      - name: E le sue note
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NOME: ${{ steps.quale.outputs.nome }}
+          SHA: ${{ steps.quale.outputs.sha }}
+        run: |
+          set -euo pipefail
+          quale="${NOME#v}"
+          # Solo il CHANGELOG torna indietro: il programma che lo legge resta
+          # quello di adesso, e a un'etichetta vecchia — la `v1.6.9` — non
+          # esisteva nemmeno.
+          git checkout --quiet "$SHA" -- ponte/CHANGELOG.md
+          node strumenti/le-note-della-versione.mjs "$quale" > note.md
+          gh release create "$NOME" --title "gdahome $quale" --notes-file note.md ||
+            gh release edit "$NOME" --title "gdahome $quale" --notes-file note.md
+          {
+            printf '## Le note di `%s`\n' "$NOME"
+            echo ""
+            gh release view "$NOME" --json url --jq .url
+            echo ""
+            echo '```'
+            cat note.md
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
       - name: Cosa e' successo
+        if: ${{ !inputs.solo_le_note }}
         env:
           NOME: ${{ steps.quale.outputs.nome }}
           SHA: ${{ steps.quale.outputs.sha }}
