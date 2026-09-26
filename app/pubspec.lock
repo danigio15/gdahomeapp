@@ -361,8 +361,8 @@ packages:
     dependency: "direct main"
     description:
       path: "packages/gdanav_app"
-      ref: "claude/blissful-ride-jazzct"
-      resolved-ref: "372ea5e099aabb4ac1c40076789c5499a1a930c3"
+      ref: main
+      resolved-ref: "206f99d3fb06b88a8d43c8cb5c56776f28987ac0"
       url: "https://github.com/danigio15/gdanav.git"
     source: git
     version: "0.1.0"
@@ -370,8 +370,8 @@ packages:
     dependency: transitive
     description:
       path: "packages/gdanav_core"
-      ref: "372ea5e099aabb4ac1c40076789c5499a1a930c3"
-      resolved-ref: "372ea5e099aabb4ac1c40076789c5499a1a930c3"
+      ref: "206f99d3fb06b88a8d43c8cb5c56776f28987ac0"
+      resolved-ref: "206f99d3fb06b88a8d43c8cb5c56776f28987ac0"
       url: "https://github.com/danigio15/gdanav.git"
     source: git
     version: "0.1.0"

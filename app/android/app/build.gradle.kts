@@ -30,15 +30,14 @@ val chiaveVera =
 val cELaChiaveVera = chiaveVera.getProperty("storeFile") != null
 val firmaDiProvaChiesta = System.getenv("GDAHOME_FIRMA_DI_PROVA") == "si"
 
-// La versione col navigatore in auto (`GDAHOME_NAVIGATORE=si`).
+// Il navigatore in auto: di serie acceso, in ogni pacchetto che si pubblica.
 //
-// E' gdahome com'e', con gdanav dentro, ma in Android Auto parte dalla mappa
-// del navigatore e la casa sta dietro un tasto: il servizio dell'auto e' di
-// navigazione, e non IOT. Stesso nome e stessa firma della gdahome di sempre
-// (la chiave vera, se c'e'): e' la stessa app, da provare nel test interno
-// prima di farla diventare quella di tutti. Le differenze stanno tutte in
-// `src/navigatore`; senza la variabile non si accende niente.
-val colNavigatore = System.getenv("GDAHOME_NAVIGATORE") == "si"
+// E' gdahome con gdanav dentro, e in Android Auto parte dalla mappa del
+// navigatore con la casa dietro un tasto: il servizio dell'auto e' di
+// navigazione, e non IOT. Stesso nome e stessa firma di sempre. Le differenze
+// stanno tutte in `src/navigatore`. Per costruire la gdahome di prima, solo
+// IOT in auto, si mette `GDAHOME_NAVIGATORE=no`.
+val colNavigatore = System.getenv("GDAHOME_NAVIGATORE") != "no"
 
 android {
     // La chiave con cui si firmano i pacchetti di prova.

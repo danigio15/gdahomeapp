@@ -7,10 +7,9 @@
 /// scarica niente. Da li' in poi resta acceso finche' l'app e' viva, come le
 /// altre sezioni: si torna alla plancia e la guida continua a parlare.
 ///
-/// In auto, nella gdahome di sempre, c'e' la casa. Nella versione col
-/// navigatore in auto (`GDAHOME_NAVIGATORE=si`, da provare nel test interno
-/// di gdanav) c'e' prima gdanav, e la casa sta dietro un tasto: li' gdanav
-/// si accende anche salendo in macchina, senza aprire la sezione.
+/// In auto c'e' prima gdanav, e la casa sta dietro un tasto: gdanav si
+/// accende anche salendo in macchina, senza aprire la sezione. Solo la
+/// gdahome costruita con `GDAHOME_NAVIGATORE=no` ha in auto la casa e basta.
 library;
 
 import 'dart:async';

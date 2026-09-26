@@ -2,10 +2,10 @@
 #
 # E' gdahome — la plancia, il menu, la casa — con gdanav dentro come sezione,
 # e in Android Auto parte dalla mappa del navigatore con la casa dietro un
-# tasto (servizio di navigazione, non IOT). Stesso nome della gdahome di
-# sempre (`com.gdahome.gdahome`) e stessa chiave vera: si carica nel test
-# interno di gdahome, e la gdahome di produzione non cambia finche' non lo
-# si decide. Vedi `GDAHOME_NAVIGATORE` in `app/android/app/build.gradle.kts`.
+# tasto (servizio di navigazione, non IOT), come ogni gdahome che si
+# pubblica. Stesso nome (`com.gdahome.gdahome`) e stessa chiave vera: e' il
+# pacchetto di un ramo di lavoro, da caricare nel test interno. Vedi
+# `GDAHOME_NAVIGATORE` in `app/android/app/build.gradle.kts`.
 #
 # Gira solo sui rami `claude/**`, e da solo non pubblica niente: l'AAB e l'APK
 # restano fra gli artefatti della corsa.

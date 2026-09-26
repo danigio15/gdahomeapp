@@ -13,8 +13,7 @@
 # - ogni notte comunque, per quello che l'avviso non ha portato;
 # - a mano, da «Run workflow».
 #
-# Gira solo dal ramo principale, come tutti i workflow a orario e ad avviso:
-# finche' il navigatore non e' su main, non parte.
+# Gira dal ramo principale, come tutti i workflow a orario e ad avviso.
 name: Aggiorna gdanav
 
 on:

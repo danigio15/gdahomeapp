@@ -105,16 +105,15 @@ dependencies:
   # schermo di gdanav sta in un pacchetto apposta; la sua app lo usa uguale.
   #
   # Porta con se' quello che gli serve — la mappa (MapLibre), la posizione,
-  # la voce, il Bluetooth per il dongle OBD — e i permessi Android relativi.
-  # Android Auto invece resta quello di gdahome.
+  # la voce, il Bluetooth per il dongle OBD — e i permessi Android relativi,
+  # e i suoi schermi di Android Auto.
   gdanav_app:
     git:
       url: https://github.com/danigio15/gdanav.git
       path: packages/gdanav_app
-      # Il ramo di gdanav dove vive oggi il pacchetto; quando e' unito, `main`.
       # Il commit preciso sta in pubspec.lock, e lo porta avanti il workflow
       # «Aggiorna gdanav».
-      ref: claude/blissful-ride-jazzct
+      ref: main
 
 dev_dependencies:
   flutter_test:

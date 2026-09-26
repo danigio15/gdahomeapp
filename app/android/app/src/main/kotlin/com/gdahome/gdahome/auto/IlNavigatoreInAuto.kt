@@ -1,11 +1,11 @@
 /* Il navigatore in auto: gdanav davanti, e la casa a un tasto.
  *
- * Esiste **solo nella versione col navigatore** (`GDAHOME_NAVIGATORE=si`,
- * vedi `build.gradle.kts`): li' il servizio dell'auto e' questo, e l'app si
- * dichiara di navigazione. Nella gdahome di sempre il servizio resta
- * `GdahomeCarAppService`, di categoria IOT, e niente di questo file si
- * accende — il segnale e' `R.bool.navigatore_in_auto`, falso qui e vero solo
- * nelle risorse di quella versione.
+ * E' la gdahome che si pubblica (vedi `colNavigatore` in `build.gradle.kts`):
+ * il servizio dell'auto e' questo, e l'app si dichiara di navigazione. Solo
+ * costruendo con `GDAHOME_NAVIGATORE=no` — e nei pacchetti di debug — il
+ * servizio resta `GdahomeCarAppService`, di categoria IOT, e niente di questo
+ * file si accende: il segnale e' `R.bool.navigatore_in_auto`, falso nelle
+ * risorse di sempre e vero in quelle di `src/navigatore`.
  *
  * ── Un motore solo, per il telefono e per l'auto ────────────────────────
  *
