@@ -588,10 +588,12 @@ void main() {
       await tester.scrollUntilVisible(
         nellaBarra('AUTOMAZIONI'),
         80,
-        scrollable: find.descendant(
-          of: find.byType(BarraDelleSezioni),
-          matching: find.byType(Scrollable),
-        ),
+        scrollable: find
+            .descendant(
+              of: find.byType(BarraDelleSezioni),
+              matching: find.byType(Scrollable),
+            )
+            .first,
       );
       expect(nellaBarra('AVANZATE'), findsOneWidget);
       expect(nellaBarra('AIUTANTI'), findsOneWidget);

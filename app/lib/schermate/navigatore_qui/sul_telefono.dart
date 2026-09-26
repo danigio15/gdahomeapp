@@ -22,6 +22,7 @@ import 'package:gdanav_app/gdanav_app.dart';
 
 import '../../casa/collegamento.dart';
 import '../../parole.dart';
+import '../../vestito/marchio.dart';
 import '../../vestito/pezzi.dart';
 import '../comandi_in_auto.dart';
 import 'la_vettura.dart';
@@ -205,7 +206,10 @@ class _IlNavigatoreState extends State<IlNavigatore>
         return GdanavDentro(
           app: app,
           navigatore: widget.navigatore,
+          /* Accanto al ☰ di gdanav (il suo menu), il marchio di gdahome
+           * apre la barra dell'app. */
           menuOspite: widget.menuOspite,
+          iconaOspite: const Marchio(lato: 34),
           apriIlMenu: widget.apriIlMenu,
           /* I comandi di casa per l'auto si scelgono dal menu del
            * navigatore: e' li' che si pensa all'auto. La schermata e' di
@@ -298,130 +302,140 @@ class _LaTessera extends StatelessWidget {
         return Padding(
           padding: const EdgeInsets.fromLTRB(10, 8, 10, 2),
           child: Material(
-            color: _notte,
+            color: Colors.transparent,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(20),
               side: scelta
                   ? const BorderSide(color: _accento, width: 2.5)
-                  : BorderSide.none,
+                  : BorderSide(color: Colors.white.withValues(alpha: 0.10)),
             ),
             clipBehavior: Clip.antiAlias,
-            child: InkWell(
-              onTap: apri,
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(14, 12, 10, 12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Container(
-                          width: 30,
-                          height: 30,
-                          decoration: BoxDecoration(
-                            color: _accento,
-                            borderRadius: BorderRadius.circular(10),
+            /* Un fondo suo, dal blu della notte a quello del logo: sulla
+             * barra chiara salta all'occhio, e su quella scura non ci si
+             * confonde. */
+            child: Ink(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [Color(0xFF1E3A5F), _notte],
+                ),
+              ),
+              child: InkWell(
+                onTap: apri,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(14, 12, 10, 12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          /* Il logo di gdanav, quello dell'icona dell'app:
+                         * e' lui, e si riconosce da lontano. */
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(9),
+                            child: Image.asset(
+                              logoGdanav,
+                              width: 34,
+                              height: 34,
+                              fit: BoxFit.cover,
+                            ),
                           ),
-                          child: const Icon(
-                            Icons.navigation_rounded,
-                            size: 18,
-                            color: _notte,
+                          const SizedBox(width: 10),
+                          const Expanded(
+                            child: Text(
+                              'GDANAV',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: 1,
+                              ),
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: 10),
-                        const Expanded(
-                          child: Text(
-                            'GDANAV',
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
+                          IconButton(
+                            tooltip: inLingua(
+                              it: 'Impostazioni del navigatore',
+                              en: 'Navigator settings',
+                            ),
+                            onPressed: impostazioni,
+                            style: IconButton.styleFrom(
+                              backgroundColor: Colors.white.withValues(
+                                alpha: 0.1,
+                              ),
+                              minimumSize: const Size(34, 34),
+                              fixedSize: const Size(34, 34),
+                              padding: EdgeInsets.zero,
+                            ),
+                            icon: const Icon(
+                              Icons.tune_rounded,
+                              size: 18,
                               color: Colors.white,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w800,
-                              letterSpacing: 1,
                             ),
                           ),
-                        ),
-                        IconButton(
-                          tooltip: inLingua(
-                            it: 'Impostazioni del navigatore',
-                            en: 'Navigator settings',
-                          ),
-                          onPressed: impostazioni,
-                          style: IconButton.styleFrom(
-                            backgroundColor: Colors.white.withValues(
-                              alpha: 0.1,
-                            ),
-                            minimumSize: const Size(34, 34),
-                            fixedSize: const Size(34, 34),
-                            padding: EdgeInsets.zero,
-                          ),
-                          icon: const Icon(
-                            Icons.tune_rounded,
-                            size: 18,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        if (ultima != null) ...[
-                          Text(
-                            '${ultima.batteria.round()}%',
-                            style: const TextStyle(
-                              fontFamily: 'Oswald',
-                              fontSize: 28,
-                              height: 1,
-                              fontWeight: FontWeight.w700,
-                              color: _verde,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
                         ],
-                        Expanded(
-                          child: Text(
-                            sotto,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 12.5,
-                              fontWeight: FontWeight.w600,
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          if (ultima != null) ...[
+                            Text(
+                              '${ultima.batteria.round()}%',
+                              style: const TextStyle(
+                                fontFamily: 'Oswald',
+                                fontSize: 28,
+                                height: 1,
+                                fontWeight: FontWeight.w700,
+                                color: _verde,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                          ],
+                          Expanded(
+                            child: Text(
+                              sotto,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 12.5,
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
                           ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _Viaggio(
-                            icona: Icons.home_rounded,
-                            testo: inLingua(it: 'A casa', en: 'Home'),
-                            quando: () {
-                              apri();
-                              unawaited(portamiA(casa: true));
-                            },
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _Viaggio(
+                              icona: Icons.home_rounded,
+                              testo: inLingua(it: 'A casa', en: 'Home'),
+                              quando: () {
+                                apri();
+                                unawaited(portamiA(casa: true));
+                              },
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: 6),
-                        Expanded(
-                          child: _Viaggio(
-                            icona: Icons.work_rounded,
-                            testo: inLingua(it: 'Al lavoro', en: 'Work'),
-                            quando: () {
-                              apri();
-                              unawaited(portamiA(casa: false));
-                            },
+                          const SizedBox(width: 6),
+                          Expanded(
+                            child: _Viaggio(
+                              icona: Icons.work_rounded,
+                              testo: inLingua(it: 'Al lavoro', en: 'Work'),
+                              quando: () {
+                                apri();
+                                unawaited(portamiA(casa: false));
+                              },
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
-                  ],
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),

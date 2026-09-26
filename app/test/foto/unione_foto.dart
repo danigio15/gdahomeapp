@@ -31,6 +31,7 @@ import 'package:gdahome/schermate/barra.dart';
 import 'package:gdahome/schermate/comandi_in_auto.dart';
 import 'package:gdahome/schermate/menu.dart';
 import 'package:gdahome/schermate/navigatore_qui/qui.dart';
+import 'package:gdahome/vestito/marchio.dart';
 import 'package:gdahome/vestito/tema.dart';
 import 'package:gdanav_app/gdanav_app.dart';
 import 'package:gdanav_app/schermate/fonte_gdahome.dart';
@@ -398,6 +399,20 @@ void main() {
     );
   }
 
+  testWidgets('domani: il menu ridisegnato, al buio', (tester) async {
+    await unaCasa(tester);
+    await tester.pumpWidget(
+      telefono(
+        Scaffold(
+          body: Stack(children: [_sfondo(), laBarra(sulNavigatore: false)]),
+        ),
+        tema: temaScuro(),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await laFoto(tester, 'domani-menu-scuro');
+  });
+
   testWidgets('domani: il menu ridisegnato, con gdanav', (tester) async {
     await unaCasa(tester);
     await tester.pumpWidget(
@@ -438,7 +453,17 @@ void main() {
     final app = await _gdanav(tester, _laZoe());
     /* A tutto schermo, come la plancia: il ☰ di gdanav apre la barra di
      * gdahome, come fanno i tre trattini della plancia. */
-    await tester.pumpWidget(telefono(Scaffold(body: GdanavDentro(app: app))));
+    await tester.pumpWidget(
+      telefono(
+        Scaffold(
+          body: GdanavDentro(
+            app: app,
+            menuOspite: () {},
+            iconaOspite: const Marchio(lato: 34),
+          ),
+        ),
+      ),
+    );
     await laFoto(tester, 'domani-gdanav');
   });
 
