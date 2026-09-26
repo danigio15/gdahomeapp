@@ -205,6 +205,36 @@
   if (!window.IntersectionObserver || fermi) {
     for (var i = 0; i < daMostrare.length; i++) daMostrare[i].classList.add("qui");
   } else {
+    /* Da qui le schede si nascondono (vedi `.appare-attivo` nello stile): prima
+     * di questa riga la pagina e' gia' intera, e resta intera se lo script
+     * non arriva fin qui. */
+    document.documentElement.classList.add("appare-attivo");
+
+    /* Oltre all'osservatore, un controllo alla buona su scorrimento e
+     * ridimensionamento: una scheda entrata nello schermo compare anche se
+     * l'osservatore non ha chiamato — su Safari, dentro certe pagine, e' gia'
+     * successo di vedere un pezzo di sito restare bianco. */
+    var ancoraDaMostrare = function () {
+      var alto = window.innerHeight || document.documentElement.clientHeight;
+      for (var m = 0; m < daMostrare.length; m++) {
+        var scheda = daMostrare[m];
+        if (scheda.classList.contains("qui")) continue;
+        var r = scheda.getBoundingClientRect();
+        if (r.top < alto && r.bottom > 0) scheda.classList.add("qui");
+      }
+    };
+    var prossimo = 0;
+    var fraPoco = function () {
+      if (prossimo) return;
+      prossimo = setTimeout(function () {
+        prossimo = 0;
+        ancoraDaMostrare();
+      }, 150);
+    };
+    window.addEventListener("scroll", fraPoco, { passive: true });
+    window.addEventListener("resize", fraPoco);
+    setTimeout(ancoraDaMostrare, 1200);
+
     var occhio = new IntersectionObserver(
       function (visti) {
         visti.forEach(function (v) {

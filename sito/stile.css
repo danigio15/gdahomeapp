@@ -344,6 +344,13 @@ section {
   border-radius: 6px;
 }
 
+/* Un elemento con `hidden` e' nascosto, qualunque `display` gli dia il suo
+ * stile. Senza questa riga `.telaio-senza` (display: flex) si vedeva sempre, e
+ * sotto la plancia vera compariva «La plancia non e' stata pubblicata». */
+[hidden] {
+  display: none !important;
+}
+
 /* ── La barra in cima ───────────────────────────────────────────────────── */
 
 .cappello {
@@ -1414,14 +1421,18 @@ a.scarico:hover {
 
 /* ── Comparire salendo ─────────────────────────────────────────────────── */
 
-.appare {
+/* Le schede partono nascoste **solo** quando `sito.js` e' partito e ha acceso
+ * la sua classe su <html>: se lo script non gira, o si ferma prima, la pagina
+ * resta intera invece di avere dei buchi bianchi dove le schede aspettano un
+ * segnale che non arriva. */
+.appare-attivo .appare {
   opacity: 0;
   transform: translateY(14px);
   transition:
     opacity 0.55s ease,
     transform 0.55s ease;
 }
-.appare.qui {
+.appare-attivo .appare.qui {
   opacity: 1;
   transform: none;
 }
