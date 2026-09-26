@@ -31,8 +31,8 @@ import {
   QUANTO_SI_PUO_SCRIVERE,
   ilBiglietto,
   ilCredenziale,
-  laPista,
   lePiste,
+  lePisteDette,
   leNovita,
   porta,
   quantoPesa,
@@ -150,14 +150,34 @@ test("le novita' di questa repository stanno nella casella", () => {
 });
 
 test("«production» non parte per sbaglio", () => {
-  assert.equal(laPista("internal"), "internal");
-  assert.equal(laPista(" alpha "), "alpha");
-  assert.throws(() => laPista(""), /su quale pista/);
-  assert.throws(() => laPista("production"), /aggiungi --davvero/);
-  assert.equal(laPista("production", { davvero: true }), "production");
+  assert.deepEqual(lePisteDette("internal"), ["internal"]);
+  assert.deepEqual(lePisteDette(" alpha "), ["alpha"]);
+  assert.throws(() => lePisteDette(""), /su quale pista/);
+  assert.throws(() => lePisteDette("  ,  ,"), /su quale pista/);
+  assert.throws(() => lePisteDette("production"), /aggiungi --davvero/);
+  assert.deepEqual(lePisteDette("production", { davvero: true }), ["production"]);
+  /* E non basta nasconderla in mezzo a un elenco: il freno guarda tutte. */
+  assert.throws(() => lePisteDette("alpha,production"), /aggiungi --davvero/);
   /* Le piste fatte a mano hanno un nome loro, e passano: l'elenco delle solite
    * serve a suggerire, non a vietare. */
-  assert.equal(laPista("custom-12345"), "custom-12345");
+  assert.deepEqual(lePisteDette("custom-12345"), ["custom-12345"]);
+});
+
+test("piu' piste in una volta: si scrivono con la virgola, e production va in fondo", () => {
+  assert.deepEqual(lePisteDette("internal,alpha,beta"), ["internal", "alpha", "beta"]);
+  assert.deepEqual(lePisteDette(" internal , alpha "), ["internal", "alpha"]);
+  /* Scritta due volte e' una volta: il negozio la stessa pista la vuole una
+   * volta sola, e chi ha battuto due volte non voleva due cose. */
+  assert.deepEqual(lePisteDette("alpha,alpha"), ["alpha"]);
+  /* L'ordine e' quello scritto, con una sola eccezione: `production` in coda.
+   * E' l'unica che il negozio puo' negare — un account personale nuovo non ce
+   * l'ha finche' non ha finito la prova chiusa — e messa per ultima un suo
+   * rifiuto lascia in piedi quello che era gia' andato sulle altre. */
+  assert.deepEqual(lePisteDette("production,alpha,internal", { davvero: true }), [
+    "alpha",
+    "internal",
+    "production",
+  ]);
 });
 
 test("il peso si dice come lo direbbe uno", () => {
@@ -222,7 +242,7 @@ test("il giro intero: apre, carica, mette sulla pista, chiede, consegna", async 
   const negozio = negozioFinto();
   const esito = await porta({
     pacco: unPacco(t),
-    pista: "internal",
+    piste: ["internal"],
     novita: NOVITA,
     segreto: JSON.stringify(credenzialeFinto()),
     prendi: negozio.prendi,
@@ -235,10 +255,10 @@ test("il giro intero: apre, carica, mette sulla pista, chiede, consegna", async 
    * la pista, e quello che si vede si scrive. */
   assert.deepEqual(esito, {
     versione: 104322,
-    pista: "internal",
+    piste: ["internal"],
     pubblicato: true,
+    esiti: [{ pista: "internal", confermato: true, stato: "completed" }],
     confermato: true,
-    stato: "completed",
   });
   const app = `/androidpublisher/v3/applications/${COME_SI_CHIAMA}`;
   assert.deepEqual(negozio.fatte, [
@@ -256,6 +276,76 @@ test("il giro intero: apre, carica, mette sulla pista, chiede, consegna", async 
   ]);
 });
 
+test("tre piste, un caricamento solo", async (t) => {
+  /* Il `versionCode` e' unico per tutta l'app: il negozio un numero gia' visto
+   * lo rifiuta, quindi «la stessa versione anche su beta» non si fa caricando
+   * tre volte. Si carica una volta e si mette su tre piste dentro la stessa
+   * modifica — e la prova guarda proprio questo, che di caricamenti ce ne sia
+   * uno. */
+  const negozio = negozioFinto();
+  const esito = await porta({
+    pacco: unPacco(t),
+    piste: ["internal", "alpha", "beta"],
+    novita: NOVITA,
+    segreto: JSON.stringify(credenzialeFinto()),
+    prendi: negozio.prendi,
+    aspetta: async () => {},
+  });
+
+  assert.deepEqual(esito.piste, ["internal", "alpha", "beta"]);
+  assert.equal(esito.confermato, true);
+  assert.equal(
+    negozio.fatte.filter((una) => una.includes("bundles?uploadType=media")).length,
+    1,
+    "il pacchetto sale una volta sola",
+  );
+  const app = `/androidpublisher/v3/applications/${COME_SI_CHIAMA}`;
+  for (const pista of ["internal", "alpha", "beta"]) {
+    assert.ok(negozio.fatte.includes(`PATCH ${app}/edits/modifica-1/tracks/${pista}`));
+  }
+  assert.equal(
+    negozio.fatte.filter((una) => una.includes(":commit")).length,
+    1,
+    "una modifica sola, quindi una consegna sola",
+  );
+});
+
+test("«production» viaggia da sola, e dopo le altre", async (t) => {
+  /* E' l'unica pista che il negozio puo' negare: un account personale nuovo
+   * non ce l'ha finche' non ha finito la prova chiusa coi suoi collaudatori.
+   * Se stesse nella stessa modifica delle altre, un suo «403» si porterebbe
+   * via anche alpha — che era andata. Quindi va in una modifica sua, per
+   * ultima, e senza ricaricare niente: la versione nel negozio c'e' gia'. */
+  const negozio = negozioFinto();
+  const esito = await porta({
+    pacco: unPacco(t),
+    piste: ["alpha", "production"],
+    novita: NOVITA,
+    segreto: JSON.stringify(credenzialeFinto()),
+    prendi: negozio.prendi,
+    aspetta: async () => {},
+  });
+
+  assert.equal(
+    negozio.fatte.filter((una) => una.includes("bundles?uploadType=media")).length,
+    1,
+    "promuovere non e' ricaricare",
+  );
+  assert.equal(
+    negozio.fatte.filter((una) => una.includes(":commit")).length,
+    2,
+    "due modifiche, due consegne: e' proprio il punto",
+  );
+  const app = `/androidpublisher/v3/applications/${COME_SI_CHIAMA}`;
+  const alpha = negozio.fatte.indexOf(`PATCH ${app}/edits/modifica-1/tracks/alpha`);
+  const produzione = negozio.fatte.indexOf(`PATCH ${app}/edits/modifica-1/tracks/production`);
+  assert.ok(alpha >= 0 && produzione > alpha, "production tocca per ultima");
+  assert.deepEqual(
+    esito.esiti.map((uno) => uno.pista),
+    ["alpha", "production"],
+  );
+});
+
 test("consegnata ma non ancora visibile: lo dice, e non dice di aver fallito", async (t) => {
   /* Il pacchetto puo' essere in lavorazione o in revisione: la consegna e'
    * andata davvero, e far diventare rosso il lavoro sarebbe sbagliato quanto
@@ -264,7 +354,7 @@ test("consegnata ma non ancora visibile: lo dice, e non dice di aver fallito", a
   const detto = [];
   const esito = await porta({
     pacco: unPacco(t),
-    pista: "alpha",
+    piste: ["alpha"],
     novita: NOVITA,
     segreto: JSON.stringify(credenzialeFinto()),
     prendi: negozio.prendi,
@@ -288,7 +378,7 @@ test("--prova fa tutto e poi butta: nel negozio non cambia niente", async (t) =>
   const negozio = negozioFinto();
   const esito = await porta({
     pacco: unPacco(t),
-    pista: "internal",
+    piste: ["internal"],
     novita: NOVITA,
     segreto: JSON.stringify(credenzialeFinto()),
     prendi: negozio.prendi,
@@ -311,7 +401,7 @@ test("se qualcosa va male la modifica si butta, e si dice cosa ha detto Google",
     () =>
       porta({
         pacco: unPacco(t),
-        pista: "internal",
+        piste: ["internal"],
         novita: NOVITA,
         segreto: JSON.stringify(credenzialeFinto()),
         prendi: negozio.prendi,
@@ -348,7 +438,7 @@ test("senza gettone non si carica niente, e si dice dove guardare", async (t) =>
     () =>
       porta({
         pacco: unPacco(t),
-        pista: "internal",
+        piste: ["internal"],
         novita: NOVITA,
         segreto: JSON.stringify(credenzialeFinto()),
         prendi,

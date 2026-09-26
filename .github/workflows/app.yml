@@ -21,9 +21,20 @@ on:
       negozio:
         description: >-
           Su quale pista del Play Console caricarlo: internal, alpha, beta,
-          production. Vuoto (di serie) vuol dire che nel negozio non ci va.
+          production. Anche piu' d'una, separate da una virgola
+          (internal,alpha,beta): il pacchetto si carica una volta sola e va su
+          tutte. Vuoto (di serie) vuol dire che nel negozio non ci va.
         required: false
         default: ""
+      davvero_in_produzione:
+        description: >-
+          Da spuntare solo per scrivere «production» qui sopra. Quella pista
+          pubblica a tutti quelli che hanno l'app, non ai collaudatori, e non
+          si torna indietro premendo un tasto: senza questa spunta lo
+          strumento si ferma e non carica niente.
+        type: boolean
+        required: false
+        default: false
       prova_del_negozio:
         description: >-
           Fa tutto il giro del negozio e poi butta la modifica, senza
@@ -385,6 +396,7 @@ jobs:
           NEGOZIO_GOOGLE: ${{ secrets.NEGOZIO_GOOGLE }}
           PISTA: ${{ inputs.negozio || vars.PISTA_DEL_NEGOZIO }}
           PROVA: ${{ inputs.prova_del_negozio }}
+          DAVVERO: ${{ inputs.davvero_in_produzione }}
         run: |
           if [ -z "$NEGOZIO_GOOGLE" ]; then
             echo "::error::Chiesta la pista «$PISTA» ma manca il segreto NEGOZIO_GOOGLE."
@@ -392,6 +404,12 @@ jobs:
           fi
           solo=""
           if [ "$PROVA" = "true" ]; then solo="--prova"; fi
+          # Le due meta' della conferma di «production»: il nome scritto nella
+          # casella, e la spunta qui accanto. Sono due gesti diversi apposta —
+          # una pista sbagliata battuta di fretta non basta a pubblicare a
+          # tutti, e chi vuole farlo spunta e sa cosa spunta. Se manca la
+          # spunta non si aggiunge niente, e lo strumento si ferma da se'.
+          if [ "$DAVVERO" = "true" ]; then solo="$solo --davvero"; fi
           # `pipefail`, e questa riga e' costata una pubblicazione.
           #
           # Lo stato di una catena e' quello dell'ULTIMO comando: `tee` riesce
@@ -405,7 +423,7 @@ jobs:
             app/build/app/outputs/bundle/release/app-release.aab \
             --pista="$PISTA" $solo | tee negozio.txt
           {
-            echo "### Nel negozio: pista \`$PISTA\`"
+            echo "### Nel negozio: \`$PISTA\`"
             echo ""
             echo '```'
             cat negozio.txt
