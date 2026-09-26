@@ -5,6 +5,7 @@
 /// — chi apre la plancia non sa su che sistema gira — e qui dice «no».
 library;
 
+import 'i_comandi.dart';
 import 'la_foto.dart';
 
 /// Sempre `false`: non c'era niente dove scriverla.
@@ -19,3 +20,12 @@ Future<String?> prendiIlComandoDellAuto() async => null;
 
 /// Nessuna ricetta: nel browser non c'e' niente che parta da solo.
 Future<List<RicettaDellAzione>> leRicetteDellAuto() async => const [];
+
+/// Nel browser non c'e' nessuna auto: nessun comando da scegliere.
+Future<IComandiScelti?> leggiIComandiSeCi() async => null;
+
+Future<IComandiScelti> leggiIComandi() async => const IComandiScelti();
+
+Future<bool> scriviIComandi(IComandiScelti scelti) async => false;
+
+Future<List<ComandoRapido>> leAzioniRapide() async => const [];

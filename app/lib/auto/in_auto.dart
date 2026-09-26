@@ -35,6 +35,7 @@ import 'package:flutter/widgets.dart' show WidgetsFlutterBinding;
 import '../casa/archivio_delle_case.dart';
 import '../casa/cassaforte.dart';
 import '../casa/collegamento.dart';
+import 'i_comandi.dart';
 import 'la_foto.dart';
 import 'qui.dart' as auto;
 
@@ -144,8 +145,13 @@ Future<ComeEFinitaInAuto> _esegui(
     if (!collegamento.dentro || stato == null) {
       return ComeEFinitaInAuto.senzaCasa;
     }
+    /* Il servizio che dipende da com'e' messa adesso (una serratura, un
+     * lettore) si decide qui, con lo stato di adesso in mano. */
+    final servizio = ricetta.servizio == secondoLoStato
+        ? ilServizioDiAdesso(ricetta.dominio, stato[ricetta.entita]?.stato)
+        : ricetta.servizio;
     await stato.comanda(
-      ricetta.servizio,
+      servizio,
       ricetta.entita,
       dominio: ricetta.dominio,
       con: ricetta.dati.isEmpty ? null : {...ricetta.dati},
