@@ -80,7 +80,10 @@ const LARGO = process.argv.includes("--largo");
  *
  * Mille e centottanta per ottocentoventi: e' un iPad girato, ed e' anche la
  * misura in cui la barra della plancia ci sta ancora tutta senza scorrere. */
-const TAVOLETTA = process.argv.includes("--tavoletta");
+/* `--ipad`: la tavoletta nella misura che l'App Store prende per gli iPad
+ * grandi (13 pollici): 1376 per 1032 punti a due pixel, cioe' 2752 per 2064. */
+const IPAD = process.argv.includes("--ipad");
+const TAVOLETTA = IPAD || process.argv.includes("--tavoletta");
 
 /* In che lingua gira l'app, e come si chiamano le cose in quella lingua.
  *
@@ -98,8 +101,29 @@ const due = (it, en) => (INGLESE ? en : it);
  * stesso del collaudo, solo respirato: le pause si allungano perche' chi
  * guarda deve fare in tempo a leggere. */
 const FILMA = process.argv.includes("--filma");
-/* Una cartella per faccia: telefono, telefono scuro, computer. */
-const FOTO = join(QUI, "foto", TAVOLETTA ? "tavoletta" : LARGO ? "largo" : SCURO ? "scuro" : "");
+/* `--iphone`: lo stesso telefono, a tre punti per pixel invece di due. Le
+ * fotografie escono 1290 per 2796, che e' una delle misure che l'App Store
+ * prende per gli iPhone grandi (6,9 pollici): quelle del Play Store, a 956,
+ * li' non le accetta. */
+const IPHONE = process.argv.includes("--iphone");
+/* Una cartella per faccia: telefono, telefono scuro, computer, iPhone. */
+const FOTO = join(
+  QUI,
+  "foto",
+  IPAD
+    ? "ipad"
+    : TAVOLETTA
+      ? "tavoletta"
+      : LARGO
+        ? "largo"
+        : IPHONE
+          ? SCURO
+            ? "iphone-scuro"
+            : "iphone"
+          : SCURO
+            ? "scuro"
+            : "",
+);
 /* Dove il servitore serve la plancia. Fissa, perche' l'app la deve sapere
  * quando la si costruisce: `--dart-define=PLANCIA_URL=http://127.0.0.1:8765`. */
 const PORTA_DEL_SERVITORE = Number(process.env.PORTA_DEL_SERVITORE || 8765);
@@ -513,12 +537,14 @@ async function main() {
   daSpegnere.push(() => browser.close());
   const contesto = await browser.newContext({
     /* Un telefono di quelli di adesso, o un computer. */
-    viewport: TAVOLETTA
-      ? { width: 1180, height: 820 }
-      : LARGO
-        ? { width: 1440, height: 900 }
-        : { width: 430, height: 932 },
-    deviceScaleFactor: 2,
+    viewport: IPAD
+      ? { width: 1376, height: 1032 }
+      : TAVOLETTA
+        ? { width: 1180, height: 820 }
+        : LARGO
+          ? { width: 1440, height: 900 }
+          : { width: 430, height: 932 },
+    deviceScaleFactor: IPHONE ? 3 : 2,
     colorScheme: SCURO ? "dark" : "light",
     /* In che lingua gira l'app: quella del telefono, e qui il telefono e'
        questo browser. L'app parla italiano e inglese e sceglie da se' (vedi

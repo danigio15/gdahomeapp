@@ -83,6 +83,16 @@ Future<void> inAuto() async {
   await eseguiIlComandoDellAuto();
 }
 
+/// Sull'iPhone il motore e' uno solo, quello dell'app, ed e' sempre acceso
+/// (CarPlay lo tiene su): il colpetto di `ios/Runner/LaCasaInCarPlay.swift`
+/// arriva a lui, e lo sente da qui. La chiama `main`.
+void ascoltaIlColpetto() {
+  const MethodChannel(canaleDellAuto).setMethodCallHandler((_) async {
+    await eseguiIlComandoDellAuto();
+    return null;
+  });
+}
+
 /// Da dove arriva il colpetto. Lo stesso nome sta in `IlPonteDellAuto.kt`: i
 /// due capi devono restare la stessa parola, perche' sbagliarli non da'
 /// nessun errore — da' un motore acceso che non fa niente.

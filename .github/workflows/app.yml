@@ -44,6 +44,13 @@ on:
         type: boolean
         required: false
         default: false
+      testflight:
+        description: >-
+          Manda anche l'app per iPhone su TestFlight (servono i segreti di
+          Apple, vedi docs/IPHONE.md). Sulle etichette ci va da se'.
+        type: boolean
+        required: false
+        default: false
       elenca_le_piste:
         description: >-
           Non costruisce niente: chiede solo al negozio come si chiamano
@@ -495,6 +502,14 @@ jobs:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
         with:
           persist-credentials: false
+      # L'App Store accetta solo pacchetti fatti con l'SDK di iOS piu'
+      # recente: si usa l'Xcode piu' nuovo che la macchina ha, e lo si scrive
+      # nel riepilogo, cosi' il giorno che Apple rifiuta si sa gia' perche'.
+      - name: L'Xcode piu' recente
+        run: |
+          xcode="$(ls -d /Applications/Xcode_*.app | grep -v -i beta | sort -V | tail -1)"
+          sudo xcode-select -s "$xcode"
+          xcodebuild -version | tee -a "$GITHUB_STEP_SUMMARY"
       - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
         with:
           channel: stable
@@ -517,17 +532,26 @@ jobs:
       # il lavoro finisce in mezzo secondo. Il punto era l'unico byte non
       # ASCII sulla riga di comando. Un trattino fa la stessa cosa in tutti e
       # tre i posti.
+      #
+      # Il numero del pacchetto (CFBundleVersion) e' quello della corsa: sale
+      # sempre, e TestFlight non accetta due volte lo stesso numero per la
+      # stessa versione. Il nome della versione resta quello di pubspec.
       - name: Compila (senza firma)
         working-directory: app
         env:
           CENTRALINO: ${{ inputs.centralino }}
           CORSA: ${{ github.run_number }}
         run: |
-          VERSIONE="$CORSA-${GITHUB_SHA:0:7}"
-          if [ -n "$CENTRALINO" ]; then
-            flutter build ios --release --no-codesign --dart-define=VERSIONE="$VERSIONE" --dart-define=CENTRALINO="$CENTRALINO"
+          # Su un'etichetta il numero e' quello del rilascio, come su Android.
+          if [ "$GITHUB_REF_TYPE" = "tag" ]; then
+            VERSIONE="${GITHUB_REF_NAME#v}"
           else
-            flutter build ios --release --no-codesign --dart-define=VERSIONE="$VERSIONE"
+            VERSIONE="$CORSA-${GITHUB_SHA:0:7}"
+          fi
+          if [ -n "$CENTRALINO" ]; then
+            flutter build ios --release --no-codesign --build-number="$CORSA" --dart-define=VERSIONE="$VERSIONE" --dart-define=CENTRALINO="$CENTRALINO"
+          else
+            flutter build ios --release --no-codesign --build-number="$CORSA" --dart-define=VERSIONE="$VERSIONE"
           fi
 
       # Da qui in giu' si va avanti solo se su GitHub ci sono le chiavi di
@@ -538,10 +562,16 @@ jobs:
         id: chiavi
         env:
           CHIAVE: ${{ secrets.APPLE_CHIAVE_P8 }}
+          CHIAVE_ID: ${{ secrets.APPLE_CHIAVE_ID }}
+          EMITTENTE: ${{ secrets.APPLE_EMITTENTE }}
           SQUADRA: ${{ secrets.APPLE_SQUADRA }}
         run: |
-          if [ -n "$CHIAVE" ] && [ -n "$SQUADRA" ]; then
+          if [ -n "$CHIAVE" ] && [ -n "$CHIAVE_ID" ] && [ -n "$EMITTENTE" ] && [ -n "$SQUADRA" ]; then
             echo "ci-sono=si" >> "$GITHUB_OUTPUT"
+          elif [ "$GITHUB_REF_TYPE" = "tag" ] && [ -n "$CHIAVE$CHIAVE_ID$EMITTENTE$SQUADRA" ]; then
+            # Un rilascio con le chiavi a meta': come su Android, ci si ferma.
+            echo "::error::Su un'etichetta servono tutti e quattro i segreti di Apple: APPLE_CHIAVE_P8, APPLE_CHIAVE_ID, APPLE_EMITTENTE, APPLE_SQUADRA."
+            exit 1
           else
             echo "ci-sono=no" >> "$GITHUB_OUTPUT"
             {
@@ -549,9 +579,17 @@ jobs:
               echo ""
               echo "Compila: i plugin nativi stanno in piedi e i permessi sono a posto."
               echo "Per installarla su un iPhone serve l'account sviluppatore Apple"
-              echo "(99 €/anno) e quattro segreti su GitHub."
+              echo "(99 €/anno) e quattro segreti su GitHub: vedi docs/IPHONE.md."
             } >> "$GITHUB_STEP_SUMMARY"
           fi
+
+      # CarPlay si accende solo quando Apple ha concesso il permesso
+      # (variabile GDAHOME_CARPLAY = si, vedi docs/IPHONE.md): prima, con
+      # quel permesso scritto dentro, la firma non passerebbe.
+      - name: CarPlay
+        if: vars.GDAHOME_CARPLAY == 'si'
+        working-directory: app
+        run: cp ios/Runner/RunnerCarPlay.entitlements ios/Runner/Runner.entitlements
 
       - name: L'archivio firmato
         if: steps.chiavi.outputs.ci-sono == 'si'
@@ -565,21 +603,27 @@ jobs:
           # La chiave dell'App Store Connect, su disco dove Xcode la cerca.
           mkdir -p ~/.appstoreconnect/private_keys
           printf '%s' "$CHIAVE" > ~/.appstoreconnect/private_keys/AuthKey_$CHIAVE_ID.p8
-          # `-allowProvisioningUpdates` e' quello che evita di doversi
-          # portare dietro certificato e profilo: con la chiave qui sopra,
-          # Xcode se li fa dare da Apple e se li tiene lui. E' il solo modo
-          # per chi non ha un Mac di firmare senza toccare un Mac.
+          # L'archivio si fa senza firma: con la firma automatica Xcode lo
+          # firmerebbe «per sviluppo», e quel profilo vuole almeno un iPhone
+          # registrato nell'account («Your team has no devices»). La firma
+          # per l'App Store la mette l'esportazione qui sotto, con
+          # `-allowProvisioningUpdates` e la chiave: certificato e profilo li
+          # tiene Apple. E' il solo modo per chi non ha un Mac di firmare
+          # senza toccare un Mac. Cosi' e' andata su TestFlight gdanav.
           xcodebuild -workspace ios/Runner.xcworkspace \
             -scheme Runner -configuration Release -sdk iphoneos \
             -archivePath build/gdahome.xcarchive archive \
-            -allowProvisioningUpdates \
-            -authenticationKeyPath ~/.appstoreconnect/private_keys/AuthKey_$CHIAVE_ID.p8 \
-            -authenticationKeyID "$CHIAVE_ID" \
-            -authenticationKeyIssuerID "$EMITTENTE" \
-            DEVELOPMENT_TEAM="$SQUADRA" CODE_SIGN_STYLE=Automatic
+            DEVELOPMENT_TEAM="$SQUADRA" \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY=""
 
+      # Su TestFlight si va come nel Play Store: quando lo si chiede. A ogni
+      # etichetta, o lanciando a mano con «testflight» spuntato; con «prova
+      # del negozio» si fa l'archivio firmato e ci si ferma.
       - name: Il pacchetto, e su TestFlight
-        if: steps.chiavi.outputs.ci-sono == 'si'
+        if: >-
+          steps.chiavi.outputs.ci-sono == 'si' &&
+          !inputs.prova_del_negozio &&
+          (github.ref_type == 'tag' || inputs.testflight)
         working-directory: app
         env:
           CHIAVE_ID: ${{ secrets.APPLE_CHIAVE_ID }}
@@ -613,7 +657,10 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
 
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
-        if: steps.chiavi.outputs.ci-sono == 'si'
+        if: >-
+          steps.chiavi.outputs.ci-sono == 'si' &&
+          !inputs.prova_del_negozio &&
+          (github.ref_type == 'tag' || inputs.testflight)
         with:
           name: gdahome-iphone
           path: app/build/ipa/*.ipa

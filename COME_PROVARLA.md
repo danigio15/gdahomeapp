@@ -373,8 +373,11 @@ flutter devices          # il telefono attaccato col cavo, o un browser
 flutter run --dart-define=CENTRALINO=wss://centralino.<nome>.workers.dev
 ```
 
-Per l'iPhone servono un Mac, Xcode e un account sviluppatore Apple: è l'unica
-strada, e non c'è modo di aggirarla.
+Per lanciarla su un iPhone dal codice servono un Mac e Xcode. Per
+**installarla** no: la costruisce un Mac di GitHub e la manda su TestFlight,
+da dove si installa sull'iPhone senza computer. Serve l'account sviluppatore
+Apple, e i passi — una volta sola — sono in [`docs/IPHONE.md`](docs/IPHONE.md),
+CarPlay compreso.
 
 ---
 

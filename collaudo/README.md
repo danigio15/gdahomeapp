@@ -47,6 +47,10 @@ bottoni a mano.
 Con `node guarda.mjs --scuro` l'app gira col tema scuro, come la vede chi
 tiene il telefono cosi', e le fotografie finiscono in `collaudo/foto/scuro/`.
 
+Con `node guarda.mjs --iphone` le fotografie escono a 1290 × 2796, e con
+`node guarda.mjs --ipad` a 2752 × 2064: sono le misure che l'App Store vuole
+per iPhone e iPad (in `collaudo/foto/iphone/` e `collaudo/foto/ipad/`).
+
 Con `COLLAUDO_SALTA_PLANCIA=1 node guarda.mjs` si salta il giro delle pagine
 della plancia, che e' la parte lunga: serve a chi sta lavorando a una
 schermata dell'app — le segnalazioni, l'assistenza, le case — e vuole

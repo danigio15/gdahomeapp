@@ -7,8 +7,10 @@
 /// nell'attimo in cui l'app se ne va, e un velo disegnato da Flutter in
 /// quell'attimo non sempre arriva in tempo.
 ///
-/// Sull'iPhone e nel browser questo canale non c'e': li' basta il velo che
-/// l'app mette quando smette di essere davanti (`main.dart`).
+/// Sull'iPhone non si puo' vietare la fotografia dello schermo, ma
+/// l'istantanea delle app recenti si': la copre la scena con un velo nativo
+/// (`ios/Runner/SceneDelegate.swift`), oltre a quello che mette l'app. Nel
+/// browser questo canale non c'e': li' basta il velo di `main.dart`.
 library;
 
 import 'package:flutter/foundation.dart';
@@ -20,7 +22,11 @@ const canaleDellaFinestra = MethodChannel('gdahome/finestra');
 /// Riservata o no. Non solleva mai: un telefono che non sa farlo resta
 /// com'era, e il velo c'e' lo stesso.
 Future<void> finestraRiservata(bool riservata) async {
-  if (kIsWeb || defaultTargetPlatform != TargetPlatform.android) return;
+  if (kIsWeb) return;
+  if (defaultTargetPlatform != TargetPlatform.android &&
+      defaultTargetPlatform != TargetPlatform.iOS) {
+    return;
+  }
   try {
     await canaleDellaFinestra.invokeMethod<void>('riservata', riservata);
   } catch (_) {

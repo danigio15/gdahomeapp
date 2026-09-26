@@ -6,6 +6,7 @@ import 'dart:convert';
 import 'dart:async';
 
 import 'package:flutter/painting.dart' show Color;
+import 'package:flutter/services.dart' show HapticFeedback;
 import 'package:flutter/widgets.dart' show Widget;
 import 'package:file_selector/file_selector.dart' as archivio;
 import 'package:image_picker/image_picker.dart';
@@ -45,7 +46,8 @@ WebViewController costruisciIlControllore({
   void Function(String foto)? quandoFotografaLaCasa,
 }) {
   final PlatformWebViewControllerCreationParams parametri;
-  if (WebViewPlatform.instance is WebKitWebViewPlatform) {
+  final iPhone = WebViewPlatform.instance is WebKitWebViewPlatform;
+  if (iPhone) {
     parametri = WebKitWebViewControllerCreationParams(
       allowsInlineMediaPlayback: true,
       mediaTypesRequiringUserAction: const <PlaybackMediaTypes>{},
@@ -53,12 +55,17 @@ WebViewController costruisciIlControllore({
   } else {
     parametri = const PlatformWebViewControllerCreationParams();
   }
-  final controllore = WebViewController.fromPlatformCreationParams(parametri)
+  /* `late`: il delegato qui sotto, a pagina caricata, gli parla. */
+  late final WebViewController controllore;
+  controllore = WebViewController.fromPlatformCreationParams(parametri)
     ..setJavaScriptMode(JavaScriptMode.unrestricted)
     ..setBackgroundColor(sfondo.withValues(alpha: 1))
     ..setNavigationDelegate(
       NavigationDelegate(
-        onPageFinished: (_) => quandoCaricata(),
+        onPageFinished: (_) {
+          if (iPhone) unawaited(_vibraSullIPhone(controllore));
+          quandoCaricata();
+        },
         onWebResourceError: (errore) {
           /* Un'immagine che non arriva non e' la pagina che non arriva. */
           if (errore.isForMainFrame ?? true) quandoFallisce(errore.description);
@@ -109,6 +116,15 @@ WebViewController costruisciIlControllore({
           }
           quandoCambiaPagina?.call(detto);
         },
+      ),
+    );
+  }
+  if (iPhone) {
+    unawaited(
+      controllore.addJavaScriptChannel(
+        _canaleDellaVibrazione,
+        onMessageReceived: (messaggio) =>
+            _vibra(int.tryParse(messaggio.message) ?? 10),
       ),
     );
   }
@@ -511,4 +527,37 @@ Widget riquadroDelWebView(
     );
   }
   return WebViewWidget(controller: controllore);
+}
+
+/* La vibrazione della plancia, sull'iPhone.
+ *
+ * La plancia, a ogni tocco che comanda qualcosa, fa `navigator.vibrate(5)`:
+ * su Android il telefono da' il colpetto, sull'iPhone il WebView quella
+ * funzione non ce l'ha e il tocco resta muto. Gliela si mette, a pagina
+ * caricata, e la si fa arrivare qui: il colpetto lo da' l'app, col motore
+ * dell'iPhone. Piu' e' lunga la vibrazione chiesta, piu' e' deciso il colpo. */
+const _canaleDellaVibrazione = 'gdahomeVibra';
+
+Future<void> _vibraSullIPhone(WebViewController controllore) async {
+  try {
+    await controllore.runJavaScript(
+      'if (!navigator.vibrate) { navigator.vibrate = function (p) {'
+      ' var ms = Array.isArray(p) ? (p[0] || 0) : (p || 0);'
+      ' try { $_canaleDellaVibrazione.postMessage(String(ms)); } catch (e) {}'
+      ' return true; }; }',
+    );
+  } catch (_) {
+    /* Senza colpetto la plancia funziona lo stesso. */
+  }
+}
+
+void _vibra(int ms) {
+  if (ms <= 0) return;
+  if (ms <= 6) {
+    unawaited(HapticFeedback.selectionClick());
+  } else if (ms <= 12) {
+    unawaited(HapticFeedback.lightImpact());
+  } else {
+    unawaited(HapticFeedback.mediumImpact());
+  }
 }

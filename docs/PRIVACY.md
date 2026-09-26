@@ -1,12 +1,12 @@
 # Privacy di gdahome
 
-Ultimo aggiornamento: 20 settembre 2026.
+Ultimo aggiornamento: 26 settembre 2026.
 
 gdahome è l'app che apre la plancia di Home Assistant sul telefono. Questa
 pagina dice, in modo chiaro e senza giri di parole, **quali dati ci sono di
 mezzo, dove stanno e chi li può leggere**. È la stessa cosa che il Play Store
-chiede di dichiarare, e vale la pena leggerla anche senza avere niente da
-dichiarare a nessuno.
+e l'App Store chiedono di dichiarare, e vale la pena leggerla anche senza
+avere niente da dichiarare a nessuno.
 
 ## La regola che viene prima di tutte
 
@@ -64,6 +64,28 @@ assistenza@gdahome.org, e serve a una cosa sola: risponderti. Sulla macchina
 che lo spedisce non resta niente del messaggio; resta, per un'ora e solo in
 memoria, il conto di quante volte un indirizzo di rete ha usato il modulo, che
 serve a non farlo usare a raffica. Se non scrivi, non parte niente.
+
+## Il navigatore e l'auto
+
+Dentro l'app c'è un navigatore (gdanav), e si accende solo se lo apri — o se
+colleghi il telefono all'auto con Android Auto o CarPlay. Per guidarti usa la
+**posizione del telefono**, anche a schermo spento mentre sei in viaggio, e la
+manda **solo** ai servizi che servono a guidare, senza nome né account:
+
+- i percorsi: Valhalla di OpenStreetMap (`valhalla1.openstreetmap.de`);
+- la ricerca degli indirizzi: Photon (`photon.komoot.io`);
+- la mappa: OpenFreeMap (`tiles.openfreemap.org`), e il traffico da TomTom
+  (`api.tomtom.com`);
+- le colonnine: Open Charge Map (`api.openchargemap.io`); i distributori e i
+  loro prezzi dal Ministero (`carburanti.mise.gov.it`) e da OpenStreetMap;
+- le segnalazioni della strada (incidenti, lavori, autovelox) e l'abbinamento
+  con Home Assistant passano da `gdanav.gdahome.org`, cifrati.
+
+Il **Bluetooth** serve solo se colleghi un dongle OBD, per leggere la batteria
+dell'auto: la lettura resta sul telefono. I comandi rapidi in auto, e la
+fotografia della casa che l'auto mostra, stanno in un file dentro l'app e
+non escono dal telefono: il comando lo esegue l'app, sul filo cifrato di
+sempre.
 
 ## La fotocamera
 
