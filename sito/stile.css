@@ -673,7 +673,65 @@ section {
   color: var(--testo-lieve);
 }
 
+/* ── gdanav: sei telefoni e quattro schermi d'auto ───────────────────────── */
+.titoletto {
+  margin-top: clamp(36px, 5vw, 56px);
+  font-size: 1.25rem;
+}
+.fila-sei {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  max-width: 900px;
+  margin-inline: auto;
+  row-gap: clamp(26px, 3.4vw, 40px);
+}
+.fila-auto {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(18px, 2.6vw, 30px);
+  margin-top: clamp(24px, 3vw, 34px);
+}
+.fila-auto figure {
+  margin: 0;
+}
+/* Lo schermo dell'auto: una cornice scura e larga, come quella del telefono,
+ * senza disegnare un cruscotto intorno. */
+.cruscotto {
+  padding: 8px;
+  background: linear-gradient(160deg, #2b3a55, #0f172a 60%);
+  border-radius: 22px;
+  box-shadow: var(--ombra-alta);
+}
+.cruscotto img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 15px;
+  background: #000;
+}
+.fila-auto figcaption {
+  margin-top: 12px;
+  text-align: center;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--testo-lieve);
+}
+.nota-auto {
+  margin: 22px auto 0;
+  max-width: 720px;
+  text-align: center;
+  font-size: 0.88rem;
+  color: var(--testo-lieve);
+}
+@media (max-width: 700px) {
+  .fila-auto {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
 @media (max-width: 900px) {
+  .fila-sei {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
   .apertura-dentro {
     grid-template-columns: minmax(0, 1fr);
     text-align: center;
