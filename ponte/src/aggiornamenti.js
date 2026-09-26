@@ -28,6 +28,7 @@
  */
 
 import { RispostaNegativa } from "./casa.js";
+import { comeDirlo } from "./il-no-del-supervisore.js";
 
 const pulito = (valore) => String(valore ?? "").trim();
 
@@ -676,7 +677,19 @@ export class Aggiornamenti {
       /* `RispostaNegativa` e' Home Assistant che ha risposto di no — permesso
        * negato, entita' sconosciuta — e quello va detto. Tutto il resto e' il
        * filo che non ha portato indietro niente, ed e' normale. */
-      if (errore instanceof RispostaNegativa) throw errore;
+      /* Un no del Supervisor lo si dice in italiano, e si dice dove guardare.
+       *
+       * «'AddonManager.update' blocked from execution, no host internet
+       * connection» e' giusto e non c'e' niente da aggirare — il Supervisor
+       * protegge gli aggiornamenti con delle condizioni, e una non era
+       * soddisfatta — ma cosi' com'e' non dice a nessuno cosa fare. Un utente
+       * l'ha letta e ha scritto in Assistenza due volte in quattro minuti.
+       * Le parole di Home Assistant restano in coda, che a chi cerca aiuto in
+       * rete servono esatte. */
+      if (errore instanceof RispostaNegativa) {
+        const meglio = comeDirlo(errore.message);
+        throw meglio ? new RispostaNegativa(errore.code, meglio) : errore;
+      }
       this.registro.info(`${cosa}: nessuna risposta, ed e' quello che ci si aspetta`);
     }
   }
