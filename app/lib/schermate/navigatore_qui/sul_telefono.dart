@@ -40,6 +40,13 @@ const _portachiavi = FlutterSecureStorage(
   ),
 );
 
+/// Il Premium di gdahome, per gdanav: vero se e' stato comprato.
+///
+/// gdahome l'acquisto non ce l'ha ancora: per ora e' sempre vero, e il
+/// navigatore e' tutto sbloccato. Quando ci sara', lo terra' aggiornato lui
+/// (comprato, rinnovato, scaduto) e gdanav lo segue da solo.
+final premiumDiGdahome = ValueNotifier<bool>(true);
+
 /// La fonte «gdahome» di gdanav: l'auto della sezione Auto della plancia,
 /// coi dati in tempo reale dalla casa. Una sola, come gdanav; la riempie
 /// `IlFiloDellaVettura`, finche' la home c'e' (`la_vettura.dart`).
@@ -64,9 +71,10 @@ Future<GdanavApp> accendiIlNavigatore() => _acceso ??= () async {
   return preparaGdanav(
     portachiavi: _portachiavi,
     gdahome: _vettura,
-    /* Niente Premium nell'app unita: tutto sbloccato, niente negozio. I
-     * pagamenti si decidono prima del rilascio. */
-    senzaPremium: true,
+    /* Il Premium di gdanav, dentro gdahome, e' quello di gdahome: se qui e'
+     * stato comprato, il navigatore e' tutto sbloccato; se no, dice di
+     * attivarlo in gdahome (niente negozio di gdanav). */
+    premiumOspite: premiumDiGdahome,
     /* Lo schermo dell'auto di gdanav si accende solo nella versione col
      * navigatore in auto; nella gdahome di sempre Android Auto e' la casa. */
     conLAuto: await _conLAuto,

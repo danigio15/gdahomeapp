@@ -51,6 +51,7 @@ import io.flutter.plugin.common.MethodChannel
 import it.gdanav.gdanav_app.auto.GdanavInAuto
 import it.gdanav.gdanav_app.auto.PonteAuto
 import it.gdanav.gdanav_app.auto.SessioneGdanav
+import it.gdanav.gdanav_app.auto.SessioniGdanav
 
 object IlNavigatoreInAuto {
     private const val MOTORE = "gdahome"
@@ -120,7 +121,10 @@ class NavigatoreCarAppService : CarAppService() {
         GdanavInAuto.casa = { IComandiInAuto(it) }
     }
 
-    override fun onCreateSession(sessionInfo: SessionInfo): Session = SessioneNavigatore()
+    /* Lo schermo centrale ha gdanav con la casa; il quadro strumenti dietro
+     * al volante, sulle auto che lo danno alle app, solo la mappa (NF-9). */
+    override fun onCreateSession(sessionInfo: SessionInfo): Session =
+        SessioniGdanav.per(sessionInfo) { SessioneNavigatore() }
 }
 
 class SessioneNavigatore : SessioneGdanav({ IlNavigatoreInAuto.salito(it) }) {
