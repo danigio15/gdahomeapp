@@ -839,6 +839,22 @@ function evShowcaseCss() {
 @keyframes dmEvvZoom{0%{left:-32%;opacity:0}20%{opacity:1}75%{opacity:1}100%{left:104%;opacity:0}}
 
 /* ── responsive ───────────────────────────────────────────────────────── */
+/* La fila del «sempre» (l'«always charge» di evcc): sotto i tasti dei modi, con
+   un titolo suo. Non porta il prefisso della pagina apposta — la stessa fila
+   compare anche nel popup dell'auto, che vive fuori dalla pagina dell'auto. */
+.dm-evcc-sempre{display:grid;gap:8px;padding:12px 14px;margin-top:10px;border-radius:14px;
+  border:1px dashed var(--card-border,#e2e8f0);background:var(--card-bg,#fff)}
+.dm-evcc-sempre-cap{display:grid;gap:1px}
+.dm-evcc-sempre-cap strong{font-size:12.5px;font-weight:900;color:var(--text,#0f172a)}
+.dm-evcc-sempre-cap small{font-size:10.5px;font-weight:700;color:var(--text-dim,#64748b)}
+.dm-evcc-sempre-righe{display:flex;gap:6px;flex-wrap:wrap}
+.dm-evcc-sempre-btn{flex:1 1 auto;min-width:72px;padding:7px 10px;border-radius:999px;cursor:pointer;
+  border:1px solid var(--card-border,#e2e8f0);background:var(--card-bg,#fff);
+  color:var(--text-dim,#64748b);font:900 11px/1.2 inherit;letter-spacing:.03em;
+  text-transform:uppercase;-webkit-tap-highlight-color:transparent}
+.dm-evcc-sempre-btn[aria-pressed="true"]{border-color:#059669;color:#047857;
+  background:color-mix(in srgb,#059669 14%,var(--card-bg,#fff))}
+
 @media(max-width:620px){
   #page-ev.dm-evv{--evv-r:22px;--evv-r-s:16px}
   #page-ev.dm-evv .dm-evv-power{gap:13px;padding:14px}

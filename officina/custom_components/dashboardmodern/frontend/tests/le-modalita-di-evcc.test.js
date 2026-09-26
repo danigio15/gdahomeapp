@@ -16,7 +16,10 @@ import {
   MODI_STORICI,
   eIlModoIntelligente,
   iModiDiEvcc,
+  iValoriDelSempre,
   ilModoAcceso,
+  ilValoreDelSempreAcceso,
+  laFilaDelSempreServe,
 } from "../src/core/le-modalita-di-evcc.js";
 
 /* Un evcc di oggi: tre modalita', e `smart` al posto di `pv`. */
@@ -103,6 +106,39 @@ test("le maiuscole non contano: lo stato arriva come lo scrive l'integrazione", 
   assert.equal(ilModoAcceso({ state: "SMART", attributes: { options: ["off", "smart", "now"] } }), "smart");
 });
 
+/* ── com'e' scritta davvero l'entita' di casa ────────────────────────────── */
+
+/* Dalla schermata di Home Assistant: l'entita' si chiama «Modus», la tendina
+ * dice Off / Smart / Fast, e lo storico segna «Smart». Con l'iniziale grande. */
+const LA_CASA = { state: "Smart", attributes: { options: ["Off", "Smart", "Fast"] } };
+
+test("le maiuscole dell'integrazione non fanno tre tasti grigi", () => {
+  /* Una tabella che guarda solo le minuscole non avrebbe riconosciuto nessuna
+   * delle tre: tre tasti senza disegno e col nome inglese, invece di tre tasti
+   * veri. */
+  const modi = iModiDiEvcc(LA_CASA);
+  assert.deepEqual(modi.map((m) => m.it), ["Spento", "Intelligente", "Fast"]);
+  assert.deepEqual(modi.map((m) => m.ignoto), [false, false, false]);
+  assert.equal(ilModoAcceso(LA_CASA), "Smart");
+});
+
+test("ma l'id resta quello che l'entita' ha scritto", () => {
+  /* E' quello che si rimanda indietro col comando: li' una maiuscola cambiata
+   * e' un'opzione che non esiste, e il servizio viene rifiutato. */
+  assert.deepEqual(idDi(LA_CASA), ["Off", "Smart", "Fast"]);
+});
+
+test("«Fast» si chiama Fast anche in italiano", () => {
+  /* Era «Subito», ed era una parola nostra: nella tendina di Home Assistant
+   * quella modalita' si chiama Fast, e chiamarla in due modi vuol dire due
+   * modalita' per chi legge. `now` e `fast` sono la stessa, e quale delle due
+   * arrivi lo decide l'integrazione. */
+  const conNow = iModiDiEvcc({ state: "now", attributes: { options: ["off", "smart", "now"] } });
+  assert.equal(conNow.at(-1).it, "Fast");
+  assert.equal(conNow.at(-1).en, "Fast");
+  assert.equal(iModiDiEvcc(LA_CASA).at(-1).it, "Fast");
+});
+
 /* ── dove sta l'opzione «always» ─────────────────────────────────────────── */
 
 test("«always» si affianca solo alla modalita' intelligente", () => {
@@ -114,4 +150,50 @@ test("«always» si affianca solo alla modalita' intelligente", () => {
   assert.equal(eIlModoIntelligente("off"), false);
   assert.equal(eIlModoIntelligente("now"), false);
   assert.equal(eIlModoIntelligente(""), false);
+});
+
+/* ── «Always charge», l'entita' a parte ──────────────────────────────────── */
+
+/* Com'e' fatta davvero, dalla schermata: `select.evcc_lektrico_always_charge`,
+ * tendina Off / On / Once, adesso su On. */
+const IL_SEMPRE = { state: "On", attributes: { options: ["Off", "On", "Once"] } };
+
+test("le tre scelte del «sempre» si leggono in parole", () => {
+  /* «Off/On/Once» non dice cosa fa: queste tre si leggono senza sapere cos'e'
+   * evcc. */
+  assert.deepEqual(
+    iValoriDelSempre(IL_SEMPRE).map((v) => v.it),
+    ["Mai", "Sempre", "Stavolta"],
+  );
+  assert.equal(ilValoreDelSempreAcceso(IL_SEMPRE), "On");
+});
+
+test("e l'id resta quello scritto, anche qui", () => {
+  assert.deepEqual(
+    iValoriDelSempre(IL_SEMPRE).map((v) => v.id),
+    ["Off", "On", "Once"],
+  );
+});
+
+test("la fila si vede solo accanto alla modalita' intelligente", () => {
+  /* Da spenti non si carica, e in «Fast» si carica al massimo comunque: li'
+   * quell'opzione non cambia niente, e una fila che non cambia niente confonde. */
+  assert.equal(laFilaDelSempreServe(IL_SEMPRE, "Smart"), true);
+  assert.equal(laFilaDelSempreServe(IL_SEMPRE, "pv"), true);
+  assert.equal(laFilaDelSempreServe(IL_SEMPRE, "Off"), false);
+  assert.equal(laFilaDelSempreServe(IL_SEMPRE, "Fast"), false);
+  assert.equal(laFilaDelSempreServe(IL_SEMPRE, ""), false);
+});
+
+test("e senza l'entita' non si vede per niente", () => {
+  /* Chi non ha mappato quella casella non deve trovarsi una fila vuota sotto i
+   * tasti: e' un evcc vecchio, o uno a cui quell'opzione non serve. */
+  assert.equal(laFilaDelSempreServe(undefined, "Smart"), false);
+  assert.equal(laFilaDelSempreServe({ state: "On" }, "Smart"), false);
+  assert.deepEqual(iValoriDelSempre(), []);
+});
+
+test("un'entita' muta non accende nessuna delle tre", () => {
+  for (const muto of ["unavailable", "unknown", ""])
+    assert.equal(ilValoreDelSempreAcceso({ ...IL_SEMPRE, state: muto }), "");
 });

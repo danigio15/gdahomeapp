@@ -3836,4 +3836,7 @@ export default Object.freeze({
   "Alarm bypass": "Inibição do alarme",
   "Bypass switch": "Interruptor de inibição",
   "Alarm panels publish a switch next to each contact that tells the panel to ignore it: that is what you need to arm the alarm with a window left open on purpose. Write it here and the shield to bypass this opening shows up on the Openings page. On means bypassed. Leave it empty and this opening is only watched, as before.": "As centrais de alarme publicam ao lado de cada contacto um interruptor que diz à central para não o vigiar: é o que é preciso para armar o alarme com uma janela deixada aberta de propósito. Escreve-o aqui e na página Aberturas aparece o escudo para inibir esta abertura. Ligado quer dizer inibido. Deixa-o vazio e esta abertura é apenas vigiada, como antes.",
+  "Keep the minimum": "Mantém o mínimo",
+  "Even when the sun is not enough": "Mesmo quando o sol não chega",
+  "EVCC always charge (select)": "Carga sempre EVCC (select)",
 });

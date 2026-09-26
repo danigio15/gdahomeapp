@@ -3836,4 +3836,7 @@ export default Object.freeze({
   "Alarm bypass": "경보 바이패스",
   "Bypass switch": "바이패스 스위치",
   "Alarm panels publish a switch next to each contact that tells the panel to ignore it: that is what you need to arm the alarm with a window left open on purpose. Write it here and the shield to bypass this opening shows up on the Openings page. On means bypassed. Leave it empty and this opening is only watched, as before.": "경보 패널은 접점마다 그 접점을 보지 말라고 패널에 알리는 스위치를 함께 내보냅니다. 창문을 일부러 열어 둔 채로 경보를 설정할 때 필요한 것이 바로 이것입니다. 여기에 적으면 개구부 페이지에 이 개구부를 바이패스하는 방패가 나타납니다. 켜짐은 바이패스를 뜻합니다. 비워 두면 이 개구부는 전처럼 지켜보기만 합니다.",
+  "Keep the minimum": "최소는 유지",
+  "Even when the sun is not enough": "햇빛이 모자랄 때도",
+  "EVCC always charge (select)": "EVCC 상시 충전 (select)",
 });

@@ -1173,6 +1173,48 @@ function setEVMode(mode) {
  * Adesso i nomi non stanno qui: stanno nelle `options` dell'entita', e i tasti
  * sono quelli. Il giudizio — quali disegnare, quale accendere — sta in
  * `core/le-modalita-di-evcc.js`, che si prova senza una wallbox in garage. */
+/* La fila del «sempre», sotto i tasti dei modi.
+ *
+ * «Always charge» non e' una quarta modalita': e' un'entita' a parte, con tre
+ * stati, che si affianca a quella intelligente — da sola quella usa solo il
+ * surplus, con questa tiene un minimo anche oltre. Disegnarla in fila coi modi
+ * farebbe credere che scegliendola si esce da smart, e invece ci si resta
+ * dentro: sta sotto, con un titolo suo.
+ *
+ * Si vede solo dove ha senso: entita' mappata, e modalita' intelligente accesa.
+ * In `off` non si carica e in `fast` si carica al massimo comunque, e una fila
+ * che non cambia niente e' una fila che confonde. */
+function dmEvccFilaDelSempre(dove, acceso) {
+  const api = window.DashboardModernModules && DashboardModernModules.evcc;
+  const eid = resolveEntity('dm.ev_ricarica_sempre_evcc');
+  const stato = (eid && eid.indexOf('dm.') !== 0 && typeof STATES !== 'undefined') ? STATES[eid] : null;
+  const vecchia = dove.parentElement && dove.parentElement.querySelector('.dm-evcc-sempre');
+  if (!api || !api.laFilaDelSempreServe(stato, acceso)) { if (vecchia) vecchia.remove(); return; }
+  const valori = api.iValoriDelSempre(stato);
+  const scelto = api.ilValoreDelSempreAcceso(stato, valori);
+  const html = '<div class="dm-evcc-sempre-cap">'
+    + '<strong>' + cdEsc('Tieni il minimo') + '</strong><small>' + cdEsc('Anche quando il sole non basta') + '</small></div>'
+    + '<div class="dm-evcc-sempre-righe">'
+    + valori.map(function(v){
+        return '<button type="button" class="dm-evcc-sempre-btn" onclick="setEVSempre(' + cdJs(v.id) + ')"'
+          + (v.id === scelto ? ' aria-pressed="true"' : ' aria-pressed="false"')
+          + '>' + cdEsc(v.it) + '</button>';
+      }).join('')
+    + '</div>';
+  const fila = vecchia || document.createElement('div');
+  if (!vecchia) { fila.className = 'dm-evcc-sempre'; dove.after(fila); }
+  if (fila.innerHTML !== html) fila.innerHTML = html;
+}
+
+/* Il comando del «sempre»: come `setEVMode`, sulla sua entita'. */
+window.setEVSempre = function(valore) {
+  if (!ws || ws.readyState !== 1) return;
+  if (navigator.vibrate) navigator.vibrate(10);
+  const eid = resolveEntity('dm.ev_ricarica_sempre_evcc');
+  if (!eid || eid.indexOf('dm.') === 0) return;
+  ws.send(JSON.stringify({ id: msgId++, type: 'call_service', domain: eid.split('.')[0], service: 'select_option', service_data: { entity_id: eid, option: valore } }));
+};
+
 /* Il nome di una modalita' arriva da evcc, non da qui: passa da `cdJs` dentro
  * il gestore e da `cdEsc` dentro il testo, come ogni valore che viene da fuori.
  * Il colore invece e' nostro, e passa da `cdColor` lo stesso — una regola che
@@ -1204,6 +1246,10 @@ function dmEvccDisegnaIModi() {
   });
   const acceso = api.ilModoAcceso(stato, modi);
   document.querySelectorAll('.evcc-mode-btn').forEach(function(b){ b.classList.remove('active'); });
+  ['.lm-evcc-grid', '.ev-popup-modes'].forEach(function(quale){
+    const griglia = document.querySelector(quale);
+    if (griglia) dmEvccFilaDelSempre(griglia, acceso);
+  });
   if (!acceso) return;
   ['m-btn-', 'p-btn-'].forEach(function(prefisso){
     const el = document.getElementById(prefisso + acceso);
@@ -3632,6 +3678,7 @@ const CD_SLOTS = {
         { ref: 'dm.ev_stato_ricarica',   lbl: 'Stato ricarica (testo)' },
         { ref: 'dm.ev_cavo_collegato',   lbl: 'Cavo collegato (binary_sensor)' },
         { ref: 'dm.ev_modalita_ricarica_evcc',        lbl: 'Modalità ricarica EVCC (select)' },
+        { ref: 'dm.ev_ricarica_sempre_evcc', lbl: 'Ricarica sempre EVCC / Always charge (select)' },
         { ref: 'dm.ev_target_soc',           lbl: 'Target SOC (select)' },
         { ref: 'dm.ev_energia_sessione',           lbl: 'Energia sessione (kWh)' },
         { ref: 'dm.ev_percentuale_solare_sessione', lbl: 'Percentuale solare sessione (%)' },

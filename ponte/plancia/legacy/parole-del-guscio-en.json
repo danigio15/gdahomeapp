@@ -404,49 +404,63 @@
      ]
     },
     {
-     "riga": 1182,
+     "riga": 1195,
+     "via": 1,
+     "metti": [
+      "    + '<strong>' + cdEsc('Keep the minimum') + '</strong><small>' + cdEsc('Even when the sun is not enough') + '</small></div>'"
+     ]
+    },
+    {
+     "riga": 1200,
+     "via": 1,
+     "metti": [
+      "          + '>' + cdEsc(v.en) + '</button>';"
+     ]
+    },
+    {
+     "riga": 1224,
      "via": 1,
      "metti": [
       "    + '<span class=\"ev-ic\">' + cdEsc(m.icona) + '</span><span class=\"ev-lbl\">' + cdEsc(m.en) + '</span></div>';"
      ]
     },
     {
-     "riga": 1187,
+     "riga": 1229,
      "via": 1,
      "metti": [
       "    + '<div class=\"icon\">' + cdEsc(m.icona) + '</div><div class=\"txt\">' + cdEsc(m.en) + '</div></div>';"
      ]
     },
     {
-     "riga": 1304,
+     "riga": 1350,
      "via": 1,
      "metti": [
       "    // Create modal"
      ]
     },
     {
-     "riga": 1349,
+     "riga": 1395,
      "via": 1,
      "metti": [
       "let EDITOR_TAB = 'sost';"
      ]
     },
     {
-     "riga": 1367,
+     "riga": 1413,
      "via": 4,
      "metti": [
       "          ${window.__DASHBOARDMODERN_HOSTED__ ? '' : '<div class=\"ed-head-close\" title=\"Download the dashboard with token and configuration baked in\" onclick=\"cdBakeDownload()\">💾</div>'}<div class=\"ed-head-close\" onclick=\"document.getElementById('editor-modal').remove()\">✕</div>"
      ]
     },
     {
-     "riga": 1375,
+     "riga": 1421,
      "via": 1,
      "metti": [
       "          <button class=\"ed-tab\" data-tab=\"sez1\" onclick=\"editorSwitch('sez1')\">⚡ Energy</button>"
      ]
     },
     {
-     "riga": 1385,
+     "riga": 1431,
      "via": 5,
      "metti": [
       "          <button class=\"ed-tab\" data-tab=\"tapp\" onclick=\"editorSwitch('tapp')\">🪟 Windows</button>",
@@ -458,222 +472,222 @@
      ]
     },
     {
-     "riga": 1450,
+     "riga": 1496,
      "via": 1,
      "metti": [
       "    editorSwitch('sost');"
      ]
     },
     {
-     "riga": 1456,
+     "riga": 1502,
      "via": 1,
      "metti": [
       "    editorSwitch('sost');"
      ]
     },
     {
-     "riga": 1470,
+     "riga": 1516,
      "via": 1,
      "metti": [
       "    sel.innerHTML = `<option value=\"\">${runtimeError ? '⚠️ ' + cdEsc(runtimeError) : '— No Report items configured —'}</option>`;"
      ]
     },
     {
-     "riga": 1479,
+     "riga": 1525,
      "via": 1,
      "metti": [
       "    if (!nm || !/^(light|switch|group|input_boolean|fan)\\./.test(id)) { alert('Enter a name and a valid entity (e.g. light.living or switch.kitchen)'); return; }"
      ]
     },
     {
-     "riga": 1486,
+     "riga": 1532,
      "via": 1,
      "metti": [
       "    edToast('Light added');"
      ]
     },
     {
-     "riga": 1496,
+     "riga": 1542,
      "via": 1,
      "metti": [
       "    edToast('Light removed');"
      ]
     },
     {
-     "riga": 1513,
+     "riga": 1559,
      "via": 1,
      "metti": [
       "    if (!document.getElementById('ed-st2-name')) { alert('Apri l\\'accordion Rooms per modificare'); return; }"
      ]
     },
     {
-     "riga": 1522,
+     "riga": 1568,
      "via": 1,
      "metti": [
       "    if (btn) btn.textContent = '💾 Save changes';"
      ]
     },
     {
-     "riga": 1534,
+     "riga": 1580,
      "via": 1,
      "metti": [
       "    edToast('Room removed');"
      ]
     },
     {
-     "riga": 1556,
+     "riga": 1602,
      "via": 1,
      "metti": [
       "        edToast('Room updated');"
      ]
     },
     {
-     "riga": 1564,
+     "riga": 1610,
      "via": 1,
      "metti": [
       "    if (!name || !temp.includes('.')) { alert('Enter a name and temperature sensor'); return; }"
      ]
     },
     {
-     "riga": 1576,
+     "riga": 1622,
      "via": 1,
      "metti": [
       "    edToast('Room added');"
      ]
     },
     {
-     "riga": 1583,
+     "riga": 1629,
      "via": 1,
      "metti": [
       "    if (!name || !ent.includes('.')) { alert('Enter a name and entity'); return; }"
      ]
     },
     {
-     "riga": 1591,
+     "riga": 1637,
      "via": 1,
      "metti": [
       "    edToast('Report entry added');"
      ]
     },
     {
-     "riga": 1602,
+     "riga": 1648,
      "via": 1,
      "metti": [
       "    edToast('Report entry removed');"
      ]
     },
     {
-     "riga": 1622,
+     "riga": 1668,
      "via": 1,
      "metti": [
       "    if (!name) { alert('Name the group'); return; }"
      ]
     },
     {
-     "riga": 1625,
+     "riga": 1671,
      "via": 1,
      "metti": [
       "    if (groups.some(g => g.id === id) || SUBLOADS_CONFIG[id]) { alert('A group with this name already exists'); return; }"
      ]
     },
     {
-     "riga": 1632,
+     "riga": 1678,
      "via": 1,
      "metti": [
       "    edToast('Group created — now add loads below');"
      ]
     },
     {
-     "riga": 1639,
+     "riga": 1685,
      "via": 1,
      "metti": [
       "    if (!confirm('Delete group \"' + g.name + '\" and its loads?')) return;"
      ]
     },
     {
-     "riga": 1649,
+     "riga": 1695,
      "via": 1,
      "metti": [
       "    edToast('Group deleted');"
      ]
     },
     {
-     "riga": 1659,
+     "riga": 1705,
      "via": 1,
      "metti": []
     },
     {
-     "riga": 1665,
+     "riga": 1711,
      "via": 1,
      "metti": [
       "   cd_luci_room_order [\"Room1\",\"Room2\",...]         (ordine delle stanze)"
      ]
     },
     {
-     "riga": 1672,
+     "riga": 1718,
      "via": 1,
      "metti": [
       "/* Room assegnata a una luce: esplicita (cd_luci_rooms) o dedotta dal prefisso \"Room - \" */"
      ]
     },
     {
-     "riga": 1691,
+     "riga": 1737,
      "via": 1,
      "metti": [
       "function cdDbgStatus(){ try { return '<div class=\"ed-intro mono\" style=\"font-size:11px;opacity:0.75;\">v'+(typeof DASHBOARD_VERSION==='undefined'?'?':DASHBOARD_VERSION)+' | hosted:'+(window.__DASHBOARDMODERN_HOSTED__?1:0)+' | bridge:'+(window.__DASHBOARDMODERN_BRIDGED__?1:0)+' | token:'+(window.__DASHBOARDMODERN_REAL_TOKEN__?1:0)+' | sync:'+cdEsc(localStorage.getItem('cd_sync_ts')||0)+' | inst:'+cdEsc(String(window.__DASHBOARDMODERN_STORAGE_NS__||'-').slice(0,10))+' | prim:'+(window.__DASHBOARDMODERN_PRIMARY__===false?0:1)+' | q:'+cdEsc(String(location.search||'').slice(0,18))+' | key:'+(('dashboardmodern_integration_config' + (window.__DASHBOARDMODERN_PRIMARY__===false && window.__DASHBOARDMODERN_INSTANCE__ ? '__'+String(window.__DASHBOARDMODERN_INSTANCE__).replace(/[^a-zA-Z0-9_-]/g,'').slice(0,16) : ''))).slice(-14)+'</div>'; } catch(e){ return ''; } } function cdNavDiag(){ try { var mp=cdNavVisMap(); var cur=cdCfg('cd_sections')||{}; var L=[]; L.push('ver=0.12.1-int url='+location.pathname.slice(-46)); L.push('inst='+String(window.__DASHBOARDMODERN_STORAGE_NS__||'-').slice(0,12)+' prim='+(window.__DASHBOARDMODERN_PRIMARY__===false?0:1)); L.push('secboot='+(window.__CD_SBRUN||0)+' navvis='+(window.__CD_NVRUN||0)); L.push('cd_sections='+String(localStorage.getItem('cd_sections'))); Object.keys(mp).forEach(function(k){ var sel='.tab[data-tab=\"'+mp[k]+'\"]'; var els=document.querySelectorAll(sel); var pg=document.getElementById('page-'+mp[k]); var st=els.length?getComputedStyle(els[0]).display:'-'; L.push(k+': cfg='+String(cur[k])+' tabs='+els.length+' disp='+st+' page='+(pg?1:0)); }); try { var st3=cdSecLS('cd_stanze')||[]; var wt=st3.filter(function(r){ return r&&r.temp; }); L.push('stanze='+st3.length+' con-temp='+wt.length+' CD_TEMP_FLOOR='+String(typeof CD_TEMP_FLOOR!=='undefined'?CD_TEMP_FLOOR:'?')); var g3=document.getElementById('temp-grid'); var errT=''; try { buildTempCards(); } catch(eT){ errT=eT.message; } L.push('temp-grid='+(g3?g3.children.length:'assente')+(errT?' ERR='+errT:'')); } catch(eX){ L.push('temp-diag-err'); } try { var ap3=cdCfgList('cd_appliances'); ap3.forEach(function(a){ if(!a) return; var ents=(a.entities||[]); var hasE=false; ents.forEach(function(en2){ var s4=STATES[en2]||{}; var at=(s4.attributes||{}); if(at.device_class==='energy'||/wh$/i.test(String(at.unit_of_measurement||''))) hasE=true; }); L.push('appl '+(a.name||'?')+': ents='+ents.length+' kwh='+(hasE?1:0)); }); } catch(eY){ L.push('appl-diag-err'); } var rep=L.join('\\n'); try { console.log('[NavDiag]\\n'+rep); } catch(e2){} prompt('Diagnosi navbar (tieni premuto per copiare)', rep); } catch(e){ alert('diag err: '+e.message); } } function editorRenderRileva(){ var st=cdDbgStatus(); st+='<button class=\"ed-btn-add\" style=\"width:100%; margin:6px 0 10px;\" onclick=\"cdNavDiag()\">🧪 Diagnosi navbar</button>'; return st+'<div class=\"ed-intro\">🪄 <b>Autorilevamento</b>: analizza tutte le entità di Home Assistant e compila da solo luci, clima, stanze, telecamere e collegamenti. Puoi correggere tutto dopo nelle altre schede.</div>'+'<button class=\"ed-btn-add\" style=\"width:100%;\" onclick=\"edAutoRileva()\">🪄 Avvia autorilevamento</button>'+'<div id=\"ed-rileva-out\" style=\"margin-top:10px;\"></div>'+'<div style=\"margin-top:22px;border-top:1px solid rgba(220,38,38,0.3);padding-top:12px;\"><button class=\"ed-btn-add\" style=\"width:100%;background:linear-gradient(135deg,#ef4444,#b91c1c);color:#fff;\" onclick=\"wzResetAll()\">🗑️ Reset totale configurazione</button></div>'; } function edAutoRilevaLog(t){ var o=document.getElementById('ed-rileva-out'); if(o) o.innerHTML='<div class=\"ed-intro\">'+t+'</div>'; } /* t e' testo nostro; gli errori passano da cdEsc dove si chiama */ function edAutoRileva(){ try { apriSetupWizard(); var wz=document.getElementById('setup-wizard'); if(wz) wz.remove(); } catch(e){} edAutoRilevaLog('⏳ Carico tutte le entità da Home Assistant…'); try { wzLoadAllEntities(); } catch(e){} var tries=0; var t=setInterval(function(){ tries++; if (typeof WIZ!=='undefined' && WIZ && WIZ.allMeta && WIZ.allMeta.length){ clearInterval(t); try { wzAutoDetect(); } catch(e){ edAutoRilevaLog('❌ '+cdEsc(e.message)); return; } try { if (WIZ.luci && Object.keys(WIZ.luci).length) localStorage.setItem('cd_luci', JSON.stringify(WIZ.luci)); if (WIZ.stanze && WIZ.stanze.length) localStorage.setItem('cd_stanze', JSON.stringify(WIZ.stanze)); if (WIZ.climaUnits && WIZ.climaUnits.length) localStorage.setItem('cd_clima_units', JSON.stringify(WIZ.climaUnits)); if (WIZ.cameras && WIZ.cameras.length) localStorage.setItem('cd_cameras', JSON.stringify(WIZ.cameras)); if (WIZ.entities && Object.keys(WIZ.entities).length){ var ov={}; try{ ov=JSON.parse(localStorage.getItem('cd_entity_overrides'))||{}; }catch(e){} Object.keys(WIZ.entities).forEach(function(k){ ov[k]=WIZ.entities[k]; }); localStorage.setItem('cd_entity_overrides', JSON.stringify(ov)); } try{ cdMarkDirty(); cdSyncPush(); }catch(e){} edAutoRilevaLog('✅ Rilevate: '+Object.keys(WIZ.luci||{}).length+' luci · '+(WIZ.stanze||[]).length+' stanze · '+(WIZ.climaUnits||[]).length+' clima · '+(WIZ.cameras||[]).length+' camere · '+Object.keys(WIZ.entities||{}).length+' entità.<br>Ricarico…'); cdRegEnrich(function(){ setTimeout(function(){ location.reload(); }, 400); }); } catch(e){ edAutoRilevaLog('❌ '+cdEsc(e.message)); } } else if (tries>40){ clearInterval(t); edAutoRilevaLog('❌ Timeout nel caricamento entità. Riprova.'); } }, 500); } function cdVisibSez(){ return [['home','🏠','Home','Meteo, avvisi, azioni rapide'],['energy','⚡','Energy','Fotovoltaico e consumi'],['ev','🚗','Auto elettrica','EV + wallbox (EVCC)'],['boiler','🌞','Solare termico','Boiler solare'],['clima','❄️','Clima','Condizionatori e riscaldamento'],['temp','🌡️','Temperatura','Temperature e umidità'],['security','🛡️','Sicurezza','Cameras e allarme'],['server','🖥️','MiniPC','Monitoraggio server']]; } function e2Gen(v){ return cdEsc(v||''); } function cdGenHtml(){ var br=cdCfg('cd_branding')||{}; var cn2=cdCfg('cd_connection')||{}; var adm=(cn2.admin_users&&cn2.admin_users[0])||''; return \"<div class='ed-intro'><b>Generali</b>: nome della dashboard e utente amministratore.</div>\" +\"<input id='ed-gen-title' class='ed-input' style='margin-bottom:8px;' placeholder='Nome dashboard (es. SMART HOME)' value='\"+e2Gen(br.title)+\"'>\" +\"<input id='ed-gen-sub' class='ed-input' style='margin-bottom:8px;' placeholder='Sottotitolo' value='\"+e2Gen(br.subtitle)+\"'>\" +\"<input id='ed-gen-admin' class='ed-input' style='margin-bottom:8px;' placeholder='Utente admin (vuoto = Config visibile a tutti)' value='\"+e2Gen(adm)+\"'>\" +\"<button class='ed-btn-add' style='width:100%;margin-bottom:16px;' onclick='edSaveGeneral()'>💾 Salva generali</button>\"; } function cdEvCarsHtml(){ var cars=getEvCars(); var act=cdEvActive(); var rows = cars.length ? cars.map(function(c,i){ return '<div class=\"ed-row\" style=\"align-items:center;\"><div class=\"ed-row-main\"><div class=\"ed-row-new\">🚗 '+cdEsc(c.name||('Auto '+(i+1)))+(i===act?' <span class=\"pool-badge\">✓ attiva</span>':'')+'</div><div class=\"ed-row-old\">'+Object.keys(c.ov||{}).length+' entità mappate</div></div><button class=\"ed-btn-add\" style=\"flex:0 0 auto; margin-right:6px;\" data-act=\"use\" data-idx=\"'+i+'\" onclick=\"cdEvCarBtn(this)\">Usa</button><div class=\"ed-del\" data-act=\"del\" data-idx=\"'+i+'\" onclick=\"cdEvCarBtn(this)\">🗑️</div></div>'; }).join('') : '<div class=\"ed-intro\">Nessun profilo auto salvato.</div>'; var sel2 = cars.length ? '<select class=\"ed-input\" style=\"width:100%; margin:8px 0;\" onchange=\"cdEvCarSelEd(this)\">'+'<option value=\"\">— Scegli un profilo da modificare —</option>'+cars.map(function(c,i){ return '<option value=\"'+i+'\"'+(i===act?' selected':'')+'>🚗 '+cdEsc(c.name||('Auto '+(i+1)))+'</option>'; }).join('')+'</select>' : ''; return sel2+'<div class=\"ed-intro\" style=\"margin-top:16px;\">🚗 <b>Auto elettriche</b>: mappa le entità EV come sempre, poi salvale come profilo. Con due o più profili, nella pagina Auto compare la tendina per scegliere quale vedere.</div>'+rows+'<div style=\"display:flex; gap:8px; margin:8px 0 16px;\"><input id=\"ed-evcar-name\" class=\"ed-input\" style=\"flex:1; margin:0;\" placeholder=\"Nome auto (es. Leapmotor B10)\"><button class=\"ed-btn-add\" style=\"flex:0 0 auto;\" onclick=\"edEvCarAdd()\">＋ Salva attuale</button></div>'; } function edEvCarAdd(){ var n=(document.getElementById('ed-evcar-name').value||'').trim(); if(!n){ alert('Dai un nome al profilo auto'); return; } var prof=cdEvCaptureProfile(); if(!Object.keys(prof.ov).length){ alert('Nessuna entità EV mappata da salvare: mappa prima le entità della sezione Auto'); return; } var cars=getEvCars(); var found=-1; for(var ci=0;ci<cars.length;ci++){ if(cars[ci] && cars[ci].name===n){ found=ci; break; } } if(found>=0){ cars[found]={ name:n, ov:prof.ov, img:prof.img }; localStorage.setItem('cd_ev_car_active', String(found)); } else { cars.push({ name:n, ov:prof.ov, img:prof.img }); localStorage.setItem('cd_ev_car_active', String(cars.length-1)); } saveEvCars(cars); editorSwitch((typeof EDITOR_TAB !== 'undefined' && EDITOR_TAB) ? EDITOR_TAB : 'visib'); } function cdEvCarSelEd(sel){ try { var i=parseInt(sel.value,10); if(isNaN(i)) return; cdEvApplyCar(i); try { editorSwitch((typeof EDITOR_TAB !== 'undefined' && EDITOR_TAB) ? EDITOR_TAB : 'sez2'); } catch(e2){} } catch(e){} } function cdEvCarBtn(btn){ try { var act=btn.getAttribute('data-act'); var i=parseInt(btn.getAttribute('data-idx')||'-1',10); if(act==='use'){ cdEvApplyCar(i); } else { var cars=getEvCars(); cars.splice(i,1); saveEvCars(cars); var a=cdEvActive(); if(a===i) localStorage.setItem('cd_ev_car_active','-1'); else if(a>i) localStorage.setItem('cd_ev_car_active', String(a-1)); } editorSwitch((typeof EDITOR_TAB !== 'undefined' && EDITOR_TAB) ? EDITOR_TAB : 'visib'); } catch(e){} } function cdEnViewsHtml(){ var lst=cdEnList(); var cur=getEnViews(); var rows=lst.map(function(x,idx){ var k=x[0]; var on=(cur[k]!==false); return '<div class=\"ed-row\" style=\"align-items:center;\"><div class=\"ed-row-main\"><div class=\"ed-row-new\">'+x[1]+' '+x[2]+'</div></div><div onclick=\"edEnViewToggle('+idx+')\" style=\"cursor:pointer;flex:0 0 52px;height:30px;border-radius:15px;background:'+(on?'#0ea5e9':'#cbd5e1')+';position:relative;transition:.2s;\"><div style=\"position:absolute;top:3px;'+(on?'right:3px':'left:3px')+';width:24px;height:24px;border-radius:50%;background:#fff;\"></div></div></div>'; }).join(''); return '<div class=\"ed-intro\" style=\"margin-top:16px;\">⚡ <b>Sezione Energy</b>: scegli quali viste mostrare. Chi non ha il fotovoltaico può tenere solo il Report; con la sola pinza sui consumi la mappa flussi nasconde da sola solare e batteria non mappati.</div>'+rows; } function edEnViewToggle(idx){ var lst=cdEnList(); var x=lst[idx]; if(!x) return; var k=x[0]; var cur=getEnViews(); cur[k]=(cur[k]===false); localStorage.setItem('cd_energy_views', JSON.stringify(cur)); try{ cdMarkDirty(); cdSyncPush(); }catch(e){} try{ cdApplyEnergyViews(); }catch(e){} editorSwitch((typeof EDITOR_TAB !== 'undefined' && EDITOR_TAB) ? EDITOR_TAB : 'visib'); } function cdSecKeyByOrd(n){ return ['home','energy','ev','boiler','security','','server','temp','','clima',''][n]||''; } function cdSecToggleHtml(k){ if(!k) return ''; var cur=cdCfg('cd_sections')||{}; var on=(cur[k]!==false); return '<button class=\"ed-btn-add\" style=\"width:100%; margin:10px 0; background:'+(on?'linear-gradient(135deg,#10b981,#047857)':'linear-gradient(135deg,#94a3b8,#64748b)')+'; color:#fff;\" data-key=\"'+k+'\" onclick=\"edSecTog(this)\">'+(on?'🟢 Sezione visibile in dashboard — tocca per nascondere':'⚪ Sezione nascosta — tocca per mostrare')+'</button>'; } function edSecTog(btn){ try { var k=btn.getAttribute('data-key'); if(!k) return; var cur=cdCfg('cd_sections')||{}; cur[k]=(cur[k]===false); localStorage.setItem('cd_sections', JSON.stringify(cur)); try { cdMarkDirty(); cdSyncPush(); } catch(e2){} try { cdApplyNavVis(); } catch(e2){} try { if(typeof render==='function') render(); } catch(e2){} try { buildTempCards(); } catch(e2){} editorSwitch((typeof EDITOR_TAB !== 'undefined' && EDITOR_TAB) ? EDITOR_TAB : 'visib'); } catch(e){} } function edSecSave(){ try { cdMarkDirty(); cdSyncPush(); } catch(e){} try { edToast('Sezione salvata'); } catch(e){} } function edCostSplit(el, mode){ try { var kids=Array.prototype.slice.call(el.children); var start=-1; for(var i=0;i<kids.length;i++){ var t=(kids[i].textContent||''); if(t.indexOf('Costo energia')!==-1||t.indexOf('Energy cost')!==-1){ start=i; break; } } if(start<0) return null; if(mode==='hide'){ for(var j=start;j<kids.length;j++) kids[j].style.display='none'; return null; } var frag=document.createElement('div'); for(var k2=start;k2<kids.length;k2++) frag.appendChild(kids[k2]); return frag; } catch(e){ return null; } } function edFilterSez(el, n){ try { var ds=el.querySelectorAll('details.ed-acc'); for (var i=0;i<ds.length;i++){ var alsoN=(n===4)?10:-1; if(i===n||i===alsoN){ ds[i].open=true; } else { ds[i].style.display='none'; } } var it=el.querySelector('.ed-intro'); if(it && !it.closest('details')) it.style.display='none'; var extra=''; var k=cdSecKeyByOrd(n); if(k) extra+=cdSecToggleHtml(k); if(n===2){ try { extra+=cdEvCarsHtml(); } catch(e2){} }  if(extra){ var w=document.createElement('div'); w.innerHTML=extra; el.insertBefore(w, el.firstChild); } if(n===0){ ['dm.home_interruttore_antifurto','dm.home_script_apertura_cancello'].forEach(function(rf){ var inp=el.querySelector('input[data-ref=\"'+rf+'\"]'); var blk=inp && (inp.closest('.ed-slot')||inp.parentElement); if(blk) blk.style.display='none'; }); }  try { el.querySelectorAll('input.ed-slot-in').forEach(function(inp){ var nx=inp.nextElementSibling; if(nx && nx.tagName==='BUTTON') return; var b=document.createElement('button'); b.type='button'; b.textContent='🔍'; b.className='dm-entity-picker'; b.onclick=function(){ try { wzPickEntity(inp.getAttribute('data-ref')||inp); } catch(e2){} }; var par=inp.parentElement; if(par){ par.style.display='flex'; par.style.gap='6px'; inp.style.flex='1'; } inp.insertAdjacentElement('afterend', b); }); } catch(eL){} if(n>=7){ var sv=document.createElement('div'); sv.innerHTML='<button class=\"ed-btn-add\" style=\"width:100%; margin-top:10px;\" onclick=\"edSecSave()\">💾 Salva sezione</button>'; el.appendChild(sv); } } catch(e){} } function cdNavOrderHtml(){ try { var tabs=cdNavTabs(); if(!tabs.length) return ''; var lbl={}; tabs.forEach(function(t){ lbl[t.k]=t.lbl; }); var keys=cdNavKeys(); var rows=keys.map(function(k,i){ return '<div class=\"ed-row\" style=\"align-items:center;\"><div style=\"display:flex; gap:4px;\"><div class=\"ed-del\" style=\"'+(i===0?'opacity:0.25;pointer-events:none;':'')+'\" data-i=\"'+i+'\" data-d=\"-1\" onclick=\"edNavMove(this)\">▲</div><div class=\"ed-del\" style=\"'+(i===keys.length-1?'opacity:0.25;pointer-events:none;':'')+'\" data-i=\"'+i+'\" data-d=\"1\" onclick=\"edNavMove(this)\">▼</div></div><div class=\"ed-row-main\"><div class=\"ed-row-new\">'+cdEsc(lbl[k]||k)+'</div></div></div>'; }).join(''); return '<div class=\"ed-intro\" style=\"margin-top:16px;\"><b>Ordine navbar</b>: disponi le sezioni della barra come preferisci.</div>'+rows; } catch(e){ return ''; } } function edNavMove(btn){ try { var i=parseInt(btn.getAttribute('data-i'),10); var d=parseInt(btn.getAttribute('data-d'),10); var keys=cdNavKeys(); var j=i+d; if(isNaN(i)||isNaN(d)||j<0||j>=keys.length) return; var t=keys[i]; keys[i]=keys[j]; keys[j]=t; localStorage.setItem('cd_navbar_order', JSON.stringify(keys)); try { cdMarkDirty(); cdSyncPush(); } catch(e2){} cdApplyNavOrder(); editorSwitch('visib'); } catch(e){} } function cdLuceRen(id){ try { var luci=cdCfg('cd_luci')||{}; var cur=luci[id]||id; var n=prompt('Nome luce', cur); if(n===null) return; n=String(n).trim(); if(!n) return; luci[id]=n; localStorage.setItem('cd_luci', JSON.stringify(luci)); try { cdMarkDirty(); cdSyncPush(); } catch(e2){} try { if(typeof updateGestioneLuci==='function') updateGestioneLuci(); } catch(e2){} editorSwitch('luci'); } catch(e){} } function cdLuceDel(id){ try { if(!confirm('Rimuovere questa luce dalla dashboard?')) return; var luci=cdCfg('cd_luci')||{}; delete luci[id]; localStorage.setItem('cd_luci', JSON.stringify(luci)); var rooms=cdCfg('cd_luci_rooms')||{}; if(rooms[id]!==undefined){ delete rooms[id]; localStorage.setItem('cd_luci_rooms', JSON.stringify(rooms)); } try { cdMarkDirty(); cdSyncPush(); } catch(e2){} try { if(typeof updateGestioneLuci==='function') updateGestioneLuci(); } catch(e2){} editorSwitch('luci'); } catch(e){} } function cdLuceAdd(){ try { var e1=document.getElementById('luce-add-ent'); var n1=document.getElementById('luce-add-name'); var ent=(e1&&e1.value||'').trim(); if(ent.indexOf('.')<0){ alert('Inserisci una entità light/switch valida'); return; } var nm=(n1&&n1.value||'').trim()||ent.split('.')[1]; var luci=cdCfg('cd_luci')||{}; luci[ent]=nm; localStorage.setItem('cd_luci', JSON.stringify(luci)); try { cdMarkDirty(); cdSyncPush(); } catch(e2){} try { cdSecShow('home'); } catch(e2){} editorSwitch('luci'); edToast('Luce aggiunta'); } catch(e){} } function edSaveGeneral(){ var t=(document.getElementById('ed-gen-title').value||'').trim(); var st2=(document.getElementById('ed-gen-sub').value||'').trim(); var a=(document.getElementById('ed-gen-admin').value||'').trim(); var br=cdCfg('cd_branding')||{}; if(t) br.title=t; else delete br.title; if(st2) br.subtitle=st2; else delete br.subtitle; localStorage.setItem('cd_branding', JSON.stringify(br)); var cn=cdCfg('cd_connection')||{}; cn.admin_users = a ? [a] : []; localStorage.setItem('cd_connection', JSON.stringify(cn)); try{ cdMarkDirty(); cdSyncPush(); }catch(e){} try{ edToast('Salvato'); }catch(e){} setTimeout(function(){ location.reload(); }, 700); } function editorRenderVisib(){ var sez=cdVisibSez(); var cur=cdCfg('cd_sections')||{}; var rows=sez.map(function(x,idx){ var k=x[0]; var on=(cur[k]!==false); return '<div class=\"ed-row\" style=\"align-items:center;\"><div class=\"ed-row-main\"><div class=\"ed-row-new\">'+x[1]+' '+x[2]+'</div><div class=\"ed-row-old\">'+x[3]+'</div></div><div onclick=\"edVisibToggle('+idx+')\" style=\"cursor:pointer;flex:0 0 52px;height:30px;border-radius:15px;background:'+(on?'#0ea5e9':'#cbd5e1')+';position:relative;transition:.2s;\"><div style=\"position:absolute;top:3px;'+(on?'right:3px':'left:3px')+';width:24px;height:24px;border-radius:50%;background:#fff;\"></div></div></div>'; }).join(''); var _rl2=''; try { _rl2=editorRenderRileva(); } catch(e) {} return cdGenHtml()+cdNavOrderHtml()+'<div class=\"ed-intro\" style=\"margin-top:18px;\"><b>Rilevamento e manutenzione</b>: autorilevamento entità e reset.</div>'+_rl2+'<div style=\"display:none;\">'+'<div class=\"ed-intro\">Attiva o disattiva intere <b>sezioni</b> della dashboard. Le sezioni disattivate spariscono dalla vista.</div><div class=\"ed-list\">'+rows+'</div>'; } function edVisibToggle(idx){ var sez=cdVisibSez(); var x=sez[idx]; if(!x) return; var k=x[0]; setTimeout(function(){ try { cdApplyNavVis(); } catch(e){} }, 50); var cur=cdCfg('cd_sections')||{}; cur[k]=(cur[k]===false); localStorage.setItem('cd_sections', JSON.stringify(cur)); try { cdMarkDirty(); cdSyncPush(); } catch(e){} try { if(typeof render==='function') render(); } catch(e){} editorSwitch((typeof EDITOR_TAB !== 'undefined' && EDITOR_TAB) ? EDITOR_TAB : 'visib'); } function editorRenderPiscina(){ var o=getPool(); return '<div class=\"ed-intro\">Gestione <b>piscina</b>: sensori, comandi e filtrazione automatica giornaliera. In modalità auto le ore di filtrazione sono temperatura/2 (min 2, max 12).</div>'+'<div style=\"display:flex; gap:8px; margin-bottom:8px;\"><input id=\"ed-pl-temp\" class=\"ed-input mono\" autocomplete=\"off\" style=\"flex:1;\" placeholder=\"sensor.piscina_temperatura\" value=\"'+cdEsc(o.tempEnt||'')+'\"><button type=\"button\" onclick=\"wzPickEntity(this.previousElementSibling)\" style=\"flex:0 0 38px; height:38px; border:none; border-radius:10px; background:linear-gradient(135deg,#0ea5e9,#0369a1); color:#fff; font-size:14px; cursor:pointer;\">🔍</button></div>'+'<div style=\"display:flex; gap:8px; margin-bottom:8px;\"><input id=\"ed-pl-ph\" class=\"ed-input mono\" autocomplete=\"off\" style=\"flex:1;\" placeholder=\"sensor.piscina_ph (facoltativo)\" value=\"'+cdEsc(o.phEnt||'')+'\"><button type=\"button\" onclick=\"wzPickEntity(this.previousElementSibling)\" style=\"flex:0 0 38px; height:38px; border:none; border-radius:10px; background:linear-gradient(135deg,#0ea5e9,#0369a1); color:#fff; font-size:14px; cursor:pointer;\">🔍</button></div>'+'<div style=\"display:flex; gap:8px; margin-bottom:8px;\"><input id=\"ed-pl-cl\" class=\"ed-input mono\" autocomplete=\"off\" style=\"flex:1;\" placeholder=\"sensor.piscina_cloro (facoltativo)\" value=\"'+cdEsc(o.clEnt||'')+'\"><button type=\"button\" onclick=\"wzPickEntity(this.previousElementSibling)\" style=\"flex:0 0 38px; height:38px; border:none; border-radius:10px; background:linear-gradient(135deg,#0ea5e9,#0369a1); color:#fff; font-size:14px; cursor:pointer;\">🔍</button></div>'+'<div style=\"display:flex; gap:8px; margin-bottom:8px;\"><input id=\"ed-pl-pump\" class=\"ed-input mono\" autocomplete=\"off\" style=\"flex:1;\" placeholder=\"switch.pompa_piscina\" value=\"'+cdEsc(o.pumpEnt||'')+'\"><button type=\"button\" onclick=\"wzPickEntity(this.previousElementSibling)\" style=\"flex:0 0 38px; height:38px; border:none; border-radius:10px; background:linear-gradient(135deg,#0ea5e9,#0369a1); color:#fff; font-size:14px; cursor:pointer;\">🔍</button></div>'+'<div style=\"display:flex; gap:8px; margin-bottom:8px;\"><input id=\"ed-pl-heat\" class=\"ed-input mono\" autocomplete=\"off\" style=\"flex:1;\" placeholder=\"switch.riscaldamento_piscina (facoltativo)\" value=\"'+cdEsc(o.heatEnt||'')+'\"><button type=\"button\" onclick=\"wzPickEntity(this.previousElementSibling)\" style=\"flex:0 0 38px; height:38px; border:none; border-radius:10px; background:linear-gradient(135deg,#0ea5e9,#0369a1); color:#fff; font-size:14px; cursor:pointer;\">🔍</button></div>'+'<div style=\"display:flex; gap:8px; margin-bottom:8px;\"><input id=\"ed-pl-light\" class=\"ed-input mono\" autocomplete=\"off\" style=\"flex:1;\" placeholder=\"light.piscina (facoltativo)\" value=\"'+cdEsc(o.lightEnt||'')+'\"><button type=\"button\" onclick=\"wzPickEntity(this.previousElementSibling)\" style=\"flex:0 0 38px; height:38px; border:none; border-radius:10px; background:linear-gradient(135deg,#0ea5e9,#0369a1); color:#fff; font-size:14px; cursor:pointer;\">🔍</button></div>'+'<div class=\"ed-intro\">Soglie qualità (avvisi) e filtrazione.</div>'+'<div style=\"display:flex; gap:8px; margin-bottom:8px;\"><input id=\"ed-pl-phmin\" type=\"number\" step=\"0.1\" class=\"ed-input\" style=\"flex:1; margin:0;\" title=\"pH minimo\" value=\"'+cdEsc(o.phMin!=null?o.phMin:7.0)+'\"><input id=\"ed-pl-phmax\" type=\"number\" step=\"0.1\" class=\"ed-input\" style=\"flex:1; margin:0;\" title=\"pH massimo\" value=\"'+cdEsc(o.phMax!=null?o.phMax:7.6)+'\"></div>'+'<div style=\"display:flex; gap:8px; margin-bottom:8px;\"><input id=\"ed-pl-clmin\" type=\"number\" step=\"0.1\" class=\"ed-input\" style=\"flex:1; margin:0;\" title=\"Cloro minimo\" placeholder=\"Cloro min\" value=\"'+cdEsc(o.clMin!=null?o.clMin:'')+'\"><input id=\"ed-pl-clmax\" type=\"number\" step=\"0.1\" class=\"ed-input\" style=\"flex:1; margin:0;\" title=\"Cloro massimo\" placeholder=\"Cloro max\" value=\"'+cdEsc(o.clMax!=null?o.clMax:'')+'\"></div>'+'<label class=\"ed-intro\" style=\"display:flex; gap:8px; align-items:center;\"><input id=\"ed-pl-auto\" type=\"checkbox\" '+(o.autoHours?'checked':'')+'> Ore automatiche (temperatura/2)</label>'+'<div style=\"display:flex; gap:8px; margin-bottom:8px;\"><input id=\"ed-pl-hours\" type=\"number\" min=\"1\" max=\"24\" class=\"ed-input\" style=\"flex:1; margin:0;\" title=\"Ore fisse\" value=\"'+(+o.filterHours||8)+'\"><input id=\"ed-pl-time\" type=\"time\" class=\"ed-input\" style=\"flex:1; margin:0;\" value=\"'+cdEsc(o.filterStart||'09:00')+'\"></div>'+'<label class=\"ed-intro\" style=\"display:flex; gap:8px; align-items:center;\"><input id=\"ed-pl-en\" type=\"checkbox\" '+(o.enabled?'checked':'')+'> Filtrazione giornaliera attiva (col tablet acceso)</label>'+'<button class=\"ed-btn-add\" style=\"width:100%;\" onclick=\"edPoolSaveCfg()\">💾 Salva piscina</button>'; } function edPoolSaveCfg(){ var o=getPool(); o.tempEnt=(document.getElementById('ed-pl-temp').value||'').trim(); o.phEnt=(document.getElementById('ed-pl-ph').value||'').trim(); o.clEnt=(document.getElementById('ed-pl-cl').value||'').trim(); o.pumpEnt=(document.getElementById('ed-pl-pump').value||'').trim(); o.heatEnt=(document.getElementById('ed-pl-heat').value||'').trim(); o.lightEnt=(document.getElementById('ed-pl-light').value||'').trim(); var a=parseFloat(document.getElementById('ed-pl-phmin').value); o.phMin=isNaN(a)?7.0:a; var b=parseFloat(document.getElementById('ed-pl-phmax').value); o.phMax=isNaN(b)?7.6:b; var c=parseFloat(document.getElementById('ed-pl-clmin').value); o.clMin=isNaN(c)?null:c; var d2=parseFloat(document.getElementById('ed-pl-clmax').value); o.clMax=isNaN(d2)?null:d2; o.autoHours=!!document.getElementById('ed-pl-auto').checked; var h=parseFloat(document.getElementById('ed-pl-hours').value); o.filterHours=(isNaN(h)||h<=0)?8:h; o.filterStart=(document.getElementById('ed-pl-time').value||'09:00'); o.enabled=!!document.getElementById('ed-pl-en').checked; savePool(o); try{ renderPiscina(); }catch(ex){} try{ edToast('Piscina salvata'); }catch(ex){} editorSwitch('pool'); } function editorRenderIrrigazione(){ var o=getIrr(); var rows = o.zones.length ? o.zones.map(function(z,i){ var fl=cdRoomFloorOf(z.room||''); return '<div class=\"ed-row\" style=\"align-items:center;\"><div class=\"ed-row-main\"><div class=\"ed-row-new\">🌱 '+cdEsc(z.name||z.entity)+' · '+(parseFloat(z.mins)||10)+' min</div><div class=\"ed-row-old\">'+cdEsc((z.room?('🏠 '+z.room):'')+(fl?(' · 🏢 '+fl):''))+'</div></div><div class=\"ed-del\" onclick=\"edIrrDel('+i+')\">🗑️</div></div>'; }).join('') : '<div class=\"ed-intro\">Nessuna zona. Aggiungine una qui sotto.</div>'; return '<div class=\"ed-intro\">Zone di <b>irrigazione</b> (switch o valve). Il programma le avvia in sequenza, ognuna per la sua durata, e salta quando la probabilità di pioggia supera la soglia.</div>'+rows+'<input id=\"ed-irr-name\" class=\"ed-input\" style=\"margin:8px 0;\" placeholder=\"Nome zona (es. Prato davanti)\">'+'<div style=\"display:flex; gap:8px; margin-bottom:8px;\"><input id=\"ed-irr-ent\" class=\"ed-input mono\" autocomplete=\"off\" style=\"flex:1;\" placeholder=\"switch.irrigazione_zona1\"><button type=\"button\" onclick=\"wzPickEntity(this.previousElementSibling)\" style=\"flex:0 0 38px; height:38px; border:none; border-radius:10px; background:linear-gradient(135deg,#0ea5e9,#0369a1); color:#fff; font-size:14px; cursor:pointer;\">🔍</button></div>'+'<div style=\"display:flex; gap:8px; margin-bottom:8px;\"><select id=\"ed-irr-room\" class=\"ed-input\" style=\"flex:1; margin:0;\">'+cdRoomOptions('')+'</select><input id=\"ed-irr-min\" type=\"number\" min=\"1\" max=\"180\" value=\"10\" class=\"ed-input\" style=\"flex:0 0 90px; margin:0;\" title=\"Duration (minuti)\"></div>'+'<button class=\"ed-btn-add\" style=\"width:100%; margin-bottom:16px;\" onclick=\"edIrrAddZone()\">＋ Aggiungi zona</button>'+'<div class=\"ed-intro\"><b>Meteo e programma</b>: sensore % pioggia, soglia, meteo (facoltativo) e orario di avvio.</div>'+'<div style=\"display:flex; gap:8px; margin-bottom:8px;\"><input id=\"ed-irr-rain\" class=\"ed-input mono\" autocomplete=\"off\" style=\"flex:1;\" placeholder=\"sensor.prob_pioggia_oggi (%)\\\\\" value=\"'+cdEsc(o.rainEnt||'')+'\"><button type=\"button\" onclick=\"wzPickEntity(this.previousElementSibling)\" style=\"flex:0 0 38px; height:38px; border:none; border-radius:10px; background:linear-gradient(135deg,#0ea5e9,#0369a1); color:#fff; font-size:14px; cursor:pointer;\">🔍</button></div>'+'<div style=\"display:flex; gap:8px; margin-bottom:8px;\"><input id=\"ed-irr-weather\" class=\"ed-input mono\" autocomplete=\"off\" style=\"flex:1;\" placeholder=\"weather.casa (facoltativo)\\\\\" value=\"'+cdEsc(o.weatherEnt||'')+'\"><button type=\"button\" onclick=\"wzPickEntity(this.previousElementSibling)\" style=\"flex:0 0 38px; height:38px; border:none; border-radius:10px; background:linear-gradient(135deg,#0ea5e9,#0369a1); color:#fff; font-size:14px; cursor:pointer;\">🔍</button></div>'+'<div style=\"display:flex; gap:8px; margin-bottom:8px;\"><input id=\"ed-irr-thr\" type=\"number\" min=\"0\" max=\"100\" value=\"'+(+o.rainThr||60)+'\" class=\"ed-input\" style=\"flex:1; margin:0;\" title=\"Soglia pioggia %\"><input id=\"ed-irr-time\" type=\"time\" value=\"'+cdEsc(o.time||'06:30')+'\" class=\"ed-input\" style=\"flex:1; margin:0;\"></div>'+'<label class=\"ed-intro\" style=\"display:flex; gap:8px; align-items:center;\"><input id=\"ed-irr-en\" type=\"checkbox\" '+(o.enabled?'checked':'')+'> Programma attivo (ogni giorno, col tablet acceso)</label>'+'<button class=\"ed-btn-add\" style=\"width:100%;\" onclick=\"edIrrSaveCfg()\">💾 Salva impostazioni</button>'; } function edIrrAddZone(){ var n=(document.getElementById('ed-irr-name').value||'').trim(); var e=(document.getElementById('ed-irr-ent').value||'').trim(); var r=(document.getElementById('ed-irr-room').value||'').trim(); var m=parseFloat(document.getElementById('ed-irr-min').value); if(!e || e.indexOf('.')<0){ alert('Inserisci una entità valida (switch o valve)'); return; } var o=getIrr(); var z={ name:n||e, entity:e, mins:(isNaN(m)||m<=0)?10:m }; if(r) z.room=r; o.zones.push(z); saveIrr(o); try{ renderIrrigazione(); }catch(ex){} editorSwitch('irr'); } function edIrrDel(i){ var o=getIrr(); o.zones.splice(i,1); saveIrr(o); try{ renderIrrigazione(); }catch(ex){} editorSwitch('irr'); } function edIrrSaveCfg(){ var o=getIrr(); o.rainEnt=(document.getElementById('ed-irr-rain').value||'').trim(); o.weatherEnt=(document.getElementById('ed-irr-weather').value||'').trim(); var t=parseFloat(document.getElementById('ed-irr-thr').value); o.rainThr=(isNaN(t)||t<0)?60:Math.min(100,t); o.time=(document.getElementById('ed-irr-time').value||'06:30'); o.enabled=!!document.getElementById('ed-irr-en').checked; saveIrr(o); try{ renderIrrigazione(); }catch(ex){} try{ edToast('Impostazioni irrigazione salvate'); }catch(ex){} editorSwitch('irr'); } function editorRenderTapparelle(){ var list=getTapparelle(); var rows = list.length ? list.map(function(t,i){ var fl=cdRoomFloorOf(t.room||''); return '<div class=\"ed-row\" style=\"align-items:center;\"><div class=\"ed-row-main\"><div class=\"ed-row-new\">🪟 '+cdEsc(t.name||t.entity)+'</div><div class=\"ed-row-old\">'+cdEsc((t.room?('🏠 '+t.room):'')+(fl?(' · 🏢 '+fl):''))+'</div></div><div class=\"ed-del\" title=\"Flip the percentages (100 = closed)\" style=\"'+(t.invertita?'background:linear-gradient(135deg,#0ea5e9,#0369a1);color:#fff;':'')+'\" onclick=\"edTappInv('+i+')\">⇄</div><div class=\"ed-del\" onclick=\"edTappDel('+i+')\">🗑️</div></div>'; }).join('') : '<div class=\"ed-intro\">Nessuna tapparella. Aggiungine una qui sotto.</div>'; return '<div class=\"ed-intro\">Gestisci le <b>tapparelle</b> (entità cover). Compaiono nella pagina 🪟 Windows, raggruppate per piano e stanza.</div>'+rows+'<input id=\"ed-tp-name\" class=\"ed-input\" style=\"margin:8px 0;\" placeholder=\"Nome (es. Tapparella salone)\">'+'<div style=\"display:flex; gap:8px; margin-bottom:8px;\"><input id=\"ed-tp-ent\" class=\"ed-input mono\" autocomplete=\"off\" style=\"flex:1;\" placeholder=\"cover.tapparella_x\"><button type=\"button\" onclick=\"wzPickEntity(this.previousElementSibling)\" style=\"flex:0 0 38px; height:38px; border:none; border-radius:10px; background:linear-gradient(135deg,#0ea5e9,#0369a1); color:#fff; font-size:14px; cursor:pointer;\">🔍</button></div>'+'<select id=\"ed-tp-room\" class=\"ed-input\" style=\"margin-bottom:8px;\">'+cdRoomOptions('')+'</select>'+'<label style=\"display:flex;align-items:center;gap:8px;margin-bottom:8px;font-size:13px;cursor:pointer;\"><input type=\"checkbox\" id=\"ed-tp-inv\"> Inverted percentages (100% = closed)</label>'+'<button class=\"ed-btn-add\" style=\"width:100%;\" onclick=\"edTappAdd()\">＋ Aggiungi tapparella</button>'; } function edTappAdd(){ var n=(document.getElementById('ed-tp-name').value||'').trim(); var e=(document.getElementById('ed-tp-ent').value||'').trim(); var r=(document.getElementById('ed-tp-room').value||'').trim(); if(!e || e.indexOf('.')<0){ alert('Inserisci una entità cover valida'); return; } var list=getTapparelle().slice(); var it={ name: n||e, entity: e }; if(r) it.room=r; try { var inv=document.getElementById('ed-tp-inv'); if(inv&&inv.checked) it.invertita=true; } catch(einv){} list.push(it); localStorage.setItem('cd_tapparelle', JSON.stringify(list)); try{ cdMarkDirty(); cdSyncPush(); }catch(ex){} try{ renderTapparelle(); }catch(ex){} editorSwitch('tapp'); } function edTappDel(i){ var list=getTapparelle().slice(); list.splice(i,1); localStorage.setItem('cd_tapparelle', JSON.stringify(list)); try{ cdMarkDirty(); cdSyncPush(); }catch(ex){} try{ renderTapparelle(); }catch(ex){} editorSwitch('tapp'); } function editorRenderStanze(){ var rooms = (typeof getStanze==='function'?getStanze():[])||[]; var esc=function(x){return String(x==null?'':x).replace(/\"/g,'&quot;');}; var rowsHtml = rooms.map(function(r,i){ return '<div class=\"ed-row\"><div class=\"ed-row-main\"><div class=\"ed-row-new\">'+((r.icon?cdIconMarkup(r.icon,22)+' ':'🏠 ')+cdEsc(r.name||'Room'))+'</div>'+(r.floor?'<div class=\"ed-row-old\">🏢 '+cdEsc(r.floor)+'</div>':'')+'</div>'+'<div class=\"ed-del\" onclick=\"edStanzaRoomDel('+i+')\" title=\"Elimina\">🗑️</div></div>'; }).join('') || '<div class=\"ed-empty\">No room. Aggiungine una qui sotto.</div>'; return '<div class=\"ed-intro\">Gestisci qui le tue <b>stanze</b>. Ogni stanza creata qui compare nel menù a tendina di elettrodomestici, clima e telecamere. Per i sensori di temperatura usa la sezione dedicata.</div>'+'<div class=\"ed-list\">'+rowsHtml+'</div>'+'<div class=\"ed-form\">'+'<div style=\"display:flex;gap:8px;margin-bottom:8px;\"><span id=\"ed-room-icon-preview\" style=\"flex:0 0 34px;display:flex;align-items:center;justify-content:center;\">🏠</span><input id=\"ed-room-icon\" class=\"ed-input\" style=\"flex:0 0 120px;text-align:center;\" placeholder=\"mdi:sofa / 🏠\" value=\"🏠\" oninput=\"document.getElementById(&quot;ed-room-icon-preview&quot;).innerHTML=cdIconMarkup(this.value,26)\"><button type=\"button\" onclick=\"dmIconPicker(&quot;#ed-room-icon&quot;, &quot;rooms&quot;)\" title=\"Selettore icone\" style=\"flex:0 0 38px;border:0;border-radius:10px;cursor:pointer;\">🎨</button><input id=\"ed-room-name\" class=\"ed-input\" style=\"flex:1;\" placeholder=\"Nome stanza (es. Cucina)\"></div><select id=\"ed-room-floor\" class=\"ed-input\" style=\"margin-bottom:8px;\">'+cdFloorSelOptions()+'</select>'+'<button class=\"ed-btn-add\" onclick=\"edStanzaRoomAdd()\">＋ Aggiungi stanza</button>'+cdFloorRowsHtml()+''+'</div>'; } function edStanzaRoomAdd(){ var name=(document.getElementById('ed-room-name').value||'').trim(); if(!name){ alert('Inserisci il nome della stanza'); return; } var icon=(document.getElementById('ed-room-icon').value||'🏠').trim(); var floor=(document.getElementById('ed-room-floor').value||'').trim(); if(floor==='__new__') floor=''; var rooms=(typeof getStanze==='function'?getStanze():[]).slice(); var r={ id:'room_'+Date.now().toString(36), name:name, icon:icon }; if(floor) r.floor=floor; rooms.push(r); localStorage.setItem('cd_stanze', JSON.stringify(rooms)); try { cdMarkDirty(); cdSyncPush(); } catch(e){} try { buildTempCards(); } catch(e){} editorSwitch('stanze'); } function edStanzaRoomDel(i){ var rooms=(typeof getStanze==='function'?getStanze():[]).slice(); rooms.splice(i,1); localStorage.setItem('cd_stanze', JSON.stringify(rooms)); try { cdMarkDirty(); cdSyncPush(); } catch(e){} try { buildTempCards(); } catch(e){} editorSwitch('stanze'); } function editorRenderLuci() {"
      ]
     },
     {
-     "riga": 1696,
+     "riga": 1742,
      "via": 1,
      "metti": [
       "            💡 No lights configured.<br>Add lights from the setup wizard (\"Lights\" step), then come back here to organize them into rooms."
      ]
     },
     {
-     "riga": 1717,
+     "riga": 1763,
      "via": 1,
      "metti": [
       "    const roomOptions = (sel) => ['<option value=\"\">— Other zones —</option>']"
      ]
     },
     {
-     "riga": 1738,
+     "riga": 1784,
      "via": 1,
      "metti": [
       "        💡 Assign each light to a room and reorder with the arrows. Rooms and order are reflected in the <b>Lights</b> popup."
      ]
     },
     {
-     "riga": 1741,
+     "riga": 1787,
      "via": 1,
      "metti": [
       "    // Rooms are managed exclusively by the Rooms editor. Qui si salva solo"
      ]
     },
     {
-     "riga": 1743,
+     "riga": 1789,
      "via": 1,
      "metti": [
       "    html += `<div class=\"ed-intro dm-lights-room-notice\">🏠 Create, rename and delete rooms only in the <b>Rooms</b> section. Here you can assign and reorder lights.</div>`;"
      ]
     },
     {
-     "riga": 1750,
+     "riga": 1796,
      "via": 1,
      "metti": [
       "            ${list.length ? list.map((id, i) => lightRow(id, r, i, list.length)).join('') : '<div style=\"font-size:11px; color:var(--text-dim,#94a3b8); padding:4px 10px;\">No lights in this room.</div>'}"
      ]
     },
     {
-     "riga": 1757,
+     "riga": 1803,
      "via": 1,
      "metti": [
       "            <div style=\"font-weight:900; font-size:12px; letter-spacing:0.5px; text-transform:uppercase; color:var(--text-dim,#64748b); margin-bottom:6px;\">📦 Other zones <span style=\"font-weight:700;\">· ${altre.length}</span></div>"
      ]
     },
     {
-     "riga": 1762,
+     "riga": 1808,
      "via": 2,
      "metti": [
       "    html += `<button class=\"ed-save-btn\" onclick=\"edToast('💾 Lights layout saved — reload to apply'); cdSyncPush && cdSyncPush();\">💾 Save lights layout</button>`;",
@@ -681,82 +695,82 @@
      ]
     },
     {
-     "riga": 1830,
+     "riga": 1876,
      "via": 0,
      "metti": [
       ""
      ]
     },
     {
-     "riga": 1835,
+     "riga": 1881,
      "via": 1,
      "metti": []
     },
     {
-     "riga": 1838,
+     "riga": 1884,
      "via": 3,
      "metti": [
       "        (GRUPPI_MONITORAGGIO[grp] || []).forEach(id => {"
      ]
     },
     {
-     "riga": 1842,
+     "riga": 1888,
      "via": 1,
      "metti": [
       "            rows += `<div class=\"ed-row\">"
      ]
     },
     {
-     "riga": 1845,
+     "riga": 1891,
      "via": 1,
      "metti": [
       "                <div class=\"ed-row-old mono\">${glbl} · ${cdEsc(id)}</div>"
      ]
     },
     {
-     "riga": 1849,
+     "riga": 1895,
      "via": 3,
      "metti": [
       "        });"
      ]
     },
     {
-     "riga": 1853,
+     "riga": 1899,
      "via": 1,
      "metti": [
       "    /* v0.10.0 (#4): CUSTOM alerts — multiple entities, edit and manual state */"
      ]
     },
     {
-     "riga": 1858,
+     "riga": 1904,
      "via": 1,
      "metti": [
       "            return `<div class=\"ed-row\"><div class=\"ed-row-main\"><div class=\"ed-row-new\">${cdEsc(a.icon||'⚠️')} ${cdEsc(a.name||ents[0]||'')} <span style=\"color:var(--text-dim,#94a3b8); font-size:11px; font-weight:700;\">· ${cdEsc(cdAvvisoCondLabel(a))}${ents.length>1?' · '+ents.length+' entities':''}</span></div><div class=\"ed-row-old mono\">${cdEsc(ents.join(', '))}</div></div><div class=\"ed-del\" onclick=\"edEditAvvisoCustom(${i})\" style=\"color:#0ea5e9;\" title=\"Edit\">✏️</div><div class=\"ed-del\" onclick=\"edDelAvvisoCustom(${i})\" title=\"Delete\">🗑️</div></div>`;"
      ]
     },
     {
-     "riga": 1860,
+     "riga": 1906,
      "via": 1,
      "metti": [
       "        rows += `<details class=\"ed-acc\" open><summary class=\"ed-acc-head\">⭐ Custom <span class=\"ed-acc-n\">${customList.length}</span></summary><div class=\"ed-acc-body\"><div class=\"ed-list\">${cinner}</div></div></details>`;"
      ]
     },
     {
-     "riga": 1862,
+     "riga": 1908,
      "via": 1,
      "metti": [
       "    if (!rows) rows = '<div class=\"ed-empty\">No alerts configured</div>';"
      ]
     },
     {
-     "riga": 1869,
+     "riga": 1915,
      "via": 1,
      "metti": [
       "      <div class=\"ed-intro\">Add sensors to the Alerts Panel with a clean name, or create a <b>⭐ Custom</b> alert on one or <b>more entities</b>, with a condition, <b>manual state/value</b> and a chosen icon. Use ✏️ to <b>edit</b> an existing alert.</div>"
      ]
     },
     {
-     "riga": 1876,
+     "riga": 1922,
      "via": 3,
      "metti": [
       "          <option value=\"clima\">❄️ Climate</option>",
@@ -765,28 +779,28 @@
      ]
     },
     {
-     "riga": 1881,
+     "riga": 1927,
      "via": 1,
      "metti": [
       "        <input id=\"ed-avv-name\" class=\"ed-input\" value=\"${editing ? esc(ed.name) : ''}\" placeholder=\"Alert name (e.g. Open windows)\">"
      ]
     },
     {
-     "riga": 1884,
+     "riga": 1930,
      "via": 1,
      "metti": [
       "        <div style=\"display:flex; gap:6px;\"><input id=\"ed-avv-icon\" class=\"ed-input\" style=\"flex:1;\" value=\"${editing ? esc(ed.icon || '⚠️') : '⚠️'}\" placeholder=\"Icon (e.g. ⚠️ 💧 🌡️)\"><button type=\"button\" onclick=\"dmIconPicker('#ed-avv-icon')\" style=\"flex:0 0 40px; height:40px; border:none; border-radius:10px; background:linear-gradient(135deg,#0ea5e9,#0369a1); color:#fff; font-size:15px; cursor:pointer;\">🔍</button></div>"
      ]
     },
     {
-     "riga": 1886,
+     "riga": 1932,
      "via": 1,
      "metti": [
       "          <button type=\"button\" class=\"ed-btn-add\" style=\"background:linear-gradient(135deg,#0ea5e9,#0369a1); margin-bottom:8px;\" onclick=\"edAvvAddEntity()\">＋ Add this entity to the list</button>"
      ]
     },
     {
-     "riga": 1889,
+     "riga": 1935,
      "via": 6,
      "metti": [
       "            ${cOpt('on','On / Active / Open (on)')}",
@@ -798,14 +812,14 @@
      ]
     },
     {
-     "riga": 1896,
+     "riga": 1942,
      "via": 1,
      "metti": [
       "          <input id=\"ed-avv-val\" class=\"ed-input\" value=\"${editing ? esc(ed.value) : ''}\" placeholder=\"manual state or value (e.g. heat, 23.5, open)\" style=\"display:${showVal ? 'block' : 'none'};\">"
      ]
     },
     {
-     "riga": 1899,
+     "riga": 1945,
      "via": 2,
      "metti": [
       "        <button class=\"ed-btn-add\" onclick=\"edAddAvviso()\">${editing ? '💾 Save changes' : '＋ Add alert'}</button>",
@@ -813,7 +827,7 @@
      ]
     },
     {
-     "riga": 1914,
+     "riga": 1960,
      "via": 2,
      "metti": [
       "        if (!entities.length) { alert('Add at least one entity (press ➕ Add this entity to the list)'); return; }",
@@ -821,70 +835,70 @@
      ]
     },
     {
-     "riga": 1924,
+     "riga": 1970,
      "via": 1,
      "metti": [
       "        edToast(wasEdit ? 'Alert updated' : 'Custom alert added');"
      ]
     },
     {
-     "riga": 1927,
+     "riga": 1973,
      "via": 1,
      "metti": [
       "    if (!ent.includes('.')) { alert('Enter a valid entity'); return; }"
      ]
     },
     {
-     "riga": 1971,
+     "riga": 2017,
      "via": 1,
      "metti": [
       "    edToast('Alert removed');"
      ]
     },
     {
-     "riga": 1980,
+     "riga": 2026,
      "via": 1,
      "metti": [
       "    edToast('Alert removed');"
      ]
     },
     {
-     "riga": 1985,
+     "riga": 2031,
      "via": 1,
      "metti": [
       "    if (!_avvNewEntities.length) { box.innerHTML = '<div style=\"font-size:11px; color:var(--text-dim); font-weight:700; padding:2px 2px 0;\">No entities in the list — type/pick an entity and press ➕</div>'; return; }"
      ]
     },
     {
-     "riga": 1991,
+     "riga": 2037,
      "via": 1,
      "metti": [
       "    if (!v.includes('.')) { alert('Enter a valid entity'); return; }"
      ]
     },
     {
-     "riga": 2035,
+     "riga": 2081,
      "via": 1,
      "metti": [
       "    editorSwitch('testi');"
      ]
     },
     {
-     "riga": 2043,
+     "riga": 2089,
      "via": 1,
      "metti": [
       "    editorSwitch('testi');"
      ]
     },
     {
-     "riga": 2070,
+     "riga": 2116,
      "via": 1,
      "metti": [
       "    { sel: '.ed-kpi-banner',                   label: 'Energy · Banner KPI' },"
      ]
     },
     {
-     "riga": 2126,
+     "riga": 2172,
      "via": 2,
      "metti": [
       "          <div class=\"ed-dl-hero-title\">💾 Download modified HTML</div>",
@@ -892,14 +906,14 @@
      ]
     },
     {
-     "riga": 2129,
+     "riga": 2175,
      "via": 1,
      "metti": [
       "        <button class=\"ed-dl-btn\" onclick=\"edDownloadHTML()\">⬇ DOWNLOAD</button>"
      ]
     },
     {
-     "riga": 2134,
+     "riga": 2180,
      "via": 2,
      "metti": [
       "        <button class=\"ed-btn-add\" style=\"flex:1;\" onclick=\"edCopyExport()\">📋 Copy configuration</button>",
@@ -907,7 +921,7 @@
      ]
     },
     {
-     "riga": 2137,
+     "riga": 2183,
      "via": 3,
      "metti": [
       "      <div class=\"ed-imp-title\">🧙 Guided setup</div>",
@@ -916,21 +930,21 @@
      ]
     },
     {
-     "riga": 2141,
+     "riga": 2187,
      "via": 1,
      "metti": [
       "      <button class=\"ed-btn-add\" onclick=\"edImport()\">Import and apply</button>`;"
      ]
     },
     {
-     "riga": 2209,
+     "riga": 2255,
      "via": 1,
      "metti": [
       "        title: brand.title || 'My Home',"
      ]
     },
     {
-     "riga": 2239,
+     "riga": 2285,
      "via": 7,
      "metti": [
       "        <div class=\"wz-title\">🔌 Connect Home Assistant</div>",
@@ -943,14 +957,14 @@
      ]
     },
     {
-     "riga": 2248,
+     "riga": 2294,
      "via": 1,
      "metti": [
       "        <button class=\"wz-btn\" onclick=\"wzTestToken()\">Test connection →</button>`;"
      ]
     },
     {
-     "riga": 2251,
+     "riga": 2297,
      "via": 3,
      "metti": [
       "        <div class=\"wz-title\">🏠 What is your home called?</div>",
@@ -959,21 +973,21 @@
      ]
     },
     {
-     "riga": 2255,
+     "riga": 2301,
      "via": 1,
      "metti": [
       "        <div class=\"wz-sub\" style=\"margin-top:8px;\">👤 <b>Utente amministratore</b> (optional): solo questo utente HA vedrà la pagina ⚙️ Configurazione. Lascia vuoto per mostrarla a tutti.</div>"
      ]
     },
     {
-     "riga": 2257,
+     "riga": 2303,
      "via": 1,
      "metti": [
       "        <button class=\"wz-btn\" onclick=\"WIZ.title=document.getElementById('wz-title-in').value.trim()||'My Home'; WIZ.subtitle=document.getElementById('wz-sub-in').value.trim(); WIZ.admin=document.getElementById('wz-admin-in').value.trim(); WIZ.step=3; wzRender();\">Next →</button>`;"
      ]
     },
     {
-     "riga": 2261,
+     "riga": 2307,
      "via": 4,
      "metti": [
       "            ['home','🏠','Home','Weather, alerts, quick actions'], ['energy','⚡','Energy','Solar PV and consumption'],",
@@ -983,7 +997,7 @@
      ]
     },
     {
-     "riga": 2267,
+     "riga": 2313,
      "via": 2,
      "metti": [
       "        <div class=\"wz-title\">📑 Which sections do you need?</div>",
@@ -991,14 +1005,14 @@
      ]
     },
     {
-     "riga": 2281,
+     "riga": 2327,
      "via": 1,
      "metti": [
       "          <div style=\"font-weight:800; font-size:13px; margin-bottom:8px;\">📌 Navigation bar</div>"
      ]
     },
     {
-     "riga": 2283,
+     "riga": 2329,
      "via": 2,
      "metti": [
       "            <button type=\"button\" class=\"wz-btn\" style=\"flex:1; font-size:12.5px; ${(localStorage.getItem('cd_navbar_mode')||'auto') !== 'fixed' ? '' : 'background:#94a3b8;'}\" onclick=\"wzSetNavMode('auto')\">👆 Auto-hide</button>",
@@ -1006,14 +1020,14 @@
      ]
     },
     {
-     "riga": 2286,
+     "riga": 2332,
      "via": 1,
      "metti": [
       "          <div style=\"font-size:11px; color:var(--text-dim); margin-top:6px;\">Auto-hide: appears with a swipe/tap on the handle. Fixed: always in view.</div>"
      ]
     },
     {
-     "riga": 2288,
+     "riga": 2334,
      "via": 3,
      "metti": [
       "        <button class=\"wz-btn\" style=\"background:linear-gradient(135deg,#059669,#10b981);\" onclick=\"wzFinishV7(true)\">🪄 Detect everything and open the editor →</button>",
@@ -1022,7 +1036,7 @@
      ]
     },
     {
-     "riga": 2296,
+     "riga": 2342,
      "via": 5,
      "metti": [
       "        <div class=\"wz-title\">💡 Choose your lights</div>",
@@ -1033,28 +1047,28 @@
      ]
     },
     {
-     "riga": 2310,
+     "riga": 2356,
      "via": 1,
      "metti": [
       "                return `<div class=\"ed-slot\"><div class=\"ed-slot-lbl\"><input class=\"wz-lbl-edit\" value=\"${cdEsc(cdCfg('cd_slot_labels')[sl.ref] || sl.lbl)}\" onchange=\"wzRenameSlot(${cdJs(sl.ref)}, this.value)\" title=\"Tap to rename\">${auto ? ' <span style=\\\"background:#dcfce7; color:#15803d; font-size:9.5px; font-weight:800; padding:1px 7px; border-radius:8px; vertical-align:1px;\\\">🪄 auto</span>' : ''}</div>"
      ]
     },
     {
-     "riga": 2317,
+     "riga": 2363,
      "via": 1,
      "metti": [
       "            const evImg = key === 'ev' ? `<div class=\"ed-slot\"><div class=\"ed-slot-lbl\">🖼️ Car image URL (e.g. /local/my_car.png)</div>"
      ]
     },
     {
-     "riga": 2320,
+     "riga": 2366,
      "via": 1,
      "metti": [
       "            return `<details class=\"ed-acc\"><summary class=\"ed-acc-head\">${sec.label} <span class=\"ed-acc-n\" style=\"${done ? 'background:#dcfce7; color:#166534;' : ''}\">${done}/${sec.slots.length} linked</span></summary><div class=\"ed-acc-body\">${rows}${evImg}</div></details>`;"
      ]
     },
     {
-     "riga": 2324,
+     "riga": 2370,
      "via": 3,
      "metti": [
       "        <div class=\"wz-title\">🧩 Link your entities</div>",
@@ -1063,21 +1077,21 @@
      ]
     },
     {
-     "riga": 2329,
+     "riga": 2375,
      "via": 1,
      "metti": [
       "        <details class=\"ed-acc\"><summary class=\"ed-acc-head\">⚡ Quick actions <span class=\"ed-acc-n\">${(WIZ.quickActions||[]).length}</span></summary>"
      ]
     },
     {
-     "riga": 2331,
+     "riga": 2377,
      "via": 1,
      "metti": [
       "            ${(WIZ.quickActions||[]).map((a, i) => `<div class=\"ed-row\"><div style=\"font-size:15px;\">${cdEsc(a.icon||'⚡')}</div><div class=\"ed-row-main\"><div class=\"ed-row-new\">${cdEsc(a.name||a.builtin||'?')}</div><div class=\"ed-row-old mono\">${a.type === 'luci_group' ? '💡 ' + ((a.lights||[]).length) + ' lights' : cdEsc(a.type)}</div></div>${a.type === 'luci_group' ? `<div class=\"ed-del\" style=\"background:rgba(14,165,233,0.12);\" onclick=\"wzEditLightGroup(${i})\">✏️</div>` : ''}<div class=\"ed-del\" onclick=\"WIZ.quickActions.splice(${i},1); wzRender();\">🗑️</div></div>`).join('')}"
      ]
     },
     {
-     "riga": 2334,
+     "riga": 2380,
      "via": 2,
      "metti": [
       "                <option value=\"luci_group\">💡 Lights popup — YOU pick the lights</option>",
@@ -1085,42 +1099,42 @@
      ]
     },
     {
-     "riga": 2342,
+     "riga": 2388,
      "via": 1,
      "metti": [
       "              <input id=\"wz-qa-ent\" class=\"wz-input mono\" autocomplete=\"off\" placeholder=\"dm.core_054 — the entity to control\" style=\"margin-bottom:0; flex:1; font-family:monospace;\">"
      ]
     },
     {
-     "riga": 2345,
+     "riga": 2391,
      "via": 1,
      "metti": [
       "            <div id=\"wz-qa-hint\" style=\"font-size:11.5px; color:var(--text-dim); margin-bottom:8px; padding:0 2px;\">💡 Give it a name (e.g. \"Ground Floor\") and press Add: you will pick the lights from a searchable list.</div>"
      ]
     },
     {
-     "riga": 2349,
+     "riga": 2395,
      "via": 1,
      "metti": [
       "        <details class=\"ed-acc\"><summary class=\"ed-acc-head\">🔔 Alerts Panel <span class=\"ed-acc-n\">${(GRUPPI_MONITORAGGIO['win']||[]).length + (GRUPPI_MONITORAGGIO['batt']||[]).length + cdCfgList('cd_avvisi_custom').length}</span></summary>"
      ]
     },
     {
-     "riga": 2351,
+     "riga": 2397,
      "via": 1,
      "metti": [
       "            <div class=\"ed-slot-lbl\" style=\"margin-bottom:4px;\">Openings (doors/windows) and batteries monitored on Home. With <b>⭐ Custom</b> you can create an alert on any entity, with your own name, condition and icon.</div>"
      ]
     },
     {
-     "riga": 2354,
+     "riga": 2400,
      "via": 1,
      "metti": [
       "                return `<div class=\"ed-row\"><div style=\"font-size:15px;\">${grp==='win'?'🚪':'🔋'}</div><div class=\"ed-row-main\"><div class=\"ed-row-new\">${cdEsc(nm)}</div><div class=\"ed-row-old mono\">${cdEsc(id)}</div></div>${grp==='win'?`<div class=\"ed-del\" title=\"Flip the direction (ON = closed)\" style=\"${dmVersoInvertito(id)?'background:linear-gradient(135deg,#0ea5e9,#0369a1);color:#fff;':''}\" onclick=\"edAvvVerso(${cdJs(id)})\">⇄</div>`:''}<div class=\"ed-del\" onclick=\"wzDelAvviso(${cdJs(grp)},${cdJs(id)})\">🗑️</div></div>`;"
      ]
     },
     {
-     "riga": 2358,
+     "riga": 2404,
      "via": 2,
      "metti": [
       "              <select id=\"wz-av-grp\" class=\"wz-input\" style=\"margin-bottom:0; flex:0 0 46%;\" onchange=\"var c=document.getElementById('wz-av-custom'); if(c) c.style.display = this.value==='custom' ? 'block' : 'none';\"><option value=\"win\">🚪 Opening</option><option value=\"batt\">🔋 Battery</option><option value=\"tapp\">🪟 Windows (cover)</option><option value=\"custom\">⭐ Custom</option></select>",
@@ -1128,14 +1142,14 @@
      ]
     },
     {
-     "riga": 2363,
+     "riga": 2409,
      "via": 1,
      "metti": [
       "              <div class=\"ed-slot-lbl\" style=\"margin-bottom:6px;\">Show the alert when the entity is…</div>"
      ]
     },
     {
-     "riga": 2366,
+     "riga": 2412,
      "via": 6,
      "metti": [
       "                  <option value=\"on\">On / Active / Open (on)</option>",
@@ -1147,42 +1161,42 @@
      ]
     },
     {
-     "riga": 2373,
+     "riga": 2419,
      "via": 1,
      "metti": [
       "                <input id=\"wz-av-val\" class=\"wz-input\" style=\"margin-bottom:0; flex:0 0 34%; display:none;\" placeholder=\"value\">"
      ]
     },
     {
-     "riga": 2376,
+     "riga": 2422,
      "via": 1,
      "metti": [
       "                <span class=\"ed-slot-lbl\" style=\"margin:0;\">Icon</span>"
      ]
     },
     {
-     "riga": 2380,
+     "riga": 2426,
      "via": 1,
      "metti": [
       "            <button class=\"ed-btn-add\" style=\"width:100%;\" onclick=\"wzAddAvviso()\">＋ Add to Alerts Panel</button>"
      ]
     },
     {
-     "riga": 2383,
+     "riga": 2429,
      "via": 1,
      "metti": [
       "        <details class=\"ed-acc\"><summary class=\"ed-acc-head\">🔌 Appliances (dishwasher, stove…) <span class=\"ed-acc-n\">${(WIZ.devices||[]).length}</span></summary>"
      ]
     },
     {
-     "riga": 2388,
+     "riga": 2434,
      "via": 1,
      "metti": [
       "              <input id=\"wz-dev-name\" class=\"wz-input\" style=\"margin-bottom:0; flex:1;\" placeholder=\"Name (e.g. Dishwasher)\">"
      ]
     },
     {
-     "riga": 2390,
+     "riga": 2436,
      "via": 4,
      "metti": [
       "            <div style=\"display:flex; gap:6px; margin-bottom:8px;\"><input id=\"wz-dev-sw\" class=\"wz-input mono\" autocomplete=\"off\" placeholder=\"dm.core_052 (optional)\" style=\"margin-bottom:0; flex:1; font-family:monospace;\"><button type=\"button\" onclick=\"wzPickEntity('#wz-dev-sw')\" style=\"flex:0 0 40px; height:40px; border:none; border-radius:12px; background:linear-gradient(135deg,#0ea5e9,#0369a1); color:#fff; font-size:15px; cursor:pointer;\">🔍</button></div>",
@@ -1192,35 +1206,35 @@
      ]
     },
     {
-     "riga": 2396,
+     "riga": 2442,
      "via": 1,
      "metti": [
       "        <details class=\"ed-acc\"><summary class=\"ed-acc-head\">📊 Analysis Report (per-device consumption) <span class=\"ed-acc-n\">${(WIZ.reportDevices||[]).length}</span></summary>"
      ]
     },
     {
-     "riga": 2398,
+     "riga": 2444,
      "via": 1,
      "metti": [
       "            <div class=\"ed-slot-lbl\" style=\"margin-bottom:6px;\">The monthly Report entries in Energy → Analysis: name, icon and entity (monthly kWh) of your choice.</div>"
      ]
     },
     {
-     "riga": 2402,
+     "riga": 2448,
      "via": 1,
      "metti": [
       "              <input id=\"wz-rep-name\" class=\"wz-input\" style=\"flex:1; margin-bottom:0;\" placeholder=\"Name (e.g. Pool)\">"
      ]
     },
     {
-     "riga": 2408,
+     "riga": 2454,
      "via": 1,
      "metti": [
       "            <button class=\"ed-btn-add\" style=\"width:100%;\" onclick=\"wzAddReportDevice()\">＋ Add to Report</button>"
      ]
     },
     {
-     "riga": 2415,
+     "riga": 2461,
      "via": 3,
      "metti": [
       "              <input id=\"wz-st-icon\" class=\"wz-input\" style=\"margin-bottom:0; flex:0 0 64px; text-align:center;\" placeholder=\"🛋️\" maxlength=\"4\">",
@@ -1229,7 +1243,7 @@
      ]
     },
     {
-     "riga": 2420,
+     "riga": 2466,
      "via": 2,
      "metti": [
       "            <div style=\"display:flex; gap:6px; margin-bottom:8px;\"><input id=\"wz-st-hum\" class=\"wz-input mono\" autocomplete=\"off\" placeholder=\"sensor.umidita_salone (optional)\" style=\"margin-bottom:0; flex:1; font-family:monospace;\"><button type=\"button\" onclick=\"wzPickEntity('#wz-st-hum')\" style=\"flex:0 0 40px; height:40px; border:none; border-radius:12px; background:linear-gradient(135deg,#0ea5e9,#0369a1); color:#fff; font-size:15px; cursor:pointer;\">🔍</button></div>",
@@ -1237,49 +1251,49 @@
      ]
     },
     {
-     "riga": 2425,
+     "riga": 2471,
      "via": 1,
      "metti": [
       "            <input id=\"ed-st2-icon\" class=\"ed-input\" style=\"flex:0 0 56px;\" placeholder=\"🌡️\" maxlength=\"4\">"
      ]
     },
     {
-     "riga": 2427,
+     "riga": 2473,
      "via": 1,
      "metti": [
       "            <input id=\"ed-st2-floor\" class=\"ed-input\" style=\"flex:0 0 32%;\" placeholder=\"Floor (opt.)\"><input id=\"ed-st2-flicon\" class=\"ed-input\" style=\"flex:0 0 52px;\" placeholder=\"🏢\" maxlength=\"4\" title=\"Floor icon\"><button type=\"button\" onclick=\"wzPickIcon('#ed-st2-flicon')\" style=\"flex:0 0 38px; height:38px; border:none; border-radius:10px; background:linear-gradient(135deg,#f59e0b,#d97706); color:#fff; font-size:16px; cursor:pointer;\">😀</button>"
      ]
     },
     {
-     "riga": 2430,
+     "riga": 2476,
      "via": 1,
      "metti": [
       "            <input id=\"ed-st2-temp\" class=\"ed-input mono\" autocomplete=\"off\" placeholder=\"sensor.temperature_x\" style=\"flex:1; font-family:monospace;\">"
      ]
     },
     {
-     "riga": 2434,
+     "riga": 2480,
      "via": 1,
      "metti": [
       "            <input id=\"ed-st2-hum\" class=\"ed-input mono\" autocomplete=\"off\" placeholder=\"sensor.umidita_x (optional)\" style=\"flex:1; font-family:monospace;\">"
      ]
     },
     {
-     "riga": 2437,
+     "riga": 2483,
      "via": 1,
      "metti": [
       "          <button class=\"ed-btn-add\" style=\"width:100%;\" onclick=\"edAddStanza2()\">＋ Add room</button>"
      ]
     },
     {
-     "riga": 2439,
+     "riga": 2485,
      "via": 1,
      "metti": [
       "        <details class=\"ed-acc\"><summary class=\"ed-acc-head\">❄️ Climate units <span class=\"ed-acc-n\">${(WIZ.climaUnits||[]).length}</span></summary>"
      ]
     },
     {
-     "riga": 2443,
+     "riga": 2489,
      "via": 2,
      "metti": [
       "              <select id=\"wz-cl-type\" class=\"wz-input\" style=\"margin-bottom:0; flex:0 0 46%;\"><option value=\"clima\">❄️ Air conditioner</option><option value=\"termo\">🔥 Radiator</option></select>",
@@ -1287,7 +1301,7 @@
      ]
     },
     {
-     "riga": 2447,
+     "riga": 2493,
      "via": 2,
      "metti": [
       "            <button class=\"ed-btn-add\" style=\"width:100%;\" onclick=\"wzAddClima()\">＋ Add unit</button>",
@@ -1295,21 +1309,21 @@
      ]
     },
     {
-     "riga": 2450,
+     "riga": 2496,
      "via": 1,
      "metti": [
       "      <details class=\"ed-acc\"><summary class=\"ed-acc-head\">📹 Cameras <span class=\"ed-acc-n\">${(WIZ.cameras||[]).length}</span></summary>"
      ]
     },
     {
-     "riga": 2453,
+     "riga": 2499,
      "via": 1,
      "metti": [
       "            <input id=\"wz-cam-name\" class=\"wz-input\" placeholder=\"Name (e.g. Garden)\" style=\"margin-bottom:8px;\">"
      ]
     },
     {
-     "riga": 2455,
+     "riga": 2501,
      "via": 2,
      "metti": [
       "            <input id=\"wz-cam-stream\" class=\"wz-input mono\" placeholder=\"Stream go2rtc (optional)\" style=\"margin-bottom:8px; font-family:monospace;\">",
@@ -1317,21 +1331,21 @@
      ]
     },
     {
-     "riga": 2459,
+     "riga": 2505,
      "via": 1,
      "metti": [
       "        <button class=\"wz-btn\" onclick=\"WIZ.step=6; wzRender();\">Next →</button>`;"
      ]
     },
     {
-     "riga": 2464,
+     "riga": 2510,
      "via": 1,
      "metti": [
       "        <div class=\"wz-title\">🎉 All set!</div>"
      ]
     },
     {
-     "riga": 2466,
+     "riga": 2512,
      "via": 7,
      "metti": [
       "          📋 <b>Summary:</b>",
@@ -1344,7 +1358,7 @@
      ]
     },
     {
-     "riga": 2474,
+     "riga": 2520,
      "via": 3,
      "metti": [
       "        <div class=\"wz-sub\">Configuration is saved <b>on this device</b> (with HACS it survives updates).<br><br>",
@@ -1353,7 +1367,7 @@
      ]
     },
     {
-     "riga": 2478,
+     "riga": 2524,
      "via": 2,
      "metti": [
       "        To make the config multi-device: ⚙️ → Configure Entities → 📤 Export.</div>",
@@ -1361,7 +1375,7 @@
      ]
     },
     {
-     "riga": 2482,
+     "riga": 2528,
      "via": 3,
      "metti": [
       "        ${WIZ.step > 1 && WIZ.step < 6 ? '<div class=\"wz-back\" onclick=\"WIZ.step--; wzRender();\">← Back</div>' : ''}",
@@ -1370,21 +1384,21 @@
      ]
     },
     {
-     "riga": 2558,
+     "riga": 2604,
      "via": 1,
      "metti": [
       "   cumulativi (gli stessi della dashboard Energy di HA) mappa quelli, e la dashboard"
      ]
     },
     {
-     "riga": 2574,
+     "riga": 2620,
      "via": 1,
      "metti": [
       "        if (!silent && typeof edToast === 'function') edToast('☁️ Configuration saved to Home Assistant');"
      ]
     },
     {
-     "riga": 2619,
+     "riga": 2665,
      "via": 2,
      "metti": [
       "    if (!tk || !tk.startsWith('eyJ')) { res.innerHTML = '<div class=\"wz-err\">⚠️ The token looks invalid (it must start with eyJ)</div>'; return; }",
@@ -1392,35 +1406,35 @@
      ]
     },
     {
-     "riga": 2622,
+     "riga": 2668,
      "via": 1,
      "metti": [
       "    if (!_ha.ok) { res.innerHTML = '<div class=\"wz-err\">⚠️ Enter your Home Assistant URL (field above) before verifying — this file is opened outside HA.</div>'; return; }"
      ]
     },
     {
-     "riga": 2629,
+     "riga": 2675,
      "via": 1,
      "metti": [
       "            if (m.type === 'auth_ok') { done = true; WIZ.token = tk; res.innerHTML = '<div class=\"wz-ok\">✅ Connected to Home Assistant!</div>'; tws.close();"
      ]
     },
     {
-     "riga": 2640,
+     "riga": 2686,
      "via": 1,
      "metti": [
       "                            alert('✅ Imported ' + n + ' settings. The dashboard will reload.');"
      ]
     },
     {
-     "riga": 2649,
+     "riga": 2695,
      "via": 1,
      "metti": [
       "            if (m.type === 'auth_invalid') { done = true; res.innerHTML = '<div class=\"wz-err\">❌ Token rejected by HA. Make sure you copied it entirely.</div>'; tws.close(); }"
      ]
     },
     {
-     "riga": 2651,
+     "riga": 2697,
      "via": 2,
      "metti": [
       "        tws.onerror = () => { if (!done) res.innerHTML = '<div class=\"wz-err\">❌ Cannot reach HA at ' + cdEsc(_ha.base || location.host) + '.<br>Check the URL and that HA is reachable from this device. If the file was opened from a download, the URL above is required.</div>'; };",
@@ -1428,14 +1442,14 @@
      ]
     },
     {
-     "riga": 2678,
+     "riga": 2724,
      "via": 1,
      "metti": [
       "    if (!WIZ.allLights || !WIZ.allLights.length) { box.innerHTML = '<div class=\"wz-loading\">Loading lights from your HA…</div>'; return; }"
      ]
     },
     {
-     "riga": 2781,
+     "riga": 2827,
      "via": 2,
      "metti": [
       "            ? '💡 Give it a name (e.g. \"Ground Floor\") and press Add: you will pick the lights from a searchable list.'",
@@ -1443,35 +1457,35 @@
      ]
     },
     {
-     "riga": 2796,
+     "riga": 2842,
      "via": 1,
      "metti": [
       "        if (!name) { alert('Name the group (es. Piano Terra)'); return; }"
      ]
     },
     {
-     "riga": 2803,
+     "riga": 2849,
      "via": 1,
      "metti": [
       "        if (!name || !ent.includes('.')) { alert('Enter a name and entity'); return; }"
      ]
     },
     {
-     "riga": 2811,
+     "riga": 2857,
      "via": 1,
      "metti": [
       "/* ═══ v0.7.4: ICON PICKER — emoji grid for icon fields (no more keyboard hunting) ═══ */"
      ]
     },
     {
-     "riga": 2821,
+     "riga": 2867,
      "via": 1,
      "metti": [
       "        <div style=\"font-weight:900;font-size:15px;\">😀 Choose an icon</div>"
      ]
     },
     {
-     "riga": 2836,
+     "riga": 2882,
      "via": 3,
      "metti": [
       "/* v0.9.7 (#9): in the editor the picker only saw entities tracked by the dashboard",
@@ -1480,21 +1494,21 @@
      ]
     },
     {
-     "riga": 2869,
+     "riga": 2915,
      "via": 1,
      "metti": [
       "    // v302: in the editor (outside the wizard) entities come from the dashboard live states"
      ]
     },
     {
-     "riga": 2873,
+     "riga": 2919,
      "via": 1,
      "metti": [
       "    if (!M.length) { alert('Wait for entities to load…'); return; }"
      ]
     },
     {
-     "riga": 2878,
+     "riga": 2924,
      "via": 2,
      "metti": [
       "        <div style=\"font-weight:900; font-size:14.5px; margin-bottom:8px; color:var(--text,#0f172a);\">🧩 Pick the entity</div>",
@@ -1502,54 +1516,54 @@
      ]
     },
     {
-     "riga": 2882,
+     "riga": 2928,
      "via": 1,
      "metti": [
       "        <button class=\"wz-btn\" style=\"margin-top:10px; background:#94a3b8;\" onclick=\"document.getElementById('cd-entpick').remove()\">Cancel</button>"
      ]
     },
     {
-     "riga": 2889,
+     "riga": 2935,
      "via": 1,
      "metti": []
     },
     {
-     "riga": 2914,
+     "riga": 2960,
      "via": 1,
      "metti": [
       "            if (!terms.every(t => hay.includes(t))) continue;"
      ]
     },
     {
-     "riga": 2918,
+     "riga": 2964,
      "via": 1,
      "metti": [
       "            score -= Math.min(idl.length, 60) * 0.1;"
      ]
     },
     {
-     "riga": 2924,
+     "riga": 2970,
      "via": 1,
      "metti": [
       "    const head = `<div style=\"font-size:10.5px; color:var(--text-dim,#64748b); font-weight:700; padding:1px 4px 5px;\">${M.length} entities available${q ? ' · ' + rows.length + ' results' : ''}</div>`;"
      ]
     },
     {
-     "riga": 2928,
+     "riga": 2974,
      "via": 1,
      "metti": [
       "      </div>`).join('') || '<div style=\"text-align:center; padding:20px; color:var(--text-dim); font-weight:700;\">No results</div>');"
      ]
     },
     {
-     "riga": 2954,
+     "riga": 3000,
      "via": 1,
      "metti": [
       "    if (!ids.length) { alert('First select your lights in the Lights step (or wizard).'); return; }"
      ]
     },
     {
-     "riga": 2959,
+     "riga": 3005,
      "via": 3,
      "metti": [
       "        <div style=\"font-weight:900; font-size:15px; margin-bottom:4px; color:var(--text,#0f172a);\">💡 Lights in group \"${cdEsc(groupName)}\"</div>",
@@ -1558,7 +1572,7 @@
      ]
     },
     {
-     "riga": 2966,
+     "riga": 3012,
      "via": 2,
      "metti": [
       "          <button class=\"wz-btn\" style=\"flex:1; background:#94a3b8;\" onclick=\"document.getElementById('cd-lightpick').remove()\">Cancel</button>",
@@ -1566,61 +1580,61 @@
      ]
     },
     {
-     "riga": 2989,
+     "riga": 3035,
      "via": 1,
      "metti": [
       "    if (!WIZ.allMeta || !WIZ.allMeta.length) { alert('Wait for entities to load…'); return; }"
      ]
     },
     {
-     "riga": 2995,
+     "riga": 3041,
      "via": 1,
      "metti": [
       "        M.filter(e => e.id.startsWith('light.')).forEach(e => {"
      ]
     },
     {
-     "riga": 3014,
+     "riga": 3060,
      "via": 1,
      "metti": [
       "    // — Cameras"
      ]
     },
     {
-     "riga": 3033,
+     "riga": 3079,
      "via": 1,
      "metti": [
       "    // — Rooms: temperatura + umidità gemella"
      ]
     },
     {
-     "riga": 3040,
+     "riga": 3086,
      "via": 1,
      "metti": [
       "        WIZ.stanze = Object.entries(byArea).slice(0, 14).map(([areaName, e]) => {"
      ]
     },
     {
-     "riga": 3081,
+     "riga": 3127,
      "via": 1,
      "metti": [
       "    /* v0.8.3: domain/class detection also for lights, climate and heating */"
      ]
     },
     {
-     "riga": 3100,
+     "riga": 3146,
      "via": 29,
      "metti": []
     },
     {
-     "riga": 3146,
+     "riga": 3192,
      "via": 1,
      "metti": [
       "        'luci': ['light','luci'], 'on': ['on','count'], 'accesi': ['accesi','count'], 'finestre': ['window','opening','aperte','finestre'],"
      ]
     },
     {
-     "riga": 3163,
+     "riga": 3209,
      "via": 0,
      "metti": [
       "        /* v0.8.0: brand e integrazioni comuni per il rilevamento automatico */",
@@ -1639,7 +1653,7 @@
      ]
     },
     {
-     "riga": 3246,
+     "riga": 3292,
      "via": 8,
      "metti": [
       "    if (!WIZ._silentDetect) alert('🪄 Detection complete!\\n\\n' +",
@@ -1653,63 +1667,63 @@
      ]
     },
     {
-     "riga": 3263,
+     "riga": 3309,
      "via": 1,
      "metti": [
       "    if (!name || (!sw && !pw && !sv)) { alert('Enter a name and at least one entity'); return; }"
      ]
     },
     {
-     "riga": 3292,
+     "riga": 3338,
      "via": 1,
      "metti": [
       "    if (btn) btn.textContent = '💾 Save changes';"
      ]
     },
     {
-     "riga": 3300,
+     "riga": 3346,
      "via": 1,
      "metti": [
       "    if (!name || !ent.includes('.')) { alert('Enter a name and entity'); return; }"
      ]
     },
     {
-     "riga": 3310,
+     "riga": 3356,
      "via": 1,
      "metti": [
       "    if (!ent.includes('.')) { alert('Enter a valid entity'); return; }"
      ]
     },
     {
-     "riga": 3315,
+     "riga": 3361,
      "via": 1,
      "metti": [
       "        if (['eq','neq','gt','lt'].includes(cond) && value === '') { alert('Enter the value for the chosen condition'); return; }"
      ]
     },
     {
-     "riga": 3380,
+     "riga": 3426,
      "via": 1,
      "metti": [
       "    if (!name || !temp.includes('.')) { alert('Enter a name and temperature sensor'); return; }"
      ]
     },
     {
-     "riga": 3395,
+     "riga": 3441,
      "via": 1,
      "metti": [
       "    if (!name || !ent.includes('.')) { alert('Enter a name and entity'); return; }"
      ]
     },
     {
-     "riga": 3404,
+     "riga": 3450,
      "via": 1,
      "metti": [
       "    if (!name || !ent.includes('.')) { alert('Enter a name and camera entity'); return; }"
      ]
     },
     {
-     "riga": 3412,
+     "riga": 3458,
      "via": 3,
      "metti": [
       "    if (!confirm('Delete ALL saved configuration?\\n\\n⚠️ The config is synced through Home Assistant: it will be removed from ALL linked devices. You will have to run the wizard again.')) return;",
@@ -1718,35 +1732,35 @@
      ]
     },
     {
-     "riga": 3416,
+     "riga": 3462,
      "via": 1,
      "metti": [
       "    // 2) clear all local keys + sync state"
      ]
     },
     {
-     "riga": 3419,
+     "riga": 3465,
      "via": 1,
      "metti": [
       "    // 3) reload clean (no hash, to avoid a loop with #reset)"
      ]
     },
     {
-     "riga": 3464,
+     "riga": 3510,
      "via": 1,
      "metti": [
       "            wzShowWait('⏳ Reading all entities from Home Assistant…');"
      ]
     },
     {
-     "riga": 3473,
+     "riga": 3519,
      "via": 1,
      "metti": [
       "            alert('⚠️ I cannot read entities from Home Assistant.\\nCheck URL and token in the connection step, then retry.');"
      ]
     },
     {
-     "riga": 3499,
+     "riga": 3545,
      "via": 6,
      "metti": [
       "        ['🧩', 'Section entities (Energy, Boiler, EV, MiniPC…)', n.nSlot],",
@@ -1758,14 +1772,14 @@
      ]
     },
     {
-     "riga": 3510,
+     "riga": 3556,
      "via": 2,
      "metti": [
       "    /* v0.8.4: on an already-configured system detection adds no duplicates — say it. */"
      ]
     },
     {
-     "riga": 3518,
+     "riga": 3564,
      "via": 5,
      "metti": [
       "            if (ov) existing.push('🧩 ' + ov + ' entities');",
@@ -1776,7 +1790,7 @@
      ]
     },
     {
-     "riga": 3530,
+     "riga": 3576,
      "via": 2,
      "metti": [
       "            ? '<div style=\"padding:14px;border-radius:14px;background:rgba(16,185,129,0.10);color:#047857;font-weight:800;font-size:13px;\">✅ Everything already configured (' + existing.join(' · ') + ').<br>Detection only adds what is missing: no duplicates.</div>'",
@@ -1784,14 +1798,14 @@
      ]
     },
     {
-     "riga": 3533,
+     "riga": 3579,
      "via": 1,
      "metti": [
       "        <div style=\"font-weight:900;font-size:18px;margin-bottom:4px;\">🪄 Detection complete</div>"
      ]
     },
     {
-     "riga": 3536,
+     "riga": 3582,
      "via": 2,
      "metti": [
       "        <div style=\"font-size:12px;color:var(--text-dim,#64748b);font-weight:700;margin-top:6px;\">You can review, fix or remove every proposal from the editor.</div>",
@@ -1799,7 +1813,7 @@
      ]
     },
     {
-     "riga": 3578,
+     "riga": 3624,
      "via": 5,
      "metti": [
       "        { ref: 'dm.home_meteo_temperatura', lbl: 'Weather station: outdoor temperature (sensor)' },",
@@ -1810,14 +1824,14 @@
      ]
     },
     {
-     "riga": 3587,
+     "riga": 3633,
      "via": 1,
      "metti": [
       "    energy: { label: '⚡ Energy', slots: ["
      ]
     },
     {
-     "riga": 3590,
+     "riga": 3636,
      "via": 2,
      "metti": [
       "        { ref: 'dm.energy_energia_prelevata_oggi',     lbl: 'Energy prelevata oggi (kWh)' },",
@@ -1825,7 +1839,7 @@
      ]
     },
     {
-     "riga": 3595,
+     "riga": 3641,
      "via": 4,
      "metti": [
       "        { ref: 'dm.energy_potenza_batteria',           lbl: 'Power batteria (W)' },",
@@ -1835,63 +1849,70 @@
      ]
     },
     {
-     "riga": 3611,
+     "riga": 3657,
      "via": 1,
      "metti": [
       "        { ref: 'dm.energy_potenza_carichi_nodo_2_cucina', lbl: 'Power carichi — nodo 2/Cucina (W)' },"
      ]
     },
     {
-     "riga": 3614,
+     "riga": 3660,
      "via": 1,
      "metti": [
       "        { ref: 'dm.energy_potenza_carichi_nodo_1_lavanderia',     lbl: 'Power carichi — nodo 1/Lavanderia (W)' },"
      ]
     },
     {
-     "riga": 3619,
+     "riga": 3665,
      "via": 1,
      "metti": [
       "        { ref: 'dm.energy_potenza_condizionatori',           lbl: 'Power condizionatori (W)' },"
      ]
     },
     {
-     "riga": 3622,
+     "riga": 3668,
      "via": 1,
      "metti": [
       "        { ref: 'dm.energy_potenza_ventola_inverter', lbl: 'Power ventola inverter (W)' },"
      ]
     },
     {
-     "riga": 3625,
+     "riga": 3671,
      "via": 1,
      "metti": [
       "    ev: { label: '🚗 Electric car', slots: ["
      ]
     },
     {
-     "riga": 3632,
+     "riga": 3678,
      "via": 1,
      "metti": [
       "        { ref: 'dm.ev_cavo_collegato',   lbl: 'Cable connected (binary_sensor)' },"
      ]
     },
     {
-     "riga": 3635,
+     "riga": 3680,
+     "via": 1,
+     "metti": [
+      "        { ref: 'dm.ev_ricarica_sempre_evcc', lbl: 'EVCC always charge (select)' },"
+     ]
+    },
+    {
+     "riga": 3682,
      "via": 1,
      "metti": [
       "        { ref: 'dm.ev_energia_sessione',           lbl: 'Energy sessione (kWh)' },"
      ]
     },
     {
-     "riga": 3637,
+     "riga": 3684,
      "via": 1,
      "metti": [
       "        { ref: 'dm.ev_potenza_wallbox',       lbl: 'Power wallbox (W)' },"
      ]
     },
     {
-     "riga": 3641,
+     "riga": 3688,
      "via": 2,
      "metti": [
       "        { ref: 'dm.ev_energia_wallbox_oggi',  lbl: 'Energy wallbox oggi (kWh)' },",
@@ -1899,42 +1920,42 @@
      ]
     },
     {
-     "riga": 3645,
+     "riga": 3692,
      "via": 1,
      "metti": [
       "        { ref: 'dm.boiler_potenza_resistenza_boiler',                lbl: 'Power resistenza boiler (W)' },"
      ]
     },
     {
-     "riga": 3664,
+     "riga": 3711,
      "via": 1,
      "metti": [
       "        { ref: 'dm.lavatrice_potenza_presa_lavatrice_per_lavatrici_no', lbl: 'Washer plug power (W) — for non-smart washers: >5W = running' },"
      ]
     },
     {
-     "riga": 3683,
+     "riga": 3730,
      "via": 1,
      "metti": [
       "        { ref: 'dm.server_potenza_raspberry_server', lbl: 'Power Raspberry/server (W)' },"
      ]
     },
     {
-     "riga": 3723,
+     "riga": 3770,
      "via": 1,
      "metti": [
       "              <div class=\"ed-slot-lbl\"><input class=\"wz-lbl-edit\" value=\"${cdEsc(lbl)}\" onchange=\"wzRenameSlot(${cdJs(sl.ref)}, this.value)\" title=\"Tap to rename the label\"></div>"
      ]
     },
     {
-     "riga": 3732,
+     "riga": 3779,
      "via": 1,
      "metti": [
       "        const evImgEd = key === 'ev' ? `<div class=\"ed-slot\"><div class=\"ed-slot-lbl\">🖼️ Car image URL (e.g. /local/my_car.png)</div>"
      ]
     },
     {
-     "riga": 3734,
+     "riga": 3781,
      "via": 3,
      "metti": [
       "                   onchange=\"localStorage.setItem('cd_ev_image', JSON.stringify(this.value.trim())); edToast('Image saved — reload to apply');\"></div>` : '';",
@@ -1943,49 +1964,49 @@
      ]
     },
     {
-     "riga": 3740,
+     "riga": 3787,
      "via": 1,
      "metti": [
       "      <div class=\"ed-intro\">Configure each section with <b>your</b> HA entities. Leave empty to keep the default reference (if it does not exist in your HA, the card shows \"—\").</div>"
      ]
     },
     {
-     "riga": 3743,
+     "riga": 3790,
      "via": 1,
      "metti": [
       "      <details class=\"ed-acc\"><summary class=\"ed-acc-head\">🌡️ Temperatura <span class=\"ed-acc-n\">${stanze.length} rooms</span></summary>"
      ]
     },
     {
-     "riga": 3747,
+     "riga": 3794,
      "via": 1,
      "metti": [
       "            <input id=\"ed-st2-icon\" class=\"ed-input\" style=\"flex:0 0 56px;\" placeholder=\"🌡️\" maxlength=\"4\">"
      ]
     },
     {
-     "riga": 3749,
+     "riga": 3796,
      "via": 1,
      "metti": [
       "            <input id=\"ed-st2-floor\" class=\"ed-input\" style=\"flex:0 0 30%;\" placeholder=\"Floor (opt.)\"><input id=\"ed-st2-flicon\" class=\"ed-input\" style=\"flex:0 0 52px;\" placeholder=\"🏢\" maxlength=\"4\" title=\"Floor icon\"><button type=\"button\" onclick=\"wzPickIcon('#ed-st2-flicon')\" style=\"flex:0 0 38px; height:38px; border:none; border-radius:10px; background:linear-gradient(135deg,#f59e0b,#d97706); color:#fff; font-size:16px; cursor:pointer;\">😀</button>"
      ]
     },
     {
-     "riga": 3752,
+     "riga": 3799,
      "via": 1,
      "metti": [
       "            <input id=\"ed-st2-temp\" class=\"ed-input mono\" autocomplete=\"off\" placeholder=\"sensor.temperature_x\" style=\"flex:1; font-family:monospace;\">"
      ]
     },
     {
-     "riga": 3756,
+     "riga": 3803,
      "via": 1,
      "metti": [
       "            <input id=\"ed-st2-hum\" class=\"ed-input mono\" autocomplete=\"off\" placeholder=\"sensor.umidita_x (optional)\" style=\"flex:1; font-family:monospace;\">"
      ]
     },
     {
-     "riga": 3759,
+     "riga": 3806,
      "via": 2,
      "metti": [
       "          <button class=\"ed-btn-add\" id=\"ed-st2-btn\" style=\"width:100%;\" onclick=\"edAddStanza2()\">＋ Add room</button></div>",
@@ -1993,7 +2014,7 @@
      ]
     },
     {
-     "riga": 3762,
+     "riga": 3809,
      "via": 2,
      "metti": [
       "              <input id=\"ed-st-icon\" class=\"ed-input ed-icon-input\" placeholder=\"🛋️\" maxlength=\"4\">",
@@ -2001,7 +2022,7 @@
      ]
     },
     {
-     "riga": 3765,
+     "riga": 3812,
      "via": 3,
      "metti": [
       "            <div style=\"display:flex; gap:8px; margin-bottom:6px;\"><input id=\"ed-st-temp\" style=\"flex:1;\" class=\"ed-input mono\" placeholder=\"sensor.temperature_x (temperatura)\"><button type=\"button\" onclick=\"wzPickEntity('#ed-st-temp')\" style=\"flex:0 0 38px; height:38px; border:none; border-radius:10px; background:linear-gradient(135deg,#0ea5e9,#0369a1); color:#fff; font-size:14px; cursor:pointer;\">🔍</button></div>",
@@ -2010,21 +2031,21 @@
      ]
     },
     {
-     "riga": 3771,
+     "riga": 3818,
      "via": 1,
      "metti": [
       "        <details class=\"ed-acc\"><summary class=\"ed-acc-head\">⚡ Quick actions (Home) <span class=\"ed-acc-n\">${getQuickActions().length} actions</span></summary>"
      ]
     },
     {
-     "riga": 3779,
+     "riga": 3826,
      "via": 1,
      "metti": [
       "                <div class=\"ed-row-old mono\">${cdEsc(a.type === 'builtin' ? 'popup nativo: ' + a.builtin : (a.type === 'luci_group' ? '💡 gruppo · ' + ((a.lights||[]).length) + ' lights' : a.type + ' · ' + (a.entity||'') + (a.option ? ' → ' + a.option : '')))}</div>"
      ]
     },
     {
-     "riga": 3788,
+     "riga": 3835,
      "via": 3,
      "metti": [
       "                <option value=\"luci_group\">💡 Lights popup — YOU pick the lights</option>",
@@ -2033,7 +2054,7 @@
      ]
     },
     {
-     "riga": 3802,
+     "riga": 3849,
      "via": 2,
      "metti": [
       "            <div id=\"ed-qa-option-row\" style=\"display:none; gap:6px; align-items:center;\"><span style=\"font-size:11px; color:var(--text-dim); flex:0 0 auto;\">Which option</span><select id=\"ed-qa-option\" class=\"ed-input\" style=\"flex:1;\"></select></div>",
@@ -2041,21 +2062,21 @@
      ]
     },
     {
-     "riga": 3805,
+     "riga": 3852,
      "via": 1,
      "metti": [
       "            <button class=\"ed-btn-add\" onclick=\"edAddQA()\">＋ Add quick action</button>"
      ]
     },
     {
-     "riga": 3809,
+     "riga": 3856,
      "via": 1,
      "metti": [
       "      <details class=\"ed-acc\"><summary class=\"ed-acc-head\">❄️ Climate units <span class=\"ed-acc-n\">${getClimaUnits().length} units</span></summary>"
      ]
     },
     {
-     "riga": 3822,
+     "riga": 3869,
      "via": 2,
      "metti": [
       "              <select id=\"ed-cl-type\" class=\"ed-input\" style=\"flex:0 0 46%;\"><option value=\"clima\">❄️ Air conditioner</option><option value=\"termo\">🔥 Radiator</option></select>",
@@ -2063,7 +2084,7 @@
      ]
     },
     {
-     "riga": 3826,
+     "riga": 3873,
      "via": 2,
      "metti": [
       "            <select id=\"ed-cl-room\" class=\"ed-input\" style=\"margin-bottom:6px;width:100%;\"></select><button class=\"ed-btn-add\" onclick=\"edAddClima()\">＋ Add climate unit</button>",
@@ -2071,21 +2092,21 @@
      ]
     },
     {
-     "riga": 3832,
+     "riga": 3879,
      "via": 1,
      "metti": [
       "      <details class=\"ed-acc\"><summary class=\"ed-acc-head\">📹 Cameras <span class=\"ed-acc-n\">${getCameras().length} cameras</span></summary>"
      ]
     },
     {
-     "riga": 3843,
+     "riga": 3890,
      "via": 1,
      "metti": [
       "            <input id=\"ed-cam-name\" class=\"ed-input\" placeholder=\"Name (e.g. Garden)\">"
      ]
     },
     {
-     "riga": 3845,
+     "riga": 3892,
      "via": 2,
      "metti": [
       "            <input id=\"ed-cam-stream\" class=\"ed-input mono\" placeholder=\"go2rtc stream name (optional, for WebRTC)\"><small style=\"display:block;font-size:11px;color:var(--text-dim,#64748b);margin:2px 2px 0;\">THIS field is what turns WebRTC on: the stream name as written inside go2rtc/Frigate. The camera name is not the lever.</small>",
@@ -2093,7 +2114,7 @@
      ]
     },
     {
-     "riga": 3852,
+     "riga": 3899,
      "via": 2,
      "metti": [
       "          <div class=\"ed-slot-lbl\" style=\"margin-bottom:6px;\">The lights managed by the dashboard. Name them \"Room - Detail\" for automatic grouping.</div>",
@@ -2101,28 +2122,28 @@
      ]
     },
     {
-     "riga": 3855,
+     "riga": 3902,
      "via": 1,
      "metti": [
       "            <input id=\"ed-lu-name\" class=\"ed-input\" style=\"flex:1;\" placeholder=\"Name (e.g. Living Room - Floor lamp)\">"
      ]
     },
     {
-     "riga": 3861,
+     "riga": 3908,
      "via": 1,
      "metti": [
       "          <select id=\"ed-lu-room\" class=\"ed-input\" style=\"margin-bottom:6px;width:100%;\"></select><button class=\"ed-btn-add\" style=\"width:100%;\" onclick=\"edAddLuce()\">＋ Add light</button>"
      ]
     },
     {
-     "riga": 3864,
+     "riga": 3911,
      "via": 1,
      "metti": [
       "      <details class=\"ed-acc\"><summary class=\"ed-acc-head\">📊 Report Analisi <span class=\"ed-acc-n\">${cdCfgList('cd_report_devices').length} entries</span></summary>"
      ]
     },
     {
-     "riga": 3866,
+     "riga": 3913,
      "via": 2,
      "metti": [
       "          <div class=\"ed-slot-lbl\" style=\"margin-bottom:6px;\">The monthly Report entries (Energy → Analysis): free name, icon and entity.</div>",
@@ -2130,21 +2151,21 @@
      ]
     },
     {
-     "riga": 3870,
+     "riga": 3917,
      "via": 1,
      "metti": [
       "            <input id=\"ed-rep2-name\" class=\"ed-input\" style=\"flex:1;\" placeholder=\"Name (e.g. Pool)\">"
      ]
     },
     {
-     "riga": 3876,
+     "riga": 3923,
      "via": 1,
      "metti": [
       "          <button class=\"ed-btn-add\" style=\"width:100%;\" onclick=\"edAddReportDevice2()\">＋ Add Report entry</button>"
      ]
     },
     {
-     "riga": 3890,
+     "riga": 3937,
      "via": 2,
      "metti": [
       "        ? '💡 Give it a name and press Add: you will pick the lights from a searchable list.'",
@@ -2152,77 +2173,77 @@
      ]
     },
     {
-     "riga": 3916,
+     "riga": 3963,
      "via": 1,
      "metti": [
       "    sel.innerHTML = '<option value=\"\">— chosen each time, from the popup —</option>' + voci.map(v => `<option value=\"${esc(v)}\">${esc(v)}</option>`).join('');"
      ]
     },
     {
-     "riga": 3919,
+     "riga": 3966,
      "via": 1,
      "metti": [
       "    if (hint) hint.textContent = '🎚️ This entity is a dropdown: the button opens a popup with its options. Or fix one here.';"
      ]
     },
     {
-     "riga": 3931,
+     "riga": 3978,
      "via": 1,
      "metti": [
       "        edToast('Light group updated');"
      ]
     },
     {
-     "riga": 3944,
+     "riga": 3991,
      "via": 1,
      "metti": [
       "        if (!name) { alert('Name the group (es. Piano Terra)'); return; }"
      ]
     },
     {
-     "riga": 3951,
+     "riga": 3998,
      "via": 1,
      "metti": [
       "            edToast('Light group created');"
      ]
     },
     {
-     "riga": 3962,
+     "riga": 4009,
      "via": 1,
      "metti": [
       "        if (!name || !ent.includes('.')) { alert('Enter a name and entity valida'); return; }"
      ]
     },
     {
-     "riga": 3990,
+     "riga": 4037,
      "via": 1,
      "metti": [
       "    if (!name || (!sw && !pw && !sv)) { alert('Enter a name and at least one entity'); return; }"
      ]
     },
     {
-     "riga": 4000,
+     "riga": 4047,
      "via": 1,
      "metti": [
       "    edToast('Appliance added');"
      ]
     },
     {
-     "riga": 4013,
+     "riga": 4060,
      "via": 1,
      "metti": [
       "    if (!name || !ent.includes('.')) { alert('Enter a name and a valid climate entity'); return; }"
      ]
     },
     {
-     "riga": 4020,
+     "riga": 4067,
      "via": 1,
      "metti": [
       "    edToast('Climate unit added');"
      ]
     },
     {
-     "riga": 4031,
+     "riga": 4078,
      "via": 2,
      "metti": [
       "function dmSaveCameras(cams){ var store=globalThis.DashboardModernModules&&DashboardModernModules.store; if(store) return store.replaceSection('cameras',cams).catch(function(e){ alert('Camera save failed: '+e.message); }); localStorage.setItem('cd_cameras',JSON.stringify(cams)); try{cdMarkDirty();cdSyncPush();}catch(e){} var grid=document.getElementById('cam-grid'); if(grid)grid._sig=''; buildCamCards(); refreshCameras(); try{render();}catch(e){} }",
@@ -2230,21 +2251,21 @@
      ]
     },
     {
-     "riga": 4040,
+     "riga": 4087,
      "via": 1,
      "metti": [
       "    else { edToast('Invalid entity'); return; }"
      ]
     },
     {
-     "riga": 4043,
+     "riga": 4090,
      "via": 1,
      "metti": [
       "    edToast('Saved — reload to apply');"
      ]
     },
     {
-     "riga": 4046,
+     "riga": 4093,
      "via": 11,
      "metti": [
       "/* v0.7.5: SAVE SECTION — on mobile the change event may never fire (open keyboard,",
@@ -2252,47 +2273,47 @@
      ]
     },
     {
-     "riga": 4087,
+     "riga": 4134,
      "via": 2,
      "metti": []
     },
     {
-     "riga": 4103,
+     "riga": 4150,
      "via": 1,
      "metti": [
       "    edToast(bad ? ('⚠️ ' + bad + ' invalid entities skipped — the rest is saved') : (n ? '💾 Section saved (' + n + ' changes) — reload to apply' : '💾 Section saved'));"
      ]
     },
     {
-     "riga": 4111,
+     "riga": 4158,
      "via": 1,
      "metti": [
       "    if (!name || !temp.includes('.')) { alert('Enter a name and temperature sensor'); return; }"
      ]
     },
     {
-     "riga": 4119,
+     "riga": 4166,
      "via": 1,
      "metti": [
       "    edToast('Room added');"
      ]
     },
     {
-     "riga": 4157,
+     "riga": 4204,
      "via": 1,
      "metti": [
       "/* v254: mostra le card \"Editor Plancia\" e \"Configure Entities\" solo agli admin. */"
      ]
     },
     {
-     "riga": 4275,
+     "riga": 4322,
      "via": 1,
      "metti": [
       "    card.appendChild(mkItem('⚙️', 'Configuration / Editor', () => apriConfigEntita()));"
      ]
     },
     {
-     "riga": 4277,
+     "riga": 4324,
      "via": 2,
      "metti": [
       "    card.appendChild(mkItem('🔄', 'Full reset', () => wzResetAll(), '#dc2626'));",
@@ -2300,49 +2321,49 @@
      ]
     },
     {
-     "riga": 4330,
+     "riga": 4377,
      "via": 1,
      "metti": [
       "  document.querySelector('.confirm-btn-cancel').textContent = opts.cancelLabel || 'Cancel';"
      ]
     },
     {
-     "riga": 4371,
+     "riga": 4418,
      "via": 1,
      "metti": [
       "        const txt = isOn ? 'IN FUNZIONE' : 'OFF';"
      ]
     },
     {
-     "riga": 4404,
+     "riga": 4451,
      "via": 1,
      "metti": [
       "  document.getElementById('details-title').innerHTML = window._luciPopupTitle ? ('💡 ' + cdEsc(window._luciPopupTitle.toUpperCase())) : '💡 LIGHTS';"
      ]
     },
     {
-     "riga": 4406,
+     "riga": 4453,
      "via": 1,
      "metti": [
       "  // v255: raggruppo per stanza usando il pattern \"Room - Dettaglio\""
      ]
     },
     {
-     "riga": 4444,
+     "riga": 4491,
      "via": 0,
      "metti": [
       ""
      ]
     },
     {
-     "riga": 4455,
+     "riga": 4502,
      "via": 1,
      "metti": [
       "      <div class=\"lgx-state\">${l.isOn ? 'ON' : 'OFF'}</div>"
      ]
     },
     {
-     "riga": 4459,
+     "riga": 4506,
      "via": 2,
      "metti": [
       "      <div class=\"lgx-bar-l\"><span class=\"lgx-dot ${onCount>0?'active':''}\"></span>${onCount>0 ? '<b>'+onCount+'</b><span>'+(onCount===1?'on':'on')+'</span>' : '<span>All off</span>'}</div>",
@@ -2350,14 +2371,14 @@
      ]
     },
     {
-     "riga": 4484,
+     "riga": 4531,
      "via": 1,
      "metti": [
       "    html += `<div class=\"lgx-zona\">OTHER AREAS</div>`;"
      ]
     },
     {
-     "riga": 4493,
+     "riga": 4540,
      "via": 3,
      "metti": [
       "/* v0.9.7 (#8): incremental refresh of the lights popup — no more full innerHTML",
@@ -2366,33 +2387,33 @@
      ]
     },
     {
-     "riga": 4513,
+     "riga": 4560,
      "via": 1,
      "metti": [
       "    if (st) { const t = isOn ? 'ON' : 'OFF'; if (st.textContent !== t) st.textContent = t; }"
      ]
     },
     {
-     "riga": 4515,
+     "riga": 4562,
      "via": 1,
      "metti": []
     },
     {
-     "riga": 4518,
+     "riga": 4565,
      "via": 1,
      "metti": [
       "    const newBar = `<div class=\"lgx-bar-l\"><span class=\"lgx-dot ${onCount>0?'active':''}\"></span>${onCount>0 ? '<b>'+onCount+'</b><span>on</span>' : '<span>All off</span>'}</div>${onCount>0 ? '<div class=\"lgx-alloff\" onclick=\"event.stopPropagation(); luciTutteOff()\">Turn all off</div>' : ''}`;"
      ]
     },
     {
-     "riga": 4870,
+     "riga": 4917,
      "via": 1,
      "metti": [
       "    prese:     { name: 'Sockets', icon: '🔌', color: '#475569', fn: () => apriTuttePrese() },"
      ]
     },
     {
-     "riga": 5059,
+     "riga": 5106,
      "via": 3,
      "metti": [
       "/* v292: primo stato REALMENTE mappato di una lista di riferimenti — i \"ghost\"",
@@ -2400,26 +2421,26 @@
      ]
     },
     {
-     "riga": 5076,
+     "riga": 5123,
      "via": 3,
      "metti": []
     },
     {
-     "riga": 5088,
+     "riga": 5135,
      "via": 1,
      "metti": [
       "   L'utente collega i totali \"lifetime\" (gli stessi del tab Energy di HA);"
      ]
     },
     {
-     "riga": 5191,
+     "riga": 5238,
      "via": 1,
      "metti": [
       "                badge.textContent = 'OFF';"
      ]
     },
     {
-     "riga": 5245,
+     "riga": 5292,
      "via": 2,
      "metti": [
       "            if (!isNaN(pw)) { on = pw > 5; st = on ? 'Running' : (sw ? (sw.state === 'on' ? 'Ready' : 'Off') : 'Off'); }",
@@ -2427,28 +2448,28 @@
      ]
     },
     {
-     "riga": 5269,
+     "riga": 5316,
      "via": 1,
      "metti": [
       "function cdRoomFloorOf(roomName){ if(!roomName) return ''; var rs=(typeof getStanze==='function'?getStanze():[]); for(var i=0;i<rs.length;i++){ if(rs[i]&&rs[i].name===roomName) return rs[i].floor||''; } return ''; } function cdGroupCards(items, cardFn){ try { var anyRoom=false; items.forEach(function(u){ if(u&&u.room) anyRoom=true; }); if(!anyRoom) return items.map(cardFn).join(''); var floors=(typeof cdFloorNames==='function'?cdFloorNames():[]); function fIdx(f){ var i=floors.indexOf(f); return i<0?9999:i; } var sorted=items.slice().sort(function(a,b){ var fa=cdRoomFloorOf(a.room), fb=cdRoomFloorOf(b.room); if(fIdx(fa)!==fIdx(fb)) return fIdx(fa)-fIdx(fb); var ra=a.room||'zzzz', rb=b.room||'zzzz'; if(ra!==rb) return ra<rb?-1:1; return 0; }); var out=''; var lastKey=null; sorted.forEach(function(u){ var f=cdRoomFloorOf(u.room); var key=(f||'')+'|'+(u.room||''); if(key!==lastKey){ lastKey=key; var lbl = u.room ? ((f?('🏢 '+f+' · '):'')+'🏠 '+u.room) : '🏠 Senza stanza'; out += '<div style=\"grid-column:1/-1; font-weight:800; opacity:0.75; font-size:13px; letter-spacing:0.5px; padding:8px 2px 0;\">'+cdEsc(lbl)+'</div>'; } out += cardFn(u); }); return out; } catch(e){ return items.map(cardFn).join(''); } } function buildClimaCards() {"
      ]
     },
     {
-     "riga": 5280,
+     "riga": 5327,
      "via": 1,
      "metti": [
       "              <div class=\"cp-badge\">OFF</div>"
      ]
     },
     {
-     "riga": 5284,
+     "riga": 5331,
      "via": 1,
      "metti": [
       "              <div class=\"cp-temp-current-wrap\"><span class=\"cp-temp-current-lbl\">Room</span><span class=\"cp-temp-current\">--°</span></div>"
      ]
     },
     {
-     "riga": 5296,
+     "riga": 5343,
      "via": 3,
      "metti": [
       "    if (gF) gF.innerHTML = cdGroupCards(uFreddo, card) || '<div class=\"ed-empty\" style=\"grid-column:1/-1; justify-content:center; flex-wrap:wrap;\">No air conditioner configured</div>';",
@@ -2457,14 +2478,14 @@
      ]
     },
     {
-     "riga": 5318,
+     "riga": 5365,
      "via": 1,
      "metti": [
       "/* The veil lifts when the dashboard is the real one, not when the shell is done."
      ]
     },
     {
-     "riga": 5320,
+     "riga": 5367,
      "via": 7,
      "metti": [
       " * The shell paints its own Home — the big weather block in the middle of the",
@@ -2476,7 +2497,7 @@
      ]
     },
     {
-     "riga": 5328,
+     "riga": 5375,
      "via": 4,
      "metti": [
       " * Now it waits for the modules to take over. If they never do — a module that",
@@ -2485,42 +2506,42 @@
      ]
     },
     {
-     "riga": 5430,
+     "riga": 5477,
      "via": 1,
      "metti": [
       "            console.warn('[Dashboard] New version ' + target + ' but the cache is not updating. Clear the browser/app cache.');"
      ]
     },
     {
-     "riga": 5434,
+     "riga": 5481,
      "via": 1,
      "metti": [
       "        console.log('[Dashboard] Updating ' + DASHBOARD_VERSION + ' \\u2192 ' + target + ': reloading\\u2026');"
      ]
     },
     {
-     "riga": 5446,
+     "riga": 5493,
      "via": 1,
      "metti": [
       "    o.innerHTML = '<div style=\"width:46px; height:46px; border:4px solid ' + (dark ? 'rgba(56,189,248,0.22)' : 'rgba(14,165,233,0.22)') + '; border-top-color:#0ea5e9; border-radius:50%; animation:cdSpin 0.8s linear infinite;\"></div><div style=\"font-size:15px; font-weight:800; letter-spacing:1px; color:' + (dark ? '#7dd3fc' : '#0369a1') + '; text-transform:uppercase;\">Updating to v' + cdEsc(target) + '\\u2026</div>';"
      ]
     },
     {
-     "riga": 5449,
+     "riga": 5496,
      "via": 1,
      "metti": [
       "/* immediate check on open: content stays covered by the boot overlay until we know whether to update, so the change is never visible */"
      ]
     },
     {
-     "riga": 5464,
+     "riga": 5511,
      "via": 1,
      "metti": [
       "        /* v0.8.2: a ref is covered also when the period engine derives it from the twin field (day←month) */"
      ]
     },
     {
-     "riga": 5466,
+     "riga": 5513,
      "via": 3,
      "metti": [
       "        if (allUnmapped) {",
@@ -2530,26 +2551,26 @@
      ]
     },
     {
-     "riga": 5472,
+     "riga": 5519,
      "via": 1,
      "metti": []
     },
     {
-     "riga": 5489,
+     "riga": 5536,
      "via": 1,
      "metti": [
       "    b.innerHTML = '<b style=\"font-size:15px;\">👋 Your dashboard is almost ready!</b><br>You have not linked your entities yet, so the cards are hidden.<br><button onclick=\"(window.__DASHBOARDMODERN_HOSTED__ ? apriConfigEntita : apriSetupWizard)()\" style=\"margin-top:12px; width:100%; padding:13px; border:none; border-radius:14px; background:linear-gradient(135deg,#0ea5e9,#0369a1); color:#fff; font-weight:800; font-size:14px; letter-spacing:0.5px; cursor:pointer; box-shadow:0 6px 16px rgba(2,132,199,0.35);\">⚙️ Set up the dashboard</button><br><span style=\"opacity:0.75; font-size:12px; display:block; margin-top:8px;\"></span>';"
      ]
     },
     {
-     "riga": 5555,
+     "riga": 5602,
      "via": 1,
      "metti": [
       "    if (!cam) { list.innerHTML = '<div class=\"cam-popup-error\">⚠️ Camera not found</div>'; return; }"
      ]
     },
     {
-     "riga": 5559,
+     "riga": 5606,
      "via": 4,
      "metti": [
       "/* ═══ v0.9.8: MULTI-STRATEGY CAMERA ENGINE (from Casa Donato) ═══",
@@ -2559,147 +2580,147 @@
      ]
     },
     {
-     "riga": 5578,
+     "riga": 5625,
      "via": 1,
      "metti": [
       "const _DM_CAM_MOTIVI = { 'senza-nome-di-flusso': 'WebRTC: skipped \\u2014 fill in \\u201cgo2rtc stream name\\u201d in the Cameras tab (the camera name is not the lever)', 'browser-senza-webrtc': 'WebRTC: skipped, the browser does not support it', 'browser-senza-hls': 'HLS: skipped, hls.js not loaded', 'telecamera-che-dorme': 'MJPEG: skipped, the camera only streams on demand' };"
      ]
     },
     {
-     "riga": 5583,
+     "riga": 5630,
      "via": 1,
      "metti": [
       "    if (!cam || !cam.entity) { content.innerHTML = '<div class=\"cam-popup-error\">⚠️ Camera without an entity<br><span style=\"font-weight:500;opacity:.85;font-size:12px;text-transform:none;letter-spacing:0;\">The Home Assistant entity is missing in the Cameras tab</span></div>'; return; }"
      ]
     },
     {
-     "riga": 5586,
+     "riga": 5633,
      "via": 1,
      "metti": [
       "        content.innerHTML = `<div class=\"cam-popup-error\">⚠️ Camera offline<br><span style=\"font-weight:500;opacity:.85;font-size:12px;text-transform:none;letter-spacing:0;\">${cdEsc(cam.entity)} not responding (state: ${cdEsc(camState || 'unknown')})</span></div>`;"
      ]
     },
     {
-     "riga": 5622,
+     "riga": 5669,
      "via": 1,
      "metti": [
       "    content.innerHTML = '<div class=\"cam-popup-error\">⚠️ Unable to open the camera<br><span style=\"font-weight:500;opacity:.85;font-size:12px;text-transform:none;letter-spacing:0;\">' + righe.map(function (riga) { return cdEsc(riga); }).join('<br>') + '</span></div>';"
      ]
     },
     {
-     "riga": 5633,
+     "riga": 5680,
      "via": 1,
      "metti": [
       "    content.innerHTML = `<div class=\"cam-popup-body\"><div id=\"video-iframe-container\" class=\"cam-zoom-container\" style=\"position:relative; padding-top:56.25%;\"><video id=\"cam-video\" autoplay playsinline></video><div id=\"cam-audio-mini\" class=\"cam-audio-mini-banner\" onclick=\"dmUnlockAudioWebRTC()\">🔇 Tap per audio</div><div id=\"cam-video-loader\" class=\"cam-video-loader-overlay\"><div class=\"cam-popup-spinner\"></div><div>Connecting WebRTC…</div></div>${_DM_FS_BTNS}</div><button id=\"toggle-fs-main-btn\" class=\"cam-fs-btn\" onclick=\"toggleFullScreenCam()\">🔲 Fullscreen</button></div>`;"
      ]
     },
     {
-     "riga": 5642,
+     "riga": 5689,
      "via": 1,
      "metti": [
       "        setTimeout(() => { if (done) return; done = true; reject(new Error(`WebRTC: no frame within ${Math.round((attesa || 3000) / 1000)}s`)); }, attesa || 3000);"
      ]
     },
     {
-     "riga": 5649,
+     "riga": 5696,
      "via": 1,
      "metti": [
       "    if (!ws || ws.readyState !== WebSocket.OPEN) throw new Error('HA WebSocket not active');"
      ]
     },
     {
-     "riga": 5653,
+     "riga": 5700,
      "via": 1,
      "metti": [
       "        pendingWsCallbacks[reqId] = (m) => { clearTimeout(tid); if (m.success && m.result && m.result.url) resolve(m.result.url); else reject(new Error((m.error && m.error.message) || 'HLS not available')); };"
      ]
     },
     {
-     "riga": 5656,
+     "riga": 5703,
      "via": 1,
      "metti": [
       "    content.innerHTML = `<div class=\"cam-popup-body\"><div id=\"video-iframe-container\" class=\"cam-zoom-container\" style=\"position:relative; padding-top:56.25%;\"><video id=\"cam-hls\" autoplay playsinline controls></video><div id=\"cam-audio-mini\" class=\"cam-audio-mini-banner\" onclick=\"dmUnlockAudio()\">🔇 Tap per audio</div><div id=\"cam-video-loader\" class=\"cam-video-loader-overlay\"><div class=\"cam-popup-spinner\"></div><div>Connecting…</div></div>${_DM_FS_BTNS}</div><button id=\"toggle-fs-main-btn\" class=\"cam-fs-btn\" onclick=\"toggleFullScreenCam()\">🔲 Fullscreen</button><div id=\"cam-audio-panel\" class=\"cam-audio-panel\"><div class=\"cam-audio-panel-row\"><div id=\"cam-audio-status\" class=\"cam-audio-status muted\">🔊 Audio</div><button class=\"cam-audio-toggle-btn\" onclick=\"dmToggleAudio()\" title=\"Mute/unmute\">🔊</button><input id=\"cam-audio-volume\" class=\"cam-audio-volume\" type=\"range\" min=\"0\" max=\"100\" value=\"100\" oninput=\"dmSetVolume(this.value)\"><button class=\"cam-audio-info-btn\" onclick=\"dmToggleDiag(this)\" title=\"Diagnostics\">ℹ</button></div><div id=\"cam-audio-diag\" class=\"cam-audio-diag\">Waiting…</div></div></div>`;"
      ]
     },
     {
-     "riga": 5667,
+     "riga": 5714,
      "via": 1,
      "metti": [
       "    } else { throw new Error('HLS not supported and hls.js missing'); }"
      ]
     },
     {
-     "riga": 5676,
+     "riga": 5723,
      "via": 1,
      "metti": [
       "        setTimeout(() => { if (done) return; done = true; reject(new Error(`HLS: no frame within ${Math.round((attesa || 10000) / 1000)}s`)); }, attesa || 10000);"
      ]
     },
     {
-     "riga": 5688,
+     "riga": 5735,
      "via": 1,
      "metti": [
       "        catch (e) { throw new Error('No MJPEG URL: ' + (e.message || e)); }"
      ]
     },
     {
-     "riga": 5690,
+     "riga": 5737,
      "via": 1,
      "metti": [
       "    content.innerHTML = `<div class=\"cam-popup-body\"><div id=\"video-iframe-container\" class=\"cam-zoom-container\" style=\"position:relative; padding-top:56.25%;\"><img id=\"cam-mjpeg\" src=\"${cdUrl(streamUrl)}\" alt=\"${cdEsc(cam.entity)}\"><div id=\"cam-video-loader\" class=\"cam-video-loader-overlay\"><div class=\"cam-popup-spinner\"></div><div>Connecting stream…</div></div>${_DM_FS_BTNS}</div><button id=\"toggle-fs-main-btn\" class=\"cam-fs-btn\" onclick=\"toggleFullScreenCam()\">🔲 Fullscreen</button><div class=\"cam-popup-hint\"><span class=\"cam-mode-badge mjpeg\">MJPEG</span> Continuous live stream</div></div>`;"
      ]
     },
     {
-     "riga": 5697,
+     "riga": 5744,
      "via": 1,
      "metti": [
       "        setTimeout(() => { if (done) return; done = true; reject(new Error(`MJPEG: no frame within ${Math.round((attesa || 3000) / 1000)}s`)); }, attesa || 3000);"
      ]
     },
     {
-     "riga": 5708,
+     "riga": 5755,
      "via": 1,
      "metti": [
       "    if (!buildUrl()) { content.innerHTML = `<div class=\"cam-popup-error\">⚠️ Stream unavailable<br><span style=\"font-weight:500;opacity:.85;font-size:12px;text-transform:none;letter-spacing:0;\">Camera ${cdEsc(cam.entity)} does not expose snapshots</span></div>`; return; }"
      ]
     },
     {
-     "riga": 5710,
+     "riga": 5757,
      "via": 1,
      "metti": [
       "    content.innerHTML = `<div class=\"cam-popup-body\"><div id=\"video-iframe-container\" class=\"cam-zoom-container\" style=\"position:relative; padding-top:56.25%;\"><img id=\"cam-polling\" alt=\"${cdEsc(cam.entity)}\"><div id=\"cam-video-loader\" class=\"cam-video-loader-overlay\"><div class=\"cam-popup-spinner\"></div><div>Loading…</div></div>${_DM_FS_BTNS}</div><button id=\"toggle-fs-main-btn\" class=\"cam-fs-btn\" onclick=\"toggleFullScreenCam()\">🔲 Fullscreen</button><button id=\"cam-audio-activate-btn\" class=\"cam-audio-btn\" onclick=\"dmAttivaAudio()\">🔊 Attiva audio</button><div class=\"cam-popup-hint\"><span class=\"cam-mode-badge polling\">SNAPSHOT</span> Preview ~2 fps · Tap \"Enable audio\" for audio + video</div></div>`;"
      ]
     },
     {
-     "riga": 5717,
+     "riga": 5764,
      "via": 1,
      "metti": [
       "        if (_dmPollFail >= 5) { clearInterval(_dmPollInt); _dmPollInt = null; content.innerHTML = '<div class=\"cam-popup-error\">⚠️ Camera not responding<br><span style=\"font-weight:500;opacity:.85;font-size:12px;text-transform:none;letter-spacing:0;\">5 attempts failed — check the camera connection</span></div>'; return; }"
      ]
     },
     {
-     "riga": 5740,
+     "riga": 5787,
      "via": 1,
      "metti": [
       "    catch (e) { dmCleanupWebRTC(); throw new Error('Unable to sign WebRTC URL: ' + (e.message || e)); }"
      ]
     },
     {
-     "riga": 5748,
+     "riga": 5795,
      "via": 1,
      "metti": [
       "        const tid = setTimeout(() => fail(new Error('WebRTC timeout (10s)')), 10000);"
      ]
     },
     {
-     "riga": 5754,
+     "riga": 5801,
      "via": 1,
      "metti": [
       "            else if (msg.type === 'error') { fail(new Error(msg.value || 'WebRTC server error')); }"
      ]
     },
     {
-     "riga": 5756,
+     "riga": 5803,
      "via": 2,
      "metti": [
       "        camWs.onerror = () => fail(new Error('WebRTC WebSocket unreachable'));",
@@ -2707,14 +2728,14 @@
      ]
     },
     {
-     "riga": 5838,
+     "riga": 5885,
      "via": 1,
      "metti": [
       "        if (!ws || ws.readyState !== WebSocket.OPEN) { reject(new Error('HA WebSocket not active')); return; }"
      ]
     },
     {
-     "riga": 5840,
+     "riga": 5887,
      "via": 2,
      "metti": [
       "        const tid = setTimeout(() => { if (pendingWsCallbacks[reqId]) { delete pendingWsCallbacks[reqId]; reject(new Error('Sign path timeout')); } }, 4000);",
@@ -2722,66 +2743,66 @@
      ]
     },
     {
-     "riga": 5875,
+     "riga": 5922,
      "via": 1,
      "metti": [
       "    if (dg) dg.textContent = 'Tracks: ' + tracks + ' · muted=' + v.muted + ' · vol=' + vol + '% · state=' + v.readyState;"
      ]
     },
     {
-     "riga": 5889,
+     "riga": 5936,
      "via": 1,
      "metti": [
       "    content.innerHTML = '<div class=\"cam-popup-body\"><div class=\"cam-zoom-container\" style=\"position:relative;padding-top:56.25%;\"><div class=\"cam-video-loader-overlay\"><div class=\"cam-popup-spinner\"></div><div>Starting HLS audio…</div></div></div></div>';"
      ]
     },
     {
-     "riga": 5891,
+     "riga": 5938,
      "via": 1,
      "metti": [
       "    catch (e) { content.innerHTML = `<div class=\"cam-popup-error\">⚠️ Audio unavailable<br><span style=\"font-weight:500;opacity:.85;font-size:12px;text-transform:none;letter-spacing:0;\">${cdEsc(e.message || e)}</span></div>`; setTimeout(() => { const c = document.getElementById('details-list'); if (c) dmCamPolling(cam, c); }, 3500); }"
      ]
     },
     {
-     "riga": 5938,
+     "riga": 5985,
      "via": 2,
      "metti": []
     },
     {
-     "riga": 5943,
+     "riga": 5990,
      "via": 1,
      "metti": []
     },
     {
-     "riga": 5960,
+     "riga": 6007,
      "via": 1,
      "metti": [
       "                       var nfRadar = document.querySelector('.dm-radar-blocco') ? ' The radar above is a separate thing and works on its own.' : ''; list.innerHTML = `<div style=\"text-align:center; padding:20px; color:var(--text-dim,#64748b); line-height:1.5;\"><strong style=\"display:block; font-size:14px; font-weight:800; color:var(--text,#0f172a); margin-bottom:6px;\">This weather entity has no forecast</strong>It reports the weather right now, not the next days. To see the seven days pick another weather entity under Config › Sections › Weather.${nfRadar}<code style=\"display:block; margin-top:10px; font-size:11px; color:var(--text-dim,#64748b);\">${cdEsc(entityId)}</code></div>`;"
      ]
     },
     {
-     "riga": 5972,
+     "riga": 6019,
      "via": 1,
      "metti": [
       "  if(!forecasts || forecasts.length === 0) { var nfRadar = document.querySelector('.dm-radar-blocco') ? ' The radar above is a separate thing and works on its own.' : ''; list.innerHTML = `<div style=\"text-align:center; padding:20px; color:var(--text-dim,#64748b); line-height:1.5;\"><strong style=\"display:block; font-size:14px; font-weight:800; color:var(--text,#0f172a); margin-bottom:6px;\">This weather entity has no forecast</strong>It reports the weather right now, not the next days. To see the seven days pick another weather entity under Config › Sections › Weather.${nfRadar}<code style=\"display:block; margin-top:10px; font-size:11px; color:var(--text-dim,#64748b);\">${cdEsc(currentWeatherEntity || '')}</code></div>`; return; }"
      ]
     },
     {
-     "riga": 6087,
+     "riga": 6134,
      "via": 1,
      "metti": [
       "    if(tipo === 'luci' && st === 'on') items.push({ id, nm, st: 'ON', icon: '💡', canOff: true });"
      ]
     },
     {
-     "riga": 6093,
+     "riga": 6140,
      "via": 1,
      "metti": [
       "      items.push({ id, nm, st: 'OPEN', icon: winIcon, canOff: false });"
      ]
     },
     {
-     "riga": 6155,
+     "riga": 6202,
      "via": 2,
      "metti": [
       "    const labels = { 'alarm_arm_home': 'Arm Home', 'alarm_arm_away': 'Arm Away', 'alarm_arm_night': 'Arm Night', 'alarm_arm_vacation': 'Arm Vacation', 'alarm_arm_custom_bypass': 'Arm Partial', 'alarm_disarm': 'Disarm Alarm' };",
@@ -2789,21 +2810,21 @@
      ]
     },
     {
-     "riga": 6272,
+     "riga": 6319,
      "via": 1,
      "metti": [
       "              const rosa = ['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW'];"
      ]
     },
     {
-     "riga": 6419,
+     "riga": 6466,
      "via": 1,
      "metti": [
       "          el.textContent = items.length ? (on + ' active / ' + items.length) : 'empty — add loads';"
      ]
     },
     {
-     "riga": 6428,
+     "riga": 6475,
      "via": 4,
      "metti": [
       "      /* v0.8.4 (#6): HOME as in HA's Energy dashboard — balance of the displayed flows:",
@@ -2812,7 +2833,7 @@
      ]
     },
     {
-     "riga": 6444,
+     "riga": 6491,
      "via": 4,
      "metti": [
       "      /* v0.8.4 (#6): HOME as in HA's Energy dashboard — balance of the displayed flows:",
@@ -2821,19 +2842,19 @@
      ]
     },
     {
-     "riga": 6457,
+     "riga": 6504,
      "via": 1,
      "metti": []
     },
     {
-     "riga": 6611,
+     "riga": 6658,
      "via": 1,
      "metti": [
       "      // Cambia foto idle ↔ plugged"
      ]
     },
     {
-     "riga": 6647,
+     "riga": 6694,
      "via": 2,
      "metti": [
       "      /* v0.8.1: DYNAMIC RAM — % sensors show %, value sensors (MB/GB) show the value",
@@ -2841,63 +2862,63 @@
      ]
     },
     {
-     "riga": 6717,
+     "riga": 6764,
      "via": 1,
      "metti": [
       "              lavFase = lavPw > 5 ? '🌀 Running (' + Math.round(lavPw) + ' W)' : 'Off';"
      ]
     },
     {
-     "riga": 6732,
+     "riga": 6779,
      "via": 1,
      "metti": [
       "          if (btnMainPwr && mainPwrSwitch) { const isOn = mainPwrSwitch.state === 'on'; btnMainPwr.classList.toggle('active', isOn); txtMainPwr.textContent = isOn ? 'ON' : 'OFF'; btnMainPwr.querySelector('.icon').textContent = isOn ? '⚡' : '🔌'; if(isOn) { btnMainPwr.style.setProperty('--btn-col', '#0ea5e9'); btnMainPwr.style.setProperty('--btn-bg', '#e0f2fe'); } else { btnMainPwr.style.setProperty('--btn-col', '#64748b'); btnMainPwr.style.setProperty('--btn-bg', '#fff'); } }"
      ]
     },
     {
-     "riga": 6744,
+     "riga": 6791,
      "via": 1,
      "metti": [
       "      const chiaveState = getRawState('valve.chiave_solare_termico'); const isChiaveOpen = chiaveState === 'open'; setActiveState('syn-v-chiave', isChiaveOpen); updateBoilerBtn('b-c-valvola', isChiaveOpen, 'OPEN', 'CHIUSA'); setTxt('txt-chiave', isChiaveOpen ? 'OPEN' : 'CHIUSA');"
      ]
     },
     {
-     "riga": 6819,
+     "riga": 6866,
      "via": 1,
      "metti": [
       "              text = 'ARMED \\u00B7 ' + String(suMisura.label || '').toUpperCase();"
      ]
     },
     {
-     "riga": 7103,
+     "riga": 7150,
      "via": 1,
      "metti": [
       "      else if (stato === 'off')  { el.classList.add('off');     txt.textContent = 'OFF'; }"
      ]
     },
     {
-     "riga": 7190,
+     "riga": 7237,
      "via": 1,
      "metti": [
       "      show = true; icon = '🛡️'; text = 'Antifurto · Total'; rgb = '225,29,72';  textRgb = '157,23,53';"
      ]
     },
     {
-     "riga": 7318,
+     "riga": 7365,
      "via": 1,
      "metti": [
       "// Apre un popup con 3 bottoni (Total/Notte/Sblocca). Riusa promptPinAndSet"
      ]
     },
     {
-     "riga": 7412,
+     "riga": 7459,
      "via": 1,
      "metti": [
       "// Sensori dispositivi mese corrente → usati anche per mesi precedenti via History"
      ]
     },
     {
-     "riga": 7428,
+     "riga": 7475,
      "via": 4,
      "metti": [
       "/* v0.7.3 fix (#6): now a callable function — adding an entry from the editor",
@@ -2905,49 +2926,49 @@
      ]
     },
     {
-     "riga": 7453,
+     "riga": 7500,
      "via": 3,
      "metti": [
       "const COSTO_KWH  = 0.25;"
      ]
     },
     {
-     "riga": 7505,
+     "riga": 7552,
      "via": 1,
      "metti": [
       "    const guadagnoGSE = immesso * 0.10;                        // stima 0.10€/kWh per energia immessa (GSE)"
      ]
     },
     {
-     "riga": 7508,
+     "riga": 7555,
      "via": 1,
      "metti": [
       "    edSetText('ed-fin-pagato-sub', cons.toFixed(0) + ' kWh × 0.25€');"
      ]
     },
     {
-     "riga": 7510,
+     "riga": 7557,
      "via": 1,
      "metti": [
       "    edSetText('ed-fin-costo-sub', prelevato.toFixed(1) + ' kWh × 0.25€');"
      ]
     },
     {
-     "riga": 7514,
+     "riga": 7561,
      "via": 1,
      "metti": [
       "    edSetText('ed-fin-imm-sub', immesso.toFixed(1) + ' kWh × 0.10€');"
      ]
     },
     {
-     "riga": 7564,
+     "riga": 7611,
      "via": 1,
      "metti": [
       "        /* v0.8.1: all year sensors; if consumption is missing, estimate it from the energy balance */"
      ]
     },
     {
-     "riga": 7593,
+     "riga": 7640,
      "via": 2,
      "metti": [
       "    /* v0.8.1: if yearly statistics yield nothing but the current month does (period engine),",
@@ -2955,14 +2976,14 @@
      ]
     },
     {
-     "riga": 7625,
+     "riga": 7672,
      "via": 1,
      "metti": [
       "    // Mostra subito il prelevato (non richiede History)"
      ]
     },
     {
-     "riga": 7696,
+     "riga": 7743,
      "via": 2,
      "metti": [
       "    /* v0.7.5: \"this week / last week\" only makes sense in the current month —",
@@ -2970,14 +2991,14 @@
      ]
     },
     {
-     "riga": 7732,
+     "riga": 7779,
      "via": 1,
      "metti": [
       "    // Somma kWh di un periodo da History"
      ]
     },
     {
-     "riga": 7854,
+     "riga": 7901,
      "via": 4,
      "metti": [
       "        // ── CURRENT MONTH: period engine (delta from the 1st) ──",
@@ -2987,49 +3008,49 @@
      ]
     },
     {
-     "riga": 7898,
+     "riga": 7945,
      "via": 1,
      "metti": [
       "            // del giorno prima dell'inizio). È il metodo del pannello Energy di HA, esatto sui"
      ]
     },
     {
-     "riga": 7909,
+     "riga": 7956,
      "via": 1,
      "metti": [
       "               Questo è ESATTAMENTE come il pannello Energy di HA calcola i totali, e con contatori"
      ]
     },
     {
-     "riga": 7955,
+     "riga": 8002,
      "via": 1,
      "metti": [
       "               del cumulativo), lascio statsOk=false così parte il fallback History col delta. */"
      ]
     },
     {
-     "riga": 7962,
+     "riga": 8009,
      "via": 1,
      "metti": [
       "        // ── METODO 2: History API (fallback - max ultimi 10 giorni) ──"
      ]
     },
     {
-     "riga": 7988,
+     "riga": 8035,
      "via": 1,
      "metti": [
       "                    // la History può restituire i sensori in ordine diverso: mappo per entity_id"
      ]
     },
     {
-     "riga": 8001,
+     "riga": 8048,
      "via": 1,
      "metti": [
       "            } catch(e) { console.error('History fetch error:', e); }"
      ]
     },
     {
-     "riga": 8005,
+     "riga": 8052,
      "via": 5,
      "metti": [
       "    /* v0.9.5 DEFINITIVE FIX: HOME as HA's Energy panel and the Monthly map.",
@@ -3039,7 +3060,7 @@
      ]
     },
     {
-     "riga": 8017,
+     "riga": 8064,
      "via": 5,
      "metti": [
       "    /* v0.7.5 (#6): DATA COHERENCE — if total consumption is unavailable but the rest is,",
@@ -3050,21 +3071,21 @@
      ]
     },
     {
-     "riga": 8044,
+     "riga": 8091,
      "via": 1,
      "metti": [
       "    edSetText('ed-fin-pagato-sub', cons.toFixed(0) + ' kWh × 0.25€');"
      ]
     },
     {
-     "riga": 8046,
+     "riga": 8093,
      "via": 1,
      "metti": [
       "    edSetText('ed-fin-costo-sub', prelevato.toFixed(1) + ' kWh × 0.25€');"
      ]
     },
     {
-     "riga": 8049,
+     "riga": 8096,
      "via": 2,
      "metti": [
       "    edSetText('ed-fin-imm',    (immesso * 0.10).toFixed(2) + ' €');",
@@ -3072,49 +3093,49 @@
      ]
     },
     {
-     "riga": 8078,
+     "riga": 8125,
      "via": 1,
      "metti": [
       "        /* v0.8.1: past month with no statistics at all → honest note instead of confident zeros */"
      ]
     },
     {
-     "riga": 8080,
+     "riga": 8127,
      "via": 1,
      "metti": [
       "            badgesEl.innerHTML = '<span class=\"ed-badge\" style=\"background:rgba(245,158,11,0.14); color:#b45309;\">⚠️ No statistics available for this month</span>';"
      ]
     },
     {
-     "riga": 8095,
+     "riga": 8142,
      "via": 1,
      "metti": [
       "    // ── Confronto settimanale via History API ───────────────────"
      ]
     },
     {
-     "riga": 8129,
+     "riga": 8176,
      "via": 1,
      "metti": [
       "            list.innerHTML = '<div style=\"text-align:center; padding:26px; color:var(--text-dim); font-weight:800;\">📊 Aggiungi i tuoi dispositivi da ⚙️ → Configure Entities → Carichi → \"Report Analisi — voci\"<br><span style=\"font-weight:600; font-size:12px;\">You can use monthly entities or cumulative TOTALS: months are computed automatically.</span></div>';"
      ]
     },
     {
-     "riga": 8181,
+     "riga": 8228,
      "via": 1,
      "metti": [
       "        // ── METODO 2: History API (fallback - max 10 giorni) ──"
      ]
     },
     {
-     "riga": 8201,
+     "riga": 8248,
      "via": 1,
      "metti": [
       "                console.error('[ED Device List] History error:', e);"
      ]
     },
     {
-     "riga": 8223,
+     "riga": 8270,
      "via": 2,
      "metti": [
       "    /* v0.7.5: if the selected month has neither production nor main consumption but device",
@@ -3122,73 +3143,73 @@
      ]
     },
     {
-     "riga": 8226,
+     "riga": 8273,
      "via": 1,
      "metti": [
       "        ? '<div style=\"padding:10px 14px; margin-bottom:8px; border-radius:14px; background:rgba(245,158,11,0.12); color:#b45309; font-size:11.5px; font-weight:700;\">⚠️ Main production and consumption unavailable for this month: the values below come from meter history and may include earlier periods.</div>'"
      ]
     },
     {
-     "riga": 8247,
+     "riga": 8294,
      "via": 2,
      "metti": []
     },
     {
-     "riga": 8250,
+     "riga": 8297,
      "via": 1,
      "metti": [
       "        list.innerHTML += '<div style=\"padding:10px 14px; margin-top:8px; border-radius:14px; background:rgba(14,165,233,0.08); color:#0369a1; font-size:11.5px; font-weight:700;\">ℹ️ The Report reads Home Assistant <b>Long-Term Statistics</b>. If values stay at zero, make sure the entities have <code>state_class: total_increasing</code> (or <code>total</code>): Developer Tools → Statistics.</div>';"
      ]
     },
     {
-     "riga": 8260,
+     "riga": 8307,
      "via": 1,
      "metti": [
       "/* ═══ v0.8.0: PERIOD ENGINE ═══"
      ]
     },
     {
-     "riga": 8288,
+     "riga": 8335,
      "via": 1,
      "metti": [
       "    if (!service) return Promise.reject(new Error('Canonical Energy service unavailable'));"
      ]
     },
     {
-     "riga": 8344,
+     "riga": 8391,
      "via": 1,
      "metti": [
       "    // ── METODO 2: History API (fallback - solo ultimi 10 giorni di default) ──"
      ]
     },
     {
-     "riga": 8377,
+     "riga": 8424,
      "via": 1,
      "metti": [
       "            console.warn('History API non raggiungibile:', e.message);"
      ]
     },
     {
-     "riga": 8465,
+     "riga": 8512,
      "via": 1,
      "metti": []
     },
     {
-     "riga": 8500,
+     "riga": 8547,
      "via": 1,
      "metti": [
       "    if(!visible.length){ grid.innerHTML='<div style=\"text-align:center; padding:30px; color:var(--text-dim); font-weight:700;\">No room con sensore — aggiungila nel tab Temperatura dell&#39;editor</div>'; return; } grid.innerHTML = tabs + visible.map(r => {"
      ]
     },
     {
-     "riga": 8552,
+     "riga": 8599,
      "via": 1,
      "metti": [
       "    /* v0.7.4: average temperature of each floor in the tabs */"
      ]
     },
     {
-     "riga": 8730,
+     "riga": 8777,
      "via": 6,
      "metti": [
       "                'on':          { label: '🟢 On-Grid',     cls: 'ongrid',       col: '#10b981' },",
@@ -3200,21 +3221,21 @@
      ]
     },
     {
-     "riga": 8821,
+     "riga": 8868,
      "via": 1,
      "metti": [
       "                ${duration ? `<div class=\"srv-event-duration\">Duration: ${duration}</div>` : ''}"
      ]
     },
     {
-     "riga": 8830,
+     "riga": 8877,
      "via": 1,
      "metti": [
       "        timeline.innerHTML = `<div style=\"text-align:center;padding:24px;color:#ef4444;font-weight:800;font-size:12px;\">❌ History non disponibile<br><span style=\"color:var(--text-dim);font-size:10px;\">${cdEsc(e.message)}</span></div>`;"
      ]
     },
     {
-     "riga": 8859,
+     "riga": 8906,
      "via": 10,
      "metti": [
       "        'dm.core_005':                    ['❄️ Air conditioner','Salone'],",
@@ -3230,28 +3251,28 @@
      ]
     },
     {
-     "riga": 8891,
+     "riga": 8938,
      "via": 1,
      "metti": [
       "                          '4':'Vel.4', '5':'Vel.5', on:'On', off:'Off' };"
      ]
     },
     {
-     "riga": 9127,
+     "riga": 9174,
      "via": 1,
      "metti": [
       "    // ── History giornaliero del periodo selezionato ──"
      ]
     },
     {
-     "riga": 9165,
+     "riga": 9212,
      "via": 1,
      "metti": [
       "        // ── METODO 2: History API (fallback per ultimi 10 giorni) ──"
      ]
     },
     {
-     "riga": 9264,
+     "riga": 9311,
      "via": 2,
      "metti": [
       "        setTxt('ed-dkpi-picco-sub', 'History N/D');",

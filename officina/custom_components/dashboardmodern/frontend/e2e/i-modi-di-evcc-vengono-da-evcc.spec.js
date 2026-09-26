@@ -35,13 +35,13 @@ const SEME = {
 };
 
 /** Avvia la plancia con un evcc che dichiara `options` e risponde `stato`. */
-async function conEvcc(page, testInfo, { stato, options }) {
+async function conEvcc(page, testInfo, { stato, options, sempre }) {
   test.setTimeout(150_000);
   await page.route("https://**", (route) => route.fulfill({ status: 200, body: "" }));
   await bootNamespacedDashboard(page, "dashboard.html", testInfo, SEME);
   await page.locator("#setup-wizard").evaluateAll((nodi) => nodi.forEach((n) => n.remove()));
   await page.evaluate(
-    ({ stato, options }) => {
+    ({ stato, options, sempre }) => {
       const stati = {
         "number.target": { state: "80", attributes: {} },
         "select.modo": { state: stato, attributes: options ? { options } : {} },
@@ -50,6 +50,11 @@ async function conEvcc(page, testInfo, { stato, options }) {
         "dm.ev_target_soc": "number.target",
         "dm.ev_modalita_ricarica_evcc": "select.modo",
       };
+      if (sempre) {
+        /* Come si chiama davvero nella casa di chi l'ha chiesta. */
+        stati["select.evcc_lektrico_always_charge"] = sempre;
+        mappa["dm.ev_ricarica_sempre_evcc"] = "select.evcc_lektrico_always_charge";
+      }
       const precedente = window.resolveEntity;
       window.resolveEntity = (riferimento) =>
         mappa[riferimento] || precedente?.(riferimento) || riferimento;
@@ -70,7 +75,7 @@ async function conEvcc(page, testInfo, { stato, options }) {
       document.getElementById("page-ev")?.classList.add("active");
       window.dispatchEvent(new CustomEvent("dashboardmodern:state-changed", { detail: {} }));
     },
-    { stato, options },
+    { stato, options, sempre },
   );
   return page.locator(".lm-evcc-grid");
 }
@@ -85,7 +90,7 @@ test("un evcc di oggi: tre tasti, e «Intelligente» al posto di Solar", async (
     options: ["off", "smart", "now"],
   });
   await expect(griglia.locator(".lm-evcc-btn")).toHaveCount(3);
-  expect(await nomi(griglia)).toEqual(["Spento", "Intelligente", "Subito"]);
+  expect(await nomi(griglia)).toEqual(["Spento", "Intelligente", "Fast"]);
   /* Il difetto da cui si è partiti: questo tasto restava spento. */
   await expect(griglia.locator("#m-btn-smart")).toHaveClass(/active/);
   await expect(griglia.locator("#m-btn-minpv")).toHaveCount(0);
@@ -98,7 +103,7 @@ test("un evcc di ieri resta com'era, con i suoi quattro", async ({ page }, testI
     options: ["off", "pv", "minpv", "now"],
   });
   await expect(griglia.locator(".lm-evcc-btn")).toHaveCount(4);
-  expect(await nomi(griglia)).toEqual(["Spento", "Solar", "Min+Sol", "Subito"]);
+  expect(await nomi(griglia)).toEqual(["Spento", "Solar", "Min+Sol", "Fast"]);
   await expect(griglia.locator("#m-btn-minpv")).toHaveClass(/active/);
 });
 
@@ -140,4 +145,80 @@ test("una modalità che non conosciamo si vede lo stesso, col nome che ha", asyn
   await expect(griglia.locator(".lm-evcc-btn")).toHaveCount(3);
   expect(await nomi(griglia)).toEqual(["Spento", "Intelligente", "turbo"]);
   await expect(griglia.locator("#m-btn-turbo")).toHaveClass(/active/);
+});
+
+/* ── «Always charge»: l'opzione che si affianca a smart ──────────────────── */
+
+/* Com'e' fatta davvero: `select.evcc_lektrico_always_charge`, Off / On / Once. */
+const IL_SEMPRE = { state: "On", attributes: { options: ["Off", "On", "Once"] } };
+
+const fila = (page) => page.locator(".dm-evcc-sempre");
+
+test("accanto a «Intelligente» compare la fila del sempre, con la scelta di adesso", async ({
+  page,
+}, testInfo) => {
+  await conEvcc(page, testInfo, {
+    stato: "Smart",
+    options: ["Off", "Smart", "Fast"],
+    sempre: IL_SEMPRE,
+  });
+  await expect(fila(page).first()).toBeVisible();
+  expect(await fila(page).first().locator(".dm-evcc-sempre-btn").allTextContents()).toEqual([
+    "Mai",
+    "Sempre",
+    "Stavolta",
+  ]);
+  await expect(fila(page).first().locator('.dm-evcc-sempre-btn[aria-pressed="true"]')).toHaveText(
+    "Sempre",
+  );
+});
+
+test("in «Fast» la fila non c'è: lì quell'opzione non cambia niente", async ({
+  page,
+}, testInfo) => {
+  await conEvcc(page, testInfo, {
+    stato: "Fast",
+    options: ["Off", "Smart", "Fast"],
+    sempre: IL_SEMPRE,
+  });
+  await expect(fila(page)).toHaveCount(0);
+});
+
+test("e senza l'entità mappata non compare mai", async ({ page }, testInfo) => {
+  /* Chi non ha quella casella non deve trovarsi una fila vuota sotto i tasti. */
+  await conEvcc(page, testInfo, { stato: "Smart", options: ["Off", "Smart", "Fast"] });
+  await expect(fila(page)).toHaveCount(0);
+});
+
+test("premendo «Stavolta» parte il valore che l'entità ha dichiarato", async ({
+  page,
+}, testInfo) => {
+  await conEvcc(page, testInfo, {
+    stato: "Smart",
+    options: ["Off", "Smart", "Fast"],
+    sempre: IL_SEMPRE,
+  });
+  await fila(page).first().locator(".dm-evcc-sempre-btn", { hasText: "Stavolta" }).click();
+  await expect
+    .poll(() => page.evaluate(() => window.__MANDATO__.at(-1)), { timeout: 10_000 })
+    .toMatchObject({
+      type: "call_service",
+      domain: "select",
+      service: "select_option",
+      service_data: { entity_id: "select.evcc_lektrico_always_charge", option: "Once" },
+    });
+});
+
+test("«Fast» si chiama Fast anche in italiano", async ({ page }, testInfo) => {
+  /* Era «Subito», ed era una parola nostra: nella tendina di Home Assistant
+   * quella modalità si chiama Fast. */
+  const griglia = await conEvcc(page, testInfo, {
+    stato: "Off",
+    options: ["Off", "Smart", "Fast"],
+  });
+  expect(await griglia.locator(".lm-evcc-btn .ev-lbl").allTextContents()).toEqual([
+    "Spento",
+    "Intelligente",
+    "Fast",
+  ]);
 });
