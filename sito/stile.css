@@ -700,6 +700,14 @@ section {
 .fila-auto figure {
   margin: 0;
 }
+/* Lo svincolo sta sopra gli altri quattro, largo quanto la fila: e' lo schermo
+ * che si guarda per davvero, coi cartelli da leggere. */
+.fila-auto .largo {
+  grid-column: 1 / -1;
+  max-width: 760px;
+  width: 100%;
+  margin-inline: auto;
+}
 /* Lo schermo dell'auto: una cornice scura e larga, come quella del telefono,
  * senza disegnare un cruscotto intorno. */
 .cruscotto {
