@@ -229,6 +229,24 @@ for (const nome of readdirSync(schermate).sort()) {
 if (quanteSchermate === 0) fermati("Non ho trovato nessuna schermata da portare.");
 conta("le schermate", quanteSchermate, schermateByte);
 
+/* gdanav dentro gdahome: le schermate del telefono e gli schermi di Android
+ * Auto. Stanno in una cartella loro, accanto alle altre schermate, e si
+ * portano allo stesso modo: una cartella che il sito usa e che lo script
+ * rifa' da capo non si scrive a mano. */
+const gdanav = join(schermate, "gdanav");
+if (!existsSync(gdanav)) fermati(`Non trovo le schermate di gdanav in ${gdanav}.`);
+mkdirSync(join(STATICO, "gdanav"), { recursive: true });
+let quanteGdanav = 0;
+let gdanavByte = 0;
+for (const nome of readdirSync(gdanav).sort()) {
+  if (!nome.endsWith(".png")) continue;
+  cpSync(join(gdanav, nome), join(STATICO, "gdanav", nome));
+  quanteGdanav += 1;
+  gdanavByte += statSync(join(STATICO, "gdanav", nome)).size;
+}
+if (quanteGdanav === 0) fermati("Non ho trovato nessuna schermata di gdanav da portare.");
+conta("gdanav", quanteGdanav, gdanavByte);
+
 /* I caratteri. */
 const font = join(RADICE, "ponte", "plancia", "legacy", "vendor", "fonts");
 if (!existsSync(font)) fermati(`Non trovo i caratteri in ${font}.`);

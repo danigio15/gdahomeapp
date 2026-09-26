@@ -722,9 +722,154 @@ section {
   font-size: 0.88rem;
   color: var(--testo-lieve);
 }
+/* Dalla plancia a gdanav: tre telefoni, tre momenti della stessa ricarica.
+ * I fotogrammi stanno uno sopra l'altro e si danno il cambio insieme, cosi'
+ * si vede che il numero cambia nello stesso momento dappertutto. */
+.guida-stretta {
+  max-width: 760px;
+}
+.dal-vivo {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(14px, 2.4vw, 28px);
+  max-width: 900px;
+  margin: clamp(26px, 3.4vw, 38px) auto 0;
+}
+.dal-vivo figure {
+  margin: 0;
+}
+.fotogrammi {
+  position: relative;
+}
+.fotogrammi img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 21px;
+  background: var(--carta);
+}
+.fotogrammi .fotogramma:not(.fotogramma-1) {
+  position: absolute;
+  inset: 0;
+}
+.fotogramma-1 {
+  animation: fotogramma-1 9s infinite;
+}
+.fotogramma-2 {
+  animation: fotogramma-2 9s infinite;
+}
+.fotogramma-3 {
+  animation: fotogramma-3 9s infinite;
+}
+@keyframes fotogramma-1 {
+  0%,
+  30% {
+    opacity: 1;
+  }
+  34%,
+  96% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+@keyframes fotogramma-2 {
+  0%,
+  30% {
+    opacity: 0;
+  }
+  34%,
+  63% {
+    opacity: 1;
+  }
+  67%,
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes fotogramma-3 {
+  0%,
+  63% {
+    opacity: 0;
+  }
+  67%,
+  96% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+.dal-vivo figcaption {
+  margin-top: 12px;
+  text-align: center;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--testo);
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+}
+.dal-vivo figcaption small {
+  font-weight: 400;
+  color: var(--testo-lieve);
+}
+.passo {
+  display: inline-grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--carta-alta);
+  font-size: 0.8rem;
+  margin-bottom: 4px;
+}
+.batteria-viva {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  margin-top: 22px;
+  font-weight: 700;
+}
+.spia-viva {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #16a34a;
+  box-shadow: 0 0 0 4px color-mix(in srgb, #16a34a 25%, transparent);
+}
+.fotogrammi-testo {
+  display: inline-grid;
+}
+.fotogrammi-testo .fotogramma {
+  grid-area: 1 / 1;
+}
+/* Chi ha chiesto meno movimento vede l'ultimo momento, fermo. */
+@media (prefers-reduced-motion: reduce) {
+  .fotogramma-1,
+  .fotogramma-2,
+  .fotogramma-3 {
+    animation: none;
+    opacity: 0;
+  }
+  .fotogramma-3 {
+    opacity: 1;
+  }
+}
+
 @media (max-width: 700px) {
   .fila-auto {
     grid-template-columns: minmax(0, 1fr);
+  }
+  .dal-vivo {
+    grid-template-columns: minmax(0, 1fr);
+    max-width: 250px;
+    gap: 26px;
+  }
+  .dal-vivo .telefono {
+    width: 100%;
   }
 }
 
