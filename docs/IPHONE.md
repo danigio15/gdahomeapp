@@ -44,7 +44,8 @@ in gdanav, lì si rimette `ref: main`.
    `com.gdahome.gdahome`, SKU `gdahome`.
 4. **La chiave per GitHub**: App Store Connect → Utenti e accesso →
    Integrazioni → App Store Connect API → Chiavi del team → `+`, ruolo
-   **App Manager**. Si scarica il `.p8` (una volta sola: poi Apple non lo
+   **Amministrazione** (Admin: il certificato di distribuzione, che Xcode
+   si fa dare da Apple a ogni build, con «Gestore dell'app» non si crea). Si scarica il `.p8` (una volta sola: poi Apple non lo
    ridà) e si segnano l'**ID chiave** e l'**ID emittente**. L'**ID del team** è
    in developer.apple.com → Account → Membership.
 5. **I quattro segreti**, nell'ambiente **`negozio`** della repository
