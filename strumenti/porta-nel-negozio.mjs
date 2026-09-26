@@ -22,8 +22,15 @@
  * ─── Come si usa ───────────────────────────────────────────────────────────
  *
  *     node strumenti/porta-nel-negozio.mjs app-release.aab --pista=internal
+ *     node strumenti/porta-nel-negozio.mjs app-release.aab --pista=internal,alpha,beta
  *     node strumenti/porta-nel-negozio.mjs app-release.aab --pista=internal --prova
  *     node strumenti/porta-nel-negozio.mjs --piste
+ *
+ * Le piste separate da una virgola vanno tutte, e il pacchetto si carica una
+ * volta sola: il negozio rifiuta un `versionCode` gia' visto, quindi «la
+ * stessa versione anche su beta» non si fa ricaricando. `production` vuole in
+ * piu' `--davvero`, e la si fa per ultima in un giro suo: e' l'unica che il
+ * negozio puo' negare, e negandola non deve portarsi via le altre.
  *
  * `--prova` fa tutto tranne l'ultimo passo: carica, prepara la pista, chiede
  * a Google se va bene, e poi **butta la modifica** invece di pubblicarla.
@@ -180,24 +187,43 @@ export function leNovita(cartella, { quanto = QUANTO_SI_PUO_SCRIVERE } = {}) {
 }
 
 /**
- * La pista su cui va, e il freno su quella che conta.
+ * Le piste su cui va, e il freno su quella che conta.
+ *
+ * Se ne possono dire piu' d'una, separate da una virgola: si carica **una
+ * volta sola** e lo stesso pacchetto si mette su tutte. Non e' un vezzo — il
+ * negozio rifiuta un `versionCode` gia' visto, quindi «la stessa versione su
+ * due piste» non si fa caricando due volte, e chi ci prova si trova a dover
+ * bruciare un numero di versione per spostare una cosa che aveva gia'.
  *
  * `production` e' l'unica da cui non si torna indietro con un bottone: chi la
  * chiede deve dirlo due volte. Non e' burocrazia — le altre tre pubblicano a
  * chi ha accettato di provare, quella pubblica a tutti.
+ *
+ * E torna sempre per ultima, perche' e' l'unica che il negozio puo' negare:
+ * un account personale nuovo non ce l'ha finche' non ha fatto la prova chiusa
+ * coi suoi collaudatori. Messa in fondo, un suo rifiuto lascia in piedi
+ * quello che era gia' andato sulle altre.
  */
-export function laPista(nome, { davvero = false } = {}) {
-  const quale = String(nome || "").trim();
-  if (!quale) {
+export function lePisteDette(nome, { davvero = false } = {}) {
+  const dette = String(nome || "")
+    .split(",")
+    .map((una) => una.trim())
+    .filter(Boolean);
+  if (!dette.length) {
     throw new Error(`su quale pista? Le solite sono ${PISTE_DI_SERIE.join(", ")}; --piste le dice`);
   }
-  if (quale === "production" && !davvero) {
+  const viste = [];
+  for (const quale of dette) if (!viste.includes(quale)) viste.push(quale);
+  if (viste.includes("production") && !davvero) {
     throw new Error(
       "«production» pubblica a tutti e non si torna indietro premendo un tasto: " +
         "se e' quello che vuoi, aggiungi --davvero",
     );
   }
-  return quale;
+  return [
+    ...viste.filter((una) => una !== "production"),
+    ...viste.filter((una) => una === "production"),
+  ];
 }
 
 /** Quanto pesa, detto come lo dice un essere umano. */
@@ -264,93 +290,20 @@ export async function ilGettone(credenziale, prendi = globalThis.fetch) {
 const perApp = (coda) =>
   `${NEGOZIO}/androidpublisher/v3/applications/${encodeURIComponent(COME_SI_CHIAMA)}${coda}`;
 
-/**
- * Porta il pacchetto su, e lo pubblica sulla pista.
+/* Una modifica aperta, usata, e chiusa in un modo solo.
  *
  * Il negozio lavora a «modifiche»: si apre una modifica, ci si mette dentro
  * tutto, e alla fine si consegna. Se qualcosa non va, la modifica **si butta**
  * — se no resta aperta e la volta dopo non si capisce piu' cosa c'e' dentro.
+ * Questo giro lo fanno in due (il caricamento e la promozione), e scriverlo
+ * due volte vorrebbe dire due posti dove dimenticarsi di buttarla.
  */
-export async function porta({
-  pacco,
-  pista,
-  novita,
-  segreto = process.env.NEGOZIO_GOOGLE || "",
-  prendi = globalThis.fetch,
-  prova = false,
-  dillo = () => {},
-  /* Quanto si aspetta fra un tentativo e l'altro di riguardare la pista: le
-   * prove lo passano a zero, che se no aspettano davvero. */
-  aspetta = (quanto) => new Promise((ok) => setTimeout(ok, quanto)),
-}) {
-  const credenziale = ilCredenziale(segreto);
-  const byte = readFileSync(pacco);
-  dillo(`${basename(pacco)}: ${quantoPesa(byte.length)}`);
-
-  const gettone = await ilGettone(credenziale, prendi);
-  dillo(`entrato nel negozio come ${credenziale.posta}`);
-
+async function dentroUnaModifica({ gettone, prendi, dillo }, fai) {
   const modifica = await chiedi(prendi, perApp("/edits"), { metodo: "POST", gettone });
   const quale = String(modifica?.id || "");
   if (!quale) throw new Error("il negozio non ha aperto nessuna modifica");
-
   try {
-    const salito = await chiedi(
-      prendi,
-      `${NEGOZIO}/upload/androidpublisher/v3/applications/${encodeURIComponent(
-        COME_SI_CHIAMA,
-      )}/edits/${quale}/bundles?uploadType=media`,
-      { metodo: "POST", gettone, corpo: byte, tipo: "application/octet-stream" },
-    );
-    const numero = Number(salito?.versionCode);
-    if (!Number.isInteger(numero) || numero <= 0) {
-      throw new Error("il negozio ha preso il pacchetto ma non dice quale versione sia");
-    }
-    dillo(`caricato: versione ${numero}`);
-
-    await chiedi(prendi, perApp(`/edits/${quale}/tracks/${encodeURIComponent(pista)}`), {
-      metodo: "PATCH",
-      gettone,
-      tipo: "application/json",
-      corpo: JSON.stringify({
-        releases: [{ versionCodes: [String(numero)], status: "completed", releaseNotes: novita }],
-      }),
-    });
-    dillo(`messo sulla pista «${pista}», con le novita' in ${novita.length} lingue`);
-
-    /* Prima di consegnare si chiede a lui se va bene: e' l'unico modo di
-     * scoprire un guaio **senza** averlo pubblicato. */
-    await chiedi(prendi, perApp(`/edits/${quale}:validate`), { metodo: "POST", gettone });
-    dillo("il negozio dice che va bene");
-
-    if (prova) {
-      await chiedi(prendi, perApp(`/edits/${quale}`), { metodo: "DELETE", gettone });
-      dillo("--prova: la modifica e' stata buttata, nel negozio non e' cambiato niente");
-      return { versione: numero, pista, pubblicato: false };
-    }
-
-    await chiedi(prendi, perApp(`/edits/${quale}:commit`), { metodo: "POST", gettone });
-    dillo(`pubblicato: la ${numero} e' sulla pista «${pista}»`);
-
-    /* E adesso si guarda se c'e' davvero. Un `commit` riuscito dice che il
-     * negozio ha preso la modifica, non che i tester vedranno qualcosa: fra le
-     * due cose c'e' la lavorazione del pacchetto, e a volte una revisione. */
-    const sulla = await cosaCEeSullaPista({ pista, gettone, prendi, aspetta });
-    const mia = (sulla || []).find((una) => una.versioni.includes(numero));
-    if (mia) {
-      dillo(`il negozio conferma: la ${numero} e' sulla pista «${pista}», stato ${mia.stato}`);
-      return { versione: numero, pista, pubblicato: true, confermato: true, stato: mia.stato };
-    }
-    /* Non si fa fallire: la modifica e' stata consegnata davvero, e dire di no
-     * sarebbe sbagliato quanto il verde di prima. Si dice quello che si sa. */
-    const altre = (sulla || []).flatMap((una) => una.versioni);
-    dillo(
-      `ATTENZIONE: il negozio non mi conferma la ${numero} sulla pista «${pista}»` +
-        (altre.length ? ` (li' vedo la ${altre.join(", ")})` : " (non vedo nessuna versione)") +
-        ". La consegna e' andata: il pacchetto puo' essere ancora in lavorazione o in revisione. " +
-        "Da controllare nella Play Console, o con --piste.",
-    );
-    return { versione: numero, pista, pubblicato: true, confermato: false, stato: "" };
+    return await fai(quale);
   } catch (errore) {
     /* Una modifica aperta e mai consegnata resta li' a scadere, e la prossima
      * volta nessuno sa cosa ci fosse dentro. */
@@ -362,6 +315,169 @@ export async function porta({
     }
     throw errore;
   }
+}
+
+/* Mette una versione gia' caricata su una pista, dentro la modifica aperta. */
+async function sullaPista({ quale, pista, numero, novita, gettone, prendi }) {
+  await chiedi(prendi, perApp(`/edits/${quale}/tracks/${encodeURIComponent(pista)}`), {
+    metodo: "PATCH",
+    gettone,
+    tipo: "application/json",
+    corpo: JSON.stringify({
+      releases: [{ versionCodes: [String(numero)], status: "completed", releaseNotes: novita }],
+    }),
+  });
+}
+
+/* E adesso si guarda se c'e' davvero. Un `commit` riuscito dice che il negozio
+ * ha preso la modifica, non che i tester vedranno qualcosa: fra le due cose
+ * c'e' la lavorazione del pacchetto, e a volte una revisione. */
+async function eCiSta({ numero, pista, gettone, prendi, aspetta, dillo }) {
+  const sulla = await cosaCEeSullaPista({ pista, gettone, prendi, aspetta });
+  const mia = (sulla || []).find((una) => una.versioni.includes(numero));
+  if (mia) {
+    dillo(`il negozio conferma: la ${numero} e' sulla pista «${pista}», stato ${mia.stato}`);
+    return { pista, confermato: true, stato: mia.stato };
+  }
+  /* Non si fa fallire: la modifica e' stata consegnata davvero, e dire di no
+   * sarebbe sbagliato quanto il verde di prima. Si dice quello che si sa. */
+  const altre = (sulla || []).flatMap((una) => una.versioni);
+  dillo(
+    `ATTENZIONE: il negozio non mi conferma la ${numero} sulla pista «${pista}»` +
+      (altre.length ? ` (li' vedo la ${altre.join(", ")})` : " (non vedo nessuna versione)") +
+      ". La consegna e' andata: il pacchetto puo' essere ancora in lavorazione o in revisione. " +
+      "Da controllare nella Play Console, o con --piste.",
+  );
+  return { pista, confermato: false, stato: "" };
+}
+
+/**
+ * Mette una versione **gia' nel negozio** su altre piste, senza ricaricarla.
+ *
+ * Serve per `production`, e serve perche' il negozio rifiuta un `versionCode`
+ * gia' visto: quello che sulle altre piste e' un caricamento, qui e' uno
+ * spostamento. Va in una modifica sua apposta — se il negozio quella pista non
+ * la concede, quello che era andato prima resta dov'e'.
+ */
+export async function promuovi({
+  numero,
+  piste,
+  novita,
+  gettone,
+  prendi = globalThis.fetch,
+  dillo = () => {},
+  aspetta = (quanto) => new Promise((ok) => setTimeout(ok, quanto)),
+}) {
+  const dove = (Array.isArray(piste) ? piste : [piste]).filter(Boolean);
+  if (!dove.length) return [];
+  await dentroUnaModifica({ gettone, prendi, dillo }, async (quale) => {
+    for (const pista of dove) {
+      await sullaPista({ quale, pista, numero, novita, gettone, prendi });
+      dillo(`messa la ${numero} sulla pista «${pista}», senza ricaricarla`);
+    }
+    await chiedi(prendi, perApp(`/edits/${quale}:validate`), { metodo: "POST", gettone });
+    await chiedi(prendi, perApp(`/edits/${quale}:commit`), { metodo: "POST", gettone });
+  });
+  const esiti = [];
+  for (const pista of dove)
+    esiti.push(await eCiSta({ numero, pista, gettone, prendi, aspetta, dillo }));
+  return esiti;
+}
+
+/**
+ * Porta il pacchetto su, e lo pubblica sulle piste.
+ *
+ * Si carica una volta sola: il `versionCode` e' unico per tutta l'app, e lo
+ * stesso pacchetto si mette su quante piste si vuole. `production`, se c'e',
+ * la fa [promuovi] in una modifica tutta sua e per ultima: e' l'unica che il
+ * negozio puo' negare, e un suo rifiuto non deve portarsi via alpha.
+ */
+export async function porta({
+  pacco,
+  piste,
+  novita,
+  segreto = process.env.NEGOZIO_GOOGLE || "",
+  prendi = globalThis.fetch,
+  prova = false,
+  dillo = () => {},
+  /* Quanto si aspetta fra un tentativo e l'altro di riguardare la pista: le
+   * prove lo passano a zero, che se no aspettano davvero. */
+  aspetta = (quanto) => new Promise((ok) => setTimeout(ok, quanto)),
+}) {
+  const dove = (Array.isArray(piste) ? piste : [piste]).filter(Boolean);
+  if (!dove.length) throw new Error("su quale pista? Non ne e' stata detta nessuna");
+  /* Se `production` e' l'unica chiesta non c'e' niente da proteggere, e si fa
+   * tutto in un giro solo come le altre. */
+  const subito = dove.length === 1 ? dove : dove.filter((una) => una !== "production");
+  const dopo = dove.filter((una) => !subito.includes(una));
+
+  const credenziale = ilCredenziale(segreto);
+  const byte = readFileSync(pacco);
+  dillo(`${basename(pacco)}: ${quantoPesa(byte.length)}`);
+
+  const gettone = await ilGettone(credenziale, prendi);
+  dillo(`entrato nel negozio come ${credenziale.posta}`);
+
+  const numero = await dentroUnaModifica({ gettone, prendi, dillo }, async (quale) => {
+    const salito = await chiedi(
+      prendi,
+      `${NEGOZIO}/upload/androidpublisher/v3/applications/${encodeURIComponent(
+        COME_SI_CHIAMA,
+      )}/edits/${quale}/bundles?uploadType=media`,
+      { metodo: "POST", gettone, corpo: byte, tipo: "application/octet-stream" },
+    );
+    const quanto = Number(salito?.versionCode);
+    if (!Number.isInteger(quanto) || quanto <= 0) {
+      throw new Error("il negozio ha preso il pacchetto ma non dice quale versione sia");
+    }
+    dillo(`caricato: versione ${quanto}`);
+
+    for (const pista of subito) {
+      await sullaPista({ quale, pista, numero: quanto, novita, gettone, prendi });
+      dillo(`messo sulla pista «${pista}», con le novita' in ${novita.length} lingue`);
+    }
+
+    /* Prima di consegnare si chiede a lui se va bene: e' l'unico modo di
+     * scoprire un guaio **senza** averlo pubblicato. */
+    await chiedi(prendi, perApp(`/edits/${quale}:validate`), { metodo: "POST", gettone });
+    dillo("il negozio dice che va bene");
+
+    if (prova) {
+      await chiedi(prendi, perApp(`/edits/${quale}`), { metodo: "DELETE", gettone });
+      dillo("--prova: la modifica e' stata buttata, nel negozio non e' cambiato niente");
+      return quanto;
+    }
+
+    await chiedi(prendi, perApp(`/edits/${quale}:commit`), { metodo: "POST", gettone });
+    dillo(`pubblicato: la ${quanto} e' sulle piste ${subito.map((una) => `«${una}»`).join(", ")}`);
+    return quanto;
+  });
+
+  if (prova) {
+    if (dopo.length) {
+      dillo(
+        `--prova: ${dopo.map((una) => `«${una}»`).join(", ")} non si prova, ` +
+          "perche' una promozione vuole una versione che nel negozio c'e' davvero",
+      );
+    }
+    return { versione: numero, piste: dove, pubblicato: false, esiti: [] };
+  }
+
+  const esiti = [];
+  for (const pista of subito)
+    esiti.push(await eCiSta({ numero, pista, gettone, prendi, aspetta, dillo }));
+  if (dopo.length) {
+    esiti.push(
+      ...(await promuovi({ numero, piste: dopo, novita, gettone, prendi, dillo, aspetta })),
+    );
+  }
+  return {
+    versione: numero,
+    piste: dove,
+    pubblicato: true,
+    esiti,
+    confermato: esiti.every((uno) => uno.confermato),
+  };
 }
 
 /* Quello che c'e' davvero su una pista, chiesto al negozio.
@@ -480,7 +596,10 @@ if (process.argv[1] && process.argv[1].endsWith("porta-nel-negozio.mjs")) {
     const pacco = detto.find((una) => !una.startsWith("--")) || "";
     try {
       if (!pacco)
-        throw new Error("uso: node strumenti/porta-nel-negozio.mjs <pacco.aab> --pista=…");
+        throw new Error(
+          "uso: node strumenti/porta-nel-negozio.mjs <pacco.aab> --pista=… " +
+            "(anche piu' d'una, separate da una virgola)",
+        );
       /* Il pacchetto prima di tutto il resto, e detto con parole: un `ENOENT`
        * in mezzo a una corsa manda a cercare un guasto che non c'e'. Quasi
        * sempre e' una cosa sola — lo zip di GitHub non e' stato scompattato, e
@@ -493,9 +612,9 @@ if (process.argv[1] && process.argv[1].endsWith("porta-nel-negozio.mjs")) {
             "(l'artefatto di GitHub e' uno zip: dentro c'e' app-release.aab)",
         );
       }
-      const pista = laPista(parola("pista"), { davvero: detto.includes("--davvero") });
+      const piste = lePisteDette(parola("pista"), { davvero: detto.includes("--davvero") });
       const novita = leNovita(join(RADICE, CARTELLA_DELLE_NOVITA));
-      porta({ pacco, pista, novita, prova: detto.includes("--prova"), dillo }).catch(vaMale);
+      porta({ pacco, piste, novita, prova: detto.includes("--prova"), dillo }).catch(vaMale);
     } catch (errore) {
       vaMale(errore);
     }
