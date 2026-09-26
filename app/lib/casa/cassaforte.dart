@@ -45,8 +45,17 @@ class CassaforteDelSistema implements Cassaforte {
   /// portachiavi lo metterebbe nelle copie di iCloud e lo porterebbe su un
   /// iPhone nuovo, e il segno che apre casa non deve uscire dal telefono a
   /// cui e' stato dato.
+  ///
+  /// Su Android le regole di prima (`encryptedSharedPreferences`) non ci sono
+  /// piu': la libreria di Google su cui stavano e' stata abbandonata. Dalla 10
+  /// il pacchetto sposta da se' i segni salvati li' nel suo portachiavi nuovo,
+  /// al primo avvio, e se lo spostamento non riesce continua a leggerli dal
+  /// posto vecchio: chi aggiorna non riabbina niente. La 10 e non subito la
+  /// 11 per questo — la 11 lo spostamento non lo fa piu', e i segni rimasti
+  /// indietro li perderebbe. Si sale alla 11 quando le case sono passate tutte
+  /// dalla 10.
   static const portachiavi = FlutterSecureStorage(
-    aOptions: AndroidOptions(encryptedSharedPreferences: true),
+    aOptions: AndroidOptions(),
     iOptions: IOSOptions(
       accessibility: KeychainAccessibility.first_unlock_this_device,
     ),

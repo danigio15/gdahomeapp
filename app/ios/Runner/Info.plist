@@ -44,6 +44,13 @@
 	     senza trovarla mai. Da fuori si passa dal centralino e questo non
 	     serve; dentro casa e' la differenza fra funzionare e non funzionare,
 	     ed e' esattamente il collegamento piu' veloce dei due. -->
+	<!-- Il navigatore (gdanav, dentro l'app): la posizione per guidare, e il
+	     Bluetooth per il dongle OBD che legge la batteria dell'auto. Tutte e
+	     due solo quando si apre il navigatore, e solo mentre l'app e' aperta. -->
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Serve al navigatore, per mostrarti sulla mappa e guidarti fino a destinazione.</string>
+	<key>NSBluetoothAlwaysUsageDescription</key>
+	<string>Serve al navigatore solo se colleghi un dongle OBD, per leggere la batteria della tua auto.</string>
 	<key>NSLocalNetworkUsageDescription</key>
 	<string>Serve a parlare con la tua Home Assistant quando sei in casa, direttamente sulla tua rete, senza passare da internet. Fuori casa non viene usato.</string>
 	<key>LSRequiresIPhoneOS</key>

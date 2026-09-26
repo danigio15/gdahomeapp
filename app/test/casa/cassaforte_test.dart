@@ -16,11 +16,11 @@ class _PortachiaviFinto extends FlutterSecureStorage {
   @override
   Future<String?> read({
     required String key,
-    IOSOptions? iOptions,
+    AppleOptions? iOptions,
     AndroidOptions? aOptions,
     LinuxOptions? lOptions,
     WebOptions? webOptions,
-    MacOsOptions? mOptions,
+    AppleOptions? mOptions,
     WindowsOptions? wOptions,
   }) async => dentro[key];
 
@@ -28,11 +28,11 @@ class _PortachiaviFinto extends FlutterSecureStorage {
   Future<void> write({
     required String key,
     required String? value,
-    IOSOptions? iOptions,
+    AppleOptions? iOptions,
     AndroidOptions? aOptions,
     LinuxOptions? lOptions,
     WebOptions? webOptions,
-    MacOsOptions? mOptions,
+    AppleOptions? mOptions,
     WindowsOptions? wOptions,
   }) async {
     scritture += 1;
@@ -46,11 +46,11 @@ class _PortachiaviFinto extends FlutterSecureStorage {
   @override
   Future<void> delete({
     required String key,
-    IOSOptions? iOptions,
+    AppleOptions? iOptions,
     AndroidOptions? aOptions,
     LinuxOptions? lOptions,
     WebOptions? webOptions,
-    MacOsOptions? mOptions,
+    AppleOptions? mOptions,
     WindowsOptions? wOptions,
   }) async => dentro.remove(key);
 }
@@ -68,9 +68,12 @@ void main() {
         CassaforteDelSistema.portachiavi.iOptions.toMap()['accessibility'],
         'first_unlock_this_device',
       );
+      /* Su Android i segni salvati dalla 9 stavano nelle preferenze cifrate
+       * di Jetpack: il pacchetto li sposta da se' nel portachiavi nuovo, e
+       * solo se lo spostamento e' acceso. Spento, chi aggiorna riabbina. */
       expect(
         CassaforteDelSistema.portachiavi.aOptions
-            .toMap()['encryptedSharedPreferences'],
+            .toMap()['migrateOnAlgorithmChange'],
         'true',
       );
     },

@@ -30,6 +30,15 @@ val chiaveVera =
 val cELaChiaveVera = chiaveVera.getProperty("storeFile") != null
 val firmaDiProvaChiesta = System.getenv("GDAHOME_FIRMA_DI_PROVA") == "si"
 
+// Il navigatore in auto: di serie acceso, in ogni pacchetto che si pubblica.
+//
+// E' gdahome con gdanav dentro, e in Android Auto parte dalla mappa del
+// navigatore con la casa dietro un tasto: il servizio dell'auto e' di
+// navigazione, e non IOT. Stesso nome e stessa firma di sempre. Le differenze
+// stanno tutte in `src/navigatore`. Per costruire la gdahome di prima, solo
+// IOT in auto, si mette `GDAHOME_NAVIGATORE=no`.
+val colNavigatore = System.getenv("GDAHOME_NAVIGATORE") != "no"
+
 android {
     // La chiave con cui si firmano i pacchetti di prova.
     //
@@ -68,7 +77,10 @@ android {
     }
 
     namespace = "com.gdahome.gdahome"
-    compileSdk = flutter.compileSdkVersion
+    // Almeno la 37: la vuole il Bluetooth del navigatore (reactive_ble, dentro
+    // gdanav). Compilare con una piu' nuova non cambia i telefoni supportati:
+    // quelli li decidono minSdk e targetSdk.
+    compileSdk = maxOf(flutter.compileSdkVersion, 37)
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
@@ -89,6 +101,13 @@ android {
         // flag during build.
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+    }
+
+    if (colNavigatore) {
+        sourceSets.getByName("release") {
+            manifest.srcFile("src/navigatore/AndroidManifest.xml")
+            res.srcDirs("src/navigatore/res")
+        }
     }
 
     buildTypes {

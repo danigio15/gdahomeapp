@@ -1,0 +1,103 @@
+# gdanav dentro gdahome, sempre aggiornato.
+#
+# gdanav — lo schermo, la mappa, la guida e i suoi schermi di Android Auto —
+# arriva dalla sua repository (danigio15/gdanav, packages/gdanav_app), fermo
+# al commit scritto in app/pubspec.lock. Questo workflow lo porta all'ultimo:
+# aggiorna il lucchetto, fa le prove dell'app, e se passano apre (o aggiorna)
+# la richiesta di unione «gdanav aggiornato». Se nella repository e' permessa
+# l'unione automatica, si unisce da sola appena le Prove sono verdi.
+#
+# Quando:
+# - appena gdanav ne ha uno nuovo su main (glielo dice il suo workflow,
+#   `gdanav-aggiornato`, se ha il segreto GDAHOME_TOKEN);
+# - ogni notte comunque, per quello che l'avviso non ha portato;
+# - a mano, da «Run workflow».
+#
+# Gira dal ramo principale, come tutti i workflow a orario e ad avviso.
+name: Aggiorna gdanav
+
+on:
+  repository_dispatch:
+    types: [gdanav-aggiornato]
+  schedule:
+    - cron: "17 3 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: aggiorna-gdanav
+  cancel-in-progress: false
+
+jobs:
+  aggiorna:
+    name: gdanav all'ultimo, con le prove
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          # Col token apposta, se c'e': una spinta fatta col token di GitHub
+          # non fa partire le Prove sulla richiesta di unione.
+          token: ${{ secrets.GDAHOME_TOKEN || github.token }}
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          channel: stable
+          cache: true
+
+      - name: L'ultimo gdanav
+        id: gdanav
+        working-directory: app
+        run: |
+          prima=$(grep -A6 '^  gdanav_app:' pubspec.lock | awk '/resolved-ref/ {gsub(/"/,""); print $2}')
+          flutter pub upgrade gdanav_app
+          dopo=$(grep -A6 '^  gdanav_app:' pubspec.lock | awk '/resolved-ref/ {gsub(/"/,""); print $2}')
+          echo "prima=$prima" >> "$GITHUB_OUTPUT"
+          echo "dopo=$dopo" >> "$GITHUB_OUTPUT"
+          if [ "$prima" = "$dopo" ]; then
+            echo "gdanav e' gia' all'ultimo (${dopo:0:7})."
+            echo "cambiato=no" >> "$GITHUB_OUTPUT"
+          else
+            echo "gdanav: ${prima:0:7} -> ${dopo:0:7}"
+            echo "cambiato=si" >> "$GITHUB_OUTPUT"
+          fi
+
+      # Le stesse prove che le Prove fanno all'app: un gdanav che rompe
+      # gdahome non arriva nemmeno alla richiesta di unione.
+      - name: L'analisi
+        if: steps.gdanav.outputs.cambiato == 'si'
+        working-directory: app
+        run: flutter analyze
+      - name: Le prove
+        if: steps.gdanav.outputs.cambiato == 'si'
+        working-directory: app
+        run: flutter test
+
+      - name: La richiesta di unione
+        if: steps.gdanav.outputs.cambiato == 'si'
+        env:
+          GH_TOKEN: ${{ secrets.GDAHOME_TOKEN || github.token }}
+          PRIMA: ${{ steps.gdanav.outputs.prima }}
+          DOPO: ${{ steps.gdanav.outputs.dopo }}
+        run: |
+          ramo="gdanav/aggiornato"
+          git config user.name "gdahome"
+          git config user.email "gdahome@users.noreply.github.com"
+          git checkout -B "$ramo"
+          git add app/pubspec.lock
+          git commit -m "gdanav aggiornato: ${PRIMA:0:7} -> ${DOPO:0:7}"
+          git push --force origin "$ramo"
+          corpo="gdanav (schermo, mappa, guida e Android Auto) passa da ${PRIMA:0:7} a ${DOPO:0:7}.
+
+          Cosa cambia: https://github.com/danigio15/gdanav/compare/${PRIMA}...${DOPO}
+
+          Analisi e prove dell'app gia' passate con questo gdanav."
+          if gh pr view "$ramo" --json state -q .state 2>/dev/null | grep -q OPEN; then
+            gh pr edit "$ramo" --title "gdanav aggiornato (${DOPO:0:7})" --body "$corpo"
+          else
+            gh pr create --head "$ramo" --title "gdanav aggiornato (${DOPO:0:7})" --body "$corpo"
+          fi
+          # Unione automatica appena le Prove sono verdi, se la repository la
+          # permette (Settings → General → Allow auto-merge).
+          gh pr merge "$ramo" --auto --squash || echo "::notice::Unione automatica non permessa: la richiesta resta da unire a mano."
