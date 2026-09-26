@@ -238,6 +238,57 @@ void main() {
     ]);
   });
 
+  test('la distanza dell\'arrivo si sceglie, e si ricorda', () {
+    final c = comandoPer(casa.first)!;
+    final scelti = IComandiScelti(comandi: [c], allArrivo: c.id, metri: 200);
+    final letti = IComandiScelti.leggi(scelti.comeSiScrive);
+    expect(letti.metri, 200);
+    expect(letti.senzaArrivo().metri, 200);
+    expect(IComandiScelti.leggi('{"comandi":[]}').metri, metriDiSolito);
+    expect(IComandiScelti.leggi('{"metri":99999}').metri, metriDiSolito);
+    expect(laDistanza(300), '300 m');
+    expect(laDistanza(1000), '1 km');
+    expect(laDistanza(1500), '1,5 km');
+  });
+
+  testWidgets('la distanza si sceglie sotto il comando dell\'arrivo', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1170, 2532);
+    tester.view.devicePixelRatio = 3;
+    addTearDown(tester.view.reset);
+    IComandiScelti? scritti;
+    final cancello = comandoPer(casa.first)!;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: ComandiInAuto(
+          leggi: () async =>
+              IComandiScelti(comandi: [cancello], allArrivo: cancello.id),
+          scrivi: (s) async {
+            scritti = s;
+            return true;
+          },
+          azioni: () async => const AzioniDellaPlancia([]),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(
+      find.text('200 m'),
+      200,
+      scrollable: find
+          .descendant(
+            of: find.byType(CustomScrollView),
+            matching: find.byType(Scrollable),
+          )
+          .first,
+    );
+    await tester.tap(find.text('200 m'));
+    await tester.pumpAndSettle();
+    expect(scritti?.metri, 200);
+    expect(scritti?.allArrivo, cancello.id);
+  });
+
   test('il servizio della serratura e del lettore si decide premendo', () {
     expect(ilServizioDiAdesso('lock', 'locked'), 'unlock');
     expect(ilServizioDiAdesso('lock', 'unlocked'), 'lock');

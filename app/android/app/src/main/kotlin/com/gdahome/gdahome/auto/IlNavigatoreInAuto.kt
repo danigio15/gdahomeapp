@@ -151,11 +151,13 @@ class SessioneNavigatore : SessioneGdanav({ IlNavigatoreInAuto.salito(it) }) {
 }
 
 /**
- * «Quasi a casa»: a 500 metri da Casa lo schermo dell'auto propone il comando
- * scelto sul telefono per l'arrivo (di solito il cancello).
+ * «Quasi a casa»: a qualche centinaio di metri da Casa — quanti lo si sceglie
+ * sul telefono, 500 se non si e' scelto — lo schermo dell'auto propone il
+ * comando scelto per l'arrivo (di solito il cancello).
  *
  * Dove si e' e dov'e' Casa li sa gdanav (`PonteAuto.qui`, `PonteAuto.casa()`).
- * Si propone solo **arrivando**: dopo essere stati ad almeno un chilometro, e
+ * Si propone solo **arrivando**: dopo essere stati piu' lontani (almeno un
+ * chilometro, o il doppio della distanza scelta), e
  * una volta per arrivo. Partendo da casa, o girando nel quartiere, nessuno
  * vuole un avviso a ogni curva.
  */
@@ -189,14 +191,16 @@ class ArrivoACasa(private val auto: () -> CarContext) {
         val metri = FloatArray(1)
         Location.distanceBetween(qui[0], qui[1], casa.lat, casa.lon, metri)
         val distanza = metri[0]
-        if (distanza > LONTANO_M) {
+        val carContext = auto()
+        val scelti = leggiIComandi(carContext)
+        val vicino = scelti.metri
+        if (distanza > maxOf(LONTANO_M, vicino * 2)) {
             lontano = true
             return
         }
-        if (!lontano || distanza > VICINO_M) return
+        if (!lontano || distanza > vicino) return
         lontano = false
-        val carContext = auto()
-        val comando = leggiIComandi(carContext).arrivo ?: return
+        val comando = scelti.arrivo ?: return
         proponi(carContext, comando)
     }
 
@@ -240,7 +244,6 @@ class ArrivoACasa(private val auto: () -> CarContext) {
 
     companion object {
         private const val OGNI_MS = 5_000L
-        private const val VICINO_M = 500f
         private const val LONTANO_M = 1_000f
         private const val DURATA_MS = 15_000L
         private const val ID_AVVISO = 4_242

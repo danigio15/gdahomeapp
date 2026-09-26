@@ -49,7 +49,8 @@ data class ComandoInAuto(
     val conferma: Boolean,
 )
 
-data class IComandi(val comandi: List<ComandoInAuto>, val arrivo: ComandoInAuto?)
+/** [metri]: a quanti metri da Casa si propone [arrivo], come scelto sul telefono. */
+data class IComandi(val comandi: List<ComandoInAuto>, val arrivo: ComandoInAuto?, val metri: Float = 500f)
 
 fun leggiIComandi(context: Context): IComandi {
     val file = File(context.filesDir, NOME_DEI_COMANDI)
@@ -76,7 +77,8 @@ fun leggiIComandi(context: Context): IComandi {
         }
     }
     val arrivo = json.optString("arrivo", "").trim()
-    return IComandi(comandi, comandi.firstOrNull { it.id == arrivo })
+    val metri = json.optInt("metri", 500).coerceIn(50, 5_000).toFloat()
+    return IComandi(comandi, comandi.firstOrNull { it.id == arrivo }, metri)
 }
 
 /** Preme un comando: se chiede conferma, prima la conferma. */

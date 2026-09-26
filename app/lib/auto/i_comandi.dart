@@ -140,8 +140,29 @@ class ComandoRapido {
 }
 
 /// Quelli scelti, e quale proporre arrivando a casa.
+/// A quanti metri da Casa si propone il comando dell'arrivo, se non si e'
+/// scelto altro.
+const int metriDiSolito = 500;
+
+/// Le distanze fra cui si sceglie: da un cancello in fondo al vialetto a
+/// uno che si apre piano e va chiamato prima.
+const List<int> metriFraCuiScegliere = [
+  100,
+  200,
+  300,
+  500,
+  800,
+  1000,
+  1500,
+  2000,
+];
+
 class IComandiScelti {
-  const IComandiScelti({this.comandi = const [], this.allArrivo});
+  const IComandiScelti({
+    this.comandi = const [],
+    this.allArrivo,
+    this.metri = metriDiSolito,
+  });
 
   final List<ComandoRapido> comandi;
 
@@ -149,12 +170,16 @@ class IComandiScelti {
   /// `null` se non si propone niente.
   final String? allArrivo;
 
+  /// A quanti metri da Casa si propone il comando dell'arrivo.
+  final int metri;
+
   ComandoRapido? get quelloDellArrivo =>
       comandi.where((c) => c.id == allArrivo).firstOrNull;
 
   String get comeSiScrive => jsonEncode({
     'comandi': [for (final c in comandi.take(comandiAlMassimo)) c.comeSiScrive],
     'arrivo': ?allArrivo,
+    'metri': metri,
   });
 
   static IComandiScelti leggi(String detto) {
@@ -167,7 +192,11 @@ class IComandiScelti {
           for (final riga in elenco) ?ComandoRapido.leggi(riga),
       ].take(comandiAlMassimo).toList();
       final arrivo = letto['arrivo'];
+      final metri = letto['metri'];
       return IComandiScelti(
+        metri: metri is int && metri >= 50 && metri <= 5000
+            ? metri
+            : metriDiSolito,
         comandi: comandi,
         allArrivo: arrivo is String && comandi.any((c) => c.id == arrivo)
             ? arrivo
@@ -181,13 +210,18 @@ class IComandiScelti {
   /// Le ricette, per chi esegue il tasto premuto in macchina.
   List<RicettaDellAzione> get ricette => [for (final c in comandi) c.ricetta];
 
-  IComandiScelti con({List<ComandoRapido>? comandi, String? allArrivo}) =>
-      IComandiScelti(
-        comandi: comandi ?? this.comandi,
-        allArrivo: allArrivo ?? this.allArrivo,
-      );
+  IComandiScelti con({
+    List<ComandoRapido>? comandi,
+    String? allArrivo,
+    int? metri,
+  }) => IComandiScelti(
+    comandi: comandi ?? this.comandi,
+    allArrivo: allArrivo ?? this.allArrivo,
+    metri: metri ?? this.metri,
+  );
 
-  IComandiScelti senzaArrivo() => IComandiScelti(comandi: comandi);
+  IComandiScelti senzaArrivo() =>
+      IComandiScelti(comandi: comandi, metri: metri);
 }
 
 /// Cosa si puo' mettere fra i comandi di questa casa, dalle sue entita'.
@@ -300,7 +334,16 @@ IComandiScelti iPrimiComandi({
               c.genere == GenereDelComando.porta && c.provenienza == 'Garage'),
     ),
   ].take(comandiAlMassimo).toList();
-  final arrivo = scelti.where((c) => c.provenienza == 'Cancello').firstOrNull;
+  /* Il cancello, che venga dalla plancia o dalla casa. */
+  final arrivo =
+      scelti.where((c) => c.provenienza == 'Cancello').firstOrNull ??
+      scelti
+          .where(
+            (c) =>
+                c.genere == GenereDelComando.varco &&
+                c.ricetta.dominio == 'cover',
+          )
+          .firstOrNull;
   return IComandiScelti(comandi: scelti, allArrivo: arrivo?.id);
 }
 

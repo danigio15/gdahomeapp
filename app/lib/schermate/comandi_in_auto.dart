@@ -60,6 +60,13 @@ String cosaFa(ComandoRapido c) {
   };
 }
 
+/// «300 m», «1 km», «1,5 km».
+String laDistanza(int metri) {
+  if (metri < 1000) return '$metri m';
+  final km = metri / 1000;
+  return '${km == km.roundToDouble() ? km.round() : km.toString().replaceAll('.', ',')} km';
+}
+
 /// Le azioni rapide della plancia, dalla sua configurazione nel ponte: tutte,
 /// non solo le sei della fotografia per l'auto. Senza casa collegata, quelle
 /// della fotografia.
@@ -162,6 +169,7 @@ class _ComandiInAutoState extends State<ComandiInAuto> {
       IComandiScelti(
         comandi: comandi,
         allArrivo: s.allArrivo == c.id ? null : s.allArrivo,
+        metri: s.metri,
       ),
     );
   }
@@ -381,10 +389,10 @@ class _ComandiInAutoState extends State<ComandiInAuto> {
               Text(
                 inLingua(
                   it:
-                      'A 500 m da Casa, lo schermo dell\'auto ti propone un '
+                      'Arrivando, lo schermo dell\'auto ti propone un '
                       'comando: «Apro il cancello?»',
                   en:
-                      '500 m from Home, the car screen offers a command: '
+                      'When you arrive, the car screen offers a command: '
                       '"Open the gate?"',
                 ),
                 style: TextStyle(color: colori.onSurfaceVariant),
@@ -406,6 +414,42 @@ class _ComandiInAutoState extends State<ComandiInAuto> {
                   id == null ? scelti.senzaArrivo() : scelti.con(allArrivo: id),
                 ),
               ),
+              if (scelti.allArrivo != null) ...[
+                const SizedBox(height: 12),
+                Text(
+                  inLingua(
+                    it: 'Quanto prima di arrivare',
+                    en: 'How far before arriving',
+                  ),
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
+                const SizedBox(height: 6),
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 6,
+                  children: [
+                    for (final m in metriFraCuiScegliere)
+                      ChoiceChip(
+                        label: Text(laDistanza(m)),
+                        selected: scelti.metri == m,
+                        onSelected: (_) => _cambia(scelti.con(metri: m)),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  inLingua(
+                    it:
+                        'Si propone una volta per arrivo, dopo essere stati '
+                        'più lontani.',
+                    en: 'Offered once per arrival, after being further away.',
+                  ),
+                  style: TextStyle(
+                    fontSize: 12.5,
+                    color: colori.onSurfaceVariant,
+                  ),
+                ),
+              ],
             ],
           ),
         ),
