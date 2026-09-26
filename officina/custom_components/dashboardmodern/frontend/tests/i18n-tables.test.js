@@ -73,6 +73,13 @@ const REACHED_OTHERWISE = new Set([
    * scritti da nessuna parte: li mieta dal guscio, che li tiene in italiano
    * soltanto e li passa cosi' come sono. */
   "cerca-nel-config-section.js",
+  /* E il pannello della barra sotto il meteo scrive i nomi delle sue cinque
+   * caselle — Intensità della pioggia, Sensore della cassetta della posta —
+   * che stanno in `src/core/come-sta-la-casa.js`, anche lui fra i cataloghi
+   * importati e anche lui con le righe `{ it, en }`. Stanno di là perché non
+   * le legge solo lui: la ricerca nel Config le nomina per mandare dove si
+   * compilano una casella che nessuno ha ancora aperto (#131). */
+  "come-sta-la-casa-section.js",
 ]);
 
 /* L'elenco si legge dal sorgente, non si importa: l'estrattore riscrive i file

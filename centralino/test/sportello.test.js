@@ -22,7 +22,11 @@ const SEGRETO = "9".repeat(64);
 
 /* Il centralino vero qui non serve: lo sportello non lo tocca, e il server gli
  * chiede solo quanti sono per scriverlo in `/salute`. */
-const centralinoFinto = { quanteCase: () => 1, quantiTelefoni: () => 0 };
+const centralinoFinto = {
+  quanteCase: () => 1,
+  quantiCollegamenti: () => 0,
+  quanteAppAperte: () => 0,
+};
 
 /* GitHub finto: tiene quello che gli e' stato chiesto, e risponde come
  * risponderebbe quello vero alle sole chiamate che facciamo. */

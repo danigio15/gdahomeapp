@@ -1162,10 +1162,27 @@ export function openApplianceEditor(index) {
    * riaprendo la scheda molte volte che se ne accumulavano. */
   chiudiLaScheda(doc?.getElementById("dm-appliance-editor-modal"));
   const visual = deviceVisualKey(device);
-  const totalInitial =
-    [device.total_energy_entity, device.history_entity, device.report_entity]
-      .map(clean)
-      .find(cumulativeEntity) || "";
+  /* «Rimuovo il contatore del consumo totale e al salvataggio viene aggiunto
+   * di nuovo automaticamente» (#130).
+   *
+   * Non veniva aggiunto: veniva RILETTO da un'altra casella. Questo campo si
+   * riempiva col primo contatore cumulativo fra tre — `total_energy_entity`,
+   * `history_entity`, `report_entity` — e al salvataggio il Report tiene la
+   * sua scelta (`report_entity: existingReport || total`), apposta, perche' il
+   * Report puo' voler usare un sensore di periodo. Cosi' chi svuotava il campo
+   * lo svuotava davvero, e riaprendo se lo ritrovava: la maschera glielo
+   * ripescava dal Report.
+   *
+   * Il ripiego serve, ma solo a chi non e' mai passato di qui: una scheda
+   * arrivata da una configurazione vecchia, dove il contatore stava solo in
+   * `history_entity`, deve farlo vedere. Per chi invece ha gia' scelto —
+   * `dm_campi_scelti` — una casella vuota e' una risposta, non una domanda, ed
+   * e' la stessa regola che vale per tutte le altre. */
+  const haGiaScelto = device?.metadata?.[CAMPI_SCELTI] === true;
+  const dovePescare = haGiaScelto
+    ? [device.total_energy_entity]
+    : [device.total_energy_entity, device.history_entity, device.report_entity];
+  const totalInitial = dovePescare.map(clean).find(cumulativeEntity) || "";
   const controlInitial =
     clean(device.control_entity || device.switch_entity) || inferredControlEntity(device);
   const powerInitial =

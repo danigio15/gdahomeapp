@@ -274,8 +274,10 @@ void main() {
     },
   );
 
-  test('il centralino conta le case e i telefoni, e non sa altro', () async {
-    /* La promessa che regge tutto il resto. Il centralino vede passare i
+  test(
+    'il centralino conta le case e i collegamenti, e non sa altro',
+    () async {
+      /* La promessa che regge tutto il resto. Il centralino vede passare i
      * byte di questo collegamento: se ci si potesse leggere dentro, «non
      * serve fidarsi di chi lo gestisce» sarebbe una frase e non un fatto.
      *
@@ -284,25 +286,33 @@ void main() {
      * ci sia dentro niente di leggibile. Qui si prova il fatto piu' piccolo e
      * piu' concreto: il centralino conosce l'identificativo della casa, che
      * gli serve a instradare, e non conosce nessun segno. */
-    final quello = centralino;
-    if (quello == null) {
-      markTestSkipped('questo centralino non tiene i conti');
-      return;
-    }
-    final collegamento = await abbinaEApri();
-    try {
-      final salute = await quello.salute();
-      expect(salute['case'], 1);
-      expect(salute['telefoni'], 1);
-      expect(
-        salute.toString(),
-        isNot(contains(collegamento.casa!.segno)),
-        reason: 'il segno al centralino non passa',
-      );
-    } finally {
-      await collegamento.chiudi();
-    }
-  });
+      final quello = centralino;
+      if (quello == null) {
+        markTestSkipped('questo centralino non tiene i conti');
+        return;
+      }
+      final collegamento = await abbinaEApri();
+      try {
+        final salute = await quello.salute();
+        expect(salute['case'], 1);
+        /* Due numeri e non uno: `collegamenti` sono i fili aperti verso il
+       * centralino, `app` quanti di quei fili sono un telefono con l'app
+       * davanti. Il nome vecchio, `telefoni`, diceva il primo e sembrava il
+       * secondo — nel cruscotto si leggeva «22 telefoni collegati» dove i
+       * telefoni erano molti meno. Qui il collegamento e' uno solo ed e' di
+       * un telefono, quindi valgono uno tutti e due. */
+        expect(salute['collegamenti'], 1);
+        expect(salute['app'], 1);
+        expect(
+          salute.toString(),
+          isNot(contains(collegamento.casa!.segno)),
+          reason: 'il segno al centralino non passa',
+        );
+      } finally {
+        await collegamento.chiudi();
+      }
+    },
+  );
 }
 
 Future<void> _finoA(

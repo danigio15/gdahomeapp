@@ -27,7 +27,12 @@ import {
   leCaselleDelConfig,
   leCaselleDelGuscio,
   leCaselleDellEnergia,
+  leCaselleDellaBarra,
 } from "../src/core/le-caselle-del-config.js";
+import {
+  IL_RIQUADRO_IN_ITALIANO,
+  LE_CASELLE_DELLA_BARRA,
+} from "../src/core/come-sta-la-casa.js";
 import { COOLING_SLOT_MAP } from "../src/core/energy-projection.js";
 import { conLaParolaAccesa } from "../src/sections/cerca-nel-config-section.js";
 
@@ -186,4 +191,60 @@ test("e continua a non far passare marcatori", () => {
     "&lt;i&gt;<mark>ventola</mark>&lt;/i&gt;",
   );
   assert.equal(conLaParolaAccesa("l'x", "zzz"), "l&#39;x");
+});
+
+/* ── e lo stesso difetto, capitato una seconda volta (#131) ──────────────── */
+
+/* «Scusate ma manca la possibilità di integrare un sensore pioggia?»
+ *
+ * Non mancava: la casella c'è, in fondo alla scheda Home, dentro «Barra sotto
+ * il meteo». Ma il pannello della barra non è né del guscio né di Energia — se
+ * lo disegna la sua sezione — quindi le sue cinque caselle non passavano da
+ * nessuna delle due strade di questo file, e chi cercava «pioggia» leggeva
+ * «Nessuna configurazione contiene questa parola». È la ventola daccapo, in un
+ * altro pannello, e si chiude nello stesso modo: i nomi escono da dove i nomi
+ * già stanno, e nessuno li ribatte. */
+
+test("il sensore della pioggia si trova, anche senza averlo mai scritto", () => {
+  /* Il difetto, detto com'è nato.
+   *
+   * Prima «Pioggia caduta oggi», che comincia con la parola cercata, e poi
+   * «Intensità della pioggia», che la porta in mezzo: è la stessa regola per
+   * cui chi scrive «interruttore» trova «Interruttore ventola» prima di
+   * «Potenza ventola». */
+  const trovate = cercaFraLeCaselle("pioggia", tutte()).map((una) => una.id);
+  assert.deepEqual(trovate, ["dm-casa.pioggiaOggi", "dm-casa.pioggia"]);
+});
+
+test("e si trova cercando il riquadro, come per il raffreddamento", () => {
+  /* «Barra sotto il meteo» è il nome del riquadro, ed è quello che uno si
+   * ricorda di aver visto scorrendo la configurazione. */
+  const trovate = cercaFraLeCaselle("barra sotto", tutte()).map((una) => una.id);
+  assert.deepEqual(trovate, LE_CASELLE_DELLA_BARRA.map((una) => `dm-casa.${una.chiave}`));
+});
+
+test("le caselle della barra sono quelle del nucleo, non un elenco a parte", () => {
+  /* La stessa guardia del raffreddamento: se ne nasce una sesta, o una cambia
+   * nome, questa prova cade prima che cada la ricerca. */
+  assert.deepEqual(
+    leCaselleDellaBarra().map((una) => una.id),
+    LE_CASELLE_DELLA_BARRA.map((una) => `dm-casa.${una.chiave}`),
+  );
+  for (const una of leCaselleDellaBarra()) {
+    assert.ok(una.it && una.en, `${una.id} senza nome`);
+    assert.equal(una.scheda, "sez0", `${una.id} manda fuori dalla scheda Home`);
+    assert.equal(una.dove, IL_RIQUADRO_IN_ITALIANO);
+  }
+});
+
+test("la sezione quei nomi non se li riscrive", () => {
+  /* Il punto di tutto: due nomi per la stessa casella sono due nomi che un
+   * giorno non combaciano più, e allora la ricerca manda dove non c'è più
+   * niente — che fa più danno di una ricerca che non trova. */
+  const sezione = sorgente("src/sections/come-sta-la-casa-section.js");
+  for (const una of LE_CASELLE_DELLA_BARRA)
+    assert.ok(
+      !sezione.includes(`"${una.it}"`),
+      `«${una.it}» è ribattuto nella sezione invece di venire dal nucleo`,
+    );
 });

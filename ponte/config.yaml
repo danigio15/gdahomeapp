@@ -43,7 +43,7 @@ name: gdahome
 #
 # Quello che non cambia: nel negozio «Aggiorna» compare **solo** se questo
 # numero si alza.
-version: "1.6.7"
+version: "1.6.8"
 slug: gdahome
 # Le virgolette non sono un vezzo: dentro c'e' un «due punti» seguito da uno
 # spazio, e in YAML quella e' la cosa che separa una chiave dal suo valore.

@@ -16,14 +16,25 @@ test("editing the lifetime meter preserves an independent current-period Report 
 });
 
 test("legacy history only prefills Total energy when it is actually cumulative", () => {
-  /* Prettier puo' andare a capo dopo l'uguale: la sentinella guarda la
-   * sostanza — le tre caselle, in quest'ordine — non l'impaginazione. */
+  /* Il ripiego sulle altre due caselle resta, per le schede vecchie in cui il
+   * contatore stava solo in `history_entity`. */
   assert.match(
     source,
-    /const totalInitial =\s*\[device\.total_energy_entity, device\.history_entity, device\.report_entity\]/,
+    /\[device\.total_energy_entity, device\.history_entity, device\.report_entity\]/,
   );
   assert.match(source, /\.find\(cumulativeEntity\)/);
   assert.doesNotMatch(source, /device\.total_energy_entity \|\| device\.history_entity/);
+});
+
+test("ma a chi ha già scelto il campo svuotato resta svuotato (#130)", () => {
+  /* «Rimuovo il contatore del consumo totale e al salvataggio viene aggiunto
+   * di nuovo automaticamente.»
+   *
+   * Non veniva aggiunto: veniva riletto dal Report, che al salvataggio tiene
+   * la sua scelta apposta. Il ripiego vale per chi non è mai passato dalla
+   * maschera; per chi ci è passato una casella vuota è una risposta. */
+  assert.match(source, /const haGiaScelto = device\?\.metadata\?\.\[CAMPI_SCELTI\] === true/);
+  assert.match(source, /haGiaScelto\s*\?\s*\[device\.total_energy_entity\]/);
 });
 
 test("total-energy help explicitly rejects the monthly sensor role", () => {

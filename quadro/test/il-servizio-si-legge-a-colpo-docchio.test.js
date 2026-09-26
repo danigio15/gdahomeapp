@@ -79,7 +79,8 @@ const IL_TRAMITE = {
   vivo: true,
   accesoDa: 486000,
   case: 6,
-  telefoni: 9,
+  collegamenti: 9,
+  app: 4,
   segnalazioni: true,
   chat: 3,
   console: true,
@@ -96,7 +97,8 @@ test("i conti del quadro e del tramite ci sono tutti, ognuno con la sua parola",
     ["7", "case seguite"],
     ["2", "installatori"],
     ["6", "case collegate"],
-    ["9", "telefoni collegati"],
+    ["9", "collegamenti aperti"],
+    ["4", "app aperte"],
     ["3", "conversazioni di assistenza"],
   ]) {
     assert.match(
@@ -165,4 +167,21 @@ test("quello che arriva dal server non diventa pagina", () => {
   assert.doesNotMatch(html, /<script>/);
   assert.match(html, /&lt;img/);
   assert.match(html, /&lt;script&gt;/);
+});
+
+test("«collegamenti aperti» e «app aperte» sono due numeri diversi, e si vedono entrambi", () => {
+  /* «Cosa significa 22 telefoni, l'app non è presente in 22 dispositivi?»
+   *
+   * Non lo era: quel numero contava i CANALI aperti in quell'istante — la
+   * stessa persona con l'app e una scheda del browser ne teneva due — e ci
+   * finivano dentro anche gli abbinamenti in corso, che un telefono abbinato
+   * non lo sono ancora. La parola diceva una cosa e il numero ne misurava
+   * un'altra.
+   *
+   * Adesso sono due mattonelle: i fili aperti in tutto, e quanti di quelli
+   * sono davvero l'app di qualcuno che sta guardando. */
+  const html = disegna({ ...IL_QUADRO, tramite: { ...IL_TRAMITE, collegamenti: 22, app: 7 } });
+  assert.match(html, /<b>22<\/b><span>collegamenti aperti<\/span>/);
+  assert.match(html, /<b>7<\/b><span>app aperte<\/span>/);
+  assert.doesNotMatch(html, /telefoni collegati/, "la parola che mentiva non c'è più");
 });

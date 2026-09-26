@@ -856,6 +856,32 @@ export async function loadAtomicEnergyBundle(
   );
 }
 
+/* Le caselle vuote viste DUE volte di fila, e solo quelle.
+ *
+ * «Statistiche a lungo termine mancanti» e' una frase che manda qualcuno a
+ * controllare la configurazione dei sensori, e per questo non si dice alla
+ * prima lettura. Una casella torna vuota anche quando il Recorder, in quel
+ * momento, non ha risposto — succede appena l'add-on riparte, col database
+ * ancora freddo — e la lettura dopo la riempie. Dal campo: «poi si toglie quel
+ * messaggio e mostra i dati corretti», cioe' l'avviso mandava a cercare un
+ * guasto che non c'era.
+ *
+ * Un contatore che le statistiche non ce le ha davvero resta vuoto anche al
+ * giro successivo, e quello arriva comunque entro un minuto
+ * (`RIPOSO_ENERGIA_MS`): si dice allora, con un minuto di ritardo e la
+ * certezza di dire una cosa vera. */
+function laChiaveDelMancante({ kind, plan }) {
+  return `${kind}:${plan.group}.${plan.key}:${plan.entity}`;
+}
+
+export function confermaIMancanti(mancanti, primaErano) {
+  const elenco = mancanti || [];
+  return {
+    confermati: elenco.filter((uno) => primaErano?.has?.(laChiaveDelMancante(uno))),
+    adesso: new Set(elenco.map(laChiaveDelMancante)),
+  };
+}
+
 /* La ragione che va scritta sopra i numeri per QUESTO pacchetto: prima la
  * domanda caduta, che si riprova da sola; poi le caselle che il Recorder non
  * puo' riempire, che invece vanno configurate. */
@@ -2009,7 +2035,13 @@ async function eseguiIlRefresh(period, carico) {
      * sempre — a chiedere al Recorder una cosa che non dipende dal Recorder:
      * un contatore senza statistiche a lungo termine non ne mette su perche'
      * glielo si richiede. */
-    segnaLaRagione(ragioneDelPacchetto(bundle), true);
+    /* Non alla prima lettura: vedi `confermaIMancanti`. */
+    const { confermati, adesso } = confermaIMancanti(bundle.mancanti, state.mancantiDiPrima);
+    state.mancantiDiPrima = adesso;
+    segnaLaRagione(
+      ragioneDelPacchetto({ caduta: bundle.caduta, mancanti: confermati }),
+      true,
+    );
     root.dispatchEvent?.(new CustomEvent("dashboardmodern:period-bundle", { detail: bundle }));
     root.dispatchEvent?.(new CustomEvent("dashboardmodern:energy-stable", { detail: bundle }));
     return true;

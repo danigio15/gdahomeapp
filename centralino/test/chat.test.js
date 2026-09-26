@@ -17,7 +17,11 @@ const ALTRA = `casa_${"9a8b7c6d".repeat(4)}`;
 const SEGRETO = "5".repeat(64);
 const CHIAVE = "chiave-della-console-lunga-abbastanza";
 
-const centralinoFinto = { quanteCase: () => 0, quantiTelefoni: () => 0 };
+const centralinoFinto = {
+  quanteCase: () => 0,
+  quantiCollegamenti: () => 0,
+  quanteAppAperte: () => 0,
+};
 
 async function banco({ chiave = CHIAVE } = {}) {
   let orologio = Date.UTC(2026, 0, 1);

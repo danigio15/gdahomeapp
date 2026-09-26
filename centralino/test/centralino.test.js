@@ -266,7 +266,7 @@ test("quando la casa se ne va, i suoi telefoni se ne accorgono subito", async ()
 
     await telefono.chiusa;
     await attendi(() => b.centralino.quanteCase() === 0);
-    assert.equal(b.centralino.quantiTelefoni(), 0);
+    assert.equal(b.centralino.quantiCollegamenti(), 0);
   } finally {
     await b.spegni();
   }
@@ -285,7 +285,45 @@ test("quando il telefono se ne va, la casa lo viene a sapere", async () => {
     telefono.chiudi();
 
     await attendi(() => casa.detti.some((uno) => uno.t === "chiudi" && uno.c === canale));
-    assert.equal(b.centralino.quantiTelefoni(), 0);
+    assert.equal(b.centralino.quantiCollegamenti(), 0);
+    casa.chiudi();
+  } finally {
+    await b.spegni();
+  }
+});
+
+/* «Cosa significa 22 telefoni? L'app non è presente in 22 dispositivi.»
+ *
+ * Non lo era. Quel numero contava i canali aperti in quell'istante, e fra
+ * quelli c'erano anche i fili di chi si sta abbinando — che un telefono
+ * abbinato non lo è ancora. Adesso sono due conti separati, e questa prova
+ * tiene ferma la differenza. */
+test("gli abbinamenti in corso contano come collegamenti, non come app aperte", async () => {
+  const b = await banco();
+  try {
+    const casa = unaCasa(b.dove);
+    await casa.entra();
+
+    /* Uno guarda davvero: entra da `/telefono/<casa>`, è già abbinato. */
+    const chiGuarda = unTelefono(b.dove, `/telefono/${casa.id}`);
+    await chiGuarda.aperta;
+    await attendi(() => casa.canali().length === 1);
+    assert.equal(b.centralino.quantiCollegamenti(), 1);
+    assert.equal(b.centralino.quanteAppAperte(), 1);
+
+    /* L'altro si sta abbinando: il filo c'è, l'app aperta no. */
+    const codice = "ABCD2345";
+    casa.manda({ t: "apri-abbinamento", impronta: impronta(codice) });
+    await attendi(() => b.centralino.abbinamenti.size === 1);
+    const chiSiAbbina = unTelefono(b.dove, `/abbinamento/${impronta(codice)}`);
+    await chiSiAbbina.aperta;
+    await attendi(() => casa.canali().length === 2);
+
+    assert.equal(b.centralino.quantiCollegamenti(), 2, "i fili aperti sono due");
+    assert.equal(b.centralino.quanteAppAperte(), 1, "ma l'app aperta è una sola");
+
+    chiGuarda.chiudi();
+    chiSiAbbina.chiudi();
     casa.chiudi();
   } finally {
     await b.spegni();
