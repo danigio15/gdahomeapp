@@ -273,6 +273,28 @@ class Portone extends StatefulWidget {
 /// nessuno.
 const quantoSiAspettaPrimaDiRiposare = Duration(seconds: 30);
 
+/// Se questo stato vuol dire che l'app **non si vede piu'**, e allora il filo
+/// si puo' chiudere.
+///
+/// `inactive` non lo vuol dire. Su `dart:ui` e' «una finestra o una scheda che
+/// non ha il fuoco», ed e' quello che succede sul web ogni volta che si tocca
+/// la plancia: la plancia e' un `iframe`, il fuoco passa a lei, e la pagina
+/// che la ospita lo perde pur restando davanti agli occhi di chi la sta
+/// usando. Contandolo come «se n'e' andata», bastava restare mezzo minuto
+/// dentro la plancia per veder comparire «sto cercando la casa»: il filo si
+/// chiudeva sotto le mani di chi stava guardando, e al ritorno la plancia si
+/// ricaricava da capo. Segnalato da chi la usa dal browser, il 26 settembre.
+///
+/// A dirlo davvero sono `hidden` e `paused` — la scheda dietro le altre,
+/// l'app in tasca — e `detached`. Sul telefono non si perde niente: `dart:ui`
+/// sintetizza `hidden` prima di `paused` proprio perche' chi vuole sapere
+/// «e' nascosta?» scriva un ramo solo, e chi se ne va davvero ci passa in un
+/// istante.
+bool nonSiGuardaPiu(AppLifecycleState stato) =>
+    stato == AppLifecycleState.hidden ||
+    stato == AppLifecycleState.paused ||
+    stato == AppLifecycleState.detached;
+
 class _PortoneState extends State<Portone> with WidgetsBindingObserver {
   late final Collegamento _collegamento;
   /* La guardia del telefono: nel browser e nelle prove non c'e', e allora il
@@ -377,9 +399,15 @@ class _PortoneState extends State<Portone> with WidgetsBindingObserver {
     if (_lucchettoInUso && !_coperto && stato != AppLifecycleState.detached) {
       _cambiaIlVelo(() => _coperto = true);
     }
+    /* «Non ha il fuoco» non vuol dire «non si sta guardando»: vedi
+     * [nonSiGuardaPiu]. Il velo qui sopra si mette lo stesso — e' per
+     * l'istantanea nell'elenco delle app recenti, che il sistema fa anche per
+     * una telefonata — ma il filo non si tocca, e nemmeno l'ora in cui l'app
+     * e' stata lasciata. */
+    if (!nonSiGuardaPiu(stato)) return;
     /* Da quando e' stata lasciata: il lucchetto al ritorno si chiude solo se
      * e' passato piu' di un minuto, e senza quest'ora non si saprebbe. Si
-     * segna la prima volta che se ne va e non a ogni scossone: `inactive` e
+     * segna la prima volta che se ne va e non a ogni scossone: `hidden` e
      * `paused` arrivano tutt'e due, e riscriverla vorrebbe dire un conto che
      * riparte da zero mentre il telefono e' gia' in tasca. */
     _lasciataIl ??= DateTime.now();
