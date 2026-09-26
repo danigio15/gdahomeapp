@@ -18,8 +18,9 @@ si fa una volta sola dalla parte di Apple, e come esce una versione.
 | Niente copie (`allowBackup=false`) | I file dell'app fuori dalle copie di iCloud; i segreti stanno nel portachiavi, solo su questo telefono | `AppDelegate.swift` |
 | Schermata d'avvio coi colori dell'app, chiara e scura | Uguale | `Assets.xcassets/FondoAvvio.colorset` |
 
-Il progetto è **solo iPhone** (niente iPad: meno schermate e una revisione in
-meno), dall'iOS 15, col privacy manifest (`PrivacyInfo.xcprivacy`) e la
+Il progetto è per **iPhone e iPad**: sull'iPad la plancia usa il formato
+largo che ha già, e gira in tutti e quattro i versi (serve per stare accanto
+a un'altra app). gdanav invece, da solo, resta solo iPhone. Dall'iOS 15, col privacy manifest (`PrivacyInfo.xcprivacy`) e la
 cifratura dichiarata (`ITSAppUsesNonExemptEncryption = NO`: è quella
 standard). La posizione e la voce vanno anche in background: servono al
 navigatore con CarPlay acceso e il telefono in tasca.
@@ -108,6 +109,9 @@ revisione. La prima volta servono:
   le fa a 1290 × 2796, in `collaudo/foto/iphone/` (vedi `collaudo/README.md`).
   Quelle del Play Store, a 956, l'App Store non le prende. Le prime cinque
   sono già in `docs/negozio/iphone/`;
+- **le schermate dell'iPad** da 13": `node collaudo/guarda.mjs --ipad` le fa
+  a 2752 × 2064, in `collaudo/foto/ipad/`. Le prime cinque sono in
+  `docs/negozio/ipad/`;
 - **i testi**: sottotitolo (30 caratteri), descrizione, parole chiave (100),
   URL di supporto (`https://gdahome.org`) e della privacy
   (`https://gdahome.org/privacy.html`). Una proposta è in
