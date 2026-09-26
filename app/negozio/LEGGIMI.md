@@ -67,9 +67,31 @@ Il giro «L'app da provare» ha due caselle apposta:
   una prova chiusa aperta a mano si chiama `custom-4697217…`, e indovinarlo non
   si può. Il negozio elenca le piste che hanno già qualcosa sopra: una prova
   appena aperta e ancora vuota qui non si vede.
+- **`negozio`** prende anche più di una pista, separate da una virgola:
+  `internal,alpha,beta`. Il pacchetto **si carica una volta sola** e va su
+  tutte. Non è una comodità: il `versionCode` è unico per tutta l'app e il
+  negozio un numero già visto lo rifiuta, quindi «la stessa versione anche su
+  beta» non si fa ricaricando — e chi ci prova si trova a bruciare un numero
+  di versione per spostare una cosa che aveva già.
+  Una pista per modifica, e non per eleganza: **il negozio rifiuta una pista
+  che nella console non è mai stata preparata**. Chiedendone tre — `internal`,
+  `alpha`, `beta` — ha preso le prime due e su `beta` ha risposto «500,
+  Internal error encountered»; stando tutte nella stessa modifica quel 500 si
+  è portato via anche le due che erano andate. Separate, quella che non prende
+  resta l'unica che non prende, e la corsa diventa rossa dicendo quale.
+- **`davvero_in_produzione`** è la seconda metà della conferma di
+  `production`: quella pista pubblica a tutti quelli che hanno l'app, non ai
+  collaudatori, e non si torna indietro premendo un tasto. Il nome scritto
+  nella casella non basta — sono due gesti diversi apposta. `production` viene
+  fatta **per ultima e in una modifica sua**: è l'unica che il negozio può
+  negare (un account personale nuovo non ce l'ha finché non ha finito la prova
+  chiusa coi suoi collaudatori), e messa in fondo un suo rifiuto lascia in
+  piedi quello che era già andato su alpha.
 - **`prova_del_negozio`** fa tutto il giro vero — costruisce, carica il
-  pacchetto, prepara la pista, chiede a Google se va bene — e poi **butta la
-  modifica** invece di consegnarla. Nessuno si ritrova una versione nuova sul
+  pacchetto, prepara le piste, chiede a Google se va bene — e poi **butta la
+  modifica** invece di consegnarla. Qui le piste vanno tutte nella stessa
+  modifica, al contrario del rilascio vero: è il modo di scoprire quella che il
+  negozio non vuole senza averci ancora speso un'etichetta. Nessuno si ritrova una versione nuova sul
   telefono, e si sa lo stesso se sarebbe andata.
 
 **E non è solo per la prima volta.** Il credenziale, una volta messo,

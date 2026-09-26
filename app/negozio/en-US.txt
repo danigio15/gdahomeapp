@@ -1,5 +1,5 @@
-gdahome comes along for the drive. With Android Auto, your car screen shows what the house is drawing and what the sun is making, who is home, and your quick action buttons — and they really do press, even with the screen off.
+Your car now has the navigator. Say "Ok Google, take me to…" and it goes: map, lanes, the next turn and arrival time on the Android Auto cards, and the turn on the instrument cluster too. The voice ducks the music instead of talking over it.
 
-Also update gdahome in Home Assistant to 1.6.4: the snapshot the car reads is left there by the dashboard, so you need both.
+The house stays one button away: what it is drawing, what the sun is making, who is home, your quick actions.
 
-Phones already paired keep working as before.
+Update gdahome in Home Assistant as well: what the car reads is left there by the dashboard, so you need both.

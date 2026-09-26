@@ -11,6 +11,38 @@ fuori. La plancia dentro continua a dire la sua, e si legge dov'è sempre
 stata: nella pastiglia «La plancia» della console. Sono due numeri perché
 sono due cose.
 
+## 1.6.11
+
+**Quello che il negozio racconta dell'app adesso è l'app che c'è.** Le
+«Novità» del Play Store erano ferme alla 1.6.4 e parlavano del cruscotto della
+casa in auto: quanto tira, quanto fa il sole, chi è rientrato. Solo che da due
+versioni in macchina c'è un navigatore, e l'app si dichiara a Google come tale.
+Un revisore che legge quel testo accanto a quel manifesto trova due cose che
+non si somigliano, ed è il genere di scarto che fa rimandare indietro un'app
+per l'auto. Adesso il testo dice il navigatore, e la casa dopo.
+
+**E la stessa versione si porta su più piste in una volta.** Il numero di
+versione è unico per tutta l'app e il negozio uno già visto lo rifiuta: «la
+metto anche su beta» non si faceva ricaricando, si faceva bruciando una
+versione. Adesso le piste si scrivono con la virgola — `internal,alpha,beta` —
+il pacchetto sale una volta sola e va su tutte. `production` resta a parte:
+vuole la sua spunta, viaggia per ultima e in un giro suo, così se il negozio la
+nega — e a un account nuovo la nega finché la prova chiusa non è finita — quello
+che era già andato sulle altre resta dov'è.
+
+**E la prova ha già trovato qualcosa.** Chieste tre piste, il negozio ha preso
+`internal` e `alpha` e su `beta` — che nella console non è mai stata preparata —
+ha risposto «500, Internal error». Stando tutte nella stessa modifica quel 500
+si è portato via anche le due che erano andate: in un rilascio vero non avrebbe
+pubblicato niente, per colpa di una pista che non c'entrava. Adesso la prima
+pista viaggia col caricamento e le altre una per una, così quella che non prende
+resta l'unica che non prende. In prova invece vanno tutte insieme, ed è voluto:
+una prova serve a scoprire la pista che il negozio non vuole prima di spenderci
+sopra un'etichetta, e per scoprirla bisogna chiedergliele tutte.
+
+Dentro non cambia niente: è la stessa 1.6.10, con un numero nuovo perché
+un'etichetta non si sposta.
+
 ## 1.6.10
 
 **Le modalità di ricarica le dice evcc, non le sa a memoria gdahome.** evcc ha
