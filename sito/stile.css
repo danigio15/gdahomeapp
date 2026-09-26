@@ -384,7 +384,7 @@ section {
   margin-left: auto;
 }
 .navigazione a {
-  padding: 8px 10px;
+  padding: 8px 7px;
   border-radius: 10px;
   text-decoration: none;
   font-size: 0.93rem;
@@ -541,12 +541,18 @@ section {
   }
 }
 
-/* Con sette voci nella barra — «Installatori» e «Contatti» sono arrivate dopo
- * — fra i 940 e i 1120 pixel il tasto «Installa l'add-on» non ci sta piu' di
- * fianco al menu. Va via lui e non il menu: lo stesso tasto sta due centimetri
- * sotto, nella copertina, e il menu e' l'unico modo di arrivare in fondo alla
- * pagina senza scorrerla tutta. */
-@media (max-width: 1120px) {
+/* Con otto voci nella barra — «Installatori», «Contatti» e «gdanav» sono
+ * arrivate dopo — fra i 940 e i 1180 pixel il tasto «Installa l'add-on» non ci
+ * sta piu' di fianco al menu. Va via lui e non il menu: lo stesso tasto sta due
+ * centimetri sotto, nella copertina, e il menu e' l'unico modo di arrivare in
+ * fondo alla pagina senza scorrerla tutta.
+ *
+ * Quando c'e', sta su una riga: in inglese le voci sono piu' lunghe, e un tasto
+ * che va a capo in tre righe esce dalla barra invece di starci dentro. */
+.cappello .attrezzi .bottone {
+  white-space: nowrap;
+}
+@media (max-width: 1180px) {
   .cappello .attrezzi .bottone {
     display: none;
   }
