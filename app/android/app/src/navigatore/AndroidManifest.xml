@@ -30,6 +30,17 @@
                 <action android:name="androidx.car.app.CarAppService" />
                 <category android:name="androidx.car.app.category.NAVIGATION" />
             </intent-filter>
+            <!-- «Ok Google, portami a…», e le richieste che arrivano da
+                 un'altra app (NF-6). A eseguirle e' `SessioneGdanav`, che la
+                 sessione di qui estende: il codice c'era gia', mancava di
+                 dichiararlo. Sta qui e non nel pacchetto perche' un filtro si
+                 dichiara nel manifesto di chi si pubblica, e quello di gdahome
+                 e' questo. -->
+            <intent-filter>
+                <action android:name="androidx.car.app.action.NAVIGATE" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:scheme="geo" />
+            </intent-filter>
         </service>
     </application>
 </manifest>
