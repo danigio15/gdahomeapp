@@ -589,18 +589,18 @@ jobs:
           # La chiave dell'App Store Connect, su disco dove Xcode la cerca.
           mkdir -p ~/.appstoreconnect/private_keys
           printf '%s' "$CHIAVE" > ~/.appstoreconnect/private_keys/AuthKey_$CHIAVE_ID.p8
-          # `-allowProvisioningUpdates` e' quello che evita di doversi
-          # portare dietro certificato e profilo: con la chiave qui sopra,
-          # Xcode se li fa dare da Apple e se li tiene lui. E' il solo modo
-          # per chi non ha un Mac di firmare senza toccare un Mac.
+          # L'archivio si fa senza firma: con la firma automatica Xcode lo
+          # firmerebbe «per sviluppo», e quel profilo vuole almeno un iPhone
+          # registrato nell'account («Your team has no devices»). La firma
+          # per l'App Store la mette l'esportazione qui sotto, con
+          # `-allowProvisioningUpdates` e la chiave: certificato e profilo li
+          # tiene Apple. E' il solo modo per chi non ha un Mac di firmare
+          # senza toccare un Mac. Cosi' e' andata su TestFlight gdanav.
           xcodebuild -workspace ios/Runner.xcworkspace \
             -scheme Runner -configuration Release -sdk iphoneos \
             -archivePath build/gdahome.xcarchive archive \
-            -allowProvisioningUpdates \
-            -authenticationKeyPath ~/.appstoreconnect/private_keys/AuthKey_$CHIAVE_ID.p8 \
-            -authenticationKeyID "$CHIAVE_ID" \
-            -authenticationKeyIssuerID "$EMITTENTE" \
-            DEVELOPMENT_TEAM="$SQUADRA" CODE_SIGN_STYLE=Automatic
+            DEVELOPMENT_TEAM="$SQUADRA" \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY=""
 
       # Su TestFlight si va come nel Play Store: quando lo si chiede. A ogni
       # etichetta, o lanciando a mano con «testflight» spuntato; con «prova
