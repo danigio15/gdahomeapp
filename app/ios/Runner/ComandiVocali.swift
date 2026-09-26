@@ -9,8 +9,9 @@ import gdanav_app
  * quella del telefono. Il lavoro vero lo fa gdanav (`GdanavCarPlay.naviga`).
  *
  * Le frasi sono scritte in inglese, la lingua di base del progetto; quelle
- * italiane stanno in `AppShortcuts.xcstrings` (le frasi per Siri) e
- * `Localizable.xcstrings` (titoli e risposte). */
+ * italiane stanno in `it.lproj/AppShortcuts.strings` (le frasi per Siri: il
+ * formato xcstrings, per quelle, vuole l'iOS 17) e in `Localizable.xcstrings`
+ * (titoli e risposte). */
 
 @available(iOS 16.0, *)
 struct NavigaVerso: AppIntent {
