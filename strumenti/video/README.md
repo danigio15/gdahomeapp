@@ -15,7 +15,7 @@ restano gli attrezzi, e il materiale si rifà con un comando
 | `gdahome-facebook` | 1080×1080 | 0:47 | il quadrato per il feed di Facebook |
 | `gdahome-tiktok` | 1080×1920 | 0:47 | lo stesso, in piedi, per TikTok — e per Reels e Storie |
 | `gdahome-novita` | 1080×1920 | 0:34 | **le novità di una versione**, tutto in dissolvenza; `gdahome-novita-quadrato` è lo stesso per il feed |
-| `gdahome-gdanav` | 1080×1920 | 0:29 | **gdanav**, il navigatore dentro gdahome; `gdahome-gdanav-quadrato` per il feed |
+| `gdahome-gdanav` | 1080×1920 | 0:33 | **gdanav**, il navigatore dentro gdahome, con le schermate vere; `gdahome-gdanav-quadrato` per il feed |
 
 | immagine | misura | dove va |
 |---|---|---|
@@ -53,6 +53,18 @@ node strumenti/video/rendi.mjs --film gdanav   la presentazione di gdanav
 node strumenti/video/rendi.mjs --lingua en     solo l'inglese
 node strumenti/video/rendi.mjs --copertine     le immagini ferme di Facebook
 ```
+
+**Il film di gdanav vuole le schermate dell'app**, e quelle le scatta Flutter,
+non Chromium: sono gli schermi veri dell'app montati su un banco di prova.
+
+```
+cd app && flutter test --update-goldens test/foto/unione_foto.dart
+```
+
+Finiscono in `collaudo/foto/unione/`, che la repository non tiene: senza, nel
+film restano i buchi al posto dei telefoni. L'unica cosa disegnata è la mappa —
+è nativa, e su un banco non c'è. Le schermate sono in **italiano** anche nel
+film inglese: l'attrezzo costruisce l'app nella sua lingua.
 
 Le fotografie della plancia vera si rifanno a parte, una lingua per volta —
 aprono la plancia e aspettano che si configuri da sola:

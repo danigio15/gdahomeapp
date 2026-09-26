@@ -11,13 +11,67 @@
  */
 
 import { inDissolvenza, misuraIlPalco } from "./dissolvenza.js";
-import { mettiInScena, oggetto, segno, t } from "./pezzi.js";
+import { mettiInScena, oggetto, segno, t, telefono } from "./pezzi.js";
 
 misuraIlPalco();
 
 /* Il marchio di gdanav: quello vero, quello che sta dentro l'app
    (`ponte/app/assets/packages/gdanav_app/`). */
 const GDANAV = "../../ponte/app/assets/packages/gdanav_app/assets/logo/gdanav.png";
+
+/* ── Le schermate ─────────────────────────────────────────────────────────
+ *
+ * Sono **vere**: non disegni, non finte. Le scatta l'attrezzo dell'app
+ *
+ *   cd app && flutter test --update-goldens test/foto/unione_foto.dart
+ *
+ * che monta gli schermi veri — la barra, il menu, gdanav, i comandi in auto —
+ * e li fotografa a 1170×2532. Finiscono in `collaudo/foto/unione/`, che la
+ * repository non tiene: si rifanno con quel comando.
+ *
+ * L'unica cosa disegnata e' la **mappa**: e' nativa (MapLibre) e su un banco
+ * di prova non c'e', quindi al suo posto gdanav disegna delle strade. Tutto
+ * il resto di quello schermo — la ricerca, le mete, la scheda dell'auto — e'
+ * quello che si vede sul telefono.
+ */
+const SCHERMATE = "../../collaudo/foto/unione";
+
+/* Le fotografie sono 1170×2532: dentro una cornice larga 314 lo schermo viene
+   alto 680, e la cornice 702. Da li' si scala. */
+const unTelefono = (quale, alto) => `
+  <div style="flex:0 0 auto">
+    ${telefono({
+      alto: 702,
+      scala: alto / 702,
+      barra: false,
+      dentro: `<img src="${SCHERMATE}/${quale}.png" alt=""
+                  style="display:block;width:100%;height:100%;object-fit:fill" />`,
+    })}
+  </div>`;
+
+/* Quanto e' alto il telefono.
+ *
+ * Non «il piu' grande che ci sta»: il piu' grande che ci sta **insieme al
+ * titolo e alla riga sotto**. Chiesto piu' alto, la sua scatola si stringe ma
+ * il disegno no — il telefono e' un elemento flessibile come gli altri — e la
+ * didascalia gli finisce sopra. Per questo sta in un involucro che non si
+ * lascia stringere, e l'altezza e' contata su quello che resta. */
+const ALTO = Number(new URLSearchParams(location.search).get("alto") || 1920);
+const IN_PIEDI = ALTO > 1400;
+const TELEFONO = IN_PIEDI ? 720 : 560;
+
+/* Una carta con dentro una schermata.
+ *
+ * Su un palco quadrato di posto ce n'e' la meta': li' restano il titolo e la
+ * fotografia, e l'occhiello e la riga sotto se ne vanno. Non e' una perdita —
+ * il titolo dice gia' cosa si sta guardando — mentre una fotografia
+ * rimpicciolita per far stare due righe di contorno non si legge piu', e una
+ * schermata che non si legge tanto vale non metterla. */
+const conLaSchermata = ({ occhiello, tinta, titolo, foto, sotto }) => `
+  ${IN_PIEDI ? `<p class="occhiello" style="color:${tinta}">${occhiello}</p>` : ""}
+  <h2 class="titolone piccolo">${titolo}</h2>
+  ${unTelefono(foto, TELEFONO)}
+  ${IN_PIEDI ? `<p class="sottotitolone" style="font-size:34px">${sotto}</p>` : ""}`;
 
 const bollo = (disegno, tinta) => `
   <div class="disegno vetro" style="border-color:${tinta}55;background:${tinta}1c">
@@ -37,46 +91,71 @@ const CARTE = [
       )}</p>`,
   },
 
-  /* ── in macchina ────────────────────────────────────────────────────── */
+  /* ── il navigatore, fotografato ─────────────────────────────────────── */
   {
-    resta: 3.2,
-    dentro: () => `
-      ${bollo("macchine", "#38bdf8")}
-      <p class="occhiello" style="color:#7dd3fc">${t("In auto", "In the car")}</p>
-      <h2 class="titolone">${t("In Android Auto<br />parte lui", "On Android Auto<br />it starts up")}</h2>
-      <p class="sottotitolone">${t(
-        "La mappa davanti, e la casa dietro un tasto. Sul telefono è una voce del menu di gdahome: <b>niente da installare in più</b>.",
-        "The map up front, your home behind one button. On the phone it's an item in the gdahome menu: <b>nothing extra to install</b>.",
-      )}</p>`,
+    resta: 3.6,
+    dentro: () =>
+      conLaSchermata({
+        occhiello: t("Nell'app", "In the app"),
+        tinta: "#7dd3fc",
+        titolo: t("Il navigatore,<br />dentro gdahome", "The navigator,<br />inside gdahome"),
+        foto: "domani-gdanav",
+        sotto: t(
+          "In auto è quello che si apre salendo.",
+          "In the car, it's what opens when you get in.",
+        ),
+      }),
   },
 
-  /* ── l'auto ─────────────────────────────────────────────────────────── */
+  /* ── l'auto, fotografata ────────────────────────────────────────────── */
   {
-    resta: 3.2,
-    dentro: () => `
-      ${bollo("ev", "#4ade80")}
-      <p class="occhiello" style="color:#86efac">${t("L'auto", "Your car")}</p>
-      <h2 class="titolone">${t("La tua auto<br />è già dentro", "Your car<br />is already in")}</h2>
-      <p class="sottotitolone">${t(
-        "Batteria, autonomia, ricarica e posizione arrivano dalla sezione Auto della plancia, in tempo reale. <b>Nessun codice, nessun QR.</b>",
-        "Battery, range, charging and position come from the dashboard's Car section, in real time. <b>No code, no QR.</b>",
-      )}</p>`,
+    resta: 3.6,
+    dentro: () =>
+      conLaSchermata({
+        occhiello: t("L'auto", "Your car"),
+        tinta: "#86efac",
+        titolo: t("La tua auto<br />è già dentro", "Your car<br />is already in"),
+        foto: "domani-gdanav-fonte",
+        sotto: t(
+          "Dalla plancia, in tempo reale. <b>Nessun codice, nessun QR.</b>",
+          "From the dashboard, in real time. <b>No code, no QR.</b>",
+        ),
+      }),
   },
 
-  /* ── i comandi ──────────────────────────────────────────────────────── */
+  /* ── i comandi, fotografati ─────────────────────────────────────────── */
   {
-    resta: 3.2,
-    dentro: () => `
-      ${bollo("azioni", "#fbbf24")}
-      <p class="occhiello" style="color:#fcd34d">${t("Comandi", "Controls")}</p>
-      <h2 class="titolone piccolo">${t("I comandi di casa,<br />sulla mappa", "Your home's controls,<br />on the map")}</h2>
-      <p class="sottotitolone">${t(
-        "Fino a dodici tasti: cancello, luci, scene, serrature. <b>Li scegli sul telefono e li premi guidando</b>, con la conferma dove serve.",
-        "Up to twelve buttons: gate, lights, scenes, locks. <b>You pick them on the phone and press them while driving</b>, with a confirmation where it matters.",
-      )}</p>`,
+    resta: 3.6,
+    dentro: () =>
+      conLaSchermata({
+        occhiello: t("Comandi", "Controls"),
+        tinta: "#fcd34d",
+        titolo: t("I comandi di casa,<br />sulla mappa", "Your home's controls,<br />on the map"),
+        foto: "domani-comandi",
+        sotto: t(
+          "Fino a dodici tasti, premuti guidando.",
+          "Up to twelve buttons, pressed while driving.",
+        ),
+      }),
   },
 
-  /* ── quasi a casa ───────────────────────────────────────────────────── */
+  /* ── la tessera nel menu ────────────────────────────────────────────── */
+  {
+    resta: 3.6,
+    dentro: () =>
+      conLaSchermata({
+        occhiello: t("Nel menu", "In the menu"),
+        tinta: "#7dd3fc",
+        titolo: t("Sempre sott'occhio", "Always in sight"),
+        foto: "domani-menu",
+        sotto: t(
+          "Batteria, chilometri, e due tasti: <b>a casa</b> o <b>al lavoro</b>.",
+          "Battery, kilometres, and two buttons: <b>home</b> or <b>work</b>.",
+        ),
+      }),
+  },
+
+  /* ── quasi a casa  /* ── quasi a casa ───────────────────────────────────────────────────── */
   {
     resta: 3.2,
     dentro: () => `
