@@ -87,12 +87,15 @@ const CARATTERI = [
   "oswald-latin-ext-500-normal.woff2",
 ];
 
-/* Dove si infilano i due script: subito prima del preludio della plancia, che
- * e' il primo codice suo che gira. */
+/* Dove si infilano i tre script: subito prima del preludio della plancia, che
+ * e' il primo codice suo che gira. Il terzo, `velo.js`, e' il velo d'avvio col
+ * nome di gdahome e un orologio che lo toglie se Safari si dimentica di farlo:
+ * il velo sta nella pagina prima del preludio, quindi li' lo trova gia'. */
 const PRELUDIO = '<script src="./bridge-prelude.js"></script>';
 const DA_INFILARE =
   '<script src="../../statico/casa.js"></script>\n' +
-  '<script src="../../casa-in-pagina.js"></script>\n';
+  '<script src="../../casa-in-pagina.js"></script>\n' +
+  '<script src="../../velo.js"></script>\n';
 
 function fermati(perche) {
   process.stderr.write(`${perche}\n`);
@@ -148,7 +151,7 @@ function portaLaPlancia() {
   rmSync(PLANCIA_NEL_SITO, { recursive: true, force: true });
   cpSync(da, PLANCIA_NEL_SITO, { recursive: true });
 
-  /* I due script, prima del preludio. E' l'unica riga della plancia che
+  /* I tre script, prima del preludio. E' l'unica riga della plancia che
    * cambia: se un giorno il preludio si chiamasse diversamente, meglio
    * fermarsi qui che pubblicare una plancia che resta sul velo d'avvio. */
   for (const pagina of ["dashboard.html", "dashboard-en.html"]) {
@@ -161,7 +164,18 @@ function portaLaPlancia() {
           `Cercavo: ${PRELUDIO}\n` +
           "Senza, la casa finta non si attacca e la plancia del sito resta al velo.",
       );
-    writeFileSync(dove, testo.replace(PRELUDIO, DA_INFILARE + PRELUDIO));
+    /* Il velo d'avvio col nome e il marchio di gdahome gia' scritti nella
+     * pagina: `velo.js` li cambia lo stesso, ma arriva dopo, e fino a quel
+     * momento si leggerebbe il nome del progetto da cui la plancia e' nata. Se
+     * un giorno il velo fosse scritto in un altro modo si lascia com'e': e' il
+     * nome su un velo, non una ragione per non pubblicare. */
+    const velo = /(<div id="cd-boot-overlay"><img src=")[^"]*(" alt=""><b>)[^<]*(<\/b>)/;
+    writeFileSync(
+      dove,
+      testo
+        .replace(PRELUDIO, DA_INFILARE + PRELUDIO)
+        .replace(velo, "$1../../statico/marchio.png$2gdahome$3"),
+    );
   }
 
   let quanti = 0;
