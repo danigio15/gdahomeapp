@@ -455,9 +455,23 @@ function pastigliaDellaZona(riga) {
     <i aria-hidden="true">${disegnoDiCasa(riga.glifo, { misura: 20, ripiego: "motion" })}</i><b>${esc(riga.name)}</b></span>`;
 }
 
+/* Un ingresso escluso dall'antifurto lo dice anche qui (#136).
+ *
+ * E' il posto in cui conta piu' che altrove: questa fila sta sopra i tasti che
+ * inseriscono la centrale, e chi sta per premere «Totale» deve vedere che una
+ * finestra e' esclusa PRIMA di premere. Qui non si comanda — lo scudo da premere
+ * sta nella pagina Varchi, dove c'e' l'elenco intero — qui si dice, che e' quello
+ * che serve a questa fila.
+ *
+ * La parola resta quella dell'infisso: esclusa o no, aperta e' aperta. La
+ * differenza la fa il tratteggio, la stessa che usa la carta di la'. */
 function pastigliaDellIngresso(riga) {
   const come = riga.stato === "aperto" ? "aperto" : riga.stato === "chiuso" ? "chiuso" : "muto";
-  return `<span class="dm-sec-zona" data-stato="${esc(come)}" title="${esc(riga.entity)}">
+  const escluso = riga.escluso === "escluso";
+  const titolo = escluso
+    ? `${riga.entity} · ${t("Esclusione dall'antifurto", "Alarm bypass")}`
+    : riga.entity;
+  return `<span class="dm-sec-zona" data-stato="${esc(come)}" data-escluso="${escluso}" title="${esc(titolo)}">
     <i aria-hidden="true">${disegnoDiCasa(riga.glifo, { misura: 20, ripiego: "door" })}</i><b>${esc(riga.name)}</b></span>`;
 }
 
@@ -1477,6 +1491,10 @@ function securityCss() {
 /* Chi non risponde non e' verde: contarlo a posto sarebbe la bugia
    tranquillizzante che le due pagine evitano gia' nel loro conto. */
 .dm-sec-zona[data-stato="muta"],.dm-sec-zona[data-stato="muto"]{opacity:.6}
+/* Escluso dall'antifurto (#136): tratteggio ambra, la stessa lingua della carta
+   nella pagina Varchi. Sopra il colore dello stato, non al posto suo: com'e' la
+   finestra e se la centrale la guarda sono due cose, e si leggono insieme. */
+.dm-sec-zona[data-escluso="true"]{border-style:dashed;border-color:#f59e0b}
 .dm-sec-area{
   flex:1 1 140px;display:flex;flex-direction:column;gap:2px;align-items:flex-start;
   padding:9px 13px;border-radius:14px;font:inherit;text-align:left;cursor:pointer;

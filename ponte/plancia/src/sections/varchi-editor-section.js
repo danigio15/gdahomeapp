@@ -16,15 +16,17 @@
  * disegni, e cosa propone il tasto d'importazione.
  */
 import {
+  CAMPI_IN_PIU,
   CHIAVE_VARCHI,
   varchiConLeFinestre,
   varchiDaImportare,
   varchiDiCasa,
 } from "../core/varchi-di-casa.js";
+import { CAMPO_ESCLUSIONE, esclusioneProposta } from "../core/l-esclusione-del-varco.js";
 import { CHIAVE_VERSI, insiemeInvertiti } from "../core/verso-aperture.js";
 import { VARCHI_TAB, renderVarchi } from "./varchi-section.js";
 import { costruisciSchedaDichiarata } from "./scheda-dichiarata-section.js";
-import { allStates, readJson, root, t } from "./shared.js";
+import { allStates, clean, esc, readJson, root, t } from "./shared.js";
 import { nomeDaHomeAssistant } from "./editor-slots-section.js";
 
 export const VARCHI_EDITOR_TAB = VARCHI_TAB;
@@ -47,6 +49,41 @@ export const DISEGNI_DEL_VARCO = Object.freeze([
   "lift",
 ]);
 
+/* La casella dell'esclusione dall'antifurto (#136).
+ *
+ * «Nei varchi che ho inserito, che sono i sensori del mio allarme Risco … mi
+ * da' la possibilita' di disabilitare. Possiamo farlo anche qui?»
+ *
+ * Sta chiusa in un `details`, come le soglie di ricarica delle Batterie: e' una
+ * cosa che riguarda chi ha una centrale, e chi non ce l'ha non deve trovarsi una
+ * casella in piu' da capire su ogni finestra di casa.
+ *
+ * In grigio c'e' quello che si e' trovato in casa, non scritto: una proposta e'
+ * una proposta finche' non la si salva, e questa casella comanda un antifurto.
+ * Finche' resta vuota il tasto in pagina non c'e'. */
+function campoDellEsclusione(riga, indice) {
+  if (!riga.entity) return "";
+  const id = `dm-varco-esclusione-${indice}`;
+  const proposta = esclusioneProposta(riga.entity, allStates());
+  return `<details class="dm-dich-piu"${clean(riga[CAMPO_ESCLUSIONE]) ? " open" : ""}>
+    <summary>🛡️ ${esc(t("Esclusione dall'antifurto", "Alarm bypass"))}</summary>
+    <small>${esc(
+      t(
+        "Le centrali pubblicano accanto a ogni contatto un interruttore che dice alla centrale di non guardarlo: è quello che serve per inserire l'antifurto con una finestra aperta apposta. Scrivilo qui e nella pagina Varchi compare lo scudo per escludere questo varco. Acceso vuol dire escluso. Lasciala vuota e questo varco si guarda e basta, come prima.",
+        "Alarm panels publish a switch next to each contact that tells the panel to ignore it: that is what you need to arm the alarm with a window left open on purpose. Write it here and the shield to bypass this opening shows up on the Openings page. On means bypassed. Leave it empty and this opening is only watched, as before.",
+      ),
+    )}</small>
+    <label class="ed-slot dm-dich-campo"><span class="ed-slot-lbl">${esc(
+      t("Interruttore di esclusione", "Bypass switch"),
+    )}</span>
+      <span class="ed-form-row"><input id="${esc(id)}" class="ed-input mono"
+        data-dm-dich-campo="${esc(CAMPO_ESCLUSIONE)}" data-dm-dich-riga="${indice}"
+        value="${esc(clean(riga[CAMPO_ESCLUSIONE]))}" placeholder="${esc(proposta || "switch.porta_ingresso_bypass")}"
+        autocomplete="off" spellcheck="false"><button type="button" class="dm-entity-picker"
+        data-dm-dich-pick="${esc(id)}" aria-label="${esc(t("Scegli entità", "Choose entity"))}">🔍</button></span></label>
+  </details>`;
+}
+
 function righeDelleFinestre() {
   return root.getTapparelle?.() || readJson("cd_tapparelle", []);
 }
@@ -58,6 +95,19 @@ const scheda = costruisciSchedaDichiarata({
   disegni: DISEGNI_DEL_VARCO,
   ripiego: "door",
   ridisegnaPagina: renderVarchi,
+  inPiu: CAMPI_IN_PIU,
+
+  campiInPiu: campoDellEsclusione,
+
+  /* L'interruttore si legge dalla casella: la scheda condivisa tiene i campi in
+   * piu' com'erano, e non sa dove questa sezione ha messo il suo. */
+  bozzaInPiu(bozza, body, indice) {
+    const casella = body.querySelector(
+      `[data-dm-dich-campo="${CAMPO_ESCLUSIONE}"][data-dm-dich-riga="${indice}"]`,
+    );
+    if (!casella) return bozza;
+    return { ...bozza, [CAMPO_ESCLUSIONE]: clean(casella.value) };
+  },
 
   parole: {
     linguetta: `🚪 ${t("Varchi", "Openings")}`,

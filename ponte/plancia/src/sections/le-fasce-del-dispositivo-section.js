@@ -115,11 +115,34 @@ export function ilBloccoDelDispositivo(detto, config, nome = "") {
       const ripiego = fascia.suo
         ? ""
         : `<small class="dm-fasce-ripiego">${esc(t("prezzo unico", "single rate"))}</small>`;
+      /* Quanti di quei kilowattora sono passati dal contatore.
+       *
+       * «Se in base alle fasce fa 12 euro perche' sopra me ne porta 21?»
+       * Perche' la riga metteva i kilowattora TUTTI accanto agli euro della
+       * SOLA rete, col prezzo al kWh in mezzo ai due: 179,9 × 0,100 fa 17,99,
+       * e l'euro accanto diceva 10,27. Chi moltiplica non si trova mai, e
+       * moltiplicare e' la prima cosa che si fa davanti a tre numeri messi
+       * cosi'.
+       *
+       * I due numeri sono giusti tutti e due e servono tutti e due — i
+       * kilowattora dicono quanto ha consumato, gli euro quanto e' costato — e
+       * il pezzo che mancava era il terzo: quanti ne ha pagati. Adesso c'e', e
+       * sta attaccato al totale invece che in una nota sotto, perche' e' li'
+       * che si fa il conto sbagliato.
+       *
+       * Si scrive solo quando i due numeri sono diversi: dove il sole non e'
+       * entrato — di notte, o in una casa senza pannelli — ripetere lo stesso
+       * numero due volte sarebbe rumore. Il decimo di kilowattora e' la soglia
+       * sotto cui la differenza non si vede nemmeno arrotondata. */
+      const soloRete = fascia.kwh - fascia.rete < 0.05;
+      const dallaRete = soloRete
+        ? ""
+        : `<small class="dm-fasce-dalla-rete">${formatNumber(fascia.rete, 1)} ${esc(t("dalla rete", "from grid"))}</small>`;
       return `
         <div class="dm-fasce-riga">
           <span class="dm-fasce-nome" style="--dm-fascia:${tintaDellaFascia(quante, fascia.indice)}">${esc(nomeDellaFascia(fascia.indice))}</span>
           <span class="dm-fasce-ore">${esc(orarioDellaFascia(config, fascia.indice))}</span>
-          <span class="dm-fasce-kwh">${formatNumber(fascia.kwh, 1)} kWh</span>
+          <span class="dm-fasce-kwh">${formatNumber(fascia.kwh, 1)} kWh${dallaRete}</span>
           <span class="dm-fasce-quota">${formatNumber(fascia.quota, 0)}%</span>
           <span class="dm-fasce-prezzo">${formatNumber(fascia.prezzo, 3)} €/kWh${ripiego}</span>
           <span class="dm-fasce-euro">${soldi(fascia.euro)}</span>
@@ -179,12 +202,24 @@ export function ilBloccoDelDispositivo(detto, config, nome = "") {
     .map((ora) => `<span>${String(ora).padStart(2, "0")}</span>`)
     .join("");
 
-  /* Il sole, detto a parte. E' la ragione per cui gli euro qui sotto sono
-   * piu' bassi della somma dei kilowattora per il prezzo, e senza dirlo
-   * sembrerebbe un conto sbagliato. */
+  /* Il sole, detto a parte, con accanto il totale che gli euro prezzano.
+   *
+   * La frase c'era gia' e diceva la cosa giusta — «gli euro qui sopra sono
+   * solo su quello che ha preso dalla rete» — e non e' bastata: chi guarda
+   * moltiplica NELLA RIGA, e la riga sta sopra la nota. Il numero che serve
+   * adesso e' li' (vedi `dallaRete`), e qui si aggiunge solo il totale, che
+   * chiude la somma delle tre righe.
+   *
+   * Si aggiunge come ETICHETTA e valore, non infilando i numeri dentro la
+   * frase: «dal sole X dei Y consumati» in italiano sembra innocente e in
+   * tredici lingue si smonta in pezzi che non sono frasi. E' la stessa regola
+   * scritta sopra, per il riquadro della fascia di punta, ed e' anche il
+   * motivo per cui la frase lunga resta quella di prima invece di
+   * riscriverla: e' gia' in tutti i cataloghi, e una frase nuova sarebbe
+   * dodici traduzioni per dire quello che si dice gia'. */
   const dalSole =
     detto.sole > 0.05
-      ? `<span aria-hidden="true">☀️</span> ${esc(t("Dal sole:", "From the sun:"))} <b>${formatNumber(detto.sole, 1)} kWh</b>. ${esc(t("Non costano niente a nessun'ora, e gli euro qui sopra sono solo su quello che ha preso dalla rete.", "They cost nothing at any hour, and the euros above are only on what it took from the grid."))}`
+      ? `<span aria-hidden="true">☀️</span> ${esc(t("Dal sole:", "From the sun:"))} <b>${formatNumber(detto.sole, 1)} kWh</b> · ${esc(t("dalla rete", "from grid"))}: <b>${formatNumber(detto.rete, 1)} kWh</b>. ${esc(t("Non costano niente a nessun'ora, e gli euro qui sopra sono solo su quello che ha preso dalla rete.", "They cost nothing at any hour, and the euros above are only on what it took from the grid."))}`
       : "";
   const spartito = detto.tuttoSpartito
     ? ""
@@ -450,6 +485,12 @@ function foglio() {
     .dm-fasce-dispositivo .dm-fasce-nome{grid-column:1!important;grid-row:1/3!important;align-self:start!important}
     .dm-fasce-dispositivo .dm-fasce-ore{grid-column:2!important;grid-row:1!important}
     .dm-fasce-dispositivo .dm-fasce-kwh{grid-column:3/5!important;grid-row:1!important}
+    /* «102,7 dalla rete» sotto il totale: e' il numero che moltiplica il
+     * prezzo, e sta attaccato al totale perche' la domanda nasce guardando
+     * quei due insieme. Blocco e non in linea — accanto, su una riga gia'
+     * stretta, spingerebbe fuori il totale — e con il peso e il colore di una
+     * didascalia, che il numero grande resta quello che ha consumato. */
+    .dm-fasce-dalla-rete{display:block!important;font-weight:700!important;font-size:10px!important;color:var(--secondary-text-color,#64748b)!important;white-space:nowrap!important}
     .dm-fasce-dispositivo .dm-fasce-quota{grid-column:2!important;grid-row:2!important;text-align:left!important}
     .dm-fasce-dispositivo .dm-fasce-prezzo{grid-column:3!important;grid-row:2!important}
     .dm-fasce-dispositivo .dm-fasce-euro{grid-column:4!important;grid-row:2!important}
