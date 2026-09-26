@@ -169,6 +169,33 @@ jobs:
   # Si firma di prova (`GDAHOME_FIRMA_DI_PROVA=si`): la chiave vera qui non
   # c'e' e non ci deve essere — sta nell'ambiente protetto, e per sapere se il
   # codice compila non serve.
+  # Lo stesso per l'iPhone: sotto il Dart c'e' Swift — CarPlay, il motore
+  # condiviso, la casa in auto — e i plugin nativi, e l'unico modo di sapere
+  # che stanno in piedi e' costruire. Un Mac costa piu' minuti di una
+  # macchina Linux: gira sulle richieste di unione, su main e a mano.
+  iphone:
+    name: L'app per iPhone, costruita
+    runs-on: macos-15
+    if: github.event_name != 'push' || github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          persist-credentials: false
+      - name: L'Xcode piu' recente
+        run: |
+          xcode="$(ls -d /Applications/Xcode_*.app | grep -v -i beta | sort -V | tail -1)"
+          sudo xcode-select -s "$xcode"
+          xcodebuild -version
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+        working-directory: app
+      - name: Il pacchetto (senza firma)
+        working-directory: app
+        run: flutter build ios --release --no-codesign
+
   pacchetto:
     name: L'app per Android, costruita
     runs-on: ubuntu-latest
