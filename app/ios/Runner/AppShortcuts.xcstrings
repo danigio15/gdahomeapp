@@ -1,0 +1,56 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "Navigate with ${applicationName}": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Naviga con ${applicationName}"
+          }
+        }
+      }
+    },
+    "Take me somewhere with ${applicationName}": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Portami con ${applicationName}"
+          }
+        }
+      }
+    },
+    "Take me home with ${applicationName}": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Portami a casa con ${applicationName}"
+          }
+        }
+      }
+    },
+    "Take me to work with ${applicationName}": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Portami al lavoro con ${applicationName}"
+          }
+        }
+      }
+    },
+    "Add a stop with ${applicationName}": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aggiungi una tappa con ${applicationName}"
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

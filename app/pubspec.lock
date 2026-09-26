@@ -362,7 +362,7 @@ packages:
     description:
       path: "packages/gdanav_app"
       ref: "claude/tender-wozniak-dc3unk"
-      resolved-ref: "42b5f5644b6de01a78f7f76db80ede741ab5e569"
+      resolved-ref: ab237f5ae4b808f0bda0d6dee8e0e28d39ca7736
       url: "https://github.com/danigio15/gdanav.git"
     source: git
     version: "0.1.0"
@@ -370,8 +370,8 @@ packages:
     dependency: transitive
     description:
       path: "packages/gdanav_core"
-      ref: "42b5f5644b6de01a78f7f76db80ede741ab5e569"
-      resolved-ref: "42b5f5644b6de01a78f7f76db80ede741ab5e569"
+      ref: ab237f5ae4b808f0bda0d6dee8e0e28d39ca7736
+      resolved-ref: ab237f5ae4b808f0bda0d6dee8e0e28d39ca7736
       url: "https://github.com/danigio15/gdanav.git"
     source: git
     version: "0.1.0"

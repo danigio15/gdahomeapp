@@ -11,6 +11,8 @@ si fa una volta sola dalla parte di Apple, e come esce una versione.
 | --- | --- | --- |
 | Android Auto col navigatore e la casa a un tasto | CarPlay, uguale: la mappa di gdanav, e dietro la casetta i comandi rapidi, i dispositivi, le azioni, come sta la casa | `app/ios/Runner/LaCasaInCarPlay.swift`, e CarPlay di gdanav |
 | «Quasi a casa», arrivando | Uguale, come avviso sopra la mappa | `LaCasaInCarPlay.swift` |
+| «Ok Google, naviga verso…» | «Ehi Siri, naviga con gdahome», «Portami a casa con gdahome», «Portami al lavoro con gdahome», «Aggiungi una tappa con gdahome»: anche in CarPlay, anche con l'app chiusa (dall'iOS 16). In italiano e in inglese | `app/ios/Runner/ComandiVocali.swift`, `AppShortcuts.xcstrings` |
+| La prova di guida di Android Auto | In CarPlay → Menu → Impostazioni → **Prova di guida**: il percorso si fa da solo | gdanav |
 | Un motore Flutter per telefono e auto (`IlNavigatoreInAuto.kt`) | Lo stesso: acceso all'avvio in `AppDelegate` | `app/ios/Runner` |
 | Il comando dell'auto eseguito da un motore senza schermo (`IlPonteDellAuto.kt`) | Lo esegue il motore dell'app, che con CarPlay è sempre acceso: stesso file, stesso canale `gdahome/auto/guarda` | `lib/auto/in_auto.dart`, `lib/main.dart` |
 | La vibrazione della plancia (`navigator.vibrate`) | Il WebView dell'iPhone non ce l'ha: gliela dà l'app, e diventa un colpetto del telefono | `lib/schermate/riquadro/sul_telefono.dart` |

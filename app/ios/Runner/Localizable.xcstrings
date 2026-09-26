@@ -1,0 +1,166 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "Navigate to": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Naviga verso"
+          }
+        }
+      }
+    },
+    "Finds a place or an address and starts guidance.": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cerca un posto o un indirizzo e parte la guida."
+          }
+        }
+      }
+    },
+    "Destination": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Destinazione"
+          }
+        }
+      }
+    },
+    "Where do you want to go?": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dove vuoi andare?"
+          }
+        }
+      }
+    },
+    "Looking for %@.": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cerco %@."
+          }
+        }
+      }
+    },
+    "Add a stop": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aggiungi una tappa"
+          }
+        }
+      }
+    },
+    "Adds a place to the current trip.": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aggiunge un posto al viaggio in corso."
+          }
+        }
+      }
+    },
+    "Stop": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tappa"
+          }
+        }
+      }
+    },
+    "Where do you want to stop?": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Da dove vuoi passare?"
+          }
+        }
+      }
+    },
+    "Looking for %@ on the way.": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cerco %@ e ci passo."
+          }
+        }
+      }
+    },
+    "Take me home": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Portami a casa"
+          }
+        }
+      }
+    },
+    "Heading home.": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Si torna a casa."
+          }
+        }
+      }
+    },
+    "Home isn't set yet: set it from the Menu.": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Casa non è ancora impostata: si imposta dal Menu."
+          }
+        }
+      }
+    },
+    "Take me to work": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Portami al lavoro"
+          }
+        }
+      }
+    },
+    "Heading to work.": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Si va al lavoro."
+          }
+        }
+      }
+    },
+    "Work isn't set yet: set it from the Menu.": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lavoro non è ancora impostato: si imposta dal Menu."
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}
