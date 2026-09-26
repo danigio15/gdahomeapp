@@ -354,10 +354,14 @@ async function eCiSta({ numero, pista, gettone, prendi, aspetta, dillo }) {
 /**
  * Mette una versione **gia' nel negozio** su altre piste, senza ricaricarla.
  *
- * Serve per `production`, e serve perche' il negozio rifiuta un `versionCode`
- * gia' visto: quello che sulle altre piste e' un caricamento, qui e' uno
- * spostamento. Va in una modifica sua apposta — se il negozio quella pista non
- * la concede, quello che era andato prima resta dov'e'.
+ * Una modifica per pista, e non per eleganza: il negozio una pista che non e'
+ * ancora stata preparata nella console la rifiuta — `production` a un account
+ * nuovo, ma anche `beta` finche' quella prova non e' stata aperta — e dentro
+ * una modifica sola quel rifiuto si porta via anche le piste che l'avevano
+ * presa. Separate, quella che non va resta l'unica che non va.
+ *
+ * Non tira: torna l'esito di ognuna, e chi chiama decide cosa farne. Fermarsi
+ * alla prima vorrebbe dire lasciare indietro le altre per colpa di una.
  */
 export async function promuovi({
   numero,
@@ -369,18 +373,23 @@ export async function promuovi({
   aspetta = (quanto) => new Promise((ok) => setTimeout(ok, quanto)),
 }) {
   const dove = (Array.isArray(piste) ? piste : [piste]).filter(Boolean);
-  if (!dove.length) return [];
-  await dentroUnaModifica({ gettone, prendi, dillo }, async (quale) => {
-    for (const pista of dove) {
-      await sullaPista({ quale, pista, numero, novita, gettone, prendi });
-      dillo(`messa la ${numero} sulla pista «${pista}», senza ricaricarla`);
-    }
-    await chiedi(prendi, perApp(`/edits/${quale}:validate`), { metodo: "POST", gettone });
-    await chiedi(prendi, perApp(`/edits/${quale}:commit`), { metodo: "POST", gettone });
-  });
   const esiti = [];
-  for (const pista of dove)
+  for (const pista of dove) {
+    try {
+      await dentroUnaModifica({ gettone, prendi, dillo }, async (quale) => {
+        await sullaPista({ quale, pista, numero, novita, gettone, prendi });
+        await chiedi(prendi, perApp(`/edits/${quale}:validate`), { metodo: "POST", gettone });
+        await chiedi(prendi, perApp(`/edits/${quale}:commit`), { metodo: "POST", gettone });
+      });
+    } catch (errore) {
+      const perche = errore?.message || String(errore);
+      dillo(`ATTENZIONE: la pista «${pista}» non l'ha presa — ${perche}`);
+      esiti.push({ pista, confermato: false, stato: "", perche });
+      continue;
+    }
+    dillo(`messa la ${numero} sulla pista «${pista}», senza ricaricarla`);
     esiti.push(await eCiSta({ numero, pista, gettone, prendi, aspetta, dillo }));
+  }
   return esiti;
 }
 
@@ -388,9 +397,26 @@ export async function promuovi({
  * Porta il pacchetto su, e lo pubblica sulle piste.
  *
  * Si carica una volta sola: il `versionCode` e' unico per tutta l'app, e lo
- * stesso pacchetto si mette su quante piste si vuole. `production`, se c'e',
- * la fa [promuovi] in una modifica tutta sua e per ultima: e' l'unica che il
- * negozio puo' negare, e un suo rifiuto non deve portarsi via alpha.
+ * stesso pacchetto si mette su quante piste si vuole.
+ *
+ * ─── Perche' una pista per modifica, e non tutte insieme ──────────────────
+ *
+ * Perche' il negozio ne puo' rifiutare una. La prova della 1.6.11 ne ha
+ * chieste tre: `internal` e `alpha` le ha prese, e su `beta` — una pista che
+ * nella console non e' mai stata preparata — ha risposto **500, Internal
+ * error**. Stando tutte nella stessa modifica, quel 500 si e' portato via
+ * anche le due che erano andate. In un rilascio vero sarebbe finita che non
+ * pubblicava niente, per colpa di una pista che non c'entrava.
+ *
+ * Quindi: la prima pista viaggia col caricamento — e' la strada di sempre,
+ * quella che in venti rilasci non ha mai tradito — e le altre le mette
+ * [promuovi], una modifica per una, senza ricaricare niente. Quella che non
+ * prende resta l'unica che non prende.
+ *
+ * In `--prova` e' il contrario, ed e' voluto: li' vanno **tutte nella stessa**
+ * modifica, che tanto viene buttata. Una prova serve a scoprire la pista che
+ * il negozio non vuole prima di spenderci sopra un'etichetta, e per scoprirla
+ * bisogna chiedergliele tutte.
  */
 export async function porta({
   pacco,
@@ -406,10 +432,10 @@ export async function porta({
 }) {
   const dove = (Array.isArray(piste) ? piste : [piste]).filter(Boolean);
   if (!dove.length) throw new Error("su quale pista? Non ne e' stata detta nessuna");
-  /* Se `production` e' l'unica chiesta non c'e' niente da proteggere, e si fa
-   * tutto in un giro solo come le altre. */
-  const subito = dove.length === 1 ? dove : dove.filter((una) => una !== "production");
-  const dopo = dove.filter((una) => !subito.includes(una));
+  /* In prova tutte insieme, che la modifica viene buttata comunque; sul serio
+   * la prima col caricamento, e le altre una per una. */
+  const subito = prova ? dove : dove.slice(0, 1);
+  const dopo = prova ? [] : dove.slice(1);
 
   const credenziale = ilCredenziale(segreto);
   const byte = readFileSync(pacco);
@@ -453,15 +479,7 @@ export async function porta({
     return quanto;
   });
 
-  if (prova) {
-    if (dopo.length) {
-      dillo(
-        `--prova: ${dopo.map((una) => `«${una}»`).join(", ")} non si prova, ` +
-          "perche' una promozione vuole una versione che nel negozio c'e' davvero",
-      );
-    }
-    return { versione: numero, piste: dove, pubblicato: false, esiti: [] };
-  }
+  if (prova) return { versione: numero, piste: dove, pubblicato: false, esiti: [] };
 
   const esiti = [];
   for (const pista of subito)
@@ -469,6 +487,20 @@ export async function porta({
   if (dopo.length) {
     esiti.push(
       ...(await promuovi({ numero, piste: dopo, novita, gettone, prendi, dillo, aspetta })),
+    );
+  }
+  /* Una pista rifiutata non fa finta di niente. Quello che e' andato su resta
+   * — e' proprio il motivo per cui viaggiano separate — ma la corsa deve
+   * diventare rossa: se no nel registro si legge «pubblicato», e non e' vero
+   * per tutte. */
+  const rimaste = esiti.filter((uno) => uno.perche);
+  if (rimaste.length) {
+    const andate = esiti.filter((uno) => !uno.perche).map((uno) => `«${uno.pista}»`);
+    throw new Error(
+      `la ${numero} e' andata su ${andate.length ? andate.join(", ") : "nessuna pista"}, ` +
+        `ma ${rimaste.map((uno) => `«${uno.pista}»`).join(", ")} il negozio non l'ha presa. ` +
+        "Una pista mai preparata nella console la rifiuta: va aperta li', e poi " +
+        "ci si rimette questa versione senza ricaricarla.",
     );
   }
   return {

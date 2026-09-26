@@ -73,6 +73,12 @@ Il giro «L'app da provare» ha due caselle apposta:
   negozio un numero già visto lo rifiuta, quindi «la stessa versione anche su
   beta» non si fa ricaricando — e chi ci prova si trova a bruciare un numero
   di versione per spostare una cosa che aveva già.
+  Una pista per modifica, e non per eleganza: **il negozio rifiuta una pista
+  che nella console non è mai stata preparata**. Chiedendone tre — `internal`,
+  `alpha`, `beta` — ha preso le prime due e su `beta` ha risposto «500,
+  Internal error encountered»; stando tutte nella stessa modifica quel 500 si
+  è portato via anche le due che erano andate. Separate, quella che non prende
+  resta l'unica che non prende, e la corsa diventa rossa dicendo quale.
 - **`davvero_in_produzione`** è la seconda metà della conferma di
   `production`: quella pista pubblica a tutti quelli che hanno l'app, non ai
   collaudatori, e non si torna indietro premendo un tasto. Il nome scritto
@@ -82,8 +88,10 @@ Il giro «L'app da provare» ha due caselle apposta:
   chiusa coi suoi collaudatori), e messa in fondo un suo rifiuto lascia in
   piedi quello che era già andato su alpha.
 - **`prova_del_negozio`** fa tutto il giro vero — costruisce, carica il
-  pacchetto, prepara la pista, chiede a Google se va bene — e poi **butta la
-  modifica** invece di consegnarla. Nessuno si ritrova una versione nuova sul
+  pacchetto, prepara le piste, chiede a Google se va bene — e poi **butta la
+  modifica** invece di consegnarla. Qui le piste vanno tutte nella stessa
+  modifica, al contrario del rilascio vero: è il modo di scoprire quella che il
+  negozio non vuole senza averci ancora speso un'etichetta. Nessuno si ritrova una versione nuova sul
   telefono, e si sa lo stesso se sarebbe andata.
 
 **E non è solo per la prima volta.** Il credenziale, una volta messo,
