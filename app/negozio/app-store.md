@@ -41,7 +41,8 @@ home assistant,domotica,casa,luci,clima,tapparelle,telecamere,consumi,carplay,na
 > Il navigatore per auto elettriche (gdanav) è dentro l'app: percorso, soste
 > di ricarica, colonnine, segnalazioni. E dietro il tasto con la casetta i
 > comandi rapidi scelti da te: il cancello, il portone, «sto arrivando».
-> Arrivando a casa, gdahome propone il comando dell'arrivo.
+> Arrivando a casa, gdahome propone il comando dell'arrivo. E con Siri:
+> «Ehi Siri, naviga con gdahome», «Portami a casa con gdahome».
 >
 > ANCHE
 > - Il lucchetto col volto (Face ID) per aprire l'app.
@@ -91,7 +92,8 @@ home assistant,smart home,lights,climate,shutters,cameras,energy,carplay,navigat
 > The EV navigator (gdanav) is inside the app: route, charging stops,
 > chargers, road reports. Behind the house button, the quick commands you
 > chose: the gate, the front door, «I'm coming home». Near home, gdahome
-> offers the arrival command.
+> offers the arrival command. And with Siri: «Hey Siri, navigate with
+> gdahome», «Take me home with gdahome».
 >
 > ALSO
 > - Face ID lock to open the app.
@@ -100,6 +102,38 @@ home assistant,smart home,lights,climate,shutters,cameras,energy,carplay,navigat
 >
 > Requires Home Assistant OS or Supervised (with the add-on store).
 > gdahome is free.
+
+## Novità (What's New)
+
+Le «Novità» della prima versione per iPhone: sono le stesse cose che il Play
+Store racconta in `it-IT.txt` e `en-US.txt`, dette con CarPlay e Siri. Per le
+versioni dopo, si copiano da quei due file, cambiando Android Auto con CarPlay
+e «Ok Google» con «Ehi Siri».
+
+**Italiano** (4000):
+
+> gdahome arriva su iPhone e iPad. In macchina, con CarPlay, c'è il
+> navigatore: dici «Ehi Siri, naviga con gdahome» e parte. Mappa, corsie, la
+> manovra e l'ora di arrivo, e la voce abbassa la musica invece di coprirla.
+>
+> La casa resta a un tasto: quanto tira, quanto fa il sole, chi è rientrato,
+> le azioni rapide.
+>
+> Aggiorna anche gdahome in Home Assistant: quello che l'auto legge lo lascia
+> la plancia, e in macchina si vede solo con tutti e due.
+
+**English**:
+
+> gdahome comes to iPhone and iPad. In the car, with CarPlay, there's the
+> navigator: say "Hey Siri, navigate with gdahome" and off it goes. Map,
+> lanes, the next turn and arrival time, and the voice ducks the music instead
+> of talking over it.
+>
+> The house stays one button away: what it is drawing, what the sun is making,
+> who is home, your quick actions.
+>
+> Update gdahome in Home Assistant as well: what the car reads is left there by
+> the dashboard, so you need both.
 
 ## Per la revisione (App Review Information)
 
