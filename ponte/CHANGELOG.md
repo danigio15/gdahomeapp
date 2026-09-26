@@ -11,6 +11,75 @@ fuori. La plancia dentro continua a dire la sua, e si legge dov'è sempre
 stata: nella pastiglia «La plancia» della console. Sono due numeri perché
 sono due cose.
 
+## 1.6.9
+
+**In macchina parte il navigatore.** gdanav — il navigatore che finora era
+un'app a parte — adesso è dentro gdahome, come voce «gdanav» del menu, e in
+Android Auto è quello che si apre salendo in macchina: la mappa davanti, e la
+casa dietro un tasto. È l'app di sempre, con lo stesso nome e la stessa firma:
+non c'è niente da installare in più e niente da abbinare. Sul telefono la
+sezione si accende la prima volta che la si apre e poi resta accesa — si torna
+alla plancia e la guida continua. Nella webapp non c'è: è roba da telefono.
+
+**L'auto della plancia arriva al navigatore da sola.** Nessun codice, nessun
+QR: la casa è già collegata, e il navigatore legge dalla sezione Auto l'auto
+attiva — nome, marca, modello, capacità — e i suoi sensori: batteria,
+autonomia, ricarica, potenza, posizione, contachilometri, temperatura. In
+tempo reale, con le unità già convertite. Se cambi auto nella plancia, il
+navigatore se ne accorge in quel momento. Le termiche restano fuori, perché di
+autonomia elettrica non ne hanno.
+
+**I comandi rapidi in auto: scelti sul telefono, premuti sulla mappa.** Dal
+menu di gdanav si compone la griglia — fino a dodici, i primi sei su ogni
+auto, gli altri dove lo schermo è più grande. Dentro ci vanno le azioni rapide
+della plancia, tutte, e le cose di casa che si premono: scene, script,
+cancelli e tapparelle, serrature, luci, prese, pulsanti. Ce ne puoi anche
+creare di tuoi — dispositivo, cosa fa, il nome sul tasto — e chiedere la
+conferma dove serve. Una serratura la conferma sempre. In macchina il tasto
+con la casa, sulla mappa, apre la griglia.
+
+**«Quasi a casa».** Avvicinandosi a casa, l'auto propone un comando — il
+cancello, il garage, quello che hai scelto tu — con «Fallo» o «Non ora». La
+distanza la decidi: da 100 metri a 2 chilometri, mezzo chilometro se non
+scegli. Lo propone solo se prima eri lontano davvero, così non lo ripete
+girando intorno all'isolato.
+
+**Il menu laterale ridisegnato.** In testa la casa, e sotto la tessera di
+gdanav, viva: batteria, nome e autonomia dell'auto, e i due tasti «A casa» e
+«Al lavoro» che accendono il navigatore e calcolano il viaggio. Le altre voci
+in tre gruppi — Casa, Avanzate, Aiuto — e l'aiuto in fondo, dove si cerca.
+Con più di una plancia nella casa, la tessera della plancia dice quale stai
+guardando e apre la tendina per cambiarla.
+
+**Le fasce del dispositivo dicono quali kilowattora prezzano.** Nel dettaglio
+di un dispositivo, la riga di una fascia metteva accanto i kilowattora
+*totali* e gli euro *della sola rete*: due basi diverse sulla stessa riga, e i
+conti non tornavano — 21 euro sopra e 12 sotto, sugli stessi consumi. Il sole
+non si paga, ed è giusto che gli euro siano quelli della rete: adesso la riga
+lo scrive, «di cui dalla rete», e la nota sotto porta tutti e tre i numeri.
+
+**La mappa dei flussi dice quando i suoi numeri non possono essere veri.**
+«Vedo tutto ma il flusso verso casa non va»: il disegno era fedele — la
+batteria diceva di caricarsi, e con quell'ingresso le linee giuste erano
+quelle — solo che entravano 24 watt e ne uscivano 1346. Una cosa che non
+esiste, e la plancia la disegnava con sicurezza. Adesso quando quello che esce
+non può venire da quello che entra lo dice, e segna la casella sospetta: nove
+volte su dieci è il segno della batteria o della rete, girato. Parla solo
+davanti a un caso impossibile — più del doppio, almeno trecento watt di
+scarto, due letture di fila e tutti e quattro i sensori dichiarati — perché un
+falso allarme qui manda a cercare un guasto che non c'è.
+
+**Un varco si esclude dall'antifurto, senza uscire dalla plancia.** Chi ha una
+centrale lo fa di continuo: la finestra del bagno resta aperta di notte, e
+prima di inserire l'antifurto quella zona la si esclude. Le centrali
+pubblicano accanto a ogni contatto l'interruttore che serve — Risco lo chiama
+`bypass` — e adesso lo si scrive nella riga del varco, in configurazione, con
+la proposta già pronta. Da lì in poi sulla carta c'è lo scudo, e il conto in
+cima dice quante sono escluse, accanto a quante sono aperte: chi sta per
+inserire l'antifurto lo deve sapere prima, non scoprirlo dopo. Una finestra
+esclusa resta contata fra le aperte, perché aperta è: l'esclusione parla alla
+centrale, non all'infisso.
+
 ## 1.6.8
 
 **L'avviso «Statistiche a lungo termine mancanti» non parla più alla prima
