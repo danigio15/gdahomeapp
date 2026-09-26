@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Un luccichio: le scene e gli script della plancia. Due stelle a quattro
+     punte, una grande e una piccola: si riconosce di sfuggita e non somiglia
+     a niente altro che c'e' in auto. -->
+<!-- Bianco e pieno apposta: in macchina la tinta la mette l'ospite, secondo il
+     tema chiaro o scuro dell'auto, e un disegno gia' colorato non si tinge.
+     Percio' qui dentro una tinta non ci va: il colore lo decide un posto solo,
+     e quel posto e' il `CarIcon` nel codice.
+
+     128dp e non 24: e' la misura che Google chiede per i segni in auto, perche'
+     gli schermi delle macchine vanno dal display del cruscotto al tablet in
+     mezzo e il segno viene ingrandito. Il disegno resta lo stesso — le curve
+     sono scritte in un riquadro di 24 e si allargano da sole. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="128dp"
+    android:height="128dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M10,2L11.9,7.6L17.5,9.5L11.9,11.4L10,17L8.1,11.4L2.5,9.5L8.1,7.6Z" />
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M18,14L18.9,16.6L21.5,17.5L18.9,18.4L18,21L17.1,18.4L14.5,17.5L17.1,16.6Z" />
+</vector>

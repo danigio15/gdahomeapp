@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Un lucchetto: le serrature. Col buco della chiave, che e' quello che lo
+     fa riconoscere quando il segno e' piccolo. -->
+<!-- Bianco e pieno apposta: in macchina la tinta la mette l'ospite, secondo il
+     tema chiaro o scuro dell'auto, e un disegno gia' colorato non si tinge.
+     Percio' qui dentro una tinta non ci va: il colore lo decide un posto solo,
+     e quel posto e' il `CarIcon` nel codice.
+
+     128dp e non 24: e' la misura che Google chiede per i segni in auto, perche'
+     gli schermi delle macchine vanno dal display del cruscotto al tablet in
+     mezzo e il segno viene ingrandito. Il disegno resta lo stesso — le curve
+     sono scritte in un riquadro di 24 e si allargano da sole. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="128dp"
+    android:height="128dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M12,2A5,5 0 0,0 7,7v3h2V7a3,3 0 0,1 6,0v3h2V7A5,5 0 0,0 12,2z" />
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:fillType="evenOdd"
+        android:pathData="M5,10h14v12H5V10zM12,13.6m-1.7,0a1.7,1.7 0 1,0 3.4,0a1.7,1.7 0 1,0 -3.4,0zM11.1,16.4h1.8l0.35,3.1h-2.5z" />
+</vector>
