@@ -113,7 +113,11 @@ dependencies:
       path: packages/gdanav_app
       # Il commit preciso sta in pubspec.lock, e lo porta avanti il workflow
       # «Aggiorna gdanav».
-      ref: main
+      #
+      # PER ADESSO il ramo di gdanav con CarPlay e l'App Store: gli agganci
+      # di CarPlay che usa `ios/Runner/LaCasaInCarPlay.swift` stanno li'.
+      # Unito quel ramo in gdanav, qui si torna a `main`.
+      ref: claude/tender-wozniak-dc3unk
 
 dev_dependencies:
   flutter_test:

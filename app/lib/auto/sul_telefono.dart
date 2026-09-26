@@ -6,11 +6,11 @@
 /// capi devono restare lo stesso file, e il nome sta scritto una volta in
 /// `la_foto.dart`.
 ///
-/// Sull'iPhone questa funzione gira e scrive, e nessuno legge: CarPlay le
-/// categorie le tiene chiuse — audio, comunicazione, navigazione, parcheggi,
-/// ricarica, cibo, carburante, lavoro alla guida — e la domotica non e' fra
-/// quelle. Scrivere un file in piu' sul telefono non fa male a nessuno, e il
-/// giorno che Apple aprisse una categoria la fotografia e' gia' li'.
+/// Sull'iPhone la legge CarPlay (`ios/Runner/LaCasaInCarPlay.swift`): la
+/// domotica da sola in CarPlay non ci entra — le categorie sono chiuse — ma
+/// gdahome ci entra come navigatore, e la casa sta dietro il tasto con la
+/// casetta, come su Android Auto. `getApplicationSupportDirectory()`
+/// sull'iPhone e' `Library/Application Support`, e Swift guarda li'.
 library;
 
 import 'dart:io';

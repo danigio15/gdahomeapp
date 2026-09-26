@@ -46,15 +46,29 @@
 	     ed e' esattamente il collegamento piu' veloce dei due. -->
 	<!-- Il navigatore (gdanav, dentro l'app): la posizione per guidare, e il
 	     Bluetooth per il dongle OBD che legge la batteria dell'auto. Tutte e
-	     due solo quando si apre il navigatore, e solo mentre l'app e' aperta. -->
+	     due solo quando si apre il navigatore. -->
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Serve al navigatore, per mostrarti sulla mappa e guidarti fino a destinazione.</string>
+	<!-- Con CarPlay acceso l'app sul telefono sta dietro, e la guida deve
+	     continuare lo stesso: per questo anche «sempre», e in background
+	     la posizione e la voce. -->
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>Serve al navigatore, per continuare a guidarti con lo schermo del telefono spento o mentre usi CarPlay.</string>
 	<key>NSBluetoothAlwaysUsageDescription</key>
 	<string>Serve al navigatore solo se colleghi un dongle OBD, per leggere la batteria della tua auto.</string>
 	<key>NSLocalNetworkUsageDescription</key>
 	<string>Serve a parlare con la tua Home Assistant quando sei in casa, direttamente sulla tua rete, senza passare da internet. Fuori casa non viene usato.</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>audio</string>
+		<string>location</string>
+	</array>
+	<!-- La cifratura e' quella standard (X25519, HKDF, AES-GCM, e HTTPS):
+	     esente, e TestFlight non si ferma a chiederlo a ogni versione. -->
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<!-- La plancia vera dentro l'app arriva al WebView da un server che sta
 	     dentro l'app stessa, su 127.0.0.1, in chiaro: non esce dal telefono.
 	     Senza questa eccezione l'iPhone rifiuta ogni http senza s, anche
@@ -70,7 +84,7 @@
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
-		<false/>
+		<true/>
 		<key>UISceneConfigurations</key>
 		<dict>
 			<key>UIWindowSceneSessionRoleApplication</key>
@@ -82,8 +96,19 @@
 					<string>flutter</string>
 					<key>UISceneDelegateClassName</key>
 					<string>$(PRODUCT_MODULE_NAME).SceneDelegate</string>
-					<key>UISceneStoryboardFile</key>
-					<string>Main</string>
+				</dict>
+			</array>
+			<!-- CarPlay: il navigatore di gdanav, con la casa dietro il tasto
+			     con la casetta (`LaCasaInCarPlay.swift`). -->
+			<key>CPTemplateApplicationSceneSessionRoleApplication</key>
+			<array>
+				<dict>
+					<key>UISceneClassName</key>
+					<string>CPTemplateApplicationScene</string>
+					<key>UISceneConfigurationName</key>
+					<string>CarPlay</string>
+					<key>UISceneDelegateClassName</key>
+					<string>GdanavCarPlay</string>
 				</dict>
 			</array>
 		</dict>
@@ -92,18 +117,9 @@
 	<true/>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
-	<key>UIMainStoryboardFile</key>
-	<string>Main</string>
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
-		<string>UIInterfaceOrientationLandscapeLeft</string>
-		<string>UIInterfaceOrientationLandscapeRight</string>
-	</array>
-	<key>UISupportedInterfaceOrientations~ipad</key>
-	<array>
-		<string>UIInterfaceOrientationPortrait</string>
-		<string>UIInterfaceOrientationPortraitUpsideDown</string>
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>

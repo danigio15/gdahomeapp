@@ -97,6 +97,12 @@ Future<void> main() async {
   /* Il navigatore in auto, dove c'e': se si sale in macchina, gdanav si
    * accende anche senza aprire la sua sezione. */
   navigatore.ascoltaLAuto();
+  /* Sull'iPhone il comando lasciato da CarPlay lo esegue questo motore, che
+   * e' uno solo e gia' acceso; su Android lo esegue un motore a parte, senza
+   * schermo (`inAuto`, qui sopra). */
+  if (!kIsWeb && defaultTargetPlatform == TargetPlatform.iOS) {
+    auto.ascoltaIlColpetto();
+  }
   runApp(AppDiCasa(impostazioni: impostazioni));
 }
 
