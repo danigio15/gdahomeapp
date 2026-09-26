@@ -34,6 +34,19 @@
 /// in poi la chiave viaggia in un biscotto, che il browser mette da se' su
 /// ogni richiesta della pagina e che nessun altro ha. Senza, si riceve un no.
 ///
+/// **Ogni casa ha il suo deposito.** Le case di un telefono sono case
+/// diverse, con ponti diversi: un file preso da una non vale per l'altra,
+/// anche quando il percorso e' lo stesso — e con la stessa versione della
+/// plancia lo e'. Percio' i file si tengono in una cartella per casa, e al
+/// WebView si dice di richiedere ogni volta (costa un giro sul telefono, non
+/// sulla rete: risponde questo server, dal disco, e se non e' cambiato niente
+/// risponde «uguale» senza nemmeno leggerlo). Le foto di casa (`/local/`,
+/// `/dashboardmodern_static/www/`) non hanno impronta e il nome lo sceglie chi
+/// le carica: quelle non si tengono affatto.
+///
+/// E nessun service worker su questa porta: uno registrato da una pagina
+/// resterebbe li' anche per le pagine delle altre case.
+///
 /// Niente Flutter qui dentro, ed e' voluto: si prova per intero senza uno
 /// schermo, e gira anche da solo, da riga di comando, per il collaudo.
 library;
@@ -112,6 +125,21 @@ const _fissi = '/dashboardmodern_static/';
 /// ponte come tutto il resto, e il ponte le legge dal disco. Cosi' la stessa
 /// configurazione mostra la stessa foto in tutti e due i posti.
 const _diCasa = '/local/';
+
+/// Le foto che la plancia carica: il nome lo sceglie chi le carica, e
+/// ricaricarne una col nome di prima e' normale. Non si tengono.
+const _fotoCaricate = '/dashboardmodern_static/www/';
+
+/// Se un file si tiene sul disco: quelli della plancia si', le foto di casa
+/// no (vedi [_diCasa] e [_fotoCaricate]).
+bool _siTiene(String percorso) =>
+    percorso.startsWith(_fissi) && !percorso.startsWith(_fotoCaricate);
+
+/// Il nome della cartella di una casa: il suo identificativo, scritto in modo
+/// che sia sempre un nome di cartella e nient'altro — niente barre, niente
+/// punti, qualunque cosa ci sia dentro.
+String cartellaDellaCasa(String casa) =>
+    base64Url.encode(utf8.encode(casa)).replaceAll('=', '');
 
 /// Quanto puo' essere grande il corpo di una chiamata REST della plancia.
 const _corpoMassimo = 4 * 1024 * 1024;
@@ -204,8 +232,25 @@ class Servitore {
   /// apre la pagina dall'indirizzo che [paginaDi] da'.
   final String chiave = _chiaveNuova();
 
-  /// Dove si tengono i file della plancia, fra un'apertura e l'altra.
+  /// Dove si tengono i file della plancia, fra un'apertura e l'altra: qui
+  /// dentro, una cartella per casa ([deposito]).
   final Directory cartella;
+
+  /// La cartella della casa che si sta servendo adesso. Senza una casa —
+  /// le prove, il collaudo — e' [cartella] stessa.
+  Directory get deposito {
+    final casa = premesse.casa;
+    if (casa.isEmpty) return cartella;
+    return Directory('${cartella.path}/case/${cartellaDellaCasa(casa)}');
+  }
+
+  /// Il segno con cui il WebView chiede «e' cambiato?»: uno per casa. Un file
+  /// tenuto dal WebView per un'altra casa ha un altro segno, e si rimanda.
+  String get _segnoDellaCasa => '"gdahome-${cartellaDellaCasa(premesse.casa)}"';
+
+  /// Chi sta arrivando, per casa: due case chiedono lo stesso percorso, e non
+  /// e' lo stesso file.
+  String _voce(String percorso) => '${premesse.casa}\n$percorso';
 
   /// La lingua della plancia: sceglie quale pagina si apre e cosa si dice
   /// alla pagina.
@@ -374,6 +419,21 @@ class Servitore {
       return;
     }
 
+    /* Un service worker no, mai. Il browser lo chiede con questa
+     * intestazione, e senza il suo file non se ne registra nessuno: su questa
+     * porta passano le pagine di tutte le case, e uno rimasto da una casa
+     * risponderebbe al posto delle altre. */
+    if (richiesta.headers.value('service-worker') != null) {
+      _rispondi(
+        richiesta,
+        404,
+        'text/plain',
+        utf8.encode('niente service worker'),
+        cache: 'no-store',
+      );
+      return;
+    }
+
     if (percorso == '/api/websocket') {
       if (!WebSocketTransformer.isUpgradeRequest(richiesta)) {
         _rispondi(richiesta, 426, 'text/plain', utf8.encode('WebSocket'));
@@ -446,20 +506,40 @@ class Servitore {
 
     final tipo = _tipoDi(percorso);
     final eLaPagina = tipo.startsWith('text/html');
-    final sulDisco = File('${cartella.path}$percorso');
+    final siTiene = _siTiene(percorso);
+    final sulDisco = File('${deposito.path}$percorso');
+    final segno = _segnoDellaCasa;
+
+    /* Il WebView ce l'ha gia', di questa casa, e sul disco c'e' ancora: non
+     * e' cambiato niente, e non serve nemmeno leggerlo. */
+    if (siTiene &&
+        !eLaPagina &&
+        richiesta.headers.value(HttpHeaders.ifNoneMatchHeader) == segno &&
+        await sulDisco.exists()) {
+      richiesta.response
+        ..statusCode = HttpStatus.notModified
+        ..headers.set(HttpHeaders.etagHeader, segno)
+        ..headers.set(HttpHeaders.cacheControlHeader, 'no-cache');
+      unawaited(richiesta.response.close().catchError((_) {}));
+      return;
+    }
 
     /* Prima si guarda se sta gia' arrivando, poi se sta sul disco, e solo
      * dopo si chiede: l'ordine conta, perche' un file che sta arrivando non
      * e' ancora sul disco, e chiederlo di nuovo vorrebbe dire due volte la
      * strada lenta per lo stesso modulo. */
     List<int>? byte;
-    final inArrivo = _inArrivo[percorso];
-    if (inArrivo == null && await sulDisco.exists()) {
+    final inArrivo = _inArrivo[_voce(percorso)];
+    if (siTiene && inArrivo == null && await sulDisco.exists()) {
       byte = await sulDisco.readAsBytes();
     } else {
       final _Scaricato preso;
       try {
-        preso = await (inArrivo ?? _scarica(percorso, sulDisco));
+        preso =
+            await (inArrivo ??
+                (siTiene
+                    ? _scarica(percorso, sulDisco)
+                    : _commissione('GET', percorso)));
       } on ErroreDelPonte catch (errore) {
         _ilNo(richiesta, errore);
         return;
@@ -497,14 +577,16 @@ class Servitore {
       unawaited(_portaAvanti(percorso, letta));
       return;
     }
-    /* Il percorso ha dentro l'impronta: quello che c'e' non cambia mai. */
-    _rispondi(
-      richiesta,
-      200,
-      tipo,
-      byte,
-      cache: 'public, max-age=31536000, immutable',
-    );
+    /* Le foto di casa si danno e basta: domani possono essere un'altra. */
+    if (!siTiene) {
+      _rispondi(richiesta, 200, tipo, byte, cache: 'no-store');
+      return;
+    }
+    /* Il percorso ha dentro l'impronta, e dentro una casa quello che c'e' non
+     * cambia. Ma il WebView e' uno per tutte le case: lo tenga pure, e prima
+     * di usarlo chieda — col segno di questa casa. */
+    richiesta.response.headers.set(HttpHeaders.etagHeader, segno);
+    _rispondi(richiesta, 200, tipo, byte, cache: 'no-cache');
   }
 
   /// Un file, dal ponte, e poi sul disco.
@@ -515,13 +597,14 @@ class Servitore {
   /// sul disco sta **dentro** l'attesa: chi arriva dopo trova il file, non un
   /// file che sta per esserci.
   Future<_Scaricato> _scarica(String percorso, File sulDisco) {
-    return _inArrivo.putIfAbsent(percorso, () async {
+    final voce = _voce(percorso);
+    return _inArrivo.putIfAbsent(voce, () async {
       try {
         final preso = await _commissione('GET', percorso);
         if (preso.stato == 200) await _metti(sulDisco, preso.byte);
         return preso;
       } finally {
-        _inArrivo.remove(percorso);
+        _inArrivo.remove(voce);
       }
     });
   }
@@ -539,15 +622,19 @@ class Servitore {
   /// Non solleva mai. Un pacco che non arriva e' una plancia che si apre come
   /// si apriva ieri, un file per volta.
   Future<void> _portaAvanti(String percorsoDellaPagina, String pagina) async {
+    /* La casa di adesso, fissata qui: se si cambia casa mentre i pacchi
+     * viaggiano, quello che arriva va nella cartella di chi l'ha chiesto. */
+    final dove = deposito;
+    final casa = premesse.casa;
     try {
       final quali = iPrecarichiDellaPagina(
         pagina,
         cartella: laCartellaDi(percorsoDellaPagina),
-      );
+      ).where(_siTiene);
       final daChiedere = <String>[];
       for (final quale in quali) {
-        if (_inArrivo.containsKey(quale)) continue;
-        if (await File('${cartella.path}$quale').exists()) continue;
+        if (_inArrivo.containsKey('$casa\n$quale')) continue;
+        if (await File('${dove.path}$quale').exists()) continue;
         daChiedere.add(quale);
       }
       if (daChiedere.isEmpty) return;
@@ -563,7 +650,7 @@ class Servitore {
               ? pacchi.length
               : da + pacchiInsieme,
         );
-        await Future.wait(adesso.map(_unPacco));
+        await Future.wait(adesso.map((uno) => _unPacco(uno, dove, casa)));
       }
     } catch (errore) {
       _racconta('i pacchi della plancia non sono andati: $errore');
@@ -581,7 +668,7 @@ class Servitore {
   /// Quelli che nel pacco non ci stavano — il ponte lo riempie fino a
   /// trecentottantaquattro kilobyte e poi smette — si richiedono nel giro
   /// dopo, e il giro dopo e' piu' corto: cosi' finisce.
-  Future<void> _unPacco(List<String> quali) async {
+  Future<void> _unPacco(List<String> quali, Directory dove, String casa) async {
     final attese = <String, Completer<_Scaricato>>{};
     for (final quale in quali) {
       final aspetta = Completer<_Scaricato>();
@@ -589,7 +676,7 @@ class Servitore {
       /* Perche' un errore che nessuno guarda non diventi un errore di
        * nessuno: chi aspetta lo riceve comunque. */
       aspetta.future.ignore();
-      _inArrivo[quale] = aspetta.future;
+      _inArrivo['$casa\n$quale'] = aspetta.future;
     }
     var restano = quali;
     try {
@@ -606,7 +693,7 @@ class Servitore {
             continue;
           }
           if (preso.stato == 200) {
-            await _metti(File('${cartella.path}$quale'), preso.byte);
+            await _metti(File('${dove.path}$quale'), preso.byte);
           }
           attese[quale]!.complete(preso);
         }
@@ -618,8 +705,9 @@ class Servitore {
       }
     } finally {
       for (final quale in quali) {
-        if (identical(_inArrivo[quale], attese[quale]!.future)) {
-          _inArrivo.remove(quale);
+        final voce = '$casa\n$quale';
+        if (identical(_inArrivo[voce], attese[quale]!.future)) {
+          _inArrivo.remove(voce);
         }
       }
     }

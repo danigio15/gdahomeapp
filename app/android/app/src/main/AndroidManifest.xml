@@ -34,11 +34,22 @@
 
     <!-- La plancia vera dentro l'app passa da un server locale, su
          127.0.0.1: e' l'unico indirizzo in chiaro che il WebView puo'
-         aprire, ed e' scritto in res/xml/network_security_config.xml. -->
+         aprire, ed e' scritto in res/xml/network_security_config.xml.
+
+         Niente copie di sicurezza, ne' nella nuvola ne' da un telefono
+         all'altro: dentro l'app ci sono il segno della casa e la chiave del
+         filo, e una copia li porterebbe fuori dal telefono. Tanto non
+         servirebbero: sono cifrati con una chiave che sta nel portachiavi del
+         telefono e non se ne va con la copia. Su un telefono nuovo si
+         riabbina, come e' giusto. `allowBackup` vale fino ad Android 11,
+         `dataExtractionRules` da Android 12 in poi. -->
     <application
         android:label="gdahome"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
+        android:allowBackup="false"
+        android:fullBackupContent="false"
+        android:dataExtractionRules="@xml/regole_delle_copie"
         android:networkSecurityConfig="@xml/network_security_config">
         <activity
             android:name=".MainActivity"
@@ -67,7 +78,50 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
+
+        <!-- gdahome in auto (prova).
+
+             In macchina non si disegna: Android Auto mostra i suoi modelli —
+             liste, pannelli, griglie — e li impagina lui. Qui non c'e' la
+             plancia, c'e' il poco che serve guidando: quanto sole c'e', chi e'
+             in casa, e i tasti che uno tocca davvero.
+
+             La categoria e' `IOT`, che e' quello che questa app e'. Dichiararne
+             un'altra per entrare dove non si entrerebbe vorrebbe dire una
+             revisione passata dicendo una cosa falsa. -->
+        <service
+            android:name=".auto.GdahomeCarAppService"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="androidx.car.app.CarAppService" />
+                <category android:name="androidx.car.app.category.IOT" />
+            </intent-filter>
+        </service>
+        <meta-data
+            android:name="com.google.android.gms.car.application"
+            android:resource="@xml/automotive_app_desc" />
+        <meta-data
+            android:name="androidx.car.app.minCarApiLevel"
+            android:value="1" />
     </application>
+
+    <!-- Qui **non** c'e' `android.hardware.type.automotive`, e non e' una
+         dimenticanza: sono due cose diverse, e il negozio non le lascia
+         dichiarare insieme.
+
+         Quella riga e' di Android **Automotive**, il sistema che sta dentro
+         l'auto. gdahome fa Android **Auto**: gira sul telefono, e in macchina
+         ci arriva proiettata — la dichiara il `com.google.android.gms.car.application`
+         qui sopra, e basta quello. Dichiarate tutt'e due, il Play Console
+         rifiuta il pacchetto:
+
+           «The app cannot declare 'android.hardware.type.automotive' device
+            feature and 'com.google.android.gms.car.application' metadata at
+            the same time.»
+
+         E' costato un caricamento (la 1.6.4.1, prima corsa). Nessuna
+         `uses-feature` serve: l'app resta quella di sempre su ogni telefono, e
+         chi ha l'auto compatibile ci trova anche la macchina. -->
     <!-- Required to query activities that can process text, see:
          https://developer.android.com/training/package-visibility and
          https://developer.android.com/reference/android/content/Intent#ACTION_PROCESS_TEXT.

@@ -1,0 +1,567 @@
+/* In quale fascia consuma questo apparecchio, nella sua scheda (#111).
+ *
+ * «Mi aggiungi anche nel dispositivo le fasce per capire quanto quel
+ * dispositivo assorbe di più e in quale fascia.»
+ *
+ * Il Report lo dice gia' per tutta la casa, in Panoramica. Ma la casa e' la
+ * somma di tutto, e sapere che il 60% del mese e' passato in F3 non dice
+ * quale apparecchio ce l'ha messo. La domanda utile e' l'altra — la wallbox,
+ * il boiler, la lavatrice: ognuno in quale fascia pesa — perche' da li' si
+ * decide cosa spostare, e spostare e' l'unica cosa che si puo' fare davvero.
+ *
+ * ── Dove sta, e perche' li' ───────────────────────────────────────────────
+ *
+ * Sotto le due tessere dell'anno, in fondo alla scheda del dispositivo. Non
+ * in cima: chi apre quella scheda viene per il numero grande — quanti
+ * kilowattora, quanto costano — e la divisione in fasce e' la risposta alla
+ * domanda DOPO, quella che ci si fa guardando il numero grande.
+ *
+ * ── Il pannello e' stretto, e non solo al telefono ────────────────────────
+ *
+ * Le sei colonne del blocco della Panoramica qui non ci stanno nemmeno su un
+ * tablet: la scheda del dispositivo vive dentro un pannello con dei margini
+ * suoi, ed e' molto piu' stretta della pagina. La riga sta su due piani
+ * SEMPRE, per il contenitore e non per la finestra — una media query guarda
+ * lo schermo, e lo schermo qui non c'entra niente.
+ *
+ * ── Quando si chiede, e quanto costa ──────────────────────────────────────
+ *
+ * Sono settecento secchielli orari per tre entita': la stessa fetta di
+ * database da cui esce gia' la quota di sole dello stesso apparecchio, e
+ * infatti si chiede con la stessa mano (`leOreDalRecorder`, che i mesi chiusi
+ * se li tiene da parte). Si chiede SOLO a scheda aperta e SOLO per
+ * l'apparecchio scelto: chiederle per ogni riga del Report a ogni giro
+ * vorrebbe dire mettere in ginocchio il Recorder per dei numeri che nessuno
+ * sta guardando.
+ *
+ * Il conto vero non e' qui: sta in `core/le-fasce-del-dispositivo.js`, che
+ * non tocca ne' la rete ne' l'orologio. Qui c'e' solo il giro.
+ */
+
+import { DEFAULT_IMPORT_RATE } from "../core/energy-calculations.js";
+import {
+  CHIAVE_FASCE,
+  leFasceValgono,
+  nomeDellaFascia,
+  normalizzaLeFasce,
+  orarioDellaFascia,
+  tintaDellaFascia,
+} from "../core/fasce-della-tariffa.js";
+import { leFasceDelDispositivo } from "../core/le-fasce-del-dispositivo.js";
+import { periodRange } from "../core/period-service.js";
+import {
+  entitaDelleFonti,
+  leOreDalRecorder,
+  pianiDelleFonti,
+  prezzoUnicoDiAcquisto,
+  segnaIlContoMisurato,
+  secchielliNellArco,
+} from "./energy-section.js";
+import {
+  clean,
+  doc,
+  esc,
+  formatNumber,
+  installStyle,
+  readJson,
+  root,
+  selectedPeriod,
+  t,
+} from "./shared.js";
+
+const KEY = "__DASHBOARDMODERN_FASCE_DEL_DISPOSITIVO__";
+const state = (root[KEY] ||= {
+  installed: false,
+  inCorso: false,
+  /* Qualcuno ha chiesto mentre si aspettava: appena torna la risposta si
+   * riparte. Vedi il giro alla rete, piu' sotto. */
+  dopo: false,
+  giro: 0,
+  chiave: "",
+  letto: 0,
+  detto: null,
+});
+
+/* Un mese in corso si rifa' al massimo ogni quarto d'ora: e' la stessa
+ * scadenza della quota di sole dello stesso apparecchio, e per la stessa
+ * ragione — la proporzione si sposta a ogni notte di ricarica, il totale no. */
+const SCADENZA_MS = 15 * 60_000;
+
+const soldi = (valore) => `${formatNumber(valore, 2)} €`;
+
+/* ── il disegno ────────────────────────────────────────────────────────── */
+
+/**
+ * Il blocco, come markup.
+ *
+ * Non legge niente e non tocca niente: entrano il conto, la configurazione e
+ * il nome dell'apparecchio, esce il disegno. E' la parte che si puo' provare
+ * senza un browser.
+ */
+export function ilBloccoDelDispositivo(detto, config, nome = "") {
+  if (!detto || !config?.voci?.length) return "";
+  const quante = config.voci.length;
+
+  const barra = detto.fasce
+    .filter((fascia) => fascia.quota > 0.05)
+    .map(
+      (fascia) =>
+        `<span class="dm-fasce-fetta" style="width:${fascia.quota.toFixed(2)}%;background:${tintaDellaFascia(quante, fascia.indice)}" title="${esc(nomeDellaFascia(fascia.indice))} ${fascia.quota.toFixed(0)}%"></span>`,
+    )
+    .join("");
+
+  const righe = detto.fasce
+    .map((fascia) => {
+      const ripiego = fascia.suo
+        ? ""
+        : `<small class="dm-fasce-ripiego">${esc(t("prezzo unico", "single rate"))}</small>`;
+      /* Quanti di quei kilowattora sono passati dal contatore.
+       *
+       * «Se in base alle fasce fa 12 euro perche' sopra me ne porta 21?»
+       * Perche' la riga metteva i kilowattora TUTTI accanto agli euro della
+       * SOLA rete, col prezzo al kWh in mezzo ai due: 179,9 × 0,100 fa 17,99,
+       * e l'euro accanto diceva 10,27. Chi moltiplica non si trova mai, e
+       * moltiplicare e' la prima cosa che si fa davanti a tre numeri messi
+       * cosi'.
+       *
+       * I due numeri sono giusti tutti e due e servono tutti e due — i
+       * kilowattora dicono quanto ha consumato, gli euro quanto e' costato — e
+       * il pezzo che mancava era il terzo: quanti ne ha pagati. Adesso c'e', e
+       * sta attaccato al totale invece che in una nota sotto, perche' e' li'
+       * che si fa il conto sbagliato.
+       *
+       * Si scrive solo quando i due numeri sono diversi: dove il sole non e'
+       * entrato — di notte, o in una casa senza pannelli — ripetere lo stesso
+       * numero due volte sarebbe rumore. Il decimo di kilowattora e' la soglia
+       * sotto cui la differenza non si vede nemmeno arrotondata. */
+      const soloRete = fascia.kwh - fascia.rete < 0.05;
+      const dallaRete = soloRete
+        ? ""
+        : `<small class="dm-fasce-dalla-rete">${formatNumber(fascia.rete, 1)} ${esc(t("dalla rete", "from grid"))}</small>`;
+      return `
+        <div class="dm-fasce-riga">
+          <span class="dm-fasce-nome" style="--dm-fascia:${tintaDellaFascia(quante, fascia.indice)}">${esc(nomeDellaFascia(fascia.indice))}</span>
+          <span class="dm-fasce-ore">${esc(orarioDellaFascia(config, fascia.indice))}</span>
+          <span class="dm-fasce-kwh">${formatNumber(fascia.kwh, 1)} kWh${dallaRete}</span>
+          <span class="dm-fasce-quota">${formatNumber(fascia.quota, 0)}%</span>
+          <span class="dm-fasce-prezzo">${formatNumber(fascia.prezzo, 3)} €/kWh${ripiego}</span>
+          <span class="dm-fasce-euro">${soldi(fascia.euro)}</span>
+        </div>`;
+    })
+    .join("");
+
+  /* La risposta a parole, che e' la domanda che ha chiesto questo blocco.
+   *
+   * Una ETICHETTA e i suoi valori, non una frase spezzata attorno a un
+   * numero. «F3 è la fascia in cui assorbe di più: 83% di quello che prende»
+   * sembra innocente in italiano e si smonta in tredici lingue — «è la fascia
+   * in cui assorbe di più» e «di quello che prende» non sono frasi, sono due
+   * pezzi che tornano insieme solo dove le parole stanno nello stesso ordine
+   * dell'italiano. Qui la parte tradotta e' un'etichetta intera, e i numeri le
+   * stanno accanto senza entrarci dentro. */
+  const meglio = detto.risparmio !== null && detto.risparmio > 0.005;
+  const peggio = detto.risparmio !== null && detto.risparmio < -0.005;
+
+  /* E quanto vale, in soldi, caricare in quell'ora invece che a caso.
+   *
+   * L'emoji del sacchetto promette un numero: senza scriverlo, la riga dice
+   * «guarda che risparmi» e non dice quanto. Le tre frasi sono INTERE e sono
+   * le stesse del blocco della casa — «in meno di una tariffa unica» e' una
+   * frase in tutte le lingue, «in meno di» piu' «una tariffa unica» lo e'
+   * solo dove le parole stanno nell'ordine dell'italiano — e qui si
+   * riusano invece di riscriverle: sono la stessa cosa detta dello stesso
+   * confronto. */
+  const verso = meglio
+    ? t("in meno di una tariffa unica", "less than a single rate")
+    : peggio
+      ? t("in più di una tariffa unica", "more than a single rate")
+      : t("come una tariffa unica", "the same as a single rate");
+  const confronto = detto.unico
+    ? `<small><b>${esc(meglio || peggio ? soldi(Math.abs(detto.risparmio)) : "")}</b> ${esc(verso)} — ${formatNumber(detto.unico.prezzo, 3)} €/kWh → ${soldi(detto.unico.euro)}</small>`
+    : "";
+  const punta = `
+    <div class="dm-fasce-confronto" data-verso="${meglio ? "meglio" : peggio ? "peggio" : "pari"}">
+      <span aria-hidden="true">${meglio ? "💰" : peggio ? "⚠️" : "🕐"}</span>
+      <span>${esc(t("La fascia in cui assorbe di più:", "The band it draws most in:"))} <b>${esc(nomeDellaFascia(detto.punta.indice))}</b> · <b>${formatNumber(detto.punta.quota, 0)}%</b>${confronto}</span>
+    </div>`;
+
+  /* Il profilo delle ventiquattro ore: a che ora si attacca. Le colonne non
+   * hanno numeri sopra — ventiquattro numeri non si leggono — e il colore e'
+   * quello della fascia, come nel profilo della casa. */
+  const massimo = detto.ore.reduce((alto, ora) => Math.max(alto, ora.kwh), 0);
+  const colonne = massimo
+    ? detto.ore
+        .map((ora) => {
+          const alta = ora.kwh > 0 ? Math.max(3, Math.round((ora.kwh / massimo) * 100)) : 2;
+          const tinta = ora.fascia >= 0 ? tintaDellaFascia(quante, ora.fascia) : "#94a3b8";
+          return `<span class="dm-profilo-colonna" style="height:${alta}%;background:${tinta}${ora.kwh > 0 ? "" : ";opacity:.28"}" title="${String(ora.ora).padStart(2, "0")}:00 · ${formatNumber(ora.kwh, 2)} kWh"></span>`;
+        })
+        .join("")
+    : "";
+  const tacche = [0, 3, 6, 9, 12, 15, 18, 21]
+    .map((ora) => `<span>${String(ora).padStart(2, "0")}</span>`)
+    .join("");
+
+  /* Il sole, detto a parte, con accanto il totale che gli euro prezzano.
+   *
+   * La frase c'era gia' e diceva la cosa giusta — «gli euro qui sopra sono
+   * solo su quello che ha preso dalla rete» — e non e' bastata: chi guarda
+   * moltiplica NELLA RIGA, e la riga sta sopra la nota. Il numero che serve
+   * adesso e' li' (vedi `dallaRete`), e qui si aggiunge solo il totale, che
+   * chiude la somma delle tre righe.
+   *
+   * Si aggiunge come ETICHETTA e valore, non infilando i numeri dentro la
+   * frase: «dal sole X dei Y consumati» in italiano sembra innocente e in
+   * tredici lingue si smonta in pezzi che non sono frasi. E' la stessa regola
+   * scritta sopra, per il riquadro della fascia di punta, ed e' anche il
+   * motivo per cui la frase lunga resta quella di prima invece di
+   * riscriverla: e' gia' in tutti i cataloghi, e una frase nuova sarebbe
+   * dodici traduzioni per dire quello che si dice gia'. */
+  const dalSole =
+    detto.sole > 0.05
+      ? `<span aria-hidden="true">☀️</span> ${esc(t("Dal sole:", "From the sun:"))} <b>${formatNumber(detto.sole, 1)} kWh</b> · ${esc(t("dalla rete", "from grid"))}: <b>${formatNumber(detto.rete, 1)} kWh</b>. ${esc(t("Non costano niente a nessun'ora, e gli euro qui sopra sono solo su quello che ha preso dalla rete.", "They cost nothing at any hour, and the euros above are only on what it took from the grid."))}`
+      : "";
+  const spartito = detto.tuttoSpartito
+    ? ""
+    : `<span aria-hidden="true">ℹ️</span> ${esc(t("Non spartiti:", "Not split:"))} <b>${formatNumber(detto.spartito.senza, 1)} kWh</b>. ${esc(t("Per quelle ore Home Assistant non tiene il consumo della casa, e non si sa quanto venisse dal sole. La fascia però è quella giusta.", "For those hours Home Assistant doesn't keep the house consumption, so we can't tell how much came from the sun. The band is right all the same."))}`;
+  const nota = [dalSole, spartito].filter(Boolean).join("<br>");
+
+  return `
+    <div class="dm-fasce-testata">
+      <div class="dm-fasce-titolo">🕐 ${esc(t("In quale fascia consuma", "Which band it draws in"))}</div>
+      <div class="dm-fasce-totale"><b>${soldi(detto.euro)}</b> <small>${formatNumber(detto.kwh, 1)} kWh${nome ? ` · ${esc(nome)}` : ""}</small></div>
+    </div>
+    <div class="dm-fasce-barra">${barra}</div>
+    <div class="dm-fasce-griglia">${righe}</div>
+    ${punta}
+    ${colonne ? `<div class="dm-profilo-grafico">${colonne}</div><div class="dm-profilo-tacche">${tacche}</div>` : ""}
+    ${nota ? `<div class="dm-fasce-nota">${nota}</div>` : ""}`;
+}
+
+/* ── dove si appende ───────────────────────────────────────────────────── */
+
+/* Sotto le due tessere dell'anno: sono l'ultima cosa della scheda prima del
+ * grafico, e il blocco parla dello stesso periodo di cui parla la card. */
+function ilRiquadro(crea = false) {
+  /* L'ultima riga di tessere, e si chiede cosi' e basta.
+   *
+   * Prima si cercava in due modi, e dal campo hanno fallito tutti e due.
+   *
+   * Il primo guardava l'elemento subito dopo il titolo dell'anno: sulla
+   * wallbox li' c'e' il riquadro verde dei kilowattora che il contatore aveva
+   * gia' fatto prima delle statistiche, e sul boiler no. Da qui il blocco che
+   * compariva su un apparecchio e non sull'altro.
+   *
+   * Il secondo, il ripiego, diceva `.ed-dev-cost-row:last-of-type` — e
+   * `:last-of-type` in CSS vuol dire **ultimo elemento di quel TAG** fra i
+   * fratelli, non ultimo con quella classe. Dopo le tessere ci sono le righe
+   * «Spartizione misurata/stimata», che sono `div` anche loro: l'ultimo `div`
+   * non e' mai la riga delle tessere, e quel selettore non trovava niente.
+   * Provato in un browser vero, con la forma esatta della scheda di casa.
+   *
+   * Due modi che si somigliano, e nessuno dei due dice quello che serve. Le
+   * righe di tessere si contano, e l'ultima e' l'ultima. */
+  const righe = doc?.querySelectorAll?.(".ed-dev-cost-row");
+  const ultimo = righe?.length ? righe[righe.length - 1] : null;
+  if (!ultimo) return null;
+  let riquadro = doc.getElementById("dm-fasce-dispositivo");
+  if (!riquadro) {
+    if (!crea) return null;
+    riquadro = doc.createElement("div");
+    riquadro.id = "dm-fasce-dispositivo";
+    riquadro.className = "dm-fasce-report dm-fasce-dispositivo";
+  }
+  /* Sotto la riga della provenienza, non fra lei e le sue tessere.
+   *
+   * «Spartizione misurata ora per ora» la scrive la scheda subito dopo le
+   * tessere di cui parla, e la ritrova guardando li'. Mettendocisi in mezzo,
+   * il blocco gliela faceva perdere: la scheda ne creava una nuova a ogni
+   * ridisegno, e sullo schermo di casa se ne sono viste tre in fila. Due
+   * inquilini per lo stesso posto, che a turno si spingevano.
+   *
+   * Quel posto e' suo: il blocco va dopo. Il grafico dei giorni resta sotto,
+   * perche' viene dopo nel documento. */
+  const strada = ultimo.nextElementSibling;
+  const ancora = strada?.classList?.contains("dm-ed-strada") ? strada : ultimo;
+  if (riquadro.previousElementSibling !== ancora) ancora.after(riquadro);
+  return riquadro;
+}
+
+/* Via il riquadro. E `scorda` dice se se ne va anche il conto.
+ *
+ * Sono due cose diverse e le si confondeva. Quando la scheda non si vede —
+ * si e' appena toccata la linguetta e il guscio non l'ha ancora aperta — il
+ * conto fatto un attimo prima e' ancora buono: e' dello stesso apparecchio e
+ * dello stesso mese. Buttandolo, il ritorno sulla scheda voleva un altro giro
+ * al Recorder, e nell'attesa non c'era niente da vedere.
+ *
+ * Si scorda quando il conto NON vale piu': un altro apparecchio, un altro
+ * mese, le fasce spente, un giro finito male. */
+function togliIlRiquadro(scorda = true) {
+  doc?.getElementById("dm-fasce-dispositivo")?.remove();
+  if (!scorda) return;
+  state.detto = null;
+  state.chiave = "";
+}
+
+/* C'e' qualcuno che sta guardando questa scheda?
+ *
+ * La stessa domanda che si fa la quota di sole dello stesso apparecchio, e
+ * per la stessa ragione: una domanda a ore fatta a nessuno e' esattamente il
+ * carico sul Recorder che non si vuole rifare. */
+function laSchedaSiVede() {
+  const selettore = doc?.getElementById("ed-dev-selector");
+  if (!selettore) return false;
+  if (typeof selettore.checkVisibility === "function")
+    return Boolean(selettore.checkVisibility());
+  return Boolean(selettore.offsetParent);
+}
+
+/** Come si chiama l'apparecchio scelto, come lo scrive la sua tendina. */
+function nomeDelDispositivo(selettore) {
+  const voce = selettore?.selectedOptions?.[0];
+  return clean(voce?.textContent);
+}
+
+/** La chiave di un conto: stesso apparecchio, stesso mese, stesso prezzo. */
+export function chiaveDelConto(entita, periodo, unico) {
+  return `${entita}~${periodo.year}-${periodo.month}~${unico}`;
+}
+
+function disegna(detto, config, nome) {
+  const markup = detto ? ilBloccoDelDispositivo(detto, config, nome) : "";
+  const riquadro = ilRiquadro(Boolean(markup));
+  if (!riquadro) return false;
+  if (!markup) {
+    riquadro.remove();
+    return false;
+  }
+  riquadro.innerHTML = markup;
+  riquadro.dataset.dmFasce = String(config.voci.length);
+  return true;
+}
+
+/* ── il giro alla rete ─────────────────────────────────────────────────── */
+
+/**
+ * Chiede le ore del mese scelto per l'apparecchio aperto, e rifa' il conto.
+ *
+ * Tre entita' in una domanda sola — l'apparecchio, la casa, la rete — perche'
+ * e' la stessa fetta di database e chiederla tre volte sarebbe tre giri
+ * regalati al Recorder.
+ */
+export async function aggiornaLeFasceDelDispositivo({ forza = false } = {}) {
+  if (!doc) return false;
+  const config = normalizzaLeFasce(readJson(CHIAVE_FASCE, {}));
+  if (!leFasceValgono(config)) {
+    togliIlRiquadro();
+    return false;
+  }
+  const selettore = doc.getElementById("ed-dev-selector");
+  const scelto = clean(selettore?.value);
+  if (!scelto || !laSchedaSiVede()) {
+    /* Non si vede: il riquadro non ci va, ma il conto resta in tasca — al
+     * ritorno si ridisegna senza chiedere niente a nessuno. */
+    togliIlRiquadro(false);
+    return false;
+  }
+
+  const periodo = selectedPeriod();
+  const { casa, rete } = entitaDelleFonti(pianiDelleFonti("month"));
+  if (!casa || !rete) {
+    togliIlRiquadro();
+    return false;
+  }
+  const unico = prezzoUnicoDiAcquisto() || DEFAULT_IMPORT_RATE;
+  const nome = nomeDelDispositivo(selettore);
+  const chiave = chiaveDelConto(scelto, periodo, unico);
+  const fresco = chiave === state.chiave && Date.now() - state.letto < SCADENZA_MS;
+  if (!forza && fresco && state.detto) return disegna(state.detto, config, nome);
+
+  /* Quello che c'e' appeso adesso parla di un altro apparecchio, o di un
+   * altro mese: si toglie subito, senza aspettare la risposta.
+   *
+   * Un blocco intestato «Boiler» sotto la scheda della wallbox e' peggio di
+   * nessun blocco — dice il falso, e lo dice con dei numeri veri accanto, che
+   * e' il modo piu' convincente di dirlo. Per il tempo del giro non c'e'
+   * niente, e chi guarda capisce di stare aspettando. */
+  if (state.chiave && state.chiave !== chiave) togliIlRiquadro();
+
+  /* Uno per volta, ma l'ultimo vince.
+   *
+   * Qui c'era `if (state.inCorso) return false;`, e buttava via la domanda
+   * appena arrivata. Cambiando apparecchio mentre il giro di quello di prima
+   * era ancora per aria, la domanda nuova non partiva proprio, e il blocco
+   * restava quello vecchio: «se metto ad esempio wallbox esce boiler». Il
+   * boiler era il giro partito prima; la wallbox una domanda mai fatta.
+   *
+   * Uno per volta resta — sono tre entita' chieste a ore, e due giri insieme
+   * sono due fette di Recorder in contemporanea — ma chi arriva mentre si
+   * aspetta si mette in coda invece di sparire. */
+  if (state.inCorso) {
+    state.dopo = true;
+    return false;
+  }
+
+  const giro = ++state.giro;
+  state.inCorso = true;
+  try {
+    const fonti = pianiDelleFonti("month");
+    const unita = Object.fromEntries(
+      fonti.filter((piano) => piano.entity).map((piano) => [piano.entity, piano.unita || ""]),
+    );
+    const arco = periodRange("month", new Date(periodo.year, periodo.month - 1, 1), new Date());
+    const pezzo = { ...arco, kind: "month", period: "hour" };
+    const righe = await leOreDalRecorder([scelto, casa, rete], pezzo, unita);
+    if (giro !== state.giro) return false;
+    const detto = leFasceDelDispositivo(
+      {
+        dispositivo: secchielliNellArco(righe?.[scelto], pezzo),
+        casa: secchielliNellArco(righe?.[casa], pezzo),
+        rete: secchielliNellArco(righe?.[rete], pezzo),
+      },
+      config,
+      { prezzoUnico: unico },
+    );
+    state.detto = detto;
+    state.chiave = chiave;
+    state.letto = Date.now();
+    /* E il conto vero lo sa anche la scheda qui sopra.
+     *
+     * I due euro della card — «risparmiato grazie al FV» e «speso dalla rete»
+     * — li faceva con la media delle fasce pesata sulle ore della settimana,
+     * che e' la sola cosa che si possa dire senza sapere in che ore
+     * l'apparecchio ha consumato. Qui quelle ore ci sono, appena chieste al
+     * Recorder: su una wallbox che carica di notte la differenza era 20,19 €
+     * contro 12,58 €, sugli stessi kilowattora e a dieci centimetri di
+     * distanza sulla stessa schermata.
+     *
+     * Si passa il conto e basta: a scrivere nella card resta la card. E lo si
+     * passa DOPO aver disegnato il proprio blocco, perche' quel passaggio fa
+     * ridipingere la scheda — e una ridipintura in mezzo al proprio lavoro e'
+     * il modo piu' rapido di non finirlo. */
+    /* Fra la domanda e la risposta la tendina puo' essere cambiata. Il conto
+     * si tiene lo stesso — e' buono, ed e' di quell'apparecchio — ma non si
+     * disegna: a disegnare ci pensa il giro che sta gia' in coda, con
+     * l'apparecchio che c'e' adesso. */
+    if (clean(doc.getElementById("ed-dev-selector")?.value) !== scelto) return false;
+    const fatto = disegna(detto, config, nome);
+    if (detto)
+      segnaIlContoMisurato(scelto, periodo, {
+        euro: detto.euro,
+        valoreDelSole: detto.valoreDelSole,
+      });
+    return fatto;
+  } catch (errore) {
+    if (giro === state.giro) {
+      root.console?.warn?.("[dashboardmodern] ore non lette per le fasce del dispositivo", errore);
+      togliIlRiquadro();
+    }
+    return false;
+  } finally {
+    if (giro === state.giro) {
+      state.inCorso = false;
+      if (state.dopo) {
+        state.dopo = false;
+        /* Fuori da questo giro e non qui dentro: dieci cambi di tendina di
+         * fila diventerebbero dieci chiamate una dentro l'altra. */
+        root.setTimeout?.(() => rifai(true), 0);
+      }
+    }
+  }
+}
+
+/* ── il foglio ─────────────────────────────────────────────────────────── */
+
+function foglio() {
+  installStyle(
+    "dm-fasce-del-dispositivo-style",
+    `
+    /* Il pannello del dispositivo e' stretto SEMPRE, non solo al telefono: le
+     * sei colonne del blocco della Panoramica non ci stanno nemmeno su un
+     * tablet. La riga va su due piani per contenitore, non per finestra. */
+    .dm-fasce-dispositivo{margin:14px 0 0!important;padding:14px 15px!important}
+    .dm-fasce-dispositivo .dm-fasce-riga{grid-template-columns:34px minmax(0,1fr) auto auto!important;gap:3px 10px!important}
+    .dm-fasce-dispositivo .dm-fasce-nome{grid-column:1!important;grid-row:1/3!important;align-self:start!important}
+    .dm-fasce-dispositivo .dm-fasce-ore{grid-column:2!important;grid-row:1!important}
+    .dm-fasce-dispositivo .dm-fasce-kwh{grid-column:3/5!important;grid-row:1!important}
+    /* «102,7 dalla rete» sotto il totale: e' il numero che moltiplica il
+     * prezzo, e sta attaccato al totale perche' la domanda nasce guardando
+     * quei due insieme. Blocco e non in linea — accanto, su una riga gia'
+     * stretta, spingerebbe fuori il totale — e con il peso e il colore di una
+     * didascalia, che il numero grande resta quello che ha consumato. */
+    .dm-fasce-dalla-rete{display:block!important;font-weight:700!important;font-size:10px!important;color:var(--secondary-text-color,#64748b)!important;white-space:nowrap!important}
+    .dm-fasce-dispositivo .dm-fasce-quota{grid-column:2!important;grid-row:2!important;text-align:left!important}
+    .dm-fasce-dispositivo .dm-fasce-prezzo{grid-column:3!important;grid-row:2!important}
+    .dm-fasce-dispositivo .dm-fasce-euro{grid-column:4!important;grid-row:2!important}
+    .dm-fasce-dispositivo .dm-profilo-grafico{height:62px!important;gap:2px!important}
+    .dm-fasce-dispositivo .dm-fasce-confronto{align-items:flex-start!important}
+    .dm-fasce-dispositivo .dm-fasce-nota{line-height:1.55!important}
+    `,
+  );
+}
+
+/* ── il giro ───────────────────────────────────────────────────────────── */
+
+function rifai(forza = false) {
+  aggiornaLeFasceDelDispositivo({ forza }).catch(() => {});
+}
+
+export function installLeFasceDelDispositivo() {
+  if (!doc || state.installed) return false;
+  state.installed = true;
+  foglio();
+  /* Cambiare apparecchio cambia il conto: e' la tendina che decide di chi si
+   * sta parlando, ed e' l'unico gesto che lo cambia da solo. */
+  doc.addEventListener("change", (evento) => {
+    if (evento.target?.id === "ed-dev-selector") rifai(true);
+  });
+  /* Il pacchetto del periodo e' il momento in cui la scheda del dispositivo
+   * viene ridipinta: e' li' che il blocco va rimesso al suo posto, e li' che
+   * un mese diverso vuole un conto diverso. E' lo stesso aggancio del blocco
+   * della Panoramica. */
+  root.addEventListener?.("dashboardmodern:period-bundle", () =>
+    root.queueMicrotask?.(() => rifai()),
+  );
+  /* E chi arriva sulla scheda cliccando la linguetta la trova gia' pronta.
+   *
+   * La linguetta e' «Analisi», ed e' li' che sta il dettaglio del dispositivo.
+   * Qui c'era scritto «#ed-tab-disp», che in questa plancia non esiste: le
+   * linguette di Energia sono due, `ed-tab-pan` e `ed-tab-ana`, e una scheda
+   * chiamata «disp» non c'e' mai stata. Quindi l'aggancio non scattava mai, e
+   * il blocco spariva per davvero: stando in Panoramica la scheda non si vede,
+   * `rifai` toglie il riquadro, e tornando su Analisi non lo rimetteva
+   * nessuno. Riappariva solo cambiando apparecchio nella tendina — cioe' il
+   * gesto che non si fa, perche' l'apparecchio e' gia' scelto da prima.
+   *
+   * Si ascoltano tutt'e due le linguette e non solo quella giusta: a decidere
+   * se il blocco ci va e' `rifai`, che guarda se la scheda si vede, e cosi'
+   * anche tornare in Panoramica passa di li' invece di lasciare il riquadro
+   * appeso a una scheda nascosta. */
+  doc.addEventListener(
+    "click",
+    (evento) => {
+      if (!evento.target?.closest?.(".ed-inner-tab,#ed-tab-ana,#ed-tab-pan")) return;
+      /* Tre volte, e non una.
+       *
+       * Il tocco si sente in cattura — prima che il guscio faccia qualunque
+       * cosa — e subito dopo la scheda non si vede ancora: `rifai` trovava
+       * tutto chiuso, non disegnava niente, e li' finiva. Il blocco tornava
+       * solo cambiando apparecchio nella tendina, ed e' il gesto che dal
+       * campo si e' dovuto inventare: «seleziono boiler e non lo porta, ne
+       * scelgo un altro e torno su boiler, e allora lo carica».
+       *
+       * Quando la scheda si apra non lo dice nessuno, quindi si riprova:
+       * subito, dopo un quarto di secondo e dopo un secondo scarso. Le
+       * passate in piu' non costano niente — trovano il conto gia' fatto e al
+       * massimo riappendono il riquadro — e quella buona e' la prima che
+       * trova la scheda aperta. */
+      for (const fra of [0, 250, 900]) root.setTimeout?.(() => rifai(), fra);
+    },
+    true,
+  );
+  rifai();
+  return true;
+}
+
+installLeFasceDelDispositivo();

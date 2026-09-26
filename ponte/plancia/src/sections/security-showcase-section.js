@@ -49,6 +49,10 @@ import {
   ingressiDellaCentrale,
   zoneDellaCentrale,
 } from "../core/le-zone-della-centrale.js";
+import {
+  CHIAVE_TELECAMERE_IN_SICUREZZA,
+  leTelecamereSiVedono,
+} from "../core/le-telecamere-si-vedono.js";
 import { CHIAVE_PRESENZA, contoDellaPresenza, presenzaDiCasa } from "../core/presenza-in-casa.js";
 import { CHIAVE_VARCHI, contoDeiVarchi, varchiDiCasa } from "../core/varchi-di-casa.js";
 import {
@@ -65,9 +69,11 @@ import {
   activeLocale,
   allStates,
   clean,
+  disegnoDiCasa,
   doc,
   english,
   esc,
+  jsArg,
   installStyle,
   readJson,
   restyleOnLocaleChange,
@@ -78,6 +84,11 @@ import {
   writeJsonIfChanged,
 } from "./shared.js";
 import { disegnoDelCatalogo } from "../core/catalogo-disegni.js";
+import { normalizePeople } from "../core/person-model.js";
+import {
+  CHIAVE_RISERVATE,
+  telecamereVisibili,
+} from "../core/telecamere-riservate.js";
 import { iconGlyphMarkup } from "./icon-engine-section.js";
 
 const KEY = "__DASHBOARDMODERN_SECURITY_SHOWCASE__";
@@ -230,6 +241,29 @@ export function securityCameras() {
   return Array.isArray(values) ? values : [];
 }
 
+/* Le persone di casa, per sapere se c'e' qualcuno. Sono quelle della sezione
+ * Persone: chi non l'ha compilata non ha nessuna telecamera riservata, e
+ * questa riga non la legge nessuno. */
+function personeDiCasa() {
+  return normalizePeople(readJson("cd_people", []));
+}
+
+/**
+ * Le telecamere **da disegnare adesso**, che non sono sempre quelle configurate.
+ *
+ * `securityCameras()` resta l'elenco intero, e deve restarlo: e' quello che
+ * l'editor mostra, e una telecamera che si nasconde da sola non si potrebbe
+ * piu' riconfigurare. Quello che cambia col momento e' questo, e lo chiama
+ * chi disegna (#81).
+ */
+export function telecamereDaMostrare(cameras = securityCameras(), states = allStates()) {
+  return telecamereVisibili(cameras, {
+    config: readJson(CHIAVE_RISERVATE, {}),
+    persone: personeDiCasa(),
+    states,
+  });
+}
+
 export function cameraSlug(camera, index) {
   if (typeof root.camSlug === "function") {
     try {
@@ -269,7 +303,7 @@ export function cameraOffline(entity, states = allStates()) {
   return OFFLINE_STATES.has(value);
 }
 
-function cameraModels(cameras = securityCameras()) {
+function cameraModels(cameras = telecamereDaMostrare()) {
   return cameras.map((camera, index) => {
     const entity = clean(camera?.entity || camera?.camera_entity || camera?.cam);
     const name = clean(camera?.name) || entity || `CAM ${index + 1}`;
@@ -418,13 +452,27 @@ function pastigliaDellaZona(riga) {
    * sarebbe la bugia tranquillizzante che quella pagina evita gia'. */
   const come = riga.stato === "attivo" ? "attiva" : riga.stato === "libero" ? "libera" : "muta";
   return `<span class="dm-sec-zona" data-stato="${esc(come)}" title="${esc(riga.entity)}">
-    <i aria-hidden="true">${riga.glifo}</i><b>${esc(riga.name)}</b></span>`;
+    <i aria-hidden="true">${disegnoDiCasa(riga.glifo, { misura: 20, ripiego: "motion" })}</i><b>${esc(riga.name)}</b></span>`;
 }
 
+/* Un ingresso escluso dall'antifurto lo dice anche qui (#136).
+ *
+ * E' il posto in cui conta piu' che altrove: questa fila sta sopra i tasti che
+ * inseriscono la centrale, e chi sta per premere «Totale» deve vedere che una
+ * finestra e' esclusa PRIMA di premere. Qui non si comanda — lo scudo da premere
+ * sta nella pagina Varchi, dove c'e' l'elenco intero — qui si dice, che e' quello
+ * che serve a questa fila.
+ *
+ * La parola resta quella dell'infisso: esclusa o no, aperta e' aperta. La
+ * differenza la fa il tratteggio, la stessa che usa la carta di la'. */
 function pastigliaDellIngresso(riga) {
   const come = riga.stato === "aperto" ? "aperto" : riga.stato === "chiuso" ? "chiuso" : "muto";
-  return `<span class="dm-sec-zona" data-stato="${esc(come)}" title="${esc(riga.entity)}">
-    <i aria-hidden="true">${riga.glifo}</i><b>${esc(riga.name)}</b></span>`;
+  const escluso = riga.escluso === "escluso";
+  const titolo = escluso
+    ? `${riga.entity} · ${t("Esclusione dall'antifurto", "Alarm bypass")}`
+    : riga.entity;
+  return `<span class="dm-sec-zona" data-stato="${esc(come)}" data-escluso="${escluso}" title="${esc(titolo)}">
+    <i aria-hidden="true">${disegnoDiCasa(riga.glifo, { misura: 20, ripiego: "door" })}</i><b>${esc(riga.name)}</b></span>`;
 }
 
 function riquadroDelleZone(zone, ingressi, labels) {
@@ -600,7 +648,7 @@ function vesteLaFinestraRapida() {
   griglia.innerHTML = tasti
     .map(
       (voce) => `<button class="qa-alarm-btn${voce.mode === acceso ? " active" : ""}"
-        data-mode="${voce.mode}" onclick="promptPinAndSet('${voce.service}')">
+        data-mode="${esc(voce.mode)}" onclick="promptPinAndSet(${jsArg(voce.service)})">
         <span class="qa-alarm-btn-icon">${disegnoDelTastoAntifurto(voce, 26)}</span>
         <span class="qa-alarm-btn-name">${esc(voce.label)}</span>
         <span class="qa-alarm-btn-sub">${esc(voce.hint)}</span>
@@ -694,7 +742,7 @@ function syncModes(shell, labels) {
 
 function modeButton(voce) {
   const { mode, service, label, hint } = voce;
-  return `<button type="button" class="alarm-mode-btn dm-sec-mode" data-mode="${mode}" onclick="promptPinAndSet('${service}')">
+  return `<button type="button" class="alarm-mode-btn dm-sec-mode" data-mode="${esc(mode)}" onclick="promptPinAndSet(${jsArg(service)})">
       <span class="dm-sec-mode-ic" aria-hidden="true">${disegnoDelTastoAntifurto(voce, 22)}</span>
       <span class="dm-sec-mode-tx">${esc(label)}</span>
       <span class="dm-sec-mode-hint">${esc(hint)}</span>
@@ -861,6 +909,19 @@ export function renderSecurity() {
   grid.hidden = total === 0;
   shell.querySelector(".dm-sec-cctv")?.classList.toggle("is-empty", total === 0);
 
+  /* E il riquadro intero, per chi telecamere non ne vuole (#113).
+   *
+   * Si nasconde, non si smette di costruire: lo scheletro si scrive una volta
+   * sola all'apertura della pagina, e l'interruttore si tocca mentre la pagina
+   * e' gia' li'. Costruire meno vorrebbe dire una pagina che si accorge del
+   * cambio solo ricaricandola. La pastiglia in cima parla delle stesse
+   * telecamere e se ne va con loro. */
+  const siVedono = leTelecamereSiVedono(readJson(CHIAVE_TELECAMERE_IN_SICUREZZA, null));
+  const cctv = shell.querySelector(".dm-sec-cctv");
+  if (cctv) cctv.hidden = !siVedono;
+  const pastiglia = shell.querySelector("[data-dm-cctv-pill]");
+  if (pastiglia) pastiglia.hidden = !siVedono;
+
   const meta = shell.querySelector("[data-dm-cam-meta]");
   if (meta) {
     const channels = total === 1 ? labels.channelsOne : labels.channels(total);
@@ -987,6 +1048,95 @@ async function premiIlModoSuMisura(id) {
 function nominaIlTastierino(modo) {
   const riquadro = doc?.getElementById?.("keypad-action-name");
   if (riquadro) riquadro.textContent = clean(modo?.nome) || clean(modo?.entita);
+}
+
+/* ── prima di inserire, cosa e' ancora aperto (#116) ─────────────────────
+ *
+ * «Possibilita' di inserire i sensori dell'allarme nella sezione in modo che
+ * se provo ad attivare l'allarme e ho una finestra aperta mi segnali quale e'
+ * aperta.»
+ *
+ * I sensori si dichiarano gia': sono gli «Ingressi di quest'area» della
+ * centrale, e la pagina li elenca sotto «Ingressi» con lo stesso nome e lo
+ * stesso stato che hanno nei Varchi. Quello che mancava e' il momento in cui
+ * servono davvero — il tocco sul tasto d'inserimento — perche' una finestra
+ * aperta la si scopriva dalla centrale che rifiuta, o peggio da un allarme che
+ * suona alle tre di notte.
+ *
+ * Si aggancia `promptPinAndSet` e non i tasti. Le file di tasti sono tre — la
+ * pagina, la tessera della Home, la finestra rapida del banner — e passano
+ * tutte di qui: chi decide cosa succede quando si preme deve essere uno solo,
+ * ed e' la stessa ragione per cui i tasti li disegna un posto solo.
+ *
+ * ── Cosa si controlla, e cosa no ────────────────────────────────────────
+ *
+ * Solo gli inserimenti veri: `alarm_arm_*`. Lo sblocco no — una finestra
+ * aperta non e' un motivo per non disinserire, e chiederlo sarebbe una domanda
+ * in mezzo a chi sta rientrando. E nemmeno i tasti scritti a mano (#413), che
+ * un servizio della centrale non lo chiamano affatto: di quelli non sappiamo
+ * se inseriscono, e chiedere «c'e' una finestra aperta» davanti a un tasto che
+ * accende il giardino sarebbe rumore.
+ *
+ * E si controllano gli ingressi che la centrale ha DICHIARATO, non tutti i
+ * varchi di casa. E' la regola di `le-zone-della-centrale.js`, decisa dal
+ * campo: «in zone sicurezza non devi rilevare tu e mettere tutto». Chi non ne
+ * ha dichiarato nessuno non vede nessuna domanda, ed e' voluto — una domanda
+ * su porte che non c'entrano con quella centrale la si impara a saltare.
+ *
+ * ── E non impedisce mai ─────────────────────────────────────────────────
+ *
+ * Chiede, e se si risponde di si' inserisce. Uno puo' voler inserire con la
+ * finestra del bagno aperta apposta; e una plancia che si mette di traverso
+ * fra chi esce di casa e il suo antifurto e' peggio del guaio che voleva
+ * evitare. Se la conferma del guscio non c'e', si passa: mai bloccare.
+ */
+const INSERISCE = /^alarm_arm_/i;
+
+/* Gli ingressi della centrale che si sta guardando, aperti adesso. La regola di
+ * cosa conti per «aperto» e' quella dei Varchi, e sta in un posto solo. */
+function ingressiApertiAdesso() {
+  const lista = centraliDiCasa();
+  const centrale = lista.find((riga) => riga.corrente === true) || lista[0] || {};
+  return contoDeiVarchi(ingressiDellaCentrale(righeDeiVarchi(), centrale)).aperte;
+}
+
+function agganciaIlControlloDegliIngressi() {
+  const nome = "promptPinAndSet";
+  const originale = root[nome];
+  if (typeof originale !== "function" || originale.__dmIngressiAperti) return false;
+  function avvolta(...argomenti) {
+    if (!INSERISCE.test(clean(argomenti[0]))) return originale.apply(this, argomenti);
+    let aperti = [];
+    try {
+      aperti = ingressiApertiAdesso();
+    } catch (_errore) {
+      aperti = [];
+    }
+    if (!aperti.length || typeof root.confermaAzione !== "function")
+      return originale.apply(this, argomenti);
+    const quali = aperti
+      .map((riga) => clean(riga?.name))
+      .filter(Boolean)
+      .join(", ");
+    try {
+      root.confermaAzione({
+        icon: "\u{1F6AA}",
+        title: t("C'è ancora qualcosa di aperto", "Something is still open"),
+        message: t(
+          `Aperti adesso: ${quali}. Inserisco lo stesso?`,
+          `Open right now: ${quali}. Arm anyway?`,
+        ),
+        onConfirm: () => originale.apply(this, argomenti),
+      });
+      return undefined;
+    } catch (_errore) {
+      return originale.apply(this, argomenti);
+    }
+  }
+  avvolta.__dmIngressiAperti = true;
+  avvolta.__dmPrecedente = originale;
+  root[nome] = avvolta;
+  return true;
 }
 
 function agganciaIModiSuMisura() {
@@ -1124,6 +1274,7 @@ export function installSecurityShowcaseSection() {
   installOverrides();
   agganciaIModiSuMisura();
   agganciaIlCodiceDeiModiSuMisura();
+  agganciaIlControlloDegliIngressi();
   agganciaLaFinestraRapida();
   if (!state.listeners) {
     state.listeners = true;
@@ -1141,6 +1292,7 @@ export function installSecurityShowcaseSection() {
         installOverrides();
         agganciaIModiSuMisura();
         agganciaIlCodiceDeiModiSuMisura();
+        agganciaIlControlloDegliIngressi();
         agganciaLaFinestraRapida();
         renderSecurity();
       });
@@ -1328,7 +1480,8 @@ function securityCss() {
 .dm-sec-zone-righe{display:flex;gap:7px;flex-wrap:wrap}
 .dm-sec-zona{display:inline-flex;align-items:center;gap:6px;padding:6px 11px;border-radius:999px;font-size:11.5px;font-weight:800;border:1px solid var(--card-border,#e2e8f0);background:var(--card-background-color,#fff)}
 .dm-sec-zona i{font-style:normal;line-height:1;display:inline-flex}
-.dm-sec-zona i svg{width:15px;height:15px}
+.dm-sec-zona i .dm-catalogo-art{display:inline-flex;line-height:0}
+.dm-sec-zona i svg{width:15px;height:15px;display:block}
 .dm-sec-zona[data-stato="attiva"],.dm-sec-zona[data-stato="aperto"]{
   border-color:color-mix(in srgb,#dc2626 42%,transparent);
   background:color-mix(in srgb,#dc2626 13%,var(--card-bg,#fff));color:#b91c1c}
@@ -1338,6 +1491,10 @@ function securityCss() {
 /* Chi non risponde non e' verde: contarlo a posto sarebbe la bugia
    tranquillizzante che le due pagine evitano gia' nel loro conto. */
 .dm-sec-zona[data-stato="muta"],.dm-sec-zona[data-stato="muto"]{opacity:.6}
+/* Escluso dall'antifurto (#136): tratteggio ambra, la stessa lingua della carta
+   nella pagina Varchi. Sopra il colore dello stato, non al posto suo: com'e' la
+   finestra e se la centrale la guarda sono due cose, e si leggono insieme. */
+.dm-sec-zona[data-escluso="true"]{border-style:dashed;border-color:#f59e0b}
 .dm-sec-area{
   flex:1 1 140px;display:flex;flex-direction:column;gap:2px;align-items:flex-start;
   padding:9px 13px;border-radius:14px;font:inherit;text-align:left;cursor:pointer;
@@ -1403,6 +1560,14 @@ function securityCss() {
 
 /* ── cameras ─────────────────────────────────────────────────────────── */
 .dm-sec-cctv{display:flex;flex-direction:column;gap:14px}
+/* E quando si toglie, si toglie davvero (#113).
+   Una regola nostra col «display» batte l'attributo «hidden» del browser, che
+   vale solo finche' nessuno dice il contrario: senza queste due righe il
+   riquadro restava esattamente dov'era, con l'attributo addosso. Lo stesso
+   inciampo del radar nella finestra del meteo, e si e' rivisto qui perche' la
+   prova sul browser vero lo ha guardato. */
+.dm-sec-cctv[hidden]{display:none}
+.dm-sec-pill[hidden]{display:none}
 .dm-sec-cctv-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:0 4px}
 .dm-sec-cctv-ic{
   width:32px;height:32px;flex:0 0 32px;display:grid;place-items:center;border-radius:10px;

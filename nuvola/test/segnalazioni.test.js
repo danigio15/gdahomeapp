@@ -17,9 +17,12 @@ import {
   corpoDellaIssue,
   filo,
   inBase64,
+  innocuo,
+  nomeColSuoTipo,
   nomeDiFile,
   paroleDellaPersona,
   statoDellaIssue,
+  tipoDelFile,
 } from "../src/segnalazioni.js";
 
 /* Un archivio come quello del Durable Object: get, put, e basta. */
@@ -450,8 +453,13 @@ test("un allegato finisce nella repository, e sotto la issue c'e' il commento ch
     }),
     (errore) => errore instanceof RichiestaSbagliata && errore.codice === "troppo_grande",
   );
+  /* Il tipo lo dicono i byte: un eseguibile resta un eseguibile anche se
+   * si dichiara una foto. (Prima qui si mandavano i byte di una foto
+   * dichiarandoli «application/octet-stream», e il no arrivava per
+   * l'intestazione; adesso l'intestazione non si guarda piu'.) */
+  const eseguibile = new TextEncoder().encode("MZ\x90\x00 questo non e' una foto");
   await assert.rejects(
-    mie.allega(aperta.numero, { nome: "x.exe", tipo: "application/octet-stream", byte }),
+    mie.allega(aperta.numero, { nome: "x.jpg", tipo: "image/jpeg", byte: eseguibile }),
     (errore) => errore instanceof RichiestaSbagliata && errore.codice === "tipo_non_ammesso",
   );
 });
@@ -495,4 +503,152 @@ test("il filo porta lo stato dei tre gruppi, e l'elenco se lo tiene", async () =
     [],
   );
   assert.equal(dentro.stato, "in-carico");
+});
+
+/* ─── Le difese ──────────────────────────────────────────────────────────── */
+
+test("il tipo di un allegato lo dicono i suoi byte, non l'intestazione", () => {
+  const da = (...byte) => {
+    const tutti = new Uint8Array(32);
+    tutti.set(byte.flat());
+    return tutti;
+  };
+  const testo = (parole) => [...parole].map((una) => una.charCodeAt(0));
+  assert.equal(tipoDelFile(da(0xff, 0xd8, 0xff, 0xe0)), "image/jpeg");
+  assert.equal(tipoDelFile(da(testo("\x89PNG\r\n\x1a\n"))), "image/png");
+  assert.equal(tipoDelFile(da(testo("GIF89a"))), "image/gif");
+  assert.equal(tipoDelFile(da(testo("RIFF"), [1, 2, 3, 4], testo("WEBP"))), "image/webp");
+  assert.equal(tipoDelFile(da([0, 0, 0, 24], testo("ftypisom"))), "video/mp4");
+  assert.equal(tipoDelFile(da([0, 0, 0, 20], testo("ftypqt  "))), "video/quicktime");
+  assert.equal(tipoDelFile(da([0, 0, 0, 24], testo("ftypheic"))), "image/heic");
+  assert.equal(tipoDelFile(da([0x1a, 0x45, 0xdf, 0xa3], testo("....webm"))), "video/webm");
+  /* Il resto no: una pagina, un eseguibile, un Matroska qualunque, un ftyp
+   * che non si conosce. */
+  assert.equal(tipoDelFile(da(testo("<html><script>"))), "");
+  assert.equal(tipoDelFile(da(testo("MZ"))), "");
+  assert.equal(tipoDelFile(da([0x1a, 0x45, 0xdf, 0xa3], testo("matroska"))), "");
+  assert.equal(tipoDelFile(da([0, 0, 0, 24], testo("ftypxxxx"))), "");
+  /* E il nome prende l'estensione di quello che il file e'. */
+  assert.equal(nomeColSuoTipo("pagina.html", "image/png"), "pagina.png");
+  assert.equal(nomeColSuoTipo("foto", "image/jpeg"), "foto.jpg");
+});
+
+test("un file che si dichiara foto ma e' una pagina non si allega; una foto con un nome strano si'", async () => {
+  const { github, chiamate } = gitHubFinto();
+  const mie = new Segnalazioni({ storage: archivioFinto(), github, casa: "casa_1" });
+  const aperta = await mie.crea({ tipo: "problema", titolo: "t", corpo: "c" });
+  const pagina = new TextEncoder().encode("<html><script>alert(1)</script></html>");
+  await assert.rejects(
+    mie.allega(aperta.numero, { nome: "foto.png", tipo: "image/png", byte: pagina }),
+    (errore) => errore.codice === "tipo_non_ammesso",
+  );
+  const png = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 0]);
+  await mie.allega(aperta.numero, { nome: "trucco.html", tipo: "text/html", byte: png });
+  const messo = chiamate.find((una) => una.metodo === "PUT");
+  assert.match(messo.url, /trucco\.png$/);
+});
+
+test("le chiamate e i commenti HTML non passano nella issue", async () => {
+  const { github, chiamate } = gitHubFinto();
+  const mie = new Segnalazioni({ storage: archivioFinto(), github, casa: "casa_1" });
+  const aperta = await mie.crea({
+    tipo: "problema",
+    titolo: "Aiuto @manutentore",
+    corpo: "Guardate @tizio e @org/squadra <!-- nascosto --> scrivete a anna@esempio.it",
+    diagnostica: { versione: "@qualcuno <!-- x -->" },
+  });
+  const issue = chiamate.find((una) => /\/issues$/.test(una.url)).corpo;
+  for (const testo of [issue.title, issue.body]) {
+    assert.doesNotMatch(testo, /(^|[^\w])@[a-z]/i, testo);
+    assert.doesNotMatch(testo, /<!-- (nascosto|x)/, testo);
+  }
+  /* Gli indirizzi email restano come sono, e i segni nostri pure. */
+  assert.match(issue.body, /anna@esempio\.it/);
+  assert.match(issue.body, /<!-- gdahome:diagnostica -->/);
+  assert.equal(innocuo("@tizio").replace("‍", ""), "@tizio");
+
+  await mie.rispondi(aperta.numero, "ciao @tizio <!-- x");
+  const risposta = chiamate.filter((una) => /\/comments$/.test(una.url)).at(-1).corpo.body;
+  assert.ok(risposta.startsWith(MARCATORE_CASA));
+  assert.doesNotMatch(risposta.slice(MARCATORE_CASA.length), /@tizio|<!--/);
+});
+
+test("gli allegati vanno sul loro ramo, che si crea da solo la prima volta", async () => {
+  const chieste = [];
+  let ramoFatto = false;
+  const prendi = async (url, opzioni = {}) => {
+    const metodo = opzioni.method || "GET";
+    const corpo = opzioni.body ? JSON.parse(opzioni.body) : null;
+    chieste.push({ url, metodo, corpo });
+    const rispondi = (status, json) => ({ ok: status < 300, status, json: async () => json });
+    const via = new URL(url).pathname;
+    if (metodo === "PUT" && via.includes("/contents/")) {
+      if (!ramoFatto) return rispondi(404, { message: "Branch allegati not found" });
+      return rispondi(201, { content: { html_url: "https://github.com/a/b/blob/allegati/x" } });
+    }
+    if (via === "/repos/chi/allegati") return rispondi(200, { default_branch: "main" });
+    if (via === "/repos/chi/allegati/git/ref/heads/main")
+      return rispondi(200, { object: { sha: "a".repeat(40) } });
+    if (via === "/repos/chi/allegati/git/refs" && metodo === "POST") {
+      ramoFatto = true;
+      return rispondi(201, {});
+    }
+    return rispondi(404, { message: "Not Found" });
+  };
+  const github = new GitHub({
+    token: "g",
+    repo: "chi/progetto",
+    repoAllegati: "chi/allegati",
+    ramoAllegati: "allegati",
+    fetch: prendi,
+  });
+  const messo = await github.mettiFile({
+    via: "allegati/1/x.png",
+    byte: new Uint8Array([1]),
+    messaggio: "m",
+  });
+  assert.match(messo.url, /blob\/allegati\//);
+  const messe = chieste.filter((una) => una.metodo === "PUT");
+  assert.equal(messe.length, 2, "una volta, poi di nuovo dopo aver creato il ramo");
+  assert.ok(messe.every((una) => una.corpo.branch === "allegati"));
+  const creato = chieste.find((una) => una.url.endsWith("/git/refs"));
+  assert.deepEqual(creato.corpo, { ref: "refs/heads/allegati", sha: "a".repeat(40) });
+
+  /* Se il ramo non si riesce a creare, l'errore lo dice. */
+  const senzaPermessi = new GitHub({
+    token: "g",
+    repo: "chi/progetto",
+    repoAllegati: "chi/allegati",
+    ramoAllegati: "allegati",
+    fetch: async (url, opzioni = {}) =>
+      (opzioni.method || "GET") === "PUT"
+        ? { ok: false, status: 404, json: async () => ({ message: "Branch allegati not found" }) }
+        : { ok: false, status: 403, json: async () => ({ message: "Resource not accessible" }) },
+  });
+  await assert.rejects(
+    senzaPermessi.mettiFile({ via: "x", byte: new Uint8Array([1]), messaggio: "m" }),
+    (errore) => errore instanceof GitHubNonRisponde && /ramo «allegati»/.test(errore.message),
+  );
+  /* Un nome di ramo strano non si usa. */
+  assert.equal(new GitHub({ token: "g", repo: "a/b", ramoAllegati: "../main" }).ramoAllegati, "");
+});
+
+test("oltre il conto di tutti, la casa aspetta anche se il suo conto e' libero", async () => {
+  const { github } = gitHubFinto();
+  const chiesti = [];
+  const mie = new Segnalazioni({
+    storage: archivioFinto(),
+    github,
+    casa: "casa_1",
+    chi: "203.0.113.4",
+    freno: async (chi) => {
+      chiesti.push(chi);
+      return false;
+    },
+  });
+  await assert.rejects(
+    mie.crea({ tipo: "problema", titolo: "t", corpo: "c" }),
+    (errore) => errore instanceof RichiestaSbagliata && errore.stato === 429,
+  );
+  assert.deepEqual(chiesti, ["203.0.113.4"]);
 });

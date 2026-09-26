@@ -44,10 +44,35 @@ export const LINGUA_DI_SERIE = "it";
  * L'indirizzo e' **assoluto dalla radice del sito** e arriva da fuori, perche'
  * sotto l'ingress davanti c'e' un prefisso che cambia a ogni riavvio di Home
  * Assistant e che questa pagina non puo' indovinare. */
+/* Un valore scritto dentro uno `<script>`, come JSON.
+ *
+ * `JSON.stringify` da solo non basta: un `</script>` dentro una stringa
+ * chiude lo script per il browser, che legge l'HTML prima del JavaScript, e
+ * quello che viene dopo diventa pagina. E U+2028 e U+2029 per JSON sono
+ * lettere, per il JavaScript di ieri ritorni a capo. Si scrivono tutti con la
+ * loro sequenza `\u…`: per il JavaScript sono la stessa cosa, per l'HTML non
+ * sono piu' niente. */
+export function perLoScript(valore) {
+  return JSON.stringify(valore)
+    .replace(/</g, "\\u003c")
+    .replace(/>/g, "\\u003e")
+    .replace(/&/g, "\\u0026")
+    .replace(/\u2028/g, "\\u2028")
+    .replace(/\u2029/g, "\\u2029");
+}
+
+/* Un valore dentro un attributo HTML fra virgolette. */
+const perUnAttributo = (testo) =>
+  String(testo ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/"/g, "&quot;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+
 export function ilWebSocket(dove) {
   return (
     "(function(Vera){" +
-    `var dove=(location.protocol==="https:"?"wss://":"ws://")+location.host+${JSON.stringify(dove)};` +
+    `var dove=(location.protocol==="https:"?"wss://":"ws://")+location.host+${perLoScript(dove)};` +
     "function Cucita(_indirizzo,protocolli){" +
     "return protocolli===undefined?new Vera(dove):new Vera(dove,protocolli);}" +
     "Cucita.prototype=Vera.prototype;" +
@@ -216,9 +241,9 @@ export function leVesti(vesti) {
   const pulito = (cosa) => String(cosa ?? "").replace(/[<>]/g, "");
   let fuori = "";
   const velo = pulito(vesti.velo);
-  if (velo) fuori += `window.__GDAHOME_VELO__=${JSON.stringify(velo)};`;
+  if (velo) fuori += `window.__GDAHOME_VELO__=${perLoScript(velo)};`;
   const testata = pulito(vesti.testata);
-  if (testata) fuori += `window.__GDAHOME_TESTATA__=${JSON.stringify(inDuePezzi(testata))};`;
+  if (testata) fuori += `window.__GDAHOME_TESTATA__=${perLoScript(inDuePezzi(testata))};`;
   return fuori;
 }
 
@@ -227,14 +252,14 @@ export function conLePremesse(
   { base, quale = null, lingua, doveIlWebSocket, configurata = null, vesti = null },
 ) {
   const premessa =
-    `<base href="${base.replace(/\/*$/, "/")}" />` +
+    `<base href="${perUnAttributo(base.replace(/\/*$/, "/"))}" />` +
     "<script>" +
     "window.__DASHBOARDMODERN_HOSTED__=true;" +
     `window.__DASHBOARDMODERN_BRIDGE_WS__=${ilWebSocket(doveIlWebSocket)};` +
-    `window.__DASHBOARDMODERN_INSTANCE__=${JSON.stringify(quale?.istanza || NOME)};` +
-    `window.__DASHBOARDMODERN_PROFILE__=${JSON.stringify(quale?.profilo || "primary")};` +
+    `window.__DASHBOARDMODERN_INSTANCE__=${perLoScript(quale?.istanza || NOME)};` +
+    `window.__DASHBOARDMODERN_PROFILE__=${perLoScript(quale?.profilo || "primary")};` +
     `window.__DASHBOARDMODERN_PRIMARY__=${quale ? quale.primaria !== false : true};` +
-    `window.__DASHBOARDMODERN_LOCALE__=${JSON.stringify(linguaPulita(lingua))};` +
+    `window.__DASHBOARDMODERN_LOCALE__=${perLoScript(linguaPulita(lingua))};` +
     "window.__GDAHOME__=true;" +
     leVesti(vesti) +
     /* Se questa plancia ha una configurazione. `null` vuol dire «non lo so»,

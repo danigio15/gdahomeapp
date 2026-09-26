@@ -37,8 +37,10 @@ import { connect as apriInChiaro } from "node:net";
 import { hostname } from "node:os";
 import { connect as apriCifrato } from "node:tls";
 
+import { Freno } from "./freno.js";
+import { daChi, reteDi } from "./indirizzo.js";
 import { RichiestaSbagliata } from "./segnalazioni.js";
-import { byteDi, json } from "./sportello.js";
+import { byteDi } from "./sportello.js";
 
 export const VIA_DEL_CONTATTO = "/contatto";
 
@@ -52,6 +54,28 @@ export const CORPO_MASSIMO = 32 * 1024;
 /** Quante lettere all'ora puo' mandare uno stesso indirizzo di rete. */
 export const LETTERE_ALL_ORA = 5;
 export const UN_ORA = 60 * 60 * 1000;
+
+/** E quante in tutto, da tutti gli indirizzi insieme. Il conto per indirizzo
+ * non vede chi scrive da mille indirizzi diversi: questo e' il tetto sopra, e
+ * sta largo perche' un sito piccolo non riceve cinquanta lettere in un'ora. */
+export const LETTERE_IN_TUTTO_ALL_ORA = 50;
+
+/* Le risposte del modulo non concedono nessuna origine.
+ *
+ * Il modulo sta sul sito, e il sito e' sulla stessa origine — Caddy passa
+ * `/contatto` a questa porta — quindi al browser non serve nessun permesso in
+ * piu'. Dirgli «da qualunque origine» (come fa lo sportello) vorrebbe dire
+ * lasciare che una pagina qualunque usasse questo modulo, e il limite per
+ * indirizzo, per spedire lettere a nome di chi la sta guardando. */
+function json(risposta, corpo, stato = 200) {
+  const testo = JSON.stringify(corpo);
+  risposta.writeHead(stato, {
+    "content-type": "application/json; charset=utf-8",
+    "cache-control": "no-store",
+    "content-length": Buffer.byteLength(testo),
+  });
+  risposta.end(testo);
+}
 
 /** Quanto si aspetta il server di posta prima di lasciar perdere. */
 export const ATTESA = 20 * 1000;
@@ -379,18 +403,10 @@ export class Postino {
 
 /* ─── La porta ───────────────────────────────────────────────────────────── */
 
-/* Da chi arriva la richiesta. Davanti c'e' Caddy, sulla stessa macchina, che
- * scrive l'indirizzo vero in `x-forwarded-for`: quella riga si crede solo se
- * a portarla e' stata la macchina stessa, se no la scriverebbe chi vuole. */
-const DA_QUI = new Set(["127.0.0.1", "::1", "::ffff:127.0.0.1"]);
-
-export function daChi(richiesta) {
-  const diretto = richiesta.socket?.remoteAddress || "?";
-  const passato = String(richiesta.headers?.["x-forwarded-for"] || "")
-    .split(",")[0]
-    .trim();
-  return DA_QUI.has(diretto) && passato ? passato : diretto;
-}
+/* Da chi arriva la richiesta: la regola sta in `indirizzo.js`, ed e' la
+ * stessa per tutte le porte. Resta esportata anche da qui per chi la cercava
+ * qui. */
+export { daChi };
 
 /* Le parole della pagina che si vede mandando il modulo **senza**
  * JavaScript: il modulo e' un modulo, e parte lo stesso. */
@@ -478,6 +494,12 @@ export class Contatti {
     /* Come si chiama il sito, per l'oggetto della lettera. */
     sito = "",
     lettereAllOra = LETTERE_ALL_ORA,
+    lettereInTutto = LETTERE_IN_TUTTO_ALL_ORA,
+    /* Da quali origini un browser puo' mandare il modulo: quella del sito, e
+     * basta. Vuoto vuol dire «nessun controllo», che e' quello che serve alle
+     * prove e a chi prova il centralino sul suo computer; sulla macchina vera
+     * lo riempie `index.js` a partire dal nome del sito. */
+    origini = [],
     adesso = () => Date.now(),
     registro = null,
   } = {}) {
@@ -489,6 +511,12 @@ export class Contatti {
     this.adesso = adesso;
     this.registro = registro;
     this.conti = new Map();
+    this.origini = new Set(
+      (Array.isArray(origini) ? origini : String(origini || "").split(","))
+        .map((una) => String(una).trim().replace(/\/+$/, "").toLowerCase())
+        .filter(Boolean),
+    );
+    this.inTutto = new Freno({ inTutto: lettereInTutto, finestra: UN_ORA, adesso });
   }
 
   /* Se il modulo e' acceso. `/salute` lo dice: senza, la porta risponde lo
@@ -524,6 +552,18 @@ export class Contatti {
     return true;
   }
 
+  /* Il browser dice da quale pagina arriva il modulo, e un browser non lo
+   * lascia scrivere alla pagina: `Origin` c'e' in ogni POST di un browser di
+   * oggi, modulo classico compreso. Se non e' quella del sito, la pagina che
+   * sta mandando non e' la nostra. Senza origini configurate non si guarda. */
+  _origineBuona(richiesta) {
+    if (!this.origini.size) return true;
+    const detta = String(richiesta.headers.origin || "")
+      .trim()
+      .toLowerCase();
+    return this.origini.has(detta);
+  }
+
   async _servi(richiesta, risposta) {
     if (richiesta.method !== "POST") {
       risposta.writeHead(405, {
@@ -542,6 +582,11 @@ export class Contatti {
     const daModulo = tipo === "application/x-www-form-urlencoded";
     if (!daModulo && tipo !== "application/json") {
       json(risposta, { errore: "tipo_sbagliato" }, 415);
+      return;
+    }
+    if (!this._origineBuona(richiesta)) {
+      this.registro?.attenzione?.("il modulo dei contatti: arrivato da un'altra origine, buttato");
+      json(risposta, { errore: "origine", spiegazione: "Il modulo si manda dal sito." }, 403);
       return;
     }
 
@@ -616,10 +661,11 @@ export class Contatti {
       });
       return;
     }
-    if (!this._concedi(daChi(richiesta))) {
+    if (!this.inTutto.cePosto() || !this._concedi(reteDi(daChi(richiesta)))) {
       rispondi(429, { errore: "troppo_spesso", spiegazione: "Troppe lettere in un'ora." });
       return;
     }
+    this.inTutto.conta();
 
     try {
       await this.postino.manda(

@@ -96,6 +96,17 @@ abstract interface class VersoLaPagina {
   Future<void> chiudi();
 }
 
+/// La plancia ha scritto la sua configurazione (`dashboardmodern/config/set`),
+/// e la casa ha detto si'.
+///
+/// Il ponte non avvisa nessuno quando la configurazione cambia: chi la vuole
+/// deve richiederla. Ma quello che scrive la plancia dentro l'app passa di
+/// qui, e qui lo si sa nell'istante in cui succede — un'auto cambiata nella
+/// sezione Auto arriva al navigatore subito, e non al prossimo giro
+/// (`schermate/navigatore_qui/la_vettura.dart`). Porta il profilo scritto.
+Stream<String> get laPlanciaHaScritto => _laPlanciaHaScritto.stream;
+final _laPlanciaHaScritto = StreamController<String>.broadcast();
+
 class Cucitura {
   Cucitura(this._verso, this._trovaIlFilo);
 
@@ -159,6 +170,9 @@ class Cucitura {
       late final int mio;
       mio = filo.instrada(messaggio, (risposta) {
         _mandaByte(risposta.conNumero(suo));
+        if (tipo == 'dashboardmodern/config/set') {
+          _laPlanciaHaScritto.add('${messaggio['profile'] ?? 'primary'}');
+        }
         if (continua('$tipo')) return;
         filo.dimentica(mio);
         _numeri.remove(suo);

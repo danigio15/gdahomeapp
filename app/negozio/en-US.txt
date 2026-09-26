@@ -1,5 +1,5 @@
-The app's number and your home's match again.
+gdahome comes along for the drive. With Android Auto, your car screen shows what the house is drawing and what the sun is making, who is home, and your quick action buttons — and they really do press, even with the screen off.
 
-Nothing changes in here: this version lines the app's number up with the add-on's, which is where the news is — the panel entries that now stay in the sidebar, and the report to whoever installed your home going out every minute instead of every quarter of an hour.
+Also update gdahome in Home Assistant to 1.6.4: the snapshot the car reads is left there by the dashboard, so you need both.
 
-Coming from further back you also get seven reports closed, the weather radar, and "What's new" read in here.
+Phones already paired keep working as before.

@@ -34,6 +34,7 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../casa/aggiornamenti.dart';
+import '../casa/fuori.dart';
 import '../casa/collegamento.dart';
 import '../casa/segnalazioni.dart' show spiegaLErrore;
 import '../parole.dart';
@@ -308,7 +309,9 @@ class _SchermataDegliAggiornamentiState
    * pagina di scorta quando le note non arrivano. */
   Future<void> _apriDiFuori(String dove) async {
     final indirizzo = Uri.tryParse(dove);
-    if (indirizzo == null) return;
+    /* Solo pagine: le note arrivano da fuori, e un link con un altro schema
+     * chiederebbe al telefono di fare qualcosa a nome dell'app. */
+    if (indirizzo == null || !siApreFuori(indirizzo)) return;
     await launchUrl(indirizzo, mode: LaunchMode.externalApplication);
   }
 

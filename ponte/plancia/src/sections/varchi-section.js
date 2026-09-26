@@ -9,10 +9,28 @@
  * rossa aperta, e smorta quella che non risponde, perché un sensore muto non è
  * una finestra chiusa.
  *
- * Qui non si comanda niente. Un contatto dice come sta e basta: le serrature e
- * i relè stanno in «Apri porte/cancelli», le tapparelle in Finestre. Tenere
- * separato il guardare dal comandare è il motivo per cui questa pagina si può
+ * Qui non si comanda l'infisso. Un contatto dice come sta e basta: le serrature
+ * e i relè stanno in «Apri porte/cancelli», le tapparelle in Finestre. Tenere
+ * separato il guardare dall'aprire è il motivo per cui questa pagina si può
  * aprire cento volte al giorno senza paura di toccare qualcosa.
+ *
+ * ── L'unica cosa che si comanda, e perché (#136) ──────────────────────────
+ *
+ * Lo scudo. «Nei varchi che ho inserito, che sono i sensori del mio allarme
+ * Risco … mi dà la possibilità di disabilitare. Possiamo farlo anche qui?»
+ *
+ * Non contraddice la regola di sopra, la precisa: lo scudo non tocca il varco,
+ * tocca l'ANTIFURTO. Non apre e non chiude niente — dice alla centrale di non
+ * guardare quella finestra, che è quello che si fa quando la si vuole lasciare
+ * aperta apposta di notte. Premerlo per sbaglio non apre una porta: rende una
+ * porta sorvegliata, o non sorvegliata, e in tutti e due i casi lo si vede
+ * scritto sulla carta e contato in cima alla pagina.
+ *
+ * Ed è qui e non altrove perché qui c'è l'elenco: chi deve escludere una
+ * finestra la cerca dove la vede, non in un'altra pagina. Lo scudo compare solo
+ * sulle righe a cui qualcuno ha scritto l'interruttore nella scheda Varchi —
+ * senza quello non c'è, perché un tasto che chiama un servizio che non esiste è
+ * un tasto rotto (#132).
  */
 import { CHIAVE_VERSI, insiemeInvertiti } from "../core/verso-aperture.js";
 import {
@@ -22,10 +40,13 @@ import {
   varchiConfigurati,
   varchiDiCasa,
 } from "../core/varchi-di-casa.js";
+import { contoDelleEsclusioni, ilComandoDellEsclusione } from "../core/l-esclusione-del-varco.js";
 import { prossimoCambioDelDaQuando, quantoTempoInParole } from "../core/da-quanto.js";
 import {
   allStates,
+  chiamaServizio,
   clean,
+  disegnoDiCasa,
   doc,
   esc,
   installStyle,
@@ -209,14 +230,53 @@ function daQuandoMarkup(riga) {
   return `<small>${esc(daQuandoTesto(riga))}</small>`;
 }
 
+/* Due scudi, non un colore solo (#136).
+ *
+ * Quello sbarrato e' «esclusa»: si legge anche in bianco e nero, e anche da chi
+ * i colori non li distingue. Il colore da solo avrebbe detto la stessa cosa
+ * soltanto a chi lo vede, e questa e' l'unica informazione della pagina che
+ * riguarda se una porta e' sorvegliata o no. */
+const SCUDI = Object.freeze({
+  sorvegliato:
+    '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3.2 5 6v5.3c0 4.3 2.9 8.3 7 9.5 4.1-1.2 7-5.2 7-9.5V6l-7-2.8Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="m9.2 12.1 2 2 3.6-3.9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  escluso:
+    '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3.2 5 6v5.3c0 4.3 2.9 8.3 7 9.5 4.1-1.2 7-5.2 7-9.5V6l-7-2.8Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M6.4 5.2 17.6 19.4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>',
+});
+
+/* Lo scudo c'e' solo se c'e' qualcosa da premere: un interruttore scritto, e
+ * che risponde. Un varco senza esclusione resta una carta da guardare, e un
+ * interruttore muto non si comanda — vedi `l-esclusione-del-varco.js`. */
+function scudoMarkup(riga) {
+  if (!clean(riga.esclusione) || !clean(riga.escluso)) return "";
+  const giu = riga.escluso === "escluso";
+  const parola = t("Esclusione dall'antifurto", "Alarm bypass");
+  /* Nessuna parola sul tasto, e non per far spazio.
+   *
+   * «Escluso» c'era gia' nel vocabolario — lo dice la VMC del recupero di calore
+   * — e riusarlo qui avrebbe scritto in tredici lingue la parola
+   * dell'AERAZIONE addosso a una zona d'allarme: in tedesco «umgangen» invece di
+   * «uberbruckt», in spagnolo «derivado» invece di «anulado». Una chiave in meno
+   * da tradurre pagata con una parola sbagliata in tredici lingue non e' un
+   * affare. Lo stato lo dicono lo scudo sbarrato, il tratteggio della carta, e
+   * il conto in cima — che ha parole sue, scritte per l'antifurto. */
+  return `<button type="button" class="dm-varco-scudo" data-dm-varco-scudo="${esc(riga.entity)}"
+    aria-pressed="${giu}" aria-label="${esc(parola)}" title="${esc(parola)}">
+    ${giu ? SCUDI.escluso : SCUDI.sorvegliato}
+  </button>`;
+}
+
 function rigaMarkup(riga) {
-  return `<article class="dm-varco" data-varco="${esc(riga.stato || "muto")}">
-    <span class="dm-varco-ic" aria-hidden="true">${esc(riga.glifo)}</span>
+  return `<article class="dm-varco" data-varco="${esc(riga.stato || "muto")}"
+    data-escluso="${riga.escluso === "escluso"}">
+    <span class="dm-varco-ic" aria-hidden="true">${disegnoDiCasa(riga.glifo, { misura: 30, ripiego: "door" })}</span>
     <div class="dm-varco-testo">
       <strong>${esc(riga.name)}</strong>
       ${daQuandoMarkup(riga)}
     </div>
-    <b class="dm-varco-stato">${esc(parolaDelVarco(riga))}</b>
+    <div class="dm-varco-coda">
+      <b class="dm-varco-stato">${esc(parolaDelVarco(riga))}</b>
+      ${scudoMarkup(riga)}
+    </div>
   </article>`;
 }
 
@@ -232,7 +292,7 @@ function vuotoMarkup() {
   </div>`;
 }
 
-function testaMarkup(conto) {
+function testaMarkup(conto, esclusioni) {
   const stato = conto.aperti ? "aperti" : conto.totale ? "chiusi" : "vuoto";
   const sotto = [
     conto.chiusi
@@ -244,6 +304,15 @@ function testaMarkup(conto) {
       ? conto.muti === 1
         ? t("1 non risponde", "1 not answering")
         : t(`${conto.muti} non rispondono`, `${conto.muti} not answering`)
+      : "",
+    /* Quante sono escluse dall'antifurto (#136). Sta qui e non sulla sola carta
+     * perche' e' la cosa che chi sta per inserire l'antifurto deve sapere PRIMA
+     * di inserirlo: una finestra esclusa e' una finestra che la centrale non
+     * guardera', e scoprirlo dopo non serve a niente. */
+    esclusioni?.esclusi
+      ? esclusioni.esclusi === 1
+        ? t("1 escluso", "1 bypassed")
+        : t(`${esclusioni.esclusi} esclusi`, `${esclusioni.esclusi} bypassed`)
       : "",
   ]
     .filter(Boolean)
@@ -278,10 +347,11 @@ function dipingi() {
    * contatto non si muove le righe sono identiche, la firma pure, e quel «5
    * minuti» restava scritto per ore su una plancia appesa al muro. Adesso la
    * scritta fa parte della firma, e quando cambia la pagina si ridisegna. */
+  const esclusioni = contoDelleEsclusioni(righe);
   const firma = JSON.stringify([righe, righe.map(daQuandoTesto), t("Aperto", "Open")]);
   if (state.firma !== firma || !dove.firstElementChild) {
     state.firma = firma;
-    dove.innerHTML = `${testaMarkup(conto)}
+    dove.innerHTML = `${testaMarkup(conto, esclusioni)}
       <div class="dm-varchi-elenco">${righe.map(rigaMarkup).join("")}</div>`;
   }
   svegliamiQuandoCambia(righe);
@@ -306,12 +376,46 @@ function svegliamiQuandoCambia(righe) {
     }, Math.max(1000, fra)) || 0;
 }
 
+/* Lo scudo premuto (#136).
+ *
+ * Si rilegge l'elenco adesso invece di fidarsi di quello disegnato: fra il
+ * disegno e il dito puo' essere passato un ridisegno, e mandare `turn_off` a un
+ * interruttore che nel frattempo si e' spento vorrebbe dire lasciare
+ * sorvegliata una porta che chi ha premuto crede esclusa. Chi non trova la riga,
+ * o trova un interruttore che non risponde, non manda niente: e' la stessa
+ * regola per cui il tasto non si disegna. */
+function premiLoScudo(entity) {
+  const riga = varchiInPlancia().find((quale) => quale.entity === clean(entity));
+  const comando = riga && ilComandoDellEsclusione(riga.esclusione, allStates());
+  if (!comando) return;
+  chiamaServizio(comando);
+  if (root.navigator?.vibrate) root.navigator.vibrate(8);
+}
+
+function ascoltaLoScudo() {
+  const pagina = ensureVarchiPage();
+  if (!pagina || pagina.dataset.dmVarchiScudo === "si") return;
+  pagina.dataset.dmVarchiScudo = "si";
+  pagina.addEventListener("click", (evento) => {
+    const scudo = evento.target?.closest?.("[data-dm-varco-scudo]");
+    if (!scudo) return;
+    evento.preventDefault();
+    premiLoScudo(scudo.dataset.dmVarcoScudo);
+  });
+}
+
 function schedule() {
   if (state.frame) return;
   const giro = () => {
     state.frame = 0;
     try {
       accendiLaVoce();
+      /* Qui e non all'installazione: la pagina si crea accanto all'ultima
+       * sorella, e all'avvio quella sorella puo' non esserci ancora.
+       * `ensureVarchiPage` tornerebbe `null`, l'ascolto non si attaccherebbe
+       * mai, e lo scudo sarebbe un tasto morto per tutta la sessione. Il
+       * cartello sul nodo fa si' che si attacchi una volta sola. */
+      ascoltaLoScudo();
       dipingi();
     } catch (error) {
       root.console?.warn?.("[DashboardModern] varchi", error);
@@ -365,14 +469,49 @@ function installStyles() {
     ${P} .dm-varco-ic{
       display:grid;place-items:center;width:44px;height:44px;border-radius:14px;font-size:20px;
       background:color-mix(in srgb,var(--dm-varco,#94a3b8) 22%,transparent)}
+    /* Il disegno del catalogo al posto dell'emoji (#74): la casella resta
+       quella, cambia quello che ci sta dentro. */
+    ${P} .dm-varco-ic .dm-catalogo-art{display:grid;place-items:center;line-height:0}
+    ${P} .dm-varco-ic svg{display:block;width:30px;height:30px}
     ${P} .dm-varco-testo{display:grid;gap:2px;min-width:0}
+    /* Il nome su due righe, e la pastiglia che gli lascia il posto.
+     *
+     * Su una riga sola, con «NON RISPONDE» accanto che si prende novanta
+     * pixel, di un nome di casa vera restavano sei lettere: «Leapmo…»,
+     * «Sensore Port…». E sono nomi che si somigliano — quattro contatti
+     * «Sensore Porta/finestra ...» diventano quattro card identiche, che e'
+     * peggio di un nome tagliato: e' un nome che non dice piu' quale.
+     *
+     * Due righe bastano quasi sempre, e la pastiglia dello stato va a capo
+     * anche lei invece di mangiarsi la colonna del nome. */
     ${P} .dm-varco-testo strong{font-size:14px;font-weight:900;color:var(--text,#0f172a);
-      overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+      display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;
+      overflow:hidden;overflow-wrap:anywhere;line-height:1.25}
     ${P} .dm-varco-testo small{font-size:10.5px;font-weight:700;color:var(--text-dim,#64748b);
       overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
     ${P} .dm-varco-stato{
       font-size:11px;font-weight:900;letter-spacing:.03em;text-transform:uppercase;
+      max-width:74px;text-align:right;line-height:1.25;
       color:color-mix(in srgb,var(--dm-varco,#94a3b8) 78%,var(--text,#0f172a))}
+
+    /* Lo scudo dell'antifurto (#136): sotto la parola dello stato, non al posto
+       suo. Sono due cose diverse — com'e' la finestra, e se la centrale la
+       guarda — e una carta che le dicesse nella stessa casella farebbe credere
+       che siano la stessa. */
+    ${P} .dm-varco-coda{display:grid;justify-items:end;gap:6px}
+    ${P} .dm-varco-scudo{
+      display:flex;align-items:center;gap:5px;padding:5px 8px;border-radius:999px;cursor:pointer;
+      border:1px solid color-mix(in srgb,var(--dm-varco,#94a3b8) 45%,transparent);
+      background:var(--card-bg,#fff);color:var(--text-dim,#64748b);
+      font-size:10px;font-weight:900;letter-spacing:.04em;text-transform:uppercase;
+      -webkit-tap-highlight-color:transparent}
+    ${P} .dm-varco-scudo svg{display:block;width:17px;height:17px}
+    ${P} .dm-varco-scudo[aria-pressed="true"]{
+      border-color:#f59e0b;background:color-mix(in srgb,#f59e0b 16%,var(--card-bg,#fff));color:#b45309}
+    /* Una carta esclusa lo dice anche da lontano, senza leggere: il tratteggio
+       vuol dire «questa la centrale non la guarda». */
+    ${P} .dm-varco[data-escluso="true"]{border-style:dashed;border-color:#f59e0b}
+
     @media(max-width:520px){${P} .dm-varchi-elenco{grid-template-columns:1fr}}
     `,
   );

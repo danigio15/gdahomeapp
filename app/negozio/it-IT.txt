@@ -1,5 +1,5 @@
-Il numero dell'app e quello di casa tornano uguali.
+gdahome sale in macchina. Con Android Auto, sullo schermo dell'auto trovi quanto tira la casa e quanto fa il sole, chi è rientrato, e i tasti delle azioni rapide — che premono davvero, anche a schermo spento.
 
-Qui dentro non cambia niente: questa versione allinea il numero dell'app a quello dell'add-on, che è dove stanno le novità — le voci del cruscotto che adesso restano nella barra laterale, e il rapporto a chi ti ha montato l'impianto che parte ogni minuto invece che ogni quarto d'ora.
+Aggiorna anche gdahome in Home Assistant alla 1.6.4: la fotografia che l'auto legge la lascia la plancia, e in macchina si vede solo con tutti e due.
 
-Chi arriva da più indietro trova anche le sette segnalazioni chiuse, il radar del meteo, e «Cosa cambia» che si legge qui dentro.
+I telefoni già abbinati continuano a funzionare come prima.

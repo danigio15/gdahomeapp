@@ -1343,8 +1343,102 @@ test("production graph is single-owner, acyclic and contains no facade pass-thro
   // parte sarebbero tre forme scritte due volte.
   // 373 con il foglietto che le disegna e le salva, che invece il deposito e
   // il documento li tocca.
+  // 374 con la regola della telecamera riservata (#81): quali telecamere si
+  // vedono solo a casa vuota, e cosa si fa quando chi c'e' in casa non si sa.
+  // E' una decisione sulla privacy che vale su tre pagine diverse, e scritta
+  // dentro una di quelle le altre due l'avrebbero riscritta a modo loro. Qui
+  // si prova su elenchi finti — nessuna persona, una persona fuori, una che
+  // non risponde — e la prova che «non si sa» nasconde sta in una riga sola.
+  // 375 con il foglietto delle spunte, che invece il deposito e il documento
+  // li tocca entrambi e va dove stanno le telecamere.
+  // 376 con la regola dell'elenco dichiarato (#74): cosa vuol dire dichiarare
+  // una riga, e la differenza fra «non lo so» e «non ne voglio nessuno». E'
+  // la stessa per le quattro schede che si autocompilavano, e scritta quattro
+  // volte sarebbero quattro regole che fra sei mesi divergono — che e' come
+  // ci si e' arrivati la prima volta. Si prova su elenchi finti, senza un
+  // documento.
+  // 377 con la scheda che le disegna tutte e quattro, che invece il deposito e
+  // il documento li tocca: la riga con la matita e il cestino, la pastiglia,
+  // la striscia dei disegni, il salva e la migrazione alla prima apertura.
+  // 378 con la scelta Auto / Moto (#75): il mezzo non e' il motore — una moto
+  // puo' essere elettrica o a benzina come un'auto — e sta in un modulo suo
+  // perche' quello del motore racconta gia' un'altra storia. Tocca il
+  // documento e il deposito: la riga della scelta, il disegno su ogni riga
+  // dell'elenco, e le quattro caselle che una moto non ha.
+  // 380 con le fasce dentro la scheda del dispositivo (#111): il conto —
+  // quanto prende un apparecchio in ognuna delle fasce, e quanta parte di
+  // quello viene dal sole invece che dalla rete — e il giro che lo chiede e
+  // lo disegna. Il conto sta da solo e non tocca ne' la rete ne' l'orologio,
+  // perche' e' quello che si prova senza una casa; il giro tocca il
+  // documento e il Recorder.
+  // 382 col tasto della ventola dell'inverter (#112): il guscio mandava a
+  // Home Assistant il nome della casella al posto dell'entita' mappata, e
+  // non succedeva niente. Cosa mandare sta da solo e si prova senza una
+  // casa; il giro tocca il documento e la presa verso Home Assistant.
+  // 383 con le caselle che la ricerca sa nominare (#114): cercare fra i
+  // valori risponde a «dove l'ho messo», e a casella vuota risponde «non
+  // esiste». L'elenco delle caselle risponde all'altra domanda, «dove lo
+  // metto», e non ribatte a mano nessun nome: li prende da dove i nomi gia'
+  // stanno. Sta da solo e si prova senza una casa.
+  // 385 con la scheda «Scollegati» (#104): l'elenco di chi in questa casa non
+  // risponde, con un cestino che toglie una riga dall'avviso per sempre. La
+  // regola di chi ci finisce sta da sola e si prova senza una casa — ed e' la
+  // stessa che legge la tessera della Home, perche' due elenchi sarebbero due
+  // verita'; la scheda tocca il documento e il deposito.
+  // 386 con la spunta del fotovoltaico (#82): «se in questa casa i pannelli ci
+  // sono» e «se l'autosufficienza si puo' dire» sono due domande, non una — il
+  // 100 % e' sbagliato anche in una casa che i pannelli ce li ha, se le manca
+  // il contatore di rete. Le risposte stanno da sole e si provano senza una
+  // casa; a nasconderle sono la pagina e il grafico, che gia' c'erano.
+  // 387 con la memoria di chi e' ogni entita': l'avviso dei dispositivi non
+  // connessi conta per dispositivo — un'asciugatrice che risponde non e' un
+  // dispositivo giu' solo perche' tace la sua serratura bambini — e chi
+  // disegna il registro di Home Assistant non ce l'ha. Chiederlo e' costata la
+  // #553, quindi si ricorda: due mappe piatte lasciate da chi i registri li ha
+  // gia' in mano, esattamente come si fa per le stanze nel file accanto. Sta
+  // da solo, non prende la rete, e si prova senza una casa.
+  // 388 con chi quelle due mappe le chiede al ponte. Dentro Home Assistant a
+  // lasciarle e' il pannello; nell'app non le lasciava nessuno — il guscio
+  // storico i registri li carica solo dopo il rilevamento automatico, e il
+  // nome del dispositivo non lo tiene affatto (`WIZ.devNames` non esiste) — e
+  // sul telefono l'avviso tornava a contare le entita'. Il ponte i registri
+  // ce li ha gia' in mano, letti per il rapporto: glieli si chiedono una
+  // volta per caricamento, e solo dove il ponte c'e'. E' l'unico modulo di
+  // questa storia che tocca la rete, ed e' per questo che sta da solo:
+  // `core/i-dispositivi-di-home-assistant.js` una prova la tiene pulita.
+  // 390 con l'interruttore che toglie il riquadro delle telecamere da
+  // Sicurezza (#113): la regola di cosa valga «non l'ho mai toccato» sta in
+  // `core/le-telecamere-si-vedono.js` perché a leggerla sono in due — la
+  // pagina e la scheda — e due copie prima o poi dicono due cose; la scheda
+  // sta nel suo modulo come le altre due che parlano di telecamere.
+  // 391 con la riga «Si vede in Home» dentro la scheda del MiniPC (#114):
+  // l'interruttore c'era, in un'altra linguetta, e quello che mancava era il
+  // cartello. È un modulo suo come le altre schede, e scrive la stessa chiave
+  // che legge l'elenco del Widget — una porta in più, non una seconda verità.
+  // 393 con la fotografia che l'auto legge: il nucleo
+  // `core/la-foto-per-lauto.js` decide cosa ci sta e quanto — tre misure, sei
+  // tasti — e la sezione legge la plancia e la passa al telefono. Sono due
+  // perché a decidere la forma sono in due: qui e il Kotlin dall'altra parte,
+  // e una prova che li tiene allineati deve poter chiamare il nucleo senza
+  // un documento e senza un canale.
+  // 394 con l'elenco di tutto quello che un elettrodomestico legge (#107):
+  // `core/le-entita-dellapparecchio.js`. L'elenco esisteva gia', scritto a
+  // mano accanto a chi decide se un cambio di stato riguarda quelle schede, e
+  // aveva dentro meta' delle caselle: la porta del frigo cambiava e la scheda
+  // non si rifaceva. Sta in un modulo perche' a leggerlo sono in due — il
+  // ridisegno e una prova che rilegge i modelli e pretende di ritrovarci ogni
+  // casella — e un elenco scritto accanto a campi che legge qualcun altro si
+  // scolla sempre.
+  // 395 con l'esclusione di un varco dall'antifurto (#136):
+  // `core/l-esclusione-del-varco.js`. Quale interruttore si propone, cosa vuol
+  // dire acceso e cosa si manda sono decisioni che a leggerle sono in tre — la
+  // pagina Varchi che disegna lo scudo, la scheda che tiene la casella, e la
+  // fila delle zone in Sicurezza che dice quali ingressi sono esclusi — e su un
+  // antifurto tre copie di una regola di segno vogliono dire una porta
+  // sorvegliata mentre la si crede esclusa. Sta in un modulo suo, senza DOM e
+  // senza parole, perche' e' anche l'unico modo di provarla a tavolino.
   assert.ok(
-    relative.length <= 373,
+    relative.length <= 395,
     `production graph unexpectedly grew to ${relative.length} modules`,
   );
   assertAcyclic(edges);
@@ -1430,6 +1524,17 @@ test("production graph is single-owner, acyclic and contains no facade pass-thro
    * ferma da solo quando l'ultimo se ne va. Una plancia senza timer
    * programmati non si sveglia mai.
    *
+   * Il dodicesimo e' la fotografia che l'auto legge. Il servizio di Android
+   * Auto vive nello stesso processo dell'app ma non parla con la casa — due
+   * posti che sanno entrare in casa sono uno di troppo — e legge un file che
+   * l'app gli lascia. Nessun evento della plancia dice «adesso la fotografia
+   * e' vecchia»: il tempo passa e basta, e una schermata che mostra i watt di
+   * mezz'ora fa facendo credere che siano adesso e' peggio di una vuota.
+   * Stessa disciplina di tutti gli altri, e piu' stretta: il timer si accende
+   * solo se il canale dell'app c'e' — nel browser e dentro Home Assistant
+   * questa sezione non fa proprio niente — sta zitto mentre la pagina non si
+   * vede, e manda solo quando la firma di quello che c'e' da dire cambia.
+   *
    * These are the intervals production is allowed, and they are named here so
    * another one cannot arrive unnoticed. */
   const intervals = [...graph.entries()].filter(([, source]) =>
@@ -1442,6 +1547,7 @@ test("production graph is single-owner, acyclic and contains no facade pass-thro
       "src/sections/english-runtime-strings-section.js",
       "src/sections/home-widgets-section.js",
       "src/sections/il-guscio-disegna-quando-serve-section.js",
+      "src/sections/la-foto-va-in-auto-section.js",
       "src/sections/live-ui-section.js",
       "src/sections/media-player-section.js",
       "src/sections/people-section.js",

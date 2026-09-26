@@ -167,7 +167,19 @@ export function ensureRoomChoices() {
   }
 
   for (const row of body.querySelectorAll(".ed-row")) {
-    if (row.matches(".dm-people-row")) continue;
+    /* Due schede non ne vogliono sapere.
+     *
+     * Le persone perche' una persona una stanza non ce l'ha. E i dispositivi
+     * non connessi perche' quella scheda non e' un posto dove si configura
+     * qualcosa: e' un avviso, e le sue righe sono cose che in questo momento
+     * non rispondono. Una tendina «— Nessuna stanza» accanto a un guasto
+     * chiede di sistemare una cosa che non c'entra, e sulle righe che
+     * nominano un'entita' sola compariva mentre su quelle raggruppate per
+     * dispositivo no: la stessa scheda con due facce.
+     *
+     * La stanza di quell'entita' si mette dove si mette quella di tutte: nella
+     * scheda che la possiede. */
+    if (row.matches(".dm-people-row, .dm-scollegati-riga")) continue;
     const entity = entityOfRow(row);
     if (salta(entity)) {
       row.querySelector(`:scope [${ASSIGN_ATTRIBUTE}]`)?.remove();

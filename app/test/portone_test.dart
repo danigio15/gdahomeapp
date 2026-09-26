@@ -70,6 +70,9 @@ class _PlanciaFinta extends FabbricaDellaPlancia {
   /// E quello che direbbe premendo i suoi tre trattini.
   void Function()? chiedeIlMenu;
 
+  /// E la fotografia che lascerebbe all'auto.
+  void Function(String foto)? fotografaLaCasa;
+
   @override
   Widget riquadro(
     Uri pagina, {
@@ -80,9 +83,11 @@ class _PlanciaFinta extends FabbricaDellaPlancia {
     ({double alto, double basso}) margini = (alto: 0, basso: 0),
     void Function(String pagina)? quandoCambiaPagina,
     void Function()? quandoChiedeIlMenu,
+    void Function(String foto)? quandoFotografaLaCasa,
   }) {
     cambioPagina = quandoCambiaPagina;
     chiedeIlMenu = quandoChiedeIlMenu;
+    fotografaLaCasa = quandoFotografaLaCasa;
     return _RiquadroFinto(
       key: chiave,
       pagina: pagina,
@@ -575,8 +580,22 @@ void main() {
       expect(nellaBarra('in casa'), findsOneWidget);
       expect(nellaBarra('PLANCIA'), findsOneWidget);
       expect(nellaBarra('DISPOSITIVI'), findsOneWidget);
+      /* In tre gruppi: la casa, l'aiuto, le avanzate. */
+      expect(nellaBarra('CASA'), findsOneWidget);
       /* I blocchi che non ci sono ancora si vedono lo stesso, spenti: cosi'
-       * si sa dove sta andando l'app. */
+       * si sa dove sta andando l'app. Stanno in fondo, fra le avanzate: si
+       * scorre fin li'. */
+      await tester.scrollUntilVisible(
+        nellaBarra('AUTOMAZIONI'),
+        80,
+        scrollable: find
+            .descendant(
+              of: find.byType(BarraDelleSezioni),
+              matching: find.byType(Scrollable),
+            )
+            .first,
+      );
+      expect(nellaBarra('AVANZATE'), findsOneWidget);
       expect(nellaBarra('AIUTANTI'), findsOneWidget);
       expect(nellaBarra('AUTOMAZIONI'), findsOneWidget);
       /* Zigbee no, e non perche' non sia pronta: perche' **questa casa non ha

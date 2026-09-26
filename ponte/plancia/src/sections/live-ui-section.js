@@ -25,6 +25,8 @@ import {
   section,
 } from "./shared.js";
 import { fermaIVideo, provaIlVideo } from "./telecamera-webrtc-section.js";
+import { normalizePeople } from "../core/person-model.js";
+import { CHIAVE_RISERVATE, telecamereVisibili } from "../core/telecamere-riservate.js";
 
 /* L'immagine ha mostrato almeno un fotogramma: da qui in poi un flusso che
  * cade non la fa sparire — resta l'ultimo fotogramma, non un lampo di nero. */
@@ -82,6 +84,22 @@ function configuredCameras() {
       entity: clean(camera?.entity || camera?.camera_entity || camera?.cam),
     }))
     .filter((camera) => camera.entity);
+}
+
+/* Quelle da cui si va davvero a prendere un fotogramma.
+ *
+ * Una telecamera riservata — «si vede solo se a casa non c'e' nessuno» (#81) —
+ * mentre qualcuno e' in casa non si disegna, e quindi non si scarica nemmeno:
+ * chiederne il fotogramma sarebbe chiederlo per buttarlo, e su una interna
+ * vorrebbe dire tirare giu' proprio l'immagine che si e' chiesto di non
+ * vedere. Il filtro sta in `telecamere-riservate.js` e lo condividono tutti e
+ * tre i posti che disegnano telecamere. */
+function telecamereVive(states = allStates()) {
+  return telecamereVisibili(configuredCameras(), {
+    config: readJson(CHIAVE_RISERVATE, {}),
+    persone: normalizePeople(readJson("cd_people", [])),
+    states,
+  });
 }
 
 function eventEntityIds(event) {
@@ -453,7 +471,7 @@ export function sorvegliaIFlussi(adesso = Date.now()) {
     delete image.dataset.dmCameraStream;
     mettiInPausaIlFlusso(image, adesso);
     const entity = clean(image.dataset.dmCameraEntity);
-    const camera = configuredCameras().find((voce) => voce.entity === entity) || { entity };
+    const camera = telecamereVive().find((voce) => voce.entity === entity) || { entity };
     ripiegaSullIstantanea(camera, image, state.cameraUrls);
     fermate += 1;
   }
@@ -466,7 +484,7 @@ function securityVisible() {
 
 export async function refreshCameraThumbnails({ force = false } = {}) {
   if (!doc || (!force && !securityVisible())) return false;
-  const cameras = configuredCameras();
+  const cameras = telecamereVive();
   if (!cameras.length) return false;
   const grid = doc.getElementById("cam-grid");
   if (grid && !grid.querySelector(".cam-card") && typeof root.buildCamCards === "function") {
@@ -518,7 +536,7 @@ function stopCameraTimer() {
 }
 
 export function syncCameraTimer() {
-  const wanted = securityVisible() && planciaVisibile() && configuredCameras().length > 0;
+  const wanted = securityVisible() && planciaVisibile() && telecamereVive().length > 0;
   if (!wanted) {
     stopCameraTimer();
     return false;

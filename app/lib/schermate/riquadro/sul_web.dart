@@ -12,6 +12,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:web/web.dart' as web;
 import 'package:webview_flutter/webview_flutter.dart';
 
+import '../../casa/fuori.dart';
 import '../../plancia/premesse.dart' show ilMenuDalRiquadro;
 
 /// Un controllore pronto a caricare una pagina. Sul web sa fare solo quello:
@@ -21,7 +22,9 @@ import '../../plancia/premesse.dart' show ilMenuDalRiquadro;
 /// della pagina.
 /// I tre dialoghi (`dice`, `chiede`, `faScrivere`) qui non si passano: in un
 /// `iframe` li fa il browser, come li farebbe alla plancia dentro Home
-/// Assistant. Stanno nella firma perche' la firma e' una sola.
+/// Assistant. Stanno nella firma perche' la firma e' una sola. Per la stessa
+/// ragione c'e' `quandoFotografaLaCasa` e qui non si usa: quella fotografia
+/// la legge Android Auto, e in un browser Android Auto non c'e'.
 WebViewController costruisciIlControllore({
   required void Function() quandoCaricata,
   required void Function(String perche) quandoFallisce,
@@ -32,6 +35,7 @@ WebViewController costruisciIlControllore({
   Future<String> Function(String domanda, String diSerie)? faScrivere,
   void Function(String pagina)? quandoCambiaPagina,
   void Function()? quandoChiedeIlMenu,
+  void Function(String foto)? quandoFotografaLaCasa,
 }) {
   final controllore = WebViewController();
   /* Chi va avvisato quando la pagina «arriva». Si tiene da parte perche'
@@ -82,6 +86,11 @@ void _ascoltaIlRiquadro(
   web.window.addEventListener(
     'message',
     ((web.MessageEvent evento) {
+      /* Solo da un riquadro di questa pagina: un'altra finestra — la pagina
+       * che ha aperto l'app, una scheda aperta da lei — non apre il menu e
+       * non sposta la plancia. L'origine qui non si guarda: nel collaudo la
+       * plancia arriva da una porta sua. */
+      if (!_daUnNostroRiquadro(evento)) return;
       final detto = evento.data;
       if (detto == null || !detto.isA<JSObject>()) return;
       final oggetto = detto as JSObject;
@@ -103,6 +112,21 @@ void _ascoltaIlRiquadro(
       }
     }).toJS,
   );
+}
+
+/// Se chi ha scritto e' la finestra dentro uno degli `iframe` di questa
+/// pagina.
+bool _daUnNostroRiquadro(web.MessageEvent evento) {
+  final fonte = evento.source;
+  if (fonte == null) return false;
+  final riquadri = web.document.querySelectorAll('iframe');
+  for (var quale = 0; quale < riquadri.length; quale += 1) {
+    final uno = riquadri.item(quale);
+    if (uno == null || !uno.isA<web.HTMLIFrameElement>()) continue;
+    final dentro = (uno as web.HTMLIFrameElement).contentWindow;
+    if (dentro != null && dentro.strictEquals(fonte).toDart) return true;
+  }
+  return false;
 }
 
 /// Sul web un `iframe` non si ricarica: si riapre la pagina.
@@ -299,8 +323,23 @@ void _consegnaA(web.Window? finestra, String chiave, Uri pagina) {
 /// Se il browser la scheda non la apre — un blocco dei popup, che qui non
 /// dovrebbe scattare perche' si arriva da un tocco — si ripiega sulla via di
 /// prima, e il codice lo si batte.
+///
+/// La maniglia si tiene **solo quando c'e' un codice da consegnare**, e solo
+/// verso un quadro in `https` (lo decide chi chiama, `eUnQuadroSicuro`):
+/// senza codice la scheda si apre con `noopener`, come un collegamento
+/// qualunque. Con la maniglia la pagina aperta sa chi l'ha aperta, e per
+/// questo qui nessun messaggio si accetta da una finestra che non sia quella
+/// giusta (`servitore_qui/sul_web.dart`).
 Future<void> apriFuori(Uri pagina, String chiave) async {
+  if (!siApreFuori(pagina)) return;
   if (chiave.isNotEmpty) _rispondiAChiChiedeLaChiave(pagina, chiave);
+  /* Senza il codice non serve la maniglia: la scheda si apre come un
+   * collegamento qualunque, `noopener` e `noreferrer` — non sa chi l'ha
+   * aperta e non la puo' toccare. */
+  if (chiave.isEmpty) {
+    await launchUrl(pagina, mode: LaunchMode.externalApplication);
+    return;
+  }
   web.Window? finestra;
   try {
     finestra = web.window.open(pagina.toString(), '_blank');
@@ -348,6 +387,16 @@ Future<void> tornaDallaConfig(WebViewController controllore) async =>
 /// riconosce dal marchio e dall'azione, gli altri lo lasciano cadere. E dal
 /// di la' si guarda che arrivi dal proprio ospite: e' la stessa regola con cui
 /// gia' oggi si passano le premesse.
+/// Come e' andata la richiesta di premere un tasto per conto dell'auto. Nel
+/// browser non arriva mai nessuna richiesta: c'e' perche' la firma e' una sola.
+enum ComeEAndataInAuto { fatto, no, aspetta }
+
+/// Nel browser non c'e' nessuna auto che abbia chiesto niente.
+Future<ComeEAndataInAuto> premiPerLAuto(
+  WebViewController controllore,
+  String segno,
+) async => ComeEAndataInAuto.no;
+
 Future<void> doveLoMetto(
   WebViewController controllore,
   String dispositivo,

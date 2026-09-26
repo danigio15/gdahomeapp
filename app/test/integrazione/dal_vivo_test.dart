@@ -265,6 +265,8 @@ Future<void> _staccaDallaConsole(PonteVero ponte, String id) async {
     final richiesta = await cliente.deleteUrl(
       Uri.parse('${ponte.console}/api/dispositivi/$id'),
     );
+    /* Il dito e' di un amministratore: lo dice l'ingress. */
+    richiesta.headers.set('X-Remote-User-Id', amministratoreDellaProva);
     final risposta = await richiesta.close();
     await risposta.drain<void>();
   } finally {

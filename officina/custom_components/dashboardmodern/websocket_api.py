@@ -74,7 +74,12 @@ from .tickets import (
 from .tickets import (
     enabled as tickets_enabled,
 )
-from .www_files import MAX_UPLOAD_BYTES, list_www_folder, save_www_upload
+from .www_files import (
+    MAX_UPLOAD_BYTES,
+    QuotaSuperata,
+    list_www_folder,
+    save_www_upload,
+)
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
@@ -420,14 +425,30 @@ async def async_upload_www(
     WebSocket si autentica qui, lato server — e ogni chiamata REST del browser
     rispondeva 401. La foto viaggia percio' su questo stesso canale, e chi puo'
     scrivere e' chi puo' gia' scrivere la configurazione.
+
+    Due limiti in piu' rispetto alla lettura. Senza nessuna plancia installata
+    `_authorized` apre a tutti, ed e' giusto per leggere; per scrivere sul
+    disco di casa no: allora carica solo l'amministratore. E la cartella ha un
+    tetto (`MAX_FOLDER_BYTES`): dieci megabyte alla volta, senza tetto,
+    riempiono il disco di Home Assistant anche a chi non e' amministratore.
     """
-    if not _authorized(hass, connection, None):
+    if not _authorized(hass, connection, None) or not (
+        _is_admin(connection) or _entries(hass)
+    ):
         _deny(connection, msg)
         return
     try:
         result = await hass.async_add_executor_job(
             _salva_foto, hass.config.path("www"), msg["filename"], msg["data"]
         )
+    except QuotaSuperata:
+        connection.send_error(
+            msg["id"],
+            "quota_exceeded",
+            "La cartella www/dashboardmodern e' piena: togli qualche foto "
+            "vecchia, o copia le nuove in config/www a mano.",
+        )
+        return
     except (ValueError, TypeError):
         connection.send_error(msg["id"], "invalid_data", "La foto non e' leggibile.")
         return

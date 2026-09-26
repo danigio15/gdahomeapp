@@ -267,6 +267,15 @@ test("chi amministra lo dice Home Assistant, e gli utenti di sistema non contano
   );
 });
 
+test("un amministratore disattivato in Home Assistant non amministra nemmeno qui", async () => {
+  const casa = unaCasa([
+    { id: IO, name: "Giovanni", is_owner: false, is_active: false, group_ids: ["system-admin"] },
+  ]);
+  const utenti = new UtentiDiCasa({ casa, registro: ZITTO });
+  assert.equal(await utenti.amministratore(IO), false);
+  assert.equal(utenti.amministratoreSubito(IO), false);
+});
+
 test("la risposta vale un minuto, e dieci pagine fanno una domanda sola", async () => {
   let quando = 1000;
   const casa = unaCasa(COME_RISPONDE_HA);
@@ -551,14 +560,14 @@ test("e non si puo' nemmeno rinominare o togliere quella di un altro", async () 
 
     const rinomina = await commissioni.rispondi(
       { id: 1, type: "ponte/plance/rinomina", profilo: "primary", titolo: "mia adesso" },
-      { chiChiede: IO },
+      { puoAmministrare: true, chiChiede: IO },
     );
     assert.equal(rinomina.success, false);
     assert.equal(rinomina.error.code, NIENTE_PER_TE);
 
     const togli = await commissioni.rispondi(
       { id: 2, type: "ponte/plance/togli", profilo: "primary" },
-      { chiChiede: IO },
+      { puoAmministrare: true, chiChiede: IO },
     );
     assert.equal(togli.success, false);
     assert.equal(togli.error.code, NIENTE_PER_TE);

@@ -1189,6 +1189,13 @@ AVVISI_BOARD_EN_A = """    <h3 class="section-title">Quadro Avvisi</h3>
     </div>
 """
 
+# Il pannello di debug scrive lo stato grezzo di un'entita' dentro innerHTML.
+# Lo stato viene da Home Assistant e una stringa qualsiasi non deve diventare
+# markup: lo si fa passare da un escape completo, scritto qui dentro perche'
+# il pannello si carica prima del runtime (dove vive cdEsc).
+DEBUG_STATE_A = "<strong>${s.state}</strong>"
+DEBUG_STATE_R = "<strong>${String(s.state).replace(/[&<>\"']/g, (c) => '&#' + c.charCodeAt(0) + ';')}</strong>"
+
 # Ordered list of (label, anchor, replacement) applied by vendor_legacy.py.
 FEATURE_PATCHES: tuple[tuple[str, str, str], ...] = (
     ("home-avvisi-board-it?", AVVISI_BOARD_IT_A, ""),
@@ -1426,4 +1433,5 @@ FEATURE_PATCHES: tuple[tuple[str, str, str], ...] = (
     ("appl-entity-fallback", R36_A, R36_R),
     ("appl-canonical-picker-it?", R37_IT_A, R37_IT_R),
     ("appl-canonical-picker-en?", R37_EN_A, R37_EN_R),
+    ("debug-state-escaped", DEBUG_STATE_A, DEBUG_STATE_R),
 )

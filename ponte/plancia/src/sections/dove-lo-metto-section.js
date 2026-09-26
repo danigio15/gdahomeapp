@@ -37,7 +37,10 @@ import {
   sezione as laSezione,
   vuoleLaStanza,
 } from "../core/dove-lo-metto.js";
+import { rilevatoriDaImportare } from "../core/presenza-in-casa.js";
+import { varchiDaImportare } from "../core/varchi-di-casa.js";
 import {
+  allStates,
   clean,
   doc,
   esc,
@@ -306,6 +309,21 @@ export function apriIlPopupDelDispositivo(voce = {}) {
   return disegna();
 }
 
+/* Le righe che la sezione mostrerebbe da se', se non fosse dichiarata. */
+function cosaCiSarebbeGia(quale, dentro) {
+  const states = allStates() || {};
+  const nomeDi = (entity) => clean(states?.[entity]?.attributes?.friendly_name) || entity;
+  try {
+    if (quale === "presenza") return rilevatoriDaImportare(states, dentro.cd_presenza, nomeDi);
+    if (quale === "varchi") return varchiDaImportare(states, dentro.cd_varchi, nomeDi);
+  } catch (_errore) {
+    /* Un rilevamento che inciampa non deve impedire di salvare: si dichiara
+     * con la sola riga nuova, che e' meno di quello che si voleva ma non e'
+     * niente. */
+  }
+  return [];
+}
+
 /** Scrive davvero, e chiude. */
 function salva() {
   const voce = state.voce;
@@ -323,7 +341,13 @@ function salva() {
    * l'una e l'altra ci puo' essere stato un salvataggio dell'editor, e
    * riscriverci sopra vorrebbe dire buttarlo. */
   const dentro = Object.fromEntries(suo.chiavi.map((chiave) => [chiave, readJson(chiave, null)]));
-  const scritto = laVoceDaScrivere(quale, scritta, dentro);
+  /* Quello che il rilevamento proporrebbe, per le sezioni che sono un elenco
+   * dichiarato: serve solo la prima volta, quando la sezione non e' ancora
+   * dichiarata e metterci una riga sola cancellerebbe dalla vista tutte
+   * quelle che oggi si vedono da se'. Sono le stesse due funzioni che
+   * riempiono il bottone «Prendi gli N» delle schede: due strade diverse per
+   * la stessa domanda darebbero due elenchi diversi. */
+  const scritto = laVoceDaScrivere(quale, scritta, dentro, cosaCiSarebbeGia(quale, dentro));
   if (!scritto) return false;
   let cambiato = false;
   for (const [chiave, valore] of Object.entries(scritto))

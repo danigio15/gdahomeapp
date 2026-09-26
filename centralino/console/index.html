@@ -282,6 +282,15 @@
         flex: 1;
       }
 
+      .senza-sopra {
+        margin-top: 0;
+      }
+      .senza-sotto {
+        margin-bottom: 0;
+      }
+      .a-destra {
+        margin-left: auto;
+      }
       .vuoto {
         color: var(--tenue);
         text-align: center;
@@ -299,7 +308,7 @@
 
     <main>
       <section id="porta" class="riquadro" hidden>
-        <p style="margin-top: 0">
+        <p class="senza-sopra">
           La chiave della console. E' quella che sta sulla macchina come
           <span class="mono">CHIAVE_CONSOLE</span>: non la sa nessun altro, e non esce da questa
           pagina.
@@ -313,7 +322,7 @@
           />
           <button id="entra" class="forte">Entra</button>
         </div>
-        <p id="male" class="avviso" hidden style="margin-bottom: 0"></p>
+        <p id="male" class="avviso senza-sotto" hidden></p>
       </section>
 
       <section id="elenco" hidden></section>
@@ -322,7 +331,7 @@
         <div class="riquadro">
           <div class="capo">
             <strong id="chi" class="mono"></strong>
-            <button id="butta" class="male" style="margin-left: auto">Cancella</button>
+            <button id="butta" class="male a-destra">Cancella</button>
           </div>
           <div id="note-chi" class="note"></div>
           <div id="filo" class="filo"></div>
@@ -338,9 +347,13 @@
     <script>
       "use strict";
 
-      /* La chiave resta nel browser, non nella pagina: chi risponde apre questa
-       * console dal telefono dieci volte al giorno, e ribatterla ogni volta
-       * finirebbe con una chiave corta. Un bottone la butta via. */
+      /* La chiave resta nella scheda, e solo finche' la scheda e' aperta.
+       *
+       * Prima restava nel browser per sempre, e il browser la teneva per
+       * indirizzo: sullo stesso indirizzo c'e' anche l'app, e qualunque cosa
+       * girasse la' dentro poteva leggerla. Adesso si ribatte quando si riapre
+       * la console — il gestore di password la riempie da solo — e ricaricare
+       * la pagina non la perde. Un bottone la butta via prima. */
       const CHIAVE = "gdahome.console.chiave";
       const OGNI = 10_000;
 
@@ -355,7 +368,7 @@
       let giro = null;
 
       try {
-        chiave = localStorage.getItem(CHIAVE) || "";
+        chiave = sessionStorage.getItem(CHIAVE) || "";
       } catch (_errore) {
         /* Finestra privata: si ribatte e pazienza. */
       }
@@ -409,7 +422,7 @@
         if (errore?.stato === 403) {
           chiave = "";
           try {
-            localStorage.removeItem(CHIAVE);
+            sessionStorage.removeItem(CHIAVE);
           } catch (_e) {
             /* pazienza */
           }
@@ -623,7 +636,7 @@
           return;
         }
         try {
-          localStorage.setItem(CHIAVE, chiave);
+          sessionStorage.setItem(CHIAVE, chiave);
         } catch (_errore) {
           /* pazienza */
         }
@@ -646,7 +659,7 @@
         chiave = "";
         aperta = null;
         try {
-          localStorage.removeItem(CHIAVE);
+          sessionStorage.removeItem(CHIAVE);
         } catch (_errore) {
           /* pazienza */
         }

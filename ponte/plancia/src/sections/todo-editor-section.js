@@ -117,7 +117,7 @@ function catalogoTessere() {
      * fra le tessere che si possono spegnere come le altre, perché chi ha una
      * casa con un'entità cronicamente muta deve poterla zittire — ma di serie
      * è accesa: un guasto muto è il guasto che dura di più. */
-    ["nonrisponde", "📡", t("Non rispondono", "Not answering")],
+    ["nonrisponde", "📡", t("Dispositivi non connessi", "Disconnected devices")],
     /* La raccolta differenziata (#293): dice cosa mettere fuori stasera. */
     ["rifiuti", "♻️", t("Rifiuti", "Waste")],
     ["varchi", "🚪", t("Varchi", "Openings")],

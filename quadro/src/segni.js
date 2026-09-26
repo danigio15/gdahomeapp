@@ -26,11 +26,25 @@
  * quello che il ponte fa gia' per l'app sul telefono. Qui arriva da li', e da
  * qui la serve il quadro, dal suo indirizzo.
  *
+ * ─── Una cartella per installatore ───────────────────────────────────────
+ *
+ * Prima la cartella era una sola per tutto il quadro, e chi scriveva per
+ * primo vinceva: una casa qualunque, di un installatore qualunque, poteva
+ * mandare l'icona e le note di «Mosquitto 6.5.2» — basta dire di averlo — e
+ * quella roba compariva nella pagina di **tutti** gli altri installatori.
+ *
+ * Adesso ogni installatore ha la sua (`segni/<inst_…>/`): le sue case ci
+ * scrivono, la sua pagina ci legge, e quello che manda una casa di Bianchi a
+ * Rossi non arriva. Si perde un po' di risparmio — la stessa icona sta una
+ * volta per installatore invece che una volta sola — e si guadagna che
+ * nessuno scrive nella pagina di un altro.
+ *
  * ─── Chi le puo' vedere ──────────────────────────────────────────────────
  *
- * Chiunque ne sappia il segno, e l'indirizzo e' `/segno/<segno>`. Come per il
- * marchio di un installatore: sedici cifre esadecimali non si indovinano, e
- * quello che si scopre indovinandole e' l'icona di Mosquitto.
+ * Chiunque ne sappia il segno e l'installatore: l'indirizzo e'
+ * `/segno/<inst_…>/<segno>`. Come per il marchio di un installatore: sedici
+ * cifre esadecimali non si indovinano, e quello che si scopre indovinandole e'
+ * l'icona di Mosquitto.
  */
 
 import { createHash } from "node:crypto";
@@ -129,10 +143,34 @@ export function cheRazzaE(byte) {
   return "";
 }
 
+/* Com'e' fatta la matricola di un installatore: la stessa di `CHI_VALIDO`. */
+const DI_CHI = /^inst_[0-9a-f]{16}$/;
+
 export class Segni {
-  constructor({ cartella = "./dati", adesso = () => Date.now() } = {}) {
-    this.cartella = join(cartella, "segni");
+  /* `di` e' l'installatore di cui e' questa cartella. Senza, e' la cartella
+   * di una volta, quella di tutti: la usano le prove dei pezzi, e il quadro
+   * la svuota all'accensione (`sgombraLaVecchia`). */
+  constructor({ cartella = "./dati", adesso = () => Date.now(), di = "" } = {}) {
+    if (di && !DI_CHI.test(String(di))) throw new Error("questo non e' un installatore");
+    this.cartella = di ? join(cartella, "segni", di) : join(cartella, "segni");
     this.adesso = adesso;
+  }
+
+  /* I file della cartella di tutti, rimasti dalle versioni di prima: non li
+   * legge piu' nessuno, e una roba che si e' deciso di non mostrare non la si
+   * tiene sul disco. Le sottocartelle — quelle degli installatori — restano. */
+  sgombraLaVecchia() {
+    let andati = 0;
+    try {
+      for (const una of readdirSync(this.cartella, { withFileTypes: true })) {
+        if (!una.isFile()) continue;
+        rmSync(join(this.cartella, una.name), { force: true });
+        andati += 1;
+      }
+    } catch (_nonCE) {
+      /* Niente cartella, niente da sgombrare. */
+    }
+    return andati;
   }
 
   /** Dove sta l'**icona** di questo segno, se c'e'. */

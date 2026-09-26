@@ -359,6 +359,25 @@ String spiegaLErrore(Object errore) => switch (errore) {
         'Home Assistant didn\'t provide notes for this version: it may be an '
         'older version, or a device that can\'t tell them.',
   ),
+  /* La rete Zigbee che Home Assistant non apre. Ha un caso suo per la stessa
+   * ragione delle note di versione: non e' l'add-on a essere vecchio — quel
+   * comando il ponte lo conosce, l'ha appena eseguito — e' Home Assistant che
+   * non lo accetta. Dal campo, con l'add-on aggiornato e la scheda ZHA piena
+   * a tre centimetri dall'avviso: «da un messaggio di aggiornare ma in realta'
+   * e' tutto aggiornato». */
+  ComandoRifiutato(codice: 'zigbee_non_accettato', :final spiegazione) =>
+    inLingua(
+      it:
+          'Home Assistant non ha accettato il comando per aprire la rete: '
+          'controlla che ZHA (o Zigbee2MQTT) sia acceso e che l\'antenna '
+          'sia collegata. Non è l\'add-on: questa cosa la sa fare. '
+          '$spiegazione',
+      en:
+          'Home Assistant refused the command to open the network: check '
+          'that ZHA (or Zigbee2MQTT) is running and the radio is plugged '
+          'in. It\'s not the add-on: it does know how to do this. '
+          '$spiegazione',
+    ),
   ComandoRifiutato(codice: 'unknown_command') => inLingua(
     it:
         'gdahome in casa è più vecchio dell\'app e questa cosa non la sa '

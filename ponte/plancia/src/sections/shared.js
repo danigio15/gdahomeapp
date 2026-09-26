@@ -1,6 +1,11 @@
 // DM-FIX-20260812B
+import { disegnoDelCatalogo } from "../core/catalogo-disegni.js";
 import { canonicalClimateType } from "../core/device-model.js";
 import { isCumulativeEnergyEntity } from "../core/period-service.js";
+import {
+  dispositiviDalGuscio,
+  ricordaIDispositivi,
+} from "../core/i-dispositivi-di-home-assistant.js";
 import {
   ricordaLeStanze,
   stanzaRicordata,
@@ -49,8 +54,21 @@ export const t = (it, en) => {
 };
 /* Translate a string that only exists in English (no Italian counterpart). */
 export const tr = (en) => translate(en, getLocale());
+/* Tutti e cinque i caratteri: i valori arrivano da Home Assistant e dalla
+ * configurazione condivisa, e finiscono sia nel testo sia dentro attributi
+ * fra virgolette doppie o semplici. */
 export const esc = (value) =>
-  clean(value).replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll('"', "&quot;");
+  clean(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+/* Un valore dentro un gestore scritto nell'HTML, onclick="f(…)": prima
+ * diventa una stringa JavaScript, poi un attributo. Si scrive senza apici
+ * intorno — li porta lui. Un apice sostituito con &#39; non basta: il browser
+ * lo rimette a posto prima di eseguire il gestore. */
+export const jsArg = (value) => esc(JSON.stringify(String(value ?? "")));
 
 export function readClimateUnits() {
   let values;
@@ -438,6 +456,10 @@ export function lexicalGlobal(name) {
 
 /* Che i registri vivi siano gia' stati messi da parte in questo caricamento. */
 let stanzeGiaRicordate = false;
+/* E di chi e' ogni entita': la stessa manovra, dallo stesso registro vivo e
+ * una volta sola per caricamento. Serve all'avviso dei dispositivi non
+ * connessi, che conta per dispositivo e non per entita'. */
+let dispositiviGiaRicordati = false;
 
 /* In che stanza di Home Assistant sta un'entita'.
  *
@@ -486,6 +508,10 @@ export function stanzaDiHomeAssistant(entity) {
     if (!stanzeGiaRicordate) {
       stanzeGiaRicordate = true;
       ricordaLeStanze(stanzeDalGuscio(wiz));
+    }
+    if (!dispositiviGiaRicordati) {
+      dispositiviGiaRicordati = true;
+      ricordaIDispositivi(dispositiviDalGuscio(wiz));
     }
     const area = riga.a || (riga.d ? wiz?.devArea?.[riga.d] : "");
     const nome = area ? clean(wiz?.areaNames?.[area]) : "";
@@ -1008,6 +1034,26 @@ export function iconGlyphHtml(icon, { size = 26, fallback = "🔌", kind = "acti
   return esc(fallback);
 }
 
+/**
+ * Il disegno di una voce, con il catalogo di casa davanti a tutto (#74).
+ *
+ * «Icone sempre quelle del catalogo nostro»: chi ha un disegno nostro lo
+ * usa — `door`, `window`, `garage-door` — e solo chi non ce l'ha ripiega su
+ * `iconGlyphHtml`, che sa il mestiere dei token `mdi:` e dei glifi scritti a
+ * mano. Senza questo passaggio un nome del catalogo finiva stampato com'e':
+ * sopra il nome della porta si leggeva la parola «door».
+ *
+ * `ripiego` e' un'altra chiave del catalogo, non un'emoji: e' il disegno che
+ * va bene per quella sezione quando la voce non ne ha ancora scelto uno.
+ */
+export function disegnoDiCasa(token, { misura = 26, ripiego = "" } = {}) {
+  const nostro = disegnoDelCatalogo(token, misura);
+  if (nostro) return nostro;
+  const scorta = ripiego ? disegnoDelCatalogo(ripiego, misura) : "";
+  if (!clean(token)) return scorta;
+  return iconGlyphHtml(token, { size: misura, fallback: "" }) || scorta;
+}
+
 export function afterResult(result, callback) {
   if (result && typeof result.finally === "function") return result.finally(callback);
   callback();
@@ -1185,6 +1231,55 @@ export function scriviSeCambia(nodo, markup) {
 export { attributoSeCambia, classeSeCambia } from "../core/scrivere-se-cambia.js";
 
 /* Lo stesso, per un testo semplice. */
+/* ── Il conto esatto delle fasce, per chi scrive i soldi ──────────────────
+ *
+ * «Gli importi dei costi energia non coincidono con il riquadro sotto.»
+ *
+ * La casella «Costo Reale» e il blocco «Come si divide il costo reale» stanno
+ * a tre centimetri l'una dall'altro e dicevano due cifre diverse per la stessa
+ * spesa — stessi kilowattora, soldi diversi. Non era un conto sbagliato: erano
+ * due conti, tutti e due giusti per quello che sapevano.
+ *
+ * La casella faceva una **stima**: i kilowattora del mese per la media pesata
+ * delle fasce, perche' di un mese intero si sa quanta energia e' passata ma
+ * non in che ore. Il blocco sotto invece le ore le ha chieste al Recorder, sa
+ * in che fascia e' passato ogni kilowattora, e fa il **conto esatto**.
+ *
+ * Il conto esatto e' quello giusto, e chi scrive la casella deve preferirlo.
+ * Il problema era che a scrivere quella casella sono in due — la sezione
+ * dell'Energia e la rifinitura del Report — e solo una delle due sapeva
+ * chiedere. L'ultima che passava vinceva, e vinceva la stima.
+ *
+ * Il registro sta qui, che e' il posto che vedono tutti e non chiude anelli:
+ * la sezione delle fasce non si puo' importare (usa l'Energia, e l'Energia
+ * importerebbe lei), quindi chi sa il conto si presenta invece di farsi
+ * chiamare.
+ */
+const IL_CONTO = "__dmContoDelleFasce";
+
+export function registraIlContoDelleFasce(lettore) {
+  root[IL_CONTO] = typeof lettore === "function" ? lettore : null;
+  return true;
+}
+
+/**
+ * Il conto esatto del mese scelto, o niente.
+ *
+ * Niente vuol dire «non c'e' un conto per QUESTO mese», e chi chiede torna
+ * alla sua stima: e' il caso di chi apre un mese vecchio, di cui il Recorder
+ * le ore non le tiene piu'.
+ */
+export function ilContoEsattoDelleFasce(periodo) {
+  try {
+    const lettore = root[IL_CONTO];
+    if (typeof lettore !== "function") return null;
+    const conto = periodo === undefined ? lettore() : lettore(periodo);
+    return conto && Number.isFinite(Number(conto.euro)) ? conto : null;
+  } catch (_error) {
+    return null;
+  }
+}
+
 export function scriviTestoSeCambia(nodo, testo) {
   if (!nodo) return false;
   const valore = String(testo ?? "");

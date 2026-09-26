@@ -6,6 +6,15 @@
      «ERR_CLEARTEXT_NOT_PERMITTED». Vale **solo** per il telefono stesso:
      verso qualunque altro indirizzo resta la regola di sistema. -->
 <network-security-config>
+    <!-- Per tutto il resto, scritto per esteso anche se e' gia' la regola di
+         sistema: niente in chiaro, e solo i certificati del sistema — non
+         quelli aggiunti a mano sul telefono, che un'app di casa non ha
+         motivo di accettare. -->
+    <base-config cleartextTrafficPermitted="false">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
     <domain-config cleartextTrafficPermitted="true">
         <domain includeSubdomains="false">127.0.0.1</domain>
         <domain includeSubdomains="false">localhost</domain>

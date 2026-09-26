@@ -140,7 +140,13 @@ test("l'elenco delle voci e' quello delle azioni rapide, non un secondo elenco",
    * tendina: da qui si chiama, non si ricopia. */
   const sorgente = leggi("sections/rooms-page-section.js");
   assert.match(sorgente, /import \{ apriIlMenu \} from "\.\/azioni-servizio-giusto-section\.js";/);
-  assert.match(sorgente, /apriIlMenu\(entity\);/);
+  /* Con chi l'ha aperta: il popup e' lo stesso che apre il tasto della Home, e
+   * di la' gli arriva l'azione — nome scelto, icona scelta. Da qui non gli
+   * arrivava niente e si intitolava col nome di Home Assistant: una finestra
+   * «MODUS» aperta da una riga che si chiama «prova». */
+  assert.match(sorgente, /apriIlMenu\(entity, \{/);
+  assert.match(sorgente, /name: clean\(scegli\.getAttribute\("data-dm-stanza-nome"\)\),/);
+  assert.match(sorgente, /icon: clean\(scegli\.getAttribute\("data-dm-stanza-segno"\)\),/);
   assert.doesNotMatch(sorgente, /dm-qa-voce/, "la stanza si e' disegnata un elenco suo");
   /* E di la' il tasto dev'esserci ancora. */
   assert.match(leggi("sections/azioni-servizio-giusto-section.js"), /export function apriIlMenu\(/);

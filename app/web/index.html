@@ -24,6 +24,27 @@
       })();
     </script>
 
+    <!-- Le regole della pagina, quelle che si possono scrivere qui.
+
+         Poche, e scelte perche' non rompano niente: niente plugin
+         (`object-src`), nessun `<base>` che porti altrove (`base-uri`: quello
+         qui sopra punta alla nostra cartella), nessun modulo che spedisca
+         altrove (`form-action`). Una regola piu' stretta sugli script
+         chiederebbe di elencare cosa serve a Flutter e a CanvasKit — e dove
+         l'app e' servita: sotto l'ingress, sul centralino, sul sito — e
+         sbagliarla vuol dire una pagina bianca; si mette dove l'app si serve,
+         come intestazione, insieme a quelle che qui non si possono scrivere
+         (`frame-ancestors`, `Cross-Origin-Opener-Policy`).
+
+         E l'indirizzo di questa pagina non esce: sotto l'ingress di Home
+         Assistant dentro c'e' un gettone, e un collegamento aperto da qui
+         non lo deve ricevere. -->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="object-src 'none'; base-uri 'self'; form-action 'self'"
+    />
+    <meta name="referrer" content="same-origin" />
+
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="description" content="L'app di casa: la plancia, e i comandi che in Home Assistant stanno nascosti." />
 

@@ -84,3 +84,180 @@ export function chiNonRisponde(entita, states = {}, { nomeDi = null } = {}) {
   }
   return fuori.sort((una, altra) => una.nome.localeCompare(altra.nome));
 }
+
+/* ── e adesso per dispositivo, non per entita' ──────────────────────────── */
+
+/* «Non devi mettere le entita' ma i dispositivi non connessi, cosi' come li
+ * mostri nel cruscotto installatore.»
+ *
+ * Aveva ragione, e il guaio era piu' grosso della forma dell'elenco. Qui si
+ * elencava ogni singola entita' muta, e fra quelle finiva
+ * `lock.asciugatrice_child_lock`: un'asciugatrice che risponde benissimo, di
+ * cui tace una sola entita' — quella serratura bambini che l'integrazione
+ * pubblica e che e' `unavailable` quando la macchina non sta lavando. Cioe'
+ * l'avviso diceva «non connesso» di una cosa connessa, che e' esattamente il
+ * modo in cui un avviso si impara a ignorare.
+ *
+ * Il ponte questa regola ce l'ha gia', ed e' quella che vede il cruscotto
+ * (`ponte/src/salute.js`): si raggruppa per dispositivo, e un dispositivo e'
+ * giu' **solo se tacciono tutte le sue entita'**. Una che parla vuol dire che
+ * la strada c'e', e allora il guasto e' di quell'entita' li', non del
+ * dispositivo. Qui si rifa' la stessa, e non una somigliante: due regole per
+ * la stessa domanda sono due verita', e il giorno che si scostano nessuno sa
+ * quale guardare.
+ *
+ * «Tutte le sue entita'» vuol dire tutte quelle che Home Assistant ha in casa,
+ * non solo quelle configurate nella plancia: se dell'asciugatrice qui dentro
+ * c'e' mappata la sola serratura bambini, a dire che l'asciugatrice sta bene
+ * sono le altre — e vanno guardate, se no il raggruppamento non servirebbe a
+ * niente proprio nel caso che l'ha reso necessario.
+ */
+
+/* Il nome del dispositivo quando il registro non lo dice.
+ *
+ * Il piu' corto fra i nomi delle sue entita': «Leapmotor B10» sta dentro
+ * «Leapmotor B10 Autonomia residua CLTC» e dentro «Leapmotor B10 Batteria»,
+ * perche' Home Assistant i nomi delle entita' li fa cosi' — il nome del
+ * dispositivo davanti, e poi cosa misura. Non e' una regola, e' un'abitudine:
+ * per questo e' il ripiego e non la prima scelta. */
+function ilPiuCorto(nomi) {
+  let scelto = "";
+  for (const nome of nomi) if (!scelto || nome.length < scelto.length) scelto = nome;
+  return scelto;
+}
+
+/* I domini che un dispositivo non ce l'hanno MAI.
+ *
+ * La regola della #111 — chi non ha un apparecchio dietro non e' un
+ * dispositivo non connesso — la si applicava guardando il registro dei
+ * dispositivi: se l'entita' non sta nel registro, fuori. Giusto, ma vale solo
+ * quando il registro c'e'. Senza, si tornava a contare riga per riga e gli
+ * aiutanti rientravano tutti — cioe' esattamente le sessantotto righe della
+ * segnalazione, in una casa che il registro non ce l'ha ancora o non e'
+ * riuscita a chiederlo.
+ *
+ * Questi dieci domini pero' non hanno bisogno di nessun registro per sapere
+ * cosa sono: un `input_boolean` e' un aiutante scritto in un file di
+ * configurazione, un'`automation` e' una regola, uno `script` e' una sequenza.
+ * Dietro non c'e' niente da andare a premere, e non c'e' registro che possa
+ * dire il contrario. Quando stanno `unavailable` e' un'altra cosa — un package
+ * che non carica, una ricaricata in corso — cioe' configurazione da
+ * correggere, che e' il guaio che questo file tiene fuori dalla prima riga.
+ *
+ * L'elenco e' dichiarato e corto apposta: dice cosa NON e' un apparecchio, e
+ * ogni voce e' una cosa che Home Assistant chiama «helper» o «automazione». */
+export const SENZA_DISPOSITIVO = Object.freeze([
+  "automation",
+  "counter",
+  "input_boolean",
+  "input_button",
+  "input_datetime",
+  "input_number",
+  "input_select",
+  "input_text",
+  "schedule",
+  "script",
+  "scene",
+  "timer",
+]);
+
+const SENZA = new Set(SENZA_DISPOSITIVO);
+
+/** Se quell'entita' e' di un dominio che un apparecchio non ce l'ha mai. */
+export function senzaDispositivo(entity) {
+  const punto = pulito(entity).indexOf(".");
+  return punto > 0 && SENZA.has(pulito(entity).slice(0, punto).toLowerCase());
+}
+
+/**
+ * Chi non risponde, raggruppato per dispositivo.
+ *
+ * `di` dice di chi e' un'entita', `nomi` come si chiama quel qualcuno: sono le
+ * due mappe di `i-dispositivi-di-home-assistant.js`. Senza, o per le entita'
+ * che un dispositivo non ce l'hanno — un template, un `input_boolean`, il
+ * meteo — si torna riga per riga come prima: raggruppare per un dispositivo
+ * che non c'e' vorrebbe dire inventarlo.
+ *
+ * Ogni riga porta `entita`, cioe' tutte le entita' mute che ci stanno dentro.
+ * Serve al cestino: mettere da parte un dispositivo vuol dire mettere da parte
+ * le sue, e cosi' l'elenco delle escluse resta fatto di entita' — come era
+ * prima, e come restano leggibili quelle gia' scritte.
+ *
+ * ── E quelle che un dispositivo non ce l'hanno restano fuori (#111) ──────
+ *
+ * «Dagli ultimi aggiornamenti ricevo allerta di 68 cose che non rispondono,
+ * fanno parte di package esistenti, i sensori sono tipicamente input boolean,
+ * datetime, automation, input Number, script ecc. Ma secondo me funzionano.
+ * Perche' questa allerta "dispositivi non connessi"?»
+ *
+ * Perche' l'elenco raggruppava per dispositivo quelle che un dispositivo ce
+ * l'hanno, e le altre le lasciava passare una per una. Cioe' faceva una regola
+ * SOMIGLIANTE a quella del cruscotto installatore, non la stessa: li'
+ * (`ponte/src/salute.js`) si guardano solo le entita' che un dispositivo ce
+ * l'hanno, e le altre non entrano nemmeno nel conto. Ed e' proprio la regola
+ * che era stata chiesta: «cosi' come li mostri nel cruscotto installatore».
+ *
+ * La differenza non e' formale. Un aiutante, un'automazione, uno script, un
+ * sensore template non hanno un apparecchio dietro e non hanno una strada che
+ * possa cadere: non esiste niente da andare a premere. Se stanno
+ * `unavailable` e' un'altra cosa — un package che non carica, un'entita'
+ * rinominata, una ricaricata in corso — cioe' configurazione da correggere,
+ * che e' il guaio che questo file tiene fuori fin dalla prima riga. Chiamarli
+ * «dispositivi non connessi» e' l'avviso che dice il vero su cose che non
+ * interessano: sessantotto righe, e la presa del giardino in mezzo che non la
+ * trova piu' nessuno.
+ *
+ * Senza le mappe dei registri non si puo' distinguere, e allora non si toglie
+ * niente: torna riga per riga come prima. Un avviso un po' piu' grossolano e'
+ * meglio di un avviso che non c'e'.
+ */
+export function chiNonRispondePerDispositivo(
+  entita,
+  states = {},
+  { nomeDi = null, di = null, nomi = null } = {},
+) {
+  const sciolte = chiNonRisponde(entita, states, { nomeDi }).filter(
+    (una) => !senzaDispositivo(una.entity),
+  );
+  const diChiE = di && typeof di === "object" ? di : {};
+  if (!Object.keys(diChiE).length) return sciolte;
+
+  /* Chi parla, fra i dispositivi: si guarda tutta la casa, non le configurate.
+   * Un giro solo su tutti gli stati, e non uno per dispositivo. */
+  const parla = new Set();
+  for (const [id, stato] of Object.entries(states || {})) {
+    const suo = pulito(diChiE[pulito(id)]);
+    if (suo && !nonRisponde(stato)) parla.add(suo);
+  }
+
+  const perDispositivo = new Map();
+  const fuori = [];
+  for (const una of sciolte) {
+    const suo = pulito(diChiE[una.entity]);
+    /* Un dispositivo non ce l'ha: non e' un dispositivo non connesso. Il
+     * perche' sta in cima, ed e' la #111. */
+    if (!suo) continue;
+    /* Il dispositivo parla da un'altra bocca: il guasto non e' suo. */
+    if (parla.has(suo)) continue;
+    const gia = perDispositivo.get(suo);
+    if (gia) gia.push(una);
+    else perDispositivo.set(suo, [una]);
+  }
+
+  const nomeDelDispositivo = nomi && typeof nomi === "object" ? nomi : {};
+  for (const [suo, quelle] of perDispositivo) {
+    fuori.push({
+      entity: `dispositivo:${suo}`,
+      dispositivo: suo,
+      nome: pulito(nomeDelDispositivo[suo]) || ilPiuCorto(quelle.map((una) => una.nome)),
+      /* Da quando: il dispositivo e' irraggiungibile da quando ha smesso di
+       * parlare l'ULTIMA delle sue, non la prima — prima di allora una voce
+       * c'era ancora. */
+      da: quelle.reduce((piu, una) => (una.da && (!piu || una.da > piu) ? una.da : piu), null),
+      entita: quelle.map((una) => una.entity),
+    });
+  }
+  /* Ogni riga qui e' un dispositivo, e `entita` ce l'ha gia': da quando le
+   * sciolte restano fuori non c'e' piu' niente da rivestire. */
+  return fuori.sort((una, altra) => una.nome.localeCompare(altra.nome));
+}

@@ -50,6 +50,9 @@
  * farebbe di chi mantiene l'app il custode dei dati di case di altri.
  */
 
+import { randomBytes } from "node:crypto";
+import { join } from "node:path";
+
 import {
   gliAddon,
   gliApparati,
@@ -62,6 +65,8 @@ import { ilSegnoDi } from "./segni.js";
 import { ilBackup, leBatterie, leEntita } from "./salute.js";
 import { PROFILI_AL_MASSIMO, profiloBuono, senzaFlussi } from "./plancia-da-lontano.js";
 import { eConfigurata } from "./configurazione.js";
+import { Archivio } from "./archivio.js";
+import { Registri } from "./registri.js";
 
 /* Dove sta il quadro.
  *
@@ -158,18 +163,6 @@ const IL_FILO_RALLENTA_FINO_A = 12;
  * registro e non fa male a nessuno. Quando il quadro fa il suo mestiere questa
  * riga non si accorge nemmeno di esistere. */
 const IL_FILO_ALMENO = 1_000;
-
-/* Quanto si tengono da parte i registri di Home Assistant.
- *
- * Servono a dare un nome ai dispositivi che non rispondono, e cambiano quando
- * qualcuno aggiunge o ribattezza un apparecchio — cioe' quasi mai. Il rapporto
- * parte ogni minuto: richiederli ogni volta vorrebbe dire duemila righe di
- * registro al minuto per due nomi che sono gli stessi di un'ora fa.
- *
- * Cinque minuti e' il ritardo massimo con cui un dispositivo appena
- * ribattezzato si vede col nome nuovo, e nessuno ribattezza una presa
- * guardando il cronometro. */
-const REGISTRI_DURANO = 5 * 60 * 1000;
 
 /* Quanto si aspetta prima del primo rapporto.
  *
@@ -414,6 +407,9 @@ export function fabbricaIlRapporto({
   plance = null,
   configurazione = null,
   dispositivi = null,
+  /* L'anagrafe della casa, condivisa con chi risponde alla plancia. Vedi
+   * `registri.js`. */
+  registri = null,
   chiamata = null,
   versioni = {},
   ogni = OGNI_DI_SERIE,
@@ -434,27 +430,16 @@ export function fabbricaIlRapporto({
     }
   };
 
-  /* I due registri, tenuti da parte per cinque minuti. Stanno qui e non in una
-   * classe perche' li vuole un pezzo solo del rapporto, e una classe in piu'
-   * per due `Map` e' una classe in piu' da tenere a mente.
+  /* I due registri li tiene `registri.js`, tenuti da parte cinque minuti, e li
+   * tiene **per tutti**: il rapporto ogni minuto, e la plancia a ogni
+   * caricamento. Due copie vorrebbero dire due letture pesanti invece di una,
+   * e due momenti diversi in cui la casa si e' guardata.
    *
-   * Uno dei due che non risponde li butta tutti e due: senza quello delle
-   * entita' non si sa di chi e' un'entita', senza quello dei dispositivi non
-   * si sa come si chiama un dispositivo, e mezza risposta darebbe nomi a
-   * meta'. `iNomi` sa gia' cavarsela senza, con i nomi delle entita'. */
-  let registri = null;
-  let registriLettiIl = 0;
-  const iRegistri = async () => {
-    const ora = adesso();
-    if (registri && ora - registriLettiIl < REGISTRI_DURANO) return registri;
-    const [dispositivi, entita] = await Promise.all([
-      casa.chiedi({ type: "config/device_registry/list" }),
-      casa.chiedi({ type: "config/entity_registry/list" }),
-    ]);
-    registri = { dispositivi, entita };
-    registriLettiIl = adesso();
-    return registri;
-  };
+   * Senza — un ponte vecchio, una prova che non lo passa — il rapporto se li
+   * legge da se', come ha sempre fatto: e' l'unico pezzo che li usa, e restare
+   * senza vorrebbe dire nomi di entita' al posto dei nomi di dispositivo. */
+  const anagrafe = registri ?? new Registri({ casa, registro, adesso });
+  const iRegistri = () => anagrafe.chiedi();
 
   return async () => {
     const [detto, stati, daFare, registriOra] = await Promise.all([
@@ -747,11 +732,24 @@ export function perchePreciso(errore) {
   return sotto || String(errore?.message || errore);
 }
 
+/* Quanto aspettare quando il quadro dice «piano» (`429`): i secondi di
+ * `retry-after`, dentro un tetto. Senza un numero leggibile, un minuto. */
+const FRENO_MASSIMO = 60 * 60;
+export function secondiDiFreno(detto) {
+  const secondi = Number.parseInt(String(detto ?? "").trim(), 10);
+  if (!Number.isFinite(secondi) || secondi <= 0) return 60;
+  return Math.min(secondi, FRENO_MASSIMO);
+}
+
 export class Postino {
   constructor({
     dove = "",
     chiave = "",
     casa = "",
+    /* Dove tenere il segreto della casa per il quadro, e l'ultima chiave che
+     * ha funzionato: vedi `_intestazioni`. Senza — nelle prove — si tengono in
+     * memoria. */
+    cartella = "",
     ogni = OGNI_DI_SERIE,
     fabbrica,
     fai = null,
@@ -827,6 +825,80 @@ export class Postino {
      * col processo: un ponte che si riavvia non manda niente finche' il quadro
      * non ridice cosa gli manca, che e' quello che si vuole. */
     this._segniChiesti = [];
+
+    /* ─── Chi e' questa casa, per il quadro ───────────────────────────────
+     *
+     * Il codice incollato nella scheda dice **a quale installatore** va la
+     * casa; da solo non dice **quale casa** e': chi avesse in mano il codice
+     * potrebbe presentarsi col nome di un'altra e portarsela via. Allora la
+     * casa ha un segreto suo, fatto dal caso la prima volta e tenuto in
+     * `/data`, che viaggia con ogni richiesta (`x-casa-segreto`): il quadro lo
+     * impara la prima volta e poi lo pretende.
+     *
+     * E quando il codice cambia — la casa passa a un altro installatore — si
+     * manda anche quello di prima (`x-chiave-prima`), finche' il nuovo non ha
+     * avuto una risposta buona: e' la prova che chi sposta la casa e' chi la
+     * aveva. */
+    this._memoria = cartella
+      ? new Archivio(join(String(cartella), "quadro.json"), {})
+      : { dati: {}, salva() {} };
+    if (typeof this._memoria.dati?.segreto !== "string" || this._memoria.dati.segreto.length < 32) {
+      this._memoria.dati = {
+        ...(this._memoria.dati || {}),
+        segreto: randomBytes(32).toString("hex"),
+      };
+      this._salvaLaMemoria();
+    }
+    /* Quando il quadro ha detto «piano», e fino a quando. */
+    this._frenoFinoA = 0;
+  }
+
+  _salvaLaMemoria() {
+    try {
+      this._memoria.salva();
+    } catch (errore) {
+      this.registro.attenzione(
+        `il segreto della casa per il quadro non si scrive: ${errore?.message || errore}`,
+      );
+    }
+  }
+
+  /* Le intestazioni di ogni richiesta al quadro: la chiave, il nome della
+   * casa, il suo segreto, e — se la chiave e' cambiata e la nuova non ha
+   * ancora avuto risposta — quella di prima. */
+  _intestazioni(altre = {}) {
+    const prima = String(this._memoria.dati?.chiaveBuona || "");
+    return {
+      ...altre,
+      /* La chiave in testa e non nel corpo: cosi' non finisce dentro quello
+       * che la console fa leggere a chi ci abita. */
+      authorization: `Bearer ${this.chiave}`,
+      "x-casa": this.casa,
+      "x-casa-segreto": String(this._memoria.dati.segreto),
+      ...(prima && prima !== this.chiave ? { "x-chiave-prima": prima } : {}),
+    };
+  }
+
+  /* La chiave di adesso ha avuto una risposta buona: da qui in avanti e'
+   * quella «di prima» per un eventuale cambio. */
+  _chiaveBuona() {
+    if (this._memoria.dati?.chiaveBuona === this.chiave) return;
+    this._memoria.dati = { ...this._memoria.dati, chiaveBuona: this.chiave };
+    this._salvaLaMemoria();
+  }
+
+  /* Il quadro ha detto «piano»: si aspetta quanto ha detto, senza contarlo
+   * come un giro andato a vuoto — non e' spento, e' pieno. */
+  _frena(risposta) {
+    const secondi = secondiDiFreno(risposta?.headers?.get?.("retry-after"));
+    this._frenoFinoA = this.adesso() + secondi * 1000;
+    this._ultimoEsito = {
+      andata: false,
+      quando: this.adesso(),
+      perche: `il quadro chiede di aspettare ${secondi} secondi`,
+    };
+    this.registro.info(`il quadro chiede di aspettare ${secondi} secondi`);
+    return secondi;
   }
 
   /** I segni che il quadro ha detto di non avere. Lo legge chi fabbrica. */
@@ -918,11 +990,7 @@ export class Postino {
       }
       const risposta = await this.prendi(`${this.dove}/plancia`, {
         method: "POST",
-        headers: {
-          "content-type": "application/json",
-          authorization: `Bearer ${this.chiave}`,
-          "x-casa": this.casa,
-        },
+        headers: this._intestazioni({ "content-type": "application/json" }),
         body: JSON.stringify({
           profilo,
           titolo: String(scatto.titolo ?? "").slice(0, 40),
@@ -957,10 +1025,7 @@ export class Postino {
       `${this.dove}/plancia/${encodeURIComponent(profilo)}?id=${encodeURIComponent(String(id))}`,
       {
         method: "GET",
-        headers: {
-          authorization: `Bearer ${this.chiave}`,
-          "x-casa": this.casa,
-        },
+        headers: this._intestazioni(),
         signal: AbortSignal.timeout(ATTESA * 3),
       },
     );
@@ -971,8 +1036,10 @@ export class Postino {
 
   _riarma() {
     if (!this._orologio) return;
-    const quanto =
-      this.ogni * 60 * 1000 * Math.min(RALLENTA_FINO_A, 2 ** this._quanteVoltePerNiente);
+    const quanto = Math.max(
+      this.ogni * 60 * 1000 * Math.min(RALLENTA_FINO_A, 2 ** this._quanteVoltePerNiente),
+      this._frenoFinoA - this.adesso(),
+    );
     this._orologio = setTimeout(() => {
       void this.manda();
       this._riarma();
@@ -983,6 +1050,8 @@ export class Postino {
   /** Un rapporto, adesso. Torna `true` se e' arrivata. */
   async manda() {
     if (!this.acceso) return false;
+    /* Il quadro ha chiesto di aspettare: non si bussa prima. */
+    if (this.adesso() < this._frenoFinoA) return false;
     let foglio;
     try {
       foglio = await this.fabbrica();
@@ -1004,16 +1073,14 @@ export class Postino {
     try {
       const risposta = await this.prendi(`${this.dove}/rapporto`, {
         method: "POST",
-        headers: {
-          "content-type": "application/json",
-          /* La chiave in testa e non nel corpo: cosi' non finisce dentro
-           * quello che la console fa leggere a chi ci abita. */
-          authorization: `Bearer ${this.chiave}`,
-          "x-casa": this.casa,
-        },
+        headers: this._intestazioni({ "content-type": "application/json" }),
         body: JSON.stringify(foglio),
         signal: AbortSignal.timeout(ATTESA),
       });
+      if (risposta.status === 429) {
+        this._frena(risposta);
+        return false;
+      }
       if (!risposta.ok) {
         this._perNiente(`il quadro ha risposto ${risposta.status}`);
         return false;
@@ -1022,6 +1089,7 @@ export class Postino {
         this.registro.info("il quadro risponde di nuovo");
         this._quanteVoltePerNiente = 0;
       }
+      this._chiaveBuona();
 
       /* Di chi e' il quadro che ha ricevuto.
        *
@@ -1144,12 +1212,24 @@ export class Postino {
     let detto = null;
     try {
       const risposta = await this.prendi(`${this.dove}/attesa`, {
-        headers: {
-          authorization: `Bearer ${this.chiave}`,
-          "x-casa": this.casa,
-        },
+        headers: this._intestazioni(),
         signal: taglia.signal,
       });
+      if (risposta.status === 429) {
+        /* «Piano» anche sul filo: si riapre quando ha detto, non prima e non
+         * al doppio. */
+        const secondi = this._frena(risposta);
+        clearTimeout(orologio);
+        this._filo = null;
+        if (!this._fermato) {
+          this._filoDopo = setTimeout(() => {
+            this._filoDopo = null;
+            void this._restaInLinea();
+          }, secondi * 1000);
+          this._filoDopo.unref?.();
+        }
+        return;
+      }
       if (!risposta.ok) throw new Error(`il quadro ha risposto ${risposta.status}`);
       detto = await risposta.json().catch(() => ({}));
       this._quanteVolteIlFiloCade = 0;

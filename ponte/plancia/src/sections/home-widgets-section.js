@@ -42,7 +42,8 @@ import {
 } from "./security-showcase-section.js";
 import { parolaDellaPorta, parolaDiStato } from "./le-parole-di-home-assistant.js";
 import { haOggettoWidget, oggettoWidget } from "../core/oggetti-widget.js";
-import { chiNonRisponde } from "../core/chi-non-risponde.js";
+import { iDispositiviScollegati } from "../core/i-dispositivi-scollegati.js";
+import { iDispositiviRicordati } from "../core/i-dispositivi-di-home-assistant.js";
 import { entitaConfigurate } from "../core/entita-configurate.js";
 import { CONFIG_KEYS } from "../core/chiavi-di-configurazione.js";
 import { iconGlyphMarkup } from "./icon-engine-section.js";
@@ -269,7 +270,7 @@ import {
 import { normalizeRobots, robotStateLabel, robotView } from "../core/robot-model.js";
 import { passoDellUnita, scalaDellUnita } from "../core/scala-clima.js";
 import { configuredLightGroups } from "./lights-alerts-section.js";
-import { floodEntities, floodIsWet } from "./flood-alerts-section.js";
+import { floodEntities, floodIsWet, puoEssereUnaSonda } from "./flood-alerts-section.js";
 import {
   SMOKE_ICON,
   nomeDelRilevatore,
@@ -283,6 +284,7 @@ import {
   allStates,
   chiediAHomeAssistant,
   clean,
+  disegnoDiCasa,
   doc,
   esc,
   formatNumber,
@@ -315,6 +317,33 @@ const STALE_MS = 30000;
 /* Quanto si aspetta prima di richiedere le voci a una lista che ha appena
  * risposto con un errore — o non ha risposto affatto. */
 const RETRY_MS = 20000;
+
+/* Quanto si aspetta una richiesta prima di darla per morta.
+ *
+ * «Solo su iPhone ogni volta che apro HA il widget agenda non carica gli
+ * eventi; devo cliccare sul widget e fare apri selezione e dopo va, ma appena
+ * richiudo mi fa lo stesso difetto» (#122).
+ *
+ * `inflight` diceva «la sto gia' chiedendo, non chiederla due volte»: giusto,
+ * e si spegneva quando la risposta arrivava o falliva. Su iOS pero' c'e' un
+ * terzo esito che non e' nessuno dei due — l'app va in secondo piano, la
+ * pagina viene sospesa, e la richiesta in volo muore senza risolvere e senza
+ * rompere. Quella promessa non torna mai, `inflight` resta acceso, e da quel
+ * momento nessuno chiede piu' niente: il widget resta vuoto per tutta la
+ * sessione, e riaprendo la app e' ancora li', acceso.
+ *
+ * Quindi non un contrassegno ma un ORARIO: dopo mezzo minuto quella richiesta
+ * si considera persa e se ne puo' fare un'altra. Mezzo minuto e' lungo per una
+ * chiamata che di solito torna in mezzo secondo, e corto abbastanza da non
+ * farsi accorgere. */
+const IN_VOLO_MS = 30000;
+
+/** Se una richiesta partita a quell'ora e' ancora viva, o e' da dare per persa. */
+export function ancoraInVolo(scheda, adesso = Date.now()) {
+  if (!scheda?.inflight) return false;
+  const da = Number(scheda.inVoloDa) || 0;
+  return da > 0 && adesso - da < IN_VOLO_MS;
+}
 /* Un appuntamento non cambia ogni mezzo minuto come una lista della spesa:
  * cinque minuti bastano, e sono cinque richieste l'ora invece di centoventi. */
 const CALENDARIO_STALE_MS = 300000;
@@ -335,11 +364,11 @@ const state = (root[KEY] ||= {
    * impedisce alla finestra di aprirsi al primo disegno su un avviso acceso
    * da stamattina. */
   avvisiVisti: null,
-  lists: new Map(), // entity -> { items, fetchedAt, inflight }
+  lists: new Map(), // entity -> { items, fetchedAt, inflight, inVoloDa }
   /* Gli eventi letti, per calendario (#259). Stanno accanto alle liste ToDo e
    * non dentro: sono due servizi diversi e due risposte diverse, e mescolarle
    * vorrebbe dire una mappa in cui meta' delle voci ha campi che non usa. */
-  calendari: new Map(), // entity -> { eventi, fetchedAt, inflight, failedAt }
+  calendari: new Map(), // entity -> { eventi, fetchedAt, inflight, inVoloDa, failedAt }
   cameraTimer: 0,
   cameraUrls: new Map(), // entity -> object URL della tessera, MAI quelli del muro
   /* Quali righe hanno il pannello della rotella aperto. Sta qui e non nel
@@ -484,7 +513,7 @@ function numOf(states, entity) {
 function record(entity) {
   let value = state.lists.get(entity);
   if (!value) {
-    value = { items: null, fetchedAt: 0, inflight: false, failedAt: 0 };
+    value = { items: null, fetchedAt: 0, inflight: false, inVoloDa: 0, failedAt: 0 };
     state.lists.set(entity, value);
   }
   return value;
@@ -505,7 +534,7 @@ function avvisaLAgenda() {
 async function fetchItems(entity, { force = false } = {}) {
   const cache = record(entity);
   const now = Date.now();
-  if (cache.inflight) return;
+  if (ancoraInVolo(cache, now)) return;
   if (!force && cache.items && now - cache.fetchedAt < STALE_MS) return;
   /* Una richiesta fallita non ha lasciato voci, e senza voci la guardia dello
    * scaduto non ferma nessuno: col socket giu' il disegno richiedeva, la
@@ -513,6 +542,7 @@ async function fetchItems(entity, { force = false } = {}) {
    * a ogni fotogramma. Dopo un errore si aspetta prima di riprovare. */
   if (!force && !cache.items && now - cache.failedAt < RETRY_MS) return;
   cache.inflight = true;
+  cache.inVoloDa = now;
   let riuscita = false;
   try {
     const result = await chiediAHomeAssistant({
@@ -548,7 +578,7 @@ async function fetchItems(entity, { force = false } = {}) {
 function schedaCalendario(entity) {
   let valore = state.calendari.get(entity);
   if (!valore) {
-    valore = { eventi: null, fetchedAt: 0, inflight: false, failedAt: 0 };
+    valore = { eventi: null, fetchedAt: 0, inflight: false, inVoloDa: 0, failedAt: 0 };
     state.calendari.set(entity, valore);
   }
   return valore;
@@ -626,13 +656,14 @@ async function eventiDallaPortaHttp(entity, da, a) {
 async function fetchEventi(entity, { force = false } = {}) {
   const scheda = schedaCalendario(entity);
   const adesso = Date.now();
-  if (scheda.inflight) return;
+  if (ancoraInVolo(scheda, adesso)) return;
   if (!force && scheda.eventi && adesso - scheda.fetchedAt < CALENDARIO_STALE_MS) return;
   /* Come per le liste: dopo un errore si aspetta, o col socket giu' il disegno
    * chiederebbe, la richiesta fallirebbe, il fallimento farebbe ridisegnare, e
    * il giro ripartirebbe a ogni fotogramma. */
   if (!force && !scheda.eventi && adesso - scheda.failedAt < RETRY_MS) return;
   scheda.inflight = true;
+  scheda.inVoloDa = adesso;
   let riuscita = false;
   const fino = adesso + GIORNI_AVANTI * 86400000;
   try {
@@ -1447,7 +1478,12 @@ function aggiornamentiModel(states) {
      * senza niente sotto: «ci sono aggiornamenti ma la card resta spenta»
      * (#540). Il colore ambra ce l'aveva gia', non lo accendeva nessuno. */
     attiva: true,
-    label: t("Aggiornamenti", "Updates"),
+    /* «Con aggiornamenti da eseguire il testo dovrebbe essere Aggiornamenti
+     * pendenti» (#108). Questa tessera esiste solo quando c'e' qualcosa da
+     * fare, quindi «Aggiornamenti» da solo era il nome di una sezione dove
+     * serviva una notizia: il numero accanto dice quanti, la parola adesso
+     * dice che aspettano. */
+    label: t("Aggiornamenti pendenti", "Pending updates"),
     value: String(fila.length),
     /* Si nomina il primo — la plancia quando c'e', che e' quella per cui
      * questa tessera e' stata chiesta — e si dice a che versione va. Gli altri
@@ -3628,7 +3664,19 @@ function irrigationModel(states) {
     const entity = clean(zona?.entity);
     return entity && widgetIncludes(entity, fuori);
   });
-  if (!attive.length) return null;
+  /* Il sensore del terreno si legge PRIMA di decidere se la tessera esce.
+   *
+   * «Quella umidità terreno in realtà già è presente ma se inserisco solo
+   * quella entità non esce nei widget.» Qui c'era `if (!attive.length) return
+   * null` e il sensore si leggeva due righe sotto: la tessera pretendeva
+   * almeno una zona, e chi ha due sonde nel vaso e nessuna elettrovalvola non
+   * ha niente da configurare e non vedeva niente. Non era una funzione che
+   * manca — c'era gia' tutta — era l'ordine in cui si guardavano le cose. */
+  const terreno = clean(config.soilEnt || config.soil_entity);
+  const umidita = terreno && widgetIncludes(terreno, fuori) ? numOf(states, terreno) : null;
+  /* Senza zone E senza un sensore che risponde non c'e' niente da dire. Con
+   * una delle due, si'. */
+  if (!attive.length && umidita == null) return null;
   /* Una zona che irriga non dice sempre «on».
    *
    * Le zone su una valvola — `valve.*`, che la plancia accetta — dicono «open»
@@ -3636,8 +3684,6 @@ function irrigationModel(states) {
    * la tessera diceva che non stava irrigando niente proprio mentre l'acqua
    * usciva. */
   const inFunzione = attive.filter((zona) => zonaInFunzione(states, zona));
-  const terreno = clean(config.soilEnt || config.soil_entity);
-  const umidita = terreno && widgetIncludes(terreno, fuori) ? numOf(states, terreno) : null;
   return {
     key: "irrigazione",
     accent: "#10b981",
@@ -3660,13 +3706,30 @@ function irrigationModel(states) {
      * analisi — che cerca un booleano — leggeva tutte le zone come ferme
      * proprio mentre l'acqua usciva. Il testo e' per gli occhi, `on` per i
      * conti: due mestieri, due campi. */
-    rows: attive.map((zona) => ({
-      glyph: "🌱",
-      name: clean(zona.name) || clean(zona.entity),
-      on: zonaInFunzione(states, zona),
-      entity: clean(zona.entity),
-      value: zonaInFunzione(states, zona) ? t("in funzione", "running") : t("ferma", "idle"),
-    })),
+    rows: [
+      ...attive.map((zona) => ({
+        glyph: "🌱",
+        name: clean(zona.name) || clean(zona.entity),
+        on: zonaInFunzione(states, zona),
+        entity: clean(zona.entity),
+        value: zonaInFunzione(states, zona) ? t("in funzione", "running") : t("ferma", "idle"),
+      })),
+      /* E il terreno fra le righe, quando c'e'.
+       *
+       * Senza questa, chi ha il solo sensore apriva una tessera vuota: il
+       * numero in copertina e niente dentro. E' una misura, non un comando —
+       * `carteDalleRighe` la mette fra «Le misure», dov'e' il suo posto. */
+      ...(umidita == null
+        ? []
+        : [
+            {
+              glyph: "💦",
+              name: t("Umidità terreno", "Soil moisture"),
+              entity: terreno,
+              value: `${Math.round(umidita)}%`,
+            },
+          ]),
+    ],
   };
 }
 
@@ -3704,12 +3767,25 @@ function rowsDetail(widget) {
  * ripetitore, togliere e rimettere corrente alla presa — si fa fuori dalla
  * plancia, e una promessa che la plancia non puo' mantenere e' peggio del
  * silenzio. */
+/* Sotto il nome non ci va l'identificativo.
+ *
+ * Qui c'era, ed era rimasto da quando ogni riga era un'entita': «Pompa
+ * piscina» e sotto `switch.pompa`. Da quando le righe sono dispositivi (#111)
+ * quel posto stampava `dispositivo:a1b2c3…`, che non e' nemmeno un'entita' —
+ * e' la maniglia con cui questo codice tiene insieme le sue entita' mute, e
+ * non vuol dire niente per nessuno.
+ *
+ * Ma non si toglie perche' era diventato brutto: si toglie perche' e' la
+ * regola di questa plancia. «Non voglio vedere il nome entita'»: gli
+ * identificativi stanno nelle schede della configurazione, dove uno li cerca,
+ * e non nelle pagine, dove uno guarda. Quello che serve qui e' il nome e da
+ * quanto tace: la presa da andare a premere si riconosce da come si chiama. */
 function nonRispondeDetail(widget) {
   return (widget.rows || [])
     .map((riga) =>
       rowShell(
         `<span class="dm-w-glyph" data-on="false" aria-hidden="true">${esc(riga.glyph || "📡")}</span>
-         <span class="dm-w-name">${esc(riga.name)}<small>${esc(riga.entity)}</small></span>
+         <span class="dm-w-name">${esc(riga.name)}</span>
          <span class="dm-w-pill" data-tono="allarme">${esc(riga.value)}</span>`,
       ),
     )
@@ -4091,7 +4167,9 @@ function presenzaModel(states) {
     rows: righe.map((riga) => ({
       entity: riga.entity,
       name: riga.name,
-      glyph: riga.glifo,
+      /* La riga della tessera vuole il markup del disegno, non il suo nome
+       * (#74): `glyph` qui dentro si stampa com'e'. */
+      glyph: disegnoDiCasa(riga.glifo, { misura: 20, ripiego: "motion" }),
       on: riga.stato === "attivo",
       /* Il tono dice il colore della pastiglia senza sapere di cosa parla: chi
        * rileva qualcuno è una cosa che sta succedendo — non un allarme, che è
@@ -4408,6 +4486,15 @@ function floodModel(states) {
   const fuori = widgetExcludedEntities("allagamenti");
   const rows = entities
     .filter((entity) => widgetIncludes(entity, fuori))
+    /* E solo quello che una sonda lo e' davvero.
+     *
+     * In questa lista ci finisce anche quello che una persona ci mette dalla
+     * scheda degli avvisi, dove fra i gruppi c'e' «Allagamenti»: un antifurto
+     * inserito diceva «C'e' acqua», perche' qui acceso vuol dire bagnato. Chi
+     * dichiara di essere un'altra cosa non si legge come sonda — la regola,
+     * e il perche', stanno in `puoEssereUnaSonda`. Dalla configurazione non
+     * sparisce: la' e' scritto che sonda non e', e c'e' il cestino. */
+    .filter((entity) => puoEssereUnaSonda(entity, stateOf(states, entity)))
     .map((entity) => ({
       entity,
       name: friendlyName(states, entity),
@@ -5049,19 +5136,26 @@ function nonRispondeModel(states) {
   } catch (_errore) {
     return null;
   }
-  const fuori = widgetExcludedEntities("nonrisponde");
-  const mute = chiNonRisponde(
-    configurate.filter((entity) => widgetIncludes(entity, fuori)),
+  /* La regola e' una sola, e sta nel nucleo: la stessa che disegna la scheda
+   * «Scollegati» della configurazione, dove si toglie una riga col cestino.
+   * Con due copie, il giorno che si scostano, il cestino toglierebbe dalla
+   * scheda una cosa che la tessera continua a dire. */
+  const { di, nomi } = iDispositiviRicordati();
+  const { adesso: mute } = iDispositiviScollegati({
+    configurate,
     states,
-    { nomeDi: (entity) => friendlyName(states, entity) },
-  );
+    escluse: widgetPreferences().excluded,
+    nomeDi: (entity) => friendlyName(states, entity),
+    di,
+    nomi,
+  });
   if (!mute.length) return null;
   return {
     key: "nonrisponde",
     accent: "#dc2626",
     icon: "📡",
     alert: true,
-    label: t("Non rispondono", "Not answering"),
+    label: t("Dispositivi non connessi", "Disconnected devices"),
     value: String(mute.length),
     caption: mute.map((una) => una.nome).join(" · "),
     ring: null,
@@ -6793,7 +6887,13 @@ const eUnaTesseraEnergia = (chiave) =>
 const famigliaDellaTessera = (chiave) =>
   eUnaTesseraEnergia(chiave) ? "energia" : clean(chiave);
 
-function carteDalleRighe(widget) {
+/* Esportata perche' la legge anche chi prepara la fotografia per l'auto: in
+ * macchina si mostrano le stesse righe che mostra la finestra qui — «Casa
+ * 725 W», «Solare 485 W» — con dentro la conversione da kW, il verso della
+ * batteria e la parola nella lingua di chi guarda. Rifare quel conto la'
+ * vorrebbe dire una seconda aritmetica dell'energia, e il giorno che si
+ * scostano in macchina si legge un numero e in casa un altro. */
+export function carteDalleRighe(widget) {
   /* Una tessera «a se'» delle evidenze si disegna come la tessera madre, e
    * cosi' anche quella di una sezione propria: sono entrambe un pugno di
    * entita' scelte a mano, col loro nome e il loro valore. */
@@ -8309,6 +8409,27 @@ function sincronizzaPopup(models, states) {
  * del testo, cosi' due parole scorrono in fretta e una fila di nomi con
  * calma. Chi ci sta resta fermo: niente da leggere in movimento senza
  * motivo. */
+/* Quanto ci mette a scorrere, da quanto testo avanza.
+ *
+ * Una sola andatura per tutte le righe che scorrono, ed e' il punto di
+ * scriverla qui: erano due conti quasi uguali in due posti — `eccesso / 11` e
+ * `eccesso / 12` — cioe' due nastri affiancati che vanno a due velocita'
+ * diverse, che si vede e non si sa perche'.
+ *
+ * Adesso e' lenta. Dal campo, col telefono in mano: «le scritte scorrevoli
+ * sotto le card vanno troppo veloci, devono andare lentamente per poterle
+ * leggere». Andava a una quindicina di punti al secondo, che su una tessera
+ * larga mezzo schermo vuol dire un nome intero che passa in un secondo e
+ * mezzo: si fa in tempo a vedere che e' passato qualcosa, non a leggerlo.
+ * Dimezzata.
+ *
+ * La durata cresce con la distanza, e quello tiene la VELOCITA' costante: una
+ * didascalia lunga il doppio ci mette il doppio, invece di scorrere il doppio
+ * piu' in fretta. Il tetto sta alto apposta — a 18 secondi quello vecchio
+ * tornava a correre proprio sulle didascalie piu' lunghe, che sono quelle che
+ * si fa piu' fatica a leggere. */
+const durataDelloScorrimento = (eccesso) => Math.min(60, Math.max(8, eccesso / 6));
+
 /* Una riga sola che scorre, quando non ci sta.
  *
  * Il nastro delle tessere misura il figlio dentro il padre; qui il testo sta
@@ -8330,7 +8451,7 @@ function scorriUnaRiga(riga) {
   if (eccesso > 4) {
     nastro.dataset.dmScroll = "true";
     nastro.style.setProperty("--dm-scroll-x", `${-eccesso - 2}px`);
-    nastro.style.setProperty("--dm-scroll-dur", `${Math.min(22, Math.max(7, eccesso / 11))}s`);
+    nastro.style.setProperty("--dm-scroll-dur", `${durataDelloScorrimento(eccesso)}s`);
     return true;
   }
   delete nastro.dataset.dmScroll;
@@ -8363,7 +8484,7 @@ function scorriDidascalie(grid) {
     if (eccesso > 4) {
       nastro.dataset.dmScroll = "true";
       nastro.style.setProperty("--dm-scroll-x", `${-eccesso - 2}px`);
-      nastro.style.setProperty("--dm-scroll-dur", `${Math.min(18, Math.max(6, eccesso / 12))}s`);
+      nastro.style.setProperty("--dm-scroll-dur", `${durataDelloScorrimento(eccesso)}s`);
       mossi += 1;
     } else if (nastro.dataset.dmScroll) {
       delete nastro.dataset.dmScroll;
@@ -9346,6 +9467,21 @@ html[data-theme="dark"] :is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-wi
 :is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-vai:active{transform:none}
 :is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-body{
   padding:16px 18px 20px;display:grid;gap:9px;
+  /* Una colonna che sa restringersi.
+   *
+   * Senza questa riga la colonna della griglia e' «auto», e una colonna auto
+   * e' larga almeno quanto il piu' largo dei suoi contenuti: una riga con
+   * dentro «Sensore perdita acqua lavello casa Umidita'» chiedeva
+   * quattrocentoquaranta pixel dentro una finestra che ne ha trecentotrenta,
+   * e la colonna glieli dava. Da li' in poi il corpo aveva centocinque pixel
+   * di troppo — e siccome scorre in verticale, di traverso scorreva anche —
+   * quindi «Asciutto» stava fuori dalla card a destra e il titoletto «LO
+   * STATO» spariva a sinistra appena si toccava. Dal campo: «non entra
+   * all'interno tutto».
+   *
+   * Con minmax(0,1fr) il minimo della colonna e' zero: la larghezza la decide
+   * la finestra, e quello che c'e' dentro si adatta. */
+  grid-template-columns:minmax(0,1fr);
   /* L'altezza minima azzerata perche' un figlio di colonna flex, per difetto,
      non scende sotto il proprio contenuto: senza, la lista non si accorcia mai
      e non c'e' niente da scorrere. */
@@ -9531,8 +9667,20 @@ html[data-theme="dark"] :is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-wi
 :is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-row .dm-w-glyph[data-on="false"]{filter:grayscale(1);opacity:.5}
 /* Il nome pesa piu' di quello che ha sotto: prima erano quasi uguali e la riga
    si leggeva tutta insieme, senza un ordine. */
+/* E va a capo invece di finire tagliato.
+ *
+ * Il nome eredita «white-space:nowrap» con i puntini di coda, ma i puntini
+ * qui non arrivano mai: .dm-w-name e' una griglia — dentro ci stanno il nome
+ * e la riga piccola sotto — e text-overflow non vale su un contenitore di
+ * griglia. Il risultato era un nome tagliato a meta' di una lettera: «Sensore
+ * acqua zanzare Um». Visto rendendo, non leggendo.
+ *
+ * Nella finestra lo spazio in verticale c'e', ed e' il posto dove i nomi si
+ * leggono per intero: si va a capo. In griglia, dove la riga e' alta
+ * quarantadue pixel e basta, resta come prima. */
 :is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-row .dm-w-name{
-  gap:2px;font-size:14px;font-weight:800;letter-spacing:.1px}
+  gap:2px;font-size:14px;font-weight:800;letter-spacing:.1px;
+  white-space:normal;overflow:visible;overflow-wrap:anywhere}
 :is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-row .dm-w-name small{
   font-size:11px;font-weight:700;letter-spacing:.2px;color:var(--text-dim,#94a3b8)}
 /* I numeri in Oswald, come tutti i numeri della plancia, e incolonnabili. */
@@ -10045,7 +10193,19 @@ ${tokenDellaCarta(":is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-po
 :is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-w-close:not(.dm-widget-detail .dm-w-close){
   flex:0 0 28px;width:28px;height:28px;display:grid;place-items:center;border:0;border-radius:9px;
   background:var(--surface-3,#f1f5f9);color:var(--text-dim,#64748b);font-size:12px;cursor:pointer}
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-w-body{display:grid;gap:2px;padding:0 10px 12px}
+/* Il corpo della tessera aperta DENTRO la griglia, e solo quello.
+ *
+ * Qui c'era anche il popup, e siccome questa riga sta in fondo al foglio
+ * vinceva a parita' di peso su quella del popup scritta piu' su: la finestra
+ * aveva dieci pixel di margine invece dei diciotto (tredici sul telefono) e
+ * due pixel fra una riga e l'altra invece di nove. I margini stretti della
+ * segnalazione erano questi — la regola di una tessera in griglia applicata a
+ * una finestra a tutto schermo.
+ *
+ * Il dettaglio dentro la griglia non esiste piu' da quando e' diventato un
+ * popup (si veda «Il dettaglio e' un popup, non una tendina»): questa riga
+ * resta per la forma, ma non deve piu' passare di la'. */
+#dm-widgets .dm-w-body{display:grid;gap:2px;padding:0 10px 12px}
 :is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-w-row{
   display:flex;align-items:center;gap:11px;min-height:42px;padding:5px 8px;border-radius:12px;
   animation:none;
@@ -10411,6 +10571,30 @@ export function installHomeWidgetsSection() {
    * prese, e chiunque altro abbia un tasto che deve mostrare quello che una
    * tessera mostra gia'. */
   root.dmApriTessera = apriLaTessera;
+  /* Tornando in primo piano, quello che era per aria si da' per perso.
+   *
+   * Su iOS l'app di Home Assistant sospende la pagina quando va dietro, e le
+   * richieste in volo muoiono senza rispondere: al ritorno ci sono schede che
+   * si credono ancora in attesa di una risposta che non arrivera' mai. La
+   * scadenza qui sopra le libera comunque, ma dopo mezzo minuto; chi riapre la
+   * app vuole vedere la sua agenda adesso, non fra trenta secondi.
+   *
+   * `pageshow` e `visibilitychange` sono i due momenti in cui il telefono
+   * dice «eccomi». Li' si spegne il contrassegno e si dimentica l'ultimo
+   * fallimento, cosi' il primo disegno utile richiede davvero. */
+  const tornatiInPrimoPiano = () => {
+    for (const scheda of [...state.lists.values(), ...state.calendari.values()]) {
+      if (!scheda) continue;
+      scheda.inflight = false;
+      scheda.inVoloDa = 0;
+      scheda.failedAt = 0;
+    }
+    schedule();
+  };
+  root.addEventListener?.("pageshow", tornatiInPrimoPiano);
+  doc.addEventListener?.("visibilitychange", () => {
+    if (doc.visibilityState === "visible") tornatiInPrimoPiano();
+  });
   doc.addEventListener("click", onClick);
   bindEscape();
   doc.addEventListener("change", onChange);

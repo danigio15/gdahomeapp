@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Le parole di gdahome in auto.
+     Stanno qui e non nel codice perche' in macchina le legge chi guida, e un
+     giorno andranno tradotte come tutto il resto: un file suo si traduce, una
+     stringa dentro una schermata no. -->
+<resources>
+    <!-- La prima schermata: i dispositivi di casa, con com'e' messo ognuno e un
+         tocco per girarlo. Sono le due cose che un'app di questa categoria puo'
+         fare guidando, ed e' per questo che stanno davanti a tutto. -->
+    <string name="auto_dispositivi">Dispositivi</string>
+    <string name="auto_senza_dispositivi">Nessun dispositivo da comandare. Apri gdahome sul telefono e configura varchi, luci o prese: da lì in poi li trovi qui.</string>
+    <!-- I due tasti in alto: corti, perché in macchina la barra è stretta. -->
+    <string name="auto_azioni_breve">Azioni</string>
+    <string name="auto_casa_breve">Casa</string>
+    <string name="auto_come_sta">Come sta la casa</string>
+    <string name="auto_senza_niente_da_dire">Non c\'è ancora niente da dire su questa casa</string>
+    <string name="auto_azioni">Azioni rapide</string>
+    <string name="auto_in_casa">In casa</string>
+    <string name="auto_fuori">Fuori</string>
+    <string name="auto_adesso">Aggiornato adesso</string>
+    <string name="auto_non_si_sa_quando">Non si sa di quando è</string>
+    <string name="auto_da_minuti">Di %1$d minuti fa</string>
+    <string name="auto_da_ore">Di %1$d ore fa</string>
+    <string name="auto_senza_foto">gdahome non ha ancora mandato niente all\'auto. Apri l\'app sul telefono una volta: da lì in poi la trovi qui.</string>
+    <string name="auto_senza_azioni">Nessuna azione rapida configurata nella plancia</string>
+    <!-- Quello che il tasto promette deve essere quello che succede: il
+         comando lo esegue l'app, e l'app lo esegue solo se e' viva. Detto
+         cosi' chi preme sa cosa aspettarsi; «e' partito» sarebbe una bugia
+         tutte le volte che l'app e' chiusa. -->
+    <string name="auto_comando_fatto">%1$s: fatto</string>
+    <string name="auto_comando_partito">%1$s: parte appena apri gdahome sul telefono, entro due minuti</string>
+    <string name="auto_comando_non_parte">%1$s: non sono riuscito a scriverlo</string>
+    <!-- I comandi rapidi, dietro il tasto con la casa sulla mappa del
+         navigatore (versione col navigatore in auto). -->
+    <string name="auto_comandi">Comandi rapidi</string>
+    <string name="auto_senza_comandi">Nessun comando scelto. Sul telefono: gdanav, menu, Comandi rapidi in auto.</string>
+    <string name="auto_conferma">%1$s: lo faccio?</string>
+    <string name="auto_conferma_si">Sì</string>
+    <string name="auto_conferma_no">No</string>
+    <!-- L'avviso a 500 m da casa. -->
+    <string name="auto_quasi_a_casa">Quasi a casa</string>
+    <string name="auto_arrivo_fai">Fallo</string>
+    <string name="auto_arrivo_non_ora">Non ora</string>
+</resources>

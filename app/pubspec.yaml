@@ -13,7 +13,7 @@ publish_to: "none"
 # sempre**. Si ricava dalla versione invece di batterlo a mano:
 # 1.4.24 → 1 × 10000 + 4 × 100 + 24 = 10424. Finche' il minore e la patch
 # stanno sotto cento, cresce insieme alla versione e non si sbaglia.
-version: 1.6.0+1060000
+version: 1.6.9+1060900
 
 environment:
   sdk: ^3.13.0
@@ -41,7 +41,7 @@ dependencies:
   # Il segno del ponte va nel portachiavi del sistema — Keychain sull'iPhone,
   # Keystore su Android — non in un file di preferenze, che su Android si legge
   # da fuori con un telefono sbloccato.
-  flutter_secure_storage: ^9.2.0
+  flutter_secure_storage: ^10.3.1
 
   # La plancia che gia' esiste, dentro l'app.
   webview_flutter: ^4.10.0
@@ -79,7 +79,7 @@ dependencies:
   # la messa a fuoco, la luce che cambia, e sotto ci stanno MLKit e Vision, che
   # sono del sistema. Scriverne uno a mano vorrebbe dire un lettore peggiore di
   # quello che ogni telefono ha gia' dentro.
-  mobile_scanner: ^7.4.0
+  mobile_scanner: ^7.4.2
 
   # Il volto e l'impronta davanti all'app (#54).
   #
@@ -99,6 +99,21 @@ dependencies:
   # serve la plancia, e i messaggi fra l'app e il riquadro. Sul telefono
   # questo pacchetto non entra in gioco.
   web: ^1.1.0
+
+  # Il navigatore: gdanav, dentro l'app come una sua sezione (solo sul
+  # telefono: nella webapp non c'e'). Viene dalla sua repository, dove lo
+  # schermo di gdanav sta in un pacchetto apposta; la sua app lo usa uguale.
+  #
+  # Porta con se' quello che gli serve — la mappa (MapLibre), la posizione,
+  # la voce, il Bluetooth per il dongle OBD — e i permessi Android relativi,
+  # e i suoi schermi di Android Auto.
+  gdanav_app:
+    git:
+      url: https://github.com/danigio15/gdanav.git
+      path: packages/gdanav_app
+      # Il commit preciso sta in pubspec.lock, e lo porta avanti il workflow
+      # «Aggiorna gdanav».
+      ref: main
 
 dev_dependencies:
   flutter_test:

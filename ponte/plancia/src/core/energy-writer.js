@@ -35,6 +35,8 @@ const clean = (value) => String(value ?? "").trim();
  * svuotato apposta. */
 export const ENERGY_SEMANTICS_FLOOR = 3;
 
+import { conIlFotovoltaico } from "./il-fotovoltaico-di-questa-casa.js";
+
 export const keptSemanticsVersion = (metadata) =>
   Math.max(Number(metadata?.semantics_version) || 0, ENERGY_SEMANTICS_FLOOR);
 
@@ -127,6 +129,28 @@ export function persistEnergyFields(store, updates = [], plantId = "") {
 /** Scrive un singolo campo del modello Energia. */
 export const persistEnergyField = (store, group, key, value, plantId = "") =>
   persistEnergyFields(store, [[group, key, value]], plantId);
+
+/* Accende o spegne il fotovoltaico di questa casa (#82).
+ *
+ * Passa dalla stessa porta e dalla stessa coda degli altri campi: e' una
+ * scrittura sul modello Energia come le altre, e due porte sulla stessa
+ * sezione vorrebbero dire due salvataggi che si sovrascrivono a vicenda.
+ *
+ * La spunta sta nei `metadata`, che sono della CASA e non dell'impianto —
+ * `plantModel` porta avanti quelli scritti in cima — perche' «questa pagina
+ * non la voglio» e' una cosa che si dice della pagina, non di un impianto.
+ * Quali pannelli ci sono, invece, lo dice ogni impianto per conto suo, e
+ * quello si ricava senza chiedere niente a nessuno. */
+export function persistIlFotovoltaico(store, acceso) {
+  return queueEnergyWrite(() =>
+    write(async () => {
+      if (!store?.getSection || !store?.replaceSection) return;
+      const model = conIlFotovoltaico(store.getSection("energy") || {}, acceso);
+      model.metadata = withSemantics(model);
+      await store.replaceSection("energy", model);
+    }),
+  );
+}
 
 /**
  * Scrive la dichiarazione di sorgente unica di un gruppo.

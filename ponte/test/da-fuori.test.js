@@ -268,11 +268,15 @@ test("il codice fabbricato dalla console arriva al centralino da solo", async ()
       chiamata: c.chiamata,
       identita: c.identita,
       cartellaDellaConsole: fileURLToPath(new URL("../console", import.meta.url)),
+      /* La prova bussa da qui, e chi preme il tasto amministra. */
+      proxyDellIngress: ["127.0.0.1"],
+      utenti: { amministratore: async (chi) => chi === "chi-amministra" },
     });
     await new Promise((ok) => console_.listen(0, "127.0.0.1", ok));
 
     const risposta = await fetch(`http://127.0.0.1:${console_.address().port}/api/codice`, {
       method: "POST",
+      headers: { "x-remote-user-id": "chi-amministra" },
     });
     const { codice } = await risposta.json();
     assert.match(codice, /^[0-9A-Z]{16}$/);
@@ -300,7 +304,7 @@ test("l'abbinamento passa dal centralino, che il codice non lo vede mai", async 
     assert.equal([...c.centralino.abbinamenti.keys()][0], impronta(codice));
 
     const telefono = unTelefono(c.doveIlCentralino, `/abbinamento/${impronta(codice)}`, {
-      abbina: true,
+      codice,
     });
     /* La stretta di mano riesce: il telefono e' arrivato alla casa giusta. */
     await telefono.dentro;
@@ -308,7 +312,7 @@ test("l'abbinamento passa dal centralino, che il codice non lo vede mai", async 
     /* E adesso il giro intero, che e' quello che fara' l'app: dentro il
      * cifrato si dice il codice, e si torna indietro con tutto il necessario
      * per non doverlo rifare mai piu'. */
-    telefono.manda({ codice, nome: "iPhone di Anna", sistema: "ios" });
+    telefono.conferma({ nome: "iPhone di Anna", sistema: "ios" });
     const ecco = await telefono.aspetta("ecco");
 
     assert.match(ecco.segno, /^[0-9a-f]{64}$/);

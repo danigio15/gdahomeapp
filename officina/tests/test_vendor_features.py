@@ -232,9 +232,10 @@ def test_rooms_management_is_separated_from_temperatures() -> None:
         assert "cdGroupCards(uCaldo, card)" in html, name
         # Temperature cards share the clima cp-card structure, ids intact.
         assert "temp-card tc2" not in html, name
-        assert 'class="cp-badge temp-comfort-badge" id="tc_${tid}"' in html, name
-        assert 'id="tv_${tid}"' in html, name
-        assert 'id="hv_${hid}"' in html, name
+        # Gli identificativi vengono dall'entita' configurata: passano da cdEsc.
+        assert 'class="cp-badge temp-comfort-badge" id="tc_${cdEsc(tid)}"' in html, name
+        assert 'id="tv_${cdEsc(tid)}"' in html, name
+        assert 'id="hv_${cdEsc(hid)}"' in html, name
         # Lights popup gains a floor level; appliances group with indexes kept.
         assert "_fi(cdRoomFloorOf(a)) - _fi(cdRoomFloorOf(b))" in html, name
         assert "cdGroupCards(list.map((a,_ai)=>" in html, name

@@ -56,6 +56,25 @@ const MOBILE = Object.freeze({
   homeY: 460,
   rowY: [680, 850],
   rowTop: [68, 85],
+  /* Con DUE file i cerchi salgono, e l'aria se la tolgono fra loro.
+   *
+   * La barra dell'app sul telefono galleggia in fondo allo schermo, e sopra un
+   * palco alto 640 punti arriva a coprirne gli ultimi 134: misurato, copre da
+   * 506 in giu'. Con una fila sola i carichi finiscono a 469 e non la toccano —
+   * il disegno e' nato cosi'. La seconda fila, che nasce dal quinto carico in
+   * poi, cadeva a 509-578: sotto la barra, col numero dentro. Chi apriva
+   * Energia vedeva i watt dei suoi ultimi carichi coperti, e per leggerli
+   * doveva scorrere senza sapere che ci fosse qualcosa da scorrere.
+   *
+   * Lo spazio si trova senza rimpicciolire niente e senza toccare la meta' di
+   * sopra — Solare, Rete, Batteria e Casa restano dove sono. Fra Casa e la
+   * prima fila c'erano 43 punti di aria, e fra le due file altri 40: sono
+   * quaranta e passa piu' del necessario, e messi insieme bastano. Le file
+   * salgono di 67 punti e i numeri tornano sopra la barra.
+   *
+   * Con una fila sola non cambia niente, ed e' voluto: chi ha quattro carichi
+   * o meno non deve accorgersi di questa riga. */
+  dueFile: { rowY: [620, 750], rowTop: [62, 75] },
   perRow: 4,
 });
 
@@ -161,10 +180,68 @@ function rowsFor(count, variant) {
   return sizes;
 }
 
-function connectorPath(variant, x, y) {
+/* Dove sta una bolla di una fila che non e' la prima (#118).
+ *
+ * «Con piu' carichi assegnati le linee di flusso passano sopra le bolle degli
+ * altri carichi.» Sul telefono da cinque carichi in su le file diventano due, e
+ * ognuna spartiva la larghezza per conto suo: con sei carichi le file hanno lo
+ * stesso numero di bolle, quindi le stesse x — la seconda fila finiva
+ * ESATTAMENTE sotto la prima, e la linea che scende verso una bolla di sotto
+ * passava dentro quella di sopra. A guardarlo sembrava che il Boiler fosse
+ * attaccato alla Lavatrice, e non e' vero: quella linea viene da Casa. Un
+ * disegno che dice una cosa falsa e' peggio di un disegno che non c'e', perche'
+ * chi guarda non ha modo di accorgersene.
+ *
+ * Non si e' curvata la linea: il varco fra due bolle della fila di sopra e'
+ * settanta unita' su mille — ventisette punti sullo schermo, misurati — e una
+ * linea che ci si infila passando a pochi punti da due cerchi si legge come un
+ * errore comunque. Si sposta la bolla, e la linea le va dietro dritta.
+ *
+ * Le file si sfalsano come i mattoni di un muro: ogni bolla di sotto sta nel
+ * VARCO di quelle di sopra. I varchi di una fila di `n` bolle sono `n + 1` —
+ * quelli fra due bolle, piu' i due margini — e stanno a mezzo passo l'uno
+ * dall'altro. Se la fila di sotto ne ha meno, si mettono al centro; se ne ha
+ * tanti quanti i varchi meno uno, la fila resta spostata di mezzo passo da una
+ * parte, che e' esattamente come si vede un muro di mattoni. */
+function sfalsata(width, primaFila, size, column) {
+  const passo = width / (primaFila + 1);
+  const varchi = primaFila + 1;
+  const inizio = Math.floor((varchi - size) / 2);
+  return passo * (inizio + column + 0.5);
+}
+
+/* La linea, e dove deve gia' essere quando passa la fila di sopra.
+ *
+ * [oltre] serve alle bolle della seconda fila (#118). Sfalsate, ognuna ha un
+ * varco libero sopra la testa — mezzo passo di distanza dalle due bolle che le
+ * stanno ai lati — ma la linea, che parte orizzontale da Casa, a quell'altezza
+ * non e' ancora arrivata alla sua x: passa piu' interna, e quel mezzo passo se
+ * lo mangia. Con otto carichi entrava di otto unita' dentro il cerchio di
+ * sopra, misurate.
+ *
+ * Invece di spostarla a occhio si chiede una cosa sola: **all'altezza della
+ * prima fila la linea deve essere gia' sulla sua verticale**. Il punto di
+ * comando che lo ottiene si ricava, non si prova — la quadratica a
+ * quell'altezza ha un parametro solo — e cosi' la distanza dalle bolle di
+ * sopra e' esattamente il mezzo passo dello sfalsamento, che e' tutto quello
+ * che uno sfalsamento puo' dare.
+ *
+ * Senza [oltre] la linea resta quella di sempre: la fila di sopra non ha
+ * niente da scavalcare, e il disegno largo — che di file ne ha una — non si
+ * accorge di questo file. */
+function comandoOltreLaFila(variant, x, y, rowY) {
+  const salto = y - variant.homeY;
+  const fino = rowY - variant.homeY;
+  if (!(salto > 0) || !(fino > 0) || fino >= salto) return x;
+  const t = Math.sqrt(fino / salto);
+  return (x * (1 + t) - (1 - t) * variant.homeX) / (2 * t);
+}
+
+function connectorPath(variant, x, y, oltre = null) {
   if (Math.abs(x - variant.homeX) < 1) return `M ${variant.homeX} ${variant.homeY} L ${x} ${y}`;
   const controlY = variant === MOBILE ? variant.homeY : Math.round((variant.homeY + y) / 2);
-  return `M ${variant.homeX} ${variant.homeY} Q ${x} ${controlY} ${x} ${y}`;
+  const controlX = round(oltre === null ? x : comandoOltreLaFila(variant, x, y, oltre), 1);
+  return `M ${variant.homeX} ${variant.homeY} Q ${controlX} ${controlY} ${x} ${y}`;
 }
 
 /* Positions for `count` bubbles, in one variant. `left`/`top` are stage
@@ -174,17 +251,29 @@ export function flowStageLayout(count, variant = "desktop") {
   const geometry = variant === "mobile" ? MOBILE : DESKTOP;
   const sizes = rowsFor(count, geometry);
   const positions = [];
+  const primaFila = sizes[0] || 0;
+  /* Dove stanno le file: piu' in alto quando sono due, cosi' la seconda non
+   * finisce sotto la barra dell'app. Il perche' sta accanto a `dueFile`. */
+  const righe = sizes.length > 1 && geometry.dueFile ? geometry.dueFile : geometry;
   sizes.forEach((size, rowIndex) => {
     for (let column = 0; column < size; column += 1) {
-      const x = (geometry.width * (column + 1)) / (size + 1);
+      /* La prima fila spartisce la larghezza; quelle sotto si sfalsano nei
+       * varchi della prima, o le linee le attraversano (#118). */
+      const x =
+        rowIndex === 0
+          ? (geometry.width * (column + 1)) / (size + 1)
+          : sfalsata(geometry.width, primaFila, size, column);
+      /* Chi sta sotto deve scavalcare la fila di sopra: la sua linea si
+       * raddrizza prima di arrivarci. Il perche' sta in `connectorPath`. */
+      const oltre = rowIndex === 0 ? null : righe.rowY[rowIndex - 1];
       positions.push({
         index: positions.length,
         row: rowIndex,
         left: round((x / geometry.width) * 100, 3),
-        top: geometry.rowTop[rowIndex],
+        top: righe.rowTop[rowIndex],
         x: round(x, 1),
-        y: geometry.rowY[rowIndex],
-        path: connectorPath(geometry, round(x, 1), geometry.rowY[rowIndex]),
+        y: righe.rowY[rowIndex],
+        path: connectorPath(geometry, round(x, 1), righe.rowY[rowIndex], oltre),
       });
     }
   });

@@ -1,6 +1,7 @@
 /* Full-screen Lovelace wrapper used by the generated DashboardModern dashboard. */
 import { legacyVariantForLocale, mountLegacyHost } from "./src/legacy/host.js";
 import { baseDellaPlancia } from "./src/core/la-base-della-plancia.js";
+import { ricordaIDispositiviDiHomeAssistant } from "./src/core/i-dispositivi-di-home-assistant.js";
 import { ricordaLeStanzeDiHomeAssistant } from "./src/core/le-stanze-di-home-assistant.js";
 
 export function canAccess(config = {}, user = {}) {
@@ -52,6 +53,10 @@ export class DashboardModernCard extends HTMLElement {
      * monta una volta sola. Costa tre confronti quando non c'e' niente di
      * nuovo. */
     ricordaLeStanzeDiHomeAssistant(value);
+    /* E di chi e' ogni entita', per lo stesso motivo e dallo stesso posto:
+     * l'avviso dei dispositivi non connessi conta per dispositivo, e chi
+     * disegna il registro non ce l'ha. */
+    ricordaIDispositiviDiHomeAssistant(value);
     this.render();
   }
 

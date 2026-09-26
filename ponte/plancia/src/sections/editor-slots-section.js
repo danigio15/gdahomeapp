@@ -957,12 +957,25 @@ function installStyles() {
 [data-dm-entity-chip="true"]>.dm-entity-picker.dm-slot-chip:hover{
   transform:none!important;filter:none!important;border-color:var(--primary-color,#0ea5e9)!important
 }
-/* A field whose form already prints its own label has no caption of its own:
-   there the pencil shares the line with the picker instead of heading a line
-   nothing else is on. */
-[data-dm-entity-chip="true"][data-dm-chip-caption="false"] .dm-chip-manual{order:3!important}
+/* A field whose form already prints its own label has no caption of its own.
+   There the two commands are twins on the line below the picker (#74).
+
+   They used not to be. The pencil was pulled up beside the picker while the
+   bin kept order:2 and stayed alone on a line of its own — the very shape
+   this rule was written to avoid, moved one button along. Worse, up there the
+   pencil kept the 36px square it has when a caption shares its line, and
+   «✏️ Modifica» spilled out of it. Every declared row is a field its form
+   labels — Openings, Doors and gates, Loads — so this was every one of them. */
+[data-dm-entity-chip="true"][data-dm-chip-caption="false"] .dm-chip-manual,
+[data-dm-entity-chip="true"][data-dm-chip-caption="false"] .dm-chip-clear{order:4!important}
+[data-dm-entity-chip="true"][data-dm-chip-caption="false"] .dm-chip-manual{
+  flex:0 0 auto!important;width:auto!important;min-width:36px!important;max-width:none!important;
+  height:36px!important;padding:0 11px!important;gap:5px!important;
+  border:1px solid var(--divider-color,#dbe4ee)!important;border-radius:999px!important;
+  font-size:11.5px!important;font-weight:800!important;color:var(--secondary-text-color,#64748b)!important
+}
 [data-dm-entity-chip="true"][data-dm-chip-caption="false"]>.dm-entity-picker.dm-slot-chip{
-  flex:1 1 auto!important
+  flex:1 1 100%!important;width:100%!important
 }
 [data-dm-entity-chip="true"]:not([data-dm-entity-raw="true"])>.dm-chip-raw{display:none!important}
 [data-dm-entity-chip="true"][data-dm-entity-raw="true"]>.dm-chip-raw{
@@ -996,9 +1009,16 @@ function installStyles() {
   order:2!important;flex:0 0 36px!important;width:36px!important;min-width:36px!important;
   max-width:36px!important;height:36px!important;border:0!important;background:transparent!important
 }
-#ed-body#ed-body [data-dm-entity-chip="true"][data-dm-chip-caption="false"] .dm-chip-manual{order:3!important}
+#ed-body#ed-body [data-dm-entity-chip="true"][data-dm-chip-caption="false"] .dm-chip-manual,
+#ed-body#ed-body [data-dm-entity-chip="true"][data-dm-chip-caption="false"] .dm-chip-clear{order:4!important}
+#ed-body#ed-body [data-dm-entity-chip="true"][data-dm-chip-caption="false"] .dm-chip-manual{
+  flex:0 0 auto!important;width:auto!important;min-width:36px!important;max-width:none!important;
+  height:36px!important;padding:0 11px!important;gap:5px!important;
+  border:1px solid var(--divider-color,#dbe4ee)!important;border-radius:999px!important;
+  font-size:11.5px!important;font-weight:800!important;color:var(--secondary-text-color,#64748b)!important
+}
 #ed-body#ed-body [data-dm-entity-chip="true"][data-dm-chip-caption="false"]>.dm-entity-picker.dm-slot-chip{
-  flex:1 1 auto!important;width:auto!important
+  flex:1 1 100%!important;width:100%!important
 }
 #ed-body#ed-body [data-dm-entity-chip="true"]:not([data-dm-entity-raw="true"])>.dm-chip-raw{display:none!important}
 #ed-body#ed-body [data-dm-entity-chip="true"][data-dm-entity-raw="true"]>.dm-chip-raw{
@@ -1015,7 +1035,8 @@ function installStyles() {
  * Which rows those are is written on them by markCardOwner, not asked for with
  * a :has() rule — see the note above it. */
 #ed-body#ed-body .ed-slot[data-dm-entity-card]{
-  display:grid!important;gap:6px!important;box-sizing:border-box!important;min-width:0!important;
+  display:grid!important;grid-template-columns:minmax(0,1fr)!important;
+  gap:6px!important;box-sizing:border-box!important;min-width:0!important;
   margin:0 0 8px!important;padding:11px 13px!important;
   border:1px solid var(--divider-color,#dbe4ee)!important;border-radius:16px!important;
   background:var(--card-background-color,#fff)!important
@@ -1050,7 +1071,8 @@ function installStyles() {
   gap:10px!important;text-align:left!important
 }
 #ed-body#ed-body .dm-slot-chip>.dm-slot-chip-copy{
-  display:grid!important;flex:1 1 auto!important;width:auto!important;min-width:0!important;
+  display:grid!important;grid-template-columns:minmax(0,1fr)!important;
+  flex:1 1 auto!important;width:auto!important;min-width:0!important;
   text-align:left!important
 }
 #ed-body#ed-body .dm-slot-chip>.dm-slot-chip-go{

@@ -24,6 +24,9 @@
  * spinta in fondo alla pagina al primo riordino.
  */
 import {
+  IL_RIQUADRO_IN_INGLESE,
+  IL_RIQUADRO_IN_ITALIANO,
+  LE_CASELLE_DELLA_BARRA,
   QUANTE_MIE,
   STATO_DI_SERIE,
   TINTA_MIA,
@@ -285,6 +288,14 @@ function parolaDelConto(chiave, conto, modello = null) {
     return uno
       ? t("stampante da guardare", "printer to check")
       : t("stampanti da guardare", "printers to check");
+  /* «Credo che con aggiornamenti da eseguire il testo dovrebbe essere
+   * Aggiornamenti pendenti» (#108): la parola che manca e' «in attesa». La
+   * pastiglia esiste solo quando c'e' qualcosa da fare, e dirlo e' proprio il
+   * suo mestiere. */
+  if (chiave === "aggiornamenti")
+    return uno
+      ? t("aggiornamento in attesa", "update pending")
+      : t("aggiornamenti in attesa", "updates pending");
   return uno ? t("in riproduzione", "playing") : t("in riproduzione", "playing");
 }
 
@@ -976,6 +987,7 @@ const NOMI_DELLE_VOCI = () => ({
   porte: t("Apri porte", "Openers"),
   varchi: t("Varchi", "Openings"),
   stampanti: t("Stampanti", "Printers"),
+  aggiornamenti: t("Aggiornamenti", "Updates"),
   luci: t("Luci", "Lights"),
   tapparelle: t("Finestre", "Windows"),
   clima: t("Clima", "Climate"),
@@ -988,14 +1000,32 @@ const NOMI_DELLE_VOCI = () => ({
   pioggiaOggi: t("Pioggia di oggi", "Rain today"),
 });
 
+/* Il nome e l'esempio di una casella della barra, presi da dove stanno (#131).
+ *
+ * Non si scrivono qui: li legge anche la ricerca del Config, per saper dire
+ * «la casella della pioggia sta qui» a chi non l'ha mai aperta. Il perche' sta
+ * accanto alla tabella, in `core/come-sta-la-casa.js`. */
+const laCasellaDella = (chiave) => LE_CASELLE_DELLA_BARRA.find((una) => una.chiave === chiave);
+
+const nomeDellaCasella = (chiave) => {
+  const casella = laCasellaDella(chiave);
+  return casella ? t(casella.it, casella.en) : "";
+};
+
+const esempioDellaCasella = (chiave) => laCasellaDella(chiave)?.esempio ?? "";
+
 /* Una casella per un sensore della barra: le due misure hanno la stessa forma
  * di quella della posta, e scriverla tre volte vorrebbe dire tre caselle che
  * col tempo diventano diverse. */
-function campoDellaMisura(chiave, valore, etichetta, esempio) {
-  return `<label class="ed-slot dm-casa-ed-campo"><span class="ed-slot-lbl">${esc(etichetta)}</span>
+function campoDellaMisura(chiave, valore) {
+  return `<label class="ed-slot dm-casa-ed-campo"><span class="ed-slot-lbl">${esc(
+    nomeDellaCasella(chiave),
+  )}</span>
       <span class="ed-form-row"><input class="ed-input mono" data-dm-casa-misura="${esc(chiave)}" value="${esc(
         valore,
-      )}" placeholder="${esc(esempio)}" autocomplete="off" spellcheck="false"><button type="button" class="dm-entity-picker" data-dm-casa-pick-misura="${esc(
+      )}" placeholder="${esc(
+        esempioDellaCasella(chiave),
+      )}" autocomplete="off" spellcheck="false"><button type="button" class="dm-entity-picker" data-dm-casa-pick-misura="${esc(
         chiave,
       )}" aria-label="${esc(t("Scegli entità", "Choose entity"))}">🔍</button></span></label>`;
 }
@@ -1152,7 +1182,9 @@ function pannelloMarkup() {
       }>
     </label>`;
   }).join("");
-  return `<div class="ed-sec-title">🏠 ${esc(t("Barra sotto il meteo", "Bar under the weather"))}</div>
+  return `<div class="ed-sec-title">🏠 ${esc(
+    t(IL_RIQUADRO_IN_ITALIANO, IL_RIQUADRO_IN_INGLESE),
+  )}</div>
     <div class="ed-intro">${esc(
       t(
         "Una riga di pastiglie sotto il meteo, con quello che conta adesso: il ritiro di oggi o domani, quante luci sono rimaste accese, quante finestre sono aperte. Compare solo quello che ha qualcosa da dire — nessuna luce accesa, nessuna pastiglia — e toccando una pastiglia si apre la tessera che racconta il resto.",
@@ -1162,11 +1194,13 @@ function pannelloMarkup() {
     <div class="dm-casa-ed-list">${righe}</div>
     ${campoDellOraDelRitiro(config.rifiutiDalleOre)}
     <label class="ed-slot dm-casa-ed-campo"><span class="ed-slot-lbl">${esc(
-      t("Sensore della cassetta della posta", "Mailbox contact sensor"),
+      nomeDellaCasella("posta"),
     )}</span>
       <span class="ed-form-row"><input id="dm-casa-posta" class="ed-input mono" data-dm-casa-posta value="${esc(
         config.posta,
-      )}" placeholder="binary_sensor.cassetta_posta" autocomplete="off" spellcheck="false"><button type="button" class="dm-entity-picker" data-dm-casa-pick aria-label="${esc(
+      )}" placeholder="${esc(
+        esempioDellaCasella("posta"),
+      )}" autocomplete="off" spellcheck="false"><button type="button" class="dm-entity-picker" data-dm-casa-pick aria-label="${esc(
         t("Scegli entità", "Choose entity"),
       )}">🔍</button></span>
       <small>${esc(
@@ -1175,30 +1209,10 @@ function pannelloMarkup() {
           "A contact on the mailbox: when the postman opens the flap the mail pill appears, moves to be noticed and stays there until somebody taps it. Mail arrives while nobody is looking, so a two-second flash is no use.",
         ),
       )}</small></label>
-    ${campoDellaMisura(
-      "temperatura",
-      config.temperatura,
-      t("Sensore della temperatura", "Temperature sensor"),
-      "sensor.temperatura_esterna",
-    )}
-    ${campoDellaMisura(
-      "umidita",
-      config.umidita,
-      t("Sensore dell'umidità", "Humidity sensor"),
-      "sensor.umidita_esterna",
-    )}
-    ${campoDellaMisura(
-      "pioggia",
-      config.pioggia,
-      t("Intensità della pioggia", "Rain rate"),
-      "sensor.stazione_rain_rate",
-    )}
-    ${campoDellaMisura(
-      "pioggiaOggi",
-      config.pioggiaOggi,
-      t("Pioggia caduta oggi", "Rain fallen today"),
-      "sensor.stazione_pioggia_giornaliera",
-    )}
+    ${campoDellaMisura("temperatura", config.temperatura)}
+    ${campoDellaMisura("umidita", config.umidita)}
+    ${campoDellaMisura("pioggia", config.pioggia)}
+    ${campoDellaMisura("pioggiaOggi", config.pioggiaOggi)}
     <div class="ed-intro">${esc(
       t(
         "Quattro sensori scelti da te: quelli che leggi per decidere, non una media della casa. Il tipico è quello fuori, con cui ci si regola per i clima interni. L'unità la dice Home Assistant, e un sensore che non indichi è una pastiglia che non compare.",

@@ -650,12 +650,15 @@ test("una plancia gia' configurata dall'app non viene coperta da quella dell'int
     configurazione: new Configurazione({ cartella, adesso: () => 5000 }),
   });
 
-  const scritta = await con.rispondi({
-    id: 1,
-    type: "dashboardmodern/config/set",
-    snapshot: { values: { cd_stanze: '[{"name":"Sala"}]' }, keys_revision: 1 },
-    expected_revision: 0,
-  });
+  const scritta = await con.rispondi(
+    {
+      id: 1,
+      type: "dashboardmodern/config/set",
+      snapshot: { values: { cd_stanze: '[{"name":"Sala"}]' }, keys_revision: 1 },
+      expected_revision: 0,
+    },
+    { puoAmministrare: true },
+  );
   assert.equal(scritta.result.status, "saved");
 
   const letta = await con.rispondi({ id: 2, type: "dashboardmodern/config/get" });
@@ -739,29 +742,35 @@ test("la configurazione della plancia la tiene il ponte, con le stesse risposte 
     },
   });
 
-  const scritta = await con.rispondi({
-    id: 2,
-    type: "dashboardmodern/config/set",
-    profile: "primary",
-    snapshot: {
-      values: { cd_stanze: '[{"name":"Sala"}]' },
-      keys_revision: 1,
-      writer_generation: 2,
-      updated_at: 0,
+  const scritta = await con.rispondi(
+    {
+      id: 2,
+      type: "dashboardmodern/config/set",
+      profile: "primary",
+      snapshot: {
+        values: { cd_stanze: '[{"name":"Sala"}]' },
+        keys_revision: 1,
+        writer_generation: 2,
+        updated_at: 0,
+      },
+      expected_revision: 0,
     },
-    expected_revision: 0,
-  });
+    { puoAmministrare: true },
+  );
   assert.equal(scritta.success, true);
   assert.equal(scritta.result.status, "saved");
   assert.equal(scritta.result.snapshot.revision, 1);
   assert.equal(scritta.result.snapshot.updated_at, 5000);
 
-  const conflitto = await con.rispondi({
-    id: 3,
-    type: "dashboardmodern/config/set",
-    snapshot: { values: { cd_stanze: "[]" } },
-    expected_revision: 0,
-  });
+  const conflitto = await con.rispondi(
+    {
+      id: 3,
+      type: "dashboardmodern/config/set",
+      snapshot: { values: { cd_stanze: "[]" } },
+      expected_revision: 0,
+    },
+    { puoAmministrare: true },
+  );
   assert.equal(conflitto.result.status, "conflict");
 
   const letta = await con.rispondi({
@@ -771,18 +780,24 @@ test("la configurazione della plancia la tiene il ponte, con le stesse risposte 
   });
   assert.equal(letta.result.snapshot.values.cd_stanze, '[{"name":"Sala"}]');
 
-  const storta = await con.rispondi({
-    id: 5,
-    type: "dashboardmodern/config/set",
-    snapshot: { values: "no" },
-  });
+  const storta = await con.rispondi(
+    {
+      id: 5,
+      type: "dashboardmodern/config/set",
+      snapshot: { values: "no" },
+    },
+    { puoAmministrare: true },
+  );
   assert.equal(storta.success, false);
   assert.equal(storta.error.code, "invalid_format");
-  const troppo = await con.rispondi({
-    id: 6,
-    type: "dashboardmodern/config/set",
-    snapshot: { values: { a: "x".repeat(3 * 1024 * 1024) } },
-  });
+  const troppo = await con.rispondi(
+    {
+      id: 6,
+      type: "dashboardmodern/config/set",
+      snapshot: { values: { a: "x".repeat(3 * 1024 * 1024) } },
+    },
+    { puoAmministrare: true },
+  );
   assert.equal(troppo.error.code, "snapshot_too_large");
   const profilo = await con.rispondi({
     id: 7,
@@ -791,13 +806,19 @@ test("la configurazione della plancia la tiene il ponte, con le stesse risposte 
   });
   assert.equal(profilo.error.code, "invalid_format");
 
-  const senzaRevisione = await con.rispondi({ id: 8, type: "dashboardmodern/config/restore" });
+  const senzaRevisione = await con.rispondi(
+    { id: 8, type: "dashboardmodern/config/restore" },
+    { puoAmministrare: true },
+  );
   assert.equal(senzaRevisione.error.code, "invalid_format");
-  const ripristino = await con.rispondi({
-    id: 9,
-    type: "dashboardmodern/config/restore",
-    revision: 42,
-  });
+  const ripristino = await con.rispondi(
+    {
+      id: 9,
+      type: "dashboardmodern/config/restore",
+      revision: 42,
+    },
+    { puoAmministrare: true },
+  );
   assert.equal(ripristino.result.status, "conflict");
 
   /* La copia vecchia per utente: una risposta innocua. */
@@ -991,7 +1012,10 @@ test("le segnalazioni della plancia: cosa risponde un ponte senza centralino", a
 
   /* La coda dell'assistenza, su un ponte senza chat, e' un comando che non sa
    * fare — come lo e' scrivere. */
-  const coda = await con.rispondi({ id: 5, type: "dashboardmodern/chat/queue" });
+  const coda = await con.rispondi(
+    { id: 5, type: "dashboardmodern/chat/queue" },
+    { puoAmministrare: true },
+  );
   assert.equal(coda.success, false);
   assert.equal(coda.error.code, "unknown_command");
 });
@@ -1532,7 +1556,10 @@ test("la coda di chi risponde passa dal ponte, e solo con la chiave", async () =
     });
     const spenta = await casaQualunque.rispondi({ id: 1, type: "dashboardmodern/chat/state" });
     assert.equal(spenta.result.console, false);
-    const negata = await casaQualunque.rispondi({ id: 2, type: "dashboardmodern/chat/queue" });
+    const negata = await casaQualunque.rispondi(
+      { id: 2, type: "dashboardmodern/chat/queue" },
+      { puoAmministrare: true },
+    );
     assert.equal(negata.success, false);
     assert.equal(negata.error.code, "forbidden");
 
@@ -1545,46 +1572,67 @@ test("la coda di chi risponde passa dal ponte, e solo con la chiave", async () =
 
     /* Le quattro risposte hanno i nomi di `websocket_api.py`, perche' a
      * leggerle c'e' il Cruscotto della plancia, che e' scritto per quelli. */
-    const coda = await con.rispondi({ id: 4, type: "dashboardmodern/chat/queue" });
+    const coda = await con.rispondi(
+      { id: 4, type: "dashboardmodern/chat/queue" },
+      { puoAmministrare: true },
+    );
     assert.deepEqual(coda.result, {
       conversations: [{ id: "casa_1", nome: "Giovanni", non_letti: 1 }],
     });
-    const filo = await con.rispondi({
-      id: 5,
-      type: "dashboardmodern/chat/open",
-      line: "casa_1",
-    });
+    const filo = await con.rispondi(
+      {
+        id: 5,
+        type: "dashboardmodern/chat/open",
+        line: "casa_1",
+      },
+      { puoAmministrare: true },
+    );
     assert.deepEqual(filo.result, { messages: [{ id: 1, da: "casa", testo: "non parte" }] });
-    const risposto = await con.rispondi({
-      id: 6,
-      type: "dashboardmodern/chat/answer",
-      line: "casa_1",
-      message: "Ci guardo subito.",
-    });
+    const risposto = await con.rispondi(
+      {
+        id: 6,
+        type: "dashboardmodern/chat/answer",
+        line: "casa_1",
+        message: "Ci guardo subito.",
+      },
+      { puoAmministrare: true },
+    );
     assert.equal(risposto.result.message.testo, "Ci guardo subito.");
-    const buttata = await con.rispondi({
-      id: 7,
-      type: "dashboardmodern/chat/drop",
-      line: "casa_1",
-    });
+    const buttata = await con.rispondi(
+      {
+        id: 7,
+        type: "dashboardmodern/chat/drop",
+        line: "casa_1",
+      },
+      { puoAmministrare: true },
+    );
     assert.deepEqual(buttata.result, { dropped: true });
 
     /* Gli stessi quattro sportelli, coi nomi che usa l'app: sotto c'e' lo
      * stesso metodo, e una linea si chiama `linea` invece che `line`. */
-    const codaDellApp = await con.rispondi({ id: 8, type: "ponte/console/coda" });
+    const codaDellApp = await con.rispondi(
+      { id: 8, type: "ponte/console/coda" },
+      { puoAmministrare: true },
+    );
     assert.deepEqual(codaDellApp.result, coda.result);
-    const filoDellApp = await con.rispondi({
-      id: 9,
-      type: "ponte/console/apri",
-      linea: "casa_1",
-    });
+    const filoDellApp = await con.rispondi(
+      {
+        id: 9,
+        type: "ponte/console/apri",
+        linea: "casa_1",
+      },
+      { puoAmministrare: true },
+    );
     assert.deepEqual(filoDellApp.result, filo.result);
-    const rispostaDellApp = await con.rispondi({
-      id: 10,
-      type: "ponte/console/rispondi",
-      linea: "casa_1",
-      testo: "Ci guardo subito.",
-    });
+    const rispostaDellApp = await con.rispondi(
+      {
+        id: 10,
+        type: "ponte/console/rispondi",
+        linea: "casa_1",
+        testo: "Ci guardo subito.",
+      },
+      { puoAmministrare: true },
+    );
     assert.equal(rispostaDellApp.result.message.testo, "Ci guardo subito.");
 
     /* E il segreto della propria chat non e' mai finito in una di quelle
@@ -1628,11 +1676,14 @@ test("piu' di una plancia: l'app le chiede, le aggiunge e le toglie", async () =
       ["primary"],
     );
 
-    const aggiunta = await con.rispondi({
-      id: 2,
-      type: "ponte/plance/aggiungi",
-      titolo: "Casa al mare",
-    });
+    const aggiunta = await con.rispondi(
+      {
+        id: 2,
+        type: "ponte/plance/aggiungi",
+        titolo: "Casa al mare",
+      },
+      { puoAmministrare: true },
+    );
     assert.equal(aggiunta.result.quale.profilo, "casa-al-mare");
     assert.deepEqual(
       aggiunta.result.plance.map((una) => una.titolo),
@@ -1660,23 +1711,29 @@ test("piu' di una plancia: l'app le chiede, le aggiunge e le toglie", async () =
     assert.equal(mai.error.code, "not_found");
 
     /* Rinominare tocca il titolo e nient'altro. */
-    const rinominata = await con.rispondi({
-      id: 5,
-      type: "ponte/plance/rinomina",
-      profilo: "casa-al-mare",
-      titolo: "Al mare",
-    });
+    const rinominata = await con.rispondi(
+      {
+        id: 5,
+        type: "ponte/plance/rinomina",
+        profilo: "casa-al-mare",
+        titolo: "Al mare",
+      },
+      { puoAmministrare: true },
+    );
     assert.equal(rinominata.result.quale.titolo, "Al mare");
     assert.equal(rinominata.result.quale.istanza, "gdahome-casa-al-mare");
 
     /* Togliendola va via anche il suo cassetto nella configurazione. */
     cassetta.scrivi("casa-al-mare", { "dm-home": '{"x":1}' }, { updated_at: 5000 });
     assert.ok(cassetta.leggi("casa-al-mare").snapshot);
-    const tolta = await con.rispondi({
-      id: 6,
-      type: "ponte/plance/togli",
-      profilo: "casa-al-mare",
-    });
+    const tolta = await con.rispondi(
+      {
+        id: 6,
+        type: "ponte/plance/togli",
+        profilo: "casa-al-mare",
+      },
+      { puoAmministrare: true },
+    );
     assert.deepEqual(
       tolta.result.plance.map((una) => una.profilo),
       ["primary"],
@@ -1685,7 +1742,10 @@ test("piu' di una plancia: l'app le chiede, le aggiunge e le toglie", async () =
 
     /* La prima non si toglie, e il no e' quello delle plance: la schermata sa
      * cosa farne. */
-    const negata = await con.rispondi({ id: 7, type: "ponte/plance/togli", profilo: "primary" });
+    const negata = await con.rispondi(
+      { id: 7, type: "ponte/plance/togli", profilo: "primary" },
+      { puoAmministrare: true },
+    );
     assert.equal(negata.success, false);
     assert.equal(negata.error.code, "non_la_prima");
 
@@ -1932,4 +1992,53 @@ test("«non si sa chi chiede» non e' un no: si va a vedere", async () => {
   assert.equal(inciampata.success, true, "un guasto di la' porta giu' la risposta");
   assert.equal(inciampata.result.installatore, true);
   assert.equal(inciampata.result.chiave, undefined, "un guasto apre la porta");
+});
+
+test("il telefono senza utente addosso amministra: il codice gli arriva", async () => {
+  /* «Su Home Assistant funziona; da app mi richiede i codici sia installatore
+   * che gestore.»
+   *
+   * Il ponte ha gia' una risposta sola alla domanda «questo filo amministra?»,
+   * e la da' `_amministra()` in `ponte.js`: un telefono **senza nessun utente
+   * addosso** — abbinato con un codice che allora lo fabbricava solo chi
+   * amministra — amministra. E' quella risposta che apre i comandi riservati
+   * alla dogana, e arriva qui come `puoAmministrare`.
+   *
+   * Qui pero' non si guardava: si guardava `amministra`, che nasce da
+   * `amministratoreSubito(chiChiede)` — e per un telefono senza utente
+   * `chiChiede` e' la stringa vuota, che quella funzione conta per un no.
+   * Cioe' lo stesso filo passava i comandi da amministratore e si sentiva
+   * negare il codice: le due pagine si aprivano e chiedevano la chiave che la
+   * scheda dell'add-on aveva gia'.
+   *
+   * Dentro Home Assistant non cambia niente, e si vede da `cucitura.js`: li'
+   * «non si sa chi guarda» vale no, e `puoAmministrare` arriva falso. */
+  const con = new Commissioni({
+    casa: casaDiProva(),
+    registro: ZITTO,
+    installatore: true,
+    gestore: true,
+    chiaveDelCruscotto: "codice-del-cruscotto",
+    chiaveDellaGestione: "codice-della-gestione",
+  });
+
+  /* Com'e' fatta la domanda che arriva da un telefono senza utente: `ponte.js`
+   * manda la stringa vuota, `amministratoreSubito("")` risponde no, e
+   * `_amministra()` risponde si'. */
+  const detta = await con.rispondi(
+    { id: 1, type: "ponte/quadro/stato" },
+    { chiChiede: "", amministra: false, puoAmministrare: true },
+  );
+  assert.equal(detta.result.chiave, "codice-del-cruscotto");
+  assert.equal(detta.result.chiaveGestione, "codice-della-gestione");
+
+  /* E chi non amministra resta fuori, che e' il motivo per cui questa porta
+   * e' stretta: di la' c'e' l'elenco dei clienti di qualcuno. */
+  const altrui = await con.rispondi(
+    { id: 2, type: "ponte/quadro/stato" },
+    { chiChiede: "un-altro", amministra: false, puoAmministrare: false },
+  );
+  assert.equal(altrui.result.chiave, undefined);
+  assert.equal(altrui.result.chiaveGestione, undefined);
+  assert.equal(altrui.result.installatore, true, "e la voce invece sparisce");
 });

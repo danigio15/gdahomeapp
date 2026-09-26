@@ -54,7 +54,7 @@ test("un simbolo scelto a mano resta quello che è, al riparo dal markup", () =>
   assert.equal(iconGlyphHtml("🛋️", { kind: "room" }), "🛋️");
   /* Chi sceglie l'icona scrive quello che vuole nella casella: esce come
    * markup, quindi esce protetto. */
-  assert.equal(iconGlyphHtml("<b>x</b>", { kind: "room" }), "&lt;b>x&lt;/b>");
+  assert.equal(iconGlyphHtml("<b>x</b>", { kind: "room" }), "&lt;b&gt;x&lt;/b&gt;");
 });
 
 test("niente icona vuol dire il ripiego, non una casella vuota", () => {

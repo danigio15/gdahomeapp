@@ -161,8 +161,19 @@ async function banco() {
       prossimo,
       chiedi,
       chiusa,
-      entra: async (codice = chiave) => {
-        ws.send(JSON.stringify({ type: "auth", access_token: codice }));
+      /* Si entra col gettone che il cruscotto chiede per questa plancia, come
+       * fa la pagina vera; o con quello che si dice, per provare i no. */
+      entra: async (codice) => {
+        let segno = codice;
+        if (segno === undefined) {
+          const chiesto = await retro(
+            `/casa/${UNA}/plancia/${profilo}/gettone`,
+            { method: "POST" },
+            chiave,
+          );
+          segno = chiesto.ok ? (await chiesto.json()).gettone : chiave;
+        }
+        ws.send(JSON.stringify({ type: "auth", access_token: segno }));
         return prossimo();
       },
     };
@@ -215,11 +226,18 @@ test("la pagina dell'editor si serve per una casa che lo permette, con le premes
     assert.ok(pagina.includes("window.__GDAHOME_DA_LONTANO__=true;"));
     assert.ok(pagina.includes('location.pathname.replace(/\\/+$/,"")+"/websocket"'));
     assert.ok(!pagina.includes(`"/plancia-da-lontano/${UNA}/primary/websocket"`));
-    /* Il codice: dal deposito del cruscotto, o dal cruscotto stesso, mai
-     * dall'indirizzo. */
-    assert.ok(pagina.includes('localStorage.getItem("gdahome.quadro.chiave")'));
-    assert.ok(pagina.includes('type:"auth",access_token:chiave'));
+    /* Il gettone: dal cruscotto che la contiene, mai dal deposito del
+     * browser e mai dall'indirizzo. La chiave del cruscotto qui non passa. */
+    assert.ok(!pagina.includes("gdahome.quadro.chiave"));
+    assert.ok(!/localStorage\.getItem\("gdahome/.test(pagina));
+    assert.ok(pagina.includes('type:"auth",access_token:gettone'));
     assert.ok(pagina.includes("evento.origin!==location.origin"));
+    assert.ok(pagina.includes("evento.source!==window.parent"));
+    /* Sta dentro il cruscotto, e il cruscotto dentro Home Assistant: il
+     * browser guarda tutti quelli che la contengono, quindi valgono le stesse
+     * origini del cruscotto. Il gettone arriva solo da lui. */
+    assert.match(risposta.headers.get("content-security-policy"), /frame-ancestors \*/);
+    assert.equal(risposta.headers.get("x-frame-options"), null);
     /* La Configurazione e basta. */
     assert.ok(pagina.includes('id="gdahome-da-lontano"'));
     assert.ok(
@@ -288,11 +306,33 @@ test("sul filo si entra col codice, per una casa propria che lo permette; poi l'
     const sbagliato = await b.filo();
     assert.equal((await sbagliato.entra("non-questa")).type, "auth_invalid");
     await sbagliato.chiusa;
+    /* Bianchi un gettone per una casa di Rossi non lo ottiene, e la sua
+     * chiave sul filo non vale. */
+    assert.equal(
+      (
+        await b.retro(
+          `/casa/${UNA}/plancia/primary/gettone`,
+          { method: "POST" },
+          b.iscritti[1].chiave,
+        )
+      ).status,
+      404,
+    );
     const diBianchi = await b.filo(b.iscritti[1].chiave);
-    const no = await diBianchi.entra();
-    assert.equal(no.type, "auth_invalid");
-    assert.match(no.message, /non la segui tu/);
+    assert.equal((await diBianchi.entra()).type, "auth_invalid");
     await diBianchi.chiusa;
+    /* E nemmeno quella di Rossi: sul filo dell'editor la chiave del
+     * cruscotto non entra, entra solo il gettone. */
+    const conLaChiave = await b.filo();
+    assert.equal((await conLaChiave.entra(b.iscritti[0].chiave)).type, "auth_invalid");
+    await conLaChiave.chiusa;
+    /* E un gettone di un'altra plancia non apre questa. */
+    const dellAltra = await (
+      await b.retro(`/casa/${UNA}/plancia/suocero/gettone`, { method: "POST" })
+    ).json();
+    const storto = await b.filo();
+    assert.equal((await storto.entra(dellAltra.gettone)).type, "auth_invalid");
+    await storto.chiusa;
 
     const filo = await b.filo();
     assert.deepEqual(await filo.entra(), { type: "auth_ok", ha_version: "gdahome" });
@@ -514,9 +554,17 @@ test("il cruscotto apre l'editor in un riquadro sopra la pagina, e la gestione n
   assert.match(CRUSCOTTO, /\/casa\/\$\{casa\}\/plancia\/\$\{profilo\}\/rinfresca`/);
   assert.match(CRUSCOTTO, /\/casa\/\$\{casa\}\/plancia\/\$\{profilo\}\/stato`/);
   assert.match(CRUSCOTTO, /`\.\.\/plancia-da-lontano\/\$\{casa\}\/\$\{profilo\}\/`/);
-  /* Il codice al riquadro con un messaggio, alla propria origine: non
-   * nell'indirizzo. */
-  assert.match(CRUSCOTTO, /postMessage\(\{ gdahome: "chiave", chiave \}, location\.origin\)/);
+  /* Al riquadro un gettone, con un messaggio, alla propria origine: non la
+   * chiave, e non nell'indirizzo. */
+  assert.match(CRUSCOTTO, /\/casa\/\$\{casa\}\/plancia\/\$\{profilo\}\/gettone`/);
+  assert.match(
+    CRUSCOTTO,
+    /postMessage\(\s*\{ gdahome: "gettone", gettone: editorAperto\.gettone \},\s*location\.origin,?\s*\)/,
+  );
+  assert.doesNotMatch(
+    CRUSCOTTO,
+    /postMessage\(\{ gdahome: "chiave", chiave \}, location\.origin\)/,
+  );
   /* La casella di JSON non c'e' piu'. */
   assert.doesNotMatch(CRUSCOTTO, /textarea\.configurazione|data-plancia-testo|lEditorDi/);
   assert.doesNotMatch(GESTIONE, /editor-plancia|plancia-da-lontano|data-configura-plancia/);

@@ -45,6 +45,17 @@ export const PLANCIA_MASSIMA = 8 * 1024 * 1024;
 /** Quante plance si tengono per casa: come nel ponte. */
 export const PROFILI_AL_MASSIMO = 8;
 
+/* Quanto pesa, al massimo, tutto quello che si tiene di una casa: gli scatti,
+ * le configurazioni in attesa, l'inventario. Senza, otto plance da otto MiB
+ * l'una facevano sessantaquattro MiB per casa, su disco e in memoria. Una
+ * plancia vera sta nelle decine di KiB: questo tetto non lo tocca nessuno che
+ * non lo stia cercando. */
+export const UNA_CASA_AL_MASSIMO = 16 * 1024 * 1024;
+
+/* Quanti archivi di casa si tengono aperti in memoria. Oltre, se ne chiude il
+ * meno usato: e' tutto su disco, e riaprirlo costa una lettura. */
+export const APERTI_AL_MASSIMO = 32;
+
 const CASA_BUONA = /^casa_[0-9a-f]{32}$/;
 
 /* Un indirizzo di flusso, o un gettone: copia di `ponte/src/plancia-da-lontano.js`,
@@ -116,7 +127,9 @@ export class PlanceDelleCase {
   constructor({ cartella = "./dati", adesso = () => Date.now() } = {}) {
     this.cartella = join(cartella, "plance");
     this.adesso = adesso;
-    /* Gli archivi aperti, uno per casa: si aprono al primo uso e restano. */
+    /* Gli archivi aperti, uno per casa: si aprono al primo uso, e restano
+     * finche' non sono fra i meno usati (`APERTI_AL_MASSIMO`). La mappa tiene
+     * l'ordine d'uso: chi si usa torna in fondo, chi e' in cima se ne va. */
     this._aperti = new Map();
     /* Le plance di cui il cruscotto vuole uno scatto **adesso**, anche se
      * la revisione e' la stessa: chi apre l'editor vuole com'e' fatta la
@@ -132,13 +145,37 @@ export class PlanceDelleCase {
   _archivio(casa) {
     if (!CASA_BUONA.test(casa)) throw new Error("questa non e' una matricola");
     let suo = this._aperti.get(casa);
-    if (!suo) {
+    if (suo) {
+      this._aperti.delete(casa);
+    } else {
       suo = new Archivio(this._dove(casa), { scatti: {}, chieste: {}, inventario: null });
       if (!suo.dati.scatti || typeof suo.dati.scatti !== "object") suo.dati.scatti = {};
       if (!suo.dati.chieste || typeof suo.dati.chieste !== "object") suo.dati.chieste = {};
-      this._aperti.set(casa, suo);
+      while (this._aperti.size >= APERTI_AL_MASSIMO) {
+        this._aperti.delete(this._aperti.keys().next().value);
+      }
     }
+    this._aperti.set(casa, suo);
     return suo;
+  }
+
+  /* Quanto pesa l'archivio di una casa, com'e' adesso in memoria. */
+  _quantoPesa(suo) {
+    try {
+      return Buffer.byteLength(JSON.stringify(suo.dati));
+    } catch (_errore) {
+      return Infinity;
+    }
+  }
+
+  /* Tenta un cambio: se l'archivio di questa casa passerebbe il tetto, lo si
+   * rimette com'era e si dice di no. */
+  _staDentro(suo, cambia) {
+    const prima = structuredClone(suo.dati);
+    cambia();
+    if (this._quantoPesa(suo) <= UNA_CASA_AL_MASSIMO) return true;
+    suo.dati = prima;
+    return false;
   }
 
   /** Se di questa casa c'e' gia' qualcosa su disco, senza aprirlo. */
@@ -173,7 +210,7 @@ export class PlanceDelleCase {
     if (!suo.dati.scatti[profilo] && Object.keys(suo.dati.scatti).length >= PROFILI_AL_MASSIMO) {
       return null;
     }
-    suo.dati.scatti[profilo] = {
+    const scatto = {
       profilo,
       titolo: testo(titolo, 40),
       revisione: intero(revisione),
@@ -187,10 +224,14 @@ export class PlanceDelleCase {
        * passato lo stesso. All'installatore un flusso non si fa vedere. */
       valori: senzaFlussi(valori),
     };
+    /* Uno scatto che fa passare alla casa il suo tetto non si prende. */
+    if (!this._staDentro(suo, () => (suo.dati.scatti[profilo] = scatto))) return null;
     /* L'inventario: ripassato dal setaccio, e tenuto uno per casa. Se questo
      * scatto non lo porta resta quello di prima. */
     if (eUnInventario(inventario)) {
-      suo.dati.inventario = { ...inventarioSenzaDati(inventario), presoIl: this.adesso() };
+      const nuovo = { ...inventarioSenzaDati(inventario), presoIl: this.adesso() };
+      /* Un inventario che non ci sta si lascia fuori, e lo scatto resta. */
+      this._staDentro(suo, () => (suo.dati.inventario = nuovo));
     }
     this._daRinfrescare.get(casa)?.delete(profilo);
     suo.salva();
@@ -268,13 +309,14 @@ export class PlanceDelleCase {
     if (!PROFILO_BUONO.test(String(profilo ?? ""))) return null;
     if (!id || !valori || typeof valori !== "object" || Array.isArray(valori)) return null;
     const suo = this._archivio(casa);
-    suo.dati.chieste[profilo] = {
+    const chiesta = {
       id: testo(id, 60),
       profilo,
       valori,
       revisioneAttesa: revisioneAttesa === null ? null : intero(revisioneAttesa),
       chiestaIl: this.adesso(),
     };
+    if (!this._staDentro(suo, () => (suo.dati.chieste[profilo] = chiesta))) return null;
     suo.salva();
     return this.chiesta(casa, profilo);
   }

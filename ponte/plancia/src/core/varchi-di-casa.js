@@ -29,6 +29,8 @@
  * contraddicono.
  */
 
+import { conLaRiga, conLeRighe, righeDichiarate, senzaLaRiga } from "./elenco-dichiarato.js";
+import { CAMPO_ESCLUSIONE, comeStaLEsclusione } from "./l-esclusione-del-varco.js";
 import { contactEntity, inferriataEntity } from "./shutter-window.js";
 import { CLASSI_DEL_VARCO, comeStaIlVarco, eUnVarco } from "./varchi-in-configurazione.js";
 
@@ -37,22 +39,34 @@ const clean = (valore) => String(valore ?? "").trim();
 /** Dove si scrive la configurazione dei varchi. */
 export const CHIAVE_VARCHI = "cd_varchi";
 
+/* Il campo in piu' che una riga di varco si tiene: l'interruttore che lo
+ * esclude dall'antifurto (#136). Passa per nome dall'elenco dichiarato, come la
+ * famiglia delle Macchine, perche' un elenco esplicito e' l'unica forma che
+ * dice cosa si salva e cosa e' roba di passaggio. */
+export const CAMPI_IN_PIU = Object.freeze([CAMPO_ESCLUSIONE]);
+
 /** Le classi che contano come varco: le stesse del rilevamento, non una copia. */
 export { CLASSI_DEL_VARCO };
 
-/* Le parole con cui Home Assistant chiama un varco, e il disegno che gli va
- * addosso. Un portone del garage non e' una finestra, e vederlo si capisce
- * prima di leggerlo. */
+/* Il disegno di serie di un varco, dalla classe che Home Assistant gli ha dato.
+ *
+ * Erano quattro emoji di sistema — porta, finestra, casa diroccata, cartello
+ * di lavori — e «icone sempre quelle del catalogo nostro» (#74). Un'emoji
+ * cambia faccia da un telefono all'altro, e la casa diroccata come portone del
+ * garage non la riconosceva nessuno. Adesso sono nomi del catalogo di casa, e
+ * sono solo il PUNTO DI PARTENZA: il disegno vero lo sceglie chi configura la
+ * riga, fra i tredici che la scheda gli mette davanti.
+ */
 const DISEGNI = Object.freeze({
-  door: "🚪",
-  window: "🪟",
-  garage_door: "🏚️",
-  opening: "🚧",
+  door: "door",
+  window: "window",
+  garage_door: "garage-door",
+  opening: "doorway",
 });
 
-/** Il disegno di un varco, dalla classe che Home Assistant gli ha dato. */
+/** Il disegno di serie di un varco, dalla classe di Home Assistant. */
 export function disegnoDelVarco(classe) {
-  return DISEGNI[clean(classe)] || "🚪";
+  return DISEGNI[clean(classe)] || "door";
 }
 
 /**
@@ -122,35 +136,73 @@ export function varchiConLeFinestre(config, righeDelleFinestre) {
   };
 }
 
+/* ── L'ELENCO DICHIARATO (#74) ────────────────────────────────────────────
+ *
+ * «La sezione si autocompila, cosa che avevo detto gia' di eliminare, e sotto
+ *  compaiono ancora quelle che ho eliminato da sopra. Va cambiata per tutte
+ *  quelle che hanno questa cosa.»
+ *
+ * La regola — cosa vuol dire dichiarare, e la differenza fra «non lo so» e
+ * «non ne voglio nessuno» — sta in `elenco-dichiarato.js`, perche' e' la
+ * stessa per tutte e quattro le schede che avevano questo difetto. Qui si
+ * riespone com'e', cosi' chi legge i varchi trova tutto da una porta sola.
+ */
+export { conLaRiga, conLeRighe, righeDichiarate, senzaLaRiga };
+
+/**
+ * Le righe che il rilevamento proporrebbe adesso.
+ *
+ * Serve a due cose, ed e' la stessa risposta: il ripiego di chi non ha mai
+ * dichiarato niente, e quello che scrive il tasto «Prendi quelli che Home
+ * Assistant ha trovato». Porta dentro tutto quello che la scheda di prima
+ * mostrava — i nomi che uno aveva gia' scritto compresi, e senza quelli che
+ * aveva gia' escluso — perche' chi aggiorna non deve ritrovarsi a rifare un
+ * lavoro che aveva gia' fatto.
+ */
+export function varchiDaImportare(states = {}, config, nomeDi = (entity) => entity) {
+  const scelte = normalizzaVarchi(config);
+  const righe = [];
+  for (const [entity, stato] of Object.entries(states || {})) {
+    if (scelte.escluse.includes(entity)) continue;
+    const aggiunto = scelte.aggiunte.includes(entity);
+    if (!aggiunto && !eUnVarco(entity, stato)) continue;
+    righe.push({
+      entity,
+      name: scelte.nomi[entity] || clean(nomeDi(entity)) || entity,
+      icon: disegnoDelVarco(clean(stato?.attributes?.device_class) || "door"),
+    });
+  }
+  return righe.sort((a, b) => a.name.localeCompare(b.name));
+}
+
 /**
  * Se questa entita' e' un varco di casa.
  *
- * Lo dice Home Assistant col `device_class`, e lo dice chi ha la casa: uno
- * escluso non e' un varco per questa plancia, uno aggiunto lo e' anche se
- * Home Assistant non lo dichiara.
+ * Lo dice la riga che qualcuno ha scritto nella scheda. Finche' nessuno ne ha
+ * scritte, lo dice il rilevamento di prima — `device_class` piu' le scelte
+ * vecchie — perche' chi non apre mai la configurazione non deve vedersi
+ * sparire la pagina per un aggiornamento.
  */
 export function eUnVarcoDiCasa(entity, stato, config) {
   const id = clean(entity);
+  if (!id) return false;
+  const dichiarate = righeDichiarate(config, CAMPI_IN_PIU);
+  if (dichiarate) return dichiarate.some((riga) => riga.entity === id);
   const scelte = normalizzaVarchi(config);
   if (scelte.escluse.includes(id)) return false;
   if (scelte.aggiunte.includes(id)) return id.includes(".");
   return eUnVarco(id, stato);
 }
 
-/** Se c'e' qualcosa da mostrare: almeno un varco leggibile in casa. */
+/** Se c'e' qualcosa da mostrare: almeno un varco con la sua entita'. */
 export function varchiConfigurati(states = {}, config) {
+  const dichiarate = righeDichiarate(config, CAMPI_IN_PIU);
+  if (dichiarate) return dichiarate.some((riga) => riga.entity);
   return Object.entries(states || {}).some(([entity, stato]) =>
     eUnVarcoDiCasa(entity, stato, config),
   );
 }
 
-/**
- * I varchi di casa, letti: nome, classe, e come stanno.
- *
- * L'ordine e' quello che serve a chi guarda: prima gli aperti — sono la
- * risposta alla domanda — poi i muti, che sono una sorveglianza che manca, e
- * in fondo i chiusi, che sono la buona notizia. Dentro ogni gruppo, per nome.
- */
 /* Quando questo varco ha cambiato stato l'ultima volta.
  *
  * `last_changed` e' l'ultimo cambio di STATO, che e' quello che serve:
@@ -163,26 +215,59 @@ export function istanteDelCambio(stato) {
   return Number.isFinite(quando) ? quando : null;
 }
 
+/**
+ * I varchi di casa, letti: nome, disegno, e come stanno.
+ *
+ * L'ordine e' quello che serve a chi guarda: prima gli aperti — sono la
+ * risposta alla domanda — poi i muti, che sono una sorveglianza che manca, e
+ * in fondo i chiusi, che sono la buona notizia. Dentro ogni gruppo, per nome.
+ *
+ * `glifo` e' il nome di un disegno del catalogo, non un'emoji: chi disegna lo
+ * passa a `disegnoDelCatalogo`. Si chiama ancora cosi' perche' e' il campo che
+ * quattro pagine leggono, e rinominarlo era un giro di parole in piu' senza
+ * niente in cambio.
+ */
 export function varchiDiCasa(states = {}, config, invertiti, nomeDi = (entity) => entity) {
+  const dichiarate = righeDichiarate(config, CAMPI_IN_PIU);
   const scelte = normalizzaVarchi(config);
-  const righe = [];
-  for (const [entity, stato] of Object.entries(states || {})) {
-    if (!eUnVarcoDiCasa(entity, stato, config)) continue;
+  const letta = (entity, nome, icona, esclusione) => {
+    const stato = states?.[entity];
     const classe = clean(stato?.attributes?.device_class) || "door";
-    righe.push({
+    const interruttore = clean(esclusione);
+    return {
       entity,
-      name: scelte.nomi[entity] || clean(nomeDi(entity)) || entity,
+      name: clean(nome) || clean(nomeDi(entity)) || entity,
       classe,
-      glifo: disegnoDelVarco(classe),
+      glifo: clean(icona) || disegnoDelVarco(classe),
       stato: comeStaIlVarco(entity, stato, invertiti),
+      /* Escluso dall'antifurto, o no (#136). Sono due campi e non uno perche'
+       * sono due domande diverse: `esclusione` dice se questo varco si PUO'
+       * escludere — cioe' se qualcuno gli ha scritto l'interruttore — e
+       * `escluso` come sta adesso. Un varco che si puo' escludere e il cui
+       * interruttore non risponde ha il primo e non il secondo, ed e' proprio
+       * il caso in cui non si disegna nessun tasto. */
+      esclusione: interruttore,
+      escluso: comeStaLEsclusione(interruttore, states),
       /* Da quando sta cosi' (#406): «l'ultima apertura o cambio stato». Sotto
        * il nome c'era l'entity_id, che chi guarda la pagina non ha mai
        * chiesto — «volendo il nome del sensore potrebbe essere obsoleto». Qui
        * si porta l'istante grezzo di Home Assistant; a dirlo in parole ci
        * pensa chi disegna, che sa che lingua si parla. */
       da: istanteDelCambio(stato),
-    });
-  }
+    };
+  };
+
+  const righe = dichiarate
+    ? /* Una riga cominciata e non finita — c'e' il nome, manca l'entita' — sta
+       * nella scheda e lo dice, ma sulla pagina non ci va: non c'e' niente da
+       * mostrare, e nel conto degli aperti sarebbe un muto inventato. */
+      dichiarate
+        .filter((riga) => riga.entity)
+        .map((riga) => letta(riga.entity, riga.name, riga.icon, riga[CAMPO_ESCLUSIONE]))
+    : Object.entries(states || {})
+        .filter(([entity, stato]) => eUnVarcoDiCasa(entity, stato, config))
+        .map(([entity]) => letta(entity, scelte.nomi[entity], ""));
+
   const peso = (riga) => (riga.stato === "aperto" ? 0 : riga.stato === "" ? 1 : 2);
   return righe.sort((a, b) => peso(a) - peso(b) || a.name.localeCompare(b.name));
 }

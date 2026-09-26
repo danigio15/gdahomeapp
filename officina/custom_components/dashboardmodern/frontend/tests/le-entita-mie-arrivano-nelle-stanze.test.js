@@ -31,7 +31,9 @@ globalThis.localStorage = {
 };
 globalThis.document = undefined;
 
-const { assignedItems } = await import("../src/sections/rooms-page-section.js");
+const { assignedItems, iconaVoce, segnoScelto } = await import(
+  "../src/sections/rooms-page-section.js"
+);
 
 const leggi = (nome) => readFileSync(new URL(`../src/${nome}`, import.meta.url), "utf8");
 
@@ -77,6 +79,97 @@ test("l'assegnazione a mano resta, e comanda lei sui doppioni", () => {
   assert.equal(voci[0].room_id, "r-salone");
 });
 
+test("ma il nome che le hai dato non lo porta via, perché lei un nome non ce l'ha", () => {
+  /* Dal campo: «il campo che uso come nome facoltativo potrebbe anche andare
+   * scritto sull'entità che trovi nella stanza? perché ora quel nome va solo
+   * sulla lista delle mie entità».
+   *
+   * I due rubinetti sanno due cose diverse: l'assegnazione a mano è una mappa
+   * entità → stanza e del nome non sa niente, «Le tue entità» sa anche come si
+   * chiama e con che segno. Vinceva la prima arrivata TUTTA INTERA, e siccome
+   * la mappa a mano si legge per prima, un'entità scritta in tutt'e due
+   * perdeva il nome: nella stanza tornava a chiamarsi come la chiama Home
+   * Assistant — su un `select` di un'integrazione tedesca, «Modus».
+   *
+   * Adesso si decide campo per campo: la stanza la dice quella scritta a mano,
+   * il nome e il segno l'unica delle due che ce li ha. */
+  magazzino.clear();
+  scrivi("cd_entita_mie", [
+    {
+      entity: "automation.luci_sera",
+      nome: "Luci sera",
+      icona: "🌙",
+      room_id: "r-cucina",
+    },
+  ]);
+  const voci = assignedItems({ "automation.luci_sera": "r-salone" }, STATI);
+  assert.equal(voci.length, 1);
+  assert.equal(voci[0].room_id, "r-salone", "la stanza resta quella scritta a mano");
+  assert.equal(voci[0].name, "Luci sera", "il nome scelto non si perde per strada");
+  assert.equal(voci[0].icon, "🌙", "e nemmeno il segno");
+});
+
+test("e il nome glielo può dare anche l'azione rapida, che è dove l'ha scritto", () => {
+  /* Dal campo, la seconda volta, con la foto della stanza davanti: «Leggo
+   * ancora modus… sono azioni rapide, scene, queste, non modus».
+   *
+   * La prima correzione aveva guardato un rubinetto solo, «Le tue entità», e
+   * lì quel nome non c'era: chi un'azione rapida ce l'ha non ha nessun motivo
+   * di riscrivere la stessa entità in un'altra scheda per darle lo stesso
+   * nome. Il nome che aveva scritto stava nell'azione rapida, e nella stanza
+   * la riga continuava a chiamarsi come la chiama Home Assistant — «Modus»,
+   * che è il `select` di un'integrazione tedesca. */
+  magazzino.clear();
+  scrivi("cd_quick_actions", [
+    { type: "toggle", name: "Serata", icon: "🌆", entity: "select.modus" },
+  ]);
+  const voci = assignedItems({ "select.modus": "r-salone" }, STATI);
+  assert.equal(voci.length, 1);
+  assert.equal(voci[0].name, "Serata");
+  assert.equal(voci[0].icon, "🌆");
+  assert.equal(voci[0].room_id, "r-salone");
+});
+
+test("ma un'azione rapida da sola in nessuna stanza ci va", () => {
+  /* Una stanza un'azione rapida non ce l'ha: il nome lo presta, la riga non la
+   * crea. Se no la pagina Stanze si riempirebbe di tasti della Home che
+   * nessuno ha messo lì. */
+  magazzino.clear();
+  scrivi("cd_quick_actions", [{ name: "Serata", entity: "select.modus" }]);
+  assert.deepEqual(assignedItems({}, STATI), []);
+});
+
+test("e «Le tue entità» resta la più forte delle due", () => {
+  /* Sono tutt'e due nomi scritti da chi ha la casa, ma non fanno lo stesso
+   * mestiere: «Le tue entità» dà un nome A QUELL'ENTITÀ, l'azione rapida lo dà
+   * a un tasto della Home. Dove ci sono tutt'e due, vince quello dell'entità. */
+  magazzino.clear();
+  scrivi("cd_entita_mie", [{ entity: "select.modus", nome: "Termostato", icona: "🌡️" }]);
+  scrivi("cd_quick_actions", [{ name: "Serata", icon: "🌆", entity: "select.modus" }]);
+  const voci = assignedItems({ "select.modus": "r-salone" }, STATI);
+  assert.equal(voci[0].name, "Termostato");
+  assert.equal(voci[0].icon, "🌡️");
+});
+
+test("un'azione integrata non presta nessun nome: un'entità non ce l'ha", () => {
+  magazzino.clear();
+  scrivi("cd_quick_actions", [{ type: "builtin", builtin: "scenes", name: "Scene" }]);
+  const voci = assignedItems({ "sensor.pressione": "r-salone" }, STATI);
+  assert.equal(voci[0].name, "Pressione");
+  /* E una configurazione storta non fa cadere la pagina. */
+  scrivi("cd_quick_actions", "non una lista");
+  assert.equal(assignedItems({ "sensor.pressione": "r-salone" }, STATI)[0].name, "Pressione");
+});
+
+test("e senza un nome scelto resta quello di Home Assistant", () => {
+  /* Il ripiego non cambia: chi non ha scritto niente nel campo facoltativo
+   * continua a leggere il nome che la casa dà a quell'entità. */
+  magazzino.clear();
+  const voci = assignedItems({ "sensor.pressione": "r-salone" }, STATI);
+  assert.equal(voci[0].name, "Pressione");
+  assert.equal(voci[0].icon, "");
+});
+
 test("chi non ha scritto niente non si ritrova niente", () => {
   magazzino.clear();
   assert.deepEqual(assignedItems({}, STATI), []);
@@ -84,6 +177,52 @@ test("chi non ha scritto niente non si ritrova niente", () => {
   /* Una configurazione storta non fa cadere la pagina delle stanze. */
   scrivi("cd_entita_mie", "non una lista");
   assert.deepEqual(assignedItems({}, STATI), []);
+});
+
+/* ── il segno, e la finestra che si intitola come la riga ──────────────── */
+
+test("il segno di un'azione rapida arriva nella stanza anche quando è un mdi:", () => {
+  /* Dal campo, con la foto: «deve uscire icona dell'azione rapida». Il nome
+   * era arrivato, il segno no — e non per caso: qui passava soltanto un
+   * glifo, cioè qualcosa fuori dall'ASCII, e l'editor delle Azioni rapide di
+   * serie ci mette un token del catalogo (`mdi:...`). Buttato quello, la riga
+   * si prendeva il segno dedotto dal dominio: su un `select`, la lavagnetta. */
+  assert.equal(segnoScelto({ icon: "mdi:tune" }), "mdi:tune");
+  assert.equal(segnoScelto({ icon: "🌆" }), "🌆");
+  assert.equal(segnoScelto({ emoji_icon: "🌙", icon: "mdi:tune" }), "🌙");
+  /* La terza forma continua a non passare: `icon` su qualche riga è la CHIAVE
+   * di un disegno del catalogo, e stampata com'è sarebbe la parola «washer»
+   * sopra il nome. */
+  assert.equal(segnoScelto({ icon: "washer" }), "");
+  assert.equal(segnoScelto({}), "");
+});
+
+test("e iconaVoce lo porta fino alla riga", () => {
+  magazzino.clear();
+  scrivi("cd_quick_actions", [{ name: "Serata", icon: "mdi:tune", entity: "select.modus" }]);
+  const voci = assignedItems({ "select.modus": "r-salone" }, STATI);
+  assert.equal(voci[0].icon, "mdi:tune");
+  assert.equal(iconaVoce(voci[0], { key: "altro" }), "mdi:tune");
+});
+
+test("la finestra delle voci si intitola come la riga che l'ha aperta", () => {
+  /* La stessa finestra la aprono il tasto della Home e la riga della stanza.
+   * Dalla Home le arriva l'azione — nome scelto, icona scelta — e si intitola
+   * giusta; dalla stanza non le arrivava niente, e ripiegava sul nome di Home
+   * Assistant: una finestra intitolata «MODUS» aperta da una riga che si
+   * chiama «prova». I due campi sono già calcolati dove si disegna il tasto:
+   * ci vanno addosso, e il gestore glieli ripassa. */
+  const sorgente = leggi("sections/rooms-page-section.js");
+  assert.match(sorgente, /data-dm-stanza-nome="\$\{esc\(nomeVoce\(item, states\)\)\}"/);
+  assert.match(sorgente, /data-dm-stanza-segno="\$\{esc\(segnoScelto\(item\)\)\}"/);
+  assert.match(
+    sorgente,
+    /apriIlMenu\(entity, \{\s*name: clean\(scegli\.getAttribute\("data-dm-stanza-nome"\)\),\s*icon: clean\(scegli\.getAttribute\("data-dm-stanza-segno"\)\),\s*\}\);/,
+  );
+  /* E il segno si disegna, non si stampa: `iconGlyphHtml` sa la differenza fra
+   * un glifo e un token, ed è la ragione per cui esiste. */
+  assert.doesNotMatch(sorgente, /\$\{esc\(iconaVoce\(item, blocco\)\)\}/);
+  assert.match(sorgente, /<span class="dm-stanze-orb">\$\{segnoDaDisegnare\(item, blocco\)\}<\/span>/);
 });
 
 /* ── e quello che si fa partire, parte ───────────────────────────────── */

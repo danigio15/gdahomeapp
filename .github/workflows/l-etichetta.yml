@@ -26,6 +26,17 @@
 # «la produzione sta qui adesso» — ma `v1.5.9.1` dice «la 1.5.9.1 e' questa»,
 # e spostarlo vorrebbe dire che chi ha scaricato ieri e chi scarica oggi hanno
 # in mano due cose diverse con lo stesso nome.
+#
+# ─── Quindi prima si prova il negozio ────────────────────────────────────
+#
+# Proprio perche' non si sposta: se il Play Console rifiuta il pacchetto —
+# succede, e non per come e' costruito ma per cosa c'e' scritto nel manifesto
+# — l'etichetta e' gia' spesa, e correggere vuol dire una versione nuova e
+# tutto il giro da rifare. Dieci minuti prima costano molto meno: «L'app da
+# provare» su `main`, con la pista nella casella `negozio` e
+# `prova_del_negozio` spuntato, fa tutto il viaggio e poi butta la modifica.
+# Quando quello e' verde, si viene qui. `app/negozio/LEGGIMI.md` lo racconta
+# per intero, con la frase con cui Google ha rimandato indietro la 1.6.4.1.
 name: L'etichetta
 
 on:
@@ -42,8 +53,9 @@ on:
         required: false
         default: ""
 
+# Di serie si legge e basta: scrive solo il lavoro che spinge l'etichetta.
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: l-etichetta
@@ -53,8 +65,10 @@ jobs:
   metti:
     name: Metti l'etichetta
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
         with:
           fetch-depth: 0
 
@@ -70,11 +84,18 @@ jobs:
           # chiede a `origin/main`, che dipende da cosa il checkout si e'
           # portato dietro; `HEAD` no.
           scelto="${COMMIT:-$(git rev-parse HEAD)}"
-          git rev-parse --verify "$scelto^{commit}" >/dev/null || {
-            echo "::error::«$scelto» non e' un commit di questa repository."
+          # Niente trattini davanti: git li leggerebbe come opzioni.
+          case "$scelto" in
+            -*)
+              echo "::error::quello scritto nella casella non e' un commit di questa repository."
+              exit 1
+              ;;
+          esac
+          git rev-parse --verify --end-of-options "$scelto^{commit}" >/dev/null || {
+            echo "::error::quello scritto nella casella non e' un commit di questa repository."
             exit 1
           }
-          sha="$(git rev-parse "$scelto^{commit}")"
+          sha="$(git rev-parse --verify --end-of-options "$scelto^{commit}")"
 
           # Il nome: quello detto, o quello che dice il manifesto **di quel
           # commit**. Leggerlo dal commit e non dal disco e' l'unica cosa che
@@ -90,13 +111,13 @@ jobs:
             }
             nome="v$versione"
           fi
-          case "$nome" in
-            v[0-9]*) : ;;
-            *)
-              echo "::error::«$nome» non e' un'etichetta di versione: ci vuole la v davanti."
-              exit 1
-              ;;
-          esac
+          # Una v, e poi solo cifre, lettere, punti e trattini: e' un nome di
+          # versione, e con questa forma resta un nome anche quando lo si
+          # scrive in un comando o in un riepilogo.
+          if ! printf '%s' "$nome" | grep -qE '^v[0-9][0-9A-Za-z.+-]{0,63}$'; then
+            echo "::error::quello scritto non e' un'etichetta di versione: ci vuole la v davanti, e poi cifre, lettere, punti e trattini."
+            exit 1
+          fi
 
           if git rev-parse --verify "refs/tags/$nome" >/dev/null 2>&1; then
             echo "::error::«$nome» c'e' gia', e un'etichetta di versione non si sposta."
@@ -106,28 +127,35 @@ jobs:
           echo "nome=$nome" >>"$GITHUB_OUTPUT"
           echo "sha=$sha" >>"$GITHUB_OUTPUT"
           echo "corto=${sha:0:8}" >>"$GITHUB_OUTPUT"
-          echo "titolo=$(git log -1 --format=%s "$sha")" >>"$GITHUB_OUTPUT"
 
+      # I valori del passo prima arrivano come variabili, e mai scritti dentro
+      # lo script: il titolo di un commit e' testo di chi l'ha scritto.
       - name: Mettila
+        env:
+          NOME: ${{ steps.quale.outputs.nome }}
+          SHA: ${{ steps.quale.outputs.sha }}
         run: |
           set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git tag -a "${{ steps.quale.outputs.nome }}" \
-            -m "gdahome ${{ steps.quale.outputs.nome }}" \
-            "${{ steps.quale.outputs.sha }}"
-          git push origin "refs/tags/${{ steps.quale.outputs.nome }}"
+          git tag -a "$NOME" -m "gdahome $NOME" "$SHA"
+          git push origin "refs/tags/$NOME"
 
       - name: Cosa e' successo
+        env:
+          NOME: ${{ steps.quale.outputs.nome }}
+          SHA: ${{ steps.quale.outputs.sha }}
+          CORTO: ${{ steps.quale.outputs.corto }}
         run: |
+          titolo="$(git log -1 --format=%s "$SHA")"
           {
-            echo "## \`${{ steps.quale.outputs.nome }}\` e' sulla \`${{ steps.quale.outputs.corto }}\`"
+            printf '## `%s` e%s sulla `%s`\n' "$NOME" "'" "$CORTO"
             echo ""
-            echo "> ${{ steps.quale.outputs.titolo }}"
+            printf '> %s\n' "$titolo"
             echo ""
             echo "Adesso il secondo bottone: **Actions → «L'app da provare» → Run"
             echo "workflow**, e come riferimento si sceglie"
-            echo "\`${{ steps.quale.outputs.nome }}\` invece di \`main\`. Da li' partono i"
+            printf '`%s` invece di `main`. Da li%s partono i\n' "$NOME" "'"
             echo "pacchetti e la release con le sue note."
             echo ""
             echo "Non parte da sola: quello che un workflow spinge col gettone di"

@@ -38,6 +38,45 @@ const ABBINAMENTO_VIVE = 6 * 60 * 1000;
 /* Un messaggio piu' lungo di cosi' non e' un comando a Home Assistant. */
 export const MESSAGGIO_MASSIMO = 1024 * 1024;
 
+/* Quello che puo' mandare un telefono, in un messaggio solo.
+ *
+ * Meno di quello della casa, e apposta: il messaggio del telefono non arriva
+ * alla casa cosi' com'e', arriva **dentro una busta** — `{"c":…,"t":"d","m":…}`
+ * — e dentro una stringa JSON ogni virgoletta diventa due caratteri, e un
+ * carattere di controllo sei. Un messaggio da un megabyte poteva diventare una
+ * busta da sei, e il ponte, che oltre il megabyte chiude il filo, avrebbe
+ * chiuso **quello della casa**: un telefono solo staccava tutti gli altri.
+ *
+ * Il ponte spezza quello che manda in pezzi da 512 KB; 600 KB lasciano il
+ * margine per la busta. E la busta si misura lo stesso, prima di partire:
+ * quella che non ci sta chiude il telefono, non la casa. */
+export const MESSAGGIO_DEL_TELEFONO = 600 * 1024;
+const BUSTA_MASSIMA = MESSAGGIO_MASSIMO;
+
+/* Quanto aspetta una casa appena arrivata prima di presentarsi, e un telefono
+ * prima di dire la prima parola. Tutti e due parlano subito — la casa manda il
+ * `sono-io` appena il filo e' aperto, il telefono la sua meta' della stretta —
+ * quindi chi resta zitto cosi' a lungo non e' lento: occupa un posto. */
+export const ATTESA_DELLA_PRESENTAZIONE = 15_000;
+export const ATTESA_DELLA_PRIMA_PAROLA = 15_000;
+
+/* Quanti fili aperti in tutto, e da uno stesso indirizzo. Il secondo e'
+ * largo — dietro lo stesso indirizzo di un operatore mobile possono esserci
+ * molti telefoni — ma non infinito. */
+export const PRESE_IN_TUTTO = 10_000;
+export const PRESE_PER_INDIRIZZO = 200;
+
+/* Quanto puo' restare in coda, non ancora partito, verso un filo solo. Chi
+ * non legge — un telefono che si e' fermato senza chiudere — farebbe
+ * crescere la coda nella memoria del centralino finche' c'e' memoria. */
+export const CODA_MASSIMA = 8 * 1024 * 1024;
+
+/* «Non posso ora, riprova»: il ponte lo legge come una caduta qualunque e
+ * ribussa con calma, invece di smettere per sempre come davanti a un no. */
+const RIPROVA_PIU_TARDI = 1013;
+/* «Questo tipo di dati non lo accetto»: un telefono manda testo, sempre. */
+const DATI_NON_ACCETTATI = 1003;
+
 /* Ogni quanto il centralino manda un colpetto alle case, per accorgersi di
  * quelle che se ne sono andate senza dire niente — una casa dietro un router
  * che si riavvia non chiude un bel niente, resta li' aperta e muta. */
@@ -45,10 +84,28 @@ const BATTITO = 45_000;
 const SILENZIO_MASSIMO = 150_000;
 
 export class Centralino {
-  constructor({ case: case_, registro, adesso = () => Date.now() } = {}) {
+  constructor({
+    case: case_,
+    registro,
+    adesso = () => Date.now(),
+    attesaDellaPresentazione = ATTESA_DELLA_PRESENTAZIONE,
+    attesaDellaPrimaParola = ATTESA_DELLA_PRIMA_PAROLA,
+    preseInTutto = PRESE_IN_TUTTO,
+    presePerIndirizzo = PRESE_PER_INDIRIZZO,
+    codaMassima = CODA_MASSIMA,
+  } = {}) {
     this.case = case_;
     this.registro = registro ?? { info() {}, attenzione() {}, errore() {} };
     this.adesso = adesso;
+    this.attesaDellaPresentazione = attesaDellaPresentazione;
+    this.attesaDellaPrimaParola = attesaDellaPrimaParola;
+    this.preseInTutto = preseInTutto;
+    this.presePerIndirizzo = presePerIndirizzo;
+    this.codaMassima = codaMassima;
+
+    /** Quanti fili aperti, in tutto e per indirizzo. */
+    this.prese = 0;
+    this.presePer = new Map();
 
     /** Le case collegate adesso, per identificativo. */
     this.collegate = new Map();
@@ -63,10 +120,65 @@ export class Centralino {
     return this.collegate.size;
   }
 
-  quantiTelefoni() {
+  /* Quanti fili sono aperti adesso, in tutto.
+   *
+   * Si chiamava `quantiTelefoni`, e non erano telefoni: e' il numero di CANALI
+   * aperti in questo istante. Lo stesso telefono con l'app aperta e una scheda
+   * del browser ne tiene due, e ci finiscono dentro anche i fili di chi si sta
+   * abbinando, che un telefono abbinato non lo e' ancora. Chi leggeva
+   * «22 telefoni collegati» capiva «l'app e' su 22 telefoni», che e' un'altra
+   * cosa e non e' vera. */
+  quantiCollegamenti() {
     let quanti = 0;
     for (const casa of this.collegate.values()) quanti += casa.canali.size;
     return quanti;
+  }
+
+  /* E quante di quelle sono davvero l'app aperta: i fili entrati da
+   * `/telefono/<casa>`, cioe' chi e' gia' abbinato e sta guardando. Restano
+   * fuori gli abbinamenti in corso. Resta un conto di adesso, non di quanti
+   * hanno l'app installata: quello il centralino non lo sa e non lo tiene. */
+  quanteAppAperte() {
+    let quante = 0;
+    for (const casa of this.collegate.values())
+      for (const canale of casa.canali.values()) if (canale.via === "telefono") quante += 1;
+    return quante;
+  }
+
+  /* ─── Quanti fili ────────────────────────────────────────────────────── */
+
+  /* Se c'e' posto per un filo in piu' da questo indirizzo. Si chiede prima
+   * di rispondere alla stretta di mano: un filo che non c'e' posto per
+   * tenere non si apre nemmeno. */
+  cePostoPer(da) {
+    if (this.prese >= this.preseInTutto) return false;
+    return (this.presePer.get(da) || 0) < this.presePerIndirizzo;
+  }
+
+  /* Un filo in piu', e la funzione da chiamare quando se ne va. */
+  unaPresaIn(da) {
+    this.prese += 1;
+    this.presePer.set(da, (this.presePer.get(da) || 0) + 1);
+    let andata = false;
+    return () => {
+      if (andata) return;
+      andata = true;
+      this.prese -= 1;
+      const quante = (this.presePer.get(da) || 1) - 1;
+      if (quante > 0) this.presePer.set(da, quante);
+      else this.presePer.delete(da);
+    };
+  }
+
+  /* Mandare, ma non all'infinito: se chi sta dall'altra parte non legge e la
+   * coda ha passato la soglia, il filo si chiude invece di crescere. */
+  manda(presa, testo) {
+    const inCoda = Number(presa?.socket?.writableLength || 0);
+    if (inCoda > this.codaMassima) {
+      presa.chiudi(RIPROVA_PIU_TARDI, "troppo indietro nel leggere");
+      return false;
+    }
+    return presa.manda(testo);
   }
 
   /* ─── Una casa si presenta ───────────────────────────────────────────── */
@@ -75,6 +187,18 @@ export class Centralino {
     const casa = new CasaCollegata(this, presa, da);
     casa.avvia();
     return casa;
+  }
+
+  /* Il telefono deve dire la prima parola entro poco, e deve dirla in testo.
+   * Vale per tutti e due i modi di arrivare — alla propria casa o in
+   * abbinamento — e si arma prima di cercare la casa, cosi' anche un canale
+   * rifiutato non resta appeso. */
+  _sorvegliaIlTelefono(presa) {
+    const zitto = setTimeout(() => {
+      presa.chiudi(CHIUSURA.normale, "nessuna parola dal telefono");
+    }, this.attesaDellaPrimaParola);
+    zitto.unref?.();
+    return () => clearTimeout(zitto);
   }
 
   /* ─── Un telefono bussa ──────────────────────────────────────────────── */
@@ -91,7 +215,7 @@ export class Centralino {
       presa.chiudi(CHIUSURA.normale, "casa non collegata");
       return null;
     }
-    return casa.apriUnCanale(presa, da);
+    return casa.apriUnCanale(presa, da, this._sorvegliaIlTelefono(presa), "telefono");
   }
 
   /* Un telefono che si sta abbinando non sa ancora a quale casa va: sa solo il
@@ -109,7 +233,7 @@ export class Centralino {
       presa.chiudi(CHIUSURA.normale, "casa non collegata");
       return null;
     }
-    return casa.apriUnCanale(presa, da);
+    return casa.apriUnCanale(presa, da, this._sorvegliaIlTelefono(presa), "abbinamento");
   }
 
   /* ─── Manutenzione ───────────────────────────────────────────────────── */
@@ -146,6 +270,7 @@ class CasaCollegata {
     this.prossimoCanale = 1;
     this.vistaIl = centralino.adesso();
     this.chiusa = false;
+    this._attesa = null;
   }
 
   get entrata() {
@@ -155,6 +280,16 @@ class CasaCollegata {
   avvia() {
     this.presa.onMessaggio = (testo) => this._dallaCasa(testo);
     this.presa.onChiusa = () => this._finita();
+    /* Una casa che non si presenta non e' una casa: e' un filo che occupa un
+     * posto. La casa vera il `sono-io` lo manda appena aperto. */
+    this._attesa = setTimeout(() => {
+      if (!this.entrata && !this.chiusa) this.chiudi("non ti sei presentata in tempo");
+    }, this.centralino.attesaDellaPresentazione);
+    this._attesa.unref?.();
+  }
+
+  _manda(testo) {
+    return this.centralino.manda(this.presa, testo);
   }
 
   _dallaCasa(testo) {
@@ -184,7 +319,7 @@ class CasaCollegata {
          * centralino — lui le case le pinga per conto suo — ma serve a lei:
          * e' cosi' che si accorge di un filo morto senza chiusura, e quel
          * filo e' dietro il suo router, non dietro il nostro. */
-        this.presa.manda(testo);
+        this._manda(testo);
         return;
       case "apri-abbinamento":
         this._apriUnAbbinamento(detto.impronta);
@@ -211,11 +346,23 @@ class CasaCollegata {
       this._rifiuta("prima bisogna presentarsi");
       return;
     }
-    if (!this.centralino.case.riconosci(detto.casa, detto.segreto)) {
+    const esito = this.centralino.case.esito(detto.casa, detto.segreto, { da: this.da });
+    if (esito === "troppe") {
+      /* Non un no: troppe case nuove in quest'ora, da qui o in tutto. Non si
+       * dice «no» — il ponte smetterebbe per sempre — si chiude come una
+       * caduta, e lui ribussa con calma piu' tardi. */
+      this.centralino.registro.attenzione(`troppe case nuove: ${this.da} aspetta`);
+      this.chiusa = true;
+      clearTimeout(this._attesa);
+      this.presa.chiudi(RIPROVA_PIU_TARDI, "troppe case nuove: riprova piu' tardi");
+      return;
+    }
+    if (esito !== "entra") {
       this.centralino.registro.attenzione(`casa rifiutata da ${this.da}`);
       this._rifiuta("non ti riconosco");
       return;
     }
+    clearTimeout(this._attesa);
 
     /* Una casa sola per identificativo. Chi arriva secondo prende il posto del
      * primo, e non il contrario: il primo puo' essere un filo morto che
@@ -226,7 +373,7 @@ class CasaCollegata {
 
     this.id = detto.casa;
     this.centralino.collegate.set(this.id, this);
-    this.presa.manda(JSON.stringify({ t: "bene" }));
+    this._manda(JSON.stringify({ t: "bene" }));
     this.centralino.registro.info(`casa collegata da ${this.da}`);
   }
 
@@ -242,6 +389,7 @@ class CasaCollegata {
     this.presa.manda(JSON.stringify({ t: "no", perche }));
     if (this.chiusa) return;
     this.chiusa = true;
+    clearTimeout(this._attesa);
     this._staccaDalCentralino();
     /* 1008 e' «non per la rete, per la politica»: il ponte lo legge come
      * definitivo anche se il messaggio andasse perso. */
@@ -250,6 +398,21 @@ class CasaCollegata {
 
   _apriUnAbbinamento(impronta) {
     if (typeof impronta !== "string" || !/^[0-9a-f]{64}$/.test(impronta)) return;
+    /* Un'impronta gia' presa da un'altra casa, ancora collegata e ancora nel
+     * suo tempo, resta sua. Chi arriva secondo con la stessa impronta non ha
+     * fabbricato lui quel codice — i codici sono ottanta bit di caso — e
+     * lasciarglielo riscrivere vorrebbe dire mandare a lui il telefono che
+     * si sta abbinando all'altra. */
+    const gia = this.centralino.abbinamenti.get(impronta);
+    if (
+      gia &&
+      gia.casa !== this.id &&
+      gia.scadeIl > this.centralino.adesso() &&
+      this.centralino.collegate.has(gia.casa)
+    ) {
+      this.centralino.registro.attenzione(`un'impronta gia' presa da un'altra casa: ${this.da}`);
+      return;
+    }
     this._chiudiGliAbbinamenti();
     this.centralino.abbinamenti.set(impronta, {
       casa: this.id,
@@ -265,32 +428,51 @@ class CasaCollegata {
 
   /* ─── I canali ───────────────────────────────────────────────────────── */
 
-  apriUnCanale(presaDelTelefono, da) {
+  /* `via` dice alla casa da quale porta e' entrato il telefono: da
+   * `/telefono/<casa>` arriva chi e' gia' abbinato, da `/abbinamento/<impronta>`
+   * chi si sta abbinando. La casa lo usa per accettare la stretta
+   * dell'abbinamento solo dalla seconda. */
+  apriUnCanale(presaDelTelefono, da, haParlato = () => {}, via = "telefono") {
     if (this.canali.size >= TELEFONI_PER_CASA) {
+      haParlato();
       presaDelTelefono.chiudi(CHIUSURA.normale, "troppi telefoni su questa casa");
       return null;
     }
     const numero = this.prossimoCanale++;
-    const canale = { numero, presa: presaDelTelefono, da };
+    /* `via` si tiene anche qui, non solo mandato alla casa: e' l'unico modo di
+     * distinguere poi un'app aperta da un abbinamento in corso. */
+    const canale = { numero, presa: presaDelTelefono, da, via };
     this.canali.set(numero, canale);
 
-    presaDelTelefono.onMessaggio = (testo) => {
+    presaDelTelefono.onMessaggio = (testo, eraTesto = typeof testo === "string") => {
+      haParlato();
       if (this.chiusa) return;
-      this.presa.manda(JSON.stringify({ c: numero, t: "d", m: testo }));
+      /* Il telefono parla in testo, sempre: un telaio binario non e' suo. */
+      if (!eraTesto || typeof testo !== "string") {
+        presaDelTelefono.chiudi(DATI_NON_ACCETTATI, "solo testo");
+        return;
+      }
+      const busta = JSON.stringify({ c: numero, t: "d", m: testo });
+      if (Buffer.byteLength(busta) > BUSTA_MASSIMA) {
+        presaDelTelefono.chiudi(CHIUSURA.troppoGrande, "messaggio troppo grande");
+        return;
+      }
+      this._manda(busta);
     };
     presaDelTelefono.onChiusa = () => {
+      haParlato();
       if (!this.canali.delete(numero)) return;
-      if (!this.chiusa) this.presa.manda(JSON.stringify({ c: numero, t: "chiudi" }));
+      if (!this.chiusa) this._manda(JSON.stringify({ c: numero, t: "chiudi" }));
     };
 
-    this.presa.manda(JSON.stringify({ c: numero, t: "apri", da }));
+    this._manda(JSON.stringify({ c: numero, t: "apri", da, via }));
     return canale;
   }
 
   _versoIlTelefono(numero, messaggio) {
     const canale = this.canali.get(numero);
     if (!canale || typeof messaggio !== "string") return;
-    canale.presa.manda(messaggio);
+    this.centralino.manda(canale.presa, messaggio);
   }
 
   _chiudiIlCanale(numero, perche) {
@@ -305,6 +487,7 @@ class CasaCollegata {
   chiudi(perche = "") {
     if (this.chiusa) return;
     this.chiusa = true;
+    clearTimeout(this._attesa);
     /* I telefoni non restano appesi a una casa che non c'e' piu': meglio che
      * si accorgano subito e ribussino, invece di parlare nel vuoto. */
     for (const canale of [...this.canali.values()]) {
@@ -316,6 +499,7 @@ class CasaCollegata {
   }
 
   _finita() {
+    clearTimeout(this._attesa);
     if (this.chiusa) return;
     this.chiusa = true;
     for (const canale of [...this.canali.values()]) {

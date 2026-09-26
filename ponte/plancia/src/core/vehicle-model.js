@@ -30,6 +30,7 @@
  */
 
 import { prossimoIdentificativo, segnoPiuAlto } from "./segno-progressivo.js";
+import { eDellaWallbox } from "./wallbox-device-binding.js";
 
 const clean = (value) => String(value ?? "").trim();
 
@@ -65,6 +66,51 @@ export function capacitaDellaBatteria(car = {}) {
   return Number.isFinite(letto) && letto > 0 ? letto : null;
 }
 
+/* Auto o moto (#75).
+ *
+ * «Sarebbe carino poter scegliere tra auto e moto.» La pagina Auto e' nata per
+ * un'automobile e lo dice dappertutto: il titolo, il disegno, le caselle. Una
+ * moto ha la stessa colonnina, la stessa batteria e lo stesso odometro — le
+ * entita' sono le stesse — ma non ha portiere, non ha finestrini e non ha un
+ * bagagliaio, e vedersele chiedere in configurazione e' vedersi chiedere di
+ * mappare qualcosa che non esiste.
+ *
+ * Il mezzo NON e' il motore: una moto puo' essere elettrica, a benzina o
+ * ibrida esattamente come un'auto, e tenerli sulla stessa tendina vorrebbe
+ * dire sei voci per due domande. Sono due campi, e si scelgono uno sotto
+ * l'altro.
+ *
+ * Vuoto vuol dire auto, per la stessa ragione per cui vuoto vuol dire
+ * elettrica: e' quello che ogni veicolo configurato finora e', e non gli si
+ * chiede di dichiararlo. */
+export const MEZZO_FIELD = "mezzo";
+
+/** I mezzi che si possono dichiarare. Il primo e' quello che si assume. */
+export const MEZZI = Object.freeze(["auto", "moto"]);
+
+/** Il mezzo dichiarato: `"moto"`, oppure vuoto, che vuol dire auto. */
+export function mezzoDelVeicolo(valore) {
+  return clean(valore).toLowerCase() === "moto" ? "moto" : "";
+}
+
+/** Se questo veicolo e' una moto. */
+export const eUnaMoto = (car = {}) => mezzoDelVeicolo(car?.[MEZZO_FIELD]) === "moto";
+
+/* Il mezzo dichiarato da chi non ha nessun profilo, come per il motore.
+ *
+ * Chi ha una moto sola compila le caselle `dm.ev_*` nella mappatura generale
+ * della plancia e non preme mai «Salva veicolo»: senza questa casella la sua
+ * scelta non avrebbe dove andare, e la pagina continuerebbe a raccontare
+ * un'automobile. Vale SOLO quando profili non ce ne sono, perche' con dei
+ * profili comanda il veicolo: in un garage possono starci una moto e un'auto,
+ * e una risposta sola per tutti e due sarebbe falsa per uno dei due. */
+export const MEZZO_DI_CASA_KEY = "cd_ev_mezzo";
+
+/** Che mezzo e' quello di cui si sta parlando: la vettura, o la plancia. */
+export function mezzoInUso(car, diCasa = "") {
+  return car ? mezzoDelVeicolo(car[MEZZO_FIELD]) : mezzoDelVeicolo(diCasa);
+}
+
 /* Tutto cio' che appartiene a un'auto, oltre alla mappatura.
  *
  * Serviva un elenco perche' il runtime risalvava il profilo sostituendolo con
@@ -80,6 +126,7 @@ export const VEHICLE_FIELDS = Object.freeze([
   "model",
   "icon",
   "tipo",
+  MEZZO_FIELD,
   VEHICLE_CAPACITY_FIELD,
   VEHICLE_PHOTO_FIELDS.idle,
   VEHICLE_PHOTO_FIELDS.plugged,
@@ -196,6 +243,7 @@ export function normalizeVehicle(input = {}, index = 0) {
     model: clean(source.model),
     icon: clean(source.icon),
     tipo: tipoMotore(source.tipo),
+    [MEZZO_FIELD]: mezzoDelVeicolo(source[MEZZO_FIELD]),
     [VEHICLE_CAPACITY_FIELD]: clean(source[VEHICLE_CAPACITY_FIELD]),
     [VEHICLE_OVERRIDES_FIELD]: Object.fromEntries(
       Object.entries(overrides)
@@ -603,4 +651,51 @@ export function ragioneDelRifiuto(messaggio) {
   const testo = String(messaggio ?? "").trim();
   if (!testo) return "";
   return PAROLE_DEL_RIFIUTO.find((voce) => voce.segni.test(testo))?.chiave || "";
+}
+
+/* ── La mappa viva, quella da cui la pagina disegna ──────────────────────── */
+
+/* La pagina dell'auto non legge i profili: legge UNA mappa,
+ * `cd_entity_overrides`, dove ogni `dm.ev_*` dice quale sensore risponde a
+ * cosa. Il profilo della vettura ne tiene la sua copia, e le due si allineano
+ * quando un'auto va in uso. Qui c'e' la regola di quell'allineamento, fuori da
+ * ogni archiviazione: entrano due oggetti, esce il terzo.
+ *
+ * Due cose non sono dell'auto e restano dove sono: tutto quello che non e' un
+ * `dm.ev_*` — la mappa viva la condividono tutte le sezioni — e le caselle
+ * della colonnina, che e' della casa. La potenza che eroga e' la stessa
+ * qualunque macchina ci sia attaccata, e chi ha due auto non deve mapparla due
+ * volte. Se pero' la vettura ne porta una e la casa non ce l'ha, quella entra:
+ * chi ha il target di carica solo dall'auto — una Tesla senza evcc — lo mette
+ * in uso cosi'. */
+export function laMappaViva(viva = {}, ov = {}) {
+  const prossime = {};
+  for (const [chiave, valore] of Object.entries(viva || {}))
+    if (!String(chiave).startsWith("dm.ev_") || eDellaWallbox(chiave)) prossime[chiave] = valore;
+  for (const [chiave, valore] of Object.entries(ov || {}))
+    if (!eDellaWallbox(chiave) || !clean(prossime[chiave])) prossime[chiave] = valore;
+  return prossime;
+}
+
+/* Cosa la mappa viva ha e il profilo no.
+ *
+ * Serve a una vettura sola. Chi ha una macchina sola ha mappato le sue entita'
+ * dove capitava — nella scheda Entita', che scrive nella mappa viva, o nel
+ * pannello del veicolo, che scrive nel profilo — e con una vettura sola le due
+ * cose sono la stessa: quello che sta solo di qua e' suo comunque. Si travasa
+ * nel profilo prima di riapplicarlo, se no riapplicare un profilo a meta'
+ * cancellerebbe quello che c'era.
+ *
+ * Da due vetture in su non si adotta niente e questa funzione non si chiama:
+ * nella mappa viva possono esserci le entita' dell'ALTRA auto — ce le mette il
+ * cambio d'auto — e adottarle vorrebbe dire dare a questa i sensori di quella.
+ */
+export function leCaselleDaAdottare(viva = {}, ov = {}) {
+  const fuori = {};
+  for (const [chiave, valore] of Object.entries(viva || {})) {
+    if (!String(chiave).startsWith("dm.ev_") || eDellaWallbox(chiave)) continue;
+    if (!clean(valore) || clean(ov?.[chiave])) continue;
+    fuori[chiave] = valore;
+  }
+  return fuori;
 }

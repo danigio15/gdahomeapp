@@ -17,6 +17,7 @@ import { readFileSync } from "node:fs";
 
 import {
   RAGGIO_DI_SERIE,
+  provaLIndirizzo,
   radarScelto,
   radarVivo,
 } from "../src/sections/radar-meteo-section.js";
@@ -118,4 +119,40 @@ test("il radar si aggiorna solo mentre la finestra è aperta", () => {
 test("sta sopra le previsioni, che è dove è stato chiesto", () => {
   assert.match(sorgente, /#weather-forecast-list/);
   assert.match(sorgente, /elenco\.before\(nodo\)/);
+});
+
+/* ── «Zoom Level Not Supported» (#109) ──────────────────────────────────── */
+
+test("la prova chiede il quadratino al livello a cui lo chiederà il radar", async () => {
+  /* Il difetto: la prova chiedeva al livello della MAPPA — trenta chilometri
+   * fanno z9 — mentre la pioggia il radar la chiede sotto il suo tetto, z7.
+   * Sopra il tetto RainViewer non manda pioggia: manda un quadratino con
+   * dentro stampato «Zoom Level Not Supported». È un'immagine come le altre,
+   * quindi arriva, quindi la prova rispondeva «Arriva: il quadratino c'è» di
+   * un servizio che a quel livello non serve niente — e chi leggeva quella
+   * riga andava a cercare il guasto da un'altra parte. */
+  const roma = { lat: 41.9028, lon: 12.4964 };
+  const chieste = [];
+  const prima = globalThis.Image;
+  class ImmagineFinta {
+    set src(dove) {
+      chieste.push(dove);
+      /* Come un quadratino che arriva: la prova guarda `naturalWidth`. */
+      this.naturalWidth = 256;
+      queueMicrotask(() => this.onload?.());
+    }
+  }
+  globalThis.Image = ImmagineFinta;
+  try {
+    const col = await provaLIndirizzo("https://q.lan/{z}/{x}/{y}.png", roma, 30, 7);
+    assert.equal(col.ok, true);
+    assert.match(chieste.at(-1), /^https:\/\/q\.lan\/7\//, "la prova chiede sopra il tetto");
+    /* Senza tetto resta il livello della mappa: è il caso di chi lo ha tolto
+     * apposta con uno zero, e allora è una scelta sua. */
+    await provaLIndirizzo("https://q.lan/{z}/{x}/{y}.png", roma, 30, null);
+    assert.match(chieste.at(-1), /^https:\/\/q\.lan\/9\//);
+  } finally {
+    if (prima === undefined) delete globalThis.Image;
+    else globalThis.Image = prima;
+  }
 });

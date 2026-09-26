@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- gdahome in auto usa i modelli di Android, non disegna niente di suo: e' la
+     sola cosa che un'app di questa categoria puo' fare, ed e' giusto cosi' —
+     quello che si guarda guidando lo deve impaginare la macchina. -->
+<automotiveApp>
+    <uses name="template" />
+</automotiveApp>

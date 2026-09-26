@@ -2,6 +2,7 @@ import { POWER_PAIRS, SIGNED_GROUPS, SIGNED_MEASURES, signedSource } from "./sig
 // DM-FIX-20260812B
 import { getDeviceDisplayName, getDeviceVisual } from "./device-model.js";
 import { pick } from "./i18n.js";
+import { spentoAMano } from "./il-fotovoltaico-di-questa-casa.js";
 import { runtimeMetrics } from "./runtime-metrics.js";
 
 function metric(states, entity, expectedUnit) {
@@ -108,7 +109,10 @@ export function renderDeviceCard(document, target, device, states = {}, rooms = 
   return card;
 }
 
-const ENERGY_GROUPS = [
+/* Esportata perche' e' l'elenco delle caselle della maschera Flussi, e chi
+ * cerca nel config deve poterle nominare senza riscriverle: una seconda copia
+ * sarebbe un secondo padrone, e invecchierebbe alla prima casella aggiunta. */
+export const ENERGY_GROUPS = [
   [
     "house",
     "Casa",
@@ -551,6 +555,43 @@ function createSignedCard(document, group, model, states, locale, handlers) {
   return card;
 }
 
+/* La spunta «in questa casa non c'è il fotovoltaico».
+ *
+ * È scritta al contrario di come si salva, ed è voluto: l'interruttore dice
+ * quello che C'È — «Impianto fotovoltaico», acceso — perché un interruttore che
+ * si accende per togliere una cosa lo si legge due volte e la seconda si
+ * sbaglia. Sotto, nei metadata, si scrive l'assenza, che è la cosa che va
+ * ricordata: la presenza si ricava dalle entità e non ha bisogno di memoria.
+ *
+ * Senza nemmeno un'entità di produzione la spunta è già spenta da sé, e
+ * toccarla non serve: serve a chi i pannelli ce li ha, e questa pagina non la
+ * vuole. */
+function createSolarPresenceField(document, model = {}, locale = "it", handlers = {}) {
+  const acceso = !spentoAMano(model);
+  const riga = document.createElement("label");
+  riga.className = "ed-slot dm-energy-fv-presenza";
+  riga.dataset.energySolarPresence = String(acceso);
+  const testo = document.createElement("span");
+  testo.className = "ed-slot-lbl";
+  testo.textContent = pick("Impianto fotovoltaico", "Photovoltaic system", locale);
+  const nota = document.createElement("span");
+  nota.className = "ed-hint";
+  nota.textContent = pick(
+    "Spegnilo se questa casa non ha pannelli: la pagina Energia smette di mostrare produzione e autosufficienza, e tiene consumo, costi e fasce. Le entità scritte qui sotto restano dove sono.",
+    "Turn it off if this house has no panels: the Energy page stops showing production and self-sufficiency, and keeps consumption, costs and time bands. The entities written below stay where they are.",
+    locale,
+  );
+  const interruttore = document.createElement("input");
+  interruttore.type = "checkbox";
+  interruttore.className = "dm-energy-fv-interruttore";
+  interruttore.checked = acceso;
+  interruttore.addEventListener("change", () =>
+    handlers.onFotovoltaico?.(interruttore.checked === true),
+  );
+  riga.append(testo, nota, interruttore);
+  return riga;
+}
+
 export function renderEnergyEditor(
   document,
   target,
@@ -626,6 +667,16 @@ export function renderEnergyEditor(
     reportButton.classList.toggle("active", name === "report");
     handlers.onTabChange?.(name);
   };
+  /* Ogni linguetta dice come si chiama.
+   *
+   * Serve a chi deve aprirne una da fuori — la ricerca nel config ci porta chi
+   * cerca una casella che sta qui dentro — e il nome scritto e' l'unica altra
+   * cosa che le distingue: cercarle per quello vorrebbe dire scriverle una
+   * seconda volta, in due lingue, e sbagliare il giorno che una si rinomina. */
+  flowsButton.dataset.energyTab = "flows";
+  settingsButton.dataset.energyTab = "settings";
+  loadsButton.dataset.energyTab = "loads";
+  reportButton.dataset.energyTab = "report";
   flowsButton.addEventListener("click", () => selectTab("flows"));
   settingsButton.addEventListener("click", () => selectTab("settings"));
   loadsButton.addEventListener("click", () => selectTab("loads"));
@@ -669,8 +720,23 @@ export function renderEnergyEditor(
     const configured = fields.filter(([key]) => Boolean(model[group]?.[key])).length;
     heading.innerHTML = `<span>${ENERGY_ICONS[group]} ${energyLabel(title, locale)}</span><small>${configured}/${fields.length} ${copy.configured}</small>`;
     block.append(heading);
+    /* Il riquadro dice di quale gruppo parla: serve a chi deve infilarci
+     * dentro qualcosa — la spunta del fotovoltaico qui sotto — senza cercarlo
+     * per il testo che ci sta scritto. Rete compare due volte, una per verso,
+     * e i due riquadri portano lo stesso nome: chi ne vuole uno solo guarda
+     * anche il posto in fila. */
+    block.dataset.energyGroup = group;
     const body = document.createElement("div");
     body.className = "ed-acc-body";
+    /* «In questa casa non c'è il fotovoltaico» (#82).
+     *
+     * Sta in cima al riquadro dei pannelli, che è dove uno la cerca: la
+     * segnalazione diceva «uno switch che tolga completamente la gestione
+     * energetica casa con fotovoltaico, pulendo da info errate la pagina
+     * energia». Le caselle sotto restano scritte e si continuano a vedere —
+     * spegnere la pagina non è cancellare la configurazione, e chi rimette la
+     * spunta ritrova le sue entità dov'erano. */
+    if (group === "solar") body.append(createSolarPresenceField(document, model, locale, handlers));
     if (signedHome.get(group) === groupIndex) {
       body.append(createDirectionField(document, group, model, locale, handlers));
       body.append(createSignedCard(document, group, model, states, locale, handlers));

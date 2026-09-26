@@ -62,6 +62,22 @@ export const VOCI_DELLA_BARRA = Object.freeze([
    * a sapere prima di mandare in stampa — e sta qui, fra le notizie, non fra
    * le cose rimaste accese. */
   Object.freeze({ chiave: "stampanti", tessera: "stampanti" }),
+  /* Gli aggiornamenti che aspettano (#108).
+   *
+   * «Magari potrebbe accendere in home in alto direttamente, magari nella
+   * barra sotto il meteo?» La tessera c'era gia' e compare solo quando c'e'
+   * qualcosa da fare; quello che mancava e' che la stessa notizia si vedesse
+   * senza scorrere.
+   *
+   * Sta qui, in fondo alle notizie e prima delle cose rimaste accese, perche'
+   * un aggiornamento in attesa e' qualcosa che e' successo — come una cartuccia
+   * agli sgoccioli — e non uno stato della casa come le luci. Ma e' l'ultima
+   * delle notizie, e non e' un dettaglio: l'antifurto, una finestra aperta e
+   * una stampante ferma si guardano adesso, un aggiornamento si fa con calma.
+   *
+   * Rossa non diventa mai: nella tessera e' ambra apposta, e due colori diversi
+   * per lo stesso fatto sarebbero due fatti. */
+  Object.freeze({ chiave: "aggiornamenti", tessera: "aggiornamenti" }),
   Object.freeze({ chiave: "luci", tessera: "luci" }),
   Object.freeze({ chiave: "tapparelle", tessera: "tapparelle" }),
   Object.freeze({ chiave: "clima", tessera: "clima" }),
@@ -114,6 +130,77 @@ export const TINTA_UMIDITA = "#0ea5e9";
 /* La pioggia e' l'acqua che cade: il blu dell'umidita' sarebbe la stessa cosa
  * detta due volte, e queste due pastiglie stanno accanto a quella. */
 export const TINTA_PIOGGIA = "#4f46e5";
+
+/* Le caselle della barra che vogliono un'entita', col nome che portano addosso
+ * nell'editor (#131).
+ *
+ * «Non riesco a configurare un sensore pioggia che mi allerta quando fuori
+ * piove.» La casella c'era — sta qui sotto, penultima — e chi la cercava
+ * scrivendo «pioggia» nella ricerca del Config si sentiva rispondere «Nessuna
+ * configurazione contiene questa parola». E' la stessa storia della ventola,
+ * raccontata in cima a `le-caselle-del-config.js`: la ricerca cammina sui
+ * valori salvati, una casella mai riempita un valore non ce l'ha, e «non
+ * trovo» si legge in un modo solo — quella cosa non si puo' fare.
+ *
+ * Il nome sta qui e non nella sezione perche' lo leggono in due: la sezione,
+ * che disegna la casella, e la ricerca, che deve saperla nominare anche
+ * quando quella casella non e' mai stata aperta. Ribatterlo di la' vorrebbe
+ * dire due nomi per la stessa casella, e il giorno che uno dei due cambia la
+ * ricerca manda dove non c'e' piu' niente — che fa piu' danno di una ricerca
+ * che non trova.
+ *
+ * `esempio` e' il grigino dentro la casella vuota. Vale la pena averlo qui
+ * accanto al nome: e' la seconda meta' della stessa risposta — come si chiama
+ * quella casella, e che faccia ha l'entita' che ci va dentro.
+ */
+export const LE_CASELLE_DELLA_BARRA = Object.freeze([
+  Object.freeze({
+    chiave: "posta",
+    it: "Sensore della cassetta della posta",
+    en: "Mailbox contact sensor",
+    esempio: "binary_sensor.cassetta_posta",
+  }),
+  Object.freeze({
+    chiave: "temperatura",
+    it: "Sensore della temperatura",
+    en: "Temperature sensor",
+    esempio: "sensor.temperatura_esterna",
+  }),
+  Object.freeze({
+    chiave: "umidita",
+    it: "Sensore dell'umidità",
+    en: "Humidity sensor",
+    esempio: "sensor.umidita_esterna",
+  }),
+  Object.freeze({
+    chiave: "pioggia",
+    it: "Intensità della pioggia",
+    en: "Rain rate",
+    esempio: "sensor.stazione_rain_rate",
+  }),
+  Object.freeze({
+    chiave: "pioggiaOggi",
+    it: "Pioggia caduta oggi",
+    en: "Rain fallen today",
+    esempio: "sensor.stazione_pioggia_giornaliera",
+  }),
+]);
+
+/* Come si chiama il riquadro che le contiene: e' la strada che la ricerca
+ * mostra sotto il nome della casella, ed e' anche il titolo che la sezione
+ * scrive in cima al pannello. Uno solo, come i nomi qui sopra.
+ *
+ * La coppia sta dentro un array e non in `{ it, en }` perche' e' cosi' che
+ * l'estrattore del corpus riconosce una tabella tenuta a chiave — la stessa
+ * forma di `IL_RAFFREDDAMENTO`, per lo stesso motivo. Scritta nell'altro modo
+ * finiva fuori dal corpus, e la mezza frase inglese restava nei cataloghi
+ * senza che nessuno la reclamasse. */
+export const IL_RIQUADRO_DELLA_BARRA = Object.freeze({
+  barra: ["Barra sotto il meteo", "Bar under the weather"],
+});
+
+/** I due pezzi, per chi ne vuole uno solo senza contare le caselle. */
+export const [IL_RIQUADRO_IN_ITALIANO, IL_RIQUADRO_IN_INGLESE] = IL_RIQUADRO_DELLA_BARRA.barra;
 
 /* ── le pastiglie scelte a mano (#7) ─────────────────────────────────────── */
 
@@ -534,6 +621,32 @@ export function pastiglieDellaCasa(modelli, { barra, posta, misure, mie, adesso 
         /* Ferma e' rosso, come l'antifurto che suona: e' la stampante che non
          * stampa. L'inchiostro che finisce si dice col colore della tessera. */
         avviso: (Number(modello.ferme) || 0) > 0,
+      });
+      continue;
+    }
+    if (voce.chiave === "aggiornamenti") {
+      /* Il conto e' quello che la tessera ha gia' fatto. Non si rifiltra qui:
+       * chi ha messo un aggiornamento fuori dalla tessera lo ha messo fuori da
+       * quella notizia, e la pastiglia e' la stessa notizia detta in breve.
+       *
+       * La tessera nasce solo quando c'e' qualcosa da fare, quindi arrivare
+       * qui vuol dire gia' «almeno uno» — ma il conto si guarda lo stesso:
+       * una pastiglia che dicesse zero sarebbe un posto occupato per dire che
+       * non e' successo niente. */
+      const righe = Array.isArray(modello.aggiornamenti) ? modello.aggiornamenti : [];
+      const conto = righe.length || Number(modello.value) || 0;
+      if (conto < 1) continue;
+      fuori.push({
+        chiave: "aggiornamenti",
+        tessera: voce.tessera,
+        icona: pulito(modello.icon),
+        tinta: pulito(modello.accent),
+        conto,
+        /* I nomi di cosa aspetta: finiscono nel titolo e nell'elenco che si
+         * apre toccandola, come per le luci accese. */
+        voci: righe
+          .map((riga) => ({ entity: pulito(riga?.entity), name: pulito(riga?.nome) }))
+          .filter((una) => una.name || una.entity),
       });
       continue;
     }

@@ -43,13 +43,25 @@ test("senza un tipo riconoscibile si legge il nome, e in ultima istanza il blocc
   assert.equal(iconaVoce({}, ELETTRODOMESTICI), "🧺");
 });
 
-test("l'icona scelta a mano vince, ma solo se e' davvero un glifo", () => {
+test("l'icona scelta a mano vince, se e' un glifo o un token che si sa disegnare", () => {
   assert.equal(iconaVoce({ emoji_icon: "🥐", visual_key: "oven" }, ELETTRODOMESTICI), "🥐");
   /* `icon` sugli elettrodomestici tiene la CHIAVE del catalogo, non un'emoji:
-   * scriverla nella riga vorrebbe dire stampare «washer» a video. */
+   * scriverla nella riga vorrebbe dire stampare «washer» a video. Questa
+   * continua a non passare, ed e' l'unica delle tre forme che non passa. */
   assert.equal(iconaVoce({ icon: "washer", visual_key: "oven" }, ELETTRODOMESTICI), "🍕");
-  /* E una `mdi:` qui non si sa disegnare: questa riga e' testo. */
-  assert.equal(iconaVoce({ icon: "mdi:fridge", visual_key: "oven" }, ELETTRODOMESTICI), "🍕");
+  /* Una `mdi:` invece adesso passa, e non perche' sia cambiata l'idea: e'
+   * cambiato cosa sa fare la riga. Prima qui usciva testo e un token stampato
+   * sarebbe stato la scritta «mdi:fridge» sopra il nome; adesso il segno lo
+   * mette `iconGlyphHtml`, che la differenza la sa e il token lo disegna.
+   *
+   * Buttarla costava l'icona scelta: chi si fa un'azione rapida la sceglie
+   * dall'editor, che di serie ci mette un `mdi:`, e nella stanza quell'icona
+   * non arrivava mai. Dal campo, con la foto: «deve uscire icona dell'azione
+   * rapida». */
+  assert.equal(
+    iconaVoce({ icon: "mdi:fridge", visual_key: "oven" }, ELETTRODOMESTICI),
+    "mdi:fridge",
+  );
 });
 
 test("il glifo e' lo stesso che sceglie il disegno grande della sezione", () => {

@@ -58,21 +58,41 @@ test("una casa ferma alla 1.5.6 mostra quello che sa, invece di un riquadro vuot
   assert.match(CONSOLE, /entita\?\.impronte/, "le quattro cifre di prima non si disegnano piu'");
 });
 
-test("il numero vero dei dispositivi giu' non si perde nel taglio a dodici", () => {
-  /* Quaranta dispositivi giu' e dodici nomi mandati: la console deve dire
-   * «e altri ventotto», se no dodici sembrano tutti quelli che ci sono — ed e'
-   * la differenza fra «ho un guaio» e «ho un disastro». */
-  const detto = leEntita(
-    Array.from({ length: 40 }, (_, i) => ({
-      entity_id: `sensor.n${i}`,
-      state: "unavailable",
-      attributes: {},
-    })),
-    { registri: iRegistri(40) },
-  );
+const giuPerFinta = (quanti) =>
+  Array.from({ length: quanti }, (_, i) => ({
+    entity_id: `sensor.n${i}`,
+    state: "unavailable",
+    attributes: {},
+  }));
+
+test("chi installa li legge tutti, non i primi dodici", () => {
+  /* «Non escono i nomi completi dei dispositivi nel cruscotto installatore,
+   * inoltre li deve mostrare tutti, non con la scritta “e altri…” ma senza
+   * poterli leggere.»
+   *
+   * Il tetto del ponte era dodici, ed era una scelta di impaginazione: dodici
+   * pastiglie stanno in tre righe. Ma quel riquadro non si legge di colpo, ci
+   * si va a cercare dentro — quali cose sono giu' decide se si prende la
+   * macchina — e «e altri 31» quella domanda non la risponde. */
+  const detto = leEntita(giuPerFinta(43), { registri: iRegistri(43) });
+  assert.equal(detto.dispositivi, 43);
+  assert.equal(detto.nomi.length, 43);
+});
+
+test("e se un giorno il tetto taglia davvero, il numero vero non si perde", () => {
+  /* Il tetto resta — e' la guardia contro un rapporto che cresce senza fine —
+   * e il giorno che tocca a una casa enorme la console deve dire «e altri
+   * ventotto», se no quelli mandati sembrano tutti quelli che ci sono, ed e'
+   * la differenza fra «ho un guaio» e «ho un disastro». Qui il taglio si
+   * chiede apposta, invece di aspettare la casa che lo faccia scattare. */
+  const detto = leEntita(giuPerFinta(40), { quante: 12, registri: iRegistri(40) });
   assert.equal(detto.dispositivi, 40);
   assert.equal(detto.nomi.length, 12);
-  assert.match(CONSOLE, /e altri \$\{altri\}/, "la console non scrive quanti ne restano fuori");
+  assert.match(
+    CONSOLE,
+    /e altri \$\{Number\(altri\)\}/,
+    "la console non scrive quanti ne restano fuori",
+  );
 });
 
 /* ─── I controlli leggono lo stesso numero della console ──────────────────── */

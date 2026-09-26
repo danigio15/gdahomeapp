@@ -109,12 +109,68 @@ test("e il tramite legge gli innesti, se no al suo primo rilancio il quadro spar
 });
 
 test("si prova prima di scambiare, non dopo", () => {
-  const scarica = pezziScritti().find((uno) => uno.dove.includes("scarica.sh"));
-  assert.ok(scarica, "non trovo scarica.sh");
-  const prove = scarica.testo.indexOf("node --test");
-  const scambio = scarica.testo.indexOf('mv "$DOVE/quadro.nuovo"');
-  assert.ok(prove > 0 && scambio > 0, "non trovo le prove o lo scambio");
-  assert.ok(prove < scambio, "scambia prima di provare: una versione rotta prenderebbe il posto");
+  /* Chi prova lascia la versione in `uscita/pronto` solo se le prove passano;
+   * lo scambio prende solo quella. */
+  const prepara = pezziScritti().find((uno) => uno.dove.includes("prepara.sh"));
+  assert.ok(prepara, "non trovo prepara.sh");
+  const prove = prepara.testo.indexOf("node --test");
+  const pronta = prepara.testo.indexOf('mv "$nuovo" "$USCITA/pronto"');
+  assert.ok(prove > 0 && pronta > 0, "non trovo le prove o la versione pronta");
+  assert.ok(prove < pronta, "la lascia pronta prima di provarla");
+  const scambia = pezziScritti().find((uno) => uno.dove.includes("scambia.sh"));
+  assert.ok(scambia, "non trovo scambia.sh");
+  assert.match(scambia.testo, /\[ -e "\$USCITA\/pronto" \] \|\| exit 0/);
+});
+
+test("il codice appena scaricato non gira da root: scarica e prova chi non ha privilegi", () => {
+  /* Le prove di una versione nuova sono codice appena arrivato da fuori.
+   * Giravano da root, dentro il giro degli aggiornamenti: adesso le fa
+   * `quadro-prepara`, con un utente suo, e root copia e riavvia e basta. */
+  const prepara = ACCENDI.slice(
+    ACCENDI.indexOf("cat >/etc/systemd/system/quadro-prepara.service"),
+    ACCENDI.indexOf("systemctl start quadro-prepara.service"),
+  );
+  assert.match(prepara, /User=\$AGGIORNATORE/);
+  assert.match(prepara, /NoNewPrivileges=yes/);
+  assert.match(prepara, /CapabilityBoundingSet=\n/);
+  assert.match(prepara, /InaccessiblePaths=\$DATI \$CONFIGURAZIONE/, "chi prova legge le chiavi");
+  assert.match(prepara, /LoadCredential=lettura:/);
+  assert.match(ACCENDI, /AGGIORNATORE="quadro-aggiorna"/);
+  /* Il giro da root non scarica e non prova: chiede a chi prepara. */
+  const giro = pezziScritti().find((uno) => uno.dove.includes("aggiorna.sh"));
+  assert.ok(giro, "non trovo aggiorna.sh");
+  assert.doesNotMatch(giro.testo, /node --test|curl /);
+  assert.match(giro.testo, /systemctl start quadro-prepara\.service/);
+  /* E lo scambio copia senza seguire collegamenti, e i file diventano di root. */
+  const scambia = pezziScritti().find((uno) => uno.dove.includes("scambia.sh"));
+  assert.match(scambia.testo, /cp -R -P/);
+  assert.match(scambia.testo, /find "\$arrivo" -type l/);
+  assert.match(scambia.testo, /chown -R root:root "\$arrivo"/);
+  /* Gli script di prima, che facevano tutto da root, se ne vanno. */
+  assert.match(ACCENDI, /rm -f "\$DOVE\/sha\.sh" "\$DOVE\/scarica\.sh"/);
+});
+
+test("Node dal repository con la chiave, non da uno script dato a bash", () => {
+  assert.doesNotMatch(ACCENDI, /deb\.nodesource\.com\/setup_/);
+  assert.match(ACCENDI, /signed-by=\/etc\/apt\/keyrings\/nodesource\.gpg/);
+});
+
+test("il firewall apre SSH prima di accendersi, e non tocca quello di un altro", () => {
+  const acceso = ACCENDI.indexOf("ufw --force enable");
+  const ssh = ACCENDI.lastIndexOf('ufw allow "$porta_ssh/tcp"', acceso);
+  assert.ok(ssh > 0 && acceso > ssh, "accende il firewall prima di aprire SSH");
+  assert.match(ACCENDI, /sshd -T/, "la porta di SSH si legge, non si suppone");
+  assert.match(ACCENDI, /SSH_CONNECTION/, "e quella da cui si e' collegati adesso");
+  assert.match(ACCENDI, /altre_regole\(\)/);
+  assert.match(ACCENDI, /FIREWALL="\$\{QUADRO_FIREWALL:-si\}"/);
+  for (const porta of ["80/tcp", "443/tcp"])
+    assert.match(ACCENDI, new RegExp(`ufw allow ${porta}`));
+});
+
+test("il quadro ascolta solo su questa macchina, e Caddy dice al browser di restare su HTTPS", () => {
+  assert.match(ACCENDI, /printf 'QUADRO_ASCOLTO=%s\\n' "127\.0\.0\.1"/);
+  const innesto = ACCENDI.slice(ACCENDI.indexOf("cat >/etc/caddy/conf.d/quadro.caddy"));
+  assert.match(innesto, /header Strict-Transport-Security "max-age=31536000"/);
 });
 
 test("il servizio non gira da root, e scrive solo nei suoi dati", () => {
@@ -210,11 +266,24 @@ test("il giro degli aggiornamenti non esce piu' zitto quando non ce la fa", () =
    * cosa si e' aggiustata e' peggio di nessun avviso. */
   assert.match(
     ACCENDI,
-    /rm -f "\\\$FOGLIETTO"/,
+    /rm -f "\\?\$FOGLIETTO"/,
     "il foglietto non si toglie mai, e un avviso che resta quando la cosa e' passata e' peggio di nessun avviso",
   );
 
   /* La data e' quella del **primo** fallimento di fila. Riscrivendola a ogni
    * giro, l'ora non arriverebbe mai e `/salute` resterebbe zitta per sempre. */
-  assert.match(ACCENDI, /head -1 "\\\$FOGLIETTO"/, "la data del primo fallimento non si tiene");
+  assert.match(ACCENDI, /head -1 "\\?\$FOGLIETTO"/, "la data del primo fallimento non si tiene");
+});
+
+test("si ferma su un systemd senza LoadCredential, prima di toccare qualunque cosa", () => {
+  /* `quadro-prepara` riceve il gettone con `LoadCredential` (systemd 247). Su
+   * uno piu' vecchio non partirebbe: meglio fermarsi prima di aver sostituito
+   * l'`aggiorna.sh` che funziona. */
+  const controllo = ACCENDI.indexOf("((SYSTEMD < 247))");
+  assert.ok(controllo > 0, "non si guarda la versione di systemd");
+  assert.match(ACCENDI, /systemctl --version/);
+  for (const dopo of ["apt-get install", 'cat >"$DOVE/aggiorna.sh"', "LoadCredential="]) {
+    const dove = ACCENDI.indexOf(dopo);
+    assert.ok(dove > controllo, `«${dopo}» arriva prima del controllo di systemd`);
+  }
 });

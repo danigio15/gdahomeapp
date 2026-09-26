@@ -168,3 +168,79 @@ export const profiloBuono = (profilo) => Configurazione.profiloBuono(profilo);
 
 /** Quanto pesano questi valori una volta scritti: e' il numero che si confronta col tetto. */
 export const quantoPesa = (valori) => Buffer.byteLength(JSON.stringify(valori ?? null), "utf8");
+
+/* ─── Quello che il quadro puo' scrivere ─────────────────────────────────
+ *
+ * Una configurazione arrivata da lontano finisce dentro la plancia di ogni
+ * telefono e di ogni pagina di questa casa. La plancia i testi li scrive con
+ * le sue cautele; qui c'e' la seconda, prima di scrivere: si accettano le
+ * chiavi che la plancia usa davvero, di grandezze da configurazione, e testi
+ * che non somigliano a un pezzo di pagina. Quello che non torna non si
+ * ripulisce in silenzio — si rifiuta, e il rapporto dice perche', come per i
+ * flussi. */
+
+/* Le chiavi della plancia: `cd_…`, `dm_…`, `dashboardmodern…` — le stesse che
+ * la plancia tiene per sue (`OWN_STORAGE_PREFIXES`). */
+const CHIAVE_DELLA_PLANCIA = /^(?:cd_|dm_|dashboardmodern)[A-Za-z0-9_.:-]{0,120}$/;
+export const CHIAVI_DA_LONTANO = 256;
+export const VALORE_DA_LONTANO = 2 * 1024 * 1024;
+export const TOTALE_DA_LONTANO = 8 * 1024 * 1024;
+
+/* Quello che in un testo della plancia non ha motivo di esserci: l'inizio di
+ * un pezzo di markup, un indirizzo che esegue, un attributo che reagisce. Un
+ * `>` da solo o un `< 5` in una nota non sono markup, e passano. */
+const COME_UNA_PAGINA = /<\s*[a-z!/?]|javascript\s*:|vbscript\s*:|\bon[a-z]+\s*=/i;
+
+function testoSospetto(valore, profondita = 0) {
+  if (profondita > 40) return "una configurazione troppo annidata";
+  if (typeof valore === "string") {
+    /* Un testo JSON si guarda dentro: li' le lettere possono essere scritte
+     * con `\u003c`, e fuori non si vedrebbero. */
+    const suo = dentro(valore);
+    if (suo) return testoSospetto(suo, profondita + 1);
+    return COME_UNA_PAGINA.test(valore) ? "un testo con dentro del markup o del programma" : null;
+  }
+  if (Array.isArray(valore)) {
+    for (const uno of valore) {
+      const no = testoSospetto(uno, profondita + 1);
+      if (no) return no;
+    }
+    return null;
+  }
+  if (valore && typeof valore === "object") {
+    for (const [chiave, uno] of Object.entries(valore)) {
+      if (COME_UNA_PAGINA.test(chiave)) return "un nome con dentro del markup o del programma";
+      const no = testoSospetto(uno, profondita + 1);
+      if (no) return no;
+    }
+  }
+  return null;
+}
+
+/**
+ * Se una configurazione arrivata dal quadro si puo' scrivere.
+ *
+ * Torna `null` se si', o il perche' di un no, in parole da rapporto.
+ */
+export function nonSiScriveDaLontano(valori) {
+  if (!valori || typeof valori !== "object" || Array.isArray(valori))
+    return "non e' una configurazione";
+  const chiavi = Object.keys(valori);
+  if (chiavi.length > CHIAVI_DA_LONTANO) return "troppe voci in quella configurazione";
+  let totale = 0;
+  for (const chiave of chiavi) {
+    if (!CHIAVE_DELLA_PLANCIA.test(chiave))
+      return `una voce che la plancia non conosce (${chiave.slice(0, 40)})`;
+    const valore = valori[chiave];
+    const pesa = Buffer.byteLength(
+      typeof valore === "string" ? valore : JSON.stringify(valore ?? null),
+      "utf8",
+    );
+    if (pesa > VALORE_DA_LONTANO) return `la voce ${chiave} e' troppo grande`;
+    totale += pesa;
+    if (totale > TOTALE_DA_LONTANO) return "quella configurazione e' troppo grande";
+    const no = testoSospetto(valore);
+    if (no) return `la voce ${chiave} conteneva ${no}`;
+  }
+  return null;
+}

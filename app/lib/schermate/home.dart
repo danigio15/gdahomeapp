@@ -50,6 +50,7 @@ import 'diagnostica.dart';
 import 'dispositivi.dart';
 import 'firma.dart';
 import 'menu.dart';
+import 'navigatore_qui/qui.dart';
 import 'zigbee.dart';
 import 'misure.dart';
 import 'plancia_vera.dart';
@@ -151,6 +152,7 @@ class _HomeState extends State<Home> {
   @override
   void dispose() {
     _giroDegliAggiornamenti?.cancel();
+    _menuDiGdanav.dispose();
     super.dispose();
   }
 
@@ -346,7 +348,20 @@ class _HomeState extends State<Home> {
    * Nel browser non si tocca niente: quel tasto e' del browser, e l'app che
    * se lo prende e' una pagina da cui non si esce piu'. Li' il menu si apre
    * dai tre trattini della plancia e dal ☰. */
+  /// Il navigatore dentro la sezione di gdanav: le sue schermate si chiudono
+  /// col tasto Indietro prima di tutto il resto.
+  final _navigatore = GlobalKey<NavigatorState>();
+
+  /// Le impostazioni di gdanav chieste dalla tessera della barra: si aprono
+  /// appena il navigatore c'e'.
+  final _menuDiGdanav = ValueNotifier<bool>(false);
+
   void _indietro() {
+    if (_sezione == Sezione.navigatore &&
+        (_navigatore.currentState?.canPop() ?? false)) {
+      _navigatore.currentState!.maybePop();
+      return;
+    }
     final barra = _barra.currentState;
     if (barra == null) return;
     if (!barra.aperta) {
@@ -389,6 +404,11 @@ class _HomeState extends State<Home> {
      * direbbe le stesse cose a tre centimetri di distanza. */
     final sullaPlancia =
         _sezione == Sezione.plancia || _sezione == Sezione.configurazione;
+    /* Anche il navigatore ha tutto lo schermo, come la plancia: la mappa ha i
+     * suoi tasti, e il suo ☰ apre la barra come i tre trattini della
+     * plancia. Una barra del titolo sopra vorrebbe dire due menu uno sotto
+     * l'altro. */
+    final aTuttoSchermo = sullaPlancia || _sezione == Sezione.navigatore;
     /* Dove la barra resta non ci vuole nessun tasto per aprirla: e' aperta. */
     final laBarraResta = QuantoELargo.di(context).laBarraResta;
     return PopScope(
@@ -400,7 +420,7 @@ class _HomeState extends State<Home> {
         _indietro();
       },
       child: Scaffold(
-        appBar: sullaPlancia
+        appBar: aTuttoSchermo
             ? null
             : AppBar(
                 /* Il ☰: la porta del menu su queste schermate. Sulla
@@ -488,7 +508,7 @@ class _HomeState extends State<Home> {
                * titolo pensa alla cima, e qui si toglie solo l'aria in fondo,
                * che se no l'ultima riga finisce sotto i tasti del telefono. */
               top: false,
-              bottom: !sullaPlancia,
+              bottom: !aTuttoSchermo,
               child: Padding(
                 /* Dove la barra si nasconde non le si lascia niente: sul
                  * bordo sinistro non c'e' piu' nulla di suo — nessuna pillola,
@@ -544,6 +564,16 @@ class _HomeState extends State<Home> {
                           Sezione.dispositivi => Dispositivi(
                             collegamento: collegamento,
                             visibile: _sezione == Sezione.dispositivi,
+                          ),
+                          /* gdanav: si accende la prima volta che ci si
+                           * entra, e poi resta acceso come le altre. */
+                          Sezione.navigatore => IlNavigatore(
+                            visibile: _sezione == Sezione.navigatore,
+                            navigatore: _navigatore,
+                            menuOspite: () => _barra.currentState?.apri(),
+                            apriIlMenu: _menuDiGdanav,
+                            /* L'auto della plancia va a gdanav da qui. */
+                            collegamento: collegamento,
                           ),
                           /* La Configurazione qui non ha una schermata: la
                            * voce apre la pagina della plancia, dentro il
@@ -619,7 +649,8 @@ class _HomeState extends State<Home> {
                 conIlCruscotto: _cruscotto.isNotEmpty,
                 conLaGestione: _gestione.isNotEmpty,
                 conZigbee: _zigbee,
-                /* Zigbee, Aiutanti e Automazioni nella webapp non ci sono:
+                /* Navigatore, Zigbee, Aiutanti e Automazioni nella webapp non
+                 * ci sono:
                  * vogliono il telefono, e nel browser sarebbero porte che si
                  * aprono su meta' di quello che promettono. */
                 nellApp: widget.impostazioni.sulTelefono,
@@ -627,6 +658,22 @@ class _HomeState extends State<Home> {
               aperta: _sezione,
               daAggiornare: _daAggiornare,
               vai: _vai,
+              /* gdanav in testa, vivo: l'auto della plancia, Casa e Lavoro.
+               * Nel browser non c'e' (e nemmeno la sua voce). */
+              tessera: widget.impostazioni.sulTelefono
+                  ? laTesseraDelNavigatore(
+                      scelta: _sezione == Sezione.navigatore,
+                      apri: () {
+                        _barra.currentState?.sceltaFatta();
+                        _vai(Sezione.navigatore);
+                      },
+                      impostazioni: () {
+                        _barra.currentState?.sceltaFatta();
+                        _menuDiGdanav.value = true;
+                        _vai(Sezione.navigatore);
+                      },
+                    )
+                  : null,
               vaiAlleCase: widget.vaiAlleCase,
               collegamento: collegamento,
               /* Sotto la barra c'e' la plancia: e' l'unica sezione che nel

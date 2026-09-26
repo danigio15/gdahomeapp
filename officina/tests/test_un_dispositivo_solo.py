@@ -51,6 +51,12 @@ async def _avvia(
     monkeypatch.setattr(
         update_module.DashboardModernReleaseCoordinator, "async_refresh", niente
     )
+    # Di serie nessuna repository pubblica le release e l'entita' non nasce
+    # (`RELEASE_REPOSITORY`): qui se ne finge una, perche' la domanda e' su
+    # quale dispositivo l'entita' si attacca il giorno che nasce.
+    monkeypatch.setattr(
+        update_module, "RELEASES_URL", "https://example.invalid/releases/latest"
+    )
 
     entry = MockConfigEntry(
         domain=DOMAIN,

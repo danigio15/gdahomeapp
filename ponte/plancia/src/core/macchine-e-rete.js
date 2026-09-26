@@ -47,15 +47,22 @@
  * tasto.
  */
 
+import { conLaRiga, conLeRighe, righeDichiarate, senzaLaRiga } from "./elenco-dichiarato.js";
+
 const clean = (valore) => String(valore ?? "").trim();
 
 /** Dove si scrive la configurazione. */
 export const CHIAVE_MACCHINE = "cd_macchine";
 
-/** Le due famiglie, con la classe che Home Assistant usa per dichiararle. */
+/** Le due famiglie, con la classe che Home Assistant usa per dichiararle.
+ *
+ * `glifo` e' il nome di un disegno del catalogo di casa, non un'emoji (#74):
+ * la scatola e le tacche del segnale cambiavano faccia da un telefono
+ * all'altro, e una tacca di segnale come «rete» diceva meno di un router. E'
+ * solo il punto di partenza: il disegno vero lo sceglie chi configura. */
 export const FAMIGLIE = Object.freeze({
-  macchine: { classe: "running", glifo: "📦" },
-  rete: { classe: "connectivity", glifo: "📶" },
+  macchine: { classe: "running", glifo: "server" },
+  rete: { classe: "connectivity", glifo: "router" },
 });
 
 const MUTI = new Set(["unavailable", "unknown", "none", ""]);
@@ -349,6 +356,51 @@ export function macchineDeiDispositivi({
   return righe;
 }
 
+/* ── L'ELENCO DICHIARATO (#74) ────────────────────────────────────────────
+ *
+ * La regola sta in `elenco-dichiarato.js`, ed e' la stessa dei Varchi, della
+ * Presenza e delle Batterie. Qui la riga porta un campo in piu', `famiglia`:
+ * una macchina e la rete stanno in due fasce diverse, e quale delle due lo
+ * decide chi configura invece di dedurlo dalla classe.
+ */
+export { conLaRiga, conLeRighe, righeDichiarate, senzaLaRiga };
+
+/** Il campo in piu' che le righe delle macchine si portano dietro. */
+export const CAMPI_IN_PIU = Object.freeze(["famiglia"]);
+
+/** La configurazione senza le righe: e' quella su cui gira il rilevamento. */
+function senzaLeRighe(config) {
+  const dato = config && typeof config === "object" && !Array.isArray(config) ? config : {};
+  const { righe: _via, ...resto } = dato;
+  return resto;
+}
+
+/**
+ * Le macchine che il rilevamento proporrebbe adesso.
+ *
+ * Serve a due cose, ed e' la stessa risposta: il ripiego di chi non ha mai
+ * dichiarato niente, e quello che scrive il tasto «prendi quelle che Home
+ * Assistant ha trovato». Le integrazioni spuntate contano ancora, ed e' il
+ * loro mestiere: da quali marche si adotta. Quello che cambia e' che adesso
+ * decidono cosa viene PROPOSTO, non cosa si vede — perche' quello che si vede
+ * e' quello che uno ha scritto.
+ */
+export function macchineDaImportare(
+  states = {},
+  config,
+  nomeDi = (entity) => entity,
+  piattaforme = null,
+  registro = {},
+) {
+  const elenchi = macchineERete(states, senzaLeRighe(config), nomeDi, piattaforme, registro);
+  return [...elenchi.macchine, ...elenchi.rete].map((riga) => ({
+    entity: riga.entity,
+    name: riga.name,
+    icon: FAMIGLIE[riga.famiglia]?.glifo || FAMIGLIE.macchine.glifo,
+    famiglia: riga.famiglia,
+  }));
+}
+
 /**
  * Gli elenchi: le macchine e la rete, letti e ordinati.
  *
@@ -364,6 +416,27 @@ export function macchineERete(
 ) {
   const scelte = normalizzaMacchine(config);
   const elenchi = { macchine: [], rete: [] };
+  const dichiarate = righeDichiarate(config, CAMPI_IN_PIU);
+  if (dichiarate) {
+    /* Una riga cominciata e non finita — c'e' il nome, manca l'entita' — sta
+     * nella scheda e lo dice, ma qui non ci va: nel conto di quante sono giu'
+     * sarebbe una macchina inventata. */
+    for (const riga of dichiarate.filter((voce) => voce.entity)) {
+      const famiglia = FAMIGLIE[riga.famiglia] ? riga.famiglia : "macchine";
+      elenchi[famiglia].push({
+        entity: riga.entity,
+        famiglia,
+        name: clean(riga.name) || clean(nomeDi(riga.entity)) || riga.entity,
+        glifo: clean(riga.icon) || FAMIGLIE[famiglia].glifo,
+        stato: comeSta(states?.[riga.entity]),
+        comandi: famiglia === "macchine" ? comandiDellaMacchina(riga.entity, states) : null,
+      });
+    }
+    const peso = (riga) => (riga.stato === "giu" ? 0 : riga.stato === "" ? 1 : 2);
+    for (const famiglia of Object.keys(elenchi))
+      elenchi[famiglia].sort((a, b) => peso(a) - peso(b) || a.name.localeCompare(b.name));
+    return elenchi;
+  }
   /* I server che non dichiarano l'acceso entrano da qui, con la stessa forma
    * di riga: da questo punto in poi sono macchine come le altre — stesso
    * ordine, stesso conto, stessa fascia. */

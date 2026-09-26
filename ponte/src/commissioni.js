@@ -61,6 +61,9 @@ import { I_MARCHI, QuestoNoNo } from "./aggiornamenti.js";
 import { CentralinoHaDettoNo, SenzaCentralino } from "./segnalazioni.js";
 import { SegnalazioniDellaPlancia } from "./segnalazioni-della-plancia.js";
 import { laVede, QuellaPlanciaNo, TroppePlance } from "./plance.js";
+import { perLaVia, percorsoSenzaTrucchi } from "./dogana.js";
+import { iFili, iRami, laMappaDisegnata } from "./mappa-zigbee.js";
+import { comeSiPresenta } from "./zigbee.js";
 
 /* Quando chi chiede non ha nessuna plancia. Non e' un guasto ed e' l'app a
  * scriverlo, percio' il codice e' uno suo e non uno di Home Assistant. */
@@ -189,6 +192,29 @@ const NELLA_CONSOLE = "La coda di chi risponde sta nella console dell'app.";
 const NIENTE_BOZZE =
   "Da qui una segnalazione o parte o non si scrive: non ci sono bozze da buttare.";
 
+/* L'anagrafe della casa, per chi disegna.
+ *
+ * «Non devi mettere le entita' ma i dispositivi non connessi, cosi' come li
+ * mostri nel cruscotto installatore.»
+ *
+ * Il cruscotto quei dispositivi li sa perche' glieli manda questo ponte, che i
+ * registri li legge gia' per il rapporto. La plancia no: chi disegna i
+ * registri non li ha, e chiederli a Home Assistant e' la porta che la #553 ha
+ * chiuso. Dentro Home Assistant glieli lascia il pannello; nell'app non glieli
+ * lasciava nessuno, e l'avviso tornava a contare le entita'.
+ *
+ * Quindi li passa il ponte, che ce li ha gia' in mano e li tiene da parte
+ * cinque minuti: nessuna domanda in piu' a Home Assistant, e una risposta
+ * sola per caricamento. Comincia per `ponte/` perche' e' roba di questo ponte
+ * e non un comando di Home Assistant travestito: dentro Home Assistant la
+ * plancia se lo sente dire «non conosco», ed e' la risposta giusta — li' i
+ * registri ce li ha gia'.
+ *
+ * Escono due mappe e nient'altro: di chi e' ogni entita', e come si chiama
+ * quel qualcuno. **Nessuno stato.** */
+const REGISTRI = "ponte/registri";
+const DIMMI_IL_DISPOSITIVO = "ponte/zigbee/dimmi";
+
 /* La chat di assistenza della dashboard: quattro comandi sono di chi chiede, e
  * li fa il ponte per ogni casa. */
 const CHAT_STATO = "dashboardmodern/chat/state";
@@ -227,6 +253,35 @@ const CHIAVE_VECCHIA = "dashboardmodern_integration_config";
 const NUMERO_MODERNO = 700000;
 
 const METODI = new Set(["GET", "POST", "PUT", "DELETE"]);
+
+/* Le commissioni che cambiano la casa o la macchina, e non solo la plancia
+ * che uno sta guardando: aggiungere e togliere plance, installare e
+ * riavviare, aprire la rete Zigbee, riscrivere la configurazione che vale per
+ * tutti, e la coda di chi risponde alle chat di tutte le case. Le fa solo chi
+ * amministra — come in Home Assistant, dove le stesse cose stanno dietro la
+ * voce da amministratore. Chi non amministra riceve un no ben scritto, e la
+ * plancia se lo tiene come si tiene un salvataggio non riuscito. */
+const SOLO_CHI_AMMINISTRA = new Set([
+  "ponte/plance/aggiungi",
+  "ponte/plance/rinomina",
+  "ponte/plance/togli",
+  "ponte/aggiornamenti/installa",
+  "ponte/aggiornamenti/riavvia",
+  "ponte/zigbee/apri",
+  "ponte/zigbee/chiudi",
+  "ponte/zigbee/rinomina",
+  "ponte/zigbee/elimina",
+  "dashboardmodern/config/set",
+  "dashboardmodern/config/restore",
+  "dashboardmodern/chat/queue",
+  "dashboardmodern/chat/open",
+  "dashboardmodern/chat/answer",
+  "dashboardmodern/chat/drop",
+  "ponte/console/coda",
+  "ponte/console/apri",
+  "ponte/console/rispondi",
+  "ponte/console/butta",
+]);
 
 /* Un file della plancia sta sotto il megabyte; una risposta di Home Assistant
  * — lo storico di un mese — puo' essere molto di piu'. Oltre questo non e'
@@ -318,6 +373,31 @@ export function si(id, result) {
   return { id, type: "result", success: true, result };
 }
 
+/* Il codice di Home Assistant non e' il codice del ponte.
+ *
+ * `unknown_command` vuol dire una cosa sola: «chi ha ricevuto questa domanda
+ * non la conosce». Il ponte lo usa per le domande che arrivano a LUI e che non
+ * sa fare, e l'app lo traduce cosi': «gdahome in casa e' piu' vecchio
+ * dell'app, aggiorna l'add-on».
+ *
+ * Ma il ponte, per rispondere, fa a sua volta delle domande a Home Assistant,
+ * e anche Home Assistant risponde `unknown_command` per quello che non
+ * conosce. Rilanciando quel codice al telefono si cambiava chi aveva ricevuto
+ * la domanda — era Home Assistant, non il ponte — e l'app mandava ad
+ * aggiornare la cosa sbagliata.
+ *
+ * Dal campo, sulla schermata Zigbee con l'add-on aggiornato: «da un messaggio
+ * di aggiornare ma in realta' e' tutto aggiornato», con la scheda ZHA piena a
+ * tre centimetri dall'avviso. Aveva ragione, e a sbagliare era il codice.
+ *
+ * Questa e' la regola, e sta in un posto solo: un comando che il ponte ha
+ * riconosciuto ed eseguito non puo' rispondere «non lo conosco», qualunque
+ * cosa sia andata storta dentro. */
+export function codiceDelPonte(errore, invece) {
+  const suo = String(errore?.code || "").trim();
+  return !suo || suo === "unknown_command" ? invece : suo;
+}
+
 export function no(id, code, message) {
   return { id, type: "result", success: false, error: { code, message } };
 }
@@ -359,6 +439,10 @@ export class Commissioni {
      * una porta che non c'e'. */
     zigbee = null,
     aggiornamenti = null,
+    /* L'anagrafe della casa — di chi e' ogni entita', e come si chiama quel
+     * qualcuno. E' la stessa che legge il rapporto, e la tiene `registri.js`:
+     * una sola, per non leggere due volte la stessa cosa pesante. */
+    registri = null,
     ritorno = null,
     scarica = scaricaDavvero,
     insieme = INSIEME,
@@ -406,6 +490,7 @@ export class Commissioni {
      * Assistant e qui sta nel ponte. */
     this.spegnimento = spegnimento;
     this.zigbee = zigbee;
+    this.registri = registri;
     /* Cosa c'e' da aggiornare, e i due tasti per farlo. In Home Assistant si
      * vede da una pagina che chi usa l'app non apre piu'. */
     this.aggiornamenti = aggiornamenti;
@@ -460,19 +545,32 @@ export class Commissioni {
    * varrebbe solo dentro Home Assistant.
    *
    * `null` o vuoto vuol dire «non si sa chi chiede», e chi non si sa vede
-   * tutto: e' come sono i telefoni abbinati prima di oggi. */
-  async rispondi(detto, { chiChiede = "", amministra = null } = {}) {
+   * tutto: e' come sono i telefoni abbinati prima di oggi.
+   *
+   * `puoAmministrare` e' un'altra domanda, e la decide chi sta sul filo
+   * (`ponte.js`, `cucitura.js`): se chi chiede puo' fare le cose da
+   * amministratore. Vale solo se e' `true`: chi non lo dice, non lo puo'. */
+  async rispondi(detto, { chiChiede = "", amministra = null, puoAmministrare = false } = {}) {
     const id = detto?.id ?? null;
     const tipo = detto?.type;
-    if (tipo === TIPO) return this._http(detto, chiChiede, amministra);
+    if (SOLO_CHI_AMMINISTRA.has(tipo) && puoAmministrare !== true) {
+      return no(id, "unauthorized", "questo lo fa solo chi amministra la casa");
+    }
+    if (tipo === TIPO) return this._http(detto, chiChiede, amministra, puoAmministrare);
     if (tipo === TIPO_MOLTI) return this._molti(detto, chiChiede, amministra);
     if (tipo === TIPO_PLANCIA) return this._laPlancia(detto, chiChiede, amministra);
     if (PLANCE.has(tipo)) return this._lePlance(detto, chiChiede, amministra);
     if (typeof tipo === "string" && tipo.startsWith("ponte/chat/")) return this._chatDellApp(detto);
-    if (tipo === IL_QUADRO) return this._ilQuadro(detto, chiChiede, amministra);
+    if (tipo === IL_QUADRO) return this._ilQuadro(detto, chiChiede, amministra, puoAmministrare);
     if (typeof tipo === "string" && tipo.startsWith("ponte/segnalazioni/"))
       return this._segnalazioni(detto);
+    /* Prima del giro `ponte/zigbee/`, perche' questo non e' un comando
+     * alla rete: si chiama cosi' per chi sta dall'altra parte, ma legge
+     * i registri e basta. Dentro `_zigbee` un ponte senza rete Zigbee
+     * risponderebbe «non conosco» a una domanda a cui sa rispondere. */
+    if (tipo === DIMMI_IL_DISPOSITIVO) return this._dimmiIlDispositivo(detto);
     if (typeof tipo === "string" && tipo.startsWith("ponte/zigbee/")) return this._zigbee(detto);
+    if (tipo === REGISTRI) return this._registri(detto);
     if (tipo === CONFIG_GET || tipo === CONFIG_SET || tipo === CONFIG_RESTORE)
       return this._configurazione(detto);
     if (tipo === DOVE_TORNARE) return this._doveTornare(detto);
@@ -502,6 +600,54 @@ export class Commissioni {
     return no(id, "unknown_command", `non conosco ${tipo}`);
   }
 
+  /* Le due mappe dell'anagrafe, per la plancia che le ha chieste.
+   *
+   * Non si cade mai: senza registri escono vuote, e chi le ha chieste torna a
+   * contare le entita' come faceva prima che questa porta esistesse. Un avviso
+   * un po' piu' grossolano e' meglio di una plancia che non si apre.
+   */
+  async _registri(detto) {
+    const id = detto?.id ?? null;
+    if (!this.registri) return no(id, "unknown_command", `non conosco ${detto?.type}`);
+    return si(id, await this.registri.leMappe());
+  }
+
+  /* Un dispositivo che c'e' gia', presentato come quelli appena entrati:
+   * serve a metterlo nella plancia partendo dall'elenco invece che
+   * dall'abbinamento.
+   *
+   * Senza questo il tasto «Mettilo nella plancia» sarebbe un tasto che si
+   * preme e non succede niente: il foglietto «Dove lo metto?» decide la
+   * sezione dall'ENTITA' — una lampadina va nelle Luci, un contatto di porta
+   * nei Varchi — e di un dispositivo senza entita' non sa dire niente. Le
+   * entita' stanno nei registri, che questo ponte legge gia' per il rapporto:
+   * nessuna domanda in piu' a Home Assistant.
+   */
+  async _dimmiIlDispositivo(detto) {
+    const id = detto?.id ?? null;
+    const quale = String(detto?.dispositivo ?? "").trim();
+    if (!quale) return no(id, "not_found", "quale dispositivo?");
+    if (!this.registri) return no(id, "unknown_command", `non conosco ${detto?.type}`);
+    try {
+      const { dispositivi, entita } = await this.registri.chiedi();
+      const suo = (Array.isArray(dispositivi) ? dispositivi : []).find(
+        (uno) => String(uno?.id ?? "") === quale,
+      );
+      if (!suo) return no(id, "not_found", "quel dispositivo questa casa non ce l'ha");
+      const sue = (Array.isArray(entita) ? entita : []).filter(
+        (una) => String(una?.device_id ?? "") === quale,
+      );
+      return si(id, { dispositivo: comeSiPresenta(suo, sue) });
+    } catch (errore) {
+      this.registro.attenzione(`zigbee: ${errore?.message || errore}`);
+      return no(
+        id,
+        codiceDelPonte(errore, "zigbee_non_accettato"),
+        String(errore?.message || errore),
+      );
+    }
+  }
+
   /* Se questa casa ha il cruscotto di chi installa, la gestione del quadro, o
    * tutt'e due: le due voci del menu che l'app da sola non puo' sapere.
    *
@@ -528,7 +674,7 @@ export class Commissioni {
    *
    * La prova qui sotto la tiene al suo posto: chiede senza chat, che e' il
    * caso che prima falliva. */
-  async _ilQuadro(detto, chiChiede = "", amministra = null) {
+  async _ilQuadro(detto, chiChiede = "", amministra = null, puoAmministrare = false) {
     /* ─── E il codice, a chi amministra ───────────────────────────────────
      *
      * Il codice sta gia' nella scheda dell'add-on — e' quello che fa esistere
@@ -566,7 +712,29 @@ export class Commissioni {
      * risponde davvero no resta un no, e un telefono senza utente addosso —
      * abbinato prima che il ponte sapesse di chi fosse — torna `false` da se',
      * senza chiedere niente. */
+    /* ─── E il telefono che un utente addosso non ce l'ha ─────────────
+     *
+     * «Su Home Assistant funziona; da app mi richiede i codici sia
+     * installatore che gestore.»
+     *
+     * `amministra` nasce da `amministratoreSubito(chiChiede)`, e `chiChiede`
+     * per un telefono abbinato prima che i telefoni si intestassero a qualcuno
+     * e' la stringa vuota: quella funzione la conta per un no, e il codice non
+     * partiva. Solo che lo stesso filo, alla dogana, i comandi da
+     * amministratore li passa — un telefono senza utente addosso e' stato
+     * abbinato con un codice che allora lo fabbricava solo chi amministra, e
+     * `_amministra()` in `ponte.js` risponde di si'. Due risposte diverse alla
+     * stessa domanda sullo stesso filo, e quella piu' stretta toccava proprio
+     * alla cosa che la scheda dell'add-on aveva gia' in mano: le due pagine si
+     * aprivano nell'app e chiedevano un codice che era li' da sempre.
+     *
+     * Quella risposta arriva qui come `puoAmministrare`, ed e' l'unica che il
+     * ponte da': si guarda quella. Non apre niente di nuovo — e' lo stesso
+     * filo che i comandi riservati li passa gia' — e dentro Home Assistant non
+     * cambia nulla, perche' li' «non si sa chi guarda» vale no
+     * (`cucitura.js`) e `puoAmministrare` arriva falso. */
     let suo = amministra;
+    if (suo !== true && puoAmministrare === true) suo = true;
     if (suo === null && this.utenti?.amministratore) {
       try {
         suo = await this.utenti.amministratore(chiChiede);
@@ -1195,6 +1363,33 @@ export class Commissioni {
           return si(id, await zigbee.apri({ secondi: detto.secondi }));
         case "ponte/zigbee/chiudi":
           return si(id, await zigbee.chiudi());
+        /* La mappa: le righe le prende la rete, il disegno lo fa chi disegna,
+         * e qui i due si mettono insieme. `scuro` perche' l'app ha due vesti e
+         * una mappa nera su nero non si vede: chi la chiede sa in quale sta. */
+        case "ponte/zigbee/mappa": {
+          const detta = await zigbee.mappa({ rifai: detto.rifai === true });
+          if (!detta.righe.length)
+            return si(id, { ...detta, fili: [], rami: [], soli: [], svg: "" });
+          const fili = iFili(detta.righe);
+          /* Il disegno E i rami in parole. Il primo e' la forma della rete a
+           * colpo d'occhio, i secondi si leggono sul telefono senza
+           * ingrandire: una casa con ottanta apparecchi disegnata e' larga due
+           * metri di schermo. Li conta lo stesso modulo, quindi non possono
+           * dire cose diverse. */
+          return si(id, {
+            ...detta,
+            fili,
+            ...iRami(detta.righe, fili),
+            svg: laMappaDisegnata(detta.righe, { scuro: detto.scuro === true }),
+          });
+        }
+        case "ponte/zigbee/elenco":
+          return si(id, await zigbee.elenco());
+        /* La targa sta in `targa` e non in `id`: `id` e' il numero del
+         * messaggio, e leggerlo qui vorrebbe dire provare a togliere dalla
+         * rete un apparecchio che si chiama «7». */
+        case "ponte/zigbee/elimina":
+          return si(id, await zigbee.elimina(detto.targa));
         case "ponte/zigbee/rinomina":
           return si(id, await zigbee.rinomina(detto.dispositivo, detto.nome));
         default:
@@ -1202,7 +1397,11 @@ export class Commissioni {
       }
     } catch (errore) {
       this.registro.attenzione(`zigbee: ${errore?.message || errore}`);
-      return no(id, errore?.code || "zigbee_ko", String(errore?.message || errore));
+      return no(
+        id,
+        codiceDelPonte(errore, "zigbee_non_accettato"),
+        String(errore?.message || errore),
+      );
     }
   }
 
@@ -1418,7 +1617,7 @@ export class Commissioni {
       this.registro.attenzione(`catalogo non costruito: ${errore?.message || errore}`);
       return no(
         id,
-        errore?.code || "ponte_catalogo",
+        codiceDelPonte(errore, "ponte_catalogo"),
         String(errore?.message || "non ha funzionato"),
       );
     }
@@ -1531,13 +1730,22 @@ export class Commissioni {
     return si(id, { file });
   }
 
-  async _http(detto, chiChiede = "", amministra = null) {
+  async _http(detto, chiChiede = "", amministra = null, puoAmministrare = false) {
     const id = detto?.id ?? null;
     const metodo = String(detto.metodo ?? "GET").toUpperCase();
     if (!METODI.has(metodo)) return no(id, "not_allowed", `il metodo ${metodo} non passa di qui`);
 
+    /* Il percorso, guardato due volte: le lettere ammesse, e che non ci siano
+     * `..` ne' barre o punti scritti in percentuale — sciolti quante volte
+     * serve. `new URL` le scioglierebbe lui, e la strada uscirebbe da dove
+     * doveva stare. */
     const percorso = detto.percorso;
-    if (typeof percorso !== "string" || !PERCORSO_BUONO.test(percorso) || percorso.includes("..")) {
+    if (
+      typeof percorso !== "string" ||
+      !PERCORSO_BUONO.test(percorso) ||
+      percorso.includes("..") ||
+      !percorsoSenzaTrucchi(percorso)
+    ) {
       return no(id, "not_allowed", "percorso non valido");
     }
 
@@ -1595,6 +1803,13 @@ export class Commissioni {
       return no(id, "not_allowed", "di qui passano solo /api/, /dashboardmodern_static/ e /local/");
     }
 
+    /* Le vie REST di Home Assistant passano dalla stessa dogana dei messaggi
+     * sul filo: il segno che le apre e' quello del Supervisor. */
+    if (percorso.startsWith("/api/")) {
+      const vietata = perLaVia({ metodo, percorso, amministra: puoAmministrare === true });
+      if (vietata) return no(id, "unauthorized", vietata);
+    }
+
     const intestazioni = { ...dove.intestazioni, "accept-encoding": "identity" };
     const tipoDelCorpo = detto.tipo;
     if (corpo && typeof tipoDelCorpo === "string") intestazioni["content-type"] = tipoDelCorpo;
@@ -1630,15 +1845,19 @@ export class Commissioni {
       /* Il filo con Home Assistant passa di qui: `/api/websocket` non e' una
        * cosa che si scarica. */
       if (percorso === "/api/websocket" || percorso.startsWith("/api/websocket?")) return null;
+      const url = dentroLaVia(this.casa.indirizzo, percorso, "/api/");
+      if (!url) return null;
       return {
-        url: `${this.casa.indirizzo}${percorso}`,
+        url,
         intestazioni: { authorization: `Bearer ${this.casa.segno}` },
         insicuro: false,
       };
     }
     if (percorso.startsWith("/dashboardmodern_static/")) {
       const base = await this.casa.doveStaLaPlancia();
-      return { url: `${base}${percorso}`, intestazioni: {}, insicuro: base.startsWith("https:") };
+      const url = dentroLaVia(base, percorso, "/dashboardmodern_static/");
+      if (!url) return null;
+      return { url, intestazioni: {}, insicuro: base.startsWith("https:") };
     }
     return null;
   }
@@ -1656,6 +1875,28 @@ export class Commissioni {
     if (prossimo) prossimo();
     else this._inCorso -= 1;
   }
+}
+
+/* L'indirizzo intero, e solo se resta dove deve.
+ *
+ * Il percorso e' gia' stato guardato, ma quello che conta e' dove va a finire
+ * la richiesta: si compone l'indirizzo, lo si fa leggere a `new URL` — che e'
+ * quello che poi usera' chi scarica — e si guarda che sia rimasto sulla stessa
+ * macchina e sotto la stessa cartella. Se no `null`, e non si va da nessuna
+ * parte. */
+export function dentroLaVia(base, percorso, sotto) {
+  let radice;
+  let intero;
+  try {
+    radice = new URL(String(base));
+    intero = new URL(`${String(base).replace(/\/+$/, "")}${percorso}`);
+  } catch (_errore) {
+    return null;
+  }
+  const prefisso = `${radice.pathname.replace(/\/+$/, "")}${sotto}`;
+  if (intero.origin !== radice.origin) return null;
+  if (!intero.pathname.startsWith(prefisso)) return null;
+  return intero.toString();
 }
 
 /* Il corpo in base64, compresso se e' testo. Chi lo riceve guarda

@@ -48,6 +48,33 @@ class PonteFinto {
   /// via, e la casa non ha piu' la sua chiave del filo.
   bool conosceIlTelefono = true;
 
+  /// Insieme a `conosceIlTelefono = false`: la casa ha staccato il telefono
+  /// ma della sua chiave del filo ha ancora memoria, e glielo dice dentro il
+  /// cifrato invece che in chiaro.
+  bool staccatoConLaChiave = false;
+
+  /// Quando c'e', la casa decide cosa rispondere a chi bussa e poi aspetta
+  /// questo prima di dirlo. Serve a far arrivare due risposte nell'ordine
+  /// che vuole la prova, qualunque sia la velocita' della macchina.
+  Completer<void>? cancello;
+
+  /// Il codice di abbinamento vivo, come se la console l'avesse appena fatto.
+  /// `null` vuol dire nessuno.
+  String? codiceVivo;
+
+  /// Quello che la casa dice di se', a chi si abbina: dove tornare.
+  Map<String, dynamic>? ritorno;
+
+  /// Quando e' `true`, la casa ha gia' tutti i telefoni che puo' avere, e chi
+  /// si abbina se lo sente dire dentro il cifrato.
+  bool casaPiena = false;
+
+  /// Le conferme arrivate da chi si abbinava, aperte.
+  final List<Map<String, dynamic>> conferme = [];
+
+  /// Le prime parole in chiaro, come sono arrivate.
+  final List<Map<String, dynamic>> strette = [];
+
   /// Quando e' `true`, non risponde ai comandi: e' Home Assistant che tace.
   bool muto = false;
 
@@ -418,7 +445,13 @@ class PonteFinto {
 
   /* ─── La rete Zigbee (#54) ────────────────────────────────────────────── */
 
-  /// Che rete c'e': `''` per nessuna, `'zha'` o `'z2m'`.
+  /// Che rete c'e': `''` per nessuna, `'zha'` o `'zigbee2mqtt'`.
+  ///
+  /// Sono le parole che manda il ponte vero (`Z2M` in `ponte/src/zigbee.js`),
+  /// non quelle che l'app si e' data per comodita'. Qui c'era scritto `'z2m'`,
+  /// e un ponte finto che parla la lingua inventata da chi lo interroga non
+  /// prova niente: e' cosi' che la voce «Zigbee» e' rimasta invisibile per due
+  /// versioni in tutte le case con Zigbee2MQTT, con le prove verdi.
   String laReteZigbee = '';
 
   /// Per quanto si apre, quando non lo dice chi la apre.
@@ -433,6 +466,27 @@ class PonteFinto {
   final Map<String, String> rinominatiInZigbee = {};
 
   int _zigbeeApertaFinoA = 0;
+
+  /// Chi c'e' nella rete Zigbee, come lo scrive il ponte vero: una forma sola
+  /// per ZHA e per Zigbee2MQTT.
+  final List<Map<String, Object?>> inReteZigbee = [];
+
+  /// Cosa risponde il ponte alla mappa. Vuota vuol dire «la rete non ha
+  /// ancora guardato con chi parla ognuno», che e' un caso vero e va provato.
+  String mappaZigbee = '';
+
+  /// La rete a rami, come la conta il ponte: l'antenna, i ripetitori, e cosa
+  /// gli sta appeso. Sul telefono e' la cosa che si legge davvero, e quindi e'
+  /// una cosa che le prove devono poter far arrivare.
+  List<Map<String, Object?>> ramiZigbee = const [];
+  List<Map<String, Object?>> soliZigbee = const [];
+
+  /// Le mappe chieste col giro vero, per contarle: quel giro dura fino a un
+  /// minuto, e una schermata che lo fa partire da sola sarebbe un guaio.
+  int mappeRifatte = 0;
+
+  /// Le entita' di ogni dispositivo gia' in rete, per `ponte/zigbee/dimmi`.
+  final Map<String, List<Map<String, Object?>>> entitaDelDispositivoZigbee = {};
 
   int _adesso() => DateTime.now().millisecondsSinceEpoch ~/ 1000;
 
@@ -636,6 +690,79 @@ class PonteFinto {
           });
         }
         return si({'fatto': true});
+      case 'ponte/zigbee/elenco':
+        if (laReteZigbee.isEmpty) {
+          return si({
+            'quale': '',
+            'righe': <Object?>[],
+            'perche': 'in questa casa non c\'e\' una rete Zigbee',
+          });
+        }
+        return si({
+          'quale': laReteZigbee,
+          'righe': List.of(inReteZigbee),
+          'perche': '',
+        });
+      case 'ponte/zigbee/elimina':
+        final targa = (detto['targa'] as String? ?? '').trim();
+        if (targa.isEmpty) {
+          return si({'fatto': false, 'perche': 'quale dispositivo?'});
+        }
+        /* Il ponte vero non si fida della rete: riguarda l'elenco e risponde
+         * con quello di **dopo**. Qui si fa uguale — una finta piu'
+         * accomodante dell'originale non prova niente. */
+        final prima = inReteZigbee.length;
+        inReteZigbee.removeWhere((uno) => uno['id'] == targa);
+        if (inReteZigbee.length == prima) {
+          return si({
+            'fatto': false,
+            'perche': 'la rete ha accettato l\'ordine ma quel dispositivo e\' ancora li\'',
+            'righe': List.of(inReteZigbee),
+          });
+        }
+        return si({'fatto': true, 'righe': List.of(inReteZigbee)});
+      case 'ponte/zigbee/dimmi':
+        final quale = (detto['dispositivo'] as String? ?? '').trim();
+        if (quale.isEmpty) return no('not_found', 'quale dispositivo?');
+        final riga = inReteZigbee.firstWhere(
+          (uno) => uno['dispositivo'] == quale,
+          orElse: () => <String, Object?>{},
+        );
+        if (riga.isEmpty) {
+          return no('not_found', 'quel dispositivo questa casa non ce l\'ha');
+        }
+        return si({
+          'dispositivo': {
+            'id': quale,
+            'nome': riga['nome'],
+            'marca': riga['marca'],
+            'modello': riga['modello'],
+            'tramite': 'zha',
+            /* Le entita' che il ponte vero pesca dai registri. Senza queste,
+             * il foglietto «Dove lo metto?» non saprebbe che sezione
+             * proporre — ed e' esattamente quello che questa risposta serve a
+             * provare. */
+            'entita': entitaDelDispositivoZigbee[quale] ?? <Object?>[],
+          },
+        });
+      case 'ponte/zigbee/mappa':
+        if (detto['rifai'] == true) mappeRifatte += 1;
+        if (mappaZigbee.isEmpty) {
+          return si({
+            'quale': laReteZigbee,
+            'righe': <Object?>[],
+            'svg': '',
+            'perche': 'la rete non ha ancora guardato con chi parla ognuno',
+          });
+        }
+        return si({
+          'quale': laReteZigbee,
+          'righe': List.of(inReteZigbee),
+          'svg': mappaZigbee,
+          'rami': List.of(ramiZigbee),
+          'soli': List.of(soliZigbee),
+          'perche': '',
+        });
       case 'ponte/zigbee/rinomina':
         final quale = (detto['dispositivo'] as String? ?? '').trim();
         final come = (detto['nome'] as String? ?? '').trim();
@@ -1085,7 +1212,22 @@ class TelefonoCollegato {
       try {
         dentro = await _busta!.apri(testo);
       } on BustaGuasta {
-        await chiudi();
+        /* Abbinandosi, una conferma che non si apre e' un codice sbagliato, e
+         * il no va in chiaro: come `ponte/src/portiere.js`. */
+        if (_abbinando) {
+          _presa.add(
+            jsonEncode({
+              'v': versioneDelProtocollo,
+              'no': 'codice sbagliato',
+              'motivo': 'codice',
+            }),
+          );
+        }
+        unawaited(chiudi());
+        return;
+      }
+      if (_abbinando) {
+        await _laConferma(dentro);
         return;
       }
       _ponte._detto(this, dentro);
@@ -1093,7 +1235,18 @@ class TelefonoCollegato {
     }
 
     final detto = jsonDecode(testo) as Map<String, dynamic>;
-    if (!_ponte.conosceIlTelefono) {
+    _ponte.strette.add(detto);
+
+    if (detto.containsKey('abbina')) {
+      await _perAbbinare(detto);
+      return;
+    }
+
+    final rifiuta = !_ponte.conosceIlTelefono && !_ponte.staccatoConLaChiave;
+    final cancello = _ponte.cancello;
+    if (cancello != null) await cancello.future;
+
+    if (rifiuta) {
       _presa.add(
         jsonEncode({
           'v': versioneDelProtocollo,
@@ -1101,7 +1254,7 @@ class TelefonoCollegato {
           'riabbina': true,
         }),
       );
-      await chiudi();
+      unawaited(chiudi());
       return;
     }
 
@@ -1113,8 +1266,7 @@ class TelefonoCollegato {
       delTelefono: sua,
       dellaCasa: mia.pubblica,
       apertura: base64.decode(detto['apertura'] as String),
-      /* Chi si sta abbinando la chiave del filo non ce l'ha ancora. */
-      chiaveDelFilo: detto['abbina'] == true ? null : chiaveBuona,
+      chiaveDelFilo: chiaveBuona,
     );
     _presa.add(
       jsonEncode({
@@ -1130,7 +1282,104 @@ class TelefonoCollegato {
       io: DaChi.casa,
       comprime: _ponte.conosceIlGzip && detto['gzip'] == true,
     );
+    if (!_ponte.conosceIlTelefono) {
+      /* Staccato, e detto dove lo puo' dire solo chi ha la chiave. */
+      _ponte._manda(this, {
+        'type': 'auth_invalid',
+        'message': 'questo telefono è stato staccato da questa casa',
+      });
+      unawaited(chiudi());
+      return;
+    }
     _ponte._manda(this, {'type': 'auth_required', 'ha_version': 'gdahome'});
+  }
+
+  /* ─── L'abbinamento, come lo fa il portiere ─────────────────────────── */
+
+  /* Qui dentro si e' nella coda di chi riceve: chiudere **aspettando** la
+   * coda vorrebbe dire aspettare se stessi. Si chiude senza aspettare, e la
+   * chiusura parte comunque dopo quello che si e' messo in coda. */
+
+  bool _abbinando = false;
+  String _telefono = '';
+  String _casa = '';
+
+  Future<void> _perAbbinare(Map<String, dynamic> detto) async {
+    void no(String perche, String motivo) {
+      _presa.add(
+        jsonEncode({
+          'v': versioneDelProtocollo,
+          'no': perche,
+          'motivo': motivo,
+        }),
+      );
+      unawaited(chiudi());
+    }
+
+    if (detto['abbina'] != versioneDellAbbinamento) {
+      no('aggiorna l\'app', 'aggiorna');
+      return;
+    }
+    final codice = _ponte.codiceVivo;
+    if (codice == null) {
+      no('nessun codice di abbinamento è attivo', 'nessuno');
+      return;
+    }
+    final mia = await coppiaEffimera();
+    final sua = base64.decode(detto['mia'] as String);
+    final chiave = await chiaveDiSessione(
+      miaPrivata: mia.privata,
+      suaPubblica: sua,
+      delTelefono: sua,
+      dellaCasa: mia.pubblica,
+      apertura: base64.decode(detto['apertura'] as String),
+      codice: codice,
+    );
+    _abbinando = true;
+    _telefono = detto['mia'] as String;
+    _casa = mia.inBase64;
+    _presa.add(
+      jsonEncode({
+        'v': versioneDelProtocollo,
+        'pronto': true,
+        'mia': mia.inBase64,
+      }),
+    );
+    _busta = Busta(chiave, io: DaChi.casa);
+  }
+
+  Future<void> _laConferma(String dentro) async {
+    final detto = jsonDecode(dentro) as Map<String, dynamic>;
+    _ponte.conferme.add(detto);
+    if (detto['t'] != 'conferma' ||
+        detto['telefono'] != _telefono ||
+        detto['casa'] != _casa) {
+      _ponte._manda(this, {
+        't': 'no',
+        'perche': 'conferma sbagliata',
+        'motivo': 'codice',
+      });
+      unawaited(chiudi());
+      return;
+    }
+    if (_ponte.casaPiena) {
+      _ponte._manda(this, {
+        't': 'no',
+        'perche': 'sono gia\' abbinati 10 dispositivi',
+        'motivo': 'telefoni',
+      });
+      unawaited(chiudi());
+      return;
+    }
+    _ponte.codiceVivo = null;
+    _ponte._manda(this, {
+      't': 'ecco',
+      'segno': segnoBuono,
+      'chiave': chiaveBuona,
+      'dispositivo': {'id': chiBuono, 'nome': detto['nome']},
+      'ritorno': _ponte.ritorno,
+    });
+    unawaited(chiudi());
   }
 
   /// Scrive solo se dall'altra parte c'e' ancora qualcuno.

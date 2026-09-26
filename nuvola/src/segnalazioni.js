@@ -75,6 +75,105 @@ export const TIPI_DI_ALLEGATO = Object.freeze([
   "video/3gpp",
 ]);
 
+/* Che cosa e' davvero un file, dai suoi primi byte.
+ *
+ * Il tipo che arriva nell'intestazione lo scrive chi manda, e da solo non
+ * dice niente: un file qualunque si puo' dichiarare «image/png». I primi byte
+ * invece sono il file — ogni formato comincia con la sua firma — e sono
+ * quelli che decidono. Quello che non ha la firma di una foto o di un video
+ * non si allega, qualunque cosa dica di essere.
+ *
+ * HEIC e 3GP ci sono perche' sono quelli che fanno i telefoni: le foto di un
+ * iPhone e i video di tanti Android. Stanno nella stessa scatola dell'MP4 e
+ * del MOV — `ftyp` all'ottavo byte — e li distingue la marca che segue. */
+const MARCHE = Object.freeze({
+  "image/heic": ["heic", "heix", "heim", "heis", "hevc", "hevx"],
+  "image/heif": ["mif1", "msf1", "mif2"],
+  "video/quicktime": ["qt  "],
+  "video/3gpp": ["3gp4", "3gp5", "3gp6", "3gp7", "3gg6", "3g2a", "3g2b", "3g2c"],
+  "video/mp4": [
+    "isom",
+    "iso2",
+    "iso4",
+    "iso5",
+    "iso6",
+    "mp41",
+    "mp42",
+    "avc1",
+    "M4V ",
+    "M4A ",
+    "mmp4",
+    "dash",
+    "MSNV",
+    "f4v ",
+  ],
+});
+
+const ascii = (byte, da, quanti) => String.fromCharCode(...byte.subarray(da, da + quanti));
+
+export function tipoDelFile(byte) {
+  if (!(byte instanceof Uint8Array) || byte.length < 3) return "";
+  if (byte[0] === 0xff && byte[1] === 0xd8 && byte[2] === 0xff) return "image/jpeg";
+  if (ascii(byte, 0, 8) === "\x89PNG\r\n\x1a\n") return "image/png";
+  if (ascii(byte, 0, 6) === "GIF87a" || ascii(byte, 0, 6) === "GIF89a") return "image/gif";
+  if (ascii(byte, 0, 4) === "RIFF" && ascii(byte, 8, 4) === "WEBP") return "image/webp";
+  if (ascii(byte, 4, 4) === "ftyp") {
+    const marca = ascii(byte, 8, 4);
+    for (const [tipo, marche] of Object.entries(MARCHE)) {
+      if (marche.includes(marca)) return tipo;
+    }
+    return "";
+  }
+  /* WebM e' un Matroska che lo dice nella testa: la firma EBML, e poco dopo
+   * la parola «webm». Un Matroska qualunque no. */
+  if (byte[0] === 0x1a && byte[1] === 0x45 && byte[2] === 0xdf && byte[3] === 0xa3) {
+    return ascii(byte, 0, Math.min(byte.length, 64)).includes("webm") ? "video/webm" : "";
+  }
+  return "";
+}
+
+/* L'estensione che il file deve avere, per il tipo che e' davvero. Un file
+ * che si chiama `.html` ma e' una foto diventa `.png`: il nome lo sceglie chi
+ * manda, e da qui in poi lo legge GitHub. */
+const ESTENSIONI = Object.freeze({
+  "image/jpeg": "jpg",
+  "image/png": "png",
+  "image/webp": "webp",
+  "image/heic": "heic",
+  "image/heif": "heif",
+  "image/gif": "gif",
+  "video/mp4": "mp4",
+  "video/quicktime": "mov",
+  "video/webm": "webm",
+  "video/3gpp": "3gp",
+});
+
+export function nomeColSuoTipo(nome, tipo) {
+  const pulito = nomeDiFile(nome);
+  const estensione = ESTENSIONI[tipo];
+  if (!estensione) return pulito;
+  const senza = pulito.replace(/\.[A-Za-z0-9]{1,8}$/, "") || "allegato";
+  return `${senza.slice(0, 60 - estensione.length - 1)}.${estensione}`;
+}
+
+/* Quello che la persona scrive finisce in una issue pubblica, e GitHub
+ * legge il Markdown: una chiocciola davanti a un nome chiama quella persona
+ * — le arriva una notifica, da una repository che non conosce — e un
+ * commento HTML nasconde il testo a chi legge la pagina ma non a chi legge
+ * il sorgente. Nessuna delle due cose serve a chi segnala un difetto.
+ *
+ * Si mette in mezzo un carattere che non si vede (U+200D): a chi legge il
+ * testo resta identico, e GitHub non ci riconosce piu' ne' la chiamata ne' il
+ * commento. Gli indirizzi email restano come sono: li' la chiocciola ha una
+ * lettera davanti, e GitHub non la legge come una chiamata. */
+const INVISIBILE = "\u200d";
+export function innocuo(valore) {
+  return String(valore ?? "")
+    .replace(/(^|[^A-Za-z0-9_`])@(?=[A-Za-z0-9])/g, `$1@${INVISIBILE}`)
+    .replace(/<!--/g, `<${INVISIBILE}!--`)
+    .replace(/-->/g, `--${INVISIBILE}>`);
+}
+
 /* Un nome di file che si puo' scrivere in una repository senza sorprese:
  * lettere, numeri, punto, trattino, trattino basso. Il resto diventa un
  * trattino basso, e non si va oltre i sessanta caratteri. */
@@ -124,7 +223,7 @@ const testo = (valore, massimo) => {
  * raccolta da sola, separate da un segno che al ritorno permette di ridare
  * alla persona solo le sue parole. */
 export function corpoDellaIssue({ corpo, diagnostica, casa, da = "" }) {
-  const righe = [testo(corpo, CORPO_MASSIMO)];
+  const righe = [innocuo(testo(corpo, CORPO_MASSIMO))];
   const voci = Object.entries(diagnostica || {}).filter(
     ([chiave, valore]) => chiave && valore !== undefined && valore !== null && valore !== "",
   );
@@ -143,10 +242,12 @@ export function corpoDellaIssue({ corpo, diagnostica, casa, da = "" }) {
 }
 
 const pulisci = (valore) =>
-  String(valore)
-    .replace(/[|\r\n]+/g, " ")
-    .trim()
-    .slice(0, 200);
+  innocuo(
+    String(valore)
+      .replace(/[|\r\n]+/g, " ")
+      .trim()
+      .slice(0, 200),
+  );
 
 /* Le parole della persona, senza la diagnostica. */
 export function paroleDellaPersona(corpo) {
@@ -222,6 +323,7 @@ export class GitHub {
     token,
     repo,
     repoAllegati = "",
+    ramoAllegati = "",
     fetch: prendi = globalThis.fetch,
     base = "https://api.github.com",
   }) {
@@ -241,6 +343,16 @@ export class GitHub {
      * spostano da qui: un ramo a parte, un'altra repository, e non cambia una
      * riga di programma. Vuota vale quella delle issue. */
     this.repoAllegati = repoAllegati || repo;
+    /* E su quale **ramo**. Vuoto vuol dire quello principale, com'era prima.
+     *
+     * Quando gli allegati stanno nella repository del progetto, il ramo
+     * principale e' quello che Home Assistant scarica per installare
+     * l'add-on: ogni foto finita li' se la porterebbe dietro chiunque
+     * installi. Un ramo a parte — `allegati` — tiene i file nella stessa
+     * repository, visibili dalla segnalazione, ma fuori da quello che si
+     * scarica. Se il ramo non c'e' ancora lo si crea al primo allegato. */
+    const ramo = String(ramoAllegati || "").trim();
+    this.ramoAllegati = /^[A-Za-z0-9][A-Za-z0-9._/-]{0,99}$/.test(ramo) ? ramo : "";
     /* Non `this.prendi = prendi`: `fetch` chiamata come metodo di
      * quest'oggetto — `this.prendi(...)` — arriva col `this` sbagliato, e il
      * worker la rifiuta con «Illegal invocation». Si chiama e basta. */
@@ -298,22 +410,76 @@ export class GitHub {
    * repository: senza, GitHub risponde 403 o 404, e l'app lo dice. Torna
    * l'indirizzo con cui aprirlo. */
   async mettiFile({ via, byte, messaggio }) {
-    const risposta = await this._chiama(
-      "PUT",
-      `/contents/${via}`,
-      {
-        message: messaggio,
-        content: inBase64(byte),
-      },
-      { dove: this.repoAllegati },
-    );
+    const corpo = {
+      message: messaggio,
+      content: inBase64(byte),
+      ...(this.ramoAllegati ? { branch: this.ramoAllegati } : {}),
+    };
+    let risposta;
+    try {
+      risposta = await this._chiama("PUT", `/contents/${via}`, corpo, { dove: this.repoAllegati });
+    } catch (errore) {
+      /* Il ramo che non c'e' ancora: GitHub lo dice con un 404 o un 422 che
+       * parlano di «branch». Si crea una volta, e si riprova una volta. */
+      if (!this.ramoAllegati || !ramoMancante(errore)) throw errore;
+      await this._creaIlRamo();
+      risposta = await this._chiama("PUT", `/contents/${via}`, corpo, { dove: this.repoAllegati });
+    }
     const contenuto = risposta?.content ?? {};
     return {
       via,
       url: contenuto.html_url ? `${contenuto.html_url}?raw=true` : "",
     };
   }
+
+  /* Il ramo degli allegati, fatto partire dalla punta del ramo principale.
+   *
+   * Vuole lo stesso permesso dei file — «Contents: Read and write» — e niente
+   * di piu'. Se due allegati arrivano insieme e lo creano tutti e due, il
+   * secondo si sente dire «esiste gia'», che e' proprio quello che voleva. */
+  async _creaIlRamo() {
+    const dove = { dove: this.repoAllegati };
+    try {
+      const repository = await this._chiama("GET", "", null, dove);
+      const principale = String(repository?.default_branch || "main");
+      const punta = await this._chiama(
+        "GET",
+        `/git/ref/heads/${encodeURIComponent(principale)}`,
+        null,
+        dove,
+      );
+      const sha = punta?.object?.sha;
+      if (!sha) throw new GitHubNonRisponde(404, "non trovo la punta del ramo principale");
+      await this._chiama(
+        "POST",
+        "/git/refs",
+        { ref: `refs/heads/${this.ramoAllegati}`, sha },
+        dove,
+      );
+    } catch (errore) {
+      if (
+        errore instanceof GitHubNonRisponde &&
+        errore.stato === 422 &&
+        /exist/i.test(errore.message)
+      )
+        return;
+      throw new GitHubNonRisponde(
+        errore?.stato || 502,
+        `il ramo «${this.ramoAllegati}» degli allegati non c'e' e non riesco a crearlo` +
+          (errore?.message ? `: ${errore.message}` : ""),
+      );
+    }
+  }
 }
+
+function ramoMancante(errore) {
+  return (
+    errore instanceof GitHubNonRisponde &&
+    (errore.stato === 404 || errore.stato === 422) &&
+    /branch|ref/i.test(errore.message)
+  );
+}
+
 /* Base64 di byte, a pezzi: `btoa` vuole una stringa di caratteri a un
  * byte, e farla in un colpo solo su dieci megabyte sfonda la pila. */
 export function inBase64(byte) {
@@ -338,11 +504,16 @@ export class RichiestaSbagliata extends Error {
 /* Vive dentro l'oggetto della casa: `storage` e' il suo, e le issue che
  * conosce sono solo le sue. */
 export class Segnalazioni {
-  constructor({ storage, github, casa, adesso = () => Date.now() }) {
+  constructor({ storage, github, casa, adesso = () => Date.now(), freno = null, chi = "" }) {
     this.storage = storage;
     this.github = github;
     this.casa = casa;
     this.adesso = adesso;
+    /* Il limite sopra quello della casa: per indirizzo e in tutto. Lo
+     * decide chi ospita — la macchina lo tiene in memoria, la nuvola in un
+     * oggetto suo — e qui si chiede e basta: `true` vuol dire «avanti». */
+    this.freno = freno;
+    this.chi = chi;
   }
 
   async elenco() {
@@ -372,7 +543,7 @@ export class Segnalazioni {
     }
     await this._contaUnaScrittura();
     const issue = await this.github.apriIssue({
-      titolo: `[${quale}] ${titoloPulito}`,
+      titolo: `[${quale}] ${innocuo(titoloPulito)}`,
       corpo: corpoDellaIssue({
         corpo: corpoPulito,
         diagnostica,
@@ -410,7 +581,7 @@ export class Segnalazioni {
     const pulito = testo(messaggio, MESSAGGIO_MASSIMO);
     if (!pulito) throw new RichiestaSbagliata("manca_il_testo", "Manca il testo.");
     await this._contaUnaScrittura();
-    await this.github.commenta(voce.numero, `${MARCATORE_CASA}\n${pulito}`);
+    await this.github.commenta(voce.numero, `${MARCATORE_CASA}\n${innocuo(pulito)}`);
     return this.leggi(voce.numero);
   }
 
@@ -424,7 +595,7 @@ export class Segnalazioni {
     return this.leggi(voce.numero);
   }
 
-  async _allega(numero, { nome, tipo, byte }) {
+  async _allega(numero, { nome, byte }) {
     if (!(byte instanceof Uint8Array) || byte.length === 0)
       throw new RichiestaSbagliata("manca_il_file", "Manca il file.");
     if (byte.length > ALLEGATO_MASSIMO)
@@ -433,20 +604,23 @@ export class Segnalazioni {
         `L'allegato e' troppo grande: al massimo ${pesoLeggibile(ALLEGATO_MASSIMO)}.`,
         413,
       );
-    if (!TIPI_DI_ALLEGATO.includes(String(tipo)))
+    /* Il tipo lo dicono i byte, non l'intestazione: quello dichiarato non si
+     * guarda nemmeno. Vedi `tipoDelFile`. */
+    const vero = tipoDelFile(byte);
+    if (!vero || !TIPI_DI_ALLEGATO.includes(vero))
       throw new RichiestaSbagliata(
         "tipo_non_ammesso",
         "Si possono allegare solo foto e video.",
         415,
       );
-    const pulito = nomeDiFile(nome);
+    const pulito = nomeColSuoTipo(nome, vero);
     const via = `allegati/${numero}/${new Date(this.adesso()).toISOString().replace(/[:.]/g, "-")}-${pulito}`;
     const messo = await this.github.mettiFile({
       via,
       byte,
       messaggio: `Allegato alla #${numero}: ${pulito}`,
     });
-    const foto = String(tipo).startsWith("image/");
+    const foto = vero.startsWith("image/");
     await this.github.commenta(
       numero,
       `${MARCATORE_CASA}\n${foto ? "📷" : "🎬"} ${pulito} (${pesoLeggibile(byte.length)})\n${messo.url}`,
@@ -495,6 +669,13 @@ export class Segnalazioni {
       throw new RichiestaSbagliata(
         "troppe",
         "Troppe scritture in un'ora: riprova piu' tardi.",
+        429,
+      );
+    }
+    if (this.freno && !(await this.freno(this.chi))) {
+      throw new RichiestaSbagliata(
+        "troppe",
+        "Troppe scritture in un'ora dal centralino: riprova piu' tardi.",
         429,
       );
     }

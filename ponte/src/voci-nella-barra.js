@@ -4,7 +4,7 @@
  *
  *  - **Cruscotto installatore**, per chi gdahome lo monta in quaranta case: da
  *    li' arriva ai suoi impianti senza aprire un altro posto;
- *  - **Gestione installatori**, per chi il quadro lo tiene — una casa sola al
+ *  - **Cruscotto gdahome**, per chi il quadro lo tiene — una casa sola al
  *    mondo: da li' aggiunge gli installatori e mette i limiti.
  *
  * Su un Home Assistant qualunque non c'e' nessuna delle due: una porta che non
@@ -80,7 +80,7 @@ export const IL_CRUSCOTTO = Object.freeze({
 
 export const LA_GESTIONE = Object.freeze({
   dove: "gdahome-gestione",
-  titolo: "Gestione installatori",
+  titolo: "Cruscotto gdahome",
   segno: "mdi:account-key",
   pagina: "gestore",
 });

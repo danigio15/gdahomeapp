@@ -10,6 +10,8 @@
  */
 import assert from "node:assert/strict";
 import test from "node:test";
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 
 import {
   ATTESA_DELLA_CASSETTA,
@@ -21,8 +23,14 @@ import {
   Zigbee,
   ceZha,
   comeSiApre,
+  comeSiApreColServizio,
+  comeSiDiceNelRegistro,
   comeSiChiude,
+  comeSiChiudeColServizio,
   comeSiPresenta,
+  leStradePerAprire,
+  leStradePerChiudere,
+  eUnComandoCheNonCe,
   eUnoNuovo,
   laReteDiCasa,
   perQuanto,
@@ -106,12 +114,29 @@ test("la si richiude dalla stessa strada, con zero al posto del tempo", () => {
 
 test("un dispositivo rinominato non è un dispositivo nuovo", () => {
   /* Il registro annuncia anche le modifiche e le cancellazioni: chi guarda
-   * l'attesa vedrebbe entrare qualcosa che era già in casa. */
-  assert.equal(eUnoNuovo({ action: "create", device_id: "abc" }), true);
-  assert.equal(eUnoNuovo({ action: "update", device_id: "abc" }), false);
-  assert.equal(eUnoNuovo({ action: "remove", device_id: "abc" }), false);
-  assert.equal(eUnoNuovo({ action: "create" }), false);
+   * l'attesa vedrebbe entrare qualcosa che era già in casa.
+   *
+   * L'evento arriva IMBUSTATO, come lo manda Home Assistant: fuori che evento
+   * è, dentro `data` i suoi dati. Qui si scriveva la forma nuda — comoda da
+   * leggere e mai vista in casa — e il codice la leggeva allo stesso modo:
+   * due errori che si davano ragione, e in una casa vera `eUnoNuovo` diceva
+   * sempre no. */
+  const bus = (dati) => ({
+    event_type: "device_registry_updated",
+    data: dati,
+    origin: "LOCAL",
+    time_fired: "2026-09-22T05:29:00.000Z",
+    context: { id: "01", parent_id: null, user_id: null },
+  });
+  assert.equal(eUnoNuovo(bus({ action: "create", device_id: "abc" })), true);
+  assert.equal(eUnoNuovo(bus({ action: "update", device_id: "abc" })), false);
+  assert.equal(eUnoNuovo(bus({ action: "remove", device_id: "abc" })), false);
+  assert.equal(eUnoNuovo(bus({ action: "create" })), false);
+  assert.equal(eUnoNuovo(bus(null)), false);
   assert.equal(eUnoNuovo(null), false);
+  /* E la forma nuda non passa piu': era il travestimento del guasto, e
+   * accettarla vorrebbe dire lasciare la porta aperta al prossimo. */
+  assert.equal(eUnoNuovo({ action: "create", device_id: "abc" }), false);
 });
 
 test("un dispositivo si presenta col nome che gli ha dato chi lo guarda", () => {
@@ -184,7 +209,37 @@ test("una riga del registro senza entità non viaggia", () => {
 
 /* ── il giro ────────────────────────────────────────────────────────────── */
 
-function casaFinta({ voci = [], cassetta = "", dispositivi = [], entita = [] } = {}) {
+/* Le regole dei jolly di MQTT, quelle vere.
+ *
+ * `+` copre UN livello, `#` copre tutto quello che resta. Servono qui perché
+ * la casa finta deve rifiutare quello che un broker rifiuterebbe: se consegna
+ * a tutti, una domanda sbagliata sembra una domanda giusta. */
+function copre(argomento, suo) {
+  const chiesti = String(argomento ?? "").split("/");
+  const arrivati = String(suo ?? "").split("/");
+  for (let i = 0; i < chiesti.length; i += 1) {
+    if (chiesti[i] === "#") return true;
+    if (i >= arrivati.length) return false;
+    if (chiesti[i] !== "+" && chiesti[i] !== arrivati[i]) return false;
+  }
+  return chiesti.length === arrivati.length;
+}
+
+/* Un rifiuto di Home Assistant, come arriva davvero: un errore col suo
+ * codice. E' la forma che `casa.js` costruisce da `{success:false, error}`. */
+function rifiuto(code, message = "no") {
+  const errore = new Error(message);
+  errore.code = code;
+  return errore;
+}
+
+function casaFinta({
+  voci = [],
+  cassetta = "",
+  dispositivi = [],
+  entita = [],
+  rifiuta = null,
+} = {}) {
   const detto = [];
   let mandaEvento = null;
   let mandaMqtt = null;
@@ -198,14 +253,47 @@ function casaFinta({ voci = [], cassetta = "", dispositivi = [], entita = [] } =
     },
     async chiedi(comando) {
       detto.push(comando);
+      /* La casa finta che dice di no a quello che la casa vera non accetta:
+       * e' l'unico modo di provare il ripiego senza una casa. */
+      const male = rifiuta?.(comando);
+      if (male) throw male;
       if (comando.type === "config_entries/get") return voci;
       if (comando.type === "config/device_registry/list") return dispositivi;
+      /* La rinomina risponde come risponde Home Assistant: la riga aggiornata.
+       * Prima questa finta rispondeva `null`, e cosi' la prova non poteva
+       * accorgersi di un «si'» che non aveva scritto niente — che e' proprio
+       * il guasto arrivato dal campo. */
+      if (comando.type === "config/device_registry/update") {
+        const riga = dispositivi.find((uno) => uno.id === comando.device_id);
+        if (!riga) return null;
+        if ("name_by_user" in comando) riga.name_by_user = comando.name_by_user;
+        return { ...riga };
+      }
       if (comando.type === "config/entity_registry/list") return entita;
       return null;
     },
     async ascolta(evento, onEvento) {
       detto.push({ ascolta: evento });
-      mandaEvento = onEvento;
+      /* La busta, come la manda Home Assistant.
+       *
+       * Qui la casa finta consegnava i dati nudi — `{action, device_id}` — e
+       * cioè la forma che si aspettava il codice invece di quella che arriva
+       * davvero: Home Assistant i dati di un evento del bus li mette in
+       * `event.data`, e fuori ci scrive di che evento si tratta. Con la forma
+       * comoda `eUnoNuovo` diceva sempre sì nelle prove e sempre no in casa,
+       * e nessun dispositivo è mai stato annunciato a nessuno.
+       *
+       * È lo stesso sbaglio della casa finta che consegnava i messaggi MQTT
+       * ignorando i caratteri jolly, e del ponte finto dell'app che rispondeva
+       * `z2m`. Un finto più accomodante dell'originale non prova niente. */
+      mandaEvento = (dati) =>
+        onEvento({
+          event_type: evento,
+          data: dati,
+          origin: "LOCAL",
+          time_fired: new Date().toISOString(),
+          context: { id: "01", parent_id: null, user_id: null },
+        });
       return async () => {
         detto.push({ smetti: evento });
         mandaEvento = null;
@@ -214,8 +302,16 @@ function casaFinta({ voci = [], cassetta = "", dispositivi = [], entita = [] } =
     async ascoltaIl(comando, onEvento) {
       detto.push({ ascoltaIl: comando.type, topic: comando.topic });
       mandaMqtt = onEvento;
-      /* La cassetta risponde subito: il messaggio è già scritto lì dentro. */
-      if (cassetta) queueMicrotask(() => onEvento({ topic: `${cassetta}/bridge/info` }));
+      /* La cassetta risponde subito: il messaggio è già scritto lì dentro —
+       * ma solo a chi ha chiesto un argomento che lo COPRE.
+       *
+       * Questa riga prima non c'era, e la casa finta consegnava a chiunque:
+       * era più generosa di un broker vero, e per questo non si è accorta che
+       * `+/bridge/info` non può far arrivare «casa/zigbee/bridge/info». In
+       * MQTT il `+` copre un livello solo, e una prova che non lo sa è una
+       * prova che dice sì dove la casa dice no. */
+      const suo = `${cassetta}/bridge/info`;
+      if (cassetta && copre(comando.topic, suo)) queueMicrotask(() => onEvento({ topic: suo }));
       return async () => {
         detto.push({ smetti: comando.type });
         mandaMqtt = null;
@@ -243,9 +339,12 @@ test("senza ZHA si chiede alla posta come si chiama la cassetta", async () => {
   const zigbee = new Zigbee({ casa });
   const rete = await zigbee.rete();
   assert.deepEqual(rete, { quale: Z2M, cassetta: "casa/zigbee" });
-  /* Una domanda sola, col jolly: non si tira a indovinare «zigbee2mqtt». */
-  const chiesto = casa.detto.find((uno) => uno.ascoltaIl);
-  assert.equal(chiesto.topic, "+/bridge/info");
+  /* Col jolly, e a due profondità: non si tira a indovinare «zigbee2mqtt», e
+   * un prefisso con le barre dentro deve poter arrivare. In MQTT il `+` copre
+   * un livello solo, quindi `+/bridge/info` «casa/zigbee» non lo prende mai —
+   * ed è il caso di questa prova. */
+  const chiesti = casa.detto.filter((uno) => uno.ascoltaIl).map((uno) => uno.topic);
+  assert.deepEqual(chiesti, ["+/bridge/info", "+/+/bridge/info"]);
   /* E ci si toglie di mezzo: l'abbonamento non resta appeso. */
   assert.equal(
     casa.detto.some((uno) => uno.smetti === "mqtt/subscribe"),
@@ -274,7 +373,10 @@ test("si ascolta PRIMA di aprire: chi è già in attesa entra subito", async () 
   const zigbee = new Zigbee({ casa });
   await zigbee.apri({ secondi: 30 });
   const ordine = casa.detto.map((uno) => uno.ascolta || uno.type).filter(Boolean);
-  assert.deepEqual(ordine, ["config_entries/get", "device_registry_updated", "zha/permit"]);
+  /* La prima strada di ZHA è il servizio `zha.permit`, non il comando sul
+   * filo: quello che questa prova tiene fermo è che l'ascolto venga PRIMA
+   * dell'ordine, qualunque strada sia. */
+  assert.deepEqual(ordine, ["config_entries/get", "device_registry_updated", "call_service"]);
   zigbee.spegni();
 });
 
@@ -447,7 +549,10 @@ test("i comandi zigbee esistono solo dove una rete c'è", async () => {
   assert.equal(stato.result.quale, ZHA);
   assert.equal(stato.result.aperta, false);
 
-  const aperta = await con.rispondi({ id: 3, type: "ponte/zigbee/apri", secondi: 45 });
+  const aperta = await con.rispondi(
+    { id: 3, type: "ponte/zigbee/apri", secondi: 45 },
+    { puoAmministrare: true },
+  );
   assert.equal(aperta.success, true);
   assert.equal(aperta.result.restano, 45);
 
@@ -493,4 +598,480 @@ test("il nome va nel registro di casa, in name_by_user e non sopra il modello", 
   assert.equal((await zigbee.rinomina("", "Boh")).fatto, false);
   assert.equal((await zigbee.rinomina("d1", "   ")).fatto, false);
   zigbee.spegni();
+});
+
+/* «Ho cambiato nome… in Home Assistant non ha cambiato il nome in quello
+ * scelto» — e intanto la schermata diceva «Adesso si chiama cosi', e con quel
+ * nome lo vedono la plancia e Home Assistant».
+ *
+ * Il rifiuto era gia' coperto: Home Assistant risponde male e `chiedi`
+ * solleva. Quello che non era coperto e' il «si'» che non fa quello che dice —
+ * un `device_id` che esiste ma non e' quello che uno guarda, un campo che
+ * quella versione non accetta. Li' il ponte rispondeva `fatto: true` e l'app,
+ * che controlla `fatto` davvero, non aveva niente da controllare.
+ *
+ * Una promessa non verificata e' la peggiore specie di guasto: chi la legge
+ * smette di controllare. */
+test("un «si'» che non ha scritto il nome non e' una rinomina riuscita", async () => {
+  const casa = casaFinta({
+    voci: [{ domain: "zha", state: "loaded" }],
+    dispositivi: [{ id: "d1", name: "TS0121" }],
+    entita: [{ entity_id: "switch.ts0121", original_device_class: "outlet", device_id: "d1" }],
+  });
+  /* Una casa che dice sempre di si' e non scrive niente: e' la forma del
+   * guasto arrivato dal campo. */
+  const vera = casa.chiedi;
+  casa.chiedi = async (comando) =>
+    comando.type === "config/device_registry/update"
+      ? { id: "d1", name: "TS0121" }
+      : vera.call(casa, comando);
+  const zigbee = new Zigbee({ casa });
+  await zigbee.apri({ secondi: 30 });
+  await casa.mandaEvento({ action: "create", device_id: "d1" });
+
+  const esito = await zigbee.rinomina("d1", "Presa lavatrice");
+  assert.equal(esito.fatto, false);
+  assert.match(esito.perche, /nome/);
+  /* E l'elenco di chi sta guardando non si inventa il nome nuovo: quello che
+   * si vede resta quello che c'e' davvero in casa. */
+  assert.equal((await zigbee.stato()).entrati[0].nome, "TS0121");
+  zigbee.spegni();
+});
+
+/* E quando Home Assistant scrive un nome DIVERSO da quello chiesto — succede
+ * se due schermate si accavallano — lo si dice, col nome che c'e' davvero:
+ * senza, si resterebbe convinti di averlo chiamato in un altro modo. */
+test("e se in casa si chiama in un altro modo, lo dice col nome vero", async () => {
+  const casa = casaFinta({
+    voci: [{ domain: "zha", state: "loaded" }],
+    dispositivi: [{ id: "d1", name: "TS0121" }],
+    entita: [{ entity_id: "switch.ts0121", original_device_class: "outlet", device_id: "d1" }],
+  });
+  const vera = casa.chiedi;
+  casa.chiedi = async (comando) =>
+    comando.type === "config/device_registry/update"
+      ? { id: "d1", name: "TS0121", name_by_user: "Presa cucina" }
+      : vera.call(casa, comando);
+  const zigbee = new Zigbee({ casa });
+  await zigbee.apri({ secondi: 30 });
+  await casa.mandaEvento({ action: "create", device_id: "d1" });
+
+  const esito = await zigbee.rinomina("d1", "Presa lavatrice");
+  assert.equal(esito.fatto, false);
+  assert.match(esito.perche, /Presa cucina/);
+  zigbee.spegni();
+});
+
+test("e la cassetta col nome semplice si trova lo stesso", () => {
+  /* L'altra metà: «zigbee2mqtt», che è il nome di serie e quello che ha quasi
+   * tutti. La copre la prima domanda, e la seconda non disturba nessuno. */
+  const casa = casaFinta({ cassetta: "zigbee2mqtt" });
+  return new Zigbee({ casa }).rete().then((rete) => {
+    assert.deepEqual(rete, { quale: Z2M, cassetta: "zigbee2mqtt" });
+  });
+});
+
+test("e dice cos'ha visto, invece di lasciare indovinare", async () => {
+  /* La ragione per cui questo esiste: una casa che HA Zigbee e un ponte che
+   * non lo trova erano indistinguibili da una casa che Zigbee non ce l'ha. In
+   * tutt'e due i casi la voce nel menu dell'app non compare, e chi guarda non
+   * ha nessun modo di sapere quale dei due gli è capitato — è il guasto muto,
+   * lo stesso contro cui questo progetto ha già scritto tre volte.
+   *
+   * Dal campo, una serata intera: «su app non esce zigbee», con l'add-on già
+   * alla versione giusta e Zigbee2MQTT in casa. Senza una riga che dica
+   * cos'ha guardato, l'unico modo di rispondere è far fare a chi ha la casa
+   * tre prove dentro Home Assistant. */
+  const zigbee = new Zigbee({ casa: casaFinta({ cassetta: "zigbee2mqtt" }) });
+  const rete = await zigbee.rete();
+  const verbale = zigbee.comeEAndata();
+  assert.equal(rete.quale, Z2M);
+  assert.equal(verbale.quale, Z2M);
+  assert.equal(verbale.cassetta, "zigbee2mqtt");
+  /* Le due righe dicono cos'è successo, a parole: quella di ZHA e quella
+   * della posta. */
+  assert.match(verbale.zha, /ZHA/);
+  assert.match(verbale.posta, /zigbee2mqtt/);
+  /* E quali argomenti ha chiesto, perché è la prima cosa che si vuole sapere
+   * quando non ha trovato niente. */
+  assert.deepEqual(verbale.cassette, ["+/bridge/info", "+/+/bridge/info"]);
+});
+
+test("e quando non trova niente lo dice col perché, non col silenzio", async () => {
+  /* Il caso che conta davvero: nessuna cassetta risponde. Prima di questa
+   * riga la risposta era «nessuna rete» e basta — identica, parola per
+   * parola, a quella di una casa che Zigbee non ce l'ha per davvero. */
+  const zigbee = new Zigbee({ casa: casaFinta({ cassetta: "" }) });
+  const rete = await zigbee.rete();
+  /* «Nessuna rete» si scrive con la stringa vuota: e' la stessa parola con
+   * cui risponde il comando dell'app, e il verbale non se ne inventa una sua. */
+  assert.equal(rete.quale, NESSUNA);
+  const verbale = zigbee.comeEAndata();
+  assert.equal(verbale.quale, NESSUNA);
+  assert.equal(verbale.cassetta, "");
+  assert.match(verbale.posta, /nessuna cassetta/);
+});
+
+/* ── e lo dice nel registro, che e' dove si guarda ───────────────────────── */
+
+test("la riga del registro dice quale rete c'è, e col nome della cassetta", () => {
+  assert.deepEqual(comeSiDiceNelRegistro({ rete: { quale: ZHA, cassetta: "" } }), {
+    grave: false,
+    riga: "la rete Zigbee di questa casa e' ZHA",
+  });
+  assert.deepEqual(comeSiDiceNelRegistro({ rete: { quale: Z2M, cassetta: "casa/zigbee" } }), {
+    grave: false,
+    riga: "la rete Zigbee di questa casa e' Zigbee2MQTT, nella cassetta «casa/zigbee»",
+  });
+});
+
+test("e quando non c'è niente la riga porta con sé tutt'e due i perché", () => {
+  /* È l'unica riga che quella persona leggerà: se il motivo non ci sta dentro,
+   * non sta da nessuna parte. Sono due perché e non uno — ZHA e la posta —
+   * perché la rete si cerca in due posti e sapere quale dei due ha risposto
+   * male è metà della risposta. */
+  const { grave, riga } = comeSiDiceNelRegistro({
+    rete: { quale: NESSUNA, cassetta: "" },
+    verbale: {
+      zha: "l'integrazione ZHA in questa casa non c'e'",
+      posta: "nessuna cassetta: Home Assistant non fa ascoltare MQTT (mqtt non configurato)",
+    },
+  });
+  /* Va scritta come un avviso, non come una riga qualunque: chi scorre il
+   * registro cercando cosa non va deve poterla vedere senza leggerlo tutto. */
+  assert.equal(grave, true);
+  assert.match(riga, /nessuna rete Zigbee/);
+  assert.match(riga, /la voce «Zigbee» non comparira'/);
+  assert.match(riga, /ZHA in questa casa non c'e'/);
+  assert.match(riga, /non fa ascoltare MQTT/);
+});
+
+test("all'accensione la riga esce da sola, senza che nessuno apra l'app", async () => {
+  /* Il guasto vero, quello che ha tenuto in piedi una serata intera: il
+   * riquadro della console si riempiva soltanto DOPO che qualcuno avesse
+   * aperto la schermata Zigbee nell'app — perché è lì che `rete()` partiva la
+   * prima volta. Ma chi quella schermata non ce l'ha, perché la voce nel menu
+   * non compare, non può aprirla per sapere perché non compare. Il rimedio al
+   * silenzio era muto anche lui. */
+  const dette = [];
+  const registro = {
+    info: (cosa) => dette.push(["info", cosa]),
+    attenzione: (cosa) => dette.push(["attenzione", cosa]),
+    errore: () => {},
+  };
+  const zigbee = new Zigbee({ casa: casaFinta({ cassetta: "zigbee2mqtt" }), registro });
+  await zigbee.dilloAlRegistro([]);
+  assert.deepEqual(dette, [
+    ["info", "la rete Zigbee di questa casa e' Zigbee2MQTT, nella cassetta «zigbee2mqtt»"],
+  ]);
+});
+
+test("e se la casa sta ancora partendo si riguarda, invece di dire una cosa falsa", async () => {
+  /* All'accensione dell'add-on Home Assistant sta spesso ancora partendo, e
+   * quello di Zigbee2MQTT parte per conto suo — a volte dopo di noi. Guardare
+   * una volta sola vorrebbe dire scrivere «nessuna rete Zigbee» in una casa
+   * che ce l'ha, e non correggerlo più fino al riavvio dopo.
+   *
+   * La casa di questa prova è una casa che si accende in ritardo: alla prima
+   * domanda la posta non c'è, alla seconda sì. */
+  let accesa = false;
+  const casa = {
+    async chiedi() {
+      return [];
+    },
+    async ascoltaIl(comando, onEvento) {
+      if (accesa && copre(comando.topic, "zigbee2mqtt/bridge/info"))
+        queueMicrotask(() => onEvento({ topic: "zigbee2mqtt/bridge/info" }));
+      return async () => {};
+    },
+  };
+  const dette = [];
+  const registro = {
+    info: (cosa) => dette.push(cosa),
+    attenzione: (cosa) => dette.push(cosa),
+    errore: () => {},
+  };
+  /* L'attesa la mette la prova, così non si sta lì mezzo minuto: è per questo
+   * che si passa dal di fuori invece di stare scritta dentro il codice. */
+  const zigbee = new Zigbee({
+    casa,
+    registro,
+    aspetta: async () => {
+      accesa = true;
+    },
+  });
+  await zigbee.dilloAlRegistro([30_000]);
+  /* Una riga sola, e quella giusta: la prima passata non scrive niente. */
+  assert.deepEqual(dette, [
+    "la rete Zigbee di questa casa e' Zigbee2MQTT, nella cassetta «zigbee2mqtt»",
+  ]);
+});
+
+test("e chi si sta spegnendo non scrive più niente", async () => {
+  /* Un ritentativo in coda mentre l'add-on si abbassa: la riga arriverebbe
+   * dopo «il ponte si abbassa», e direbbe di una casa che non c'è più. */
+  const dette = [];
+  const zigbee = new Zigbee({
+    casa: casaFinta({}),
+    registro: { info: (cosa) => dette.push(cosa), attenzione: (cosa) => dette.push(cosa) },
+    aspetta: async () => zigbee.spegni(),
+  });
+  await zigbee.dilloAlRegistro([30_000]);
+  assert.deepEqual(dette, []);
+});
+
+/* ── e l'app cerca la stessa parola che il ponte manda ───────────────────── */
+
+test("le due parole del filo sono le stesse di qua e di la'", () => {
+  /* Il guasto per cui è nata questa prova, e che è arrivato fino a una casa
+   * vera senza farsi vedere.
+   *
+   * «Su app non esce zigbee», per giorni, in una casa che Zigbee ce l'ha. Il
+   * ponte la rete la trovava e lo scriveva pure nel registro — «la rete Zigbee
+   * di questa casa e' Zigbee2MQTT, nella cassetta zigbee2mqtt» — e l'app
+   * continuava a non disegnare la voce nel menu.
+   *
+   * Perché le due parole erano diverse. Il ponte manda `zigbee2mqtt`; l'app,
+   * nell'elenco `LaRete`, cercava l'abbreviazione `z2m`. Un confronto fra due
+   * parole diverse non torna mai: la risposta finiva in `LaRete.nessuna`,
+   * `siApre` diceva di no, e `barra.dart` la voce non la metteva.
+   *
+   * Con ZHA le due parole sono la stessa — `zha` di qua e `zha` di là — e
+   * infatti quella metà funzionava. È il modo in cui un guasto del genere
+   * passa le prove: metà del codice è giusta, e la si prova.
+   *
+   * Le due metà stanno in due linguaggi, e nessun compilatore le guarda
+   * insieme. Le guarda questa prova, che legge i due file e confronta le
+   * parole — come `marchio.test.js` fa con i numeri di versione. */
+  const dart = readFileSync(
+    fileURLToPath(new URL("../../app/lib/casa/zigbee.dart", import.meta.url)),
+    "utf8",
+  );
+  /* `nome('parola')`: la parola fra apici è quella che viaggia sul filo. */
+  const dellApp = Object.fromEntries(
+    [...dart.matchAll(/^ {2}(zha|z2m|nessuna)\('([^']*)'\)[;,]$/gm)].map((una) => [una[1], una[2]]),
+  );
+  assert.deepEqual(
+    Object.keys(dellApp).sort(),
+    ["nessuna", "z2m", "zha"],
+    "l'elenco LaRete dell'app non si legge piu' come prima: questa prova va rifatta",
+  );
+  assert.equal(dellApp.zha, ZHA);
+  assert.equal(dellApp.z2m, Z2M);
+  assert.equal(dellApp.nessuna, NESSUNA);
+});
+
+/* ── quando Home Assistant non accetta il comando ─────────────────────────
+ *
+ * Dal campo, con l'add-on aggiornato: la schermata Zigbee mostrava in cima
+ * «gdahome in casa è più vecchio dell'app: aggiorna l'add-on», e tre
+ * centimetri sotto la scheda ZHA piena — «È la rete che c'è in questa casa».
+ * Le due cose non potevano essere vere insieme: se il ponte non sapesse fare
+ * lo Zigbee, la scheda ZHA non ci sarebbe.
+ *
+ * La catena: «Apri la rete» → il ponte manda a Home Assistant `zha/permit` →
+ * Home Assistant risponde `unknown_command` perché quel comando sul filo non
+ * ce l'ha → il ponte rilanciava quel codice tale e quale → l'app lo leggeva
+ * come il PROPRIO codice, quello che vuol dire «il ponte è vecchio».
+ *
+ * `unknown_command` vuol dire «chi ha ricevuto questa domanda non la
+ * conosce». Rilanciandolo si cambiava chi l'aveva ricevuta.
+ */
+
+test("ZHA ha due strade per lo stesso ordine: il filo e il servizio", () => {
+  assert.deepEqual(comeSiApreColServizio({ quale: ZHA }, 120), {
+    type: "call_service",
+    domain: "zha",
+    service: "permit",
+    service_data: { duration: 120 },
+  });
+  assert.deepEqual(comeSiChiudeColServizio({ quale: ZHA }), {
+    type: "call_service",
+    domain: "zha",
+    service: "permit",
+    service_data: { duration: 0 },
+  });
+  /* Il tempo passa dallo stesso filtro della strada principale: un ripiego
+   * che apre per un tempo diverso da quello chiesto non è lo stesso ordine. */
+  assert.equal(comeSiApreColServizio({ quale: ZHA }, 99_999).service_data.duration, AL_PIU_APERTA);
+  /* Zigbee2MQTT passa già per un servizio — `mqtt.publish` — e di ripieghi
+   * non ne ha bisogno. */
+  assert.equal(comeSiApreColServizio({ quale: Z2M }), null);
+  assert.equal(comeSiChiudeColServizio({ quale: NESSUNA }), null);
+});
+
+test("si riprova solo per un comando che non c'è, non per un rifiuto qualunque", () => {
+  /* Le tre facce della stessa cosa: un comando sul filo che non c'è, e un
+   * servizio che non c'è, detto nei due modi in cui Home Assistant lo dice. */
+  for (const codice of ["unknown_command", "not_found", "service_not_found"])
+    assert.equal(eUnComandoCheNonCe(rifiuto(codice)), true, codice);
+  /* Tutto il resto no: riprovarlo darebbe lo stesso rifiuto due volte e il
+   * doppio dell'attesa a chi ha premuto il tasto. */
+  for (const codice of ["home_assistant_error", "unauthorized", "zigbee_ko", ""])
+    assert.equal(eUnComandoCheNonCe(rifiuto(codice)), false, codice || "(vuoto)");
+  assert.equal(eUnComandoCheNonCe(new Error("senza codice")), false);
+  assert.equal(eUnComandoCheNonCe(null), false);
+});
+
+test("la prima strada di ZHA è il servizio: è l'API pubblica", () => {
+  /* `zha/permit` è l'API INTERNA — quella del pannello di ZHA dentro Home
+   * Assistant — e cambia quando quel pannello cambia. `zha.permit` è un
+   * servizio: sta in Strumenti per sviluppatori → Azioni e lo chiamano le
+   * automazioni di chiunque. Rompere un servizio vuol dire rompere le
+   * automazioni di tutti, e infatti i servizi si rompono molto più di rado.
+   *
+   * Dal campo, su una casa aggiornatissima: «non mi fa aprire la rete», con
+   * la scheda ZHA piena tre centimetri sopra. Il comando sul filo non c'era
+   * più. */
+  const strade = leStradePerAprire({ quale: ZHA }, 120);
+  assert.equal(strade.length, 2);
+  assert.equal(strade[0].type, "call_service");
+  assert.equal(strade[0].domain, "zha");
+  assert.equal(strade[0].service, "permit");
+  assert.equal(strade[1].type, "zha/permit", "e quella sul filo resta, seconda");
+  /* Zigbee2MQTT di strade ne ha una sola: passa già per un servizio. */
+  const posta = leStradePerAprire({ quale: Z2M, cassetta: "zigbee2mqtt" }, 120);
+  assert.equal(posta.length, 1);
+  assert.equal(posta[0].domain, "mqtt");
+  /* E dove rete non ce n'è, nessuna. */
+  assert.deepEqual(leStradePerAprire({ quale: NESSUNA }), []);
+  assert.deepEqual(leStradePerChiudere({ quale: NESSUNA }), []);
+});
+
+test("se il servizio non c'è, la rete si apre col comando sul filo", async () => {
+  const casa = casaFinta({
+    voci: [{ domain: "zha", state: "loaded" }],
+    rifiuta: (comando) =>
+      comando.type === "call_service" && comando.domain === "zha"
+        ? rifiuto("service_not_found", "service not found")
+        : null,
+  });
+  const zigbee = new Zigbee({ casa });
+  const esito = await zigbee.apri({ secondi: 60 });
+  /* È andata: chi ha premuto il tasto vede il conto alla rovescia, non un
+   * avviso rosso. */
+  assert.equal(esito.fatto, true);
+  assert.equal(esito.restano, 60);
+  /* E si sono provate le due strade, in quest'ordine. */
+  const strade = casa.detto.filter(
+    (uno) => uno.type === "zha/permit" || (uno.type === "call_service" && uno.domain === "zha"),
+  );
+  assert.equal(strade.length, 2);
+  assert.equal(strade[0].service, "permit");
+  assert.equal(strade[1].type, "zha/permit");
+  assert.equal(strade[1].duration, 60);
+  await zigbee.chiudi();
+});
+
+test("se non c'è nessuna delle due, l'errore dice di chi è", async () => {
+  const casa = casaFinta({
+    voci: [{ domain: "zha", state: "loaded" }],
+    /* Le due strade e basta: `config_entries/get` porta anche lui
+     * `domain: "zha"` — è la domanda con cui il ponte scopre che ZHA c'è — e
+     * rifiutando anche quello si proverebbe una casa senza rete, che è
+     * un'altra prova. */
+    rifiuta: (comando) =>
+      comando.type === "zha/permit" || (comando.type === "call_service" && comando.domain === "zha")
+        ? rifiuto("unknown_command", "unknown command")
+        : null,
+  });
+  const zigbee = new Zigbee({ casa });
+  const male = await zigbee.apri({ secondi: 60 }).then(
+    () => null,
+    (errore) => errore,
+  );
+  assert.ok(male, "doveva fallire");
+  /* Questo è il punto di tutta la correzione: NON esce `unknown_command`.
+   *
+   * Quel codice, arrivato al telefono, vuol dire «il ponte è più vecchio
+   * dell'app: aggiorna l'add-on» — e l'add-on non c'entra niente: il ponte
+   * `ponte/zigbee/apri` lo conosce, l'ha appena eseguito. */
+  assert.notEqual(male.code, "unknown_command");
+  assert.equal(male.code, "zigbee_non_accettato");
+  assert.match(male.message, /Home Assistant/);
+  assert.match(male.message, /zha\/permit/);
+  assert.match(male.message, /zha\.permit/);
+  await zigbee.chiudi().catch(() => {});
+});
+
+test("un rifiuto che non è «non ce l'ho» esce com'è, senza riprovare", async () => {
+  const casa = casaFinta({
+    voci: [{ domain: "zha", state: "loaded" }],
+    rifiuta: (comando) =>
+      comando.type === "call_service" && comando.domain === "zha"
+        ? rifiuto("home_assistant_error", "il coordinatore non risponde")
+        : null,
+  });
+  const zigbee = new Zigbee({ casa });
+  const male = await zigbee.apri({ secondi: 60 }).then(
+    () => null,
+    (errore) => errore,
+  );
+  assert.equal(male?.code, "home_assistant_error");
+  /* E la seconda strada non si è nemmeno provata: l'antenna staccata resta
+   * staccata anche per quella, e chi aspetta aspetterebbe il doppio per lo
+   * stesso «no». */
+  assert.equal(
+    casa.detto.some((uno) => uno.type === "zha/permit"),
+    false,
+  );
+});
+
+test("l'app ha una spiegazione per questo codice, e non manda ad aggiornare", () => {
+  /* Le due metà stanno in due linguaggi e nessun compilatore le guarda
+   * insieme — come per i nomi delle reti, qui sopra. Un codice che il ponte
+   * manda e l'app non conosce finisce nel mucchio degli sconosciuti, che è
+   * esattamente il mucchio da cui questo guasto è uscito. */
+  const dart = readFileSync(
+    fileURLToPath(new URL("../../app/lib/casa/segnalazioni.dart", import.meta.url)),
+    "utf8",
+  );
+  /* Il codice, non la forma esatta della riga: il ramo può prendersi anche la
+   * spiegazione — `(codice: '…', :final spiegazione)` — e una prova che
+   * guarda la punteggiatura invece di quello che garantisce si rompe al primo
+   * ritocco e non protegge da niente. */
+  const suo = dart.indexOf("codice: 'zigbee_non_accettato'");
+  assert.ok(suo > 0, "l'app deve conoscere il codice che il ponte manda");
+  const spiegazione = dart.slice(suo, dart.indexOf("ComandoRifiutato(codice:", suo + 10));
+  assert.match(spiegazione, /Home Assistant/);
+  assert.doesNotMatch(
+    spiegazione,
+    /aggiorna l'add-on|update the add-on/i,
+    "questo codice non deve mandare ad aggiornare l'add-on: l'add-on non c'entra",
+  );
+});
+
+test("la regola sta in un posto solo, e vale per ogni comando girato a casa", async () => {
+  const { codiceDelPonte } = await import("../src/commissioni.js");
+  /* Il codice di Home Assistant che dice «non conosco questa domanda» non
+   * puo' uscire dal ponte: là fuori vuol dire un'altra cosa — «il ponte è
+   * più vecchio dell'app» — e manda ad aggiornare l'add-on. */
+  assert.equal(
+    codiceDelPonte({ code: "unknown_command" }, "zigbee_non_accettato"),
+    "zigbee_non_accettato",
+  );
+  assert.equal(codiceDelPonte({}, "ponte_catalogo"), "ponte_catalogo");
+  assert.equal(codiceDelPonte(null, "ponte_catalogo"), "ponte_catalogo");
+  assert.equal(codiceDelPonte({ code: "   " }, "ponte_catalogo"), "ponte_catalogo");
+  /* Tutti gli altri passano: sono rifiuti veri, e dicono cosa è successo. */
+  assert.equal(codiceDelPonte({ code: "unauthorized" }, "x"), "unauthorized");
+  assert.equal(codiceDelPonte({ code: "home_assistant_error" }, "x"), "home_assistant_error");
+
+  /* E nessuna risposta al telefono prende il codice da un errore così com'è.
+   *
+   * È la forma esatta del guasto: `no(id, errore?.code || "...")`. Leggere
+   * `unknown_command` da un errore va benissimo — serve a capire che in
+   * questa casa l'integrazione non c'è — ma rimandarlo INDIETRO cambia chi
+   * ha ricevuto la domanda, e manda ad aggiornare la cosa sbagliata. Chi ne
+   * scriverà un'altra fra sei mesi lo scoprirà qui invece che dal campo. */
+  const fonte = readFileSync(
+    fileURLToPath(new URL("../src/commissioni.js", import.meta.url)),
+    "utf8",
+  );
+  const rimandati = [...fonte.matchAll(/\bno\(\s*[\w.?]+\s*,\s*errore\?\.code/g)];
+  assert.deepEqual(
+    rimandati.map((una) => una[0]),
+    [],
+    "un no() non prende il codice da un errore: passa da codiceDelPonte",
+  );
 });

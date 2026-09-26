@@ -86,9 +86,11 @@ test("mobile wraps onto a second row instead of crushing eight bubbles into one"
     eight.map(({ row }) => row),
     [0, 0, 0, 0, 1, 1, 1, 1],
   );
+  /* Con due file i cerchi salgono: la seconda, giu' dov'era, finiva sotto la
+   * barra dell'app. Il perche' sta accanto a `dueFile`, e la prova sotto. */
   assert.deepEqual(
     eight.map(({ top }) => top),
-    [68, 68, 68, 68, 85, 85, 85, 85],
+    [62, 62, 62, 62, 75, 75, 75, 75],
   );
   assert.ok(eight.every(({ path }) => path.startsWith("M 500 460 ")));
   const five = flowStageLayout(5, "mobile");
@@ -96,6 +98,191 @@ test("mobile wraps onto a second row instead of crushing eight bubbles into one"
     five.map(({ row }) => row),
     [0, 0, 0, 1, 1],
   );
+});
+
+/* «Con piu' carichi assegnati le linee di flusso passano sopra le bolle degli
+ * altri carichi» (#118).
+ *
+ * Sul telefono da cinque carichi in su le file sono due, e ognuna spartiva la
+ * larghezza per conto suo: con sei carichi le due file hanno lo stesso numero
+ * di bolle, quindi le stesse x — la seconda finiva esattamente sotto la prima,
+ * e la linea verso una bolla di sotto passava DENTRO quella di sopra. A
+ * guardarlo sembrava che il Boiler fosse attaccato alla Lavatrice.
+ *
+ * Quanto e' grossa una bolla, qui, e' misurato sul telefono della
+ * segnalazione: palco largo 384 punti, bolla 69 con sei carichi. Il palco e'
+ * disegnato in un riquadro di mille per mille qualunque sia la sua larghezza
+ * vera, quindi la bolla in quelle unita' e' 69/384 di mille — e cresce sui
+ * telefoni piu' stretti, che e' il caso peggiore. La misura di partenza e' 75
+ * punti (`comeSiamoMessi`, sotto i 480), ristretta da `flowNodeScale` quando i
+ * carichi sono tanti. */
+const PALCO_MISURATO = 384;
+const BOLLA_SUL_TELEFONO = 75;
+const raggioDellaBolla = (quanti) =>
+  (BOLLA_SUL_TELEFONO * flowNodeScale(quanti) * 1000) / PALCO_MISURATO / 2;
+
+/* Dove passa un connettore, campionato. Sono le stesse due forme che
+ * `connectorPath` scrive: la retta di chi sta sotto Casa, e la quadratica di
+ * tutti gli altri. */
+function puntiDelConnettore(path) {
+  const retta = path.match(/^M (\S+) (\S+) L (\S+) (\S+)$/);
+  const curva = path.match(/^M (\S+) (\S+) Q (\S+) (\S+) (\S+) (\S+)$/);
+  const punti = [];
+  for (let passo = 0; passo <= 100; passo += 1) {
+    const t = passo / 100;
+    if (retta) {
+      const [, x0, y0, x1, y1] = retta.map(Number);
+      punti.push([x0 + (x1 - x0) * t, y0 + (y1 - y0) * t]);
+      continue;
+    }
+    assert.ok(curva, `forma non riconosciuta: ${path}`);
+    const [, x0, y0, cx, cy, x1, y1] = curva.map(Number);
+    const u = 1 - t;
+    punti.push([
+      u * u * x0 + 2 * u * t * cx + t * t * x1,
+      u * u * y0 + 2 * u * t * cy + t * t * y1,
+    ]);
+  }
+  return punti;
+}
+
+test("sul telefono nessuna linea attraversa la bolla di un altro carico (#118)", () => {
+  for (let quanti = 2; quanti <= FLOW_MAX_LOADS; quanti += 1) {
+    const bolle = flowStageLayout(quanti, "mobile");
+    const raggio = raggioDellaBolla(quanti);
+    for (const bolla of bolle) {
+      for (const punto of puntiDelConnettore(bolla.path)) {
+        for (const altra of bolle) {
+          if (altra === bolla) continue;
+          const distanza = Math.hypot(punto[0] - altra.x, punto[1] - altra.y);
+          assert.ok(
+            distanza >= raggio,
+            `con ${quanti} carichi la linea di «${bolla.x},${bolla.y}» passa a ` +
+              `${Math.round(distanza)} dal centro di «${altra.x},${altra.y}», ` +
+              `che ha raggio ${Math.round(raggio)}`,
+          );
+        }
+      }
+    }
+  }
+});
+
+test("la linea che scavalca una fila arriva dritta sulla sua verticale (#118)", () => {
+  /* E' la regola da cui esce il punto di comando: se a quell'altezza la linea
+   * non fosse ancora arrivata alla sua x, si mangerebbe il mezzo passo dello
+   * sfalsamento e tornerebbe a sfiorare la bolla di sopra. */
+  const sei = flowStageLayout(6, "mobile");
+  /* L'altezza della prima fila si chiede al disegno, non si scrive qui: le
+   * file si sono gia' spostate una volta, e una prova che se la ricorda a
+   * memoria misura il posto sbagliato senza dirlo. */
+  const primaFila = sei.find(({ row }) => row === 0).y;
+  for (const bolla of sei.filter(({ row }) => row > 0)) {
+    const [, , , cx, , x1] = bolla.path.match(/^M (\S+) (\S+) Q (\S+) (\S+) (\S+) (\S+)$/);
+    const punto = puntiDelConnettore(bolla.path).find(([, y]) => y >= primaFila);
+    /* Due unita' su mille di sfrido: la linea qui si campiona a passi, e il
+     * punto di comando si scrive con un decimale. La regola e' «dritta», non
+     * «dritta al millesimo». */
+    assert.ok(
+      Math.abs(punto[0] - Number(x1)) < 2,
+      `all'altezza della prima fila la linea di ${x1} sta a ${punto[0].toFixed(1)}`,
+    );
+    /* E il punto di comando non e' piu' la x della bolla: e' quello che serve
+     * a raddrizzarla in tempo. */
+    assert.notEqual(Number(cx), Number(x1));
+  }
+  /* La prima fila non scavalca niente, e il suo comando resta dov'era. */
+  for (const bolla of sei.filter(({ row }) => row === 0)) {
+    if (!bolla.path.includes("Q")) continue;
+    const [, , , cx, , x1] = bolla.path.match(/^M (\S+) (\S+) Q (\S+) (\S+) (\S+) (\S+)$/);
+    assert.equal(Number(cx), Number(x1));
+  }
+});
+
+/* La barra dell'app sul telefono galleggia in fondo allo schermo e arriva a
+ * coprire gli ultimi 134 punti del palco: misurato, copre da 506 in giu' su un
+ * palco alto 640. Qui si lavora in centesimi, che e' come sono scritte le
+ * altezze delle file. */
+const DOVE_ARRIVA_LA_BARRA = (506 / 640) * 100;
+/* Mezza bolla, in centesimi dell'altezza del palco: 75 punti di diametro
+ * ristretti da `flowNodeScale`, su 640. */
+const MEZZA_BOLLA = (quanti) => ((75 * flowNodeScale(quanti)) / 2 / 640) * 100;
+
+test("con due file i numeri dell'ultima restano sopra la barra dell'app", () => {
+  /* Il numero di un carico sta in fondo alla bolla, ma dentro: sotto di lui
+   * resta un quarto di cerchio. Quello che deve stare sopra la barra e' il
+   * numero — se finisce sotto, chi apre Energia vede i watt dei suoi ultimi
+   * carichi coperti, e per leggerli deve scorrere senza sapere che ci sia
+   * qualcosa da scorrere. */
+  for (let quanti = 5; quanti <= FLOW_MAX_LOADS; quanti += 1) {
+    const bolle = flowStageLayout(quanti, "mobile");
+    const ultima = Math.max(...bolle.map(({ top }) => top));
+    const fondoDelNumero = ultima + MEZZA_BOLLA(quanti) * 0.45;
+    assert.ok(
+      fondoDelNumero <= DOVE_ARRIVA_LA_BARRA,
+      `con ${quanti} carichi il numero dell'ultima fila arriva a ` +
+        `${fondoDelNumero.toFixed(1)}, e la barra comincia a ` +
+        `${DOVE_ARRIVA_LA_BARRA.toFixed(1)}`,
+    );
+  }
+});
+
+test("le file salgono solo quando sono due, e non si toccano (#118)", () => {
+  /* Chi ha quattro carichi o meno non deve accorgersi di questa riga: li' la
+   * fila e' una, e sta dov'e' sempre stata. */
+  for (let quanti = 1; quanti <= 4; quanti += 1)
+    assert.ok(
+      flowStageLayout(quanti, "mobile").every(({ top }) => top === 68),
+      `con ${quanti} carichi la fila deve restare al 68`,
+    );
+
+  /* E salendo non si accavallano fra loro: fra i due centri ci deve stare una
+   * bolla intera piu' un dito d'aria. */
+  for (let quanti = 5; quanti <= FLOW_MAX_LOADS; quanti += 1) {
+    const file = [...new Set(flowStageLayout(quanti, "mobile").map(({ top }) => top))];
+    assert.equal(file.length, 2, `con ${quanti} carichi le file devono essere due`);
+    assert.ok(
+      file[1] - file[0] > MEZZA_BOLLA(quanti) * 2,
+      `con ${quanti} carichi le due file distano ${(file[1] - file[0]).toFixed(1)}, ` +
+        `e una bolla e' alta ${(MEZZA_BOLLA(quanti) * 2).toFixed(1)}`,
+    );
+  }
+});
+
+test("le file si sfalsano come i mattoni, e non si incolonnano (#118)", () => {
+  /* Il perche' sta nella prova qui sopra: incolonnate, la linea di sotto
+   * passa per forza dentro quella di sopra. Questa dice COME si e' risolto,
+   * cosi' chi un giorno rimette le x uguali sa cosa sta rompendo. */
+  const sei = flowStageLayout(6, "mobile");
+  assert.deepEqual(
+    sei.map(({ x }) => x),
+    [250, 500, 750, 125, 375, 625],
+  );
+  /* Con sette la fila di sotto sta giusto nei varchi di quella di sopra. */
+  assert.deepEqual(
+    flowStageLayout(7, "mobile").map(({ x }) => x),
+    [200, 400, 600, 800, 300, 500, 700],
+  );
+  /* E una fila sola non si sfalsa con niente: resta dov'era. */
+  assert.deepEqual(
+    flowStageLayout(4, "mobile").map(({ x }) => x),
+    [200, 400, 600, 800],
+  );
+});
+
+test("il disegno largo non e' cambiato: li' la fila e' una sola (#118)", () => {
+  /* Lo sfalsamento e' del telefono, dove le file diventano due. Sul disegno
+   * largo ce n'e' sempre una, e chi la guarda non deve accorgersi di niente. */
+  for (let quanti = 1; quanti <= FLOW_MAX_LOADS; quanti += 1) {
+    const fila = flowStageLayout(quanti, "desktop");
+    assert.ok(
+      fila.every(({ row }) => row === 0),
+      `con ${quanti} carichi il disegno largo deve restare a una fila`,
+    );
+    assert.deepEqual(
+      fila.map(({ x }) => x),
+      Array.from({ length: quanti }, (_, i) => Number(((1000 * (i + 1)) / (quanti + 1)).toFixed(1))),
+    );
+  }
 });
 
 test("bubbles shrink past five and connectors scale with the reading", () => {

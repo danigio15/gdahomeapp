@@ -1,0 +1,60 @@
+# Chi tiene d'occhio le versioni di quello che il progetto prende da fuori.
+#
+# Le azioni dei workflow sono fissate al commit, non all'etichetta: un'etichetta
+# si puo' spostare, un commit no. Il prezzo e' che nessuno le aggiorna piu' da
+# se' — e qui entra questo file: guarda se c'e' una versione nuova e apre una
+# richiesta di modifica col commit nuovo e il suo numero accanto, da leggere e
+# accettare come tutte le altre.
+#
+# Una volta al mese, e **una richiesta sola per cartella**: al primo giro ne
+# erano arrivate nove insieme, e nove richieste da guardare in un pomeriggio
+# sono nove richieste che non guarda nessuno.
+#
+# **I salti di versione grossi non li propone.** Un 2 → 3 cambia il modo di
+# usare una libreria — quella del lucchetto, quella dove l'app tiene le chiavi
+# delle case — e va fatto a mano, con il tempo di provarlo sul telefono. Le
+# azioni dei workflow uguale: un v4 → v7 tocca anche i giri che costruiscono e
+# pubblicano l'app, che le prove delle richieste non fanno girare. Le
+# correzioni di sicurezza delle dipendenze arrivano comunque, a parte, se nelle
+# impostazioni della repository sono accesi gli avvisi di Dependabot.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+    groups:
+      azioni:
+        patterns: ["*"]
+
+  # Le dipendenze di npm: solo dove ce ne sono. Il ponte, il centralino e il
+  # quadro non ne hanno e non ne devono avere.
+  - package-ecosystem: npm
+    directories:
+      - /
+      - /collaudo
+      - /nuvola
+      - /officina
+    schedule:
+      interval: monthly
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+    groups:
+      npm:
+        patterns: ["*"]
+
+  # E quelle dell'app.
+  - package-ecosystem: pub
+    directory: /app
+    schedule:
+      interval: monthly
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+    groups:
+      app:
+        patterns: ["*"]

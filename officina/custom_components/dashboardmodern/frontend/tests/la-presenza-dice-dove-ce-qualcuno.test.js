@@ -12,6 +12,8 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
+import { chiaveDelDisegno } from "../src/core/catalogo-disegni.js";
+import { parolaDelRilevatore } from "../src/sections/presenza-section.js";
 import { stanzaDiHomeAssistant } from "../src/sections/shared.js";
 
 import {
@@ -23,6 +25,7 @@ import {
   stanzeDaiRegistri,
 } from "../src/core/le-stanze-di-home-assistant.js";
 import {
+  ASSENTE,
   CHIAVE_PRESENZA,
   CLASSI_DELLA_PRESENZA,
   comeStaIlRilevatore,
@@ -64,11 +67,17 @@ test("movimento e presenza non dicono la stessa cosa", () => {
   assert.equal(eUnaPresenzaStabile("presence"), true);
   assert.equal(eUnaPresenzaStabile("motion"), false);
   assert.equal(eUnaPresenzaStabile("moving"), false);
-  assert.equal(disegnoDelRilevatore("occupancy"), "🧍");
-  assert.equal(disegnoDelRilevatore("motion"), "🏃");
+  /* I disegni di serie sono nomi del CATALOGO di casa, non emoji di sistema
+   * (#74): un'emoji cambia faccia da un telefono all'altro, e un mmWave
+   * disegnato come un omino che corre non lo riconosce nessuno. */
+  assert.equal(disegnoDelRilevatore("occupancy"), "person");
+  assert.equal(disegnoDelRilevatore("presence"), "radar");
+  assert.equal(disegnoDelRilevatore("motion"), "motion");
   /* Una classe che non si conosce prende comunque un disegno: una riga senza
    * icona sarebbe più brutta di una icona approssimata. */
-  assert.equal(disegnoDelRilevatore("boh"), "🏃");
+  assert.equal(disegnoDelRilevatore("boh"), "motion");
+  for (const chiave of ["person", "radar", "motion"])
+    assert.equal(chiaveDelDisegno(chiave), chiave, `${chiave} non è nel catalogo`);
 });
 
 test("la configurazione si ripulisce, e le tre correzioni valgono", () => {
@@ -102,7 +111,15 @@ test("un rilevatore muto non è una stanza vuota", () => {
   assert.equal(comeStaIlRilevatore(rilevatore("off")), "libero");
   assert.equal(comeStaIlRilevatore(rilevatore("unavailable")), "");
   assert.equal(comeStaIlRilevatore(rilevatore("unknown")), "");
-  assert.equal(comeStaIlRilevatore(null), "");
+  /* E «non c'è» non è «non risponde»: uno stato che non esiste affatto è una
+   * riga che punta a un'entità che Home Assistant non ha — un dispositivo
+   * tolto e rimesso, un identificativo cambiato sotto i piedi. Dal campo, un
+   * sensore appena abbinato che diceva «Non risponde da 2 minuti» mandava a
+   * guardare la batteria e il segnale di una cosa che non c'era.
+   *
+   * Si riparano in due posti diversi, quindi si dicono con due parole. */
+  assert.equal(comeStaIlRilevatore(null), ASSENTE);
+  assert.equal(comeStaIlRilevatore(undefined), ASSENTE);
   /* `last_changed` e non `last_updated`: il secondo si muove anche quando
    * cambia solo un attributo, e direbbe «libera da un minuto» di una stanza
    * vuota da ieri. */
@@ -133,7 +150,7 @@ test("le righe stanno in ordine: prima chi rileva qualcuno, in fondo la quiete",
     ],
   );
   assert.equal(righe[0].stabile, true);
-  assert.equal(righe[0].glifo, "🧍");
+  assert.equal(righe[0].glifo, "person");
   assert.equal(righe[3].stabile, false);
 });
 
@@ -247,23 +264,26 @@ test("la pagina è fatta con lo stesso impianto dei Varchi", async () => {
   assert.match(presenza, /righe\.map\(daQuandoTesto\)/);
 });
 
-test("la scheda del Config è quella dei Varchi, con le stesse tre correzioni", async () => {
+test("la scheda del Config è quella dei Varchi — adesso proprio la stessa", async () => {
+  /* Prima era «la stessa forma», scritta due volte. Adesso è lo stesso file:
+   * `scheda-dichiarata-section.js` disegna la riga, la pastiglia, la striscia
+   * dei disegni e i gesti, e la presenza porta solo quello che è suo — le
+   * parole, i disegni, e cosa propone il tasto d'importazione (#74).
+   *
+   * Questa prova guarda che la scheda sia davvero quella condivisa e non una
+   * terza copia: è l'unico modo perché fra sei mesi le quattro sezioni si
+   * comportino ancora alla stessa maniera. */
   const scheda = await leggi("../src/sections/presenza-editor-section.js");
-  for (const gesto of [
-    "data-dm-presenza-escludi",
-    "data-dm-presenza-riprendi",
-    "data-dm-presenza-nome",
-    "data-dm-presenza-aggiungi",
-    "data-dm-presenza-pick",
-  ])
-    assert.ok(scheda.includes(gesto), `manca il gesto ${gesto}`);
-  /* Le escluse si chiedono al modello SENZA il filtro, e si togliono dopo:
-   * chieste già filtrate non ci sarebbe modo di rimetterle dentro. */
-  assert.match(scheda, /escluse: \[\] \}/);
-  assert.match(scheda, /filter\(\(riga\) => !scelte\.escluse\.includes\(riga\.entity\)\)/);
-  /* Il nome si salva senza ridisegnare, sennò il cursore salta via. */
-  assert.match(scheda, /function onInput\(event\)/);
-  assert.doesNotMatch(scheda.slice(scheda.indexOf("function onInput")), /^\s+ridisegna\(\);/m);
+  assert.match(scheda, /costruisciSchedaDichiarata\(\{/);
+  assert.match(scheda, /from "\.\/scheda-dichiarata-section\.js"/);
+  for (const suo of ["nome: \"presenza\"", "ripiego: \"motion\"", "rilevatoriDaImportare"])
+    assert.ok(scheda.includes(suo), `la presenza non porta ${suo}`);
+  /* E i gesti del rilevamento non ci sono più: il cestino cancella.
+   * Si guarda il codice, non i commenti: l'intestazione racconta com'era
+   * prima, e raccontarlo non è rifarlo. */
+  const codice = scheda.replace(/\/\*[\s\S]*?\*\//g, "");
+  for (const via of ["escludi", "riprendi", "Tolti dai conti"])
+    assert.ok(!codice.includes(via), `«${via}» doveva sparire`);
 });
 
 test("la tessera della Home non si accende: chi è in casa non è un allarme", async () => {
@@ -607,4 +627,29 @@ test("chi disegna legge la stanza anche a `WIZ` vuoto, e quando c'è la lascia s
     else delete globalThis.localStorage;
     dimenticaLeStanze();
   }
+});
+
+test("una riga che punta a un'entità che non c'è lo dice, invece di dire «non risponde»", () => {
+  /* Le due frasi mandano in due posti diversi: «non risponde» col dispositivo
+   * in mano, «non c'è» nella scheda della configurazione. */
+  const righe = presenzaDiCasa(
+    { "binary_sensor.salone": rilevatore("on") },
+    {
+      righe: [
+        { entity: "binary_sensor.salone", name: "Salone" },
+        { entity: "binary_sensor.sparito", name: "Presenza salone" },
+      ],
+    },
+  );
+  const sparito = righe.find((una) => una.entity === "binary_sensor.sparito");
+  assert.equal(sparito.stato, ASSENTE);
+  assert.equal(parolaDelRilevatore(sparito), "Non c'è in Home Assistant");
+  /* E quella vera resta quella vera. */
+  const vero = righe.find((una) => una.entity === "binary_sensor.salone");
+  assert.equal(vero.stato, "attivo");
+  assert.equal(parolaDelRilevatore(vero), "Movimento");
+  /* Nel conto delle stanze una sorveglianza che manca non è una stanza
+   * libera: sarebbe una casa che sembra più tranquilla di com'è. */
+  const conto = contoDellaPresenza(righe);
+  assert.equal(conto.liberi, 0);
 });

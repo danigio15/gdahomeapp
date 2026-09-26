@@ -33,6 +33,7 @@ library;
 import 'dart:async';
 
 import '../parole.dart';
+import 'segnalazioni.dart' show spiegaLErrore;
 import '../ponte/errori.dart';
 import '../ponte/filo.dart';
 
@@ -45,7 +46,18 @@ enum LaRete {
   zha('zha'),
 
   /// Il programma a parte, che parla per posta (MQTT).
-  z2m('z2m');
+  ///
+  /// La parola e' `zigbee2mqtt` e non `z2m`, perche' e' quella che **manda il
+  /// ponte**: `Z2M` in `ponte/src/zigbee.js`. Qui c'era scritta l'abbreviazione,
+  /// e un confronto fra due parole diverse non torna mai: in una casa con
+  /// Zigbee2MQTT `stato()` rispondeva `zigbee2mqtt`, questo elenco non lo
+  /// riconosceva, `LaRete.nessuna` diceva che una rete non c'e' e la voce
+  /// «Zigbee» nel menu non compariva. Con ZHA invece le due parole erano la
+  /// stessa, e li' funzionava — che e' il motivo per cui il guasto e' arrivato
+  /// fino a una casa vera senza farsi vedere prima.
+  ///
+  /// Una prova tiene ferme tutt'e due (`ponte/test/zigbee.test.js`).
+  z2m('zigbee2mqtt');
 
   const LaRete(this.comeLaChiamaIlPonte);
 
@@ -225,6 +237,224 @@ class StatoDellaRete {
   final List<DispositivoEntrato> entrati;
 }
 
+/// Un apparecchio che nella rete c'e' gia'.
+///
+/// E' la stessa cosa di [DispositivoEntrato] vista un momento dopo: quello e'
+/// «chi e' appena arrivato», questo e' «chi c'e'». Non sono la stessa classe
+/// perche' non dicono le stesse cose — di chi e' arrivato interessano le
+/// entita' da mettere nella plancia, di chi c'e' gia' interessano il mestiere
+/// che fa nella rete e come sta messo.
+class NellaRete {
+  const NellaRete({
+    required this.targa,
+    required this.nome,
+    required this.marca,
+    required this.modello,
+    required this.tipo,
+    required this.potenza,
+    required this.dispositivo,
+  });
+
+  factory NellaRete.daQuelloCheDice(Map<Object?, Object?> detto) => NellaRete(
+    targa: _testo(detto['id']),
+    nome: _testo(detto['nome']),
+    marca: _testo(detto['marca']),
+    modello: _testo(detto['modello']),
+    tipo: _testo(detto['tipo']),
+    potenza: _testo(detto['potenza']),
+    dispositivo: _testo(detto['dispositivo']),
+  );
+
+  /// La targa: l'indirizzo IEEE. E' l'unica cosa che le due reti — ZHA e
+  /// Zigbee2MQTT — chiamano allo stesso modo, ed e' quello che si passa al
+  /// ponte per toglierlo.
+  final String targa;
+
+  final String nome;
+  final String marca;
+  final String modello;
+
+  /// `coordinatore`, `router` o `terminale`: che mestiere fa nella rete.
+  final String tipo;
+
+  /// `rete` o `batteria`. Vuoto vuol dire che la rete non lo dice — e resta
+  /// vuoto, perche' «non si sa» e' diverso da «a corrente».
+  final String potenza;
+
+  /// Il dispositivo di Home Assistant, quando si sa: e' il filo che lega
+  /// questa riga a quello che la plancia gia' conosce.
+  final String dispositivo;
+
+  /// Se tiene su la rete per gli altri. Sono quelli che vanno a corrente, e
+  /// toglierne uno stacca tutto quello che ci passava.
+  bool get reggeGliAltri => tipo == 'coordinatore' || tipo == 'router';
+
+  /// Se e' l'antenna. Quella non si toglie: si toglierebbe la rete.
+  bool get eLAntenna => tipo == 'coordinatore';
+
+  bool get vaABatteria => potenza == 'batteria';
+
+  /// Come si presenta in una riga, sotto il nome: quello che fa capire «ah,
+  /// e' quello» a chi sta guardando l'elenco.
+  String get comeSiDice {
+    final pezzi = [marca, modello].where((uno) => uno.isNotEmpty).toList();
+    return pezzi.isEmpty ? targa : pezzi.join(' ');
+  }
+}
+
+/// L'elenco di chi c'e' nella rete, e perche' se non c'e'.
+class ChiCEInRete {
+  const ChiCEInRete({
+    required this.rete,
+    required this.righe,
+    required this.perche,
+  });
+
+  factory ChiCEInRete.daQuelloCheDice(Map<Object?, Object?> detto) {
+    final elenco = detto['righe'];
+    return ChiCEInRete(
+      rete: LaRete.daQuelloCheDice(detto['quale']),
+      righe: [
+        if (elenco is List)
+          for (final uno in elenco)
+            if (uno is Map<Object?, Object?>) NellaRete.daQuelloCheDice(uno),
+      ],
+      perche: _testo(detto['perche']),
+    );
+  }
+
+  static const vuoto = ChiCEInRete(rete: LaRete.nessuna, righe: [], perche: '');
+
+  final LaRete rete;
+  final List<NellaRete> righe;
+
+  /// Perche' l'elenco e' vuoto, quando lo e'. Vuoto a elenco pieno.
+  final String perche;
+}
+
+/// Un apparecchio dentro la mappa: come lo racconta l'elenco dei rami.
+///
+/// [qualita] e' quanto e' buono il filo verso chi lo regge, da zero a
+/// duecentocinquantacinque. Nullo vuol dire che la rete non l'ha detto — ed e'
+/// diverso da zero, che vorrebbe dire «non si sentono».
+class NelRamo {
+  const NelRamo({
+    required this.targa,
+    required this.nome,
+    required this.tipo,
+    required this.potenza,
+    required this.qualita,
+  });
+
+  factory NelRamo.daQuelloCheDice(Map<Object?, Object?> detto) => NelRamo(
+    targa: _testo(detto['id']),
+    nome: _testo(detto['nome']),
+    tipo: _testo(detto['tipo']),
+    potenza: _testo(detto['potenza']),
+    qualita: detto['qualita'] is num
+        ? (detto['qualita']! as num).toInt()
+        : null,
+  );
+
+  final String targa;
+  final String nome;
+  final String tipo;
+  final String potenza;
+  final int? qualita;
+
+  bool get vaABatteria => potenza == 'batteria';
+  bool get eLAntenna => tipo == 'coordinatore';
+}
+
+/// Un ramo della rete: l'antenna o un ripetitore, e cosa gli sta appeso.
+class UnRamo {
+  const UnRamo({required this.capo, required this.appesi});
+
+  factory UnRamo.daQuelloCheDice(Map<Object?, Object?> detto) {
+    final elenco = detto['appesi'];
+    return UnRamo(
+      capo: NelRamo.daQuelloCheDice(detto),
+      appesi: [
+        if (elenco is List)
+          for (final uno in elenco)
+            if (uno is Map<Object?, Object?>) NelRamo.daQuelloCheDice(uno),
+      ],
+    );
+  }
+
+  final NelRamo capo;
+  final List<NelRamo> appesi;
+}
+
+/// La mappa: la figura, e con chi parla ognuno.
+///
+/// La figura la disegna il ponte e arriva gia' fatta — un SVG — perche' sia
+/// una sola: disegnarla qui in Dart e nella plancia in JavaScript vorrebbe
+/// dire due mappe che il giorno che una cambia dicono cose diverse.
+///
+/// ─── E perche' arrivano anche i rami, se c'e' gia' il disegno ────────────
+///
+/// Perche' una casa con ottanta apparecchi, disegnata, e' larga due metri di
+/// schermo: dal campo, «non si vede nulla». I rami sono le stesse cose scritte
+/// in righe — chi regge chi, e quanto bene — e un elenco il telefono lo sa
+/// scorrere. Li conta lo stesso modulo del disegno, quindi le due cose non
+/// possono dirsi diverse.
+class LaMappaDellaRete {
+  const LaMappaDellaRete({
+    required this.figura,
+    required this.quanti,
+    required this.rami,
+    required this.soli,
+    required this.perche,
+  });
+
+  factory LaMappaDellaRete.daQuelloCheDice(Map<Object?, Object?> detto) {
+    final righe = detto['righe'];
+    final rami = detto['rami'];
+    final soli = detto['soli'];
+    return LaMappaDellaRete(
+      figura: _testo(detto['svg']),
+      quanti: righe is List ? righe.length : 0,
+      rami: [
+        if (rami is List)
+          for (final uno in rami)
+            if (uno is Map<Object?, Object?>) UnRamo.daQuelloCheDice(uno),
+      ],
+      soli: [
+        if (soli is List)
+          for (final uno in soli)
+            if (uno is Map<Object?, Object?>) NelRamo.daQuelloCheDice(uno),
+      ],
+      perche: _testo(detto['perche']),
+    );
+  }
+
+  static const vuota = LaMappaDellaRete(
+    figura: '',
+    quanti: 0,
+    rami: [],
+    soli: [],
+    perche: '',
+  );
+
+  /// Il disegno, pronto da mostrare. Vuoto quando non c'e' una mappa.
+  final String figura;
+
+  /// Quanti apparecchi ci sono dentro.
+  final int quanti;
+
+  /// La rete a righe: l'antenna per prima, poi i rami piu' carichi.
+  final List<UnRamo> rami;
+
+  /// Chi non parla con nessuno: nel disegno sta in fondo, qui in fondo uguale.
+  final List<NelRamo> soli;
+
+  /// Perche' non c'e', quando non c'e'.
+  final String perche;
+
+  bool get cE => figura.isNotEmpty;
+}
+
 /// Quanto spesso si richiede lo stato mentre si aspetta.
 ///
 /// Un secondo. E' la stessa frequenza con cui si muove il conto alla rovescia
@@ -286,6 +516,94 @@ class Zigbee {
     /* Qui il giro in piu' si paga volentieri: la risposta non dice che rete
      * fosse, e chi ha richiuso resta su quella schermata. */
     return stato();
+  }
+
+  /// Chi c'e' nella rete, tutto.
+  ///
+  /// Non solleva: una schermata che si apre su una casa senza Zigbee deve
+  /// dire «qui non c'e' niente», non rompersi. Il perche' arriva dal ponte e
+  /// si mostra accanto all'elenco vuoto.
+  Future<ChiCEInRete> elenco() async {
+    try {
+      final detto = await _filo.risultato({'type': 'ponte/zigbee/elenco'});
+      if (detto is! Map<Object?, Object?>) return ChiCEInRete.vuoto;
+      return ChiCEInRete.daQuelloCheDice(detto);
+    } catch (_) {
+      return ChiCEInRete.vuoto;
+    }
+  }
+
+  /// Toglie un apparecchio dalla rete.
+  ///
+  /// Solleva quando non e' andata, come `apri`: l'ha premuto una persona, e
+  /// se non e' successo deve saperlo. Il ponte non si fida della risposta
+  /// della rete — riguarda l'elenco — quindi quello che torna qui e' l'elenco
+  /// **dopo**, gia' senza quello tolto: la schermata si ridisegna senza un
+  /// secondo giro.
+  Future<ChiCEInRete> elimina(String targa) async {
+    final detto = await _filo.risultato({
+      'type': 'ponte/zigbee/elimina',
+      'targa': targa,
+    });
+    final fatto = _andataBene(detto);
+    return ChiCEInRete.daQuelloCheDice(fatto);
+  }
+
+  /// La mappa di chi parla con chi.
+  ///
+  /// `rifai` fa partire il giro vero, che **dura**: il coordinatore chiede a
+  /// ogni ripetitore, uno alla volta, e su una rete di venti cose ci mette
+  /// fino a un minuto — durante il quale la rete e' occupata. Senza, si
+  /// mostra quello che si sa gia'.
+  ///
+  /// Non solleva: se la mappa non c'e' si dice perche', che e' piu' utile di
+  /// un errore rosso su una cosa che si era solo chiesta di guardare.
+  Future<LaMappaDellaRete> mappa({
+    bool rifai = false,
+    bool scuro = false,
+  }) async {
+    try {
+      final detto = await _filo.risultato({
+        'type': 'ponte/zigbee/mappa',
+        'rifai': rifai,
+        'scuro': scuro,
+      });
+      if (detto is! Map<Object?, Object?>) return LaMappaDellaRete.vuota;
+      return LaMappaDellaRete.daQuelloCheDice(detto);
+    } catch (errore) {
+      return LaMappaDellaRete(
+        figura: '',
+        quanti: 0,
+        rami: const [],
+        soli: const [],
+        perche: spiegaLErrore(errore),
+      );
+    }
+  }
+
+  /// Un dispositivo che c'e' gia', presentato come quelli appena entrati.
+  ///
+  /// Serve a metterlo nella plancia partendo dall'elenco: il foglietto «Dove
+  /// lo metto?» decide la sezione dalle ENTITA', e l'elenco quelle non le
+  /// porta — sarebbero sei righe per riga per una cosa che si guarda solo
+  /// quando si apre una scheda.
+  ///
+  /// Solleva: l'ha chiesto una persona premendo un tasto.
+  Future<DispositivoEntrato> dimmi(String dispositivo) async {
+    final detto = await _filo.risultato({
+      'type': 'ponte/zigbee/dimmi',
+      'dispositivo': dispositivo,
+    });
+    final dentro = detto is Map<Object?, Object?> ? detto['dispositivo'] : null;
+    if (dentro is! Map<Object?, Object?>) {
+      throw ComandoRifiutato(
+        inLingua(
+          it: 'quel dispositivo non si legge',
+          en: 'that device cannot be read',
+        ),
+      );
+    }
+    return DispositivoEntrato.daQuelloCheDice(dentro);
   }
 
   /// Gli da' il nome che gli ha dato chi lo guarda (il passo 3).

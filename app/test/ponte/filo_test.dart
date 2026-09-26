@@ -65,6 +65,89 @@ void main() {
     },
   );
 
+  test(
+    'un «non ti conosco» in chiaro non spegne il filo: si dice, e si riprova',
+    () async {
+      /* Scritto prima della stretta di mano, non lo firma nessuno: il
+       * centralino, o chi risponde all'indirizzo di casa, lo potrebbe dire
+       * uguale. Se bastasse a staccare il telefono per sempre, basterebbe una
+       * riga per staccarlo. */
+      ponte.conosceIlTelefono = false;
+      final filo = filoCon();
+
+      await expectLater(
+        filo.apri(),
+        throwsA(
+          isA<RifiutoNonFirmato>().having(
+            (e) => e.spiegazione,
+            'spiegazione',
+            contains('riabbinalo'),
+          ),
+        ),
+      );
+
+      final quantiSubito = ponte.collegamenti;
+      await Future<void>.delayed(const Duration(milliseconds: 400));
+      expect(
+        ponte.collegamenti,
+        greaterThan(quantiSubito),
+        reason: 'deve continuare a bussare',
+      );
+
+      /* E quando la casa torna a riconoscerlo, si rientra da soli. */
+      ponte.conosceIlTelefono = true;
+      await filo.apri();
+      expect(filo.dentro, isTrue);
+      await filo.chiudi();
+    },
+  );
+
+  test(
+    'il rifiuto di una bussata vecchia non fa fallire un apri fatto dopo',
+    () async {
+      ponte.conosceIlTelefono = false;
+      final filo = filoCon();
+      await expectLater(filo.apri(), throwsA(isA<RifiutoNonFirmato>()));
+
+      /* Una bussata di riprova arriva mentre la casa ancora non conosce il
+       * telefono: la casa decide di dire di no, e lo trattiene. */
+      final cancello = Completer<void>();
+      ponte.cancello = cancello;
+      final prima = ponte.strette.length;
+      while (ponte.strette.length == prima) {
+        await Future<void>.delayed(const Duration(milliseconds: 5));
+      }
+
+      /* Poi la casa torna a riconoscerlo, e chi usa l'app riapre: questa
+       * bussata e' nuova, e la casa le dira' di si'. */
+      ponte.conosceIlTelefono = true;
+      final riapre = filo.apri();
+      final dopo = ponte.strette.length;
+      while (ponte.strette.length == dopo) {
+        await Future<void>.delayed(const Duration(milliseconds: 5));
+      }
+
+      /* Il no vecchio arriva prima del si' nuovo. Non e' di chi ha riaperto. */
+      cancello.complete();
+      await riapre;
+      expect(filo.dentro, isTrue);
+      await filo.chiudi();
+    },
+  );
+
+  test('un telefono staccato che la casa riconosce lo sa dentro il cifrato, e non riprova', () async {
+    ponte
+      ..conosceIlTelefono = false
+      ..staccatoConLaChiave = true;
+    final filo = filoCon();
+
+    await expectLater(filo.apri(), throwsA(isA<SegnoRifiutato>()));
+    final quantiSubito = ponte.collegamenti;
+    await Future<void>.delayed(const Duration(milliseconds: 400));
+    expect(ponte.collegamenti, quantiSubito, reason: 'non deve ribussare');
+    await filo.chiudi();
+  });
+
   test('un telefono staccato mentre è collegato viene buttato fuori', () async {
     final filo = filoCon();
     await filo.apri();

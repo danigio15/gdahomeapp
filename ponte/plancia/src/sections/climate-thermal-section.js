@@ -78,6 +78,7 @@ import {
   doc,
   english,
   esc,
+  jsArg,
   finiteOrNull,
   installStyle,
   lexicalGlobal,
@@ -391,8 +392,8 @@ export function filoFraMinimoEMassimo(series, { width, height, pad } = SPARK) {
 function zoneButton(zone, labels) {
   const cold = zone === "freddo";
   return `<button type="button" class="clima-page-mode-btn dm-cl-tab${cold ? " active-freddo" : ""}"
-      id="clima-page-mode-${cold ? "freddo" : "caldo"}" data-dm-cl-zone="${zone}"
-      aria-pressed="${cold ? "true" : "false"}" onclick="setClimaPageMode('${zone}')">
+      id="clima-page-mode-${cold ? "freddo" : "caldo"}" data-dm-cl-zone="${esc(zone)}"
+      aria-pressed="${cold ? "true" : "false"}" onclick="setClimaPageMode(${jsArg(zone)})">
       <span class="icon dm-cl-tab-ic">${cold ? ICONS.snow : ICONS.flame}</span>
       <span class="dm-cl-tab-tx">${esc(cold ? labels.cold : labels.warm)}</span>
       <span class="dm-cl-tab-count" data-dm-cl-count="${zone}">0</span>
@@ -461,12 +462,13 @@ function cardMarkup(unit, labels) {
    * `paintCard`: un'unita' che risponde tardi — o che cambia scala passando in
    * Fahrenheit — deve poter correggere la legenda senza rifare la card. */
   const [low, high] = scalaDellaZona(climateReading(unit.entity).attributi, unit.zone);
-  const entity = esc(unit.entity).replaceAll("'", "&#39;");
+  const entity = jsArg(unit.entity);
+  const zona = jsArg(unit.zone);
   // The family is already in the masthead, so an unassigned unit shows nothing
   // here rather than repeating "Condizionatori" on every card.
   const meta = unit.room;
   return `<article class="dm-cl-card" id="${esc(unit.cardId)}" data-dm-cl="${esc(unit.entity)}"
-      data-dm-cl-zone="${unit.zone}" onclick="apriClimaPopup('${entity}', event)">
+      data-dm-cl-zone="${esc(unit.zone)}" onclick="apriClimaPopup(${entity}, event)">
       <div class="dm-cl-head">
         <span class="dm-cl-ic" aria-hidden="true">${unit.zone === "caldo" ? ICONS.flame : ICONS.snow}</span>
         <div class="dm-cl-txt">
@@ -508,16 +510,16 @@ function cardMarkup(unit, labels) {
       </div>
       <div class="dm-cl-foot">
         <button type="button" class="dm-cl-modes" data-dm-cl-modes aria-label="${esc(labels.modesAria)}"
-          onclick="event.stopPropagation(); apriClimaPopup('${entity}')">
+          onclick="event.stopPropagation(); apriClimaPopup(${entity})">
           ${ICONS.sliders}<span data-dm-cl-mode-cap>${esc(labels.modes)}</span>
         </button>
         <div class="dm-cl-actions">
           <button type="button" class="dm-cl-step" aria-label="${esc(labels.cooler)}"
-            onclick="event.stopPropagation(); setTemp('${entity}', 'down')">${ICONS.minus}</button>
+            onclick="event.stopPropagation(); setTemp(${entity}, 'down')">${ICONS.minus}</button>
           <button type="button" class="dm-cl-step" aria-label="${esc(labels.warmer)}"
-            onclick="event.stopPropagation(); setTemp('${entity}', 'up')">${ICONS.plus}</button>
+            onclick="event.stopPropagation(); setTemp(${entity}, 'up')">${ICONS.plus}</button>
           <button type="button" class="dm-cl-pwr" data-dm-cl-pwr aria-label="${esc(labels.power)}"
-            onclick="event.stopPropagation(); toggleClima('${entity}', '${unit.zone}')">${ICONS.power}</button>
+            onclick="event.stopPropagation(); toggleClima(${entity}, ${zona})">${ICONS.power}</button>
         </div>
       </div>
     </article>`;

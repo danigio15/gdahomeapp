@@ -43,7 +43,9 @@ test("il cestino passa dalla conferma in pagina", async () => {
   const markup = renderCanonicalLightsEditor();
   // Il form vuoto non ha righe: le classi del cestino stanno nel sorgente.
   const source = await read("../src/sections/lights-alerts-section.js");
-  assert.match(source, /dmLuceDel\('\$\{esc\(id\)\}'\)/);
+  /* L'entita' come stringa JSON per l'attributo: con '${esc(id)}' un apice
+   * nel nome tornava apice prima di eseguire il gestore. */
+  assert.match(source, /dmLuceDel\(\$\{jsArg\(id\)\}\)/);
   assert.doesNotMatch(source, /onclick="cdLuceDel/);
   // E il legacy cdLuceDel viene reindirizzato alla versione che funziona.
   assert.match(source, /root\.cdLuceDel = openLightDeleteConfirm/);

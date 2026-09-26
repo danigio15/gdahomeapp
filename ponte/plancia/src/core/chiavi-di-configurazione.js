@@ -252,7 +252,30 @@
  * il fronte di salita, e va ricordato perche' dopo non si puo' piu' leggere.
  * E' un fatto della casa come il ritiro: la posta e' arrivata per tutti, non
  * per il vetro che l'ha vista per primo. */
-export const CONFIG_KEYS_REVISION = 52;
+/* La revisione 53 aggiunge le telecamere riservate (`cd_telecamere_riservate`,
+ * #81): «vorrei si potesse vedere solo se a casa non c'e' nessuno per una
+ * questione di privacy». Quali telecamere si guardano solo a casa vuota e' una
+ * scelta della CASA, e di quelle che ci vivono dentro: non del vetro da cui e'
+ * stata spuntata. Se non viaggiasse, la telecamera nascosta sul telefono
+ * resterebbe accesa sul tablet in cucina — cioe' proprio su quello davanti a
+ * cui si passa — e la spunta non garantirebbe niente. Fra tutte le caselle di
+ * questo elenco e' quella che sbagliata fa il danno peggiore, perche' il danno
+ * non lo vedi: la telecamera che si e' voluta nascondere continua a riprendere
+ * il salotto su uno schermo che nessuno sta guardando. */
+/* La revisione 54 aggiunge il mezzo dichiarato da chi non ha profili
+ * (`cd_ev_mezzo`, #75): «sarebbe carino poter scegliere tra auto e moto». Va
+ * con `cd_ev_motore` e `cd_ev_kwh` e per la stessa ragione — e' quello che si
+ * sa del veicolo e non delle sue entita'. Chi ha una moto sola e la dichiara
+ * dal telefono deve ritrovarla dichiarata sul tablet in cucina: se no la
+ * pagina racconta una moto su un vetro e un'automobile sull'altro, con le
+ * stesse identiche entita' dietro. */
+/* La revisione 55 aggiunge l'interruttore del riquadro delle telecamere
+ * (`cd_telecamere_in_sicurezza`, #113): «possibilita' di togliere la sezione
+ * se uno non dispone di telecamere». E' una scelta della CASA e non di un
+ * vetro: chi telecamere non ne ha non le vuole vedere ne' sul tablet in cucina
+ * ne' sul telefono, e lasciarla su un dispositivo solo vorrebbe dire
+ * rispegnerla su ognuno. */
+export const CONFIG_KEYS_REVISION = 55;
 
 // Complete shared dashboard configuration snapshot. Runtime counters/timers and
 // true per-device preferences (connection credentials, theme/navbar mode) stay
@@ -383,6 +406,11 @@ export const CONFIG_KEYS = Object.freeze([
    * tempo di fine carica si conta da lei, e un numero scritto sul computer che
    * sul telefono non c'e' fa uscire due tempi diversi per la stessa carica. */
   "cd_ev_kwh",
+  /* E se quel veicolo e' un'auto o una moto (#75). Non e' il motore — una moto
+   * puo' essere elettrica o a benzina come un'automobile — ed e' della casa
+   * allo stesso modo: il garage e' uno solo, e quello che c'e' dentro non
+   * cambia col vetro da cui lo si guarda. */
+  "cd_ev_mezzo",
   /* `cd_ev_image` e `cd_ev_image_plugged` non stanno piu' qui.
    *
    * Sono le due caselle da cui il disegno legge la foto dell'auto attiva: non
@@ -515,4 +543,10 @@ export const CONFIG_KEYS = Object.freeze([
    * telefono, che quel giro non l'aveva mai fatto, se lo rimetteva da solo. Il
    * fumo aveva gia' avuto la sua correzione; l'acqua era rimasta indietro. */
   "cd_allag_rilevato",
+  /* Le telecamere che si vedono solo a casa vuota (#81). La ragione per cui
+   * sta qui e' scritta accanto alla revisione 53. */
+  "cd_telecamere_riservate",
+  /* E se il riquadro delle telecamere si veda affatto (#113): la ragione per
+   * cui sta qui e' scritta accanto alla revisione 55. */
+  "cd_telecamere_in_sicurezza",
 ]);

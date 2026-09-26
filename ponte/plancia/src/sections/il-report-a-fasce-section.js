@@ -82,6 +82,10 @@ const state = (root[KEY] ||= {
   letto: 0,
   report: null,
   periodo: null,
+  /* Il pacchetto che aspetta di essere guardato, e la sentinella che avvisa
+   * quando succede. Vedi `quandoLaPanoramicaSiVede`. */
+  aspetta: null,
+  sentinella: null,
 });
 
 /** Quanto si tiene buono un conto del mese in corso: un quarto d'ora. */
@@ -272,6 +276,41 @@ function ilReportSiVede() {
   return Boolean(vista.offsetParent);
 }
 
+/* Il conto si fa se c'e' qualcuno che guarda — e il «quando» non e' per forza
+ * adesso.
+ *
+ * `ilReportSiVede()` e' una fotografia: risponde per l'istante in cui la si
+ * chiede. Il pacchetto del mese pero' arriva quando arriva, e se arriva mentre
+ * la Panoramica non e' ancora a schermo il conto non si faceva — e non si
+ * riprovava mai, perche' gli unici richiami erano i clic sulle linguette.
+ *
+ * Dal campo: «il Report non riporta subito la divisione, devo cliccare prima
+ * su Analisi poi vado in Panoramica e cambia». Esattamente questo: la prima
+ * occasione persa, e la seconda la doveva dare il dito.
+ *
+ * E non era solo il blocco a mancare. Finche' il conto non c'e', «Costo Reale»
+ * resta sulla stima — la media delle fasce pesata sulle ore che ognuna copre —
+ * invece della spesa contata ora per ora. In una casa vera si leggeva 32,16 €
+ * nella tessera e 19,85 € nel blocco, a tre centimetri di distanza: due cifre
+ * diverse per la stessa spesa, che e' il difetto che questo pezzo di progetto
+ * aveva scritto di non voler fare.
+ *
+ * Quindi la fotografia diventa un'attesa: si mette una sentinella sulla
+ * Panoramica, e quando compare il conto parte. Una sola, e si toglie appena
+ * ha fatto il suo giro. */
+function quandoLaPanoramicaSiVede(fai) {
+  const vista = doc?.getElementById("view-panoramica");
+  if (!vista || typeof root.IntersectionObserver !== "function") return;
+  if (state.sentinella) return;
+  state.sentinella = new root.IntersectionObserver((voci) => {
+    if (!voci.some((una) => una.isIntersecting)) return;
+    state.sentinella?.disconnect();
+    state.sentinella = null;
+    fai();
+  });
+  state.sentinella.observe(vista);
+}
+
 function ilBlocco(crea = false) {
   const griglia = doc?.querySelector("#ed-pane-panoramica .ed-fin-grid");
   if (!griglia) return null;
@@ -370,7 +409,16 @@ export async function aggiornaIlReportDelleFasce(bundle, { forza = false } = {})
     togliIlBlocco();
     return false;
   }
-  if (!forza && !ilReportSiVede()) return false;
+  if (!forza && !ilReportSiVede()) {
+    /* Non si butta: si aspetta di essere guardati. */
+    state.aspetta = bundle;
+    quandoLaPanoramicaSiVede(() => {
+      const suo = state.aspetta;
+      state.aspetta = null;
+      aggiornaIlReportDelleFasce(suo ?? root.__DASHBOARDMODERN_RUNTIME_ROOT__?.bundle);
+    });
+    return false;
+  }
 
   const periodo = selectedPeriod();
   const fonti = pianiDelleFonti("month");

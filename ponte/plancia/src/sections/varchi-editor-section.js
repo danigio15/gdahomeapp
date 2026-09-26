@@ -1,290 +1,198 @@
-/* La scheda dei varchi in configurazione (#367, #377).
+/* La scheda dei varchi in configurazione (#367, #377, #74).
  *
- * Non c'è niente da compilare per cominciare: un contatto porta-finestra lo
- * dichiara Home Assistant col suo `device_class`, e la pagina Varchi compare da
- * sola. Questa scheda serve alle tre cose che il rilevamento non può sapere:
+ * «Sezione varchi attuale non ha alcuna possibilità di inserire icone.
+ *  Inoltre è differente dalle altre sezioni in quanto si autocompila, cosa che
+ *  avevo detto già di eliminare, e sotto compaiono ancora quelle che ho
+ *  eliminato da sopra.»
  *
- *   · un sensore etichettato «door» che porta non è — quello del frigorifero,
- *     quello della cassetta della posta — e non deve contare fra i varchi;
- *   · un contatto che nessuno ha etichettato, e che quindi non viene trovato;
- *   · un nome. «Contact 4B» non dice a nessuno quale porta è.
+ * Tre difetti, e sono lo stesso difetto: questa scheda non era una scheda, era
+ * un RILEVAMENTO con delle correzioni sopra. L'elenco lo faceva Home Assistant
+ * — tutto quello che si chiamava «door» o «window» — il cestino non cancellava
+ * ma ESCLUDEVA, e l'escluso restava scritto sotto in «Tolti dai conti».
  *
- * È la stessa forma della scheda dell'aria, perché è lo stesso problema:
- * l'elenco lo fa Home Assistant, e qui si corregge. Ogni gesto si salva
- * subito — chi tocca queste caselle sta rispondendo a una domanda, e aspettare
- * un tasto vorrebbe solo dire perdere la risposta chiudendo la scheda.
+ * Adesso è una scheda come le altre, e non «come le altre» per modo di dire:
+ * la scheda è letteralmente la stessa — `scheda-dichiarata-section.js` — e qui
+ * dentro c'è solo quello che dei varchi è davvero proprio. Le parole, i
+ * disegni, e cosa propone il tasto d'importazione.
  */
-import { CHIAVE_VERSI, insiemeInvertiti } from "../core/verso-aperture.js";
 import {
+  CAMPI_IN_PIU,
   CHIAVE_VARCHI,
-  contattiDichiaratiNelleFinestre,
-  normalizzaVarchi,
   varchiConLeFinestre,
+  varchiDaImportare,
   varchiDiCasa,
 } from "../core/varchi-di-casa.js";
+import { CAMPO_ESCLUSIONE, esclusioneProposta } from "../core/l-esclusione-del-varco.js";
+import { CHIAVE_VERSI, insiemeInvertiti } from "../core/verso-aperture.js";
 import { VARCHI_TAB, renderVarchi } from "./varchi-section.js";
-import {
-  allStates,
-  clean,
-  doc,
-  esc,
-  installStyle,
-  onEditorRedraw,
-  readJson,
-  root,
-  t,
-  writeJsonIfChanged,
-} from "./shared.js";
+import { costruisciSchedaDichiarata } from "./scheda-dichiarata-section.js";
+import { allStates, clean, esc, readJson, root, t } from "./shared.js";
 import { nomeDaHomeAssistant } from "./editor-slots-section.js";
-
-const KEY = "__DASHBOARDMODERN_VARCHI_EDITOR__";
-const state = (root[KEY] ||= { installed: false });
 
 export const VARCHI_EDITOR_TAB = VARCHI_TAB;
 
-/* Quello che la scheda elenca e' quello che la Home mostra, coi contatti
- * dichiarati nelle Finestre compresi: prima non c'erano, e in Home comparivano
- * lo stesso — «in configurazione nessun contatto trovato, invece nella home me
- * li mette tutti e due». Non elencandoli non si potevano nemmeno togliere. */
+/* I disegni che la scheda mette davanti, in ordine di quanto sono comuni in
+ * una casa. Sono tredici: tutto quello che in una casa si apre. */
+export const DISEGNI_DEL_VARCO = Object.freeze([
+  "door",
+  "front-door",
+  "window",
+  "french-window",
+  "sliding-door",
+  "gate",
+  "garage-door",
+  "barrier",
+  "shutters",
+  "skylight",
+  "hatch",
+  "doorway",
+  "lift",
+]);
+
+/* La casella dell'esclusione dall'antifurto (#136).
+ *
+ * «Nei varchi che ho inserito, che sono i sensori del mio allarme Risco … mi
+ * da' la possibilita' di disabilitare. Possiamo farlo anche qui?»
+ *
+ * Sta chiusa in un `details`, come le soglie di ricarica delle Batterie: e' una
+ * cosa che riguarda chi ha una centrale, e chi non ce l'ha non deve trovarsi una
+ * casella in piu' da capire su ogni finestra di casa.
+ *
+ * In grigio c'e' quello che si e' trovato in casa, non scritto: una proposta e'
+ * una proposta finche' non la si salva, e questa casella comanda un antifurto.
+ * Finche' resta vuota il tasto in pagina non c'e'. */
+function campoDellEsclusione(riga, indice) {
+  if (!riga.entity) return "";
+  const id = `dm-varco-esclusione-${indice}`;
+  const proposta = esclusioneProposta(riga.entity, allStates());
+  return `<details class="dm-dich-piu"${clean(riga[CAMPO_ESCLUSIONE]) ? " open" : ""}>
+    <summary>🛡️ ${esc(t("Esclusione dall'antifurto", "Alarm bypass"))}</summary>
+    <small>${esc(
+      t(
+        "Le centrali pubblicano accanto a ogni contatto un interruttore che dice alla centrale di non guardarlo: è quello che serve per inserire l'antifurto con una finestra aperta apposta. Scrivilo qui e nella pagina Varchi compare lo scudo per escludere questo varco. Acceso vuol dire escluso. Lasciala vuota e questo varco si guarda e basta, come prima.",
+        "Alarm panels publish a switch next to each contact that tells the panel to ignore it: that is what you need to arm the alarm with a window left open on purpose. Write it here and the shield to bypass this opening shows up on the Openings page. On means bypassed. Leave it empty and this opening is only watched, as before.",
+      ),
+    )}</small>
+    <label class="ed-slot dm-dich-campo"><span class="ed-slot-lbl">${esc(
+      t("Interruttore di esclusione", "Bypass switch"),
+    )}</span>
+      <span class="ed-form-row"><input id="${esc(id)}" class="ed-input mono"
+        data-dm-dich-campo="${esc(CAMPO_ESCLUSIONE)}" data-dm-dich-riga="${indice}"
+        value="${esc(clean(riga[CAMPO_ESCLUSIONE]))}" placeholder="${esc(proposta || "switch.porta_ingresso_bypass")}"
+        autocomplete="off" spellcheck="false"><button type="button" class="dm-entity-picker"
+        data-dm-dich-pick="${esc(id)}" aria-label="${esc(t("Scegli entità", "Choose entity"))}">🔍</button></span></label>
+  </details>`;
+}
+
 function righeDelleFinestre() {
   return root.getTapparelle?.() || readJson("cd_tapparelle", []);
 }
 
-function configurazione() {
-  return normalizzaVarchi(varchiConLeFinestre(readJson(CHIAVE_VARCHI, {}), righeDelleFinestre()));
-}
+const scheda = costruisciSchedaDichiarata({
+  nome: "varchi",
+  chiave: CHIAVE_VARCHI,
+  tab: VARCHI_EDITOR_TAB,
+  disegni: DISEGNI_DEL_VARCO,
+  ripiego: "door",
+  ridisegnaPagina: renderVarchi,
+  inPiu: CAMPI_IN_PIU,
 
-/* Quello che si salva e' solo la configurazione dei Varchi: i contatti delle
- * Finestre stanno nelle Finestre, e riscriverli qui fra gli «aggiunti» ne
- * farebbe una copia che il giorno che si cambia la riga non si aggiorna. */
-function configurazioneSalvata() {
-  return normalizzaVarchi(readJson(CHIAVE_VARCHI, {}));
-}
+  campiInPiu: campoDellEsclusione,
 
-function salva(prossima) {
-  writeJsonIfChanged(CHIAVE_VARCHI, prossima);
-  renderVarchi();
-  ridisegna();
-}
+  /* L'interruttore si legge dalla casella: la scheda condivisa tiene i campi in
+   * piu' com'erano, e non sa dove questa sezione ha messo il suo. */
+  bozzaInPiu(bozza, body, indice) {
+    const casella = body.querySelector(
+      `[data-dm-dich-campo="${CAMPO_ESCLUSIONE}"][data-dm-dich-riga="${indice}"]`,
+    );
+    if (!casella) return bozza;
+    return { ...bozza, [CAMPO_ESCLUSIONE]: clean(casella.value) };
+  },
 
-function activeTab() {
-  return clean(doc?.querySelector?.(".ed-tab.active")?.dataset?.tab);
-}
-
-function ridisegna() {
-  const body = doc?.getElementById("ed-body");
-  if (body) delete body.dataset.dmVarchiEditor;
-  ensureVarchiEditor();
-}
-
-/* ── il disegno della scheda ──────────────────────────────────────────── */
-
-function rigaMarkup(riga, scelte, dalleFinestre = new Set()) {
-  /* Da dove viene questa riga, quando non l'ha trovata Home Assistant da se':
-   * «aggiunto a mano» su un contatto che sta dentro una riga delle Finestre
-   * manderebbe a cercare nella scheda sbagliata quello che si vuole cambiare. */
-  const provenienza = dalleFinestre.has(riga.entity)
-    ? t("dalle Finestre", "from Windows")
-    : scelte.aggiunte.includes(riga.entity)
-      ? t("aggiunto a mano", "added by hand")
-      : "";
-  return `<article class="ed-row dm-varco-ed-riga" data-varco="${esc(riga.stato || "muto")}">
-    <span class="dm-varco-ed-ic" aria-hidden="true">${esc(riga.glifo)}</span>
-    <div class="ed-row-main dm-varco-ed-testo">
-      <input class="ed-input dm-varco-ed-nome" value="${esc(riga.name)}"
-        data-dm-varco-nome="${esc(riga.entity)}" aria-label="${esc(t("Nome", "Name"))}">
-      <small class="ed-row-old mono">${esc(riga.entity)}${provenienza ? ` · ${esc(provenienza)}` : ""}</small>
-    </div>
-    <button type="button" class="ed-del dm-varco-ed-togli" data-dm-varco-escludi="${esc(riga.entity)}"
-      title="${esc(t("Togli dall'elenco", "Drop from the list"))}"
-      aria-label="${esc(t("Togli dall'elenco", "Drop from the list"))}">🗑️</button>
-  </article>`;
-}
-
-function fuoriMarkup(scelte) {
-  if (!scelte.escluse.length) return "";
-  return `<div class="dm-varco-ed-elenco">${scelte.escluse
-    .map(
-      (entity) =>
-        `<span class="dm-varco-ed-fuori">${esc(entity)}<button type="button" class="ed-del" data-dm-varco-riprendi="${esc(entity)}" aria-label="${esc(t("Rimetti", "Put back"))}">✕</button></span>`,
-    )
-    .join("")}</div>`;
-}
-
-function schedaMarkup() {
-  const scelte = configurazione();
-  const dalleFinestre = new Set(contattiDichiaratiNelleFinestre(righeDelleFinestre()));
-  const states = allStates();
-  const righe = varchiDiCasa(
-    states,
-    { ...scelte, escluse: [] },
-    insiemeInvertiti(readJson(CHIAVE_VERSI, {})),
-    (entity) => nomeDaHomeAssistant(entity, states),
-  ).filter((riga) => !scelte.escluse.includes(riga.entity));
-  return `<div class="ed-intro">${esc(
-    t(
-      "I contatti di porte e finestre li dichiara Home Assistant da sé, e la pagina Varchi compare da sola: verde chiuso, rosso aperto, e in cima quanti sono aperti adesso. Qui si corregge quel rilevamento — si toglie un sensore che varco non è, si aggiunge uno che non viene trovato, e si dà un nome a chi si chiama «Contact 4B».",
-      "Home Assistant declares door and window contacts itself, and the Openings page appears on its own: green closed, red open, and how many are open right now on top. Here you correct that — drop a sensor that is not an opening, add one that is not found, and give a name to whatever is called “Contact 4B”.",
+  parole: {
+    linguetta: `🚪 ${t("Varchi", "Openings")}`,
+    intro: t(
+      "I varchi di casa: porte, finestre, portone, basculante. Ogni varco ha la sua riga — l'entità del contatto, il nome che vuoi tu, il disegno — e la pagina Varchi mostra queste, in quest'ordine: verde chiuso, rosso aperto, e in cima quanti sono aperti adesso.",
+      "The openings at home: doors, windows, front door, garage door. Each opening has its own row — the contact entity, the name you want, the drawing — and the Openings page shows these, in this order: green closed, red open, and how many are open right now on top.",
     ),
-  )}</div>
+    vuoto: t("Nessun varco configurato", "No opening configured"),
+    aggiungi: t("Aggiungi varco", "Add opening"),
+    nuovo: t("Varco nuovo", "New opening"),
+    senzaNome: t("Varco senza nome", "Unnamed opening"),
+    salva: t("Salva varco", "Save opening"),
+    salvato: `🚪 ${t("Varco salvato", "Opening saved")}`,
+    etichettaEntita: t("Entità del contatto", "Contact entity"),
+    segnaposto: "binary_sensor.finestra_cucina",
+    aiutoEntita: t(
+      "Il sensore che dice aperto o chiuso: binary_sensor.*, oppure un cover.* se l'infisso è motorizzato.",
+      "The sensor that says open or closed: binary_sensor.*, or a cover.* if it is motorised.",
+    ),
+    segnapostoNome: t("Finestra cucina", "Kitchen window"),
+    aiutoNome: t(
+      "Come si chiama per te. È questo che si legge nella pagina, non «Contact 4B».",
+      "What you call it. This is what the page reads, not “Contact 4B”.",
+    ),
+    muta: t(
+      "Finché non scegli l'entità questo varco non si vede: né nella pagina, né nel conto di quanti sono aperti adesso.",
+      "Until you pick the entity this opening is nowhere: not on the page, not in the count of how many are open right now.",
+    ),
+    importa: (quanti) =>
+      t(
+        `Prendi i ${quanti} contatti che Home Assistant ha trovato`,
+        `Take the ${quanti} contacts Home Assistant found`,
+      ),
+    presi: (quanti) => t(`🚪 ${quanti} varchi aggiunti`, `🚪 ${quanti} openings added`),
+    notaImporta: t(
+      "Li mette qui come righe, una volta sola: da lì in poi sono tue — le rinomini, gli dai il disegno, e quelle che elimini non tornano più.",
+      "It puts them here as rows, once: from then on they are yours — rename them, give them a drawing, and the ones you remove do not come back.",
+    ),
+  },
 
-  <label class="ed-slot dm-varco-ed-campo"><span class="ed-slot-lbl">${esc(t("Aggiungi un contatto che non viene trovato", "Add a contact that is not found"))}</span>
-    <span class="ed-form-row"><input id="dm-varco-aggiungi" class="ed-input mono" placeholder="binary_sensor.porta_cantina"
-      autocomplete="off" spellcheck="false"><button type="button" class="dm-entity-picker"
-      data-dm-varco-pick="dm-varco-aggiungi" aria-label="${esc(t("Scegli entità", "Choose entity"))}">🔍</button>
-      <button type="button" class="ed-btn-add" data-dm-varco-aggiungi>${esc(t("Aggiungi", "Add"))}</button></span>
-    <small>${esc(t("Un contatto che Home Assistant non ha etichettato — un template fatto in casa — non viene trovato: qui gli si dice che è un varco.", "A contact Home Assistant has not labelled — a template of your own — is not found: here you say it is an opening."))}</small>
-  </label>
+  /* Come stanno adesso i varchi dichiarati: la pagina e la scheda leggono lo
+   * stesso elenco dalla stessa funzione, che e' il motivo per cui non si
+   * contraddicono piu'. */
+  leggi(elenco) {
+    const states = allStates();
+    return new Map(
+      varchiDiCasa(
+        states,
+        { righe: elenco },
+        insiemeInvertiti(readJson(CHIAVE_VERSI, {})),
+        (entity) => nomeDaHomeAssistant(entity, states),
+      ).map((riga) => [riga.entity, riga]),
+    );
+  },
 
-  <div class="ed-slot-lbl dm-varco-ed-titolo">${esc(t("I contatti di casa", "The contacts at home"))}</div>
-  ${
-    righe.length
-      ? `<div class="ed-list dm-varco-ed-lista">${righe.map((riga) => rigaMarkup(riga, scelte, dalleFinestre)).join("")}</div>`
-      : `<div class="ed-empty">${esc(t("Nessun contatto trovato", "No contact found"))}</div>`
-  }
-  ${scelte.escluse.length ? `<div class="ed-slot-lbl dm-varco-ed-titolo">${esc(t("Tolti dai conti", "Dropped from the count"))}</div>` : ""}
-  ${fuoriMarkup(scelte)}`;
-}
+  /* Quello che il rilevamento proporrebbe: i contatti che Home Assistant
+   * dichiara varchi, piu' quelli dichiarati dentro le righe delle Finestre. */
+  daImportare(config) {
+    const states = allStates();
+    return varchiDaImportare(states, varchiConLeFinestre(config, righeDelleFinestre()), (entity) =>
+      nomeDaHomeAssistant(entity, states),
+    );
+  },
 
+  statoDellaRiga: (letta) =>
+    letta?.stato === "aperto" ? "male" : letta?.stato === "chiuso" ? "bene" : "muta",
+  didascalia: (letta) =>
+    letta?.stato === "aperto"
+      ? t("aperto", "open")
+      : letta?.stato === "chiuso"
+        ? t("chiuso", "closed")
+        : "",
+});
+
+/* I tre nomi con cui il resto della plancia chiama questa scheda. Sono
+ * funzioni dichiarate, non scorciatoie a una costante: il pacchetto si prova
+ * cercando `function install...`, ed e' giusto che si possa. */
 export function ensureVarchiEditor() {
-  const body = doc?.getElementById("ed-body");
-  if (!body || activeTab() !== VARCHI_EDITOR_TAB) return false;
-  if (body.dataset.dmVarchiEditor === "true") return false;
-  body.dataset.dmVarchiEditor = "true";
-  body.innerHTML = `<div class="dm-varchi-ed">${schedaMarkup()}</div>`;
-  return true;
+  return scheda.disegnaScheda();
 }
-
 export function ensureVarchiEditorTab() {
-  const tabs = doc?.querySelector(".ed-tab")?.parentElement;
-  if (!tabs || tabs.querySelector(`.ed-tab[data-tab="${VARCHI_EDITOR_TAB}"]`)) return false;
-  const tab = doc.createElement("button");
-  tab.className = "ed-tab";
-  tab.dataset.tab = VARCHI_EDITOR_TAB;
-  tab.textContent = `🚪 ${t("Varchi", "Openings")}`;
-  tab.addEventListener("click", () => root.editorSwitch?.(VARCHI_EDITOR_TAB));
-  const prima = tabs.querySelector('.ed-tab[data-tab="runtime"]');
-  if (prima) prima.before(tab);
-  else tabs.append(tab);
-  return true;
+  return scheda.disegnaLinguetta();
 }
-
-/* ── i gesti ──────────────────────────────────────────────────────────── */
-
-function onClick(event) {
-  const body = doc?.getElementById("ed-body");
-  if (!body || activeTab() !== VARCHI_EDITOR_TAB || !body.contains(event.target)) return;
-  const scelte = configurazioneSalvata();
-
-  const lente = event.target.closest("[data-dm-varco-pick]");
-  if (lente) {
-    event.preventDefault();
-    const campo = body.querySelector(`#${CSS.escape(clean(lente.dataset.dmVarcoPick))}`);
-    if (campo) root.wzPickEntity?.(campo);
-    return;
-  }
-
-  if (event.target.closest("[data-dm-varco-aggiungi]")) {
-    event.preventDefault();
-    const entity = clean(body.querySelector("#dm-varco-aggiungi")?.value);
-    if (!entity.includes(".")) return;
-    salva({
-      ...scelte,
-      aggiunte: [...new Set([...scelte.aggiunte, entity])],
-      escluse: scelte.escluse.filter((voce) => voce !== entity),
-    });
-    root.edToast?.(t("🚪 Contatto aggiunto ai varchi", "🚪 Contact added to the openings"));
-    return;
-  }
-
-  const togli = event.target.closest("[data-dm-varco-escludi]");
-  if (togli) {
-    event.preventDefault();
-    const entity = clean(togli.dataset.dmVarcoEscludi);
-    salva({
-      ...scelte,
-      escluse: [...new Set([...scelte.escluse, entity])],
-      aggiunte: scelte.aggiunte.filter((voce) => voce !== entity),
-    });
-    return;
-  }
-
-  const rimetti = event.target.closest("[data-dm-varco-riprendi]");
-  if (rimetti) {
-    event.preventDefault();
-    const entity = clean(rimetti.dataset.dmVarcoRiprendi);
-    salva({ ...scelte, escluse: scelte.escluse.filter((voce) => voce !== entity) });
-    return;
-  }
-}
-
-/* Il nome si salva mentre lo si scrive, e la scheda NON si ridisegna: un
- * ridisegno a ogni lettera porterebbe via il cursore dalla casella. */
-function onInput(event) {
-  const campo = event.target?.closest?.("[data-dm-varco-nome]");
-  if (!campo) return;
-  const entity = clean(campo.dataset.dmVarcoNome);
-  if (!entity) return;
-  const scelte = configurazioneSalvata();
-  const nomi = { ...scelte.nomi };
-  const scritto = clean(campo.value);
-  if (scritto) nomi[entity] = scritto;
-  else delete nomi[entity];
-  writeJsonIfChanged(CHIAVE_VARCHI, { ...scelte, nomi });
-  renderVarchi();
-}
-
-function installStyles() {
-  installStyle(
-    "dm-varchi-editor-style",
-    `
-    #ed-body .dm-varchi-ed{display:grid!important;gap:12px!important}
-    #ed-body .dm-varco-ed-titolo{margin-top:6px!important}
-    #ed-body .dm-varco-ed-lista{display:grid!important;gap:8px!important}
-    #ed-body .dm-varco-ed-riga{
-      display:grid!important;grid-template-columns:40px minmax(0,1fr) 40px!important;
-      align-items:center!important;gap:10px!important;
-      border-left:4px solid var(--dm-varco,#94a3b8)!important}
-    #ed-body .dm-varco-ed-riga[data-varco="aperto"]{--dm-varco:#dc2626}
-    #ed-body .dm-varco-ed-riga[data-varco="chiuso"]{--dm-varco:#16a34a}
-    #ed-body .dm-varco-ed-riga[data-varco="muto"]{--dm-varco:#94a3b8}
-    #ed-body .dm-varco-ed-ic{
-      display:grid!important;place-items:center!important;width:40px!important;height:40px!important;
-      border-radius:12px!important;font-size:18px!important;
-      background:color-mix(in srgb,var(--dm-varco,#94a3b8) 20%,transparent)!important}
-    #ed-body .dm-varco-ed-testo{display:grid!important;gap:4px!important;min-width:0!important}
-    #ed-body .dm-varco-ed-nome{width:100%!important;min-width:0!important}
-    #ed-body .dm-varco-ed-elenco{display:flex!important;flex-wrap:wrap!important;gap:8px!important}
-    #ed-body .dm-varco-ed-fuori{
-      display:inline-flex!important;align-items:center!important;gap:6px!important;
-      padding:4px 6px 4px 12px!important;border-radius:999px!important;font-size:11.5px!important;
-      font-weight:800!important;font-family:ui-monospace,monospace!important;
-      background:var(--secondary-background-color,#eef2f7)!important;color:var(--text,#0f172a)!important}
-    `,
-  );
-}
-
 export function installVarchiEditor() {
-  if (!doc || state.installed) return false;
-  state.installed = true;
-  installStyles();
-  ensureVarchiEditorTab();
-  onEditorRedraw("__dmVarchiEditor", () => {
-    root.queueMicrotask?.(() => {
-      ensureVarchiEditorTab();
-      ensureVarchiEditor();
-    });
-  });
-  doc.addEventListener("click", onClick);
-  doc.addEventListener("input", onInput);
-  for (const evento of ["dashboardmodern:legacy-ready", "dashboardmodern:editor-rendered"])
-    root.addEventListener?.(evento, () => {
-      root.queueMicrotask?.(() => {
-        ensureVarchiEditorTab();
-        ensureVarchiEditor();
-      });
-    });
-  return true;
+  return scheda.installa();
 }
 
 installVarchiEditor();

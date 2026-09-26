@@ -35,5 +35,42 @@ test("la risposta entra dalla stessa porta della consegna: e' lo stesso messaggi
   assert.match(CRUSCOTTO, /if \(!detto \|\| detto\.gdahome !== "chiave"\) return;/);
   /* E quella battuta a mano resta padrona, come per la consegna. */
   const ascolto = CRUSCOTTO.slice(CRUSCOTTO.indexOf('addEventListener("message"'));
-  assert.match(ascolto.slice(0, 800), /consegnata = arrivata;\s*if \(chiave\) return;/);
+  assert.match(ascolto.slice(0, 1400), /consegnata = arrivata;\s*if \(chiave\) return;/);
+});
+
+test("la risposta si prende solo da chi ci tiene, e da un'origine nuova solo dopo un si'", () => {
+  /* Prima si prendeva da chiunque: una pagina qualunque che mettesse il
+   * cruscotto in un riquadro gli poteva consegnare la sua chiave, e chi
+   * guardava lavorava in un cruscotto non suo. */
+  const ascolto = CRUSCOTTO.slice(CRUSCOTTO.indexOf('addEventListener("message"')).slice(0, 2000);
+  assert.match(ascolto, /if \(!daChiCiTiene\(evento\.source\)\) return;/);
+  /* Chi ci tiene dentro un riquadro e' la voce di Home Assistant, da un
+   * indirizzo diverso in ogni casa: da li' si prende. Si offre soltanto quella
+   * di una finestra di un altro sito che ci ha aperti. */
+  assert.match(
+    ascolto,
+    /const daDentro = window\.parent !== window && evento\.source === window\.parent;/,
+  );
+  assert.match(
+    ascolto,
+    /if \(!daDentro && !origineFidata\(String\(evento\.origin \|\| ""\)\)\) \{/,
+  );
+  /* Da un'origine nuova si offre, con scritto da dove viene, e non si prende. */
+  assert.match(
+    ascolto,
+    /offerta = \{ chiave: arrivata, origine: String\(evento\.origin \|\| ""\) \};/,
+  );
+  assert.match(CRUSCOTTO, /id="usa-la-consegnata"/);
+  assert.match(CRUSCOTTO, /\$\{testo\(offerta\.origine\)\}/);
+  /* Le origini fidate: questa, quelle scritte dal quadro, quelle gia' dette. */
+  assert.match(CRUSCOTTO, /origine === location\.origin \|\|/);
+  assert.match(CRUSCOTTO, /<meta name="gdahome-ospiti" content="" \/>/);
+  /* Avuta la chiave, o smesso di aspettarla, chi ci ha aperto si lascia
+   * andare: la pagina non tiene in mano una finestra dell'app. */
+  assert.match(CRUSCOTTO, /if \(window\.opener\) window\.opener = null;/);
+  assert.match(ascolto, /lasciaChiMiHaAperto\(\);\s*consegnata = arrivata;/);
+  assert.match(CRUSCOTTO, /setTimeout\(lasciaChiMiHaAperto, 10000\);/);
+  /* E la chiave sta nella scheda, non nel browser. */
+  assert.doesNotMatch(CRUSCOTTO, /localStorage\.setItem\(DOVE_STA_LA_CHIAVE/);
+  assert.match(CRUSCOTTO, /localStorage\.removeItem\(DOVE_STA_LA_CHIAVE\)/);
 });

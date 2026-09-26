@@ -100,12 +100,13 @@ export class UtentiDiCasa {
   }
 
   /* Se questo utente amministra la casa. `false` anche per un utente che non
-   * esiste: non esistere non e' un titolo. */
+   * esiste, e per uno disattivato: non esistere non e' un titolo, e un utente
+   * spento in Home Assistant non amministra niente nemmeno da qui. */
   async amministratore(chi) {
     const cercato = String(chi || "").trim();
     if (!cercato) return false;
     const elenco = await this.elenco();
-    return elenco.some((uno) => uno.id === cercato && uno.amministratore);
+    return elenco.some((uno) => uno.id === cercato && uno.amministratore && uno.attivo !== false);
   }
 
   /* Lo stesso, ma **senza chiedere niente a nessuno**: solo da quello che c'e'
@@ -118,6 +119,8 @@ export class UtentiDiCasa {
     const cercato = String(chi || "").trim();
     if (!cercato) return false;
     if (!this._ultimi) return null;
-    return this._ultimi.some((uno) => uno.id === cercato && uno.amministratore);
+    return this._ultimi.some(
+      (uno) => uno.id === cercato && uno.amministratore && uno.attivo !== false,
+    );
   }
 }

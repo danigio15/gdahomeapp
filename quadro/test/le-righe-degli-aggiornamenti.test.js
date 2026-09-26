@@ -23,6 +23,7 @@ import { dirname, join } from "node:path";
 
 const QUI = dirname(fileURLToPath(import.meta.url));
 const PAGINA = readFileSync(join(QUI, "..", "console", "index.html"), "utf8");
+const CHI = "inst_0123456789abcdef";
 
 /* Due pezzi, perche' in mezzo c'e' roba che ha bisogno del browser. Se un
  * segno sparisce la prova non passa in silenzio: si ferma dicendo qual e'. */
@@ -40,8 +41,10 @@ function iPezzi() {
     assert.ok(ultimo > primo, `nella pagina non c'e' piu' «${a}» dopo «${da}»`);
     programma += PAGINA.slice(primo, ultimo);
   }
+  /* Chi e' l'installatore: le icone stanno nella sua cartella, e
+   * l'indirizzo lo porta davanti. */
   return new Function(
-    `${programma}; return { ilSegnoDi, cosaCambia, unaRiga, ilTasto, eLaStessa };`,
+    `const IO = { chi: ${JSON.stringify(CHI)} }; ${programma}; return { ilSegnoDi, cosaCambia, unaRiga, ilTasto, eLaStessa };`,
   )();
 }
 
@@ -76,7 +79,7 @@ test("l'icona arriva dal quadro, non dai marchi di Home Assistant", () => {
   /* `../segno/`, con il punto punto: la pagina sta in `/console/`, e senza
    * quello l'indirizzo si legge da li' — `/console/segno/…`, dove non c'e'
    * niente, e ogni icona salvata bene tornava un 404. */
-  assert.match(disegnato, /src="\.\.\/segno\/e574160d1c8dc4e2"/);
+  assert.match(disegnato, /src="\.\.\/segno\/inst_0123456789abcdef\/e574160d1c8dc4e2"/);
   assert.ok(
     !/src="segno\//.test(disegnato),
     "l'indirizzo si legge da /console/ e non trova niente",
@@ -88,7 +91,11 @@ test("l'icona arriva dal quadro, non dai marchi di Home Assistant", () => {
   /* E sotto c'e' l'iniziale: finche' l'icona non e' arrivata — il primo giro
    * dopo che un aggiornamento compare — la riga si legge lo stesso. */
   assert.match(disegnato, />S</);
-  assert.match(disegnato, /onerror="this\.remove\(\)"/);
+  /* Se non arriva si toglie: non con un `onerror` dentro il tag, che la
+   * politica della pagina non lascia girare, ma con un ascolto solo. */
+  assert.match(disegnato, /data-se-non-arriva="via"/);
+  assert.doesNotMatch(disegnato, /onerror=/);
+  assert.match(PAGINA, /chi\.dataset\.seNonArriva === "via"\) chi\.remove\(\)/);
 });
 
 test("in tutta la pagina non si va piu' a prendere niente dai marchi", () => {

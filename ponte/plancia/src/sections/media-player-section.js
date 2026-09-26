@@ -20,6 +20,7 @@
 import {
   CHIAVE_MEDIA,
   comandoDelLettore,
+  ilTastoCentrale,
   letturaDelLettore,
   lettureDeiLettori,
   lettoriConfigurati,
@@ -178,6 +179,10 @@ const GLIFI = Object.freeze({
   suona: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7.5 4.9v14.2a.9.9 0 0 0 1.38.76l11-7.1a.9.9 0 0 0 0-1.52l-11-7.1a.9.9 0 0 0-1.38.76Z" fill="currentColor"/></svg>`,
   pausa: `<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6.6" y="4.8" width="4.2" height="14.4" rx="1.6" fill="currentColor"/><rect x="13.2" y="4.8" width="4.2" height="14.4" rx="1.6" fill="currentColor"/></svg>`,
   spegni: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.6v7.6" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"/><path d="M6.9 6.7a7.2 7.2 0 1 0 10.2 0" stroke="currentColor" stroke-width="2.1" fill="none" stroke-linecap="round"/></svg>`,
+  /* Accendi e spegni portano lo stesso segno, perche' il segno
+   * dell'alimentazione e' uno solo: quello che cambia e' cosa c'e' scritto
+   * sotto le dita e cosa succede premendo. */
+  accendi: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.6v7.6" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"/><path d="M6.9 6.7a7.2 7.2 0 1 0 10.2 0" stroke="currentColor" stroke-width="2.1" fill="none" stroke-linecap="round"/></svg>`,
   muto: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.4h3.4L12 5.2v13.6L7.4 14.6H4Z" fill="currentColor"/><path d="m16 9.6 4.4 4.8M20.4 9.6 16 14.4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>`,
   voce: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.4h3.4L12 5.2v13.6L7.4 14.6H4Z" fill="currentColor"/><path d="M15.6 9.2a4 4 0 0 1 0 5.6M18.3 6.8a7.6 7.6 0 0 1 0 10.4" stroke="currentColor" stroke-width="1.9" fill="none" stroke-linecap="round"/></svg>`,
 });
@@ -189,11 +194,22 @@ const GLIFI = Object.freeze({
  * la finestra della tessera in Home, che e' l'altro posto da cui si comanda la
  * musica. Un secondo disegno con un secondo gestore vorrebbe dire due modi di
  * mettere in pausa, e prima o poi due modi diversi. */
+/* Come si chiama il tasto centrale, quando c'e'. Il nucleo dice quale dei tre
+ * e', qui si scrive la parola e si sceglie il segno. */
+const NOMI_DEL_CENTRO = {
+  accendi: () => t("Accendi", "Turn on"),
+  pausa: () => t("Pausa", "Pause"),
+  suona: () => t("Riproduci", "Play"),
+};
+
 export function comandiMediaMarkup(riga) {
-  const centro = riga.suona ? GLIFI.pausa : GLIFI.suona;
+  /* Quale tasto centrale, o nessuno: il perche' sta in `ilTastoCentrale`.
+   * Su un televisore che di pausa non ne ha, in mezzo alla fila non c'e'
+   * niente — meglio del triangolo che chiamava un servizio che non fa nulla. */
+  const centro = ilTastoCentrale(riga);
   return `<div class="dm-mp-comandi">
     ${riga.puo.precedente ? tastoMarkup(riga, "precedente", t("Brano precedente", "Previous track"), GLIFI.precedente) : ""}
-    ${tastoMarkup(riga, "centro", riga.suona ? t("Pausa", "Pause") : t("Riproduci", "Play"), centro)}
+    ${centro ? tastoMarkup(riga, "centro", NOMI_DEL_CENTRO[centro](), GLIFI[centro]) : ""}
     ${riga.puo.successivo ? tastoMarkup(riga, "successivo", t("Brano successivo", "Next track"), GLIFI.successivo) : ""}
     ${riga.puo.spegni && !riga.spento ? tastoMarkup(riga, "spegni", t("Spegni", "Turn off"), GLIFI.spegni) : ""}
   </div>`;
@@ -766,7 +782,18 @@ function installStyles() {
          tasto che si cerca, e sulla copertina deve restare il suo colore. */
       .dm-mp-card[data-arte="true"] .dm-mp-tasto:not([data-dm-mp="centro"]){
         color:#f8fafc;background:rgba(248,250,252,.14);border-color:rgba(248,250,252,.24)}
-      .dm-mp-testo{display:grid;gap:5px;min-width:0}
+      /* La colonna è dichiarata, e non lasciata all'«auto».
+
+         Una griglia senza colonne scritte se ne fa una implicita larga quanto il
+         figlio più largo, e i figli qui dentro sono una tendina con dentro «Dolby
+         Digital Plus 5.1» e un nome di entità lungo una riga: su un telefono la
+         colonna veniva 220px dove ce n'erano 162, e siccome la card taglia quello
+         che esce («overflow:hidden», che le serve per il fondale sfocato) il di
+         più spariva — senza modo di andarlo a prendere, perché la pagina non
+         scorre di lato. «minmax(0,1fr)» dice che quella colonna non può crescere
+         oltre lo spazio che ha, e il testo lungo si accorcia o va a capo come
+         ognuno di questi pezzi sa già fare. */
+      .dm-mp-testo{display:grid;grid-template-columns:minmax(0,1fr);gap:5px;min-width:0}
       .dm-mp-dove{
         font-size:10.5px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;
         color:var(--text-dim,#64748b);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -802,7 +829,16 @@ function installStyles() {
       .dm-mp-percento{
         font-size:10.5px;font-weight:800;color:var(--text-dim,#64748b);
         font-variant-numeric:tabular-nums;flex:0 0 34px;text-align:right}
-      .dm-mp-sorgente{display:flex;align-items:center;gap:9px;margin-top:8px}
+      /* Etichetta e tendina sulla stessa riga finché ci stanno, e quando non
+         ci stanno la tendina va a capo e si prende la riga intera.
+
+         Tenute affiancate per forza, un nome lungo — «Formato di ingresso del
+         segnale», che è il nome che ci mette l'integrazione, non uno scelto qui —
+         si impilava su tre righe e alla tendina restavano cento pixel: dentro ci
+         si leggeva «No input co», e il resto non si raggiungeva in nessun modo,
+         perché una tendina non si scorre di lato. */
+      .dm-mp-sorgente{
+        display:flex;align-items:center;flex-wrap:wrap;gap:9px;row-gap:4px;margin-top:8px}
       /* Quello che sta accanto (#451): i tasti dell'integrazione e le sue
          letture, sotto i comandi del brano. */
       .dm-mp-cmds{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
@@ -834,7 +870,7 @@ function installStyles() {
         font-size:10.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;
         color:var(--text-dim,#64748b)}
       .dm-mp-sorgente select{
-        flex:1 1 auto;min-width:0;padding:7px 10px;border-radius:11px;font-size:12px;font-weight:700;
+        flex:1 1 150px;min-width:0;padding:7px 10px;border-radius:11px;font-size:12px;font-weight:700;
         color:var(--text,#0f172a);
         background:var(--card-background-color,#fff);border:1px solid var(--card-border,#e2e8f0)}
       /* La finestra di un lettore solo (#460): il fondo sfocato e la card in

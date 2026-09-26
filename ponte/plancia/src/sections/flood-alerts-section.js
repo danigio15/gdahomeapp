@@ -41,6 +41,44 @@ export function isFloodSensor(entityId, stato) {
   return clean(stato?.attributes?.device_class).toLowerCase() === "moisture";
 }
 
+/**
+ * Se un'entita' di questa lista si puo' leggere come una sonda.
+ *
+ * `isFloodSensor` e' la regola del RILEVAMENTO: cosa la casa si prende da sola
+ * al primo avvio. Li' si e' stretti apposta — `device_class: moisture` e
+ * basta — perche' prendersi qualcosa di piu' vorrebbe dire mettere in mano a
+ * chi abita un elenco che non ha scelto.
+ *
+ * Questa e' la regola di CHI GUARDA, e non puo' essere la stessa: in questa
+ * lista finisce anche quello che una persona ci mette dalla scheda degli
+ * avvisi, dove fra i gruppi c'e' anche «Allagamenti» — compreso un sensore
+ * fatto in casa, che la classe non la dichiara affatto e che e' una sonda per
+ * chi ce l'ha messo.
+ *
+ * Quindi: e' una sonda un `binary_sensor` che dice di essere di umidita', o
+ * che non dice niente. Uno che dice di essere UN'ALTRA COSA — `safety`,
+ * `problem`, `motion` — non lo e'.
+ *
+ * Dal campo, ed e' il motivo per cui questa riga esiste: «continua ad uscire
+ * questo allarme bagnato ma non c'e' nessuna entita' allarme, sono 5 i sensori
+ * configurati, questo 6 non esiste». Il sesto era un avviso finito nel gruppo
+ * Allagamenti, e la tessera lo leggeva come legge tutti — acceso vuol dire
+ * bagnato — cosi' un antifurto inserito diceva «C'e' acqua».
+ *
+ * Non si cancella niente: quella voce resta nella scheda della configurazione,
+ * dove adesso porta scritto che una sonda non e', col cestino accanto. Qui si
+ * decide solo cosa la tessera ha il diritto di chiamare sonda.
+ */
+export function puoEssereUnaSonda(entityId, stato) {
+  if (!clean(entityId).startsWith("binary_sensor.")) return false;
+  /* Senza stato non e' una sonda che si possa leggere: e' una riga rimasta in
+   * lista dopo che il dispositivo e' stato tolto, e contarla fra le sonde che
+   * «hanno risposto» sarebbe dire il falso sul numero. */
+  if (!stato) return false;
+  const classe = clean(stato?.attributes?.device_class).toLowerCase();
+  return !classe || classe === "moisture";
+}
+
 /** Bagnato o asciutto: `on` e' bagnato, come per ogni binary_sensor. */
 export const floodIsWet = (stato) => clean(stato?.state).toLowerCase() === "on";
 
@@ -213,7 +251,9 @@ function ensureFloodEditorRows() {
       return (
         `<div class="ed-row" data-dm-flood-row="${esc(id)}">` +
         `<div class="ed-row-main"><div class="ed-row-new">${esc(nome)}</div>` +
-        `<div class="ed-row-old mono">${esc(id)}</div></div>` +
+        `<div class="ed-row-old mono">${esc(id)}</div>` +
+        seNonEUnaSonda(id, states) +
+        `</div>` +
         `<div class="ed-del" data-dm-flood-del="${esc(id)}">🗑️</div></div>`
       );
     })
@@ -224,6 +264,35 @@ function ensureFloodEditorRows() {
     `<div class="ed-acc-body"><div class="ed-list">${righe}</div></div>`;
   scriviSeCambia(acc, markup);
   return true;
+}
+
+/* Quando in questa lista c'e' dentro qualcosa che una sonda non e'.
+ *
+ * Dal campo, con lo scatto del popup: «continua ad uscire questo allarme
+ * bagnato ma non c'e' nessuna entita' allarme, sono 5 i sensori configurati,
+ * questo 6 non esiste». Il sesto esisteva eccome — stava in questa lista — ma
+ * non era una sonda: era un'entita' aggiunta al gruppo Allagamenti dalla
+ * scheda degli avvisi, col suo nome scritto a mano. La tessera la legge come
+ * legge tutte le altre — acceso vuol dire bagnato — e quindi diceva «Bagnato»
+ * di una cosa che non misura acqua.
+ *
+ * Toglierla d'ufficio sarebbe peggio: c'e' chi mette in questa lista un
+ * sensore fatto in casa che la classe non la dichiara, ed e' una scelta sua.
+ * Quello che mancava e' che si vedesse. Qui si vede, e si vede nel posto
+ * giusto: la scheda che si compila, dove l'identificativo c'e' gia' e dove
+ * accanto c'e' il cestino per toglierla.
+ *
+ * Due casi, e sono diversi: uno che in Home Assistant non c'e' piu' (un
+ * dispositivo tolto, e la riga rimasta) e uno che c'e' ma di acqua non parla. */
+function seNonEUnaSonda(id, states) {
+  const suo = states?.[id];
+  const perche = !suo
+    ? t("in Home Assistant non c'è", "not in Home Assistant")
+    : isFloodSensor(id, suo)
+      ? ""
+      : t("non è un sensore di allagamento", "not a flood sensor");
+  if (!perche) return "";
+  return `<div class="ed-hint" data-dm-flood-dubbia="true">⚠️ ${esc(perche)}</div>`;
 }
 
 /* Il cestino e' quello del runtime: sa gia' distinguere una voce aggiunta

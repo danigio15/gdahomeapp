@@ -144,14 +144,54 @@ void main() {
     expect(impostazioni.lucchetto.alRitorno, isTrue);
   });
 
-  testWidgets('spegnere non chiede niente', (tester) async {
+  testWidgets('spegnere un lucchetto acceso lo chiede', (tester) async {
+    /* Prima si spegneva con una levetta, senza chiedere niente: chi trovava
+     * il telefono aperto lo toglieva, e alla prossima apertura l'app era
+     * sua. */
     await impostazioni.metti(lucchetto: const IlLucchetto(allAvvio: true));
     await apri(tester);
     await tester.tap(find.text('Chiedilo quando apro l\'app'));
     await tester.pumpAndSettle();
-    expect(guardia.chieste, isEmpty);
+    expect(guardia.chieste, hasLength(1));
     expect(impostazioni.lucchetto.allAvvio, isFalse);
   });
+
+  testWidgets('e se non si passa, resta acceso', (tester) async {
+    guardia.risponde = ComeEAndata.no;
+    await impostazioni.metti(
+      lucchetto: const IlLucchetto(
+        allAvvio: true,
+        prima: {PrimaDi.ilCruscotto},
+      ),
+    );
+    await apri(tester);
+    await tester.tap(find.text('Chiedilo quando apro l\'app'));
+    await tester.pumpAndSettle();
+    expect(impostazioni.lucchetto.allAvvio, isTrue);
+
+    /* Lo stesso per il volto e l'impronta: spenti tutti e due, il lucchetto
+     * non avrebbe piu' con cosa chiedere. */
+    await tester.tap(find.text('Volto'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Impronta'));
+    await tester.pumpAndSettle();
+    expect(impostazioni.lucchetto.acceso, isTrue);
+    expect(guardia.chieste, isNotEmpty);
+  });
+
+  testWidgets(
+    'un telefono che non sa piu\' rispondere il lucchetto lo toglie',
+    (tester) async {
+      /* E' il caso in cui l'app all'apertura entra lo stesso: un lucchetto che
+     * non si puo' ne' aprire ne' togliere si cura solo disinstallando. */
+      guardia.risponde = ComeEAndata.nonSaFarlo;
+      await impostazioni.metti(lucchetto: const IlLucchetto(allAvvio: true));
+      await apri(tester);
+      await tester.tap(find.text('Chiedilo quando apro l\'app'));
+      await tester.pumpAndSettle();
+      expect(impostazioni.lucchetto.allAvvio, isFalse);
+    },
+  );
 
   testWidgets('su un telefono senza guardia la scheda lo dice, e basta', (
     tester,

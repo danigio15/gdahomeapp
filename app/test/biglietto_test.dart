@@ -60,6 +60,27 @@ void main() {
     },
   );
 
+  test('a un quadro in http la chiave non si manda', () async {
+    /* La chiave andrebbe in chiaro: la vedrebbe chiunque stia in mezzo. */
+    var chiamate = 0;
+    final cliente = MockClient((_) async {
+      chiamate += 1;
+      return http.Response(jsonEncode({'biglietto': _biglietto}), 200);
+    });
+    final inChiaro = Uri.parse('http://quadro.gdahome.org/console/');
+    expect(
+      await conIlBiglietto(inChiaro, 'la-chiave', cliente: cliente),
+      inChiaro,
+    );
+    expect(chiamate, 0);
+
+    /* Il proprio computer si': non passa da nessuna rete. */
+    final qui = Uri.parse('http://127.0.0.1:8080/console/');
+    final dove = await conIlBiglietto(qui, 'la-chiave', cliente: cliente);
+    expect(chiamate, 1);
+    expect(dove.queryParameters['biglietto'], _biglietto);
+  });
+
   test('senza chiave non si chiede niente: la pagina com\'e\'', () async {
     var chiamate = 0;
     final cliente = MockClient((_) async {

@@ -3,7 +3,7 @@
  * Poche vie, e chi bussa altrove non trova niente.
  *
  *   GET  /                            la soglia: cos'e' questo indirizzo
- *   GET  /salute                      dice solo che e' vivo
+ *   GET  /salute                      dice solo che e' vivo (e di piu' a chi guarda da dentro)
  *   GET  /console/                    la console della chat, e le sue vie
  *   POST /contatto                    il modulo «Contatti» del sito, che Caddy passa qui
  *   WS   /casa/<casa_…>              una casa che chiama fuori
@@ -19,11 +19,13 @@
  * filo, verso la casa, che e' l'unica che lo puo' verificare.
  */
 
+import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { createServer } from "node:http";
 
 import { CASA_VALIDA } from "./case.js";
-import { MESSAGGIO_MASSIMO } from "./centralino.js";
+import { MESSAGGIO_DEL_TELEFONO, MESSAGGIO_MASSIMO } from "./centralino.js";
+import { daChi, eDaDentro, reteDi } from "./indirizzo.js";
 import { accetta, eUnaSalita } from "./presa.js";
 import { laSoglia } from "./soglia.js";
 import { json } from "./sportello.js";
@@ -37,10 +39,40 @@ const IMPRONTA_VALIDA = /^[0-9a-f]{64}$/;
  * console la apre dieci volte al giorno. */
 const PAGINA_DELLA_CONSOLE = new URL("../console/index.html", import.meta.url);
 let paginaDellaConsole;
+let regoleDellaConsole = "";
+
+/* Le regole che il browser fa rispettare alla pagina della console.
+ *
+ * La console apre tutte le conversazioni, e la sua chiave passa dalla pagina:
+ * il browser deve eseguire **quello** script e nessun altro. Lo script e lo
+ * stile stanno dentro la pagina, e si dicono per impronta — SHA-256 del loro
+ * testo esatto, calcolata qui quando la pagina si legge — cosi' uno script
+ * infilato da qualche parte non gira, perche' la sua impronta non e' questa.
+ * La pagina parla solo con questo indirizzo, e non si lascia mettere dentro
+ * un riquadro di nessun altro. */
+function regoleDellaPagina(pagina) {
+  const impronte = (etichetta) =>
+    [...pagina.matchAll(new RegExp(`<${etichetta}>([\\s\\S]*?)</${etichetta}>`, "g"))]
+      .map((uno) => `'sha256-${createHash("sha256").update(uno[1], "utf8").digest("base64")}'`)
+      .join(" ");
+  return [
+    "default-src 'none'",
+    `script-src ${impronte("script") || "'none'"}`,
+    `style-src ${impronte("style") || "'none'"}`,
+    "connect-src 'self'",
+    "img-src 'self' data:",
+    "base-uri 'none'",
+    "form-action 'none'",
+    "frame-ancestors 'none'",
+  ].join("; ");
+}
 
 function laConsole(risposta) {
   try {
-    if (paginaDellaConsole === undefined) paginaDellaConsole = readFileSync(PAGINA_DELLA_CONSOLE);
+    if (paginaDellaConsole === undefined) {
+      paginaDellaConsole = readFileSync(PAGINA_DELLA_CONSOLE);
+      regoleDellaConsole = regoleDellaPagina(paginaDellaConsole.toString("utf8"));
+    }
   } catch (_errore) {
     paginaDellaConsole = null;
   }
@@ -52,9 +84,25 @@ function laConsole(risposta) {
     "content-type": "text/html; charset=utf-8",
     "cache-control": "no-store",
     "content-length": paginaDellaConsole.length,
+    "content-security-policy": regoleDellaConsole,
   });
   risposta.end(paginaDellaConsole);
 }
+
+/* Quello che vale per ogni risposta, qualunque porta la dia.
+ *
+ * Nessuna pagina di qui si mette dentro un riquadro altrui; nessun file si
+ * legge per quello che il browser indovina invece che per quello che e'; e
+ * l'indirizzo da cui si arriva non si racconta a nessuno. Le regole di
+ * difetto non lasciano girare niente: la soglia e la pagina dei contatti non
+ * hanno script, e la console — l'unica che ne ha — ha le sue. */
+const INTESTAZIONI_DI_SEMPRE = Object.freeze({
+  "x-content-type-options": "nosniff",
+  "x-frame-options": "DENY",
+  "referrer-policy": "no-referrer",
+  "content-security-policy":
+    "default-src 'none'; style-src 'unsafe-inline'; img-src 'self' data:; base-uri 'none'; form-action 'self'; frame-ancestors 'none'",
+});
 
 export const rotta = (richiesta) => new URL(richiesta.url || "/", "http://centralino").pathname;
 
@@ -73,6 +121,9 @@ export function costruisciIlServer({
 }) {
   const soglia = Buffer.from(laSoglia(dove), "utf8");
   const server = createServer((richiesta, risposta) => {
+    for (const [nome, valore] of Object.entries(INTESTAZIONI_DI_SEMPRE)) {
+      risposta.setHeader(nome, valore);
+    }
     const indirizzo = new URL(richiesta.url || "/", "http://centralino");
     const via = indirizzo.pathname;
 
@@ -95,13 +146,25 @@ export function costruisciIlServer({
      * va: che e' vivo, da quanto — un numero piccolo dopo che nessuno ha
      * toccato niente vuol dire che si e' riacceso da solo — e se le
      * segnalazioni hanno il loro gettone. `posta` dice se il modulo dei
-     * contatti del sito ha un server di posta con cui spedire. */
+     * contatti del sito ha un server di posta con cui spedire.
+     *
+     * **Da fuori ne dice due**: che e' vivo e da quanto. Il secondo serve a
+     * chi sposta il segno del tramite (il riassunto del bottone «Il tramite»
+     * su Actions dice di guardare `acceso_da`). Quante case e quanti telefoni
+     * ci sono, e cosa e' acceso e cosa no, non servono a chi passa: li vede
+     * chi guarda dalla macchina stessa — `curl` da dentro, lo script che la
+     * accende, le prove — cioe' chi arriva senza passare da Caddy. */
     if (via === "/salute" && richiesta.method === "GET") {
+      if (!eDaDentro(richiesta)) {
+        json(risposta, { vivo: true, acceso_da: Math.round((Date.now() - acceso) / 1000) });
+        return;
+      }
       json(risposta, {
         vivo: true,
         acceso_da: Math.round((Date.now() - acceso) / 1000),
         case: centralino.quanteCase(),
-        telefoni: centralino.quantiTelefoni(),
+        collegamenti: centralino.quantiCollegamenti(),
+        app: centralino.quanteAppAperte(),
         segnalazioni: Boolean(sportello?.pronto),
         chat: chat ? { linee: chat.archivio.quanteLinee(), console: chat.consoleAperta } : false,
         posta: Boolean(contatti?.pronto),
@@ -152,7 +215,23 @@ export function costruisciIlServer({
       socket.end("HTTP/1.1 400 Bad Request\r\n\r\n");
       return;
     }
-    const da = socket.remoteAddress || "?";
+    /* Da chi arriva: quello vero, anche dietro Caddy. Serve a contare i fili
+     * per indirizzo, ed e' quello che la casa si vede dire all'apertura di un
+     * canale — lo stesso che le dice il centralino sulla nuvola. */
+    const da = daChi(richiesta);
+    /* I fili si contano per rete (in IPv6 un /64 intero e' di una persona
+     * sola), ma alla casa si dice l'indirizzo com'e'. */
+    const rete = reteDi(da);
+    if (centralino.cePostoPer && !centralino.cePostoPer(rete)) {
+      socket.end("HTTP/1.1 503 Service Unavailable\r\nretry-after: 30\r\n\r\n");
+      return;
+    }
+    const contaLaPresa = (presa) => {
+      if (!presa || !centralino.unaPresaIn) return presa;
+      const andata = centralino.unaPresaIn(rete);
+      socket.once("close", andata);
+      return presa;
+    };
 
     /* `/casa` e `/casa/<casa_…>` sono la stessa porta. L'identificativo
      * nell'indirizzo qui non serve — chi decide e' il `sono-io` che arriva
@@ -161,30 +240,36 @@ export function costruisciIlServer({
      * prima ancora di accettarlo. Le due punte parlano la stessa lingua a
      * tutti e due. */
     if (via === "/casa" || /^\/casa\/[A-Za-z0-9_]+$/.test(via)) {
-      const presa = accetta(richiesta, socket, {
-        messaggioMassimo: MESSAGGIO_MASSIMO,
-        onGuasto: ilGuasto("una casa"),
-      });
+      const presa = contaLaPresa(
+        accetta(richiesta, socket, {
+          messaggioMassimo: MESSAGGIO_MASSIMO,
+          onGuasto: ilGuasto("una casa"),
+        }),
+      );
       if (presa) centralino.accogliUnaCasa(presa, { da });
       return;
     }
 
     const alTelefono = /^\/telefono\/([A-Za-z0-9_]+)$/.exec(via);
     if (alTelefono && CASA_VALIDA.test(alTelefono[1])) {
-      const presa = accetta(richiesta, socket, {
-        messaggioMassimo: MESSAGGIO_MASSIMO,
-        onGuasto: ilGuasto("un telefono"),
-      });
+      const presa = contaLaPresa(
+        accetta(richiesta, socket, {
+          messaggioMassimo: MESSAGGIO_DEL_TELEFONO,
+          onGuasto: ilGuasto("un telefono"),
+        }),
+      );
       if (presa) centralino.accogliUnTelefono(presa, { casa: alTelefono[1], da });
       return;
     }
 
     const inAbbinamento = /^\/abbinamento\/([0-9a-f]+)$/.exec(via);
     if (inAbbinamento && IMPRONTA_VALIDA.test(inAbbinamento[1])) {
-      const presa = accetta(richiesta, socket, {
-        messaggioMassimo: MESSAGGIO_MASSIMO,
-        onGuasto: ilGuasto("un abbinamento"),
-      });
+      const presa = contaLaPresa(
+        accetta(richiesta, socket, {
+          messaggioMassimo: MESSAGGIO_DEL_TELEFONO,
+          onGuasto: ilGuasto("un abbinamento"),
+        }),
+      );
       if (presa) centralino.accogliUnAbbinamento(presa, { impronta: inAbbinamento[1], da });
       return;
     }

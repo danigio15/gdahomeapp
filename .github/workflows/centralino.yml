@@ -44,9 +44,14 @@ jobs:
   accendi:
     name: Accendi il centralino
     runs-on: ubuntu-latest
+    # Pubblica in produzione: passa dall'ambiente `produzione`, che il
+    # proprietario protegge nelle impostazioni della repository.
+    environment: produzione
     steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-node@v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
           node-version: "22"
 
@@ -110,6 +115,17 @@ jobs:
             quanti=$(find nuvola/pubblico/app -type f | wc -l)
             echo "gdahome: $quanti file, serviti da /app/"
             echo "GDAHOME=si" >> "$GITHUB_ENV"
+            # Le intestazioni dell'app, le stesse che mette Caddy sul tramite:
+            # nessuna pagina di un altro sito la incornicia o le tiene la
+            # maniglia della finestra, e l'indirizzo non esce nei referer.
+            printf '%s\n' \
+              '/app/*' \
+              '  X-Content-Type-Options: nosniff' \
+              "  Content-Security-Policy: frame-ancestors 'none'" \
+              '  X-Frame-Options: DENY' \
+              '  Cross-Origin-Opener-Policy: same-origin-allow-popups' \
+              '  Referrer-Policy: no-referrer' \
+              > nuvola/pubblico/_headers
           else
             # Senza app il centralino si accende lo stesso: fa il suo mestiere,
             # che e' instradare. Il link nel browser semplicemente non c'e'.

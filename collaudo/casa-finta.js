@@ -15,6 +15,10 @@ import { fileURLToPath } from "node:url";
 
 export const SEGNO_DEL_SUPERVISOR = "segno-finto-del-supervisor";
 
+/* L'utente di Home Assistant a nome del quale il collaudo usa la console del
+ * ponte. Nel mondo vero lo dice l'ingress, con `X-Remote-User-Id`. */
+export const AMMINISTRATORE_DEL_COLLAUDO = "utente-che-guarda";
+
 /* Quello che risponde `get_panels`: una casa senza DashboardModern. La
  * plancia non sta qui: la porta il ponte, dentro l'add-on, e in Home
  * Assistant non serve nessuna integrazione. */
@@ -534,6 +538,21 @@ export function alzaLaCasaFinta() {
         return;
       case "get_states":
         ok([...entita.values()]);
+        return;
+      /* Chi c'e' in casa: il ponte lo chiede per sapere chi amministra, e la
+       * sua console si apre solo a un amministratore. Qui ce n'e' uno, ed e'
+       * quello a nome del quale il collaudo preme i bottoni della console. */
+      case "config/auth/list":
+        ok([
+          {
+            id: AMMINISTRATORE_DEL_COLLAUDO,
+            name: "Chi guarda",
+            is_owner: true,
+            is_active: true,
+            system_generated: false,
+            group_ids: ["system-admin"],
+          },
+        ]);
         return;
       case "get_panels":
         ok(pannelli());

@@ -58,6 +58,48 @@ import { existsSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
+/* Quanto puo' pesare il logo di chi installa: lo stesso tetto del quadro. */
+const LOGO_MASSIMO = 128 * 1024;
+
+const LE_RAZZE = [
+  { tipo: "image/png", coda: "png", segno: [0x89, 0x50, 0x4e, 0x47] },
+  { tipo: "image/jpeg", coda: "jpg", segno: [0xff, 0xd8, 0xff] },
+  /* «RIFF», quattro byte di lunghezza, «WEBP»: il RIFF da solo e' anche un
+   * WAV o un AVI. */
+  {
+    tipo: "image/webp",
+    coda: "webp",
+    segno: [0x52, 0x49, 0x46, 0x46],
+    poi: { dove: 8, segno: [0x57, 0x45, 0x42, 0x50] },
+  },
+];
+
+/**
+ * Che immagine e' questa, guardando come comincia.
+ *
+ * Torna `{tipo, coda}` o `null`. E' lo stesso controllo che fa il quadro
+ * accettandola, rifatto dalla casa: fra le due macchine c'e' una rete, e un
+ * controllo da una parte sola non e' un controllo. Sta qui, dove il logo si
+ * serve, perche' il tipo con cui esce lo decidono i suoi byte e nient'altro.
+ *
+ * L'SVG no, e non per gusto: un SVG e' un documento, con dentro quello che un
+ * documento puo' avere — anche del programma — e questo logo si serve dalla
+ * stessa origine della plancia. Chi installa manda un PNG, un JPEG o un WebP;
+ * il resto non si mette in testa alla plancia di nessuno.
+ *
+ * @param {Buffer} byte il file com'e' arrivato
+ */
+export function cheImmagineE(byte) {
+  if (!Buffer.isBuffer(byte) || byte.length < 4 || byte.length > LOGO_MASSIMO) return null;
+  for (const una of LE_RAZZE) {
+    if (!una.segno.every((quanto, dove) => byte[dove] === quanto)) continue;
+    if (una.poi && !una.poi.segno.every((quanto, dove) => byte[una.poi.dove + dove] === quanto))
+      continue;
+    return { tipo: una.tipo, coda: una.coda };
+  }
+  return null;
+}
+
 /* Come si chiama questo, dove si vede. */
 export const NOME = "gdahome";
 
@@ -222,9 +264,14 @@ export function vestiDiGdahome(relativo, corpo, tipo, suo = null, versione = "")
       return { corpo: Buffer.from(fatto, "utf8"), tipo };
     }
     if (quale === IL_LOGO) {
-      const nostro = chi?.logo || ilLogo();
+      /* Il logo di chi installa si serve col tipo **dei suoi byte**, non con
+       * quello che dice chi l'ha mandato: un file che si dice immagine e non
+       * lo e' non va in testa alla plancia. */
+      const suo = chi?.logo ? cheImmagineE(chi.logo) : null;
+      if (suo) return { corpo: chi.logo, tipo: suo.tipo };
+      const nostro = ilLogo();
       if (!nostro) return { corpo, tipo };
-      return { corpo: nostro, tipo: (chi?.logo && chi.tipo) || tipo };
+      return { corpo: nostro, tipo };
     }
     if (quale.endsWith(".html")) {
       return { corpo: Buffer.from(laPagina(corpo.toString("utf8"), chi), "utf8"), tipo };
@@ -340,8 +387,9 @@ export function laPagina(testo, suo = null) {
    * fino a centoventotto kilobyte prima del primo disegno — e allora li' resta
    * il nostro, che di kilobyte ne pesa quattro. La **parola** invece cambia:
    * e' quella che si legge. */
-  const velo = chi?.logo && chi.logo.length <= VELO_MASSIMO ? chi.logo : ilVelo();
-  const razza = velo === chi?.logo ? chi.tipo || "image/png" : "image/webp";
+  const delSuo = chi?.logo && chi.logo.length <= VELO_MASSIMO ? cheImmagineE(chi.logo) : null;
+  const velo = delSuo ? chi.logo : ilVelo();
+  const razza = delSuo ? delSuo.tipo : "image/webp";
   if (velo) {
     fatto = fatto.replace(
       LIMMAGINE_DEL_VELO,

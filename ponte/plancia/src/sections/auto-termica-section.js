@@ -34,11 +34,13 @@ import {
 } from "../core/auto-termica.js";
 import {
   CAPACITA_DI_CASA_KEY,
+  MEZZO_DI_CASA_KEY,
   MOTORE_DI_CASA_KEY,
   TIPI_MOTORE,
   VEHICLE_CAPACITY_FIELD,
   VEHICLE_KEY_FIELD,
   capacitaDellaBatteria,
+  mezzoInUso,
   motoreDellaVettura,
   siRicarica,
   tipoMotore,
@@ -108,22 +110,46 @@ export function motoreInPagina() {
   return motoreDellaVettura(activeVehicle(), motoreDiCasa());
 }
 
+/* E che mezzo e' (#75): la moto in uso, o quella dichiarata dalla plancia da
+ * chi profili non ne ha. Sta qui accanto al motore perche' e' la stessa
+ * domanda fatta sull'altro asse, e perche' chi la chiede — il titolo della
+ * pagina, poco piu' sotto — le vuole tutte e due insieme. */
+export function mezzoInPagina() {
+  return mezzoInUso(activeVehicle(), readJson(MEZZO_DI_CASA_KEY, ""));
+}
+
 /* ── le parole ────────────────────────────────────────────────────────── */
 
-/* L'intestazione della pagina dice di che auto parla: «Carica · Autonomia ·
- * Wallbox» sopra un serbatoio sarebbe una bugia. */
-export function titoloDellaPagina(tipo = motoreInPagina()) {
+/* L'intestazione della pagina dice di che veicolo parla: «Carica · Autonomia ·
+ * Wallbox» sopra un serbatoio sarebbe una bugia, e «Portiere» sopra una moto
+ * pure (#75).
+ *
+ * Un'auto elettrica non ha titolo suo: tiene quello che il guscio le ha dato,
+ * che dice gia' la cosa giusta. Una moto elettrica invece SI', perche' quel
+ * titolo dice «Auto» e di lei non e' vero. */
+export function titoloDellaPagina(tipo = motoreInPagina(), mezzo = mezzoInPagina()) {
+  const moto = mezzo === "moto";
   if (tipo === "termica")
-    return {
-      title: t("Auto", "Car"),
-      subtitle: t("Carburante · Autonomia · Portiere", "Fuel · Range · Doors"),
-    };
+    return moto
+      ? {
+          title: t("Moto", "Motorcycle"),
+          subtitle: t("Carburante · Autonomia · Motore", "Fuel · Range · Engine"),
+        }
+      : {
+          title: t("Auto", "Car"),
+          subtitle: t("Carburante · Autonomia · Portiere", "Fuel · Range · Doors"),
+        };
   if (tipo === "ibrida")
     return {
-      title: t("Auto ibrida", "Hybrid car"),
+      title: moto ? t("Moto ibrida", "Hybrid motorcycle") : t("Auto ibrida", "Hybrid car"),
       subtitle: t("Carica · Carburante · Autonomia", "Charge · Fuel · Range"),
     };
-  return null;
+  return moto
+    ? {
+        title: t("Moto", "Motorcycle"),
+        subtitle: t("Carica · Autonomia · Wallbox", "Charge · Range · Wallbox"),
+      }
+    : null;
 }
 
 export function nomeDelMotore(tipo) {
@@ -231,9 +257,11 @@ export function mettiLeCaselle() {
     (voce) => Array.isArray(voce?.slots) && voce.slots.some((slot) => slot?.ref === "dm.ev_batteria_auto"),
   );
   if (!sezione) return false;
-  /* La scheda si chiama «Auto», non «Auto elettrica»: da qui passano anche
-   * le vetture a benzina, e il titolo della pagina dice la stessa cosa. */
-  if (/auto elettrica|electric/i.test(String(sezione.label || ""))) sezione.label = `🚗 ${t("Auto", "Car")}`;
+  /* La scheda si chiama «Veicoli», non «Auto elettrica»: da qui passano anche
+   * le vetture a benzina e le moto (#75), e una scheda che si chiama «Auto»
+   * mentre dentro ci sta una moto dice il falso a chi la apre. */
+  if (/auto elettrica|electric|^.?\s*auto$|^.?\s*car$/i.test(String(sezione.label || "")))
+    sezione.label = `🚗 ${t("Veicoli", "Vehicles")}`;
   let aggiunte = 0;
   for (const voce of CASELLE_TERMICHE) {
     if (sezione.slots.some((slot) => slot?.ref === voce.ref)) continue;
@@ -259,7 +287,7 @@ export function mettiLeCaselle() {
  * la parola dove c'e' la casella, la linguetta intera dove non c'e', o si
  * porterebbe via il disegno. E' la stessa mano della sezione solare. */
 export function rinominaLaLinguettaDellAuto() {
-  const nome = t("Auto", "Car");
+  const nome = t("Veicoli", "Vehicles");
   let fatto = false;
   const parola = doc?.querySelector?.('.ed-tab[data-tab="sez2"] .dm-beta4-tab-label');
   if (parola && clean(parola.textContent) !== nome) {
@@ -280,14 +308,18 @@ function tendina() {
   return doc?.querySelector?.("#ed-body select[data-ev-tipo]") || null;
 }
 
-/* Di chi parla la tendina, adesso.
+/* Di chi parla la scheda, adesso.
+ *
+ * Lo chiede anche la scelta Auto / Moto (#75), che e' l'altra domanda che si
+ * fa sulla stessa riga: la risposta e' una sola e sta scritta dove e' stata
+ * scritta la prima volta, invece di essere ricopiata.
  *
  * Tre casi, ed e' la stessa domanda che si fa il resto della scheda: la bozza
  * del «＋» non e' nessuna vettura; con dei profili e' quello aperto con la
  * matita (o quello in uso); senza nessun profilo e' la plancia, che il motore
  * lo dichiara per conto suo perche' non c'e' nessuna vettura a cui
  * appenderlo. */
-function diChiParlaLaTendina() {
+export function diChiParlaLaScheda() {
   if (bozzaAperta()) return { chiave: "bozza", auto: null, casa: false };
   const auto = editedVehicle();
   if (auto) return { chiave: clean(auto[VEHICLE_KEY_FIELD]) || "senza-uid", auto, casa: false };
@@ -300,7 +332,7 @@ function diChiParlaLaTendina() {
 function sincronizzaTendina() {
   const select = tendina();
   if (!select) return false;
-  const { chiave, auto, casa } = diChiParlaLaTendina();
+  const { chiave, auto, casa } = diChiParlaLaScheda();
   if (select.dataset.dmPer === chiave) return true;
   select.dataset.dmPer = chiave;
   select.value = casa ? motoreDiCasa() : tipoMotore(auto?.tipo);
@@ -319,7 +351,7 @@ function sincronizzaTendina() {
  * perche' l'auto di cui parla non esiste ancora. */
 export function scriviIlMotore(valore) {
   const tipo = tipoMotore(valore);
-  const { auto, casa } = diChiParlaLaTendina();
+  const { auto, casa } = diChiParlaLaScheda();
   if (casa) {
     writeJsonIfChanged(MOTORE_DI_CASA_KEY, tipo);
   } else if (auto) {
@@ -379,7 +411,7 @@ export function ensureTendinaMotore() {
  * interessa — e lasciarla vuota non rompe niente: restano i settanta di
  * prima, detti invece che nascosti. */
 function ensureCasellaCapacita(dopo) {
-  const { auto, casa } = diChiParlaLaTendina();
+  const { auto, casa } = diChiParlaLaScheda();
   const visibile = casa || !auto || siRicarica(auto);
   let casella = doc.querySelector("#ed-body [data-ev-kwh-riga]");
   if (!visibile) {
@@ -412,7 +444,7 @@ function ensureCasellaCapacita(dopo) {
 function sincronizzaCapacita(casella) {
   const campo = casella?.querySelector("[data-ev-kwh]");
   if (!campo) return false;
-  const { chiave, auto, casa } = diChiParlaLaTendina();
+  const { chiave, auto, casa } = diChiParlaLaScheda();
   if (campo.dataset.dmPer === chiave) return true;
   campo.dataset.dmPer = chiave;
   /* Senza vettura la casella non e' muta: legge quella della plancia, che e'
@@ -432,7 +464,7 @@ function sincronizzaCapacita(casella) {
  * sola e il tempo di fine carica restava sui settanta assunti.
  */
 export function scriviLaCapacita(valore) {
-  const { auto, casa } = diChiParlaLaTendina();
+  const { auto, casa } = diChiParlaLaScheda();
   const scritto = clean(valore).replace(",", ".");
   const numero = Number(scritto);
   /* Un numero che non sta in piedi non si salva e non cancella quello che

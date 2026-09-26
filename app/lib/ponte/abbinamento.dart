@@ -30,8 +30,11 @@ import '../parole.dart';
 import 'errori.dart';
 import 'indirizzo.dart';
 import 'invito.dart';
+import 'cifra.dart' show codicePulito;
 import 'presa.dart';
 import 'stretta.dart';
+
+export 'cifra.dart' show codicePulito;
 
 /// Quanto si aspetta il ponte prima di dire che non c'e'.
 const Duration _attesa = Duration(seconds: 12);
@@ -115,10 +118,14 @@ class Abbinamento {
     required String sistema,
     IndirizzoDelCentralino? centralinoDiRipiego,
     ApriLaPresa? apri,
-    http.Client? cliente,
     Future<bool> Function(Uri)? bussa,
   }) async {
-    final inCasa = await qualeRisponde(invito.indirizzi, bussa: bussa);
+    /* Solo gli indirizzi da cui ci si puo' abbinare: un indirizzo in chiaro
+     * fuori casa non si prova nemmeno, e si passa dal centralino. */
+    final inCasa = await qualeRisponde([
+      for (final dove in invito.indirizzi)
+        if (dove.siPuoAbbinare) dove,
+    ], bussa: bussa);
     if (inCasa != null) {
       return Entrata(
         await chiedi(
@@ -126,7 +133,7 @@ class Abbinamento {
           codice: invito.codice,
           nome: nome,
           sistema: sistema,
-          cliente: cliente,
+          apri: apri,
         ),
         daDentro: inCasa,
       );
@@ -172,6 +179,59 @@ class Abbinamento {
     required String sistema,
     ApriLaPresa? apri,
   }) async {
+    final pulito = _codiceBuono(codice);
+    if (!centralino.sicuro && !eInCasa(centralino.casa)) {
+      throw PonteIrraggiungibile(_soloInCasa);
+    }
+    return _sulFilo(
+      centralino.abbinamento(await impronta(pulito)),
+      codice: pulito,
+      nome: nome,
+      sistema: sistema,
+      apri: apri,
+    );
+  }
+
+  /// Abbina bussando dritto al ponte, quando si sa dove sta.
+  ///
+  /// Serve a chi il centralino non ce l'ha — l'add-on lo lascia vuoto, e va
+  /// benissimo per chi la casa la guarda dal divano — e a chi vuole abbinare
+  /// senza far passare niente da fuori.
+  ///
+  /// Passa dal filo, come tutto il resto, e con la stessa stretta di mano
+  /// legata al codice che si fa dal centralino. Una volta era una POST in
+  /// chiaro, con il segno e la chiave nella risposta: sulla rete di casa li
+  /// leggeva chiunque ci fosse sopra, e chi rispondeva al posto del ponte se
+  /// li prendeva. Adesso chi sta sulla rete di casa vede quello che vede il
+  /// centralino, cioe' niente.
+  static Future<Abbinato> chiedi({
+    required IndirizzoDelPonte dove,
+    required String codice,
+    required String nome,
+    required String sistema,
+    ApriLaPresa? apri,
+  }) async {
+    final pulito = _codiceBuono(codice);
+    if (!dove.siPuoAbbinare) throw PonteIrraggiungibile(_soloInCasa);
+    return _sulFilo(
+      dove.filo,
+      codice: pulito,
+      nome: nome,
+      sistema: sistema,
+      apri: apri,
+    );
+  }
+
+  static String get _soloInCasa => inLingua(
+    it:
+        'in chiaro ci si abbina solo dentro casa: questo indirizzo è fuori. '
+        'Usa l\'indirizzo di casa, o uno che cominci con https',
+    en:
+        'pairing without encryption only works inside the home: this address '
+        'is outside. Use the home address, or one starting with https',
+  );
+
+  static String _codiceBuono(String codice) {
     final pulito = codicePulito(codice);
     if (pulito.length < 4) {
       throw CodiceRifiutato(
@@ -181,24 +241,42 @@ class Abbinamento {
         ),
       );
     }
+    return pulito;
+  }
 
+  /* Il giro intero, uguale da tutte e due le strade: si apre il filo, si
+   * stringe la mano col codice, si conferma, e si aspetta l'«ecco». */
+  static Future<Abbinato> _sulFilo(
+    Uri dove, {
+    required String codice,
+    required String nome,
+    required String sistema,
+    ApriLaPresa? apri,
+  }) async {
     final Presa sotto;
     try {
-      sotto = await (apri ?? PresaSuWebSocket.apri)(
-        centralino.abbinamento(await impronta(pulito)),
-      );
+      sotto = await (apri ?? PresaSuWebSocket.apri)(dove);
     } catch (errore) {
       throw PonteIrraggiungibile(_leggibile(errore));
     }
 
-    PresaAperta? cifrata;
+    PresaCifrata? cifrata;
     try {
-      cifrata = await stringiLaMano(sotto);
-      /* Il codice viaggia **dentro** il cifrato. Al centralino arriva una
-       * busta, e la casa e' l'unica che la puo' aprire. */
+      cifrata = await stringiLaMano(sotto, codice: codice);
+      /* Il codice non viaggia: sta gia' dentro la chiave. Quello che si manda
+       * e' la conferma — le due chiavi pubbliche come le ha viste questo
+       * telefono, in una busta chiusa con la chiave del codice. La casa la
+       * apre solo se il codice e' lo stesso, e solo allora risponde con il
+       * segno e la chiave. */
       final risposta = _laPrimaRisposta(cifrata);
       cifrata.manda(
-        jsonEncode({'codice': pulito, 'nome': nome, 'sistema': sistema}),
+        jsonEncode({
+          't': 'conferma',
+          'telefono': cifrata.miaPubblica,
+          'casa': cifrata.suaPubblica,
+          'nome': nome,
+          'sistema': sistema,
+        }),
       );
       return _leggiLEcco(
         await risposta.timeout(
@@ -216,66 +294,6 @@ class Abbinamento {
       /* Un filo di abbinamento serve a una cosa sola e poi si chiude: il
        * telefono torna dalla porta normale, col segno appena avuto. */
       await (cifrata?.chiudi() ?? sotto.chiudi());
-    }
-  }
-
-  /// Abbina bussando dritto al ponte, quando si sa dove sta.
-  ///
-  /// Serve a chi il centralino non ce l'ha — l'add-on lo lascia vuoto, e va
-  /// benissimo per chi la casa la guarda dal divano — e a chi vuole abbinare
-  /// senza far passare niente da fuori. Il ponte risponde le stesse cose.
-  static Future<Abbinato> chiedi({
-    required IndirizzoDelPonte dove,
-    required String codice,
-    required String nome,
-    required String sistema,
-    http.Client? cliente,
-  }) async {
-    final suo = cliente == null;
-    final chi = cliente ?? http.Client();
-    try {
-      final risposta = await chi
-          .post(
-            dove.abbinamento,
-            headers: const {'content-type': 'application/json'},
-            body: jsonEncode({
-              /* Il ponte ripulisce il codice per conto suo — maiuscole, spazi,
-               * trattini — quindi qui si manda com'e' stato battuto. */
-              'codice': codice,
-              'nome': nome,
-              'sistema': sistema,
-            }),
-          )
-          .timeout(_attesa);
-
-      final corpo = _leggi(risposta.body);
-
-      switch (risposta.statusCode) {
-        case 201:
-          return _daJson(corpo);
-        case 403:
-          throw CodiceRifiutato(_perche(corpo, 'codice sbagliato o scaduto'));
-        case 429:
-          throw TroppiTentativi(
-            _perche(corpo, 'troppi tentativi: riprova fra un quarto d\'ora'),
-          );
-        case 409:
-          throw TroppiDispositivi(
-            _perche(corpo, 'questa casa ha già tutti i telefoni che può avere'),
-          );
-        default:
-          throw PonteIrraggiungibile(
-            _perche(corpo, 'gdahome ha risposto ${risposta.statusCode}'),
-          );
-      }
-    } on ErroreDelPonte {
-      rethrow;
-    } catch (errore) {
-      /* Rete assente, indirizzo che non risolve, attesa scaduta, certificato
-       * rifiutato: per chi guarda lo schermo sono tutti la stessa cosa. */
-      throw PonteIrraggiungibile(_leggibile(errore));
-    } finally {
-      if (suo) chi.close();
     }
   }
 
@@ -389,10 +407,12 @@ class Abbinamento {
   static Abbinato _leggiLEcco(Map<String, dynamic> detto) {
     if (detto['t'] == 'no') {
       final perche = detto['perche'] as String? ?? 'non ha funzionato';
-      /* Il ponte dice il perche' a parole. Le tre cose che l'app deve
-       * distinguere si riconoscono da li', ed e' l'unico posto dove ci si
-       * appoggia a un testo: dall'altra parte le tre risposte nascono da tre
-       * eccezioni diverse, e varrebbe la pena farlo dire anche a lei. */
+      /* Il ponte dice il perche' con una parola apposta, `motivo`. */
+      if (detto['motivo'] is String) {
+        throw rifiutoDellAbbinamento(detto, perche);
+      }
+      /* Un ponte che il motivo non lo dice lo dice solo a parole, e allora
+       * ci si appoggia al testo. */
       if (perche.contains('troppi tentativi')) throw TroppiTentativi(perche);
       if (perche.contains('telefoni')) throw TroppiDispositivi(perche);
       throw CodiceRifiutato(perche);
@@ -453,11 +473,6 @@ class Abbinamento {
       return const {};
     }
   }
-
-  static String _perche(Map<String, dynamic> corpo, String difetto) {
-    final detto = corpo['errore'];
-    return detto is String && detto.isNotEmpty ? detto : difetto;
-  }
 }
 
 /// L'impronta di un codice: quello che si dice al centralino al posto suo.
@@ -469,14 +484,6 @@ Future<String> impronta(String codice) async {
   final fatta = await Sha256().hash(utf8.encode(codice));
   return fatta.bytes.map((b) => b.toRadixString(16).padLeft(2, '0')).join();
 }
-
-/// Il codice come lo batte la gente: minuscole, spazi, trattini.
-///
-/// Ripulito **qui e non solo sul ponte**, perche' l'impronta si calcola qui:
-/// «abcd-2345» e «ABCD2345» devono dare la stessa, o il centralino non
-/// riconosce l'abbinamento e l'utente vede un codice giusto rifiutato.
-String codicePulito(String scritto) =>
-    scritto.toUpperCase().replaceAll(RegExp(r'[^0-9A-Z]'), '');
 
 String _leggibile(Object errore) {
   if (errore is ErroreDelPonte) return errore.spiegazione;

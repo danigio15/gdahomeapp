@@ -148,6 +148,24 @@ test("l'utente collegato arriva nel documento ospitato, e solo il suo identifica
   assert.match(senza, /window\.__DASHBOARDMODERN_UTENTE__=""/);
 });
 
+/* Il preludio e' uno <script> scritto dentro lo srcdoc: un valore che porta
+ * `</script>` non deve poterlo chiudere e scrivere HTML suo. */
+test("i valori del preludio non chiudono il suo <script>", async () => {
+  const cattivo = "x</script><img src=x onerror=alert(1)><script>";
+  const { host } = mount({ instanceId: cattivo, configProfile: cattivo });
+  for (let attempt = 0; attempt < 10 && !host.frame.srcdoc; attempt++) {
+    await new Promise((resolve) => setTimeout(resolve, 0));
+  }
+  const html = host.frame.srcdoc;
+  const chiusure = (testo) => (testo.match(/<\/script>/gi) || []).length;
+  const pulito = await hostedDocument("it");
+  assert.equal(chiusure(html), chiusure(pulito), "il valore ha chiuso lo <script> del preludio");
+  assert.equal(html.includes("<img"), false);
+  /* E JavaScript lo legge uguale a com'era. */
+  const [, letto] = html.match(/window\.__DASHBOARDMODERN_INSTANCE__=("[^\n]*?");/);
+  assert.equal(JSON.parse(letto), cattivo);
+});
+
 test("no credential is published to the hosted page", () => {
   const { hostWindow } = mount();
   assert.equal(hostWindow[HOST_KEY], true);

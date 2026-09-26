@@ -118,19 +118,82 @@ test("la scansione della pagina Temperature gira solo a pagina a schermo, un gir
   );
 });
 
-test("lo sfondo animato sta sul suo livello e si ferma per chi riduce le animazioni", () => {
-  /* Le due righe stanno nella fondazione del tema: sono di quel genere —
-   * un livello e un colore che valgono per tutta la plancia — e il modulo di
-   * stabilita' che le portava non faceva altro. */
+test("i pallini che pulsano lampeggiano invece di respirare, tutti", () => {
+  /* Respirando, una dissolvenza continua scrive un valore nuovo a ogni
+   * fotogramma, e un valore nuovo a ogni fotogramma vuol dire ridipingere a
+   * ogni fotogramma: un pallino da otto pixel si portava via un quinto della
+   * CPU della pagina dove stava. Misurato contando le rasterizzazioni del
+   * browser in cinque secondi: 900 e 24% di un core respirando, 27 e 5% a
+   * passi, 12 e 4% spento del tutto.
+   *
+   * Le altre cure sono state provate tutte e non curano — «will-change»
+   * (anche caricato col foglio: iniettato dopo non conta, un'animazione gia'
+   * partita non ci ripensa), togliere la prospettiva, togliere l'ombra,
+   * pulsare nella sola opacita'. Tutte 900 rasterizzazioni.
+   *
+   * Sta nella fondazione del tema e non nella sezione del MiniPC perche'
+   * questa animazione la usano una dozzina di pallini in giro per la plancia:
+   * la connessione in testata, le card «Rete e impianto», l'orologio
+   * dell'editor, i LED delle lampadine accese. Con l'andatura DENTRO i
+   * fotogrammi vale per tutti senza elencarli, e quello che nasce domani
+   * nasce gia' a posto. */
   const sezione = leggi("sections/theme-foundation-section.js");
   assert.match(
     sezione,
-    /\.animated-mesh-bg::before,\.animated-mesh-bg::after\{will-change:transform\}/,
+    /@keyframes pulseDot\{\s*0%\{animation-timing-function:steps\(1,end\);opacity:1\}\s*50%\{animation-timing-function:steps\(1,end\);opacity:\.45\}\s*100%\{opacity:\.45\}/,
   );
-  assert.match(
-    sezione,
-    /@media \(prefers-reduced-motion:reduce\)\{\s*\.animated-mesh-bg::before,\.animated-mesh-bg::after\{animation-play-state:paused!important\}/,
-  );
+  /* Niente piu' ingrandimento: era la meta' del costo e non tornava. */
+  assert.equal(/@keyframes pulseDot\{[^}]*scale\(/.test(sezione), false);
+  /* E la sezione del MiniPC non si tiene piu' un'animazione tutta sua: una
+   * regola sola, senza eccezioni da ricordare. */
+  const minipc = leggi("sections/minipc-showcase-section.js");
+  assert.equal(/dmSrvxPulsa/.test(minipc), false);
+  assert.equal(/animation-timing-function/.test(minipc), false);
+});
+
+test("le due macchie dello sfondo sono sfumate, non sfocate", () => {
+  /* Qui prima si difendeva «will-change:transform» sulle due macchie, messo
+   * per la CPU del mini PC. Misurato sulla plancia servita col freno della
+   * CPU a sei, quel livello **non cambia niente**: 15 fotogrammi al secondo
+   * con, 15 senza. Nemmeno fermare l'animazione basta — resta a 17. A costare
+   * e' il «filter: blur(100px)» su mezzo schermo, che si rifa' ogni volta che
+   * qualcosa sopra si ridisegna.
+   *
+   * Scritta come sfumatura radiale invece che come sfocatura, la stessa
+   * figura si disegna una volta sola: 60 al secondo. Questa prova difende
+   * quello — che il blur non torni, e che gli stop restino quelli della
+   * gaussiana, perche' e' li' che sta la somiglianza. */
+  const sezione = leggi("sections/theme-foundation-section.js");
+  assert.match(sezione, /\.animated-mesh-bg::before,\.animated-mesh-bg::after\{\s*filter:none!important;/);
+  assert.match(sezione, /background:radial-gradient\(closest-side,/);
+  for (const passo of ["1\\) 0%", "\\.98\\) 17%", "\\.84\\) 34%", "\\.5\\) 50%", "\\.16\\) 66%", "\\.02\\) 83%", "0\\) 100%"]) {
+    assert.match(sezione, new RegExp(`rgb\\(var\\(--dm-macchia\\) / ${passo}`));
+  }
+  /* Le quattro tinte: due di giorno e due di notte. Senza quelle di notte il
+   * tema scuro ricadrebbe sul colore pieno del guscio — un disco dal bordo
+   * netto invece di un alone. */
+  for (const tinta of ["220 252 231", "224 242 254", "14 42 28", "11 39 64"]) {
+    assert.match(sezione, new RegExp(`--dm-macchia:${tinta}`));
+  }
+  /* E stanno ferme. Tolta la sfocatura, il costo che restava era il
+   * movimento: le macchie stanno dietro tutto, e mentre scorrono tutto quello
+   * che ci sta sopra va ricomposto. A pagina aperta e senza toccare niente,
+   * contando la CPU di tutti i processi del browser: Home 14% -> 7%, MiniPC
+   * 78% -> 27%, Energia 43% -> 1%.
+   *
+   * Lo «scale(2)» resta perche' la sfumatura finisce dove finisce la scatola
+   * mentre la sfocatura sbordava: il doppio di scatola rimette il disegno
+   * dov'era. */
+  assert.match(sezione, /animation:none!important;/);
+  assert.match(sezione, /transform:scale\(2\)!important;/);
+  /* Niente piu' «will-change»: senza la sfocatura non c'e' niente di caro da
+   * tenere da parte, e una scatola larga il doppio promossa a livello sono
+   * decine di megabyte per niente. */
+  assert.equal(/will-change:transform\}/.test(sezione), false);
+  /* E niente piu' «prefers-reduced-motion» per queste due: metteva in pausa
+   * un'animazione che adesso non parte. Chi chiede meno movimento lo trova
+   * gia' fermo, che e' quello che aveva chiesto. */
+  assert.equal(/animation-play-state:paused/.test(sezione), false);
 });
 
 test("i colori dei tubi dell'Energia non si riscrivono a ogni passata", () => {

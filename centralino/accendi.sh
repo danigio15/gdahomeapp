@@ -30,8 +30,9 @@
 #   2. chiede le due cose che non puo' sapere — il gettone delle segnalazioni e
 #      la repository dove finiscono — e genera da sola la chiave della console;
 #   3. installa Node, Caddy, il blocco di chi prova le password e gli
-#      aggiornamenti di sicurezza automatici;
-#   4. scarica il tramite dalla repository, in sola lettura;
+#      aggiornamenti di sicurezza automatici, e chiude le porte che non servono;
+#   4. scarica il tramite dalla repository, in sola lettura, e lo prova con un
+#      utente senza privilegi;
 #   5. lo accende come servizio, e lo segna perche' riparta da solo;
 #   6. mette Caddy davanti, che si prende i certificati per tutti i nomi;
 #   7. accende il giro che tiene il tramite aggiornato da solo;
@@ -77,6 +78,18 @@ DATI="/var/lib/tramite"
 CONFIGURAZIONE="/etc/tramite"
 UTENTE="tramite"
 
+# Chi scarica, prova e prepara le versioni nuove. Non e' root e non e'
+# nemmeno l'utente del servizio: quello che fa girare — le prove, e lo
+# strumento che finisce il sito — e' codice appena arrivato da fuori, e se un
+# giorno fosse sbagliato deve trovarsi in mano meno cose possibile.
+AGGIORNATORE="tramite-aggiorna"
+LAVORO="/var/lib/tramite-aggiorna"
+
+# Le porte che si aprono verso fuori: SSH, e il web. Tutto il resto resta
+# chiuso. `TRAMITE_FIREWALL=no` lascia stare il firewall a chi lo tiene per
+# conto suo.
+FIREWALL="${TRAMITE_FIREWALL:-si}"
+
 SOLO_CONTROLLO=no
 [[ "${1:-}" == "--controlla" ]] && SOLO_CONTROLLO=si
 
@@ -111,6 +124,18 @@ if [[ "$SOLO_CONTROLLO" == no ]]; then
     "Lo script installa i pacchetti con apt, e qui apt non c'e'." \
     "Rifai la macchina scegliendo Ubuntu, l'ultima con scritto LTS."
   bene "Debian o Ubuntu, e sono root"
+
+  # Il servizio che prepara le versioni nuove riceve i suoi due segreti da
+  # systemd (`LoadCredential`), e systemd lo sa fare dalla 247 in poi: Debian
+  # 11, Ubuntu 22.04. Su uno piu' vecchio quel servizio non partirebbe, e il
+  # tramite resterebbe senza aggiornamenti — quindi ci si ferma qui, prima di
+  # toccare niente, e non a meta'.
+  SYSTEMD_VERSIONE="$(systemctl --version 2>/dev/null | awk 'NR == 1 { print $2 }' | tr -cd '0-9')"
+  [[ "${SYSTEMD_VERSIONE:-0}" -ge 247 ]] || male \
+    "Questa macchina ha systemd ${SYSTEMD_VERSIONE:-sconosciuto}, e serve almeno il 247." \
+    "Vuol dire un sistema troppo vecchio: Debian 11 o Ubuntu 22.04 in su." \
+    "Non ho cambiato niente. Rifai la macchina con un Ubuntu LTS recente."
+  bene "systemd $SYSTEMD_VERSIONE"
 fi
 
 # L'indirizzo di questa macchina visto da fuori. Serve a confrontarlo coi nomi:
@@ -240,6 +265,14 @@ REPO_SEGNALAZIONI="${REPO_SEGNALAZIONI:-$(gia_scritto "$CONFIGURAZIONE/ambiente"
 # altrove. Si riempie il giorno che convenisse spostarle — gli allegati si
 # committano, e restano nella storia di git — senza toccare il programma.
 REPO_ALLEGATI="${REPO_ALLEGATI:-$(gia_scritto "$CONFIGURAZIONE/ambiente" GITHUB_REPO_ALLEGATI)}"
+# E su quale ramo. Di serie `allegati`, e non il ramo principale: se le foto
+# stanno nella repository del progetto, il ramo principale e' quello che Home
+# Assistant scarica per installare l'add-on, e ogni foto finita li' se la
+# porterebbe dietro chiunque installi. Il ramo si crea da solo al primo
+# allegato. Meglio ancora una repository a parte, solo per gli allegati:
+# quella si sceglie qui sopra, e il gettone deve poterci scrivere.
+RAMO_ALLEGATI="${RAMO_ALLEGATI:-$(gia_scritto "$CONFIGURAZIONE/ambiente" GITHUB_RAMO_ALLEGATI)}"
+RAMO_ALLEGATI="${RAMO_ALLEGATI:-allegati}"
 if [[ -n "$GETTONE_SEGNALAZIONI" ]]; then
   bene "le segnalazioni sono gia' accese, su ${REPO_SEGNALAZIONI:-?}"
 fi
@@ -337,8 +370,18 @@ apt-get update -qq
 apt-get install -y -qq ca-certificates curl gnupg tar fail2ban unattended-upgrades >/dev/null
 bene "pacchetti di base, blocco delle password a raffica, aggiornamenti automatici"
 
+# Node dal repository di NodeSource, con la sua chiave, come dice la loro
+# «installazione a mano». Prima si scaricava il loro script e lo si dava a
+# bash da root: qualunque cosa ci fosse dentro quel giorno, girava. Cosi'
+# invece si scarica una chiave, e apt controlla con quella ogni pacchetto.
 if ! command -v node >/dev/null 2>&1 || [[ "$(node -p 'process.versions.node.split(".")[0]' 2>/dev/null || echo 0)" -lt 22 ]]; then
-  curl -fsSL https://deb.nodesource.com/setup_22.x | bash - >/dev/null
+  install -d -m 755 /etc/apt/keyrings
+  curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key |
+    gpg --dearmor --yes -o /etc/apt/keyrings/nodesource.gpg
+  chmod 644 /etc/apt/keyrings/nodesource.gpg
+  printf 'deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_22.x nodistro main\n' \
+    >/etc/apt/sources.list.d/nodesource.list
+  apt-get update -qq
   apt-get install -y -qq nodejs >/dev/null
 fi
 bene "Node $(node --version)"
@@ -370,63 +413,157 @@ if [[ -d /etc/needrestart/conf.d ]]; then
 fi
 bene "gli aggiornamenti di sicurezza si installano da soli, senza riavvii a sorpresa"
 
+# Il firewall: si entra da SSH e dal web, e basta. Il tramite ascolta solo su
+# questa macchina, ma una macchina appena nata puo' avere altre porte aperte
+# che nessuno ha scelto.
+#
+# Tre regole, per non fare danni:
+#   - la porta di SSH si apre **prima** di accendere il resto, e si legge da
+#     sshd invece di supporla: chi sta installando da SSH non resta fuori;
+#   - se un firewall c'e' gia' — ufw acceso, o regole di nftables/iptables
+#     scritte da qualcun altro — non si tocca: si aggiungono le tre porte a ufw
+#     se e' lui, e se non e' lui si dice cosa aprire;
+#   - `TRAMITE_FIREWALL=no` lo lascia stare del tutto.
+porte_ssh() {
+  local trovate=""
+  if command -v sshd >/dev/null 2>&1; then
+    trovate="$(sshd -T 2>/dev/null | awk '$1 == "port" { print $2 }' | tr '\n' ' ')"
+  fi
+  # E quella da cui si e' collegati adesso, se si e' su SSH: fosse anche una
+  # che sshd non dice — l'SSH acceso da un socket di systemd, per esempio —
+  # chiudere quella vuol dire chiudersi fuori.
+  if [[ -n "${SSH_CONNECTION:-}" ]]; then
+    trovate="$trovate $(awk '{ print $4 }' <<<"$SSH_CONNECTION")"
+  fi
+  trovate="$(tr ' ' '\n' <<<"$trovate" | grep -E '^[0-9]+$' | sort -u | tr '\n' ' ' || true)"
+  trovate="${trovate% }"
+  printf '%s' "${trovate:-22}"
+}
+
+altre_regole() {
+  # Regole che non sono di ufw: un firewall scritto da qualcun altro.
+  if command -v nft >/dev/null 2>&1; then
+    nft list ruleset 2>/dev/null | grep -vqE '^\s*$|^table|^\s*(chain|type|policy|\})' && return 0
+  fi
+  if command -v iptables >/dev/null 2>&1; then
+    iptables -S 2>/dev/null | grep -vqE '^-P ' && return 0
+  fi
+  return 1
+}
+
+if [[ "$FIREWALL" == no ]]; then
+  nota "il firewall lo lascio stare, come chiesto (TRAMITE_FIREWALL=no)"
+elif command -v ufw >/dev/null 2>&1 && ufw status 2>/dev/null | grep -q '^Status: active'; then
+  for porta_ssh in $(porte_ssh); do ufw allow "$porta_ssh/tcp" >/dev/null; done
+  ufw allow 80/tcp >/dev/null
+  ufw allow 443/tcp >/dev/null
+  ufw allow 443/udp >/dev/null
+  bene "il firewall c'era gia': ho aggiunto SSH, 80 e 443, il resto e' come prima"
+elif altre_regole; then
+  printf '  %s!%s %s\n' "$giallo" "$spento" "qui c'e' gia' un firewall che non e' ufw: non lo tocco."
+  nota "Deve lasciar passare SSH ($(porte_ssh)), 80/tcp e 443 (tcp e udp)."
+else
+  apt-get install -y -qq ufw >/dev/null
+  ufw default deny incoming >/dev/null
+  ufw default allow outgoing >/dev/null
+  for porta_ssh in $(porte_ssh); do ufw allow "$porta_ssh/tcp" >/dev/null; done
+  ufw allow 80/tcp >/dev/null
+  ufw allow 443/tcp >/dev/null
+  ufw allow 443/udp >/dev/null
+  ufw --force enable >/dev/null
+  bene "firewall acceso: entrano solo SSH ($(porte_ssh)), 80 e 443"
+fi
+
 # ─── 4. Il tramite ───────────────────────────────────────────────────────────
 
 passo "Scarico il tramite"
 
 id -u "$UTENTE" >/dev/null 2>&1 || useradd --system --home "$DATI" --shell /usr/sbin/nologin "$UTENTE"
+id -u "$AGGIORNATORE" >/dev/null 2>&1 ||
+  useradd --system --home "$LAVORO/lavoro" --shell /usr/sbin/nologin "$AGGIORNATORE"
 install -d -m 755 "$DOVE"
 install -d -m 700 -o "$UTENTE" -g "$UTENTE" "$DATI"
 install -d -m 700 "$CONFIGURAZIONE"
+
+# La cartella di chi prepara. Lei e' di root, e dentro ce ne sono due sue:
+# `lavoro`, dove scarica e prova, e `uscita`, dove lascia la versione pronta.
+# Che la cartella di sopra sia di root non e' un dettaglio: cosi' chi prepara
+# non puo' mettere al posto di `uscita` un collegamento a un'altra parte della
+# macchina, e root, quando va a prendere la versione pronta, prende quella.
+install -d -m 755 "$LAVORO"
+install -d -m 700 -o "$AGGIORNATORE" -g "$AGGIORNATORE" "$LAVORO/lavoro"
+install -d -m 755 -o "$AGGIORNATORE" -g "$AGGIORNATORE" "$LAVORO/uscita"
 
 # Il gettone di lettura sta in un file, non in un comando e non in un remoto di
 # git: i comandi si leggono da fuori, i file no.
 printf 'GETTONE_LETTURA=%s\n' "$GETTONE_LETTURA" >"$CONFIGURAZIONE/lettura"
 chmod 600 "$CONFIGURAZIONE/lettura"
 
-# Quale versione c'e' la' fuori. Il numero intero, non quello corto: si
-# scarica esattamente quello che si e' confrontato, e il confronto della
-# prossima volta guarda la stessa cosa.
-cat >"$DOVE/sha.sh" <<'FINE'
-#!/usr/bin/env bash
-set -euo pipefail
-. /etc/tramite/lettura
-# Il gettone passa a curl in un file, non fra gli argomenti: la riga di
-# comando di un processo la legge chiunque sia sulla macchina, e questo script
-# gira da root mentre di fianco c'e' l'utente del servizio. `printf` e'
-# integrato nella shell, quindi nemmeno lui apre un processo che lo mostri.
-curl -fsS --max-time 20 --retry 2 \
-  --config <(printf 'header = "Authorization: Bearer %s"\n' "$GETTONE_LETTURA") \
-  -H "Accept: application/vnd.github+json" \
-  "https://api.github.com/repos/${1:?repository}/commits/${2:?segno}" |
-  sed -n 's/.*"sha"[[:space:]]*:[[:space:]]*"\([0-9a-f]\{40\}\)".*/\1/p' | head -1
-FINE
+# Quale repository, quale segno, quale cartella: scritto in un file, cosi' gli
+# script che aggiornano non hanno niente dentro che dipenda da questa macchina.
+{
+  printf 'REPO=%s\n' "$REPO_DEL_TRAMITE"
+  printf 'SEGNO=%s\n' "$SEGNO"
+  printf 'DOVE=%s\n' "$DOVE"
+  printf 'LAVORO=%s\n' "$LAVORO"
+} >"$CONFIGURAZIONE/quale"
+chmod 600 "$CONFIGURAZIONE/quale"
 
-# Scarica una versione precisa, la prova, e solo se le prove passano la mette
-# al posto di quella che c'e'.
+# Gli script di prima, di quando si scaricava e si provava da root: non
+# servono piu', e un file che nessuno usa e' un file che qualcuno rilancia.
+rm -f "$DOVE/sha.sh" "$DOVE/scarica.sh"
+
+# Prepara una versione: chiede a GitHub quale c'e', la scarica, la prova, e
+# solo se le prove passano la lascia pronta in `uscita/pronto`.
+#
+# Gira come `tramite-aggiorna`, dentro il servizio `tramite-prepara`, e non
+# come root: le prove e lo strumento che finisce il sito sono codice appena
+# arrivato da fuori. I due file di /etc/tramite che le servono — il gettone di
+# lettura e il «quale» — non li legge lei: glieli passa systemd
+# (`LoadCredential`), e restano chiusi a 600 per tutti gli altri.
 #
 # L'ordine e' la cosa che conta: prima si prova, poi si scambia. Al contrario —
 # scambia e poi prova — una versione rotta avrebbe gia' preso il posto di una
 # che funzionava, e per tornare indietro servirebbe un'altra rete.
-#
-# E si scambiano solo le cose che cambiano: `centralino`, `app`, `sito`,
-# `versione`. Gli script stanno di fianco e non si toccano, se no un
-# aggiornamento si porterebbe via anche chi lo sta eseguendo.
-cat >"$DOVE/scarica.sh" <<'FINE'
+cat >"$DOVE/prepara.sh" <<'FINE'
 #!/usr/bin/env bash
 set -euo pipefail
-. /etc/tramite/lettura
-REPO="${1:?repository}"
-SHA="${2:?sha}"
-DOVE="${3:?dove}"
+umask 022
+CREDENZIALI="${CREDENTIALS_DIRECTORY:?gira solo dentro il servizio tramite-prepara}"
+. "$CREDENZIALI/quale"
+. "$CREDENZIALI/lettura"
+USCITA="$LAVORO/uscita"
 
-tmp="$(mktemp -d)"
+# Il gettone passa a curl in un file, non fra gli argomenti: la riga di
+# comando di un processo la legge chiunque sia sulla macchina. `printf` e'
+# integrato nella shell, quindi nemmeno lui apre un processo che lo mostri.
+adesso="$(curl -fsS --max-time 20 --retry 2 \
+  --config <(printf 'header = "Authorization: Bearer %s"\n' "$GETTONE_LETTURA") \
+  -H "Accept: application/vnd.github+json" \
+  "https://api.github.com/repos/$REPO/commits/$SEGNO" |
+  sed -n 's/.*"sha"[[:space:]]*:[[:space:]]*"\([0-9a-f]\{40\}\)".*/\1/p' | head -1 || true)"
+if [ -z "$adesso" ]; then
+  echo "non riesco a chiedere a GitHub che versione c'e': riprovo al giro dopo"
+  exit 0
+fi
+
+qui="$(cat "$DOVE/versione" 2>/dev/null || true)"
+if [ "$adesso" = "$qui" ]; then
+  rm -rf "$USCITA/pronto"
+  exit 0
+fi
+if [ "$(cat "$USCITA/pronto/versione" 2>/dev/null || true)" = "$adesso" ]; then
+  echo "la ${adesso:0:8} e' gia' pronta: aspetta solo lo scambio"
+  exit 0
+fi
+
+tmp="$(mktemp -d "$LAVORO/lavoro/giro.XXXXXX")"
 trap 'rm -rf "$tmp"' EXIT
 
 curl -fsSL --max-time 120 --retry 3 --retry-delay 2 \
   --config <(printf 'header = "Authorization: Bearer %s"\n' "$GETTONE_LETTURA") \
   -H "Accept: application/vnd.github+json" \
-  "https://api.github.com/repos/$REPO/tarball/$SHA" | tar xz -C "$tmp"
+  "https://api.github.com/repos/$REPO/tarball/$adesso" | tar xz --no-same-owner -C "$tmp"
 
 radice="$(find "$tmp" -maxdepth 1 -mindepth 1 -type d | head -1)"
 [ -d "$radice/centralino" ] || {
@@ -435,16 +572,16 @@ radice="$(find "$tmp" -maxdepth 1 -mindepth 1 -type d | head -1)"
 }
 
 ( cd "$radice/centralino" && node --test test/*.test.js >/dev/null 2>&1 ) || {
-  echo "le prove di questa versione non passano" >&2
+  echo "le prove della ${adesso:0:8} non passano: non la preparo" >&2
   exit 2
 }
 
-rm -rf "$DOVE/centralino.nuovo" "$DOVE/app.nuovo" "$DOVE/sito.nuovo"
-cp -a "$radice/centralino" "$DOVE/centralino.nuovo"
+nuovo="$USCITA/pronto.nuovo"
+rm -rf "$nuovo"
+mkdir -p "$nuovo"
+cp -a "$radice/centralino" "$nuovo/centralino"
 if [ -d "$radice/ponte/app" ]; then
-  cp -a "$radice/ponte/app" "$DOVE/app.nuovo"
-else
-  mkdir -p "$DOVE/app.nuovo"
+  cp -a "$radice/ponte/app" "$nuovo/app"
 fi
 # Il sito che racconta cos'e' gdahome. Se in questa versione non c'e', resta
 # quello di prima: una cartella vuota davanti a un nome pubblico vuol dire un
@@ -455,8 +592,7 @@ fi
 # — perche' nella repository non c'e': sarebbe una seconda copia, identica,
 # di quella che sta in `ponte/plancia/`. Ce la mette questo comando, pescandola
 # proprio da li'. E' la stessa cosa che si fa in locale prima di guardare il
-# sito, e serve che ci sia Node — qui c'e' gia', e' quello che ha appena girato
-# le prove.
+# sito.
 #
 # Se non riesce, il sito **non si scambia**: resta quello di prima, intero,
 # invece di diventare una pagina col buco al posto della plancia. Il resto
@@ -465,39 +601,136 @@ fi
 if [ -d "$radice/sito" ]; then
   if node "$radice/strumenti/porta-nel-sito.mjs" >/dev/null 2>&1 &&
     [ -s "$radice/sito/dashboardmodern_static/legacy/dashboard.html" ]; then
-    cp -a "$radice/sito" "$DOVE/sito.nuovo"
+    cp -a "$radice/sito" "$nuovo/sito"
   else
     echo "la plancia non e' entrata nel sito: lascio quello di prima" >&2
   fi
 fi
+printf '%s' "$adesso" >"$nuovo/versione"
+rm -rf "$USCITA/pronto"
+mv "$nuovo" "$USCITA/pronto"
+echo "la ${adesso:0:8} e' provata e pronta"
+FINE
+
+# Lo scambio: l'unico pezzo che deve essere root, perche' scrive in $DOVE.
+#
+# Non esegue niente di quello che e' arrivato: copia. E copia in un modo
+# preciso — senza seguire nessun collegamento simbolico (`cp -P`), dentro una
+# cartella sua, e poi guarda che nella copia di collegamenti non ce ne siano.
+# Un collegamento dentro la versione pronta vorrebbe dire far copiare a root
+# un file che chi prepara non poteva leggere; in una versione vera non ce ne
+# sono, quindi se ce n'e' uno la versione non entra.
+#
+# E si scambiano solo le cose che cambiano: `centralino`, `app`, `sito`,
+# `versione`. Gli script stanno di fianco e non si toccano, se no un
+# aggiornamento si porterebbe via anche chi lo sta eseguendo.
+cat >"$DOVE/scambia.sh" <<'FINE'
+#!/usr/bin/env bash
+set -euo pipefail
+umask 022
+USCITA="${1:?uscita}"
+DOVE="${2:?dove}"
+
+[ -e "$USCITA/pronto" ] || exit 0
+
+arrivo="$DOVE/.arrivo"
+rm -rf "$arrivo"
+cp -R -P "$USCITA/pronto" "$arrivo"
+if [ -L "$arrivo" ] || [ -n "$(find "$arrivo" -type l -print -quit)" ]; then
+  rm -rf "$arrivo"
+  echo "nella versione pronta ci sono collegamenti simbolici: non la porto dentro" >&2
+  exit 1
+fi
+SHA="$(head -c 40 "$arrivo/versione" 2>/dev/null || true)"
+case "$SHA" in
+  *[!0-9a-f]* | "")
+    rm -rf "$arrivo"
+    echo "la versione pronta non dice che versione e'" >&2
+    exit 1
+    ;;
+esac
+[ "${#SHA}" -eq 40 ] && [ -d "$arrivo/centralino" ] || {
+  rm -rf "$arrivo"
+  echo "la versione pronta non e' intera" >&2
+  exit 1
+}
+[ -d "$arrivo/app" ] || mkdir -p "$arrivo/app"
 
 rm -rf "$DOVE/centralino.via" "$DOVE/app.via" "$DOVE/sito.via"
 [ -d "$DOVE/centralino" ] && mv "$DOVE/centralino" "$DOVE/centralino.via"
 [ -d "$DOVE/app" ] && mv "$DOVE/app" "$DOVE/app.via"
-mv "$DOVE/centralino.nuovo" "$DOVE/centralino"
-mv "$DOVE/app.nuovo" "$DOVE/app"
-if [ -d "$DOVE/sito.nuovo" ]; then
+mv "$arrivo/centralino" "$DOVE/centralino"
+mv "$arrivo/app" "$DOVE/app"
+if [ -d "$arrivo/sito" ]; then
   [ -d "$DOVE/sito" ] && mv "$DOVE/sito" "$DOVE/sito.via"
-  mv "$DOVE/sito.nuovo" "$DOVE/sito"
+  mv "$arrivo/sito" "$DOVE/sito"
 fi
 printf '%s' "$SHA" >"$DOVE/versione"
-rm -rf "$DOVE/centralino.via" "$DOVE/app.via" "$DOVE/sito.via"
+rm -rf "$DOVE/centralino.via" "$DOVE/app.via" "$DOVE/sito.via" "$arrivo"
+rm -rf "$USCITA/pronto"
 FINE
 
-chmod 700 "$DOVE/sha.sh" "$DOVE/scarica.sh"
+chmod 755 "$DOVE/prepara.sh"
+chmod 700 "$DOVE/scambia.sh"
 
-VERSIONE="$("$DOVE/sha.sh" "$REPO_DEL_TRAMITE" "$SEGNO" || true)"
+# Il servizio che prepara: non root, e con addosso solo quello che gli serve.
+# Scrive in due cartelle sue e basta; legge i due segreti che systemd gli
+# passa; va in rete, perche' deve parlare con GitHub.
+cat >/etc/systemd/system/tramite-prepara.service <<FINE
+[Unit]
+Description=Scarica e prova il tramite nuovo, senza privilegi
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=$AGGIORNATORE
+Group=$AGGIORNATORE
+LoadCredential=lettura:$CONFIGURAZIONE/lettura
+LoadCredential=quale:$CONFIGURAZIONE/quale
+Environment=HOME=$LAVORO/lavoro
+WorkingDirectory=$LAVORO/lavoro
+ExecStart=$DOVE/prepara.sh
+TimeoutStartSec=20min
+NoNewPrivileges=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectSystem=strict
+ProtectHome=yes
+ReadWritePaths=$LAVORO/lavoro $LAVORO/uscita
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectKernelLogs=yes
+ProtectControlGroups=yes
+ProtectClock=yes
+ProtectHostname=yes
+RestrictSUIDSGID=yes
+RestrictNamespaces=yes
+RestrictRealtime=yes
+CapabilityBoundingSet=
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX AF_NETLINK
+LockPersonality=yes
+FINE
+
+systemctl daemon-reload
+systemctl start tramite-prepara.service || male \
+  "Non riesco a mettere in piedi il tramite." \
+  "Se ha detto che le prove non passano, quella versione e' rotta: non la" \
+  "accendo, ed e' giusto. Il perche' lo dice:" \
+  "  journalctl -u tramite-prepara -n 40 --no-pager" \
+  "Se invece non riesce a chiedere a GitHub, il gettone di lettura deve" \
+  "vedere «$REPO_DEL_TRAMITE» con Contents: Read, e il segno «$SEGNO» deve esistere."
+
+"$DOVE/scambia.sh" "$LAVORO/uscita" "$DOVE" || male \
+  "La versione scaricata non si lascia portare dentro." \
+  "  journalctl -u tramite-prepara -n 40 --no-pager"
+
+VERSIONE="$(cat "$DOVE/versione" 2>/dev/null || true)"
 [[ -n "$VERSIONE" ]] || male \
   "Non riesco a chiedere a GitHub che versione c'e'." \
   "Il gettone di lettura non va bene, o il segno «$SEGNO» non esiste ancora." \
-  "Il gettone deve vedere «$REPO_DEL_TRAMITE» con Contents: Read."
-
-"$DOVE/scarica.sh" "$REPO_DEL_TRAMITE" "$VERSIONE" "$DOVE" || male \
-  "Non riesco a mettere in piedi il tramite." \
-  "Se ha detto che le prove non passano, quella versione e' rotta: non la" \
-  "accendo, ed e' giusto. Si guarda cosa dicono cosi':" \
-  "  curl -fsSL -H \"Authorization: Bearer <gettone>\" \\" \
-  "    https://api.github.com/repos/$REPO_DEL_TRAMITE/tarball/$SEGNO | tar tz | head"
+  "Il gettone deve vedere «$REPO_DEL_TRAMITE» con Contents: Read." \
+  "  journalctl -u tramite-prepara -n 40 --no-pager"
 
 bene "tramite scaricato e provato, versione ${VERSIONE:0:8}"
 
@@ -512,6 +745,7 @@ passo "Accendo il servizio"
   printf 'GITHUB_SEGNALAZIONI=%s\n' "$GETTONE_SEGNALAZIONI"
   printf 'GITHUB_REPO=%s\n' "$REPO_SEGNALAZIONI"
   printf 'GITHUB_REPO_ALLEGATI=%s\n' "$REPO_ALLEGATI"
+  printf 'GITHUB_RAMO_ALLEGATI=%s\n' "$RAMO_ALLEGATI"
   # I due nomi per la soglia: chi apre l'indirizzo nudo del tramite va mandato
   # da qualche parte, e questa macchina da sola non sa come si chiama il sito.
   printf 'NOME_DEL_SITO=%s\n' "$NOME_DEL_SITO"
@@ -611,6 +845,26 @@ $NOME_DEL_TRAMITE {
 	# **Ed e' l'unico posto da cui l'app si serve.** Il nome corto rimanda qui
 	# invece di servire una seconda copia: il browser tiene l'abbinamento per
 	# indirizzo, e due indirizzi vorrebbero dire due abbinamenti da fare.
+	# Quello che il browser non deve fare con queste pagine: indovinare il tipo
+	# di un file invece di credere a quello detto, mettere l'app o la console
+	# dentro un riquadro di un altro sito, lasciare che una pagina di un altro
+	# sito che apre l'app ne tenga la maniglia. Le finestre che apre l'app si'
+	# (\`allow-popups\`): e' cosi' che consegna il codice al cruscotto del quadro.
+	# Alla console il tramite aggiunge da se' le
+	# regole sugli script; all'app no, perche' Flutter nel browser ne ha
+	# bisogno di larghe, e qui si mette solo quello che non la rompe.
+	header /app/* {
+		X-Content-Type-Options nosniff
+		X-Frame-Options DENY
+		Content-Security-Policy "frame-ancestors 'none'"
+		Cross-Origin-Opener-Policy same-origin-allow-popups
+	}
+	header /console* {
+		X-Content-Type-Options nosniff
+		X-Frame-Options DENY
+		Referrer-Policy no-referrer
+	}
+
 	handle /app {
 		redir https://$NOME_DEL_TRAMITE/app/ permanent
 	}
@@ -714,37 +968,28 @@ bene "Caddy in piedi"
 
 passo "Accendo il giro degli aggiornamenti"
 
-# Quale repository, quale segno, quale cartella: scritto in un file, cosi' lo
-# script che aggiorna non ha niente dentro che dipenda da questa macchina.
-{
-  printf 'REPO=%s\n' "$REPO_DEL_TRAMITE"
-  printf 'SEGNO=%s\n' "$SEGNO"
-  printf 'DOVE=%s\n' "$DOVE"
-} >"$CONFIGURAZIONE/quale"
-chmod 600 "$CONFIGURAZIONE/quale"
-
+# Il giro: chiede a `tramite-prepara` di preparare — lui, senza privilegi,
+# scarica e prova — e se trova una versione pronta la scambia e riavvia. Qui,
+# da root, non si esegue niente di quello che arriva da fuori: si copia e si
+# riavvia. Meglio un tramite vecchio che funziona di uno nuovo che non parte.
 cat >"$DOVE/aggiorna.sh" <<'FINE'
 #!/usr/bin/env bash
-#
-# Guarda se il segno si e' spostato, e in quel caso porta dentro la versione
-# nuova. Se le sue prove non passano, non la porta dentro: meglio un tramite
-# vecchio che funziona di uno nuovo che non parte.
 set -euo pipefail
 . /etc/tramite/quale
 
-adesso="$("$DOVE/sha.sh" "$REPO" "$SEGNO" || true)"
-if [ -z "$adesso" ]; then
-  echo "non riesco a chiedere a GitHub che versione c'e': riprovo al giro dopo"
-  exit 0
+if ! systemctl start tramite-prepara.service; then
+  echo "la preparazione non e' andata: il perche' e' in journalctl -u tramite-prepara"
+  exit 1
 fi
 
+pronta="$(cat "$LAVORO/uscita/pronto/versione" 2>/dev/null || true)"
+[ -n "$pronta" ] || exit 0
 qui="$(cat "$DOVE/versione" 2>/dev/null || true)"
-[ "$adesso" != "$qui" ] || exit 0
 
-echo "si passa da ${qui:0:8} a ${adesso:0:8}"
-"$DOVE/scarica.sh" "$REPO" "$adesso" "$DOVE"
+echo "si passa da ${qui:0:8} a ${pronta:0:8}"
+"$DOVE/scambia.sh" "$LAVORO/uscita" "$DOVE"
 systemctl restart tramite
-echo "acceso sulla ${adesso:0:8}"
+echo "acceso sulla ${pronta:0:8}"
 FINE
 chmod 700 "$DOVE/aggiorna.sh"
 
@@ -755,6 +1000,10 @@ Description=Porta dentro il tramite nuovo, se c'e'
 [Service]
 Type=oneshot
 ExecStart=$DOVE/aggiorna.sh
+# Questo resta root — scambia le cartelle e riavvia il servizio — ma non ha
+# bisogno di guardare nelle case degli utenti ne' nella /tmp degli altri.
+PrivateTmp=yes
+ProtectHome=yes
 FINE
 
 cat >/etc/systemd/system/tramite-aggiorna.timer <<'FINE'
@@ -930,8 +1179,8 @@ case "${1:-}" in
   *)
     scelta="$1"
     # Almeno sedici caratteri, e niente che rompa il file dove va scritta.
-    if [ "${#scelta}" -lt 16 ]; then
-      echo "troppo corta: almeno 16 caratteri (questa ne ha ${#scelta})." >&2
+    if [ "${#scelta}" -lt 32 ]; then
+      echo "troppo corta: almeno 32 caratteri (questa ne ha ${#scelta})." >&2
       echo "Una chiave che si prova a indovinare va provata: corta, cade." >&2
       exit 1
     fi

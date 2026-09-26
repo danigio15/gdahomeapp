@@ -17,8 +17,10 @@ jobs:
     name: Il ponte, il centralino e il quadro
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-node@v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
           node-version: "22"
       # Nessuno dei tre ha dipendenze: le loro prove girano su Node e basta.
@@ -52,13 +54,15 @@ jobs:
     name: La plancia
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-node@v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
           node-version: "22"
       # Il pacchetto per HACS lo costruisce uno script Python, e due prove lo
       # costruiscono per davvero prima di guardarci dentro.
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
         with:
           python-version: "3.12"
       # Le prove della plancia non hanno dipendenze: girano su Node e basta.
@@ -82,8 +86,10 @@ jobs:
     name: La forma del codice
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-node@v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
           node-version: "22"
           cache: npm
@@ -99,8 +105,10 @@ jobs:
     name: L'app
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
-      - uses: subosito/flutter-action@v2
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          persist-credentials: false
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
         with:
           channel: stable
           cache: true
@@ -142,3 +150,48 @@ jobs:
       - name: Il gzip, dentro un browser
         run: flutter test --platform chrome test/plancia/gzip_nel_browser_test.dart
         working-directory: app
+
+  # E l'app **costruita per davvero**, non solo analizzata.
+  #
+  # Questa corsa e' nata da una versione persa. La 1.6.4 portava gdahome in
+  # macchina, e con lei il primo codice Kotlin scritto in questa repository:
+  # `flutter analyze` l'ha guardato — e non dice niente di Kotlin, guarda il
+  # Dart — `flutter test` pure, e le Prove sono passate verdi. L'errore, due
+  # righe che sovrascrivevano un metodo che non esiste, si e' visto solo
+  # dentro il rilascio: con l'etichetta gia' messa, il negozio gia' approvato
+  # a mano e il pacchetto che non e' mai uscito.
+  #
+  # `analyze` e' il controllo dei tipi **del Dart**. Sotto c'e' dell'altro —
+  # Kotlin, il manifesto, le librerie di Android, R8 che riscrive tutto — e
+  # l'unico modo di sapere che sta in piedi e' costruirlo. Sono sette minuti
+  # su una macchina di GitHub, e costano molto meno di un rilascio da rifare.
+  #
+  # Si firma di prova (`GDAHOME_FIRMA_DI_PROVA=si`): la chiave vera qui non
+  # c'e' e non ci deve essere — sta nell'ambiente protetto, e per sapere se il
+  # codice compila non serve.
+  pacchetto:
+    name: L'app per Android, costruita
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4.9.1
+        with:
+          distribution: temurin
+          # 21 e non 17: la mappa del navigatore (MapLibre, dentro gdanav) si
+          # compila solo da Java 21 in su.
+          java-version: "21"
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+        working-directory: app
+      # In *release*, come il pacchetto vero: e' li' che gira R8, ed e' R8 che
+      # si accorge di una libreria che manca o di una regola sbagliata.
+      - name: Il pacchetto
+        working-directory: app
+        env:
+          GDAHOME_FIRMA_DI_PROVA: si
+        run: flutter build apk --release

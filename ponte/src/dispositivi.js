@@ -37,6 +37,21 @@ const GIORNO = 24 * 60 * 60 * 1000;
  * nessuno: serve sapere se un telefono e' sparito da tre mesi. */
 const VISITA_SUL_DISCO = 5 * 60 * 1000;
 
+/* ─── I telefoni staccati ────────────────────────────────────────────────
+ *
+ * Un telefono staccato — dalla console, o perche' sparito da troppo tempo —
+ * non entra piu'. Ma se ribussa, qualcuno glielo deve dire, e dirglielo in
+ * chiaro vuol dire che chiunque stia in mezzo puo' dirlo al posto nostro: un
+ * «non ti conosco, riabbinati» falso e' un modo di far riabbinare un telefono
+ * dove vuole lui. Allora della chiave del filo di un telefono staccato si
+ * tiene memoria per un po': il portiere la usa per dirgli di no **cifrato**,
+ * con la sua chiave, cosi' il no e' vero.
+ *
+ * Si tiene la chiave e basta: il segno, che serve a entrare, se ne va col
+ * telefono. E non per sempre, e non senza tetto. */
+const GIORNI_DEI_REVOCATI = 180;
+const REVOCATI_AL_MASSIMO = 100;
+
 const nomePulito = (scritto) =>
   String(scritto ?? "")
     .replace(/\s+/g, " ")
@@ -73,6 +88,37 @@ export class Dispositivi {
 
   get lista() {
     return this.archivio.dati.dispositivi;
+  }
+
+  get _revocati() {
+    if (!Array.isArray(this.archivio.dati.revocati)) this.archivio.dati.revocati = [];
+    return this.archivio.dati.revocati;
+  }
+
+  /* La chiave del filo di un telefono staccato, se lo si ricorda ancora: vedi
+   * «I telefoni staccati». `null` se non c'e', o se e' passato troppo tempo. */
+  chiaveRevocataDi(id) {
+    const limite = this.adesso() - GIORNI_DEI_REVOCATI * GIORNO;
+    const trovato = this._revocati.find((uno) => uno.id === id && (uno.staccatoIl || 0) >= limite);
+    const chiave = trovato?.chiave;
+    return typeof chiave === "string" && chiave.length === 64 ? chiave : null;
+  }
+
+  /* Si ricorda la chiave di questi telefoni, e dimentica quelle troppo
+   * vecchie o di troppo. Non salva: lo fa chi chiama, una volta sola. */
+  _ricordaStaccati(andati) {
+    const ora = this.adesso();
+    const limite = ora - GIORNI_DEI_REVOCATI * GIORNO;
+    const nuovi = andati
+      .filter((uno) => typeof uno?.chiave === "string" && uno.chiave.length === 64)
+      .map((uno) => ({ id: uno.id, chiave: uno.chiave, staccatoIl: ora }));
+    const tenuti = [
+      ...this._revocati.filter(
+        (uno) => (uno.staccatoIl || 0) >= limite && !nuovi.some((nuovo) => nuovo.id === uno.id),
+      ),
+      ...nuovi,
+    ];
+    this.archivio.dati.revocati = tenuti.slice(-REVOCATI_AL_MASSIMO);
   }
 
   /* Quello che si puo' far vedere: l'impronta resta dentro. */
@@ -163,18 +209,20 @@ export class Dispositivi {
   }
 
   stacca(id) {
-    const prima = this.lista.length;
+    const andati = this.lista.filter((uno) => uno.id === id);
+    if (!andati.length) return false;
     this.archivio.dati.dispositivi = this.lista.filter((uno) => uno.id !== id);
-    if (this.lista.length === prima) return false;
+    this._ricordaStaccati(andati);
     this.archivio.salva();
     return true;
   }
 
   staccaTutti() {
-    const quanti = this.lista.length;
+    const andati = [...this.lista];
     this.archivio.dati.dispositivi = [];
+    this._ricordaStaccati(andati);
     this.archivio.salva();
-    return quanti;
+    return andati.length;
   }
 
   rinomina(id, nome) {
@@ -189,11 +237,12 @@ export class Dispositivi {
   potatura() {
     if (!this.giorniDiSilenzio) return 0;
     const limite = this.adesso() - this.giorniDiSilenzio * GIORNO;
-    const prima = this.lista.length;
+    const andati = this.lista.filter((uno) => (uno.vistoIl || 0) < limite);
+    if (!andati.length) return 0;
     this.archivio.dati.dispositivi = this.lista.filter((uno) => (uno.vistoIl || 0) >= limite);
-    const andati = prima - this.lista.length;
-    if (andati) this.archivio.salva();
-    return andati;
+    this._ricordaStaccati(andati);
+    this.archivio.salva();
+    return andati.length;
   }
 
   /* Il dispositivo come lo vede chi sta fuori da qui.

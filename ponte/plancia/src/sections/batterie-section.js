@@ -35,6 +35,7 @@ import {
 import {
   allStates,
   clean,
+  disegnoDiCasa,
   doc,
   esc,
   installStyle,
@@ -46,6 +47,8 @@ import {
 } from "./shared.js";
 import {
   batterieSorvegliate,
+  disegnoDellaBatteria,
+  mappaDelleRighe,
   CHIAVE_NOMI_SCELTI,
   nomeDellaBatteria,
 } from "./batterie-elenco-section.js";
@@ -71,10 +74,17 @@ export function batterieInPlancia() {
   /* Le soglie di ricarica si leggono una volta per tutta la pagina, come i
    * nomi: sono la configurazione di casa, non una lettura per riga. */
   const ricariche = normalizzaRicariche(readJson(CHIAVE_RICARICA, []));
+  const righe = mappaDelleRighe();
   return batterieLette(batterieSorvegliate(), states, {
     soglia: sogliaDiCasa(),
     nome: (entity) => nomeDellaBatteria(entity, states, nomi),
-  }).map((riga) => ({ ...riga, ricarica: ricaricaDellaBatteria(riga.entity, ricariche) }));
+  }).map((riga) => ({
+    ...riga,
+    ricarica: ricaricaDellaBatteria(riga.entity, ricariche),
+    /* Il disegno che uno ha scelto per questa batteria (#74). Senza, resta il
+     * segno del livello: pieno, scarico, muto. */
+    disegno: disegnoDellaBatteria(riga.entity, righe),
+  }));
 }
 
 /** Se c'è almeno una batteria da mostrare. */
@@ -211,7 +221,7 @@ function rigaMarkup(riga, states = {}) {
   const stato = riga.muta ? "muta" : riga.scarica ? "scarica" : "carica";
   const quanto = riga.muta ? 0 : Math.max(0, Math.min(100, riga.level));
   return `<article class="dm-batt" data-batt="${esc(stato)}" data-dm-entita="${esc(riga.entity)}">
-    <span class="dm-batt-ic" aria-hidden="true">${esc(glifoDelLivello(riga))}</span>
+    <span class="dm-batt-ic" aria-hidden="true">${riga.disegno ? disegnoDiCasa(riga.disegno, { misura: 26 }) : esc(glifoDelLivello(riga))}</span>
     <div class="dm-batt-testo">
       <strong>${esc(riga.name)}</strong>
       <span class="dm-batt-barra"><i style="width:${esc(String(quanto))}%"></i></span>
@@ -349,6 +359,8 @@ function installStyles() {
       background:var(--card-bg,#fff)}
     ${P} .dm-batt[data-batt="scarica"]{--dm-batt:#f59e0b}
     ${P} .dm-batt[data-batt="muta"]{--dm-batt:#94a3b8;opacity:.72}
+    ${P} .dm-batt-ic .dm-catalogo-art{display:grid;place-items:center;line-height:0}
+    ${P} .dm-batt-ic svg{display:block;width:26px;height:26px}
     ${P} .dm-batt-ic{display:grid;place-items:center;width:38px;height:38px;border-radius:12px;
       font-size:19px;background:color-mix(in srgb,var(--dm-batt) 20%,transparent)}
     ${P} .dm-batt-testo{display:grid;gap:3px;min-width:0}

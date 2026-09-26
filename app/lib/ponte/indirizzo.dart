@@ -9,6 +9,47 @@ library;
 
 import '../parole.dart';
 
+/// Se [casa] e' un nome o un numero che vive solo dentro una rete di casa.
+///
+/// Serve a una regola sola: **in chiaro** (`http`, `ws`) si parla solo con
+/// quello che sta in casa. Fuori, fra il telefono e la casa ci sono reti che
+/// non sono nostre, e chi ci sta sopra puo' rispondere al posto di chi si
+/// cercava. La stretta di mano cifrata regge anche li' — e' fatta apposta —
+/// ma un indirizzo pubblico in chiaro per l'abbinamento o per il centralino
+/// e' quasi sempre uno sbaglio di chi l'ha scritto, e vale la pena non
+/// seguirlo.
+///
+/// In casa sono: le reti private (10/8, 172.16/12, 192.168/16), il giro
+/// corto del telefono stesso (127/8, `localhost`), gli indirizzi che una
+/// macchina si da' da sola quando non trova nessuno (169.254/16), i nomi
+/// `.local` e `.home.arpa`, e i nomi di una parola sola (`homeassistant`), che
+/// fuori da una rete di casa non vogliono dire niente.
+bool eInCasa(String casa) {
+  final nome = casa.toLowerCase();
+  if (nome == 'localhost' ||
+      nome.endsWith('.local') ||
+      nome.endsWith('.home.arpa')) {
+    return true;
+  }
+  final numeri = RegExp(r'^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$')
+      .firstMatch(nome);
+  if (numeri != null) {
+    final quattro = [for (var i = 1; i <= 4; i += 1) int.parse(numeri[i]!)];
+    if (quattro.any((uno) => uno > 255)) return false;
+    final a = quattro[0];
+    final b = quattro[1];
+    return a == 10 ||
+        a == 127 ||
+        (a == 172 && b >= 16 && b <= 31) ||
+        (a == 192 && b == 168) ||
+        (a == 169 && b == 254);
+  }
+  /* Una parola sola, senza punti: non e' un indirizzo che si raggiunga da
+   * internet. Tutto numeri pero' no: `3232235777` e' un numero scritto in un
+   * altro modo, e da fuori si raggiunge benissimo. */
+  return !nome.contains('.') && !RegExp(r'^\d+$').hasMatch(nome);
+}
+
 class IndirizzoDelPonte {
   const IndirizzoDelPonte({
     required this.casa,
@@ -26,9 +67,15 @@ class IndirizzoDelPonte {
   /// proxy inverso, o l'accesso remoto di Home Assistant.
   final bool sicuro;
 
+  /// Il filo. Ci passa anche l'abbinamento: la stessa stretta di mano
+  /// cifrata di sempre, legata al codice. Il vecchio `POST /abbinamento` in
+  /// chiaro l'app non lo usa piu'.
   Uri get filo => _via(sicuro ? 'wss' : 'ws', '/casa');
-  Uri get abbinamento => _via(sicuro ? 'https' : 'http', '/abbinamento');
   Uri get salute => _via(sicuro ? 'https' : 'http', '/salute');
+
+  /// Se ci si puo' abbinare da qui: in cifrato sempre, in chiaro solo
+  /// dentro casa. Vedi [eInCasa].
+  bool get siPuoAbbinare => sicuro || eInCasa(casa);
 
   Uri _via(String schema, String percorso) =>
       Uri(scheme: schema, host: casa, port: porta, path: percorso);
@@ -195,6 +242,10 @@ class IndirizzoDelCentralino {
     if (testo.isEmpty || !RegExp(r'^[A-Za-z0-9._-]+$').hasMatch(testo)) {
       return null;
     }
+    /* Un centralino in chiaro va bene solo in casa — quello delle prove, o
+     * uno sulla stessa rete. Uno su internet senza cifrato non lo si segue:
+     * e' quasi sempre uno sbaglio, e da li' passano tutti i fili. */
+    if (!sicuro && !eInCasa(testo)) return null;
     return IndirizzoDelCentralino(
       casa: testo.toLowerCase(),
       porta: porta,

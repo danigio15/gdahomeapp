@@ -17,6 +17,10 @@ import {
   mesiDaiGiorni,
 } from "../core/period-service.js";
 import { quotaSolareDelDispositivo } from "../core/quota-solare-del-dispositivo.js";
+import {
+  cEIlFotovoltaico,
+  siPuoDireLAutosufficienza,
+} from "../core/il-fotovoltaico-di-questa-casa.js";
 import { CHIAVE_FASCE, normalizzaLeFasce, prezzoMedioDelleFasce } from "../core/fasce-della-tariffa.js";
 import { reconcileEnergyBundle } from "./energy-calculations-section.js";
 import {
@@ -34,6 +38,7 @@ import {
   esc,
   finite,
   formatNumber,
+  ilContoEsattoDelleFasce,
   installStyle,
   lexicalGlobal,
   onEditorRedraw,
@@ -851,6 +856,32 @@ export async function loadAtomicEnergyBundle(
   );
 }
 
+/* Le caselle vuote viste DUE volte di fila, e solo quelle.
+ *
+ * «Statistiche a lungo termine mancanti» e' una frase che manda qualcuno a
+ * controllare la configurazione dei sensori, e per questo non si dice alla
+ * prima lettura. Una casella torna vuota anche quando il Recorder, in quel
+ * momento, non ha risposto — succede appena l'add-on riparte, col database
+ * ancora freddo — e la lettura dopo la riempie. Dal campo: «poi si toglie quel
+ * messaggio e mostra i dati corretti», cioe' l'avviso mandava a cercare un
+ * guasto che non c'era.
+ *
+ * Un contatore che le statistiche non ce le ha davvero resta vuoto anche al
+ * giro successivo, e quello arriva comunque entro un minuto
+ * (`RIPOSO_ENERGIA_MS`): si dice allora, con un minuto di ritardo e la
+ * certezza di dire una cosa vera. */
+function laChiaveDelMancante({ kind, plan }) {
+  return `${kind}:${plan.group}.${plan.key}:${plan.entity}`;
+}
+
+export function confermaIMancanti(mancanti, primaErano) {
+  const elenco = mancanti || [];
+  return {
+    confermati: elenco.filter((uno) => primaErano?.has?.(laChiaveDelMancante(uno))),
+    adesso: new Set(elenco.map(laChiaveDelMancante)),
+  };
+}
+
 /* La ragione che va scritta sopra i numeri per QUESTO pacchetto: prima la
  * domanda caduta, che si riprova da sola; poi le caselle che il Recorder non
  * puo' riempire, che invece vanno configurate. */
@@ -950,27 +981,84 @@ function financial(data, bundle) {
   };
 }
 
+/* Quello che si vede e quello che si nasconde (#82).
+ *
+ * Una casa senza pannelli leggeva «Produzione FV 0,0 kWh» — che non e'
+ * produzione zero, e' che i pannelli non ci sono — e «Autosufficienza 100 %»,
+ * che e' il numero sbagliato vero: `(consumo − prelievo) / consumo` con il
+ * prelievo a zero perche' nemmeno il contatore di rete e' configurato. Una
+ * casa che prende tutto dalla rete leggeva di essere autosufficiente, e il
+ * consumo — l'unica cosa che misurava davvero — si perdeva in mezzo.
+ *
+ * Nascondere si dice con una classe, mai togliendo il nodo: il guscio e gli
+ * altri moduli scrivono dentro queste caselle a ogni pacchetto, e un nodo che
+ * non c'e' piu' li farebbe scrivere nel vuoto. */
+function mostra(nodo, si) {
+  if (!nodo) return;
+  nodo.classList?.toggle?.("dm-senza-fv", !si);
+}
+
+const ilRiquadroDi = (id) => doc?.getElementById(id)?.closest?.(".ed-kpi-item");
+
 function applyReportOverview(bundle) {
   const data = bundle.month;
   const auto = autonomy(data);
+  const impianto = energyModel();
+  const ilSole = cEIlFotovoltaico(impianto);
+  /* L'autosufficienza vuole tutte e tre le misure, e non basta la spunta: il
+   * 100 % e' sbagliato anche in una casa CHE HA i pannelli, se le manca il
+   * contatore di rete. */
+  const lAutosufficienza = siPuoDireLAutosufficienza(impianto);
+  mostra(ilRiquadroDi("ed-kpi-prod"), ilSole);
+  mostra(ilRiquadroDi("ed-kpi-auto"), lAutosufficienza);
+  mostra(doc?.querySelector?.(".ed-auto-row"), lAutosufficienza);
   setHtml("ed-kpi-prod", `${formatNumber(data.solar)} <small>kWh</small>`);
   setHtml("ed-kpi-cons", `${formatNumber(data.house)} <small>kWh</small>`);
   setHtml("ed-kpi-auto", `${auto} <small>%</small>`);
   const chips = doc?.getElementById("ed-yoy-chips");
   if (chips) {
     const value = [
-      `<span class="ed-yoy-chip">☀️ ${kwh(data.solar)}</span>`,
+      ilSole ? `<span class="ed-yoy-chip">☀️ ${kwh(data.solar)}</span>` : "",
       `<span class="ed-yoy-chip">🏠 ${kwh(data.house)}</span>`,
       `<span class="ed-yoy-chip">⚡ ${kwh(data.gridImport)} ${t("da Rete", "from Grid")}</span>`,
     ].join("");
     scriviSeCambia(chips, value);
   }
+  /* Senza pannelli, quattro delle cinque caselle dei soldi sono tautologie:
+   * «Senza FV» e' esattamente quello che si paga, il risparmio e' zero per
+   * definizione, l'immesso non esiste e la CO2 evitata nemmeno. Resta il costo
+   * reale, che e' l'unico numero vero — ed e' quello che la segnalazione
+   * chiedeva di lasciare in piedi insieme al consumo e alle fasce. */
+  for (const id of ["ed-fin-pagato", "ed-fin-risp", "ed-fin-imm", "ed-fin-co2"])
+    mostra(doc?.getElementById(id)?.closest?.(".ed-fin-card"), ilSole);
+  /* La griglia e' scritta a cinque colonne dentro l'attributo `style`: con una
+   * casella sola resterebbe schiacciata nel primo quinto, con quattro buchi
+   * accanto. Il conto delle colonne lo rifa' il foglio, che sull'attributo
+   * vince con `!important`. */
+  doc?.querySelector?.(".ed-fin-grid")?.classList?.toggle?.("dm-solo-il-costo", !ilSole);
   const money = financial(data, bundle);
+  /* Il conto esatto batte la stima, quando c'e'.
+   *
+   * «Gli importi dei costi energia non coincidono con il riquadro sotto.» Qui
+   * «Costo Reale» era i kilowattora del mese per la MEDIA PESATA delle fasce —
+   * una stima, perche' di un mese si sa quanta energia e' passata ma non in
+   * che ore. Il blocco attaccato subito sotto le ore le ha chieste al Recorder
+   * e fa il conto vero: due numeri diversi per la stessa spesa, a tre
+   * centimetri di distanza.
+   *
+   * A scrivere questa casella siamo in due — anche la rifinitura del Report — e
+   * lei il conto esatto lo chiedeva gia'. Vinceva chi passava per ultima, e
+   * passava per ultima la stima. Adesso lo chiedono tutte e due, allo stesso
+   * registro. E il risparmio segue il costo: se no diceva di aver risparmiato
+   * meno di quanto il conto vero dice. */
+  const aFasce = ilContoEsattoDelleFasce();
+  const costoDiRete = aFasce ? Math.max(0, Number(aFasce.euro) || 0) : money.realCost;
+  const risparmiato = Math.max(0, money.withoutSolar - costoDiRete);
   setText("ed-fin-pagato", `${formatNumber(money.withoutSolar, 2)} €`);
   setText("ed-fin-pagato-sub", kwh(data.house));
-  setText("ed-fin-costo", `${formatNumber(money.realCost, 2)} €`);
+  setText("ed-fin-costo", `${formatNumber(costoDiRete, 2)} €`);
   setText("ed-fin-costo-sub", `${kwh(data.gridImport)} ${t("dalla rete", "from grid")}`);
-  setText("ed-fin-risp", `${formatNumber(money.saved, 2)} €`);
+  setText("ed-fin-risp", `${formatNumber(risparmiato, 2)} €`);
   setText("ed-fin-imm", `${formatNumber(money.exportIncome, 2)} €`);
   setText("ed-auto-big", `${auto}%`);
   setText("ed-auto-ring-val", `${auto}%`);
@@ -1446,6 +1534,17 @@ function scriviLaStrada(ancora, misurata) {
     riga.className = "dm-ed-strada";
     tessere.after(riga);
   }
+  /* E le copie che si erano accumulate se ne vanno.
+   *
+   * Questa riga si ritrova guardando subito sotto le sue tessere. Quando li'
+   * in mezzo ci finiva qualcun altro — il blocco delle fasce, che per un po'
+   * si e' appeso nello stesso posto — non la si trovava piu' e se ne creava
+   * una nuova a ogni ridisegno: sullo schermo di casa se ne sono viste tre in
+   * fila, tutte uguali. Adesso il posto e' di nuovo uno solo, e quelle
+   * rimaste in piedi si tolgono di mezzo qui, senza aspettare un
+   * ricaricamento della pagina. */
+  while (riga.nextElementSibling?.classList?.contains("dm-ed-strada"))
+    riga.nextElementSibling.remove();
   riga.classList.toggle("dm-ed-strada-stimata", !misurata);
   scriviTestoSeCambia(
     riga,
@@ -1520,6 +1619,52 @@ function scriviLAmmanco(bundle, source) {
   return true;
 }
 
+/* Il conto MISURATO di un apparecchio, quando qualcuno lo sa.
+ *
+ * La scheda del dispositivo scrive due euro — «risparmiato grazie al FV» e
+ * «speso dalla rete» — e li faceva con un prezzo solo: la media delle fasce
+ * pesata sulle ore della settimana. E' una stima onesta finche' non si sa in
+ * che ore quell'apparecchio ha consumato: la plancia sa quanti kilowattora
+ * sono passati, non quando.
+ *
+ * Il blocco delle fasce, pero', quelle ore le chiede davvero al Recorder, e
+ * per lo stesso apparecchio e lo stesso mese sa il conto vero, fascia per
+ * fascia. Su una wallbox che carica di notte le due cose non si somigliano
+ * nemmeno: 20,19 € stimati contro 12,58 € veri, sugli stessi kilowattora. Uno
+ * dei due numeri era sbagliato, e stavano sulla stessa scheda a dieci
+ * centimetri uno dall'altro — dal campo: «il costo riportato in alto non si
+ * trova con quello riportato sotto dalle fasce».
+ *
+ * Adesso, quando la misura c'e', comanda lei. La scheda resta l'unica a
+ * scrivere quei numeri — chi misura non tocca il documento, passa il conto e
+ * basta — e senza misura non cambia niente: chi le fasce non le ha continua a
+ * leggere la stima di sempre.
+ */
+function chiaveDelContoMisurato(entita, periodo) {
+  return `${clean(entita)}~${Number(periodo?.year) || 0}-${Number(periodo?.month) || 0}`;
+}
+
+export function segnaIlContoMisurato(entita, periodo, conto) {
+  if (!clean(entita) || !conto) return false;
+  const conti = (state.contiMisurati ||= new Map());
+  const chiave = chiaveDelContoMisurato(entita, periodo);
+  const prima = conti.get(chiave);
+  const adesso = {
+    euro: finite(conto.euro),
+    valoreDelSole: finite(conto.valoreDelSole),
+  };
+  if (prima && prima.euro === adesso.euro && prima.valoreDelSole === adesso.valoreDelSole)
+    return false;
+  conti.set(chiave, adesso);
+  /* La scheda e' gia' dipinta con la stima: si ridipinge adesso che si sa. */
+  return applyDeviceDetail(state.bundle);
+}
+
+/** Il conto misurato di questo apparecchio in questo mese, se qualcuno l'ha fatto. */
+function ilContoMisurato(entita, periodo) {
+  return state.contiMisurati?.get(chiaveDelContoMisurato(entita, periodo)) || null;
+}
+
 function applyDeviceDetail(bundle) {
   const selector = doc?.getElementById("ed-dev-selector");
   const entity = clean(selector?.value);
@@ -1573,8 +1718,18 @@ function applyDeviceDetail(bundle) {
   const monthSplit = quotaDaScrivere(bundle, source, "month", monthValue);
   const yearSplit = quotaDaScrivere(bundle, source, "year", yearValue);
 
+  /* Il conto del mese: misurato se qualcuno l'ha misurato, stimato se no.
+   *
+   * I tre euro del mese sono lo stesso conto diviso in due — quello che il
+   * sole ha risparmiato e quello che la rete ha preso — e la somma sta in
+   * cima. Vengono dalla stessa fonte tutti e tre, o non tornerebbero fra
+   * loro: e' esattamente il difetto che questa riga chiude. */
+  const misurato = ilContoMisurato(entity, bundle.period);
+  const risparmioMese = misurato ? misurato.valoreDelSole : monthSplit.solar * importPrice;
+  const spesaMese = misurato ? misurato.euro : monthSplit.grid * importPrice;
+
   setText("ed-dkpi-mese", `${formatNumber(monthValue, 1)} kWh`);
-  setText("ed-dkpi-mese-eur", `€ ${formatNumber(monthValue * importPrice, 2)}`);
+  setText("ed-dkpi-mese-eur", `€ ${formatNumber(risparmioMese + spesaMese, 2)}`);
   setText("ed-dkpi-media", days ? `${formatNumber(monthValue / days, 2)} kWh` : "—");
   /* Il picco, con la virgola come tutto il resto della card.
    *
@@ -1592,12 +1747,12 @@ function applyDeviceDetail(bundle) {
       );
   }
   setText("ed-dkpi-media-sub", t("Media/giorno", "Daily average"));
-  setText("ed-dkpi-risp-eur", `+ ${formatNumber(monthSplit.solar * importPrice, 2)} €`);
+  setText("ed-dkpi-risp-eur", `+ ${formatNumber(risparmioMese, 2)} €`);
   setText(
     "ed-dkpi-risp-kwh",
     `${formatNumber(monthSplit.solar, 1)} kWh ${t("da FV", "from solar")}`,
   );
-  setText("ed-dkpi-costo-eur", `- ${formatNumber(monthSplit.grid * importPrice, 2)} €`);
+  setText("ed-dkpi-costo-eur", `- ${formatNumber(spesaMese, 2)} €`);
   setText(
     "ed-dkpi-costo-kwh",
     `${formatNumber(monthSplit.grid, 1)} kWh ${t("dalla rete", "from grid")}`,
@@ -1880,7 +2035,13 @@ async function eseguiIlRefresh(period, carico) {
      * sempre — a chiedere al Recorder una cosa che non dipende dal Recorder:
      * un contatore senza statistiche a lungo termine non ne mette su perche'
      * glielo si richiede. */
-    segnaLaRagione(ragioneDelPacchetto(bundle), true);
+    /* Non alla prima lettura: vedi `confermaIMancanti`. */
+    const { confermati, adesso } = confermaIMancanti(bundle.mancanti, state.mancantiDiPrima);
+    state.mancantiDiPrima = adesso;
+    segnaLaRagione(
+      ragioneDelPacchetto({ caduta: bundle.caduta, mancanti: confermati }),
+      true,
+    );
     root.dispatchEvent?.(new CustomEvent("dashboardmodern:period-bundle", { detail: bundle }));
     root.dispatchEvent?.(new CustomEvent("dashboardmodern:energy-stable", { detail: bundle }));
     return true;
@@ -2279,6 +2440,19 @@ function installObserver() {
 }
 
 function installStyles() {
+  /* Quello che in questa casa non esiste non si vede (#82).
+   *
+   * Si spegne con una classe e non togliendo il nodo: il guscio e gli altri
+   * moduli scrivono dentro queste caselle a ogni pacchetto, e un nodo sparito
+   * li manderebbe a scrivere nel vuoto — che e' il modo silenzioso di rompere
+   * una pagina. */
+  installStyle(
+    "dm-senza-fotovoltaico-style",
+    `
+      #page-energia .dm-senza-fv{display:none!important}
+      #page-energia .ed-fin-grid.dm-solo-il-costo{grid-template-columns:1fr!important}
+    `,
+  );
   installStyle(
     "dm-energy-section-style",
     `

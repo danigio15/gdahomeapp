@@ -79,26 +79,32 @@ void main() {
    * davanti al dispositivo, col telefono in una mano, e nel browser sarebbe
    * una porta che si apre su metà di quello che promette. Con lei se ne
    * vanno Aiutanti e Automazioni, per la stessa ragione. */
-  test('nella webapp Zigbee, Aiutanti e Automazioni non ci sono', () {
-    final nelBrowser = vociDellaBarra(conZigbee: true, nellApp: false);
-    expect(nelBrowser, isNot(contains(Sezione.zigbee)));
-    expect(nelBrowser, isNot(contains(Sezione.aiutanti)));
-    expect(nelBrowser, isNot(contains(Sezione.automazioni)));
-    /* E il resto c'è tutto: si tolgono tre voci, non si fa un'altra app. */
-    expect(nelBrowser, contains(Sezione.plancia));
-    expect(nelBrowser, contains(Sezione.dispositivi));
-    expect(nelBrowser, contains(Sezione.configurazione));
-    expect(
-      vociDellaBarra(conZigbee: true).length - nelBrowser.length,
-      3,
-      reason: 'nella webapp mancano esattamente quelle tre',
-    );
-  });
+  test(
+    'nella webapp Navigatore, Zigbee, Aiutanti e Automazioni non ci sono',
+    () {
+      final nelBrowser = vociDellaBarra(conZigbee: true, nellApp: false);
+      expect(nelBrowser, isNot(contains(Sezione.zigbee)));
+      expect(nelBrowser, isNot(contains(Sezione.aiutanti)));
+      expect(nelBrowser, isNot(contains(Sezione.automazioni)));
+      /* E il navigatore: vuole il GPS e la voce del telefono. */
+      expect(nelBrowser, isNot(contains(Sezione.navigatore)));
+      /* E il resto c'è tutto: si tolgono tre voci, non si fa un'altra app. */
+      expect(nelBrowser, contains(Sezione.plancia));
+      expect(nelBrowser, contains(Sezione.dispositivi));
+      expect(nelBrowser, contains(Sezione.configurazione));
+      expect(
+        vociDellaBarra(conZigbee: true).length - nelBrowser.length,
+        4,
+        reason: 'nella webapp mancano esattamente quelle quattro',
+      );
+    },
+  );
 
   test('e chi è solo dell\'app lo dichiara lei, non la barra', () {
     /* Aggiungerne una domani vuol dire una parola nel suo elenco, e non una
      * riga in più dentro il filtro. */
     expect(Sezione.values.where((una) => una.soloNellApp).toSet(), {
+      Sezione.navigatore,
       Sezione.zigbee,
       Sezione.aiutanti,
       Sezione.automazioni,
@@ -204,7 +210,7 @@ void main() {
   testWidgets('con Zigbee2MQTT la schermata è la stessa, la rete no', (
     tester,
   ) async {
-    await unaCasa(tester, rete: 'z2m');
+    await unaCasa(tester, rete: 'zigbee2mqtt');
     await apri(tester);
     expect(find.text('Zigbee2MQTT'), findsOneWidget);
     expect(find.text('Apri la rete'), findsOneWidget);

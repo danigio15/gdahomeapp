@@ -14,9 +14,11 @@
 #
 # **Serve un gettone**, e serve per una cosa sola: leggere un numero che GitHub
 # ha gia'. Non scrive niente, non tocca il codice. Il permesso e'
-# «Administration: Read-only» su questa repository — si puo' aggiungere a
-# `GETTONE_SEGNALAZIONI`, che c'e' gia', oppure se ne fa uno suo e si chiama
-# `GETTONE_CONTI`: questa corsa prende il primo che trova.
+# «Administration: Read-only» su questa repository, e il gettone e' **suo**:
+# `GETTONE_CONTI`. Non si ripiega su `GETTONE_SEGNALAZIONI`, che e' fatto per
+# un'altra cosa e ha altri permessi — ogni lavoro tiene in mano solo quello
+# che gli serve. (Il gettone di serie della corsa il traffico non lo legge:
+# GitHub non gli da' quel permesso.)
 #
 # Quello che i due numeri dicono davvero:
 #
@@ -37,8 +39,10 @@ on:
     - cron: "37 5 * * *"
   workflow_dispatch:
 
+# Di serie si legge e basta: il lavoro qui sotto scrive sul ramo dei conti, e
+# il permesso lo chiede lui.
 permissions:
-  contents: write
+  contents: read
 
 # Due corse insieme scriverebbero lo stesso ramo, e la seconda si troverebbe
 # la prima davanti. Si aspetta: un conto che arriva un minuto dopo va bene.
@@ -50,9 +54,16 @@ jobs:
   conta:
     name: I conti di oggi
     runs-on: ubuntu-latest
+    # Per spingere il ramo `contatori`, e solo per quello.
+    permissions:
+      contents: write
     steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-node@v4
+      # Il ramo dei conti si spinge con un indirizzo suo, piu' sotto: il
+      # checkout non ha bisogno di tenersi le credenziali.
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
           node-version: "22"
 
@@ -72,9 +83,8 @@ jobs:
       - name: Conta
         id: conta
         env:
-          # Il primo che c'e'. Uno solo dei due basta, e nessuno dei due deve
-          # poter scrivere niente.
-          GETTONE: ${{ secrets.GETTONE_CONTI || secrets.GETTONE_SEGNALAZIONI }}
+          # Solo il suo: in sola lettura, e per il traffico e basta.
+          GETTONE: ${{ secrets.GETTONE_CONTI }}
         run: |
           if [ -z "$GETTONE" ]; then
             {
@@ -82,8 +92,7 @@ jobs:
               echo ""
               echo "Per leggere il traffico serve un gettone con il permesso"
               echo '**Administration: Read-only** su questa repository, come segreto'
-              echo '`GETTONE_CONTI` — oppure lo stesso permesso aggiunto a'
-              echo '`GETTONE_SEGNALAZIONI`, che c'"'"'e'"'"' gia'"'"'.'
+              echo '`GETTONE_CONTI`.'
             } >> "$GITHUB_STEP_SUMMARY"
             echo "::error::manca il gettone per leggere il traffico"
             exit 1

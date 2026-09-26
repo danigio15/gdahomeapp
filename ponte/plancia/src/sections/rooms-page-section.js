@@ -32,6 +32,8 @@ import {
 } from "../core/comandi-accanto.js";
 import { CHIAVE_ENTITA_MIE, entitaMie } from "../core/entita-mie.js";
 import { roomGlyph } from "../core/personalization-catalog.js";
+import { normalizePeople } from "../core/person-model.js";
+import { CHIAVE_RISERVATE, telecamereVisibili } from "../core/telecamere-riservate.js";
 import {
   ROOM_ASSIGN_KEY,
   ROOM_BLOCKS,
@@ -69,6 +71,7 @@ import {
   clean,
   doc,
   esc,
+  iconGlyphHtml,
   installStyle,
   paginaVisibile,
   quandoSiCambiaPagina,
@@ -121,7 +124,16 @@ export function roomSources() {
     /* I lettori (#405): la loro scheda la stanza la chiede gia', e qui si
      * legge dall'altro lato — com'e' per le luci e per le telecamere. */
     media: lettoriConfigurati(readJson(CHIAVE_MEDIA, null)),
-    cameras: lista("cameras", "cd_cameras"),
+    /* Le telecamere che si possono vedere adesso, non tutte quelle
+     * configurate: una riservata — «si vede solo se a casa non c'e' nessuno»
+     * (#81) — dentro una stanza sarebbe la stessa immagine dello stesso
+     * salotto, entrata da un'altra porta. Nascondersi in un posto solo non e'
+     * nascondersi. */
+    cameras: telecamereVisibili(lista("cameras", "cd_cameras"), {
+      config: readJson(CHIAVE_RISERVATE, {}),
+      persone: normalizePeople(readJson("cd_people", [])),
+      states: allStates(),
+    }),
     loads: lista("loads", "cd_loads"),
     robots: lista("robots", "cd_robot"),
     irrigation: section("irrigation", null) || readJson("cd_irrigazione", {}),
@@ -138,26 +150,38 @@ export function roomPages() {
  * La mappa e' `entita' -> stanza` e la scrive l'assegnatore in configurazione.
  * Qui si trasforma in voci con un nome leggibile: quello di Home Assistant se
  * c'e', altrimenti l'entity_id — brutto da leggere ma mai una bugia. */
-export function assignedItems(mappa = readJson(ROOM_ASSIGN_KEY, {}), states = allStates()) {
-  const voci = new Map();
-  const metti = (entity, stanza, nome, icona) => {
+export const CHIAVE_AZIONI_RAPIDE = "cd_quick_actions";
+
+export function assignedItems(
+  mappa = readJson(ROOM_ASSIGN_KEY, {}),
+  states = allStates(),
+  azioni = readJson(CHIAVE_AZIONI_RAPIDE, []),
+) {
+  /* Due rubinetti, e ognuno sa una cosa diversa.
+   *
+   * L'assegnazione a mano e' una mappa entita' → stanza: sa DOVE, e del nome
+   * non sa niente. «Le tue entita'» sa dove, come si chiama e con che segno.
+   * Prima vinceva la prima arrivata, tutta intera — e siccome la mappa a mano
+   * si legge per prima, un'entita' scritta in tutt'e due perdeva il nome che
+   * le era stato dato, e nella stanza tornava a chiamarsi come la chiama Home
+   * Assistant. Dal campo: «il campo che uso come nome facoltativo potrebbe
+   * anche andare scritto sull'entita' che trovi nella stanza? perche' ora quel
+   * nome va solo sulla lista delle mie entita'». Una casa con un `select`
+   * tedesco in salotto vedeva scritto «Modus».
+   *
+   * Adesso si decide campo per campo: la STANZA la dice la piu' esplicita
+   * delle due — quella scritta a mano, com'era — e il NOME e il SEGNO li dice
+   * l'unica delle due che ce li ha. Non si contendono niente, perche' non
+   * parlano della stessa cosa. */
+  const stanze = new Map();
+  const vestito = new Map();
+  const dove = (entity, stanza) => {
     const id = clean(entity);
     const room_id = clean(stanza);
-    if (!id || !room_id || voci.has(id)) return;
-    voci.set(id, {
-      entity: id,
-      name: clean(nome) || clean(states?.[id]?.attributes?.friendly_name) || id,
-      /* L'icona si scrive dove la riga la cerca gia': `emojiScelta` guarda
-       * `icon`, e accetta solo quello che un glifo lo e' davvero. */
-      icon: clean(icona),
-      /* La classe che Home Assistant scrive sull'entita': e' quello che la
-       * riga sa dire di se' quando nessuna scheda la descrive. */
-      device_class: clean(states?.[id]?.attributes?.device_class),
-      room_id,
-    });
+    if (id && room_id && !stanze.has(id)) stanze.set(id, room_id);
   };
   if (mappa && typeof mappa === "object")
-    for (const [entity, room] of Object.entries(mappa)) metti(entity, room);
+    for (const [entity, room] of Object.entries(mappa)) dove(entity, room);
   /* Le entita' che uno si aggiunge a mano (#504).
    *
    * «Si potrebbero inserire le entità personalizzate nelle stanze tipo
@@ -172,9 +196,47 @@ export function assignedItems(mappa = readJson(ROOM_ASSIGN_KEY, {}), states = al
    * comanda quella scritta dalla tendina della sua riga — e' la piu' esplicita
    * delle due, e comunque una riga sola non diventa due. */
   for (const voce of entitaMie(readJson(CHIAVE_ENTITA_MIE, []))) {
-    metti(voce.entity, voce.room_id, voce.nome, voce.icona);
+    const id = clean(voce.entity);
+    if (!id) continue;
+    dove(id, voce.room_id);
+    if (!vestito.has(id))
+      vestito.set(id, { nome: clean(voce.nome), icona: clean(voce.icona) });
   }
-  return [...voci.values()];
+  /* E le Azioni rapide: il terzo rubinetto, quello che mancava.
+   *
+   * Un'azione rapida ha un nome che l'ha scritto chi l'ha fatta — «Scena
+   * serata», «Tapparelle giu'» — e comanda un'entita'. Se quella stessa
+   * entita' e' assegnata anche a una stanza, nella stanza usciva col nome di
+   * Home Assistant: dal campo, «Modus», che e' come si chiama in tedesco il
+   * `select` di un termostato. «Leggo ancora modus: sono azioni rapide,
+   * scene, queste — non modus.»
+   *
+   * La prima volta si era guardato solo «Le tue entita'», e li' quel nome non
+   * c'era: chi un'azione rapida ce l'ha non ha nessun motivo di riscrivere la
+   * stessa entita' anche in un'altra scheda per darle lo stesso nome.
+   *
+   * Viene dopo «Le tue entita'», che di mestiere fa proprio dare un nome a
+   * un'entita'; l'azione rapida il nome ce l'ha per fare un tasto, e vale dove
+   * l'altro non c'e'. E non mette niente in nessuna stanza — una stanza
+   * un'azione rapida non ce l'ha — percio' qui si tocca solo il vestito. */
+  if (Array.isArray(azioni))
+    for (const azione of azioni) {
+      const id = clean(azione?.entity);
+      if (!id || vestito.has(id)) continue;
+      vestito.set(id, { nome: clean(azione?.name), icona: clean(azione?.icon) });
+    }
+  return [...stanze].map(([id, room_id]) => ({
+    entity: id,
+    name:
+      clean(vestito.get(id)?.nome) || clean(states?.[id]?.attributes?.friendly_name) || id,
+    /* L'icona si scrive dove la riga la cerca gia': `emojiScelta` guarda
+     * `icon`, e accetta solo quello che un glifo lo e' davvero. */
+    icon: clean(vestito.get(id)?.icona),
+    /* La classe che Home Assistant scrive sull'entita': e' quello che la
+     * riga sa dire di se' quando nessuna scheda la descrive. */
+    device_class: clean(states?.[id]?.attributes?.device_class),
+    room_id,
+  }));
 }
 
 /* Come si chiama ogni blocco, e con che faccia. Le parole stanno qui e non nel
@@ -227,9 +289,20 @@ const ICONE_CLIMA = Object.freeze({ termo: "🔥", pompa: "♨️", clima: "❄�
  * accetta solo quello che un glifo lo e' davvero: qualcosa fuori dall'ASCII. */
 const UN_GLIFO = /[^\u0000-\u007f]/;
 
-const emojiScelta = (item) => {
+export const segnoScelto = (item) => {
   const scritta = clean(item?.emoji_icon) || clean(item?.icon);
-  return UN_GLIFO.test(scritta) ? scritta : "";
+  if (UN_GLIFO.test(scritta)) return scritta;
+  /* E un token del catalogo, che il motore delle icone sa disegnare.
+   *
+   * Prima qui passava solo il glifo, e un `mdi:` veniva buttato: l'icona che
+   * uno aveva scelto per la sua azione rapida non arrivava mai nella stanza,
+   * e la riga si prendeva il segno dedotto dal dominio — su un `select`, la
+   * lavagnetta. Dal campo, con la foto: «deve uscire icona dell'azione
+   * rapida». Il token si sa disegnare da quando c'e' `iconGlyphHtml`; quello
+   * che non si sa ancora scrivere e' la terza forma, la CHIAVE di un disegno
+   * del catalogo («washer»), che stampata com'e' sarebbe la parola «washer»
+   * sopra il nome. Quella continua a non passare di qui. */
+  return /^mdi:/i.test(scritta) ? scritta : "";
 };
 
 /* Che faccia ha una cosa assegnata a mano (#426).
@@ -320,7 +393,7 @@ export function glifoDellaVoce(item) {
 }
 
 export function iconaVoce(item, blocco) {
-  const propria = emojiScelta(item);
+  const propria = segnoScelto(item);
   if (propria) return propria;
   if (blocco.key === "clima") return ICONE_CLIMA[canonicalClimateType(item?.type)] || "❄️";
   if (blocco.key === "elettrodomestici")
@@ -333,6 +406,18 @@ export function iconaVoce(item, blocco) {
     );
   if (blocco.key === "altro") return glifoDellaVoce(item) || iconaBlocco(blocco);
   return iconaBlocco(blocco);
+}
+
+/* Il segno di una riga, gia' pronto da mettere nel markup.
+ *
+ * `iconaVoce` torna una parola: un glifo — che si scrive com'e' — oppure un
+ * token `mdi:`, che si disegna. Stampare un token vorrebbe dire la scritta
+ * «mdi:tune» sopra il nome, ed e' lo sbaglio contro cui `iconGlyphHtml`
+ * esiste. Lei la differenza la sa, e scappa con `esc` quello che non e' un
+ * token: da qui esce markup, e un simbolo scelto a mano puo' contenere di
+ * tutto. */
+function segnoDaDisegnare(item, blocco) {
+  return iconGlyphHtml(iconaVoce(item, blocco), { size: 22, fallback: iconaBlocco(blocco) });
 }
 
 /* Il nome di una voce, comunque sia stata configurata: quello scelto, quello
@@ -577,7 +662,7 @@ export function sceneMarkup(pagina, states) {
  * nella configurazione stanno sulla riga della stanza stessa. Per questo la
  * card sta qui e non fra le voci: quelle sono cose dentro la stanza, questa e'
  * la stanza. */
-function readingMarkup(pagina, states) {
+export function readingMarkup(pagina, states) {
   /* Una stanza puo' avere piu' di una coppia di sensori.
    *
    * La scheda Temperature lo permette da tempo — «la stessa stanza puo' essere
@@ -600,8 +685,17 @@ function readingMarkup(pagina, states) {
   return associazioni
     .map((voce) => {
       /* Col nome suo se ce l'ha: con tre righe uguali non si saprebbe quale
-       * sonda sta dicendo cosa. */
-      const titolo = clean(voce.name) || clean(pagina.name);
+       * sonda sta dicendo cosa.
+       *
+       * Ma con UNA sonda sola non c'e' niente da distinguere, e quel nome non
+       * e' scelto: lo riempie Home Assistant col nome del dispositivo, che e'
+       * quello che gli ha dato chi l'ha abbinato — e nel Salone di questa casa
+       * si legge «Salown». La card parla della stanza; quando la stanza ha una
+       * sonda sola, porta il nome della stanza, che quello lo ha scritto chi
+       * usa la plancia. Da due in su tornano i nomi delle sonde, perche' li'
+       * servono davvero. */
+      const titolo =
+        associazioni.length > 1 ? clean(voce.name) || clean(pagina.name) : clean(pagina.name) || clean(voce.name);
       return `<article class="dm-stanze-card dm-stanze-clima">
     <div class="dm-stanze-card-row">
       <span class="dm-stanze-orb">🌡️</span>
@@ -719,7 +813,7 @@ function rowMarkup(item, blocco, states, aperture = aperturePerEntita(), sotto =
     const parola = parolaDelGesto(azioniDellaPorta(porta, states?.[porta.entity])[0]?.gesto);
     return `<article class="dm-stanze-card dm-stanze-voce dm-stanze-apertura" data-dm-door="${esc(porta.id)}" role="button" tabindex="0">
     <div class="dm-stanze-card-row">
-      <span class="dm-stanze-orb">${esc(iconaVoce(item, blocco))}</span>
+      <span class="dm-stanze-orb">${segnoDaDisegnare(item, blocco)}</span>
       <span class="dm-stanze-title"><b>${esc(clean(porta.name) || nomeVoce(item, states))}</b><s>${esc(
         porta.pin ? `${parola} — ${t("chiede il PIN", "asks for the PIN")}` : parola,
       )}</s></span>
@@ -740,7 +834,15 @@ function rowMarkup(item, blocco, states, aperture = aperturePerEntita(), sotto =
         ? /* Tre puntini in colonna: e' il segno di «c'e' un elenco», e non la
            * stella di «questo parte adesso». Due gesti diversi non possono
            * portare lo stesso disegno. */
-          `<button type="button" class="dm-stanze-avvia dm-stanze-scegli" data-dm-stanza-scegli="${esc(entity)}" aria-label="${esc(
+          /* Il tasto si porta dietro nome e segno della riga: il popup e' lo
+           * stesso delle Azioni rapide, e quando lo apre il tasto della Home
+           * gli arriva l'azione — nome scelto, icona scelta. Da qui non gli
+           * arrivava niente, e la finestra ripiegava sul nome di Home
+           * Assistant e sulla sua faccia di serie: dal campo, una finestra
+           * intitolata «MODUS» aperta da una riga che si chiama «prova».
+           * Sono due parole gia' calcolate qui sopra: costano zero, e senza
+           * di loro il popup non ha nessun modo di sapere chi lo ha aperto. */
+          `<button type="button" class="dm-stanze-avvia dm-stanze-scegli" data-dm-stanza-scegli="${esc(entity)}" data-dm-stanza-nome="${esc(nomeVoce(item, states))}" data-dm-stanza-segno="${esc(segnoScelto(item))}" aria-label="${esc(
             t("Scegli", "Choose"),
           )} ${esc(nomeVoce(item, states))}"><span aria-hidden="true">⋮</span></button>`
         : blocco.tab
@@ -755,7 +857,7 @@ function rowMarkup(item, blocco, states, aperture = aperturePerEntita(), sotto =
     : "";
   return `<article class="dm-stanze-card dm-stanze-voce" data-dm-stanza-entita="${esc(entity)}"${dove}>
     <div class="dm-stanze-card-row">
-      <span class="dm-stanze-orb">${esc(iconaVoce(item, blocco))}</span>
+      <span class="dm-stanze-orb">${segnoDaDisegnare(item, blocco)}</span>
       <span class="dm-stanze-title"><b>${esc(nomeVoce(item, states))}</b><s data-dm-stanza-stato="${esc(entity)}" data-dm-stanza-blocco="${esc(blocco.key)}">${esc(statoVoce(item, states, blocco.key))}</s></span>
       ${tocco}
     </div>
@@ -1606,7 +1708,14 @@ function handleClick(event) {
     const entity = clean(scegli.getAttribute("data-dm-stanza-scegli"));
     if (!entity || !siComanda(entity)) return;
     root.navigator?.vibrate?.(8);
-    apriIlMenu(entity);
+    /* Il popup vuole un'azione, e da qui gliene si da' una fatta di due
+     * campi: come si chiama questa riga e che segno porta. Sono gli stessi
+     * due che il tasto della Home gli passa, ed e' l'unico modo che ha la
+     * finestra di intitolarsi come la cosa che uno ha toccato. */
+    apriIlMenu(entity, {
+      name: clean(scegli.getAttribute("data-dm-stanza-nome")),
+      icon: clean(scegli.getAttribute("data-dm-stanza-segno")),
+    });
     return;
   }
   /* Un tocco su un comando non e' un tocco sulla card (#467): i tasti del

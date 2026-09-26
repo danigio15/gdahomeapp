@@ -22,6 +22,8 @@ e il silenzio quando la rete non c'e'.
 from __future__ import annotations
 
 import asyncio
+import hashlib
+import hmac
 import io
 import json
 import re
@@ -56,6 +58,8 @@ def _carica_funzioni() -> tuple[
     fine = sorgente.index("class DashboardModernReleaseCoordinator")
     spazio: dict = {
         "Any": object,
+        "hashlib": hashlib,
+        "hmac": hmac,
         "io": io,
         "json": json,
         "shutil": shutil,
@@ -74,6 +78,11 @@ def _carica_funzioni() -> tuple[
 
 
 normalize_version, newer, installa_da_zip, annuncia_a_hacs = _carica_funzioni()
+
+
+def _impronta(dati: bytes) -> str:
+    """La riga che `sha256sum` scriverebbe accanto allo zip."""
+    return f"{hashlib.sha256(dati).hexdigest()}  dashboardmodern.zip\n"
 
 
 def _zip_di_release(versione: str, **file_extra: str) -> bytes:
@@ -211,7 +220,7 @@ def test_lo_zip_buono_prende_il_posto_del_vecchio(tmp_path: Path) -> None:
     """A scambio riuscito restano i file nuovi, e nessuna cartella d'appoggio."""
     cartella = _cartella_installata(tmp_path)
     dati = _zip_di_release("1.3.9", **{"frontend/nuovo.js": "// nuovo\n"})
-    installa_da_zip(cartella, dati, "v1.3.9")
+    installa_da_zip(cartella, dati, "v1.3.9", impronta=_impronta(dati))
     manifesto = json.loads((cartella / "manifest.json").read_text())
     assert manifesto["version"] == "1.3.9"
     assert (cartella / "frontend/nuovo.js").exists()
@@ -232,7 +241,9 @@ def test_lo_zip_che_scavalca_la_cartella_non_tocca_niente(tmp_path: Path) -> Non
             )
             archivio.writestr(nome, "# non deve uscire\n")
         try:
-            installa_da_zip(cartella, dati.getvalue(), "1.3.9")
+            installa_da_zip(
+                cartella, dati.getvalue(), "1.3.9", impronta=_impronta(dati.getvalue())
+            )
         except ValueError:
             pass
         else:  # pragma: no cover - il fallimento atteso e' l'eccezione
@@ -254,7 +265,9 @@ def test_lo_zip_sbagliato_viene_rifiutato_prima_di_muovere(tmp_path: Path) -> No
     sbagliati.append(dati.getvalue())
     for zip_sbagliato in sbagliati:
         try:
-            installa_da_zip(cartella, zip_sbagliato, "1.3.9")
+            installa_da_zip(
+                cartella, zip_sbagliato, "1.3.9", impronta=_impronta(zip_sbagliato)
+            )
         except (ValueError, zipfile.BadZipFile):
             pass
         else:  # pragma: no cover - il fallimento atteso e' l'eccezione
@@ -458,10 +471,65 @@ def test_un_estrazione_fallita_non_lascia_una_seconda_integrazione(
 
     monkeypatch.setattr(zipfile.ZipFile, "extractall", esplode)
     try:
-        installa_da_zip(cartella, dati, "1.3.9")
+        installa_da_zip(cartella, dati, "1.3.9", impronta=_impronta(dati))
     except OSError:
         pass
     else:  # pragma: no cover - il fallimento atteso e' l'eccezione
         raise AssertionError("l'estrazione doveva fallire")
     assert sorted(p.name for p in cartella.parent.iterdir()) == ["dashboardmodern"]
     assert (cartella / "vecchio.py").exists()
+
+
+# ─── Da dove arriva lo zip, e quale zip ──────────────────────────────────────
+#
+# Le release uscivano da una repository che non esiste piu'. Un controllo che
+# chiede «l'ultima release» a un indirizzo che nessuno tiene crede a chiunque un
+# giorno risponda da li', e il tasto «Installa» avrebbe scritto il suo codice
+# dentro Home Assistant.
+
+
+def test_senza_una_fonte_vera_l_entita_non_nasce() -> None:
+    """Nessuna repository pubblica le release: non si chiede niente a nessuno."""
+    const = (COMPONENT / "const.py").read_text(encoding="utf-8")
+    assert re.search(r'^RELEASE_REPOSITORY = ""$', const, re.M)
+    assert "dashboardmodern-v2/releases" not in const
+    sorgente = UPDATE.read_text(encoding="utf-8")
+    avvio = sorgente[sorgente.index("async def async_setup_entry") :]
+    assert avvio.index("if not RELEASES_URL:") < avvio.index("async_add_entities(")
+    # Le release non si cercano piu' nella repository delle segnalazioni.
+    assert "RELEASES_URL, headers=headers" in sorgente
+    assert "REPOSITORY, destinazione" not in sorgente.replace(
+        "RELEASE_REPOSITORY, destinazione", ""
+    )
+
+
+def test_lo_zip_che_non_torna_con_l_impronta_non_si_apre(tmp_path: Path) -> None:
+    """Un byte diverso da quello pubblicato e non si muove niente."""
+    cartella = _cartella_installata(tmp_path)
+    dati = _zip_di_release("1.3.9")
+    altro = _zip_di_release("1.3.9", **{"extra.py": "# non pubblicato\n"})
+    for impronta in (_impronta(altro), "", "non-e-un-impronta", "0" * 63):
+        with pytest.raises(ValueError):
+            installa_da_zip(cartella, dati, "1.3.9", impronta=impronta)
+    assert (cartella / "vecchio.py").exists()
+    assert json.loads((cartella / "manifest.json").read_text())["version"] == "1.3.8"
+
+
+def test_indietro_non_si_torna_nemmeno_con_uno_zip_autentico(tmp_path: Path) -> None:
+    """Stessa versione o piu' vecchia: rifiutata, anche con l'impronta giusta."""
+    cartella = _cartella_installata(tmp_path)
+    for versione in ("1.3.8", "1.3.7", "1.2.0"):
+        dati = _zip_di_release(versione)
+        with pytest.raises(ValueError):
+            installa_da_zip(cartella, dati, versione, impronta=_impronta(dati))
+    assert (cartella / "vecchio.py").exists()
+    assert json.loads((cartella / "manifest.json").read_text())["version"] == "1.3.8"
+
+
+def test_l_impronta_si_cerca_nella_stessa_release() -> None:
+    """Lo zip e la sua impronta vengono dalla stessa risposta di GitHub."""
+    sorgente = UPDATE.read_text(encoding="utf-8")
+    assert "RELEASE_ASSET_SHA256" in sorgente
+    assert '"sha256_url": sha256_url' in sorgente
+    assert "if not asset_url or not sha256_url:" in sorgente
+    assert "impronta=impronta" in sorgente

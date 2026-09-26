@@ -11,6 +11,1083 @@ fuori. La plancia dentro continua a dire la sua, e si legge dov'è sempre
 stata: nella pastiglia «La plancia» della console. Sono due numeri perché
 sono due cose.
 
+## 1.6.9
+
+**In macchina parte il navigatore.** gdanav — il navigatore che finora era
+un'app a parte — adesso è dentro gdahome, come voce «gdanav» del menu, e in
+Android Auto è quello che si apre salendo in macchina: la mappa davanti, e la
+casa dietro un tasto. È l'app di sempre, con lo stesso nome e la stessa firma:
+non c'è niente da installare in più e niente da abbinare. Sul telefono la
+sezione si accende la prima volta che la si apre e poi resta accesa — si torna
+alla plancia e la guida continua. Nella webapp non c'è: è roba da telefono.
+
+**L'auto della plancia arriva al navigatore da sola.** Nessun codice, nessun
+QR: la casa è già collegata, e il navigatore legge dalla sezione Auto l'auto
+attiva — nome, marca, modello, capacità — e i suoi sensori: batteria,
+autonomia, ricarica, potenza, posizione, contachilometri, temperatura. In
+tempo reale, con le unità già convertite. Se cambi auto nella plancia, il
+navigatore se ne accorge in quel momento. Le termiche restano fuori, perché di
+autonomia elettrica non ne hanno.
+
+**I comandi rapidi in auto: scelti sul telefono, premuti sulla mappa.** Dal
+menu di gdanav si compone la griglia — fino a dodici, i primi sei su ogni
+auto, gli altri dove lo schermo è più grande. Dentro ci vanno le azioni rapide
+della plancia, tutte, e le cose di casa che si premono: scene, script,
+cancelli e tapparelle, serrature, luci, prese, pulsanti. Ce ne puoi anche
+creare di tuoi — dispositivo, cosa fa, il nome sul tasto — e chiedere la
+conferma dove serve. Una serratura la conferma sempre. In macchina il tasto
+con la casa, sulla mappa, apre la griglia.
+
+**«Quasi a casa».** Avvicinandosi a casa, l'auto propone un comando — il
+cancello, il garage, quello che hai scelto tu — con «Fallo» o «Non ora». La
+distanza la decidi: da 100 metri a 2 chilometri, mezzo chilometro se non
+scegli. Lo propone solo se prima eri lontano davvero, così non lo ripete
+girando intorno all'isolato.
+
+**Il menu laterale ridisegnato.** In testa la casa, e sotto la tessera di
+gdanav, viva: batteria, nome e autonomia dell'auto, e i due tasti «A casa» e
+«Al lavoro» che accendono il navigatore e calcolano il viaggio. Le altre voci
+in tre gruppi — Casa, Avanzate, Aiuto — e l'aiuto in fondo, dove si cerca.
+Con più di una plancia nella casa, la tessera della plancia dice quale stai
+guardando e apre la tendina per cambiarla.
+
+**Le fasce del dispositivo dicono quali kilowattora prezzano.** Nel dettaglio
+di un dispositivo, la riga di una fascia metteva accanto i kilowattora
+*totali* e gli euro *della sola rete*: due basi diverse sulla stessa riga, e i
+conti non tornavano — 21 euro sopra e 12 sotto, sugli stessi consumi. Il sole
+non si paga, ed è giusto che gli euro siano quelli della rete: adesso la riga
+lo scrive, «di cui dalla rete», e la nota sotto porta tutti e tre i numeri.
+
+**La mappa dei flussi dice quando i suoi numeri non possono essere veri.**
+«Vedo tutto ma il flusso verso casa non va»: il disegno era fedele — la
+batteria diceva di caricarsi, e con quell'ingresso le linee giuste erano
+quelle — solo che entravano 24 watt e ne uscivano 1346. Una cosa che non
+esiste, e la plancia la disegnava con sicurezza. Adesso quando quello che esce
+non può venire da quello che entra lo dice, e segna la casella sospetta: nove
+volte su dieci è il segno della batteria o della rete, girato. Parla solo
+davanti a un caso impossibile — più del doppio, almeno trecento watt di
+scarto, due letture di fila e tutti e quattro i sensori dichiarati — perché un
+falso allarme qui manda a cercare un guasto che non c'è.
+
+**Un varco si esclude dall'antifurto, senza uscire dalla plancia.** Chi ha una
+centrale lo fa di continuo: la finestra del bagno resta aperta di notte, e
+prima di inserire l'antifurto quella zona la si esclude. Le centrali
+pubblicano accanto a ogni contatto l'interruttore che serve — Risco lo chiama
+`bypass` — e adesso lo si scrive nella riga del varco, in configurazione, con
+la proposta già pronta. Da lì in poi sulla carta c'è lo scudo, e il conto in
+cima dice quante sono escluse, accanto a quante sono aperte: chi sta per
+inserire l'antifurto lo deve sapere prima, non scoprirlo dopo. Una finestra
+esclusa resta contata fra le aperte, perché aperta è: l'esclusione parla alla
+centrale, non all'infisso.
+
+## 1.6.8
+
+**L'avviso «Statistiche a lungo termine mancanti» non parla più alla prima
+lettura.** Era la frase che manda a controllare i sensori, e la si scriveva
+appena una casella tornava vuota — ma vuota non vuol dire sconfigurata: vuol
+dire che il Recorder non ha risposto *adesso*, cosa che succede proprio quando
+l'add-on è appena ripartito e il database è ancora freddo. Cioè nel momento in
+cui uno apre la plancia dopo un aggiornamento. Un attimo dopo la stessa domanda
+si riempie, l'avviso sparisce da solo, e chi l'ha letto è già andato a cercare
+un guasto che non c'era. Adesso parla solo di quello che manca due letture di
+fila.
+
+**Il sensore della pioggia si trova, cercandolo.** Le due caselle — intensità
+e millimetri caduti oggi — ci sono da sempre in Home → «Barra sotto il meteo»,
+e sono le stesse che guarda l'Irrigazione. Ma la ricerca nella configurazione
+cammina sui valori già salvati, e una casella mai riempita un valore non ce
+l'ha: chi cercava «pioggia» leggeva «Nessuna configurazione contiene questa
+parola», che si legge in un modo solo. Adesso la ricerca porta dritto alle
+caselle anche da vuote, sotto «Dove si configura» — e con loro tutte e cinque
+quelle della barra, compresa la cassetta della posta.
+
+**La TV si accende dal tasto che dice «Accendi».** Una TV si mette fra i
+lettori, e accenderla si poteva già — ma il tasto mostrava il triangolo di
+«Riproduci», che su un televisore spento non si legge come «accendi». Peggio:
+un televisore che la pausa non ce l'ha — quasi tutti, perché non riproduce
+niente di suo — da acceso rispondeva a quel triangolo con un servizio che Home
+Assistant accetta e non esegue. Adesso il tasto in mezzo dice quello che fa:
+«Accendi» se è spenta, la pausa solo a chi la pausa ce l'ha, e niente dove non
+c'è niente da premere. Anche l'azione rapida su una TV accesa adesso la spegne
+invece di non fare nulla.
+
+**Il contatore totale tolto resta tolto.** Nella scheda di un elettrodomestico,
+svuotare la casella del contatore totale e salvare: riaprendo, il valore era
+tornato. Non era il salvataggio — era la riapertura, che se la casella la
+trovava vuota se la ricompilava da sola pescando fra le altre entità. Adesso
+una scelta fatta resta fatta, anche quando la scelta è «nessuna».
+
+**Nel cruscotto, «telefoni collegati» non erano telefoni.** Diceva 22 dove i
+telefoni con l'app erano molti meno: contava i *collegamenti* aperti verso il
+centralino, che sono un'altra cosa. Adesso sono due numeri, e dicono quello che
+sono: **collegamenti aperti** e **app aperte**.
+
+## 1.6.7
+
+**Stesse cose della 1.6.6, con un numero nuovo.** La 1.6.6 era stata caricata
+sulla pista chiusa e li' si e' fermata: il negozio la tiene come «non ancora
+mandata in revisione», e il suo numero — una volta usato — non si puo' riusare
+su un'altra pista. Questa e' la stessa identica versione col numero avanti di
+uno, per poterla portare sulla pista interna, che non aspetta la revisione.
+
+Dentro non cambia niente rispetto alla 1.6.6: in macchina si vedono i
+dispositivi e si premono, il sole e le persone stanno dietro il tasto «Casa»,
+e dentro casa plancia, ponte e cruscotto sono quelli di prima.
+
+## 1.6.6
+
+**In macchina si vedono i dispositivi, e si premono.** Fino a ieri gdahome in
+auto apriva tre numeri del fotovoltaico e due tasti per altre due schermate:
+informazioni sulla casa, non roba da premere. Adesso la prima cosa che si vede
+è la griglia dei dispositivi — sei, col nome, com'è messo ognuno e un tocco per
+girarlo. Davanti le porte e i varchi, che sono quello che si preme arrivando;
+dietro le luci e le prese rimaste accese, che sono la domanda opposta: sono
+partito e ho lasciato acceso?
+
+Quali sei li sceglie la plancia, e non si sceglie niente di nuovo: le porte
+sono quelle di Sicurezza, i varchi quelli dei Varchi, luci e prese quelle delle
+loro tessere. Anche le parole («Aperto», «Accesa») arrivano fatte da lì — due
+parole diverse per lo stesso stato, una in macchina e una sul divano, sarebbero
+due stati per chi le legge.
+
+**Il sole e chi c'è in casa non spariscono:** stanno dietro il tasto «Casa», in
+alto, e sono diventati una schermata sola invece di due. In macchina i tocchi
+si contano.
+
+Fuori dalla griglia restano la serratura e il lettore, apposta: il comando
+giusto dipende da com'è messa l'entità **adesso**, e una ricetta scritta
+mezz'ora fa chiuderebbe una porta che intanto qualcuno ha aperto.
+
+**Perché tutto questo.** La categoria con cui l'app si presenta all'auto è
+`IOT`, e le due cose che Google mette davanti a tutte per un'app così sono
+vedere com'è messo un dispositivo e accenderlo o spegnerlo con un tocco. Non
+ce n'era nessuna delle due, ed è il motivo per cui dalla 1.6.4 in poi — la
+prima con l'auto dentro — le revisioni del negozio non passavano più.
+
+Dentro casa non cambia niente: la plancia, il ponte e il cruscotto sono quelli
+della 1.6.5.
+
+## 1.6.5
+
+**Un numero solo.** Da qui in avanti l'add-on in casa e l'app sul telefono
+dicono la stessa cosa: fino a ieri la casa leggeva 1.6.4.4 e il negozio 1.6.4.2,
+e due numeri per la stessa versione sono due versioni per chi li guarda.
+
+**Gli aiutanti non sono dispositivi non connessi.** «68 dispositivi non
+connessi», e non erano dispositivi: erano automazioni, contatori, scene,
+script, timer e le caselle `input_*`, che un dispositivo da andare a premere
+non ce l'hanno. La regola c'era già ma valeva solo dove Home Assistant manda le
+mappe dei registri; dove non le manda — o per un'entità che a nessun
+dispositivo appartiene — rientravano tutti. Adesso è scritta una volta sola e
+vale nella tessera, nella sezione e nel cruscotto dell'installatore.
+
+**L'Agenda su iPhone si riempie appena riapri.** «Ogni volta che apro HA il
+widget agenda non carica gli eventi; devo cliccare sul widget e fare apri
+selezione, e appena richiudo mi fa lo stesso difetto.» Non era il calendario.
+Quando l'app va in secondo piano, iOS sospende la pagina e la richiesta che era
+per aria muore senza rispondere e senza rompere: la scheda restava «in attesa»
+di una risposta che non sarebbe mai arrivata, e da lì in poi nessun disegno
+chiedeva più niente. Adesso una richiesta persa scade da sé dopo mezzo minuto, e
+al rientro in primo piano si libera subito — l'agenda è già lì. Vale anche per
+le liste ToDo, che avevano lo stesso identico difetto.
+
+**La porta del frigo cambia e la card se ne accorge.** «Lo stato della marcia
+funziona e cambia, quello delle porte no.» La lettura della porta era giusta —
+riaprendo la pagina la pastiglia c'era — ma la scheda non si rifaceva mai.
+Quali entità facciano ridisegnare le card degli elettrodomestici era scritto in
+un elenco a parte, e quell'elenco aveva dentro l'interruttore, lo stato, la
+potenza e i contatori dell'energia: non la porta, non le temperature, non il
+tempo che manca, non l'anomalia, e nemmeno le letture, i comandi e le voci
+scelte in «Cosa accende la card». Adesso è uno solo e sta accanto alle caselle
+che lo compongono.
+
+**Aggiornamenti pendenti, e si vedono in cima.** La tessera compare solo quando
+c'è qualcosa da fare, ma si chiamava col nome di una sezione: adesso dice
+«Aggiornamenti pendenti», e la stessa notizia ha la sua pastiglia nella barra
+sotto il meteo — in fondo alle notizie, perché un aggiornamento si fa con
+calma. Toccandola si vede cosa aspetta. Si spegne dalla sua spunta in
+«Barra sotto il meteo», come tutte le altre.
+
+## 1.6.4.4
+
+**I due euro della scheda del dispositivo adesso si parlano.** In alto il costo
+del mese, sotto il conto delle fasce, e non si trovavano: sulla wallbox 34,69 €
+contro 12,58 €. Nessuno dei due era un errore di somma — erano due conti
+diversi detti con la stessa parola. In alto tutto il consumo al **prezzo medio**
+delle fasce, pesato sulle ore della settimana; sotto solo i kilowattora presi
+davvero dalla rete, ai prezzi delle fasce vere, **ora per ora**. Su una
+macchina che carica di notte la stima sbagliava del sessanta per cento.
+
+Adesso, quando le ore si conoscono — è il blocco delle fasce che le chiede — la
+scheda usa quelle: quanto è costato alla rete e quanto ha risparmiato il sole,
+ciascuno al prezzo dell'ora in cui è successo. Il totale in cima è la somma
+delle due tessere sotto, non un terzo conto. Chi le fasce non le ha continua a
+leggere la stima di prima, che resta l'unica cosa vera che si possa dire senza
+sapere le ore.
+
+## 1.6.4.3
+
+**L'auto mappata che la pagina non mostrava.** In configurazione la vettura
+c'era — «attiva, 13 entità mappate» — e la pagina dell'auto era vuota:
+batteria a zero, autonomia e odometro a «—». Si vedevano solo tensione e
+temperatura della colonnina, ed è quello che ha spiegato il resto. La pagina
+non legge i profili: legge una mappa sola, e ogni vettura ne tiene la sua
+copia. Le due si allineavano soltanto salvando un veicolo o premendo «Usa»;
+riaprendo la plancia nessuno riapplicava niente, e lì restavano le caselle
+della colonnina — che sono di casa e nessuno cancella. Adesso l'auto in uso
+torna al suo posto anche all'avvio, e con una vettura sola quello che avevi
+mappato altrove viene adottato invece che perso.
+
+**Le fasce del dispositivo al primo colpo.** Sceglievi il boiler e il riquadro
+non compariva; bisognava passare da un altro apparecchio e tornare indietro.
+La scheda, appena toccata la linguetta, non è ancora aperta: il blocco non si
+disegnava e buttava anche il conto appena fatto. Adesso il conto resta, e dopo
+il tocco si riprova finché la scheda c'è.
+
+**I nomi nelle card dei Varchi.** Su una riga sola, con «NON RISPONDE»
+accanto, di un nome vero restavano sei lettere. Vanno su due righe, e la
+pastiglia dello stato va a capo anche lei.
+
+**La card dei sensori della stanza** porta il nome della stanza quando la
+sonda è una sola: il nome della sonda serve a distinguerne tre, non a
+ribattezzare il Salone.
+
+## 1.6.4.2
+
+**Il negozio rifiutava il pacchetto.** Costruito bene, firmato bene, e il Play
+Console lo rimandava indietro: nel manifesto c'erano dichiarate insieme due
+cose che si somigliano solo nel nome. Android **Auto** è l'app che gira sul
+telefono e in macchina ci arriva proiettata — è quello che gdahome fa; Android
+**Automotive** è il sistema che sta dentro l'auto. Google non lascia dichiarare
+tutte e due, e ha ragione: sono due prodotti diversi. Ne resta una, quella
+vera.
+
+E le «Novità» che il negozio mostra a chi installa l'app parlavano ancora della
+1.6.2: adesso raccontano la macchina.
+
+In casa non cambia niente.
+
+## 1.6.4.1
+
+**L'app della 1.6.4 non è mai uscita.** Il pacchetto per il telefono non si
+costruiva: il pezzo nuovo che porta gdahome in macchina si metteva in ascolto
+della sessione dell'auto sovrascrivendo un metodo che in quella libreria non
+esiste, e la costruzione si fermava lì — con l'etichetta già messa e il
+negozio già aperto a mano. In casa non cambia niente, la 1.6.4 dell'add-on è
+quella giusta: cambia che adesso c'è anche l'app.
+
+**E la rete che mancava.** Le prove guardavano il Dart — `flutter analyze`,
+`flutter test` — e il codice nativo di Android non lo costruiva nessuno fino
+al rilascio. Adesso a ogni modifica il pacchetto per Android si costruisce per
+davvero: un errore come quello si vede subito, non dentro una versione già
+etichettata.
+
+## 1.6.4
+
+**gdahome sale in macchina.** Android Auto mostra i suoi modelli — un pannello,
+una lista, una griglia — e li disegna lui col carattere e i colori dell'auto:
+non c'è la plancia, c'è il poco che si guarda guidando. Quanto tira la casa e
+quanto fa il sole, chi è rientrato, e i tasti delle azioni rapide.
+
+I numeri non li rifà nessuno: sono le stesse righe che la finestra
+dell'Energia mostra in casa, con dentro la conversione da kW e la parola nella
+lingua di chi guarda. Il servizio in auto con la casa non parla — due posti che
+sanno entrare in casa sono uno di troppo: la plancia lascia al telefono una
+fotografia, e l'auto legge quella. Se il telefono non ne ha ancora mandata una,
+in macchina si legge che non è arrivata: mai un numero inventato al posto di
+uno vero.
+
+E i tasti premono davvero, **anche a schermo spento**. Premuto in macchina, il
+comando lo esegue l'app senza che nulla compaia in mano. Non tutto può partire
+da solo, e quello che non può lo dice il tasto: un'azione con una conferma
+vuole qualcuno che guardi, un menu vuole un dito che sceglie, e una serratura
+non si comanda su uno stato di mezz'ora fa. Col lucchetto acceso non parte
+niente senza aprire l'app, che è il senso del lucchetto.
+
+**Da app la casa chiedeva due volte i codici.** «Su Home Assistant funziona, da
+app mi richiede codici sia installatore che gestore.» Fra tutti i comandi che
+l'app fa al ponte, uno solo non guardava la chiave che l'app gli stava già
+passando: quello che chiede lo stato del quadro. Bastava quello per rifare la
+domanda a chi aveva già risposto.
+
+**Il radar diceva «Zoom Level Not Supported» sopra un indirizzo scritto a
+mano.** L'ingrandimento della pioggia ha un tetto, diverso da servizio a
+servizio, e per un indirizzo battuto a mano non lo guardava nessuno. Adesso lo
+guarda — e anche il tasto «Prova», che provava a un ingrandimento che poi non
+si usava e quindi rispondeva su una cosa diversa da quella che si vedeva.
+
+**Sessantotto dispositivi non connessi che erano uno.** La tessera contava
+anche gli aiutanti — i numeri e gli interruttori che uno si crea in Home
+Assistant — e quelli un dispositivo non ce l'hanno: non sono un dispositivo
+che non risponde. Su una casa vera: da 68 a 1. E la finestra ha smesso di
+stampare la maniglia del dispositivo, che è roba da scheda, non da pagina.
+
+**Il tasto del feed manuale non compariva.** Un pulsante che nessuno ha mai
+premuto sta su `unknown`, e chi disegnava lo prendeva per rotto e lo
+nascondeva — per sempre, perché finché non si preme non cambia stato. E un
+menu a tendina disegnava un tasto che non faceva niente: adesso apre le voci e
+se ne sceglie una.
+
+**Le telecamere si tolgono da Sicurezza senza perdere l'allarme.** Chi non ne
+ha una poteva solo spegnere Sicurezza intera, e perdere anche i varchi e
+l'antifurto, che con le telecamere non c'entrano. Adesso c'è un interruttore
+sotto le telecamere, e spegnerlo non cancella niente: si riaccende e tornano
+dov'erano.
+
+**Prima di inserire l'allarme, la plancia dice cosa è ancora aperto.** Si
+inseriva e poi si scopriva la finestra del bagno dal telefono, da fuori.
+
+**«Si vede in Home» adesso è scritto anche dentro la scheda del MiniPC.**
+L'interruttore c'era, in Configurazione → Widget, e non lo trovava nessuno: è
+lo stesso, scritto dove uno lo cerca.
+
+**Nel flusso dell'Energia le linee passavano sopra le bolle degli altri
+carichi.** Sul telefono, dal quinto carico in poi, le file diventano due e
+stavano incolonnate: la linea verso una bolla di sotto attraversava quella di
+sopra, e sembrava che il boiler fosse attaccato alla lavatrice. Adesso le file
+si sfalsano come i mattoni di un muro e ogni linea scende nel suo varco. Nello
+stesso giro la seconda fila è salita di sessantasette punti: i suoi numeri
+finivano sotto la barra dell'app, e per leggerli bisognava scorrere senza
+sapere che ci fosse qualcosa da scorrere.
+
+**La mappa della rete Zigbee, su una casa vera, non si leggeva.** «La mappa
+dopo vari tentativi si è caricata ma non si vede nulla e non si può né fare
+zoom né niente.» Erano due cose, e tutte e due si vedono solo misurando.
+
+Il disegno aveva due cerchi di misura fissa, tarati su una dozzina di
+apparecchi: su un cerchio di centottantacinque pixel ci stanno milleduecento
+pixel di circonferenza, e quarantacinque ripetitori larghi cinquantaquattro ne
+vogliono duemilaquattrocento. Contate: centoventitré coppie di anelli uno sopra
+l'altro e sessantanove coppie di scritte accavallate. Adesso il raggio lo detta
+la rete — a ognuno spetta il pezzo di cerchio che il suo nome occupa — e su
+ottanta apparecchi le coppie sovrapposte sono zero. Una casa piccola ha la
+mappa di sempre: sotto il minimo non si scende.
+
+E nell'app la figura non si poteva ingrandire perché stava dentro una lista,
+che il dito se lo prende lei, e col margine di spostamento a zero — il valore
+di serie — anche ingrandendo non c'era niente da portare al centro. Adesso si
+tocca e si apre in una pagina sua: si ingrandisce con le dita o con i tasti, si
+sposta dove si vuole, e un tasto la rimette intera.
+
+**E la rete si legge anche a righe, che su un telefono è la cosa che serve.**
+Sotto la mappa c'è «Chi regge chi»: l'antenna, ogni ripetitore, cosa gli sta
+appeso e quanto tiene il filo — buono, discreto, debole. Un disegno grande due
+metri di schermo si scorre male; un elenco lo scorre chiunque. Lo conta lo
+stesso modulo che disegna la mappa, quindi le due cose non possono dire cose
+diverse.
+
+**Togliendo un dispositivo dalla rete usciva «la rete ha accettato l'ordine ma
+quel dispositivo è ancora lì» — e invece stava andando via.** Un ordine Zigbee
+viaggia via radio: il coordinatore lo manda, l'apparecchio se ne va, e l'elenco
+si riscrive dopo. Si rileggeva nell'istante in cui l'ordine partiva, quindi lo
+si trovava ancora lì quasi sempre. Adesso si guarda per dodici secondi, e solo
+se dopo c'è ancora si dice — dicendo anche cosa fare, perché quasi sempre è un
+apparecchio che dorme e l'ordine di uscire non lo sente finché non si sveglia.
+
+**Negli aggiornamenti mancava proprio la nostra icona.** Nel cruscotto Duck
+DNS, Git pull e Home Assistant Core avevano il loro marchio e gdahome una «G».
+Il modo in cui l'icona viaggia funziona — la casa la prende dal Supervisor e la
+manda col rapporto — ma in un rapporto un'icona ci sta fino a 64 KiB, e la
+nostra ne pesava 102: sopra quel peso il ponte non dice «oggi non ce l'ho», dice
+«un'icona non ce l'ha», e il quadro se lo segna e non la richiede più. Era
+l'unica icona sopra il tetto di tutta la casa. Adesso pesa 28 KiB, sempre 256
+per 256, e una prova guarda il file vero perché non succeda di nuovo.
+
+**Il nome di un dispositivo Zigbee adesso arriva anche alla rete.** «Ho
+associato dispositivo zigbee… il nome nella sezione zigbee, sia su Home
+Assistant che su app, non risulta modificato.» Erano due nomi e se ne scriveva
+uno solo: l'etichetta nel registro di Home Assistant. Il `friendly_name` di
+Zigbee2MQTT — quello con cui la rete lo chiama nella sua cassetta, nella sua
+pagina e in ogni messaggio che manda — non lo sapeva nessuno, e restava
+l'indirizzo (`0x0cae5ffffec141a9`). Adesso si scrivono tutti e due, e non ci si
+fida del «sì»: si riguarda la cassetta finché il nome nuovo non c'è.
+
+Rinominare, però, non è mettere un'etichetta: il nome della rete è l'indirizzo
+della cassetta, e cambiandolo Home Assistant rifà le entità con identificativi
+nuovi. La schermata lo dice prima di farlo, con le parole di quello che
+succede — e nell'abbinamento lo dice al momento giusto, quando il dispositivo è
+appena entrato e non lo usa ancora nessuno.
+
+**E su Zigbee2MQTT la riga dell'elenco porta il suo dispositivo di Home
+Assistant.** Lo riempiva solo ZHA: su una casa Zigbee2MQTT, nella scheda di un
+dispositivo, «rinominalo» e «mettilo nella plancia» non avevano su cosa
+lavorare — non hanno mai funzionato. Il filo c'era già ed è l'indirizzo: si
+incrocia col registro dei dispositivi, che il ponte legge una volta e si
+ricorda per mezzo minuto.
+
+**E «non risponde» non si dice più di una riga che punta a un'entità che non
+c'è.** Nella Presenza, un rilevatore che Home Assistant non ha affatto —
+un'entità cambiata sotto i piedi, un dispositivo tolto e rimesso — diceva «Non
+risponde», che manda a guardare la batteria e il segnale di una cosa che non
+esiste. Adesso dice «Non c'è in Home Assistant»: sono due guasti diversi e si
+riparano in due posti diversi, uno col dispositivo in mano e l'altro nella
+scheda della configurazione.
+
+**Un avviso finito nel gruppo Allagamenti non diventa più una sonda bagnata.**
+La tessera leggeva tutto quello che c'era in quella lista allo stesso modo —
+acceso vuol dire bagnato — e un antifurto inserito faceva dire alla casa «C'è
+acqua». Adesso nella tessera è una sonda chi dichiara umidità o chi non
+dichiara niente (il sensore fatto in casa resta); chi dichiara di essere
+un'altra cosa — `safety`, `problem`, `motion` — resta nella configurazione ma
+fuori dal conto. La regola del rilevamento automatico non cambia: quella è
+stretta apposta.
+
+**E nella scheda degli Allagamenti si vede quale voce non è una sonda.** «Non
+c'è nessuna entità allarme, sono 5 i sensori configurati, questo 6 non esiste»:
+il sesto stava nella lista — ce l'aveva messo la scheda degli avvisi, col nome
+scritto a mano — ma non era una sonda, e la tessera lo leggeva come legge tutti
+(acceso vuol dire bagnato). Toglierlo d'ufficio sarebbe peggio, perché c'è chi
+in quella lista mette un sensore fatto in casa che la classe non la dichiara:
+adesso la riga lo dice, accanto al cestino che la toglie.
+
+**La finestra di una tessera ci sta dentro la sua card.** «Aggiusta i margini
+del popup allagamenti, non entra all'interno tutto»: negli Allagamenti
+«Asciutto» finiva oltre il bordo destro e il titoletto «LO STATO» spariva a
+sinistra. Non era degli allagamenti — sul telefono sbordavano anche il fumo e
+le tapparelle, e tutte e sei le finestre avevano dieci pixel di margine invece
+dei quindici del loro foglio. I nomi lunghi, nelle righe, non si tagliano più a
+metà di una lettera: vanno a capo.
+
+## 1.6.3
+
+**Energia: «Costo Reale» e il riquadro sotto dicevano due cifre per la stessa
+spesa.** In Panoramica il costo era stimato da una media, mentre «Come si
+divide il costo reale» lo faceva ora per ora con le fasce — due conti diversi
+sullo stesso consumo, e chi guardava la schermata vedeva due numeri e non
+sapeva quale credere. Adesso il numero è uno: quello a fasce, quando le fasce
+ci sono. Sopra e sotto si legge la stessa cifra, e il risparmio si conta da
+quella.
+
+**La «Gestione installatori» si chiama Cruscotto gdahome.** Nella barra
+laterale di Home Assistant, nel titolo della scheda e in cima alla pagina.
+
+**Il riquadro «Il servizio» si legge a colpo d'occhio.** Erano due paragrafi
+in grassetto e cinque caselle stirate per tutta la larghezza, col numero in
+alto a sinistra e mezzo riquadro vuoto accanto. Adesso ogni macchina — il
+quadro, il tramite — ha la sua testa, con il suo disegno e la pastiglia che
+dice come sta; i conti sono mattonelle larghe quanto serve; e gli interruttori
+del tramite sono pastiglie con la spia, una per uno.
+
+**E adesso dice quando il quadro ha smesso di aggiornarsi da sé.** Quel
+segnale arrivava già — sei giri a vuoto di fila, e `/salute` lo dice — e la
+pagina lo buttava via. È la cosa per cui quel riquadro esiste, perché un
+quadro fermo non lo scopre nessun altro: si legge nella pastiglia, che diventa
+ambra, e sotto da quanto è fermo e perché.
+
+**La scheda di una casa si apre accanto all'elenco, non sopra.** «Case a
+sinistra e se clicco mi apre il dettaglio affianco, non il popup: non mi piace
+il popup.»
+
+Il foglio che sale dal basso è giusto sul telefono, dove non c'è spazio per
+due cose insieme. Su uno schermo largo si pagava due volte: copriva l'elenco da
+cui eri appena partito — con un velo sfocato sopra — e per passare alla casa
+dopo toccava chiudere, ritrovare il punto, riaprire. Da quattordici pollici in
+su le due pagine del quadro diventano elenco a sinistra e scheda accanto, con
+la casa aperta riconoscibile dal bordo, e l'elenco che resta fermo mentre si
+legge. Sotto quella misura non cambia niente: telefono e tablet in verticale
+restano col foglio che sale, identico a prima.
+
+Nel cruscotto dell'installatore l'elenco diventa un elenco vero: una riga per
+impianto, il nome e lo stato sulla stessa linea. Alte com'erano nella griglia a
+due colonne, otto impianti riempivano due schermi.
+
+**E i margini tornano in squadra.** Tre disallineamenti, trovati misurando e
+non guardando: la colonna dell'elenco cominciava cinque pixel prima di tutto il
+resto; dentro la scheda i titoli stavano quattro pixel più a destra delle carte
+che intitolano — questo c'era da sempre, e col foglio largo quanto un telefono
+non lo notava nessuno; e il titolo della raccolta era finito attaccato alla
+carta sopra. Corretti tutti e tre, in tutte e due le pagine, e il quarto anche
+sul telefono.
+
+## 1.6.2
+
+**Aggiorna l'add-on e l'app insieme.** Questa versione cambia il modo in cui
+un telefono si abbina, e i due pezzi devono parlare la stessa lingua.
+
+- **Abbinare un telefono nuovo** vuole l'add-on e l'app di questa versione.
+  I telefoni già abbinati continuano a funzionare come prima, senza fare
+  niente.
+- **La console di gdahome la apre chi amministra Home Assistant.** Gli altri
+  utenti di casa continuano a vedere e usare la plancia; non ne cambiano la
+  configurazione e non fanno codici di abbinamento.
+- **Un telefono intestato a chi non amministra** usa la casa — luci, clima,
+  tapparelle, telecamere, scene — ma non le impostazioni di Home Assistant.
+- **L'add-on si aggiorna dalle versioni pubblicate**, e mai a una più vecchia
+  di quella che ha.
+- **Il logo di chi ti ha fatto l'impianto** si carica come PNG, JPEG o WebP.
+
+## 1.6.1
+
+**Zigbee: si vede chi c'è già in rete, e la mappa.** «Voglio vedere elenco
+completo dei dispositivi e poterli eliminare e eventualmente associare
+dispositivi già esistenti nella plancia. Crea inoltre la possibilità di
+mostrare la mappa di collegamento.»
+
+Sotto i tasti dell'abbinamento adesso c'è l'elenco di chi c'è già, con marca,
+modello e la pila per chi va a batteria. Da ogni riga si apre la sua scheda: si
+rinomina, si manda nella plancia, si toglie dalla rete — e prima di togliere si
+dice **la parte che costa**, cioè che per rimetterlo lo si riabbina da qui. Di
+un ripetitore si dice anche che tiene su la rete per gli altri.
+
+«Guarda la rete» apre la **mappa**: al centro l'antenna, intorno i ripetitori,
+fuori chi sta in fondo a un ramo — che è la forma che una rete Zigbee *ha*, non
+una disposizione scelta. Lo spessore e il tratteggio dicono quanto è buono ogni
+collegamento, e chi non parla con nessuno sta in fondo con scritto perché. I
+pallini sono i disegni veri del catalogo: il disegno dice *cos'è*
+quell'apparecchio, l'anello colorato *che mestiere fa* nella rete.
+
+**Sul telefono la mappa usciva vuota.** Gli anelli, i fili e i nomi c'erano, e
+dentro ogni anello niente: proprio le icone dei dispositivi. Erano un `<svg>`
+dentro l'altro — un modo valido, che nel browser si vede — e `flutter_svg`
+quelli li salta. Nessuna prova se ne era accorta perché guardavano tutte il
+*testo* della figura, e il testo era giusto: si è visto fotografando la
+schermata.
+
+**La plancia si mangiava un core intero, ferma.** La segnalazione diceva «la
+torre 3d va a scatti quando si clicca»: non era la torre e non era il clic —
+ogni pagina, con nessuno che la tocca, stava al cento per cento di un core, per
+sempre. Il clic si notava soltanto perché è il momento in cui uno si aspetta
+una risposta.
+
+Erano tre cose: la sfocatura da cento pixel delle due macchie di sfondo,
+rifatta in continuazione; il loro movimento, che obbliga a ricomporre tutto
+quello che ci sta sopra; e i pallini che pulsano, che respirando scrivevano un
+valore nuovo a ogni fotogramma. Adesso le macchie sono una sfumatura e stanno
+ferme, e i pallini lampeggiano invece di respirare. A pagina aperta e senza
+toccare niente: **Home 4%, MiniPC 4%, Energia 1%**.
+
+Si vede cambiare due cose: lo sfondo non scorre più, e i pallini non crescono
+più — cambia solo quanto sono accesi.
+
+## 1.6.0.6
+
+**I dispositivi non connessi si contano per dispositivo, non per entità.** «Non
+devi mettere le entità ma i dispositivi non connessi, così come li mostri nel
+cruscotto installatore.»
+
+Nell'elenco finivano «Asciugatrice Child lock», «Boiler Child lock»,
+«Condizionatori Child lock»: quattro elettrodomestici che rispondono benissimo,
+di ognuno dei quali tace una sola entità — quella serratura bambini che
+l'integrazione pubblica sempre e che è `unavailable` quando la macchina non sta
+lavorando. Cioè l'avviso diceva il vero su cose che non interessano, che è il
+modo esatto in cui un avviso si impara a ignorare.
+
+Nel cruscotto dell'installatore quei `child_lock` non compaiono, perché il
+ponte la regola giusta ce l'ha da sempre: si raggruppa per dispositivo, e un
+dispositivo è giù **solo se tacciono tutte le sue entità**. Adesso la plancia fa
+la stessa, non una somigliante. Le entità che parlano si guardano in tutta la
+casa e non solo fra quelle mappate qui: se di un'asciugatrice è configurata la
+sola serratura bambini, a dire che la macchina sta bene sono le altre. Il
+cestino mette da parte tutte le entità di quel dispositivo in un colpo, e quello
+che si scrive restano entità — così le voci già messe da parte continuano a
+valere.
+
+**La scheda si chiama «Dispositivi non connessi»**, come la tessera in Home.
+
+**Le fasce nel dettaglio del dispositivo tornano quando si apre ANALISI.** «Si
+vedono nella parte panoramica ma dentro analisi quando seleziono i dispositivi
+non le vedo.» Il blocco si toglie quando la scheda non si vede — un conto a ore
+chiesto per una scheda che nessuno guarda è carico sul Recorder regalato — e a
+rimetterlo doveva essere il click sulla linguetta. Quel click si ascoltava su
+`#ed-tab-disp`, che in questa plancia non esiste: le linguette di Energia sono
+`ed-tab-pan` e `ed-tab-ana`. Così il blocco tornava solo cambiando apparecchio
+nella tendina, cioè il gesto che non si fa quando l'apparecchio è già scelto.
+
+**Nel MiniPC, sotto «Macchine e container», si leggeva «server» al posto
+dell'icona.** Dalla 1.6.0 quel campo è il nome di un disegno del catalogo e non
+un'emoji; chi disegna ha continuato a stamparlo com'era, e un nome stampato è
+una parola.
+
+## 1.6.0.5
+
+Una correzione sola, e un numero nuovo perché la 1.6.0.4 era già arrivata
+nelle case senza di lei.
+
+**La pagina Musica sta dentro lo schermo di un telefono.** «Si riesce ad
+impaginare o per telefono o per tablet? perché oltre che sborda, non scorre
+per andare a lato.»
+
+Erano due guasti. Il primo si vedeva nella tendina: etichetta e tendina
+stavano affiancate per forza, e quei nomi non li sceglie nessuno qui — li
+manda l'integrazione, e SmartThings scrive «Formato di ingresso del
+segnale». Su un telefono l'etichetta si impilava su tre righe e alla tendina
+restavano cento pixel: dentro si leggeva «No input co», e il resto non si
+poteva andare a prendere, perché una tendina non si scorre di lato. Adesso
+quando affiancate non ci stanno la tendina va a capo e si prende la riga
+intera.
+
+Il secondo era il «sborda», e stava più a monte: la colonna del testo della
+card era una griglia senza colonne dichiarate, e una griglia così se ne fa
+una larga quanto il figlio più largo. Su uno schermo da 320 px quella colonna
+veniva 220 dove ce n'erano 162, e la card taglia quello che le esce perché le
+serve per il fondale sfocato della copertina: il di più spariva, senza modo
+di riprenderselo.
+
+## 1.6.0.4
+
+**Una casa senza pannelli non legge più numeri finti (#82).** «Uno switch che
+tolga completamente la gestione energetica casa con fotovoltaico, pulendo da
+info errate la pagina energia.»
+
+Senza impianto la pagina Energia mostrava lo stesso «Produzione FV 0,0 kWh» —
+che non è produzione zero, è che i pannelli non ci sono — e «Autosufficienza
+100 %», che è il numero sbagliato vero: viene da `(consumo − prelievo) /
+consumo`, e con il prelievo a `0` perché nemmeno il contatore di rete è
+configurato, una casa che prende tutto dalla rete leggeva di essere
+autosufficiente. Il consumo, l'unica cosa che quella casa misura davvero, si
+perdeva in mezzo ai due numeri finti.
+
+Sono due domande e non una: **il 100 % è sbagliato anche in una casa che i
+pannelli ce li ha**, se le manca il contatore di rete, perché quel conto vuole
+tutte e due le misure. Adesso la produzione sparisce dove i pannelli non ci
+sono, e l'autosufficienza dove non si può dire — spenta o accesa che sia la
+spunta.
+
+Di solito non c'è niente da chiedere: senza nemmeno un'entità di produzione la
+risposta la sa già la configurazione. La spunta **«Impianto fotovoltaico»**, in
+cima al riquadro ☀️ Fotovoltaico, serve a chi i pannelli ce li ha e questa
+pagina non la vuole. Spegnendola vanno via anche il sole dalla riga del mese,
+la linea «Produzione» dal grafico giornaliero e quattro delle cinque caselle
+dei soldi — «Senza FV» è esattamente quello che si paga, il risparmio è zero
+per definizione, l'immesso non esiste e la CO₂ evitata nemmeno. Restano
+consumo, costo reale e fasce orarie. Le entità scritte in configurazione non si
+toccano: chi rimette la spunta le ritrova dov'erano.
+
+**Una scheda «Scollegati» nel config, con un cestino.** La tessera
+«Dispositivi non connessi» compare in Home quando qualcosa smette di
+rispondere, e finché resta muta va bene così. Il guaio è quando dice il vero su
+una cosa che non interessa — un'integrazione tolta che lascia l'entità scritta,
+la presa dell'albero di Natale a gennaio — perché allora l'avviso si impara a
+ignorare, e un avviso che si ignora è peggio di nessun avviso.
+
+Adesso quell'elenco si apre anche in configurazione, sotto **Macchine e rete**,
+con accanto a ogni riga un cestino. Le righe le mette la plancia: non c'è
+niente da aggiungere. Il cestino chiede conferma e poi toglie quel dispositivo
+dall'avviso **per sempre** — le righe tolte restano scritte in fondo alla
+scheda, senza cestino, e dicono se in casa quell'entità esiste ancora: un
+dispositivo silenziato e una configurazione rimasta indietro sono due cose
+diverse. L'elenco è uno solo: la scheda e la tessera leggono la stessa regola.
+
+**La ricerca nel config sa anche dove si scrive.** «La casella c'è ma manca nel
+config dove inserire l'entità.» La casella c'era davvero, ed erano due cose
+insieme.
+
+La ricerca camminava solo sui valori **già salvati**, e una casella vuota non
+ha valore: chi cercava «ventola» prima di averci scritto qualcosa si sentiva
+rispondere «Nessuna configurazione contiene questa parola», che si legge in un
+modo solo. Adesso i risultati sono due gruppi: quello che è scritto, e sotto
+**«Dove si configura»**, le caselle — che esistono anche da vuote. Il tocco
+apre la scheda, la maschera giusta e accende la riga, che è l'unico modo di
+dire «è questa» a chi ha davanti venti caselle uguali.
+
+E il salto portava nel posto sbagliato: le entità mappate a mano finivano tutte
+attribuite al **MiniPC**, perché stanno in un cassetto solo. Chi cercava dove
+mettere la ventola atterrava in una scheda dove di ventole non se ne parla, e
+concludeva — giustamente — che quella casella non esiste.
+
+**Le entità di Energia sparivano appena scritte.** Trovato inseguendo la
+ventola. Alla fine della procedura guidata tutto quello che il rilevamento
+aveva trovato veniva scritto in un colpo solo, e un attimo dopo di ⚡ Energia
+non restava niente: delle sei mappature ne sopravvivevano due, e le quattro di
+Energia sparivano con il modello ancora vuoto. Nemmeno il ricaricamento
+rimediava. Adesso quello che arriva mappato a mano entra nel modello **prima**
+che la plancia lo riproietti, e svuotare un campo continua a svuotarlo.
+
+**Il tasto della ventola dell'inverter manda un ordine vero.** Mandava a Home
+Assistant il nome della casella invece dell'entità mappata, e non succedeva
+niente. La potenza si vedeva — quella si legge, e leggere funzionava — e il
+tasto no: è il modo più confondente di essere rotti. L'entità si scrive in
+**Energia → IMPOSTAZIONI → 🌡️ Temperature e raffreddamento → «Interruttore
+ventola»**.
+
+**L'ora di una fascia oraria cambiata torna a quella di prima.** «Nella
+selezione delle fasce orarie se cambio ora non salva, ritorna di nuovo a quella
+impostata per default.» Le fasce scrivevano i minuti e rileggevano le ore: la
+funzione non sapeva rileggere quello che scriveva, e alla riapertura ricadeva
+sull'ora di fabbrica. Un'ora diversa da quelle di serie **non era mai
+sopravvissuta a una riapertura**: sembrava a posto solo finché le ore erano
+ancora quelle di default, perché il ripiego indovinava giusto.
+
+**Le fasce dentro il dettaglio del dispositivo (#111).** «Mi aggiungi anche nel
+dispositivo le fasce per capire quanto quel dispositivo assorbe di più e in
+quale fascia.» Nella finestra di un apparecchio, sotto i costi, adesso c'è
+quanto ha preso in ognuna delle tre fasce e quanto è costato. I kWh li conta
+tutti; **gli euro contano solo quello che è venuto dalla rete**, ora per ora,
+perché il sole a nessuna ora ha un prezzo.
+
+**La rete Zigbee si apre davvero, e il rifiuto non è più colpa dell'add-on.**
+«No perché non mi fa aprire la rete.» Erano due cose. La prima: quando Home
+Assistant rifiutava il comando, la plancia diceva «gdahome in casa è più
+vecchio dell'app, aggiorna l'add-on» — e mandava ad aggiornare una cosa che era
+già aggiornata. Adesso il messaggio riporta le parole di Home Assistant e dice
+di controllare che ZHA o Zigbee2MQTT siano accesi e l'antenna collegata.
+
+La seconda: con ZHA la rete **non si apriva**. Si chiedeva prima per una via
+interna che Home Assistant ha riscritto, e solo dopo col servizio `zha.permit`,
+che è l'API pubblica e non è mai cambiata. Adesso si prova prima quella.
+
+**Un veicolo è un'auto o una moto, e la scheda lo chiede (#75).** «Molti di noi
+smanettoni hanno anche una moto connessa, sarebbe carino avere una sezione
+MOTO.» Nella scheda dei Veicoli c'è la scelta **Auto / Moto**, sopra il motore
+e indipendente da lui: una moto può essere elettrica, a benzina o ibrida come
+un'auto. Scegliendo Moto la card prende il disegno della moto, il titolo della
+pagina lo dice, e le quattro caselle che una moto non ha — portiere, finestrini,
+bagagliaio, cofano — spariscono dalla configurazione. Chi non tocca niente non
+vede cambiare niente: vuoto vuol dire auto.
+
+**La linguetta «Installatori» della gestione diceva 1 a chi ne ha due.** Il
+numero non era sbagliato, era un altro numero: contava gli installatori **al
+limite**. Ma una pastiglia appoggiata alla parola «Installatori» si legge in un
+modo solo, e quel conto quella schermata lo dice già due volte. Adesso la
+linguetta di una raccolta non porta pastiglia, come «Impianti» nel cruscotto.
+
+**Il dispositivo che entra nella rete Zigbee viene annunciato.** «Il pairing
+lo fa partire l'app, ma poi non vede che lo ha trovato»: la rete si apriva,
+il conto alla rovescia scorreva, il dispositivo entrava davvero in
+Zigbee2MQTT — e la schermata restava su «Sto ascoltando la casa» fino alla
+fine.
+
+Non era ne' Zigbee2MQTT ne' un ritardo: **non e' mai stato annunciato
+niente**, a nessuno, in nessuna casa, nemmeno con ZHA. Gli eventi del bus
+Home Assistant li manda in una busta — fuori che evento e', dentro `data` i
+suoi dati:
+
+```
+{ event_type: "device_registry_updated",
+  data: { action: "create", device_id: "..." } }
+```
+
+`eUnoNuovo` leggeva `evento.action` e `evento.device_id`, cioe' **fuori dalla
+busta**: sempre `undefined`, sempre «no». Lo stesso abbonamento in
+`spegnimento.js` la busta la apre da sempre (`const dati = evento?.data`):
+erano due letture della stessa cosa, e una sola era giusta.
+
+Le prove non se ne sono accorte perche' la casa finta consegnava i dati nudi
+— la forma comoda, quella che si aspettava il codice — invece della busta
+vera. E' la **terza** volta in tre giorni: la casa finta che consegnava i
+messaggi MQTT ignorando i caratteri jolly, il ponte finto dell'app che
+rispondeva `z2m`, e adesso questa. Un finto piu' accomodante dell'originale
+non prova niente, e due errori che si danno ragione a vicenda passano
+qualunque corsa verde.
+
+Adesso la casa finta imbusta come Home Assistant, e la forma nuda **non passa
+piu'**: era il travestimento del guasto, e accettarla vorrebbe dire lasciare
+la porta aperta al prossimo. Col codice di prima sei prove diventano rosse.
+
+**Una telecamera che si vede solo quando in casa non c'è nessuno (#81).**
+«Tipo io ne ho una interna ma vorrei si potesse vedere solo se a casa non
+c'è nessuno per una questione di privacy.»
+
+Nella scheda Sicurezza, sotto le telecamere, c'è una spunta per telecamera.
+Spuntata, quella telecamera si vede soltanto a casa vuota: mentre qualcuno è
+in casa sparisce dalla pagina Sicurezza, dalla stanza in cui è stata messa e
+dal giro dei fotogrammi — **il fotogramma non viene nemmeno scaricato**, che
+su una telecamera interna è la differenza fra nasconderla e coprirla con un
+foglio. Chi rientra la fa sparire subito, non al prossimo cambio pagina: è
+la stessa presenza che già fa ridisegnare la plancia.
+
+Chi c'è in casa lo dicono le persone della sezione Persone: `home` vuol dire
+dentro, tutto il resto — `not_home`, una zona col nome, l'ufficio — vuol
+dire fuori. E se non si sa (nessuna persona configurata, o nessuna delle
+loro entità che risponde) **la telecamera resta nascosta**. Fra i due
+sbagli possibili — una telecamera nascosta a chi poteva vederla, e una
+telecamera accesa in salotto mentre qualcuno ci passa davanti — il primo si
+scopre subito e si rimedia con una spunta, il secondo non lo scopri mai.
+Per questo la spunta si offre solo dove almeno una persona c'è, e dove non
+c'è lo dice invece di far finta di niente.
+
+La scelta viaggia fra i dispositivi, come tutta la configurazione della
+casa: se restasse su un telefono, la telecamera nascosta lì resterebbe
+accesa sul tablet in cucina — cioè proprio sullo schermo davanti a cui si
+passa.
+
+**L'umidità del terreno si vede anche senza elettrovalvole (#80).** «Quella
+umidità terreno in realtà già è presente ma se inserisco solo quella entità
+non esce nei widget.»
+
+La funzione c'era per intero — il sensore in configurazione, il misuratore
+con la banda ideale, la soglia che salta l'irrigazione a terreno bagnato — e
+quello che non andava era l'**ordine** in cui si guardavano le cose, nello
+stesso modo in due posti. Sia la tessera della Home sia la pagina
+Irrigazione uscivano su «nessuna zona» prima di arrivare a leggere il
+sensore. Chi ha due sonde nel vaso e nessuna valvola non vedeva niente, e
+non aveva modo di capire perché. Adesso il sensore si legge prima del
+verdetto: senza zone il misuratore si disegna lo stesso, sopra l'invito ad
+aggiungere le zone.
+
+**La mattonella della gestione conta i dispositivi, non le entità.** Diceva
+«Entità 2496 · 49 non rispondono» tre centimetri sotto una riga che dice «7
+dispositivi non collegati». Non sono in disaccordo — sono 49 entità mute
+dentro 7 apparecchi — ma chi legge non ha modo di saperlo, e quei 49 non li
+può nemmeno andare a vedere: da una casa viaggiano solo i nomi dei
+dispositivi, mai quelli delle entità. Adesso quando qualcosa è giù la
+mattonella dice i dispositivi, che è il numero che si può aprire.
+
+
+**I Varchi si dichiarano, non si autocompilano (#74).** «Sezione varchi
+attuale non ha alcuna possibilità di inserire icone. Inoltre è differente
+dalle altre sezioni in quanto si autocompila, cosa che avevo detto già di
+eliminare, e sotto compaiono ancora quelle che ho eliminato da sopra.»
+
+Tre difetti, ed erano lo stesso difetto: quella scheda non era una scheda,
+era un **rilevamento con delle correzioni sopra**. L'elenco lo faceva Home
+Assistant — tutto quello che si chiamava «door» o «window» — il cestino non
+cancellava ma ESCLUDEVA, e l'escluso restava scritto sotto in «Tolti dai
+conti». Di suo, chi abita la casa poteva solo cambiare il nome.
+
+Adesso è come Porte e cancelli, come i Carichi, come tutte le altre: **una
+riga per varco**, e dentro la riga le tre cose che un varco ha — l'entità, il
+nome, il disegno. La metti tu, e quando la elimini è eliminata. Via «Tolti dai
+conti».
+
+**Quello che c'era non si perde.** Alla prima apertura la scheda scrive come
+righe esattamente quello che la pagina mostrava un attimo prima: i nomi già
+dati, senza quelli già tolti, col disegno che viene dalla classe. E una
+finestra nuova non entra più da sola — è il punto di tutto — ma nemmeno si
+deve cercare a mano: il tasto in fondo dice quanti contatti Home Assistant ha
+trovato che qui dentro non ci sono, e li mette come righe. Una volta sola.
+
+**Dieci disegni nuovi, e niente più emoji di sistema.** «Icone sempre quelle
+del catalogo nostro, se non presenti queste creale.» I varchi avevano quattro
+emoji scelte dalla classe — porta, finestra, casa diroccata, cartello di
+lavori — che cambiano faccia da un telefono all'altro, e la casa diroccata
+come portone del garage non la riconosceva nessuno. Adesso ce ne sono tredici
+fra cui scegliere, tutti disegnati con la tavolozza degli elettrodomestici:
+finestra, porta-finestra, portone, basculante, lucernario, botola,
+scorrevole, sbarra, varco generico — più il radar di presenza, che arriva con
+loro. Il disegno si vede anche nella pagina Varchi, nella vetrina della
+Sicurezza e nella scheda delle aree d'allarme, che leggono lo stesso elenco.
+
+**E adesso sono tutte e quattro la stessa scheda.** Non «la stessa forma»
+scritta due volte: proprio lo stesso file. I rilevatori avevano lo stesso
+difetto dei varchi — l'elenco lo faceva Home Assistant, il cestino escludeva
+invece di cancellare, e sotto c'era «Tolti dai conti» — e adesso hanno la
+riga, la pastiglia, la striscia dei disegni e il tasto d'importazione dei
+varchi, perché li disegna lo stesso pezzo di codice. Quattro copie della
+stessa scheda sarebbero quattro schede che fra sei mesi non si comportano più
+alla stessa maniera, che è esattamente come ci siamo arrivati la prima volta.
+Anche i due disegni della presenza erano emoji: adesso sono quindici fra cui
+scegliere, col radar per chi ha un mmWave.
+
+Le **Batterie** e le **Macchine** hanno la stessa scheda, con le loro due cose
+in più: la soglia di casa e le soglie di ricarica da una parte, la scelta
+delle integrazioni dall'altra. Le integrazioni spuntate restano e fanno ancora
+il loro mestiere — da quali marche si adotta — ma adesso decidono cosa viene
+**proposto**, non cosa si vede: quello che si vede è quello che hai scritto.
+Le macchine hanno in più la fascia, macchina o pezzo di rete, che prima si
+deduceva dalla classe e adesso la scegli tu.
+
+**E dichiarando entra anche quello che il rilevamento non trovava.** Il
+rilevamento dei varchi guarda solo i `binary_sensor.*`: un basculante che in
+Home Assistant è un `cover.*` non lo trovava, e non c'era modo di metterlo.
+
+**E i due comandi della pastiglia dell'entità stavano male.** Su un campo che
+l'etichetta ce l'ha già — cioè ogni riga dichiarata, quindi anche Porte e
+cancelli e i Carichi di oggi — il 🗑 Elimina restava da solo su una riga sua e
+la ✏️ sbordava dal suo quadrato da 36 pixel. Adesso sono gemelli, sotto la
+pastiglia, sulla stessa riga. Nella stessa passata è sparito un difetto più
+silenzioso: un entity_id lungo apriva la riga in larghezza invece di
+accorciarsi con i puntini, e quello che sbordava veniva tagliato via.
+
+
+## 1.6.0.3
+
+**La voce «Zigbee» nell'app c'e', in una casa con Zigbee2MQTT.** Era una
+parola sola, e stava scritta in due modi.
+
+La riga nuova del registro, dalla casa di chi l'ha segnalato, ha detto in un
+colpo cos'era: `la rete Zigbee di questa casa e' Zigbee2MQTT, nella cassetta
+«zigbee2mqtt»`. Il ponte la rete la trovava — la trovava dalla 1.6.0 — e
+l'app continuava a non disegnare la voce nel menu. Quindi il guasto non era
+nel cercare: era in chi ascolta la risposta.
+
+Sul filo il ponte manda `quale: "zigbee2mqtt"` (`Z2M`, in
+`ponte/src/zigbee.js`). L'app, nel suo elenco `LaRete`, cercava
+l'abbreviazione — `z2m`. Due parole diverse non tornano mai: la risposta
+finiva in `LaRete.nessuna`, `siApre` diceva che una rete non c'e', e
+`barra.dart` la voce non la metteva. Esattamente lo stesso disegno di una
+casa che Zigbee non ce l'ha — che e' il motivo per cui dal di fuori non si
+poteva distinguere, ed e' il guasto che la 1.6.0.2 ha reso visibile.
+
+Con ZHA le due parole erano la stessa, `zha` di qua e `zha` di la', e quella
+meta' funzionava. E' cosi' che un guasto del genere passa le prove: meta' del
+codice e' giusta, e la si prova.
+
+Le due meta' stanno in due linguaggi e nessun compilatore le guarda insieme.
+Adesso le guarda una prova: legge l'elenco `LaRete` dal file Dart, lo
+confronta con le tre costanti del ponte e cade se una delle tre non torna —
+come `marchio.test.js` fa con i numeri di versione. Rimessa la parola
+vecchia, la prova diventa rossa; e' stata provata in tutt'e due i versi.
+
+E c'e' un secondo motivo per cui e' passato, che vale la pena scrivere: **le
+prove dell'app usavano la stessa parola sbagliata**. Il ponte finto di
+`app/test/` rispondeva `z2m`, perche' l'ha scritto chi ha scritto anche
+l'elenco. Un ponte finto che parla la lingua inventata da chi lo interroga
+non prova niente — e' lo stesso sbaglio della casa finta che consegnava i
+messaggi MQTT a chiunque, «piu' generosa di un broker vero», scoperto due
+versioni fa. Adesso il ponte finto dice `zigbee2mqtt`, che e' quello che dice
+il ponte vero.
+
+**E nella stanza esce l'icona dell'azione rapida, e la finestra si intitola
+come la riga.** Il nome era arrivato, il resto no.
+
+L'icona, perche' qui passava soltanto un **glifo** — qualcosa fuori
+dall'ASCII — e l'editor delle Azioni rapide di serie ci mette un token del
+catalogo, `mdi:qualcosa`. Buttato quello, la riga si prendeva il segno che
+sa dedurre dal dominio: su un `select`, la lavagnetta. La regola aveva la
+sua ragione, ed era vera quando e' stata scritta: quella riga era testo, e
+un token stampato com'e' sarebbe stata la scritta «mdi:tune» sopra il nome.
+Adesso il segno lo mette `iconGlyphHtml`, che la differenza fra un glifo e
+un token la sa ed e' nata per questo. La terza forma continua a non passare
+— su qualche riga `icon` e' la CHIAVE di un disegno del catalogo,
+«washer» — perche' quella a video sarebbe davvero la parola «washer».
+
+Il titolo, perche' la finestra delle voci e' **la stessa** che apre il tasto
+delle Azioni rapide nella Home, e di la' le arriva l'azione: nome scelto,
+icona scelta. Da qui non le arrivava niente, e ripiegava sul nome di Home
+Assistant e sulla sua faccia di serie — una finestra intitolata «MODUS»
+aperta da una riga che si chiama «prova». Adesso il tasto dei tre puntini si
+porta dietro quei due campi, che erano gia' calcolati una riga sopra.
+
+## 1.6.0.2
+
+**La riga dello Zigbee esce da sola, nel registro dell'add-on.** La 1.6.0.1
+aveva messo in piedi il rimedio al guasto muto — il ponte scrive cos'ha
+trovato guardando la rete Zigbee, invece di lasciare indovinare — ma il
+rimedio era muto anche lui. Quella riga la riempiva `rete()`, e `rete()`
+partiva la prima volta quando qualcuno apriva la schermata Zigbee nell'app:
+finche' nessuno la apriva, il riquadro della console restava nascosto e nel
+registro non compariva niente. Solo che chi quella schermata non ce l'ha —
+perche' la voce nel menu non compare, **che e' esattamente la domanda** — non
+puo' aprirla per scoprire perche' non compare. Un cerchio, e dal campo si e'
+chiuso cosi': «Ho aggiornato app ma niente, nei log non e' uscito».
+
+Adesso la rete la si guarda all'accensione, e la riga va nel registro
+dell'add-on insieme alle altre — accanto a «Home Assistant risponde», a «5
+dispositivi abbinati», a «il centralino ci conosce». Il registro e' il primo
+posto dove si guarda quando una cosa non c'e', ed e' dove il ponte dice gia'
+tutto il resto di se'. Dice una cosa sola di tre:
+
+- `la rete Zigbee di questa casa e' ZHA`
+- `la rete Zigbee di questa casa e' Zigbee2MQTT, nella cassetta «zigbee2mqtt»`
+- `nessuna rete Zigbee: nell'app la voce «Zigbee» non comparira' — <perche'>`
+
+La terza porta con se' tutt'e due le ragioni, quella di ZHA e quella della
+posta, perche' e' l'unica riga che quella persona leggera': se il motivo non
+ci sta dentro, non sta da nessuna parte. Ed e' scritta come un avviso, non
+come una riga qualunque, per chi il registro lo scorre cercando cosa non va.
+
+Se la prima occhiata non trova niente si riguarda dopo mezzo minuto e dopo
+due: all'accensione Home Assistant sta spesso ancora partendo, e l'add-on di
+Zigbee2MQTT parte per conto suo, a volte dopo di noi. Scrivere «nessuna rete
+Zigbee» in una casa che ce l'ha, e non correggerlo piu' fino al riavvio dopo,
+sarebbe peggio del silenzio. E siccome adesso la rete si guarda comunque, il
+riquadro «Zigbee» nella console dell'add-on si riempie da se' invece di
+aspettare che qualcuno passi dall'app.
+
+**Nella stanza, il nome glielo da' anche l'azione rapida.** «Leggo ancora
+modus… sono azioni rapide, scene, queste — non modus.» La 1.6.0.1 aveva
+corretto meta' del guasto: nella stanza il nome se lo prende da «Le tue
+entita'» invece che da Home Assistant. Ma i rubinetti che un nome ce l'hanno
+sono due, e il secondo non lo guardava nessuno — chi un'azione rapida ce l'ha
+non ha nessun motivo di riscrivere la stessa entita' in un'altra scheda per
+darle lo stesso nome. Il nome stava li', e nella stanza la riga continuava a
+chiamarsi «Modus»: e' il `select` di un'integrazione tedesca, e vuol dire
+«modalita'».
+
+Adesso il nome e il segno arrivano anche dalle Azioni rapide. Dove ci sono
+tutt'e due vince quello di «Le tue entita'», che di mestiere fa proprio dare
+un nome a un'entita'; l'azione rapida il nome ce l'ha per fare un tasto, e
+vale dove l'altro non c'e'. E un'azione rapida da sola in nessuna stanza ci
+va: il nome lo presta, la riga non la crea — se no la pagina Stanze si
+riempirebbe di tasti della Home che nessuno ha messo li'.
+
+**Le «Novita'» nel Play Store raccontano la 1.6.0.** Sotto la 1.6.0 e sotto
+la 1.6.0.1 c'era il testo della 1.5.4 — «Il numero dell'app e quello di casa
+tornano uguali. Qui dentro non cambia niente» — perche' quei due file non li
+aveva piu' toccati nessuno da marzo. Chi apriva la scheda dell'app sul
+telefono leggeva quello, davanti alla versione con l'abbinamento Zigbee, il
+volto o l'impronta, le fasce orarie e le stanze per piano.
+
+## 1.6.0.1
+
+Sette cose viste provando la 1.6.0 su un telefono e su una casa vera. Nessuna
+funzione nuova: sono tutte correzioni, e due di queste toglievano fiducia a
+quello che la plancia dice.
+
+**Uno switch acceso non è più un «dispositivo non collegato».** Nel cruscotto
+dell'installatore comparivano quarantatré apparecchi giù in una casa in cui
+funzionavano quasi tutti. La prova sta nella scheda di uno switch UniFi:
+stato **Connesso**, in casa, CPU al 5,7%, firmware aggiornato — e in fondo
+all'elenco «Port 1 power cycle» e «Port 4 power cycle» col tasto grigio. Su
+quelle due porte non c'è attaccato niente, quindi UniFi pubblica quei due
+pulsanti come non disponibili. Due entità su venti, e la regola diceva: se
+una tace, il dispositivo è giù. Non è un capriccio di UniFi — il blocco
+bambini di un'asciugatrice spenta, il canale non usato di una presa multipla,
+la ricarica di un'auto che non c'è fanno lo stesso. Adesso un apparecchio è
+giù solo quando **tutte** le sue entità tacciono insieme, che è come si
+presenta davvero uno irraggiungibile: una sola che parla vuol dire che la
+strada c'è.
+
+**Il Report divide per fasce subito, invece di aspettare un giro da Analisi.**
+«Devo cliccare prima su Analisi, poi vado in Panoramica e cambia.» Il conto
+si fa se c'è qualcuno che guarda la Panoramica — sono settecento righe
+chieste al Recorder, e farle per una pagina che nessuno ha davanti sarebbe
+lavoro buttato — ma quella domanda era una fotografia, e rispondeva per
+l'istante in cui la si faceva. Il pacchetto del mese arriva mentre il Report
+si sta ancora aprendo: la risposta era «no», e non si riprovava più. Da qui
+il giro da Analisi, che non era un rimedio ma il dito che dava la seconda
+occasione al posto del codice. E non mancava solo il blocco: finché il conto
+non c'è, «Costo Reale» resta sulla stima invece della spesa contata ora per
+ora — **32,16 € nella tessera e 19,85 € nel blocco**, a tre centimetri di
+distanza. Adesso il pacchetto si mette da parte e si aspetta di essere
+guardati.
+
+**Il ponte dice che rete Zigbee ha trovato, invece di tacere.** Una casa che
+ha Zigbee e un ponte che non lo trova erano indistinguibili da una casa che
+Zigbee non ce l'ha: in tutt'e due i casi la voce nel menu dell'app non
+compare, e chi guarda non sa né quale dei due gli è capitato né cosa andare a
+controllare. Adesso la console dell'add-on lo scrive in una riga, accanto a
+quella del centralino: «la cassetta si chiama zigbee2mqtt», oppure «in 2
+secondi non ha risposto nessuno», oppure «Home Assistant non fa ascoltare
+MQTT». E la cassetta si trova anche quando il suo prefisso ha una barra
+dentro: la funzione che lo legge era preparata per quel caso, ma la domanda
+lo rendeva impossibile — in MQTT il `+` copre un livello solo.
+
+**Nel cruscotto i dispositivi non collegati si leggono tutti.** Erano dodici
+più «e altri 31», e quella scritta non risponde alla domanda per cui quel
+riquadro esiste: chi installa ci va a cercare dentro **quali** cose sono giù,
+perché è da lì che decide se prendere la macchina. Il taglio non era nel
+cruscotto, che disegna tutto quello che gli arriva: era nel ponte, e stava a
+dodici per una ragione di impaginazione. Adesso sta a duecento, che è una
+guardia contro un elenco che cresce senza fine.
+
+**Il nome che dai a un'entità arriva anche nella stanza**, non solo nel suo
+elenco. Le righe di «Altro in questa stanza» le riempiono due rubinetti:
+l'assegnazione a mano, che sa **dove** e del nome non sa niente, e «Le tue
+entità», che sa dove, come si chiama e con che segno. Vinceva la prima
+arrivata, tutta intera — e siccome la mappa a mano si legge per prima,
+un'entità scritta in tutt'e due perdeva il nome che le era stato dato e
+tornava a chiamarsi come la chiama Home Assistant. Adesso si decide campo per
+campo: la stanza la dice quella scritta a mano, il nome e il segno l'unica
+delle due che ce li ha.
+
+**I disegni degli elettrodomestici non abbagliano più al buio.** Il palco su
+cui stanno era una radiale azzurro chiaro su fondo quasi bianco, uguale per
+tutti e due i temi: su una pagina scura diventava una lastra, e il disegno —
+che è bianco e acciaio — ci si perdeva dentro invece di staccarsi. Guardati
+tutti e ventidue prima di toccare: su un palco scuro si leggono meglio, non
+peggio. I palchi erano due, quello a riposo e quello di quando l'apparecchio
+è in funzione, e il secondo al buio era il peggiore.
+
+**Tre cose più piccole, dalla stessa sera.** La tessera «Non rispondono» si
+chiama **Dispositivi non connessi** e ha finalmente un disegno suo: era
+l'unica della Home che ricadeva su un'emoji, e accanto a sei oggetti disegnati
+si vedeva che era più grande e fuori asse. Le didascalie che scorrono sotto le
+tessere vanno a **metà velocità**: andavano a una quindicina di punti al
+secondo, e un tetto sbagliato faceva correre proprio le più lunghe, che sono
+quelle che si fa più fatica a leggere.
+
 ## 1.6.0
 
 Il numero passa a **1.6.0** e non a 1.5.9.17, perché qui non ci sono

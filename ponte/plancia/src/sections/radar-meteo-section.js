@@ -953,7 +953,7 @@ function osservaLaFinestra() {
  * caricano come immagini, e un servizio che non manda le intestazioni per le
  * chiamate incrociate passa lo stesso — provarlo con `fetch` direbbe «non
  * funziona» di una cosa che funziona. */
-export function provaLIndirizzo(modello, luogo, raggio = RAGGIO_DI_SERIE) {
+export function provaLIndirizzo(modello, luogo, raggio = RAGGIO_DI_SERIE, tetto = null) {
   return new Promise((risolvi) => {
     /* Prima si guarda che COSA e' stato incollato: «non e' un modello» ha due
      * ragioni molto diverse, e dirle uguali lascia la persona ferma dov'era. */
@@ -962,7 +962,18 @@ export function provaLIndirizzo(modello, luogo, raggio = RAGGIO_DI_SERIE) {
       risolvi({ ok: false, motivo: problema === "vuoto" ? "senza-indirizzo" : problema });
       return;
     }
-    const finestraTessere = luogo && finestraDiTessere(luogo.lat, luogo.lon, { raggioKm: raggio });
+    const perLaMappa = luogo && finestraDiTessere(luogo.lat, luogo.lon, { raggioKm: raggio });
+    /* Il quadratino si chiede al livello a cui lo chiedera' il radar, non a
+     * quello della mappa: sotto il tetto la pioggia si chiede piu' larga
+     * (`finestraDellaPioggia`), e provarla un gradino piu' su vorrebbe dire
+     * provare una cosa che nessuno chiedera' mai. Peggio: quello che torna da
+     * sopra il tetto e' un quadratino con dentro stampato «Zoom Level Not
+     * Supported», che e' un'immagine come le altre — arriva, e la prova
+     * diceva «Arriva: il quadratino c'e'» di un servizio che a quel livello
+     * non serve niente. */
+    const finestraTessere = perLaMappa
+      ? finestraDellaPioggia(luogo.lat, luogo.lon, perLaMappa, tetto) || perLaMappa
+      : null;
     const tessera = finestraTessere?.tessere?.[0];
     const url = tessera ? urlDellaTessera(modello, tessera, finestraTessere.zoom) : "";
     if (!url) {
@@ -1328,7 +1339,12 @@ async function onClick(event) {
       ? { ok: false, motivo: "senza-posto" }
       : scelto?.servizio && SERVIZI_RADAR[scelto.servizio] && !modello
         ? { ok: false, motivo: "senza-fotogramma" }
-        : await provaLIndirizzo(modello, luogo, Number(config.raggio));
+        : await provaLIndirizzo(
+            modello,
+            luogo,
+            Number(config.raggio),
+            zoomDellaPioggia(config, servizioScelto(config)),
+          );
     state.provando = false;
     esito.dataset.dmEsito = risposta.ok ? "bene" : "male";
     esito.textContent = risposta.ok

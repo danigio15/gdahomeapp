@@ -57,10 +57,9 @@ Poi il JSON va in Settings → Secrets and variables → Actions → New reposit
 secret, con nome `NEGOZIO_GOOGLE`. In chiaro o in base64, li prende tutti e
 due.
 
-## La prima volta si prova, e non si pubblica
+## Si prova prima, e ogni volta
 
-Il giro «L'app da provare» ha due caselle apposta, e conviene usarle in
-quest'ordine:
+Il giro «L'app da provare» ha due caselle apposta:
 
 - **`elenca_le_piste`** non costruisce niente: chiede al negozio come si
   chiamano davvero le sue piste, e in mezzo minuto le scrive nel riepilogo. Le
@@ -68,10 +67,31 @@ quest'ordine:
   una prova chiusa aperta a mano si chiama `custom-4697217…`, e indovinarlo non
   si può. Il negozio elenca le piste che hanno già qualcosa sopra: una prova
   appena aperta e ancora vuota qui non si vede.
-- **`prova_del_negozio`** fa tutto il giro vero — carica il pacchetto, prepara
-  la pista, chiede a Google se va bene — e poi **butta la modifica** invece di
-  consegnarla. È il modo di scoprire che il credenziale funziona senza che
-  nessuno si ritrovi una versione nuova sul telefono.
+- **`prova_del_negozio`** fa tutto il giro vero — costruisce, carica il
+  pacchetto, prepara la pista, chiede a Google se va bene — e poi **butta la
+  modifica** invece di consegnarla. Nessuno si ritrova una versione nuova sul
+  telefono, e si sa lo stesso se sarebbe andata.
 
-Quando tutt'e due dicono di sì, si rilancia con la pista scritta nella casella
-`negozio` e quella volta va su per davvero.
+**E non è solo per la prima volta.** Il credenziale, una volta messo,
+funziona; quello che cambia da una versione all'altra è **il pacchetto**, e il
+negozio guarda anche quello. La 1.6.4.1 si costruiva bene ed era firmata con la
+chiave vera: Google l'ha rimandata indietro lo stesso.
+
+```
+The app cannot declare 'android.hardware.type.automotive' device feature
+and 'com.google.android.gms.car.application' metadata at the same time.
+```
+
+Una riga nel manifesto. Ma l'etichetta era già messa, e un'etichetta non si
+sposta: per correggerla è servita una versione nuova e tutto il giro da rifare
+— add-on, centralino, etichetta, tramite — più due approvazioni a mano
+dell'ambiente `negozio`.
+
+Quindi l'ordine è questo, e costa dieci minuti di macchina:
+
+1. **«L'app da provare» su `main`**, con la pista scritta nella casella
+   `negozio` e `prova_del_negozio` spuntato. Se Google dice di no, non è
+   costato niente: nessuna etichetta messa, nessuna versione bruciata.
+2. Solo quando dice di sì: **«L'etichetta»**, e poi «L'app da provare» su
+   quell'etichetta, con la pista e la casella della prova **vuota**. Quella
+   volta va su per davvero, e con lei nasce la release.

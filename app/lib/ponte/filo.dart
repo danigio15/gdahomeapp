@@ -375,7 +375,9 @@ class Filo {
   ///
   ///  - **torna**: si e' dentro;
   ///  - **[SegnoRifiutato]**: il telefono e' stato staccato dalla console, e
-  ///    non si riprova perche' riprovare non cambierebbe niente;
+  ///    non si riprova perche' riprovare non cambierebbe niente. Lo si crede
+  ///    solo quando la casa lo dice dentro il cifrato (`auth_invalid`): un
+  ///    «non ti conosco» in chiaro e' un [RifiutoNonFirmato], e si riprova;
   ///  - **[PonteIrraggiungibile]**: non si trova la casa. Arriva **appena** il
   ///    primo giro di ricerca ha finito, con la spiegazione di chi ha cercato,
   ///    non dopo [entro] con una spiegazione nostra; [entro] resta come rete
@@ -411,6 +413,11 @@ class Filo {
     try {
       dove = await _trovaLApprodo();
     } catch (errore) {
+      /* Una bussata che nel frattempo ne ha una piu' nuova davanti non ha
+       * niente da dire a nessuno: il filo, i tentativi e chi aspetta sono
+       * della nuova. Rispondere qui vorrebbe dire far fallire l'attesa di
+       * un `apri` fatto dopo, con l'esito di prima. */
+      if (mia != _bussate) return;
       /* Nessun indirizzo risponde. I tentativi vanno avanti — il telefono puo'
        * essere in galleria, e fra un minuto no — ma **la prima volta chi
        * aspetta lo viene a sapere subito**, e con la spiegazione vera.
@@ -469,14 +476,14 @@ class Filo {
         unawaited(sotto.chiudi());
         return;
       }
+      /* Un «non ti conosco» detto qui, prima della stretta, e' in chiaro e
+       * non lo firma nessuno: arriva come [RifiutoNonFirmato], e finisce
+       * nell'ultimo `catch` come ogni altro intoppo — si dice, e si riprova.
+       * Spegnere il filo per sempre lo puo' solo `auth_invalid`, che arriva
+       * dentro il cifrato: vedi `_arrivato`, e in cima a `stretta.dart`. */
       presa = await stringiLaMano(sotto, chi: chi, chiaveDelFilo: chiave);
-    } on SegnoRifiutato catch (errore) {
-      /* La casa dice che questo telefono non lo conosce piu'. Non e' una
-       * caduta: ribussare non cambierebbe niente, e chi guarda lo schermo deve
-       * sapere che va riabbinato. */
-      _segnoNonVale(errore.spiegazione);
-      return;
     } on TimeoutException {
+      if (mia != _bussate) return;
       /* Una presa che non si apre e non fallisce e' un silenzio, non una
        * risposta: chi aspetta non lo viene a sapere: il giro dopo, quasi
        * sempre, la presa si apre — e un telefono che si ricollega da solo non
@@ -489,6 +496,8 @@ class Filo {
       );
       return;
     } catch (errore) {
+      /* Come sopra: l'esito di una bussata superata non e' di nessuno. */
+      if (mia != _bussate) return;
       /* Prima di tutto: e' la casa che non risponde, o e' il telefono che non
        * ha ancora rete? Dopo mezz'ora in tasca e' quasi sempre il secondo, e
        * si risolve riprovando fra un attimo. */

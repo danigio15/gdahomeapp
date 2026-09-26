@@ -21,6 +21,7 @@ import {
   floodEntities,
   floodIsWet,
   isFloodSensor,
+  puoEssereUnaSonda,
 } from "../src/sections/flood-alerts-section.js";
 
 const SRC = join(dirname(fileURLToPath(import.meta.url)), "..", "src");
@@ -187,4 +188,33 @@ test("la tessera in Home legge l'ELENCO dei sensori, non l'oggetto che lo porta 
   /* La forma della risposta, per non ricascarci. */
   const risposta = floodEntities({ [FLOOD_GROUP]: ["binary_sensor.perdita_lavello"] }, {}, {}, true);
   assert.deepEqual(risposta, { entities: ["binary_sensor.perdita_lavello"], primoAvvio: false });
+});
+
+test("nella tessera è una sonda chi non dice di essere un'altra cosa", () => {
+  /* Dal campo: «continua ad uscire questo allarme bagnato ma non c'è nessuna
+   * entità allarme, sono 5 i sensori configurati, questo 6 non esiste». Il
+   * sesto c'era: un avviso finito nel gruppo Allagamenti dalla scheda degli
+   * avvisi, dove fra i gruppi c'è anche «Allagamenti». La tessera lo leggeva
+   * come legge tutti — acceso vuol dire bagnato — e un antifurto inserito
+   * diceva «C'è acqua».
+   *
+   * La regola del rilevamento non si tocca: quella è stretta apposta. Questa è
+   * la regola di chi guarda, e deve tenere dentro anche il sensore fatto in
+   * casa, che la classe non la dichiara affatto. */
+  const conClasse = (classe) => ({ state: "on", attributes: { device_class: classe } });
+  /* Quello che dichiara acqua, e quello che non dichiara niente. */
+  assert.equal(puoEssereUnaSonda("binary_sensor.perdita", conClasse("moisture")), true);
+  assert.equal(puoEssereUnaSonda("binary_sensor.fatto_in_casa", { state: "off" }), true);
+  /* E quello che dichiara di essere un'altra cosa, no. */
+  assert.equal(puoEssereUnaSonda("binary_sensor.allarme", conClasse("safety")), false);
+  assert.equal(puoEssereUnaSonda("binary_sensor.allarme", conClasse("problem")), false);
+  assert.equal(puoEssereUnaSonda("binary_sensor.corridoio", conClasse("motion")), false);
+  /* Niente che non sia un binary_sensor, e niente che in Home Assistant non
+   * c'è: una riga rimasta in lista dopo che il dispositivo è stato tolto non è
+   * una sonda che «ha risposto». */
+  assert.equal(puoEssereUnaSonda("input_boolean.allarme", { state: "on" }), false);
+  assert.equal(puoEssereUnaSonda("binary_sensor.sparito", undefined), false);
+  assert.equal(puoEssereUnaSonda("", conClasse("moisture")), false);
+  /* E il rilevamento resta stretto: si prende da solo solo l'umidità. */
+  assert.equal(isFloodSensor("binary_sensor.fatto_in_casa", { state: "off" }), false);
 });
