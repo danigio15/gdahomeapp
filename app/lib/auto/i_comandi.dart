@@ -298,20 +298,32 @@ List<ComandoRapido> leAzioniDellaPlancia(
   try {
     final letto = jsonDecode(fotografia);
     if (letto is! Map || letto['azioni'] is! List) return const [];
-    return [
-      for (final riga in letto['azioni'] as List)
-        if (riga is Map &&
-            riga['id'] is String &&
-            riga['nome'] is String &&
-            laRicettaDi(riga['id'] as String, ricette) != null)
-          ComandoRapido(
-            id: riga['id'] as String,
-            nome: (riga['nome'] as String).trim(),
-            genere: GenereDelComando.azione,
-            provenienza: 'Azione rapida',
-            ricetta: laRicettaDi(riga['id'] as String, ricette)!,
-          ),
-    ];
+    final fuori = <ComandoRapido>[];
+    for (final riga in letto['azioni'] as List) {
+      if (riga is! Map || riga['id'] is! String || riga['nome'] is! String) {
+        continue;
+      }
+      final ricetta = laRicettaDi(riga['id'] as String, ricette);
+      if (ricetta == null) continue;
+      fuori.add(
+        ComandoRapido(
+          id: riga['id'] as String,
+          nome: (riga['nome'] as String).trim(),
+          /* Il genere e' il disegno che esce in auto. Qui l'entita' viva non
+           * c'e' — la fotografia e' quella lasciata all'auto, e l'app puo'
+           * essere chiusa — ma la ricetta si', e il dominio basta a dire che
+           * un cancello e' un varco e una scena e' una scena. Prima era
+           * «azione» per tutti, ed erano tutti col fulmine. */
+          genere: _genereDelDominio(ricetta.dominio, ''),
+          /* Una serratura in macchina chiede sempre conferma, da qualunque
+           * parte arrivi: la stessa regola dell'altra strada. */
+          conferma: ricetta.dominio == 'lock',
+          provenienza: 'Azione rapida',
+          ricetta: ricetta,
+        ),
+      );
+    }
+    return fuori;
   } on FormatException {
     return const [];
   }

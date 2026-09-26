@@ -222,7 +222,7 @@ class ArrivoACasa(private val auto: () -> CarContext) {
             DURATA_MS,
         )
             .setSubtitle(CarText.create(comando.nome))
-            .setIcon(ilSegno(carContext, comando.genere))
+            .setIcon(ilSegno(carContext, comando.genere, comando.dominio))
             .addAction(
                 Action.Builder()
                     .setTitle(carContext.getString(R.string.auto_arrivo_fai))
