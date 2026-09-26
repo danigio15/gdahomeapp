@@ -20,6 +20,14 @@ import { attributoSeCambia, classeSeCambia } from "../src/core/scrivere-se-cambi
 import { runSteps, stepReporter } from "../src/core/runtime-steps.js";
 import { DashboardStore } from "../src/core/dashboard-store.js";
 import { daProvare, diagnosi, siSveglia, strategieDellaTelecamera } from "../src/core/strategie-telecamera.js";
+import {
+  eIlModoIntelligente,
+  iModiDiEvcc,
+  iValoriDelSempre,
+  ilModoAcceso,
+  ilValoreDelSempreAcceso,
+  laFilaDelSempreServe,
+} from "../src/core/le-modalita-di-evcc.js";
 import { renderPreseEditor } from "../src/sections/prese-section.js";
 /* La chat di assistenza si installa da se', come le altre sezioni: l'import e'
  * qui perche' il grafo di produzione parte da questo file, e un modulo che
@@ -963,6 +971,18 @@ const DashboardModernModules = Object.freeze({
    * dentro. E' l'unico modo perche' quella scelta si possa provare senza una
    * Ring in casa. */
   telecamere: Object.freeze({ strategieDellaTelecamera, daProvare, diagnosi, siSveglia }),
+  /* Le modalita' di ricarica: quali tasti disegnare e quale accendere. evcc le
+   * ha rinominate una volta (`pv` → `smart`) e i tasti sono rimasti spenti per
+   * giorni; adesso i nomi non stanno piu' nel guscio, stanno nell'entita', e il
+   * guscio li chiede qui. */
+  evcc: Object.freeze({
+    iModiDiEvcc,
+    ilModoAcceso,
+    eIlModoIntelligente,
+    iValoriDelSempre,
+    ilValoreDelSempreAcceso,
+    laFilaDelSempreServe,
+  }),
   store,
   EDITOR_REGISTRY,
   renderEditorTab,

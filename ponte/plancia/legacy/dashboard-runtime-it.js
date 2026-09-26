@@ -1161,6 +1161,102 @@ function setEVMode(mode) {
   ws.send(JSON.stringify({ id: msgId++, type: 'call_service', domain: modeEid.split('.')[0], service: 'select_option', service_data: { entity_id: modeEid, option: mode } }));
 }
 
+/* I tasti delle modalita' di evcc, disegnati da quello che l'entita' dichiara.
+ *
+ * evcc ha rifatto le modalita': `pv` si chiama `smart` e `minpv` non c'e' piu'
+ * (evcc-io/evcc#32490). Qui i tasti erano quattro, scritti a mano nell'HTML con
+ * gli id fissi, e l'acceso si cercava come `m-btn-<stato>`: da quel giorno
+ * `m-btn-smart` non esisteva e non si accendeva piu' niente — mentre il comando
+ * partiva lo stesso, perche' evcc accetta ancora `pv` come scrittura deprecata.
+ * Un tasto che fa quello che deve e sembra rotto.
+ *
+ * Adesso i nomi non stanno qui: stanno nelle `options` dell'entita', e i tasti
+ * sono quelli. Il giudizio — quali disegnare, quale accendere — sta in
+ * `core/le-modalita-di-evcc.js`, che si prova senza una wallbox in garage. */
+/* La fila del «sempre», sotto i tasti dei modi.
+ *
+ * «Always charge» non e' una quarta modalita': e' un'entita' a parte, con tre
+ * stati, che si affianca a quella intelligente — da sola quella usa solo il
+ * surplus, con questa tiene un minimo anche oltre. Disegnarla in fila coi modi
+ * farebbe credere che scegliendola si esce da smart, e invece ci si resta
+ * dentro: sta sotto, con un titolo suo.
+ *
+ * Si vede solo dove ha senso: entita' mappata, e modalita' intelligente accesa.
+ * In `off` non si carica e in `fast` si carica al massimo comunque, e una fila
+ * che non cambia niente e' una fila che confonde. */
+function dmEvccFilaDelSempre(dove, acceso) {
+  const api = window.DashboardModernModules && DashboardModernModules.evcc;
+  const eid = resolveEntity('dm.ev_ricarica_sempre_evcc');
+  const stato = (eid && eid.indexOf('dm.') !== 0 && typeof STATES !== 'undefined') ? STATES[eid] : null;
+  const vecchia = dove.parentElement && dove.parentElement.querySelector('.dm-evcc-sempre');
+  if (!api || !api.laFilaDelSempreServe(stato, acceso)) { if (vecchia) vecchia.remove(); return; }
+  const valori = api.iValoriDelSempre(stato);
+  const scelto = api.ilValoreDelSempreAcceso(stato, valori);
+  const html = '<div class="dm-evcc-sempre-cap">'
+    + '<strong>' + cdEsc('Tieni il minimo') + '</strong><small>' + cdEsc('Anche quando il sole non basta') + '</small></div>'
+    + '<div class="dm-evcc-sempre-righe">'
+    + valori.map(function(v){
+        return '<button type="button" class="dm-evcc-sempre-btn" onclick="setEVSempre(' + cdJs(v.id) + ')"'
+          + (v.id === scelto ? ' aria-pressed="true"' : ' aria-pressed="false"')
+          + '>' + cdEsc(v.it) + '</button>';
+      }).join('')
+    + '</div>';
+  const fila = vecchia || document.createElement('div');
+  if (!vecchia) { fila.className = 'dm-evcc-sempre'; dove.after(fila); }
+  if (fila.innerHTML !== html) fila.innerHTML = html;
+}
+
+/* Il comando del «sempre»: come `setEVMode`, sulla sua entita'. */
+window.setEVSempre = function(valore) {
+  if (!ws || ws.readyState !== 1) return;
+  if (navigator.vibrate) navigator.vibrate(10);
+  const eid = resolveEntity('dm.ev_ricarica_sempre_evcc');
+  if (!eid || eid.indexOf('dm.') === 0) return;
+  ws.send(JSON.stringify({ id: msgId++, type: 'call_service', domain: eid.split('.')[0], service: 'select_option', service_data: { entity_id: eid, option: valore } }));
+};
+
+/* Il nome di una modalita' arriva da evcc, non da qui: passa da `cdJs` dentro
+ * il gestore e da `cdEsc` dentro il testo, come ogni valore che viene da fuori.
+ * Il colore invece e' nostro, e passa da `cdColor` lo stesso — una regola che
+ * vale solo quando conviene non e' una regola. */
+function dmEvccTastoGrande(m) {
+  return '<div class="lm-evcc-btn evcc-mode-btn" id="m-btn-' + cdEsc(m.id) + '" onclick="setEVMode(' + cdJs(m.id) + ')"'
+    + ' style="--btn-col:' + cdColor(m.colore, '#64748b') + ';--btn-bg:' + cdColor(m.sfondo, '#f1f5f9') + ';">'
+    + '<span class="ev-ic">' + cdEsc(m.icona) + '</span><span class="ev-lbl">' + cdEsc(m.it) + '</span></div>';
+}
+function dmEvccTastoPopup(m) {
+  return '<div class="ev-popup-mode-btn evcc-mode-btn" id="p-btn-' + cdEsc(m.id) + '" onclick="setEVMode(' + cdJs(m.id) + ')"'
+    + ' style="--btn-col: ' + cdColor(m.colore, '#64748b') + '; --btn-bg: ' + cdColor(m.sfondo, '#f1f5f9') + ';">'
+    + '<div class="icon">' + cdEsc(m.icona) + '</div><div class="txt">' + cdEsc(m.it) + '</div></div>';
+}
+function dmEvccDisegnaIModi() {
+  const api = window.DashboardModernModules && DashboardModernModules.evcc;
+  if (!api) return;
+  const eid = resolveEntity('dm.ev_modalita_ricarica_evcc');
+  const stato = (eid && eid.indexOf('dm.') !== 0 && typeof STATES !== 'undefined') ? STATES[eid] : null;
+  const modi = api.iModiDiEvcc(stato);
+  // Si ridisegna solo quando l'elenco cambia: l'acceso invece si rimette a ogni
+  // giro, ed e' l'unica cosa che si muove davvero.
+  const firma = modi.map(function(m){ return m.id; }).join(',');
+  [['.lm-evcc-grid', dmEvccTastoGrande], ['.ev-popup-modes', dmEvccTastoPopup]].forEach(function(coppia){
+    const dove = document.querySelector(coppia[0]);
+    if (!dove || dove.dataset.dmEvccFirma === firma) return;
+    dove.dataset.dmEvccFirma = firma;
+    dove.innerHTML = modi.map(coppia[1]).join('');
+  });
+  const acceso = api.ilModoAcceso(stato, modi);
+  document.querySelectorAll('.evcc-mode-btn').forEach(function(b){ b.classList.remove('active'); });
+  ['.lm-evcc-grid', '.ev-popup-modes'].forEach(function(quale){
+    const griglia = document.querySelector(quale);
+    if (griglia) dmEvccFilaDelSempre(griglia, acceso);
+  });
+  if (!acceso) return;
+  ['m-btn-', 'p-btn-'].forEach(function(prefisso){
+    const el = document.getElementById(prefisso + acceso);
+    if (el) el.classList.add('active');
+  });
+}
+
 window.changeSelect = function(entityId, value) {
   if(!ws) return;
   if(navigator.vibrate) navigator.vibrate(10);
@@ -3582,6 +3678,7 @@ const CD_SLOTS = {
         { ref: 'dm.ev_stato_ricarica',   lbl: 'Stato ricarica (testo)' },
         { ref: 'dm.ev_cavo_collegato',   lbl: 'Cavo collegato (binary_sensor)' },
         { ref: 'dm.ev_modalita_ricarica_evcc',        lbl: 'Modalità ricarica EVCC (select)' },
+        { ref: 'dm.ev_ricarica_sempre_evcc', lbl: 'Ricarica sempre EVCC / Always charge (select)' },
         { ref: 'dm.ev_target_soc',           lbl: 'Target SOC (select)' },
         { ref: 'dm.ev_energia_sessione',           lbl: 'Energia sessione (kWh)' },
         { ref: 'dm.ev_percentuale_solare_sessione', lbl: 'Percentuale solare sessione (%)' },
@@ -6432,11 +6529,7 @@ function render() {
       const autoLimKm = dmEvKmAlTarget();
       document.querySelectorAll('.v-auto-limite').forEach(el => el.textContent = autoLimKm != null ? autoLimKm+' km' : '—');
       // Modo EVCC
-      const evccModeRaw = getRawState('dm.ev_modalita_ricarica_evcc');
-      document.querySelectorAll('.lm-evcc-btn').forEach(b => b.classList.remove('active'));
-      const modeMap2 = { 'off':'m-btn-off','pv':'m-btn-pv','minpv':'m-btn-minpv','now':'m-btn-now' };
-      const activeM = modeMap2[evccModeRaw?.toLowerCase()];
-      if (activeM) { const el = document.getElementById(activeM); if(el) el.classList.add('active'); }
+      dmEvccDisegnaIModi();
       // Target SoC select
       const tSocSel = document.getElementById('sel-target-soc');
       const tSocVal = getRawState('dm.ev_target_soc');
@@ -6657,7 +6750,7 @@ function render() {
 
       document.querySelectorAll('.v-ev-pow').forEach(el => el.textContent = getDisplay('dm.ev_potenza_wallbox')); document.querySelectorAll('.v-ev-volt').forEach(el => el.textContent = getDisplay('dm.ev_tensione_wallbox')); document.querySelectorAll('.v-ev-range').forEach(el => el.textContent = getDisplay('dm.ev_autonomia')); document.querySelectorAll('.v-ev-km-ric').forEach(el => el.textContent = getDisplay('dm.ev_km_dall_ultima_ricarica')); document.querySelectorAll('.v-ev-odo').forEach(el => el.textContent = getDisplay('dm.ev_odometro')); document.querySelectorAll('.v-ev-ac-tot').forEach(el => el.textContent = getDisplay('dm.ev_prelievo_ac_totale_auto')); document.querySelectorAll('.v-ev-temp-wb').forEach(el => el.textContent = getDisplay('dm.ev_temperatura_wallbox'));
       updateSelectOptions('dm.ev_target_soc', 'sel-target-soc'); updateSelectOptions('dm.ev_target_soc', 'sel-target-soc-popup'); (function(){ const km = dmEvKmAlTarget(); document.querySelectorAll('.v-auto-limite').forEach(el => el.textContent = km != null ? km+' km' : '—'); })();
-      const evccMode = getRawState('dm.ev_modalita_ricarica_evcc'); document.querySelectorAll('.evcc-mode-btn').forEach(btn => btn.classList.remove('active')); if(evccMode && evccMode !== '—') { const md = evccMode.toLowerCase(); const b1 = document.getElementById('m-btn-' + md); if(b1) b1.classList.add('active'); const b2 = document.getElementById('p-btn-' + md); if(b2) b2.classList.add('active'); }
+      dmEvccDisegnaIModi();
 
       if(currentPopupType && currentPopupType.startsWith('subloads_')) { renderSubLoads(currentPopupType.replace('subloads_', '')); }
       if(currentPopupType === 'gestione_luci' && document.getElementById('details-modal').classList.contains('show')) { updateGestioneLuci(); }

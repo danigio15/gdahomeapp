@@ -3836,4 +3836,7 @@ export default Object.freeze({
   "Alarm bypass": "警報のバイパス",
   "Bypass switch": "バイパスのスイッチ",
   "Alarm panels publish a switch next to each contact that tells the panel to ignore it: that is what you need to arm the alarm with a window left open on purpose. Write it here and the shield to bypass this opening shows up on the Openings page. On means bypassed. Leave it empty and this opening is only watched, as before.": "警報盤は接点ごとに、その接点を見ないよう盤に伝えるスイッチを公開します。わざと窓を開けたまま警報をセットしたいときに必要なのがこれです。ここに書くと、開口部のページにこの開口部をバイパスする盾が出ます。オンはバイパス中の意味です。空のままにすれば、この開口部は今までどおり見るだけになります。",
+  "Keep the minimum": "最低限は流す",
+  "Even when the sun is not enough": "太陽が足りないときも",
+  "EVCC always charge (select)": "EVCC の常時充電 (select)",
 });

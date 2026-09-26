@@ -39,7 +39,12 @@ const state = (root[KEY] ||= { installed: false, listeners: false, frame: 0 });
 
 const ARC_RADIUS = 50;
 const ARC_LENGTH = 2 * Math.PI * ARC_RADIUS;
-const MODE_IDS = Object.freeze(["off", "pv", "minpv", "now"]);
+/* `smart` is what evcc renamed `pv` to (evcc-io/evcc#32490); `minpv` is gone
+   from its read path but stays here for the shells that still offer it. Which
+   buttons actually exist is decided by the entity's own options — see
+   `core/le-modalita-di-evcc.js` — this list only says which ids this section
+   knows how to dress. */
+const MODE_IDS = Object.freeze(["off", "pv", "smart", "minpv", "now"]);
 
 const ICONS = Object.freeze({
   bolt: '<path d="M13.2 2.8 5.6 13.4h5.3l-.9 7.8 8.4-10.6h-5.3l.1-7.8Z"/>',
@@ -68,7 +73,13 @@ const STAT_ICONS = Object.freeze({
   "dm.ev_temperatura_wallbox": "thermo",
 });
 
-const MODE_ICONS = Object.freeze({ off: "stop", pv: "sun", minpv: "cloudsun", now: "rocket" });
+const MODE_ICONS = Object.freeze({
+  off: "stop",
+  pv: "sun",
+  smart: "sun",
+  minpv: "cloudsun",
+  now: "rocket",
+});
 
 function icon(name, size = 20) {
   const body = ICONS[name];
@@ -506,6 +517,7 @@ function evShowcaseCss() {
 /* the four EVCC colours already configured on the buttons */
 #page-ev.dm-evv[data-dm-ev-mode="off"]{--evv-mode:#e11d48;--evv-mode-rgb:225,29,72}
 #page-ev.dm-evv[data-dm-ev-mode="pv"]{--evv-mode:#059669;--evv-mode-rgb:5,150,105}
+#page-ev.dm-evv[data-dm-ev-mode="smart"]{--evv-mode:#059669;--evv-mode-rgb:5,150,105}
 #page-ev.dm-evv[data-dm-ev-mode="minpv"]{--evv-mode:#d97706;--evv-mode-rgb:217,119,6}
 #page-ev.dm-evv[data-dm-ev-mode="now"]{--evv-mode:#0284c7;--evv-mode-rgb:2,132,199}
 #page-ev.dm-evv .dm-evv-shell{display:grid!important;gap:14px!important}
@@ -794,12 +806,14 @@ function evShowcaseCss() {
 }
 #page-ev.dm-evv #m-btn-off.active .dm-evv-fx::before{animation:dmEvvOffRing 3.4s ease-out infinite}
 /* pv — sun rays turning slowly behind the icon */
+#page-ev.dm-evv #m-btn-smart .dm-evv-fx::before,
 #page-ev.dm-evv #m-btn-pv .dm-evv-fx::before{
   content:"";position:absolute;left:50%;top:42%;width:104px;height:104px;margin:-52px 0 0 -52px;
   background:repeating-conic-gradient(rgba(255,255,255,.34) 0deg 12deg,transparent 12deg 45deg);
   -webkit-mask-image:radial-gradient(circle,transparent 16px,#000 20px,#000 36px,transparent 42px);
   mask-image:radial-gradient(circle,transparent 16px,#000 20px,#000 36px,transparent 42px)
 }
+#page-ev.dm-evv #m-btn-smart.active .dm-evv-fx::before,
 #page-ev.dm-evv #m-btn-pv.active .dm-evv-fx::before{animation:dmEvvSpin 11s linear infinite}
 /* minpv — a cloud crossing the sun: the grid minimum backing the solar */
 #page-ev.dm-evv #m-btn-minpv .dm-evv-fx::before{
@@ -825,6 +839,22 @@ function evShowcaseCss() {
 @keyframes dmEvvZoom{0%{left:-32%;opacity:0}20%{opacity:1}75%{opacity:1}100%{left:104%;opacity:0}}
 
 /* ── responsive ───────────────────────────────────────────────────────── */
+/* La fila del «sempre» (l'«always charge» di evcc): sotto i tasti dei modi, con
+   un titolo suo. Non porta il prefisso della pagina apposta — la stessa fila
+   compare anche nel popup dell'auto, che vive fuori dalla pagina dell'auto. */
+.dm-evcc-sempre{display:grid;gap:8px;padding:12px 14px;margin-top:10px;border-radius:14px;
+  border:1px dashed var(--card-border,#e2e8f0);background:var(--card-bg,#fff)}
+.dm-evcc-sempre-cap{display:grid;gap:1px}
+.dm-evcc-sempre-cap strong{font-size:12.5px;font-weight:900;color:var(--text,#0f172a)}
+.dm-evcc-sempre-cap small{font-size:10.5px;font-weight:700;color:var(--text-dim,#64748b)}
+.dm-evcc-sempre-righe{display:flex;gap:6px;flex-wrap:wrap}
+.dm-evcc-sempre-btn{flex:1 1 auto;min-width:72px;padding:7px 10px;border-radius:999px;cursor:pointer;
+  border:1px solid var(--card-border,#e2e8f0);background:var(--card-bg,#fff);
+  color:var(--text-dim,#64748b);font:900 11px/1.2 inherit;letter-spacing:.03em;
+  text-transform:uppercase;-webkit-tap-highlight-color:transparent}
+.dm-evcc-sempre-btn[aria-pressed="true"]{border-color:#059669;color:#047857;
+  background:color-mix(in srgb,#059669 14%,var(--card-bg,#fff))}
+
 @media(max-width:620px){
   #page-ev.dm-evv{--evv-r:22px;--evv-r-s:16px}
   #page-ev.dm-evv .dm-evv-power{gap:13px;padding:14px}

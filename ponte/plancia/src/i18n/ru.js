@@ -3836,4 +3836,7 @@ export default Object.freeze({
   "Alarm bypass": "Обход охраны",
   "Bypass switch": "Переключатель обхода",
   "Alarm panels publish a switch next to each contact that tells the panel to ignore it: that is what you need to arm the alarm with a window left open on purpose. Write it here and the shield to bypass this opening shows up on the Openings page. On means bypassed. Leave it empty and this opening is only watched, as before.": "Охранные панели публикуют рядом с каждым датчиком переключатель, который велит панели не смотреть на него: именно это и нужно, чтобы поставить охрану с намеренно открытым окном. Впишите его здесь, и на странице «Проёмы» появится щит, которым этот проём берётся в обход. Включено значит в обходе. Оставьте пустым — и этот проём будет только наблюдаться, как прежде.",
+  "Keep the minimum": "Держать минимум",
+  "Even when the sun is not enough": "Даже когда солнца не хватает",
+  "EVCC always charge (select)": "EVCC «всегда заряжать» (select)",
 });

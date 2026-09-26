@@ -3836,4 +3836,7 @@ export default Object.freeze({
   "Alarm bypass": "Alarm-Überbrückung",
   "Bypass switch": "Überbrückungsschalter",
   "Alarm panels publish a switch next to each contact that tells the panel to ignore it: that is what you need to arm the alarm with a window left open on purpose. Write it here and the shield to bypass this opening shows up on the Openings page. On means bypassed. Leave it empty and this opening is only watched, as before.": "Alarmzentralen veröffentlichen neben jedem Kontakt einen Schalter, der der Zentrale sagt, ihn zu ignorieren: genau das brauchst du, um den Alarm mit einem absichtlich offen gelassenen Fenster zu aktivieren. Schreib ihn hier hinein, und auf der Seite Öffnungen erscheint der Schild, mit dem du diese Öffnung überbrückst. Ein heißt überbrückt. Lass ihn leer, dann wird diese Öffnung nur beobachtet, wie vorher.",
+  "Keep the minimum": "Mindestleistung halten",
+  "Even when the sun is not enough": "Auch wenn die Sonne nicht reicht",
+  "EVCC always charge (select)": "EVCC Dauerladen (select)",
 });

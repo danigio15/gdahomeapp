@@ -1437,8 +1437,15 @@ test("production graph is single-owner, acyclic and contains no facade pass-thro
   // antifurto tre copie di una regola di segno vogliono dire una porta
   // sorvegliata mentre la si crede esclusa. Sta in un modulo suo, senza DOM e
   // senza parole, perche' e' anche l'unico modo di provarla a tavolino.
+  // 396 con le modalita' di ricarica di evcc (#…): `core/le-modalita-di-evcc.js`.
+  // evcc le ha rinominate — `pv` e' diventato `smart`, `minpv` e' sparito — e i
+  // tasti del guscio, che quei nomi li avevano scritti dentro, sono rimasti
+  // spenti per giorni mentre il comando partiva lo stesso. Adesso i nomi
+  // stanno nelle `options` dell'entita' e il giudizio sta qui, in un modulo che
+  // si prova senza una wallbox in garage: e' anche l'unico modo di sapere che
+  // al prossimo rinominare non si rompe piu' niente.
   assert.ok(
-    relative.length <= 395,
+    relative.length <= 396,
     `production graph unexpectedly grew to ${relative.length} modules`,
   );
   assertAcyclic(edges);

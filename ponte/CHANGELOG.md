@@ -11,6 +11,42 @@ fuori. La plancia dentro continua a dire la sua, e si legge dov'è sempre
 stata: nella pastiglia «La plancia» della console. Sono due numeri perché
 sono due cose.
 
+## 1.6.10
+
+**Le modalità di ricarica le dice evcc, non le sa a memoria gdahome.** evcc ha
+rifatto le sue modalità: `pv` adesso si chiama **smart** — «intelligente», e
+copre anche chi il fotovoltaico non ce l'ha e usa evcc per le tariffe orarie —
+e `minpv` non c'è più. Qui i quattro tasti erano scritti a mano, e il tasto
+acceso si cercava per nome: da quando evcc risponde `smart` non si accendeva
+più niente, mentre il comando partiva lo stesso. Un tasto che fa quello che deve
+e sembra rotto. Adesso i tasti sono quelli che l'entità dichiara davvero, con le
+loro parole: chi ha evcc nuovo ne vede tre, chi ha il vecchio resta con quattro,
+e al prossimo cambio di nomi non si rompe niente. La modalità rapida si chiama
+**Fast**, come nella tendina di Home Assistant, e non più «Subito».
+
+**E «Always charge» ha il suo posto.** Quello che faceva `minpv` — non fermarsi
+mai, tenere almeno il minimo anche oltre il surplus — in evcc è diventato
+un'opzione a parte, che si affianca a «intelligente» invece di sostituirla.
+Nella configurazione c'è la sua casella, accanto a quella della modalità; nella
+console della ricarica compare sotto i tasti, col suo titolo — «Tieni il minimo,
+anche quando il sole non basta» — e tre scelte: **Mai**, **Sempre**,
+**Stavolta**. Si vede solo dove ha senso: da spenti non si carica, e in Fast si
+carica al massimo comunque.
+
+**Il navigatore in auto risponde a «Ok Google, portami a…».** gdanav arriva
+all'ultimo, e con lui i requisiti che Google mette ai navigatori: in guida la
+manovra, le corsie e l'orario di arrivo li disegna Android Auto nelle sue schede
+— sulla mappa restano la velocità, il limite e gli avvisi — la prossima svolta
+va anche al quadro strumenti, c'è la notifica di navigazione, e la voce usa il
+canale della navigazione, quindi abbassa la musica invece di sovrapporsi. Le
+richieste di navigazione da altre app e dall'assistente adesso arrivano: con le
+coordinate si parte subito, con un indirizzo si cerca e si va.
+
+**E la scheda dell'auto, quando i dati non ci sono, dice perché.** Non più un
+riquadro vuoto: relè non raggiungibile, Home Assistant non collegato, nessuna
+auto elettrica nella plancia, sensore della batteria mancante o muto. Dice dove
+si ferma il filo, invece di lasciare a indovinare.
+
 ## 1.6.9
 
 **In macchina parte il navigatore.** gdanav — il navigatore che finora era
