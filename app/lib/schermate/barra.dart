@@ -206,7 +206,9 @@ class BarraDelleSezioniState extends State<BarraDelleSezioni>
           trovata = true;
           break;
         }
-        sopra += ((gruppo.sezioni.length + 1) ~/ 2) * (_LeTessere.alta + 8);
+        final larga = widget.collegamento?.pannello?.piuDiUna ?? false;
+        final strette = gruppo.sezioni.length - (larga ? 1 : 0);
+        sopra += ((strette + 1) ~/ 2 + (larga ? 1 : 0)) * (_LeTessere.alta + 8);
         continue;
       }
       final dove = gruppo.sezioni.indexOf(widget.aperta);
@@ -230,8 +232,8 @@ class BarraDelleSezioniState extends State<BarraDelleSezioni>
     if (!_resta) _rimanda(_dopoLaScelta);
   }
 
-  /// I gruppi della barra, con le loro voci: prima la casa, poi l'aiuto,
-  /// poi le avanzate. Un gruppo senza voci non si scrive, e il navigatore
+  /// I gruppi della barra, con le loro voci: prima la casa, poi le avanzate,
+  /// e in fondo l'aiuto. Un gruppo senza voci non si scrive, e il navigatore
   /// non si ripete fra le voci quando c'e' la sua tessera.
   List<({GruppoDellaBarra titolo, List<Sezione> sezioni})> get _gruppi => [
     for (final gruppo in GruppoDellaBarra.values)
@@ -380,22 +382,6 @@ class BarraDelleSezioniState extends State<BarraDelleSezioni>
                                     collegamento: widget.collegamento!,
                                     quandoPremuta: widget.vaiAlleCase,
                                   ),
-                                /* Quale plancia, per chi ne ha piu' d'una.
-                                 *
-                                 * Sotto la casa perche' e' la stessa domanda
-                                 * un gradino piu' in basso: prima in quale
-                                 * casa si e', poi quale delle sue plance si
-                                 * guarda. E non c'e' affatto per chi ne ha
-                                 * una sola, che sono quasi tutti: una riga
-                                 * per scegliere fra una cosa sola e' una riga
-                                 * di troppo. */
-                                if (widget.collegamento?.pannello?.piuDiUna ??
-                                    false)
-                                  _LePlance(
-                                    collegamento: widget.collegamento!,
-                                    trattieni: _trattieni,
-                                    lascia: _lascia,
-                                  ),
                                 if (widget.tessera case final t?) t,
                                 Flexible(
                                   child: ListView(
@@ -416,6 +402,9 @@ class BarraDelleSezioniState extends State<BarraDelleSezioni>
                                             aperta: widget.aperta,
                                             scegli: _scelta,
                                             daAggiornare: widget.daAggiornare,
+                                            collegamento: widget.collegamento,
+                                            trattieni: _trattieni,
+                                            lascia: _lascia,
                                           )
                                         else
                                           _IlRiquadro(
@@ -587,24 +576,34 @@ class _LaCasa extends StatelessWidget {
   }
 }
 
-/// Quale plancia si guarda, per chi ne ha piu' d'una.
+/// La tessera della plancia per chi ne ha piu' d'una: larga quanto la riga,
+/// con il nome della plancia che si guarda e, a destra, la tendina per
+/// sceglierne un'altra.
 ///
 /// Nella dashboard le plance sono voci di Home Assistant, e si scelgono dalla
 /// sua barra laterale. Nell'app non c'e' nessuna barra laterale di Home
-/// Assistant, e allora la scelta sta dov'e' l'altra dello stesso tipo: sotto
-/// la casa, in cima alla barra delle sezioni.
+/// Assistant: la scelta sta sulla plancia stessa, dove la si cerca. Toccando
+/// la tessera si apre la plancia di adesso; toccando la freccia si apre la
+/// tendina, e sceglierne una la apre.
 ///
 /// Un menu e non un elenco di righe: le plance sono al massimo otto, e otto
-/// righe in cima alla barra mangerebbero il posto delle venti sezioni — che
-/// sono la ragione per cui quella barra esiste.
+/// righe in cima alla barra mangerebbero il posto delle altre sezioni.
 class _LePlance extends StatelessWidget {
   const _LePlance({
     required this.collegamento,
+    required this.scelta,
+    required this.apri,
     required this.trattieni,
     required this.lascia,
   });
 
   final Collegamento collegamento;
+
+  /// Se la plancia e' la sezione aperta.
+  final bool scelta;
+
+  /// Apre la sezione della plancia.
+  final VoidCallback apri;
 
   /// La barra si chiude da sola dopo qualche secondo, e mentre si legge un
   /// menu che le sta sopra non le arriva nessun tocco: la si trattiene finche'
@@ -615,85 +614,152 @@ class _LePlance extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colori = Theme.of(context).colorScheme;
-    final testi = Theme.of(context).textTheme;
     final plance = collegamento.plance;
-    final scelta = collegamento.planciaScelta;
-    final trovate = plance.where((una) => una.profilo == scelta);
+    final trovate = plance.where(
+      (una) => una.profilo == collegamento.planciaScelta,
+    );
     final quale = trovate.isEmpty ? plance.first : trovate.first;
+    final fondo = scelta
+        ? colori.onSurface
+        : colori.onSurface.withValues(alpha: 0.06);
+    final scritta = scelta
+        ? colori.surface
+        : colori.onSurface.withValues(alpha: 0.85);
+    final tenue = scritta.withValues(alpha: 0.65);
 
-    return Material(
-      color: Colors.transparent,
-      child: PopupMenuButton<String>(
-        tooltip: inLingua(it: 'Quale plancia', en: 'Which dashboard'),
-        position: PopupMenuPosition.under,
-        onOpened: trattieni,
-        onCanceled: lascia,
-        onSelected: (profilo) {
-          lascia();
-          unawaited(collegamento.cambiaPlancia(profilo));
-        },
-        itemBuilder: (context) => [
-          for (final una in plance)
-            PopupMenuItem<String>(
-              value: una.profilo,
-              child: Row(
-                children: [
-                  Icon(
-                    una.profilo == quale.profilo
-                        ? Icons.radio_button_checked_rounded
-                        : Icons.radio_button_unchecked_rounded,
-                    size: 18,
-                    color: una.profilo == quale.profilo
-                        ? colori.primary
-                        : colori.onSurfaceVariant,
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      una.titolo,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-        ],
-        child: Container(
-          padding: const EdgeInsets.fromLTRB(19, 9, 12, 9),
-          decoration: BoxDecoration(
-            border: Border(
-              bottom: BorderSide(
-                color: colori.onSurface.withValues(alpha: 0.08),
-              ),
-            ),
-          ),
-          child: Row(
-            children: [
-              Icon(
-                Icons.dashboard_rounded,
-                size: 17,
-                color: colori.onSurfaceVariant,
-              ),
-              const SizedBox(width: 9),
-              Expanded(
-                child: Text(
-                  quale.titolo,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: testi.labelLarge?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: -0.1,
+    return SizedBox(
+      height: _LeTessere.alta,
+      child: Material(
+        color: fondo,
+        borderRadius: BorderRadius.circular(18),
+        clipBehavior: Clip.antiAlias,
+        child: Row(
+          children: [
+            Expanded(
+              child: InkWell(
+                onTap: apri,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(12, 10, 6, 10),
+                  child: Row(
+                    children: [
+                      Oggetto(Sezione.plancia.disegno, lato: 26),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _NomeDellaVoce(
+                              Sezione.plancia.titolo,
+                              colore: scritta,
+                            ),
+                            const SizedBox(height: 3),
+                            Text(
+                              quale.titolo,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 12.5,
+                                fontWeight: FontWeight.w600,
+                                color: tenue,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
-              Icon(
-                Icons.expand_more_rounded,
-                size: 18,
-                color: colori.onSurfaceVariant,
+            ),
+            Container(
+              width: 1,
+              height: _LeTessere.alta - 28,
+              color: scritta.withValues(alpha: 0.15),
+            ),
+            PopupMenuButton<String>(
+              tooltip: inLingua(it: 'Quale plancia', en: 'Which dashboard'),
+              position: PopupMenuPosition.under,
+              offset: const Offset(0, 6),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
               ),
-            ],
-          ),
+              onOpened: trattieni,
+              onCanceled: lascia,
+              onSelected: (profilo) {
+                lascia();
+                unawaited(collegamento.cambiaPlancia(profilo));
+                apri();
+              },
+              itemBuilder: (context) => [
+                PopupMenuItem<String>(
+                  enabled: false,
+                  height: 32,
+                  child: Text(
+                    inLingua(
+                      it: 'PLANCE DI QUESTA CASA',
+                      en: 'DASHBOARDS IN THIS HOME',
+                    ),
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 1.1,
+                      color: colori.onSurfaceVariant,
+                    ),
+                  ),
+                ),
+                for (final una in plance)
+                  PopupMenuItem<String>(
+                    value: una.profilo,
+                    child: Row(
+                      children: [
+                        Icon(
+                          una.profilo == quale.profilo
+                              ? Icons.radio_button_checked_rounded
+                              : Icons.radio_button_unchecked_rounded,
+                          size: 18,
+                          color: una.profilo == quale.profilo
+                              ? colori.primary
+                              : colori.onSurfaceVariant,
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            una.titolo,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontWeight: una.profilo == quale.profilo
+                                  ? FontWeight.w700
+                                  : FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+              ],
+              child: SizedBox(
+                width: 48,
+                height: _LeTessere.alta,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.unfold_more_rounded, size: 22, color: scritta),
+                    const SizedBox(height: 2),
+                    Text(
+                      '${plance.length}',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w800,
+                        color: tenue,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -806,6 +872,9 @@ class _LeTessere extends StatelessWidget {
     required this.aperta,
     required this.scegli,
     required this.daAggiornare,
+    this.collegamento,
+    required this.trattieni,
+    required this.lascia,
   });
 
   static const double alta = 74;
@@ -815,28 +884,62 @@ class _LeTessere extends StatelessWidget {
   final void Function(Sezione) scegli;
   final int daAggiornare;
 
+  /// Da dove si leggono le plance: con piu' d'una, la tessera della plancia
+  /// si allarga e porta la tendina per sceglierla.
+  final Collegamento? collegamento;
+  final VoidCallback trattieni;
+  final VoidCallback lascia;
+
   @override
   Widget build(BuildContext context) {
+    final collegamento = this.collegamento;
+    final larga =
+        collegamento != null &&
+        (collegamento.pannello?.piuDiUna ?? false) &&
+        sezioni.contains(Sezione.plancia);
+    final strette = [
+      for (final s in sezioni)
+        if (!(larga && s == Sezione.plancia)) s,
+    ];
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 10),
-      child: GridView.count(
-        crossAxisCount: 2,
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        padding: EdgeInsets.zero,
-        mainAxisSpacing: 8,
-        crossAxisSpacing: 8,
-        childAspectRatio: 100 / alta,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          for (final sezione in sezioni)
-            _LaTessera(
-              sezione: sezione,
-              scelta: sezione == aperta,
-              quanti: sezione == Sezione.aggiornamenti ? daAggiornare : 0,
-              premuta: () => scegli(sezione),
+          if (larga) ...[
+            _LePlance(
+              collegamento: collegamento,
+              scelta: aperta == Sezione.plancia,
+              apri: () => scegli(Sezione.plancia),
+              trattieni: trattieni,
+              lascia: lascia,
             ),
+            const SizedBox(height: 8),
+          ],
+          _laGriglia(strette),
         ],
       ),
+    );
+  }
+
+  Widget _laGriglia(List<Sezione> sezioni) {
+    return GridView.count(
+      crossAxisCount: 2,
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      padding: EdgeInsets.zero,
+      mainAxisSpacing: 8,
+      crossAxisSpacing: 8,
+      childAspectRatio: 100 / alta,
+      children: [
+        for (final sezione in sezioni)
+          _LaTessera(
+            sezione: sezione,
+            scelta: sezione == aperta,
+            quanti: sezione == Sezione.aggiornamenti ? daAggiornare : 0,
+            premuta: () => scegli(sezione),
+          ),
+      ],
     );
   }
 }

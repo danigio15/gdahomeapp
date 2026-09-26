@@ -294,7 +294,7 @@ void main() {
     _plancia = (await codec.getNextFrame()).image;
   });
 
-  Future<void> unaCasa(WidgetTester tester) async {
+  Future<void> unaCasa(WidgetTester tester, {bool trePlance = false}) async {
     tester.platformDispatcher.accessibilityFeaturesTestValue =
         const _SenzaMovimento();
     tester.view.physicalSize = const Size(1170, 2532);
@@ -302,6 +302,11 @@ void main() {
     addTearDown(tester.view.reset);
     await tester.runAsync(() async {
       ponte = await PonteFinto.alza();
+      if (trePlance) {
+        ponte.plance.first['titolo'] = 'Casa';
+        ponte.unaPlanciaInPiu('Casa al mare');
+        ponte.unaPlanciaInPiu('Ufficio');
+      }
       final archivio = ArchivioDelleCase(CassaforteInMemoria());
       await archivio.aggiungi(
         nome: 'Casa',
@@ -341,7 +346,11 @@ void main() {
   Widget telefono(Widget dentro, {ThemeData? tema}) => MaterialApp(
     debugShowCheckedModeBanner: false,
     theme: tema ?? temaChiaro(),
-    home: RepaintBoundary(key: const ValueKey('foto'), child: dentro),
+    /* Attorno al navigatore, e non alla pagina: le tendine si aprono sopra
+     * la pagina, e nella fotografia devono esserci. */
+    builder: (context, pagina) =>
+        RepaintBoundary(key: const ValueKey('foto'), child: pagina),
+    home: dentro,
   );
 
   testWidgets('oggi: il menu di gdahome', (tester) async {
@@ -424,6 +433,32 @@ void main() {
     );
     await tester.pumpAndSettle();
     await laFoto(tester, 'domani-menu');
+  });
+
+  testWidgets('domani: il menu con tre plance', (tester) async {
+    await unaCasa(tester, trePlance: true);
+    await tester.runAsync(() async {
+      for (var i = 0; i < 50 && !collegamento.pannelloLetto; i++) {
+        await Future<void>.delayed(const Duration(milliseconds: 20));
+      }
+    });
+    await tester.pumpWidget(
+      telefono(
+        Scaffold(
+          body: Stack(children: [_sfondo(), laBarra(sulNavigatore: false)]),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(collegamento.plance, hasLength(3));
+    await laFoto(tester, 'domani-menu-plance');
+    /* Nelle prove le ombre si disegnano come un bordo nero: per la
+     * fotografia della tendina servono vere, come sul telefono. */
+    debugDisableShadows = false;
+    await tester.tap(find.byTooltip('Quale plancia'));
+    await tester.pumpAndSettle();
+    await laFoto(tester, 'domani-menu-plance-tendina');
+    debugDisableShadows = true;
   });
 
   testWidgets('oggi: gdanav da solo', (tester) async {

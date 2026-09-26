@@ -170,11 +170,11 @@ enum Sezione {
 /// Quattordici voci una sotto l'altra si leggono tutte uguali, e quelle di
 /// ogni giorno — la plancia, i dispositivi — stanno in mezzo a quelle di una
 /// volta al mese. In tre gruppi si trova prima quello che si cerca: la casa,
-/// l'aiuto, e le cose da installatore.
+/// le cose da installatore, e in fondo l'aiuto, dove lo si va a cercare.
 enum GruppoDellaBarra {
   casa,
-  aiuto,
-  avanzate;
+  avanzate,
+  aiuto;
 
   String get titolo => switch (this) {
     GruppoDellaBarra.casa => inLingua(it: 'Casa', en: 'Home'),

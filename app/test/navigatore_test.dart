@@ -64,6 +64,11 @@ void main() {
     expect(find.text('GDANAV'), findsOneWidget);
     expect(find.text('CASA'), findsOneWidget);
     expect(find.text('AIUTO'), findsOneWidget);
+    /* L'aiuto in fondo, le avanzate sopra. */
+    expect(
+      tester.getTopLeft(find.text('AIUTO')).dy,
+      greaterThan(tester.getTopLeft(find.text('AVANZATE')).dy),
+    );
     expect(find.text('Tocca per navigare'), findsOneWidget);
 
     await tester.tap(find.text('GDANAV'));
