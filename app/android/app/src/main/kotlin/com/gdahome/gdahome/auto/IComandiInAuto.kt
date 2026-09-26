@@ -15,6 +15,7 @@ package com.gdahome.gdahome.auto
 import android.content.Context
 import androidx.car.app.CarContext
 import androidx.car.app.Screen
+import androidx.car.app.constraints.ConstraintManager
 import androidx.car.app.model.Action
 import androidx.car.app.model.ActionStrip
 import androidx.car.app.model.CarColor
@@ -30,7 +31,16 @@ import org.json.JSONObject
 import java.io.File
 
 private const val NOME_DEI_COMANDI = "gdahome-auto-comandi.json"
-private const val COMANDI_AL_MASSIMO = 6
+private const val COMANDI_AL_MASSIMO = 12
+
+/* Quanti ne entrano nella griglia di QUESTA auto: sei su tutte, di piu' sugli
+ * schermi grandi. Lo dice l'auto, dalla versione 2 delle API; prima, sei. */
+private fun quantiNeStanno(context: CarContext): Int =
+    runCatching {
+        if (context.carAppApiLevel < 2) return@runCatching 6
+        context.getCarService(ConstraintManager::class.java)
+            .getContentLimit(ConstraintManager.CONTENT_LIMIT_TYPE_GRID)
+    }.getOrDefault(6).coerceIn(6, COMANDI_AL_MASSIMO)
 
 data class ComandoInAuto(
     val id: String,
@@ -85,7 +95,7 @@ class IComandiInAuto(context: CarContext) : Screen(context) {
         if (comandi.isEmpty()) {
             elenco.setNoItemsMessage(carContext.getString(R.string.auto_senza_comandi))
         }
-        for (comando in comandi) {
+        for (comando in comandi.take(quantiNeStanno(carContext))) {
             elenco.addItem(
                 GridItem.Builder()
                     .setTitle(comando.nome)

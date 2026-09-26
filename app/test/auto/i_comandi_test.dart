@@ -78,9 +78,9 @@ void main() {
     expect(primi.quelloDellArrivo?.nome, 'Cancello');
   });
 
-  test('scritti e riletti sono gli stessi, e sono al massimo sei', () {
+  test('scritti e riletti sono gli stessi, e sono al massimo dodici', () {
     final tanti = [
-      for (var i = 0; i < 9; i++) comandoPer(e('light.l$i', nome: 'Luce $i'))!,
+      for (var i = 0; i < 14; i++) comandoPer(e('light.l$i', nome: 'Luce $i'))!,
     ];
     final scritti = IComandiScelti(
       comandi: tanti,
@@ -155,18 +155,122 @@ void main() {
             scritti = s;
             return true;
           },
-          azioni: () async => const [],
+          azioni: () async => const AzioniDellaPlancia([]),
         ),
       ),
     );
     await tester.pumpAndSettle();
-    expect(find.text('1 di 6 scelti'), findsOneWidget);
+    expect(find.text('1 / $comandiAlMassimo'), findsOneWidget);
     expect(find.text('Cancello'), findsWidgets);
 
-    /* Senza casa collegata non c'e' altro da aggiungere; si toglie. */
-    await tester.tap(find.byType(Switch).first);
+    /* Si toglie. */
+    await tester.tap(find.byTooltip('Togli'));
     await tester.pumpAndSettle();
     expect(scritti?.comandi, isEmpty);
-    expect(find.text('0 di 6 scelti'), findsOneWidget);
+    expect(find.text('0 / $comandiAlMassimo'), findsOneWidget);
+  });
+
+  testWidgets('si crea un comando: dispositivo, cosa fa, nome, conferma', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1170, 2532);
+    tester.view.devicePixelRatio = 3;
+    addTearDown(tester.view.reset);
+    IComandiScelti? scritti;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: ComandiInAuto(
+          leggi: () async => const IComandiScelti(),
+          scrivi: (s) async {
+            scritti = s;
+            return true;
+          },
+          azioni: () async => const AzioniDellaPlancia([]),
+          entita: casa,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Crea un comando'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Box').last);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Chiudi'));
+    await tester.enterText(find.byType(TextField).last, 'Chiudi il box');
+    await tester.tap(find.text('Aggiungi in auto'));
+    await tester.pumpAndSettle();
+    final c = scritti!.comandi.single;
+    expect(c.nome, 'Chiudi il box');
+    expect(c.ricetta.servizio, 'close_cover');
+    expect(c.ricetta.entita, 'cover.box');
+    expect(c.provenienza, 'Creato da te');
+  });
+
+  test('le azioni della plancia arrivano tutte, dalla configurazione', () {
+    final lette = leAzioniDellaConfigurazione({
+      'cd_quick_actions': jsonEncode([
+        for (var i = 0; i < 8; i++) {'name': 'Luce $i', 'entity': 'light.l$i'},
+        {'name': 'Porta', 'entity': 'lock.vecchia', 'confirm': 'Sicuro?'},
+        {
+          'name': 'Giardino',
+          'type': 'luci_group',
+          'lights': ['light.a', 'light.b'],
+        },
+        {'name': 'Lettore', 'entity': 'media_player.sala'},
+        {'name': 'Modo', 'entity': 'select.modo', 'option': 'Cinema'},
+        {'name': 'Modo libero', 'entity': 'select.modo'},
+        {'name': 'Tutte le luci', 'type': 'builtin'},
+      ]),
+      'cd_entity_overrides': jsonEncode({'lock.vecchia': 'lock.porta'}),
+    });
+    expect(lette.comandi, hasLength(12), reason: 'non piu\' solo sei');
+    final porta = lette.comandi.firstWhere((c) => c.nome == 'Porta');
+    expect(porta.ricetta.entita, 'lock.porta', reason: 'la sostituzione');
+    expect(porta.ricetta.servizio, secondoLoStato);
+    expect(porta.conferma, isTrue);
+    final giardino = lette.comandi.firstWhere((c) => c.nome == 'Giardino');
+    expect(giardino.ricetta.entita, 'light.a,light.b');
+    final modo = lette.comandi.firstWhere((c) => c.nome == 'Modo');
+    expect(modo.ricetta.dati, {'option': 'Cinema'});
+    expect(lette.soloNellaPlancia.map((f) => f.nome), [
+      'Modo libero',
+      'Tutte le luci',
+    ]);
+  });
+
+  test('il servizio della serratura e del lettore si decide premendo', () {
+    expect(ilServizioDiAdesso('lock', 'locked'), 'unlock');
+    expect(ilServizioDiAdesso('lock', 'unlocked'), 'lock');
+    expect(ilServizioDiAdesso('media_player', 'off'), 'turn_on');
+    expect(ilServizioDiAdesso('media_player', 'playing'), 'media_play_pause');
+  });
+
+  test('cosa si puo\' fare, per chi crea un comando', () {
+    final box = casa.firstWhere((x) => x.id == 'cover.box');
+    expect(cosaSiPuoFare(box).map((c) => c.servizio), [
+      'toggle',
+      'open_cover',
+      'close_cover',
+    ]);
+    expect(
+      siPuoComandare(casa.firstWhere((x) => x.dominio == 'sensor')),
+      isFalse,
+    );
+    final fatto = comandoFatto(
+      entita: box,
+      nome: '',
+      servizio: 'open_cover',
+      conferma: true,
+    );
+    expect(fatto.nome, 'Box');
+    expect(fatto.conferma, isTrue);
+    expect(
+      IComandiScelti.leggi(IComandiScelti(comandi: [fatto]).comeSiScrive)
+          .comandi
+          .single
+          .ricetta
+          .servizio,
+      'open_cover',
+    );
   });
 }

@@ -22,9 +22,34 @@ import 'la_foto.dart';
 /// Il file dei comandi, accanto a quelli della fotografia per l'auto.
 const String nomeDeiComandi = 'gdahome-auto-comandi.json';
 
-/// Quanti ne stanno sullo schermo dell'auto: una griglia di sei si legge in
-/// un colpo d'occhio, di piu' vuol dire scorrere guidando.
-const int comandiAlMassimo = 6;
+/// Quanti se ne possono scegliere. Lo schermo dell'auto ne mostra quanti ne
+/// stanno nella sua griglia — sei su tutte, di piu' sugli schermi grandi —
+/// nell'ordine scelto: i primi sei sono quelli che si vedono sempre.
+const int comandiAlMassimo = 12;
+
+/// Quanti se ne vedono in auto su qualunque schermo.
+const int comandiSempreInVista = 6;
+
+/// Il servizio che si decide al momento di premere, guardando com'e' messa
+/// l'entita' adesso: una serratura chiusa si apre e una aperta si chiude, un
+/// lettore spento si accende e uno acceso va in pausa. Scritto prima, quel
+/// servizio chiuderebbe una porta che intanto qualcuno ha aperto.
+const String secondoLoStato = 'secondo_lo_stato';
+
+/// Il servizio vero di [secondoLoStato], dallo stato di adesso.
+String ilServizioDiAdesso(String dominio, String? stato) {
+  final s = (stato ?? '').toLowerCase();
+  return switch (dominio) {
+    'lock' => s == 'locked' ? 'unlock' : 'lock',
+    'media_player' =>
+      const {'off', 'standby', 'unavailable', 'unknown', ''}.contains(s)
+          ? 'turn_on'
+          : 'media_play_pause',
+    'cover' =>
+      const {'open', 'opening'}.contains(s) ? 'close_cover' : 'open_cover',
+    _ => 'toggle',
+  };
+}
 
 /// Che cosa e', per il disegno sullo schermo dell'auto. Lo stesso nome sta in
 /// `IComandiInAuto.kt`.
@@ -52,6 +77,21 @@ class ComandoRapido {
 
   /// Da dove viene, in parole: «Azione rapida», «Scena», «Cancello»…
   final String provenienza;
+
+  /// Cosa fa davvero — su quale entita', con quale servizio e quale voce —
+  /// per riconoscere due comandi uguali venuti da posti diversi.
+  String get impronta =>
+      '${ricetta.entita}|${ricetta.servizio}|${ricetta.dati['option'] ?? ''}';
+
+  /// Lo stesso comando con un altro nome, o con o senza conferma.
+  ComandoRapido cambiato({String? nome, bool? conferma}) => ComandoRapido(
+    id: id,
+    nome: nome == null || nome.trim().isEmpty ? this.nome : nome.trim(),
+    genere: genere,
+    ricetta: ricetta,
+    conferma: conferma ?? this.conferma,
+    provenienza: provenienza,
+  );
 
   Map<String, Object?> get comeSiScrive => {
     'id': id,
@@ -249,14 +289,240 @@ IComandiScelti iPrimiComandi({
   required List<ComandoRapido> azioni,
   required List<ComandoRapido> dellaCasa,
 }) {
+  final fatti = {for (final a in azioni) a.impronta};
   final scelti = <ComandoRapido>[
     ...azioni,
+    /* Il cancello che e' gia' un'azione rapida non si mette due volte. */
     ...dellaCasa.where(
       (c) =>
-          c.genere == GenereDelComando.varco && c.provenienza == 'Cancello' ||
-          c.genere == GenereDelComando.porta && c.provenienza == 'Garage',
+          !fatti.contains(c.impronta) &&
+          (c.genere == GenereDelComando.varco && c.provenienza == 'Cancello' ||
+              c.genere == GenereDelComando.porta && c.provenienza == 'Garage'),
     ),
   ].take(comandiAlMassimo).toList();
   final arrivo = scelti.where((c) => c.provenienza == 'Cancello').firstOrNull;
   return IComandiScelti(comandi: scelti, allArrivo: arrivo?.id);
+}
+
+/// Le azioni rapide della plancia, **tutte**, lette dalla sua configurazione
+/// (`cd_quick_actions`, con le sostituzioni di `cd_entity_overrides`): le
+/// stesse, nello stesso ordine, dei tasti in Home.
+///
+/// Prima arrivavano dalla fotografia lasciata all'auto, che ne tiene sei e
+/// solo quelle che partono senza nessuno che guardi: chi ne aveva nove ne
+/// trovava cinque. Qui entrano anche quelle con la domanda di conferma (in
+/// auto la fa lo schermo dell'auto), le serrature e i lettori (il servizio si
+/// decide premendo, [secondoLoStato]) e i gruppi di luci. Restano fuori, con
+/// il perche' in [AzioniDellaPlancia.soloNellaPlancia], quelle che aprono un
+/// pannello della plancia e i menu senza una voce fissata.
+AzioniDellaPlancia leAzioniDellaConfigurazione(
+  Map<String, dynamic> valori, {
+  Entita? Function(String id)? entita,
+}) {
+  Object? json(Object? v) {
+    if (v is String) {
+      try {
+        return jsonDecode(v);
+      } on FormatException {
+        return null;
+      }
+    }
+    return v;
+  }
+
+  String testo(Object? v) => v is String ? v.trim() : '';
+  final elenco = json(valori['cd_quick_actions']);
+  final sostituzioni = json(valori['cd_entity_overrides']);
+  String vera(String id) {
+    if (sostituzioni is Map) {
+      final altra = sostituzioni[id];
+      if (altra is String && altra.contains('.')) return altra.trim();
+    }
+    return id;
+  }
+
+  final comandi = <ComandoRapido>[];
+  final fuori = <({String nome, String perche})>[];
+  if (elenco is! List) return AzioniDellaPlancia(comandi, fuori);
+  for (final grezza in elenco) {
+    if (grezza is! Map) continue;
+    final nome = testo(grezza['name']);
+    if (nome.isEmpty) continue;
+    final tipo = testo(grezza['type']).toLowerCase();
+    final conferma = testo(grezza['confirm']).isNotEmpty;
+    if (tipo == 'builtin') {
+      fuori.add((nome: nome, perche: 'Apre un pannello della plancia'));
+      continue;
+    }
+    if (tipo == 'luci_group') {
+      final luci = [
+        for (final l
+            in grezza['lights'] is List ? grezza['lights'] as List : [])
+          if (l is String && l.contains('.')) vera(l.trim()),
+      ];
+      if (luci.isEmpty) {
+        fuori.add((nome: nome, perche: 'Il gruppo non ha luci'));
+        continue;
+      }
+      final id = 'q|$nome|${luci.join(',')}';
+      comandi.add(
+        ComandoRapido(
+          id: id,
+          nome: nome,
+          genere: GenereDelComando.luce,
+          conferma: conferma,
+          provenienza: 'Gruppo di ${luci.length} luci',
+          ricetta: RicettaDellAzione(
+            id: id,
+            dominio: 'light',
+            servizio: 'toggle',
+            entita: luci.join(','),
+          ),
+        ),
+      );
+      continue;
+    }
+    final scritta = testo(grezza['entity']);
+    if (!scritta.contains('.')) {
+      fuori.add((nome: nome, perche: 'Senza un dispositivo'));
+      continue;
+    }
+    final id0 = vera(scritta);
+    final dominio = tipo == 'script'
+        ? 'script'
+        : tipo == 'scene'
+        ? 'scene'
+        : id0.split('.').first.toLowerCase();
+    final voce = testo(grezza['option']);
+    if ((dominio == 'select' || dominio == 'input_select') && voce.isEmpty) {
+      fuori.add((nome: nome, perche: 'Chiede di scegliere una voce'));
+      continue;
+    }
+    final servizio = switch (dominio) {
+      'button' || 'input_button' => 'press',
+      'scene' || 'script' => 'turn_on',
+      'select' || 'input_select' => 'select_option',
+      'lock' || 'media_player' => secondoLoStato,
+      _ => 'toggle',
+    };
+    final e = entita?.call(id0);
+    final genere = e == null
+        ? _genereDelDominio(dominio, '')
+        : comandoPer(e)?.genere ??
+              _genereDelDominio(
+                dominio,
+                '${e.attributi['device_class'] ?? ''}',
+              );
+    final id = 'q|$nome|$id0';
+    comandi.add(
+      ComandoRapido(
+        id: id,
+        nome: nome,
+        genere: genere,
+        /* Una serratura in macchina chiede sempre conferma. */
+        conferma: conferma || dominio == 'lock',
+        provenienza: 'Azione rapida',
+        ricetta: RicettaDellAzione(
+          id: id,
+          dominio: dominio,
+          servizio: servizio,
+          entita: id0,
+          dati: voce.isEmpty ? const {} : {'option': voce},
+        ),
+      ),
+    );
+  }
+  return AzioniDellaPlancia(comandi, fuori);
+}
+
+GenereDelComando _genereDelDominio(String dominio, String classe) =>
+    switch (dominio) {
+      'scene' || 'script' => GenereDelComando.scena,
+      'cover' when classe == 'garage' || classe == 'door' =>
+        GenereDelComando.porta,
+      'cover' => GenereDelComando.varco,
+      'lock' => GenereDelComando.serratura,
+      'light' => GenereDelComando.luce,
+      'switch' || 'input_boolean' || 'fan' => GenereDelComando.presa,
+      _ => GenereDelComando.azione,
+    };
+
+/// Le azioni rapide della plancia: quelle che vanno in auto, e quelle che
+/// restano nella plancia col perche'.
+class AzioniDellaPlancia {
+  const AzioniDellaPlancia(this.comandi, [this.soloNellaPlancia = const []]);
+
+  final List<ComandoRapido> comandi;
+  final List<({String nome, String perche})> soloNellaPlancia;
+}
+
+/// Cosa si puo' fare con questa entita', per chi crea un comando suo: le
+/// scelte, in parole, col servizio che chiamano.
+List<({String titolo, String servizio, Map<String, Object?> dati})>
+cosaSiPuoFare(Entita e) {
+  final d = e.dominio;
+  final voci = e.attributi['options'];
+  return switch (d) {
+    'scene' || 'script' => [(titolo: 'Attiva', servizio: 'turn_on', dati: {})],
+    'button' ||
+    'input_button' => [(titolo: 'Premi', servizio: 'press', dati: {})],
+    'cover' => [
+      (titolo: 'Apri o chiudi', servizio: 'toggle', dati: {}),
+      (titolo: 'Apri', servizio: 'open_cover', dati: {}),
+      (titolo: 'Chiudi', servizio: 'close_cover', dati: {}),
+    ],
+    'lock' => [
+      (titolo: 'Apri o chiudi', servizio: secondoLoStato, dati: {}),
+      (titolo: 'Apri', servizio: 'unlock', dati: {}),
+      (titolo: 'Chiudi', servizio: 'lock', dati: {}),
+    ],
+    'light' || 'switch' || 'input_boolean' || 'fan' => [
+      (titolo: 'Accendi o spegni', servizio: 'toggle', dati: {}),
+      (titolo: 'Accendi', servizio: 'turn_on', dati: {}),
+      (titolo: 'Spegni', servizio: 'turn_off', dati: {}),
+    ],
+    'media_player' => [
+      (titolo: 'Play o pausa', servizio: secondoLoStato, dati: {}),
+      (titolo: 'Spegni', servizio: 'turn_off', dati: {}),
+    ],
+    'select' || 'input_select' => [
+      if (voci is List)
+        for (final v in voci)
+          if (v is String)
+            (titolo: v, servizio: 'select_option', dati: {'option': v}),
+    ],
+    _ => const [],
+  };
+}
+
+/// Le entita' con cui si puo' creare un comando.
+bool siPuoComandare(Entita e) => !e.muta && cosaSiPuoFare(e).isNotEmpty;
+
+/// Un comando creato da chi guida: questa entita', questa cosa da fare, con
+/// il nome che vuole.
+ComandoRapido comandoFatto({
+  required Entita entita,
+  required String nome,
+  required String servizio,
+  Map<String, Object?> dati = const {},
+  required bool conferma,
+}) {
+  final voce = dati['option'];
+  final id = 'm|${entita.id}|$servizio${voce is String ? '|$voce' : ''}';
+  final classe = '${entita.attributi['device_class'] ?? ''}';
+  return ComandoRapido(
+    id: id,
+    nome: nome.trim().isEmpty ? entita.nome : nome.trim(),
+    genere:
+        comandoPer(entita)?.genere ?? _genereDelDominio(entita.dominio, classe),
+    conferma: conferma,
+    provenienza: 'Creato da te',
+    ricetta: RicettaDellAzione(
+      id: id,
+      dominio: entita.dominio,
+      servizio: servizio,
+      entita: entita.id,
+      dati: dati,
+    ),
+  );
 }

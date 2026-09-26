@@ -222,8 +222,8 @@ class _IlNavigatoreState extends State<IlNavigatore>
                 en: 'Quick commands in car',
               ),
               sotto: inLingua(
-                it: 'Il tasto con la casa, sulla mappa in auto',
-                en: 'The home button on the car map',
+                it: 'Crea e scegli i tasti di casa da usare in auto',
+                en: 'Create and pick home buttons for the car',
               ),
               apri: () => Navigator.of(context, rootNavigator: true).push(
                 MaterialPageRoute<void>(

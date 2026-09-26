@@ -28,6 +28,7 @@ import 'package:gdahome/casa/cassaforte.dart';
 import 'package:gdahome/casa/collegamento.dart';
 import 'package:gdahome/ponte/sonda.dart';
 import 'package:gdahome/schermate/barra.dart';
+import 'package:gdahome/auto/i_comandi.dart';
 import 'package:gdahome/schermate/comandi_in_auto.dart';
 import 'package:gdahome/schermate/menu.dart';
 import 'package:gdahome/schermate/navigatore_qui/qui.dart';
@@ -569,7 +570,28 @@ void main() {
           collegamento: collegamento,
           leggi: () async => null,
           scrivi: (_) async => true,
-          azioni: () async => const [],
+          /* Le azioni rapide di una plancia vera: otto, con una conferma,
+           * un gruppo di luci e un pannello che resta nella plancia. */
+          azioni: () async => leAzioniDellaConfigurazione({
+            'cd_quick_actions': [
+              {'name': 'Cancello', 'entity': 'cover.cancello'},
+              {'name': 'Garage', 'entity': 'cover.box'},
+              {'name': 'Arrivo', 'entity': 'scene.arrivo', 'type': 'scene'},
+              {
+                'name': 'Porta',
+                'entity': 'lock.porta',
+                'confirm': 'Apro la porta?',
+              },
+              {
+                'name': 'Luci giardino',
+                'type': 'luci_group',
+                'lights': ['light.giardino_1', 'light.giardino_2'],
+              },
+              {'name': 'Irrigazione', 'entity': 'switch.irrigazione'},
+              {'name': 'Buonanotte', 'entity': 'scene.buonanotte'},
+              {'name': 'Tutte le luci', 'type': 'builtin'},
+            ],
+          }, entita: (id) => collegamento.stato?[id]),
         ),
       ),
     );
@@ -578,6 +600,18 @@ void main() {
     );
     await tester.pumpAndSettle();
     await laFoto(tester, 'domani-comandi');
+    /* Piu' giu': le azioni della plancia, con «Aggiungi tutte». */
+    await tester.drag(find.byType(CustomScrollView), const Offset(0, -700));
+    await tester.pumpAndSettle();
+    await laFoto(tester, 'domani-comandi-plancia');
+    /* Creare un comando: il cancello, «Apri». */
+    await tester.tap(find.text('Crea un comando'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Cancello').last);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Apri').last);
+    await tester.pumpAndSettle();
+    await laFoto(tester, 'domani-comandi-crea');
   });
 }
 
