@@ -27,10 +27,6 @@ cifratura dichiarata (`ITSAppUsesNonExemptEncryption = NO`: è quella
 standard). La posizione e la voce vanno anche in background: servono al
 navigatore con CarPlay acceso e il telefono in tasca.
 
-**Una cosa da ricordare**: in `app/pubspec.yaml` gdanav viene per adesso dal
-ramo `claude/tender-wozniak-dc3unk` di gdanav, dove c'è CarPlay. Unito quel ramo
-in gdanav, lì si rimette `ref: main`.
-
 ## Una volta sola, dalla parte di Apple
 
 1. **Apple Developer Program** (99 $ l'anno), su
