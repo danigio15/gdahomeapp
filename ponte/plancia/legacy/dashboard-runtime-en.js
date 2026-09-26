@@ -1159,6 +1159,56 @@ function setEVMode(mode) {
   ws.send(JSON.stringify({ id: msgId++, type: 'call_service', domain: modeEid.split('.')[0], service: 'select_option', service_data: { entity_id: modeEid, option: mode } }));
 }
 
+/* I tasti delle modalita' di evcc, disegnati da quello che l'entita' dichiara.
+ *
+ * evcc ha rifatto le modalita': `pv` si chiama `smart` e `minpv` non c'e' piu'
+ * (evcc-io/evcc#32490). Qui i tasti erano quattro, scritti a mano nell'HTML con
+ * gli id fissi, e l'acceso si cercava come `m-btn-<stato>`: da quel giorno
+ * `m-btn-smart` non esisteva e non si accendeva piu' niente — mentre il comando
+ * partiva lo stesso, perche' evcc accetta ancora `pv` come scrittura deprecata.
+ * Un tasto che fa quello che deve e sembra rotto.
+ *
+ * Adesso i nomi non stanno qui: stanno nelle `options` dell'entita', e i tasti
+ * sono quelli. Il giudizio — quali disegnare, quale accendere — sta in
+ * `core/le-modalita-di-evcc.js`, che si prova senza una wallbox in garage. */
+/* Il nome di una modalita' arriva da evcc, non da qui: passa da `cdJs` dentro
+ * il gestore e da `cdEsc` dentro il testo, come ogni valore che viene da fuori.
+ * Il colore invece e' nostro, e passa da `cdColor` lo stesso — una regola che
+ * vale solo quando conviene non e' una regola. */
+function dmEvccTastoGrande(m) {
+  return '<div class="lm-evcc-btn evcc-mode-btn" id="m-btn-' + cdEsc(m.id) + '" onclick="setEVMode(' + cdJs(m.id) + ')"'
+    + ' style="--btn-col:' + cdColor(m.colore, '#64748b') + ';--btn-bg:' + cdColor(m.sfondo, '#f1f5f9') + ';">'
+    + '<span class="ev-ic">' + cdEsc(m.icona) + '</span><span class="ev-lbl">' + cdEsc(m.en) + '</span></div>';
+}
+function dmEvccTastoPopup(m) {
+  return '<div class="ev-popup-mode-btn evcc-mode-btn" id="p-btn-' + cdEsc(m.id) + '" onclick="setEVMode(' + cdJs(m.id) + ')"'
+    + ' style="--btn-col: ' + cdColor(m.colore, '#64748b') + '; --btn-bg: ' + cdColor(m.sfondo, '#f1f5f9') + ';">'
+    + '<div class="icon">' + cdEsc(m.icona) + '</div><div class="txt">' + cdEsc(m.en) + '</div></div>';
+}
+function dmEvccDisegnaIModi() {
+  const api = window.DashboardModernModules && DashboardModernModules.evcc;
+  if (!api) return;
+  const eid = resolveEntity('dm.ev_modalita_ricarica_evcc');
+  const stato = (eid && eid.indexOf('dm.') !== 0 && typeof STATES !== 'undefined') ? STATES[eid] : null;
+  const modi = api.iModiDiEvcc(stato);
+  // Si ridisegna solo quando l'elenco cambia: l'acceso invece si rimette a ogni
+  // giro, ed e' l'unica cosa che si muove davvero.
+  const firma = modi.map(function(m){ return m.id; }).join(',');
+  [['.lm-evcc-grid', dmEvccTastoGrande], ['.ev-popup-modes', dmEvccTastoPopup]].forEach(function(coppia){
+    const dove = document.querySelector(coppia[0]);
+    if (!dove || dove.dataset.dmEvccFirma === firma) return;
+    dove.dataset.dmEvccFirma = firma;
+    dove.innerHTML = modi.map(coppia[1]).join('');
+  });
+  const acceso = api.ilModoAcceso(stato, modi);
+  document.querySelectorAll('.evcc-mode-btn').forEach(function(b){ b.classList.remove('active'); });
+  if (!acceso) return;
+  ['m-btn-', 'p-btn-'].forEach(function(prefisso){
+    const el = document.getElementById(prefisso + acceso);
+    if (el) el.classList.add('active');
+  });
+}
+
 window.changeSelect = function(entityId, value) {
   if(!ws) return;
   if(navigator.vibrate) navigator.vibrate(10);
@@ -6382,11 +6432,7 @@ function render() {
       const autoLimKm = dmEvKmAlTarget();
       document.querySelectorAll('.v-auto-limite').forEach(el => el.textContent = autoLimKm != null ? autoLimKm+' km' : '—');
       // Modo EVCC
-      const evccModeRaw = getRawState('dm.ev_modalita_ricarica_evcc');
-      document.querySelectorAll('.lm-evcc-btn').forEach(b => b.classList.remove('active'));
-      const modeMap2 = { 'off':'m-btn-off','pv':'m-btn-pv','minpv':'m-btn-minpv','now':'m-btn-now' };
-      const activeM = modeMap2[evccModeRaw?.toLowerCase()];
-      if (activeM) { const el = document.getElementById(activeM); if(el) el.classList.add('active'); }
+      dmEvccDisegnaIModi();
       // Target SoC select
       const tSocSel = document.getElementById('sel-target-soc');
       const tSocVal = getRawState('dm.ev_target_soc');
@@ -6607,7 +6653,7 @@ function render() {
 
       document.querySelectorAll('.v-ev-pow').forEach(el => el.textContent = getDisplay('dm.ev_potenza_wallbox')); document.querySelectorAll('.v-ev-volt').forEach(el => el.textContent = getDisplay('dm.ev_tensione_wallbox')); document.querySelectorAll('.v-ev-range').forEach(el => el.textContent = getDisplay('dm.ev_autonomia')); document.querySelectorAll('.v-ev-km-ric').forEach(el => el.textContent = getDisplay('dm.ev_km_dall_ultima_ricarica')); document.querySelectorAll('.v-ev-odo').forEach(el => el.textContent = getDisplay('dm.ev_odometro')); document.querySelectorAll('.v-ev-ac-tot').forEach(el => el.textContent = getDisplay('dm.ev_prelievo_ac_totale_auto')); document.querySelectorAll('.v-ev-temp-wb').forEach(el => el.textContent = getDisplay('dm.ev_temperatura_wallbox'));
       updateSelectOptions('dm.ev_target_soc', 'sel-target-soc'); updateSelectOptions('dm.ev_target_soc', 'sel-target-soc-popup'); (function(){ const km = dmEvKmAlTarget(); document.querySelectorAll('.v-auto-limite').forEach(el => el.textContent = km != null ? km+' km' : '—'); })();
-      const evccMode = getRawState('dm.ev_modalita_ricarica_evcc'); document.querySelectorAll('.evcc-mode-btn').forEach(btn => btn.classList.remove('active')); if(evccMode && evccMode !== '—') { const md = evccMode.toLowerCase(); const b1 = document.getElementById('m-btn-' + md); if(b1) b1.classList.add('active'); const b2 = document.getElementById('p-btn-' + md); if(b2) b2.classList.add('active'); }
+      dmEvccDisegnaIModi();
 
       if(currentPopupType && currentPopupType.startsWith('subloads_')) { renderSubLoads(currentPopupType.replace('subloads_', '')); }
       if(currentPopupType === 'gestione_luci' && document.getElementById('details-modal').classList.contains('show')) { updateGestioneLuci(); }

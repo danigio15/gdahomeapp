@@ -39,7 +39,12 @@ const state = (root[KEY] ||= { installed: false, listeners: false, frame: 0 });
 
 const ARC_RADIUS = 50;
 const ARC_LENGTH = 2 * Math.PI * ARC_RADIUS;
-const MODE_IDS = Object.freeze(["off", "pv", "minpv", "now"]);
+/* `smart` is what evcc renamed `pv` to (evcc-io/evcc#32490); `minpv` is gone
+   from its read path but stays here for the shells that still offer it. Which
+   buttons actually exist is decided by the entity's own options — see
+   `core/le-modalita-di-evcc.js` — this list only says which ids this section
+   knows how to dress. */
+const MODE_IDS = Object.freeze(["off", "pv", "smart", "minpv", "now"]);
 
 const ICONS = Object.freeze({
   bolt: '<path d="M13.2 2.8 5.6 13.4h5.3l-.9 7.8 8.4-10.6h-5.3l.1-7.8Z"/>',
@@ -68,7 +73,13 @@ const STAT_ICONS = Object.freeze({
   "dm.ev_temperatura_wallbox": "thermo",
 });
 
-const MODE_ICONS = Object.freeze({ off: "stop", pv: "sun", minpv: "cloudsun", now: "rocket" });
+const MODE_ICONS = Object.freeze({
+  off: "stop",
+  pv: "sun",
+  smart: "sun",
+  minpv: "cloudsun",
+  now: "rocket",
+});
 
 function icon(name, size = 20) {
   const body = ICONS[name];
@@ -506,6 +517,7 @@ function evShowcaseCss() {
 /* the four EVCC colours already configured on the buttons */
 #page-ev.dm-evv[data-dm-ev-mode="off"]{--evv-mode:#e11d48;--evv-mode-rgb:225,29,72}
 #page-ev.dm-evv[data-dm-ev-mode="pv"]{--evv-mode:#059669;--evv-mode-rgb:5,150,105}
+#page-ev.dm-evv[data-dm-ev-mode="smart"]{--evv-mode:#059669;--evv-mode-rgb:5,150,105}
 #page-ev.dm-evv[data-dm-ev-mode="minpv"]{--evv-mode:#d97706;--evv-mode-rgb:217,119,6}
 #page-ev.dm-evv[data-dm-ev-mode="now"]{--evv-mode:#0284c7;--evv-mode-rgb:2,132,199}
 #page-ev.dm-evv .dm-evv-shell{display:grid!important;gap:14px!important}
@@ -794,12 +806,14 @@ function evShowcaseCss() {
 }
 #page-ev.dm-evv #m-btn-off.active .dm-evv-fx::before{animation:dmEvvOffRing 3.4s ease-out infinite}
 /* pv — sun rays turning slowly behind the icon */
+#page-ev.dm-evv #m-btn-smart .dm-evv-fx::before,
 #page-ev.dm-evv #m-btn-pv .dm-evv-fx::before{
   content:"";position:absolute;left:50%;top:42%;width:104px;height:104px;margin:-52px 0 0 -52px;
   background:repeating-conic-gradient(rgba(255,255,255,.34) 0deg 12deg,transparent 12deg 45deg);
   -webkit-mask-image:radial-gradient(circle,transparent 16px,#000 20px,#000 36px,transparent 42px);
   mask-image:radial-gradient(circle,transparent 16px,#000 20px,#000 36px,transparent 42px)
 }
+#page-ev.dm-evv #m-btn-smart.active .dm-evv-fx::before,
 #page-ev.dm-evv #m-btn-pv.active .dm-evv-fx::before{animation:dmEvvSpin 11s linear infinite}
 /* minpv — a cloud crossing the sun: the grid minimum backing the solar */
 #page-ev.dm-evv #m-btn-minpv .dm-evv-fx::before{
