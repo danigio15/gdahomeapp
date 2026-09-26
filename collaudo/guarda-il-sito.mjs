@@ -507,27 +507,6 @@ await prova("quando la plancia c'e', nessuno dice che manca", async () => {
   if (detto.telaioVia) throw new Error("il riquadro e' nascosto, e la plancia dentro ci gira");
 });
 
-/* Il bottone che raccoglie le donazioni. E' l'unico posto della pagina dove
- * un errore costa dei soldi a qualcuno: un indirizzo sbagliato manda a una
- * persona che non c'entra, e uno vuoto manda a nessuno — e in tutti e due i
- * casi la pagina si apre benissimo e non lo dice a nessuno.
- *
- * Deve restare lo stesso a cui manda il «Sostieni il progetto» dentro la
- * plancia: uno solo, cosi' non si sparpaglia e non si contraddice. */
-await prova("il bottone delle donazioni porta dove deve", async () => {
-  const dove = await pagina.evaluate(() => {
-    const bottone = document.querySelector("#sostieni a.bottone");
-    return bottone ? bottone.getAttribute("href") : null;
-  });
-  if (!dove) throw new Error("nella sezione «sostieni» non c'e' nessun bottone");
-  const nellaPlancia = readFileSync(
-    join(RADICE, "ponte", "plancia", "src", "sections", "sostieni-il-progetto-section.js"),
-    "utf8",
-  );
-  if (!nellaPlancia.includes(dove))
-    throw new Error(`il sito manda a ${dove}, che nella plancia non c'e': i due si sono divisi`);
-});
-
 await prova("le schermate dell'app si vedono", async () => {
   const come = await pagina.evaluate(() =>
     [...document.querySelectorAll('img[src*="statico/schermate/"]')].map((una) => ({

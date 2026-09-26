@@ -85,10 +85,13 @@ manuale e la peggiore possibile per una copertina.
 ## Per chi installa, e dove scrivere
 
 Due cose che il sito non diceva. Il **cruscotto installatore** ha una sezione
-sua (`#installatori`), perché è l'unico pezzo di gdahome che si paga e l'unico
-che non è per chi abita la casa: la prima cosa scritta è cosa **non** vede, con
-le parole del quadro (`quadro/README.md`), e «Quanto costa» adesso dice che per
-casa tua è gratis e che il cruscotto è a parte.
+sua (`#installatori`), perché è l'unico pezzo di gdahome che non è per chi abita
+la casa: la prima cosa scritta è cosa **non** vede, con le parole del quadro
+(`quadro/README.md`).
+
+I prezzi sul sito non ci sono: la sezione «Quanto costa», che diceva che per
+chi abita la casa gdahome era gratis, è stata tolta, perché non sarà così. Ci
+torneranno i costi veri quando saranno decisi.
 
 E c'è un posto dove **scrivere** (`#contatti`): un modulo con nome, email e
 messaggio, che arriva per posta a `assistenza@gdahome.org`. È l'unica cosa
