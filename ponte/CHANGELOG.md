@@ -11,6 +11,31 @@ fuori. La plancia dentro continua a dire la sua, e si legge dov'è sempre
 stata: nella pastiglia «La plancia» della console. Sono due numeri perché
 sono due cose.
 
+## Non ancora uscita
+
+**L'ora di avvio di un ciclo la sa la casa, e adesso gliela chiediamo.** «Quando
+guardo la sezione elettrodomestici segna inizio ciclo anche se è già iniziato da
+1 ora.» Il contatore dei cicli sapeva già distinguere «l'ho visto partire» da
+«l'ho trovato già partito», e nel secondo caso scriveva «da prima di» — onesto,
+ma l'ora era comunque quella in cui si era guardato. Adesso, quando l'avvio è
+una supposizione, si chiede a Home Assistant la storia di quell'apparecchio e si
+va a vedere quando si è messo in funzione davvero. Una domanda per ciclo, e solo
+per i cicli trovati già in giro. Senza Recorder non cambia niente: resta la
+supposizione di prima, segnata come tale.
+
+**Il contatore di sempre non passa più per il consumo di oggi.** «Nella sezione
+dei consumi giornalieri degli elettrodomestici, per la lavatrice viene
+visualizzato il consumo totale cumulativo invece del consumo della singola
+giornata.» Quando la casella dell'energia giornaliera contiene lo stesso sensore
+di quella del totale, non sono due misure: è una misura sola, copiata. Adesso si
+riconosce, e quel contatore risponde come gli altri contatori — col consumo del
+giorno ricavato dal Recorder — invece di mostrare i kilowattora di tre anni.
+
+**Gli animali di casa hanno la loro tessera in Home.** «La sezione animali non
+appare nei widget della home»: e infatti non c'era. Adesso la tessera dice
+quanti sono e cosa vogliono adesso — la ciotola, l'acqua, la lettiera — si
+ordina e si spegne come le altre, e da lì si apre la sezione.
+
 ## 1.7.0
 
 **gdahome Premium esiste nel codice, e resta spento.** Fin qui era un progetto

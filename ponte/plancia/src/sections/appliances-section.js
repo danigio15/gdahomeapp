@@ -2,6 +2,7 @@
 import { applianceArtwork, canonicalArtworkType } from "../core/appliance-artwork.js";
 import { createApplianceViewModel, onRunHoldExpiry } from "../core/appliance-view-model.js";
 import { entitaDegliApparecchi } from "../core/le-entita-dellapparecchio.js";
+import { eIlTotaleTravestito } from "../core/appliance-card-view-model.js";
 import { isCumulativeEnergyEntity, resolveEntity } from "../core/period-service.js";
 import { runtimeMetrics } from "../core/runtime-metrics.js";
 import { iconGlyphMarkup } from "./icon-engine-section.js";
@@ -97,11 +98,39 @@ function energyValueKwh(entity, states = {}) {
   return Math.max(0, numeric);
 }
 
+/* Un contatore di sempre non e' il consumo di oggi (#130).
+ *
+ * «Quando importo la lavatrice tramite l'integrazione Haier acquisisce
+ *  correttamente tutti i dati. Tuttavia, nella sezione dei consumi giornalieri
+ *  degli elettrodomestici, per la lavatrice viene visualizzato il consumo
+ *  totale cumulativo invece del consumo effettuato durante la singola
+ *  giornata.»
+ *
+ * La casella si chiama «energia giornaliera» e dentro c'era il contatore che
+ * parte dall'installazione e non si azzera mai, scritto una seconda volta. Il
+ * valore veniva letto e mostrato com'era: 214 kWh «di oggi», che poi e' il
+ * bucato di tre anni.
+ *
+ * Il come si riconosce sta in `eIlTotaleTravestito`, dove sta anche il perche'
+ * non basta chiedere «sei cumulativo?». Qui conta cosa se ne fa: il numero non
+ * sparisce, quel contatore scende fra i cumulativi e da' la stessa risposta
+ * degli altri — il delta del giorno, cioe' il consumo vero.
+ *
+ * Ed e' anche la promessa scritta in fondo al popup: «I valori lifetime non
+ * vengono mai sommati direttamente.» Adesso e' vera anche da questa parte. */
+function eUnContatoreDiSempre(entity, states) {
+  return isCumulativeEnergyEntity(entity, states, (value) => resolveEntity(value));
+}
+
 export function applianceDailySource(device = {}, states = {}) {
   const directCandidates = [device.daily_energy_entity, device.energy_today, device.daily_energy]
     .map(configuredEntity)
     .filter(Boolean);
-  const direct = directCandidates.find((entity) => energyValueKwh(entity, states) != null);
+  const direct = directCandidates.find(
+    (entity) =>
+      energyValueKwh(entity, states) != null &&
+      !eIlTotaleTravestito(device, entity, (value) => resolveEntity(value)),
+  );
   if (direct) {
     return {
       entity: resolvedEntity(direct),
@@ -112,6 +141,10 @@ export function applianceDailySource(device = {}, states = {}) {
   }
 
   const cumulativeCandidates = [
+    /* Il contatore trovato nella casella del giornaliero viene prima di tutti:
+     * e' quello che chi configura ha indicato per questo apparecchio, e se e'
+     * cumulativo va derivato, non buttato. */
+    ...directCandidates,
     device.total_energy_entity,
     device.history_entity,
     device.report_entity,
@@ -125,7 +158,7 @@ export function applianceDailySource(device = {}, states = {}) {
   const cumulative = cumulativeCandidates.find((entity) => {
     if (seen.has(entity)) return false;
     seen.add(entity);
-    return isCumulativeEnergyEntity(entity, states, (value) => resolveEntity(value));
+    return eUnContatoreDiSempre(entity, states);
   });
   if (!cumulative) return null;
   return {

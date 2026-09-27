@@ -120,6 +120,10 @@ function catalogoTessere() {
     ["nonrisponde", "📡", t("Dispositivi non connessi", "Disconnected devices")],
     /* La raccolta differenziata (#293): dice cosa mettere fuori stasera. */
     ["rifiuti", "♻️", t("Rifiuti", "Waste")],
+    /* Gli animali di casa (#145): «la sezione animali non appare nei widget
+     * della home». La sezione c'era da un pezzo, la tessera no, e senza una
+     * riga qui non si sarebbe potuta ne' ordinare ne' spegnere. */
+    ["animali", "🐾", t("Animali", "Pets")],
     ["varchi", "🚪", t("Varchi", "Openings")],
     /* La presenza (#432): dice in quante stanze c'e' qualcuno adesso, e sta
      * accanto ai varchi perche' e' la stessa domanda su un'altra famiglia di

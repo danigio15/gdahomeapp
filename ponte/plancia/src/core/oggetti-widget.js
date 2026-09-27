@@ -957,7 +957,14 @@ export const CLASSE_DELL_OGGETTO = "dm-oggetto";
  * perche' e' cosi' che la chiama chi la guarda. Ricopiare il disegno vorrebbe
  * dire due definizioni della stessa cosa, e prima o poi due disegni diversi:
  * qui c'e' il nome, non una seconda copia. */
-const ALTRI_NOMI = Object.freeze({ porte: "aperture" });
+/* Le tessere il cui disegno si chiama in un altro modo.
+ *
+ * La tessera delle aperture ha chiave «porte» e disegno «aperture»; quella
+ * degli animali ha chiave «animali» e disegno «animale», perche' il disegno e'
+ * UN'orma e la sezione sono gli animali. Senza questa riga la tessera esce col
+ * ripiego — l'emoji — accanto a venti disegni, che e' proprio la cosa che il
+ * catalogo esiste per non fare. */
+const ALTRI_NOMI = Object.freeze({ porte: "aperture", animali: "animale" });
 
 const nomeDelDisegno = (chiave) => {
   const nome = String(chiave || "");

@@ -1463,8 +1463,18 @@ test("production graph is single-owner, acyclic and contains no facade pass-thro
   // perche' il gradino va guardato sul numero COME SI VEDRA' — 999,6 W scritti
   // interi sono «1000 W», che e' proprio la scritta che non si vuole — il che
   // e' una cosa che si prova a tavolino e non guardando uno schermo.
+  // 399 con l'ora vera dell'avvio: `core/quando-e-partito.js`. «Quando guardo
+  // la sezione elettrodomestici segna inizio ciclo anche se e' gia' iniziato da
+  // 1 ora.» Il contatore dei cicli sapeva DIRE che non lo sapeva — l'avvio
+  // segnato come supposto — ma l'ora restava quella in cui si era guardato, che
+  // e' onesta e non serve a niente. L'ora vera ce l'ha la casa: la storia di
+  // quell'entita' dice quando la macchina si e' messa in funzione. Preparare la
+  // domanda e camminare all'indietro nei cambi di stato — dove le righe sono i
+  // CAMBI e non i campioni, e una sosta breve non apre un ciclo nuovo — sono
+  // decisioni pure, e stanno qui perche' e' l'unico modo di provarle senza una
+  // lavatrice accesa e un Recorder in ascolto.
   assert.ok(
-    relative.length <= 398,
+    relative.length <= 399,
     `production graph unexpectedly grew to ${relative.length} modules`,
   );
   assertAcyclic(edges);

@@ -199,8 +199,50 @@ function numericState(states, reference) {
   return snapshot ? finiteOrNull(snapshot.state) : null;
 }
 
+/* Le caselle in cui vive il contatore che parte dall'installazione.
+ *
+ * Sono tre perche' tre ne riempie chi collega un apparecchio: il totale e',
+ * quando nessuno ha detto altro, anche lo storico e il report. E sono le
+ * stesse tre da cui la maschera ripesca «il contatore del consumo totale»
+ * quando la apri — se cambiano qui devono cambiare anche li'. */
+export const CASELLE_DEL_TOTALE = Object.freeze([
+  "total_energy_entity",
+  "history_entity",
+  "report_entity",
+]);
+
+/**
+ * Se quello che sta nella casella del giornaliero è il contatore di sempre
+ * scritto due volte (#130).
+ *
+ * «Nella sezione dei consumi giornalieri degli elettrodomestici, per la
+ *  lavatrice viene visualizzato il consumo totale cumulativo invece del
+ *  consumo effettuato durante la singola giornata.»
+ *
+ * Lo `state_class` non basta a distinguerli: un `utility_meter` giornaliero
+ * — quello vero, che a mezzanotte si azzera — Home Assistant lo marca
+ * `total_increasing` esattamente come il contatore di sempre. Chiedere
+ * «sei cumulativo?» risponderebbe di sì a tutti e due, e butterebbe via
+ * proprio i sensori giornalieri buoni.
+ *
+ * Quello che li distingue davvero è più semplice, e sta già scritto nel
+ * modulo dei periodi: se la casella del giorno contiene LA STESSA entità
+ * della casella del totale, allora è il totale — ce l'ha messo chi collega,
+ * o una configurazione vecchia che ce l'aveva travasato — e va derivato col
+ * Recorder, mai letto com'è. Due caselle diverse che dicono la stessa entità
+ * non sono due misure: sono una misura sola, copiata.
+ */
+export function eIlTotaleTravestito(device = {}, entity = "", resolve = (value) => value) {
+  const quale = clean(resolve(entityRef(entity)));
+  if (!quale) return false;
+  return CASELLE_DEL_TOTALE.some((casella) => clean(resolve(entityRef(device[casella]))) === quale);
+}
+
 export function dailyEnergyKwh(device = {}, states = {}) {
   for (const reference of [device.daily_energy_entity, device.energy_today, device.daily_energy]) {
+    /* Il totale scritto anche qui non è il consumo di oggi: meglio nessun
+     * numero di uno che dice il bucato di tre anni (#130). */
+    if (eIlTotaleTravestito(device, reference)) continue;
     const snapshot = stateSnapshot(states, reference);
     if (!snapshot) continue;
     const numeric = finiteOrNull(snapshot.state);

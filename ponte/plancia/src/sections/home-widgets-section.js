@@ -186,6 +186,14 @@ import {
 } from "../core/rifiuti-model.js";
 import { ingressoInPlancia } from "./citofono-section.js";
 import { nomeDellaRiga, parolaDelQuando } from "./rifiuti-section.js";
+import {
+  CHIAVE_ANIMALI,
+  CHIAVI_CAMPI as CHIAVI_CAMPI_ANIMALI,
+  animaliDisegnabili,
+  haLetture,
+  vistaAnimale,
+} from "../core/animali-model.js";
+import { parolaAvviso, testoLettura } from "./animali-section.js";
 import { disegnoDelBidone } from "../core/disegni-rifiuti.js";
 import { CHIAVE_VMC, entitaDellaVmc, letturaVmc, vmcDisegnabili, vmcParla } from "../core/vmc-model.js";
 import { avvisiAppenaAccesi } from "../core/avvisi-che-si-aprono.js";
@@ -5391,6 +5399,104 @@ function rifiutiModel(states) {
   };
 }
 
+/* Gli animali di casa, in Home (#145).
+ *
+ * «La sezione animali non appare nei widget della home.»
+ *
+ * E non c'era: la sezione aveva la sua scheda nel Config, la sua pagina e il
+ * suo disegno nel catalogo, e in Home niente — nessun modello, nessuna
+ * tessera, nemmeno il tasto «Apri sezione» perche' quello lo da' l'elenco
+ * delle tessere. Chi ha un gatto teneva la sua sezione dietro la barra, e
+ * doveva andarci apposta per sapere se il cibo stava finendo.
+ *
+ * ── Cosa dice, passando ──────────────────────────────────────────────────
+ *
+ * Quanti sono, e cosa vogliono adesso. Le tre cose che un animale domestico
+ * chiede a una casa — la ciotola, l'acqua, la lettiera — sono le stesse che la
+ * scheda gia' sorveglia, e la tessera ne porta in cima il piu' urgente. Senza
+ * niente da dire porta i nomi, che e' il modo onesto di dire «tutto a posto».
+ *
+ * Le parole degli avvisi e delle letture sono quelle della sezione, importate:
+ * scritte una seconda volta, una delle due sarebbe rimasta indietro.
+ *
+ * ── L'interruttore «nel widget» ─────────────────────────────────────────
+ *
+ * Si toglie dal MODELLO, non dal solo cancello: l'entita' spenta si azzera
+ * PRIMA di leggere la scheda, cosi' non entra ne' nell'avviso ne' nel valore
+ * ne' nell'elenco. E' la stessa regola dei rifiuti, e sta scritta li' per
+ * esteso. */
+export function animaliModel(states) {
+  const schede = animaliDisegnabili(readJson(CHIAVE_ANIMALI, []));
+  if (!schede.length) return null;
+  const fuori = widgetExcludedEntities("animali");
+  const adesso = Date.now();
+  const viste = schede
+    .map((animale) => {
+      const suo = { ...animale };
+      for (const chiave of CHIAVI_CAMPI_ANIMALI)
+        if (!widgetIncludes(suo[chiave], fuori)) suo[chiave] = "";
+      return vistaAnimale(suo, states, adesso);
+    })
+    /* Una scheda col solo nome non e' una notizia: in Home non ci va. Nella
+     * sezione si', perche' li' si e' andati apposta. */
+    .filter((vista) => haLetture(vista));
+  if (!viste.length) return null;
+
+  /* Il piu' urgente per primo: e' quello che la tessera mette in cima, ed e'
+   * anche l'ordine in cui uno se ne occuperebbe. */
+  const peso = { urgente: 0, attenzione: 1, quiete: 2 };
+  const inFila = [...viste].sort((a, b) => peso[a.gravita] - peso[b.gravita]);
+  const daFare = inFila.filter((vista) => vista.avvisi.length);
+  const urgenti = inFila.some((vista) => vista.gravita === "urgente");
+
+  /* Cosa vuole questo animale adesso: il suo avviso peggiore, se ne ha uno. */
+  const suoAvviso = (vista) =>
+    vista.avvisi.find((voce) => voce.gravita === "urgente") || vista.avvisi[0] || null;
+  /* E se non vuole niente, la lettura che si guarda per prima: quella che la
+   * scheda ha davvero, nell'ordine in cui le caselle sono dichiarate. */
+  const suaLettura = (vista) =>
+    CHIAVI_CAMPI_ANIMALI.map((chiave) => vista.letture[chiave]).find(
+      (voce) => voce && !voce.muto,
+    ) || null;
+
+  return {
+    key: "animali",
+    /* L'arancio dell'orma: lo stesso della zampa nel catalogo, e lo stesso a
+     * cui si e' abituato chi apre la sezione. */
+    accent: urgenti ? "#dc2626" : daFare.length ? "#f59e0b" : "#f97316",
+    icon: "🐾",
+    label: t("Animali", "Pets"),
+    value: String(viste.length),
+    caption: daFare.length
+      ? daFare
+          .map((vista) => `${vista.nome}: ${parolaAvviso(suoAvviso(vista).chiave).toLowerCase()}`)
+          .join(" · ")
+      : viste.map((vista) => vista.nome).join(" · "),
+    ring: null,
+    attiva: daFare.length > 0,
+    alert: urgenti,
+    rows: inFila.map((vista) => {
+      const avviso = suoAvviso(vista);
+      const voce = suaLettura(vista);
+      return {
+        /* Il click di una riga apre lo storico di quell'entita': quella giusta
+         * e' la lettura che la riga sta mostrando, non l'animale — un animale
+         * non e' un'entita' e uno storico non ce l'ha. */
+        entity: (avviso ? vista.letture[avviso.campo] : voce)?.entita || "",
+        name: vista.nome,
+        glyph: disegnoDiCasa(vista.disegno, { misura: 20, ripiego: "pet" }),
+        value: avviso ? parolaAvviso(avviso.chiave) : testoLettura(voce),
+        tono:
+          vista.gravita === "urgente"
+            ? "allarme"
+            : vista.gravita === "attenzione"
+              ? "acceso"
+              : "quiete",
+      };
+    }),
+  };
+}
+
 /* La ventilazione meccanica (#371).
  *
  * La tessera dice la cosa che si guarda passando: a che temperatura sta
@@ -5500,6 +5606,7 @@ export function modelliDelleTessere(states) {
       nonRispondeModel(states),
       allerteModel(states),
       rifiutiModel(states),
+      animaliModel(states),
       vmcModel(states),
       irrigationModel(states),
       batteriesModel(states),
@@ -6854,6 +6961,7 @@ const CHIAVI_A_CARTE = new Set([
   "batterie",
   "allerte",
   "rifiuti",
+  "animali",
   "vmc",
   "elettrodomestici",
   /* «Sui widget il mini pc non incolonna bene le scritte.»
@@ -7647,6 +7755,7 @@ const SEZIONE_DEL_WIDGET = Object.freeze({
   minipc: "server",
   allerte: "allerte",
   rifiuti: "rifiuti",
+  animali: "animali",
   /* La ventilazione vive nella pagina del Clima: la tessera ci porta li'. */
   vmc: "clima",
   media: "media",

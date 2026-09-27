@@ -185,6 +185,9 @@ export const TESSERE_PER_SCHEDA = Object.freeze({
   presenza: "presenza",
   stampanti: "stampanti",
   rifiuti: "rifiuti",
+  /* Gli animali (#145): la scheda parla di una tessera sola, e adesso quella
+   * tessera in Home c'e'. */
+  animali: "animali",
   /* Le porte e i cancelli si configurano in una scheda loro e adesso hanno
    * anche la loro tessera (#457): prima si mostravano dentro la Sicurezza, e
    * l'interruttore accanto a ogni apertura parlava di quella. */
