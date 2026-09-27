@@ -505,8 +505,8 @@ List<(IconData, String, String)> _funzioni(bool sulWeb) {
         en: 'From away, secure and direct',
       ),
       inLingua(
-        it: 'Dal centralino, cifrato da un capo all\'altro',
-        en: 'Through the relay, encrypted end to end',
+        it: 'Senza aprire porte sul router, cifrato da un capo all\'altro',
+        en: 'No router ports to open, encrypted end to end',
       ),
     ),
     (

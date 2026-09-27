@@ -373,12 +373,12 @@ class PlanciaVeraState extends State<PlanciaVera> {
           sotto: inLingua(
             it:
                 'Sotto il Wi-Fi di «${collegamento.casa?.nome ?? 'casa'}» si '
-                'apre come sempre. Con Premium ci entri da ovunque: dal '
-                'centralino, cifrato da un capo all\'altro.',
+                'apre come sempre. Con Premium ci entri da ovunque, senza '
+                'aprire porte sul router e cifrato da un capo all\'altro.',
             en:
                 'On the Wi-Fi of “${collegamento.casa?.nome ?? 'home'}” it '
-                'opens as always. With Premium you get in from anywhere: '
-                'through the relay, encrypted end to end.',
+                'opens as always. With Premium you get in from anywhere, '
+                'with no router ports to open and encrypted end to end.',
           ),
           azione: FilledButton.icon(
             onPressed: () => unawaited(
