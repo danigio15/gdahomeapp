@@ -3837,7 +3837,8 @@ export default Object.freeze({
   "Alarm bypass": "Alarmoverbrugging",
   "Bypass switch": "Overbruggingsschakelaar",
   "Alarm panels publish a switch next to each contact that tells the panel to ignore it: that is what you need to arm the alarm with a window left open on purpose. Write it here and the shield to bypass this opening shows up on the Openings page. On means bypassed. Leave it empty and this opening is only watched, as before.": "Alarmcentrales publiceren naast elk contact een schakelaar die de centrale vertelt dat contact te negeren: dat is wat je nodig hebt om het alarm in te schakelen met een raam dat je opzettelijk open laat. Schrijf hem hier en op de pagina Openingen verschijnt het schild om deze opening te overbruggen. Aan betekent overbrugd. Laat hem leeg en deze opening wordt alleen bekeken, zoals eerst.",
-  "Keep the minimum": "Houd het minimum",
-  "Even when the sun is not enough": "Ook als de zon niet genoeg is",
+  "Charge even without sun": "Ook laden zonder zon",
+  "Keeps the minimum when solar is not enough": "Houdt het minimum aan als de zon niet volstaat",
+  "Only applies in Smart: not here": "Geldt alleen in Smart: hier niet",
   "EVCC always charge (select)": "EVCC altijd laden (select)",
 });

@@ -1181,19 +1181,31 @@ function setEVMode(mode) {
  * farebbe credere che scegliendola si esce da smart, e invece ci si resta
  * dentro: sta sotto, con un titolo suo.
  *
- * Si vede solo dove ha senso: entita' mappata, e modalita' intelligente accesa.
- * In `off` non si carica e in `fast` si carica al massimo comunque, e una fila
- * che non cambia niente e' una fila che confonde. */
+ * **C'e' sempre**, e prima no: prima compariva solo con la modalita'
+ * intelligente accesa. Il ragionamento stava in piedi — in `off` non si carica
+ * e in `fast` si carica al massimo comunque — ma faceva sparire un tasto: uno
+ * apre la console in Fast, non vede niente, e non sa che quella cosa esiste.
+ * «Devi mettere sempre quel tasto.»
+ *
+ * Quando non e' in vigore non sparisce: si smorza, e al posto della frase
+ * scrive dove vale. Si puo' scegliere lo stesso — «Sempre» impostato mentre si
+ * carica in Fast e' pronto per quando si torna in Intelligente, e cosi' non si
+ * deve passare da una modalita' all'altra solo per cambiare un'impostazione.
+ *
+ * Quello che resta come prima: senza l'entita' mappata la fila non c'e'. Una
+ * fila di tasti che non comandano niente e' peggio di nessuna fila. */
 function dmEvccFilaDelSempre(dove, acceso) {
   const api = window.DashboardModernModules && DashboardModernModules.evcc;
   const eid = resolveEntity('dm.ev_ricarica_sempre_evcc');
   const stato = (eid && eid.indexOf('dm.') !== 0 && typeof STATES !== 'undefined') ? STATES[eid] : null;
   const vecchia = dove.parentElement && dove.parentElement.querySelector('.dm-evcc-sempre');
-  if (!api || !api.laFilaDelSempreServe(stato, acceso)) { if (vecchia) vecchia.remove(); return; }
+  if (!api || !api.laFilaDelSempreServe(stato)) { if (vecchia) vecchia.remove(); return; }
   const valori = api.iValoriDelSempre(stato);
   const scelto = api.ilValoreDelSempreAcceso(stato, valori);
+  const inVigore = api.ilSempreEInVigore(acceso);
+  const sotto = inVigore ? 'Tiene il minimo quando il fotovoltaico non basta' : 'Vale solo in Intelligente: qui non conta';
   const html = '<div class="dm-evcc-sempre-cap">'
-    + '<strong>' + cdEsc('Tieni il minimo') + '</strong><small>' + cdEsc('Anche quando il sole non basta') + '</small></div>'
+    + '<strong>' + cdEsc('Carica anche senza sole') + '</strong><small>' + cdEsc(sotto) + '</small></div>'
     + '<div class="dm-evcc-sempre-righe">'
     + valori.map(function(v){
         return '<button type="button" class="dm-evcc-sempre-btn" onclick="setEVSempre(' + cdJs(v.id) + ')"'
@@ -1203,6 +1215,7 @@ function dmEvccFilaDelSempre(dove, acceso) {
     + '</div>';
   const fila = vecchia || document.createElement('div');
   if (!vecchia) { fila.className = 'dm-evcc-sempre'; dove.after(fila); }
+  fila.setAttribute('data-vigore', inVigore ? 'true' : 'false');
   if (fila.innerHTML !== html) fila.innerHTML = html;
 }
 

@@ -65,8 +65,14 @@ boot: auto
 # La console, dietro l'autenticazione di Home Assistant.
 ingress: true
 ingress_port: 8099
-panel_icon: mdi:bridge
-panel_title: gdahome
+# Nella barra di Home Assistant questa voce apre la **console del ponte**: si
+# abbinano i telefoni, si scelgono le dashboard, si apre l'indirizzo da fuori.
+# Si chiamava «gdahome» con un ponte per segno, e detta cosi' prometteva un'app
+# che li' dentro non c'e': chi ci entrava cercando la casa trovava le
+# impostazioni. Il nome dice cosa si apre, e l'ingranaggio e' il segno che in
+# Home Assistant vuol dire «qui si configura».
+panel_icon: mdi:cog
+panel_title: Configura gdahome
 
 # La porta dell'app.
 ports:

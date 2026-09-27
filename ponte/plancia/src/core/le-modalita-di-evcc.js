@@ -158,7 +158,7 @@ export function eIlModoIntelligente(id) {
 const IL_SEMPRE = Object.freeze({
   off: { it: "Mai", en: "Never" },
   on: { it: "Sempre", en: "Always" },
-  once: { it: "Stavolta", en: "This time" },
+  once: { it: "Solo stavolta", en: "Just this time" },
 });
 
 /** Le scelte che l'entita' del «sempre» offre, pronte da disegnare. */
@@ -182,13 +182,40 @@ export function ilValoreDelSempreAcceso(stato, disegnati = iValoriDelSempre(stat
 }
 
 /**
- * Se la fila del «sempre» ha senso adesso.
+ * Se la fila del «sempre» si disegna.
  *
- * Vuole due cose insieme: che l'entita' ci sia e dichiari le sue scelte, e che
- * la modalita' accesa sia quella intelligente. Da spenti non si carica, e in
- * «Fast» si carica al massimo comunque: li' quell'opzione non cambia niente, e
- * una fila che non cambia niente e' una fila che confonde.
+ * Una cosa sola: che l'entita' ci sia e dichiari le sue scelte. Chi non ha
+ * mappato quella casella non deve trovarsi una fila che non comanda niente.
+ *
+ * **Prima ne voleva due**: anche che la modalita' accesa fosse quella
+ * intelligente. Il ragionamento stava in piedi — da spenti non si carica, in
+ * «Fast» si carica al massimo comunque, e li' quell'opzione non cambia niente
+ * — ma in pratica faceva sparire un tasto. Uno apre la console in «Fast», non
+ * vede niente, e non ha modo di sapere che quella cosa esiste; e per metterla
+ * a posto per stanotte dovrebbe prima passare a Intelligente, poi scegliere,
+ * poi tornare indietro. «Devi mettere sempre quel tasto.»
+ *
+ * Adesso c'e' sempre, e quando non e' in vigore lo dice invece di sparire:
+ * si smorza e scrive dove vale ([ilSempreEInVigore]). Si puo' scegliere
+ * comunque — «Sempre» impostato mentre si carica in Fast e' pronto per quando
+ * si torna in Intelligente.
  */
-export function laFilaDelSempreServe(statoDelSempre, modoAcceso) {
-  return iValoriDelSempre(statoDelSempre).length > 0 && eIlModoIntelligente(modoAcceso);
+export function laFilaDelSempreServe(statoDelSempre) {
+  return iValoriDelSempre(statoDelSempre).length > 0;
+}
+
+/**
+ * Se quello che dice la fila sta facendo effetto adesso.
+ *
+ * **Solo in Intelligente.** «Devi mettere sempre quel tasto» — e c'e' sempre —
+ * «ma la funzione si deve attivare solo quando si preme su intelligente; su
+ * Fast bypassa tutto.» E' esattamente cosi': in `fast` si carica al massimo e
+ * quella scelta la scavalca, in `off` non si carica affatto.
+ *
+ * Non nasconde la fila e non la spegne: la fila resta, si comanda, e sotto il
+ * nome c'e' scritto che li' non conta. Scegliere «Sempre» stando in Fast e'
+ * legittimo — vale da quando si torna in Intelligente.
+ */
+export function ilSempreEInVigore(modoAcceso) {
+  return eIlModoIntelligente(modoAcceso);
 }

@@ -1187,11 +1187,13 @@ function dmEvccFilaDelSempre(dove, acceso) {
   const eid = resolveEntity('dm.ev_ricarica_sempre_evcc');
   const stato = (eid && eid.indexOf('dm.') !== 0 && typeof STATES !== 'undefined') ? STATES[eid] : null;
   const vecchia = dove.parentElement && dove.parentElement.querySelector('.dm-evcc-sempre');
-  if (!api || !api.laFilaDelSempreServe(stato, acceso)) { if (vecchia) vecchia.remove(); return; }
+  if (!api || !api.laFilaDelSempreServe(stato)) { if (vecchia) vecchia.remove(); return; }
   const valori = api.iValoriDelSempre(stato);
   const scelto = api.ilValoreDelSempreAcceso(stato, valori);
+  const inVigore = api.ilSempreEInVigore(acceso);
+  const sotto = inVigore ? 'Keeps the minimum when solar is not enough' : 'Only applies in Smart: not here';
   const html = '<div class="dm-evcc-sempre-cap">'
-    + '<strong>' + cdEsc('Keep the minimum') + '</strong><small>' + cdEsc('Even when the sun is not enough') + '</small></div>'
+    + '<strong>' + cdEsc('Charge even without sun') + '</strong><small>' + cdEsc(sotto) + '</small></div>'
     + '<div class="dm-evcc-sempre-righe">'
     + valori.map(function(v){
         return '<button type="button" class="dm-evcc-sempre-btn" onclick="setEVSempre(' + cdJs(v.id) + ')"'
@@ -1201,6 +1203,7 @@ function dmEvccFilaDelSempre(dove, acceso) {
     + '</div>';
   const fila = vecchia || document.createElement('div');
   if (!vecchia) { fila.className = 'dm-evcc-sempre'; dove.after(fila); }
+  fila.setAttribute('data-vigore', inVigore ? 'true' : 'false');
   if (fila.innerHTML !== html) fila.innerHTML = html;
 }
 

@@ -25,6 +25,7 @@ import {
   iModiDiEvcc,
   iValoriDelSempre,
   ilModoAcceso,
+  ilSempreEInVigore,
   ilValoreDelSempreAcceso,
   laFilaDelSempreServe,
 } from "../src/core/le-modalita-di-evcc.js";
@@ -980,6 +981,7 @@ const DashboardModernModules = Object.freeze({
     ilModoAcceso,
     eIlModoIntelligente,
     iValoriDelSempre,
+    ilSempreEInVigore,
     ilValoreDelSempreAcceso,
     laFilaDelSempreServe,
   }),
