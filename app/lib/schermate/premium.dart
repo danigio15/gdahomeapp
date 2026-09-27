@@ -2,14 +2,18 @@
 ///
 /// Ci si arriva dal menu, e da ogni lucchetto dell'app: una plancia in piu',
 /// una casa in piu', la Configurazione, Zigbee, la casa da fuori. Chi arriva
-/// da un lucchetto legge in cima **perche'** e' qui ([perche]), e sotto
-/// trova le stesse tre porte di sempre: i due piani del negozio, «Ripristina
-/// acquisti», «Ho un codice regalo».
+/// da un lucchetto legge in cima **perche'** e' qui ([perche]).
 ///
-/// Premium e' **della casa**, e la pagina lo dice: si compra per la casa
-/// aperta, e tutti i telefoni abbinati a lei — e la webapp — lo diventano
-/// insieme. Sul web non si compra: li' non c'e' un negozio, e la pagina
-/// manda al telefono. Un codice regalo invece si riscatta anche da li'.
+/// La pagina e' fatta come quella di gdanav, riga per riga: il nome, una
+/// riga, cosa comprende, cosa resta gratis, i due piani da scegliere, un
+/// solo bottone, la nota del rinnovo, «Ripristina abbonamento», «Ho un
+/// codice regalo», Privacy e Condizioni d'uso. Cambiano i colori, che sono
+/// quelli di gdahome, e le parole.
+///
+/// Premium e' **della casa**: si compra per la casa aperta, e tutti i
+/// telefoni abbinati a lei — e la webapp — lo diventano insieme. Sul web non
+/// si compra: li' non c'e' un negozio, e la pagina manda al telefono. Un
+/// codice regalo invece si riscatta anche da li'.
 library;
 
 import 'dart:async';
@@ -17,14 +21,13 @@ import 'dart:async';
 import 'package:flutter/foundation.dart'
     show defaultTargetPlatform, kIsWeb, TargetPlatform;
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../casa/collegamento.dart';
 import '../licenza/gettone.dart';
 import '../licenza/licenza.dart';
 import '../licenza/negozio.dart';
 import '../parole.dart';
-import '../vestito/oggetti.dart';
-import '../vestito/pezzi.dart';
 import '../vestito/tema.dart';
 
 /// Gli acquisti dell'app: uno solo, acceso dal portone (`main.dart`) appena
@@ -97,7 +100,7 @@ class SchermataPremium extends StatefulWidget {
   final Collegamento collegamento;
 
   /// Il negozio: `null` dove non c'e', e allora i prezzi sono quelli di
-  /// riserva e i tasti per comprare non ci sono.
+  /// riserva e il bottone per comprare non va.
   final GestoreDegliAcquisti? acquisti;
 
   /// Da quale lucchetto si arriva, in una riga.
@@ -105,6 +108,14 @@ class SchermataPremium extends StatefulWidget {
 
   /// Nella webapp: non si compra, si manda al telefono.
   final bool sulWeb;
+
+  /// L'informativa sulla privacy, sul sito.
+  static const privacy = 'https://gdahome.org/privacy.html';
+
+  /// Le condizioni d'uso: quelle standard di Apple (EULA), come in gdanav,
+  /// valide anche per Google Play finche' gdahome non ne ha di sue sul sito.
+  static const condizioni =
+      'https://www.apple.com/legal/internet-services/itunes/dev/stdeula/';
 
   @override
   State<SchermataPremium> createState() => _SchermataPremiumState();
@@ -115,6 +126,9 @@ class _SchermataPremiumState extends State<SchermataPremium> {
     widget.collegamento.licenza,
     ?widget.acquisti,
   ]);
+
+  /// Il piano scelto: l'annuale, finche' non si tocca l'altro.
+  var _scelto = pianoAnnuale;
 
   @override
   void initState() {
@@ -128,7 +142,7 @@ class _SchermataPremiumState extends State<SchermataPremium> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('gdahome Premium')),
+      appBar: AppBar(title: const Text('Premium')),
       body: ListenableBuilder(
         listenable: _ascolta,
         builder: (context, _) => _laPagina(context),
@@ -141,148 +155,178 @@ class _SchermataPremiumState extends State<SchermataPremium> {
     final casa = widget.collegamento.casa;
     final premium = licenza.premiumDi(casa);
     final acquisti = widget.acquisti;
-    final colori = Theme.of(context).colorScheme;
-    final testi = Theme.of(context).textTheme;
+    final s = Theme.of(context).colorScheme;
+    final t = Theme.of(context).textTheme;
+
+    /* Col negozio che risponde si compra; senza (niente rete, un telefono
+     * senza Play Store) i prezzi si mostrano lo stesso, quelli di listino. */
+    final dalNegozio =
+        !widget.sulWeb && acquisti != null && acquisti.disponibile;
+    String prezzo(String piano) =>
+        acquisti?.prezzoDi(piano) ?? prezzoDiRiserva(piano);
+    final giorni = dalNegozio ? acquisti.provaDi(_scelto) : 0;
+    final inCorso = acquisti?.inCorso ?? false;
 
     return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 4, 16, 40),
+      padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
       children: [
         if (widget.perche case final perche? when !premium) ...[
           _IlPerche(perche),
-          const SizedBox(height: 14),
+          const SizedBox(height: 16),
         ],
-        _LaTestata(
-          casa: casa?.nome,
-          premium: premium,
-          gettone: licenza.gettoneDi(casa),
-          controlli: licenza.controlliAccesi,
+        Row(
+          children: [
+            Icon(Icons.workspace_premium, color: s.primary, size: 36),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                'gdahome Premium',
+                style: t.headlineSmall?.copyWith(fontWeight: FontWeight.w800),
+              ),
+            ),
+          ],
         ),
-        const SizedBox(height: 24),
-        Insegna(inLingua(it: 'Cosa comprende', en: 'What\'s included')),
-        _CosaComprende(sulWeb: widget.sulWeb),
-        const SizedBox(height: 24),
-        if (!premium) ...[
-          Insegna(inLingua(it: 'I piani', en: 'Plans')),
-          if (widget.sulWeb) ...[_SulWeb(), const SizedBox(height: 12)],
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: _Piano(
-                  titolo: inLingua(it: 'Mensile', en: 'Monthly'),
-                  prezzo:
-                      acquisti?.prezzoDi(pianoMensile) ??
-                      prezzoDiRiserva(pianoMensile),
-                  sotto: inLingua(
-                    it: 'Si disdice quando vuoi',
-                    en: 'Cancel any time',
-                  ),
-                  compra: _compraIl(pianoMensile),
-                  conTasto: !widget.sulWeb,
-                  giorniProva: acquisti?.provaDi(pianoMensile) ?? 0,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _Piano(
-                  titolo: inLingua(it: 'Annuale', en: 'Yearly'),
-                  prezzo:
-                      acquisti?.prezzoDi(pianoAnnuale) ??
-                      prezzoDiRiserva(pianoAnnuale),
-                  sotto: inLingua(
-                    it: 'Due mesi gratis rispetto al mensile',
-                    en: 'Two months free compared to monthly',
-                  ),
-                  evidenza: inLingua(it: 'conviene', en: 'best value'),
-                  compra: _compraIl(pianoAnnuale),
-                  conTasto: !widget.sulWeb,
-                  giorniProva: acquisti?.provaDi(pianoAnnuale) ?? 0,
-                ),
-              ),
-            ],
-          ),
-          if (!widget.sulWeb && (acquisti == null || !acquisti.disponibile))
-            Padding(
-              padding: const EdgeInsets.fromLTRB(4, 10, 4, 0),
+        const SizedBox(height: 8),
+        Text(
+          premium
+              ? _comeSta(
+                  licenza.gettoneDi(casa),
+                  licenza.controlliAccesi,
+                  casa?.nome,
+                )
+              : _perChi(acquisti, dalNegozio),
+          key: const Key('stato-premium'),
+          style: t.bodyLarge,
+        ),
+        const SizedBox(height: 12),
+        for (final (icona, titolo, testo) in _funzioni(widget.sulWeb))
+          _Voce(icona: icona, titolo: titolo, testo: testo),
+        const SizedBox(height: 8),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(
+              Icons.check_circle_outline,
+              size: 18,
+              color: s.onSurfaceVariant,
+            ),
+            const SizedBox(width: 8),
+            Expanded(
               child: Text(
                 inLingua(
                   it:
-                      'Il negozio non risponde adesso: i prezzi sono quelli '
-                      'di listino.',
+                      'Gratis per tutti: una plancia, una casa, il '
+                      'collegamento da casa.',
                   en:
-                      'The store isn\'t responding right now: these are '
-                      'list prices.',
+                      'Free for everyone: one dashboard, one home, the '
+                      'connection from home.',
                 ),
-                style: testi.bodySmall?.copyWith(
-                  color: colori.onSurfaceVariant,
+                style: t.bodySmall?.copyWith(color: s.onSurfaceVariant),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        if (!premium) ...[
+          for (final id in [pianoAnnuale, pianoMensile])
+            _Piano(
+              id: id,
+              prezzo: prezzo(id),
+              scelto: _scelto == id,
+              nota: id == pianoAnnuale
+                  ? _risparmio(prezzo(pianoMensile), prezzo(pianoAnnuale))
+                  : null,
+              onTap: () => setState(() => _scelto = id),
+            ),
+          const SizedBox(height: 8),
+          if (widget.sulWeb)
+            const _SulWeb()
+          else ...[
+            FilledButton(
+              key: const Key('compra-premium'),
+              onPressed: inCorso || !dalNegozio
+                  ? null
+                  : () => unawaited(acquisti.compra(_scelto)),
+              style: FilledButton.styleFrom(
+                minimumSize: const Size.fromHeight(52),
+              ),
+              child: inCorso
+                  ? const SizedBox.square(
+                      dimension: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : Text(
+                      !dalNegozio
+                          ? inLingua(it: 'Prova gratis', en: 'Try for free')
+                          : giorni > 0
+                          ? inLingua(
+                              it: 'Prova gratis per $giorni giorni',
+                              en: 'Try free for $giorni days',
+                            )
+                          : inLingua(
+                              it: 'Abbonati a ${prezzo(_scelto)}',
+                              en: 'Subscribe for ${prezzo(_scelto)}',
+                            ),
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+            ),
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Text(
+                dalNegozio
+                    ? _ilRinnovo(prezzo(_scelto), giorni > 0)
+                    : _senzaNegozio(),
+                key: dalNegozio ? null : const Key('negozio-assente'),
+                textAlign: TextAlign.center,
+                style: t.bodySmall?.copyWith(color: s.onSurfaceVariant),
+              ),
+            ),
+            TextButton(
+              onPressed: dalNegozio && !inCorso
+                  ? () => unawaited(acquisti.ripristina())
+                  : null,
+              child: Text(
+                inLingua(
+                  it: 'Ripristina abbonamento',
+                  en: 'Restore subscription',
                 ),
               ),
             ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(4, 10, 4, 0),
-            child: Text(
-              _laProva(acquisti),
-              style: testi.bodySmall?.copyWith(color: colori.onSurfaceVariant),
-            ),
-          ),
-          const SizedBox(height: 16),
+          ],
         ],
-        if (acquisti?.inCorso ?? false)
-          const Padding(
-            padding: EdgeInsets.only(bottom: 12),
-            child: LinearProgressIndicator(),
-          ),
-        if (acquisti?.errore case final errore?)
-          _Riga(errore, colore: colori.error),
-        if (acquisti?.fatto case final fatto?)
-          _Riga(fatto, colore: Colori.bene),
         OutlinedButton.icon(
+          key: const Key('codice-regalo'),
           onPressed: () => _ilCodice(context),
-          icon: const Icon(Icons.redeem_rounded),
+          icon: const Icon(Icons.redeem),
           label: Text(
             inLingua(it: 'Ho un codice regalo', en: 'I have a gift code'),
           ),
         ),
-        if (!widget.sulWeb) ...[
-          const SizedBox(height: 8),
-          TextButton(
-            onPressed: acquisti?.disponibile ?? false
-                ? () => unawaited(acquisti!.ripristina())
-                : null,
-            child: Text(
-              inLingua(it: 'Ripristina acquisti', en: 'Restore purchases'),
-            ),
+        if (!premium)
+          /* L'App Store vuole i due link accanto all'abbonamento. */
+          Wrap(
+            alignment: WrapAlignment.center,
+            children: [
+              TextButton(
+                onPressed: () => _apri(SchermataPremium.privacy),
+                child: const Text('Privacy'),
+              ),
+              TextButton(
+                onPressed: () => _apri(SchermataPremium.condizioni),
+                child: Text(
+                  inLingua(it: 'Condizioni d\'uso', en: 'Terms of use'),
+                ),
+              ),
+            ],
           ),
-        ],
-        const SizedBox(height: 16),
-        Text(
-          inLingua(
-            it:
-                'Premium vale per la casa, non per il telefono: tutti i '
-                'telefoni abbinati a questa casa, e la webapp, lo sono '
-                'insieme. L\'abbonamento si rinnova da solo e si disdice dal '
-                'negozio. Dentro c\'è anche gdanav Premium.',
-            en:
-                'Premium belongs to the home, not the phone: every phone '
-                'paired with this home, and the web app, get it together. '
-                'The subscription renews automatically and is cancelled from '
-                'the store. gdanav Premium is included.',
-          ),
-          textAlign: TextAlign.center,
-          style: testi.bodySmall?.copyWith(color: colori.onSurfaceVariant),
-        ),
+        if (acquisti?.errore case final errore?) _Riga(errore, colore: s.error),
+        if (acquisti?.fatto case final fatto?)
+          _Riga(fatto, colore: Colori.bene),
       ],
     );
-  }
-
-  /// Il tasto per comprare un piano: `null` dove non si compra.
-  VoidCallback? _compraIl(String piano) {
-    final acquisti = widget.acquisti;
-    if (widget.sulWeb || acquisti == null || !acquisti.disponibile) {
-      return null;
-    }
-    if (acquisti.inCorso) return null;
-    return () => unawaited(acquisti.compra(piano));
   }
 
   Future<void> _ilCodice(BuildContext context) async {
@@ -291,47 +335,236 @@ class _SchermataPremiumState extends State<SchermataPremium> {
       builder: (_) => _IlCodiceRegalo(collegamento: widget.collegamento),
     );
     if (fatto != true || !context.mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
+    ScaffoldMessenger.maybeOf(context)?.showSnackBar(
       SnackBar(
         content: Text(
           inLingua(
-            it: 'Codice riscattato: grazie!',
-            en: 'Code redeemed: thank you!',
+            it: 'Codice riscattato: la casa è Premium.',
+            en: 'Code redeemed: your home is Premium.',
           ),
         ),
       ),
     );
   }
+
+  static Future<void> _apri(String indirizzo) async {
+    try {
+      await launchUrl(
+        Uri.parse(indirizzo),
+        mode: LaunchMode.externalApplication,
+      );
+    } catch (_) {}
+  }
+
+  /// La riga sotto il nome, per chi non ha Premium. La prova si promette
+  /// solo se c'e': col negozio che risponde e dice «niente prova» (l'hai
+  /// gia' usata) non la si nomina.
+  static String _perChi(GestoreDegliAcquisti? acquisti, bool dalNegozio) {
+    final senzaProva =
+        dalNegozio &&
+        acquisti!.provaDi(pianoMensile) == 0 &&
+        acquisti.provaDi(pianoAnnuale) == 0;
+    if (senzaProva) {
+      return inLingua(
+        it: 'Per la casa intera, su tutti i telefoni abbinati.',
+        en: 'For the whole home, on every paired phone.',
+      );
+    }
+    return inLingua(
+      it:
+          'Per la casa intera, su tutti i telefoni abbinati, con '
+          '$giorniDiProva giorni di prova gratuita.',
+      en:
+          'For the whole home, on every paired phone, with a '
+          '$giorniDiProva-day free trial.',
+    );
+  }
+
+  /// La nota sotto il bottone: il rinnovo, e dove si disdice.
+  String _ilRinnovo(String prezzo, bool prova) {
+    final nome = _nomeDelNegozio();
+    final dal = nome == 'App Store' ? 'dall\'App Store' : 'dal $nome';
+    return inLingua(
+      it:
+          '${prova ? 'Poi ' : ''}$prezzo, rinnovo automatico. Disdici quando '
+          'vuoi $dal${prova ? ': se disdici durante la prova non paghi '
+                    'nulla.' : '.'}',
+      en:
+          '${prova ? 'Then ' : ''}$prezzo, renews automatically. Cancel any '
+          'time from the $nome${prova ? ': cancel during the trial and you '
+                    'pay nothing.' : '.'}',
+    );
+  }
+
+  /// La nota quando il negozio non risponde.
+  String _senzaNegozio() {
+    final nome = _nomeDelNegozio();
+    final il = nome == 'App Store' ? 'L\'App Store' : 'Il $nome';
+    return inLingua(
+      it:
+          '$il non risponde adesso: i prezzi sono quelli di listino, e per '
+          'comprare bisogna riprovare tra poco.',
+      en:
+          'The $nome isn\'t responding right now: these are list prices, '
+          'try again shortly to buy.',
+    );
+  }
+
+  /// Il Play Store su Android, l'App Store sull'iPhone: quello che dice il
+  /// negozio, o quello della piattaforma se il negozio non c'e'.
+  String _nomeDelNegozio() {
+    final nome = widget.acquisti?.negozio?.nome;
+    if (nome != null && nome.isNotEmpty) return nome;
+    return defaultTargetPlatform == TargetPlatform.iOS
+        ? 'App Store'
+        : 'Play Store';
+  }
+
+  /// «Risparmi il 17%» rispetto a dodici mesi pagati uno per uno.
+  static String? _risparmio(String mensile, String annuale) {
+    double? euro(String prezzo) => double.tryParse(
+      prezzo.replaceAll(RegExp(r'[^\d,.]'), '').replaceAll(',', '.'),
+    );
+    final m = euro(mensile), a = euro(annuale);
+    if (m == null || a == null || m <= 0) return null;
+    final r = (100 * (1 - a / (m * 12))).round();
+    return r > 0 ? inLingua(it: 'Risparmi il $r%', en: 'Save $r%') : null;
+  }
+
+  /// La riga sotto il nome per chi ha Premium: fino a quando, da dove.
+  /// «Premium è attivo fino al 12 marzo 2027 · regalo.»
+  static String _comeSta(Gettone? gettone, bool controlli, String? casa) {
+    if (!controlli || gettone == null) {
+      return inLingua(it: 'Tutto è aperto.', en: 'Everything is unlocked.');
+    }
+    final perChi = casa == null
+        ? ''
+        : inLingua(
+            it: ' Vale per «$casa» e per tutti i suoi telefoni.',
+            en: ' It covers “$casa” and all of its phones.',
+          );
+    final scade = gettone.scade;
+    if (gettone.prova && scade != null) {
+      return inLingua(
+            it: 'Prova gratuita fino ${_alGiorno(scade)}.',
+            en: 'Free trial until ${dataInParole(scade)}.',
+          ) +
+          perChi;
+    }
+    final quando = scade == null
+        ? inLingua(
+            it: 'Premium è attivo per sempre',
+            en: 'Premium is active forever',
+          )
+        : inLingua(
+            it: 'Premium è attivo fino ${_alGiorno(scade)}',
+            en: 'Premium is active until ${dataInParole(scade)}',
+          );
+    final origine = switch (gettone.origine) {
+      'regalo' => inLingua(it: 'regalo', en: 'gift'),
+      'installatore' => inLingua(
+        it: 'dal tuo installatore',
+        en: 'from your installer',
+      ),
+      'negozio' => inLingua(it: 'abbonamento', en: 'subscription'),
+      _ => '',
+    };
+    return '${origine.isEmpty ? quando : '$quando · $origine'}.$perChi';
+  }
 }
 
-/// La riga in cima quando si arriva da un lucchetto.
+/// Cosa comprende Premium: solo quello che c'e' davvero.
+List<(IconData, String, String)> _funzioni(bool sulWeb) {
+  /* L'auto di questo telefono: Android Auto su Android, CarPlay sull'iPhone.
+   * Solo quella: le regole dell'App Store non vogliono altri sistemi nominati
+   * nell'app per iPhone. Sul web, e altrove, tutte e due. */
+  final tutteEDue = inLingua(
+    it: 'Android Auto e CarPlay',
+    en: 'Android Auto and CarPlay',
+  );
+  final auto = sulWeb
+      ? tutteEDue
+      : switch (defaultTargetPlatform) {
+          TargetPlatform.android => 'Android Auto',
+          TargetPlatform.iOS => 'CarPlay',
+          _ => tutteEDue,
+        };
+  return [
+    (
+      Icons.dashboard_customize_outlined,
+      inLingua(it: 'Più plance e più case', en: 'More dashboards and homes'),
+      inLingua(
+        it: 'Fino a 8 plance per casa e 10 case nell\'app',
+        en: 'Up to 8 dashboards per home and 10 homes in the app',
+      ),
+    ),
+    (
+      Icons.public,
+      inLingua(
+        it: 'Da fuori casa, sicuro e diretto',
+        en: 'From away, secure and direct',
+      ),
+      inLingua(
+        it: 'Dal centralino, cifrato da un capo all\'altro',
+        en: 'Through the relay, encrypted end to end',
+      ),
+    ),
+    (
+      Icons.tune,
+      inLingua(it: 'Configurazione dall\'app', en: 'Configure from the app'),
+      inLingua(
+        it: 'La plancia si cambia dal telefono',
+        en: 'Change the dashboard from your phone',
+      ),
+    ),
+    (
+      Icons.sensors,
+      inLingua(
+        it: 'Dispositivi Zigbee dall\'app',
+        en: 'Zigbee devices from the app',
+      ),
+      inLingua(
+        it: 'Li abbini dal telefono e scegli dove metterli',
+        en: 'Pair them from your phone and choose where they go',
+      ),
+    ),
+    (
+      Icons.navigation_outlined,
+      inLingua(it: 'gdanav Premium compreso', en: 'gdanav Premium included'),
+      inLingua(
+        it: '$auto, soste alle colonnine, Home Assistant',
+        en: '$auto, charging stops, Home Assistant',
+      ),
+    ),
+  ];
+}
+
+/// La riga in cima quando si arriva da un lucchetto: piccola, col
+/// lucchetto, come le righe di gdanav.
 class _IlPerche extends StatelessWidget {
   const _IlPerche(this.testo);
   final String testo;
 
   @override
   Widget build(BuildContext context) {
-    final colori = Theme.of(context).colorScheme;
+    final s = Theme.of(context).colorScheme;
     return Container(
-      padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+      key: const Key('perche-premium'),
+      padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
       decoration: BoxDecoration(
-        color: colori.secondaryContainer,
-        borderRadius: BorderRadius.circular(16),
+        color: s.secondaryContainer,
+        borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(
-            Icons.lock_rounded,
-            size: 20,
-            color: colori.onSecondaryContainer,
-          ),
-          const SizedBox(width: 10),
+          Icon(Icons.lock_outline, size: 18, color: s.onSecondaryContainer),
+          const SizedBox(width: 8),
           Expanded(
             child: Text(
               testo,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: colori.onSecondaryContainer,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: s.onSecondaryContainer,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -342,160 +575,166 @@ class _IlPerche extends StatelessWidget {
   }
 }
 
-/// La testata: il nome, per quale casa, e come sta.
-class _LaTestata extends StatelessWidget {
-  const _LaTestata({
-    required this.casa,
-    required this.premium,
-    required this.gettone,
-    required this.controlli,
+/// Un piano da scegliere: il pallino, il nome, il prezzo a destra.
+class _Piano extends StatelessWidget {
+  const _Piano({
+    required this.id,
+    required this.prezzo,
+    required this.scelto,
+    required this.onTap,
+    this.nota,
   });
 
-  final String? casa;
-  final bool premium;
-  final Gettone? gettone;
-  final bool controlli;
+  final String id;
+  final String prezzo;
+  final bool scelto;
+  final String? nota;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    final stato = premium
-        ? _comeSta(gettone, controlli)
-        : inLingua(it: 'Base', en: 'Basic');
-    return Container(
-      padding: const EdgeInsets.fromLTRB(18, 18, 18, 18),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(24),
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFF1E3A5F), Colori.notte],
-        ),
-        boxShadow: Scheda.ombra(context),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Oggetto('evidenza', lato: 40),
-              const SizedBox(width: 12),
-              const Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'gdahome',
-                      style: TextStyle(
-                        color: Colors.white70,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    Text(
-                      'PREMIUM',
-                      style: TextStyle(
-                        fontFamily: 'Oswald',
-                        color: Colors.white,
-                        fontSize: 30,
-                        height: 1.05,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 1.5,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 5,
-                ),
-                decoration: BoxDecoration(
-                  color: premium
-                      ? Colori.bene
-                      : Colors.white.withValues(alpha: 0.14),
-                  borderRadius: BorderRadius.circular(999),
-                ),
-                child: Text(
-                  premium
-                      ? inLingua(it: 'Attivo', en: 'Active')
-                      : inLingua(it: 'Base', en: 'Basic'),
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-              ),
-            ],
+    final t = Theme.of(context).textTheme;
+    final s = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Material(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(
+            color: scelto ? s.primary : s.outline.withValues(alpha: 0.45),
+            width: scelto ? 2 : 1,
           ),
-          const SizedBox(height: 14),
-          Text(
-            casa == null
-                ? inLingua(
-                    it: 'Per tutta la casa, su tutti i telefoni.',
-                    en: 'For the whole home, on every phone.',
-                  )
-                : inLingua(
-                    it: 'Per «$casa», su tutti i telefoni della casa.',
-                    en: 'For “$casa”, on every phone in the home.',
+        ),
+        child: InkWell(
+          key: Key('piano-$id'),
+          borderRadius: BorderRadius.circular(16),
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(12, 12, 16, 12),
+            child: Row(
+              children: [
+                Icon(
+                  scelto ? Icons.radio_button_checked : Icons.radio_button_off,
+                  color: scelto ? s.primary : null,
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        id == pianoAnnuale
+                            ? inLingua(it: 'Annuale', en: 'Yearly')
+                            : inLingua(it: 'Mensile', en: 'Monthly'),
+                        style: t.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      if (nota case final n?)
+                        Text(n, style: t.bodySmall?.copyWith(color: s.primary)),
+                    ],
                   ),
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 15,
-              fontWeight: FontWeight.w600,
+                ),
+                Text(
+                  prezzo,
+                  style: t.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+                ),
+              ],
             ),
           ),
-          const SizedBox(height: 4),
-          Text(
-            premium
-                ? stato
-                : inLingua(
-                    it:
-                        'Adesso: una plancia, una casa, collegamento solo '
-                        'in casa.',
-                    en: 'Now: one dashboard, one home, connection at home only.',
-                  ),
-            style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.72),
-              fontSize: 13,
-              height: 1.35,
+        ),
+      ),
+    );
+  }
+}
+
+/// Una voce di cosa comprende: l'icona, il titolo, una riga sotto.
+class _Voce extends StatelessWidget {
+  const _Voce({required this.icona, required this.titolo, required this.testo});
+
+  final IconData icona;
+  final String titolo;
+  final String testo;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = Theme.of(context).textTheme;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 5),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icona, size: 22),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  titolo,
+                  style: t.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+                ),
+                Text(testo, style: t.bodySmall),
+              ],
             ),
           ),
         ],
       ),
     );
   }
+}
 
-  /// «Premium fino al 12 marzo 2027 · regalo».
-  static String _comeSta(Gettone? gettone, bool controlli) {
-    if (!controlli || gettone == null) {
-      return inLingua(it: 'Tutto è aperto.', en: 'Everything is unlocked.');
-    }
-    final scade = gettone.scade;
-    final quando = scade == null
-        ? inLingua(it: 'Premium per sempre', en: 'Premium forever')
-        : inLingua(
-            it: 'Premium fino ${_alGiorno(scade)}',
-            en: 'Premium until ${dataInParole(scade)}',
-          );
-    if (gettone.prova && scade != null) {
-      return inLingua(
-        it: 'Prova gratuita fino ${_alGiorno(scade)}',
-        en: 'Free trial until ${dataInParole(scade)}',
-      );
-    }
-    final origine = switch (gettone.origine) {
-      'regalo' => inLingua(it: 'regalo', en: 'gift'),
-      'installatore' => inLingua(
-        it: 'dal tuo installatore',
-        en: 'from your installer',
+/// Sul web, al posto del bottone: si compra dal telefono.
+class _SulWeb extends StatelessWidget {
+  const _SulWeb();
+
+  @override
+  Widget build(BuildContext context) {
+    final s = Theme.of(context).colorScheme;
+    return Padding(
+      key: const Key('premium-sul-web'),
+      padding: const EdgeInsets.fromLTRB(0, 8, 0, 16),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(Icons.phone_iphone, size: 18, color: s.onSurfaceVariant),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              inLingua(
+                it:
+                    'Da qui non si compra: abbonati dall\'app gdahome sul '
+                    'telefono, e Premium arriva anche qui. Un codice regalo '
+                    'invece lo puoi riscattare anche dal browser.',
+                en:
+                    'You can\'t buy from here: subscribe in the gdahome app on '
+                    'your phone, and Premium shows up here too. A gift code, '
+                    'though, can be redeemed from the browser as well.',
+              ),
+              style: Theme.of(context).textTheme.bodySmall
+                  ?.copyWith(color: s.onSurfaceVariant),
+            ),
+          ),
+        ],
       ),
-      'negozio' => inLingua(it: 'abbonamento', en: 'subscription'),
-      _ => '',
-    };
-    return origine.isEmpty ? quando : '$quando · $origine';
+    );
   }
+}
+
+class _Riga extends StatelessWidget {
+  const _Riga(this.testo, {required this.colore});
+  final String testo;
+  final Color colore;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.only(top: 8),
+    child: Text(
+      testo,
+      textAlign: TextAlign.center,
+      style: TextStyle(color: colore),
+    ),
+  );
 }
 
 /// «al 12 marzo 2027», ma «all'8 ottobre»: l'1, l'8 e l'11 cominciano con
@@ -518,289 +757,6 @@ String dataInParole(DateTime quando) {
   return inLingua(
     it: '${locale.day} ${mesi[locale.month - 1]} ${locale.year}',
     en: '${locale.day} ${months[locale.month - 1]} ${locale.year}',
-  );
-}
-
-/// Cosa comprende, riga per riga.
-class _CosaComprende extends StatelessWidget {
-  const _CosaComprende({required this.sulWeb});
-
-  final bool sulWeb;
-
-  /// L'auto di questo telefono: Android Auto su Android, CarPlay sull'iPhone.
-  /// Solo quella: le regole dell'App Store non vogliono altri sistemi nominati
-  /// nell'app per iPhone. Sul web, e altrove, tutte e due.
-  String _lAuto() {
-    if (sulWeb) {
-      return inLingua(
-        it: 'Android Auto e CarPlay',
-        en: 'Android Auto and CarPlay',
-      );
-    }
-    return switch (defaultTargetPlatform) {
-      TargetPlatform.android => 'Android Auto',
-      TargetPlatform.iOS => 'CarPlay',
-      _ => inLingua(
-        it: 'Android Auto e CarPlay',
-        en: 'Android Auto and CarPlay',
-      ),
-    };
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final righe = [
-      (
-        Icons.dashboard_customize_rounded,
-        inLingua(it: 'Più plance e più case', en: 'More dashboards and homes'),
-        inLingua(
-          it: 'Fino a 8 plance per casa e 10 case nell\'app.',
-          en: 'Up to 8 dashboards per home and 10 homes in the app.',
-        ),
-      ),
-      (
-        Icons.public_rounded,
-        inLingua(
-          it: 'Da fuori casa, sicuro e diretto',
-          en: 'From away, secure and direct',
-        ),
-        inLingua(
-          it: 'Dal centralino, cifrato da un capo all\'altro.',
-          en: 'Through the relay, encrypted end to end.',
-        ),
-      ),
-      (
-        Icons.tune_rounded,
-        inLingua(it: 'Configurazione dall\'app', en: 'Configure from the app'),
-        inLingua(
-          it: 'La plancia si cambia dal telefono.',
-          en: 'Change the dashboard from your phone.',
-        ),
-      ),
-      (
-        Icons.sensors_rounded,
-        inLingua(
-          it: 'Dispositivi Zigbee dall\'app',
-          en: 'Zigbee devices from the app',
-        ),
-        inLingua(
-          it: 'Li abbini dal telefono e scegli dove metterli.',
-          en: 'Pair them from your phone and choose where they go.',
-        ),
-      ),
-      (
-        Icons.navigation_rounded,
-        inLingua(it: 'gdanav Premium compreso', en: 'gdanav Premium included'),
-        inLingua(
-          it: '${_lAuto()}, soste alle colonnine, Home Assistant.',
-          en: '${_lAuto()}, charging stops, Home Assistant.',
-        ),
-      ),
-    ];
-    final colori = Theme.of(context).colorScheme;
-    final testi = Theme.of(context).textTheme;
-    return Scheda(
-      padding: const EdgeInsets.fromLTRB(14, 6, 14, 6),
-      child: Column(
-        children: [
-          for (final (i, (icona, titolo, sotto)) in righe.indexed) ...[
-            if (i > 0) Divider(color: colori.outlineVariant, height: 1),
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 10),
-              child: Row(
-                children: [
-                  Cerchietto(
-                    icona: icona,
-                    lato: 38,
-                    fondo: colori.secondaryContainer,
-                    colore: colori.onSecondaryContainer,
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          titolo,
-                          style: testi.titleSmall?.copyWith(
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          sotto,
-                          style: testi.bodySmall?.copyWith(
-                            color: colori.onSurfaceVariant,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-}
-
-/// Un piano: il nome, il prezzo del negozio, il tasto.
-class _Piano extends StatelessWidget {
-  const _Piano({
-    required this.titolo,
-    required this.prezzo,
-    required this.sotto,
-    required this.compra,
-    this.evidenza,
-    this.conTasto = true,
-    this.giorniProva = 0,
-  });
-
-  /// Sul web il tasto non c'e': li' non si compra.
-  final bool conTasto;
-
-  /// I giorni gratis che il negozio offre per questo piano; 0 niente prova.
-  final int giorniProva;
-
-  final String titolo;
-  final String prezzo;
-  final String sotto;
-  final VoidCallback? compra;
-  final String? evidenza;
-
-  @override
-  Widget build(BuildContext context) {
-    final colori = Theme.of(context).colorScheme;
-    final testi = Theme.of(context).textTheme;
-    return Scheda(
-      padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
-      bordo: evidenza != null ? Colori.ambra : null,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          /* Alta uguale con e senza il bollino: i due piani stanno affiancati,
-           * e i prezzi devono stare alla stessa altezza. */
-          SizedBox(
-            height: 26,
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    titolo.toUpperCase(),
-                    style: testi.labelMedium?.copyWith(
-                      letterSpacing: 1.2,
-                      fontWeight: FontWeight.w800,
-                      color: colori.onSurfaceVariant,
-                    ),
-                  ),
-                ),
-                if (evidenza case final e?)
-                  Bollino(
-                    e,
-                    fondo: colori.secondaryContainer,
-                    colore: colori.onSecondaryContainer,
-                  ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 10),
-          FittedBox(
-            fit: BoxFit.scaleDown,
-            alignment: Alignment.centerLeft,
-            child: Text(
-              prezzo,
-              maxLines: 1,
-              style: carattereDelNumero(
-                corpo: 26,
-                peso: FontWeight.w700,
-                colore: colori.onSurface,
-              ),
-            ),
-          ),
-          const SizedBox(height: 6),
-          SizedBox(
-            height: 34,
-            child: Text(
-              sotto,
-              maxLines: 2,
-              style: testi.bodySmall?.copyWith(color: colori.onSurfaceVariant),
-            ),
-          ),
-          if (conTasto) ...[
-            const SizedBox(height: 10),
-            FilledButton(
-              onPressed: compra,
-              style: FilledButton.styleFrom(
-                minimumSize: const Size.fromHeight(44),
-                backgroundColor: evidenza != null ? Colori.ambraScura : null,
-              ),
-              child: FittedBox(
-                fit: BoxFit.scaleDown,
-                child: Text(
-                  giorniProva > 0
-                      ? inLingua(
-                          it: '$giorniProva giorni gratis',
-                          en: '$giorniProva days free',
-                        )
-                      : inLingua(it: 'Abbonati', en: 'Subscribe'),
-                ),
-              ),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-}
-
-/// Sul web: si compra dal telefono.
-class _SulWeb extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    final colori = Theme.of(context).colorScheme;
-    return Scheda(
-      child: Row(
-        children: [
-          Cerchietto(icona: Icons.phone_iphone_rounded, lato: 40),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              inLingua(
-                it:
-                    'Da qui non si compra: abbonati dall\'app gdahome sul '
-                    'telefono, e Premium arriva anche qui. Un codice regalo '
-                    'invece lo puoi riscattare anche dal browser.',
-                en:
-                    'You can\'t buy from here: subscribe in the gdahome app on '
-                    'your phone, and Premium shows up here too. A gift code, '
-                    'though, can be redeemed from the browser as well.',
-              ),
-              style: Theme.of(context).textTheme.bodyMedium
-                  ?.copyWith(color: colori.onSurface),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _Riga extends StatelessWidget {
-  const _Riga(this.testo, {required this.colore});
-  final String testo;
-  final Color colore;
-
-  @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.only(bottom: 12),
-    child: Text(
-      testo,
-      textAlign: TextAlign.center,
-      style: Theme.of(context).textTheme.bodyMedium
-          ?.copyWith(color: colore, fontWeight: FontWeight.w600),
-    ),
   );
 }
 
@@ -853,21 +809,25 @@ class _IlCodiceRegaloState extends State<_IlCodiceRegalo> {
           Text(
             inLingua(
               it:
-                  'Il codice vale per la casa aperta adesso, e per tutti i '
-                  'suoi telefoni.',
+                  'Il codice che ti hanno dato, per attivare Premium su '
+                  'questa casa e su tutti i suoi telefoni.',
               en:
-                  'The code applies to the home open right now, and to all '
-                  'of its phones.',
+                  'The code you were given, to turn on Premium for this '
+                  'home and all of its phones.',
             ),
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 12),
           TextField(
+            key: const Key('campo-codice'),
             controller: _testo,
             autofocus: true,
             textCapitalization: TextCapitalization.characters,
+            autocorrect: false,
+            enableSuggestions: false,
             enabled: !_staMandando,
             decoration: InputDecoration(
               hintText: 'GDA-XXXX-XXXX-XXXX',
+              border: const OutlineInputBorder(),
               errorText: _errore,
               errorMaxLines: 3,
             ),
@@ -877,16 +837,18 @@ class _IlCodiceRegaloState extends State<_IlCodiceRegalo> {
       ),
       actions: [
         TextButton(
-          onPressed: _staMandando ? null : () => Navigator.of(context).pop(),
+          onPressed: _staMandando
+              ? null
+              : () => Navigator.of(context).pop(false),
           child: Text(inLingua(it: 'Annulla', en: 'Cancel')),
         ),
         FilledButton(
+          key: const Key('riscatta-codice'),
           onPressed: _staMandando ? null : _manda,
           style: FilledButton.styleFrom(minimumSize: const Size(0, 44)),
           child: _staMandando
-              ? const SizedBox(
-                  width: 18,
-                  height: 18,
+              ? const SizedBox.square(
+                  dimension: 18,
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
               : Text(inLingua(it: 'Riscatta', en: 'Redeem')),
@@ -894,43 +856,4 @@ class _IlCodiceRegaloState extends State<_IlCodiceRegalo> {
       ],
     );
   }
-}
-
-/// La riga sotto i piani che dice della prova gratuita. Col negozio che
-/// risponde si dice quella che il negozio offre davvero (a chi l'ha gia' usata
-/// niente); senza negozio si dice com'e' fatta, «la prima volta».
-String _laProva(GestoreDegliAcquisti? acquisti) {
-  final giorni = acquisti == null || !acquisti.disponibile
-      ? giorniDiProva
-      : [
-          acquisti.provaDi(pianoMensile),
-          acquisti.provaDi(pianoAnnuale),
-        ].reduce((a, b) => a > b ? a : b);
-  if (acquisti != null && acquisti.disponibile && giorni == 0) {
-    return inLingua(
-      it: 'La prova gratuita l\'hai già usata: l\'abbonamento parte subito.',
-      en: 'You\'ve already used the free trial: the subscription starts now.',
-    );
-  }
-  /* Col negozio che risponde lo si chiama per nome: il Play Store su
-   * Android, l'App Store sull'iPhone. */
-  final nome = acquisti != null && acquisti.disponibile
-      ? acquisti.negozio?.nome
-      : null;
-  final dove = switch (nome) {
-    null || '' => inLingua(it: 'dal negozio', en: 'the store'),
-    final nome when 'AEIOUaeiou'.contains(nome[0]) => inLingua(
-      it: 'dall\'$nome',
-      en: 'the $nome',
-    ),
-    final nome => inLingua(it: 'dal $nome', en: 'the $nome'),
-  };
-  return inLingua(
-    it:
-        'La prima volta i primi $giorni giorni sono gratis: se disdici prima '
-        '$dove, non paghi niente.',
-    en:
-        'The first time, the first $giorni days are free: cancel from '
-        '$dove before then and you pay nothing.',
-  );
 }

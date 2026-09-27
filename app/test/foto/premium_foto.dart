@@ -259,9 +259,24 @@ void main() {
       ),
     );
     await passa(tester);
-    await tester.drag(find.byType(Scrollable).first, const Offset(0, -700));
-    await passa(tester);
     await scatta(tester, 'premium-prova-14-giorni', _sistema);
+  }, variant: _sistemi);
+
+  testWidgets('il codice regalo', (tester) async {
+    quantoGrande(tester);
+    final collegamento = await casaSenzaFilo(tester);
+    await tester.pumpWidget(
+      _lApp(SchermataPremium(collegamento: collegamento, sulWeb: false)),
+    );
+    await passa(tester);
+    await tester.tap(find.byKey(const Key('codice-regalo')));
+    await passa(tester);
+    await tester.enterText(
+      find.byKey(const Key('campo-codice')),
+      'GDA-7KQM-2XRT-9HVB',
+    );
+    await passa(tester);
+    await scatta(tester, 'premium-codice-regalo', _sistema);
   }, variant: _sistemi);
 
   testWidgets('la pagina Premium durante la prova', (tester) async {
