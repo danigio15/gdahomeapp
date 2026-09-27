@@ -7,8 +7,11 @@
  * e da dove:
  *
  *  - **la plancia**, da `ponte/plancia/` — quella di DashboardModern, gli
- *    stessi file che stanno dentro l'add-on. Non una copia rifatta a mano, non
- *    delle fotografie: la plancia, che nel sito gira davvero;
+ *    stessi file che stanno dentro l'add-on. La pagina non la mostra piu' in
+ *    un riquadro (adesso fa vedere le fotografie dell'app), ma lo scambio sul
+ *    server (`prepara.sh`, scritto da `centralino/accendi.sh`) porta il sito
+ *    solo se dopo questo script c'e' `dashboardmodern_static/legacy/
+ *    dashboard.html`: finche' quella regola resta, la plancia si porta;
  *  - **la casa demo**, da `collaudo/casa-demo.json` — la stessa che il
  *    collaudo accende per fotografare l'app, con cui la plancia del sito si
  *    riempie: duecentotrentacinque entita' di una casa che esiste;
@@ -183,9 +186,17 @@ function portaLaPlancia() {
 
 /* ── Il giro ──────────────────────────────────────────────────────────── */
 
-rmSync(STATICO, { recursive: true, force: true });
-mkdirSync(join(STATICO, "oggetti"), { recursive: true });
-mkdirSync(join(STATICO, "font"), { recursive: true });
+/* Si rifanno le cartelle che questo script riempie, e solo quelle.
+ *
+ * `statico/app/` e `statico/gdanav/` non sono sue: sono le fotografie delle
+ * due app, ridotte a mano per il sito — quelle di gdanav vengono da un'altra
+ * repository, e qui non c'e' niente da cui rifarle. Prima si buttava via
+ * tutta `statico/`, e sul server, dove questo script gira prima di ogni
+ * scambio, sarebbero sparite a ogni versione. */
+for (const cartella of ["oggetti", "font", "schermate"]) {
+  rmSync(join(STATICO, cartella), { recursive: true, force: true });
+  mkdirSync(join(STATICO, cartella), { recursive: true });
+}
 
 const fatto = [];
 const conta = (che, quanti, byte, unita = "file") => fatto.push({ che, quanti, byte, unita });
@@ -216,12 +227,22 @@ conta("le icone", icone, iconeByte);
  * quello che si vede sul telefono, non dei mockup. Una copertina che racconta
  * un'app senza farla vedere chiede a chi legge di fidarsi; queste tolgono di
  * mezzo la domanda. */
+/* Solo quelle che le pagine usano davvero: in `docs/immagini/` ce ne sono
+ * anche per il cruscotto e per l'add-on, e sul server sarebbero un paio di
+ * megabyte che nessuno chiede. */
 const schermate = join(RADICE, "docs", "immagini");
 if (!existsSync(schermate)) fermati(`Non trovo le schermate in ${schermate}.`);
+const usate = new Set();
+for (const pagina of readdirSync(SITO).filter((nome) => nome.endsWith(".html")))
+  for (const trovata of readFileSync(join(SITO, pagina), "utf8").matchAll(
+    /statico\/schermate\/([\w.-]+)/g,
+  ))
+    usate.add(trovata[1]);
 let quanteSchermate = 0;
 let schermateByte = 0;
-for (const nome of readdirSync(schermate).sort()) {
-  if (!nome.endsWith(".png")) continue;
+for (const nome of [...usate].sort()) {
+  if (!existsSync(join(schermate, nome)))
+    fermati(`Il sito usa la schermata ${nome}, e in ${schermate} non c'e'.`);
   cpSync(join(schermate, nome), join(STATICO, "schermate", nome));
   quanteSchermate += 1;
   schermateByte += statSync(join(STATICO, "schermate", nome)).size;

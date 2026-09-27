@@ -2,65 +2,26 @@
 
 Il posto dove il progetto si racconta a chi non l'ha mai visto: cos'è l'app,
 come fa la casa a rispondere da fuori senza che si apra niente sul router, e
-**la plancia vera che ci gira dentro**.
+le due app — **gdahome** e **gdanav** — fatte vedere con le loro fotografie.
 
 Sta su **[gdahome.org](https://gdahome.org)**.
 
-## La plancia non è una riproduzione: è la plancia
+## Fotografie, e non la plancia in un riquadro
 
-È il pezzo per cui il sito esiste, ed è anche la cosa che il sito **non**
-disegna. In un riquadro, nella pagina, gira **la plancia di gdahome**: gli stessi
-file che stanno dentro l'add-on, `ponte/plancia/`, copiati byte per byte. Le
-trenta voci della barra sono le sue, le tessere sono le sue, i ritratti 3D
-delle persone sono i suoi.
+Nella sezione «La plancia» c'era, in un riquadro, **la plancia vera** — gli
+stessi file dell'add-on, con dietro una Home Assistant finta
+(`casa-in-pagina.js`) e la casa demo del collaudo. Sul server però la plancia
+nel sito non sta in git: la rifà `strumenti/porta-nel-sito.mjs` a ogni
+versione, e quando non c'era al suo posto compariva un riquadro con scritto
+«La plancia non è stata pubblicata su questo server». A chi legge non diceva
+niente, e lasciava un buco nel mezzo della pagina.
 
-C'era una versione precedente di questa pagina in cui la plancia era
-ridisegnata a mano in duemila righe di HTML. Somigliava, e si vedeva che non
-era lei — che è esattamente il motivo per cui un renderer parallelo era già
-stato scartato:
-
-> un renderer parallelo […] o viene identico, e allora riscriverlo non è
-> servito a niente, o viene diverso, e l'utente lo riconosce come peggiore.
-
-### Come fa a girare senza una casa
-
-Una plancia vuole un Home Assistant dietro, e un sito statico non ce l'ha: non
-può aprire un WebSocket verso casa, e non ci sarebbe nessuna casa a cui
-aprirlo.
-
-Ma la plancia ha **un gancio fatto apposta**. Il suo preludio
-(`legacy/bridge-prelude.js`) guarda se qualcuno ha già messo un
-`__DASHBOARDMODERN_BRIDGE_WS__` nella finestra, e se c'è usa quello invece del
-WebSocket vero. È lo stesso gancio con cui l'app sul telefono le cuce addosso
-il proprio filo: non è un WebSocket, è un oggetto finto messo nella pagina
-insieme alle altre premesse.
-
-Di qua dal gancio c'è `casa-in-pagina.js`: una Home Assistant finta che parla
-il protocollo vero, con le stesse risposte di `collaudo/casa-finta.js` — la
-Home Assistant finta contro cui girano le prove dal vivo. Quello che lì è un
-server in Node, qui è un oggetto in pagina: cambia chi consegna le buste, non
-cosa c'è dentro. Due comandi non sono di Home Assistant ma del **ponte** —
-`dashboardmodern/config/get` e `config/set` — e sono risposti come li risponde
-lui, regole comprese (i valori si sostituiscono, una scrittura vuota sopra una
-plancia configurata si rifiuta, la revisione cresce e basta).
-
-Dentro c'è la **casa demo del collaudo**: le stesse 235 entità di
-`collaudo/casa-demo.json` contro cui girano le prove. Sette stanze, otto luci,
-cinque termostati, un fotovoltaico con la batteria, sei elettrodomestici,
-un'auto, una piscina.
-
-### Quello che è finto, e il sito lo scrive
-
-Dall'altra parte non c'è nessuna casa: gli stati stanno in una mappa nella
-pagina. Premere un interruttore la cambia, e il cambiamento torna indietro
-come tornerebbe da Home Assistant — quindi la plancia si muove per davvero —
-ma non si accende niente da nessuna parte, e ricaricando la pagina torna tutto
-com'era.
-
-Le **due telecamere** sono l'unica cosa che non si può far vedere: la plancia
-le chiede come immagini su `/api/camera_proxy/`, e un sito statico non ha un
-Home Assistant che gliele dia. In casa quelle due richieste passano dal ponte e
-tornano col fotogramma.
+Adesso le tre sezioni che raccontano le app — **la plancia** (`#plancia`),
+**l'app gdahome** (`#app`) e **gdanav** (`#gdanav`) — sono fatte di fotografie
+vere e di schede di testo. Le fotografie stanno nella repository, dentro
+`sito/`, e ci sono sempre. `casa-in-pagina.js` e `statico/casa.js` restano
+perché lo script li infila ancora nella plancia che porta (vedi «Quello che non
+si ribatte a mano»), ma la pagina non li usa più.
 
 ## Una luce sola, e il prodotto in faccia
 
@@ -108,49 +69,50 @@ attivo e a chi scrivere. Le impostazioni le chiede `centralino/accendi.sh`
 
 ## Come si guarda
 
-La plancia non sta nella repository due volte: `sito/dashboardmodern_static/`
-è fuori da git e si fa con un comando.
+La pagina è fatta di file fermi, e tutti quelli che usa stanno in `sito/`:
 
 ```bash
-node strumenti/porta-nel-sito.mjs
 cd sito && python3 -m http.server 8099
 ```
 
-Poi `http://127.0.0.1:8099/`. Un server ci vuole: un `iframe` su `file://` non
-carica i moduli della plancia.
+Poi `http://127.0.0.1:8099/`.
 
 ## I file
 
-|                             |                                                                                                                    |
-| --------------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| `index.html`                | la pagina: il colpo d'occhio, le schermate, come funziona, la plancia, cosa fa, quanto costa, per chi installa, scaricala, sostegno, contatti |
-| `privacy.html`              | l'informativa — la gemella di `docs/PRIVACY.md`, ed è l'indirizzo che il Play Store tiene da parte                 |
-| `stile.css`                 | i colori (quelli di `app/lib/vestito/tema.dart`), i caratteri, il fondo vivo coi due aloni, il telaio del riquadro |
-| `privacy.css`               | l'unica cosa che nell'informativa è diversa: una colonna stretta, da leggere                                       |
-| `casa-in-pagina.js`         | la Home Assistant finta che fa girare la plancia                                                                   |
-| `sito.js`                   | la lingua, l'ombra sotto la barra, le schede che compaiono, il modulo dei contatti — lo caricano tutte e due le pagine |
-| `statico/`                  | marchio, icone, caratteri, casa demo e **le schermate dell'app** — **non si tocca a mano**, è salvata nella repository |
-| `dashboardmodern_static/`   | la plancia vera — **non si tocca a mano**, ed è fuori da git                                                       |
-| `gdahome.png`               | il marchio dell'informativa                                                                                        |
-| `robots.txt`, `sitemap.xml` | si può guardare tutto, e le pagine sono due                                                                        |
+|                                   |                                                                                                                                                                                           |
+| --------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `index.html`                      | la pagina: il colpo d'occhio, la plancia, come funziona, l'app gdahome, gdanav, quanto costa, per chi installa, scaricala, sostegno, contatti                                             |
+| `privacy.html`                    | l'informativa — la gemella di `docs/PRIVACY.md`, ed è l'indirizzo che il Play Store tiene da parte                                                                                        |
+| `stile.css`                       | i colori (quelli di `app/lib/vestito/tema.dart`), i caratteri, il fondo vivo coi due aloni, le file di fotografie                                                                         |
+| `privacy.css`                     | l'unica cosa che nell'informativa è diversa: una colonna stretta, da leggere                                                                                                              |
+| `casa-in-pagina.js`               | la Home Assistant finta della plancia di prima: la pagina non la usa più                                                                                                                  |
+| `sito.js`                         | la lingua, l'ombra sotto la barra, le schede che compaiono, il modulo dei contatti — lo caricano tutte e due le pagine                                                                    |
+| `statico/`                        | marchio, icone, caratteri, casa demo e le schermate della plancia — **non si toccano a mano**, sono salvati nella repository                                                              |
+| `statico/app/`, `statico/gdanav/` | le fotografie delle due app, ridotte in JPG dalle schermate dei README (quelle di gdanav vengono da `danigio15/gdanav`, `docs/immagini/`) — **si fanno a mano**, e lo script non le tocca |
+| `dashboardmodern_static/`         | la plancia vera — fuori da git; la pagina non la usa più, la vuole lo scambio sul server                                                                                                  |
+| `gdahome.png`                     | il marchio dell'informativa                                                                                                                                                               |
+| `robots.txt`, `sitemap.xml`       | si può guardare tutto, e le pagine sono due                                                                                                                                               |
 
 ## Quello che non si ribatte a mano
 
-Il marchio, le 47 icone, i caratteri Inter e Oswald, la casa demo, e la
+Il marchio, le icone, i caratteri Inter e Oswald, le schermate della plancia
+(solo quelle che le pagine usano, da `docs/immagini/`), la casa demo e la
 plancia intera: li porta uno script, dalle cartelle dove stanno per davvero.
 
 ```bash
 node strumenti/porta-nel-sito.mjs
 ```
 
-Si rilancia quando cambia il marchio, un'icona, la casa demo, o quando arriva
-una versione nuova della plancia. Quello che finisce in `statico/` è salvato
-nella repository (seicento kilobyte); la plancia no, perché sono diciassette
-megabyte identici a quelli che stanno già in `ponte/plancia/`.
+Rifà `statico/oggetti/`, `statico/font/` e `statico/schermate/`, e basta:
+`statico/app/` e `statico/gdanav/` sono fatte a mano e restano come sono. Prima
+lo script buttava via tutta `statico/`, e sul server — dove gira prima di ogni
+scambio — le fotografie delle app sarebbero sparite a ogni versione.
 
-Lo script **si ferma** se in `dashboard.html` non trova più il preludio dove
-se lo aspetta: meglio fermarsi che pubblicare una plancia che resta sul velo
-d'avvio.
+La plancia (`dashboardmodern_static/`) la porta ancora, anche se la pagina non
+la mostra più: lo scambio sul server (`prepara.sh`, che nasce da
+`centralino/accendi.sh`) porta il sito **solo** se dopo lo script c'è
+`dashboardmodern_static/legacy/dashboard.html`. Finché quella regola resta,
+la plancia si porta; è fuori da git e non pesa sulla repository.
 
 ## Dove si pubblica
 
@@ -166,15 +128,15 @@ nuova aperta.
 
 ### Cosa succede sulla macchina
 
-`scarica.sh` (che nasce da [`centralino/accendi.sh`](../centralino/accendi.sh))
-scarica il pacchetto della versione e, prima di copiare `sito/`, **rifà la
-plancia**: la stessa `node strumenti/porta-nel-sito.mjs` che si lancia qui, con
-dentro la `ponte/plancia/` di quella versione. Nel pacchetto la plancia dentro
-il sito non c'è — è fuori da git apposta, per non averne due copie — e quindi
-va rimessa lì dove la pagina la va a cercare.
+`prepara.sh` (che nasce da [`centralino/accendi.sh`](../centralino/accendi.sh))
+scarica il pacchetto della versione e, prima di copiare `sito/`, lancia la
+stessa `node strumenti/porta-nel-sito.mjs` che si lancia qui.
 
-Se non ci riesce, **il sito non si scambia**: resta quello di prima, intero,
-invece di diventare una pagina col buco al posto della plancia. Il resto
+Se non ci riesce, **il sito non si scambia**: resta quello di prima, intero.
+Attenzione: `prepara.sh` si scrive sulla macchina quando si lancia
+`accendi.sh`, e non si aggiorna da solo con le versioni. Se il sito pubblicato
+resta indietro, o gli mancano dei file, la prima cosa da guardare è quale
+`prepara.sh` c'è sulla macchina. Il resto
 dell'aggiornamento va avanti lo stesso, perché il tramite è un servizio e il
 sito è una pagina, e non si tiene fermo il primo per la seconda.
 
@@ -183,7 +145,7 @@ così com'è. Nel suo blocco ci sono quattro cose e basta:
 
 - **niente `try_files`** — una pagina che non esiste deve dire che non esiste,
   non far finta di essere l'indice;
-- **due velocità di cache** — la plancia e `statico/` un giorno, perché
+- **due velocità di cache** — `statico/` un giorno, perché
   cambiano solo quando cambia la versione; le pagine no, perché un testo
   corretto che resta in cache è un testo corretto che nessuno legge;
 - **`www` è un redirect vero**, non un secondo sito;
@@ -193,7 +155,8 @@ così com'è. Nel suo blocco ci sono quattro cose e basta:
 ### E prima di spostare il segno
 
 C'è l'altro bottone, **Actions → «Il sito»**, che non pubblica niente: apre il
-sito con un browser vero e guarda che la plancia parta. Parte da sé a ogni
+sito con un browser vero e guarda che le fotografie delle app arrivino tutte.
+Parte da sé a ogni
 modifica di `sito/` o di `ponte/plancia/`. È il controllo che una pagina ferma
 non può farsi da sola — se non trovasse i suoi file non ci sarebbe nessun
 errore da nessuna parte, ci sarebbe una pagina bianca.
@@ -203,14 +166,16 @@ E le prove che la **macchina** rigira da sé prima di scambiare
 due promesse che si rompono per distrazione: che la pagina non tiri su niente
 da fuori — nessun carattere scaricato, nessuna libreria, nessun contatore — e
 che l'informativa pubblicata dica quello che dice `docs/PRIVACY.md`, sezione
-per sezione e con la stessa data.
+per sezione e con la stessa data. E guardano che **ogni file che le pagine
+chiamano stia dentro `sito/`**, salvato in git e scritto con le stesse
+maiuscole: un'immagine che punta fuori da `sito/` si vede aprendo la pagina
+dalla repository, e sul server è un buco.
 
 ## Come si prova
 
 Con un browser vero, come tutto il resto del collaudo:
 
 ```bash
-node strumenti/porta-nel-sito.mjs
 cd collaudo && npm install && cd ..
 node collaudo/guarda-il-sito.mjs
 ```
@@ -218,25 +183,23 @@ node collaudo/guarda-il-sito.mjs
 Apre il sito a tre larghezze — telefono, tablet, computer — e guarda, in
 ordine di quanto fa male sbagliarlo:
 
-1. **la plancia parte**: esce dal velo d'avvio, tira su la sua barra con tutte
-   le sue voci (compresa quella che si è fatta chi ci abita, l'acquario), e
-   apre le sue pagine;
-2. **la plancia risponde**: un comando dato alla plancia arriva fino alla casa
-   finta in pagina e le cambia lo stato;
-3. **niente errori** in console e nessun file che non arriva — le due
-   telecamere sono l'eccezione, ed è scritta nel collaudo;
-4. **niente scorrimento di lato** a nessuna larghezza;
-5. **i link portano dove dicono**;
-6. **le schermate dell'app si vedono** — non basta che il tag ci sia: si chiede
-   al browser se dentro ci sono davvero dei pixel, perché un'immagine che non
-   arriva lascia un buco e non fa nessun rumore;
+1. **le fotografie arrivano**: si scorre tutta la pagina (le immagini sono
+   caricate quando ci si arriva) e si chiede al browser se in ogni immagine ci
+   sono davvero dei pixel, perché un'immagine che non arriva lascia un buco e
+   non fa nessun rumore;
+2. **la plancia, l'app e gdanav** hanno la loro sezione, la loro voce nel menu
+   e le loro fotografie; nella pagina non c'è più nessun riquadro;
+3. **niente errori** in console e nessun file che non arriva;
+4. **niente scorrimento di lato** a nessuna larghezza, e il menu del telefono
+   si apre e si richiude;
+5. **la lingua si cambia** coi due tasti, anche nelle sezioni nuove, e si torna
+   all'italiano;
+6. **i link portano dove dicono**, il modulo dei contatti manda al tramite, il
+   bottone delle donazioni è quello della plancia;
 7. **la copertina resta chiara** anche a chi preferisce il tema scuro;
 8. **l'informativa è vestita come il sito**: i caratteri giusti, il fondo
    giusto, una colonna da leggere e i collegamenti che si distinguono dal
-   testo. Che il testo sia quello giusto lo tiene una prova del centralino;
-   questa tiene l'altra metà, che nessuna prova sul testo vedrebbe. È già
-   successo: l'informativa era scritta addosso a uno `stile.css` che poi è
-   stato rifatto per l'indice, e da quel momento apriva senza niente addosso.
+   testo.
 
 Le fotografie finiscono in `collaudo/foto/sito-*.png`.
 
