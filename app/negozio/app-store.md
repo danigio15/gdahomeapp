@@ -50,7 +50,9 @@ home assistant,domotica,casa,luci,clima,tapparelle,telecamere,consumi,carplay,na
 > - Più case, e più plance per casa.
 >
 > Serve Home Assistant OS o Supervised (con il negozio degli add-on).
-> gdahome è gratuita.
+> gdahome Base è gratuita. gdahome Premium (abbonamento mensile o annuale)
+> aggiunge più plance e più case, il collegamento da fuori casa, la
+> configurazione e Zigbee dall'app, e comprende gdanav Premium.
 
 **URL di supporto**: `https://gdahome.org`
 **URL della privacy**: `https://gdahome.org/privacy.html`

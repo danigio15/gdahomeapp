@@ -1074,8 +1074,12 @@ section {
 .scarichi {
   display: grid;
   gap: 14px;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   margin-top: 34px;
+}
+.scarico code {
+  overflow-wrap: anywhere;
+  font-size: 0.86em;
 }
 .scarico {
   display: flex;
@@ -1351,5 +1355,140 @@ a.scarico:hover {
 @media (max-width: 900px) {
   .contatto {
     grid-template-columns: 1fr;
+  }
+}
+
+/* ── Quanto costa ───────────────────────────────────────────────────────
+ *
+ * Due piani di fianco, Base e Premium, e sotto le tre strade per avere
+ * Premium. Premium ha il bordo ambra — il colore di una luce accesa — e non
+ * un'altra forma: sono la stessa app, una con qualcosa in piu'. */
+.piani {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-top: 34px;
+}
+.piano {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+.piano-premium {
+  border: 2px solid color-mix(in srgb, var(--ambra) 70%, transparent);
+  box-shadow: var(--ombra-alta);
+}
+.piano-prova {
+  position: absolute;
+  top: 22px;
+  right: 22px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--ambra) 18%, var(--carta));
+  color: var(--ambra-scura);
+}
+.piano h3 {
+  padding-right: 170px;
+}
+.carta .prezzo {
+  color: var(--testo);
+  font-size: 1rem;
+  margin: 2px 0 18px;
+}
+.prezzo b {
+  font-family: "Oswald", "Inter", sans-serif;
+  font-weight: 500;
+  font-size: 2rem;
+  letter-spacing: -0.01em;
+  line-height: 1.1;
+}
+.prezzo span {
+  color: var(--testo-lieve);
+}
+.prezzo span b {
+  font-size: 1.25rem;
+  color: var(--testo);
+}
+.sottotitolo {
+  font-size: clamp(1.3rem, 2.4vw, 1.6rem);
+  margin-top: clamp(40px, 6vw, 64px);
+}
+.carte-tre {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-top: 20px;
+}
+.carte-due {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.carta code,
+.scarico code {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  background: var(--carta-alta);
+  border: 1px solid var(--bordo-tenue);
+  border-radius: 6px;
+  padding: 1px 5px;
+  white-space: nowrap;
+}
+.scarico code {
+  display: block;
+  width: fit-content;
+  max-width: 100%;
+  margin: 6px 0;
+  white-space: normal;
+}
+.nota-privacy {
+  margin-top: clamp(30px, 4vw, 44px);
+  border-left: 4px solid var(--azzurro);
+}
+.nota-privacy b {
+  display: block;
+  margin-bottom: 6px;
+}
+.nota-privacy a {
+  color: var(--azzurro-cupo);
+  font-weight: 700;
+}
+@media (max-width: 900px) {
+  .carte-tre {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (max-width: 760px) {
+  .piani,
+  .carte-due {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (max-width: 460px) {
+  .piano-prova {
+    position: static;
+    align-self: flex-start;
+    margin-bottom: 12px;
+  }
+  .piano h3 {
+    padding-right: 0;
+  }
+}
+
+/* Le funzioni: la scheda dell'app e' lunga, e sta da sola su tutta la riga,
+ * con la lista in due colonne; sotto, di fianco, l'auto e quello che arriva. */
+.carte-funzioni {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.carta-larga {
+  grid-column: 1 / -1;
+}
+.elenco-due {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 28px;
+}
+@media (max-width: 760px) {
+  .carte-funzioni,
+  .elenco-due {
+    grid-template-columns: minmax(0, 1fr);
   }
 }
