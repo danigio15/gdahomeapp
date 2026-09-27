@@ -131,7 +131,7 @@ import { Biglietti, GettoniDellEditor } from "./biglietti.js";
 import { laFormaDel, leRigheDeiSegni } from "./forma-del-rapporto.js";
 import { Freno } from "./freno.js";
 import { daChiSiConta, eDaQui } from "./indirizzo.js";
-import { ATTESA_DEL_NEGOZIO, CASA, Licenze, NoLicenza, TELEFONO } from "./licenze.js";
+import { ATTESA_DEL_NEGOZIO, CASA, Licenze, NoLicenza, TELEFONO, ilPacchettoDetto } from "./licenze.js";
 import { NegozioGiu, Negozi, RicevutaNonValida } from "./negozi.js";
 
 /**
@@ -1434,7 +1434,18 @@ export function costruisciIlServer({
      * Solo alle **sue** case: la casa deve essere una di quelle che segue in
      * questo quadro. «Non e' tua» e «non c'e'» si dicono uguale, come per il
      * nome. Il pacchetto lo conta `licenze.js`, nello stesso passo in cui la
-     * licenza nasce: quando e' finito, e' il server che dice di no. */
+     * licenza nasce: quando e' finito, e' il server che dice di no.
+     *
+     * La durata non la sceglie lui: sceglie uno dei mucchi del suo pacchetto,
+     * `durata` ("12", "sempre"). Il vecchio `mesi` si legge ancora come la
+     * stessa cosa (`null` = per sempre). */
+    const laDurataDetta = (detto) =>
+      detto?.durata !== undefined
+        ? detto.durata
+        : detto && typeof detto === "object" && "mesi" in detto
+          ? (detto.mesi ?? "sempre")
+          : undefined;
+
     if (via === "/licenze" && metodo === "GET") {
       json(risposta, licenze.elencoDi(chi));
       return;
@@ -1451,7 +1462,7 @@ export function costruisciIlServer({
         const una = licenze.regala({
           app: detto?.app,
           casa: casaDetta,
-          mesi: detto?.mesi,
+          durata: laDurataDetta(detto),
           nota: detto?.nota,
           installatore: chi,
         });
@@ -1480,7 +1491,7 @@ export function costruisciIlServer({
         const [fatto] = licenze.generaCodici({
           app: detto?.app,
           quanti: 1,
-          mesi: detto?.mesi,
+          durata: laDurataDetta(detto),
           nota: detto?.nota,
           installatore: chi,
         });
@@ -1896,11 +1907,26 @@ export function costruisciIlServer({
       return;
     }
 
+    /* Il pacchetto detto dal gestore, controllato **prima** di fare qualunque
+     * cosa: un pacchetto storto non lascia un installatore fatto a meta'.
+     * `undefined` se non c'e', `null` (e il 400 gia' mandato) se non va. */
+    const ilPacchettoDi = (detto, risposta) => {
+      if (detto?.pacchetto === undefined || detto?.pacchetto === null) return undefined;
+      try {
+        return ilPacchettoDetto(detto.pacchetto);
+      } catch (errore) {
+        if (!(errore instanceof NoLicenza)) throw errore;
+        male(risposta, errore.stato, errore.errore);
+        return null;
+      }
+    };
+
     if (via === "/installatori" && metodo === "POST") {
       const detto = await ilDetto(richiesta);
+      const pacchetto = ilPacchettoDi(detto, risposta);
+      if (pacchetto === null) return;
       const fatto = installatori.fai({ nome: detto?.nome, soglia: detto?.soglia });
-      if (detto?.pacchetto && typeof detto.pacchetto === "object")
-        licenze.mettiIlPacchetto(fatto.chi, detto.pacchetto);
+      if (pacchetto) licenze.mettiIlPacchetto(fatto.chi, pacchetto);
       registro.info(`un installatore nuovo: ${fatto.chi}`);
       /* La chiave in chiaro esce **una volta sola**, adesso. Poi qui resta solo
        * la sua impronta: se si perde si rifa', non si recupera. */
@@ -1921,6 +1947,8 @@ export function costruisciIlServer({
         male(risposta, 404, "questo installatore non c'e'");
         return;
       }
+      const pacchetto = ilPacchettoDi(detto, risposta);
+      if (pacchetto === null) return;
       if (detto?.nome !== undefined) {
         /* Vuoto si rifiuta: un installatore senza nome e' una riga che non
          * dice di chi sono gli impianti, e il nome finisce anche in cima alle
@@ -1937,9 +1965,10 @@ export function costruisciIlServer({
       }
       if (detto?.soglia !== undefined) installatori.limite(uno[1], detto.soglia);
       /* Il pacchetto si puo' abbassare anche sotto quelle gia' date: quelle
-       * restano, e fino a che non ne toglie qualcuna non ne da' altre. */
-      if (detto?.pacchetto && typeof detto.pacchetto === "object")
-        licenze.mettiIlPacchetto(uno[1], detto.pacchetto);
+       * restano, e fino a che non ne toglie qualcuna non ne da' altre. Una app
+       * nominata prende i conti detti tutti interi (una durata tolta dal
+       * gestore sparisce); quella non nominata resta com'era. */
+      if (pacchetto) licenze.mettiIlPacchetto(uno[1], pacchetto);
       json(risposta, ilQuadro());
       return;
     }

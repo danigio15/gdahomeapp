@@ -55,9 +55,15 @@ Prodotti:
    licenze a una casa (per `casa_…`) o si generano **codici regalo** (per
    gdahome o gdanav, di N mesi o per sempre).
 3. **Regalo dell'installatore**: quando il gestore crea (o modifica) un
-   installatore gli da' un **pacchetto**: quante licenze gdahome e quante
-   gdanav. L'installatore dalla sua pagina ne assegna una a una delle sue case,
-   o genera un codice da dare al cliente. Se la toglie, torna nel pacchetto.
+   installatore gli da' un **pacchetto**: per ogni app, quante licenze **di
+   ogni durata** — per esempio 10 gdahome di 1 mese, 5 gdahome di 1 anno, 2
+   gdanav per sempre. La durata la decide il gestore (nella sua pagina: 1, 3,
+   6, 12, 24 mesi o per sempre; dall'API qualunque numero di mesi da 1 a 120,
+   o `"sempre"`). L'installatore dalla sua pagina ne assegna una a una delle
+   sue case, o genera un codice da dare al cliente, scegliendo una delle
+   durate che ha ancora nel pacchetto per quell'app: la durata comincia quando
+   la assegna, o quando il cliente riscatta il codice. Ogni app + durata e' un
+   conto a se': se la toglie (o annulla il codice non usato), torna in quello.
 
 Un codice regalo si riscatta dall'app gdahome (per la casa) o da gdanav (per
 il telefono): `GDA-XXXX-XXXX-XXXX`, alfabeto senza lettere ambigue
@@ -153,16 +159,48 @@ quel segreto entra):
 - `POST /gestore/licenze` `{app, casa, mesi|null, nota}` — regalo a una casa;
 - `POST /gestore/codici` `{app, quanti, mesi|null, nota}` — codici regalo;
 - `DELETE /gestore/licenze/:lic` — revoca;
-- `PATCH /gestore/installatori/:id` `{pacchetto: {gdahome, gdanav}}` — il
-  pacchetto (anche in creazione, `POST /installatori`).
+- `PATCH /gestore/installatori/:id` (o `PUT /gestore/installatore/:id`)
+  `{pacchetto: {gdahome: {"1": 10, "12": 5}, gdanav: {"sempre": 2}}}` — il
+  pacchetto, anche in creazione (`POST /gestore/installatori`). Per ogni app,
+  quante licenze per durata: la chiave e' il numero di mesi (1..120, come
+  stringa) oppure `"sempre"`. Una app nominata prende quei conti **tutti
+  interi** (una durata che non c'e' piu' e' tolta), una non nominata resta
+  com'era; gli zeri spariscono. Si accetta anche l'elenco del GET
+  (`[{durata, totali}]`) e, come prima, un numero (`gdahome: 5`), che vale
+  `{"12": 5}` — anche quando e' scritto cosi' nell'archivio. Una durata non
+  valida: `400 {errore: "durata-non-valida"}`, e non si cambia niente.
+- `GET /gestore/installatori` — per ogni installatore anche `pacchetto`, nella
+  forma dei conti per durata:
+  `{gdahome: [{durata: "1", totali: 10, usate: 0}, {durata: "12", totali: 5,
+  usate: 2}], gdanav: [{durata: "sempre", totali: 2, usate: 1}]}`, dalla
+  durata piu' corta a `"sempre"`. `usate` = licenze date non tolte + codici
+  non ancora riscattati ne' annullati. Una durata tolta dal gestore con
+  licenze ancora in giro resta nell'elenco con `totali: 0`.
 
 **Dall'installatore** (sessione della sua pagina):
 
-- `GET /licenze` — il suo pacchetto (`{gdahome: {totali, usate}, gdanav: …}`),
-  le sue licenze, i suoi codici;
-- `POST /licenze` `{app, casa, mesi|null}` — a una delle **sue** case;
-- `POST /codici` `{app, mesi|null}` — un codice dal suo pacchetto;
-- `DELETE /licenze/:lic` — la toglie, torna nel pacchetto.
+- `GET /licenze` — il suo pacchetto, nella stessa forma del gestore
+  (`{gdahome: [{durata, totali, usate}], gdanav: […]}`), le sue licenze, i
+  suoi codici (ognuno con `taglio`, la durata del pacchetto da cui viene);
+- `POST /licenze` `{app, casa, durata}` — a una delle **sue** case;
+- `POST /codici` `{app, durata}` — un codice dal suo pacchetto;
+- `DELETE /licenze/:lic`, `DELETE /codici/:codice` — la toglie (o lo annulla
+  se non e' stato usato), e il posto torna nella sua durata.
+
+`durata` e' una delle durate del suo pacchetto per quell'app: `"12"`,
+`"sempre"` (si accetta anche il numero, e il vecchio `mesi`, con `null` = per
+sempre). Il posto preso resta scritto sulla licenza e sul codice (`taglio`), e
+un codice riscattato lo passa alla licenza che diventa. Gli errori:
+
+| | |
+| --- | --- |
+| `400 durata-mancante` | non ha detto la durata |
+| `400 durata-non-valida` | non e' un numero di mesi da 1 a 120 ne' `"sempre"` |
+| `400 durata-non-nel-pacchetto` | quella durata per quell'app nel suo pacchetto non c'e' |
+| `409 pacchetto-esaurito` | c'e', ma e' finita; oppure per quell'app non ha niente |
+
+Una licenza o un codice di un installatore scritti prima delle durate, senza
+`taglio`, si contano nei 12 mesi (un codice con i suoi `mesi`, in quelli).
 
 Controllo delle ricevute: Google Play Developer API
 (`purchases.subscriptionsv2.get`) con un service account

@@ -9,8 +9,8 @@
  *  2. **chi si presenta per primo tiene il posto**: la seconda volta entra
  *     solo lo stesso segreto;
  *  3. **un codice regalo vale una volta**;
- *  4. **il pacchetto e' un limite**: finito, il server dice di no; tolta una
- *     licenza, il posto torna;
+ *  4. **il pacchetto e' un limite**, durata per durata: finito, il server dice
+ *     di no; tolta una licenza, il posto torna nel suo mucchio;
  *  5. **un installatore regala solo alle sue case**;
  *  6. **il negozio lo dice il negozio**: le risposte di Google e di Apple,
  *     finte ma nella loro forma, e le ricevute che non valgono;
@@ -376,38 +376,42 @@ test("un codice regalo si riscatta una volta sola, e dall'app giusta", async () 
 
 test("il pacchetto si consuma, finisce, e tolta una licenza il posto torna", async () => {
   const b = await banco({
-    installatori: [{ pacchetto: { gdahome: 2, gdanav: 1 }, case: [UNA, ALTRA] }],
+    installatori: [{ pacchetto: { gdahome: { "12": 2 }, gdanav: { "6": 1 } }, case: [UNA, ALTRA] }],
   });
   try {
     const chiave = b.iscritti[0].chiave;
     let letto = await b.retro(chiave, "/licenze");
     assert.equal(letto.stato, 200);
     assert.deepEqual(letto.detto.pacchetto, {
-      gdahome: { totali: 2, usate: 0 },
-      gdanav: { totali: 1, usate: 0 },
+      gdahome: [{ durata: "12", totali: 2, usate: 0 }],
+      gdanav: [{ durata: "6", totali: 1, usate: 0 }],
     });
 
     const data = await b.retro(chiave, "/licenze", {
       metodo: "POST",
-      corpo: { app: "gdahome", casa: UNA, mesi: 12 },
+      corpo: { app: "gdahome", casa: UNA, durata: "12" },
     });
     assert.equal(data.stato, 200);
-    assert.equal(data.detto.pacchetto.gdahome.usate, 1);
+    assert.equal(data.detto.pacchetto.gdahome[0].usate, 1);
+    assert.equal(data.detto.licenze[0].taglio, "12");
 
-    const codice = await b.retro(chiave, "/codici", { metodo: "POST", corpo: { app: "gdahome", mesi: null } });
+    /* Il vecchio `mesi` si legge ancora: 12 e' lo stesso mucchio. */
+    const codice = await b.retro(chiave, "/codici", { metodo: "POST", corpo: { app: "gdahome", mesi: 12 } });
     assert.equal(codice.stato, 200);
     assert.match(codice.detto.codice, /^GDA-/);
-    assert.equal(codice.detto.pacchetto.gdahome.usate, 2);
+    assert.equal(codice.detto.pacchetto.gdahome[0].usate, 2);
+    assert.equal(codice.detto.codici[0].mesi, 12);
+    assert.equal(codice.detto.codici[0].taglio, "12");
 
     /* Finito: ne' licenze ne' codici. */
     const troppo = await b.retro(chiave, "/licenze", {
       metodo: "POST",
-      corpo: { app: "gdahome", casa: ALTRA, mesi: 12 },
+      corpo: { app: "gdahome", casa: ALTRA, durata: "12" },
     });
     assert.equal(troppo.stato, 409);
     assert.equal(troppo.detto.errore, "pacchetto-esaurito");
     assert.equal(
-      (await b.retro(chiave, "/codici", { metodo: "POST", corpo: { app: "gdahome" } })).stato,
+      (await b.retro(chiave, "/codici", { metodo: "POST", corpo: { app: "gdahome", durata: "12" } })).stato,
       409,
     );
 
@@ -416,8 +420,9 @@ test("il pacchetto si consuma, finisce, e tolta una licenza il posto torna", asy
     assert.equal(riscattato.stato, 200);
     assert.equal(verificaIlGettone(riscattato.detto.gettoni.gdahome, PUBBLICA).origine, "installatore");
     letto = await b.retro(chiave, "/licenze");
-    assert.equal(letto.detto.pacchetto.gdahome.usate, 2);
+    assert.equal(letto.detto.pacchetto.gdahome[0].usate, 2);
     assert.equal(letto.detto.licenze.length, 2);
+    assert.ok(letto.detto.licenze.every((una) => una.taglio === "12"));
     assert.equal(letto.detto.codici.length, 0);
 
     /* La casa vede la licenza dell'installatore. */
@@ -427,51 +432,209 @@ test("il pacchetto si consuma, finisce, e tolta una licenza il posto torna", asy
     /* Tolta, torna nel pacchetto, e se ne da' un'altra. */
     const tolta = await b.retro(chiave, `/licenze/${data.detto.licenza}`, { metodo: "DELETE" });
     assert.equal(tolta.stato, 200);
-    assert.equal(tolta.detto.pacchetto.gdahome.usate, 1);
+    assert.equal(tolta.detto.pacchetto.gdahome[0].usate, 1);
     assert.deepEqual((await b.fuori("casa", { casa: UNA, segreto: SEGRETO })).detto.gettoni, {});
     assert.equal(
-      (await b.retro(chiave, "/licenze", { metodo: "POST", corpo: { app: "gdahome", casa: ALTRA, mesi: null } }))
+      (await b.retro(chiave, "/licenze", { metodo: "POST", corpo: { app: "gdahome", casa: ALTRA, durata: "12" } }))
         .stato,
       200,
     );
 
     /* Un codice non usato si annulla, e il posto torna anche cosi'. */
-    const nav = await b.retro(chiave, "/codici", { metodo: "POST", corpo: { app: "gdanav", mesi: 6 } });
-    assert.equal(nav.detto.pacchetto.gdanav.usate, 1);
+    const nav = await b.retro(chiave, "/codici", { metodo: "POST", corpo: { app: "gdanav", durata: "6" } });
+    assert.equal(nav.detto.pacchetto.gdanav[0].usate, 1);
     const via = await b.retro(chiave, `/codici/${nav.detto.codice}`, { metodo: "DELETE" });
-    assert.equal(via.detto.pacchetto.gdanav.usate, 0);
+    assert.equal(via.detto.pacchetto.gdanav[0].usate, 0);
 
-    /* Il gestore vede il pacchetto, e lo cambia. */
+    /* Il gestore vede il pacchetto, e lo cambia: una app nominata prende i
+     * conti detti, quella non nominata resta com'era. */
     const quadro = await b.gestore("/installatori");
     assert.deepEqual(quadro.detto.installatori[0].pacchetto, {
-      gdahome: { totali: 2, usate: 2 },
-      gdanav: { totali: 1, usate: 0 },
+      gdahome: [{ durata: "12", totali: 2, usate: 2 }],
+      gdanav: [{ durata: "6", totali: 1, usate: 0 }],
     });
     const cambiato = await b.gestore(`/installatori/${b.iscritti[0].chi}`, {
       metodo: "PATCH",
-      corpo: { pacchetto: { gdahome: 5 } },
+      corpo: { pacchetto: { gdahome: { "1": 10, "12": 5 } } },
     });
     assert.equal(cambiato.stato, 200);
     assert.deepEqual(cambiato.detto.installatori[0].pacchetto, {
-      gdahome: { totali: 5, usate: 2 },
-      gdanav: { totali: 1, usate: 0 },
+      gdahome: [
+        { durata: "1", totali: 10, usate: 0 },
+        { durata: "12", totali: 5, usate: 2 },
+      ],
+      gdanav: [{ durata: "6", totali: 1, usate: 0 }],
     });
-    /* E la via di sempre, al singolare, fa lo stesso. */
+    /* E la via di sempre, al singolare, fa lo stesso; anche con l'elenco del GET. */
     const col = await b.gestore(`/installatore/${b.iscritti[0].chi}`, {
       metodo: "PUT",
-      corpo: { pacchetto: { gdanav: 3 } },
+      corpo: { pacchetto: { gdanav: [{ durata: "sempre", totali: 3 }] } },
     });
-    assert.equal(col.detto.installatori[0].pacchetto.gdanav.totali, 3);
+    assert.deepEqual(col.detto.installatori[0].pacchetto.gdanav, [{ durata: "sempre", totali: 3, usate: 0 }]);
   } finally {
     await b.chiudi();
+  }
+});
+
+test("ogni durata del pacchetto e' un mucchio suo: si consuma, finisce e si riempie da solo", async () => {
+  const b = await banco({
+    installatori: [{ pacchetto: { gdahome: { "1": 1, "12": 1 }, gdanav: { sempre: 1 } }, case: [UNA, ALTRA, TERZA] }],
+  });
+  try {
+    const chiave = b.iscritti[0].chiave;
+    const prima = Date.now();
+
+    /* Un mese: scade fra un mese, da adesso. */
+    const mese = await b.retro(chiave, "/licenze", {
+      metodo: "POST",
+      corpo: { app: "gdahome", casa: UNA, durata: "1" },
+    });
+    assert.equal(mese.stato, 200);
+    const laMese = mese.detto.licenze.find((una) => una.lic === mese.detto.licenza);
+    assert.equal(laMese.taglio, "1");
+    assert.ok(laMese.scade >= mesiDopo(prima, 1) && laMese.scade <= mesiDopo(Date.now(), 1));
+    assert.deepEqual(mese.detto.pacchetto.gdahome, [
+      { durata: "1", totali: 1, usate: 1 },
+      { durata: "12", totali: 1, usate: 0 },
+    ]);
+
+    /* Il mese e' finito, l'anno no: un altro mese e' un no, un anno si'. */
+    const altroMese = await b.retro(chiave, "/licenze", {
+      metodo: "POST",
+      corpo: { app: "gdahome", casa: ALTRA, durata: 1 },
+    });
+    assert.equal(altroMese.stato, 409);
+    assert.equal(altroMese.detto.errore, "pacchetto-esaurito");
+    const anno = await b.retro(chiave, "/codici", { metodo: "POST", corpo: { app: "gdahome", durata: "12" } });
+    assert.equal(anno.stato, 200);
+    assert.equal(anno.detto.codici[0].mesi, 12);
+
+    /* Una durata che il pacchetto non ha: 400, e non si prende niente. */
+    for (const durata of ["3", "sempre", null]) {
+      const no = await b.retro(chiave, "/licenze", { metodo: "POST", corpo: { app: "gdahome", casa: TERZA, durata } });
+      assert.equal(no.stato, 400, `durata ${durata}`);
+      assert.equal(no.detto.errore, "durata-non-nel-pacchetto");
+    }
+    /* Una che non e' una durata, e nessuna durata. */
+    for (const durata of ["mai", 0, 121, 1.5]) {
+      const no = await b.retro(chiave, "/codici", { metodo: "POST", corpo: { app: "gdahome", durata } });
+      assert.equal(no.stato, 400);
+      assert.equal(no.detto.errore, "durata-non-valida");
+    }
+    const senza = await b.retro(chiave, "/codici", { metodo: "POST", corpo: { app: "gdahome" } });
+    assert.equal(senza.stato, 400);
+    assert.equal(senza.detto.errore, "durata-mancante");
+
+    /* gdanav per sempre: scade mai. */
+    const sempre = await b.retro(chiave, "/licenze", {
+      metodo: "POST",
+      corpo: { app: "gdanav", casa: UNA, durata: "sempre" },
+    });
+    assert.equal(sempre.stato, 200);
+    assert.equal(sempre.detto.licenze.find((una) => una.lic === sempre.detto.licenza).scade, null);
+
+    let letto = await b.retro(chiave, "/licenze");
+    assert.deepEqual(letto.detto.pacchetto, {
+      gdahome: [
+        { durata: "1", totali: 1, usate: 1 },
+        { durata: "12", totali: 1, usate: 1 },
+      ],
+      gdanav: [{ durata: "sempre", totali: 1, usate: 1 }],
+    });
+
+    /* Tolta la licenza di un mese, torna nel mucchio del mese (non in quello dell'anno). */
+    const tolta = await b.retro(chiave, `/licenze/${mese.detto.licenza}`, { metodo: "DELETE" });
+    assert.deepEqual(tolta.detto.pacchetto.gdahome, [
+      { durata: "1", totali: 1, usate: 0 },
+      { durata: "12", totali: 1, usate: 1 },
+    ]);
+    /* Il codice di un anno riscattato comincia adesso, e resta nel mucchio dell'anno. */
+    const riscattato = await b.fuori("riscatta", { codice: anno.detto.codice, casa: TERZA, segreto: SEGRETO });
+    assert.equal(riscattato.stato, 200);
+    letto = await b.retro(chiave, "/licenze");
+    const dalCodice = letto.detto.licenze.find((una) => una.codice === anno.detto.codice);
+    assert.equal(dalCodice.taglio, "12");
+    assert.ok(dalCodice.scade >= mesiDopo(prima, 12));
+    assert.deepEqual(letto.detto.pacchetto.gdahome[1], { durata: "12", totali: 1, usate: 1 });
+
+    /* Il gestore toglie l'anno: la licenza data resta, e il mucchio si vede con zero totali. */
+    const tolto = await b.gestore(`/installatori/${b.iscritti[0].chi}`, {
+      metodo: "PATCH",
+      corpo: { pacchetto: { gdahome: { "1": 1 } } },
+    });
+    assert.deepEqual(tolto.detto.installatori[0].pacchetto.gdahome, [
+      { durata: "1", totali: 1, usate: 0 },
+      { durata: "12", totali: 0, usate: 1 },
+    ]);
+
+    /* Un pacchetto storto e' un 400, e non tocca niente. */
+    for (const pacchetto of [{ gdahome: { "0": 3 } }, { gdahome: { mai: 1 } }, [1, 2], "tanti"]) {
+      const storto = await b.gestore(`/installatori/${b.iscritti[0].chi}`, { metodo: "PATCH", corpo: { pacchetto } });
+      assert.equal(storto.stato, 400, JSON.stringify(pacchetto));
+    }
+    const fatto = await b.gestore("/installatori", {
+      metodo: "POST",
+      corpo: { nome: "Storto", pacchetto: { gdanav: { "13 mesi": 1 } } },
+    });
+    assert.equal(fatto.stato, 400);
+    assert.equal(fatto.detto.errore, "durata-non-valida");
+    assert.ok(!(await b.gestore("/installatori")).detto.installatori.some((uno) => uno.nome === "Storto"));
+  } finally {
+    await b.chiudi();
+  }
+});
+
+test("un pacchetto scritto come prima, un numero per app, vale tante licenze di dodici mesi", async () => {
+  const b = await banco({ installatori: [{ pacchetto: { gdahome: 2, gdanav: 0 }, case: [UNA] }] });
+  try {
+    const { chi, chiave } = b.iscritti[0];
+    const letto = await b.retro(chiave, "/licenze");
+    assert.deepEqual(letto.detto.pacchetto, { gdahome: [{ durata: "12", totali: 2, usate: 0 }], gdanav: [] });
+    assert.equal(
+      (await b.retro(chiave, "/licenze", { metodo: "POST", corpo: { app: "gdahome", casa: UNA, durata: "12" } })).stato,
+      200,
+    );
+  } finally {
+    await b.chiudi();
+  }
+
+  /* E dall'archivio: un pacchetto numerico, e una licenza e un codice senza `taglio`. */
+  const cartella = mkdtempSync(join(tmpdir(), "quadro-licenze-prima-"));
+  try {
+    writeFileSync(
+      join(cartella, "licenze.json"),
+      JSON.stringify({
+        licenze: [
+          { lic: "lic_0011223344556677", app: "gdahome", sog: UNA, origine: "installatore", installatore: "ins_x", scade: null, creata: 1, revocata: null },
+        ],
+        codici: [
+          { codice: "GDA-AAAA-BBBB-CCCC", app: "gdahome", mesi: null, origine: "installatore", installatore: "ins_x", creato: 1, usatoDa: null, usatoIl: null, lic: null, annullato: null },
+        ],
+        soggetti: {},
+        pacchetti: { ins_x: { gdahome: 5, gdanav: 1 } },
+      }),
+    );
+    const licenze = new Licenze({ cartella, chiave: PRIVATA });
+    assert.deepEqual(licenze.pacchetto("ins_x"), {
+      gdahome: [
+        { durata: "12", totali: 5, usate: 1 },
+        { durata: "sempre", totali: 0, usate: 1 },
+      ],
+      gdanav: [{ durata: "12", totali: 1, usate: 0 }],
+    });
+    /* Cambiato gdanav, gdahome resta: letto come prima e scritto nella forma nuova. */
+    licenze.mettiIlPacchetto("ins_x", { gdanav: { "3": 4 } });
+    assert.deepEqual(licenze.pacchettoDato("ins_x"), { gdahome: { "12": 5 }, gdanav: { "3": 4 } });
+  } finally {
+    rmSync(cartella, { recursive: true, force: true });
   }
 });
 
 test("un installatore regala solo alle sue case, e toglie solo le sue licenze", async () => {
   const b = await banco({
     installatori: [
-      { pacchetto: { gdahome: 5, gdanav: 5 }, case: [UNA] },
-      { pacchetto: { gdahome: 5, gdanav: 5 }, case: [ALTRA] },
+      { pacchetto: { gdahome: { "12": 5, sempre: 5 }, gdanav: { "12": 5 } }, case: [UNA] },
+      { pacchetto: { gdahome: { "12": 5, sempre: 5 }, gdanav: { "12": 5 } }, case: [ALTRA] },
     ],
   });
   try {
@@ -479,21 +642,21 @@ test("un installatore regala solo alle sue case, e toglie solo le sue licenze", 
     /* La casa di Bianchi, dalla chiave di Rossi: no, e senza dire che esiste. */
     const suaNo = await b.retro(rossi.chiave, "/licenze", {
       metodo: "POST",
-      corpo: { app: "gdahome", casa: ALTRA, mesi: 12 },
+      corpo: { app: "gdahome", casa: ALTRA, durata: "12" },
     });
     assert.equal(suaNo.stato, 404);
     const nessuna = await b.retro(rossi.chiave, "/licenze", {
       metodo: "POST",
-      corpo: { app: "gdahome", casa: TERZA, mesi: 12 },
+      corpo: { app: "gdahome", casa: TERZA, durata: "12" },
     });
     assert.equal(nessuna.stato, 404);
     assert.equal(suaNo.detto.errore, nessuna.detto.errore);
-    assert.equal((await b.retro(rossi.chiave, "/licenze")).detto.pacchetto.gdahome.usate, 0);
+    assert.ok((await b.retro(rossi.chiave, "/licenze")).detto.pacchetto.gdahome.every((uno) => uno.usate === 0));
 
     /* Quella di Bianchi non la toglie Rossi, e nemmeno quella del gestore. */
     const diBianchi = await b.retro(bianchi.chiave, "/licenze", {
       metodo: "POST",
-      corpo: { app: "gdahome", casa: ALTRA, mesi: null },
+      corpo: { app: "gdahome", casa: ALTRA, durata: "sempre" },
     });
     assert.equal(diBianchi.stato, 200);
     assert.equal(
@@ -512,13 +675,15 @@ test("un installatore regala solo alle sue case, e toglie solo le sue licenze", 
     assert.ok(!JSON.stringify(suo.detto).includes(ALTRA));
 
     /* Il codice di Bianchi non lo annulla Rossi. */
-    const codice = await b.retro(bianchi.chiave, "/codici", { metodo: "POST", corpo: { app: "gdanav" } });
+    const codice = await b.retro(bianchi.chiave, "/codici", { metodo: "POST", corpo: { app: "gdanav", durata: "12" } });
     assert.equal((await b.retro(rossi.chiave, `/codici/${codice.detto.codice}`, { metodo: "DELETE" })).stato, 404);
 
-    /* Senza pacchetto, niente. */
+    /* Senza pacchetto, niente: qualunque durata chieda, e' esaurito. */
     const { detto: senza } = await b.gestore("/installatori", { metodo: "POST", corpo: { nome: "Verdi" } });
-    const niente = await b.retro(senza.chiave, "/codici", { metodo: "POST", corpo: { app: "gdahome" } });
+    assert.deepEqual(senza.installatori.find((uno) => uno.chi === senza.chi).pacchetto, { gdahome: [], gdanav: [] });
+    const niente = await b.retro(senza.chiave, "/codici", { metodo: "POST", corpo: { app: "gdahome", durata: "12" } });
     assert.equal(niente.stato, 409);
+    assert.equal(niente.detto.errore, "pacchetto-esaurito");
   } finally {
     await b.chiudi();
   }

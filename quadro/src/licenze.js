@@ -13,7 +13,7 @@
  *    solo quel segreto. E' la stessa regola del centralino: nessuno si
  *    iscrive, e nessuno puo' farsi passare per un altro dopo;
  *  - i **pacchetti** degli installatori: quante licenze gdahome e quante
- *    gdanav il gestore gli ha dato da regalare.
+ *    gdanav il gestore gli ha dato da regalare, e di che durata.
  *
  * ─── Il gettone ──────────────────────────────────────────────────────────
  *
@@ -38,6 +38,18 @@
  *
  * Una licenza a tempo che scade **resta** contata: il posto e' stato usato. Se
  * l'installatore la toglie torna nel pacchetto, ed e' una scelta sua.
+ *
+ * La durata la decide il gestore, non l'installatore: il pacchetto e', app per
+ * app, un conto per ogni durata — `{gdahome: {"1": 10, "12": 5}, gdanav:
+ * {"sempre": 2}}`, mesi scritti come stringa oppure "sempre". Ogni «mucchio»
+ * (app + durata) si consuma e si riempie da se': la licenza e il codice
+ * tengono il loro in `taglio`, e togliendoli il posto torna in quello. La
+ * durata comincia quando la licenza si da', o quando il codice si riscatta.
+ *
+ * Un pacchetto scritto come prima, un numero per app (`gdahome: 5`), si legge
+ * come cinque licenze di dodici mesi; una licenza o un codice di un
+ * installatore senza `taglio` si conta nei dodici mesi anche lui (il codice,
+ * se ha i suoi `mesi`, in quelli).
  *
  * ─── I rinnovi ───────────────────────────────────────────────────────────
  *
@@ -242,6 +254,61 @@ const pulisciNota = (nota) =>
 
 const numeroNelPacchetto = (quante) => Math.max(0, Math.min(99999, Math.floor(Number(quante) || 0)));
 
+/** Il taglio di chi non l'ha detto: il pacchetto di prima era di dodici mesi. */
+export const TAGLIO_DI_PRIMA = "12";
+
+/**
+ * Una durata del pacchetto nella sua forma: i mesi come stringa ("12"), da 1 a
+ * 120, oppure "sempre". Si accetta anche il numero, e `null` per «per
+ * sempre». Tutto il resto e' un 400 `durata-non-valida`.
+ */
+export function unaDurata(detta) {
+  if (detta === null || detta === "sempre") return "sempre";
+  const n = typeof detta === "string" && detta.trim() !== "" ? Number(detta) : typeof detta === "number" ? detta : NaN;
+  if (!Number.isInteger(n) || n < 1 || n > MESI_AL_MASSIMO) throw new NoLicenza(400, "durata-non-valida");
+  return String(n);
+}
+
+/** I mesi di una durata: `null` per sempre. */
+export const iMesiDelTaglio = (taglio) => (taglio === "sempre" ? null : Number(taglio));
+
+/* Le durate in ordine: la piu' corta prima, «per sempre» in fondo. */
+const inOrdine = (a, b) => (a === "sempre" ? Infinity : Number(a)) - (b === "sempre" ? Infinity : Number(b));
+
+/**
+ * I conti di una app come li ha scritti chi chiede, nella forma che si tiene:
+ * `{"12": 5}`. Si legge un numero (la forma di prima: tanti di dodici mesi),
+ * un oggetto `{durata: quante}`, o un elenco `[{durata, totali}]` (quello che
+ * torna il GET, rimandato indietro). Le durate ripetute si sommano, gli zeri
+ * se ne vanno.
+ */
+function iContiDetti(detti) {
+  const fuori = {};
+  const aggiungi = (durata, quante) => {
+    const taglio = unaDurata(durata);
+    const n = numeroNelPacchetto(quante);
+    if (n) fuori[taglio] = numeroNelPacchetto((fuori[taglio] || 0) + n);
+  };
+  if (detti === null || detti === undefined) return fuori;
+  if (typeof detti === "number" || typeof detti === "string") aggiungi(TAGLIO_DI_PRIMA, detti);
+  else if (Array.isArray(detti)) for (const riga of detti) aggiungi(riga?.durata, riga?.totali ?? riga?.quante);
+  else if (typeof detti === "object") for (const [durata, quante] of Object.entries(detti)) aggiungi(durata, quante);
+  else throw new NoLicenza(400, "pacchetto-non-valido");
+  return fuori;
+}
+
+/**
+ * Un pacchetto detto dal gestore, controllato e messo in forma: solo le app
+ * che nomina, ognuna con i suoi conti. Solleva 400 se qualcosa non va, prima
+ * che si tocchi niente.
+ */
+export function ilPacchettoDetto(detto) {
+  if (!detto || typeof detto !== "object" || Array.isArray(detto)) throw new NoLicenza(400, "pacchetto-non-valido");
+  const fuori = {};
+  for (const app of APP) if (detto[app] !== undefined) fuori[app] = iContiDetti(detto[app]);
+  return fuori;
+}
+
 export class Licenze {
   /**
    * @param {object} opzioni
@@ -391,11 +458,13 @@ export class Licenze {
    * il conto e il posto preso devono essere la stessa operazione — due
    * richieste insieme non devono passare tutte e due sull'ultimo posto.
    */
-  regala({ app, casa, mesi = null, nota = "", installatore = null }) {
+  regala({ app, casa, mesi = null, durata, nota = "", installatore = null }) {
     unaApp(app);
     if (!CASA.test(String(casa ?? ""))) throw new NoLicenza(400, "casa-non-valida");
-    const quanti = iMesi(mesi);
-    if (installatore) this._cePosto(installatore, app);
+    /* L'installatore non sceglie i mesi: sceglie una durata del suo pacchetto. */
+    const taglio = installatore ? this._durataChiesta(durata) : null;
+    const quanti = installatore ? iMesiDelTaglio(taglio) : iMesi(mesi);
+    if (installatore) this._cePosto(installatore, app, taglio);
     const una = this._nuova({
       app,
       sog: casa,
@@ -403,6 +472,7 @@ export class Licenze {
       installatore,
       scade: mesiDopo(this.adesso(), quanti),
       nota,
+      ...(taglio ? { taglio } : {}),
     });
     this.archivio.salva();
     return una;
@@ -424,12 +494,13 @@ export class Licenze {
   /* ─── I codici regalo ───────────────────────────────────────────────── */
 
   /** Uno o piu' codici. Con `installatore`, uno per posto libero. */
-  generaCodici({ app, quanti = 1, mesi = null, nota = "", installatore = null }) {
+  generaCodici({ app, quanti = 1, mesi = null, durata, nota = "", installatore = null }) {
     unaApp(app);
-    const mesiBuoni = iMesi(mesi);
+    const taglio = installatore ? this._durataChiesta(durata) : null;
+    const mesiBuoni = installatore ? iMesiDelTaglio(taglio) : iMesi(mesi);
     const n = Math.floor(Number(quanti));
     if (!Number.isInteger(n) || n < 1 || n > CODICI_AL_MASSIMO) throw new NoLicenza(400, "quanti-non-valido");
-    if (installatore) this._cePosto(installatore, app, n);
+    if (installatore) this._cePosto(installatore, app, taglio, n);
     const fatti = [];
     const gia = new Set(this.codici.map((uno) => uno.codice));
     while (fatti.length < n) {
@@ -441,7 +512,7 @@ export class Licenze {
         app,
         mesi: mesiBuoni,
         origine: installatore ? "installatore" : "regalo",
-        ...(installatore ? { installatore } : {}),
+        ...(installatore ? { installatore, taglio } : {}),
         nota: pulisciNota(nota),
         creato: this.adesso(),
         usatoDa: null,
@@ -496,6 +567,8 @@ export class Licenze {
       scade: mesiDopo(this.adesso(), uno.mesi ?? null),
       nota: uno.nota,
       codice: uno.codice,
+      /* Il posto preso dal codice resta quello: la licenza lo eredita. */
+      ...(uno.installatore ? { taglio: this._taglioDi(uno) } : {}),
     });
     uno.usatoDa = sog;
     uno.usatoIl = this.adesso();
@@ -641,43 +714,96 @@ export class Licenze {
 
   /* ─── Il pacchetto degli installatori ───────────────────────────────── */
 
-  /** I totali dati a un installatore: `{gdahome, gdanav}`. */
+  /**
+   * I conti dati a un installatore, nella forma che si tiene:
+   * `{gdahome: {"12": 5}, gdanav: {}}`. Un numero (la forma di prima) si legge
+   * come tante licenze di dodici mesi.
+   */
   pacchettoDato(chi) {
     const suo = this.archivio.dati.pacchetti[chi] || {};
-    return { gdahome: numeroNelPacchetto(suo.gdahome), gdanav: numeroNelPacchetto(suo.gdanav) };
+    return Object.fromEntries(
+      APP.map((app) => {
+        try {
+          return [app, iContiDetti(suo[app])];
+        } catch (_errore) {
+          return [app, {}];
+        }
+      }),
+    );
   }
 
-  /** Cambia i totali. Quello che non si dice resta com'era. */
+  /**
+   * Cambia il pacchetto. Una app che si nomina prende i conti detti **tutti
+   * interi** (una durata che non c'e' piu' e' tolta); quella che non si
+   * nomina resta com'era. Solleva 400 se il detto non va, senza toccare
+   * niente.
+   */
   mettiIlPacchetto(chi, detto = {}) {
-    const prima = this.pacchettoDato(chi);
-    this.archivio.dati.pacchetti[chi] = {
-      gdahome: detto?.gdahome === undefined ? prima.gdahome : numeroNelPacchetto(detto.gdahome),
-      gdanav: detto?.gdanav === undefined ? prima.gdanav : numeroNelPacchetto(detto.gdanav),
-    };
+    const nuovo = ilPacchettoDetto(detto);
+    this.archivio.dati.pacchetti[chi] = { ...this.pacchettoDato(chi), ...nuovo };
     this.archivio.salva();
     return this.pacchetto(chi);
   }
 
-  /** Quanti posti ha preso, app per app: licenze non tolte e codici in giro. */
-  usate(chi, app) {
-    const licenze = this.licenze.filter(
-      (una) => una.installatore === chi && una.app === app && !una.revocata,
-    ).length;
-    const codici = this.codici.filter(
-      (uno) => uno.installatore === chi && uno.app === app && !uno.usatoDa && !uno.annullato,
-    ).length;
-    return licenze + codici;
+  /** Il mucchio da cui viene una licenza o un codice di un installatore. */
+  _taglioDi(uno) {
+    if (uno.taglio) return String(uno.taglio);
+    if (uno.mesi !== undefined) return uno.mesi === null ? "sempre" : String(uno.mesi);
+    return TAGLIO_DI_PRIMA;
   }
 
-  /** Il pacchetto nella forma del contratto: `{gdahome: {totali, usate}, gdanav: …}`. */
+  /** Le durate chieste dall'installatore: una, detta bene, e non «nessuna». */
+  _durataChiesta(durata) {
+    if (durata === undefined || durata === "") throw new NoLicenza(400, "durata-mancante");
+    return unaDurata(durata);
+  }
+
+  /**
+   * Quanti posti ha preso, per app e durata: licenze non tolte e codici in
+   * giro. Torna `{gdahome: {"12": 2}, gdanav: {}}`.
+   */
+  usatePerTaglio(chi) {
+    const fuori = Object.fromEntries(APP.map((app) => [app, {}]));
+    const conta = (uno) => {
+      if (!fuori[uno.app]) return;
+      const taglio = this._taglioDi(uno);
+      fuori[uno.app][taglio] = (fuori[uno.app][taglio] || 0) + 1;
+    };
+    for (const una of this.licenze) if (una.installatore === chi && !una.revocata) conta(una);
+    for (const uno of this.codici) if (uno.installatore === chi && !uno.usatoDa && !uno.annullato) conta(uno);
+    return fuori;
+  }
+
+  /**
+   * Il pacchetto nella forma del contratto: per ogni app un elenco di mucchi,
+   * dal piu' corto a «per sempre», `{gdahome: [{durata: "1", totali: 10,
+   * usate: 0}, {durata: "12", totali: 5, usate: 2}], gdanav: []}`. Ci sono le
+   * durate date, e anche quelle tolte dal gestore ma con licenze ancora in
+   * giro (`totali: 0`): chi le ha date le vede, e sa perche'.
+   */
   pacchetto(chi) {
     const dato = this.pacchettoDato(chi);
-    return Object.fromEntries(APP.map((app) => [app, { totali: dato[app], usate: this.usate(chi, app) }]));
+    const usate = this.usatePerTaglio(chi);
+    return Object.fromEntries(
+      APP.map((app) => {
+        const durate = [...new Set([...Object.keys(dato[app]), ...Object.keys(usate[app])])].sort(inOrdine);
+        return [app, durate.map((durata) => ({ durata, totali: dato[app][durata] || 0, usate: usate[app][durata] || 0 }))];
+      }),
+    );
   }
 
-  _cePosto(chi, app, quanti = 1) {
-    const { totali, usate } = this.pacchetto(chi)[app];
-    if (usate + quanti > totali) throw new NoLicenza(409, "pacchetto-esaurito");
+  /**
+   * C'e' posto in quel mucchio? Una durata che il pacchetto non ha e' un 400
+   * `durata-non-nel-pacchetto` (la richiesta e' sbagliata); una che c'e' ma
+   * e' finita e' un 409 `pacchetto-esaurito`. Un installatore che non ha
+   * niente per quella app e' esaurito anche lui, qualunque durata chieda.
+   */
+  _cePosto(chi, app, taglio, quanti = 1) {
+    const mucchi = this.pacchetto(chi)[app];
+    if (!mucchi.some((uno) => uno.totali > 0)) throw new NoLicenza(409, "pacchetto-esaurito");
+    const mucchio = mucchi.find((uno) => uno.durata === taglio);
+    if (!mucchio || !mucchio.totali) throw new NoLicenza(400, "durata-non-nel-pacchetto");
+    if (mucchio.usate + quanti > mucchio.totali) throw new NoLicenza(409, "pacchetto-esaurito");
   }
 
   /** Un installatore eliminato: il suo pacchetto se ne va, le licenze date restano. */
@@ -701,6 +827,7 @@ export class Licenze {
       revocata: una.revocata || null,
       nota: una.nota || "",
       codice: una.codice || null,
+      ...(una.installatore ? { taglio: this._taglioDi(una) } : {}),
       prova: Boolean(una.prova),
       vale: this.vale(una, ora),
     };
@@ -713,6 +840,7 @@ export class Licenze {
       mesi: uno.mesi ?? null,
       origine: uno.origine,
       installatore: uno.installatore || null,
+      ...(uno.installatore ? { taglio: this._taglioDi(uno) } : {}),
       nota: uno.nota || "",
       creato: uno.creato,
       usatoDa: uno.usatoDa || null,

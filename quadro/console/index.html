@@ -3070,7 +3070,7 @@
        * (`/console/licenze`), e l'ultimo codice fatto, da copiare. */
       let LICENZE = {
         accese: true,
-        pacchetto: { gdahome: { totali: 0, usate: 0 }, gdanav: { totali: 0, usate: 0 } },
+        pacchetto: { gdahome: [], gdanav: [] },
         licenze: [],
         codici: [],
       };
@@ -4166,34 +4166,48 @@
       /* ─── Le licenze ─────────────────────────────────────────────────
        *
        * Il gestore ti da' un **pacchetto**: quante licenze gdahome Premium e
-       * quante gdanav Premium puoi regalare ai tuoi clienti. Da qui ne assegni
-       * una a uno dei tuoi impianti, o generi un codice da consegnare al
-       * cliente, che lo riscatta dall'app. Se la togli torna nel pacchetto.
+       * quante gdanav Premium puoi regalare ai tuoi clienti, e di che durata
+       * — tante di un anno, tante di un mese, tante per sempre. Da qui ne
+       * assegni una a uno dei tuoi impianti, o generi un codice da consegnare
+       * al cliente, che lo riscatta dall'app: la durata la scegli fra quelle
+       * che hai, e comincia da quel momento (per un codice, da quando lo
+       * riscatta). Se la togli torna nel pacchetto, nella sua durata.
        * Il conto lo tiene il quadro: quando il pacchetto e' finito, e' lui a
        * dire di no, e qui si vede prima di premere.
        * ─────────────────────────────────────────────────────────────────── */
 
       const IL_NOME_DELLA_APP = { gdahome: "gdahome Premium", gdanav: "gdanav Premium" };
-      const LE_DURATE = [
-        ["1", "1 mese"],
-        ["3", "3 mesi"],
-        ["6", "6 mesi"],
-        ["12", "12 mesi"],
-        ["24", "24 mesi"],
-        ["", "Per sempre"],
-      ];
+      const LE_APP = ["gdahome", "gdanav"];
 
-      const quantiMesi = (mesi) =>
-        mesi === null || mesi === undefined ? "per sempre" : plurale(Number(mesi), "mese", "mesi");
+      /* Una durata a parole: «1 mese», «1 anno», «per sempre». I mesi
+       * arrivano come numero (un codice) o come stringa (il pacchetto). */
+      function quantiMesi(mesi) {
+        if (mesi === null || mesi === undefined || mesi === "sempre") return "per sempre";
+        const n = Number(mesi);
+        return n % 12 === 0 ? plurale(n / 12, "anno", "anni") : plurale(n, "mese", "mesi");
+      }
+
+      /* I mucchi del pacchetto di un'app: `[{durata, totali, usate}]`. */
+      const iMucchiDi = (app) => (Array.isArray(LICENZE.pacchetto?.[app]) ? LICENZE.pacchetto[app] : []);
 
       const inItaliano = (quando) =>
         new Date(quando).toLocaleDateString("it-IT", { day: "numeric", month: "long", year: "numeric" });
 
-      /* Quanti posti restano per un'app del pacchetto. */
-      const restanoDi = (app) => {
-        const { totali = 0, usate = 0 } = LICENZE.pacchetto?.[app] || {};
-        return Math.max(0, totali - usate);
-      };
+      /* Quanti posti restano in un mucchio, e per un'app in tutto. */
+      const restanoNel = ({ totali = 0, usate = 0 }) => Math.max(0, totali - usate);
+      const restanoDi = (app) => iMucchiDi(app).reduce((tot, mucchio) => tot + restanoNel(mucchio), 0);
+
+      /* Le durate che si possono ancora dare per un'app, per il menu a tendina. */
+      function opzioniDelleDurate(app) {
+        const libere = iMucchiDi(app).filter((mucchio) => restanoNel(mucchio) > 0);
+        if (!libere.length) return `<option value="">Nessuna disponibile</option>`;
+        return libere
+          .map(
+            (mucchio) =>
+              `<option value="${testo(mucchio.durata)}">${testo(quantiMesi(mucchio.durata))} · ${testo(plurale(restanoNel(mucchio), "disponibile", "disponibili"))}</option>`,
+          )
+          .join("");
+      }
 
       /* Il nome che hai dato alla casa, se e' tua; se no la matricola. */
       const laCasaDi = (sog) => {
@@ -4202,22 +4216,31 @@
         return String(sog).startsWith("tel_") ? "Telefono del cliente" : `${String(sog).slice(0, 13)}…`;
       };
 
-      function ilPezzoDelPacchetto(app) {
-        const { totali = 0, usate = 0 } = LICENZE.pacchetto?.[app] || {};
-        const quota = totali > 0 ? Math.min(100, Math.round((usate / totali) * 100)) : 0;
+      /* Un contatore per ogni app e durata: quante ne hai date su quante. */
+      function ilPezzoDelPacchetto(app, { durata, totali = 0, usate = 0 }) {
+        const quota = totali > 0 ? Math.min(100, Math.round((usate / totali) * 100)) : 100;
         return `
-          <div class="pezzo" data-finito="${totali > 0 && usate >= totali ? "sì" : "no"}">
-            <span>${testo(IL_NOME_DELLA_APP[app])}</span>
+          <div class="pezzo" data-finito="${usate >= totali ? "sì" : "no"}">
+            <span>${testo(IL_NOME_DELLA_APP[app])} · ${testo(quantiMesi(durata))}</span>
             <b>${Number(usate)}<small> / ${Number(totali)}</small></b>
             <div class="metro"><i style="width: ${Number(quota)}%"></i></div>
-            <span>${totali ? `${plurale(Math.max(0, totali - usate), "disponibile", "disponibili")}` : "nessuna nel pacchetto"}</span>
+            <span>${totali ? plurale(Math.max(0, totali - usate), "disponibile", "disponibili") : "tolte dal pacchetto"}</span>
           </div>`;
+      }
+
+      function iPezziDelPacchetto() {
+        const pezzi = LE_APP.flatMap((app) => iMucchiDi(app).map((mucchio) => ilPezzoDelPacchetto(app, mucchio)));
+        return pezzi.length
+          ? `<div class="pacchetto">${/* già HTML */ pezzi.join("")}</div>`
+          : `<div class="vuoto" style="margin-bottom: 14px">Nel tuo pacchetto non ci sono licenze. Le decide chi gestisce il cruscotto.</div>`;
       }
 
       function leLicenze() {
         const date = LICENZE.licenze || [];
         const codici = LICENZE.codici || [];
         const nessuna = !restanoDi("gdahome") && !restanoDi("gdanav");
+        /* L'app scelta di serie: la prima che ha ancora qualcosa da dare. */
+        const primaApp = LE_APP.find((app) => restanoDi(app)) || "gdahome";
         const mie = CASE.filter((una) => una.casa);
         const opzioniDelleCase = mie
           .map(
@@ -4225,10 +4248,6 @@
               `<option value="${testo(una.casa)}">${testo(una.senzaNome ? "Senza nome · " + una.casa.slice(5, 13) : una.nome)}</option>`,
           )
           .join("");
-        const opzioniDelleDurate = LE_DURATE.map(
-          ([valore, parola]) =>
-            `<option value="${testo(valore)}"${valore === "12" ? " selected" : ""}>${testo(parola)}</option>`,
-        ).join("");
 
         return `
           <h1 class="titolone">Licenze</h1>
@@ -4240,10 +4259,7 @@
             <div class="colonna">
               <section class="riquadro tinto">
                 <div class="capoRiquadro"><h3>Il tuo pacchetto</h3></div>
-                <div class="pacchetto">
-                  ${/* già HTML */ ilPezzoDelPacchetto("gdahome")}
-                  ${/* già HTML */ ilPezzoDelPacchetto("gdanav")}
-                </div>
+                ${/* già HTML */ iPezziDelPacchetto()}
 
                 ${
                   CODICE_APPENA
@@ -4261,13 +4277,13 @@
                   <div class="campo">
                     <label for="licenza-app">App</label>
                     <select id="licenza-app">
-                      <option value="gdahome"${restanoDi("gdahome") || !restanoDi("gdanav") ? " selected" : ""}>gdahome Premium</option>
-                      <option value="gdanav"${!restanoDi("gdahome") && restanoDi("gdanav") ? " selected" : ""}>gdanav Premium</option>
+                      <option value="gdahome"${primaApp === "gdahome" ? " selected" : ""}>gdahome Premium</option>
+                      <option value="gdanav"${primaApp === "gdanav" ? " selected" : ""}>gdanav Premium</option>
                     </select>
                   </div>
                   <div class="campo">
                     <label for="licenza-durata">Durata</label>
-                    <select id="licenza-durata">${/* già HTML */ opzioniDelleDurate}</select>
+                    <select id="licenza-durata"${restanoDi(primaApp) ? "" : " disabled"}>${/* già HTML */ opzioniDelleDurate(primaApp)}</select>
                   </div>
                 </div>
                 <div class="campo">
@@ -4279,13 +4295,13 @@
                   }
                 </div>
                 <div class="azioni">
-                  <button type="button" class="tasto forte grande" data-assegna ${nessuna || !mie.length ? "disabled" : ""}>Assegna all'impianto</button>
-                  <button type="button" class="tasto grande" data-codice-regalo ${nessuna ? "disabled" : ""}>Genera un codice</button>
+                  <button type="button" class="tasto forte grande" data-assegna ${!restanoDi(primaApp) || !mie.length ? "disabled" : ""}>Assegna all'impianto</button>
+                  <button type="button" class="tasto grande" data-codice-regalo ${!restanoDi(primaApp) ? "disabled" : ""}>Genera un codice</button>
                 </div>
                 ${
                   nessuna
                     ? `<p class="minuta" style="margin-top: 14px">
-                         <b>Il pacchetto è esaurito.</b> Per averne altre contatta chi gestisce il cruscotto. Togliendo una licenza che hai dato, torna disponibile.
+                         <b>Il pacchetto è esaurito.</b> Per averne altre contatta chi gestisce il cruscotto. Togliendo una licenza che hai dato, torna disponibile nella sua durata.
                        </p>`
                     : ""
                 }
@@ -4380,44 +4396,58 @@
       }
 
       function agganciaLeLicenze() {
-        const durata = () => {
-          const detta = dove.querySelector("#licenza-durata")?.value || "";
-          return detta ? Number(detta) : null;
-        };
+        /* La durata e' una di quelle del pacchetto, "12" o "sempre": la
+         * sceglie il gestore quando lo riempie, qui si sceglie il mucchio. */
+        const durata = () => dove.querySelector("#licenza-durata")?.value || "";
         const app = () => dove.querySelector("#licenza-app")?.value || "gdahome";
         const assegna = dove.querySelector("[data-assegna]");
+        const regalo = dove.querySelector("[data-codice-regalo]");
+        const ciSonoCase = CASE.some((una) => una.casa);
+        /* Cambiata l'app, il menu delle durate mostra solo le sue, e i tasti
+         * si spengono se non ne ha. */
+        const sceltaApp = dove.querySelector("#licenza-app");
+        if (sceltaApp)
+          sceltaApp.onchange = () => {
+            const quale = app();
+            const menu = dove.querySelector("#licenza-durata");
+            if (menu) {
+              menu.innerHTML = opzioniDelleDurate(quale);
+              menu.disabled = !restanoDi(quale);
+            }
+            if (assegna) assegna.disabled = !restanoDi(quale) || !ciSonoCase;
+            if (regalo) regalo.disabled = !restanoDi(quale);
+          };
         if (assegna)
           assegna.onclick = () => {
             const casa = dove.querySelector("#licenza-casa")?.value || "";
             const quale = app();
-            if (!restanoDi(quale)) {
+            if (!restanoDi(quale) || !durata()) {
               avvisa(`Nel pacchetto non restano licenze ${quale}`);
               return;
             }
             faiEpoi(assegna, async () => {
               await chiedi("/licenze", {
                 method: "POST",
-                body: JSON.stringify({ app: quale, casa, mesi: durata() }),
+                body: JSON.stringify({ app: quale, casa, durata: durata() }),
               });
               CODICE_APPENA = null;
               avvisa(`${IL_NOME_DELLA_APP[quale]} assegnato a ${laCasaDi(casa)}`);
             });
           };
-        const regalo = dove.querySelector("[data-codice-regalo]");
         if (regalo)
           regalo.onclick = () => {
             const quale = app();
-            if (!restanoDi(quale)) {
+            const scelta = durata();
+            if (!restanoDi(quale) || !scelta) {
               avvisa(`Nel pacchetto non restano licenze ${quale}`);
               return;
             }
-            const mesi = durata();
             faiEpoi(regalo, async () => {
               const detto = await chiedi("/codici", {
                 method: "POST",
-                body: JSON.stringify({ app: quale, mesi }),
+                body: JSON.stringify({ app: quale, durata: scelta }),
               });
-              CODICE_APPENA = { codice: detto.codice, app: quale, mesi };
+              CODICE_APPENA = { codice: detto.codice, app: quale, mesi: scelta };
             });
           };
         dove.querySelectorAll("[data-togli-licenza]").forEach((tasto) => {

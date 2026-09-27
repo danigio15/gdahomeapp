@@ -3228,6 +3228,66 @@
         font-weight: 700;
       }
 
+      /* Il pacchetto a righe: app, durata, quante, e il tasto per toglierla.
+         Lo stesso pezzo nella carta dell'installatore e in «Aggiungi». */
+      .righe-pacchetto {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        flex-basis: 100%;
+        min-width: 0;
+        container-type: inline-size;
+      }
+
+      /* Stretta nella carta, larga in «Aggiungi»: le due tendine non
+         crescono oltre quello che serve a leggerle. */
+      .riga-pacchetto {
+        display: grid;
+        grid-template-columns: minmax(0, 12rem) minmax(0, 12rem) 3.9rem auto;
+        justify-content: start;
+        gap: 8px;
+        align-items: center;
+      }
+
+      .riga-pacchetto select,
+      .riga-pacchetto input {
+        width: 100%;
+        padding: 8px 6px 8px 9px;
+        font-size: 0.88rem;
+      }
+
+      .riga-pacchetto input {
+        font-weight: 700;
+      }
+
+      .riga-pacchetto .togli-riga {
+        padding: 7px 10px;
+      }
+
+      .righe-pacchetto .aggiungi-riga {
+        align-self: flex-start;
+      }
+
+      .righe-pacchetto .vuoto-pacchetto {
+        margin: 0;
+        font-size: 0.84rem;
+        color: var(--ink-3);
+      }
+
+      /* Piu' stretta ancora (la carta sul telefono): app e durata sopra,
+         quante e il tasto sotto. */
+      @container (max-width: 18rem) {
+        .riga-pacchetto {
+          grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+          padding-bottom: 8px;
+          border-bottom: 1px solid var(--linea);
+        }
+
+        .riga-pacchetto .togli-riga {
+          justify-self: start;
+        }
+      }
+
       .sola-lettura {
         display: inline-flex;
         align-items: center;
@@ -4658,31 +4718,10 @@
               <button type="button" class="tasto forte" data-salva-limite="${testo(uno.chi)}">Salva</button>
               <span class="nota">Zero vuol dire senza limite.</span>
             </div>
-            <div class="rigaPacchetto" data-pacchetto-di="${testo(uno.chi)}" hidden>
-              <label>
-                gdahome
-                <input
-                  type="number"
-                  min="0"
-                  max="99999"
-                  data-app="gdahome"
-                  value="${Number(uno.pacchetto?.gdahome?.totali) || 0}"
-                  aria-label="Licenze gdahome nel pacchetto"
-                />
-              </label>
-              <label>
-                gdanav
-                <input
-                  type="number"
-                  min="0"
-                  max="99999"
-                  data-app="gdanav"
-                  value="${Number(uno.pacchetto?.gdanav?.totali) || 0}"
-                  aria-label="Licenze gdanav nel pacchetto"
-                />
-              </label>
+            <div class="rigaPacchetto" data-pacchetto-di="${testo(uno.chi)}"${PACCHETTI_APERTI.has(uno.chi) ? "" : " hidden"}>
+              ${/* già HTML */ leRigheDelPacchetto(uno.chi)}
               <button type="button" class="tasto forte" data-salva-pacchetto="${testo(uno.chi)}">Salva</button>
-              <span class="nota">Quante licenze può regalare ai suoi clienti. Quelle già date restano anche se abbassi il numero.</span>
+              <span class="nota">Quante licenze può regalare ai suoi clienti, e di che durata: la durata comincia quando la assegna, o quando il cliente riscatta il codice. Quelle già date restano anche se abbassi il numero.</span>
             </div>
             <div class="tasti">
               <button type="button" class="tasto" data-nome="${testo(uno.chi)}">Rinomina</button>
@@ -4755,18 +4794,12 @@
             <p class="minuta">
               Il limite è quanti impianti può seguire. <b>Zero</b> vuol dire senza limite.
             </p>
-            <div class="due-campi pari">
-              <div class="campo">
-                <label for="pacchetto-gdahome">Licenze gdahome Premium</label>
-                <input type="number" id="pacchetto-gdahome" min="0" max="99999" value="0" />
-              </div>
-              <div class="campo">
-                <label for="pacchetto-gdanav">Licenze gdanav Premium</label>
-                <input type="number" id="pacchetto-gdanav" min="0" max="99999" value="0" />
-              </div>
+            <div class="campo">
+              <label>Licenze del pacchetto</label>
+              ${/* già HTML */ leRigheDelPacchetto(NUOVO)}
             </div>
             <p class="minuta">
-              Il <b>pacchetto</b>: quante licenze può regalare ai suoi clienti, dalla sua pagina. Se ne toglie una, torna nel pacchetto.
+              Il <b>pacchetto</b>: quante licenze può regalare ai suoi clienti, dalla sua pagina, e di che durata. La durata comincia quando la assegna, o quando il cliente riscatta il codice. Se ne toglie una, torna nel pacchetto.
             </p>
             <div class="azioni">
               <button type="button" class="tasto forte grande" data-iscrivi>Aggiungi</button>
@@ -4832,16 +4865,158 @@
         return una.scade > ADESSO() ? `fino al ${ilGiorno(una.scade)}` : `scaduta il ${ilGiorno(una.scade)}`;
       }
 
-      /* Il pacchetto di un installatore, nella sua carta: due pastiglie. */
+      /* Il pacchetto di un installatore, nella sua carta: una pastiglia per
+       * ogni app e durata, «gdahome · 1 anno 2/5». */
       function ilSuoPacchetto(uno) {
         const p = uno.pacchetto;
         if (!p) return "";
-        const pezzo = (app) => {
-          const { totali = 0, usate = 0 } = p[app] || {};
-          const tono = totali > 0 && usate >= totali ? "attenta" : usate ? "bene" : "";
-          return `<span class="pastiglia ${testo(tono)}">${testo(app)} <b>${Number(usate)}/${Number(totali)}</b></span>`;
+        const pezzi = LE_APP.flatMap((app) =>
+          (Array.isArray(p[app]) ? p[app] : []).map(({ durata, totali = 0, usate = 0 }) => {
+            const tono = usate >= totali && usate > 0 ? "attenta" : usate ? "bene" : "";
+            return `<span class="pastiglia ${testo(tono)}">${testo(app)} · ${testo(laDurata(durata))} <b>${Number(usate)}/${Number(totali)}</b></span>`;
+          }),
+        );
+        return `<div class="pacchetto-conto" aria-label="Licenze date su quelle del pacchetto">${
+          pezzi.length ? /* già HTML */ pezzi.join("") : `<span class="pastiglia">nessuna licenza nel pacchetto</span>`
+        }</div>`;
+      }
+
+      /* ─── Il pacchetto a righe ─────────────────────────────────────────
+       *
+       * Il gestore decide quante licenze e **di che durata**: una riga per
+       * ogni app e durata. Le righe si tengono qui (`BOZZE`), non nelle
+       * caselle: il ridisegno di ogni minuto rifa' le caselle, e una riga
+       * aggiunta e non ancora salvata non deve sparire. `NUOVO` e' la bozza
+       * di «Aggiungi»; le altre sono per matricola. */
+      const LE_APP = ["gdahome", "gdanav"];
+      const NUOVO = "";
+      const LE_DURATE_DEL_PACCHETTO = [
+        ["1", "1 mese"],
+        ["3", "3 mesi"],
+        ["6", "6 mesi"],
+        ["12", "1 anno"],
+        ["24", "2 anni"],
+        ["sempre", "per sempre"],
+      ];
+      const BOZZE = new Map();
+      const PACCHETTI_APERTI = new Set();
+
+      /* Una durata a parole: «1 mese», «1 anno», «per sempre». */
+      function laDurata(durata) {
+        const nota = LE_DURATE_DEL_PACCHETTO.find(([valore]) => valore === String(durata));
+        if (nota) return nota[1];
+        const mesi = Number(durata);
+        if (mesi % 12 === 0) return plurale(mesi / 12, "anno", "anni");
+        return plurale(mesi, "mese", "mesi");
+      }
+
+      const unaRigaNuova = () => ({ app: "gdahome", durata: "12", quante: 0 });
+
+      /* Le righe di un installatore come le ha adesso: quelle con dei totali. */
+      const leRigheDi = (uno) =>
+        LE_APP.flatMap((app) =>
+          (Array.isArray(uno?.pacchetto?.[app]) ? uno.pacchetto[app] : [])
+            .filter((mucchio) => mucchio.totali > 0)
+            .map((mucchio) => ({ app, durata: String(mucchio.durata), quante: Number(mucchio.totali) })),
+        );
+
+      function laBozza(di) {
+        if (!BOZZE.has(di))
+          BOZZE.set(
+            di,
+            di === NUOVO ? [unaRigaNuova()] : leRigheDi(INSTALLATORI.find((uno) => uno.chi === di)),
+          );
+        return BOZZE.get(di);
+      }
+
+      /* Le righe, in quello che il quadro si aspetta: tutte e due le app,
+       * sempre, cosi' una app senza righe si svuota davvero. */
+      function ilPacchettoDellaBozza(di) {
+        const fuori = { gdahome: {}, gdanav: {} };
+        for (const { app, durata, quante } of laBozza(di)) {
+          const n = Math.max(0, Math.min(99999, Math.floor(Number(quante) || 0)));
+          if (!n || !fuori[app]) continue;
+          fuori[app][durata] = (fuori[app][durata] || 0) + n;
+        }
+        return fuori;
+      }
+
+      function leRigheDelPacchetto(di) {
+        const righe = laBozza(di);
+        const opzioni = (tutte, scelta) =>
+          tutte
+            .map(
+              ([valore, parola]) =>
+                `<option value="${testo(valore)}"${valore === scelta ? " selected" : ""}>${testo(parola)}</option>`,
+            )
+            .join("");
+        return `
+          <div class="righe-pacchetto" data-bozza="${testo(di)}">
+            ${
+              righe.length
+                ? righe
+                    .map((riga, i) => {
+                      /* Una durata detta dall'API e non fra quelle solite si vede lo stesso. */
+                      const durate = LE_DURATE_DEL_PACCHETTO.some(([valore]) => valore === riga.durata)
+                        ? LE_DURATE_DEL_PACCHETTO
+                        : [...LE_DURATE_DEL_PACCHETTO, [riga.durata, laDurata(riga.durata)]];
+                      return `
+                <div class="riga-pacchetto" data-riga="${Number(i)}">
+                  <select data-campo="app" aria-label="App">${/* già HTML */ opzioni(
+                    LE_APP.map((app) => [app, app]),
+                    riga.app,
+                  )}</select>
+                  <select data-campo="durata" aria-label="Durata">${/* già HTML */ opzioni(durate, riga.durata)}</select>
+                  <input type="number" data-campo="quante" min="0" max="99999" value="${Number(riga.quante) || 0}" aria-label="Quante" />
+                  <button type="button" class="tasto togli-riga" data-togli-riga="${Number(i)}" aria-label="Togli la riga" title="Togli la riga">✕</button>
+                </div>`;
+                    })
+                    .join("")
+                : `<p class="vuoto-pacchetto">Nessuna licenza nel pacchetto.</p>`
+            }
+            <button type="button" class="tasto aggiungi-riga" data-aggiungi-riga>Aggiungi riga</button>
+          </div>`;
+      }
+
+      /* Le righe si cambiano senza ridisegnare la pagina: solo il loro pezzo. */
+      function ridisegnaLeRighe(di) {
+        const dentro = [...dove.querySelectorAll("[data-bozza]")].find((uno) => uno.dataset.bozza === di);
+        if (dentro) dentro.outerHTML = leRigheDelPacchetto(di);
+      }
+
+      function agganciaLeRighe() {
+        const laRiga = (evento) => {
+          const riquadro = evento.target.closest("[data-bozza]");
+          if (!riquadro) return null;
+          const di = riquadro.dataset.bozza;
+          const riga = evento.target.closest("[data-riga]");
+          return { di, righe: laBozza(di), i: riga ? Number(riga.dataset.riga) : -1 };
         };
-        return `<div class="pacchetto-conto" aria-label="Licenze date su quelle del pacchetto">${/* già HTML */ pezzo("gdahome")}${/* già HTML */ pezzo("gdanav")}</div>`;
+        const cambia = (evento) => {
+          const chi = laRiga(evento);
+          const campo = evento.target.dataset?.campo;
+          if (!chi || chi.i < 0 || !campo || !chi.righe[chi.i]) return;
+          chi.righe[chi.i][campo] = campo === "quante" ? evento.target.value : String(evento.target.value);
+        };
+        dove.addEventListener("input", cambia);
+        dove.addEventListener("change", cambia);
+        dove.addEventListener("click", (evento) => {
+          const chi = laRiga(evento);
+          if (!chi) return;
+          if (evento.target.closest("[data-aggiungi-riga]")) {
+            const ultima = chi.righe.at(-1);
+            chi.righe.push(ultima ? { ...ultima, quante: 0 } : unaRigaNuova());
+            ridisegnaLeRighe(chi.di);
+            const tutte = [...dove.querySelectorAll("[data-bozza]")].find((uno) => uno.dataset.bozza === chi.di);
+            tutte?.querySelector(".riga-pacchetto:last-of-type [data-campo='quante']")?.focus();
+            return;
+          }
+          const togli = evento.target.closest("[data-togli-riga]");
+          if (togli) {
+            chi.righe.splice(Number(togli.dataset.togliRiga), 1);
+            ridisegnaLeRighe(chi.di);
+          }
+        });
       }
 
       function leLicenze() {
@@ -5059,15 +5234,17 @@
 
       async function cambiaIlPacchetto(chi, tasto) {
         const riga = dove.querySelector(`[data-pacchetto-di="${chi}"]`);
-        const quanti = (app) =>
-          Math.max(0, Math.floor(Number(riga?.querySelector(`[data-app="${app}"]`)?.value) || 0));
-        const pacchetto = { gdahome: quanti("gdahome"), gdanav: quanti("gdanav") };
+        const pacchetto = ilPacchettoDellaBozza(chi);
+        const quante = (app) => Object.values(pacchetto[app]).reduce((tot, n) => tot + n, 0);
         await faiEpoi(tasto, async () => {
           await chiedi(`/installatori/${encodeURIComponent(chi)}`, {
             method: "PATCH",
             body: JSON.stringify({ pacchetto }),
           });
-          avvisa(`${ilNomeDi(chi)}: ${pacchetto.gdahome} gdahome e ${pacchetto.gdanav} gdanav`);
+          PACCHETTI_APERTI.delete(chi);
+          BOZZE.delete(chi);
+          if (riga) riga.hidden = true;
+          avvisa(`${ilNomeDi(chi)}: ${quante("gdahome")} gdahome e ${quante("gdanav")} gdanav`);
         });
       }
 
@@ -5571,10 +5748,17 @@
         });
         dove.querySelectorAll("[data-pacchetto]").forEach((tasto) => {
           tasto.onclick = () => {
-            const riga = dove.querySelector(`[data-pacchetto-di="${tasto.dataset.pacchetto}"]`);
+            const chi = tasto.dataset.pacchetto;
+            const riga = dove.querySelector(`[data-pacchetto-di="${chi}"]`);
             if (!riga) return;
+            /* Si apre sempre da quello che c'e' adesso, non da una bozza vecchia. */
+            if (riga.hidden) {
+              BOZZE.delete(chi);
+              PACCHETTI_APERTI.add(chi);
+              ridisegnaLeRighe(chi);
+            } else PACCHETTI_APERTI.delete(chi);
             riga.hidden = !riga.hidden;
-            if (!riga.hidden) riga.querySelector("input")?.focus();
+            if (!riga.hidden) riga.querySelector("input, select")?.focus();
           };
         });
         dove.querySelectorAll("[data-salva-pacchetto]").forEach((tasto) => {
@@ -5662,10 +5846,7 @@
       async function iscrivi(tasto) {
         const nome = document.getElementById("nome")?.value.trim() || "";
         const soglia = Number(document.getElementById("tetto")?.value) || 0;
-        const pacchetto = {
-          gdahome: Math.max(0, Math.floor(Number(document.getElementById("pacchetto-gdahome")?.value) || 0)),
-          gdanav: Math.max(0, Math.floor(Number(document.getElementById("pacchetto-gdanav")?.value) || 0)),
-        };
+        const pacchetto = ilPacchettoDellaBozza(NUOVO);
         if (!nome) {
           document.getElementById("nome")?.focus();
           avvisa("Inserisci il nome");
@@ -5677,6 +5858,7 @@
             body: JSON.stringify({ nome, soglia, pacchetto }),
           });
           APPENA_FATTO = { nome, chiave: detto.chiave };
+          BOZZE.delete(NUOVO);
           avvisa(`${nome} aggiunto`);
         });
       }
@@ -5823,6 +6005,8 @@
         const chi = document.activeElement;
         return Boolean(chi && dove.contains(chi) && chi.matches("input, textarea, select"));
       };
+
+      agganciaLeRighe();
 
       /* Un rinfresco lento: questa pagina si guarda ogni tanto, non si fissa.
        * Con una chiave nuova a schermo non si tocca niente: sparirebbe. */
