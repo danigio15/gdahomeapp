@@ -5611,6 +5611,10 @@ function apriCamera(camId, title) {
    LONG_LIVED_TOKEN, HA_HTTP_URL, toggleFullScreenCam. */
 let _dmCurrentCam = null, _dmPc = null, _dmWs = null, _dmHls = null;
 let _dmPollInt = null, _dmPollBlob = null, _dmPollFail = 0;
+/* Le istantanee: quanto si aspetta fra un fotogramma e il successivo, e da
+   quanto tempo senza nemmeno un'immagine si dice che non risponde. Venti
+   secondi, e sono scritti anche nel messaggio: se cambiano qui, cambia li'. */
+const DM_POLL_PASSO = 500, DM_POLL_RESA = 20000;
 const _dmCamBlobs = {};
 function dmIsWebRTC() { return typeof RTCPeerConnection !== 'undefined'; }
 
@@ -5758,21 +5762,51 @@ async function dmCamPolling(cam, content) {
     content.innerHTML = `<div class="cam-popup-body"><div id="video-iframe-container" class="cam-zoom-container" style="position:relative; padding-top:56.25%;"><img id="cam-polling" alt="${cdEsc(cam.entity)}"><div id="cam-video-loader" class="cam-video-loader-overlay"><div class="cam-popup-spinner"></div><div>Caricamento…</div></div>${_DM_FS_BTNS}</div><button id="toggle-fs-main-btn" class="cam-fs-btn" onclick="toggleFullScreenCam()">🔲 Schermo Intero</button><button id="cam-audio-activate-btn" class="cam-audio-btn" onclick="dmAttivaAudio()">🔊 Attiva audio</button><div class="cam-popup-hint"><span class="cam-mode-badge polling">SNAPSHOT</span> Anteprima ~2 fps · Tocca "Attiva audio" per audio + video</div></div>`;
     const imgEl = document.getElementById('cam-polling');
     const loaderEl = document.getElementById('cam-video-loader');
-    if (_dmPollInt) clearInterval(_dmPollInt);
+    if (_dmPollInt) { clearTimeout(_dmPollInt); _dmPollInt = null; }
     _dmPollFail = 0;
+    /* Da quando si prova senza aver visto niente. E' il tempo a decidere la
+       resa, non il numero dei tentativi: un tentativo torna subito o dura tre
+       secondi, e contarli vuol dire arrendersi a tempi diversi su telecamere
+       diverse. Qui c'era `setInterval` ogni mezzo secondo su una richiesta che
+       ne puo' durare tre: su una telecamera lenta — o vista da fuori casa, per
+       il tramite — le richieste si accavallavano, sei in volo insieme, e i
+       cinque «tentativi falliti» si bruciavano in tre secondi su una
+       telecamera che stava solo rispondendo piano. */
+    let daQuando = Date.now();
+    /* Che questo giro sia ancora il popup che si sta guardando. Chi chiude, o
+       apre un'altra telecamera, si porta via l'elemento: da li' in poi non c'e'
+       piu' niente da disegnare, e scrivere dentro `content` vorrebbe dire
+       scrivere nel popup di qualcun altro. */
+    const eAncoraSuo = () => imgEl.isConnected && document.getElementById('cam-polling') === imgEl;
+    const smetti = () => { if (_dmPollInt) { clearTimeout(_dmPollInt); _dmPollInt = null; } };
     const loadFrame = async () => {
-        if (!document.getElementById('cam-polling')) { clearInterval(_dmPollInt); _dmPollInt = null; return; }
-        if (_dmPollFail >= 5) { clearInterval(_dmPollInt); _dmPollInt = null; content.innerHTML = '<div class="cam-popup-error">⚠️ Telecamera non risponde<br><span style="font-weight:500;opacity:.85;font-size:12px;text-transform:none;letter-spacing:0;">5 tentativi falliti — verifica la connessione della camera</span></div>'; return; }
-        const url = buildUrl(); if (!url) return;
-        const blob = await dmLoadImageBlob(url);
-        if (!blob || !imgEl.isConnected) { _dmPollFail++; return; }
-        _dmPollFail = 0;
-        if (_dmPollBlob && _dmPollBlob.startsWith('blob:')) URL.revokeObjectURL(_dmPollBlob);
-        _dmPollBlob = blob; imgEl.src = blob;
-        if (loaderEl) loaderEl.classList.add('hidden');
+        if (!eAncoraSuo()) { smetti(); return; }
+        const url = buildUrl();
+        const blob = url ? await dmLoadImageBlob(url) : null;
+        /* Il fotogramma e' arrivato adesso, e adesso il popup puo' essere
+           gia' di un'altra telecamera: si guarda di nuovo. */
+        if (!eAncoraSuo()) { smetti(); return; }
+        if (blob) {
+            _dmPollFail = 0;
+            daQuando = Date.now();
+            if (_dmPollBlob && _dmPollBlob.startsWith('blob:')) URL.revokeObjectURL(_dmPollBlob);
+            _dmPollBlob = blob; imgEl.src = blob;
+            if (loaderEl) loaderEl.classList.add('hidden');
+        } else {
+            _dmPollFail++;
+            if (Date.now() - daQuando >= DM_POLL_RESA) {
+                smetti();
+                content.innerHTML = '<div class="cam-popup-error">⚠️ Telecamera non risponde<br><span style="font-weight:500;opacity:.85;font-size:12px;text-transform:none;letter-spacing:0;">Venti secondi senza un\'immagine: può essere spenta, o solo molto lenta</span><br><button id="cam-riprova" class="cam-fs-btn">↻ Riprova</button></div>';
+                const riprova = document.getElementById('cam-riprova');
+                if (riprova) riprova.onclick = () => dmCamPolling(cam, content);
+                return;
+            }
+        }
+        /* Il fotogramma dopo si chiede quando il precedente e' tornato: uno
+           alla volta, mai accavallati. */
+        _dmPollInt = setTimeout(loadFrame, DM_POLL_PASSO);
     };
     await loadFrame();
-    _dmPollInt = setInterval(loadFrame, 500);
 }
 
 async function dmStartWebRTC(streamName, videoEl) {
