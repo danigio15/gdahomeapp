@@ -216,9 +216,29 @@ class Premesse {
       'getComputedStyle(radice).getPropertyValue(NOME))||0;}'
       'catch(male){return 0;}'
       '};'
+      /* Si scrive **sempre**, anche zero, e il perche' e' tutto qui.
+       *
+       * Prima c'era `if(!(mio>0))return;`: con zero non si scriveva niente e
+       * si lasciava rispondere `env(safe-area-inset-bottom)`. Su Android
+       * dentro una cornice quella risponde zero, e tornava. Su iPhone no:
+       * WKWebView le fascette di sicurezza della finestra le passa alla
+       * pagina, e `env()` risponde i suoi trentaquattro punti. Solo che il
+       * fondo ce lo siamo gia' presi noi accorciando il riquadro — la pagina
+       * finisce dove comincia la barretta di casa — e quei trentaquattro si
+       * sommavano ai diciotto della plancia: la barra in fondo galleggiava
+       * cinquantadue punti sopra il vetro, e sotto restava una striscia di
+       * niente. «Troppo alta su iPhone», segnalato con la foto.
+       *
+       * Zero non vuol dire «non lo so»: vuol dire «il fondo e' mio, tu non
+       * aggiungere niente». Ed e' vero su tutti e due i sistemi, perche' il
+       * riquadro lo accorciamo sempre (`plancia_vera.dart`, `basso: 0.0`).
+       *
+       * Si scrive solo se cambia davvero: l'osservatore qui sotto guarda
+       * l'attributo dello stile della radice, e riscriverlo uguale lo farebbe
+       * scattare all'infinito. */
       'var scrivi=function(){'
-      'if(!radice||!(mio>0))return;'
-      'try{if(suo()>=mio)return;'
+      'if(!radice)return;'
+      'try{if(Math.abs(suo()-mio)<0.5)return;'
       'radice.style.setProperty(NOME,mio+"px");}catch(male){}'
       '};'
       'scrivi();'
