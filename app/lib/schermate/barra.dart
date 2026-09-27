@@ -107,13 +107,34 @@ const double _angolo = 30;
 /// Quanto e' alta una mattonella, fianco compreso.
 const double _mattonella = 116;
 
-/// Quanto e' spesso il fianco di una mattonella: l'altezza del suo rilievo.
+/// Di quanto affonda una mattonella mentre la si preme.
 ///
-/// «Riesci a fare le card come se avessero un effetto 3d?» Erano sei, e con
-/// sei il fianco e' una fascia: si legge come un bordo, non come uno spessore.
-/// «L'effetto 3d non mi piace, i bordi troppo scuri e doppi.» Quattro: si vede
-/// che la mattonella e' alzata, e non si vede una riga intorno.
-const double _spessore = 4;
+/// ── Come ci si e' arrivati ───────────────────────────────────────────────
+///
+/// «Riesci a fare le card come se avessero un effetto 3d?» Il primo giro
+/// disegnava un fianco di sei punti sotto la faccia. Poi: «i bordi troppo
+/// scuri e doppi» — il fianco era un bordo, e sotto c'era l'ombra: due righe.
+/// Ammorbidito. Poi: «riduci ancora, vedo 3 bordi», e li aveva contati
+/// giusti. Sotto ogni mattonella c'erano **tre** salti di tono, uno sopra
+/// l'altro:
+///
+///   1. il fondo della faccia, che una sfumatura scuriva del tre per cento;
+///   2. il fianco, quattro punti piu' scuro ancora;
+///   3. l'ombra sotto il fianco.
+///
+/// Ognuno era tenue. Tre tenui in fila fanno un bordo spesso.
+///
+/// ── Adesso ───────────────────────────────────────────────────────────────
+///
+/// **Uno solo**: un'ombra morbida. La faccia e' di tinta piena, senza
+/// sfumature, e il fianco non c'e' piu'.
+///
+/// Il volume non l'hanno mai fatto i bordi: lo fa il **movimento**. Premuta,
+/// la mattonella affonda di questi tre punti e l'ombra si stringe sotto di
+/// lei — e' quello che fa un tasto vero quando lo si spinge, ed e' la cosa che
+/// di solito manca. Un rilievo disegnato e fermo e' il disegno di un tasto;
+/// un rilievo che si muove al dito e' un tasto.
+const double _quantoScende = 3;
 
 class BarraDelleSezioni extends StatefulWidget {
   const BarraDelleSezioni({
@@ -931,31 +952,21 @@ class _StatoDellaMattonella extends State<_Mattonella> {
      * **Tinta piena**, e non un velo: da un velo non si ricava un fianco piu'
      * scuro — verrebbe fuori il fondo del pannello — e senza fianco non c'e'
      * nessun rilievo. */
+    /* **Tinta piena, senza sfumature.** La faccia aveva una sfumatura appena
+     * accennata che finiva piu' scura del tre per cento: sul fondo della
+     * mattonella faceva una riga, e sommata al fianco e all'ombra erano i tre
+     * bordi che si contavano. Un colore solo non ne fa nessuno. */
     final faccia = scelta ? colori.onSurface : colori.surfaceContainerLowest;
-    /* **Appena piu' scuro della faccia, non molto.**
-     *
-     * Era scurito del diciassette per cento, e un fianco cosi' scuro sotto una
-     * faccia bianca non e' uno spessore: e' un bordo. Insieme all'ombra
-     * facevano due righe, una sopra l'altra — «i bordi troppo scuri e doppi».
-     *
-     * Adesso il fianco e' un'ombra propria appena accennata, e l'ombra sotto
-     * e' larga e tenue: due cose che non si vedono da sole, e insieme fanno
-     * un oggetto alzato. Il rilievo si sente al tocco, quando la faccia scende
-     * e l'ombra si stringe. */
-    final fianco = _piuScuro(faccia, scelta ? 0.20 : 0.07);
-    /* La luce arriva da sopra a sinistra, e si spegne a meta' faccia. Poco:
-     * una sfumatura che si vede e' una sfumatura di troppo. */
-    final luce = _piuChiaro(faccia, scuro ? 0.07 : 0.04);
     final scritta = scelta
         ? colori.surface
         : colori.onSurface.withValues(alpha: sezione.pronta ? 0.9 : 0.32);
 
     final tondo = BorderRadius.circular(22);
     final puo = sezione.pronta;
-    /* Quella che non si puo' ancora aprire non si alza da terra: niente
-     * rilievo, niente ombra. Il volume dice «questo si preme», e dirlo di una
-     * che non si preme sarebbe una bugia in rilievo. */
-    final salita = puo ? (_giu ? 0.0 : _spessore) : 0.0;
+    /* Quella che non si puo' ancora aprire non si alza da terra: niente ombra
+     * e niente movimento. Il volume dice «questo si preme», e dirlo di una che
+     * non si preme sarebbe una bugia in rilievo. */
+    final scesa = puo && _giu ? _quantoScende : 0.0;
 
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
@@ -963,61 +974,31 @@ class _StatoDellaMattonella extends State<_Mattonella> {
       onTapUp: puo ? (_) => _spingi(false) : null,
       onTapCancel: puo ? () => _spingi(false) : null,
       onTap: puo ? widget.premuta : null,
-      child: Stack(
-        children: [
-          /* Il fianco. Sta sotto per tutta l'altezza: quando la faccia scende
-           * lo copre, e quello che resta scoperto e' zero — premuta, la
-           * mattonella e' piatta. */
-          Positioned.fill(
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                color: puo ? fianco : Colors.transparent,
-                borderRadius: tondo,
-                /* Larga e tenue: e' l'aria sotto la mattonella, non una riga
-                 * che la contorna. Premuta si stringe e si alza: e' quello
-                 * che fa l'ombra di un tasto vero. */
-                boxShadow: puo
-                    ? [
-                        BoxShadow(
-                          color: Colors.black.withValues(
-                            alpha: scuro ? 0.32 : 0.08,
-                          ),
-                          blurRadius: _giu ? 6 : 16,
-                          offset: Offset(0, _giu ? 1 : 5),
-                        ),
-                      ]
-                    : null,
-              ),
-            ),
-          ),
-          /* La faccia. Scende di [_spessore] quando il dito e' giu', e ci
-           * mette quanto ci mette un tasto: ottanta millesimi. Piu' lento
-           * sembrerebbe un'animazione, e un tasto non si anima. */
-          AnimatedPositioned(
-            duration: const Duration(milliseconds: 80),
-            curve: Curves.easeOut,
-            left: 0,
-            right: 0,
-            top: 0,
-            bottom: salita,
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                borderRadius: tondo,
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    luce,
-                    faccia,
-                    _piuScuro(faccia, scuro ? 0.06 : 0.03),
-                  ],
-                  stops: const [0, 0.5, 1],
-                ),
-              ),
-              child: _laFaccia(context, scritta: scritta, colori: colori),
-            ),
-          ),
-        ],
+      /* Tutta la mattonella affonda insieme, ombra compresa, e ci mette quanto
+       * ci mette un tasto: ottanta millesimi. Piu' lento sembrerebbe
+       * un'animazione, e un tasto non si anima. */
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 80),
+        curve: Curves.easeOut,
+        transform: Matrix4.translationValues(0, scesa, 0),
+        decoration: BoxDecoration(
+          color: faccia,
+          borderRadius: tondo,
+          /* **Una sola ombra, e morbida.** E' l'aria sotto la mattonella, non
+           * una riga che la contorna: e' l'unico salto di tono che c'e' sotto
+           * di lei, ed e' per questo che non se ne contano tre. Premuta si
+           * stringe e si alza. */
+          boxShadow: puo
+              ? [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: scuro ? 0.30 : 0.07),
+                    blurRadius: _giu ? 4 : 14,
+                    offset: Offset(0, _giu ? 1 : 4),
+                  ),
+                ]
+              : null,
+        ),
+        child: _laFaccia(context, scritta: scritta, colori: colori),
       ),
     );
   }
@@ -1103,14 +1084,6 @@ class _StatoDellaMattonella extends State<_Mattonella> {
     return trovate.isEmpty ? c.plance.first : trovate.first;
   }
 }
-
-/// Lo stesso colore, con sopra un velo nero: e' il fianco di una mattonella.
-Color _piuScuro(Color quale, double quanto) =>
-    Color.alphaBlend(Colors.black.withValues(alpha: quanto), quale);
-
-/// Lo stesso colore, con sopra un velo bianco: e' dove batte la luce.
-Color _piuChiaro(Color quale, double quanto) =>
-    Color.alphaBlend(Colors.white.withValues(alpha: quanto), quale);
 
 /// Il tasto in alto a destra della mattonella della plancia: quale plancia.
 ///
