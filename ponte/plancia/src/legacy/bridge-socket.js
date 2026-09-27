@@ -73,6 +73,10 @@ export const ALLOWED_MESSAGE_TYPES = Object.freeze([
   "media_source/browse_media",
   "media_source/resolve_media",
   "dashboardmodern/www/list",
+  // Scegliere cosa suonare (Sonos, Music Assistant): la libreria che il
+  // lettore stesso dichiara. Non e' la stessa domanda di qui sopra — quella
+  // sfoglia i file su disco, questa sfoglia il lettore — e va detta a parte.
+  "media_player/browse_media",
   // Il caricamento «Dal dispositivo»: la foto viaggia sul socket perche' la
   // plancia servita dall'integrazione non possiede nessun token e ogni
   // chiamata REST del browser risponde 401.

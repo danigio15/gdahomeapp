@@ -104,6 +104,13 @@ const PER_TUTTI = new Set([
   "camera/web_rtc_offer",
   "media_source/browse_media",
   "media_source/resolve_media",
+  /* Cosa ha da offrire un lettore: le playlist di Music Assistant, le stazioni
+   * di Sonos. E' la domanda che la scheda Musica manda per far scegliere cosa
+   * suonare; senza, da dentro il pannello e da Nabu Casa la finestra si
+   * aprirebbe su «Message type not permitted through the bridge». Legge e non
+   * cambia niente, come le altre di questo elenco: quello che poi si suona
+   * passa per «call_service», che qui c'e' gia'. */
+  "media_player/browse_media",
   "frontend/get_user_data",
   "frontend/set_user_data",
   "frontend/get_translations",

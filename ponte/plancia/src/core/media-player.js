@@ -42,6 +42,19 @@ export const SA = Object.freeze({
   SORGENTE: 2048,
   FERMA: 4096,
   SUONA: 16384,
+  /* Sfogliare quello che c'e' da ascoltare, e metterlo in coda.
+   *
+   * «Con Sonos e Music Assistant, dalla plancia non si riesce a scegliere
+   * cosa suonare.» Non si riusciva perche' non c'era: la scheda muoveva il
+   * volume, la sorgente e la pausa di qualcosa che qualcun altro aveva fatto
+   * partire. Chi accende la musica lo fa da un'altra app, e poi torna qui per
+   * abbassarla.
+   *
+   * Sono le ultime due bandiere di `MediaPlayerEntityFeature` che servono a
+   * dei tasti: `BROWSE_MEDIA` dice che quel lettore sa elencare cosa ha da
+   * offrire, `MEDIA_ENQUEUE` che sa mettere in coda invece di interrompere. */
+  SFOGLIA: 131072,
+  ACCODA: 2097152,
 });
 
 const STATI_VIVI = new Set(["playing", "paused", "buffering", "idle", "on", "standby"]);
@@ -177,6 +190,15 @@ export function letturaDelLettore(voce, states = {}, resolve = (valore) => valor
       sorgente: sa(SA.SORGENTE),
       accendi: sa(SA.ACCENDI),
       spegni: sa(SA.SPEGNI),
+      /* Sfogliare e far partire. Sono due bandiere e vanno insieme:
+       * un lettore che sa elencare la sua libreria ma non sa ricevere un
+       * brano apre una finestra da cui non si esce con niente, e un elenco
+       * che non si puo' toccare e' la stessa cosa di un tasto rotto. */
+      suona: sa(SA.SUONA),
+      sfoglia: sa(SA.SFOGLIA) && sa(SA.SUONA),
+      /* La coda la sa solo chi ce l'ha: su un Chromecast «accoda» sostituisce
+       * quello che sta suonando, e chi lo premeva perdeva il brano. */
+      accoda: sa(SA.ACCODA) && sa(SA.SUONA),
     },
     /* Quello che sta accanto (#451): l'interruttore dell'alimentazione, la
      * tendina della sorgente di SmartThings, il canale, il volume, il

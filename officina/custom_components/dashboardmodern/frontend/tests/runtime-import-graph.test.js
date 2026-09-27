@@ -1444,8 +1444,17 @@ test("production graph is single-owner, acyclic and contains no facade pass-thro
   // stanno nelle `options` dell'entita' e il giudizio sta qui, in un modulo che
   // si prova senza una wallbox in garage: e' anche l'unico modo di sapere che
   // al prossimo rinominare non si rompe piu' niente.
+  // 397 con lo scegliere cosa suonare: `core/sfoglia-i-media.js`. Dalla plancia
+  // si poteva alzare il volume a quello che gia' suonava, non far partire
+  // niente. La libreria che un lettore dichiara — le playlist di Music
+  // Assistant, le stazioni di Sonos — e' un albero che si chiede a Home
+  // Assistant e si scende come una cartella: preparare la domanda, mettere in
+  // ordine i figli e costruire il comando che fa partire sono decisioni pure,
+  // e stanno in un modulo perche' e' l'unico modo di provarle senza una cassa
+  // in salotto. Non e' `core/media-picker.js`: quello sfoglia i file su disco,
+  // questo sfoglia il lettore.
   assert.ok(
-    relative.length <= 396,
+    relative.length <= 397,
     `production graph unexpectedly grew to ${relative.length} modules`,
   );
   assertAcyclic(edges);
