@@ -76,24 +76,28 @@ Dal telefono si inquadra, e la casa è abbinata.
 Tutto passo per passo, e cosa guardare una volta dentro, sta in
 **[`COME_PROVARLA.md`](COME_PROVARLA.md)**.
 
-## Quanto costa: niente
+## Quanto costa
 
-L'add-on, la plancia, l'app, l'accesso da fuori casa, le segnalazioni e la
-chat di assistenza: **tutto gratis**. Nessun abbonamento, nessun limite a
-pagamento, nessun account da fare. Nell'app non c'è nessun tasto che chiede
-soldi, ed è una scelta scritta: quello che serve a vedere e comandare la
-propria casa non si paga mai — l'accesso da fuori compreso, che tenerlo in
-piedi costa zero ([`nuvola/`](nuvola/README.md)).
+**Base, gratis.** L'add-on, la plancia principale, l'app per una casa, le
+segnalazioni e la chat di assistenza. Il telefono parla con la casa quando è
+sulla rete di casa. Nessun account da fare.
 
-**Gratis però non vuol dire finito.** Gli aiutanti, lo Zigbee, il mago delle
-automazioni non ci sono ancora: sono in fila, e il lavoro va avanti finché c'è
-chi lo tiene in piedi. Chi vuole dare una mano ha il tasto **Sponsor** qui in
-cima alla pagina: ogni sostegno è una di quelle cose che arriva prima. Chi non
-vuole o non può, la usa lo stesso — tutta, per sempre.
+**Premium: 4,99 € al mese o 49,99 € all'anno**, e vale per la casa, non per il
+telefono: tutti i telefoni abbinati a quella casa sono Premium insieme a lei.
 
-Un sostegno non sblocca niente, e non deve: se sbloccasse qualcosa, «tutto
-gratis» sarebbe una frase da togliere. Come è fatto, e cosa si è scelto di
-non vendere, sta in [`docs/SOSTEGNO.md`](docs/SOSTEGNO.md).
+- più plance e più case;
+- il collegamento da fuori casa, sicuro e diretto, senza aprire porte sul
+  router;
+- la configurazione della plancia dall'app;
+- i dispositivi Zigbee aggiunti dall'app, scegliendo in quale sezione vanno;
+- **gdanav Premium compreso**, con tutto sbloccato.
+
+Premium si compra dall'app, oppure arriva in regalo da chi ha installato
+l'impianto. Come funzionano le licenze, i codici regalo e i pacchetti degli
+installatori sta in [`docs/LICENZE.md`](docs/LICENZE.md).
+
+Un sostegno con il tasto **Sponsor** resta un'altra cosa: non sblocca niente,
+serve a far andare avanti il piano ([`docs/SOSTEGNO.md`](docs/SOSTEGNO.md)).
 
 ## Come ci si arriva
 

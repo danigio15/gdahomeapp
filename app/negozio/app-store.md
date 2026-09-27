@@ -101,7 +101,9 @@ home assistant,smart home,lights,climate,shutters,cameras,energy,carplay,navigat
 > - Several homes, and several dashboards per home.
 >
 > Requires Home Assistant OS or Supervised (with the add-on store).
-> gdahome is free.
+> gdahome Base is free. gdahome Premium (monthly or yearly subscription) adds
+> several dashboards and homes, access from away, configuration and Zigbee
+> from the app, and includes gdanav Premium.
 
 ## Novità (What's New)
 

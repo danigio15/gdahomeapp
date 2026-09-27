@@ -4,8 +4,8 @@ Tre pezzi, in quest'ordine:
 
 1. **il ponte**, l'add-on dentro Home Assistant — senza, l'app non ha niente a
    cui bussare;
-2. **il centralino**, che serve solo per entrare **da fuori casa** — è gratis, e
-   si mette in piedi in cinque minuti;
+2. **il centralino**, che serve solo per entrare **da fuori casa** (con gdahome
+   Premium) — si mette in piedi in cinque minuti;
 3. **l'app** sul telefono.
 
 Se vuoi solo provarla sul divano, il 2 puoi saltarlo.
