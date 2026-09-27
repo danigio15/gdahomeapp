@@ -334,13 +334,24 @@ class BarraDelleSezioniState extends State<BarraDelleSezioni>
         final quanto = Curves.easeOutBack.transform(_molla.value.clamp(0, 1));
         return Stack(
           children: [
-            /* Toccare fuori la chiude. Prende i tocchi solo quando c'e': a
-             * barra chiusa non deve rubare niente alla pagina. */
+            /* Il velo, e il tocco fuori che chiude.
+             *
+             * Il velo prima non c'era: la barra si apriva e la pagina restava
+             * accesa com'era, cosi' quello che ci passava sotto — i numeri
+             * grossi delle tessere, una mappa — si leggeva insieme alle voci.
+             * Un menu che copre e non scurisce non sembra un menu: sembra un
+             * foglietto appoggiato. Prende i tocchi solo quando c'e': a barra
+             * chiusa non deve rubare niente alla pagina. */
             if (aperta && !_resta)
               Positioned.fill(
                 child: GestureDetector(
-                  behavior: HitTestBehavior.translucent,
+                  behavior: HitTestBehavior.opaque,
                   onTap: chiudi,
+                  child: ColoredBox(
+                    color: Colors.black.withValues(
+                      alpha: _quantoVelo * quanto.clamp(0.0, 1.0),
+                    ),
+                  ),
                 ),
               ),
             Positioned(
@@ -361,75 +372,81 @@ class BarraDelleSezioniState extends State<BarraDelleSezioni>
                 child: Center(
                   child: IgnorePointer(
                     ignoring: !aperta,
-                    child: Opacity(
-                      opacity: _molla.value.clamp(0, 1),
-                      child: Listener(
-                        onPointerDown: (_) => _laStaUsando(),
-                        onPointerMove: (_) => _laStaUsando(),
-                        onPointerUp: (_) => _laStaUsando(),
-                        onPointerSignal: (_) => _laStaUsando(),
-                        child: _IlVetro(
-                          child: SizedBox(
-                            width: _larghezzaDellaBarra,
-                            /* Alta quanto le sue voci, e non un punto di piu': una
+                    /* Qui c'era un `Opacity` per la comparsa, e faceva un
+                     * danno che non si vedeva: un `Opacity` apre un livello
+                     * nuovo, e dentro un livello nuovo il `BackdropFilter` del
+                     * vetro non ha piu' niente da sfocare. La sfocatura era
+                     * scritta, girava, e non produceva niente — quello che
+                     * passava sotto passava **nitido**. La barra entra
+                     * scorrendo da sinistra col velo che monta: la dissolvenza
+                     * non serviva, e costava un livello per fotogramma. */
+                    child: Listener(
+                      onPointerDown: (_) => _laStaUsando(),
+                      onPointerMove: (_) => _laStaUsando(),
+                      onPointerUp: (_) => _laStaUsando(),
+                      onPointerSignal: (_) => _laStaUsando(),
+                      child: _IlVetro(
+                        child: SizedBox(
+                          width: _larghezzaDellaBarra,
+                          /* Alta quanto le sue voci, e non un punto di piu': una
                          * barra che arriva sempre in fondo allo schermo sembra
                          * un pannello, e un pannello non si chiude da solo. */
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                if (widget.collegamento != null)
-                                  _LaCasa(
-                                    collegamento: widget.collegamento!,
-                                    quandoPremuta: widget.vaiAlleCase,
-                                  ),
-                                if (widget.tessera case final t?) t,
-                                Flexible(
-                                  child: ListView(
-                                    controller: _scorrimento,
-                                    shrinkWrap: true,
-                                    padding: const EdgeInsets.only(bottom: 8),
-                                    children: [
-                                      for (final gruppo in _gruppi) ...[
-                                        _TitoloDelGruppo(gruppo.titolo.titolo),
-                                        /* La casa in tessere grandi: sono le
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              if (widget.collegamento != null)
+                                _LaCasa(
+                                  collegamento: widget.collegamento!,
+                                  quandoPremuta: widget.vaiAlleCase,
+                                ),
+                              if (widget.tessera case final t?) t,
+                              Flexible(
+                                child: ListView(
+                                  controller: _scorrimento,
+                                  shrinkWrap: true,
+                                  padding: const EdgeInsets.only(bottom: 8),
+                                  children: [
+                                    for (final gruppo in _gruppi) ...[
+                                      _TitoloDelGruppo(gruppo.titolo.titolo),
+                                      /* La casa in tessere grandi: sono le
                                          * voci di ogni giorno, e una tessera
                                          * si prende al volo. Il resto in un
                                          * riquadro, riga per riga. */
-                                        if (gruppo.titolo ==
-                                            GruppoDellaBarra.casa)
-                                          _LeTessere(
-                                            sezioni: gruppo.sezioni,
-                                            aperta: widget.aperta,
-                                            scegli: _scelta,
-                                            daAggiornare: widget.daAggiornare,
-                                            collegamento: widget.collegamento,
-                                            trattieni: _trattieni,
-                                            lascia: _lascia,
-                                          )
-                                        else
-                                          _IlRiquadro(
-                                            children: [
-                                              for (final sezione
-                                                  in gruppo.sezioni)
-                                                _Voce(
-                                                  sezione: sezione,
-                                                  scelta:
-                                                      sezione == widget.aperta,
-                                                  quandoPremuta: () =>
-                                                      _scelta(sezione),
-                                                  quanti:
-                                                      sezione ==
-                                                          Sezione.aggiornamenti
-                                                      ? widget.daAggiornare
-                                                      : 0,
-                                                ),
-                                            ],
-                                          ),
-                                      ],
+                                      if (gruppo.titolo ==
+                                          GruppoDellaBarra.casa)
+                                        _LeTessere(
+                                          sezioni: gruppo.sezioni,
+                                          aperta: widget.aperta,
+                                          scegli: _scelta,
+                                          daAggiornare: widget.daAggiornare,
+                                          collegamento: widget.collegamento,
+                                          trattieni: _trattieni,
+                                          lascia: _lascia,
+                                        )
+                                      else
+                                        _IlRiquadro(
+                                          children: [
+                                            for (final sezione
+                                                in gruppo.sezioni)
+                                              _Voce(
+                                                sezione: sezione,
+                                                scelta:
+                                                    sezione == widget.aperta,
+                                                quandoPremuta: () =>
+                                                    _scelta(sezione),
+                                                quanti:
+                                                    sezione ==
+                                                        Sezione.aggiornamenti
+                                                    ? widget.daAggiornare
+                                                    : 0,
+                                              ),
+                                          ],
+                                        ),
                                     ],
-                                  ),
+                                  ],
                                 ),
-                                /* Che versione e' questa.
+                              ),
+                              /* Che versione e' questa.
                                  *
                                  * Era in fondo a «Le case» e nella
                                  * diagnostica, e non bastava: «io non so che
@@ -439,15 +456,14 @@ class BarraDelleSezioniState extends State<BarraDelleSezioni>
                                  * fondo alle voci si legge senza cercarla —
                                  * che e' la differenza fra un'informazione
                                  * che c'e' e una che si trova. */
-                                const Padding(
-                                  padding: EdgeInsets.only(bottom: 10),
-                                  child: Firma(
-                                    spazioSopra: 2,
-                                    conIlCentralino: false,
-                                  ),
+                              const Padding(
+                                padding: EdgeInsets.only(bottom: 10),
+                                child: Firma(
+                                  spazioSopra: 2,
+                                  conIlCentralino: false,
                                 ),
-                              ],
-                            ),
+                              ),
+                            ],
                           ),
                         ),
                       ),
@@ -463,7 +479,24 @@ class BarraDelleSezioniState extends State<BarraDelleSezioni>
   }
 }
 
-/// Il vetro smerigliato su cui sta la barra.
+/// Quanto si scurisce la pagina dietro la barra aperta.
+///
+/// Abbastanza da dire «questa adesso e' coperta», non tanto da spegnerla: chi
+/// apre il menu sta ancora guardando la sua casa.
+const double _quantoVelo = 0.42;
+
+/// Come e' fatto il fondo della barra: **pieno**, o smerigliato.
+///
+/// Sta qui, in una riga sola, perche' e' una scelta di come si vede e non di
+/// come funziona — e perche' cosi' si puo' guardare com'e' in tutt'e due i
+/// modi con `test/foto/menu_vetro_foto.dart` prima di decidere.
+///
+/// Pieno: si legge e basta, ed e' quello che fa gia' gdanav coi suoi riquadri
+/// sopra la mappa (`ColoriGdanav.vetro` e' opaco). Smerigliato: sotto si
+/// intuisce, costa una sfocatura a fotogramma.
+const bool _ilVetroEPieno = true;
+
+/// Il vetro su cui sta la barra.
 class _IlVetro extends StatelessWidget {
   const _IlVetro({required this.child});
 
@@ -473,35 +506,40 @@ class _IlVetro extends StatelessWidget {
   Widget build(BuildContext context) {
     final colori = Theme.of(context).colorScheme;
     final scuro = Theme.of(context).brightness == Brightness.dark;
+    final fondo = Container(
+      decoration: BoxDecoration(
+        /* Pieno, o quasi. Un vetro troppo trasparente sopra una pagina di
+             * schede lascia **leggere** quello che c'e' sotto, e allora non
+             * sembra una barra: sembra una velatura. Quello che passa sotto si
+             * deve intuire e non leggere — e col fondo pieno non passa
+             * proprio, che e' la strada piu' corta e la piu' sicura. */
+        color: _ilVetroEPieno
+            ? colori.surface
+            : colori.surface.withValues(alpha: 0.96),
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(
+          color: scuro
+              ? Colors.white.withValues(alpha: 0.12)
+              : Colors.white.withValues(alpha: 0.8),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: scuro ? 0.5 : 0.16),
+            blurRadius: 38,
+            offset: const Offset(0, 18),
+          ),
+        ],
+      ),
+      child: child,
+    );
     return ClipRRect(
       borderRadius: BorderRadius.circular(28),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 42, sigmaY: 42),
-        child: Container(
-          decoration: BoxDecoration(
-            /* Quasi pieno, non velato. Un vetro troppo trasparente sopra una
-             * pagina di schede lascia leggere quello che c'e' sotto, e allora
-             * non sembra una barra: sembra una velatura. Quello che passa
-             * sotto si deve intuire e non leggere — e' il punto di un vetro
-             * smerigliato. */
-            color: colori.surface.withValues(alpha: 0.92),
-            borderRadius: BorderRadius.circular(28),
-            border: Border.all(
-              color: scuro
-                  ? Colors.white.withValues(alpha: 0.12)
-                  : Colors.white.withValues(alpha: 0.8),
+      child: _ilVetroEPieno
+          ? fondo
+          : BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 42, sigmaY: 42),
+              child: fondo,
             ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: scuro ? 0.5 : 0.16),
-                blurRadius: 38,
-                offset: const Offset(0, 18),
-              ),
-            ],
-          ),
-          child: child,
-        ),
-      ),
     );
   }
 }
