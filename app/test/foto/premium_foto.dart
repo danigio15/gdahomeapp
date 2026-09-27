@@ -11,12 +11,17 @@
 /// Le fotografie finiscono in `/home/user/render/gdahome-app/` (o dove dice
 /// `GDAHOME_FOTO`), fuori dalla repository: non c'e' niente da confrontare.
 ///
+/// Ogni fotografia esce due volte, `<nome>-android.png` e `<nome>-ios.png`:
+/// la seconda con `debugDefaultTargetPlatformOverride` su iOS, che il bottone
+/// e il negozio seguono. La webapp una volta sola: `premium-web.png`.
+///
 /// Tutte con la **chiave di prova** delle licenze iniettata, perche' con la
 /// chiave vuota — com'e' di serie — i lucchetti non ci sono proprio.
 library;
 
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show FontLoader;
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -105,12 +110,17 @@ Widget _lApp(Widget home) => MaterialApp(
   home: home,
 );
 
-/// Un negozio che risponde, con la prova di 14 giorni su tutti e due i piani.
+/// Un negozio che risponde, con la prova di 14 giorni su tutti e due i piani:
+/// il Play Store, o l'App Store per le fotografie dell'iPhone.
 class _NegozioConLaProva implements NegozioGdahome {
+  _NegozioConLaProva({required this.iPhone});
+
+  final bool iPhone;
+
   @override
-  String get piattaforma => 'android';
+  String get piattaforma => iPhone ? 'ios' : 'android';
   @override
-  String get nome => 'Play Store';
+  String get nome => iPhone ? 'App Store' : 'Play Store';
   @override
   Future<bool> disponibile() async => true;
   @override
@@ -127,6 +137,17 @@ class _NegozioConLaProva implements NegozioGdahome {
   @override
   Future<void> completa(PurchaseDetails acquisto) async {}
 }
+
+/// Ogni fotografia due volte: Android e iPhone. La variante mette
+/// `debugDefaultTargetPlatformOverride` e lo rimette a posto nel suo tearDown.
+final _sistemi = TargetPlatformVariant(const {
+  TargetPlatform.android,
+  TargetPlatform.iOS,
+});
+
+bool get _iPhone => defaultTargetPlatform == TargetPlatform.iOS;
+
+String get _sistema => _iPhone ? 'ios' : 'android';
 
 void main() {
   setUpAll(() async {
@@ -148,10 +169,16 @@ void main() {
     }
   }
 
-  Future<void> scatta(WidgetTester tester, String nome) => expectLater(
-    find.byType(MaterialApp),
-    matchesGoldenFile('$_cartella/$nome.png'),
-  );
+  /// `sistema` e' `android` o `ios`; `null` per la webapp, che e' una sola.
+  Future<void> scatta(WidgetTester tester, String nome, String? sistema) =>
+      expectLater(
+        find.byType(MaterialApp),
+        matchesGoldenFile(
+          sistema == null
+              ? '$_cartella/$nome.png'
+              : '$_cartella/$nome-$sistema.png',
+        ),
+      );
 
   /// Una casa senza filo: basta per la pagina Premium, che la casa non la
   /// chiama se non c'e'. Abbinata «alla vecchia», cosi' `apri` non bussa.
@@ -187,8 +214,8 @@ void main() {
       _lApp(SchermataPremium(collegamento: collegamento, sulWeb: false)),
     );
     await passa(tester);
-    await scatta(tester, 'premium-base');
-  });
+    await scatta(tester, 'premium-base', _sistema);
+  }, variant: _sistemi);
 
   testWidgets('la pagina Premium, da una casa Premium', (tester) async {
     quantoGrande(tester);
@@ -205,8 +232,8 @@ void main() {
       _lApp(SchermataPremium(collegamento: collegamento, sulWeb: false)),
     );
     await passa(tester);
-    await scatta(tester, 'premium-attivo');
-  });
+    await scatta(tester, 'premium-attivo', _sistema);
+  }, variant: _sistemi);
 
   testWidgets('la pagina Premium col negozio che offre la prova', (
     tester,
@@ -214,7 +241,7 @@ void main() {
     quantoGrande(tester);
     final collegamento = await casaSenzaFilo(tester);
     final acquisti = GestoreDegliAcquisti(
-      negozio: _NegozioConLaProva(),
+      negozio: _NegozioConLaProva(iPhone: _iPhone),
       porta: ({
         required piattaforma,
         required prodotto,
@@ -234,8 +261,8 @@ void main() {
     await passa(tester);
     await tester.drag(find.byType(Scrollable).first, const Offset(0, -700));
     await passa(tester);
-    await scatta(tester, 'premium-prova-14-giorni');
-  });
+    await scatta(tester, 'premium-prova-14-giorni', _sistema);
+  }, variant: _sistemi);
 
   testWidgets('la pagina Premium durante la prova', (tester) async {
     quantoGrande(tester);
@@ -252,18 +279,8 @@ void main() {
       _lApp(SchermataPremium(collegamento: collegamento, sulWeb: false)),
     );
     await passa(tester);
-    await scatta(tester, 'premium-in-prova');
-  });
-
-  testWidgets('la pagina Premium nella webapp', (tester) async {
-    quantoGrande(tester);
-    final collegamento = await casaSenzaFilo(tester);
-    await tester.pumpWidget(
-      _lApp(SchermataPremium(collegamento: collegamento, sulWeb: true)),
-    );
-    await passa(tester);
-    await scatta(tester, 'premium-web');
-  });
+    await scatta(tester, 'premium-in-prova', _sistema);
+  }, variant: _sistemi);
 
   testWidgets('le case: la seconda col lucchetto, e dove porta', (
     tester,
@@ -277,7 +294,7 @@ void main() {
           aggiungiUnaCasa: () {},
           impostazioni: Impostazioni(
             sulTelefono: true,
-            android: true,
+            android: !_iPhone,
             dispensa: DispensaInMemoria(),
           ),
           guardia: const NessunaGuardia(),
@@ -285,11 +302,11 @@ void main() {
       ),
     );
     await passa(tester);
-    await scatta(tester, 'le-case-seconda-col-lucchetto');
+    await scatta(tester, 'le-case-seconda-col-lucchetto', _sistema);
     await tester.tap(find.byType(FloatingActionButton));
     await passa(tester);
-    await scatta(tester, 'premium-per-una-casa-in-piu');
-  });
+    await scatta(tester, 'premium-per-una-casa-in-piu', _sistema);
+  }, variant: _sistemi);
 
   testWidgets('fuori casa senza Premium', (tester) async {
     quantoGrande(tester);
@@ -329,7 +346,7 @@ void main() {
               fabbrica: _SenzaPlancia(),
               impostazioni: Impostazioni(
                 sulTelefono: true,
-                android: true,
+                android: !_iPhone,
                 dispensa: DispensaInMemoria(),
               ),
               vaiAlleCase: () {},
@@ -339,8 +356,8 @@ void main() {
       ),
     );
     await passa(tester);
-    await scatta(tester, 'fuori-casa-serve-premium');
-  });
+    await scatta(tester, 'fuori-casa-serve-premium', _sistema);
+  }, variant: _sistemi);
 
   testWidgets('il menu coi lucchetti, e le plance col lucchetto', (
     tester,
@@ -415,10 +432,28 @@ void main() {
     await tester.pump();
     chiave.currentState!.apri();
     await passa(tester, 40);
-    await scatta(tester, 'menu-con-i-lucchetti');
+    await scatta(tester, 'menu-con-i-lucchetti', _sistema);
 
-    await tester.tap(find.byIcon(Icons.unfold_more_rounded));
-    await passa(tester, 20);
-    await scatta(tester, 'plance-col-lucchetto');
+    /* flutter_test disegna le ombre come un bordo nero pieno
+     * (`debugDisableShadows`): per la tendina, che ha un'elevazione, le si
+     * rimettono vere, e si rimettono a posto prima della fine della prova. */
+    debugDisableShadows = false;
+    try {
+      await tester.tap(find.byIcon(Icons.unfold_more_rounded));
+      await passa(tester, 20);
+      await scatta(tester, 'plance-col-lucchetto', _sistema);
+    } finally {
+      debugDisableShadows = true;
+    }
+  }, variant: _sistemi);
+
+  testWidgets('la pagina Premium nella webapp', (tester) async {
+    quantoGrande(tester);
+    final collegamento = await casaSenzaFilo(tester);
+    await tester.pumpWidget(
+      _lApp(SchermataPremium(collegamento: collegamento, sulWeb: true)),
+    );
+    await passa(tester);
+    await scatta(tester, 'premium-web', null);
   });
 }

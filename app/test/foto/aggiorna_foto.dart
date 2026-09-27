@@ -8,12 +8,17 @@
 /// cd app && flutter test --update-goldens test/foto/aggiorna_foto.dart
 /// ```
 ///
-/// La fotografia finisce in `/home/user/render/gdahome-app/` (o dove dice
+/// Esce due volte: `aggiorna-l-app-android.png` («Aggiorna dal Play Store») e
+/// `aggiorna-l-app-ios.png` («Aggiorna dall'App Store»), la seconda con
+/// `debugDefaultTargetPlatformOverride` su iOS.
+///
+/// Le fotografie finiscono in `/home/user/render/gdahome-app/` (o dove dice
 /// `GDAHOME_FOTO`), fuori dalla repository.
 library;
 
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show FontLoader;
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -53,6 +58,17 @@ Future<void> _iCaratteri() async {
         .load();
   }
 }
+
+/// Ogni fotografia due volte: Android e iPhone. La variante mette
+/// `debugDefaultTargetPlatformOverride` e lo rimette a posto nel suo tearDown.
+final _sistemi = TargetPlatformVariant(const {
+  TargetPlatform.android,
+  TargetPlatform.iOS,
+});
+
+bool get _iPhone => defaultTargetPlatform == TargetPlatform.iOS;
+
+String get _sistema => _iPhone ? 'ios' : 'android';
 
 void main() {
   setUpAll(() async {
@@ -111,9 +127,15 @@ void main() {
     });
     await tester.pump();
     expect(find.byType(PaginaAggiornala), findsOneWidget);
+    expect(
+      find.text(
+        _iPhone ? 'Aggiorna dall\'App Store' : 'Aggiorna dal Play Store',
+      ),
+      findsOneWidget,
+    );
     await expectLater(
       find.byType(MaterialApp),
-      matchesGoldenFile('$_cartella/aggiorna-l-app.png'),
+      matchesGoldenFile('$_cartella/aggiorna-l-app-$_sistema.png'),
     );
-  });
+  }, variant: _sistemi);
 }

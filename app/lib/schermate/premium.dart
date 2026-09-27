@@ -14,7 +14,8 @@ library;
 
 import 'dart:async';
 
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart'
+    show defaultTargetPlatform, kIsWeb, TargetPlatform;
 import 'package:flutter/material.dart';
 
 import '../casa/collegamento.dart';
@@ -158,7 +159,7 @@ class _SchermataPremiumState extends State<SchermataPremium> {
         ),
         const SizedBox(height: 24),
         Insegna(inLingua(it: 'Cosa comprende', en: 'What\'s included')),
-        const _CosaComprende(),
+        _CosaComprende(sulWeb: widget.sulWeb),
         const SizedBox(height: 24),
         if (!premium) ...[
           Insegna(inLingua(it: 'I piani', en: 'Plans')),
@@ -475,12 +476,12 @@ class _LaTestata extends StatelessWidget {
     final quando = scade == null
         ? inLingua(it: 'Premium per sempre', en: 'Premium forever')
         : inLingua(
-            it: 'Premium fino al ${dataInParole(scade)}',
+            it: 'Premium fino ${_alGiorno(scade)}',
             en: 'Premium until ${dataInParole(scade)}',
           );
     if (gettone.prova && scade != null) {
       return inLingua(
-        it: 'Prova gratuita fino al ${dataInParole(scade)}',
+        it: 'Prova gratuita fino ${_alGiorno(scade)}',
         en: 'Free trial until ${dataInParole(scade)}',
       );
     }
@@ -496,6 +497,12 @@ class _LaTestata extends StatelessWidget {
     return origine.isEmpty ? quando : '$quando · $origine';
   }
 }
+
+/// «al 12 marzo 2027», ma «all'8 ottobre»: l'1, l'8 e l'11 cominciano con
+/// una vocale.
+String _alGiorno(DateTime quando) =>
+    '${const {1, 8, 11}.contains(quando.day) ? "all'" : 'al '}'
+    '${dataInParole(quando)}';
 
 /// «12 marzo 2027», «12 March 2027».
 String dataInParole(DateTime quando) {
@@ -516,7 +523,29 @@ String dataInParole(DateTime quando) {
 
 /// Cosa comprende, riga per riga.
 class _CosaComprende extends StatelessWidget {
-  const _CosaComprende();
+  const _CosaComprende({required this.sulWeb});
+
+  final bool sulWeb;
+
+  /// L'auto di questo telefono: Android Auto su Android, CarPlay sull'iPhone.
+  /// Solo quella: le regole dell'App Store non vogliono altri sistemi nominati
+  /// nell'app per iPhone. Sul web, e altrove, tutte e due.
+  String _lAuto() {
+    if (sulWeb) {
+      return inLingua(
+        it: 'Android Auto e CarPlay',
+        en: 'Android Auto and CarPlay',
+      );
+    }
+    return switch (defaultTargetPlatform) {
+      TargetPlatform.android => 'Android Auto',
+      TargetPlatform.iOS => 'CarPlay',
+      _ => inLingua(
+        it: 'Android Auto e CarPlay',
+        en: 'Android Auto and CarPlay',
+      ),
+    };
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -563,8 +592,8 @@ class _CosaComprende extends StatelessWidget {
         Icons.navigation_rounded,
         inLingua(it: 'gdanav Premium compreso', en: 'gdanav Premium included'),
         inLingua(
-          it: 'Android Auto e CarPlay, soste alle colonnine, Home Assistant.',
-          en: 'Android Auto and CarPlay, charging stops, Home Assistant.',
+          it: '${_lAuto()}, soste alle colonnine, Home Assistant.',
+          en: '${_lAuto()}, charging stops, Home Assistant.',
         ),
       ),
     ];
@@ -883,12 +912,25 @@ String _laProva(GestoreDegliAcquisti? acquisti) {
       en: 'You\'ve already used the free trial: the subscription starts now.',
     );
   }
+  /* Col negozio che risponde lo si chiama per nome: il Play Store su
+   * Android, l'App Store sull'iPhone. */
+  final nome = acquisti != null && acquisti.disponibile
+      ? acquisti.negozio?.nome
+      : null;
+  final dove = switch (nome) {
+    null || '' => inLingua(it: 'dal negozio', en: 'the store'),
+    final nome when 'AEIOUaeiou'.contains(nome[0]) => inLingua(
+      it: 'dall\'$nome',
+      en: 'the $nome',
+    ),
+    final nome => inLingua(it: 'dal $nome', en: 'the $nome'),
+  };
   return inLingua(
     it:
         'La prima volta i primi $giorni giorni sono gratis: se disdici prima '
-        'dal negozio, non paghi niente.',
+        '$dove, non paghi niente.',
     en:
-        'The first time, the first $giorni days are free: cancel from the '
-        'store before then and you pay nothing.',
+        'The first time, the first $giorni days are free: cancel from '
+        '$dove before then and you pay nothing.',
   );
 }
