@@ -194,12 +194,9 @@ class Premesse {
   ///
   /// `--dm-fondo-di-sistema` e' la sua variabile, e la scrive lei sul
   /// documento — `style.setProperty`, quindi in linea, e una regola di un
-  /// foglio non la batte. Si scrive nello stesso posto, e solo quando il
-  /// numero di Flutter e' **piu' grande** del suo: mai al ribasso. Dove lei ci
-  /// arriva da se' — la plancia che e' la pagina, in un browser che le
-  /// risponde davvero — il suo numero e' quello buono e non si tocca; e' la
-  /// stessa aritmetica che fa lei, che prende il massimo fra quello che vede e
-  /// quello che le dice chi la ospita (`core/fondo-di-sistema.js`).
+  /// foglio non la batte. Si scrive nello stesso posto, e si scrive **il
+  /// numero di Flutter, qualunque sia**: dentro il riquadro il fondo lo misura
+  /// lui, e zero e' una misura come le altre.
   ///
   /// Si riscrive a ogni occasione in cui lei rifa' il conto — si gira lo
   /// schermo, si apre la tastiera — e quando riscrive quella riga: la si

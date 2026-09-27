@@ -197,8 +197,11 @@ void main() {
         isNot(contains('bottom:calc(var(--gdahome-basso)')),
         reason: 'dove sta la barra lo decide la plancia',
       );
-      /* Mai al ribasso, e riscritto quando lei rifà il suo conto. */
-      expect(testo, contains('if(suo()>=mio)return'));
+      /* Si riscrive quando lei rifà il suo conto, e si riscrive solo se il
+       * numero è cambiato davvero: l'osservatore guarda l'attributo dello
+       * stile della radice, e rimetterci lo stesso valore lo farebbe scattare
+       * all'infinito. */
+      expect(testo, contains('Math.abs(suo()-mio)<0.5'));
       expect(testo, contains('MutationObserver'));
       expect(testo, contains('"resize"'));
       /* Lo stile sta **in fondo**, dopo il foglio della plancia: fra due
@@ -211,6 +214,36 @@ void main() {
       );
     },
   );
+
+  test('anche zero è una misura, e si scrive', () async {
+    /* Su iPhone la barra della plancia galleggiava cinquantadue punti sopra il
+     * vetro, con una striscia di niente sotto l'ultima riga. Prima con zero
+     * non si scriveva niente e si lasciava rispondere
+     * `env(safe-area-inset-bottom)`: dentro una cornice su Android quella
+     * risponde zero e andava bene per caso, ma WKWebView le fascette della
+     * finestra le passa alla pagina, e i suoi trentaquattro punti si
+     * sommavano ai diciotto della plancia.
+     *
+     * Il fondo lo prendiamo noi accorciando il riquadro — sempre, su tutti e
+     * due i sistemi — quindi zero non vuol dire «non lo so»: vuol dire «il
+     * fondo è mio, tu non aggiungere niente», e va scritto. */
+    servitore.margini = (alto: 0, basso: 0);
+    final dove = servitore.paginaDi(pannello());
+    final richiesta = await cliente.getUrl(dove);
+    final risposta = await richiesta.close();
+    final byte = await risposta.fold<List<int>>(
+      [],
+      (tutti, pezzo) => tutti..addAll(pezzo),
+    );
+    final testo = utf8.decode(byte);
+
+    expect(testo, contains('var mio=0;'));
+    expect(
+      testo,
+      isNot(contains('mio>0')),
+      reason: 'con zero non si sta zitti: zero è la misura',
+    );
+  });
 
   test(
     'ogni plancia ha il suo indirizzo, e la prima tiene quello di sempre',
