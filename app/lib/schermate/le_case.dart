@@ -10,7 +10,6 @@ import '../casa/impostazioni.dart';
 import '../casa/la_guardia.dart';
 import '../parole.dart';
 import '../vestito/pezzi.dart';
-import 'il_lucchetto.dart';
 import 'riconoscimento.dart';
 import '../vestito/tema.dart';
 import 'barra.dart' show nomeDelleCase;
@@ -39,28 +38,19 @@ class LeCase extends StatelessWidget {
     final archivio = collegamento.archivio;
     final aperta = collegamento.casa;
 
+    /* **Niente catenaccio in cima.**
+     *
+     * C'era, e apriva la scheda del lucchetto. «Mi fai un'altra voce nel menu
+     * che sarebbe impostazioni app, e tutta la parte legata a sicurezza app,
+     * codice, biometrico eccetera la sposti qui: ora e' presente nell'icona
+     * catenaccio.» Adesso sta li' (`impostazioni_app.dart`), che e' dove uno
+     * le impostazioni le va a cercare.
+     *
+     * Questa pagina il lucchetto lo usa ancora — togliere una casa e' una
+     * delle tre cose che puo' proteggere, e lo chiede qui sotto — ma usarlo e
+     * impostarlo sono due cose diverse, e stavano sulla stessa icona. */
     return Scaffold(
-      appBar: AppBar(
-        title: Text(nomeDelleCase),
-        actions: [
-          /* Il lucchetto e' dell'app: nella webapp il volto e l'impronta non
-           * ci sono, e una scheda che dice solo «questo non si puo' fare» e'
-           * una porta che non si apre. */
-          if (impostazioni.sulTelefono)
-            IconButton(
-              onPressed: () => Navigator.of(context).push<void>(
-                MaterialPageRoute(
-                  builder: (_) => SchermataDelLucchetto(
-                    impostazioni: impostazioni,
-                    guardia: guardia,
-                  ),
-                ),
-              ),
-              icon: const Icon(Icons.lock_rounded),
-              tooltip: inLingua(it: 'Il lucchetto', en: 'The lock'),
-            ),
-        ],
-      ),
+      appBar: AppBar(title: Text(nomeDelleCase)),
       floatingActionButton: archivio.piena
           ? null
           : FloatingActionButton.extended(
@@ -186,9 +176,14 @@ class _Casa extends StatelessWidget {
   Widget build(BuildContext context) {
     final colori = Theme.of(context).colorScheme;
     final testi = Theme.of(context).textTheme;
+    /* **Tinta, non filo.** La casa aperta aveva un contorno blu intorno alla
+     * scheda bianca: con l'ombra a due strati diventavano due contorni, e in
+     * gdanav «questa e' quella» si dice riempiendo la carta
+     * (`Card(color: primaryContainer)`, `la_tua_auto.dart`), non bordandola.
+     * Si vede da piu' lontano e non litiga con l'ombra. */
     return Scheda(
       padding: const EdgeInsets.fromLTRB(14, 12, 6, 12),
-      bordo: aperta ? colori.primary : null,
+      colore: aperta ? colori.primaryContainer : null,
       quandoPremuta: aperta ? null : quandoScelta,
       child: Row(
         children: [

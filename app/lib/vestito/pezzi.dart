@@ -68,7 +68,19 @@ class Scheda extends StatelessWidget {
   }
 }
 
-/// Il titolo di una sezione: piccolo, spaziato, di lato.
+/// Il titolo di una sezione dentro una pagina.
+///
+/// **Scritto com'e', non in maiuscoletto spaziato.** Era
+/// `LE TUE CASE` — labelMedium, tutte maiuscole, un punto e mezzo di aria fra
+/// le lettere — ed e' la cosa che faceva sembrare le due app di due
+/// produttori diversi: in gdanav un titolo di sezione e' una riga normale
+/// (`titleSmall`, `la_tua_auto.dart`), e in gdahome era un'etichetta da
+/// pannello di controllo.
+///
+/// Il maiuscoletto spaziato ha anche un difetto suo, e si vedeva: una parola
+/// lunga come `CONFIGURAZIONE` in maiuscolo occupa un terzo in piu' di spazio
+/// e si legge un terzo piu' piano. Resta nel menu, sui titoli dei gruppi, che
+/// non si leggono: si contano.
 class Insegna extends StatelessWidget {
   const Insegna(this.testo, {super.key, this.azione});
 
@@ -79,16 +91,18 @@ class Insegna extends StatelessWidget {
   Widget build(BuildContext context) {
     final colori = Theme.of(context).colorScheme;
     return Padding(
+      /* Quattro, che sommati ai sedici della pagina fanno i venti di gdanav:
+         li' il testo rientra di venti e le carte di sedici, e il titolo si
+         stacca appena da quello che intitola. */
       padding: const EdgeInsets.only(left: 4, right: 4, bottom: 10),
       child: Row(
         children: [
           Expanded(
             child: Text(
-              testo.toUpperCase(),
-              style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                color: colori.onSurfaceVariant,
-                letterSpacing: 1.4,
-                fontWeight: FontWeight.w600,
+              testo,
+              style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                color: colori.onSurface,
+                fontWeight: FontWeight.w700,
               ),
             ),
           ),

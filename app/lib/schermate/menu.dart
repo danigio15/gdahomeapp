@@ -46,6 +46,27 @@ enum Sezione {
   navigatore('ev', pronta: true, soloNellApp: true),
   configurazione('impostazioni', pronta: true),
   comeVaLApp('minipc', pronta: true),
+  /* Le impostazioni dell'**app**, e dentro la sicurezza: il lucchetto, il
+   * volto, l'impronta, e i momenti in cui l'app li chiede.
+   *
+   * «Mi fai un'altra voce nel menu che sarebbe impostazioni app, e tutta la
+   * parte legata a sicurezza app, codice, biometrico eccetera la sposti qui:
+   * ora e' presente nell'icona catenaccio.»
+   *
+   * Era un catenaccio in alto a destra nella pagina «Le tue case», e la' non
+   * lo trovava nessuno: si apriva solo passando da una pagina che parla
+   * d'altro, e per un'impostazione che si cerca una volta e si cerca a mente
+   * fredda. Adesso e' una voce del menu, che e' dove uno le impostazioni le
+   * va a cercare.
+   *
+   * **Solo sul telefono**, come il catenaccio di prima: il volto e l'impronta
+   * nel browser non ci sono, e una pagina che dice solo «questo qui non si
+   * puo' fare» e' una porta che non si apre.
+   *
+   * Il disegno e' quello della **sicurezza** e non quello delle impostazioni:
+   * quello ce l'ha gia' la Configurazione, che e' la Config della plancia, e
+   * due voci col disegno uguale sono due voci che si confondono. */
+  impostazioniDellApp('sicurezza', pronta: true, soloNellApp: true),
   /* Cosa c'e' da aggiornare in casa.
    *
    * «Quando ci saranno gli aggiornamenti, e quindi compaiono in Home
@@ -119,6 +140,10 @@ enum Sezione {
     Sezione.navigatore => 'gdanav',
     Sezione.configurazione => inLingua(it: 'Configurazione', en: 'Config'),
     Sezione.comeVaLApp => inLingua(it: 'Come va l\'app', en: 'App health'),
+    Sezione.impostazioniDellApp => inLingua(
+      it: 'Impostazioni app',
+      en: 'App settings',
+    ),
     Sezione.aggiornamenti => inLingua(it: 'Aggiornamenti', en: 'Updates'),
     Sezione.segnalazioni => inLingua(it: 'Segnalazioni', en: 'Reports'),
     Sezione.assistenza => inLingua(it: 'Assistenza', en: 'Support'),
@@ -154,6 +179,9 @@ enum Sezione {
     Sezione.navigatore ||
     Sezione.configurazione ||
     Sezione.aggiornamenti => GruppoDellaBarra.casa,
+    /* Con «Come va l'app»: sono le due voci che parlano dell'app e non della
+     * casa, e chi cerca l'una guarda dov'e' l'altra. */
+    Sezione.impostazioniDellApp ||
     Sezione.comeVaLApp ||
     Sezione.segnalazioni ||
     Sezione.assistenza => GruppoDellaBarra.aiuto,

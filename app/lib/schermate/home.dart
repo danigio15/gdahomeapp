@@ -35,6 +35,7 @@ import '../casa/collegamento.dart';
 import '../casa/console.dart';
 import '../casa/cruscotto.dart';
 import '../casa/impostazioni.dart';
+import '../casa/la_guardia.dart';
 import '../casa/zigbee.dart';
 import '../misure/lavori.dart';
 import '../parole.dart';
@@ -50,6 +51,7 @@ import 'diagnostica.dart';
 import 'dispositivi.dart';
 import 'firma.dart';
 import 'menu.dart';
+import 'impostazioni_app.dart';
 import 'navigatore_qui/qui.dart';
 import 'zigbee.dart';
 import 'misure.dart';
@@ -63,11 +65,17 @@ class Home extends StatefulWidget {
     required this.vaiAlleCase,
     required this.plancia,
     required this.impostazioni,
+    required this.guardia,
   });
 
   final Collegamento collegamento;
   final Impostazioni impostazioni;
   final VoidCallback vaiAlleCase;
+
+  /// Chi chiede il volto e l'impronta. Serve alla sezione «Impostazioni app»,
+  /// che e' dove si accendono: senza, quella pagina sarebbe un elenco di
+  /// interruttori che non provano niente.
+  final LaGuardia guardia;
 
   /// Come si apre la plancia vera: il servitore e il riquadro. Sostituibile
   /// nelle prove.
@@ -589,6 +597,18 @@ class _HomeState extends State<Home> {
                             impostazioni: widget.impostazioni,
                             nuda: true,
                           ),
+                          /* Le impostazioni dell'app: oggi dentro c'e' la
+                           * sicurezza — il lucchetto, il volto, l'impronta —
+                           * che stava sotto un catenaccio in cima a «Le tue
+                           * case» e non la trovava nessuno. Senza la sua
+                           * barra: qui la mette la home. */
+                          Sezione.impostazioniDellApp =>
+                            SchermataDelleImpostazioniDellApp(
+                              impostazioni: widget.impostazioni,
+                              guardia: widget.guardia,
+                              nuda: true,
+                              visibile: _sezione == Sezione.impostazioniDellApp,
+                            ),
                           /* Cosa c'e' da aggiornare in casa: l'unica
                            * sezione che porta un numero addosso alla voce,
                            * ed e' lei a dirlo qui appena l'ha letto. */

@@ -165,7 +165,7 @@ void main() {
     );
     await tester.pumpAndSettle();
     /* L'insegna scrive in maiuscolo, come sulla plancia. */
-    expect(find.text('LE TUE SEGNALAZIONI'), findsOneWidget);
+    expect(find.text('Le tue segnalazioni'), findsOneWidget);
     expect(find.text('Una tessera per la piscina'), findsOneWidget);
     expect(find.textContaining('3 messaggi'), findsOneWidget);
 

@@ -681,6 +681,7 @@ class _PortoneState extends State<Portone> with WidgetsBindingObserver {
       collegamento: _collegamento,
       plancia: _plancia,
       impostazioni: _impostazioni,
+      guardia: _guardia,
       vaiAlleCase: () async {
         await Navigator.of(context).push<void>(
           MaterialPageRoute(

@@ -79,26 +79,28 @@ void main() {
    * davanti al dispositivo, col telefono in una mano, e nel browser sarebbe
    * una porta che si apre su metà di quello che promette. Con lei se ne
    * vanno Aiutanti e Automazioni, per la stessa ragione. */
-  test(
-    'nella webapp Navigatore, Zigbee, Aiutanti e Automazioni non ci sono',
-    () {
-      final nelBrowser = vociDellaBarra(conZigbee: true, nellApp: false);
-      expect(nelBrowser, isNot(contains(Sezione.zigbee)));
-      expect(nelBrowser, isNot(contains(Sezione.aiutanti)));
-      expect(nelBrowser, isNot(contains(Sezione.automazioni)));
-      /* E il navigatore: vuole il GPS e la voce del telefono. */
-      expect(nelBrowser, isNot(contains(Sezione.navigatore)));
-      /* E il resto c'è tutto: si tolgono tre voci, non si fa un'altra app. */
-      expect(nelBrowser, contains(Sezione.plancia));
-      expect(nelBrowser, contains(Sezione.dispositivi));
-      expect(nelBrowser, contains(Sezione.configurazione));
-      expect(
-        vociDellaBarra(conZigbee: true).length - nelBrowser.length,
-        4,
-        reason: 'nella webapp mancano esattamente quelle quattro',
-      );
-    },
-  );
+  test('nella webapp Navigatore, Zigbee, Aiutanti, Automazioni e Impostazioni app non ci sono', () {
+    final nelBrowser = vociDellaBarra(conZigbee: true, nellApp: false);
+    expect(nelBrowser, isNot(contains(Sezione.zigbee)));
+    expect(nelBrowser, isNot(contains(Sezione.aiutanti)));
+    expect(nelBrowser, isNot(contains(Sezione.automazioni)));
+    /* E il navigatore: vuole il GPS e la voce del telefono. */
+    expect(nelBrowser, isNot(contains(Sezione.navigatore)));
+    /* E le impostazioni dell'app: dentro c'è la sicurezza, e il volto e
+       * l'impronta nel browser non ci sono. Era il catenaccio in cima a «Le
+       * tue case», che infatti si disegnava solo `if (sulTelefono)`. */
+    expect(nelBrowser, isNot(contains(Sezione.impostazioniDellApp)));
+    /* E il resto c'è tutto: si tolgono cinque voci, non si fa un'altra
+       * app. */
+    expect(nelBrowser, contains(Sezione.plancia));
+    expect(nelBrowser, contains(Sezione.dispositivi));
+    expect(nelBrowser, contains(Sezione.configurazione));
+    expect(
+      vociDellaBarra(conZigbee: true).length - nelBrowser.length,
+      5,
+      reason: 'nella webapp mancano esattamente quelle cinque',
+    );
+  });
 
   test('e chi è solo dell\'app lo dichiara lei, non la barra', () {
     /* Aggiungerne una domani vuol dire una parola nel suo elenco, e non una
@@ -108,6 +110,7 @@ void main() {
       Sezione.zigbee,
       Sezione.aiutanti,
       Sezione.automazioni,
+      Sezione.impostazioniDellApp,
     });
   });
 
