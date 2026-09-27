@@ -96,7 +96,7 @@ Future<void> main() async {
   await impostazioni.carica();
   /* Il navigatore in auto, dove c'e': se si sale in macchina, gdanav si
    * accende anche senza aprire la sua sezione. */
-  navigatore.ascoltaLAuto();
+  navigatore.ascoltaLAuto(apriIlFilo: apriIlFiloConLaCasa);
   /* Sull'iPhone il comando lasciato da CarPlay lo esegue questo motore, che
    * e' uno solo e gia' acceso; su Android lo esegue un motore a parte, senza
    * schermo (`inAuto`, qui sopra). */
@@ -295,6 +295,52 @@ bool nonSiGuardaPiu(AppLifecycleState stato) =>
     stato == AppLifecycleState.paused ||
     stato == AppLifecycleState.detached;
 
+/* ─── Il filo con la casa, uno per tutta l'app ───────────────────────────────
+ *
+ * Stava dentro la schermata, e nasceva col suo albero di widget. In macchina
+ * quell'albero puo' non esserci: «Android Auto tiene su il PROCESSO dell'app
+ * — il servizio dell'auto gira li' dentro — ma non la parte Flutter» (sta
+ * scritto in `auto/in_auto.dart`, e quel file esiste proprio per questo).
+ * Quindi il servizio dell'auto accendeva il motore, il motore eseguiva
+ * `main`, e il filo con la casa non lo apriva nessuno.
+ *
+ * Dal campo: «i dati auto arrivano solo dopo aver aperto l'app sullo
+ * smartphone; e se si chiude non si vedono piu'». Era esatto, e la sveglia
+ * era l'app aperta a mano: la batteria e l'autonomia che gdanav mostra in
+ * macchina le riempie questo filo, e senza filo restavano quelle di prima di
+ * partire.
+ *
+ * Adesso il filo e' uno per tutta l'app — come il navigatore, e per la stessa
+ * ragione — e lo apre chi arriva prima: la home, o la macchina. Aprirlo due
+ * volte non costa niente, ci pensa `apri` a non rifare un filo che gia'
+ * funziona.
+ */
+Collegamento? _filoDiCasa;
+
+/// Il filo con la casa dell'app. Lo crea chi lo chiede per primo.
+Collegamento ilFiloConLaCasa() => _filoDiCasa ??= Collegamento(
+  archivio: ArchivioDelleCase(const CassaforteDelSistema()),
+);
+
+/// Apre il filo con la casa: l'archivio, poi la casa attiva.
+///
+/// Sono le stesse due mosse che faceva la schermata all'avvio, tirate fuori
+/// perche' a chiederle adesso sono in due — lei e il servizio dell'auto — e
+/// due copie di questa sequenza si scostano al primo cambiamento.
+Future<void> apriIlFiloConLaCasa([Collegamento? quale]) async {
+  final filo = quale ?? ilFiloConLaCasa();
+  if (!filo.archivio.aperto) await filo.archivio.apri();
+  if (!filo.avviato) {
+    await filo.apri();
+    return;
+  }
+  /* Gia' avviato: se dormiva — l'app in tasca da un pezzo, e adesso si sale
+   * in macchina — lo si rimette in piedi. Se era sveglio non si tocca:
+   * aprire non e' bussare, e bussare a un filo che funziona vuol dire un giro
+   * di richieste per niente. */
+  if (filo.aRiposo) filo.sveglia();
+}
+
 class _PortoneState extends State<Portone> with WidgetsBindingObserver {
   late final Collegamento _collegamento;
   /* La guardia del telefono: nel browser e nelle prove non c'e', e allora il
@@ -360,13 +406,14 @@ class _PortoneState extends State<Portone> with WidgetsBindingObserver {
       (_) => unawaited(_laFinestra()),
     );
     navigatore.inMacchina.addListener(_inMacchinaECambiato);
+    /* Quello dell'app, che in macchina puo' essere gia' aperto. Con una
+     * cassaforte messa da fuori invece se ne fa uno suo: e' una prova, e una
+     * prova non deve trovarsi in mano il filo di un'altra. */
     _collegamento =
         widget.collegamento ??
-        Collegamento(
-          archivio: ArchivioDelleCase(
-            widget.cassaforte ?? const CassaforteDelSistema(),
-          ),
-        );
+        (widget.cassaforte != null
+            ? Collegamento(archivio: ArchivioDelleCase(widget.cassaforte!))
+            : ilFiloConLaCasa());
     _accendi();
   }
 
@@ -576,12 +623,12 @@ class _PortoneState extends State<Portone> with WidgetsBindingObserver {
   }
 
   Future<void> _accendi() async {
-    if (!_collegamento.archivio.aperto) await _collegamento.archivio.apri();
     /* Una volta sola. Da li' in poi il collegamento si gestisce da solo — si
      * riconnette, cambia approdo, cambia casa — e riavviarlo a ogni
      * ricostruzione vorrebbe dire buttare giu' il filo ogni volta che gira lo
-     * schermo. */
-    if (!_collegamento.avviato) await _collegamento.apri();
+     * schermo. E se in macchina l'ha gia' aperto il servizio dell'auto, qui
+     * non si rifa' niente. */
+    await apriIlFiloConLaCasa(_collegamento);
     /* Il lucchetto si decide su quello che c'e' scritto nelle impostazioni,
      * che `main` ha gia' letto dal disco. E si decide **insieme** a «pronto»,
      * nello stesso giro: la home non si disegna nemmeno una volta prima di
@@ -637,7 +684,14 @@ class _PortoneState extends State<Portone> with WidgetsBindingObserver {
     }
     Misure.io.spegni();
     _impostazioni.chiudi();
-    _collegamento.chiudi();
+    /* Il filo dell'app non si chiude se la macchina lo sta usando: lo schermo
+     * dell'auto resta acceso quando l'app sul telefono se ne va, ed e'
+     * proprio allora che quei dati servono. Quello di una prova invece e'
+     * suo, e si chiude sempre. */
+    if (!identical(_collegamento, _filoDiCasa) ||
+        !navigatore.inMacchina.value) {
+      _collegamento.chiudi();
+    }
     super.dispose();
   }
 

@@ -98,11 +98,23 @@ Future<GdanavApp> accendiIlNavigatore() => _acceso ??= () async {
 /// Salendo in macchina il servizio dell'auto chiede di accendere gdanav anche
 /// se sul telefono la sezione non si e' mai aperta; e se la macchina e'
 /// arrivata prima che il Dart fosse pronto a sentirlo, glielo si domanda qui.
-void ascoltaLAuto() {
+///
+/// [apriIlFilo] apre il filo con la casa. E' la cosa che mancava: il filo lo
+/// apriva la schermata, e in macchina quella schermata puo' non esserci —
+/// Android Auto tiene su il processo dell'app, non la parte che disegna. Da
+/// li' i dati dell'auto arrivavano solo aprendo l'app a mano. Lo chiama
+/// `main` passando `apriIlFiloConLaCasa`; nelle prove non lo passa nessuno e
+/// non succede niente.
+void ascoltaLAuto({Future<void> Function()? apriIlFilo}) {
+  void inMacchinaAdesso() {
+    inMacchina.value = true;
+    if (apriIlFilo != null) unawaited(apriIlFilo());
+  }
+
   _auto.setMethodCallHandler((chiamata) async {
     switch (chiamata.method) {
       case 'accendi':
-        inMacchina.value = true;
+        inMacchinaAdesso();
         unawaited(accendiIlNavigatore());
       case 'sceso':
         inMacchina.value = false;
@@ -112,7 +124,7 @@ void ascoltaLAuto() {
     try {
       final come = await _auto.invokeMapMethod<String, Object?>('comeSta');
       if (come?['inAuto'] == true) {
-        inMacchina.value = true;
+        inMacchinaAdesso();
         scheduleMicrotask(() => unawaited(accendiIlNavigatore()));
       }
       return true;

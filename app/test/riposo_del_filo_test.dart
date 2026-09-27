@@ -8,6 +8,8 @@
 /// l'app, sopra una plancia che funzionava, scriveva «sto cercando la casa».
 library;
 
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gdahome/casa/archivio_delle_case.dart';
@@ -25,12 +27,22 @@ class _CollegamentoSpia extends Collegamento {
 
   int riposi = 0;
   int svegliate = 0;
+  int aperture = 0;
 
   @override
   Future<void> riposa() async => riposi += 1;
 
   @override
   void sveglia() => svegliate += 1;
+
+  /* Si conta e si lascia fare: e' `apri` a segnare che il filo e' avviato, e
+   * senza quel segno chi lo apre due volte lo rifarebbe. Con l'archivio vuoto
+   * non c'e' nessuna casa da raggiungere, quindi non si va in rete. */
+  @override
+  Future<void> apri({bool forza = false}) async {
+    aperture += 1;
+    await super.apri(forza: forza);
+  }
 }
 
 void main() {
@@ -43,6 +55,67 @@ void main() {
     expect(nonSiGuardaPiu(AppLifecycleState.hidden), isTrue);
     expect(nonSiGuardaPiu(AppLifecycleState.paused), isTrue);
     expect(nonSiGuardaPiu(AppLifecycleState.detached), isTrue);
+  });
+
+  test('il filo lo apre anche chi non ha uno schermo: la macchina', () async {
+    /* «I dati auto arrivano solo dopo aver aperto l'app sullo smartphone, e
+     * se si chiude non si vedono più.»
+     *
+     * Il filo lo apriva la schermata, nel suo `initState`. In macchina quella
+     * schermata può non esserci: Android Auto tiene su il PROCESSO dell'app —
+     * il servizio dell'auto gira lì dentro — ma non la parte che disegna, e
+     * sta scritto nero su bianco in `auto/in_auto.dart`, che esiste proprio
+     * per questo. Il motore partiva, `main` girava, e il filo non lo apriva
+     * nessuno: la batteria che gdanav mostra in macchina restava quella di
+     * prima di partire, e la sveglia era l'app aperta a mano.
+     *
+     * Questa prova non disegna niente apposta: è il caso della macchina. */
+    final filo = _CollegamentoSpia();
+    await apriIlFiloConLaCasa(filo);
+    expect(filo.archivio.aperto, isTrue, reason: 'prima si apre l\'archivio');
+    expect(filo.aperture, 1, reason: 'poi la casa attiva');
+    expect(
+      filo.svegliate,
+      0,
+      reason: 'aprire non e\' bussare: un filo appena aperto e\' gia\' sveglio',
+    );
+  });
+
+  test('aprirlo due volte non lo rifà', () async {
+    /* In macchina lo apre il servizio dell'auto; poi, se l'app si apre
+     * davvero, ci prova anche la schermata. Un filo che funziona non si butta
+     * giù e non si rifà. */
+    final filo = _CollegamentoSpia();
+    await apriIlFiloConLaCasa(filo);
+    await apriIlFiloConLaCasa(filo);
+    expect(filo.aperture, 1);
+  });
+
+  test('e chi sale in macchina lo apre, per tutt\'e due le strade', () {
+    /* Questa legge il sorgente, e non e' pigrizia: toccare davvero
+     * `ascoltaLAuto` vuol dire far partire gdanav — il navigatore, il GPS, le
+     * mappe — dentro una prova che non ha nessun telefono sotto. Quello che
+     * conta e' che il filo si apra da tutt'e due le porte, e le porte sono
+     * due perche' la macchina puo' arrivare prima del Dart: il colpetto
+     * «accendi», e la domanda «comeSta» che il Dart fa da se' appena parte.
+     * La terza riga e' quella che le lega a `main`. */
+    final ponte = File('lib/schermate/navigatore_qui/sul_telefono.dart')
+        .readAsStringSync();
+    final dentro = ponte.substring(ponte.indexOf('void ascoltaLAuto('));
+    expect(
+      RegExp(r'inMacchinaAdesso\(\);').allMatches(dentro).length,
+      2,
+      reason: 'il colpetto «accendi» e la domanda «comeSta»',
+    );
+    expect(
+      dentro,
+      contains('if (apriIlFilo != null) unawaited(apriIlFilo());'),
+    );
+    expect(
+      File('lib/main.dart').readAsStringSync(),
+      contains('navigatore.ascoltaLAuto(apriIlFilo: apriIlFiloConLaCasa)'),
+      reason: 'senza questa riga la macchina non sa come aprirlo',
+    );
   });
 
   testWidgets('nella plancia il filo resta aperto', (tester) async {
