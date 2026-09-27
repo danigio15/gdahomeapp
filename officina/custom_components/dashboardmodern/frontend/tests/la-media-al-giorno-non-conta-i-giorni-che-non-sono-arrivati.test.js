@@ -66,6 +66,6 @@ test("il riquadro della media usa la regola, e a zero giorni scrive un trattino"
   assert.doesNotMatch(sorgente, /const days = new Date\(selectedYear, selectedMonth, 0\)/);
   assert.match(
     sorgente,
-    /setText\("ed-dkpi-media", days \? `\$\{formatNumber\(monthValue \/ days, 2\)\} kWh` : "—"\);/,
+    /setText\("ed-dkpi-media", days \? lEnergiaInParole\(monthValue \/ days, \{ decimali: 2 \}\) : "—"\);/,
   );
 });

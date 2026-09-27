@@ -66,6 +66,7 @@ import {
 import { persistEnergyField as writeEnergyField } from "../core/energy-writer.js";
 import { runtimeMetrics } from "../core/runtime-metrics.js";
 import { BUILD_INFO } from "../../legacy/build-info.js";
+import { lEnergiaInParole, laPotenzaInParole } from "../core/le-unita-della-corrente.js";
 
 root.__DM_20260815C__ = true;
 const KEY = "__DASHBOARDMODERN_RUNTIME_ROOT__";
@@ -937,8 +938,10 @@ function setHtml(id, value) {
   return scriviSeCambia(doc?.getElementById(id), value);
 }
 
+/* I chilowattora, con la scala giusta: sopra i mille diventano megawattora.
+ * La regola e' quella di `core/le-unita-della-corrente.js`, come dappertutto. */
 function kwh(value, digits = 1) {
-  return `${formatNumber(value, digits)} kWh`;
+  return lEnergiaInParole(value, { decimali: digits });
 }
 
 function dual(imported, exported, battery = false) {
@@ -1147,8 +1150,8 @@ export function scriviLaQuota(row, quota) {
   if (!riga) return;
   const pezzi = riga.querySelectorAll("span");
   if (pezzi.length < 2) return;
-  pezzi[0].textContent = `☀️ ${formatNumber(quota.solar, 1)} kWh`;
-  pezzi[1].textContent = `🔌 ${formatNumber(quota.grid, 1)} kWh`;
+  pezzi[0].textContent = `☀️ ${lEnergiaInParole(quota.solar)}`;
+  pezzi[1].textContent = `🔌 ${lEnergiaInParole(quota.grid)}`;
   riga.dataset.dmQuota = VERSION;
 }
 
@@ -1728,9 +1731,9 @@ function applyDeviceDetail(bundle) {
   const risparmioMese = misurato ? misurato.valoreDelSole : monthSplit.solar * importPrice;
   const spesaMese = misurato ? misurato.euro : monthSplit.grid * importPrice;
 
-  setText("ed-dkpi-mese", `${formatNumber(monthValue, 1)} kWh`);
+  setText("ed-dkpi-mese", lEnergiaInParole(monthValue));
   setText("ed-dkpi-mese-eur", `€ ${formatNumber(risparmioMese + spesaMese, 2)}`);
-  setText("ed-dkpi-media", days ? `${formatNumber(monthValue / days, 2)} kWh` : "—");
+  setText("ed-dkpi-media", days ? lEnergiaInParole(monthValue / days, { decimali: 2 }) : "—");
   /* Il picco, con la virgola come tutto il resto della card.
    *
    * Lo scriveva il guscio storico, e lo scriveva dopo di noi: la sua passata
@@ -1739,7 +1742,7 @@ function applyDeviceDetail(bundle) {
    * scrittura viene DOPO la sua — e' un ordine, non una corsa. */
   const picco = ilGiornoDelPicco(bundle.deviceMonthDays?.get(source));
   if (picco) {
-    setText("ed-dkpi-picco", `${formatNumber(picco.quanto, 2)} kWh`);
+    setText("ed-dkpi-picco", lEnergiaInParole(picco.quanto, { decimali: 2 }));
     if (picco.quando)
       setText(
         "ed-dkpi-picco-sub",

@@ -1453,8 +1453,18 @@ test("production graph is single-owner, acyclic and contains no facade pass-thro
   // e stanno in un modulo perche' e' l'unico modo di provarle senza una cassa
   // in salotto. Non e' `core/media-picker.js`: quello sfoglia i file su disco,
   // questo sfoglia il lettore.
+  // 398 con le unita' della corrente: `core/le-unita-della-corrente.js`.
+  // «Quando sono 1000 W devi poi esporli in kW; quando si arriva a 1000 kWh
+  // devi mettere 1 MWh.» La regola era scritta in quattro posti, ognuno con la
+  // sua idea sui decimali, e nelle bolle della pagina Energia — il posto piu'
+  // guardato di tutti — non c'era affatto: «6011 W» invece di «6,01 kW». Un
+  // modulo solo perche' a leggerla sono in cinque (le bolle, l'analisi, la
+  // finestra di un carico, la tessera di un elettrodomestico, la batteria), e
+  // perche' il gradino va guardato sul numero COME SI VEDRA' — 999,6 W scritti
+  // interi sono «1000 W», che e' proprio la scritta che non si vuole — il che
+  // e' una cosa che si prova a tavolino e non guardando uno schermo.
   assert.ok(
-    relative.length <= 397,
+    relative.length <= 398,
     `production graph unexpectedly grew to ${relative.length} modules`,
   );
   assertAcyclic(edges);

@@ -90,6 +90,7 @@ import {
   t,
   wrapFunction,
 } from "./shared.js";
+import { lEnergiaInParole, laPotenzaInParole } from "../core/le-unita-della-corrente.js";
 
 const KEY = "__DASHBOARDMODERN_CLIMATE_THERMAL__";
 const STYLE_ID = "dm-climate-thermal-style";
@@ -786,7 +787,7 @@ function paintCard(card, unit, reading, labels) {
   if (stateChip) {
     const parola = stateLabel(reading, zone, labels);
     stateChip.textContent =
-      reading.watt === null ? parola : `${parola} · ${Math.round(reading.watt)} W`;
+      reading.watt === null ? parola : `${parola} · ${laPotenzaInParole(reading.watt)}`;
   }
 
   /* Col flag acceso il numero grande e' l'ambiente e la riga piccola il

@@ -36,19 +36,23 @@ test("timestamp parsing accepts ISO strings and epoch values", () => {
   assert.equal(parseTimestampMs("unavailable"), null);
 });
 
-test("labels use the reference formatting (dot decimals, compact units)", () => {
+/* Le unita' della corrente adesso le scrive un posto solo
+ * (`core/le-unita-della-corrente.js`), e scrive all'italiana: «1,90 kW», non
+ * «1.9 kW». Prima questa tessera aveva la sua tipografia, e sulla stessa
+ * schermata il cerchio della casa ne aveva un'altra. «Allinea bene tutto.» */
+test("labels use the reference formatting (comma decimals, compact units)", () => {
   assert.equal(formatClockDuration(1800), "0:30");
   assert.equal(formatClockDuration(4500), "1:15");
   assert.equal(formatMinutesLabel(9), "9min");
   assert.equal(formatMinutesLabel(80), "1h 20min");
   assert.equal(formatMinutesLabel(120), "2h");
   assert.equal(formatMinutesLabel(null), "—");
-  assert.equal(formatPowerLabel(1900), "1.9 kW");
-  assert.equal(formatPowerLabel(2450), "2.45 kW");
+  assert.equal(formatPowerLabel(1900), "1,90 kW");
+  assert.equal(formatPowerLabel(2450), "2,45 kW");
   assert.equal(formatPowerLabel(0), "0 W");
-  assert.equal(formatKwhLabel(0.19), "0.19 kWh");
-  assert.equal(formatKwhLabel(12.34), "12.3 kWh");
-  assert.equal(formatCostLabel(0.021), "0.02 €");
+  assert.equal(formatKwhLabel(0.19), "0,19 kWh");
+  assert.equal(formatKwhLabel(12.34), "12,3 kWh");
+  assert.equal(formatCostLabel(0.021), "0,02 €");
   assert.equal(formatCostLabel(null), "—");
 });
 
@@ -184,13 +188,13 @@ test("card model composes running state, countdown, cycle labels and costs", () 
   assert.equal(model.accent, "water");
   assert.equal(model.remaining.label, "0:30");
   assert.equal(model.remaining.fraction, 0.5);
-  assert.equal(model.power.label, "1.9 kW");
+  assert.equal(model.power.label, "1,90 kW");
   assert.ok(model.cycle.live);
   assert.equal(model.cycle.startLabel, "oggi 09:55");
   assert.equal(model.cycle.durationLabel, "35min");
-  assert.equal(model.cycle.energyLabel, "0.19 kWh");
+  assert.equal(model.cycle.energyLabel, "0,19 kWh");
   // device price (0.25) wins over the global tariff (0.4): 0.19 × 0.25.
-  assert.equal(model.cycle.costLabel, "0.05 €");
+  assert.equal(model.cycle.costLabel, "0,05 €");
 });
 
 test("continuous appliances fall back to the daily energy for the cycle footer", () => {
@@ -219,8 +223,8 @@ test("continuous appliances fall back to the daily energy for the cycle footer",
   assert.equal(model.continuous, true);
   assert.equal(model.temperature.label, "4 °C");
   assert.equal(model.cycle.durationLabel, "—");
-  assert.equal(model.cycle.energyLabel, "0.28 kWh");
-  assert.equal(model.cycle.costLabel, "0.03 €");
+  assert.equal(model.cycle.energyLabel, "0,28 kWh");
+  assert.equal(model.cycle.costLabel, "0,03 €");
 });
 
 test("alarm flag follows the alert entity and the unavailable mode", () => {

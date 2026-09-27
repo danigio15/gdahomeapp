@@ -40,6 +40,8 @@
  * plancia ha sempre usato.
  */
 
+import { laPotenzaInParole } from "./le-unita-della-corrente.js";
+
 const positivo = (value) => (Number.isFinite(value) && value > 0 ? value : 0);
 
 /**
@@ -191,7 +193,7 @@ export function laQuadraturaNonTorna(letture = {}) {
  * mentre carica. Il segno e' una convenzione del modello, non una cosa che si
  * legge su un pannello: si mostra la grandezza e il verso, con la freccia che
  * entra nella batteria quando si carica ed esce quando alimenta. */
-export function batteryReadout(battery = 0, format = (watt) => `${Math.round(watt)} W`) {
+export function batteryReadout(battery = 0, format = (watt) => laPotenzaInParole(watt)) {
   const value = Number(battery);
   if (!Number.isFinite(value) || value === 0) return null;
   return value < 0 ? `▼ ${format(-value)}` : `▲ ${format(value)}`;

@@ -12,6 +12,7 @@ import { pick } from "./i18n.js";
 import { canonicalArtworkType } from "./appliance-artwork.js";
 import { createApplianceViewModel } from "./appliance-view-model.js";
 import { programFacts } from "./appliance-program.js";
+import { lEnergiaInParole, laPotenzaInParole } from "./le-unita-della-corrente.js";
 
 const clean = (value) => String(value ?? "").trim();
 const entityRef = (value) =>
@@ -121,29 +122,38 @@ export function formatMinutesLabel(minutes, locale = "it") {
   return `${hours}h ${rest}min`;
 }
 
+/* La potenza sulla tessera.
+ *
+ * Il salto di scala e la virgola li fa `le-unita-della-corrente.js`, come nelle
+ * bolle del flusso e nel guscio: questa tessera scriveva «1.9 kW» col punto e
+ * gli zeri tagliati, e sulla stessa schermata il cerchio della casa diceva
+ * «6,01 kW». «Allinea bene tutto»: stessa regola, stessa virgola.
+ *
+ * Resta la sola cosa che e' di questa tessera: sotto i dieci watt si scrive il
+ * decimo. Un frigo in pausa che tira 4,5 W non e' «5 W», ed e' la differenza
+ * fra «sta assorbendo qualcosa» e «e' spento». */
 export function formatPowerLabel(watts) {
   const numeric = Number(watts);
   if (!Number.isFinite(numeric)) return "0 W";
   const value = Math.max(0, numeric);
-  if (value >= 1000) {
-    const digits = value >= 10000 ? 1 : 2;
-    return `${(value / 1000).toFixed(digits).replace(/0+$/, "").replace(/\.$/, "")} kW`;
-  }
-  if (value > 0 && value < 10) return `${value.toFixed(1).replace(/\.0$/, "")} W`;
-  return `${Math.round(value)} W`;
+  return laPotenzaInParole(value, { decimali: value > 0 && value < 10 ? 1 : 0 });
 }
 
 export function formatKwhLabel(kwh) {
   const value = finiteOrNull(kwh);
   if (value == null) return "—";
-  if (value >= 10) return `${value.toFixed(1)} kWh`;
-  return `${value.toFixed(2)} kWh`;
+  /* Due decimali sotto i dieci, uno sopra: un ciclo di lavatrice da 0,84 kWh
+   * scritto «0,8» perderebbe proprio la cifra per cui lo si guarda. Sopra i
+   * mille sale a MWh come tutto il resto. */
+  return lEnergiaInParole(value, { decimali: value >= 10 ? 1 : 2 });
 }
 
 export function formatCostLabel(cost) {
   const value = finiteOrNull(cost);
   if (value == null) return "—";
-  return `${value.toFixed(2)} €`;
+  /* La virgola anche qui: un euro scritto col punto accanto a un kWh scritto
+   * con la virgola sono due tipografie sulla stessa riga. */
+  return `${new Intl.NumberFormat("it-IT", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value)} €`;
 }
 
 /* L'ora dell'avvio, e il segno di quando e' una supposizione (#65).

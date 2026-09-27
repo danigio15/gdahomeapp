@@ -111,7 +111,7 @@ test("card markup carries the legacy contract hooks and the reference layout", a
   assert.match(markup, /0:30/);
   assert.match(markup, /RIMANENTI/);
   assert.match(markup, /Potenza attuale/);
-  assert.match(markup, /1\.9 kW/);
+  assert.match(markup, /1,90 kW/);
   assert.match(markup, /Ultimo ciclo/);
   assert.match(markup, /Avvio/);
   assert.match(markup, /Durata/);

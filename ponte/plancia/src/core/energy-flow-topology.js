@@ -16,6 +16,7 @@
  * what shipped before.
  */
 
+import { laPotenzaInParole, lEnergiaInParole } from "./le-unita-della-corrente.js";
 import { wattsFromState } from "./signed-energy.js";
 
 export const FLOW_MAX_LOADS = 8;
@@ -302,15 +303,19 @@ export function flowIntensity(value, peak = 0) {
   };
 }
 
+/* Il numero della bolla, nell'unita' in cui si scrive.
+ *
+ * L'istantanea sono watt e il periodo sono chilowattora, e fin qui si
+ * scrivevano cosi' e basta: «6011 W» sotto il cerchio della casa. Adesso
+ * salgono di scala al migliaio — «6,01 kW» — perche' e' come si legge una
+ * potenza, e perche' quattro cifre in una bolla si contano invece di
+ * leggerle. La regola sta in un posto solo (`le-unita-della-corrente.js`) ed
+ * e' la stessa dell'analisi, delle finestre dei carichi e delle tessere. */
 export function formatFlowValue(value, period = "instant", locale = "it-IT") {
-  const numeric = finiteOrNull(value);
-  if (numeric === null) return "—";
-  const digits = period === "instant" ? 0 : 1;
-  const formatted = new Intl.NumberFormat(locale, {
-    minimumFractionDigits: digits,
-    maximumFractionDigits: digits,
-  }).format(numeric);
-  return `${formatted} ${period === "instant" ? "W" : "kWh"}`;
+  if (finiteOrNull(value) === null) return "—";
+  return period === "instant"
+    ? laPotenzaInParole(value, { lingua: locale })
+    : lEnergiaInParole(value, { lingua: locale });
 }
 
 function stateNumber(states, entity) {

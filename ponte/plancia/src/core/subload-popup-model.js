@@ -15,6 +15,7 @@
  */
 import { campoDiPotenza } from "./energy-flow-topology.js";
 import { createApplianceViewModel } from "./appliance-view-model.js";
+import { laPotenzaInParole, lEnergiaInParole } from "./le-unita-della-corrente.js";
 import { wattsFromState } from "./signed-energy.js";
 
 const clean = (value) => String(value ?? "").trim();
@@ -122,21 +123,12 @@ export function subloadState(child = {}, states = {}) {
 
 export function formatWatts(value, locale = "it-IT") {
   if (value === null || value === undefined) return "—";
-  const magnitude = Math.abs(value);
-  if (magnitude >= 1000)
-    return `${new Intl.NumberFormat(locale, {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }).format(value / 1000)} kW`;
-  return `${new Intl.NumberFormat(locale, { maximumFractionDigits: 0 }).format(value)} W`;
+  return laPotenzaInParole(value, { lingua: locale });
 }
 
 export function formatKwh(value, locale = "it-IT") {
   if (value === null || value === undefined) return "";
-  return `${new Intl.NumberFormat(locale, {
-    minimumFractionDigits: 1,
-    maximumFractionDigits: 1,
-  }).format(value)} kWh`;
+  return lEnergiaInParole(value, { lingua: locale });
 }
 
 /* The popup for one circle: its appliances, heaviest first, each with the share

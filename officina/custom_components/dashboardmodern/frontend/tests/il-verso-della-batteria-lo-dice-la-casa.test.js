@@ -125,8 +125,10 @@ test("con il verso giusto la mappa disegna la carica, non la scarica", () => {
 test("anche la bolla dice la stessa cosa della mappa", () => {
   /* La freccia della bolla e quella della mappa vengono dallo stesso numero:
    * due letture dello stesso segno non possono discordare. */
-  assert.equal(batteryReadout(-1500), "▼ 1500 W");
-  assert.equal(batteryReadout(1500), "▲ 1500 W");
+  assert.equal(batteryReadout(-1500), "▼ 1,50 kW");
+  assert.equal(batteryReadout(1500), "▲ 1,50 kW");
+  /* Sotto il migliaio restano watt, come tutto il resto. */
+  assert.equal(batteryReadout(-201), "▼ 201 W");
 });
 
 test("l'istantanea decide dagli stati, mai dal testo della bolla", async () => {
