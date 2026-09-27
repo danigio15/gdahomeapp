@@ -62,6 +62,19 @@ class RifiutoNonFirmato extends StrettaRifiutata {
   const RifiutoNonFirmato(super.spiegazione);
 }
 
+/// La casa ha detto che quest'app e' troppo vecchia per entrare
+/// (`motivo: "aggiorna-l-app"`, vedi `ponte/src/versione-minima.js`).
+///
+/// E' in chiaro come ogni no della stretta di mano, e non si cancella niente
+/// per questo: si copre l'app con la pagina «aggiornala»
+/// (`aggiornamento_obbligatorio.dart`), che porta al negozio.
+class AppDaAggiornare extends StrettaRifiutata {
+  const AppDaAggiornare(super.spiegazione, {this.minima});
+
+  /// Il numero piu' piccolo che la casa lascia entrare, se l'ha detto.
+  final int? minima;
+}
+
 /// Home Assistant ha risposto «no» a un comando.
 class ComandoRifiutato extends ErroreDelPonte {
   const ComandoRifiutato(super.spiegazione, {this.codice});

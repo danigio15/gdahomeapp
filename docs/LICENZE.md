@@ -252,3 +252,61 @@ controllo e' spento (tutti passano, come oggi): si accende insieme alla chiave.
   «Ho un codice regalo». Sul web non si compra: si riscatta un codice, o si
   compra dal telefono.
 - gdanav riceve `premiumOspite` = la casa in uso e' Premium.
+
+## Il giorno dei pagamenti: le app vecchie si fermano
+
+Le app della fase di prova hanno tutto aperto. Il giorno che esce la versione
+pubblica con i pagamenti vanno fermate, se no chi le ha non paghera' mai. Per
+questo c'e' un interruttore sul centralino, **spento di serie** (minima `0` =
+non si ferma nessuno).
+
+**Come si accende.** Si scrive in `VERSIONE_MINIMA_APP` il numero di
+costruzione della prima versione pubblica a pagamento
+(`costruzioneDiQuestApp` in `app/lib/versione.dart`, per esempio `1070000`):
+
+- sulla nuvola: la riga `VERSIONE_MINIMA_APP = "0"` fra le `[vars]` di
+  `nuvola/wrangler.toml`, poi `npx wrangler deploy`;
+- sul centralino in Node: la variabile d'ambiente `VERSIONE_MINIMA_APP` (in
+  `/etc/tramite/ambiente`, o `VERSIONE_MINIMA_APP=1070000 bash accendi.sh`,
+  che la ricorda ai giri dopo), poi si riavvia il servizio.
+
+Il centralino la dice a tutti su `GET /versioni` →
+`{"gdahome": {"minima": 1070000}}` (pubblica, CORS aperto, tenuta 5 minuti).
+Scritta male vale `0`: un errore di battitura non spegne le app di tutti. Per
+riaprire tutto si rimette `0`.
+
+**Chi la legge, e cosa succede.**
+
+- **L'add-on** (`ponte/src/versione-minima.js`) la chiede al suo centralino (o
+  a quello di difetto, se la casa non ne usa nessuno) all'accensione e ogni 6
+  ore, e tiene l'ultima in `/data/versioni.json`. Il telefono dice il suo
+  numero nella prima parola in chiaro della stretta di mano, campo `app`
+  (`{v:1, chi, apertura, mia, …, app: 1061100}`; vedi `ponte/src/portiere.js` e
+  `app/lib/ponte/stretta.dart`). Con la minima sopra zero, chi non lo dice o ne
+  dice uno piu' piccolo si sente rispondere
+  `{v:1, no:"…", motivo:"aggiorna-l-app", minima:N}` e la porta si chiude —
+  in casa e da fuori, abbinamento compreso.
+- **L'app nuova** (`app/lib/aggiornamento_obbligatorio.dart`) la chiede anche
+  da se' al centralino di difetto (in `https`) all'avvio, tornando davanti e
+  ogni 6 ore, la ricorda sul telefono (senza rete non si riapre) e, se e'
+  sotto, si copre tutta con «C'è una versione nuova di gdahome: aggiornala per
+  continuare» e il bottone per il negozio. La stessa pagina compare quando la
+  casa risponde `aggiorna-l-app`. Nel browser non si ferma mai (l'app web la
+  serve l'add-on, sempre della sua stessa costruzione), e nemmeno nelle
+  costruzioni di prova, a meno di `--dart-define=VERSIONE_MINIMA_SEMPRE=true`.
+- **Le app della prova di oggi** il controllo non ce l'hanno e il numero non
+  lo dicono: le ferma l'add-on aggiornato, che le rifiuta; la frase del no
+  («questa versione di gdahome e' vecchia: aggiornala dal negozio per
+  continuare») la mostrano come mostrano ogni no della casa.
+
+**Prima di accenderla**: l'add-on che esce insieme alla versione a pagamento
+deve portarsi l'app web ricostruita (`porta-l-app`), cosi' dice anche lei il
+suo numero. Se l'app web di un add-on e' sotto la minima, l'add-on lo scrive
+nel registro.
+
+**Il limite.** Una casa che tiene l'add-on vecchio **e** l'app vecchia
+continua a funzionare sulla rete di casa: nessuno dei due sa della minima. Da
+fuori invece no: il centralino, una volta scritta la chiave delle licenze,
+chiude i telefoni delle case senza gettone Premium, e l'add-on vecchio il
+gettone non lo manda. Il numero `app` non lo firma nessuno: e' un cancello
+per le app della prova, non una serratura.

@@ -4,6 +4,7 @@
  *
  *   GET  /                            la soglia: cos'e' questo indirizzo
  *   GET  /salute                      dice solo che e' vivo (e di piu' a chi guarda da dentro)
+ *   GET  /versioni                    da quale numero in su un'app si puo' usare (`versioni.js`)
  *   GET  /console/                    la console della chat, e le sue vie
  *   POST /contatto                    il modulo «Contatti» del sito, che Caddy passa qui
  *   WS   /casa/<casa_…>              una casa che chiama fuori
@@ -29,6 +30,7 @@ import { daChi, eDaDentro, reteDi } from "./indirizzo.js";
 import { accetta, eUnaSalita } from "./presa.js";
 import { laSoglia } from "./soglia.js";
 import { json } from "./sportello.js";
+import { INTESTAZIONI_DELLE_VERSIONI, leVersioni } from "./versioni.js";
 
 const IMPRONTA_VALIDA = /^[0-9a-f]{64}$/;
 
@@ -118,7 +120,11 @@ export function costruisciIlServer({
   /* Come si chiamano il sito e l'app di questo centralino, per la soglia.
    * Quello che non si sa non si inventa: la riga non compare. */
   dove = {},
+  /* Il numero di costruzione piu' piccolo che si puo' ancora usare (vedi
+   * `versioni.js`). Zero, di serie: nessuna app si ferma. */
+  versioneMinima = 0,
 }) {
+  const versioni = Buffer.from(JSON.stringify(leVersioni(versioneMinima)), "utf8");
   const soglia = Buffer.from(laSoglia(dove), "utf8");
   const server = createServer((richiesta, risposta) => {
     for (const [nome, valore] of Object.entries(INTESTAZIONI_DI_SEMPRE)) {
@@ -169,6 +175,18 @@ export function costruisciIlServer({
         chat: chat ? { linee: chat.archivio.quanteLinee(), console: chat.consoleAperta } : false,
         posta: Boolean(contatti?.pronto),
       });
+      return;
+    }
+
+    /* Le versioni: pubbliche, uguali per tutti, e tenute cinque minuti da
+     * chi sta in mezzo. L'app le chiede all'avvio e ogni sei ore, l'add-on
+     * anche: vedi `versioni.js`. */
+    if (via === "/versioni" && (richiesta.method === "GET" || richiesta.method === "HEAD")) {
+      risposta.writeHead(200, {
+        ...INTESTAZIONI_DELLE_VERSIONI,
+        "content-length": versioni.length,
+      });
+      risposta.end(richiesta.method === "HEAD" ? undefined : versioni);
       return;
     }
 

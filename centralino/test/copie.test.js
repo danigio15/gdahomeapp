@@ -53,7 +53,7 @@ test("le copie prese dal ponte sono ancora identiche", () => {
  * dire due comportamenti diversi a seconda di dove una casa e' finita, che e'
  * il genere di differenza che non si trova mai guardando il codice di una
  * parte sola. */
-const PRESI_DALLA_NUVOLA = ["segnalazioni.js"];
+const PRESI_DALLA_NUVOLA = ["segnalazioni.js", "versioni.js"];
 
 test("le copie prese dalla nuvola sono ancora identiche", () => {
   for (const nome of PRESI_DALLA_NUVOLA) {

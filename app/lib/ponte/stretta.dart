@@ -16,12 +16,13 @@
 /// Un messaggio per parte, in chiaro. E' l'unico pezzo che il centralino vede,
 /// e non c'e' niente dentro che gli serva.
 ///
-///     telefono → casa   {v:1, chi:"dm_…", apertura:"…", mia:"…", gzip:true}   telefono noto
-///     telefono → casa   {v:1, abbina:2, apertura:"…", mia:"…"}              telefono nuovo
+///     telefono → casa   {v:1, chi:"dm_…", apertura:"…", mia:"…", gzip:true, app:N}   telefono noto
+///     telefono → casa   {v:1, abbina:2, apertura:"…", mia:"…", app:N}              telefono nuovo
 ///     casa → telefono   {v:1, pronto:true, mia:"…", gzip:true, mucchio:true}
 ///     casa → telefono   {v:1, no:"…"}                              e basta
 ///     casa → telefono   {v:1, no:"…", riabbina:true}               non ti conosco
 ///     casa → telefono   {v:1, no:"…", motivo:"…"}                  l'abbinamento non parte
+///     casa → telefono   {v:1, no:"…", motivo:"aggiorna-l-app", minima:N}   app vecchia
 ///
 /// **Il `riabbina` in chiaro non e' una sentenza.** E' in chiaro, e chi sta
 /// in mezzo — il centralino, o chi risponde all'indirizzo di casa — lo puo'
@@ -52,6 +53,12 @@
 /// fuori casa, li manda insieme invece di uno per uno. Vedi `filo.dart` e
 /// `ponte/src/ponte.js`.
 ///
+/// `app` e' il numero di costruzione di quest'app (`costruzioneDiQuestApp`):
+/// la casa lo confronta con la versione minima del giorno dei pagamenti, e a
+/// chi e' sotto — o non lo dice, come le app di prima — risponde
+/// `aggiorna-l-app`. Qui diventa [AppDaAggiornare], e l'app si copre con la
+/// pagina «aggiornala». Vedi `aggiornamento_obbligatorio.dart`.
+///
 /// Dall'altra parte c'e' `ponte/src/portiere.js`, e le due descrizioni devono
 /// restare la stessa descrizione.
 library;
@@ -64,9 +71,19 @@ import 'dart:typed_data';
 import 'package:cryptography/cryptography.dart';
 
 import '../parole.dart';
+import '../versione.dart';
 import 'cifra.dart';
 import 'errori.dart';
 import 'presa.dart';
+
+/// Il `motivo` con cui la casa rifiuta un'app troppo vecchia: lo stesso di
+/// `ponte/src/portiere.js`.
+const String motivoAppVecchia = 'aggiorna-l-app';
+
+/// Chi va avvisato quando la casa dice [motivoAppVecchia], con la minima se
+/// l'ha detta. Lo attacca `main.dart` alla pagina «aggiornala»
+/// (`aggiornamento_obbligatorio.dart`); qui non si importa Flutter.
+void Function(int? minima)? quandoLaCasaDiceAggiorna;
 
 /// Quanto si aspetta che la casa risponda alla presentazione.
 const Duration attesaDellaStretta = Duration(seconds: 15);
@@ -126,6 +143,37 @@ Future<PresaCifrata> stringiLaMano(
         /* Una bandierina e non una frase: il telefono ci *fa* qualcosa, e
          * farlo dipendere dal testo vorrebbe dire romperlo il giorno che
          * qualcuno riscrive la frase. */
+        /* Prima di tutto: l'app e' troppo vecchia per questa casa. Vale
+         * anche abbinandosi, e lo si dice a chi copre l'app. */
+        if (detto['motivo'] == motivoAppVecchia) {
+          final minima = detto['minima'];
+          quandoLaCasaDiceAggiorna?.call(minima is int ? minima : null);
+          throw AppDaAggiornare(
+            /* Nel browser la pagina «aggiornala» non c'e': l'app la serve
+             * l'add-on, e una pagina ricaricata e' gia' quella nuova.
+             * `identical(0, 0.0)` e' vero solo in JavaScript, e qui non si
+             * importa Flutter: questo file gira anche in `bin/servitore.dart`,
+             * con Dart e basta. */
+            identical(0, 0.0)
+                ? inLingua(
+                    it:
+                        'c\'è una versione nuova di gdahome: ricarica la '
+                        'pagina per continuare',
+                    en:
+                        'there\'s a new version of gdahome: reload the page '
+                        'to continue',
+                  )
+                : inLingua(
+                    it:
+                        'c\'è una versione nuova di gdahome: aggiornala per '
+                        'continuare',
+                    en:
+                        'there\'s a new version of gdahome: update it to '
+                        'continue',
+                  ),
+            minima: minima is int ? minima : null,
+          );
+        }
         if (perAbbinarsi) throw rifiutoDellAbbinamento(detto, no);
         throw detto['riabbina'] == true
             ? RifiutoNonFirmato(
@@ -175,6 +223,10 @@ Future<PresaCifrata> stringiLaMano(
        * passando dal centralino, che e' dove ogni messaggio e' una richiesta
        * contata; in casa manda come prima. Vedi `ponte/src/ponte.js`. */
       'mucchio': true,
+      /* Che numero e' quest'app: la casa ferma quelle sotto la versione
+       * minima (`ponte/src/versione-minima.js`). Nel browser come sul
+       * telefono: l'app web servita dall'add-on e' della stessa costruzione. */
+      'app': costruzioneDiQuestApp,
     }),
   );
 

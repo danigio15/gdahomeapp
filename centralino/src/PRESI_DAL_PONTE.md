@@ -35,3 +35,6 @@ cp nuvola/src/segnalazioni.js centralino/src/
 Quando il Worker si spegnera', questa copia diventa l'originale e la riga qui
 sopra si cancella.
 
+Anche `versioni.js` (la versione minima dell'app, `GET /versioni`) viene
+dalla nuvola, per la stessa ragione: le due punte devono dire lo stesso
+numero allo stesso modo.

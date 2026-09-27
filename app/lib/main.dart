@@ -14,6 +14,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
+import 'aggiornamento_obbligatorio.dart';
 import 'auto/in_auto.dart' as auto;
 import 'casa/archivio_delle_case.dart';
 import 'casa/cassaforte.dart';
@@ -105,6 +106,11 @@ Future<void> main() async {
   if (!kIsWeb && defaultTargetPlatform == TargetPlatform.iOS) {
     auto.ascoltaIlColpetto();
   }
+  /* Il giorno dei pagamenti: se questa costruzione e' sotto la versione
+   * minima, l'app si copre con la pagina «aggiornala». Non si aspetta: la
+   * minima ricordata arriva in un attimo, quella nuova quando risponde il
+   * centralino. Nel browser e nelle costruzioni di prova non fa niente. */
+  accendiLaVersioneMinima();
   runApp(AppDiCasa(impostazioni: impostazioni));
 }
 
@@ -189,9 +195,13 @@ class _AppDiCasaState extends State<AppDiCasa> with WidgetsBindingObserver {
       /* Il fondo vivo sta qui, sotto tutte le schermate e una volta sola: se
        * lo mettesse ogni pagina, gli aloni ripartirebbero da capo a ogni
        * cambio di pagina, e sarebbe un lampo invece di un cielo. */
-      builder: (context, schermata) => SopraTutto(
-        velo: _velo,
-        child: SfondoVivo(child: schermata ?? const SizedBox.shrink()),
+      builder: (context, schermata) => AggiornamentoObbligatorio(
+        /* Sopra tutto, anche sopra il velo del lucchetto: un'app troppo
+         * vecchia non si apre, e non c'e' niente da riconoscere. */
+        child: SopraTutto(
+          velo: _velo,
+          child: SfondoVivo(child: schermata ?? const SizedBox.shrink()),
+        ),
       ),
       home: Portone(
         cassaforte: widget.cassaforte,

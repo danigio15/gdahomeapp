@@ -87,6 +87,10 @@ class PonteFinto {
   /// e' attaccata. Da fuori e' identico a un ponte vero che chiude in faccia.
   String? chiudeSubitoDicendo;
 
+  /// La versione minima dell'app, come la sa l'add-on dal centralino
+  /// (`ponte/src/versione-minima.js`). Zero: entrano tutti.
+  int versioneMinima = 0;
+
   static Future<PonteFinto> alza() async {
     final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
     final ponte = PonteFinto._(server);
@@ -1278,6 +1282,23 @@ class TelefonoCollegato {
 
     final detto = jsonDecode(testo) as Map<String, dynamic>;
     _ponte.strette.add(detto);
+
+    /* Come il portiere: prima di tutto, abbinamento compreso, l'app troppo
+     * vecchia — o che non dice il suo numero. */
+    final minima = _ponte.versioneMinima;
+    final app = detto['app'];
+    if (minima > 0 && (app is! int || app < minima)) {
+      _presa.add(
+        jsonEncode({
+          'v': versioneDelProtocollo,
+          'no': 'questa versione di gdahome e\' vecchia',
+          'motivo': 'aggiorna-l-app',
+          'minima': minima,
+        }),
+      );
+      unawaited(chiudi());
+      return;
+    }
 
     if (detto.containsKey('abbina')) {
       await _perAbbinare(detto);

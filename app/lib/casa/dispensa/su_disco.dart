@@ -7,15 +7,21 @@ import 'package:path_provider/path_provider.dart';
 
 import 'dispensa.dart';
 
-Dispensa dispensaDiQuestoSistema() => DispensaSuDisco();
+Dispensa dispensaDiQuestoSistema({String nome = 'impostazioni.json'}) =>
+    DispensaSuDisco(nome);
 
-/// Un file `impostazioni.json`. Se il disco non c'e' — nelle prove non c'e'
-/// il sistema che dice dove sta la cartella — si fa come se fosse vuoto:
-/// un'impostazione che non si ricorda non e' un motivo per non partire.
+/// Un file, di solito `impostazioni.json`. Se il disco non c'e' — nelle prove
+/// non c'e' il sistema che dice dove sta la cartella — si fa come se fosse
+/// vuoto: un'impostazione che non si ricorda non e' un motivo per non partire.
 class DispensaSuDisco implements Dispensa {
+  DispensaSuDisco([this.nome = 'impostazioni.json']);
+
+  /// Come si chiama il file, nella cartella di supporto dell'app.
+  final String nome;
+
   Future<File> _file() async {
     final supporto = await getApplicationSupportDirectory();
-    return File('${supporto.path}/impostazioni.json');
+    return File('${supporto.path}/$nome');
   }
 
   @override

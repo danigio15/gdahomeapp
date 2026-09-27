@@ -10,13 +10,14 @@
  * Un messaggio per parte, in chiaro. E' l'unico pezzo che il centralino vede,
  * e non c'e' niente dentro che gli serva.
  *
- *   telefono → casa   {v:1, chi:"dm_…", apertura:"…", mia:"…", gzip:true, mucchio:true}
- *   telefono → casa   {v:1, abbina:2, apertura:"…", mia:"…"}   un telefono nuovo
+ *   telefono → casa   {v:1, chi:"dm_…", apertura:"…", mia:"…", gzip:true, mucchio:true, app:1061100}
+ *   telefono → casa   {v:1, abbina:2, apertura:"…", mia:"…", app:1061100}   un telefono nuovo
  *   casa → telefono   {v:1, pronto:true, mia:"…", gzip:true, mucchio:true}
  *   casa → telefono   {v:1, no:"…"}                          e basta
  *   casa → telefono   {v:1, no:"…", riabbina:true}           non ti conosco
  *   casa → telefono   {v:1, no:"…", motivo:"…"}              l'abbinamento non parte
  *   casa → telefono   {v:1, no:"…", motivo:"premium-richiesto"}  da fuori, con Base
+ *   casa → telefono   {v:1, no:"…", motivo:"aggiorna-l-app", minima:N}  app troppo vecchia
  *
  * `mia` e' una chiave pubblica effimera: vive quanto il collegamento. `chi` e'
  * l'identificativo del telefono, che non e' un segreto — serve solo a sapere
@@ -24,6 +25,13 @@
  * compressa»: chi manda comprime solo se l'altro l'ha detto, e chi non lo
  * dice — un'app vecchia, l'app nel browser — riceve tutto com'era. E' scritto
  * in `cifra.js`.
+ *
+ * `app` e' il numero di costruzione dell'app (`costruzioneDiQuestApp` in
+ * `app/lib/versione.dart`). Le app di prima non lo dicono, e finche' la
+ * versione minima e' zero non lo chiede nessuno; sopra zero, chi non lo dice
+ * o dice un numero piu' piccolo si ferma con `aggiorna-l-app`. E' scritto in
+ * `versione-minima.js`. Un campo in piu' in un oggetto: un ponte di prima lo
+ * ignora, un'app di prima non lo manda.
  *
  * Dopo, ogni messaggio e' una busta.
  *
@@ -107,6 +115,8 @@ const ATTESA_DELLA_STRETTA = 15 * 1000;
 const MOTIVO = Object.freeze({
   /* Da fuori casa, con gdahome Base: vedi `_soloInCasa`. */
   premium: "premium-richiesto",
+  /* L'app e' piu' vecchia della versione minima: vedi `versione-minima.js`. */
+  vecchia: "aggiorna-l-app",
   aggiorna: "aggiorna",
   nessuno: "nessuno",
   tentativi: "tentativi",
@@ -127,8 +137,12 @@ export class Portiere {
      * `limitata`). Una funzione, perche' cambia mentre il ponte gira; di
      * serie no, che e' come stanno le licenze finche' la chiave e' vuota. */
     soloInCasa = () => false,
+    /* La versione minima dell'app (`versione-minima.js`). Di serie nessuna:
+     * entrano tutti, come prima. */
+    versioneMinima = null,
   }) {
     this.soloInCasa = soloInCasa;
+    this.versioneMinima = versioneMinima;
     this.ponte = ponte;
     this.dispositivi = dispositivi;
     this.abbinamento = abbinamento;
@@ -188,6 +202,22 @@ export class Portiere {
     const apertura = Buffer.from(detto.apertura, "base64");
     if (apertura.length !== 16) {
       this._no(presa, "apertura sbagliata");
+      return;
+    }
+
+    /* ─── L'app troppo vecchia ────────────────────────────────────────────
+     *
+     * Prima di tutto il resto, abbinamento compreso: un'app che non si puo'
+     * piu' usare non si abbina, e non si porta alla pagina Premium — si
+     * porta al negozio. Con la minima a zero non si ferma nessuno. Il numero
+     * lo dice il telefono e nessuno lo firma: e' un cancello per le app
+     * della prova, che non lo sanno dire, non una serratura. */
+    if (this.versioneMinima?.troppoVecchia(detto.app)) {
+      this._no(
+        presa,
+        "questa versione di gdahome e' vecchia: aggiornala dal negozio per continuare",
+        { motivo: MOTIVO.vecchia, minima: this.versioneMinima.minima },
+      );
       return;
     }
 

@@ -29,6 +29,7 @@ import { IL_CRUSCOTTO, LA_GESTIONE, VoceNellaBarra } from "./voci-nella-barra.js
 import { UtentiDiCasa } from "./utenti.js";
 import { Identita } from "./identita.js";
 import { Licenze } from "./licenze.js";
+import { VersioneMinima } from "./versione-minima.js";
 import { Dispositivi } from "./dispositivi.js";
 import { leggiLeOpzioni } from "./opzioni.js";
 import { Ponte } from "./ponte.js";
@@ -384,6 +385,17 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
   });
   licenze.segreto = () => postino.segretoDellaCasa;
 
+  /* La versione minima dell'app: il giorno dei pagamenti le app della prova
+   * si fermano, e le ferma la casa (`versione-minima.js`). La chiede al suo
+   * centralino, o a quello di difetto se non ne usa nessuno (`opzioni.js`,
+   * `versioni`); senza un indirizzo non chiede niente. Di serie e' zero, e
+   * non ferma nessuno. */
+  const versioneMinima = new VersioneMinima({
+    centralino: opzioni.versioni ?? "",
+    cartella: opzioni.cartella,
+    cartellaDellApp: opzioni.app,
+    registro,
+  });
   const portiere = new Portiere({
     ponte,
     dispositivi,
@@ -393,6 +405,7 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
     /* Da fuori casa si entra con gdahome Premium; l'abbinamento resta aperto
      * a tutti. Il perche' del taglio sta in `portiere.js`. */
     soloInCasa: () => licenze.limitata,
+    versioneMinima,
   });
   const chiamata = new Chiamata({
     dove: opzioni.centralino,
@@ -543,6 +556,7 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
   /* Separata dal rapporto, e non per caso: il rapporto resta spento di serie,
    * e le licenze non ne hanno bisogno. Manda solo chi e' la casa. */
   licenze.parti();
+  versioneMinima.parti();
 
   const saluto = await casa.saluta();
   if (saluto.viva) registro.info("Home Assistant risponde");
@@ -598,6 +612,7 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
     chiamata.spegni();
     postino.ferma();
     licenze.ferma();
+    versioneMinima.ferma();
     ponte.chiudiTutto();
     spegnimento.chiudi();
     zigbee.spegni();
@@ -617,6 +632,7 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
     registro,
     postino,
     licenze,
+    versioneMinima,
     app,
     console: console_,
     planceInCasa,
