@@ -64,6 +64,7 @@ for (const [chi, pagina] of Object.entries(PAGINE)) {
      * e non nel foglio, la pagina torna a una colonna sola e nessuno se ne
      * accorge finche' non la apre. */
     assert.match(pagina, /class="colonna-elenco"/, "l'elenco non ha piu' il suo contenitore");
+    assert.match(pagina, /class="posto-dell-elenco"/, "l'elenco non ha piu' il suo posto");
     assert.match(
       pagina,
       /class="scheda-vuota"/,
@@ -71,7 +72,7 @@ for (const [chi, pagina] of Object.entries(PAGINE)) {
     );
 
     const foglio = laffiancata(pagina);
-    assert.match(regola(foglio, "#dove > .colonna-elenco"), /grid-column: 1;/);
+    assert.match(regola(foglio, "#dove > .posto-dell-elenco"), /grid-column: 1;/);
     assert.match(
       regola(foglio, "#dove > .scheda-vuota,\n        #dove > .foglio"),
       /grid-column: 2;/,
@@ -85,7 +86,7 @@ for (const [chi, pagina] of Object.entries(PAGINE)) {
      * che ne comparisse una per spostarne una sola delle due. */
     const foglio = laffiancata(pagina);
     const riga = (selettore) => /grid-row: (\d+);/.exec(regola(foglio, selettore))?.[1];
-    const elenco = riga("#dove > .colonna-elenco");
+    const elenco = riga("#dove > .posto-dell-elenco");
     const scheda = riga("#dove > .scheda-vuota,\n        #dove > .foglio");
     assert.ok(elenco, "l'elenco non ha una riga sua");
     assert.equal(scheda, elenco, "la scheda non sta sulla riga dell'elenco");
@@ -100,7 +101,7 @@ for (const [chi, pagina] of Object.entries(PAGINE)) {
      * vedeva. Il respiro adesso sta solo sopra e sotto, e questa prova e' la
      * sola cosa che se ne accorge se qualcuno lo rimette di lato. */
     const foglio = laffiancata(pagina);
-    const colonna = regola(foglio, "#dove > .colonna-elenco");
+    const colonna = regola(foglio, "#dove .colonna-elenco");
     /* La parte di destra-sinistra di una scorciatoia, comunque sia scritta:
      * «tutto», «sopra-sotto lati», «sopra lati sotto», «sopra destra sotto
      * sinistra».
@@ -138,7 +139,7 @@ for (const [chi, pagina] of Object.entries(PAGINE)) {
     /* E il titolo in cima non porta il suo stacco: le due colonne devono
      * cominciare alla stessa altezza, e con lo stacco la prima riga
      * dell'elenco restava sessanta pixel piu' in basso della scheda. */
-    assert.match(regola(foglio, "#dove > .colonna-elenco > .voce"), /margin-top: 0;/);
+    assert.match(regola(foglio, "#dove .colonna-elenco > .voce"), /margin-top: 0;/);
   });
 
   test(`${chi}: dentro la scheda c'e' un bordo sinistro solo`, () => {
@@ -192,7 +193,7 @@ for (const [chi, pagina] of Object.entries(PAGINE)) {
       "lo stacco della riga non c'e' piu'",
     );
 
-    const colonna = regola(foglio, "#dove > .colonna-elenco");
+    const colonna = regola(foglio, "#dove .colonna-elenco");
     const respiro = /\n\s*padding: (\d+)px 0;/.exec(colonna)?.[1];
     assert.ok(respiro, "alla colonna manca il respiro sopra e sotto");
     /* La colonna parte dallo stacco meno il suo respiro, cosi' il contenuto
@@ -206,6 +207,56 @@ for (const [chi, pagina] of Object.entries(PAGINE)) {
       regola(foglio, "#dove > .scheda-vuota,\n        #dove > .foglio"),
       /margin-top: var\(--stacco-affianco\);/,
       "la scheda non parte dallo stacco della riga",
+    );
+  });
+
+  test(`${chi}: l'elenco si ferma dove finisce la sua riga`, () => {
+    /* «Controlla lo scroll, che quando vado in basso si sballa la parte di
+     * sotto.»
+     *
+     * Il difetto per nome. `sticky` **non** si ferma in fondo alla sua riga di
+     * griglia: si ferma in fondo al suo blocco contenitore, e per una casella
+     * di griglia quello e' la griglia intera. L'elenco, finita la riga nona,
+     * continuava a scendere sopra la decima — e siccome e' posizionato si
+     * disegna davanti a quello che e' fermo. Misurato con un browser vero:
+     * centosessanta pixel del riquadro «Cosa si vede da qui» spariti dietro
+     * l'elenco.
+     *
+     * Il rimedio e' una scatola in mezzo: la casella e' il posto, l'elenco si
+     * attacca dentro di lui, e il gioco che ha e' quello della riga.
+     *
+     * Le tre cose che lo tengono in piedi — e senza una qualunque delle tre
+     * torna il difetto:
+     *
+     *  1. la casella e' il posto, e l'elenco no (nessun `grid-row` suo);
+     *  2. il posto riempie la riga (`align-self: stretch`: la griglia allinea
+     *     tutto in alto, e un posto alto quanto l'elenco non darebbe gioco);
+     *  3. e' l'elenco a essere `sticky`, non il posto. */
+    const foglio = laffiancata(pagina);
+
+    const posto = regola(foglio, "#dove > .posto-dell-elenco");
+    assert.match(posto, /grid-row: \d+;/, "il posto non e' la casella di griglia");
+    assert.match(posto, /align-self: stretch;/, "il posto non riempie la riga: gioco zero");
+    assert.doesNotMatch(
+      posto,
+      /position: sticky;/,
+      "a attaccarsi dev'essere l'elenco, non il posto",
+    );
+
+    const colonna = regola(foglio, "#dove .colonna-elenco");
+    assert.match(colonna, /position: sticky;/, "l'elenco non si attacca piu'");
+    assert.doesNotMatch(
+      colonna,
+      /grid-row:/,
+      "l'elenco e' tornato a essere lui la casella: cosi' scavalca la riga",
+    );
+
+    /* E nel corpo della pagina l'elenco sta davvero dentro il suo posto: due
+     * regole giuste su un annidamento che non c'e' non servono a niente. */
+    assert.match(
+      pagina,
+      /class="posto-dell-elenco">\s*<div class="colonna-elenco">/,
+      "l'elenco non sta dentro il suo posto",
     );
   });
 

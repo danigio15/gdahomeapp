@@ -463,8 +463,10 @@ test("la gestione vede anche i numeri del tramite, presi uno per uno", async () 
         vivo: true,
         acceso_da: 120,
         case: 131,
+        installate: 152,
         collegamenti: 22,
         app: 7,
+        web: 3,
         segnalazioni: true,
         chat: { linee: 5, console: true },
         posta: false,
@@ -481,8 +483,10 @@ test("la gestione vede anche i numeri del tramite, presi uno per uno", async () 
       vivo: true,
       accesoDa: 120,
       case: 131,
+      installate: 152,
       collegamenti: 22,
       app: 7,
+      web: 3,
       segnalazioni: true,
       chat: 5,
       console: true,
@@ -493,6 +497,28 @@ test("la gestione vede anche i numeri del tramite, presi uno per uno", async () 
       await fetch(`${b.dove}/salute`, { headers: { "x-forwarded-for": "203.0.113.9" } })
     ).json();
     assert.deepEqual(daFuori, { vivo: true });
+  } finally {
+    await b.chiudi();
+    await new Promise((ok) => tramite.close(ok));
+  }
+});
+
+/* Un tramite non ancora aggiornato non dice «installate» ne' «web». Quei due
+ * arrivano `null`, e la pagina non ne fa mattonelle: uno zero che nessuno ha
+ * contato direbbe che nessuno ha installato gdahome. */
+test("i numeri che un tramite vecchio non dice arrivano null, non zero", async () => {
+  const { createServer } = await import("node:http");
+  const tramite = createServer((_q, r) => {
+    r.writeHead(200, { "content-type": "application/json" });
+    r.end(JSON.stringify({ vivo: true, acceso_da: 120, case: 131, collegamenti: 22, app: 7 }));
+  });
+  await new Promise((ok) => tramite.listen(0, "127.0.0.1", ok));
+  const b = await banco({ saluteDelTramite: `http://127.0.0.1:${tramite.address().port}/salute` });
+  try {
+    const detto = await (await b.gestore("/salute")).json();
+    assert.equal(detto.tramite.installate, null);
+    assert.equal(detto.tramite.web, null);
+    assert.equal(detto.tramite.case, 131, "quello che sa dire arriva com'e'");
   } finally {
     await b.chiudi();
     await new Promise((ok) => tramite.close(ok));

@@ -1439,23 +1439,54 @@
            quelle compare. Le righe vuote in mezzo non occupano niente,
            perche' fra una riga e l'altra non c'e' spazio. */
 
-        /* L'elenco resta fermo mentre la scheda scorre.
+        /* ── L'elenco resta fermo mentre la scheda scorre ──────────────
          *
-         * Il primo tentativo faceva il contrario — scheda attaccata in alto,
-         * elenco che scorre — e non si attaccava niente: `sticky` si muove
-         * dentro la sua riga di griglia, e la scheda era **alta quanto la
-         * riga**. Gioco zero, e se ne andava su con la pagina, col titolo che
-         * finiva sotto la barra. Girata: la riga e' alta quanto la scheda, che
-         * e' quasi sempre la piu' lunga, e il gioco ce l'ha l'elenco. Il
-         * giorno che e' l'elenco a essere piu' lungo, si attacca la scheda: e'
-         * la stessa regola, e va bene in tutt'e due i versi.
+         * Due scatole dove sembrerebbe bastarne una: il **posto**, che e' la
+         * casella di griglia, e dentro l'**elenco**, che e' quello che si
+         * attacca. La seconda e' nata da un difetto, e senza di lei torna.
          *
-         * Il tetto e lo scorrimento suo servono a chi ha quaranta impianti:
-         * senza, l'elenco sarebbe piu' alto dello schermo e non si
-         * attaccherebbe piu' niente. */
-        #dove > .colonna-elenco {
+         * L'idea e' semplice: la riga e' alta quanto la scheda, che e' quasi
+         * sempre la piu' lunga, e il gioco ce l'ha l'elenco — sta fermo
+         * mentre la scheda accanto scorre. Il giorno che e' l'elenco a essere
+         * piu' lungo, si attacca la scheda: e' la stessa regola, e va bene in
+         * tutt'e due i versi. Il tetto e lo scorrimento suo servono a chi ha
+         * quaranta impianti: senza, l'elenco sarebbe piu' alto dello schermo e
+         * non si attaccherebbe piu' niente.
+         *
+         * ── Perche' il posto, e non l'elenco, e' la casella ────────────
+         *
+         * «Controlla lo scroll, che quando vado in basso si sballa la parte
+         * di sotto.»
+         *
+         * Qui c'era scritto che «`sticky` si muove dentro la sua riga di
+         * griglia». **Non e' vero.** Un elemento attaccato si muove dentro il
+         * suo blocco contenitore, e per una casella di griglia quel blocco e'
+         * la **griglia intera**, non la sua riga. Cosi' l'elenco, finita la
+         * riga nona, non si fermava: scendeva sopra la riga decima, e siccome
+         * e' posizionato si disegna **davanti** a quello che e' fermo.
+         * Scorrendo in basso, il riquadro «Cosa si vede da qui» spariva per un
+         * pezzo dietro l'elenco — misurato, centosessanta pixel.
+         *
+         * Adesso la casella e' il posto, che la riga la riempie tutta e li'
+         * finisce; l'elenco sta dentro e si attacca dentro di lui. Il gioco
+         * che ha e' esattamente quello della riga: finita quella, se ne va su
+         * con la pagina come tutto il resto.
+         *
+         * `align-self: stretch` perche' la griglia allinea tutto in alto
+         * (`align-items: start`, qui sopra): senza, il posto sarebbe alto
+         * quanto l'elenco — gioco zero, e l'elenco non si attaccherebbe piu'
+         * a niente. E' la riga che deve dare la misura, non il contenuto.
+         *
+         * Fuori dalla griglia — sul telefono — il posto e' una scatola vuota
+         * che non fa niente, e va bene cosi'. */
+        #dove > .posto-dell-elenco {
           grid-column: 1;
           grid-row: 9;
+          min-width: 0;
+          align-self: stretch;
+        }
+
+        #dove .colonna-elenco {
           min-width: 0;
           position: sticky;
           top: 66px;
@@ -1481,17 +1512,17 @@
            la prima riga dell'elenco sessanta pixel piu' in basso del bordo
            della scheda accanto. E il rientro di due pixel lo portava fuori
            squadro con le righe sotto. */
-        #dove > .colonna-elenco > :first-child,
+        #dove .colonna-elenco > :first-child,
         /* Il titolo, e non «il primo figlio»: nel cruscotto il primo figlio
            e' il blocco «Da verificare ora», che qui e' nascosto — nascosto ma
            primo, e il margine glielo toglieva a lui mentre il titolo vero
            restava sessanta pixel piu' in basso. Di titoli in cima alla
            colonna ce n'e' uno solo, in tutt'e due le pagine. */
-        #dove > .colonna-elenco > .voce {
+        #dove .colonna-elenco > .voce {
           margin-top: 0;
         }
 
-        #dove > .colonna-elenco .voce {
+        #dove .colonna-elenco .voce {
           margin-inline: 0;
         }
 
@@ -1508,12 +1539,12 @@
            quando sotto, la linea dei quattordici giorni sottile. Alte come
            nella griglia a due colonne, otto impianti riempivano due schermi,
            e un elenco che non ci sta in uno schermo non e' piu' un elenco. */
-        #dove > .colonna-elenco .mattonelle {
+        #dove .colonna-elenco .mattonelle {
           grid-template-columns: minmax(0, 1fr);
           gap: 8px;
         }
 
-        #dove > .colonna-elenco .mattonella {
+        #dove .colonna-elenco .mattonella {
           display: grid;
           grid-template-columns: minmax(0, 1fr) auto;
           grid-template-areas:
@@ -1525,24 +1556,24 @@
           padding: 11px 13px 9px;
         }
 
-        #dove > .colonna-elenco .mattonella .nome {
+        #dove .colonna-elenco .mattonella .nome {
           grid-area: nome;
           min-height: 0;
           -webkit-line-clamp: 1;
           font-size: 0.94rem;
         }
 
-        #dove > .colonna-elenco .mattonella .riga {
+        #dove .colonna-elenco .mattonella .riga {
           grid-area: stato;
           font-size: 0.8rem;
         }
 
-        #dove > .colonna-elenco .mattonella .quando {
+        #dove .colonna-elenco .mattonella .quando {
           grid-area: quando;
           margin-top: 0;
         }
 
-        #dove > .colonna-elenco .mattonella .linea {
+        #dove .colonna-elenco .mattonella .linea {
           grid-area: linea;
           height: 18px;
           margin-top: 4px;
@@ -1551,7 +1582,7 @@
         /* «Da verificare ora» qui direbbe due volte la stessa cosa: l'elenco
            sotto e' gia' ordinato con le offline in cima, e il perche' adesso
            si legge nella scheda accanto, aperta. */
-        #dove > .colonna-elenco .da-verificare {
+        #dove .colonna-elenco .da-verificare {
           display: none;
         }
 
@@ -4271,38 +4302,40 @@
             </div>
           </section>
 
-          <div class="colonna-elenco">
-            ${
-              chiedono.length && filtro === "tutte"
-                ? `<div class="da-verificare">
-                     <div class="voce">
-                       <h2>Da verificare ora</h2>
-                       <span>${plurale(chiedono.length, "impianto", "impianti")}</span>
-                     </div>
-                     <div class="scorri">
-                       ${chiedono.map((r) => unaCarta(r.una, r.indice, r.stato)).join("")}
-                     </div>
-                   </div>`
-                : ""
-            }
+          <div class="posto-dell-elenco">
+            <div class="colonna-elenco">
+              ${
+                chiedono.length && filtro === "tutte"
+                  ? `<div class="da-verificare">
+                       <div class="voce">
+                         <h2>Da verificare ora</h2>
+                         <span>${plurale(chiedono.length, "impianto", "impianti")}</span>
+                       </div>
+                       <div class="scorri">
+                         ${chiedono.map((r) => unaCarta(r.una, r.indice, r.stato)).join("")}
+                       </div>
+                     </div>`
+                  : ""
+              }
 
-            <div class="voce">
-              <h2>${filtro === "tutte" ? "Tutti gli impianti" : IL_TITOLO_DELLA_FILA[filtro]}</h2>
-              <span>${viste.length} su ${CASE.length}</span>
+              <div class="voce">
+                <h2>${filtro === "tutte" ? "Tutti gli impianti" : IL_TITOLO_DELLA_FILA[filtro]}</h2>
+                <span>${viste.length} su ${CASE.length}</span>
+              </div>
+              ${
+                !CASE.length
+                  ? `<div class="vetro vuoto">
+                       <b>Ancora nessun impianto</b> Da «Abbinamento» si genera un codice, e il primo impianto compare qui da solo.
+                     </div>`
+                  : viste.length
+                    ? `<div class="mattonelle">
+                         ${viste.map((r) => unaCasa(r.una, r.indice, r.stato)).join("")}
+                       </div>`
+                    : `<div class="vetro vuoto">
+                         <b>Nessun impianto in questo gruppo</b> Premi di nuovo il filtro per vederli tutti.
+                       </div>`
+              }
             </div>
-            ${
-              !CASE.length
-                ? `<div class="vetro vuoto">
-                     <b>Ancora nessun impianto</b> Da «Abbinamento» si genera un codice, e il primo impianto compare qui da solo.
-                   </div>`
-                : viste.length
-                  ? `<div class="mattonelle">
-                       ${viste.map((r) => unaCasa(r.una, r.indice, r.stato)).join("")}
-                     </div>`
-                  : `<div class="vetro vuoto">
-                       <b>Nessun impianto in questo gruppo</b> Premi di nuovo il filtro per vederli tutti.
-                     </div>`
-            }
           </div>
 
           <div class="scheda-vuota">

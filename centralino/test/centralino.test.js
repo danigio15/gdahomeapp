@@ -19,7 +19,7 @@ import { createHash, randomBytes } from "node:crypto";
 
 import { Case } from "../src/case.js";
 import { Centralino } from "../src/centralino.js";
-import { costruisciIlServer } from "../src/server.js";
+import { cheCosaE, costruisciIlServer } from "../src/server.js";
 
 const impronta = (cosa) => createHash("sha256").update(cosa).digest("hex");
 const unaCasaNuova = () => `casa_${randomBytes(16).toString("hex")}`;
@@ -325,6 +325,102 @@ test("gli abbinamenti in corso contano come collegamenti, non come app aperte", 
     chiGuarda.chiudi();
     chiSiAbbina.chiudi();
     casa.chiudi();
+  } finally {
+    await b.spegni();
+  }
+});
+
+/* «io voglio sapere su case, quanti hanno installato e funzionante gdahome.
+ * app quanto stanno usando da app e collegamenti aperti quanti la stanno
+ * usando da web.»
+ *
+ * Tre domande, e per un po' i numeri sulla pagina ne rispondevano una e mezza:
+ * «app aperte» contava chiunque fosse abbinato — app o scheda di browser, lo
+ * stesso conto — e «installato» non lo diceva nessuno.
+ *
+ * Qui si tiene ferma la separazione dei due schermi. Chi la fa e' `cheCosaE`,
+ * e le sue quattro regole si provano da sole nella prova dopo. */
+test("un filo dal browser conta nel web, non nell'app", async () => {
+  const b = await banco();
+  try {
+    const casa = unaCasa(b.dove);
+    await casa.entra();
+
+    /* `?da=web` e' quello che scrive l'app compilata per il browser. Si prova
+     * da qui e non con un `Origin` a mano perche' il WebSocket di Node non
+     * lascia scrivere le intestazioni: l'`Origin` si prova in `cheCosaE`. */
+    const dalBrowser = unTelefono(b.dove, `/telefono/${casa.id}?da=web`);
+    await dalBrowser.aperta;
+    await attendi(() => casa.canali().length === 1);
+
+    const dallApp = unTelefono(b.dove, `/telefono/${casa.id}?da=app`);
+    await dallApp.aperta;
+    await attendi(() => casa.canali().length === 2);
+
+    assert.equal(b.centralino.quantiCollegamenti(), 2, "due fili in tutto");
+    assert.equal(b.centralino.quanteAppAperte(), 1, "uno dall'app");
+    assert.equal(b.centralino.quantiDalWeb(), 1, "e uno dal browser");
+
+    /* E arrivano fino alla pagina: `/salute` e' l'unica strada per cui quei
+     * conti si vedono da qualche parte, e una prova che si ferma al metodo non
+     * accorgerebbe di una riga dimenticata li'. */
+    const salute = await (await fetch(`${b.http}/salute`)).json();
+    assert.deepEqual(
+      {
+        case: salute.case,
+        installate: salute.installate,
+        collegamenti: salute.collegamenti,
+        app: salute.app,
+        web: salute.web,
+      },
+      { case: 1, installate: 1, collegamenti: 2, app: 1, web: 1 },
+    );
+
+    dalBrowser.chiudi();
+    dallApp.chiudi();
+    casa.chiudi();
+  } finally {
+    await b.spegni();
+  }
+});
+
+test("quello che il filo dice di se' vince, e senza Origin e' l'app", () => {
+  const che = (url, intestazioni = {}) => cheCosaE({ url, headers: intestazioni });
+
+  /* Le versioni gia' installate non dicono niente: l'app non manda `Origin`,
+   * il browser lo manda sempre e non si puo' togliere. Cosi' il conto e'
+   * giusto anche prima che si aggiorni qualcuno. */
+  assert.equal(che("/telefono/casa_x"), "app");
+  assert.equal(che("/telefono/casa_x", { origin: "https://gdahome.org" }), "web");
+
+  /* Quando invece lo dice, lo dice lui. */
+  assert.equal(che("/telefono/casa_x?da=web"), "web");
+  assert.equal(che("/telefono/casa_x?da=app", { origin: "https://gdahome.org" }), "app");
+
+  /* Una parola che non conosciamo non e' una terza categoria: si ricade sulla
+   * regola dell'`Origin`, che sbaglia meno di una parola inventata. */
+  assert.equal(che("/telefono/casa_x?da=chissa"), "app");
+  assert.equal(che("/telefono/casa_x?da=chissa", { origin: "https://gdahome.org" }), "web");
+});
+
+/* «le 140 case collegate cosa significa» — questo: gli impianti col filo
+ * aperto adesso. Quanti hanno installato e' un altro numero, e viene dal
+ * registro delle case, che resta anche quando il filo non c'e'. */
+test("le installazioni si contano anche quando il filo e' chiuso", async () => {
+  const b = await banco();
+  try {
+    const casa = unaCasa(b.dove);
+    await casa.entra();
+    await attendi(() => b.centralino.quanteCase() === 1);
+    assert.equal(b.centralino.quanteInstallate(), 1);
+
+    casa.chiudi();
+    await attendi(() => b.centralino.quanteCase() === 0);
+    assert.equal(
+      b.centralino.quanteInstallate(),
+      1,
+      "l'impianto resta installato anche a filo chiuso",
+    );
   } finally {
     await b.spegni();
   }

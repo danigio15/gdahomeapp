@@ -116,6 +116,41 @@ export class Centralino {
     this._battito.unref?.();
   }
 
+  /* ─── I conti che si leggono dalla gestione ──────────────────────────
+   *
+   * Sono quattro, e vanno letti insieme perche' due contano **impianti** e due
+   * contano **persone davanti a uno schermo**. Tenerli separati non e' un
+   * vezzo: «140» accanto a un nome sbagliato e' un numero che decide dei
+   * prezzi e delle scelte, e per un po' e' stato letto per quello che non era.
+   *
+   *   · [quanteInstallate]  quanti hanno installato l'add-on. E' un totale.
+   *   · [quanteCase]        quanti ce l'hanno **acceso e collegato adesso**.
+   *   · [quanteAppAperte]   quanti stanno guardando dall'app.
+   *   · [quantiDalWeb]      quanti stanno guardando dal browser.
+   *
+   * I primi due sono impianti, gli altri due schermi, e uno stesso impianto
+   * puo' avere tre schermi aperti o nessuno. */
+
+  /* Quanti impianti hanno installato gdahome. Non e' un conto di adesso: e' il
+   * registro delle case, cioe' ogni add-on che si e' presentato almeno una
+   * volta e non e' stato zitto per sei mesi di fila (`case.js`, `potatura`).
+   * E' l'unica cosa che somigli a «quante installazioni ci sono in giro», e
+   * somiglia abbastanza: il filo verso il tramite lo apre ogni ponte da solo,
+   * senza che nessuno configuri niente.
+   *
+   * Restano fuori — e vanno detti, perche' sono i casi in cui il numero e'
+   * piu' piccolo del vero — chi ha spento `da_fuori_casa` e chi si e' messo un
+   * tramite suo. */
+  quanteInstallate() {
+    return this.case?.quante?.() ?? 0;
+  }
+
+  /* E quanti di quegli impianti stanno funzionando **adesso**: il ponte ha il
+   * filo aperto verso qui, quindi l'add-on gira e la casa vede internet.
+   *
+   * E' il numero piu' onesto che questa macchina possa dare su «installato e
+   * funzionante», e ha un limite da dire: che Home Assistant risponda al ponte
+   * qui non si sa. Quello lo sa il quadro, che riceve i rapporti. */
   quanteCase() {
     return this.collegate.size;
   }
@@ -127,22 +162,44 @@ export class Centralino {
    * del browser ne tiene due, e ci finiscono dentro anche i fili di chi si sta
    * abbinando, che un telefono abbinato non lo e' ancora. Chi leggeva
    * «22 telefoni collegati» capiva «l'app e' su 22 telefoni», che e' un'altra
-   * cosa e non e' vera. */
+   * cosa e non e' vera.
+   *
+   * Resta perche' e' il totale — app + browser + abbinamenti in corso — e
+   * perche' e' la somma che si confronta col tetto dei fili. Sulla pagina non
+   * ci va piu': «collegamenti aperti» non diceva niente a nessuno. */
   quantiCollegamenti() {
     let quanti = 0;
     for (const casa of this.collegate.values()) quanti += casa.canali.size;
     return quanti;
   }
 
-  /* E quante di quelle sono davvero l'app aperta: i fili entrati da
-   * `/telefono/<casa>`, cioe' chi e' gia' abbinato e sta guardando. Restano
-   * fuori gli abbinamenti in corso. Resta un conto di adesso, non di quanti
-   * hanno l'app installata: quello il centralino non lo sa e non lo tiene. */
+  /* Quanti stanno guardando dall'app, e quanti dal browser.
+   *
+   * Prima c'era un conto solo, e contava i fili entrati da `/telefono/<casa>`
+   * — cioe' chi e' gia' abbinato, **qualunque cosa avesse in mano**. Si
+   * chiamava «app aperte» e dentro c'era anche ogni scheda di browser: due
+   * numeri diversi chiesti allo stesso conto.
+   *
+   * Adesso la differenza la dice chi apre il filo (`che`, in `server.js`), e i
+   * due conti sono due. Gli abbinamenti in corso non stanno in nessuno dei
+   * due: chi si sta abbinando non sta ancora guardando niente.
+   *
+   * Sono conti di **adesso**: quante persone hanno l'app aperta in questo
+   * istante, non quante l'hanno installata. */
   quanteAppAperte() {
-    let quante = 0;
+    return this._quantiCosi("app");
+  }
+
+  quantiDalWeb() {
+    return this._quantiCosi("web");
+  }
+
+  _quantiCosi(che) {
+    let quanti = 0;
     for (const casa of this.collegate.values())
-      for (const canale of casa.canali.values()) if (canale.via === "telefono") quante += 1;
-    return quante;
+      for (const canale of casa.canali.values())
+        if (canale.via === "telefono" && canale.che === che) quanti += 1;
+    return quanti;
   }
 
   /* ─── Quanti fili ────────────────────────────────────────────────────── */
@@ -207,7 +264,7 @@ export class Centralino {
    * l'identificativo serve a instradare, il segno a entrare, e il segno viene
    * dopo — dentro il filo, verso la casa, che e' l'unica che lo puo'
    * verificare. */
-  accogliUnTelefono(presa, { casa: idDellaCasa, da = "?" } = {}) {
+  accogliUnTelefono(presa, { casa: idDellaCasa, da = "?", che = "" } = {}) {
     const casa = this.collegate.get(idDellaCasa);
     if (!casa) {
       /* Detto com'e': «questa casa adesso non e' collegata». Non e' un
@@ -215,7 +272,7 @@ export class Centralino {
       presa.chiudi(CHIUSURA.normale, "casa non collegata");
       return null;
     }
-    return casa.apriUnCanale(presa, da, this._sorvegliaIlTelefono(presa), "telefono");
+    return casa.apriUnCanale(presa, da, this._sorvegliaIlTelefono(presa), "telefono", che);
   }
 
   /* Un telefono che si sta abbinando non sa ancora a quale casa va: sa solo il
@@ -432,7 +489,7 @@ class CasaCollegata {
    * `/telefono/<casa>` arriva chi e' gia' abbinato, da `/abbinamento/<impronta>`
    * chi si sta abbinando. La casa lo usa per accettare la stretta
    * dell'abbinamento solo dalla seconda. */
-  apriUnCanale(presaDelTelefono, da, haParlato = () => {}, via = "telefono") {
+  apriUnCanale(presaDelTelefono, da, haParlato = () => {}, via = "telefono", che = "") {
     if (this.canali.size >= TELEFONI_PER_CASA) {
       haParlato();
       presaDelTelefono.chiudi(CHIUSURA.normale, "troppi telefoni su questa casa");
@@ -440,8 +497,13 @@ class CasaCollegata {
     }
     const numero = this.prossimoCanale++;
     /* `via` si tiene anche qui, non solo mandato alla casa: e' l'unico modo di
-     * distinguere poi un'app aperta da un abbinamento in corso. */
-    const canale = { numero, presa: presaDelTelefono, da, via };
+     * distinguere poi un'app aperta da un abbinamento in corso.
+     *
+     * E `che` dice cos'e' quello che sta all'altro capo — `"app"` o `"web"` —
+     * per poterli contare separati. Alla casa non serve e non si manda: lei
+     * parla col telefono allo stesso modo in tutti e due i casi, e un dato in
+     * piu' sul filo sarebbe un dato in piu' senza motivo. */
+    const canale = { numero, presa: presaDelTelefono, da, via, che };
     this.canali.set(numero, canale);
 
     presaDelTelefono.onMessaggio = (testo, eraTesto = typeof testo === "string") => {

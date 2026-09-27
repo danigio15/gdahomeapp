@@ -2632,23 +2632,54 @@
            quelle compare. Le righe vuote in mezzo non occupano niente,
            perche' fra una riga e l'altra non c'e' spazio. */
 
-        /* L'elenco resta fermo mentre la scheda scorre.
+        /* ── L'elenco resta fermo mentre la scheda scorre ──────────────
          *
-         * Il primo tentativo faceva il contrario — scheda attaccata in alto,
-         * elenco che scorre — e non si attaccava niente: `sticky` si muove
-         * dentro la sua riga di griglia, e la scheda era **alta quanto la
-         * riga**. Gioco zero, e se ne andava su con la pagina, col titolo che
-         * finiva sotto la barra. Girata: la riga e' alta quanto la scheda, che
-         * e' quasi sempre la piu' lunga, e il gioco ce l'ha l'elenco. Il
-         * giorno che e' l'elenco a essere piu' lungo, si attacca la scheda: e'
-         * la stessa regola, e va bene in tutt'e due i versi.
+         * Due scatole dove sembrerebbe bastarne una: il **posto**, che e' la
+         * casella di griglia, e dentro l'**elenco**, che e' quello che si
+         * attacca. La seconda e' nata da un difetto, e senza di lei torna.
          *
-         * Il tetto e lo scorrimento suo servono a chi ha quaranta impianti:
-         * senza, l'elenco sarebbe piu' alto dello schermo e non si
-         * attaccherebbe piu' niente. */
-        #dove > .colonna-elenco {
+         * L'idea e' semplice: la riga e' alta quanto la scheda, che e' quasi
+         * sempre la piu' lunga, e il gioco ce l'ha l'elenco — sta fermo
+         * mentre la scheda accanto scorre. Il giorno che e' l'elenco a essere
+         * piu' lungo, si attacca la scheda: e' la stessa regola, e va bene in
+         * tutt'e due i versi. Il tetto e lo scorrimento suo servono a chi ha
+         * quaranta impianti: senza, l'elenco sarebbe piu' alto dello schermo e
+         * non si attaccherebbe piu' niente.
+         *
+         * ── Perche' il posto, e non l'elenco, e' la casella ────────────
+         *
+         * «Controlla lo scroll, che quando vado in basso si sballa la parte
+         * di sotto.»
+         *
+         * Qui c'era scritto che «`sticky` si muove dentro la sua riga di
+         * griglia». **Non e' vero.** Un elemento attaccato si muove dentro il
+         * suo blocco contenitore, e per una casella di griglia quel blocco e'
+         * la **griglia intera**, non la sua riga. Cosi' l'elenco, finita la
+         * riga nona, non si fermava: scendeva sopra la riga decima, e siccome
+         * e' posizionato si disegna **davanti** a quello che e' fermo.
+         * Scorrendo in basso, il riquadro «Cosa si vede da qui» spariva per un
+         * pezzo dietro l'elenco — misurato, centosessanta pixel.
+         *
+         * Adesso la casella e' il posto, che la riga la riempie tutta e li'
+         * finisce; l'elenco sta dentro e si attacca dentro di lui. Il gioco
+         * che ha e' esattamente quello della riga: finita quella, se ne va su
+         * con la pagina come tutto il resto.
+         *
+         * `align-self: stretch` perche' la griglia allinea tutto in alto
+         * (`align-items: start`, qui sopra): senza, il posto sarebbe alto
+         * quanto l'elenco — gioco zero, e l'elenco non si attaccherebbe piu'
+         * a niente. E' la riga che deve dare la misura, non il contenuto.
+         *
+         * Fuori dalla griglia — sul telefono — il posto e' una scatola vuota
+         * che non fa niente, e va bene cosi'. */
+        #dove > .posto-dell-elenco {
           grid-column: 1;
           grid-row: 9;
+          min-width: 0;
+          align-self: stretch;
+        }
+
+        #dove .colonna-elenco {
           min-width: 0;
           position: sticky;
           top: 66px;
@@ -2674,17 +2705,17 @@
            la prima riga dell'elenco sessanta pixel piu' in basso del bordo
            della scheda accanto. E il rientro di due pixel lo portava fuori
            squadro con le righe sotto. */
-        #dove > .colonna-elenco > :first-child,
+        #dove .colonna-elenco > :first-child,
         /* Il titolo, e non «il primo figlio»: nel cruscotto il primo figlio
            e' il blocco «Da verificare ora», che qui e' nascosto — nascosto ma
            primo, e il margine glielo toglieva a lui mentre il titolo vero
            restava sessanta pixel piu' in basso. Di titoli in cima alla
            colonna ce n'e' uno solo, in tutt'e due le pagine. */
-        #dove > .colonna-elenco > .voce {
+        #dove .colonna-elenco > .voce {
           margin-top: 0;
         }
 
-        #dove > .colonna-elenco .voce {
+        #dove .colonna-elenco .voce {
           margin-inline: 0;
         }
 
@@ -4163,7 +4194,34 @@
        *
        * «Non mi aggiorno» arrivava da /salute e non lo leggeva nessuno: e' la
        * cosa per cui questo riquadro esiste, e adesso e' la prima che si
-       * vede. */
+       * vede.
+       *
+       * ── Le mattonelle del tramite, e cosa contano ──────────────────────
+       *
+       * «Le 140 case collegate cosa significa, che sono sul tramite o in
+       * generale stanno usando gdahome?»
+       *
+       * Significava la prima, e la parola faceva credere la seconda. Le altre
+       * due erano peggio: «collegamenti aperti» era la somma dei fili —
+       * abbinamenti in corso compresi — e non voleva dire niente per nessuno,
+       * e «app aperte» contava chiunque fosse abbinato, l'app sul telefono e
+       * una scheda di browser nello stesso numero.
+       *
+       * Adesso ogni mattonella risponde a una domanda sola:
+       *
+       *   impianti con gdahome    quanti hanno installato l'add-on (un totale:
+       *                           resta anche quando la casa e' spenta)
+       *   collegati adesso        quanti di quelli hanno il filo aperto in
+       *                           questo istante — installato e funzionante
+       *   la guardano dall'app    quante app aperte adesso
+       *   la guardano dal browser quante pagine aperte adesso
+       *
+       * I primi due sono impianti, gli altri due schermi, e un impianto solo
+       * puo' avere tre schermi aperti o nessuno.
+       *
+       * Le prime due non le sa dire un tramite non ancora aggiornato: arrivano
+       * `null`, e allora la mattonella non si disegna. Uno zero direbbe che
+       * nessuno ha installato gdahome. */
       function ilServizio() {
         if (!SALUTE) return "";
 
@@ -4228,9 +4286,18 @@
                  )
                }
                <div class="servizio-conti">
-                 ${/* già HTML */ mattonella("blu", "casa", Number(t.case) || 0, "case collegate")}
-                 ${/* già HTML */ mattonella("verde", "filo", Number(t.collegamenti) || 0, "collegamenti aperti")}
-                 ${/* già HTML */ mattonella("verde", "telefono", Number(t.app) || 0, "app aperte")}
+                 ${
+                   /* già HTML */ t.installate === null
+                     ? ""
+                     : mattonella("blu", "casa", t.installate, "impianti con gdahome")
+                 }
+                 ${/* già HTML */ mattonella("verde", "filo", Number(t.case) || 0, "collegati adesso")}
+                 ${/* già HTML */ mattonella("verde", "telefono", Number(t.app) || 0, "la guardano dall'app")}
+                 ${
+                   /* già HTML */ t.web === null
+                     ? ""
+                     : mattonella("verde", "browser", t.web, "la guardano dal browser")
+                 }
                  ${/* già HTML */ mattonella("ambra", "chat", Number(t.chat) || 0, "conversazioni di assistenza")}
                </div>
                <div class="interruttori">
@@ -4282,6 +4349,8 @@
       const LE_ICONE = {
         installatori:
           '<svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><circle cx="7.5" cy="7" r="3" stroke="currentColor" stroke-width="1.8"/><path d="M2.5 16c.6-2.9 2.6-4.5 5-4.5s4.4 1.6 5 4.5M13.5 5.5a2.5 2.5 0 0 1 0 5M15.5 11.8c1.3.7 2 1.9 2.3 3.7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>',
+        browser:
+          '<svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><rect x="2.4" y="3.6" width="15.2" height="12.8" rx="2.4" stroke="currentColor" stroke-width="1.8"/><path d="M2.4 7.6h15.2" stroke="currentColor" stroke-width="1.8"/><circle cx="5.2" cy="5.6" r="0.75" fill="currentColor"/><circle cx="7.7" cy="5.6" r="0.75" fill="currentColor"/></svg>',
         aggiungi:
           '<svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M10 4v12M4 10h12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>',
         /* Le cinque del riquadro «Il servizio»: due macchine e tre conti. */
@@ -4449,18 +4518,20 @@
 
           ${/* già HTML */ ilServizio()}
 
-          <div class="colonna-elenco">
-            <div class="voce">
-              <h2>Gli installatori</h2>
-              <span>${INSTALLATORI.length}</span>
+          <div class="posto-dell-elenco">
+            <div class="colonna-elenco">
+              <div class="voce">
+                <h2>Gli installatori</h2>
+                <span>${INSTALLATORI.length}</span>
+              </div>
+              ${
+                INSTALLATORI.length
+                  ? `<div class="installatori">${INSTALLATORI.map(unInstallatore).join("")}</div>`
+                  : `<div class="vetro vuoto">
+                       <b>Ancora nessun installatore</b> Il primo si aggiunge da «Aggiungi»: nome, limite, e viene generata la sua chiave.
+                     </div>`
+              }
             </div>
-            ${
-              INSTALLATORI.length
-                ? `<div class="installatori">${INSTALLATORI.map(unInstallatore).join("")}</div>`
-                : `<div class="vetro vuoto">
-                     <b>Ancora nessun installatore</b> Il primo si aggiunge da «Aggiungi»: nome, limite, e viene generata la sua chiave.
-                   </div>`
-            }
           </div>
 
           <div class="scheda-vuota">

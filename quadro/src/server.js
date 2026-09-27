@@ -1084,11 +1084,19 @@ export function costruisciIlServer({
         vivo: detto?.vivo === true,
         accesoDa: numero(detto?.acceso_da),
         case: numero(detto?.case),
+        /* Quanti hanno installato: il registro delle case del tramite, che
+         * resta anche quando il filo e' chiuso. Un tramite non ancora
+         * aggiornato non lo dice, e allora resta `null` e la mattonella non
+         * compare: meglio una mattonella in meno di un numero inventato. */
+        installate: numero(detto?.installate),
         /* `telefoni` e' il nome vecchio: il tramite e il quadro si aggiornano
          * ognuno per conto suo, e per il tempo in cui uno e' avanti e l'altro
          * indietro la mattonella deve dire un numero invece di restare vuota. */
         collegamenti: numero(detto?.collegamenti ?? detto?.telefoni),
         app: numero(detto?.app),
+        /* E quanti guardano dal browser. Come sopra: `null` finche' il tramite
+         * non lo dice. */
+        web: numero(detto?.web),
         segnalazioni: detto?.segnalazioni === true,
         chat: numero(detto?.chat?.linee),
         console: detto?.chat?.console === true,

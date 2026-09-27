@@ -77,6 +77,41 @@ void main() {
     );
   });
 
+  /* «app quanto stanno usando da app e collegamenti aperti quanti la stanno
+   * usando da web»: due numeri che dal centralino si vedevano come uno solo,
+   * perche' niente diceva cos'era il filo. Adesso lo dice il filo stesso.
+   *
+   * Le prove girano sulla macchina, non nel browser, quindi qui `da` vale
+   * `app`; il caso `web` lo tiene il centralino, che se l'`Origin` c'e' conta
+   * comunque un browser. */
+  test('il filo verso il centralino dice cosa ha dall\'altro capo', () {
+    final dove = IndirizzoDelCentralino.leggi('tramite.esempio.it')!;
+    final filo = dove.filo('casa_00112233445566778899aabbccddeeff');
+
+    expect(filo.scheme, 'wss');
+    expect(filo.path, '/telefono/casa_00112233445566778899aabbccddeeff');
+    expect(filo.queryParameters['da'], 'app');
+
+    /* L'identificativo resta nel percorso: il centralino instrada su quello
+     * prima di accettare il filo, e una parola in piu' in coda non lo deve
+     * spostare. */
+    expect(
+      filo.toString(),
+      'wss://tramite.esempio.it/telefono/casa_00112233445566778899aabbccddeeff?da=app',
+    );
+
+    /* E con una porta scritta a mano resta al suo posto. */
+    final conPorta = IndirizzoDelCentralino.leggi('ws://127.0.0.1:8787')!;
+    expect(
+      conPorta.filo('casa_00112233445566778899aabbccddeeff').toString(),
+      'ws://127.0.0.1:8787/telefono/casa_00112233445566778899aabbccddeeff?da=app',
+    );
+
+    /* L'abbinamento no: chi si sta abbinando non sta guardando niente, e in
+     * nessuno dei due conti ci finisce. */
+    expect(dove.abbinamento('abcdef').query, '');
+  });
+
   test('i quattro modi in cui la gente lo scrive danno la stessa cosa', () {
     const atteso = IndirizzoDelPonte(casa: 'casa.esempio.it');
     for (final scritto in [
