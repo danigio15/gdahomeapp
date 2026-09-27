@@ -3332,6 +3332,8 @@ export default Object.freeze({
   "reply": "ответ",
   "room busy": "комната занята",
   "rooms busy": "комнаты заняты",
+  "1 room · someone is there now": "1 комната · там сейчас кто-то есть",
+  "rooms · someone is there now": "комнат · там сейчас кто-то есть",
   "running": "работает",
   "says": "говорит",
   "schedule off": "расписание выключено",

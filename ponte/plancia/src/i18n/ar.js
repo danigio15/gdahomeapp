@@ -3332,6 +3332,8 @@ export default Object.freeze({
   "reply": "رد",
   "room busy": "غرفة مشغولة",
   "rooms busy": "غرف مشغولة",
+  "1 room · someone is there now": "غرفة واحدة · يوجد أحد الآن",
+  "rooms · someone is there now": "غرف · يوجد أحد الآن",
   "running": "يعمل",
   "says": "يقول",
   "schedule off": "الجدولة معطَّلة",

@@ -3332,6 +3332,8 @@ export default Object.freeze({
   "reply": "回复",
   "room busy": "个房间有人",
   "rooms busy": "个房间有人",
+  "1 room · someone is there now": "1 个房间 · 现在有人",
+  "rooms · someone is there now": "个房间 · 现在有人",
   "running": "运行中",
   "says": "的值是",
   "schedule off": "计划已关",

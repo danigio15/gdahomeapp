@@ -3332,6 +3332,8 @@ export default Object.freeze({
   "reply": "yanıt",
   "room busy": "oda dolu",
   "rooms busy": "oda dolu",
+  "1 room · someone is there now": "1 oda · şu an birisi var",
+  "rooms · someone is there now": "oda · şu an birisi var",
   "running": "çalışıyor",
   "says": "diyor",
   "schedule off": "program kapalı",

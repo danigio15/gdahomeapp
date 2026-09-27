@@ -3332,6 +3332,8 @@ export default Object.freeze({
   "reply": "返事",
   "room busy": "部屋に人あり",
   "rooms busy": "部屋に人あり",
+  "1 room · someone is there now": "1 部屋 · 今だれかがいます",
+  "rooms · someone is there now": "部屋 · 今だれかがいます",
   "running": "稼働中",
   "says": "の値",
   "schedule off": "スケジュール停止",

@@ -3332,6 +3332,8 @@ export default Object.freeze({
   "reply": "답변",
   "room busy": "방 사용 중",
   "rooms busy": "방 사용 중",
+  "1 room · someone is there now": "1개 방 · 지금 누군가 있음",
+  "rooms · someone is there now": "개 방 · 지금 누군가 있음",
   "running": "가동 중",
   "says": "의 값",
   "schedule off": "일정 꺼짐",

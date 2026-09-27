@@ -3332,6 +3332,8 @@ export default Object.freeze({
   "reply": "antwoord",
   "room busy": "kamer bezet",
   "rooms busy": "kamers bezet",
+  "1 room · someone is there now": "1 kamer · daar is nu iemand",
+  "rooms · someone is there now": "kamers · daar is nu iemand",
   "running": "draait",
   "says": "zegt",
   "schedule off": "schema uit",

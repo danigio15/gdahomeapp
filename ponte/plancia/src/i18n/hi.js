@@ -3332,6 +3332,8 @@ export default Object.freeze({
   "reply": "जवाब",
   "room busy": "कमरा व्यस्त",
   "rooms busy": "कमरे व्यस्त",
+  "1 room · someone is there now": "1 कमरा · अभी वहाँ कोई है",
+  "rooms · someone is there now": "कमरे · अभी वहाँ कोई है",
   "running": "चल रहा है",
   "says": "कहता है",
   "schedule off": "समय-सारणी बंद",

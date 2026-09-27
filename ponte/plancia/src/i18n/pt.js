@@ -3332,6 +3332,8 @@ export default Object.freeze({
   "reply": "resposta",
   "room busy": "divisão ocupada",
   "rooms busy": "divisões ocupadas",
+  "1 room · someone is there now": "1 divisão · está lá alguém agora",
+  "rooms · someone is there now": "divisões · está lá alguém agora",
   "running": "a funcionar",
   "says": "diz",
   "schedule off": "programação desativada",
