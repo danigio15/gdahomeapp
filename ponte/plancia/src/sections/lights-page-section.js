@@ -701,7 +701,18 @@ function installStyles() {
     `
       /* La larghezza non se la sceglie questa sezione: sta in --dm-page-room e
        * tutte le pagine la seguono insieme. */
-      :is(#page-luci,#page-stanze,#page-prese) .dm-lucip-wrap{box-sizing:border-box;width:100%;max-width:var(--dm-page-room,none);margin:0 auto;padding:0 4px 18px;display:grid;gap:12px}
+      /* La colonna e' dichiarata, e non e' un di piu'.
+         Una griglia senza colonne se ne fa una implicita larga quanto il figlio
+         piu' largo: qui il figlio piu' largo e' la testata, che tiene il
+         riquadro dei conti e i due tasti «accendi tutte / spegni tutte»
+         affiancati, e a 390 punti la sua larghezza naturale e' 387 dove ce ne
+         sono 354. La pagina usciva di sedici pixel e si portava dietro tutte le
+         card, che di quella colonna sono figlie. Misurato in un browser vero,
+         pagina per pagina: «luci» scorreva di lato di 16px e nessun'altra
+         sezione lo faceva. E' lo stesso guasto della card della Musica — anche
+         li' una griglia senza colonne — e vale per tre pagine, perche' questo
+         foglio lo portano Luci, Stanze e Prese. */
+      :is(#page-luci,#page-stanze,#page-prese) .dm-lucip-wrap{box-sizing:border-box;width:100%;max-width:var(--dm-page-room,none);margin:0 auto;padding:0 4px 18px;display:grid;grid-template-columns:minmax(0,1fr);gap:12px}
 
       /* La fascia in alto, nella forma di Clima e Tapparelle: la lettura a
        * sinistra, un solo controllo segmentato con i due comandi di casa. */
@@ -844,7 +855,10 @@ function installStyles() {
         :is(#page-luci,#page-stanze,#page-prese) .dm-lucip-card.is-on:hover{box-shadow:0 14px 34px color-mix(in srgb,var(--dm-light-segno,#f59e0b) 30%,transparent)}
       }
       @media(max-width:560px){
-        :is(#page-luci,#page-stanze,#page-prese) .dm-lucip-grid{grid-template-columns:1fr}
+        /* «1fr» da solo ha per minimo il contenuto minimo, e il nome lungo di
+           una luce non e' un minimo: si sceglie «minmax(0,1fr)», cosi' e' il
+           nome ad accorciarsi e non la colonna ad allargarsi. */
+        :is(#page-luci,#page-stanze,#page-prese) .dm-lucip-grid{grid-template-columns:minmax(0,1fr)}
         :is(#page-luci,#page-stanze,#page-prese) .dm-lucip-bulk button{padding:11px 10px}
       }
       @media(prefers-reduced-motion:reduce){
