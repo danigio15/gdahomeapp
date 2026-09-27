@@ -211,6 +211,11 @@ export function costruisciIlServer({
         collegamenti: centralino.quantiCollegamenti(),
         app: centralino.quanteAppAperte(),
         web: centralino.quantiDalWeb?.() ?? null,
+        /* Quante di quelle case sanno dire la loro licenza: il numero da
+         * guardare prima di scrivere qui la chiave delle licenze. Finche' e'
+         * sotto `case`, accendere toglie l'accesso da fuori alla differenza
+         * (`centralino.js`, `quantePronteAllaLicenza`). */
+        pronte_alla_licenza: centralino.quantePronteAllaLicenza?.() ?? null,
         segnalazioni: Boolean(sportello?.pronto),
         chat: chat ? { linee: chat.archivio.quanteLinee(), console: chat.consoleAperta } : false,
         posta: Boolean(contatti?.pronto),

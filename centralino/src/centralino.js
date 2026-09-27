@@ -229,6 +229,25 @@ export class Centralino {
     return this._quantiCosi("web");
   }
 
+  /* Quante delle case collegate adesso sanno dire la loro licenza.
+   *
+   * E' il numero da guardare **prima** di scrivere la chiave delle licenze su
+   * questa macchina, ed e' l'unico che dice se si puo'. Qui il controllo si
+   * accende insieme alla chiave, e da quel momento una casa senza un gettone
+   * valido si vede chiudere i telefoni che arrivano da fuori. Una casa con
+   * l'add-on vecchio un gettone non ce l'ha e non sa nemmeno di doverlo
+   * chiedere: si chiuderebbe fuori da sola, pagante o no.
+   *
+   * Finche' questo numero e' sotto `quanteCase()`, accendere qui vuol dire
+   * togliere l'accesso da fuori a quella differenza di case. Vale zero
+   * finche' nessuno ha l'add-on nuovo, ed e' giusto cosi': zero e' la
+   * risposta vera, e dice di aspettare. */
+  quantePronteAllaLicenza() {
+    let quante = 0;
+    for (const casa of this.collegate.values()) if (casa.dicelaLicenza) quante += 1;
+    return quante;
+  }
+
   _quantiCosi(che) {
     let quanti = 0;
     for (const casa of this.collegate.values())
@@ -330,6 +349,13 @@ export class Centralino {
    * fuori esce — un telefono non resta dentro per il solo fatto d'essere
    * entrato prima. Torna se la casa e' Premium adesso. */
   laLicenzaDi(casa, gettone) {
+    /* Che la casa il gettone lo dica si segna **sempre**, anche a controllo
+     * spento, e prima di guardarlo: e' l'unico modo di sapere quante case
+     * hanno gia' l'add-on che le licenze le conosce. Un add-on vecchio questo
+     * messaggio non lo manda affatto — e il giorno in cui si scrive la chiave
+     * qui, quelle case si chiuderebbero fuori da sole. Prima di accendere si
+     * guarda `quantePronteAllaLicenza` contro `quanteCase`. */
+    if (casa) casa.dicelaLicenza = true;
     if (!this.chiaveLicenze || !casa?.id) return true;
     const detto = verificaGettone(String(gettone ?? ""), {
       chiave: this.chiaveLicenze,
@@ -399,6 +425,10 @@ class CasaCollegata {
     this.vistaIl = centralino.adesso();
     this.chiusa = false;
     this._attesa = null;
+    /* Se questa casa ha mai detto la sua licenza su questo filo. Non e' «e'
+     * Premium»: e' «il suo add-on sa che le licenze esistono». Vedi
+     * `quantePronteAllaLicenza`. */
+    this.dicelaLicenza = false;
   }
 
   get entrata() {
