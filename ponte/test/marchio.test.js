@@ -131,7 +131,21 @@ test("il manifesto dice gdahome tre volte: il nome, lo slug e la voce nella barr
    * sola — ma deve essere una cosa voluta, non un riordino. */
   assert.match(manifesto, new RegExp(`^name: ${NOME}$`, "m"));
   assert.match(manifesto, new RegExp(`^slug: ${NOME}$`, "m"));
-  assert.match(manifesto, new RegExp(`^panel_title: ${NOME}$`, "m"));
+
+  /* La voce nella barra dice **cosa apre**, e porta il nome dentro.
+   *
+   * Si chiamava «gdahome» e basta, con un ponte per segno, e detta cosi'
+   * prometteva l'app: chi ci entrava cercando la casa trovava le impostazioni
+   * — abbina un telefono, scegli le dashboard, apri l'indirizzo da fuori.
+   * Adesso si chiama «Configura gdahome» col segno dell'ingranaggio, che in
+   * Home Assistant e' quello che vuol dire «qui si configura».
+   *
+   * Il nome ci deve stare dentro lo stesso: in una barra piena di voci di
+   * chiunque, una che dice solo «Configura» non dice di chi e'. */
+  const voce = /^panel_title: (.*)$/m.exec(manifesto);
+  assert.ok(voce, "nel manifesto non c'e' nessun «panel_title:»");
+  assert.ok(voce[1].includes(NOME), `la voce nella barra non dice «${NOME}»: «${voce[1]}»`);
+  assert.match(manifesto, /^panel_icon: mdi:cog$/m);
 
   /* E il nome di prima non sta in nessuna delle righe che Home Assistant
    * mostra. Nei commenti si', ed e' giusto: quella e' la provenienza della

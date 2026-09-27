@@ -24,9 +24,26 @@
  * L'unica cosa che difende e' che una casa non possa spacciarsi per un'altra —
  * perche' se ci riuscisse raccoglierebbe i segni dei telefoni che bussano — e
  * per quello c'e' `case.js`.
+ *
+ * ─── La licenza ───────────────────────────────────────────────────────────
+ *
+ * Entrare da fuori casa e' gdahome Premium (`docs/LICENZE.md`). La casa dice
+ * al centralino il suo gettone — appena entrata, e ogni volta che il quadro
+ * gliene da' uno nuovo — con `{"t": "licenza", "tipo": "licenza", "gettone":
+ * "…"}` sul suo filo; il centralino lo verifica con la chiave pubblica di
+ * `chiave-licenze.js` e si ricorda fino a quando vale. Un telefono che bussa a
+ * `/telefono/<casa>` di una casa senza un gettone gdahome valido si chiude con
+ * `4402` e `premium-richiesto`.
+ *
+ * Non cambia niente di quello che il centralino vede: il gettone e' una firma
+ * del quadro, non un segreto, e i messaggi restano byte che si spostano.
+ * L'abbinamento (`/abbinamento/…`) resta aperto a tutti. E con la chiave
+ * vuota — com'e' di serie — il controllo e' spento: entrano tutti, come ieri.
  */
 
 import { CASA_VALIDA } from "./case.js";
+import { CHIAVE_PUBBLICA_LICENZE } from "./chiave-licenze.js";
+import { valeFino, verificaGettone } from "./gettone.js";
 import { CHIUSURA } from "./presa.js";
 
 /* Quanti telefoni insieme puo' avere una casa. Oltre non e' una famiglia. */
@@ -77,6 +94,12 @@ const RIPROVA_PIU_TARDI = 1013;
 /* «Questo tipo di dati non lo accetto»: un telefono manda testo, sempre. */
 const DATI_NON_ACCETTATI = 1003;
 
+/* Il telefono di una casa senza gdahome Premium. Il codice e il motivo sono
+ * quelli del contratto (`docs/LICENZE.md`): l'app li riconosce e porta alla
+ * pagina Premium invece di ribussare. I codici da 4000 in su sono delle
+ * applicazioni, e 4402 ricorda il 402 di HTTP, «serve pagare». */
+export const PREMIUM_RICHIESTO = Object.freeze({ codice: 4402, motivo: "premium-richiesto" });
+
 /* Ogni quanto il centralino manda un colpetto alle case, per accorgersi di
  * quelle che se ne sono andate senza dire niente — una casa dietro un router
  * che si riavvia non chiude un bel niente, resta li' aperta e muta. */
@@ -93,8 +116,20 @@ export class Centralino {
     preseInTutto = PRESE_IN_TUTTO,
     presePerIndirizzo = PRESE_PER_INDIRIZZO,
     codaMassima = CODA_MASSIMA,
+    /* La chiave con cui si verificano i gettoni delle licenze. Vuota vuol
+     * dire controllo spento. Si passa solo nelle prove. */
+    chiaveLicenze = CHIAVE_PUBBLICA_LICENZE,
   } = {}) {
     this.case = case_;
+    this.chiaveLicenze = String(chiaveLicenze || "");
+    /** Fino a quando una casa e' gdahome Premium, per identificativo.
+     *
+     * Sta qui e non sulla casa collegata: una casa che cade e si riaggancia
+     * ridice il suo gettone appena rientra, ma fra la caduta e il rientro un
+     * telefono non deve sentirsi dire «premium richiesto» — si sentirebbe
+     * dire «casa non collegata», che e' la verita'. In memoria e basta: dopo
+     * un riavvio del centralino ogni casa lo ridice rientrando. */
+    this.premiumFino = new Map();
     this.registro = registro ?? { info() {}, attenzione() {}, errore() {} };
     this.adesso = adesso;
     this.attesaDellaPresentazione = attesaDellaPresentazione;
@@ -116,6 +151,41 @@ export class Centralino {
     this._battito.unref?.();
   }
 
+  /* ─── I conti che si leggono dalla gestione ──────────────────────────
+   *
+   * Sono quattro, e vanno letti insieme perche' due contano **impianti** e due
+   * contano **persone davanti a uno schermo**. Tenerli separati non e' un
+   * vezzo: «140» accanto a un nome sbagliato e' un numero che decide dei
+   * prezzi e delle scelte, e per un po' e' stato letto per quello che non era.
+   *
+   *   · [quanteInstallate]  quanti hanno installato l'add-on. E' un totale.
+   *   · [quanteCase]        quanti ce l'hanno **acceso e collegato adesso**.
+   *   · [quanteAppAperte]   quanti stanno guardando dall'app.
+   *   · [quantiDalWeb]      quanti stanno guardando dal browser.
+   *
+   * I primi due sono impianti, gli altri due schermi, e uno stesso impianto
+   * puo' avere tre schermi aperti o nessuno. */
+
+  /* Quanti impianti hanno installato gdahome. Non e' un conto di adesso: e' il
+   * registro delle case, cioe' ogni add-on che si e' presentato almeno una
+   * volta e non e' stato zitto per sei mesi di fila (`case.js`, `potatura`).
+   * E' l'unica cosa che somigli a «quante installazioni ci sono in giro», e
+   * somiglia abbastanza: il filo verso il tramite lo apre ogni ponte da solo,
+   * senza che nessuno configuri niente.
+   *
+   * Restano fuori — e vanno detti, perche' sono i casi in cui il numero e'
+   * piu' piccolo del vero — chi ha spento `da_fuori_casa` e chi si e' messo un
+   * tramite suo. */
+  quanteInstallate() {
+    return this.case?.quante?.() ?? 0;
+  }
+
+  /* E quanti di quegli impianti stanno funzionando **adesso**: il ponte ha il
+   * filo aperto verso qui, quindi l'add-on gira e la casa vede internet.
+   *
+   * E' il numero piu' onesto che questa macchina possa dare su «installato e
+   * funzionante», e ha un limite da dire: che Home Assistant risponda al ponte
+   * qui non si sa. Quello lo sa il quadro, che riceve i rapporti. */
   quanteCase() {
     return this.collegate.size;
   }
@@ -127,22 +197,63 @@ export class Centralino {
    * del browser ne tiene due, e ci finiscono dentro anche i fili di chi si sta
    * abbinando, che un telefono abbinato non lo e' ancora. Chi leggeva
    * «22 telefoni collegati» capiva «l'app e' su 22 telefoni», che e' un'altra
-   * cosa e non e' vera. */
+   * cosa e non e' vera.
+   *
+   * Resta perche' e' il totale — app + browser + abbinamenti in corso — e
+   * perche' e' la somma che si confronta col tetto dei fili. Sulla pagina non
+   * ci va piu': «collegamenti aperti» non diceva niente a nessuno. */
   quantiCollegamenti() {
     let quanti = 0;
     for (const casa of this.collegate.values()) quanti += casa.canali.size;
     return quanti;
   }
 
-  /* E quante di quelle sono davvero l'app aperta: i fili entrati da
-   * `/telefono/<casa>`, cioe' chi e' gia' abbinato e sta guardando. Restano
-   * fuori gli abbinamenti in corso. Resta un conto di adesso, non di quanti
-   * hanno l'app installata: quello il centralino non lo sa e non lo tiene. */
+  /* Quanti stanno guardando dall'app, e quanti dal browser.
+   *
+   * Prima c'era un conto solo, e contava i fili entrati da `/telefono/<casa>`
+   * — cioe' chi e' gia' abbinato, **qualunque cosa avesse in mano**. Si
+   * chiamava «app aperte» e dentro c'era anche ogni scheda di browser: due
+   * numeri diversi chiesti allo stesso conto.
+   *
+   * Adesso la differenza la dice chi apre il filo (`che`, in `server.js`), e i
+   * due conti sono due. Gli abbinamenti in corso non stanno in nessuno dei
+   * due: chi si sta abbinando non sta ancora guardando niente.
+   *
+   * Sono conti di **adesso**: quante persone hanno l'app aperta in questo
+   * istante, non quante l'hanno installata. */
   quanteAppAperte() {
+    return this._quantiCosi("app");
+  }
+
+  quantiDalWeb() {
+    return this._quantiCosi("web");
+  }
+
+  /* Quante delle case collegate adesso sanno dire la loro licenza.
+   *
+   * E' il numero da guardare **prima** di scrivere la chiave delle licenze su
+   * questa macchina, ed e' l'unico che dice se si puo'. Qui il controllo si
+   * accende insieme alla chiave, e da quel momento una casa senza un gettone
+   * valido si vede chiudere i telefoni che arrivano da fuori. Una casa con
+   * l'add-on vecchio un gettone non ce l'ha e non sa nemmeno di doverlo
+   * chiedere: si chiuderebbe fuori da sola, pagante o no.
+   *
+   * Finche' questo numero e' sotto `quanteCase()`, accendere qui vuol dire
+   * togliere l'accesso da fuori a quella differenza di case. Vale zero
+   * finche' nessuno ha l'add-on nuovo, ed e' giusto cosi': zero e' la
+   * risposta vera, e dice di aspettare. */
+  quantePronteAllaLicenza() {
     let quante = 0;
-    for (const casa of this.collegate.values())
-      for (const canale of casa.canali.values()) if (canale.via === "telefono") quante += 1;
+    for (const casa of this.collegate.values()) if (casa.dicelaLicenza) quante += 1;
     return quante;
+  }
+
+  _quantiCosi(che) {
+    let quanti = 0;
+    for (const casa of this.collegate.values())
+      for (const canale of casa.canali.values())
+        if (canale.via === "telefono" && canale.che === che) quanti += 1;
+    return quanti;
   }
 
   /* ─── Quanti fili ────────────────────────────────────────────────────── */
@@ -207,7 +318,7 @@ export class Centralino {
    * l'identificativo serve a instradare, il segno a entrare, e il segno viene
    * dopo — dentro il filo, verso la casa, che e' l'unica che lo puo'
    * verificare. */
-  accogliUnTelefono(presa, { casa: idDellaCasa, da = "?" } = {}) {
+  accogliUnTelefono(presa, { casa: idDellaCasa, da = "?", che = "" } = {}) {
     const casa = this.collegate.get(idDellaCasa);
     if (!casa) {
       /* Detto com'e': «questa casa adesso non e' collegata». Non e' un
@@ -215,7 +326,50 @@ export class Centralino {
       presa.chiudi(CHIUSURA.normale, "casa non collegata");
       return null;
     }
-    return casa.apriUnCanale(presa, da, this._sorvegliaIlTelefono(presa), "telefono");
+    /* Da fuori casa si entra con gdahome Premium. Dopo «casa non
+     * collegata», e non prima: una casa che non c'e' non c'e', Premium o no,
+     * e il telefono deve riprovare fra poco invece di arrendersi. */
+    if (!this.ePremium(idDellaCasa)) {
+      presa.chiudi(PREMIUM_RICHIESTO.codice, PREMIUM_RICHIESTO.motivo);
+      return null;
+    }
+    return casa.apriUnCanale(presa, da, this._sorvegliaIlTelefono(presa), "telefono", che);
+  }
+
+  /* ─── Le licenze ─────────────────────────────────────────────────────── */
+
+  /* Se da fuori si entra in questa casa. Con la chiave vuota si', sempre. */
+  ePremium(idDellaCasa) {
+    if (!this.chiaveLicenze) return true;
+    return (this.premiumFino.get(idDellaCasa) || 0) > this.adesso();
+  }
+
+  /* Il gettone che la casa ha detto. Buono: ci si ricorda fino a quando vale.
+   * Vuoto o storto: la casa non e' (piu') Premium, e chi era gia' entrato da
+   * fuori esce — un telefono non resta dentro per il solo fatto d'essere
+   * entrato prima. Torna se la casa e' Premium adesso. */
+  laLicenzaDi(casa, gettone) {
+    /* Che la casa il gettone lo dica si segna **sempre**, anche a controllo
+     * spento, e prima di guardarlo: e' l'unico modo di sapere quante case
+     * hanno gia' l'add-on che le licenze le conosce. Un add-on vecchio questo
+     * messaggio non lo manda affatto — e il giorno in cui si scrive la chiave
+     * qui, quelle case si chiuderebbero fuori da sole. Prima di accendere si
+     * guarda `quantePronteAllaLicenza` contro `quanteCase`. */
+    if (casa) casa.dicelaLicenza = true;
+    if (!this.chiaveLicenze || !casa?.id) return true;
+    const detto = verificaGettone(String(gettone ?? ""), {
+      chiave: this.chiaveLicenze,
+      sog: casa.id,
+      app: "gdahome",
+      adesso: this.adesso(),
+    });
+    if (detto) {
+      this.premiumFino.set(casa.id, valeFino(detto));
+      return true;
+    }
+    this.premiumFino.delete(casa.id);
+    casa.chiudiITelefoni(PREMIUM_RICHIESTO.codice, PREMIUM_RICHIESTO.motivo);
+    return false;
   }
 
   /* Un telefono che si sta abbinando non sa ancora a quale casa va: sa solo il
@@ -271,6 +425,10 @@ class CasaCollegata {
     this.vistaIl = centralino.adesso();
     this.chiusa = false;
     this._attesa = null;
+    /* Se questa casa ha mai detto la sua licenza su questo filo. Non e' «e'
+     * Premium»: e' «il suo add-on sa che le licenze esistono». Vedi
+     * `quantePronteAllaLicenza`. */
+    this.dicelaLicenza = false;
   }
 
   get entrata() {
@@ -333,7 +491,13 @@ class CasaCollegata {
       case "chiudi":
         this._chiudiIlCanale(detto.c, "la casa ha chiuso");
         return;
+      case "licenza":
+        this.centralino.laLicenzaDi(this, detto.gettone);
+        return;
       default:
+        /* Il contratto chiama il campo `tipo`: una casa scritta leggendo solo
+         * quello manda `tipo` e basta, e va capita lo stesso. */
+        if (detto.tipo === "licenza") this.centralino.laLicenzaDi(this, detto.gettone);
         /* Roba che non si conosce si lascia perdere: una casa piu' nuova del
          * centralino puo' dire cose che qui non si sanno ancora, e non e' un
          * motivo per buttarla fuori. */
@@ -373,6 +537,12 @@ class CasaCollegata {
 
     this.id = detto.casa;
     this.centralino.collegate.set(this.id, this);
+    /* Il gettone puo' arrivare anche dentro la presentazione. Non e'
+     * obbligatorio — il ponte lo manda subito dopo, a parte — e se non c'e'
+     * non si dimentica quello di prima: la casa lo ridice appena entrata. */
+    if (typeof detto.gettone === "string" && detto.gettone) {
+      this.centralino.laLicenzaDi(this, detto.gettone);
+    }
     this._manda(JSON.stringify({ t: "bene" }));
     this.centralino.registro.info(`casa collegata da ${this.da}`);
   }
@@ -432,7 +602,7 @@ class CasaCollegata {
    * `/telefono/<casa>` arriva chi e' gia' abbinato, da `/abbinamento/<impronta>`
    * chi si sta abbinando. La casa lo usa per accettare la stretta
    * dell'abbinamento solo dalla seconda. */
-  apriUnCanale(presaDelTelefono, da, haParlato = () => {}, via = "telefono") {
+  apriUnCanale(presaDelTelefono, da, haParlato = () => {}, via = "telefono", che = "") {
     if (this.canali.size >= TELEFONI_PER_CASA) {
       haParlato();
       presaDelTelefono.chiudi(CHIUSURA.normale, "troppi telefoni su questa casa");
@@ -440,8 +610,13 @@ class CasaCollegata {
     }
     const numero = this.prossimoCanale++;
     /* `via` si tiene anche qui, non solo mandato alla casa: e' l'unico modo di
-     * distinguere poi un'app aperta da un abbinamento in corso. */
-    const canale = { numero, presa: presaDelTelefono, da, via };
+     * distinguere poi un'app aperta da un abbinamento in corso.
+     *
+     * E `che` dice cos'e' quello che sta all'altro capo — `"app"` o `"web"` —
+     * per poterli contare separati. Alla casa non serve e non si manda: lei
+     * parla col telefono allo stesso modo in tutti e due i casi, e un dato in
+     * piu' sul filo sarebbe un dato in piu' senza motivo. */
+    const canale = { numero, presa: presaDelTelefono, da, via, che };
     this.canali.set(numero, canale);
 
     presaDelTelefono.onMessaggio = (testo, eraTesto = typeof testo === "string") => {
@@ -467,6 +642,17 @@ class CasaCollegata {
 
     this._manda(JSON.stringify({ c: numero, t: "apri", da, via }));
     return canale;
+  }
+
+  /* Chiude i telefoni entrati da fuori, non quelli che si stanno abbinando:
+   * l'abbinamento resta aperto a tutti. */
+  chiudiITelefoni(codice, perche) {
+    for (const [numero, canale] of [...this.canali]) {
+      if (canale.via !== "telefono") continue;
+      this.canali.delete(numero);
+      canale.presa.chiudi(codice, perche);
+      if (!this.chiusa) this._manda(JSON.stringify({ c: numero, t: "chiudi" }));
+    }
   }
 
   _versoIlTelefono(numero, messaggio) {

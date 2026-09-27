@@ -300,11 +300,16 @@ test("bubbles shrink past five and connectors scale with the reading", () => {
 });
 
 test("readings keep the period unit and never invent a value", () => {
-  // it-IT only groups from five digits up, which is why 1235 stays ungrouped.
-  assert.equal(formatFlowValue(1234.6, "instant"), "1235 W");
-  assert.equal(formatFlowValue(12345, "instant"), "12.345 W");
+  /* Il numero sale di scala al migliaio: «6011 W» nella bolla della casa si
+     contava invece di leggerlo, e non e' come si scrive una potenza. La regola
+     sta in `core/le-unita-della-corrente.js`, con la sua prova; qui si tiene
+     fermo che la bolla la usi e che non inventi un valore dove non ce n'e'. */
+  assert.equal(formatFlowValue(999, "instant"), "999 W");
+  assert.equal(formatFlowValue(1234.6, "instant"), "1,23 kW");
+  assert.equal(formatFlowValue(12345, "instant"), "12,3 kW");
   assert.equal(formatFlowValue(2.34, "day"), "2,3 kWh");
   assert.equal(formatFlowValue(2.34, "day", "en-GB"), "2.3 kWh");
+  assert.equal(formatFlowValue(2340, "day"), "2,34 MWh");
   assert.equal(formatFlowValue(null, "day"), "—");
   assert.equal(formatFlowValue("", "instant"), "—");
 });
@@ -361,7 +366,7 @@ test("a load metered only by its lifetime counter reads absent, never the total"
     states: { ...states, "sensor.boiler_power": { state: "1500" } },
     recorderValues: { boiler: 7.843 },
   });
-  assert.equal(instant.nodes[0].text, "1500 W");
+  assert.equal(instant.nodes[0].text, "1,50 kW");
 });
 
 test("eight configured loads produce eight bound bubbles", () => {
@@ -389,7 +394,7 @@ test("a load below the threshold is drawn idle, and an unbound one reads as abse
   assert.deepEqual(
     model.nodes.map(({ id, active, text }) => [id, active, text]),
     [
-      ["a", true, "1800 W"],
+      ["a", true, "1,80 kW"],
       ["b", false, "0 W"],
       ["c", false, "—"],
     ],

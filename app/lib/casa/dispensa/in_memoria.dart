@@ -3,4 +3,5 @@ library;
 
 import 'dispensa.dart';
 
-Dispensa dispensaDiQuestoSistema() => DispensaInMemoria();
+Dispensa dispensaDiQuestoSistema({String nome = 'impostazioni.json'}) =>
+    DispensaInMemoria();

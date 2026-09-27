@@ -35,6 +35,7 @@ class CasaConosciuta {
     this.daFuoriCasa,
     this.ultimoApprodo,
     this.plancia,
+    this.gettone,
   });
 
   /// Identificativo interno dell'app, mai mostrato. Non e' quello del ponte.
@@ -84,6 +85,19 @@ class CasaConosciuta {
   /// cambiando casa gli resti quella di prima. `null` vuol dire la prima, che
   /// e' la risposta di sempre.
   final String? plancia;
+
+  /// L'ultimo gettone gdahome che questa casa ha dato (`docs/LICENZE.md`).
+  ///
+  /// Si ricorda per casa, e non per telefono, perche' la licenza e' della
+  /// casa: aprendo l'app senza rete si sa gia' se questa casa e' Premium, e
+  /// una casa lontana si sa se si puo' raggiungere da fuori prima di bussare.
+  ///
+  /// Tre stati, e servono tutti e tre: `null` vuol dire **mai chiesto** (una
+  /// casa abbinata prima delle licenze, o appena abbinata); vuoto vuol dire
+  /// chiesto, e la casa non ne ha; il resto e' il gettone, ancora da
+  /// controllare — la firma la guarda `licenza/gettone.dart`, non questa
+  /// classe.
+  final String? gettone;
 
   /// `true` quando questa casa e' stata abbinata prima che esistessero le
   /// chiavi, e adesso non basta piu'.
@@ -158,6 +172,7 @@ class CasaConosciuta {
     IndirizzoDelPonte? daFuoriCasa,
     DaDove? ultimoApprodo,
     String? plancia,
+    String? gettone,
     bool togliInCasa = false,
     bool togliDaFuori = false,
     bool togliLaPlancia = false,
@@ -176,7 +191,31 @@ class CasaConosciuta {
      * come un'altra, e senza questo non si potrebbe dire — `null` vorrebbe
      * dire «lascia com'era». */
     plancia: togliLaPlancia ? null : (plancia ?? this.plancia),
+    gettone: gettone ?? this.gettone,
   );
+
+  /// La stessa casa, con la sola strada di casa.
+  ///
+  /// E' quella che si prende quando la casa non e' Premium: il centralino e
+  /// l'indirizzo pubblico non si provano nemmeno. Tutto il resto resta com'e'.
+  CasaConosciuta soloLaStradaDiCasa() => CasaConosciuta(
+    id: id,
+    nome: nome,
+    segno: segno,
+    identificativo: identificativo,
+    chiave: chiave,
+    casaAlCentralino: casaAlCentralino,
+    inCasa: inCasa,
+    ultimoApprodo: ultimoApprodo == DaDove.daDentro ? ultimoApprodo : null,
+    plancia: plancia,
+    gettone: gettone,
+  );
+
+  /// Se questa casa ha una strada che porta da fuori: il centralino, o un
+  /// indirizzo pubblico.
+  bool get haStradeDaFuori =>
+      daFuoriCasa != null ||
+      (centralino != null && (casaAlCentralino?.isNotEmpty ?? false));
 
   Map<String, dynamic> inJson() => {
     'id': id,
@@ -190,6 +229,7 @@ class CasaConosciuta {
     if (daFuoriCasa != null) 'da_fuori': daFuoriCasa.toString(),
     if (ultimoApprodo != null) 'ultimo_approdo': ultimoApprodo!.name,
     if (plancia != null && plancia!.isNotEmpty) 'plancia': plancia,
+    if (gettone != null) 'gettone': gettone,
   };
 
   /// Torna `null` quando quello che c'e' scritto non e' una casa: un archivio
@@ -219,6 +259,12 @@ class CasaConosciuta {
       },
       plancia: switch (grezza['plancia']) {
         final String s when s.isNotEmpty => s,
+        _ => null,
+      },
+      /* Un archivio scritto prima delle licenze non ce l'ha: `null`, cioe'
+       * «mai chiesto», che e' la verita'. */
+      gettone: switch (grezza['gettone']) {
+        final String s => s,
         _ => null,
       },
     );

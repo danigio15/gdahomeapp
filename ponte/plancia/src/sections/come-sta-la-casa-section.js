@@ -800,6 +800,27 @@ function rigaDellElenco(voce, states, chiave = "") {
       </div>${pastiglia}${tasto}</div>`;
 }
 
+/* La riga sotto il titolo: cos'e' questo elenco, e cosa ci si fa.
+ *
+ * Quasi sempre e' roba accesa, e la si puo' spegnere di li': «tocca per
+ * spegnere» e' l'istruzione. Le stanze occupate no — una stanza non si spegne,
+ * e infatti il tasto non c'e' — e scriverci sotto un invito a un gesto che non
+ * esiste sarebbe peggio del silenzio: chi cerca il tasto e non lo trova pensa
+ * che sia rotto. Dicono quello che sono: dove c'e' qualcuno adesso.
+ *
+ * Esportata perche' la prova la legge: e' la sola riga che cambia mestiere a
+ * seconda di che pastiglia si e' toccata.
+ */
+export function briciolaDellElenco(chiave, quante) {
+  if (clean(chiave) === "presenza")
+    return quante === 1
+      ? t("1 stanza · c'è qualcuno adesso", "1 room · someone is there now")
+      : `${quante} ${t("stanze · c'è qualcuno adesso", "rooms · someone is there now")}`;
+  return quante === 1
+    ? t("1 acceso · tocca per spegnere", "1 on · tap to turn off")
+    : `${quante} ${t("accesi · tocca per spegnere", "on · tap to turn off")}`;
+}
+
 /** Riempie l'elenco aperto con quello che e' acceso adesso. */
 export function disegnaLElenco() {
   const chiave = clean(state.elenco);
@@ -840,10 +861,7 @@ export function disegnaLElenco() {
     return false;
   }
   if (sotto) {
-    const briciola =
-      voci.length === 1
-        ? t("1 acceso · tocca per spegnere", "1 on · tap to turn off")
-        : `${voci.length} ${t("accesi · tocca per spegnere", "on · tap to turn off")}`;
+    const briciola = briciolaDellElenco(chiave, voci.length);
     if (sotto.textContent !== briciola) sotto.textContent = briciola;
   }
   const disegno = voci.map((voce) => rigaDellElenco(voce, states, chiave)).join("");

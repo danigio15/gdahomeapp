@@ -157,9 +157,14 @@ void main() {
         );
 
         expect(approdo.da, DaDove.dalCentralino);
+        /* Con in coda cosa c'e' da questa parte del filo: serve al centralino
+         * per contare separati chi guarda dall'app e chi dal browser, e non
+         * cambia niente di come si entra. */
         expect(
           approdo.filo,
-          Uri.parse('wss://centralino.esempio.it/telefono/$idAlCentralino'),
+          Uri.parse(
+            'wss://centralino.esempio.it/telefono/$idAlCentralino?da=app',
+          ),
         );
       },
     );

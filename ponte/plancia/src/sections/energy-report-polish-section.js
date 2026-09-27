@@ -13,6 +13,7 @@ import {
 } from "../core/fasce-della-tariffa.js";
 import { salvaLeFasceDellaScheda } from "./beta22-load-slots-hotfix-section.js";
 import { allStates, clean, doc, formatNumber, installStyle, readJson, registraIlContoDelleFasce, root, scriviTestoSeCambia, t, wrapFunction } from "./shared.js";
+import { lEnergiaInParole, laPotenzaInParole } from "../core/le-unita-della-corrente.js";
 
 const KEY = "__DASHBOARDMODERN_ENERGY_REPORT_POLISH__";
 const state = (root[KEY] ||= { installed: false, frame: 0, dailyChart: null, legacyDailyChart: null, subscribed: false, contoAFasce: null });
@@ -254,7 +255,7 @@ export async function renderActualDailyChart(daysInMonth, selMonth, selYear) {
         maintainAspectRatio: false,
         animation: false,
         interaction: { intersect: false, mode: "index" },
-        plugins: { legend: { display: false }, tooltip: { callbacks: { label: (ctx) => `${ctx.dataset.label}${ctx.dataset.dmOrario ? ` ${ctx.dataset.dmOrario}` : ""}: ${formatNumber(ctx.parsed.y, 2)} kWh` } } },
+        plugins: { legend: { display: false }, tooltip: { callbacks: { label: (ctx) => `${ctx.dataset.label}${ctx.dataset.dmOrario ? ` ${ctx.dataset.dmOrario}` : ""}: ${lEnergiaInParole(ctx.parsed.y, { decimali: 2 })}` } } },
         scales: {
           y: { beginAtZero: true, stacked: fasce.length > 0, title: { display: true, text: "kWh" } },
           x: { stacked: fasce.length > 0, grid: { display: false } },
@@ -405,7 +406,7 @@ export function applyFinancialOverview(bundle) {
    * guscio non sapeva che la griglia aveva un padrone e ci riscriveva sopra. */
   const set = (id, value) => scriviTestoSeCambia(doc?.getElementById(id), value);
   set("ed-fin-pagato", money(withoutSolar));
-  set("ed-fin-pagato-sub", `${formatNumber(data.house, 1)} kWh`);
+  set("ed-fin-pagato-sub", lEnergiaInParole(data.house));
   set("ed-fin-costo", money(realCost));
   set("ed-fin-costo-sub", `${formatNumber(data.gridImport, 1)} kWh ${t("dalla rete", "from grid")}`);
   set("ed-fin-risp", money(saved));

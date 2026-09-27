@@ -18,6 +18,7 @@ import {
   iModiDiEvcc,
   iValoriDelSempre,
   ilModoAcceso,
+  ilSempreEInVigore,
   ilValoreDelSempreAcceso,
   laFilaDelSempreServe,
 } from "../src/core/le-modalita-di-evcc.js";
@@ -86,14 +87,23 @@ test("e un guscio col tasto vecchio capisce lo stesso un evcc nuovo", () => {
    * difetto da cui si e' partiti. */
   assert.equal(ilModoAcceso({ state: "smart" }), "pv");
   /* E al contrario: tasti nuovi, evcc vecchio. */
-  assert.equal(ilModoAcceso({ state: "pv", attributes: { options: ["off", "smart", "now"] } }), "smart");
+  assert.equal(
+    ilModoAcceso({ state: "pv", attributes: { options: ["off", "smart", "now"] } }),
+    "smart",
+  );
 });
 
 test("uno stato che nessun tasto rappresenta non ne accende nessuno", () => {
   /* Accendere quello sbagliato direbbe che la macchina carica in un modo in cui
    * non sta caricando. */
-  assert.equal(ilModoAcceso({ state: "minpv", attributes: { options: ["off", "smart", "now"] } }), "");
-  assert.equal(ilModoAcceso({ state: "boh", attributes: { options: ["off", "smart", "now"] } }), "");
+  assert.equal(
+    ilModoAcceso({ state: "minpv", attributes: { options: ["off", "smart", "now"] } }),
+    "",
+  );
+  assert.equal(
+    ilModoAcceso({ state: "boh", attributes: { options: ["off", "smart", "now"] } }),
+    "",
+  );
 });
 
 test("e un'entita' muta nemmeno", () => {
@@ -103,7 +113,10 @@ test("e un'entita' muta nemmeno", () => {
 });
 
 test("le maiuscole non contano: lo stato arriva come lo scrive l'integrazione", () => {
-  assert.equal(ilModoAcceso({ state: "SMART", attributes: { options: ["off", "smart", "now"] } }), "smart");
+  assert.equal(
+    ilModoAcceso({ state: "SMART", attributes: { options: ["off", "smart", "now"] } }),
+    "smart",
+  );
 });
 
 /* ── com'e' scritta davvero l'entita' di casa ────────────────────────────── */
@@ -117,8 +130,14 @@ test("le maiuscole dell'integrazione non fanno tre tasti grigi", () => {
    * delle tre: tre tasti senza disegno e col nome inglese, invece di tre tasti
    * veri. */
   const modi = iModiDiEvcc(LA_CASA);
-  assert.deepEqual(modi.map((m) => m.it), ["Spento", "Intelligente", "Fast"]);
-  assert.deepEqual(modi.map((m) => m.ignoto), [false, false, false]);
+  assert.deepEqual(
+    modi.map((m) => m.it),
+    ["Spento", "Intelligente", "Fast"],
+  );
+  assert.deepEqual(
+    modi.map((m) => m.ignoto),
+    [false, false, false],
+  );
   assert.equal(ilModoAcceso(LA_CASA), "Smart");
 });
 
@@ -163,7 +182,7 @@ test("le tre scelte del «sempre» si leggono in parole", () => {
    * evcc. */
   assert.deepEqual(
     iValoriDelSempre(IL_SEMPRE).map((v) => v.it),
-    ["Mai", "Sempre", "Stavolta"],
+    ["Mai", "Sempre", "Solo stavolta"],
   );
   assert.equal(ilValoreDelSempreAcceso(IL_SEMPRE), "On");
 });
@@ -175,21 +194,34 @@ test("e l'id resta quello scritto, anche qui", () => {
   );
 });
 
-test("la fila si vede solo accanto alla modalita' intelligente", () => {
-  /* Da spenti non si carica, e in «Fast» si carica al massimo comunque: li'
-   * quell'opzione non cambia niente, e una fila che non cambia niente confonde. */
-  assert.equal(laFilaDelSempreServe(IL_SEMPRE, "Smart"), true);
-  assert.equal(laFilaDelSempreServe(IL_SEMPRE, "pv"), true);
-  assert.equal(laFilaDelSempreServe(IL_SEMPRE, "Off"), false);
-  assert.equal(laFilaDelSempreServe(IL_SEMPRE, "Fast"), false);
-  assert.equal(laFilaDelSempreServe(IL_SEMPRE, ""), false);
+test("la fila si vede in tutte le modalita'", () => {
+  /* «Devi mettere sempre quel tasto.»
+   *
+   * Prima si vedeva solo accanto alla modalita' intelligente, ed era un
+   * ragionamento che stava in piedi — in `off` non si carica, in «Fast» si
+   * carica al massimo comunque — ma faceva sparire un tasto: uno apre la
+   * console in Fast e non sa nemmeno che quella cosa esiste. */
+  for (const modo of ["Smart", "pv", "Off", "Fast", ""])
+    assert.equal(laFilaDelSempreServe(IL_SEMPRE), true, modo);
+});
+
+test("ma dice quando fa effetto e quando no", () => {
+  /* Non sparisce e non si spegne: si comanda sempre — «Sempre» scelto mentre
+   * si carica in Fast e' pronto per quando si torna in Intelligente — e sotto
+   * il nome c'e' scritto dove vale. */
+  assert.equal(ilSempreEInVigore("Smart"), true);
+  assert.equal(ilSempreEInVigore("pv"), true);
+  assert.equal(ilSempreEInVigore("Off"), false);
+  assert.equal(ilSempreEInVigore("Fast"), false);
+  assert.equal(ilSempreEInVigore(""), false);
 });
 
 test("e senza l'entita' non si vede per niente", () => {
-  /* Chi non ha mappato quella casella non deve trovarsi una fila vuota sotto i
-   * tasti: e' un evcc vecchio, o uno a cui quell'opzione non serve. */
-  assert.equal(laFilaDelSempreServe(undefined, "Smart"), false);
-  assert.equal(laFilaDelSempreServe({ state: "On" }, "Smart"), false);
+  /* Chi non ha mappato quella casella non deve trovarsi una fila di tasti che
+   * non comandano niente: e' un evcc vecchio, o uno a cui quell'opzione non
+   * serve. Questa resta l'unica condizione. */
+  assert.equal(laFilaDelSempreServe(undefined), false);
+  assert.equal(laFilaDelSempreServe({ state: "On" }), false);
   assert.deepEqual(iValoriDelSempre(), []);
 });
 

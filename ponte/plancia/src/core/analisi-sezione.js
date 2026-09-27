@@ -45,6 +45,7 @@
 
 import { daQuanto, fraQuanto, numero, VERDETTI } from "./racconto-tessera.js";
 import { letturaNelTempo, SOGLIE_INSOLITO } from "./modello-nel-tempo.js";
+import { lEnergiaInParole, laPotenzaInParole } from "./le-unita-della-corrente.js";
 
 const IN_ITALIANO = (italiano) => italiano;
 
@@ -62,13 +63,14 @@ const num = (valore) => {
 
 const pulito = (valore) => String(valore ?? "").trim();
 
-/* Watt leggibili: sotto il migliaio l'intero, sopra i kW con due decimali. */
+/* Watt leggibili: la regola sta in `le-unita-della-corrente.js`, che e' la
+ * stessa delle bolle e delle finestre dei carichi. Prima era scritta qui, e
+ * si fermava al chilowatt: un impianto da un megawatt avrebbe letto «1.200,00
+ * kW». */
 function watt(valore, lingua = "it-IT") {
   const n = num(valore);
   if (n == null) return "—";
-  const assoluto = Math.abs(n);
-  if (assoluto >= 1000) return `${numero(n / 1000, 2, lingua)} kW`;
-  return `${numero(n, 0, lingua)} W`;
+  return laPotenzaInParole(n, { lingua });
 }
 
 /* La lingua per i numeri arriva da fuori, non si indovina.
@@ -169,7 +171,10 @@ const LETTURE = Object.freeze({
     const oggi = num(tessera?.today);
     if (oggi != null)
       punti.push(
-        tr(`Da mezzanotte ${numero(oggi, 1, l)} kWh`, `${numero(oggi, 1, l)} kWh since midnight`),
+        tr(
+          `Da mezzanotte ${lEnergiaInParole(oggi, { lingua: l })}`,
+          `${lEnergiaInParole(oggi, { lingua: l })} since midnight`,
+        ),
       );
 
     /* La batteria: positiva vuol dire che sta dando corrente a casa,

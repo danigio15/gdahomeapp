@@ -325,6 +325,11 @@ POSTA_UTENTE="${POSTA_UTENTE:-$(gia_scritto "$CONFIGURAZIONE/ambiente" POSTA_UTE
 POSTA_PASSWORD="${POSTA_PASSWORD:-$(gia_scritto "$CONFIGURAZIONE/ambiente" POSTA_PASSWORD)}"
 POSTA_DA="${POSTA_DA:-$(gia_scritto "$CONFIGURAZIONE/ambiente" POSTA_DA)}"
 POSTA_A="${POSTA_A:-$(gia_scritto "$CONFIGURAZIONE/ambiente" POSTA_A)}"
+# Il giorno dei pagamenti: le app sotto questo numero di costruzione si
+# fermano e chiedono di essere aggiornate (docs/LICENZE.md). Si passa da qui
+# (VERSIONE_MINIMA_APP=1070000 bash accendi.sh) o si scrive in `ambiente`, e
+# un giro dopo resta com'era: vuoto o zero, non si ferma nessuno.
+VERSIONE_MINIMA_APP="${VERSIONE_MINIMA_APP:-$(gia_scritto "$CONFIGURAZIONE/ambiente" VERSIONE_MINIMA_APP)}"
 if [[ -n "$POSTA_SERVER" ]]; then
   bene "il modulo dei contatti spedisce da $POSTA_SERVER a ${POSTA_A:-?}"
 else
@@ -757,6 +762,7 @@ passo "Accendo il servizio"
   printf 'POSTA_PASSWORD=%s\n' "$POSTA_PASSWORD"
   printf 'POSTA_DA=%s\n' "$POSTA_DA"
   printf 'POSTA_A=%s\n' "$POSTA_A"
+  printf 'VERSIONE_MINIMA_APP=%s\n' "${VERSIONE_MINIMA_APP:-0}"
   printf 'NODE_OPTIONS=--disable-warning=ExperimentalWarning\n'
 } >"$CONFIGURAZIONE/ambiente"
 chmod 600 "$CONFIGURAZIONE/ambiente"

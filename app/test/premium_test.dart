@@ -1,0 +1,302 @@
+/// La pagina Premium: i due piani da scegliere, un solo bottone, il codice
+/// regalo, la webapp. Fatta come quella di gdanav.
+library;
+
+import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:gdahome/casa/archivio_delle_case.dart';
+import 'package:gdahome/casa/cassaforte.dart';
+import 'package:gdahome/casa/collegamento.dart';
+import 'package:gdahome/licenza/licenza.dart';
+import 'package:gdahome/licenza/negozio.dart';
+import 'package:gdahome/ponte/indirizzo.dart';
+import 'package:gdahome/schermate/premium.dart';
+import 'package:gdahome/vestito/tema.dart';
+import 'package:in_app_purchase/in_app_purchase.dart';
+
+import 'licenza/gettoni_di_prova.dart';
+
+/// Un negozio finto che si ricorda cosa si e' comprato.
+class _NegozioFinto implements NegozioGdahome {
+  _NegozioFinto({this.giorni = 14});
+
+  final int giorni;
+  final comprati = <String>[];
+  var ripristinati = 0;
+
+  @override
+  String get piattaforma => 'android';
+  @override
+  String get nome => 'Play Store';
+  @override
+  Future<bool> disponibile() async => true;
+  @override
+  Future<List<PianoGdahome>> piani() async => [
+    PianoGdahome(id: pianoMensile, prezzo: '4,99 €', giorniProva: giorni),
+    PianoGdahome(id: pianoAnnuale, prezzo: '49,99 €', giorniProva: giorni),
+  ];
+  @override
+  Stream<List<PurchaseDetails>> get acquisti => const Stream.empty();
+  @override
+  Future<void> compra(String piano) async => comprati.add(piano);
+  @override
+  Future<void> ripristina() async => ripristinati += 1;
+  @override
+  Future<void> completa(PurchaseDetails acquisto) async {}
+}
+
+void main() {
+  Future<Collegamento> casaSenzaFilo(
+    WidgetTester tester, {
+    String? gettone,
+  }) async {
+    late Collegamento collegamento;
+    await tester.runAsync(() async {
+      final archivio = ArchivioDelleCase(CassaforteInMemoria());
+      await archivio.apri();
+      final casa = await archivio.aggiungi(
+        nome: 'Casa al lago',
+        segno: 'segno',
+        casaAlCentralino: casaDiProva,
+        inCasa: IndirizzoDelPonte.leggi('192.168.1.50'),
+      );
+      await archivio.segnaIlGettone(casa.id, gettone ?? '');
+      collegamento = Collegamento(
+        archivio: archivio,
+        licenza: GestoreLicenza(chiave: chiaveDiProva),
+      );
+      await collegamento.apri();
+    });
+    addTearDown(() => tester.runAsync(collegamento.chiudi));
+    return collegamento;
+  }
+
+  Future<void> mostra(WidgetTester tester, Widget pagina) async {
+    tester.view.physicalSize = const Size(390 * 3, 1600 * 3);
+    tester.view.devicePixelRatio = 3;
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(MaterialApp(theme: temaChiaro(), home: pagina));
+    await tester.pump();
+  }
+
+  Future<GestoreDegliAcquisti> acquistiCon(
+    WidgetTester tester,
+    _NegozioFinto negozio,
+  ) async {
+    final acquisti = GestoreDegliAcquisti(
+      negozio: negozio,
+      porta: ({
+        required piattaforma,
+        required prodotto,
+        required ricevuta,
+      }) async {},
+    );
+    await tester.runAsync(acquisti.avvia);
+    return acquisti;
+  }
+
+  FilledButton ilBottone(WidgetTester tester) =>
+      tester.widget<FilledButton>(find.byKey(const Key('compra-premium')));
+
+  testWidgets('senza negozio: prezzi di listino, bottone spento', (
+    tester,
+  ) async {
+    final collegamento = await casaSenzaFilo(tester);
+    await mostra(
+      tester,
+      SchermataPremium(collegamento: collegamento, sulWeb: false),
+    );
+    expect(find.text('Premium'), findsOneWidget);
+    expect(find.text('gdahome Premium'), findsOneWidget);
+    expect(find.textContaining('14 giorni di prova gratuita'), findsOneWidget);
+    expect(find.text('Più plance e più case'), findsOneWidget);
+    expect(find.textContaining('Gratis per tutti'), findsOneWidget);
+    expect(find.text('49,99 €/anno'), findsOneWidget);
+    expect(find.text('4,99 €/mese'), findsOneWidget);
+    expect(find.text('Risparmi il 17%'), findsOneWidget);
+    expect(ilBottone(tester).onPressed, isNull);
+    expect(find.byKey(const Key('negozio-assente')), findsOneWidget);
+    expect(find.text('Privacy'), findsOneWidget);
+    expect(find.text('Condizioni d\'uso'), findsOneWidget);
+  });
+
+  testWidgets('col negozio: si sceglie il piano e si compra quello', (
+    tester,
+  ) async {
+    final collegamento = await casaSenzaFilo(tester);
+    final negozio = _NegozioFinto();
+    final acquisti = await acquistiCon(tester, negozio);
+    await mostra(
+      tester,
+      SchermataPremium(
+        collegamento: collegamento,
+        acquisti: acquisti,
+        sulWeb: false,
+      ),
+    );
+    expect(find.text('Prova gratis per 14 giorni'), findsOneWidget);
+    expect(
+      find.textContaining('Poi 49,99 €/anno, rinnovo automatico'),
+      findsOneWidget,
+    );
+    expect(find.textContaining('dal Play Store'), findsOneWidget);
+
+    /* L'annuale e' scelto da subito. */
+    await tester.tap(find.byKey(const Key('compra-premium')));
+    await tester.pump();
+    expect(negozio.comprati, [pianoAnnuale]);
+
+    /* Si tocca il mensile: la nota cambia, e si compra quello. */
+    acquisti.inCorso = false;
+    await tester.tap(find.byKey(const Key('piano-$pianoMensile')));
+    await tester.pump();
+    expect(find.textContaining('Poi 4,99 €/mese'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('compra-premium')));
+    await tester.pump();
+    expect(negozio.comprati, [pianoAnnuale, pianoMensile]);
+
+    /* Mentre compra, il bottone gira e non si tocca. */
+    expect(ilBottone(tester).onPressed, isNull);
+    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+
+    /* Finito (qui a mano); toccare un piano ridisegna la pagina. */
+    acquisti.inCorso = false;
+    await tester.tap(find.byKey(const Key('piano-$pianoAnnuale')));
+    await tester.pump();
+    await tester.tap(find.text('Ripristina abbonamento'));
+    await tester.pump();
+    expect(negozio.ripristinati, 1);
+  });
+
+  testWidgets('la prova gia\' usata: «Abbonati a», e della prova niente', (
+    tester,
+  ) async {
+    final collegamento = await casaSenzaFilo(tester);
+    final acquisti = await acquistiCon(tester, _NegozioFinto(giorni: 0));
+    await mostra(
+      tester,
+      SchermataPremium(
+        collegamento: collegamento,
+        acquisti: acquisti,
+        sulWeb: false,
+      ),
+    );
+    expect(find.text('Abbonati a 49,99 €/anno'), findsOneWidget);
+    expect(find.textContaining('prova'), findsNothing);
+  });
+
+  testWidgets('da un lucchetto, il perche\' sta in cima', (tester) async {
+    final collegamento = await casaSenzaFilo(tester);
+    await mostra(
+      tester,
+      SchermataPremium(
+        collegamento: collegamento,
+        perche: PerchePremium.unAltraCasa,
+        sulWeb: false,
+      ),
+    );
+    expect(find.byKey(const Key('perche-premium')), findsOneWidget);
+    expect(find.text(PerchePremium.unAltraCasa), findsOneWidget);
+  });
+
+  testWidgets('il codice regalo: il foglio, l\'errore, Annulla', (
+    tester,
+  ) async {
+    final collegamento = await casaSenzaFilo(tester);
+    await mostra(
+      tester,
+      SchermataPremium(collegamento: collegamento, sulWeb: false),
+    );
+    await tester.tap(find.byKey(const Key('codice-regalo')));
+    await tester.pumpAndSettle();
+    expect(find.text('Codice regalo'), findsOneWidget);
+    await tester.enterText(
+      find.byKey(const Key('campo-codice')),
+      'GDA-ABCD-EFGH-JKMN',
+    );
+    /* Senza filo la casa non risponde: il foglio lo dice e resta aperto. */
+    await tester.runAsync(() async {
+      await tester.tap(find.byKey(const Key('riscatta-codice')));
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+    });
+    await tester.pump();
+    expect(find.text('Codice regalo'), findsOneWidget);
+    final campo = tester.widget<TextField>(
+      find.byKey(const Key('campo-codice')),
+    );
+    expect(campo.decoration?.errorText, isNotNull);
+    await tester.tap(find.text('Annulla'));
+    await tester.pumpAndSettle();
+    expect(find.text('Codice regalo'), findsNothing);
+  });
+
+  testWidgets('nella webapp: niente bottone per comprare, il codice sì', (
+    tester,
+  ) async {
+    final collegamento = await casaSenzaFilo(tester);
+    await mostra(
+      tester,
+      SchermataPremium(collegamento: collegamento, sulWeb: true),
+    );
+    expect(find.byKey(const Key('compra-premium')), findsNothing);
+    expect(find.text('Ripristina abbonamento'), findsNothing);
+    expect(find.byKey(const Key('premium-sul-web')), findsOneWidget);
+    expect(find.byKey(const Key('codice-regalo')), findsOneWidget);
+    expect(find.textContaining('Android Auto e CarPlay'), findsOneWidget);
+  });
+
+  testWidgets('con Premium: fino a quando e da dove, senza piani', (
+    tester,
+  ) async {
+    late String gettone;
+    await tester.runAsync(() async {
+      gettone = await firmaUnGettone(
+        origine: 'regalo',
+        scade: DateTime(2027, 3, 12),
+      );
+    });
+    final collegamento = await casaSenzaFilo(tester, gettone: gettone);
+    await mostra(
+      tester,
+      SchermataPremium(collegamento: collegamento, sulWeb: false),
+    );
+    expect(
+      find.textContaining('Premium è attivo fino al 12 marzo 2027 · regalo'),
+      findsOneWidget,
+    );
+    expect(find.byKey(const Key('compra-premium')), findsNothing);
+    expect(find.byKey(const Key('piano-$pianoAnnuale')), findsNothing);
+    expect(find.byKey(const Key('codice-regalo')), findsOneWidget);
+  });
+
+  testWidgets('durante la prova: «Prova gratuita fino al»', (tester) async {
+    late String gettone;
+    await tester.runAsync(() async {
+      gettone = await firmaUnGettone(
+        origine: 'negozio',
+        prova: true,
+        scade: DateTime(2027, 3, 12),
+      );
+    });
+    final collegamento = await casaSenzaFilo(tester, gettone: gettone);
+    await mostra(
+      tester,
+      SchermataPremium(collegamento: collegamento, sulWeb: false),
+    );
+    expect(
+      find.textContaining('Prova gratuita fino al 12 marzo 2027'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('su iPhone: CarPlay e l\'App Store', (tester) async {
+    final collegamento = await casaSenzaFilo(tester);
+    await mostra(
+      tester,
+      SchermataPremium(collegamento: collegamento, sulWeb: false),
+    );
+    expect(find.textContaining('CarPlay'), findsOneWidget);
+    expect(find.textContaining('Android Auto'), findsNothing);
+    expect(find.textContaining('L\'App Store non risponde'), findsOneWidget);
+  }, variant: TargetPlatformVariant.only(TargetPlatform.iOS));
+}

@@ -12,8 +12,13 @@ Quindi si copiano, e c'e' una prova — `copie.test.js` — che fallisce nel
 momento in cui divergono. La copia si aggiorna cosi':
 
 ```bash
-cp ponte/src/{presa,segreti,archivio}.js centralino/src/
+cp ponte/src/{presa,segreti,archivio,registro,testo,gettone,chiave-licenze}.js centralino/src/
 ```
+
+`gettone.js` e `chiave-licenze.js` sono le licenze (`docs/LICENZE.md`): il
+gettone si verifica con le stesse regole nel ponte e nel centralino, e la
+chiave pubblica e' la stessa riga — la scrive `strumenti/chiave-licenze.mjs`
+in tutti i posti insieme.
 
 ## E uno preso dalla nuvola
 
@@ -30,3 +35,6 @@ cp nuvola/src/segnalazioni.js centralino/src/
 Quando il Worker si spegnera', questa copia diventa l'originale e la riga qui
 sopra si cancella.
 
+Anche `versioni.js` (la versione minima dell'app, `GET /versioni`) viene
+dalla nuvola, per la stessa ragione: le due punte devono dire lo stesso
+numero allo stesso modo.

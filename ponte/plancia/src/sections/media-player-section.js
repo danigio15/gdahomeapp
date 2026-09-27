@@ -27,6 +27,15 @@ import {
   orologio,
   posizioneOra,
 } from "../core/media-player.js";
+import {
+  ilComandoPerSuonare,
+  ilFiloDallaRadice,
+  ilFiloDopo,
+  ilFiloFinoA,
+  ilPassoDiAdesso,
+  laCartella,
+  laDomandaPerSfogliare,
+} from "../core/sfoglia-i-media.js";
 import { comandoDelDispositivo } from "../core/comandi-accanto.js";
 import { disegnoDelCatalogo } from "../core/catalogo-disegni.js";
 import { oggettoWidget } from "../core/oggetti-widget.js";
@@ -34,6 +43,7 @@ import { registraPaginaARuntime, renderPageMastheads } from "./page-masthead-sec
 import {
   activeLocale,
   allStates,
+  chiediAHomeAssistant,
   clean,
   doc,
   esc,
@@ -45,7 +55,14 @@ import {
 
 const KEY = "__DASHBOARDMODERN_MEDIA_PLAYER__";
 const STYLE_ID = "dm-media-player-style";
-const state = (root[KEY] ||= { installed: false, frame: 0, firma: "", battito: 0, aperto: "" });
+const state = (root[KEY] ||= {
+  installed: false,
+  frame: 0,
+  firma: "",
+  battito: 0,
+  aperto: "",
+  sfoglia: null,
+});
 
 export const MEDIA_TAB = "media";
 export const PAGINA_MEDIA = "page-media";
@@ -185,6 +202,10 @@ const GLIFI = Object.freeze({
   accendi: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.6v7.6" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"/><path d="M6.9 6.7a7.2 7.2 0 1 0 10.2 0" stroke="currentColor" stroke-width="2.1" fill="none" stroke-linecap="round"/></svg>`,
   muto: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.4h3.4L12 5.2v13.6L7.4 14.6H4Z" fill="currentColor"/><path d="m16 9.6 4.4 4.8M20.4 9.6 16 14.4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>`,
   voce: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.4h3.4L12 5.2v13.6L7.4 14.6H4Z" fill="currentColor"/><path d="M15.6 9.2a4 4 0 0 1 0 5.6M18.3 6.8a7.6 7.6 0 0 1 0 10.4" stroke="currentColor" stroke-width="1.9" fill="none" stroke-linecap="round"/></svg>`,
+  /* Sfogliare: una fila di righe con la nota in fondo. E' il segno delle
+   * raccolte — una scaletta — e non la lente della ricerca, perche' qui non si
+   * cerca per nome: si scende dentro quello che il lettore ha da offrire. */
+  sfoglia: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.4 6.6h11.2M4.4 11h11.2M4.4 15.4h6.4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M19.4 8.6v7.1" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="17.5" cy="16.4" r="2" fill="currentColor"/></svg>`,
 });
 
 /* I comandi di un lettore, in una riga.
@@ -211,6 +232,15 @@ export function comandiMediaMarkup(riga) {
     ${riga.puo.precedente ? tastoMarkup(riga, "precedente", t("Brano precedente", "Previous track"), GLIFI.precedente) : ""}
     ${centro ? tastoMarkup(riga, "centro", NOMI_DEL_CENTRO[centro](), GLIFI[centro]) : ""}
     ${riga.puo.successivo ? tastoMarkup(riga, "successivo", t("Brano successivo", "Next track"), GLIFI.successivo) : ""}
+    ${
+      /* Scegliere cosa suonare, dove prima si poteva solo alzare il volume a
+       * quello che suonava gia'. Il tasto c'e' solo se quel lettore sa
+       * elencare la sua libreria E ricevere un brano: le due bandiere stanno
+       * insieme in «puo.sfoglia», e il perche' e' scritto nel nucleo. */
+      riga.puo.sfoglia
+        ? tastoMarkup(riga, "sfoglia", t("Scegli cosa suonare", "Choose what to play"), GLIFI.sfoglia)
+        : ""
+    }
     ${riga.puo.spegni && !riga.spento ? tastoMarkup(riga, "spegni", t("Spegni", "Turn off"), GLIFI.spegni) : ""}
   </div>`;
 }
@@ -613,6 +643,319 @@ function disegnaIlLettoreAperto() {
   return true;
 }
 
+/* ── scegliere cosa suonare ────────────────────────────────────────────────
+ *
+ * «Con Sonos e Music Assistant, dalla plancia non si riesce a scegliere cosa
+ * suonare.» Vero: la scheda Musica sapeva la pausa, il brano avanti, il
+ * volume e la sorgente, e sono tutte cose che si fanno a qualcosa che
+ * qualcun altro ha fatto partire. Per accendere la musica si prendeva un
+ * altro telefono.
+ *
+ * Questa finestra e' l'albero che il lettore stesso dichiara — su Music
+ * Assistant le playlist, gli artisti, le radio; su Sonos le stazioni e le
+ * liste salvate — e si scende dentro come in una cartella. Il nucleo
+ * «sfoglia-i-media.js» prepara le domande e mette in ordine le risposte;
+ * qui c'e' solo il disegno, i tocchi, e il filo per risalire.
+ *
+ * Non e' disegnata dentro la card: una libreria dentro una tessera larga 280
+ * punti sarebbe un elenco da due righe. E non si ridisegna col battito degli
+ * stati, o l'elenco si strapperebbe di sotto al dito di chi sta scorrendo.
+ */
+const SFOGLIO_ID = "dm-sf-popup";
+
+function sfoglio() {
+  state.sfoglia ||= {
+    entity: "",
+    nome: "",
+    filo: [],
+    voci: [],
+    carica: false,
+    errore: "",
+    nonMostrate: 0,
+    /* A che domanda stiamo aspettando risposta: chi tocca due cartelle di
+     * fila non deve vedersi arrivare il contenuto della prima. */
+    giro: 0,
+  };
+  return state.sfoglia;
+}
+
+function finestraDelloSfoglio() {
+  if (!doc?.body) return null;
+  const gia = doc.getElementById(SFOGLIO_ID);
+  if (gia) return gia;
+  const host = doc.createElement("div");
+  host.id = SFOGLIO_ID;
+  host.hidden = true;
+  host.addEventListener("click", (evento) => {
+    if (evento.target === host || evento.target?.closest?.("[data-dm-sf-chiudi]"))
+      chiudiLoSfoglio();
+  });
+  doc.body.append(host);
+  return host;
+}
+
+/** Apre la finestra su un lettore. Torna «false» se non c'e' niente da aprire. */
+export function apriLoSfoglio(entity) {
+  const riga = letturaDiUnLettore(entity);
+  /* Un lettore che non sa elencare niente non ha una libreria da aprire: il
+   * tasto non c'e', e se ci si arriva da un'altra parte non si apre il vuoto. */
+  if (!riga?.puo?.sfoglia) return false;
+  const suo = sfoglio();
+  suo.entity = riga.entity;
+  suo.nome = riga.nome;
+  suo.filo = ilFiloDallaRadice(t("Da ascoltare", "To play"));
+  suo.voci = [];
+  suo.errore = "";
+  suo.nonMostrate = 0;
+  chiediLaCartella();
+  return true;
+}
+
+/** Richiude la finestra. Torna «false» se non era aperta. */
+export function chiudiLoSfoglio() {
+  if (!state.sfoglia?.entity) return false;
+  state.sfoglia = null;
+  const host = doc?.getElementById?.(SFOGLIO_ID);
+  if (host) {
+    host.hidden = true;
+    host.innerHTML = "";
+  }
+  return true;
+}
+
+/* La domanda, e la risposta che arriva dopo.
+ *
+ * Il giro serve a una cosa sola: chi tocca una cartella e poi subito un'altra
+ * riceve due risposte, e quella lenta puo' arrivare per ultima. Senza il giro
+ * la finestra finirebbe col contenuto della cartella sbagliata, che e' la
+ * peggiore delle bugie perche' sembra vera.
+ */
+async function chiediLaCartella() {
+  const suo = sfoglio();
+  const passo = ilPassoDiAdesso(suo.filo);
+  const domanda = laDomandaPerSfogliare(suo.entity, { id: passo.id, tipo: passo.tipo });
+  if (!domanda) return chiudiLoSfoglio();
+  const giro = (suo.giro += 1);
+  suo.carica = true;
+  suo.errore = "";
+  disegnaLoSfoglio();
+  let risposta = null;
+  let guaio = "";
+  try {
+    /* Dodici secondi e non otto: la libreria di Music Assistant sta su un
+     * server che a sua volta interroga Spotify, e la prima apertura di una
+     * casa grande ci mette piu' di un socket che risponde da solo. */
+    risposta = await chiediAHomeAssistant(domanda, 12000);
+  } catch (errore) {
+    guaio = clean(errore?.message);
+  }
+  /* Un'altra cartella e' stata chiesta nel frattempo, o la finestra e' stata
+   * chiusa e riaperta su un altro lettore: questa risposta non riguarda piu'
+   * quello che si sta guardando. */
+  if (suo.giro !== giro || state.sfoglia !== suo) return true;
+  suo.carica = false;
+  if (guaio) {
+    suo.voci = [];
+    suo.nonMostrate = 0;
+    suo.errore = parolaDelGuaio(guaio);
+  } else {
+    const cartella = laCartella(risposta);
+    suo.voci = cartella.voci;
+    suo.nonMostrate = cartella.nonMostrate;
+    suo.errore = "";
+    /* Come si chiama la cartella lo dice Home Assistant, e lo dice solo
+     * quando risponde: il nome del passo si scrive adesso, non prima. */
+    const dove = ilPassoDiAdesso(suo.filo);
+    if (cartella.titolo) dove.titolo = cartella.titolo;
+  }
+  disegnaLoSfoglio();
+  return true;
+}
+
+/* Cosa e' andato storto, detto a chi guarda.
+ *
+ * Il messaggio di Home Assistant e' la sola spiegazione vera — «Media not
+ * found», «Unknown media type» — e passa cosi' com'e'. Le tre parole che
+ * inventa l'attrezzo del socket invece non dicono niente a nessuno, e quelle
+ * si traducono. */
+function parolaDelGuaio(guaio) {
+  if (guaio === "timeout")
+    return t("Il lettore non ha risposto.", "The player did not answer.");
+  if (guaio === "socket" || guaio === "msgId")
+    return t("Manca il collegamento a Home Assistant.", "No connection to Home Assistant.");
+  return guaio || t("Non si riesce a leggere la libreria.", "The library cannot be read.");
+}
+
+/* I segni delle voci: una cartella, una nota, delle onde.
+ *
+ * Tre e non dodici. Home Assistant ha una «media_class» per ogni cosa —
+ * album, artista, podcast, stagione, canale — e disegnarle tutte vorrebbe
+ * dire dodici segni che nessuno impara. Quello che conta e' se la riga porta
+ * altrove, se si ascolta, o se e' una cosa che trasmette e basta. */
+const SEGNI_DELLE_VOCI = Object.freeze({
+  cartella: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.6 7.4a2 2 0 0 1 2-2h3.1l1.8 2h8a2 2 0 0 1 2 2v7.8a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2Z" fill="currentColor" opacity=".9"/></svg>`,
+  nota: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17.4 4.2v10.3" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"/><path d="M17.4 4.2c0 2.3 1.2 3 3 3.4" stroke="currentColor" stroke-width="2.1" fill="none" stroke-linecap="round"/><circle cx="14.6" cy="15.6" r="3.3" fill="currentColor"/></svg>`,
+  onde: `<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="2.4" fill="currentColor"/><path d="M7.9 7.9a5.8 5.8 0 0 0 0 8.2M16.1 16.1a5.8 5.8 0 0 0 0-8.2M5.1 5.1a9.8 9.8 0 0 0 0 13.8M18.9 18.9a9.8 9.8 0 0 0 0-13.8" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round"/></svg>`,
+});
+
+const CLASSI_CHE_TRASMETTONO = new Set(["channel", "podcast", "tv_show", "episode"]);
+
+function segnoDellaVoce(voce) {
+  if (voce.sfogliabile) return SEGNI_DELLE_VOCI.cartella;
+  return CLASSI_CHE_TRASMETTONO.has(voce.classe)
+    ? SEGNI_DELLE_VOCI.onde
+    : SEGNI_DELLE_VOCI.nota;
+}
+
+/* Una miniatura dentro un «url()» di CSS, e non dentro un «img».
+ *
+ * Un «img» che non carica lascia l'icona rotta del browser; un fondo che non
+ * carica non si vede, e sotto resta il segno della voce. Le miniature
+ * arrivano da Spotify, da TuneIn, da chi le manda: una su venti non c'e'
+ * piu'. Le virgolette e le parentesi si codificano, perche' sono le sole
+ * cose che, dentro «url()», uscirebbero dal loro posto. */
+function fondoDellaMiniatura(url) {
+  const pulito = clean(url);
+  if (!pulito) return "";
+  return pulito.replace(/["'()\\\s]/g, (carattere) => encodeURIComponent(carattere));
+}
+
+function voceMarkup(voce, indice, puoAccodare) {
+  const segno = segnoDellaVoce(voce);
+  const fondo = fondoDellaMiniatura(voce.miniatura);
+  const dove = voce.sfogliabile ? "apri" : "suona";
+  return `<div class="dm-sf-voce">
+    <button type="button" class="dm-sf-riga" data-dm-sf="${dove}" data-dm-sf-voce="${indice}">
+      <span class="dm-sf-mini"${fondo ? ` style="background-image:url(${fondo})"` : ""}>${segno}</span>
+      <span class="dm-sf-nome">${esc(voce.titolo)}</span>
+      ${voce.sfogliabile ? `<span class="dm-sf-freccia" aria-hidden="true">›</span>` : ""}
+    </button>
+    ${
+      /* Il triangolo accanto c'e' solo dove serve: una playlist si apre E si
+       * suona, e senza il tasto a parte l'unico modo di farla partire intera
+       * sarebbe entrarci e scegliere il primo brano. Su un artista, che si
+       * apre e non si suona, il triangolo non compare. */
+      voce.sfogliabile && voce.suonabile
+        ? `<button type="button" class="dm-sf-tasto" data-dm-sf="suona" data-dm-sf-voce="${indice}"
+            aria-label="${esc(t("Riproduci", "Play"))}">${GLIFI.suona}</button>`
+        : ""
+    }
+    ${
+      voce.suonabile && puoAccodare
+        ? `<button type="button" class="dm-sf-tasto dm-sf-coda" data-dm-sf="coda" data-dm-sf-voce="${indice}"
+            aria-label="${esc(t("Metti in coda", "Add to queue"))}">+</button>`
+        : ""
+    }
+  </div>`;
+}
+
+function filoMarkup(filo) {
+  if (filo.length < 2) return "";
+  return `<nav class="dm-sf-filo" aria-label="${esc(t("Dove siamo", "Where we are"))}">${filo
+    .map(
+      (passo, indice) =>
+        `${indice ? `<i aria-hidden="true">›</i>` : ""}<button type="button" data-dm-sf="filo"
+          data-dm-sf-passo="${indice}"${indice === filo.length - 1 ? ` aria-current="true"` : ""}>${esc(
+          passo.titolo || t("Da ascoltare", "To play"),
+        )}</button>`,
+    )
+    .join("")}</nav>`;
+}
+
+function corpoDelloSfoglio(suo) {
+  if (suo.carica)
+    return `<p class="dm-sf-nota" role="status">${esc(t("Sto guardando…", "Looking…"))}</p>`;
+  if (suo.errore)
+    return `<p class="dm-sf-nota dm-sf-guaio" role="alert">${esc(suo.errore)}</p>`;
+  if (!suo.voci.length)
+    return `<p class="dm-sf-nota">${esc(t("Qui non c'è niente.", "Nothing here."))}</p>`;
+  const puoAccodare = letturaDiUnLettore(suo.entity)?.puo?.accoda === true;
+  return `<div class="dm-sf-elenco">${suo.voci
+    .map((voce, indice) => voceMarkup(voce, indice, puoAccodare))
+    .join("")}</div>${
+    suo.nonMostrate ? `<p class="dm-sf-nota">${esc(quanteNeMancano(suo.nonMostrate))}</p>` : ""
+  }`;
+}
+
+/* Quante voci sono rimaste fuori, al singolare quando e' una.
+ *
+ * «E altre 1 che non stanno in questo elenco» e' una frase che nessuno
+ * scriverebbe, e si legge come un guasto del programma piu' che come
+ * un'informazione. */
+function quanteNeMancano(quante) {
+  if (quante === 1)
+    return t("E un'altra che non sta in questo elenco.", "And one more that does not fit this list.");
+  return t(
+    `E altre ${quante} che non stanno in questo elenco.`,
+    `And ${quante} more that do not fit this list.`,
+  );
+}
+
+function disegnaLoSfoglio() {
+  const suo = state.sfoglia;
+  if (!suo?.entity) return false;
+  const host = finestraDelloSfoglio();
+  if (!host) return false;
+  const passo = ilPassoDiAdesso(suo.filo);
+  host.innerHTML = `<div class="dm-sf-box" role="dialog" aria-modal="true"
+    aria-label="${esc(t("Scegli cosa suonare", "Choose what to play"))}">
+    <header class="dm-sf-testa">
+      ${
+        suo.filo.length > 1
+          ? `<button type="button" class="dm-sf-tondo" data-dm-sf="filo"
+              data-dm-sf-passo="${suo.filo.length - 2}"
+              aria-label="${esc(t("Indietro", "Back"))}">‹</button>`
+          : `<span class="dm-sf-tondo dm-sf-tondo-vuoto" aria-hidden="true">${GLIFI.sfoglia}</span>`
+      }
+      <span class="dm-sf-dove">
+        <strong>${esc(passo.titolo || t("Da ascoltare", "To play"))}</strong>
+        <small>${esc(suo.nome || suo.entity)}</small>
+      </span>
+      <button type="button" class="dm-sf-tondo" data-dm-sf-chiudi
+        aria-label="${esc(t("Chiudi", "Close"))}">✕</button>
+    </header>
+    ${filoMarkup(suo.filo)}
+    ${corpoDelloSfoglio(suo)}
+  </div>`;
+  if (host.hidden) host.hidden = false;
+  return true;
+}
+
+/* Il tocco su una voce.
+ *
+ * Aprire cambia cartella; suonare chiude la finestra, perche' la commissione
+ * e' finita e sotto c'e' la card che adesso dice quel brano; accodare la
+ * lascia aperta, perche' chi mette in coda ne mette tre.
+ */
+function tocca(comando, nodo) {
+  const suo = state.sfoglia;
+  if (!suo?.entity) return;
+  root.navigator?.vibrate?.(8);
+  if (comando === "filo") {
+    suo.filo = ilFiloFinoA(suo.filo, Number(nodo.dataset.dmSfPasso));
+    chiediLaCartella();
+    return;
+  }
+  const voce = suo.voci[Number(nodo.dataset.dmSfVoce)];
+  if (!voce) return;
+  if (comando === "apri") {
+    suo.filo = ilFiloDopo(suo.filo, voce);
+    chiediLaCartella();
+    return;
+  }
+  const comandato = ilComandoPerSuonare(suo.entity, voce, comando === "coda" ? "coda" : "subito");
+  if (!comandato) return;
+  chiamaHa(comandato.domain, comandato.service, comandato.data);
+  if (comando === "coda") {
+    /* Il segno che e' andata: la coda non si vede da nessuna parte — ne' nella
+     * card ne' nello stato — e un tasto che non risponde si preme due volte. */
+    nodo.dataset.dmSfFatto = "1";
+    root.setTimeout?.(() => delete nodo.dataset.dmSfFatto, 1400);
+    return;
+  }
+  chiudiLoSfoglio();
+}
+
 /* ── i comandi ────────────────────────────────────────────────────────── */
 
 async function chiamaHa(dominio, servizio, payload) {
@@ -647,6 +990,14 @@ function comandoAccantoDi(entity) {
 }
 
 function onClick(event) {
+  /* La finestra che sfoglia la libreria: sta prima di tutto, perche' quando e'
+   * aperta i tocchi sono suoi. */
+  const dentroLoSfoglio = event.target?.closest?.("[data-dm-sf]");
+  if (dentroLoSfoglio) {
+    event.preventDefault();
+    tocca(clean(dentroLoSfoglio.dataset.dmSf), dentroLoSfoglio);
+    return;
+  }
   /* Un comando accanto (#451): si preme, si accende o si inverte, secondo cosa
    * è. Sta prima dei tasti del lettore perché è un tasto suo, non del brano. */
   const accanto = event.target?.closest?.("[data-dm-mp-cmd]");
@@ -668,6 +1019,13 @@ function onClick(event) {
   const comando = clean(tasto.dataset.dmMp);
   if (!entity.includes(".")) return;
   root.navigator?.vibrate?.(8);
+  /* Sfogliare non e' un servizio: e' una finestra. Sta qui e non piu' in
+   * basso perche' «comandoDelLettore» per questo tasto non ha niente da dare,
+   * e piu' in basso un servizio vuoto esce senza fare nulla. */
+  if (comando === "sfoglia") {
+    apriLoSfoglio(entity);
+    return;
+  }
   const riga = letturaDi(entity);
   const servizio = comandoDelLettore(comando, riga);
   if (!servizio) return;
@@ -899,6 +1257,96 @@ function installStyles() {
       #dm-mp-popup .dm-mp-card[data-arte="true"]+.dm-mp-popup-chiudi,
       #dm-mp-popup .dm-mp-popup-box:has(.dm-mp-card[data-arte="true"]) .dm-mp-popup-chiudi{
         color:#f8fafc;background:rgba(15,23,42,.62);border-color:rgba(248,250,252,.28)}
+      /* La finestra che sfoglia la libreria. Il velo e il riquadro sono quelli
+         della finestra di un lettore solo — e' la stessa plancia — ma dentro
+         c'e' un elenco che scorre, non una card, e l'altezza la decide lo
+         schermo: su un telefono la libreria di Music Assistant ha centinaia di
+         righe e la finestra deve stare dove sta, col solo elenco che si muove. */
+      #dm-sf-popup[hidden]{display:none!important}
+      #dm-sf-popup{
+        position:fixed;inset:0;z-index:2700;display:grid;place-items:center;
+        padding:18px;background:rgba(2,6,23,.66);
+        backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px)}
+      #dm-sf-popup .dm-sf-box{
+        display:flex;flex-direction:column;min-height:0;
+        width:min(480px,100%);max-height:min(78vh,620px);
+        padding:12px 12px 8px;border-radius:24px;
+        background:var(--card-background-color,#fff);border:1px solid var(--card-border,#e2e8f0);
+        box-shadow:0 26px 60px -30px rgba(2,6,23,.7)}
+      .dm-sf-testa{
+        display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:10px;align-items:center;
+        padding:2px 2px 10px}
+      .dm-sf-dove{display:grid;grid-template-columns:minmax(0,1fr);text-align:center}
+      .dm-sf-dove>strong{
+        font-size:14.5px;font-weight:900;color:var(--text,#0f172a);
+        overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+      .dm-sf-dove>small{
+        font-size:11px;font-weight:700;color:var(--text-dim,#64748b);
+        overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+      .dm-sf-tondo{
+        display:grid;place-items:center;width:34px;height:34px;padding:0;
+        border-radius:50%;cursor:pointer;font:inherit;font-size:17px;font-weight:900;line-height:1;
+        color:var(--text,#0f172a);background:var(--bg-sculpted,#f1f5f9);
+        border:1px solid var(--card-border,#e2e8f0)}
+      .dm-sf-tondo>svg{width:18px;height:18px}
+      .dm-sf-tondo-vuoto{cursor:default;color:var(--text-dim,#94a3b8);background:transparent;border-color:transparent}
+      /* Le briciole di pane scorrono di lato invece di andare a capo: dentro
+         una libreria si scende di quattro o cinque passi, e un filo che si
+         impila su tre righe si mangia l'elenco che sta sotto. */
+      .dm-sf-filo{
+        display:flex;align-items:center;gap:4px;flex:0 0 auto;
+        overflow-x:auto;scrollbar-width:none;padding:0 2px 8px}
+      .dm-sf-filo::-webkit-scrollbar{display:none}
+      .dm-sf-filo>i{color:var(--text-dim,#cbd5e1);font-style:normal;font-weight:900}
+      .dm-sf-filo>button{
+        flex:0 0 auto;max-width:120px;padding:4px 9px;border-radius:9px;cursor:pointer;
+        font:inherit;font-size:11px;font-weight:800;
+        overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+        color:var(--text-dim,#64748b);background:var(--bg-sculpted,#f1f5f9);
+        border:1px solid transparent}
+      .dm-sf-filo>button[aria-current="true"]{color:var(--text,#0f172a);background:transparent}
+      .dm-sf-elenco{
+        flex:1 1 auto;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;
+        display:grid;gap:5px;padding:0 2px 4px}
+      .dm-sf-voce{display:flex;align-items:center;gap:5px}
+      .dm-sf-riga{
+        flex:1 1 auto;
+        display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:11px;align-items:center;
+        min-width:0;padding:7px 9px;border-radius:14px;cursor:pointer;text-align:left;
+        font:inherit;color:var(--text,#0f172a);
+        background:var(--bg-sculpted,#f8fafc);border:1px solid var(--card-border,#e2e8f0)}
+      .dm-sf-mini{
+        display:grid;place-items:center;width:42px;height:42px;flex:0 0 42px;
+        border-radius:11px;overflow:hidden;color:var(--text-dim,#94a3b8);
+        background-color:var(--card-background-color,#fff);
+        background-size:cover;background-position:center;
+        border:1px solid var(--card-border,#e2e8f0)}
+      /* Quando la miniatura c'e', il segno dietro non deve trasparire da sopra:
+         la copertina non e' un fondo, e' l'immagine. */
+      .dm-sf-mini[style]>svg{display:none}
+      .dm-sf-mini>svg{width:21px;height:21px}
+      .dm-sf-nome{
+        min-width:0;font-size:13.5px;font-weight:800;
+        overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+      .dm-sf-freccia{color:var(--text-dim,#cbd5e1);font-weight:900;font-size:17px;line-height:1}
+      .dm-sf-tasto{
+        display:grid;place-items:center;width:38px;height:38px;flex:0 0 38px;padding:0;
+        border-radius:12px;cursor:pointer;font:inherit;font-size:17px;font-weight:900;line-height:1;
+        color:var(--text,#0f172a);background:var(--bg-sculpted,#f1f5f9);
+        border:1px solid var(--card-border,#e2e8f0)}
+      .dm-sf-tasto>svg{width:15px;height:15px}
+      /* Che e' andata: la coda non si vede in nessuno stato, e un tasto che non
+         risponde si preme due volte. */
+      .dm-sf-coda[data-dm-sf-fatto]{color:#fff;background:#16a34a;border-color:#16a34a}
+      .dm-sf-nota{
+        flex:0 0 auto;margin:0;padding:14px 10px;text-align:center;
+        font-size:12px;font-weight:700;color:var(--text-dim,#64748b)}
+      .dm-sf-guaio{color:#dc2626}
+      @media(max-width:420px){
+        #dm-sf-popup{padding:10px}
+        #dm-sf-popup .dm-sf-box{max-height:86vh;border-radius:20px}
+        .dm-sf-mini{width:38px;height:38px;flex-basis:38px}
+      }
       @media(max-width:560px){
         .dm-mp-card{grid-template-columns:auto minmax(0,1fr);gap:12px;padding:13px}
         .dm-mp-arte-box,.dm-mp-arte{width:82px;height:82px;flex-basis:82px}
@@ -931,7 +1379,11 @@ export function installMediaPlayer() {
     if (event.target?.closest?.(".tab[data-tab]")) root.queueMicrotask?.(schedule);
   });
   doc.addEventListener("keydown", (evento) => {
-    if (evento.key === "Escape") chiudiIlLettore();
+    /* Le finestre sono due, e una sta sopra l'altra: Escape chiude quella che
+     * si sta guardando. Chiuderle entrambe vorrebbe dire che chi torna
+     * indietro dalla libreria perde anche il lettore da cui l'ha aperta. */
+    if (evento.key !== "Escape") return;
+    if (!chiudiLoSfoglio()) chiudiIlLettore();
   });
   root.addEventListener?.("pagehide", ferma);
   schedule();

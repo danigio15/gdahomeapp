@@ -28,8 +28,27 @@ function functionSource(source, name) {
 }
 
 /* Le funzioni del runtime che scrivono HTML passano i valori da cdEsc/cdJs:
- * chi le prova da sole se le porta dietro. */
-const ESCAPE_HELPERS = ["cdEsc", "cdJs", "cdUrlOk", "cdUrl", "cdColor"];
+ * chi le prova da sole se le porta dietro.
+ *
+ * E da quando i watt e i wattora salgono di scala al migliaio, anche le
+ * quattro funzioni che li scrivono: una tessera che dice «5,25 kW» la dice con
+ * `cdW`, e ritagliarla senza portarsi quella vorrebbe dire provarla in un
+ * mondo dove non esiste. */
+const ESCAPE_HELPERS = [
+  "cdEsc",
+  "cdJs",
+  "cdUrlOk",
+  "cdUrl",
+  "cdColor",
+  "cdLinguaNumeri",
+  "cdScalaDellUnita",
+  "cdDecimaliDellaScala",
+  "cdNumeroScritto",
+  "cdNumeroTondo",
+  "cdUnitaGiusta",
+  "cdW",
+  "cdKwh",
+];
 const escapeHelpers = (source) =>
   ESCAPE_HELPERS.map((name) => functionSource(source, name)).join("\n");
 

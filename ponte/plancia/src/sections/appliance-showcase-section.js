@@ -89,6 +89,10 @@ const copy = () => ({
   total: t("Consumo totale", "Total consumption"),
   totalHidden: t("Consumo istantaneo", "Instant power"),
   active: t("elettrodomestici attivi", "appliances running"),
+  /* Uno solo si dice al singolare. «1 elettrodomestici attivi» e' scritto
+   * sotto il numero piu' grande della pagina, e a chi legge non sembra una
+   * sfumatura di lingua: sembra che il programma abbia sbagliato a contare. */
+  activeOne: t("elettrodomestico attivo", "appliance running"),
   activeHidden: t("In funzione", "Running"),
   today: t("Oggi", "Today"),
   todayHidden: t("Energia giornaliera", "Daily energy"),
@@ -676,7 +680,9 @@ function skeletonMarkup(labels) {
           </div>
           <div class="glance-card dm-total-running">
             <span class="g-val" data-dm-total-running>0</span>
-            <span class="g-name">${esc(labels.active)}<span class="dm-sr-only"> · ${esc(labels.activeHidden)}</span></span>
+            <span class="g-name"><span data-dm-total-running-nome>${esc(
+              labels.active,
+            )}</span><span class="dm-sr-only"> · ${esc(labels.activeHidden)}</span></span>
           </div>
           <!-- La sfumatura porta il nome del suo posto, il pannello che la
                contiene: un nome fisso, in una pagina con due grafici, farebbe
@@ -835,6 +841,10 @@ function renderSidebar(shell, models, counts, rooms, labels) {
   const active = shell.querySelector("[data-dm-total-running]");
   if (active && active.textContent !== String(counts.running))
     scriviTestoSeCambia(active, String(counts.running));
+  /* E la parola concorda col numero che ha appena sopra. Lo zero resta al
+   * plurale — «0 elettrodomestici attivi» e' come si dice. */
+  const nome = shell.querySelector("[data-dm-total-running-nome]");
+  if (nome) scriviTestoSeCambia(nome, counts.running === 1 ? labels.activeOne : labels.active);
   const spark = shell.querySelector("[data-dm-spark]");
   if (spark) {
     const { line, area } = filoDaZero(state.spark, 100, 28);

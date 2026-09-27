@@ -97,7 +97,13 @@ class PresaSuWebSocket implements Presa {
       handleDone: (sink) {
         final perche = _canale.closeReason;
         if (perche != null && perche.trim().isNotEmpty) {
-          sink.addError(FiloCaduto(inParoleNostre(perche)));
+          /* Il centralino chiude i telefoni di una casa senza licenza: e' un
+           * no diverso dagli altri, e la schermata lo dice col suo tasto. */
+          sink.addError(
+            eIlNoDelPremium(perche) || _canale.closeCode == 4402
+                ? PremiumRichiesto(fuoriCasaServePremium)
+                : FiloCaduto(inParoleNostre(perche)),
+          );
         }
         sink.close();
       },

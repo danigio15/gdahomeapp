@@ -329,10 +329,9 @@ const ACCESE = Object.freeze({
    * rilevatori resta una stanza, e rifare quel raggruppamento qui vorrebbe
    * dire due regole su cosa e' «un posto».
    *
-   * Sono NOMI di stanze, non righe con un'entita' dentro, e percio' questa
-   * pastiglia non ha l'elenco «tocca per spegnere» che hanno le luci: una
-   * stanza non si spegne. Toccandola si apre la sua tessera, dove le stanze
-   * occupate stanno scritte una per una. */
+   * Sono NOMI di stanze, non righe con un'entita' dentro. Un elenco ce l'hanno
+   * lo stesso — «quali due?» e' la domanda che si fa toccando «2 stanze
+   * occupate» — ma senza il tasto: una stanza non si spegne. */
   presenza: "occupate",
 });
 
@@ -680,9 +679,22 @@ export function pastiglieDellaCasa(modelli, { barra, posta, misure, mie, adesso 
        * quelli accesi e non una replica del popup widget». Le due cose vengono
        * dalla stessa riga e viaggiano insieme: due elenchi della stessa
        * lampadina — uno di nomi, uno di entita' — sarebbero due elenchi da
-       * tenere allineati. */
+       * tenere allineati.
+       *
+       * Una riga puo' essere un NOME e basta: le stanze occupate sono posti,
+       * non entita' — una stanza con tre rilevatori e' una stanza sola, e
+       * quella stanza un `entity_id` non ce l'ha. Restano voci a pieno titolo:
+       * senza, la pastiglia «2 stanze occupate» era l'unica che contava
+       * qualcosa e non aveva un elenco da aprire, e il tocco finiva sulla sua
+       * tessera — cioe' da nessuna parte, per chi quella tessera l'aveva
+       * nascosta dalla Home. Chi tocca un numero vuole sapere QUALI: quella
+       * risposta non puo' dipendere da un'altra tessera. */
       voci: righe
-        .map((riga) => ({ entity: pulito(riga?.entity), name: pulito(riga?.name) }))
+        .map((riga) =>
+          typeof riga === "string"
+            ? { entity: "", name: pulito(riga) }
+            : { entity: pulito(riga?.entity), name: pulito(riga?.name) },
+        )
         .filter((voce) => voce.name || voce.entity),
     });
   }

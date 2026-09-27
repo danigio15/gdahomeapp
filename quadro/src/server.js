@@ -23,6 +23,11 @@
  *   POST   /console/io/avvisi/prova      mandamene uno adesso, per vedere
  *   GET    /console/case                 **le sue** case
  *   GET    /console/note/<segno>         le note intere di un aggiornamento
+ *   GET    /console/licenze              il suo pacchetto, le licenze che ha dato, i suoi codici
+ *   POST   /console/licenze              una licenza dal pacchetto a una **sua** casa
+ *   DELETE /console/licenze/<lic_…>      la toglie, e torna nel pacchetto
+ *   POST   /console/codici               un codice regalo dal pacchetto
+ *   DELETE /console/codici/<GDA-…>       lo annulla, se nessuno l'ha usato
  *   GET    /console/inviti               i **suoi** codici in attesa
  *   POST   /console/inviti               fanne uno, se il limite lo consente
  *   DELETE /console/inviti/<inv_…>       annulla il suo
@@ -43,6 +48,11 @@
  *   WS     /plancia-da-lontano/<casa_…>/<profilo>/websocket   e il filo su cui parla, cieco
  *   GET    /dashboardmodern_static/…                          i file della plancia, senza chiave
  *
+ *   POST   /v1/licenze/casa              una casa chiede i suoi gettoni (`docs/LICENZE.md`)
+ *   POST   /v1/licenze/negozio           e porta una ricevuta del negozio
+ *   POST   /v1/licenze/riscatta          un codice regalo, per una casa o un telefono
+ *   POST   /v1/licenze/telefono          gdanav da solo chiede i suoi
+ *
  *   GET    /gestore/                     la pagina di chi tiene il quadro
  *   GET    /gestore/installatori         chi c'e', quanti impianti ha ognuno e
  *                                        quante entita' in tutto
@@ -55,6 +65,12 @@
  *   DELETE /gestore/installatore/<id>/congela   e ridagliela
  *   POST   /gestore/installatore/<id>/chiave   una chiave nuova
  *   DELETE /gestore/installatore/<id>    eliminalo, con tutto quello che e' suo
+ *   PATCH  /gestore/installatori/<id>    il suo pacchetto di licenze (anche nome e limite)
+ *   GET    /gestore/licenze              tutte le licenze e tutti i codici
+ *   POST   /gestore/licenze              una licenza in regalo a una casa
+ *   DELETE /gestore/licenze/<lic_…>      toglila
+ *   POST   /gestore/codici               codici regalo, quanti se ne vuole
+ *   DELETE /gestore/codici/<GDA-…>       annulla uno non ancora usato
  *
  * ─── Tre chiavi, e ognuna apre una porta sola ────────────────────────────
  *
@@ -115,6 +131,15 @@ import { Biglietti, GettoniDellEditor } from "./biglietti.js";
 import { laFormaDel, leRigheDeiSegni } from "./forma-del-rapporto.js";
 import { Freno } from "./freno.js";
 import { daChiSiConta, eDaQui } from "./indirizzo.js";
+import {
+  ATTESA_DEL_NEGOZIO,
+  CASA,
+  Licenze,
+  NoLicenza,
+  TELEFONO,
+  ilPacchettoDetto,
+} from "./licenze.js";
+import { NegozioGiu, Negozi, RicevutaNonValida } from "./negozi.js";
 
 /**
  * Quanto puo' essere grossa un rapporto. Le vere stanno sotto i quattro KiB —
@@ -316,6 +341,20 @@ export function costruisciIlServer({
   frenoDellAttesa = new Freno({ quanti: 20, ogni: 5 * 1000 }),
   /* E quello delle prove degli avvisi, installatore per installatore. */
   frenoDelleProve = new Freno({ quanti: 3, ogni: 60 * 1000 }),
+  /* Le licenze (`licenze.js`) e chi controlla le ricevute (`negozi.js`).
+   * Di serie spente: senza la chiave privata le vie di `/v1/licenze`
+   * rispondono 503, e senza le chiavi dei negozi quella del negozio. */
+  licenze = new Licenze({ cartella }),
+  negozi = new Negozi({ ambiente: {} }),
+  /* Quanto si aspetta il negozio, per i rinnovi, mentre una casa aspetta i
+   * suoi gettoni. */
+  attesaDelNegozio = ATTESA_DEL_NEGOZIO,
+  /* Il freno delle licenze, per indirizzo: una casa chiede ogni sei ore, e
+   * un'app al massimo qualche volta di fila. Quello dei codici e' piu'
+   * stretto, per indirizzo **e** per soggetto: e' la porta da cui si
+   * proverebbero i codici a raffica. */
+  frenoDelleLicenze = new Freno({ quanti: 20, ogni: 15 * 1000 }),
+  frenoDeiCodici = new Freno({ quanti: 6, ogni: 60 * 1000 }),
   /* Chi puo' tenere il cruscotto in un riquadro: vedi `gliOspiti`. */
   ospiti = gliOspiti(),
   /* Dove chiedere i numeri del tramite, per la gestione. Vuoto: non si
@@ -862,6 +901,14 @@ export function costruisciIlServer({
       return;
     }
 
+    /* ─── Le licenze, dalla casa e dal telefono ──────────────────────── */
+
+    const perLeLicenze = /^\/v1\/licenze\/(casa|negozio|riscatta|telefono)$/.exec(via);
+    if (perLeLicenze && metodo === "POST") {
+      await leLicenzeDaFuori(richiesta, risposta, perLeLicenze[1]);
+      return;
+    }
+
     /* ─── Il retro: gli installatori ───────────────────────────────────── */
 
     if (via === "/console" && metodo === "GET") {
@@ -1084,11 +1131,19 @@ export function costruisciIlServer({
         vivo: detto?.vivo === true,
         accesoDa: numero(detto?.acceso_da),
         case: numero(detto?.case),
+        /* Quanti hanno installato: il registro delle case del tramite, che
+         * resta anche quando il filo e' chiuso. Un tramite non ancora
+         * aggiornato non lo dice, e allora resta `null` e la mattonella non
+         * compare: meglio una mattonella in meno di un numero inventato. */
+        installate: numero(detto?.installate),
         /* `telefoni` e' il nome vecchio: il tramite e il quadro si aggiornano
          * ognuno per conto suo, e per il tempo in cui uno e' avanti e l'altro
          * indietro la mattonella deve dire un numero invece di restare vuota. */
         collegamenti: numero(detto?.collegamenti ?? detto?.telefoni),
         app: numero(detto?.app),
+        /* E quanti guardano dal browser. Come sopra: `null` finche' il tramite
+         * non lo dice. */
+        web: numero(detto?.web),
         segnalazioni: detto?.segnalazioni === true,
         chat: numero(detto?.chat?.linee),
         console: detto?.chat?.console === true,
@@ -1160,6 +1215,111 @@ export function costruisciIlServer({
       return;
     }
     json(risposta, { note: dette });
+  }
+
+  /* ─── Le licenze ─────────────────────────────────────────────────────
+   *
+   * Il contratto e' `docs/LICENZE.md`. Qui si traduce e basta: chi bussa si
+   * riconosce col suo segreto (la prima volta resta l'impronta), si fa
+   * quello che chiede, e si risponde **sempre nella stessa forma** — i
+   * gettoni e le licenze che valgono adesso. Gli errori hanno la loro
+   * parola, che le app leggono: e' il campo `errore`, e non cambia. */
+  function rispondiDelleLicenze(risposta, errore) {
+    if (errore instanceof NoLicenza) {
+      male(risposta, errore.stato, errore.errore);
+      return;
+    }
+    if (errore instanceof RicevutaNonValida) {
+      male(risposta, 402, errore.errore);
+      return;
+    }
+    if (errore instanceof NegozioGiu) {
+      registro.attenzione(`il negozio non risponde: ${errore.message}`);
+      male(risposta, 502, "negozio-non-risponde");
+      return;
+    }
+    throw errore;
+  }
+
+  async function leLicenzeDaFuori(richiesta, risposta, quale) {
+    const da = daChiSiConta(richiesta);
+    const fraQuanto = frenoDelleLicenze.passa(da);
+    if (fraQuanto) {
+      frenato(risposta, fraQuanto);
+      return;
+    }
+    if (!licenze.accese) {
+      male(risposta, 503, "licenze-non-configurate");
+      return;
+    }
+    let detto;
+    try {
+      detto = await ilCorpo(richiesta, 16 * 1024);
+    } catch (_errore) {
+      male(risposta, 400, "corpo-non-valido");
+      return;
+    }
+    if (!detto || typeof detto !== "object" || Array.isArray(detto)) {
+      male(risposta, 400, "corpo-non-valido");
+      return;
+    }
+    try {
+      /* Prima dei gettoni, le sue licenze del negozio vicine alla scadenza si
+       * richiedono al negozio: un abbonamento rinnovato non lo dice nessuno.
+       * Al massimo qualche secondo; se il negozio tace, si risponde con
+       * quello che si sapeva (`licenze.js`, «I rinnovi»). */
+      if (quale === "casa") {
+        const sog = licenze.riconosci(detto.casa, detto.segreto, CASA);
+        await licenze.rinnova(negozi, { sog, attesa: attesaDelNegozio, registro });
+        json(risposta, licenze.perIlSoggetto(sog));
+        return;
+      }
+      if (quale === "telefono") {
+        const sog = licenze.riconosci(detto.telefono, detto.segreto, TELEFONO);
+        await licenze.rinnova(negozi, { sog, attesa: attesaDelNegozio, registro });
+        json(risposta, licenze.perIlSoggetto(sog));
+        return;
+      }
+      if (quale === "riscatta") {
+        /* Il freno stretto, prima di guardare il codice: per indirizzo, e
+         * per soggetto — chi ha mille indirizzi ha comunque una casa sola. */
+        const sogDetto = String(detto.casa ?? detto.telefono ?? "");
+        const aspetta = frenoDeiCodici.passa(`da:${da}`) || frenoDeiCodici.passa(`sog:${sogDetto}`);
+        if (aspetta) {
+          frenato(risposta, aspetta);
+          return;
+        }
+        const sog =
+          detto.casa !== undefined
+            ? licenze.riconosci(detto.casa, detto.segreto, CASA)
+            : licenze.riconosci(detto.telefono, detto.segreto, TELEFONO);
+        const una = licenze.riscatta(detto.codice, sog);
+        registro.info(`un codice regalo riscattato: ${una.app} per ${sog}`);
+        json(risposta, licenze.perIlSoggetto(sog));
+        return;
+      }
+      /* Il negozio. */
+      const sog = licenze.riconosci(detto.casa, detto.segreto, CASA);
+      const piattaforma = String(detto.piattaforma ?? "");
+      if (piattaforma !== "android" && piattaforma !== "ios")
+        throw new NoLicenza(400, "piattaforma-non-valida");
+      if (!negozi.configurato(piattaforma)) throw new NoLicenza(503, "verifica-non-configurata");
+      const esito = await negozi.controlla({
+        piattaforma,
+        prodotto: detto.prodotto,
+        ricevuta: detto.ricevuta,
+      });
+      /* L'app che dice il corpo non conta per decidere: conta quella del
+       * prodotto che il negozio ha risposto. Se non coincidono, qualcuno sta
+       * provando a far passare un abbonamento per un altro. */
+      if (detto.app !== undefined && detto.app !== esito.app)
+        throw new RicevutaNonValida("prodotto-di-un-altra-app");
+      licenze.dalNegozio({ ...esito, sog, piattaforma });
+      registro.info(`una ricevuta ${piattaforma} controllata: ${esito.app} per ${sog}`);
+      json(risposta, licenze.perIlSoggetto(sog));
+    } catch (errore) {
+      rispondiDelleLicenze(risposta, errore);
+    }
   }
 
   async function ilRetro(richiesta, risposta, via, metodo, chi) {
@@ -1282,6 +1442,90 @@ export function costruisciIlServer({
      * telefono, e porta la chiave con cui e' stato chiesto — questa. */
     if (via === "/biglietto" && metodo === "POST") {
       json(risposta, biglietti.stacca(chi, ilSegno(richiesta)));
+      return;
+    }
+
+    /* Le licenze del suo pacchetto.
+     *
+     * Solo alle **sue** case: la casa deve essere una di quelle che segue in
+     * questo quadro. «Non e' tua» e «non c'e'» si dicono uguale, come per il
+     * nome. Il pacchetto lo conta `licenze.js`, nello stesso passo in cui la
+     * licenza nasce: quando e' finito, e' il server che dice di no.
+     *
+     * La durata non la sceglie lui: sceglie uno dei mucchi del suo pacchetto,
+     * `durata` ("12", "sempre"). Il vecchio `mesi` si legge ancora come la
+     * stessa cosa (`null` = per sempre). */
+    const laDurataDetta = (detto) =>
+      detto?.durata !== undefined
+        ? detto.durata
+        : detto && typeof detto === "object" && "mesi" in detto
+          ? (detto.mesi ?? "sempre")
+          : undefined;
+
+    if (via === "/licenze" && metodo === "GET") {
+      json(risposta, licenze.elencoDi(chi));
+      return;
+    }
+
+    if (via === "/licenze" && metodo === "POST") {
+      const detto = await ilDetto(richiesta);
+      const casaDetta = String(detto?.casa ?? "");
+      if (case_.quella(casaDetta)?.di !== chi) {
+        male(risposta, 404, "questa casa non la segui tu");
+        return;
+      }
+      try {
+        const una = licenze.regala({
+          app: detto?.app,
+          casa: casaDetta,
+          durata: laDurataDetta(detto),
+          nota: detto?.nota,
+          installatore: chi,
+        });
+        registro.info(`${chi} ha dato una licenza ${una.app} a ${casaDetta}`);
+        json(risposta, { licenza: una.lic, ...licenze.elencoDi(chi) });
+      } catch (errore) {
+        rispondiDelleLicenze(risposta, errore);
+      }
+      return;
+    }
+
+    const suaLicenza = /^\/licenze\/(lic_[0-9a-f]{16})$/.exec(via);
+    if (suaLicenza && metodo === "DELETE") {
+      if (!licenze.togli(suaLicenza[1], { installatore: chi })) {
+        male(risposta, 404, "questa licenza non l'hai data tu");
+        return;
+      }
+      registro.info(`${chi} ha tolto la licenza ${suaLicenza[1]}: torna nel pacchetto`);
+      json(risposta, licenze.elencoDi(chi));
+      return;
+    }
+
+    if (via === "/codici" && metodo === "POST") {
+      const detto = await ilDetto(richiesta);
+      try {
+        const [fatto] = licenze.generaCodici({
+          app: detto?.app,
+          quanti: 1,
+          durata: laDurataDetta(detto),
+          nota: detto?.nota,
+          installatore: chi,
+        });
+        registro.info(`${chi} ha fatto un codice regalo ${fatto.app}`);
+        json(risposta, { codice: fatto.codice, ...licenze.elencoDi(chi) });
+      } catch (errore) {
+        rispondiDelleLicenze(risposta, errore);
+      }
+      return;
+    }
+
+    const suoCodice = /^\/codici\/(GDA-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4})$/.exec(via);
+    if (suoCodice && metodo === "DELETE") {
+      if (!licenze.annullaCodice(suoCodice[1], { installatore: chi })) {
+        male(risposta, 404, "questo codice non c'e', o e' gia' stato usato");
+        return;
+      }
+      json(risposta, licenze.elencoDi(chi));
       return;
     }
 
@@ -1622,10 +1866,14 @@ export function costruisciIlServer({
      * alla pagina, e chi ha appena aggiunto un installatore vede «0 impianti in tutto»
      * con le righe che dicono altro. Una forma sola non lo lascia succedere. */
     const ilQuadro = () => ({
-      installatori: installatori.elenco(
-        (chi) => case_.quante(chi),
-        (chi) => case_.entita(chi),
-      ),
+      installatori: installatori
+        .elenco(
+          (chi) => case_.quante(chi),
+          (chi) => case_.entita(chi),
+        )
+        /* Il pacchetto di licenze di ognuno: quante ne ha avute, quante ne ha
+         * gia' date. Sta in `licenze.js`, che e' dove si contano. */
+        .map((uno) => ({ ...uno, pacchetto: licenze.pacchetto(uno.chi) })),
       case: case_.lista.length,
       /* Quelle di un installatore tolto: restano, e continuano a depositare. Senza
        * questo numero il totale non tornerebbe con la somma degli installatori, e non
@@ -1675,9 +1923,26 @@ export function costruisciIlServer({
       return;
     }
 
+    /* Il pacchetto detto dal gestore, controllato **prima** di fare qualunque
+     * cosa: un pacchetto storto non lascia un installatore fatto a meta'.
+     * `undefined` se non c'e', `null` (e il 400 gia' mandato) se non va. */
+    const ilPacchettoDi = (detto, risposta) => {
+      if (detto?.pacchetto === undefined || detto?.pacchetto === null) return undefined;
+      try {
+        return ilPacchettoDetto(detto.pacchetto);
+      } catch (errore) {
+        if (!(errore instanceof NoLicenza)) throw errore;
+        male(risposta, errore.stato, errore.errore);
+        return null;
+      }
+    };
+
     if (via === "/installatori" && metodo === "POST") {
       const detto = await ilDetto(richiesta);
+      const pacchetto = ilPacchettoDi(detto, risposta);
+      if (pacchetto === null) return;
       const fatto = installatori.fai({ nome: detto?.nome, soglia: detto?.soglia });
+      if (pacchetto) licenze.mettiIlPacchetto(fatto.chi, pacchetto);
       registro.info(`un installatore nuovo: ${fatto.chi}`);
       /* La chiave in chiaro esce **una volta sola**, adesso. Poi qui resta solo
        * la sua impronta: se si perde si rifa', non si recupera. */
@@ -1685,13 +1950,21 @@ export function costruisciIlServer({
       return;
     }
 
-    const uno = new RegExp(`^/installatore/(${CHI_VALIDO.source.slice(1, -1)})$`).exec(via);
-    if (uno && metodo === "PUT") {
+    /* Il contratto delle licenze la chiama `PATCH /installatori/<id>`: e' la
+     * stessa via di `PUT /installatore/<id>`, con un nome al plurale. */
+    const uno =
+      new RegExp(`^/installatore/(${CHI_VALIDO.source.slice(1, -1)})$`).exec(via) ||
+      (metodo === "PATCH"
+        ? new RegExp(`^/installatori/(${CHI_VALIDO.source.slice(1, -1)})$`).exec(via)
+        : null);
+    if (uno && (metodo === "PUT" || metodo === "PATCH")) {
       const detto = await ilDetto(richiesta);
       if (!installatori.quello(uno[1])) {
         male(risposta, 404, "questo installatore non c'e'");
         return;
       }
+      const pacchetto = ilPacchettoDi(detto, risposta);
+      if (pacchetto === null) return;
       if (detto?.nome !== undefined) {
         /* Vuoto si rifiuta: un installatore senza nome e' una riga che non
          * dice di chi sono gli impianti, e il nome finisce anche in cima alle
@@ -1707,6 +1980,11 @@ export function costruisciIlServer({
         installatori.rinomina(uno[1], nome);
       }
       if (detto?.soglia !== undefined) installatori.limite(uno[1], detto.soglia);
+      /* Il pacchetto si puo' abbassare anche sotto quelle gia' date: quelle
+       * restano, e fino a che non ne toglie qualcuna non ne da' altre. Una app
+       * nominata prende i conti detti tutti interi (una durata tolta dal
+       * gestore sparisce); quella non nominata resta com'era. */
+      if (pacchetto) licenze.mettiIlPacchetto(uno[1], pacchetto);
       json(risposta, ilQuadro());
       return;
     }
@@ -1747,6 +2025,9 @@ export function costruisciIlServer({
       const suoi = chiavi.toglieTutto(chi);
       const quante = case_.toglieTutto(chi);
       gettoni.dimentica(chi);
+      /* Il suo pacchetto se ne va con lui; le licenze che ha dato restano: le
+       * case dei suoi clienti non perdono il Premium perche' lui non c'e' piu'. */
+      licenze.dimenticaIlPacchetto(chi);
       marchi.togli(chi, installatori.quello(chi)?.marchio || "");
       const chiuso = installatori.togli(chi);
       registro.info(
@@ -1780,6 +2061,68 @@ export function costruisciIlServer({
         );
       }
       json(risposta, { congelato: congela, ...ilQuadro() });
+      return;
+    }
+
+    /* ─── Le licenze, dalla gestione ───────────────────────────────── */
+
+    if (via === "/licenze" && metodo === "GET") {
+      json(risposta, licenze.elenco());
+      return;
+    }
+
+    if (via === "/licenze" && metodo === "POST") {
+      const detto = await ilDetto(richiesta);
+      try {
+        const una = licenze.regala({
+          app: detto?.app,
+          casa: String(detto?.casa ?? "").trim(),
+          mesi: detto?.mesi,
+          nota: detto?.nota,
+        });
+        registro.info(`una licenza ${una.app} in regalo a ${una.sog}`);
+        json(risposta, { licenza: una.lic, ...licenze.elenco() });
+      } catch (errore) {
+        rispondiDelleLicenze(risposta, errore);
+      }
+      return;
+    }
+
+    if (via === "/codici" && metodo === "POST") {
+      const detto = await ilDetto(richiesta);
+      try {
+        const fatti = licenze.generaCodici({
+          app: detto?.app,
+          quanti: detto?.quanti ?? 1,
+          mesi: detto?.mesi,
+          nota: detto?.nota,
+        });
+        registro.info(`${fatti.length} codici regalo ${fatti[0]?.app} fatti dalla gestione`);
+        json(risposta, { ...licenze.elenco(), nuovi: fatti.map((uno) => uno.codice) });
+      } catch (errore) {
+        rispondiDelleLicenze(risposta, errore);
+      }
+      return;
+    }
+
+    const unaLicenza = /^\/licenze\/(lic_[0-9a-f]{16})$/.exec(via);
+    if (unaLicenza && metodo === "DELETE") {
+      if (!licenze.togli(unaLicenza[1])) {
+        male(risposta, 404, "questa licenza non c'e', o e' gia' tolta");
+        return;
+      }
+      registro.info(`licenza tolta dalla gestione: ${unaLicenza[1]}`);
+      json(risposta, licenze.elenco());
+      return;
+    }
+
+    const unCodice = /^\/codici\/(GDA-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4})$/.exec(via);
+    if (unCodice && metodo === "DELETE") {
+      if (!licenze.annullaCodice(unCodice[1])) {
+        male(risposta, 404, "questo codice non c'e', o e' gia' stato usato");
+        return;
+      }
+      json(risposta, licenze.elenco());
       return;
     }
 

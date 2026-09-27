@@ -308,7 +308,7 @@ function apriApplianceDetail(i){
   const s=cdApplStatus(a);
   document.getElementById('details-title').innerHTML='<span style="display:inline-flex;vertical-align:middle;color:#0ea5e9;">'+cdApplianceVisual(a,22)+'</span> '+cdEsc(String(cdApplianceDisplayName(a)).toUpperCase());
   const list=document.getElementById('details-list');
-  const badge='<div style="text-align:center;margin-bottom:14px;"><span class="appl-st '+s.cls+'" style="display:inline-block;padding:7px 16px;font-size:13px;">'+s.label+(s.w!=null?' · '+Math.round(s.w)+' W':'')+'</span></div>';
+  const badge='<div style="text-align:center;margin-bottom:14px;"><span class="appl-st '+s.cls+'" style="display:inline-block;padding:7px 16px;font-size:13px;">'+s.label+(s.w!=null?' · '+cdW(s.w):'')+'</span></div>';
   const rows=ents.map(en=>{ const st=STATES[en]; const nm=(st&&st.attributes&&st.attributes.friendly_name)||en; const val=st?String(st.state):'—';
     const unit=(st&&st.attributes&&st.attributes.unit_of_measurement)||'';
     return '<div class="detail-row hist-clickable" onclick="apriStorico(event, '+cdJs(en)+', '+cdJs(nm)+')"><div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0;overflow:hidden;"><div class="d-info" style="min-width:0;flex:1;overflow:hidden;"><div class="d-name" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:14px;">'+cdEsc(nm)+'</div><div class="d-state"><span style="font-family:monospace;font-size:11px;color:var(--text-dim,#64748b);">'+cdEsc(en)+'</span></div></div></div><div class="d-val" style="font-weight:800;color:#0ea5e9;">'+cdEsc(val)+' '+cdEsc(unit)+'</div>'+((/^(switch|light|input_boolean|fan)\./.test(en))?('<button class="ed-ord-btn'+(((STATES[en]&&STATES[en].state)==='on')?' on':'')+'" style="flex:0 0 auto; margin-left:8px; width:44px; height:30px; border:none; border-radius:9px; cursor:pointer; font-size:15px; background:rgba(14,165,233,0.16);" onclick="event.stopPropagation(); cdApplEntTog('+cdJs(en)+', this)">'+(((STATES[en]&&STATES[en].state)==='on')?'OFF':'ON')+'</button>'):'')+'</div>';
@@ -354,7 +354,7 @@ function cdApplMainCard(a) {
   const roomValid=room && (!api?.isConfiguredRoom || api.isConfiguredRoom(room));
   const nm=String(typeof cdApplianceDisplayName==='function'?cdApplianceDisplayName(a):(a&&a.name?a.name:cdApplianceName(a.icon)));
   const metrics=[];
-  const powerValue=p?cdApplVal(p,''):(st.w!=null?Math.round(st.w)+' W':'');
+  const powerValue=p?cdApplVal(p,''):(st.w!=null?cdW(st.w):'');
   if(powerValue) metrics.push('<div class="appl-primary"><span>⚡ Consumo</span><strong>'+cdEsc(powerValue)+'</strong></div>');
   if(e) metrics.push('<span class="appl-mini">🔋 '+cdEsc(cdApplVal(e,''))+'</span>');
   if(d) metrics.push('<span class="appl-mini">⏱ '+cdEsc(cdApplVal(d,''))+'</span>');
@@ -395,7 +395,7 @@ function renderApplianceSection(force) {
   const watts = list.reduce((t, a) => t + (cdApplStatus(a).w || 0), 0);
   const day = list.reduce((t, a) => t + cdApplNum(cdApplEntity(a, ['energy_today','daily_energy'])), 0);
   const alerts = list.filter(a => !cdApplConfiguredEntities(a).length).length;
-  setHtml('appl-kpi-grid', [[labs[0], on, '🟢'], [labs[1], Math.round(watts) + ' W', '⚡'], [labs[2], (day ? day.toFixed(1) : '—') + ' kWh', '📅'], [labs[3], alerts, '⚠️']].map(x => `<div class="glance-card" style="--g-rgb:14,165,233;display:flex;"><div class="g-info"><span class="g-name">${x[0]}</span><span class="g-val">${x[1]}</span></div><div class="g-icon-wrap">${x[2]}</div></div>`).join(''));
+  setHtml('appl-kpi-grid', [[labs[0], on, '🟢'], [labs[1], cdW(watts), '⚡'], [labs[2], (day != null ? cdKwh(day) : '—'), '📅'], [labs[3], alerts, '⚠️']].map(x => `<div class="glance-card" style="--g-rgb:14,165,233;display:flex;"><div class="g-info"><span class="g-name">${x[0]}</span><span class="g-val">${x[1]}</span></div><div class="g-icon-wrap">${x[2]}</div></div>`).join(''));
   setTxt('appl-main-sub', list.length ? '' : 'Nessun elettrodomestico configurato.');
   const cats = {
     overview: roomList,
@@ -1181,19 +1181,31 @@ function setEVMode(mode) {
  * farebbe credere che scegliendola si esce da smart, e invece ci si resta
  * dentro: sta sotto, con un titolo suo.
  *
- * Si vede solo dove ha senso: entita' mappata, e modalita' intelligente accesa.
- * In `off` non si carica e in `fast` si carica al massimo comunque, e una fila
- * che non cambia niente e' una fila che confonde. */
+ * **C'e' sempre**, e prima no: prima compariva solo con la modalita'
+ * intelligente accesa. Il ragionamento stava in piedi — in `off` non si carica
+ * e in `fast` si carica al massimo comunque — ma faceva sparire un tasto: uno
+ * apre la console in Fast, non vede niente, e non sa che quella cosa esiste.
+ * «Devi mettere sempre quel tasto.»
+ *
+ * Quando non e' in vigore non sparisce: si smorza, e al posto della frase
+ * scrive dove vale. Si puo' scegliere lo stesso — «Sempre» impostato mentre si
+ * carica in Fast e' pronto per quando si torna in Intelligente, e cosi' non si
+ * deve passare da una modalita' all'altra solo per cambiare un'impostazione.
+ *
+ * Quello che resta come prima: senza l'entita' mappata la fila non c'e'. Una
+ * fila di tasti che non comandano niente e' peggio di nessuna fila. */
 function dmEvccFilaDelSempre(dove, acceso) {
   const api = window.DashboardModernModules && DashboardModernModules.evcc;
   const eid = resolveEntity('dm.ev_ricarica_sempre_evcc');
   const stato = (eid && eid.indexOf('dm.') !== 0 && typeof STATES !== 'undefined') ? STATES[eid] : null;
   const vecchia = dove.parentElement && dove.parentElement.querySelector('.dm-evcc-sempre');
-  if (!api || !api.laFilaDelSempreServe(stato, acceso)) { if (vecchia) vecchia.remove(); return; }
+  if (!api || !api.laFilaDelSempreServe(stato)) { if (vecchia) vecchia.remove(); return; }
   const valori = api.iValoriDelSempre(stato);
   const scelto = api.ilValoreDelSempreAcceso(stato, valori);
+  const inVigore = api.ilSempreEInVigore(acceso);
+  const sotto = inVigore ? 'Tiene il minimo quando il fotovoltaico non basta' : 'Vale solo in Intelligente: qui non conta';
   const html = '<div class="dm-evcc-sempre-cap">'
-    + '<strong>' + cdEsc('Tieni il minimo') + '</strong><small>' + cdEsc('Anche quando il sole non basta') + '</small></div>'
+    + '<strong>' + cdEsc('Carica anche senza sole') + '</strong><small>' + cdEsc(sotto) + '</small></div>'
     + '<div class="dm-evcc-sempre-righe">'
     + valori.map(function(v){
         return '<button type="button" class="dm-evcc-sempre-btn" onclick="setEVSempre(' + cdJs(v.id) + ')"'
@@ -1203,6 +1215,7 @@ function dmEvccFilaDelSempre(dove, acceso) {
     + '</div>';
   const fila = vecchia || document.createElement('div');
   if (!vecchia) { fila.className = 'dm-evcc-sempre'; dove.after(fila); }
+  fila.setAttribute('data-vigore', inVigore ? 'true' : 'false');
   if (fila.innerHTML !== html) fila.innerHTML = html;
 }
 
@@ -5031,7 +5044,7 @@ function cdUpdateFlowNode(nodeId, lineId, valId, defaultRef) {
             if (!isNaN(w)) { tot += w; any = true; }
         });
         const valEl = document.getElementById(valId);
-        if (valEl) valEl.textContent = any ? Math.round(tot) + ' W' : '—';
+        if (valEl) valEl.textContent = any ? cdW(tot) : '—';
         const line = document.getElementById(lineId);
         node.style.display = ''; if (line) line.style.display = '';
         const idle = !any || Math.abs(tot) < 3;
@@ -5082,7 +5095,7 @@ function cdNodeLive(key, defEntity) {
                 tot += w; any = true;
             }
         });
-        return { disp: any ? Math.round(Math.abs(tot)) + ' W' : '—', w: any ? Math.abs(tot) : 0, mapped: true };
+        return { disp: any ? cdW(Math.abs(tot)) : '—', w: any ? Math.abs(tot) : 0, mapped: true };
     }
     const s = STATES[defEntity];
     const ghost = !s || s.entity_id === 'dm.unmapped';
@@ -5295,7 +5308,7 @@ function updateDeviceCards() {
             card.classList.toggle('on', on);
             if (stEl) stEl.textContent = st;
             let val = '';
-            if (!isNaN(pw) && pw > 5) val = Math.round(pw) + ' W';
+            if (!isNaN(pw) && pw > 5) val = cdW(pw);
             if (sv && sv.state !== undefined && sv.state !== 'unavailable' && sv.entity_id !== 'dm.unmapped') {
                 const u = sv.attributes?.unit_of_measurement || '';
                 val = (val ? val + ' · ' : '') + sv.state + (u ? ' ' + u : '');
@@ -5611,6 +5624,10 @@ function apriCamera(camId, title) {
    LONG_LIVED_TOKEN, HA_HTTP_URL, toggleFullScreenCam. */
 let _dmCurrentCam = null, _dmPc = null, _dmWs = null, _dmHls = null;
 let _dmPollInt = null, _dmPollBlob = null, _dmPollFail = 0;
+/* Le istantanee: quanto si aspetta fra un fotogramma e il successivo, e da
+   quanto tempo senza nemmeno un'immagine si dice che non risponde. Venti
+   secondi, e sono scritti anche nel messaggio: se cambiano qui, cambia li'. */
+const DM_POLL_PASSO = 500, DM_POLL_RESA = 20000;
 const _dmCamBlobs = {};
 function dmIsWebRTC() { return typeof RTCPeerConnection !== 'undefined'; }
 
@@ -5758,21 +5775,51 @@ async function dmCamPolling(cam, content) {
     content.innerHTML = `<div class="cam-popup-body"><div id="video-iframe-container" class="cam-zoom-container" style="position:relative; padding-top:56.25%;"><img id="cam-polling" alt="${cdEsc(cam.entity)}"><div id="cam-video-loader" class="cam-video-loader-overlay"><div class="cam-popup-spinner"></div><div>Caricamento…</div></div>${_DM_FS_BTNS}</div><button id="toggle-fs-main-btn" class="cam-fs-btn" onclick="toggleFullScreenCam()">🔲 Schermo Intero</button><button id="cam-audio-activate-btn" class="cam-audio-btn" onclick="dmAttivaAudio()">🔊 Attiva audio</button><div class="cam-popup-hint"><span class="cam-mode-badge polling">SNAPSHOT</span> Anteprima ~2 fps · Tocca "Attiva audio" per audio + video</div></div>`;
     const imgEl = document.getElementById('cam-polling');
     const loaderEl = document.getElementById('cam-video-loader');
-    if (_dmPollInt) clearInterval(_dmPollInt);
+    if (_dmPollInt) { clearTimeout(_dmPollInt); _dmPollInt = null; }
     _dmPollFail = 0;
+    /* Da quando si prova senza aver visto niente. E' il tempo a decidere la
+       resa, non il numero dei tentativi: un tentativo torna subito o dura tre
+       secondi, e contarli vuol dire arrendersi a tempi diversi su telecamere
+       diverse. Qui c'era `setInterval` ogni mezzo secondo su una richiesta che
+       ne puo' durare tre: su una telecamera lenta — o vista da fuori casa, per
+       il tramite — le richieste si accavallavano, sei in volo insieme, e i
+       cinque «tentativi falliti» si bruciavano in tre secondi su una
+       telecamera che stava solo rispondendo piano. */
+    let daQuando = Date.now();
+    /* Che questo giro sia ancora il popup che si sta guardando. Chi chiude, o
+       apre un'altra telecamera, si porta via l'elemento: da li' in poi non c'e'
+       piu' niente da disegnare, e scrivere dentro `content` vorrebbe dire
+       scrivere nel popup di qualcun altro. */
+    const eAncoraSuo = () => imgEl.isConnected && document.getElementById('cam-polling') === imgEl;
+    const smetti = () => { if (_dmPollInt) { clearTimeout(_dmPollInt); _dmPollInt = null; } };
     const loadFrame = async () => {
-        if (!document.getElementById('cam-polling')) { clearInterval(_dmPollInt); _dmPollInt = null; return; }
-        if (_dmPollFail >= 5) { clearInterval(_dmPollInt); _dmPollInt = null; content.innerHTML = '<div class="cam-popup-error">⚠️ Telecamera non risponde<br><span style="font-weight:500;opacity:.85;font-size:12px;text-transform:none;letter-spacing:0;">5 tentativi falliti — verifica la connessione della camera</span></div>'; return; }
-        const url = buildUrl(); if (!url) return;
-        const blob = await dmLoadImageBlob(url);
-        if (!blob || !imgEl.isConnected) { _dmPollFail++; return; }
-        _dmPollFail = 0;
-        if (_dmPollBlob && _dmPollBlob.startsWith('blob:')) URL.revokeObjectURL(_dmPollBlob);
-        _dmPollBlob = blob; imgEl.src = blob;
-        if (loaderEl) loaderEl.classList.add('hidden');
+        if (!eAncoraSuo()) { smetti(); return; }
+        const url = buildUrl();
+        const blob = url ? await dmLoadImageBlob(url) : null;
+        /* Il fotogramma e' arrivato adesso, e adesso il popup puo' essere
+           gia' di un'altra telecamera: si guarda di nuovo. */
+        if (!eAncoraSuo()) { smetti(); return; }
+        if (blob) {
+            _dmPollFail = 0;
+            daQuando = Date.now();
+            if (_dmPollBlob && _dmPollBlob.startsWith('blob:')) URL.revokeObjectURL(_dmPollBlob);
+            _dmPollBlob = blob; imgEl.src = blob;
+            if (loaderEl) loaderEl.classList.add('hidden');
+        } else {
+            _dmPollFail++;
+            if (Date.now() - daQuando >= DM_POLL_RESA) {
+                smetti();
+                content.innerHTML = '<div class="cam-popup-error">⚠️ Telecamera non risponde<br><span style="font-weight:500;opacity:.85;font-size:12px;text-transform:none;letter-spacing:0;">Venti secondi senza un\'immagine: può essere spenta, o solo molto lenta</span><br><button id="cam-riprova" class="cam-fs-btn">↻ Riprova</button></div>';
+                const riprova = document.getElementById('cam-riprova');
+                if (riprova) riprova.onclick = () => dmCamPolling(cam, content);
+                return;
+            }
+        }
+        /* Il fotogramma dopo si chiede quando il precedente e' tornato: uno
+           alla volta, mai accavallati. */
+        _dmPollInt = setTimeout(loadFrame, DM_POLL_PASSO);
     };
     await loadFrame();
-    _dmPollInt = setInterval(loadFrame, 500);
 }
 
 async function dmStartWebRTC(streamName, videoEl) {
@@ -6253,9 +6300,78 @@ function refreshCameras() {
 window.camInterval = setInterval(refreshCameras, 4000);
 
 
+
+/* ── Le unita' della corrente ────────────────────────────────────────────
+ *
+ * «Quando sono 1000 W devi poi esporli in kW; quando si arriva a 1000 kWh devi
+ * mettere 1 MWh. Usa le unita' di misura corrette.»
+ *
+ * E' la stessa regola del nucleo (`src/core/le-unita-della-corrente.js`), qui
+ * perche' il guscio scrive i suoi numeri per conto suo: i quattro cerchioni
+ * della pagina Energia — Casa, Rete, Solare, Batteria — li scrive questo file,
+ * ed erano rimasti a «6011 W» mentre le bolle dei carichi sotto dicevano gia'
+ * «5,25 kW». Due unita' diverse per la stessa cosa nella stessa schermata.
+ *
+ * Si sale al migliaio, e si guarda il numero COME SI VEDRA': 999,6 W scritti
+ * interi sarebbero «1000 W», che e' proprio la scritta che non si vuole. Sopra
+ * il primo gradino restano tre cifre che contano — 6,01 kW, 12,3 kW, 123 kW.
+ * Sotto, i decimali li decide chi scrive: una potenza istantanea e' intera, un
+ * consumo di giornata ha il decimo.
+ *
+ * La virgola o il punto li decide la lingua della pagina, come per tutto il
+ * resto del guscio. */
+const CD_SCALA_W = ['W', 'kW', 'MW', 'GW'];
+const CD_SCALA_WH = ['Wh', 'kWh', 'MWh', 'GWh'];
+/* Dichiarate `function` e non frecce: c'e' chi le ritaglia dal guscio per
+ * provarle da sole, e una freccia in una `const` non la si ritaglia. */
+/* Senza un documento — c'e' chi ritaglia queste funzioni per provarle da
+ * sole — si scrive come scrive questo guscio. */
+function cdLinguaNumeri() {
+  const lingua = typeof document !== 'undefined' && document.documentElement ? document.documentElement.lang : '';
+  return lingua === 'en' ? 'en-GB' : 'it-IT';
+}
+function cdScalaDellUnita(unita) {
+  const scale = [['W', 'kW', 'MW', 'GW'], ['Wh', 'kWh', 'MWh', 'GWh']];
+  const nome = String(unita == null ? '' : unita).trim().toLowerCase();
+  for (const scala of scale) {
+    const passo = scala.findIndex((u) => u.toLowerCase() === nome);
+    if (passo >= 0) return { scala, passo };
+  }
+  return null;
+}
+function cdDecimaliDellaScala(v) { return Math.abs(v) < 10 ? 2 : Math.abs(v) < 100 ? 1 : 0; }
+function cdNumeroScritto(v, d) {
+  return new Intl.NumberFormat(cdLinguaNumeri(), { minimumFractionDigits: d, maximumFractionDigits: d }).format(v);
+}
+/* Si arrotonda con lo stesso attrezzo che poi scrive: `toFixed` e `Intl` non
+ * sono d'accordo sui mezzi, e il disaccordo cadrebbe proprio sul migliaio. */
+function cdNumeroTondo(v, d) {
+  return Number(new Intl.NumberFormat('en-US', { minimumFractionDigits: d, maximumFractionDigits: d, useGrouping: false }).format(v));
+}
+function cdUnitaGiusta(valore, unita, decimaliBase) {
+  const n = Number(valore);
+  const dove = cdScalaDellUnita(unita);
+  if (!isFinite(n) || !dove) return null;
+  const base = decimaliBase == null ? 0 : decimaliBase;
+  let passo = dove.passo;
+  let corrente = n;
+  let decimali = base;
+  for (let giro = 0; giro < dove.scala.length; giro++) {
+    decimali = passo > dove.passo ? cdDecimaliDellaScala(corrente) : base;
+    const tondo = cdNumeroTondo(corrente, decimali);
+    if (Math.abs(tondo) < 1000 || passo >= dove.scala.length - 1) { corrente = tondo; break; }
+    corrente /= 1000;
+    passo++;
+  }
+  return cdNumeroScritto(corrente, decimali) + ' ' + dove.scala[passo];
+}
+/* Le due scorciatoie che si usano dappertutto qui dentro. */
+function cdW(watt) { return cdUnitaGiusta(watt, 'W', 0) || '—'; }
+function cdKwh(kwh, decimali) { return cdUnitaGiusta(kwh, 'kWh', decimali == null ? 1 : decimali) || '—'; }
+
 const getPowerInWatts = (id) => { const s = STATES[id]; if (!s || s.state === undefined || s.state === 'unknown' || s.state === 'unavailable') return 0; let val = parseFloat(s.state) || 0; if (s.attributes && s.attributes.unit_of_measurement && s.attributes.unit_of_measurement.toLowerCase() === 'kw') { val *= 1000; } return val; };
 const getRawState = (id) => { const s = STATES[id]; if (s && s.state !== undefined && s.state !== 'unknown' && s.state !== 'unavailable') { let val = s.state; let numVal = parseFloat(val); if (!isNaN(numVal) && val.toString().includes('.')) { return Number(numVal.toFixed(2)); } return val; } return '—'; };
-const getDisplay = (id) => { const s = STATES[id]; if(s && s.state !== undefined && s.state !== 'unknown' && s.state !== 'unavailable') { const unit = (s.attributes && s.attributes.unit_of_measurement) ? s.attributes.unit_of_measurement : ''; let val = s.state; let numVal = parseFloat(val); if (!isNaN(numVal) && val.toString().includes('.')) { val = Number(numVal.toFixed(2)); } if(!unit && (id.includes('power') || id.includes('potenza'))) return val + ' W'; return val + (unit ? ' ' + unit : ''); } return '—'; };
+const getDisplay = (id) => { const s = STATES[id]; if(s && s.state !== undefined && s.state !== 'unknown' && s.state !== 'unavailable') { const unit = (s.attributes && s.attributes.unit_of_measurement) ? s.attributes.unit_of_measurement : ''; let val = s.state; let numVal = parseFloat(val); if (!isNaN(numVal) && val.toString().includes('.')) { val = Number(numVal.toFixed(2)); } const senzaUnita = !unit && (id.includes('power') || id.includes('potenza')) ? 'W' : unit; const decimali = String(val).includes('.') ? Math.min(2, String(val).split('.')[1].length) : 0; const salito = cdUnitaGiusta(val, senzaUnita, senzaUnita.toLowerCase() === 'w' ? 0 : decimali); if (salito) return salito; return val + (unit ? ' ' + unit : ''); } return '—'; };
 function getTempColor(val) { if (val === '—') return '#cbd5e1'; let t = parseFloat(val); if (t >= 65) return '#e11d48'; if (t >= 50) return '#ea580c'; if (t >= 35) return '#f59e0b'; return '#0284c7'; }
 const setLine = (id, active) => { const el = document.getElementById(id); if(el) el.classList.toggle('active', active); const elm = document.getElementById('m-' + id); if(elm) elm.classList.toggle('active', active); };
 const setNode = (id, active) => { const el = document.getElementById(id); if(el) el.classList.toggle('active', active); };
@@ -6482,7 +6598,7 @@ function render() {
           const _gb = _n(dGridB), _gs = _n(dGridS), _bc = _n(dBatC), _bd = _n(dBatD);
           if (dSol > 0 || _gb !== null) {
               const bal = dSol - (_gs || 0) + (_gb || 0) + (_bd || 0) - (_bc || 0);
-              if (bal >= 0) setTxt('v-home-day', (bal >= 100 ? bal.toFixed(1) : bal.toFixed(2)) + ' kWh');
+              if (bal >= 0) setTxt('v-home-day', cdKwh(bal, bal >= 100 ? 1 : 2));
           }
       } catch(e) {}
       setNode('n-solar-day', dSol > 0.1); setNode('n-grid-day', parseFloat(dGridB) > 0.1 || parseFloat(dGridS) > 0.1); setNode('n-battery-day', parseFloat(dBatC) > 0.1 || parseFloat(dBatD) > 0.1); setNode('n-home-day', true); setNode('n-wb-day', dWb > 0.1); setNode('n-boiler-day', dBoiler > 0.1); setNode('n-clima-day', dClima > 0.1); setNode('n-lav-day', dLav > 0.1); setNode('n-cuc-day', dCuc > 0.1); setLine('line-solar-home-day', dSol > 0.1); setLine('line-grid-home-day', parseFloat(dGridB) > 0.1); setLine('line-solar-grid-day', parseFloat(dGridS) > 0.1); setLine('line-battery-home-day', parseFloat(dBatD) > 0.1); setLine('line-solar-battery-day', parseFloat(dBatC) > 0.1); setLine('line-home-wb-day', dWb > 0.1); setLine('line-home-boiler-day', dBoiler > 0.1); setLine('line-home-clima-day', dClima > 0.1); setLine('line-home-lav-day', dLav > 0.1); setLine('line-home-cuc-day', dCuc > 0.1);
@@ -6498,7 +6614,7 @@ function render() {
           const _gb = _n(mGridB), _gs = _n(mGridS), _bc = _n(mBatC), _bd = _n(mBatD);
           if (mSol > 0 || _gb !== null) {
               const bal = mSol - (_gs || 0) + (_gb || 0) + (_bd || 0) - (_bc || 0);
-              if (bal >= 0) setTxt('v-home-month', (bal >= 100 ? bal.toFixed(1) : bal.toFixed(2)) + ' kWh');
+              if (bal >= 0) setTxt('v-home-month', cdKwh(bal, bal >= 100 ? 1 : 2));
           }
       } catch(e) {}
       setNode('n-solar-month', mSol > 0.1); setNode('n-grid-month', parseFloat(mGridB) > 0.1 || parseFloat(mGridS) > 0.1); setNode('n-battery-month', parseFloat(mBatC) > 0.1 || parseFloat(mBatD) > 0.1); setNode('n-home-month', true); setNode('n-wb-month', mWb > 0.1); setNode('n-boiler-month', mBoiler > 0.1); setNode('n-clima-month', mClima > 0.1); setNode('n-lav-month', mLav > 0.1); setNode('n-cuc-month', mCuc > 0.1); setLine('line-solar-home-month', mSol > 0.1); setLine('line-grid-home-month', parseFloat(mGridB) > 0.1); setLine('line-solar-grid-month', parseFloat(mGridS) > 0.1); setLine('line-battery-home-month', parseFloat(mBatD) > 0.1); setLine('line-solar-battery-month', parseFloat(mBatC) > 0.1); setLine('line-home-wb-month', mWb > 0.1); setLine('line-home-boiler-month', mBoiler > 0.1); setLine('line-home-clima-month', mClima > 0.1); setLine('line-home-lav-month', mLav > 0.1); setLine('line-home-cuc-month', mCuc > 0.1);
@@ -6524,7 +6640,7 @@ function render() {
       document.querySelectorAll('.v-ev-volt').forEach(el => el.textContent = voltRaw !== '—' ? parseFloat(voltRaw).toFixed(1)+' V' : '—');
       document.querySelectorAll('.v-ev-km-ric').forEach(el => el.textContent = kmRicRaw !== '—' ? kmRicRaw+' km' : '—');
       document.querySelectorAll('.v-ev-odo').forEach(el => el.textContent = odoRaw !== '—' ? parseFloat(odoRaw).toFixed(0)+' km' : '—');
-      document.querySelectorAll('.v-ev-ac-tot').forEach(el => el.textContent = acTotRaw !== '—' ? parseFloat(acTotRaw).toFixed(2)+' kWh' : '—');
+      document.querySelectorAll('.v-ev-ac-tot').forEach(el => el.textContent = acTotRaw !== '—' ? cdKwh(parseFloat(acTotRaw), 2) : '—');
       document.querySelectorAll('.v-ev-temp-wb').forEach(el => el.textContent = tempWbRaw !== '—' ? parseFloat(tempWbRaw).toFixed(1)+' °C' : '—');
       const autoLimKm = dmEvKmAlTarget();
       document.querySelectorAll('.v-auto-limite').forEach(el => el.textContent = autoLimKm != null ? autoLimKm+' km' : '—');
@@ -6563,7 +6679,7 @@ function render() {
       const bdBg  = isCharging ? 'rgba(6,182,212,0.25)' : codeEV==='B' ? 'rgba(245,158,11,0.25)' : 'rgba(0,0,0,0.4)';
       if (badgeDotEl) badgeDotEl.style.background = bdCol;
       if (badgeBox) { badgeBox.style.background = bdBg; badgeBox.style.borderColor = bdCol+'66'; } 
-      document.querySelectorAll('.v-ev-energy-all').forEach(el => el.textContent = energyKwhRaw !== '—' ? energyKwhRaw + ' kWh' : '—'); 
+      document.querySelectorAll('.v-ev-energy-all').forEach(el => el.textContent = energyKwhRaw !== '—' ? cdKwh(parseFloat(energyKwhRaw), 2) : '—'); 
       document.querySelectorAll('.v-ev-soc-txt').forEach(el => el.textContent = socCarNum + '%');
       
       const imgContainer = document.getElementById('ev-img-container'); if(imgContainer) imgContainer.classList.toggle('is-charging', isCharging);
@@ -7572,7 +7688,7 @@ function edUpdateKpiOnly() {
     edSetText('ed-auto-big', auto + '%');
 
     // Wallbox
-    edSetText('ed-wb-on',  wbOn.toFixed(1) + ' kWh');
+    edSetText('ed-wb-on',  cdKwh(wbOn));
     const kwNowKpi  = parseFloat(getRawState(ED_SENSORS_CURR.wbKwPeak)) || 0;
     const kwPeakKpi = kwNowKpi > 0.5 ? kwNowKpi : (wbOn > 10 ? 6.0 : 0);
     edSetText('ed-wb-kwpeak', kwPeakKpi > 0 ? kwPeakKpi.toFixed(1) : '—');
@@ -7810,8 +7926,8 @@ async function edCalcolaSettimanale(selMonth, selYear, isCurrentMonth) {
     const wPrevPct = (safeWPrev / wMax * 100).toFixed(1);
     const wCurrPct = (safeWCurr / wMax * 100).toFixed(1);
 
-    edSetText('ed-w-prev-val', safeWPrev.toFixed(1) + ' kWh');
-    edSetText('ed-w-curr-val', safeWCurr.toFixed(1) + ' kWh');
+    edSetText('ed-w-prev-val', cdKwh(safeWPrev));
+    edSetText('ed-w-curr-val', cdKwh(safeWCurr));
 
     const prevBar = document.getElementById('ed-w-prev-bar');
     const currBar = document.getElementById('ed-w-curr-bar');
@@ -7841,7 +7957,7 @@ async function edCalcolaSettimanale(selMonth, selYear, isCurrentMonth) {
 
     // Mostra anche la riga "Scorsa: X kWh" sotto la barra
     const prevNote = document.getElementById('ed-w-prev-note');
-    if (prevNote && safeWPrev > 0) prevNote.textContent = 'Scorsa ' + safeWPrev.toFixed(1) + ' kWh';
+    if (prevNote && safeWPrev > 0) prevNote.textContent = 'Scorsa ' + cdKwh(safeWPrev);
 }
 
 function edSwitchTab(tab) {
@@ -8130,7 +8246,7 @@ async function renderEnergyDashboard() {
     }
 
     // ── Wallbox ──────────────────────────────────────────────────
-    edSetText('ed-wb-on',  wbOn.toFixed(1) + ' kWh');
+    edSetText('ed-wb-on',  cdKwh(wbOn));
     // kW picco: potenza attuale se sta caricando, altrimenti stima da kWh mensili
     const kwNow  = isCurrentMonth ? (parseFloat(getRawState(ED_SENSORS_CURR.wbKwPeak)) || 0) : 0;
     // Stima picco: per una Wallbox 7.4kW, la sessione media è ~6kW
@@ -8325,7 +8441,7 @@ function cdPRaw(ref) {
 }
 /* Display formattato del periodo (per i nodi delle mappe) */
 function cdPVal(ref) {
-    if (CD_PERIOD[ref] !== undefined) { const v = CD_PERIOD[ref]; return (v >= 100 ? v.toFixed(1) : v.toFixed(2)) + ' kWh'; }
+    if (CD_PERIOD[ref] !== undefined) { const v = CD_PERIOD[ref]; return cdKwh(v, v >= 100 ? 1 : 2); }
     return getDisplay(ref);
 }
 
@@ -8484,7 +8600,7 @@ async function renderEdDailyChart(daysInMonth, selMonth, selYear, isCurrentMonth
                     boxPadding: 6,
                     callbacks:{
                         title: items => 'Giorno ' + items[0].label,
-                        label: item  => ' ' + item.dataset.label + ': ' + ((item.raw ?? 0).toFixed(1)) + ' kWh'
+                        label: item  => ' ' + item.dataset.label + ': ' + cdKwh(item.raw ?? 0)
                     },
                     titleFont:{ size:12, weight:'bold' },
                     bodyFont:{ size:13, weight:'bold' }
@@ -9155,9 +9271,9 @@ async function edCaricaDettaglio() {
     const costoEurDev  = kwhReteDev * COSTO_KWH;
 
     // ── Aggiorno UI ──
-    setTxt('ed-dkpi-mese', valMese.toFixed(1) + ' kWh');
+    setTxt('ed-dkpi-mese', cdKwh(valMese));
     setTxt('ed-dkpi-mese-eur', '€ ' + (valMese * COSTO_KWH).toFixed(2));
-    setTxt('ed-dkpi-media', media + ' kWh');
+    setTxt('ed-dkpi-media', cdKwh(parseFloat(media)));
     setTxt('ed-dkpi-media-sub', 'Media/giorno');
     
     const rispEurEl  = document.getElementById('ed-dkpi-risp-eur');
@@ -9266,7 +9382,7 @@ async function edCaricaDettaglio() {
             }
         }
 
-        setTxt('ed-dkpi-picco', piccoVal > 0 ? piccoVal.toFixed(2)+' kWh' : '—');
+        setTxt('ed-dkpi-picco', piccoVal > 0 ? cdKwh(piccoVal, 2) : '—');
         setTxt('ed-dkpi-picco-sub', piccoDay !== '--' ? 'Giorno '+piccoDay : '—');
 
         if (edDevChart) { edDevChart.destroy(); edDevChart = null; }
@@ -9294,7 +9410,7 @@ async function edCaricaDettaglio() {
                         borderColor:'#e2e8f0', borderWidth:1, cornerRadius:12, padding:10,
                         callbacks:{
                             title: i => 'Giorno ' + i[0].label,
-                            label: i => ' ' + i.raw.toFixed(2) + ' kWh'
+                            label: i => ' ' + cdKwh(i.raw, 2)
                         }
                     }
                 },

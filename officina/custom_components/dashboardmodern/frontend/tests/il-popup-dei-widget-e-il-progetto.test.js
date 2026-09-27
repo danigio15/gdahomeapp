@@ -128,7 +128,9 @@ test("la bolla del flusso legge i kW come kW", () => {
   });
   const bolla = modello.nodes.find((nodo) => nodo.id === "load-wallbox");
   assert.equal(bolla.value, 1610);
-  assert.match(bolla.text, /1\.610|1610/);
+  /* Il valore letto e' 1610 W; scritto, sale di scala come ogni potenza. Qui
+     conta che sia quello e non «2 W», che era il guasto. */
+  assert.match(bolla.text, /1,61 kW/);
 });
 
 test("Boiler e friggitrice ad aria hanno il loro disegno, fermo e animato", () => {

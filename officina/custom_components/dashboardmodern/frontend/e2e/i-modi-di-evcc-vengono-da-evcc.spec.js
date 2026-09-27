@@ -163,25 +163,55 @@ test("accanto a «Intelligente» compare la fila del sempre, con la scelta di ad
     sempre: IL_SEMPRE,
   });
   await expect(fila(page).first()).toBeVisible();
+  await expect(fila(page).first().locator(".dm-evcc-sempre-cap strong")).toHaveText(
+    "Carica anche senza sole",
+  );
+  await expect(fila(page).first()).toHaveAttribute("data-vigore", "true");
   expect(await fila(page).first().locator(".dm-evcc-sempre-btn").allTextContents()).toEqual([
     "Mai",
     "Sempre",
-    "Stavolta",
+    "Solo stavolta",
   ]);
   await expect(fila(page).first().locator('.dm-evcc-sempre-btn[aria-pressed="true"]')).toHaveText(
     "Sempre",
   );
 });
 
-test("in «Fast» la fila non c'è: lì quell'opzione non cambia niente", async ({
+test("in «Fast» c'è lo stesso, e si comanda: dice solo che non fa effetto", async ({
   page,
 }, testInfo) => {
+  /* «Devi mettere sempre quel tasto.»
+   *
+   * Prima qui la fila spariva. Il ragionamento stava in piedi — in «Fast» si
+   * carica al massimo comunque, e quell'opzione non cambia niente — ma faceva
+   * sparire un tasto: uno apre la console in Fast, non vede niente, e non sa
+   * che quella cosa esiste. E per metterla a posto per stanotte dovrebbe
+   * passare a Intelligente, scegliere, e tornare indietro. */
   await conEvcc(page, testInfo, {
     stato: "Fast",
     options: ["Off", "Smart", "Fast"],
     sempre: IL_SEMPRE,
   });
-  await expect(fila(page)).toHaveCount(0);
+  await expect(fila(page).first()).toBeVisible();
+  await expect(fila(page).first()).toHaveAttribute("data-vigore", "false");
+  await expect(fila(page).first().locator(".dm-evcc-sempre-cap small")).toHaveText(
+    "Vale quando carichi in Intelligente",
+  );
+  /* E si preme davvero: la scelta fatta adesso vale per quando si torna. */
+  await fila(page).first().locator(".dm-evcc-sempre-btn", { hasText: "Mai" }).click();
+  await expect
+    .poll(() => page.evaluate(() => window.__MANDATO__.at(-1)), { timeout: 10_000 })
+    .toMatchObject({ type: "call_service", service: "select_option" });
+});
+
+test("in «Spento» pure: c'è, e dice dove vale", async ({ page }, testInfo) => {
+  await conEvcc(page, testInfo, {
+    stato: "Off",
+    options: ["Off", "Smart", "Fast"],
+    sempre: IL_SEMPRE,
+  });
+  await expect(fila(page).first()).toBeVisible();
+  await expect(fila(page).first()).toHaveAttribute("data-vigore", "false");
 });
 
 test("e senza l'entità mappata non compare mai", async ({ page }, testInfo) => {
@@ -198,7 +228,7 @@ test("premendo «Stavolta» parte il valore che l'entità ha dichiarato", async 
     options: ["Off", "Smart", "Fast"],
     sempre: IL_SEMPRE,
   });
-  await fila(page).first().locator(".dm-evcc-sempre-btn", { hasText: "Stavolta" }).click();
+  await fila(page).first().locator(".dm-evcc-sempre-btn", { hasText: "Solo stavolta" }).click();
   await expect
     .poll(() => page.evaluate(() => window.__MANDATO__.at(-1)), { timeout: 10_000 })
     .toMatchObject({

@@ -7,6 +7,8 @@
 /// una porta e' un modo per farlo sbagliare.
 library;
 
+import 'package:flutter/foundation.dart' show kIsWeb;
+
 import '../parole.dart';
 
 /// Se [casa] e' un nome o un numero che vive solo dentro una rete di casa.
@@ -165,6 +167,16 @@ class IndirizzoDelPonte {
 
 /* ─── Il centralino ───────────────────────────────────────────────────────── */
 
+/// Cosa c'e' da questa parte del filo: l'app installata, o la stessa app
+/// dentro un browser.
+///
+/// Due domande diverse — «quanti la usano dall'app» e «quanti dal web» — che
+/// dal centralino si vedevano come un numero solo. Lo si potrebbe indovinare
+/// dall'`Origin` della stretta di mano (un browser lo manda sempre, `dart:io`
+/// mai), e infatti il centralino lo fa per le versioni che non lo dicono; ma
+/// indovinare e' indovinare, e dirlo costa una parola.
+const String _cosaSiamo = kIsWeb ? 'web' : 'app';
+
 /// Dove si chiama per entrare da fuori.
 ///
 /// Il centralino non e' una casa: e' il posto dove la casa **chiama** e resta
@@ -187,8 +199,15 @@ class IndirizzoDelCentralino {
 
   /// Il filo verso una casa. L'identificativo non e' un segreto: serve a
   /// instradare, e il segno viene dopo, dentro il cifrato, verso la casa.
-  Uri filo(String idDellaCasa) =>
-      _via(sicuro ? 'wss' : 'ws', '/telefono/$idDellaCasa');
+  ///
+  /// Con dentro [_cosaSiamo], che non serve a entrare e non cambia niente di
+  /// come si parla: serve al centralino per contare separati chi guarda
+  /// dall'app e chi da una pagina. Senza, sono lo stesso numero.
+  Uri filo(String idDellaCasa) => _via(
+    sicuro ? 'wss' : 'ws',
+    '/telefono/$idDellaCasa',
+    con: const {'da': _cosaSiamo},
+  );
 
   /// Il filo di chi si sta abbinando. Si instrada sull'**impronta** del
   /// codice: il codice al centralino non passa mai.
@@ -197,9 +216,20 @@ class IndirizzoDelCentralino {
 
   Uri get salute => _via(sicuro ? 'https' : 'http', '/salute');
 
-  Uri _via(String schema, String percorso) => porta == null
-      ? Uri(scheme: schema, host: casa, path: percorso)
-      : Uri(scheme: schema, host: casa, port: porta, path: percorso);
+  /// Da quale numero di costruzione in su l'app si puo' usare: vedi
+  /// `aggiornamento_obbligatorio.dart`.
+  Uri get versioni => _via(sicuro ? 'https' : 'http', '/versioni');
+
+  Uri _via(String schema, String percorso, {Map<String, String>? con}) =>
+      porta == null
+      ? Uri(scheme: schema, host: casa, path: percorso, queryParameters: con)
+      : Uri(
+          scheme: schema,
+          host: casa,
+          port: porta,
+          path: percorso,
+          queryParameters: con,
+        );
 
   /// Legge quello che ha detto la casa.
   ///

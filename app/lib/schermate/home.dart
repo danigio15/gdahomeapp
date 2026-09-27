@@ -35,6 +35,7 @@ import '../casa/collegamento.dart';
 import '../casa/console.dart';
 import '../casa/cruscotto.dart';
 import '../casa/impostazioni.dart';
+import '../casa/la_guardia.dart';
 import '../casa/zigbee.dart';
 import '../misure/lavori.dart';
 import '../parole.dart';
@@ -50,10 +51,12 @@ import 'diagnostica.dart';
 import 'dispositivi.dart';
 import 'firma.dart';
 import 'menu.dart';
+import 'impostazioni_app.dart';
 import 'navigatore_qui/qui.dart';
 import 'zigbee.dart';
 import 'misure.dart';
 import 'plancia_vera.dart';
+import 'premium.dart';
 import 'segnalazioni.dart';
 
 class Home extends StatefulWidget {
@@ -63,11 +66,17 @@ class Home extends StatefulWidget {
     required this.vaiAlleCase,
     required this.plancia,
     required this.impostazioni,
+    required this.guardia,
   });
 
   final Collegamento collegamento;
   final Impostazioni impostazioni;
   final VoidCallback vaiAlleCase;
+
+  /// Chi chiede il volto e l'impronta. Serve alla sezione «Impostazioni app»,
+  /// che e' dove si accendono: senza, quella pagina sarebbe un elenco di
+  /// interruttori che non provano niente.
+  final LaGuardia guardia;
 
   /// Come si apre la plancia vera: il servitore e il riquadro. Sostituibile
   /// nelle prove.
@@ -284,7 +293,34 @@ class _HomeState extends State<Home> {
     });
   }
 
+  /// Le voci col lucchetto, per la casa di adesso.
+  ///
+  /// La Configurazione e Zigbee sono di gdahome Premium: senza, restano nel
+  /// menu col lucchetto e portano alla sua pagina. Con i controlli spenti —
+  /// la chiave delle licenze vuota — non ce n'e' nessuna.
+  Set<Sezione> get _bloccate {
+    final licenza = widget.collegamento.licenza;
+    if (!licenza.controlliAccesi || licenza.premium) return const {};
+    return const {Sezione.configurazione, Sezione.zigbee};
+  }
+
   void _vai(Sezione dove) {
+    /* La pagina Premium non e' una sezione della fila: si apre sopra. E ci
+     * portano anche le voci col lucchetto, con scritto perche'. */
+    if (dove == Sezione.premium || _bloccate.contains(dove)) {
+      unawaited(
+        apriLaPaginaPremium(
+          context,
+          widget.collegamento,
+          perche: switch (dove) {
+            Sezione.configurazione => PerchePremium.configurazione,
+            Sezione.zigbee => PerchePremium.zigbee,
+            _ => null,
+          },
+        ),
+      );
+      return;
+    }
     /* La Configurazione non e' una schermata dell'app: e' la pagina
      * Configurazione della plancia, quella della dashboard, e si apre dentro
      * il riquadro com'e'. Della voce del menu resta la porta — e' quello che
@@ -581,6 +617,8 @@ class _HomeState extends State<Home> {
                            * perche' le sezioni e le voci del menu sono la
                            * stessa cosa. */
                           Sezione.configurazione => const SizedBox.shrink(),
+                          /* Anche Premium: la voce apre la sua pagina sopra. */
+                          Sezione.premium => const SizedBox.shrink(),
                           /* «Come va l'app»: la stessa schermata che apre
                            * l'Assistenza, senza la sua barra — qui la barra
                            * la mette la home. */
@@ -589,6 +627,18 @@ class _HomeState extends State<Home> {
                             impostazioni: widget.impostazioni,
                             nuda: true,
                           ),
+                          /* Le impostazioni dell'app: oggi dentro c'e' la
+                           * sicurezza — il lucchetto, il volto, l'impronta —
+                           * che stava sotto un catenaccio in cima a «Le tue
+                           * case» e non la trovava nessuno. Senza la sua
+                           * barra: qui la mette la home. */
+                          Sezione.impostazioniDellApp =>
+                            SchermataDelleImpostazioniDellApp(
+                              impostazioni: widget.impostazioni,
+                              guardia: widget.guardia,
+                              nuda: true,
+                              visibile: _sezione == Sezione.impostazioniDellApp,
+                            ),
                           /* Cosa c'e' da aggiornare in casa: l'unica
                            * sezione che porta un numero addosso alla voce,
                            * ed e' lei a dirlo qui appena l'ha letto. */
@@ -654,6 +704,15 @@ class _HomeState extends State<Home> {
                  * vogliono il telefono, e nel browser sarebbero porte che si
                  * aprono su meta' di quello che promettono. */
                 nellApp: widget.impostazioni.sulTelefono,
+                conPremium: collegamento.licenza.siVende,
+              ),
+              bloccate: _bloccate,
+              apriPremium: () => unawaited(
+                apriLaPaginaPremium(
+                  context,
+                  collegamento,
+                  perche: PerchePremium.altrePlance,
+                ),
               ),
               aperta: _sezione,
               daAggiornare: _daAggiornare,

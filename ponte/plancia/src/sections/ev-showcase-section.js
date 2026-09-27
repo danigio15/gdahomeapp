@@ -854,6 +854,15 @@ function evShowcaseCss() {
   text-transform:uppercase;-webkit-tap-highlight-color:transparent}
 .dm-evcc-sempre-btn[aria-pressed="true"]{border-color:#059669;color:#047857;
   background:color-mix(in srgb,#059669 14%,var(--card-bg,#fff))}
+/* Quando non e' in vigore la fila **non si smorza**: cambia solo la riga
+   sotto il titolo, che invece della frase dice dove vale.
+   Smorzarla era la prima idea, ed era sbagliata: un blocco a mezza opacita'
+   si legge come «disabilitato», e questo invece si comanda eccome — anzi, e'
+   il momento in cui serve di piu'. Si sceglie «Sempre» mentre si carica in
+   Fast, e quando si torna in Intelligente e' gia' a posto: senza, si dovrebbe
+   passare da una modalita' all'altra solo per cambiare un'impostazione. */
+.dm-evcc-sempre[data-vigore="false"] .dm-evcc-sempre-cap small{font-style:italic;
+  color:var(--text-dim,#64748b)}
 
 @media(max-width:620px){
   #page-ev.dm-evv{--evv-r:22px;--evv-r-s:16px}

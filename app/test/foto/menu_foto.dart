@@ -23,9 +23,13 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show FontLoader;
 import 'package:flutter_test/flutter_test.dart';
+import 'package:gdahome/casa/archivio_delle_case.dart';
+import 'package:gdahome/casa/cassaforte.dart';
+import 'package:gdahome/casa/collegamento.dart';
 import 'package:gdahome/schermate/barra.dart';
 import 'package:gdahome/schermate/da_parte.dart';
 import 'package:gdahome/schermate/menu.dart';
+import 'package:gdahome/schermate/navigatore_qui/qui.dart';
 import 'package:gdahome/vestito/sfondo.dart';
 import 'package:gdahome/vestito/tema.dart';
 
@@ -90,6 +94,16 @@ void main() {
     addTearDown(tester.platformDispatcher.clearPlatformBrightnessTestValue);
   }
 
+  /* Una casa che non si e' ancora aperta.
+   *
+   * Basta a far comparire la **testata** del pannello — il nome della casa e
+   * la riga «da dove si passa» — che e' meta' del disegno del menu: senza, la
+   * fotografia comincia dal primo titolo di gruppo e racconta un pannello che
+   * nell'app non esiste. Aprirla vorrebbe dire alzare un ponte finto, e qui
+   * non serve: quello che si guarda e' la forma, non i dati. */
+  Collegamento laCasa() =>
+      Collegamento(archivio: ArchivioDelleCase(CassaforteInMemoria()));
+
   Widget laBarra({
     required GlobalKey<BarraDelleSezioniState> chiave,
     required bool conIlCruscotto,
@@ -126,7 +140,21 @@ void main() {
               aperta: Sezione.plancia,
               vai: (_) {},
               vaiAlleCase: () {},
+              collegamento: laCasa(),
+              daAggiornare: 2,
               daParte: const LaPlanciaDaParte(),
+              /* **La tessera di gdanav, in testa.** Nell'app c'e' sempre —
+               * e' il primo figlio dell'elenco, sopra tutti i gruppi — e
+               * nelle prime fotografie mancava perche' il banco passava
+               * `null`: si vedeva gdanav come una mattonella qualunque in
+               * mezzo a «Casa», e sembrava che fosse stata declassata. Una
+               * fotografia che racconta un menu che non esiste e' peggio di
+               * nessuna fotografia. */
+              tessera: laTesseraDelNavigatore(
+                scelta: false,
+                apri: () {},
+                impostazioni: () {},
+              ),
             ),
           ],
         ),

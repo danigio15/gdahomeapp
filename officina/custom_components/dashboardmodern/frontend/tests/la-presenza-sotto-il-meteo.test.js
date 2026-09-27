@@ -10,7 +10,12 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { VOCI_DELLA_BARRA, pastiglieDellaCasa } from "../src/core/come-sta-la-casa.js";
+import { comandoPerSpegnere } from "../src/core/come-si-spegne.js";
 import { contoDellaPresenza } from "../src/core/presenza-in-casa.js";
+import {
+  briciolaDellElenco,
+  statoDellaVoce,
+} from "../src/sections/come-sta-la-casa-section.js";
 
 /* Il modello della tessera come lo fa `presenzaModel`: due stanze occupate su
  * quattro posti. */
@@ -45,9 +50,20 @@ test("la pastiglia conta i POSTI occupati, non i rilevatori", () => {
   assert.equal(pastiglia.conto, 2);
   assert.equal(pastiglia.tinta, "#2563eb");
   assert.equal(pastiglia.tessera, "presenza");
-  /* Nessun elenco «tocca per spegnere»: una stanza non si spegne. Toccandola
-   * si apre la tessera, che le stanze occupate le dice una per una. */
-  assert.deepEqual(pastiglia.voci, []);
+  /* E si porta dietro QUALI, che è la domanda che uno si fa toccandola.
+   *
+   * «Su "2 stanze occupate" se ci premo non mi apre niente, rispetto a luci o
+   * varchi ecc.» — ed era così: questa era la sola pastiglia che contava
+   * qualcosa senza portarsi l'elenco, e il tocco ripiegava sulla sua tessera.
+   * Chi quella tessera l'aveva nascosta dalla Home non apriva niente.
+   *
+   * Sono nomi di stanze e non entità — una stanza con tre rilevatori è una
+   * stanza sola, e un `entity_id` non ce l'ha — quindi l'elenco esce senza il
+   * tasto «spegni»: una stanza non si spegne. Ma esce. */
+  assert.deepEqual(pastiglia.voci, [
+    { entity: "", name: "Cucina" },
+    { entity: "", name: "Studio" },
+  ]);
 
   /* Il raggruppamento lo ha già fatto la tessera, ed è il punto: una stanza con
    * tre rilevatori resta una stanza. Rifare quel conto qui vorrebbe dire due
@@ -67,4 +83,22 @@ test("con la casa libera non c'è nessuna pastiglia", () => {
    * fascia, e vale anche qui — «in 0 stanze c'è qualcuno» non è una notizia. */
   assert.deepEqual(pastiglieDellaCasa([{ ...MODELLO, occupate: [] }]), []);
   assert.deepEqual(pastiglieDellaCasa([{ ...MODELLO, occupate: undefined }]), []);
+});
+
+test("l'elenco delle stanze non promette un tasto che non c'è", () => {
+  /* Le altre pastiglie aprono roba che si spegne, e la riga sotto il titolo lo
+   * dice. Le stanze no: «tocca per spegnere» sopra un elenco senza tasti è un
+   * invito a un gesto che non esiste, e chi cerca il tasto e non lo trova pensa
+   * che sia rotto. */
+  assert.equal(briciolaDellElenco("presenza", 2), "2 stanze · c'è qualcuno adesso");
+  assert.equal(briciolaDellElenco("presenza", 1), "1 stanza · c'è qualcuno adesso");
+  assert.equal(briciolaDellElenco("luci", 2), "2 accesi · tocca per spegnere");
+  assert.equal(briciolaDellElenco("luci", 1), "1 acceso · tocca per spegnere");
+
+  /* E il tasto infatti non nasce, perché non nasce il comando: una stanza non
+   * ha un'entità da spegnere. */
+  assert.equal(comandoPerSpegnere(""), null);
+  /* Né la pastiglia dello stato: scrivere «non risponde» accanto a una stanza
+   * sarebbe una notizia su un sensore che lì non c'è. */
+  assert.deepEqual(statoDellaVoce("", {}, "presenza"), { parola: "", muta: true });
 });

@@ -30,6 +30,7 @@ import '../casa/il_lucchetto.dart';
 import '../casa/la_guardia.dart';
 import '../parole.dart';
 import '../vestito/marchio.dart';
+import '../vestito/tema.dart';
 
 /// Il disegno del volto e quello dell'impronta.
 ///
@@ -265,8 +266,8 @@ class _IlFogliettoState extends State<_IlFoglietto> {
                 en: 'Waiting to recognise you before the command',
               ),
               PrimaDi.ilCruscotto => inLingua(
-                it: 'In attesa di riconoscimento per aprire il cruscotto',
-                en: 'Waiting to recognise you before opening the fleet',
+                it: 'In attesa di riconoscimento per aprire la gestione',
+                en: 'Waiting to recognise you before opening the management page',
               ),
               PrimaDi.togliereUnaCasa => inLingua(
                 it: 'In attesa di riconoscimento per togliere la casa',
@@ -331,7 +332,11 @@ class _IRiquadri extends StatelessWidget {
             for (final come in ComeRiconosce.values)
               if (conCosa.contains(come)) come,
           ];
-    final tinta = scuro ? const Color(0xFF38BDF8) : colori.primary;
+    /* Il blu di gdanav anche qui: e' l'unico colore vivo di una schermata che
+     * e' tutta grigio ardesia, e deve essere lo stesso delle altre pagine.
+     * Era il celeste vecchio, scritto a mano, rimasto indietro quando il tema
+     * e' passato al blu. */
+    final tinta = scuro ? Colori.bluDiNotte : colori.primary;
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [

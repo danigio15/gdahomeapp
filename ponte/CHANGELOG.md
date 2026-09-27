@@ -11,6 +11,59 @@ fuori. La plancia dentro continua a dire la sua, e si legge dov'è sempre
 stata: nella pastiglia «La plancia» della console. Sono due numeri perché
 sono due cose.
 
+## 1.7.0
+
+**gdahome Premium esiste nel codice, e resta spento.** Fin qui era un progetto
+scritto (`docs/LICENZE.md`) e niente altro: nessun file delle licenze, il
+centralino che non chiudeva nessuno, e nell'app la parola «premium» in un posto
+solo — per dire che Premium non c'era. Adesso c'è tutto: il quadro che rilascia
+i gettoni firmati e controlla le ricevute con Google e Apple, l'add-on che tiene
+la licenza della casa e la rinnova ogni sei ore, il centralino che la fa
+rispettare, l'app con l'acquisto, i codici regalo e i lucchetti, e i pacchetti
+di licenze da dare agli installatori.
+
+**E oggi non cambia niente per nessuno.** L'interruttore è uno solo — la chiave
+pubblica delle licenze — ed è vuoto: nessun gettone vale, l'add-on non limita
+niente, l'app non mette lucchetti, il centralino lascia passare tutti. Chi ha
+gdahome installato non si accorge di nulla, e l'accesso da fuori casa resta di
+tutti. Si accende un altro giorno, con `strumenti/accendi-gli-acquisti.mjs`, che
+di suo non accende niente: guarda e racconta a che punto si è.
+
+**Prima di accenderlo c'è un numero da guardare**, e prima non c'era. Il
+controllo del centralino si accende insieme alla chiave, e una casa con l'add-on
+vecchio il gettone non lo manda affatto — non perché non paga, ma perché quella
+versione del ponte le licenze non le conosce: si chiuderebbe fuori da sola. Nei
+numeri del centralino adesso c'è `pronte_alla_licenza` accanto a `case`: quante
+delle case collegate sanno dire la loro licenza. Finché il primo è sotto il
+secondo, accendere lì vuol dire togliere l'accesso da fuori a quella differenza,
+e adesso si sa a quante case invece di scoprirlo dalle telefonate.
+
+**Le stanze occupate, sotto il meteo, adesso si aprono.** Segnalato dal gruppo:
+toccando «2 stanze occupate» non si apriva niente, al contrario di luci o
+varchi. Le pastiglie che contano si portano dietro l'elenco di quello che
+contano, e il tocco apre quello; le stanze però sono nomi di posti, non entità,
+e l'elenco si costruiva solo da righe con un'entità dentro. Restava vuoto.
+Adesso la finestra si apre con le stanze dentro, senza il tasto «spegni» — una
+stanza non si spegne — e la riga sotto il titolo lo dice invece di promettere un
+gesto che non esiste.
+
+**Le unità di misura, giuste dappertutto.** Le bolle dell'Energia dicevano «6011
+W»: watt veri, ma non è come si scrive una potenza, e quattro cifre in un
+cerchio si contano invece di leggerle. Adesso al migliaio si sale — `6,01 kW`,
+`1,23 MW`, e `1000 kWh` diventano `1,00 MWh` — con tre cifre che contano e la
+virgola dove ci va. La regola sta in un posto solo e la usano tutti: le bolle,
+l'analisi, le finestre dei carichi, le tessere, l'UPS, gli impianti termici e i
+due gusci. E la bolla della batteria, che da quel cambio andava a capo su tre
+righe, adesso sta su una: il carattere si stringe quel tanto che basta.
+
+**Nessun segreto in una repository che tutti possono leggere.** Questa
+repository è pubblica e deve restarlo — è lei l'archivio di add-on che Home
+Assistant legge — quindi una credenziale che ci entra è pubblica per sempre:
+cancellarla dopo non la toglie dal commit di prima. Adesso c'è un guardiano fra
+le Prove (`npm run check:segreti`) che guarda i file tracciati e cerca le forme
+il cui incontro è sempre una perdita vera. Il conto di cosa è davvero aperto, e
+cosa lo protegge, sta in `docs/BLINDATURA.md`.
+
 ## 1.6.11
 
 **Quello che il negozio racconta dell'app adesso è l'app che c'è.** Le

@@ -133,7 +133,7 @@ void main() {
   ) async {
     await unaCasa(tester);
     await apri(tester);
-    expect(find.text('CE NE SONO 3'), findsOneWidget);
+    expect(find.text('Ce ne sono 3'), findsOneWidget);
     expect(find.text('Antenna'), findsOneWidget);
     expect(find.text('Presa cucina'), findsOneWidget);
     /* Sotto il nome c'è marca e modello: è quello che fa dire «ah, è quello»
@@ -258,7 +258,7 @@ void main() {
     expect(ponte.inReteZigbee.length, 2);
     /* E tornando indietro l'elenco si è già rifatto: una riga rimasta lì
      * sarebbe una bugia. */
-    expect(find.text('CE NE SONO 2'), findsOneWidget);
+    expect(find.text('Ce ne sono 2'), findsOneWidget);
     expect(find.text('Porta ingresso'), findsNothing);
   });
 

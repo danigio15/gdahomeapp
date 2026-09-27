@@ -32,6 +32,7 @@ import '../ponte/filo.dart';
 import '../vestito/pezzi.dart';
 import 'barra.dart' show nomeDelleCase;
 import 'da_dove.dart';
+import 'premium.dart';
 import 'riquadro/qui.dart' as riquadro;
 
 /// Un servitore acceso a parte, invece di quello che l'app si apre da se'.
@@ -357,6 +358,48 @@ class PlanciaVeraState extends State<PlanciaVera> {
                     'Pair your home again with a new QR code, from the '
                     'gdahome page in Home Assistant.',
               ),
+        );
+      case ComeVa.irraggiungibile when collegamento.fuoriCasaSenzaPremium:
+        /* Non e' un guasto: la casa c'e', e da fuori ci si arriva con
+         * Premium. Si dice cosi', col tasto per andarci. */
+        return _Stato(
+          collegamento: collegamento,
+          vaiAlleCase: widget.vaiAlleCase,
+          icona: Icons.wifi_lock_rounded,
+          titolo: inLingua(
+            it: 'Fuori casa serve gdahome Premium',
+            en: 'Away from home you need gdahome Premium',
+          ),
+          sotto: inLingua(
+            it:
+                'Sotto il Wi-Fi di «${collegamento.casa?.nome ?? 'casa'}» si '
+                'apre come sempre. Con Premium ci entri da ovunque, senza '
+                'aprire porte sul router e cifrato da un capo all\'altro.',
+            en:
+                'On the Wi-Fi of “${collegamento.casa?.nome ?? 'home'}” it '
+                'opens as always. With Premium you get in from anywhere, '
+                'with no router ports to open and encrypted end to end.',
+          ),
+          azione: FilledButton.icon(
+            onPressed: () => unawaited(
+              apriLaPaginaPremium(
+                context,
+                collegamento,
+                perche: PerchePremium.fuoriCasa,
+              ),
+            ),
+            style: FilledButton.styleFrom(
+              minimumSize: const Size(0, 48),
+              padding: const EdgeInsets.symmetric(horizontal: 22),
+            ),
+            icon: const Icon(Icons.star_rounded),
+            label: Text(
+              inLingua(
+                it: 'Scopri gdahome Premium',
+                en: 'Discover gdahome Premium',
+              ),
+            ),
+          ),
         );
       case ComeVa.irraggiungibile:
         return _Stato(
@@ -961,6 +1004,7 @@ class _Stato extends StatelessWidget {
     required this.titolo,
     required this.sotto,
     this.vaiAlleCase,
+    this.azione,
   });
 
   final Collegamento collegamento;
@@ -968,6 +1012,7 @@ class _Stato extends StatelessWidget {
   final String titolo;
   final String sotto;
   final VoidCallback? vaiAlleCase;
+  final Widget? azione;
 
   @override
   Widget build(BuildContext context) {
@@ -1009,6 +1054,7 @@ class _Stato extends StatelessWidget {
             icona: icona,
             titolo: titolo,
             sotto: sotto,
+            azione: azione,
           ),
         ],
       ),

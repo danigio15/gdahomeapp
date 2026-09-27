@@ -1,76 +1,140 @@
-/// La barra delle sezioni: laterale, a scomparsa.
+/// Il menu delle sezioni: un pannello che entra di fianco.
 ///
-/// Sta fuori dallo schermo, oltre il bordo sinistro, e non si vede finche' non
-/// la si chiama. Non e' un vezzo: una barra sempre presente si mangia una
-/// fascia di schermo su ogni pagina, e su un telefono quella fascia e' l'unica
-/// cosa che non si puo' comprare. Cosi' invece la si vede quando serve e
-/// sparisce da sola quando non serve piu'.
+/// ## Come ci si e' arrivati
 ///
-/// **Da dove si chiama.** Da nessun gesto e da nessuna pillola disegnata
-/// sopra la pagina: quelli li aveva, ed erano sul bordo sinistro dello
-/// schermo, dove la Configurazione della plancia ha le sue sezioni — si
-/// toccava una sezione e si apriva il menu. Adesso le porte sono due, e sono
-/// due porte che c'erano gia':
+/// Tre volte rifatto, e le prime due non erano rifacimenti.
+///
+/// Era una **striscia laterale** di duecento punti con quattordici voci
+/// dentro. La prima volta le voci sono diventate tessere a due colonne, la
+/// seconda righe ordinate: il vestito, non l'idea. Il difetto era la
+/// **striscia** — duecento punti sono un posto dove non ci sta niente comodo:
+/// i nomi lunghi si rimpiccioliscono o si tagliano, le tessere diventano
+/// francobolli, le righe diventano una lista e basta.
+///
+/// La terza volta e' diventato una schermata che saliva dal basso. Larghezza
+/// intera, mattonelle grandi, una casella per cercare, la casa scritta grande
+/// in testa. Le tre cose buone erano quelle, e restano tutte; ma il menu di
+/// un'app che ha la plancia sotto **deve stare di lato**: e' da li' che lo si
+/// chiama (i tre trattini in alto a sinistra), ed e' da li' che ci si aspetta
+/// che esca. Uno che arriva dal basso copre la pagina dalla parte opposta a
+/// quella che si e' toccata.
+///
+/// ## Com'e' adesso
+///
+/// Entra **da sinistra**, dal bordo del tasto che lo chiama, e si prende quasi
+/// tutta la larghezza — `_quantoLargo`. Non e' la striscia di prima girata:
+/// dentro c'e' tutto quello che la schermata aveva, e ci sta perche' la
+/// larghezza c'e':
+///
+///  - le sezioni come **mattonelle in rilievo**, due per riga, col disegno
+///    grosso e il nome intero sotto. Hanno un fianco e un'ombra, e premendole
+///    scendono sul loro fianco come un tasto vero — vedi `_Mattonella`;
+///  - una **casella per cercare**. Con quattordici sezioni, e domani venti, la
+///    cosa piu' veloce e' scrivere tre lettere;
+///  - la **casa in testa** scritta grande, col tasto per cambiarla.
+///
+/// La striscia di pagina resta scoperta **a destra**: dice che sotto c'e'
+/// ancora la propria casa, e da' un posto dove toccare per richiudere che non
+/// sia un tasto.
+///
+/// **Da dove si chiama.** Le porte sono le stesse di sempre:
 ///
 ///  - sulla **plancia**, i suoi tre trattini in alto a sinistra. Dentro Home
 ///    Assistant quel tasto apre la barra di chi la ospita; qui chi la ospita
-///    e' l'app, e apre questa (`plancia/premesse.dart`);
+///    e' l'app, e apre questo (`plancia/premesse.dart`);
 ///  - sulle **altre sezioni**, il ☰ nella barra del titolo, che e' dove lo
 ///    cerca chiunque abbia un telefono in mano.
 ///
-/// E il **tasto indietro**, dappertutto: apre la barra, e con la barra aperta
-/// esce dall'app — le sezioni sono la pagina sotto, la sezione aperta e' la
-/// pagina sopra, e indietro va sempre verso fuori (`home.dart`).
+/// E il **tasto indietro**, dappertutto: apre il menu, e col menu aperto esce
+/// dall'app — le sezioni sono la pagina sotto, la sezione aperta e' la pagina
+/// sopra, e indietro va sempre verso fuori (`home.dart`).
 ///
-/// Sta di lato e non in fondo perche' le sezioni sono venti: in orizzontale se
-/// ne vedono cinque per volta e per arrivare all'ultima si scorre al buio, in
-/// verticale se ne vedono dodici col nome intero accanto al disegno. E il
-/// pollice, su un telefono tenuto in mano, il bordo sinistro ce l'ha sotto.
-///
-/// La forma e' quella della plancia: vetro smerigliato, angoli tondi, il
-/// disegno della sezione — lo stesso disegno, non uno che gli somiglia — e la
-/// voce scelta come pastiglia scura. Chi passa dal telefono alla dashboard non
-/// deve reimparare dove si va.
-///
-/// Si chiude da sola in tre modi, gli stessi dappertutto: scegliendo una
-/// sezione, toccando fuori, o lasciandola stare.
-///
-/// **Dove lo schermo avanza, non si nasconde affatto.** Nascondersi e' la
-/// scelta giusta dove la fascia di schermo e' l'unica cosa che non si puo'
-/// comprare; su un computer, o su un tablet di lato, e' un gesto in piu' per
-/// ogni cambio di pagina e non serve a niente. Sopra i novecento punti la
-/// barra resta, il ☰ sparisce, e toccare fuori non la chiude piu'
-/// — vedi `vestito/quanto_e_largo.dart`.
+/// Si chiude in quattro modi: scegliendo una sezione, spingendolo verso
+/// sinistra, toccando la striscia di pagina che resta scoperta, o lasciandolo
+/// stare.
 library;
 
 import 'dart:async';
-import 'dart:ui';
 
 import 'package:flutter/material.dart';
 
 import '../casa/collegamento.dart';
 import '../parole.dart';
+import '../plancia/pannello.dart';
 import '../vestito/oggetti.dart';
-import '../vestito/quanto_e_largo.dart';
 import '../vestito/tema.dart';
 import 'da_dove.dart';
 import 'da_parte.dart';
 import 'firma.dart';
 import 'menu.dart';
 
-/// Quanto resta aperta se non si tocca niente.
-const _daSola = Duration(seconds: 4);
+/// Quanto resta aperto se non si tocca niente.
+///
+/// Piu' di prima (erano quattro secondi), perche' adesso e' una schermata e
+/// non una striscia: quattordici mattonelle si guardano, e quattro secondi
+/// sono il tempo di leggerne cinque. Ogni tocco fa ripartire il conto, e
+/// mentre si scrive nella casella non corre affatto.
+const _daSola = Duration(seconds: 7);
 
 /// Quanto resta dopo che si e' scelto: il tempo di vedere che si e' premuto.
 const _dopoLaScelta = Duration(milliseconds: 700);
 
-/// Quanto e' larga la barra, e quanto sta indietro quando e' fuori.
+/// Quanto si scurisce la pagina dietro il menu aperto.
 ///
-/// Piu' larga di prima (era 192): in testa c'e' la tessera di gdanav, con la
-/// batteria dell'auto e i tasti Casa e Lavoro, e in 192 punti i due tasti non
-/// ci stanno affiancati.
-const double _larghezzaDellaBarra = 232;
-const double _fuori = _larghezzaDellaBarra + 24;
+/// Alto, perche' della pagina resta scoperta solo una striscia: o e' chiaro
+/// che quella striscia e' «la pagina di sotto», o sembra un pezzo del menu.
+const double _quantoVelo = 0.55;
+
+/// Quanta pagina resta scoperta a destra del pannello.
+///
+/// Serve a due cose: dire che sotto c'e' ancora la propria casa — un menu che
+/// prende tutto lo schermo e' una pagina nuova, e da una pagina nuova ci si
+/// aspetta un «indietro» — e dare un posto dove toccare per richiudere che
+/// non sia un tasto.
+const double _strisciaDiPagina = 44;
+
+/// Oltre quanto il pannello non si allarga piu'.
+///
+/// Su un telefono vince la striscia: il pannello si prende quello che resta.
+/// Su un tablet o nel browser no — un menu largo mille punti sarebbe una
+/// pagina, non un menu — e allora si ferma qui, e la pagina sotto si vede
+/// tutta.
+const double _quantoLargo = 430;
+
+/// L'angolo tondo del fianco destro del pannello.
+const double _angolo = 30;
+
+/// Quanto e' alta una mattonella, fianco compreso.
+const double _mattonella = 116;
+
+/// Di quanto affonda una mattonella mentre la si preme.
+///
+/// ── Come ci si e' arrivati ───────────────────────────────────────────────
+///
+/// «Riesci a fare le card come se avessero un effetto 3d?» Il primo giro
+/// disegnava un fianco di sei punti sotto la faccia. Poi: «i bordi troppo
+/// scuri e doppi» — il fianco era un bordo, e sotto c'era l'ombra: due righe.
+/// Ammorbidito. Poi: «riduci ancora, vedo 3 bordi», e li aveva contati
+/// giusti. Sotto ogni mattonella c'erano **tre** salti di tono, uno sopra
+/// l'altro:
+///
+///   1. il fondo della faccia, che una sfumatura scuriva del tre per cento;
+///   2. il fianco, quattro punti piu' scuro ancora;
+///   3. l'ombra sotto il fianco.
+///
+/// Ognuno era tenue. Tre tenui in fila fanno un bordo spesso.
+///
+/// ── Adesso ───────────────────────────────────────────────────────────────
+///
+/// **Uno solo**: un'ombra morbida. La faccia e' di tinta piena, senza
+/// sfumature, e il fianco non c'e' piu'.
+///
+/// Il volume non l'hanno mai fatto i bordi: lo fa il **movimento**. Premuta,
+/// la mattonella affonda di questi tre punti e l'ombra si stringe sotto di
+/// lei — e' quello che fa un tasto vero quando lo si spinge, ed e' la cosa che
+/// di solito manca. Un rilievo disegnato e fermo e' il disegno di un tasto;
+/// un rilievo che si muove al dito e' un tasto.
+const double _quantoScende = 3;
 
 class BarraDelleSezioni extends StatefulWidget {
   const BarraDelleSezioni({
@@ -84,21 +148,31 @@ class BarraDelleSezioni extends StatefulWidget {
     this.daParte = const LaPlanciaDaParte(),
     this.daAggiornare = 0,
     this.tessera,
+    this.bloccate = const {},
+    this.apriPremium,
   });
 
-  /// La tessera in testa, sotto la casa: gdanav, vivo — l'auto della plancia,
-  /// la batteria, Casa e Lavoro (`navigatore_qui/`). Quando c'e', la voce del
-  /// navigatore non si ripete fra le righe. Chi la mette chiama
+  /// Le mattonelle col lucchetto: ci sono, si toccano, e portano alla pagina
+  /// di gdahome Premium. Lo decide chi apre la barra (`home.dart`).
+  final Set<Sezione> bloccate;
+
+  /// Apre la pagina Premium: la tendina delle plance la chiama per le plance
+  /// col lucchetto.
+  final VoidCallback? apriPremium;
+
+  /// La tessera in testa: gdanav, vivo — l'auto della plancia, la batteria,
+  /// Casa e Lavoro (`navigatore_qui/`). Quando c'e', la mattonella del
+  /// navigatore non si ripete. Chi la mette chiama
   /// [BarraDelleSezioniState.sceltaFatta] quando la si tocca.
   final Widget? tessera;
 
   /* Quanti aggiornamenti aspettano di essere fatti.
    *
-   * E' l'unico numero che compare sulle voci, e c'e' per il motivo per cui
-   * esiste quella sezione: in Home Assistant il pallino rosso degli
+   * E' l'unico numero che compare sulle mattonelle, e c'e' per il motivo per
+   * cui esiste quella sezione: in Home Assistant il pallino rosso degli
    * aggiornamenti sta in una pagina che chi usa l'app non apre piu', e una
    * sezione che si scopre solo entrandoci non risolve granche'. Il numero
-   * addosso alla voce si vede aprendo il menu, che e' il gesto che si fa
+   * addosso alla mattonella si vede aprendo il menu, che e' il gesto che si fa
    * comunque venti volte al giorno.
    *
    * Zero vuol dire niente da fare, e niente da fare vuol dire **niente
@@ -109,27 +183,27 @@ class BarraDelleSezioni extends StatefulWidget {
   /// Le sezioni da mostrare, nell'ordine in cui vanno.
   final List<Sezione> sezioni;
 
-  /// La casa in cui si e', per scriverla in cima alla barra: il nome, e da
-  /// dove ci si sta passando. E' l'unico posto dell'app che lo dice mentre
-  /// si guarda la plancia, che di suo non lo sa.
+  /// La casa in cui si e', per scriverla in testa: il nome, e da dove ci si
+  /// sta passando. E' l'unico posto dell'app che lo dice mentre si guarda la
+  /// plancia, che di suo non lo sa.
   final Collegamento? collegamento;
 
-  /// Quella che si sta guardando: e' la pastiglia accesa.
+  /// Quella che si sta guardando: e' la mattonella accesa.
   final Sezione aperta;
 
   final void Function(Sezione dove) vai;
   final VoidCallback vaiAlleCase;
 
-  /// Se sotto la barra c'e' la plancia.
+  /// Se sotto il menu c'e' la plancia.
   ///
   /// Nel browser cambia tutto. La plancia e' un `iframe`, e un `iframe` si
-  /// mangia i tocchi di quello che gli sta sopra: a barra aperta le sue voci
-  /// si vedono e non si premono. Allora, mentre la barra lo copre, il riquadro
-  /// si fa da parte. Dove sotto la barra c'e' una pagina dell'app non c'e'
+  /// mangia i tocchi di quello che gli sta sopra: a menu aperto le sue
+  /// mattonelle si vedono e non si premono. Allora, mentre il menu lo copre,
+  /// il riquadro si fa da parte. Dove sotto c'e' una pagina dell'app non c'e'
   /// niente da spostare: i tocchi le arrivano da se' — vedi `da_parte.dart`.
   final bool sopraLaPlancia;
 
-  /// Chi sposta il riquadro perche' i tocchi arrivino alla barra.
+  /// Chi sposta il riquadro perche' i tocchi arrivino al menu.
   /// Sostituibile nelle prove.
   final LaPlanciaDaParte daParte;
 
@@ -141,50 +215,77 @@ class BarraDelleSezioniState extends State<BarraDelleSezioni>
     with SingleTickerProviderStateMixin {
   late final AnimationController _molla = AnimationController(
     vsync: this,
-    duration: const Duration(milliseconds: 380),
-    reverseDuration: const Duration(milliseconds: 260),
+    duration: const Duration(milliseconds: 340),
+    reverseDuration: const Duration(milliseconds: 230),
   );
   Timer? _daChiudere;
 
-  /* La barra si apre sulla voce scelta: con quindici sezioni, quella che si
-   * sta guardando puo' stare fuori vista, e una barra che si apre sempre
-   * dall'inizio obbliga a scorrerla ogni volta. */
   final _scorrimento = ScrollController();
+  final _scritto = TextEditingController();
+  final _fuoco = FocusNode();
 
-  /// Se qui la barra resta invece di nascondersi.
-  bool _resta = false;
-
-  /// Se in questo momento la barra copre quello che c'e' sotto.
+  /// Se in questo momento il menu copre quello che c'e' sotto.
   bool _copre = false;
 
-  bool get aperta => _resta || _molla.value > 0.02;
+  bool get aperta => _molla.value > 0.02;
+
+  /// Cosa si sta cercando, gia' in minuscolo.
+  String get _cercato => _scritto.text.trim().toLowerCase();
 
   @override
   void initState() {
     super.initState();
-    _molla.addListener(_seLaBarraCopre);
+    _molla.addListener(_seIlMenuCopre);
+    /* Quello che si era scritto non si porta dietro: riaprendo il menu si
+     * ricomincia da tutte le sezioni, non dalla ricerca di ieri. Si pulisce
+     * **quando e' arrivato in fondo**, non appena si chiude: se no lo si
+     * vedrebbe cambiare mentre scende. */
+    _molla.addStatusListener((come) {
+      if (come == AnimationStatus.dismissed && _scritto.text.isNotEmpty) {
+        _scritto.clear();
+      }
+    });
+    /* Mentre si scrive il conto alla rovescia non corre: si sta cercando, e
+     * un menu che si chiude sotto la tastiera e' un menu rotto. */
+    _fuoco.addListener(() {
+      if (_fuoco.hasFocus) {
+        _trattieni();
+      } else {
+        _lascia();
+      }
+    });
   }
 
   @override
   void dispose() {
     _daChiudere?.cancel();
-    /* La barra se ne va, e quello che aveva spostato si rimette a posto: se no
+    /* Il menu se ne va, e quello che aveva spostato si rimette a posto: se no
      * la plancia resta a non prendere tocchi. */
     if (_copre) widget.daParte.siFaDaParte(false);
     _molla.dispose();
     _scorrimento.dispose();
+    _scritto.dispose();
+    _fuoco.dispose();
     super.dispose();
   }
 
   void apri() {
     _molla.forward();
     _rimanda(_daSola);
-    /* Dopo il primo fotogramma, quando le misure ci sono. */
-    WidgetsBinding.instance.addPostFrameCallback((_) => _portaSullaScelta());
+    /* Si riapre sempre **dall'inizio**.
+     *
+     * L'elenco tiene il punto dove si era arrivati a scorrere — se lo scrive
+     * da se', in `PageStorage` — e riaprendo il menu ci si ritrovava a meta',
+     * con la casa e le prime sezioni gia' scivolate via. Chi apre il menu
+     * vuole vedere la prima cosa, non l'ultima che aveva guardato. */
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && _scorrimento.hasClients) _scorrimento.jumpTo(0);
+    });
   }
 
   void chiudi() {
     _daChiudere?.cancel();
+    _fuoco.unfocus();
     _molla.reverse();
   }
 
@@ -193,48 +294,16 @@ class BarraDelleSezioniState extends State<BarraDelleSezioni>
     _daChiudere = Timer(quanto, chiudi);
   }
 
-  void _portaSullaScelta() {
-    if (!_scorrimento.hasClients) return;
-    /* Dov'e' la voce aperta, a occhio: le tessere della casa stanno in
-     * cima, le altre righe sotto, ognuna col suo titolo. */
-    var sopra = 0.0;
-    var trovata = false;
-    for (final gruppo in _gruppi) {
-      sopra += _TitoloDelGruppo.altezza;
-      if (gruppo.titolo == GruppoDellaBarra.casa) {
-        if (gruppo.sezioni.contains(widget.aperta)) {
-          trovata = true;
-          break;
-        }
-        final larga = widget.collegamento?.pannello?.piuDiUna ?? false;
-        final strette = gruppo.sezioni.length - (larga ? 1 : 0);
-        sopra += ((strette + 1) ~/ 2 + (larga ? 1 : 0)) * (_LeTessere.alta + 8);
-        continue;
-      }
-      final dove = gruppo.sezioni.indexOf(widget.aperta);
-      if (dove >= 0) {
-        sopra += dove * (_Voce.altezza + _Voce.spazio);
-        trovata = true;
-        break;
-      }
-      sopra += gruppo.sezioni.length * (_Voce.altezza + _Voce.spazio) + 8;
-    }
-    if (!trovata) return;
-    const passo = _Voce.altezza + _Voce.spazio;
-    final schermo = MediaQuery.sizeOf(context).height;
-    final meta = sopra - (schermo / 2) + (passo / 2);
-    _scorrimento.jumpTo(meta.clamp(0, _scorrimento.position.maxScrollExtent));
-  }
+  /// Si e' scelto qualcosa fuori dalle mattonelle (la tessera di gdanav): il
+  /// menu si toglie di mezzo come dopo una sezione.
+  void sceltaFatta() => _rimanda(_dopoLaScelta);
 
-  /// Si e' scelto qualcosa fuori dalle righe (la tessera): la barra si toglie
-  /// di mezzo come dopo una voce.
-  void sceltaFatta() {
-    if (!_resta) _rimanda(_dopoLaScelta);
-  }
-
-  /// I gruppi della barra, con le loro voci: prima la casa, poi le avanzate,
-  /// e in fondo l'aiuto. Un gruppo senza voci non si scrive, e il navigatore
-  /// non si ripete fra le voci quando c'e' la sua tessera.
+  /// I gruppi del menu, con le loro sezioni: prima la casa, poi le avanzate,
+  /// e in fondo l'aiuto. Un gruppo senza sezioni non si scrive, e il
+  /// navigatore non si ripete quando c'e' la sua tessera.
+  ///
+  /// Mentre si cerca i gruppi non ci sono: chi ha scritto tre lettere vuole
+  /// vedere cosa risponde, non in che scatola sta.
   List<({GruppoDellaBarra titolo, List<Sezione> sezioni})> get _gruppi => [
     for (final gruppo in GruppoDellaBarra.values)
       if (_diQuesto(gruppo) case final sue when sue.isNotEmpty)
@@ -242,16 +311,23 @@ class BarraDelleSezioniState extends State<BarraDelleSezioni>
   ];
 
   List<Sezione> _diQuesto(GruppoDellaBarra gruppo) => [
+    for (final una in _leSezioni)
+      if (una.gruppo == gruppo) una,
+  ];
+
+  /// Le sezioni da mostrare adesso: tutte, o quelle che rispondono a quello
+  /// che si sta cercando.
+  List<Sezione> get _leSezioni => [
     for (final una in widget.sezioni)
-      if (una.gruppo == gruppo &&
-          !(una == Sezione.navigatore && widget.tessera != null))
+      if (!(una == Sezione.navigatore && widget.tessera != null) &&
+          (_cercato.isEmpty || una.titolo.toLowerCase().contains(_cercato)))
         una,
   ];
 
   void _scelta(Sezione dove) {
     sceltaFatta();
-    /* Anche la voce **gia' segnata**: se un tocco serve o no non lo decide la
-     * barra.
+    /* Anche la sezione **gia' segnata**: se un tocco serve o no non lo decide
+     * il menu.
      *
      * Segnata vuol dire «l'app crede di essere li'», e quel «crede» si puo'
      * perdere: dov'e' la plancia lo dice la plancia, e basta una ricarica in
@@ -266,21 +342,20 @@ class BarraDelleSezioniState extends State<BarraDelleSezioni>
     widget.vai(dove);
   }
 
-  /* Finche' la si sta usando non se ne va. Scorrere quindici voci per trovare
-   * la propria non si fa in quattro secondi, e una barra che sparisce sotto il
-   * dito mentre la si scorre e' peggio di una barra che resta. Il conto alla
-   * rovescia riparte a ogni tocco: quando il dito si ferma, riprende a
-   * scorrere il tempo, non prima. */
+  /* Finche' lo si sta usando non se ne va. Il conto alla rovescia riparte a
+   * ogni tocco: quando il dito si ferma, riprende a scorrere il tempo, non
+   * prima. */
   void _laStaUsando() {
     if (_trattenuta) return;
-    if (aperta && !_resta) _rimanda(_daSola);
+    if (aperta) _rimanda(_daSola);
   }
 
-  /* Un menu aperto sopra la barra la trattiene.
+  /* Un menu aperto sopra il menu lo trattiene — la tendina delle plance — e
+   * cosi' la tastiera mentre si cerca.
    *
-   * Senza, la barra scivolerebbe via dopo quattro secondi lasciando il menu a
-   * mezz'aria: nessun tocco arriva a lei mentre si legge un elenco che le sta
-   * sopra, e il conto alla rovescia non lo sa. */
+   * Senza, il foglio scivolerebbe via lasciando la tendina a mezz'aria:
+   * nessun tocco arriva a lui mentre si legge un elenco che gli sta sopra, e
+   * il conto alla rovescia non lo sa. */
   bool _trattenuta = false;
 
   void _trattieni() {
@@ -290,166 +365,121 @@ class BarraDelleSezioniState extends State<BarraDelleSezioni>
 
   void _lascia() {
     _trattenuta = false;
-    if (aperta && !_resta) _rimanda(_daSola);
+    if (aperta) _rimanda(_daSola);
   }
 
-  /* Mentre la barra copre la plancia, il riquadro si fa da parte.
+  /* Mentre il menu copre la plancia, il riquadro si fa da parte.
    *
    * Serve nel browser, dove la plancia e' un `iframe` e si mangia i tocchi di
-   * tutto quello che gli sta sopra: senza questo le voci della barra si
-   * vedrebbero e non si premerebbero, e toccare fuori non la chiuderebbe
+   * tutto quello che gli sta sopra: senza questo le mattonelle si vedrebbero
+   * e non si premerebbero, e toccare fuori non lo chiuderebbe
    * (`da_parte.dart`). Sul telefono non fa niente.
    *
-   * Dove la barra **resta** non copre niente — il posto glielo si lascia per
-   * davvero, e la plancia comincia dopo — e allora non si sposta nessuno. E
-   * dove sotto non c'e' la plancia non c'e' niente da spostare: le pagine
-   * dell'app le disegna l'app, e i tocchi le arrivano da se'.
-   *
-   * Si guarda a ogni scatto dell'animazione e a ogni ridisegno: il primo e' la
-   * barra che si apre e si chiude, il secondo la finestra che si rimpicciolisce
-   * mentre la barra e' aperta. */
-  void _seLaBarraCopre() {
-    final copre = !_resta && widget.sopraLaPlancia && _molla.value > 0.02;
+   * Si guarda a ogni scatto dell'animazione e a ogni ridisegno. */
+  void _seIlMenuCopre() {
+    final copre = widget.sopraLaPlancia && _molla.value > 0.02;
     if (copre == _copre) return;
     _copre = copre;
     widget.daParte.siFaDaParte(copre);
   }
 
+  /* Spingendolo giu' se ne va, e tirandolo su torna.
+   *
+   * Il foglio segue il dito punto per punto: e' il gesto che si fa a ogni
+   * foglio che sale dal basso, su tutti e due i sistemi, e va seguito
+   * davvero — un foglio che si muove a scatti o che aspetta la fine del
+   * gesto per decidere sembra rotto. Lasciato sotto i tre quarti, o
+   * lasciato andando giu' di corsa, si chiude; se no risale. */
+  /// Quanto e' largo il pannello su questo schermo.
+  ///
+  /// Quello che resta togliendo la striscia di pagina, fino a [_quantoLargo].
+  /// E' anche la misura su cui si conta la spinta: spingere di mezzo pannello
+  /// deve valere mezzo pannello, non mezzo schermo.
+  double _quantoLargoQui(BuildContext contesto) {
+    final larghezza = MediaQuery.sizeOf(contesto).width;
+    return (larghezza - _strisciaDiPagina).clamp(0.0, _quantoLargo);
+  }
+
+  void _spinto(DragUpdateDetails quanto) {
+    final largo = _quantoLargoQui(context);
+    if (largo <= 0) return;
+    _daChiudere?.cancel();
+    _molla.value = (_molla.value + quanto.primaryDelta! / largo).clamp(
+      0.0,
+      1.0,
+    );
+  }
+
+  void _lasciato(DragEndDetails come) {
+    if (_molla.value < 0.75 || come.velocity.pixelsPerSecond.dx < -700) {
+      chiudi();
+    } else {
+      _molla.forward();
+      _rimanda(_daSola);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final alto = MediaQuery.paddingOf(context).top;
-    final basso = MediaQuery.paddingOf(context).bottom;
-    /* Si guarda a ogni ridisegno, non una volta all'avvio: su un computer la
-     * finestra si rimpicciolisce di continuo, e una barra che resta larga
-     * quanto mezza finestra stretta e' peggio di una che si nasconde. */
-    _resta = QuantoELargo.di(context).laBarraResta;
-    if (_resta && _molla.value != 1) {
-      _daChiudere?.cancel();
-      _molla.value = 1;
-    }
-    _seLaBarraCopre();
+    _seIlMenuCopre();
     return AnimatedBuilder(
       animation: _molla,
       builder: (context, _) {
-        final quanto = Curves.easeOutBack.transform(_molla.value.clamp(0, 1));
+        /* Chiuso non si disegna affatto.
+         *
+         * Prima il menu stava nell'albero sempre, anche tutto fuori schermo:
+         * quattordici mattonelle disegnate per niente sopra ogni pagina
+         * dell'app, e — peggio — i nomi delle sezioni erano li' dentro anche
+         * a menu chiuso. Chi cerca «Dispositivi» sulla pagina della plancia
+         * lo trovava, e non c'era. */
+        if (_molla.value <= 0) return const SizedBox.shrink();
+        final quanto = Curves.easeOutCubic.transform(_molla.value.clamp(0, 1));
         return Stack(
           children: [
-            /* Toccare fuori la chiude. Prende i tocchi solo quando c'e': a
-             * barra chiusa non deve rubare niente alla pagina. */
-            if (aperta && !_resta)
+            /* Il velo, e il tocco fuori che chiude.
+             *
+             * Il velo prima non c'era: il menu si apriva e la pagina restava
+             * accesa com'era, cosi' quello che ci passava sotto — i numeri
+             * grossi delle tessere, una mappa — si leggeva insieme alle voci.
+             * Un menu che copre e non scurisce non sembra un menu: sembra un
+             * foglietto appoggiato. Prende i tocchi solo quando c'e': a menu
+             * chiuso non deve rubare niente alla pagina. */
+            if (aperta)
               Positioned.fill(
                 child: GestureDetector(
-                  behavior: HitTestBehavior.translucent,
+                  behavior: HitTestBehavior.opaque,
                   onTap: chiudi,
+                  child: ColoredBox(
+                    color: Colors.black.withValues(alpha: _quantoVelo * quanto),
+                  ),
                 ),
               ),
             Positioned(
-              /* Da oltre il bordo fino a dieci punti da dentro. */
-              left: -_fuori + (_fuori + 10) * quanto,
-              top: alto + 10,
-              bottom: basso + 10,
-              /* La larghezza va data qui, prima di centrare.
-               *
-               * Un riquadro messo con la sola coordinata sinistra non ha un
-               * limite a destra: e' largo quanto vuole. Centrare dentro un
-               * limite che non c'e' non e' una domanda con risposta, e quel
-               * pezzo di schermo restava non impaginato: la barra c'era
-               * nell'albero e non si vedeva. Niente errori, niente segni —
-               * che e' il modo peggiore di rompersi. */
-              child: SizedBox(
-                width: _larghezzaDellaBarra,
-                child: Center(
-                  child: IgnorePointer(
-                    ignoring: !aperta,
-                    child: Opacity(
-                      opacity: _molla.value.clamp(0, 1),
+              left: 0,
+              top: 0,
+              bottom: 0,
+              child: IgnorePointer(
+                ignoring: !aperta,
+                /* Scorre di tutta la sua larghezza: a zero e' fuori dal bordo
+                 * sinistro, a uno e' al suo posto. */
+                child: FractionalTranslation(
+                  translation: Offset(quanto - 1, 0),
+                  child: SizedBox(
+                    width: _quantoLargoQui(context),
+                    /* Il gesto sta qui e prende tutto il pannello, come in
+                     * qualunque cassetto: si spinge verso sinistra da dove
+                     * capita, e non solo da una maniglia che bisogna trovare.
+                     * Orizzontale, quindi non litiga con l'elenco che scorre
+                     * in verticale. */
+                    child: GestureDetector(
+                      onHorizontalDragUpdate: _spinto,
+                      onHorizontalDragEnd: _lasciato,
                       child: Listener(
                         onPointerDown: (_) => _laStaUsando(),
                         onPointerMove: (_) => _laStaUsando(),
                         onPointerUp: (_) => _laStaUsando(),
                         onPointerSignal: (_) => _laStaUsando(),
-                        child: _IlVetro(
-                          child: SizedBox(
-                            width: _larghezzaDellaBarra,
-                            /* Alta quanto le sue voci, e non un punto di piu': una
-                         * barra che arriva sempre in fondo allo schermo sembra
-                         * un pannello, e un pannello non si chiude da solo. */
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                if (widget.collegamento != null)
-                                  _LaCasa(
-                                    collegamento: widget.collegamento!,
-                                    quandoPremuta: widget.vaiAlleCase,
-                                  ),
-                                if (widget.tessera case final t?) t,
-                                Flexible(
-                                  child: ListView(
-                                    controller: _scorrimento,
-                                    shrinkWrap: true,
-                                    padding: const EdgeInsets.only(bottom: 8),
-                                    children: [
-                                      for (final gruppo in _gruppi) ...[
-                                        _TitoloDelGruppo(gruppo.titolo.titolo),
-                                        /* La casa in tessere grandi: sono le
-                                         * voci di ogni giorno, e una tessera
-                                         * si prende al volo. Il resto in un
-                                         * riquadro, riga per riga. */
-                                        if (gruppo.titolo ==
-                                            GruppoDellaBarra.casa)
-                                          _LeTessere(
-                                            sezioni: gruppo.sezioni,
-                                            aperta: widget.aperta,
-                                            scegli: _scelta,
-                                            daAggiornare: widget.daAggiornare,
-                                            collegamento: widget.collegamento,
-                                            trattieni: _trattieni,
-                                            lascia: _lascia,
-                                          )
-                                        else
-                                          _IlRiquadro(
-                                            children: [
-                                              for (final sezione
-                                                  in gruppo.sezioni)
-                                                _Voce(
-                                                  sezione: sezione,
-                                                  scelta:
-                                                      sezione == widget.aperta,
-                                                  quandoPremuta: () =>
-                                                      _scelta(sezione),
-                                                  quanti:
-                                                      sezione ==
-                                                          Sezione.aggiornamenti
-                                                      ? widget.daAggiornare
-                                                      : 0,
-                                                ),
-                                            ],
-                                          ),
-                                      ],
-                                    ],
-                                  ),
-                                ),
-                                /* Che versione e' questa.
-                                 *
-                                 * Era in fondo a «Le case» e nella
-                                 * diagnostica, e non bastava: «io non so che
-                                 * versione app ho» e' arrivato da chi le
-                                 * pubblica. Il menu e' la schermata che si
-                                 * apre ogni giorno, e una riga grigia in
-                                 * fondo alle voci si legge senza cercarla —
-                                 * che e' la differenza fra un'informazione
-                                 * che c'e' e una che si trova. */
-                                const Padding(
-                                  padding: EdgeInsets.only(bottom: 10),
-                                  child: Firma(
-                                    spazioSopra: 2,
-                                    conIlCentralino: false,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
+                        child: _IlFoglio(child: _dentro(context)),
                       ),
                     ),
                   ),
@@ -461,11 +491,94 @@ class BarraDelleSezioniState extends State<BarraDelleSezioni>
       },
     );
   }
+
+  Widget _dentro(BuildContext context) {
+    final bordi = MediaQuery.paddingOf(context);
+    final trovate = _leSezioni;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        /* Il pannello e' alto quanto lo schermo, orologio e tacca compresi:
+         * quello che ha dentro comincia sotto. */
+        SizedBox(height: bordi.top + 8),
+        if (widget.collegamento case final c?)
+          _LaCasaInTesta(collegamento: c, quandoPremuta: widget.vaiAlleCase),
+        _Cerca(
+          scritto: _scritto,
+          fuoco: _fuoco,
+          riscrivi: () => setState(() {}),
+        ),
+        Flexible(
+          child: ListView(
+            controller: _scorrimento,
+            shrinkWrap: true,
+            padding: const EdgeInsets.fromLTRB(14, 6, 14, 6),
+            children: [
+              if (widget.tessera case final t?) ...[
+                if (_cercato.isEmpty) ...[t, const SizedBox(height: 14)],
+              ],
+              if (trovate.isEmpty)
+                _NienteCosi(cercato: _scritto.text.trim())
+              else if (_cercato.isNotEmpty)
+                _LeMattonelle(
+                  sezioni: trovate,
+                  aperta: widget.aperta,
+                  scegli: _scelta,
+                  daAggiornare: widget.daAggiornare,
+                  collegamento: widget.collegamento,
+                  trattieni: _trattieni,
+                  lascia: _lascia,
+                  bloccate: widget.bloccate,
+                  apriPremium: widget.apriPremium,
+                )
+              else
+                for (final (i, gruppo) in _gruppi.indexed) ...[
+                  if (i > 0) const SizedBox(height: 16),
+                  _TitoloDelGruppo(gruppo.titolo.titolo),
+                  _LeMattonelle(
+                    sezioni: gruppo.sezioni,
+                    aperta: widget.aperta,
+                    scegli: _scelta,
+                    daAggiornare: widget.daAggiornare,
+                    collegamento: widget.collegamento,
+                    trattieni: _trattieni,
+                    lascia: _lascia,
+                    bloccate: widget.bloccate,
+                    apriPremium: widget.apriPremium,
+                  ),
+                ],
+            ],
+          ),
+        ),
+        /* Che versione e', **fissa** in fondo e fuori dall'elenco.
+         *
+         * «Io non so che versione app ho» e' arrivato da chi le pubblica, con
+         * la versione gia' scritta in fondo a «Le case» e nella diagnostica:
+         * un'informazione che c'e' e non si trova vale come una che non c'e'.
+         * In coda all'elenco si vedeva solo scorrendo fino in fondo — e in
+         * una casa piena l'elenco arriva al tetto e scorre davvero. Qui si
+         * legge sempre, che e' il motivo per cui e' nel menu. */
+        Padding(
+          padding: EdgeInsets.fromLTRB(14, 2, 14, bordi.bottom + 12),
+          child: const Firma(spazioSopra: 0, conIlCentralino: false),
+        ),
+      ],
+    );
+  }
 }
 
-/// Il vetro smerigliato su cui sta la barra.
-class _IlVetro extends StatelessWidget {
-  const _IlVetro({required this.child});
+/// Il pannello: fondo pieno, tondo sul fianco destro, con la sua maniglia.
+///
+/// **Pieno**, non smerigliato. Un vetro trasparente sopra una pagina di schede
+/// lascia leggere quello che c'e' sotto, e allora non sembra un menu: sembra
+/// una velatura, e le voci si leggono male — segnalato con la foto. Quello che
+/// passa sotto lo copre il velo, che e' il posto giusto per dirlo.
+///
+/// L'ombra cade **verso destra**, da dove entra il pannello: e' quella che lo
+/// stacca dalla pagina e gli da' uno spessore, come alle mattonelle che ha
+/// dentro.
+class _IlFoglio extends StatelessWidget {
+  const _IlFoglio({required this.child});
 
   final Widget child;
 
@@ -473,47 +586,75 @@ class _IlVetro extends StatelessWidget {
   Widget build(BuildContext context) {
     final colori = Theme.of(context).colorScheme;
     final scuro = Theme.of(context).brightness == Brightness.dark;
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(28),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 42, sigmaY: 42),
-        child: Container(
-          decoration: BoxDecoration(
-            /* Quasi pieno, non velato. Un vetro troppo trasparente sopra una
-             * pagina di schede lascia leggere quello che c'e' sotto, e allora
-             * non sembra una barra: sembra una velatura. Quello che passa
-             * sotto si deve intuire e non leggere — e' il punto di un vetro
-             * smerigliato. */
-            color: colori.surface.withValues(alpha: 0.92),
-            borderRadius: BorderRadius.circular(28),
-            border: Border.all(
-              color: scuro
-                  ? Colors.white.withValues(alpha: 0.12)
-                  : Colors.white.withValues(alpha: 0.8),
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: scuro ? 0.5 : 0.16),
-                blurRadius: 38,
-                offset: const Offset(0, 18),
-              ),
-            ],
+    const tondo = BorderRadius.horizontal(right: Radius.circular(_angolo));
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: colori.surface,
+        borderRadius: tondo,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: scuro ? 0.6 : 0.26),
+            blurRadius: 34,
+            offset: const Offset(6, 0),
           ),
-          child: child,
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: tondo,
+        child: Stack(
+          children: [
+            child,
+            /* La maniglia sta sul fianco da cui si spinge, a meta' altezza:
+               e' dove sta il pollice di chi tiene il telefono, ed e' l'unico
+               punto del pannello che non e' ne' un nome ne' un disegno. */
+            const Positioned(right: 0, top: 0, bottom: 0, child: _Maniglia()),
+          ],
         ),
       ),
     );
   }
 }
 
-/// In cima alla barra: la casa in cui si e', e da dove ci si sta passando.
+/// La barretta sul fianco: dice «questo si spinge di lato» senza scriverlo.
+class _Maniglia extends StatelessWidget {
+  const _Maniglia();
+
+  @override
+  Widget build(BuildContext context) {
+    return IgnorePointer(
+      child: Center(
+        child: Padding(
+          padding: const EdgeInsets.only(right: 7),
+          child: Container(
+            width: 5,
+            height: 46,
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.onSurface
+                  .withValues(alpha: 0.18),
+              borderRadius: BorderRadius.circular(999),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// In testa al menu: la casa in cui si e', e da dove ci si sta passando.
 ///
-/// Si tocca per passare a un'altra casa. E' qui e non sulla plancia perche'
-/// la plancia e' una pagina web che di case ne conosce una sola, la sua: il
-/// nome che scrive in testata e' quello di Home Assistant, e «in casa» o
-/// «da fuori» non lo puo' sapere.
-class _LaCasa extends StatelessWidget {
-  const _LaCasa({required this.collegamento, required this.quandoPremuta});
+/// Si tocca il tondo a destra per passare a un'altra casa. E' qui e non sulla
+/// plancia perche' la plancia e' una pagina web che di case ne conosce una
+/// sola, la sua: il nome che scrive in testata e' quello di Home Assistant, e
+/// «in casa» o «da fuori» non lo puo' sapere.
+///
+/// Il nome e' grande perche' adesso c'e' il posto: nella striscia stava in
+/// dodici punti schiacciato contro il bordo, e su una schermata larga la prima
+/// cosa che si legge deve essere **dove si e'**.
+class _LaCasaInTesta extends StatelessWidget {
+  const _LaCasaInTesta({
+    required this.collegamento,
+    required this.quandoPremuta,
+  });
 
   final Collegamento collegamento;
   final VoidCallback quandoPremuta;
@@ -522,53 +663,118 @@ class _LaCasa extends StatelessWidget {
   Widget build(BuildContext context) {
     final colori = Theme.of(context).colorScheme;
     final testi = Theme.of(context).textTheme;
-    /* Il nome per chi non la vede — e per le prove — sta nel suggerimento,
-     * non in un'etichetta che coprirebbe il nome della casa e da dove si
-     * passa: quelle due righe le deve leggere anche un lettore di schermo. */
-    return Tooltip(
-      message: nomeDelleCase,
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-          onTap: quandoPremuta,
-          child: Container(
-            padding: const EdgeInsets.fromLTRB(19, 16, 12, 12),
-            decoration: BoxDecoration(
-              border: Border(
-                bottom: BorderSide(
-                  color: colori.onSurface.withValues(alpha: 0.08),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 6, 14, 12),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  collegamento.casa?.nome ?? inLingua(it: 'Casa', en: 'Home'),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: testi.headlineSmall?.copyWith(
+                    fontSize: 25,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: -0.6,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                DaDoveSiPassa(collegamento, piccolo: true),
+              ],
+            ),
+          ),
+          /* Il nome per chi non la vede — e per le prove — sta nel
+           * suggerimento: il tondo non ha scritte, e il verso del segno e'
+           * quello che fa, cioe' portare **via** da questa casa. */
+          Tooltip(
+            message: nomeDelleCase,
+            child: Material(
+              color: colori.onSurface.withValues(alpha: 0.06),
+              shape: const CircleBorder(),
+              clipBehavior: Clip.antiAlias,
+              child: InkWell(
+                onTap: quandoPremuta,
+                child: SizedBox(
+                  width: 44,
+                  height: 44,
+                  child: Icon(
+                    Icons.swap_horiz_rounded,
+                    size: 22,
+                    color: colori.onSurface.withValues(alpha: 0.75),
+                  ),
                 ),
               ),
             ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        collegamento.casa?.nome ??
-                            inLingua(it: 'Casa', en: 'Home'),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: testi.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: -0.2,
-                        ),
-                      ),
-                      const SizedBox(height: 3),
-                      DaDoveSiPassa(collegamento, piccolo: true),
-                    ],
-                  ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// La casella per cercare una sezione.
+///
+/// E' la cosa che la striscia non poteva avere, ed e' quella che cambia il
+/// menu piu' di tutte: con quattordici sezioni — e domani venti — tre lettere
+/// arrivano prima di qualunque elenco. Non si apre da sola la tastiera: il
+/// menu si apre venti volte al giorno e quasi sempre per toccare la seconda
+/// mattonella, e una tastiera che salta su ogni volta sarebbe una tassa.
+class _Cerca extends StatelessWidget {
+  const _Cerca({
+    required this.scritto,
+    required this.fuoco,
+    required this.riscrivi,
+  });
+
+  final TextEditingController scritto;
+  final FocusNode fuoco;
+  final VoidCallback riscrivi;
+
+  @override
+  Widget build(BuildContext context) {
+    final colori = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(14, 0, 14, 10),
+      child: TextField(
+        controller: scritto,
+        focusNode: fuoco,
+        onChanged: (_) => riscrivi(),
+        textInputAction: TextInputAction.search,
+        style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+        decoration: InputDecoration(
+          isDense: true,
+          contentPadding: const EdgeInsets.symmetric(vertical: 13),
+          hintText: inLingua(it: 'Cerca una sezione', en: 'Search a section'),
+          prefixIcon: Icon(
+            Icons.search_rounded,
+            size: 20,
+            color: colori.onSurfaceVariant,
+          ),
+          suffixIcon: scritto.text.isEmpty
+              ? null
+              : IconButton(
+                  icon: const Icon(Icons.close_rounded, size: 18),
+                  onPressed: () {
+                    scritto.clear();
+                    riscrivi();
+                  },
                 ),
-                Icon(
-                  Icons.chevron_right_rounded,
-                  size: 20,
-                  color: colori.onSurfaceVariant,
-                ),
-              ],
-            ),
+          filled: true,
+          fillColor: colori.onSurface.withValues(alpha: 0.05),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(16),
+            borderSide: BorderSide.none,
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(16),
+            borderSide: BorderSide.none,
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(16),
+            borderSide: BorderSide(color: colori.primary, width: 1.4),
           ),
         ),
       ),
@@ -576,40 +782,373 @@ class _LaCasa extends StatelessWidget {
   }
 }
 
-/// La tessera della plancia per chi ne ha piu' d'una: larga quanto la riga,
-/// con il nome della plancia che si guarda e, a destra, la tendina per
-/// sceglierne un'altra.
+/// Quando quello che si cerca non c'e'.
+///
+/// Si dice cosa si e' cercato, non «nessun risultato»: chi legge deve poter
+/// vedere il refuso senza tornare nella casella.
+class _NienteCosi extends StatelessWidget {
+  const _NienteCosi({required this.cercato});
+
+  final String cercato;
+
+  @override
+  Widget build(BuildContext context) {
+    final colori = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 40),
+      child: Column(
+        children: [
+          Icon(
+            Icons.search_off_rounded,
+            size: 34,
+            color: colori.onSurfaceVariant,
+          ),
+          const SizedBox(height: 12),
+          Text(
+            inLingua(
+              it: 'Nessuna sezione si chiama «$cercato»',
+              en: 'No section is called "$cercato"',
+            ),
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: colori.onSurfaceVariant,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Le sezioni in mattonelle, tre per riga.
+class _LeMattonelle extends StatelessWidget {
+  const _LeMattonelle({
+    required this.sezioni,
+    required this.aperta,
+    required this.scegli,
+    required this.daAggiornare,
+    required this.collegamento,
+    required this.trattieni,
+    required this.lascia,
+    this.bloccate = const {},
+    this.apriPremium,
+  });
+
+  final Set<Sezione> bloccate;
+  final VoidCallback? apriPremium;
+
+  final List<Sezione> sezioni;
+  final Sezione aperta;
+  final void Function(Sezione) scegli;
+  final int daAggiornare;
+
+  /// Da dove si leggono le plance: con piu' d'una, la mattonella della
+  /// plancia porta anche quale si sta guardando e il modo di cambiarla.
+  final Collegamento? collegamento;
+  final VoidCallback trattieni;
+  final VoidCallback lascia;
+
+  @override
+  Widget build(BuildContext context) {
+    final collegamento = this.collegamento;
+    final piuDiUna = collegamento?.pannello?.piuDiUna ?? false;
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      padding: EdgeInsets.zero,
+      itemCount: sezioni.length,
+      /* **Due per riga**, non tre. Tre stavano nella schermata che prendeva
+         tutto lo schermo; qui la larghezza e' quella del pannello, e a tre un
+         nome come «Gestione installatore» tornerebbe a essere un francobollo.
+         A due ci sta intero, e il rilievo si vede. */
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        mainAxisSpacing: 12,
+        crossAxisSpacing: 12,
+        mainAxisExtent: _mattonella,
+      ),
+      itemBuilder: (context, i) {
+        final sezione = sezioni[i];
+        return _Mattonella(
+          sezione: sezione,
+          scelta: sezione == aperta,
+          quanti: sezione == Sezione.aggiornamenti ? daAggiornare : 0,
+          premuta: () => scegli(sezione),
+          plance: sezione == Sezione.plancia && piuDiUna ? collegamento : null,
+          trattieni: trattieni,
+          lascia: lascia,
+          bloccata: bloccate.contains(sezione),
+          apriPremium: apriPremium,
+        );
+      },
+    );
+  }
+}
+
+/// Una sezione: il disegno grande, il nome sotto, e sotto ancora il suo fianco.
+///
+/// ## Il rilievo
+///
+/// «Riesci a fare le card come se avessero un effetto 3d?»
+///
+/// Non un'ombra portata e basta — quella la mette chiunque e si legge come
+/// «una carta su un foglio». Qui la mattonella e' un **oggetto spesso**:
+///
+///  - un **fianco** [_spessore] punti sotto la faccia, dello stesso colore ma
+///    scurito. E' lui a fare il volume: senza, un'ombra e' un disegno;
+///  - una **faccia** con la luce che le arriva da sopra a sinistra, cioe' una
+///    sfumatura dal chiaro allo scuro e un filo piu' chiaro sul bordo alto;
+///  - un'**ombra** appoggiata sotto il fianco, non sotto la faccia;
+///  - e premendo, la faccia **scende sul fianco** e l'ombra si stringe: e'
+///    quello che fa un tasto vero quando lo si spinge, ed e' la meta' che di
+///    solito manca. Un rilievo che non si muove al tocco e' un disegno di un
+///    tasto.
+///
+/// Scurito e schiarito si calcolano dalla faccia ([_piuScuro], [_piuChiaro]),
+/// non scritti a mano: cosi' la stessa regola vale sul chiaro e sullo scuro,
+/// sulla mattonella scelta e su quelle spente, e nessuno deve tenere allineate
+/// quattro tavolozze.
+///
+/// **I nomi non sono in maiuscolo.** Erano tutti in maiuscolo e rimpiccioliti
+/// quanto bastava a entrare nella striscia: «CONFIGURAZIONE» usciva piu'
+/// piccolo di «PLANCIA», e una colonna di nomi di corpo diverso non e' una
+/// scala, e' disordine. Qui il posto c'e', e le maiuscole restano dove
+/// servono: sui titoli dei gruppi, che non si leggono, si contano.
+class _Mattonella extends StatefulWidget {
+  const _Mattonella({
+    required this.sezione,
+    required this.scelta,
+    required this.quanti,
+    required this.premuta,
+    required this.plance,
+    required this.trattieni,
+    required this.lascia,
+    this.bloccata = false,
+    this.apriPremium,
+  });
+
+  final Sezione sezione;
+  final bool scelta;
+  final int quanti;
+  final VoidCallback premuta;
+
+  /// Col lucchetto: si preme lo stesso, e porta alla pagina Premium.
+  final bool bloccata;
+
+  /// Per le plance col lucchetto nella tendina.
+  final VoidCallback? apriPremium;
+
+  /// Non nullo solo sulla plancia, e solo dove le plance sono piu' d'una: in
+  /// quel caso la mattonella porta sotto il nome di quella che si guarda, e
+  /// in alto a destra il tasto per cambiarla.
+  final Collegamento? plance;
+  final VoidCallback trattieni;
+  final VoidCallback lascia;
+
+  @override
+  State<_Mattonella> createState() => _StatoDellaMattonella();
+}
+
+class _StatoDellaMattonella extends State<_Mattonella> {
+  /* Se il dito e' giu' adesso. E' tutto lo stato che serve al rilievo: la
+   * faccia sta su o sta giu'. */
+  bool _giu = false;
+
+  void _spingi(bool quanto) {
+    if (_giu == quanto) return;
+    setState(() => _giu = quanto);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final sezione = widget.sezione;
+    final scelta = widget.scelta;
+    final colori = Theme.of(context).colorScheme;
+    final scuro = Theme.of(context).brightness == Brightness.dark;
+
+    /* La scelta e' l'inverso della pagina: scura sul chiaro, chiara sullo
+     * scuro. Cosi' salta all'occhio in tutti e due i vestiti senza scegliere
+     * un colore che in uno dei due stona.
+     *
+     * Le altre sono **piu' chiare del pannello**, non piu' scure. Un primo
+     * giro le aveva fatte con un velo scuro sopra il fondo: il fianco si
+     * vedeva, ma la faccia era grigia come il pannello e le mattonelle
+     * sembravano fantasmi. Un oggetto che si alza prende piu' luce di quello
+     * su cui appoggia, non meno.
+     *
+     * **Tinta piena**, e non un velo: da un velo non si ricava un fianco piu'
+     * scuro — verrebbe fuori il fondo del pannello — e senza fianco non c'e'
+     * nessun rilievo. */
+    /* **Tinta piena, senza sfumature.** La faccia aveva una sfumatura appena
+     * accennata che finiva piu' scura del tre per cento: sul fondo della
+     * mattonella faceva una riga, e sommata al fianco e all'ombra erano i tre
+     * bordi che si contavano. Un colore solo non ne fa nessuno. */
+    final faccia = scelta ? colori.onSurface : colori.surfaceContainerLowest;
+    final scritta = scelta
+        ? colori.surface
+        : colori.onSurface.withValues(alpha: sezione.pronta ? 0.9 : 0.32);
+
+    final tondo = BorderRadius.circular(22);
+    final puo = sezione.pronta;
+    /* Quella che non si puo' ancora aprire non si alza da terra: niente ombra
+     * e niente movimento. Il volume dice «questo si preme», e dirlo di una che
+     * non si preme sarebbe una bugia in rilievo. */
+    final scesa = puo && _giu ? _quantoScende : 0.0;
+
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTapDown: puo ? (_) => _spingi(true) : null,
+      onTapUp: puo ? (_) => _spingi(false) : null,
+      onTapCancel: puo ? () => _spingi(false) : null,
+      onTap: puo ? widget.premuta : null,
+      /* Tutta la mattonella affonda insieme, ombra compresa, e ci mette quanto
+       * ci mette un tasto: ottanta millesimi. Piu' lento sembrerebbe
+       * un'animazione, e un tasto non si anima. */
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 80),
+        curve: Curves.easeOut,
+        transform: Matrix4.translationValues(0, scesa, 0),
+        decoration: BoxDecoration(
+          color: faccia,
+          borderRadius: tondo,
+          /* **Una sola ombra, e morbida.** E' l'aria sotto la mattonella, non
+           * una riga che la contorna: e' l'unico salto di tono che c'e' sotto
+           * di lei, ed e' per questo che non se ne contano tre. Premuta si
+           * stringe e si alza. */
+          boxShadow: puo
+              ? [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: scuro ? 0.30 : 0.07),
+                    blurRadius: _giu ? 4 : 14,
+                    offset: Offset(0, _giu ? 1 : 4),
+                  ),
+                ]
+              : null,
+        ),
+        child: _laFaccia(context, scritta: scritta, colori: colori),
+      ),
+    );
+  }
+
+  Widget _laFaccia(
+    BuildContext context, {
+    required Color scritta,
+    required ColorScheme colori,
+  }) {
+    final sezione = widget.sezione;
+    final scelta = widget.scelta;
+    return Stack(
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(8, 12, 8, 10),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              /* Il disegno della sezione, lo stesso della plancia. Quella
+               * che non si sta guardando lo tiene smorzato: il colore e'
+               * l'unica cosa che dice «sei qui», e se ce l'hanno tutte non
+               * lo dice nessuna. */
+              Oggetto(
+                sezione.disegno,
+                lato: 34,
+                quantoSpento: scelta ? 0 : 0.25,
+                velo: sezione.pronta ? 1 : 0.45,
+              ),
+              const SizedBox(height: 10),
+              Text(
+                sezione.titolo,
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 13,
+                  height: 1.15,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: -0.1,
+                  color: scritta,
+                ),
+              ),
+              if (widget.plance case final c?) ...[
+                const SizedBox(height: 2),
+                Text(
+                  _quale(c).titolo,
+                  textAlign: TextAlign.center,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 10.5,
+                    height: 1.1,
+                    fontWeight: FontWeight.w600,
+                    color: scelta
+                        ? colori.surface.withValues(alpha: 0.7)
+                        : colori.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+        if (widget.quanti > 0)
+          Positioned(top: 8, right: 8, child: _Quanti(widget.quanti)),
+        if (widget.bloccata)
+          Positioned(top: 8, right: 8, child: _IlLucchetto(sulloScuro: scelta)),
+        if (widget.plance case final c?)
+          Positioned(
+            top: 4,
+            right: 4,
+            child: _QualePlancia(
+              collegamento: c,
+              colore: scritta,
+              trattieni: widget.trattieni,
+              lascia: widget.lascia,
+              apri: widget.premuta,
+              apriPremium: widget.apriPremium,
+            ),
+          ),
+      ],
+    );
+  }
+
+  static UnaPlancia _quale(Collegamento c) {
+    final trovate = c.plance.where((una) => una.profilo == c.planciaScelta);
+    return trovate.isEmpty ? c.plance.first : trovate.first;
+  }
+}
+
+/// Il tasto in alto a destra della mattonella della plancia: quale plancia.
 ///
 /// Nella dashboard le plance sono voci di Home Assistant, e si scelgono dalla
 /// sua barra laterale. Nell'app non c'e' nessuna barra laterale di Home
-/// Assistant: la scelta sta sulla plancia stessa, dove la si cerca. Toccando
-/// la tessera si apre la plancia di adesso; toccando la freccia si apre la
-/// tendina, e sceglierne una la apre.
+/// Assistant: la scelta sta sulla mattonella della plancia, dove la si cerca.
 ///
-/// Un menu e non un elenco di righe: le plance sono al massimo otto, e otto
-/// righe in cima alla barra mangerebbero il posto delle altre sezioni.
-class _LePlance extends StatelessWidget {
-  const _LePlance({
+/// Una tendina e non delle mattonelle: le plance sono al massimo otto, e otto
+/// mattonelle in cima al menu mangerebbero il posto delle sezioni.
+class _QualePlancia extends StatelessWidget {
+  const _QualePlancia({
     required this.collegamento,
-    required this.scelta,
-    required this.apri,
+    required this.colore,
     required this.trattieni,
     required this.lascia,
+    required this.apri,
+    this.apriPremium,
   });
 
+  /// Le plance oltre la principale, senza gdahome Premium, portano qui.
+  final VoidCallback? apriPremium;
+
   final Collegamento collegamento;
+  final Color colore;
 
-  /// Se la plancia e' la sezione aperta.
-  final bool scelta;
-
-  /// Apre la sezione della plancia.
-  final VoidCallback apri;
-
-  /// La barra si chiude da sola dopo qualche secondo, e mentre si legge un
-  /// menu che le sta sopra non le arriva nessun tocco: la si trattiene finche'
-  /// il menu e' aperto, e la si lascia quando si chiude.
+  /// Il menu si chiude da solo dopo qualche secondo, e mentre si legge una
+  /// tendina che gli sta sopra non gli arriva nessun tocco: lo si trattiene
+  /// finche' la tendina e' aperta, e lo si lascia quando si chiude.
   final VoidCallback trattieni;
   final VoidCallback lascia;
+
+  /// Aprire la plancia, dopo averne scelta un'altra.
+  final VoidCallback apri;
 
   @override
   Widget build(BuildContext context) {
@@ -619,407 +1158,85 @@ class _LePlance extends StatelessWidget {
       (una) => una.profilo == collegamento.planciaScelta,
     );
     final quale = trovate.isEmpty ? plance.first : trovate.first;
-    final fondo = scelta
-        ? colori.onSurface
-        : colori.onSurface.withValues(alpha: 0.06);
-    final scritta = scelta
-        ? colori.surface
-        : colori.onSurface.withValues(alpha: 0.85);
-    final tenue = scritta.withValues(alpha: 0.65);
-
-    return SizedBox(
-      height: _LeTessere.alta,
-      child: Material(
-        color: fondo,
-        borderRadius: BorderRadius.circular(18),
-        clipBehavior: Clip.antiAlias,
-        child: Row(
-          children: [
-            Expanded(
-              child: InkWell(
-                onTap: apri,
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(12, 10, 6, 10),
-                  child: Row(
-                    children: [
-                      Oggetto(Sezione.plancia.disegno, lato: 26),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            _NomeDellaVoce(
-                              Sezione.plancia.titolo,
-                              colore: scritta,
-                            ),
-                            const SizedBox(height: 3),
-                            Text(
-                              quale.titolo,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                fontSize: 12.5,
-                                fontWeight: FontWeight.w600,
-                                color: tenue,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+    return PopupMenuButton<String>(
+      tooltip: inLingua(it: 'Quale plancia', en: 'Which dashboard'),
+      position: PopupMenuPosition.under,
+      padding: EdgeInsets.zero,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      onOpened: trattieni,
+      onCanceled: lascia,
+      onSelected: (profilo) {
+        lascia();
+        final voluta = plance
+            .where((una) => una.profilo == profilo)
+            .firstOrNull;
+        /* Col lucchetto: non si apre, si spiega. */
+        if (voluta != null && !collegamento.siPuoAprire(voluta)) {
+          apriPremium?.call();
+          return;
+        }
+        unawaited(collegamento.cambiaPlancia(profilo));
+        apri();
+      },
+      itemBuilder: (context) => [
+        PopupMenuItem<String>(
+          enabled: false,
+          height: 32,
+          child: Text(
+            inLingua(
+              it: 'PLANCE DI QUESTA CASA',
+              en: 'DASHBOARDS IN THIS HOME',
             ),
-            Container(
-              width: 1,
-              height: _LeTessere.alta - 28,
-              color: scritta.withValues(alpha: 0.15),
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 1.1,
+              color: colori.onSurfaceVariant,
             ),
-            PopupMenuButton<String>(
-              tooltip: inLingua(it: 'Quale plancia', en: 'Which dashboard'),
-              position: PopupMenuPosition.under,
-              offset: const Offset(0, 6),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              onOpened: trattieni,
-              onCanceled: lascia,
-              onSelected: (profilo) {
-                lascia();
-                unawaited(collegamento.cambiaPlancia(profilo));
-                apri();
-              },
-              itemBuilder: (context) => [
-                PopupMenuItem<String>(
-                  enabled: false,
-                  height: 32,
-                  child: Text(
-                    inLingua(
-                      it: 'PLANCE DI QUESTA CASA',
-                      en: 'DASHBOARDS IN THIS HOME',
-                    ),
-                    style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 1.1,
-                      color: colori.onSurfaceVariant,
-                    ),
-                  ),
-                ),
-                for (final una in plance)
-                  PopupMenuItem<String>(
-                    value: una.profilo,
-                    child: Row(
-                      children: [
-                        Icon(
-                          una.profilo == quale.profilo
-                              ? Icons.radio_button_checked_rounded
-                              : Icons.radio_button_unchecked_rounded,
-                          size: 18,
-                          color: una.profilo == quale.profilo
-                              ? colori.primary
-                              : colori.onSurfaceVariant,
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: Text(
-                            una.titolo,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              fontWeight: una.profilo == quale.profilo
-                                  ? FontWeight.w700
-                                  : FontWeight.w500,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-              ],
-              child: SizedBox(
-                width: 48,
-                height: _LeTessere.alta,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.unfold_more_rounded, size: 22, color: scritta),
-                    const SizedBox(height: 2),
-                    Text(
-                      '${plance.length}',
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w800,
-                        color: tenue,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
+          ),
         ),
-      ),
-    );
-  }
-}
-
-/// Una voce della barra: il disegno a sinistra, il nome accanto.
-///
-/// In riga e non in colonna perche' la barra e' alta: accanto al disegno c'e'
-/// il posto per il nome intero, e «ELETTRODOMESTICI» si legge in un colpo
-/// invece di doverlo indovinare da «ELETTR.».
-class _Voce extends StatelessWidget {
-  const _Voce({
-    required this.sezione,
-    required this.scelta,
-    required this.quandoPremuta,
-    this.quanti = 0,
-  });
-
-  static const double altezza = 40;
-  static const double spazio = 2;
-
-  final Sezione sezione;
-  final bool scelta;
-  final VoidCallback quandoPremuta;
-
-  /// Quante cose aspettano dentro questa voce. Zero non si disegna.
-  final int quanti;
-
-  @override
-  Widget build(BuildContext context) {
-    final colori = Theme.of(context).colorScheme;
-    /* La pastiglia scelta e' l'inverso della pagina: scura sul chiaro, chiara
-     * sullo scuro. Cosi' salta all'occhio in tutti e due i vestiti senza
-     * scegliere un colore che in uno dei due stona. */
-    final fondo = colori.onSurface;
-    final sopra = colori.surface;
-
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 220),
-      curve: Curves.easeOutBack,
-      height: altezza,
-      margin: const EdgeInsets.symmetric(horizontal: 4),
-      transform: Matrix4.translationValues(scelta ? 3 : 0, 0, 0),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(14),
-        gradient: scelta
-            ? LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  fondo,
-                  Color.lerp(fondo, colori.onSurfaceVariant, 0.35)!,
-                ],
-              )
-            : null,
-        boxShadow: scelta
-            ? [
-                BoxShadow(
-                  color: fondo.withValues(alpha: 0.3),
-                  blurRadius: 18,
-                  offset: const Offset(0, 8),
-                ),
-              ]
-            : null,
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(14),
-          onTap: sezione.pronta ? quandoPremuta : null,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 11),
+        for (final una in plance)
+          PopupMenuItem<String>(
+            value: una.profilo,
             child: Row(
               children: [
-                /* Il disegno della sezione, lo stesso della plancia. Quella
-                 * che non si sta guardando lo tiene smorzato: il colore e'
-                 * l'unica cosa che dice «sei qui», e se ce l'hanno tutte non
-                 * lo dice nessuna. */
-                Oggetto(
-                  sezione.disegno,
-                  lato: 21,
-                  quantoSpento: scelta ? 0 : 0.28,
-                  velo: sezione.pronta ? 1 : 0.45,
+                Icon(
+                  !collegamento.siPuoAprire(una)
+                      ? Icons.lock_rounded
+                      : una.profilo == quale.profilo
+                      ? Icons.radio_button_checked_rounded
+                      : Icons.radio_button_unchecked_rounded,
+                  size: 18,
+                  color: !collegamento.siPuoAprire(una)
+                      ? Colori.ambraScura
+                      : una.profilo == quale.profilo
+                      ? colori.primary
+                      : colori.onSurfaceVariant,
                 ),
                 const SizedBox(width: 10),
                 Expanded(
-                  child: _NomeDellaVoce(
-                    sezione.titolo,
-                    colore: scelta
-                        ? sopra
-                        : fondo.withValues(alpha: sezione.pronta ? 0.78 : 0.3),
+                  child: Text(
+                    una.titolo,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontWeight: una.profilo == quale.profilo
+                          ? FontWeight.w700
+                          : FontWeight.w500,
+                      color: collegamento.siPuoAprire(una)
+                          ? null
+                          : colori.onSurfaceVariant,
+                    ),
                   ),
                 ),
-                if (quanti > 0) ...[const SizedBox(width: 6), _Quanti(quanti)],
               ],
             ),
           ),
-        ),
-      ),
-    );
-  }
-}
-
-/// Le voci della casa in tessere, due per riga: il disegno grande, il nome
-/// sotto, e il numero addosso quando qualcosa aspetta.
-class _LeTessere extends StatelessWidget {
-  const _LeTessere({
-    required this.sezioni,
-    required this.aperta,
-    required this.scegli,
-    required this.daAggiornare,
-    this.collegamento,
-    required this.trattieni,
-    required this.lascia,
-  });
-
-  static const double alta = 74;
-
-  final List<Sezione> sezioni;
-  final Sezione aperta;
-  final void Function(Sezione) scegli;
-  final int daAggiornare;
-
-  /// Da dove si leggono le plance: con piu' d'una, la tessera della plancia
-  /// si allarga e porta la tendina per sceglierla.
-  final Collegamento? collegamento;
-  final VoidCallback trattieni;
-  final VoidCallback lascia;
-
-  @override
-  Widget build(BuildContext context) {
-    final collegamento = this.collegamento;
-    final larga =
-        collegamento != null &&
-        (collegamento.pannello?.piuDiUna ?? false) &&
-        sezioni.contains(Sezione.plancia);
-    final strette = [
-      for (final s in sezioni)
-        if (!(larga && s == Sezione.plancia)) s,
-    ];
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 10),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (larga) ...[
-            _LePlance(
-              collegamento: collegamento,
-              scelta: aperta == Sezione.plancia,
-              apri: () => scegli(Sezione.plancia),
-              trattieni: trattieni,
-              lascia: lascia,
-            ),
-            const SizedBox(height: 8),
-          ],
-          _laGriglia(strette),
-        ],
-      ),
-    );
-  }
-
-  Widget _laGriglia(List<Sezione> sezioni) {
-    return GridView.count(
-      crossAxisCount: 2,
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      padding: EdgeInsets.zero,
-      mainAxisSpacing: 8,
-      crossAxisSpacing: 8,
-      childAspectRatio: 100 / alta,
-      children: [
-        for (final sezione in sezioni)
-          _LaTessera(
-            sezione: sezione,
-            scelta: sezione == aperta,
-            quanti: sezione == Sezione.aggiornamenti ? daAggiornare : 0,
-            premuta: () => scegli(sezione),
-          ),
       ],
-    );
-  }
-}
-
-class _LaTessera extends StatelessWidget {
-  const _LaTessera({
-    required this.sezione,
-    required this.scelta,
-    required this.quanti,
-    required this.premuta,
-  });
-
-  final Sezione sezione;
-  final bool scelta;
-  final int quanti;
-  final VoidCallback premuta;
-
-  @override
-  Widget build(BuildContext context) {
-    final colori = Theme.of(context).colorScheme;
-    /* Come la pastiglia di prima: la scelta e' l'inverso della pagina. */
-    final fondo = scelta
-        ? colori.onSurface
-        : colori.onSurface.withValues(alpha: 0.06);
-    final scritta = scelta
-        ? colori.surface
-        : colori.onSurface.withValues(alpha: 0.85);
-    return Material(
-      color: fondo,
-      borderRadius: BorderRadius.circular(18),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(18),
-        onTap: sezione.pronta ? premuta : null,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(12, 10, 10, 10),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Oggetto(sezione.disegno, lato: 26),
-                  const Spacer(),
-                  if (quanti > 0) _Quanti(quanti),
-                ],
-              ),
-              _NomeDellaVoce(sezione.titolo, colore: scritta),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// Il riquadro di un gruppo: le sue voci una sotto l'altra, dentro una
-/// forma sola, perche' si legga che stanno insieme.
-class _IlRiquadro extends StatelessWidget {
-  const _IlRiquadro({required this.children});
-
-  final List<Widget> children;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 10),
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.05),
-        borderRadius: BorderRadius.circular(18),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          for (final (i, voce) in children.indexed) ...[
-            if (i > 0) const SizedBox(height: _Voce.spazio),
-            voce,
-          ],
-        ],
+      child: SizedBox(
+        width: 30,
+        height: 30,
+        child: Icon(Icons.unfold_more_rounded, size: 17, color: colore),
       ),
     );
   }
@@ -1030,40 +1247,31 @@ class _IlRiquadro extends StatelessWidget {
 class _TitoloDelGruppo extends StatelessWidget {
   const _TitoloDelGruppo(this.testo);
 
-  static const double altezza = 32;
-
   final String testo;
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: altezza,
-      child: Align(
-        alignment: Alignment.bottomLeft,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 0, 12, 7),
-          child: Text(
-            testo.toUpperCase(),
-            style: TextStyle(
-              fontSize: 9.5,
-              height: 1,
-              fontWeight: FontWeight.w800,
-              letterSpacing: 1.2,
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-          ),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(4, 0, 4, 9),
+      child: Text(
+        testo.toUpperCase(),
+        style: TextStyle(
+          fontSize: 10,
+          height: 1,
+          fontWeight: FontWeight.w800,
+          letterSpacing: 1.4,
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
         ),
       ),
     );
   }
 }
 
-/// Il numero addosso a una voce: quante cose ci aspettano dentro.
+/// Il numero addosso a una sezione: quante cose ci aspettano dentro.
 ///
-/// Ambra e non rosso, come la tessera della plancia: un aggiornamento non e'
-/// un guasto, e' una cosa da fare con calma. Il rosso, in questa casa, vuol
-/// dire «vai a vedere adesso», e speso qui non vorrebbe piu' dire niente
-/// quando servira' davvero.
+/// Ambra e non rosso: un aggiornamento non e' un guasto, e' una cosa da fare
+/// con calma. Il rosso, in questa casa, vuol dire «vai a vedere adesso», e
+/// speso qui non vorrebbe piu' dire niente quando servira' davvero.
 ///
 /// Oltre il nove diventa «9+»: tre cifre dentro una pastiglia da venti punti
 /// non si leggono, e la differenza fra dodici e quattordici aggiornamenti non
@@ -1076,8 +1284,8 @@ class _Quanti extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      constraints: const BoxConstraints(minWidth: 18),
-      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+      constraints: const BoxConstraints(minWidth: 21),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
         color: Colori.ambraScura,
         borderRadius: BorderRadius.circular(999),
@@ -1086,7 +1294,7 @@ class _Quanti extends StatelessWidget {
         quanti > 9 ? '9+' : '$quanti',
         textAlign: TextAlign.center,
         style: const TextStyle(
-          fontSize: 10,
+          fontSize: 11,
           height: 1.2,
           fontWeight: FontWeight.w800,
           color: Colors.white,
@@ -1096,42 +1304,35 @@ class _Quanti extends StatelessWidget {
   }
 }
 
-/// Il nome di una voce, in maiuscoletto minuto e per intero.
+/// Il lucchetto di gdahome Premium, addosso a una mattonella.
 ///
-/// «ELETTRODOMESTICI» non diventa «Elettr.»: un nome accorciato si legge due
-/// volte — la prima per capire cos'era — e su una barra che si scorre col
-/// pollice quella mezza attesa e' tutto il tempo che c'e'. Dove il nome non
-/// entra si rimpicciolisce quanto basta a entrare intero, e le voci restano
-/// tutte della stessa misura: una fila di nomi di corpo diverso non e' una
-/// scala, e' disordine.
-class _NomeDellaVoce extends StatelessWidget {
-  const _NomeDellaVoce(this.testo, {required this.colore});
+/// Ambra come il numero degli aggiornamenti, e per lo stesso motivo: non e'
+/// un guasto, e' una porta che si apre con Premium. La mattonella resta viva
+/// — si preme, e porta alla pagina che spiega — perche' una voce spenta non
+/// dice niente di cosa c'e' dietro.
+class _IlLucchetto extends StatelessWidget {
+  const _IlLucchetto({this.sulloScuro = false});
 
-  final String testo;
-  final Color colore;
+  final bool sulloScuro;
 
   @override
   Widget build(BuildContext context) {
-    return FittedBox(
-      fit: BoxFit.scaleDown,
-      alignment: Alignment.centerLeft,
-      child: Text(
-        testo.toUpperCase(),
-        maxLines: 1,
-        softWrap: false,
-        style: TextStyle(
-          fontSize: 10.5,
-          height: 1,
-          fontWeight: FontWeight.w800,
-          letterSpacing: 0.6,
-          color: colore,
+    return Tooltip(
+      message: 'gdahome Premium',
+      child: Container(
+        width: 22,
+        height: 22,
+        decoration: BoxDecoration(
+          color: sulloScuro ? Colori.ambra : Colori.ambraScura,
+          shape: BoxShape.circle,
         ),
+        child: const Icon(Icons.lock_rounded, size: 13, color: Colors.white),
       ),
     );
   }
 }
 
-/// Le voci della barra: la plancia, i dispositivi, e quello che verra'.
+/// Le sezioni del menu: la plancia, i dispositivi, e quello che verra'.
 ///
 /// Tutte tranne una. La **Console** — la coda delle richieste di aiuto di
 /// tutte le case — la vede solo chi risponde, cioe' la casa che nelle opzioni
@@ -1161,9 +1362,11 @@ List<Sezione> vociDellaBarra({
   bool conLaGestione = false,
   bool conZigbee = false,
   bool nellApp = true,
+  bool conPremium = false,
 }) => [
   for (final una in Sezione.values)
     if ((una != Sezione.console || conLaConsole) &&
+        (una != Sezione.premium || conPremium) &&
         (una != Sezione.cruscotto || conIlCruscotto) &&
         (una != Sezione.gestione || conLaGestione) &&
         (una != Sezione.zigbee || conZigbee) &&
@@ -1171,7 +1374,7 @@ List<Sezione> vociDellaBarra({
       una,
 ];
 
-/// Come si chiama il tasto che apre la barra: il ☰ nella barra del titolo.
+/// Come si chiama il tasto che apre il menu: il ☰ nella barra del titolo.
 /// Il lettore di schermo lo legge cosi', e le prove lo cercano con questo
 /// nome.
 ///
@@ -1181,17 +1384,15 @@ List<Sezione> vociDellaBarra({
 String get nomeDelTastoDellaBarra =>
     inLingua(it: 'Barra delle sezioni', en: 'Sections bar');
 
-/// Come si chiama, per chi non la vede, la riga in cima alla barra che porta
+/// Come si chiama, per chi non lo vede, il tondo in testa al menu che porta
 /// all'elenco delle case.
 String get nomeDelleCase => inLingua(it: 'Le tue case', en: 'Your homes');
 
-/// Quanto posto vuole la barra quando resta aperta: la sua larghezza piu'
-/// l'aria che si tiene ai due lati.
-const double spazioPerLaBarraFerma = _larghezzaDellaBarra + 22;
-
 /// Quanto lasciare a sinistra al contenuto, su questo schermo.
 ///
-/// Dove la barra si nasconde, niente: non c'e' piu' niente di suo sul bordo
-/// sinistro — nessuna pillola, nessuna fascia — e la pagina arriva al bordo.
-double quantoPerLaBarra(BuildContext contesto) =>
-    QuantoELargo.di(contesto).laBarraResta ? spazioPerLaBarraFerma : 0;
+/// **Niente, dappertutto.** Il menu non sta piu' di lato e non resta aperto da
+/// nessuna parte: sale dal basso quando lo si chiama e se ne va. Resta qui
+/// perche' la pagina la chiede, e perche' il giorno in cui su uno schermo
+/// largo il menu tornasse a stare fermo da qualche parte, il posto dove
+/// dirlo e' questo.
+double quantoPerLaBarra(BuildContext contesto) => 0;

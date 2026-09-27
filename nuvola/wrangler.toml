@@ -110,6 +110,13 @@ GITHUB_REPO = "danigio15/gdahomeapp"
 GITHUB_REPO_ALLEGATI = "danigio15/gdahomeapp"
 GITHUB_RAMO_ALLEGATI = "allegati"
 
+# Il giorno dei pagamenti: il numero di costruzione della prima versione
+# pubblica a pagamento (`costruzioneDiQuestApp` in `app/lib/versione.dart`).
+# Le app con un numero piu' piccolo si fermano e chiedono di essere
+# aggiornate: lo leggono loro e lo leggono gli add-on, su `GET /versioni`.
+# "0" non ferma nessuno. Il perche' sta in `docs/LICENZE.md`.
+VERSIONE_MINIMA_APP = "0"
+
 # gdahome da aprire in un browser, servita da qui.
 #
 # **Questo blocco sta in fondo apposta.** In TOML tutto quello che viene dopo

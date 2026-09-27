@@ -137,6 +137,55 @@ void main() {
     expect(azioni.map((a) => a.nome), ['Cancello']);
   });
 
+  test('un\'azione rapida porta in auto il disegno di quello che e\'', () {
+    /* Visto sullo schermo dell'auto: «Cancello Automatico» col fulmine, come
+     * tutti gli altri. Qui erano tutti «azione», e il fulmine e' il disegno
+     * di quel genere: adesso il genere viene dal dominio della ricetta. */
+    final foto = jsonEncode({
+      'azioni': [
+        {'id': 'q|Cancello|c', 'nome': 'Cancello Automatico'},
+        {'id': 'q|Sera|s', 'nome': 'Buonanotte'},
+        {'id': 'q|Porta|p', 'nome': 'Porta di casa'},
+        {'id': 'q|Salotto|l', 'nome': 'Salotto'},
+      ],
+    });
+    final azioni = leAzioniDellaPlancia(foto, const [
+      RicettaDellAzione(
+        id: 'q|Cancello|c',
+        dominio: 'cover',
+        servizio: 'toggle',
+        entita: 'cover.cancello',
+      ),
+      RicettaDellAzione(
+        id: 'q|Sera|s',
+        dominio: 'scene',
+        servizio: 'turn_on',
+        entita: 'scene.buonanotte',
+      ),
+      RicettaDellAzione(
+        id: 'q|Porta|p',
+        dominio: 'lock',
+        servizio: secondoLoStato,
+        entita: 'lock.porta',
+      ),
+      RicettaDellAzione(
+        id: 'q|Salotto|l',
+        dominio: 'light',
+        servizio: 'toggle',
+        entita: 'light.salotto',
+      ),
+    ]);
+    expect(azioni.map((a) => a.genere), [
+      GenereDelComando.varco,
+      GenereDelComando.scena,
+      GenereDelComando.serratura,
+      GenereDelComando.luce,
+    ]);
+    /* E la serratura chiede conferma anche da questa strada: un tocco
+     * sbagliato guidando non apre la porta di casa. */
+    expect(azioni.map((a) => a.conferma), [false, false, true, false]);
+  });
+
   testWidgets('la schermata: si toglie, si aggiunge, si sceglie l\'arrivo', (
     tester,
   ) async {

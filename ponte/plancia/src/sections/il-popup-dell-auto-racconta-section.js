@@ -31,6 +31,7 @@ import { capacitaDellAutoInUso } from "./auto-termica-section.js";
 import { liveState } from "./ev-section.js";
 import { codiceDellaRicaricaAdesso, kilowattDellaColonnina } from "./ev-stato-e-target-section.js";
 import { clean, doc, installStyle, root, t, wrapFunction } from "./shared.js";
+import { lEnergiaInParole, laPotenzaInParole } from "../core/le-unita-della-corrente.js";
 
 const KEY = "__DASHBOARDMODERN_POPUP_AUTO_RACCONTA__";
 const state = (root[KEY] ||= { installed: false });
@@ -145,7 +146,7 @@ function scriviLaSessione() {
   const muto = !grezzo || /^(unknown|unavailable|none)$/i.test(grezzo);
   const kwh = muto ? null : inKilowattora(numero(grezzo), stato?.attributes?.unit_of_measurement);
   const testo =
-    kwh === null ? "—" : `${kwh.toFixed(Math.abs(kwh) < 10 ? 2 : 1).replace(/\.?0+$/, "")} kWh`;
+    kwh === null ? "—" : lEnergiaInParole(kwh, { decimali: Math.abs(kwh) < 10 ? 2 : 1 });
   const perche =
     kwh !== null
       ? ""

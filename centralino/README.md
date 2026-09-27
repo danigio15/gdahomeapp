@@ -51,6 +51,7 @@ Sul disco finisce l'**impronta** del segreto di ogni casa, mai il segreto.
 |---|---|---|
 | `GET /` | — | la soglia: una pagina che dice cos'e' questo indirizzo e dove si va |
 | `GET /salute` | — | da fuori dice solo che e' vivo e da quanto; da dentro la macchina anche quante case ci sono |
+| `GET /versioni` | — | `{"gdahome": {"minima": N}}`: da quale numero di costruzione in su l'app si puo' usare (`VERSIONE_MINIMA_APP`) |
 | `GET /console/` | la chiave, per leggere | la console della chat dell'assistenza |
 | `POST /contatto` | — | il modulo «Contatti» del sito: Caddy lo passa qui, e parte una mail |
 | `WS /casa` | il segreto della casa, dentro il filo | la casa che chiama fuori |
@@ -113,6 +114,7 @@ da Node. Le variabili che legge:
 | `GITHUB_RAMO_ALLEGATI` | il ramo dove si committano foto e video (`accendi.sh` scrive `allegati`) |
 | `CHIAVE_CONSOLE` | la chiave della console: almeno 32 caratteri, se no la console resta chiusa |
 | `CHAT_SOLO_CASE_CONOSCIUTE` | `1`: una linea della chat nasce solo con nome e segreto di una casa del filo |
+| `VERSIONE_MINIMA_APP` | il numero di costruzione piu' piccolo dell'app che si puo' ancora usare, detto a tutti su `GET /versioni` (difetto: 0, nessuno si ferma; vedi `docs/LICENZE.md`) |
 | `CONTATTO_ORIGINI` | da quali origini si manda il modulo (difetto: `https://<sito>` e `https://www.<sito>`) |
 | `POSTA_SERVER`, `POSTA_PORTA`, … | la posta del modulo dei contatti del sito: sotto |
 

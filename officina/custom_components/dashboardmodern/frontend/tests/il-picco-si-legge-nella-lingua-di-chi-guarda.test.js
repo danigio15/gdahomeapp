@@ -77,7 +77,7 @@ test("il riquadro del picco passa dal formattatore, e i giorni arrivano col mese
   );
   assert.match(
     sezione,
-    /setText\("ed-dkpi-picco", `\$\{formatNumber\(picco\.quanto, 2\)\} kWh`\);/,
+    /setText\("ed-dkpi-picco", lEnergiaInParole\(picco\.quanto, \{ decimali: 2 \}\)\);/,
   );
   /* I giorni si chiedono solo per il mese dei dispositivi: tenerli per tutti i
    * periodi vorrebbe dire portarsi dietro trecento righe per ogni misura. */

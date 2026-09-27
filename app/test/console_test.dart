@@ -152,7 +152,7 @@ void main() {
 
     /* L'elenco: chi ha scritto, quanto c'e' da leggere, e l'ultima cosa
      * detta. L'insegna scrive in maiuscolo, come sulla plancia. */
-    expect(find.text('CONVERSAZIONI · 1 DA LEGGERE'), findsOneWidget);
+    expect(find.text('Conversazioni · 1 da leggere'), findsOneWidget);
     expect(find.text('Giovanni'), findsOneWidget);
     expect(find.text('Le telecamere non partono.'), findsOneWidget);
 

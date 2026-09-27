@@ -20,6 +20,20 @@ library;
 
 import '../parole.dart';
 
+/// Quello che si dice a chi e' fuori casa con una casa che non e' Premium.
+String get fuoriCasaServePremium => inLingua(
+  it:
+      'Fuori casa serve gdahome Premium: senza, la casa si raggiunge solo '
+      'dal suo Wi-Fi.',
+  en:
+      'Away from home you need gdahome Premium: without it, your home can '
+      'only be reached on its own Wi-Fi.',
+);
+
+/// Se il centralino ha chiuso perche' la casa non e' Premium.
+bool eIlNoDelPremium(String detto) =>
+    detto.trim().toLowerCase() == 'premium-richiesto';
+
 /// La frase del centralino, in parole nostre.
 String inParoleNostre(String detto) {
   final nudo = detto.trim().toLowerCase();
@@ -40,6 +54,7 @@ String inParoleNostre(String detto) {
       it: 'troppi telefoni su questa casa',
       en: 'too many phones on this home',
     ),
+    'premium-richiesto' => fuoriCasaServePremium,
     _ => detto.trim(),
   };
 }

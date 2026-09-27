@@ -305,7 +305,7 @@ test("a bubble carries the load name, icon and reading of its period", () => {
   const instant = bubbles(views.instant)[0];
   assert.equal(textOf(instant, ".node-label"), "Wallbox");
   assert.equal(textOf(instant, ".node-icon"), "🚗");
-  assert.equal(textOf(instant, ".dm-flow-value"), "7100 W");
+  assert.equal(textOf(instant, ".dm-flow-value"), "7,10 kW");
   assert.equal(instant.style.getPropertyValue("--n-color"), "#06b6d4");
   assert.equal(textOf(bubbles(views.day)[0], ".dm-flow-value"), "18,4 kWh");
   assert.equal(textOf(bubbles(views.month)[0], ".dm-flow-value"), "260,0 kWh");
@@ -503,7 +503,7 @@ test("a load metered only by its lifetime counter reads today and this month fro
   };
 
   configure({ loads: [lifetime], states });
-  assert.equal(textOf(bubbles(views.instant)[0], ".dm-flow-value"), "1500 W");
+  assert.equal(textOf(bubbles(views.instant)[0], ".dm-flow-value"), "1,50 kW");
   assert.equal(textOf(bubbles(views.day)[0], ".dm-flow-value"), "—");
   assert.equal(textOf(bubbles(views.month)[0], ".dm-flow-value"), "—");
 
@@ -523,5 +523,5 @@ test("a load metered only by its lifetime counter reads today and this month fro
   });
   assert.equal(textOf(bubbles(views.day)[0], ".dm-flow-value"), "1,4 kWh");
   assert.equal(textOf(bubbles(views.month)[0], ".dm-flow-value"), "7,8 kWh");
-  assert.equal(textOf(bubbles(views.instant)[0], ".dm-flow-value"), "1500 W");
+  assert.equal(textOf(bubbles(views.instant)[0], ".dm-flow-value"), "1,50 kW");
 });

@@ -23,6 +23,12 @@ jobs:
       - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
           node-version: "22"
+      # Per primo perche' e' il piu' veloce e il piu' grave: questa repository
+      # e' pubblica e deve restarlo (e' lei l'archivio di add-on che Home
+      # Assistant legge), quindi una credenziale che entra qui e' pubblica per
+      # sempre — cancellarla dopo non la toglie dal commit di prima.
+      - name: Nessun segreto nella repository
+        run: npm run check:segreti
       # Nessuno dei tre ha dipendenze: le loro prove girano su Node e basta.
       - name: Le prove del ponte
         run: npm run test:ponte

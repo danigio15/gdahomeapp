@@ -25,12 +25,17 @@ import { Chiavi } from "./chiavi.js";
 import { Fattorino } from "./fattorino.js";
 import { Giro } from "./giro.js";
 import { Installatori } from "./installatori.js";
+import { Licenze } from "./licenze.js";
+import { Negozi } from "./negozi.js";
 import { PlanciaServita } from "./plancia-servita.js";
 import { apriIlRegistro } from "./registro.js";
 import { costruisciIlServer } from "./server.js";
 
 /** Ogni quanto si buttano gli inviti scaduti. */
 const POTATURA = 60 * 60 * 1000;
+
+/** Ogni quanto si richiedono ai negozi le licenze vicine alla scadenza. */
+const RINNOVI = 60 * 60 * 1000;
 
 export async function alzaIlQuadro({
   porta = Number(process.env.QUADRO_PORTA || 8100),
@@ -56,13 +61,25 @@ export async function alzaIlQuadro({
    * la gestione li mostra accanto a quelli del quadro. Chiesti da qui, il
    * tramite li dice per intero; da fuori non li dice a nessuno. */
   saluteDelTramite = process.env.QUADRO_TRAMITE_SALUTE ?? "http://127.0.0.1:8099/salute",
+  /* La chiave privata delle licenze: il `d` di una JWK Ed25519, in base64url
+   * (`docs/LICENZE.md`, «La chiave»). Sta **solo** su questa macchina.
+   * Senza, le vie di `/v1/licenze` rispondono 503 e tutti restano Base. */
+  chiaveDelleLicenze = process.env.QUADRO_LICENZE_CHIAVE || "",
+  /* Chi controlla le ricevute dei negozi: di serie legge le sue chiavi
+   * dall'ambiente (`negozi.js`). Le prove ne passano uno col fetch finto. */
+  negozi = undefined,
+  /* Quanto si aspetta il negozio per un rinnovo mentre una casa aspetta i
+   * suoi gettoni: di serie cinque secondi (`licenze.js`). */
+  attesaDelNegozio = undefined,
 } = {}) {
   const registro = apriIlRegistro(livello);
   const case_ = new CaseSeguite({ cartella });
   const chiavi = new Chiavi({ cartella });
   const installatori = new Installatori({ cartella });
+  const licenze = new Licenze({ cartella, chiave: chiaveDelleLicenze });
 
   const fattorino = new Fattorino({ registro });
+  const iNegozi = negozi ?? new Negozi({ registro });
 
   /* La plancia per l'editor dentro il cruscotto: quella dell'add-on, che
    * `accendi.sh` mette accanto a `src/` e che nella repository sta in
@@ -87,6 +104,9 @@ export async function alzaIlQuadro({
     plancia,
     registro,
     saluteDelTramite,
+    licenze,
+    negozi: iNegozi,
+    attesaDelNegozio,
   });
 
   /* Il giro degli avvisi: quello che fa lavorare il quadro mentre nessuno lo
@@ -115,6 +135,20 @@ export async function alzaIlQuadro({
       "senza QUADRO_GESTORE non si puo' aggiungere nessun installatore: le case gia' abbinate continuano a depositare",
     );
 
+  if (licenze.accese) registro.info(`le licenze sono accese: la pubblica e' ${licenze.pubblica}`);
+  else if (String(chiaveDelleLicenze).trim())
+    registro.errore(
+      "QUADRO_LICENZE_CHIAVE non e' una chiave Ed25519 buona: le licenze restano spente",
+    );
+  else
+    registro.attenzione("senza QUADRO_LICENZE_CHIAVE le licenze sono spente: tutti restano Base");
+  for (const [piattaforma, nome] of [
+    ["android", "Google Play"],
+    ["ios", "App Store"],
+  ])
+    if (!iNegozi.configurato(piattaforma))
+      registro.info(`senza le chiavi di ${nome} le sue ricevute non si controllano (503)`);
+
   giro.parti();
 
   const potatura = setInterval(() => {
@@ -123,12 +157,36 @@ export async function alzaIlQuadro({
   }, POTATURA);
   potatura.unref?.();
 
+  /* I rinnovi: ogni ora, le licenze del negozio che scadono entro un giorno o
+   * sono scadute da poco si richiedono al negozio, anche quelle di chi non
+   * chiede (`licenze.js`, «I rinnovi»). Uno alla volta: se il giro prima non
+   * ha finito, questo salta. */
+  let rinnoviInCorso = false;
+  const rinnovi = setInterval(() => {
+    if (rinnoviInCorso || !licenze.accese) return;
+    rinnoviInCorso = true;
+    licenze
+      .rinnova(iNegozi, { registro })
+      .then((quante) => {
+        if (quante) registro.info(`${quante} abbonamenti rinnovati dal negozio`);
+      })
+      .catch((errore) =>
+        registro.attenzione(`il giro dei rinnovi non e' andato: ${errore?.message}`),
+      )
+      .finally(() => {
+        rinnoviInCorso = false;
+      });
+  }, RINNOVI);
+  rinnovi.unref?.();
+
   return {
     server,
     porta: vera,
     case: case_,
     chiavi,
     installatori,
+    licenze,
+    negozi: iNegozi,
     giro,
     plancia,
     registro,
@@ -136,6 +194,7 @@ export async function alzaIlQuadro({
       new Promise((ok) => {
         giro.ferma();
         clearInterval(potatura);
+        clearInterval(rinnovi);
         /* Prima i fili tenuti aperti, poi il server: `close` aspetta che le
          * richieste in corso finiscano, e quelle per definizione non
          * finiscono da sole. */

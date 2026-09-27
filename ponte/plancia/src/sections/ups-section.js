@@ -39,6 +39,7 @@ import {
   root,
   t,
 } from "./shared.js";
+import { laMisuraDallUnita } from "../core/le-unita-della-corrente.js";
 
 const KEY = "__DASHBOARDMODERN_UPS_SECTION__";
 const state = (root[KEY] ||= { installed: false, frame: 0, firma: "" });
@@ -187,10 +188,17 @@ const POSTI = Object.freeze({
  * deve trovarsi un «--» al posto suo, che e' una promessa non mantenuta. */
 function targhetta(posto, etichetta, valore, unita, colore, cifre = 1) {
   if (valore == null) return "";
+  /* Watt e wattora salgono di scala al migliaio, come in tutta la plancia: una
+   * targhetta che dice «1211 W» accanto a un cerchio che dice «1,21 kW» sono
+   * due unita' per la stessa cosa. Le altre — volt, per cento, minuti — non
+   * hanno multipli qui e restano com'erano. */
+  const salita = laMisuraDallUnita(valore, unita, { decimali: cifre });
+  const numero = salita ? salita.numero : NUMERO(valore, cifre);
+  const sigla = salita ? ` ${salita.unita}` : unita;
   return `<div class="dm-ups-nodo dm-ups-nodo-plate" data-dm-ups-posto="${esc(posto)}" style="${POSTI[posto]}">
     <div class="dm-ups-plate">
       <span class="dm-ups-plate-lbl">${esc(etichetta)}</span>
-      <b class="dm-ups-plate-val" style="color:${colore}">${esc(NUMERO(valore, cifre))}<i>${esc(unita)}</i></b>
+      <b class="dm-ups-plate-val" style="color:${colore}">${esc(numero)}<i>${esc(sigla)}</i></b>
     </div>
   </div>`;
 }

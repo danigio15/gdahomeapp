@@ -991,7 +991,97 @@ export function refreshEnergyFlows() {
   const impianto = energiaDellImpianto();
   renderBatterySoc(doc, impianto, allStates());
   mostraBolleDellImpianto(impianto);
+  /* Per ultimo, quando i numeri sono tutti scritti: prima non ci sarebbe
+   * niente da misurare. */
+  adattaINumeriDelleBolle(doc);
   return touched;
+}
+
+/* ── Il numero della bolla sta su una riga ───────────────────────────────
+ *
+ * «Sistema la batteria perche' e' su due righe, adatta tutto.»
+ *
+ * Da quando i watt salgono di scala la bolla della batteria dice «▲ 5,10 kW»:
+ * misurato in un browser vero, quel testo vuole 64 punti dove il cerchio da 88
+ * ne lascia 70 scarsi al netto del bordo e del margine — e il «kW» finiva da
+ * solo sotto il numero, col per cento della carica ancora sotto. Tre righe in
+ * un cerchio disegnato per una.
+ *
+ * Alzare il cerchio o accorciare la scritta sarebbero due modi di rimandare:
+ * domani arriva «1.234,5 kWh» nella vista del mese, o una casa con un
+ * megawatt. Qui invece si misura e ci si adatta — quello che il foglio di
+ * stile non sa fare, perche' non sa quanto e' lungo un testo.
+ *
+ * Il foglio dichiara che a capo non si va (`white-space:nowrap`) e che fuori
+ * dal cerchio non si esce (`max-width:100%`); quelle due righe sono la
+ * ragione per cui questa misura funziona: senza `nowrap` il testo andrebbe a
+ * capo e risulterebbe sempre «largo abbastanza».
+ *
+ * Si stringe fino al 62% e non oltre: sotto, il numero non si legge piu' da un
+ * metro, ed e' meglio un carattere che sborda di un carattere che non si
+ * legge. E si misura solo quando il testo cambia — la firma e' il testo
+ * stesso — perche' leggere `scrollWidth` costa un calcolo di impaginazione, e
+ * questo giro passa su sette bolle a ogni cambio di stato.
+ */
+const QUANTO_AL_PIU_SI_STRINGE = 0.62;
+const FIRMA_DELLA_STRETTA = "__dmStretta";
+
+/** Tutti i numeri delle bolle: i quattro cerchioni e i carichi. */
+export const I_NUMERI_DELLE_BOLLE = "#page-energy .node span, #page-energy .dm-flow-value";
+
+/**
+ * Stringe il carattere di un numero finche' sta nella sua bolla.
+ *
+ * Torna `true` se l'ha toccato. Esportata perche' la provano: il conto e' una
+ * proporzione e si verifica con un nodo finto, senza un browser.
+ */
+export function stringiIlNumero(nodo, misuraDelCarattere) {
+  if (!nodo) return false;
+  const testo = String(nodo.textContent ?? "");
+  if (nodo[FIRMA_DELLA_STRETTA] === testo) return false;
+  /* Si riparte sempre dalla misura del foglio: un numero corto dopo uno lungo
+   * deve tornare grande, o la bolla resterebbe rimpicciolita per sempre. */
+  nodo.style?.removeProperty?.("font-size");
+  const largo = Number(nodo.scrollWidth) || 0;
+  const spazio = Number(nodo.clientWidth) || 0;
+  /* La firma si mette solo dopo aver misurato davvero.
+   *
+   * Una pagina che non e' in vista non ha larghezze: tutto zero. Il primo giro
+   * capita spesso li' — la plancia disegna anche le pagine chiuse — e
+   * ricordarsi «questo testo l'ho gia' guardato» avrebbe voluto dire non
+   * guardarlo mai piu', perche' quando la pagina si apre il testo e' lo stesso
+   * di prima. La bolla della batteria restava a due righe fino al primo numero
+   * nuovo. */
+  if (!spazio) return false;
+  nodo[FIRMA_DELLA_STRETTA] = testo;
+  if (!testo.trim()) return false;
+  /* Un punto di tolleranza: i mezzi pixel di un'arrotondatura non sono un
+   * testo che non ci sta. */
+  if (!largo || largo <= spazio + 1) return false;
+  const base = Number(misuraDelCarattere?.(nodo)) || 0;
+  if (!base) return false;
+  const quanto = Math.max(spazio / largo, QUANTO_AL_PIU_SI_STRINGE);
+  /* «important», e non e' un vezzo: il foglio la misura del carattere delle
+   * bolle la scrive cosi' («#view-ist .node span { font-size: 15px !important
+   * }», per non far esplodere il cerchio), e una riga in linea senza la stessa
+   * forza perderebbe. Misurato: la stretta si scriveva e non si vedeva. */
+  nodo.style.setProperty("font-size", `${Math.floor(base * quanto * 10) / 10}px`, "important");
+  return true;
+}
+
+/* La misura del carattere che il foglio ha dato a questo nodo. */
+function misuraDalFoglio(nodo) {
+  const vista = root.getComputedStyle?.(nodo);
+  return vista ? Number.parseFloat(vista.fontSize) : 0;
+}
+
+/** Passa su tutti i numeri delle bolle e li fa stare dentro. */
+export function adattaINumeriDelleBolle(targetDocument = doc) {
+  const nodi = targetDocument?.querySelectorAll?.(I_NUMERI_DELLE_BOLLE);
+  if (!nodi) return 0;
+  let tocchi = 0;
+  for (const nodo of nodi) if (stringiIlNumero(nodo, misuraDalFoglio)) tocchi += 1;
+  return tocchi;
 }
 
 /* Le due bolle che non tutti gli impianti hanno.

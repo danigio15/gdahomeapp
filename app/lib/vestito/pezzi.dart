@@ -8,12 +8,22 @@ library;
 
 import 'package:flutter/material.dart';
 
+import 'tema.dart';
+
 /// Una scheda: bianca, angoli morbidi, e un'ombra che la stacca dal fondo.
 ///
-/// L'ombra e' la stessa della plancia — larga, tenue, due strati — e non e' un
-/// vezzo: e' quello che fa **galleggiare** la scheda sopra il cielo invece di
-/// incollarcela. Senza, il bianco su un fondo chiaro non si vede, e la
-/// schermata sembra un foglio a righe.
+/// E' il [Vetro] di gdanav — `gdanav_app/lib/componenti/vetro.dart` — con gli
+/// stessi due strati d'ombra e lo stesso raggio: le due app sono dello stesso
+/// produttore e una scheda deve essere la stessa scheda.
+///
+/// L'ombra non e' un vezzo: e' quello che fa **galleggiare** la scheda sopra
+/// il cielo invece di incollarcela. Senza, il bianco su un fondo chiaro non si
+/// vede, e la schermata sembra un foglio a righe.
+///
+/// **E niente filo intorno.** Ce l'aveva, e con l'ombra piu' marcata di gdanav
+/// diventava un doppio contorno: l'ombra separa gia'. Il filo resta solo dove
+/// qualcuno lo chiede apposta ([bordo]), che vuol dire «questa scheda dice
+/// qualcosa» — un avviso, un errore.
 class Scheda extends StatelessWidget {
   const Scheda({
     super.key,
@@ -30,36 +40,23 @@ class Scheda extends StatelessWidget {
   final Color? colore;
   final Color? bordo;
 
-  /// L'ombra scolpita della plancia: `0 4px 20px` tenue piu' un velo corto.
-  static List<BoxShadow> ombra(BuildContext context) {
-    final scuro = Theme.of(context).brightness == Brightness.dark;
-    return [
-      BoxShadow(
-        color: Colors.black.withValues(alpha: scuro ? 0.34 : 0.06),
-        blurRadius: 20,
-        offset: const Offset(0, 4),
-      ),
-      BoxShadow(
-        color: Colors.black.withValues(alpha: scuro ? 0.2 : 0.04),
-        blurRadius: 4,
-        offset: const Offset(0, 1),
-      ),
-    ];
-  }
+  /// L'ombra di gdanav: due strati, uno largo che stacca e uno corto che
+  /// appoggia. Sta in [Colori.ombra], perche' non e' solo di questa scheda:
+  /// la usano il menu, le mattonelle, tutto quello che si alza dal fondo.
+  static List<BoxShadow> ombra(BuildContext context) =>
+      Colori.ombra(scuro: Theme.of(context).brightness == Brightness.dark);
 
   @override
   Widget build(BuildContext context) {
     final colori = Theme.of(context).colorScheme;
-    final forma = BorderRadius.circular(20);
+    final forma = BorderRadius.circular(18);
     return DecoratedBox(
       decoration: BoxDecoration(borderRadius: forma, boxShadow: ombra(context)),
       child: Material(
         color: colore ?? colori.surfaceContainerLowest,
         shape: RoundedRectangleBorder(
           borderRadius: forma,
-          side: bordo == null
-              ? BorderSide(color: colori.outlineVariant)
-              : BorderSide(color: bordo!),
+          side: bordo == null ? BorderSide.none : BorderSide(color: bordo!),
         ),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
@@ -71,7 +68,19 @@ class Scheda extends StatelessWidget {
   }
 }
 
-/// Il titolo di una sezione: piccolo, spaziato, di lato.
+/// Il titolo di una sezione dentro una pagina.
+///
+/// **Scritto com'e', non in maiuscoletto spaziato.** Era
+/// `LE TUE CASE` — labelMedium, tutte maiuscole, un punto e mezzo di aria fra
+/// le lettere — ed e' la cosa che faceva sembrare le due app di due
+/// produttori diversi: in gdanav un titolo di sezione e' una riga normale
+/// (`titleSmall`, `la_tua_auto.dart`), e in gdahome era un'etichetta da
+/// pannello di controllo.
+///
+/// Il maiuscoletto spaziato ha anche un difetto suo, e si vedeva: una parola
+/// lunga come `CONFIGURAZIONE` in maiuscolo occupa un terzo in piu' di spazio
+/// e si legge un terzo piu' piano. Resta nel menu, sui titoli dei gruppi, che
+/// non si leggono: si contano.
 class Insegna extends StatelessWidget {
   const Insegna(this.testo, {super.key, this.azione});
 
@@ -82,16 +91,18 @@ class Insegna extends StatelessWidget {
   Widget build(BuildContext context) {
     final colori = Theme.of(context).colorScheme;
     return Padding(
+      /* Quattro, che sommati ai sedici della pagina fanno i venti di gdanav:
+         li' il testo rientra di venti e le carte di sedici, e il titolo si
+         stacca appena da quello che intitola. */
       padding: const EdgeInsets.only(left: 4, right: 4, bottom: 10),
       child: Row(
         children: [
           Expanded(
             child: Text(
-              testo.toUpperCase(),
-              style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                color: colori.onSurfaceVariant,
-                letterSpacing: 1.4,
-                fontWeight: FontWeight.w600,
+              testo,
+              style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                color: colori.onSurface,
+                fontWeight: FontWeight.w700,
               ),
             ),
           ),

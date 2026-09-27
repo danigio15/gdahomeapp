@@ -40,6 +40,8 @@ class SchermataDelLucchetto extends StatefulWidget {
     required this.impostazioni,
     required this.guardia,
     this.nuda = false,
+    this.visibile = true,
+    this.inTesta,
   });
 
   final Impostazioni impostazioni;
@@ -47,6 +49,32 @@ class SchermataDelLucchetto extends StatefulWidget {
 
   /// `true` quando la barra del titolo la mette chi ospita.
   final bool nuda;
+
+  /// Quello che la pagina che ospita questo capitolo vuole **sopra** di lui.
+  ///
+  /// La sicurezza non e' piu' una pagina sua: e' un capitolo di «Impostazioni
+  /// app» (`impostazioni_app.dart`), e sopra ce n'e' un altro — la plancia
+  /// leggera e la composizione ibrida.
+  ///
+  /// Lo scorrimento lo tiene questo pezzo e non chi lo ospita, ed e' voluto:
+  /// quando il telefono non ha nessuna guardia di suo, qui non c'e' un elenco
+  /// di interruttori ma uno stato vuoto che si prende la pagina intera. Chi
+  /// ospita non puo' saperlo, e una lista dentro una lista non scorre bene.
+  final Widget? inTesta;
+
+  /// Se questa pagina e' quella che si guarda.
+  ///
+  /// Dentro la home le sezioni stanno tutte in piedi insieme — la plancia e'
+  /// una pagina web e rifarla a ogni ritorno vorrebbe dire riaprirla — quindi
+  /// questa schermata nasce **all'avvio dell'app**, che qualcuno l'apra o no.
+  /// E la prima cosa che fa e' chiedere al telefono cosa sa fare, cioe'
+  /// bussare al lettore dell'impronta.
+  ///
+  /// Chiederlo a un'app che si sta accendendo, per una pagina che nessuno ha
+  /// aperto, e' lavoro fatto per niente — e nelle prove e' una domanda a un
+  /// canale di sistema che non risponde mai, cioe' un'app che non finisce di
+  /// partire. Si chiede quando si guarda.
+  final bool visibile;
 
   @override
   State<SchermataDelLucchetto> createState() => _SchermataDelLucchettoState();
@@ -59,7 +87,15 @@ class _SchermataDelLucchettoState extends State<SchermataDelLucchetto> {
   @override
   void initState() {
     super.initState();
-    _cosaSaFare();
+    if (widget.visibile) _cosaSaFare();
+  }
+
+  @override
+  void didUpdateWidget(SchermataDelLucchetto vecchia) {
+    super.didUpdateWidget(vecchia);
+    /* Appena si apre, e una volta sola: quello che il telefono sa fare non
+     * cambia mentre l'app e' accesa. */
+    if (widget.visibile && !vecchia.visibile && !_chiesto) _cosaSaFare();
   }
 
   Future<void> _cosaSaFare() async {
@@ -150,6 +186,10 @@ class _SchermataDelLucchettoState extends State<SchermataDelLucchetto> {
   }
 
   Widget _corpo(BuildContext context) {
+    /* Non si guarda: niente. Una rotella che gira per una pagina che nessuno
+     * ha aperto e' lavoro buttato — e dentro la home, dove le sezioni stanno
+     * tutte in piedi insieme, e' una rotella che gira per sempre. */
+    if (!widget.visibile && !_chiesto) return const SizedBox.shrink();
     if (!_chiesto) return const Center(child: CircularProgressIndicator());
     final colori = Theme.of(context).colorScheme;
     final testi = Theme.of(context).textTheme;
@@ -183,6 +223,8 @@ class _SchermataDelLucchettoState extends State<SchermataDelLucchetto> {
       child: ListView(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 28),
         children: [
+          if (widget.inTesta case final sopra?) sopra,
+          Insegna(inLingua(it: 'Sicurezza', en: 'Security')),
           Scheda(
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
             child: Column(
@@ -402,8 +444,8 @@ IconData _disegnoDi(PrimaDi quale) => switch (quale) {
 
 String _comeSiChiama(PrimaDi quale) => switch (quale) {
   PrimaDi.ilCruscotto => inLingua(
-    it: 'Aprire il cruscotto e la gestione',
-    en: 'Opening the fleet and the management page',
+    it: 'Aprire le pagine di gestione',
+    en: 'Opening the management pages',
   ),
   PrimaDi.iComandi => inLingua(
     it: 'Comandare dalla scheda Dispositivi',

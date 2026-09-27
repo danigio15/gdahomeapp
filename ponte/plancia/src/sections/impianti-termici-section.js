@@ -154,11 +154,22 @@ function nodoTarghetta(
   classe = "",
 ) {
   if (valore == null) return "";
+  /* Watt e wattora salgono di scala al migliaio, come in tutta la plancia: una
+   * targhetta che dice «1211 W» accanto a un cerchio che dice «1,21 kW» sono
+   * due unita' per la stessa cosa. Gradi, litri e per cento restano come
+   * sono — multipli qui non ne hanno. */
+  const salita = laMisuraDallUnita(valore, unita, { decimali: cifre });
   /* Il nome in coda serve al telefono: le posizioni sono scritte in linea, e
    * per spostare un nodo su uno schermo stretto ci vuole qualcosa che il
    * vestito sappia chiamare per nome. */
   return `<div class="dm-it-nodo dm-it-nodo-plate ${classe}" style="${posizione}">
-    ${targhetta(etichetta, NUMERO(valore, cifre), unita, colore, extra)}
+    ${targhetta(
+      etichetta,
+      salita ? salita.numero : NUMERO(valore, cifre),
+      salita ? ` ${salita.unita}` : unita,
+      colore,
+      extra,
+    )}
   </div>`;
 }
 

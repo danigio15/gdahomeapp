@@ -56,10 +56,10 @@ test("i watt si leggono nella lingua del sensore", () => {
   const presa = { power: "sensor.tv_w" };
   assert.equal(consumoDellaPresa(presa, { "sensor.tv_w": watt(42) }), "42 W");
   /* Un sensore in kilowatt non vale mille volte tanto. */
-  assert.equal(consumoDellaPresa(presa, { "sensor.tv_w": watt(1.2, "kW") }), "1.2 kW");
+  assert.equal(consumoDellaPresa(presa, { "sensor.tv_w": watt(1.2, "kW") }), "1,20 kW");
   /* Sopra il chilowatt la card lo scrive in chilowatt anche se il sensore
    * parla in watt: è la stessa forma degli elettrodomestici. */
-  assert.equal(consumoDellaPresa(presa, { "sensor.tv_w": watt(2400) }), "2.4 kW");
+  assert.equal(consumoDellaPresa(presa, { "sensor.tv_w": watt(2400) }), "2,40 kW");
   /* Zero watt è una notizia — non sta consumando — e si scrive. */
   assert.equal(consumoDellaPresa(presa, { "sensor.tv_w": watt(0) }), "0 W");
 });

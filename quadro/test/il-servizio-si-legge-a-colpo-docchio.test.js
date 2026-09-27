@@ -79,8 +79,10 @@ const IL_TRAMITE = {
   vivo: true,
   accesoDa: 486000,
   case: 6,
+  installate: 11,
   collegamenti: 9,
   app: 4,
+  web: 2,
   segnalazioni: true,
   chat: 3,
   console: true,
@@ -96,9 +98,10 @@ test("i conti del quadro e del tramite ci sono tutti, ognuno con la sua parola",
   for (const [quanti, cosa] of [
     ["7", "case seguite"],
     ["2", "installatori"],
-    ["6", "case collegate"],
-    ["9", "collegamenti aperti"],
-    ["4", "app aperte"],
+    ["11", "impianti con gdahome"],
+    ["6", "collegati adesso"],
+    ["4", "la guardano dall&#39;app"],
+    ["2", "la guardano dal browser"],
     ["3", "conversazioni di assistenza"],
   ]) {
     assert.match(
@@ -134,7 +137,7 @@ test("il tramite dice come sta nella pastiglia, non in coda a una riga", () => {
   assert.match(muto, /pastiglia offline">non risponde</);
   /* E i suoi numeri restano: quello che aveva quando rispondeva si legge
    * ancora, altrimenti non si capisce cosa si e' perso. */
-  assert.match(muto, /<b>6<\/b><span>case collegate<\/span>/);
+  assert.match(muto, /<b>6<\/b><span>collegati adesso<\/span>/);
 });
 
 test("gli interruttori del tramite concordano, uno per uno", () => {
@@ -169,19 +172,67 @@ test("quello che arriva dal server non diventa pagina", () => {
   assert.match(html, /&lt;script&gt;/);
 });
 
-test("«collegamenti aperti» e «app aperte» sono due numeri diversi, e si vedono entrambi", () => {
-  /* «Cosa significa 22 telefoni, l'app non è presente in 22 dispositivi?»
-   *
-   * Non lo era: quel numero contava i CANALI aperti in quell'istante — la
-   * stessa persona con l'app e una scheda del browser ne teneva due — e ci
-   * finivano dentro anche gli abbinamenti in corso, che un telefono abbinato
-   * non lo sono ancora. La parola diceva una cosa e il numero ne misurava
-   * un'altra.
-   *
-   * Adesso sono due mattonelle: i fili aperti in tutto, e quanti di quelli
-   * sono davvero l'app di qualcuno che sta guardando. */
-  const html = disegna({ ...IL_QUADRO, tramite: { ...IL_TRAMITE, collegamenti: 22, app: 7 } });
-  assert.match(html, /<b>22<\/b><span>collegamenti aperti<\/span>/);
-  assert.match(html, /<b>7<\/b><span>app aperte<\/span>/);
-  assert.doesNotMatch(html, /telefoni collegati/, "la parola che mentiva non c'è più");
+/* «io voglio sapere su case, quanti hanno installato e funzionante gdahome.
+ * app quanto stanno usando da app e collegamenti aperti quanti la stanno
+ * usando da web.»
+ *
+ * Tre domande. Le mattonelle ne rispondevano una e mezza, e con le parole
+ * sbagliate:
+ *
+ *   · «case collegate» sembrava «quante case hanno gdahome» ed era «quante ce
+ *     l'hanno accesa e collegata in questo istante»;
+ *   · «collegamenti aperti» non voleva dire niente per nessuno: era la somma
+ *     dei fili, abbinamenti in corso compresi;
+ *   · «app aperte» contava chiunque fosse abbinato — l'app sul telefono e una
+ *     scheda di browser finivano nello stesso numero.
+ *
+ * Adesso ogni mattonella risponde a una domanda sola, e chi non la sa dire non
+ * la disegna.
+ */
+test("ogni mattonella del tramite risponde a una domanda sola", () => {
+  const html = disegna({
+    ...IL_QUADRO,
+    tramite: { ...IL_TRAMITE, installate: 152, case: 140, app: 7, web: 3 },
+  });
+
+  /* Quanti hanno installato, e quanti di quelli sono accesi adesso. Sono due
+   * numeri, e il secondo non e' mai piu' grande del primo. */
+  assert.match(html, /<b>152<\/b><span>impianti con gdahome<\/span>/);
+  assert.match(html, /<b>140<\/b><span>collegati adesso<\/span>/);
+
+  /* E chi sta guardando, diviso per come. */
+  assert.match(html, /<b>7<\/b><span>la guardano dall&#39;app<\/span>/);
+  assert.match(html, /<b>3<\/b><span>la guardano dal browser<\/span>/);
+
+  /* Le parole che mentivano non ci sono piu'. */
+  assert.doesNotMatch(html, /telefoni collegati/);
+  assert.doesNotMatch(html, /collegamenti aperti/);
+  assert.doesNotMatch(html, /case collegate/);
+  assert.doesNotMatch(html, />app aperte</);
+});
+
+/* Un tramite non ancora aggiornato non sa dire i due numeri nuovi, e il quadro
+ * li passa `null`. Una mattonella con dentro `null` — o uno zero che nessuno
+ * ha contato — direbbe che nessuno ha installato gdahome e che nessuno la sta
+ * guardando dal browser. Meglio due mattonelle in meno. */
+test("i numeri che un tramite vecchio non dice non diventano zeri", () => {
+  const html = disegna({
+    ...IL_QUADRO,
+    tramite: { ...IL_TRAMITE, installate: null, web: null },
+  });
+  assert.doesNotMatch(html, /impianti con gdahome/);
+  assert.doesNotMatch(html, /la guardano dal browser/);
+
+  /* Quello che sa dire lo dice come sempre. */
+  assert.match(html, /<b>6<\/b><span>collegati adesso<\/span>/);
+  assert.match(html, /<b>4<\/b><span>la guardano dall&#39;app<\/span>/);
+});
+
+/* Zero non e' «non lo so»: un tramite che risponde e dice zero ha contato, e
+ * quello zero va scritto. Nessuno che guarda dal browser alle quattro di notte
+ * e' una cosa vera. */
+test("uno zero contato si scrive", () => {
+  const html = disegna({ ...IL_QUADRO, tramite: { ...IL_TRAMITE, installate: 0, web: 0 } });
+  assert.match(html, /<b>0<\/b><span>impianti con gdahome<\/span>/);
+  assert.match(html, /<b>0<\/b><span>la guardano dal browser<\/span>/);
 });

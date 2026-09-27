@@ -4,10 +4,11 @@
  *
  *   GET  /                            la soglia: cos'e' questo indirizzo
  *   GET  /salute                      dice solo che e' vivo (e di piu' a chi guarda da dentro)
+ *   GET  /versioni                    da quale numero in su un'app si puo' usare (`versioni.js`)
  *   GET  /console/                    la console della chat, e le sue vie
  *   POST /contatto                    il modulo «Contatti» del sito, che Caddy passa qui
  *   WS   /casa/<casa_…>              una casa che chiama fuori
- *   WS   /telefono/<casa_…>           un telefono che va alla sua casa
+ *   WS   /telefono/<casa_…>?da=app    un telefono che va alla sua casa
  *   WS   /abbinamento/<impronta>      un telefono che si sta abbinando
  *
  * La prima e' l'unica che non serve a niente di tecnico, ed e' quella che
@@ -29,6 +30,7 @@ import { daChi, eDaDentro, reteDi } from "./indirizzo.js";
 import { accetta, eUnaSalita } from "./presa.js";
 import { laSoglia } from "./soglia.js";
 import { json } from "./sportello.js";
+import { INTESTAZIONI_DELLE_VERSIONI, leVersioni } from "./versioni.js";
 
 const IMPRONTA_VALIDA = /^[0-9a-f]{64}$/;
 
@@ -106,6 +108,39 @@ const INTESTAZIONI_DI_SEMPRE = Object.freeze({
 
 export const rotta = (richiesta) => new URL(richiesta.url || "/", "http://centralino").pathname;
 
+/* Cosa c'e' all'altro capo del filo: l'app installata, o una pagina in un
+ * browser.
+ *
+ * Serve a contarli separati, perche' sono due domande diverse — «quanti la
+ * usano dall'app» e «quanti la usano dal web» — e per un po' avevano un conto
+ * solo in comune.
+ *
+ * Si guarda in due posti, in questo ordine:
+ *
+ *  1. `?da=app` o `?da=web`, che il filo dice di se stesso. E' la risposta
+ *     buona: e' l'app che dichiara cos'e', e non ci si deve indovinare niente.
+ *
+ *  2. l'`Origin` della stretta di mano, per tutti quelli che ancora non lo
+ *     dicono. **Non e' un'euristica fragile**: un WebSocket aperto da una
+ *     pagina manda sempre `Origin` e il browser non lascia scegliere; uno
+ *     aperto da `dart:io` — l'app su Android e su iPhone — non ne manda
+ *     nessuno. Cosi' il conto e' giusto anche per le versioni gia' installate,
+ *     senza aspettare che si aggiorni nessuno.
+ *
+ * Non c'e' un terzo caso «non lo so»: il ripiego e' `"app"`, ed e' voluto.
+ * Un filo senza `Origin` che non sia la nostra app non esiste in natura, e una
+ * terza mattonella «non lo dicono» sarebbe una riga in piu' sulla pagina per
+ * un caso che non capita.
+ *
+ * Non e' una difesa: chi vuole mentire su cosa ha in mano mente, e non c'e'
+ * niente da guadagnarci. E' un conto per chi guarda la gestione. */
+export function cheCosaE(richiesta) {
+  const detto = new URL(richiesta?.url || "/", "http://centralino").searchParams.get("da");
+  if (detto === "app" || detto === "web") return detto;
+  const origine = richiesta?.headers?.origin;
+  return typeof origine === "string" && origine.trim() ? "web" : "app";
+}
+
 export function costruisciIlServer({
   centralino,
   sportello = null,
@@ -118,7 +153,11 @@ export function costruisciIlServer({
   /* Come si chiamano il sito e l'app di questo centralino, per la soglia.
    * Quello che non si sa non si inventa: la riga non compare. */
   dove = {},
+  /* Il numero di costruzione piu' piccolo che si puo' ancora usare (vedi
+   * `versioni.js`). Zero, di serie: nessuna app si ferma. */
+  versioneMinima = 0,
 }) {
+  const versioni = Buffer.from(JSON.stringify(leVersioni(versioneMinima)), "utf8");
   const soglia = Buffer.from(laSoglia(dove), "utf8");
   const server = createServer((richiesta, risposta) => {
     for (const [nome, valore] of Object.entries(INTESTAZIONI_DI_SEMPRE)) {
@@ -162,13 +201,37 @@ export function costruisciIlServer({
       json(risposta, {
         vivo: true,
         acceso_da: Math.round((Date.now() - acceso) / 1000),
+        /* Quattro numeri, e ognuno risponde a una domanda sola: quanti hanno
+         * installato, quanti ce l'hanno acceso adesso, quanti stanno guardando
+         * dall'app e quanti dal browser. `collegamenti` e' il totale dei fili
+         * — app + browser + abbinamenti in corso — e resta perche' e' quello
+         * che si confronta col tetto, non perche' si legga da qualche parte. */
         case: centralino.quanteCase(),
+        installate: centralino.quanteInstallate?.() ?? null,
         collegamenti: centralino.quantiCollegamenti(),
         app: centralino.quanteAppAperte(),
+        web: centralino.quantiDalWeb?.() ?? null,
+        /* Quante di quelle case sanno dire la loro licenza: il numero da
+         * guardare prima di scrivere qui la chiave delle licenze. Finche' e'
+         * sotto `case`, accendere toglie l'accesso da fuori alla differenza
+         * (`centralino.js`, `quantePronteAllaLicenza`). */
+        pronte_alla_licenza: centralino.quantePronteAllaLicenza?.() ?? null,
         segnalazioni: Boolean(sportello?.pronto),
         chat: chat ? { linee: chat.archivio.quanteLinee(), console: chat.consoleAperta } : false,
         posta: Boolean(contatti?.pronto),
       });
+      return;
+    }
+
+    /* Le versioni: pubbliche, uguali per tutti, e tenute cinque minuti da
+     * chi sta in mezzo. L'app le chiede all'avvio e ogni sei ore, l'add-on
+     * anche: vedi `versioni.js`. */
+    if (via === "/versioni" && (richiesta.method === "GET" || richiesta.method === "HEAD")) {
+      risposta.writeHead(200, {
+        ...INTESTAZIONI_DELLE_VERSIONI,
+        "content-length": versioni.length,
+      });
+      risposta.end(richiesta.method === "HEAD" ? undefined : versioni);
       return;
     }
 
@@ -258,7 +321,12 @@ export function costruisciIlServer({
           onGuasto: ilGuasto("un telefono"),
         }),
       );
-      if (presa) centralino.accogliUnTelefono(presa, { casa: alTelefono[1], da });
+      if (presa)
+        centralino.accogliUnTelefono(presa, {
+          casa: alTelefono[1],
+          da,
+          che: cheCosaE(richiesta),
+        });
       return;
     }
 

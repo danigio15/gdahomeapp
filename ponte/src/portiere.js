@@ -10,12 +10,14 @@
  * Un messaggio per parte, in chiaro. E' l'unico pezzo che il centralino vede,
  * e non c'e' niente dentro che gli serva.
  *
- *   telefono → casa   {v:1, chi:"dm_…", apertura:"…", mia:"…", gzip:true, mucchio:true}
- *   telefono → casa   {v:1, abbina:2, apertura:"…", mia:"…"}   un telefono nuovo
+ *   telefono → casa   {v:1, chi:"dm_…", apertura:"…", mia:"…", gzip:true, mucchio:true, app:1061100}
+ *   telefono → casa   {v:1, abbina:2, apertura:"…", mia:"…", app:1061100}   un telefono nuovo
  *   casa → telefono   {v:1, pronto:true, mia:"…", gzip:true, mucchio:true}
  *   casa → telefono   {v:1, no:"…"}                          e basta
  *   casa → telefono   {v:1, no:"…", riabbina:true}           non ti conosco
  *   casa → telefono   {v:1, no:"…", motivo:"…"}              l'abbinamento non parte
+ *   casa → telefono   {v:1, no:"…", motivo:"premium-richiesto"}  da fuori, con Base
+ *   casa → telefono   {v:1, no:"…", motivo:"aggiorna-l-app", minima:N}  app troppo vecchia
  *
  * `mia` e' una chiave pubblica effimera: vive quanto il collegamento. `chi` e'
  * l'identificativo del telefono, che non e' un segreto — serve solo a sapere
@@ -23,6 +25,13 @@
  * compressa»: chi manda comprime solo se l'altro l'ha detto, e chi non lo
  * dice — un'app vecchia, l'app nel browser — riceve tutto com'era. E' scritto
  * in `cifra.js`.
+ *
+ * `app` e' il numero di costruzione dell'app (`costruzioneDiQuestApp` in
+ * `app/lib/versione.dart`). Le app di prima non lo dicono, e finche' la
+ * versione minima e' zero non lo chiede nessuno; sopra zero, chi non lo dice
+ * o dice un numero piu' piccolo si ferma con `aggiorna-l-app`. E' scritto in
+ * `versione-minima.js`. Un campo in piu' in un oggetto: un ponte di prima lo
+ * ignora, un'app di prima non lo manda.
  *
  * Dopo, ogni messaggio e' una busta.
  *
@@ -104,6 +113,10 @@ const ATTESA_DELLA_STRETTA = 15 * 1000;
 
 /* Le parole dell'abbinamento che l'app deve riconoscere: vedi sopra. */
 const MOTIVO = Object.freeze({
+  /* Da fuori casa, con gdahome Base: vedi `_soloInCasa`. */
+  premium: "premium-richiesto",
+  /* L'app e' piu' vecchia della versione minima: vedi `versione-minima.js`. */
+  vecchia: "aggiorna-l-app",
   aggiorna: "aggiorna",
   nessuno: "nessuno",
   tentativi: "tentativi",
@@ -120,7 +133,16 @@ export class Portiere {
     chiamata,
     ritorno,
     attesaDellaStretta = ATTESA_DELLA_STRETTA,
+    /* Se questa casa sta nei limiti di gdahome Base (`licenze.js`,
+     * `limitata`). Una funzione, perche' cambia mentre il ponte gira; di
+     * serie no, che e' come stanno le licenze finche' la chiave e' vuota. */
+    soloInCasa = () => false,
+    /* La versione minima dell'app (`versione-minima.js`). Di serie nessuna:
+     * entrano tutti, come prima. */
+    versioneMinima = null,
   }) {
+    this.soloInCasa = soloInCasa;
+    this.versioneMinima = versioneMinima;
     this.ponte = ponte;
     this.dispositivi = dispositivi;
     this.abbinamento = abbinamento;
@@ -183,10 +205,49 @@ export class Portiere {
       return;
     }
 
+    /* ─── L'app troppo vecchia ────────────────────────────────────────────
+     *
+     * Prima di tutto il resto, abbinamento compreso: un'app che non si puo'
+     * piu' usare non si abbina, e non si porta alla pagina Premium — si
+     * porta al negozio. Con la minima a zero non si ferma nessuno. Il numero
+     * lo dice il telefono e nessuno lo firma: e' un cancello per le app
+     * della prova, che non lo sanno dire, non una serratura. */
+    if (this.versioneMinima?.troppoVecchia(detto.app)) {
+      this._no(
+        presa,
+        "questa versione di gdahome e' vecchia: aggiornala dal negozio per continuare",
+        { motivo: MOTIVO.vecchia, minima: this.versioneMinima.minima },
+      );
+      return;
+    }
+
     /* Un telefono nuovo: nessuna chiave del filo, ancora. Quella la ricevera'
      * dentro questa stessa conversazione. */
     if (detto.abbina != null && detto.abbina !== false) {
       this._perAbbinare(presa, { detto, apertura, da, abbina });
+      return;
+    }
+
+    /* ─── Da fuori casa, con gdahome Base ─────────────────────────────────
+     *
+     * Il collegamento da fuori e' Premium (`docs/LICENZE.md`). Il taglio sta
+     * **qui**, e non sul filo col centralino, per una ragione sola: su quel
+     * filo passa anche l'abbinamento, e l'abbinamento resta aperto a tutti —
+     * chi inquadra il QR stando fuori casa deve poter abbinare il telefono, e
+     * poi usarlo in casa. Quindi il filo della casa resta su, i canali si
+     * aprono, e un canale arrivato dal centralino si ferma alla prima parola
+     * se non e' un abbinamento.
+     *
+     * Il centralino fa lo stesso da parte sua — chiude con `4402` il telefono
+     * di una casa senza gettone — ma questa riga non si fida di lui: un
+     * centralino vecchio, o uno di qualcun altro, non lo sa fare. Il no va in
+     * chiaro come tutti quelli della stretta di mano: non dice niente che chi
+     * sta in mezzo non sappia gia', e all'app serve il `motivo` per portare
+     * alla pagina Premium invece di dire «non trovo la casa». */
+    if (String(da).startsWith("centralino") && this._soloInCasa()) {
+      this._no(presa, "con gdahome Base questa casa si apre solo da casa", {
+        motivo: MOTIVO.premium,
+      });
       return;
     }
 
@@ -458,6 +519,14 @@ export class Portiere {
     /* Un filo di abbinamento serve a una cosa sola e poi si chiude. Il
      * telefono ritorna dalla porta normale, col segno appena avuto. */
     cifrata.chiudi(1000, "abbinato");
+  }
+
+  _soloInCasa() {
+    try {
+      return this.soloInCasa?.() === true;
+    } catch (_errore) {
+      return false;
+    }
   }
 
   _no(presa, perche, altro = {}) {

@@ -17,6 +17,7 @@ import {
   section,
   t,
 } from "./shared.js";
+import { lEnergiaInParole, laPotenzaInParole } from "../core/le-unita-della-corrente.js";
 
 globalThis.__DM_20260815C__ = true;
 const KEY = "__DASHBOARDMODERN_ENERGY_ANALYSIS_SECTION__";
@@ -190,8 +191,8 @@ function renderWeeklyComparison(previous, current) {
   if (!Number.isFinite(prevValue) || !Number.isFinite(currValue)) return false;
 
   const maximum = Math.max(prevValue, currValue, 0.001);
-  setText("ed-w-prev-val", `${formatNumber(prevValue, 1)} kWh`);
-  setText("ed-w-curr-val", `${formatNumber(currValue, 1)} kWh`);
+  setText("ed-w-prev-val", lEnergiaInParole(prevValue));
+  setText("ed-w-curr-val", lEnergiaInParole(currValue));
   setBar("ed-w-prev-bar", prevValue, maximum);
   setBar("ed-w-curr-bar", currValue, maximum);
 

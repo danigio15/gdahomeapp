@@ -14,6 +14,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
+import 'aggiornamento_obbligatorio.dart';
 import 'auto/in_auto.dart' as auto;
 import 'casa/archivio_delle_case.dart';
 import 'casa/cassaforte.dart';
@@ -29,7 +30,9 @@ import 'schermate/home.dart';
 import 'schermate/le_case.dart';
 import 'schermate/misure.dart';
 import 'schermate/navigatore_qui/qui.dart' as navigatore;
+import 'licenza/negozio.dart';
 import 'schermate/plancia_vera.dart';
+import 'schermate/premium.dart';
 import 'schermate/riconoscimento.dart';
 import 'vestito/sfondo.dart';
 import 'vestito/tema.dart';
@@ -96,13 +99,18 @@ Future<void> main() async {
   await impostazioni.carica();
   /* Il navigatore in auto, dove c'e': se si sale in macchina, gdanav si
    * accende anche senza aprire la sua sezione. */
-  navigatore.ascoltaLAuto();
+  navigatore.ascoltaLAuto(apriIlFilo: apriIlFiloConLaCasa);
   /* Sull'iPhone il comando lasciato da CarPlay lo esegue questo motore, che
    * e' uno solo e gia' acceso; su Android lo esegue un motore a parte, senza
    * schermo (`inAuto`, qui sopra). */
   if (!kIsWeb && defaultTargetPlatform == TargetPlatform.iOS) {
     auto.ascoltaIlColpetto();
   }
+  /* Il giorno dei pagamenti: se questa costruzione e' sotto la versione
+   * minima, l'app si copre con la pagina «aggiornala». Non si aspetta: la
+   * minima ricordata arriva in un attimo, quella nuova quando risponde il
+   * centralino. Nel browser e nelle costruzioni di prova non fa niente. */
+  accendiLaVersioneMinima();
   runApp(AppDiCasa(impostazioni: impostazioni));
 }
 
@@ -187,9 +195,13 @@ class _AppDiCasaState extends State<AppDiCasa> with WidgetsBindingObserver {
       /* Il fondo vivo sta qui, sotto tutte le schermate e una volta sola: se
        * lo mettesse ogni pagina, gli aloni ripartirebbero da capo a ogni
        * cambio di pagina, e sarebbe un lampo invece di un cielo. */
-      builder: (context, schermata) => SopraTutto(
-        velo: _velo,
-        child: SfondoVivo(child: schermata ?? const SizedBox.shrink()),
+      builder: (context, schermata) => AggiornamentoObbligatorio(
+        /* Sopra tutto, anche sopra il velo del lucchetto: un'app troppo
+         * vecchia non si apre, e non c'e' niente da riconoscere. */
+        child: SopraTutto(
+          velo: _velo,
+          child: SfondoVivo(child: schermata ?? const SizedBox.shrink()),
+        ),
       ),
       home: Portone(
         cassaforte: widget.cassaforte,
@@ -273,6 +285,74 @@ class Portone extends StatefulWidget {
 /// nessuno.
 const quantoSiAspettaPrimaDiRiposare = Duration(seconds: 30);
 
+/// Se questo stato vuol dire che l'app **non si vede piu'**, e allora il filo
+/// si puo' chiudere.
+///
+/// `inactive` non lo vuol dire. Su `dart:ui` e' «una finestra o una scheda che
+/// non ha il fuoco», ed e' quello che succede sul web ogni volta che si tocca
+/// la plancia: la plancia e' un `iframe`, il fuoco passa a lei, e la pagina
+/// che la ospita lo perde pur restando davanti agli occhi di chi la sta
+/// usando. Contandolo come «se n'e' andata», bastava restare mezzo minuto
+/// dentro la plancia per veder comparire «sto cercando la casa»: il filo si
+/// chiudeva sotto le mani di chi stava guardando, e al ritorno la plancia si
+/// ricaricava da capo. Segnalato da chi la usa dal browser, il 26 settembre.
+///
+/// A dirlo davvero sono `hidden` e `paused` — la scheda dietro le altre,
+/// l'app in tasca — e `detached`. Sul telefono non si perde niente: `dart:ui`
+/// sintetizza `hidden` prima di `paused` proprio perche' chi vuole sapere
+/// «e' nascosta?» scriva un ramo solo, e chi se ne va davvero ci passa in un
+/// istante.
+bool nonSiGuardaPiu(AppLifecycleState stato) =>
+    stato == AppLifecycleState.hidden ||
+    stato == AppLifecycleState.paused ||
+    stato == AppLifecycleState.detached;
+
+/* ─── Il filo con la casa, uno per tutta l'app ───────────────────────────────
+ *
+ * Stava dentro la schermata, e nasceva col suo albero di widget. In macchina
+ * quell'albero puo' non esserci: «Android Auto tiene su il PROCESSO dell'app
+ * — il servizio dell'auto gira li' dentro — ma non la parte Flutter» (sta
+ * scritto in `auto/in_auto.dart`, e quel file esiste proprio per questo).
+ * Quindi il servizio dell'auto accendeva il motore, il motore eseguiva
+ * `main`, e il filo con la casa non lo apriva nessuno.
+ *
+ * Dal campo: «i dati auto arrivano solo dopo aver aperto l'app sullo
+ * smartphone; e se si chiude non si vedono piu'». Era esatto, e la sveglia
+ * era l'app aperta a mano: la batteria e l'autonomia che gdanav mostra in
+ * macchina le riempie questo filo, e senza filo restavano quelle di prima di
+ * partire.
+ *
+ * Adesso il filo e' uno per tutta l'app — come il navigatore, e per la stessa
+ * ragione — e lo apre chi arriva prima: la home, o la macchina. Aprirlo due
+ * volte non costa niente, ci pensa `apri` a non rifare un filo che gia'
+ * funziona.
+ */
+Collegamento? _filoDiCasa;
+
+/// Il filo con la casa dell'app. Lo crea chi lo chiede per primo.
+Collegamento ilFiloConLaCasa() => _filoDiCasa ??= Collegamento(
+  archivio: ArchivioDelleCase(const CassaforteDelSistema()),
+);
+
+/// Apre il filo con la casa: l'archivio, poi la casa attiva.
+///
+/// Sono le stesse due mosse che faceva la schermata all'avvio, tirate fuori
+/// perche' a chiederle adesso sono in due — lei e il servizio dell'auto — e
+/// due copie di questa sequenza si scostano al primo cambiamento.
+Future<void> apriIlFiloConLaCasa([Collegamento? quale]) async {
+  final filo = quale ?? ilFiloConLaCasa();
+  if (!filo.archivio.aperto) await filo.archivio.apri();
+  if (!filo.avviato) {
+    await filo.apri();
+    return;
+  }
+  /* Gia' avviato: se dormiva — l'app in tasca da un pezzo, e adesso si sale
+   * in macchina — lo si rimette in piedi. Se era sveglio non si tocca:
+   * aprire non e' bussare, e bussare a un filo che funziona vuol dire un giro
+   * di richieste per niente. */
+  if (filo.aRiposo) filo.sveglia();
+}
+
 class _PortoneState extends State<Portone> with WidgetsBindingObserver {
   late final Collegamento _collegamento;
   /* La guardia del telefono: nel browser e nelle prove non c'e', e allora il
@@ -337,13 +417,15 @@ class _PortoneState extends State<Portone> with WidgetsBindingObserver {
     _ascoltoDelleImpostazioni = _impostazioni.cambiamenti.listen(
       (_) => unawaited(_laFinestra()),
     );
+    navigatore.inMacchina.addListener(_inMacchinaECambiato);
+    /* Quello dell'app, che in macchina puo' essere gia' aperto. Con una
+     * cassaforte messa da fuori invece se ne fa uno suo: e' una prova, e una
+     * prova non deve trovarsi in mano il filo di un'altra. */
     _collegamento =
         widget.collegamento ??
-        Collegamento(
-          archivio: ArchivioDelleCase(
-            widget.cassaforte ?? const CassaforteDelSistema(),
-          ),
-        );
+        (widget.cassaforte != null
+            ? Collegamento(archivio: ArchivioDelleCase(widget.cassaforte!))
+            : ilFiloConLaCasa());
     _accendi();
   }
 
@@ -377,14 +459,59 @@ class _PortoneState extends State<Portone> with WidgetsBindingObserver {
     if (_lucchettoInUso && !_coperto && stato != AppLifecycleState.detached) {
       _cambiaIlVelo(() => _coperto = true);
     }
+    /* «Non ha il fuoco» non vuol dire «non si sta guardando»: vedi
+     * [nonSiGuardaPiu]. Il velo qui sopra si mette lo stesso — e' per
+     * l'istantanea nell'elenco delle app recenti, che il sistema fa anche per
+     * una telefonata — ma il filo non si tocca, e nemmeno l'ora in cui l'app
+     * e' stata lasciata. */
+    if (!nonSiGuardaPiu(stato)) return;
     /* Da quando e' stata lasciata: il lucchetto al ritorno si chiude solo se
      * e' passato piu' di un minuto, e senza quest'ora non si saprebbe. Si
-     * segna la prima volta che se ne va e non a ogni scossone: `inactive` e
+     * segna la prima volta che se ne va e non a ogni scossone: `hidden` e
      * `paused` arrivano tutt'e due, e riscriverla vorrebbe dire un conto che
      * riparte da zero mentre il telefono e' gia' in tasca. */
     _lasciataIl ??= DateTime.now();
     _seNonTorna ??= Timer(quantoSiAspettaPrimaDiRiposare, () {
       _seNonTorna = null;
+      /* In macchina no: vedi [_inMacchinaECambiato]. Si guarda adesso e non
+       * quando si e' partito il conto, perche' in quel minuto si puo' essere
+       * saliti in macchina. */
+      if (navigatore.inMacchina.value) return;
+      unawaited(_collegamento.riposa());
+    });
+  }
+
+  /* Saliti in macchina, il filo si sveglia; scesi, torna a riposare.
+   *
+   * Dal campo, con la foto dello schermo dell'auto: «i dati batteria non si
+   * aggiornano fino a che non apro app dal cellulare». La batteria che gdanav
+   * mostra in macchina la prende dalla sezione Auto della plancia, e quella
+   * la riempie questo filo. Il filo pero' si chiude da solo dopo qualche
+   * minuto che l'app non si guarda — e col telefono in tasca e Android Auto
+   * acceso l'app non si guarda mai. Da li' il numero restava quello di prima
+   * di partire, e aprire l'app sul telefono lo faceva tornare vivo: era la
+   * sveglia, non un caso.
+   *
+   * Il risparmio di richieste al centralino resta dov'era: in macchina ci si
+   * sta un'ora, non una notte, ed e' l'unico momento in cui quel dato lo sta
+   * guardando davvero qualcuno. */
+  void _inMacchinaECambiato() {
+    if (navigatore.inMacchina.value) {
+      _seNonTorna?.cancel();
+      _seNonTorna = null;
+      _collegamento.sveglia();
+      return;
+    }
+    /* Scesi dalla macchina con l'app ancora in tasca: il conto alla rovescia
+     * riparte da adesso, come se l'app fosse stata appena lasciata. */
+    if (!nonSiGuardaPiu(
+      WidgetsBinding.instance.lifecycleState ?? AppLifecycleState.resumed,
+    )) {
+      return;
+    }
+    _seNonTorna ??= Timer(quantoSiAspettaPrimaDiRiposare, () {
+      _seNonTorna = null;
+      if (navigatore.inMacchina.value) return;
       unawaited(_collegamento.riposa());
     });
   }
@@ -508,12 +635,12 @@ class _PortoneState extends State<Portone> with WidgetsBindingObserver {
   }
 
   Future<void> _accendi() async {
-    if (!_collegamento.archivio.aperto) await _collegamento.archivio.apri();
     /* Una volta sola. Da li' in poi il collegamento si gestisce da solo — si
      * riconnette, cambia approdo, cambia casa — e riavviarlo a ogni
      * ricostruzione vorrebbe dire buttare giu' il filo ogni volta che gira lo
-     * schermo. */
-    if (!_collegamento.avviato) await _collegamento.apri();
+     * schermo. E se in macchina l'ha gia' aperto il servizio dell'auto, qui
+     * non si rifa' niente. */
+    await apriIlFiloConLaCasa(_collegamento);
     /* Il lucchetto si decide su quello che c'e' scritto nelle impostazioni,
      * che `main` ha gia' letto dal disco. E si decide **insieme** a «pronto»,
      * nello stesso giro: la home non si disegna nemmeno una volta prima di
@@ -550,8 +677,28 @@ class _PortoneState extends State<Portone> with WidgetsBindingObserver {
     /* Solo i cambiamenti del collegamento — la casa, lo stato, l'approdo —
      * non quelli delle entita': quelli arrivano decine di volte al secondo,
      * e da qui si ridisegna tutta l'app. */
+    /* Il negozio, dove si compra: nell'app vera, sul telefono, e solo quando
+     * c'e' qualcosa da vendere (la chiave delle licenze scritta). Si mette in
+     * ascolto subito, perche' un acquisto finito ad app chiusa arriva adesso,
+     * e la sua ricevuta deve andare alla casa. */
+    if (widget.collegamento == null &&
+        _collegamento.licenza.siVende &&
+        acquistiDellApp == null) {
+      final negozio = negozioDelTelefono();
+      if (negozio != null) {
+        acquistiDellApp = GestoreDegliAcquisti(
+          negozio: negozio,
+          porta: _collegamento.mandaLaRicevuta,
+        );
+        unawaited(acquistiDellApp!.avvia());
+      }
+    }
     _ascolto = _collegamento.cambiamenti.listen((_) {
       if (mounted) _cambiaIlVelo(() {});
+      /* Una ricevuta rimasta indietro parte appena la casa c'e'. */
+      if (_collegamento.comeVa == ComeVa.aperta) {
+        unawaited(acquistiDellApp?.riprova());
+      }
     });
   }
 
@@ -561,6 +708,7 @@ class _PortoneState extends State<Portone> with WidgetsBindingObserver {
     _seNonTorna?.cancel();
     _ascolto?.cancel();
     _ascoltoDelleImpostazioni?.cancel();
+    navigatore.inMacchina.removeListener(_inMacchinaECambiato);
     /* Il velo e' di questo portone: andandosene, non resta a coprire. */
     final sopra = _sopra;
     if (sopra != null) {
@@ -568,11 +716,28 @@ class _PortoneState extends State<Portone> with WidgetsBindingObserver {
     }
     Misure.io.spegni();
     _impostazioni.chiudi();
-    _collegamento.chiudi();
+    /* Il filo dell'app non si chiude se la macchina lo sta usando: lo schermo
+     * dell'auto resta acceso quando l'app sul telefono se ne va, ed e'
+     * proprio allora che quei dati servono. Quello di una prova invece e'
+     * suo, e si chiude sempre. */
+    if (!identical(_collegamento, _filoDiCasa) ||
+        !navigatore.inMacchina.value) {
+      _collegamento.chiudi();
+    }
     super.dispose();
   }
 
   Future<void> _aggiungiUnaCasa() async {
+    /* La seconda casa e' di gdahome Premium: basta che lo sia una di quelle
+     * che ci sono. */
+    if (!_collegamento.licenza.siPuoAggiungereUnaCasa) {
+      await apriLaPaginaPremium(
+        context,
+        _collegamento,
+        perche: PerchePremium.unAltraCasa,
+      );
+      return;
+    }
     await Navigator.of(context).push<void>(
       MaterialPageRoute(
         builder: (contesto) => AggiungiCasa(
@@ -612,6 +777,7 @@ class _PortoneState extends State<Portone> with WidgetsBindingObserver {
       collegamento: _collegamento,
       plancia: _plancia,
       impostazioni: _impostazioni,
+      guardia: _guardia,
       vaiAlleCase: () async {
         await Navigator.of(context).push<void>(
           MaterialPageRoute(

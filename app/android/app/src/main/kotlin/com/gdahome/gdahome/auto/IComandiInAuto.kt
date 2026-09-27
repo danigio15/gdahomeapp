@@ -46,6 +46,9 @@ data class ComandoInAuto(
     val id: String,
     val nome: String,
     val genere: String,
+    /* Il dominio della ricetta («cover», «light», «scene»…). Serve al disegno
+     * quando il genere non lo sa dire: vedi [ilSegno]. */
+    val dominio: String,
     val conferma: Boolean,
 )
 
@@ -71,6 +74,7 @@ fun leggiIComandi(context: Context): IComandi {
                     id = id,
                     nome = nome,
                     genere = uno.optString("genere", "").trim(),
+                    dominio = uno.optString("dominio", "").trim(),
                     conferma = uno.optBoolean("conferma", false),
                 ),
             )
@@ -98,10 +102,15 @@ class IComandiInAuto(context: CarContext) : Screen(context) {
             elenco.setNoItemsMessage(carContext.getString(R.string.auto_senza_comandi))
         }
         for (comando in comandi.take(quantiNeStanno(carContext))) {
+            val (sopra, sotto) = suDueRighe(comando.nome)
             elenco.addItem(
                 GridItem.Builder()
-                    .setTitle(comando.nome)
-                    .setImage(ilSegno(carContext, comando.genere))
+                    .setTitle(sopra)
+                    /* Come in «Dispositivi»: se sotto non c'e' niente ci va
+                     * uno spazio, perche' una tessera senza la riga sotto e'
+                     * piu' bassa delle altre. */
+                    .setText(sotto.ifBlank { " " })
+                    .setImage(ilSegno(carContext, comando.genere, comando.dominio))
                     .setOnClickListener { premiIlComando(this, comando) }
                     .build(),
             )
@@ -151,16 +160,82 @@ class ConfermaInAuto(context: CarContext, private val comando: ComandoInAuto) : 
             .build()
 }
 
-/** Il disegno di un comando, per genere: gli stessi della casa in auto. */
-fun ilSegno(context: CarContext, genere: String): CarIcon {
-    val disegno = when (genere) {
+/* Il nome su due righe.
+ *
+ * L'auto taglia il titolo della griglia — «Cancello Automatico» diventa
+ * «Cancello Auto…» — e la seconda riga, che c'e', la lasciavamo vuota. Allora
+ * un nome lungo si spezza allo spazio che lascia i due pezzi piu' pari: il
+ * primo sopra, il resto sotto. Uno corto resta dov'e': spezzare «Cancello» in
+ * «Can» e «cello» non aiuta nessuno. */
+private const val NOME_CORTO = 12
+
+fun suDueRighe(nome: String): Pair<String, String> {
+    if (nome.length <= NOME_CORTO) return nome to ""
+    var dove = -1
+    var peggio = Int.MAX_VALUE
+    for (i in nome.indices) {
+        if (nome[i] != ' ') continue
+        /* Il pezzo piu' lungo dei due: si sceglie lo spazio che lo accorcia. */
+        val quanto = maxOf(i, nome.length - i - 1)
+        if (quanto < peggio) {
+            peggio = quanto
+            dove = i
+        }
+    }
+    return if (dove < 0) nome to "" else nome.substring(0, dove) to nome.substring(dove + 1)
+}
+
+/* Che cos'e' questo comando, per il disegno.
+ *
+ * Lo dice il telefono («GenereDelComando» in `lib/auto/i_comandi.dart`), ma
+ * «azione» e' anche il suo ripiego, e i comandi scritti prima di questa
+ * correzione ce l'hanno tutti. Allora quando il genere non dice niente si
+ * guarda il dominio della ricetta, che nel file c'e' sempre: un cancello gia'
+ * scritto smette di uscire col fulmine senza aspettare che lo si risalvi. */
+private fun ilGenere(genere: String, dominio: String): String {
+    if (genere.isNotEmpty() && genere != "azione") return genere
+    return when (dominio) {
+        "scene", "script" -> "scena"
+        "cover" -> "varco"
+        "lock" -> "serratura"
+        "light" -> "luce"
+        "switch", "input_boolean", "fan" -> "presa"
+        else -> "azione"
+    }
+}
+
+/**
+ * Il disegno di un comando, e il suo colore.
+ *
+ * I sette generi hanno sette disegni, gli stessi che si vedono sul telefono.
+ * Il colore prima era `CarColor.DEFAULT` — «tingilo tu» — e l'auto li faceva
+ * tutti bianchi: sei tessere identiche, e per riconoscerle restava solo il
+ * nome, che nella griglia viene pure tagliato. Questi colori li da' l'auto, e
+ * li da' giusti tanto sul tema chiaro quanto sullo scuro: un disegno colorato
+ * da noi, invece, resterebbe uguale su tutti e due.
+ */
+fun ilSegno(context: CarContext, genere: String, dominio: String = ""): CarIcon {
+    val quale = ilGenere(genere, dominio)
+    val disegno = when (quale) {
         "varco" -> R.drawable.auto_varco
         "porta" -> R.drawable.auto_porta
         "luce" -> R.drawable.auto_luce
         "presa" -> R.drawable.auto_presa
+        "scena" -> R.drawable.auto_scena
+        "serratura" -> R.drawable.auto_serratura
         else -> R.drawable.auto_azione
     }
+    val colore = when (quale) {
+        "varco", "porta" -> CarColor.BLUE
+        "luce" -> CarColor.YELLOW
+        "presa" -> CarColor.GREEN
+        "scena" -> CarColor.PRIMARY
+        /* Rosso: e' l'unico che, premuto, apre casa — ed e' anche l'unico che
+         * prima di farlo chiede conferma. */
+        "serratura" -> CarColor.RED
+        else -> CarColor.DEFAULT
+    }
     return CarIcon.Builder(IconCompat.createWithResource(context, disegno))
-        .setTint(CarColor.DEFAULT)
+        .setTint(colore)
         .build()
 }

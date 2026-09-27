@@ -94,8 +94,17 @@ object IlNavigatoreInAuto {
         canale?.invokeMethod("accendi", null)
     }
 
+    /**
+     * Si e' scesi dalla macchina.
+     *
+     * Lo si dice anche al Dart, e non solo a se stessi: finche' si e' in
+     * macchina il filo con la casa non va a riposo — e' li' che prende i dati
+     * dell'auto per gdanav — e senza questo avviso non tornerebbe a riposo
+     * mai piu' (`main.dart`, `sul_telefono.dart`).
+     */
     fun sceso() {
         inAuto = false
+        canale?.invokeMethod("sceso", null)
     }
 }
 
@@ -222,7 +231,7 @@ class ArrivoACasa(private val auto: () -> CarContext) {
             DURATA_MS,
         )
             .setSubtitle(CarText.create(comando.nome))
-            .setIcon(ilSegno(carContext, comando.genere))
+            .setIcon(ilSegno(carContext, comando.genere, comando.dominio))
             .addAction(
                 Action.Builder()
                     .setTitle(carContext.getString(R.string.auto_arrivo_fai))

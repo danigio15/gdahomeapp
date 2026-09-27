@@ -28,8 +28,13 @@ class IlNavigatore extends StatelessWidget {
   Widget build(BuildContext context) => const SizedBox.shrink();
 }
 
-/// Nel browser non c'e' nessuna auto da ascoltare.
-void ascoltaLAuto() {}
+/// Nel browser non c'e' nessuna auto da ascoltare, e nessun filo da aprire
+/// per lei: la firma pero' e' una sola.
+void ascoltaLAuto({Future<void> Function()? apriIlFilo}) {}
+
+/// Nel browser in macchina non ci si va: la scheda non ha un Android Auto, e
+/// il filo riposa sempre com'e' giusto che faccia.
+final inMacchina = ValueNotifier<bool>(false);
 
 /// Nel browser la tessera non c'e': non c'e' il navigatore.
 Widget? laTesseraDelNavigatore({

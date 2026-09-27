@@ -5,6 +5,7 @@ import {
   oggettoWidget,
 } from "../core/oggetti-widget.js";
 import { clean, doc, esc, formatNumber, installStyle, root, t, wrapFunction } from "./shared.js";
+import { lEnergiaInParole, laPotenzaInParole } from "../core/le-unita-della-corrente.js";
 
 // Kept in the beta4 entry filename for release compatibility, but this module is
 // now the final root-cause owner for the regressions reported after beta.4.
@@ -494,7 +495,7 @@ function keepSecondaryEnergyFlowsComplete() {
       }
       if (valueNode) {
         const value = numericState(references[period]);
-        if (value != null) valueNode.textContent = `${formatNumber(value, value < 10 ? 2 : 1)} kWh`;
+        if (value != null) valueNode.textContent = lEnergiaInParole(value, { decimali: value < 10 ? 2 : 1 });
         else if (!clean(valueNode.textContent)) valueNode.textContent = "—";
       }
     }
@@ -669,7 +670,7 @@ async function renderRealDailyChart(daysInMonth, selMonth, selYear) {
       interaction: { intersect: false, mode: "index" },
       plugins: {
         legend: { display: false },
-        tooltip: { callbacks: { label: (context) => `${context.dataset.label}: ${formatNumber(context.parsed.y, 2)} kWh` } },
+        tooltip: { callbacks: { label: (context) => `${context.dataset.label}: ${lEnergiaInParole(context.parsed.y, { decimali: 2 })}` } },
       },
       scales: { y: { beginAtZero: true, title: { display: true, text: "kWh" } }, x: { grid: { display: false } } },
     },

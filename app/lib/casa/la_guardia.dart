@@ -140,8 +140,8 @@ class LaGuardiaDelTelefono implements LaGuardia {
 String perche(PrimaDi? quale) => switch (quale) {
   null => inLingua(it: 'Per aprire gdahome', en: 'To open gdahome'),
   PrimaDi.ilCruscotto => inLingua(
-    it: 'Per aprire il cruscotto degli impianti',
-    en: 'To open the fleet dashboard',
+    it: 'Per aprire la gestione degli impianti',
+    en: 'To open the installer management page',
   ),
   PrimaDi.iComandi => inLingua(
     it: 'Per comandare questo dispositivo',

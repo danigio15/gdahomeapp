@@ -2,9 +2,9 @@
  *
  * Sono due, e vanno a due persone diverse:
  *
- *  - **Cruscotto installatore**, per chi gdahome lo monta in quaranta case: da
+ *  - **Gestione installatore**, per chi gdahome lo monta in quaranta case: da
  *    li' arriva ai suoi impianti senza aprire un altro posto;
- *  - **Cruscotto gdahome**, per chi il quadro lo tiene — una casa sola al
+ *  - **Gestione gdahome**, per chi il quadro lo tiene — una casa sola al
  *    mondo: da li' aggiunge gli installatori e mette i limiti.
  *
  * Su un Home Assistant qualunque non c'e' nessuna delle due: una porta che non
@@ -15,11 +15,11 @@
  * La chiave, e solo la chiave. Chi decide e' `opzioni.js`, e qui arriva gia'
  * deciso in `acceso`:
  *
- *  - il **Cruscotto** vuole l'interruttore `installatore` acceso **e** il
- *    codice del cruscotto scritto nella scheda. L'interruttore da solo non
- *    apre niente;
- *  - la **Gestione** non ha nessun interruttore: c'e' la sua chiave o non c'e'
- *    la voce.
+ *  - la **Gestione installatore** vuole l'interruttore `installatore` acceso
+ *    **e** il codice del cruscotto scritto nella scheda. L'interruttore da
+ *    solo non apre niente;
+ *  - la **Gestione gdahome** non ha nessun interruttore: c'e' la sua chiave o
+ *    non c'e' la voce.
  *
  * Prima bastavano gli interruttori, e le chiavi le chiedeva la pagina: non
  * finivano sul disco di nessuno, ed era il pregio. Il difetto era che chi
@@ -73,14 +73,14 @@ export const RIQUADRO = "gdahome-riquadro";
  * dentro — e `pagina` quella del quadro che ci si apre. */
 export const IL_CRUSCOTTO = Object.freeze({
   dove: "gdahome-cruscotto",
-  titolo: "Cruscotto installatore",
+  titolo: "Gestione installatore",
   segno: "mdi:gauge",
   pagina: "console",
 });
 
 export const LA_GESTIONE = Object.freeze({
   dove: "gdahome-gestione",
-  titolo: "Cruscotto gdahome",
+  titolo: "Gestione gdahome",
   segno: "mdi:account-key",
   pagina: "gestore",
 });

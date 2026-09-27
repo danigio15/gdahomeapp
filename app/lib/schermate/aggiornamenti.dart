@@ -537,9 +537,10 @@ class _Riassunto extends StatelessWidget {
      * due le cose, dava un fondo beige spento e un bordo che non si vedeva. */
     final tinta = aposto ? Colori.bene : Colori.ambraScura;
     final viva = aposto ? Colori.bene : Colori.ambra;
+    /* La tinta basta: il filo sopra la tinta erano due volte la stessa cosa,
+     * e con l'ombra a due strati di gdanav tre. */
     return Scheda(
       colore: viva.withValues(alpha: 0.16),
-      bordo: tinta.withValues(alpha: 0.32),
       child: Row(
         children: [
           Cerchietto(
@@ -1102,7 +1103,6 @@ class _Avviso extends StatelessWidget {
     return Scheda(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       colore: colori.errorContainer,
-      bordo: colori.error.withValues(alpha: 0.4),
       child: Row(
         children: [
           Icon(Icons.error_outline_rounded, color: colori.onErrorContainer),

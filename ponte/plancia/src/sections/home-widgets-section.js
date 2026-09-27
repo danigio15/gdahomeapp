@@ -304,6 +304,7 @@ import {
 } from "./shared.js";
 import { disegnaComeStaLaCasa } from "./come-sta-la-casa-section.js";
 import { disegnoDelCatalogo } from "../core/catalogo-disegni.js";
+import { laMisuraDallUnita, lEnergiaInParole, laPotenzaInParole } from "../core/le-unita-della-corrente.js";
 
 const KEY = "__DASHBOARDMODERN_HOME_WIDGETS__";
 const STYLE_ID = "dm-widgets-style";
@@ -1537,13 +1538,12 @@ function porteModel(states) {
   };
 }
 
-/* Watt leggibili: sotto il migliaio il numero intero, sopra i kW con due
- * decimali — «1.240 W» non sta in una tessera, «1,24 kW» si'. */
+/* Watt leggibili — «1.240 W» non sta in una tessera, «1,24 kW» si'. La regola
+ * sta in `core/le-unita-della-corrente.js`, la stessa delle bolle del flusso e
+ * del guscio: prima era scritta qui e si fermava al chilowatt. */
 function formatWatts(value) {
   if (value == null) return "—";
-  const absolute = Math.abs(value);
-  if (absolute >= 1000) return `${formatNumber(value / 1000, 2)} kW`;
-  return `${formatNumber(value, 0)} W`;
+  return laPotenzaInParole(value);
 }
 
 function camerasModel(states = allStates()) {
@@ -1777,7 +1777,7 @@ function didascaliaDiOggi(oggi) {
   const testa =
     casa == null
       ? t("potenza di casa", "home power")
-      : `${t("Oggi", "Today")} ${formatNumber(casa, 1)} kWh`;
+      : `${t("Oggi", "Today")} ${lEnergiaInParole(casa)}`;
   /* Le sorgenti si dicono per esteso, e la riga scorre se non ci sta: e' il
    * nastro che la plancia usa da sempre per le didascalie lunghe — le Luci ci
    * elencano quali sono accese — e usarlo qui vuol dire una tessera che si
@@ -2845,7 +2845,11 @@ function scaldabagnoModel(states) {
         name: etichetta(lettura, indice, testo),
         entity: clean(lettura[chiave === "temperatura" ? "entity" : chiave]) || lettura.entity,
         raw: valore,
-        value: `${formatNumber(valore, cifre)}${unita}`,
+        /* Watt e wattora salgono di scala al migliaio; gradi e per cento no. */
+        value: (() => {
+          const salita = laMisuraDallUnita(valore, unita, { decimali: cifre });
+          return salita ? `${salita.numero} ${salita.unita}` : `${formatNumber(valore, cifre)}${unita}`;
+        })(),
       });
     };
     misura("temperatura", t("Acqua adesso", "Water now"), lettura.temperatura, 1, "°");
@@ -3037,7 +3041,11 @@ function righeDellUps(config, lettura, conIlNome) {
       name: nome(testo),
       entity: clean(dato[campo]),
       raw: valore,
-      value: `${formatNumber(valore, cifre)}${unita}`,
+      /* Watt e wattora salgono di scala al migliaio; per cento, volt e minuti no. */
+      value: (() => {
+        const salita = laMisuraDallUnita(valore, unita, { decimali: cifre });
+        return salita ? `${salita.numero} ${salita.unita}` : `${formatNumber(valore, cifre)}${unita}`;
+      })(),
     });
   };
   misura("batteria", t("Batteria", "Battery"), "🔋", lettura.batteria, 0, "%");
@@ -6587,7 +6595,7 @@ function appliancesDetail(widget) {
       /* I watt solo di chi lavora: su una macchina spenta «0.3 W» e' il
        * consumo della sua spia, e non e' una notizia. */
       const watt =
-        acceso && Number.isFinite(Number(riga.watts)) ? `${Math.round(riga.watts)} W` : "";
+        acceso && Number.isFinite(Number(riga.watts)) ? laPotenzaInParole(riga.watts) : "";
       return `<button type="button" class="dm-w-appl-chip" data-dm-appl-chip="${esc(riga.id)}" data-on="${acceso ? "true" : "false"}" aria-expanded="${scelta ? "true" : "false"}">
         <span class="dm-w-appl-art" aria-hidden="true">${applianceArtwork(riga.type, 26) || "🔌"}</span>
         <span class="dm-w-appl-nome">${esc(riga.name)}</span>
@@ -6921,10 +6929,10 @@ export function carteDalleRighe(widget) {
       const valore = oggi?.[chiave];
       if (valore == null) return "";
       const voce = PAROLE_DI_OGGI.find((riga) => riga.chiave === chiave);
-      return `${t(voce.it, voce.en)} ${formatNumber(valore, 1)} kWh`;
+      return `${t(voce.it, voce.en)} ${lEnergiaInParole(valore)}`;
     };
     const delGiorno = {
-      house: oggi.house == null ? "" : `${formatNumber(oggi.house, 1)} kWh`,
+      house: oggi.house == null ? "" : lEnergiaInParole(oggi.house),
       solar: parola("solar"),
       grid: [parola("gridImport"), parola("gridExport")].filter(Boolean).join(" · "),
       battery: [parola("batteryCharged"), parola("batteryDischarged")]
@@ -9822,6 +9830,42 @@ html[data-theme="dark"] :is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-wi
   :is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-widget-detail{border-radius:22px;max-height:82dvh}
   :is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-widget-detail .dm-w-head{padding:16px 16px 15px;column-gap:12px}
   :is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-body{padding:13px 15px 18px}
+  /* Sul telefono i comandi scendono sotto, e il nome si prende la riga.
+   *
+   * Dal campo, con la foto: nella finestra delle Tapparelle i nomi uscivano
+   * dalla riga e si accavallavano — «Tappa / rella / Cucin / a» — e la
+   * percentuale finiva sotto il nome di quella dopo. Lo stesso nelle
+   * Finestre, e in ogni sezione che in riga ha piu' di un comando.
+   *
+   * Misurato a trecentonovanta punti, che e' un telefono: la riga ne ha
+   * trecentodieci utili, la pastiglia ne prende trentotto, le tre frecce
+   * centosei e la tendina della posizione trentotto. Al nome ne restavano
+   * **ottantotto** — tre sillabe — e siccome il nome puo' andare a capo
+   * dappertutto («overflow-wrap:anywhere», che serve ai nomi lunghi delle
+   * entita') la colonna si stringeva fin li' invece di rubare spazio ai
+   * comandi: sono loro a non potersi stringere.
+   *
+   * Due righe, e il difetto non c'e' piu':
+   *
+   *  - la riga puo' andare a capo. Quando nome e comandi in fila non ci
+   *    stanno, i comandi scendono sotto e si prendono la loro riga intera —
+   *    dove per giunta il dito ci arriva meglio;
+   *  - al nome si da' un minimo. Senza, «puo' andare a capo dappertutto»
+   *    vuol dire «posso stringermi fino a una lettera», ed e' esattamente
+   *    quello che succedeva. Col minimo, o ci sta tutto in riga o i comandi
+   *    vanno sotto: non c'e' piu' il caso di mezzo, che era il difetto.
+   *
+   * Il minimo e' centocinquanta e non di piu' apposta: le righe con un solo
+   * comando — una luce col suo interruttore, una presa col suo tasto —
+   * restano su una riga sola come prima. Va a capo solo chi ne ha davvero
+   * troppi. */
+  :is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-row{flex-wrap:wrap}
+  :is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-row .dm-w-name{
+    min-width:min(150px,100%)}
+  /* Andati sotto, i comandi stanno a destra: e' il lato da cui si arriva col
+     pollice, ed e' dove stavano prima di scendere. */
+  :is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-row
+    :is(.dm-w-arrows,.dm-w-porte-gesti,.dm-w-alarm){margin-left:auto}
 }
 /* ── «In primo piano»: il ponte dei widget della Home ─────────────────── */
 #dm-widgets{display:block;margin:16px 0 6px}

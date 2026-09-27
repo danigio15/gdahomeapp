@@ -20,10 +20,14 @@
 /// la dashboard tiene per questo dispositivo e dichiara tali. Quelle non si
 /// rifanno: si aprono.
 ///
-/// E **Come va l'app**, che dell'app parla davvero: i fotogrammi, il filo con
-/// la casa, il ritardo dei dati, e i due interruttori che pesano sul riquadro
-/// — la plancia leggera e la composizione ibrida. Sono cose dell'app, non
-/// della plancia, e nella plancia non ci sono perche' non ci possono essere.
+/// E **Diagnostica app**, che dell'app parla davvero: i fotogrammi, il filo
+/// con la casa, il ritardo dei dati. Sono cose dell'app, non della plancia, e
+/// nella plancia non ci sono perche' non ci possono essere.
+///
+/// Accanto a lei **Impostazioni app**: quello che di quelle cose si **tocca**
+/// — la plancia leggera, la composizione ibrida — piu' la sicurezza. Li' si
+/// guarda per capire, qui si cambia; erano insieme, e un interruttore in mezzo
+/// ai numeri e' un interruttore in una pagina che non e' sua.
 ///
 /// Il resto e' quello che in Home Assistant sta nascosto, e che l'app
 /// aggiunge. Le voci che non ci sono ancora restano nell'elenco, spente: si
@@ -46,6 +50,27 @@ enum Sezione {
   navigatore('ev', pronta: true, soloNellApp: true),
   configurazione('impostazioni', pronta: true),
   comeVaLApp('minipc', pronta: true),
+  /* Le impostazioni dell'**app**, e dentro la sicurezza: il lucchetto, il
+   * volto, l'impronta, e i momenti in cui l'app li chiede.
+   *
+   * «Mi fai un'altra voce nel menu che sarebbe impostazioni app, e tutta la
+   * parte legata a sicurezza app, codice, biometrico eccetera la sposti qui:
+   * ora e' presente nell'icona catenaccio.»
+   *
+   * Era un catenaccio in alto a destra nella pagina «Le tue case», e la' non
+   * lo trovava nessuno: si apriva solo passando da una pagina che parla
+   * d'altro, e per un'impostazione che si cerca una volta e si cerca a mente
+   * fredda. Adesso e' una voce del menu, che e' dove uno le impostazioni le
+   * va a cercare.
+   *
+   * **Solo sul telefono**, come il catenaccio di prima: il volto e l'impronta
+   * nel browser non ci sono, e una pagina che dice solo «questo qui non si
+   * puo' fare» e' una porta che non si apre.
+   *
+   * Il disegno e' quello della **sicurezza** e non quello delle impostazioni:
+   * quello ce l'ha gia' la Configurazione, che e' la Config della plancia, e
+   * due voci col disegno uguale sono due voci che si confondono. */
+  impostazioniDellApp('sicurezza', pronta: true, soloNellApp: true),
   /* Cosa c'e' da aggiornare in casa.
    *
    * «Quando ci saranno gli aggiornamenti, e quindi compaiono in Home
@@ -97,7 +122,13 @@ enum Sezione {
    * l'app. In una casa senza ZHA e senza Zigbee2MQTT quella voce aprirebbe
    * una porta che non si apre — vedi `vociDellaBarra`. */
   zigbee('runtime', pronta: true, soloNellApp: true),
-  automazioni('azioni', soloNellApp: true);
+  automazioni('azioni', soloNellApp: true),
+  /* gdahome Premium: cosa comprende, i piani, il codice regalo. Non e' una
+   * schermata della fila — la voce apre la sua pagina sopra — e c'e' solo
+   * quando c'e' qualcosa da vendere: con la chiave delle licenze vuota tutto
+   * e' gia' aperto, e una voce che vende l'aria sarebbe peggio di niente.
+   * Vedi `vociDellaBarra` e `licenza/`. */
+  premium('evidenza', pronta: true);
 
   const Sezione(this.disegno, {this.pronta = false, this.soloNellApp = false});
 
@@ -106,36 +137,69 @@ enum Sezione {
   /// E' una domanda e non un campo perche' un campo di un `enum` si decide
   /// quando si compila, e la lingua si sa quando si apre l'app.
   ///
-  /// «Configurazione» in inglese e' **Config**, e non «Settings»: quella voce
-  /// apre la pagina Config della plancia, e la plancia inglese la chiama
-  /// cosi' (`dashboard-en.html`). Due nomi per la stessa stanza sono un nome
-  /// di troppo. Per lo stesso motivo «Aiutanti» e «Automazioni» prendono i
-  /// nomi che hanno in Home Assistant: Helpers e Automations.
+  /// «Aiutanti» e «Automazioni» prendono i nomi che hanno in Home Assistant —
+  /// Helpers e Automations — perche' aprono le sue pagine, e due nomi per la
+  /// stessa stanza sono un nome di troppo.
   String get titolo => switch (this) {
     Sezione.plancia => inLingua(it: 'Plancia', en: 'Dashboard'),
     Sezione.dispositivi => inLingua(it: 'Dispositivi', en: 'Devices'),
     /* Il suo nome, e non «Navigatore»: e' un'app che c'e' anche da sola, e
      * chi la conosce la cerca con quel nome. */
     Sezione.navigatore => 'gdanav',
-    Sezione.configurazione => inLingua(it: 'Configurazione', en: 'Config'),
-    Sezione.comeVaLApp => inLingua(it: 'Come va l\'app', en: 'App health'),
+    /* «Configurazione plancia», e non «Configurazione».
+     *
+     * Da quando nel menu c'e' anche «Impostazioni app», una voce che dice
+     * soltanto «Configurazione» non dice di **cosa**: sono due voci vicine che
+     * configurano due cose diverse — questa la plancia, quella l'app — e la
+     * differenza la doveva indovinare chi legge.
+     *
+     * In inglese **Dashboard config** e non «Settings»: quella voce apre la
+     * pagina Config della plancia, e la plancia inglese la chiama Config
+     * (`dashboard-en.html`). */
+    Sezione.configurazione => inLingua(
+      it: 'Configurazione plancia',
+      en: 'Dashboard config',
+    ),
+    /* Si chiamava «Come va l'app», e finche' dentro c'erano anche due
+     * interruttori era il nome giusto: una pagina che dice come va e lascia
+     * mettere mano. Gli interruttori sono andati in «Impostazioni app», e
+     * quello che resta sono numeri da leggere — «scrivi diagnostica app». */
+    Sezione.comeVaLApp => inLingua(
+      it: 'Diagnostica app',
+      en: 'App diagnostics',
+    ),
+    Sezione.impostazioniDellApp => inLingua(
+      it: 'Impostazioni app',
+      en: 'App settings',
+    ),
     Sezione.aggiornamenti => inLingua(it: 'Aggiornamenti', en: 'Updates'),
     Sezione.segnalazioni => inLingua(it: 'Segnalazioni', en: 'Reports'),
     Sezione.assistenza => inLingua(it: 'Assistenza', en: 'Support'),
     Sezione.console => inLingua(it: 'Console', en: 'Console'),
-    /* Qui basta «Cruscotto»: nell'app ci si e' gia' dentro, e «installatore»
-     * non aggiunge niente che il posto non dica gia'. Nella barra laterale di
-     * Home Assistant invece la voce si chiama «Cruscotto installatore», perche'
-     * li' sta in mezzo ai pannelli di chiunque e deve dire di chi e'.
+    /* «Cruscotto non mi piace come nome: metti gestione installatore, e
+     * nell'altra gestione gdahome.»
      *
-     * E in inglese non «Dashboard», che e' gia' di Plancia: due nomi per la
-     * stessa parola sono peggio di due parole. «Fleet» dice quello che la
-     * schermata mostra — tutti gli impianti insieme — in una parola sola. */
-    Sezione.cruscotto => inLingua(it: 'Cruscotto', en: 'Fleet'),
-    Sezione.gestione => inLingua(it: 'Gestione', en: 'Manage'),
+     * Erano «Cruscotto» e «Gestione», e la differenza fra le due la doveva
+     * indovinare chi leggeva. Adesso ognuna dice **di chi e'**: una tiene gli
+     * impianti di chi installa, l'altra tiene chi installa. Sono le stesse
+     * parole che stanno nella barra laterale di Home Assistant — un posto
+     * solo, un nome solo.
+     *
+     * In inglese non «Dashboard», che e' gia' di Plancia: due nomi per la
+     * stessa parola sono peggio di due parole. */
+    Sezione.cruscotto => inLingua(
+      it: 'Gestione installatore',
+      en: 'Installer management',
+    ),
+    Sezione.gestione => inLingua(
+      it: 'Gestione gdahome',
+      en: 'gdahome management',
+    ),
     Sezione.aiutanti => inLingua(it: 'Aiutanti', en: 'Helpers'),
     Sezione.zigbee => inLingua(it: 'Zigbee', en: 'Zigbee'),
     Sezione.automazioni => inLingua(it: 'Automazioni', en: 'Automations'),
+    /* Il nome del prodotto, uguale nelle due lingue. */
+    Sezione.premium => 'gdahome Premium',
   };
 
   /// In quale gruppo della barra sta.
@@ -145,9 +209,13 @@ enum Sezione {
     Sezione.navigatore ||
     Sezione.configurazione ||
     Sezione.aggiornamenti => GruppoDellaBarra.casa,
+    /* Con «Come va l'app»: sono le due voci che parlano dell'app e non della
+     * casa, e chi cerca l'una guarda dov'e' l'altra. */
+    Sezione.impostazioniDellApp ||
     Sezione.comeVaLApp ||
     Sezione.segnalazioni ||
-    Sezione.assistenza => GruppoDellaBarra.aiuto,
+    Sezione.assistenza ||
+    Sezione.premium => GruppoDellaBarra.aiuto,
     _ => GruppoDellaBarra.avanzate,
   };
 
