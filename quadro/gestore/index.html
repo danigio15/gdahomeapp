@@ -3151,6 +3151,83 @@
         margin: 4px 0 12px;
       }
 
+      /* ─── Le licenze ─────────────────────────────────────────────────
+         Le stesse caselle, gli stessi riquadri e le stesse righe del
+         resto della pagina: la schermata delle licenze non ha un disegno
+         suo, ha solo un menu a tendina in piu'. */
+
+      select {
+        font: inherit;
+        color: var(--ink);
+        background: var(--vetro-pieno);
+        border: 1px solid var(--linea-forte);
+        border-radius: 14px;
+        padding: 10px 14px;
+        min-width: 0;
+      }
+
+      select:focus {
+        outline: none;
+        border-color: var(--accento);
+        box-shadow: 0 0 0 3px var(--accento-soft);
+      }
+
+      .campo select {
+        width: 100%;
+        flex: none;
+      }
+
+      .due-campi.pari {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      /* I codici appena fatti: uno sotto l'altro, da copiare tutti insieme. */
+      .codici-fatti {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr));
+        gap: 6px;
+      }
+
+      /* Il pacchetto di un installatore, sotto il metro dei posti. */
+      .pacchetto-conto {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-top: 10px;
+      }
+
+      /* La riga del pacchetto, sorella di quelle del nome e del limite. */
+      .rigaPacchetto {
+        grid-column: 1 / -1;
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        flex-wrap: wrap;
+        margin-top: 8px;
+      }
+
+      .rigaPacchetto[hidden] {
+        display: none;
+      }
+
+      .rigaPacchetto .nota {
+        flex-basis: 100%;
+      }
+
+      .rigaPacchetto label {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.84rem;
+        font-weight: 700;
+        color: var(--ink-2);
+      }
+
+      .rigaPacchetto input {
+        width: 5.5rem;
+        font-weight: 700;
+      }
+
       .sola-lettura {
         display: inline-flex;
         align-items: center;
@@ -3293,6 +3370,10 @@
       /* La chiave appena fatta, che si vede una volta sola e poi sparisce
        * ricaricando. Non finisce in nessun archivio, nemmeno del browser. */
       let APPENA_FATTO = null;
+      /* Le licenze e i codici regalo (`/gestore/licenze`), e i codici appena
+       * generati, che si mostrano in cima finche' non si chiudono. */
+      let LICENZE = { accese: true, licenze: [], codici: [] };
+      let CODICI_APPENA = null;
 
       let schermata = "installatori";
       /* La casa aperta nel foglio, o `null`: di chi e', quale, e se il foglio
@@ -4133,6 +4214,12 @@
       async function carica() {
         prendi(await chiedi("/installatori"));
         await caricaLeCase();
+        /* Le licenze: se non arrivano si tiene quello che c'era. */
+        try {
+          LICENZE = await chiedi("/licenze");
+        } catch (male) {
+          if (male instanceof ChiaveNoNo) throw male;
+        }
         /* I numeri non sono essenziali: se non arrivano, la pagina va avanti
          * e lo dice nel suo riquadro. Una chiave rifiutata invece si dice. */
         try {
@@ -4284,6 +4371,8 @@
           '<svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><circle cx="7.5" cy="7" r="3" stroke="currentColor" stroke-width="1.8"/><path d="M2.5 16c.6-2.9 2.6-4.5 5-4.5s4.4 1.6 5 4.5M13.5 5.5a2.5 2.5 0 0 1 0 5M15.5 11.8c1.3.7 2 1.9 2.3 3.7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>',
         aggiungi:
           '<svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M10 4v12M4 10h12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>',
+        licenze:
+          '<svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M3 6.5A1.5 1.5 0 0 1 4.5 5h11A1.5 1.5 0 0 1 17 6.5V8a2 2 0 0 0 0 4v1.5a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 3 13.5V12a2 2 0 0 0 0-4z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M10 7.6l.8 1.6 1.7.2-1.3 1.2.3 1.7-1.5-.8-1.5.8.3-1.7-1.3-1.2 1.7-.2z" fill="currentColor"/></svg>',
         /* Le cinque del riquadro «Il servizio»: due macchine e tre conti. */
         quadro:
           '<svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><rect x="2.6" y="4" width="14.8" height="12" rx="2.6" stroke="currentColor" stroke-width="1.8"/><path d="M2.6 8h14.8M7 12.2h6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>',
@@ -4354,6 +4443,7 @@
              titolone e nella casella «al limite», che sono i suoi posti. */
           ["installatori", "Installatori", 0],
           ["aggiungi", "Aggiungi", 0],
+          ["licenze", "Licenze", 0],
         ]
           .map(
             ([quale, parola, quanti]) => `
@@ -4372,7 +4462,11 @@
         animaIMetri = primaVolta;
 
         dove.innerHTML =
-          (schermata === "installatori" ? gliInstallatori() : aggiungi()) + ilFoglio();
+          (schermata === "installatori"
+            ? gliInstallatori()
+            : schermata === "licenze"
+              ? leLicenze()
+              : aggiungi()) + ilFoglio();
 
         if (primaVolta) {
           apriGliArchi(dove);
@@ -4539,6 +4633,7 @@
               <div class="metro">
                 <i style="width: ${Number(animaIMetri ? 0 : quota)}%"${animaIMetri ? ` data-fine="${Number(quota)}%"` : ""}></i>
               </div>
+              ${/* già HTML */ ilSuoPacchetto(uno)}
             </div>
             <ul class="case-sue">${leSueCase(uno)}</ul>
             <div class="rigaNome" data-nome-di="${testo(uno.chi)}" hidden>
@@ -4563,9 +4658,36 @@
               <button type="button" class="tasto forte" data-salva-limite="${testo(uno.chi)}">Salva</button>
               <span class="nota">Zero vuol dire senza limite.</span>
             </div>
+            <div class="rigaPacchetto" data-pacchetto-di="${testo(uno.chi)}" hidden>
+              <label>
+                gdahome
+                <input
+                  type="number"
+                  min="0"
+                  max="99999"
+                  data-app="gdahome"
+                  value="${Number(uno.pacchetto?.gdahome?.totali) || 0}"
+                  aria-label="Licenze gdahome nel pacchetto"
+                />
+              </label>
+              <label>
+                gdanav
+                <input
+                  type="number"
+                  min="0"
+                  max="99999"
+                  data-app="gdanav"
+                  value="${Number(uno.pacchetto?.gdanav?.totali) || 0}"
+                  aria-label="Licenze gdanav nel pacchetto"
+                />
+              </label>
+              <button type="button" class="tasto forte" data-salva-pacchetto="${testo(uno.chi)}">Salva</button>
+              <span class="nota">Quante licenze può regalare ai suoi clienti. Quelle già date restano anche se abbassi il numero.</span>
+            </div>
             <div class="tasti">
               <button type="button" class="tasto" data-nome="${testo(uno.chi)}">Rinomina</button>
               <button type="button" class="tasto" data-limite="${testo(uno.chi)}">Limite</button>
+              <button type="button" class="tasto" data-pacchetto="${testo(uno.chi)}">Licenze</button>
               <button type="button" class="tasto" data-rifai="${testo(uno.chi)}">Nuova chiave</button>
               ${
                 uno.congelato
@@ -4633,6 +4755,19 @@
             <p class="minuta">
               Il limite è quanti impianti può seguire. <b>Zero</b> vuol dire senza limite.
             </p>
+            <div class="due-campi pari">
+              <div class="campo">
+                <label for="pacchetto-gdahome">Licenze gdahome Premium</label>
+                <input type="number" id="pacchetto-gdahome" min="0" max="99999" value="0" />
+              </div>
+              <div class="campo">
+                <label for="pacchetto-gdanav">Licenze gdanav Premium</label>
+                <input type="number" id="pacchetto-gdanav" min="0" max="99999" value="0" />
+              </div>
+            </div>
+            <p class="minuta">
+              Il <b>pacchetto</b>: quante licenze può regalare ai suoi clienti, dalla sua pagina. Se ne toglie una, torna nel pacchetto.
+            </p>
             <div class="azioni">
               <button type="button" class="tasto forte grande" data-iscrivi>Aggiungi</button>
             </div>
@@ -4655,6 +4790,282 @@
               <button type="button" class="tasto" data-chiudi-chiave>Chiudi</button>
             </div>
           </section>`;
+      }
+
+
+      /* ─── Le licenze ─────────────────────────────────────────────────
+       *
+       * Il contratto sta in `docs/LICENZE.md`. Da qui si regala una licenza
+       * a una casa (per la sua matricola, `casa_…`), si generano codici
+       * regalo, e si toglie quello che si e' dato. Le licenze dei negozi si
+       * vedono e si possono togliere, ma tornano da sole al rinnovo
+       * successivo se l'abbonamento e' pagato: il negozio e' lui a dirlo.
+       * ─────────────────────────────────────────────────────────────────── */
+
+      const IL_NOME_DELLA_APP = { gdahome: "gdahome Premium", gdanav: "gdanav Premium" };
+      const DA_DOVE = { negozio: "dal negozio", regalo: "regalo del gestore", installatore: "dall'installatore" };
+      const LE_DURATE = [
+        ["1", "1 mese"],
+        ["3", "3 mesi"],
+        ["6", "6 mesi"],
+        ["12", "12 mesi"],
+        ["24", "24 mesi"],
+        ["", "Per sempre"],
+      ];
+
+      const leDurate = (scelta = "12") =>
+        LE_DURATE.map(
+          ([valore, parola]) =>
+            `<option value="${testo(valore)}"${valore === scelta ? " selected" : ""}>${testo(parola)}</option>`,
+        ).join("");
+
+      const quantiMesi = (mesi) =>
+        mesi === null || mesi === undefined ? "per sempre" : plurale(Number(mesi), "mese", "mesi");
+
+      /* Fino a quando, a parole. */
+      function laScadenza(una) {
+        if (una.revocata) return `tolta il ${ilGiorno(una.revocata)}`;
+        if (una.scade === null) return "per sempre";
+        return una.scade > ADESSO() ? `fino al ${ilGiorno(una.scade)}` : `scaduta il ${ilGiorno(una.scade)}`;
+      }
+
+      /* Il pacchetto di un installatore, nella sua carta: due pastiglie. */
+      function ilSuoPacchetto(uno) {
+        const p = uno.pacchetto;
+        if (!p) return "";
+        const pezzo = (app) => {
+          const { totali = 0, usate = 0 } = p[app] || {};
+          const tono = totali > 0 && usate >= totali ? "attenta" : usate ? "bene" : "";
+          return `<span class="pastiglia ${testo(tono)}">${testo(app)} <b>${Number(usate)}/${Number(totali)}</b></span>`;
+        };
+        return `<div class="pacchetto-conto" aria-label="Licenze date su quelle del pacchetto">${/* già HTML */ pezzo("gdahome")}${/* già HTML */ pezzo("gdanav")}</div>`;
+      }
+
+      function leLicenze() {
+        const tutte = LICENZE.licenze || [];
+        const valgono = tutte.filter((una) => una.vale);
+        const nonValgono = tutte.filter((una) => !una.vale && !una.revocata);
+        const tolte = tutte.filter((una) => una.revocata).length;
+        const codici = LICENZE.codici || [];
+        const liberi = codici.filter((uno) => !uno.usatoDa && !uno.annullato);
+        const usati = codici.filter((uno) => uno.usatoDa).slice(0, 20);
+        const nomeDi = (chi) => INSTALLATORI.find((uno) => uno.chi === chi)?.nome || "un installatore";
+
+        const rigaDellaLicenza = (una) => `
+          <li>
+            <span class="che">
+              <b>${testo(IL_NOME_DELLA_APP[una.app] || una.app)}</b>
+              <span class="mono">${testo(una.sog)}</span>
+              <span>${testo(DA_DOVE[una.origine] || una.origine)}${una.installatore ? ` · ${testo(nomeDi(una.installatore))}` : ""} · ${testo(laScadenza(una))}${una.nota ? ` · ${testo(una.nota)}` : ""}</span>
+            </span>
+            <span class="pastiglia ${una.vale ? "bene" : "male"}">${una.vale ? "attiva" : "scaduta"}</span>
+            ${una.revocata ? "" : `<button type="button" class="tasto male" data-revoca="${testo(una.lic)}">Revoca</button>`}
+          </li>`;
+
+        return `
+          <h1 class="titolone">Licenze</h1>
+          <p class="sottotitolo">
+            gdahome Premium è <b>della casa</b>: tutti i telefoni abbinati a quella casa sono Premium insieme. gdanav Premium da solo è <b>del telefono</b>, e si regala con un codice. Chi compra nel negozio compare qui da solo.
+          </p>
+
+          ${
+            LICENZE.accese
+              ? ""
+              : `<div class="avvertenza" style="margin: 0 0 14px">
+                   <span class="gettone" aria-hidden="true">!</span>
+                   <span>
+                     <b>Le licenze sono spente.</b> Su questa macchina manca <span class="mono">QUADRO_LICENZE_CHIAVE</span>: puoi regalare licenze e generare codici, ma le case e i telefoni non ricevono niente finché la chiave non c'è. Si fabbrica con <span class="mono">node strumenti/chiave-licenze.mjs</span>.
+                   </span>
+                 </div>`
+          }
+
+          ${
+            CODICI_APPENA
+              ? `<section class="chiave-nuova">
+                   <b>${plurale(CODICI_APPENA.codici.length, "codice", "codici")} ${testo(IL_NOME_DELLA_APP[CODICI_APPENA.app] || "")} · ${testo(quantiMesi(CODICI_APPENA.mesi))}</b>
+                   <p>Ognuno vale <b>una volta sola</b>: si riscatta dall'app gdahome (per la casa) o da gdanav (per il telefono), in «Ho un codice regalo». Restano anche nell'elenco qui sotto finché nessuno li usa.</p>
+                   <div class="codici-fatti">
+                     ${CODICI_APPENA.codici.map((uno) => `<div class="valore">${testo(uno)}</div>`).join("")}
+                   </div>
+                   <div class="azioni" style="margin-top: 10px">
+                     <button type="button" class="tasto forte" data-copia="${testo(CODICI_APPENA.codici.join("\n"))}">Copia</button>
+                     <button type="button" class="tasto" data-chiudi-codici>Chiudi</button>
+                   </div>
+                 </section>`
+              : ""
+          }
+
+          <div class="abbina">
+            <div class="colonna">
+              <section class="riquadro tinto">
+                <div class="capoRiquadro"><h3>Regala una licenza a una casa</h3></div>
+                <p class="minuta">
+                  La matricola della casa è quella che comincia per <span class="mono">casa_</span>: la trovi nella console dell'add-on, o nella scheda dell'impianto.
+                </p>
+                <div class="due-campi pari">
+                  <div class="campo">
+                    <label for="regalo-app">App</label>
+                    <select id="regalo-app">
+                      <option value="gdahome">gdahome Premium</option>
+                      <option value="gdanav">gdanav Premium</option>
+                    </select>
+                  </div>
+                  <div class="campo">
+                    <label for="regalo-durata">Durata</label>
+                    <select id="regalo-durata">${/* già HTML */ leDurate("12")}</select>
+                  </div>
+                </div>
+                <div class="campo">
+                  <label for="regalo-casa">Casa</label>
+                  <input type="text" id="regalo-casa" maxlength="37" placeholder="casa_0123…" autocomplete="off" spellcheck="false" />
+                </div>
+                <div class="campo">
+                  <label for="regalo-nota">Nota</label>
+                  <input type="text" id="regalo-nota" maxlength="200" placeholder="Perché la regali (facoltativo)" autocomplete="off" />
+                </div>
+                <div class="azioni">
+                  <button type="button" class="tasto forte grande" data-regala>Regala</button>
+                </div>
+              </section>
+
+              <section class="riquadro tinto">
+                <div class="capoRiquadro"><h3>Genera codici regalo</h3></div>
+                <p class="minuta">
+                  Un codice <span class="mono">GDA-XXXX-XXXX-XXXX</span> per ogni persona: la durata parte da quando lo riscatta.
+                </p>
+                <div class="due-campi pari">
+                  <div class="campo">
+                    <label for="codici-app">App</label>
+                    <select id="codici-app">
+                      <option value="gdahome">gdahome Premium</option>
+                      <option value="gdanav">gdanav Premium</option>
+                    </select>
+                  </div>
+                  <div class="campo">
+                    <label for="codici-durata">Durata</label>
+                    <select id="codici-durata">${/* già HTML */ leDurate("12")}</select>
+                  </div>
+                </div>
+                <div class="due-campi">
+                  <div class="campo">
+                    <label for="codici-nota">Nota</label>
+                    <input type="text" id="codici-nota" maxlength="200" placeholder="Per chi sono (facoltativo)" autocomplete="off" />
+                  </div>
+                  <div class="campo">
+                    <label for="codici-quanti">Quanti</label>
+                    <input type="number" id="codici-quanti" min="1" max="200" value="1" />
+                  </div>
+                </div>
+                <div class="azioni">
+                  <button type="button" class="tasto forte grande" data-genera-codici>Genera</button>
+                </div>
+              </section>
+            </div>
+
+            <div class="colonna">
+              <section class="riquadro">
+                <div class="capoRiquadro">
+                  <h3>Le licenze</h3>
+                  <span class="conta">${Number(valgono.length)} attive${tolte ? ` · ${Number(tolte)} tolte` : ""}</span>
+                </div>
+                ${
+                  valgono.length || nonValgono.length
+                    ? `<ul class="righe">${[...valgono, ...nonValgono].map(rigaDellaLicenza).join("")}</ul>`
+                    : `<div class="vuoto"><b>Nessuna licenza</b> Quelle regalate, comprate nel negozio o date dagli installatori compaiono qui.</div>`
+                }
+              </section>
+
+              <section class="riquadro">
+                <div class="capoRiquadro">
+                  <h3>I codici regalo</h3>
+                  <span class="conta">${Number(liberi.length)} da usare</span>
+                </div>
+                ${
+                  liberi.length || usati.length
+                    ? `<ul class="righe">
+                        ${liberi
+                          .map(
+                            (uno) => `
+                          <li>
+                            <span class="che">
+                              <b class="mono">${testo(uno.codice)}</b>
+                              <span>${testo(IL_NOME_DELLA_APP[uno.app] || uno.app)} · ${testo(quantiMesi(uno.mesi))}${uno.installatore ? ` · di ${testo(nomeDi(uno.installatore))}` : ""}${uno.nota ? ` · ${testo(uno.nota)}` : ""}</span>
+                            </span>
+                            <button type="button" class="tasto copia" data-copia="${testo(uno.codice)}">Copia</button>
+                            <button type="button" class="tasto male" data-annulla-codice="${testo(uno.codice)}">Annulla</button>
+                          </li>`,
+                          )
+                          .join("")}
+                        ${usati
+                          .map(
+                            (uno) => `
+                          <li>
+                            <span class="che">
+                              <b class="mono">${testo(uno.codice)}</b>
+                              <span>${testo(IL_NOME_DELLA_APP[uno.app] || uno.app)} · usato ${testo(daQuanto(uno.usatoIl))} da <span class="mono">${testo(uno.usatoDa)}</span></span>
+                            </span>
+                            <span class="pastiglia">usato</span>
+                          </li>`,
+                          )
+                          .join("")}
+                      </ul>`
+                    : `<div class="vuoto"><b>Nessun codice</b> Generane uno qui accanto.</div>`
+                }
+              </section>
+            </div>
+          </div>`;
+      }
+
+      async function regala(tasto) {
+        const casa = document.getElementById("regalo-casa")?.value.trim().toLowerCase() || "";
+        if (!/^casa_[0-9a-f]{32}$/.test(casa)) {
+          document.getElementById("regalo-casa")?.focus();
+          avvisa("La casa è casa_ seguito da 32 cifre esadecimali");
+          return;
+        }
+        const app = document.getElementById("regalo-app")?.value || "gdahome";
+        const durata = document.getElementById("regalo-durata")?.value || "";
+        const nota = document.getElementById("regalo-nota")?.value || "";
+        await faiEpoi(tasto, async () => {
+          await chiedi("/licenze", {
+            method: "POST",
+            body: JSON.stringify({ app, casa, mesi: durata ? Number(durata) : null, nota }),
+          });
+          avvisa(`${IL_NOME_DELLA_APP[app]} regalato a ${casa.slice(0, 13)}…`);
+        });
+      }
+
+      async function generaICodici(tasto) {
+        const app = document.getElementById("codici-app")?.value || "gdahome";
+        const durata = document.getElementById("codici-durata")?.value || "";
+        const nota = document.getElementById("codici-nota")?.value || "";
+        const quanti = Math.floor(Number(document.getElementById("codici-quanti")?.value) || 1);
+        if (quanti < 1 || quanti > 200) {
+          avvisa("Da 1 a 200 codici per volta");
+          return;
+        }
+        await faiEpoi(tasto, async () => {
+          const detto = await chiedi("/codici", {
+            method: "POST",
+            body: JSON.stringify({ app, quanti, mesi: durata ? Number(durata) : null, nota }),
+          });
+          CODICI_APPENA = { app, mesi: durata ? Number(durata) : null, codici: detto.nuovi || [] };
+          avvisa(quanti === 1 ? "Codice generato" : `${quanti} codici generati`);
+        });
+      }
+
+      async function cambiaIlPacchetto(chi, tasto) {
+        const riga = dove.querySelector(`[data-pacchetto-di="${chi}"]`);
+        const quanti = (app) =>
+          Math.max(0, Math.floor(Number(riga?.querySelector(`[data-app="${app}"]`)?.value) || 0));
+        const pacchetto = { gdahome: quanti("gdahome"), gdanav: quanti("gdanav") };
+        await faiEpoi(tasto, async () => {
+          await chiedi(`/installatori/${encodeURIComponent(chi)}`, {
+            method: "PATCH",
+            body: JSON.stringify({ pacchetto }),
+          });
+          avvisa(`${ilNomeDi(chi)}: ${pacchetto.gdahome} gdahome e ${pacchetto.gdanav} gdanav`);
+        });
       }
 
       /* ─── Il foglio: la scheda di una casa, in sola lettura ─────────── */
@@ -5125,6 +5536,47 @@
             }
           };
         });
+        const regalaT = dove.querySelector("[data-regala]");
+        if (regalaT) regalaT.onclick = () => regala(regalaT);
+        const codiciT = dove.querySelector("[data-genera-codici]");
+        if (codiciT) codiciT.onclick = () => generaICodici(codiciT);
+        const chiudiCodici = dove.querySelector("[data-chiudi-codici]");
+        if (chiudiCodici)
+          chiudiCodici.onclick = () => {
+            CODICI_APPENA = null;
+            disegna();
+          };
+        dove.querySelectorAll("[data-revoca]").forEach((tasto) => {
+          tasto.onclick = () =>
+            inDueTempi(tasto, "Revoca", "", async () => {
+              await faiEpoi(tasto, async () => {
+                await chiedi(`/licenze/${encodeURIComponent(tasto.dataset.revoca)}`, { method: "DELETE" });
+                avvisa("Licenza revocata: smette di valere entro otto giorni");
+              });
+            });
+        });
+        dove.querySelectorAll("[data-annulla-codice]").forEach((tasto) => {
+          tasto.onclick = () =>
+            inDueTempi(tasto, "Annulla", "", async () => {
+              await faiEpoi(tasto, async () => {
+                await chiedi(`/codici/${encodeURIComponent(tasto.dataset.annullaCodice)}`, {
+                  method: "DELETE",
+                });
+                avvisa("Codice annullato");
+              });
+            });
+        });
+        dove.querySelectorAll("[data-pacchetto]").forEach((tasto) => {
+          tasto.onclick = () => {
+            const riga = dove.querySelector(`[data-pacchetto-di="${tasto.dataset.pacchetto}"]`);
+            if (!riga) return;
+            riga.hidden = !riga.hidden;
+            if (!riga.hidden) riga.querySelector("input")?.focus();
+          };
+        });
+        dove.querySelectorAll("[data-salva-pacchetto]").forEach((tasto) => {
+          tasto.onclick = () => cambiaIlPacchetto(tasto.dataset.salvaPacchetto, tasto);
+        });
         const iscriviT = dove.querySelector("[data-iscrivi]");
         if (iscriviT) iscriviT.onclick = () => iscrivi(iscriviT);
         const chiudiChiave = dove.querySelector("[data-chiudi-chiave]");
@@ -5207,6 +5659,10 @@
       async function iscrivi(tasto) {
         const nome = document.getElementById("nome")?.value.trim() || "";
         const soglia = Number(document.getElementById("tetto")?.value) || 0;
+        const pacchetto = {
+          gdahome: Math.max(0, Math.floor(Number(document.getElementById("pacchetto-gdahome")?.value) || 0)),
+          gdanav: Math.max(0, Math.floor(Number(document.getElementById("pacchetto-gdanav")?.value) || 0)),
+        };
         if (!nome) {
           document.getElementById("nome")?.focus();
           avvisa("Inserisci il nome");
@@ -5215,7 +5671,7 @@
         await faiEpoi(tasto, async () => {
           const detto = await chiedi("/installatori", {
             method: "POST",
-            body: JSON.stringify({ nome, soglia }),
+            body: JSON.stringify({ nome, soglia, pacchetto }),
           });
           APPENA_FATTO = { nome, chiave: detto.chiave };
           avvisa(`${nome} aggiunto`);
@@ -5362,13 +5818,13 @@
       /* Se si sta scrivendo in una casella, il ridisegno aspetta il giro dopo. */
       const staScrivendo = () => {
         const chi = document.activeElement;
-        return Boolean(chi && dove.contains(chi) && chi.matches("input, textarea"));
+        return Boolean(chi && dove.contains(chi) && chi.matches("input, textarea, select"));
       };
 
       /* Un rinfresco lento: questa pagina si guarda ogni tanto, non si fissa.
        * Con una chiave nuova a schermo non si tocca niente: sparirebbe. */
       setInterval(() => {
-        if (!chiave || APPENA_FATTO || staScrivendo()) return;
+        if (!chiave || APPENA_FATTO || CODICI_APPENA || staScrivendo()) return;
         carica()
           .then(() => disegna())
           .catch(() => {

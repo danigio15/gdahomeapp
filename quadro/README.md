@@ -274,6 +274,9 @@ QUADRO_GESTORE='qualcosa di lungo e a caso' npm run avvia
 | `QUADRO_OSPITI` | le origini che possono tenere il cruscotto in un riquadro e consegnargli la chiave senza chiedere (separate da spazi o virgole, anche `https://*.dominio`). Vuoto: in un riquadro lo mette chiunque, ma una chiave consegnata da un'origine nuova si usa solo dopo un «sì» di chi guarda, che il browser ricorda |
 | `QUADRO_DATI` | dove tiene i suoi file, `./dati` |
 | `QUADRO_REGISTRO` | quanto parla: `debug`, `info`, `attenzione`, `errore` |
+| `QUADRO_LICENZE_CHIAVE` | la chiave **privata** Ed25519 delle licenze (il `d` in base64url), quella che stampa `node strumenti/chiave-licenze.mjs`. Senza, le vie `/v1/licenze/*` rispondono 503 e nessuna casa diventa Premium; gestore e installatori le licenze le vedono lo stesso ([`docs/LICENZE.md`](../docs/LICENZE.md)) |
+| `QUADRO_GOOGLE_SERVICE_ACCOUNT` | il JSON del service account di Google Play, per controllare gli abbonamenti comprati su Android. `QUADRO_GOOGLE_PACCHETTO` di serie `com.gdahome.gdahome` |
+| `QUADRO_APPLE_CHIAVE`, `QUADRO_APPLE_KEY_ID`, `QUADRO_APPLE_ISSUER`, `QUADRO_APPLE_BUNDLE` | la chiave `.p8` della App Store Server API e i suoi dati, per gli abbonamenti comprati su iPhone. `QUADRO_APPLE_RADICE` sostituisce l'impronta del certificato radice di Apple, da controllare prima del rilascio |
 
 > **`quadro.gdahome.org` deve risolvere prima di rilasciare l'add-on.** Quel
 > nome sta scritto dentro il ponte (`QUADRO_DI_DIFETTO` in
