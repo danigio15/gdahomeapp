@@ -67,7 +67,7 @@ const unIndirizzo = () => {
   return `203.0.${Math.floor(indirizzo / 250) % 250}.${(indirizzo % 250) + 1}`;
 };
 
-async function banco({ chiave = PRIVATA, negozi, installatori = [] } = {}) {
+async function banco({ chiave = PRIVATA, negozi, installatori = [], attesaDelNegozio } = {}) {
   const cartella = mkdtempSync(join(tmpdir(), "quadro-licenze-"));
   const acceso = await alzaIlQuadro({
     porta: 0,
@@ -76,6 +76,7 @@ async function banco({ chiave = PRIVATA, negozi, installatori = [] } = {}) {
     chiaveDelGestore: CHIAVE_DEL_GESTORE,
     chiaveDelleLicenze: chiave,
     negozi: negozi ?? new Negozi({ ambiente: {} }),
+    attesaDelNegozio,
   });
   const dove = `http://127.0.0.1:${acceso.porta}`;
   const gestore = async (via, { metodo = "GET", corpo } = {}) => {
@@ -151,7 +152,7 @@ test("il gettone e' quello del contratto, e si verifica con la pubblica di prova
     assert.equal(una.scade, Date.parse("2026-10-27T10:00:00Z"));
     const { gettoni, licenze: sue } = licenze.perIlSoggetto(UNA);
     assert.deepEqual(Object.keys(gettoni), ["gdahome"], "una licenza gdahome da' il gettone gdahome e basta");
-    assert.deepEqual(sue, [{ lic: una.lic, app: "gdahome", origine: "regalo", scade: una.scade }]);
+    assert.deepEqual(sue, [{ lic: una.lic, app: "gdahome", origine: "regalo", scade: una.scade, prova: false }]);
 
     const [primo, firma] = gettoni.gdahome.split(".");
     assert.doesNotMatch(gettoni.gdahome, /=/, "base64url senza `=`");
@@ -687,7 +688,7 @@ test("una ricevuta di Google Play diventa una licenza fino alla scadenza, una so
 
 /* Un Apple finto: la produzione non conosce la transazione, il sandbox si',
  * e la risponde firmata con una catena di prova. */
-function unAppleFinto(transazioni, { radice = RADICE_DI_PROVA } = {}) {
+function unAppleFinto(transazioni, { radice = RADICE_DI_PROVA, stati = {} } = {}) {
   const { privateKey, publicKey } = generateKeyPairSync("ec", { namedCurve: "P-256" });
   const foglia = createPrivateKey(CHIAVE_DELLA_FOGLIA);
   const firmata = (corpo) => {
@@ -709,6 +710,33 @@ function unAppleFinto(transazioni, { radice = RADICE_DI_PROVA } = {}) {
     const letto = JSON.parse(Buffer.from(corpo, "base64url"));
     assert.equal(letto.aud, "appstoreconnect-v1");
     assert.equal(letto.bid, "com.gdahome.gdahome");
+    /* «Get All Subscription Statuses»: l'ultima transazione di ogni gruppo. */
+    const originale = /\/inApps\/v1\/subscriptions\/(\d+)$/.exec(dove)?.[1];
+    if (originale) {
+      if (dove.startsWith("https://api.storekit.itunes.apple.com/") || !stati[originale])
+        return new Response(JSON.stringify({ errorCode: 4040005 }), { status: 404 });
+      return new Response(
+        JSON.stringify({
+          environment: "Sandbox",
+          bundleId: "com.gdahome.gdahome",
+          data: [
+            {
+              subscriptionGroupIdentifier: "21000001",
+              lastTransactions: [
+                { originalTransactionId: "1999999999999999", status: 1, signedTransactionInfo: "non-e-questa" },
+                {
+                  originalTransactionId: originale,
+                  status: 1,
+                  signedTransactionInfo: firmata(stati[originale]),
+                  signedRenewalInfo: "",
+                },
+              ],
+            },
+          ],
+        }),
+        { status: 200 },
+      );
+    }
     const id = /\/inApps\/v1\/transactions\/(\d+)$/.exec(dove)?.[1];
     if (dove.startsWith("https://api.storekit.itunes.apple.com/") || !transazioni[id])
       return new Response(JSON.stringify({ errorCode: 4040010 }), { status: 404 });
@@ -813,6 +841,235 @@ test("una risposta di Apple firmata da una radice che non e' quella di Apple non
     });
     assert.equal(stato, 402);
     assert.equal(detto.errore, "risposta-apple-radice-sconosciuta");
+  } finally {
+    await b.chiudi();
+  }
+});
+
+/* ─── I rinnovi e la prova gratuita ──────────────────────────────────────── */
+
+const ORA = 60 * 60 * 1000;
+const TOKEN_PROVA = "token-google-in-prova-0123456789";
+
+/* Il payload di un gettone, senza verificarlo: quello si fa a parte. */
+const ilPayload = (gettone) => JSON.parse(Buffer.from(gettone.split(".")[0], "base64url").toString("utf8"));
+
+test("la prova gratuita di Google finisce, l'abbonamento si rinnova, e il quadro lo richiede da se'", async () => {
+  const abbonamenti = {
+    [TOKEN_PROVA]: {
+      subscriptionState: "SUBSCRIPTION_STATE_ACTIVE",
+      acknowledgementState: "ACKNOWLEDGEMENT_STATE_ACKNOWLEDGED",
+      lineItems: [
+        {
+          productId: "gdahome_premium",
+          expiryTime: new Date(Date.now() + 2 * ORA).toISOString(),
+          offerDetails: { basePlanId: "mensile", offerId: "prova-14-giorni" },
+          offerPhase: { freeTrial: {} },
+        },
+      ],
+    },
+  };
+  const { negozi, chiesti } = unGoogleFinto(abbonamenti);
+  const b = await banco({ negozi });
+  const aGoogle = () => chiesti.filter((uno) => uno.dove.includes("/subscriptionsv2/tokens/")).length;
+  try {
+    const presa = await b.fuori("negozio", {
+      casa: UNA,
+      segreto: SEGRETO,
+      app: "gdahome",
+      piattaforma: "android",
+      prodotto: "gdahome_premium",
+      ricevuta: TOKEN_PROVA,
+    });
+    assert.equal(presa.stato, 200);
+    const primo = verificaIlGettone(presa.detto.gettoni.gdahome, PUBBLICA, { sog: UNA });
+    assert.equal(primo.prova, true, "in prova gratuita, il gettone lo dice");
+    assert.equal(presa.detto.licenze[0].prova, true);
+    const una = b.licenze.quella(primo.lic);
+    assert.deepEqual(una.negozio.ricevuta, { token: TOKEN_PROVA, prodotto: "gdahome_premium" });
+    assert.equal((await b.gestore("/licenze")).detto.licenze[0].prova, true, "e il gestore lo vede");
+
+    /* Appena controllata: per un'ora non si richiede, anche se scade presto. */
+    const prima = aGoogle();
+    assert.equal((await b.fuori("casa", { casa: UNA, segreto: SEGRETO })).stato, 200);
+    assert.equal(aGoogle(), prima, "una volta l'ora al massimo");
+
+    /* La prova finisce, Google rinnova per un mese: la casa chiede i gettoni
+     * e il quadro lo scopre da se', senza che l'app mandi niente. */
+    const fra30 = new Date(Date.now() + 30 * GIORNO).toISOString();
+    abbonamenti[TOKEN_PROVA] = {
+      ...abbonamenti[TOKEN_PROVA],
+      lineItems: [
+        {
+          productId: "gdahome_premium",
+          expiryTime: fra30,
+          offerDetails: { basePlanId: "mensile", offerId: "prova-14-giorni" },
+          offerPhase: { basePrice: {} },
+        },
+      ],
+    };
+    una.ricontrollata = Date.now() - 2 * ORA;
+    const dopo = await b.fuori("casa", { casa: UNA, segreto: SEGRETO });
+    assert.equal(dopo.stato, 200);
+    assert.equal(aGoogle(), prima + 1);
+    const rinnovato = verificaIlGettone(dopo.detto.gettoni.gdahome, PUBBLICA, { sog: UNA });
+    assert.equal(rinnovato.lic, primo.lic, "la stessa licenza");
+    assert.equal(rinnovato.scade, Date.parse(fra30), "la scadenza va avanti");
+    assert.ok(rinnovato.emesso >= primo.emesso);
+    assert.equal("prova" in ilPayload(dopo.detto.gettoni.gdahome), false, "finita la prova, il campo non c'e'");
+    assert.equal(dopo.detto.licenze[0].prova, false);
+
+    /* Adesso scade fra un mese: non si richiede piu', anche passata l'ora. */
+    una.ricontrollata = Date.now() - 2 * ORA;
+    await b.fuori("casa", { casa: UNA, segreto: SEGRETO });
+    assert.equal(aGoogle(), prima + 1);
+  } finally {
+    await b.chiudi();
+  }
+});
+
+test("senza la fase dell'offerta, la prova si riconosce dal tag dell'offerta di Google", async () => {
+  const token = "token-google-col-tag-0123456789";
+  const { negozi } = unGoogleFinto({
+    [token]: {
+      subscriptionState: "SUBSCRIPTION_STATE_ACTIVE",
+      acknowledgementState: "ACKNOWLEDGEMENT_STATE_ACKNOWLEDGED",
+      lineItems: [
+        {
+          productId: "gdanav_premium",
+          expiryTime: new Date(Date.now() + 14 * GIORNO).toISOString(),
+          offerDetails: { basePlanId: "annuale", offerId: "benvenuto", offerTags: ["trial"] },
+        },
+      ],
+    },
+  });
+  const esito = await negozi.controlla({ piattaforma: "android", prodotto: "gdanav_premium", ricevuta: token });
+  assert.equal(esito.app, "gdanav");
+  assert.equal(esito.prova, true);
+});
+
+test("se il negozio non risponde si tiene quello che si sapeva, e i gettoni arrivano lo stesso", async () => {
+  const token = "token-google-negozio-giu-01234567";
+  const scade = Date.now() + 3 * ORA;
+  const { negozi, chiesti } = unGoogleFinto({
+    [token]: {
+      subscriptionState: "SUBSCRIPTION_STATE_ACTIVE",
+      acknowledgementState: "ACKNOWLEDGEMENT_STATE_ACKNOWLEDGED",
+      lineItems: [{ productId: "gdahome_premium", expiryTime: new Date(scade).toISOString() }],
+    },
+  });
+  const b = await banco({ negozi, attesaDelNegozio: 100 });
+  try {
+    const presa = await b.fuori("negozio", {
+      casa: UNA,
+      segreto: SEGRETO,
+      app: "gdahome",
+      piattaforma: "android",
+      prodotto: "gdahome_premium",
+      ricevuta: token,
+    });
+    const una = b.licenze.quella(presa.detto.licenze[0].lic);
+    assert.equal(una.prova, false);
+    assert.equal("prova" in ilPayload(presa.detto.gettoni.gdahome), false);
+
+    /* Google risponde 503. */
+    const vero = negozi.chiama;
+    negozi.chiama = async (dove, opzioni) =>
+      dove.includes("/subscriptionsv2/") ? new Response("{}", { status: 503 }) : vero(dove, opzioni);
+    una.ricontrollata = Date.now() - 2 * ORA;
+    const giu = await b.fuori("casa", { casa: UNA, segreto: SEGRETO });
+    assert.equal(giu.stato, 200);
+    assert.equal(verificaIlGettone(giu.detto.gettoni.gdahome, PUBBLICA, { sog: UNA }).scade, scade);
+    assert.equal(una.scade, scade, "la scadenza resta quella");
+    assert.ok(Date.now() - una.ricontrollata < ORA, "e si riprova fra un'ora, non alla prossima richiesta");
+
+    /* Google non risponde proprio: si aspetta poco, e si risponde lo stesso. */
+    let appese = 0;
+    negozi.chiama = async (dove, opzioni) => {
+      if (!dove.includes("/subscriptionsv2/")) return vero(dove, opzioni);
+      appese += 1;
+      return new Promise(() => {});
+    };
+    una.ricontrollata = Date.now() - 2 * ORA;
+    const partito = Date.now();
+    const muto = await b.fuori("casa", { casa: UNA, segreto: SEGRETO });
+    assert.equal(muto.stato, 200);
+    assert.equal(appese, 1);
+    assert.ok(Date.now() - partito < 2000, "non si aspetta il negozio per sempre");
+    assert.equal(verificaIlGettone(muto.detto.gettoni.gdahome, PUBBLICA, { sog: UNA }).scade, scade);
+    negozi.chiama = vero;
+  } finally {
+    await b.chiudi();
+  }
+});
+
+test("Apple: la prova, il rinnovo chiesto con la transazione originale, e un rimborso che non allunga", async () => {
+  const originale = "2000000500000000";
+  const base = {
+    originalTransactionId: originale,
+    bundleId: "com.gdahome.gdahome",
+    productId: "gdahome_premium_mensile",
+    type: "Auto-Renewable Subscription",
+  };
+  const inProva = {
+    ...base,
+    transactionId: originale,
+    expiresDate: Date.now() + 5 * ORA,
+    offerType: 1,
+    offerDiscountType: "FREE_TRIAL",
+  };
+  const stati = {};
+  const { negozi, chiesti } = unAppleFinto({ [originale]: inProva }, { stati });
+  const b = await banco({ negozi });
+  try {
+    const presa = await b.fuori("negozio", {
+      casa: UNA,
+      segreto: SEGRETO,
+      app: "gdahome",
+      piattaforma: "ios",
+      prodotto: "gdahome_premium_mensile",
+      ricevuta: originale,
+    });
+    assert.equal(presa.stato, 200);
+    assert.equal(verificaIlGettone(presa.detto.gettoni.gdahome, PUBBLICA, { sog: UNA }).prova, true);
+    const una = b.licenze.quella(presa.detto.licenze[0].lic);
+    assert.deepEqual(una.negozio.ricevuta, { originale });
+
+    /* Il rinnovo: il giro di ogni ora lo trova, anche se nessuno chiede. */
+    const fra30 = Date.now() + 30 * GIORNO;
+    stati[originale] = { ...base, transactionId: "2000000500000001", expiresDate: fra30 };
+    una.ricontrollata = Date.now() - 2 * ORA;
+    assert.equal(await b.licenze.rinnova(b.negozi), 1);
+    assert.deepEqual(chiesti.filter((uno) => uno.includes("/subscriptions/")), [
+      `https://api.storekit.itunes.apple.com/inApps/v1/subscriptions/${originale}`,
+      `https://api.storekit-sandbox.itunes.apple.com/inApps/v1/subscriptions/${originale}`,
+    ]);
+    assert.equal(una.scade, fra30);
+    assert.equal(una.prova, false);
+    const dopo = await b.fuori("casa", { casa: UNA, segreto: SEGRETO });
+    assert.equal(verificaIlGettone(dopo.detto.gettoni.gdahome, PUBBLICA, { sog: UNA }).scade, fra30);
+    assert.equal("prova" in ilPayload(dopo.detto.gettoni.gdahome), false);
+
+    /* Scaduta da poco, e intanto rimborsata: non si allunga, e resta scaduta. */
+    una.scade = Date.now() - GIORNO;
+    una.ricontrollata = Date.now() - 2 * ORA;
+    stati[originale] = {
+      ...base,
+      transactionId: "2000000500000002",
+      expiresDate: Date.now() + 29 * GIORNO,
+      revocationDate: Date.now() - ORA,
+    };
+    const rimborsata = await b.fuori("casa", { casa: UNA, segreto: SEGRETO });
+    assert.equal(rimborsata.stato, 200);
+    assert.deepEqual(rimborsata.detto.gettoni, {});
+    assert.equal(una.scade < Date.now(), true, "rimborsato: non si allunga");
+
+    /* Scaduta da piu' di trentacinque giorni non si chiede piu'. */
+    const quante = chiesti.length;
+    una.scade = Date.now() - 36 * GIORNO;
+    una.ricontrollata = Date.now() - 2 * ORA;
+    assert.equal(await b.licenze.rinnova(b.negozi), 0);
+    assert.equal(chiesti.length, quante);
   } finally {
     await b.chiudi();
   }

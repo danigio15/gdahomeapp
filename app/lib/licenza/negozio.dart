@@ -19,6 +19,9 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:in_app_purchase_android/in_app_purchase_android.dart';
+import 'package:in_app_purchase_storekit/in_app_purchase_storekit.dart';
+import 'package:in_app_purchase_storekit/store_kit_2_wrappers.dart';
+import 'package:in_app_purchase_storekit/store_kit_wrappers.dart';
 
 import '../parole.dart';
 import 'licenza.dart';
@@ -35,6 +38,11 @@ const idAppStoreGdahome = {
   pianoAnnuale: '${idPremiumGdahome}_annuale',
 };
 
+/// I giorni di prova gratuita, la prima volta. Su Google Play li dice
+/// l'offerta stessa («P14D»); l'App Store dice solo se la prova spetta, e
+/// quanto dura e' quello scritto in App Store Connect: questo numero.
+const giorniDiProva = 14;
+
 /// Un acquisto di gdahome Premium, da qualunque negozio venga.
 bool eDiGdahomePremium(String prodotto) =>
     prodotto == idPremiumGdahome || idAppStoreGdahome.containsValue(prodotto);
@@ -47,13 +55,22 @@ String prezzoDiRiserva(String piano) => piano == pianoAnnuale
 
 /// Un piano come lo propone il negozio.
 class PianoGdahome {
-  const PianoGdahome({required this.id, required this.prezzo});
+  const PianoGdahome({
+    required this.id,
+    required this.prezzo,
+    this.giorniProva = 0,
+  });
 
   /// [pianoMensile] o [pianoAnnuale].
   final String id;
 
-  /// Il prezzo come lo scrive il negozio, nella valuta di chi compra.
+  /// Il prezzo come lo scrive il negozio, nella valuta di chi compra: quello
+  /// che si paga dopo la prova.
   final String prezzo;
+
+  /// Quanti giorni gratis prima di pagare. 0: niente prova (gia' usata, o
+  /// nessuna offerta). La prova spetta una volta sola per abbonamento.
+  final int giorniProva;
 }
 
 /// Il negozio, visto dall'app: Google Play, l'App Store, o uno finto nelle
@@ -108,12 +125,20 @@ class NegozioGooglePlay implements NegozioGdahome {
           ? null
           : dettaglio.productDetails.subscriptionOfferDetails?[indice];
       if (offerta == null || offerta.pricingPhases.isEmpty) continue;
-      /* Per ogni piano base si tiene la prima offerta: il prezzo che si
-       * scrive e' quello dell'ultima fase, cioe' quello che si paga. */
-      if (piani.containsKey(offerta.basePlanId)) continue;
+      /* Il prezzo che si scrive e' quello dell'ultima fase, cioe' quello che
+       * si paga. La prova e' una prima fase a prezzo zero: Google la propone
+       * solo a chi non l'ha gia' usata, e per ogni piano base si tiene
+       * l'offerta con la prova, se c'e'. */
+      final fasi = offerta.pricingPhases;
+      final prova = fasi.length > 1 && fasi.first.priceAmountMicros == 0
+          ? giorniDelPeriodo(fasi.first.billingPeriod)
+          : 0;
+      final gia = piani[offerta.basePlanId];
+      if (gia != null && prova <= gia.giorniProva) continue;
       piani[offerta.basePlanId] = PianoGdahome(
         id: offerta.basePlanId,
-        prezzo: offerta.pricingPhases.last.formattedPrice,
+        prezzo: fasi.last.formattedPrice,
+        giorniProva: prova,
       );
       _perPiano[offerta.basePlanId] = dettaglio;
     }
@@ -169,7 +194,25 @@ class NegozioAppStore implements NegozioGdahome {
           .firstOrNull;
       if (dettaglio == null) continue;
       _perPiano[piano] = dettaglio;
-      piani.add(PianoGdahome(id: piano, prezzo: dettaglio.price));
+      /* La prova spetta una volta sola per gruppo: chi l'ha gia' usata paga
+       * subito, e StoreKit lo sa. */
+      var prova = false;
+      if (dettaglio is AppStoreProduct2Details) {
+        try {
+          prova = await SK2Product.isIntroductoryOfferEligible(id);
+        } catch (_) {}
+      } else if (dettaglio is AppStoreProductDetails) {
+        prova =
+            dettaglio.skProduct.introductoryPrice?.paymentMode ==
+            SKProductDiscountPaymentMode.freeTrail;
+      }
+      piani.add(
+        PianoGdahome(
+          id: piano,
+          prezzo: dettaglio.price,
+          giorniProva: prova ? giorniDiProva : 0,
+        ),
+      );
     }
     return piani;
   }
@@ -195,6 +238,18 @@ class NegozioAppStore implements NegozioGdahome {
   @override
   Future<void> completa(PurchaseDetails acquisto) =>
       _iap.completePurchase(acquisto);
+}
+
+/// «P14D», «P2W», «P1M» → giorni.
+int giorniDelPeriodo(String periodo) {
+  final trovato = RegExp(r'P(\d+)([DWM])').firstMatch(periodo);
+  if (trovato == null) return 0;
+  final quanti = int.parse(trovato.group(1)!);
+  return switch (trovato.group(2)) {
+    'W' => quanti * 7,
+    'M' => quanti * 30,
+    _ => quanti,
+  };
 }
 
 /// Chi porta la ricevuta alla casa: di solito `Collegamento.mandaLaRicevuta`.
@@ -264,10 +319,27 @@ class GestoreDegliAcquisti extends ChangeNotifier {
 
   bool _riprovando = false;
 
+  /// I giorni di prova di un piano, come li dice il negozio. Senza negozio
+  /// (web, prove) 0: la prova la promette solo chi la puo' dare.
+  int provaDi(String piano) =>
+      piani.where((uno) => uno.id == piano).firstOrNull?.giorniProva ?? 0;
+
   /// Il prezzo di un piano: quello del negozio, o quello di riserva.
-  String prezzoDi(String piano) =>
-      piani.where((uno) => uno.id == piano).firstOrNull?.prezzo ??
-      prezzoDiRiserva(piano);
+  String prezzoDi(String piano) {
+    final dalNegozio = piani.where((uno) => uno.id == piano).firstOrNull;
+    if (dalNegozio == null) return prezzoDiRiserva(piano);
+    /* Il negozio scrive solo la cifra («4,99 €»): il periodo lo si aggiunge
+     * qui, come nei prezzi di riserva. */
+    return piano == pianoAnnuale
+        ? inLingua(
+            it: '${dalNegozio.prezzo}/anno',
+            en: '${dalNegozio.prezzo}/year',
+          )
+        : inLingua(
+            it: '${dalNegozio.prezzo}/mese',
+            en: '${dalNegozio.prezzo}/month',
+          );
+  }
 
   /// Si mette in ascolto del negozio. Va fatto presto: un acquisto finito
   /// mentre l'app era chiusa arriva appena ci si mette in ascolto, e la sua

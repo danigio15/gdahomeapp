@@ -39,7 +39,12 @@ class Gettone {
     required this.scade,
     required this.fino,
     required this.emesso,
+    this.prova = false,
   });
+
+  /// Un abbonamento nei giorni di prova gratuita (`"prova": true` nel
+  /// gettone, che il quadro mette solo quando e' vero).
+  final bool prova;
 
   /// Il gettone com'e' arrivato: si ricorda questo, non i pezzi.
   final String grezzo;
@@ -145,6 +150,7 @@ Future<Gettone?> leggiIlGettone(String? grezzo, {String? chiave}) async {
           : DateTime.fromMillisecondsSinceEpoch((scade as num).toInt()),
       fino: finoIl,
       emesso: emessoIl,
+      prova: detto['prova'] == true,
     );
   } catch (_) {
     /* Base64 storto, JSON storto, una chiave che non e' una chiave: non vale,

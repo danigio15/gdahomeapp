@@ -82,8 +82,8 @@ Tutto passo per passo, e cosa guardare una volta dentro, sta in
 segnalazioni e la chat di assistenza. Il telefono parla con la casa quando è
 sulla rete di casa. Nessun account da fare.
 
-**Premium: 4,99 € al mese o 49,99 € all'anno**, e vale per la casa, non per il
-telefono: tutti i telefoni abbinati a quella casa sono Premium insieme a lei.
+**Premium: 4,99 € al mese o 49,99 € all'anno, con i primi 14 giorni gratis**,
+e vale per la casa, non per il telefono: tutti i telefoni abbinati a quella casa sono Premium insieme a lei.
 
 - più plance e più case;
 - il collegamento da fuori casa, sicuro e diretto, senza aprire porte sul

@@ -37,6 +37,20 @@ Prodotti:
    cifrato (`ponte/licenza/negozio`), la casa la gira al quadro, il quadro la
    controlla con Google o Apple e segna la licenza fino alla scadenza
    dell'abbonamento.
+   La prima volta un abbonamento ha **14 giorni di prova gratuita**, per
+   gdahome e per gdanav: nella Play Console e' un'offerta «prova gratuita»
+   su tutti e due i piani base (`mensile` e `annuale`), in App Store Connect
+   un'offerta introduttiva «free trial 2 weeks» su tutti e due i prodotti.
+   Durante la prova la licenza (e il gettone) lo dice con `prova: true`, e
+   `scade` e' la fine della prova.
+   La scadenza del negozio e' quella del **periodo in corso** (la prova, il
+   mese, l'anno): i rinnovi li richiede il quadro da se'. Tiene
+   l'identificativo dell'acquisto (il token di Google, la transazione
+   originale di Apple) e, per le licenze che scadono entro un giorno o sono
+   scadute da meno di 35, lo richiede al negozio quando la casa (o il
+   telefono) chiede i gettoni e ogni ora per tutte, al massimo una volta
+   l'ora per licenza. Rinnovato, `scade` va avanti; scaduto o rimborsato, la
+   licenza scade da se'; il negozio che non risponde non toglie niente.
 2. **Regalo del gestore**: dalla pagina del gestore del quadro si regalano
    licenze a una casa (per `casa_…`) o si generano **codici regalo** (per
    gdahome o gdanav, di N mesi o per sempre).
@@ -70,9 +84,14 @@ base64url senza `=`. Il payload:
   "origine": "negozio",      // "negozio" | "regalo" | "installatore"
   "scade": 1767225600000,    // quando finisce la licenza (ms), null = per sempre
   "fino": 1759999999000,     // quando smette di valere QUESTO gettone (ms)
-  "emesso": 1759300000000
+  "emesso": 1759300000000,
+  "prova": true              // facoltativo: c'e' solo durante la prova gratuita
 }
 ```
+
+`prova` c'e' **solo** quando e' vero (un abbonamento del negozio nei suoi
+giorni gratis): chi verifica non lo guarda per decidere, e i campi che non
+conosce li lascia stare.
 
 Regole di verifica, uguali ovunque:
 
@@ -121,7 +140,7 @@ quel segreto entra):
 
 | Via | Corpo | Risposta |
 | --- | --- | --- |
-| `POST /v1/licenze/casa` | `{casa, segreto}` | `{gettoni: {gdahome?: string, gdanav?: string}, licenze: [{lic, app, origine, scade}]}` |
+| `POST /v1/licenze/casa` | `{casa, segreto}` | `{gettoni: {gdahome?: string, gdanav?: string}, licenze: [{lic, app, origine, scade, prova}]}` |
 | `POST /v1/licenze/negozio` | `{casa, segreto, app, piattaforma: "android"\|"ios", prodotto, ricevuta}` | come sopra; `402 {errore}` se la ricevuta non vale; `503 {errore: "verifica-non-configurata"}` se mancano le chiavi del negozio |
 | `POST /v1/licenze/riscatta` | `{codice, casa, segreto}` oppure `{codice, telefono, segreto}` | come sopra; `404` codice che non c'e', `409` gia' usato |
 
@@ -148,7 +167,8 @@ quel segreto entra):
 Controllo delle ricevute: Google Play Developer API
 (`purchases.subscriptionsv2.get`) con un service account
 (`QUADRO_GOOGLE_SERVICE_ACCOUNT`, il JSON), e App Store Server API
-(`GET /inApps/v1/transactions/{id}`) con `QUADRO_APPLE_CHIAVE`,
+(`GET /inApps/v1/transactions/{id}`, e per i rinnovi
+`GET /inApps/v1/subscriptions/{originalTransactionId}`) con `QUADRO_APPLE_CHIAVE`,
 `QUADRO_APPLE_KEY_ID`, `QUADRO_APPLE_ISSUER`, `QUADRO_APPLE_BUNDLE`. Senza,
 `503`: i regali funzionano lo stesso.
 

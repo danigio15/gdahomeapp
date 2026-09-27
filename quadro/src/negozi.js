@@ -35,6 +35,23 @@
  * contro l'impronta di «Apple Root CA - G3». La strada e' gia' TLS verso Apple,
  * quindi e' una cintura in piu', non l'unica.
  *
+ * ─── I rinnovi ───────────────────────────────────────────────────────────
+ *
+ * Un abbonamento si paga un periodo alla volta: la scadenza che il negozio
+ * dice oggi e' la fine della prova gratuita o del mese, non dell'abbonamento.
+ * Per questo il quadro tiene l'identificativo dell'acquisto (il token di
+ * Google, la transazione originale di Apple) e, vicino alla scadenza, lo
+ * richiede al negozio da se' (`ricontrolla`): Google con lo stesso
+ * `subscriptionsv2.get`, Apple con «Get All Subscription Statuses»
+ * (`GET /inApps/v1/subscriptions/{originalTransactionId}`).
+ *
+ * ─── La prova gratuita ───────────────────────────────────────────────────
+ *
+ * gdahome e gdanav hanno quattordici giorni di prova la prima volta. Si
+ * riconosce da quello che dice il negozio: Google con `offerPhase.freeTrial`
+ * nella riga (e, se la fase non c'e', dai tag o dal nome dell'offerta), Apple
+ * con `offerType` 1 e `offerDiscountType` «FREE_TRIAL».
+ *
  * Senza chiavi, `configurato` dice di no e il server risponde 503: i regali
  * funzionano lo stesso.
  */
@@ -80,6 +97,21 @@ export class NegozioGiu extends Error {}
 
 const b64u = (cosa) => Buffer.from(cosa).toString("base64url");
 const ilJwt = (testa, corpo) => `${b64u(JSON.stringify(testa))}.${b64u(JSON.stringify(corpo))}`;
+
+/* Una riga di Google e' in prova gratuita? La fase dell'offerta lo dice
+ * chiaro; se manca, si guarda come si chiama l'offerta: nella Play Console
+ * quella della prova ha il tag (o il nome) «prova» o «trial». */
+function inProvaSuGoogle(riga) {
+  const fase = riga?.offerPhase;
+  if (fase && typeof fase === "object") return Boolean(fase.freeTrial && typeof fase.freeTrial === "object");
+  const offerta = riga?.offerDetails || {};
+  const parla = (detto) => /prova|trial/i.test(String(detto ?? ""));
+  return (Array.isArray(offerta.offerTags) && offerta.offerTags.some(parla)) || parla(offerta.offerId);
+}
+
+/* Una transazione di Apple e' in prova gratuita: un'offerta introduttiva
+ * (`offerType` 1) che non costa niente. */
+const inProvaSuApple = (t) => t?.offerType === 1 && t?.offerDiscountType === "FREE_TRIAL";
 
 /** Il corpo di una JWS, **senza** verificarla. Chi lo usa sa perche'. */
 export function ilCorpoDi(jws) {
@@ -188,14 +220,28 @@ export class Negozi {
   }
 
   /**
-   * Controlla una ricevuta. Torna `{app, prodotto, scade, acquisto, prima}`:
-   * di quale app e', fino a quando vale, e l'identificativo con cui si
-   * riconosce lo stesso acquisto la volta dopo. Solleva `RicevutaNonValida`
-   * (402) o `NegozioGiu` (502).
+   * Controlla una ricevuta. Torna `{app, prodotto, scade, acquisto, prima,
+   * prova, ricevuta}`: di quale app e', fino a quando vale, l'identificativo
+   * con cui si riconosce lo stesso acquisto la volta dopo, se e' in prova
+   * gratuita, e quello che serve per richiederlo al negozio (`ricontrolla`).
+   * Solleva `RicevutaNonValida` (402) o `NegozioGiu` (502).
    */
   async controlla({ piattaforma, prodotto, ricevuta }) {
     if (piattaforma === "android") return this._google(String(prodotto ?? ""), String(ricevuta ?? ""));
     if (piattaforma === "ios") return this._apple(String(prodotto ?? ""), String(ricevuta ?? ""));
+    throw new RicevutaNonValida("piattaforma-non-valida");
+  }
+
+  /**
+   * Richiede al negozio un abbonamento gia' visto, con quello che se ne e'
+   * tenuto (`ricevuta` come la torna `controlla`): Google il token e il
+   * prodotto, Apple la transazione originale. Torna e solleva come
+   * `controlla`.
+   */
+  async ricontrolla({ piattaforma, ricevuta }) {
+    if (piattaforma === "android")
+      return this._google(String(ricevuta?.prodotto ?? ""), String(ricevuta?.token ?? ""));
+    if (piattaforma === "ios") return this._appleDiNuovo(String(ricevuta?.originale ?? ""));
     throw new RicevutaNonValida("piattaforma-non-valida");
   }
 
@@ -249,9 +295,10 @@ export class Negozi {
     const riga =
       righe.find((una) => una.productId === prodotto || prodotto.startsWith(`${una.productId}:`)) ?? righe[0];
     const app = laAppDel(riga.productId);
-    const scade = Math.max(
-      ...righe.filter((una) => laAppDel(una.productId) === app).map((una) => Date.parse(una.expiryTime) || 0),
-    );
+    const sue = righe.filter((una) => laAppDel(una.productId) === app);
+    const scade = Math.max(...sue.map((una) => Date.parse(una.expiryTime) || 0));
+    /* La prova la dice la riga che dura di piu': quella del periodo in corso. */
+    const ultima = sue.find((una) => (Date.parse(una.expiryTime) || 0) === scade) ?? riga;
     if (!scade) throw new RicevutaNonValida("ricevuta-senza-scadenza");
     if (!GOOGLE_VALIDI.has(detto.subscriptionState) || scade <= this.adesso())
       throw new RicevutaNonValida("abbonamento-scaduto");
@@ -277,6 +324,8 @@ export class Negozi {
       scade,
       acquisto: token,
       prima: detto.linkedPurchaseToken || null,
+      prova: inProvaSuGoogle(ultima),
+      ricevuta: { token, prodotto: riga.productId },
     };
   }
 
@@ -313,7 +362,40 @@ export class Negozi {
     }
     if (!firmata) throw new RicevutaNonValida("ricevuta-sconosciuta");
 
-    const t = verificaLaJwsDiApple(firmata, this.apple.radice, this.adesso());
+    return this._laTransazione(verificaLaJwsDiApple(firmata, this.apple.radice, this.adesso()));
+  }
+
+  /**
+   * «Get All Subscription Statuses»: lo stato di adesso di un abbonamento,
+   * dalla sua transazione originale. Di ogni gruppo Apple da' l'ultima
+   * transazione: si prende quella con la stessa originale.
+   */
+  async _appleDiNuovo(originale) {
+    if (!/^\d{1,40}$/.test(originale)) throw new RicevutaNonValida("ricevuta-illeggibile");
+    const jwt = this._jwtApple();
+    let detto = null;
+    for (const dove of [APPLE_PRODUZIONE, APPLE_SANDBOX]) {
+      const risposta = await this.chiama(`${dove}/inApps/v1/subscriptions/${originale}`, {
+        headers: { authorization: `Bearer ${jwt}` },
+      });
+      if (risposta.status === 404) continue;
+      if (risposta.status === 400) throw new RicevutaNonValida("ricevuta-sconosciuta");
+      if (!risposta.ok) throw new NegozioGiu(`apple risponde ${risposta.status}`);
+      detto = await risposta.json();
+      break;
+    }
+    const ultime = (Array.isArray(detto?.data) ? detto.data : []).flatMap((gruppo) =>
+      Array.isArray(gruppo?.lastTransactions) ? gruppo.lastTransactions : [],
+    );
+    const sua = ultime.find((una) => String(una?.originalTransactionId) === originale);
+    if (!sua?.signedTransactionInfo) throw new RicevutaNonValida("ricevuta-sconosciuta");
+    const t = verificaLaJwsDiApple(sua.signedTransactionInfo, this.apple.radice, this.adesso());
+    if (String(t.originalTransactionId) !== originale) throw new RicevutaNonValida("ricevuta-sconosciuta");
+    return this._laTransazione(t);
+  }
+
+  /** Una transazione di Apple gia' verificata, nella forma di `controlla`. */
+  _laTransazione(t) {
     if (t.bundleId !== this.apple.bundle) throw new RicevutaNonValida("ricevuta-di-un-altra-app");
     const app = laAppDel(t.productId);
     if (!app) throw new RicevutaNonValida("prodotto-sconosciuto");
@@ -329,6 +411,8 @@ export class Negozi {
        * ritrovare la stessa licenza. */
       acquisto: String(t.originalTransactionId || t.transactionId),
       prima: null,
+      prova: inProvaSuApple(t),
+      ricevuta: { originale: String(t.originalTransactionId || t.transactionId) },
     };
   }
 }

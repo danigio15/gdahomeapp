@@ -106,9 +106,11 @@ Chi compra Premium dall'app: la ricevuta del negozio (il codice d'acquisto di
 Google Play o l'identificativo della transazione di Apple) passa cifrata dal
 telefono all'add-on e da lì al quadro, che la controlla con Google o Apple.
 Il quadro conserva, per ogni licenza: la casa, da dove arriva (negozio, regalo,
-installatore), quando scade, e l'impronta della ricevuta. Il pagamento lo
-gestiscono Google e Apple: a gdahome non arrivano né il nome né i dati della
-carta.
+installatore), quando scade, se è nella prova gratuita, e l'identificativo
+dell'acquisto (il codice d'acquisto di Google Play o l'identificativo della
+transazione originale di Apple), che gli serve per chiedere a Google o ad
+Apple se l'abbonamento si è rinnovato. Il pagamento lo gestiscono Google e
+Apple: a gdahome non arrivano né il nome né i dati della carta.
 
 gdanav da sola usa per i codici regalo un identificativo del telefono (`tel_…`)
 fatto a caso sul telefono, che non dice chi sei.

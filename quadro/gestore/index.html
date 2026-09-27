@@ -4826,6 +4826,9 @@
       function laScadenza(una) {
         if (una.revocata) return `tolta il ${ilGiorno(una.revocata)}`;
         if (una.scade === null) return "per sempre";
+        /* Un abbonamento nei quattordici giorni gratis: finiti, il negozio lo
+         * rinnova (e il quadro se ne accorge da se') o finisce li'. */
+        if (una.prova && una.scade > ADESSO()) return `in prova gratuita fino al ${ilGiorno(una.scade)}`;
         return una.scade > ADESSO() ? `fino al ${ilGiorno(una.scade)}` : `scaduta il ${ilGiorno(una.scade)}`;
       }
 

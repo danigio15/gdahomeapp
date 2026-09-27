@@ -131,7 +131,7 @@ import { Biglietti, GettoniDellEditor } from "./biglietti.js";
 import { laFormaDel, leRigheDeiSegni } from "./forma-del-rapporto.js";
 import { Freno } from "./freno.js";
 import { daChiSiConta, eDaQui } from "./indirizzo.js";
-import { CASA, Licenze, NoLicenza, TELEFONO } from "./licenze.js";
+import { ATTESA_DEL_NEGOZIO, CASA, Licenze, NoLicenza, TELEFONO } from "./licenze.js";
 import { NegozioGiu, Negozi, RicevutaNonValida } from "./negozi.js";
 
 /**
@@ -339,6 +339,9 @@ export function costruisciIlServer({
    * rispondono 503, e senza le chiavi dei negozi quella del negozio. */
   licenze = new Licenze({ cartella }),
   negozi = new Negozi({ ambiente: {} }),
+  /* Quanto si aspetta il negozio, per i rinnovi, mentre una casa aspetta i
+   * suoi gettoni. */
+  attesaDelNegozio = ATTESA_DEL_NEGOZIO,
   /* Il freno delle licenze, per indirizzo: una casa chiede ogni sei ore, e
    * un'app al massimo qualche volta di fila. Quello dei codici e' piu'
    * stretto, per indirizzo **e** per soggetto: e' la porta da cui si
@@ -1246,13 +1249,19 @@ export function costruisciIlServer({
       return;
     }
     try {
+      /* Prima dei gettoni, le sue licenze del negozio vicine alla scadenza si
+       * richiedono al negozio: un abbonamento rinnovato non lo dice nessuno.
+       * Al massimo qualche secondo; se il negozio tace, si risponde con
+       * quello che si sapeva (`licenze.js`, «I rinnovi»). */
       if (quale === "casa") {
         const sog = licenze.riconosci(detto.casa, detto.segreto, CASA);
+        await licenze.rinnova(negozi, { sog, attesa: attesaDelNegozio, registro });
         json(risposta, licenze.perIlSoggetto(sog));
         return;
       }
       if (quale === "telefono") {
         const sog = licenze.riconosci(detto.telefono, detto.segreto, TELEFONO);
+        await licenze.rinnova(negozi, { sog, attesa: attesaDelNegozio, registro });
         json(risposta, licenze.perIlSoggetto(sog));
         return;
       }

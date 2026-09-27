@@ -28,6 +28,8 @@ import 'package:gdahome/casa/dispensa/dispensa.dart';
 import 'package:gdahome/casa/impostazioni.dart';
 import 'package:gdahome/casa/la_guardia.dart';
 import 'package:gdahome/licenza/licenza.dart';
+import 'package:gdahome/licenza/negozio.dart';
+import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:gdahome/plancia/servitore_qui/qui.dart';
 import 'package:gdahome/ponte/filo.dart';
 import 'package:gdahome/ponte/indirizzo.dart';
@@ -102,6 +104,29 @@ Widget _lApp(Widget home) => MaterialApp(
       SfondoVivo(child: schermata ?? const SizedBox.shrink()),
   home: home,
 );
+
+/// Un negozio che risponde, con la prova di 14 giorni su tutti e due i piani.
+class _NegozioConLaProva implements NegozioGdahome {
+  @override
+  String get piattaforma => 'android';
+  @override
+  String get nome => 'Play Store';
+  @override
+  Future<bool> disponibile() async => true;
+  @override
+  Future<List<PianoGdahome>> piani() async => const [
+    PianoGdahome(id: pianoMensile, prezzo: '4,99 €', giorniProva: 14),
+    PianoGdahome(id: pianoAnnuale, prezzo: '49,99 €', giorniProva: 14),
+  ];
+  @override
+  Stream<List<PurchaseDetails>> get acquisti => const Stream.empty();
+  @override
+  Future<void> compra(String piano) async {}
+  @override
+  Future<void> ripristina() async {}
+  @override
+  Future<void> completa(PurchaseDetails acquisto) async {}
+}
 
 void main() {
   setUpAll(() async {
@@ -181,6 +206,53 @@ void main() {
     );
     await passa(tester);
     await scatta(tester, 'premium-attivo');
+  });
+
+  testWidgets('la pagina Premium col negozio che offre la prova', (
+    tester,
+  ) async {
+    quantoGrande(tester);
+    final collegamento = await casaSenzaFilo(tester);
+    final acquisti = GestoreDegliAcquisti(
+      negozio: _NegozioConLaProva(),
+      porta: ({
+        required piattaforma,
+        required prodotto,
+        required ricevuta,
+      }) async {},
+    );
+    await tester.runAsync(acquisti.avvia);
+    await tester.pumpWidget(
+      _lApp(
+        SchermataPremium(
+          collegamento: collegamento,
+          sulWeb: false,
+          acquisti: acquisti,
+        ),
+      ),
+    );
+    await passa(tester);
+    await tester.drag(find.byType(Scrollable).first, const Offset(0, -700));
+    await passa(tester);
+    await scatta(tester, 'premium-prova-14-giorni');
+  });
+
+  testWidgets('la pagina Premium durante la prova', (tester) async {
+    quantoGrande(tester);
+    late String gettone;
+    await tester.runAsync(() async {
+      gettone = await firmaUnGettone(
+        origine: 'negozio',
+        prova: true,
+        scade: DateTime.now().add(const Duration(days: 11)),
+      );
+    });
+    final collegamento = await casaSenzaFilo(tester, gettone: gettone);
+    await tester.pumpWidget(
+      _lApp(SchermataPremium(collegamento: collegamento, sulWeb: false)),
+    );
+    await passa(tester);
+    await scatta(tester, 'premium-in-prova');
   });
 
   testWidgets('la pagina Premium nella webapp', (tester) async {

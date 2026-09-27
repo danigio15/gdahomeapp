@@ -178,6 +178,7 @@ class _SchermataPremiumState extends State<SchermataPremium> {
                   ),
                   compra: _compraIl(pianoMensile),
                   conTasto: !widget.sulWeb,
+                  giorniProva: acquisti?.provaDi(pianoMensile) ?? 0,
                 ),
               ),
               const SizedBox(width: 12),
@@ -194,6 +195,7 @@ class _SchermataPremiumState extends State<SchermataPremium> {
                   evidenza: inLingua(it: 'conviene', en: 'best value'),
                   compra: _compraIl(pianoAnnuale),
                   conTasto: !widget.sulWeb,
+                  giorniProva: acquisti?.provaDi(pianoAnnuale) ?? 0,
                 ),
               ),
             ],
@@ -215,6 +217,13 @@ class _SchermataPremiumState extends State<SchermataPremium> {
                 ),
               ),
             ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(4, 10, 4, 0),
+            child: Text(
+              _laProva(acquisti),
+              style: testi.bodySmall?.copyWith(color: colori.onSurfaceVariant),
+            ),
+          ),
           const SizedBox(height: 16),
         ],
         if (acquisti?.inCorso ?? false)
@@ -469,6 +478,12 @@ class _LaTestata extends StatelessWidget {
             it: 'Premium fino al ${dataInParole(scade)}',
             en: 'Premium until ${dataInParole(scade)}',
           );
+    if (gettone.prova && scade != null) {
+      return inLingua(
+        it: 'Prova gratuita fino al ${dataInParole(scade)}',
+        en: 'Free trial until ${dataInParole(scade)}',
+      );
+    }
     final origine = switch (gettone.origine) {
       'regalo' => inLingua(it: 'regalo', en: 'gift'),
       'installatore' => inLingua(
@@ -611,10 +626,14 @@ class _Piano extends StatelessWidget {
     required this.compra,
     this.evidenza,
     this.conTasto = true,
+    this.giorniProva = 0,
   });
 
   /// Sul web il tasto non c'e': li' non si compra.
   final bool conTasto;
+
+  /// I giorni gratis che il negozio offre per questo piano; 0 niente prova.
+  final int giorniProva;
 
   final String titolo;
   final String prezzo;
@@ -688,7 +707,17 @@ class _Piano extends StatelessWidget {
                 minimumSize: const Size.fromHeight(44),
                 backgroundColor: evidenza != null ? Colori.ambraScura : null,
               ),
-              child: Text(inLingua(it: 'Abbonati', en: 'Subscribe')),
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  giorniProva > 0
+                      ? inLingua(
+                          it: '$giorniProva giorni gratis',
+                          en: '$giorniProva days free',
+                        )
+                      : inLingua(it: 'Abbonati', en: 'Subscribe'),
+                ),
+              ),
             ),
           ],
         ],
@@ -836,4 +865,30 @@ class _IlCodiceRegaloState extends State<_IlCodiceRegalo> {
       ],
     );
   }
+}
+
+/// La riga sotto i piani che dice della prova gratuita. Col negozio che
+/// risponde si dice quella che il negozio offre davvero (a chi l'ha gia' usata
+/// niente); senza negozio si dice com'e' fatta, «la prima volta».
+String _laProva(GestoreDegliAcquisti? acquisti) {
+  final giorni = acquisti == null || !acquisti.disponibile
+      ? giorniDiProva
+      : [
+          acquisti.provaDi(pianoMensile),
+          acquisti.provaDi(pianoAnnuale),
+        ].reduce((a, b) => a > b ? a : b);
+  if (acquisti != null && acquisti.disponibile && giorni == 0) {
+    return inLingua(
+      it: 'La prova gratuita l\'hai già usata: l\'abbonamento parte subito.',
+      en: 'You\'ve already used the free trial: the subscription starts now.',
+    );
+  }
+  return inLingua(
+    it:
+        'La prima volta i primi $giorni giorni sono gratis: se disdici prima '
+        'dal negozio, non paghi niente.',
+    en:
+        'The first time, the first $giorni days are free: cancel from the '
+        'store before then and you pay nothing.',
+  );
 }

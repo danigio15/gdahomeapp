@@ -38,6 +38,16 @@
  *
  * Una licenza a tempo che scade **resta** contata: il posto e' stato usato. Se
  * l'installatore la toglie torna nel pacchetto, ed e' una scelta sua.
+ *
+ * ─── I rinnovi ───────────────────────────────────────────────────────────
+ *
+ * Una licenza del negozio scade quando finisce il periodo pagato (o la prova
+ * gratuita), e un abbonamento si rinnova da se' senza che l'app lo dica a
+ * nessuno. Percio' il quadro richiede al negozio (`rinnova`) le licenze che
+ * stanno per scadere o sono scadute da poco: quando la casa o il telefono
+ * chiedono i gettoni, e ogni ora per tutte. Una volta l'ora al massimo per
+ * licenza; se il negozio non risponde si tiene quello che si sapeva, e se dice
+ * che e' finito (scaduto, rimborsato) la licenza scade da se'.
  */
 
 import { createHash, createPrivateKey, createPublicKey, randomBytes, randomInt, sign, verify } from "node:crypto";
@@ -66,6 +76,18 @@ export const OTTO_GIORNI = 8 * 24 * 60 * 60 * 1000;
 
 /** Quanti codici si fanno in una volta, al massimo. */
 export const CODICI_AL_MASSIMO = 200;
+
+/** Da quanto prima della scadenza una licenza del negozio si richiede al negozio. */
+export const PRIMA_DI_SCADERE = 24 * 60 * 60 * 1000;
+
+/** Fino a quanto dopo la scadenza la si richiede ancora: poi e' finita. */
+export const DOPO_SCADUTA = 35 * 24 * 60 * 60 * 1000;
+
+/** Una licenza si richiede al negozio al massimo una volta in questo tempo. */
+export const UNA_VOLTA_OGNI = 60 * 60 * 1000;
+
+/** Quanto si aspetta il negozio mentre qualcuno aspetta i suoi gettoni. */
+export const ATTESA_DEL_NEGOZIO = 5000;
 
 /** Quanti mesi al massimo per un regalo a tempo: dieci anni. Oltre, «per sempre». */
 export const MESI_AL_MASSIMO = 120;
@@ -314,11 +336,20 @@ export class Licenze {
     }
     return {
       gettoni,
-      licenze: sue.map((una) => ({ lic: una.lic, app: una.app, origine: una.origine, scade: una.scade })),
+      licenze: sue.map((una) => ({
+        lic: una.lic,
+        app: una.app,
+        origine: una.origine,
+        scade: una.scade,
+        prova: Boolean(una.prova),
+      })),
     };
   }
 
-  /** Il gettone di una licenza, firmato adesso. */
+  /**
+   * Il gettone di una licenza, firmato adesso. `prova` c'e' solo quando e'
+   * vero: chi verifica i campi che non conosce li lascia stare.
+   */
   gettone(una, ora = this.adesso()) {
     const fino = una.scade === null ? ora + OTTO_GIORNI : Math.min(ora + OTTO_GIORNI, una.scade);
     return firmaIlGettone(this.privata, {
@@ -330,6 +361,7 @@ export class Licenze {
       scade: una.scade,
       fino,
       emesso: ora,
+      ...(una.prova ? { prova: true } : {}),
     });
   }
 
@@ -488,8 +520,11 @@ export class Licenze {
    * `prima` e' l'identificativo dell'acquisto che questo ha sostituito
    * (`linkedPurchaseToken` di Google, per un cambio di piano): la riga e'
    * quella, e passa al nuovo.
+   *
+   * `ricevuta` e' quello che serve per richiederlo al negozio piu' avanti
+   * (`Negozi.ricontrolla`): resta in `negozio.ricevuta`.
    */
-  dalNegozio({ app, sog, scade, acquisto, prima = null, piattaforma, prodotto }) {
+  dalNegozio({ app, sog, scade, acquisto, prima = null, piattaforma, prodotto, prova = false, ricevuta = null }) {
     unaApp(app);
     const chiave = createHash("sha256").update(`${piattaforma}:${acquisto}`).digest("hex");
     const vecchia = prima ? createHash("sha256").update(`${piattaforma}:${prima}`).digest("hex") : null;
@@ -504,17 +539,104 @@ export class Licenze {
         origine: "negozio",
         scade,
         nota: `${piattaforma} · ${prodotto}`,
-        negozio: { chiave, piattaforma, prodotto },
+        negozio: { chiave, piattaforma, prodotto, ...(ricevuta ? { ricevuta } : {}) },
       });
     } else {
       una.sog = sog;
       una.app = app;
       una.scade = scade;
-      una.negozio = { chiave, piattaforma, prodotto };
+      una.negozio = { chiave, piattaforma, prodotto, ...(ricevuta ? { ricevuta } : {}) };
       una.visto = this.adesso();
     }
+    una.prova = Boolean(prova);
+    una.ricontrollata = this.adesso();
     this.archivio.salva();
     return una;
+  }
+
+  /* ─── I rinnovi ─────────────────────────────────────────────────────── */
+
+  /**
+   * Le licenze del negozio da richiedere adesso: con quello che serve per
+   * chiederle, non tolte, che scadono entro un giorno o sono scadute da meno
+   * di trentacinque, e non richieste nell'ultima ora. Con `sog`, solo le sue.
+   */
+  daRicontrollare({ sog = null, ora = this.adesso() } = {}) {
+    return this.licenze.filter(
+      (una) =>
+        una.origine === "negozio" &&
+        !una.revocata &&
+        una.negozio?.ricevuta &&
+        una.scade !== null &&
+        (sog === null || una.sog === sog) &&
+        una.scade - ora <= PRIMA_DI_SCADERE &&
+        ora - una.scade < DOPO_SCADUTA &&
+        !(una.ricontrollata && ora - una.ricontrollata < UNA_VOLTA_OGNI),
+    );
+  }
+
+  /**
+   * Richiede al negozio le licenze di `daRicontrollare`. Non solleva mai:
+   * chi chiede i gettoni li riceve comunque, con quello che si sapeva.
+   *
+   * - una risposta buona sposta la scadenza **avanti** (mai indietro) e
+   *   aggiorna la prova gratuita;
+   * - `RicevutaNonValida` (scaduto, rimborsato): si lascia com'e', e scade
+   *   da se';
+   * - `NegozioGiu`, o piu' di `attesa` ms: si tiene quello che c'era, e si
+   *   riprova fra un'ora. Una risposta che arriva dopo l'attesa vale lo
+   *   stesso.
+   *
+   * Con `sog` le sue, tutte insieme; senza, tutte, una dopo l'altra (il giro
+   * di ogni ora, che non ha fretta e non deve bussare a raffica). Torna quante
+   * sono state allungate.
+   */
+  async rinnova(negozi, { sog = null, attesa = ATTESA_DEL_NEGOZIO, registro = null } = {}) {
+    const ora = this.adesso();
+    const quali = this.daRicontrollare({ sog, ora }).filter((una) =>
+      negozi?.configurato?.(una.negozio.piattaforma),
+    );
+    if (!quali.length) return 0;
+    let allungate = 0;
+    const richiedi = async (una) => {
+      /* Segnata prima di chiedere: due richieste insieme non bussano due volte. */
+      una.ricontrollata = ora;
+      const lavoro = negozi
+        .ricontrolla({ piattaforma: una.negozio.piattaforma, ricevuta: una.negozio.ricevuta })
+        .then((esito) => {
+          if (this._dalRicontrollo(una, esito)) allungate += 1;
+        })
+        .catch((errore) => {
+          const detto = errore?.errore || errore?.message || String(errore);
+          registro?.[errore?.errore ? "info" : "attenzione"]?.(
+            `il rinnovo di ${una.lic} non si e' potuto controllare: ${detto}`,
+          );
+        });
+      let timer;
+      const scaduto = new Promise((ok) => {
+        timer = setTimeout(ok, attesa);
+        timer.unref?.();
+      });
+      await Promise.race([lavoro, scaduto]);
+      clearTimeout(timer);
+    };
+    if (sog !== null) await Promise.all(quali.map(richiedi));
+    else for (const una of quali) await richiedi(una);
+    this.archivio.salva();
+    return allungate;
+  }
+
+  /* Quello che il negozio ha detto di una licenza gia' sua. La casa resta
+   * quella: un rinnovo non sposta niente. */
+  _dalRicontrollo(una, esito) {
+    if (!esito || esito.app !== una.app) return false;
+    una.prova = Boolean(esito.prova);
+    if (esito.prodotto) una.negozio.prodotto = esito.prodotto;
+    if (esito.ricevuta) una.negozio.ricevuta = esito.ricevuta;
+    const allungata = Number(esito.scade) > (una.scade ?? Infinity);
+    if (allungata) una.scade = Number(esito.scade);
+    this.archivio.salva();
+    return allungata;
   }
 
   /* ─── Il pacchetto degli installatori ───────────────────────────────── */
@@ -579,6 +701,7 @@ export class Licenze {
       revocata: una.revocata || null,
       nota: una.nota || "",
       codice: una.codice || null,
+      prova: Boolean(una.prova),
       vale: this.vale(una, ora),
     };
   }
