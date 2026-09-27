@@ -20,10 +20,14 @@
 /// la dashboard tiene per questo dispositivo e dichiara tali. Quelle non si
 /// rifanno: si aprono.
 ///
-/// E **Come va l'app**, che dell'app parla davvero: i fotogrammi, il filo con
-/// la casa, il ritardo dei dati, e i due interruttori che pesano sul riquadro
-/// — la plancia leggera e la composizione ibrida. Sono cose dell'app, non
-/// della plancia, e nella plancia non ci sono perche' non ci possono essere.
+/// E **Diagnostica app**, che dell'app parla davvero: i fotogrammi, il filo
+/// con la casa, il ritardo dei dati. Sono cose dell'app, non della plancia, e
+/// nella plancia non ci sono perche' non ci possono essere.
+///
+/// Accanto a lei **Impostazioni app**: quello che di quelle cose si **tocca**
+/// — la plancia leggera, la composizione ibrida — piu' la sicurezza. Li' si
+/// guarda per capire, qui si cambia; erano insieme, e un interruttore in mezzo
+/// ai numeri e' un interruttore in una pagina che non e' sua.
 ///
 /// Il resto e' quello che in Home Assistant sta nascosto, e che l'app
 /// aggiunge. Le voci che non ci sono ancora restano nell'elenco, spente: si
@@ -139,7 +143,14 @@ enum Sezione {
      * chi la conosce la cerca con quel nome. */
     Sezione.navigatore => 'gdanav',
     Sezione.configurazione => inLingua(it: 'Configurazione', en: 'Config'),
-    Sezione.comeVaLApp => inLingua(it: 'Come va l\'app', en: 'App health'),
+    /* Si chiamava «Come va l'app», e finche' dentro c'erano anche due
+     * interruttori era il nome giusto: una pagina che dice come va e lascia
+     * mettere mano. Gli interruttori sono andati in «Impostazioni app», e
+     * quello che resta sono numeri da leggere — «scrivi diagnostica app». */
+    Sezione.comeVaLApp => inLingua(
+      it: 'Diagnostica app',
+      en: 'App diagnostics',
+    ),
     Sezione.impostazioniDellApp => inLingua(
       it: 'Impostazioni app',
       en: 'App settings',

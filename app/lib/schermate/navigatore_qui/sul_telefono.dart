@@ -23,6 +23,7 @@ import '../../casa/collegamento.dart';
 import '../../parole.dart';
 import '../../vestito/marchio.dart';
 import '../../vestito/pezzi.dart';
+import '../../vestito/tema.dart';
 import '../comandi_in_auto.dart';
 import 'la_vettura.dart';
 
@@ -310,7 +311,11 @@ class _LaTessera extends StatelessWidget {
   final SorgenteGdahome fonte;
 
   static const _notte = Color(0xFF0F172A);
-  static const _accento = Color(0xFF0EA5E9);
+
+  /* Il blu di gdanav, e non piu' il celeste scritto a mano: questa tessera e'
+   * la porta verso gdanav, ed e' l'ultimo posto che poteva permettersi di
+   * essere di un altro azzurro. */
+  static const _accento = Colori.bluDiNotte;
   static const _verde = Color(0xFF4ADE80);
 
   @override

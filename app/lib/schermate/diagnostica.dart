@@ -1,4 +1,10 @@
-/// Come va l'app, in numeri, e i due interruttori che pesano sulla plancia.
+/// La diagnostica dell'app: come va, in numeri.
+///
+/// **Solo numeri.** C'erano anche i due interruttori che pesano sulla plancia
+/// — la plancia leggera e la composizione ibrida — e adesso stanno in
+/// «Impostazioni app». Qui si guarda per capire, li' si cambia: e' la riga che
+/// divide le due pagine, ed e' anche il motivo per cui questa si chiama
+/// «Diagnostica app» e non piu' «Come va l'app».
 ///
 /// E' la schermata da fotografare quando l'app va a scatti: dice se e' il
 /// disegno (UI), la scheda video (GPU) o il filo principale bloccato, quanto
@@ -93,7 +99,6 @@ class _SchermataDellaDiagnosticaState extends State<SchermataDellaDiagnostica> {
     final testi = Theme.of(context).textTheme;
     final minuto = (widget.misure ?? () => Misure.io.ultimoMinuto)();
     final fatti = (widget.lavori ?? () => Lavori.io.tutti)();
-    final impostazioni = widget.impostazioni;
     final collegamento = widget.collegamento;
 
     Widget riga(String nome, String valore) => Padding(
@@ -390,67 +395,12 @@ class _SchermataDellaDiagnosticaState extends State<SchermataDellaDiagnostica> {
                       '${_quanto(context, sopra: false)}',
                 ),
               ),
-              const SizedBox(height: 6),
-              SwitchListTile(
-                contentPadding: EdgeInsets.zero,
-                title: Text(
-                  inLingua(it: 'Plancia leggera', en: 'Light dashboard'),
-                ),
-                subtitle: Text(
-                  inLingua(
-                    it:
-                        'Spenta di serie. Ferma le animazioni che non '
-                        'finiscono mai e toglie le sfocature dietro le '
-                        'tessere: la plancia cambia aspetto. Solo se il '
-                        'telefono proprio non ce la fa.',
-                    en:
-                        'Off by default. It stops the never-ending animations '
-                        'and removes the blur behind the cards: the dashboard '
-                        'looks different. Only if the phone really can\'t '
-                        'keep up.',
-                  ),
-                ),
-                value: impostazioni.planciaLeggera,
-                onChanged: (valore) =>
-                    impostazioni.metti(planciaLeggera: valore),
-              ),
-              if (impostazioni.android)
-                SwitchListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: Text(
-                    inLingua(
-                      it: 'Composizione ibrida',
-                      en: 'Hybrid composition',
-                    ),
-                  ),
-                  subtitle: Text(
-                    inLingua(
-                      it:
-                          'Il riquadro della plancia lo disegna Android per '
-                          'conto suo, invece di passare da Flutter a ogni '
-                          'fotogramma. Prova a spegnerla solo se con lei va '
-                          'peggio.',
-                      en:
-                          'Android draws the dashboard frame on its own, '
-                          'instead of going through Flutter on every frame. '
-                          'Only try turning it off if things are worse with '
-                          'it on.',
-                    ),
-                  ),
-                  value: impostazioni.composizioneIbrida,
-                  onChanged: (valore) =>
-                      impostazioni.metti(composizioneIbrida: valore),
-                ),
-              const SizedBox(height: 4),
-              Text(
-                inLingua(
-                  it: 'Cambiare un interruttore ricarica la plancia.',
-                  en: 'Flipping either switch reloads the dashboard.',
-                ),
-                style: testi.bodySmall?.copyWith(
-                  color: colori.onSurfaceVariant,
-                ),
-              ),
+              /* **Gli interruttori se ne sono andati.** La plancia leggera e la
+                 composizione ibrida stanno in «Impostazioni app»: «spostale
+                 anche quelle in impostazioni app». Qui restano i numeri —
+                 quello che si guarda per capire, non quello che si tocca per
+                 cambiare — ed e' la stessa riga che divide questa pagina da
+                 quella. */
             ],
           ),
         ),

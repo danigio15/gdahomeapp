@@ -41,6 +41,7 @@ class SchermataDelLucchetto extends StatefulWidget {
     required this.guardia,
     this.nuda = false,
     this.visibile = true,
+    this.inTesta,
   });
 
   final Impostazioni impostazioni;
@@ -48,6 +49,18 @@ class SchermataDelLucchetto extends StatefulWidget {
 
   /// `true` quando la barra del titolo la mette chi ospita.
   final bool nuda;
+
+  /// Quello che la pagina che ospita questo capitolo vuole **sopra** di lui.
+  ///
+  /// La sicurezza non e' piu' una pagina sua: e' un capitolo di «Impostazioni
+  /// app» (`impostazioni_app.dart`), e sopra ce n'e' un altro — la plancia
+  /// leggera e la composizione ibrida.
+  ///
+  /// Lo scorrimento lo tiene questo pezzo e non chi lo ospita, ed e' voluto:
+  /// quando il telefono non ha nessuna guardia di suo, qui non c'e' un elenco
+  /// di interruttori ma uno stato vuoto che si prende la pagina intera. Chi
+  /// ospita non puo' saperlo, e una lista dentro una lista non scorre bene.
+  final Widget? inTesta;
 
   /// Se questa pagina e' quella che si guarda.
   ///
@@ -210,6 +223,8 @@ class _SchermataDelLucchettoState extends State<SchermataDelLucchetto> {
       child: ListView(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 28),
         children: [
+          if (widget.inTesta case final sopra?) sopra,
+          Insegna(inLingua(it: 'Sicurezza', en: 'Security')),
           Scheda(
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
             child: Column(

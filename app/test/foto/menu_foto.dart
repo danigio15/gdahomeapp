@@ -29,6 +29,7 @@ import 'package:gdahome/casa/collegamento.dart';
 import 'package:gdahome/schermate/barra.dart';
 import 'package:gdahome/schermate/da_parte.dart';
 import 'package:gdahome/schermate/menu.dart';
+import 'package:gdahome/schermate/navigatore_qui/qui.dart';
 import 'package:gdahome/vestito/sfondo.dart';
 import 'package:gdahome/vestito/tema.dart';
 
@@ -142,6 +143,18 @@ void main() {
               collegamento: laCasa(),
               daAggiornare: 2,
               daParte: const LaPlanciaDaParte(),
+              /* **La tessera di gdanav, in testa.** Nell'app c'e' sempre —
+               * e' il primo figlio dell'elenco, sopra tutti i gruppi — e
+               * nelle prime fotografie mancava perche' il banco passava
+               * `null`: si vedeva gdanav come una mattonella qualunque in
+               * mezzo a «Casa», e sembrava che fosse stata declassata. Una
+               * fotografia che racconta un menu che non esiste e' peggio di
+               * nessuna fotografia. */
+              tessera: laTesseraDelNavigatore(
+                scelta: false,
+                apri: () {},
+                impostazioni: () {},
+              ),
             ),
           ],
         ),

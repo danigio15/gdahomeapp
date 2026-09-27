@@ -109,9 +109,11 @@ const double _mattonella = 116;
 
 /// Quanto e' spesso il fianco di una mattonella: l'altezza del suo rilievo.
 ///
-/// «Riesci a fare le card come se avessero un effetto 3d?» Sei punti. Meno non
-/// si vede, di piu' diventa un disegno di un tasto invece di un tasto.
-const double _spessore = 6;
+/// «Riesci a fare le card come se avessero un effetto 3d?» Erano sei, e con
+/// sei il fianco e' una fascia: si legge come un bordo, non come uno spessore.
+/// «L'effetto 3d non mi piace, i bordi troppo scuri e doppi.» Quattro: si vede
+/// che la mattonella e' alzata, e non si vede una riga intorno.
+const double _spessore = 4;
 
 class BarraDelleSezioni extends StatefulWidget {
   const BarraDelleSezioni({
@@ -930,7 +932,17 @@ class _StatoDellaMattonella extends State<_Mattonella> {
      * scuro — verrebbe fuori il fondo del pannello — e senza fianco non c'e'
      * nessun rilievo. */
     final faccia = scelta ? colori.onSurface : colori.surfaceContainerLowest;
-    final fianco = _piuScuro(faccia, scelta ? 0.38 : 0.17);
+    /* **Appena piu' scuro della faccia, non molto.**
+     *
+     * Era scurito del diciassette per cento, e un fianco cosi' scuro sotto una
+     * faccia bianca non e' uno spessore: e' un bordo. Insieme all'ombra
+     * facevano due righe, una sopra l'altra — «i bordi troppo scuri e doppi».
+     *
+     * Adesso il fianco e' un'ombra propria appena accennata, e l'ombra sotto
+     * e' larga e tenue: due cose che non si vedono da sole, e insieme fanno
+     * un oggetto alzato. Il rilievo si sente al tocco, quando la faccia scende
+     * e l'ombra si stringe. */
+    final fianco = _piuScuro(faccia, scelta ? 0.20 : 0.07);
     /* La luce arriva da sopra a sinistra, e si spegne a meta' faccia. Poco:
      * una sfumatura che si vede e' una sfumatura di troppo. */
     final luce = _piuChiaro(faccia, scuro ? 0.07 : 0.04);
@@ -961,13 +973,16 @@ class _StatoDellaMattonella extends State<_Mattonella> {
               decoration: BoxDecoration(
                 color: puo ? fianco : Colors.transparent,
                 borderRadius: tondo,
+                /* Larga e tenue: e' l'aria sotto la mattonella, non una riga
+                 * che la contorna. Premuta si stringe e si alza: e' quello
+                 * che fa l'ombra di un tasto vero. */
                 boxShadow: puo
                     ? [
                         BoxShadow(
                           color: Colors.black.withValues(
-                            alpha: scuro ? 0.45 : 0.16,
+                            alpha: scuro ? 0.32 : 0.08,
                           ),
-                          blurRadius: _giu ? 5 : 12,
+                          blurRadius: _giu ? 6 : 16,
                           offset: Offset(0, _giu ? 1 : 5),
                         ),
                       ]
