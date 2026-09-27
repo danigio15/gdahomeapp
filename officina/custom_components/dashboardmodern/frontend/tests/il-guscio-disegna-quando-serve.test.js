@@ -412,7 +412,13 @@ test("ogni regola corrisponde a un timer del runtime vendorizzato, in entrambe l
         period: passoDopo(sorgente, fine),
       });
     }
-    assert.equal(occorrenze.length, 20, "i timer del runtime sono venti");
+    /* Diciannove, ed erano venti: quello delle istantanee delle telecamere
+     * non e' piu' un `setInterval`. Girava ogni mezzo secondo su una
+     * richiesta che ne puo' durare tre, e le chiamate si accavallavano finche'
+     * il popup non diceva «Telecamera non risponde» a una telecamera che
+     * rispondeva solo piano. Adesso il fotogramma dopo si chiede quando il
+     * precedente e' tornato: `setTimeout`, uno alla volta. */
+    assert.equal(occorrenze.length, 19, "i timer del runtime sono diciannove");
     for (const regola of TIMER_DEL_GUSCIO) {
       const prese = occorrenze.filter(
         (occorrenza) =>

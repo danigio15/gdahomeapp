@@ -5567,6 +5567,11 @@ function apriCamera(camId, title) {
    LONG_LIVED_TOKEN, HA_HTTP_URL, toggleFullScreenCam. */
 let _dmCurrentCam = null, _dmPc = null, _dmWs = null, _dmHls = null;
 let _dmPollInt = null, _dmPollBlob = null, _dmPollFail = 0;
+/* The snapshots: how long to wait between one frame and the next, and after
+   how long with no image at all we say the camera is not responding. Twenty
+   seconds, and they are written in the message too: change them here, change
+   them there. */
+const DM_POLL_PASSO = 500, DM_POLL_RESA = 20000;
 const _dmCamBlobs = {};
 function dmIsWebRTC() { return typeof RTCPeerConnection !== 'undefined'; }
 
@@ -5714,21 +5719,51 @@ async function dmCamPolling(cam, content) {
     content.innerHTML = `<div class="cam-popup-body"><div id="video-iframe-container" class="cam-zoom-container" style="position:relative; padding-top:56.25%;"><img id="cam-polling" alt="${cdEsc(cam.entity)}"><div id="cam-video-loader" class="cam-video-loader-overlay"><div class="cam-popup-spinner"></div><div>Loading…</div></div>${_DM_FS_BTNS}</div><button id="toggle-fs-main-btn" class="cam-fs-btn" onclick="toggleFullScreenCam()">🔲 Fullscreen</button><button id="cam-audio-activate-btn" class="cam-audio-btn" onclick="dmAttivaAudio()">🔊 Attiva audio</button><div class="cam-popup-hint"><span class="cam-mode-badge polling">SNAPSHOT</span> Preview ~2 fps · Tap "Enable audio" for audio + video</div></div>`;
     const imgEl = document.getElementById('cam-polling');
     const loaderEl = document.getElementById('cam-video-loader');
-    if (_dmPollInt) clearInterval(_dmPollInt);
+    if (_dmPollInt) { clearTimeout(_dmPollInt); _dmPollInt = null; }
     _dmPollFail = 0;
+    /* Since when we have been trying without seeing anything. Time decides
+       when to give up, not the number of attempts: one attempt comes back at
+       once or takes three seconds, and counting them means giving up after
+       different times on different cameras. This used to be `setInterval`
+       every half second on a request that can take three: on a slow camera —
+       or seen from outside the home, through the relay — the requests piled
+       up, six in flight together, and the five “failed attempts” burned
+       through in three seconds on a camera that was merely answering slowly. */
+    let daQuando = Date.now();
+    /* Whether this loop is still the popup being watched. Closing it, or
+       opening another camera, takes the element away: from then on there is
+       nothing left to draw, and writing into `content` would mean writing
+       into somebody else's popup. */
+    const eAncoraSuo = () => imgEl.isConnected && document.getElementById('cam-polling') === imgEl;
+    const smetti = () => { if (_dmPollInt) { clearTimeout(_dmPollInt); _dmPollInt = null; } };
     const loadFrame = async () => {
-        if (!document.getElementById('cam-polling')) { clearInterval(_dmPollInt); _dmPollInt = null; return; }
-        if (_dmPollFail >= 5) { clearInterval(_dmPollInt); _dmPollInt = null; content.innerHTML = '<div class="cam-popup-error">⚠️ Camera not responding<br><span style="font-weight:500;opacity:.85;font-size:12px;text-transform:none;letter-spacing:0;">5 attempts failed — check the camera connection</span></div>'; return; }
-        const url = buildUrl(); if (!url) return;
-        const blob = await dmLoadImageBlob(url);
-        if (!blob || !imgEl.isConnected) { _dmPollFail++; return; }
-        _dmPollFail = 0;
-        if (_dmPollBlob && _dmPollBlob.startsWith('blob:')) URL.revokeObjectURL(_dmPollBlob);
-        _dmPollBlob = blob; imgEl.src = blob;
-        if (loaderEl) loaderEl.classList.add('hidden');
+        if (!eAncoraSuo()) { smetti(); return; }
+        const url = buildUrl();
+        const blob = url ? await dmLoadImageBlob(url) : null;
+        /* The frame has arrived now, and by now the popup may already belong
+           to another camera: look again. */
+        if (!eAncoraSuo()) { smetti(); return; }
+        if (blob) {
+            _dmPollFail = 0;
+            daQuando = Date.now();
+            if (_dmPollBlob && _dmPollBlob.startsWith('blob:')) URL.revokeObjectURL(_dmPollBlob);
+            _dmPollBlob = blob; imgEl.src = blob;
+            if (loaderEl) loaderEl.classList.add('hidden');
+        } else {
+            _dmPollFail++;
+            if (Date.now() - daQuando >= DM_POLL_RESA) {
+                smetti();
+                content.innerHTML = '<div class="cam-popup-error">⚠️ Camera not responding<br><span style="font-weight:500;opacity:.85;font-size:12px;text-transform:none;letter-spacing:0;">Twenty seconds with no image: it may be off, or just very slow</span><br><button id="cam-riprova" class="cam-fs-btn">↻ Retry</button></div>';
+                const riprova = document.getElementById('cam-riprova');
+                if (riprova) riprova.onclick = () => dmCamPolling(cam, content);
+                return;
+            }
+        }
+        /* The next frame is asked for once the previous one is back: one at a
+           time, never overlapping. */
+        _dmPollInt = setTimeout(loadFrame, DM_POLL_PASSO);
     };
     await loadFrame();
-    _dmPollInt = setInterval(loadFrame, 500);
 }
 
 async function dmStartWebRTC(streamName, videoEl) {
