@@ -193,6 +193,16 @@ export function leggiLeOpzioni(cartella = process.env.PONTE_ARCHIVIO || "/data")
       scritte.da_fuori_casa === false
         ? ""
         : String(process.env.PONTE_CENTRALINO || scritte.centralino || CENTRALINO_DI_DIFETTO),
+    /* Dove si chiede la versione minima dell'app (`versione-minima.js`): il
+     * centralino della casa, o quello di difetto se la casa non ne usa
+     * nessuno — le app della prova vanno fermate anche li'. Non e' una
+     * casella: `PONTE_VERSIONI` e' per il banco, e vuota non chiede niente. */
+    versioni: String(
+      process.env.PONTE_VERSIONI ??
+        (scritte.da_fuori_casa === false
+          ? CENTRALINO_DI_DIFETTO
+          : process.env.PONTE_CENTRALINO || scritte.centralino || CENTRALINO_DI_DIFETTO),
+    ),
     portaDellApp: numero(scritte.porta_app, DIFETTO.porta_app),
     portaDellaConsole: numero(process.env.PONTE_PORTA_CONSOLE, 8099),
     /* Da dove puo' arrivare chi bussa alla console: nell'add-on solo il proxy

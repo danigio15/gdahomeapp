@@ -307,6 +307,9 @@ class Collegamento {
           chiChiede,
           amministra: this.ponte.utenti?.amministratoreSubito?.(chiChiede) ?? null,
           puoAmministrare: this._amministra(),
+          /* Chi sta su questo filo e' l'app: con gdahome Base le si serve la
+           * plancia principale e basta (`commissioni.js`). */
+          dalTelefono: true,
         })
       : Promise.resolve(no(detto.id ?? null, "unknown_command", "questo ponte non lo sa fare"));
     risposta

@@ -10,6 +10,7 @@ import { Contatti, Postino } from "./posta.js";
 import { apriIlRegistro } from "./registro.js";
 import { costruisciIlServer } from "./server.js";
 import { Sportello } from "./sportello.js";
+import { versioneMinimaDa } from "./versioni.js";
 
 const POTATURA = 12 * 60 * 60 * 1000;
 
@@ -80,6 +81,11 @@ export async function alzaIlCentralino({
    * serie quelle del sito — `https://<sito>` e `https://www.<sito>` — e
    * nessun controllo se il sito non ha un nome. */
   originiDelModulo = process.env.CONTATTO_ORIGINI || "",
+  /* Il giorno dei pagamenti: il numero di costruzione della prima versione
+   * pubblica a pagamento. Le app con un numero piu' piccolo si fermano e
+   * chiedono di essere aggiornate (`versioni.js`, `docs/LICENZE.md`). Vuoto
+   * o zero: non si ferma nessuno. */
+  versioneMinimaDellApp = process.env.VERSIONE_MINIMA_APP || "",
 } = {}) {
   const registro = apriIlRegistro(livello);
   const definiti = (oggetto) =>
@@ -133,6 +139,7 @@ export async function alzaIlCentralino({
     origini,
     registro,
   });
+  const minima = versioneMinimaDa(versioneMinimaDellApp);
   const server = costruisciIlServer({
     centralino,
     sportello,
@@ -140,6 +147,7 @@ export async function alzaIlCentralino({
     contatti,
     registro,
     dove: { sito: ilSito, app: lApp },
+    versioneMinima: minima,
   });
 
   await new Promise((riuscito, fallito) => {
@@ -161,6 +169,16 @@ export async function alzaIlCentralino({
     chat.consoleAperta
       ? `la chat ha ${chat.archivio.quanteLinee()} conversazioni`
       : "la chat riceve, ma la console e' chiusa: manca la chiave",
+  );
+  if (!minima && !/^0*$/.test(String(versioneMinimaDellApp).trim())) {
+    registro.attenzione(
+      `VERSIONE_MINIMA_APP non e' un numero di costruzione («${versioneMinimaDellApp}»): non si ferma nessuna app`,
+    );
+  }
+  registro.info(
+    minima
+      ? `le app sotto la ${minima} si fermano e chiedono di essere aggiornate`
+      : "nessuna versione minima dell'app: non si ferma nessuno",
   );
   registro.info(
     contatti.pronto

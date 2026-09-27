@@ -87,6 +87,10 @@ class PonteFinto {
   /// e' attaccata. Da fuori e' identico a un ponte vero che chiude in faccia.
   String? chiudeSubitoDicendo;
 
+  /// La versione minima dell'app, come la sa l'add-on dal centralino
+  /// (`ponte/src/versione-minima.js`). Zero: entrano tutti.
+  int versioneMinima = 0;
+
   static Future<PonteFinto> alza() async {
     final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
     final ponte = PonteFinto._(server);
@@ -153,6 +157,40 @@ class PonteFinto {
         'type': 'result',
         'success': false,
         'error': {'code': 'unknown_command', 'message': 'non so cosa sia'},
+      });
+      return;
+    }
+    /* Le licenze (`docs/LICENZE.md`): lo stato, il codice regalo, la
+     * ricevuta del negozio. Un ponte senza [licenza] e' un ponte di prima,
+     * che il comando non lo conosce. */
+    if (detto['type'] case final String t when t.startsWith('ponte/licenza/')) {
+      chieste.add(detto);
+      Map<String, dynamic> no(String codice, String perche) => {
+        'id': id,
+        'type': 'result',
+        'success': false,
+        'error': {'code': codice, 'message': perche},
+      };
+      if (licenza == null) {
+        _manda(presa, no('unknown_command', 'Unknown command.'));
+        return;
+      }
+      if (t == 'ponte/licenza/riscatta') {
+        final gettone = codiciRegalo.remove(detto['codice']);
+        if (gettone == null) {
+          _manda(presa, no('404', 'codice che non c\'e\''));
+          return;
+        }
+        licenza = {
+          ...?licenza,
+          'gettoni': {'gdahome': gettone},
+        };
+      }
+      _manda(presa, {
+        'id': id,
+        'type': 'result',
+        'success': true,
+        'result': licenza,
       });
       return;
     }
@@ -346,6 +384,14 @@ class PonteFinto {
       },
     });
   }
+
+  /// Quello che risponde `ponte/licenza/stato`, come il ponte vero:
+  /// `{gdahome: {attiva, scade, origine}, gettoni: {gdahome?: …}}`. `null` e'
+  /// un ponte di prima, che le licenze non le conosce.
+  Map<String, dynamic>? licenza;
+
+  /// I codici regalo che questa casa accetta, e il gettone che ciascuno da'.
+  Map<String, String> codiciRegalo = {};
 
   /// Quello che risponde `ponte/plancia`: la plancia dentro l'add-on. `null`
   /// e' un ponte che non ce l'ha, e dice di no.
@@ -1236,6 +1282,23 @@ class TelefonoCollegato {
 
     final detto = jsonDecode(testo) as Map<String, dynamic>;
     _ponte.strette.add(detto);
+
+    /* Come il portiere: prima di tutto, abbinamento compreso, l'app troppo
+     * vecchia — o che non dice il suo numero. */
+    final minima = _ponte.versioneMinima;
+    final app = detto['app'];
+    if (minima > 0 && (app is! int || app < minima)) {
+      _presa.add(
+        jsonEncode({
+          'v': versioneDelProtocollo,
+          'no': 'questa versione di gdahome e\' vecchia',
+          'motivo': 'aggiorna-l-app',
+          'minima': minima,
+        }),
+      );
+      unawaited(chiudi());
+      return;
+    }
 
     if (detto.containsKey('abbina')) {
       await _perAbbinare(detto);

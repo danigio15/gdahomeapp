@@ -4,14 +4,6 @@ Questo file e' il contratto fra i pezzi: il quadro che le rilascia, l'add-on
 che le tiene, il centralino che le fa rispettare, l'app gdahome e gdanav che le
 mostrano. Chi tocca uno di questi pezzi legge qui prima.
 
-> **Attenzione: qui c'e' il progetto, non il programma.** Al 27 settembre 2026
-> niente di quello che segue esiste nel codice — non ci sono `ponte/src/licenze.js`,
-> `quadro/src/licenze.js`, nessun `chiave-licenze.js`, nessun `strumenti/chiave-licenze.mjs`,
-> e il centralino non chiude nessuno con `4402`. **Oggi tutto e' sbloccato per
-> tutti, e l'accesso da fuori casa e' gratis.** Il README e il sito invece
-> Premium lo mostrano gia' coi prezzi: il conto di quel disallineamento, e cosa
-> farne, sta in [`BLINDATURA.md`](BLINDATURA.md).
-
 ## Cosa si paga
 
 | | Base / gratis | Premium |

@@ -83,6 +83,7 @@ per cui passano gli abbinamenti di tutte le case del mondo.
 | | |
 |---|---|
 | `GET /salute` | dice solo che è vivo |
+| `GET /versioni` | da quale numero di costruzione in su l'app si può usare: `VERSIONE_MINIMA_APP` in `wrangler.toml`, di serie `"0"` (vedi `docs/LICENZE.md`) |
 | `WS /casa/<casa_…>` | una casa che chiama fuori |
 | `WS /telefono/<casa_…>` | un telefono che va alla sua casa |
 | `WS /abbinamento/<impronta>` | un telefono che si sta abbinando |

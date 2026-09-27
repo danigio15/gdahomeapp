@@ -74,52 +74,54 @@ La parola giusta, in inglese, è **source available**: sorgente disponibile, non
 open source. Chi legge «pubblica su GitHub» pensa spesso «allora è mia»: non lo
 è, e conviene dirlo con le parole esatte ogni volta che salta fuori.
 
-## 4. Il paywall, invece, oggi non esiste
+## 4. Il paywall: costruito, e spento finché non si accende la chiave
 
 Questa è la cosa importante, e non c'entra con la paura del codice in chiaro.
 
-`docs/LICENZE.md` descrive un sistema di licenze completo e ben pensato: il
-quadro che firma un gettone Ed25519, l'add-on che lo tiene e lo verifica, il
-centralino che chiude il telefono di una casa senza gettone con `4402`
-`premium-richiesto`, l'app che mostra il lucchetto. **Quel sistema nel codice
-non c'è.** Oggi, 27 settembre 2026:
+`docs/LICENZE.md` descrive il sistema delle licenze: il quadro che firma un
+gettone Ed25519, l'add-on che lo tiene e lo verifica, il centralino che chiude
+il telefono di una casa senza gettone con `4402` `premium-richiesto`, l'app che
+mostra il lucchetto. Quando questo documento è stato scritto nel codice non
+c'era; **adesso c'è**:
 
-| cosa dice il documento | com'è nel codice |
+| cosa dice il documento | dov'è nel codice |
 | --- | --- |
-| `ponte/src/licenze.js` | non esiste |
-| `quadro/src/licenze.js` e le vie `/v1/licenze/*` | non esistono |
-| `chiave-licenze.js` in ponte, centralino, nuvola, app | non esistono |
-| `strumenti/chiave-licenze.mjs` | non esiste |
-| il centralino che chiude con `4402` | nel centralino non c'è nessun controllo di licenza |
-| `plance.aggiungi` che rifiuta la seconda plancia in Base | non c'è |
+| il quadro che rilascia le licenze, le vie `/v1/licenze/*`, i codici regalo, i pacchetti degli installatori | `quadro/src/licenze.js`, `quadro/src/negozi.js` |
+| l'add-on che tiene la licenza della casa | `ponte/src/licenze.js`, `ponte/src/gettone.js` |
+| `chiave-licenze.js` in ponte, centralino, nuvola, app | `ponte/src/chiave-licenze.js`, `centralino/src/chiave-licenze.js`, `nuvola/src/chiave-licenze.js`, `app/lib/licenza/chiave.dart` |
+| lo strumento che fabbrica la coppia e scrive la pubblica dappertutto | `strumenti/chiave-licenze.mjs` |
+| il centralino che chiude con `4402` | `centralino/src/centralino.js` (`PREMIUM_RICHIESTO`) |
+| `plance.aggiungi` che rifiuta la seconda plancia in Base | `ponte/src/plance.js` (`PremiumRichiesto`) |
+| l'app: pagina Premium, acquisto, codice regalo, lucchetti di Base, 14 giorni di prova, versione minima | `app/lib/licenza/`, `app/lib/schermate/premium.dart`, `app/lib/aggiornamento_obbligatorio.dart` |
 
-Quindi: **oggi tutto è sbloccato per tutti, e l'accesso da fuori casa funziona
-per chiunque, gratis.** Nell'app Flutter la parola «premium» compare in **un
-file solo**, e per dire il contrario (`senzaPremium: true`,
-`app/lib/schermate/navigatore_qui/sul_telefono.dart`: «Niente Premium nell'app
-unita: tutto sbloccato, niente negozio»). Finché il codice sta così, nessuno
-paga niente, con o senza sorgenti pubblici.
+Ma **la chiave pubblica di serie è vuota**, in tutti quei file, e chiave vuota
+vuol dire controlli spenti: ogni casa vale come Premium, il centralino fa
+passare tutti, l'app non mostra lucchetti. Quindi, oggi come prima: **tutto è
+sbloccato per tutti, e l'accesso da fuori casa funziona per chiunque, gratis.**
+Cambia il giorno in cui si lancia una volta `node strumenti/chiave-licenze.mjs`,
+che fabbrica la coppia, scrive la pubblica in tutti i pezzi e lascia la privata
+solo sulla macchina del quadro — e da lì si pubblicano add-on, centralino e app
+nuovi (`docs/LICENZE.md`, «La chiave» e «Il giorno dei pagamenti»).
 
 ### Ed è da qui che nasce la seconda domanda
 
-Il piano però **è già pubblicato**, e come se fosse fatto:
+Il piano **è già pubblicato**:
 
-- il `README.md` di questa repository mostra nove immagini di Premium che nel
-  codice non esiste: `fuori-casa-serve-premium.png` («Fuori casa serve gdahome
-  Premium»), `menu-con-i-lucchetti.png`, `plance-col-lucchetto.png`,
-  `premium-prova-14-giorni.png`, `premium-attivo.png`,
-  `addon-licenza-base.png`, `addon-licenza-premium.png`. Non le disegna nessun
-  programma della repository: sono immagini fatte a mano, e sono lì in mezzo
-  agli scatti veri, senza niente che dica che sono un progetto;
+- il `README.md` di questa repository mostra le schermate di Premium —
+  `fuori-casa-serve-premium.png` («Fuori casa serve gdahome Premium»),
+  `menu-con-i-lucchetti.png`, `plance-col-lucchetto.png`,
+  `premium-prova-14-giorni.png`, `premium-attivo.png` e le altre. Adesso sono
+  fotografie dell'app vera, fatte dalle prove (`app/test/foto/premium_foto.dart`)
+  con i controlli accesi; ma nelle case, finché la chiave è vuota, quelle
+  schermate non compaiono;
 - il sito `gdahome.org` (`sito/index.html`) pubblica i prezzi — 4,99 €/mese,
   49,99 €/anno, 2,99 e 29,99 per gdanav — e i 14 giorni di prova.
 
 Alessandro non ha letto il codice: ha letto quello. La sua domanda non è «hai
 cambiato il programma», è **«hai cambiato i patti»**, e da dove guarda lui è una
-domanda giusta. Prima di rispondergli conviene sapere che il disallineamento è
-questo: le promesse sono già in piazza, la roba non c'è ancora. Da sistemare in
-uno dei due modi — costruendo le licenze, oppure dicendo chiaro, dove si mostra
-Premium, che è quello che verrà e non quello che c'è.
+domanda giusta. Il disallineamento adesso è più piccolo: le promesse sono in
+piazza e la roba c'è, ma è spenta. Accenderla è una decisione, non un lavoro da
+fare — e va presa rispondendo prima alla domanda del §7.
 
 Vale la pena dire com'è fatto quel sistema, perché risponde da solo alla paura:
 il gettone lo firma **il quadro**, che è una macchina a Giovanni, e chi verifica
@@ -159,11 +161,13 @@ password di ogni prova, e un guardiano che grida ogni giorno lo si spegne entro
 la settimana — e allora il giorno che prende quella vera nessuno lo sta più
 guardando.
 
-Oggi la repository è pulita: 2332 file di testo guardati, nessun segreto. Le due
+Oggi la repository è pulita: 2379 file di testo guardati, nessun segreto. Le
 cose che il guardiano trova e che sono dichiarate come eccezioni, col motivo
 scritto accanto, sono chiavi **di prova**: il certificato autofirmato di
-`centralino/test/posta.test.js` e la coppia di prova delle licenze in
-`docs/LICENZE.md`. Le prove (`ponte/test/nessun-segreto.test.js`) controllano
+`centralino/test/posta.test.js`, la coppia di prova delle licenze in
+`docs/LICENZE.md` e in `quadro/test/le-licenze.test.js`, e in quella stessa
+prova la chiave di una catena di certificati finta, per provare le risposte
+firmate di Apple senza Apple. Le prove (`ponte/test/nessun-segreto.test.js`) controllano
 anche il contrario di quello che si spera: che ogni regola **suoni** davanti
 alla sua credenziale finta, e che un'eccezione che non copre più niente venga
 tolta invece di restare aperta per abitudine.
@@ -200,14 +204,13 @@ invece di uscire firmata di prova (`app/android/app/build.gradle.kts`).
 | Spostare l'add-on in una repository pubblica sua, e chiudere il resto | l'app Flutter, il quadro e il centralino non si leggono più | **scartata da Giovanni**: «tutto ciò che è legato alle app non le possiamo tirare fuori da GitHub». E aveva ragione anche tecnicamente: due repository, due CI, i workflow da rifare, la storia da tagliare — e la plancia resterebbe leggibile comunque, perché viaggia dentro l'add-on |
 | Minificare o offuscare la plancia | qualche minuto in più a chi vuole leggerla | un errore dal campo non si legge più — che è il motivo per cui non si fa. Guadagno vicino a zero |
 | Rendere privata **`gdanav`** | il codice dell'app in auto non si legge | niente: gdanav si distribuisce dai negozi, non da GitHub. È l'unica chiusura che non rompe nulla |
-| **Costruire il sistema delle licenze** di `docs/LICENZE.md` | è l'unica cosa che cambia chi paga e chi no | il lavoro descritto nel documento, e va fatto prima di chiedere soldi |
+| **Accendere il sistema delle licenze** di `docs/LICENZE.md` (costruito: §4) | è l'unica cosa che cambia chi paga e chi no | una volta `strumenti/chiave-licenze.mjs`, e un rilascio di add-on, centralino e app; prima, la risposta del §7 su chi usa già l'accesso da fuori |
 
 Le due righe di mezzo sono chiuse: l'app e tutto quello che le sta attorno
-restano dove sono. Resta quindi, in ordine di quanto conta: **prima** il
-sistema delle licenze — senza quello non si incassa, e nessun altro lavoro di
-questa lista cambia di un euro quello che entra; **poi** la spunta di secret
-scanning, che costa un minuto; **poi** `gdanav` privata, se se ne ha voglia.
-L'offuscamento, mai.
+restano dove sono. Resta quindi, in ordine di quanto conta: **prima** decidere
+quando accendere le licenze — il codice c'è, e senza la chiave non si incassa;
+**poi** la spunta di secret scanning, che costa un minuto; **poi** `gdanav`
+privata, se se ne ha voglia. L'offuscamento, mai.
 
 ## 7. Cosa rispondere, nel gruppo
 
@@ -224,20 +227,21 @@ Sul sorgente — si può incollare così:
 Sull'accesso da remoto la risposta la deve dare Giovanni, perché è una scelta e
 non un fatto. I tre fatti utili per scriverla:
 
-1. **oggi funziona per tutti e gratis**, e continuerà finché il sistema delle
-   licenze non c'è (§4);
+1. **oggi funziona per tutti e gratis**, e continuerà finché la chiave delle
+   licenze resta vuota (§4): il sistema è scritto, ma è spento;
 2. il **centralino è una macchina che si paga ogni mese**, tutti i mesi, ed è la
    ragione per cui nel piano quella voce sta fra quelle a pagamento: non è una
    funzione in più da vendere, è un costo che qualcuno deve coprire;
 3. Alessandro l'ha letto dal README e dal sito, dove Premium è mostrato come se
-   ci fosse già.
+   fosse già acceso.
 
 Quello che resta da decidere — e che è **esattamente** quello che lui sta
 chiedendo — è **se chi lo usa già lo tiene**. Su questo conviene essere
 espliciti in un senso o nell'altro: «chi ce l'ha ora lo tiene» è una risposta,
 «dal giorno X serve Premium anche a chi lo usava» è una risposta; non
-rispondere no, perché la domanda resta lì e la rifà qualcun altro. E finché le
-licenze non ci sono, vale la pena dirlo: **non è cambiato ancora niente**.
+rispondere no, perché la domanda resta lì e la rifà qualcun altro. E finché la
+chiave delle licenze è vuota, vale la pena dirlo: **non è cambiato ancora
+niente**.
 
 ---
 

@@ -986,3 +986,45 @@ h2 > .ic {
 .di-chi-risponde h2 > .ic {
   background: color-mix(in srgb, var(--testo) 6%, transparent);
 }
+
+/* ─── La licenza ─────────────────────────────────────────────────────────── */
+
+/* Il bollino in fondo alla riga: «Premium» o «Base», in una parola. Premium
+   prende il colore dell'accento, che e' quello dei tasti: e' la cosa che si
+   e' comprata, e deve vedersi senza leggere. Base resta tenue — non e' un
+   guasto, e non si scrive come tale. */
+.bollino {
+  flex: 0 0 auto;
+  padding: 3px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--bordo);
+  color: var(--tenue);
+  font-size: 0.76rem;
+  font-weight: 650;
+  letter-spacing: 0.01em;
+}
+
+.bollino.premium {
+  color: var(--acceso);
+  border-color: color-mix(in srgb, var(--acceso) 35%, transparent);
+  background: color-mix(in srgb, var(--acceso) 9%, transparent);
+}
+
+.faccia.premium {
+  background: color-mix(in srgb, var(--acceso) 12%, transparent);
+  border-color: color-mix(in srgb, var(--acceso) 26%, transparent);
+}
+
+.faccia.premium .ic {
+  color: var(--acceso);
+}
+
+#codice-regalo {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+#avviso-licenza.bene {
+  color: var(--bene);
+}

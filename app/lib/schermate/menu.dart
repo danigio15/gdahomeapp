@@ -122,7 +122,13 @@ enum Sezione {
    * l'app. In una casa senza ZHA e senza Zigbee2MQTT quella voce aprirebbe
    * una porta che non si apre — vedi `vociDellaBarra`. */
   zigbee('runtime', pronta: true, soloNellApp: true),
-  automazioni('azioni', soloNellApp: true);
+  automazioni('azioni', soloNellApp: true),
+  /* gdahome Premium: cosa comprende, i piani, il codice regalo. Non e' una
+   * schermata della fila — la voce apre la sua pagina sopra — e c'e' solo
+   * quando c'e' qualcosa da vendere: con la chiave delle licenze vuota tutto
+   * e' gia' aperto, e una voce che vende l'aria sarebbe peggio di niente.
+   * Vedi `vociDellaBarra` e `licenza/`. */
+  premium('evidenza', pronta: true);
 
   const Sezione(this.disegno, {this.pronta = false, this.soloNellApp = false});
 
@@ -192,6 +198,8 @@ enum Sezione {
     Sezione.aiutanti => inLingua(it: 'Aiutanti', en: 'Helpers'),
     Sezione.zigbee => inLingua(it: 'Zigbee', en: 'Zigbee'),
     Sezione.automazioni => inLingua(it: 'Automazioni', en: 'Automations'),
+    /* Il nome del prodotto, uguale nelle due lingue. */
+    Sezione.premium => 'gdahome Premium',
   };
 
   /// In quale gruppo della barra sta.
@@ -206,7 +214,8 @@ enum Sezione {
     Sezione.impostazioniDellApp ||
     Sezione.comeVaLApp ||
     Sezione.segnalazioni ||
-    Sezione.assistenza => GruppoDellaBarra.aiuto,
+    Sezione.assistenza ||
+    Sezione.premium => GruppoDellaBarra.aiuto,
     _ => GruppoDellaBarra.avanzate,
   };
 

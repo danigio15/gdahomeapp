@@ -77,6 +77,12 @@
    * al tetto, invece di farlo premere per sentirsi dire di no. */
   var PLANCE_AL_MASSIMO = 8;
 
+  /* Se questa casa sta nei limiti di gdahome Base. Lo dice `api/licenza`, e
+   * serve alle plance: con Base il tasto «Aggiungi» si spegne e una riga dice
+   * perche', invece di farlo premere per sentirsi dire di no. Di serie falso:
+   * con le licenze spente la pagina e' quella di sempre. */
+  var soloBase = false;
+
   function trova(id) {
     return vediPagina.getElementById(id);
   }
@@ -633,7 +639,8 @@
     if (!elenco) return;
     elenco.textContent = "";
     var quante = plance ? plance.length : 0;
-    trova("aggiungi-plancia").disabled = quante >= PLANCE_AL_MASSIMO;
+    trova("aggiungi-plancia").disabled = quante >= PLANCE_AL_MASSIMO || soloBase;
+    trova("plance-premium").hidden = !soloBase;
 
     (plance || []).forEach(function (una) {
       var riga = vediPagina.createElement("li");
@@ -1647,6 +1654,12 @@
         trova("porta").textContent = stato.porta;
         var fuori = comeVaIlCentralino(stato.centralino);
         pastiglia("pas-fuori", fuori.come, fuori.corto);
+        /* Con gdahome Base il filo c'e' — e' da li' che passa l'abbinamento —
+         * ma i telefoni da fuori non entrano: il verde direbbe il contrario.
+         * Grigio, e non giallo: non e' un guaio e non si aspetta niente. */
+        if (soloBase && fuori.come === "bene") {
+          pastiglia("pas-fuori", "spento", due("solo con Premium", "Premium only"));
+        }
         trova("spiega-centralino").textContent = fuori.lungo;
         scriviLoZigbee(stato.zigbee);
         /* La versione, sempre a schermo accanto al nome: oggi si leggeva solo
@@ -2025,6 +2038,198 @@
     });
   })();
 
+  /* ─── La licenza ────────────────────────────────────────────────────────── */
+
+  /* Una data per una persona: «12 marzo 2027», non un numero. */
+  function unGiorno(quando) {
+    try {
+      return new Date(quando).toLocaleDateString(INGLESE ? "en-GB" : "it-IT", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      });
+    } catch (_errore) {
+      return new Date(quando).toISOString().slice(0, 10);
+    }
+  }
+
+  /* Da dove viene, in una parola che dica qualcosa a chi ci abita. */
+  function daDove(origine) {
+    if (origine === "negozio") return due("abbonamento", "subscription");
+    if (origine === "regalo") return due("regalo", "gift");
+    if (origine === "installatore")
+      return due("da chi ti ha fatto l'impianto", "from your installer");
+    return "";
+  }
+
+  /* Quanto tempo fa, in parole corte. */
+  function quantoFa(quando) {
+    var minuti = Math.round((Date.now() - quando) / 60000);
+    if (minuti < 1) return due("adesso", "just now");
+    if (minuti < 60) return minuti + due(" min fa", " min ago");
+    return Math.round(minuti / 60) + due(" ore fa", " hours ago");
+  }
+
+  /* La riga di un'app: il nome, com'e' messa, e il bollino. */
+  function unaRigaDiLicenza(nome, sua, perBase) {
+    var riga = vediPagina.createElement("li");
+    riga.appendChild(unaFaccia("ic-stella", sua.attiva ? "premium" : ""));
+    var parole = vediPagina.createElement("div");
+    parole.className = "nome";
+    var forte = vediPagina.createElement("strong");
+    forte.textContent = nome;
+    var sotto = vediPagina.createElement("span");
+    var pezzi = [];
+    if (sua.attiva) {
+      pezzi.push(
+        sua.scade == null
+          ? due("Premium per sempre", "Premium for good")
+          : due("Premium fino al ", "Premium until ") + unGiorno(sua.scade),
+      );
+      if (sua.compresa)
+        pezzi.push(due("compreso in gdahome Premium", "included in gdahome Premium"));
+      else if (daDove(sua.origine)) pezzi.push(daDove(sua.origine));
+    } else {
+      pezzi.push(perBase);
+    }
+    sotto.textContent = pezzi.join(" · ");
+    parole.appendChild(forte);
+    parole.appendChild(sotto);
+    riga.appendChild(parole);
+    var bollino = vediPagina.createElement("span");
+    bollino.className = "bollino" + (sua.attiva ? " premium" : "");
+    bollino.textContent = sua.attiva ? "Premium" : "Base";
+    riga.appendChild(bollino);
+    return riga;
+  }
+
+  function disegnaLaLicenza(stato) {
+    var scheda = trova("scheda-licenza");
+    if (!stato || !stato.attive) {
+      scheda.hidden = true;
+      soloBase = false;
+      return;
+    }
+    scheda.hidden = false;
+    var spenta = { attiva: false };
+    var gdahome = stato.gdahome || spenta;
+    var gdanav = stato.gdanav || spenta;
+    soloBase = !gdahome.attiva;
+    var elenco = trova("elenco-licenze");
+    elenco.textContent = "";
+    elenco.appendChild(
+      unaRigaDiLicenza(
+        "gdahome",
+        gdahome,
+        due("Base: una plancia, e solo da casa", "Base: one dashboard, and only at home"),
+      ),
+    );
+    elenco.appendChild(
+      unaRigaDiLicenza(
+        "gdanav",
+        gdanav,
+        due(
+          "Base: navigazione completa per l'auto termica",
+          "Base: full navigation for combustion cars",
+        ),
+      ),
+    );
+    /* Quando e' stata chiesta l'ultima volta: la casa la rinnova da se' ogni
+     * sei ore, e chi guarda deve poter vedere che lo fa. */
+    var ultima = stato.ultima;
+    trova("licenza-quando").textContent = !ultima
+      ? ""
+      : ultima.andata
+        ? due("controllata ", "checked ") + quantoFa(ultima.quando)
+        : due("il quadro non risponde", "the licence server isn't answering");
+  }
+
+  function guardaLaLicenza() {
+    return chiedi("api/licenza")
+      .then(function (stato) {
+        var prima = soloBase;
+        disegnaLaLicenza(stato);
+        /* Le plance dipendono da questa risposta: se e' cambiata, si
+         * ridisegnano subito invece che al giro dopo. */
+        if (prima !== soloBase) return aggiornaTutto();
+        return undefined;
+      })
+      .catch(function () {
+        /* Come per il quadro: una via che non risponde non fa sparire la
+         * scheda sotto gli occhi di chi la sta leggendo. */
+      });
+  }
+
+  function avvisaLaLicenza(testo, bene) {
+    var avviso = trova("avviso-licenza");
+    avviso.textContent = testo || "";
+    avviso.className = "avviso" + (bene ? " bene" : "");
+    avviso.hidden = !testo;
+  }
+
+  /* Le frasi dei no del quadro, dai loro codici: la pagina non indovina da
+   * una frase inglese scritta da una macchina. */
+  function percheNo(codice, altrimenti) {
+    var frasi = {
+      "codice-storto": due(
+        "Un codice regalo è fatto così: GDA-XXXX-XXXX-XXXX.",
+        "A gift code looks like this: GDA-XXXX-XXXX-XXXX.",
+      ),
+      "codice-inesistente": due("Questo codice non esiste.", "This code doesn't exist."),
+      "codice-gia-usato": due(
+        "Questo codice è già stato usato.",
+        "This code has already been used.",
+      ),
+      "quadro-irraggiungibile": due(
+        "Il quadro delle licenze non risponde: riprova fra poco.",
+        "The licence server isn't answering: try again shortly.",
+      ),
+    };
+    return frasi[codice] || altrimenti || due("Non ha funzionato.", "It didn't work.");
+  }
+
+  function riscattaIlCodice() {
+    var casella = trova("codice-regalo");
+    var tasto = trova("riscatta");
+    if (!casella.value.trim()) return;
+    avvisaLaLicenza("");
+    tasto.disabled = true;
+    fetch("api/licenza/riscatta", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ codice: casella.value }),
+    })
+      .then(function (risposta) {
+        return risposta.json().then(function (corpo) {
+          if (!risposta.ok) {
+            avvisaLaLicenza(percheNo(corpo && corpo.errore, corpo && corpo.spiegazione));
+            return undefined;
+          }
+          casella.value = "";
+          disegnaLaLicenza(corpo);
+          avvisaLaLicenza(
+            due(
+              "Fatto: il codice vale per questa casa.",
+              "Done: the code now counts for this home.",
+            ),
+            true,
+          );
+          return aggiornaTutto();
+        });
+      })
+      .catch(function () {
+        avvisaLaLicenza(percheNo("quadro-irraggiungibile"));
+      })
+      .finally(function () {
+        tasto.disabled = false;
+      });
+  }
+
+  trova("riscatta").addEventListener("click", riscattaIlCodice);
+  trova("codice-regalo").addEventListener("keydown", function (evento) {
+    if (evento.key === "Enter") riscattaIlCodice();
+  });
+
   /* Prima di tutto il resto: le parole della pagina, nella lingua di chi
    * guarda. Va fatto prima che qualcosa le riscriva, e prima che si legga il
    * testo di un tasto per rimetterlo dov'era. */
@@ -2042,4 +2247,8 @@
   guardaIlQuadro();
   guardaIlCruscotto();
   setInterval(guardaIlQuadro, 60 * 1000);
+  /* E la licenza: la casa la rinnova ogni sei ore, e qui basta guardarla ogni
+   * minuto — un codice riscattato si ridisegna da se', senza aspettare. */
+  guardaLaLicenza();
+  setInterval(guardaLaLicenza, 60 * 1000);
 })();

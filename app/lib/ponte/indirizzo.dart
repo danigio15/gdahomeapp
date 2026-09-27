@@ -216,6 +216,10 @@ class IndirizzoDelCentralino {
 
   Uri get salute => _via(sicuro ? 'https' : 'http', '/salute');
 
+  /// Da quale numero di costruzione in su l'app si puo' usare: vedi
+  /// `aggiornamento_obbligatorio.dart`.
+  Uri get versioni => _via(sicuro ? 'https' : 'http', '/versioni');
+
   Uri _via(String schema, String percorso, {Map<String, String>? con}) =>
       porta == null
       ? Uri(scheme: schema, host: casa, path: percorso, queryParameters: con)

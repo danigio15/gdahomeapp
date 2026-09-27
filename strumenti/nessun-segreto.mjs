@@ -164,6 +164,18 @@ export const LE_ECCEZIONI = Object.freeze([
     perche:
       "la coppia di prova delle licenze, scritta nel documento perche' chi prova ne ha bisogno e non deve inventarsene una. Quella vera nasce con `strumenti/chiave-licenze.mjs` e sta solo sulla macchina del quadro",
   },
+  {
+    file: "quadro/test/le-licenze.test.js",
+    segno: "chiave-ed25519-grezza",
+    perche:
+      "la stessa coppia di prova di `docs/LICENZE.md`: il quadro ci firma i gettoni delle prove, e le prove degli altri pezzi li verificano con la pubblica di prova. Non vale in nessuna casa: la chiave di serie e' vuota, e quella vera nasce con `strumenti/chiave-licenze.mjs`",
+  },
+  {
+    file: "quadro/test/le-licenze.test.js",
+    segno: "chiave-privata",
+    perche:
+      "la chiave della foglia di una catena di certificati di prova (radice e intermedio «di prova»), per provare la verifica delle risposte firmate di Apple senza Apple: non firma niente fuori dalla prova",
+  },
 ]);
 
 const suUnaRiga = (segno, riga) => segno.come.exec(riga);

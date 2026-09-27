@@ -47,6 +47,9 @@
         <path d="M3 9h18" />
         <path d="M8 12v5M12 12v5M16 12v5" />
       </symbol>
+      <symbol id="ic-stella" viewBox="0 0 24 24">
+        <path d="M12 3.2l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.6l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z" />
+      </symbol>
       <symbol id="ic-onde" viewBox="0 0 24 24">
         <path d="M3 12h3l2.5-7 3.5 14 3-9 2 4h4" />
       </symbol>
@@ -318,7 +321,53 @@
               Ognuna ha le sue sezioni, le sue tessere, le sue stanze — i file sono gli stessi.
               Nell'app si scelgono dal menu; in Home Assistant stanno fra le Dashboard.
             </p>
+            <p class="minuta" id="plance-premium" hidden>
+              <span
+                data-en="With gdahome Base there is one dashboard, the main one. With Premium, up to eight."
+                >Con gdahome Base la plancia è una, la principale. Con Premium, fino a otto.</span
+              >
+            </p>
             <p class="avviso" id="avviso-plance" hidden></p>
+          </section>
+
+          <!-- ⑦ La licenza di questa casa: gdahome Base o Premium, e gdanav
+               che ci sta dentro. Si vede solo quando le licenze sono accese —
+               cioe' quando nel codice c'e' la chiave per verificarle — e
+               finche' non lo sono questa pagina e' quella di sempre. Qui non
+               si compra niente: si compra dall'app sul telefono. Qui si
+               guarda, e si riscatta un codice regalo, che e' la cosa che
+               capita a chi ha l'impianto fatto da qualcuno. -->
+          <section class="scheda" id="scheda-licenza" hidden>
+            <div class="testa-di-scheda">
+              <h2>
+                <svg class="ic" aria-hidden="true"><use href="#ic-stella" /></svg
+                ><span data-en="Licence">Licenza</span>
+              </h2>
+              <span class="conta" id="licenza-quando"></span>
+            </div>
+            <ul id="elenco-licenze" class="elenco"></ul>
+            <div class="riga-di-tasti">
+              <input
+                id="codice-regalo"
+                type="text"
+                maxlength="24"
+                autocomplete="off"
+                spellcheck="false"
+                placeholder="GDA-XXXX-XXXX-XXXX"
+                aria-label="Codice regalo"
+                data-en-aria-label="Gift code"
+              />
+              <button id="riscatta" type="button" data-en="Redeem">Riscatta</button>
+            </div>
+            <p
+              class="minuta"
+              data-en="A gift code comes from whoever installed your home, or with a present. It works once, for this home and for every phone paired with it. Premium itself is bought from the gdahome app on your phone."
+            >
+              Un codice regalo te lo dà chi ti ha fatto l'impianto, o arriva con un regalo. Vale una
+              volta sola, per questa casa e per tutti i telefoni abbinati. Premium si compra
+              dall'app gdahome sul telefono.
+            </p>
+            <p class="avviso" id="avviso-licenza" hidden></p>
           </section>
         </div>
       </div>

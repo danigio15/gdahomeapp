@@ -46,6 +46,7 @@ export { Freno } from "./freno.js";
 
 import { quellaCasa, quelCodice } from "./dove.js";
 import { CASA_VALIDA, IMPRONTA_VALIDA } from "./nomi.js";
+import { INTESTAZIONI_DELLE_VERSIONI, leVersioni } from "./versioni.js";
 
 export default {
   async fetch(richiesta, env) {
@@ -53,6 +54,15 @@ export default {
 
     if (via === "/salute" && richiesta.method === "GET") {
       return risposta({ vivo: true });
+    }
+
+    /* Da quale numero in su l'app si puo' ancora usare: `VERSIONE_MINIMA_APP`
+     * fra le [vars] di `wrangler.toml`. Vedi `versioni.js`. */
+    if (via === "/versioni" && (richiesta.method === "GET" || richiesta.method === "HEAD")) {
+      return new Response(
+        richiesta.method === "HEAD" ? null : JSON.stringify(leVersioni(env?.VERSIONE_MINIMA_APP)),
+        { status: 200, headers: INTESTAZIONI_DELLE_VERSIONI },
+      );
     }
 
     /* L'indirizzo nudo porta a gdahome.

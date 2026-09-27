@@ -100,6 +100,16 @@ dependencies:
   # questo pacchetto non entra in gioco.
   web: ^1.1.0
 
+  # gdahome Premium, comprato dal telefono: Google Play Billing su Android,
+  # StoreKit sull'iPhone. Gli stessi pacchetti (e le stesse versioni) di
+  # gdanav, che dentro l'app ci sta gia': due versioni diverse dello stesso
+  # negozio nello stesso telefono non si mettono d'accordo. La ricevuta non
+  # la controlla l'app: va alla casa, e dalla casa al quadro
+  # (`docs/LICENZE.md`).
+  in_app_purchase: ^3.3.1
+  in_app_purchase_android: ^0.5.3
+  in_app_purchase_storekit: ^0.4.13
+
   # Il navigatore: gdanav, dentro l'app come una sua sezione (solo sul
   # telefono: nella webapp non c'e'). Viene dalla sua repository, dove lo
   # schermo di gdanav sta in un pacchetto apposta; la sua app lo usa uguale.

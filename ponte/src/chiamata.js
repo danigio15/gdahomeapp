@@ -39,6 +39,26 @@
  * niente: si scrive una volta che quel filo non si puo' sorvegliare, e si va
  * avanti come prima. Un ponte aggiornato accanto a un centralino da
  * aggiornare deve funzionare come funzionava, non peggio.
+ *
+ * ─── La licenza, detta al centralino ──────────────────────────────────────
+ *
+ * Il centralino fa entrare da fuori i telefoni di una casa che e' gdahome
+ * Premium, e lo sa perche' glielo dice lei: appena entrata, e ogni volta che
+ * il quadro le da' un gettone nuovo, la casa manda
+ *
+ *     {"t": "licenza", "tipo": "licenza", "gettone": "…"}
+ *
+ * `t` e' come si chiamano tutti i messaggi di questo filo; `tipo` e' come lo
+ * chiama il contratto (`docs/LICENZE.md`). Tutt'e due, perche' costano sette
+ * byte ogni sei ore e cosi' nessun centralino — questo, quello sulla nuvola,
+ * uno scritto domani leggendo solo il contratto — ha da indovinare. Un
+ * centralino di ieri non lo conosce e lo lascia cadere, come fa con tutto
+ * quello che non conosce.
+ *
+ * Il gettone non e' un segreto: e' una firma del quadro che dice «questa casa
+ * e' Premium fino a…», e il centralino la verifica da se' con la chiave
+ * pubblica. Non gli fa vedere niente di quello che passa sul filo. Con le
+ * licenze spente — la chiave vuota — non parte niente.
  */
 
 import { Canale } from "./canale.js";
@@ -112,6 +132,21 @@ export class Chiamata {
     /* `null` finche' non si sa: diventa vero al primo colpetto tornato
      * indietro, falso quando si e' aspettato abbastanza da poterlo dire. */
     this._rispondeAiColpetti = null;
+    /* L'ultimo gettone da dire al centralino. `null` vuol dire «licenze
+     * spente»: non si manda niente, e il filo e' quello di sempre. */
+    this._licenza = null;
+  }
+
+  /* La casa ha un gettone nuovo (o non ne ha piu': stringa vuota). Si dice
+   * subito se il filo e' su, e in ogni caso a ogni rientro. */
+  diLaLicenza(gettone) {
+    this._licenza = String(gettone ?? "");
+    if (this.dentro) this._mandaLaLicenza();
+  }
+
+  _mandaLaLicenza() {
+    if (this._licenza === null) return;
+    this._manda({ t: "licenza", tipo: "licenza", gettone: this._licenza });
   }
 
   get accesa() {
@@ -217,6 +252,9 @@ export class Chiamata {
       this._tentativi = 0;
       this.registro.info(`il centralino ci conosce: ${this.identita.casa}`);
       this._cominciaABattere();
+      /* Prima di qualunque telefono: il centralino decide su questo se far
+       * entrare chi bussa da fuori. */
+      this._mandaLaLicenza();
       /* Se c'era un codice in attesa quando il filo e' caduto, si rimette:
        * altrimenti chi sta davanti allo schermo col codice in mano vedrebbe
        * l'app dire che non trova niente, senza sapere perche'. */

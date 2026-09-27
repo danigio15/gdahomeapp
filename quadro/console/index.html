@@ -2798,6 +2798,18 @@
           font-size: 0.83rem;
           gap: 5px;
         }
+        /* Quattro linguette su un telefono: con «Licenze» in piu' le parole
+           non ci stanno piu' alla misura di prima, e si stringono invece di
+           accavallarsi. */
+        .barra button {
+          padding-inline: 2px;
+          font-size: 0.74rem;
+        }
+        .barra button span {
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
         .barra button svg {
           display: none;
         }
@@ -2822,6 +2834,120 @@
         *::after {
           animation: none !important;
           transition-duration: 0.01ms !important;
+        }
+      }
+
+      /* ─── Le licenze ─────────────────────────────────────────────────
+         Il pacchetto che il gestore ti ha dato, e le licenze che ne hai
+         tolto. Stessi riquadri, stesse righe e stessi tasti
+         dell'abbinamento: le caselle e il menu a tendina sono quelli della
+         pagina del gestore. */
+
+      select {
+        font: inherit;
+        color: var(--ink);
+        background: var(--vetro-pieno);
+        border: 1px solid var(--linea-forte);
+        border-radius: 14px;
+        padding: 10px 14px;
+        min-width: 0;
+      }
+
+      select:focus {
+        outline: none;
+        border-color: var(--accento);
+        box-shadow: 0 0 0 3px var(--accento-soft);
+      }
+
+      .campo {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        margin-bottom: 12px;
+        min-width: 0;
+      }
+
+      .campo label {
+        font-size: 0.84rem;
+        font-weight: 700;
+        color: var(--ink-2);
+      }
+
+      .campo select,
+      .campo input {
+        width: 100%;
+        flex: none;
+      }
+
+      .due-campi {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      /* Le due app del pacchetto, una accanto all'altra: quante ne hai date
+         su quante ne hai, e il metro. */
+      .pacchetto {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+        margin-bottom: 14px;
+      }
+
+      .pacchetto .pezzo {
+        padding: 14px 16px;
+        border-radius: var(--r);
+        background: var(--vetro-pieno);
+        border: 1px solid var(--linea);
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        min-width: 0;
+      }
+
+      .pacchetto .pezzo span {
+        font-size: 0.82rem;
+        font-weight: 700;
+        color: var(--ink-2);
+      }
+
+      .pacchetto .pezzo b {
+        font-size: 1.6rem;
+        font-weight: 800;
+        letter-spacing: -0.03em;
+        line-height: 1.1;
+      }
+
+      .pacchetto .pezzo b small {
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: var(--ink-3);
+      }
+
+      .pacchetto .metro {
+        height: 7px;
+        border-radius: 999px;
+        background: var(--linea);
+        overflow: hidden;
+      }
+
+      .pacchetto .metro i {
+        display: block;
+        height: 100%;
+        border-radius: 999px;
+        background: linear-gradient(90deg, var(--accento), #8b7cf6);
+      }
+
+      .pacchetto .pezzo[data-finito="sì"] .metro i {
+        background: var(--ambra);
+      }
+
+      /* Sul telefono le due caselle delle licenze stanno una sotto l'altra:
+         affiancate, il nome dell'app si tronca. */
+      @media (max-width: 30rem) {
+        .due-campi {
+          grid-template-columns: minmax(0, 1fr);
+          gap: 0;
         }
       }
     </style>
@@ -2971,6 +3097,15 @@
 
       let CASE = [];
       let INVITI = [];
+      /* Il pacchetto di licenze, quelle date e i codici da consegnare
+       * (`/console/licenze`), e l'ultimo codice fatto, da copiare. */
+      let LICENZE = {
+        accese: true,
+        pacchetto: { gdahome: [], gdanav: [] },
+        licenze: [],
+        codici: [],
+      };
+      let CODICE_APPENA = null;
       /* Chi sono, quante ne ho e qual è il mio tetto. Il tetto si mostra
        * **prima** di sbatterci: un codice rifiutato al quarantunesimo impianto,
        * con il cliente che aspetta, è il momento peggiore per scoprire che
@@ -3030,6 +3165,13 @@
         INVITI = inviti.inviti || [];
         IO = io || IO;
         if (case_.soglie) SOGLIE = case_.soglie;
+        /* Le licenze non sono essenziali: se non arrivano, il resto della
+         * pagina va avanti con quello che c'era. */
+        try {
+          LICENZE = await chiedi("/licenze");
+        } catch (errore) {
+          if (errore instanceof ChiaveNoNo || errore instanceof Congelata) throw errore;
+        }
       }
 
       /* Quante ne restano prima del tetto, o `null` se tetto non ce n'è.
@@ -3629,6 +3771,7 @@
              e si vede da se', perche' quella casa nell'elenco si chiama
              `casa_99592daf…`. */
           ["abbina", "Abbinamento", INVITI.length],
+          ["licenze", "Licenze", 0],
         ]
           .map(
             ([quale, parola, quanti]) => `
@@ -3669,7 +3812,9 @@
             ? leCase(primaVolta)
             : schermata === "aggiornamenti"
               ? laFlotta()
-              : lAbbinamento()) + ilFoglio();
+              : schermata === "licenze"
+                ? leLicenze()
+                : lAbbinamento()) + ilFoglio();
 
         for (const una of CASE) if (una.carta?.quando) VISTI.set(una.casa, una.carta.quando);
 
@@ -3771,6 +3916,7 @@
         /* I tasti che cambiano qualcosa. Ognuno fa la sua chiamata, ricarica e
          * ridisegna: non si tocca niente a schermo prima che il server abbia
          * detto di sì, se no si vedrebbe una cosa che non è successa. */
+        agganciaLeLicenze();
         dove.querySelectorAll("[data-fai]").forEach((tasto) => {
           tasto.onclick = () =>
             faiEpoi(tasto, async () => {
@@ -4048,6 +4194,328 @@
         avviaGliOrologi();
       }
 
+      /* ─── Le licenze ─────────────────────────────────────────────────
+       *
+       * Il gestore ti da' un **pacchetto**: quante licenze gdahome Premium e
+       * quante gdanav Premium puoi regalare ai tuoi clienti, e di che durata
+       * — tante di un anno, tante di un mese, tante per sempre. Da qui ne
+       * assegni una a uno dei tuoi impianti, o generi un codice da consegnare
+       * al cliente, che lo riscatta dall'app: la durata la scegli fra quelle
+       * che hai, e comincia da quel momento (per un codice, da quando lo
+       * riscatta). Se la togli torna nel pacchetto, nella sua durata.
+       * Il conto lo tiene il quadro: quando il pacchetto e' finito, e' lui a
+       * dire di no, e qui si vede prima di premere.
+       * ─────────────────────────────────────────────────────────────────── */
+
+      const IL_NOME_DELLA_APP = { gdahome: "gdahome Premium", gdanav: "gdanav Premium" };
+      const LE_APP = ["gdahome", "gdanav"];
+
+      /* Una durata a parole: «1 mese», «1 anno», «per sempre». I mesi
+       * arrivano come numero (un codice) o come stringa (il pacchetto). */
+      function quantiMesi(mesi) {
+        if (mesi === null || mesi === undefined || mesi === "sempre") return "per sempre";
+        const n = Number(mesi);
+        return n % 12 === 0 ? plurale(n / 12, "anno", "anni") : plurale(n, "mese", "mesi");
+      }
+
+      /* I mucchi del pacchetto di un'app: `[{durata, totali, usate}]`. */
+      const iMucchiDi = (app) =>
+        Array.isArray(LICENZE.pacchetto?.[app]) ? LICENZE.pacchetto[app] : [];
+
+      const inItaliano = (quando) =>
+        new Date(quando).toLocaleDateString("it-IT", {
+          day: "numeric",
+          month: "long",
+          year: "numeric",
+        });
+
+      /* Quanti posti restano in un mucchio, e per un'app in tutto. */
+      const restanoNel = ({ totali = 0, usate = 0 }) => Math.max(0, totali - usate);
+      const restanoDi = (app) =>
+        iMucchiDi(app).reduce((tot, mucchio) => tot + restanoNel(mucchio), 0);
+
+      /* Le durate che si possono ancora dare per un'app, per il menu a tendina. */
+      function opzioniDelleDurate(app) {
+        const libere = iMucchiDi(app).filter((mucchio) => restanoNel(mucchio) > 0);
+        if (!libere.length) return `<option value="">Nessuna disponibile</option>`;
+        return libere
+          .map(
+            (mucchio) =>
+              `<option value="${testo(mucchio.durata)}">${testo(quantiMesi(mucchio.durata))} · ${testo(plurale(restanoNel(mucchio), "disponibile", "disponibili"))}</option>`,
+          )
+          .join("");
+      }
+
+      /* Il nome che hai dato alla casa, se e' tua; se no la matricola. */
+      const laCasaDi = (sog) => {
+        const una = CASE.find((altra) => altra.casa === sog);
+        if (una && !una.senzaNome && una.nome) return una.nome;
+        return String(sog).startsWith("tel_")
+          ? "Telefono del cliente"
+          : `${String(sog).slice(0, 13)}…`;
+      };
+
+      /* Un contatore per ogni app e durata: quante ne hai date su quante. */
+      function ilPezzoDelPacchetto(app, { durata, totali = 0, usate = 0 }) {
+        const quota = totali > 0 ? Math.min(100, Math.round((usate / totali) * 100)) : 100;
+        return `
+          <div class="pezzo" data-finito="${usate >= totali ? "sì" : "no"}">
+            <span>${testo(IL_NOME_DELLA_APP[app])} · ${testo(quantiMesi(durata))}</span>
+            <b>${Number(usate)}<small> / ${Number(totali)}</small></b>
+            <div class="metro"><i style="width: ${Number(quota)}%"></i></div>
+            <span>${totali ? plurale(Math.max(0, totali - usate), "disponibile", "disponibili") : "tolte dal pacchetto"}</span>
+          </div>`;
+      }
+
+      function iPezziDelPacchetto() {
+        const pezzi = LE_APP.flatMap((app) =>
+          iMucchiDi(app).map((mucchio) => ilPezzoDelPacchetto(app, mucchio)),
+        );
+        return pezzi.length
+          ? `<div class="pacchetto">${/* già HTML */ pezzi.join("")}</div>`
+          : `<div class="vuoto" style="margin-bottom: 14px">Nel tuo pacchetto non ci sono licenze. Le decide chi gestisce il cruscotto.</div>`;
+      }
+
+      function leLicenze() {
+        const date = LICENZE.licenze || [];
+        const codici = LICENZE.codici || [];
+        const nessuna = !restanoDi("gdahome") && !restanoDi("gdanav");
+        /* L'app scelta di serie: la prima che ha ancora qualcosa da dare. */
+        const primaApp = LE_APP.find((app) => restanoDi(app)) || "gdahome";
+        const mie = CASE.filter((una) => una.casa);
+        const opzioniDelleCase = mie
+          .map(
+            (una) =>
+              `<option value="${testo(una.casa)}">${testo(una.senzaNome ? "Senza nome · " + una.casa.slice(5, 13) : una.nome)}</option>`,
+          )
+          .join("");
+
+        return `
+          <h1 class="titolone">Licenze</h1>
+          <p class="sottotitolo">
+            Le licenze Premium che puoi regalare ai tuoi clienti. <b>gdahome Premium</b> vale per tutta la casa, e comprende gdanav Premium; <b>gdanav Premium</b> da solo vale per un telefono, e si consegna con un codice.
+          </p>
+
+          <div class="abbina">
+            <div class="colonna">
+              <section class="riquadro tinto">
+                <div class="capoRiquadro"><h3>Il tuo pacchetto</h3></div>
+                ${/* già HTML */ iPezziDelPacchetto()}
+
+                ${
+                  CODICE_APPENA
+                    ? `<div class="codice">
+                        <span class="cifre">${testo(CODICE_APPENA.codice)}</span>
+                        <button type="button" class="tasto copia" data-copia="${testo(CODICE_APPENA.codice)}">Copia</button>
+                      </div>
+                      <p class="nota" style="margin: 8px 0 14px">
+                        ${testo(IL_NOME_DELLA_APP[CODICE_APPENA.app] || "")}, ${testo(quantiMesi(CODICE_APPENA.mesi))} da quando lo riscatta. Il cliente lo inserisce nell'app, in «Ho un codice regalo»: vale una volta sola.
+                      </p>`
+                    : ""
+                }
+
+                <div class="due-campi">
+                  <div class="campo">
+                    <label for="licenza-app">App</label>
+                    <select id="licenza-app">
+                      <option value="gdahome"${primaApp === "gdahome" ? " selected" : ""}>gdahome Premium</option>
+                      <option value="gdanav"${primaApp === "gdanav" ? " selected" : ""}>gdanav Premium</option>
+                    </select>
+                  </div>
+                  <div class="campo">
+                    <label for="licenza-durata">Durata</label>
+                    <select id="licenza-durata"${restanoDi(primaApp) ? "" : " disabled"}>${/* già HTML */ opzioniDelleDurate(primaApp)}</select>
+                  </div>
+                </div>
+                <div class="campo">
+                  <label for="licenza-casa">Impianto</label>
+                  ${
+                    mie.length
+                      ? `<select id="licenza-casa">${/* già HTML */ opzioniDelleCase}</select>`
+                      : `<select id="licenza-casa" disabled><option>Nessun impianto abbinato</option></select>`
+                  }
+                </div>
+                <div class="azioni">
+                  <button type="button" class="tasto forte grande" data-assegna ${!restanoDi(primaApp) || !mie.length ? "disabled" : ""}>Assegna all'impianto</button>
+                  <button type="button" class="tasto grande" data-codice-regalo ${!restanoDi(primaApp) ? "disabled" : ""}>Genera un codice</button>
+                </div>
+                ${
+                  nessuna
+                    ? `<p class="minuta" style="margin-top: 14px">
+                         <b>Il pacchetto è esaurito.</b> Per averne altre contatta chi gestisce il cruscotto. Togliendo una licenza che hai dato, torna disponibile nella sua durata.
+                       </p>`
+                    : ""
+                }
+                ${
+                  LICENZE.accese
+                    ? ""
+                    : `<div class="avvertenza">
+                         <span class="gettone" aria-hidden="true">!</span>
+                         <span>Il servizio delle licenze non è ancora attivo: quello che assegni adesso vale da quando il gestore lo accende.</span>
+                       </div>`
+                }
+              </section>
+            </div>
+
+            <div class="colonna">
+              <section class="riquadro">
+                <div class="capoRiquadro">
+                  <h3>Licenze assegnate</h3>
+                  <span class="conta">${Number(date.length)}</span>
+                </div>
+                ${
+                  date.length
+                    ? `<ul class="righe">
+                        ${date
+                          .map(
+                            (una) => `
+                          <li>
+                            <span class="che">
+                              <b>${testo(laCasaDi(una.sog))}</b>
+                              <span>${testo(IL_NOME_DELLA_APP[una.app] || una.app)} · ${una.scade === null ? "per sempre" : una.vale ? `fino al ${testo(inItaliano(una.scade))}` : `scaduta il ${testo(inItaliano(una.scade))}`}${una.codice ? " · da codice" : ""}</span>
+                            </span>
+                            <span class="pastiglia ${una.vale ? "posto" : "offline"}">${una.vale ? "attiva" : "scaduta"}</span>
+                            <button type="button" class="tasto male" data-togli-licenza="${testo(una.lic)}">Togli</button>
+                          </li>`,
+                          )
+                          .join("")}
+                      </ul>`
+                    : `<div class="vuoto">Nessuna licenza assegnata. Quelle che dai, e quelle riscattate dai tuoi codici, compaiono qui.</div>`
+                }
+              </section>
+
+              <section class="riquadro">
+                <div class="capoRiquadro">
+                  <h3>Codici da consegnare</h3>
+                  <span class="conta">${Number(codici.length)}</span>
+                </div>
+                ${
+                  codici.length
+                    ? `<ul class="righe">
+                        ${codici
+                          .map(
+                            (uno) => `
+                          <li>
+                            <span class="che">
+                              <b class="mono">${testo(uno.codice)}</b>
+                              <span>${testo(IL_NOME_DELLA_APP[uno.app] || uno.app)} · ${testo(quantiMesi(uno.mesi))} · generato ${testo(daQuanto(uno.creato))}</span>
+                            </span>
+                            <button type="button" class="tasto copia" data-copia="${testo(uno.codice)}">Copia</button>
+                            <button type="button" class="tasto male" data-annulla-codice="${testo(uno.codice)}">Annulla</button>
+                          </li>`,
+                          )
+                          .join("")}
+                      </ul>`
+                    : `<div class="vuoto">Nessun codice in attesa. Un codice non ancora riscattato occupa un posto del pacchetto: annullandolo, torna disponibile.</div>`
+                }
+                <div class="avvertenza">
+                  <span class="gettone" aria-hidden="true">!</span>
+                  <span>
+                    Una licenza tolta smette di valere <b>entro otto giorni</b>: l'impianto la controlla da solo, anche quando non è collegato.
+                  </span>
+                </div>
+              </section>
+            </div>
+          </div>`;
+      }
+
+      /* Un tasto in due tempi, come «Installa»: il primo tocco arma, il
+       * secondo fa. Togliere una licenza a un cliente non deve bastare un
+       * tocco andato storto scorrendo l'elenco. */
+      function inDueTempi(tasto, parola, poi) {
+        if (tasto.dataset.sicuro !== "sì") {
+          tasto.dataset.sicuro = "sì";
+          tasto.textContent = "Premi ancora per confermare";
+          setTimeout(() => {
+            if (!tasto.isConnected) return;
+            tasto.dataset.sicuro = "";
+            tasto.textContent = parola;
+          }, 6000);
+          return;
+        }
+        poi();
+      }
+
+      function agganciaLeLicenze() {
+        /* La durata e' una di quelle del pacchetto, "12" o "sempre": la
+         * sceglie il gestore quando lo riempie, qui si sceglie il mucchio. */
+        const durata = () => dove.querySelector("#licenza-durata")?.value || "";
+        const app = () => dove.querySelector("#licenza-app")?.value || "gdahome";
+        const assegna = dove.querySelector("[data-assegna]");
+        const regalo = dove.querySelector("[data-codice-regalo]");
+        const ciSonoCase = CASE.some((una) => una.casa);
+        /* Cambiata l'app, il menu delle durate mostra solo le sue, e i tasti
+         * si spengono se non ne ha. */
+        const sceltaApp = dove.querySelector("#licenza-app");
+        if (sceltaApp)
+          sceltaApp.onchange = () => {
+            const quale = app();
+            const menu = dove.querySelector("#licenza-durata");
+            if (menu) {
+              menu.innerHTML = opzioniDelleDurate(quale);
+              menu.disabled = !restanoDi(quale);
+            }
+            if (assegna) assegna.disabled = !restanoDi(quale) || !ciSonoCase;
+            if (regalo) regalo.disabled = !restanoDi(quale);
+          };
+        if (assegna)
+          assegna.onclick = () => {
+            const casa = dove.querySelector("#licenza-casa")?.value || "";
+            const quale = app();
+            if (!restanoDi(quale) || !durata()) {
+              avvisa(`Nel pacchetto non restano licenze ${quale}`);
+              return;
+            }
+            faiEpoi(assegna, async () => {
+              await chiedi("/licenze", {
+                method: "POST",
+                body: JSON.stringify({ app: quale, casa, durata: durata() }),
+              });
+              CODICE_APPENA = null;
+              avvisa(`${IL_NOME_DELLA_APP[quale]} assegnato a ${laCasaDi(casa)}`);
+            });
+          };
+        if (regalo)
+          regalo.onclick = () => {
+            const quale = app();
+            const scelta = durata();
+            if (!restanoDi(quale) || !scelta) {
+              avvisa(`Nel pacchetto non restano licenze ${quale}`);
+              return;
+            }
+            faiEpoi(regalo, async () => {
+              const detto = await chiedi("/codici", {
+                method: "POST",
+                body: JSON.stringify({ app: quale, durata: scelta }),
+              });
+              CODICE_APPENA = { codice: detto.codice, app: quale, mesi: scelta };
+            });
+          };
+        dove.querySelectorAll("[data-togli-licenza]").forEach((tasto) => {
+          tasto.onclick = () =>
+            inDueTempi(tasto, "Togli", () =>
+              faiEpoi(tasto, async () => {
+                await chiedi(`/licenze/${encodeURIComponent(tasto.dataset.togliLicenza)}`, {
+                  method: "DELETE",
+                });
+                avvisa("Licenza tolta: torna nel pacchetto");
+              }),
+            );
+        });
+        dove.querySelectorAll("[data-annulla-codice]").forEach((tasto) => {
+          tasto.onclick = () =>
+            inDueTempi(tasto, "Annulla", () =>
+              faiEpoi(tasto, async () => {
+                await chiedi(`/codici/${encodeURIComponent(tasto.dataset.annullaCodice)}`, {
+                  method: "DELETE",
+                });
+                if (CODICE_APPENA?.codice === tasto.dataset.annullaCodice) CODICE_APPENA = null;
+                avvisa("Codice annullato: torna nel pacchetto");
+              }),
+            );
+        });
+      }
+
       /* Fa una cosa, poi ricarica e ridisegna. Il tasto resta spento mentre
        * succede: due tocchi su «fai un codice» sono due codici. */
       async function faiEpoi(tasto, cosa) {
@@ -4127,6 +4595,8 @@
           '<svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M10 3v10m0 0 3.5-3.5M10 13 6.5 9.5M4 16h12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
         abbina:
           '<svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M10 4v12M4 10h12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>',
+        licenze:
+          '<svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M3 6.5A1.5 1.5 0 0 1 4.5 5h11A1.5 1.5 0 0 1 17 6.5V8a2 2 0 0 0 0 4v1.5a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 3 13.5V12a2 2 0 0 0 0-4z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M10 7.6l.8 1.6 1.7.2-1.3 1.2.3 1.7-1.5-.8-1.5.8.3-1.7-1.3-1.2 1.7-.2z" fill="currentColor"/></svg>',
       };
 
       /* Le iniziali per il tondo in testata: le prime lettere delle prime due
@@ -6224,7 +6694,7 @@
        * vorrebbe dire perdere quello che si e' scritto. */
       const staScrivendo = () => {
         const chi = document.activeElement;
-        return Boolean(chi && dove.contains(chi) && chi.matches("input, textarea"));
+        return Boolean(chi && dove.contains(chi) && chi.matches("input, textarea, select"));
       };
 
       setInterval(() => {

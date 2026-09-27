@@ -148,7 +148,17 @@ class BarraDelleSezioni extends StatefulWidget {
     this.daParte = const LaPlanciaDaParte(),
     this.daAggiornare = 0,
     this.tessera,
+    this.bloccate = const {},
+    this.apriPremium,
   });
+
+  /// Le mattonelle col lucchetto: ci sono, si toccano, e portano alla pagina
+  /// di gdahome Premium. Lo decide chi apre la barra (`home.dart`).
+  final Set<Sezione> bloccate;
+
+  /// Apre la pagina Premium: la tendina delle plance la chiama per le plance
+  /// col lucchetto.
+  final VoidCallback? apriPremium;
 
   /// La tessera in testa: gdanav, vivo — l'auto della plancia, la batteria,
   /// Casa e Lavoro (`navigatore_qui/`). Quando c'e', la mattonella del
@@ -518,6 +528,8 @@ class BarraDelleSezioniState extends State<BarraDelleSezioni>
                   collegamento: widget.collegamento,
                   trattieni: _trattieni,
                   lascia: _lascia,
+                  bloccate: widget.bloccate,
+                  apriPremium: widget.apriPremium,
                 )
               else
                 for (final (i, gruppo) in _gruppi.indexed) ...[
@@ -531,6 +543,8 @@ class BarraDelleSezioniState extends State<BarraDelleSezioni>
                     collegamento: widget.collegamento,
                     trattieni: _trattieni,
                     lascia: _lascia,
+                    bloccate: widget.bloccate,
+                    apriPremium: widget.apriPremium,
                   ),
                 ],
             ],
@@ -818,7 +832,12 @@ class _LeMattonelle extends StatelessWidget {
     required this.collegamento,
     required this.trattieni,
     required this.lascia,
+    this.bloccate = const {},
+    this.apriPremium,
   });
+
+  final Set<Sezione> bloccate;
+  final VoidCallback? apriPremium;
 
   final List<Sezione> sezioni;
   final Sezione aperta;
@@ -860,6 +879,8 @@ class _LeMattonelle extends StatelessWidget {
           plance: sezione == Sezione.plancia && piuDiUna ? collegamento : null,
           trattieni: trattieni,
           lascia: lascia,
+          bloccata: bloccate.contains(sezione),
+          apriPremium: apriPremium,
         );
       },
     );
@@ -904,12 +925,20 @@ class _Mattonella extends StatefulWidget {
     required this.plance,
     required this.trattieni,
     required this.lascia,
+    this.bloccata = false,
+    this.apriPremium,
   });
 
   final Sezione sezione;
   final bool scelta;
   final int quanti;
   final VoidCallback premuta;
+
+  /// Col lucchetto: si preme lo stesso, e porta alla pagina Premium.
+  final bool bloccata;
+
+  /// Per le plance col lucchetto nella tendina.
+  final VoidCallback? apriPremium;
 
   /// Non nullo solo sulla plancia, e solo dove le plance sono piu' d'una: in
   /// quel caso la mattonella porta sotto il nome di quella che si guarda, e
@@ -1063,6 +1092,8 @@ class _StatoDellaMattonella extends State<_Mattonella> {
         ),
         if (widget.quanti > 0)
           Positioned(top: 8, right: 8, child: _Quanti(widget.quanti)),
+        if (widget.bloccata)
+          Positioned(top: 8, right: 8, child: _IlLucchetto(sulloScuro: scelta)),
         if (widget.plance case final c?)
           Positioned(
             top: 4,
@@ -1073,6 +1104,7 @@ class _StatoDellaMattonella extends State<_Mattonella> {
               trattieni: widget.trattieni,
               lascia: widget.lascia,
               apri: widget.premuta,
+              apriPremium: widget.apriPremium,
             ),
           ),
       ],
@@ -1100,7 +1132,11 @@ class _QualePlancia extends StatelessWidget {
     required this.trattieni,
     required this.lascia,
     required this.apri,
+    this.apriPremium,
   });
+
+  /// Le plance oltre la principale, senza gdahome Premium, portano qui.
+  final VoidCallback? apriPremium;
 
   final Collegamento collegamento;
   final Color colore;
@@ -1131,6 +1167,14 @@ class _QualePlancia extends StatelessWidget {
       onCanceled: lascia,
       onSelected: (profilo) {
         lascia();
+        final voluta = plance
+            .where((una) => una.profilo == profilo)
+            .firstOrNull;
+        /* Col lucchetto: non si apre, si spiega. */
+        if (voluta != null && !collegamento.siPuoAprire(voluta)) {
+          apriPremium?.call();
+          return;
+        }
         unawaited(collegamento.cambiaPlancia(profilo));
         apri();
       },
@@ -1157,11 +1201,15 @@ class _QualePlancia extends StatelessWidget {
             child: Row(
               children: [
                 Icon(
-                  una.profilo == quale.profilo
+                  !collegamento.siPuoAprire(una)
+                      ? Icons.lock_rounded
+                      : una.profilo == quale.profilo
                       ? Icons.radio_button_checked_rounded
                       : Icons.radio_button_unchecked_rounded,
                   size: 18,
-                  color: una.profilo == quale.profilo
+                  color: !collegamento.siPuoAprire(una)
+                      ? Colori.ambraScura
+                      : una.profilo == quale.profilo
                       ? colori.primary
                       : colori.onSurfaceVariant,
                 ),
@@ -1175,6 +1223,9 @@ class _QualePlancia extends StatelessWidget {
                       fontWeight: una.profilo == quale.profilo
                           ? FontWeight.w700
                           : FontWeight.w500,
+                      color: collegamento.siPuoAprire(una)
+                          ? null
+                          : colori.onSurfaceVariant,
                     ),
                   ),
                 ),
@@ -1253,6 +1304,34 @@ class _Quanti extends StatelessWidget {
   }
 }
 
+/// Il lucchetto di gdahome Premium, addosso a una mattonella.
+///
+/// Ambra come il numero degli aggiornamenti, e per lo stesso motivo: non e'
+/// un guasto, e' una porta che si apre con Premium. La mattonella resta viva
+/// — si preme, e porta alla pagina che spiega — perche' una voce spenta non
+/// dice niente di cosa c'e' dietro.
+class _IlLucchetto extends StatelessWidget {
+  const _IlLucchetto({this.sulloScuro = false});
+
+  final bool sulloScuro;
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: 'gdahome Premium',
+      child: Container(
+        width: 22,
+        height: 22,
+        decoration: BoxDecoration(
+          color: sulloScuro ? Colori.ambra : Colori.ambraScura,
+          shape: BoxShape.circle,
+        ),
+        child: const Icon(Icons.lock_rounded, size: 13, color: Colors.white),
+      ),
+    );
+  }
+}
+
 /// Le sezioni del menu: la plancia, i dispositivi, e quello che verra'.
 ///
 /// Tutte tranne una. La **Console** — la coda delle richieste di aiuto di
@@ -1283,9 +1362,11 @@ List<Sezione> vociDellaBarra({
   bool conLaGestione = false,
   bool conZigbee = false,
   bool nellApp = true,
+  bool conPremium = false,
 }) => [
   for (final una in Sezione.values)
     if ((una != Sezione.console || conLaConsole) &&
+        (una != Sezione.premium || conPremium) &&
         (una != Sezione.cruscotto || conIlCruscotto) &&
         (una != Sezione.gestione || conLaGestione) &&
         (una != Sezione.zigbee || conZigbee) &&

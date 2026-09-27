@@ -46,6 +46,8 @@
  * mandano solo a quella che lo porta.
  */
 
+import { CHIAVE_PUBBLICA_LICENZE } from "./chiave-licenze.js";
+import { valeFino, verificaGettone } from "./gettone.js";
 import { impronta, stessaImpronta } from "./segreti.js";
 import { quelCodice, quelFreno } from "./dove.js";
 import { CASA_VALIDA, IMPRONTA_VALIDA } from "./nomi.js";
@@ -115,6 +117,10 @@ const SOLO_TESTO = 1003;
 const TROPPO_GRANDE = 1009;
 const RIPROVA_PIU_TARDI = 1013;
 
+/* Il telefono di una casa senza gdahome Premium: codice e motivo del
+ * contratto (`docs/LICENZE.md`), uguali al centralino in Node. */
+export const PREMIUM_RICHIESTO = Object.freeze({ codice: 4402, motivo: "premium-richiesto" });
+
 const suoDi = (presa) => {
   try {
     return presa.deserializeAttachment() ?? {};
@@ -151,6 +157,22 @@ export class Casa {
   constructor(state, env) {
     this.state = state;
     this.env = env;
+    /* La chiave dei gettoni delle licenze: quella scritta nel codice, sempre.
+     * Non si legge da `env` apposta — chi tiene il Worker non deve poter
+     * accendere o spegnere le licenze da una variabile — e si cambia solo
+     * nelle prove, a oggetto fatto.
+     *
+     * ─── La licenza, sulla nuvola ───────────────────────────────────────
+     *
+     * La casa dice il suo gettone con `{"t": "licenza", "tipo": "licenza",
+     * "gettone": "…"}`; si verifica qui e si scrive nell'archivio fino a
+     * quando vale (`premiumFino`). Nell'archivio e non addosso a un filo
+     * perche' questo oggetto si dimentica tutto fra un risveglio e l'altro, e
+     * perche' una casa che cade e si riaggancia non deve far dire
+     * «premium-richiesto» ai suoi telefoni nel frattempo. Una scrittura ogni
+     * sei ore per casa, che e' niente. Con la chiave vuota non si scrive e
+     * non si guarda niente: entrano tutti, come prima. */
+    this.chiaveLicenze = CHIAVE_PUBBLICA_LICENZE;
   }
 
   /* ─── Chi arriva ──────────────────────────────────────────────────────── */
@@ -268,6 +290,13 @@ export class Casa {
       presa.close(NORMALE, "casa non collegata");
       return;
     }
+    /* Da fuori si entra con gdahome Premium; l'abbinamento resta aperto a
+     * tutti. Dopo «casa non collegata», che e' la verita' piu' utile. */
+    if (via === "telefono" && !(await this._ePremium())) {
+      presa.accept();
+      presa.close(PREMIUM_RICHIESTO.codice, PREMIUM_RICHIESTO.motivo);
+      return;
+    }
     if (this.state.getWebSockets("telefono").length >= TELEFONI_PER_CASA) {
       presa.accept();
       presa.close(NORMALE, "troppi telefoni su questa casa");
@@ -279,7 +308,9 @@ export class Casa {
 
     const ora = Date.now();
     this.state.acceptWebSocket(presa, ["telefono", `c${numero}`]);
-    presa.serializeAttachment({ chi: "telefono", numero, arrivatoIl: ora, parlato: false });
+    /* `via` addosso al filo: se la casa smette d'essere Premium escono i
+     * telefoni entrati da fuori, non quelli che si stanno abbinando. */
+    presa.serializeAttachment({ chi: "telefono", numero, via, arrivatoIl: ora, parlato: false });
     casa.send(JSON.stringify({ c: numero, t: "apri", da, via }));
     await this._sveglia(ora + ATTESA);
   }
@@ -294,6 +325,43 @@ export class Casa {
       this.state.setWebSocketAutoResponse(new Coppia(COLPETTO, COLPETTO));
     } catch (_errore) {
       /* Un runtime che non lo sa fare: si risponde svegliandosi, sotto. */
+    }
+  }
+
+  /* ─── La licenza ─────────────────────────────────────────────────────── */
+
+  async _ePremium() {
+    if (!this.chiaveLicenze) return true;
+    const fino = await this.state.storage.get("premiumFino");
+    return typeof fino === "number" && fino > Date.now();
+  }
+
+  /* Il gettone detto dalla casa. Buono: si scrive fino a quando vale. Vuoto o
+   * storto: la casa non e' (piu') Premium, si cancella, e i telefoni entrati
+   * da fuori escono col codice del contratto. */
+  async _laLicenza(suo, gettone) {
+    if (!this.chiaveLicenze) return;
+    const detto = await verificaGettone(String(gettone ?? ""), {
+      chiave: this.chiaveLicenze,
+      sog: suo.atteso,
+      app: "gdahome",
+      adesso: Date.now(),
+    });
+    if (detto) {
+      const fino = valeFino(detto);
+      /* Si scrive solo se cambia: e' sempre un numero nuovo a ogni rinnovo,
+       * ma una casa che ridice lo stesso gettone rientrando non scrive. */
+      if ((await this.state.storage.get("premiumFino")) !== fino) {
+        await this.state.storage.put("premiumFino", fino);
+      }
+      return;
+    }
+    if ((await this.state.storage.get("premiumFino")) !== undefined) {
+      await this.state.storage.delete("premiumFino");
+    }
+    for (const telefono of this.state.getWebSockets("telefono")) {
+      if (suoDi(telefono).via !== "telefono") continue;
+      chiudi(telefono, PREMIUM_RICHIESTO.codice, PREMIUM_RICHIESTO.motivo);
     }
   }
 
@@ -364,10 +432,16 @@ export class Casa {
       case "chiudi":
         this._chiudiIlCanale(detto.c, "la casa ha chiuso");
         return;
+      case "licenza":
+        await this._laLicenza(suo, detto.gettone);
+        return;
       default:
-        /* Roba che non si conosce si lascia perdere: una casa piu' nuova del
-         * centralino puo' dire cose che qui non si sanno ancora, e non e' un
-         * motivo per buttarla fuori. */
+        /* Il contratto chiama il campo `tipo`: una casa scritta leggendo solo
+         * quello va capita lo stesso. */
+        if (detto.tipo === "licenza") await this._laLicenza(suo, detto.gettone);
+        /* Il resto che non si conosce si lascia perdere: una casa piu' nuova
+         * del centralino puo' dire cose che qui non si sanno ancora, e non e'
+         * un motivo per buttarla fuori. */
         return;
     }
   }
@@ -436,6 +510,11 @@ export class Casa {
     }
 
     presa.serializeAttachment({ ...suo, entrata: true });
+    /* Il gettone puo' venire anche dentro la presentazione; di solito arriva
+     * subito dopo, a parte. Se non c'e' non si dimentica quello di prima. */
+    if (typeof detto.gettone === "string" && detto.gettone) {
+      await this._laLicenza(suo, detto.gettone);
+    }
     presa.send(JSON.stringify({ t: "bene" }));
 
     const ora = Date.now();
