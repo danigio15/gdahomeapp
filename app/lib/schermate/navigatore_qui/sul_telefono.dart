@@ -58,6 +58,25 @@ const _auto = MethodChannel('gdahome/navigatore');
  * parla all'auto: in macchina c'e' la casa. */
 Future<bool> _conLAuto = Future.value(false);
 
+/// Se **adesso** si e' in macchina, con lo schermo dell'auto acceso.
+///
+/// Serve a una cosa sola, e non e' una cosa da poco: finche' si e' in
+/// macchina il filo con la casa **non va a riposo**.
+///
+/// Dal campo, con la foto dello schermo dell'auto: «i dati batteria non si
+/// aggiornano fino a che non apro app dal cellulare». Era vero. La batteria
+/// che gdanav mostra in macchina la prende dalla sezione Auto della plancia
+/// (`la_vettura.dart`), e quella la riempie il filo con la casa. Il filo
+/// pero' si chiude da solo quando l'app non si guarda piu' — e' un risparmio
+/// di richieste al centralino, e ha senso col telefono in tasca a casa. In
+/// macchina il telefono e' in tasca **apposta**, e quello che si guarda e' lo
+/// schermo dell'auto: chiudere li' vuol dire spegnere proprio il dato che si
+/// sta guardando.
+///
+/// Si spegne quando si scende (`IlNavigatoreInAuto.sceso`), e da li' il filo
+/// torna a riposare come sempre.
+final inMacchina = ValueNotifier<bool>(false);
+
 /// Accende gdanav, una volta sola per tutta l'app: dalla sezione del
 /// telefono o dall'auto, chi arriva prima.
 Future<GdanavApp> accendiIlNavigatore() => _acceso ??= () async {
@@ -80,12 +99,19 @@ Future<GdanavApp> accendiIlNavigatore() => _acceso ??= () async {
 /// arrivata prima che il Dart fosse pronto a sentirlo, glielo si domanda qui.
 void ascoltaLAuto() {
   _auto.setMethodCallHandler((chiamata) async {
-    if (chiamata.method == 'accendi') unawaited(accendiIlNavigatore());
+    switch (chiamata.method) {
+      case 'accendi':
+        inMacchina.value = true;
+        unawaited(accendiIlNavigatore());
+      case 'sceso':
+        inMacchina.value = false;
+    }
   });
   _conLAuto = () async {
     try {
       final come = await _auto.invokeMapMethod<String, Object?>('comeSta');
       if (come?['inAuto'] == true) {
+        inMacchina.value = true;
         scheduleMicrotask(() => unawaited(accendiIlNavigatore()));
       }
       return true;

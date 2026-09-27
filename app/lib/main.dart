@@ -359,6 +359,7 @@ class _PortoneState extends State<Portone> with WidgetsBindingObserver {
     _ascoltoDelleImpostazioni = _impostazioni.cambiamenti.listen(
       (_) => unawaited(_laFinestra()),
     );
+    navigatore.inMacchina.addListener(_inMacchinaECambiato);
     _collegamento =
         widget.collegamento ??
         Collegamento(
@@ -413,6 +414,45 @@ class _PortoneState extends State<Portone> with WidgetsBindingObserver {
     _lasciataIl ??= DateTime.now();
     _seNonTorna ??= Timer(quantoSiAspettaPrimaDiRiposare, () {
       _seNonTorna = null;
+      /* In macchina no: vedi [_inMacchinaECambiato]. Si guarda adesso e non
+       * quando si e' partito il conto, perche' in quel minuto si puo' essere
+       * saliti in macchina. */
+      if (navigatore.inMacchina.value) return;
+      unawaited(_collegamento.riposa());
+    });
+  }
+
+  /* Saliti in macchina, il filo si sveglia; scesi, torna a riposare.
+   *
+   * Dal campo, con la foto dello schermo dell'auto: «i dati batteria non si
+   * aggiornano fino a che non apro app dal cellulare». La batteria che gdanav
+   * mostra in macchina la prende dalla sezione Auto della plancia, e quella
+   * la riempie questo filo. Il filo pero' si chiude da solo dopo qualche
+   * minuto che l'app non si guarda — e col telefono in tasca e Android Auto
+   * acceso l'app non si guarda mai. Da li' il numero restava quello di prima
+   * di partire, e aprire l'app sul telefono lo faceva tornare vivo: era la
+   * sveglia, non un caso.
+   *
+   * Il risparmio di richieste al centralino resta dov'era: in macchina ci si
+   * sta un'ora, non una notte, ed e' l'unico momento in cui quel dato lo sta
+   * guardando davvero qualcuno. */
+  void _inMacchinaECambiato() {
+    if (navigatore.inMacchina.value) {
+      _seNonTorna?.cancel();
+      _seNonTorna = null;
+      _collegamento.sveglia();
+      return;
+    }
+    /* Scesi dalla macchina con l'app ancora in tasca: il conto alla rovescia
+     * riparte da adesso, come se l'app fosse stata appena lasciata. */
+    if (!nonSiGuardaPiu(
+      WidgetsBinding.instance.lifecycleState ?? AppLifecycleState.resumed,
+    )) {
+      return;
+    }
+    _seNonTorna ??= Timer(quantoSiAspettaPrimaDiRiposare, () {
+      _seNonTorna = null;
+      if (navigatore.inMacchina.value) return;
       unawaited(_collegamento.riposa());
     });
   }
@@ -589,6 +629,7 @@ class _PortoneState extends State<Portone> with WidgetsBindingObserver {
     _seNonTorna?.cancel();
     _ascolto?.cancel();
     _ascoltoDelleImpostazioni?.cancel();
+    navigatore.inMacchina.removeListener(_inMacchinaECambiato);
     /* Il velo e' di questo portone: andandosene, non resta a coprire. */
     final sopra = _sopra;
     if (sopra != null) {

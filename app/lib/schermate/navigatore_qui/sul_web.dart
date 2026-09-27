@@ -31,6 +31,10 @@ class IlNavigatore extends StatelessWidget {
 /// Nel browser non c'e' nessuna auto da ascoltare.
 void ascoltaLAuto() {}
 
+/// Nel browser in macchina non ci si va: la scheda non ha un Android Auto, e
+/// il filo riposa sempre com'e' giusto che faccia.
+final inMacchina = ValueNotifier<bool>(false);
+
 /// Nel browser la tessera non c'e': non c'e' il navigatore.
 Widget? laTesseraDelNavigatore({
   required bool scelta,

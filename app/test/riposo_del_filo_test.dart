@@ -16,6 +16,7 @@ import 'package:gdahome/casa/collegamento.dart';
 import 'package:gdahome/casa/dispensa/dispensa.dart';
 import 'package:gdahome/casa/impostazioni.dart';
 import 'package:gdahome/main.dart';
+import 'package:gdahome/schermate/navigatore_qui/qui.dart' as navigatore;
 
 /// Un collegamento che segna quante volte lo si è mandato a riposo.
 class _CollegamentoSpia extends Collegamento {
@@ -83,5 +84,57 @@ void main() {
     tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
     await tester.pump();
     expect(collegamento.svegliate, greaterThan(0));
+  });
+
+  testWidgets('in macchina il filo non va a riposo', (tester) async {
+    /* Dal campo, con la foto dello schermo dell'auto: «i dati batteria non si
+     * aggiornano fino a che non apro app dal cellulare».
+     *
+     * La batteria che gdanav mostra in macchina la prende dalla sezione Auto
+     * della plancia, e quella la riempie questo filo. Il filo si chiude da
+     * solo quando l'app non si guarda più — e col telefono in tasca e Android
+     * Auto acceso l'app non si guarda mai: il numero restava quello di prima
+     * di partire, e aprire l'app sul telefono era la sveglia. */
+    final collegamento = _CollegamentoSpia();
+    final impostazioni = Impostazioni(
+      sulTelefono: true,
+      android: true,
+      dispensa: DispensaInMemoria(),
+    );
+    await impostazioni.carica();
+    addTearDown(() => navigatore.inMacchina.value = false);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Portone(
+          cassaforte: CassaforteInMemoria(),
+          collegamento: collegamento,
+          impostazioni: impostazioni,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // Il telefono va in tasca e si sale in macchina.
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.hidden);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+    navigatore.inMacchina.value = true;
+    await tester.pump(quantoSiAspettaPrimaDiRiposare * 3);
+    expect(
+      collegamento.riposi,
+      0,
+      reason: 'in macchina lo schermo dell\'auto sta guardando',
+    );
+    expect(
+      collegamento.svegliate,
+      greaterThan(0),
+      reason: 'e se il filo dormiva già, salendo si sveglia',
+    );
+
+    // Si scende, col telefono ancora in tasca: da lì il conto riparte.
+    navigatore.inMacchina.value = false;
+    await tester.pump(quantoSiAspettaPrimaDiRiposare ~/ 2);
+    expect(collegamento.riposi, 0);
+    await tester.pump(quantoSiAspettaPrimaDiRiposare);
+    expect(collegamento.riposi, 1);
   });
 }
