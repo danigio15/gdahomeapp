@@ -151,6 +151,28 @@ function installStyles() {
     html body #page-tapparelle#page-tapparelle .tapp-name{min-width:0!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important;color:var(--tapp-text)!important;font-size:14.5px!important;font-weight:900!important;letter-spacing:.2px!important}
     html body #page-tapparelle#page-tapparelle .tapp-state{display:inline-flex!important;align-items:center!important;gap:6px!important;flex:0 0 auto!important;padding:4px 10px!important;border:1px solid transparent!important;border-radius:999px!important;font-size:10px!important;font-weight:900!important;letter-spacing:.8px!important;text-transform:uppercase!important;white-space:nowrap!important;background:var(--tapp-off-bg)!important;border-color:var(--tapp-off-line)!important;color:var(--tapp-off-fg)!important}
     html body #page-tapparelle#page-tapparelle .tapp-state::before{content:""!important;flex:0 0 auto!important;width:6px!important;height:6px!important;border-radius:50%!important;background:currentColor!important;box-shadow:0 0 0 3px color-mix(in srgb,currentColor 20%,transparent)!important}
+    /* Sul telefono il nome va a capo invece di finire nei puntini.
+     *
+     * Dal campo, con la foto: «Tapparella Bag...». Il nome sta a sinistra e
+     * la pastiglia dello stato a destra, sulla stessa riga; la pastiglia non
+     * si stringe — «TAPPARELLA CHIUSA» in maiuscoletto spaziato ne prende
+     * centocinquanta — e su un telefono al nome ne restano centosettanta.
+     * Con `white-space:nowrap` e i puntini di coda, «Tapparella Bagno Sopra»
+     * diventa «Tapparella Bag...»: cioe' due tapparelle diverse dello stesso
+     * bagno si leggono uguali, che e' il modo peggiore di accorciare un nome.
+     *
+     * Su una card che e' alta — sotto c'e' il disegno della finestra — una
+     * riga in piu' non costa niente: al massimo due, e da li' in poi i
+     * puntini, perche' un nome di sei righe sposterebbe la finestra fuori
+     * dalla card. Vale anche per le finestre col solo sensore: la card e' la
+     * stessa (`windowOnlyCardMarkup`).
+     *
+     * Largo, invece, resta come prima: li' il posto c'e' e una riga sola si
+     * legge prima. */
+    @media(max-width:600px){
+      html body #page-tapparelle#page-tapparelle .tapp-head{align-items:flex-start!important}
+      html body #page-tapparelle#page-tapparelle .tapp-name{white-space:normal!important;overflow-wrap:break-word!important;display:-webkit-box!important;-webkit-box-orient:vertical!important;-webkit-line-clamp:2!important;line-clamp:2!important}
+    }
     html body #page-tapparelle#page-tapparelle .tapp-st-open{background:var(--tapp-ok-bg)!important;border-color:var(--tapp-ok-line)!important;color:var(--tapp-ok-fg)!important}
     html body #page-tapparelle#page-tapparelle .tapp-st-closed{background:var(--tapp-off-bg)!important;border-color:var(--tapp-off-line)!important;color:var(--tapp-off-fg)!important}
     html body #page-tapparelle#page-tapparelle .tapp-st-opening,html body #page-tapparelle#page-tapparelle .tapp-st-closing{background:var(--tapp-run-bg)!important;border-color:var(--tapp-run-line)!important;color:var(--tapp-run-fg)!important}

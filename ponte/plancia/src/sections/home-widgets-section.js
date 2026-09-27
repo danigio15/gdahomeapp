@@ -9822,6 +9822,42 @@ html[data-theme="dark"] :is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-wi
   :is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-widget-detail{border-radius:22px;max-height:82dvh}
   :is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-widget-detail .dm-w-head{padding:16px 16px 15px;column-gap:12px}
   :is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-body{padding:13px 15px 18px}
+  /* Sul telefono i comandi scendono sotto, e il nome si prende la riga.
+   *
+   * Dal campo, con la foto: nella finestra delle Tapparelle i nomi uscivano
+   * dalla riga e si accavallavano — «Tappa / rella / Cucin / a» — e la
+   * percentuale finiva sotto il nome di quella dopo. Lo stesso nelle
+   * Finestre, e in ogni sezione che in riga ha piu' di un comando.
+   *
+   * Misurato a trecentonovanta punti, che e' un telefono: la riga ne ha
+   * trecentodieci utili, la pastiglia ne prende trentotto, le tre frecce
+   * centosei e la tendina della posizione trentotto. Al nome ne restavano
+   * **ottantotto** — tre sillabe — e siccome il nome puo' andare a capo
+   * dappertutto (`overflow-wrap:anywhere`, che serve ai nomi lunghi delle
+   * entita') la colonna si stringeva fin li' invece di rubare spazio ai
+   * comandi: sono loro a non potersi stringere.
+   *
+   * Due righe, e il difetto non c'e' piu':
+   *
+   *  - la riga puo' andare a capo. Quando nome e comandi in fila non ci
+   *    stanno, i comandi scendono sotto e si prendono la loro riga intera —
+   *    dove per giunta il dito ci arriva meglio;
+   *  - al nome si da' un minimo. Senza, «puo' andare a capo dappertutto»
+   *    vuol dire «posso stringermi fino a una lettera», ed e' esattamente
+   *    quello che succedeva. Col minimo, o ci sta tutto in riga o i comandi
+   *    vanno sotto: non c'e' piu' il caso di mezzo, che era il difetto.
+   *
+   * Il minimo e' centocinquanta e non di piu' apposta: le righe con un solo
+   * comando — una luce col suo interruttore, una presa col suo tasto —
+   * restano su una riga sola come prima. Va a capo solo chi ne ha davvero
+   * troppi. */
+  :is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-row{flex-wrap:wrap}
+  :is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-row .dm-w-name{
+    min-width:min(150px,100%)}
+  /* Andati sotto, i comandi stanno a destra: e' il lato da cui si arriva col
+     pollice, ed e' dove stavano prima di scendere. */
+  :is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-row
+    :is(.dm-w-arrows,.dm-w-porte-gesti,.dm-w-alarm){margin-left:auto}
 }
 /* ── «In primo piano»: il ponte dei widget della Home ─────────────────── */
 #dm-widgets{display:block;margin:16px 0 6px}
