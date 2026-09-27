@@ -425,3 +425,27 @@ html body #editor-modal #ed-body .ed-row.dm-room-config-row.dm-beta11-room-row >
   visibility: visible !important;
   opacity: 1 !important;
 }
+
+/* Il numero di una bolla del flusso sta su UNA riga.
+ *
+ * «Sistema la batteria perche' e' su due righe, adatta tutto.» Da quando i
+ * watt salgono di scala, la bolla della batteria dice «▲ 5,10 kW»: nove
+ * caratteri, e in un cerchio da 88 punti — settanta dentro il bordo e il
+ * margine — ce ne stanno sessantaquattro. Andava a capo, e «kW» finiva da
+ * solo sotto il numero, col per cento della carica ancora sotto: tre righe in
+ * un cerchio disegnato per una.
+ *
+ * Qui si dichiara che a capo non ci va e che oltre il cerchio non esce; a
+ * farlo stare dentro e' `energy-flow-section.js`, che dopo averlo scritto lo
+ * misura e, se non ci sta, gli stringe il carattere quel tanto che basta. Le
+ * due cose vanno insieme: senza `nowrap` la misura non direbbe mai che il
+ * testo e' piu' largo — andrebbe a capo e sarebbe largo abbastanza — e senza
+ * la misura il `nowrap` da solo lo farebbe uscire dal cerchio.
+ *
+ * Sta qui e non nel foglio italiano perche' questo lo leggono tutt'e due le
+ * lingue: una regola sola, non una copia da tenere allineata. */
+#page-energy .node span,
+#page-energy .dm-flow-value {
+  white-space: nowrap;
+  max-width: 100%;
+}
