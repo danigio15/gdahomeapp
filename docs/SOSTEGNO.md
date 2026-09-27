@@ -1,21 +1,18 @@
 # Il sostegno
 
-gdahome è gratis, e deve restare gratis. Questo documento è come si tiene in
-piedi quella frase: cosa costa davvero il progetto, dove si può dare una mano,
-e — la parte pratica — **come si attiva GitHub Sponsors**, passo per passo, coi
-testi già scritti da incollare.
+gdahome ha una versione Base gratis e una Premium in abbonamento
+([`LICENZE.md`](LICENZE.md)). Il sostegno è un'altra cosa, e resta separato:
+non compra Premium e non sblocca niente. Questo documento dice cosa costa
+davvero il progetto, dove si può dare una mano, e — la parte pratica — **come
+si attiva GitHub Sponsors**, passo per passo, coi testi già scritti da
+incollare.
 
-## Perché si chiede, se è gratis
+## Perché si chiede, se c'è già Premium
 
-Perché **gratis non vuol dire finito**. Quello che c'è oggi — l'add-on, la
-plancia, l'app, l'accesso da fuori — resta gratis e non ha limiti a pagamento.
-Quello che non c'è ancora sono gli aiutanti, lo Zigbee, il mago delle
-automazioni: cose pensate e messe in fila, non idee buttate lì. Diventano vere
-solo se c'è il tempo per scriverle, per provarle e per rispondere a chi chiede
-aiuto.
-
-Ecco cosa si chiede, e cosa no: non si chiede di comprare una funzione — non ce
-ne sono da comprare — si chiede di far andare avanti il piano.
+Perché le funzioni si comprano con Premium, e il sostegno serve ad altro: a
+far andare avanti il piano (gli aiutanti, il mago delle automazioni) e a tenere
+in piedi la versione Base per chi non paga. Chi sostiene non compra una
+funzione, e un sostegno non diventa mai uno sconto su Premium.
 
 **I conti del progetto non si mettono in piazza.** Qualcuno c'è (i negozi hanno
 i loro), ma un invito fatto di ricevute sposta l'attenzione sulla cifra, e la
@@ -88,12 +85,12 @@ copia tutto intero, così com'è, e ci si ritrova con tutti e due.
 > l'add-on, si inquadra un QR code, e la casa è sul telefono — dentro e fuori
 > casa, senza aprire porte sul router e senza VPN.
 >
-> È tutto gratis e resta gratis: l'add-on, la plancia, l'app, l'accesso da
-> fuori. Nessun abbonamento, nessun limite a pagamento, nessun account da fare.
+> La versione Base è gratis; Premium aggiunge più plance e più case, il
+> collegamento da fuori casa e gdanav Premium. Nessun account da fare.
 >
-> Sostenerlo non sblocca niente — e non deve. **Gratis non vuol dire finito**:
-> gli aiutanti, lo Zigbee, il mago delle automazioni sono scritti nel piano, e
-> ogni sostegno è una di quelle righe che diventa vera.
+> Sostenerlo non sblocca niente — e non deve: Premium si compra dall'app. Gli
+> aiutanti e il mago delle automazioni sono scritti nel piano, e ogni sostegno
+> è una di quelle righe che diventa vera.
 >
 > · · ·
 >
@@ -103,12 +100,12 @@ copia tutto intero, così com'è, e ci si ritrova con tutti e due.
 > QR code, and your home is on your phone — at home and away, with no ports
 > opened on your router and no VPN.
 >
-> Everything is free and stays free: the add-on, the dashboard, the app, remote
-> access. No subscription, no paywalled limits, no account to create.
+> Base is free; Premium adds several dashboards and homes, access from away
+> and gdanav Premium. No account to create.
 >
-> Sponsoring unlocks nothing — and it shouldn't. **Free doesn't mean finished**:
-> helpers, Zigbee and the automation wizard are written down in the plan, and
-> every sponsorship is one of those lines coming true.
+> Sponsoring unlocks nothing — and it shouldn't: Premium is bought in the app.
+> Helpers and the automation wizard are written down in the plan, and every
+> sponsorship is one of those lines coming true.
 
 #### Dove si incolla
 
@@ -228,16 +225,15 @@ importi conviene guardarli due volte adesso.
 
 ### Il messaggio a chi si iscrive
 
-> Grazie. Non ti ho sbloccato niente perché non c'è niente da sbloccare: gdahome
-> è gratis per tutti e resta così — è proprio questo che stai tenendo in piedi.
+> Grazie. Il sostegno non sblocca niente — Premium resta una cosa a parte —
+> ma tiene in piedi il progetto e la versione Base per tutti.
 > Se trovi un difetto o ti manca qualcosa, scrivilo dalle Segnalazioni dentro
 > l'app: quelle le leggo tutte.
 >
 > · · ·
 >
-> Thank you. I haven't unlocked anything for you, because there is nothing to
-> unlock: gdahome is free for everyone and stays that way — and that is exactly
-> what you are keeping alive. If something is broken or missing, write it from
+> Thank you. Sponsoring unlocks nothing — Premium is a separate thing — but it
+> keeps the project, and the free Base version, alive. If something is broken or missing, write it from
 > **Segnalazioni** (the reports screen) inside the app: I read all of them.
 
 L'app parla italiano, quindi il nome della schermata resta in italiano anche
@@ -246,11 +242,9 @@ nel testo inglese: chi legge deve ritrovare la voce che vede davvero nel menu.
 
 ## Quello che un sostegno non compra
 
-Niente, ed è la prima delle regole con cui è stato deciso tutto il resto:
-**quello che serve a vedere e comandare la propria casa non si paga**, mai,
-accesso da fuori compreso. Un livello che sbloccasse una
-funzione trasformerebbe il sostegno in un prezzo, e a quel punto «tutto gratis»
-nei video sarebbe una frase da togliere.
+Niente. Le funzioni in più si comprano con Premium, dall'app, e hanno un
+prezzo scritto; un livello di sostegno che sbloccasse una funzione sarebbe un
+secondo listino, più confuso del primo.
 
 Quindi i livelli si distinguono per quanto, non per cosa danno. Chi vuole
 metterci il nome può farlo: gli sponsor compaiono sul profilo di GitHub, e

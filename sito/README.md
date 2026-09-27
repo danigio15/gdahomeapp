@@ -84,11 +84,13 @@ manuale e la peggiore possibile per una copertina.
 
 ## Per chi installa, e dove scrivere
 
-Due cose che il sito non diceva. Il **cruscotto installatore** ha una sezione
-sua (`#installatori`), perché è l'unico pezzo di gdahome che si paga e l'unico
-che non è per chi abita la casa: la prima cosa scritta è cosa **non** vede, con
-le parole del quadro (`quadro/README.md`), e «Quanto costa» adesso dice che per
-casa tua è gratis e che il cruscotto è a parte.
+Il **cruscotto installatore** ha una sezione sua (`#installatori`), perché è
+l'unico pezzo di gdahome che non è per chi abita la casa: come sta ogni casa,
+le licenze Premium da dare ai clienti, e accanto cosa **non** vede, con le
+parole del quadro (`quadro/README.md`). **Quanto costa** (`#prezzi`) dice Base
+e Premium, come si ha Premium e gdanav, coi prezzi e le regole di
+[`docs/LICENZE.md`](../docs/LICENZE.md); il sostegno (`#sostieni`) sta a parte,
+perché non sblocca niente.
 
 E c'è un posto dove **scrivere** (`#contatti`): un modulo con nome, email e
 messaggio, che arriva per posta a `assistenza@gdahome.org`. È l'unica cosa
@@ -121,7 +123,7 @@ carica i moduli della plancia.
 
 |                             |                                                                                                                    |
 | --------------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| `index.html`                | la pagina: il colpo d'occhio, le schermate, come funziona, la plancia, cosa fa, per chi installa, dove sta, quanto costa, contatti |
+| `index.html`                | la pagina: il colpo d'occhio, le schermate, come funziona, la plancia, cosa fa, quanto costa, per chi installa, scaricala, sostegno, contatti |
 | `privacy.html`              | l'informativa — la gemella di `docs/PRIVACY.md`, ed è l'indirizzo che il Play Store tiene da parte                 |
 | `stile.css`                 | i colori (quelli di `app/lib/vestito/tema.dart`), i caratteri, il fondo vivo coi due aloni, il telaio del riquadro |
 | `privacy.css`               | l'unica cosa che nell'informativa è diversa: una colonna stretta, da leggere                                       |

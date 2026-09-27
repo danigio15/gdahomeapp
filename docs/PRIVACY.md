@@ -1,6 +1,6 @@
 # Privacy di gdahome
 
-Ultimo aggiornamento: 26 settembre 2026.
+Ultimo aggiornamento: 27 settembre 2026.
 
 gdahome è l'app che apre la plancia di Home Assistant sul telefono. Questa
 pagina dice, in modo chiaro e senza giri di parole, **quali dati ci sono di
@@ -93,6 +93,27 @@ Serve a una cosa sola: **inquadrare il QR code** che abbina il
 telefono alla casa. L'immagine non viene salvata né mandata da nessuna parte —
 si legge il codice e basta. Se preferisci, il codice si digita a mano e la
 fotocamera non serve.
+
+## Premium e licenze
+
+Per sapere se una casa è Premium, l'add-on chiede a `quadro.gdahome.org`,
+all'accensione e ogni sei ore, **solo** l'identificativo della casa verso il
+centralino (`casa_…`) e il suo segreto, che serve a dimostrare che è lei.
+Nient'altro: niente nomi, dispositivi, stati o posizione. La risposta è un
+gettone firmato, che l'add-on, il centralino e l'app controllano da soli.
+
+Chi compra Premium dall'app: la ricevuta del negozio (il codice d'acquisto di
+Google Play o l'identificativo della transazione di Apple) passa cifrata dal
+telefono all'add-on e da lì al quadro, che la controlla con Google o Apple.
+Il quadro conserva, per ogni licenza: la casa, da dove arriva (negozio, regalo,
+installatore), quando scade, se è nella prova gratuita, e l'identificativo
+dell'acquisto (il codice d'acquisto di Google Play o l'identificativo della
+transazione originale di Apple), che gli serve per chiedere a Google o ad
+Apple se l'abbonamento si è rinnovato. Il pagamento lo gestiscono Google e
+Apple: a gdahome non arrivano né il nome né i dati della carta.
+
+gdanav da sola usa per i codici regalo un identificativo del telefono (`tel_…`)
+fatto a caso sul telefono, che non dice chi sei.
 
 ## Quello che non c'è
 
