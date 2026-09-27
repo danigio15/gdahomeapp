@@ -68,6 +68,16 @@ class ComandoRifiutato extends ErroreDelPonte {
   final String? codice;
 }
 
+/// La strada da fuori casa e' chiusa perche' la casa non e' Premium.
+///
+/// La dice l'app stessa, quando da fuori non prova nemmeno il centralino, e
+/// la dice il centralino, che chiude il filo di un telefono verso una casa
+/// senza licenza (`4402 premium-richiesto`, vedi `docs/LICENZE.md`). In casa,
+/// sotto il proprio Wi-Fi, si entra lo stesso.
+class PremiumRichiesto extends ErroreDelPonte {
+  const PremiumRichiesto(super.spiegazione);
+}
+
 /// Il filo si e' chiuso mentre si aspettava una risposta.
 class FiloCaduto extends ErroreDelPonte {
   const FiloCaduto(super.spiegazione);

@@ -156,6 +156,40 @@ class PonteFinto {
       });
       return;
     }
+    /* Le licenze (`docs/LICENZE.md`): lo stato, il codice regalo, la
+     * ricevuta del negozio. Un ponte senza [licenza] e' un ponte di prima,
+     * che il comando non lo conosce. */
+    if (detto['type'] case final String t when t.startsWith('ponte/licenza/')) {
+      chieste.add(detto);
+      Map<String, dynamic> no(String codice, String perche) => {
+        'id': id,
+        'type': 'result',
+        'success': false,
+        'error': {'code': codice, 'message': perche},
+      };
+      if (licenza == null) {
+        _manda(presa, no('unknown_command', 'Unknown command.'));
+        return;
+      }
+      if (t == 'ponte/licenza/riscatta') {
+        final gettone = codiciRegalo.remove(detto['codice']);
+        if (gettone == null) {
+          _manda(presa, no('404', 'codice che non c\'e\''));
+          return;
+        }
+        licenza = {
+          ...?licenza,
+          'gettoni': {'gdahome': gettone},
+        };
+      }
+      _manda(presa, {
+        'id': id,
+        'type': 'result',
+        'success': true,
+        'result': licenza,
+      });
+      return;
+    }
     /* Le segnalazioni e la chat: quello che il ponte vero porta al
      * centralino, qui sta in memoria. */
     final tipo = detto['type'];
@@ -346,6 +380,14 @@ class PonteFinto {
       },
     });
   }
+
+  /// Quello che risponde `ponte/licenza/stato`, come il ponte vero:
+  /// `{gdahome: {attiva, scade, origine}, gettoni: {gdahome?: …}}`. `null` e'
+  /// un ponte di prima, che le licenze non le conosce.
+  Map<String, dynamic>? licenza;
+
+  /// I codici regalo che questa casa accetta, e il gettone che ciascuno da'.
+  Map<String, String> codiciRegalo = {};
 
   /// Quello che risponde `ponte/plancia`: la plancia dentro l'add-on. `null`
   /// e' un ponte che non ce l'ha, e dice di no.

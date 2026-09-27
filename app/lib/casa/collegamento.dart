@@ -20,12 +20,14 @@ library;
 
 import 'dart:async';
 
+import '../licenza/licenza.dart';
 import '../parole.dart';
 import '../plancia/pannello.dart';
 import '../ponte/abbinamento.dart';
 import '../ponte/errori.dart';
 import '../ponte/filo.dart';
 import '../ponte/indirizzo.dart';
+import '../ponte/parole_del_centralino.dart' show fuoriCasaServePremium;
 import '../ponte/presa.dart';
 import '../ponte/sonda.dart';
 import 'archivio_delle_case.dart';
@@ -69,11 +71,35 @@ enum ComeVa {
 }
 
 class Collegamento {
-  Collegamento({required this.archivio, Sonda? sonda, this.apriLaPresa})
-    : _sonda = sonda ?? const Sonda();
+  Collegamento({
+    required this.archivio,
+    Sonda? sonda,
+    this.apriLaPresa,
+    GestoreLicenza? licenza,
+  }) : _sonda = sonda ?? const Sonda(),
+       licenza = licenza ?? GestoreLicenza(),
+       _licenzaMia = licenza == null {
+    this.licenza.addListener(_avvisa);
+  }
 
   final ArchivioDelleCase archivio;
   final Sonda _sonda;
+
+  /// gdahome Premium: quale casa lo e', e cosa si apre (`licenza/`).
+  ///
+  /// Sta qui perche' la licenza si chiede alla casa **a ogni collegamento**,
+  /// e decide per che strade si bussa: da fuori casa, senza Premium, non si
+  /// prova nemmeno il centralino.
+  final GestoreLicenza licenza;
+  final bool _licenzaMia;
+  bool _licenzaLasciata = false;
+
+  /* L'ultima volta non si e' entrati perche' si era fuori casa con una casa
+   * che non e' Premium. La plancia lo dice col suo tasto. */
+  bool _fuoriSenzaPremium = false;
+
+  /// Se non si entra perche' da fuori casa serve gdahome Premium.
+  bool get fuoriCasaSenzaPremium => _fuoriSenzaPremium;
 
   /// Come si apre il filo nudo, sotto la cifratura. Sostituibile nelle prove.
   final ApriLaPresa? apriLaPresa;
@@ -236,6 +262,11 @@ class Collegamento {
     _casa = casa;
     _daDove = null;
     _perche = null;
+    _fuoriSenzaPremium = false;
+    /* Le licenze che si sanno gia', dall'archivio: servono prima di bussare,
+     * perche' decidono da dove. */
+    await licenza.conosci(archivio.tutte);
+    licenza.inUso(casa?.id);
 
     if (casa == null) {
       _vai(ComeVa.nessunaCasa);
@@ -305,6 +336,8 @@ class Collegamento {
            * piccola. Se la risposta e' la stessa, la pagina non si ricarica:
            * l'indirizzo non cambia, e chi disegna guarda l'indirizzo. */
           unawaited(_leggiLaPlancia(filo));
+          /* E la licenza, che la casa rinnova ogni sei ore. */
+          unawaited(_chiediLaLicenza(filo));
           /* E si ricontrolla la strada: si torna dentro anche rientrando in
            * casa, e li' la strada corta c'e' e prima non c'era. */
           unawaited(_imparaLaStradaDiCasa(filo));
@@ -328,6 +361,7 @@ class Collegamento {
       /* I tentativi vanno avanti da soli: quando il telefono rientra sotto una
        * rete che vede la casa, il filo si apre e lo stato si sistema. */
       _perche = errore.spiegazione;
+      _fuoriSenzaPremium = errore is PremiumRichiesto;
       _vai(ComeVa.irraggiungibile);
       _riprendiQuandoTorna(filo);
       return;
@@ -348,10 +382,102 @@ class Collegamento {
      * domanda sola. Le entita' — tutte, con i loro eventi — si leggono solo
      * quando qualcuno le vuole, vedi [serveLaCasa]. */
     await _leggiLaPlancia(filo);
+    /* La licenza, a ogni collegamento: e' la casa che la tiene. */
+    unawaited(_chiediLaLicenza(filo));
     /* E se si e' entrati dalla strada lunga, si chiede alla casa dov'e'. Non
      * si aspetta: la casa e' gia' aperta, e questo e' solo per andarci piu'
      * dritti. */
     unawaited(_imparaLaStradaDiCasa(filo));
+  }
+
+  /* ─── La licenza ─────────────────────────────────────────────────────── */
+
+  /// Chiede alla casa la sua licenza, e rimette a posto quello che cambia.
+  ///
+  /// Se la casa risulta non Premium mentre si e' entrati da fuori, si riparte
+  /// da capo: questa volta si bussa solo in casa, e se non si e' in casa la
+  /// schermata dice perche'. Se cambia qualcosa si rilegge la plancia: una
+  /// casa appena diventata Premium riapre quella scelta l'ultima volta, una
+  /// che non lo e' piu' torna alla principale.
+  Future<void> _chiediLaLicenza(Filo filo) async {
+    final casa = _casa;
+    if (casa == null) return;
+    final prima = licenza.premium;
+    if (!await licenza.chiedi(filo, casa, archivio)) return;
+    if (_filo != filo) return;
+    final adesso = archivio.quella(casa.id) ?? casa;
+    _casa = adesso;
+    if (_daDove != null &&
+        _daDove != DaDove.daDentro &&
+        !licenza.stradeDaFuoriPer(adesso)) {
+      await apri(forza: true);
+      return;
+    }
+    if (licenza.premium != prima) await _leggiLaPlancia(filo);
+    _avvisa();
+  }
+
+  /// Richiede la licenza alla casa: dopo un acquisto, o dalla pagina Premium.
+  Future<void> rileggiLaLicenza() async {
+    final filo = _filo;
+    if (filo == null || !filo.dentro) return;
+    await _chiediLaLicenza(filo);
+  }
+
+  /// Se questa plancia si puo' aprire: la principale sempre, le altre con
+  /// gdahome Premium.
+  bool siPuoAprire(UnaPlancia una) => una.primaria || licenza.premium;
+
+  /// Riscatta un codice regalo per la casa aperta.
+  ///
+  /// Solleva [LicenzaRifiutata], con la frase da mostrare.
+  Future<void> riscatta(String codice) async {
+    final (filo, casa) = _perLaLicenza();
+    await licenza.riscatta(codice, filo, casa, archivio);
+    await _dopoLaLicenza(filo, casa);
+  }
+
+  /// Manda alla casa aperta la ricevuta di un acquisto.
+  Future<void> mandaLaRicevuta({
+    required String piattaforma,
+    required String prodotto,
+    required String ricevuta,
+  }) async {
+    final (filo, casa) = _perLaLicenza();
+    await licenza.mandaLaRicevuta(
+      piattaforma: piattaforma,
+      prodotto: prodotto,
+      ricevuta: ricevuta,
+      filo: filo,
+      casa: casa,
+      archivio: archivio,
+    );
+    await _dopoLaLicenza(filo, casa);
+  }
+
+  (Filo, CasaConosciuta) _perLaLicenza() {
+    final filo = _filo;
+    final casa = _casa;
+    if (filo == null || !filo.dentro || casa == null) {
+      throw LicenzaRifiutata(
+        inLingua(
+          it:
+              'La casa non è collegata adesso: la licenza la tiene lei. '
+              'Riprova quando la plancia si vede.',
+          en:
+              'Your home isn\'t connected right now, and it holds the '
+              'licence. Try again when the dashboard shows up.',
+        ),
+        definitiva: false,
+      );
+    }
+    return (filo, casa);
+  }
+
+  Future<void> _dopoLaLicenza(Filo filo, CasaConosciuta casa) async {
+    _casa = archivio.quella(casa.id) ?? casa;
+    if (_filo == filo) await _leggiLaPlancia(filo);
+    _avvisa();
   }
 
   /* ─── La strada di casa, imparata dopo ──────────────────────────────── */
@@ -471,7 +597,9 @@ class Collegamento {
     /* Quella scelta l'ultima volta in **questa** casa. Chi ne ha una sola non
      * ha mai scelto niente, e qui non c'e' scritto niente: si chiede la
      * prima, ed e' la domanda di sempre. */
-    final voluto = profilo ?? _casa?.plancia ?? '';
+    /* Senza Premium si apre solo la principale: quella ricordata resta
+     * scritta, e torna appena la casa lo diventa. */
+    final voluto = profilo ?? (licenza.premium ? _casa?.plancia : null) ?? '';
     try {
       _pannello = await trovaLaPlancia(filo, profilo: voluto);
       _nessunaPerMe = false;
@@ -508,6 +636,10 @@ class Collegamento {
     final filo = _filo;
     if (filo == null || !filo.dentro) return;
     if (profilo == planciaScelta) return;
+    /* Le plance oltre la principale sono di gdahome Premium: la barra le
+     * mostra col lucchetto, e qui non si aprono comunque. */
+    final voluta = plance.where((una) => una.profilo == profilo).firstOrNull;
+    if (!licenza.premium && !(voluta?.primaria ?? profilo.isEmpty)) return;
     await _leggiLaPlancia(filo, profilo: profilo);
     final casa = _casa;
     if (casa == null) return;
@@ -536,7 +668,23 @@ class Collegamento {
 
   /// Dove bussare adesso. Chiamata dal filo a ogni tentativo.
   Future<Approdo> _trova(CasaConosciuta casa) async {
-    final approdo = await _sonda.dove(casa);
+    /* La casa com'e' adesso nell'archivio: il gettone puo' essere cambiato
+     * dopo che il filo e' nato. Senza Premium le strade di fuori non si
+     * provano nemmeno — il centralino direbbe di no, e l'indirizzo pubblico
+     * non e' compreso. */
+    final adesso = archivio.quella(casa.id) ?? casa;
+    final daFuori = licenza.stradeDaFuoriPer(adesso);
+    final Approdo approdo;
+    try {
+      approdo = await _sonda.dove(
+        daFuori ? adesso : adesso.soloLaStradaDiCasa(),
+      );
+    } on PonteIrraggiungibile {
+      if (daFuori || !adesso.haStradeDaFuori) rethrow;
+      _fuoriSenzaPremium = true;
+      throw PremiumRichiesto(fuoriCasaServePremium);
+    }
+    _fuoriSenzaPremium = false;
     _daDove = approdo.da;
     /* Si scrive solo quando cambia: il filo si riapre a ogni ascensore. */
     unawaited(archivio.segnaLApprodo(casa.id, approdo.da));
@@ -575,6 +723,11 @@ class Collegamento {
   }
 
   Future<void> chiudi() async {
+    if (!_licenzaLasciata) {
+      _licenzaLasciata = true;
+      licenza.removeListener(_avvisa);
+      if (_licenzaMia) licenza.dispose();
+    }
     await _chiudiIlFilo();
     if (!_cambiamenti.isClosed) await _cambiamenti.close();
     if (!_entitaCambiate.isClosed) await _entitaCambiate.close();

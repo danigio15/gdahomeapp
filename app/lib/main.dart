@@ -29,7 +29,9 @@ import 'schermate/home.dart';
 import 'schermate/le_case.dart';
 import 'schermate/misure.dart';
 import 'schermate/navigatore_qui/qui.dart' as navigatore;
+import 'licenza/negozio.dart';
 import 'schermate/plancia_vera.dart';
+import 'schermate/premium.dart';
 import 'schermate/riconoscimento.dart';
 import 'vestito/sfondo.dart';
 import 'vestito/tema.dart';
@@ -550,8 +552,28 @@ class _PortoneState extends State<Portone> with WidgetsBindingObserver {
     /* Solo i cambiamenti del collegamento — la casa, lo stato, l'approdo —
      * non quelli delle entita': quelli arrivano decine di volte al secondo,
      * e da qui si ridisegna tutta l'app. */
+    /* Il negozio, dove si compra: nell'app vera, sul telefono, e solo quando
+     * c'e' qualcosa da vendere (la chiave delle licenze scritta). Si mette in
+     * ascolto subito, perche' un acquisto finito ad app chiusa arriva adesso,
+     * e la sua ricevuta deve andare alla casa. */
+    if (widget.collegamento == null &&
+        _collegamento.licenza.siVende &&
+        acquistiDellApp == null) {
+      final negozio = negozioDelTelefono();
+      if (negozio != null) {
+        acquistiDellApp = GestoreDegliAcquisti(
+          negozio: negozio,
+          porta: _collegamento.mandaLaRicevuta,
+        );
+        unawaited(acquistiDellApp!.avvia());
+      }
+    }
     _ascolto = _collegamento.cambiamenti.listen((_) {
       if (mounted) _cambiaIlVelo(() {});
+      /* Una ricevuta rimasta indietro parte appena la casa c'e'. */
+      if (_collegamento.comeVa == ComeVa.aperta) {
+        unawaited(acquistiDellApp?.riprova());
+      }
     });
   }
 
@@ -573,6 +595,16 @@ class _PortoneState extends State<Portone> with WidgetsBindingObserver {
   }
 
   Future<void> _aggiungiUnaCasa() async {
+    /* La seconda casa e' di gdahome Premium: basta che lo sia una di quelle
+     * che ci sono. */
+    if (!_collegamento.licenza.siPuoAggiungereUnaCasa) {
+      await apriLaPaginaPremium(
+        context,
+        _collegamento,
+        perche: PerchePremium.unAltraCasa,
+      );
+      return;
+    }
     await Navigator.of(context).push<void>(
       MaterialPageRoute(
         builder: (contesto) => AggiungiCasa(

@@ -174,6 +174,16 @@ class ArchivioDelleCase {
     );
   }
 
+  /// Il gettone gdahome che questa casa ha dato: vuoto se non ne ha.
+  ///
+  /// Come per l'approdo, si scrive solo quando cambia: la casa lo rinnova ogni
+  /// sei ore, e si chiede a ogni collegamento.
+  Future<void> segnaIlGettone(String id, String gettone) async {
+    final casa = quella(id);
+    if (casa == null || casa.gettone == gettone) return;
+    await _cambia(id, (vecchia) => vecchia.con(gettone: gettone));
+  }
+
   Future<void> _cambia(
     String id,
     CasaConosciuta Function(CasaConosciuta) come,

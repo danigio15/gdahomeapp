@@ -14,12 +14,14 @@ library;
 
 import 'dart:async';
 
+import 'package:flutter/foundation.dart' show ValueListenable;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:gdanav_app/gdanav_app.dart';
 
 import '../../casa/collegamento.dart';
+import '../../licenza/chiave.dart';
 import '../../parole.dart';
 import '../../vestito/marchio.dart';
 import '../../vestito/pezzi.dart';
@@ -45,6 +47,12 @@ const _portachiavi = FlutterSecureStorage(
 /// `IlFiloDellaVettura`, finche' la home c'e' (`la_vettura.dart`).
 final _vettura = SorgenteGdahome();
 
+/// gdanav Premium dentro gdahome: e' compreso in gdahome Premium, e segue la
+/// casa in uso (`docs/LICENZE.md`). Lo tiene aggiornato [IlNavigatore], dalla
+/// licenza del collegamento; finche' non c'e', vale quello che si sa senza
+/// chiedere: con la chiave delle licenze vuota tutto e' aperto.
+final _premiumOspite = ValueNotifier<bool>(chiavePubblicaLicenze.isEmpty);
+
 /* Uno per tutta l'app, e non uno per schermata: la guida, la posizione e le
  * segnalazioni sono cose che stanno accese, e due copie parlerebbero in due. */
 Future<GdanavApp>? _acceso;
@@ -64,9 +72,10 @@ Future<GdanavApp> accendiIlNavigatore() => _acceso ??= () async {
   return preparaGdanav(
     portachiavi: _portachiavi,
     gdahome: _vettura,
-    /* Niente Premium nell'app unita: tutto sbloccato, niente negozio. I
-     * pagamenti si decidono prima del rilascio. */
-    senzaPremium: true,
+    /* gdanav Premium lo decide gdahome: la casa in uso e' Premium, e gdanav
+     * con lei. Niente negozio di gdanav qui dentro: se manca, gdanav dice di
+     * prenderlo in gdahome. */
+    premiumOspite: _premiumOspite,
     /* Lo schermo dell'auto di gdanav si accende solo nella versione col
      * navigatore in auto; nella gdahome di sempre Android Auto e' la casa. */
     conLAuto: await _conLAuto,
@@ -162,11 +171,23 @@ class _IlNavigatoreState extends State<IlNavigatore>
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    _premiumDellaCasa?.removeListener(_copiaIlPremium);
     _filo?.ferma();
     super.dispose();
   }
 
+  ValueListenable<bool>? _premiumDellaCasa;
+
+  void _copiaIlPremium() {
+    final premium = _premiumDellaCasa;
+    if (premium != null) _premiumOspite.value = premium.value;
+  }
+
   void _seguiLaCasa() {
+    _premiumDellaCasa?.removeListener(_copiaIlPremium);
+    _premiumDellaCasa = widget.collegamento?.licenza.premiumQui;
+    _premiumDellaCasa?.addListener(_copiaIlPremium);
+    _copiaIlPremium();
     _filo?.ferma();
     _filo = switch (widget.collegamento) {
       final c? => IlFiloDellaVettura(c, _vettura)..avvia(),

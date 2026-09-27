@@ -11,6 +11,7 @@ import '../casa/la_guardia.dart';
 import '../parole.dart';
 import '../vestito/pezzi.dart';
 import 'il_lucchetto.dart';
+import 'premium.dart';
 import 'riconoscimento.dart';
 import '../vestito/tema.dart';
 import 'barra.dart' show nomeDelleCase;
@@ -38,6 +39,10 @@ class LeCase extends StatelessWidget {
   Widget build(BuildContext context) {
     final archivio = collegamento.archivio;
     final aperta = collegamento.casa;
+    final licenza = collegamento.licenza;
+    /* La seconda casa si aggiunge solo se una di quelle che ci sono e'
+     * Premium. Il tasto resta — con il lucchetto — e porta a dire perche'. */
+    final siPuo = licenza.siPuoAggiungereUnaCasa;
 
     return Scaffold(
       appBar: AppBar(
@@ -64,8 +69,14 @@ class LeCase extends StatelessWidget {
       floatingActionButton: archivio.piena
           ? null
           : FloatingActionButton.extended(
-              onPressed: aggiungiUnaCasa,
-              icon: const Icon(Icons.add_rounded),
+              onPressed: siPuo
+                  ? aggiungiUnaCasa
+                  : () => apriLaPaginaPremium(
+                      context,
+                      collegamento,
+                      perche: PerchePremium.unAltraCasa,
+                    ),
+              icon: Icon(siPuo ? Icons.add_rounded : Icons.lock_rounded),
               label: Text(inLingua(it: 'Aggiungi', en: 'Add')),
             ),
       body: ListView(
@@ -76,6 +87,7 @@ class LeCase extends StatelessWidget {
               casa: casa,
               aperta: casa.id == aperta?.id,
               daDove: casa.id == aperta?.id ? collegamento.daDove : null,
+              premium: licenza.controlliAccesi && licenza.premiumDi(casa),
               quandoScelta: () async {
                 await collegamento.cambiaCasa(casa.id);
                 if (context.mounted) Navigator.of(context).pop();
@@ -174,8 +186,12 @@ class _Casa extends StatelessWidget {
     required this.daDove,
     required this.quandoScelta,
     required this.quandoTolta,
+    this.premium = false,
   });
 
+  /// Se accanto al nome va scritto «Premium»: solo quando i lucchetti ci
+  /// sono, se no lo sarebbero tutte e non vorrebbe dire niente.
+  final bool premium;
   final CasaConosciuta casa;
   final bool aperta;
   final DaDove? daDove;
@@ -219,6 +235,14 @@ class _Casa extends StatelessWidget {
                         'aperta',
                         fondo: colori.primaryContainer,
                         colore: colori.onPrimaryContainer,
+                      ),
+                    ],
+                    if (premium) ...[
+                      const SizedBox(width: 6),
+                      Bollino(
+                        'Premium',
+                        fondo: colori.secondaryContainer,
+                        colore: colori.onSecondaryContainer,
                       ),
                     ],
                   ],

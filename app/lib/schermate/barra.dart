@@ -84,7 +84,17 @@ class BarraDelleSezioni extends StatefulWidget {
     this.daParte = const LaPlanciaDaParte(),
     this.daAggiornare = 0,
     this.tessera,
+    this.bloccate = const {},
+    this.apriPremium,
   });
+
+  /// Le voci col lucchetto: ci sono, si toccano, e portano alla pagina di
+  /// gdahome Premium. Lo decide chi apre la barra (`home.dart`).
+  final Set<Sezione> bloccate;
+
+  /// Apre la pagina Premium: la tendina delle plance la chiama per le plance
+  /// col lucchetto.
+  final VoidCallback? apriPremium;
 
   /// La tessera in testa, sotto la casa: gdanav, vivo — l'auto della plancia,
   /// la batteria, Casa e Lavoro (`navigatore_qui/`). Quando c'e', la voce del
@@ -405,6 +415,8 @@ class BarraDelleSezioniState extends State<BarraDelleSezioni>
                                             collegamento: widget.collegamento,
                                             trattieni: _trattieni,
                                             lascia: _lascia,
+                                            bloccate: widget.bloccate,
+                                            apriPremium: widget.apriPremium,
                                           )
                                         else
                                           _IlRiquadro(
@@ -422,6 +434,8 @@ class BarraDelleSezioniState extends State<BarraDelleSezioni>
                                                           Sezione.aggiornamenti
                                                       ? widget.daAggiornare
                                                       : 0,
+                                                  bloccata: widget.bloccate
+                                                      .contains(sezione),
                                                 ),
                                             ],
                                           ),
@@ -595,7 +609,11 @@ class _LePlance extends StatelessWidget {
     required this.apri,
     required this.trattieni,
     required this.lascia,
+    this.apriPremium,
   });
+
+  /// Le plance oltre la principale, senza gdahome Premium, portano qui.
+  final VoidCallback? apriPremium;
 
   final Collegamento collegamento;
 
@@ -688,6 +706,14 @@ class _LePlance extends StatelessWidget {
               onCanceled: lascia,
               onSelected: (profilo) {
                 lascia();
+                final voluta = plance
+                    .where((una) => una.profilo == profilo)
+                    .firstOrNull;
+                /* Col lucchetto: non si apre, si spiega. */
+                if (voluta != null && !collegamento.siPuoAprire(voluta)) {
+                  apriPremium?.call();
+                  return;
+                }
                 unawaited(collegamento.cambiaPlancia(profilo));
                 apri();
               },
@@ -714,11 +740,15 @@ class _LePlance extends StatelessWidget {
                     child: Row(
                       children: [
                         Icon(
-                          una.profilo == quale.profilo
+                          !collegamento.siPuoAprire(una)
+                              ? Icons.lock_rounded
+                              : una.profilo == quale.profilo
                               ? Icons.radio_button_checked_rounded
                               : Icons.radio_button_unchecked_rounded,
                           size: 18,
-                          color: una.profilo == quale.profilo
+                          color: !collegamento.siPuoAprire(una)
+                              ? Colori.ambraScura
+                              : una.profilo == quale.profilo
                               ? colori.primary
                               : colori.onSurfaceVariant,
                         ),
@@ -732,6 +762,9 @@ class _LePlance extends StatelessWidget {
                               fontWeight: una.profilo == quale.profilo
                                   ? FontWeight.w700
                                   : FontWeight.w500,
+                              color: collegamento.siPuoAprire(una)
+                                  ? null
+                                  : colori.onSurfaceVariant,
                             ),
                           ),
                         ),
@@ -777,7 +810,11 @@ class _Voce extends StatelessWidget {
     required this.scelta,
     required this.quandoPremuta,
     this.quanti = 0,
+    this.bloccata = false,
   });
+
+  /// Col lucchetto: si tocca lo stesso, e porta alla pagina Premium.
+  final bool bloccata;
 
   static const double altezza = 40;
   static const double spazio = 2;
@@ -855,6 +892,10 @@ class _Voce extends StatelessWidget {
                   ),
                 ),
                 if (quanti > 0) ...[const SizedBox(width: 6), _Quanti(quanti)],
+                if (bloccata) ...[
+                  const SizedBox(width: 6),
+                  _IlLucchetto(sulloScuro: scelta),
+                ],
               ],
             ),
           ),
@@ -875,9 +916,14 @@ class _LeTessere extends StatelessWidget {
     this.collegamento,
     required this.trattieni,
     required this.lascia,
+    this.bloccate = const {},
+    this.apriPremium,
   });
 
   static const double alta = 74;
+
+  final Set<Sezione> bloccate;
+  final VoidCallback? apriPremium;
 
   final List<Sezione> sezioni;
   final Sezione aperta;
@@ -913,6 +959,7 @@ class _LeTessere extends StatelessWidget {
               apri: () => scegli(Sezione.plancia),
               trattieni: trattieni,
               lascia: lascia,
+              apriPremium: apriPremium,
             ),
             const SizedBox(height: 8),
           ],
@@ -938,6 +985,7 @@ class _LeTessere extends StatelessWidget {
             scelta: sezione == aperta,
             quanti: sezione == Sezione.aggiornamenti ? daAggiornare : 0,
             premuta: () => scegli(sezione),
+            bloccata: bloccate.contains(sezione),
           ),
       ],
     );
@@ -950,12 +998,14 @@ class _LaTessera extends StatelessWidget {
     required this.scelta,
     required this.quanti,
     required this.premuta,
+    this.bloccata = false,
   });
 
   final Sezione sezione;
   final bool scelta;
   final int quanti;
   final VoidCallback premuta;
+  final bool bloccata;
 
   @override
   Widget build(BuildContext context) {
@@ -985,6 +1035,7 @@ class _LaTessera extends StatelessWidget {
                   Oggetto(sezione.disegno, lato: 26),
                   const Spacer(),
                   if (quanti > 0) _Quanti(quanti),
+                  if (bloccata) _IlLucchetto(sulloScuro: scelta),
                 ],
               ),
               _NomeDellaVoce(sezione.titolo, colore: scritta),
@@ -1096,6 +1147,34 @@ class _Quanti extends StatelessWidget {
   }
 }
 
+/// Il lucchetto di gdahome Premium, addosso a una voce.
+///
+/// Ambra come il numero degli aggiornamenti, e per lo stesso motivo: non e'
+/// un guasto, e' una porta che si apre con Premium. La voce resta viva — si
+/// tocca, e porta alla pagina che spiega — perche' una voce spenta non dice
+/// niente di cosa c'e' dietro.
+class _IlLucchetto extends StatelessWidget {
+  const _IlLucchetto({this.sulloScuro = false});
+
+  final bool sulloScuro;
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: 'gdahome Premium',
+      child: Container(
+        width: 20,
+        height: 20,
+        decoration: BoxDecoration(
+          color: sulloScuro ? Colori.ambra : Colori.ambraScura,
+          shape: BoxShape.circle,
+        ),
+        child: const Icon(Icons.lock_rounded, size: 12, color: Colors.white),
+      ),
+    );
+  }
+}
+
 /// Il nome di una voce, in maiuscoletto minuto e per intero.
 ///
 /// «ELETTRODOMESTICI» non diventa «Elettr.»: un nome accorciato si legge due
@@ -1161,9 +1240,11 @@ List<Sezione> vociDellaBarra({
   bool conLaGestione = false,
   bool conZigbee = false,
   bool nellApp = true,
+  bool conPremium = false,
 }) => [
   for (final una in Sezione.values)
     if ((una != Sezione.console || conLaConsole) &&
+        (una != Sezione.premium || conPremium) &&
         (una != Sezione.cruscotto || conIlCruscotto) &&
         (una != Sezione.gestione || conLaGestione) &&
         (una != Sezione.zigbee || conZigbee) &&
