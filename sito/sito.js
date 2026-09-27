@@ -1,12 +1,9 @@
 /* Le poche cose che il sito fa da sé.
  *
- * Sono quattro, e nessuna è indispensabile: la pagina si legge tutta anche
- * senza JavaScript. La lingua, l'ombra sotto la barra quando si scende, le
- * schede che compaiono salendo, e il modulo dei contatti che resta sulla
- * pagina invece di andarsene.
- *
- * Quello che conta — la plancia — non sta qui: sta nel riquadro, ed è un
- * documento suo con la sua vita.
+ * Sono poche, e nessuna è indispensabile: la pagina si legge tutta anche
+ * senza JavaScript. La lingua, il menu del telefono che si richiude, l'ombra
+ * sotto la barra quando si scende, le schede che compaiono salendo, e il
+ * modulo dei contatti che resta sulla pagina invece di andarsene.
  */
 
 (function () {
@@ -26,8 +23,8 @@
    *
    * `data-en` porta il contenuto, col suo `<b>` dentro se in quella frase c'è;
    * `data-en-<attributo>` porta un attributo — `data-en-alt` riempie `alt`,
-   * `data-en-content` il `content` di una `<meta>`, `data-en-src` l'indirizzo
-   * della plancia nel riquadro.
+   * `data-en-content` il `content` di una `<meta>`, `data-en-aria-label` il
+   * nome che legge chi usa un lettore di schermo.
    *
    * Si cambia lingua **senza ricaricare**, e quindi l'italiano non si può
    * buttare via: alla prima passata si mette da parte, e da lì in poi le due
@@ -138,33 +135,6 @@
     });
   }
 
-  /* ── Se la plancia non c'è ────────────────────────────────────────────
-   *
-   * La plancia dentro il riquadro non sta nella repository: la rimette lo
-   * script quando si pubblica. Se quel passo non fosse stato fatto, la pagina
-   * si aprirebbe **senza un errore da nessuna parte** e in mezzo ci sarebbe un
-   * riquadro vuoto alto seicento pixel — che è il modo peggiore di rompersi,
-   * perché sembra la pagina.
-   *
-   * Quindi si chiede, e basta una testa: il file c'è o non c'è. È dello
-   * stesso indirizzo, quindi nessuno lo vieta. Se non c'è, al posto del
-   * riquadro va un pezzo che dice cosa manca e dove guardare — e se la
-   * domanda stessa non si potesse fare, non si tocca niente: meglio un
-   * riquadro vuoto che una pagina che si cancella un pezzo da sola. */
-  var telaio = document.querySelector(".telaio-dentro");
-  var invece = document.querySelector(".telaio-senza");
-  if (telaio && invece && window.fetch) {
-    fetch(telaio.getAttribute("src"), { method: "HEAD" })
-      .then(function (risposta) {
-        if (risposta.ok) return;
-        telaio.hidden = true;
-        invece.hidden = false;
-      })
-      .catch(function () {
-        /* Nessuna risposta: non si sa, e nel dubbio si lascia com'è. */
-      });
-  }
-
   /* ── Il menu sul telefono ─────────────────────────────────────────────
    *
    * Si apre e si chiude da solo, perché è un <details>. Quello che il
@@ -231,7 +201,10 @@
   var modulo = document.getElementById("modulo-contatti");
   if (modulo && window.fetch && window.FormData) {
     var esito = modulo.querySelector(".modulo-esito");
-    var scrivi = modulo.getAttribute("data-scrivi") || "";
+    /* Non `scrivi`: le `var` stanno in tutta la funzione, e con quel nome
+     * questa riga prendeva il posto della funzione che cambia lingua — i
+     * tasti IT/EN, premuti, davano «scrivi is not a function». */
+    var aChiScrivere = modulo.getAttribute("data-scrivi") || "";
     var PAROLE = {
       it: {
         invio: "Sto mandando…",
@@ -256,7 +229,7 @@
     var detto = function (quale, email) {
       return PAROLE[linguaDellaPagina()][quale]
         .replace("{email}", email || "")
-        .replace("{scrivi}", scrivi);
+        .replace("{scrivi}", aChiScrivere);
     };
     var mostra = function (testo, male) {
       esito.textContent = testo;
