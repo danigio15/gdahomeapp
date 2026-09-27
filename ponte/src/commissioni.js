@@ -1495,7 +1495,9 @@ export class Commissioni {
          * messaggio, e leggerlo qui vorrebbe dire provare a togliere dalla
          * rete un apparecchio che si chiama «7». */
         case "ponte/zigbee/elimina":
-          return si(id, await zigbee.elimina(detto.targa));
+          /* `perForza` e' il secondo passo, quello che si chiede solo dopo che
+           * il garbato ha fallito e con scritto cosa comporta (`zigbee.js`). */
+          return si(id, await zigbee.elimina(detto.targa, { perForza: detto.perForza === true }));
         case "ponte/zigbee/rinomina":
           return si(id, await zigbee.rinomina(detto.dispositivo, detto.nome));
         default:

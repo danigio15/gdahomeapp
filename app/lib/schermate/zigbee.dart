@@ -53,6 +53,7 @@ import '../casa/segnalazioni.dart' show spiegaLErrore;
 import '../casa/zigbee.dart';
 import '../parole.dart';
 import '../ponte/filo.dart';
+import '../ponte/errori.dart' show ComandoRifiutato;
 import '../vestito/pezzi.dart';
 import '../vestito/quanto_e_largo.dart';
 
@@ -1342,18 +1343,77 @@ class _SchedaDelDispositivoZigbeeState
       ),
     );
     if (sicuro != true || !mounted) return;
+    await _toglilo();
+  }
+
+  /// L'ordine garbato, e — se non basta — la seconda domanda.
+  ///
+  /// Il garbato chiede all'apparecchio di andarsene, e chi va a corrente e fa
+  /// da ripetitore spesso quell'ordine lo ignora: il ponte riguarda l'elenco
+  /// per qualche secondo e poi dice onestamente che e' ancora li'. Fin qui
+  /// arrivava, e finiva: la strada c'era — cancellare la riga d'imperio — ma
+  /// non la offriva nessuno, e chi stava col telefono in mano restava fermo.
+  ///
+  /// Adesso la si offre, **dopo** il fallimento e con scritto cosa comporta.
+  /// Non prima, e non di nascosto: forzare toglie la riga senza che
+  /// l'apparecchio lo sappia, e quello resta acceso a cercare un coordinatore
+  /// che non gli risponde piu'.
+  Future<void> _toglilo({bool perForza = false}) async {
     setState(() {
       _inCorso = true;
       _perche = null;
     });
     try {
-      await widget.zigbee.elimina(widget.suo.targa);
+      await widget.zigbee.elimina(widget.suo.targa, perForza: perForza);
       if (mounted) Navigator.of(context).pop();
     } catch (errore) {
-      if (mounted) setState(() => _perche = spiegaLErrore(errore));
+      if (!mounted) return;
+      setState(() => _perche = spiegaLErrore(errore));
+      if (errore is ComandoRifiutato && errore.siPuoForzare) {
+        await _forseAForza(errore.spiegazione);
+      }
     } finally {
       if (mounted) setState(() => _inCorso = false);
     }
+  }
+
+  /// La seconda domanda, quella «per iscritto».
+  Future<void> _forseAForza(String comEAndata) async {
+    final insisti = await showDialog<bool>(
+      context: context,
+      builder: (dentro) => AlertDialog(
+        title: Text(
+          inLingua(it: 'Toglilo lo stesso?', en: 'Remove it anyway?'),
+        ),
+        content: Text(
+          inLingua(
+            it:
+                '$comEAndata\n\nSi può togliere d\'imperio: la riga sparisce '
+                'da Zigbee2MQTT e dall\'elenco anche se il dispositivo non '
+                'risponde. Ma lui non lo saprà: resta acceso a cercare una '
+                'rete che non gli risponde più, e per rimetterlo bisogna '
+                'resettarlo col dito prima di riabbinarlo.',
+            en:
+                '$comEAndata\n\nIt can be removed by force: the row goes from '
+                'Zigbee2MQTT and from the list even if the device does not '
+                'answer. But it will not know: it stays on looking for a '
+                'network that no longer answers it, and putting it back means '
+                'resetting it by hand before pairing it again.',
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dentro).pop(false),
+            child: Text(inLingua(it: 'Lascia stare', en: 'Leave it')),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dentro).pop(true),
+            child: Text(inLingua(it: 'Toglilo d\'imperio', en: 'Force it out')),
+          ),
+        ],
+      ),
+    );
+    if (insisti == true && mounted) await _toglilo(perForza: true);
   }
 
   /* Prima si chiedono le entita' — un giro sul filo che puo' andare storto —

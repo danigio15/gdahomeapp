@@ -463,6 +463,25 @@ class LaMappaDellaRete {
 const ognUnSecondo = Duration(seconds: 1);
 
 /// Il giro al ponte per la rete Zigbee.
+/// Quanto si aspetta la mappa della rete.
+///
+/// Due minuti, e non e' generosita': il ponte aspetta **novanta secondi**
+/// (`ATTESA_DELLA_MAPPA`, in `ponte/src/zigbee.js`), perche' il coordinatore
+/// chiede a un ripetitore alla volta e su una rete grossa il giro dei vicini
+/// ci mette un minuto buono.
+///
+/// L'attesa di serie del filo e' venti secondi, e va bene per ogni altro
+/// comando: sono domande a cui Home Assistant risponde subito. Questa no — e
+/// chiedendola senza dirlo si smetteva di ascoltare al ventesimo secondo,
+/// mentre il ponte stava ancora aspettando. La schermata scriveva «Home
+/// Assistant non ha risposto in tempo», che era falso due volte: Home
+/// Assistant stava rispondendo, e chi aveva smesso di aspettare era l'app.
+///
+/// Visto su una rete vera da 74 dispositivi. Piu' dei novanta del ponte,
+/// perche' chi decide quando arrendersi dev'essere chi sa quanto ci vuole: se
+/// il giro non arriva, e' il ponte a dirlo, con dentro il perche'.
+const attesaDellaMappa = Duration(seconds: 120);
+
 class Zigbee {
   const Zigbee(this._filo);
 
@@ -540,10 +559,16 @@ class Zigbee {
   /// della rete — riguarda l'elenco — quindi quello che torna qui e' l'elenco
   /// **dopo**, gia' senza quello tolto: la schermata si ridisegna senza un
   /// secondo giro.
-  Future<ChiCEInRete> elimina(String targa) async {
+  /// `perForza` e' il secondo passo, e si chiede solo dopo che il garbato ha
+  /// fallito: cancella la riga dalla cassetta di Zigbee2MQTT senza chiedere il
+  /// permesso all'apparecchio. Chi lo preme deve sapere che quello resta
+  /// acceso a cercare un coordinatore che non gli risponde piu', e che per
+  /// rimetterlo in rete va resettato col dito. La schermata lo scrive.
+  Future<ChiCEInRete> elimina(String targa, {bool perForza = false}) async {
     final detto = await _filo.risultato({
       'type': 'ponte/zigbee/elimina',
       'targa': targa,
+      if (perForza) 'perForza': true,
     });
     final fatto = _andataBene(detto);
     return ChiCEInRete.daQuelloCheDice(fatto);
@@ -567,7 +592,7 @@ class Zigbee {
         'type': 'ponte/zigbee/mappa',
         'rifai': rifai,
         'scuro': scuro,
-      });
+      }, entro: attesaDellaMappa);
       if (detto is! Map<Object?, Object?>) return LaMappaDellaRete.vuota;
       return LaMappaDellaRete.daQuelloCheDice(detto);
     } catch (errore) {
@@ -644,7 +669,12 @@ class Zigbee {
     if (detto is Map<Object?, Object?>) {
       if (detto['fatto'] == true) return detto;
       final perche = _testo(detto['perche']);
-      if (perche.isNotEmpty) throw ComandoRifiutato(perche);
+      if (perche.isNotEmpty) {
+        throw ComandoRifiutato(
+          perche,
+          siPuoForzare: detto['siPuoForzare'] == true,
+        );
+      }
     }
     throw ComandoRifiutato(
       inLingua(

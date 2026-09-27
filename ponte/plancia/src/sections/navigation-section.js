@@ -54,10 +54,25 @@ function installStyles() {
        * coi tasti e guardare la barra spostarsi davvero. */
       :root{--dm-fondo-di-sistema:env(safe-area-inset-bottom,0px)}
       /* La barra a riposo, quella tirata fuori e quella tenuta ferma: tutte e
-       * tre misurano dal fondo, e tutte e tre devono scansare i tasti. */
+       * tre misurano dal fondo, e tutte e tre devono scansare i tasti.
+       *
+       * Si prende il piu' grande dei due, e non si sommano. Prima erano
+       * diciotto pixel **piu'** la fascia
+       * di sistema, e quei diciotto restavano scoperti: fra la barra e i tasti
+       * di Android c'era una striscia di pagina, e scorrendo ci si vedeva
+       * passare dentro il contenuto. Sembrava una barra che galleggia sopra un
+       * buco, e infatti la segnalazione diceva proprio cosi': «non mi piace
+       * che se scorro si vede lo spazio vuoto sotto».
+       *
+       * Adesso la barra appoggia **sulla** fascia: dove il sistema si prende
+       * qualcosa — i tre tasti di Android, la barretta dell'iPhone — la barra
+       * gli sta appena sopra e non resta niente in mezzo. Dove non si prende
+       * niente — un tablet, un computer, un telefono a gesti che dichiara zero
+       * — restano gli otto pixel del minimo, perche' una barra tonda incollata
+       * al bordo dello schermo sembra tagliata, non appoggiata. */
       nav.tabs.bottom-nav-bar.visible,
       body.cd-nav-fixed nav.tabs.bottom-nav-bar{
-        bottom:calc(18px + var(--dm-fondo-di-sistema))!important
+        bottom:max(8px, var(--dm-fondo-di-sistema))!important
       }
       /* E lo spazio sotto l'ultima card cresce insieme alla barra.
        *
