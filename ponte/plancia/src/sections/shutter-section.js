@@ -157,7 +157,7 @@ function installStyles() {
      * la pastiglia dello stato a destra, sulla stessa riga; la pastiglia non
      * si stringe — «TAPPARELLA CHIUSA» in maiuscoletto spaziato ne prende
      * centocinquanta — e su un telefono al nome ne restano centosettanta.
-     * Con `white-space:nowrap` e i puntini di coda, «Tapparella Bagno Sopra»
+     * Con «white-space:nowrap» e i puntini di coda, «Tapparella Bagno Sopra»
      * diventa «Tapparella Bag...»: cioe' due tapparelle diverse dello stesso
      * bagno si leggono uguali, che e' il modo peggiore di accorciare un nome.
      *
@@ -165,7 +165,7 @@ function installStyles() {
      * riga in piu' non costa niente: al massimo due, e da li' in poi i
      * puntini, perche' un nome di sei righe sposterebbe la finestra fuori
      * dalla card. Vale anche per le finestre col solo sensore: la card e' la
-     * stessa (`windowOnlyCardMarkup`).
+     * stessa («windowOnlyCardMarkup»).
      *
      * Largo, invece, resta come prima: li' il posto c'e' e una riga sola si
      * legge prima. */

@@ -9833,7 +9833,7 @@ html[data-theme="dark"] :is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-wi
    * trecentodieci utili, la pastiglia ne prende trentotto, le tre frecce
    * centosei e la tendina della posizione trentotto. Al nome ne restavano
    * **ottantotto** — tre sillabe — e siccome il nome puo' andare a capo
-   * dappertutto (`overflow-wrap:anywhere`, che serve ai nomi lunghi delle
+   * dappertutto («overflow-wrap:anywhere», che serve ai nomi lunghi delle
    * entita') la colonna si stringeva fin li' invece di rubare spazio ai
    * comandi: sono loro a non potersi stringere.
    *
