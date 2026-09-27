@@ -924,6 +924,18 @@ export class Postino {
     return this._ultimoEsito;
   }
 
+  /* Il segreto di questa casa per il quadro, quello di `x-casa-segreto`.
+   *
+   * Lo legge anche chi chiede le licenze (`licenze.js`): il quadro e' uno, e
+   * una casa gli si presenta con un segreto solo. Se le licenze ne usassero
+   * un altro, una casa col rapporto acceso sarebbe due case per il quadro — e
+   * dare il segreto del centralino a una macchina che non e' il centralino
+   * vorrebbe dire dargli di che spacciarsi per questa casa. Quello del
+   * quadro al quadro lo si da' gia'. */
+  get segretoDellaCasa() {
+    return String(this._memoria.dati?.segreto || "");
+  }
+
   parti() {
     if (!this.acceso || this._orologio) return;
     this._fermato = false;

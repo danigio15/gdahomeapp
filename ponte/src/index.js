@@ -28,6 +28,7 @@ import { PlanceInCasa } from "./plance-in-casa.js";
 import { IL_CRUSCOTTO, LA_GESTIONE, VoceNellaBarra } from "./voci-nella-barra.js";
 import { UtentiDiCasa } from "./utenti.js";
 import { Identita } from "./identita.js";
+import { Licenze } from "./licenze.js";
 import { Dispositivi } from "./dispositivi.js";
 import { leggiLeOpzioni } from "./opzioni.js";
 import { Ponte } from "./ponte.js";
@@ -127,6 +128,22 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
   /* Chi e' questa casa per il centralino: serve alla chiamata, e alle
    * segnalazioni, che al centralino si presentano allo stesso modo. */
   const identita = new Identita({ cartella: opzioni.cartella });
+  /* Le licenze di questa casa: gdahome Premium, e gdanav che ci sta dentro.
+   *
+   * Con la chiave di `chiave-licenze.js` vuota — com'e' di serie — non parte
+   * niente e non si limita niente: ogni pezzo qui sotto che chiede
+   * `licenze.limitata` si sente dire di no, e fa quello che faceva ieri. Il
+   * contratto sta in `docs/LICENZE.md`, il perche' dei pezzi in `licenze.js`.
+   *
+   * Il segreto con cui la casa si presenta al quadro lo tiene il postino del
+   * rapporto, che nasce piu' giu': glielo si chiede quando serve. */
+  const licenze = new Licenze({
+    casa: identita.casa,
+    cartella: opzioni.cartella,
+    registro,
+  });
+  /* Con gdahome Base la plancia e' una: `plance.aggiungi` lo sa da qui. */
+  plance.limitata = () => licenze.limitata;
   /* Le segnalazioni e la chat dell'app: dal ponte al centralino, e da li' a
    * chi mantiene il progetto. */
   const segnalazioni = new Segnalazioni({
@@ -212,6 +229,9 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
     spegnimento,
     zigbee,
     aggiornamenti,
+    /* Le licenze: `ponte/licenza/*` sul filo, e la plancia principale sola
+     * per l'app di una casa Base. */
+    licenze,
   });
   const ponte = new Ponte({ casa, dispositivi, registro, commissioni, utenti });
 
@@ -362,8 +382,18 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
     },
     registro,
   });
+  licenze.segreto = () => postino.segretoDellaCasa;
 
-  const portiere = new Portiere({ ponte, dispositivi, abbinamento, registro, ritorno });
+  const portiere = new Portiere({
+    ponte,
+    dispositivi,
+    abbinamento,
+    registro,
+    ritorno,
+    /* Da fuori casa si entra con gdahome Premium; l'abbinamento resta aperto
+     * a tutti. Il perche' del taglio sta in `portiere.js`. */
+    soloInCasa: () => licenze.limitata,
+  });
   const chiamata = new Chiamata({
     dove: opzioni.centralino,
     identita,
@@ -371,6 +401,12 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
     registro,
   });
   portiere.chiamata = chiamata;
+  /* Il gettone al centralino: appena entrati, e a ogni rinnovo. Con le
+   * licenze spente non si dice niente, e il filo e' quello di sempre. */
+  if (licenze.attive) {
+    chiamata.diLaLicenza(licenze.gettonePerIlCentralino);
+    licenze.on("cambio", () => chiamata.diLaLicenza(licenze.gettonePerIlCentralino));
+  }
   /* E qui il postino riceve da dove prendere i suoi numeri.
    *
    * Si monta adesso e non insieme a lui perche' gli serve la **chiamata**, che
@@ -473,6 +509,9 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
     /* Se c'e' una versione nuova del ponte, e il bottone per portarsela
      * dentro: l'unico posto da cui chi non ha un computer puo' aggiornare. */
     aggiornamento,
+    /* Le licenze, per la scheda «Licenza»: com'e' messa la casa, e la
+     * casella del codice regalo. */
+    licenze,
     cartellaDellaConsole: opzioni.console,
     /* Da dove arriva l'ingress del Supervisor: l'unico che puo' bussare alla
      * console. Nelle prove e' `127.0.0.1`; nell'add-on non si cambia. */
@@ -501,6 +540,9 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
 
   chiamata.avvia();
   postino.parti();
+  /* Separata dal rapporto, e non per caso: il rapporto resta spento di serie,
+   * e le licenze non ne hanno bisogno. Manda solo chi e' la casa. */
+  licenze.parti();
 
   const saluto = await casa.saluta();
   if (saluto.viva) registro.info("Home Assistant risponde");
@@ -555,6 +597,7 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
     clearInterval(giro);
     chiamata.spegni();
     postino.ferma();
+    licenze.ferma();
     ponte.chiudiTutto();
     spegnimento.chiudi();
     zigbee.spegni();
@@ -573,6 +616,7 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
     ritorno,
     registro,
     postino,
+    licenze,
     app,
     console: console_,
     planceInCasa,

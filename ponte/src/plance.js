@@ -180,6 +180,19 @@ export class QuellaPlanciaNo extends Error {
   }
 }
 
+/* La seconda plancia, a una casa che e' gdahome Base.
+ *
+ * Il codice e' quello del contratto (`docs/LICENZE.md`), uguale ovunque: l'app
+ * lo riconosce e porta alla pagina Premium invece di scrivere un errore. */
+export class PremiumRichiesto extends Error {
+  constructor(
+    spiegazione = "con gdahome Base la plancia e' una, la principale: le altre sono Premium",
+  ) {
+    super(spiegazione);
+    this.codice = "premium-richiesto";
+  }
+}
+
 export class Plance {
   constructor({
     cartella,
@@ -195,7 +208,12 @@ export class Plance {
      * potrebbero essere tre: un avviso solo, dove le plance cambiano
      * davvero. */
     quandoCambia = null,
+    /* Se questa casa sta nei limiti di Base (`licenze.js`, `limitata`). Una
+     * funzione, perche' la risposta cambia mentre il ponte gira; di serie no,
+     * che e' come stanno le licenze finche' la chiave e' vuota. */
+    limitata = () => false,
   } = {}) {
+    this.limitata = limitata;
     this.archivio = new Archivio(percorso || join(cartella, "plance.json"), DIFETTO);
     this.adesso = adesso;
     this.registro = registro ?? { info() {}, attenzione() {}, errore() {} };
@@ -314,6 +332,14 @@ export class Plance {
     return this.elenco().find((una) => una.profilo === cercato) || null;
   }
 
+  _limitata() {
+    try {
+      return this.limitata?.() === true;
+    } catch (_errore) {
+      return false;
+    }
+  }
+
   get prima() {
     return this.quale(PROFILO_PRINCIPALE);
   }
@@ -332,6 +358,11 @@ export class Plance {
    * non c'e', mostra la sua «la dashboard e' quasi pronta»: e' la stessa cosa
    * che vede chi la installa il primo giorno. */
   aggiungi(titolo) {
+    /* Con gdahome Base la plancia e' una: quella principale, che c'e' sempre.
+     * Quindi ogni plancia che si aggiunge e' «la seconda», e si rifiuta. Si
+     * guarda qui e non nei due posti da cui si aggiunge — la console e l'app —
+     * per la stessa ragione di `quandoCambia`: un posto solo. */
+    if (this._limitata()) throw new PremiumRichiesto();
     if (this.quante >= QUANTE_AL_MASSIMO) throw new TroppePlance();
     const prese = new Set(this.archivio.dati.plance.map((una) => una.profilo));
     const nome = titoloPulito(titolo, "Plancia");
@@ -365,6 +396,15 @@ export class Plance {
     const nome = titoloPulito(titolo);
     if (!Configurazione.profiloBuono(quale) || !nome) return false;
     if (this.archivio.dati.plance.some((una) => una.profilo === quale)) return false;
+    /* Anche quella voluta da chi segue la casa: la regola di Base e' la stessa
+     * da qualunque parte arrivi la plancia. Resta «in attesa» nel cruscotto, e
+     * nasce il giorno che la casa e' Premium. */
+    if (this._limitata()) {
+      this.registro.attenzione(
+        `la plancia «${nome}» voluta da chi segue la casa non nasce: con gdahome Base la plancia e' una`,
+      );
+      return false;
+    }
     if (this.quante >= QUANTE_AL_MASSIMO) {
       this.registro.attenzione(
         `la plancia «${nome}» voluta da chi segue la casa non nasce: di plance se ne tengono ${QUANTE_AL_MASSIMO}`,

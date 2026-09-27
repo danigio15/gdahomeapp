@@ -1,6 +1,6 @@
 # Privacy di gdahome
 
-Ultimo aggiornamento: 26 settembre 2026.
+Ultimo aggiornamento: 27 settembre 2026.
 
 gdahome è l'app che apre la plancia di Home Assistant sul telefono. Questa
 pagina dice, in modo chiaro e senza giri di parole, **quali dati ci sono di

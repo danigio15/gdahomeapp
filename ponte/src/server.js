@@ -424,6 +424,9 @@ export function costruisciLaConsole({
   postino,
   ferro,
   aggiornamento,
+  /* Le licenze di questa casa (`licenze.js`): la scheda «Licenza» dice
+   * com'e' messa, e ha la casella del codice regalo. */
+  licenze = null,
   cartellaDellaConsole,
   cartellaDellApp,
   /* Da dove arriva l'ingress: vedi `daLIngress`. Si cambia solo nelle prove. */
@@ -494,6 +497,7 @@ export function costruisciLaConsole({
           postino,
           ferro,
           aggiornamento,
+          licenze,
         });
       } catch (errore) {
         registro.errore(`la console e' inciampata: ${errore?.message || errore}`);
@@ -903,6 +907,7 @@ async function api({
   postino,
   ferro,
   aggiornamento,
+  licenze = null,
 }) {
   /* C'e' una versione nuova del ponte?
    *
@@ -1079,7 +1084,9 @@ async function api({
       return;
     }
     if (metodo === "GET") {
-      json(risposta, { plance: plance.elenco() });
+      /* `limitata`: con gdahome Base la plancia e' una, e la console spegne
+       * il tasto «Aggiungi» invece di farlo premere per un no. */
+      json(risposta, { plance: plance.elenco(), limitata: licenze?.limitata === true });
       return;
     }
     let detto = {};
@@ -1124,11 +1131,59 @@ async function api({
       json(
         risposta,
         { errore: errore?.codice || "plance", spiegazione: errore?.message || "" },
-        400,
+        /* 402 e' «serve pagare»: e' esattamente questo, e la console lo
+         * distingue da un titolo storto senza leggere la frase. */
+        errore?.codice === "premium-richiesto" ? 402 : 400,
       );
       return;
     }
     male(risposta, 405, "metodo non previsto");
+    return;
+  }
+
+  /* La licenza di questa casa, per la scheda «Licenza».
+   *
+   * Lo stesso stato che l'app riceve con `ponte/licenza/stato`, e la stessa
+   * strada per un codice regalo: una sola, cosi' la console e l'app non
+   * possono raccontare due cose diverse della stessa casa. I gettoni non
+   * sono segreti — sono firme che dicono «Premium fino a…» — ma alla pagina
+   * non servono, e non ci vanno. */
+  if (via === "/api/licenza" && metodo === "GET") {
+    if (!licenze) {
+      json(risposta, { attive: false });
+      return;
+    }
+    const { gettoni: _gettoni, ...stato } = licenze.stato();
+    json(risposta, stato);
+    return;
+  }
+
+  if (via === "/api/licenza/riscatta" && metodo === "POST") {
+    if (!licenze || !licenze.attive) {
+      json(risposta, { errore: "licenze-spente" }, 409);
+      return;
+    }
+    let detto = {};
+    try {
+      detto = await corpoDiJson(richiesta);
+    } catch (errore) {
+      male(risposta, 400, errore.message);
+      return;
+    }
+    try {
+      const { gettoni: _gettoni, ...stato } = await licenze.riscatta(detto?.codice);
+      json(risposta, stato);
+    } catch (errore) {
+      /* Lo stato del quadro, dove c'e' — 404 per un codice che non esiste,
+       * 409 per uno gia' usato — cosi' la pagina scrive la frase giusta. */
+      const stato =
+        Number(errore?.stato) >= 400 && Number(errore?.stato) < 500 ? errore.stato : 400;
+      json(
+        risposta,
+        { errore: errore?.codice || "licenza", spiegazione: String(errore?.message || "") },
+        errore?.codice === "quadro-irraggiungibile" ? 502 : stato,
+      );
+    }
     return;
   }
 

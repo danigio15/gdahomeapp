@@ -60,7 +60,8 @@ import { ChatHaDettoNo } from "./chat.js";
 import { I_MARCHI, QuestoNoNo } from "./aggiornamenti.js";
 import { CentralinoHaDettoNo, SenzaCentralino } from "./segnalazioni.js";
 import { SegnalazioniDellaPlancia } from "./segnalazioni-della-plancia.js";
-import { laVede, QuellaPlanciaNo, TroppePlance } from "./plance.js";
+import { laVede, PremiumRichiesto, QuellaPlanciaNo, TroppePlance } from "./plance.js";
+import { LicenzaNo } from "./licenze.js";
 import { perLaVia, percorsoSenzaTrucchi } from "./dogana.js";
 import { iFili, iRami, laMappaDisegnata } from "./mappa-zigbee.js";
 import { comeSiPresenta } from "./zigbee.js";
@@ -125,6 +126,20 @@ const DOVE_TORNARE = "ponte/casa/dove";
  * Una domanda sola per due voci del menu, perche' sono la stessa domanda fatta
  * a chi la sa: due giri sul filo per due campi sarebbero due giri. */
 const IL_QUADRO = "ponte/quadro/stato";
+
+/* Le licenze di questa casa (`licenze.js`, e il contratto in
+ * `docs/LICENZE.md`): com'e' messa, una ricevuta del negozio da girare al
+ * quadro, un codice regalo da riscattare.
+ *
+ * **Non** sono di chi amministra: gdahome Premium e' della casa, e chiunque
+ * abbia un telefono abbinato la vede e la puo' comprare o riscattare — come
+ * in un negozio chiunque puo' fare un regalo. Quello che si ottiene e' piu'
+ * roba per tutti, non un potere su qualcuno. */
+const LICENZA = new Map([
+  ["ponte/licenza/stato", "stato"],
+  ["ponte/licenza/negozio", "negozio"],
+  ["ponte/licenza/riscatta", "riscatta"],
+]);
 
 const CONFIG_GET = "dashboardmodern/config/get";
 const CONFIG_SET = "dashboardmodern/config/set";
@@ -444,6 +459,10 @@ export class Commissioni {
      * una sola, per non leggere due volte la stessa cosa pesante. */
     registri = null,
     ritorno = null,
+    /* Le licenze di questa casa (`licenze.js`). Senza — un ponte sul banco, o
+     * le prove di ieri — nessun limite, e `ponte/licenza/stato` dice che le
+     * licenze sono spente. */
+    licenze = null,
     scarica = scaricaDavvero,
     insieme = INSIEME,
   } = {}) {
@@ -500,6 +519,7 @@ export class Commissioni {
      * sente rispondere «non conosco», come ogni comando che questo ponte non
      * sa fare. */
     this.ritorno = ritorno;
+    this.licenze = licenze;
     this.scarica = scarica;
     this.insieme = insieme;
     this._inCorso = 0;
@@ -550,16 +570,28 @@ export class Commissioni {
    * `puoAmministrare` e' un'altra domanda, e la decide chi sta sul filo
    * (`ponte.js`, `cucitura.js`): se chi chiede puo' fare le cose da
    * amministratore. Vale solo se e' `true`: chi non lo dice, non lo puo'. */
-  async rispondi(detto, { chiChiede = "", amministra = null, puoAmministrare = false } = {}) {
+  /* `dalTelefono` dice che chi chiede e' l'app — un telefono, o gdahome in un
+   * browser — e non la plancia servita dentro Home Assistant. Serve a una
+   * regola sola, quella di gdahome Base: all'app si serve solo la plancia
+   * principale. Dentro Home Assistant le plance stanno fra le Dashboard, e
+   * quelle le governa Home Assistant. */
+  async rispondi(
+    detto,
+    { chiChiede = "", amministra = null, puoAmministrare = false, dalTelefono = false } = {},
+  ) {
     const id = detto?.id ?? null;
     const tipo = detto?.type;
     if (SOLO_CHI_AMMINISTRA.has(tipo) && puoAmministrare !== true) {
       return no(id, "unauthorized", "questo lo fa solo chi amministra la casa");
     }
+    /* Base, visto dall'app: la plancia principale e basta. Con le licenze
+     * spente e' sempre falso, e tutto va com'e' sempre andato. */
+    const soloLaPrima = dalTelefono === true && this._limitata();
     if (tipo === TIPO) return this._http(detto, chiChiede, amministra, puoAmministrare);
     if (tipo === TIPO_MOLTI) return this._molti(detto, chiChiede, amministra);
-    if (tipo === TIPO_PLANCIA) return this._laPlancia(detto, chiChiede, amministra);
-    if (PLANCE.has(tipo)) return this._lePlance(detto, chiChiede, amministra);
+    if (tipo === TIPO_PLANCIA) return this._laPlancia(detto, chiChiede, amministra, soloLaPrima);
+    if (PLANCE.has(tipo)) return this._lePlance(detto, chiChiede, amministra, soloLaPrima);
+    if (LICENZA.has(tipo)) return this._laLicenza(detto);
     if (typeof tipo === "string" && tipo.startsWith("ponte/chat/")) return this._chatDellApp(detto);
     if (tipo === IL_QUADRO) return this._ilQuadro(detto, chiChiede, amministra, puoAmministrare);
     if (typeof tipo === "string" && tipo.startsWith("ponte/segnalazioni/"))
@@ -571,8 +603,15 @@ export class Commissioni {
     if (tipo === DIMMI_IL_DISPOSITIVO) return this._dimmiIlDispositivo(detto);
     if (typeof tipo === "string" && tipo.startsWith("ponte/zigbee/")) return this._zigbee(detto);
     if (tipo === REGISTRI) return this._registri(detto);
-    if (tipo === CONFIG_GET || tipo === CONFIG_SET || tipo === CONFIG_RESTORE)
+    if (tipo === CONFIG_GET || tipo === CONFIG_SET || tipo === CONFIG_RESTORE) {
+      /* La configurazione di una plancia che all'app non si serve non le si
+       * da' nemmeno da leggere o da scrivere: sarebbe la stessa plancia, per
+       * un'altra porta. */
+      if (soloLaPrima && (detto?.profile ?? PROFILO_PRINCIPALE) !== PROFILO_PRINCIPALE) {
+        return no(id, "premium-richiesto", "con gdahome Base l'app vede la plancia principale");
+      }
       return this._configurazione(detto);
+    }
     if (tipo === DOVE_TORNARE) return this._doveTornare(detto);
     if (tipo === CATALOGO) return this._catalogo(detto);
     if (tipo === FOTO_ELENCO) return this._elencoDelleFoto(detto);
@@ -983,11 +1022,17 @@ export class Commissioni {
    * scelto una delle altre. E l'elenco viaggia insieme, perche' il selettore
    * lo disegna chi ha appena chiesto la plancia: una seconda domanda per
    * sapere quante sono sarebbe un secondo giro sul filo per niente. */
-  _laPlancia(detto, chiChiede = "", amministra = null) {
+  _laPlancia(detto, chiChiede = "", amministra = null, soloLaPrima = false) {
     const id = detto?.id ?? null;
     if (!this.plancia?.cE) return no(id, "not_found", "questo ponte non ha la plancia");
     const voluto = typeof detto?.profilo === "string" ? detto.profilo.trim() : "";
-    const sue = this._lePlanceSue(chiChiede, amministra);
+    /* gdahome Base: una plancia che non e' la principale all'app non si serve,
+     * e glielo si dice col codice del contratto — l'app porta alla pagina
+     * Premium invece di aprire in silenzio un'altra plancia. */
+    if (soloLaPrima && voluto && voluto !== PROFILO_PRINCIPALE) {
+      return no(id, "premium-richiesto", "con gdahome Base l'app vede la plancia principale");
+    }
+    const sue = this._lePlanceSue(chiChiede, amministra, soloLaPrima);
     let quale = this.plance ? (voluto ? this.plance.quale(voluto) : this.plance.prima) : null;
     if (voluto && !quale) return no(id, "not_found", "quella plancia non c'e'");
     /* Nessuna plancia per chi chiede: si dice, e non si apre niente.
@@ -1055,8 +1100,12 @@ export class Commissioni {
     return this._lePlanceSue(chiChiede, amministra).length > 0;
   }
 
-  _lePlanceSue(chiChiede = "", amministra = null) {
-    const tutte = this.plance ? this.plance.elenco() : [];
+  _lePlanceSue(chiChiede = "", amministra = null, soloLaPrima = false) {
+    const elenco = this.plance ? this.plance.elenco() : [];
+    /* Con gdahome Base l'elenco che va all'app ha dentro la principale e
+     * basta: le altre restano sul disco, intatte, e tornano il giorno che la
+     * casa e' Premium. */
+    const tutte = soloLaPrima ? elenco.filter((una) => una.profilo === PROFILO_PRINCIPALE) : elenco;
     if (!chiChiede) return tutte;
     return tutte.filter((una) => laVede(una, chiChiede, amministra));
   }
@@ -1067,20 +1116,20 @@ export class Commissioni {
    * restasse, chi rifacesse una plancia con lo stesso nome si ritroverebbe
    * dentro il lavoro di quella di prima. Quel cassetto lo tiene la cassetta
    * della configurazione, e a lei si chiede. */
-  _lePlance(detto, chiChiede = "", amministra = null) {
+  _lePlance(detto, chiChiede = "", amministra = null, soloLaPrima = false) {
     const id = detto?.id ?? null;
     const plance = this.plance;
     if (!plance) return no(id, "unknown_command", `non conosco ${detto.type}`);
     /* Le sue, e solo le sue. Anche quando sono zero: un elenco che si
      * riempie di quelle degli altri appena il tuo e' vuoto e' lo stesso buco
      * di `_laPlancia`, un piano piu' sotto. */
-    const sue = () => this._lePlanceSue(chiChiede, amministra);
+    const sue = () => this._lePlanceSue(chiChiede, amministra, soloLaPrima);
     /* E quello che non si vede non si tocca: senza questo, chi non vede una
      * plancia poteva comunque rinominarla o toglierla passandone il profilo,
      * che e' peggio che vederla. */
     const nonESua = (quello) => {
       if (!chiChiede || !quello) return false;
-      const mie = this._lePlanceSue(chiChiede, amministra);
+      const mie = this._lePlanceSue(chiChiede, amministra, soloLaPrima);
       return !mie.some((una) => una.profilo === quello);
     };
     const titolo = typeof detto.titolo === "string" ? detto.titolo : "";
@@ -1109,11 +1158,68 @@ export class Commissioni {
           return no(id, "unknown_command", `non conosco ${detto.type}`);
       }
     } catch (errore) {
-      if (errore instanceof TroppePlance || errore instanceof QuellaPlanciaNo) {
+      if (
+        errore instanceof TroppePlance ||
+        errore instanceof QuellaPlanciaNo ||
+        errore instanceof PremiumRichiesto
+      ) {
         return no(id, errore.codice, errore.message);
       }
       this.registro.errore(`le plance sono andate storte: ${errore?.message || errore}`);
       return no(id, "ponte_plance", "non ha funzionato");
+    }
+  }
+
+  /* Se questa casa sta nei limiti di gdahome Base. Senza licenze, no. */
+  _limitata() {
+    try {
+      return this.licenze?.limitata === true;
+    } catch (_errore) {
+      return false;
+    }
+  }
+
+  /* Le licenze: com'e' messa la casa, una ricevuta, un codice regalo.
+   *
+   * La risposta e' sempre lo stato intero, anche dopo una ricevuta o un
+   * codice: l'app ridisegna la pagina Premium da quello, e non deve fare una
+   * seconda domanda per sapere cosa e' cambiato. */
+  async _laLicenza(detto) {
+    const id = detto?.id ?? null;
+    const licenze = this.licenze;
+    const cosa = LICENZA.get(detto?.type);
+    if (cosa === "stato") {
+      if (!licenze) {
+        const spenta = { attiva: false, scade: null, origine: null, fino: null };
+        return si(id, {
+          attive: false,
+          gdahome: spenta,
+          gdanav: spenta,
+          gettoni: {},
+          licenze: [],
+          ultima: null,
+        });
+      }
+      return si(id, licenze.stato());
+    }
+    if (!licenze) return no(id, "licenze-spente", "questo ponte non ha le licenze");
+    try {
+      if (cosa === "negozio") {
+        return si(
+          id,
+          await licenze.negozio({
+            app: detto.app,
+            piattaforma: detto.piattaforma,
+            prodotto: detto.prodotto,
+            ricevuta: detto.ricevuta,
+          }),
+        );
+      }
+      return si(id, await licenze.riscatta(detto.codice));
+    } catch (errore) {
+      if (errore instanceof LicenzaNo) return no(id, errore.codice, errore.message);
+      this.registro.errore(`la licenza e' andata storta: ${errore?.message || errore}`);
+      return no(id, "ponte_licenza", "non ha funzionato");
     }
   }
 

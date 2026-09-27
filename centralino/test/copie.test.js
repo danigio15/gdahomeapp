@@ -21,7 +21,20 @@ const CENTRALINO = join(QUI, "..", "src");
 const PONTE = join(QUI, "..", "..", "ponte", "src");
 const NUVOLA = join(QUI, "..", "..", "nuvola", "src");
 
-const COPIATI = ["presa.js", "segreti.js", "archivio.js", "registro.js", "testo.js"];
+/* `gettone.js` e `chiave-licenze.js` ci sono dal giorno delle licenze: il
+ * gettone si verifica con le stesse regole dappertutto (`docs/LICENZE.md`), e
+ * la chiave e' la stessa riga in tutti i posti — e' `strumenti/chiave-licenze.mjs`
+ * a scriverla, e se un giorno ne scrivesse una sola il centralino
+ * rifiuterebbe i gettoni che il ponte accetta. */
+const COPIATI = [
+  "presa.js",
+  "segreti.js",
+  "archivio.js",
+  "registro.js",
+  "testo.js",
+  "gettone.js",
+  "chiave-licenze.js",
+];
 
 test("le copie prese dal ponte sono ancora identiche", () => {
   for (const nome of COPIATI) {
@@ -51,4 +64,15 @@ test("le copie prese dalla nuvola sono ancora identiche", () => {
         `  cp nuvola/src/${nome} centralino/src/`,
     );
   }
+});
+
+/* E la nuvola, che il gettone lo verifica con le sue funzioni, ha la stessa
+ * chiave: la riga e' una, in tre posti. */
+test("la chiave delle licenze e' la stessa nella nuvola", () => {
+  assert.equal(
+    readFileSync(join(NUVOLA, "chiave-licenze.js"), "utf8"),
+    readFileSync(join(PONTE, "chiave-licenze.js"), "utf8"),
+    "«chiave-licenze.js» della nuvola e' diverso da quello del ponte: si rifa' con\n" +
+      "  node strumenti/chiave-licenze.mjs",
+  );
 });

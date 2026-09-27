@@ -161,16 +161,22 @@ Controllo delle ricevute: Google Play Developer API
 - Comandi sul filo cifrato: `ponte/licenza/stato` → `{gdahome: {attiva,
   scade, origine}, gdanav: {…}, gettoni: {…}}`; `ponte/licenza/negozio`
   `{app, piattaforma, prodotto, ricevuta}`; `ponte/licenza/riscatta` `{codice}`.
-- Base: `plance.aggiungi` rifiuta la seconda plancia (`premium-richiesto`),
-  le plance oltre la principale non si servono all'app; il filo verso il
-  centralino per i telefoni non si apre (l'abbinamento si').
+- Il segreto che manda al quadro e' quello che la casa ha gia' per il quadro
+  (`/data/quadro.json`), non quello del centralino: il segreto del centralino
+  non esce verso un'altra macchina.
+- Base: `plance.aggiungi` rifiuta la seconda plancia (`premium-richiesto`,
+  `POST /api/plance` risponde 402), le plance oltre la principale non si
+  servono all'app; un canale che arriva dal centralino e non e' un abbinamento
+  viene rifiutato con `motivo: "premium-richiesto"` (l'abbinamento si').
 - La console dell'add-on mostra lo stato della licenza e un campo per il
   codice regalo.
 
 ## Il centralino (centralino e nuvola)
 
 La casa manda il gettone quando si presenta e ogni volta che lo rinnova
-(messaggio `{"tipo": "licenza", "gettone": "…"}` sul filo della casa). Un
+(messaggio `{"t": "licenza", "tipo": "licenza", "gettone": "…"}` sul filo della
+casa: il protocollo del centralino usa `t`, si mandano tutti e due; stringa
+vuota = nessuna licenza; si accetta anche `gettone` dentro `sono-io`). Un
 telefono che bussa a `/telefono/<casa>` di una casa **senza gettone gdahome
 valido** viene chiuso con codice `4402` e motivo `premium-richiesto`.
 L'abbinamento (`/abbinamento/…`) resta aperto a tutti. Con la chiave vuota il
