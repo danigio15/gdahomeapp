@@ -185,11 +185,16 @@ class _SenzaMovimento implements AccessibilityFeatures {
 /// ognuna ha la sua prova (`barra_nel_browser_test.dart`, `home_test.dart`).
 /// Qui serve solo che la barra sia aperta.
 Future<void> apriLaBarra(WidgetTester tester) async {
-  /* La barra si richiude da sola poco dopo che si e' scelto: si lascia
-   * passare il tempo che ci mette a togliersi di mezzo, e poi la si chiama. */
-  await tester.pump(const Duration(seconds: 5));
+  /* Il menu si richiude da solo poco dopo che si e' scelto: si lascia
+   * passare il tempo che ci mette a togliersi di mezzo, e poi lo si chiama. */
+  await tester.pump(const Duration(seconds: 9));
   await tester.pumpAndSettle();
   tester.state<BarraDelleSezioniState>(find.byType(BarraDelleSezioni)).apri();
+  /* Un fotogramma perche' cominci a salire, e poi lo si lascia arrivare.
+   * Senza, `pumpAndSettle` da solo tornava col menu ancora chiuso: il menu
+   * chiuso non e' nell'albero — non si disegna affatto — e la prima
+   * ricostruzione e' quella che lo rimette. */
+  await tester.pump();
   await tester.pumpAndSettle();
 }
 
@@ -573,38 +578,44 @@ void main() {
       expect(find.text('Dispositivi'), findsNothing);
 
       /* La barra. In cima c'e' la casa in cui si e', e da dove ci si passa;
-       * sotto, i nomi in maiuscolo e per intero. Da dove si chiama e' una
-       * prova a parte, qui sotto. */
+       * sotto, i nomi per intero e **come si scrivono** — `Configurazione`,
+       * non `CONFIGURAZIONE`: in maiuscolo erano, e i piu' lunghi venivano
+       * rimpiccioliti per farli entrare. Da dove si chiama e' una prova a
+       * parte, qui sotto. */
       await apriLaBarra(tester);
       expect(nellaBarra('Casa mia'), findsOneWidget);
       expect(nellaBarra('in casa'), findsOneWidget);
-      expect(nellaBarra('PLANCIA'), findsOneWidget);
-      expect(nellaBarra('DISPOSITIVI'), findsOneWidget);
+      expect(nellaBarra('Plancia'), findsOneWidget);
+      expect(nellaBarra('Dispositivi'), findsOneWidget);
       /* In tre gruppi: la casa, l'aiuto, le avanzate. */
       expect(nellaBarra('CASA'), findsOneWidget);
       /* I blocchi che non ci sono ancora si vedono lo stesso, spenti: cosi'
        * si sa dove sta andando l'app. Stanno in fondo, fra le avanzate: si
        * scorre fin li'. */
       await tester.scrollUntilVisible(
-        nellaBarra('AUTOMAZIONI'),
+        nellaBarra('Automazioni'),
         80,
+        /* L'**ultimo**, non il primo: dentro il menu di Scrollable ce ne
+         * sono due, e il primo e' quello della casella per cercare. Tirando
+         * quello non si muove niente, e la prova falliva dicendo che
+         * «Automazioni» non c'era. */
         scrollable: find
             .descendant(
               of: find.byType(BarraDelleSezioni),
               matching: find.byType(Scrollable),
             )
-            .first,
+            .last,
       );
       expect(nellaBarra('AVANZATE'), findsOneWidget);
-      expect(nellaBarra('AIUTANTI'), findsOneWidget);
-      expect(nellaBarra('AUTOMAZIONI'), findsOneWidget);
+      expect(nellaBarra('Aiutanti'), findsOneWidget);
+      expect(nellaBarra('Automazioni'), findsOneWidget);
       /* Zigbee no, e non perche' non sia pronta: perche' **questa casa non ha
        * una rete Zigbee**. E' la stessa regola della Console e del Cruscotto —
        * una porta che non si apre e' peggio di una porta che non c'e' — ed e'
        * l'unica voce dell'elenco che dipende da com'e' fatta la casa invece
        * che da com'e' fatta l'app. Dove la rete c'e', compare: lo prova
        * `zigbee_test.dart`. */
-      expect(nellaBarra('ZIGBEE'), findsNothing);
+      expect(nellaBarra('Zigbee'), findsNothing);
 
       /* Finche' la si scorre non se ne va. La barra si toglie di mezzo da
        * sola dopo qualche secondo, ma cercare la propria sezione fra venti
@@ -614,16 +625,16 @@ void main() {
       final barra = tester.state<BarraDelleSezioniState>(
         find.byType(BarraDelleSezioni),
       );
-      await tester.pump(const Duration(seconds: 3));
+      await tester.pump(const Duration(seconds: 5));
       await tester.drag(find.byType(BarraDelleSezioni), const Offset(-60, 0));
-      await tester.pump(const Duration(seconds: 3));
+      await tester.pump(const Duration(seconds: 5));
       expect(
         barra.aperta,
         isTrue,
         reason: 'scorrendola, il conto alla rovescia riparte',
       );
-      /* Lasciata stare, invece, se ne va. */
-      await tester.pump(const Duration(seconds: 5));
+      /* Lasciato stare, invece, se ne va. */
+      await tester.pump(const Duration(seconds: 9));
       await tester.pumpAndSettle();
       expect(barra.aperta, isFalse, reason: 'da sola si chiude');
       await apriLaBarra(tester);
@@ -636,7 +647,7 @@ void main() {
        * sull'energia. Il menu dell'app restava segnato su «Configurazione»
        * con sotto un'altra pagina: due barre che dicevano due cose diverse.
        * Adesso la pagina dice dov'e' andata, e il menu la segue. */
-      await tester.tap(nellaBarra('CONFIGURAZIONE'));
+      await tester.tap(nellaBarra('Configurazione'));
       await tester.pumpAndSettle();
       expect(
         tester.widget<BarraDelleSezioni>(find.byType(BarraDelleSezioni)).aperta,
@@ -651,7 +662,7 @@ void main() {
       );
       /* Tornando sulla Config, invece, ci si resta. */
       await apriLaBarra(tester);
-      await tester.tap(nellaBarra('CONFIGURAZIONE'));
+      await tester.tap(nellaBarra('Configurazione'));
       await tester.pumpAndSettle();
       plancia.cambioPagina?.call('config');
       await tester.pumpAndSettle();
@@ -663,7 +674,7 @@ void main() {
 
       /* Da li' ai dispositivi: la barra si richiude, la sezione cambia, e le
        * entita' compaiono adesso — non prima. */
-      await tester.tap(nellaBarra('DISPOSITIVI'));
+      await tester.tap(nellaBarra('Dispositivi'));
       await tester.pump();
       /* Le entita' si chiedono adesso, alla casa finta, con prese vere: il
        * tempo finto non le fa arrivare, si aspetta quello vero. */
@@ -741,12 +752,12 @@ void main() {
       await tester.pumpAndSettle();
 
       await apriLaBarra(tester);
-      expect(nellaBarra('AGGIORNAMENTI'), findsOneWidget);
+      expect(nellaBarra('Aggiornamenti'), findsOneWidget);
       /* Due, scritto sulla voce. Senza questo la sezione sarebbe una porta
        * che nessuno apre. */
       expect(nellaBarra('2'), findsOneWidget);
 
-      await tester.tap(nellaBarra('AGGIORNAMENTI'));
+      await tester.tap(nellaBarra('Aggiornamenti'));
       await tester.pump();
       /* Qui non si puo' «aspettare che tutto si fermi»: mentre l'elenco
        * arriva c'e' una rotella che gira, e una rotella non si ferma mai —
@@ -828,8 +839,8 @@ void main() {
       /* Si aspetta che tutto stia fermo prima di provare un gesto: mentre
        * l'app si sta collegando c'e' una riga che gira, e finche' gira
        * `pumpAndSettle` continua a far scorrere il tempo — abbastanza da far
-       * scadere i quattro secondi dopo i quali la barra si richiude da se'. */
-      await tester.pump(const Duration(seconds: 5));
+       * scadere i sette secondi dopo i quali il menu si richiude da se'. */
+      await tester.pump(const Duration(seconds: 9));
       await tester.pumpAndSettle();
 
       /* Si guarda ogni volta quella che c'e' adesso, e non una tenuta da
@@ -875,9 +886,9 @@ void main() {
       await tester.pumpAndSettle();
       expect(uscita, 1);
 
-      /* Chiusa la barra — da sola, dopo qualche secondo — indietro la riapre
+      /* Chiuso il menu — da solo, dopo qualche secondo — indietro lo riapre
        * invece di uscire: uscire vuole due indietro di fila. */
-      await tester.pump(const Duration(seconds: 5));
+      await tester.pump(const Duration(seconds: 9));
       await tester.pumpAndSettle();
       expect(laBarraEAperta(), isFalse);
       await tester.binding.handlePopRoute();
@@ -886,7 +897,7 @@ void main() {
       expect(uscita, 1, reason: 'al primo indietro non si esce');
 
       /* E il ☰, sulle sezioni che una barra del titolo ce l'hanno. */
-      await tester.tap(nellaBarra('DISPOSITIVI'));
+      await tester.tap(nellaBarra('Dispositivi'));
       await tester.pump();
       /* Le entita' si chiedono adesso, alla casa finta, con prese vere: il
        * tempo finto non le fa arrivare, si aspetta quello vero. Finche' non
@@ -896,7 +907,7 @@ void main() {
         () => _finoA(() => (collegamento.stato?.quante ?? 0) > 0),
       );
       await tester.pumpAndSettle();
-      await tester.pump(const Duration(seconds: 5));
+      await tester.pump(const Duration(seconds: 9));
       await tester.pumpAndSettle();
       expect(laBarraEAperta(), isFalse);
       await tester.tap(find.byTooltip(nomeDelTastoDellaBarra));

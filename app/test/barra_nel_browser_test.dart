@@ -234,7 +234,7 @@ void main() {
       chiave.currentState!.apri();
       await prova.pumpAndSettle();
 
-      await prova.tap(find.text(vociDellaBarra().first.titolo.toUpperCase()));
+      await prova.tap(find.text(vociDellaBarra().first.titolo));
       await prova.pump();
 
       expect(premute, [Sezione.plancia]);
