@@ -647,7 +647,7 @@ void main() {
        * sull'energia. Il menu dell'app restava segnato su «Configurazione»
        * con sotto un'altra pagina: due barre che dicevano due cose diverse.
        * Adesso la pagina dice dov'e' andata, e il menu la segue. */
-      await tester.tap(nellaBarra('Configurazione'));
+      await tester.tap(nellaBarra('Configurazione plancia'));
       await tester.pumpAndSettle();
       expect(
         tester.widget<BarraDelleSezioni>(find.byType(BarraDelleSezioni)).aperta,
@@ -662,7 +662,7 @@ void main() {
       );
       /* Tornando sulla Config, invece, ci si resta. */
       await apriLaBarra(tester);
-      await tester.tap(nellaBarra('Configurazione'));
+      await tester.tap(nellaBarra('Configurazione plancia'));
       await tester.pumpAndSettle();
       plancia.cambioPagina?.call('config');
       await tester.pumpAndSettle();

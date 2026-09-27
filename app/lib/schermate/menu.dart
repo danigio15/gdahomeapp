@@ -131,18 +131,29 @@ enum Sezione {
   /// E' una domanda e non un campo perche' un campo di un `enum` si decide
   /// quando si compila, e la lingua si sa quando si apre l'app.
   ///
-  /// «Configurazione» in inglese e' **Config**, e non «Settings»: quella voce
-  /// apre la pagina Config della plancia, e la plancia inglese la chiama
-  /// cosi' (`dashboard-en.html`). Due nomi per la stessa stanza sono un nome
-  /// di troppo. Per lo stesso motivo «Aiutanti» e «Automazioni» prendono i
-  /// nomi che hanno in Home Assistant: Helpers e Automations.
+  /// «Aiutanti» e «Automazioni» prendono i nomi che hanno in Home Assistant —
+  /// Helpers e Automations — perche' aprono le sue pagine, e due nomi per la
+  /// stessa stanza sono un nome di troppo.
   String get titolo => switch (this) {
     Sezione.plancia => inLingua(it: 'Plancia', en: 'Dashboard'),
     Sezione.dispositivi => inLingua(it: 'Dispositivi', en: 'Devices'),
     /* Il suo nome, e non «Navigatore»: e' un'app che c'e' anche da sola, e
      * chi la conosce la cerca con quel nome. */
     Sezione.navigatore => 'gdanav',
-    Sezione.configurazione => inLingua(it: 'Configurazione', en: 'Config'),
+    /* «Configurazione plancia», e non «Configurazione».
+     *
+     * Da quando nel menu c'e' anche «Impostazioni app», una voce che dice
+     * soltanto «Configurazione» non dice di **cosa**: sono due voci vicine che
+     * configurano due cose diverse — questa la plancia, quella l'app — e la
+     * differenza la doveva indovinare chi legge.
+     *
+     * In inglese **Dashboard config** e non «Settings»: quella voce apre la
+     * pagina Config della plancia, e la plancia inglese la chiama Config
+     * (`dashboard-en.html`). */
+    Sezione.configurazione => inLingua(
+      it: 'Configurazione plancia',
+      en: 'Dashboard config',
+    ),
     /* Si chiamava «Come va l'app», e finche' dentro c'erano anche due
      * interruttori era il nome giusto: una pagina che dice come va e lascia
      * mettere mano. Gli interruttori sono andati in «Impostazioni app», e
