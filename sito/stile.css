@@ -551,6 +551,14 @@ section {
     display: none;
   }
 }
+/* Con otto voci — «L'app» e «gdanav» sono arrivate dopo — appena sopra i 940
+ * pixel la barra in inglese sforava di qualche pixel: le voci si stringono un
+ * po' invece di spingere la lingua fuori dallo schermo. */
+@media (min-width: 941px) and (max-width: 1060px) {
+  .navigazione a {
+    padding-inline: 7px;
+  }
+}
 
 /* Sul telefono in cima restano il marchio e la lingua.
  *
@@ -643,9 +651,10 @@ section {
 
 /* ── La fila delle schermate ────────────────────────────────────────────── */
 .fila-schermate {
+  --spazio: clamp(14px, 2.4vw, 28px);
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: clamp(14px, 2.4vw, 28px);
+  gap: var(--spazio);
   margin-top: clamp(30px, 4vw, 46px);
 }
 .fila-schermate figure {
@@ -692,11 +701,22 @@ section {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+/* Sul telefono restano due per riga: una per riga, le sezioni con sette
+ * fotografie diventavano lunghe cinque schermate. */
 @media (max-width: 460px) {
   .fila-schermate {
-    grid-template-columns: minmax(0, 1fr);
-    max-width: 300px;
-    margin-inline: auto;
+    --spazio: 12px;
+  }
+  .telefono-piccolo {
+    padding: 4px;
+    border-radius: 20px;
+  }
+  .telefono-piccolo img {
+    border-radius: 16px;
+  }
+  .fila-schermate figcaption {
+    font-size: 0.82rem;
+    line-height: 1.35;
   }
 }
 
@@ -817,167 +837,82 @@ section {
   color: var(--testo-lieve);
 }
 
-/* ── La plancia ─────────────────────────────────────────────────────────── */
-
-.invito {
-  display: inline-flex;
-  align-items: center;
-  gap: 9px;
-  padding: 8px 15px;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--ambra) 16%, var(--carta));
-  border: 1px solid color-mix(in srgb, var(--ambra) 34%, transparent);
-  font-size: 0.88rem;
-  font-weight: 700;
-  margin-bottom: 22px;
-}
-.invito::before {
-  content: "";
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--ambra);
-  box-shadow: 0 0 0 0 color-mix(in srgb, var(--ambra) 70%, transparent);
-  animation: battito 2.4s ease-out infinite;
-}
-@keyframes battito {
-  70%,
-  100% {
-    box-shadow: 0 0 0 9px transparent;
-  }
-}
-
-/* ── Il riquadro con dentro la plancia ──────────────────────────────────
+/* ── Le sezioni con le fotografie ───────────────────────────────────────
  *
- * Il telaio è una cornice, non un'interfaccia: tre pallini, il nome della casa
- * e la spia del filo. Dentro non c'è niente di disegnato da noi — c'è la
- * plancia vera, in un `iframe`, servita da `dashboardmodern_static/` come la
- * serve il ponte.
- *
- * Si carica quando si arriva (`loading="lazy"`): sono diciassette megabyte e
- * ottocento file, e chi si ferma a leggere i piani non ha ragione di
- * scaricarli. */
-.telaio {
-  margin: 30px 0 0;
-  background: var(--carta);
-  border: 1px solid var(--bordo);
-  border-radius: var(--raggio);
-  box-shadow: var(--ombra-alta);
-  overflow: hidden;
+ * La plancia, l'app e gdanav si raccontano allo stesso modo: una fila di
+ * fotografie vere e, sotto, le schede con le parole. Nessuna riproduzione
+ * disegnata a mano e niente che giri nella pagina: sono fotografie, e ci sono
+ * sempre. */
+
+/* Tre fotografie invece di quattro: piu' strette della pagina, se no ognuna
+ * diventa alta come uno schermo intero. */
+.fila-tre {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  max-width: 880px;
+  margin-inline: auto;
 }
-.telaio-cima {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 11px 16px;
-  border-bottom: 1px solid var(--bordo-tenue);
-  background: var(--carta-alta);
-}
-.telaio-pallini {
-  flex-shrink: 0;
-  width: 11px;
-  height: 11px;
-  border-radius: 50%;
-  background: var(--bordo);
-  box-shadow:
-    17px 0 0 var(--bordo),
-    34px 0 0 var(--bordo);
-  margin-right: 34px;
-}
-.telaio-nome {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 0.88rem;
-  font-weight: 700;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.telaio-nome img {
-  border-radius: 6px;
-  flex-shrink: 0;
-}
-.telaio-spia {
-  margin-left: auto;
-  flex-shrink: 0;
-  font-size: 0.74rem;
-  font-weight: 700;
-  color: var(--bene);
-  background: color-mix(in srgb, var(--bene) 13%, transparent);
-  padding: 4px 10px;
-  border-radius: 999px;
-  white-space: nowrap;
-}
-.telaio-spia::before {
-  content: "● ";
-  font-size: 0.7em;
-  vertical-align: 1px;
-}
-.telaio-dentro {
-  display: block;
-  width: 100%;
-  height: min(78vh, 860px);
-  min-height: 520px;
-  border: 0;
-  background: #f0f4f8;
-}
-/* `hidden` da solo qui non basta: la riga sopra mette un `display`, e una
- * classe batte l'attributo. Senza questa, nascondere il riquadro lo lascia
- * dov'e' — alto cinquecento pixel e vuoto, che e' proprio la cosa da cui si
- * scappa. */
-.telaio-dentro[hidden] {
-  display: none;
+.fila-schermate + .carte,
+.carte + .fila-schermate {
+  margin-top: clamp(30px, 4vw, 46px);
 }
 
-/* Il pezzo che prende il posto della plancia quando la plancia non c'e'.
- * Stessa altezza del riquadro, cosi' la pagina non salta, e l'aria di una
- * cosa voluta invece che di una cosa rotta. */
-.telaio-senza {
-  display: flex;
-  flex-direction: column;
+/* Una scheda con accanto una fotografia: le parole a sinistra, quello che si
+ * vede a destra. Sul telefono la fotografia va sotto. */
+.vetrina {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 420px);
+  gap: clamp(20px, 4vw, 48px);
   align-items: center;
-  justify-content: center;
-  gap: 10px;
-  text-align: center;
-  min-height: clamp(280px, 42vw, 420px);
-  padding: clamp(28px, 5vw, 52px);
-  background: var(--carta-alta);
+  margin-top: 16px;
+  border-left: 4px solid var(--ambra);
 }
-.telaio-senza p {
-  max-width: 46ch;
-  margin: 0;
-  color: var(--testo-lieve);
+.vetrina-sola {
+  grid-template-columns: minmax(0, 1fr);
+  margin-top: clamp(30px, 4vw, 46px);
 }
-.telaio-senza b {
-  color: var(--testo);
+.vetrina-detto {
+  max-width: 44em;
 }
-.telaio-senza .bottone {
+.vetrina-detto .bottone {
   margin-top: 8px;
 }
-.telaio figcaption {
-  padding: 14px 18px;
-  border-top: 1px solid var(--bordo-tenue);
-  font-size: 0.88rem;
-  color: var(--testo-lieve);
-  background: var(--carta-alta);
+.vetrina-foto {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  align-items: start;
+  width: 100%;
+}
+.vetrina-foto img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: var(--raggio-piccolo);
+  border: 1px solid var(--bordo);
 }
 
 .carte-strette {
   grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
 }
 
-@media (max-width: 620px) {
-  .telaio-pallini {
-    display: none;
+@media (max-width: 900px) {
+  .fila-tre {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
-  .telaio-spia {
-    display: none;
+  /* La terza, da sola sulla sua riga, sta in mezzo e non a sinistra. */
+  .fila-tre > figure:last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+    justify-self: center;
+    width: calc((100% - var(--spazio)) / 2);
   }
-  .telaio-dentro {
-    height: min(76vh, 680px);
-    min-height: 460px;
+}
+@media (max-width: 760px) {
+  .vetrina {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .vetrina-foto {
+    justify-self: center;
+    max-width: 420px;
   }
 }
 

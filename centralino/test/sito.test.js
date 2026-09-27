@@ -19,7 +19,8 @@
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
+import { execFileSync } from "node:child_process";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -176,4 +177,111 @@ test("il sito non racconta un codice di abbinamento diverso da quello vero", asy
         !new RegExp(`${come} (lettere|caratteri)`, "i").test(indice),
         `il sito parla di «${come} lettere», ma il codice e' di ${quanti} caratteri`,
       );
+});
+
+/* ─── Quello che la pagina tira su deve esserci ─────────────────────────── */
+
+test("ogni file che le pagine chiamano sta dentro sito/, col nome giusto", () => {
+  /* Il server serve la cartella `sito/` e basta. Un'immagine che punta a
+     `../docs/immagini/`, a un file che git non salva o a un nome con una
+     maiuscola diversa si vede benissimo aprendo la pagina dalla repository, e
+     sul server e' un buco — senza un errore da nessuna parte. Qui si prende
+     ogni `src` e ogni `href` locale delle pagine, e anche le loro traduzioni
+     (`data-en-src`, e i collegamenti dentro un `data-en`), e si guarda che il
+     file ci sia davvero, dentro `sito/`, scritto uguale. */
+  const SITO = join(RADICE, "sito");
+  const esiste = (percorso) => {
+    /* Maiuscole comprese: su un Mac `Foto.PNG` e `foto.png` sono lo stesso
+       file, sul server no. Si guarda il nome come lo scrive la cartella. */
+    let dove = SITO;
+    for (const pezzo of percorso.split("/")) {
+      if (!existsSync(dove) || !statSync(dove).isDirectory()) return false;
+      if (!readdirSync(dove).includes(pezzo)) return false;
+      dove = join(dove, pezzo);
+    }
+    return statSync(dove).isFile();
+  };
+  const chiamati = (pagina) => {
+    const testo = pagina
+      .replace(/&quot;/g, '"')
+      .replace(/&lt;/g, "<")
+      .replace(/&gt;/g, ">");
+    return [...testo.matchAll(/(?:^|\s)(?:data-en-)?(?:src|href)="([^"]*)"/g)].map((t) => t[1]);
+  };
+
+  let guardati = 0;
+  const usati = new Set();
+  for (const quale of PAGINE) {
+    for (const indirizzo of chiamati(leggi(quale))) {
+      if (/^(?:[a-z]+:|\/\/|#)/i.test(indirizzo)) continue; // https:, mailto:, un'ancora
+      const percorso = indirizzo.split(/[?#]/)[0];
+      /* «/» e' la pagina di casa: il server la serve come `index.html`. */
+      const file = percorso === "/" ? "index.html" : percorso.replace(/^\//, "");
+      assert.ok(
+        !file.split("/").includes(".."),
+        `«${quale}» chiama ${indirizzo}, che sta fuori da sito/: sul server non c'e'`,
+      );
+      assert.ok(
+        !file.startsWith("dashboardmodern_static/"),
+        `«${quale}» chiama ${indirizzo}: quella cartella git non la salva, e la pagina non la usa piu'`,
+      );
+      assert.ok(esiste(file), `«${quale}» chiama ${indirizzo}, e in sito/ non c'e'`);
+      usati.add(file);
+      guardati += 1;
+    }
+  }
+  /* Che ci sia qui non basta: deve esserci anche in quello che arriva al
+     server, cioe' in git. Un file che il `.gitignore` tiene fuori c'e' sul
+     computer di chi lo ha fatto e da nessun'altra parte. Si guarda solo dove
+     c'e' una repository: sul server le prove girano su un pacchetto, e li'
+     quello che non era in git non c'e' gia' piu' — lo prende l'`esiste` di
+     sopra. */
+  if (existsSync(join(RADICE, ".git")) && usati.size) {
+    let ignorati = "";
+    try {
+      ignorati = execFileSync("git", ["check-ignore", "--no-index", "--", ...usati], {
+        cwd: SITO,
+        encoding: "utf8",
+      });
+    } catch (errore) {
+      /* `check-ignore` esce con 1 quando non ne ignora nessuno: e' la risposta giusta. */
+      if (errore.status !== 1) throw errore;
+    }
+    assert.equal(ignorati.trim(), "", `git non salva questi file, e sul server non ci sono`);
+  }
+  assert.ok(guardati > 20, `ho guardato solo ${guardati} indirizzi: la prova non li trova piu'`);
+
+  /* E i caratteri, che li chiama il foglio di stile. */
+  for (const trovata of leggi("sito/stile.css").matchAll(/url\("?([^")]+)"?\)/g)) {
+    if (/^(?:data:|[a-z]+:|\/\/)/i.test(trovata[1])) continue;
+    assert.ok(esiste(trovata[1]), `stile.css chiama ${trovata[1]}, e in sito/ non c'e'`);
+  }
+});
+
+test("le sezioni della pagina ci sono, e dal menu ci si arriva", () => {
+  /* La plancia in fotografia, l'app gdahome e gdanav hanno una sezione
+     ciascuna. Ogni voce del menu porta a una sezione che esiste: un'ancora
+     rotta non da' errore, fa solo non succedere niente al tocco. */
+  const indice = leggi("sito/index.html");
+  const menu = /<nav\s+class="navigazione"[\s\S]*?<\/nav>/.exec(indice)?.[0] ?? "";
+  const voci = [...menu.matchAll(/href="#([\w-]+)"/g)].map((t) => t[1]);
+  for (const sezione of ["plancia", "app", "gdanav", "prezzi", "contatti"])
+    assert.ok(voci.includes(sezione), `nel menu manca la voce per «#${sezione}»`);
+  for (const voce of voci)
+    assert.match(indice, new RegExp(`id="${voce}"`), `il menu porta a «#${voce}», che non c'e'`);
+
+  /* Le tre sezioni fanno vedere le app: fotografie, non un riquadro con
+     dentro una pagina che sul server puo' non esserci. */
+  const sezione = (id) =>
+    new RegExp(`<section[^>]*id="${id}"[\\s\\S]*?</section>`).exec(indice)?.[0] ?? "";
+  for (const [id, almeno] of [
+    ["plancia", 3],
+    ["app", 4],
+    ["gdanav", 6],
+  ]) {
+    const foto = [...sezione(id).matchAll(/<img\s[^>]*src="statico\/[^"]+\.(?:png|jpg)"/g)];
+    assert.ok(foto.length >= almeno, `in «#${id}» ci sono ${foto.length} fotografie`);
+  }
+  assert.doesNotMatch(indice, /<iframe/, "nella pagina c'e' di nuovo un riquadro");
+  assert.doesNotMatch(indice, /telaio-senza|non è stata pubblicata/, "c'e' ancora l'avviso");
 });
