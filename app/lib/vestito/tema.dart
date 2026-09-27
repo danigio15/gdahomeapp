@@ -1,17 +1,43 @@
 /// Il vestito dell'app: colori, carattere, forme. In un posto solo.
 ///
 /// Prima l'app vestiva il Material di difetto con un seme azzurro qualunque:
-/// funzionava, e sembrava un esempio. Qui ci sono le scelte, e sono poche
-/// apposta:
+/// funzionava, e sembrava un esempio. Qui ci sono le scelte.
 ///
-///  - **blu notte** come colore primo — serio, e non e' l'azzurro che hanno
-///    tutte le app di domotica;
-///  - **ambra** come accento — e' il colore di una luce accesa, e in una casa
-///    e' quello che si guarda;
+/// ## Lo stesso vestito di gdanav
+///
+/// «Per il menu e per tutte le pagine dell'app non puoi prendere spunto da
+/// gdanav, cosi' da renderle uguali visto che sono dello stesso produttore?»
+///
+/// Si', e la strada e' questa: **quello che due app dello stesso produttore
+/// hanno in comune sta nel tema, non nelle schermate**. Cambiare qui arriva a
+/// tutte le pagine insieme, e nessuna puo' restare indietro.
+///
+/// Quello che gdahome ha preso da `gdanav/packages/gdanav_app/lib/tema.dart`,
+/// e che era diverso:
+///
+///  - il **blu**. Era il celeste `#0EA5E9`, quello che hanno tutte le app di
+///    domotica; adesso e' il `#2563EB` di gdanav, con lo stesso primario
+///    chiaro e lo stesso scuro. E' la cosa che si riconosce da lontano, prima
+///    di leggere una parola;
+///  - le **forme**: schede a diciotto, caselle a quattordici, fogli che salgono
+///    a ventotto con la loro maniglia, tasti bordati a quattordici;
+///  - le **caselle senza filo intorno**: piene e basta, come in gdanav. Il
+///    filo grigio faceva modulo da compilare;
+///  - l'**ombra**: due strati, larga e morbida, un po' piu' marcata di prima —
+///    e' il [Vetro] di gdanav, ed e' quella che fa galleggiare le schede
+///    invece di incollarle al fondo;
+///  - i **titoli** piu' grassi e piu' stretti (w700, spaziatura negativa).
+///
+/// Quello che gdahome si tiene, perche' e' suo e in gdanav non c'e':
+///
+///  - l'**ambra** come accento — e' il colore di una luce accesa, e in una
+///    casa e' quello che si guarda;
 ///  - **Inter** per quello che si legge e **Oswald** per i numeri grandi: sono
-///    i caratteri della plancia, non due che gli somigliano;
-///  - schede a angoli morbidi, senza ombre dure; le ombre in un'app di casa
-///    fanno scaffalatura.
+///    i caratteri della plancia, e la plancia e' una pagina web che quei
+///    caratteri se li porta dietro;
+///  - il **fondo vivo** con le due macchie che si muovono piano: gdanav sotto
+///    ha una mappa, qui sotto non c'e' niente, e un grigio piatto e' la cosa
+///    che fa sembrare vecchia un'app.
 ///
 /// Tutto il resto lo ricava il tema da qui. Nessuna schermata mette un colore
 /// di suo: se lo fa, e' un errore da correggere qui e non li'.
@@ -28,8 +54,37 @@ abstract final class Colori {
   static const bene = Color(0xFF16A34A);
   static const male = Color(0xFFE11D48);
 
-  /// L'azzurro della plancia: e' il colore che dice «premi qui».
-  static const accento = Color(0xFF0EA5E9);
+  /// Il blu di gdanav: e' il colore che dice «premi qui», ed e' lo stesso
+  /// nelle due app.
+  ///
+  /// Era il celeste `#0EA5E9` della plancia. La plancia se lo tiene — e' una
+  /// pagina web col suo foglio di stile — ma l'app che la ospita si veste come
+  /// l'altra app dello stesso produttore, che e' quello che si riconosce
+  /// quando si hanno tutte e due sul telefono.
+  static const accento = Color(0xFF2563EB);
+
+  /// Il primario vero, per chiaro e scuro. Sono i due numeri che gdanav scrive
+  /// in `temaGdanav`, copiati e non somigliati: due blu vicini sono peggio di
+  /// due blu diversi.
+  static const blu = Color(0xFF1D4ED8);
+  static const bluDiNotte = Color(0xFF7FB2FF);
+
+  /// L'ombra delle schede, in due strati. E' quella del [Vetro] di gdanav.
+  ///
+  /// Due strati e non uno: quello largo stacca dal fondo, quello corto
+  /// appoggia. Con uno solo la scheda o galleggia senza posarsi o e' incollata.
+  static List<BoxShadow> ombra({required bool scuro}) => [
+    BoxShadow(
+      color: Colors.black.withValues(alpha: scuro ? 0.42 : 0.14),
+      blurRadius: 18,
+      offset: const Offset(0, 6),
+    ),
+    BoxShadow(
+      color: Colors.black.withValues(alpha: scuro ? 0.24 : 0.08),
+      blurRadius: 3,
+      offset: const Offset(0, 1),
+    ),
+  ];
 
   /// Il fondo scolpito, e le due macchie che ci galleggiano sopra.
   ///
@@ -75,7 +130,7 @@ ThemeData _tema(Brightness luce) {
   final colori = chiaro
       ? const ColorScheme(
           brightness: Brightness.light,
-          primary: Colori.accento,
+          primary: Colori.blu,
           onPrimary: Colors.white,
           primaryContainer: Color(0xFFE0F2FE),
           onPrimaryContainer: Color(0xFF075985),
@@ -109,8 +164,8 @@ ThemeData _tema(Brightness luce) {
         )
       : const ColorScheme(
           brightness: Brightness.dark,
-          primary: Color(0xFF38BDF8),
-          onPrimary: Color(0xFF04283A),
+          primary: Colori.bluDiNotte,
+          onPrimary: Color(0xFF07203F),
           primaryContainer: Color(0xFF1F3A66),
           onPrimaryContainer: Color(0xFFDCE7FA),
           secondary: Colori.ambra,
@@ -152,21 +207,25 @@ ThemeData _tema(Brightness luce) {
     scaffoldBackgroundColor: Colors.transparent,
   );
 
+  /* I pesi e le spaziature di gdanav: titoli a settecento e un filo piu'
+   * stretti. Erano a seicento, e accanto a gdanav si leggevano come un'altra
+   * app. */
   final testi = base.textTheme.copyWith(
     displaySmall: base.textTheme.displaySmall?.copyWith(
-      fontWeight: FontWeight.w600,
+      fontWeight: FontWeight.w700,
       letterSpacing: -1,
     ),
     headlineMedium: base.textTheme.headlineMedium?.copyWith(
-      fontWeight: FontWeight.w600,
-      letterSpacing: -0.6,
+      fontWeight: FontWeight.w700,
+      letterSpacing: -0.5,
     ),
     headlineSmall: base.textTheme.headlineSmall?.copyWith(
-      fontWeight: FontWeight.w600,
-      letterSpacing: -0.4,
+      fontWeight: FontWeight.w700,
+      letterSpacing: -0.3,
     ),
     titleLarge: base.textTheme.titleLarge?.copyWith(
-      fontWeight: FontWeight.w600,
+      fontWeight: FontWeight.w700,
+      letterSpacing: -0.2,
     ),
     titleMedium: base.textTheme.titleMedium?.copyWith(
       fontWeight: FontWeight.w600,
@@ -193,7 +252,18 @@ ThemeData _tema(Brightness luce) {
       surfaceTintColor: Colors.transparent,
       elevation: 0,
       margin: EdgeInsets.zero,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+    ),
+    /* I fogli che salgono: ventotto in cima e la maniglia, come in gdanav.
+     * Qui non erano vestiti affatto — uscivano col Material di difetto, che
+     * accanto all'altra app si vede subito. */
+    bottomSheetTheme: BottomSheetThemeData(
+      backgroundColor: colori.surfaceContainerLowest,
+      surfaceTintColor: Colors.transparent,
+      showDragHandle: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
     ),
     filledButtonTheme: FilledButtonThemeData(
       style: FilledButton.styleFrom(
@@ -202,10 +272,13 @@ ThemeData _tema(Brightness luce) {
         textStyle: testi.labelLarge?.copyWith(fontSize: 16),
       ),
     ),
+    /* Bordato: quarantotto e quattordici, come in gdanav. Pieno e bordato
+     * hanno misure diverse apposta — il pieno e' quello che si preme, e si
+     * vede che e' piu' grosso. */
     outlinedButtonTheme: OutlinedButtonThemeData(
       style: OutlinedButton.styleFrom(
-        minimumSize: const Size.fromHeight(52),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        minimumSize: const Size.fromHeight(48),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
         side: BorderSide(color: colori.outline),
         textStyle: testi.labelLarge?.copyWith(fontSize: 16),
       ),
@@ -216,20 +289,24 @@ ThemeData _tema(Brightness luce) {
         textStyle: testi.labelLarge,
       ),
     ),
+    /* Le caselle: **piene e senza filo intorno**, a quattordici, come in
+     * gdanav. Il filo grigio su un fondo pieno non separa niente — il pieno lo
+     * fa gia' — e faceva modulo da compilare. Il filo torna solo su quella in
+     * cui si sta scrivendo, ed e' blu: li' dice qualcosa. */
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
-      fillColor: colori.surfaceContainerLowest,
+      fillColor: colori.surfaceContainer,
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(16),
-        borderSide: BorderSide(color: colori.outlineVariant),
+        borderRadius: BorderRadius.circular(14),
+        borderSide: BorderSide.none,
       ),
       enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(16),
-        borderSide: BorderSide(color: colori.outlineVariant),
+        borderRadius: BorderRadius.circular(14),
+        borderSide: BorderSide.none,
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(14),
         borderSide: BorderSide(color: colori.primary, width: 1.6),
       ),
       labelStyle: TextStyle(color: colori.onSurfaceVariant),
@@ -249,6 +326,7 @@ ThemeData _tema(Brightness luce) {
       trackOutlineColor: const WidgetStatePropertyAll(Colors.transparent),
     ),
     listTileTheme: ListTileThemeData(
+      contentPadding: const EdgeInsets.symmetric(horizontal: 20),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
       iconColor: colori.onSurfaceVariant,
     ),

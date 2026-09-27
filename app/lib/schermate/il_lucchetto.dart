@@ -402,8 +402,8 @@ IconData _disegnoDi(PrimaDi quale) => switch (quale) {
 
 String _comeSiChiama(PrimaDi quale) => switch (quale) {
   PrimaDi.ilCruscotto => inLingua(
-    it: 'Aprire il cruscotto e la gestione',
-    en: 'Opening the fleet and the management page',
+    it: 'Aprire le pagine di gestione',
+    en: 'Opening the management pages',
   ),
   PrimaDi.iComandi => inLingua(
     it: 'Comandare dalla scheda Dispositivi',

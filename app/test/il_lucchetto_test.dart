@@ -210,8 +210,8 @@ void main() {
     tester,
   ) async {
     await apri(tester);
-    await fino(tester, find.text('Aprire il cruscotto e la gestione'));
-    expect(find.text('Aprire il cruscotto e la gestione'), findsOneWidget);
+    await fino(tester, find.text('Aprire le pagine di gestione'));
+    expect(find.text('Aprire le pagine di gestione'), findsOneWidget);
     expect(find.text('Comandare dalla scheda Dispositivi'), findsOneWidget);
     expect(find.text('Togliere una casa dall\'app'), findsOneWidget);
     /* Spenti finché il lucchetto è spento: appena installata l'app non deve

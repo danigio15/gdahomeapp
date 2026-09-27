@@ -1,36 +1,43 @@
-/// Il menu delle sezioni: una schermata che sale dal basso.
+/// Il menu delle sezioni: un pannello che entra di fianco.
 ///
-/// ## Cos'era, e perche' non e' piu' cosi'
+/// ## Come ci si e' arrivati
 ///
-/// Era una **striscia laterale**: duecento punti sul bordo sinistro, dentro
-/// cui stavano quattordici voci. E' stata rifatta due volte senza cambiare
-/// quello che era — la prima volta le voci in tessere a due colonne dentro la
-/// striscia, la seconda in righe ordinate — e tutte e due le volte il difetto
-/// era lo stesso: **la striscia**. Duecento punti sono un posto dove non ci
-/// sta niente comodo. I nomi lunghi vanno rimpiccioliti o tagliati, le
-/// tessere diventano francobolli, le righe diventano una lista di righe e
-/// basta, e quattordici voci in duecento punti si scorrono al buio col
-/// pollice che copre meta' di quello che sta leggendo.
+/// Tre volte rifatto, e le prime due non erano rifacimenti.
 ///
-/// Adesso il menu **e' una schermata**. Sale dal basso, dove sta il pollice,
-/// copre la pagina e si prende tutta la larghezza — e con la larghezza
-/// arrivano tre cose che nella striscia non ci potevano stare:
+/// Era una **striscia laterale** di duecento punti con quattordici voci
+/// dentro. La prima volta le voci sono diventate tessere a due colonne, la
+/// seconda righe ordinate: il vestito, non l'idea. Il difetto era la
+/// **striscia** — duecento punti sono un posto dove non ci sta niente comodo:
+/// i nomi lunghi si rimpiccioliscono o si tagliano, le tessere diventano
+/// francobolli, le righe diventano una lista e basta.
 ///
-///  - le sezioni come **mattonelle grandi**, tre per riga, col disegno grosso
-///    e il nome intero sotto. E' la forma di una schermata di telefono, che
-///    non si impara perche' si sa gia';
-///  - una **casella per cercare**. Con quattordici sezioni, e domani venti,
-///    la cosa piu' veloce e' scrivere tre lettere. Nella striscia una casella
-///    di ricerca non ci stava;
-///  - la **casa in testa** scritta grande, col tasto per cambiarla, invece di
-///    una riga schiacciata contro il bordo.
+/// La terza volta e' diventato una schermata che saliva dal basso. Larghezza
+/// intera, mattonelle grandi, una casella per cercare, la casa scritta grande
+/// in testa. Le tre cose buone erano quelle, e restano tutte; ma il menu di
+/// un'app che ha la plancia sotto **deve stare di lato**: e' da li' che lo si
+/// chiama (i tre trattini in alto a sinistra), ed e' da li' che ci si aspetta
+/// che esca. Uno che arriva dal basso copre la pagina dalla parte opposta a
+/// quella che si e' toccata.
 ///
-/// Sale dal basso e non da sinistra perche' un telefono si tiene in una mano:
-/// quello che arriva dal basso arriva **sotto il pollice**, e chiudere e'
-/// il gesto piu' naturale che c'e' — si spinge giu'.
+/// ## Com'e' adesso
 ///
-/// **Da dove si chiama.** Le porte sono le stesse di prima, e sono due porte
-/// che c'erano gia':
+/// Entra **da sinistra**, dal bordo del tasto che lo chiama, e si prende quasi
+/// tutta la larghezza — `_quantoLargo`. Non e' la striscia di prima girata:
+/// dentro c'e' tutto quello che la schermata aveva, e ci sta perche' la
+/// larghezza c'e':
+///
+///  - le sezioni come **mattonelle in rilievo**, due per riga, col disegno
+///    grosso e il nome intero sotto. Hanno un fianco e un'ombra, e premendole
+///    scendono sul loro fianco come un tasto vero — vedi `_Mattonella`;
+///  - una **casella per cercare**. Con quattordici sezioni, e domani venti, la
+///    cosa piu' veloce e' scrivere tre lettere;
+///  - la **casa in testa** scritta grande, col tasto per cambiarla.
+///
+/// La striscia di pagina resta scoperta **a destra**: dice che sotto c'e'
+/// ancora la propria casa, e da' un posto dove toccare per richiudere che non
+/// sia un tasto.
+///
+/// **Da dove si chiama.** Le porte sono le stesse di sempre:
 ///
 ///  - sulla **plancia**, i suoi tre trattini in alto a sinistra. Dentro Home
 ///    Assistant quel tasto apre la barra di chi la ospita; qui chi la ospita
@@ -42,8 +49,8 @@
 /// dall'app — le sezioni sono la pagina sotto, la sezione aperta e' la pagina
 /// sopra, e indietro va sempre verso fuori (`home.dart`).
 ///
-/// Si chiude in quattro modi: scegliendo una sezione, spingendolo giu',
-/// toccando la striscia di pagina che resta scoperta in cima, o lasciandolo
+/// Si chiude in quattro modi: scegliendo una sezione, spingendolo verso
+/// sinistra, toccando la striscia di pagina che resta scoperta, o lasciandolo
 /// stare.
 library;
 
@@ -74,24 +81,37 @@ const _dopoLaScelta = Duration(milliseconds: 700);
 
 /// Quanto si scurisce la pagina dietro il menu aperto.
 ///
-/// Piu' di prima, perche' adesso resta scoperta solo una striscia in cima: o
-/// e' chiaro che quella striscia e' «la pagina di sotto», o sembra un pezzo
-/// del menu.
+/// Alto, perche' della pagina resta scoperta solo una striscia: o e' chiaro
+/// che quella striscia e' «la pagina di sotto», o sembra un pezzo del menu.
 const double _quantoVelo = 0.55;
 
-/// Quanta pagina resta scoperta in cima, sotto l'orologio del telefono.
+/// Quanta pagina resta scoperta a destra del pannello.
 ///
 /// Serve a due cose: dire che sotto c'e' ancora la propria casa — un menu che
 /// prende tutto lo schermo e' una pagina nuova, e da una pagina nuova ci si
 /// aspetta un «indietro» — e dare un posto dove toccare per richiudere che
 /// non sia un tasto.
-const double _strisciaDiPagina = 26;
+const double _strisciaDiPagina = 44;
 
-/// L'angolo tondo in cima al foglio.
+/// Oltre quanto il pannello non si allarga piu'.
+///
+/// Su un telefono vince la striscia: il pannello si prende quello che resta.
+/// Su un tablet o nel browser no — un menu largo mille punti sarebbe una
+/// pagina, non un menu — e allora si ferma qui, e la pagina sotto si vede
+/// tutta.
+const double _quantoLargo = 430;
+
+/// L'angolo tondo del fianco destro del pannello.
 const double _angolo = 30;
 
-/// Quanto e' alta una mattonella.
-const double _mattonella = 106;
+/// Quanto e' alta una mattonella, fianco compreso.
+const double _mattonella = 116;
+
+/// Quanto e' spesso il fianco di una mattonella: l'altezza del suo rilievo.
+///
+/// «Riesci a fare le card come se avessero un effetto 3d?» Sei punti. Meno non
+/// si vede, di piu' diventa un disegno di un tasto invece di un tasto.
+const double _spessore = 6;
 
 class BarraDelleSezioni extends StatefulWidget {
   const BarraDelleSezioni({
@@ -337,15 +357,28 @@ class BarraDelleSezioniState extends State<BarraDelleSezioni>
    * davvero — un foglio che si muove a scatti o che aspetta la fine del
    * gesto per decidere sembra rotto. Lasciato sotto i tre quarti, o
    * lasciato andando giu' di corsa, si chiude; se no risale. */
+  /// Quanto e' largo il pannello su questo schermo.
+  ///
+  /// Quello che resta togliendo la striscia di pagina, fino a [_quantoLargo].
+  /// E' anche la misura su cui si conta la spinta: spingere di mezzo pannello
+  /// deve valere mezzo pannello, non mezzo schermo.
+  double _quantoLargoQui(BuildContext contesto) {
+    final larghezza = MediaQuery.sizeOf(contesto).width;
+    return (larghezza - _strisciaDiPagina).clamp(0.0, _quantoLargo);
+  }
+
   void _spinto(DragUpdateDetails quanto) {
-    final alto = MediaQuery.sizeOf(context).height;
-    if (alto <= 0) return;
+    final largo = _quantoLargoQui(context);
+    if (largo <= 0) return;
     _daChiudere?.cancel();
-    _molla.value = (_molla.value - quanto.primaryDelta! / alto).clamp(0.0, 1.0);
+    _molla.value = (_molla.value + quanto.primaryDelta! / largo).clamp(
+      0.0,
+      1.0,
+    );
   }
 
   void _lasciato(DragEndDetails come) {
-    if (_molla.value < 0.75 || come.velocity.pixelsPerSecond.dy > 700) {
+    if (_molla.value < 0.75 || come.velocity.pixelsPerSecond.dx < -700) {
       chiudi();
     } else {
       _molla.forward();
@@ -356,7 +389,6 @@ class BarraDelleSezioniState extends State<BarraDelleSezioni>
   @override
   Widget build(BuildContext context) {
     _seIlMenuCopre();
-    final alto = MediaQuery.paddingOf(context).top;
     return AnimatedBuilder(
       animation: _molla,
       builder: (context, _) {
@@ -391,36 +423,31 @@ class BarraDelleSezioniState extends State<BarraDelleSezioni>
               ),
             Positioned(
               left: 0,
-              right: 0,
+              top: 0,
               bottom: 0,
               child: IgnorePointer(
                 ignoring: !aperta,
-                /* Scende di tutta la sua altezza: a zero e' sotto lo schermo,
-                 * a uno e' al suo posto. */
+                /* Scorre di tutta la sua larghezza: a zero e' fuori dal bordo
+                 * sinistro, a uno e' al suo posto. */
                 child: FractionalTranslation(
-                  translation: Offset(0, 1 - quanto),
-                  /* **Alto quanto quello che ha dentro**, e non un punto di
-                   * piu', fino al tetto che gli lascia la striscia di pagina
-                   * in cima. Una casa con poche sezioni ha un foglio basso e
-                   * si vede ancora la plancia sotto; una piena arriva al
-                   * tetto e da li' scorre. Un foglio sempre alto uguale
-                   * lascerebbe in fondo una fascia di niente sotto l'ultima
-                   * riga — che e' esattamente quello che faceva la striscia
-                   * di prima, girata di novanta gradi. */
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints(
-                      maxHeight:
-                          (MediaQuery.sizeOf(context).height -
-                                  alto -
-                                  _strisciaDiPagina)
-                              .clamp(0.0, double.infinity),
-                    ),
-                    child: Listener(
-                      onPointerDown: (_) => _laStaUsando(),
-                      onPointerMove: (_) => _laStaUsando(),
-                      onPointerUp: (_) => _laStaUsando(),
-                      onPointerSignal: (_) => _laStaUsando(),
-                      child: _IlFoglio(child: _dentro(context)),
+                  translation: Offset(quanto - 1, 0),
+                  child: SizedBox(
+                    width: _quantoLargoQui(context),
+                    /* Il gesto sta qui e prende tutto il pannello, come in
+                     * qualunque cassetto: si spinge verso sinistra da dove
+                     * capita, e non solo da una maniglia che bisogna trovare.
+                     * Orizzontale, quindi non litiga con l'elenco che scorre
+                     * in verticale. */
+                    child: GestureDetector(
+                      onHorizontalDragUpdate: _spinto,
+                      onHorizontalDragEnd: _lasciato,
+                      child: Listener(
+                        onPointerDown: (_) => _laStaUsando(),
+                        onPointerMove: (_) => _laStaUsando(),
+                        onPointerUp: (_) => _laStaUsando(),
+                        onPointerSignal: (_) => _laStaUsando(),
+                        child: _IlFoglio(child: _dentro(context)),
+                      ),
                     ),
                   ),
                 ),
@@ -433,30 +460,16 @@ class BarraDelleSezioniState extends State<BarraDelleSezioni>
   }
 
   Widget _dentro(BuildContext context) {
-    final basso = MediaQuery.paddingOf(context).bottom;
+    final bordi = MediaQuery.paddingOf(context);
     final trovate = _leSezioni;
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        /* La maniglia e la testata si prendono il gesto: e' li' che la mano
-         * va a spingere, ed e' li' che non c'e' niente da premere. Sulle
-         * mattonelle no — un dito che scorre l'elenco non deve chiudere
-         * niente. */
-        GestureDetector(
-          onVerticalDragUpdate: _spinto,
-          onVerticalDragEnd: _lasciato,
-          behavior: HitTestBehavior.opaque,
-          child: Column(
-            children: [
-              const _Maniglia(),
-              if (widget.collegamento case final c?)
-                _LaCasaInTesta(
-                  collegamento: c,
-                  quandoPremuta: widget.vaiAlleCase,
-                ),
-            ],
-          ),
-        ),
+        /* Il pannello e' alto quanto lo schermo, orologio e tacca compresi:
+         * quello che ha dentro comincia sotto. */
+        SizedBox(height: bordi.top + 8),
+        if (widget.collegamento case final c?)
+          _LaCasaInTesta(collegamento: c, quandoPremuta: widget.vaiAlleCase),
         _Cerca(
           scritto: _scritto,
           fuoco: _fuoco,
@@ -509,7 +522,7 @@ class BarraDelleSezioniState extends State<BarraDelleSezioni>
          * una casa piena l'elenco arriva al tetto e scorre davvero. Qui si
          * legge sempre, che e' il motivo per cui e' nel menu. */
         Padding(
-          padding: EdgeInsets.fromLTRB(14, 2, 14, basso + 12),
+          padding: EdgeInsets.fromLTRB(14, 2, 14, bordi.bottom + 12),
           child: const Firma(spazioSopra: 0, conIlCentralino: false),
         ),
       ],
@@ -517,12 +530,16 @@ class BarraDelleSezioniState extends State<BarraDelleSezioni>
   }
 }
 
-/// Il foglio che sale: fondo pieno, tondo solo in cima.
+/// Il pannello: fondo pieno, tondo sul fianco destro, con la sua maniglia.
 ///
 /// **Pieno**, non smerigliato. Un vetro trasparente sopra una pagina di schede
 /// lascia leggere quello che c'e' sotto, e allora non sembra un menu: sembra
 /// una velatura, e le voci si leggono male — segnalato con la foto. Quello che
 /// passa sotto lo copre il velo, che e' il posto giusto per dirlo.
+///
+/// L'ombra cade **verso destra**, da dove entra il pannello: e' quella che lo
+/// stacca dalla pagina e gli da' uno spessore, come alle mattonelle che ha
+/// dentro.
 class _IlFoglio extends StatelessWidget {
   const _IlFoglio({required this.child});
 
@@ -532,46 +549,53 @@ class _IlFoglio extends StatelessWidget {
   Widget build(BuildContext context) {
     final colori = Theme.of(context).colorScheme;
     final scuro = Theme.of(context).brightness == Brightness.dark;
+    const tondo = BorderRadius.horizontal(right: Radius.circular(_angolo));
     return DecoratedBox(
       decoration: BoxDecoration(
         color: colori.surface,
-        borderRadius: const BorderRadius.vertical(
-          top: Radius.circular(_angolo),
-        ),
+        borderRadius: tondo,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: scuro ? 0.6 : 0.24),
+            color: Colors.black.withValues(alpha: scuro ? 0.6 : 0.26),
             blurRadius: 34,
-            offset: const Offset(0, -6),
+            offset: const Offset(6, 0),
           ),
         ],
       ),
       child: ClipRRect(
-        borderRadius: const BorderRadius.vertical(
-          top: Radius.circular(_angolo),
+        borderRadius: tondo,
+        child: Stack(
+          children: [
+            child,
+            /* La maniglia sta sul fianco da cui si spinge, a meta' altezza:
+               e' dove sta il pollice di chi tiene il telefono, ed e' l'unico
+               punto del pannello che non e' ne' un nome ne' un disegno. */
+            const Positioned(right: 0, top: 0, bottom: 0, child: _Maniglia()),
+          ],
         ),
-        child: child,
       ),
     );
   }
 }
 
-/// La barretta in cima: dice «questo si spinge giu'» senza scriverlo.
+/// La barretta sul fianco: dice «questo si spinge di lato» senza scriverlo.
 class _Maniglia extends StatelessWidget {
   const _Maniglia();
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 10, bottom: 6),
+    return IgnorePointer(
       child: Center(
-        child: Container(
-          width: 42,
-          height: 5,
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.onSurface
-                .withValues(alpha: 0.18),
-            borderRadius: BorderRadius.circular(999),
+        child: Padding(
+          padding: const EdgeInsets.only(right: 7),
+          child: Container(
+            width: 5,
+            height: 46,
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.onSurface
+                  .withValues(alpha: 0.18),
+              borderRadius: BorderRadius.circular(999),
+            ),
           ),
         ),
       ),
@@ -793,10 +817,14 @@ class _LeMattonelle extends StatelessWidget {
       physics: const NeverScrollableScrollPhysics(),
       padding: EdgeInsets.zero,
       itemCount: sezioni.length,
+      /* **Due per riga**, non tre. Tre stavano nella schermata che prendeva
+         tutto lo schermo; qui la larghezza e' quella del pannello, e a tre un
+         nome come «Gestione installatore» tornerebbe a essere un francobollo.
+         A due ci sta intero, e il rilievo si vede. */
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3,
-        mainAxisSpacing: 10,
-        crossAxisSpacing: 10,
+        crossAxisCount: 2,
+        mainAxisSpacing: 12,
+        crossAxisSpacing: 12,
         mainAxisExtent: _mattonella,
       ),
       itemBuilder: (context, i) {
@@ -815,14 +843,36 @@ class _LeMattonelle extends StatelessWidget {
   }
 }
 
-/// Una sezione: il disegno grande, il nome sotto, per intero e come si scrive.
+/// Una sezione: il disegno grande, il nome sotto, e sotto ancora il suo fianco.
 ///
-/// **Non in maiuscolo.** Erano tutte in maiuscolo e rimpicciolite quanto
-/// bastava a entrare nella striscia: «CONFIGURAZIONE» usciva piu' piccolo di
-/// «PLANCIA», e una colonna di nomi di corpo diverso non e' una scala, e'
-/// disordine. Qui il posto c'e', e le maiuscole restano dove servono: sui
-/// titoli dei gruppi, che non si leggono, si contano.
-class _Mattonella extends StatelessWidget {
+/// ## Il rilievo
+///
+/// «Riesci a fare le card come se avessero un effetto 3d?»
+///
+/// Non un'ombra portata e basta — quella la mette chiunque e si legge come
+/// «una carta su un foglio». Qui la mattonella e' un **oggetto spesso**:
+///
+///  - un **fianco** [_spessore] punti sotto la faccia, dello stesso colore ma
+///    scurito. E' lui a fare il volume: senza, un'ombra e' un disegno;
+///  - una **faccia** con la luce che le arriva da sopra a sinistra, cioe' una
+///    sfumatura dal chiaro allo scuro e un filo piu' chiaro sul bordo alto;
+///  - un'**ombra** appoggiata sotto il fianco, non sotto la faccia;
+///  - e premendo, la faccia **scende sul fianco** e l'ombra si stringe: e'
+///    quello che fa un tasto vero quando lo si spinge, ed e' la meta' che di
+///    solito manca. Un rilievo che non si muove al tocco e' un disegno di un
+///    tasto.
+///
+/// Scurito e schiarito si calcolano dalla faccia ([_piuScuro], [_piuChiaro]),
+/// non scritti a mano: cosi' la stessa regola vale sul chiaro e sullo scuro,
+/// sulla mattonella scelta e su quelle spente, e nessuno deve tenere allineate
+/// quattro tavolozze.
+///
+/// **I nomi non sono in maiuscolo.** Erano tutti in maiuscolo e rimpiccioliti
+/// quanto bastava a entrare nella striscia: «CONFIGURAZIONE» usciva piu'
+/// piccolo di «PLANCIA», e una colonna di nomi di corpo diverso non e' una
+/// scala, e' disordine. Qui il posto c'e', e le maiuscole restano dove
+/// servono: sui titoli dei gruppi, che non si leggono, si contano.
+class _Mattonella extends StatefulWidget {
   const _Mattonella({
     required this.sezione,
     required this.scelta,
@@ -846,91 +896,190 @@ class _Mattonella extends StatelessWidget {
   final VoidCallback lascia;
 
   @override
+  State<_Mattonella> createState() => _StatoDellaMattonella();
+}
+
+class _StatoDellaMattonella extends State<_Mattonella> {
+  /* Se il dito e' giu' adesso. E' tutto lo stato che serve al rilievo: la
+   * faccia sta su o sta giu'. */
+  bool _giu = false;
+
+  void _spingi(bool quanto) {
+    if (_giu == quanto) return;
+    setState(() => _giu = quanto);
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final sezione = widget.sezione;
+    final scelta = widget.scelta;
     final colori = Theme.of(context).colorScheme;
+    final scuro = Theme.of(context).brightness == Brightness.dark;
+
     /* La scelta e' l'inverso della pagina: scura sul chiaro, chiara sullo
      * scuro. Cosi' salta all'occhio in tutti e due i vestiti senza scegliere
-     * un colore che in uno dei due stona. */
-    final fondo = scelta
-        ? colori.onSurface
-        : colori.onSurface.withValues(alpha: 0.05);
+     * un colore che in uno dei due stona.
+     *
+     * Le altre sono **piu' chiare del pannello**, non piu' scure. Un primo
+     * giro le aveva fatte con un velo scuro sopra il fondo: il fianco si
+     * vedeva, ma la faccia era grigia come il pannello e le mattonelle
+     * sembravano fantasmi. Un oggetto che si alza prende piu' luce di quello
+     * su cui appoggia, non meno.
+     *
+     * **Tinta piena**, e non un velo: da un velo non si ricava un fianco piu'
+     * scuro — verrebbe fuori il fondo del pannello — e senza fianco non c'e'
+     * nessun rilievo. */
+    final faccia = scelta ? colori.onSurface : colori.surfaceContainerLowest;
+    final fianco = _piuScuro(faccia, scelta ? 0.38 : 0.17);
+    /* La luce arriva da sopra a sinistra, e si spegne a meta' faccia. Poco:
+     * una sfumatura che si vede e' una sfumatura di troppo. */
+    final luce = _piuChiaro(faccia, scuro ? 0.07 : 0.04);
     final scritta = scelta
         ? colori.surface
         : colori.onSurface.withValues(alpha: sezione.pronta ? 0.9 : 0.32);
 
-    return Material(
-      color: fondo,
-      borderRadius: BorderRadius.circular(22),
-      clipBehavior: Clip.antiAlias,
+    final tondo = BorderRadius.circular(22);
+    final puo = sezione.pronta;
+    /* Quella che non si puo' ancora aprire non si alza da terra: niente
+     * rilievo, niente ombra. Il volume dice «questo si preme», e dirlo di una
+     * che non si preme sarebbe una bugia in rilievo. */
+    final salita = puo ? (_giu ? 0.0 : _spessore) : 0.0;
+
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTapDown: puo ? (_) => _spingi(true) : null,
+      onTapUp: puo ? (_) => _spingi(false) : null,
+      onTapCancel: puo ? () => _spingi(false) : null,
+      onTap: puo ? widget.premuta : null,
       child: Stack(
         children: [
-          InkWell(
-            onTap: sezione.pronta ? premuta : null,
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(8, 14, 8, 10),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  /* Il disegno della sezione, lo stesso della plancia. Quella
-                   * che non si sta guardando lo tiene smorzato: il colore e'
-                   * l'unica cosa che dice «sei qui», e se ce l'hanno tutte non
-                   * lo dice nessuna. */
-                  Oggetto(
-                    sezione.disegno,
-                    lato: 34,
-                    quantoSpento: scelta ? 0 : 0.25,
-                    velo: sezione.pronta ? 1 : 0.45,
-                  ),
-                  const SizedBox(height: 10),
-                  Text(
-                    sezione.titolo,
-                    textAlign: TextAlign.center,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 12.5,
-                      height: 1.15,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: -0.1,
-                      color: scritta,
-                    ),
-                  ),
-                  if (plance case final c?) ...[
-                    const SizedBox(height: 2),
-                    Text(
-                      _quale(c).titolo,
-                      textAlign: TextAlign.center,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 10.5,
-                        height: 1.1,
-                        fontWeight: FontWeight.w600,
-                        color: scelta
-                            ? colori.surface.withValues(alpha: 0.7)
-                            : colori.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
-                ],
+          /* Il fianco. Sta sotto per tutta l'altezza: quando la faccia scende
+           * lo copre, e quello che resta scoperto e' zero — premuta, la
+           * mattonella e' piatta. */
+          Positioned.fill(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: puo ? fianco : Colors.transparent,
+                borderRadius: tondo,
+                boxShadow: puo
+                    ? [
+                        BoxShadow(
+                          color: Colors.black.withValues(
+                            alpha: scuro ? 0.45 : 0.16,
+                          ),
+                          blurRadius: _giu ? 5 : 12,
+                          offset: Offset(0, _giu ? 1 : 5),
+                        ),
+                      ]
+                    : null,
               ),
             ),
           ),
-          if (quanti > 0) Positioned(top: 8, right: 8, child: _Quanti(quanti)),
-          if (plance case final c?)
-            Positioned(
-              top: 4,
-              right: 4,
-              child: _QualePlancia(
-                collegamento: c,
-                colore: scritta,
-                trattieni: trattieni,
-                lascia: lascia,
-                apri: premuta,
+          /* La faccia. Scende di [_spessore] quando il dito e' giu', e ci
+           * mette quanto ci mette un tasto: ottanta millesimi. Piu' lento
+           * sembrerebbe un'animazione, e un tasto non si anima. */
+          AnimatedPositioned(
+            duration: const Duration(milliseconds: 80),
+            curve: Curves.easeOut,
+            left: 0,
+            right: 0,
+            top: 0,
+            bottom: salita,
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                borderRadius: tondo,
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    luce,
+                    faccia,
+                    _piuScuro(faccia, scuro ? 0.06 : 0.03),
+                  ],
+                  stops: const [0, 0.5, 1],
+                ),
               ),
+              child: _laFaccia(context, scritta: scritta, colori: colori),
             ),
+          ),
         ],
       ),
+    );
+  }
+
+  Widget _laFaccia(
+    BuildContext context, {
+    required Color scritta,
+    required ColorScheme colori,
+  }) {
+    final sezione = widget.sezione;
+    final scelta = widget.scelta;
+    return Stack(
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(8, 12, 8, 10),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              /* Il disegno della sezione, lo stesso della plancia. Quella
+               * che non si sta guardando lo tiene smorzato: il colore e'
+               * l'unica cosa che dice «sei qui», e se ce l'hanno tutte non
+               * lo dice nessuna. */
+              Oggetto(
+                sezione.disegno,
+                lato: 34,
+                quantoSpento: scelta ? 0 : 0.25,
+                velo: sezione.pronta ? 1 : 0.45,
+              ),
+              const SizedBox(height: 10),
+              Text(
+                sezione.titolo,
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 13,
+                  height: 1.15,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: -0.1,
+                  color: scritta,
+                ),
+              ),
+              if (widget.plance case final c?) ...[
+                const SizedBox(height: 2),
+                Text(
+                  _quale(c).titolo,
+                  textAlign: TextAlign.center,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 10.5,
+                    height: 1.1,
+                    fontWeight: FontWeight.w600,
+                    color: scelta
+                        ? colori.surface.withValues(alpha: 0.7)
+                        : colori.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+        if (widget.quanti > 0)
+          Positioned(top: 8, right: 8, child: _Quanti(widget.quanti)),
+        if (widget.plance case final c?)
+          Positioned(
+            top: 4,
+            right: 4,
+            child: _QualePlancia(
+              collegamento: c,
+              colore: scritta,
+              trattieni: widget.trattieni,
+              lascia: widget.lascia,
+              apri: widget.premuta,
+            ),
+          ),
+      ],
     );
   }
 
@@ -939,6 +1088,14 @@ class _Mattonella extends StatelessWidget {
     return trovate.isEmpty ? c.plance.first : trovate.first;
   }
 }
+
+/// Lo stesso colore, con sopra un velo nero: e' il fianco di una mattonella.
+Color _piuScuro(Color quale, double quanto) =>
+    Color.alphaBlend(Colors.black.withValues(alpha: quanto), quale);
+
+/// Lo stesso colore, con sopra un velo bianco: e' dove batte la luce.
+Color _piuChiaro(Color quale, double quanto) =>
+    Color.alphaBlend(Colors.white.withValues(alpha: quanto), quale);
 
 /// Il tasto in alto a destra della mattonella della plancia: quale plancia.
 ///

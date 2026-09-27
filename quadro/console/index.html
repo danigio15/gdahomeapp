@@ -6,7 +6,7 @@
     <!-- Le origini da cui si prende una chiave consegnata senza chiedere: le
          scrive il quadro (QUADRO_OSPITI), e vuote vuol dire solo questa. -->
     <meta name="gdahome-ospiti" content="" />
-    <title>Cruscotto installatore</title>
+    <title>Gestione installatore</title>
     <!--
       IL QUADRO — LA CONSOLE DI CHI INSTALLA.
 
@@ -2842,7 +2842,7 @@
             <span id="sigla">gd</span>
           </div>
           <div class="nomi">
-            <h1 id="come-si-chiama">Cruscotto installatore</h1>
+            <h1 id="come-si-chiama">Gestione installatore</h1>
             <p id="chi"></p>
           </div>
           <button
@@ -3595,7 +3595,7 @@
        * perche' dal server non e' arrivato niente. */
       function ilGelo() {
         doveNav.innerHTML = "";
-        document.getElementById("chi").textContent = "Cruscotto installatore";
+        document.getElementById("chi").textContent = "Gestione installatore";
         dove.innerHTML = `
           <section class="riquadro" style="max-width: 640px; margin: 40px auto">
             <div class="capoRiquadro"><h3>Utenza sospesa</h3></div>
@@ -3648,11 +3648,11 @@
           suo.src = ilSuoMarchio();
         }
         document.getElementById("sigla").textContent = laSigla(IO.nome);
-        document.getElementById("come-si-chiama").textContent = IO.nome || "Cruscotto installatore";
+        document.getElementById("come-si-chiama").textContent = IO.nome || "Gestione installatore";
 
         const restano = quanteRestano();
         document.getElementById("chi").textContent =
-          (IO.nome ? "Cruscotto installatore · " : "") +
+          (IO.nome ? "Gestione installatore · " : "") +
           plurale(CASE.length, "impianto", "impianti") +
           (restano === null ? "" : ` · ${restano} disponibili`);
 

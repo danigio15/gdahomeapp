@@ -265,8 +265,8 @@ class _IlFogliettoState extends State<_IlFoglietto> {
                 en: 'Waiting to recognise you before the command',
               ),
               PrimaDi.ilCruscotto => inLingua(
-                it: 'In attesa di riconoscimento per aprire il cruscotto',
-                en: 'Waiting to recognise you before opening the fleet',
+                it: 'In attesa di riconoscimento per aprire la gestione',
+                en: 'Waiting to recognise you before opening the management page',
               ),
               PrimaDi.togliereUnaCasa => inLingua(
                 it: 'In attesa di riconoscimento per togliere la casa',
