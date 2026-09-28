@@ -227,6 +227,12 @@ const PAGES = Object.freeze([
    * intestazione: niente titolo, niente tasto per tornare a casa, e la voce
    * della barra che intanto nasconde la testata del guscio. Si vede subito
    * aprendola, e non si vede affatto scrivendola. */
+  {
+    id: "page-batterie",
+    tint: ["34,197,94", "234,179,8"],
+    it: ["Batterie", "Cariche · Scariche · Chi non risponde"],
+    en: ["Batteries", "Charged · Low · Not reporting"],
+  },
   /* Acqua e gas, dalle segnalazioni #115, #135 e #137. Il nome non dice
    * «Contatori» perché in Energia i contatori sono già quelli della corrente:
    * due voci con lo stesso nome mandano a cercare nel posto sbagliato. */
@@ -236,11 +242,13 @@ const PAGES = Object.freeze([
     it: ["Acqua e gas", "Contatori · Oggi e il mese"],
     en: ["Water and gas", "Meters · Today and this month"],
   },
+  /* Le piante, dalla segnalazione #159: la terra di ogni pianta, e quando
+   * innaffiarla. */
   {
-    id: "page-batterie",
-    tint: ["34,197,94", "234,179,8"],
-    it: ["Batterie", "Cariche · Scariche · Chi non risponde"],
-    en: ["Batteries", "Charged · Low · Not reporting"],
+    id: "page-piante",
+    tint: ["22,163,74", "14,165,233"],
+    it: ["Piante", "Terra · Quando innaffiare"],
+    en: ["Plant care", "Soil · When to water"],
   },
   /* Il calendario (#259) nasce con la sua pagina, e l'intestazione nasce con
    * lei: gli impegni di oggi e dei giorni che vengono. */

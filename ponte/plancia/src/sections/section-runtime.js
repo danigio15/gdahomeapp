@@ -162,6 +162,8 @@ import { installStampanti } from "./stampanti-section.js";
 import { installStampantiEditor } from "./stampanti-editor-section.js";
 import { installContatori } from "./contatori-section.js";
 import { installContatoriEditor } from "./contatori-editor-section.js";
+import { installPiante } from "./piante-section.js";
+import { installPianteEditor } from "./piante-editor-section.js";
 import { installMacchine } from "./macchine-e-rete-section.js";
 import { installMacchineEditor } from "./macchine-editor-section.js";
 import { installNodiSection } from "./nodi-section.js";
@@ -1147,6 +1149,9 @@ export function installSectionRuntime() {
      * trova gia' cosa ridisegnare quando salva. */
     installContatori();
     installContatoriEditor();
+    /* Le piante (#159): la pagina e la sua scheda, nello stesso ordine. */
+    installPiante();
+    installPianteEditor();
     installMacchine();
     installMacchineEditor();
     installNodiSection();
@@ -1276,6 +1281,8 @@ export function installSectionRuntime() {
         "stampanti-editor",
         "contatori",
         "contatori-editor",
+        "piante",
+        "piante-editor",
         "macchine-e-rete",
         "macchine-editor",
       ]),

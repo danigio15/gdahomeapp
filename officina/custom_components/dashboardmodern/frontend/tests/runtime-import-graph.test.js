@@ -1480,8 +1480,15 @@ test("production graph is single-owner, acyclic and contains no facade pass-thro
   // pagina sola. Il nucleo sta da parte perche' le decisioni che contano sono
   // pure e si provano a tavolino: da quando l'acqua scorre senza fermarsi, i
   // giorni di sale che restano, oggi e il mese dai secchielli del Recorder.
+  // 403, 404, 405 e 406 con le piante (#159): `core/giorni-alla-soglia.js`,
+  // la retta che dice fra quanti giorni un livello che scende tocca la soglia
+  // — il sale dell'addolcitore e la terra di una pianta sono la stessa domanda,
+  // e la regola era scritta dentro i contatori —, il nucleo
+  // `core/le-piante-di-casa.js` con la soglia, la pioggia in arrivo e l'ultima
+  // innaffiata, la pagina `sections/piante-section.js` e la sua scheda
+  // `sections/piante-editor-section.js`.
   assert.ok(
-    relative.length <= 402,
+    relative.length <= 406,
     `production graph unexpectedly grew to ${relative.length} modules`,
   );
   assertAcyclic(edges);

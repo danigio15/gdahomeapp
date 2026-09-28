@@ -117,6 +117,10 @@ const CORPI = Object.freeze({
 
   flame: `${PANNELLO}<rect ${SCOCCA} x="22" y="70" width="52" height="10" rx="5"/><rect ${SCOCCA} x="30" y="80" width="36" height="6" rx="3"/><path ${ACCENTO} d="M48 12c10 12 18 22 18 34 0 11-8 20-18 20s-18-9-18-20c0-8 5-14 9-19 1 6 4 9 7 10-2-9 0-17 2-25Z"/><path ${VETRO} d="M48 36c5 6 8 11 8 16a8 8 0 0 1-16 0c0-5 3-10 8-16Z"/>`,
 
+  /* La pianta in vaso (#159): tre foglie e il vaso. Il catalogo aveva il fiore
+   * e il giardino, ma un ficus in salotto non è né l'uno né l'altro. */
+  plant: `${PANNELLO}<path fill="none" stroke="#22c55e" stroke-width="3" stroke-linecap="round" d="M48 56V34"/><path ${VERDE} d="M47 52C44 40 36 34 24 34c2 11 10 18 23 18Z"/><path ${VERDE} d="M49 46c2-13 11-21 24-22-1 13-10 21-24 22Z"/><path ${VERDE} d="M48 36c-6-8-6-18 0-24 6 6 6 16 0 24Z"/><rect ${SCOCCA} x="28" y="56" width="40" height="9" rx="4"/><path ${SCOCCA} d="M32 63h32l-4 21H36Z"/><path ${TRATTO_CHIARO} d="M39 69l1.6 10"/>`,
+
   irrigation: `${PANNELLO}<rect ${SCOCCA} x="42" y="44" width="12" height="38" rx="5"/><rect ${SCOCCA} x="28" y="76" width="40" height="8" rx="4"/><path ${TRATTO_ACCENTO} d="M30 42c4-10 12-16 18-16s14 6 18 16"/><path ${VETRO} d="M24 30c3 4 4 6 4 8a4 4 0 0 1-8 0c0-2 1-4 4-8Z"/><path ${VETRO} d="M72 30c3 4 4 6 4 8a4 4 0 0 1-8 0c0-2 1-4 4-8Z"/><path ${VETRO} d="M48 14c3 4 4 6 4 8a4 4 0 0 1-8 0c0-2 1-4 4-8Z"/>`,
 
   sauna: `${PANNELLO}<rect ${SCOCCA} x="20" y="44" width="56" height="40" rx="10"/><circle ${SPENTO} cx="36" cy="56" r="6"/><circle ${SPENTO} cx="50" cy="53" r="7"/><circle ${SPENTO} cx="63" cy="57" r="6"/><rect ${ACCENTO} x="28" y="68" width="40" height="8" rx="4"/><path ${CALDO} d="M38 34c5-5 6-10 4-14 6 3 9 9 8 14 3-2 4-5 4-8 4 4 6 9 4 14H36z"/>`,
@@ -475,6 +479,10 @@ const ALIAS = Object.freeze({
   pressione: "gauge",
   fiamma: "flame",
   metano: "flame",
+  /* La pianta in vaso, come la chiama chi la cerca. */
+  pianta: "plant",
+  piante: "plant",
+  vaso: "plant",
   irrigazione: "irrigation",
   ascensore: "lift",
   casa: "home",

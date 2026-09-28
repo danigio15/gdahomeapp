@@ -151,6 +151,9 @@ export const SCHEDE = Object.freeze({
    * all'irrigazione. Non con l'Energia: li' «Contatori» sono quelli della
    * corrente, e il gas si confronta coi kilowattora ma si paga a metri cubi. */
   contatori: { famiglia: "clima", posizione: 45 },
+  /* Le piante (#159): accanto all'irrigazione, perché è la stessa domanda —
+   * quando dare l'acqua — per chi un impianto non ce l'ha. */
+  piante: { famiglia: "clima", posizione: 42 },
 
   /* ── 🛋️ Casa ───────────────────────────────────────────────────────── */
   stanze: { famiglia: "casa", posizione: 10 },

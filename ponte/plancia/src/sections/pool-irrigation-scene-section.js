@@ -204,6 +204,49 @@ export function gaugeVerdict(value, min, max) {
   return "ok";
 }
 
+/**
+ * La barra a forcella, per chi la usa fuori dalla piscina.
+ *
+ * La pressione dell'acqua di casa (#115) e la terra delle piante (#159) si
+ * guardano come il pH: un numero, la sua forcella, e dove sta la lancetta. Il
+ * disegno e' questo, con le sue classi e il suo foglio; chi la chiede porta le
+ * parole — «troppo basso» per la pressione, «da innaffiare» per la terra —
+ * perche' la stessa lancetta a sinistra vuol dire cose diverse. La pista e'
+ * quella di `gaugePosition`: la forcella nel terzo di mezzo.
+ */
+export function forcellaMarkup({
+  chiave,
+  etichetta,
+  valore,
+  testo,
+  minimo,
+  massimo,
+  verdetto,
+  parola,
+  forchetta,
+}) {
+  const campo = massimo - minimo || 1;
+  const da = minimo - campo;
+  const a = massimo + campo;
+  const sinistra = ((minimo - da) / (a - da)) * 100;
+  const destra = 100 - ((massimo - da) / (a - da)) * 100;
+  const ago = gaugePosition(valore, minimo, massimo) ?? 50;
+  return `<div class="dm-gauge" data-dm-gauge="${esc(chiave)}" data-verdict="${esc(verdetto)}">
+    <div class="dm-gauge-head">
+      <span class="dm-gauge-label">${esc(etichetta)}</span>
+      <span class="dm-gauge-value">${esc(testo)}</span>
+    </div>
+    <div class="dm-gauge-track">
+      <span class="dm-gauge-band" style="left:${sinistra.toFixed(1)}%;right:${destra.toFixed(1)}%"></span>
+      <span class="dm-gauge-pin" style="left:${ago.toFixed(1)}%"></span>
+    </div>
+    <div class="dm-gauge-foot">
+      <span class="dm-gauge-verdict">${esc(parola)}</span>
+      <span class="dm-gauge-range">${esc(forchetta)}</span>
+    </div>
+  </div>`;
+}
+
 function qualityGauge(kind, label, unit, value, min, max) {
   const reading = num(value);
   if (reading == null) return "";

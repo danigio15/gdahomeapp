@@ -195,6 +195,7 @@ import {
 } from "../core/animali-model.js";
 import { parolaAvviso, testoLettura } from "./animali-section.js";
 import { EVENTO_CONTATORI, tesseraDeiContatori, vistaDeiContatori } from "./contatori-section.js";
+import { EVENTO_PIANTE, tesseraDellePiante, vistaDellePiante } from "./piante-section.js";
 import { disegnoDelBidone } from "../core/disegni-rifiuti.js";
 import { CHIAVE_VMC, entitaDellaVmc, letturaVmc, vmcDisegnabili, vmcParla } from "../core/vmc-model.js";
 import { avvisiAppenaAccesi } from "../core/avvisi-che-si-aprono.js";
@@ -5513,6 +5514,16 @@ function contatoriModel(states) {
   return tessera && { ...tessera, key: "contatori" };
 }
 
+/* Le piante (#159): quante sono da innaffiare, e quali. Le parole le fa la
+ * sezione; qui si toglie quello che l'interruttore «nel widget» ha spento. */
+function pianteModel(states) {
+  const fuori = widgetExcludedEntities("piante");
+  const tessera = tesseraDellePiante(
+    vistaDellePiante(states, { dentro: (entity) => widgetIncludes(entity, fuori) }),
+  );
+  return tessera && { ...tessera, key: "piante" };
+}
+
 /* La ventilazione meccanica (#371).
  *
  * La tessera dice la cosa che si guarda passando: a che temperatura sta
@@ -5626,6 +5637,7 @@ export function modelliDelleTessere(states) {
       vmcModel(states),
       irrigationModel(states),
       contatoriModel(states),
+      pianteModel(states),
       batteriesModel(states),
       floodModel(states),
       fumoModel(states),
@@ -7775,6 +7787,8 @@ const SEZIONE_DEL_WIDGET = Object.freeze({
   animali: "animali",
   /* L'acqua e il gas (#115, #135, #137) hanno la loro pagina. */
   contatori: "contatori",
+  /* Le piante (#159) hanno la loro pagina. */
+  piante: "piante",
   /* La ventilazione vive nella pagina del Clima: la tessera ci porta li'. */
   vmc: "clima",
   media: "media",
@@ -10793,6 +10807,8 @@ export function installHomeWidgetsSection() {
     /* I consumi dell'acqua e del gas arrivano dal Recorder, dopo che la Home
        si e' gia' disegnata: la tessera va rifatta quando atterrano. */
     EVENTO_CONTATORI,
+    /* E le medie della terra e le previsioni delle piante, per lo stesso motivo. */
+    EVENTO_PIANTE,
     /* La chat di assistenza dice quando ha una risposta da leggere, e quando
        e' stata letta: la sua tessera compare e sparisce con quello. */
     "dashboardmodern:chat-stato",

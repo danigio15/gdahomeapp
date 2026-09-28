@@ -39,7 +39,7 @@ import { quantoTempoInParole } from "../core/da-quanto.js";
 import { normalizePeople } from "../core/person-model.js";
 import { domandaDellAvvio, righeDellaStoria } from "../core/quando-e-partito.js";
 import { cEQualcunoInCasa } from "../core/telecamere-riservate.js";
-import { gaugePosition } from "./pool-irrigation-scene-section.js";
+import { forcellaMarkup } from "./pool-irrigation-scene-section.js";
 import {
   allStates,
   chiediAHomeAssistant,
@@ -589,34 +589,24 @@ function rigaMarkup({ stato = "bene", icona, nome, barra = null, sotto = "", val
 
 /* La pressione sulla barra a forcella della Piscina: stesse classi, stesso
  * foglio, e la stessa regola per la pista — la forcella nel terzo di mezzo. */
-function forcellaMarkup(voce) {
+function forcellaDellaPressione(voce) {
   const { lettura, bar, minimo, massimo, verdetto } = voce;
-  const campo = massimo - minimo || 1;
-  const da = minimo - campo;
-  const a = massimo + campo;
-  const sinistra = ((minimo - da) / (a - da)) * 100;
-  const destra = 100 - ((massimo - da) / (a - da)) * 100;
-  const ago = gaugePosition(bar, minimo, massimo) ?? 50;
-  const parola =
-    verdetto === "low"
-      ? t("troppo basso", "too low")
-      : verdetto === "high"
-        ? t("troppo alto", "too high")
-        : t("nella norma", "in range");
-  return `<div class="dm-gauge" data-dm-gauge="pressione" data-verdict="${esc(verdetto)}">
-    <div class="dm-gauge-head">
-      <span class="dm-gauge-label">${esc(lettura.name)}</span>
-      <span class="dm-gauge-value">${esc(barInParole(bar))}</span>
-    </div>
-    <div class="dm-gauge-track">
-      <span class="dm-gauge-band" style="left:${sinistra.toFixed(1)}%;right:${destra.toFixed(1)}%"></span>
-      <span class="dm-gauge-pin" style="left:${ago.toFixed(1)}%"></span>
-    </div>
-    <div class="dm-gauge-foot">
-      <span class="dm-gauge-verdict">${esc(parola)}</span>
-      <span class="dm-gauge-range">${esc(t("ideale", "ideal"))} ${esc(forcellaInParole(minimo, massimo))}</span>
-    </div>
-  </div>`;
+  return forcellaMarkup({
+    chiave: "pressione",
+    etichetta: lettura.name,
+    valore: bar,
+    testo: barInParole(bar),
+    minimo,
+    massimo,
+    verdetto,
+    parola:
+      verdetto === "low"
+        ? t("troppo basso", "too low")
+        : verdetto === "high"
+          ? t("troppo alto", "too high")
+          : t("nella norma", "in range"),
+    forchetta: `${t("ideale", "ideal")} ${forcellaInParole(minimo, massimo)}`,
+  });
 }
 
 function schedaMarkup(chiave, disegno, titolo, dentro) {
@@ -648,7 +638,7 @@ function rigaDelMese(consumi, icona, comeSiDice) {
 function schedaDellAcqua(come, adesso) {
   const forcelle = come.pressioni
     .filter((voce) => voce.bar !== null)
-    .map(forcellaMarkup)
+    .map(forcellaDellaPressione)
     .join("");
   const righe = [];
   /* Una pressione che non risponde non ha una forcella da disegnare: diventa

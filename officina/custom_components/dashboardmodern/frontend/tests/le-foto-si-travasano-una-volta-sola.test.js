@@ -240,7 +240,13 @@ test("togliere una chiave non alza la revisione", async () => {
    * `cd_contatori`): quali sensori, cosa misura ognuno, i prezzi. Sono della
    * casa: una perdita detta sul telefono e taciuta sul tablet, perché solo uno
    * dei due sa quale sensore guardare, è proprio il danno da evitare. */
-  assert.equal(CONFIG_KEYS_REVISION, 56);
+  /* E la 57 con le piante (#159, `cd_piante`): la soglia sotto cui una pianta
+   * è da innaffiare dev'essere la stessa sul telefono e sul tablet. */
+  assert.equal(CONFIG_KEYS_REVISION, 57);
+  assert.ok(
+    CONFIG_KEYS.includes("cd_piante"),
+    "le piante dichiarate qui devono essere le stesse anche sul tablet in cucina",
+  );
   assert.ok(
     CONFIG_KEYS.includes("cd_contatori"),
     "i contatori dichiarati qui devono essere gli stessi anche sul tablet in cucina",

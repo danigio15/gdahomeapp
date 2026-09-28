@@ -198,6 +198,8 @@ export const TESSERE_PER_SCHEDA = Object.freeze({
   allerte: "allerte",
   /* L'acqua e il gas (#115, #135, #137): la scheda parla di una tessera sola. */
   contatori: "contatori",
+  /* Le piante (#159): la scheda parla di una tessera sola. */
+  piante: "piante",
 });
 
 /**

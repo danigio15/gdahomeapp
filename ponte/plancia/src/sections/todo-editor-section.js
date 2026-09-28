@@ -145,6 +145,9 @@ function catalogoTessere() {
     /* L'acqua e il gas (#115, #135, #137): l'acqua di oggi, e la perdita in
      * rosso quando c'è. Compare quando la sua scheda ha una riga. */
     ["contatori", "💧", t("Acqua e gas", "Water and gas")],
+    /* Le piante (#159): quante sono da innaffiare. Compare quando la sua
+     * scheda ha una riga. */
+    ["piante", "🪴", t("Piante", "Plant care")],
     ["batterie", "🔋", t("Batterie", "Batteries")],
     ["allagamenti", "💧", t("Allagamenti", "Floods")],
     /* Fumo e gas (#328): compare da sola coi rilevatori di casa, come gli

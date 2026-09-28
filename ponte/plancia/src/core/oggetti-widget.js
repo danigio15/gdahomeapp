@@ -873,6 +873,26 @@ const OGGETTI = Object.freeze({
     <path d="M8.2 14.8a4.4 4.4 0 0 1 3.4-4.4" stroke="#fff" stroke-opacity=".55" stroke-width="1.4"
       fill="none" stroke-linecap="round"/>`,
 
+  /* Le piante (#159): il vaso di coccio e tre foglie. Non è l'irrigazione —
+   * quella è una goccia, l'acqua che parte da sola — ma la pianta che aspetta
+   * qualcuno che la innaffi. */
+  piante: `<defs>
+      <linearGradient id="dmoPiantaF" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#bbf7d0"/><stop offset=".5" stop-color="#22c55e"/>
+        <stop offset="1" stop-color="#15803d"/></linearGradient>
+      <linearGradient id="dmoPiantaV" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#fdba74"/><stop offset=".6" stop-color="#ea580c"/>
+        <stop offset="1" stop-color="#9a3412"/></linearGradient></defs>
+    ${OMBRA(16, 29.2, 6.4)}
+    <path d="M10.4 19.6h11.2l-1.6 8.2a1.6 1.6 0 0 1-1.6 1.3h-4.8a1.6 1.6 0 0 1-1.6-1.3Z" fill="url(#dmoPiantaV)"/>
+    <rect x="9.4" y="17.6" width="13.2" height="3" rx="1.2" fill="#c2410c"/>
+    <path d="M16 17.8V11" stroke="#15803d" stroke-width="1.4" stroke-linecap="round" fill="none"/>
+    <path d="M15.6 15.4c-.8-3.8-3.6-6.2-7.6-6.4.4 3.8 3.2 6.2 7.6 6.4Z" fill="url(#dmoPiantaF)"/>
+    <path d="M16.4 13.6c.6-4.2 3.6-7 8-7.4-.4 4.2-3.4 7-8 7.4Z" fill="url(#dmoPiantaF)"/>
+    <path d="M16 11.4c-1.8-2.4-1.8-5.6 0-8 1.8 2.4 1.8 5.6 0 8Z" fill="url(#dmoPiantaF)"/>
+    <path d="M11.8 21.8l.6 5" stroke="#fff" stroke-opacity=".6" stroke-width="1.1"
+      stroke-linecap="round" fill="none"/>`,
+
   /* I contatori di casa (#115, #135, #137): il contatore d'ottone con la
    * finestra delle cifre e la goccia. Non è l'umidità — quella è una goccia
    * dentro un quadrante di tacche — ma il contatore che si legge in cantina,

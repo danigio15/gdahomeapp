@@ -85,6 +85,33 @@ prende i contatori che Home Assistant dichiara; la sezione compare nella barra
 solo quando ha almeno una riga. Il catalogo dei disegni ha tre oggetti nuovi:
 il contatore, il manometro e la fiamma del gas.
 
+**Le piante dicono quando vogliono l'acqua.** «Impostando una soglia minima ti
+avverte quando è ora di innaffiare, oppure anche se è ora di innaffiare ma è
+prevista pioggia a breve eviti di farlo.» Adesso c'è «Piante»: in cima quante
+sono da innaffiare e quali, sotto l'elenco a semaforo dei Varchi — rossa la
+pianta asciutta, verde quella che sta bene — e per ogni pianta l'umidità della
+terra sulla forcella della piscina, con la temperatura quando il sensore la
+misura. Ecowitt WH51 e WH52, Tuya, Xiaomi: basta che dia la terra in percento.
+
+**E se sta per piovere, aspetta.** Una pianta segnata «all'aperto» con la
+terra asciutta guarda le previsioni del meteo di casa: se nelle prossime dodici
+ore arrivano almeno cinque millimetri non chiede acqua, e la sua riga lo dice
+— «Piove fra 4 ore: 8,5 mm». Il ficus in salotto la pioggia non la prende, e
+non aspetta. La spunta è per pianta, spenta di serie.
+
+**Sa anche quando l'hai innaffiata, e quando toccherà di nuovo.** Dalle medie
+di ogni ora del Recorder un'innaffiata è un salto della terra in poche ore:
+la riga dice «ultima acqua 6 giorni fa», e per chi sta bene fra quanti giorni
+arriverà alla soglia, al passo con cui si sta asciugando. La tessera in Home
+dice quante ne hanno sete e chiede attenzione come la batteria da cambiare; chi
+aspetta la pioggia non la accende.
+
+**Si configura come le altre schede**, in «Clima e acqua»: il sensore della
+terra, il nome, il disegno, la temperatura accanto, la soglia sotto cui è da
+innaffiare e quella sopra cui è troppo bagnata. La prima apertura prende i
+sensori della terra che Home Assistant ha trovato, e propone la temperatura
+dello stesso vaso. Il catalogo ha un disegno nuovo: la pianta nel vaso.
+
 ## 1.7.0
 
 **gdahome Premium esiste nel codice, e resta spento.** Fin qui era un progetto

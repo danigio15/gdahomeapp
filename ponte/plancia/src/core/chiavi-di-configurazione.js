@@ -282,7 +282,13 @@
  * tablet in cucina moltiplica, e una perdita detta su un vetro e taciuta
  * sull'altro — perche' solo uno dei due sa quale sensore guardare — e' proprio
  * il danno che questa sezione esiste per evitare. */
-export const CONFIG_KEYS_REVISION = 56;
+/* La revisione 57 aggiunge le piante (`cd_piante`, #159): quale sensore
+ * della terra, la sua temperatura, la forcella e se la pianta sta
+ * all'aperto. Sono della CASA come i contatori: la soglia scritta dal
+ * telefono deve essere quella con cui il tablet in cucina dice «da
+ * innaffiare», o la stessa pianta sarebbe asciutta su un vetro e a posto
+ * sull'altro. */
+export const CONFIG_KEYS_REVISION = 57;
 
 // Complete shared dashboard configuration snapshot. Runtime counters/timers and
 // true per-device preferences (connection credentials, theme/navbar mode) stay
@@ -559,4 +565,7 @@ export const CONFIG_KEYS = Object.freeze([
   /* I contatori dell'acqua e del gas (#115, #135, #137): la ragione per cui
    * stanno qui e' scritta accanto alla revisione 56. */
   "cd_contatori",
+  /* Le piante (#159): la ragione per cui stanno qui e' scritta accanto alla
+   * revisione 57. */
+  "cd_piante",
 ]);

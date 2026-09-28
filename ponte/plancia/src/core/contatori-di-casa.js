@@ -22,6 +22,7 @@
  * l'adesso lo passa chi chiama.
  */
 import { conLaRiga, conLeRighe, righeDichiarate, senzaLaRiga } from "./elenco-dichiarato.js";
+import { giorniAllaSoglia } from "./giorni-alla-soglia.js";
 import { avvioDallaStoria } from "./quando-e-partito.js";
 
 const pulito = (valore) => String(valore ?? "").trim();
@@ -629,30 +630,10 @@ export const SALE_DA_RICOMPRARE = 10;
  * stato caricato), non c'è una risposta onesta: `null`.
  */
 export function giorniDiSale(serie, { soglia = SALE_DA_RICOMPRARE } = {}) {
-  const punti = (Array.isArray(serie) ? serie : [])
-    .map((voce) => ({ x: Number(voce?.quando) / 86400000, y: numero(voce?.valore) }))
-    .filter((p) => Number.isFinite(p.x) && p.y !== null)
-    .sort((a, b) => a.x - b.x);
-  /* Un carico di sale fa risalire il livello: la retta si prende solo da lì
-   * in poi, altrimenti il carico di ieri la farebbe salire. */
-  let inizio = 0;
-  for (let i = 1; i < punti.length; i += 1) if (punti[i].y > punti[i - 1].y + 1) inizio = i;
-  const usati = punti.slice(inizio);
-  if (usati.length < 3) return null;
-  const mediaX = usati.reduce((s, p) => s + p.x, 0) / usati.length;
-  const mediaY = usati.reduce((s, p) => s + p.y, 0) / usati.length;
-  let sopra = 0;
-  let sotto = 0;
-  for (const p of usati) {
-    sopra += (p.x - mediaX) * (p.y - mediaY);
-    sotto += (p.x - mediaX) ** 2;
-  }
-  if (!sotto) return null;
-  const alGiorno = sopra / sotto;
-  if (!(alGiorno < 0)) return null;
-  const ultimo = usati[usati.length - 1].y;
-  const limite = numero(soglia) ?? SALE_DA_RICOMPRARE;
-  return Math.max(0, Math.floor((ultimo - limite) / -alGiorno));
+  /* La retta è quella della terra delle piante: la regola sta in
+   * `giorni-alla-soglia.js`. Il sale si legge una volta al giorno, e un punto
+   * che risale anche di poco è già un carico. */
+  return giorniAllaSoglia(serie, { soglia: numero(soglia) ?? SALE_DA_RICOMPRARE, salto: 1 });
 }
 
 /**
