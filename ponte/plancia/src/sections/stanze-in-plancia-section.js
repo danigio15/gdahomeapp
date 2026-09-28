@@ -8,40 +8,78 @@
  * Le stanze la plancia le ha già tutte: la loro pagina, le loro entità, la loro
  * icona. Quello che non aveva è il pezzo di casa da cui si guardano senza
  * aprire niente — una fila di stanze in plancia, con dentro la temperatura e
- * quante cose sono accese, e il tocco che porta dentro la stanza.
+ * cosa c'è acceso, e il tocco che porta dentro la stanza.
  *
  * Il blocco non c'è finché nessuno sceglie una stanza: una plancia non deve
  * riempirsi da sola di roba che nessuno ha chiesto. Chi ne sceglie una lo vede
  * comparire, e da lì in poi si sposta con gli altri blocchi — le persone, le
  * tessere, le azioni rapide — perché è un blocco come loro.
  *
+ * Si spegne anche da qui. «Nelle stanze della home dove compare la lucina
+ * quando sono accese le luci, si può spegnere tutto senza entrare nella
+ * stanza?» — l'ha chiesto il cliente di un installatore, al primo minuto, e
+ * arrivava da Fibaro. Adesso sì: la luce, la presa e il clima accesi sono tasti
+ * in fondo alla card, e il tocco chiede prima di spegnere, come nella pagina
+ * Stanze. Il resto della card porta dentro, come prima.
+ *
  * Chi decide sta nel modulo puro `core/stanze-in-plancia.js`; qui c'è la mano
- * che disegna e il tocco che porta nella stanza.
+ * che disegna, il tocco che porta nella stanza e quello che spegne.
  */
 import { eAcceso } from "../core/stato-acceso.js";
 import { oggettoWidget } from "../core/oggetti-widget.js";
 import {
-  CHIAVE_STANZE_IN_PLANCIA,
-  idDellaStanza,
-  stanzeInPlancia,
-} from "../core/stanze-in-plancia.js";
+  PASTIGLIE_DELLA_STANZA,
+  QUANTO_DURA_LA_DOMANDA,
+  QUANTO_DURA_L_ANNULLA,
+} from "../core/le-stanze-per-piano.js";
+import {
+  FONDO_DELLA_CARTA,
+  GRANA_DELLA_CARTA,
+  OMBRA_DELLA_CARTA,
+  tokenDellaCarta,
+} from "../core/le-vesti-della-carta.js";
+import { CHIAVE_STANZE_IN_PLANCIA, stanzeInPlancia } from "../core/stanze-in-plancia.js";
 import {
   allStates,
   clean,
   doc,
   esc,
+  formatNumber,
   iconGlyphHtml,
   installStyle,
   readJson,
   root,
   t,
 } from "./shared.js";
-import { apriLaStanza, roomPages } from "./rooms-page-section.js";
+import {
+  apriLaStanza,
+  cosaSiSpegne,
+  cosaSiSpegneAParole,
+  parolaDelFatto,
+  roomPages,
+  spegnereDaFuori,
+  vivo,
+} from "./rooms-page-section.js";
 
 const KEY = "__DASHBOARDMODERN_STANZE_IN_PLANCIA__";
 const STYLE_ID = "dm-stanze-plancia-style";
 export const BLOCCO_ID = "dm-stanze-home";
-const state = (root[KEY] ||= { installed: false, frame: 0, firma: "" });
+const state = (root[KEY] ||= {
+  installed: false,
+  frame: 0,
+  firma: "",
+  /* La domanda aperta su una card e l'annulla che resta dopo. Stanno nello
+   * stato e non nel documento: il blocco si ridisegna al primo cambio di stato
+   * — cioè proprio quando la luce si spegne — e un «Annulla» appeso al
+   * documento sparirebbe nell'istante in cui serve. */
+  chiesta: null,
+  annulla: null,
+  sveglia: 0,
+});
+
+/* Chiedere, spegnere e rimettere sono quelli della pagina Stanze: la regola è
+ * una, e qui c'è solo il posto dove si vede. */
+const velo = spegnereDaFuori(state, () => ridisegnaStanzeInPlancia());
 
 export function stanzeScelte() {
   const scritto = readJson(CHIAVE_STANZE_IN_PLANCIA, []);
@@ -127,52 +165,156 @@ export function riassuntoDellaStanza(pagina, states = allStates()) {
   return { gradi, umidita, accese, perTipo, quante: Number(pagina?.count) || 0 };
 }
 
-/* Le pastiglie di cosa e' acceso, un genere per pastiglia (#546).
+/* ── i tasti che spengono ────────────────────────────────────────────────── */
+
+/* I generi che si spengono dalla card, e in quell'ordine: quelli che la pagina
+ * Stanze dichiara `spegni` — la luce, la presa, il clima. La regola è una per
+ * i due posti, così la stessa lampadina fa la stessa cosa in Home e
+ * nell'elenco delle stanze. */
+const SI_SPENGONO = PASTIGLIE_DELLA_STANZA.filter((voce) => voce.comanda === "spegni").map(
+  (voce) => voce.chiave,
+);
+
+/**
+ * I tasti di una stanza: per ogni genere che si spegne, quante cose spegne
+ * adesso.
  *
- * Escono solo i generi che hanno qualcosa acceso: una fila di zeri non e' un
- * colpo d'occhio, e' un modulo da compilare. Il numero sta accanto al disegno
- * perche' «due luci» e «una luce» sono due notizie diverse. */
-/* `dove` e' la stanza: due stanze possono avere accese le stesse cose, e due
- * pastiglie con gli stessi nomi di sfumatura tornerebbero a dipendere una
- * dall'altra — che e' il difetto da cui si viene. */
-function accesePerTipoMarkup(perTipo, dove = "") {
-  if (!perTipo.length) return "";
-  return `<span class="dm-stanza-plancia-generi">${perTipo
-    .map(
-      (voce) =>
-        `<span class="dm-stanza-plancia-genere" data-dm-genere="${esc(voce.chiave)}">` +
-        `<span class="dm-stanza-plancia-genere-ic" aria-hidden="true">${oggettoWidget(
-          voce.oggetto,
-          "",
-          `stanza-${dove}-${voce.chiave}`,
-        )}</span><b>${esc(String(voce.quante))}</b></span>`,
-    )
+ * Il numero è quello di `cosaSiSpegne` — le cose che il tocco spegne davvero —
+ * e non il conto per genere della card: una luce accesa che non risponde, o
+ * che chi ha la casa ha chiuso col lucchetto, si conta fra le accese ma un
+ * comando non la raggiunge. Un tasto che dice «2» e ne spegne una è una
+ * promessa non mantenuta.
+ */
+export function tastiDellaStanza(pagina, states = allStates()) {
+  return SI_SPENGONO.map((chiave) => ({
+    chiave,
+    quante: cosaSiSpegne(pagina, chiave, states).length,
+  })).filter((tasto) => tasto.quante > 0);
+}
+
+/* Le cose accese che non hanno un tasto, a parole: «Tapparelle · Musica ·
+ * Robot». Stanno sotto i gradi come la didascalia delle tessere, e sono parole
+ * perché qui non si toccano — un disegno accanto ai tasti sembrerebbe un tasto
+ * anche lui. Il quanto lo dicono i tasti e la stanza; qui basta il cosa.
+ *
+ * Sono i nomi delle sezioni, gli stessi del menu e delle tessere: chi legge
+ * «Musica» sa già dove andare a cercarla, e sono parole che la plancia sa già
+ * dire in tutte le sue lingue.
+ *
+ * Ci finiscono anche le luci, le prese e il clima accesi che non si possono
+ * spegnere da qui: una luce col lucchetto non ha un tasto, ma resta accesa, e
+ * la card lo deve dire. */
+const NOME_DEL_GENERE = Object.freeze({
+  luci: () => t("Luci", "Lights"),
+  prese: () => t("Prese", "Sockets"),
+  clima: () => t("Clima", "Climate"),
+  coperture: () => t("Tapparelle", "Shutters"),
+  elettrodomestici: () => t("Elettrodomestici", "Appliances"),
+  media: () => t("Musica", "Music"),
+  telecamere: () => t("Telecamere", "Cameras"),
+  carichi: () => t("Carichi", "Loads"),
+  robot: () => t("Robot", "Robots"),
+  irrigazione: () => t("Irrigazione", "Irrigation"),
+  altro: () => t("Altro", "Other"),
+});
+
+export function didascaliaDellaStanza(perTipo, tasti = []) {
+  if (!perTipo.length) return t("Tutto spento", "All off");
+  const conTasto = new Set(tasti.map((tasto) => tasto.chiave));
+  const nomi = perTipo
+    .filter((voce) => !conTasto.has(voce.chiave))
+    .map((voce) => (NOME_DEL_GENERE[voce.chiave] || NOME_DEL_GENERE.altro)());
+  /* Due blocchi dello stesso genere — «altro» e un genere che non conosciamo —
+   * non scrivono due volte la stessa parola. */
+  return [...new Set(nomi)].join(" · ");
+}
+
+/* Quanto resta alla domanda o all'annulla, per la riga che si accorcia sotto
+ * il tasto: la durata intera e quanto ne è già passato. Il blocco si
+ * ridisegna a ogni cambio di stato della casa, e senza il «già passato» la
+ * riga ripartirebbe da capo ogni volta che un sensore cambia, mentre il tempo
+ * vero va avanti. */
+function tempoCheResta(momento, durata) {
+  const passato = Math.max(0, Math.min(durata, durata - (Number(momento.fino) - Date.now())));
+  return `--dm-dura:${durata}ms;--dm-gia:-${Math.round(passato)}ms`;
+}
+
+function tastoMarkup(pagina, tasto) {
+  const parola = `${t("Spegni", "Turn off")} ${cosaSiSpegneAParole(tasto.chiave, tasto.quante)}`;
+  return `<button type="button" class="dm-stanza-plancia-tasto" data-dm-stanza-plancia-spegni="${esc(tasto.chiave)}"
+      title="${esc(parola)}" aria-label="${esc(parola)}"><span class="dm-stanza-plancia-tasto-ic" aria-hidden="true">${oggettoWidget(
+        OGGETTO_DEL_BLOCCO[tasto.chiave] || "evidenza",
+        "",
+        `stanza-${pagina.id}-${tasto.chiave}`,
+      )}</span><b>${esc(String(tasto.quante))}</b></button>`;
+}
+
+/* La zona dei comandi, in fondo alla card: i tasti; oppure, al loro posto, la
+ * domanda; oppure quello che si è fatto, col modo di tornare indietro. Un
+ * posto solo per tutti e tre: la card non cambia forma sotto il dito, e la
+ * stanza su cui si sta rispondendo resta scritta sopra. */
+function zonaDeiComandi(pagina, tasti) {
+  const chiesta = state.chiesta;
+  if (vivo(chiesta) && chiesta.stanza === pagina.id) {
+    const quante = tasti.find((tasto) => tasto.chiave === chiesta.chiave)?.quante || 1;
+    const domanda = `${t("Spegni", "Turn off")} ${cosaSiSpegneAParole(chiesta.chiave, quante)}?`;
+    /* Il no non ha un tasto, come nella pagina Stanze: la domanda se ne va da
+     * sola, e un tocco sul resto della card la chiude subito. Un ✕ accanto
+     * rubava a «Spegni il clima?» la metà della riga. */
+    return `<span class="dm-stanza-plancia-comandi" data-dm-momento="domanda" style="${tempoCheResta(chiesta, QUANTO_DURA_LA_DOMANDA)}">
+      <button type="button" class="dm-stanza-plancia-si" data-dm-stanza-plancia-si="${esc(chiesta.chiave)}">${esc(domanda)}</button>
+    </span>`;
+  }
+  const annulla = state.annulla;
+  if (vivo(annulla) && annulla.stanza === pagina.id)
+    return `<span class="dm-stanza-plancia-comandi" data-dm-momento="fatto" style="${tempoCheResta(annulla, QUANTO_DURA_L_ANNULLA)}">
+      <span class="dm-stanza-plancia-fatto">✓ ${esc(parolaDelFatto(annulla.chiave, annulla.entita?.length || 0))}</span>
+      <button type="button" class="dm-stanza-plancia-rimetti" data-dm-stanza-plancia-rimetti>${esc(t("Annulla", "Undo"))}</button>
+    </span>`;
+  if (!tasti.length) return "";
+  return `<span class="dm-stanza-plancia-comandi" data-dm-momento="tasti">${tasti
+    .map((tasto) => tastoMarkup(pagina, tasto))
     .join("")}</span>`;
 }
 
+/* I gradi grandi come il numero delle tessere, l'umidità piccola accanto. */
+function misureMarkup(gradi, umidita) {
+  if (gradi === null && umidita === null) return "";
+  const grado =
+    gradi === null
+      ? ""
+      : `<b class="dm-stanza-plancia-gradi">${esc(formatNumber(gradi, 1))}</b><i class="dm-stanza-plancia-grado">°</i>`;
+  const umido =
+    umidita === null ? "" : `<i class="dm-stanza-plancia-umido">${esc(String(Math.round(umidita)))}%</i>`;
+  return `<span class="dm-stanza-plancia-misure">${grado}${umido}</span>`;
+}
+
+/* La card è una tessera, la stessa lingua dei widget che le stanno sopra: la
+ * pastiglia col disegno, il nome in maiuscoletto, il numero grande — qui i
+ * gradi — e sotto la didascalia. Prima era un'altra cosa: il disegno e il nome
+ * in mezzo, e sotto una fila di pastiglie tutte uguali, quelle che si leggono e
+ * quelle che si toccano. In Home era l'unico blocco che parlava un'altra
+ * lingua. */
 function cardMarkup(pagina, states) {
-  const { gradi, umidita, accese, perTipo } = riassuntoDellaStanza(pagina, states);
+  const riassunto = riassuntoDellaStanza(pagina, states);
+  const tasti = tastiDellaStanza(pagina, states);
+  /* La card si accende quando è accesa la luce: è la «lucina» che si guarda da
+   * fuori. Il resto acceso lo dicono i tasti e la didascalia; se la card
+   * l'accendesse anche un condizionatore, in una casa abitata sarebbero
+   * accese quasi tutte — e se gridano tutte non si sente nessuna. */
+  const luce = riassunto.perTipo.some((voce) => voce.chiave === "luci");
+  const didascalia = didascaliaDellaStanza(riassunto.perTipo, tasti);
   const disegno = disegnoDellaStanza(pagina.icon);
-  const misure = [
-    gradi === null ? "" : `${Math.round(gradi)}°`,
-    umidita === null ? "" : `${Math.round(umidita)}%`,
-  ]
-    .filter(Boolean)
-    .join(" · ");
-  const acceso = accese > 0;
-  /* Il nome, il disegno e le misure stanno in colonna e in mezzo (#546):
-   * «with the room icon and name centered». Di fianco, con le pastiglie dei
-   * generi sotto, il nome finiva schiacciato in un angolo della card e la
-   * fila delle pastiglie restava appesa a destra senza un asse. */
-  return `<button type="button" class="dm-stanza-plancia" data-dm-stanza-plancia="${esc(pagina.id)}"
-      data-accesa="${acceso}" aria-label="${esc(pagina.name)}">
-    <span class="dm-stanza-plancia-ic" aria-hidden="true">${disegno}</span>
-    <span class="dm-stanza-plancia-testo">
-      <b>${esc(pagina.name)}</b>
-      <small>${esc(misure)}</small>
+  return `<article class="dm-stanza-plancia" role="button" tabindex="0" data-dm-stanza-plancia="${esc(pagina.id)}"
+      data-accesa="${luce}" aria-label="${esc(pagina.name)}">
+    <span class="dm-stanza-plancia-cima">
+      <span class="dm-stanza-plancia-ic" aria-hidden="true">${disegno}</span>
+      <span class="dm-stanza-plancia-nome">${esc(pagina.name)}</span>
     </span>
-    ${accesePerTipoMarkup(perTipo, pagina.id)}
-  </button>`;
+    ${misureMarkup(riassunto.gradi, riassunto.umidita)}
+    ${didascalia ? `<small class="dm-stanza-plancia-didascalia">${esc(didascalia)}</small>` : ""}
+    ${zonaDeiComandi(pagina, tasti)}
+  </article>`;
 }
 
 /* «E' nato un blocco»: l'avviso per chi mette i blocchi in fila.
@@ -224,8 +366,8 @@ export function renderStanzeInPlancia() {
     return false;
   }
   const states = allStates();
-  const firma = pagine
-    .map((voce) => {
+  const firma = [
+    ...pagine.map((voce) => {
       const riassunto = riassuntoDellaStanza(voce, states);
       return [
         voce.id,
@@ -237,9 +379,20 @@ export function renderStanzeInPlancia() {
          * mentre si accende un condizionatore lascia il totale a due, e la
          * card sarebbe rimasta a dire «luce» fino al cambio dopo. */
         riassunto.perTipo.map((tipo) => `${tipo.chiave}:${tipo.quante}`).join(","),
+        /* E i tasti, che contano quello che si spegne davvero: una luce che
+         * smette di rispondere non cambia il conto degli accesi, ma toglie un
+         * uno dal suo tasto. */
+        tastiDellaStanza(voce, states)
+          .map((tasto) => `${tasto.chiave}:${tasto.quante}`)
+          .join(","),
       ].join("|");
-    })
-    .join("§");
+    }),
+    /* La domanda e l'annulla nascono e muoiono senza che cambi nessuno stato
+     * della casa: senza di loro nella firma, il tocco non si vedrebbe. */
+    [state.chiesta?.stanza, state.chiesta?.chiave, state.annulla?.stanza, state.annulla?.chiave]
+      .map((voce) => voce || "")
+      .join("~"),
+  ].join("§");
   const casa = host(pagina);
   if (!casa) return false;
   if (state.firma === firma && casa.querySelector("[data-dm-stanza-plancia]")) return true;
@@ -254,9 +407,42 @@ export function renderStanzeInPlancia() {
   return true;
 }
 
+/* Il tocco: i tasti prima della card che li contiene. Senza uscire qui, ogni
+ * tocco su un tasto porterebbe anche dentro la stanza. */
 function onClick(evento) {
   const card = evento.target?.closest?.("[data-dm-stanza-plancia]");
   if (!card) return;
+  const stanza = card.getAttribute("data-dm-stanza-plancia") || "";
+  const spegni = evento.target.closest("[data-dm-stanza-plancia-spegni]");
+  const si = evento.target.closest("[data-dm-stanza-plancia-si]");
+  const rimetti = evento.target.closest("[data-dm-stanza-plancia-rimetti]");
+  if (spegni || si || rimetti) {
+    evento.preventDefault();
+    evento.stopPropagation();
+    if (spegni) velo.chiedi(stanza, spegni.getAttribute("data-dm-stanza-plancia-spegni") || "");
+    else if (si) velo.spegni(stanza, si.getAttribute("data-dm-stanza-plancia-si") || "");
+    else velo.rimetti();
+    return;
+  }
+  evento.preventDefault();
+  /* Con la domanda aperta, il tocco sul resto della card è un no: chi ha
+   * toccato la lampadina per sbaglio si aspetta che la domanda sparisca, non
+   * di finire dentro la stanza. */
+  if (vivo(state.chiesta) && state.chiesta.stanza === stanza) {
+    velo.lascia();
+    return;
+  }
+  apriLaStanza(card.getAttribute("data-dm-stanza-plancia") || "");
+}
+
+/* La card non è più un <button> — dentro ha dei tasti, e un tasto dentro un
+ * tasto non esiste — quindi Invio e spazio sulla card li deve raccogliere
+ * qualcuno: aprono la stanza come il dito. Sui tasti dentro ci pensa il
+ * browser, che li trasforma in un tocco. */
+function onKey(evento) {
+  if (evento.key !== "Enter" && evento.key !== " ") return;
+  const card = evento.target?.closest?.("[data-dm-stanza-plancia]");
+  if (!card || evento.target !== card) return;
   evento.preventDefault();
   apriLaStanza(card.getAttribute("data-dm-stanza-plancia") || "");
 }
@@ -280,57 +466,162 @@ export function ridisegnaStanzeInPlancia() {
   schedule();
 }
 
+/* L'ambra delle cose accese: è quella della tessera Luci, e della pastiglia
+ * accesa di ogni tessera. */
+const AMBRA = "#f59e0b";
+
 function stile() {
   installStyle(
     STYLE_ID,
     `
+  ${tokenDellaCarta(`#${BLOCCO_ID}`)}
   #${BLOCCO_ID}{display:block;margin-top:18px}
   #${BLOCCO_ID} .section-title{display:flex;align-items:center;gap:8px}
   .dm-stanze-plancia-titolo-ic{display:inline-grid;place-items:center;width:20px;height:20px}
   .dm-stanze-plancia-titolo-ic svg{width:20px;height:20px}
+  /* La griglia delle tessere dei widget, con le sue misure. */
   #${BLOCCO_ID} .dm-stanze-plancia-griglia{
-    display:grid;gap:10px;
-    grid-template-columns:repeat(auto-fit,minmax(min(190px,100%),1fr))}
+    display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(210px,1fr))}
+
+  /* La tessera. Le vesti sono quelle di ogni card della plancia — fondo a
+     carta, fili sui bordi, ombra corta e ombra lunga, la grana — e le misure
+     quelle delle tessere dei widget, così le due file si leggono come una. */
   .dm-stanza-plancia{
-    display:flex;flex-direction:column;align-items:center;gap:8px;min-width:0;width:100%;
-    padding:14px 12px;border-radius:18px;cursor:pointer;font:inherit;text-align:center;
-    color:var(--text,#0f172a);
-    background:var(--card-background-color,var(--card-bg,#fff));
-    border:1px solid var(--card-border,#e2e8f0);
-    box-shadow:0 8px 18px -14px rgba(15,23,42,.85);
-    transition:transform .13s ease,border-color .13s ease}
-  @media(hover:hover){.dm-stanza-plancia:hover{transform:translateY(-2px)}}
-  .dm-stanza-plancia:active{transform:translateY(1px) scale(.99)}
-  .dm-stanza-plancia:focus-visible{outline:2px solid var(--accent,#0ea5e9);outline-offset:3px}
-  /* Una stanza con qualcosa acceso si vede da lontano: è la ragione per cui
-     uno guarda la plancia invece di aprire la pagina. */
+    position:relative;overflow:hidden;display:flex;flex-direction:column;gap:10px;min-width:0;
+    padding:15px 16px 16px;border:0;border-radius:22px;cursor:pointer;font:inherit;text-align:left;
+    color:var(--text,#0f172a);background:${FONDO_DELLA_CARTA};box-shadow:${OMBRA_DELLA_CARTA};
+    transition:transform .18s cubic-bezier(.16,1,.3,1),box-shadow .2s ease,background .45s ease}
+  .dm-stanza-plancia::before{${GRANA_DELLA_CARTA}}
+  /* Accesa: il velo ambra nell'angolo, il bordo che si scalda e l'ombra lunga
+     che prende la tinta. È la lucina, vista da lontano. */
   .dm-stanza-plancia[data-accesa="true"]{
-    border-color:color-mix(in srgb,#f59e0b 52%,transparent)}
+    background:
+      radial-gradient(135% 105% at 100% 0%,
+        color-mix(in srgb,${AMBRA} var(--dm-velo),transparent),transparent 66%),
+      ${FONDO_DELLA_CARTA};
+    box-shadow:
+      inset 0 1px 0 var(--dm-vetrino),
+      inset 0 0 0 1px color-mix(in srgb,${AMBRA} 28%,transparent),
+      inset 0 -1px 0 color-mix(in srgb,${AMBRA} 16%,transparent),
+      0 1px 1px rgba(15,23,42,.05),
+      0 16px 32px -18px color-mix(in srgb,${AMBRA} 60%,rgba(15,23,42,.5))}
+  @media(hover:hover){.dm-stanza-plancia:hover{transform:translateY(-2px)}}
+  .dm-stanza-plancia:active{transform:translateY(1px) scale(.995)}
+  .dm-stanza-plancia:focus-visible{outline:2px solid ${AMBRA};outline-offset:3px}
+
+  /* La prima riga: la pastiglia col disegno della stanza, e il nome. */
+  .dm-stanza-plancia-cima{position:relative;display:flex;align-items:center;gap:11px;min-width:0}
   .dm-stanza-plancia-ic{
-    flex:0 0 auto;display:grid;place-items:center;width:42px;height:42px;
-    border-radius:14px;font-size:22px;line-height:1;
-    background:var(--bg-sculpted,#f0f4f8)}
-  .dm-stanza-plancia-ic svg{width:26px;height:26px}
-  .dm-stanza-plancia-testo{
-    display:flex;flex-direction:column;align-items:center;gap:2px;min-width:0;width:100%}
-  .dm-stanza-plancia-testo b{
-    font-size:13.5px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .dm-stanza-plancia-testo small{
-    font-size:11.5px;font-weight:700;color:var(--text-dim,#64748b);
-    font-variant-numeric:tabular-nums;white-space:nowrap}
-  /* Le pastiglie dei generi (#546): una per famiglia di cose accese, col
-     disegno di casa e quante ne sono. Vanno a capo da sole — una stanza con
-     luci, clima e prese accesi ne ha tre, e su mezza colonna non stanno in
-     fila. */
-  .dm-stanza-plancia-generi{
-    display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:6px;
-    width:100%;min-width:0}
-  .dm-stanza-plancia-genere{
-    display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:999px;
-    font-size:11px;font-weight:900;font-variant-numeric:tabular-nums;
-    color:#b45309;background:color-mix(in srgb,#f59e0b 20%,transparent)}
-  .dm-stanza-plancia-genere-ic{display:inline-grid;place-items:center;width:15px;height:15px}
-  .dm-stanza-plancia-genere-ic svg{width:15px;height:15px}
+    flex:0 0 41px;width:41px;height:41px;display:grid;place-items:center;border-radius:15px;font-size:20px;
+    background:linear-gradient(158deg,
+      color-mix(in srgb,var(--text,#0f172a) 8%,var(--card-bg,#fff)),
+      color-mix(in srgb,var(--text,#0f172a) 3%,var(--card-bg,#fff)));
+    box-shadow:
+      inset 0 1px 0 var(--dm-vetrino),
+      inset 0 0 0 1px color-mix(in srgb,var(--text,#0f172a) 7%,transparent),
+      inset 0 -3px 6px -4px color-mix(in srgb,var(--text,#0f172a) 30%,transparent),
+      0 5px 11px -9px rgba(15,23,42,.8);
+    transition:background .5s ease,box-shadow .5s ease}
+  .dm-stanza-plancia[data-accesa="true"] .dm-stanza-plancia-ic{
+    background:linear-gradient(158deg,
+      color-mix(in srgb,${AMBRA} var(--dm-cuscino),var(--card-bg,#fff)),
+      color-mix(in srgb,${AMBRA} 9%,var(--card-bg,#fff)));
+    box-shadow:
+      inset 0 1px 0 var(--dm-vetrino),
+      inset 0 0 0 1px color-mix(in srgb,${AMBRA} 32%,transparent),
+      inset 0 -3px 7px -4px color-mix(in srgb,${AMBRA} 55%,transparent),
+      0 10px 18px -11px color-mix(in srgb,${AMBRA} 90%,transparent)}
+  .dm-stanza-plancia-ic svg{width:26px;height:26px;display:block}
+  .dm-stanza-plancia-nome{
+    flex:1;min-width:0;font-size:9.8px;font-weight:900;letter-spacing:.11em;line-height:1.25;
+    text-transform:uppercase;color:var(--text-dim,#64748b);
+    display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
+
+  /* La seconda riga: i gradi come il numero delle tessere, e l'umidità
+     accanto senza pesare. Il margine negativo toglie l'aria che Oswald si
+     prende dentro la riga, senza tagliargli la testa (vedi le tessere). */
+  .dm-stanza-plancia-misure{display:block;min-width:0;line-height:1;white-space:nowrap}
+  .dm-stanza-plancia-gradi{
+    display:inline-flex;align-items:baseline;margin:-13.6px 0;
+    font-family:'Oswald','Inter',sans-serif;font-weight:200;font-size:40px;line-height:1.6;
+    letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+  .dm-stanza-plancia-grado{
+    margin-left:1px;font-style:normal;font-size:17px;font-weight:300;
+    font-family:'Oswald','Inter',sans-serif;color:var(--text-dim,#64748b)}
+  .dm-stanza-plancia-umido{
+    margin-left:9px;font-style:normal;font-size:12px;font-weight:800;
+    color:var(--text-dim,#64748b);font-variant-numeric:tabular-nums}
+  /* Il resto acceso, a parole. Due righe al massimo: una stanza con sei cose
+     accese si capisce lo stesso, e la card non si allunga. */
+  .dm-stanza-plancia-didascalia{
+    font-size:11px;font-weight:700;line-height:1.35;color:var(--text-dim,#94a3b8);
+    display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
+
+  /* I comandi stanno in fondo: in una fila di card alte uguali, i tasti di
+     tutte cadono sulla stessa riga. */
+  .dm-stanza-plancia-comandi{display:flex;align-items:center;gap:6px;min-width:0;margin-top:auto}
+  /* Il tasto è la pastiglia accesa delle tessere, in ambra: un cuscino col
+     disegno della cosa e quante ne spegne. Alto un pollice, perché spegne. */
+  .dm-stanza-plancia-tasto{
+    flex:1 1 0;max-width:68px;min-width:0;height:44px;padding:0 6px;
+    display:inline-flex;align-items:center;justify-content:center;gap:4px;
+    border:0;border-radius:14px;cursor:pointer;font:inherit;font-size:13px;font-weight:900;
+    font-variant-numeric:tabular-nums;color:#b45309;
+    background:linear-gradient(158deg,
+      color-mix(in srgb,${AMBRA} 30%,var(--card-bg,#fff)),
+      color-mix(in srgb,${AMBRA} 10%,var(--card-bg,#fff)));
+    box-shadow:
+      inset 0 1px 0 var(--dm-vetrino),
+      inset 0 0 0 1px color-mix(in srgb,${AMBRA} 34%,transparent),
+      inset 0 -3px 7px -4px color-mix(in srgb,${AMBRA} 60%,transparent),
+      0 10px 18px -11px color-mix(in srgb,${AMBRA} 90%,transparent)}
+  .dm-stanza-plancia-tasto:active{transform:scale(.96)}
+  .dm-stanza-plancia-tasto:focus-visible{outline:2px solid ${AMBRA};outline-offset:2px}
+  .dm-stanza-plancia-tasto-ic{display:grid;place-items:center;width:20px;height:20px}
+  .dm-stanza-plancia-tasto-ic svg{width:20px;height:20px;display:block}
+  /* La domanda al posto dei tasti: un tasto solo, scuro e largo quanto la
+     riga. Il no non ha un tasto — la domanda se ne va da sola, e il tocco sul
+     resto della card la chiude — come nella pagina Stanze. */
+  .dm-stanza-plancia-si,
+  .dm-stanza-plancia-rimetti{position:relative;overflow:hidden;height:44px;border:0;border-radius:14px;
+    cursor:pointer;font:inherit;font-size:12.5px;font-weight:900;white-space:nowrap}
+  .dm-stanza-plancia-si{flex:1 1 auto;min-width:0;padding:0 10px;text-overflow:ellipsis;
+    color:#f8fafc;background:#0f172a;box-shadow:0 10px 18px -12px rgba(15,23,42,.9)}
+  .dm-stanza-plancia-rimetti{
+    flex:0 0 auto;padding:0 14px;color:var(--text,#0f172a);
+    background:linear-gradient(158deg,
+      color-mix(in srgb,var(--text,#0f172a) 8%,var(--card-bg,#fff)),
+      color-mix(in srgb,var(--text,#0f172a) 3%,var(--card-bg,#fff)));
+    box-shadow:inset 0 1px 0 var(--dm-vetrino),
+      inset 0 0 0 1px color-mix(in srgb,var(--text,#0f172a) 9%,transparent),
+      0 5px 11px -9px rgba(15,23,42,.8)}
+  /* Il tempo che resta per rispondere, o per tornare indietro: una riga che si
+     accorcia sotto la parola. */
+  .dm-stanza-plancia-si::after,
+  .dm-stanza-plancia-rimetti::after{
+    content:"";position:absolute;left:12px;right:12px;bottom:7px;height:2px;border-radius:2px;
+    background:currentColor;opacity:.4;transform-origin:left;
+    animation:dm-stanza-plancia-resta var(--dm-dura,2000ms) linear var(--dm-gia,0ms) both}
+  @keyframes dm-stanza-plancia-resta{from{transform:scaleX(1)}to{transform:scaleX(0)}}
+  .dm-stanza-plancia-fatto{flex:1 1 auto;min-width:0;font-size:12px;font-weight:900;
+    color:var(--text-dim,#64748b);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+  /* Al buio: il numero dei tasti più chiaro, e il sì chiaro su scuro. */
+  html[data-theme="dark"] .dm-stanza-plancia-tasto,
+  body.dark-theme .dm-stanza-plancia-tasto{color:#fbbf24}
+  html[data-theme="dark"] .dm-stanza-plancia-si,
+  body.dark-theme .dm-stanza-plancia-si{color:#0f172a;background:#f8fafc}
+
+  /* Sugli schermi stretti scala tutto insieme, come le tessere. */
+  @media(max-width:768px){
+    .dm-stanza-plancia{padding:13px 13px 15px;gap:9px}
+    .dm-stanza-plancia-ic{flex-basis:36px;width:36px;height:36px;border-radius:13px}
+    .dm-stanza-plancia-ic svg{width:23px;height:23px}
+    .dm-stanza-plancia-cima{gap:9px}
+    .dm-stanza-plancia-nome{font-size:9.2px;letter-spacing:.07em}
+    .dm-stanza-plancia-gradi{font-size:34px}
+    .dm-stanza-plancia-didascalia{font-size:10.5px}
+  }
 
   /* Due colonne sul telefono (#524).
    *
@@ -339,27 +630,19 @@ function stile() {
    * scorrere mezza pagina per leggere sei nomi — e il blocco delle stanze
    * serve a dare un colpo d'occhio, non una lista.
    *
-   * Non bastava abbassare il minimo della griglia: con auto-fit due colonne
+   * Non bastava abbassare il minimo della griglia: con auto-fill due colonne
    * ci stanno solo se due minimi piu' il vuoto in mezzo entrano nella pagina,
    * e su un telefono da 390 pixel, tolti i margini, non entravano mai. Qui le
-   * colonne si dichiarano: due, e larghe uguali.
-   *
-   * La card si stringe con loro — il disegno piu' piccolo, meno aria ai lati,
-   * la pastiglia degli accesi sotto invece che di fianco — perche' a meta'
-   * larghezza, di fianco, resterebbe un nome tagliato dopo tre lettere. */
+   * colonne si dichiarano: due, e larghe uguali. Tre tasti su mezza colonna si
+   * dividono la riga. */
   @media (max-width:560px){
-    #${BLOCCO_ID} .dm-stanze-plancia-griglia{
-      grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
-    .dm-stanza-plancia{gap:7px;padding:11px 9px}
-    .dm-stanza-plancia-ic{width:34px;height:34px;border-radius:12px;font-size:18px}
-    .dm-stanza-plancia-ic svg{width:21px;height:21px}
-    .dm-stanza-plancia-testo b{font-size:12.5px}
-    .dm-stanza-plancia-testo small{
-      font-size:11px;white-space:normal;overflow-wrap:anywhere}
-    /* Su mezza colonna la pastiglia si stringe attorno al numero: il disegno
-       resta, la cornice no. */
-    .dm-stanza-plancia-generi{gap:5px}
-    .dm-stanza-plancia-genere{padding:2px 6px;font-size:10.5px;gap:3px}
+    #${BLOCCO_ID} .dm-stanze-plancia-griglia{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .dm-stanza-plancia-comandi{gap:5px}
+    .dm-stanza-plancia-tasto{padding:0 4px}
+  }
+  @media(prefers-reduced-motion:reduce){
+    .dm-stanza-plancia,.dm-stanza-plancia-tasto{transition:none}
+    .dm-stanza-plancia-si::after,.dm-stanza-plancia-rimetti::after{animation:none}
   }
   `,
   );
@@ -370,6 +653,7 @@ export function installStanzeInPlancia() {
   state.installed = true;
   stile();
   doc.addEventListener("click", onClick);
+  doc.addEventListener("keydown", onKey);
   for (const evento of [
     "dashboardmodern:legacy-ready",
     "dashboardmodern:runtime-ready",

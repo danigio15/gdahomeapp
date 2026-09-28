@@ -95,6 +95,7 @@ const state = (root[KEY] ||= {
    * tasto «Annulla» appeso al documento sparirebbe nell'istante in cui serve. */
   chiesta: null,
   annulla: null,
+  sveglia: 0,
 });
 
 export const ROOMS_PAGE_ID = "page-stanze";
@@ -1155,14 +1156,32 @@ function pastigliaMarkup(pastiglia) {
 
 /* ── la domanda e l'annulla, sulla tessera ───────────────────────────────── */
 
-/* Quanti e come si chiamano, per la frase della domanda. */
-function paroleDaSpegnere(chiave, quante) {
+/* Cosa si spegne, a parole, per la frase della domanda: «2 luci», «1 presa»,
+ * «il clima». La usano la tessera di questa pagina e la card della stanza in
+ * Home, perche' la stessa domanda con due parole diverse sarebbero due
+ * domande.
+ *
+ * Il clima non si conta: dentro ci stanno il condizionatore e il termostato
+ * dei termosifoni, e «2 condizionatori» per un condizionatore e una caldaia
+ * direbbe una cosa falsa. «Il clima» e' giusto per tutti e due, e il numero lo
+ * porta gia' il tasto che si e' toccato. */
+export function cosaSiSpegneAParole(chiave, quante) {
   const uno = quante === 1;
-  if (chiave === "prese") return uno ? t("presa", "socket") : t("prese", "sockets");
-  return uno ? t("luce", "light") : t("luci", "lights");
+  if (chiave === "clima") return t("il clima", "Climate");
+  if (chiave === "prese") return `${quante} ${uno ? t("presa", "socket") : t("prese", "sockets")}`;
+  return `${quante} ${uno ? t("luce", "light") : t("luci", "lights")}`;
 }
 
-function vivo(momento) {
+/* La parola di dopo, accanto ad «Annulla»: «Spente» per le luci e le prese,
+ * «Spento» per il clima. Una parola sola per tutti e tre scriveva «Spente»
+ * anche sotto un condizionatore. */
+export function parolaDelFatto(chiave, quante) {
+  if (chiave === "clima") return t("Spento", "Off");
+  return quante === 1 ? t("Spenta", "Off") : t("Spente", "Turned off");
+}
+
+/* Se la domanda o l'annulla sono ancora in tempo. */
+export function vivo(momento) {
   return Boolean(momento) && Number(momento.fino) > Date.now();
 }
 
@@ -1175,7 +1194,7 @@ function veloDellaTessera(pagina, conti) {
   const chiesta = state.chiesta;
   if (vivo(chiesta) && chiesta.stanza === pagina.id) {
     const quante = Math.max(1, Number(conti?.[chiesta.chiave]) || 0);
-    const frase = `${t("Spengo", "Turn off")} ${quante} ${paroleDaSpegnere(chiesta.chiave, quante)}?`;
+    const frase = `${t("Spengo", "Turn off")} ${cosaSiSpegneAParole(chiesta.chiave, quante)}?`;
     return `<div class="dm-stanze-velo" data-dm-stanza-velo="chiesta">
         <span>${esc(frase)}</span>
         <button type="button" data-dm-stanza-conferma="${esc(chiesta.chiave)}">${esc(
@@ -1186,7 +1205,7 @@ function veloDellaTessera(pagina, conti) {
   const annulla = state.annulla;
   if (vivo(annulla) && annulla.stanza === pagina.id)
     return `<div class="dm-stanze-velo" data-dm-stanza-velo="annulla">
-        <span>${esc(t("Spente", "Turned off"))}</span>
+        <span>${esc(parolaDelFatto(annulla.chiave, annulla.entita?.length || 0))}</span>
         <button type="button" data-dm-stanza-annulla>${esc(t("Annulla", "Undo"))}</button>
       </div>`;
   return "";
@@ -1394,30 +1413,41 @@ function schedule() {
 /* ── spegnere una stanza da fuori (#17, parte 3) ─────────────────────────── */
 
 /* Cosa si spegne, in quella stanza, premendo quella pastiglia. Le luci le
- * conta gia' la scena della stanza — e' la stessa domanda — e le prese sono
- * quelle del loro blocco che rispondono e sono accese. */
-function cosaSiSpegne(pagina, chiave, states) {
+ * conta gia' la scena della stanza — e' la stessa domanda — le prese sono
+ * quelle del loro blocco che rispondono e sono accese, e il clima quello che
+ * sta scaldando, raffrescando o deumidificando: la stessa parola con cui la
+ * pastiglia lo conta, cosi' il numero sul tasto e' quello che si spegne.
+ *
+ * La usa anche la card della stanza in Home: e' lei a dire quanti ne spegne
+ * ogni suo tasto, e un numero diverso da quello che si spegne sarebbe una
+ * promessa non mantenuta. */
+export function cosaSiSpegne(pagina, chiave, states) {
   if (chiave === "luci")
     return roomSceneEntities(pagina).filter((entity) => {
-      const vista = lightView(entity, {
-        state: states[entity],
-        comandabile: siComanda(entity),
-      });
+      /* Il lucchetto vale anche qui. Il comando di una luce chiusa se lo
+       * rifiuta gia' `lightCommand`, ma la luce restava nel conto: la domanda
+       * diceva «Spengo 2 luci?» e se ne spegneva una. */
+      if (!siComanda(entity)) return false;
+      const vista = lightView(entity, { state: states[entity], comandabile: true });
       return vista.on && vista.available;
     });
+  const acceso = chiave === "clima" ? CLIMA_ACCESO : SI_COMANDA_ACCESO;
   const blocco = (pagina?.blocchi || []).find((voce) => voce.key === chiave);
   return (blocco?.voci || [])
     .map((voce) => entitaVoce(voce))
-    .filter(
-      (entity) =>
-        entity && siComanda(entity) && SI_COMANDA_ACCESO.test(statoDi(entity, states)),
-    );
+    .filter((entity) => entity && siComanda(entity) && acceso.test(statoDi(entity, states)));
 }
 
 /* Accende o spegne un elenco di entita', ognuna col comando che la sua specie
  * capisce: una luce si spegne con `light.turn_off`, una presa con quello del
- * suo dominio. Il lucchetto l'hanno gia' tolto di mezzo i due filtri sopra. */
-function commuta(entita, acceso, states) {
+ * suo dominio. Il lucchetto l'hanno gia' tolto di mezzo i due filtri sopra.
+ *
+ * Il clima si rimette com'era, non «acceso». `climate.turn_on` accende nel
+ * modo che sceglie l'integrazione — spesso l'ultimo, a volte il primo
+ * dell'elenco — e un condizionatore spento mentre raffrescava tornerebbe a
+ * scaldare. Il modo di prima e' lo stato che aveva quando l'abbiamo spento,
+ * `prima` lo porta, e si rimette quello. */
+function commuta(entita, acceso, states, prima = {}) {
   for (const entity of entita) {
     if (entity.startsWith("light.")) {
       const vista = lightView(entity, {
@@ -1428,6 +1458,15 @@ function commuta(entita, acceso, states) {
       continue;
     }
     const dominio = entity.split(".")[0];
+    const modo = clean(prima?.[entity]).toLowerCase();
+    if (acceso && dominio === "climate" && CLIMA_ACCESO.test(modo)) {
+      chiamaServizio({
+        domain: "climate",
+        service: "set_hvac_mode",
+        data: { entity_id: entity, hvac_mode: modo },
+      });
+      continue;
+    }
     chiamaServizio({
       domain: dominio,
       service: acceso ? "turn_on" : "turn_off",
@@ -1436,62 +1475,84 @@ function commuta(entita, acceso, states) {
   }
 }
 
-/* Il timer che fa sparire la domanda o l'annulla quando scade. Uno solo: i due
- * veli non convivono, e due timer vorrebbero dire due risvegli a rimuovere
- * ognuno il velo dell'altro. */
-function fraQuanto(quanto) {
-  root.clearTimeout?.(state.sveglia);
-  state.sveglia = root.setTimeout?.(() => {
-    state.sveglia = 0;
-    state.signature = "";
-    schedule();
-  }, quanto + 40);
-}
-
 /* «Spengo 3 luci?»: il tocco chiede, non fa.
  *
  * «Una tessera che finora si toccava per ENTRARE diventa una tessera con sette
  * bersagli dentro, e il tocco sbagliato spegne le luci a chi voleva solo
  * guardare.» La domanda e' la risposta a quel rischio, e costa un tocco in
- * piu' solo a chi voleva spegnere davvero. */
-function chiediDiSpegnere(stanza, chiave) {
-  state.annulla = null;
-  state.chiesta = { stanza, chiave, fino: Date.now() + QUANTO_DURA_LA_DOMANDA };
-  root.navigator?.vibrate?.(8);
-  fraQuanto(QUANTO_DURA_LA_DOMANDA);
-  state.signature = "";
-  schedule();
+ * piu' solo a chi voleva spegnere davvero.
+ *
+ * Le stanze si spengono da fuori in due posti: l'elenco di questa pagina e le
+ * card delle stanze in Home. Ognuno ha il suo stato — una domanda aperta in
+ * Home non e' una domanda aperta qui — ma chiedere, spegnere e rimettere sono
+ * la stessa cosa, e stanno scritti una volta sola: due copie della stessa
+ * regola diventano due regole al primo ritocco.
+ *
+ * `stato` porta `chiesta`, `annulla` e `sveglia`; `ridisegna` e' come quel
+ * posto si ridipinge. */
+export function spegnereDaFuori(stato, ridisegna) {
+  /* Il timer che fa sparire la domanda o l'annulla quando scade. Uno solo: i
+   * due veli non convivono, e due timer vorrebbero dire due risvegli a
+   * rimuovere ognuno il velo dell'altro. */
+  const fraQuanto = (quanto) => {
+    root.clearTimeout?.(stato.sveglia);
+    stato.sveglia = root.setTimeout?.(() => {
+      stato.sveglia = 0;
+      ridisegna();
+    }, quanto + 40);
+  };
+  return {
+    chiedi(stanza, chiave) {
+      stato.annulla = null;
+      stato.chiesta = { stanza, chiave, fino: Date.now() + QUANTO_DURA_LA_DOMANDA };
+      root.navigator?.vibrate?.(8);
+      fraQuanto(QUANTO_DURA_LA_DOMANDA);
+      ridisegna();
+    },
+    /* Il no: la domanda se ne va, e non succede niente. */
+    lascia() {
+      stato.chiesta = null;
+      root.clearTimeout?.(stato.sveglia);
+      stato.sveglia = 0;
+      ridisegna();
+    },
+    spegni(stanza, chiave) {
+      const states = allStates();
+      const pagina = pickRoomPage(roomPages(), stanza);
+      const entita = cosaSiSpegne(pagina, chiave, states);
+      /* Com'era ognuna prima del comando: al clima serve per tornare nel suo
+       * modo, e alle altre non costa niente. */
+      const prima = Object.fromEntries(entita.map((entity) => [entity, statoDi(entity, states)]));
+      commuta(entita, false, states);
+      root.navigator?.vibrate?.(15);
+      stato.chiesta = null;
+      /* L'annulla si ricorda COSA ha spento, non «rimetti com'era»: rimettere
+       * com'era vorrebbe dire uno scatto di tutta la stanza, e in mezzo secondo
+       * la casa e' gia' cambiata da sola. Queste sono le entita' che ha toccato
+       * lui, e sono le sole che deve rimettere a posto. */
+      stato.annulla = { stanza, chiave, entita, prima, fino: Date.now() + QUANTO_DURA_L_ANNULLA };
+      fraQuanto(QUANTO_DURA_L_ANNULLA);
+      ridisegna();
+    },
+    rimetti() {
+      const annulla = stato.annulla;
+      stato.annulla = null;
+      root.clearTimeout?.(stato.sveglia);
+      stato.sveglia = 0;
+      if (annulla?.entita?.length) {
+        commuta(annulla.entita, true, allStates(), annulla.prima);
+        root.navigator?.vibrate?.(8);
+      }
+      ridisegna();
+    },
+  };
 }
 
-function spegniDavvero(stanza, chiave) {
-  const states = allStates();
-  const pagina = pickRoomPage(roomPages(), stanza);
-  const entita = cosaSiSpegne(pagina, chiave, states);
-  commuta(entita, false, states);
-  root.navigator?.vibrate?.(15);
-  state.chiesta = null;
-  /* L'annulla si ricorda COSA ha spento, non «rimetti com'era»: rimettere
-   * com'era vorrebbe dire uno scatto di tutta la stanza, e in mezzo secondo
-   * la casa e' gia' cambiata da sola. Queste sono le entita' che ha toccato
-   * lui, e sono le sole che deve rimettere a posto. */
-  state.annulla = { stanza, chiave, entita, fino: Date.now() + QUANTO_DURA_L_ANNULLA };
-  fraQuanto(QUANTO_DURA_L_ANNULLA);
+/* La domanda e l'annulla di questa pagina. */
+const velo = spegnereDaFuori(state, () => {
   state.signature = "";
   schedule();
-}
-
-function riaccendi() {
-  const annulla = state.annulla;
-  state.annulla = null;
-  root.clearTimeout?.(state.sveglia);
-  state.sveglia = 0;
-  if (annulla?.entita?.length) {
-    commuta(annulla.entita, true, allStates());
-    root.navigator?.vibrate?.(8);
-  }
-  state.signature = "";
-  schedule();
-}
+});
 
 function runScene(on) {
   const states = allStates();
@@ -1618,7 +1679,7 @@ function handleClick(event) {
   if (spegni) {
     event.preventDefault();
     event.stopPropagation();
-    chiediDiSpegnere(
+    velo.chiedi(
       clean(spegni.closest("[data-dm-stanza]")?.dataset.dmStanza),
       clean(spegni.dataset.dmStanzaSpegni),
     );
@@ -1628,7 +1689,7 @@ function handleClick(event) {
   if (conferma) {
     event.preventDefault();
     event.stopPropagation();
-    spegniDavvero(
+    velo.spegni(
       clean(conferma.closest("[data-dm-stanza]")?.dataset.dmStanza),
       clean(conferma.dataset.dmStanzaConferma),
     );
@@ -1637,7 +1698,7 @@ function handleClick(event) {
   if (event.target?.closest?.("[data-dm-stanza-annulla]")) {
     event.preventDefault();
     event.stopPropagation();
-    riaccendi();
+    velo.rimetti();
     return;
   }
   /* Le altre pastiglie non comandano: il tocco scivola sulla tessera, che

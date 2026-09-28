@@ -36,6 +36,28 @@ appare nei widget della home»: e infatti non c'era. Adesso la tessera dice
 quanti sono e cosa vogliono adesso — la ciotola, l'acqua, la lettiera — si
 ordina e si spegne come le altre, e da lì si apre la sezione.
 
+**Le stanze in Home si spengono senza entrarci.** «Nelle stanze della home dove
+compare la lucina quando sono accese le luci, si può spegnere tutto senza
+entrare nella stanza?» Adesso sì. In fondo alla card di ogni stanza ci sono i
+tasti di quello che è acceso e si può spegnere — le luci, le prese, il clima —
+col numero di quante cose spegne ognuno. Il tocco chiede prima di fare
+(«Spegni 2 luci?»), e dopo resta per cinque secondi il modo di tornare
+indietro. Il resto della card porta dentro la stanza, come prima.
+
+**E la card è nuova.** È una tessera come quelle dei widget che le stanno
+sopra: il disegno della stanza, il nome, i gradi grandi, e sotto a parole
+quello che è acceso ma non ha un tasto — «Tapparelle · Musica». Si accende di
+giallo quando è accesa la luce, che è la cosa che si guarda da fuori.
+
+**Il clima si spegne da fuori anche nella pagina Stanze**, come le luci e le
+prese. E chi annulla lo ritrova nel modo in cui era — un condizionatore spento
+mentre raffrescava torna a raffrescare, non a quello che sceglie
+l'integrazione.
+
+**Una luce chiusa col lucchetto non entra più nel conto di quello che si
+spegne.** Il comando se lo rifiutava già, ma la domanda diceva «Spengo 2 luci?»
+e se ne spegneva una.
+
 ## 1.7.0
 
 **gdahome Premium esiste nel codice, e resta spento.** Fin qui era un progetto

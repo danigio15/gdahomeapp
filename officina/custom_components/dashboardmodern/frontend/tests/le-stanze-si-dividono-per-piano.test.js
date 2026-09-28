@@ -152,11 +152,43 @@ test("quali pastiglie comandano, e quali portano dentro", () => {
   const per = new Map(PASTIGLIE_DELLA_STANZA.map((voce) => [voce.chiave, voce.comanda]));
   assert.equal(per.get("luci"), "spegni");
   assert.equal(per.get("prese"), "spegni");
+  /* Il clima si spegne da fuori come la luce: «spegnere tutto senza entrare
+   * nella stanza», e un condizionatore dimenticato costa più di una lampadina. */
+  assert.equal(per.get("clima"), "spegni");
   /* I gradi non sono un interruttore, una finestra non si chiude da una
    * pastiglia, e un avviso si guarda — non si spegne. */
-  for (const chiave of ["gradi", "clima", "finestre", "porte", "mute"])
+  for (const chiave of ["gradi", "finestre", "porte", "mute"])
     assert.equal(per.get(chiave), "entra", `«${chiave}» non deve comandare`);
   assert.equal(new Set(per.values()).size, 2, "non esiste una terza risposta");
+});
+
+test("il clima spento da fuori torna nel suo modo, non in uno qualunque", () => {
+  /* `climate.turn_on` accende nel modo che sceglie l'integrazione: un
+   * condizionatore spento mentre raffrescava tornerebbe magari a scaldare.
+   * L'annulla si ricorda com'era e rimette quello. */
+  const sezione = leggi("sections/rooms-page-section.js");
+  assert.match(sezione, /const acceso = chiave === "clima" \? CLIMA_ACCESO : SI_COMANDA_ACCESO;/);
+  assert.match(
+    sezione,
+    /const prima = Object\.fromEntries\(entita\.map\(\(entity\) => \[entity, statoDi\(entity, states\)\]\)\);/,
+  );
+  assert.match(sezione, /service: "set_hvac_mode",\s*data: \{ entity_id: entity, hvac_mode: modo \}/);
+  assert.match(sezione, /commuta\(annulla\.entita, true, allStates\(\), annulla\.prima\);/);
+});
+
+test("la domanda e l'annulla sono una regola sola, per la pagina e per la Home", () => {
+  /* Le stanze si spengono da fuori in due posti. Ognuno ha il suo stato, ma
+   * chiedere, spegnere e rimettere sono scritti una volta: due copie della
+   * stessa regola diventano due regole al primo ritocco. */
+  const sezione = leggi("sections/rooms-page-section.js");
+  assert.match(sezione, /export function spegnereDaFuori\(stato, ridisegna\)/);
+  assert.match(sezione, /const velo = spegnereDaFuori\(state, /);
+  const home = leggi("sections/stanze-in-plancia-section.js");
+  assert.match(home, /spegnereDaFuori\(state, /);
+  /* E le parole della domanda sono le stesse: «il clima» non si conta, perché
+   * dentro ci stanno il condizionatore e il termostato dei termosifoni. */
+  assert.match(sezione, /if \(chiave === "clima"\) return t\("il clima", "Climate"\);/);
+  assert.match(home, /cosaSiSpegneAParole\(/);
 });
 
 /* ── il piano, in una riga ──────────────────────────────────────────────── */
