@@ -160,6 +160,8 @@ import { installCitofono } from "./citofono-section.js";
 import { installCitofonoEditor } from "./citofono-editor-section.js";
 import { installStampanti } from "./stampanti-section.js";
 import { installStampantiEditor } from "./stampanti-editor-section.js";
+import { installContatori } from "./contatori-section.js";
+import { installContatoriEditor } from "./contatori-editor-section.js";
 import { installMacchine } from "./macchine-e-rete-section.js";
 import { installMacchineEditor } from "./macchine-editor-section.js";
 import { installNodiSection } from "./nodi-section.js";
@@ -1140,6 +1142,11 @@ export function installSectionRuntime() {
     installCitofonoEditor();
     installStampanti();
     installStampantiEditor();
+    /* L'acqua e il gas (#115, #135, #137): una pagina e una scheda, come le
+     * altre nate a runtime. La pagina prima della scheda, cosi' la scheda
+     * trova gia' cosa ridisegnare quando salva. */
+    installContatori();
+    installContatoriEditor();
     installMacchine();
     installMacchineEditor();
     installNodiSection();
@@ -1267,6 +1274,8 @@ export function installSectionRuntime() {
         "presenza-editor",
         "stampanti",
         "stampanti-editor",
+        "contatori",
+        "contatori-editor",
         "macchine-e-rete",
         "macchine-editor",
       ]),

@@ -275,7 +275,14 @@
  * vetro: chi telecamere non ne ha non le vuole vedere ne' sul tablet in cucina
  * ne' sul telefono, e lasciarla su un dispositivo solo vorrebbe dire
  * rispegnerla su ognuno. */
-export const CONFIG_KEYS_REVISION = 55;
+/* La revisione 56 aggiunge i contatori dell'acqua e del gas (`cd_contatori`,
+ * #115, #135, #137): quali sensori, cosa misura ognuno, i prezzi al metro
+ * cubo, il coefficiente del gas e la forcella della pressione. Sono della
+ * CASA: il prezzo dell'acqua scritto dal telefono deve essere quello che il
+ * tablet in cucina moltiplica, e una perdita detta su un vetro e taciuta
+ * sull'altro — perche' solo uno dei due sa quale sensore guardare — e' proprio
+ * il danno che questa sezione esiste per evitare. */
+export const CONFIG_KEYS_REVISION = 56;
 
 // Complete shared dashboard configuration snapshot. Runtime counters/timers and
 // true per-device preferences (connection credentials, theme/navbar mode) stay
@@ -549,4 +556,7 @@ export const CONFIG_KEYS = Object.freeze([
   /* E se il riquadro delle telecamere si veda affatto (#113): la ragione per
    * cui sta qui e' scritta accanto alla revisione 55. */
   "cd_telecamere_in_sicurezza",
+  /* I contatori dell'acqua e del gas (#115, #135, #137): la ragione per cui
+   * stanno qui e' scritta accanto alla revisione 56. */
+  "cd_contatori",
 ]);

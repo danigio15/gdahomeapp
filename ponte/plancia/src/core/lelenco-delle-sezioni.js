@@ -123,6 +123,15 @@ export const SEZIONI = Object.freeze(
     },
     { scheda: "media", chiave: "media", glifo: "🎵", it: "Musica", en: "Music" },
     { scheda: "batterie", chiave: "batterie", glifo: "🔋", it: "Batterie", en: "Batteries" },
+    /* L'acqua e il gas (#115, #135, #137): i contatori, la pressione, la
+     * portata e il sale. */
+    {
+      scheda: "contatori",
+      chiave: "contatori",
+      glifo: "💧",
+      it: "Acqua e gas",
+      en: "Water and gas",
+    },
     /* Le sezioni che uno si fa da se' non hanno UNA pagina: ne hanno una per
      * sezione creata, e ognuna si porta il simbolo che l'utente ha scelto. La
      * scheda del Config invece e' una sola, ed e' quella. */

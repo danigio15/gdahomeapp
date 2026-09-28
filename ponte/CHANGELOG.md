@@ -58,6 +58,33 @@ l'integrazione.
 spegne.** Il comando se lo rifiutava già, ma la domanda diceva «Spengo 2 luci?»
 e se ne spegneva una.
 
+**L'acqua e il gas hanno la loro sezione.** Tre richieste, la stessa cosa:
+«manca una sezione per monitorare portata e pressione dell'impianto idrico di
+casa, magari anche l'addolcitore per vedere il livello del sale», «sezioni come
+consumi e contatore acqua e energia gas», «una sezione consumo gas». Adesso c'è
+«Acqua e gas»: in cima quanta acqua si è usata oggi, poi la pressione sulla sua
+forcella — la stessa barra del pH della piscina — la portata, i giorni di sale
+che restano all'addolcitore, e il gas di oggi e del mese in metri cubi, in
+kilowattora e in euro. I numeri li dà il Recorder di Home Assistant, e ogni
+mese si confronta col mese prima.
+
+**E se l'acqua non si ferma mai, lo dice in rosso.** Una casa usa l'acqua a
+colpi — la doccia, la lavatrice, lo sciacquone — e fra un colpo e l'altro la
+portata torna a zero. Quando resta sopra zero per tre ore di fila è una
+perdita: la pagina lo scrive grande («Scorre da 3 ore»), aggiunge se in casa
+non c'è nessuno, e diventa l'elenco a semaforo dei Varchi, un contatore per
+riga. Chi non ha il sensore di portata ha lo stesso controllo dal contatore:
+un giorno intero senza un'ora ferma. La tessera in Home si accende di rosso
+con le stesse parole.
+
+**Si configura come le altre schede.** Nel Config, famiglia «Clima e acqua»,
+ogni riga è un sensore con il suo nome, il disegno e cosa misura; il prezzo
+dell'acqua e del gas, il coefficiente della bolletta e la forcella della
+pressione stanno dentro la riga a cui servono. La prima apertura della scheda
+prende i contatori che Home Assistant dichiara; la sezione compare nella barra
+solo quando ha almeno una riga. Il catalogo dei disegni ha tre oggetti nuovi:
+il contatore, il manometro e la fiamma del gas.
+
 ## 1.7.0
 
 **gdahome Premium esiste nel codice, e resta spento.** Fin qui era un progetto

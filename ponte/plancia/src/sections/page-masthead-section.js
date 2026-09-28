@@ -227,6 +227,15 @@ const PAGES = Object.freeze([
    * intestazione: niente titolo, niente tasto per tornare a casa, e la voce
    * della barra che intanto nasconde la testata del guscio. Si vede subito
    * aprendola, e non si vede affatto scrivendola. */
+  /* Acqua e gas, dalle segnalazioni #115, #135 e #137. Il nome non dice
+   * «Contatori» perché in Energia i contatori sono già quelli della corrente:
+   * due voci con lo stesso nome mandano a cercare nel posto sbagliato. */
+  {
+    id: "page-contatori",
+    tint: ["14,165,233", "234,88,12"],
+    it: ["Acqua e gas", "Contatori · Oggi e il mese"],
+    en: ["Water and gas", "Meters · Today and this month"],
+  },
   {
     id: "page-batterie",
     tint: ["34,197,94", "234,179,8"],

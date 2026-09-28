@@ -194,6 +194,7 @@ import {
   vistaAnimale,
 } from "../core/animali-model.js";
 import { parolaAvviso, testoLettura } from "./animali-section.js";
+import { EVENTO_CONTATORI, tesseraDeiContatori, vistaDeiContatori } from "./contatori-section.js";
 import { disegnoDelBidone } from "../core/disegni-rifiuti.js";
 import { CHIAVE_VMC, entitaDellaVmc, letturaVmc, vmcDisegnabili, vmcParla } from "../core/vmc-model.js";
 import { avvisiAppenaAccesi } from "../core/avvisi-che-si-aprono.js";
@@ -5497,6 +5498,21 @@ export function animaliModel(states) {
   };
 }
 
+/* L'acqua e il gas (#115, #135, #137).
+ *
+ * «Manca una sezione per monitorare portata e pressione dell'impianto idrico
+ * di casa.» La tessera dice l'acqua di oggi — o il gas, per chi ha solo quello
+ * — e quando una perdita c'è lo dice in rosso, con le parole della pagina. Le
+ * parole e i numeri li fa la sezione: qui si toglie quello che l'interruttore
+ * «nel widget» ha spento, come per le altre tessere, prima di leggere. */
+function contatoriModel(states) {
+  const fuori = widgetExcludedEntities("contatori");
+  const tessera = tesseraDeiContatori(
+    vistaDeiContatori(states, { dentro: (entity) => widgetIncludes(entity, fuori) }),
+  );
+  return tessera && { ...tessera, key: "contatori" };
+}
+
 /* La ventilazione meccanica (#371).
  *
  * La tessera dice la cosa che si guarda passando: a che temperatura sta
@@ -5609,6 +5625,7 @@ export function modelliDelleTessere(states) {
       animaliModel(states),
       vmcModel(states),
       irrigationModel(states),
+      contatoriModel(states),
       batteriesModel(states),
       floodModel(states),
       fumoModel(states),
@@ -7756,6 +7773,8 @@ const SEZIONE_DEL_WIDGET = Object.freeze({
   allerte: "allerte",
   rifiuti: "rifiuti",
   animali: "animali",
+  /* L'acqua e il gas (#115, #135, #137) hanno la loro pagina. */
+  contatori: "contatori",
   /* La ventilazione vive nella pagina del Clima: la tessera ci porta li'. */
   vmc: "clima",
   media: "media",
@@ -10771,6 +10790,9 @@ export function installHomeWidgetsSection() {
        tessera «Server e rete» conta solo quelle delle integrazioni scelte, e
        prima di quella risposta non ne conta nessuna. */
     EVENTO_PIATTAFORME,
+    /* I consumi dell'acqua e del gas arrivano dal Recorder, dopo che la Home
+       si e' gia' disegnata: la tessera va rifatta quando atterrano. */
+    EVENTO_CONTATORI,
     /* La chat di assistenza dice quando ha una risposta da leggere, e quando
        e' stata letta: la sua tessera compare e sparisce con quello. */
     "dashboardmodern:chat-stato",

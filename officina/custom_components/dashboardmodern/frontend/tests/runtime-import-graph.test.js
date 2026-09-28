@@ -1473,8 +1473,15 @@ test("production graph is single-owner, acyclic and contains no facade pass-thro
   // CAMBI e non i campioni, e una sosta breve non apre un ciclo nuovo — sono
   // decisioni pure, e stanno qui perche' e' l'unico modo di provarle senza una
   // lavatrice accesa e un Recorder in ascolto.
+  // 400, 401 e 402 con l'acqua e il gas (#115, #135, #137): il nucleo
+  // `core/contatori-di-casa.js`, la pagina `sections/contatori-section.js` e la
+  // sua scheda `sections/contatori-editor-section.js`. Tre richieste — la
+  // portata e la pressione, il contatore dell'acqua, il consumo del gas — e una
+  // pagina sola. Il nucleo sta da parte perche' le decisioni che contano sono
+  // pure e si provano a tavolino: da quando l'acqua scorre senza fermarsi, i
+  // giorni di sale che restano, oggi e il mese dai secchielli del Recorder.
   assert.ok(
-    relative.length <= 399,
+    relative.length <= 402,
     `production graph unexpectedly grew to ${relative.length} modules`,
   );
   assertAcyclic(edges);

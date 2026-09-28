@@ -142,6 +142,9 @@ function catalogoTessere() {
      * entrando l'aria e quanto la macchina se n'e' ripreso, e porta alla
      * pagina del Clima, dove le quattro temperature stanno incrociate. */
     ["vmc", "🔄", t("Ventilazione", "Ventilation")],
+    /* L'acqua e il gas (#115, #135, #137): l'acqua di oggi, e la perdita in
+     * rosso quando c'è. Compare quando la sua scheda ha una riga. */
+    ["contatori", "💧", t("Acqua e gas", "Water and gas")],
     ["batterie", "🔋", t("Batterie", "Batteries")],
     ["allagamenti", "💧", t("Allagamenti", "Floods")],
     /* Fumo e gas (#328): compare da sola coi rilevatori di casa, come gli

@@ -196,6 +196,8 @@ export const TESSERE_PER_SCHEDA = Object.freeze({
    * e l'interruttore accanto e' quello della sua sezione. */
   citofono: "citofono",
   allerte: "allerte",
+  /* L'acqua e il gas (#115, #135, #137): la scheda parla di una tessera sola. */
+  contatori: "contatori",
 });
 
 /**

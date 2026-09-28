@@ -873,6 +873,29 @@ const OGGETTI = Object.freeze({
     <path d="M8.2 14.8a4.4 4.4 0 0 1 3.4-4.4" stroke="#fff" stroke-opacity=".55" stroke-width="1.4"
       fill="none" stroke-linecap="round"/>`,
 
+  /* I contatori di casa (#115, #135, #137): il contatore d'ottone con la
+   * finestra delle cifre e la goccia. Non è l'umidità — quella è una goccia
+   * dentro un quadrante di tacche — ma il contatore che si legge in cantina,
+   * coi due tubi che entrano ed escono. */
+  contatori: `<defs>
+      <linearGradient id="dmoContO" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#fde68a"/><stop offset=".55" stop-color="#d4a017"/>
+        <stop offset="1" stop-color="#92400e"/></linearGradient>
+      <linearGradient id="dmoContA" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#bae6fd"/><stop offset=".5" stop-color="#0ea5e9"/>
+        <stop offset="1" stop-color="#0369a1"/></linearGradient></defs>
+    ${OMBRA(16, 29, 9)}
+    <rect x="1.6" y="13.4" width="5" height="5.2" rx="1.2" fill="#94a3b8"/>
+    <rect x="25.4" y="13.4" width="5" height="5.2" rx="1.2" fill="#94a3b8"/>
+    <circle cx="16" cy="16" r="10.8" fill="url(#dmoContO)"/>
+    <circle cx="16" cy="16" r="8.4" fill="#f8fafc"/>
+    <rect x="10.4" y="10.6" width="11.2" height="4" rx="1" fill="#0f172a"/>
+    <path d="M13.2 11.4v2.4M16 11.4v2.4" stroke="#fff" stroke-width=".9" stroke-linecap="round"/>
+    <rect x="18.2" y="11.2" width="2.8" height="2.8" rx=".6" fill="#dc2626"/>
+    <path d="M16 16.6c1.7 2 2.9 3.4 2.9 4.7a2.9 2.9 0 1 1-5.8 0c0-1.3 1.2-2.7 2.9-4.7Z" fill="url(#dmoContA)"/>
+    <path d="M9.6 10.8a8.6 8.6 0 0 1 4-3.6" stroke="#fff" stroke-opacity=".85" stroke-width="1.4"
+      fill="none" stroke-linecap="round"/>`,
+
   /* L'umidita': il quadrante dell'igrometro con la goccia dentro. Non e' la
    * goccia degli allagamenti — quella e' l'acqua dov'e' finita, questa e'
    * l'acqua che si misura — e sta accanto al termometro, con cui divide la
