@@ -254,9 +254,12 @@ test("le domande passano dal ponte, le previsioni solo per chi sta fuori, e non 
 
 test("la scheda nel Config: la spunta «all'aperto» è per pianta, e spenta di serie", () => {
   assert.match(scheda, /costruisciSchedaDichiarata\(\{/);
+  /* La casella come quella di «Si vede ma non si comanda» delle Luci e delle
+   * Prese: il titolo sopra come gli altri campi, la spiegazione accanto. */
+  assert.match(scheda, /<label class="ed-slot dm-pian-fuori">/);
   assert.match(
     scheda,
-    /<label class="ed-check dm-pian-fuori"><input type="checkbox" data-dm-dich-campo="fuori"/,
+    /<span class="ed-form-row dm-solo-lettura-riga"><input type="checkbox" data-dm-dich-campo="fuori"/,
   );
   assert.match(scheda, /\$\{fuori \? " checked" : ""\}/);
   assert.match(scheda, /const fuori = riga\.fuori === true \|\|/);

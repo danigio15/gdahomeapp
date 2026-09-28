@@ -82,15 +82,16 @@ function campiDellaPianta(riga, indice) {
       t("Troppa acqua sopra il (%)", "Too wet above (%)"),
       String(TERRA_ZUPPA),
     )}
-    <label class="ed-check dm-pian-fuori"><input type="checkbox" data-dm-dich-campo="fuori"
-      data-dm-dich-riga="${indice}"${fuori ? " checked" : ""}> ${esc(
-        t("All'aperto: se sta per piovere, aspetta", "Outdoors: if rain is coming, wait"),
-      )}<small>${esc(
-        t(
-          "Quando la terra è asciutta ma il meteo di casa prevede pioggia nelle prossime ore, la pianta aspetta invece di chiedere acqua. Solo per chi la pioggia la prende davvero.",
-          "When the soil is dry but the home weather forecasts rain in the next hours, the plant waits instead of asking for water. Only for those the rain really reaches.",
-        ),
-      )}</small></label>`;
+    <label class="ed-slot dm-pian-fuori"><span class="ed-slot-lbl">${esc(
+      t("All'aperto: se sta per piovere, aspetta", "Outdoors: if rain is coming, wait"),
+    )}</span>
+      <span class="ed-form-row dm-solo-lettura-riga"><input type="checkbox" data-dm-dich-campo="fuori"
+        data-dm-dich-riga="${indice}"${fuori ? " checked" : ""}><small>${esc(
+          t(
+            "Quando la terra è asciutta ma il meteo di casa prevede pioggia nelle prossime ore, la pianta aspetta invece di chiedere acqua. Solo per chi la pioggia la prende davvero.",
+            "When the soil is dry but the home weather forecasts rain in the next hours, the plant waits instead of asking for water. Only for those the rain really reaches.",
+          ),
+        )}</small></span></label>`;
 }
 
 /* Quello che la riga aperta ha nelle sue caselle adesso. */
