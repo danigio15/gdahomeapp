@@ -1,4 +1,4 @@
-In auto c'è il traffico: su Android Auto e CarPlay il navigatore mostra le code, e agli svincoli le corsie. L'app è più veloce, soprattutto fuori casa: quando torni, la plancia è già lì.
+Il navigatore conosce le ZTL, ti chiede se hai il permesso e ti propone le strade a risparmio. Su Android Auto e CarPlay c'è il traffico, con le corsie agli svincoli. L'app è più veloce, soprattutto fuori casa.
 
 Nella plancia: la stanza diventa una tavola di comandi, le batterie di accumulo in Energia, la friggitrice negli Elettrodomestici, l'esclusione di un varco dall'antifurto.
 

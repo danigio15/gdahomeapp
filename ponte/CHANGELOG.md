@@ -20,6 +20,49 @@ Adesso ce l'ha, su Android e su iPhone: su Android Auto e su CarPlay le code si
 vedono sulla mappa, e i percorsi arrivano da TomTom, con le corsie agli
 svincoli.
 
+**Il navigatore conosce le ZTL e le aree pedonali.** «Sulle ZTL mettere se uno
+ha o meno il permesso, per escludere o includere quelle strade dal calcolo del
+navigatore.» Sulla mappa, sul telefono e in auto, la ZTL è tratteggiata di
+rosso col suo stato, per esempio «ZTL · attiva fino alle 18», e l'area pedonale
+è a puntini grigi. Il percorso gira al largo delle ZTL attive. La prima volta
+che ne attraverserebbe una, il navigatore chiede se hai il permesso e dice
+quanti minuti guadagni passandoci: con «Sì» il percorso ci passa, con «No» o
+senza risposta la evita. Se la meta è dentro, ti porta al varco. In guida, un
+avviso dice la ZTL davanti e se il percorso la evita; a voce, solo quello che
+può costare una multa. Nel menu del navigatore, in «ZTL e aree pedonali», si
+sceglie se vederle sulla mappa, si accendono gli avvisi e si cambiano i
+permessi dati, uno per ZTL. Le zone vengono da OpenStreetMap: 218 ZTL e 6.848
+aree pedonali in tutta Italia. Se un orario non si capisce, la ZTL vale come
+sempre attiva: è l'errore che non costa una multa.
+
+**Le strade a risparmio, come in ABRP.** «Se lungo il tragitto trova una strada
+energy saver, proporla come alternativa indicando quanti minuti in più o in
+meno.» Prima di partire, ogni strada proposta ha il suo nome — più rapida,
+risparmia energia, tempo simile — con la durata col traffico, i kWh (o i litri,
+per un'auto a carburante) e la batteria all'arrivo. In guida, ogni cinque
+minuti, il navigatore confronta la strada che stai facendo con le altre. Se una
+fa risparmiare almeno la soglia senza costare troppi minuti, o se con le code
+davanti fa arrivare prima, te la propone: sul telefono, su Android Auto e su
+CarPlay, con quanto risparmi, i minuti in più o in meno e la batteria
+all'arrivo. «Prendila» cambia strada; con «Resto qui», o senza risposta per
+venti secondi, quella strada non torna. Sulla mappa la strada proposta è verde,
+e una strada che entrerebbe in una ZTL attiva senza permesso non si propone. Le
+soglie si scelgono nel menu, in «Strade a risparmio».
+
+**In auto la colonnina dice il prezzo.** «Se interrogo la colonnina mi deve dare
+indicazione dei prezzi.» Su Android Auto, toccando una colonnina sulla mappa,
+la scheda dice la potenza, il gestore, le prese libere e il prezzo della
+corrente con cui quell'auto caricherebbe lì. Se il gestore il prezzo non lo
+comunica alla PUN, la scheda lo dice. Su Android Auto recente la scheda sta
+sopra la mappa, che resta ferma.
+
+**Sulla mappa ci sono tutte le colonnine, anche le lente.** Al Centro
+Direzionale di Napoli la mappa non mostrava le colonnine Plenitude da 22 kW: la
+potenza minima scelta in «Ricarica», di serie 50 kW, valeva anche per la mappa.
+Adesso la mappa e «Colonnine vicine», sul telefono, su Android Auto e su
+CarPlay, le mostrano tutte. La potenza minima vale solo per le soste del
+viaggio, e si chiama «Soste del viaggio (kW)».
+
 **La stanza aperta è una tavola di comandi.** «Non trovo utile questa sezione
 così com'è… è l'unica parte che uso ancora della mia plancia vecchia.» La
 stanza era un elenco diviso per tipo, e per comandare quasi tutto bisognava
@@ -120,7 +163,9 @@ lentissimo.»
 
 **In auto anche senza aprire l'app.** «Se non si apre l'app non lega il GPS e
 non legge i dati auto.» Su Android Auto il navigatore riceve la posizione e i
-dati dell'auto anche col telefono in tasca e l'app chiusa. E il lucchetto
+dati dell'auto anche col telefono in tasca e l'app chiusa. Mentre il navigatore
+è sullo schermo dell'auto, sul telefono c'è una notifica silenziosa: è quella
+che tiene accesa la posizione. E il lucchetto
 «all'avvio», se l'hai acceso, adesso chiede anche quando riapri l'app dopo
 averla chiusa.
 
