@@ -138,6 +138,37 @@ livello, luci, filtro, riscaldatore — e la sua forcella o la sua soglia. La
 prima apertura prende le entità che nel nome hanno acquario, reef o pesci. Il
 catalogo ha un disegno nuovo: l'acquario.
 
+**La TV ha il suo telecomando.** «Sarebbe possibile usarle anche qua per
+spegnerle, accenderle ed usare il loro telecomando virtuale se disponibile?»
+Accendere e spegnere è uscito nella 1.6.8; adesso c'è l'altra metà. Nella
+pagina Musica, sotto la scheda di una TV accesa, ci sono la croce con OK in
+mezzo e, sotto, indietro, la schermata iniziale, il menu e i canali: gli
+stessi tasti quadrati della scheda, con OK del colore del tasto in mezzo. Da
+spenta il telecomando non c'è, e per accenderla c'è già il tasto.
+
+**Ogni tasto ha il nome che gli dà la sua integrazione.** Home Assistant non
+dice quali tasti sa ricevere una TV, e un nome sbagliato non dà errore: non fa
+niente. Quindi la plancia chiede al registro di che integrazione è la TV, e
+conosce i tasti di Samsung (integrazione Samsung Smart TV), LG webOS, Sony
+Bravia, Philips, Android TV e Google TV, Apple TV e Roku. Per ognuna ci sono
+solo quelli che l'integrazione documenta: su Apple TV i canali non ci sono, e
+non compaiono. Un'integrazione che la plancia non conosce non ha telecomando.
+LG un'entità `remote` non ce l'ha: i tasti li prende la TV con
+`webostv.button`, e il ponte adesso lo lascia passare a tutti. Solo quello:
+`webostv.command` resta a chi amministra.
+
+**E il volume a passi.** Quasi tutte le TV il volume lo sanno solo alzare e
+abbassare, e la scheda guardava solo il cursore: adesso chi il cursore non ce
+l'ha trova − e +.
+
+**Si configura dove si configura la TV**: in Config → Musica, nella riga del
+lettore, la casella «Telecomando» con l'entità `remote.*`. Chi aggiunge la TV
+dal menu delle integrazioni se la trova già scritta, e il telecomando che
+porta il nome della TV e viene dalla stessa integrazione si trova da solo.
+Sotto la casella la scheda dice cosa ne verrà fuori — «Samsung Smart TV: le
+frecce, OK e gli altri tasti compaiono sotto la scheda, a TV accesa» — o
+perché non comparirà niente.
+
 ## 1.7.0
 
 **gdahome Premium esiste nel codice, e resta spento.** Fin qui era un progetto

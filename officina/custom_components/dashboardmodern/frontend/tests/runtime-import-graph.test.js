@@ -1493,8 +1493,11 @@ test("production graph is single-owner, acyclic and contains no facade pass-thro
   // `core/l-acquario-di-casa.js` con le forcelle, il rabbocco e il cambio
   // d'acqua, la pagina `sections/acquario-section.js` e la sua scheda
   // `sections/acquario-editor-section.js`.
+  // 411 col telecomando della TV (#132): `core/telecomando.js`, i nomi dei
+  // tasti integrazione per integrazione. La pagina e la scheda sono quelle
+  // della Musica, che c'erano già.
   assert.ok(
-    relative.length <= 410,
+    relative.length <= 411,
     `production graph unexpectedly grew to ${relative.length} modules`,
   );
   assertAcyclic(edges);

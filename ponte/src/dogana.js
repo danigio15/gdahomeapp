@@ -206,6 +206,12 @@ const DOMINI_PER_TUTTI = new Map([
   ["script", true],
   ["automation", new Set(["trigger", "turn_on", "turn_off", "toggle"])],
   ["remote", true],
+  /* Il telecomando di una TV LG (#132): webOS un'entita' `remote` non ce l'ha,
+   * e i tasti li prende il televisore con `webostv.button` — la stessa cosa
+   * che `remote.send_command` fa per le altre. `webostv.command` no: manda
+   * alla TV qualunque richiesta del suo sistema, e quello e' per chi
+   * amministra. */
+  ["webostv", new Set(["button"])],
   ["timer", true],
   ["counter", true],
   ["todo", true],

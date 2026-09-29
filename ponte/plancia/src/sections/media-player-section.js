@@ -39,6 +39,16 @@ import {
 import { comandoDelDispositivo } from "../core/comandi-accanto.js";
 import { disegnoDelCatalogo } from "../core/catalogo-disegni.js";
 import { oggettoWidget } from "../core/oggetti-widget.js";
+import {
+  comandoDelTelecomando,
+  entitaDaRiconoscere,
+  tastiDelTelecomando,
+} from "../core/telecomando.js";
+import {
+  EVENTO_PIATTAFORME,
+  piattaformeConosciute,
+  scopriLePiattaforme,
+} from "./di-chi-e-unentita-section.js";
 import { registraPaginaARuntime, renderPageMastheads } from "./page-masthead-section.js";
 import {
   activeLocale,
@@ -81,7 +91,52 @@ function funzioneAccesa() {
 }
 
 function letture() {
-  return lettureDeiLettori(configurazione(), allStates(), root.resolveEntity || ((v) => v));
+  return lettureDeiLettori(
+    configurazione(),
+    allStates(),
+    root.resolveEntity || ((v) => v),
+    piattaformeConosciute(),
+  );
+}
+
+/* Di che integrazione sono le TV e i loro telecomandi (#132).
+ *
+ * Il nome dei tasti lo decide l'integrazione, e lo stato di un'entità non la
+ * dice: la sa il registro di Home Assistant, e la domanda è quella che la
+ * pagina Server fa già per le sue macchine — una volta per entità, e la
+ * risposta si tiene. Qui si chiedono solo i lettori e i loro telecomandi.
+ *
+ * E si chiedono solo quando Home Assistant li ha già mandati: prima degli
+ * stati la presa non è ancora aperta, e la domanda cadrebbe nel vuoto. Chi
+ * non ha avuto risposta si richiede non prima di un minuto: un filo che cade
+ * non deve diventare una domanda a ogni cambio di stato della casa. */
+const RICHIEDI_DOPO_MS = 60 * 1000;
+
+function imparaLeTv(voci) {
+  const chieste = (state.chieste ||= new Map());
+  const conosciute = piattaformeConosciute();
+  const states = allStates();
+  const adesso = Date.now();
+  const risolvi = (valore) => {
+    try {
+      return clean(root.resolveEntity?.(valore) || valore);
+    } catch (_errore) {
+      return clean(valore);
+    }
+  };
+  const risolte = voci.map((voce) => ({
+    entity: risolvi(voce?.entity),
+    telecomando: voce?.telecomando ? risolvi(voce.telecomando) : "",
+  }));
+  const mancanti = entitaDaRiconoscere(risolte, states).filter(
+    (entity) =>
+      states?.[entity] &&
+      !(entity in conosciute) &&
+      adesso - (chieste.get(entity) || 0) > RICHIEDI_DOPO_MS,
+  );
+  if (!mancanti.length) return;
+  for (const entity of mancanti) chieste.set(entity, adesso);
+  scopriLePiattaforme(mancanti);
 }
 
 /* ── la pagina e la sua voce nella barra ──────────────────────────────── */
@@ -206,6 +261,17 @@ const GLIFI = Object.freeze({
    * raccolte — una scaletta — e non la lente della ricerca, perche' qui non si
    * cerca per nome: si scende dentro quello che il lettore ha da offrire. */
   sfoglia: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.4 6.6h11.2M4.4 11h11.2M4.4 15.4h6.4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M19.4 8.6v7.1" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="17.5" cy="16.4" r="2" fill="currentColor"/></svg>`,
+  /* Il volume un passo alla volta (#132): la cassa col meno e col piu'. */
+  abbassa: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.6 9.4H7L11.6 5.2v13.6L7 14.6H3.6Z" fill="currentColor"/><path d="M15 12h5.4" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"/></svg>`,
+  alza: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.6 9.4H7L11.6 5.2v13.6L7 14.6H3.6Z" fill="currentColor"/><path d="M15 12h5.4M17.7 9.3v5.4" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"/></svg>`,
+  /* Il telecomando (#132): le quattro frecce, indietro, la casa, il menu. */
+  su: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 14.6 12 9.1l5.5 5.5" stroke="currentColor" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+  giu: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 9.4 12 14.9l5.5-5.5" stroke="currentColor" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+  sinistra: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.6 6.5 9.1 12l5.5 5.5" stroke="currentColor" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+  destra: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9.4 6.5 14.9 12l-5.5 5.5" stroke="currentColor" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+  indietro: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5.6 4.6 10 9 14.4" stroke="currentColor" stroke-width="2.1" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.2 10h9.3a4.9 4.9 0 0 1 0 9.8H11" stroke="currentColor" stroke-width="2.1" fill="none" stroke-linecap="round"/></svg>`,
+  home: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.4 11.4 12 4.9l7.6 6.5" stroke="currentColor" stroke-width="2.1" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M6.8 9.8v9.3h10.4V9.8" stroke="currentColor" stroke-width="2.1" fill="none" stroke-linejoin="round"/><path d="M10.3 19.1v-4.6h3.4v4.6" stroke="currentColor" stroke-width="2.1" fill="none" stroke-linejoin="round"/></svg>`,
+  menu: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h14M5 12h14M5 17h14" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>`,
 });
 
 /* I comandi di un lettore, in una riga.
@@ -267,9 +333,15 @@ function barraMarkup(riga) {
 }
 
 function volumeMarkup(riga) {
-  if (!riga.puo.volume && !riga.puo.muto) return "";
+  /* Chi il volume lo sa solo alzare e abbassare — quasi tutte le TV (#132) —
+   * ha i due tasti col meno e col piu', dove chi lo sa mettere a un numero ha
+   * il cursore. Prima non aveva niente: il passo lo dichiarava, e la scheda
+   * guardava solo il numero. Da spenta non ci sono, come il telecomando. */
+  const aPassi = riga.puo.passiVolume && !riga.puo.volume && !riga.spento && !riga.muto;
+  if (!riga.puo.volume && !riga.puo.muto && !aPassi) return "";
   const percento = Math.round((riga.volume ?? 0) * 100);
   return `<div class="dm-mp-volume">
+    ${aPassi ? tastoMarkup(riga, "abbassa", t("Abbassa il volume", "Volume down"), GLIFI.abbassa) : ""}
     ${
       riga.puo.muto
         ? tastoMarkup(
@@ -281,6 +353,7 @@ function volumeMarkup(riga) {
           )
         : ""
     }
+    ${aPassi ? tastoMarkup(riga, "alza", t("Alza il volume", "Volume up"), GLIFI.alza) : ""}
     ${
       riga.puo.volume
         ? `<input type="range" class="dm-mp-slider" min="0" max="100" step="1"
@@ -353,6 +426,65 @@ function lettureAccantoMarkup(riga) {
     .join("")}</div>`;
 }
 
+/* Il telecomando della TV (#132).
+ *
+ * «Sarebbe possibile usarle anche qua per spegnerle, accenderle ed usare il
+ * loro telecomando virtuale se disponibile?» Sta sotto la card, largo quanto
+ * lei: la croce con OK in mezzo, e sotto i tasti che una TV ha e una cassa no
+ * — indietro, la schermata iniziale, il menu, i canali. Ci sono solo quelli
+ * che l'integrazione di quella TV sa ricevere, e solo a TV accesa: il perche'
+ * sta in `core/telecomando.js`.
+ *
+ * I tasti sono quelli della card, non una famiglia nuova: gli stessi quadrati
+ * dei comandi del brano, e OK col colore del tasto in mezzo. */
+const NOMI_DEI_TASTI = Object.freeze({
+  su: () => t("Freccia su", "Arrow up"),
+  giu: () => t("Freccia giù", "Arrow down"),
+  sinistra: () => t("Freccia a sinistra", "Arrow left"),
+  destra: () => t("Freccia a destra", "Arrow right"),
+  ok: () => t("Conferma", "Confirm"),
+  indietro: () => t("Indietro", "Back"),
+  home: () => t("Schermata iniziale della TV", "TV home screen"),
+  menu: () => t("Menu della TV", "TV menu"),
+  canale_meno: () => t("Canale precedente", "Previous channel"),
+  canale_piu: () => t("Canale successivo", "Next channel"),
+});
+
+/* «OK» e «CH» si scrivono cosi' su ogni telecomando del mondo, e cosi' restano. */
+function segnoDelTasto(tasto) {
+  if (tasto === "ok") return "OK";
+  if (tasto === "canale_meno") return `<span class="dm-mp-ch">CH</span><b>−</b>`;
+  if (tasto === "canale_piu") return `<span class="dm-mp-ch">CH</span><b>+</b>`;
+  return GLIFI[tasto] || "";
+}
+
+function tastoDelTelecomando(riga, tasto) {
+  const canale = tasto === "canale_meno" || tasto === "canale_piu";
+  return `<button type="button" class="dm-mp-tasto${canale ? " dm-mp-tasto-ch" : ""}"
+    data-dm-tele="${esc(tasto)}" data-dm-tele-lettore="${esc(riga.entity)}"
+    aria-label="${esc(NOMI_DEI_TASTI[tasto]())}">${segnoDelTasto(tasto)}</button>`;
+}
+
+export function telecomandoMarkup(riga) {
+  const tasti = new Set(tastiDelTelecomando(riga?.telecomando));
+  if (!tasti.size) return "";
+  const quali = (elenco) => elenco.filter((tasto) => tasti.has(tasto));
+  const croce = quali(["su", "sinistra", "ok", "destra", "giu"]);
+  const navigare = quali(["indietro", "home", "menu"]);
+  const canali = quali(["canale_meno", "canale_piu"]);
+  const tutti = (elenco) => elenco.map((tasto) => tastoDelTelecomando(riga, tasto)).join("");
+  return `<div class="dm-mp-tele" data-dm-mp-tele="${esc(riga.entity)}">
+    ${croce.length ? `<div class="dm-mp-croce">${tutti(croce)}</div>` : ""}
+    ${
+      navigare.length || canali.length
+        ? `<div class="dm-mp-tele-fila">${tutti(navigare)}${
+            canali.length ? `<span class="dm-mp-tele-canali">${tutti(canali)}</span>` : ""
+          }</div>`
+        : ""
+    }
+  </div>`;
+}
+
 /* Cosa deve cambiare perche' una card si rifaccia.
  *
  * Sta in una funzione sola perche' le card disegnate sono due: quelle della
@@ -384,6 +516,11 @@ function firmaDelLettore(riga) {
       )
       .join("+"),
     (riga.letture || []).map((lettura) => `${lettura.entity}:${lettura.testo}`).join("+"),
+    /* Il telecomando (#132): compare quando si viene a sapere di che
+     * integrazione e' la TV, e se ne va quando la TV si spegne. */
+    riga.telecomando
+      ? `${riga.telecomando.via}:${riga.telecomando.entity}:${riga.telecomando.piattaforma}`
+      : "",
   ].join("|");
 }
 
@@ -408,6 +545,7 @@ function cardMarkup(riga) {
       ${comandiAccantoMarkup(riga)}
       ${lettureAccantoMarkup(riga)}
     </div>
+    ${telecomandoMarkup(riga)}
   </article>`;
 }
 
@@ -506,6 +644,7 @@ export function renderMediaPlayer() {
   if (voce) voce.style.display = configurati.length && accesa ? "" : "none";
   const pagina = configurati.length ? ensurePagina() : doc.getElementById(PAGINA_MEDIA);
   if (!pagina) return false;
+  imparaLeTv(configurati);
   const righe = letture();
   registraPaginaARuntime(PAGINA_MEDIA, {
     /* Il viola e il rosa della musica: le uniche due tinte che nella plancia
@@ -569,7 +708,7 @@ export function letturaDiUnLettore(entity, states = allStates()) {
   const voce = lettoriConfigurati(configurazione()).find(
     (riga) => scritta(riga.entity) === cercato,
   );
-  return letturaDelLettore(voce || { entity: cercato }, states, risolvi);
+  return letturaDelLettore(voce || { entity: cercato }, states, risolvi, piattaformeConosciute());
 }
 
 function popupDelLettore() {
@@ -619,6 +758,9 @@ export function chiudiIlLettore() {
  * di sotto al dito di chi sta muovendo il volume. */
 function disegnaIlLettoreAperto() {
   if (!state.aperto) return false;
+  /* Una TV messa fra le Azioni rapide e non nella pagina Musica ha il suo
+   * telecomando anche qui (#132): di lei si chiede come delle altre. */
+  imparaLeTv([...lettoriConfigurati(configurazione()), { entity: state.aperto }]);
   const riga = letturaDiUnLettore(state.aperto);
   const host = popupDelLettore();
   if (!host || !riga) return chiudiIlLettore();
@@ -1012,6 +1154,19 @@ function onClick(event) {
     if (servizio) chiamaHa(servizio.domain, servizio.service, servizio.data);
     return;
   }
+  /* Un tasto del telecomando (#132): va al telecomando di quella TV, col nome
+   * che la sua integrazione gli da'. Si rilegge adesso e non si prende dal
+   * disegno: la TV spenta nel frattempo il telecomando non ce l'ha piu'. */
+  const tele = event.target?.closest?.("[data-dm-tele]");
+  if (tele) {
+    event.preventDefault();
+    const riga = letturaDi(clean(tele.dataset.dmTeleLettore));
+    const servizio = comandoDelTelecomando(riga?.telecomando, clean(tele.dataset.dmTele));
+    if (!servizio) return;
+    root.navigator?.vibrate?.(8);
+    chiamaHa(servizio.domain, servizio.service, servizio.data);
+    return;
+  }
   const tasto = event.target?.closest?.("[data-dm-mp]");
   if (!tasto) return;
   event.preventDefault();
@@ -1182,6 +1337,34 @@ function installStyles() {
         background:linear-gradient(135deg,#8b5cf6,#ec4899)}
       .dm-mp-tasto[data-dm-mp="centro"] svg{width:24px;height:24px}
       .dm-mp-tasto[data-acceso="true"]{color:#f97316}
+      /* Il telecomando della TV (#132): sotto la card e largo quanto lei, sopra
+         il fondale come il resto. I tasti sono i quadrati dei comandi del
+         brano, un po' piu' grandi perche' si premono a colpo sicuro; OK ha il
+         colore del tasto in mezzo, ed e' tondo come su ogni telecomando. */
+      .dm-mp-tele{
+        grid-column:1/-1;position:relative;z-index:2;
+        display:grid;justify-items:center;gap:12px;
+        padding-top:14px;border-top:1px solid var(--divider-color,#e2e8f0)}
+      .dm-mp-croce{
+        display:grid;grid-template-columns:repeat(3,52px);grid-template-rows:repeat(3,52px);gap:8px}
+      .dm-mp-croce>[data-dm-tele="su"]{grid-area:1/2}
+      .dm-mp-croce>[data-dm-tele="sinistra"]{grid-area:2/1}
+      .dm-mp-croce>[data-dm-tele="ok"]{grid-area:2/2}
+      .dm-mp-croce>[data-dm-tele="destra"]{grid-area:2/3}
+      .dm-mp-croce>[data-dm-tele="giu"]{grid-area:3/2}
+      .dm-mp-croce>.dm-mp-tasto{width:52px;height:52px;border-radius:16px}
+      .dm-mp-croce>.dm-mp-tasto svg{width:25px;height:25px}
+      .dm-mp-croce>.dm-mp-tasto[data-dm-tele="ok"],
+      .dm-mp-card[data-arte="true"] .dm-mp-croce>.dm-mp-tasto[data-dm-tele="ok"]{
+        border-radius:50%;color:#fff;border-color:transparent;
+        background:linear-gradient(135deg,#8b5cf6,#ec4899);
+        font:inherit;font-size:15px;font-weight:900;letter-spacing:.06em}
+      .dm-mp-tele-fila{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:8px}
+      .dm-mp-tele-canali{display:flex;gap:8px;margin-left:10px}
+      .dm-mp-tasto-ch{align-content:center;gap:1px}
+      .dm-mp-tasto-ch>.dm-mp-ch{font-size:9px;font-weight:900;letter-spacing:.08em;line-height:1;opacity:.72}
+      .dm-mp-tasto-ch>b{font-size:17px;font-weight:900;line-height:1}
+      .dm-mp-card[data-arte="true"] .dm-mp-tele{border-top-color:rgba(248,250,252,.18)}
       .dm-mp-volume{display:flex;align-items:center;gap:10px;margin-top:8px}
       .dm-mp-slider{flex:1 1 auto;min-width:0;accent-color:#8b5cf6}
       .dm-mp-percento{
@@ -1373,6 +1556,9 @@ export function installMediaPlayer() {
     "dashboardmodern:persistence-restored",
   ])
     root.addEventListener?.(evento, schedule);
+  /* Quando si viene a sapere di che integrazione e' una TV, il suo telecomando
+   * puo' comparire (#132). */
+  root.addEventListener?.(EVENTO_PIATTAFORME, ridisegnaMediaPlayer);
   /* Chi cambia pagina spegne o riaccende il battito: la barra del tempo non
    * deve correre dietro a una pagina che nessuno sta guardando. */
   doc.addEventListener("click", (event) => {

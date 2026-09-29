@@ -82,6 +82,8 @@ test("un lettore è quello che è, e senza entità non è un lettore", () => {
      * primo salvataggio. */
     comandi: [],
     letture: [],
+    /* E il telecomando della TV (#132), per la stessa ragione. */
+    telecomando: "",
   });
   const lista = [{ entity: "media_player.a" }, { entity: "" }, { entity: "media_player.b" }];
   assert.equal(lettoriConfigurati(lista).length, 2, "la riga a metà resta fuori");
