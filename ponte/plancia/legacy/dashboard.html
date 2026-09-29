@@ -185,6 +185,7 @@ html[data-theme="dark"] #cd-boot-overlay b{color:#e2e8f0}
 <link rel="modulepreload" href="../src/core/scaldabagno-model.js">
 <link rel="modulepreload" href="../src/core/scrivere-se-cambia.js">
 <link rel="modulepreload" href="../src/core/security-door-model.js">
+<link rel="modulepreload" href="../src/core/segni-del-catalogo.js">
 <link rel="modulepreload" href="../src/core/segno-progressivo.js">
 <link rel="modulepreload" href="../src/core/sezioni-mie.js">
 <link rel="modulepreload" href="../src/core/sfoglia-i-media.js">
@@ -390,6 +391,7 @@ html[data-theme="dark"] #cd-boot-overlay b{color:#e2e8f0}
 <link rel="modulepreload" href="../src/sections/security-doors-section.js">
 <link rel="modulepreload" href="../src/sections/security-showcase-section.js">
 <link rel="modulepreload" href="../src/sections/segnalazioni-section.js">
+<link rel="modulepreload" href="../src/sections/segni-del-catalogo-section.js">
 <link rel="modulepreload" href="../src/sections/sezioni-mie-editor-section.js">
 <link rel="modulepreload" href="../src/sections/sezioni-mie-section.js">
 <link rel="modulepreload" href="../src/sections/shared.js">
@@ -491,19 +493,19 @@ html[data-theme="dark"] #cd-boot-overlay b{color:#e2e8f0}
   </header>
   
   <nav class="tabs bottom-nav-bar">
-    <button class="tab active" data-tab="home"><span class="icon">🏠</span><span class="text">Home</span></button>
-    <button class="tab" data-tab="energy"><span class="icon">⚡</span><span class="text">Energia</span></button>
-    <button class="tab" data-tab="appliances-main"><span class="icon">🧺</span><span class="text">Elettrodomestici</span></button>
-    <button class="tab" data-tab="ev"><span class="icon">🚗</span><span class="text">Auto</span></button>
-    <button class="tab" data-tab="boiler"><span class="icon">🌞</span><span class="text">Solare Termico</span></button>
-    <button class="tab" data-tab="clima"><span class="icon">❄️</span><span class="text">Clima</span></button>
-    <button class="tab" data-tab="temp"><span class="icon">🌡️</span><span class="text">Temperatura</span></button>
-    <button class="tab" data-tab="tapparelle" id="tab-tapparelle" style="display: none;"><span class="icon">🪟</span><span class="text">Finestre</span></button>
-    <button class="tab" data-tab="irrigazione" id="tab-irrigazione" style="display: none;"><span class="icon">💧</span><span class="text">Irrigazione</span></button>
-    <button class="tab" data-tab="piscina" id="tab-piscina" style="display: none;"><span class="icon">🏊</span><span class="text">Piscina</span></button>
-    <button class="tab" data-tab="security" onclick="refreshCameras()"><span class="icon">🛡️</span><span class="text">Sicurezza</span></button>
-    <button class="tab" data-tab="server"><span class="icon">🖥️</span><span class="text">MiniPC</span></button>
-    <button class="tab" data-tab="config" id="tab-config" style="display: none;"><span class="icon">⚙️</span><span class="text">Config</span></button>
+    <button class="tab active" data-tab="home"><span class="icon"><i class="dm-segno" data-dm-segno="home" aria-hidden="true"></i></span><span class="text">Home</span></button>
+    <button class="tab" data-tab="energy"><span class="icon"><i class="dm-segno" data-dm-segno="power" aria-hidden="true"></i></span><span class="text">Energia</span></button>
+    <button class="tab" data-tab="appliances-main"><span class="icon"><i class="dm-segno" data-dm-segno="washer" aria-hidden="true"></i></span><span class="text">Elettrodomestici</span></button>
+    <button class="tab" data-tab="ev"><span class="icon"><i class="dm-segno" data-dm-segno="ev" aria-hidden="true"></i></span><span class="text">Auto</span></button>
+    <button class="tab" data-tab="boiler"><span class="icon"><i class="dm-segno" data-dm-segno="sun" aria-hidden="true"></i></span><span class="text">Solare Termico</span></button>
+    <button class="tab" data-tab="clima"><span class="icon"><i class="dm-segno" data-dm-segno="air-conditioner" aria-hidden="true"></i></span><span class="text">Clima</span></button>
+    <button class="tab" data-tab="temp"><span class="icon"><i class="dm-segno" data-dm-segno="thermometer" aria-hidden="true"></i></span><span class="text">Temperatura</span></button>
+    <button class="tab" data-tab="tapparelle" id="tab-tapparelle" style="display: none;"><span class="icon"><i class="dm-segno" data-dm-segno="window" aria-hidden="true"></i></span><span class="text">Finestre</span></button>
+    <button class="tab" data-tab="irrigazione" id="tab-irrigazione" style="display: none;"><span class="icon"><i class="dm-segno" data-dm-segno="water" aria-hidden="true"></i></span><span class="text">Irrigazione</span></button>
+    <button class="tab" data-tab="piscina" id="tab-piscina" style="display: none;"><span class="icon"><i class="dm-segno" data-dm-segno="room-pool" aria-hidden="true"></i></span><span class="text">Piscina</span></button>
+    <button class="tab" data-tab="security" onclick="refreshCameras()"><span class="icon"><i class="dm-segno" data-dm-segno="security" aria-hidden="true"></i></span><span class="text">Sicurezza</span></button>
+    <button class="tab" data-tab="server"><span class="icon"><i class="dm-segno" data-dm-segno="computer" aria-hidden="true"></i></span><span class="text">MiniPC</span></button>
+    <button class="tab" data-tab="config" id="tab-config" style="display: none;"><span class="icon"><i class="dm-segno" data-dm-segno="sliders" aria-hidden="true"></i></span><span class="text">Config</span></button>
   </nav>
 
   <!-- Maniglia per mostrare/nascondere la barra inferiore su mobile -->
@@ -512,16 +514,16 @@ html[data-theme="dark"] #cd-boot-overlay b{color:#e2e8f0}
   <section class="page active" id="page-home">
     <div class="weather-widget" onclick="apriMeteo()">
       <div class="w-left">
-        <div class="w-icon" id="w-icon">☀️</div>
+        <div class="w-icon" id="w-icon"><i class="dm-segno" data-dm-segno="sun" aria-hidden="true"></i></div>
         <div class="w-temp-wrap">
           <span class="w-temp" id="w-temp">--°C</span>
           <span class="w-state" id="w-state">Caricamento...</span>
         </div>
       </div>
       <div class="w-right">
-        <div class="w-detail">💧 Umidità <span id="w-hum">--</span></div>
-        <div class="w-detail">💨 Vento <span id="w-wind">--</span></div>
-        <div class="w-detail" id="w-feel-row" style="display:none">🌡️ Percepita <span id="w-feel">--</span></div>
+        <div class="w-detail"><i class="dm-segno" data-dm-segno="water" aria-hidden="true"></i> Umidità <span id="w-hum">--</span></div>
+        <div class="w-detail"><i class="dm-segno" data-dm-segno="wind" aria-hidden="true"></i> Vento <span id="w-wind">--</span></div>
+        <div class="w-detail" id="w-feel-row" style="display:none"><i class="dm-segno" data-dm-segno="thermometer" aria-hidden="true"></i> Percepita <span id="w-feel">--</span></div>
       </div>
     </div>
 
@@ -529,13 +531,13 @@ html[data-theme="dark"] #cd-boot-overlay b{color:#e2e8f0}
     <div class="dashboard-pills-row" id="dashboard-pills-row">
       <!-- v244: Pillola caldaia accesa (visibile solo se switch.caldaia è ON) -->
       <div id="caldaia-banner" class="status-pill caldaia-banner" onclick="apriQuickClimaCaldo()">
-        <span class="caldaia-banner-icon">🔥</span>
+        <span class="caldaia-banner-icon"><i class="dm-segno" data-dm-segno="radiator" aria-hidden="true"></i></span>
         <span class="caldaia-banner-text">Caldaia accesa</span>
         <span class="caldaia-banner-pulse"></span>
       </div>
       <!-- v245: Pillola antifurto attivo (visibile solo se stato ≠ disarmed) -->
       <div id="allarme-banner" class="status-pill allarme-banner" onclick="apriQuickAntifurto()">
-        <span class="status-pill-icon" id="allarme-banner-icon">🛡️</span>
+        <span class="status-pill-icon" id="allarme-banner-icon"><i class="dm-segno" data-dm-segno="security" aria-hidden="true"></i></span>
         <span class="status-pill-text" id="allarme-banner-text">Antifurto</span>
         <span class="status-pill-dot"></span>
       </div>
@@ -554,17 +556,17 @@ html[data-theme="dark"] #cd-boot-overlay b{color:#e2e8f0}
 <section class="page" id="page-appliances-main">
   <div class="sub-tabs-container">
     <div class="sub-tabs-energy">
-      <button class="sub-tab-btn appl-section-tab active" onclick="switchApplianceView('overview', event)">📊 Panoramica</button>
-      <button class="sub-tab-btn appl-section-tab" onclick="switchApplianceView('kitchen', event)">🍳 Cucina</button>
-      <button class="sub-tab-btn appl-section-tab" onclick="switchApplianceView('laundry', event)">🧺 Lavanderia</button>
-      <button class="sub-tab-btn appl-section-tab" onclick="switchApplianceView('home', event)">🏠 Casa</button>
-      <button class="sub-tab-btn appl-section-tab" onclick="switchApplianceView('other', event)">🔌 Altro</button>
-      <button class="sub-tab-btn appl-section-tab" onclick="switchApplianceView('consumption', event)">⚡ Consumi</button>
-      <button class="sub-tab-btn appl-section-tab" onclick="switchApplianceView('automations', event)">🤖 Automazioni</button>
+      <button class="sub-tab-btn appl-section-tab active" onclick="switchApplianceView('overview', event)"><i class="dm-segno" data-dm-segno="gauge" aria-hidden="true"></i> Panoramica</button>
+      <button class="sub-tab-btn appl-section-tab" onclick="switchApplianceView('kitchen', event)"><i class="dm-segno" data-dm-segno="cooktop" aria-hidden="true"></i> Cucina</button>
+      <button class="sub-tab-btn appl-section-tab" onclick="switchApplianceView('laundry', event)"><i class="dm-segno" data-dm-segno="washer" aria-hidden="true"></i> Lavanderia</button>
+      <button class="sub-tab-btn appl-section-tab" onclick="switchApplianceView('home', event)"><i class="dm-segno" data-dm-segno="home" aria-hidden="true"></i> Casa</button>
+      <button class="sub-tab-btn appl-section-tab" onclick="switchApplianceView('other', event)"><i class="dm-segno" data-dm-segno="socket" aria-hidden="true"></i> Altro</button>
+      <button class="sub-tab-btn appl-section-tab" onclick="switchApplianceView('consumption', event)"><i class="dm-segno" data-dm-segno="power" aria-hidden="true"></i> Consumi</button>
+      <button class="sub-tab-btn appl-section-tab" onclick="switchApplianceView('automations', event)"><i class="dm-segno" data-dm-segno="robot" aria-hidden="true"></i> Automazioni</button>
     </div>
   </div>
   <div class="appl-main-hero">
-    <div><div class="appl-main-title">🧺 Elettrodomestici</div><div class="appl-main-sub" id="appl-main-sub"></div></div>
+    <div><div class="appl-main-title"><i class="dm-segno" data-dm-segno="washer" aria-hidden="true"></i> Elettrodomestici</div><div class="appl-main-sub" id="appl-main-sub"></div></div>
   </div>
   <div class="glance-grid appl-kpi-grid" id="appl-kpi-grid"></div>
   <div class="appl-main-view active" id="appl-view-overview"><h3 class="section-title">Panoramica</h3><div class="appl-page-grid" id="appl-grid-overview"></div></div>
@@ -572,18 +574,18 @@ html[data-theme="dark"] #cd-boot-overlay b{color:#e2e8f0}
   <div class="appl-main-view" id="appl-view-laundry"><h3 class="section-title">Lavanderia</h3><div class="appl-page-grid" id="appl-grid-laundry"></div></div>
   <div class="appl-main-view" id="appl-view-home"><h3 class="section-title">Casa</h3><div class="appl-page-grid" id="appl-grid-home"></div></div>
   <div class="appl-main-view" id="appl-view-other"><h3 class="section-title">Altro</h3><div class="appl-page-grid" id="appl-grid-other"></div></div>
-  <div class="appl-main-view" id="appl-view-consumption"><h3 class="section-title">Consumi</h3><div class="ed-chart-card"><div class="ed-chart-header"><div class="ed-chart-title">📈 Consumo istantaneo</div></div><div class="appl-consumption-list" id="appl-consumption-list"></div></div></div>
+  <div class="appl-main-view" id="appl-view-consumption"><h3 class="section-title">Consumi</h3><div class="ed-chart-card"><div class="ed-chart-header"><div class="ed-chart-title"><i class="dm-segno" data-dm-segno="gauge" aria-hidden="true"></i> Consumo istantaneo</div></div><div class="appl-consumption-list" id="appl-consumption-list"></div></div></div>
   <div class="appl-main-view" id="appl-view-automations"><h3 class="section-title">Automazioni</h3><div class="appl-page-grid" id="appl-grid-automations"></div></div>
 </section>
 
 <section class="page" id="page-energy">
     <div class="sub-tabs-container">
      <div class="sub-tabs-energy">
-       <button class="sub-tab-btn" onclick="switchEnergyView('panoramica'); renderEnergyDashboard();">📊 Report</button>
-       <button class="sub-tab-btn active" onclick="switchEnergyView('ist')">⚡ Istantanea</button>
-       <button class="sub-tab-btn" onclick="switchEnergyView('day')">📅 Giornaliera</button>
-       <button class="sub-tab-btn" onclick="switchEnergyView('month')">📆 Mensile</button>
-       <button class="sub-tab-btn" onclick="switchEnergyView('temp')">🌡️ Temperature</button>
+       <button class="sub-tab-btn" onclick="switchEnergyView('panoramica'); renderEnergyDashboard();"><i class="dm-segno" data-dm-segno="gauge" aria-hidden="true"></i> Report</button>
+       <button class="sub-tab-btn active" onclick="switchEnergyView('ist')"><i class="dm-segno" data-dm-segno="power" aria-hidden="true"></i> Istantanea</button>
+       <button class="sub-tab-btn" onclick="switchEnergyView('day')"><i class="dm-segno" data-dm-segno="calendar" aria-hidden="true"></i> Giornaliera</button>
+       <button class="sub-tab-btn" onclick="switchEnergyView('month')"><i class="dm-segno" data-dm-segno="calendar" aria-hidden="true"></i> Mensile</button>
+       <button class="sub-tab-btn" onclick="switchEnergyView('temp')"><i class="dm-segno" data-dm-segno="thermometer" aria-hidden="true"></i> Temperature</button>
 
      </div>
     </div>
@@ -598,7 +600,7 @@ html[data-theme="dark"] #cd-boot-overlay b{color:#e2e8f0}
         <div class="ed-header-top">
           <div class="ed-header-brand">
             <div class="ed-title">
-              <div class="ed-icon">⚡</div>
+              <div class="ed-icon"><i class="dm-segno" data-dm-segno="power" aria-hidden="true"></i></div>
             </div>
             <div class="ed-title-text">
               <h2>Dashboard Energia</h2>
@@ -610,13 +612,13 @@ html[data-theme="dark"] #cd-boot-overlay b{color:#e2e8f0}
               <span class="ed-status-dot"></span>
               Connesso
             </div>
-            <div class="ed-clock-pill">⏰ <span id="ed-clock">—</span></div>
+            <div class="ed-clock-pill"><i class="dm-segno" data-dm-segno="timer" aria-hidden="true"></i> <span id="ed-clock">—</span></div>
           </div>
         </div>
 
         <!-- Riga 2: Selezione periodo + chip YoY -->
         <div class="ed-header-period">
-          <div class="ed-period-label">📅 Mese:</div>
+          <div class="ed-period-label"><i class="dm-segno" data-dm-segno="calendar" aria-hidden="true"></i> Mese:</div>
           <div class="ed-select-wrap">
             <select class="ed-select" id="ed-sel-month" onchange="renderEnergyDashboard()">
               <option value="1">Gennaio</option><option value="2">Febbraio</option>
@@ -639,8 +641,8 @@ html[data-theme="dark"] #cd-boot-overlay b{color:#e2e8f0}
 
       <!-- Pill tab Panoramica / Analisi -->
       <div class="ed-inner-tabs">
-        <button class="ed-inner-tab active" id="ed-tab-pan" onclick="edSwitchTab('panoramica')">🏠 Panoramica</button>
-        <button class="ed-inner-tab" id="ed-tab-ana" onclick="edSwitchTab('analisi')">📊 Analisi</button>
+        <button class="ed-inner-tab active" id="ed-tab-pan" onclick="edSwitchTab('panoramica')"><i class="dm-segno" data-dm-segno="home" aria-hidden="true"></i> Panoramica</button>
+        <button class="ed-inner-tab" id="ed-tab-ana" onclick="edSwitchTab('analisi')"><i class="dm-segno" data-dm-segno="gauge" aria-hidden="true"></i> Analisi</button>
       </div>
 
       <!-- ═══ TAB: PANORAMICA ═══ -->
@@ -649,17 +651,17 @@ html[data-theme="dark"] #cd-boot-overlay b{color:#e2e8f0}
         <!-- v254: Banner KPI uniformato (bianco + 3 colori brand) -->
         <div class="ed-kpi-banner">
           <div class="ed-kpi-item" style="--kpi-rgb: 22, 163, 74;">
-            <div class="ed-kpi-icon">☀️</div>
+            <div class="ed-kpi-icon"><i class="dm-segno" data-dm-segno="sun" aria-hidden="true"></i></div>
             <div class="ed-kpi-label">Produzione FV</div>
             <div class="ed-kpi-val" id="ed-kpi-prod">— <small>kWh</small></div>
           </div>
           <div class="ed-kpi-item" style="--kpi-rgb: 124, 58, 237;">
-            <div class="ed-kpi-icon">🏠</div>
+            <div class="ed-kpi-icon"><i class="dm-segno" data-dm-segno="home" aria-hidden="true"></i></div>
             <div class="ed-kpi-label">Consumo Totale</div>
             <div class="ed-kpi-val" id="ed-kpi-cons">— <small>kWh</small></div>
           </div>
           <div class="ed-kpi-item" style="--kpi-rgb: 245, 158, 11;">
-            <div class="ed-kpi-icon">🔋</div>
+            <div class="ed-kpi-icon"><i class="dm-segno" data-dm-segno="battery" aria-hidden="true"></i></div>
             <div class="ed-kpi-label">Autosufficienza</div>
             <div class="ed-kpi-val" id="ed-kpi-auto">— <small>%</small></div>
           </div>
@@ -668,7 +670,7 @@ html[data-theme="dark"] #cd-boot-overlay b{color:#e2e8f0}
         <!-- ═══════ BILANCIO ANNO: totale pagato + risparmiato dell'anno corrente ═══════ -->
         <div class="ed-year-summary" id="ed-year-summary">
           <div class="ed-year-summary-header">
-            <span class="ed-year-summary-icon">📊</span>
+            <span class="ed-year-summary-icon"><i class="dm-segno" data-dm-segno="gauge" aria-hidden="true"></i></span>
             <div class="ed-year-summary-title">
               <div class="ed-year-summary-lbl">Totale</div>
               <div class="ed-year-summary-year" id="ed-year-summary-year">2026</div>
@@ -676,13 +678,13 @@ html[data-theme="dark"] #cd-boot-overlay b{color:#e2e8f0}
           </div>
           <div class="ed-year-summary-grid">
             <div class="ed-year-stat">
-              <div class="ed-year-stat-lbl">💸 Pagato</div>
+              <div class="ed-year-stat-lbl"><i class="dm-segno" data-dm-segno="coin" aria-hidden="true"></i> Pagato</div>
               <div class="ed-year-stat-val pagato" id="ed-year-pagato">— €</div>
               <div class="ed-year-stat-sub" id="ed-year-pagato-sub">— kWh dalla rete</div>
             </div>
             <div class="ed-year-divider"></div>
             <div class="ed-year-stat">
-              <div class="ed-year-stat-lbl">💰 Risparmiato</div>
+              <div class="ed-year-stat-lbl"><i class="dm-segno" data-dm-segno="coin" aria-hidden="true"></i> Risparmiato</div>
               <div class="ed-year-stat-val risparmio" id="ed-year-risparmio">— €</div>
               <div class="ed-year-stat-sub" id="ed-year-risparmio-sub">grazie al fotovoltaico</div>
             </div>
@@ -693,31 +695,31 @@ html[data-theme="dark"] #cd-boot-overlay b{color:#e2e8f0}
         <div class="ed-fin-grid" style="grid-template-columns:repeat(5,1fr);">
           <!-- 1. Quanto avresti speso senza FV -->
           <div class="ed-fin-card">
-            <div class="ed-fin-lbl">💸 Senza FV</div>
+            <div class="ed-fin-lbl"><i class="dm-segno" data-dm-segno="coin" aria-hidden="true"></i> Senza FV</div>
             <div class="ed-fin-val" id="ed-fin-pagato" style="color:#dc2626;">—</div>
             <div class="ed-fin-sub" id="ed-fin-pagato-sub"></div>
           </div>
           <!-- 2. Quanto hai effettivamente speso -->
           <div class="ed-fin-card">
-            <div class="ed-fin-lbl">💳 Costo Reale</div>
+            <div class="ed-fin-lbl"><i class="dm-segno" data-dm-segno="coin" aria-hidden="true"></i> Costo Reale</div>
             <div class="ed-fin-val" id="ed-fin-costo" style="color:#f97316;">—</div>
             <div class="ed-fin-sub" id="ed-fin-costo-sub"></div>
           </div>
           <!-- 3. Risparmio = (1) - (2) -->
           <div class="ed-fin-card">
-            <div class="ed-fin-lbl">💰 Risparmio</div>
+            <div class="ed-fin-lbl"><i class="dm-segno" data-dm-segno="coin" aria-hidden="true"></i> Risparmio</div>
             <div class="ed-fin-val" id="ed-fin-risp" style="color:#15803d;">—</div>
             <div class="ed-fin-sub" id="ed-fin-risp-sub"></div>
           </div>
           <!-- 4. kWh venduti alla rete + guadagno GSE -->
           <div class="ed-fin-card">
-            <div class="ed-fin-lbl">⚡ Venduto</div>
+            <div class="ed-fin-lbl"><i class="dm-segno" data-dm-segno="power" aria-hidden="true"></i> Venduto</div>
             <div class="ed-fin-val" id="ed-fin-imm" style="color:#0ea5e9;">—</div>
             <div class="ed-fin-sub" id="ed-fin-imm-sub"></div>
           </div>
           <!-- 5. CO₂ evitata -->
           <div class="ed-fin-card">
-            <div class="ed-fin-lbl">🌳 CO₂ Evitata</div>
+            <div class="ed-fin-lbl"><i class="dm-segno" data-dm-segno="plant" aria-hidden="true"></i> CO₂ Evitata</div>
             <div class="ed-fin-val" id="ed-fin-co2" style="color:#16a34a;">—</div>
             <div class="ed-fin-sub" id="ed-fin-co2-sub"></div>
           </div>
@@ -747,7 +749,7 @@ html[data-theme="dark"] #cd-boot-overlay b{color:#e2e8f0}
         <!-- Grafico andamento giornaliero -->
         <div class="ed-chart-card">
           <div class="ed-chart-header">
-            <div class="ed-chart-title">📈 Andamento Giornaliero</div>
+            <div class="ed-chart-title"><i class="dm-segno" data-dm-segno="gauge" aria-hidden="true"></i> Andamento Giornaliero</div>
             <div class="ed-chart-legend">
               <div class="ed-legend-item"><div class="ed-legend-dot" style="background:#16a34a;"></div>Produzione</div>
               <div class="ed-legend-item"><div class="ed-legend-dot" style="background:#0ea5e9;"></div>Consumo</div>
@@ -755,7 +757,7 @@ html[data-theme="dark"] #cd-boot-overlay b{color:#e2e8f0}
           </div>
           <div class="ed-chart-wrap">
             <div id="ed-chart-loading" style="display:flex;align-items:center;justify-content:center;height:100%;font-size:13px;font-weight:800;color:var(--text-dim);gap:8px;">
-              <span style="animation:spinAnim 1s linear infinite;display:inline-block;">⏳</span> Caricamento dati storici...
+              <span style="animation:spinAnim 1s linear infinite;display:inline-block;"><i class="dm-segno" data-dm-segno="timer" aria-hidden="true"></i></span> Caricamento dati storici...
             </div>
             <canvas id="ed-daily-canvas" style="display:none;"></canvas>
           </div>
@@ -768,7 +770,7 @@ html[data-theme="dark"] #cd-boot-overlay b{color:#e2e8f0}
 
         <!-- Confronto settimanale -->
         <div class="ed-weekly-card">
-          <div class="ed-weekly-title">🔄 Confronto Settimanale</div>
+          <div class="ed-weekly-title"><i class="dm-segno" data-dm-segno="refresh" aria-hidden="true"></i> Confronto Settimanale</div>
           <div class="ed-weekly-row">
             <div class="ed-weekly-lbl">Sett. Scorsa</div>
             <div class="ed-weekly-bar-bg">
@@ -789,12 +791,12 @@ html[data-theme="dark"] #cd-boot-overlay b{color:#e2e8f0}
         <!-- Attività Dispositivi -->
         <div class="ed-devices-card">
           <div class="ed-devices-header">
-            <div class="ed-devices-title">⚡ Attività Dispositivi</div>
+            <div class="ed-devices-title"><i class="dm-segno" data-dm-segno="power" aria-hidden="true"></i> Attività Dispositivi</div>
             <div class="ed-devices-subtitle" id="ed-dev-period-label">Mese in corso</div>
           </div>
           <div id="ed-device-list"></div>
           <div class="ed-devices-total">
-            <div class="ed-devices-total-lbl">🔌 Totale Monitorato</div>
+            <div class="ed-devices-total-lbl"><i class="dm-segno" data-dm-segno="socket" aria-hidden="true"></i> Totale Monitorato</div>
             <div class="ed-devices-total-val" id="ed-dev-total">— kWh &nbsp;|&nbsp; — €</div>
           </div>
         </div>
@@ -802,25 +804,25 @@ html[data-theme="dark"] #cd-boot-overlay b{color:#e2e8f0}
         <!-- Dettaglio Dispositivo -->
         <div class="ed-devices-card ed-dev-detail-wrap">
           <div class="ed-dev-detail-bar">
-            <div class="ed-devices-title">📊 Dettaglio Dispositivo</div>
+            <div class="ed-devices-title"><i class="dm-segno" data-dm-segno="gauge" aria-hidden="true"></i> Dettaglio Dispositivo</div>
             <div class="ed-dev-select-wrap">
               <span class="ed-dev-select-lbl">Seleziona:</span>
               <select class="ed-dev-select" id="ed-dev-selector" onchange="edCaricaDettaglio()">
                 <option value="">— Scegli —</option>
                 <optgroup label="Elettrodomestici">
-                  <option value="dm.ev_energia_wallbox_mese">⚡ Wallbox</option>
-                  <option value="dm.core_032">🧊 Frigorifero</option>
-                  <option value="dm.core_034">🍽️ Lavastoviglie</option>
-                  <option value="dm.core_031">🍟 Friggitrice</option>
-                  <option value="dm.core_033">☕ Macchina Caffè</option>
-                  <option value="dm.core_029">💨 Asciugatrice</option>
-                  <option value="dm.core_035">🧺 Lavatrice</option>
-                  <option value="dm.core_030">♨️ Forno</option>
-                  <option value="dm.core_036">📡 Microonde</option>
-                  <option value="dm.energy_boiler_mese">🔥 Boiler</option>
+                  <option value="dm.ev_energia_wallbox_mese">Wallbox</option>
+                  <option value="dm.core_032">Frigorifero</option>
+                  <option value="dm.core_034">Lavastoviglie</option>
+                  <option value="dm.core_031">Friggitrice</option>
+                  <option value="dm.core_033">Macchina Caffè</option>
+                  <option value="dm.core_029">Asciugatrice</option>
+                  <option value="dm.core_035">Lavatrice</option>
+                  <option value="dm.core_030">Forno</option>
+                  <option value="dm.core_036">Microonde</option>
+                  <option value="dm.energy_boiler_mese">Boiler</option>
                 </optgroup>
                 <optgroup label="Climatizzazione">
-                  <option value="dm.energy_condizionatori_mese">❄️ Condizionatori</option>
+                  <option value="dm.energy_condizionatori_mese">Condizionatori</option>
                 </optgroup>
               </select>
             </div>
@@ -846,30 +848,30 @@ html[data-theme="dark"] #cd-boot-overlay b{color:#e2e8f0}
           </div>
 
           <!-- Card costi e risparmio per il dispositivo selezionato — MESE SELEZIONATO -->
-          <div style="font-size:10px; color:var(--text-dim); font-weight:800; letter-spacing:1.5px; text-transform:uppercase; margin-top:14px; padding-left:4px;">📅 Mese selezionato</div>
+          <div style="font-size:10px; color:var(--text-dim); font-weight:800; letter-spacing:1.5px; text-transform:uppercase; margin-top:14px; padding-left:4px;"><i class="dm-segno" data-dm-segno="calendar" aria-hidden="true"></i> Mese selezionato</div>
           <div class="ed-dev-cost-row" style="display:flex; gap:12px; margin-top:6px; flex-wrap:wrap;">
             <div class="ed-cost-card ed-cost-positive">
-              <div class="ed-cost-lbl">☀️ Risparmiato grazie al FV</div>
+              <div class="ed-cost-lbl"><i class="dm-segno" data-dm-segno="sun" aria-hidden="true"></i> Risparmiato grazie al FV</div>
               <div class="ed-cost-val" id="ed-dkpi-risp-eur">— €</div>
               <div class="ed-cost-sub" id="ed-dkpi-risp-kwh">— kWh da FV</div>
             </div>
             <div class="ed-cost-card ed-cost-negative">
-              <div class="ed-cost-lbl">🔌 Speso dalla rete</div>
+              <div class="ed-cost-lbl"><i class="dm-segno" data-dm-segno="socket" aria-hidden="true"></i> Speso dalla rete</div>
               <div class="ed-cost-val" id="ed-dkpi-costo-eur">— €</div>
               <div class="ed-cost-sub" id="ed-dkpi-costo-kwh">— kWh dalla rete</div>
             </div>
           </div>
 
           <!-- Card costi e risparmio per il dispositivo selezionato — TOTALE ANNO -->
-          <div style="font-size:10px; color:var(--text-dim); font-weight:800; letter-spacing:1.5px; text-transform:uppercase; margin-top:14px; padding-left:4px;">📊 Totale anno <span id="ed-dkpi-year-lbl">2026</span></div>
+          <div style="font-size:10px; color:var(--text-dim); font-weight:800; letter-spacing:1.5px; text-transform:uppercase; margin-top:14px; padding-left:4px;"><i class="dm-segno" data-dm-segno="gauge" aria-hidden="true"></i> Totale anno <span id="ed-dkpi-year-lbl">2026</span></div>
           <div class="ed-dev-cost-row" style="display:flex; gap:12px; margin-top:6px; flex-wrap:wrap;">
             <div class="ed-cost-card ed-cost-positive">
-              <div class="ed-cost-lbl">☀️ Risparmiato anno</div>
+              <div class="ed-cost-lbl"><i class="dm-segno" data-dm-segno="sun" aria-hidden="true"></i> Risparmiato anno</div>
               <div class="ed-cost-val" id="ed-dkpi-anno-risp-eur">— €</div>
               <div class="ed-cost-sub" id="ed-dkpi-anno-risp-kwh">— kWh da FV</div>
             </div>
             <div class="ed-cost-card ed-cost-negative">
-              <div class="ed-cost-lbl">🔌 Speso anno</div>
+              <div class="ed-cost-lbl"><i class="dm-segno" data-dm-segno="socket" aria-hidden="true"></i> Speso anno</div>
               <div class="ed-cost-val" id="ed-dkpi-anno-costo-eur">— €</div>
               <div class="ed-cost-sub" id="ed-dkpi-anno-costo-kwh">— kWh dalla rete</div>
             </div>
@@ -878,7 +880,7 @@ html[data-theme="dark"] #cd-boot-overlay b{color:#e2e8f0}
           <!-- Grafico a barre storico 7 giorni -->
           <div class="ed-dev-chart-wrap">
             <div id="ed-dev-chart-msg" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:var(--text-dim);">
-              ☝️ Seleziona un dispositivo
+              <i class="dm-segno" data-dm-segno="info" aria-hidden="true"></i> Seleziona un dispositivo
             </div>
             <canvas id="ed-dev-chart-canvas" style="display:none;"></canvas>
           </div>
@@ -887,7 +889,7 @@ html[data-theme="dark"] #cd-boot-overlay b{color:#e2e8f0}
         <!-- Wallbox (visibile solo se selezionato il dispositivo Wallbox) -->
         <div class="ed-bottom-grid" id="ed-bottom-grid" style="grid-template-columns:1fr; display:none;">
           <div class="ed-wb-card" id="ed-wb-card">
-            <div class="ed-section-title">⚡ Wallbox &amp; Ricarica EV</div>
+            <div class="ed-section-title"><i class="dm-segno" data-dm-segno="power" aria-hidden="true"></i> Wallbox &amp; Ricarica EV</div>
             <div class="ed-wb-stats">
               <div class="ed-wb-stat"><div class="ed-wb-stat-val" id="ed-wb-sess">—</div><div class="ed-wb-stat-lbl">Sessioni</div></div>
               <div class="ed-wb-stat"><div class="ed-wb-stat-val" id="ed-wb-kwmed">—</div><div class="ed-wb-stat-lbl">kW medio</div></div>
@@ -895,7 +897,7 @@ html[data-theme="dark"] #cd-boot-overlay b{color:#e2e8f0}
             </div>
             <div class="ed-wb-sub-grid" style="grid-template-columns:1fr;">
               <div class="ed-wb-sub">
-                <div class="ed-wb-sub-label">⚡ Energia Erogata (da HA)</div>
+                <div class="ed-wb-sub-label"><i class="dm-segno" data-dm-segno="power" aria-hidden="true"></i> Energia Erogata (da HA)</div>
                 <div class="ed-wb-sub-val" id="ed-wb-on">— kWh</div>
               </div>
             </div>
@@ -933,16 +935,16 @@ html[data-theme="dark"] #cd-boot-overlay b{color:#e2e8f0}
           <path id="m-line-home-lav" class="flow-line" style="--line-color: #7c3aed" d="M 500 460 Q 650 460 650 840"/>
         </svg>
 
-        <div class="node n-main hist-clickable" id="n-solar" style="left:50%; top:15%; --n-color:#f59e0b; --n-rgb: 245,158,11;" onclick="apriStorico(event, 'dm.energy_potenza_fotovoltaico', 'Produzione Solare')"><div class="node-label">Solare</div><div class="node-icon">☀️</div><span id="v-solar">—</span></div>
-        <div class="node n-main hist-clickable" id="n-grid" style="left:25%; top:33%; --n-color:#1e40af; --n-rgb: 30,64,175;" onclick="apriStorico(event, 'dm.energy_potenza_scambio_rete', 'Rete Elettrica')"><div class="node-label">Rete</div><div class="node-icon">⚡</div><span id="v-grid">—</span></div>
-        <div class="node n-main hist-clickable" id="n-battery" style="left:75%; top:33%; --n-color:#15803d; --n-rgb: 21, 128, 61;" onclick="apriStorico(event, 'dm.energy_potenza_batteria', 'Potenza Batteria')"><div class="node-label">Batteria</div><div class="node-icon">🔋</div><span id="v-battery">—</span><div id="v-battery-soc" style="font-size:12px; font-weight:800; color:var(--text-dim); margin-top:3px; cursor:pointer; padding:1px 6px; border-radius:8px; transition:background 0.2s;" onclick="event.stopPropagation(); apriStorico(event, 'dm.energy_stato_carica_batteria', 'Livello Batteria (SOC)')" onmouseover="this.style.background='rgba(5,150,105,0.15)'" onmouseout="this.style.background='transparent'">—</div></div>
-        <div class="node n-home hist-clickable" id="n-home" style="left:50%; top:50%; --n-color:var(--text); --n-rgb: 10,14,23;" onclick="apriStorico(event, 'dm.energy_potenza_consumo_casa', 'Consumo Casa')"><div class="node-label">Casa</div><div class="node-icon">🏠</div><span id="v-home">—</span></div>
+        <div class="node n-main hist-clickable" id="n-solar" style="left:50%; top:15%; --n-color:#f59e0b; --n-rgb: 245,158,11;" onclick="apriStorico(event, 'dm.energy_potenza_fotovoltaico', 'Produzione Solare')"><div class="node-label">Solare</div><div class="node-icon"><i class="dm-segno" data-dm-segno="sun" aria-hidden="true"></i></div><span id="v-solar">—</span></div>
+        <div class="node n-main hist-clickable" id="n-grid" style="left:25%; top:33%; --n-color:#1e40af; --n-rgb: 30,64,175;" onclick="apriStorico(event, 'dm.energy_potenza_scambio_rete', 'Rete Elettrica')"><div class="node-label">Rete</div><div class="node-icon"><i class="dm-segno" data-dm-segno="power" aria-hidden="true"></i></div><span id="v-grid">—</span></div>
+        <div class="node n-main hist-clickable" id="n-battery" style="left:75%; top:33%; --n-color:#15803d; --n-rgb: 21, 128, 61;" onclick="apriStorico(event, 'dm.energy_potenza_batteria', 'Potenza Batteria')"><div class="node-label">Batteria</div><div class="node-icon"><i class="dm-segno" data-dm-segno="battery" aria-hidden="true"></i></div><span id="v-battery">—</span><div id="v-battery-soc" style="font-size:12px; font-weight:800; color:var(--text-dim); margin-top:3px; cursor:pointer; padding:1px 6px; border-radius:8px; transition:background 0.2s;" onclick="event.stopPropagation(); apriStorico(event, 'dm.energy_stato_carica_batteria', 'Livello Batteria (SOC)')" onmouseover="this.style.background='rgba(5,150,105,0.15)'" onmouseout="this.style.background='transparent'">—</div></div>
+        <div class="node n-home hist-clickable" id="n-home" style="left:50%; top:50%; --n-color:var(--text); --n-rgb: 10,14,23;" onclick="apriStorico(event, 'dm.energy_potenza_consumo_casa', 'Consumo Casa')"><div class="node-label">Casa</div><div class="node-icon"><i class="dm-segno" data-dm-segno="home" aria-hidden="true"></i></div><span id="v-home">—</span></div>
         
-        <div class="node n-load hist-clickable" id="n-boiler" style="left:16%; top:83%; --n-color:#ea580c; --n-rgb: 234,88,12;" onclick="apriStorico(event, 'dm.boiler_potenza_resistenza_boiler', 'Consumo Boiler')"><div class="node-label">Boiler</div><div class="node-icon">♨️</div><span id="v-boiler-p">—</span></div>
-        <div class="node n-load hist-clickable" id="n-wb" style="left:33%; top:83%; --n-color:#06b6d4; --n-rgb: 6,182,212;" onclick="apriPopup()"><div class="node-label">Wallbox</div><div class="node-icon">🚗</div><span id="v-wb-p">—</span></div>
-        <div class="node n-load hist-clickable" id="n-clima" style="left:50%; top:83%; --n-color:#0ea5e9; --n-rgb: 14,165,233;" onclick="apriStorico(event, 'dm.energy_potenza_condizionatori', 'Potenza Clima')"><div class="node-label">Clima</div><div class="node-icon">❄️</div><span id="v-clima-p">—</span></div>
-        <div class="node n-load hist-clickable" id="n-lav" style="left:67%; top:83%; --n-color:#7c3aed; --n-rgb: 124,58,237;" onclick="apriSubLoads('lavanderia')"><div class="node-label">Lavanderia</div><div class="node-icon">🧺</div><span id="v-lav-p">—</span></div>
-        <div class="node n-load hist-clickable" id="n-cuc" style="left:84%; top:83%; --n-color:#e11d48; --n-rgb: 225,29,72;" onclick="apriSubLoads('cucina')"><div class="node-label">Cucina</div><div class="node-icon">🍳</div><span id="v-cuc-p">—</span></div>
+        <div class="node n-load hist-clickable" id="n-boiler" style="left:16%; top:83%; --n-color:#ea580c; --n-rgb: 234,88,12;" onclick="apriStorico(event, 'dm.boiler_potenza_resistenza_boiler', 'Consumo Boiler')"><div class="node-label">Boiler</div><div class="node-icon"><i class="dm-segno" data-dm-segno="heat-pump" aria-hidden="true"></i></div><span id="v-boiler-p">—</span></div>
+        <div class="node n-load hist-clickable" id="n-wb" style="left:33%; top:83%; --n-color:#06b6d4; --n-rgb: 6,182,212;" onclick="apriPopup()"><div class="node-label">Wallbox</div><div class="node-icon"><i class="dm-segno" data-dm-segno="ev" aria-hidden="true"></i></div><span id="v-wb-p">—</span></div>
+        <div class="node n-load hist-clickable" id="n-clima" style="left:50%; top:83%; --n-color:#0ea5e9; --n-rgb: 14,165,233;" onclick="apriStorico(event, 'dm.energy_potenza_condizionatori', 'Potenza Clima')"><div class="node-label">Clima</div><div class="node-icon"><i class="dm-segno" data-dm-segno="air-conditioner" aria-hidden="true"></i></div><span id="v-clima-p">—</span></div>
+        <div class="node n-load hist-clickable" id="n-lav" style="left:67%; top:83%; --n-color:#7c3aed; --n-rgb: 124,58,237;" onclick="apriSubLoads('lavanderia')"><div class="node-label">Lavanderia</div><div class="node-icon"><i class="dm-segno" data-dm-segno="washer" aria-hidden="true"></i></div><span id="v-lav-p">—</span></div>
+        <div class="node n-load hist-clickable" id="n-cuc" style="left:84%; top:83%; --n-color:#e11d48; --n-rgb: 225,29,72;" onclick="apriSubLoads('cucina')"><div class="node-label">Cucina</div><div class="node-icon"><i class="dm-segno" data-dm-segno="cooktop" aria-hidden="true"></i></div><span id="v-cuc-p">—</span></div>
       </div><!-- v293: chiuso qui per ospitare la griglia -->
       <div class="dev-grid" id="custom-loads-grid" style="display:none; margin-top:14px;"><!-- gruppi carico personalizzati --></div>
       <div style="display:none;"><!-- v293: assorbe la vecchia chiusura -->
@@ -976,16 +978,16 @@ html[data-theme="dark"] #cd-boot-overlay b{color:#e2e8f0}
           <path id="m-line-home-lav-day" class="flow-line" style="--line-color: #7c3aed" d="M 500 460 Q 650 460 650 840"/>
         </svg>
 
-        <div class="node n-main" id="n-solar-day" style="left:50%; top:15%; --n-color:#f59e0b; --n-rgb: 245,158,11;"><div class="node-label">Solare</div><div class="node-icon">☀️</div><span id="v-solar-day">—</span></div>
-        <div class="node n-main" id="n-grid-day" style="left:25%; top:33%; --n-color:#1e40af; --n-rgb: 30,64,175;"><div class="node-label">Rete</div><div class="node-icon">⚡</div><span id="v-grid-day" class="dual-val">—</span></div>
-        <div class="node n-main" id="n-battery-day" style="left:75%; top:33%; --n-color:#15803d; --n-rgb: 21, 128, 61;"><div class="node-label">Batteria</div><div class="node-icon">🔋</div><span id="v-battery-day" class="dual-val">—</span></div>
-        <div class="node n-home" id="n-home-day" style="left:50%; top:50%; --n-color:var(--text); --n-rgb: 10,14,23;"><div class="node-label">Casa</div><div class="node-icon">🏠</div><span id="v-home-day">—</span></div>
+        <div class="node n-main" id="n-solar-day" style="left:50%; top:15%; --n-color:#f59e0b; --n-rgb: 245,158,11;"><div class="node-label">Solare</div><div class="node-icon"><i class="dm-segno" data-dm-segno="sun" aria-hidden="true"></i></div><span id="v-solar-day">—</span></div>
+        <div class="node n-main" id="n-grid-day" style="left:25%; top:33%; --n-color:#1e40af; --n-rgb: 30,64,175;"><div class="node-label">Rete</div><div class="node-icon"><i class="dm-segno" data-dm-segno="power" aria-hidden="true"></i></div><span id="v-grid-day" class="dual-val">—</span></div>
+        <div class="node n-main" id="n-battery-day" style="left:75%; top:33%; --n-color:#15803d; --n-rgb: 21, 128, 61;"><div class="node-label">Batteria</div><div class="node-icon"><i class="dm-segno" data-dm-segno="battery" aria-hidden="true"></i></div><span id="v-battery-day" class="dual-val">—</span></div>
+        <div class="node n-home" id="n-home-day" style="left:50%; top:50%; --n-color:var(--text); --n-rgb: 10,14,23;"><div class="node-label">Casa</div><div class="node-icon"><i class="dm-segno" data-dm-segno="home" aria-hidden="true"></i></div><span id="v-home-day">—</span></div>
         
-        <div class="node n-load" id="n-boiler-day" style="left:16%; top:83%; --n-color:#ea580c; --n-rgb: 234,88,12;"><div class="node-label">Boiler</div><div class="node-icon">♨️</div><span id="v-boiler-day">—</span></div>
-        <div class="node n-load" id="n-wb-day" style="left:33%; top:83%; --n-color:#06b6d4; --n-rgb: 6,182,212;"><div class="node-label">Wallbox</div><div class="node-icon">🚗</div><span id="v-wb-day">—</span></div>
-        <div class="node n-load hist-clickable" id="n-clima-day" style="left:50%; top:83%; --n-color:#0ea5e9; --n-rgb: 14,165,233;" onclick="apriStorico(event, 'dm.energy_condizionatori_oggi', 'Clima Oggi')"><div class="node-label">Clima</div><div class="node-icon">❄️</div><span id="v-clima-day">—</span></div>
-        <div class="node n-load hist-clickable" id="n-lav-day" style="left:67%; top:83%; --n-color:#7c3aed; --n-rgb: 124,58,237;" onclick="apriSubLoads('lavanderia_day')"><div class="node-label">Lavanderia</div><div class="node-icon">🧺</div><span id="v-lav-day">—</span></div>
-        <div class="node n-load hist-clickable" id="n-cuc-day" style="left:84%; top:83%; --n-color:#e11d48; --n-rgb: 225,29,72;" onclick="apriSubLoads('cucina_day')"><div class="node-label">Cucina</div><div class="node-icon">🍳</div><span id="v-cuc-day">—</span></div>
+        <div class="node n-load" id="n-boiler-day" style="left:16%; top:83%; --n-color:#ea580c; --n-rgb: 234,88,12;"><div class="node-label">Boiler</div><div class="node-icon"><i class="dm-segno" data-dm-segno="heat-pump" aria-hidden="true"></i></div><span id="v-boiler-day">—</span></div>
+        <div class="node n-load" id="n-wb-day" style="left:33%; top:83%; --n-color:#06b6d4; --n-rgb: 6,182,212;"><div class="node-label">Wallbox</div><div class="node-icon"><i class="dm-segno" data-dm-segno="ev" aria-hidden="true"></i></div><span id="v-wb-day">—</span></div>
+        <div class="node n-load hist-clickable" id="n-clima-day" style="left:50%; top:83%; --n-color:#0ea5e9; --n-rgb: 14,165,233;" onclick="apriStorico(event, 'dm.energy_condizionatori_oggi', 'Clima Oggi')"><div class="node-label">Clima</div><div class="node-icon"><i class="dm-segno" data-dm-segno="air-conditioner" aria-hidden="true"></i></div><span id="v-clima-day">—</span></div>
+        <div class="node n-load hist-clickable" id="n-lav-day" style="left:67%; top:83%; --n-color:#7c3aed; --n-rgb: 124,58,237;" onclick="apriSubLoads('lavanderia_day')"><div class="node-label">Lavanderia</div><div class="node-icon"><i class="dm-segno" data-dm-segno="washer" aria-hidden="true"></i></div><span id="v-lav-day">—</span></div>
+        <div class="node n-load hist-clickable" id="n-cuc-day" style="left:84%; top:83%; --n-color:#e11d48; --n-rgb: 225,29,72;" onclick="apriSubLoads('cucina_day')"><div class="node-label">Cucina</div><div class="node-icon"><i class="dm-segno" data-dm-segno="cooktop" aria-hidden="true"></i></div><span id="v-cuc-day">—</span></div>
       </div>
     </div>
 
@@ -1016,16 +1018,16 @@ html[data-theme="dark"] #cd-boot-overlay b{color:#e2e8f0}
           <path id="m-line-home-lav-month" class="flow-line" style="--line-color: #7c3aed" d="M 500 460 Q 650 460 650 840"/>
         </svg>
 
-        <div class="node n-main" id="n-solar-month" style="left:50%; top:15%; --n-color:#f59e0b; --n-rgb: 245,158,11;"><div class="node-label">Solare</div><div class="node-icon">☀️</div><span id="v-solar-month">—</span></div>
-        <div class="node n-main" id="n-grid-month" style="left:25%; top:33%; --n-color:#1e40af; --n-rgb: 30,64,175;"><div class="node-label">Rete</div><div class="node-icon">⚡</div><span id="v-grid-month" class="dual-val">—</span></div>
-        <div class="node n-main" id="n-battery-month" style="left:75%; top:33%; --n-color:#15803d; --n-rgb: 21, 128, 61;"><div class="node-label">Batteria</div><div class="node-icon">🔋</div><span id="v-battery-month" class="dual-val">—</span></div>
-        <div class="node n-home" id="n-home-month" style="left:50%; top:50%; --n-color:var(--text); --n-rgb: 10,14,23;"><div class="node-label">Casa</div><div class="node-icon">🏠</div><span id="v-home-month">—</span></div>
+        <div class="node n-main" id="n-solar-month" style="left:50%; top:15%; --n-color:#f59e0b; --n-rgb: 245,158,11;"><div class="node-label">Solare</div><div class="node-icon"><i class="dm-segno" data-dm-segno="sun" aria-hidden="true"></i></div><span id="v-solar-month">—</span></div>
+        <div class="node n-main" id="n-grid-month" style="left:25%; top:33%; --n-color:#1e40af; --n-rgb: 30,64,175;"><div class="node-label">Rete</div><div class="node-icon"><i class="dm-segno" data-dm-segno="power" aria-hidden="true"></i></div><span id="v-grid-month" class="dual-val">—</span></div>
+        <div class="node n-main" id="n-battery-month" style="left:75%; top:33%; --n-color:#15803d; --n-rgb: 21, 128, 61;"><div class="node-label">Batteria</div><div class="node-icon"><i class="dm-segno" data-dm-segno="battery" aria-hidden="true"></i></div><span id="v-battery-month" class="dual-val">—</span></div>
+        <div class="node n-home" id="n-home-month" style="left:50%; top:50%; --n-color:var(--text); --n-rgb: 10,14,23;"><div class="node-label">Casa</div><div class="node-icon"><i class="dm-segno" data-dm-segno="home" aria-hidden="true"></i></div><span id="v-home-month">—</span></div>
         
-        <div class="node n-load" id="n-boiler-month" style="left:16%; top:83%; --n-color:#ea580c; --n-rgb: 234,88,12;"><div class="node-label">Boiler</div><div class="node-icon">♨️</div><span id="v-boiler-month">—</span></div>
-        <div class="node n-load" id="n-wb-month" style="left:33%; top:83%; --n-color:#06b6d4; --n-rgb: 6,182,212;"><div class="node-label">Wallbox</div><div class="node-icon">🚗</div><span id="v-wb-month">—</span></div>
-        <div class="node n-load hist-clickable" id="n-clima-month" style="left:50%; top:83%; --n-color:#0ea5e9; --n-rgb: 14,165,233;" onclick="apriStorico(event, 'dm.energy_condizionatori_mese', 'Clima Mese')"><div class="node-label">Clima</div><div class="node-icon">❄️</div><span id="v-clima-month">—</span></div>
-        <div class="node n-load hist-clickable" id="n-lav-month" style="left:67%; top:83%; --n-color:#7c3aed; --n-rgb: 124,58,237;" onclick="apriSubLoads('lavanderia_month')"><div class="node-label">Lavanderia</div><div class="node-icon">🧺</div><span id="v-lav-month">—</span></div>
-        <div class="node n-load hist-clickable" id="n-cuc-month" style="left:84%; top:83%; --n-color:#e11d48; --n-rgb: 225,29,72;" onclick="apriSubLoads('cucina_month')"><div class="node-label">Cucina</div><div class="node-icon">🍳</div><span id="v-cuc-month">—</span></div>
+        <div class="node n-load" id="n-boiler-month" style="left:16%; top:83%; --n-color:#ea580c; --n-rgb: 234,88,12;"><div class="node-label">Boiler</div><div class="node-icon"><i class="dm-segno" data-dm-segno="heat-pump" aria-hidden="true"></i></div><span id="v-boiler-month">—</span></div>
+        <div class="node n-load" id="n-wb-month" style="left:33%; top:83%; --n-color:#06b6d4; --n-rgb: 6,182,212;"><div class="node-label">Wallbox</div><div class="node-icon"><i class="dm-segno" data-dm-segno="ev" aria-hidden="true"></i></div><span id="v-wb-month">—</span></div>
+        <div class="node n-load hist-clickable" id="n-clima-month" style="left:50%; top:83%; --n-color:#0ea5e9; --n-rgb: 14,165,233;" onclick="apriStorico(event, 'dm.energy_condizionatori_mese', 'Clima Mese')"><div class="node-label">Clima</div><div class="node-icon"><i class="dm-segno" data-dm-segno="air-conditioner" aria-hidden="true"></i></div><span id="v-clima-month">—</span></div>
+        <div class="node n-load hist-clickable" id="n-lav-month" style="left:67%; top:83%; --n-color:#7c3aed; --n-rgb: 124,58,237;" onclick="apriSubLoads('lavanderia_month')"><div class="node-label">Lavanderia</div><div class="node-icon"><i class="dm-segno" data-dm-segno="washer" aria-hidden="true"></i></div><span id="v-lav-month">—</span></div>
+        <div class="node n-load hist-clickable" id="n-cuc-month" style="left:84%; top:83%; --n-color:#e11d48; --n-rgb: 225,29,72;" onclick="apriSubLoads('cucina_month')"><div class="node-label">Cucina</div><div class="node-icon"><i class="dm-segno" data-dm-segno="cooktop" aria-hidden="true"></i></div><span id="v-cuc-month">—</span></div>
       </div>
     </div>
 
@@ -1033,7 +1035,7 @@ html[data-theme="dark"] #cd-boot-overlay b{color:#e2e8f0}
     <div id="view-temp" class="flow-view">
       <div class="tmp-header">
         <div class="tmp-header-left">
-          <div class="tmp-header-icon">🌡️</div>
+          <div class="tmp-header-icon"><i class="dm-segno" data-dm-segno="thermometer" aria-hidden="true"></i></div>
           <div>
             <h2 class="tmp-header-title">Temperature & Raffreddamento</h2>
             <div class="tmp-header-sub">Monitoraggio inverter, batteria e ventola</div>
@@ -1049,7 +1051,7 @@ html[data-theme="dark"] #cd-boot-overlay b{color:#e2e8f0}
       <div class="tmp-grid">
         <!-- INVERTER AC -->
         <div class="tmp-card" id="tmp-card-ac" onclick="apriStorico(event, 'dm.energy_temperatura_ac_inverter', 'Temperatura Inverter AC')">
-          <div class="tmp-card-icon">🔥</div>
+          <div class="tmp-card-icon"><i class="dm-segno" data-dm-segno="radiator" aria-hidden="true"></i></div>
           <div class="tmp-card-label">Inverter AC</div>
           <div class="tmp-gauge">
             <svg class="tmp-gauge-svg" viewBox="0 0 100 60">
@@ -1065,7 +1067,7 @@ html[data-theme="dark"] #cd-boot-overlay b{color:#e2e8f0}
 
         <!-- INVERTER DC -->
         <div class="tmp-card" id="tmp-card-dc" onclick="apriStorico(event, 'dm.energy_temperatura_dc_inverter', 'Temperatura Inverter DC')">
-          <div class="tmp-card-icon">⚡</div>
+          <div class="tmp-card-icon"><i class="dm-segno" data-dm-segno="power" aria-hidden="true"></i></div>
           <div class="tmp-card-label">Inverter DC</div>
           <div class="tmp-gauge">
             <svg class="tmp-gauge-svg" viewBox="0 0 100 60">
@@ -1081,7 +1083,7 @@ html[data-theme="dark"] #cd-boot-overlay b{color:#e2e8f0}
 
         <!-- BATTERIA -->
         <div class="tmp-card" id="tmp-card-bat" onclick="apriStorico(event, 'dm.energy_temperatura_batteria', 'Temperatura Batteria')">
-          <div class="tmp-card-icon">🔋</div>
+          <div class="tmp-card-icon"><i class="dm-segno" data-dm-segno="battery" aria-hidden="true"></i></div>
           <div class="tmp-card-label">Batteria</div>
           <div class="tmp-gauge">
             <svg class="tmp-gauge-svg" viewBox="0 0 100 60">
@@ -1100,7 +1102,7 @@ html[data-theme="dark"] #cd-boot-overlay b{color:#e2e8f0}
       <div class="fan-card" id="fan-card" onclick="toggleVentola()">
         <div class="fan-icon-wrap">
           <div class="fan-icon-ring" id="fan-icon-ring"></div>
-          <div class="fan-icon" id="fan-icon">🌀</div>
+          <div class="fan-icon" id="fan-icon"><i class="dm-segno" data-dm-segno="fan" aria-hidden="true"></i></div>
         </div>
         <div class="fan-info">
           <div class="fan-label">Ventola Superiore Inverter</div>
@@ -1119,7 +1121,7 @@ html[data-theme="dark"] #cd-boot-overlay b{color:#e2e8f0}
 
       <!-- Card info raffreddamento -->
       <div class="tmp-info-card">
-        <div class="tmp-info-icon">💡</div>
+        <div class="tmp-info-icon"><i class="dm-segno" data-dm-segno="lights" aria-hidden="true"></i></div>
         <div class="tmp-info-text">
           <strong>Tocca un sensore</strong> per vedere il grafico storico.<br>
           <strong>Tocca la ventola</strong> per accenderla o spegnerla manualmente.
@@ -1174,17 +1176,17 @@ html[data-theme="dark"] #cd-boot-overlay b{color:#e2e8f0}
     <!-- ── KPI principali: Autonomia · Potenza · Stato ── -->
     <div class="lm-kpi-row">
       <div class="lm-kpi-card" style="--kc-rgb:16,185,129;" onclick="apriStorico(event,'dm.ev_autonomia','Autonomia')">
-        <span class="lm-kpi-icon">🧭</span>
+        <span class="lm-kpi-icon"><i class="dm-segno" data-dm-segno="gauge" aria-hidden="true"></i></span>
         <span class="lm-kpi-val v-ev-range">—</span>
         <span class="lm-kpi-lbl">Autonomia</span>
       </div>
       <div class="lm-kpi-card" style="--kc-rgb:6,182,212;" onclick="apriStorico(event,'dm.ev_potenza_wallbox','Potenza Wallbox')">
-        <span class="lm-kpi-icon">⚡</span>
+        <span class="lm-kpi-icon"><i class="dm-segno" data-dm-segno="power" aria-hidden="true"></i></span>
         <span class="lm-kpi-val v-ev-pow">—</span>
         <span class="lm-kpi-lbl">Potenza WB</span>
       </div>
       <div class="lm-kpi-card" style="--kc-rgb:245,158,11;" onclick="apriStorico(event,'dm.ev_energia_sessione','Energia Sessione')">
-        <span class="lm-kpi-icon">📈</span>
+        <span class="lm-kpi-icon"><i class="dm-segno" data-dm-segno="gauge" aria-hidden="true"></i></span>
         <span class="lm-kpi-val v-ev-energy-all">—</span>
         <span class="lm-kpi-lbl">Sessione</span>
       </div>
@@ -1192,7 +1194,7 @@ html[data-theme="dark"] #cd-boot-overlay b{color:#e2e8f0}
 
     <!-- ── Sessione Ricarica ── -->
     <div class="lm-session-card">
-      <div class="lm-session-title">⚡ Sessione Ricarica</div>
+      <div class="lm-session-title"><i class="dm-segno" data-dm-segno="power" aria-hidden="true"></i> Sessione Ricarica</div>
       <div class="lm-session-grid">
         <div class="lm-sess-kpi">
           <div class="lm-sess-kpi-val v-ev-energy-all">—</div>
@@ -1204,7 +1206,7 @@ html[data-theme="dark"] #cd-boot-overlay b{color:#e2e8f0}
         </div>
       </div>
       <div class="lm-solar-row">
-        <span class="lm-solar-lbl">☀️ Solare</span>
+        <span class="lm-solar-lbl"><i class="dm-segno" data-dm-segno="sun" aria-hidden="true"></i> Solare</span>
         <div class="lm-solar-track">
           <div class="lm-solar-fill v-ev-solar-fill" style="width:0%"></div>
         </div>
@@ -1215,34 +1217,34 @@ html[data-theme="dark"] #cd-boot-overlay b{color:#e2e8f0}
     <!-- ── Stats dettaglio ── -->
     <div class="lm-stats-grid">
       <div class="lm-stat-card hist-clickable" onclick="apriStorico(event,'dm.ev_tensione_wallbox','Tensione Wallbox')">
-        <div class="lm-stat-icon">🔌</div>
+        <div class="lm-stat-icon"><i class="dm-segno" data-dm-segno="socket" aria-hidden="true"></i></div>
         <div class="lm-stat-info"><span class="lm-stat-lbl">Tensione WB</span><span class="lm-stat-val v-ev-volt">—</span></div>
       </div>
       <div class="lm-stat-card hist-clickable" onclick="apriStorico(event,'dm.ev_km_dall_ultima_ricarica','Km da Ultima Ricarica')">
-        <div class="lm-stat-icon">🔄</div>
+        <div class="lm-stat-icon"><i class="dm-segno" data-dm-segno="refresh" aria-hidden="true"></i></div>
         <div class="lm-stat-info"><span class="lm-stat-lbl">Da Ultima Ric.</span><span class="lm-stat-val v-ev-km-ric">—</span></div>
       </div>
       <div class="lm-stat-card hist-clickable" onclick="apriStorico(event,'dm.ev_odometro','Odometro')">
-        <div class="lm-stat-icon">🛣️</div>
+        <div class="lm-stat-icon"><i class="dm-segno" data-dm-segno="ev" aria-hidden="true"></i></div>
         <div class="lm-stat-info"><span class="lm-stat-lbl">Odometro</span><span class="lm-stat-val v-ev-odo">—</span></div>
       </div>
       <div class="lm-stat-card hist-clickable" onclick="apriStorico(event,'dm.ev_prelievo_ac_totale_auto','Prelievo AC')">
-        <div class="lm-stat-icon">🔋</div>
+        <div class="lm-stat-icon"><i class="dm-segno" data-dm-segno="battery" aria-hidden="true"></i></div>
         <div class="lm-stat-info"><span class="lm-stat-lbl">Prelievo AC Tot.</span><span class="lm-stat-val v-ev-ac-tot">—</span></div>
       </div>
       <div class="lm-stat-card hist-clickable" onclick="apriStorico(event,'dm.ev_temperatura_wallbox','Temp. Wallbox')">
-        <div class="lm-stat-icon">🌡️</div>
+        <div class="lm-stat-icon"><i class="dm-segno" data-dm-segno="thermometer" aria-hidden="true"></i></div>
         <div class="lm-stat-info"><span class="lm-stat-lbl">Temp. Wallbox</span><span class="lm-stat-val v-ev-temp-wb">—</span></div>
       </div>
       <div class="lm-stat-card">
-        <div class="lm-stat-icon">🎯</div>
+        <div class="lm-stat-icon"><i class="dm-segno" data-dm-segno="gauge" aria-hidden="true"></i></div>
         <div class="lm-stat-info"><span class="lm-stat-lbl">Autonomia al Target</span><span class="lm-stat-val v-auto-limite">—</span></div>
       </div>
     </div>
 
     <!-- ── Target SoC ── -->
     <div class="lm-target-card">
-      <span class="lm-target-icon">🎯</span>
+      <span class="lm-target-icon"><i class="dm-segno" data-dm-segno="gauge" aria-hidden="true"></i></span>
       <div class="lm-target-info">
         <div class="lm-target-lbl">Target Ricarica (SoC)</div>
         <div class="lm-target-val v-auto-limite">—</div>
@@ -1252,23 +1254,23 @@ html[data-theme="dark"] #cd-boot-overlay b{color:#e2e8f0}
 
     <!-- ── Modalità EVCC ── -->
     <div class="lm-evcc-card">
-      <div class="lm-evcc-title">⚡ Console Ricarica EVCC</div>
+      <div class="lm-evcc-title"><i class="dm-segno" data-dm-segno="power" aria-hidden="true"></i> Console Ricarica EVCC</div>
       <div class="lm-evcc-grid">
         <div class="lm-evcc-btn evcc-mode-btn" id="m-btn-off" onclick="setEVMode('off')"
              style="--btn-col:#e11d48;--btn-bg:#fff1f2;">
-          <span class="ev-ic">🛑</span><span class="ev-lbl">Spento</span>
+          <span class="ev-ic"><i class="dm-segno" data-dm-segno="stop" aria-hidden="true"></i></span><span class="ev-lbl">Spento</span>
         </div>
         <div class="lm-evcc-btn evcc-mode-btn" id="m-btn-pv" onclick="setEVMode('pv')"
              style="--btn-col:#059669;--btn-bg:#f0fdf4;">
-          <span class="ev-ic">☀️</span><span class="ev-lbl">Solar</span>
+          <span class="ev-ic"><i class="dm-segno" data-dm-segno="sun" aria-hidden="true"></i></span><span class="ev-lbl">Solar</span>
         </div>
         <div class="lm-evcc-btn evcc-mode-btn" id="m-btn-minpv" onclick="setEVMode('minpv')"
              style="--btn-col:#d97706;--btn-bg:#fffbeb;">
-          <span class="ev-ic">⛅</span><span class="ev-lbl">Min+Sol</span>
+          <span class="ev-ic"><i class="dm-segno" data-dm-segno="sun" aria-hidden="true"></i></span><span class="ev-lbl">Min+Sol</span>
         </div>
         <div class="lm-evcc-btn evcc-mode-btn" id="m-btn-now" onclick="setEVMode('now')"
              style="--btn-col:#0284c7;--btn-bg:#f0f9ff;">
-          <span class="ev-ic">🚀</span><span class="ev-lbl">Fast</span>
+          <span class="ev-ic"><i class="dm-segno" data-dm-segno="power" aria-hidden="true"></i></span><span class="ev-lbl">Fast</span>
         </div>
       </div>
     </div>
@@ -1283,7 +1285,7 @@ html[data-theme="dark"] #cd-boot-overlay b{color:#e2e8f0}
       </div>
 
       <div class="synoptic-stage">
-        <div class="syn-safety-alert" id="syn-safety-icon">⚠️ SAFETY LIMIT</div>
+        <div class="syn-safety-alert" id="syn-safety-icon"><i class="dm-segno" data-dm-segno="warning" aria-hidden="true"></i> SAFETY LIMIT</div>
         
         <svg class="syn-svg" viewBox="0 0 1000 600" preserveAspectRatio="none">
           <defs>
@@ -1307,7 +1309,7 @@ html[data-theme="dark"] #cd-boot-overlay b{color:#e2e8f0}
             <div class="syn-solar-grid"></div>
             <div class="syn-solar-glass"></div>
             <div class="syn-solar-content">
-              <div class="sun-icon" id="syn-sun">☀️</div>
+              <div class="sun-icon" id="syn-sun"><i class="dm-segno" data-dm-segno="sun" aria-hidden="true"></i></div>
               <div class="syn-lbl">Pannello Solare</div>
               <div class="syn-val hist-clickable" id="syn-v-pannello" style="color:#f59e0b;" onclick="apriStorico(event, 'dm.boiler_sonda_temperatura_1', 'Temperatura Pannello')">--</div>
             </div>
@@ -1376,15 +1378,15 @@ html[data-theme="dark"] #cd-boot-overlay b{color:#e2e8f0}
       </div>
 
       <div class="b-controls-grid">
-        <div class="b-btn" id="b-c-pompasol" onclick="toggle('dm.boiler_pompa_solare')" style="--c-rgb: 234,88,12;"><div class="icon"><span class="spin-active">🔄</span></div><div class="state">OFF</div></div>
-        <div class="b-btn" id="b-c-ricircolo" onclick="toggle('dm.core_051')" style="--c-rgb: 124,58,237;"><div class="icon"><span class="spin-active">🔁</span></div><div class="state">OFF</div></div>
-        <div class="b-btn" id="b-c-centralina" onclick="toggle('dm.boiler_centralina_solare_termico')" style="--c-rgb: 245,158,11;"><div class="icon">⚙️</div><div class="lbl">Centralina</div><div class="state">OFF</div></div>
-        <div class="b-btn" id="b-c-solare" onclick="toggle('dm.boiler_interruttore_solare_termico')" style="--c-rgb: 245,158,11;"><div class="icon">♨️</div><div class="lbl">Ctrl Solare</div><div class="state">OFF</div></div>
-        <div class="b-btn" id="b-c-valvola" onclick="toggle('valve.chiave_solare_termico')" style="--c-rgb: 6,182,212;"><div class="icon">🎛️</div><div class="lbl">Valvola</div><div class="state">CHIUSA</div></div>
-        <div class="b-btn" id="b-c-boiler" onclick="toggle('dm.boiler_interruttore_boiler')" style="--c-rgb: 30,64,175;"><div class="icon">🌊</div><div class="lbl">Boiler</div><div class="state">OFF</div></div>
-        <div class="b-btn" id="b-c-pdc" onclick="toggle('dm.core_050')" style="--c-rgb: 124,58,237;"><div class="icon">🌬️</div><div class="lbl">PdC</div><div class="state">OFF</div></div>
-        <div class="b-btn" id="b-c-boost" onclick="toggle('dm.core_048')" style="--c-rgb: 236,72,153;"><div class="icon">🚀</div><div class="lbl">Boost</div><div class="state">OFF</div></div>
-        <div class="b-btn" id="b-c-sicurezza" onclick="toggle('dm.boiler_valvola_di_sicurezza')" style="--c-rgb: 225,29,72;"><div class="icon"><span class="blink-active">🔒</span></div><div class="lbl">V. Sicurezza</div><div class="state">CHIUSA</div></div>
+        <div class="b-btn" id="b-c-pompasol" onclick="toggle('dm.boiler_pompa_solare')" style="--c-rgb: 234,88,12;"><div class="icon"><span class="spin-active"><i class="dm-segno" data-dm-segno="refresh" aria-hidden="true"></i></span></div><div class="state">OFF</div></div>
+        <div class="b-btn" id="b-c-ricircolo" onclick="toggle('dm.core_051')" style="--c-rgb: 124,58,237;"><div class="icon"><span class="spin-active"><i class="dm-segno" data-dm-segno="refresh" aria-hidden="true"></i></span></div><div class="state">OFF</div></div>
+        <div class="b-btn" id="b-c-centralina" onclick="toggle('dm.boiler_centralina_solare_termico')" style="--c-rgb: 245,158,11;"><div class="icon"><i class="dm-segno" data-dm-segno="sliders" aria-hidden="true"></i></div><div class="lbl">Centralina</div><div class="state">OFF</div></div>
+        <div class="b-btn" id="b-c-solare" onclick="toggle('dm.boiler_interruttore_solare_termico')" style="--c-rgb: 245,158,11;"><div class="icon"><i class="dm-segno" data-dm-segno="heat-pump" aria-hidden="true"></i></div><div class="lbl">Ctrl Solare</div><div class="state">OFF</div></div>
+        <div class="b-btn" id="b-c-valvola" onclick="toggle('valve.chiave_solare_termico')" style="--c-rgb: 6,182,212;"><div class="icon"><i class="dm-segno" data-dm-segno="sliders" aria-hidden="true"></i></div><div class="lbl">Valvola</div><div class="state">CHIUSA</div></div>
+        <div class="b-btn" id="b-c-boiler" onclick="toggle('dm.boiler_interruttore_boiler')" style="--c-rgb: 30,64,175;"><div class="icon"><i class="dm-segno" data-dm-segno="water" aria-hidden="true"></i></div><div class="lbl">Boiler</div><div class="state">OFF</div></div>
+        <div class="b-btn" id="b-c-pdc" onclick="toggle('dm.core_050')" style="--c-rgb: 124,58,237;"><div class="icon"><i class="dm-segno" data-dm-segno="wind" aria-hidden="true"></i></div><div class="lbl">PdC</div><div class="state">OFF</div></div>
+        <div class="b-btn" id="b-c-boost" onclick="toggle('dm.core_048')" style="--c-rgb: 236,72,153;"><div class="icon"><i class="dm-segno" data-dm-segno="power" aria-hidden="true"></i></div><div class="lbl">Boost</div><div class="state">OFF</div></div>
+        <div class="b-btn" id="b-c-sicurezza" onclick="toggle('dm.boiler_valvola_di_sicurezza')" style="--c-rgb: 225,29,72;"><div class="icon"><span class="blink-active"><i class="dm-segno" data-dm-segno="lock" aria-hidden="true"></i></span></div><div class="lbl">V. Sicurezza</div><div class="state">CHIUSA</div></div>
       </div>
     </div>
   </section>
@@ -1404,7 +1406,7 @@ html[data-theme="dark"] #cd-boot-overlay b{color:#e2e8f0}
         <div class="alarm-hero-top">
           <div class="alarm-hero-icon-wrap">
             <div class="alarm-hero-icon-ring"></div>
-            <div class="alarm-hero-icon" id="alarm-icon-new">🛡️</div>
+            <div class="alarm-hero-icon" id="alarm-icon-new"><i class="dm-segno" data-dm-segno="security" aria-hidden="true"></i></div>
           </div>
           <div class="alarm-hero-info">
             <div class="alarm-hero-label">Stato Antifurto</div>
@@ -1417,15 +1419,15 @@ html[data-theme="dark"] #cd-boot-overlay b{color:#e2e8f0}
         <!-- Riga pulsanti modalità (segmented control) -->
         <div class="alarm-hero-controls">
           <button class="alarm-mode-btn" data-mode="away" onclick="promptPinAndSet('alarm_arm_away')">
-            <div class="alarm-mode-icon">🏠</div>
+            <div class="alarm-mode-icon"><i class="dm-segno" data-dm-segno="home" aria-hidden="true"></i></div>
             <div class="alarm-mode-text">Fuori</div>
           </button>
           <button class="alarm-mode-btn" data-mode="night" onclick="promptPinAndSet('alarm_arm_night')">
-            <div class="alarm-mode-icon">🌙</div>
+            <div class="alarm-mode-icon"><i class="dm-segno" data-dm-segno="moon" aria-hidden="true"></i></div>
             <div class="alarm-mode-text">Notte</div>
           </button>
           <button class="alarm-mode-btn" data-mode="disarm" onclick="promptPinAndSet('alarm_disarm')">
-            <div class="alarm-mode-icon">🔓</div>
+            <div class="alarm-mode-icon"><i class="dm-segno" data-dm-segno="unlock" aria-hidden="true"></i></div>
             <div class="alarm-mode-text">Sblocca</div>
           </button>
         </div>
@@ -1462,24 +1464,24 @@ html[data-theme="dark"] #cd-boot-overlay b{color:#e2e8f0}
     <div class="srv-hero">
       <div class="srv-hero-top" ondblclick="toggleDebug()">
         <div class="srv-hero-brand">
-          <div class="srv-hero-icon">🖥️</div>
+          <div class="srv-hero-icon"><i class="dm-segno" data-dm-segno="computer" aria-hidden="true"></i></div>
           <div><div class="srv-hero-title">MiniPC Server</div><div class="srv-hero-sub">Home Assistant · Sistema Core</div></div>
         </div>
         <div class="srv-hero-pill"><span class="srv-hero-dot"></span><span id="v-srv-net-status">ONLINE</span></div>
       </div>
       <div class="srv-hero-metrics">
         <div class="srv-metric" style="--m-rgb: 6, 182, 212;" onclick="apriStorico(event,'dm.server_cpu','CPU')">
-          <div class="srv-metric-top"><span class="srv-metric-lbl">CPU</span><span class="srv-metric-icon">🎛️</span></div>
+          <div class="srv-metric-top"><span class="srv-metric-lbl">CPU</span><span class="srv-metric-icon"><i class="dm-segno" data-dm-segno="sliders" aria-hidden="true"></i></span></div>
           <div><span class="srv-metric-val" id="v-srv-cpu">—</span><span class="srv-metric-unit">%</span></div>
           <div class="srv-metric-bar"><div class="srv-metric-fill" id="srv-fill-cpu" style="width:0%;background:#06b6d4;"></div></div>
         </div>
         <div class="srv-metric" style="--m-rgb: 124, 58, 237;" onclick="apriStorico(event,'dm.server_ram','RAM')">
-          <div class="srv-metric-top"><span class="srv-metric-lbl">RAM</span><span class="srv-metric-icon">💾</span></div>
+          <div class="srv-metric-top"><span class="srv-metric-lbl">RAM</span><span class="srv-metric-icon"><i class="dm-segno" data-dm-segno="check" aria-hidden="true"></i></span></div>
           <div><span class="srv-metric-val" id="v-srv-ram">—</span><span class="srv-metric-unit" id="u-srv-ram">%</span></div>
           <div class="srv-metric-bar"><div class="srv-metric-fill" id="srv-fill-ram" style="width:0%;background:#7c3aed;"></div></div>
         </div>
         <div class="srv-metric" style="--m-rgb: 16, 185, 129;" onclick="apriStorico(event,'dm.server_disco','Disco')">
-          <div class="srv-metric-top"><span class="srv-metric-lbl">Disco</span><span class="srv-metric-icon">💽</span></div>
+          <div class="srv-metric-top"><span class="srv-metric-lbl">Disco</span><span class="srv-metric-icon"><i class="dm-segno" data-dm-segno="server" aria-hidden="true"></i></span></div>
           <div><span class="srv-metric-val" id="v-srv-disk">—</span><span class="srv-metric-unit">%</span></div>
           <div class="srv-metric-bar"><div class="srv-metric-fill" id="srv-fill-disk" style="width:0%;background:#10b981;"></div></div>
         </div>
@@ -1504,22 +1506,22 @@ html[data-theme="dark"] #cd-boot-overlay b{color:#e2e8f0}
     </div>
     <div class="srv-tel-grid">
       <div class="srv-tel-card" style="--tc-rgb:239,68,68;" onclick="apriStorico(event,'dm.server_potenza_raspberry_server','Potenza')">
-        <div class="srv-tel-top"><span class="srv-tel-lbl">Alimentazione</span><div class="srv-tel-icon">⚡</div></div>
+        <div class="srv-tel-top"><span class="srv-tel-lbl">Alimentazione</span><div class="srv-tel-icon"><i class="dm-segno" data-dm-segno="power" aria-hidden="true"></i></div></div>
         <div class="srv-tel-val" id="v-srv-pwr">—</div>
         <div class="srv-tel-sub">Consumo istantaneo</div>
       </div>
       <div class="srv-tel-card" style="--tc-rgb:99,102,241;" onclick="apriStorico(event,'dm.server_uptime_home_assistant','Uptime')">
-        <div class="srv-tel-top"><span class="srv-tel-lbl">Uptime</span><div class="srv-tel-icon">🕐</div></div>
+        <div class="srv-tel-top"><span class="srv-tel-lbl">Uptime</span><div class="srv-tel-icon"><i class="dm-segno" data-dm-segno="timer" aria-hidden="true"></i></div></div>
         <div class="srv-tel-val" id="v-srv-uptime">—</div>
         <div class="srv-tel-sub" id="v-srv-uptime-sub">Dall'ultimo riavvio</div>
       </div>
       <div class="srv-tel-card" style="--tc-rgb:16,185,129;" onclick="apriStorico(event,'dm.server_speedtest_download','Download')">
-        <div class="srv-tel-top"><span class="srv-tel-lbl">Download</span><div class="srv-tel-icon">⬇️</div></div>
+        <div class="srv-tel-top"><span class="srv-tel-lbl">Download</span><div class="srv-tel-icon">↓</div></div>
         <div class="srv-tel-val" id="v-srv-dl">—</div>
         <div class="srv-tel-sub">Speedtest downlink</div>
       </div>
       <div class="srv-tel-card" style="--tc-rgb:124,58,237;" onclick="apriStorico(event,'dm.server_speedtest_upload','Upload')">
-        <div class="srv-tel-top"><span class="srv-tel-lbl">Upload</span><div class="srv-tel-icon">⬆️</div></div>
+        <div class="srv-tel-top"><span class="srv-tel-lbl">Upload</span><div class="srv-tel-icon">↑</div></div>
         <div class="srv-tel-val" id="v-srv-ul">—</div>
         <div class="srv-tel-sub">Speedtest uplink</div>
       </div>
@@ -1540,7 +1542,7 @@ html[data-theme="dark"] #cd-boot-overlay b{color:#e2e8f0}
     <!-- Debug Sensori — visibile solo in modalità debug -->
     <div id="debug-panel" style="display:none; margin-top:16px; background:#1e293b; border-radius:16px; padding:16px; font-family:monospace; font-size:11px; color:#e2e8f0; line-height:1.8;">
       <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
-        <span style="font-weight:800; color:#7c3aed; font-size:13px;">🔍 DEBUG SENSORI</span>
+        <span style="font-weight:800; color:#7c3aed; font-size:13px;"><i class="dm-segno" data-dm-segno="search" aria-hidden="true"></i> DEBUG SENSORI</span>
         <button onclick="document.getElementById('debug-panel').style.display='none'" style="background:none;border:none;color:#94a3b8;cursor:pointer;font-size:16px;">✕</button>
       </div>
       <div id="debug-content">Caricamento...</div>
@@ -1569,7 +1571,7 @@ html[data-theme="dark"] #cd-boot-overlay b{color:#e2e8f0}
 
       <!-- Configura Entità -->
       <div class="cfg-card" id="srv-config-card" onclick="apriConfigEntita()">
-        <div class="cfg-card-ico" style="--cc-rgb: 124,58,237;">🧩</div>
+        <div class="cfg-card-ico" style="--cc-rgb: 124,58,237;"><i class="dm-segno" data-dm-segno="sliders" aria-hidden="true"></i></div>
         <div class="cfg-card-txt">
           <div class="cfg-card-nm">Configura Entità</div>
           <div class="cfg-card-ds">Sostituzioni, carichi, avvisi, testi, sezioni ed esportazione HTML</div>
@@ -1579,25 +1581,25 @@ html[data-theme="dark"] #cd-boot-overlay b{color:#e2e8f0}
 
       <!-- Tema -->
       <div class="cfg-card cfg-card-theme">
-        <div class="cfg-card-ico" style="--cc-rgb: 245,158,11;">🎨</div>
+        <div class="cfg-card-ico" style="--cc-rgb: 245,158,11;"><i class="dm-segno" data-dm-segno="sliders" aria-hidden="true"></i></div>
         <div class="cfg-card-txt">
           <div class="cfg-card-nm">Tema</div>
           <div class="cfg-card-ds">Aspetto della dashboard su questo dispositivo</div>
           <div class="theme-seg" id="theme-seg">
-            <button class="theme-opt" data-theme="light" onclick="setTheme('light')"><span class="theme-opt-ico">☀️</span><span>Chiaro</span></button>
-            <button class="theme-opt" data-theme="dark" onclick="setTheme('dark')"><span class="theme-opt-ico">🌙</span><span>Scuro</span></button>
-            <button class="theme-opt" data-theme="auto" onclick="setTheme('auto')"><span class="theme-opt-ico">📱</span><span>Auto</span></button>
+            <button class="theme-opt" data-theme="light" onclick="setTheme('light')"><span class="theme-opt-ico"><i class="dm-segno" data-dm-segno="sun" aria-hidden="true"></i></span><span>Chiaro</span></button>
+            <button class="theme-opt" data-theme="dark" onclick="setTheme('dark')"><span class="theme-opt-ico"><i class="dm-segno" data-dm-segno="moon" aria-hidden="true"></i></span><span>Scuro</span></button>
+            <button class="theme-opt" data-theme="auto" onclick="setTheme('auto')"><span class="theme-opt-ico"><i class="dm-segno" data-dm-segno="phone" aria-hidden="true"></i></span><span>Auto</span></button>
           </div>
         </div>
       </div>
       <div class="cfg-card cfg-card-theme">
-        <div class="cfg-card-ico" style="--cc-rgb: 14,165,233;">📌</div>
+        <div class="cfg-card-ico" style="--cc-rgb: 14,165,233;"><i class="dm-segno" data-dm-segno="star" aria-hidden="true"></i></div>
         <div class="cfg-card-txt">
           <div class="cfg-card-nm">Barra di navigazione</div>
           <div class="cfg-card-ds">Sempre visibile o a scomparsa, su questo dispositivo</div>
           <div class="theme-seg">
-            <button class="theme-opt" id="nav-opt-auto" onclick="wzSetNavMode('auto'); setTimeout(() => location.reload(), 150);"><span class="theme-opt-ico">👆</span> A scomparsa</button>
-            <button class="theme-opt" id="nav-opt-fixed" onclick="wzSetNavMode('fixed'); setTimeout(() => location.reload(), 150);"><span class="theme-opt-ico">📌</span> Fissa</button>
+            <button class="theme-opt" id="nav-opt-auto" onclick="wzSetNavMode('auto'); setTimeout(() => location.reload(), 150);"><span class="theme-opt-ico"><i class="dm-segno" data-dm-segno="sliders" aria-hidden="true"></i></span> A scomparsa</button>
+            <button class="theme-opt" id="nav-opt-fixed" onclick="wzSetNavMode('fixed'); setTimeout(() => location.reload(), 150);"><span class="theme-opt-ico"><i class="dm-segno" data-dm-segno="star" aria-hidden="true"></i></span> Fissa</button>
           </div>
         </div>
       </div>
@@ -1616,10 +1618,10 @@ html[data-theme="dark"] #cd-boot-overlay b{color:#e2e8f0}
       <!-- v254: Selettore Freddo/Caldo -->
       <div class="clima-page-mode-switch">
         <button class="clima-page-mode-btn active-freddo" id="clima-page-mode-freddo" onclick="setClimaPageMode('freddo')">
-          <span class="icon">❄️</span><span>Freddo</span>
+          <span class="icon"><i class="dm-segno" data-dm-segno="air-conditioner" aria-hidden="true"></i></span><span>Freddo</span>
         </button>
         <button class="clima-page-mode-btn" id="clima-page-mode-caldo" onclick="setClimaPageMode('caldo')">
-          <span class="icon">🔥</span><span>Caldo</span>
+          <span class="icon"><i class="dm-segno" data-dm-segno="radiator" aria-hidden="true"></i></span><span>Caldo</span>
         </button>
       </div>
 
@@ -1643,7 +1645,7 @@ html[data-theme="dark"] #cd-boot-overlay b{color:#e2e8f0}
 <div class="modal-wrapper" id="weather-modal" onclick="closeModal(event, 'weather-modal')">
   <div class="modal-card details-content" style="max-width: 480px;">
     <div class="ev-waw-header">
-      <h3 class="ev-waw-title" id="weather-title">🌤️ PREVISIONI 7 GIORNI</h3>
+      <h3 class="ev-waw-title" id="weather-title"><i class="dm-segno" data-dm-segno="sun" aria-hidden="true"></i> PREVISIONI 7 GIORNI</h3>
       <div class="ev-waw-close" onclick="forceClose('weather-modal')">✕ CHIUDI</div>
     </div>
     <div id="weather-forecast-list" style="display:flex; flex-direction:column; gap:8px;"></div>
@@ -1653,7 +1655,7 @@ html[data-theme="dark"] #cd-boot-overlay b{color:#e2e8f0}
 <div class="modal-wrapper" id="weather-hourly-modal" onclick="closeModal(event, 'weather-hourly-modal')" style="z-index: 10001;">
   <div class="modal-card details-content" style="max-width: 480px; padding: 25px;">
     <div class="ev-waw-header">
-      <h3 class="ev-waw-title" style="font-size: 20px;">⏳ ORARIE <span id="weather-hourly-date"></span></h3>
+      <h3 class="ev-waw-title" style="font-size: 20px;"><i class="dm-segno" data-dm-segno="timer" aria-hidden="true"></i> ORARIE <span id="weather-hourly-date"></span></h3>
       <div class="ev-waw-close" onclick="forceClose('weather-hourly-modal')">✕ CHIUDI</div>
     </div>
     <div id="weather-hourly-list" style="display:flex; flex-direction:column; gap:6px; max-height: 60vh; overflow-y:auto; padding-right: 5px;"></div>
@@ -1665,16 +1667,16 @@ html[data-theme="dark"] #cd-boot-overlay b{color:#e2e8f0}
 <div class="modal-wrapper" id="quick-clima-modal" onclick="closeModal(event, 'quick-clima-modal')">
   <div class="modal-card details-content" style="max-width: 560px; padding: 25px;">
     <div class="ev-waw-header">
-      <h3 class="ev-waw-title" id="quick-clima-title">❄️ CLIMA · FREDDO</h3>
+      <h3 class="ev-waw-title" id="quick-clima-title"><i class="dm-segno" data-dm-segno="air-conditioner" aria-hidden="true"></i> CLIMA · FREDDO</h3>
       <div class="ev-waw-close" onclick="forceClose('quick-clima-modal')">✕ CHIUDI</div>
     </div>
     <div class="ns-clima-mode-switch">
       <button class="ns-clima-mode-btn active-freddo" id="ns-mode-freddo" onclick="setQuickClimaMode('freddo')">
-        <span class="ns-clima-mode-btn-icon">❄️</span>
+        <span class="ns-clima-mode-btn-icon"><i class="dm-segno" data-dm-segno="air-conditioner" aria-hidden="true"></i></span>
         <span>Freddo</span>
       </button>
       <button class="ns-clima-mode-btn" id="ns-mode-caldo" onclick="setQuickClimaMode('caldo')">
-        <span class="ns-clima-mode-btn-icon">🔥</span>
+        <span class="ns-clima-mode-btn-icon"><i class="dm-segno" data-dm-segno="radiator" aria-hidden="true"></i></span>
         <span>Caldo</span>
       </button>
     </div>
@@ -1683,7 +1685,7 @@ html[data-theme="dark"] #cd-boot-overlay b{color:#e2e8f0}
     <!-- v244: pannello stato termico (caldaia, termocamino, aspiratore) - solo modalità Caldo -->
     <div class="ns-thermal-panel" id="ns-thermal-panel">
       <div class="ns-thermal-row" id="ns-thermal-row-caldaia" style="--nt-rgb: 239, 68, 68;">
-        <span class="ns-thermal-icon">🔥</span>
+        <span class="ns-thermal-icon"><i class="dm-segno" data-dm-segno="radiator" aria-hidden="true"></i></span>
         <span class="ns-thermal-label">Caldaia</span>
         <span class="ns-thermal-state off" id="ns-thermal-caldaia">
           <span class="ns-thermal-dot"></span>
@@ -1691,7 +1693,7 @@ html[data-theme="dark"] #cd-boot-overlay b{color:#e2e8f0}
         </span>
       </div>
       <div class="ns-thermal-row" id="ns-thermal-row-termocamino" style="--nt-rgb: 234, 88, 12;">
-        <span class="ns-thermal-icon">🔄</span>
+        <span class="ns-thermal-icon"><i class="dm-segno" data-dm-segno="refresh" aria-hidden="true"></i></span>
         <span class="ns-thermal-label">Pompa termocamino</span>
         <span class="ns-thermal-state off" id="ns-thermal-termocamino">
           <span class="ns-thermal-dot"></span>
@@ -1699,7 +1701,7 @@ html[data-theme="dark"] #cd-boot-overlay b{color:#e2e8f0}
         </span>
       </div>
       <div class="ns-thermal-row is-clickable" id="ns-thermal-row-aspiratore" style="--nt-rgb: 14, 165, 233;" onclick="toggleAspiratoreCF()">
-        <span class="ns-thermal-icon">💨</span>
+        <span class="ns-thermal-icon"><i class="dm-segno" data-dm-segno="wind" aria-hidden="true"></i></span>
         <span class="ns-thermal-label">Aspiratore canna fumaria</span>
         <span class="ns-thermal-state off" id="ns-thermal-aspiratore-btn">
           <span class="ns-thermal-dot"></span>
@@ -1716,7 +1718,7 @@ html[data-theme="dark"] #cd-boot-overlay b{color:#e2e8f0}
 <div class="modal-wrapper" id="quick-alarm-modal" onclick="closeModal(event, 'quick-alarm-modal')">
   <div class="modal-card details-content" style="max-width: 520px; padding: 25px;">
     <div class="ev-waw-header">
-      <h3 class="ev-waw-title">🛡️ ANTIFURTO</h3>
+      <h3 class="ev-waw-title"><i class="dm-segno" data-dm-segno="security" aria-hidden="true"></i> ANTIFURTO</h3>
       <div class="ev-waw-close" onclick="forceClose('quick-alarm-modal')">✕ CHIUDI</div>
     </div>
     <div class="qa-alarm-status">
@@ -1726,22 +1728,22 @@ html[data-theme="dark"] #cd-boot-overlay b{color:#e2e8f0}
     </div>
     <div class="qa-alarm-grid" id="qa-alarm-grid">
       <button class="qa-alarm-btn" data-mode="home" onclick="promptPinAndSet('alarm_arm_home')">
-        <span class="qa-alarm-btn-icon">🏡</span>
+        <span class="qa-alarm-btn-icon"><i class="dm-segno" data-dm-segno="home" aria-hidden="true"></i></span>
         <span class="qa-alarm-btn-name">Casa</span>
         <span class="qa-alarm-btn-sub">Solo perimetro</span>
       </button>
       <button class="qa-alarm-btn" data-mode="away" onclick="promptPinAndSet('alarm_arm_away')">
-        <span class="qa-alarm-btn-icon">🏠</span>
+        <span class="qa-alarm-btn-icon"><i class="dm-segno" data-dm-segno="home" aria-hidden="true"></i></span>
         <span class="qa-alarm-btn-name">Totale</span>
         <span class="qa-alarm-btn-sub">Tutta la casa</span>
       </button>
       <button class="qa-alarm-btn" data-mode="night" onclick="promptPinAndSet('alarm_arm_night')">
-        <span class="qa-alarm-btn-icon">🌙</span>
+        <span class="qa-alarm-btn-icon"><i class="dm-segno" data-dm-segno="moon" aria-hidden="true"></i></span>
         <span class="qa-alarm-btn-name">Notte</span>
         <span class="qa-alarm-btn-sub">Perimetro</span>
       </button>
       <button class="qa-alarm-btn" data-mode="disarm" onclick="promptPinAndSet('alarm_disarm')">
-        <span class="qa-alarm-btn-icon">🔓</span>
+        <span class="qa-alarm-btn-icon"><i class="dm-segno" data-dm-segno="unlock" aria-hidden="true"></i></span>
         <span class="qa-alarm-btn-name">Sblocca</span>
         <span class="qa-alarm-btn-sub">Disinserisci</span>
       </button>
@@ -1763,7 +1765,7 @@ html[data-theme="dark"] #cd-boot-overlay b{color:#e2e8f0}
 <div class="modal-wrapper" id="lavatrice-modal" onclick="closeModal(event, 'lavatrice-modal')">
   <div class="modal-card ev-dash-waw">
     <div class="ev-waw-header">
-      <div class="ev-waw-title"><span class="icon" style="font-size: 26px; color: #0ea5e9;">🧺</span> LAVATRICE</div>
+      <div class="ev-waw-title"><span class="icon" style="font-size: 26px; color: #0ea5e9;"><i class="dm-segno" data-dm-segno="washer" aria-hidden="true"></i></span> LAVATRICE</div>
       <div class="ev-waw-close" onclick="forceClose('lavatrice-modal')">✕ CHIUDI</div>
     </div>
 
@@ -1775,14 +1777,14 @@ html[data-theme="dark"] #cd-boot-overlay b{color:#e2e8f0}
         <div class="lav-area-quick">
             <h4 style="font-family: 'Inter', sans-serif; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; font-size: 11px; color: var(--text-dim); margin-bottom: 12px;">Programmi Rapidi</h4>
             <div class="lav-preset-grid">
-              <button class="lav-preset-btn" onclick="toggle('dm.lavatrice_script_programma_59')"><div class="icon-wrap">⏱️</div><div class="name">Rapido 59'</div></button>
-              <button class="lav-preset-btn" onclick="toggle('dm.lavatrice_script_programma_rapido_14')"><div class="icon-wrap">⚡</div><div class="name">Rapido 14'</div></button>
-              <button class="lav-preset-btn" onclick="toggle('dm.lavatrice_script_programma_30')"><div class="icon-wrap">⏲️</div><div class="name">Rapido 30'</div></button>
-              <button class="lav-preset-btn" onclick="toggle('dm.lavatrice_script_programma_misto_colorati')"><div class="icon-wrap">👕</div><div class="name">Colorati</div></button>
+              <button class="lav-preset-btn" onclick="toggle('dm.lavatrice_script_programma_59')"><div class="icon-wrap"><i class="dm-segno" data-dm-segno="timer" aria-hidden="true"></i></div><div class="name">Rapido 59'</div></button>
+              <button class="lav-preset-btn" onclick="toggle('dm.lavatrice_script_programma_rapido_14')"><div class="icon-wrap"><i class="dm-segno" data-dm-segno="power" aria-hidden="true"></i></div><div class="name">Rapido 14'</div></button>
+              <button class="lav-preset-btn" onclick="toggle('dm.lavatrice_script_programma_30')"><div class="icon-wrap"><i class="dm-segno" data-dm-segno="timer" aria-hidden="true"></i></div><div class="name">Rapido 30'</div></button>
+              <button class="lav-preset-btn" onclick="toggle('dm.lavatrice_script_programma_misto_colorati')"><div class="icon-wrap"><i class="dm-segno" data-dm-segno="dryer" aria-hidden="true"></i></div><div class="name">Colorati</div></button>
             </div>
             <div class="ev-actions-grid" style="margin-top: auto; display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
-               <div class="ev-act-btn" id="lav-btn-power" onclick="toggle('dm.lavatrice_presa_avvio_lavatrice')" style="--btn-col: #0ea5e9; --btn-bg: #e0f2fe;"><div class="icon" style="font-size: 22px;">🔌</div><div class="txt" id="lav-txt-power" style="font-size: 11px;">SPENTA</div></div>
-               <div class="ev-act-btn" id="lav-btn-play" onclick="toggle('dm.lavatrice_avvio_ciclo')" style="--btn-col: #0ea5e9; --btn-bg: #e0f2fe;"><div class="icon" style="font-size: 22px;">▶️</div><div class="txt" id="lav-txt-play" style="font-size: 11px;">PAUSA</div></div>
+               <div class="ev-act-btn" id="lav-btn-power" onclick="toggle('dm.lavatrice_presa_avvio_lavatrice')" style="--btn-col: #0ea5e9; --btn-bg: #e0f2fe;"><div class="icon" style="font-size: 22px;"><i class="dm-segno" data-dm-segno="socket" aria-hidden="true"></i></div><div class="txt" id="lav-txt-power" style="font-size: 11px;">SPENTA</div></div>
+               <div class="ev-act-btn" id="lav-btn-play" onclick="toggle('dm.lavatrice_avvio_ciclo')" style="--btn-col: #0ea5e9; --btn-bg: #e0f2fe;"><div class="icon" style="font-size: 22px;"><i class="dm-segno" data-dm-segno="play" aria-hidden="true"></i></div><div class="txt" id="lav-txt-play" style="font-size: 11px;">PAUSA</div></div>
             </div>
         </div>
 
@@ -1796,19 +1798,19 @@ html[data-theme="dark"] #cd-boot-overlay b{color:#e2e8f0}
             <h4 style="font-family: 'Inter', sans-serif; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; font-size: 11px; color: var(--text-dim); margin-bottom: 2px;">Impostazioni Manuali</h4>
             <div class="detail-row" style="padding: 12px 18px;">
                 <div style="display:flex; align-items:center; width: 100%; gap: 15px;">
-                    <div class="d-icon" style="font-size: 18px; width: 40px; height: 40px;">📋</div>
+                    <div class="d-icon" style="font-size: 18px; width: 40px; height: 40px;"><i class="dm-segno" data-dm-segno="list" aria-hidden="true"></i></div>
                     <div class="d-info" style="flex: 1;"><div class="d-name" style="font-size: 13px;">Programma</div><select id="sel-lav-prog" class="ha-select" onchange="changeSelect('dm.lavatrice_programma', this.value)"></select></div>
                 </div>
             </div>
             <div class="detail-row" style="padding: 12px 18px;">
                 <div style="display:flex; align-items:center; width: 100%; gap: 15px;">
-                    <div class="d-icon" style="font-size: 18px; width: 40px; height: 40px;">🌡️</div>
+                    <div class="d-icon" style="font-size: 18px; width: 40px; height: 40px;"><i class="dm-segno" data-dm-segno="thermometer" aria-hidden="true"></i></div>
                     <div class="d-info" style="flex: 1;"><div class="d-name" style="font-size: 13px;">Temperatura</div><select id="sel-lav-temp" class="ha-select" onchange="changeSelect('dm.lavatrice_temperatura', this.value)"></select></div>
                 </div>
             </div>
             <div class="detail-row" style="padding: 12px 18px;">
                 <div style="display:flex; align-items:center; width: 100%; gap: 15px;">
-                    <div class="d-icon" style="font-size: 18px; width: 40px; height: 40px;">🌀</div>
+                    <div class="d-icon" style="font-size: 18px; width: 40px; height: 40px;"><i class="dm-segno" data-dm-segno="fan" aria-hidden="true"></i></div>
                     <div class="d-info" style="flex: 1;"><div class="d-name" style="font-size: 13px;">Centrifuga</div><select id="sel-lav-cent" class="ha-select" onchange="changeSelect('dm.lavatrice_centrifuga', this.value)"></select></div>
                 </div>
             </div>
@@ -1826,7 +1828,7 @@ html[data-theme="dark"] #cd-boot-overlay b{color:#e2e8f0}
         <h3 class="ev-waw-title">La mia auto</h3>
         <div class="ev-popup-sub">
           <span class="ev-popup-sub-name">EV</span>
-          <span class="ev-popup-status" id="ev-popup-badge">⚪ SCOLLEGATA</span>
+          <span class="ev-popup-status" id="ev-popup-badge">○ SCOLLEGATA</span>
         </div>
       </div>
       <div class="ev-waw-close ev-popup-close" onclick="forceClose('ev-popup')">✕ CHIUDI</div>
@@ -1840,7 +1842,7 @@ html[data-theme="dark"] #cd-boot-overlay b{color:#e2e8f0}
     <!-- Hero card batteria -->
     <div class="ev-popup-batt-card hist-clickable" onclick="apriStorico(event, 'dm.ev_batteria_auto', 'Livello Batteria EV')">
       <div class="ev-popup-batt-top">
-        <div class="ev-popup-batt-icon">🔋</div>
+        <div class="ev-popup-batt-icon"><i class="dm-segno" data-dm-segno="battery" aria-hidden="true"></i></div>
         <div class="ev-popup-batt-info">
           <div class="ev-popup-batt-lbl">Livello batteria</div>
           <div class="ev-popup-batt-val v-ev-soc-txt">0%</div>
@@ -1854,17 +1856,17 @@ html[data-theme="dark"] #cd-boot-overlay b{color:#e2e8f0}
     <!-- 3 stat cards in riga -->
     <div class="ev-popup-stats">
       <div class="ev-popup-stat hist-clickable" onclick="apriStorico(event, 'dm.ev_autonomia', 'Autonomia EV')" style="--m-rgb: 6, 182, 212;">
-        <div class="ev-popup-stat-icon">📈</div>
+        <div class="ev-popup-stat-icon"><i class="dm-segno" data-dm-segno="gauge" aria-hidden="true"></i></div>
         <div class="ev-popup-stat-lbl">Autonomia</div>
         <div class="ev-popup-stat-val v-ev-range">—</div>
       </div>
       <div class="ev-popup-stat hist-clickable" onclick="apriStorico(event, 'dm.ev_potenza_wallbox', 'Potenza Wallbox')" style="--m-rgb: 16, 185, 129;">
-        <div class="ev-popup-stat-icon">⚡</div>
+        <div class="ev-popup-stat-icon"><i class="dm-segno" data-dm-segno="power" aria-hidden="true"></i></div>
         <div class="ev-popup-stat-lbl">Potenza</div>
         <div class="ev-popup-stat-val v-ev-pow">—</div>
       </div>
       <div class="ev-popup-stat" style="--m-rgb: 124, 58, 237;">
-        <div class="ev-popup-stat-icon">📍</div>
+        <div class="ev-popup-stat-icon"><i class="dm-segno" data-dm-segno="home" aria-hidden="true"></i></div>
         <div class="ev-popup-stat-lbl">Aut. Prevista</div>
         <div class="ev-popup-stat-val v-auto-limite">—</div>
       </div>
@@ -1873,15 +1875,15 @@ html[data-theme="dark"] #cd-boot-overlay b{color:#e2e8f0}
     <!-- Session info box -->
     <div class="ev-popup-session">
       <div class="ev-popup-session-row">
-        <span class="lbl"><span class="lbl-icon">⏱️</span> <span id="lbl-ev-remain-popup">Tempo al target</span></span>
+        <span class="lbl"><span class="lbl-icon"><i class="dm-segno" data-dm-segno="timer" aria-hidden="true"></i></span> <span id="lbl-ev-remain-popup">Tempo al target</span></span>
         <span class="val" id="v-ev-remain-popup">IN ATTESA</span>
       </div>
       <div class="ev-popup-session-row">
-        <span class="lbl"><span class="lbl-icon">☀️</span> Energia sessione</span>
+        <span class="lbl"><span class="lbl-icon"><i class="dm-segno" data-dm-segno="sun" aria-hidden="true"></i></span> Energia sessione</span>
         <span class="val v-ev-energy-all">—</span>
       </div>
       <div class="ev-popup-session-row">
-        <span class="lbl"><span class="lbl-icon">🌞</span> Mix solare EVCC</span>
+        <span class="lbl"><span class="lbl-icon"><i class="dm-segno" data-dm-segno="sun" aria-hidden="true"></i></span> Mix solare EVCC</span>
         <span class="val v-ev-solar-mix">—</span>
       </div>
       <div class="ev-popup-session-bar">
@@ -1891,16 +1893,16 @@ html[data-theme="dark"] #cd-boot-overlay b{color:#e2e8f0}
 
     <!-- Target SoC -->
     <div class="ev-popup-target">
-      <span class="ev-popup-target-lbl"><span class="lbl-icon">🎯</span> Target SoC</span>
+      <span class="ev-popup-target-lbl"><span class="lbl-icon"><i class="dm-segno" data-dm-segno="gauge" aria-hidden="true"></i></span> Target SoC</span>
       <select id="sel-target-soc-popup" class="ha-select target-select" onchange="changeSelect('dm.ev_target_soc', this.value)"></select>
     </div>
 
     <!-- Mode buttons EVCC -->
     <div class="ev-popup-modes">
-      <div class="ev-popup-mode-btn evcc-mode-btn" id="p-btn-off" onclick="setEVMode('off')" style="--btn-col: #e11d48; --btn-bg: #ffe4e6;"><div class="icon">🛑</div><div class="txt">Spento</div></div>
-      <div class="ev-popup-mode-btn evcc-mode-btn" id="p-btn-pv" onclick="setEVMode('pv')" style="--btn-col: #059669; --btn-bg: #d1fae5;"><div class="icon">☀️</div><div class="txt">Solar</div></div>
-      <div class="ev-popup-mode-btn evcc-mode-btn" id="p-btn-minpv" onclick="setEVMode('minpv')" style="--btn-col: #f59e0b; --btn-bg: #fef3c7;"><div class="icon">⛅</div><div class="txt">Min+Sol</div></div>
-      <div class="ev-popup-mode-btn evcc-mode-btn" id="p-btn-now" onclick="setEVMode('now')" style="--btn-col: #06b6d4; --btn-bg: #cffafe;"><div class="icon">🚀</div><div class="txt">Fast</div></div>
+      <div class="ev-popup-mode-btn evcc-mode-btn" id="p-btn-off" onclick="setEVMode('off')" style="--btn-col: #e11d48; --btn-bg: #ffe4e6;"><div class="icon"><i class="dm-segno" data-dm-segno="stop" aria-hidden="true"></i></div><div class="txt">Spento</div></div>
+      <div class="ev-popup-mode-btn evcc-mode-btn" id="p-btn-pv" onclick="setEVMode('pv')" style="--btn-col: #059669; --btn-bg: #d1fae5;"><div class="icon"><i class="dm-segno" data-dm-segno="sun" aria-hidden="true"></i></div><div class="txt">Solar</div></div>
+      <div class="ev-popup-mode-btn evcc-mode-btn" id="p-btn-minpv" onclick="setEVMode('minpv')" style="--btn-col: #f59e0b; --btn-bg: #fef3c7;"><div class="icon"><i class="dm-segno" data-dm-segno="sun" aria-hidden="true"></i></div><div class="txt">Min+Sol</div></div>
+      <div class="ev-popup-mode-btn evcc-mode-btn" id="p-btn-now" onclick="setEVMode('now')" style="--btn-col: #06b6d4; --btn-bg: #cffafe;"><div class="icon"><i class="dm-segno" data-dm-segno="power" aria-hidden="true"></i></div><div class="txt">Fast</div></div>
     </div>
   </div>
 </div>
@@ -1959,7 +1961,7 @@ html[data-theme="dark"] #cd-boot-overlay b{color:#e2e8f0}
 <div id="confirm-modal" class="modal-wrapper" onclick="closeModal(event, 'confirm-modal')">
   <div class="modal-card confirm-card">
     <div class="confirm-icon-wrap">
-      <div class="confirm-icon" id="confirm-icon">⛩️</div>
+      <div class="confirm-icon" id="confirm-icon"><i class="dm-segno" data-dm-segno="gate" aria-hidden="true"></i></div>
     </div>
     <h3 class="confirm-title" id="confirm-title">Apri Cancello</h3>
     <p class="confirm-message" id="confirm-message">Sei sicuro di voler aprire il cancello?</p>
@@ -1980,7 +1982,7 @@ html[data-theme="dark"] #cd-boot-overlay b{color:#e2e8f0}
       <span class="bh-icon">←</span><span>Home</span>
     </button>
     <div style="margin-bottom:20px;">
-      <h2 style="font-family:'Oswald',sans-serif;font-size:26px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">🌡️ Temperature</h2>
+      <h2 style="font-family:'Oswald',sans-serif;font-size:26px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;"><i class="dm-segno" data-dm-segno="thermometer" aria-hidden="true"></i> Temperature</h2>
       <p style="font-size:11px;font-weight:800;color:var(--text-dim);text-transform:uppercase;letter-spacing:2px;" id="temp-last-update">Aggiornamento in corso...</p>
     </div>
     <div class="temp-grid" id="temp-grid"><!-- v257: card stanze generate dinamicamente da CD_STANZE / config utente --></div>
@@ -1990,18 +1992,18 @@ html[data-theme="dark"] #cd-boot-overlay b{color:#e2e8f0}
 <div class="clima-popup-overlay" id="clima-popup-overlay" onclick="chiudiClimaPopup(event)">
   <div class="clima-popup">
     <button class="clima-popup-close" onclick="chiudiClimaPopup()">✕</button>
-    <div class="clima-popup-room" id="cp-room">❄️ Condizionatore</div>
+    <div class="clima-popup-room" id="cp-room"><i class="dm-segno" data-dm-segno="air-conditioner" aria-hidden="true"></i> Condizionatore</div>
     <div class="clima-popup-name" id="cp-name">—</div>
 
     <!-- Temperatura -->
     <div class="clima-temp-display">
-      <button class="clima-temp-btn" onclick="cpSetTemp(-0.5)">➖</button>
+      <button class="clima-temp-btn" onclick="cpSetTemp(-0.5)">−</button>
       <div class="clima-temp-center">
         <div class="clima-temp-val" id="cp-temp-val">--°</div>
         <div class="clima-temp-unit">Temperatura Target</div>
         <div class="clima-temp-current" id="cp-temp-curr">Ambiente: --°</div>
       </div>
-      <button class="clima-temp-btn" onclick="cpSetTemp(+0.5)">➕</button>
+      <button class="clima-temp-btn" onclick="cpSetTemp(+0.5)">+</button>
     </div>
 
     <!-- Modalità (solo condizionatori, nascosto per termosifoni) -->
@@ -2009,19 +2011,19 @@ html[data-theme="dark"] #cd-boot-overlay b{color:#e2e8f0}
       <div class="clima-section-lbl">Modalità</div>
       <div class="clima-mode-grid">
         <div class="clima-mode-btn" data-mode="cool" onclick="cpSetMode('cool')" style="--mode-col:#0ea5e9;--mode-rgb:14,165,233">
-          <span class="ic">❄️</span><span class="lb">Freddo</span>
+          <span class="ic"><i class="dm-segno" data-dm-segno="air-conditioner" aria-hidden="true"></i></span><span class="lb">Freddo</span>
         </div>
         <div class="clima-mode-btn" data-mode="heat" onclick="cpSetMode('heat')" style="--mode-col:#f97316;--mode-rgb:249,115,22">
-          <span class="ic">🔥</span><span class="lb">Caldo</span>
+          <span class="ic"><i class="dm-segno" data-dm-segno="radiator" aria-hidden="true"></i></span><span class="lb">Caldo</span>
         </div>
         <div class="clima-mode-btn" data-mode="fan_only" onclick="cpSetMode('fan_only')" style="--mode-col:#8b5cf6;--mode-rgb:139,92,246">
-          <span class="ic">💨</span><span class="lb">Ventola</span>
+          <span class="ic"><i class="dm-segno" data-dm-segno="wind" aria-hidden="true"></i></span><span class="lb">Ventola</span>
         </div>
         <div class="clima-mode-btn" data-mode="dry" onclick="cpSetMode('dry')" style="--mode-col:#06b6d4;--mode-rgb:6,182,212">
-          <span class="ic">💧</span><span class="lb">Secco</span>
+          <span class="ic"><i class="dm-segno" data-dm-segno="water" aria-hidden="true"></i></span><span class="lb">Secco</span>
         </div>
         <div class="clima-mode-btn" data-mode="auto" onclick="cpSetMode('auto')" style="--mode-col:#6366f1;--mode-rgb:99,102,241">
-          <span class="ic">⚙️</span><span class="lb">Auto</span>
+          <span class="ic"><i class="dm-segno" data-dm-segno="sliders" aria-hidden="true"></i></span><span class="lb">Auto</span>
         </div>
       </div>
     </div>
@@ -2035,7 +2037,7 @@ html[data-theme="dark"] #cd-boot-overlay b{color:#e2e8f0}
     <!-- Potenza -->
     <div class="clima-power-row">
       <button class="clima-pwr-btn off" id="cp-btn-off" onclick="cpPower('off')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/></svg> Spegni</button>
-      <button class="clima-pwr-btn on"  id="cp-btn-on"  onclick="cpPower('on')">⚡ Accendi</button>
+      <button class="clima-pwr-btn on"  id="cp-btn-on"  onclick="cpPower('on')"><i class="dm-segno" data-dm-segno="power" aria-hidden="true"></i> Accendi</button>
     </div>
   </div>
 </div>

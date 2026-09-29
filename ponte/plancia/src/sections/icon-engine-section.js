@@ -18,6 +18,7 @@ import {
 } from "../core/personalization-catalog.js";
 import { applianceArtwork, canonicalArtworkType } from "../core/appliance-artwork.js";
 import { chiaviDaProvare, disegnoDelCatalogo } from "../core/catalogo-disegni.js";
+import { segnoDelCatalogo, segnoPerEmoji } from "../core/segni-del-catalogo.js";
 import { clean, doc, esc, installStyle, root, t } from "./shared.js";
 
 globalThis.__DM_20260815C__ = true;
@@ -114,8 +115,20 @@ function firmaDelGlifo(kind, token, size, disegnato) {
 
 /* Il disegno si cerca una volta sola: serve sia per scrivere il glifo sia per
  * sapere, subito dopo, se quello gia' scritto e' ancora quello giusto. */
+/* Quando la voce un disegno suo non ce l'ha, non si torna all'emoji: si
+ * traduce il glifo che le spetterebbe nel disegno del catalogo che dice la
+ * stessa cosa, e se non c'e' si prende quello di serie del genere — la casa
+ * per una stanza, il fulmine per un carico, la stella per un'azione. «Non deve
+ * esserci nulla che non sia nel nostro catalogo.» */
+const RIPIEGO_DEL_GENERE = Object.freeze({ room: "home", load: "power", action: "star" });
+
+function disegnoDiRipiego(normalized, token, size) {
+  const chiave = segnoPerEmoji(iconGlyph(normalized, token)) || RIPIEGO_DEL_GENERE[normalized] || "star";
+  return segnoDelCatalogo(chiave, size);
+}
+
 function glifoDaScrivere(normalized, token, size) {
-  const disegno = disegnoDiCasa(normalized, token, size);
+  const disegno = disegnoDiCasa(normalized, token, size) || disegnoDiRipiego(normalized, token, size);
   const firma = esc(firmaDelGlifo(normalized, token, size, Boolean(disegno)));
   const testa = `<span class="dm-icon-engine-glyph ${glyphClass(normalized)}" data-dm-icon-engine-glyph="${normalized}" data-token="${esc(token)}" data-dm-firma="${firma}"`;
   if (disegno)

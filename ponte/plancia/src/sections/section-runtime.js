@@ -8,6 +8,7 @@ import { installGuscioQuandoServe } from "./il-guscio-disegna-quando-serve-secti
 import { installI18nSection } from "./i18n-section.js";
 import { installThemeFoundationSection } from "./theme-foundation-section.js";
 import { installTavolozzeSection } from "./tavolozze-section.js";
+import { installSegniDelCatalogoSection } from "./segni-del-catalogo-section.js";
 import { installIconeLeggibiliSection } from "./icone-leggibili-section.js";
 import { installDataContractsSection } from "./data-contracts-section.js";
 import { installEnergyCalculationsSection } from "./energy-calculations-section.js";
@@ -844,6 +845,9 @@ export function installSectionRuntime() {
     /* Subito dopo le fondamenta, e non prima: le tavolozze riscrivono gli
      * stessi token, e a parita' di peso vince chi viene dopo (#436). */
     installTavolozzeSection();
+    /* I segni del catalogo prima di ogni pagina: i segnaposti del guscio ci
+     * sono gia' dal primo giro. */
+    installSegniDelCatalogoSection();
     /* Subito dopo le fondamenta del tema e prima di ogni disegno: il foglio
      * delle sfumature deve stare in cima al documento gia' al primo giro, o
      * i disegni nascono mezzi e si riparano solo al secondo. */
@@ -1240,6 +1244,7 @@ export function installSectionRuntime() {
         "english-runtime-strings",
         "theme-foundation",
         "tavolozze",
+        "segni-del-catalogo",
         "security-showcase",
         "security-doors",
         "security-doors-editor",

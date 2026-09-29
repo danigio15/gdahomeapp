@@ -25,6 +25,7 @@ import { lightCommand, lightView, lightsSignature } from "../core/light-model.js
 import { canonicalClimateType } from "../core/device-model.js";
 import { applianceArtwork, canonicalArtworkType } from "../core/appliance-artwork.js";
 import { chiaviDaProvare, disegnoDelCatalogo } from "../core/catalogo-disegni.js";
+import { segnoHtml } from "../core/segni-del-catalogo.js";
 import { CHIAVE_MEDIA, letturaDelLettore, lettoriConfigurati } from "../core/media-player.js";
 import {
   comandoDelDispositivo,
@@ -1238,7 +1239,7 @@ function pastigliaMarkup(pastiglia) {
       ? `${Math.round(pastiglia.valore)}°`
       : String(pastiglia.conto);
   const parola = paroleDellaPastiglia(pastiglia);
-  const dentro = `<i aria-hidden="true">${esc(pastiglia.icona)}</i><b>${esc(testo)}</b>
+  const dentro = `${segnoHtml(pastiglia.icona, { misura: 16 })}<b>${esc(testo)}</b>
       <span class="dm-stanze-pill-voce">${esc(parola)}</span>`;
   const comuni = `class="dm-stanze-pill" data-dm-stanza-pill="${esc(pastiglia.chiave)}"
       data-dm-comanda="${esc(pastiglia.comanda)}"`;
@@ -1337,9 +1338,9 @@ function gruppoMarkup(gruppo, conti, segni = {}) {
   const nome = gruppo.piano || t("Senza piano", "No floor");
   /* Ogni piano col SUO segno. Le stanze che un piano non ce l'hanno non ne
    * portano nessuno: un segno inventato le farebbe sembrare un piano. */
-  const segno = gruppo.piano ? `${segnoDelPiano(segni, gruppo.piano)} ` : "";
+  const segno = gruppo.piano ? `${segnoHtml(segnoDelPiano(segni, gruppo.piano), { misura: 18 })} ` : "";
   const testa = gruppo.intitolare
-    ? `<h2 class="dm-stanze-piano"><span>${esc(segno)}${esc(nome)}</span><small>${esc(riassunto)}</small></h2>`
+    ? `<h2 class="dm-stanze-piano"><span>${segno}${esc(nome)}</span><small>${esc(riassunto)}</small></h2>`
     : "";
   return `${testa}<div class="dm-stanze-indice-griglia">${gruppo.stanze
     .map((pagina) => tesseraDellaStanza(pagina, conti[pagina.id] || {}))
