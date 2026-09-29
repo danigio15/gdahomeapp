@@ -3,6 +3,7 @@
    brand marks use pinned public SVG sources so the same canonical helper owns
    picker, editor, profile cards and EV header without post-render swapping. */
 import { getLocale, pick } from "./i18n.js";
+import { segnoDelCatalogo, segnoPerEmoji } from "./segni-del-catalogo.js";
 
 const clean = (value) => String(value ?? "").trim();
 const normalized = (value) =>
@@ -748,8 +749,14 @@ export function roomVisual(value, size = 48) {
   const item = roomCatalogMatch(value);
   if (!item) return "";
   const safeSize = Math.max(16, Math.min(160, Number(size) || 48));
-  const glyph = ROOM_GLYPHS[item.id] || roomGlyph(item.mdi);
-  return `<span class="dm-room-art dm-room-glyph" data-visual="${item.id}" style="font-size:${safeSize}px"><span aria-hidden="true">${glyph}</span></span>`;
+  /* Il disegno della stanza dal catalogo di casa, non l'emoji: chi non ne ha
+   * uno suo prende quello dell'elettrodomestico che la nomina, e in ultimo la
+   * casa. */
+  const disegno =
+    [`room-${item.id}`, item.id, String(item.mdi || "").replace(/^mdi:/, "")]
+      .map((chiave) => segnoDelCatalogo(chiave, safeSize))
+      .find(Boolean) || segnoDelCatalogo("home", safeSize);
+  return `<span class="dm-room-art dm-room-glyph" data-visual="${item.id}">${disegno}</span>`;
 }
 
 export function brandMatch(value) {
@@ -793,7 +800,7 @@ function brandFallback(value, safeSize) {
    * non ha ancora scelto vede una macchina, che e' esattamente quello che c'e'
    * da vedere. */
   if (!nome)
-    return `<span class="dm-car-brand" data-brand="" data-brand-source="empty" aria-hidden="true" style="width:${safeSize}px;height:${safeSize}px;display:grid;place-items:center;font-size:${Math.round(safeSize * 0.62)}px">🚗</span>`;
+    return `<span class="dm-car-brand" data-brand="" data-brand-source="empty" aria-hidden="true" style="width:${safeSize}px;height:${safeSize}px;display:grid;place-items:center;">${segnoDelCatalogo("ev", safeSize)}</span>`;
   const initials = (nome.slice(0, 2) || "?").toUpperCase();
   const fontSize = initials.length > 2 ? 10 : initials.length === 2 ? 13 : 16;
   return `<span class="dm-car-brand" data-brand="" data-brand-source="unknown" title="${testoSicuro(nome)}" style="width:${safeSize}px;height:${safeSize}px"><span data-brand-logo=""><svg width="${safeSize}" height="${safeSize}" viewBox="0 0 48 48" aria-hidden="true"><rect x="3" y="3" width="42" height="42" rx="14" fill="currentColor" opacity=".12"/><circle cx="24" cy="24" r="15.5" fill="none" stroke="currentColor" stroke-width="2.4" opacity=".9"/><text x="24" y="28.5" text-anchor="middle" font-size="${fontSize}" font-family="system-ui,sans-serif" font-weight="900" fill="currentColor">${testoSicuro(initials)}</text></svg></span></span>`;
@@ -901,7 +908,13 @@ export function actionVisual(value, size = 48) {
   const item = actionCatalogMatch(value);
   if (!item) return "";
   const safeSize = Math.max(16, Math.min(160, Number(size) || 48));
-  return `<span class="dm-action-glyph" data-visual="${item.id}" style="font-size:${safeSize}px"><span aria-hidden="true">${item.glyph || "⭐"}</span></span>`;
+  /* Il disegno del catalogo di casa, come per le stanze: prima quello della
+   * voce, poi quello che il suo glifo vuol dire, e in ultimo la stella. */
+  const disegno =
+    [item.id, String(item.mdi || "").replace(/^mdi:/, "")]
+      .map((chiave) => segnoDelCatalogo(chiave, safeSize))
+      .find(Boolean) || segnoDelCatalogo(segnoPerEmoji(item.glyph) || "star", safeSize);
+  return `<span class="dm-action-glyph" data-visual="${item.id}">${disegno}</span>`;
 }
 
 /* What can actually draw power in a home. The action catalogue was the wrong

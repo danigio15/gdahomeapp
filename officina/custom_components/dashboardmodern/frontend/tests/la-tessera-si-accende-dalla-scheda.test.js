@@ -52,5 +52,5 @@ test("la riga sta solo nella scheda da cui è partita la segnalazione", () => {
 test("la tessera del MiniPC esiste davvero nel catalogo", () => {
   /* Una riga che accende una tessera che non c'è sarebbe un interruttore che
    * non fa niente — cioè il difetto che questa segnalazione credeva di avere. */
-  assert.match(elenco, /\["minipc", "🖥️", t\("MiniPC", "MiniPC"\)\]/);
+  assert.match(elenco, /\["minipc", "computer", t\("MiniPC", "MiniPC"\)\]/);
 });

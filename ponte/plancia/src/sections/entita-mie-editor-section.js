@@ -16,6 +16,7 @@
  * pagine spente non compaiono, e una sezione nuova entra il giorno in cui
  * nasce senza che nessuno se ne ricordi.
  */
+import { segnoDaValoreHtml, segnoHtml } from "../core/segni-del-catalogo.js";
 import { MASSIMO_PER_SEZIONE } from "../core/entita-mie.js";
 import { CHIAVE_ENTITA_MIE, ridisegnaEntitaMie } from "./entita-mie-section.js";
 import {
@@ -106,7 +107,7 @@ function rigaMarkup(voce, indice, sezioni, troppe) {
   const nome = clean(voce?.nome) || clean(voce?.entity) || t("Entità nuova", "New entity");
   return `<article class="ed-row dm-todo-ed-row dm-mia-ent-riga" data-mia-ent="${indice}" data-open="${aperta}">
     <div class="dm-todo-ed-head">
-      <span class="dm-todo-ed-icon" aria-hidden="true">${esc(clean(voce?.icona) || "⭐")}</span>
+      <span class="dm-todo-ed-icon" aria-hidden="true">${segnoDaValoreHtml(voce?.icona, { ripiego: "star" })}</span>
       <span class="ed-row-main">
         <strong class="ed-row-new">${esc(nome)}</strong>
         <small class="ed-row-old">${esc(nomeDellaSezione(voce?.sezione, sezioni))}${
@@ -114,9 +115,9 @@ function rigaMarkup(voce, indice, sezioni, troppe) {
         }</small>
       </span>
       <button type="button" class="ed-del dm-todo-ed-edit" data-mia-ent-edit
-        aria-label="${esc(t("Modifica", "Edit"))}">✏️</button>
+        aria-label="${esc(t("Modifica", "Edit"))}">${segnoHtml("pencil")}</button>
       <button type="button" class="ed-del dm-todo-ed-del" data-mia-ent-del
-        aria-label="${esc(t("Elimina", "Remove"))}">🗑️</button>
+        aria-label="${esc(t("Elimina", "Remove"))}">${segnoHtml("trash")}</button>
     </div>
     <div class="dm-todo-ed-body"${aperta ? "" : " hidden"}>
       <label class="ed-slot dm-mia-ent-campo"><span class="ed-slot-lbl">${esc(
@@ -125,7 +126,7 @@ function rigaMarkup(voce, indice, sezioni, troppe) {
         data-mia-ent-campo="sezione">${sezioniMarkup(voce?.sezione, sezioni)}</select></span></label>
       <div class="dm-mia-ent-testa">
         <input class="ed-input dm-mia-ent-icona" data-mia-ent-campo="icona"
-          value="${esc(clean(voce?.icona))}" placeholder="⭐"
+          value="${esc(clean(voce?.icona))}"
           aria-label="${esc(t("Icona", "Icon"))}" maxlength="4">
         <input class="ed-input" data-mia-ent-campo="nome" value="${esc(clean(voce?.nome))}"
           placeholder="${esc(t("Nome (facoltativo)", "Name (optional)"))}">
@@ -137,7 +138,7 @@ function rigaMarkup(voce, indice, sezioni, troppe) {
         autocomplete="off" spellcheck="false"><button type="button" class="dm-entity-picker"
         data-mia-ent-pick="${id}" aria-label="${esc(
           t("Scegli entità", "Choose entity"),
-        )}">🔍</button></span></label>
+        )}">${segnoHtml("search")}</button></span></label>
       <label class="ed-slot dm-mia-ent-campo"><span class="ed-slot-lbl">${esc(
         t("Stanza", "Room"),
       )}</span><span class="ed-form-row"><select id="${id}-room" class="ed-input"
@@ -145,7 +146,7 @@ function rigaMarkup(voce, indice, sezioni, troppe) {
           clean(voce?.room_id),
           t("Nessuna stanza", "No room"),
         )}</select></span></label>
-      <button type="button" class="ed-save-btn" data-mia-ent-save>💾 ${esc(
+      <button type="button" class="ed-save-btn" data-mia-ent-save>${segnoHtml("check")} ${esc(
         t("Salva entità", "Save entity"),
       )}</button>
     </div>
@@ -172,7 +173,7 @@ function corpoMarkup() {
   const sezioni = sezioniDisponibili();
   const troppe = oltreIlTetto(lista);
   return `<div class="dm-mia-ent-ed">
-  <div class="ed-sec-title">⭐ ${esc(t("Le tue entità", "Your own entities"))}</div>
+  <div class="ed-sec-title">${segnoHtml("star")} ${esc(t("Le tue entità", "Your own entities"))}</div>
   <div class="ed-intro">${esc(
     t(
       "Alcune schede sono elenchi — Luci, Prese, Telecamere — e lì un'entità in più si è sempre potuta aggiungere. Altre sono fatte di caselle con un ruolo preciso: l'Energia ha una rete e un fotovoltaico, la Sicurezza una centrale, e per un sensore in più non c'era posto. Qui c'è: scegli l'entità, in quale scheda farla comparire, come chiamarla e con che icona. Compare in fondo alla pagina che scegli, e quelle che si accendono si accendono.",
@@ -302,7 +303,7 @@ function onClick(event) {
     lista[indice] = leggiLaRiga(riga);
     salva(lista);
     ridisegna();
-    root.edToast?.(t("💾 Entità salvata", "💾 Entity saved"));
+    root.edToast?.(t("Entità salvata", "Entity saved"));
   }
 }
 
@@ -313,7 +314,7 @@ export function ensureEntitaMieTab() {
   const linguetta = doc.createElement("button");
   linguetta.className = "ed-tab";
   linguetta.dataset.tab = ENTITA_MIE_EDITOR_TAB;
-  linguetta.textContent = `⭐ ${t("Le tue entità", "Your own entities")}`;
+  linguetta.innerHTML = `${segnoHtml("star")} ${esc(t("Le tue entità", "Your own entities"))}`;
   linguetta.addEventListener("click", () => root.editorSwitch?.(ENTITA_MIE_EDITOR_TAB));
   /* Accanto a «Le tue sezioni», che è la sua parente stretta: una è
    * un'entità in più su una pagina che c'è, l'altra è una pagina nuova. */

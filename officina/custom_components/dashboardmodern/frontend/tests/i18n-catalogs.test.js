@@ -133,6 +133,13 @@ test("no translation is left as its English source", async () => {
 const SHARED_ACROSS_LANGUAGES = new Set([
   ".",
   "24 h",
+  /* I minuti e le ore della Cottura (#71): «min» e «h» sono i simboli delle
+   * unita', e mezza Europa li scrive cosi'. Dove non e' vero — tedesco, russo,
+   * turco, e gli alfabeti che non sono il nostro — il catalogo li traduce. */
+  "+1 min",
+  "${minuti} min",
+  "${ore} h",
+  "${ore} h ${resto} min",
   /* «Humidex» e' il nome dell'indice, non una parola: lo scrivono cosi' anche
    * i servizi meteo che non parlano inglese, e tradurlo vorrebbe dire
    * inventarne uno che nessuno cerca. */
@@ -171,6 +178,7 @@ const SHARED_ACROSS_LANGUAGES = new Set([
   "kWh/day",
   "☀️ Solar",
   "📊 Report",
+  "Report",
   "Solar",
   "Solar ΔT",
   "Recirc.",
@@ -402,10 +410,14 @@ const LOCALE_IDENTITIES = {
     "Robots",
     "♨️ Oven",
     "⚠️ Camera offline",
+    "Camera offline",
     "💨 Wind",
     "🔥 Radiator",
+    "Radiator",
     "🚪 Opening",
+    "Opening",
     "🛡️ ALARM",
+    "ALARM",
     "${open} open",
     "${value} offline",
     "${value} units",
@@ -459,6 +471,7 @@ const LOCALE_IDENTITIES = {
     "Polo",
     "Robot",
     "🛡️ ALARM",
+    "ALARM",
     "${value} offline",
     "Alarm",
     "Alert",
@@ -473,6 +486,7 @@ const LOCALE_IDENTITIES = {
     "Polo",
     "Robot",
     "🛡️ ALARM",
+    "ALARM",
     "Alarm",
     "Disk",
     "Fan",
@@ -564,6 +578,7 @@ const UNTRANSLATED_SHELL_TEXT = new Set([
   "— kWh &nbsp;|&nbsp; — €",
   "⚡ Wallbox",
   "⚡ Wallbox &amp; Ricarica EV",
+  "Wallbox &amp; Ricarica EV",
 ]);
 
 test("a catalog is fetched on demand and answers through the engine", async () => {

@@ -369,6 +369,22 @@ export async function loadCameraFrame(camera, image, registry = state.cameraUrls
      * firma vale per il percorso che e' stato firmato, e il percorso del
      * flusso e' un altro. Senza foto ci pensa `flussoFirmato`. */
     if (!flussoInPausa(image) && (await avviaIlFlusso(camera, image, picture, registry))) return true;
+  } else if (
+    image.dataset.dmSoloVideo ||
+    !istantanea ||
+    (image.dataset.dmCameraState === "unavailable" && !image.dataset.dmCameraFrame)
+  ) {
+    /* Una telecamera che la foto non la da' (#164): la Ring `…_live_view` sa
+     * solo il WebRTC, il proxy risponde con un errore e la tessera restava su
+     * «in attesa del fotogramma» per sempre, mentre il popup — che la strada
+     * la chiede a Home Assistant — si vedeva. Quando la foto non arriva si
+     * prova la stessa strada, muta. Chi le foto le da' non arriva mai qui; e
+     * un video caduto va in pausa, e intanto si torna alle foto. */
+    if (await provaIlVideo(camera, image)) {
+      image.dataset.dmSoloVideo = "1";
+      return true;
+    }
+    delete image.dataset.dmSoloVideo;
   }
   if (image.dataset.dmCameraStream) delete image.dataset.dmCameraStream;
   if (!istantanea) {

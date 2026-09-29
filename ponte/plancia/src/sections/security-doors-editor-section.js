@@ -5,6 +5,7 @@
  * entita' che la apre, icona, PIN facoltativo — e viaggia in
  * `cd_security_doors`, nella configurazione condivisa fra i dispositivi.
  */
+import { segnoHtml } from "../core/segni-del-catalogo.js";
 import {
   SECURITY_DOOR_DOMAINS,
   gestoDellaPorta,
@@ -94,7 +95,7 @@ function rigaMarkup(door, index) {
   return `<article class="ed-row dm-door-ed-row" data-door-index="${index}" data-open="${aperto}">
     <div class="dm-door-ed-head">
       <span class="dm-door-ed-icon" aria-hidden="true">${iconaPortaMarkup(door.icon)}</span>
-      <span class="ed-row-main dm-door-ed-testo"><strong class="ed-row-new">${esc(nomeDi(door, index))}</strong><small class="ed-row-old mono">${esc(clean(door.entity) || t("nessuna entità", "no entity"))}${door.pin ? " · 🔒 PIN" : ""}</small>${
+      <span class="ed-row-main dm-door-ed-testo"><strong class="ed-row-new">${esc(nomeDi(door, index))}</strong><small class="ed-row-old mono">${esc(clean(door.entity) || t("nessuna entità", "no entity"))}${door.pin ? ` · ${segnoHtml("lock")} PIN` : ""}</small>${
         clean(door.entity)
           ? ""
           : `<small class="dm-door-ed-muta">${esc(
@@ -104,20 +105,20 @@ function rigaMarkup(door, index) {
               ),
             )}</small>`
       }</span>
-      <button type="button" class="ed-del dm-door-ed-edit" data-door-edit aria-label="${t("Modifica", "Edit")}">✏️</button>
-      <button type="button" class="ed-del dm-door-ed-del" data-door-del aria-label="${t("Elimina", "Remove")}">🗑️</button>
+      <button type="button" class="ed-del dm-door-ed-edit" data-door-edit aria-label="${t("Modifica", "Edit")}">${segnoHtml("pencil")}</button>
+      <button type="button" class="ed-del dm-door-ed-del" data-door-del aria-label="${t("Elimina", "Remove")}">${segnoHtml("trash")}</button>
     </div>
     <div class="dm-door-ed-body"${aperto ? "" : " hidden"}>
       <label class="ed-slot dm-door-ed-field"><span class="ed-slot-lbl">${t("Nome", "Name")}</span><span class="ed-form-row"><input id="dm-door-${index}-name" class="ed-input" data-door-field="name" value="${esc(clean(door.name))}" placeholder="${t("Portone condominio", "Building front door")}"></span></label>
       <label class="ed-slot dm-door-ed-field"><span class="ed-slot-lbl">${t("Entità che apre", "Opening entity")}</span>
-        <span class="ed-form-row"><input id="dm-door-${index}-entity" class="ed-input mono" data-door-field="entity" value="${esc(door.entity)}" placeholder="lock.portone" autocomplete="off" spellcheck="false"><button type="button" class="dm-entity-picker" data-door-pick="dm-door-${index}-entity" aria-label="${t("Scegli entità", "Choose entity")}">🔍</button></span>
+        <span class="ed-form-row"><input id="dm-door-${index}-entity" class="ed-input mono" data-door-field="entity" value="${esc(door.entity)}" placeholder="lock.portone" autocomplete="off" spellcheck="false"><button type="button" class="dm-entity-picker" data-door-pick="dm-door-${index}-entity" aria-label="${t("Scegli entità", "Choose entity")}">${segnoHtml("search")}</button></span>
         <small>${t("Serratura, pulsante, relè, cancello o script: lock.*, button.*, switch.*, cover.*, script.*…", "Lock, button, relay, gate or script: lock.*, button.*, switch.*, cover.*, script.*…")}</small></label>
       ${gestoMarkup(door, index)}
-      <label class="ed-slot dm-door-ed-field"><span class="ed-slot-lbl">${t("Icona", "Icon")}</span><span class="ed-form-row"><input id="dm-door-${index}-icon" class="ed-input" data-door-field="icon" value="${esc(door.icon || ICONA_PORTA)}" maxlength="24"><button type="button" class="dm-door-icon-btn" data-door-icon-pick="dm-door-${index}-icon" aria-label="${t("Scegli icona", "Choose icon")}">🎨</button></span></label>
+      <label class="ed-slot dm-door-ed-field"><span class="ed-slot-lbl">${t("Icona", "Icon")}</span><span class="ed-form-row"><input id="dm-door-${index}-icon" class="ed-input" data-door-field="icon" value="${esc(door.icon || ICONA_PORTA)}" maxlength="24"><button type="button" class="dm-door-icon-btn" data-door-icon-pick="dm-door-${index}-icon" aria-label="${t("Scegli icona", "Choose icon")}">${segnoHtml("sliders")}</button></span></label>
       <label class="ed-slot dm-door-ed-field"><span class="ed-slot-lbl">${t("PIN (facoltativo)", "PIN (optional)")}</span><span class="ed-form-row"><input id="dm-door-${index}-pin" class="ed-input mono" data-door-field="pin" value="${esc(door.pin)}" inputmode="numeric" autocomplete="off" placeholder="1234"></span>
         <small>${t("Da 4 a 8 cifre: prima di aprire viene chiesto il codice, contro i tocchi accidentali. Vuoto = solo conferma.", "4 to 8 digits: the code is asked before opening, against accidental taps. Empty = confirm only.")}</small></label>
       <output class="dm-door-ed-error" data-door-error></output>
-      <button type="button" class="ed-save-btn" data-door-save>💾 ${t("Salva porta", "Save door")}</button>
+      <button type="button" class="ed-save-btn" data-door-save>${segnoHtml("check")} ${t("Salva porta", "Save door")}</button>
     </div>
   </article>`;
 }
@@ -372,8 +373,8 @@ function salvaTutte(body) {
   }
   root.edToast?.(
     errori.size
-      ? t("💾 Salvate — una porta è da completare", "💾 Saved — one door needs finishing")
-      : t("💾 Porta salvata", "💾 Door saved"),
+      ? t("Salvate — una porta è da completare", "Saved — one door needs finishing")
+      : t("Porta salvata", "Door saved"),
   );
 }
 
@@ -387,7 +388,7 @@ export function ensureDoorsEditorTab() {
    * per esteso — quello che sta in testa alla sezione — si troncava a meta'
    * parola. Qui va la stessa cosa detta corta, come «Elettrodom.» sta per
    * «Elettrodomestici». */
-  tab.textContent = `🚪 ${t("Apri porte/cancelli", "Door & gate openers")}`;
+  tab.innerHTML = `${segnoHtml("door")} ${esc(t("Apri porte/cancelli", "Door & gate openers"))}`;
   tab.addEventListener("click", () => root.editorSwitch?.(DOORS_EDITOR_TAB));
   const prima = tabs.querySelector('.ed-tab[data-tab="runtime"]');
   if (prima) prima.before(tab);

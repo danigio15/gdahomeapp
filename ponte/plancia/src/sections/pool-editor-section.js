@@ -8,6 +8,7 @@
  * posto in cui quei campi sono scritti. Qui sotto si aggiungono le altre, che
  * vivono in un elenco accanto alla prima e non le tolgono niente.
  */
+import { segnoHtml } from "../core/segni-del-catalogo.js";
 import { POOL_DEFAULTS, poolList, storedPools } from "../core/pool-model.js";
 import { clean, doc, esc, installStyle, onEditorRedraw, root, t, wrapFunction } from "./shared.js";
 
@@ -65,7 +66,7 @@ function campoMarkup(pool, index, [field, italiano, inglese, esempio, kind]) {
   const input = `<input id="${id}" class="ed-input mono" data-pool-field="${esc(field)}" type="${kind === "entity" ? "text" : kind}" value="${esc(value)}" placeholder="${esc(esempio)}" autocomplete="off" spellcheck="false">`;
   const lente =
     kind === "entity"
-      ? `<button type="button" class="dm-pool-pick" data-pool-pick="${esc(id)}" aria-label="${t("Scegli entità", "Choose entity")}">🔍</button>`
+      ? `<button type="button" class="dm-pool-pick" data-pool-pick="${esc(id)}" aria-label="${t("Scegli entità", "Choose entity")}">${segnoHtml("search")}</button>`
       : "";
   return `<label class="ed-slot dm-pool-field"><span class="ed-slot-lbl">${esc(label)}</span><span class="ed-form-row">${input}${lente}</span></label>`;
 }
@@ -74,17 +75,17 @@ function schedaMarkup(pool, index) {
   const aperta = state.aperta === index;
   return `<article class="ed-row dm-pool-row" data-pool-index="${index}" data-open="${aperta}">
     <header class="dm-pool-row-head">
-      <span class="dm-pool-row-icon" aria-hidden="true">🏊</span>
+      <span class="dm-pool-row-icon" aria-hidden="true">${segnoHtml("room-pool")}</span>
       <span class="ed-row-main"><strong class="ed-row-new">${esc(nomeDi(pool, index))}</strong><small class="ed-row-old mono">${esc(clean(pool.pumpEnt) || clean(pool.tempEnt) || t("nessuna entità", "no entity"))}</small></span>
-      <button type="button" class="ed-del dm-pool-edit" data-pool-edit aria-label="${t("Modifica", "Edit")}">✏️</button>
-      <button type="button" class="ed-del dm-pool-del" data-pool-del aria-label="${t("Elimina", "Remove")}">🗑️</button>
+      <button type="button" class="ed-del dm-pool-edit" data-pool-edit aria-label="${t("Modifica", "Edit")}">${segnoHtml("pencil")}</button>
+      <button type="button" class="ed-del dm-pool-del" data-pool-del aria-label="${t("Elimina", "Remove")}">${segnoHtml("trash")}</button>
     </header>
     <div class="dm-pool-row-body"${aperta ? "" : " hidden"}>
       <label class="ed-slot dm-pool-field"><span class="ed-slot-lbl">${t("Nome", "Name")}</span><span class="ed-form-row"><input id="dm-pool-${index}-name" class="ed-input" data-pool-field="name" value="${esc(clean(pool.name))}" placeholder="${t("Piscina piccola", "Small pool")}"></span></label>
       ${CAMPI.map((campo) => campoMarkup(pool, index, campo)).join("")}
       <label class="ed-slot dm-pool-field dm-pool-switch"><input type="checkbox" data-pool-field="autoHours" ${pool.autoHours ? "checked" : ""}><span>${t("Ore automatiche (temperatura / 2)", "Automatic hours (temperature / 2)")}</span></label>
       <label class="ed-slot dm-pool-field dm-pool-switch"><input type="checkbox" data-pool-field="enabled" ${pool.enabled ? "checked" : ""}><span>${t("Avvia la filtrazione all'ora programmata", "Start filtration at the scheduled time")}</span></label>
-      <button type="button" class="ed-save-btn" data-pool-save>💾 ${t("Salva piscina", "Save pool")}</button>
+      <button type="button" class="ed-save-btn" data-pool-save>${segnoHtml("check")} ${t("Salva piscina", "Save pool")}</button>
     </div>
   </article>`;
 }
@@ -102,7 +103,7 @@ function schedaMarkup(pool, index) {
  * modulo — e' lui che tiene l'elenco delle vasche — e due posti che scrivono lo
  * stesso campo sarebbero due padroni. */
 function primaMarkup(pool = {}) {
-  return `<div class="ed-sec-title">🏊 ${t("Nome della prima vasca", "Name of the first basin")}</div>
+  return `<div class="ed-sec-title">${segnoHtml("room-pool")} ${t("Nome della prima vasca", "Name of the first basin")}</div>
     <div class="ed-intro">${t(
       "I sensori della prima vasca si compilano nella maschera qui sopra. Qui le si da' un nome, cosi' con piu' di una vasca si capisce quale si sta guardando.",
       "The first basin's sensors are filled in the form above. Here you give it a name, so with more than one basin you can tell which one you are looking at.",
@@ -113,7 +114,7 @@ function primaMarkup(pool = {}) {
 function panelMarkup(pools) {
   const altre = pools.slice(1);
   return `${primaMarkup(pools[0])}
-    <div class="ed-sec-title">🏊 ${t("Altre piscine", "Other pools")}</div>
+    <div class="ed-sec-title">${segnoHtml("room-pool")} ${t("Altre piscine", "Other pools")}</div>
     <div class="ed-intro">${t(
       "La maschera qui sopra configura la prima vasca. Se ne hai piu' di una, aggiungi qui le altre: ognuna ha i suoi sensori, i suoi comandi e la sua filtrazione.",
       "The form above configures the first basin. If you have more than one, add the others here: each one has its own sensors, controls and filtration.",
@@ -259,7 +260,7 @@ function onClick(event, panel) {
     next[index] = leggiScheda(riga, pools[index]);
     salva(next);
     ridisegna(panel);
-    root.edToast?.(t("💾 Piscina salvata", "💾 Pool saved"));
+    root.edToast?.(t("Piscina salvata", "Pool saved"));
   }
 }
 

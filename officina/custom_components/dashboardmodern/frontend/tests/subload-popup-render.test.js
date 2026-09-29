@@ -199,7 +199,7 @@ test("a circle renamed by a saved flow-node customization keeps that name in the
   });
   popup.renderSubloadPopup("cucina");
   assert.equal(title.querySelector(".dm-subload-title-name").textContent, "CUCINA DI SOTTO");
-  assert.equal(title.querySelector(".dm-subload-title-icon").textContent, "🔥");
+  assert.match(title.querySelector(".dm-subload-title-icon").innerHTML, /data-dm-segno="radiator"/);
 });
 
 test("an mdi token is drawn as a glyph, in the title and in every card", () => {
@@ -260,12 +260,12 @@ test("where the icon engine is installed, it is what resolves an mdi token", () 
   }
 });
 
-test("an emoji is still written as text, not through the mdi renderer", () => {
+test("an emoji is drawn from the catalog, not through the mdi renderer", () => {
   configure({ loads: KITCHEN, states: {} });
   popup.renderSubloadPopup("cucina");
   const icon = title.querySelector(".dm-subload-title-icon");
-  assert.equal(icon.textContent, "🍳");
-  assert.equal(icon.innerHTML, "");
+  assert.equal(icon.textContent, "");
+  assert.match(icon.innerHTML, /^<i class="dm-segno" data-dm-segno="cooktop"/);
 });
 
 /* ── il travaso non deve mentire ────────────────────────────────────────────
@@ -578,7 +578,7 @@ test("rinominare il cerchio a popup aperto cambia la testata", () => {
   storage.set("cd_flow_nodes", JSON.stringify({ boiler: { name: "Cucina nuova", icon: "🔥" } }));
   popup.renderSubloadPopup("cucina");
   assert.equal(title.querySelector(".dm-subload-title-name").textContent, "CUCINA NUOVA");
-  assert.equal(title.querySelector(".dm-subload-title-icon").textContent, "🔥");
+  assert.match(title.querySelector(".dm-subload-title-icon").innerHTML, /data-dm-segno="radiator"/);
 });
 
 /* ── il «fleak» del video ───────────────────────────────────────────────────

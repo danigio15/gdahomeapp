@@ -22,7 +22,8 @@ test("il dizionario traduce esattamente, e solo, le voci sue", () => {
   assert.equal(traduciTesto("ARMATO · FUORI"), "ARMED · AWAY");
   assert.equal(traduciTesto("DISARMATO"), "DISARMED");
   assert.equal(traduciTesto("Sezione salvata"), "Section saved");
-  assert.equal(traduciTesto("✅ Rilevate: 3"), "✅ Detected: 3");
+  assert.equal(traduciTesto("✅ Rilevate: 3"), "Detected: 3");
+  assert.equal(traduciTesto("Rilevate: 3"), "Detected: 3");
   /* Gli spazi intorno sopravvivono: il nodo di testo puo' averne. */
   assert.equal(traduciTesto("  IN USCITA  "), "  ARMING  ");
   /* Quello che non e' in dizionario non si tocca — nemmeno per somiglianza. */

@@ -70,7 +70,7 @@ test("il modello aggrega: numero, riassunto e righe formattate", () => {
   ]);
   const modello = evidenzaModel(STATI);
   assert.equal(modello.key, "evidenza");
-  assert.equal(modello.icon, "⭐");
+  assert.equal(modello.icon, "star");
   assert.equal(modello.value, "3");
   // La didascalia e' il riassunto: «quadro 34,2 °C · rack 41,8 °C · pompa Acceso».
   assert.match(modello.caption, /quadro 34[.,]2 °C · rack 41[.,]8 °C · pompa/);
@@ -115,7 +115,7 @@ test("la tessera e' iscritta al popup a caselle e al catalogo dell'editor", () =
   const carte = ponte.slice(ponte.indexOf("const CHIAVI_A_CARTE"), ponte.indexOf("]);", ponte.indexOf("const CHIAVI_A_CARTE")));
   assert.match(carte, /"evidenza"/);
   // Il catalogo ordina/accendi ha la sua riga con la stella.
-  assert.match(editor, /\["evidenza", "⭐", t\("In evidenza", "Highlights"\)\]/);
+  assert.match(editor, /\["evidenza", "star", t\("In evidenza", "Highlights"\)\]/);
   // E la scheda Widget ha il blocco di configurazione che scrive cd_evidenza.
   assert.match(editor, /EVIDENZA_CONFIG_KEY/);
   assert.match(editor, /data-evid-add/);

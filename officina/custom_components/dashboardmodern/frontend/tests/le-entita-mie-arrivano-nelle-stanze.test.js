@@ -202,7 +202,12 @@ test("e iconaVoce lo porta fino alla riga", () => {
   scrivi("cd_quick_actions", [{ name: "Serata", icon: "mdi:tune", entity: "select.modus" }]);
   const voci = assignedItems({ "select.modus": "r-salone" }, STATI);
   assert.equal(voci[0].icon, "mdi:tune");
-  assert.equal(iconaVoce(voci[0], { key: "altro" }), "mdi:tune");
+  /* `mdi:tune` il catalogo di casa non lo disegna: la riga prende il disegno
+   * del dominio, non un'emoji. Una `mdi:` che il catalogo conosce arriva. */
+  assert.equal(iconaVoce(voci[0], { key: "altro" }), "list");
+  scrivi("cd_quick_actions", [{ name: "Serata", icon: "mdi:weather-night", entity: "select.modus" }]);
+  const notte = assignedItems({ "select.modus": "r-salone" }, STATI);
+  assert.equal(iconaVoce(notte[0], { key: "altro" }), "mdi:weather-night");
 });
 
 test("la finestra delle voci si intitola come la riga che l'ha aperta", () => {

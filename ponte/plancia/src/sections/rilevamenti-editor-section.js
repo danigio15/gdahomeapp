@@ -21,6 +21,7 @@
  * che si puo' fare bene e' consegnare il documento con dentro le entita' che
  * sono state scelte, e un tasto che lo copia.
  */
+import { segnoHtml } from "../core/segni-del-catalogo.js";
 import {
   CHIAVE_RILEVAMENTI,
   TIPI_RILEVAMENTO,
@@ -93,7 +94,7 @@ function rigaMarkup(camera, voci, trovati) {
         value="${esc(scritto)}" placeholder="${esc(proposta || "binary_sensor.…")}"
         autocomplete="off" spellcheck="false"><button type="button"
         class="dm-entity-picker" data-dm-ril-pick="${id}"
-        aria-label="${esc(t("Scegli entità", "Choose entity"))}">🔍</button></span>
+        aria-label="${esc(t("Scegli entità", "Choose entity"))}">${segnoHtml("search")}</button></span>
     </label>`;
   }).join("");
   const quanti = TIPI_RILEVAMENTO.filter((tipo) => clean(voci?.[tipo])).length;

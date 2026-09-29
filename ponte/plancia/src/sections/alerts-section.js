@@ -12,6 +12,7 @@ import {
   wrapFunction,
   writeJsonIfChanged,
 } from "./shared.js";
+import { chiaveDelValore, emojiInSegni, segnoHtml } from "../core/segni-del-catalogo.js";
 
 const KEY = "__DASHBOARDMODERN_ALERTS_SECTION__";
 const state = (root[KEY] ||= { installed: false, listeners: false });
@@ -112,7 +113,14 @@ export function alertIconMarkup(entity, group, misura = 20) {
     });
     if (disegnata) return disegnata;
   }
-  return esc(valore);
+  return segnoDellIcona(valore, misura);
+}
+
+/* Un'emoji scelta in una configurazione vecchia si disegna col catalogo; un
+ * testo scritto a mano resta quello, protetto. */
+function segnoDellIcona(valore, misura) {
+  const chiave = chiaveDelValore(valore);
+  return chiave ? segnoHtml(chiave, { misura }) : emojiInSegni(esc(valore), { misura });
 }
 
 /* Chi si e' aggiunto non puo' essere anche uno che si e' tolto.
@@ -219,8 +227,8 @@ function rowName(row, entity) {
 
 function groupOptions(selected) {
   return GROUPS.map(
-    ([key, icon, it, en]) =>
-      `<option value="${key}" ${key === selected ? "selected" : ""}>${icon} ${t(it, en)}</option>`,
+    ([key, , it, en]) =>
+      `<option value="${key}" ${key === selected ? "selected" : ""}>${t(it, en)}</option>`,
   ).join("");
 }
 
@@ -273,7 +281,7 @@ function syncAlertVisual(form) {
   const mostra = (nodo) => {
     if (!nodo) return;
     if (disegnata) nodo.innerHTML = disegnata;
-    else nodo.textContent = icon;
+    else nodo.innerHTML = segnoDellIcona(icon, 22);
   };
   mostra(form.querySelector("[data-alert-group-preview]"));
   mostra(form.closest(".dm-section-dialog")?.querySelector("[data-alert-header-icon]"));
@@ -288,14 +296,14 @@ export function openAlertEditor(row) {
   modal.id = "dm-alert-editor-modal";
   modal.className = "dm-section-modal";
   modal.innerHTML = `<section class="dm-section-dialog" role="dialog" aria-modal="true" aria-labelledby="dm-alert-editor-title">
-    <header><strong id="dm-alert-editor-title"><span data-alert-header-icon aria-hidden="true">${groupIcon(oldGroup)}</span> ${t("Modifica avviso", "Edit alert")}</strong><button type="button" data-close aria-label="${t("Chiudi", "Close")}">✕</button></header>
+    <header><strong id="dm-alert-editor-title"><span data-alert-header-icon aria-hidden="true">${segnoDellIcona(groupIcon(oldGroup), 0)}</span> ${t("Modifica avviso", "Edit alert")}</strong><button type="button" data-close aria-label="${t("Chiudi", "Close")}">✕</button></header>
     <form data-form>
       <label class="ed-slot"><span class="ed-slot-lbl">${t("Nome", "Name")}</span><input class="ed-input" name="name" value="${esc(rowName(row, oldEntity))}" required></label>
-      <label class="ed-slot"><span class="ed-slot-lbl">${t("Entità Home Assistant", "Home Assistant entity")}</span><span class="ed-form-row"><input class="ed-input mono" name="entity" value="${esc(oldEntity)}" required><button type="button" class="dm-entity-picker" data-pick>🔍</button></span></label>
+      <label class="ed-slot"><span class="ed-slot-lbl">${t("Entità Home Assistant", "Home Assistant entity")}</span><span class="ed-form-row"><input class="ed-input mono" name="entity" value="${esc(oldEntity)}" required><button type="button" class="dm-entity-picker" data-pick>${segnoHtml("search")}</button></span></label>
       <label class="ed-slot"><span class="ed-slot-lbl">${t("Gruppo avviso", "Alert group")}</span><span class="dm-alert-group-row"><span class="dm-alert-group-preview" data-alert-group-preview aria-hidden="true">${alertIconMarkup(oldEntity, oldGroup, 22)}</span><select class="ed-input" name="group">${groupOptions(oldGroup)}</select></span><small>${t("Il gruppo decide dove l’avviso viene sorvegliato.", "The group decides where the alert is watched.")}</small></label>
-      <label class="ed-slot"><span class="ed-slot-lbl">${t("Icona", "Icon")}</span><span class="ed-form-row"><input class="ed-input" id="dm-alert-icon" name="icon" value="${esc(alertIcon(oldEntity, oldGroup))}" maxlength="32" autocomplete="off"><button type="button" class="dm-entity-picker" data-pick-icon aria-label="${t("Scegli l’icona", "Pick the icon")}">🔍</button></span><small>${t("Lasciala uguale a quella del gruppo per seguirlo; cambiala per distinguere questa apertura dalle altre.", "Leave it as the group icon to follow it; change it to tell this opening from the others.")}</small></label>
+      <label class="ed-slot"><span class="ed-slot-lbl">${t("Icona", "Icon")}</span><span class="ed-form-row"><input class="ed-input" id="dm-alert-icon" name="icon" value="${esc(alertIcon(oldEntity, oldGroup))}" maxlength="32" autocomplete="off"><button type="button" class="dm-entity-picker" data-pick-icon aria-label="${t("Scegli l’icona", "Pick the icon")}">${segnoHtml("search")}</button></span><small>${t("Lasciala uguale a quella del gruppo per seguirlo; cambiala per distinguere questa apertura dalle altre.", "Leave it as the group icon to follow it; change it to tell this opening from the others.")}</small></label>
       <output data-error></output>
-      <footer><button type="button" class="ed-btn-add" data-cancel>${t("Annulla", "Cancel")}</button><button type="submit" class="ed-save-btn">💾 ${t("Salva modifiche", "Save changes")}</button></footer>
+      <footer><button type="button" class="ed-btn-add" data-cancel>${t("Annulla", "Cancel")}</button><button type="submit" class="ed-save-btn">${segnoHtml("check")} ${t("Salva modifiche", "Save changes")}</button></footer>
     </form>
   </section>`;
   doc.body.append(modal);
@@ -376,7 +384,7 @@ export function normalizeAlertsEditor() {
     edit.type = "button";
     edit.className = "ed-del dm-alert-edit";
     edit.dataset.dmAlertEdit = "true";
-    edit.textContent = "✏️";
+    edit.innerHTML = segnoHtml("pencil");
     edit.setAttribute("aria-label", t("Modifica avviso", "Edit alert"));
     const remove = [...row.querySelectorAll(".ed-del")].at(-1);
     remove?.before(edit);

@@ -14,65 +14,73 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { applianceGlyph } from "../src/core/appliance-artwork.js";
+import { canonicalArtworkType } from "../src/core/appliance-artwork.js";
 import { iconaVoce } from "../src/sections/rooms-page-section.js";
 
+/* Dalla 1.8.1 la riga porta un disegno del catalogo, non un'emoji: «non deve
+ * esserci nulla che non sia nel nostro catalogo». `iconaVoce` dice quale. */
 const ELETTRODOMESTICI = { key: "elettrodomestici" };
+const EMOJI = /\p{Extended_Pictographic}/u;
 
-test("ogni elettrodomestico porta il glifo del suo tipo, non quello del blocco", () => {
-  const glifo = (item) => iconaVoce(item, ELETTRODOMESTICI);
+test("ogni elettrodomestico porta il disegno del suo tipo, non quello del blocco", () => {
+  const disegno = (item) => iconaVoce(item, ELETTRODOMESTICI);
   /* Come li scrive l'editor: la chiave del catalogo dei disegni, in tre campi. */
-  assert.equal(glifo({ visual_key: "dishwasher" }), "🍽️");
-  assert.equal(glifo({ device_type: "fridge" }), "🧊");
-  assert.equal(glifo({ type: "oven" }), "🍕");
+  assert.equal(disegno({ visual_key: "dishwasher" }), "dishwasher");
+  assert.equal(disegno({ device_type: "fridge" }), "fridge");
+  assert.equal(disegno({ type: "oven" }), "oven");
   /* E tre cose diverse non danno mai la stessa riga. */
   const tre = [
-    glifo({ visual_key: "oven" }),
-    glifo({ visual_key: "fridge" }),
-    glifo({ visual_key: "dishwasher" }),
+    disegno({ visual_key: "oven" }),
+    disegno({ visual_key: "fridge" }),
+    disegno({ visual_key: "dishwasher" }),
   ];
   assert.equal(new Set(tre).size, 3);
 });
 
 test("senza un tipo riconoscibile si legge il nome, e in ultima istanza il blocco", () => {
-  /* Chi ha scritto solo il nome ha detto comunque qualcosa. */
-  assert.equal(iconaVoce({ name: "Lavastoviglie cucina" }, ELETTRODOMESTICI), "🍽️");
-  /* E quello che non si riconosce non prende un glifo a caso: resta il
-   * cestello del blocco, che e' quello che c'era prima. */
-  assert.equal(iconaVoce({ name: "Aggeggio" }, ELETTRODOMESTICI), "🧺");
-  assert.equal(iconaVoce({}, ELETTRODOMESTICI), "🧺");
+  assert.equal(iconaVoce({ name: "Lavastoviglie cucina" }, ELETTRODOMESTICI), "dishwasher");
+  assert.equal(iconaVoce({ name: "Friggitrice aria" }, ELETTRODOMESTICI), "air-fryer");
+  /* Quello che non si riconosce prende il disegno generico del blocco. */
+  assert.equal(iconaVoce({ name: "Aggeggio" }, ELETTRODOMESTICI), "generic");
+  assert.equal(iconaVoce({}, ELETTRODOMESTICI), "generic");
 });
 
-test("l'icona scelta a mano vince, se e' un glifo o un token che si sa disegnare", () => {
-  assert.equal(iconaVoce({ emoji_icon: "🥐", visual_key: "oven" }, ELETTRODOMESTICI), "🥐");
-  /* `icon` sugli elettrodomestici tiene la CHIAVE del catalogo, non un'emoji:
-   * scriverla nella riga vorrebbe dire stampare «washer» a video. Questa
-   * continua a non passare, ed e' l'unica delle tre forme che non passa. */
-  assert.equal(iconaVoce({ icon: "washer", visual_key: "oven" }, ELETTRODOMESTICI), "🍕");
-  /* Una `mdi:` invece adesso passa, e non perche' sia cambiata l'idea: e'
-   * cambiato cosa sa fare la riga. Prima qui usciva testo e un token stampato
-   * sarebbe stato la scritta «mdi:fridge» sopra il nome; adesso il segno lo
-   * mette `iconGlyphHtml`, che la differenza la sa e il token lo disegna.
-   *
-   * Buttarla costava l'icona scelta: chi si fa un'azione rapida la sceglie
-   * dall'editor, che di serie ci mette un `mdi:`, e nella stanza quell'icona
-   * non arrivava mai. Dal campo, con la foto: «deve uscire icona dell'azione
-   * rapida». */
+test("l'icona scelta a mano vince se il catalogo la sa disegnare, un'emoji no", () => {
+  /* Un'emoji scelta a mano che il catalogo non conosce non esce: resta il
+   * disegno del tipo. */
+  assert.equal(iconaVoce({ emoji_icon: "🥐", visual_key: "oven" }, ELETTRODOMESTICI), "oven");
+  /* La chiave del catalogo in `icon` adesso si disegna. */
+  assert.equal(iconaVoce({ icon: "washer", visual_key: "oven" }, ELETTRODOMESTICI), "washer");
   assert.equal(
     iconaVoce({ icon: "mdi:fridge", visual_key: "oven" }, ELETTRODOMESTICI),
     "mdi:fridge",
   );
 });
 
-test("il glifo e' lo stesso che sceglie il disegno grande della sezione", () => {
-  /* Una riga della stanza e la card della sezione non devono poter dire due
-   * cose diverse dello stesso apparecchio: la fonte e' una sola. */
-  for (const tipo of ["washer", "dryer", "dishwasher", "fridge", "oven", "microwave"])
-    assert.equal(iconaVoce({ visual_key: tipo }, ELETTRODOMESTICI), applianceGlyph(tipo));
+test("il disegno e' lo stesso della card della sezione", () => {
+  for (const tipo of ["washer", "dryer", "dishwasher", "fridge", "oven", "microwave", "coffee"])
+    assert.equal(iconaVoce({ visual_key: tipo }, ELETTRODOMESTICI), canonicalArtworkType(tipo));
 });
 
-test("gli altri blocchi non cambiano: il clima resta com'era", () => {
-  assert.equal(iconaVoce({ type: "termo" }, { key: "clima" }), "🔥");
-  assert.equal(iconaVoce({ type: "pompa" }, { key: "clima" }), "♨️");
-  assert.equal(iconaVoce({}, { key: "clima" }), "❄️");
+test("il clima porta il suo disegno per tipo", () => {
+  assert.equal(iconaVoce({ type: "termo" }, { key: "clima" }), "radiator");
+  assert.equal(iconaVoce({ type: "pompa" }, { key: "clima" }), "heat-pump");
+  assert.equal(iconaVoce({}, { key: "clima" }), "air-conditioner");
+});
+
+test("nessun blocco ripiega su un'emoji", () => {
+  for (const key of [
+    "clima",
+    "luci",
+    "prese",
+    "coperture",
+    "elettrodomestici",
+    "media",
+    "telecamere",
+    "carichi",
+    "robot",
+    "irrigazione",
+    "altro",
+  ])
+    assert.doesNotMatch(iconaVoce({ emoji_icon: "🍕" }, { key }), EMOJI, key);
 });

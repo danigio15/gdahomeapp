@@ -34,6 +34,7 @@ import {
   root,
   t,
 } from "./shared.js";
+import { segnoHtml } from "../core/segni-del-catalogo.js";
 
 const KEY = "__DASHBOARDMODERN_TESTA_FISSA__";
 const state = (root[KEY] ||= { installed: false });
@@ -89,7 +90,7 @@ function corpoMarkup() {
   const accesa = testaFissaAttiva();
   return `<div class="ed-slot dm-testa" id="${BLOCCO}">
     <div class="dm-testa-riga">
-      <span class="ed-slot-lbl">📌 ${esc(t("Intestazione fissa", "Pinned header"))}</span>
+      <span class="ed-slot-lbl">${segnoHtml("star")} ${esc(t("Intestazione fissa", "Pinned header"))}</span>
       <button type="button" class="dm-testa-int" role="switch"
         aria-checked="${accesa ? "true" : "false"}"
         aria-label="${esc(t("Intestazione fissa", "Pinned header"))}"

@@ -40,8 +40,9 @@ import { impiantoScelto } from "./energy-section.js";
 import { buildEntityIndex } from "../core/entity-search-index.js";
 import { ricordaLeStanze } from "../core/le-stanze-di-home-assistant.js";
 import { buildPostings, detectCategories, detectSlots, parseSlotPlan } from "../core/entity-autodetect.js";
-import { allStates, clean, dashboardStore, doc, installStyle, lexicalGlobal, readJson, reloadDashboard, root, t } from "./shared.js";
+import { allStates, clean, dashboardStore, doc, esc, installStyle, lexicalGlobal, readJson, reloadDashboard, root, t } from "./shared.js";
 import { accendiLeSezioniCheLeggonoLaCasa } from "./beta26-real-device-stability-section.js";
+import { segnoHtml, senzaEmoji } from "../core/segni-del-catalogo.js";
 
 const KEY = "__DASHBOARDMODERN_ENTITY_AUTODETECT__";
 const HOSTED_ENOUGH = 200;
@@ -71,7 +72,7 @@ function failure(message) {
   const target = outlet();
   if (target) target.innerHTML = `<div class="ed-intro dm-ad-error"></div>`;
   const line = target?.querySelector(".dm-ad-error");
-  if (line) line.textContent = `❌ ${message}`;
+  if (line) line.textContent = String(message);
 }
 
 function countRow(icon, label, value, note = "") {
@@ -79,7 +80,7 @@ function countRow(icon, label, value, note = "") {
   row.className = "dm-ad-row";
   const left = doc.createElement("span");
   left.className = "dm-ad-row-label";
-  left.textContent = `${icon} ${label}`;
+  left.innerHTML = `${segnoHtml(icon)} ${esc(label)}`;
   const right = doc.createElement("span");
   right.className = value ? "dm-ad-row-value" : "dm-ad-row-value is-empty";
   right.textContent = note || String(value);
@@ -96,7 +97,7 @@ function renderSummary(proposal) {
 
   const title = doc.createElement("div");
   title.className = "dm-ad-title";
-  title.textContent = t("🪄 Ecco cosa ho trovato", "🪄 Here is what I found");
+  title.textContent = senzaEmoji(t("🪄 Ecco cosa ho trovato", "🪄 Here is what I found"));
   panel.append(title);
 
   const intro = doc.createElement("div");
@@ -109,12 +110,12 @@ function renderSummary(proposal) {
 
   const kept = t("già configurato", "already configured");
   panel.append(
-    countRow("🔗", t("Collegamenti alle entità", "Entity links"), proposal.assignments.length),
-    countRow("💡", t("Luci", "Lights"), proposal.lightCount, proposal.skipped.lights ? kept : ""),
-    countRow("🌡️", t("Stanze", "Rooms"), proposal.rooms.length, proposal.skipped.rooms ? kept : ""),
-    countRow("❄️", t("Unità clima", "Climate units"), proposal.climate.length, proposal.skipped.climate ? kept : ""),
-    countRow("📹", t("Telecamere", "Cameras"), proposal.cameras.length, proposal.skipped.cameras ? kept : ""),
-    countRow("🔔", t("Entità nei gruppi avvisi", "Entities in alert groups"), proposal.groupCount),
+    countRow("link", t("Collegamenti alle entità", "Entity links"), proposal.assignments.length),
+    countRow("lights", t("Luci", "Lights"), proposal.lightCount, proposal.skipped.lights ? kept : ""),
+    countRow("thermometer", t("Stanze", "Rooms"), proposal.rooms.length, proposal.skipped.rooms ? kept : ""),
+    countRow("air-conditioner", t("Unità clima", "Climate units"), proposal.climate.length, proposal.skipped.climate ? kept : ""),
+    countRow("camera", t("Telecamere", "Cameras"), proposal.cameras.length, proposal.skipped.cameras ? kept : ""),
+    countRow("bell", t("Entità nei gruppi avvisi", "Entities in alert groups"), proposal.groupCount),
   );
 
   if (proposal.assignments.length) {
@@ -160,7 +161,7 @@ function renderSummary(proposal) {
   const apply = doc.createElement("button");
   apply.type = "button";
   apply.className = "ed-btn-add dm-ad-apply";
-  apply.textContent = t("✅ Applica e ricarica", "✅ Apply and reload");
+  apply.textContent = senzaEmoji(t("✅ Applica e ricarica", "✅ Apply and reload"));
   apply.addEventListener("click", () => applyProposal(proposal));
   const cancel = doc.createElement("button");
   cancel.type = "button";
@@ -440,7 +441,7 @@ export async function applyProposal(proposal) {
   if (target) {
     target.innerHTML = '<div class="ed-intro dm-ad-saving"></div>';
     const line = target.querySelector(".dm-ad-saving");
-    if (line) line.textContent = t("💾 Salvo e ricarico…", "💾 Saving and reloading…");
+    if (line) line.textContent = senzaEmoji(t("💾 Salvo e ricarico…", "💾 Saving and reloading…"));
   }
   if (Object.keys(proposal.lights).length) writeJson("cd_luci", proposal.lights);
   if (proposal.rooms.length) writeJson("cd_stanze", proposal.rooms);
