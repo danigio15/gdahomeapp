@@ -370,6 +370,29 @@ class PonteFinto {
       });
       return;
     }
+    if (detto['type'] == 'subscribe_entities') {
+      /* Come Home Assistant: prima la risposta, e subito dopo lo stato di
+       * adesso delle entita' chieste, nella forma stretta. */
+      _manda(presa, {
+        'id': id,
+        'type': 'result',
+        'success': true,
+        'result': null,
+      });
+      final chieste = (detto['entity_ids'] as List?)?.cast<String>();
+      _manda(presa, {
+        'id': id,
+        'type': 'event',
+        'event': {
+          'a': {
+            for (final una in entita)
+              if (chieste == null || chieste.contains(una['entity_id']))
+                una['entity_id'] as String: stretta(una),
+          },
+        },
+      });
+      return;
+    }
     _manda(presa, {
       'id': id,
       'type': 'result',
@@ -1196,6 +1219,21 @@ class PonteFinto {
     'last_updated':
         aggiornataIl ?? cambiataIl ?? '2026-09-07T07:00:00.000000+00:00',
   };
+
+  /// Un'entita' come la scrive `subscribe_entities`: `s`, `a`, e i secondi
+  /// `lc` (e `lu`, solo se diverso).
+  static Map<String, dynamic> stretta(Map<String, dynamic> intera) {
+    double secondi(Object? quando) =>
+        DateTime.parse(quando! as String).microsecondsSinceEpoch / 1000000;
+    final lc = secondi(intera['last_changed']);
+    final lu = secondi(intera['last_updated'] ?? intera['last_changed']);
+    return {
+      's': intera['state'],
+      'a': intera['attributes'],
+      'lc': lc,
+      if (lu != lc) 'lu': lu,
+    };
+  }
 
   /// Manda un `state_changed` come lo manderebbe Home Assistant.
   void cambia(int id, String entita, Map<String, dynamic>? nuovo) {

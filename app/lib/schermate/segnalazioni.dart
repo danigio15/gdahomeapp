@@ -56,10 +56,23 @@ class _SchermataDelleSegnalazioniState
     return filo != null && filo.dentro ? filo : null;
   }
 
+  /// Se la sezione si vede. Nella home quelle nascoste hanno gli orologi
+  /// fermi (`TickerMode`), e qui vuol dire anche niente richieste.
+  bool _siVede = true;
+
   @override
-  void initState() {
-    super.initState();
-    _carica();
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    /* Si legge la prima volta che si guarda. La home tiene in piedi tutte le
+     * sezioni dall'avvio, e leggerle tutte subito voleva dire richieste al
+     * ponte in fila davanti a quelle della plancia — da fuori casa, tutte dal
+     * centralino. */
+    _siVede = TickerMode.valuesOf(context).enabled;
+    if (_siVede && _elenco == null && !_caricando) {
+      Future.microtask(() {
+        if (mounted && _elenco == null && !_caricando) _carica();
+      });
+    }
   }
 
   @override
@@ -67,7 +80,7 @@ class _SchermataDelleSegnalazioniState
     super.didUpdateWidget(vecchia);
     /* Il filo puo' non esserci alla prima apertura ed esserci dopo: appena
      * c'e', si legge. */
-    if (_elenco == null && !_caricando && _filo != null) _carica();
+    if (_siVede && _elenco == null && !_caricando && _filo != null) _carica();
   }
 
   Future<void> _carica({bool aggiorna = false}) async {

@@ -73,17 +73,28 @@ class _SchermataDellaDiagnosticaState extends State<SchermataDellaDiagnostica> {
   Timer? _orologio;
   StreamSubscription<void>? _ascolto;
 
+  /// Se la pagina si vede. Dentro la home sta in piedi anche da nascosta, e
+  /// rinfrescarla ogni secondo voleva dire un fotogramma al secondo sopra la
+  /// plancia per una pagina che nessuno guardava.
+  bool _siVede = true;
+
   @override
   void initState() {
     super.initState();
     /* I numeri si rinfrescano da soli: chi guarda deve vedere l'ultimo
      * minuto, non quello di quando ha aperto la pagina. */
     _orologio = Timer.periodic(const Duration(seconds: 1), (_) {
-      if (mounted) setState(() {});
+      if (mounted && _siVede) setState(() {});
     });
     _ascolto = widget.impostazioni.cambiamenti.listen((_) {
       if (mounted) setState(() {});
     });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _siVede = TickerMode.valuesOf(context).enabled;
   }
 
   @override

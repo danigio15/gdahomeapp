@@ -53,11 +53,27 @@ class _SchermataDellaConsoleState extends State<SchermataDellaConsole> {
     return filo != null && filo.dentro ? filo : null;
   }
 
+  /// Se la sezione si vede. La home la tiene in piedi in ogni casa, e la
+  /// coda c'e' in una casa sola: nelle altre chiedeva ogni dieci secondi,
+  /// anche da nascosta, e il ponte rispondeva di no. Adesso chiede solo
+  /// quando la si guarda (`TickerMode`, messo dalla home).
+  bool _siVede = true;
+
   @override
   void initState() {
     super.initState();
-    _carica();
     _giro = Timer.periodic(_ogniQuanto, (_) => _unGiro());
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _siVede = TickerMode.valuesOf(context).enabled;
+    if (_siVede && !_letta && !_caricando) {
+      Future.microtask(() {
+        if (mounted && !_letta && !_caricando) _carica();
+      });
+    }
   }
 
   @override
@@ -68,12 +84,13 @@ class _SchermataDellaConsoleState extends State<SchermataDellaConsole> {
 
   /* Il giro dei dieci secondi.
    *
-   * Si salta quando si sta gia' caricando e quando il filo e' giu': una
-   * richiesta che non puo' partire non serve a nessuno, e due giri
-   * sovrapposti si scriverebbero addosso. Con una conversazione aperta si
-   * rilegge quella — e' li' che si sta guardando — e l'elenco viene dietro. */
+   * Si salta quando la sezione non si vede, quando si sta gia' caricando e
+   * quando il filo e' giu': una richiesta che non puo' partire non serve a
+   * nessuno, e due giri sovrapposti si scriverebbero addosso. Con una
+   * conversazione aperta si rilegge quella — e' li' che si sta guardando — e
+   * l'elenco viene dietro. */
   Future<void> _unGiro() async {
-    if (!mounted || _caricando || _presa == null) return;
+    if (!mounted || !_siVede || _caricando || _presa == null) return;
     if (_aperta != null) {
       await _rileggiIlFilo();
       return;
@@ -84,7 +101,7 @@ class _SchermataDellaConsoleState extends State<SchermataDellaConsole> {
   @override
   void didUpdateWidget(SchermataDellaConsole vecchia) {
     super.didUpdateWidget(vecchia);
-    if (!_letta && !_caricando && _presa != null) _carica();
+    if (_siVede && !_letta && !_caricando && _presa != null) _carica();
   }
 
   Future<void> _carica() async {

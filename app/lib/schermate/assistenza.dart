@@ -79,16 +79,28 @@ class _SchermataDellAssistenzaState extends State<SchermataDellAssistenza> {
     return filo != null && filo.dentro ? filo : null;
   }
 
+  /// Se la sezione si vede: vedi [didChangeDependencies].
+  bool _siVede = true;
+
   @override
-  void initState() {
-    super.initState();
-    _carica();
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    /* Si legge la prima volta che si guarda, non all'avvio: dentro la home
+     * le sezioni nascoste hanno gli orologi fermi (`TickerMode`), e una
+     * richiesta al ponte per una pagina che nessuno apre si metteva in fila
+     * davanti a quelle della plancia. */
+    _siVede = TickerMode.valuesOf(context).enabled;
+    if (_siVede && !_letta && !_caricando) {
+      Future.microtask(() {
+        if (mounted && !_letta && !_caricando) _carica();
+      });
+    }
   }
 
   @override
   void didUpdateWidget(SchermataDellAssistenza vecchia) {
     super.didUpdateWidget(vecchia);
-    if (!_letta && !_caricando && _filo != null) _carica();
+    if (_siVede && !_letta && !_caricando && _filo != null) _carica();
   }
 
   Future<void> _carica() async {

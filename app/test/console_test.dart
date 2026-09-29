@@ -189,6 +189,51 @@ void main() {
     });
   });
 
+  testWidgets('da nascosta non chiede niente, e chiede appena la si guarda', (
+    tester,
+  ) async {
+    /* La home tiene in piedi la Console in ogni casa, anche dove la coda non
+     * c'e': prima chiedeva all'avvio e poi ogni dieci secondi, da nascosta,
+     * e nelle altre case il ponte rispondeva di no. Nascosta, per la home, e'
+     * un TickerMode spento. */
+    late PonteFinto ponte;
+    late Collegamento collegamento;
+    await tester.runAsync(() async {
+      ponte = await PonteFinto.alza();
+      ponte.laConsole = true;
+      collegamento = await _casaCollegata(ponte);
+    });
+    int chieste() =>
+        ponte.arrivati.where((u) => u['type'] == 'ponte/console/coda').length;
+
+    Widget console({required bool siVede}) => MaterialApp(
+      home: Scaffold(
+        body: TickerMode(
+          enabled: siVede,
+          child: SchermataDellaConsole(collegamento: collegamento),
+        ),
+      ),
+    );
+
+    await tester.pumpWidget(console(siVede: false));
+    await _lasciaFare(tester);
+    /* Il giro dei dieci secondi passa, e resta tutto fermo. */
+    await tester.pump(const Duration(seconds: 11));
+    await _lasciaFare(tester);
+    expect(chieste(), 0);
+
+    await tester.pumpWidget(console(siVede: true));
+    await _lasciaFare(tester);
+    expect(chieste(), 1);
+    expect(find.text('Nessuno ha scritto'), findsOneWidget);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.runAsync(() async {
+      await collegamento.chiudi();
+      await ponte.spegni();
+    });
+  });
+
   testWidgets('senza coda si dice cosa ci arriverà', (tester) async {
     late PonteFinto ponte;
     late Collegamento collegamento;

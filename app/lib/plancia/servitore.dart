@@ -451,7 +451,15 @@ class Servitore {
         _rispondi(richiesta, 426, 'text/plain', utf8.encode('WebSocket'));
         return;
       }
-      final presa = await WebSocketTransformer.upgrade(richiesta);
+      /* Senza compressione: la pagina sta sullo stesso telefono, e comprimere
+       * serve solo a una rete. Il WebView la chiede, e accettata costava ogni
+       * messaggio compresso qui e scompresso là — un get_states da un
+       * megabyte e mezzo, 10–13 ms sul filo principale, dove intanto
+       * disegnano sia Flutter sia il WebView. */
+      final presa = await WebSocketTransformer.upgrade(
+        richiesta,
+        compression: CompressionOptions.compressionOff,
+      );
       final cucitura = Cucitura(_LaPresa(presa), _filoPronto);
       /* Chi ascolta la pagina e' l'adattatore, non la cucitura: la cucitura
        * il trasporto non lo conosce, ed e' l'intera ragione per cui la stessa
