@@ -423,7 +423,7 @@ function stanzeMarkup() {
    * home page, it must be unlimited». Proteggeva da una cosa che nessuno fa
    * per sbaglio — le stanze si spuntano una per volta — e diceva di no in
    * silenzio, con la spunta che tornava indietro da sola. */
-  return `<div class="ed-sec-title dm-blocco-sep">\u{1F6CB}\uFE0F ${esc(t("Stanze in plancia", "Rooms on Home"))}</div>
+  return `<div class="ed-sec-title dm-blocco-sep">${segnoHtml("room-living")} ${esc(t("Stanze in plancia", "Rooms on Home"))}</div>
     <div class="ed-intro">${esc(
       t(
         "Quali stanze si vedono in Home, con la temperatura e quante cose sono accese: un tocco porta dentro la stanza. Quante ne vuoi; nessuna spuntata vuol dire nessun blocco.",

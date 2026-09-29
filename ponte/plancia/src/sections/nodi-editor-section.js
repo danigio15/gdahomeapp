@@ -106,7 +106,7 @@ function rigaMarkup(nodo, indice) {
 
 function schedaMarkup() {
   const lista = elenco();
-  return `<div class="ed-sec-title">🖧 ${esc(t("Altri nodi del cluster", "Other cluster nodes"))}</div>
+  return `<div class="ed-sec-title">${segnoHtml("server")} ${esc(t("Altri nodi del cluster", "Other cluster nodes"))}</div>
     <div class="ed-intro">${esc(
       t(
         "La scheda grande in cima alla pagina Server è il computer su cui gira Home Assistant. Questi sono gli altri nodi: uno per riga, con il nome che gli dai e le entità che vuoi vedere. Le caselle sono tutte facoltative — Proxmox VE pubblica lo stato e le tre percentuali, Glances aggiunge i gradi, un ping dà solo il su e giù — e una casella vuota è una barra che non compare.",

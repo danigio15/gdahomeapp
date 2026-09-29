@@ -126,7 +126,7 @@ export const SEGNO_DELL_EMOJI = Object.freeze({
   "✅": "check",
   "✔️": "check",
   "❌": "error",
-  "ℹ️": "info",
+  ℹ️: "info",
   "📹": "camera",
   "📷": "camera",
   "🎵": "speaker",
@@ -500,7 +500,8 @@ export const TESTO_DELL_EMOJI = Object.freeze({
 
 /** Il disegno che prende il posto di un'emoji, o "". */
 export function segnoPerEmoji(emoji) {
-  const chiave = SEGNO_DELL_EMOJI[pulita(emoji)] || SEGNO_DELL_EMOJI[pulita(emoji).replace(/️/g, "")];
+  const chiave =
+    SEGNO_DELL_EMOJI[pulita(emoji)] || SEGNO_DELL_EMOJI[pulita(emoji).replace(/️/g, "")];
   return chiave && segnoEsiste(chiave) ? chiave : "";
 }
 
@@ -515,6 +516,11 @@ export function chiaveDelSegno(valore) {
 const EMOJI_SOLA =
   /(?:\p{Extended_Pictographic})(?:\uFE0F|\u200D\p{Extended_Pictographic}\uFE0F?)*/gu;
 const senzaVariante = (valore) => String(valore).replace(/\uFE0F/g, "");
+
+/* Una tabella si interroga com'e', senza il selettore di variante e con: la
+ * stessa emoji si trova scritta in tutti e tre i modi. */
+const cerca = (tabella, emoji) =>
+  tabella[emoji] || tabella[senzaVariante(emoji)] || tabella[`${senzaVariante(emoji)}\uFE0F`] || "";
 
 /** La chiave del disegno che prende il posto di un valore: una chiave del
  * catalogo resta quella, un'emoji si traduce; altrimenti il ripiego. */
@@ -536,7 +542,7 @@ export function segnoDaValoreHtml(valore, { misura = 0, ripiego = "star", classe
  * tolgono. Il resto del testo va passato gia' sfuggito (`esc`). */
 export function emojiInSegni(testoSfuggito, { misura = 0 } = {}) {
   return String(testoSfuggito ?? "").replace(EMOJI_SOLA, (emoji) => {
-    const scritta = TESTO_DELL_EMOJI[emoji] || TESTO_DELL_EMOJI[senzaVariante(emoji)];
+    const scritta = cerca(TESTO_DELL_EMOJI, emoji);
     if (scritta) return scritta;
     const chiave = segnoPerEmoji(emoji);
     return chiave ? segnoHtml(chiave, { misura }) : "";
@@ -545,10 +551,15 @@ export function emojiInSegni(testoSfuggito, { misura = 0 } = {}) {
 
 /** Un testo semplice senza emoji: per `textContent`, `title`, `aria-label`,
  * le `<option>` — dove un disegno non ci puo' stare. Le frecce e i segni di
- * scrittura restano, come carattere tipografico. */
+ * scrittura restano, come carattere tipografico. Gli a capo restano dove
+ * sono: si toglie l'emoji con lo spazio che la seguiva, e basta. */
 export function senzaEmoji(testo) {
   return String(testo ?? "")
-    .replace(EMOJI_SOLA, (emoji) => TESTO_DELL_EMOJI[emoji] || TESTO_DELL_EMOJI[senzaVariante(emoji)] || "")
-    .replace(/\s{2,}/g, " ")
-    .trim();
+    .replace(new RegExp(`(?:${EMOJI_SOLA.source})[ \\t]?`, "gu"), (tratto) => {
+      const emoji = tratto.replace(/[ \t]$/, "");
+      const scritta = cerca(TESTO_DELL_EMOJI, emoji);
+      return scritta ? `${scritta}${tratto.slice(emoji.length)}` : "";
+    })
+    .replace(/[ \t]{2,}/g, " ")
+    .replace(/^[ \t]+|[ \t]+$/g, "");
 }

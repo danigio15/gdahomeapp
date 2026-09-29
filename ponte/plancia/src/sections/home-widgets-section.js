@@ -2738,7 +2738,7 @@ function solarThermalModel(states) {
       const quando = stateOf(states, dato.entity);
       const cambiato = Date.parse(quando?.last_changed ?? quando?.last_updated ?? "");
       righe.push({
-        glyph: casella.glyph,
+        glyph: /^[a-z-]+$/.test(casella.glyph) ? segnoHtml(casella.glyph) : casella.glyph,
         name: friendlyName(states, dato.entity),
         entity: dato.entity,
         on: attivo,
@@ -2751,7 +2751,7 @@ function solarThermalModel(states) {
     if (primaSonda == null && casella.ref.startsWith("dm.boiler_sonda")) primaSonda = dato.value;
     visti.add(dato.entity);
     righe.push({
-      glyph: casella.glyph,
+      glyph: /^[a-z-]+$/.test(casella.glyph) ? segnoHtml(casella.glyph) : casella.glyph,
       name: friendlyName(states, dato.entity),
       entity: dato.entity,
       /* Il testo e' per gli occhi, `raw` per i conti: `Number("68°")` non e' un
@@ -3496,7 +3496,7 @@ const CASELLE_MINIPC = Object.freeze([
     chiave: "cpu",
     it: "CPU",
     en: "CPU",
-    glyph: segnoHtml("computer"),
+    glyph: "computer",
     unita: "%",
     cifre: 0,
     quota: true,
@@ -3506,7 +3506,7 @@ const CASELLE_MINIPC = Object.freeze([
     chiave: "ram",
     it: "RAM",
     en: "RAM",
-    glyph: segnoHtml("gauge"),
+    glyph: "gauge",
     unita: "%",
     cifre: 0,
     quota: true,
@@ -3516,7 +3516,7 @@ const CASELLE_MINIPC = Object.freeze([
     chiave: "disco",
     it: "Disco",
     en: "Disk",
-    glyph: segnoHtml("server"),
+    glyph: "server",
     unita: "%",
     cifre: 0,
     quota: true,
@@ -3525,7 +3525,7 @@ const CASELLE_MINIPC = Object.freeze([
     ref: "dm.server_temperatura_cpu",
     it: "Temperatura CPU",
     en: "CPU temperature",
-    glyph: segnoHtml("thermometer"),
+    glyph: "thermometer",
     unita: "°",
     cifre: 1,
   },
@@ -3533,7 +3533,7 @@ const CASELLE_MINIPC = Object.freeze([
     ref: "dm.server_temperature",
     it: "Temperatura",
     en: "Temperature",
-    glyph: segnoHtml("thermometer"),
+    glyph: "thermometer",
     unita: "°",
     cifre: 1,
   },
@@ -3541,7 +3541,7 @@ const CASELLE_MINIPC = Object.freeze([
     ref: "dm.server_potenza_raspberry_server",
     it: "Potenza",
     en: "Power",
-    glyph: segnoHtml("power"),
+    glyph: "power",
     unita: " W",
     cifre: 0,
   },
@@ -3561,13 +3561,13 @@ const CASELLE_MINIPC = Object.freeze([
     unita: " Mb/s",
     cifre: 0,
   },
-  { ref: "dm.server_ping_internet", it: "Ping", en: "Ping", glyph: segnoHtml("router"), unita: " ms", cifre: 0 },
-  { ref: "dm.server_stato_internet", it: "Internet", en: "Internet", glyph: segnoHtml("globe"), acceso: true },
+  { ref: "dm.server_ping_internet", it: "Ping", en: "Ping", glyph: "router", unita: " ms", cifre: 0 },
+  { ref: "dm.server_stato_internet", it: "Internet", en: "Internet", glyph: "globe", acceso: true },
   {
     ref: "dm.server_raggiungibilita_google",
     it: "Rete raggiungibile",
     en: "Network reachable",
-    glyph: segnoHtml("globe"),
+    glyph: "globe",
     acceso: true,
   },
 ]);
@@ -3633,7 +3633,7 @@ export function minipcModel(states) {
       visti.add(dato.entity);
       const attivo = STATI_ACCESI.test(dato.state);
       rows.push({
-        glyph: casella.glyph,
+        glyph: /^[a-z-]+$/.test(casella.glyph) ? segnoHtml(casella.glyph) : casella.glyph,
         name: friendlyName(states, dato.entity),
         entity: dato.entity,
         on: attivo,
@@ -3651,7 +3651,7 @@ export function minipcModel(states) {
     )
       carico = dato.value;
     rows.push({
-      glyph: casella.glyph,
+      glyph: /^[a-z-]+$/.test(casella.glyph) ? segnoHtml(casella.glyph) : casella.glyph,
       name: t(casella.it, casella.en),
       /* Il nome della misura, non la parola tradotta.
        *
