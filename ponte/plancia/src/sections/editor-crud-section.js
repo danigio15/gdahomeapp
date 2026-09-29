@@ -1,5 +1,4 @@
 // DM-FIX-20260812B
-import { segnoDaValoreHtml, segnoHtml } from "../core/segni-del-catalogo.js";
 import { contactEntity, inferriataEntity } from "../core/shutter-window.js";
 import { coverClosedThreshold, coverDownRelay, coverPresetPosition } from "../core/cover-kind.js";
 import { umiditaDellaRiga } from "../core/arieggiare.js";
@@ -110,7 +109,7 @@ function editButton(kind, index) {
   button.className = "ed-del dm-edit-existing";
   button.dataset.dmEditKind = kind;
   button.dataset.dmEditIndex = String(index);
-  button.innerHTML = segnoHtml("pencil");
+  button.textContent = "✏️";
   button.title = t("Modifica", "Edit");
   button.setAttribute("aria-label", button.title);
   return button;
@@ -332,12 +331,10 @@ function beginEdit(kind, index) {
     setField("ed-room-floor", item.floor || "");
     const preview = doc.getElementById("ed-room-icon-preview");
     if (preview)
-      preview.innerHTML = /^mdi:/i.test(clean(item.icon))
-        ? root.cdIconMarkup?.(item.icon, 26) || segnoHtml("home", { misura: 26 })
-        : segnoDaValoreHtml(item.icon, { misura: 26, ripiego: "home" });
+      preview.innerHTML = root.cdIconMarkup?.(item.icon || "🏠", 26) || item.icon || "🏠";
   }
   const add = formFor(kind)?.querySelector(".ed-btn-add:not(.dm-edit-cancel)");
-  if (add) add.textContent = t("Salva modifiche", "Save changes");
+  if (add) add.textContent = t("💾 Salva modifiche", "💾 Save changes");
   addCancel(kind);
 }
 

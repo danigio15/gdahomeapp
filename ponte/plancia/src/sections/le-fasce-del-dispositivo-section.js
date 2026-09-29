@@ -68,7 +68,6 @@ import {
   selectedPeriod,
   t,
 } from "./shared.js";
-import { segnoHtml } from "../core/segni-del-catalogo.js";
 
 const KEY = "__DASHBOARDMODERN_FASCE_DEL_DISPOSITIVO__";
 const state = (root[KEY] ||= {
@@ -182,7 +181,7 @@ export function ilBloccoDelDispositivo(detto, config, nome = "") {
     : "";
   const punta = `
     <div class="dm-fasce-confronto" data-verso="${meglio ? "meglio" : peggio ? "peggio" : "pari"}">
-      <span aria-hidden="true">${segnoHtml(meglio ? "coin" : peggio ? "warning" : "timer")}</span>
+      <span aria-hidden="true">${meglio ? "💰" : peggio ? "⚠️" : "🕐"}</span>
       <span>${esc(t("La fascia in cui assorbe di più:", "The band it draws most in:"))} <b>${esc(nomeDellaFascia(detto.punta.indice))}</b> · <b>${formatNumber(detto.punta.quota, 0)}%</b>${confronto}</span>
     </div>`;
 
@@ -220,16 +219,16 @@ export function ilBloccoDelDispositivo(detto, config, nome = "") {
    * dodici traduzioni per dire quello che si dice gia'. */
   const dalSole =
     detto.sole > 0.05
-      ? `<span aria-hidden="true">${segnoHtml("sun")}</span> ${esc(t("Dal sole:", "From the sun:"))} <b>${formatNumber(detto.sole, 1)} kWh</b> · ${esc(t("dalla rete", "from grid"))}: <b>${formatNumber(detto.rete, 1)} kWh</b>. ${esc(t("Non costano niente a nessun'ora, e gli euro qui sopra sono solo su quello che ha preso dalla rete.", "They cost nothing at any hour, and the euros above are only on what it took from the grid."))}`
+      ? `<span aria-hidden="true">☀️</span> ${esc(t("Dal sole:", "From the sun:"))} <b>${formatNumber(detto.sole, 1)} kWh</b> · ${esc(t("dalla rete", "from grid"))}: <b>${formatNumber(detto.rete, 1)} kWh</b>. ${esc(t("Non costano niente a nessun'ora, e gli euro qui sopra sono solo su quello che ha preso dalla rete.", "They cost nothing at any hour, and the euros above are only on what it took from the grid."))}`
       : "";
   const spartito = detto.tuttoSpartito
     ? ""
-    : `<span aria-hidden="true">${segnoHtml("info")}</span> ${esc(t("Non spartiti:", "Not split:"))} <b>${formatNumber(detto.spartito.senza, 1)} kWh</b>. ${esc(t("Per quelle ore Home Assistant non tiene il consumo della casa, e non si sa quanto venisse dal sole. La fascia però è quella giusta.", "For those hours Home Assistant doesn't keep the house consumption, so we can't tell how much came from the sun. The band is right all the same."))}`;
+    : `<span aria-hidden="true">ℹ️</span> ${esc(t("Non spartiti:", "Not split:"))} <b>${formatNumber(detto.spartito.senza, 1)} kWh</b>. ${esc(t("Per quelle ore Home Assistant non tiene il consumo della casa, e non si sa quanto venisse dal sole. La fascia però è quella giusta.", "For those hours Home Assistant doesn't keep the house consumption, so we can't tell how much came from the sun. The band is right all the same."))}`;
   const nota = [dalSole, spartito].filter(Boolean).join("<br>");
 
   return `
     <div class="dm-fasce-testata">
-      <div class="dm-fasce-titolo">${segnoHtml("timer")} ${esc(t("In quale fascia consuma", "Which band it draws in"))}</div>
+      <div class="dm-fasce-titolo">🕐 ${esc(t("In quale fascia consuma", "Which band it draws in"))}</div>
       <div class="dm-fasce-totale"><b>${soldi(detto.euro)}</b> <small>${formatNumber(detto.kwh, 1)} kWh${nome ? ` · ${esc(nome)}` : ""}</small></div>
     </div>
     <div class="dm-fasce-barra">${barra}</div>

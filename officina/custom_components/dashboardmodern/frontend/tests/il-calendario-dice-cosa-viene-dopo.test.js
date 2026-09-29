@@ -314,7 +314,7 @@ test("una tessera sola, con dentro i due pezzi interi", async () => {
     new URL("../src/sections/todo-editor-section.js", import.meta.url),
     "utf8",
   );
-  assert.match(editor, /\["agenda", "calendar", t\("Agenda", "Agenda"\)\]/);
+  assert.match(editor, /\["agenda", "📅", t\("Agenda", "Agenda"\)\]/);
 });
 
 test("gli eventi si chiedono al servizio, non allo stato dell'entita'", async () => {

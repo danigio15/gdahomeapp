@@ -40,7 +40,6 @@ import {
   root,
   t,
 } from "./shared.js";
-import { segnoHtml } from "../core/segni-del-catalogo.js";
 
 const KEY = "__DASHBOARDMODERN_MODO_CHIOSCO__";
 const state = (root[KEY] ||= { installed: false });
@@ -65,7 +64,7 @@ function corpoMarkup() {
   const acceso = kioskAttivo();
   return `<div class="ed-slot dm-chiosco" id="${BLOCCO}">
     <div class="dm-chiosco-riga">
-      <span class="ed-slot-lbl">${segnoHtml("computer")} ${esc(t("Modo chiosco", "Kiosk mode"))}</span>
+      <span class="ed-slot-lbl">🖥️ ${esc(t("Modo chiosco", "Kiosk mode"))}</span>
       <button type="button" class="dm-chiosco-int" role="switch"
         aria-checked="${acceso ? "true" : "false"}"
         aria-label="${esc(t("Modo chiosco", "Kiosk mode"))}"

@@ -80,7 +80,7 @@ test("la card scrive i watt accanto allo stato, e solo se ci sono", async () => 
   const sorgente = await leggi("../src/sections/lights-page-section.js");
   assert.match(
     sorgente,
-    /\$\{view\.consumo \? `<span class="dm-lucip-badge" data-kind="consumo">\$\{segnoHtml\("power"\)\} \$\{esc\(view\.consumo\)\}<\/span>` : ""\}/,
+    /\$\{view\.consumo \? `<span class="dm-lucip-badge" data-kind="consumo">⚡ \$\{esc\(view\.consumo\)\}<\/span>` : ""\}/,
   );
   /* Una luce un wattmetro non ce l'ha: la pastiglia esiste solo dove il campo
    * arriva, e la scheda delle luci resta quella di sempre. */

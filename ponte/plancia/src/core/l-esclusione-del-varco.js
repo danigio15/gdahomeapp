@@ -29,8 +29,8 @@
  * anche l'unico che si legge senza pensarci. Non c'e' un giro-il-segno come per
  * i contatti (`verso-aperture.js`): quello esiste perche' meta' dei contatti
  * porta-finestra del mondo sono cablati all'incontrario e non c'era modo di
- * scegliere. Qui l'interruttore lo vede chi configura, una casella per volta,
- * e se ne trovasse uno girato basta scriverci `-`. Una seconda casella
+ * scegliere. Qui l'interruttore lo scrive chi configura, una casella per volta,
+ * e se ne trovasse uno girato basta che non lo metta. Una seconda casella
  * «questo e' al contrario» sarebbe una domanda in piu' a tutti per un caso che
  * nessuno ha ancora avuto.
  *
@@ -71,53 +71,14 @@ export function puoEscludere(entity) {
  * italiano. */
 const PAROLE = Object.freeze(["bypass", "esclusione", "escludi", "escluso"]);
 
-/* Le stesse, e qualcuna in piu', quando si cerca DENTRO un dispositivo.
- *
- * Li' la domanda e' un'altra: non «come si chiama l'interruttore di questo
- * contatto» ma «quale, fra gli interruttori che stanno sullo stesso
- * dispositivo del contatto, e' quello che esclude». La zona della centrale e'
- * gia' stata trovata dal registro, e basta riconoscere la parola: `bypass` di
- * Risco, Paradox, AlarmDecoder; `exclude` e `excluded` di chi traduce cosi';
- * `escludi`, `esclusione`, `esclusa` di chi l'ha chiamato all'italiana. La
- * parola deve stare intera — `bypass`, non `bypassaggio_caldaia` — e si guarda
- * sia l'identificativo sia il nome che si legge. */
-const PAROLA_DEL_DISPOSITIVO =
-  /(^|[^a-z0-9])(bypass|bypassed|exclude|excluded|esclusione|escludi|escluso|esclusa)($|[^a-z0-9])/i;
-
-/**
- * L'interruttore d'esclusione che sta sullo STESSO dispositivo del contatto.
- *
- * E' la strada buona, e si prova per prima: Risco — e con lei le altre
- * centrali che Home Assistant conosce — mette ogni zona in un dispositivo suo,
- * col contatto e l'interruttore dell'esclusione dentro. Il registro lo dice
- * senza bisogno di indovinare niente dal nome, e regge anche chi i nomi li ha
- * cambiati tutti. `dispositivi` e' la mappa entita' → dispositivo che la
- * plancia si ricorda (`i-dispositivi-di-home-assistant.js`): qui non si chiede
- * niente a nessuno.
- *
- * Due interruttori con la parola giusta sullo stesso dispositivo non sono una
- * risposta: sono una domanda, e qui non si sceglie a caso quale zona lasciare
- * scoperta. Si torna vuoti, e decide il nome o chi configura.
- */
-export function esclusioneDelDispositivo(entity, states = {}, dispositivi = null) {
-  const id = pulito(entity);
-  const suo = pulito(dispositivi?.[id]);
-  if (!id || !suo) return "";
-  const trovati = Object.keys(states || {}).filter((quale) => {
-    if (quale === id || !puoEscludere(quale)) return false;
-    if (pulito(dispositivi?.[quale]) !== suo) return false;
-    const nome = pulito(states?.[quale]?.attributes?.friendly_name);
-    return PAROLA_DEL_DISPOSITIVO.test(quale.split(".")[1]) || PAROLA_DEL_DISPOSITIVO.test(nome);
-  });
-  return trovati.length === 1 ? trovati[0] : "";
-}
-
 /**
  * L'interruttore che con ogni probabilita' esclude questo contatto.
  *
- * Prima il dispositivo, se il registro c'e' (vedi sopra); poi il nome.
+ * Serve a non far battere a mano un identificativo che la centrale ha gia'
+ * scritto: si propone, non si decide. Chi configura lo vede nella casella e lo
+ * cancella se non e' quello — e finche' non salva, non esiste.
  *
- * ── Perche' col nome cerca cosi' poco ────────────────────────────────────
+ * ── Perche' cerca cosi' poco ──────────────────────────────────────────────
  *
  * Si accettano due forme sole, e la parola d'esclusione deve essere una PAROLA
  * INTERA attaccata al nome del contatto: `porta_ingresso_bypass` o
@@ -127,18 +88,16 @@ export function esclusioneDelDispositivo(entity, states = {}, dispositivi = null
  * La regola larga — «un interruttore che cominci come il contatto e abbia
  * `bypass` addosso» — sembrava piu' generosa e invece era pericolosa: per un
  * contatto che si chiama `binary_sensor.porta` avrebbe proposto
- * `switch.porta_cantina_bypass`, cioe' l'esclusione di un'ALTRA porta. Adesso
- * che quello che si trova si usa davvero (vedi `lInterruttoreDelVarco`) e' una
- * ragione in piu': una proposta sbagliata qui e' una finestra che resta
- * sorvegliata mentre chi ha premuto crede di averla esclusa, e un'altra esclusa
- * senza che nessuno l'abbia chiesto.
+ * `switch.porta_cantina_bypass`, cioe' l'esclusione di un'ALTRA porta, pronta a
+ * essere salvata da chi si fida della proposta. Una proposta sbagliata qui non
+ * e' una comodita' in meno: e' una finestra che resta sorvegliata mentre chi ha
+ * premuto crede di averla esclusa, e un'altra esclusa senza che nessuno
+ * l'abbia chiesto. Meglio far scrivere una casella a mano.
  */
-export function esclusioneProposta(entity, states = {}, dispositivi = null) {
+export function esclusioneProposta(entity, states = {}) {
   const id = pulito(entity);
   const oggetto = id.split(".")[1] || "";
   if (!oggetto) return "";
-  const dalDispositivo = esclusioneDelDispositivo(id, states, dispositivi);
-  if (dalDispositivo) return dalDispositivo;
   const nomi = new Set();
   for (const dominio of DOMINI)
     for (const parola of PAROLE) {
@@ -146,38 +105,6 @@ export function esclusioneProposta(entity, states = {}, dispositivi = null) {
       nomi.add(`${dominio}${parola}_${oggetto}`);
     }
   return Object.keys(states || {}).find((quale) => nomi.has(quale) && puoEscludere(quale)) || "";
-}
-
-/* Quello che si scrive nella casella per dire «questo varco non ha
- * esclusione, non cercarla». Un trattino, come nelle caselle dei moduli di
- * carta: e' l'unico segno che non puo' essere un'entita'. */
-export const NESSUNA_ESCLUSIONE = "-";
-
-/**
- * L'interruttore che comanda davvero l'esclusione di questo varco.
- *
- * Fino alla prima versione (#136) valeva solo quello scritto a mano, e la
- * proposta restava in grigio nella casella. Ma chi l'ha chiesto l'ha detto
- * chiaro: «sono tutti binary sensor che gia' Home Assistant vede». Una centrale
- * Risco con trenta zone vuol dire trenta caselle da riempire con un nome che
- * Home Assistant sa gia', e una funzione che nessuno usa perche' costa mezz'ora
- * di configurazione.
- *
- * Quindi si usa quello che si trova, ma solo con le due prove forti: lo stesso
- * dispositivo nel registro, o il nome esatto che la centrale pubblica. La
- * casella resta, e vince sempre: ci si scrive un altro interruttore per
- * correggere, o `-` per dire che questo varco non si esclude da qui.
- *
- * `trovato` dice se l'interruttore l'ha trovato la plancia e non chi
- * configura: la scheda lo mostra, perche' una cosa che comanda un antifurto
- * deve potersi vedere prima di doverla scoprire.
- */
-export function lInterruttoreDelVarco(entity, scritto, states = {}, dispositivi = null) {
-  const mano = pulito(scritto);
-  if (mano === NESSUNA_ESCLUSIONE) return { interruttore: "", trovato: false };
-  if (mano) return { interruttore: mano, trovato: false };
-  const trovato = esclusioneProposta(entity, states, dispositivi);
-  return { interruttore: trovato, trovato: Boolean(trovato) };
 }
 
 /* Muti sono muti, qui come nei contatti. */
@@ -218,39 +145,6 @@ export function ilComandoDellEsclusione(interruttore, states = {}) {
     service: come === "escluso" ? "turn_off" : "turn_on",
     data: { entity_id: id },
   };
-}
-
-/* Quanto restano sulla carta la domanda, l'annulla e il no della centrale.
- *
- * La domanda dura piu' di quella delle stanze (due secondi): li' si legge
- * «Spengo 3 luci?», qui si legge una parola sull'antifurto e si decide se
- * lasciare scoperta una finestra, e due secondi sono troppo pochi per farlo
- * senza fretta. L'annulla dura quanto quello delle stanze, cinque secondi. Il
- * no della centrale resta di piu', perche' va letto e capito. */
-export const DURA_LA_DOMANDA_DELLO_SCUDO = 4000;
-export const DURA_L_ANNULLA_DELLO_SCUDO = 5000;
-export const DURA_L_ERRORE_DELLO_SCUDO = 9000;
-
-/**
- * Cosa fa lo scudo premuto: chiede, manda, o niente.
- *
- * Le due direzioni non pesano uguale. Rimettere sotto sorveglianza una
- * finestra rende la casa piu' sicura, e si fa subito: una domanda li' sarebbe
- * un tocco in piu' a chi sta facendo la cosa giusta. Escluderla la rende meno
- * sicura, e allora il tocco chiede prima — sulla carta stessa, come «Spengo 3
- * luci?» nelle stanze — e dopo lascia un «Annulla» per qualche secondo.
- *
- * Il lucchetto vale anche qui, sui due lati: chi ha messo in sola lettura il
- * contatto, o l'interruttore della centrale, ha detto che da questa plancia
- * non si tocca. `siComanda` e' la stessa domanda che si fanno le luci.
- */
-export function laMossaDelloScudo(riga, states = {}, siComanda = () => true) {
-  const interruttore = pulito(riga?.esclusione);
-  const comando = ilComandoDellEsclusione(interruttore, states);
-  if (!comando) return { mossa: "niente", comando: null };
-  if (!siComanda(interruttore) || !siComanda(pulito(riga?.entity)))
-    return { mossa: "bloccato", comando: null };
-  return { mossa: comando.service === "turn_on" ? "chiedi" : "manda", comando };
 }
 
 /**

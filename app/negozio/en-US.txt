@@ -1,5 +1,3 @@
 The navigator knows Italy's limited traffic zones (ZTL), asks whether you have a permit and suggests energy-saving routes. Android Auto and CarPlay show traffic, with the lanes at junctions. The app is faster, especially away from home.
 
-In the dashboard: the room becomes a control board, storage batteries in Energy, the air fryer in Appliances, excluding a door or window from the alarm.
-
-Update gdahome in Home Assistant as well: the new sections come from there.
+Update gdahome in Home Assistant to 1.9.1: the dashboard that works for everyone is back, with your configuration as it was.

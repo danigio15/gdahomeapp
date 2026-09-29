@@ -1,11 +1,9 @@
 // DM-FIX-20260812C
-import { emojiInSegni, segnoHtml } from "../core/segni-del-catalogo.js";
 import {
   clean,
   dashboardStore,
   doc,
   english,
-  esc,
   installStyle,
   readClimateUnits,
   readJson,
@@ -157,7 +155,7 @@ function repairClimateEditorRows() {
     const room = roomLabel(unit.room || unit.room_id, unit.name);
     nodes.primary.textContent = name;
     nodes.primary.title = name;
-    nodes.secondary.textContent = [clean(unit.entity), room || ""].filter(Boolean).join(" · ");
+    nodes.secondary.textContent = [clean(unit.entity), room ? `🏠 ${room}` : ""].filter(Boolean).join(" · ");
     nodes.secondary.title = nodes.secondary.textContent;
     row.dataset.dmBeta16ClimateName = "true";
   });
@@ -221,8 +219,8 @@ function repairClimateRoomHeadings() {
   const rooms = canonicalRooms();
   let repaired = false;
   for (const [gridId, glyph] of [
-    ["clima-grid-freddo", "air-conditioner"],
-    ["clima-grid-caldo", "radiator"],
+    ["clima-grid-freddo", "❄️"],
+    ["clima-grid-caldo", "🔥"],
   ]) {
     const grid = doc?.getElementById?.(gridId);
     if (!grid) continue;
@@ -230,7 +228,7 @@ function repairClimateRoomHeadings() {
     [...grid.children].forEach((node) => {
       if (node.classList.contains("cp-card")) {
         const icon = node.querySelector(".cp-icon");
-        if (icon) icon.innerHTML = segnoHtml(glyph);
+        if (icon) icon.textContent = glyph;
         let badge = node.querySelector(":scope > .dm-beta16-climate-room");
         if (currentRoom) {
           if (!badge) {
@@ -240,7 +238,7 @@ function repairClimateRoomHeadings() {
             if (header) header.after(badge);
             else node.prepend(badge);
           }
-          badge.textContent = clean(currentRoom.name);
+          badge.textContent = `🏠 ${clean(currentRoom.name)}`;
           badge.title = clean(currentRoom.name);
           node.dataset.dmBeta16RoomId = clean(currentRoom.id || currentRoom.name);
         } else {
@@ -251,19 +249,7 @@ function repairClimateRoomHeadings() {
         return;
       }
 
-      /* La scheda di oggi e' del Clima nuovo, coi suoi titoli: qui non e' un
-       * titolo niente di quello che disegna. Una card con la modalita' «In
-       * casa» ha il 🏠 nella pastiglia, e scambiata per titolo spariva dal
-       * telefono (#168). */
-      if (node.matches?.(".dm-cl-card,.dm-cl-room,.dm-cl-floor,[data-dm-cl]")) return;
       const text = clean(node.textContent);
-      /* Un titolo gia' sistemato qui porta il segno disegnato, non l'emoji:
-       * la stanza la ricorda il suo dataset. */
-      if (node.classList.contains("dm-beta16-climate-group-heading") && node.dataset.dmBeta16RoomLabel !== undefined) {
-        currentRoom = matchCanonicalRoom(rooms, node.dataset.dmBeta16RoomLabel);
-        repaired = true;
-        return;
-      }
       if (!text.includes("🏠")) return;
       const roomReference = clean(text.split("🏠").pop());
       const room = matchCanonicalRoom(rooms, roomReference);
@@ -271,9 +257,9 @@ function repairClimateRoomHeadings() {
       currentRoom = room || null;
       node.classList.add("clima-section-title", "dm-beta16-climate-group-heading");
       if (room) {
-        const prefix = text.includes("🏢") ? `${emojiInSegni(esc(clean(text.split("🏠")[0])))} ` : "";
+        const prefix = text.includes("🏢") ? `${clean(text.split("🏠")[0])} ` : "";
         const name = clean(room.name) || roomReference;
-        node.innerHTML = `${prefix}${segnoHtml("home")} ${esc(name)}`;
+        node.textContent = `${prefix}🏠 ${name}`.trim();
         node.dataset.dmBeta16RoomLabel = clean(room.id || name);
         node.title = name;
       } else if (noRoom) {

@@ -33,24 +33,8 @@ const pulito = (valore) => String(valore ?? "").trim();
 export const CHIAVE_PIANI = "cd_floors";
 export const CHIAVE_SEGNI_DEI_PIANI = "cd_floor_icons";
 
-/** Il segno di un piano che non ne ha scelto uno: una chiave del catalogo dei
- * disegni, non un'emoji. */
-export const SEGNO_DI_SERIE = "home";
-
-/* I segni che si sceglievano prima, quando erano emoji: chi ne ha salvato uno
- * se lo ritrova come il disegno che dice la stessa cosa. */
-const SEGNO_DI_PRIMA = Object.freeze({
-  "🏢": "home",
-  "🏠": "home",
-  "🪜": "room-attic",
-  "🛗": "lift",
-  "🛏️": "room-bedroom",
-  "🛏": "room-bedroom",
-  "🏚️": "room-cellar",
-  "🏚": "room-cellar",
-  "🚗": "room-garage",
-  "🌳": "room-garden",
-});
+/** Il segno di un piano che non ne ha scelto uno. */
+export const SEGNO_DI_SERIE = "🏢";
 
 /** Quanti piani si possono tenere. Oltre non e' una casa, e' un condominio. */
 export const QUANTI_PIANI = 12;
@@ -73,11 +57,7 @@ export function nomiDeiPiani(salvati) {
 /** Il segno scelto per un piano, o quello di serie. */
 export function segnoDelPiano(segni, nome) {
   const suo = pulito(segni?.[pulito(nome)]);
-  if (!suo) return SEGNO_DI_SERIE;
-  if (SEGNO_DI_PRIMA[suo]) return SEGNO_DI_PRIMA[suo];
-  /* Una chiave del catalogo si riconosce: minuscole e trattini. Qualunque
-   * altra cosa — un'emoji che non conosciamo — torna al segno di serie. */
-  return /^[a-z0-9-]+$/.test(suo) ? suo : SEGNO_DI_SERIE;
+  return suo || SEGNO_DI_SERIE;
 }
 
 /**

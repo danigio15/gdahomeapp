@@ -20,7 +20,7 @@ import {
   programmaSpegnimento,
   scadenzaDi,
 } from "./spegnimento-programmato-section.js";
-import { allStates, clean, climaAccesoDaiWatt, readClimateUnits, root } from "./shared.js";
+import { allStates, clean, readClimateUnits, root } from "./shared.js";
 
 const KEY = "__DASHBOARDMODERN_CLIMATE_POWER__";
 const state = (root[KEY] ||= { installed: false, ultime: new Map() });
@@ -140,11 +140,7 @@ export function commutaClima(entity, acceso, zona = "") {
   if (!id) return null;
   const stato = statoDi(id);
   const precedente = ricordaModalita(id);
-  /* Il verso lo decide quello che si vede sulla card: con la presa e la
-   * soglia sono i watt (#490). Un climatizzatore acceso dal telecomando per
-   * Home Assistant è «off», e chiedere a lui voleva dire riaccenderlo. */
-  const daiWatt = typeof acceso === "boolean" ? null : climaAccesoDaiWatt(id);
-  const voluto = typeof acceso === "boolean" ? acceso : daiWatt === null ? climateIsOff(stato) : !daiWatt;
+  const voluto = typeof acceso === "boolean" ? acceso : climateIsOff(stato);
   const chiamata = climatePowerCall(
     stato,
     voluto,

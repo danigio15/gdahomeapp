@@ -167,11 +167,7 @@ test("il clima spento da fuori torna nel suo modo, non in uno qualunque", () => 
    * condizionatore spento mentre raffrescava tornerebbe magari a scaldare.
    * L'annulla si ricorda com'era e rimette quello. */
   const sezione = leggi("sections/rooms-page-section.js");
-  /* Il clima acceso lo dice il suo modo — o i watt, quando l'unità ha la presa
-   * con la soglia (#490): acceso dal telecomando, per Home Assistant è «off». */
-  assert.match(sezione, /\? \(entity\) => climaAcceso\(entity, statoDi\(entity, states\), states\)/);
-  assert.match(sezione, /: \(entity\) => SI_COMANDA_ACCESO\.test\(statoDi\(entity, states\)\)/);
-  assert.match(sezione, /climaAccesoDaiWatt\(entity, states\) \?\? CLIMA_ACCESO\.test\(stato\)/);
+  assert.match(sezione, /const acceso = chiave === "clima" \? CLIMA_ACCESO : SI_COMANDA_ACCESO;/);
   assert.match(
     sezione,
     /const prima = Object\.fromEntries\(entita\.map\(\(entity\) => \[entity, statoDi\(entity, states\)\]\)\);/,

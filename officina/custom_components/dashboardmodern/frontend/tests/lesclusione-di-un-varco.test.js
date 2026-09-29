@@ -15,14 +15,10 @@ import test from "node:test";
 
 import {
   CAMPO_ESCLUSIONE,
-  NESSUNA_ESCLUSIONE,
   comeStaLEsclusione,
   contoDelleEsclusioni,
-  esclusioneDelDispositivo,
   esclusioneProposta,
   ilComandoDellEsclusione,
-  lInterruttoreDelVarco,
-  laMossaDelloScudo,
   puoEscludere,
 } from "../src/core/l-esclusione-del-varco.js";
 import { contoDeiVarchi, varchiDiCasa } from "../src/core/varchi-di-casa.js";
@@ -154,169 +150,14 @@ test("la riga porta con se' il suo interruttore e come sta", () => {
   assert.equal(bagno.escluso, "escluso");
 });
 
-test("e chi non l'ha scritto ha quello che la centrale pubblica col suo nome", () => {
-  /* Fino alla prima versione qui si diceva il contrario: senza la casella
-   * scritta, niente esclusione. Ma «sono tutti binary sensor che gia' Home
-   * Assistant vede»: chi ha trenta zone Risco non deve riscrivere trenta nomi.
-   * Il nome esatto `<contatto>_bypass` e' una prova forte, e si usa — dicendo
-   * che l'ha trovato la plancia. */
+test("e chi non l'ha dichiarato non ne ha uno indovinato", () => {
+  /* La porta d'ingresso ha il suo `switch.porta_ingresso_bypass` in casa, e la
+   * proposta lo troverebbe. Ma nessuno l'ha scritto nella riga, e un'esclusione
+   * che nessuno ha dichiarato non si comanda: proporla in configurazione e
+   * darla per buona in pagina sono due cose diverse. */
   const porta = lette().find((riga) => riga.entity === "binary_sensor.porta_ingresso");
-  assert.equal(porta.esclusione, "switch.porta_ingresso_bypass");
-  assert.equal(porta.esclusioneTrovata, true);
-  assert.equal(porta.escluso, "sorvegliato");
-  const bagno = lette().find((riga) => riga.entity === "binary_sensor.finestra_bagno");
-  assert.equal(bagno.esclusioneTrovata, false, "quello scritto non e' «trovato»");
-});
-
-test("e il trattino dice che quel varco da qui non si esclude", () => {
-  const conTrattino = varchiDiCasa(
-    CASA,
-    {
-      righe: [
-        {
-          entity: "binary_sensor.porta_ingresso",
-          name: "Porta ingresso",
-          [CAMPO_ESCLUSIONE]: NESSUNA_ESCLUSIONE,
-        },
-      ],
-    },
-    new Set(),
-  );
-  assert.equal(conTrattino[0].esclusione, "");
-  assert.equal(conTrattino[0].escluso, "");
-});
-
-/* ── la zona della centrale, dal registro ──────────────────────────────── */
-
-/* Una zona Risco rinominata a mano: il contatto si chiama «Ingresso», e
- * l'interruttore ha l'identificativo che gli ha dato l'integrazione. Dal nome
- * non si troverebbe mai; dal dispositivo si'. */
-const ZONA = {
-  "binary_sensor.ingresso": {
-    state: "off",
-    attributes: { device_class: "door", friendly_name: "Ingresso" },
-  },
-  "switch.zona_1_bypass": { state: "off", attributes: { friendly_name: "Zona 1 Bypass" } },
-  "switch.luce_ingresso": { state: "on", attributes: { friendly_name: "Luce ingresso" } },
-  "binary_sensor.zona_1_alarmed": { state: "off", attributes: {} },
-  "switch.garage_bypass": { state: "off", attributes: { friendly_name: "Garage Bypass" } },
-};
-const REGISTRO = {
-  "binary_sensor.ingresso": "zona1",
-  "switch.zona_1_bypass": "zona1",
-  "binary_sensor.zona_1_alarmed": "zona1",
-  "switch.luce_ingresso": "zona1",
-  "switch.garage_bypass": "garage",
-};
-
-test("l'interruttore sulla stessa zona della centrale si trova dal registro", () => {
-  assert.equal(
-    esclusioneDelDispositivo("binary_sensor.ingresso", ZONA, REGISTRO),
-    "switch.zona_1_bypass",
-  );
-  /* E la proposta lo prova per primo: il nome non c'entra. */
-  assert.equal(esclusioneProposta("binary_sensor.ingresso", ZONA, REGISTRO), "switch.zona_1_bypass");
-  assert.deepEqual(lInterruttoreDelVarco("binary_sensor.ingresso", "", ZONA, REGISTRO), {
-    interruttore: "switch.zona_1_bypass",
-    trovato: true,
-  });
-});
-
-test("la parola si riconosce anche dal nome che si legge, e in italiano", () => {
-  const st = {
-    "binary_sensor.porta": { state: "off", attributes: { device_class: "door" } },
-    "switch.zona_3_x": { state: "off", attributes: { friendly_name: "Porta Escludi" } },
-  };
-  const reg = { "binary_sensor.porta": "z3", "switch.zona_3_x": "z3" };
-  assert.equal(esclusioneDelDispositivo("binary_sensor.porta", st, reg), "switch.zona_3_x");
-});
-
-test("sulla stessa zona, un interruttore qualsiasi non e' un'esclusione", () => {
-  /* La luce dell'ingresso sta sullo stesso dispositivo — capita, con le
-   * centrali che hanno le uscite — ma non ha la parola: non si prende. */
-  const reg = { "binary_sensor.ingresso": "zona1", "switch.luce_ingresso": "zona1" };
-  assert.equal(esclusioneDelDispositivo("binary_sensor.ingresso", ZONA, reg), "");
-});
-
-test("due esclusioni sulla stessa zona sono una domanda, non una risposta", () => {
-  /* Non si sceglie a caso quale finestra lasciare scoperta: si torna vuoti, e
-   * decide il nome o chi configura. */
-  const reg = { ...REGISTRO, "switch.garage_bypass": "zona1" };
-  assert.equal(esclusioneDelDispositivo("binary_sensor.ingresso", ZONA, reg), "");
-});
-
-test("senza registro si cerca per nome, come prima", () => {
-  assert.equal(esclusioneDelDispositivo("binary_sensor.ingresso", ZONA, null), "");
-  assert.equal(esclusioneProposta("binary_sensor.ingresso", ZONA, null), "");
-  assert.equal(
-    esclusioneProposta("binary_sensor.porta_ingresso", CASA, {}),
-    "switch.porta_ingresso_bypass",
-  );
-});
-
-test("quello scritto vince sempre su quello trovato", () => {
-  assert.deepEqual(
-    lInterruttoreDelVarco("binary_sensor.ingresso", "switch.altro", ZONA, REGISTRO),
-    { interruttore: "switch.altro", trovato: false },
-  );
-  assert.deepEqual(
-    lInterruttoreDelVarco("binary_sensor.ingresso", NESSUNA_ESCLUSIONE, ZONA, REGISTRO),
-    { interruttore: "", trovato: false },
-  );
-});
-
-test("la riga del varco prende l'esclusione dal registro, se gliela si passa", () => {
-  const [riga] = varchiDiCasa(
-    ZONA,
-    { righe: [{ entity: "binary_sensor.ingresso", name: "Ingresso" }] },
-    new Set(),
-    (entity) => entity,
-    null,
-    REGISTRO,
-  );
-  assert.equal(riga.esclusione, "switch.zona_1_bypass");
-  assert.equal(riga.escluso, "sorvegliato");
-});
-
-/* ── cosa fa lo scudo premuto ─────────────────────────────────────────── */
-
-const rigaDi = (entity, esclusione) => ({ entity, esclusione });
-
-test("escludere chiede prima, includere no", () => {
-  /* Le due direzioni non pesano uguale: una lascia scoperta una finestra,
-   * l'altra la rimette sotto sorveglianza. */
-  const esclude = laMossaDelloScudo(
-    rigaDi("binary_sensor.porta_ingresso", "switch.porta_ingresso_bypass"),
-    CASA,
-  );
-  assert.equal(esclude.mossa, "chiedi");
-  assert.equal(esclude.comando.service, "turn_on");
-  const include = laMossaDelloScudo(
-    rigaDi("binary_sensor.finestra_bagno", "switch.finestra_bagno_bypass"),
-    CASA,
-  );
-  assert.equal(include.mossa, "manda");
-  assert.equal(include.comando.service, "turn_off");
-});
-
-test("col lucchetto, sul contatto o sull'interruttore, non si manda niente", () => {
-  for (const chiuso of ["switch.porta_ingresso_bypass", "binary_sensor.porta_ingresso"]) {
-    const mossa = laMossaDelloScudo(
-      rigaDi("binary_sensor.porta_ingresso", "switch.porta_ingresso_bypass"),
-      CASA,
-      (entity) => entity !== chiuso,
-    );
-    assert.deepEqual(mossa, { mossa: "bloccato", comando: null }, chiuso);
-  }
-});
-
-test("e un interruttore muto non fa niente, lucchetto o no", () => {
-  const muta = { ...CASA, "switch.porta_ingresso_bypass": { state: "unavailable" } };
-  assert.deepEqual(
-    laMossaDelloScudo(rigaDi("binary_sensor.porta_ingresso", "switch.porta_ingresso_bypass"), muta),
-    { mossa: "niente", comando: null },
-  );
-  assert.equal(laMossaDelloScudo(null, CASA).mossa, "niente");
+  assert.equal(porta.esclusione, "");
+  assert.equal(porta.escluso, "");
 });
 
 test("una finestra esclusa resta una finestra APERTA", () => {

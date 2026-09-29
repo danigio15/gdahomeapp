@@ -119,7 +119,7 @@ test("a dimmer gets a dimmer, and a relay gets a power button and an explanation
   assert.doesNotMatch(plain, /data-block=/);
   assert.match(plain, /data-dm-light-power/);
   assert.match(plain, /collegata a uno switch/);
-  assert.match(plain, /data-dm-segno="socket"/);
+  assert.match(plain, /🔌/);
 
   const gone = renderLightControlMarkup(missing);
   assert.match(gone, /Entità non disponibile/);

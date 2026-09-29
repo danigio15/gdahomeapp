@@ -45,22 +45,21 @@ test("un nome mdi esce come disegno, mai come parola", () => {
 });
 
 test("senza motore esce il ripiego, e comunque non il nome dell'icona", () => {
-  const uscita = conIlMotore(null, () => iconGlyphHtml("mdi:sofa", { kind: "room", fallback: "room-living" }));
-  assert.equal(uscita, '<i class="dm-segno" data-dm-segno="room-living" aria-hidden="true" style="--dm-segno:26px"></i>');
+  const uscita = conIlMotore(null, () => iconGlyphHtml("mdi:sofa", { kind: "room", fallback: "🛋️" }));
+  assert.equal(uscita, "🛋️");
   assert.ok(!uscita.includes("mdi:"), "il nome dell'icona non esce mai come testo");
 });
 
 test("un simbolo scelto a mano resta quello che è, al riparo dal markup", () => {
-  /* Un'emoji scelta in una configurazione vecchia esce come il suo disegno. */
-  assert.equal(iconGlyphHtml("🛋️", { kind: "room" }), '<i class="dm-segno" data-dm-segno="room-living" aria-hidden="true" style="--dm-segno:26px"></i>');
+  assert.equal(iconGlyphHtml("🛋️", { kind: "room" }), "🛋️");
   /* Chi sceglie l'icona scrive quello che vuole nella casella: esce come
    * markup, quindi esce protetto. */
   assert.equal(iconGlyphHtml("<b>x</b>", { kind: "room" }), "&lt;b&gt;x&lt;/b&gt;");
 });
 
 test("niente icona vuol dire il ripiego, non una casella vuota", () => {
-  assert.equal(iconGlyphHtml("", { kind: "room", fallback: "room-living" }), '<i class="dm-segno" data-dm-segno="room-living" aria-hidden="true" style="--dm-segno:26px"></i>');
-  assert.equal(iconGlyphHtml(null, { kind: "room", fallback: "room-living" }), '<i class="dm-segno" data-dm-segno="room-living" aria-hidden="true" style="--dm-segno:26px"></i>');
+  assert.equal(iconGlyphHtml("", { kind: "room", fallback: "🛋️" }), "🛋️");
+  assert.equal(iconGlyphHtml(null, { kind: "room", fallback: "🛋️" }), "🛋️");
 });
 
 test("la regola sta in un posto solo: chi scrive nel nodo chiama chi torna il markup", () => {
@@ -83,7 +82,7 @@ test("i due posti delle stanze chiedono il disegno, non scrivono il nome", () =>
   const blocco = leggi("sections/stanze-in-plancia-section.js");
   assert.match(
     blocco,
-    /function disegnoDellaStanza\(icona\) \{\s*\n\s*return iconGlyphHtml\(icona, \{ size: 34, kind: "room", fallback: "room-living" \}\);\s*\n\}/,
+    /function disegnoDellaStanza\(icona\) \{\s*\n\s*return iconGlyphHtml\(icona, \{ size: 34, kind: "room", fallback: "🛋️" \}\);\s*\n\}/,
   );
   assert.match(blocco, /class="dm-stanza-plancia-ic" aria-hidden="true">\$\{disegno\}</);
   assert.ok(

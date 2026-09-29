@@ -9,7 +9,6 @@
  * aggiunge l'unita' il suo valore le si attacca; la card la disegna da
  * `core/valvola-trv.js`.
  */
-import { segnoHtml } from "../core/segni-del-catalogo.js";
 import { climateUnits } from "./climate-thermal-section.js";
 import { clean, doc, esc, installStyle, onEditorRedraw, readJson, root, t, writeJsonIfChanged } from "./shared.js";
 
@@ -41,7 +40,7 @@ export function ensureTrvField() {
    * campo non stava in riga con gli altri. */
   casella = doc.createElement("div");
   casella.className = "dm-trv-slot";
-  casella.innerHTML = `<div class="dm-trv-campo" style="display:flex; gap:8px; margin-bottom:6px;"><input id="${CAMPO_ID}" class="ed-input mono" style="flex:1;" placeholder="sensor.trv_valve_position" autocomplete="off" spellcheck="false"><button type="button" class="dm-entity-picker" data-dm-trv-pick aria-label="${esc(t("Scegli entità", "Choose entity"))}">${segnoHtml("search")}</button></div>
+  casella.innerHTML = `<div class="dm-trv-campo" style="display:flex; gap:8px; margin-bottom:6px;"><input id="${CAMPO_ID}" class="ed-input mono" style="flex:1;" placeholder="sensor.trv_valve_position" autocomplete="off" spellcheck="false"><button type="button" class="dm-entity-picker" data-dm-trv-pick aria-label="${esc(t("Scegli entità", "Choose entity"))}">🔍</button></div>
     <small>${esc(
       t(
         "Il sensore o il number con la posizione della valvola termostatica, da 0 a 100: la card mostra quanto è aperta e quanto chiusa. Se l'unità climate espone già valve_position, non serve.",

@@ -1,4 +1,3 @@
-import { emojiInSegni, segnoHtml } from "../core/segni-del-catalogo.js";
 import { roomVisual } from "../core/personalization-catalog.js";
 import {
   allStates,
@@ -59,13 +58,9 @@ function configuredRooms() {
 function roomMarkup(room, size = 34) {
   const value = clean(room?.icon || room?.name || "mdi:home");
   try {
-    return (
-      roomVisual(value, size) ||
-      (value.startsWith("mdi:") && root.cdIconMarkup?.(value, size)) ||
-      emojiInSegni(esc(value), { misura: size })
-    );
+    return roomVisual(value, size) || root.cdIconMarkup?.(value, size) || esc(value);
   } catch (_error) {
-    return value.startsWith("mdi:") ? segnoHtml("home", { misura: size }) : emojiInSegni(esc(value), { misura: size });
+    return esc(value.startsWith("mdi:") ? "🏠" : value);
   }
 }
 
@@ -115,10 +110,12 @@ function rebuildTemperatureRoomOptions(form, select) {
   const current = clean(select.value || form.dataset.dmOriginalRoom);
   const options = rooms.map((room) => {
     const id = clean(room.id || room.name);
+    const icon = clean(room.icon);
     const marker = (clean(room.temp) || clean(room.hum)) && id !== current
       ? (t(" — configurata", " — configured"))
       : "";
-    return `<option value="${esc(id)}" ${id === current ? "selected" : ""}>${esc(room.name || id)}${marker}</option>`;
+    const labelIcon = icon && !icon.startsWith("mdi:") ? `${icon} ` : "";
+    return `<option value="${esc(id)}" ${id === current ? "selected" : ""}>${esc(labelIcon)}${esc(room.name || id)}${marker}</option>`;
   }).join("");
   if (select.dataset.dmRoomOptionsSignature !== options) {
     select.innerHTML = options;

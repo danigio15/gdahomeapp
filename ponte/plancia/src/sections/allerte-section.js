@@ -40,7 +40,6 @@ import {
   t,
 } from "./shared.js";
 import { disegnoDelCatalogo } from "../core/catalogo-disegni.js";
-import { segnoHtml } from "../core/segni-del-catalogo.js";
 
 const KEY = "__DASHBOARDMODERN_ALLERTE__";
 const state = (root[KEY] ||= { installed: false, frame: 0, firma: "" });
@@ -506,7 +505,7 @@ export function ensureAllerteTab() {
   voce.className = "tab";
   voce.dataset.tab = ALLERTE_TAB;
   voce.id = `tab-${ALLERTE_TAB}`;
-  voce.innerHTML = `<span class="icon">${segnoHtml("warning")}</span><span class="text">${esc(t("Allerte", "Alerts"))}</span>`;
+  voce.innerHTML = `<span class="icon">⚠️</span><span class="text">${esc(t("Allerte", "Alerts"))}</span>`;
   /* Il gestore che il runtime lega alle voci lo lega una volta sola, al
    * caricamento: questa arriva dopo, e il suo tocco se lo deve gestire da se'. */
   voce.addEventListener("click", () => {
@@ -568,7 +567,7 @@ function riassuntoMarkup(letture) {
       ? `${fonti} · ${attive.map((voce) => categoriaDelleAllerte(voce.chiave).nome).join(", ")}`
       : fonti;
   return `<div class="dm-allerte-riassunto" data-livello="${esc(livello)}">
-    <span class="dm-allerte-riassunto-ic" aria-hidden="true">${segnoHtml(livello === "quiete" ? "security" : "warning")}</span>
+    <span class="dm-allerte-riassunto-ic" aria-hidden="true">${livello === "quiete" ? "🛡️" : "⚠️"}</span>
     <div class="dm-allerte-riassunto-testo"><strong>${esc(titolo)}</strong><small>${esc(sotto)}</small></div>
   </div>`;
 }

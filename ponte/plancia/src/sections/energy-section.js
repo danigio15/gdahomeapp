@@ -67,7 +67,6 @@ import { persistEnergyField as writeEnergyField } from "../core/energy-writer.js
 import { runtimeMetrics } from "../core/runtime-metrics.js";
 import { BUILD_INFO } from "../../legacy/build-info.js";
 import { lEnergiaInParole, laPotenzaInParole } from "../core/le-unita-della-corrente.js";
-import { segnoHtml } from "../core/segni-del-catalogo.js";
 
 root.__DM_20260815C__ = true;
 const KEY = "__DASHBOARDMODERN_RUNTIME_ROOT__";
@@ -1022,9 +1021,9 @@ function applyReportOverview(bundle) {
   const chips = doc?.getElementById("ed-yoy-chips");
   if (chips) {
     const value = [
-      ilSole ? `<span class="ed-yoy-chip">${segnoHtml("sun")} ${kwh(data.solar)}</span>` : "",
-      `<span class="ed-yoy-chip">${segnoHtml("home")} ${kwh(data.house)}</span>`,
-      `<span class="ed-yoy-chip">${segnoHtml("power")} ${kwh(data.gridImport)} ${t("da Rete", "from Grid")}</span>`,
+      ilSole ? `<span class="ed-yoy-chip">☀️ ${kwh(data.solar)}</span>` : "",
+      `<span class="ed-yoy-chip">🏠 ${kwh(data.house)}</span>`,
+      `<span class="ed-yoy-chip">⚡ ${kwh(data.gridImport)} ${t("da Rete", "from Grid")}</span>`,
     ].join("");
     scriviSeCambia(chips, value);
   }
@@ -1151,8 +1150,8 @@ export function scriviLaQuota(row, quota) {
   if (!riga) return;
   const pezzi = riga.querySelectorAll("span");
   if (pezzi.length < 2) return;
-  pezzi[0].innerHTML = `${segnoHtml("sun")} ${esc(lEnergiaInParole(quota.solar))}`;
-  pezzi[1].innerHTML = `${segnoHtml("socket")} ${esc(lEnergiaInParole(quota.grid))}`;
+  pezzi[0].textContent = `☀️ ${lEnergiaInParole(quota.solar)}`;
+  pezzi[1].textContent = `🔌 ${lEnergiaInParole(quota.grid)}`;
   riga.dataset.dmQuota = VERSION;
 }
 
@@ -1611,11 +1610,11 @@ function scriviLAmmanco(bundle, source) {
   scriviTestoSeCambia(
     riga,
     testa.contata
-      ? `${formatNumber(testa.quanta, 1)} kWh ${t(
+      ? `✅ ${formatNumber(testa.quanta, 1)} kWh ${t(
           "compresi qui: il contatore li aveva già fatti prima che ne cominciassero le statistiche",
           "included here: the counter had already made them before its statistics began",
         )}`
-      : `${formatNumber(testa.quanta, 1)} kWh ${t(
+      : `⚠️ ${formatNumber(testa.quanta, 1)} kWh ${t(
           "non contati: il contatore li aveva già fatti prima che ne cominciassero le statistiche, e sono troppi per essere di questo periodo",
           "not counted: the counter had already made them before its statistics began, and they are too many to belong to this period",
         )}`,
@@ -2259,7 +2258,7 @@ function createTotalField(definition, value) {
   picker.type = "button";
   picker.className = "dm-entity-picker";
   picker.dataset.entityTarget = input.id;
-  picker.innerHTML = segnoHtml("search");
+  picker.textContent = "🔍";
   picker.setAttribute("aria-label", `${t("Seleziona", "Select")} ${label}`);
   picker.addEventListener("click", () => root.wzPickEntity?.(input));
   row.append(input, picker);
@@ -2313,7 +2312,7 @@ function entityField(label, key, value, placeholder) {
   const picker = doc.createElement("button");
   picker.type = "button";
   picker.className = "dm-entity-picker";
-  picker.innerHTML = segnoHtml("search");
+  picker.textContent = "🔍";
   picker.addEventListener("click", () => root.wzPickEntity?.(input));
   row.append(input, picker);
   wrap.append(row);
@@ -2547,7 +2546,7 @@ const RIQUADRI_DELL_ANNO = Object.freeze([
 
 function iRiquadriDellAnnoAspettano(selYear) {
   setText("ed-dkpi-year-lbl", String(selYear ?? ""));
-  for (const id of RIQUADRI_DELL_ANNO) setText(id, "—");
+  for (const id of RIQUADRI_DELL_ANNO) setText(id, "⏳ —");
 }
 
 function spegniIlTotaleAnnoDelGuscio() {

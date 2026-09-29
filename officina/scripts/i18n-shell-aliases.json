@@ -44,9 +44,5 @@
   "— Scegli —": "— Choose —",
   "Quick Actions": "Quick actions",
   "Solar Thermal": "Solar thermal",
-  "Spento": "Off",
-  "Energy Erogata (da HA)": "Energy delivered (from HA)",
-  "Wallbox & Ricarica EV": "Wallbox & EV charging",
-  "Total anno": "Year total",
-  "Total Monitorato": "Monitored total"
+  "Spento": "Off"
 }

@@ -65,7 +65,6 @@ import {
   t,
   writeJsonIfChanged,
 } from "./shared.js";
-import { segnoHtml, senzaEmoji } from "../core/segni-del-catalogo.js";
 
 const KEY = "__DASHBOARDMODERN_WIDGET_ENTITY_CHOICE__";
 const state = (root[KEY] ||= { installed: false });
@@ -216,7 +215,7 @@ function interruttore(entities, dentro, tessera) {
   button.setAttribute(CHOICE_ATTRIBUTE, entities.join(","));
   button.setAttribute(TESSERA_ATTRIBUTE, tessera);
   button.dataset.on = String(dentro);
-  button.innerHTML = `<span aria-hidden="true">${segnoHtml("sliders")}</span><b></b><i></i>`;
+  button.innerHTML = `<span aria-hidden="true">🧩</span><b></b><i></i>`;
   vestiInterruttore(button, dentro);
   return button;
 }
@@ -386,11 +385,9 @@ function onClick(event) {
   vestiInterruttore(button, !dentro);
   salvaEscluse(elenco);
   root.edToast?.(
-    senzaEmoji(
-      dentro
-        ? t("🧩 Fuori dai widget", "🧩 Out of the widgets")
-        : t("🧩 Nei widget", "🧩 In the widgets"),
-    ),
+    dentro
+      ? t("🧩 Fuori dai widget", "🧩 Out of the widgets")
+      : t("🧩 Nei widget", "🧩 In the widgets"),
   );
 }
 

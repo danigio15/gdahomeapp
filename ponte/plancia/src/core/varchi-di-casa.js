@@ -30,11 +30,7 @@
  */
 
 import { conLaRiga, conLeRighe, righeDichiarate, senzaLaRiga } from "./elenco-dichiarato.js";
-import {
-  CAMPO_ESCLUSIONE,
-  comeStaLEsclusione,
-  lInterruttoreDelVarco,
-} from "./l-esclusione-del-varco.js";
+import { CAMPO_ESCLUSIONE, comeStaLEsclusione } from "./l-esclusione-del-varco.js";
 import { contactEntity, inferriataEntity } from "./shutter-window.js";
 import { CLASSI_DEL_VARCO, comeStaIlVarco, eUnVarco } from "./varchi-in-configurazione.js";
 
@@ -276,10 +272,6 @@ export function istanteDelCambio(stato) {
  * passa a `disegnoDelCatalogo`. Si chiama ancora cosi' perche' e' il campo che
  * quattro pagine leggono, e rinominarlo era un giro di parole in piu' senza
  * niente in cambio.
- *
- * `dispositivi` e' la mappa entita' → dispositivo del registro, quando la
- * plancia se la ricorda: serve a trovare l'interruttore d'esclusione che sta
- * sulla stessa zona della centrale (#136). Senza, lo si cerca per nome.
  */
 export function varchiDiCasa(
   states = {},
@@ -287,19 +279,13 @@ export function varchiDiCasa(
   invertiti,
   nomeDi = (entity) => entity,
   finestre = null,
-  dispositivi = null,
 ) {
   const dichiarate = righeDichiarate(config, CAMPI_IN_PIU);
   const scelte = normalizzaVarchi(config);
   const letta = (entity, nome, icona, esclusione, tipoScritto = "") => {
     const stato = states?.[entity];
     const classe = clean(stato?.attributes?.device_class) || "door";
-    const { interruttore, trovato } = lInterruttoreDelVarco(
-      entity,
-      esclusione,
-      states,
-      dispositivi,
-    );
+    const interruttore = clean(esclusione);
     return {
       entity,
       name: clean(nome) || clean(nomeDi(entity)) || entity,
@@ -312,13 +298,11 @@ export function varchiDiCasa(
       stato: comeStaIlVarco(entity, stato, invertiti),
       /* Escluso dall'antifurto, o no (#136). Sono due campi e non uno perche'
        * sono due domande diverse: `esclusione` dice se questo varco si PUO'
-       * escludere — cioe' se c'e' un interruttore, scritto o trovato — e
+       * escludere — cioe' se qualcuno gli ha scritto l'interruttore — e
        * `escluso` come sta adesso. Un varco che si puo' escludere e il cui
        * interruttore non risponde ha il primo e non il secondo, ed e' proprio
-       * il caso in cui non si disegna nessun tasto. `esclusioneTrovata` dice
-       * se l'ha trovato la plancia: la scheda lo fa vedere. */
+       * il caso in cui non si disegna nessun tasto. */
       esclusione: interruttore,
-      esclusioneTrovata: trovato,
       escluso: comeStaLEsclusione(interruttore, states),
       /* Da quando sta cosi' (#406): «l'ultima apertura o cambio stato». Sotto
        * il nome c'era l'entity_id, che chi guarda la pagina non ha mai

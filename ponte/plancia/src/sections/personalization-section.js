@@ -2,7 +2,6 @@ import { ACTION_ICON_CATALOG, CAR_BRANDS, ROOM_CATALOG, actionVisual, carBrandVi
 import { clean, doc, esc, installStyle, readJson, root, scriviSeCambia, t, wrapFunction, writeJsonIfChanged } from "./shared.js";
 import { VEHICLE_KEY_FIELD, stessoModello, tipoMotore } from "../core/vehicle-model.js";
 import { bozzaAperta, editedVehicle, profiles, salvaAuto } from "./ev-section.js";
-import { segnoHtml } from "../core/segni-del-catalogo.js";
 
 globalThis.__DM_20260815C__ = true;
 const KEY = "__DASHBOARDMODERN_PERSONALIZATION_SECTION__";
@@ -426,7 +425,7 @@ function renameSection(key, current) {
   const modal = doc.createElement("div");
   modal.className = "dm-section-modal";
   modal.id = "dm-section-rename-modal";
-  modal.innerHTML = `<section class="dm-section-dialog" role="dialog" aria-modal="true"><header><strong>${segnoHtml("pencil")} ${t("Rinomina sezione", "Rename section")}</strong><button type="button" data-close aria-label="${t("Chiudi", "Close")}">✕</button></header><form data-form><label class="ed-slot"><span class="ed-slot-lbl">${t("Nome sezione", "Section name")}</span><input class="ed-input" name="name" value="${esc(current)}" required></label><footer><button type="button" class="ed-btn-add" data-close>${t("Annulla", "Cancel")}</button><button type="submit" class="ed-save-btn">${segnoHtml("check")} ${t("Salva", "Save")}</button></footer></form></section>`;
+  modal.innerHTML = `<section class="dm-section-dialog" role="dialog" aria-modal="true"><header><strong>✏️ ${t("Rinomina sezione", "Rename section")}</strong><button type="button" data-close aria-label="${t("Chiudi", "Close")}">✕</button></header><form data-form><label class="ed-slot"><span class="ed-slot-lbl">${t("Nome sezione", "Section name")}</span><input class="ed-input" name="name" value="${esc(current)}" required></label><footer><button type="button" class="ed-btn-add" data-close>${t("Annulla", "Cancel")}</button><button type="submit" class="ed-save-btn">💾 ${t("Salva", "Save")}</button></footer></form></section>`;
   doc.body.append(modal);
   modal.querySelectorAll("[data-close]").forEach((button) => button.addEventListener("click", () => modal.remove()));
   modal.querySelector("form")?.addEventListener("submit", (event) => {
@@ -465,7 +464,7 @@ function ensureSectionRenamer() {
       button.className = "dm-inline-rename";
       button.dataset.rename = "true";
       button.setAttribute("aria-label", t("Rinomina sezione", "Rename section"));
-      button.innerHTML = segnoHtml("pencil");
+      button.textContent = "✏️";
       button.addEventListener("click", () => {
         const currentNames = sectionNames();
         const persisted = clean(currentNames[key] || (key === "appliances-main" ? currentNames.appliances : ""));
@@ -670,7 +669,7 @@ function ensureEvAppearanceEditor() {
    * tendina si apre sulla riga che chiede di scegliere. */
   const brand = effectiveBrand(visual) || clean(visual.brand);
   const model = effectiveModel(visual);
-  panel.innerHTML = `<div class="ed-sec-title">${segnoHtml("ev")} ${t("Marchio e modello del veicolo", "Vehicle brand and model")}</div><div class="ed-intro">${t("Il logo viene associato automaticamente al marchio. Il modello sostituisce la vecchia icona auto generica.", "The logo is automatically associated with the brand. The model replaces the old generic car icon.")}</div><div class="dm-ev-appearance-grid"><button type="button" class="dm-brand-preview dm-visual-trigger" data-brand-preview aria-label="${t("Scegli brand auto", "Choose car brand")}">${carBrandVisual(brand, 56)}<span class="dm-ev-brand-copy"><b>${esc(brand)}</b>${model ? `<small>${esc(model)}</small>` : ""}</span></button><label class="dm-ev-appearance-field"><span>${t("Marchio", "Brand")}</span><select class="ed-input" data-brand><option value="">— ${t("Seleziona marchio", "Choose brand")} —</option>${CAR_BRANDS.map((item) => `<option value="${esc(item.name)}" ${item.name === brand ? "selected" : ""}>${esc(item.name)}</option>`).join("")}</select></label><label class="dm-ev-appearance-field"><span>${t("Modello", "Model")}</span><select class="ed-input" data-model>${modelOptions(brand, model, motoreDichiarato(visual))}</select></label></div><button type="button" class="ed-save-btn" data-save>${segnoHtml("check")} ${t("Salva brand e modello", "Save brand and model")}</button>`;
+  panel.innerHTML = `<div class="ed-sec-title">🚘 ${t("Marchio e modello del veicolo", "Vehicle brand and model")}</div><div class="ed-intro">${t("Il logo viene associato automaticamente al marchio. Il modello sostituisce la vecchia icona auto generica.", "The logo is automatically associated with the brand. The model replaces the old generic car icon.")}</div><div class="dm-ev-appearance-grid"><button type="button" class="dm-brand-preview dm-visual-trigger" data-brand-preview aria-label="${t("Scegli brand auto", "Choose car brand")}">${carBrandVisual(brand, 56)}<span class="dm-ev-brand-copy"><b>${esc(brand)}</b>${model ? `<small>${esc(model)}</small>` : ""}</span></button><label class="dm-ev-appearance-field"><span>${t("Marchio", "Brand")}</span><select class="ed-input" data-brand><option value="">— ${t("Seleziona marchio", "Choose brand")} —</option>${CAR_BRANDS.map((item) => `<option value="${esc(item.name)}" ${item.name === brand ? "selected" : ""}>${esc(item.name)}</option>`).join("")}</select></label><label class="dm-ev-appearance-field"><span>${t("Modello", "Model")}</span><select class="ed-input" data-model>${modelOptions(brand, model, motoreDichiarato(visual))}</select></label></div><button type="button" class="ed-save-btn" data-save>💾 ${t("Salva brand e modello", "Save brand and model")}</button>`;
   // The accordion is found by its own EV slots rather than by its wording, so a
   // renamed section still gets the panel. It exists: the guard above returned
   // early otherwise, which is what keeps this placement the only one.

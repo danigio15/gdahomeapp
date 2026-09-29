@@ -23,7 +23,6 @@ import {
 } from "../core/vehicle-model.js";
 import { pickMediaImage } from "./media-picker-section.js";
 import { allStates, clean, dashboardStore, doc, esc, installStyle, onEditorRedraw, readJson, root, section, setLexicalGlobal, t, wrapFunction, writeJsonIfChanged } from "./shared.js";
-import { emojiInSegni, segnoHtml, senzaEmoji, svgDelSegno } from "../core/segni-del-catalogo.js";
 
 globalThis.__DM_20260815C__ = true;
 const KEY = "__DASHBOARDMODERN_EV_SECTION__";
@@ -542,7 +541,7 @@ function photoFieldMarkup(kind, label, hint, value) {
   const cerca = t("Scegli un'entità immagine", "Pick an image entity");
   return `<div class="dm-ev-photo" data-ev-photo="${kind}">
     <span class="dm-ev-photo-lbl">${esc(label)}</span>
-    <span class="dm-ev-photo-row"><input class="ed-input mono" data-ev-photo-input data-domain="image camera" data-dm-entity-optional="true" value="${esc(value)}" placeholder="/local/auto-${kind}.png" autocomplete="off" spellcheck="false" aria-label="${esc(label)}"><button type="button" class="dm-entity-picker dm-ev-photo-pick" data-ev-photo-pick aria-label="${esc(cerca)}" title="${esc(cerca)}">${segnoHtml("search")}</button><button type="button" class="dm-ev-photo-browse" data-ev-photo-browse aria-label="${esc(t("Sfoglia le cartelle di Home Assistant", "Browse the Home Assistant folders"))}" title="${esc(t("Sfoglia le cartelle di Home Assistant", "Browse the Home Assistant folders"))}">${segnoHtml("list")}</button></span>
+    <span class="dm-ev-photo-row"><input class="ed-input mono" data-ev-photo-input data-domain="image camera" data-dm-entity-optional="true" value="${esc(value)}" placeholder="/local/auto-${kind}.png" autocomplete="off" spellcheck="false" aria-label="${esc(label)}"><button type="button" class="dm-entity-picker dm-ev-photo-pick" data-ev-photo-pick aria-label="${esc(cerca)}" title="${esc(cerca)}">🔍</button><button type="button" class="dm-ev-photo-browse" data-ev-photo-browse aria-label="${esc(t("Sfoglia le cartelle di Home Assistant", "Browse the Home Assistant folders"))}" title="${esc(t("Sfoglia le cartelle di Home Assistant", "Browse the Home Assistant folders"))}">📁</button></span>
     <small class="dm-ev-photo-hint">${esc(hint)}</small>
     <span class="dm-ev-photo-preview" data-ev-photo-preview></span>
   </div>`;
@@ -710,20 +709,20 @@ export function ensureVehiclePhotoEditor() {
     panelNode = doc.createElement("section");
     panelNode.className = "ed-form dm-ev-photos";
     panelNode.dataset.evPhotos = "true";
-    panelNode.innerHTML = `<div class="ed-sec-title" data-ev-photos-title>${segnoHtml("camera")} ${t("Foto dell'auto", "Vehicle photos")}</div>
+    panelNode.innerHTML = `<div class="ed-sec-title" data-ev-photos-title>📸 ${t("Foto dell'auto", "Vehicle photos")}</div>
       <div class="ed-intro">${t(
         "Due scatti della stessa auto: la plancia mostra quello con il cavo attaccato mentre è in ricarica e l'altro nel resto del tempo. Basta la prima: senza la seconda resta sempre quella.",
         "Two shots of the same car: the dashboard shows the plugged-in one while it charges and the other one the rest of the time. The first is enough — without the second it simply stays.",
       )}</div>
-      <div class="ed-intro">${emojiInSegni(t(
+      <div class="ed-intro">${t(
         "Al posto del percorso puoi scrivere un'entità immagine (image.auto) o una telecamera (camera.auto): la foto la tiene aggiornata l'integrazione, e la lente 🔍 te la fa cercare.",
         "Instead of a path you can write an image entity (image.car) or a camera (camera.car): the integration keeps the photo up to date, and the 🔍 lens finds it for you.",
-      ))}</div>
+      )}</div>
       <div class="dm-ev-photo-grid">
         ${photoFieldMarkup("idle", t("Cavo staccato", "Cable unplugged"), t("Percorso /local o entità immagine, es. /local/auto.png o image.auto", "A /local path or an image entity, e.g. /local/car.png or image.car"), photos.idle)}
         ${photoFieldMarkup("plugged", t("Cavo attaccato", "Cable plugged in"), t("Facoltativa: mostrata durante la ricarica", "Optional: shown while charging"), photos.plugged)}
       </div>
-      <button type="button" class="ed-save-btn" data-ev-photos-save>${segnoHtml("check")} ${t("Salva foto", "Save photos")}</button>`;
+      <button type="button" class="ed-save-btn" data-ev-photos-save>💾 ${t("Salva foto", "Save photos")}</button>`;
     (legacyRow || body.lastElementChild)?.insertAdjacentElement?.("beforebegin", panelNode) ||
       body.append(panelNode);
     panelNode.addEventListener("input", (event) => {
@@ -833,9 +832,9 @@ export function ensureVehiclePhotoEditor() {
     const bersaglio = elenco[vehiclePhotoTargetIndex(elenco)];
     const nome = clean(bersaglio?.name);
     const testo = nome && elenco.length > 1
-      ? `${t("Foto dell'auto", "Vehicle photos")} — ${nome}`
-      : t("Foto dell'auto", "Vehicle photos");
-    if (clean(titolo.textContent) !== testo) titolo.innerHTML = `${segnoHtml("camera")} ${esc(testo)}`;
+      ? `📸 ${t("Foto dell'auto", "Vehicle photos")} — ${nome}`
+      : `📸 ${t("Foto dell'auto", "Vehicle photos")}`;
+    if (titolo.textContent !== testo) titolo.textContent = testo;
     /* La bozza non sopravvive al cambio d'auto.
      *
      * Un percorso scritto e non ancora salvato resta nel campo apposta — il
@@ -981,7 +980,7 @@ function ensureCarListDecor() {
       matita.className = "ed-btn-add";
       matita.dataset.evEdit = bottone.dataset.idx || "";
       matita.style.cssText = "flex:0 0 auto;margin-right:6px;";
-      matita.innerHTML = segnoHtml("pencil");
+      matita.textContent = "✏️";
       matita.setAttribute("aria-label", t("Modifica questo veicolo", "Edit this vehicle"));
       matita.addEventListener("click", () => {
         const indice = Number.parseInt(matita.dataset.evEdit, 10);
@@ -1033,10 +1032,10 @@ function ensureCarListDecor() {
     const nomeAperta = clean(elencoAuto[apertaIndice]?.name);
     const nuova = chiaveAperta === "" || (!nomeAperta && apertaIndice < 0);
     const testoSalva = nuova
-      ? t("Salva il nuovo veicolo", "Save the new vehicle")
+      ? `💾 ${t("Salva il nuovo veicolo", "Save the new vehicle")}`
       : nomeAperta
-        ? `${t("Salva le modifiche a", "Save changes to")} ${nomeAperta}`
-        : t("Salva veicolo", "Save vehicle");
+        ? `💾 ${t("Salva le modifiche a", "Save changes to")} ${nomeAperta}`
+        : `💾 ${t("Salva veicolo", "Save vehicle")}`;
     if (salva.textContent !== testoSalva) salva.textContent = testoSalva;
     salva.dataset.evSaveCar = "true";
     const rigaNome = salva.parentElement;
@@ -1104,12 +1103,11 @@ function ensureCarListDecor() {
     /salvale come profilo|save them as a profile|Aggiungi auto per crearne/i.test(clean(nodo.textContent)),
   );
   if (intro) {
-    const testo = t(
+    const testo = `🚗 ${t(
       "Tre gesti, e basta: ＋ Nuovo veicolo apre una scheda vuota, la ✏️ apre un veicolo già salvato, l'interruttore lo accende o lo spegne nella sezione EV. Sotto si dice se è un'auto o una moto, e si compila nome, marca, modello, entità e le due foto — il salvataggio è uno solo: dice se sta creando o modificando, e in fondo alla sezione porta le stesse parole. Quale veicolo guardare si sceglie dalle linguette della sezione, non da qui.",
       "Three gestures, no more: ＋ New vehicle opens an empty card, the ✏️ opens a vehicle you already saved, the switch turns it on or off in the EV section. Below you say whether it is a car or a motorcycle, and you fill in name, brand, model, entities and both photos — there is a single save: it says whether it is creating or editing, and the one at the bottom of the section carries the same words. Which vehicle you look at is picked from the section's own tabs, not from here.",
-    );
-    if (senzaEmoji(intro.textContent) !== senzaEmoji(testo))
-      intro.innerHTML = `${segnoHtml("ev")} ${emojiInSegni(esc(testo))}`;
+    )}`;
+    if (clean(intro.textContent) !== clean(testo)) intro.textContent = testo;
   }
   return true;
 }
@@ -1339,7 +1337,7 @@ function profileMeta(car = {}) {
 function vehicleProfileVisual(car = {}) {
   const brand = clean(car.brand); if (brand) return carBrandVisual(brand, 28);
   const icon = clean(car.icon || "mdi:car-electric");
-  try { return root.cdIconMarkup?.(icon, 26) || segnoHtml("ev", { misura: 26 }); } catch (_error) { return segnoHtml("ev", { misura: 26 }); }
+  try { return root.cdIconMarkup?.(icon, 26) || "🚗"; } catch (_error) { return "🚗"; }
 }
 function nativeHost() { return doc?.getElementById("ev-car-picker") || null; }
 function nativeSelect() { return doc?.getElementById("ev-car-sel") || nativeHost()?.querySelector("select") || null; }
@@ -2081,7 +2079,7 @@ function installStyles() {
 .dm-ev-photos .dm-ev-photo-preview{display:block!important;min-height:0!important}
 .dm-ev-photos .dm-ev-photo-preview img{display:block!important;width:100%!important;max-height:112px!important;object-fit:contain!important;border-radius:11px!important;background:var(--secondary-background-color,#f6f8fb)!important}
 .dm-ev-photos .dm-ev-photo[data-ev-photo-state="broken"] .dm-ev-photo-preview img{display:none!important}
-.dm-ev-photos .dm-ev-photo[data-ev-photo-state="broken"] .dm-ev-photo-preview::after{content:"";display:block;width:22px;height:22px;margin:0 auto;background:center/contain no-repeat url("data:image/svg+xml,${encodeURIComponent(svgDelSegno("warning")).replace(/'/g, "%27").replace(/"/g, "%22")}")}
+.dm-ev-photos .dm-ev-photo[data-ev-photo-state="broken"] .dm-ev-photo-preview::after{content:"⚠️";display:block;text-align:center;font-size:20px}
 /* The single legacy photo field this panel replaces is marked hidden when the
  * panel goes in. The editor's own layout pins .ed-slot to display:grid, which
  * outweighs the browser's meaning of the attribute and left the old field on

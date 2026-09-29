@@ -351,7 +351,7 @@ export function ensureSaveFooter(body = editorBody(), tab = activeTab()) {
     button.type = "button";
     button.className = "ed-save-btn dm-save-footer-btn";
     button.dataset.dmSaveAll = "true";
-    button.textContent = t("Salva sezione", "Save section");
+    button.textContent = `💾 ${t("Salva sezione", "Save section")}`;
     footer.append(button);
     // The acknowledgement is the runtime's own toast, the one every save in the
     // editor has always raised. A second status of our own would be one more
@@ -370,7 +370,7 @@ export function ensureSaveFooter(body = editorBody(), tab = activeTab()) {
   if (etichetta) {
     const testo = salvaAuto
       ? clean(salvaAuto.textContent)
-      : t("Salva sezione", "Save section");
+      : `💾 ${t("Salva sezione", "Save section")}`;
     if (testo && etichetta.textContent !== testo) etichetta.textContent = testo;
   }
   // Always the last thing on the tab, whatever the tab appended after it.

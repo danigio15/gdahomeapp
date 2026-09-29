@@ -40,7 +40,6 @@ const ESCAPE_HELPERS = [
   "cdUrlOk",
   "cdUrl",
   "cdColor",
-  "cdSegno",
   "cdLinguaNumeri",
   "cdScalaDellUnita",
   "cdDecimaliDellaScala",

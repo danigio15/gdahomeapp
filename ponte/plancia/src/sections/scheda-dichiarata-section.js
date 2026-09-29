@@ -42,7 +42,6 @@ import {
   t,
   writeJsonIfChanged,
 } from "./shared.js";
-import { segnoHtml } from "../core/segni-del-catalogo.js";
 
 /* ── il disegno ───────────────────────────────────────────────────────────── */
 
@@ -76,7 +75,7 @@ function corpoMarkup(scheda, riga, indice) {
       <span class="ed-form-row"><input id="${id}-entity" class="ed-input mono" data-dm-dich-campo="entity"
         data-dm-dich-riga="${indice}" value="${esc(riga.entity)}" placeholder="${esc(parole.segnaposto)}"
         autocomplete="off" spellcheck="false"><button type="button" class="dm-entity-picker"
-        data-dm-dich-pick="${id}-entity" aria-label="${esc(t("Scegli entità", "Choose entity"))}">${segnoHtml("search")}</button></span>
+        data-dm-dich-pick="${id}-entity" aria-label="${esc(t("Scegli entità", "Choose entity"))}">🔍</button></span>
       <small>${esc(parole.aiutoEntita)}</small></label>
     <label class="ed-slot dm-dich-campo"><span class="ed-slot-lbl">${esc(t("Nome", "Name"))}</span>
       <span class="ed-form-row"><input id="${id}-name" class="ed-input" data-dm-dich-campo="name"
@@ -84,7 +83,7 @@ function corpoMarkup(scheda, riga, indice) {
       <small>${esc(parole.aiutoNome)}</small></label>
     ${strisciaMarkup(scheda, indice, riga.icon || scheda.ripiego)}
     ${scheda.campiInPiu ? scheda.campiInPiu(riga, indice) : ""}
-    <button type="button" class="ed-save-btn" data-dm-dich-salva="${indice}">${segnoHtml("check")} ${esc(parole.salva)}</button>
+    <button type="button" class="ed-save-btn" data-dm-dich-salva="${indice}">💾 ${esc(parole.salva)}</button>
   </div>`;
 }
 
@@ -106,9 +105,9 @@ function rigaMarkup(scheda, riga, indice, letta, aperta) {
       </span>
       ${accanto ? `<b class="dm-dich-val">${esc(accanto)}</b>` : ""}
       <button type="button" class="ed-del dm-dich-edit" data-dm-dich-apri="${indice}"
-        aria-label="${esc(t("Modifica", "Edit"))}">${segnoHtml("pencil")}</button>
+        aria-label="${esc(t("Modifica", "Edit"))}">✏️</button>
       <button type="button" class="ed-del" data-dm-dich-elimina="${indice}"
-        aria-label="${esc(t("Elimina", "Remove"))}">${segnoHtml("trash")}</button>
+        aria-label="${esc(t("Elimina", "Remove"))}">🗑️</button>
     </div>
     ${aperta ? corpoMarkup(scheda, riga, indice) : ""}
   </article>`;

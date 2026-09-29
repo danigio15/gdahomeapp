@@ -25,7 +25,6 @@ import {
   vmcParla,
 } from "../core/vmc-model.js";
 import { allStates, clean, esc, readJson, roomLabel, t } from "./shared.js";
-import { segnoDaValoreHtml, segnoHtml } from "../core/segni-del-catalogo.js";
 
 /** Le macchine configurate, come le salva la scheda della configurazione. */
 export function vmcConfigurate() {
@@ -135,7 +134,7 @@ function pastiglieMarkup(lettura) {
   return `<div class="dm-vmc-pastiglie">${voci
     .map(
       (voce) =>
-        `<span class="dm-vmc-pastiglia" data-dm-vmc-int="${esc(voce.chiave)}" data-acceso="${voce.acceso === true}" data-avvisa="${voce.avvisa === true && voce.acceso === true}"><span aria-hidden="true">${segnoDaValoreHtml(voce.glifo, { ripiego: "wind" })}</span>${esc(parolaInterruttore(voce))}</span>`,
+        `<span class="dm-vmc-pastiglia" data-dm-vmc-int="${esc(voce.chiave)}" data-acceso="${voce.acceso === true}" data-avvisa="${voce.avvisa === true && voce.acceso === true}"><span aria-hidden="true">${esc(voce.glifo)}</span>${esc(parolaInterruttore(voce))}</span>`,
     )
     .join("")}</div>`;
 }
@@ -170,7 +169,7 @@ function schedaMarkup(lettura) {
   const nome = lettura.nome || t("Ventilazione", "Ventilation");
   return `<article class="dm-vmc-card" data-dm-vmc="${esc(lettura.id)}" data-avvisa="${lettura.avvisi.length > 0}">
     <div class="dm-vmc-head">
-      <span class="dm-vmc-ic" aria-hidden="true">${segnoHtml("refresh")}</span>
+      <span class="dm-vmc-ic" aria-hidden="true">🔄</span>
       <span class="dm-vmc-titolo"><strong>${esc(nome)}</strong>${sotto ? `<small>${esc(sotto)}</small>` : ""}</span>
       ${recuperoMarkup(lettura)}
     </div>
@@ -199,7 +198,7 @@ export function letturaDelleVmc(states = allStates()) {
 export function vmcMarkup(letture = letturaDelleVmc()) {
   if (!letture.length) return "";
   return `<section class="dm-vmc" data-dm-vmc-fascia>
-    <h3 class="dm-vmc-titolo-fascia">${segnoHtml("refresh")} ${esc(t("Ventilazione meccanica", "Mechanical ventilation"))}</h3>
+    <h3 class="dm-vmc-titolo-fascia">🔄 ${esc(t("Ventilazione meccanica", "Mechanical ventilation"))}</h3>
     <div class="dm-vmc-griglia">${letture.map(schedaMarkup).join("")}</div>
   </section>`;
 }
@@ -249,8 +248,8 @@ export function sincronizzaLeVmc(host, letture) {
       nodo.dataset.acceso = String(voce.acceso === true);
       nodo.dataset.avvisa = String(voce.avvisa === true && voce.acceso === true);
       const parola = parolaInterruttore(voce);
-      if (clean(nodo.textContent) !== clean(parola))
-        nodo.innerHTML = `<span aria-hidden="true">${segnoDaValoreHtml(voce.glifo, { ripiego: "wind" })}</span>${esc(parola)}`;
+      if (clean(nodo.textContent) !== `${voce.glifo}${parola}`)
+        nodo.innerHTML = `<span aria-hidden="true">${esc(voce.glifo)}</span>${esc(parola)}`;
     }
     const recupero = card.querySelector("[data-dm-vmc-recupero] b");
     if (recupero) {
