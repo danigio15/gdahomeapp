@@ -86,6 +86,51 @@ Future<bool> _conLAuto = Future.value(false);
 /// torna a riposare come sempre.
 final inMacchina = ValueNotifier<bool>(false);
 
+/* Il filo che tiene [_vettura] al passo con la casa, e il Premium della casa
+ * per gdanav: uno per tutta l'app, come la fonte che riempie.
+ *
+ * Prima li teneva la schermata del navigatore, e in macchina quella
+ * schermata puo' non esserci: Android Auto tiene su il processo dell'app, non
+ * la parte che disegna. Dal campo: «se non si apre l'app … non legge i dati
+ * auto». Adesso li chiedono in due — la schermata e l'auto — e restano accesi
+ * finche' almeno uno dei due li vuole. */
+IlFiloDellaVettura? _filoDellaVettura;
+final _chiLaSegue = <Object>{};
+ValueListenable<bool>? _premiumDellaCasa;
+
+void _copiaIlPremium() {
+  final premium = _premiumDellaCasa;
+  if (premium != null) _premiumOspite.value = premium.value;
+}
+
+/// [chi] segue [casa]: l'auto della sua plancia va a gdanav, e il suo
+/// Premium pure. Senza una casa, e' come lasciarla.
+void _seguiLaCasa(Object chi, Collegamento? casa) {
+  if (casa == null) {
+    _lasciaLaCasa(chi);
+    return;
+  }
+  _chiLaSegue.add(chi);
+  if (identical(_filoDellaVettura?.collegamento, casa)) return;
+  _premiumDellaCasa?.removeListener(_copiaIlPremium);
+  _premiumDellaCasa = casa.licenza.premiumQui..addListener(_copiaIlPremium);
+  _copiaIlPremium();
+  _filoDellaVettura?.ferma();
+  _filoDellaVettura = IlFiloDellaVettura(casa, _vettura)..avvia();
+}
+
+/// [chi] non la segue piu': se era l'ultimo, il filo si ferma.
+void _lasciaLaCasa(Object chi) {
+  if (!_chiLaSegue.remove(chi) || _chiLaSegue.isNotEmpty) return;
+  _premiumDellaCasa?.removeListener(_copiaIlPremium);
+  _premiumDellaCasa = null;
+  _filoDellaVettura?.ferma();
+  _filoDellaVettura = null;
+}
+
+/// Chi segue la casa per conto dell'auto, quando la schermata non c'e'.
+const _perLAuto = #auto;
+
 /// Accende gdanav, una volta sola per tutta l'app: dalla sezione del
 /// telefono o dall'auto, chi arriva prima.
 Future<GdanavApp> accendiIlNavigatore() => _acceso ??= () async {
@@ -114,10 +159,18 @@ Future<GdanavApp> accendiIlNavigatore() => _acceso ??= () async {
 /// li' i dati dell'auto arrivavano solo aprendo l'app a mano. Lo chiama
 /// `main` passando `apriIlFiloConLaCasa`; nelle prove non lo passa nessuno e
 /// non succede niente.
-void ascoltaLAuto({Future<void> Function()? apriIlFilo}) {
+///
+/// [laCasa] e' la casa da cui gdanav prende l'auto della plancia: aprire il
+/// filo non bastava, perche' a leggere l'auto dal filo era ancora la
+/// schermata. Adesso la segue anche l'auto, finche' si e' in macchina.
+void ascoltaLAuto({
+  Future<void> Function()? apriIlFilo,
+  Collegamento Function()? laCasa,
+}) {
   void inMacchinaAdesso() {
     inMacchina.value = true;
     if (apriIlFilo != null) unawaited(apriIlFilo());
+    if (laCasa != null) _seguiLaCasa(_perLAuto, laCasa());
   }
 
   _auto.setMethodCallHandler((chiamata) async {
@@ -127,6 +180,7 @@ void ascoltaLAuto({Future<void> Function()? apriIlFilo}) {
         unawaited(accendiIlNavigatore());
       case 'sceso':
         inMacchina.value = false;
+        _lasciaLaCasa(_perLAuto);
     }
   });
   _conLAuto = () async {
@@ -180,13 +234,11 @@ class IlNavigatore extends StatefulWidget {
 
 class _IlNavigatoreState extends State<IlNavigatore>
     with WidgetsBindingObserver {
-  IlFiloDellaVettura? _filo;
-
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _seguiLaCasa();
+    _seguiLaCasa(this, widget.collegamento);
   }
 
   @override
@@ -194,44 +246,26 @@ class _IlNavigatoreState extends State<IlNavigatore>
     super.didUpdateWidget(prima);
     /* Un'altra casa, un'altra plancia, forse un'altra auto. */
     if (prima.collegamento != widget.collegamento) {
-      _seguiLaCasa();
+      _seguiLaCasa(this, widget.collegamento);
     } else if (widget.visibile && !prima.visibile) {
       /* Si apre il navigatore: l'auto dev'essere quella di adesso. */
-      unawaited(_filo?.rileggi());
+      unawaited(_filoDellaVettura?.rileggi());
     }
   }
 
   /* Si torna nell'app: l'auto puo' essere cambiata altrove intanto. */
   @override
   void didChangeAppLifecycleState(AppLifecycleState stato) {
-    if (stato == AppLifecycleState.resumed) unawaited(_filo?.rileggi());
+    if (stato == AppLifecycleState.resumed) {
+      unawaited(_filoDellaVettura?.rileggi());
+    }
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    _premiumDellaCasa?.removeListener(_copiaIlPremium);
-    _filo?.ferma();
+    _lasciaLaCasa(this);
     super.dispose();
-  }
-
-  ValueListenable<bool>? _premiumDellaCasa;
-
-  void _copiaIlPremium() {
-    final premium = _premiumDellaCasa;
-    if (premium != null) _premiumOspite.value = premium.value;
-  }
-
-  void _seguiLaCasa() {
-    _premiumDellaCasa?.removeListener(_copiaIlPremium);
-    _premiumDellaCasa = widget.collegamento?.licenza.premiumQui;
-    _premiumDellaCasa?.addListener(_copiaIlPremium);
-    _copiaIlPremium();
-    _filo?.ferma();
-    _filo = switch (widget.collegamento) {
-      final c? => IlFiloDellaVettura(c, _vettura)..avvia(),
-      null => null,
-    };
   }
 
   @override

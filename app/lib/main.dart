@@ -98,8 +98,12 @@ Future<void> main() async {
   );
   await impostazioni.carica();
   /* Il navigatore in auto, dove c'e': se si sale in macchina, gdanav si
-   * accende anche senza aprire la sua sezione. */
-  navigatore.ascoltaLAuto(apriIlFilo: apriIlFiloConLaCasa);
+   * accende anche senza aprire la sua sezione, e l'auto della plancia gli
+   * arriva anche senza la schermata. */
+  navigatore.ascoltaLAuto(
+    apriIlFilo: apriIlFiloConLaCasa,
+    laCasa: ilFiloConLaCasa,
+  );
   /* Sull'iPhone il comando lasciato da CarPlay lo esegue questo motore, che
    * e' uno solo e gia' acceso; su Android lo esegue un motore a parte, senza
    * schermo (`inAuto`, qui sopra). */
@@ -398,6 +402,12 @@ class _PortoneState extends State<Portone> with WidgetsBindingObserver {
   /// Quando l'app e' stata lasciata. `null` finche' non se ne va.
   DateTime? _lasciataIl;
 
+  /// L'app e' stata chiusa (`detached`) e il motore e' rimasto acceso: la
+  /// versione col navigatore in auto lo tiene acceso apposta, per l'auto.
+  /// Riaprirla, per chi guarda, e' un'apertura, e il lucchetto «all'avvio»
+  /// chiede come all'apertura (vedi [_seSiRichiude]).
+  bool _chiusa = false;
+
   /// Una domanda per volta: il sistema ne tiene aperta una sola, e chiederne
   /// due vuol dire la seconda che fallisce da sola.
   bool _staChiedendo = false;
@@ -449,9 +459,12 @@ class _PortoneState extends State<Portone> with WidgetsBindingObserver {
       _seNonTorna?.cancel();
       _seNonTorna = null;
       _collegamento.sveglia();
-      unawaited(_seSiRichiude());
+      final riaperta = _chiusa;
+      _chiusa = false;
+      unawaited(_seSiRichiude(riaperta: riaperta));
       return;
     }
+    if (stato == AppLifecycleState.detached) _chiusa = true;
     /* Col lucchetto acceso, il velo si mette **appena** l'app smette di
      * essere davanti — non al ritorno. Al ritorno sarebbe tardi: il sistema
      * ha gia' fatto l'istantanea per l'elenco delle app recenti, e dentro
@@ -590,11 +603,23 @@ class _PortoneState extends State<Portone> with WidgetsBindingObserver {
   /// Il velo che copriva l'app mentre era via si toglie **qui**, a decisione
   /// presa, e non appena l'app torna: nel mezzo — il tempo di chiedere al
   /// telefono cosa sa fare — la casa resterebbe scoperta.
-  Future<void> _seSiRichiude() async {
+  ///
+  /// [riaperta]: l'app era stata chiusa, e si e' riaperta sul motore rimasto
+  /// acceso. Prima un motore cosi' non c'era — ogni apertura ne accendeva uno
+  /// e ripassava da [_daChiedereAllApertura] — e il lucchetto «all'avvio»
+  /// deve chiedere lo stesso.
+  Future<void> _seSiRichiude({bool riaperta = false}) async {
     final lasciata = _lasciataIl;
     _lasciataIl = null;
     Set<ComeRiconosce>? conCosa;
-    if (lasciata != null && !_chiuso && _impostazioni.lucchetto.alRitorno) {
+    if (riaperta && !_chiuso) {
+      conCosa = await _daChiedereAllApertura();
+      if (!mounted) return;
+    }
+    if (conCosa == null &&
+        lasciata != null &&
+        !_chiuso &&
+        _impostazioni.lucchetto.alRitorno) {
       final sa = await _guardia.cosaSaFare();
       if (!mounted) return;
       final quanto = DateTime.now().difference(lasciata);

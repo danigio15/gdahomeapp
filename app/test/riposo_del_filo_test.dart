@@ -111,9 +111,22 @@ void main() {
       dentro,
       contains('if (apriIlFilo != null) unawaited(apriIlFilo());'),
     );
+    /* E aprirlo non basta: l'auto della plancia dal filo la leggeva la
+     * schermata del navigatore, che in macchina puo' non esserci. La segue
+     * anche l'auto, e la lascia quando si scende. */
     expect(
-      File('lib/main.dart').readAsStringSync(),
-      contains('navigatore.ascoltaLAuto(apriIlFilo: apriIlFiloConLaCasa)'),
+      dentro,
+      contains('if (laCasa != null) _seguiLaCasa(_perLAuto, laCasa());'),
+    );
+    expect(dentro, contains('_lasciaLaCasa(_perLAuto);'));
+    final main = File('lib/main.dart').readAsStringSync();
+    final chiamata = main.substring(main.indexOf('navigatore.ascoltaLAuto('));
+    expect(
+      chiamata.substring(0, chiamata.indexOf(');')),
+      allOf(
+        contains('apriIlFilo: apriIlFiloConLaCasa'),
+        contains('laCasa: ilFiloConLaCasa'),
+      ),
       reason: 'senza questa riga la macchina non sa come aprirlo',
     );
   });

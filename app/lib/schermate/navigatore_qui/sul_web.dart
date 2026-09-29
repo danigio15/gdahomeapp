@@ -30,7 +30,10 @@ class IlNavigatore extends StatelessWidget {
 
 /// Nel browser non c'e' nessuna auto da ascoltare, e nessun filo da aprire
 /// per lei: la firma pero' e' una sola.
-void ascoltaLAuto({Future<void> Function()? apriIlFilo}) {}
+void ascoltaLAuto({
+  Future<void> Function()? apriIlFilo,
+  Collegamento Function()? laCasa,
+}) {}
 
 /// Nel browser in macchina non ci si va: la scheda non ha un Android Auto, e
 /// il filo riposa sempre com'e' giusto che faccia.

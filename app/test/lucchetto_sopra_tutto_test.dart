@@ -161,6 +161,58 @@ void main() {
     expect(guardia.chieste, 1, reason: 'solo quella dell\'apertura');
   });
 
+  testWidgets(
+    'chiusa e riaperta sul motore rimasto acceso, all\'avvio si richiede',
+    (tester) async {
+      /* La versione col navigatore in auto tiene acceso il motore anche
+       * quando l'app si chiude, per l'auto: riaprendola non si riparte da
+       * capo. Per chi guarda pero' e' un'apertura, e il lucchetto «all'avvio»
+       * lo deve sapere. */
+      guardia = _GuardiaFinta();
+      await impostazioni.metti(
+        lucchetto: const IlLucchetto(allAvvio: true, alRitorno: false),
+      );
+      guardia.risposta.complete(ComeEAndata.si);
+      await tester.pumpWidget(lApp());
+      for (var giro = 0; giro < 10; giro += 1) {
+        await tester.pump(const Duration(milliseconds: 20));
+      }
+      expect(guardia.chieste, 1);
+
+      Future<void> passa(List<AppLifecycleState> stati) async {
+        for (final stato in stati) {
+          tester.binding.handleAppLifecycleStateChanged(stato);
+          await tester.pump();
+        }
+        for (var giro = 0; giro < 5; giro += 1) {
+          await tester.pump(const Duration(milliseconds: 20));
+        }
+      }
+
+      /* Lasciata e ripresa, senza chiuderla: solo all'avvio vuol dire no. */
+      await passa([
+        AppLifecycleState.inactive,
+        AppLifecycleState.hidden,
+        AppLifecycleState.paused,
+        AppLifecycleState.hidden,
+        AppLifecycleState.inactive,
+        AppLifecycleState.resumed,
+      ]);
+      expect(guardia.chieste, 1);
+
+      /* Chiusa, e riaperta. */
+      await passa([
+        AppLifecycleState.inactive,
+        AppLifecycleState.hidden,
+        AppLifecycleState.paused,
+        AppLifecycleState.detached,
+        AppLifecycleState.resumed,
+      ]);
+      expect(guardia.chieste, 2);
+      expect(find.text('Colleghiamo la casa'), findsOneWidget);
+    },
+  );
+
   testWidgets('col lucchetto spento non si copre niente', (tester) async {
     guardia = _GuardiaFinta();
     await tester.pumpWidget(lApp());
