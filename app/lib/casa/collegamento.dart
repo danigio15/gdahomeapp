@@ -563,7 +563,26 @@ class Collegamento {
      * Non si scrive niente — l'indirizzo che c'e' puo' essere ancora buono
      * per quando si torna. */
     if (quale == null) return;
-    if (quale.toString() == casa.inCasa?.toString()) return;
+    if (quale.toString() == casa.inCasa?.toString()) {
+      /* L'indirizzo e' quello che si sapeva, e risponde: si e' in casa, e il
+       * centralino ha vinto la corsa lo stesso. Succede quando l'ultima volta
+       * si era entrati da li': allora parte senza ritardo (`sonda.dart`), e
+       * una rete di casa appena ritrovata — il telefono che si riaggancia al
+       * Wi-Fi — puo' rispondere un soffio dopo di lui. Prima qui si tornava e
+       * basta, e si restava sul giro lungo fino al filo dopo, che ripartiva
+       * di nuovo senza ritardo: in casa, per sempre dal centralino.
+       *
+       * Si segna che la strada che funziona e' quella di casa — cosi' al giro
+       * dopo il centralino riparte col suo ritardo — e si riparte da li'. */
+      if (_daDove != DaDove.dalCentralino ||
+          _filo != filo ||
+          _casa?.id != casa.id) {
+        return;
+      }
+      await archivio.segnaLApprodo(casa.id, DaDove.daDentro);
+      await apri(forza: true);
+      return;
+    }
 
     await archivio.cambiaGliIndirizzi(casa.id, inCasa: quale);
     /* E si riparte da li'. La casa e' la stessa e il filo si riapre subito:

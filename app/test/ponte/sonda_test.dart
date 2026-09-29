@@ -209,6 +209,80 @@ void main() {
       expect(bussate, [ilCentralino.salute]);
     });
 
+    test(
+      'se l\'ultima volta si è entrati da lì, parte senza aspettare',
+      () async {
+        /* «Casa · da fuori · Apro la plancia…», e la rotella che gira. Chi
+         * l'ultima volta e' passato dal centralino quasi sempre e' ancora
+         * fuori, e il vantaggio alle strade di casa lo pagava a ogni apertura
+         * e a ogni ritorno, per aspettare un indirizzo che da li' non
+         * risponde. Qui il vantaggio e' lungo apposta: se si aspettasse, si
+         * vedrebbe. */
+        final bussate = <Uri>[];
+        final sonda = sondaChe(
+          {inRete: false, ilCentralino: true},
+          lenti: {
+            inRete: const Duration(milliseconds: 150),
+            ilCentralino: const Duration(milliseconds: 20),
+          },
+          bussate: bussate,
+          vantaggio: const Duration(seconds: 5),
+        );
+
+        final inizio = DateTime.now();
+        final approdo = await sonda.dove(
+          casaCon(
+            dentro: inRete,
+            centralino: ilCentralino,
+            ultimo: DaDove.dalCentralino,
+          ),
+        );
+        final quanto = DateTime.now().difference(inizio);
+
+        expect(approdo.da, DaDove.dalCentralino);
+        expect(quanto.inMilliseconds, lessThan(120));
+        expect(
+          bussate,
+          contains(inRete.salute),
+          reason: 'la strada di casa si prova lo stesso, insieme',
+        );
+      },
+    );
+
+    test('e se nel frattempo si è tornati a casa, la strada di casa vince '
+        'lo stesso quando risponde prima', () async {
+      final sonda = sondaChe(
+        {inRete: true, ilCentralino: true},
+        lenti: {ilCentralino: const Duration(milliseconds: 60)},
+        vantaggio: const Duration(seconds: 5),
+      );
+      final approdo = await sonda.dove(
+        casaCon(
+          dentro: inRete,
+          centralino: ilCentralino,
+          ultimo: DaDove.dalCentralino,
+        ),
+      );
+      expect(approdo.da, DaDove.daDentro);
+    });
+
+    test('se l\'ultima volta si è entrati da casa, il ritardo resta', () async {
+      /* E' il caso per cui il ritardo c'e': il centralino risponde per primo,
+       * e perde lo stesso. */
+      final sonda = sondaChe(
+        {inRete: true, ilCentralino: true},
+        lenti: {inRete: const Duration(milliseconds: 25)},
+      );
+      final approdo = await sonda.dove(
+        casaCon(
+          dentro: inRete,
+          centralino: ilCentralino,
+          ultimo: DaDove.daDentro,
+        ),
+      );
+      expect(approdo.da, DaDove.daDentro);
+    });
+
     test('quando tace anche il centralino, lo si prova lo stesso', () async {
       /* La bussata serve a scegliere la strada, non a vietarla: un telefono
        * appena riacceso puo' non ricevere in tempo una risposta che

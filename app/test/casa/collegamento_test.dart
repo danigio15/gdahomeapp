@@ -10,6 +10,7 @@ import 'package:gdahome/casa/archivio_delle_case.dart';
 import 'package:gdahome/casa/cassaforte.dart';
 import 'package:gdahome/casa/collegamento.dart';
 import 'package:gdahome/ponte/indirizzo.dart';
+import 'package:gdahome/ponte/presa.dart';
 import 'package:gdahome/ponte/sonda.dart';
 
 import '../ponte/ponte_finto.dart';
@@ -167,6 +168,72 @@ void main() {
     expect(collegamento.dentro, isTrue);
     await inCasa.spegni();
     await laStradaLunga.spegni();
+  });
+
+  test('tornati a casa dal centralino, se la strada di casa risponde ci si '
+      'torna anche quando l\'indirizzo è quello di sempre', () async {
+    /* L'ultima volta si e' entrati dal centralino, e allora il centralino
+     * parte senza ritardo (`sonda.dart`): fuori casa e' quello che si vuole.
+     * Ma tornati a casa la rete puo' rispondere un soffio dopo di lui — il
+     * telefono che si riaggancia al Wi-Fi — e il centralino vince la corsa.
+     * L'indirizzo di casa pero' e' quello che si sapeva: prima qui si
+     * tornava e basta, e si restava sul giro lungo, in casa, fino al filo
+     * dopo — che ripartiva di nuovo senza ritardo. */
+    final ponte = await PonteFinto.alza();
+    ponte.indirizziDiCasa = [ponte.indirizzo];
+    final centralino = IndirizzoDelCentralino.leggi(
+      'wss://centralino.esempio.it',
+    )!;
+    final casa = await archivio.aggiungi(
+      nome: 'Casa',
+      segno: segnoBuono,
+      identificativo: chiBuono,
+      chiave: chiaveBuona,
+      inCasa: ponte.indirizzo,
+      centralino: centralino,
+      casaAlCentralino: 'casa_00112233445566778899aabbccddeeff',
+      approdoIniziale: DaDove.dalCentralino,
+    );
+
+    collegamento = Collegamento(
+      archivio: archivio,
+      /* Il centralino porta alla stessa casa: qui e' lo stesso ponte finto,
+       * visto da un'altra strada. */
+      apriLaPresa: (dove) => PresaSuWebSocket.apri(
+        dove.host == centralino.salute.host ? ponte.indirizzo.filo : dove,
+      ),
+      sonda: Sonda(
+        attesa: const Duration(seconds: 1),
+        vantaggio: const Duration(milliseconds: 400),
+        bussa: (dove) async {
+          if (dove == centralino.salute) return true;
+          if (dove == ponte.indirizzo.salute) {
+            /* Il Wi-Fi appena ritrovato: risponde, ma non per primo. */
+            await Future<void>.delayed(const Duration(milliseconds: 150));
+            return true;
+          }
+          return false;
+        },
+      ),
+    );
+    await collegamento.apri();
+    expect(
+      collegamento.daDove,
+      DaDove.dalCentralino,
+      reason: 'l\'ultima volta era da lì, e parte senza aspettare',
+    );
+
+    await _finoA(
+      () =>
+          collegamento.daDove == DaDove.daDentro &&
+          collegamento.comeVa == ComeVa.aperta,
+    );
+    expect(
+      archivio.quella(casa.id)!.ultimoApprodo,
+      DaDove.daDentro,
+      reason: 'la volta dopo il centralino riparte col suo ritardo',
+    );
+    await ponte.spegni();
   });
 
   test('un ponte che non sa dire dove sta non cambia niente', () async {
