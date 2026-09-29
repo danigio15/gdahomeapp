@@ -13,6 +13,16 @@ sono due cose.
 
 ## Non ancora uscita
 
+**La Gestione termica torna a mostrare i numeri.** «Dopo ultimo aggiornamento
+al 1.7.0 non funziona più la gestione termica. Prima andava perfettamente.»
+Era vero. La 1.7.0 aveva insegnato alle targhette di caldaia e scaldabagno a
+salire di scala al migliaio — «1,21 kW» invece di «1211 W», come nel resto
+della plancia — e alla pagina mancava il pezzo che lo sa fare. Ogni targhetta
+con un numero dentro fermava il disegno: le linguette c'erano, e sotto niente
+o la scena di prima senza un valore. Adesso il pezzo c'è, e una prova nuova
+controlla in tutta la plancia che ogni file abbia quello che usa: la prova di
+prima leggeva la pagina come testo, e il testo era giusto.
+
 **L'ora di avvio di un ciclo la sa la casa, e adesso gliela chiediamo.** «Quando
 guardo la sezione elettrodomestici segna inizio ciclo anche se è già iniziato da
 1 ora.» Il contatore dei cicli sapeva già distinguere «l'ho visto partire» da
