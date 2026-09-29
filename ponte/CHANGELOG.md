@@ -241,6 +241,18 @@ schermi resta aperto. I tasti non cambiano posto: si vedono raggruppati, ma
 per chi li colora, ci disegna il simbolo o ci posa la copertina restano
 nell'ordine in cui sono scritti.
 
+**La mappa della rete Zigbee arriva.** L'app aspettava venti secondi, e il
+ponte per fare il giro di tutti i dispositivi ce ne mette fino a novanta: la
+risposta arrivava sempre quando l'app aveva già rinunciato. Adesso per quella
+domanda sola aspetta due minuti. **E un dispositivo eliminato non resta più
+lì:** quando non risponde alla rimozione gentile, l'app lo dice e chiede se
+toglierlo per forza, scrivendo cosa costa — dopo va riassociato a mano.
+
+**Nell'app, due cose storte raddrizzate.** Nelle mattonelle del menu il
+disegno e la scritta stavano appoggiati all'angolo invece che in mezzo; e sopra
+la barra di sistema di Android la barra della plancia lasciava diciotto punti
+di vuoto, che si vedevano scorrendo.
+
 **Il navigatore conosce tutte le colonnine d'Italia, e sa quali sono
 libere.** gdanav arriva all'ultimo. Le colonnine vengono dalla Piattaforma
 Unica Nazionale, dove i gestori le devono scrivere, e sulla mappa ci sono
