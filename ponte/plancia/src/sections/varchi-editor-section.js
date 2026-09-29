@@ -28,6 +28,7 @@ import {
   varchiDiCasa,
 } from "../core/varchi-di-casa.js";
 import { CAMPO_ESCLUSIONE, esclusioneProposta } from "../core/l-esclusione-del-varco.js";
+import { iDispositiviRicordati } from "../core/i-dispositivi-di-home-assistant.js";
 import { CHIAVE_VERSI, insiemeInvertiti } from "../core/verso-aperture.js";
 import { VARCHI_TAB, renderVarchi } from "./varchi-section.js";
 import { costruisciSchedaDichiarata } from "./scheda-dichiarata-section.js";
@@ -63,21 +64,36 @@ export const DISEGNI_DEL_VARCO = Object.freeze([
  * cosa che riguarda chi ha una centrale, e chi non ce l'ha non deve trovarsi una
  * casella in piu' da capire su ogni finestra di casa.
  *
- * In grigio c'e' quello che si e' trovato in casa, non scritto: una proposta e'
- * una proposta finche' non la si salva, e questa casella comanda un antifurto.
- * Finche' resta vuota il tasto in pagina non c'e'. */
+ * In grigio c'e' quello che la plancia ha trovato da sola — sulla stessa zona
+ * della centrale, o col nome esatto che la centrale pubblica — e che usa
+ * finche' la casella resta vuota. Prima era solo una proposta, da salvare a
+ * mano riga per riga; ma chi ha trenta zone Risco non deve riscrivere trenta
+ * nomi che Home Assistant sa gia'. Quello che si scrive vince sempre, e `-`
+ * vuol dire «questo varco da qui non si esclude».
+ *
+ * Il `details` si apre da solo quando c'e' qualcosa da vedere, scritto o
+ * trovato: una cosa che comanda un antifurto non deve stare nascosta dentro
+ * una tendina chiusa. */
 function campoDellEsclusione(riga, indice) {
   if (!riga.entity) return "";
   const id = `dm-varco-esclusione-${indice}`;
-  const proposta = esclusioneProposta(riga.entity, allStates());
-  return `<details class="dm-dich-piu"${clean(riga[CAMPO_ESCLUSIONE]) ? " open" : ""}>
+  const proposta = esclusioneProposta(riga.entity, allStates(), iDispositiviRicordati().di);
+  const scritto = clean(riga[CAMPO_ESCLUSIONE]);
+  const trovato =
+    proposta && !scritto
+      ? `<small class="dm-varco-trovato">${segnoHtml("check")} ${esc(
+          t("Trovato da solo, si usa questo:", "Found automatically, this one is used:"),
+        )} <code>${esc(proposta)}</code></small>`
+      : "";
+  return `<details class="dm-dich-piu"${scritto || proposta ? " open" : ""}>
     <summary>${segnoHtml("security")} ${esc(t("Esclusione dall'antifurto", "Alarm bypass"))}</summary>
     <small>${esc(
       t(
-        "Le centrali pubblicano accanto a ogni contatto un interruttore che dice alla centrale di non guardarlo: è quello che serve per inserire l'antifurto con una finestra aperta apposta. Scrivilo qui e nella pagina Varchi compare lo scudo per escludere questo varco. Acceso vuol dire escluso. Lasciala vuota e questo varco si guarda e basta, come prima.",
-        "Alarm panels publish a switch next to each contact that tells the panel to ignore it: that is what you need to arm the alarm with a window left open on purpose. Write it here and the shield to bypass this opening shows up on the Openings page. On means bypassed. Leave it empty and this opening is only watched, as before.",
+        "Le centrali pubblicano accanto a ogni contatto un interruttore che dice alla centrale di non guardarlo: è quello che serve per inserire l'antifurto con una finestra aperta apposta. Se sta sullo stesso dispositivo del contatto, o si chiama come lui con «bypass» in fondo, la plancia lo trova da sola; altrimenti scrivilo qui. Nella pagina Varchi compare il tasto per escludere o includere questo varco. Acceso vuol dire escluso. Scrivi - per non mostrare il tasto.",
+        "Alarm panels publish a switch next to each contact that tells the panel to ignore it: that is what you need to arm the alarm with a window left open on purpose. If it sits on the same device as the contact, or is named like it with «bypass» at the end, the dashboard finds it by itself; otherwise write it here. The button to bypass or re-include this opening shows up on the Openings page. On means bypassed. Write - to hide the button.",
       ),
     )}</small>
+    ${trovato}
     <label class="ed-slot dm-dich-campo"><span class="ed-slot-lbl">${esc(
       t("Interruttore di esclusione", "Bypass switch"),
     )}</span>
