@@ -4184,4 +4184,5 @@ export default Object.freeze({
   "Total time": "Gesamtzeit",
   "under a minute": "weniger als eine Minute",
   "What the “Cooking” entry of Appliances reads and presses. A control is an entity (button, switch, number, script) or a service with its parameters: philips_airfryer.adjust_time time=60 method=add. A button only shows up when its field is filled in, and only if it answers.": "Was der Eintrag „Kochen“ der Haushaltsgeräte liest und drückt. Eine Steuerung ist eine Entität (button, switch, number, script) oder ein Dienst mit seinen Parametern: philips_airfryer.adjust_time time=60 method=add. Eine Taste erscheint nur, wenn ihr Feld ausgefüllt ist, und nur wenn sie antwortet.",
+  "Storage battery": "Speicherbatterie",
 });

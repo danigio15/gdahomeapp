@@ -186,10 +186,10 @@ const scheda = costruisciSchedaDichiarata({
   bozzaInPiu: conICampiDellaRiga,
 
   parole: {
-    /* «Batterie», come la linguetta in Energia di cui questa scheda è la
-     * configurazione: sta sotto l'insegna Energia, e le pile dei sensori —
-     * l'altra scheda «Batterie» — sotto quella della Casa. */
-    linguetta: t("Batterie", "Batteries"),
+    /* «Batteria di accumulo», e non «Batterie» come la linguetta in Energia:
+     * nel Config c'era già una scheda «Batterie», quella delle pile dei
+     * sensori sotto la Casa, e due schede con lo stesso nome si scambiano. */
+    linguetta: t("Batteria di accumulo", "Storage battery"),
     intro: t(
       "I pacchi dell'accumulo e i loro BMS: si vedono nella linguetta Batterie di Energia e nella tessera Accumulo in Home. Un pacco per riga: la sua entità è lo stato di carica, e dentro ci sono le altre — salute, tensioni, correnti, temperature, cicli, capacità e le celle una per una.",
       "The storage packs and their BMS: they show in the Batteries tab of Energy and on the Battery storage tile in Home. One pack per row: its entity is the state of charge, and inside are the others — health, voltages, currents, temperatures, cycles, capacity and every single cell.",

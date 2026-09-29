@@ -751,6 +751,7 @@ export const SOURCE_INDEX = Object.freeze({
   "Batteria caricata · Mese": "Battery charged · Month",
   "Batteria caricata · Oggi": "Battery charged · Today",
   "Batteria del collare": "Collar battery",
+  "Batteria di accumulo": "Storage battery",
   "Batteria di servizio 12 V (% o V)": "Service battery 12 V (% or V)",
   "Batteria nuova": "New battery",
   "Batteria orologio": "Watch battery",

@@ -4184,4 +4184,5 @@ export default Object.freeze({
   "Total time": "कुल समय",
   "under a minute": "एक मिनट से कम",
   "What the “Cooking” entry of Appliances reads and presses. A control is an entity (button, switch, number, script) or a service with its parameters: philips_airfryer.adjust_time time=60 method=add. A button only shows up when its field is filled in, and only if it answers.": "उपकरणों के “कुकिंग” हिस्से में क्या पढ़ा और दबाया जाता है। नियंत्रण एक एंटिटी है (button, switch, number, script) या अपने पैरामीटर के साथ एक सेवा: philips_airfryer.adjust_time time=60 method=add. बटन तभी दिखता है जब उसका फ़ील्ड भरा हो, और तभी जब वह जवाब दे।",
+  "Storage battery": "भंडारण बैटरी",
 });

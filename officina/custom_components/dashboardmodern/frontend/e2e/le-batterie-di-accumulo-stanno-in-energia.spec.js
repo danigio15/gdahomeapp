@@ -4,7 +4,7 @@
  * Qui si guarda la plancia vera con due JK come li pubblica esphome-jk-bms,
  * uno con le celle in regola e uno da bilanciare:
  *
- *   · la scheda «Batterie» del Config, sotto l'insegna Energia, che alla prima apertura si
+ *   · la scheda «Batteria di accumulo» del Config, sotto l'insegna Energia, che alla prima apertura si
  *     riempie da sola dei due pacchi, con le loro sedici celle;
  *   · la linguetta «Batterie» dentro Energia, accanto a Istantanea, con la
  *     risposta grande, l'avviso del pacco da bilanciare e una scheda per pacco;
@@ -151,7 +151,7 @@ test("la scheda del Config trova i due JK da sola, con le loro celle", async ({
 
   await page.evaluate(() => window.apriConfigEntita());
   const linguetta = page.locator('#editor-modal .ed-tab[data-tab="accumulo"]');
-  await expect(linguetta).toHaveText("Batterie");
+  await expect(linguetta).toHaveText("Batteria di accumulo");
   await linguetta.click();
   const righe = page.locator('#ed-body [data-dm-dich-sezione="accumulo"] .dm-dich-riga');
   await expect(righe).toHaveCount(2, { timeout: 15_000 });

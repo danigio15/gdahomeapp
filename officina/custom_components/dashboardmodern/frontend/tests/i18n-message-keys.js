@@ -3281,6 +3281,7 @@ export const MESSAGE_KEYS = Object.freeze([
   "Stopped",
   "Stops above",
   "Storage",
+  "Storage battery",
   "Storage boiler",
   "Straight",
   "stream",
