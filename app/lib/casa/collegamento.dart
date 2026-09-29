@@ -76,6 +76,7 @@ class Collegamento {
     Sonda? sonda,
     this.apriLaPresa,
     GestoreLicenza? licenza,
+    this.attesaPerLaRicevuta = const Duration(seconds: 20),
   }) : _sonda = sonda ?? const Sonda(),
        licenza = licenza ?? GestoreLicenza(),
        _licenzaMia = licenza == null {
@@ -84,6 +85,10 @@ class Collegamento {
 
   final ArchivioDelleCase archivio;
   final Sonda _sonda;
+
+  /// Quanto una ricevuta comprata fuori casa aspetta la strada del
+  /// centralino prima di restare al negozio (`mandaLaRicevuta`).
+  final Duration attesaPerLaRicevuta;
 
   /// gdahome Premium: quale casa lo e', e cosa si apre (`licenza/`).
   ///
@@ -456,21 +461,62 @@ class Collegamento {
   }
 
   /// Manda alla casa aperta la ricevuta di un acquisto.
+  ///
+  /// Se la casa adesso non c'e', la ricevuta resta al negozio e si riprova
+  /// quando torna (`GestoreDegliAcquisti.riprova`). E se non c'e' perche' si
+  /// e' fuori casa senza Premium — il caso di chi compra proprio per entrare
+  /// da fuori — le strade di fuori si aprono per portarla
+  /// ([GestoreLicenza.ricevutaDaPortare]): si bussa subito, e si aspetta la
+  /// casa per [attesaPerLaRicevuta], col bottone che gira. Chi ha appena
+  /// pagato vede «Fatto» qualche secondo dopo, e non un errore rosso che dice
+  /// che la casa non c'e' mentre la si sta andando a prendere.
   Future<void> mandaLaRicevuta({
     required String piattaforma,
     required String prodotto,
     required String ricevuta,
   }) async {
+    if (!_pronta) {
+      licenza.ricevutaDaPortare = true;
+      if (_fuoriSenzaPremium) {
+        unawaited(apri(forza: true));
+        await _aspettaLaCasa(attesaPerLaRicevuta);
+      }
+    }
     final (filo, casa) = _perLaLicenza();
-    await licenza.mandaLaRicevuta(
-      piattaforma: piattaforma,
-      prodotto: prodotto,
-      ricevuta: ricevuta,
-      filo: filo,
-      casa: casa,
-      archivio: archivio,
-    );
+    try {
+      await licenza.mandaLaRicevuta(
+        piattaforma: piattaforma,
+        prodotto: prodotto,
+        ricevuta: ricevuta,
+        filo: filo,
+        casa: casa,
+        archivio: archivio,
+      );
+    } on LicenzaRifiutata catch (no) {
+      /* Un no di chi decide chiude la faccenda: non c'e' piu' niente da
+       * portare. Un no della strada invece la lascia aperta. */
+      if (no.definitiva) licenza.ricevutaDaPortare = false;
+      rethrow;
+    }
+    licenza.ricevutaDaPortare = false;
     await _dopoLaLicenza(filo, casa);
+  }
+
+  /* Se c'e' una casa aperta a cui dire qualcosa adesso. */
+  bool get _pronta => _filo != null && _filo!.dentro && _casa != null;
+
+  /* Aspetta che la casa sia aperta, al massimo [quanto]: `true` se c'e'. */
+  Future<bool> _aspettaLaCasa(Duration quanto) async {
+    if (_pronta) return true;
+    final arrivata = Completer<bool>();
+    final ascolto = cambiamenti.listen((_) {
+      if (_pronta && !arrivata.isCompleted) arrivata.complete(true);
+    });
+    try {
+      return await arrivata.future.timeout(quanto, onTimeout: () => _pronta);
+    } finally {
+      await ascolto.cancel();
+    }
   }
 
   (Filo, CasaConosciuta) _perLaLicenza() {

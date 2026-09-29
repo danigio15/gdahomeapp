@@ -36,6 +36,7 @@ class CasaConosciuta {
     this.ultimoApprodo,
     this.plancia,
     this.gettone,
+    this.senzaLicenze = false,
   });
 
   /// Identificativo interno dell'app, mai mostrato. Non e' quello del ponte.
@@ -98,6 +99,17 @@ class CasaConosciuta {
   /// controllare — la firma la guarda `licenza/gettone.dart`, non questa
   /// classe.
   final String? gettone;
+
+  /// `true` quando questa casa ha detto di non saper tenere una licenza: il
+  /// suo add-on e' di prima delle licenze, o le ha spente.
+  ///
+  /// Allora non ha gettoni, e non potrebbe averne: comprare Premium li' non
+  /// arriverebbe a nessuno. Un lucchetto senza una chiave da comprare e' solo
+  /// un lucchetto, e l'app quella casa la lascia aperta finche' l'add-on non
+  /// si aggiorna. Si ricorda, come il gettone: all'apertura si sa gia', prima
+  /// di bussare, e una casa lontana non resta fuori per un lucchetto che non
+  /// la riguarda.
+  final bool senzaLicenze;
 
   /// `true` quando questa casa e' stata abbinata prima che esistessero le
   /// chiavi, e adesso non basta piu'.
@@ -173,9 +185,11 @@ class CasaConosciuta {
     DaDove? ultimoApprodo,
     String? plancia,
     String? gettone,
+    bool? senzaLicenze,
     bool togliInCasa = false,
     bool togliDaFuori = false,
     bool togliLaPlancia = false,
+    bool togliIlGettone = false,
   }) => CasaConosciuta(
     id: id,
     nome: nome ?? this.nome,
@@ -191,7 +205,10 @@ class CasaConosciuta {
      * come un'altra, e senza questo non si potrebbe dire — `null` vorrebbe
      * dire «lascia com'era». */
     plancia: togliLaPlancia ? null : (plancia ?? this.plancia),
-    gettone: gettone ?? this.gettone,
+    /* `togliIlGettone`, come per la plancia: tornare a «mai chiesto» e' una
+     * cosa da poter dire, e `gettone: null` vuol gia' dire «com'era». */
+    gettone: togliIlGettone ? null : (gettone ?? this.gettone),
+    senzaLicenze: senzaLicenze ?? this.senzaLicenze,
   );
 
   /// La stessa casa, con la sola strada di casa.
@@ -209,6 +226,7 @@ class CasaConosciuta {
     ultimoApprodo: ultimoApprodo == DaDove.daDentro ? ultimoApprodo : null,
     plancia: plancia,
     gettone: gettone,
+    senzaLicenze: senzaLicenze,
   );
 
   /// Se questa casa ha una strada che porta da fuori: il centralino, o un
@@ -230,6 +248,7 @@ class CasaConosciuta {
     if (ultimoApprodo != null) 'ultimo_approdo': ultimoApprodo!.name,
     if (plancia != null && plancia!.isNotEmpty) 'plancia': plancia,
     if (gettone != null) 'gettone': gettone,
+    if (senzaLicenze) 'senza_licenze': true,
   };
 
   /// Torna `null` quando quello che c'e' scritto non e' una casa: un archivio
@@ -267,6 +286,7 @@ class CasaConosciuta {
         final String s => s,
         _ => null,
       },
+      senzaLicenze: grezza['senza_licenze'] == true,
     );
   }
 

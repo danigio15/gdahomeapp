@@ -21,7 +21,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:gdanav_app/gdanav_app.dart';
 
 import '../../casa/collegamento.dart';
-import '../../licenza/chiave.dart';
+import '../../licenza/licenza.dart' show licenzeInQuestaApp;
 import '../../parole.dart';
 import '../../vestito/marchio.dart';
 import '../../vestito/pezzi.dart';
@@ -51,8 +51,9 @@ final _vettura = SorgenteGdahome();
 /// gdanav Premium dentro gdahome: e' compreso in gdahome Premium, e segue la
 /// casa in uso (`docs/LICENZE.md`). Lo tiene aggiornato [IlNavigatore], dalla
 /// licenza del collegamento; finche' non c'e', vale quello che si sa senza
-/// chiedere: con la chiave delle licenze vuota tutto e' aperto.
-final _premiumOspite = ValueNotifier<bool>(chiavePubblicaLicenze.isEmpty);
+/// chiedere: dove le licenze non contano — la chiave vuota, o prima
+/// dell'iPhone un telefono che non e' un iPhone — tutto e' aperto.
+final _premiumOspite = ValueNotifier<bool>(!licenzeInQuestaApp);
 
 /* Uno per tutta l'app, e non uno per schermata: la guida, la posizione e le
  * segnalazioni sono cose che stanno accese, e due copie parlerebbero in due. */

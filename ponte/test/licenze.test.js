@@ -20,7 +20,7 @@ import { mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-import { CHIAVE_PUBBLICA_LICENZE } from "../src/chiave-licenze.js";
+import { CHIAVE_PUBBLICA_LICENZE, LICENZE_SOLO_SULL_IPHONE } from "../src/chiave-licenze.js";
 import { leggiGettone, verificaGettone } from "../src/gettone.js";
 import { codiceRegaloPulito, LicenzaNo, Licenze } from "../src/licenze.js";
 import { Plance, PremiumRichiesto } from "../src/plance.js";
@@ -48,6 +48,8 @@ function unPosto() {
 
 test("nel codice la chiave e' vuota: di serie le licenze sono spente", () => {
   assert.equal(CHIAVE_PUBBLICA_LICENZE, "");
+  /* E «prima l'iPhone» si scrive insieme alla chiave, non prima. */
+  assert.equal(LICENZE_SOLO_SULL_IPHONE, false);
   /* E con la chiave vuota non vale nessun gettone, nemmeno uno buono. */
   const buono = unGettone({ sog: CASA }, { adesso: ADESSO });
   assert.equal(vale(buono, { chiave: "" }), null);
@@ -122,13 +124,20 @@ function quadroFinto(risposte = {}) {
   return { fetch, chieste };
 }
 
-function leLicenze({ cartella = "", risposte = {}, chiave = PUBBLICA_DI_PROVA, adesso } = {}) {
+function leLicenze({
+  cartella = "",
+  risposte = {},
+  chiave = PUBBLICA_DI_PROVA,
+  soloSullIPhone = false,
+  adesso,
+} = {}) {
   const quadro = quadroFinto(risposte);
   const licenze = new Licenze({
     casa: CASA,
     segreto: () => "s".repeat(64),
     cartella,
     chiave,
+    soloSullIPhone,
     dove: "https://quadro.prova",
     fetch: quadro.fetch,
     adesso: adesso ?? (() => ADESSO),
@@ -265,6 +274,59 @@ test("con la chiave vuota non parte niente e non si limita niente", async () => 
     assert.equal(errore.codice, "licenze-spente");
     return true;
   });
+});
+
+test("prima l'iPhone: la casa tiene i gettoni e gira le ricevute, ma non limita niente", async () => {
+  /* Il Premium si vende solo nell'app per iPhone. La casa deve fare la sua
+   * parte — chi compra dall'iPhone diventa Premium davvero — ma i lucchetti li
+   * mette l'app: le plance, i telefoni da fuori, Android e il browser restano
+   * come prima. Base qui vuol dire «Base sull'iPhone», e basta. */
+  const gettone = unGettone({ sog: CASA, origine: "negozio" }, { adesso: ADESSO });
+  const { licenze, quadro } = leLicenze({
+    soloSullIPhone: true,
+    risposte: {
+      "/v1/licenze/casa": conGettoni({}),
+      "/v1/licenze/negozio": conGettoni({ gdahome: gettone }),
+    },
+  });
+  await licenze.rinnova();
+  assert.equal(quadro.chieste[0].dove, "https://quadro.prova/v1/licenze/casa");
+  assert.equal(licenze.attive, true);
+  assert.equal(licenze.premium, false);
+  assert.equal(licenze.limitata, false, "con Base sull'iPhone la casa non si limita");
+  const base = licenze.stato();
+  assert.equal(base.attive, true);
+  assert.equal(base.soloSullIPhone, true);
+  assert.equal(base.limitata, false);
+
+  /* E la ricevuta dell'iPhone arriva al quadro, e torna Premium. */
+  const dopo = await licenze.negozio({
+    app: "gdahome",
+    piattaforma: "ios",
+    prodotto: "gdahome_premium_mensile",
+    ricevuta: "2000000123456789",
+  });
+  assert.equal(quadro.chieste[1].dove, "https://quadro.prova/v1/licenze/negozio");
+  assert.equal(dopo.gdahome.attiva, true);
+  assert.equal(licenze.premium, true);
+});
+
+test("per tutti, invece, Base limita: e lo stato lo dice", async () => {
+  const { licenze } = leLicenze({ risposte: { "/v1/licenze/casa": conGettoni({}) } });
+  await licenze.rinnova();
+  assert.equal(licenze.limitata, true);
+  assert.equal(licenze.stato().limitata, true);
+  assert.equal(licenze.stato().soloSullIPhone, false);
+});
+
+test("a chiave vuota «solo iPhone» non accende niente", async () => {
+  /* La bandierina da sola non e' un interruttore: senza la chiave non si
+   * bussa, e lo stato non dice che le licenze contano da qualche parte. */
+  const { licenze, quadro } = leLicenze({ chiave: "", soloSullIPhone: true });
+  await licenze.rinnova();
+  assert.equal(quadro.chieste.length, 0);
+  assert.equal(licenze.attive, false);
+  assert.equal(licenze.stato().soloSullIPhone, false);
 });
 
 test("il codice regalo si accetta scritto come capita, e si manda giusto", async () => {

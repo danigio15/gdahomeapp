@@ -278,6 +278,14 @@ QUADRO_GESTORE='qualcosa di lungo e a caso' npm run avvia
 | `QUADRO_GOOGLE_SERVICE_ACCOUNT` | il JSON del service account di Google Play, per controllare gli abbonamenti comprati su Android. `QUADRO_GOOGLE_PACCHETTO` di serie `com.gdahome.gdahome` |
 | `QUADRO_APPLE_CHIAVE`, `QUADRO_APPLE_KEY_ID`, `QUADRO_APPLE_ISSUER`, `QUADRO_APPLE_BUNDLE` | la chiave `.p8` della App Store Server API e i suoi dati, per gli abbonamenti comprati su iPhone. `QUADRO_APPLE_RADICE` sostituisce l'impronta del certificato radice di Apple, da controllare prima del rilascio |
 
+Sulla macchina queste righe stanno in `/etc/quadro/ambiente`. La chiave delle
+licenze e quelle dei negozi ce le mette a mano chi tiene il quadro, e
+`accendi.sh` rilanciato **non le tocca**: riscrive le sue cinque e rimette le
+altre in fondo, uguali. La `.p8` va su una riga sola, fra apici singoli e con
+`\n` al posto degli a capo (`QUADRO_APPLE_CHIAVE='-----BEGIN PRIVATE
+KEY-----\nMIGT…\n-----END PRIVATE KEY-----'`): senza apici systemd si mangia le
+barre, e la chiave non si legge piu'.
+
 > **`quadro.gdahome.org` deve risolvere prima di rilasciare l'add-on.** Quel
 > nome sta scritto dentro il ponte (`QUADRO_DI_DIFETTO` in
 > `ponte/src/rapporto.js`), e una volta uscita una versione quella riga sta in

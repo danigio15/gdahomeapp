@@ -20,6 +20,55 @@ gdanav. Li scrive tutti `strumenti/chiave-licenze.mjs`, e una prova controlla
 che siano d'accordo fra loro: se uno restasse indietro, una parte verificherebbe
 e un'altra no, e non se ne accorgerebbe nessuno finché non chiama un cliente.
 
+## Prima l'iPhone
+
+C'è una tappa in mezzo, ed è quella di adesso: **Premium si vende solo
+nell'app per iPhone**, che è la prima a uscire nell'App Store. Android è
+ancora in prova interna, e lì come nel browser resta tutto aperto.
+
+| | spento | prima l'iPhone | per tutti |
+|---|---|---|---|
+| chiave nell'add-on e nell'app | vuota | **sì** | sì |
+| chiave nel centralino e nella nuvola | vuota | vuota | sì |
+| `LICENZE_SOLO_SULL_IPHONE` | `false` | **`true`** | `false` |
+| la casa chiede i gettoni e gira le ricevute | no | **sì** | sì |
+| la casa si limita (plance, telefoni da fuori) | no | **no** | sì, se Base |
+| lucchetti e negozio nell'app | no | **solo sull'iPhone** | dappertutto |
+
+Si scrive così, con la pubblica che la macchina del quadro ha stampato:
+
+    node strumenti/chiave-licenze.mjs --solo-iphone --pubblica <la pubblica>
+
+**La coppia qui non si fabbrica.** Nasce sulla macchina del quadro, con un
+comando che scrive la privata in `/etc/quadro/ambiente` e stampa solo la
+pubblica: la privata non passa da nessun terminale che non sia quello, da
+nessuna chat, da nessun file della repository. Prima di questa tappa lì
+servono anche le credenziali di Apple (`QUADRO_APPLE_*`), se no le ricevute
+dell'iPhone rispondono 503.
+
+Cosa fa l'app per iPhone, e perché:
+
+- **Una casa con l'add-on vecchio non si chiude.** Un add-on che le licenze
+  non le sa tenere — di prima, o con la chiave vuota — non può ricevere un
+  acquisto: un lucchetto lì sarebbe senza chiave. L'app se lo ricorda
+  (`senza_licenze` nell'archivio delle case) e la lascia aperta finché
+  l'add-on non si aggiorna.
+- **Niente «Ho un codice regalo».** Per l'App Store aprire una funzione con un
+  codice nostro è una «chiave di licenza» (regola 3.1.1), e l'app torna
+  indietro dalla revisione. I codici si riscattano dalla scheda gdahome in
+  Home Assistant, o dal browser, e Premium arriva anche sull'iPhone: è della
+  casa.
+- **Chi compra fuori casa entra subito.** Con la casa Base le strade di fuori
+  sono chiuse, e la ricevuta aspetterebbe il Wi-Fi di casa. Con una ricevuta
+  da portare invece si bussa al centralino — che prima dell'iPhone lascia
+  passare — e appena la casa l'ha avuta è Premium. È anche quello che fa
+  chi rivede l'app per Apple, da lontano, con una casa di prova Base.
+
+Il giorno che si accende per tutti, `--fallo` riconosce la tappa e **tiene
+la stessa chiave**: la privata è già sul quadro e ha già firmato i gettoni
+in giro. Scrive la pubblica anche nel centralino e nella nuvola, e spegne la
+bandierina.
+
 ## L'ordine, e perché è quello
 
 ### Prima di girare l'interruttore

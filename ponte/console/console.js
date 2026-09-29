@@ -2114,26 +2114,42 @@
     var spenta = { attiva: false };
     var gdahome = stato.gdahome || spenta;
     var gdanav = stato.gdanav || spenta;
-    soloBase = !gdahome.attiva;
+    /* Base limita la casa solo quando il ponte lo dice. Prima dell'iPhone —
+     * licenze che contano solo nell'app per iPhone — una casa Base non si
+     * limita affatto: le plance e il centralino restano come sempre, e qui
+     * non si spengono tasti per un lucchetto che sta su un telefono. */
+    var soloIPhone = stato.soloSullIPhone === true;
+    soloBase = stato.limitata === undefined ? !gdahome.attiva : stato.limitata === true;
     var elenco = trova("elenco-licenze");
     elenco.textContent = "";
     elenco.appendChild(
       unaRigaDiLicenza(
         "gdahome",
         gdahome,
-        due("Base: una plancia, e solo da casa", "Base: one dashboard, and only at home"),
+        soloIPhone
+          ? due(
+              "Base nell'app per iPhone: una plancia, e solo da casa",
+              "Base in the iPhone app: one dashboard, and only at home",
+            )
+          : due("Base: una plancia, e solo da casa", "Base: one dashboard, and only at home"),
       ),
     );
     elenco.appendChild(
       unaRigaDiLicenza(
         "gdanav",
         gdanav,
-        due(
-          "Base: navigazione completa per l'auto termica",
-          "Base: full navigation for combustion cars",
-        ),
+        soloIPhone
+          ? due(
+              "Base nell'app per iPhone: navigazione completa per l'auto termica",
+              "Base in the iPhone app: full navigation for combustion cars",
+            )
+          : due(
+              "Base: navigazione completa per l'auto termica",
+              "Base: full navigation for combustion cars",
+            ),
       ),
     );
+    trova("licenza-solo-iphone").hidden = !soloIPhone;
     /* Quando e' stata chiesta l'ultima volta: la casa la rinnova da se' ogni
      * sei ore, e chi guarda deve poter vedere che lo fa. */
     var ultima = stato.ultima;

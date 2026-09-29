@@ -15,6 +15,14 @@
  * dentro una chiave, i controlli si accendono. Non c'e' nessun altro posto da
  * toccare, e nessun altro modo di accenderli per sbaglio.
  *
+ * Con una tappa in mezzo, «prima l'iPhone»: la chiave nell'add-on e
+ * nell'app, e la bandierina `LICENZE_SOLO_SULL_IPHONE` accesa in tutti i
+ * file. La casa tiene i gettoni senza limitare niente, i lucchetti li mette
+ * solo l'app per iPhone, e il centralino e la nuvola restano senza chiave.
+ * La si scrive con `chiave-licenze.mjs --solo-iphone --pubblica <x>`; da li'
+ * `--fallo` accende per tutti **con la stessa chiave**, che sta gia' sul
+ * quadro e ha gia' firmato i gettoni in giro.
+ *
  * ─── Perche' un programma e non un foglietto ─────────────────────────────
  *
  * Perche' l'ordine dei passi non e' un dettaglio, e un foglietto si legge a
@@ -64,24 +72,70 @@ export function laChiaveIn(testo) {
   return trovata ? trovata[1] : null;
 }
 
+/* La bandierina «prima l'iPhone», nelle stesse due forme. Un file che non ce
+ * l'ha e' di prima che esistesse: vuol dire spenta. */
+const BANDIERINA = /(?:LICENZE_SOLO_SULL_IPHONE|licenzeSoloSullIPhone)\s*=\s*(true|false)/;
+
+export function laBandierinaIn(testo) {
+  const trovata = BANDIERINA.exec(String(testo ?? ""));
+  return trovata ? trovata[1] === "true" : false;
+}
+
+/* Dove va la chiave prima dell'iPhone: la casa e l'app. */
+const CASA_E_APP = new Set(["ponte/src/chiave-licenze.js", "app/lib/licenza/chiave.dart"]);
+
 /**
  * Com'e' messo l'interruttore, file per file.
  *
  * `spento` quando tutti e quattro hanno la chiave vuota, `acceso` quando tutti
- * e quattro hanno la **stessa** chiave, `rotto` quando non sono d'accordo — ed
- * e' il caso peggiore, perche' vorrebbe dire che una parte verifica e l'altra
- * no, e nessuno se ne accorge finche' un cliente non chiama.
+ * e quattro hanno la **stessa** chiave, `solo-iphone` quando ce l'hanno solo
+ * l'add-on e l'app e la bandierina e' accesa in tutti; `rotto` quando non sono
+ * d'accordo — ed e' il caso peggiore, perche' vorrebbe dire che una parte
+ * verifica e l'altra no, e nessuno se ne accorge finche' un cliente non chiama.
  */
 export function comEMesso({ radice = RADICE, file = I_FILE_DELLA_CHIAVE } = {}) {
   const dentro = file.map((nome) => {
     const dove = join(radice, nome);
-    if (!existsSync(dove)) return { file: nome, ce: false, chiave: null };
-    return { file: nome, ce: true, chiave: laChiaveIn(readFileSync(dove, "utf8")) };
+    if (!existsSync(dove)) return { file: nome, ce: false, chiave: null, soloIPhone: false };
+    const testo = readFileSync(dove, "utf8");
+    return {
+      file: nome,
+      ce: true,
+      chiave: laChiaveIn(testo),
+      soloIPhone: laBandierinaIn(testo),
+    };
   });
   const mancanti = dentro.filter((uno) => !uno.ce || uno.chiave === null);
   const chiavi = new Set(dentro.filter((uno) => uno.chiave !== null).map((uno) => uno.chiave));
+  const bandierine = new Set(dentro.map((uno) => uno.soloIPhone));
   if (mancanti.length)
     return { stato: "rotto", perche: "qualche file non c'e' o non si legge", dentro };
+  if (bandierine.size > 1)
+    return {
+      stato: "rotto",
+      perche: "la bandierina «solo iPhone» non e' uguale dappertutto",
+      dentro,
+    };
+  if ([...bandierine][0]) {
+    /* Prima l'iPhone: la stessa chiave nella casa e nell'app, e nessuna
+     * dove si chiuderebbe fuori chi non e' su un iPhone. */
+    const loro = dentro.filter((uno) => CASA_E_APP.has(uno.file));
+    const gliAltri = dentro.filter((uno) => !CASA_E_APP.has(uno.file));
+    const sua = loro[0]?.chiave ?? "";
+    const giusta =
+      sua !== "" &&
+      loro.length === CASA_E_APP.size &&
+      loro.every((uno) => uno.chiave === sua) &&
+      gliAltri.every((uno) => uno.chiave === "");
+    if (!giusta)
+      return {
+        stato: "rotto",
+        perche:
+          "con «solo iPhone» la chiave va nell'add-on e nell'app, e nel centralino e nella nuvola no",
+        dentro,
+      };
+    return { stato: "solo-iphone", chiave: sua, dentro };
+  }
   if (chiavi.size > 1)
     return { stato: "rotto", perche: "i file non hanno la stessa chiave", dentro };
   const sola = [...chiavi][0];
@@ -156,6 +210,11 @@ function racconta(come, gdanav) {
   if (come.stato === "spento") {
     righe.push("L'interruttore e' SPENTO: la chiave pubblica e' vuota in tutti i file.");
     righe.push("Oggi nessuno e' limitato, e l'accesso da fuori casa e' di tutti.");
+  } else if (come.stato === "solo-iphone") {
+    righe.push(`L'interruttore e' ACCESO SOLO SULL'IPHONE: la chiave e' \`${come.chiave}\`.`);
+    righe.push("E' nell'add-on e nell'app; il centralino e la nuvola sono senza.");
+    righe.push("La casa tiene i gettoni e gira le ricevute ma non limita niente:");
+    righe.push("i lucchetti li mette solo l'app per iPhone. Android e il browser sono aperti.");
   } else if (come.stato === "acceso") {
     righe.push(`L'interruttore e' ACCESO: la chiave e' \`${come.chiave}\`.`);
     righe.push("I controlli valgono da qui in avanti, per chi ha il pezzo aggiornato.");
@@ -224,12 +283,21 @@ if (process.argv[1] && process.argv[1].endsWith("accendi-gli-acquisti.mjs")) {
 
   console.log(`── La chiave ${"─".repeat(63)}\n`);
   const argomenti = ["strumenti/chiave-licenze.mjs"];
+  /* Dopo l'iPhone la chiave e' gia' fatta: la privata sta sul quadro e ha
+   * firmato i gettoni che girano. Se ne facesse un'altra, tutte le case che
+   * hanno pagato tornerebbero Base per sei ore. Si allarga quella. */
+  const giaFatta = come.stato === "solo-iphone";
+  if (giaFatta) argomenti.push("--pubblica", come.chiave);
   if (gdanav) argomenti.push("--gdanav", gdanav);
   execFileSync("node", argomenti, { cwd: RADICE, stdio: "inherit" });
 
   console.log(`\n── E adesso, in quest'ordine ${"─".repeat(47)}\n`);
-  console.log("  1. la privata qui sopra va SOLO nell'ambiente della macchina del quadro,");
-  console.log("     come QUADRO_LICENZE_CHIAVE. In nessun file, in nessun commit.");
+  if (giaFatta) {
+    console.log("  1. la chiave e' quella di prima: sul quadro non cambia niente.");
+  } else {
+    console.log("  1. la privata qui sopra va SOLO nell'ambiente della macchina del quadro,");
+    console.log("     come QUADRO_LICENZE_CHIAVE. In nessun file, in nessun commit.");
+  }
   console.log("  2. un acquisto vero in sandbox, e si guarda il giro intero.");
   console.log("  3. si rilascia l'add-on e l'app. Le case si aggiornano da sole.");
   console.log("  4. si aspetta: `pronte_alla_licenza` contro `case`, nei numeri del centralino.");

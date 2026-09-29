@@ -8,6 +8,7 @@ import '../casa/collegamento.dart';
 import '../casa/il_lucchetto.dart';
 import '../casa/impostazioni.dart';
 import '../casa/la_guardia.dart';
+import '../licenza/licenza.dart' show ComeStaLaLicenza;
 import '../parole.dart';
 import '../vestito/pezzi.dart';
 import 'premium.dart';
@@ -77,7 +78,9 @@ class LeCase extends StatelessWidget {
               casa: casa,
               aperta: casa.id == aperta?.id,
               daDove: casa.id == aperta?.id ? collegamento.daDove : null,
-              premium: licenza.controlliAccesi && licenza.premiumDi(casa),
+              /* Il bollino dice chi ha Premium davvero: non una casa senza
+               * lucchetti perche' le licenze non le sa tenere. */
+              premium: licenza.comeSta(casa) == ComeStaLaLicenza.premium,
               quandoScelta: () async {
                 await collegamento.cambiaCasa(casa.id);
                 if (context.mounted) Navigator.of(context).pop();

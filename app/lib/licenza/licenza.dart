@@ -15,6 +15,10 @@
 /// che ha sempre fatto. I lucchetti si accendono insieme alla chiave, non
 /// prima: cosi' una build di oggi e le prove di oggi restano quelle.
 ///
+/// **Prima l'iPhone** ([licenzeSoloSullIPhone]): con la chiave scritta, i
+/// lucchetti e il negozio ci sono solo nell'app per iPhone. Su Android e nel
+/// browser la stessa app resta aperta come prima, e non chiede niente.
+///
 /// Niente schermi qui dentro: le schermate chiedono [GestoreLicenza.premium]
 /// e decidono loro cosa disegnare.
 library;
@@ -47,6 +51,19 @@ bool? get _forzatoDiSerie {
   };
 }
 
+/// Se le licenze contano in questa app, su questo telefono.
+///
+/// Serve la chiave; e prima dell'iPhone ([licenzeSoloSullIPhone]) serve anche
+/// essere l'app per iPhone. Nel browser mai, prima dell'iPhone: anche aperto
+/// da un iPhone, il browser non e' l'app del negozio.
+bool get licenzeInQuestaApp =>
+    chiavePubblicaLicenze.isNotEmpty && contanoQui(licenzeSoloSullIPhone);
+
+/// Se, con la chiave scritta, le licenze contano qui: sempre, o solo
+/// nell'app per iPhone.
+bool contanoQui(bool soloSullIPhone) =>
+    !soloSullIPhone || (!kIsWeb && defaultTargetPlatform == TargetPlatform.iOS);
+
 /// Come sta la licenza di una casa, per chi la deve scrivere a schermo.
 enum ComeStaLaLicenza {
   /// I controlli sono spenti: la chiave e' vuota, o e' forzato.
@@ -55,6 +72,11 @@ enum ComeStaLaLicenza {
   /// Mai chiesto a questa casa: un ponte che non lo sa dire, o una casa
   /// appena abbinata.
   maiChiesto,
+
+  /// La casa ha detto che le licenze non le sa tenere: il suo add-on e' di
+  /// prima delle licenze, o le ha spente. Li' Premium non si puo' comprare,
+  /// e allora non c'e' nemmeno il lucchetto (`CasaConosciuta.senzaLicenze`).
+  casaSenzaLicenze,
 
   /// Chiesto, e la casa non ha un gettone che valga.
   base,
@@ -65,18 +87,30 @@ enum ComeStaLaLicenza {
 
 class GestoreLicenza extends ChangeNotifier {
   /// [chiave] si passa nelle prove (la coppia di prova del contratto); di
-  /// solito e' [chiavePubblicaLicenze]. [forza] mette tutte le case Premium
-  /// (`true`) o tutte Base (`false`), e vince sulla chiave: serve alle prove
-  /// e alle fotografie.
-  GestoreLicenza({String? chiave, bool? forza, DateTime Function()? orologio})
-    : chiave = chiave ?? chiavePubblicaLicenze,
-      _forza = forza ?? _forzatoDiSerie,
-      _orologio = orologio ?? DateTime.now {
+  /// solito e' [chiavePubblicaLicenze]. [qui] dice se le licenze contano su
+  /// questo telefono: di solito lo decide [contanoQui], e le prove lo
+  /// passano per fare l'iPhone e l'Android. [forza] mette tutte le case
+  /// Premium (`true`) o tutte Base (`false`), e vince sulla chiave: serve
+  /// alle prove e alle fotografie.
+  GestoreLicenza({
+    String? chiave,
+    bool? qui,
+    bool? forza,
+    DateTime Function()? orologio,
+  }) : chiave = chiave ?? chiavePubblicaLicenze,
+       qui = qui ?? contanoQui(licenzeSoloSullIPhone),
+       _forza = forza ?? _forzatoDiSerie,
+       _orologio = orologio ?? DateTime.now {
     premiumQui = ValueNotifier<bool>(_calcolaPremium());
   }
 
   /// La chiave pubblica con cui si controllano i gettoni.
   final String chiave;
+
+  /// Se le licenze contano su questo telefono. Prima dell'iPhone, su Android
+  /// e nel browser no: la chiave c'e', ma qui non si chiede e non si chiude
+  /// niente.
+  final bool qui;
   final DateTime Function() _orologio;
 
   bool? _forza;
@@ -95,10 +129,27 @@ class GestoreLicenza extends ChangeNotifier {
   /// quando Premium e' forzato a `false`, che e' il modo di vederli senza la
   /// chiave.
   bool get controlliAccesi =>
-      _forza == false || (_forza == null && chiave.isNotEmpty);
+      _forza == false || (_forza == null && chiave.isNotEmpty && qui);
 
   /// Se c'e' qualcosa da comprare: la pagina Premium ha senso solo cosi'.
-  bool get siVende => chiave.isNotEmpty || _forza != null;
+  bool get siVende => (chiave.isNotEmpty && qui) || _forza != null;
+
+  /// Se c'e' una ricevuta del negozio che non e' ancora arrivata alla casa.
+  ///
+  /// Chi compra fuori casa, con la casa Base, e' proprio quello che il
+  /// lucchetto ha fermato fuori: senza questa riga la ricevuta aspetterebbe
+  /// che torni sotto il Wi-Fi di casa, e avrebbe pagato per niente fino a
+  /// sera. Con una ricevuta da portare le strade di fuori si prendono
+  /// ([stradeDaFuoriPer]), e appena la casa l'ha avuta si torna com'era. La
+  /// mette `Collegamento.mandaLaRicevuta`.
+  bool get ricevutaDaPortare => _ricevutaDaPortare;
+  set ricevutaDaPortare(bool si) {
+    if (_ricevutaDaPortare == si) return;
+    _ricevutaDaPortare = si;
+    _ricalcola();
+  }
+
+  bool _ricevutaDaPortare = false;
 
   /* I gettoni controllati, per casa: quello com'era scritto e quello che se
    * ne e' letto. Si ricontrolla la firma solo quando il testo cambia. */
@@ -157,15 +208,20 @@ class GestoreLicenza extends ChangeNotifier {
     if (_forza == false) return ComeStaLaLicenza.base;
     if (gettoneDi(casa) != null) return ComeStaLaLicenza.premium;
     final conosciuta = casa == null ? null : (_case[casa.id] ?? casa);
+    if (conosciuta?.senzaLicenze ?? false) {
+      return ComeStaLaLicenza.casaSenzaLicenze;
+    }
     if (conosciuta?.gettone == null) return ComeStaLaLicenza.maiChiesto;
     return ComeStaLaLicenza.base;
   }
 
-  /// Se questa casa e' Premium. Con i controlli spenti, si'.
+  /// Se questa casa e' Premium. Con i controlli spenti, si'; e si' anche in
+  /// una casa che le licenze non le sa tenere, dove non si puo' comprare.
   bool premiumDi(CasaConosciuta? casa) {
     if (_forza != null) return _forza!;
     if (!controlliAccesi) return true;
-    return gettoneDi(casa) != null;
+    if (gettoneDi(casa) != null) return true;
+    return comeSta(casa) == ComeStaLaLicenza.casaSenzaLicenze;
   }
 
   /// Se la casa in uso e' Premium.
@@ -194,6 +250,7 @@ class GestoreLicenza extends ChangeNotifier {
   bool stradeDaFuoriPer(CasaConosciuta casa) {
     if (premiumDi(casa)) return true;
     if (_forza == false) return false;
+    if (_ricevutaDaPortare) return true;
     return comeSta(casa) == ComeStaLaLicenza.maiChiesto;
   }
 
@@ -201,23 +258,46 @@ class GestoreLicenza extends ChangeNotifier {
 
   /// Chiede alla casa il suo gettone, lo ricorda nell'archivio e lo controlla.
   ///
-  /// Torna `true` se la casa ha risposto. Un ponte di prima non conosce il
-  /// comando: si resta con quello che si sapeva, e non e' un errore da dire.
-  /// Con la chiave vuota non si chiede nemmeno: nessun gettone varrebbe.
+  /// Torna `true` se la casa ha risposto. Con la chiave vuota non si chiede
+  /// nemmeno: nessun gettone varrebbe; e nemmeno dove le licenze non contano.
+  ///
+  /// Una casa che le licenze non le sa tenere lo dice in due modi: un add-on
+  /// di prima non conosce il comando, uno con le licenze spente risponde
+  /// `attive: false`. Tutti e due si ricordano come
+  /// [ComeStaLaLicenza.casaSenzaLicenze]: li' Premium non si puo' comprare, e
+  /// il lucchetto non si mette.
   Future<bool> chiedi(
     Filo filo,
     CasaConosciuta casa,
     ArchivioDelleCase archivio,
   ) async {
-    if (chiave.isEmpty) return false;
+    if (chiave.isEmpty || !qui) return false;
     final Object? detto;
     try {
       detto = await filo.risultato({'type': 'ponte/licenza/stato'});
+    } on ComandoRifiutato catch (no) {
+      if (!_nonLoConosce(no)) return false;
+      await archivio.segnaSenzaLicenze(casa.id);
+      await conosci(archivio.tutte);
+      return true;
     } on ErroreDelPonte {
       return false;
     }
+    if (detto is Map && detto['attive'] == false) {
+      await archivio.segnaSenzaLicenze(casa.id);
+      await conosci(archivio.tutte);
+      return true;
+    }
     await _ricordaLaRisposta(detto, casa, archivio);
     return true;
+  }
+
+  /* Un ponte che il comando non lo conosce proprio: e' di prima delle
+   * licenze. Gli altri no — un filo caduto, una casa che non risponde — non
+   * dicono niente della licenza, e si resta con quello che si sapeva. */
+  static bool _nonLoConosce(ComandoRifiutato no) {
+    final tutto = '${no.codice ?? ''} ${no.spiegazione}'.toLowerCase();
+    return no.codice == 'unknown_command' || tutto.contains('unknown command');
   }
 
   /// Riscatta un codice regalo per questa casa (`ponte/licenza/riscatta`).
@@ -296,6 +376,8 @@ class GestoreLicenza extends ChangeNotifier {
     if (detto is! Map) return;
     final gettoni = detto['gettoni'];
     if (gettoni is! Map) return;
+    /* `segnaIlGettone` toglie anche il «senza licenze»: una casa che da'
+     * gettoni, vuoti o no, le licenze le sa tenere. */
     final gettone = gettoni['gdahome'];
     await archivio.segnaIlGettone(casa.id, gettone is String ? gettone : '');
     await conosci(archivio.tutte);
@@ -304,7 +386,12 @@ class GestoreLicenza extends ChangeNotifier {
   static String _spiega(ErroreDelPonte errore) {
     final codice = errore is ComandoRifiutato ? (errore.codice ?? '') : '';
     final tutto = '$codice ${errore.spiegazione}'.toLowerCase();
-    if (codice == 'unknown_command' || tutto.contains('unknown command')) {
+    /* Un add-on di prima delle licenze non conosce il comando; uno con le
+     * licenze spente lo conosce e dice di no. Per chi compra e' la stessa
+     * cosa, e si ripara allo stesso modo. */
+    if (codice == 'unknown_command' ||
+        tutto.contains('unknown command') ||
+        tutto.contains('licenze-spente')) {
       return inLingua(
         it:
             'L\'add-on di questa casa non conosce ancora le licenze: '

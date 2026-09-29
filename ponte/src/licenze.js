@@ -27,14 +27,22 @@
  *
  * Non parte niente e non cambia niente. `attive` e' falso, nessuno bussa al
  * quadro, e `limitata` e' falso: la casa fa tutto quello che faceva ieri. Le
- * licenze si accendono il giorno in cui la chiave si scrive, tutte insieme.
+ * licenze si accendono il giorno in cui la chiave si scrive.
+ *
+ * ─── Prima l'iPhone ──────────────────────────────────────────────────────
+ *
+ * Con `LICENZE_SOLO_SULL_IPHONE` (`chiave-licenze.js`) la chiave c'e' ma il
+ * Premium si vende solo nell'app per iPhone. La casa fa meta' del lavoro:
+ * bussa al quadro, tiene i gettoni, gira le ricevute — chi compra dall'iPhone
+ * deve diventare Premium davvero — e non limita niente, perche' i lucchetti
+ * li mette solo quell'app. `attive` e' vero, `limitata` resta falso.
  */
 
 import { EventEmitter } from "node:events";
 import { join } from "node:path";
 
 import { Archivio } from "./archivio.js";
-import { CHIAVE_PUBBLICA_LICENZE } from "./chiave-licenze.js";
+import { CHIAVE_PUBBLICA_LICENZE, LICENZE_SOLO_SULL_IPHONE } from "./chiave-licenze.js";
 import { leggiGettone, valeAdesso, verificaGettone } from "./gettone.js";
 import { perchePreciso, QUADRO_DI_DIFETTO } from "./rapporto.js";
 
@@ -85,6 +93,8 @@ export class Licenze extends EventEmitter {
     segreto = () => "",
     cartella = "",
     chiave = CHIAVE_PUBBLICA_LICENZE,
+    /* Le licenze contano solo nell'app per iPhone: vedi in cima. */
+    soloSullIPhone = LICENZE_SOLO_SULL_IPHONE,
     /* Dove sta il quadro. Si sposta come si sposta quello del rapporto — con
      * `PONTE_QUADRO_DOVE` — che serve alle prove e a chi si rifa' gdahome per
      * se'. Nella scheda dell'add-on non c'e' una casella: il quadro delle
@@ -99,6 +109,7 @@ export class Licenze extends EventEmitter {
     this.casa = String(casa || "");
     this.segreto = typeof segreto === "function" ? segreto : () => String(segreto || "");
     this.chiave = String(chiave || "");
+    this.soloSullIPhone = soloSullIPhone === true;
     this.dove = String(dove || "").replace(/\/+$/, "");
     this.prendi = prendi;
     this.adesso = adesso;
@@ -167,9 +178,11 @@ export class Licenze extends EventEmitter {
    *
    * E' la domanda che fanno le plance, il portiere e le commissioni, e non e'
    * `!premium`: con la chiave vuota le licenze sono spente, e allora non c'e'
-   * nessun limite — tutto come ieri. */
+   * nessun limite — tutto come ieri. E nemmeno quando contano solo
+   * nell'iPhone: li' il lucchetto lo mette l'app, e la casa resta aperta a
+   * Android, al browser e ai telefoni da fuori. */
   get limitata() {
-    return this.attive && !this.premium;
+    return this.attive && !this.soloSullIPhone && !this.premium;
   }
 
   /* Il gettone da dare al centralino: quello di gdahome, cosi' com'e'. Lo
@@ -202,6 +215,10 @@ export class Licenze extends EventEmitter {
     }
     return {
       attive: this.attive,
+      /* Se la casa si sta limitando davvero, e se le licenze contano solo
+       * nell'app per iPhone: la console scrive «Base» in due modi diversi. */
+      limitata: this.limitata,
+      soloSullIPhone: this.attive && this.soloSullIPhone,
       casa: this.casa,
       gdahome: una("gdahome"),
       gdanav: una("gdanav"),

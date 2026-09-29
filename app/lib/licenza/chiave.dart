@@ -15,3 +15,15 @@
 library;
 
 const chiavePubblicaLicenze = '';
+
+/// Prima l'iPhone: con `true` le licenze contano solo nell'app per iPhone.
+///
+/// E' la prima app che esce nel negozio col Premium da comprare. Li' ci sono
+/// i lucchetti e l'App Store; su Android e nel browser, anche con la chiave
+/// scritta, resta tutto aperto come oggi. La casa fa la sua parte — tiene i
+/// gettoni e gira le ricevute — senza limitare niente
+/// (`LICENZE_SOLO_SULL_IPHONE` in `ponte/src/chiave-licenze.js`).
+///
+/// La scrive `node strumenti/chiave-licenze.mjs --solo-iphone`, insieme alla
+/// chiave; il giorno che si accende per tutti torna `false`.
+const licenzeSoloSullIPhone = false;

@@ -16,6 +16,8 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { laBandierinaIn, laChiaveIn } from "../../strumenti/accendi-gli-acquisti.mjs";
+
 const QUI = dirname(fileURLToPath(import.meta.url));
 const CENTRALINO = join(QUI, "..", "src");
 const PONTE = join(QUI, "..", "..", "ponte", "src");
@@ -36,8 +38,37 @@ const COPIATI = [
   "chiave-licenze.js",
 ];
 
+/* La chiave delle licenze e' l'unica riga che puo' essere diversa, e solo
+ * in un modo: prima dell'iPhone sta nell'add-on e il centralino e la nuvola
+ * sono senza (`strumenti/accendi-gli-acquisti.mjs`, «solo iPhone»). Tutto il
+ * resto del file e' identico sempre, e se la chiave c'e' da tutte e due le
+ * parti e' la stessa. */
+function laChiaveCome(copia, delPonte, dove) {
+  const vuota = (testo) => testo.replace(/(CHIAVE_PUBBLICA_LICENZE\s*=\s*)"[^"]*"/, '$1""');
+  assert.equal(
+    vuota(copia),
+    vuota(delPonte),
+    `«chiave-licenze.js» ${dove} e' diverso da quello del ponte: si rifa' con\n` +
+      "  node strumenti/chiave-licenze.mjs",
+  );
+  const sua = laChiaveIn(copia);
+  const quella = laChiaveIn(delPonte);
+  assert.ok(
+    sua === quella || (sua === "" && laBandierinaIn(delPonte)),
+    `la chiave ${dove} non e' quella del ponte, e non e' «prima l'iPhone»`,
+  );
+}
+
 test("le copie prese dal ponte sono ancora identiche", () => {
   for (const nome of COPIATI) {
+    if (nome === "chiave-licenze.js") {
+      laChiaveCome(
+        readFileSync(join(CENTRALINO, nome), "utf8"),
+        readFileSync(join(PONTE, nome), "utf8"),
+        "del centralino",
+      );
+      continue;
+    }
     assert.equal(
       readFileSync(join(CENTRALINO, nome), "utf8"),
       readFileSync(join(PONTE, nome), "utf8"),
@@ -69,10 +100,21 @@ test("le copie prese dalla nuvola sono ancora identiche", () => {
 /* E la nuvola, che il gettone lo verifica con le sue funzioni, ha la stessa
  * chiave: la riga e' una, in tre posti. */
 test("la chiave delle licenze e' la stessa nella nuvola", () => {
-  assert.equal(
+  laChiaveCome(
     readFileSync(join(NUVOLA, "chiave-licenze.js"), "utf8"),
     readFileSync(join(PONTE, "chiave-licenze.js"), "utf8"),
-    "«chiave-licenze.js» della nuvola e' diverso da quello del ponte: si rifa' con\n" +
-      "  node strumenti/chiave-licenze.mjs",
+    "della nuvola",
   );
+});
+
+test("prima dell'iPhone il centralino puo' restare senza chiave, e solo allora", () => {
+  const delPonte = (chiave, soloIPhone) =>
+    `export const CHIAVE_PUBBLICA_LICENZE = "${chiave}";\nexport const LICENZE_SOLO_SULL_IPHONE = ${soloIPhone};\n`;
+  const x = "6P9sdqQtlHcmH7Ve_SgzmyJmxJS28CNORRJJfjI3rnI";
+  /* Prima l'iPhone: la casa con la chiave, il centralino senza. */
+  laChiaveCome(delPonte("", true), delPonte(x, true), "di prova");
+  /* Per tutti: senza la chiave il centralino lascerebbe entrare chi non paga. */
+  assert.throws(() => laChiaveCome(delPonte("", false), delPonte(x, false), "di prova"));
+  /* E una chiave diversa non va mai. */
+  assert.throws(() => laChiaveCome(delPonte("un'altra", true), delPonte(x, true), "di prova"));
 });

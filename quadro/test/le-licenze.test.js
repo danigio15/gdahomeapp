@@ -1579,6 +1579,58 @@ test("strumenti/chiave-licenze.mjs scrive la stessa pubblica dappertutto, e stam
   }
 });
 
+test("strumenti/chiave-licenze.mjs --solo-iphone: la casa e l'app, e nessuna coppia fatta qui", () => {
+  /* Prima l'iPhone la coppia nasce sulla macchina del quadro, e di li' esce
+   * solo la pubblica: lo strumento non ne fabbrica, e non tocca il centralino
+   * e la nuvola, che con la chiave chiuderebbero fuori i telefoni Android. */
+  const radice = mkdtempSync(join(tmpdir(), "chiave-licenze-"));
+  const strumento = join(
+    dirname(fileURLToPath(import.meta.url)),
+    "..",
+    "..",
+    "strumenti",
+    "chiave-licenze.mjs",
+  );
+  const lancia = (...argomenti) =>
+    execFileSync(process.execPath, [strumento, "--radice", radice, ...argomenti], {
+      encoding: "utf8",
+      stdio: "pipe",
+    });
+  try {
+    assert.throws(() => lancia("--solo-iphone"), /--pubblica/);
+    mkdirSync(join(radice, "gdanav", "packages"), { recursive: true });
+    assert.throws(
+      () => lancia("--solo-iphone", "--pubblica", PUBBLICA, "--gdanav", join(radice, "gdanav")),
+      /gdanav/,
+    );
+
+    const detto = lancia("--solo-iphone", "--pubblica", PUBBLICA);
+    assert.doesNotMatch(detto, /QUADRO_LICENZE_CHIAVE=/);
+    const leggi = (via) => readFileSync(join(radice, via), "utf8");
+    assert.match(leggi("ponte/src/chiave-licenze.js"), new RegExp(`= "${PUBBLICA}";`));
+    assert.match(leggi("app/lib/licenza/chiave.dart"), new RegExp(`= '${PUBBLICA}';`));
+    for (const via of ["centralino/src/chiave-licenze.js", "nuvola/src/chiave-licenze.js"])
+      assert.match(leggi(via), /export const CHIAVE_PUBBLICA_LICENZE = "";/, via);
+    for (const via of [
+      "ponte/src/chiave-licenze.js",
+      "centralino/src/chiave-licenze.js",
+      "nuvola/src/chiave-licenze.js",
+    ])
+      assert.match(leggi(via), /export const LICENZE_SOLO_SULL_IPHONE = true;/, via);
+    assert.match(leggi("app/lib/licenza/chiave.dart"), /const licenzeSoloSullIPhone = true;/);
+
+    /* E poi per tutti, con la stessa chiave: la bandierina si spegne. */
+    lancia("--pubblica", PUBBLICA);
+    for (const via of ["centralino/src/chiave-licenze.js", "nuvola/src/chiave-licenze.js"]) {
+      assert.match(leggi(via), new RegExp(`= "${PUBBLICA}";`), via);
+      assert.match(leggi(via), /LICENZE_SOLO_SULL_IPHONE = false;/, via);
+    }
+    assert.match(leggi("app/lib/licenza/chiave.dart"), /const licenzeSoloSullIPhone = false;/);
+  } finally {
+    rmSync(radice, { recursive: true, force: true });
+  }
+});
+
 /* ─── La catena di prova ─────────────────────────────────────────────────
  *
  * Tre certificati EC fatti con openssl per queste prove: una radice, un
