@@ -14,7 +14,7 @@
  *
  * Perche' passa dal centralino e non dal telefono: il gettone di GitHub e'
  * del manutentore e non deve stare su nessun telefono e in nessun ponte. Sta
- * qui, come segreto del Worker, e viaggia solo verso api.github.com. La casa
+ * sulla macchina del centralino, e viaggia solo verso api.github.com. La casa
  * si presenta col suo segreto — lo stesso della chiamata — e puo' leggere e
  * scrivere solo nelle issue che ha aperto lei.
  *
@@ -202,10 +202,10 @@ export function pesoLeggibile(byte) {
  * rombo col punto di domanda, per sempre.
  *
  * Qui si contano i punti di codice e non i gruppi, al contrario di quello che
- * fa la chat: questo file gira anche su Cloudflare, e `Intl.Segmenter` non e'
- * detto che ci sia. Senza i gruppi una bandiera tagliata a meta' diventa due
- * lettere, che e' brutto ma e' un carattere vero; con `slice` diventava un
- * buco. */
+ * fa la chat: questo file e' nato per girare anche su Cloudflare, dove
+ * `Intl.Segmenter` non era detto che ci fosse. Senza i gruppi una bandiera
+ * tagliata a meta' diventa due lettere, che e' brutto ma e' un carattere
+ * vero; con `slice` diventava un buco. */
 const testo = (valore, massimo) => {
   const pulito = String(valore ?? "").trim();
   if (pulito.length <= massimo) return pulito;
@@ -510,8 +510,8 @@ export class Segnalazioni {
     this.casa = casa;
     this.adesso = adesso;
     /* Il limite sopra quello della casa: per indirizzo e in tutto. Lo
-     * decide chi ospita — la macchina lo tiene in memoria, la nuvola in un
-     * oggetto suo — e qui si chiede e basta: `true` vuol dire «avanti». */
+     * decide chi ospita — la macchina lo tiene in memoria — e qui si chiede e
+     * basta: `true` vuol dire «avanti». */
     this.freno = freno;
     this.chi = chi;
   }

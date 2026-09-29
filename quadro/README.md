@@ -278,6 +278,14 @@ QUADRO_GESTORE='qualcosa di lungo e a caso' npm run avvia
 | `QUADRO_GOOGLE_SERVICE_ACCOUNT` | il JSON del service account di Google Play, per controllare gli abbonamenti comprati su Android. `QUADRO_GOOGLE_PACCHETTO` di serie `com.gdahome.gdahome` |
 | `QUADRO_APPLE_CHIAVE`, `QUADRO_APPLE_KEY_ID`, `QUADRO_APPLE_ISSUER`, `QUADRO_APPLE_BUNDLE` | la chiave `.p8` della App Store Server API e i suoi dati, per gli abbonamenti comprati su iPhone. `QUADRO_APPLE_RADICE` sostituisce l'impronta del certificato radice di Apple, da controllare prima del rilascio |
 
+Sulla macchina queste righe stanno in `/etc/quadro/ambiente`. La chiave delle
+licenze e quelle dei negozi ce le mette a mano chi tiene il quadro, e
+`accendi.sh` rilanciato **non le tocca**: riscrive le sue cinque e rimette le
+altre in fondo, uguali. La `.p8` va su una riga sola, fra apici singoli e con
+`\n` al posto degli a capo (`QUADRO_APPLE_CHIAVE='-----BEGIN PRIVATE
+KEY-----\nMIGT…\n-----END PRIVATE KEY-----'`): senza apici systemd si mangia le
+barre, e la chiave non si legge piu'.
+
 > **`quadro.gdahome.org` deve risolvere prima di rilasciare l'add-on.** Quel
 > nome sta scritto dentro il ponte (`QUADRO_DI_DIFETTO` in
 > `ponte/src/rapporto.js`), e una volta uscita una versione quella riga sta in
@@ -1019,22 +1027,22 @@ guardi.
 ### La tappa che non si fa: il quadro su Cloudflare
 
 Una stesura diceva **«la versione su Cloudflare, come `nuvola/`, con la stessa
-prova dal vivo contro tutte e due»**. E' tolta, e qui c'e' scritto perche' — se
-no fra sei mesi qualcuno la rimette guardando `nuvola/` e pensando «c'e' per il
-centralino, ci vorra' anche qui».
+prova dal vivo contro tutte e due»**. E' tolta, e qui c'e' scritto perche'.
+(Adesso nemmeno il centralino sta piu' su Cloudflare: `nuvola/` e' stata tolta
+a fine settembre 2026, quando le case erano tutte passate alla macchina.)
 
-**`nuvola/` esiste per un motivo che qui non vale.** Il suo README lo dice
+**`nuvola/` esisteva per un motivo che qui non vale.** Il suo README lo diceva
 netto: *«un centralino da tenere acceso e' un server da pagare, e chiedere
 cinque euro al mese per accendere una luce da fuori casa e' il modo piu' rapido
 di far chiudere l'app»*. Il centralino lo accende **chi abita la casa**: una
 persona qualunque, per cui cinque euro al mese e un dominio da comprare sono la
-differenza fra usare l'app e disinstallarla. Cloudflare regala il piano e
-l'indirizzo, e quella e' tutta la ragione del pezzo.
+differenza fra usare l'app e disinstallarla. Cloudflare regalava il piano e
+l'indirizzo, e quella era tutta la ragione del pezzo.
 
 Il quadro invece lo accende **l'installatore**: uno che monta gdahome in
 quaranta case, che quelle installazioni le fattura, e che un server e un dominio
 ce li ha gia'. Cinque euro al mese su quaranta impianti sono dodici centesimi a
-impianto all'anno. La barriera che `nuvola/` abbatte, qui non c'e'. E il vincolo
+impianto all'anno. La barriera che `nuvola/` abbatteva, qui non c'e'. E il vincolo
 vero del quadro — che a ospitarlo sia l'installatore, perche' le case che guarda
 sono clienti suoi — il suo server lo soddisfa gia'.
 
@@ -1055,7 +1063,7 @@ Resterebbe D1, e allora `case.js` smette di essere un oggetto JSON che si muta e
 diventa SQL.
 
 **Ma la ragione che basterebbe da sola e' un'altra.** Questo progetto la tassa
-delle copie la paga gia': `segnalazioni.js` sono cinquecentoquattro righe
+delle copie la pagava gia': `segnalazioni.js` erano cinquecentoquattro righe
 identiche fra `centralino/` e `nuvola/`, tenute allineate da una prova scritta
 apposta perche' — dice la prova — il rischio e' *«si corregge un difetto da una
 parte e dall'altra resta»*. Un quadro su Worker vorrebbe dire pagarla una terza

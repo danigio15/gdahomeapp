@@ -440,6 +440,11 @@ class _HomeState extends State<Home> {
      * direbbe le stesse cose a tre centimetri di distanza. */
     final sullaPlancia =
         _sezione == Sezione.plancia || _sezione == Sezione.configurazione;
+    /* La sezione che si vede davvero: la Configurazione e' una pagina della
+     * plancia, e si guarda dentro il suo riquadro. */
+    final mostrata = _sezione == Sezione.configurazione
+        ? Sezione.plancia
+        : _sezione;
     /* Anche il navigatore ha tutto lo schermo, come la plancia: la mappa ha i
      * suoi tasti, e il suo ☰ apre la barra come i tre trattini della
      * plancia. Una barra del titolo sopra vorrebbe dire due menu uno sotto
@@ -562,131 +567,144 @@ class _HomeState extends State<Home> {
                 child: IndexedStack(
                   /* La Configurazione mostra il riquadro: la sua pagina sta
                    * dentro la plancia, e la voce del menu la apre li'. */
-                  index: Sezione.values.indexOf(
-                    _sezione == Sezione.configurazione
-                        ? Sezione.plancia
-                        : _sezione,
-                  ),
+                  index: Sezione.values.indexOf(mostrata),
                   children: [
                     for (final sezione in Sezione.values)
-                      /* Le pagine dell'app si fermano dove si legge ancora e
+                      /* Le nascoste con gli orologi fermi. IndexedStack non
+                       * le disegna, ma le loro animazioni giravano lo stesso
+                       * — la rotellina della Console, quelle di Segnalazioni
+                       * e Assistenza — e ognuna chiedeva un fotogramma a ogni
+                       * giro dello schermo, sopra la plancia: con la
+                       * composizione ibrida, sul filo principale. Le pagine
+                       * leggono lo stesso segno per non chiedere al ponte
+                       * finche' nessuno le guarda. */
+                      TickerMode(
+                        enabled: sezione == mostrata,
+                        child:
+                            /* Le pagine dell'app si fermano dove si legge ancora e
                        * restano in mezzo: una riga lunga duemila punti l'occhio
                        * non la segue, e su un computer una configurazione larga
                        * tutta la finestra e' un modulo che si attraversa col
                        * collo. La plancia no: quella ha un disegno suo che si
                        * adatta, e le si da' tutto quello che c'e'. */
-                      QuantoCiSta(
-                        quanto: sezione == Sezione.plancia
-                            ? double.infinity
-                            : null,
-                        child: switch (sezione) {
-                          Sezione.plancia => PlanciaVera(
-                            key: _plancia,
-                            collegamento: collegamento,
-                            /* La plancia e' l'unica sezione che resta al
+                            QuantoCiSta(
+                              quanto: sezione == Sezione.plancia
+                                  ? double.infinity
+                                  : null,
+                              child: switch (sezione) {
+                                Sezione.plancia => PlanciaVera(
+                                  key: _plancia,
+                                  collegamento: collegamento,
+                                  /* La plancia e' l'unica sezione che resta al
                                lavoro anche da spenta: e' una pagina web, e
                                una pagina web non si accorge da sola che
                                nessuno la guarda. Glielo si dice. */
-                            visibile: sullaPlancia,
-                            fabbrica: widget.plancia,
-                            impostazioni: widget.impostazioni,
-                            vaiAlleCase: widget.vaiAlleCase,
-                            quandoCambiaPagina: _laPlanciaEAltrove,
-                            /* I tre trattini della plancia: sono la porta del
+                                  visibile: sullaPlancia,
+                                  fabbrica: widget.plancia,
+                                  impostazioni: widget.impostazioni,
+                                  vaiAlleCase: widget.vaiAlleCase,
+                                  quandoCambiaPagina: _laPlanciaEAltrove,
+                                  /* I tre trattini della plancia: sono la porta del
                              * menu, qui dove la barra del titolo non c'e'. */
-                            quandoChiedeIlMenu: () =>
-                                _barra.currentState?.apri(),
-                          ),
-                          Sezione.dispositivi => Dispositivi(
-                            collegamento: collegamento,
-                            visibile: _sezione == Sezione.dispositivi,
-                          ),
-                          /* gdanav: si accende la prima volta che ci si
+                                  quandoChiedeIlMenu: () =>
+                                      _barra.currentState?.apri(),
+                                ),
+                                Sezione.dispositivi => Dispositivi(
+                                  collegamento: collegamento,
+                                  visibile: _sezione == Sezione.dispositivi,
+                                ),
+                                /* gdanav: si accende la prima volta che ci si
                            * entra, e poi resta acceso come le altre. */
-                          Sezione.navigatore => IlNavigatore(
-                            visibile: _sezione == Sezione.navigatore,
-                            navigatore: _navigatore,
-                            menuOspite: () => _barra.currentState?.apri(),
-                            apriIlMenu: _menuDiGdanav,
-                            /* L'auto della plancia va a gdanav da qui. */
-                            collegamento: collegamento,
-                          ),
-                          /* La Configurazione qui non ha una schermata: la
+                                Sezione.navigatore => IlNavigatore(
+                                  visibile: _sezione == Sezione.navigatore,
+                                  navigatore: _navigatore,
+                                  menuOspite: () => _barra.currentState?.apri(),
+                                  apriIlMenu: _menuDiGdanav,
+                                  /* L'auto della plancia va a gdanav da qui. */
+                                  collegamento: collegamento,
+                                ),
+                                /* La Configurazione qui non ha una schermata: la
                            * voce apre la pagina della plancia, dentro il
                            * riquadro, e la fila mostra quello. Il posto resta
                            * perche' le sezioni e le voci del menu sono la
                            * stessa cosa. */
-                          Sezione.configurazione => const SizedBox.shrink(),
-                          /* Anche Premium: la voce apre la sua pagina sopra. */
-                          Sezione.premium => const SizedBox.shrink(),
-                          /* «Come va l'app»: la stessa schermata che apre
+                                Sezione.configurazione =>
+                                  const SizedBox.shrink(),
+                                /* Anche Premium: la voce apre la sua pagina sopra. */
+                                Sezione.premium => const SizedBox.shrink(),
+                                /* «Come va l'app»: la stessa schermata che apre
                            * l'Assistenza, senza la sua barra — qui la barra
                            * la mette la home. */
-                          Sezione.comeVaLApp => SchermataDellaDiagnostica(
-                            collegamento: collegamento,
-                            impostazioni: widget.impostazioni,
-                            nuda: true,
-                          ),
-                          /* Le impostazioni dell'app: oggi dentro c'e' la
+                                Sezione.comeVaLApp => SchermataDellaDiagnostica(
+                                  collegamento: collegamento,
+                                  impostazioni: widget.impostazioni,
+                                  nuda: true,
+                                ),
+                                /* Le impostazioni dell'app: oggi dentro c'e' la
                            * sicurezza — il lucchetto, il volto, l'impronta —
                            * che stava sotto un catenaccio in cima a «Le tue
                            * case» e non la trovava nessuno. Senza la sua
                            * barra: qui la mette la home. */
-                          Sezione.impostazioniDellApp =>
-                            SchermataDelleImpostazioniDellApp(
-                              impostazioni: widget.impostazioni,
-                              guardia: widget.guardia,
-                              nuda: true,
-                              visibile: _sezione == Sezione.impostazioniDellApp,
-                            ),
-                          /* Cosa c'e' da aggiornare in casa: l'unica
+                                Sezione.impostazioniDellApp =>
+                                  SchermataDelleImpostazioniDellApp(
+                                    impostazioni: widget.impostazioni,
+                                    guardia: widget.guardia,
+                                    nuda: true,
+                                    visibile:
+                                        _sezione == Sezione.impostazioniDellApp,
+                                  ),
+                                /* Cosa c'e' da aggiornare in casa: l'unica
                            * sezione che porta un numero addosso alla voce,
                            * ed e' lei a dirlo qui appena l'ha letto. */
-                          Sezione.aggiornamenti => SchermataDegliAggiornamenti(
-                            collegamento: collegamento,
-                            visibile: _sezione == Sezione.aggiornamenti,
-                            quandoContati: _contati,
-                          ),
-                          Sezione.segnalazioni => SchermataDelleSegnalazioni(
-                            collegamento: collegamento,
-                            diagnostica: _diagnostica,
-                          ),
-                          Sezione.assistenza => SchermataDellAssistenza(
-                            collegamento: collegamento,
-                            diagnostica: _diagnostica,
-                            impostazioni: widget.impostazioni,
-                          ),
-                          /* La coda di chi risponde: c'e' in una casa sola al
+                                Sezione.aggiornamenti =>
+                                  SchermataDegliAggiornamenti(
+                                    collegamento: collegamento,
+                                    visibile: _sezione == Sezione.aggiornamenti,
+                                    quandoContati: _contati,
+                                  ),
+                                Sezione.segnalazioni =>
+                                  SchermataDelleSegnalazioni(
+                                    collegamento: collegamento,
+                                    diagnostica: _diagnostica,
+                                  ),
+                                Sezione.assistenza => SchermataDellAssistenza(
+                                  collegamento: collegamento,
+                                  diagnostica: _diagnostica,
+                                  impostazioni: widget.impostazioni,
+                                ),
+                                /* La coda di chi risponde: c'e' in una casa sola al
                            * mondo, e in quella la voce del menu compare. */
-                          Sezione.console => SchermataDellaConsole(
-                            collegamento: collegamento,
-                          ),
-                          /* Gli impianti di chi installa: la voce c'e' solo
+                                Sezione.console => SchermataDellaConsole(
+                                  collegamento: collegamento,
+                                ),
+                                /* Gli impianti di chi installa: la voce c'e' solo
                            * dove le opzioni del ponte l'hanno accesa. */
-                          Sezione.cruscotto => SchermataDelCruscotto(
-                            dove: _cruscotto,
-                            chiave: _chiave,
-                            visibile: _sezione == Sezione.cruscotto,
-                          ),
-                          /* Chi tiene il quadro: la stessa schermata del
+                                Sezione.cruscotto => SchermataDelCruscotto(
+                                  dove: _cruscotto,
+                                  chiave: _chiave,
+                                  visibile: _sezione == Sezione.cruscotto,
+                                ),
+                                /* Chi tiene il quadro: la stessa schermata del
                            * cruscotto, con un altro indirizzo dentro. La
                            * pagina e' quella che esiste gia' sul quadro, e
                            * rifarla qui vorrebbe dire un secondo posto dove
                            * stanno le stesse regole. */
-                          Sezione.gestione => SchermataDelCruscotto(
-                            dove: _gestione,
-                            chiave: _chiaveGestione,
-                            visibile: _sezione == Sezione.gestione,
-                          ),
-                          /* Un dispositivo nuovo dal telefono: la voce
+                                Sezione.gestione => SchermataDelCruscotto(
+                                  dove: _gestione,
+                                  chiave: _chiaveGestione,
+                                  visibile: _sezione == Sezione.gestione,
+                                ),
+                                /* Un dispositivo nuovo dal telefono: la voce
                            * c'e' solo dove una rete Zigbee c'e' davvero. */
-                          Sezione.zigbee => SchermataZigbee(
-                            collegamento: collegamento,
-                            visibile: _sezione == Sezione.zigbee,
-                            quandoVaMessoNellaPlancia: _loMettiNellaPlancia,
-                          ),
-                          _ => _InArrivo(sezione),
-                        },
+                                Sezione.zigbee => SchermataZigbee(
+                                  collegamento: collegamento,
+                                  visibile: _sezione == Sezione.zigbee,
+                                  quandoVaMessoNellaPlancia:
+                                      _loMettiNellaPlancia,
+                                ),
+                                _ => _InArrivo(sezione),
+                              },
+                            ),
                       ),
                   ],
                 ),

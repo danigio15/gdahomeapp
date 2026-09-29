@@ -92,9 +92,8 @@ const Duration attesaDellaStretta = Duration(seconds: 15);
 ///
 /// La prima cosa che l'app chiede e' `get_states`: **tutta la casa in un
 /// messaggio solo**, che su una casa vera sono due o tre megabyte. Dal
-/// centralino non passa — le funzioni sulla nuvola hanno un tetto di un
-/// megabyte per messaggio, e non e' un'impostazione — quindi le buste grandi
-/// si spezzano.
+/// centralino non passa — non lascia passare piu' di un megabyte per
+/// messaggio — quindi le buste grandi si spezzano.
 ///
 /// Un pezzo comincia con `|`, l'ultimo no: chi riceve accumula finche' non
 /// arriva quello senza. Il segno sta **fuori** dalla busta, quindi chi sta in

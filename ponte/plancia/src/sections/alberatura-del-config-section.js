@@ -36,6 +36,7 @@
  * trova il suo posto senza che nessuno la registri da nessuna parte.
  */
 import { famigliaDellaScheda, famiglieConSchede, inOrdine } from "../core/alberatura-del-config.js";
+import { segnoDaValoreHtml, segnoHtml } from "../core/segni-del-catalogo.js";
 import { clean, doc, esc, installStyle, onEditorRedraw, root, t } from "./shared.js";
 
 const KEY = "__DASHBOARDMODERN_ALBERATURA__";
@@ -80,8 +81,11 @@ function insegna(dentro, voce) {
     nodo.dataset.famiglia = voce.chiave;
     nodo.setAttribute("aria-hidden", "true");
   }
-  const testo = `${voce.glifo} ${nomeDellaFamiglia(voce)}`;
-  if (nodo.textContent !== testo) nodo.textContent = testo;
+  const markup = `${segnoDaValoreHtml(voce.glifo)} ${esc(nomeDellaFamiglia(voce))}`;
+  if (nodo.dataset.dmScritto !== markup) {
+    nodo.innerHTML = markup;
+    nodo.dataset.dmScritto = markup;
+  }
   return nodo;
 }
 
@@ -248,7 +252,7 @@ function ensureFila() {
   const markup = gruppi
     .map(
       (voce) =>
-        `<button type="button" class="dm-alberatura-famiglia${voce.chiave === scelta ? " active" : ""}" aria-pressed="${voce.chiave === scelta ? "true" : "false"}" data-dm-famiglia="${esc(voce.chiave)}"><span aria-hidden="true">${esc(voce.glifo)}</span>${esc(nomeDellaFamiglia(voce))}</button>`,
+        `<button type="button" class="dm-alberatura-famiglia${voce.chiave === scelta ? " active" : ""}" aria-pressed="${voce.chiave === scelta ? "true" : "false"}" data-dm-famiglia="${esc(voce.chiave)}"><span aria-hidden="true">${segnoDaValoreHtml(voce.glifo)}</span>${esc(nomeDellaFamiglia(voce))}</button>`,
     )
     .join("");
   /* «Tutte» c'e' sempre, e quando non si sta filtrando e' lei quella scelta.
@@ -307,8 +311,10 @@ export function ensureTitoloDellaSezione() {
   /* Il guscio riscrive il corpo a ogni cambio di scheda: il titolo torna in
    * cima da se', invece di essere rimesso li' da chi si ricorda di farlo. */
   if (corpo.firstElementChild !== testa) corpo.prepend(testa);
-  const insegnaTesto = famiglia ? `${famiglia.glifo} ${nomeDellaFamiglia(famiglia)}` : "";
-  const markup = `${insegnaTesto ? `<span class="${TITOLO}-famiglia">${esc(insegnaTesto)}</span>` : ""}<span class="${TITOLO}-nome">${esc(nome)}</span>`;
+  const insegna = famiglia
+    ? `${segnoDaValoreHtml(famiglia.glifo)} ${esc(nomeDellaFamiglia(famiglia))}`
+    : "";
+  const markup = `${insegna ? `<span class="${TITOLO}-famiglia">${insegna}</span>` : ""}<span class="${TITOLO}-nome">${esc(nome)}</span>`;
   if (testa.innerHTML !== markup) testa.innerHTML = markup;
   return true;
 }

@@ -76,6 +76,7 @@ class Collegamento {
     Sonda? sonda,
     this.apriLaPresa,
     GestoreLicenza? licenza,
+    this.attesaPerLaRicevuta = const Duration(seconds: 20),
   }) : _sonda = sonda ?? const Sonda(),
        licenza = licenza ?? GestoreLicenza(),
        _licenzaMia = licenza == null {
@@ -84,6 +85,10 @@ class Collegamento {
 
   final ArchivioDelleCase archivio;
   final Sonda _sonda;
+
+  /// Quanto una ricevuta comprata fuori casa aspetta la strada del
+  /// centralino prima di restare al negozio (`mandaLaRicevuta`).
+  final Duration attesaPerLaRicevuta;
 
   /// gdahome Premium: quale casa lo e', e cosa si apre (`licenza/`).
   ///
@@ -190,10 +195,19 @@ class Collegamento {
   ///
   /// Chi lo chiama aspetta un po' prima (`main.dart`): un'app che si guarda
   /// per due secondi e torna non deve rifare la strada da capo.
+  ///
+  /// **Si chiude il filo, non la plancia.** Dove sta la plancia di questa casa
+  /// si sapeva prima e si sa anche adesso: la casa e' la stessa. Prima qui si
+  /// dimenticava, e chi disegna, non sapendo piu' dove fosse, al ritorno
+  /// buttava via la pagina e scriveva «Cerco la plancia…» — e la pagina si
+  /// rifaceva da capo, moduli compresi, a ogni ritorno dopo mezzo minuto in
+  /// tasca. Da fuori casa era la plancia intera che ripassava dal centralino.
+  /// Adesso la pagina resta dov'e', e il suo WebSocket si ricollega da se'
+  /// quando il filo torna, come fa gia' a ogni caduta.
   Future<void> riposa() async {
     if (!_avviato || _filo == null || _aRiposo) return;
     _aRiposo = true;
-    await _chiudiIlFilo();
+    await _chiudiIlFilo(tieniLaPlancia: true);
     _vai(ComeVa.inCammino);
   }
 
@@ -256,9 +270,18 @@ class Collegamento {
         _casa!.id == archivio.attiva?.id) {
       return;
     }
-    await _chiudiIlFilo();
+    await _chiudiIlFilo(tieniLaPlancia: true);
 
     final casa = archivio.attiva;
+    /* La plancia si dimentica solo cambiando casa.
+     *
+     * Rifare il filo della **stessa** casa — al risveglio, tirando giu' per
+     * aggiornare, dopo aver imparato la strada corta — non cambia dove sta la
+     * sua plancia: la si rilegge appena il filo e' su, e se e' la stessa la
+     * pagina non si tocca. Dimenticarla vorrebbe dire far buttare via a chi
+     * disegna una pagina che funziona, per riaprirla uguale un secondo dopo.
+     * Un'altra casa invece ha un'altra plancia, e quella di prima non e' sua. */
+    if (casa?.id != _casa?.id) _dimenticaLaPlancia();
     _casa = casa;
     _daDove = null;
     _perche = null;
@@ -438,21 +461,62 @@ class Collegamento {
   }
 
   /// Manda alla casa aperta la ricevuta di un acquisto.
+  ///
+  /// Se la casa adesso non c'e', la ricevuta resta al negozio e si riprova
+  /// quando torna (`GestoreDegliAcquisti.riprova`). E se non c'e' perche' si
+  /// e' fuori casa senza Premium — il caso di chi compra proprio per entrare
+  /// da fuori — le strade di fuori si aprono per portarla
+  /// ([GestoreLicenza.ricevutaDaPortare]): si bussa subito, e si aspetta la
+  /// casa per [attesaPerLaRicevuta], col bottone che gira. Chi ha appena
+  /// pagato vede «Fatto» qualche secondo dopo, e non un errore rosso che dice
+  /// che la casa non c'e' mentre la si sta andando a prendere.
   Future<void> mandaLaRicevuta({
     required String piattaforma,
     required String prodotto,
     required String ricevuta,
   }) async {
+    if (!_pronta) {
+      licenza.ricevutaDaPortare = true;
+      if (_fuoriSenzaPremium) {
+        unawaited(apri(forza: true));
+        await _aspettaLaCasa(attesaPerLaRicevuta);
+      }
+    }
     final (filo, casa) = _perLaLicenza();
-    await licenza.mandaLaRicevuta(
-      piattaforma: piattaforma,
-      prodotto: prodotto,
-      ricevuta: ricevuta,
-      filo: filo,
-      casa: casa,
-      archivio: archivio,
-    );
+    try {
+      await licenza.mandaLaRicevuta(
+        piattaforma: piattaforma,
+        prodotto: prodotto,
+        ricevuta: ricevuta,
+        filo: filo,
+        casa: casa,
+        archivio: archivio,
+      );
+    } on LicenzaRifiutata catch (no) {
+      /* Un no di chi decide chiude la faccenda: non c'e' piu' niente da
+       * portare. Un no della strada invece la lascia aperta. */
+      if (no.definitiva) licenza.ricevutaDaPortare = false;
+      rethrow;
+    }
+    licenza.ricevutaDaPortare = false;
     await _dopoLaLicenza(filo, casa);
+  }
+
+  /* Se c'e' una casa aperta a cui dire qualcosa adesso. */
+  bool get _pronta => _filo != null && _filo!.dentro && _casa != null;
+
+  /* Aspetta che la casa sia aperta, al massimo [quanto]: `true` se c'e'. */
+  Future<bool> _aspettaLaCasa(Duration quanto) async {
+    if (_pronta) return true;
+    final arrivata = Completer<bool>();
+    final ascolto = cambiamenti.listen((_) {
+      if (_pronta && !arrivata.isCompleted) arrivata.complete(true);
+    });
+    try {
+      return await arrivata.future.timeout(quanto, onTimeout: () => _pronta);
+    } finally {
+      await ascolto.cancel();
+    }
   }
 
   (Filo, CasaConosciuta) _perLaLicenza() {
@@ -545,7 +609,26 @@ class Collegamento {
      * Non si scrive niente — l'indirizzo che c'e' puo' essere ancora buono
      * per quando si torna. */
     if (quale == null) return;
-    if (quale.toString() == casa.inCasa?.toString()) return;
+    if (quale.toString() == casa.inCasa?.toString()) {
+      /* L'indirizzo e' quello che si sapeva, e risponde: si e' in casa, e il
+       * centralino ha vinto la corsa lo stesso. Succede quando l'ultima volta
+       * si era entrati da li': allora parte senza ritardo (`sonda.dart`), e
+       * una rete di casa appena ritrovata — il telefono che si riaggancia al
+       * Wi-Fi — puo' rispondere un soffio dopo di lui. Prima qui si tornava e
+       * basta, e si restava sul giro lungo fino al filo dopo, che ripartiva
+       * di nuovo senza ritardo: in casa, per sempre dal centralino.
+       *
+       * Si segna che la strada che funziona e' quella di casa — cosi' al giro
+       * dopo il centralino riparte col suo ritardo — e si riparte da li'. */
+      if (_daDove != DaDove.dalCentralino ||
+          _filo != filo ||
+          _casa?.id != casa.id) {
+        return;
+      }
+      await archivio.segnaLApprodo(casa.id, DaDove.daDentro);
+      await apri(forza: true);
+      return;
+    }
 
     await archivio.cambiaGliIndirizzi(casa.id, inCasa: quale);
     /* E si riparte da li'. La casa e' la stessa e il filo si riapre subito:
@@ -600,19 +683,34 @@ class Collegamento {
     /* Senza Premium si apre solo la principale: quella ricordata resta
      * scritta, e torna appena la casa lo diventa. */
     final voluto = profilo ?? (licenza.premium ? _casa?.plancia : null) ?? '';
+    PannelloDellaPlancia? trovato;
+    var nessunaPerMe = false;
     try {
-      _pannello = await trovaLaPlancia(filo, profilo: voluto);
-      _nessunaPerMe = false;
+      trovato = await trovaLaPlancia(filo, profilo: voluto);
     } on NessunaPlanciaPerTe {
       /* Le plance ci sono, ma non per questa utenza. Non si cerca altrove e
        * non si apre niente: la schermata lo scrive. */
-      _pannello = null;
-      _nessunaPerMe = true;
+      nessunaPerMe = true;
+    } on FiloCaduto {
+      /* Il filo e' caduto mentre si chiedeva: la casa non ha detto niente, e
+       * «niente» non vuol dire «la plancia non c'e'». Se si sapeva gia' dove
+       * stava, si tiene quello, e la pagina resta: si richiede quando il filo
+       * torna su. Se non si sapeva, si dice quello che si e' sempre detto. */
+      if (_pannelloLetto) return;
     } on ErroreDelPonte {
-      _pannello = null;
-      _nessunaPerMe = false;
+      /* Un altro no: si segna che si e' chiesto, e la schermata dice quello
+       * che sa. */
     }
+    /* Una risposta arrivata su un filo che non c'e' piu' non vale.
+     *
+     * Prima si scriveva lo stesso, e bastava: la plancia si dimenticava a ogni
+     * filo chiuso, e quello che restava scritto non lo guardava nessuno.
+     * Adesso fra un filo e l'altro della stessa casa la plancia resta — e una
+     * risposta vecchia, magari un «il filo e' caduto» di quello chiuso andando
+     * a riposo, cancellerebbe una plancia buona. */
     if (_filo != filo) return;
+    _pannello = trovato;
+    _nessunaPerMe = nessunaPerMe;
     _pannelloLetto = true;
     _avvisa();
   }
@@ -707,19 +805,25 @@ class Collegamento {
     _avvisa();
   }
 
-  Future<void> _chiudiIlFilo() async {
+  /// Chiude il filo. Con [tieniLaPlancia] si tiene quello che si sapeva della
+  /// plancia di questa casa: vedi [riposa] e [apri].
+  Future<void> _chiudiIlFilo({bool tieniLaPlancia = false}) async {
     await _guardaIlFilo?.cancel();
     await _guardaLaCasa?.cancel();
     _guardaIlFilo = null;
     _guardaLaCasa = null;
     await _stato?.stacca();
     _stato = null;
-    _pannello = null;
-    _pannelloLetto = false;
-    _nessunaPerMe = false;
+    if (!tieniLaPlancia) _dimenticaLaPlancia();
     await _filo?.chiudi();
     _filo = null;
     _daDove = null;
+  }
+
+  void _dimenticaLaPlancia() {
+    _pannello = null;
+    _pannelloLetto = false;
+    _nessunaPerMe = false;
   }
 
   Future<void> chiudi() async {

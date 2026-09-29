@@ -1,5 +1,5 @@
-Il navigatore conosce tutte le colonnine d'Italia: sulla mappa si vede quali sono libere, occupate o guaste, e il percorso sceglie le soste libere. Nella scheda della colonnina ci sono i prezzi, come li comunica il gestore. Agli svincoli tornano le corsie.
+Il navigatore conosce le ZTL, ti chiede se hai il permesso e ti propone le strade a risparmio. Su Android Auto e CarPlay c'è il traffico, con le corsie agli svincoli. L'app è più veloce, soprattutto fuori casa.
 
-Nella plancia: le sezioni Acqua e gas, Piante e Acquario, il telecomando della TV, le azioni rapide in gruppi.
+Nella plancia: la stanza diventa una tavola di comandi, le batterie di accumulo in Energia, la friggitrice negli Elettrodomestici, l'esclusione di un varco dall'antifurto.
 
 Aggiorna anche gdahome in Home Assistant: le sezioni nuove arrivano da lì.

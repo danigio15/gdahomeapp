@@ -31,6 +31,7 @@ import {
   t,
   writeJsonIfChanged,
 } from "./shared.js";
+import { segnoHtml } from "../core/segni-del-catalogo.js";
 
 // Single visual owner for the Pool and Irrigation pages.
 //
@@ -134,7 +135,7 @@ export function soilMoisture(config = {}) {
 /* ─────────────────────────── shared markup bits ─────────────────────────── */
 
 function emptyState(icon, title, hint) {
-  return `<div class="dm-scene-empty"><span class="dm-scene-empty-icon" aria-hidden="true">${icon}</span>
+  return `<div class="dm-scene-empty"><span class="dm-scene-empty-icon" aria-hidden="true">${segnoHtml(icon)}</span>
     <strong>${esc(title)}</strong><span>${esc(hint)}</span></div>`;
 }
 
@@ -307,7 +308,7 @@ function syncGauge(gauge, reading, min, max, unit = "") {
 
 function poolTile(act, glyph, label) {
   return `<button type="button" class="dm-pool-tile" data-act="${esc(act)}" data-dm-pool-tile="${esc(act)}" aria-pressed="false">
-    <span class="dm-pool-tile-icon" aria-hidden="true">${glyph}</span>
+    <span class="dm-pool-tile-icon" aria-hidden="true">${segnoHtml(glyph)}</span>
     <span class="dm-pool-tile-label">${esc(label)}</span>
     <span class="dm-pool-tile-state" data-dm-tile-state>${esc(t("spenta", "off"))}</span>
   </button>`;
@@ -353,9 +354,9 @@ function poolSceneMarkup(config) {
 
 function poolMarkup(config) {
   const tiles = [
-    config.pumpEnt ? poolTile("pump", "🌀", t("Pompa", "Pump")) : "",
-    config.heatEnt ? poolTile("heat", "🔥", t("Riscaldamento", "Heating")) : "",
-    config.lightEnt ? poolTile("light", "💡", t("Luce", "Light")) : "",
+    config.pumpEnt ? poolTile("pump", "fan", t("Pompa", "Pump")) : "",
+    config.heatEnt ? poolTile("heat", "radiator", t("Riscaldamento", "Heating")) : "",
+    config.lightEnt ? poolTile("light", "lights", t("Luce", "Light")) : "",
   ]
     .filter(Boolean)
     .join("");
@@ -377,7 +378,7 @@ function poolMarkup(config) {
   const filtration = config.pumpEnt
     ? `<article class="dm-pool-card dm-pool-filtration" data-dm-pool-filtration>
         <div class="dm-pool-card-head">
-          <span class="dm-pool-card-title"><i aria-hidden="true">🌀</i>${esc(t("Filtrazione", "Filtration"))}</span>
+          <span class="dm-pool-card-title">${segnoHtml("fan")}${esc(t("Filtrazione", "Filtration"))}</span>
           <span class="dm-pool-badge" data-dm-filter-badge>—</span>
         </div>
         <div class="dm-pool-filtration-body">
@@ -387,8 +388,8 @@ function poolMarkup(config) {
           <div class="dm-pool-filtration-copy">
             <p class="dm-pool-note" data-dm-filter-note></p>
             <div class="dm-pool-actions">
-              <button type="button" class="dm-btn dm-primary" data-act="fstart">▶ ${esc(t("Avvia filtrazione", "Start filtration"))}</button>
-              <button type="button" class="dm-btn dm-ghost" data-act="fstop">⏹ ${esc(t("Stop", "Stop"))}</button>
+              <button type="button" class="dm-btn dm-primary" data-act="fstart">${segnoHtml("play")} ${esc(t("Avvia filtrazione", "Start filtration"))}</button>
+              <button type="button" class="dm-btn dm-ghost" data-act="fstop">${segnoHtml("stop")} ${esc(t("Stop", "Stop"))}</button>
             </div>
           </div>
         </div>
@@ -398,7 +399,7 @@ function poolMarkup(config) {
   const qualityCard = quality
     ? `<article class="dm-pool-card dm-pool-quality">
         <div class="dm-pool-card-head">
-          <span class="dm-pool-card-title"><i aria-hidden="true">🧪</i>${esc(t("Qualità acqua", "Water quality"))}</span>
+          <span class="dm-pool-card-title">${segnoHtml("gauge")}${esc(t("Qualità acqua", "Water quality"))}</span>
         </div>
         <div class="dm-pool-gauges" data-dm-pool-gauges>${quality}</div>
       </article>`
@@ -514,7 +515,7 @@ function poolBlockMarkup(pool, mostrareIlNome) {
    * il nome lo dice gia' la scheda accesa, e ripeterlo sotto sarebbe due volte
    * la stessa parola in mezzo centimetro. */
   const testa = mostrareIlNome
-    ? `<header class="dm-pool-name"><span class="dm-pool-name-icon" aria-hidden="true">🏊</span><strong>${esc(poolName(pool))}</strong></header>`
+    ? `<header class="dm-pool-name"><span class="dm-pool-name-icon" aria-hidden="true">${segnoHtml("room-pool")}</span><strong>${esc(poolName(pool))}</strong></header>`
     : "";
   return `<article class="dm-pool-block" data-dm-pool="${esc(pool.id)}" data-dm-pool-index="${pool.index}">
     ${testa}
@@ -532,7 +533,7 @@ function poolTabsMarkup(pools, scelta) {
   return `<nav class="sub-tabs-energy dm-pool-tabs" role="tablist" aria-label="${esc(t("Piscine", "Pools"))}">${pools
     .map(
       (pool) =>
-        `<button type="button" class="sub-tab-btn dm-pool-tab${pool.index === scelta ? " active" : ""}" role="tab" aria-selected="${pool.index === scelta}" data-dm-pool-tab="${pool.index}">🏊 ${esc(poolName(pool))}</button>`,
+        `<button type="button" class="sub-tab-btn dm-pool-tab${pool.index === scelta ? " active" : ""}" role="tab" aria-selected="${pool.index === scelta}" data-dm-pool-tab="${pool.index}">${segnoHtml("room-pool")} ${esc(poolName(pool))}</button>`,
     )
     .join("")}</nav>`;
 }
@@ -571,7 +572,7 @@ function renderPool() {
     if (state.poolSignature !== "empty" || !wrap.querySelector(".dm-scene-empty")) {
       state.poolSignature = "empty";
       wrap.innerHTML = emptyState(
-        "🏊",
+        "room-pool",
         t("Nessuna piscina configurata", "No pool configured"),
         t(
           "Aggiungi le entità della piscina dall'editor per vedere la vasca.",
@@ -683,7 +684,7 @@ function soilGaugeMarkup(config) {
   if (soil.reading == null) return "";
   return `<div class="dm-irr-soil" data-dm-irr-soil>${qualityGauge(
     "soil",
-    `🌱 ${t("Umidità terreno", "Soil moisture")}`,
+    t("Umidità terreno", "Soil moisture"),
     "%",
     soil.reading,
     num(config.soilMin),
@@ -694,16 +695,16 @@ function soilGaugeMarkup(config) {
 function programMarkup(config) {
   return `<article class="dm-irr-program" data-dm-irr-program>
     <div class="dm-irr-program-head">
-      <span class="dm-irr-program-title"><i aria-hidden="true">💧</i>${esc(t("Programma irrigazione", "Irrigation schedule"))}</span>
+      <span class="dm-irr-program-title">${segnoHtml("water")}${esc(t("Programma irrigazione", "Irrigation schedule"))}</span>
       <span class="dm-irr-chip" data-dm-irr-schedule>—</span>
     </div>
     <div class="dm-irr-meta" data-dm-irr-meta></div>
     ${soilGaugeMarkup(config)}
     <div class="dm-irr-skip" data-dm-irr-skip hidden></div>
     <div class="dm-irr-actions">
-      <button type="button" class="dm-btn dm-primary" data-act="pstart">▶ ${esc(t("Avvia programma", "Start schedule"))}</button>
-      <button type="button" class="dm-btn dm-warn" data-act="pforce">⚡ ${esc(t("Forza (ignora pioggia)", "Force (ignore rain)"))}</button>
-      <button type="button" class="dm-btn dm-ghost" data-act="stop">⏹ ${esc(t("Stop", "Stop"))}</button>
+      <button type="button" class="dm-btn dm-primary" data-act="pstart">${segnoHtml("play")} ${esc(t("Avvia programma", "Start schedule"))}</button>
+      <button type="button" class="dm-btn dm-warn" data-act="pforce">${segnoHtml("power")} ${esc(t("Forza (ignora pioggia)", "Force (ignore rain)"))}</button>
+      <button type="button" class="dm-btn dm-ghost" data-act="stop">${segnoHtml("stop")} ${esc(t("Stop", "Stop"))}</button>
     </div>
   </article>`;
 }
@@ -711,14 +712,14 @@ function programMarkup(config) {
 function zoneCardMarkup(zone, index) {
   return `<article class="dm-irr-card" data-dm-irr-card="${index}" data-state="off">
     <div class="dm-irr-card-head">
-      <span class="dm-irr-card-name"><i aria-hidden="true">🌿</i>${esc(zoneName(zone))}</span>
+      <span class="dm-irr-card-name">${segnoHtml("plant")}${esc(zoneName(zone))}</span>
       <span class="dm-irr-card-chip" data-dm-card-chip>${zoneMinutes(zone)} min</span>
     </div>
-    ${clean(zone.room) ? `<span class="dm-irr-card-room">🏠 ${esc(zone.room)}</span>` : ""}
+    ${clean(zone.room) ? `<span class="dm-irr-card-room">${segnoHtml("home")} ${esc(zone.room)}</span>` : ""}
     <div class="dm-irr-card-bar"><b data-dm-card-bar style="width:0%"></b></div>
     <div class="dm-irr-card-actions">
-      <button type="button" class="dm-btn dm-primary dm-compact" data-act="zstart" data-idx="${index}">▶ ${esc(t("Avvia", "Start"))}</button>
-      <button type="button" class="dm-btn dm-ghost dm-compact" data-act="stop">⏹</button>
+      <button type="button" class="dm-btn dm-primary dm-compact" data-act="zstart" data-idx="${index}">${segnoHtml("play")} ${esc(t("Avvia", "Start"))}</button>
+      <button type="button" class="dm-btn dm-ghost dm-compact" data-act="stop">${segnoHtml("stop")}</button>
     </div>
   </article>`;
 }
@@ -768,9 +769,10 @@ function syncIrrigationValues(host, grid, config) {
     // Tutti i momenti della giornata, non solo il primo: da quando gli orari
     // sono piu' d'uno la pastiglia che ne nomina uno solo e' una bugia.
     const orari = elencoDegliOrari(orariDelProgramma(config));
-    schedule.textContent = config.enabled
-      ? `⏰ ${t("ogni giorno alle", "every day at")} ${orari.join(" · ") || ORARIO_PREDEFINITO}`
-      : t("programma spento", "schedule off");
+    const quando = config.enabled
+      ? `${segnoHtml("timer")} ${esc(`${t("ogni giorno alle", "every day at")} ${orari.join(" · ") || ORARIO_PREDEFINITO}`)}`
+      : esc(t("programma spento", "schedule off"));
+    if (schedule.innerHTML !== quando) schedule.innerHTML = quando;
     schedule.dataset.on = String(Boolean(config.enabled));
   }
 
@@ -784,12 +786,12 @@ function syncIrrigationValues(host, grid, config) {
     if (weather) {
       const temperature = num(weather.attributes?.temperature);
       chips.push(
-        `<span class="dm-irr-meta-chip">⛅ ${esc(weather.state)}${temperature == null ? "" : ` · ${temperature}°`}</span>`,
+        `<span class="dm-irr-meta-chip">${segnoHtml("sun")} ${esc(weather.state)}${temperature == null ? "" : ` · ${temperature}°`}</span>`,
       );
     }
     if (rain != null) {
       chips.push(
-        `<span class="dm-irr-meta-chip" data-alert="${String(rain >= threshold)}">🌧️ ${t("pioggia", "rain")} ${Math.round(rain)}% · ${t("soglia", "threshold")} ${threshold}%</span>`,
+        `<span class="dm-irr-meta-chip" data-alert="${String(rain >= threshold)}">${segnoHtml("storm")} ${t("pioggia", "rain")} ${Math.round(rain)}% · ${t("soglia", "threshold")} ${threshold}%</span>`,
       );
     }
     /* Quanta ne e' caduta davvero (#478).
@@ -813,7 +815,7 @@ function syncIrrigationValues(host, grid, config) {
             ? t("terreno bagnato", "ground already wet")
             : t("asciutto", "dry");
       chips.push(
-        `<span class="dm-irr-meta-chip" data-dm-irr-caduta data-alert="${String(siPuoSaltare(pioggia))}">☔ ${esc(parola)}${esc(quanta)}</span>`,
+        `<span class="dm-irr-meta-chip" data-dm-irr-caduta data-alert="${String(siPuoSaltare(pioggia))}">${segnoHtml("storm")} ${esc(parola)}${esc(quanta)}</span>`,
       );
     }
     const markup = chips.join("");
@@ -855,7 +857,10 @@ function syncIrrigationValues(host, grid, config) {
     const sequencing = index === sequenced && left > 0;
     node.dataset.state = running[index] ? "on" : "off";
     const chip = node.querySelector("[data-dm-card-chip]");
-    if (chip) chip.textContent = sequencing ? `💦 ${label}` : `${durataInCorso(zone)} min`;
+    const scritta = sequencing
+      ? `${segnoHtml("water")} ${esc(label)}`
+      : esc(`${durataInCorso(zone)} min`);
+    if (chip && chip.innerHTML !== scritta) chip.innerHTML = scritta;
     const bar = node.querySelector("[data-dm-card-bar]");
     if (bar) {
       const total = durataInCorso(zone) * 60000;
@@ -890,7 +895,7 @@ function renderIrrigation() {
       head.innerHTML =
         (soloTerreno ? soilGaugeMarkup(config) : "") +
         emptyState(
-          "🌱",
+          "plant",
           t("Nessuna zona configurata", "No zone configured"),
           soloTerreno
             ? t(
@@ -1526,7 +1531,7 @@ function casellaSoil() {
   const holder = doc.createElement("div");
   holder.dataset.dmIrrSoilFields = "true";
   holder.innerHTML = `<label class="ed-slot dm-irr-soil-slot"><span class="ed-slot-lbl">${t("Sensore umidità terreno", "Soil moisture sensor")}</span>
-      <span class="ed-form-row"><input id="ed-irr-soil" class="ed-input mono" autocomplete="off" data-entity-input="true" placeholder="sensor.umidita_terreno"><button type="button" class="dm-entity-picker" data-entity-target="ed-irr-soil" aria-label="${t("Seleziona entità", "Select entity")}">🔍</button></span>
+      <span class="ed-form-row"><input id="ed-irr-soil" class="ed-input mono" autocomplete="off" data-entity-input="true" placeholder="sensor.umidita_terreno"><button type="button" class="dm-entity-picker" data-entity-target="ed-irr-soil" aria-label="${t("Seleziona entità", "Select entity")}">${segnoHtml("search")}</button></span>
       <small>${t("La % di umidità del terreno compare nella card del programma.", "The soil moisture % appears on the schedule card.")}</small></label>
     <div class="dm-irr-soil-band">
       <label class="ed-slot"><span class="ed-slot-lbl">${t("Umidità ideale min (%)", "Ideal moisture min (%)")}</span><input id="ed-irr-soil-min" class="ed-input" type="number" min="0" max="100" step="1" placeholder="30"></label>
@@ -1827,7 +1832,7 @@ function installProgramGate() {
               ? t("sta piovendo", "raining now")
               : t("ha gia' piovuto abbastanza", "enough rain already");
           if (root.CD_IRR)
-            root.CD_IRR.skip = `☔ ${parola} — ${t("programma saltato", "program skipped")}`;
+            root.CD_IRR.skip = `${parola} — ${t("programma saltato", "program skipped")}`;
           try {
             root.renderIrrigazione?.();
           } catch (_error) {}
@@ -1839,7 +1844,7 @@ function installProgramGate() {
         const soil = soilMoisture(config);
         if (soglia != null && soil.reading != null && soil.reading >= soglia) {
           if (root.CD_IRR)
-            root.CD_IRR.skip = `🌱 ${t("Terreno al", "Soil at")} ${Math.round(soil.reading)}% — ${t("programma saltato", "program skipped")}`;
+            root.CD_IRR.skip = `${t("Terreno al", "Soil at")} ${Math.round(soil.reading)}% — ${t("programma saltato", "program skipped")}`;
           try {
             root.renderIrrigazione?.();
           } catch (_error) {}
@@ -1878,7 +1883,7 @@ function valutaTerreno() {
     if ((root.CD_IRR?.cur ?? -1) >= 0) {
       root.localStorage?.setItem?.(SOIL_RUN_KEY, oggi);
       root.edToast?.(
-        `🌱 ${t("Terreno al", "Soil at")} ${Math.round(soil.reading)}% — ${t("irrigazione avviata", "watering started")}`,
+        `${t("Terreno al", "Soil at")} ${Math.round(soil.reading)}% — ${t("irrigazione avviata", "watering started")}`,
       );
     }
   } catch (_error) {}
@@ -2024,7 +2029,7 @@ function guardaLOrologio() {
       if (root.CD_IRR)
         // L'ora davanti e il resto com'e' sempre stato: la frase non si
         // spezza in tre pezzi da rimettere in fila lingua per lingua.
-        root.CD_IRR.skip = `🌱 ${scelta.orario.ora} · ${t("Terreno al", "Soil at")} ${Math.round(scelta.lettura)}% — ${t("programma saltato", "program skipped")}`;
+        root.CD_IRR.skip = `${scelta.orario.ora} · ${t("Terreno al", "Soil at")} ${Math.round(scelta.lettura)}% — ${t("programma saltato", "program skipped")}`;
       try {
         root.renderIrrigazione?.();
       } catch (_error) {}

@@ -222,23 +222,134 @@ void main() {
     expect(fonte.ultima?.batteria, 80);
     expect(fonte.ultima?.autonomiaKm, 300);
 
-    final id =
-        ponte.arrivati.lastWhere(
-              (uno) => uno['type'] == 'subscribe_events',
-            )['id']
-            as int;
-    ponte.cambia(
-      id,
-      'sensor.zoe_batteria',
-      PonteFinto.unaEntita(
-        'sensor.zoe_batteria',
-        '79',
-        unita: '%',
-        aggiornataIl: '2026-09-07T07:05:00.000000+00:00',
-      ),
+    /* Solo i sensori dell'auto: niente get_states, niente eventi di tutta la
+     * casa. Da fuori casa erano un megabyte e mezzo a ogni collegamento, e
+     * ogni cambiamento di ogni entita' dopo. */
+    final abbonamento = ponte.arrivati.lastWhere(
+      (uno) => uno['type'] == 'subscribe_entities',
     );
+    expect(abbonamento['entity_ids'], [
+      'device_tracker.zoe',
+      'sensor.zoe_autonomia',
+      'sensor.zoe_batteria',
+      'sensor.zoe_ricarica',
+    ]);
+    expect(ponte.arrivati.where((uno) => uno['type'] == 'get_states'), isEmpty);
+    expect(
+      ponte.arrivati.where((uno) => uno['type'] == 'subscribe_events'),
+      isEmpty,
+    );
+
+    ponte.evento(abbonamento['id'] as int, {
+      'c': {
+        'sensor.zoe_batteria': {
+          '+': {'s': '79', 'lc': 1788764700.0},
+        },
+      },
+    });
     await finche(() => fonte.ultima?.batteria == 79);
     expect(fonte.ultima?.batteria, 79);
+    expect(fonte.ultima?.autonomiaKm, 300);
     expect(fonte.ultima?.sorgente, TipoSorgente.gdahome);
+    expect(
+      fonte.ultima?.letto,
+      DateTime.fromMillisecondsSinceEpoch(1788764700000, isUtc: true),
+    );
+  });
+
+  test('senza un\'auto elettrica non ci si abbona a niente', () async {
+    final ponte = await PonteFinto.alza();
+    ponte.configurazione = {
+      'profile': 'primary',
+      'snapshot': {'values': <String, dynamic>{}},
+    };
+    ponte.entita = [PonteFinto.unaEntita('sensor.qualunque', '1')];
+    final archivio = ArchivioDelleCase(CassaforteInMemoria());
+    await archivio.aggiungi(
+      nome: 'Casa',
+      segno: segnoBuono,
+      identificativo: chiBuono,
+      chiave: chiaveBuona,
+      inCasa: ponte.indirizzo,
+    );
+    final collegamento = Collegamento(
+      archivio: archivio,
+      sonda: Sonda(bussa: (dove) async => dove == ponte.indirizzo.salute),
+    );
+    final fonte = SorgenteGdahome();
+    final filo = IlFiloDellaVettura(collegamento, fonte);
+    addTearDown(() async {
+      filo.ferma();
+      await collegamento.chiudi();
+      await ponte.spegni();
+    });
+
+    filo.avvia();
+    await collegamento.apri();
+    for (
+      var i = 0;
+      i < 100 &&
+          !ponte.arrivati.any(
+            (uno) => uno['type'] == 'dashboardmodern/config/get',
+          );
+      i += 1
+    ) {
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+    }
+    await Future<void>.delayed(const Duration(milliseconds: 200));
+    final chiesti = ponte.arrivati.map((uno) => uno['type']).toSet();
+    expect(chiesti, contains('dashboardmodern/config/get'));
+    expect(chiesti, isNot(contains('subscribe_entities')));
+    expect(chiesti, isNot(contains('get_states')));
+    expect(chiesti, isNot(contains('subscribe_events')));
+    expect(fonte.ultima, isNull);
+  });
+
+  group('la forma stretta di subscribe_entities', () {
+    test('lo stato intero: s, a, lc, e lu solo quando serve', () {
+      final e = Entita.daStretta('sensor.zoe_batteria', {
+        's': '80',
+        'a': {'unit_of_measurement': '%'},
+        'lc': 1788764400.5,
+      })!;
+      expect(e.stato, '80');
+      expect(e.unita, '%');
+      expect(
+        e.cambiataIl,
+        DateTime.fromMicrosecondsSinceEpoch(1788764400500000, isUtc: true),
+      );
+      expect(e.aggiornataIl, e.cambiataIl);
+      expect(Entita.daStretta('x', {'a': {}}), isNull);
+    });
+
+    test('un cambiamento: valore, attributi nuovi e tolti, e le ore', () {
+      final prima = Entita.daStretta('device_tracker.zoe', {
+        's': 'home',
+        'a': {'latitude': 40.8, 'longitude': 14.2, 'gps_accuracy': 5},
+        'lc': 1788764400.0,
+      })!;
+      final dopo = prima.conIlCambio({
+        '+': {
+          's': 'not_home',
+          'a': {'latitude': 40.9},
+          'lc': 1788764500.0,
+        },
+        '-': {
+          'a': ['gps_accuracy'],
+        },
+      });
+      expect(dopo.stato, 'not_home');
+      expect(dopo.attributi, {'latitude': 40.9, 'longitude': 14.2});
+      expect(dopo.cambiataIl, DateTime.utc(2026, 9, 7, 7, 1, 40));
+      expect(dopo.aggiornataIl, dopo.cambiataIl);
+
+      /* Stesso valore riscritto: si sposta solo l'ora della scrittura. */
+      final riscritta = dopo.conIlCambio({
+        '+': {'lu': 1788764600.0},
+      });
+      expect(riscritta.stato, 'not_home');
+      expect(riscritta.cambiataIl, dopo.cambiataIl);
+      expect(riscritta.aggiornataIl, DateTime.utc(2026, 9, 7, 7, 3, 20));
+    });
   });
 }

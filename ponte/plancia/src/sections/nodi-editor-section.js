@@ -13,6 +13,7 @@
  * Glances aggiunge i gradi, un ping dà solo il su e giù. Una casella vuota è
  * una barra che non compare, non un errore.
  */
+import { segnoHtml } from "../core/segni-del-catalogo.js";
 import {
   CAMPI_DEL_NODO,
   CHIAVE_NODI,
@@ -78,7 +79,7 @@ function campoMarkup(indice, campo, valore) {
   const [etichetta, esempio] = ETICHETTE()[campo];
   const id = `dm-nodo-${indice}-${campo}`;
   return `<label class="ed-slot dm-nodo-ed-campo"><span class="ed-slot-lbl">${esc(etichetta)}</span>
-    <span class="ed-form-row"><input id="${esc(id)}" class="ed-input mono" data-dm-nodo-campo="${esc(campo)}" value="${esc(valore)}" placeholder="${esc(esempio)}" autocomplete="off" spellcheck="false"><button type="button" class="dm-entity-picker" data-dm-nodo-pick="${esc(id)}" aria-label="${esc(t("Scegli entità", "Choose entity"))}">🔍</button></span></label>`;
+    <span class="ed-form-row"><input id="${esc(id)}" class="ed-input mono" data-dm-nodo-campo="${esc(campo)}" value="${esc(valore)}" placeholder="${esc(esempio)}" autocomplete="off" spellcheck="false"><button type="button" class="dm-entity-picker" data-dm-nodo-pick="${esc(id)}" aria-label="${esc(t("Scegli entità", "Choose entity"))}">${segnoHtml("search")}</button></span></label>`;
 }
 
 function rigaMarkup(nodo, indice) {
@@ -86,26 +87,26 @@ function rigaMarkup(nodo, indice) {
   const quante = CAMPI_DEL_NODO.filter((campo) => clean(nodo?.[campo])).length;
   return `<article class="ed-row dm-nodo-ed-riga" data-dm-nodo-indice="${indice}" data-open="${aperto}">
     <div class="dm-nodo-ed-head">
-      <span class="dm-nodo-ed-ic" aria-hidden="true">🖥️</span>
+      <span class="dm-nodo-ed-ic" aria-hidden="true">${segnoHtml("computer")}</span>
       <span class="ed-row-main">
         <strong class="ed-row-new">${esc(clean(nodo?.nome) || t("Nodo nuovo", "New node"))}</strong>
         <small class="ed-row-old mono">${esc(clean(nodo?.stato) || `${quante}/${CAMPI_DEL_NODO.length}`)}</small>
       </span>
-      <button type="button" class="ed-del" data-dm-nodo-apri aria-label="${esc(t("Modifica", "Edit"))}">✏️</button>
-      <button type="button" class="ed-del" data-dm-nodo-togli aria-label="${esc(t("Elimina", "Remove"))}">🗑️</button>
+      <button type="button" class="ed-del" data-dm-nodo-apri aria-label="${esc(t("Modifica", "Edit"))}">${segnoHtml("pencil")}</button>
+      <button type="button" class="ed-del" data-dm-nodo-togli aria-label="${esc(t("Elimina", "Remove"))}">${segnoHtml("trash")}</button>
     </div>
     <div class="dm-nodo-ed-body"${aperto ? "" : " hidden"}>
       <label class="ed-slot dm-nodo-ed-campo"><span class="ed-slot-lbl">${esc(t("Nome", "Name"))}</span>
         <span class="ed-form-row"><input class="ed-input" data-dm-nodo-campo="nome" value="${esc(clean(nodo?.nome))}" placeholder="pve2"></span></label>
       ${CAMPI_DEL_NODO.map((campo) => campoMarkup(indice, campo, clean(nodo?.[campo]))).join("")}
-      <button type="button" class="ed-save-btn" data-dm-nodo-salva>💾 ${esc(t("Salva nodo", "Save node"))}</button>
+      <button type="button" class="ed-save-btn" data-dm-nodo-salva>${segnoHtml("check")} ${esc(t("Salva nodo", "Save node"))}</button>
     </div>
   </article>`;
 }
 
 function schedaMarkup() {
   const lista = elenco();
-  return `<div class="ed-sec-title">🖧 ${esc(t("Altri nodi del cluster", "Other cluster nodes"))}</div>
+  return `<div class="ed-sec-title">${segnoHtml("server")} ${esc(t("Altri nodi del cluster", "Other cluster nodes"))}</div>
     <div class="ed-intro">${esc(
       t(
         "La scheda grande in cima alla pagina Server è il computer su cui gira Home Assistant. Questi sono gli altri nodi: uno per riga, con il nome che gli dai e le entità che vuoi vedere. Le caselle sono tutte facoltative — Proxmox VE pubblica lo stato e le tre percentuali, Glances aggiunge i gradi, un ping dà solo il su e giù — e una casella vuota è una barra che non compare.",
@@ -118,7 +119,7 @@ function schedaMarkup() {
         : `<div class="ed-empty">${esc(t("Nessun altro nodo", "No other node"))}</div>`
     }</div>
     <div class="dm-nodi-ed-invito">
-      <button type="button" class="ed-btn-add dm-nodi-ed-integ" data-dm-nodo-integ>🔗 ${esc(
+      <button type="button" class="ed-btn-add dm-nodi-ed-integ" data-dm-nodo-integ>${segnoHtml("link")} ${esc(
         t("Aggiungi da un'integrazione", "Add from an integration"),
       )}</button>
       <small>${esc(
@@ -274,7 +275,7 @@ function onClick(event) {
     prossima[indice] = leggiLaRiga(riga, lista[indice]);
     salva(prossima);
     ridisegna();
-    root.edToast?.(t("💾 Nodo salvato", "💾 Node saved"));
+    root.edToast?.(t("Nodo salvato", "Node saved"));
   }
 }
 

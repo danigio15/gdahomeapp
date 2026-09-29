@@ -328,7 +328,7 @@ test("la tessera dice cosa sta suonando, non solo quante casse", () => {
    * senza potersi né spostare né spegnere. */
   assert.match(
     leggi("sections/todo-editor-section.js"),
-    /\["media", "🔊", t\("Musica", "Media"\)\]/,
+    /\["media", "speaker", t\("Musica", "Media"\)\]/,
   );
   /* Dalla finestra si arriva alla sezione. */
   assert.match(ponte, /media: "media",\n\}\);/);

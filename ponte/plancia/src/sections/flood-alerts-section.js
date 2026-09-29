@@ -21,6 +21,7 @@
  */
 import { allStates, clean, doc, esc, lexicalGlobal, onEditorRedraw, readJson, root, scriviSeCambia, t, writeJsonIfChanged } from "./shared.js";
 import { MARCHIO_TESSERA } from "../core/fuori-dai-widget.js";
+import { segnoDaValoreHtml, segnoHtml } from "../core/segni-del-catalogo.js";
 
 const KEY = "__DASHBOARDMODERN_FLOOD_ALERTS__";
 const state = (root[KEY] ||= { installed: false, frame: 0, deleteBound: false });
@@ -188,7 +189,7 @@ function ensureGroupOption(select) {
   if (!select || select.querySelector(`option[value="${FLOOD_GROUP}"]`)) return false;
   const option = doc.createElement("option");
   option.value = FLOOD_GROUP;
-  option.textContent = `${FLOOD_ICON} ${floodName()}`;
+  option.textContent = floodName();
   const custom = select.querySelector('option[value="custom"]');
   if (custom) custom.before(option);
   else select.append(option);
@@ -254,12 +255,12 @@ function ensureFloodEditorRows() {
         `<div class="ed-row-old mono">${esc(id)}</div>` +
         seNonEUnaSonda(id, states) +
         `</div>` +
-        `<div class="ed-del" data-dm-flood-del="${esc(id)}">🗑️</div></div>`
+        `<div class="ed-del" data-dm-flood-del="${esc(id)}">${segnoHtml("trash")}</div></div>`
       );
     })
     .join("");
   const markup =
-    `<summary class="ed-acc-head">${FLOOD_ICON} ${esc(floodName())} ` +
+    `<summary class="ed-acc-head">${segnoDaValoreHtml(FLOOD_ICON)} ${esc(floodName())} ` +
     `<span class="ed-acc-n">${entities.length}</span></summary>` +
     `<div class="ed-acc-body"><div class="ed-list">${righe}</div></div>`;
   scriviSeCambia(acc, markup);
@@ -292,7 +293,7 @@ function seNonEUnaSonda(id, states) {
       ? ""
       : t("non è un sensore di allagamento", "not a flood sensor");
   if (!perche) return "";
-  return `<div class="ed-hint" data-dm-flood-dubbia="true">⚠️ ${esc(perche)}</div>`;
+  return `<div class="ed-hint" data-dm-flood-dubbia="true">${segnoHtml("warning")} ${esc(perche)}</div>`;
 }
 
 /* Il cestino e' quello del runtime: sa gia' distinguere una voce aggiunta

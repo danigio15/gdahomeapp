@@ -117,12 +117,21 @@ base64url. Sta, sempre uguale, in:
 
 - `ponte/src/chiave-licenze.js`
 - `centralino/src/chiave-licenze.js`
-- `nuvola/src/chiave-licenze.js`
 - `app/lib/licenza/chiave.dart`
 - in gdanav: `packages/gdanav_app/lib/stato/chiave_licenze.dart`
 
 **Di serie e' vuota**: nessun gettone vale, tutti sono Base (e gdanav fa quello
-che fa oggi col negozio). Prima del rilascio si lancia una volta
+che fa oggi col negozio).
+
+**Prima l'iPhone**: con `LICENZE_SOLO_SULL_IPHONE = true` (nei tre file JS) e
+`licenzeSoloSullIPhone = true` (nell'app) la chiave sta solo nell'add-on e
+nell'app, e il centralino resta vuoto. La casa chiede i gettoni
+e gira le ricevute ma non si limita; i lucchetti ci sono solo nell'app per
+iPhone. Si scrive con `node strumenti/chiave-licenze.mjs --solo-iphone
+--pubblica <x>`, e il perche' sta in
+[`ACCENDERE-GLI-ACQUISTI.md`](ACCENDERE-GLI-ACQUISTI.md).
+
+Prima del rilascio per tutti si lancia una volta
 
     node strumenti/chiave-licenze.mjs [--gdanav ../gdanav]
 
@@ -229,7 +238,7 @@ Controllo delle ricevute: Google Play Developer API
 - La console dell'add-on mostra lo stato della licenza e un campo per il
   codice regalo.
 
-## Il centralino (centralino e nuvola)
+## Il centralino
 
 La casa manda il gettone quando si presenta e ogni volta che lo rinnova
 (messaggio `{"t": "licenza", "tipo": "licenza", "gettone": "…"}` sul filo della
@@ -244,13 +253,22 @@ controllo e' spento (tutti passano, come oggi): si accende insieme alla chiave.
 
 - Chiede `ponte/licenza/stato` a ogni collegamento, verifica il gettone, lo
   ricorda per casa. Premium = la casa in uso ha un gettone gdahome valido.
+- Una casa che le licenze non le sa tenere — il comando non lo conosce, o
+  risponde `attive: false` — si ricorda come `senza_licenze` e resta aperta:
+  li' Premium non si puo' comprare.
+- Prima dell'iPhone tutto questo vale solo nell'app per iPhone: su Android e
+  nel browser non si chiede niente alla casa e non c'e' nessun lucchetto.
 - Base: una casa sola (la seconda si aggiunge solo se una casa gia' abbinata
   e' Premium), solo la plancia principale, niente strade fuori casa (centralino
   e indirizzo pubblico), «Configurazione» e «Zigbee» con il lucchetto che porta
   alla pagina Premium.
 - La pagina Premium: i due piani coi prezzi del negozio, «Ripristina acquisti»,
   «Ho un codice regalo». Sul web non si compra: si riscatta un codice, o si
-  compra dal telefono.
+  compra dal telefono. Sull'iPhone il codice regalo non c'e' (App Store, regola
+  3.1.1): si riscatta in Home Assistant o dal browser.
+- Una ricevuta che non arriva alla casa resta aperta nel negozio e si
+  riprova. Se non arriva perche' si e' fuori casa con Base, per portarla si
+  prende la strada del centralino.
 - gdanav riceve `premiumOspite` = la casa in uso e' Premium.
 
 ## Il giorno dei pagamenti: le app vecchie si fermano
@@ -262,13 +280,10 @@ non si ferma nessuno).
 
 **Come si accende.** Si scrive in `VERSIONE_MINIMA_APP` il numero di
 costruzione della prima versione pubblica a pagamento
-(`costruzioneDiQuestApp` in `app/lib/versione.dart`, per esempio `1070000`):
-
-- sulla nuvola: la riga `VERSIONE_MINIMA_APP = "0"` fra le `[vars]` di
-  `nuvola/wrangler.toml`, poi `npx wrangler deploy`;
-- sul centralino in Node: la variabile d'ambiente `VERSIONE_MINIMA_APP` (in
-  `/etc/tramite/ambiente`, o `VERSIONE_MINIMA_APP=1070000 bash accendi.sh`,
-  che la ricorda ai giri dopo), poi si riavvia il servizio.
+(`costruzioneDiQuestApp` in `app/lib/versione.dart`, per esempio `1070000`).
+E' una variabile d'ambiente del centralino: sta in `/etc/tramite/ambiente`, o
+si passa a `VERSIONE_MINIMA_APP=1070000 bash accendi.sh`, che la ricorda ai
+giri dopo. Poi si riavvia il servizio.
 
 Il centralino la dice a tutti su `GET /versioni` →
 `{"gdahome": {"minima": 1070000}}` (pubblica, CORS aperto, tenuta 5 minuti).

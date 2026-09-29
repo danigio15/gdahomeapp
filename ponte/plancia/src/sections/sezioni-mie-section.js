@@ -37,12 +37,14 @@ import {
   doc,
   esc,
   formatNumber,
+  iconGlyphHtml,
   installStyle,
   readJson,
   root,
   siComanda,
   t,
 } from "./shared.js";
+import { chiaveDelValore, emojiInSegni, segnoHtml } from "../core/segni-del-catalogo.js";
 
 const KEY = "__DASHBOARDMODERN_SEZIONI_MIE__";
 const state = (root[KEY] ||= { installed: false, frame: 0, firme: new Map() });
@@ -143,13 +145,21 @@ function ensureVoce(sezione) {
   return voce;
 }
 
+/* L'icona scelta per una sezione o una riga: un nome mdi lo disegna il
+ * motore, un'emoji o una chiave il catalogo; un testo scritto a mano resta. */
+function segnoDellaScelta(valore) {
+  if (/^mdi:/i.test(valore)) return iconGlyphHtml(valore, { size: 22 });
+  const chiave = chiaveDelValore(valore);
+  return chiave ? segnoHtml(chiave) : emojiInSegni(esc(valore));
+}
+
 function scriviLaVoce(voce, sezione) {
   const titolo = sezione.titolo || t("Senza titolo", "Untitled");
   const atteso = `${sezione.icona} ${titolo}`;
   if (voce.dataset.dmMiaFirma === atteso) return;
   voce.dataset.dmMiaFirma = atteso;
   voce.innerHTML =
-    `<span class="icon">${esc(sezione.icona)}</span>` +
+    `<span class="icon">${segnoDellaScelta(sezione.icona)}</span>` +
     `<span class="text">${esc(titolo)}</span>`;
 }
 
@@ -213,7 +223,7 @@ function codaMarkup(riga) {
   const parti = riga.avviabile
     ? `<button type="button" class="dm-mia-parti" data-dm-mia-parti="${esc(riga.entity)}"
          title="${esc(t("Fai partire adesso", "Run it now"))}"
-         aria-label="${esc(t("Fai partire adesso", "Run it now"))} — ${esc(riga.nome)}">▶</button>`
+         aria-label="${esc(t("Fai partire adesso", "Run it now"))} — ${esc(riga.nome)}">${segnoHtml("play")}</button>`
     : "";
   return `${parti}<button type="button" class="dm-mia-lev" data-dm-mia-tocca="${esc(riga.entity)}"
        role="switch" aria-checked="${riga.acceso}"
@@ -221,9 +231,9 @@ function codaMarkup(riga) {
 }
 
 function rigaMarkup(riga) {
-  const icona = riga.icona || (riga.comandabile ? "💡" : "📈");
+  const icona = riga.icona || (riga.comandabile ? "lights" : "gauge");
   return `<article class="dm-mia-riga" data-on="${riga.acceso}" data-muta="${riga.muto}">
-    <span class="dm-mia-ic" aria-hidden="true">${esc(icona)}</span>
+    <span class="dm-mia-ic" aria-hidden="true">${segnoDellaScelta(icona)}</span>
     <span class="dm-mia-nome">
       <strong>${esc(riga.nome)}</strong>
     </span>

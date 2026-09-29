@@ -387,12 +387,12 @@ async function attendi(condizione, entro = 5000) {
 /* Perche' questa prova esiste, e cos'era il difetto.
  *
  * Dentro casa un evento verso il telefono e' un messaggio su un socket della
- * rete locale, e non costa niente. Da fuori si passa dal centralino, dove
- * **ogni messaggio e' una richiesta contata**: il piano gratuito ne da'
- * centomila al giorno, e una casa vera manda cinque eventi al secondo. Fanno
- * quarantamila all'ora — due ore e mezza di plancia aperta, e il centralino si
- * spegne per tutti fino a mezzanotte. E' arrivato l'avviso di Cloudflare al
- * novanta per cento.
+ * rete locale, e non costa niente. Da fuori si passa dal centralino, e quando
+ * stava su Cloudflare **ogni messaggio era una richiesta contata**: il piano
+ * gratuito ne dava centomila al giorno, e una casa vera manda cinque eventi al
+ * secondo. Facevano quarantamila all'ora — due ore e mezza di plancia aperta,
+ * e il centralino si spegneva per tutti fino a mezzanotte. E' arrivato
+ * l'avviso di Cloudflare al novanta per cento.
  *
  * Quindi da fuori gli eventi partono **insieme**, e quello che si prova qui e'
  * che il raggruppamento non cambi niente di quello che conta: l'ordine in cui

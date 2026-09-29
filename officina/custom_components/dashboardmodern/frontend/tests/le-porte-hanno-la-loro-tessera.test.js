@@ -184,7 +184,7 @@ test("la tessera esiste, porta in «Apri porte» e si può ordinare e spegnere",
   /* «Apri porte» e non «Porte» (#513): la voce con cui si spegne la tessera si
    * chiama come la tessera, o il config e la Home direbbero due nomi per la
    * stessa cosa. */
-  assert.match(EDITOR, /\["porte", "🚪", t\("Apri porte", "Openers"\)\]/);
+  assert.match(EDITOR, /\["porte", "door", t\("Apri porte", "Openers"\)\]/);
 });
 
 /* La fascia sotto il meteo legge questo campo, e senza non ha niente da dire

@@ -27,7 +27,17 @@
  *
  * Non parte niente e non cambia niente. `attive` e' falso, nessuno bussa al
  * quadro, e `limitata` e' falso: la casa fa tutto quello che faceva ieri. Le
- * licenze si accendono il giorno in cui la chiave si scrive, tutte insieme.
+ * licenze si accendono il giorno in cui la chiave si scrive.
+ *
+ * ─── La casa non limita niente ───────────────────────────────────────────
+ *
+ * Con la chiave la casa fa la sua parte e basta: bussa al quadro, tiene la
+ * licenza, gira le ricevute di chi compra dall'app, e dice com'e' messa a chi
+ * lo chiede. Non chiude niente: le plance, Home Assistant e i telefoni da
+ * fuori restano come sempre. I lucchetti di Base li mettono l'app e il
+ * browser, leggendo la licenza da qui; il fuori casa, a suo tempo, lo chiude
+ * il centralino (`docs/ACCENDERE-GLI-ACQUISTI.md`). E' la scelta del 29
+ * settembre: «base funziona e anche addon funziona». `limitata` resta falso.
  */
 
 import { EventEmitter } from "node:events";
@@ -110,6 +120,8 @@ export class Licenze extends EventEmitter {
       : { dati: {}, salva() {} };
     this._orologio = null;
     this._inCorso = null;
+    /* Le domande al quadro, in fila: vedi `_inFila`. */
+    this._fila = Promise.resolve();
     /* Com'e' andata l'ultima volta che si e' bussato. In memoria e basta: e'
      * per la console, e dopo un riavvio si riempie al primo giro. */
     this._esito = null;
@@ -163,13 +175,14 @@ export class Licenze extends EventEmitter {
     return Boolean(this._valido("gdahome"));
   }
 
-  /* Se questa casa sta nei limiti di Base.
+  /* Se questa casa sta nei limiti di Base: mai.
    *
-   * E' la domanda che fanno le plance, il portiere e le commissioni, e non e'
-   * `!premium`: con la chiave vuota le licenze sono spente, e allora non c'e'
-   * nessun limite — tutto come ieri. */
+   * E' la domanda che fanno le plance, il portiere e le commissioni, e la
+   * risposta e' sempre no — con la chiave o senza, Premium o Base. La casa
+   * non chiude niente: i lucchetti di Base li mettono l'app e il browser, e
+   * il fuori casa lo chiudera' il centralino (vedi in cima). */
   get limitata() {
-    return this.attive && !this.premium;
+    return false;
   }
 
   /* Il gettone da dare al centralino: quello di gdahome, cosi' com'e'. Lo
@@ -202,6 +215,9 @@ export class Licenze extends EventEmitter {
     }
     return {
       attive: this.attive,
+      /* Se la casa si limita: mai (vedi `limitata`). La console lo legge per
+       * non spegnere tasti che la casa non spegne. */
+      limitata: this.limitata,
       casa: this.casa,
       gdahome: una("gdahome"),
       gdanav: una("gdanav"),
@@ -240,7 +256,7 @@ export class Licenze extends EventEmitter {
     if (this._inCorso) return this._inCorso;
     this._inCorso = (async () => {
       try {
-        await this._chiedi("/v1/licenze/casa", {});
+        await this._inFila(() => this._chiedi("/v1/licenze/casa", {}));
       } catch (errore) {
         this.registro.attenzione(`licenze: ${errore?.message || errore}`);
       } finally {
@@ -264,12 +280,14 @@ export class Licenze extends EventEmitter {
     if (typeof ricevuta !== "string" || !ricevuta.trim() || ricevuta.length > 64 * 1024) {
       throw new LicenzaNo("ricevuta-mancante", "manca la ricevuta del negozio");
     }
-    await this._chiedi("/v1/licenze/negozio", {
-      app,
-      piattaforma,
-      prodotto: prodotto.trim(),
-      ricevuta,
-    });
+    await this._inFila(() =>
+      this._chiedi("/v1/licenze/negozio", {
+        app,
+        piattaforma,
+        prodotto: prodotto.trim(),
+        ricevuta,
+      }),
+    );
     return this.stato();
   }
 
@@ -280,9 +298,19 @@ export class Licenze extends EventEmitter {
     if (!codice) {
       throw new LicenzaNo("codice-storto", "un codice regalo e' fatto cosi': GDA-XXXX-XXXX-XXXX");
     }
-    await this._chiedi("/v1/licenze/riscatta", { codice });
+    await this._inFila(() => this._chiedi("/v1/licenze/riscatta", { codice }));
     this.registro.info("un codice regalo e' stato riscattato per questa casa");
     return this.stato();
+  }
+
+  /* Una domanda al quadro alla volta, e le risposte nell'ordine in cui sono
+   * partite. Senza, un rinnovo partito un attimo prima di un acquisto poteva
+   * tornare un attimo dopo, coi gettoni di prima, e togliere alla casa il
+   * Premium appena pagato fino al giro seguente — sei ore. */
+  _inFila(domanda) {
+    const questa = this._fila.then(domanda, domanda);
+    this._fila = questa.catch(() => {});
+    return questa;
   }
 
   _servonoLeLicenze() {
@@ -314,11 +342,21 @@ export class Licenze extends EventEmitter {
       this._esito = { andata: false, quando: this.adesso(), perche };
       throw new LicenzaNo("quadro-irraggiungibile", perche);
     }
-    let detto = {};
+    let detto = null;
     try {
       detto = await risposta.json();
     } catch (_errore) {
-      detto = {};
+      detto = null;
+    }
+    if (risposta.ok && !(detto?.gettoni && typeof detto.gettoni === "object")) {
+      /* Un si' che non e' la risposta del quadro — una pagina messa in mezzo
+       * da qualcuno, un JSON senza gettoni — non vuol dire «nessun gettone»:
+       * non vuol dire niente, e quelli di prima restano. */
+      const perche = "il quadro ha risposto qualcosa che non si capisce";
+      if (via === "/v1/licenze/casa") {
+        this._esito = { andata: false, quando: this.adesso(), perche };
+      }
+      throw new LicenzaNo("quadro-ha-detto-no", perche, 502);
     }
     if (!risposta.ok) {
       const codice = codiceDelNo(risposta.status, detto);

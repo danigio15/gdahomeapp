@@ -7,6 +7,7 @@
  *   GET  /versioni                    da quale numero in su un'app si puo' usare (`versioni.js`)
  *   GET  /console/                    la console della chat, e le sue vie
  *   POST /contatto                    il modulo «Contatti» del sito, che Caddy passa qui
+ *   POST /licenza/<casa_…>           la ricevuta di chi compra fuori casa (`ricevute.js`)
  *   WS   /casa/<casa_…>              una casa che chiama fuori
  *   WS   /telefono/<casa_…>?da=app    un telefono che va alla sua casa
  *   WS   /abbinamento/<impronta>      un telefono che si sta abbinando
@@ -148,6 +149,9 @@ export function costruisciIlServer({
   /* Il modulo dei contatti del sito, e la posta con cui spedisce. Senza, la
    * via risponde lo stesso e dice che non e' configurata. */
   contatti = null,
+  /* La porta delle ricevute di chi compra fuori casa (`ricevute.js`). Senza,
+   * la via non c'e'. */
+  ricevute = null,
   registro = null,
   acceso = Date.now(),
   /* Come si chiamano il sito e l'app di questo centralino, per la soglia.
@@ -253,6 +257,7 @@ export function costruisciIlServer({
       if (chat && (await chat.forseServe(richiesta, risposta, indirizzo))) return;
       if (sportello && (await sportello.forseServe(richiesta, risposta, via))) return;
       if (contatti && (await contatti.forseServe(richiesta, risposta, via))) return;
+      if (ricevute && (await ricevute.forseServe(richiesta, risposta, via))) return;
       json(risposta, { errore: "qui non c'e' niente" }, 404);
     })().catch((errore) => {
       registro?.errore?.(`una porta e' inciampata: ${errore?.stack || errore}`);
@@ -280,7 +285,7 @@ export function costruisciIlServer({
     }
     /* Da chi arriva: quello vero, anche dietro Caddy. Serve a contare i fili
      * per indirizzo, ed e' quello che la casa si vede dire all'apertura di un
-     * canale — lo stesso che le dice il centralino sulla nuvola. */
+     * canale. */
     const da = daChi(richiesta);
     /* I fili si contano per rete (in IPv6 un /64 intero e' di una persona
      * sola), ma alla casa si dice l'indirizzo com'e'. */
@@ -298,10 +303,10 @@ export function costruisciIlServer({
 
     /* `/casa` e `/casa/<casa_…>` sono la stessa porta. L'identificativo
      * nell'indirizzo qui non serve — chi decide e' il `sono-io` che arriva
-     * subito dopo, ed e' l'unico che porta anche il segreto — ma il centralino
-     * sulla nuvola ne ha bisogno per sapere a quale casa consegnare il filo
-     * prima ancora di accettarlo. Le due punte parlano la stessa lingua a
-     * tutti e due. */
+     * subito dopo, ed e' l'unico che porta anche il segreto — ma i ponti lo
+     * mettono lo stesso (`ponte/src/chiamata.js`), e qui si accetta: e' la
+     * forma del contratto, e un centralino che instrada prima di accettare il
+     * filo non ha altro da guardare. */
     if (via === "/casa" || /^\/casa\/[A-Za-z0-9_]+$/.test(via)) {
       const presa = contaLaPresa(
         accetta(richiesta, socket, {

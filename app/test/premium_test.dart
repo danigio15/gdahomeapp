@@ -298,5 +298,26 @@ void main() {
     expect(find.textContaining('CarPlay'), findsOneWidget);
     expect(find.textContaining('Android Auto'), findsNothing);
     expect(find.textContaining('L\'App Store non risponde'), findsOneWidget);
+    /* E niente codice regalo: per l'App Store aprire una funzione con un
+     * codice nostro e' una «chiave di licenza» (regola 3.1.1), e l'app che lo
+     * fa torna indietro dalla revisione. Il codice si riscatta in Home
+     * Assistant o dal browser, e il Premium arriva anche qui. */
+    expect(find.byKey(const Key('codice-regalo')), findsNothing);
+    expect(find.textContaining('codice'), findsNothing);
+    /* I due link che l'App Store vuole accanto all'abbonamento restano. */
+    expect(find.text('Privacy'), findsOneWidget);
+    expect(find.text('Condizioni d\'uso'), findsOneWidget);
+    expect(find.text('Ripristina abbonamento'), findsOneWidget);
   }, variant: TargetPlatformVariant.only(TargetPlatform.iOS));
+
+  testWidgets('sull\'Android e nel browser il codice regalo resta', (
+    tester,
+  ) async {
+    final collegamento = await casaSenzaFilo(tester);
+    await mostra(
+      tester,
+      SchermataPremium(collegamento: collegamento, sulWeb: false),
+    );
+    expect(find.byKey(const Key('codice-regalo')), findsOneWidget);
+  }, variant: TargetPlatformVariant.only(TargetPlatform.android));
 }

@@ -59,10 +59,11 @@ export const ATTESA_DEL_SEGNO = 15_000;
  *
  * Un evento di Home Assistant, verso il telefono, era un messaggio. Dentro
  * casa non costa niente — e' un socket sulla rete locale — ma **da fuori** si
- * passa dal centralino, e li' ogni messaggio e' una richiesta contata: il
- * piano gratuito di Cloudflare ne da' centomila al giorno, e una casa vera ne
- * manda cinque al secondo. Fanno quarantamila all'ora: due ore e mezza di
- * plancia aperta e il centralino si spegne per tutti fino a mezzanotte.
+ * passa dal centralino. Quando il centralino stava su Cloudflare ogni
+ * messaggio era una richiesta contata: il piano gratuito ne dava centomila al
+ * giorno, e una casa vera ne manda cinque al secondo. Facevano quarantamila
+ * all'ora: due ore e mezza di plancia aperta e il centralino si spegneva per
+ * tutti fino a mezzanotte.
  *
  * Il rimedio non e' mandare meno cose: e' **mandarle insieme**. Gli eventi si
  * raccolgono per una finestra breve e partono in un messaggio solo. Cinque al

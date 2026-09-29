@@ -53,7 +53,8 @@ import it.gdanav.gdanav_app.auto.PonteAuto
 import it.gdanav.gdanav_app.auto.SessioneGdanav
 
 object IlNavigatoreInAuto {
-    private const val MOTORE = "gdahome"
+    /** Il nome del motore nella cache: `MainActivity` lo chiede cosi'. */
+    const val MOTORE = "gdahome"
 
     /* Se c'e' una sessione in auto adesso: il Dart lo chiede partendo. */
     @Volatile private var inAuto = false
@@ -67,6 +68,18 @@ object IlNavigatoreInAuto {
         val cache = FlutterEngineCache.getInstance()
         cache.get(MOTORE)?.let { return it }
         val motore = FlutterEngine(context.applicationContext)
+        /* Un motore spento sembra acceso e non risponde: se un giorno lo
+         * spegne qualcuno, la cache non lo da' piu' a nessuno, e il prossimo
+         * che lo chiede ne trova uno nuovo. */
+        motore.addEngineLifecycleListener(
+            object : FlutterEngine.EngineLifecycleListener {
+                override fun onPreEngineRestart() {}
+
+                override fun onEngineWillDestroy() {
+                    if (cache.get(MOTORE) === motore) cache.remove(MOTORE)
+                }
+            },
+        )
         collega(motore, context)
         motore.dartExecutor.executeDartEntrypoint(DartExecutor.DartEntrypoint.createDefault())
         cache.put(MOTORE, motore)

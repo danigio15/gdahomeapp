@@ -46,6 +46,7 @@ import {
   t,
   writeJsonIfChanged,
 } from "./shared.js";
+import { segnoHtml } from "../core/segni-del-catalogo.js";
 
 const KEY = "__DASHBOARDMODERN_APPLIANCE_INTEGRATION__";
 const state = (root[KEY] ||= {
@@ -225,7 +226,7 @@ function rigaDispositivo(device) {
       : `${device.entities} ${t("entità", "entities")}`;
   return `<button type="button" class="dm-integ-device" data-device-id="${esc(device.id)}" data-search="${esc(`${device.name} ${dettagli} ${stanza}`.toLowerCase())}">
     <span class="dm-integ-device-name">${esc(device.name || device.id)}</span>
-    <span class="dm-integ-device-meta">${esc(dettagli)}${dettagli && stanza ? " · " : ""}${stanza ? `🏠 ${esc(stanza)}` : ""}</span>
+    <span class="dm-integ-device-meta">${esc(dettagli)}${dettagli && stanza ? " · " : ""}${stanza ? `${segnoHtml("home")} ${esc(stanza)}` : ""}</span>
     <span class="dm-integ-device-count">${quante}</span>
   </button>`;
 }
@@ -334,14 +335,14 @@ export function apriMenuIntegrazioni({
   modal.id = "dm-integ-menu";
   modal.className = "dm-section-modal dm-integ-modal";
   modal.innerHTML = `<section class="dm-section-dialog dm-integ-dialog" role="dialog" aria-modal="true" aria-labelledby="dm-integ-title">
-    <header><strong id="dm-integ-title">🔗 ${esc(titolo || t("Collega a un'integrazione", "Link to an integration"))}</strong><button type="button" data-close aria-label="${t("Chiudi", "Close")}">✕</button></header>
+    <header><strong id="dm-integ-title">${segnoHtml("link")} ${esc(titolo || t("Collega a un'integrazione", "Link to an integration"))}</strong><button type="button" data-close aria-label="${t("Chiudi", "Close")}">✕</button></header>
     <div class="dm-integ-body">
       <p class="dm-integ-intro">${esc(intro) || t("Le integrazioni di Home Assistant, ufficiali o da HACS, con i dispositivi che portano. Scegli il tuo elettrodomestico: le sue entità entrano tutte, e le caselle della card si compilano da sole.", "Home Assistant integrations, official or from HACS, with the devices they bring. Pick your appliance: every entity comes along, and the card fields fill themselves in.")}</p>
       <div class="dm-integ-status" data-status>${t("Leggo le integrazioni di Home Assistant…", "Reading Home Assistant integrations…")}</div>
       <div class="dm-integ-columns" data-columns hidden>
         <nav class="dm-integ-list" data-integrations aria-label="${t("Integrazioni", "Integrations")}"></nav>
         <div class="dm-integ-devices">
-          <input class="ed-input dm-integ-search" type="search" data-search placeholder="🔎 ${t("Cerca un dispositivo…", "Search a device…")}" autocomplete="off">
+          <input class="ed-input dm-integ-search" type="search" data-search placeholder="${t("Cerca un dispositivo…", "Search a device…")}" autocomplete="off">
           <div class="dm-integ-device-list" data-devices></div>
         </div>
       </div>
@@ -417,7 +418,7 @@ export function apriMenuIntegrazioni({
         ${letta.etichetta ? `<span class="dm-integ-preview-type">${esc(t("Riconosciuto come", "Recognised as"))}: <b>${esc(letta.etichetta)}</b></span>` : ""}
       </div>
       ${letta.corpo || ""}
-      <button type="button" class="ed-btn-add dm-integ-confirm" data-confirm>🔗 ${t("Usa questo dispositivo", "Use this device")}</button>`;
+      <button type="button" class="ed-btn-add dm-integ-confirm" data-confirm>${segnoHtml("link")} ${t("Usa questo dispositivo", "Use this device")}</button>`;
     anteprima.querySelector("[data-confirm]")?.addEventListener("click", () => {
       close();
       try {
@@ -543,7 +544,7 @@ function vesteLaScheda() {
   if (form && !form.querySelector(".dm-integ-invito")) {
     const invito = doc.createElement("div");
     invito.className = "dm-integ-invito";
-    invito.innerHTML = `<button type="button" class="ed-btn-add dm-integ-add" data-dm-integ-add>🔗 ${t("Aggiungi da un'integrazione", "Add from an integration")}</button>
+    invito.innerHTML = `<button type="button" class="ed-btn-add dm-integ-add" data-dm-integ-add>${segnoHtml("link")} ${t("Aggiungi da un'integrazione", "Add from an integration")}</button>
       <small>${t("hOn, Home Connect, Miele, LG ThinQ, SmartThings, una presa Shelly… scegli il dispositivo e l'apparecchio arriva con tutte le sue entità già al posto giusto. Oppure, qui sotto, una entità alla volta.", "hOn, Home Connect, Miele, LG ThinQ, SmartThings, a Shelly plug… pick the device and the appliance arrives with all its entities in the right place. Or, below, one entity at a time.")}</small>`;
     invito.querySelector("[data-dm-integ-add]")?.addEventListener("click", () => {
       apriMenuIntegrazioni({
@@ -571,7 +572,7 @@ function vesteLaScheda() {
     const pin = doc.createElement("span");
     pin.className = "dm-integ-pin";
     pin.title = bindingLabel(appliance, activeLocale());
-    pin.textContent = `🔗 ${clean(appliance.integration_name) || clean(appliance.integration)}`;
+    pin.innerHTML = `${segnoHtml("link")} ${esc(clean(appliance.integration_name) || clean(appliance.integration))}`;
     testa.append(" ", pin);
   });
 }

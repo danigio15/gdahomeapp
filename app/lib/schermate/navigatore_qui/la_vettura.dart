@@ -26,6 +26,8 @@ import 'package:gdanav_app/gdanav_app.dart';
 import '../../casa/collegamento.dart';
 import '../../casa/entita.dart';
 import '../../plancia/cucitura.dart' show laPlanciaHaScritto;
+import '../../ponte/errori.dart' show ComandoRifiutato;
+import '../../ponte/filo.dart' show Filo;
 
 /// La vettura come la racconta la configurazione della plancia.
 class LaVettura {
@@ -269,9 +271,10 @@ class LaVettura {
 
 /// Tiene la fonte gdahome di gdanav al passo con la casa.
 ///
-/// I dati dell'auto arrivano a ogni cambiamento degli stati, subito. L'auto
-/// stessa — quale, e di che modello — sta nella configurazione della plancia,
-/// e il ponte non avvisa quando cambia: la si rilegge
+/// I dati dell'auto arrivano a ogni cambiamento dei suoi sensori, subito, e
+/// solo di quelli ([_abbonati]). L'auto stessa — quale, e di che modello —
+/// sta nella configurazione della plancia, e il ponte non avvisa quando
+/// cambia: la si rilegge
 /// - **subito**, quando la plancia dentro l'app la scrive (un'auto cambiata
 ///   nella sezione Auto: `laPlanciaHaScritto`, dalla cucitura);
 /// - quando il filo si riapre, quando si torna nell'app e quando si apre il
@@ -295,6 +298,16 @@ class IlFiloDellaVettura {
   bool _dentro = false;
   bool _spento = false;
 
+  /// Gli stati dei sensori dell'auto, dal loro abbonamento.
+  final _valori = <String, Entita>{};
+  StreamSubscription<Map<String, dynamic>>? _abbonamento;
+  Filo? _filoAbbonato;
+  String _abbonatiA = '';
+
+  /// Un ponte che `subscribe_entities` non lo lascia passare: allora gli
+  /// stati si prendono come prima, tutti.
+  bool _comePrima = false;
+
   void avvia() {
     _ascolti
       ..add(collegamento.cambiamenti.listen((_) => _comeVa()))
@@ -311,6 +324,8 @@ class IlFiloDellaVettura {
     }
     _ascolti.clear();
     _orologio?.cancel();
+    unawaited(_abbonamento?.cancel());
+    _abbonamento = null;
     fonte.collegamento(false);
   }
 
@@ -338,7 +353,7 @@ class IlFiloDellaVettura {
         Map<String, dynamic>.from(valori['values'] as Map),
       );
       fonte.descrivi(_vettura?.auto);
-      await collegamento.serveLaCasa();
+      await _abbonati(filo);
       _aggiorna();
     } catch (_) {
       /* La configurazione non e' arrivata: resta quella di prima, e si
@@ -346,11 +361,81 @@ class IlFiloDellaVettura {
     }
   }
 
+  /// Si abbona ai sensori dell'auto, e a nient'altro.
+  ///
+  /// `subscribe_entities` coi loro nomi da' prima il loro stato di adesso,
+  /// poi solo quello che cambia, in forma stretta. Prima qui si chiedeva
+  /// tutta la casa (`serveLaCasa`): un `get_states` da un megabyte e mezzo, e
+  /// poi ogni cambiamento di ogni entita', a ogni collegamento e anche senza
+  /// un'auto. Da fuori casa passava tutto dal centralino, e due volte,
+  /// perche' la plancia gli stati se li chiede per conto suo.
+  ///
+  /// Dopo una caduta il filo rifa' l'abbonamento da solo, e Home Assistant
+  /// rimanda lo stato di adesso: quello che e' cambiato nel frattempo arriva
+  /// cosi'.
+  Future<void> _abbonati(Filo filo) async {
+    final ids = <String>{
+      for (final id in _vettura?.sensori.values ?? const <String>[])
+        if (!id.startsWith('dm.')) id,
+    }.toList()..sort();
+    final quali = ids.join(',');
+    if (identical(filo, _filoAbbonato) && quali == _abbonatiA) return;
+    await _abbonamento?.cancel();
+    _abbonamento = null;
+    _valori.clear();
+    _filoAbbonato = filo;
+    _abbonatiA = quali;
+    if (ids.isEmpty) return;
+    if (_comePrima) {
+      await collegamento.serveLaCasa();
+      return;
+    }
+    try {
+      final flusso = await filo.sottoscrivi({
+        'type': 'subscribe_entities',
+        'entity_ids': ids,
+      });
+      if (_spento) return;
+      _abbonamento = flusso.listen(_cambiate, onError: (Object _) {});
+    } on ComandoRifiutato {
+      _comePrima = true;
+      await collegamento.serveLaCasa();
+    } catch (_) {
+      /* Il filo e' caduto mentre si chiedeva: al prossimo giro si riprova. */
+      _filoAbbonato = null;
+    }
+  }
+
+  /// Un messaggio dell'abbonamento: `a` le entita' con lo stato intero, `c`
+  /// quello che e' cambiato, `r` quelle che non ci sono piu'.
+  void _cambiate(Map<String, dynamic> evento) {
+    if (evento['a'] case final Map aggiunte) {
+      for (final MapEntry(:key, :value) in aggiunte.entries) {
+        if (Entita.daStretta('$key', value) case final e?) _valori['$key'] = e;
+      }
+    }
+    if (evento['c'] case final Map cambi) {
+      for (final MapEntry(:key, :value) in cambi.entries) {
+        final prima = _valori['$key'];
+        if (prima != null) _valori['$key'] = prima.conIlCambio(value);
+      }
+    }
+    if (evento['r'] case final List tolte) {
+      for (final id in tolte) {
+        _valori.remove('$id');
+      }
+    }
+    _aggiorna();
+  }
+
   void _aggiorna() {
     final v = _vettura;
-    final stato = collegamento.stato;
-    if (v == null || stato == null || _spento) return;
-    final l = v.lettura((id) => stato[id]);
+    if (v == null || _spento) return;
+    /* I suoi sensori dall'abbonamento; e se qualcun altro ha gia' chiesto
+     * tutta la casa (l'elenco dei dispositivi, un ponte di prima), anche da
+     * li'. */
+    final casa = collegamento.stato;
+    final l = v.lettura((id) => _valori[id] ?? casa?[id]);
     if (l == null || _uguale(l, _mandata)) return;
     _mandata = l;
     fonte.manda(l);

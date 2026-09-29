@@ -7,6 +7,7 @@ library;
 
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gdahome/casa/archivio_delle_case.dart';
 import 'package:gdahome/casa/casa_conosciuta.dart';
@@ -51,6 +52,76 @@ void main() {
         ComeStaLaLicenza.senzaControlli,
       );
     });
+
+    test('prima dell\'iPhone, dove non contano non si chiude niente', () async {
+      /* La chiave c'e', ma questo telefono non e' l'app per iPhone: niente
+       * lucchetti, niente negozio, e Base non vuol dire niente. */
+      final licenza = GestoreLicenza(chiave: chiaveDiProva, qui: false);
+      await licenza.conosci([unaCasa('a', gettone: '')]);
+      licenza.inUso('a');
+      expect(licenza.controlliAccesi, isFalse);
+      expect(licenza.siVende, isFalse);
+      expect(licenza.premium, isTrue);
+      expect(licenza.premiumQui.value, isTrue);
+      expect(licenza.stradeDaFuoriPer(unaCasa('a', gettone: '')), isTrue);
+      expect(
+        licenza.comeSta(unaCasa('a', gettone: '')),
+        ComeStaLaLicenza.senzaControlli,
+      );
+    });
+
+    test('contano sempre, o solo nell\'app per iPhone', () {
+      addTearDown(() => debugDefaultTargetPlatformOverride = null);
+      expect(contanoQui(false), isTrue);
+      debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+      expect(contanoQui(true), isTrue);
+      debugDefaultTargetPlatformOverride = TargetPlatform.android;
+      expect(contanoQui(true), isFalse);
+      /* Di serie la chiave e' vuota: in questa app oggi non contano. */
+      expect(licenzeInQuestaApp, isFalse);
+    });
+
+    test('una casa che le licenze non le sa tenere resta aperta', () async {
+      /* Il suo add-on e' di prima, o le ha spente: li' Premium non si puo'
+       * comprare, e un lucchetto senza una chiave da comprare non si mette. */
+      final licenza = GestoreLicenza(chiave: chiaveDiProva);
+      final senza = unaCasa('a').con(senzaLicenze: true);
+      final base = unaCasa('b', gettone: '');
+      await licenza.conosci([senza, base]);
+      licenza.inUso('a');
+      expect(licenza.comeSta(senza), ComeStaLaLicenza.casaSenzaLicenze);
+      expect(licenza.premium, isTrue);
+      expect(licenza.stradeDaFuoriPer(senza), isTrue);
+      /* Le altre restano quello che sono. */
+      expect(licenza.premiumDi(base), isFalse);
+      expect(licenza.stradeDaFuoriPer(base), isFalse);
+    });
+
+    test(
+      'con una ricevuta da portare, da fuori si passa anche da Base',
+      () async {
+        /* Chi compra fuori casa deve poterla portare subito: la strada si apre
+       * per quello, e il Premium lo dice poi la casa. */
+        final licenza = GestoreLicenza(chiave: chiaveDiProva);
+        final base = unaCasa('a', gettone: '');
+        await licenza.conosci([base]);
+        licenza.inUso('a');
+        expect(licenza.stradeDaFuoriPer(base), isFalse);
+        var avvisi = 0;
+        licenza.addListener(() => avvisi += 1);
+        licenza.ricevutaDaPortare = true;
+        expect(avvisi, greaterThan(0));
+        expect(licenza.stradeDaFuoriPer(base), isTrue);
+        expect(licenza.premium, isFalse);
+        licenza.ricevutaDaPortare = false;
+        expect(licenza.stradeDaFuoriPer(base), isFalse);
+        /* E Base forzata a mano resta chiusa: e' per vedere i lucchetti. */
+        licenza
+          ..forza = false
+          ..ricevutaDaPortare = true;
+        expect(licenza.stradeDaFuoriPer(base), isFalse);
+      },
+    );
 
     test('con la chiave, una casa senza gettone è Base', () async {
       final licenza = GestoreLicenza(chiave: chiaveDiProva);
@@ -195,6 +266,30 @@ void main() {
         expect(ancora.attiva!.gettone, '');
       },
     );
+
+    test(
+      '«senza licenze» si ricorda, e la prima risposta vera lo toglie',
+      () async {
+        final cassaforte = CassaforteInMemoria();
+        final archivio = ArchivioDelleCase(cassaforte);
+        await archivio.apri();
+        final casa = await archivio.aggiungi(nome: 'Casa', segno: 'segno');
+        await archivio.segnaIlGettone(casa.id, 'abc.def');
+        await archivio.segnaSenzaLicenze(casa.id);
+        final riaperto = ArchivioDelleCase(cassaforte);
+        await riaperto.apri();
+        expect(riaperto.attiva!.senzaLicenze, isTrue);
+        /* Il gettone di prima non lo rinnova piu' nessuno: mai chiesto. */
+        expect(riaperto.attiva!.gettone, isNull);
+        /* L'add-on si aggiorna e risponde, anche senza gettone: le licenze
+       * adesso le sa tenere. */
+        await riaperto.segnaIlGettone(casa.id, '');
+        final ancora = ArchivioDelleCase(cassaforte);
+        await ancora.apri();
+        expect(ancora.attiva!.senzaLicenze, isFalse);
+        expect(ancora.attiva!.gettone, '');
+      },
+    );
   });
 
   group('sul filo', () {
@@ -249,6 +344,106 @@ void main() {
         isEmpty,
       );
       expect(collegamento.licenza.premium, isTrue);
+    });
+
+    test('prima dell\'iPhone, sull\'Android alla casa non si chiede', () async {
+      ponte.licenza = {'gettoni': <String, String>{}};
+      await archivio.aggiungi(
+        nome: 'Casa',
+        segno: segnoBuono,
+        identificativo: chiBuono,
+        chiave: chiaveBuona,
+        inCasa: ponte.indirizzo,
+      );
+      collegamento = Collegamento(
+        archivio: archivio,
+        sonda: sondaChe({ponte.indirizzo}),
+        licenza: GestoreLicenza(chiave: chiaveDiProva, qui: false),
+      );
+      await collegamento.apri();
+      await Future<void>.delayed(const Duration(milliseconds: 200));
+      expect(
+        ponte.chieste.where((una) => una['type'] == 'ponte/licenza/stato'),
+        isEmpty,
+      );
+      expect(collegamento.licenza.premium, isTrue);
+    });
+
+    for (final (come, risponde) in [
+      ('un add-on di prima delle licenze', null),
+      (
+        'un add-on con le licenze spente',
+        <String, dynamic>{'attive': false, 'gettoni': <String, String>{}},
+      ),
+    ]) {
+      test('$come: si ricorda, e la casa non si chiude', () async {
+        ponte.licenza = risponde;
+        final casa = await archivio.aggiungi(
+          nome: 'Casa',
+          segno: segnoBuono,
+          identificativo: chiBuono,
+          chiave: chiaveBuona,
+          inCasa: ponte.indirizzo,
+        );
+        collegamento = Collegamento(
+          archivio: archivio,
+          sonda: sondaChe({ponte.indirizzo}),
+          licenza: GestoreLicenza(chiave: chiaveDiProva),
+        );
+        await collegamento.apri();
+        await aspetta(() => archivio.quella(casa.id)!.senzaLicenze);
+        expect(archivio.quella(casa.id)!.senzaLicenze, isTrue);
+        expect(collegamento.licenza.premium, isTrue);
+        expect(
+          collegamento.licenza.comeSta(archivio.quella(casa.id)),
+          ComeStaLaLicenza.casaSenzaLicenze,
+        );
+      });
+    }
+
+    test('una ricevuta comprata fuori casa, con Base, apre la strada del '
+        'centralino', () async {
+      final centralino = IndirizzoDelCentralino.leggi(
+        'wss://centralino.esempio.it',
+      )!;
+      final casa = await archivio.aggiungi(
+        nome: 'Casa',
+        segno: segnoBuono,
+        identificativo: chiBuono,
+        chiave: chiaveBuona,
+        casaAlCentralino: casaDiProva,
+        centralino: centralino,
+        inCasa: IndirizzoDelPonte.leggi('192.168.1.50')!,
+      );
+      await archivio.segnaIlGettone(casa.id, '');
+      collegamento = Collegamento(
+        archivio: archivio,
+        sonda: sondaChe({}),
+        licenza: GestoreLicenza(chiave: chiaveDiProva),
+        /* Il centralino di prova non risponde: si aspetta poco. */
+        attesaPerLaRicevuta: const Duration(milliseconds: 300),
+      );
+      await collegamento.apri();
+      expect(collegamento.fuoriCasaSenzaPremium, isTrue);
+      /* La ricevuta arriva mentre la casa non c'e': non si perde — resta al
+       * negozio e si riprova — e intanto si bussa da fuori per portarla. */
+      await expectLater(
+        collegamento.mandaLaRicevuta(
+          piattaforma: 'ios',
+          prodotto: 'gdahome_premium_mensile',
+          ricevuta: '2000000123456789',
+        ),
+        throwsA(
+          isA<LicenzaRifiutata>().having(
+            (no) => no.definitiva,
+            'definitiva',
+            false,
+          ),
+        ),
+      );
+      expect(collegamento.licenza.ricevutaDaPortare, isTrue);
+      await aspetta(() => !collegamento.fuoriCasaSenzaPremium);
+      expect(collegamento.fuoriCasaSenzaPremium, isFalse);
     });
 
     test('a ogni collegamento si chiede, e il gettone resta', () async {

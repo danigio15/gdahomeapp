@@ -22,6 +22,7 @@
  * che parte e la tessera della Home continuano a leggere l'unico posto che
  * hanno sempre letto. La regola sta in `core/piu-di-uno.js`.
  */
+import { segnoHtml } from "../core/segni-del-catalogo.js";
 import {
   CHIAVE_CENTRALE_SCELTA,
   CHIAVE_CENTRALI,
@@ -214,7 +215,7 @@ function rigaMarkup(voce, indice) {
   const id = `dm-area-${indice}-entity`;
   return `<article class="ed-row dm-todo-ed-row dm-area-row" data-area-index="${indice}" data-open="${aperto}">
     <div class="dm-todo-ed-head">
-      <span class="dm-todo-ed-icon" aria-hidden="true">🛡️</span>
+      <span class="dm-todo-ed-icon" aria-hidden="true">${segnoHtml("security")}</span>
       <span class="ed-row-main"><strong class="ed-row-new">${esc(
         nomeDellaCentrale(voce, indice, t("Area", "Area")),
       )}</strong><small class="ed-row-old mono">${
@@ -225,19 +226,19 @@ function rigaMarkup(voce, indice) {
       ${
         voce?.corrente
           ? ""
-          : `<button type="button" class="ed-del" data-area-mostra aria-label="${t("Mostra in pagina", "Show on the page")}" title="${t("Mostra in pagina", "Show on the page")}">👁️</button>`
+          : `<button type="button" class="ed-del" data-area-mostra aria-label="${t("Mostra in pagina", "Show on the page")}" title="${t("Mostra in pagina", "Show on the page")}">${segnoHtml("camera")}</button>`
       }
-      <button type="button" class="ed-del dm-todo-ed-edit" data-area-edit aria-label="${t("Modifica", "Edit")}">✏️</button>
-      <button type="button" class="ed-del dm-todo-ed-del" data-area-del aria-label="${t("Elimina", "Remove")}">🗑️</button>
+      <button type="button" class="ed-del dm-todo-ed-edit" data-area-edit aria-label="${t("Modifica", "Edit")}">${segnoHtml("pencil")}</button>
+      <button type="button" class="ed-del dm-todo-ed-del" data-area-del aria-label="${t("Elimina", "Remove")}">${segnoHtml("trash")}</button>
     </div>
     <div class="dm-todo-ed-body"${aperto ? "" : " hidden"}>
       <label class="ed-slot dm-todo-ed-field"><span class="ed-slot-lbl">${t("Nome", "Name")}</span><span class="ed-form-row"><input class="ed-input" data-area-nome value="${esc(clean(voce?.nome))}" placeholder="${esc(t("Zona notte", "Night zone"))}"></span></label>
       <label class="ed-slot dm-todo-ed-field"><span class="ed-slot-lbl">${t("Centrale allarme", "Alarm panel")}</span>
-        <span class="ed-form-row"><input id="${id}" class="ed-input mono" data-area-entity value="${esc(entita)}" placeholder="alarm_control_panel.zona_notte" autocomplete="off" spellcheck="false"><button type="button" class="dm-entity-picker" data-area-pick="${id}" aria-label="${t("Scegli entità", "Choose entity")}">🔍</button></span>
+        <span class="ed-form-row"><input id="${id}" class="ed-input mono" data-area-entity value="${esc(entita)}" placeholder="alarm_control_panel.zona_notte" autocomplete="off" spellcheck="false"><button type="button" class="dm-entity-picker" data-area-pick="${id}" aria-label="${t("Scegli entità", "Choose entity")}">${segnoHtml("search")}</button></span>
         <small>${esc(t("Un'entità alarm_control_panel.*: la pagina legge da lei gli inserimenti che accetta e ci manda i comandi.", "An alarm_control_panel.* entity: the page reads the arming modes it accepts from it and sends the commands to it."))}</small></label>
       ${zoneMarkup(voce)}
       <output class="dm-todo-ed-error" data-area-error></output>
-      <button type="button" class="ed-save-btn" data-area-save>💾 ${esc(t("Salva area", "Save area"))}</button>
+      <button type="button" class="ed-save-btn" data-area-save>${segnoHtml("check")} ${esc(t("Salva area", "Save area"))}</button>
     </div>
   </article>`;
 }
@@ -255,10 +256,10 @@ function zoneDellaSolaMarkup(voce) {
   const pastiglie = zoneMarkup(voce);
   if (!voce || !pastiglie) return "";
   return `<div class="dm-area-sola" data-area-index="0">
-    <div class="ed-sec-title">🛡️ ${esc(t("Zone e ingressi della centrale", "Zones and entry points of the panel"))}</div>
+    <div class="ed-sec-title">${segnoHtml("security")} ${esc(t("Zone e ingressi della centrale", "Zones and entry points of the panel"))}</div>
     ${pastiglie}
     <output class="dm-todo-ed-error" data-area-error></output>
-    <button type="button" class="ed-save-btn" data-area-save>💾 ${esc(t("Salva zone", "Save zones"))}</button>
+    <button type="button" class="ed-save-btn" data-area-save>${segnoHtml("check")} ${esc(t("Salva zone", "Save zones"))}</button>
   </div>`;
 }
 
@@ -277,7 +278,7 @@ function corpoMarkup() {
       ),
     )}</div>`;
   }
-  return `<div class="ed-sec-title">🛡️ ${esc(t("Le tue aree d'allarme", "Your alarm areas"))}</div>
+  return `<div class="ed-sec-title">${segnoHtml("security")} ${esc(t("Le tue aree d'allarme", "Your alarm areas"))}</div>
   <div class="ed-intro">${esc(
     t(
       "Ogni area è una centrale di Home Assistant, con i suoi inserimenti. Quella segnata «in pagina adesso» è quella che il quadrante e il tastierino stanno comandando: l'occhio accanto a un'altra la porta a schermo al posto suo.",
@@ -428,7 +429,7 @@ function onClick(event) {
     event.preventDefault();
     salva(righeDelDocumento(body, "data-area-index", lista, leggiRiga), lista[indice].id);
     ridisegna();
-    root.edToast?.(t("🛡️ Area in pagina", "🛡️ Area on the page"));
+    root.edToast?.(t("Area in pagina", "Area on the page"));
     return;
   }
   if (event.target.closest("[data-area-del]")) {
@@ -477,8 +478,8 @@ function onClick(event) {
     ridisegna();
     root.edToast?.(
       riga.querySelector("[data-area-entity]")
-        ? t("💾 Area salvata", "💾 Area saved")
-        : t("💾 Zone salvate", "💾 Zones saved"),
+        ? t("Area salvata", "Area saved")
+        : t("Zone salvate", "Zones saved"),
     );
   }
 }

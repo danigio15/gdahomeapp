@@ -10,6 +10,7 @@ import 'package:gdahome/casa/archivio_delle_case.dart';
 import 'package:gdahome/casa/cassaforte.dart';
 import 'package:gdahome/casa/collegamento.dart';
 import 'package:gdahome/ponte/indirizzo.dart';
+import 'package:gdahome/ponte/presa.dart';
 import 'package:gdahome/ponte/sonda.dart';
 
 import '../ponte/ponte_finto.dart';
@@ -169,6 +170,72 @@ void main() {
     await laStradaLunga.spegni();
   });
 
+  test('tornati a casa dal centralino, se la strada di casa risponde ci si '
+      'torna anche quando l\'indirizzo è quello di sempre', () async {
+    /* L'ultima volta si e' entrati dal centralino, e allora il centralino
+     * parte senza ritardo (`sonda.dart`): fuori casa e' quello che si vuole.
+     * Ma tornati a casa la rete puo' rispondere un soffio dopo di lui — il
+     * telefono che si riaggancia al Wi-Fi — e il centralino vince la corsa.
+     * L'indirizzo di casa pero' e' quello che si sapeva: prima qui si
+     * tornava e basta, e si restava sul giro lungo, in casa, fino al filo
+     * dopo — che ripartiva di nuovo senza ritardo. */
+    final ponte = await PonteFinto.alza();
+    ponte.indirizziDiCasa = [ponte.indirizzo];
+    final centralino = IndirizzoDelCentralino.leggi(
+      'wss://centralino.esempio.it',
+    )!;
+    final casa = await archivio.aggiungi(
+      nome: 'Casa',
+      segno: segnoBuono,
+      identificativo: chiBuono,
+      chiave: chiaveBuona,
+      inCasa: ponte.indirizzo,
+      centralino: centralino,
+      casaAlCentralino: 'casa_00112233445566778899aabbccddeeff',
+      approdoIniziale: DaDove.dalCentralino,
+    );
+
+    collegamento = Collegamento(
+      archivio: archivio,
+      /* Il centralino porta alla stessa casa: qui e' lo stesso ponte finto,
+       * visto da un'altra strada. */
+      apriLaPresa: (dove) => PresaSuWebSocket.apri(
+        dove.host == centralino.salute.host ? ponte.indirizzo.filo : dove,
+      ),
+      sonda: Sonda(
+        attesa: const Duration(seconds: 1),
+        vantaggio: const Duration(milliseconds: 400),
+        bussa: (dove) async {
+          if (dove == centralino.salute) return true;
+          if (dove == ponte.indirizzo.salute) {
+            /* Il Wi-Fi appena ritrovato: risponde, ma non per primo. */
+            await Future<void>.delayed(const Duration(milliseconds: 150));
+            return true;
+          }
+          return false;
+        },
+      ),
+    );
+    await collegamento.apri();
+    expect(
+      collegamento.daDove,
+      DaDove.dalCentralino,
+      reason: 'l\'ultima volta era da lì, e parte senza aspettare',
+    );
+
+    await _finoA(
+      () =>
+          collegamento.daDove == DaDove.daDentro &&
+          collegamento.comeVa == ComeVa.aperta,
+    );
+    expect(
+      archivio.quella(casa.id)!.ultimoApprodo,
+      DaDove.daDentro,
+      reason: 'la volta dopo il centralino riparte col suo ritardo',
+    );
+    await ponte.spegni();
+  });
+
   test('un ponte che non sa dire dove sta non cambia niente', () async {
     /* Un add-on di prima quel comando non lo conosce: si resta dove si e', e
      * quello che si sapeva non si cancella. */
@@ -321,6 +388,157 @@ void main() {
     expect(ponte.prese, hasLength(1));
     await ponte.spegni();
   });
+
+  test('a riposo si chiude il filo, non la plancia: al ritorno è ancora lì', () async {
+    /* «Tempo di caricamento app lentissimo.» Ogni ritorno dopo mezzo minuto in
+     * tasca il filo si riapre — ed e' giusto — ma insieme si dimenticava dove
+     * stava la plancia: chi la disegna buttava via la pagina, scriveva
+     * «Cerco la plancia…», e la rifaceva da capo. La casa pero' era la
+     * stessa, e la plancia pure. */
+    final ponte = await PonteFinto.alza();
+    await archivio.aggiungi(
+      nome: 'Casa',
+      segno: segnoBuono,
+      identificativo: chiBuono,
+      chiave: chiaveBuona,
+      inCasa: ponte.indirizzo,
+    );
+    collegamento = Collegamento(
+      archivio: archivio,
+      sonda: sondaChe({ponte.indirizzo}),
+    );
+    await collegamento.apri();
+    await _finoA(() => collegamento.pannelloLetto);
+    final base = collegamento.pannello!.base;
+    int quanteDomande() =>
+        ponte.arrivati.where((m) => m['type'] == 'ponte/plancia').length;
+    expect(quanteDomande(), 1);
+
+    /* Chi disegna guarda questo a ogni avviso: se in mezzo diventa falso, la
+     * pagina se ne va. */
+    final visti = <bool>[];
+    final ascolto = collegamento.cambiamenti.listen(
+      (_) => visti.add(collegamento.pannelloLetto),
+    );
+
+    await collegamento.riposa();
+    expect(collegamento.dentro, isFalse);
+    expect(collegamento.pannelloLetto, isTrue);
+    expect(collegamento.pannello?.base, base);
+
+    collegamento.sveglia();
+    /* Al ritorno la plancia si richiede lo stesso: puo' essere cambiata
+     * mentre si era via, e un permesso tolto deve valere. */
+    await _finoA(
+      () => collegamento.comeVa == ComeVa.aperta && quanteDomande() == 2,
+      entro: const Duration(seconds: 5),
+    );
+    await _finoA(() => collegamento.pannelloLetto);
+    expect(collegamento.pannello?.base, base);
+    expect(
+      visti,
+      isNot(contains(false)),
+      reason: 'per un momento non si sapeva dove fosse: la pagina se ne andava',
+    );
+
+    /* Lo stesso quando si rifa' il filo apposta, tirando giu' per aggiornare:
+     * la casa e' la stessa. */
+    visti.clear();
+    await collegamento.apri(forza: true);
+    await _finoA(() => quanteDomande() == 3);
+    expect(visti, isNot(contains(false)));
+    expect(collegamento.pannello?.base, base);
+
+    await ascolto.cancel();
+    await ponte.spegni();
+  });
+
+  test('cambiando casa, la plancia di prima si dimentica', () async {
+    /* L'altra meta' della regola: un'altra casa ha un'altra plancia, e quella
+     * di prima non deve restare a schermo nemmeno per un momento. */
+    final mia = await PonteFinto.alza();
+    final loro = await PonteFinto.alza();
+    loro.planciaDelPonte = PonteFinto.planciaNelPonte(
+      base: '/dashboardmodern_static/loro5678',
+    );
+    final casaMia = await archivio.aggiungi(
+      nome: 'Casa mia',
+      segno: segnoBuono,
+      identificativo: chiBuono,
+      chiave: chiaveBuona,
+      inCasa: mia.indirizzo,
+    );
+    final casaLoro = await archivio.aggiungi(
+      nome: 'Dai miei',
+      segno: segnoBuono,
+      identificativo: chiBuono,
+      chiave: chiaveBuona,
+      inCasa: loro.indirizzo,
+    );
+    collegamento = Collegamento(
+      archivio: archivio,
+      sonda: sondaChe({mia.indirizzo, loro.indirizzo}),
+    );
+    await collegamento.cambiaCasa(casaMia.id);
+    await _finoA(() => collegamento.pannelloLetto);
+    expect(collegamento.pannello!.base, '/dashboardmodern_static/ponte1234');
+
+    final visti = <(String?, bool)>[];
+    final ascolto = collegamento.cambiamenti.listen(
+      (_) => visti.add((collegamento.casa?.id, collegamento.pannelloLetto)),
+    );
+    await collegamento.cambiaCasa(casaLoro.id);
+    await _finoA(() => collegamento.pannelloLetto);
+
+    expect(collegamento.pannello!.base, '/dashboardmodern_static/loro5678');
+    expect(visti.first, (
+      casaLoro.id,
+      false,
+    ), reason: 'la casa nuova comincia senza la plancia di quella vecchia');
+    await ascolto.cancel();
+    await mia.spegni();
+    await loro.spegni();
+  });
+
+  test(
+    'se il filo cade mentre si chiede, la plancia che si sapeva resta',
+    () async {
+      /* Una domanda senza risposta non e' un «qui la plancia non c'e'»: prima
+     * lo diventava, e la schermata buttava via la pagina per scrivere che
+     * l'add-on non ha la plancia — proprio mentre la plancia c'era. */
+      final ponte = await PonteFinto.alza();
+      await archivio.aggiungi(
+        nome: 'Casa',
+        segno: segnoBuono,
+        identificativo: chiBuono,
+        chiave: chiaveBuona,
+        inCasa: ponte.indirizzo,
+      );
+      collegamento = Collegamento(
+        archivio: archivio,
+        sonda: sondaChe({ponte.indirizzo}),
+      );
+      await collegamento.apri();
+      await _finoA(() => collegamento.pannelloLetto);
+      final prima = collegamento.pannello;
+      expect(prima, isNotNull);
+
+      /* La casa smette di rispondere, e mentre si aspetta il filo cade. */
+      ponte.muto = true;
+      final chiesta = collegamento.rileggiLaPlancia();
+      await _finoA(
+        () =>
+            ponte.arrivati.where((m) => m['type'] == 'ponte/plancia').length ==
+            2,
+      );
+      await ponte.buttaGiu();
+      await chiesta;
+
+      expect(collegamento.pannelloLetto, isTrue);
+      expect(collegamento.pannello, same(prima));
+      await ponte.spegni();
+    },
+  );
 
   test('quando il filo torna su da solo, l\'app se ne accorge', () async {
     /* Il difetto si vedeva solo dalla seconda volta in poi: la prima ci

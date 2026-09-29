@@ -550,14 +550,29 @@ bene "quadro scaricato e provato, versione ${VERSIONE:0:8}"
 
 passo "Accendo il servizio"
 
-{
-  printf 'QUADRO_PORTA=%s\n' "$PORTA"
-  # Solo su questa macchina: davanti c'e' Caddy.
-  printf 'QUADRO_ASCOLTO=%s\n' "127.0.0.1"
-  printf 'QUADRO_DATI=%s\n' "$DATI"
-  printf 'QUADRO_GESTORE=%s\n' "$CHIAVE_GESTORE"
-  printf 'QUADRO_REGISTRO=%s\n' "info"
-} >"$CONFIGURAZIONE/ambiente"
+# Le righe che questo script non scrive le ha messe a mano chi tiene il quadro:
+# la chiave privata delle licenze (`QUADRO_LICENZE_CHIAVE`), le credenziali dei
+# negozi (`QUADRO_APPLE_*`, `QUADRO_GOOGLE_*`). Rilanciarlo non le porta via: si
+# rileggono prima di riscrivere il file, e si rimettono in fondo uguali.
+#
+# Buttarle sarebbe il guaio peggiore che questo script possa fare, ed e'
+# silenzioso: senza la privata il quadro non firma piu' nessun gettone, e otto
+# giorni dopo tutte le case che hanno pagato sono Base. E la privata non si
+# riprende: sta solo qui.
+MESSE_A_MANO="$(grep -Ev '^(QUADRO_PORTA|QUADRO_ASCOLTO|QUADRO_DATI|QUADRO_GESTORE|QUADRO_REGISTRO)=' \
+  "$CONFIGURAZIONE/ambiente" 2>/dev/null || true)"
+(
+  umask 077
+  {
+    printf 'QUADRO_PORTA=%s\n' "$PORTA"
+    # Solo su questa macchina: davanti c'e' Caddy.
+    printf 'QUADRO_ASCOLTO=%s\n' "127.0.0.1"
+    printf 'QUADRO_DATI=%s\n' "$DATI"
+    printf 'QUADRO_GESTORE=%s\n' "$CHIAVE_GESTORE"
+    printf 'QUADRO_REGISTRO=%s\n' "info"
+    [[ -z "$MESSE_A_MANO" ]] || printf '%s\n' "$MESSE_A_MANO"
+  } >"$CONFIGURAZIONE/ambiente"
+)
 chmod 600 "$CONFIGURAZIONE/ambiente"
 
 cat >/etc/systemd/system/quadro.service <<FINE

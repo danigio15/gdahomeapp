@@ -11,6 +11,7 @@
 /// devono essere quelli che la pagina chiede.
 library;
 
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -119,6 +120,106 @@ void main() {
     expect(laCartellaDi('/a/b/c.html'), '/a/b');
     expect(laCartellaDi('/c.html'), '/');
     expect(laCartellaDi('c.html'), '/');
+  });
+
+  test('la cartella che li contiene tutti', () {
+    /* E' dove si guarda cosa c'e' gia' sul disco, una volta sola: la plancia
+     * con la sua impronta, e non tutte quelle di prima di ogni
+     * aggiornamento. */
+    expect(
+      laCartellaComune([
+        '/dashboardmodern_static/abc/src/core/uno.js',
+        '/dashboardmodern_static/abc/src/sections/due.js',
+        '/dashboardmodern_static/abc/legacy/modules-entry.js',
+      ]),
+      '/dashboardmodern_static/abc',
+    );
+    expect(laCartellaComune(['/a/b/c.js']), '/a/b');
+    /* Un nome che comincia allo stesso modo non e' la stessa cartella. */
+    expect(laCartellaComune(['/a/bc/x.js', '/a/b/y.js']), '/a');
+    expect(laCartellaComune(['/x.js', '/a/b/y.js']), '/');
+    expect(laCartellaComune(const <String>[]), '/');
+  });
+
+  group('i pacchi viaggiano in una finestra, non a gruppi', () {
+    /// Un lavoro che finisce quando lo dice la prova.
+    ({
+      List<String> partiti,
+      Map<String, Completer<void>> finisci,
+      Future<void> Function(String) lavora,
+    })
+    lavoriAMano() {
+      final partiti = <String>[];
+      final finisci = <String, Completer<void>>{};
+      return (
+        partiti: partiti,
+        finisci: finisci,
+        lavora: (String quale) {
+          partiti.add(quale);
+          return (finisci[quale] = Completer<void>()).future;
+        },
+      );
+    }
+
+    test('appena uno finisce ne parte un altro, senza aspettare il più '
+        'lento', () async {
+      /* Prima si andava a gruppi di quattro: il quinto partiva quando erano
+       * finiti tutti e quattro i primi, e un pacco lento lasciava vuoti gli
+       * altri tre posti. */
+      final a = lavoriAMano();
+      final tutti = aFinestra(['1', '2', '3', '4', '5', '6'], a.lavora);
+      await Future<void>.delayed(Duration.zero);
+      expect(a.partiti, ['1', '2', '3', '4'], reason: 'quattro in volo');
+
+      /* Il primo e' lento; il secondo finisce, e il suo posto non aspetta. */
+      a.finisci['2']!.complete();
+      await Future<void>.delayed(Duration.zero);
+      expect(a.partiti, ['1', '2', '3', '4', '5']);
+
+      a.finisci['3']!.complete();
+      await Future<void>.delayed(Duration.zero);
+      expect(a.partiti, ['1', '2', '3', '4', '5', '6']);
+
+      var finito = false;
+      unawaited(tutti.then((_) => finito = true));
+      for (final quale in ['4', '5', '6']) {
+        a.finisci[quale]!.complete();
+      }
+      await Future<void>.delayed(Duration.zero);
+      expect(finito, isFalse, reason: 'il primo è ancora in volo');
+      a.finisci['1']!.complete();
+      await tutti;
+    });
+
+    test('mai più di quanti se ne chiedono insieme', () async {
+      var inVolo = 0;
+      var alMassimo = 0;
+      await aFinestra(List.generate(20, (i) => i), (i) async {
+        inVolo += 1;
+        if (inVolo > alMassimo) alMassimo = inVolo;
+        await Future<void>.delayed(Duration(milliseconds: 1 + i % 3));
+        inVolo -= 1;
+      });
+      expect(alMassimo, pacchiInsieme);
+    });
+
+    test('uno che va storto non ferma gli altri, e si sa in fondo', () async {
+      final fatti = <int>[];
+      await expectLater(
+        aFinestra([1, 2, 3, 4, 5, 6], (i) async {
+          if (i == 1) throw StateError('il primo non è arrivato');
+          fatti.add(i);
+        }, quanti: 2),
+        throwsA(isA<StateError>()),
+      );
+      expect(fatti, [2, 3, 4, 5, 6]);
+    });
+
+    test('un elenco vuoto non fa niente', () async {
+      var chiamato = false;
+      await aFinestra(const <int>[], (_) async => chiamato = true);
+      expect(chiamato, isFalse);
+    });
   });
 
   test('la pagina vera: i percorsi sono quelli dei file che ci sono', () {

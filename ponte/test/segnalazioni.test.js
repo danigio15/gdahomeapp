@@ -116,10 +116,7 @@ async function centralinoFinto() {
 }
 
 test("dal wss del centralino si ricava la porta http di fianco", () => {
-  assert.equal(
-    baseDelCentralino("wss://gdahome-centralino.x.workers.dev"),
-    "https://gdahome-centralino.x.workers.dev",
-  );
+  assert.equal(baseDelCentralino("wss://tramite.esempio.it"), "https://tramite.esempio.it");
   assert.equal(baseDelCentralino("ws://127.0.0.1:8787/"), "http://127.0.0.1:8787");
   assert.equal(baseDelCentralino(""), "");
   assert.equal(baseDelCentralino(undefined), "");

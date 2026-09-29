@@ -267,7 +267,10 @@ for (const variant of PRIMARY) {
     await expect(card.locator(".temp-room-name")).toHaveText("Salone");
     await expect(card.locator(".temp-value")).toHaveText("22.4");
     await expect(card.locator(".temp-hum-val")).toHaveText("48%");
-    await expect(card.locator(".dm-temperature-icon-fallback")).toHaveText("🛋️");
+    await expect(card.locator(".dm-temperature-icon-fallback .dm-segno")).toHaveAttribute(
+      "data-dm-segno",
+      "room-living",
+    );
     await expect(page.locator("#temp-grid")).toHaveAttribute(
       "data-dm-temperature-renderer",
       "canonical",

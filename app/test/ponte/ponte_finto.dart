@@ -289,12 +289,21 @@ class PonteFinto {
         quanto += '${(risposta['result'] as Map)['corpo']}'.length;
         if (quanto >= paccoFinoA) break;
       }
-      _manda(presa, {
+      final pacco = {
         'id': id,
         'type': 'result',
         'success': true,
         'result': {'file': dentro},
-      });
+      };
+      final prima = primaDelPacco;
+      if (prima == null) {
+        _manda(presa, pacco);
+      } else {
+        unawaited(
+          prima([for (final uno in percorsi) '$uno'])
+              .then((_) => _manda(presa, pacco)),
+        );
+      }
       return;
     }
     if (detto['type'] == 'ponte/plancia') {
@@ -357,6 +366,29 @@ class PonteFinto {
             'primario': quale['primaria'],
           },
           'plance': plance,
+        },
+      });
+      return;
+    }
+    if (detto['type'] == 'subscribe_entities') {
+      /* Come Home Assistant: prima la risposta, e subito dopo lo stato di
+       * adesso delle entita' chieste, nella forma stretta. */
+      _manda(presa, {
+        'id': id,
+        'type': 'result',
+        'success': true,
+        'result': null,
+      });
+      final chieste = (detto['entity_ids'] as List?)?.cast<String>();
+      _manda(presa, {
+        'id': id,
+        'type': 'event',
+        'event': {
+          'a': {
+            for (final una in entita)
+              if (chieste == null || chieste.contains(una['entity_id']))
+                una['entity_id'] as String: stretta(una),
+          },
         },
       });
       return;
@@ -1048,6 +1080,11 @@ class PonteFinto {
   /// cosa succede a quelli che non ci stanno.
   int paccoFinoA = 384 * 1024;
 
+  /// Quando c'e', il pacco si risponde dopo questo: e' un pacco lento, quello
+  /// grosso o quello che passa da un centralino affollato. Riceve i percorsi
+  /// chiesti, cosi' la prova sceglie quale fare aspettare.
+  Future<void> Function(List<String> percorsi)? primaDelPacco;
+
   Map<String, dynamic> _commissione(Map<String, dynamic> detto) {
     commissioni.add(detto);
     return _unFile(detto);
@@ -1182,6 +1219,21 @@ class PonteFinto {
     'last_updated':
         aggiornataIl ?? cambiataIl ?? '2026-09-07T07:00:00.000000+00:00',
   };
+
+  /// Un'entita' come la scrive `subscribe_entities`: `s`, `a`, e i secondi
+  /// `lc` (e `lu`, solo se diverso).
+  static Map<String, dynamic> stretta(Map<String, dynamic> intera) {
+    double secondi(Object? quando) =>
+        DateTime.parse(quando! as String).microsecondsSinceEpoch / 1000000;
+    final lc = secondi(intera['last_changed']);
+    final lu = secondi(intera['last_updated'] ?? intera['last_changed']);
+    return {
+      's': intera['state'],
+      'a': intera['attributes'],
+      'lc': lc,
+      if (lu != lc) 'lu': lu,
+    };
+  }
 
   /// Manda un `state_changed` come lo manderebbe Home Assistant.
   void cambia(int id, String entita, Map<String, dynamic>? nuovo) {

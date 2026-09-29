@@ -25,7 +25,7 @@ import {
   tipoDelFile,
 } from "../src/segnalazioni.js";
 
-/* Un archivio come quello del Durable Object: get, put, e basta. */
+/* Un archivio come quello che lo sportello da' a ogni casa: get, put, e basta. */
 function archivioFinto() {
   const dentro = new Map();
   return {

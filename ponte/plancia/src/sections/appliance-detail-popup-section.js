@@ -45,6 +45,7 @@ import {
   root,
   t,
 } from "./shared.js";
+import { segnoHtml } from "../core/segni-del-catalogo.js";
 
 const KEY = "__DASHBOARDMODERN_APPLIANCE_DETAIL_POPUP__";
 const state = (root[KEY] ||= { installed: false, aperto: null });
@@ -101,16 +102,16 @@ function glifoDellaLettura(entity, unit) {
   /* L'unita' comanda: c'e' chi chiama il sensore di potenza «w_kwh_frigo»,
    * e a leggere solo il nome i watt uscirebbero vestiti da energia. */
   const unita = clean(unit).toLowerCase();
-  if (unita === "w" || unita === "kw") return "⚡";
-  if (unita === "kwh" || unita === "wh") return "📊";
+  if (unita === "w" || unita === "kw") return "power";
+  if (unita === "kwh" || unita === "wh") return "gauge";
   const token = `${entity} ${unit}`.toLowerCase();
-  if (/temperatur|°/.test(token)) return "🌡️";
-  if (/umidit|humidity/.test(token)) return "💧";
-  if (/kwh|energy|energia/.test(token)) return "📊";
-  if (/\bw\b|watt|power|potenza/.test(token)) return "⚡";
-  if (/corrente|current|\ba\b/.test(token)) return "🔌";
-  if (/volt|tension/.test(token)) return "🎚️";
-  return "📈";
+  if (/temperatur|°/.test(token)) return "thermometer";
+  if (/umidit|humidity/.test(token)) return "water";
+  if (/kwh|energy|energia/.test(token)) return "gauge";
+  if (/\bw\b|watt|power|potenza/.test(token)) return "power";
+  if (/corrente|current|\ba\b/.test(token)) return "socket";
+  if (/volt|tension/.test(token)) return "sliders";
+  return "gauge";
 }
 
 /* Il nome della casella, in parole.
@@ -323,7 +324,7 @@ function riveste(indice) {
       const casella = doc.createElement("button");
       casella.type = "button";
       casella.className = "dm-apde-casella hist-clickable";
-      casella.innerHTML = `<span class="dm-apde-casella-ic" aria-hidden="true">${misura.glifo}</span>
+      casella.innerHTML = `<span class="dm-apde-casella-ic" aria-hidden="true">${segnoHtml(misura.glifo)}</span>
         <b>${esc(misura.valore)}</b><span>${esc(misura.nome)}</span>`;
       casella.addEventListener("click", (event) => apriStorico(event, misura.entity, misura.nome));
       griglia.append(casella);
@@ -359,7 +360,8 @@ function riveste(indice) {
       const tasto = doc.createElement("button");
       tasto.type = "button";
       tasto.className = `dm-apde-tasto${comando.acceso ? " on" : ""}`;
-      tasto.textContent = comando.azione ? "▶" : comando.acceso ? "OFF" : "ON";
+      if (comando.azione) tasto.innerHTML = segnoHtml("play");
+      else tasto.textContent = comando.acceso ? "OFF" : "ON";
       tasto.setAttribute(
         "aria-label",
         comando.azione ? `${t("Esegui", "Run")} ${comando.nome}` : comando.nome,
@@ -482,7 +484,8 @@ function tastoDelComandoExtra(voce) {
   tasto.type = "button";
   const interruttore = voce.genere === "interruttore";
   tasto.className = `dm-apde-tasto${interruttore && voce.acceso ? " on" : ""}`;
-  tasto.textContent = interruttore ? (voce.acceso ? "OFF" : "ON") : "▶";
+  if (interruttore) tasto.textContent = voce.acceso ? "OFF" : "ON";
+  else tasto.innerHTML = segnoHtml("play");
   tasto.disabled = !voce.available;
   if (interruttore) tasto.setAttribute("aria-pressed", String(voce.acceso === true));
   tasto.setAttribute(
@@ -527,7 +530,7 @@ function aggiungiAltreLetture(lista, appliance, titoletto) {
     casella.type = "button";
     casella.className = "dm-apde-casella hist-clickable";
     casella.dataset.dmApdeEntity = voce.entity;
-    casella.innerHTML = `<span class="dm-apde-casella-ic" aria-hidden="true">📈</span><b>${esc(voce.testo)}</b><span>${esc(voce.name)}</span>`;
+    casella.innerHTML = `<span class="dm-apde-casella-ic" aria-hidden="true">${segnoHtml("gauge")}</span><b>${esc(voce.testo)}</b><span>${esc(voce.name)}</span>`;
     casella.addEventListener("click", (event) => apriStorico(event, voce.entity, voce.name));
     griglia.append(casella);
   }
@@ -605,7 +608,7 @@ function tastoDelComando(voce) {
   tasto.type = "button";
   if (controllo.kind === "press") {
     tasto.className = "dm-apde-tasto";
-    tasto.textContent = "▶";
+    tasto.innerHTML = segnoHtml("play");
     tasto.setAttribute("aria-label", `${t("Esegui", "Run")} ${voce.name}`);
     tasto.addEventListener("click", (event) => {
       event.stopPropagation();
@@ -686,7 +689,7 @@ function vesteIntegrazione(lista, appliance, giaMostrate, titoletto) {
     .map(clean)
     .filter(Boolean)
     .join(" ");
-  testa.innerHTML = `<strong>🔗 ${esc(t("Dall'integrazione", "From the integration"))}${nome ? ` ${esc(nome)}` : ""}</strong>${chi ? `<span>${esc(chi)}</span>` : ""}`;
+  testa.innerHTML = `<strong>${segnoHtml("link")} ${esc(t("Dall'integrazione", "From the integration"))}${nome ? ` ${esc(nome)}` : ""}</strong>${chi ? `<span>${esc(chi)}</span>` : ""}`;
   lista.append(testa);
 
   if (stato.length) {
@@ -714,7 +717,7 @@ function vesteIntegrazione(lista, appliance, giaMostrate, titoletto) {
       casella.type = "button";
       casella.className = "dm-apde-casella hist-clickable";
       casella.dataset.dmApdeEntity = voce.entity;
-      casella.innerHTML = `<span class="dm-apde-casella-ic" aria-hidden="true">📈</span><b>${esc(voce.value)}</b><span>${esc(voce.name)}</span>`;
+      casella.innerHTML = `<span class="dm-apde-casella-ic" aria-hidden="true">${segnoHtml("gauge")}</span><b>${esc(voce.value)}</b><span>${esc(voce.name)}</span>`;
       casella.addEventListener("click", (event) => apriStorico(event, voce.entity, voce.name));
       griglia.append(casella);
     }

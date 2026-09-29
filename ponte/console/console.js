@@ -2114,14 +2114,21 @@
     var spenta = { attiva: false };
     var gdahome = stato.gdahome || spenta;
     var gdanav = stato.gdanav || spenta;
-    soloBase = !gdahome.attiva;
+    /* Base limita la casa solo se il ponte lo dice, e il ponte di oggi non
+     * lo dice mai: i lucchetti di Base li mettono l'app e il browser, e qui
+     * non si spengono tasti che la casa non spegne. Un ponte di prima, che
+     * `limitata` non la mandava, limitava con Base. */
+    soloBase = stato.limitata === undefined ? !gdahome.attiva : stato.limitata === true;
     var elenco = trova("elenco-licenze");
     elenco.textContent = "";
     elenco.appendChild(
       unaRigaDiLicenza(
         "gdahome",
         gdahome,
-        due("Base: una plancia, e solo da casa", "Base: one dashboard, and only at home"),
+        due(
+          "Base: nell'app e nel browser una plancia, e solo da casa",
+          "Base: one dashboard in the app and the browser, and only at home",
+        ),
       ),
     );
     elenco.appendChild(

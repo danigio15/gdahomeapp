@@ -294,6 +294,12 @@ jobs:
       # Il pacchetto esce senza centralino pur avendone uno, e il riquadro qui
       # sopra intanto dice quello giusto: due cose che si contraddicono, ed e'
       # il modo piu' rapido di far perdere un'ora a chi lo installa.
+      #
+      # Le chiavi di gdanav vengono dagli stessi segreti di «Navigatore in
+      # prova», e qui non c'erano: la 1.8.0 del Play Store e' uscita senza
+      # quella di TomTom, e il navigatore — in auto e sul telefono — non aveva
+      # lo strato del traffico. L'ha detto la sua diagnosi: «Non c'è: l'app è
+      # senza la chiave TomTom».
       - name: Il pacchetto
         working-directory: app
         env:
@@ -304,6 +310,8 @@ jobs:
           # sapere quale si ha installato era disinstallare e rifare — che
           # costa l'abbinamento. Adesso c'e' scritto in fondo alla schermata.
           CORSA: ${{ github.run_number }}
+          TOMTOM: ${{ secrets.GDANAV_TOMTOM_CHIAVE }}
+          OCM: ${{ secrets.GDANAV_OCM_CHIAVE }}
         run: |
           # Su un'etichetta il numero e' quello del rilascio, e non «37-a0566bd»:
           # chi ha installato una release deve poter dire quale ha, con le stesse
@@ -314,11 +322,15 @@ jobs:
             VERSIONE="$CORSA-${GITHUB_SHA:0:7}"
           fi
           echo "Questo pacchetto e' il $VERSIONE"
-          if [ -n "$CENTRALINO" ]; then
-            flutter build apk --release --dart-define=VERSIONE="$VERSIONE" --dart-define=CENTRALINO="$CENTRALINO"
+          definizioni=(--dart-define=VERSIONE="$VERSIONE")
+          if [ -n "$CENTRALINO" ]; then definizioni+=(--dart-define=CENTRALINO="$CENTRALINO"); fi
+          if [ -n "$TOMTOM" ]; then
+            definizioni+=(--dart-define=GDANAV_TOMTOM_CHIAVE="$TOMTOM")
           else
-            flutter build apk --release --dart-define=VERSIONE="$VERSIONE"
+            echo "::warning::Manca il segreto GDANAV_TOMTOM_CHIAVE: il navigatore esce senza traffico, in auto e sul telefono."
           fi
+          if [ -n "$OCM" ]; then definizioni+=(--dart-define=GDANAV_OCM_CHIAVE="$OCM"); fi
+          flutter build apk --release "${definizioni[@]}"
 
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
@@ -340,17 +352,19 @@ jobs:
         env:
           CENTRALINO: ${{ inputs.centralino }}
           CORSA: ${{ github.run_number }}
+          TOMTOM: ${{ secrets.GDANAV_TOMTOM_CHIAVE }}
+          OCM: ${{ secrets.GDANAV_OCM_CHIAVE }}
         run: |
           if [ "$GITHUB_REF_TYPE" = "tag" ]; then
             VERSIONE="${GITHUB_REF_NAME#v}"
           else
             VERSIONE="$CORSA-${GITHUB_SHA:0:7}"
           fi
-          if [ -n "$CENTRALINO" ]; then
-            flutter build appbundle --release --dart-define=VERSIONE="$VERSIONE" --dart-define=CENTRALINO="$CENTRALINO"
-          else
-            flutter build appbundle --release --dart-define=VERSIONE="$VERSIONE"
-          fi
+          definizioni=(--dart-define=VERSIONE="$VERSIONE")
+          if [ -n "$CENTRALINO" ]; then definizioni+=(--dart-define=CENTRALINO="$CENTRALINO"); fi
+          if [ -n "$TOMTOM" ]; then definizioni+=(--dart-define=GDANAV_TOMTOM_CHIAVE="$TOMTOM"); fi
+          if [ -n "$OCM" ]; then definizioni+=(--dart-define=GDANAV_OCM_CHIAVE="$OCM"); fi
+          flutter build appbundle --release "${definizioni[@]}"
           {
             echo "### Il pacchetto per il Play Store"
             echo ""
@@ -536,11 +550,18 @@ jobs:
       # Il numero del pacchetto (CFBundleVersion) e' quello della corsa: sale
       # sempre, e TestFlight non accetta due volte lo stesso numero per la
       # stessa versione. Il nome della versione resta quello di pubspec.
+      #
+      # Le chiavi di gdanav si passano qui e non dopo: l'archivio firmato
+      # rifa' la parte Dart con le definizioni che questo passo ha scritto in
+      # Generated.xcconfig, e CarPlay senza la chiave di TomTom resta senza
+      # traffico come Android Auto.
       - name: Compila (senza firma)
         working-directory: app
         env:
           CENTRALINO: ${{ inputs.centralino }}
           CORSA: ${{ github.run_number }}
+          TOMTOM: ${{ secrets.GDANAV_TOMTOM_CHIAVE }}
+          OCM: ${{ secrets.GDANAV_OCM_CHIAVE }}
         run: |
           # Su un'etichetta il numero e' quello del rilascio, come su Android.
           if [ "$GITHUB_REF_TYPE" = "tag" ]; then
@@ -548,11 +569,15 @@ jobs:
           else
             VERSIONE="$CORSA-${GITHUB_SHA:0:7}"
           fi
-          if [ -n "$CENTRALINO" ]; then
-            flutter build ios --release --no-codesign --build-number="$CORSA" --dart-define=VERSIONE="$VERSIONE" --dart-define=CENTRALINO="$CENTRALINO"
+          definizioni=(--dart-define=VERSIONE="$VERSIONE")
+          if [ -n "$CENTRALINO" ]; then definizioni+=(--dart-define=CENTRALINO="$CENTRALINO"); fi
+          if [ -n "$TOMTOM" ]; then
+            definizioni+=(--dart-define=GDANAV_TOMTOM_CHIAVE="$TOMTOM")
           else
-            flutter build ios --release --no-codesign --build-number="$CORSA" --dart-define=VERSIONE="$VERSIONE"
+            echo "::warning::Manca il segreto GDANAV_TOMTOM_CHIAVE: il navigatore esce senza traffico, in CarPlay e sul telefono."
           fi
+          if [ -n "$OCM" ]; then definizioni+=(--dart-define=GDANAV_OCM_CHIAVE="$OCM"); fi
+          flutter build ios --release --no-codesign --build-number="$CORSA" "${definizioni[@]}"
 
       # Da qui in giu' si va avanti solo se su GitHub ci sono le chiavi di
       # Apple. Non ci sono? Il lavoro finisce verde lo stesso, e sopra c'e'

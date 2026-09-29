@@ -16,10 +16,11 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { laChiaveIn } from "../../strumenti/accendi-gli-acquisti.mjs";
+
 const QUI = dirname(fileURLToPath(import.meta.url));
 const CENTRALINO = join(QUI, "..", "src");
 const PONTE = join(QUI, "..", "..", "ponte", "src");
-const NUVOLA = join(QUI, "..", "..", "nuvola", "src");
 
 /* `gettone.js` e `chiave-licenze.js` ci sono dal giorno delle licenze: il
  * gettone si verifica con le stesse regole dappertutto (`docs/LICENZE.md`), e
@@ -36,8 +37,39 @@ const COPIATI = [
   "chiave-licenze.js",
 ];
 
+/* La chiave delle licenze e' l'unica riga che puo' essere diversa, e solo
+ * in un modo: al primo passo sta nell'add-on e il centralino e' senza
+ * (`strumenti/accendi-gli-acquisti.mjs`, «senza-centralino»). Tutto il
+ * resto del file e' identico sempre, e se la chiave c'e' da tutte e due le
+ * parti e' la stessa. */
+function laChiaveCome(copia, delPonte, dove) {
+  const vuota = (testo) => testo.replace(/(CHIAVE_PUBBLICA_LICENZE\s*=\s*)"[^"]*"/, '$1""');
+  assert.equal(
+    vuota(copia),
+    vuota(delPonte),
+    `«chiave-licenze.js» ${dove} e' diverso da quello del ponte: si rifa' con\n` +
+      "  node strumenti/chiave-licenze.mjs",
+  );
+  const sua = laChiaveIn(copia);
+  const quella = laChiaveIn(delPonte);
+  /* Vuota si', finche' non tocca al centralino (il primo passo,
+   * `docs/ACCENDERE-GLI-ACQUISTI.md`); un'altra chiave mai. */
+  assert.ok(
+    sua === quella || sua === "",
+    `la chiave ${dove} non e' quella del ponte, e non e' vuota`,
+  );
+}
+
 test("le copie prese dal ponte sono ancora identiche", () => {
   for (const nome of COPIATI) {
+    if (nome === "chiave-licenze.js") {
+      laChiaveCome(
+        readFileSync(join(CENTRALINO, nome), "utf8"),
+        readFileSync(join(PONTE, nome), "utf8"),
+        "del centralino",
+      );
+      continue;
+    }
     assert.equal(
       readFileSync(join(CENTRALINO, nome), "utf8"),
       readFileSync(join(PONTE, nome), "utf8"),
@@ -47,32 +79,16 @@ test("le copie prese dal ponte sono ancora identiche", () => {
   }
 });
 
-/* `segnalazioni.js` invece viene dalla nuvola, ed e' una copia per un motivo
- * diverso: la stessa cosa gira in due posti — il Worker e la macchina — finche'
- * le case non saranno passate tutte di qua. Due copie che divergono vorrebbero
- * dire due comportamenti diversi a seconda di dove una casa e' finita, che e'
- * il genere di differenza che non si trova mai guardando il codice di una
- * parte sola. */
-const PRESI_DALLA_NUVOLA = ["segnalazioni.js", "versioni.js"];
-
-test("le copie prese dalla nuvola sono ancora identiche", () => {
-  for (const nome of PRESI_DALLA_NUVOLA) {
-    assert.equal(
-      readFileSync(join(CENTRALINO, nome), "utf8"),
-      readFileSync(join(NUVOLA, nome), "utf8"),
-      `\u00ab${nome}\u00bb e' diverso da quello della nuvola. Si riallinea cosi':\n` +
-        `  cp nuvola/src/${nome} centralino/src/`,
-    );
-  }
-});
-
-/* E la nuvola, che il gettone lo verifica con le sue funzioni, ha la stessa
- * chiave: la riga e' una, in tre posti. */
-test("la chiave delle licenze e' la stessa nella nuvola", () => {
-  assert.equal(
-    readFileSync(join(NUVOLA, "chiave-licenze.js"), "utf8"),
-    readFileSync(join(PONTE, "chiave-licenze.js"), "utf8"),
-    "«chiave-licenze.js» della nuvola e' diverso da quello del ponte: si rifa' con\n" +
-      "  node strumenti/chiave-licenze.mjs",
-  );
+test("il centralino puo' restare senza la chiave della casa, ma non averne un'altra", () => {
+  const delPonte = (chiave) => `export const CHIAVE_PUBBLICA_LICENZE = "${chiave}";\n`;
+  const x = "6P9sdqQtlHcmH7Ve_SgzmyJmxJS28CNORRJJfjI3rnI";
+  /* Il primo passo: la casa con la chiave, il centralino senza. */
+  laChiaveCome(delPonte(""), delPonte(x), "di prova");
+  /* Tutti e due: la stessa. */
+  laChiaveCome(delPonte(x), delPonte(x), "di prova");
+  /* Una chiave diversa non va mai. */
+  assert.throws(() => laChiaveCome(delPonte("un'altra"), delPonte(x), "di prova"));
+  /* E il centralino con una chiave che la casa non ha chiuderebbe fuori
+   * tutte le case: nessuna gli direbbe una licenza. */
+  assert.throws(() => laChiaveCome(delPonte(x), delPonte(""), "di prova"));
 });

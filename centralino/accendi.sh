@@ -844,9 +844,8 @@ $NOME_DEL_TRAMITE {
 	# Non e' un doppione per comodita': e' l'indirizzo che la console
 	# dell'add-on fabbrica da se'. Lei sa una cosa sola del centralino — quello
 	# che ha in configurazione, \`wss://<nome>\` — e il link per il browser lo
-	# ricava da quello: stesso nome, \`/app/\` in fondo. Sulla nuvola e' cosi'
-	# da sempre; qui l'app stava solo sul nome corto, e quel link finiva su
-	# «qui non c'e' niente».
+	# ricava da quello: stesso nome, \`/app/\` in fondo. Prima l'app stava solo
+	# sul nome corto, e quel link finiva su «qui non c'e' niente».
 	#
 	# **Ed e' l'unico posto da cui l'app si serve.** Il nome corto rimanda qui
 	# invece di servire una seconda copia: il browser tiene l'abbinamento per

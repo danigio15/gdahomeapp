@@ -13,7 +13,7 @@
 ///
 /// Questa schermata sa tre cose: quando la casa non e' pronta lo dice, quando
 /// il ponte non ha la plancia lo dice, e quando ce l'ha apre la pagina e la
-/// copre finche' non e' arrivata.
+/// copre finche' non si vede.
 library;
 
 import 'dart:async';
@@ -71,6 +71,7 @@ class FabbricaDellaPlancia {
     ({double alto, double basso}) margini = (alto: 0, basso: 0),
     void Function(String pagina)? quandoCambiaPagina,
     void Function()? quandoChiedeIlMenu,
+    VoidCallback? quandoSiVede,
     void Function(String foto)? quandoFotografaLaCasa,
   }) => RiquadroDellaPlancia(
     key: chiave,
@@ -81,9 +82,20 @@ class FabbricaDellaPlancia {
     quandoFallisce: quandoFallisce,
     quandoCambiaPagina: quandoCambiaPagina,
     quandoChiedeIlMenu: quandoChiedeIlMenu,
+    quandoSiVede: quandoSiVede,
     quandoFotografaLaCasa: quandoFotografaLaCasa,
   );
 }
+
+/// Quanto resta al piu' il velo sopra una pagina che non dice niente.
+///
+/// Di solito il velo se ne va molto prima: appena la pagina e' in piedi lo
+/// dice lei, e se non lo dice c'e' la pagina finita. Questa e' la rete sotto
+/// tutte e due, per un WebView che non dice niente del tutto: una rotella che
+/// gira per sempre e' peggio di qualunque cosa ci sia sotto. In venti secondi,
+/// anche a freddo da fuori casa, la pagina — che e' un file solo — e' arrivata
+/// da un pezzo, e sotto il nostro velo c'e' gia' il suo.
+const quantoDuraAlPiuIlVelo = Duration(seconds: 20);
 
 class PlanciaVera extends StatefulWidget {
   const PlanciaVera({
@@ -135,6 +147,12 @@ class PlanciaVeraState extends State<PlanciaVera> {
   /// apre una.
   Uri? _pagina;
   bool _caricata = false;
+
+  /// La pagina ha detto che la sua prima schermata c'e': il velo si puo'
+  /// togliere anche se non e' ancora finita. [_caricata] resta il «finita»,
+  /// che e' quello che serve per parlarle (la Config, il parcheggio, l'auto).
+  bool _siVede = false;
+  Timer? _scadenzaDelVelo;
   String? _perche;
   StreamSubscription<void>? _ascoltoLeImpostazioni;
   StreamSubscription<void>? _ascoltoLaConfigurazione;
@@ -172,7 +190,36 @@ class PlanciaVeraState extends State<PlanciaVera> {
   void dispose() {
     _ascoltoLeImpostazioni?.cancel();
     _ascoltoLaConfigurazione?.cancel();
+    _scadenzaDelVelo?.cancel();
     super.dispose();
+  }
+
+  /* Il velo torna su: una pagina nuova, o la stessa ricaricata. Con lui
+   * riparte la sua scadenza. Si chiama dove si decide di ricoprire, dentro o
+   * fuori da un `setState`: qui si cambia solo lo stato. */
+  void _rimettiIlVelo() {
+    _caricata = false;
+    _siVede = false;
+    _perche = null;
+    _scadenzaDelVelo?.cancel();
+    _scadenzaDelVelo = Timer(quantoDuraAlPiuIlVelo, _ilVeloHaAspettato);
+  }
+
+  /* La pagina non ha detto niente, ne' che si vede ne' che e' finita: il velo
+   * si toglie lo stesso. */
+  void _ilVeloHaAspettato() {
+    _scadenzaDelVelo = null;
+    if (!mounted || _caricata || _siVede) return;
+    setState(() => _siVede = true);
+  }
+
+  /// La pagina e' in piedi: il velo se ne va, e il resto aspetta che sia
+  /// finita — e' il suo `load` a dire che le si puo' parlare.
+  void _laPaginaSiVede() {
+    _scadenzaDelVelo?.cancel();
+    _scadenzaDelVelo = null;
+    if (!mounted || _siVede) return;
+    setState(() => _siVede = true);
   }
 
   Future<void> _accendi() async {
@@ -209,8 +256,7 @@ class PlanciaVeraState extends State<PlanciaVera> {
     setState(() {
       _leggera = leggera;
       _ibrida = ibrida;
-      _caricata = false;
-      _perche = null;
+      _rimettiIlVelo();
     });
     /* Con la composizione cambiata il riquadro rinasce da solo, chiave
      * nuova, e ricarica la pagina da se'. Con la sola leggerezza cambiata
@@ -240,10 +286,7 @@ class PlanciaVeraState extends State<PlanciaVera> {
   /// barra quando ci si e' gia'.
   void ricarica() {
     if (!mounted) return;
-    setState(() {
-      _caricata = false;
-      _perche = null;
-    });
+    setState(_rimettiIlVelo);
     _riquadro.currentState?.ricarica();
   }
 
@@ -545,10 +588,9 @@ class PlanciaVeraState extends State<PlanciaVera> {
 
     if (_pagina != pagina) {
       /* Una pagina nuova — un'altra casa, un'integrazione aggiornata — si
-       * copre di nuovo finche' non arriva. */
+       * copre di nuovo finche' non si vede. */
       _pagina = pagina;
-      _caricata = false;
-      _perche = null;
+      _rimettiIlVelo();
       _apertaSenzaCasa = false;
       _giaRicaricata = false;
     }
@@ -584,6 +626,8 @@ class PlanciaVeraState extends State<PlanciaVera> {
                 if (!collegamento.dentro && !_giaRicaricata) {
                   _apertaSenzaCasa = true;
                 }
+                _scadenzaDelVelo?.cancel();
+                _scadenzaDelVelo = null;
                 if (!_caricata) setState(() => _caricata = true);
                 /* Una pagina appena aperta non sa niente di quello che le e'
                    stato detto prima di nascere: se e' nata sotto un'altra
@@ -599,6 +643,10 @@ class PlanciaVeraState extends State<PlanciaVera> {
               },
               quandoCambiaPagina: widget.quandoCambiaPagina,
               quandoChiedeIlMenu: widget.quandoChiedeIlMenu,
+              /* La pagina e' in piedi, col velo della plancia davanti: il
+                 nostro se ne va senza aspettare il `load`, che aspetta anche
+                 i moduli delle sezioni e ogni immagine. */
+              quandoSiVede: _laPaginaSiVede,
               /* Il nome della casa lo mette qui l'app: la plancia sa di essere
                  una plancia, non sa di quale delle case dell'app e'. */
               quandoFotografaLaCasa: (foto) => unawaited(
@@ -633,7 +681,7 @@ class PlanciaVeraState extends State<PlanciaVera> {
               ),
             ),
           )
-        else if (!_caricata)
+        else if (!_caricata && !_siVede)
           _Velo(
             child: _Attesa(
               collegamento: collegamento,
@@ -666,6 +714,7 @@ class RiquadroDellaPlancia extends StatefulWidget {
     required this.quandoFallisce,
     this.quandoCambiaPagina,
     this.quandoChiedeIlMenu,
+    this.quandoSiVede,
     this.quandoFotografaLaCasa,
     this.ibrido = false,
     this.margini = (alto: 0, basso: 0),
@@ -688,6 +737,10 @@ class RiquadroDellaPlancia extends StatefulWidget {
 
   /// La pagina chiede il menu dell'app, dalla stessa strada.
   final void Function()? quandoChiedeIlMenu;
+
+  /// La pagina ha la sua prima schermata, e lo dice dalla stessa strada:
+  /// arriva prima di [quandoCaricata], che aspetta tutto.
+  final VoidCallback? quandoSiVede;
 
   /// La plancia ha fotografato la casa per Android Auto: due numeri, chi c'e'
   /// in casa, i tasti. Arriva da un canale suo — vedi `riquadro/sul_telefono`
@@ -827,6 +880,7 @@ class RiquadroDellaPlanciaState extends State<RiquadroDellaPlancia> {
       faScrivere: _laPaginaFaScrivere,
       quandoCambiaPagina: widget.quandoCambiaPagina,
       quandoChiedeIlMenu: widget.quandoChiedeIlMenu,
+      quandoSiVede: () => widget.quandoSiVede?.call(),
       quandoFotografaLaCasa: widget.quandoFotografaLaCasa,
       /* Lo stesso fondo dell'app: sotto la pagina, finche' non arriva, non
        * si vede un lampo di un altro colore. */

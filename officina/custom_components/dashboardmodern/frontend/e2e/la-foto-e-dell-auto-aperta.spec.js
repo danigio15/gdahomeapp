@@ -52,7 +52,7 @@ test("la matita apre un'auto: la sua foto e' sua, e il disegno resta dell'auto i
     const riga = [...document.querySelectorAll("#ed-body .ed-row")].find((r) =>
       /Zoe/.test(r.textContent || ""),
     );
-    [...riga.querySelectorAll("button")].find((b) => /✏️/.test(b.textContent || ""))?.click();
+    riga.querySelector("button[data-ev-edit]")?.click();
   });
   await page.waitForTimeout(500);
 

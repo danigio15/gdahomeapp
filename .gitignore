@@ -37,11 +37,6 @@ node_modules/
 /app/ios/Flutter/flutter_export_environment.sh
 /app/ios/Flutter/Generated.xcconfig
 
-# gdahome copiata accanto al centralino dal bottone «Il centralino»: e la
-# stessa che sta in `ponte/app`, e una copia in piu nella repository non
-# serve a nessuno.
-nuvola/pubblico/
-
 # La plancia vera, copiata nel sito da `node strumenti/porta-nel-sito.mjs`.
 # Sono diciassette megabyte identici a quelli che stanno gia' in
 # `ponte/plancia/`: una seconda copia nella repository non serve a nessuno, e

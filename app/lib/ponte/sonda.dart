@@ -18,6 +18,9 @@
 /// sempre — sta su internet, e' fatto per rispondere — quindi senza ritardo
 /// vincerebbe anche dal divano, e ogni comando farebbe il giro del mondo per
 /// arrivare a tre metri.
+///
+/// Tranne quando l'ultima volta si e' entrati proprio dal centralino: vedi
+/// [Sonda.dove].
 library;
 
 import 'dart:async';
@@ -118,12 +121,24 @@ class Sonda {
       vincitore.completeError(PonteIrraggiungibile(_perche(casa)));
     }
 
+    /* Il ritardo si salta quando non c'e' niente da aspettare: una casa che
+     * ha solo il centralino non deve pagare mezzo secondo per niente.
+     *
+     * E si salta quando l'ultima volta si e' entrati dal centralino. Il
+     * vantaggio serve a chi e' sul divano, e chi l'ultima volta e' passato
+     * dal centralino quasi sempre e' ancora fuori — il telefono sta dov'era
+     * l'ultima volta nove volte su dieci — e il ritardo lo pagava a ogni
+     * apertura e a ogni ritorno, per aspettare una strada di casa che da li'
+     * non risponde. Le strade di casa si chiedono lo stesso, insieme: in casa
+     * rispondono in pochi millesimi, e di solito vincono comunque. Se invece
+     * perdono di un soffio, il collegamento se ne accorge appena dentro — la
+     * strada di casa si fa dire e si bussa — e ci torna
+     * (`casa/collegamento.dart`). */
+    final senzaRitardo =
+        casa.ultimoApprodo == DaDove.dalCentralino ||
+        candidati.every((uno) => uno.da == DaDove.dalCentralino);
     for (final candidato in candidati) {
-      /* Il ritardo si salta quando non c'e' niente da aspettare: una casa che
-       * ha solo il centralino non deve pagare mezzo secondo per niente. */
-      final aspetta =
-          candidato.da == DaDove.dalCentralino &&
-              candidati.any((altro) => altro.da != DaDove.dalCentralino)
+      final aspetta = candidato.da == DaDove.dalCentralino && !senzaRitardo
           ? vantaggio
           : Duration.zero;
 

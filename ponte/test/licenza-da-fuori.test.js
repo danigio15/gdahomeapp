@@ -4,17 +4,19 @@
  * prova; il ponte e' questo, con le sue licenze e un quadro finto che firma
  * gettoni veri. Il telefono e' un WebSocket vero che bussa al centralino.
  *
- * Si provano le tre porte del contratto (`docs/LICENZE.md`):
+ * Si provano le porte del contratto (`docs/LICENZE.md`):
  *
  *   - una casa Base: il telefono da fuori si chiude con `4402`
  *     `premium-richiesto`, e l'abbinamento resta aperto;
  *   - la casa diventa Premium: il gettone arriva al centralino da solo, e il
  *     telefono entra;
  *   - un centralino che non sa niente di licenze (chiave vuota, o vecchio):
- *     il ponte taglia da se', alla prima parola.
+ *     la casa non taglia niente — il fuori casa lo chiude solo il centralino;
+ *   - chi compra fuori casa: la ricevuta firmata dal telefono passa dal
+ *     centralino alla casa, la casa diventa Premium, e il telefono entra.
  *
- * E la console: la scheda «Licenza» legge lo stato e riscatta un codice, e il
- * tasto «Aggiungi» delle plance si sente dire 402.
+ * E la console: la scheda «Licenza» legge lo stato e riscatta un codice, e le
+ * plance non si limitano: i lucchetti di Base sono dell'app e del browser.
  */
 
 import { test } from "node:test";
@@ -28,6 +30,7 @@ import { fileURLToPath } from "node:url";
 
 import { Case } from "../../centralino/src/case.js";
 import { Centralino } from "../../centralino/src/centralino.js";
+import { Ricevute } from "../../centralino/src/ricevute.js";
 import { costruisciIlServer } from "../../centralino/src/server.js";
 
 import { Abbinamento } from "../src/abbinamento.js";
@@ -39,6 +42,7 @@ import { Plance } from "../src/plance.js";
 import { Ponte } from "../src/ponte.js";
 import { Portiere } from "../src/portiere.js";
 import { accetta } from "../src/presa.js";
+import { firmaDellaRicevuta, laRicevutaDaFuori } from "../src/ricevuta-da-fuori.js";
 import { costruisciLaConsole } from "../src/server.js";
 import { telefonoCifrato } from "./telefono-cifrato.js";
 import { PUBBLICA_DI_PROVA, unGettone } from "./gettoni-di-prova.js";
@@ -102,9 +106,13 @@ async function catena({ chiaveDelCentralino = PUBBLICA_DI_PROVA } = {}) {
     case: new Case({ cartella: nuovaCartella("case") }),
     chiaveLicenze: chiaveDelCentralino,
   });
-  const serverDelCentralino = costruisciIlServer({ centralino });
+  const serverDelCentralino = costruisciIlServer({
+    centralino,
+    ricevute: new Ricevute({ centralino }),
+  });
   await new Promise((ok) => serverDelCentralino.listen(0, "127.0.0.1", ok));
   const doveIlCentralino = `ws://127.0.0.1:${serverDelCentralino.address().port}`;
+  const httpDelCentralino = `http://127.0.0.1:${serverDelCentralino.address().port}`;
 
   const { Casa } = await import("../src/casa.js");
   const casa = new Casa({ indirizzo: ha.indirizzo, segno: SEGNO_DELLA_CASA });
@@ -113,14 +121,21 @@ async function catena({ chiaveDelCentralino = PUBBLICA_DI_PROVA } = {}) {
   const abbinamento = new Abbinamento({});
   const identita = new Identita({ cartella: nuovaCartella("identita") });
 
-  /* Il quadro finto: risponde il gettone che la prova ha deciso. */
-  const quadro = { gettoni: {} };
+  /* Il quadro finto: risponde il gettone che la prova ha deciso, e una
+   * ricevuta del negozio la prende per buona e fa la casa Premium. */
+  const quadro = { gettoni: {}, ricevute: [] };
   const licenze = new Licenze({
     casa: identita.casa,
     segreto: () => "segreto-della-casa-per-il-quadro-0123456789",
     chiave: PUBBLICA_DI_PROVA,
     dove: "https://quadro.prova",
-    fetch: async () => ({ ok: true, status: 200, json: async () => ({ gettoni: quadro.gettoni }) }),
+    fetch: async (dove, opzioni) => {
+      if (dove.endsWith("/v1/licenze/negozio")) {
+        quadro.ricevute.push(JSON.parse(opzioni.body));
+        quadro.gettoni = { gdahome: unGettone({ sog: identita.casa, origine: "negozio" }) };
+      }
+      return { ok: true, status: 200, json: async () => ({ gettoni: quadro.gettoni }) };
+    },
     registro: ZITTO,
   });
   const cartellaDellePlance = nuovaCartella("plance");
@@ -141,12 +156,15 @@ async function catena({ chiaveDelCentralino = PUBBLICA_DI_PROVA } = {}) {
   portiere.chiamata = chiamata;
   chiamata.diLaLicenza(licenze.gettonePerIlCentralino);
   licenze.on("cambio", () => chiamata.diLaLicenza(licenze.gettonePerIlCentralino));
+  chiamata.alRicevere = (corpo) =>
+    laRicevutaDaFuori(corpo, { casa: identita.casa, dispositivi, licenze });
   chiamata.avvia();
   await attendi(() => chiamata.dentro);
 
   return {
     centralino,
     doveIlCentralino,
+    httpDelCentralino,
     casa,
     ponte,
     dispositivi,
@@ -190,7 +208,7 @@ function daFuori(c) {
 test("una casa Base: il telefono da fuori si chiude con 4402 premium-richiesto", async () => {
   const c = await catena();
   try {
-    assert.equal(c.licenze.limitata, true);
+    assert.equal(c.licenze.premium, false);
     const { chiusura } = daFuori(c);
     assert.deepEqual(await chiusura, { codice: 4402, motivo: "premium-richiesto" });
     /* Il filo della casa resta su: e' da li' che passa l'abbinamento. */
@@ -252,23 +270,110 @@ test("il gettone si ridice a ogni rientro: un centralino riavviato non se lo sco
   }
 });
 
-test("un centralino che non guarda le licenze: taglia il ponte, alla prima parola", async () => {
+test("un centralino che non guarda le licenze: la casa Base non taglia niente", async () => {
   /* Chiave vuota al centralino — com'e' un centralino di ieri — e casa Base:
-   * il telefono passa il centralino, e si ferma al portiere con un no che
-   * l'app sa leggere. */
+   * il telefono passa il centralino e passa anche il portiere. Il fuori casa
+   * lo chiude il centralino e basta: la casa non limita niente, e i lucchetti
+   * di Base li mette l'app. */
   const c = await catena({ chiaveDelCentralino: "" });
   try {
+    assert.equal(c.licenze.premium, false);
     const { telefono } = daFuori(c);
-    await assert.rejects(telefono.dentro);
-    const no = telefono.inChiaro.find((uno) => uno.no);
-    assert.equal(no.motivo, "premium-richiesto");
-    assert.equal(c.chiamata.dentro, true);
+    await telefono.dentro;
+    assert.equal((await telefono.aspetta("auth_required")).type, "auth_required");
+    assert.equal(
+      telefono.inChiaro.some((uno) => uno.no),
+      false,
+      "nessun no della casa",
+    );
+    telefono.chiudi();
+  } finally {
+    await c.spegni();
+  }
+});
 
-    /* Premium: passa. */
-    await c.diventaPremium();
-    const secondo = daFuori(c);
-    await secondo.telefono.dentro;
-    secondo.telefono.chiudi();
+/* ─── Chi compra fuori casa ──────────────────────────────────────────────── */
+
+/* La ricevuta come la manda l'app: firmata con la chiave del filo. */
+function unaRicevuta(c, { chi, chiave }, altro = {}) {
+  const campi = {
+    chi,
+    quando: Date.now(),
+    app: "gdahome",
+    piattaforma: "ios",
+    prodotto: "gdahome_premium_mensile",
+    ricevuta: "2000000123456789",
+    ...altro,
+  };
+  return {
+    v: 1,
+    ...campi,
+    firma: firmaDellaRicevuta({ chiaveDelFilo: chiave, casa: c.identita.casa, ...campi }),
+  };
+}
+
+const portaLaRicevuta = (c, corpo) =>
+  fetch(`${c.httpDelCentralino}/licenza/${c.identita.casa}`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(corpo),
+  });
+
+test("chi compra fuori casa: la ricevuta passa dal centralino, la casa diventa Premium, e il telefono entra", async () => {
+  const c = await catena();
+  try {
+    /* Fuori casa, con la casa Base: il telefono resta fuori. */
+    const { chiave, dispositivo } = c.dispositivi.abbina({ nome: "iPhone di chi compra" });
+    const prima = telefonoCifrato(`${c.doveIlCentralino}/telefono/${c.identita.casa}`, {
+      chi: dispositivo.id,
+      chiave,
+    });
+    prima.dentro.catch(() => {});
+    const chiusa = new Promise((ok) =>
+      prima.presa.addEventListener("close", (evento) => ok(evento.code)),
+    );
+    assert.equal(await chiusa, 4402);
+
+    /* Compra, e la ricevuta la consegna al centralino. */
+    const risposta = await portaLaRicevuta(c, unaRicevuta(c, { chi: dispositivo.id, chiave }));
+    assert.equal(risposta.status, 200);
+    const detto = await risposta.json();
+    assert.equal(detto.gdahome.attiva, true);
+    assert.equal(typeof detto.gettoni.gdahome, "string");
+    assert.equal(c.quadro.ricevute.length, 1);
+    assert.equal(c.quadro.ricevute[0].ricevuta, "2000000123456789");
+    assert.equal(c.licenze.premium, true);
+    await attendi(() => c.centralino.ePremium(c.identita.casa));
+
+    /* E adesso entra. */
+    const dopo = telefonoCifrato(`${c.doveIlCentralino}/telefono/${c.identita.casa}`, {
+      chi: dispositivo.id,
+      chiave,
+    });
+    await dopo.dentro;
+    assert.equal((await dopo.aspetta("auth_required")).type, "auth_required");
+    dopo.chiudi();
+  } finally {
+    await c.spegni();
+  }
+});
+
+test("una ricevuta che non ha firmato un telefono della casa non arriva al quadro", async () => {
+  const c = await catena();
+  try {
+    const { chiave, dispositivo } = c.dispositivi.abbina({ nome: "un telefono" });
+    /* Firmata con un'altra chiave: chi bussa non e' un telefono di qui. */
+    const storta = unaRicevuta(c, { chi: dispositivo.id, chiave: "ab".repeat(32) });
+    const risposta = await portaLaRicevuta(c, storta);
+    assert.equal(risposta.status, 403);
+    assert.deepEqual(await risposta.json(), { errore: "firma-sbagliata" });
+    /* E un telefono che la casa ha staccato non passa piu'. */
+    const buona = unaRicevuta(c, { chi: dispositivo.id, chiave });
+    c.dispositivi.stacca(dispositivo.id);
+    const staccato = await portaLaRicevuta(c, buona);
+    assert.equal(staccato.status, 403);
+    assert.equal(c.quadro.ricevute.length, 0);
+    assert.equal(c.centralino.ePremium(c.identita.casa), false);
   } finally {
     await c.spegni();
   }
@@ -304,7 +409,7 @@ async function laConsole(c) {
   return { chiedi, chiudi: () => new Promise((ok) => console_.close(ok)) };
 }
 
-test("la console: lo stato della licenza, il codice regalo, e la plancia in piu' che costa", async () => {
+test("la console: lo stato della licenza e il codice regalo; le plance non si limitano", async () => {
   const c = await catena();
   const console_ = await laConsole(c);
   try {
@@ -314,14 +419,15 @@ test("la console: lo stato della licenza, il codice regalo, e la plancia in piu'
     assert.equal(prima.detto.gdahome.attiva, false);
     assert.equal("gettoni" in prima.detto, false, "i gettoni alla pagina non servono");
 
+    /* Base, e in Home Assistant le plance si aggiungono lo stesso: la casa
+     * non limita niente. La plancia sola di Base e' dell'app e del browser. */
     const plance = await console_.chiedi("/api/plance");
-    assert.equal(plance.detto.limitata, true);
+    assert.equal(plance.detto.limitata, false);
     const aggiunta = await console_.chiedi("/api/plance", {
       method: "POST",
       body: JSON.stringify({ titolo: "Mare" }),
     });
-    assert.equal(aggiunta.stato, 402);
-    assert.equal(aggiunta.detto.errore, "premium-richiesto");
+    assert.equal(aggiunta.stato, 201);
 
     /* Un codice storto non va nemmeno al quadro. */
     const storto = await console_.chiedi("/api/licenza/riscatta", {
@@ -339,12 +445,6 @@ test("la console: lo stato della licenza, il codice regalo, e la plancia in piu'
     assert.equal(riscatto.stato, 200);
     assert.equal(riscatto.detto.gdahome.attiva, true);
     assert.equal(riscatto.detto.gdahome.origine, "regalo");
-
-    const dopo = await console_.chiedi("/api/plance", {
-      method: "POST",
-      body: JSON.stringify({ titolo: "Mare" }),
-    });
-    assert.equal(dopo.stato, 201);
   } finally {
     await console_.chiudi();
     await c.spegni();

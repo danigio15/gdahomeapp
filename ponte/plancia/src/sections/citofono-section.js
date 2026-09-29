@@ -37,6 +37,7 @@ import {
   t,
   writeJsonIfChanged,
 } from "./shared.js";
+import { segnoHtml } from "../core/segni-del-catalogo.js";
 
 const KEY = "__DASHBOARDMODERN_CITOFONO__";
 const state = (root[KEY] ||= { installed: false, frame: 0, firma: "", sveglia: 0 });
@@ -122,7 +123,7 @@ export function ensureCitofonoTab() {
   voce.className = "tab";
   voce.dataset.tab = CITOFONO_TAB;
   voce.id = `tab-${CITOFONO_TAB}`;
-  voce.innerHTML = `<span class="icon">📮</span><span class="text">${esc(
+  voce.innerHTML = `<span class="icon">${segnoHtml("mail")}</span><span class="text">${esc(
     t("Citofono", "Intercom"),
   )}</span>`;
   voce.addEventListener("click", () => {
@@ -209,7 +210,7 @@ function citofonoMarkup(voce) {
         ? t("Silenzio", "Quiet")
         : t("Nessun campanello indicato", "No doorbell set");
   return `<article class="dm-citofono" data-suona="${suona}" data-dm-citofono="${esc(voce.id)}">
-    <span class="dm-citofono-ic" aria-hidden="true">🔔</span>
+    <span class="dm-citofono-ic" aria-hidden="true">${segnoHtml("bell")}</span>
     <div class="dm-citofono-testo">
       <strong>${esc(voce.nome || t("Citofono", "Intercom"))}</strong>
       <small>${esc(sotto)}</small>
@@ -249,7 +250,7 @@ function cassettaMarkup(voce) {
       : `${t("Lettere", "Letters")} · ${voce.contatore.toLocaleString()}`,
   ].filter(Boolean);
   return `<article class="dm-cassetta" data-stato="${esc(stato)}" data-dm-cassetta="${esc(voce.id)}">
-    <span class="dm-cassetta-ic" aria-hidden="true">📬</span>
+    <span class="dm-cassetta-ic" aria-hidden="true">${segnoHtml("mail")}</span>
     <div class="dm-cassetta-testo">
       <strong>${esc(voce.nome || t("Cassetta", "Mailbox"))}</strong>
       ${righe.map((riga) => `<small>${esc(riga)}</small>`).join("")}

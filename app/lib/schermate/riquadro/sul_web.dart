@@ -24,7 +24,9 @@ import '../../plancia/premesse.dart' show ilMenuDalRiquadro;
 /// `iframe` li fa il browser, come li farebbe alla plancia dentro Home
 /// Assistant. Stanno nella firma perche' la firma e' una sola. Per la stessa
 /// ragione c'e' `quandoFotografaLaCasa` e qui non si usa: quella fotografia
-/// la legge Android Auto, e in un browser Android Auto non c'e'.
+/// la legge Android Auto, e in un browser Android Auto non c'e'. E cosi'
+/// `quandoSiVede`: la pagina che dice di essere in piedi serve a togliere il
+/// velo prima del `load`, e qui il velo si toglie subito.
 WebViewController costruisciIlControllore({
   required void Function() quandoCaricata,
   required void Function(String perche) quandoFallisce,
@@ -35,6 +37,7 @@ WebViewController costruisciIlControllore({
   Future<String> Function(String domanda, String diSerie)? faScrivere,
   void Function(String pagina)? quandoCambiaPagina,
   void Function()? quandoChiedeIlMenu,
+  void Function()? quandoSiVede,
   void Function(String foto)? quandoFotografaLaCasa,
 }) {
   final controllore = WebViewController();

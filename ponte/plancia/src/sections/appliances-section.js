@@ -298,7 +298,7 @@ function normalizeEnergyGlyphs(card) {
       if (!/🔋/.test(node.textContent || "")) return;
       [...node.childNodes].forEach((child) => {
         if (child.nodeType === 3 && /🔋/.test(child.nodeValue || "")) {
-          child.nodeValue = String(child.nodeValue || "").replaceAll("🔋", "⚡");
+          child.nodeValue = String(child.nodeValue || "").replace(/🔋\s*/gu, "");
         }
       });
     });

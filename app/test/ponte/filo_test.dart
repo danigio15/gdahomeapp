@@ -961,7 +961,7 @@ void main() {
       expect(
         Filo.laReteNonCEAncora(
           const SocketException(
-            "Failed host lookup: 'gdahome-centralino.esempio.workers.dev'",
+            "Failed host lookup: 'tramite.esempio.it'",
             osError: OSError('No address associated with hostname', 7),
           ),
         ),

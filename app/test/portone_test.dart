@@ -83,6 +83,7 @@ class _PlanciaFinta extends FabbricaDellaPlancia {
     ({double alto, double basso}) margini = (alto: 0, basso: 0),
     void Function(String pagina)? quandoCambiaPagina,
     void Function()? quandoChiedeIlMenu,
+    VoidCallback? quandoSiVede,
     void Function(String foto)? quandoFotografaLaCasa,
   }) {
     cambioPagina = quandoCambiaPagina;

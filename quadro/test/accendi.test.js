@@ -22,7 +22,7 @@ import assert from "node:assert/strict";
 
 import { FOGLIETTO } from "../src/mi-aggiorno.js";
 import { execFileSync } from "node:child_process";
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -82,6 +82,75 @@ test("rilanciarlo non cambia la chiave della gestione", () => {
     generazione.indexOf("\nfi\n"),
   );
   assert.match(dentroIlSe, /urandom/, "la chiave si genera fuori dal «se non c'e'»");
+});
+
+/* Il pezzo vero che riscrive `/etc/quadro/ambiente`, fatto girare su una
+ * cartella di passaggio al posto di `/etc/quadro`. */
+function riscriviLAmbiente(cartella) {
+  const inizio = ACCENDI.indexOf('MESSE_A_MANO="$(grep');
+  const fine = ACCENDI.indexOf('chmod 600 "$CONFIGURAZIONE/ambiente"', inizio);
+  assert.ok(inizio > 0 && fine > inizio, "il pezzo che riscrive l'ambiente non si trova");
+  const pezzo = `${ACCENDI.slice(inizio, fine)}chmod 600 "$CONFIGURAZIONE/ambiente"\n`;
+  execFileSync("bash", ["-euo", "pipefail", "-c", pezzo], {
+    env: {
+      ...process.env,
+      CONFIGURAZIONE: cartella,
+      PORTA: "8100",
+      DATI: "/var/lib/quadro",
+      CHIAVE_GESTORE: "la-chiave-di-gestione",
+    },
+  });
+  return readFileSync(join(cartella, "ambiente"), "utf8");
+}
+
+test("rilanciarlo non porta via le righe messe a mano: la chiave delle licenze, i negozi", () => {
+  /* La privata delle licenze sta solo li'. Un rilancio che la butta via non
+   * si vede subito: il quadro smette di firmare, e otto giorni dopo tutte le
+   * case che hanno pagato sono Base. */
+  const cartella = mkdtempSync(join(tmpdir(), "ambiente-quadro-"));
+  try {
+    writeFileSync(
+      join(cartella, "ambiente"),
+      [
+        "QUADRO_PORTA=8100",
+        "QUADRO_ASCOLTO=127.0.0.1",
+        "QUADRO_DATI=/var/lib/quadro",
+        "QUADRO_GESTORE=la-chiave-di-gestione",
+        "QUADRO_REGISTRO=info",
+        /* Valori finti e corti: quelli veri stanno solo sulla macchina, e il
+         * guardiano dei segreti suonerebbe per una cosa che ne ha la forma. */
+        "QUADRO_LICENZE_CHIAVE=privata",
+        "QUADRO_APPLE_CHIAVE='riga uno\\nriga due'",
+        "QUADRO_APPLE_KEY_ID=ABCDE12345",
+        "",
+      ].join("\n"),
+    );
+    const dopo = riscriviLAmbiente(cartella);
+    assert.match(dopo, /^QUADRO_LICENZE_CHIAVE=privata$/m);
+    /* Fra apici e con le barre: e' la forma in cui ci sta la `.p8`. */
+    assert.match(dopo, /^QUADRO_APPLE_CHIAVE='riga uno\\nriga due'$/m);
+    assert.match(dopo, /^QUADRO_APPLE_KEY_ID=ABCDE12345$/m);
+    /* E le sue le scrive una volta sola, non due. */
+    for (const sua of ["PORTA", "ASCOLTO", "DATI", "GESTORE", "REGISTRO"]) {
+      assert.equal(dopo.match(new RegExp(`^QUADRO_${sua}=`, "gm"))?.length, 1, sua);
+    }
+    assert.equal(statSync(join(cartella, "ambiente")).mode & 0o777, 0o600);
+    /* Rilanciato ancora, uguale: niente che si raddoppia a ogni giro. */
+    assert.equal(riscriviLAmbiente(cartella), dopo);
+  } finally {
+    rmSync(cartella, { recursive: true, force: true });
+  }
+});
+
+test("la prima volta l'ambiente nasce leggibile solo da root", () => {
+  const cartella = mkdtempSync(join(tmpdir(), "ambiente-quadro-"));
+  try {
+    const scritto = riscriviLAmbiente(cartella);
+    assert.equal(scritto.trim().split("\n").length, 5);
+    assert.equal(statSync(join(cartella, "ambiente")).mode & 0o777, 0o600);
+  } finally {
+    rmSync(cartella, { recursive: true, force: true });
+  }
 });
 
 test("e non richiede il gettone che il tramite ha gia' su quella macchina", () => {

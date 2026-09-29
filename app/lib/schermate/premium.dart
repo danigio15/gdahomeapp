@@ -95,6 +95,7 @@ class SchermataPremium extends StatefulWidget {
     this.acquisti,
     this.perche,
     this.sulWeb = kIsWeb,
+    this.codiceRegalo,
   });
 
   final Collegamento collegamento;
@@ -108,6 +109,14 @@ class SchermataPremium extends StatefulWidget {
 
   /// Nella webapp: non si compra, si manda al telefono.
   final bool sulWeb;
+
+  /// Se c'e' «Ho un codice regalo». Di serie si', tranne nell'app per iPhone:
+  /// per l'App Store aprire una funzione con un codice nostro e' una «chiave
+  /// di licenza» (regola 3.1.1), e l'app che lo fa torna indietro dalla
+  /// revisione. Li' il codice si riscatta dalla scheda gdahome in Home
+  /// Assistant o dal browser, e il Premium arriva anche sull'iPhone: e' della
+  /// casa. `null` vuol dire «come vuole questo telefono»; le prove lo dicono.
+  final bool? codiceRegalo;
 
   /// L'informativa sulla privacy, sul sito.
   static const privacy = 'https://gdahome.org/privacy.html';
@@ -297,14 +306,16 @@ class _SchermataPremiumState extends State<SchermataPremium> {
             ),
           ],
         ],
-        OutlinedButton.icon(
-          key: const Key('codice-regalo'),
-          onPressed: () => _ilCodice(context),
-          icon: const Icon(Icons.redeem),
-          label: Text(
-            inLingua(it: 'Ho un codice regalo', en: 'I have a gift code'),
+        if (widget.codiceRegalo ??
+            (widget.sulWeb || defaultTargetPlatform != TargetPlatform.iOS))
+          OutlinedButton.icon(
+            key: const Key('codice-regalo'),
+            onPressed: () => _ilCodice(context),
+            icon: const Icon(Icons.redeem),
+            label: Text(
+              inLingua(it: 'Ho un codice regalo', en: 'I have a gift code'),
+            ),
           ),
-        ),
         if (!premium)
           /* L'App Store vuole i due link accanto all'abbonamento. */
           Wrap(

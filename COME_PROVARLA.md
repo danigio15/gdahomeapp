@@ -157,44 +157,24 @@ Quel posto è il centralino.
 
 Il centralino di gdahome è `tramite.gdahome.org`, ed è quello che l'app usa
 senza che nessuno configuri niente: sta scritto nel codice, e il ponte lo
-chiama da sé. **Questo punto serve solo a chi vuole il proprio**, e ci sono due
-modi.
+chiama da sé. **Questo punto serve solo a chi vuole il proprio.**
 
-**Su Cloudflare**, piano gratuito, indirizzo compreso: non c'è niente da pagare
-e nessun dominio da comprare. È in [`nuvola/`](nuvola/README.md), e dal
-computer si fa una volta sola:
+Si mette su **una macchina propria**: il programma è in
+[`centralino/`](centralino/README.md), scritto in Node, con uno script che lo
+mette in piedi da zero.
 
-```bash
-git clone https://github.com/danigio15/gdahomeapp
-cd gdahomeapp/nuvola
-npm install
-npx wrangler login      # apre il browser: si fa un account gratuito e basta
-npx wrangler deploy
-```
-
-Alla fine stampa l'indirizzo, fatto così:
-
-```
-https://centralino.<il-tuo-nome>.workers.dev
-```
-
-Poi quell'indirizzo va scritto **dentro l'add-on**: nella sua scheda una
+Poi il suo indirizzo va scritto **dentro l'add-on**: nella sua scheda una
 casella per metterlo non c'è, apposta — l'indirizzo giusto è quello di gdahome,
 e una casella che non va toccata prima o poi qualcuno la tocca. Con una copia
 locale dell'add-on si fa una volta sola:
 
 ```
-node strumenti/centralino.mjs wss://centralino.<il-tuo-nome>.workers.dev
+node strumenti/centralino.mjs wss://<il-tuo-centralino>
 ```
 
 Scrive i tre posti dove quell'indirizzo sta — il difetto dell'add-on, quello
 dell'app, quello della chat — e una prova tiene fermo che i primi due restino
 identici. Poi **Negozio degli add-on → Ricarica**, e si installa da lì.
-
-**Su una macchina propria**, se si preferisce non dipendere da Cloudflare:
-la stessa cosa scritta in Node sta in [`centralino/`](centralino/README.md),
-con uno script che la mette in piedi da zero. I due sono intercambiabili, e la
-prova dal vivo passa identica contro tutti e due.
 
 Apri **gdahome** nella barra laterale: sotto «Da fuori casa» deve dire
 **«Collegato a wss://…: da fuori casa si entra.»**, con dentro il tuo
@@ -225,9 +205,10 @@ da quattro.)
 Non serve installare niente sul computer: lo costruisce GitHub.
 
 1. Sulla repository: **Actions → «L'app da provare» → Run workflow**.
-2. C'è una casella **centralino**: incollaci `wss://centralino.<nome>.workers.dev`.
-   Puoi anche lasciarla vuota: inquadrando il QR code, il centralino glielo
-   dice la casa. Serve solo a chi vuole digitare le lettere a mano da fuori.
+2. C'è una casella **centralino**: se ne hai uno tuo, incollaci il suo
+   indirizzo (`wss://…`). Puoi anche lasciarla vuota: inquadrando il QR code,
+   il centralino glielo dice la casa. Serve solo a chi vuole digitare le
+   lettere a mano da fuori.
 3. Quando finisce (cinque minuti circa), in fondo alla pagina della corsa c'è
    **gdahome-android**: scaricalo. Dentro c'è `app-release.apk`.
 4. Passa il file sul telefono e aprilo. Android chiederà di consentire
@@ -340,18 +321,17 @@ risponde **401**. Per averne uno da salvare fra i preferiti, da aprire da
 qualsiasi rete e da mandare a qualcuno, gdahome sta **anche sul centralino**:
 
 ```
-https://gdahome-centralino.<il-tuo-nome>.workers.dev/app/
+https://tramite.gdahome.org/app/
 ```
 
-L'indirizzo corto — senza `/app/` — porta lì da solo. Lo trovi già scritto,
-pronto da copiare, nella console dell'add-on: **gdahome → gdahome in un
-browser → «Da fuori casa, o da un browser qualsiasi»**.
+L'indirizzo corto, **webapp.gdahome.org**, porta lì da solo. Lo trovi già
+scritto, pronto da copiare, nella console dell'add-on: **gdahome → gdahome in
+un browser → «Da fuori casa, o da un browser qualsiasi»**.
 
-Si accende insieme al centralino: **Actions → «Il centralino» → Run
-workflow**. Quel bottone copia accanto al centralino la stessa app che sta
-dentro l'add-on (`ponte/app`) — non ne costruisce una seconda, così non
-possono diventare diverse. Se l'add-on non se la porta ancora dietro, prima
-**«gdahome dentro l'add-on»**, poi questo.
+Ce la mette la macchina del centralino, ogni volta che si aggiorna: copia
+accanto al centralino la stessa app che sta dentro l'add-on (`ponte/app`) —
+non ne costruisce una seconda, così non possono diventare diverse. Chi ha un
+centralino suo ce l'ha allo stesso modo, sotto `/app/` del suo indirizzo.
 
 **Cosa diventa pubblico: solo l'app.** Non la plancia — quella la serve
 l'add-on di casa e passa dal filo cifrato; non la configurazione; non nessuna
@@ -370,7 +350,7 @@ Home Assistant aperto su `http`.
 cd gdahomeapp/app
 flutter pub get
 flutter devices          # il telefono attaccato col cavo, o un browser
-flutter run --dart-define=CENTRALINO=wss://centralino.<nome>.workers.dev
+flutter run             # per un centralino tuo: --dart-define=CENTRALINO=wss://…
 ```
 
 Per lanciarla su un iPhone dal codice servono un Mac e Xcode. Per
@@ -401,22 +381,18 @@ chiunque può leggere.
 Per le segnalazioni, una volta sola:
 
 1. Crea una repository per le segnalazioni (privata va bene), per esempio
-   `gdahome-segnalazioni`, e scrivila in `nuvola/wrangler.toml` alla voce
-   `GITHUB_REPO`.
+   `gdahome-segnalazioni`. Il suo nome va nella riga `GITHUB_REPO` di
+   `/etc/tramite/ambiente`, sulla macchina del centralino: `centralino/accendi.sh`
+   lo chiede la prima volta.
 2. Crea su GitHub un **token a grana fine** (Settings → Developer settings →
    Fine-grained tokens) con accesso alla sola repository di cui sopra e due
    permessi: **Issues: Read and write** per le segnalazioni, e **Contents:
    Read and write** per le foto e i video che ci si allegano. Non incollarlo
    da nessuna parte che non sia il passo dopo.
-3. Mettilo fra i segreti di questa repository: Settings → Secrets and
-   variables → Actions → New repository secret, nome `GETTONE_SEGNALAZIONI`
-   (GitHub non accetta un segreto che cominci con `GITHUB_`), dentro solo il
-   token. Non finisce in nessun file.
-4. Lancia il bottone **Il centralino** su Actions: ripubblica il centralino e
-   gli porta il gettone come `GITHUB_SEGNALAZIONI`.
-
-Chi ha un terminale può fare le stesse due cose dalla cartella `nuvola`, con
-`npx wrangler secret put GITHUB_SEGNALAZIONI` e poi `npx wrangler deploy`.
+3. Sulla macchina del centralino lancia `tramite-gettone --metti`: lo chiede
+   senza mostrarlo, lo prova presso GitHub e lo scrive solo in
+   `/etc/tramite/ambiente`, che legge solo root. `tramite-gettone` da solo
+   dice se GitHub lo accetta ancora.
 
 Senza il segreto tutto il resto funziona: l'app dice che il centralino non
 ha le segnalazioni accese, e basta.

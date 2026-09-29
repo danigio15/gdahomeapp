@@ -483,8 +483,8 @@ test("l'app si serve da un indirizzo solo, e il nome corto ci rimanda", () => {
 test("l'app si apre anche dall'indirizzo del tramite, sotto /app/", () => {
   /* Il link per il browser lo fabbrica la console dell'add-on, e lo ricava
    * dall'unica cosa che sa del centralino: il nome che ha in configurazione,
-   * con «/app/» in fondo. Sulla nuvola quel posto c'e'; qui l'app stava solo
-   * sul nome corto, e quel bottone portava a «qui non c'e' niente». */
+   * con «/app/» in fondo. Prima qui l'app stava solo sul nome corto, e quel
+   * bottone portava a «qui non c'e' niente». */
   const blocco = /^\$NOME_DEL_TRAMITE \{$([\s\S]*?)^\}$/m.exec(ACCENDI);
   assert.ok(blocco, "non trovo il blocco del tramite");
   assert.match(blocco[1], /handle \/app\/\* \{/, "il tramite non serve l'app");

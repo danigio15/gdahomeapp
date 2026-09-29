@@ -3,8 +3,7 @@
  * Il quadro firma, tutti gli altri verificano: e' la regola di
  * `docs/LICENZE.md`, e questo file e' la meta' «verificano» per chi gira in
  * Node — il ponte e il centralino, che ne tiene una copia identica (vedi
- * `centralino/src/PRESI_DAL_PONTE.md`). Il centralino sulla nuvola fa la
- * stessa cosa con le funzioni del Worker, in `nuvola/src/gettone.js`.
+ * `centralino/src/PRESI_DAL_PONTE.md`).
  *
  *     gettone = base64url(payload JSON) + "." + base64url(firma Ed25519)
  *     firma   = Ed25519(privata del quadro, byte ASCII del primo pezzo)
@@ -101,9 +100,8 @@ export function verificaGettone(
   return valeAdesso(detto, { sog, app, adesso }) ? detto : null;
 }
 
-/* Le regole che non sono la firma. Stanno da sole perche' la nuvola ha la
- * sua firma — asincrona, con le funzioni del Worker — e queste righe devono
- * essere le stesse: la copia la' e' tenuta uguale da una prova. */
+/* Le regole che non sono la firma: il gettone e' di questa casa, di questa
+ * app, e vale ancora adesso. */
 export function valeAdesso(detto, { sog, app, adesso }) {
   if (!detto || detto.v !== 1) return false;
   if (detto.sog !== sog) return false;

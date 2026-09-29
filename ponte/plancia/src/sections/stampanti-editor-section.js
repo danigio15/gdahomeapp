@@ -14,6 +14,7 @@
  * caselle sta rispondendo a una domanda, e aspettare un tasto vorrebbe dire
  * perdere la risposta chiudendo la scheda.
  */
+import { segnoHtml } from "../core/segni-del-catalogo.js";
 import {
   CHIAVE_STAMPANTI,
   MASSIMO_STAMPANTI,
@@ -98,14 +99,14 @@ function rigaMarkup(riga, indice, states) {
         riga.entity ? esc(parolaDellaStampante(lettura)) : "—"
       }</b>
       <button type="button" class="ed-del" data-dm-stampante-togli="${esc(riga.id)}"
-        title="${esc(t("Togli", "Remove"))}" aria-label="${esc(t("Togli", "Remove"))}">🗑️</button>
+        title="${esc(t("Togli", "Remove"))}" aria-label="${esc(t("Togli", "Remove"))}">${segnoHtml("trash")}</button>
     </div>
     <div class="dm-todo-ed-body">
       <label class="ed-slot dm-todo-ed-field"><span class="ed-slot-lbl">${esc(t("Entità dello stato", "State entity"))}</span>
         <span class="ed-form-row"><input id="${id}" class="ed-input mono" data-dm-stampante-campo="entity"
           value="${esc(riga.entity)}" placeholder="sensor.stampante_ufficio" autocomplete="off"
           spellcheck="false"><button type="button" class="dm-entity-picker" data-dm-stampante-pick="${id}"
-          aria-label="${esc(t("Scegli entità", "Choose entity"))}">🔍</button></span>
+          aria-label="${esc(t("Scegli entità", "Choose entity"))}">${segnoHtml("search")}</button></span>
         <small>${esc(
           t(
             "Quella che dice pronta, in stampa o ferma — la crea l'integrazione della stampante col suo nome.",
@@ -128,7 +129,7 @@ function rigaMarkup(riga, indice, states) {
         <span class="ed-form-row"><input id="${id}-pag" class="ed-input mono" data-dm-stampante-campo="pagine"
           value="${esc(riga.pagine)}" placeholder="sensor.stampante_pagine" autocomplete="off"
           spellcheck="false"><button type="button" class="dm-entity-picker" data-dm-stampante-pick="${id}-pag"
-          aria-label="${esc(t("Scegli entità", "Choose entity"))}">🔍</button></span>
+          aria-label="${esc(t("Scegli entità", "Choose entity"))}">${segnoHtml("search")}</button></span>
       </label>
     </div>
   </article>`;
@@ -171,7 +172,7 @@ export function ensureStampantiEditorTab() {
   const tab = doc.createElement("button");
   tab.className = "ed-tab";
   tab.dataset.tab = STAMPANTI_EDITOR_TAB;
-  tab.textContent = `🖨️ ${t("Stampanti", "Printers")}`;
+  tab.innerHTML = `${segnoHtml("printer")} ${esc(t("Stampanti", "Printers"))}`;
   tab.addEventListener("click", () => root.editorSwitch?.(STAMPANTI_EDITOR_TAB));
   const prima = tabs.querySelector('.ed-tab[data-tab="runtime"]');
   if (prima) prima.before(tab);

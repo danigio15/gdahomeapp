@@ -180,8 +180,28 @@ class ArchivioDelleCase {
   /// sei ore, e si chiede a ogni collegamento.
   Future<void> segnaIlGettone(String id, String gettone) async {
     final casa = quella(id);
-    if (casa == null || casa.gettone == gettone) return;
-    await _cambia(id, (vecchia) => vecchia.con(gettone: gettone));
+    if (casa == null || (casa.gettone == gettone && !casa.senzaLicenze)) {
+      return;
+    }
+    await _cambia(
+      id,
+      (vecchia) => vecchia.con(gettone: gettone, senzaLicenze: false),
+    );
+  }
+
+  /// Questa casa le licenze non le sa tenere: il suo add-on e' di prima, o
+  /// le ha spente (`CasaConosciuta.senzaLicenze`).
+  ///
+  /// Il gettone che si ricordava non vale piu' niente — nessuno lo rinnova —
+  /// e si torna a «mai chiesto». Quando l'add-on si aggiorna e risponde,
+  /// [segnaIlGettone] rimette le cose a posto.
+  Future<void> segnaSenzaLicenze(String id) async {
+    final casa = quella(id);
+    if (casa == null || (casa.senzaLicenze && casa.gettone == null)) return;
+    await _cambia(
+      id,
+      (vecchia) => vecchia.con(senzaLicenze: true, togliIlGettone: true),
+    );
   }
 
   Future<void> _cambia(

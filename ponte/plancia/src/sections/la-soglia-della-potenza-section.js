@@ -43,6 +43,7 @@ import {
   root,
   t,
 } from "./shared.js";
+import { segnoHtml } from "../core/segni-del-catalogo.js";
 
 /* I watt come li scrive il resto della plancia, nella lingua di chi guarda.
  *
@@ -126,7 +127,7 @@ function schedaMarkup(soglia) {
         placeholder="${esc(esempio)}">
     </label>`;
   return `
-    <div class="ed-sec-title">⚠️ ${esc(t("Soglia di potenza", "Power threshold"))}</div>
+    <div class="ed-sec-title">${segnoHtml("warning")} ${esc(t("Soglia di potenza", "Power threshold"))}</div>
     <div class="ed-hint">${esc(
       t(
         "Sopra la soglia la tessera Energia in Home cambia colore: ambra per tenerla d'occhio, rossa per il sovraccarico. Lascia vuoto un campo per non usarlo.",
@@ -143,7 +144,7 @@ function schedaMarkup(soglia) {
       ${campo("rossa", t("Rossa da", "Red from"), soglia.rossa, "3300")}
     </div>
     <small class="dm-soglia-ora" data-dm-soglia-ora>${esc(rigaDiAdesso(soglia.sorgente))}</small>
-    <button type="button" class="ed-save-btn" data-dm-soglia-salva>💾 ${esc(
+    <button type="button" class="ed-save-btn" data-dm-soglia-salva>${segnoHtml("check")} ${esc(
       t("Salva soglia", "Save threshold"),
     )}</button>`;
 }
@@ -225,7 +226,7 @@ function ensureStriscia() {
   }
   const livello = verdetto.livello === LIVELLO_AMBRA ? "ambra" : "rossa";
   if (striscia.dataset.livello !== livello) striscia.dataset.livello = livello;
-  const testo = `⚠️ ${t("Sovraccarico", "Overload")} · ${nomeDellaSorgente(verdetto.sorgente)} ${formatWatts(
+  const testo = `${t("Sovraccarico", "Overload")} · ${nomeDellaSorgente(verdetto.sorgente)} ${formatWatts(
     verdetto.watt,
   )} ${t("oltre", "over")} ${formatWatts(verdetto.limite)}`;
   if (striscia.textContent !== testo) striscia.textContent = testo;

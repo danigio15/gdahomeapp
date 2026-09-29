@@ -1,6 +1,6 @@
 package com.gdahome.gdahome
 
-import android.content.Context
+import android.os.Bundle
 import android.view.WindowManager
 import com.gdahome.gdahome.auto.IlNavigatoreInAuto
 import io.flutter.embedding.android.FlutterFragmentActivity
@@ -20,10 +20,28 @@ class MainActivity : FlutterFragmentActivity() {
      * Nella versione col navigatore in auto il motore e' uno per il telefono
      * e per la macchina, e lo tiene `IlNavigatoreInAuto`: se Android Auto
      * l'ha gia' acceso, si riusa. Nella gdahome di sempre ognuno il suo, come
-     * prima (`null` = se lo fa l'activity).
+     * prima.
+     *
+     * Si prende **per nome**, dalla cache, e non passandolo
+     * (`provideFlutterEngine`, com'era). La differenza sta tutta nella
+     * chiusura: un motore passato FlutterFragmentActivity lo spegne quando
+     * l'activity se ne va — il suo frammento nasce con «distruggi il motore
+     * con me» — e la cache restava con un motore spento in mano. Da li' la
+     * macchina riceveva quello: niente GPS e niente dati dell'auto finche'
+     * non si riapriva l'app. Uno preso per nome resta acceso
+     * (`shouldDestroyEngineWithHost` e' falso), e l'activity lo usa e basta.
+     *
+     * Si accende **prima** di `super.onCreate`: quando Android ricrea
+     * l'activity dopo aver chiuso il processo, il frammento torna da solo col
+     * nome del motore scritto dentro, e lo cerca subito.
      */
-    override fun provideFlutterEngine(context: Context): FlutterEngine? =
-        if (IlNavigatoreInAuto.acceso(context)) IlNavigatoreInAuto.motore(context) else null
+    override fun onCreate(savedInstanceState: Bundle?) {
+        if (IlNavigatoreInAuto.acceso(this)) IlNavigatoreInAuto.motore(this)
+        super.onCreate(savedInstanceState)
+    }
+
+    override fun getCachedEngineId(): String? =
+        if (IlNavigatoreInAuto.acceso(this)) IlNavigatoreInAuto.MOTORE else super.getCachedEngineId()
 
     /*
      * La finestra riservata, quando il lucchetto e' acceso
@@ -33,8 +51,7 @@ class MainActivity : FlutterFragmentActivity() {
      */
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
-        if (IlNavigatoreInAuto.acceso(this)) IlNavigatoreInAuto.collega(flutterEngine, this)
-        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "gdahome/finestra")
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, FINESTRA)
             .setMethodCallHandler { chiamata, risposta ->
                 when (chiamata.method) {
                     "riservata" -> {
@@ -48,5 +65,16 @@ class MainActivity : FlutterFragmentActivity() {
                     else -> risposta.notImplemented()
                 }
             }
+    }
+
+    /* Il motore puo' restare acceso dopo l'activity: la finestra invece e'
+     * di questa, e il filo che la tocca se ne va con lei. */
+    override fun cleanUpFlutterEngine(flutterEngine: FlutterEngine) {
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, FINESTRA).setMethodCallHandler(null)
+        super.cleanUpFlutterEngine(flutterEngine)
+    }
+
+    private companion object {
+        const val FINESTRA = "gdahome/finestra"
     }
 }

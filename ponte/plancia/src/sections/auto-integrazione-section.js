@@ -40,6 +40,7 @@ import {
   wrapFunction,
   writeJsonIfChanged,
 } from "./shared.js";
+import { segnoHtml } from "../core/segni-del-catalogo.js";
 
 const KEY = "__DASHBOARDMODERN_AUTO_INTEGRAZIONE__";
 const state = (root[KEY] ||= { installed: false });
@@ -274,7 +275,7 @@ export function ensureInvitoAuto() {
   if (doc.querySelector("#ed-body [data-auto-integ]")) return true;
   const invito = doc.createElement("div");
   invito.className = "dm-auto-invito";
-  invito.innerHTML = `<button type="button" class="ed-btn-add dm-auto-integ" data-auto-integ>🔗 ${esc(
+  invito.innerHTML = `<button type="button" class="ed-btn-add dm-auto-integ" data-auto-integ>${segnoHtml("link")} ${esc(
     t("Aggiungi da un'integrazione", "Add from an integration"),
   )}</button>
     <small>${esc(
@@ -283,7 +284,7 @@ export function ensureInvitoAuto() {
         "Hyundai, Tesla, Renault, BMW… pick the device and the car arrives ready-made: battery or tank, range, odometer, doors and the rest. Or, below, one field at a time.",
       ),
     )}</small>
-    <button type="button" class="ed-btn-add dm-auto-integ" data-wallbox-integ="colonnina">🔌 ${esc(
+    <button type="button" class="ed-btn-add dm-auto-integ" data-wallbox-integ="colonnina">${segnoHtml("wallbox")} ${esc(
       t("Collega la colonnina", "Connect the charger"),
     )}</button>
     <small>${esc(
@@ -292,7 +293,7 @@ export function ensureInvitoAuto() {
         "The charger belongs to the house, not to one car: connect it once and it counts for every vehicle. It brings what it measures: power, energy, voltage, temperature, the cable.",
       ),
     )}</small>
-    <button type="button" class="ed-btn-add dm-auto-integ" data-wallbox-integ="evcc">☀️ ${esc(
+    <button type="button" class="ed-btn-add dm-auto-integ" data-wallbox-integ="evcc">${segnoHtml("sun")} ${esc(
       t("Collega evcc", "Connect evcc"),
     )}</button>
     <small>${esc(

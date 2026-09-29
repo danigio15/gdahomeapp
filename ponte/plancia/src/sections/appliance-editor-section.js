@@ -1,3 +1,4 @@
+import { segnoHtml } from "../core/segni-del-catalogo.js";
 import { applianceArtwork } from "../core/appliance-artwork.js";
 import {
   APPLIANCE_CATALOG,
@@ -6,7 +7,6 @@ import {
   applianceVisualKey,
 } from "../core/device-model.js";
 import { apriIlFoglioDiScelta, chiudiIlFoglioDiScelta } from "./foglio-di-scelta-section.js";
-import { iconGlyph } from "./icon-engine-section.js";
 import {
   activeLocale,
   allStates,
@@ -42,6 +42,14 @@ import {
 } from "./appliance-integration-section.js";
 import { CAMPI_SCELTI } from "../core/energy-loads-config.js";
 import {
+  CASELLA_DEL_BERSAGLIO,
+  CASELLE_DELLA_COTTURA,
+  COMANDI_DELLA_COTTURA,
+  comandiDellaCottura,
+  proponiLaCottura,
+  tipoDellaCucina,
+} from "../core/la-cottura.js";
+import {
   eDiUnAltroApparecchio,
   paroleDegliAltri,
   paroleDellApparecchio,
@@ -60,18 +68,8 @@ function appliances() {
   return Array.isArray(stored) ? stored.slice() : readJson("cd_appliances", []);
 }
 
-/* L'unico posto della sezione dove l'emoji resta, e non e' una scelta.
- *
- * «Non voglio vedere icone che non sono nostre»: giusto, e dappertutto qui
- * intorno adesso c'e' il disegno del catalogo. Qui no, e non per dimenticanza:
- * questa e' la tendina delle stanze, e dentro un `<option>` il browser disegna
- * TESTO — nessun elemento, nessun disegno, nemmeno un'immagine. Per mettercelo
- * bisognerebbe rifare la tendina come menu nostro, che e' un'altra cosa e un
- * altro lavoro. Finche' e' un `<select>`, l'emoji e' quello che si puo'. */
-function roomIconEmoji(icon) {
-  return iconGlyph("room", clean(icon) || "mdi:home") || "🏠";
-}
-
+/* Dentro un `<option>` il browser disegna solo testo: la tendina delle stanze
+ * dice il nome, senza segno. */
 function roomOptions(selected) {
   const rooms = section("rooms", readJson("cd_stanze", []));
   return [
@@ -79,7 +77,7 @@ function roomOptions(selected) {
     ...rooms.map((room) => {
       const value = clean(room.id || room.name);
       const active = [room.id, room.name].map(clean).includes(clean(selected));
-      return `<option value="${esc(value)}" ${active ? "selected" : ""}>${roomIconEmoji(room.icon)} ${esc(room.name || value)}</option>`;
+      return `<option value="${esc(value)}" ${active ? "selected" : ""}>${esc(room.name || value)}</option>`;
     }),
   ].join("");
 }
@@ -99,8 +97,7 @@ function flowLoadOptions(selected) {
     ...circles.map((load) => {
       const value = clean(load?.metadata?.flow_group) || clean(load.id);
       const label = clean(load.name) || value;
-      const icon = clean(load.emoji_icon || load.icon) || "🔌";
-      return `<option value="${esc(value)}" ${value === clean(selected) ? "selected" : ""}>${esc(icon)} ${esc(label)}</option>`;
+      return `<option value="${esc(value)}" ${value === clean(selected) ? "selected" : ""}>${esc(label)}</option>`;
     }),
   ].join("");
 }
@@ -125,7 +122,7 @@ function typeIconMarkup(value, size = 42) {
   if (legacy) return legacy;
   const artwork = applianceArtwork(key, size);
   if (artwork) return artwork;
-  return `<span class="dm-appliance-editor-fallback">🔌</span>`;
+  return `<span class="dm-appliance-editor-fallback">${segnoHtml("socket")}</span>`;
 }
 
 function typeLabel(value) {
@@ -301,7 +298,7 @@ function cumulativeEntity(value) {
 }
 
 function entityField(name, label, value, help = "", extra = "") {
-  return `<label class="ed-slot"><span class="ed-slot-lbl">${label}</span><span class="ed-form-row"><input class="ed-input mono" name="${name}" value="${esc(value)}"><button type="button" class="dm-entity-picker" data-pick="${name}" aria-label="${t("Seleziona entità", "Select entity")}">🔍</button></span>${help ? `<small>${help}</small>` : ""}${extra}</label>`;
+  return `<label class="ed-slot"><span class="ed-slot-lbl">${label}</span><span class="ed-form-row"><input class="ed-input mono" name="${name}" value="${esc(value)}"><button type="button" class="dm-entity-picker" data-pick="${name}" aria-label="${t("Seleziona entità", "Select entity")}">${segnoHtml("search")}</button></span>${help ? `<small>${help}</small>` : ""}${extra}</label>`;
 }
 
 function numberField(name, label, value, help = "", { step = "0.1", placeholder = "" } = {}) {
@@ -362,7 +359,7 @@ function cardFieldsMarkup(device = {}) {
     clean(device.image || device.image_url) ||
     CARD_FIELD_KEYS.some((key) => clean(device[key]) !== "");
   return `<details class="dm-appliance-card-fields"${configured ? " open" : ""}>
-    <summary>🧩 ${t("Card avanzata — immagine, durata, temperatura, porta, costi", "Advanced card — image, duration, temperature, door, costs")}</summary>
+    <summary>${segnoHtml("sliders")} ${t("Card avanzata — immagine, durata, temperatura, porta, costi", "Advanced card — image, duration, temperature, door, costs")}</summary>
     <div class="dm-appliance-card-fields-intro">${t(
       "Tutti i campi sono facoltativi: la card mostra automaticamente ciò che è disponibile. Avvio, durata, consumo e costo dell'ultimo ciclo vengono calcolati da soli dalle transizioni di potenza se non indichi entità dedicate.",
       "Every field is optional: the card automatically shows what is available. Start, duration, energy and cost of the last cycle are computed automatically from power transitions unless you provide dedicated entities.",
@@ -720,6 +717,9 @@ function updateEditType(modal, key) {
   const preview = modal.querySelector("[data-icon-preview]");
   const trigger = modal.querySelector("[data-type-trigger]");
   if (hidden) hidden.value = canonical;
+  /* La Cottura c'e' per gli apparecchi della cucina, e basta. */
+  const cottura = modal.querySelector("[data-appl-cottura]");
+  if (cottura) cottura.hidden = !tipoDellaCucina({ visual_key: canonical });
   if (preview) {
     preview.innerHTML = typeIconMarkup(canonical, 58);
     preview.dataset.dmPreviewSource = "canonical-picker";
@@ -733,6 +733,159 @@ function updateEditType(modal, key) {
       `${t("Tipo / immagine", "Type / artwork")}: ${typeLabel(canonical)}`,
     );
   }
+}
+
+/* ── la cottura (#71) ──────────────────────────────────────────────────────
+ *
+ * «Mi piacerebbe pilotare la mia friggitrice ad aria della Philips.» Gli
+ * apparecchi della cucina — friggitrice, forno, microonde, piano cottura,
+ * cappa — hanno qui le caselle della voce «Cottura»: cosa si legge (lo stato,
+ * il programma, i gradi, i tempi, il cassetto) e cosa si preme (pausa,
+ * riprendi, stop, un minuto in piu', piu' caldo e meno caldo).
+ *
+ * Un comando e' un'entita' — `button.*`, `switch.*`, `number.*`, `script.*` —
+ * oppure un servizio con i suoi parametri scritti accanto, come li vuole la
+ * friggitrice Philips da HACS: `philips_airfryer.adjust_time time=60
+ * method=add`. Sotto le caselle si legge quali tasti ne verranno fuori: una
+ * casella vuota non disegna niente, e un'entita' che non risponde nemmeno. */
+const PAROLE_DELLA_COTTURA = Object.freeze({
+  cottura_stato: () => t("Stato della cottura", "Cooking status"),
+  cottura_programma: () => t("Programma o ricetta", "Program or recipe"),
+  cottura_temperatura: () => t("Temperatura", "Temperature"),
+  cottura_temperatura_voluta: () => t("Temperatura voluta", "Target temperature"),
+  cottura_tempo_totale: () => t("Tempo totale", "Total time"),
+  cottura_tempo_rimanente: () => t("Tempo rimanente", "Remaining time"),
+  cottura_cassetto: () => t("Cassetto o porta", "Drawer or door"),
+  cottura_pausa: () => t("Pausa", "Pause"),
+  cottura_riprendi: () => t("Riprendi", "Resume"),
+  cottura_stop: () => t("Stop", "Stop"),
+  cottura_piu_un_minuto: () => t("+1 min", "+1 min"),
+  cottura_piu_caldo: () => t("Più caldo", "Hotter"),
+  cottura_meno_caldo: () => t("Meno caldo", "Cooler"),
+  cottura_bersaglio: () => t("Entità per i servizi", "Entity for the services"),
+});
+
+function parolaDellaCasella(casella) {
+  const parola = PAROLE_DELLA_COTTURA[casella];
+  return parola ? parola() : casella;
+}
+
+function casellaDellaCottura(casella, valore, aiuto = "", segnaposto = "") {
+  return `<label class="ed-slot"><span class="ed-slot-lbl">${esc(parolaDellaCasella(casella))}</span><span class="ed-form-row"><input class="ed-input mono" name="${casella}" value="${esc(valore ?? "")}" placeholder="${esc(segnaposto)}" autocomplete="off" spellcheck="false"><button type="button" class="dm-entity-picker" data-pick="${casella}" aria-label="${t("Seleziona entità", "Select entity")}">${segnoHtml("search")}</button></span>${aiuto ? `<small>${aiuto}</small>` : ""}</label>`;
+}
+
+function cotturaMarkup(device = {}, tipo = "") {
+  const valore = (casella) => device[casella] ?? "";
+  const letture = [
+    ["cottura_stato", t("Vuota: usa l'«Entità stato programma».", "Empty: uses the “Program state entity”."), "sensor.philips_airfryer_status"],
+    ["cottura_programma", "", "sensor.friggitrice_programma"],
+    ["cottura_temperatura", t("Il sensore dei gradi.", "The temperature sensor."), "sensor.philips_airfryer_temp"],
+    ["cottura_temperatura_voluta", t("Un number o input_number: il − e il + lo spostano di un passo.", "A number or input_number: − and + move it by one step."), "number.friggitrice_set_temperature"],
+    ["cottura_tempo_totale", t("Secondi, minuti o hh:mm. Vuota: usa la «Durata programma».", "Seconds, minutes or hh:mm. Empty: uses the “Program duration”."), "sensor.philips_airfryer_total_time"],
+    ["cottura_tempo_rimanente", t("Secondi, minuti, hh:mm o l'ora di fine. Vuota: usa il «Tempo rimanente».", "Seconds, minutes, hh:mm or the end time. Empty: uses the “Remaining time”."), "sensor.philips_airfryer_time_remaining"],
+    ["cottura_cassetto", t("binary_sensor aperto/chiuso. Vuota: usa l'«Entità porta».", "Open/closed binary_sensor. Empty: uses the “Door entity”."), "binary_sensor.philips_airfryer_drawer_open"],
+  ];
+  const segnaposti = {
+    cottura_pausa: "button.friggitrice_pause",
+    cottura_riprendi: "philips_airfryer.start_resume",
+    cottura_stop: "button.friggitrice_stop",
+    cottura_piu_un_minuto: "philips_airfryer.adjust_time time=60 method=add",
+    cottura_piu_caldo: "philips_airfryer.adjust_temp temp=5 method=add",
+    cottura_meno_caldo: "philips_airfryer.adjust_temp temp=5 method=subtract",
+  };
+  const comandi = COMANDI_DELLA_COTTURA.map((chiave) => `cottura_${chiave}`);
+  const aperta = CASELLE_DELLA_COTTURA.some((casella) => clean(device[casella]));
+  return `<details class="dm-appliance-cottura" data-appl-cottura${aperta ? " open" : ""}${tipo ? "" : " hidden"}>
+    <summary>${segnoHtml("air-fryer")} ${t("Cottura — stato, tempi, temperatura e comandi", "Cooking — status, times, temperature and controls")}</summary>
+    <div class="dm-appliance-card-fields-intro">${t(
+      "Quello che la voce «Cottura» degli Elettrodomestici legge e preme. Un comando è un'entità (button, switch, number, script) oppure un servizio con i suoi parametri: philips_airfryer.adjust_time time=60 method=add. Si mostra solo il tasto che ha la sua casella, e solo se risponde.",
+      "What the “Cooking” entry of Appliances reads and presses. A control is an entity (button, switch, number, script) or a service with its parameters: philips_airfryer.adjust_time time=60 method=add. A button only shows up when its field is filled in, and only if it answers.",
+    )}</div>
+    <div class="dm-appliance-cottura-azioni"><button type="button" class="ed-btn-add" data-appl-cottura-cerca>${segnoHtml("search")} ${t("Compila dalle entità dell'apparecchio", "Fill in from the appliance's entities")}</button><output data-appl-cottura-esito></output></div>
+    <section class="dm-appliance-entity-grid">
+      ${letture.map(([casella, aiuto, segnaposto]) => casellaDellaCottura(casella, valore(casella), aiuto, segnaposto)).join("")}
+      ${comandi.map((casella) => casellaDellaCottura(casella, valore(casella), "", segnaposti[casella])).join("")}
+      ${casellaDellaCottura(CASELLA_DEL_BERSAGLIO, valore(CASELLA_DEL_BERSAGLIO), t("L'entity_id dato ai servizi che non ne scrivono uno. Vuota: lo stato della cottura.", "The entity_id given to services that do not name one. Empty: the cooking status."), "sensor.philips_airfryer_status")}
+    </section>
+    <small class="dm-appliance-cottura-anteprima" data-appl-cottura-anteprima></small>
+  </details>`;
+}
+
+/* I tasti che la scheda disegnera', detti con le parole dei tasti. Si chiede
+ * al nucleo in due fasi — in cottura e in pausa — perche' Pausa e Riprendi non
+ * compaiono mai insieme. */
+function anteprimaDellaCottura(modal, form) {
+  const riga = modal.querySelector("[data-appl-cottura-anteprima]");
+  if (!riga) return;
+  const values = Object.fromEntries(new FormData(form).entries());
+  const states = allStates();
+  const pronti = new Set([
+    ...Object.keys(comandiDellaCottura(values, states, "cottura")),
+    ...Object.keys(comandiDellaCottura(values, states, "pausa")),
+  ]);
+  const nomi = COMANDI_DELLA_COTTURA.filter((chiave) => pronti.has(chiave)).map((chiave) =>
+    parolaDellaCasella(`cottura_${chiave}`),
+  );
+  riga.textContent = nomi.length
+    ? `${t("Tasti nella Cottura", "Buttons in Cooking")}: ${nomi.join(" · ")}`
+    : t(
+        "Nessun tasto: la Cottura mostrerà solo lo stato e i tempi.",
+        "No buttons: Cooking will only show the status and the times.",
+      );
+}
+
+/* Le entita' da cui compilare: quelle del dispositivo collegato, e se non ce
+ * n'e' uno quelle che portano il nome dell'apparecchio o della friggitrice. */
+function entitaPerLaCottura(values) {
+  const catalogo = entitaDelDispositivo(clean(values.device_id)) || [];
+  const scatto = bindingSnapshot(values);
+  if (catalogo.length || scatto.length) return [...catalogo, ...scatto];
+  const pezzi = clean(values.name)
+    .toLowerCase()
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .split(/[^a-z0-9]+/)
+    .filter((pezzo) => pezzo.length >= 4);
+  if (tipoDellaCucina({ visual_key: values.icon }) === "air-fryer") pezzi.push("airfryer");
+  return Object.keys(allStates()).filter((id) => pezzi.some((pezzo) => id.includes(pezzo)));
+}
+
+function compilaLaCottura(form, entita, integrazione = "") {
+  const proposta = proponiLaCottura(entita, allStates(), { integrazione });
+  const scritte = [];
+  for (const [casella, valore] of Object.entries(proposta)) {
+    const campo = form.elements[casella];
+    if (!campo || clean(campo.value)) continue;
+    campo.value = valore;
+    /* La pastiglia della casella si ridipinge sul «change», come quando
+     * l'entita' la sceglie la lente. */
+    campo.dispatchEvent(new Event("change", { bubbles: true }));
+    scritte.push(parolaDellaCasella(casella));
+  }
+  return scritte;
+}
+
+function wireCottura(modal, form) {
+  const blocco = modal.querySelector("[data-appl-cottura]");
+  if (!blocco) return;
+  const esito = blocco.querySelector("[data-appl-cottura-esito]");
+  blocco.querySelector("[data-appl-cottura-cerca]")?.addEventListener("click", (event) => {
+    event.preventDefault();
+    const values = Object.fromEntries(new FormData(form).entries());
+    const scritte = compilaLaCottura(form, entitaPerLaCottura(values), values.integration);
+    const caselle = scritte.join(", ");
+    if (esito)
+      esito.textContent = scritte.length
+        ? t(`Compilate: ${caselle}.`, `Filled in: ${caselle}.`)
+        : t(
+            "Niente da compilare: le caselle piene restano, e non ho trovato altro.",
+            "Nothing to fill in: filled fields stay, and nothing else was found.",
+          );
+    anteprimaDellaCottura(modal, form);
+  });
+  blocco.addEventListener("input", () => anteprimaDellaCottura(modal, form));
+  blocco.addEventListener("change", () => anteprimaDellaCottura(modal, form));
+  anteprimaDellaCottura(modal, form);
 }
 
 /* Il blocco «Integrazione» in cima alla finestra di modifica.
@@ -775,7 +928,7 @@ function bindingMarkup(device = {}) {
     <div class="dm-appliance-binding-text"><strong data-binding-title></strong><small data-binding-note></small></div>
     <div class="dm-appliance-binding-actions">
       <button type="button" class="ed-btn-add dm-appliance-binding-link" data-binding-link></button>
-      <button type="button" class="ed-btn-add dm-appliance-binding-unlink" data-binding-unlink>✂️ ${t("Scollega", "Unlink")}</button>
+      <button type="button" class="ed-btn-add dm-appliance-binding-unlink" data-binding-unlink>${segnoHtml("tools")} ${t("Scollega", "Unlink")}</button>
     </div>
   </section>`;
 }
@@ -952,7 +1105,7 @@ function disegnaNascoste(modal, form) {
           const spenta = nascoste.has(entity);
           return `<button type="button" class="dm-appl-cmd-chip dm-appl-nascosta" data-appl-nascosta="${esc(entity)}"
             data-on="${spenta ? "false" : "true"}" aria-pressed="${spenta ? "false" : "true"}"
-            title="${esc(entity)}"><span>${esc(nomeAccantoAlDispositivo(entity, apparecchio, states))}</span><i aria-hidden="true">${spenta ? "🚫" : "👁"}</i></button>`;
+            title="${esc(entity)}"><span>${esc(nomeAccantoAlDispositivo(entity, apparecchio, states))}</span><i aria-hidden="true">${spenta ? segnoHtml("stop") : segnoHtml("camera")}</i></button>`;
         })
         .join("")
     : `<small class="dm-appl-cmd-vuoto">${esc(t("Niente da scegliere: l'apparecchio non ha ancora entità.", "Nothing to choose: the appliance has no entities yet."))}</small>`;
@@ -1060,23 +1213,23 @@ function paintBinding(modal, form, note = "") {
       { ...values, device_entities: bindingSnapshot(values) },
       activeLocale(),
     );
-    title.textContent = `🔗 ${clean(values.device_name) || t("Dispositivo collegato", "Linked device")}${label ? ` · ${label}` : ""}`;
+    title.textContent = `${clean(values.device_name) || t("Dispositivo collegato", "Linked device")}${label ? ` · ${label}` : ""}`;
     small.textContent =
       note ||
       t(
         "Nel dettaglio dell'apparecchio escono tutte le entità del dispositivo; qui sotto quelle che disegnano la card.",
         "The appliance detail shows every entity of the device; below, the ones that draw the card.",
       );
-    link.textContent = `🔁 ${t("Cambia dispositivo", "Change device")}`;
+    link.textContent = t("Cambia dispositivo", "Change device");
   } else {
-    title.textContent = `🔗 ${t("Collega a un'integrazione", "Link to an integration")}`;
+    title.textContent = t("Collega a un'integrazione", "Link to an integration");
     small.textContent =
       note ||
       t(
         "hOn, Home Connect, Miele, LG ThinQ, una presa Shelly…: scegli il dispositivo e le caselle vuote si compilano da sole. Quelle scritte a mano restano.",
         "hOn, Home Connect, Miele, LG ThinQ, a Shelly plug…: pick the device and the empty fields fill themselves in. The ones written by hand stay.",
       );
-    link.textContent = `🔗 ${t("Scegli il dispositivo", "Pick the device")}`;
+    link.textContent = t("Scegli il dispositivo", "Pick the device");
   }
   /* Collegare o scollegare un dispositivo cambia quali comandi e quali letture
    * gli stanno accanto (#338, #471): le proposte si rifanno insieme alla
@@ -1122,6 +1275,13 @@ function wireBinding(modal, form, device) {
         if (room && !clean(room.value) && appliance.room_id) room.value = appliance.room_id;
         if (filled.some((role) => CARD_FIELD_KEYS.includes(role)))
           modal.querySelector(".dm-appliance-card-fields")?.setAttribute("open", "");
+        /* Un apparecchio della cucina si porta dietro anche le caselle della
+         * Cottura (#71): con `philips_airfryer` i comandi sono i suoi servizi. */
+        if (tipoDellaCucina(appliance)) {
+          if (compilaLaCottura(form, entities, integration?.domain).length)
+            modal.querySelector("[data-appl-cottura]")?.setAttribute("open", "");
+          anteprimaDellaCottura(modal, form);
+        }
         const words = filled.map(roleWord).filter(Boolean);
         const count = words.length;
         const list = words.join(", ");
@@ -1193,20 +1353,20 @@ export function openApplianceEditor(index) {
   modal.id = "dm-appliance-editor-modal";
   modal.className = "dm-section-modal";
   modal.innerHTML = `<section class="dm-section-dialog dm-appliance-editor-dialog" role="dialog" aria-modal="true" aria-labelledby="dm-appliance-editor-title">
-    <header><strong id="dm-appliance-editor-title">🔌 ${t("Modifica elettrodomestico", "Edit appliance")}</strong><button type="button" data-close aria-label="${t("Chiudi", "Close")}">✕</button></header>
+    <header><strong id="dm-appliance-editor-title">${segnoHtml("socket")} ${t("Modifica elettrodomestico", "Edit appliance")}</strong><button type="button" data-close aria-label="${t("Chiudi", "Close")}">✕</button></header>
     <form data-form>
       ${bindingMarkup(device)}
       <div class="dm-modal-grid dm-appliance-main-fields">
         <label class="ed-slot"><span class="ed-slot-lbl">${t("Nome", "Name")}</span><input class="ed-input" name="name" value="${esc(device.name)}" required></label>
         <label class="ed-slot dm-appliance-icon-field"><span class="ed-slot-lbl">${t("Tipo / immagine", "Type / artwork")}</span><input type="hidden" name="icon" value="${esc(visual)}"><span class="dm-appliance-icon-row"><span class="dm-appliance-icon-preview" data-icon-preview data-dm-preview-source="canonical-picker" aria-hidden="false"></span><button type="button" class="ed-input dm-appliance-type-trigger" data-type-trigger aria-haspopup="listbox"></button></span><small>${t("Usa lo stesso catalogo e la stessa icona azzurra della prima configurazione.", "Uses the same catalog and blue icon as the first configuration.")}</small></label>
         <label class="ed-slot"><span class="ed-slot-lbl">${t("Stanza", "Room")}</span><select class="ed-input" name="room_id">${roomOptions(device.room_id || device.room)}</select></label>
-        <label class="ed-slot"><span class="ed-slot-lbl">${t("Carico energia", "Energy load")}</span><select class="ed-input" name="flow_group" data-dm-appliance-flow-group>${flowLoadOptions(device.metadata?.beta27_subload_group)}</select><small class="dm-appliance-flow-suggestion" data-dm-flow-suggestion${flowGroupSuggested(device) ? "" : " hidden"}>✨ ${t("Suggerito: ha una potenza mappata", "Suggested: it has a mapped power sensor")}</small><small>${t("Il cerchio del flusso in cui rientra. Il suo valore diventa la somma dei dispositivi assegnati, e il popup del cerchio lo elenca: non serve riconfigurarlo nei Carichi.", "The flow circle it belongs to. That circle becomes the total of the appliances assigned to it and its popup lists them, with nothing to configure again under Loads.")}</small></label>
+        <label class="ed-slot"><span class="ed-slot-lbl">${t("Carico energia", "Energy load")}</span><select class="ed-input" name="flow_group" data-dm-appliance-flow-group>${flowLoadOptions(device.metadata?.beta27_subload_group)}</select><small class="dm-appliance-flow-suggestion" data-dm-flow-suggestion${flowGroupSuggested(device) ? "" : " hidden"}>${segnoHtml("star")} ${t("Suggerito: ha una potenza mappata", "Suggested: it has a mapped power sensor")}</small><small>${t("Il cerchio del flusso in cui rientra. Il suo valore diventa la somma dei dispositivi assegnati, e il popup del cerchio lo elenca: non serve riconfigurarlo nei Carichi.", "The flow circle it belongs to. That circle becomes the total of the appliances assigned to it and its popup lists them, with nothing to configure again under Loads.")}</small></label>
         ${soglieMarkup(device)}
       </div>
       <section class="dm-appliance-entity-grid">
         ${entityField("control_entity", t("Entità comando", "Control entity"), controlInitial, t("Switch, light, fan o input_boolean usato dal pulsante Accendi/Spegni.", "Switch, light, fan or input_boolean used by the On/Off button."))}
         <label class="ed-check dm-appliance-switch-off"><input type="checkbox" name="switch_disabled"${device.switch_disabled ? " checked" : ""}> ${t("Senza tasto Accendi/Spegni", "Without the On/Off button")}<small>${t("L'entità comando resta per leggere lo stato, ma la card non mostra l'interruttore: il frigo non si spegne per sbaglio.", "The control entity still reads the state, but the card hides the switch: the fridge cannot be turned off by mistake.")}</small></label>
-        ${entityField("power_entity", t("Potenza istantanea", "Instant power"), powerInitial, t("Sensore W o kW mostrato nella card.", "W or kW sensor shown on the card."), `<small class="dm-appliance-power-warning" data-dm-power-warning${powerMuta ? "" : " hidden"}>⚠️ ${esc(powerMuta)}</small>`)}
+        ${entityField("power_entity", t("Potenza istantanea", "Instant power"), powerInitial, t("Sensore W o kW mostrato nella card.", "W or kW sensor shown on the card."), `<small class="dm-appliance-power-warning" data-dm-power-warning${powerMuta ? "" : " hidden"}>${segnoHtml("warning")} ${esc(powerMuta)}</small>`)}
         ${entityField("daily_energy_entity", t("Energia giornaliera", "Daily energy"), device.daily_energy_entity, t("Facoltativa: sostituisce il calcolo del giorno.", "Optional: overrides the daily calculation."))}
         ${entityField("monthly_energy_entity", t("Energia mensile", "Monthly energy"), device.monthly_energy_entity, t("Facoltativa: sostituisce il calcolo del mese corrente.", "Optional: overrides the current-month calculation."))}
         ${entityField("total_energy_entity", t("Energia totale per storico e Report", "Total energy for history and Report"), totalInitial, t("Deve essere un contatore cumulativo kWh con state_class total o total_increasing. Non usare qui il sensore mensile: questo campo serve per ricostruire anche i mesi precedenti.", "This must be a cumulative kWh meter with state_class total or total_increasing. Do not use the monthly sensor here: this field is required to reconstruct previous months."))}
@@ -1215,9 +1375,10 @@ export function openApplianceEditor(index) {
       ${lettureExtraMarkup(device)}
       ${nascosteMarkup(device)}
       ${coloranoMarkup(device)}
+      ${cotturaMarkup(device, tipoDellaCucina({ visual_key: visual }))}
       ${cardFieldsMarkup(device)}
       <output data-error></output>
-      <footer><button type="button" class="ed-btn-add" data-cancel>${t("Annulla", "Cancel")}</button><button type="submit" class="ed-save-btn">💾 ${t("Salva modifiche", "Save changes")}</button></footer>
+      <footer><button type="button" class="ed-btn-add" data-cancel>${t("Annulla", "Cancel")}</button><button type="submit" class="ed-save-btn">${segnoHtml("check")} ${t("Salva modifiche", "Save changes")}</button></footer>
     </form>
   </section>`;
   doc.body.append(modal);
@@ -1229,6 +1390,7 @@ export function openApplianceEditor(index) {
   wireLetture(modal, form);
   wireNascoste(modal, form);
   wireColorano(modal, form);
+  wireCottura(modal, form);
   modal.querySelector("[data-type-trigger]")?.addEventListener("click", () => {
     openTypePicker({
       selected: form.elements.icon.value,
@@ -1251,7 +1413,7 @@ export function openApplianceEditor(index) {
   if (powerField && powerWarning) {
     const ridiLAvviso = () => {
       const motivo = percheLaPotenzaNonSiLegge(powerField.value);
-      powerWarning.textContent = motivo ? `⚠️ ${motivo}` : "";
+      powerWarning.innerHTML = motivo ? `${segnoHtml("warning")} ${esc(motivo)}` : "";
       powerWarning.hidden = !motivo;
     };
     powerField.addEventListener("input", ridiLAvviso);
@@ -1371,6 +1533,13 @@ export function openApplianceEditor(index) {
     const colorano = elencoColorano(values.colorano);
     if (colorano.length) next[COLORANO_CAMPO] = colorano;
     else delete next[COLORANO_CAMPO];
+    /* Le caselle della Cottura (#71): scritte si tengono, vuote se ne vanno —
+     * un apparecchio senza cottura resta esattamente com'era. */
+    for (const casella of CASELLE_DELLA_COTTURA) {
+      const scritto = clean(values[casella]);
+      if (scritto) next[casella] = scritto;
+      else delete next[casella];
+    }
     if (next.threshold_standby === "") delete next.threshold_standby;
     for (const key of [
       "cycle_minutes",
@@ -1462,13 +1631,26 @@ function installStyles() {
     .dm-appliance-flow-suggestion[hidden]{display:none!important}
     .dm-appliance-power-warning{display:block!important;margin-top:3px!important;color:#b45309!important;font-weight:750!important;line-height:1.45!important}
     .dm-appliance-power-warning[hidden]{display:none!important}
-    .dm-appliance-card-fields{margin-top:14px!important;border:1px solid var(--divider-color,#dbe4ee)!important;border-radius:16px!important;background:color-mix(in srgb,var(--secondary-background-color,#f1f5f9) 45%,transparent)!important;overflow:hidden!important}
-    .dm-appliance-card-fields>summary{padding:13px 16px!important;font-size:13px!important;font-weight:850!important;cursor:pointer!important;list-style:none!important;user-select:none!important}
-    .dm-appliance-card-fields>summary::-webkit-details-marker{display:none!important}
-    .dm-appliance-card-fields>summary::after{content:"⌄";float:right;font-size:16px;transition:transform .2s ease}
-    .dm-appliance-card-fields[open]>summary::after{transform:rotate(180deg)}
+    .dm-appliance-card-fields,.dm-appliance-cottura{margin-top:14px!important;border:1px solid var(--divider-color,#dbe4ee)!important;border-radius:16px!important;background:color-mix(in srgb,var(--secondary-background-color,#f1f5f9) 45%,transparent)!important;overflow:hidden!important}
+    .dm-appliance-card-fields>summary,.dm-appliance-cottura>summary{padding:13px 16px!important;font-size:13px!important;font-weight:850!important;cursor:pointer!important;list-style:none!important;user-select:none!important}
+    .dm-appliance-card-fields>summary::-webkit-details-marker,.dm-appliance-cottura>summary::-webkit-details-marker{display:none!important}
+    .dm-appliance-card-fields>summary::after,.dm-appliance-cottura>summary::after{content:"⌄";float:right;font-size:16px;transition:transform .2s ease}
+    .dm-appliance-card-fields[open]>summary::after,.dm-appliance-cottura[open]>summary::after{transform:rotate(180deg)}
     .dm-appliance-card-fields-intro{padding:0 16px 10px!important;font-size:11.5px!important;line-height:1.5!important;color:var(--secondary-text-color,#64748b)!important}
-    .dm-appliance-card-fields .dm-appliance-entity-grid{padding:0 12px 12px!important}
+    .dm-appliance-card-fields .dm-appliance-entity-grid,.dm-appliance-cottura .dm-appliance-entity-grid{padding:0 12px 12px!important}
+    /* Le due fisarmoniche non si schiacciano. La scheda e' una griglia alta
+       quanto lo schermo, e un figlio che scorre per conto suo (overflow
+       hidden) per la griglia puo' diventare alto zero: la «Card avanzata»,
+       aperta, era una riga di due pixel in fondo alla scheda, e la Cottura
+       accanto a lei la stessa cosa. «clip» taglia gli angoli uguale, ma non fa
+       della fisarmonica un riquadro che scorre: resta alta quanto quello che
+       ha dentro, e scorre la scheda. */
+    .dm-appliance-card-fields,.dm-appliance-cottura{overflow:clip!important}
+    .dm-appliance-cottura[hidden]{display:none!important}
+    .dm-appliance-cottura-azioni{display:flex!important;flex-wrap:wrap!important;align-items:center!important;gap:8px 12px!important;padding:0 16px 10px!important}
+    .dm-appliance-cottura-azioni .ed-btn-add{margin:0!important}
+    .dm-appliance-cottura-azioni output{font-size:11.5px!important;font-weight:750!important;color:#15803d!important}
+    .dm-appliance-cottura-anteprima{display:block!important;padding:0 16px 14px!important;font-size:12px!important;font-weight:800!important;color:var(--text,#0f172a)!important}
 .dm-appliance-type-grid{display:grid!important;grid-template-columns:repeat(auto-fill,minmax(88px,1fr))!important;gap:8px!important;overflow-y:auto!important;min-height:0!important}
     .dm-appliance-type-option{display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;gap:5px!important;min-height:92px!important;padding:10px 4px!important;border:1px solid var(--divider-color,#e2e8f0)!important;border-radius:14px!important;background:color-mix(in srgb,var(--secondary-background-color,#f1f5f9) 70%,transparent)!important;color:inherit!important;cursor:pointer!important}.dm-appliance-type-option[aria-selected="true"]{border-color:#0ea5e9!important;box-shadow:0 0 0 2px color-mix(in srgb,#0ea5e9 18%,transparent)!important}.dm-appliance-type-option-icon{display:grid!important;place-items:center!important;height:34px!important;color:#0ea5e9!important}.dm-appliance-type-option-icon svg{width:30px!important;height:30px!important}.dm-appliance-type-option>span:last-child{font-size:10px!important;font-weight:800!important;line-height:1.15!important;text-align:center!important}
     @media(max-width:520px){.dm-appliance-icon-row{grid-template-columns:84px minmax(0,1fr)!important}.dm-appliance-type-grid{grid-template-columns:repeat(4,minmax(0,1fr))!important}.dm-appliance-type-option{min-width:0!important;min-height:92px!important}}

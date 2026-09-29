@@ -216,7 +216,8 @@ test("un gettone che scade fa tornare Base senza che arrivi niente", async () =>
   assert.equal(licenze.premium, true);
   ora = ADESSO + 9 * GIORNO;
   assert.equal(licenze.premium, false);
-  assert.equal(licenze.limitata, true);
+  /* Base, e la casa resta aperta lo stesso: i lucchetti non sono suoi. */
+  assert.equal(licenze.limitata, false);
 });
 
 test("il gettone di un'altra casa non si tiene nemmeno sul disco", async () => {
@@ -265,6 +266,102 @@ test("con la chiave vuota non parte niente e non si limita niente", async () => 
     assert.equal(errore.codice, "licenze-spente");
     return true;
   });
+});
+
+test("con la chiave la casa tiene la licenza e gira le ricevute, ma non limita niente", async () => {
+  /* Base o Premium, la casa resta aperta: Home Assistant, le plance e i
+   * telefoni che arrivano restano come sempre. I lucchetti di Base li mettono
+   * l'app e il browser, leggendo la licenza da qui; il fuori casa lo chiude
+   * il centralino. La casa fa la sua parte e basta: chi compra dall'app
+   * diventa Premium davvero. */
+  const gettone = unGettone({ sog: CASA, origine: "negozio" }, { adesso: ADESSO });
+  const { licenze, quadro } = leLicenze({
+    risposte: {
+      "/v1/licenze/casa": conGettoni({}),
+      "/v1/licenze/negozio": conGettoni({ gdahome: gettone }),
+    },
+  });
+  await licenze.rinnova();
+  assert.equal(quadro.chieste[0].dove, "https://quadro.prova/v1/licenze/casa");
+  assert.equal(licenze.attive, true);
+  assert.equal(licenze.premium, false);
+  assert.equal(licenze.limitata, false, "con Base la casa non si limita");
+  const base = licenze.stato();
+  assert.equal(base.attive, true);
+  assert.equal(base.limitata, false);
+  assert.equal(base.gdahome.attiva, false);
+  assert.equal("soloSullIPhone" in base, false);
+
+  /* E la ricevuta dell'app arriva al quadro, e torna Premium. */
+  const dopo = await licenze.negozio({
+    app: "gdahome",
+    piattaforma: "ios",
+    prodotto: "gdahome_premium_mensile",
+    ricevuta: "2000000123456789",
+  });
+  assert.equal(quadro.chieste[1].dove, "https://quadro.prova/v1/licenze/negozio");
+  assert.equal(dopo.gdahome.attiva, true);
+  assert.equal(licenze.premium, true);
+  assert.equal(licenze.limitata, false);
+});
+
+test("un rinnovo lento non scavalca un acquisto: le domande al quadro vanno in fila", async () => {
+  /* Il rinnovo di ogni sei ore parte, il quadro e' lento; intanto arriva la
+   * ricevuta di chi ha appena pagato. Senza la fila la risposta del rinnovo —
+   * partita prima dell'acquisto, coi gettoni di prima — arrivava dopo, e la
+   * casa tornava Base fino al giro seguente. */
+  const premium = unGettone({ sog: CASA, origine: "negozio" }, { adesso: ADESSO });
+  let pagato = false;
+  const { licenze, quadro } = leLicenze({
+    risposte: {
+      "/v1/licenze/casa": () => conGettoni(pagato ? { gdahome: premium } : {}),
+      "/v1/licenze/negozio": () => {
+        pagato = true;
+        return conGettoni({ gdahome: premium });
+      },
+    },
+  });
+  /* Il quadro risponde al rinnovo subito — coi gettoni di prima, perche'
+   * l'acquisto non c'e' ancora — ma la risposta ci mette un po' ad arrivare. */
+  const fetchVero = licenze.prendi;
+  licenze.prendi = async (dove, opzioni) => {
+    const risposta = await fetchVero(dove, opzioni);
+    if (dove.endsWith("/v1/licenze/casa")) await new Promise((ok) => setTimeout(ok, 40));
+    return risposta;
+  };
+  const rinnovo = licenze.rinnova();
+  const acquisto = licenze.negozio({
+    app: "gdahome",
+    piattaforma: "ios",
+    prodotto: "gdahome_premium_mensile",
+    ricevuta: "2000000123456789",
+  });
+  await Promise.all([rinnovo, acquisto]);
+  assert.equal(licenze.premium, true, "il Premium appena pagato resta");
+  assert.deepEqual(
+    quadro.chieste.map((una) => new URL(una.dove).pathname),
+    ["/v1/licenze/casa", "/v1/licenze/negozio"],
+  );
+});
+
+test("un si' del quadro che non e' la sua risposta non toglie i gettoni", async () => {
+  const gettone = unGettone({ sog: CASA }, { adesso: ADESSO });
+  let giro = 0;
+  const { licenze } = leLicenze({
+    risposte: {
+      "/v1/licenze/casa": () => {
+        giro += 1;
+        /* Il primo e' buono; il secondo e' un 200 senza gettoni, come lo
+         * darebbe una pagina messa in mezzo da qualcuno. */
+        return giro === 1 ? conGettoni({ gdahome: gettone }) : { stato: 200, detto: { ciao: 1 } };
+      },
+    },
+  });
+  await licenze.rinnova();
+  assert.equal(licenze.premium, true);
+  await licenze.rinnova();
+  assert.equal(licenze.premium, true, "i gettoni di prima restano");
+  assert.equal(licenze.stato().ultima.andata, false);
 });
 
 test("il codice regalo si accetta scritto come capita, e si manda giusto", async () => {

@@ -43,7 +43,7 @@ name: gdahome
 #
 # Quello che non cambia: nel negozio «Aggiorna» compare **solo** se questo
 # numero si alza.
-version: "1.8.0"
+version: "1.9.0"
 slug: gdahome
 # Le virgolette non sono un vezzo: dentro c'e' un «due punti» seguito da uno
 # spazio, e in YAML quella e' la cosa che separa una chiave dal suo valore.
@@ -164,7 +164,7 @@ options:
     # che cambia non cambia piu'. Dove chiama questa casa lo dice la console,
     # nella scheda «Da fuori casa».
     #
-    # Chi vuole un centralino suo se ne accende uno (`nuvola/README.md`) e si
+    # Chi vuole un centralino suo se ne accende uno (`centralino/README.md`) e si
     # tiene una copia locale di questo add-on, dove quella riga si cambia una
     # volta: e' una cosa da chi sa cos'e' un centralino, e chi lo sa sa anche
     # cambiare una riga.
