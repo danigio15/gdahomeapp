@@ -27,9 +27,8 @@ import 'package:gdahome/casa/zigbee.dart';
 /// I novanta secondi del ponte, letti da `ponte/src/zigbee.js`.
 Duration _attesaDelPonte() {
   final sorgente = File('../ponte/src/zigbee.js').readAsStringSync();
-  final trovato = RegExp(
-    r'ATTESA_DELLA_MAPPA\s*=\s*([\d_]+)',
-  ).firstMatch(sorgente);
+  final trovato = RegExp(r'ATTESA_DELLA_MAPPA\s*=\s*([\d_]+)')
+      .firstMatch(sorgente);
   expect(
     trovato,
     isNotNull,
