@@ -147,6 +147,16 @@ export const SCHEDE = Object.freeze({
   sez3: { famiglia: "clima", posizione: 25 }, // Gestione termica: solare, scaldabagno, caldaia
   pool: { famiglia: "clima", posizione: 30 }, // Piscina
   irr: { famiglia: "clima", posizione: 40 }, // Irrigazione
+  /* L'acqua e il gas (#115, #135, #137): sta con l'acqua di casa, accanto
+   * all'irrigazione. Non con l'Energia: li' «Contatori» sono quelli della
+   * corrente, e il gas si confronta coi kilowattora ma si paga a metri cubi. */
+  contatori: { famiglia: "clima", posizione: 45 },
+  /* Le piante (#159): accanto all'irrigazione, perché è la stessa domanda —
+   * quando dare l'acqua — per chi un impianto non ce l'ha. */
+  piante: { famiglia: "clima", posizione: 42 },
+  /* L'acquario (#127): accanto alla piscina e alle piante, fra l'acqua di
+   * casa. */
+  acquario: { famiglia: "clima", posizione: 43 },
 
   /* ── 🛋️ Casa ───────────────────────────────────────────────────────── */
   stanze: { famiglia: "casa", posizione: 10 },

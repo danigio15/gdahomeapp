@@ -186,6 +186,17 @@ import {
 } from "../core/rifiuti-model.js";
 import { ingressoInPlancia } from "./citofono-section.js";
 import { nomeDellaRiga, parolaDelQuando } from "./rifiuti-section.js";
+import {
+  CHIAVE_ANIMALI,
+  CHIAVI_CAMPI as CHIAVI_CAMPI_ANIMALI,
+  animaliDisegnabili,
+  haLetture,
+  vistaAnimale,
+} from "../core/animali-model.js";
+import { parolaAvviso, testoLettura } from "./animali-section.js";
+import { EVENTO_CONTATORI, tesseraDeiContatori, vistaDeiContatori } from "./contatori-section.js";
+import { EVENTO_PIANTE, tesseraDellePiante, vistaDellePiante } from "./piante-section.js";
+import { EVENTO_ACQUARIO, tesseraDellAcquario, vistaDellAcquario } from "./acquario-section.js";
 import { disegnoDelBidone } from "../core/disegni-rifiuti.js";
 import { CHIAVE_VMC, entitaDellaVmc, letturaVmc, vmcDisegnabili, vmcParla } from "../core/vmc-model.js";
 import { avvisiAppenaAccesi } from "../core/avvisi-che-si-aprono.js";
@@ -194,7 +205,7 @@ import { iconaPresaMarkup } from "./prese-section.js";
 import { puntiDi, quandoArrivaLoStorico } from "./storico-condiviso-section.js";
 import {
   CHIAVE_SOGLIA_CHIUSA,
-  sogliaDellaCopertura,
+  coperturaAlzata,
   coverEntries,
   contoDelleAperture,
   coverKindLabel,
@@ -214,7 +225,9 @@ import { azioniDellaPorta } from "../core/security-door-model.js";
 import { humidityEntry } from "../core/room-overview.js";
 import {
   CHIAVE_VARCHI,
+  contattiDichiaratiNelleFinestre,
   contoDeiVarchi,
+  eUnContatto,
   varchiConLeFinestre,
   varchiDiCasa,
 } from "../core/varchi-di-casa.js";
@@ -264,7 +277,6 @@ import {
   apertaSecondoVerso,
   insiemeInvertiti,
   posizioneSecondoVerso,
-  statoSecondoVerso,
   versoInvertito,
 } from "../core/verso-aperture.js";
 import { normalizeRobots, robotStateLabel, robotView } from "../core/robot-model.js";
@@ -1197,26 +1209,21 @@ function coversModel(states) {
        * al verso della plancia — 100 e ON vogliono dire aperto — cosi' quello
        * che segue non deve saperne niente. */
       const girata = versoInvertito(item);
-      /* Anche la parola, non solo la posizione (#353): la tapparella montata
-       * al contrario che la posizione non la pubblica dichiara «open» quando
-       * e' giu', e la tessera la contava fra le aperte. */
-      const raw = statoSecondoVerso(current?.state, girata);
       const position = posizioneSecondoVerso(Number(current?.attributes?.current_position), girata);
       /* Il contatto parla la sua lingua — `on` e' aperto — e non ha posizione:
        * chiederla a lui vorrebbe dire inventarla. */
       /* Dove una posizione c'e', comanda lei — e sotto la soglia di casa
        * (#298) uno spiraglio e' una tapparella chiusa: «le imposto al 10%
        * per un minimo passaggio d'aria, ma il sistema le rileva aperte». Lo
-       * stato di Home Assistant resta per chi la posizione non la dichiara. */
+       * stato di Home Assistant resta per chi la posizione non la dichiara, e
+       * si gira col verso della riga (#353). La regola sta in
+       * `coperturaAlzata`, la stessa che usa la pagina Stanze (#162). */
       const open = soloSensore
         ? apertaSecondoVerso(
             windowOpenFromState(current?.state),
             insiemeInvertiti(readJson(CHIAVE_VERSI, [])).has(entity),
           ) === true
-        : raw === "opening" ||
-          (Number.isFinite(position)
-            ? position > sogliaDellaCopertura(item, readJson(CHIAVE_SOGLIA_CHIUSA, 0))
-            : raw === "open");
+        : coperturaAlzata(item, current, readJson(CHIAVE_SOGLIA_CHIUSA, 0));
       return {
         soloSensore: Boolean(soloSensore),
         entity,
@@ -1347,6 +1354,17 @@ function coversModel(states) {
      * suo, e due conti sulla stessa cosa non possono divergere se il conto e'
      * uno. */
     open: contate,
+    /* E per la fascia sotto il meteo escono separate (#162).
+     *
+     * «“Finestre aperte” in realtà conta le tapparelle/covers aperti.» La
+     * pastiglia leggeva `open`, che e' due cose diverse a seconda della casa.
+     * Adesso le tapparelle hanno la loro pastiglia, che conta i motori su e
+     * basta, e i contatti sull'anta vanno in quella delle finestre, insieme a
+     * quelli dei Varchi. Dei contatti solo quelli veri: un `binary_sensor`. */
+    alzate,
+    contattiAperti: aperte
+      .filter((riga) => eUnContatto(riga.entity))
+      .map((riga) => ({ entity: riga.entity, name: riga.name })),
     /* E tutto quello che la tessera conta: le ante aperte con i motori su.
      * Chi apre la tessera trova l'elenco, che e' quello che il numero dice. */
     aperteEAlzate: tutte,
@@ -4094,15 +4112,24 @@ function varchiModel(states) {
    * riunione la fanno adesso anche la pagina Varchi e la sua scheda, che prima
    * non ne sapevano niente — «in configurazione nessun contatto trovato,
    * invece nella home me li mette tutti e due» (#19). */
-  const conLeFinestre = varchiConLeFinestre(
-    readJson(CHIAVE_VARCHI, {}),
-    root.getTapparelle?.() || readJson("cd_tapparelle", []),
-  );
-  const righe = varchiDiCasa(states, conLeFinestre, girati, (entity) =>
-    friendlyName(states, entity),
+  const righeDelleFinestre = root.getTapparelle?.() || readJson("cd_tapparelle", []);
+  const conLeFinestre = varchiConLeFinestre(readJson(CHIAVE_VARCHI, {}), righeDelleFinestre);
+  /* I contatti scritti nelle Finestre sono finestre anche qui (#162): chi li
+   * ha messi nella casella dell'anta l'ha gia' detto, e la classe di Home
+   * Assistant non lo smentisce. Vince solo quello che si scrive nella riga
+   * del varco. */
+  const dichiaratiFinestre = new Set(contattiDichiaratiNelleFinestre(righeDelleFinestre));
+  const righe = varchiDiCasa(
+    states,
+    conLeFinestre,
+    girati,
+    (entity) => friendlyName(states, entity),
+    dichiaratiFinestre,
   ).filter((riga) => widgetIncludes(riga.entity, fuori));
   if (!righe.length) return null;
   const conto = contoDeiVarchi(righe);
+  const perLaFascia = (elenco) =>
+    elenco.map((riga) => ({ entity: riga.entity, name: clean(riga.name) || riga.entity }));
   return {
     key: "varchi",
     accent: conto.aperti ? "#dc2626" : "#16a34a",
@@ -4117,6 +4144,12 @@ function varchiModel(states) {
     /* Gli aperti escono col modello, per la fascia sotto il meteo (#482): la
      * stessa lista che qui sotto diventa la didascalia. */
     open: conto.aperte,
+    /* E divisi fra porte e finestre, solo i contatti (#162): «“Varchi aperti”
+     * somma insieme contatti di porte e finestre». La fascia li dice in due
+     * pastiglie; la tessera resta una, perche' la domanda «cosa e' aperto in
+     * casa» ha ancora una risposta sola. */
+    porteAperte: perLaFascia(conto.porte),
+    finestreAperte: perLaFascia(conto.finestre),
     rows: righe.map((riga) => ({
       entity: riga.entity,
       name: riga.name,
@@ -5391,6 +5424,140 @@ function rifiutiModel(states) {
   };
 }
 
+/* Gli animali di casa, in Home (#145).
+ *
+ * «La sezione animali non appare nei widget della home.»
+ *
+ * E non c'era: la sezione aveva la sua scheda nel Config, la sua pagina e il
+ * suo disegno nel catalogo, e in Home niente — nessun modello, nessuna
+ * tessera, nemmeno il tasto «Apri sezione» perche' quello lo da' l'elenco
+ * delle tessere. Chi ha un gatto teneva la sua sezione dietro la barra, e
+ * doveva andarci apposta per sapere se il cibo stava finendo.
+ *
+ * ── Cosa dice, passando ──────────────────────────────────────────────────
+ *
+ * Quanti sono, e cosa vogliono adesso. Le tre cose che un animale domestico
+ * chiede a una casa — la ciotola, l'acqua, la lettiera — sono le stesse che la
+ * scheda gia' sorveglia, e la tessera ne porta in cima il piu' urgente. Senza
+ * niente da dire porta i nomi, che e' il modo onesto di dire «tutto a posto».
+ *
+ * Le parole degli avvisi e delle letture sono quelle della sezione, importate:
+ * scritte una seconda volta, una delle due sarebbe rimasta indietro.
+ *
+ * ── L'interruttore «nel widget» ─────────────────────────────────────────
+ *
+ * Si toglie dal MODELLO, non dal solo cancello: l'entita' spenta si azzera
+ * PRIMA di leggere la scheda, cosi' non entra ne' nell'avviso ne' nel valore
+ * ne' nell'elenco. E' la stessa regola dei rifiuti, e sta scritta li' per
+ * esteso. */
+export function animaliModel(states) {
+  const schede = animaliDisegnabili(readJson(CHIAVE_ANIMALI, []));
+  if (!schede.length) return null;
+  const fuori = widgetExcludedEntities("animali");
+  const adesso = Date.now();
+  const viste = schede
+    .map((animale) => {
+      const suo = { ...animale };
+      for (const chiave of CHIAVI_CAMPI_ANIMALI)
+        if (!widgetIncludes(suo[chiave], fuori)) suo[chiave] = "";
+      return vistaAnimale(suo, states, adesso);
+    })
+    /* Una scheda col solo nome non e' una notizia: in Home non ci va. Nella
+     * sezione si', perche' li' si e' andati apposta. */
+    .filter((vista) => haLetture(vista));
+  if (!viste.length) return null;
+
+  /* Il piu' urgente per primo: e' quello che la tessera mette in cima, ed e'
+   * anche l'ordine in cui uno se ne occuperebbe. */
+  const peso = { urgente: 0, attenzione: 1, quiete: 2 };
+  const inFila = [...viste].sort((a, b) => peso[a.gravita] - peso[b.gravita]);
+  const daFare = inFila.filter((vista) => vista.avvisi.length);
+  const urgenti = inFila.some((vista) => vista.gravita === "urgente");
+
+  /* Cosa vuole questo animale adesso: il suo avviso peggiore, se ne ha uno. */
+  const suoAvviso = (vista) =>
+    vista.avvisi.find((voce) => voce.gravita === "urgente") || vista.avvisi[0] || null;
+  /* E se non vuole niente, la lettura che si guarda per prima: quella che la
+   * scheda ha davvero, nell'ordine in cui le caselle sono dichiarate. */
+  const suaLettura = (vista) =>
+    CHIAVI_CAMPI_ANIMALI.map((chiave) => vista.letture[chiave]).find(
+      (voce) => voce && !voce.muto,
+    ) || null;
+
+  return {
+    key: "animali",
+    /* L'arancio dell'orma: lo stesso della zampa nel catalogo, e lo stesso a
+     * cui si e' abituato chi apre la sezione. */
+    accent: urgenti ? "#dc2626" : daFare.length ? "#f59e0b" : "#f97316",
+    icon: "🐾",
+    label: t("Animali", "Pets"),
+    value: String(viste.length),
+    caption: daFare.length
+      ? daFare
+          .map((vista) => `${vista.nome}: ${parolaAvviso(suoAvviso(vista).chiave).toLowerCase()}`)
+          .join(" · ")
+      : viste.map((vista) => vista.nome).join(" · "),
+    ring: null,
+    attiva: daFare.length > 0,
+    alert: urgenti,
+    rows: inFila.map((vista) => {
+      const avviso = suoAvviso(vista);
+      const voce = suaLettura(vista);
+      return {
+        /* Il click di una riga apre lo storico di quell'entita': quella giusta
+         * e' la lettura che la riga sta mostrando, non l'animale — un animale
+         * non e' un'entita' e uno storico non ce l'ha. */
+        entity: (avviso ? vista.letture[avviso.campo] : voce)?.entita || "",
+        name: vista.nome,
+        glyph: disegnoDiCasa(vista.disegno, { misura: 20, ripiego: "pet" }),
+        value: avviso ? parolaAvviso(avviso.chiave) : testoLettura(voce),
+        tono:
+          vista.gravita === "urgente"
+            ? "allarme"
+            : vista.gravita === "attenzione"
+              ? "acceso"
+              : "quiete",
+      };
+    }),
+  };
+}
+
+/* L'acqua e il gas (#115, #135, #137).
+ *
+ * «Manca una sezione per monitorare portata e pressione dell'impianto idrico
+ * di casa.» La tessera dice l'acqua di oggi — o il gas, per chi ha solo quello
+ * — e quando una perdita c'è lo dice in rosso, con le parole della pagina. Le
+ * parole e i numeri li fa la sezione: qui si toglie quello che l'interruttore
+ * «nel widget» ha spento, come per le altre tessere, prima di leggere. */
+function contatoriModel(states) {
+  const fuori = widgetExcludedEntities("contatori");
+  const tessera = tesseraDeiContatori(
+    vistaDeiContatori(states, { dentro: (entity) => widgetIncludes(entity, fuori) }),
+  );
+  return tessera && { ...tessera, key: "contatori" };
+}
+
+/* Le piante (#159): quante sono da innaffiare, e quali. Le parole le fa la
+ * sezione; qui si toglie quello che l'interruttore «nel widget» ha spento. */
+function pianteModel(states) {
+  const fuori = widgetExcludedEntities("piante");
+  const tessera = tesseraDellePiante(
+    vistaDellePiante(states, { dentro: (entity) => widgetIncludes(entity, fuori) }),
+  );
+  return tessera && { ...tessera, key: "piante" };
+}
+
+/* L'acquario (#127): la temperatura dell'acqua, e la cosa da fare quando ce
+ * n'è una. Le parole le fa la sezione; qui si toglie quello che
+ * l'interruttore «nel widget» ha spento. */
+function acquarioModel(states) {
+  const fuori = widgetExcludedEntities("acquario");
+  const tessera = tesseraDellAcquario(
+    vistaDellAcquario(states, { dentro: (entity) => widgetIncludes(entity, fuori) }),
+  );
+  return tessera && { ...tessera, key: "acquario" };
+}
+
 /* La ventilazione meccanica (#371).
  *
  * La tessera dice la cosa che si guarda passando: a che temperatura sta
@@ -5500,8 +5667,12 @@ export function modelliDelleTessere(states) {
       nonRispondeModel(states),
       allerteModel(states),
       rifiutiModel(states),
+      animaliModel(states),
       vmcModel(states),
       irrigationModel(states),
+      contatoriModel(states),
+      pianteModel(states),
+      acquarioModel(states),
       batteriesModel(states),
       floodModel(states),
       fumoModel(states),
@@ -6854,6 +7025,7 @@ const CHIAVI_A_CARTE = new Set([
   "batterie",
   "allerte",
   "rifiuti",
+  "animali",
   "vmc",
   "elettrodomestici",
   /* «Sui widget il mini pc non incolonna bene le scritte.»
@@ -7647,6 +7819,13 @@ const SEZIONE_DEL_WIDGET = Object.freeze({
   minipc: "server",
   allerte: "allerte",
   rifiuti: "rifiuti",
+  animali: "animali",
+  /* L'acqua e il gas (#115, #135, #137) hanno la loro pagina. */
+  contatori: "contatori",
+  /* Le piante (#159) hanno la loro pagina. */
+  piante: "piante",
+  /* E l'acquario (#127). */
+  acquario: "acquario",
   /* La ventilazione vive nella pagina del Clima: la tessera ci porta li'. */
   vmc: "clima",
   media: "media",
@@ -10662,6 +10841,13 @@ export function installHomeWidgetsSection() {
        tessera «Server e rete» conta solo quelle delle integrazioni scelte, e
        prima di quella risposta non ne conta nessuna. */
     EVENTO_PIATTAFORME,
+    /* I consumi dell'acqua e del gas arrivano dal Recorder, dopo che la Home
+       si e' gia' disegnata: la tessera va rifatta quando atterrano. */
+    EVENTO_CONTATORI,
+    /* E le medie della terra e le previsioni delle piante, per lo stesso motivo. */
+    EVENTO_PIANTE,
+    /* E le medie del livello dell'acquario. */
+    EVENTO_ACQUARIO,
     /* La chat di assistenza dice quando ha una risposta da leggere, e quando
        e' stata letta: la sua tessera compare e sparisce con quello. */
     "dashboardmodern:chat-stato",

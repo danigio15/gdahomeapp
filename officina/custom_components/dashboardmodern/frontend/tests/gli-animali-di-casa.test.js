@@ -211,7 +211,12 @@ test("il cibo sotto soglia si dice, e mezzo sotto si dice piu' forte", () => {
     "sensor.cibo_agli_sgoccioli": stato("4", { unit_of_measurement: "%" }),
   };
   const poco = vistaAnimale({ nome: "Micio", cibo_livello: "sensor.cibo" }, letture, ORA);
-  assert.deepEqual(poco.avvisi, [{ chiave: "cibo_scarso", gravita: "attenzione" }]);
+  /* `campo` dice da quale casella e' nato l'avviso: chi dall'avviso deve
+   * risalire all'entita' — la tessera della Home (#145) — non puo' indovinarlo,
+   * perche' «cibo_scarso» e «cibo_livello» non si somigliano abbastanza. */
+  assert.deepEqual(poco.avvisi, [
+    { chiave: "cibo_scarso", gravita: "attenzione", campo: "cibo_livello" },
+  ]);
   const pochissimo = vistaAnimale(
     { nome: "Micio", cibo_livello: "sensor.cibo_agli_sgoccioli" },
     letture,
@@ -348,7 +353,9 @@ test("la lettiera non pulita da un giorno si dice, da due si dice piu' forte", (
       ORA,
     ).avvisi;
   assert.deepEqual(dopo(3), []);
-  assert.deepEqual(dopo(26), [{ chiave: "lettiera_da_pulire", gravita: "attenzione" }]);
+  assert.deepEqual(dopo(26), [
+    { chiave: "lettiera_da_pulire", gravita: "attenzione", campo: "lettiera_ultima" },
+  ]);
   assert.equal(dopo(50)[0].gravita, "urgente");
 });
 

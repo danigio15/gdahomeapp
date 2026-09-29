@@ -1,5 +1,5 @@
-In macchina adesso c'è il navigatore. Dici «Ok Google, portami a…» e parte: mappa, corsie, la manovra e l'ora di arrivo sulle schede di Android Auto, la prossima svolta anche sul quadro strumenti. La voce abbassa la musica invece di coprirla.
+Il navigatore conosce tutte le colonnine d'Italia: sulla mappa si vede quali sono libere, occupate o guaste, e il percorso sceglie le soste libere. Nella scheda della colonnina ci sono i prezzi, come li comunica il gestore. Agli svincoli tornano le corsie.
 
-La casa resta a un tasto: quanto tira, quanto fa il sole, chi è rientrato, le azioni rapide.
+Nella plancia: le sezioni Acqua e gas, Piante e Acquario, il telecomando della TV, le azioni rapide in gruppi.
 
-Aggiorna anche gdahome in Home Assistant: quello che l'auto legge lo lascia la plancia, e in macchina si vede solo con tutti e due.
+Aggiorna anche gdahome in Home Assistant: le sezioni nuove arrivano da lì.

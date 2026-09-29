@@ -275,7 +275,25 @@
  * vetro: chi telecamere non ne ha non le vuole vedere ne' sul tablet in cucina
  * ne' sul telefono, e lasciarla su un dispositivo solo vorrebbe dire
  * rispegnerla su ognuno. */
-export const CONFIG_KEYS_REVISION = 55;
+/* La revisione 56 aggiunge i contatori dell'acqua e del gas (`cd_contatori`,
+ * #115, #135, #137): quali sensori, cosa misura ognuno, i prezzi al metro
+ * cubo, il coefficiente del gas e la forcella della pressione. Sono della
+ * CASA: il prezzo dell'acqua scritto dal telefono deve essere quello che il
+ * tablet in cucina moltiplica, e una perdita detta su un vetro e taciuta
+ * sull'altro — perche' solo uno dei due sa quale sensore guardare — e' proprio
+ * il danno che questa sezione esiste per evitare. */
+/* La revisione 57 aggiunge le piante (`cd_piante`, #159): quale sensore
+ * della terra, la sua temperatura, la forcella e se la pianta sta
+ * all'aperto. Sono della CASA come i contatori: la soglia scritta dal
+ * telefono deve essere quella con cui il tablet in cucina dice «da
+ * innaffiare», o la stessa pianta sarebbe asciutta su un vetro e a posto
+ * sull'altro. */
+/* La revisione 58 aggiunge l'acquario (`cd_acquario`, #127): le sue righe,
+ * la vasca, ogni quanto si cambia l'acqua e quando è stata cambiata
+ * l'ultima volta. Quella data si segna da un telefono e si conta sul
+ * tablet in cucina: se restasse sul vetro che l'ha segnata, gli altri
+ * direbbero «cambio d'acqua da fare» per una vasca appena cambiata. */
+export const CONFIG_KEYS_REVISION = 58;
 
 // Complete shared dashboard configuration snapshot. Runtime counters/timers and
 // true per-device preferences (connection credentials, theme/navbar mode) stay
@@ -549,4 +567,13 @@ export const CONFIG_KEYS = Object.freeze([
   /* E se il riquadro delle telecamere si veda affatto (#113): la ragione per
    * cui sta qui e' scritta accanto alla revisione 55. */
   "cd_telecamere_in_sicurezza",
+  /* I contatori dell'acqua e del gas (#115, #135, #137): la ragione per cui
+   * stanno qui e' scritta accanto alla revisione 56. */
+  "cd_contatori",
+  /* Le piante (#159): la ragione per cui stanno qui e' scritta accanto alla
+   * revisione 57. */
+  "cd_piante",
+  /* L'acquario (#127): la ragione per cui sta qui è scritta accanto alla
+   * revisione 58. */
+  "cd_acquario",
 ]);

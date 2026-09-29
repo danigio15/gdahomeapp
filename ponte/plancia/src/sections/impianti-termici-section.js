@@ -42,6 +42,7 @@ import {
   tabAttiva,
   verdettoPressione,
 } from "../core/impianti-termici.js";
+import { laMisuraDallUnita } from "../core/le-unita-della-corrente.js";
 import {
   SCALDABAGNI_KEY,
   lettureScaldabagni,

@@ -40,7 +40,10 @@ const STATI = {
 const nomeDi = (entity) => STATI[entity]?.attributes?.friendly_name || entity;
 
 test("conta come varco solo quello che Home Assistant chiama varco", () => {
-  assert.equal(eUnVarcoDiCasa("binary_sensor.porta_ingresso", STATI["binary_sensor.porta_ingresso"]), true);
+  assert.equal(
+    eUnVarcoDiCasa("binary_sensor.porta_ingresso", STATI["binary_sensor.porta_ingresso"]),
+    true,
+  );
   /* Un rilevatore di movimento è un binary_sensor come gli altri, ma non è un
    * varco: contarlo vorrebbe dire dire «una porta aperta» a chi passa. */
   assert.equal(eUnVarcoDiCasa("binary_sensor.movimento", STATI["binary_sensor.movimento"]), false);
@@ -102,6 +105,8 @@ test("senza contatti non c'e' niente da mostrare", () => {
   assert.equal(varchiConfigurati(STATI), true);
   assert.deepEqual(varchiDiCasa({}, {}, new Set()), []);
   assert.deepEqual(contoDeiVarchi(), {
+    porte: [],
+    finestre: [],
     aperti: 0,
     chiusi: 0,
     muti: 0,
@@ -115,7 +120,7 @@ test("la configurazione si ripulisce di quello che non e' un'entita'", () => {
   const scelte = normalizzaVarchi({
     escluse: ["binary_sensor.uno", "senza-punto", "binary_sensor.uno"],
     aggiunte: ["binary_sensor.due"],
-    nomi: { "binary_sensor.due": "  Cantina  ", "no": "niente", "binary_sensor.tre": "  " },
+    nomi: { "binary_sensor.due": "  Cantina  ", no: "niente", "binary_sensor.tre": "  " },
   });
   assert.deepEqual(scelte.escluse, ["binary_sensor.uno"]);
   assert.deepEqual(scelte.aggiunte, ["binary_sensor.due"]);

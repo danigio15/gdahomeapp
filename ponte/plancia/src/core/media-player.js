@@ -19,6 +19,7 @@
 
 import { comandiDelDispositivo, elencoComandi } from "./comandi-accanto.js";
 import { elencoLetture, lettureDelDispositivo, lettureRiconosciute } from "./letture-accanto.js";
+import { eUnTelecomando, telecomandoDelLettore } from "./telecomando.js";
 
 const pulito = (valore) => String(valore ?? "").trim();
 
@@ -98,6 +99,10 @@ export function normalizzaLettore(stored, indice = 0) {
      * hanno il robot e gli elettrodomestici. */
     comandi: elencoComandi(dato.comandi ?? dato.commands),
     letture: elencoLetture(dato.letture ?? dato.readings),
+    /* Il telecomando della TV (#132): il `remote.*` che riceve le frecce.
+     * Può mancare — LG webOS le prende dal lettore, e il telecomando che porta
+     * il nome della TV si trova da solo. */
+    telecomando: eUnTelecomando(dato.telecomando) ? pulito(dato.telecomando) : "",
   };
 }
 
@@ -137,15 +142,26 @@ export function istante(valore) {
  *
  * `muto` vuol dire che Home Assistant non lo conosce o non risponde — una cosa
  * diversa da «spento», che invece è una risposta.
+ *
+ * `piattaforme` dice di che integrazione è ogni entità, ed è quello che serve
+ * al telecomando (#132): senza, la TV ha i suoi tasti e le frecce no.
  */
-export function letturaDelLettore(voce, states = {}, resolve = (valore) => valore) {
+export function letturaDelLettore(
+  voce,
+  states = {},
+  resolve = (valore) => valore,
+  piattaforme = {},
+) {
+  const risolvi = (valore) => {
+    const grezza = pulito(valore);
+    try {
+      return pulito(resolve(grezza)) || grezza;
+    } catch (_error) {
+      return grezza;
+    }
+  };
   const entity = pulito(voce?.entity);
-  let risolta = entity;
-  try {
-    risolta = pulito(resolve(entity)) || entity;
-  } catch (_error) {
-    risolta = entity;
-  }
+  const risolta = risolvi(entity);
   const stato = states?.[risolta] || states?.[entity] || null;
   const grezzo = pulito(stato?.state).toLowerCase();
   const attributi = stato?.attributes || {};
@@ -205,6 +221,18 @@ export function letturaDelLettore(voce, states = {}, resolve = (valore) => valor
      * consumo. Entità a parte, scelte da chi configura. */
     comandi: comandiDelDispositivo(voce, states),
     letture: lettureDelDispositivo(voce, states),
+    /* Le frecce, OK, indietro, i canali (#132) — solo a TV accesa, e solo
+     * quelli che la sua integrazione sa ricevere. In standby la TV risponde ma
+     * lo schermo è spento: una freccia lì non muove niente. */
+    telecomando: telecomandoDelLettore(
+      {
+        entity: risolta || entity,
+        telecomando: voce?.telecomando ? risolvi(voce.telecomando) : "",
+        acceso: !muto && STATI_VIVI.has(grezzo) && grezzo !== "standby",
+      },
+      states,
+      piattaforme,
+    ),
   };
 }
 
@@ -240,11 +268,18 @@ export function bindLettoreToDevice({
       .map((voce) => pulito(voce.entity_id)),
   );
 
+  /* Il telecomando dello stesso dispositivo (#132): il registro lo sa per
+   * certo, e scriverlo qui vuol dire non doverlo indovinare dopo. */
+  const remoto = elenco.find((voce) => dominio(voce) === "remote");
+
   const nato = {
     ...normalizzaLettore(precedente, indice),
     nome: pulito(precedente.nome) || pulito(device.name),
     entity: pulito(suo?.entity_id) || pulito(precedente.entity),
     comandi: comandi.length ? comandi : elencoComandi(precedente.comandi),
+    telecomando:
+      pulito(remoto?.entity_id) ||
+      (eUnTelecomando(precedente.telecomando) ? pulito(precedente.telecomando) : ""),
   };
   /* Le letture sono quelle DI QUEL dispositivo — l'elenco arriva dal registro
    * di Home Assistant, ed è esatto — lette però sullo stato vero, perché è lì
@@ -261,8 +296,10 @@ export function bindLettoreToDevice({
 }
 
 /** Le letture di tutti i lettori configurati. */
-export function lettureDeiLettori(stored, states = {}, resolve) {
-  return lettoriConfigurati(stored).map((voce) => letturaDelLettore(voce, states, resolve));
+export function lettureDeiLettori(stored, states = {}, resolve, piattaforme = {}) {
+  return lettoriConfigurati(stored).map((voce) =>
+    letturaDelLettore(voce, states, resolve, piattaforme),
+  );
 }
 
 /**
@@ -345,6 +382,10 @@ export function comandoDelLettore(comando, lettura) {
   if (comando === "successivo") return "media_next_track";
   if (comando === "muto") return "volume_mute";
   if (comando === "volume") return "volume_set";
+  /* Un passo alla volta, per chi il volume non lo sa mettere a un numero
+   * (#132): quasi tutte le TV, che sanno solo alzarlo e abbassarlo. */
+  if (comando === "alza") return "volume_up";
+  if (comando === "abbassa") return "volume_down";
   if (comando === "sorgente") return "select_source";
   if (comando === "spegni") return "turn_off";
   if (comando === "accendi") return "turn_on";

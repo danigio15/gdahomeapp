@@ -264,22 +264,29 @@ function laPostaAdesso(config, states) {
  * Il numero esce dalla frase e resta un numero. Le parole diventano quattordici
  * chiavi ferme, che si traducono una volta e valgono per ogni conto.
  */
-function parolaDelConto(chiave, conto, modello = null) {
+function parolaDelConto(chiave, conto) {
   const uno = conto === 1;
   if (chiave === "luci") return uno ? t("luce accesa", "light on") : t("luci accese", "lights on");
-  if (chiave === "tapparelle") {
-    /* Dove non c'e' un solo contatto sull'anta, quel conto sono i motori
-     * alzati e non le finestre aperte (#31): la tessera lo dice giusto da
-     * quando c'e' la #442, qui arrivava solo il numero. */
-    if (modello?.soloMotori)
-      return uno ? t("tapparella alzata", "shutter up") : t("tapparelle alzate", "shutters up");
-    return uno ? t("finestra aperta", "window open") : t("finestre aperte", "windows open");
-  }
+  /* Le tapparelle contano solo i motori su, e si dicono per quello che sono
+   * (#31, #162): «rinominare il chip “Finestre aperte” in “Tapparelle aperte”
+   * quando la sorgente è costituita da entità cover». Le ante aperte hanno la
+   * pastiglia loro, qui sotto. */
+  if (chiave === "tapparelle")
+    return uno ? t("tapparella aperta", "shutter open") : t("tapparelle aperte", "shutters open");
   if (chiave === "clima") return uno ? t("unità accesa", "unit on") : t("unità accese", "units on");
   if (chiave === "prese")
     return uno ? t("presa accesa", "socket on") : t("prese accese", "sockets on");
-  if (chiave === "porte") return uno ? t("porta aperta", "door open") : t("porte aperte", "doors open");
-  if (chiave === "varchi") return uno ? t("varco aperto", "opening open") : t("varchi aperti", "openings open");
+  /* Porte e finestre, dai contatti sull'anta (#162). */
+  if (chiave === "porteAperte")
+    return uno ? t("porta aperta", "door open") : t("porte aperte", "doors open");
+  if (chiave === "finestreAperte")
+    return uno ? t("finestra aperta", "window open") : t("finestre aperte", "windows open");
+  /* La serratura sbloccata non e' una porta aperta (#162): la pastiglia dice
+   * la cosa che sa. */
+  if (chiave === "porte")
+    return uno
+      ? t("serratura sbloccata", "lock unlocked")
+      : t("serrature sbloccate", "locks unlocked");
   /* «In una stanza c'e' qualcuno» — la stanza, non il rilevatore: e' il posto
    * che la tessera conta, ed e' la risposta che uno cerca passando davanti. */
   if (chiave === "presenza")
@@ -379,7 +386,7 @@ function paroleDellaPastiglia(pastiglia) {
      * un numero, e senza il nome quel numero non e' di niente. */
     return { testa, coda: pastiglia.nome, titolo: `${pastiglia.nome} · ${testa}` };
   }
-  const parola = parolaDelConto(pastiglia.chiave, pastiglia.conto, pastiglia);
+  const parola = parolaDelConto(pastiglia.chiave, pastiglia.conto);
   const testa = String(pastiglia.conto);
   const nomi = vociDellaPastiglia(pastiglia)
     .map((voce) => voce.name)
@@ -721,7 +728,7 @@ function finestra() {
 /* Le pastiglie che parlano di qualcosa che si apre: li' «acceso» non e' la
  * parola: una finestra e' aperta, e chi legge «ON» sotto il nome di una
  * finestra deve tradurselo da solo. */
-const SI_APRONO = new Set(["varchi", "porte", "finestre", "tapparelle"]);
+const SI_APRONO = new Set(["porte", "porteAperte", "finestreAperte", "tapparelle"]);
 
 /* Com'e' adesso quella voce, IN PAROLE.
  *
@@ -816,6 +823,23 @@ export function briciolaDellElenco(chiave, quante) {
     return quante === 1
       ? t("1 stanza · c'è qualcuno adesso", "1 room · someone is there now")
       : `${quante} ${t("stanze · c'è qualcuno adesso", "rooms · someone is there now")}`;
+  /* Le porte e le finestre aperte non hanno un tasto (#162): un contatto dice
+   * com'e' l'anta, non la chiude. «Tocca per spegnere» sarebbe un invito a un
+   * gesto che non c'e'. */
+  if (clean(chiave) === "porteAperte" || clean(chiave) === "finestreAperte")
+    return quante === 1
+      ? t("1 aperta adesso · si chiude a mano", "1 open now · closed by hand")
+      : `${quante} ${t("aperte adesso · si chiudono a mano", "open now · closed by hand")}`;
+  /* Le tapparelle e le serrature si chiudono di qui: il tasto dice «Chiudi»,
+   * e la riga sotto il titolo dice la stessa parola. */
+  if (clean(chiave) === "tapparelle")
+    return quante === 1
+      ? t("1 aperta · tocca per chiudere", "1 open · tap to close")
+      : `${quante} ${t("aperte · tocca per chiudere", "open · tap to close")}`;
+  if (clean(chiave) === "porte")
+    return quante === 1
+      ? t("1 sbloccata · tocca per chiudere a chiave", "1 unlocked · tap to lock")
+      : `${quante} ${t("sbloccate · tocca per chiudere a chiave", "unlocked · tap to lock")}`;
   return quante === 1
     ? t("1 acceso · tocca per spegnere", "1 on · tap to turn off")
     : `${quante} ${t("accesi · tocca per spegnere", "on · tap to turn off")}`;
@@ -1002,12 +1026,16 @@ const NOMI_DELLE_VOCI = () => ({
   posta: t("Posta", "Mail"),
   rifiuti: t("Rifiuti", "Waste"),
   sicurezza: t("Sicurezza", "Security"),
-  porte: t("Apri porte", "Openers"),
-  varchi: t("Varchi", "Openings"),
+  /* Porte e finestre dai contatti, e le serrature della tessera Apri porte
+   * (#162): la voce si chiama come quello che la pastiglia dice, perche' le
+   * pastiglie dei passaggi adesso sono tre e due tessere sole. */
+  porteAperte: t("Porte", "Doors"),
+  finestreAperte: t("Finestre", "Windows"),
+  porte: t("Serrature", "Locks"),
   stampanti: t("Stampanti", "Printers"),
   aggiornamenti: t("Aggiornamenti", "Updates"),
   luci: t("Luci", "Lights"),
-  tapparelle: t("Finestre", "Windows"),
+  tapparelle: t("Tapparelle", "Shutters"),
   clima: t("Clima", "Climate"),
   prese: t("Prese", "Sockets"),
   media: t("Musica", "Media"),

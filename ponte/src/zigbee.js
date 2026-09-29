@@ -512,7 +512,7 @@ export function laCassettaDellElenco(cassetta) {
  * dall'elenco riguardato dopo. La rinomina ha gia' insegnato cosa vale un
  * «si'» che nessuno ha controllato.
  */
-export function comeSiElimina({ quale, cassetta = "" }, chi) {
+export function comeSiElimina({ quale, cassetta = "" }, chi, { forza = false } = {}) {
   const id = targa(chi);
   if (!id) return null;
   if (quale === ZHA) return { type: "zha/remove", ieee: id };
@@ -523,12 +523,13 @@ export function comeSiElimina({ quale, cassetta = "" }, chi) {
       service: "publish",
       service_data: {
         topic: `${cassetta}/bridge/request/device/remove`,
-        /* `force` no, e non e' prudenza eccessiva: forzare toglie la riga
-         * dalla cassetta senza che l'apparecchio lo sappia, e quello resta
-         * appeso alla rete a cercare un coordinatore che non gli risponde
-         * piu'. Si forza quando il garbato ha gia' fallito, e allora lo si
-         * chiede per iscritto — non di nascosto, al primo tocco. */
-        payload: JSON.stringify({ id, force: false }),
+        /* `force` no di serie, e non e' prudenza eccessiva: forzare toglie la
+         * riga dalla cassetta senza che l'apparecchio lo sappia, e quello
+         * resta appeso alla rete a cercare un coordinatore che non gli
+         * risponde piu'. Si forza quando il garbato ha gia' fallito, e allora
+         * lo si chiede per iscritto — non di nascosto, al primo tocco: e'
+         * `forza`, e lo mette solo chi ha letto cosa comporta. */
+        payload: JSON.stringify({ id, force: Boolean(forza) }),
       },
     };
   return null;
@@ -622,7 +623,12 @@ export function comeSiEliminaColServizio({ quale }, chi) {
 }
 
 /** Le strade per togliere uno, nell'ordine in cui si provano. */
-export function leStradePerEliminare(rete, chi) {
+export function leStradePerEliminare(rete, chi, { forza = false } = {}) {
+  /* Forzando, la strada del servizio di ZHA non c'entra: `zha.remove` il
+   * garbato lo fa gia', e su Zigbee2MQTT la differenza sta tutta nel campo
+   * `force` del messaggio. Si manda quello e basta, cosi' non si rischia che
+   * una strada risponda «fatto» mentre l'altra non e' partita. */
+  if (forza) return [comeSiElimina(rete, chi, { forza: true })].filter(Boolean);
   return [comeSiEliminaColServizio(rete, chi), comeSiElimina(rete, chi)].filter(Boolean);
 }
 
@@ -876,6 +882,15 @@ export function perCheNonEUscito() {
     "Di solito vuol dire che dorme: se va a batteria, sveglialo — premi un tasto, apri e chiudi " +
     "il contatto — e riprova; se va a corrente, stacca e riattacca. Se esce da solo piu' tardi, " +
     "dall'elenco sparisce senza fare altro"
+  );
+}
+
+/* Quando non esce nemmeno forzando, la strada e' un'altra e non e' nell'app. */
+export function perCheNonEUscitoNemmenoAForza() {
+  return (
+    "la riga e' stata tolta d'imperio, ma nell'elenco c'e' ancora: vuol dire che " +
+    "Zigbee2MQTT non ha accettato l'ordine. Guarda il suo registro — Impostazioni → " +
+    "Add-on → Zigbee2MQTT → Registro — che li' c'e' scritto il motivo"
   );
 }
 
@@ -1367,13 +1382,33 @@ export class Zigbee {
    * saperlo e' riguardarlo. La rinomina ha gia' insegnato quanto vale un «si'»
    * che nessuno ha controllato.
    */
-  async elimina(chi) {
+  /**
+   * Toglie un apparecchio dalla rete.
+   *
+   * `perForza` e' il secondo passo, quello che il garbato promette e non fa da
+   * se': cancella la riga dalla cassetta di Zigbee2MQTT **senza chiedere il
+   * permesso all'apparecchio**. Serve per chi l'ordine di andarsene lo ignora
+   * — un ripetitore a corrente lo fa spesso — e ha un prezzo che chi lo preme
+   * deve sapere: quell'apparecchio resta acceso a cercare un coordinatore che
+   * non gli risponde piu', e per rimetterlo in rete va resettato col dito.
+   *
+   * Per questo non e' un ripiego automatico dopo il fallimento del garbato: e'
+   * una seconda domanda, che la fa chi ha letto cosa comporta. (Da non
+   * confondere con il `forza` di `rete()`, che vuol dire tutt'altro: non
+   * fidarti di quello che ti ricordi.)
+   */
+  async elimina(chi, { perForza = false } = {}) {
     const id = pulito(chi).toLowerCase();
     if (!id) return { fatto: false, perche: "quale dispositivo?" };
     const rete = await this.rete();
-    const strade = leStradePerEliminare(rete, id);
+    const strade = leStradePerEliminare(rete, id, { forza: perForza });
     if (!strade.length)
-      return { fatto: false, perche: "in questa casa non c'e' una rete Zigbee da cui toglierlo" };
+      return {
+        fatto: false,
+        perche: perForza
+          ? "in questa casa la rete Zigbee non e' Zigbee2MQTT: di forzare non c'e' modo"
+          : "in questa casa non c'e' una rete Zigbee da cui toglierlo",
+      };
     try {
       await this._ordina(strade);
     } catch (errore) {
@@ -1400,7 +1435,10 @@ export class Zigbee {
     if (dopo.righe.some((una) => una.id === id))
       return {
         fatto: false,
-        perche: perCheNonEUscito(),
+        perche: perForza ? perCheNonEUscitoNemmenoAForza() : perCheNonEUscito(),
+        /* Che si possa insistere lo dice la risposta, non la schermata: se
+         * questa casa non ha Zigbee2MQTT il tasto non deve nemmeno comparire. */
+        siPuoForzare: !perForza && Boolean(comeSiElimina(rete, id, { forza: true })),
         righe: dopo.righe,
       };
     return { fatto: true, righe: dopo.righe };

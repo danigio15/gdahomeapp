@@ -84,12 +84,15 @@ test("ogni genere porta il disegno di casa, non un'emoji", () => {
     riassunto.perTipo.map((voce) => voce.oggetto),
     ["clima", "luci", "media"],
   );
-  /* Le pastiglie si disegnano con il catalogo degli oggetti, che è lo stesso
-   * delle tessere e della fascia sotto il meteo. */
+  /* I tasti si disegnano con il catalogo degli oggetti, che è lo stesso delle
+   * tessere e della fascia sotto il meteo. */
   assert.match(sorgente, /import \{ oggettoWidget \} from "\.\.\/core\/oggetti-widget\.js";/);
   /* Il disegno col posto — la stanza e il genere — cosi' due stanze che hanno
    * accese le stesse cose non si passano le sfumature. */
-  assert.match(sorgente, /oggettoWidget\(\s*voce\.oggetto,\s*"",\s*`stanza-\$\{dove\}-\$\{voce\.chiave\}`,?\s*\)/);
+  assert.match(
+    sorgente,
+    /oggettoWidget\(\s*OGGETTO_DEL_BLOCCO\[tasto\.chiave\] \|\| "evidenza",\s*"",\s*`stanza-\$\{pagina\.id\}-\$\{tasto\.chiave\}`,?\s*\)/,
+  );
 });
 
 test("una stanza spenta non mostra nessuna pastiglia", () => {
@@ -104,14 +107,28 @@ test("una stanza spenta non mostra nessuna pastiglia", () => {
   assert.deepEqual(spenta.perTipo, []);
 });
 
-test("il disegno e il nome della stanza stanno in mezzo", () => {
-  const stile = sorgente.slice(sorgente.indexOf(".dm-stanza-plancia{"));
-  assert.match(stile, /flex-direction:column;align-items:center/);
-  assert.match(stile, /text-align:center/);
+test("la card è una tessera, come i widget che le stanno sopra", () => {
+  /* «Graficamente non mi piace»: la card col disegno e il nome in mezzo, e
+   * sotto una fila di pastiglie tutte uguali, in Home era l'unico blocco che
+   * parlava un'altra lingua. Adesso ha le vesti di ogni card della plancia e le
+   * misure delle tessere: la pastiglia, il nome in maiuscoletto, i gradi grandi. */
   assert.match(
     sorgente,
-    /\.dm-stanza-plancia-testo\{\s*display:flex;flex-direction:column;align-items:center/,
+    /import \{\s*FONDO_DELLA_CARTA,\s*GRANA_DELLA_CARTA,\s*OMBRA_DELLA_CARTA,\s*tokenDellaCarta,\s*\} from "\.\.\/core\/le-vesti-della-carta\.js";/,
   );
+  const stile = sorgente.slice(sorgente.indexOf(".dm-stanza-plancia{"));
+  assert.match(stile, /background:\$\{FONDO_DELLA_CARTA\};box-shadow:\$\{OMBRA_DELLA_CARTA\};/);
+  assert.match(sorgente, /\.dm-stanza-plancia-nome\{[^}]*text-transform:uppercase/);
+  assert.match(sorgente, /\.dm-stanza-plancia-gradi\{[^}]*font-family:'Oswald'/);
+  /* E resta in due colonne sul telefono (#524). */
+  assert.match(sorgente, /grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
+});
+
+test("la card si accende con la luce, non con qualunque cosa accesa", () => {
+  /* È la «lucina» che si guarda da fuori. Se la accendesse anche un
+   * condizionatore, in una casa abitata sarebbero accese quasi tutte. */
+  assert.match(sorgente, /const luce = riassunto\.perTipo\.some\(\(voce\) => voce\.chiave === "luci"\);/);
+  assert.match(sorgente, /data-accesa="\$\{luce\}"/);
 });
 
 test("la firma del blocco cambia anche quando cambia un solo genere", () => {

@@ -20,6 +20,8 @@ import { attributoSeCambia, classeSeCambia } from "../src/core/scrivere-se-cambi
 import { runSteps, stepReporter } from "../src/core/runtime-steps.js";
 import { DashboardStore } from "../src/core/dashboard-store.js";
 import { daProvare, diagnosi, siSveglia, strategieDellaTelecamera } from "../src/core/strategie-telecamera.js";
+import { capacitaDellaTelecamera } from "../src/sections/telecamera-capacita-section.js";
+import { go2rtcRaggiungibile, stradaAppenaCaduta } from "../src/sections/telecamera-subito-section.js";
 import {
   eIlModoIntelligente,
   iModiDiEvcc,
@@ -845,6 +847,23 @@ function renderDiagnostics(target) {
   chiediComeArrivano(target);
 }
 
+/* Le strade della telecamera per la fila del guscio, con quello che la plancia
+ * sa e il guscio no (#164): che flussi ha dichiarato Home Assistant, se il
+ * nome del flusso go2rtc da qui si raggiunge, e quale strada il popup ha
+ * appena provato col suo tempo intero. Senza, la fila sceglieva con i soli
+ * attributi — che dal 2025.6 non dicono piu' niente — e a una Ring caduta sul
+ * WebRTC proponeva un HLS che non ha. Quello che il guscio passa vince: lui
+ * sa del browser. */
+function strategieDellaTelecameraDiCasa(cam = {}, stato = {}, opzioni = {}) {
+  const entity = String(cam?.entity ?? "").trim();
+  return strategieDellaTelecamera(cam, stato, {
+    capacita: capacitaDellaTelecamera(entity),
+    go2rtcRaggiungibile: go2rtcRaggiungibile(),
+    appenaCaduta: stradaAppenaCaduta(entity),
+    ...opzioni,
+  });
+}
+
 export const EDITOR_TAB_ALIASES = Object.freeze({
   sez0: "home", sez1: "energy", sez2: "ev", sez3: "solar", sez4: "security",
   sez6: "server", sez7: "temperature", sez8: "actions", sez9: "climate",
@@ -971,7 +990,12 @@ const DashboardModernModules = Object.freeze({
    * un modulo puro, e il runtime la chiede a lui invece di averla scritta
    * dentro. E' l'unico modo perche' quella scelta si possa provare senza una
    * Ring in casa. */
-  telecamere: Object.freeze({ strategieDellaTelecamera, daProvare, diagnosi, siSveglia }),
+  telecamere: Object.freeze({
+    strategieDellaTelecamera: strategieDellaTelecameraDiCasa,
+    daProvare,
+    diagnosi,
+    siSveglia,
+  }),
   /* Le modalita' di ricarica: quali tasti disegnare e quale accendere. evcc le
    * ha rinominate una volta (`pv` → `smart`) e i tasti sono rimasti spenti per
    * giorni; adesso i nomi non stanno piu' nel guscio, stanno nell'entita', e il

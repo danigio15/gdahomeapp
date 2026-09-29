@@ -22,6 +22,9 @@ import { ALLERTE_TAB } from "../src/sections/allerte-section.js";
 import { BATTERIE_TAB } from "../src/sections/batterie-section.js";
 import { CALENDARIO_TAB } from "../src/sections/calendario-section.js";
 import { CITOFONO_TAB } from "../src/sections/citofono-section.js";
+import { CONTATORI_TAB } from "../src/sections/contatori-section.js";
+import { PIANTE_TAB } from "../src/sections/piante-section.js";
+import { ACQUARIO_TAB } from "../src/sections/acquario-section.js";
 import { LIGHTS_TAB } from "../src/sections/lights-page-section.js";
 import { MEDIA_TAB } from "../src/sections/media-player-section.js";
 import { PRESE_TAB } from "../src/sections/prese-section.js";
@@ -101,6 +104,9 @@ test("ogni tessera che ha una pagina ha la sua riga, col nome che la pagina dich
     batterie: BATTERIE_TAB,
     citofono: CITOFONO_TAB,
     stampanti: STAMPANTI_TAB,
+    contatori: CONTATORI_TAB,
+    piante: PIANTE_TAB,
+    acquario: ACQUARIO_TAB,
     ups: UPS_TAB,
     agenda: CALENDARIO_TAB,
     rifiuti: RIFIUTI_TAB,

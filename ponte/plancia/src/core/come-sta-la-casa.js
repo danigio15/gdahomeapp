@@ -51,9 +51,27 @@ export const VOCI_DELLA_BARRA = Object.freeze([
    * Stanno prima delle luci e non dopo, perche' un varco aperto e' una
    * notizia, non una cosa rimasta accesa: e' la stessa ragione per cui le loro
    * tessere diventano rosse mentre quella delle luci resta gialla. E stanno
-   * dopo l'antifurto, che e' la notizia piu' grossa delle tre. */
+   * dopo l'antifurto, che e' la notizia piu' grossa delle tre.
+   *
+   * Porte e finestre, ognuna la sua (#162).
+   *
+   * «“Varchi aperti” somma insieme contatti di porte e finestre.» Era una
+   * pastiglia sola per due domande diverse: la porta di casa aperta si va a
+   * chiudere adesso, la finestra del bagno magari e' aperta apposta. Adesso
+   * sono due, e contano solo i contatti sull'anta. Le conta la tessera dei
+   * Varchi, che sa di ogni contatto se e' una porta o una finestra; le
+   * finestre prendono anche i contatti scritti nelle righe delle Finestre. */
+  Object.freeze({ chiave: "porteAperte", tessera: "varchi" }),
+  Object.freeze({ chiave: "finestreAperte", tessera: "varchi" }),
+  /* E le serrature, con la parola loro (#162).
+   *
+   * Questa pastiglia c'era e diceva «porte aperte»: contava le serrature
+   * sbloccate della tessera Apri porte. «Unlocked significa solo serratura non
+   * chiusa a chiave, non porta fisicamente aperta.» Il fatto resta — uscendo
+   * di casa si vuole saperlo, e dall'elenco si chiude a chiave — ma si dice
+   * per quello che e'. La chiave resta «porte»: chi l'aveva spenta la ritrova
+   * spenta. */
   Object.freeze({ chiave: "porte", tessera: "porte" }),
-  Object.freeze({ chiave: "varchi", tessera: "varchi" }),
   /* Le stampanti, quando hanno qualcosa da dire (#469, e poi la domanda di
    * chi le usa: «sulla sezione stampanti riesce a mettere i 4 colori? che
    * poi va sulla home sotto il meteo quando c'e' un sottosoglia?»). I colori
@@ -113,7 +131,11 @@ export const VOCI_DELLA_BARRA = Object.freeze([
   Object.freeze({ chiave: "pioggiaOggi", tessera: "" }),
 ]);
 
-const NOTE = new Set(VOCI_DELLA_BARRA.map((voce) => voce.chiave));
+/* Le tessere da cui la barra legge: quasi sempre la voce e la sua tessera
+ * hanno lo stesso nome, ma le porte e le finestre aperte vengono dai Varchi. */
+const NOTE = new Set(
+  VOCI_DELLA_BARRA.flatMap((voce) => [voce.chiave, voce.tessera]).filter(Boolean),
+);
 
 /* Ogni pastiglia porta la tinta della SUA tessera: sono la stessa notizia detta
  * due volte, una in breve e una per esteso, e due colori diversi per lo stesso
@@ -316,15 +338,20 @@ const MISURE = Object.freeze({
  */
 const ACCESE = Object.freeze({
   luci: "on",
-  tapparelle: "open",
+  /* I motori su, e nient'altro (#162): le ante aperte stanno nella pastiglia
+   * delle finestre. */
+  tapparelle: "alzate",
   clima: "on",
   prese: "on",
   media: "suonano",
-  /* Le due voci dei passaggi (#482). Anche loro portano le righe aperte nel
+  /* Le voci dei passaggi (#482). Anche loro portano le righe aperte nel
    * modello, e anche qui vale la regola di sopra: si legge il campo, non si
-   * rifiltrano le righe. */
+   * rifiltrano le righe. Le serrature sbloccate stanno in `open` della
+   * tessera Apri porte; le porte aperte in un campo della tessera Varchi. Le
+   * finestre aperte hanno due tessere da cui venire, e si leggono in
+   * `finestreAperteDellaCasa`. */
   porte: "open",
-  varchi: "open",
+  porteAperte: "porteAperte",
   /* I posti occupati, che la tessera ha gia' contato: una stanza con tre
    * rilevatori resta una stanza, e rifare quel raggruppamento qui vorrebbe
    * dire due regole su cosa e' «un posto».
@@ -335,6 +362,44 @@ const ACCESE = Object.freeze({
   presenza: "occupate",
 });
 
+/* Da quale voce di prima prende la scelta una voce nuova. */
+const EREDITATE = Object.freeze({ porteAperte: "varchi", finestreAperte: "varchi" });
+
+/* La tinta delle due pastiglie dei contatti: il rosso della tessera dei Varchi
+ * quando qualcosa e' aperto, che e' l'unico caso in cui queste pastiglie
+ * esistono. Serve quando la tessera dei Varchi non c'e' — una casa coi soli
+ * contatti delle Finestre — e il colore da prendere non e' di nessuno. */
+export const TINTA_APERTA = "#dc2626";
+
+/**
+ * Le finestre aperte, dalle due tessere che le conoscono (#162).
+ *
+ * La tessera dei Varchi sa di ogni contatto se e' una porta o una finestra;
+ * quella delle Finestre ha i contatti scritti nella casella dell'anta, che
+ * nei Varchi possono non esserci — chi ha dichiarato i suoi varchi a mano non
+ * e' obbligato a ripeterli. Si mettono insieme contandoli una volta sola, e
+ * un contatto che nei Varchi qualcuno ha chiamato porta resta una porta.
+ */
+export function finestreAperteDellaCasa(varchi, finestre) {
+  const porte = new Set(
+    (Array.isArray(varchi?.porteAperte) ? varchi.porteAperte : []).map((voce) =>
+      pulito(voce?.entity),
+    ),
+  );
+  const viste = new Set();
+  const fuori = [];
+  for (const voce of [
+    ...(Array.isArray(varchi?.finestreAperte) ? varchi.finestreAperte : []),
+    ...(Array.isArray(finestre?.contattiAperti) ? finestre.contattiAperti : []),
+  ]) {
+    const entity = pulito(voce?.entity);
+    if (!entity || porte.has(entity) || viste.has(entity)) continue;
+    viste.add(entity);
+    fuori.push({ entity, name: pulito(voce?.name) });
+  }
+  return fuori;
+}
+
 /** La configurazione della barra, ripulita: quali voci si vedono e la cassetta. */
 export function normalizzaBarra(salvato) {
   const dato = salvato && typeof salvato === "object" && !Array.isArray(salvato) ? salvato : {};
@@ -342,8 +407,15 @@ export function normalizzaBarra(salvato) {
   const voci = {};
   /* Di serie ci sono tutte: una voce che non ha niente da dire non si vede
    * comunque, quindi partire con tutte accese non riempie niente di inutile e
-   * fa trovare la barra gia' fatta a chi non apre mai la configurazione. */
-  for (const voce of VOCI_DELLA_BARRA) voci[voce.chiave] = scelte[voce.chiave] !== false;
+   * fa trovare la barra gia' fatta a chi non apre mai la configurazione.
+   *
+   * Le due voci nate dai Varchi (#162) ereditano la scelta di quella: chi
+   * aveva spento «Varchi» non voleva i contatti nella fascia, e non deve
+   * ritrovarseli in due pastiglie invece che in una. */
+  for (const voce of VOCI_DELLA_BARRA) {
+    const scelta = scelte[voce.chiave] ?? scelte[EREDITATE[voce.chiave]];
+    voci[voce.chiave] = scelta !== false;
+  }
   return {
     voci,
     posta: pulito(dato.posta),
@@ -549,7 +621,22 @@ export function pastiglieDellaCasa(modelli, { barra, posta, misure, mie, adesso 
       });
       continue;
     }
-    const modello = perChiave.get(voce.chiave);
+    if (voce.chiave === "finestreAperte") {
+      /* Due tessere, una pastiglia (#162): vedi `finestreAperteDellaCasa`. */
+      const varchi = perChiave.get("varchi");
+      const righe = finestreAperteDellaCasa(varchi, perChiave.get("tapparelle"));
+      if (!righe.length) continue;
+      fuori.push({
+        chiave: voce.chiave,
+        tessera: varchi ? voce.tessera : "tapparelle",
+        icona: "🪟",
+        tinta: pulito(varchi?.accent) || TINTA_APERTA,
+        conto: righe.length,
+        voci: righe.filter((riga) => riga.name || riga.entity),
+      });
+      continue;
+    }
+    const modello = perChiave.get(voce.tessera || voce.chiave);
     if (!modello) continue;
     if (voce.chiave === "rifiuti") {
       /* Due righe che sulla fascia si **leggono uguali** sono un bidone solo.
@@ -658,19 +745,6 @@ export function pastiglieDellaCasa(modelli, { barra, posta, misure, mie, adesso 
       icona: pulito(modello.icon),
       tinta: pulito(modello.accent),
       conto,
-      /* Se quel conto sono motori e non contatti (#31).
-       *
-       * «Nella scheda il titolo tapparelle e' corretto, mentre in quei piccoli
-       *  popup che si aprono sopra dice finestre aperte.» Il numero che la
-       * tessera delle Finestre porta e' due cose diverse a seconda della casa —
-       * i motori alzati dove non c'e' un solo contatto sull'anta, le finestre
-       * aperte dove ci sono — e la tessera cambia parola di conseguenza dalla
-       * #442. Qui arrivava solo il numero, e la parola era sempre la seconda.
-       *
-       * Viene dal modello e non si ricalcola: rifare il conto di cosa c'e'
-       * dentro la sezione vorrebbe dire due regole sulla stessa cosa, che e'
-       * esattamente quello che questo modulo non fa. */
-      soloMotori: modello.soloMotori === true,
       /* Cio' che e' acceso, una voce per riga: il nome e l'entita'.
        *
        * Il nome finisce nel titolo della pastiglia — non ci starebbe dentro —

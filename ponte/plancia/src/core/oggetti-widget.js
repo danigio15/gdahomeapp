@@ -403,6 +403,29 @@ const OGGETTI = Object.freeze({
     <path d="M8.2 8.6h4.4M8.2 12.4h4.4" stroke="#f59e0b" stroke-opacity=".5" stroke-width="1.4"
       stroke-linecap="round" fill="none"/>`,
 
+  /* La finestra aperta (#162): il telaio, il cielo dove l'anta non c'e' piu',
+   * e l'anta girata verso chi guarda.
+   *
+   * «Separare “Varchi aperti” in due chip distinti.» La porta socchiusa qui
+   * sopra resta alle porte; alle finestre serviva la sua. Sono sorelle apposta
+   * — lo stesso legno, la stessa anta che gira — perche' sulla fascia stanno
+   * una accanto all'altra e dicono la stessa cosa di due varchi diversi. Il
+   * davanzale e il vetro celeste sono quello che fa dire «finestra» anche a
+   * sedici pixel. */
+  finestra: `<defs>
+      <linearGradient id="dmoFinT" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#fbbf24"/><stop offset=".5" stop-color="#f59e0b"/>
+        <stop offset="1" stop-color="#b45309"/></linearGradient>
+      <linearGradient id="dmoFinV" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#e0f2fe"/><stop offset="1" stop-color="#7dd3fc"/></linearGradient></defs>
+    ${OMBRA(16, 28.6, 9.4)}
+    <rect x="3.6" y="4.6" width="17.4" height="21" rx="1.8" fill="url(#dmoFinT)"/>
+    <rect x="5.9" y="6.9" width="12.8" height="16.4" rx="1" fill="url(#dmoFinV)"/>
+    <path d="M8.2 20.6 11.6 9.6" stroke="#fff" stroke-opacity=".75" stroke-width="1.6" stroke-linecap="round"/>
+    <path d="M18.7 6.9 27.6 4v22.4l-8.9-2.9z" fill="url(#dmoFinT)"/>
+    <path d="M20.5 9.1 25.9 7.4v16.2l-5.4-1.7z" fill="url(#dmoFinV)"/>
+    <path d="M2.6 26.9h20.2" stroke="#94a3b8" stroke-width="1.8" stroke-linecap="round"/>`,
+
   /* La stampante: il corpo, il foglio che esce e le quattro cartucce.
    *
    * «Volevo chiedere se c'era la possibilita' del controllo delle tv e
@@ -873,6 +896,72 @@ const OGGETTI = Object.freeze({
     <path d="M8.2 14.8a4.4 4.4 0 0 1 3.4-4.4" stroke="#fff" stroke-opacity=".55" stroke-width="1.4"
       fill="none" stroke-linecap="round"/>`,
 
+  /* Le piante (#159): il vaso di coccio e tre foglie. Non è l'irrigazione —
+   * quella è una goccia, l'acqua che parte da sola — ma la pianta che aspetta
+   * qualcuno che la innaffi. */
+  piante: `<defs>
+      <linearGradient id="dmoPiantaF" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#bbf7d0"/><stop offset=".5" stop-color="#22c55e"/>
+        <stop offset="1" stop-color="#15803d"/></linearGradient>
+      <linearGradient id="dmoPiantaV" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#fdba74"/><stop offset=".6" stop-color="#ea580c"/>
+        <stop offset="1" stop-color="#9a3412"/></linearGradient></defs>
+    ${OMBRA(16, 29.2, 6.4)}
+    <path d="M10.4 19.6h11.2l-1.6 8.2a1.6 1.6 0 0 1-1.6 1.3h-4.8a1.6 1.6 0 0 1-1.6-1.3Z" fill="url(#dmoPiantaV)"/>
+    <rect x="9.4" y="17.6" width="13.2" height="3" rx="1.2" fill="#c2410c"/>
+    <path d="M16 17.8V11" stroke="#15803d" stroke-width="1.4" stroke-linecap="round" fill="none"/>
+    <path d="M15.6 15.4c-.8-3.8-3.6-6.2-7.6-6.4.4 3.8 3.2 6.2 7.6 6.4Z" fill="url(#dmoPiantaF)"/>
+    <path d="M16.4 13.6c.6-4.2 3.6-7 8-7.4-.4 4.2-3.4 7-8 7.4Z" fill="url(#dmoPiantaF)"/>
+    <path d="M16 11.4c-1.8-2.4-1.8-5.6 0-8 1.8 2.4 1.8 5.6 0 8Z" fill="url(#dmoPiantaF)"/>
+    <path d="M11.8 21.8l.6 5" stroke="#fff" stroke-opacity=".6" stroke-width="1.1"
+      stroke-linecap="round" fill="none"/>`,
+
+  /* L'acquario (#127): la vasca con l'acqua, la sabbia, due foglie e il pesce
+   * rosso. Non è la piscina — quella è l'acqua dove si entra — ma la vasca che
+   * si guarda da fuori, col suo mobile sotto. */
+  acquario: `<defs>
+      <linearGradient id="dmoAcqA" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#bae6fd"/><stop offset=".55" stop-color="#38bdf8"/>
+        <stop offset="1" stop-color="#0369a1"/></linearGradient>
+      <linearGradient id="dmoAcqP" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#fde68a"/><stop offset=".5" stop-color="#f59e0b"/>
+        <stop offset="1" stop-color="#c2410c"/></linearGradient></defs>
+    ${OMBRA(16, 29.4, 12)}
+    <rect x="3" y="6.4" width="26" height="19.6" rx="2.6" fill="#0f2942"/>
+    <rect x="4.8" y="9.4" width="22.4" height="14.8" rx="1.4" fill="url(#dmoAcqA)"/>
+    <path d="M6.4 11.4h19.2" stroke="#fff" stroke-opacity=".6" stroke-width="1" stroke-linecap="round"/>
+    <path d="M4.8 21.8h22.4v1a1.4 1.4 0 0 1-1.4 1.4H6.2a1.4 1.4 0 0 1-1.4-1.4Z" fill="#cbd5e1"/>
+    <path d="M8 22.4c-.4-3.4.4-6.4 2.4-8.6-.4 3-.4 5.8 0 8.6Z" fill="#22c55e"/>
+    <path d="M10.4 22.4c.4-2.6 1.6-4.6 3.4-5.8-1 2-1.4 3.8-1.4 5.8Z" fill="#16a34a"/>
+    <path d="M14.4 16.6c2-2.4 5.6-2.4 7.6 0-2 2.4-5.6 2.4-7.6 0Z" fill="url(#dmoAcqP)"/>
+    <path d="M22 16.6l2.8-2v4Z" fill="url(#dmoAcqP)"/>
+    <circle cx="16.4" cy="16.3" r=".65" fill="#0f2942"/>
+    <circle cx="24.2" cy="13.6" r=".8" fill="#fff" fill-opacity=".85"/>
+    <rect x="5.4" y="26" width="21.2" height="2.6" rx="1.3" fill="#1e3a5f"/>`,
+
+  /* I contatori di casa (#115, #135, #137): il contatore d'ottone con la
+   * finestra delle cifre e la goccia. Non è l'umidità — quella è una goccia
+   * dentro un quadrante di tacche — ma il contatore che si legge in cantina,
+   * coi due tubi che entrano ed escono. */
+  contatori: `<defs>
+      <linearGradient id="dmoContO" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#fde68a"/><stop offset=".55" stop-color="#d4a017"/>
+        <stop offset="1" stop-color="#92400e"/></linearGradient>
+      <linearGradient id="dmoContA" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#bae6fd"/><stop offset=".5" stop-color="#0ea5e9"/>
+        <stop offset="1" stop-color="#0369a1"/></linearGradient></defs>
+    ${OMBRA(16, 29, 9)}
+    <rect x="1.6" y="13.4" width="5" height="5.2" rx="1.2" fill="#94a3b8"/>
+    <rect x="25.4" y="13.4" width="5" height="5.2" rx="1.2" fill="#94a3b8"/>
+    <circle cx="16" cy="16" r="10.8" fill="url(#dmoContO)"/>
+    <circle cx="16" cy="16" r="8.4" fill="#f8fafc"/>
+    <rect x="10.4" y="10.6" width="11.2" height="4" rx="1" fill="#0f172a"/>
+    <path d="M13.2 11.4v2.4M16 11.4v2.4" stroke="#fff" stroke-width=".9" stroke-linecap="round"/>
+    <rect x="18.2" y="11.2" width="2.8" height="2.8" rx=".6" fill="#dc2626"/>
+    <path d="M16 16.6c1.7 2 2.9 3.4 2.9 4.7a2.9 2.9 0 1 1-5.8 0c0-1.3 1.2-2.7 2.9-4.7Z" fill="url(#dmoContA)"/>
+    <path d="M9.6 10.8a8.6 8.6 0 0 1 4-3.6" stroke="#fff" stroke-opacity=".85" stroke-width="1.4"
+      fill="none" stroke-linecap="round"/>`,
+
   /* L'umidita': il quadrante dell'igrometro con la goccia dentro. Non e' la
    * goccia degli allagamenti — quella e' l'acqua dov'e' finita, questa e'
    * l'acqua che si misura — e sta accanto al termometro, con cui divide la
@@ -957,7 +1046,21 @@ export const CLASSE_DELL_OGGETTO = "dm-oggetto";
  * perche' e' cosi' che la chiama chi la guarda. Ricopiare il disegno vorrebbe
  * dire due definizioni della stessa cosa, e prima o poi due disegni diversi:
  * qui c'e' il nome, non una seconda copia. */
-const ALTRI_NOMI = Object.freeze({ porte: "aperture" });
+/* Le tessere il cui disegno si chiama in un altro modo.
+ *
+ * La tessera delle aperture ha chiave «porte» e disegno «aperture»; quella
+ * degli animali ha chiave «animali» e disegno «animale», perche' il disegno e'
+ * UN'orma e la sezione sono gli animali. Senza questa riga la tessera esce col
+ * ripiego — l'emoji — accanto a venti disegni, che e' proprio la cosa che il
+ * catalogo esiste per non fare. */
+const ALTRI_NOMI = Object.freeze({
+  porte: "aperture",
+  animali: "animale",
+  /* Le due pastiglie dei contatti (#162): le porte aperte portano la porta
+   * socchiusa che era dei Varchi, le finestre la finestra aperta. */
+  porteAperte: "varchi",
+  finestreAperte: "finestra",
+});
 
 const nomeDelDisegno = (chiave) => {
   const nome = String(chiave || "");

@@ -85,8 +85,21 @@ test("la barra si misura invece di chiedere, e riscrive la sua variabile", () =>
   /* Il risultato entra nella variabile che il foglio di stile usa già: la
    * regola scritta per #249 resta quella, e finalmente riceve un numero. */
   assert.match(barra, /setProperty\("--dm-fondo-di-sistema", inPixel\(valore\)\)/);
-  assert.match(barra, /bottom:calc\(18px \+ var\(--dm-fondo-di-sistema\)\)/);
+  /* E la barra **appoggia** sulla fascia, non ci galleggia sopra.
+   *
+   * Prima era una somma — diciotto pixel più la fascia — e quei diciotto
+   * restavano scoperti: fra la barra e i tasti di Android passava una striscia
+   * di pagina, e scorrendo ci si vedeva dentro il contenuto. Dal campo: «non
+   * mi piace che se scorro si vede lo spazio vuoto sotto».
+   *
+   * `max` invece di `+`: dove il sistema si prende qualcosa la barra gli sta
+   * appena sopra e in mezzo non resta niente; dove non si prende niente — un
+   * tablet, un computer — restano gli otto del minimo, perché una barra tonda
+   * incollata al bordo sembra tagliata. */
+  assert.match(barra, /bottom:max\(8px, var\(--dm-fondo-di-sistema\)\)/);
+  /* E mai più una somma, che è il guasto di prima. */
+  assert.doesNotMatch(barra, /bottom:calc\(\d+px \+ var\(--dm-fondo-di-sistema\)\)!important\s*\n\s*}\s*\n\s*\/\* E lo spazio/);
   /* Nessun numero cablato: alzare di un tanto fisso è proprio quello che non
    * si doveva fare. */
-  assert.doesNotMatch(barra, /bottom:calc\(18px \+ \d+px\)/);
+  assert.doesNotMatch(barra, /bottom:max\(8px, \d+px\)/);
 });

@@ -305,6 +305,42 @@ export function createCycleTracker({
       if (changed) persist();
       return records;
     },
+    /**
+     * L'avvio scoperto dopo (#143).
+     *
+     * Quando si trova un apparecchio gia' in funzione, l'avvio e' una
+     * supposizione — `avvioIncerto` — e la casa la risposta vera ce l'ha:
+     * basta chiederle la storia di quell'entita'. Arriva in ritardo di
+     * qualche decimo, e quando arriva questa scrive l'ora giusta al posto
+     * della supposizione.
+     *
+     * Tre regole, e sono tutte «non peggiorare quello che c'e' gia'»:
+     *
+     * - si corregge SOLO una supposizione. Un avvio visto succedere, o
+     *   dichiarato dalla casa, non si tocca: quello lo sappiamo.
+     * - l'ora nuova puo' solo andare INDIETRO. La supposizione e' «non dopo
+     *   adesso», e una correzione in avanti direbbe che il ciclo e'
+     *   cominciato dopo che l'avevamo gia' visto girare.
+     * - non piu' indietro di un giorno, come per l'avvio detto dalla casa:
+     *   oltre, e' un interruttore rimasto acceso o un orologio che non torna.
+     *
+     * `certo` falso vuol dire che la storia arriva fino al bordo della
+     * finestra: l'ora e' migliore di prima ma resta un «da prima di», e il
+     * segno rimane.
+     */
+    correggiLAvvio(id, quando, { certo = true } = {}) {
+      rileggi();
+      const active = records[String(id)]?.active;
+      if (!active?.avvioIncerto) return false;
+      const istante = finiteOrNull(quando);
+      const avvio = finiteOrNull(active.startMs);
+      if (istante == null || avvio == null) return false;
+      if (istante > avvio || avvio - istante > UN_GIORNO_MS) return false;
+      active.startMs = istante;
+      if (certo) delete active.avvioIncerto;
+      persist();
+      return true;
+    },
     reset() {
       records = {};
       persist();

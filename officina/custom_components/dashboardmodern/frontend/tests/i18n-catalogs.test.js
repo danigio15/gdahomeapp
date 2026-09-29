@@ -221,6 +221,13 @@ const LOCALE_IDENTITIES = {
     "Animal",
   ]),
   fr: new Set([
+    /* L'aquarium et ses litres (#127) s'écrivent pareil des deux côtés. */
+    "Aquarium",
+    "Litres",
+    /* Le compte d'un groupe fermé d'actions rapides (#139): «1 action»,
+     * «3 actions», le même mot en français et en anglais. */
+    "1 action",
+    "${quante} actions",
     "Animal",
     /* «Machines» s'écrit pareil des deux côtés: c'est le même mot, pas une
      * traduction oubliée. */
@@ -284,6 +291,9 @@ const LOCALE_IDENTITIES = {
     "Zone",
   ]),
   de: new Set([
+    /* L'acquario (#127) in tedesco si chiama Aquarium: la stessa parola
+     * latina, non una traduzione dimenticata. */
+    "Aquarium",
     /* «optional» e' la parola tedesca corrente: tradurla peggiorerebbe.
      */
     "Name (optional)",
@@ -364,6 +374,8 @@ const LOCALE_IDENTITIES = {
     "Volume",
   ]),
   nl: new Set([
+    /* Een aquarium (#127) heet in het Nederlands ook zo. */
+    "Aquarium",
     /* «Machines» is in het Nederlands hetzelfde woord: geen vergeten
      * vertaling, maar een toevallige samenval. */
     "machines",

@@ -77,8 +77,20 @@ class AppDaAggiornare extends StrettaRifiutata {
 
 /// Home Assistant ha risposto «no» a un comando.
 class ComandoRifiutato extends ErroreDelPonte {
-  const ComandoRifiutato(super.spiegazione, {this.codice});
+  const ComandoRifiutato(
+    super.spiegazione, {
+    this.codice,
+    this.siPuoForzare = false,
+  });
   final String? codice;
+
+  /// Se questo no si puo' scavalcare insistendo, e la schermata deve offrirlo.
+  ///
+  /// Oggi lo dice solo il togliere dalla rete Zigbee: il garbato ha fallito,
+  /// ma esiste un secondo passo — cancellare la riga d'imperio — che ha un
+  /// prezzo e per questo si chiede a parte. Lo decide il ponte e non l'app:
+  /// dipende da che rete c'e' in casa (`ponte/src/zigbee.js`).
+  final bool siPuoForzare;
 }
 
 /// La strada da fuori casa e' chiusa perche' la casa non e' Premium.

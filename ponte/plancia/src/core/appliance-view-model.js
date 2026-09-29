@@ -348,6 +348,36 @@ export function letturaDelloStato(value) {
   return "";
 }
 
+/**
+ * Da quale entita' si legge «sta lavorando», e con quale regola (#143).
+ *
+ * Tre risposte, nello stesso ordine in cui `sampledMode` le usa: prima
+ * l'interruttore di attivita', poi la parola dello stato, poi i watt. La
+ * quarta risposta e' «non si sa da dove», e allora e' `null`.
+ *
+ * Perche' esista una funzione invece di due righe in mezzo al modello: la
+ * stessa domanda la fa chi guarda lo stato di ADESSO e chi va a cercare nella
+ * STORIA di quell'entita' quando e' partito un ciclo trovato gia' in giro.
+ * Sono due posti, e una regola scritta due volte e' una regola che prima o
+ * poi dice due cose.
+ */
+export function laRegolaDelLavora({
+  stateEntity = "",
+  activityBinary = false,
+  dettoDalloStato = "",
+  powerEntity = "",
+  soglia = 5,
+  fattore = 1,
+} = {}) {
+  if (activityBinary && stateEntity) return Object.freeze({ entita: stateEntity, come: "acceso" });
+  /* Un lettore resta fuori: il suo «in funzione» e' una TV accesa, non un
+   * programma partito, e di quello un avvio non vuol dire niente. */
+  if (stateEntity && dettoDalloStato && !/^media_player\./.test(stateEntity))
+    return Object.freeze({ entita: stateEntity, come: "parole" });
+  if (powerEntity) return Object.freeze({ entita: powerEntity, come: "watt", soglia, fattore });
+  return null;
+}
+
 /* Quali sensori possono fare da stato quando nessuno l'ha scelto: quelli che
  * si chiamano stato, fase o simili E che in questo momento dicono una parola
  * che il vocabolario conosce. Il nome da solo non basta — `sensor.stato_wifi`
@@ -428,14 +458,13 @@ export function createApplianceViewModel(
       .map(entityId)
       .find((id) => isCumulativeEnergy(states, id)) || "";
   const rawPower = numeric(states, powerEntity);
-  const watts =
-    rawPower == null
-      ? null
-      : unit(states, powerEntity) === "kw"
-        ? rawPower * 1000
-        : unit(states, powerEntity) === "mw"
-          ? rawPower * 1_000_000
-          : rawPower;
+  /* Per quanto va moltiplicata la lettura per farne watt. E' un numero a se'
+   * perche' lo usa anche chi legge la STORIA di quel contatore (#143): li' i
+   * valori sono grezzi come questo, e la stessa soglia va confrontata con la
+   * stessa scala. */
+  const fattoreDeiWatt =
+    unit(states, powerEntity) === "kw" ? 1000 : unit(states, powerEntity) === "mw" ? 1_000_000 : 1;
+  const watts = rawPower == null ? null : rawPower * fattoreDeiWatt;
   const controlState = clean(states?.[controlEntity]?.state).toLowerCase();
   const configuredState = clean(states?.[stateEntity]?.state).toLowerCase();
   const unavailable = [powerEntity, controlEntity, stateEntity]
@@ -550,6 +579,25 @@ export function createApplianceViewModel(
     watts,
     /* Da quando, se la casa lo sa dire: lo legge il contatore dei cicli. */
     iniziatoIl,
+    /* Da quale entita' si legge «sta lavorando», e con quale regola.
+     *
+     * E' la stessa scala con cui qui sopra si decide IN FUNZIONE, ma scritta
+     * come dato invece che come conto: serve a chi quella domanda la fa alla
+     * STORIA di quell'entita' invece che al suo stato di adesso (#143) —
+     * cioe' a chi va a cercare quando e' partito davvero un ciclo trovato
+     * gia' in giro. Se la regola fosse scritta due volte, la storia direbbe
+     * un ciclo e la card un altro.
+     *
+     * I lettori restano fuori: il loro «in funzione» e' una TV accesa, non un
+     * programma partito, e di quello un avvio non ha senso. */
+    comeSiSaCheLavora: laRegolaDelLavora({
+      stateEntity,
+      activityBinary,
+      dettoDalloStato,
+      powerEntity,
+      soglia: run,
+      fattore: fattoreDeiWatt,
+    }),
     powerEntity,
     controlEntity,
     stateEntity,

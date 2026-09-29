@@ -14,7 +14,18 @@ import { comandiVicini, elencoComandi, genereDelComando } from "../core/comandi-
 import { elencoLetture, lettureVicine } from "../core/letture-accanto.js";
 import { ESITI_ELENCO, conLaVoce, tettoDellElenco } from "../core/robot-model.js";
 import { nomeAccantoAlDispositivo } from "../core/nome-accanto-al-dispositivo.js";
-import { apriMenuIntegrazioni } from "./appliance-integration-section.js";
+import {
+  TELECOMANDI,
+  esitoDelTelecomando,
+  telecomandiInCasa,
+  telecomandoGemello,
+} from "../core/telecomando.js";
+import { apriMenuIntegrazioni, nomiDelleIntegrazioni } from "./appliance-integration-section.js";
+import {
+  EVENTO_PIATTAFORME,
+  piattaformeConosciute,
+  scopriLePiattaforme,
+} from "./di-chi-e-unentita-section.js";
 import {
   allStates,
   clean,
@@ -137,6 +148,118 @@ function listaMarkup(tipo, voce, indice) {
   </div>`;
 }
 
+/* Il telecomando della TV (#132).
+ *
+ * Il `remote.*` che riceve le frecce. Chi arriva dal menu delle integrazioni
+ * ce l'ha già scritto — il registro sa di che dispositivo è ogni entità —;
+ * qui lo si sceglie a mano, o si prende con un tocco quello che in casa c'è,
+ * cominciando da quello che porta il nome della TV. Sotto si dice cosa ne
+ * verrà fuori: chi sceglie un telecomando e non vede comparire niente deve
+ * sapere perché. */
+function nomeDellIntegrazione(piattaforma) {
+  return TELECOMANDI[piattaforma]?.nome || nomiDelleIntegrazioni()[piattaforma] || piattaforma;
+}
+
+function testoDelTelecomando(voce) {
+  const { esito, piattaforma } = esitoDelTelecomando(voce, piattaformeConosciute());
+  const nome = nomeDellIntegrazione(piattaforma);
+  if (esito === "tv")
+    return t(
+      `${nome}: i tasti li prende la TV stessa, il telecomando non serve.`,
+      `${nome}: the TV takes the keys itself, no remote needed.`,
+    );
+  if (esito === "pronto")
+    return t(
+      `${nome}: le frecce, OK e gli altri tasti compaiono sotto la scheda, a TV accesa.`,
+      `${nome}: the arrows, OK and the other keys show under the card while the TV is on.`,
+    );
+  if (esito === "sconosciuto")
+    return nome
+      ? t(
+          `Di ${nome} la plancia non conosce i tasti: il telecomando non compare.`,
+          `The dashboard doesn't know the keys of ${nome}: the remote won't show.`,
+        )
+      : t(
+          "Di questo telecomando Home Assistant non dice l'integrazione: non compare.",
+          "Home Assistant doesn't say which integration this remote belongs to: it won't show.",
+        );
+  if (esito === "attesa")
+    return t(
+      "Chiedo a Home Assistant di che integrazione è…",
+      "Asking Home Assistant which integration it is…",
+    );
+  if (esito === "non_remote")
+    return t("Serve un'entità remote.*.", "A remote.* entity is required.");
+  return "";
+}
+
+function telecomandoMarkup(voce, indice) {
+  const states = allStates();
+  const scelto = clean(voce?.telecomando);
+  /* Un telecomando già preso da un'altra TV non si propone: è il suo. */
+  const presi = new Set(
+    lettori()
+      .filter((_altro, dove) => dove !== indice)
+      .map((altro) => clean(altro?.telecomando))
+      .filter(Boolean),
+  );
+  const proposte = [telecomandoGemello(voce?.entity, states), ...telecomandiInCasa(states)]
+    .filter(
+      (entity, dove, tutte) =>
+        entity && entity !== scelto && !presi.has(entity) && tutte.indexOf(entity) === dove,
+    )
+    .slice(0, 6);
+  const nome = (entity) => clean(states?.[entity]?.attributes?.friendly_name) || entity;
+  const id = `dm-mp-ed-${indice}-telecomando`;
+  return `<div class="ed-slot dm-mp-ed-campo dm-mp-lista" data-mp-tele>
+    <span class="ed-slot-lbl">${esc(t("Telecomando", "Remote control"))}</span>
+    <span class="ed-form-row"><input id="${id}" class="ed-input mono" data-mp-campo="telecomando" value="${esc(scelto)}" placeholder="remote.tv_salotto" autocomplete="off" spellcheck="false"><button type="button" class="dm-entity-picker" data-mp-pick="${id}" aria-label="${esc(t("Scegli entità", "Choose entity"))}">🔍</button></span>
+    ${
+      proposte.length
+        ? `<small>${esc(t("In casa ci sono questi — un tocco lo sceglie:", "These are in the house — one tap picks it:"))}</small>
+    <div class="dm-mp-chips dm-mp-proposte">${proposte
+      .map(
+        (entity) =>
+          `<button type="button" class="dm-mp-chip" data-mp-tele-sug="${esc(entity)}" title="${esc(entity)}"><span>${esc(nome(entity))}</span><i aria-hidden="true">＋</i></button>`,
+      )
+      .join("")}</div>`
+        : ""
+    }
+    <small class="dm-mp-tele-esito" data-mp-tele-esito>${esc(testoDelTelecomando(voce))}</small>
+    <small>${esc(
+      t(
+        "Le frecce, OK, indietro, la schermata iniziale e i canali della TV, sotto la sua scheda e solo a TV accesa. Serve l'entità remote.* della TV: Samsung (integrazione Samsung Smart TV), Sony Bravia, Philips, Android TV e Google TV, Apple TV, Roku. Le LG webOS non ne hanno bisogno.",
+        "The TV's arrows, OK, back, home screen and channels, under its card and only while the TV is on. It needs the TV's remote.* entity: Samsung (Samsung Smart TV integration), Sony Bravia, Philips, Android TV and Google TV, Apple TV, Roku. LG webOS TVs don't need it.",
+      ),
+    )}</small>
+  </div>`;
+}
+
+/* L'esito si riscrive al suo posto, e la riga no: la risposta del registro
+ * arriva mentre chi configura sta scrivendo, e ridisegnare la riga gli
+ * porterebbe via quello che ha appena battuto. */
+function aggiornaLEsito(riga) {
+  const esito = riga?.querySelector?.("[data-mp-tele-esito]");
+  if (!esito) return;
+  const testo = testoDelTelecomando(leggiLaRiga(riga));
+  if (esito.textContent !== testo) esito.textContent = testo;
+}
+
+function aggiornaGliEsiti() {
+  const body = doc?.getElementById("ed-body");
+  if (!body || schedaAttiva() !== MEDIA_EDITOR_TAB) return;
+  for (const riga of body.querySelectorAll("[data-mp-voce]")) aggiornaLEsito(riga);
+}
+
+/* Di che integrazione sono la TV e il telecomando della riga aperta: si chiede
+ * solo quello che non si sa, e la memoria è quella della pagina Musica. */
+function imparaLaRiga(voce) {
+  const entita = [clean(voce?.entity), clean(voce?.telecomando)].filter((entity) =>
+    entity.includes("."),
+  );
+  if (entita.length) scopriLePiattaforme(entita);
+}
+
 /* Si lavora sulle righe grezze: una riga appena aggiunta non ha ancora
  * un'entità, e la normalizzazione la scarterebbe prima di poterla compilare. */
 function lettori() {
@@ -205,6 +328,7 @@ function rigaMarkup(voce, indice) {
           clean(voce?.room_id),
           t("Nessuna stanza", "No room"),
         )}</select></span></label>
+      ${telecomandoMarkup(voce, indice)}
       ${listaMarkup("comandi", voce, indice)}
       ${listaMarkup("letture", voce, indice)}
       <output class="dm-mp-ed-errore" data-mp-errore></output>
@@ -252,6 +376,7 @@ function corpoMarkup() {
 export function ensureMediaEditor() {
   const body = doc?.getElementById("ed-body");
   if (!body || schedaAttiva() !== MEDIA_EDITOR_TAB) return false;
+  if (state.aperta >= 0) imparaLaRiga(lettori()[state.aperta]);
   const firma = `${JSON.stringify(lettori())}|${state.aperta}|${sezioneNascosta()}`;
   if (body.dataset.dmMediaEditor === firma && body.querySelector(".dm-mp-ed")) return true;
   body.dataset.dmMediaEditor = firma;
@@ -299,6 +424,7 @@ function anteprimaLettore({ device, entities }) {
     etichetta: t("Lettore", "Player"),
     corpo: `<div class="dm-integ-caselle">
         ${casella(t("Entità", "Entity"), nato.entity)}
+        ${nato.telecomando ? casella(t("Telecomando", "Remote control"), nato.telecomando) : ""}
         ${casella(t("Altri comandi", "Other commands"), nomi(nato.comandi))}
         ${casella(t("Altre letture", "Other readings"), nomi(nato.letture))}
       </div>`,
@@ -387,6 +513,18 @@ function onClick(event) {
     return;
   }
 
+  /* Il telecomando proposto (#132): un tocco lo sceglie e si salva subito,
+   * con quello che c'è scritto nelle altre caselle — come le pastiglie. */
+  const telecomando = event.target.closest("[data-mp-tele-sug]");
+  if (telecomando) {
+    event.preventDefault();
+    const lista = righeDalDocumento(body);
+    lista[indice] = { ...leggiLaRiga(riga), telecomando: clean(telecomando.dataset.mpTeleSug) };
+    salva(lista);
+    ridisegna();
+    return;
+  }
+
   /* Le due liste (#451): aggiungere una proposta, aggiungere quella scritta
    * nella casella, toglierne una scelta. Si salva subito — con quello che c'è
    * scritto nelle altre caselle, così un nome battuto e non ancora salvato non
@@ -444,6 +582,20 @@ function onClick(event) {
   }
 }
 
+/* Scritto a mano, o arrivato dal selettore delle entità: si chiede di che
+ * integrazione è, e l'esito sotto la casella si rifà. Solo al cambio, non a
+ * ogni lettera — «remote.s», «remote.sa» sono domande senza risposta. */
+function onChange(event) {
+  const body = doc?.getElementById("ed-body");
+  if (!body || schedaAttiva() !== MEDIA_EDITOR_TAB || !body.contains(event.target)) return;
+  const campo = clean(event.target?.dataset?.mpCampo);
+  if (campo !== "telecomando" && campo !== "entity") return;
+  const riga = event.target.closest("[data-mp-voce]");
+  if (!riga) return;
+  imparaLaRiga(leggiLaRiga(riga));
+  aggiornaLEsito(riga);
+}
+
 export function ensureMediaTab() {
   const linguette = doc?.querySelector(".ed-tab")?.parentElement;
   if (!linguette || linguette.querySelector(`.ed-tab[data-tab="${MEDIA_EDITOR_TAB}"]`))
@@ -493,6 +645,9 @@ function installStyles() {
       #ed-body .dm-mp-quanti[data-pieno="true"]{opacity:1;color:var(--warning-color,#f59e0b)}
       #ed-body .dm-mp-aggiungi{background:linear-gradient(135deg,#10b981,#047857)}
       #ed-body .dm-mp-ed-errore:not(:empty){color:var(--error-color,#dc2626);font-size:12px;font-weight:800}
+      /* Cosa verrà fuori dal telecomando scelto (#132): si legge prima dell'aiuto. */
+      #ed-body .dm-mp-lista .dm-mp-tele-esito{font-weight:800;color:var(--text,#0f172a)}
+      #ed-body .dm-mp-lista .dm-mp-tele-esito:empty{display:none}
       #ed-body .dm-mp-invito{display:grid;gap:6px;margin:0 0 12px;padding:12px;border-radius:14px;border:1px dashed color-mix(in srgb,#8b5cf6 45%,transparent);background:color-mix(in srgb,#8b5cf6 7%,transparent)}
       #ed-body .dm-mp-invito .dm-mp-integ{margin:0!important;background:linear-gradient(135deg,#6d28d9,#4c1d95)!important;color:#fff!important}
       #ed-body .dm-mp-invito small{font-size:11px;line-height:1.45;color:var(--text-dim,#64748b);font-weight:600}
@@ -508,6 +663,8 @@ export function installMediaEditor() {
   state.installed = true;
   installStyles();
   doc.addEventListener("click", onClick);
+  doc.addEventListener("change", onChange);
+  root.addEventListener?.(EVENTO_PIATTAFORME, aggiornaGliEsiti);
   wrapFunction("apriConfigEntita", "__dmMediaEditor", () => {
     ensureMediaTab();
     ensureMediaEditor();

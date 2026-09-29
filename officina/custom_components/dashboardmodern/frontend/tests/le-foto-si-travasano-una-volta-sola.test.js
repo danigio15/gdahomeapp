@@ -236,7 +236,27 @@ test("togliere una chiave non alza la revisione", async () => {
    * telecamere non ne ha non le vuole vedere né sul tablet in cucina né sul
    * telefono, e senza questa chiave dovrebbe rispegnerle su ogni vetro — cioè
    * un interruttore che sembra non funzionare. */
-  assert.equal(CONFIG_KEYS_REVISION, 55);
+  /* E la 56 coi contatori dell'acqua e del gas (#115, #135, #137,
+   * `cd_contatori`): quali sensori, cosa misura ognuno, i prezzi. Sono della
+   * casa: una perdita detta sul telefono e taciuta sul tablet, perché solo uno
+   * dei due sa quale sensore guardare, è proprio il danno da evitare. */
+  /* E la 57 con le piante (#159, `cd_piante`): la soglia sotto cui una pianta
+   * è da innaffiare dev'essere la stessa sul telefono e sul tablet. */
+  /* E la 58 con l'acquario (#127, `cd_acquario`): il cambio d'acqua segnato
+   * dal telefono dev'essere lo stesso che conta il tablet in cucina. */
+  assert.equal(CONFIG_KEYS_REVISION, 58);
+  assert.ok(
+    CONFIG_KEYS.includes("cd_acquario"),
+    "l'acquario e il suo ultimo cambio d'acqua devono essere gli stessi anche sul tablet in cucina",
+  );
+  assert.ok(
+    CONFIG_KEYS.includes("cd_piante"),
+    "le piante dichiarate qui devono essere le stesse anche sul tablet in cucina",
+  );
+  assert.ok(
+    CONFIG_KEYS.includes("cd_contatori"),
+    "i contatori dichiarati qui devono essere gli stessi anche sul tablet in cucina",
+  );
   assert.ok(
     CONFIG_KEYS.includes("cd_telecamere_in_sicurezza"),
     "il riquadro spento qui deve restare spento anche sul tablet in cucina",

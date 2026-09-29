@@ -88,6 +88,7 @@ import { installReportEditorSection } from "./report-editor-section.js";
 import { installShutterSection } from "./shutter-section.js";
 import { installPageMastheadSection } from "./page-masthead-section.js";
 import { installAzioniRapideVassoio } from "./azioni-rapide-vassoio-section.js";
+import { installAzioniRapideGruppi } from "./azioni-rapide-gruppi-section.js";
 import { installAzioniServizioGiusto } from "./azioni-servizio-giusto-section.js";
 import { installFoglioDelGuscio } from "./foglio-del-guscio-section.js";
 import { installStrisceDiLinguette } from "./le-strisce-di-linguette-section.js";
@@ -160,6 +161,12 @@ import { installCitofono } from "./citofono-section.js";
 import { installCitofonoEditor } from "./citofono-editor-section.js";
 import { installStampanti } from "./stampanti-section.js";
 import { installStampantiEditor } from "./stampanti-editor-section.js";
+import { installContatori } from "./contatori-section.js";
+import { installContatoriEditor } from "./contatori-editor-section.js";
+import { installPiante } from "./piante-section.js";
+import { installPianteEditor } from "./piante-editor-section.js";
+import { installAcquario } from "./acquario-section.js";
+import { installAcquarioEditor } from "./acquario-editor-section.js";
 import { installMacchine } from "./macchine-e-rete-section.js";
 import { installMacchineEditor } from "./macchine-editor-section.js";
 import { installNodiSection } from "./nodi-section.js";
@@ -1041,6 +1048,9 @@ export function installSectionRuntime() {
      * la Home, perche' il ripiano si mette attorno a una griglia che deve
      * gia' esistere. */
     installAzioniRapideVassoio();
+    /* E dentro il ripiano i gruppi (#139): i titoli si mettono fra i tasti che
+     * il ripiano ha gia' avvolto, senza spostarli. */
+    installAzioniRapideGruppi();
     installAzioniServizioGiusto();
     installFoglioDelGuscio();
     installStrisceDiLinguette();
@@ -1140,6 +1150,17 @@ export function installSectionRuntime() {
     installCitofonoEditor();
     installStampanti();
     installStampantiEditor();
+    /* L'acqua e il gas (#115, #135, #137): una pagina e una scheda, come le
+     * altre nate a runtime. La pagina prima della scheda, cosi' la scheda
+     * trova gia' cosa ridisegnare quando salva. */
+    installContatori();
+    installContatoriEditor();
+    /* Le piante (#159): la pagina e la sua scheda, nello stesso ordine. */
+    installPiante();
+    installPianteEditor();
+    /* L'acquario (#127): la pagina e la sua scheda, nello stesso ordine. */
+    installAcquario();
+    installAcquarioEditor();
     installMacchine();
     installMacchineEditor();
     installNodiSection();
@@ -1267,6 +1288,12 @@ export function installSectionRuntime() {
         "presenza-editor",
         "stampanti",
         "stampanti-editor",
+        "contatori",
+        "contatori-editor",
+        "piante",
+        "piante-editor",
+        "acquario",
+        "acquario-editor",
         "macchine-e-rete",
         "macchine-editor",
       ]),

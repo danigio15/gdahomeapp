@@ -11,6 +11,276 @@ fuori. La plancia dentro continua a dire la sua, e si legge dov'è sempre
 stata: nella pastiglia «La plancia» della console. Sono due numeri perché
 sono due cose.
 
+## 1.8.0
+
+**La Gestione termica torna a mostrare i numeri.** «Dopo ultimo aggiornamento
+al 1.7.0 non funziona più la gestione termica. Prima andava perfettamente.»
+Era vero. La 1.7.0 aveva insegnato alle targhette di caldaia e scaldabagno a
+salire di scala al migliaio — «1,21 kW» invece di «1211 W», come nel resto
+della plancia — e alla pagina mancava il pezzo che lo sa fare. Ogni targhetta
+con un numero dentro fermava il disegno: le linguette c'erano, e sotto niente
+o la scena di prima senza un valore. Adesso il pezzo c'è, e una prova nuova
+controlla in tutta la plancia che ogni file abbia quello che usa: la prova di
+prima leggeva la pagina come testo, e il testo era giusto.
+
+**Sotto il meteo porte, finestre e tapparelle si dicono ognuna per sé.**
+«“Varchi aperti” somma insieme contatti di porte e finestre. “Finestre aperte”
+in realtà conta le tapparelle.» Adesso sono pastiglie diverse: «porte aperte» e
+«finestre aperte» contano solo i contatti sull'anta — i `binary_sensor` —,
+«tapparelle aperte» conta solo i motori su. E la pastiglia che diceva «porte
+aperte» contando le serrature sbloccate della tessera Apri porte adesso dice
+quello che sa: «serrature sbloccate». Una serratura sbloccata non è più una
+porta aperta, da nessuna parte. Toccando una pastiglia si apre l'elenco di
+quello che conta; tapparelle e serrature si chiudono da lì.
+
+**Porta o finestra lo dice il contatto, e lo correggi tu.** Di serie decide la
+classe che Home Assistant dà al contatto — `window` è una finestra, tutto il
+resto una porta — e un contatto scritto nella casella dell'anta delle Finestre
+è una finestra. Dove le classi non tornano, come la centrale che chiama tutto
+«opening» o il modulo che chiama porta la finestra del bagno, in Config →
+Varchi ogni contatto ha la sua scelta «Porta o finestra». Le pastiglie si
+accendono e si spengono nella scheda Home, alla voce «Barra sotto il meteo»: chi
+aveva spento «Varchi» trova spente anche «Porte» e «Finestre».
+
+**E nella pagina Stanze vale la stessa regola.** Le «finestre aperte» di una
+stanza contavano la tapparella su, e le «porte aperte» la serratura sbloccata.
+Adesso contano i contatti, porta o finestra come nei Varchi. Il catalogo dei
+disegni ha la finestra aperta.
+
+**La Ring si vede, anche quando nel nome non dice di essere una Ring.** «Ho
+delle telecamere configurate ma 2 in particolare non mi hanno mai funzionato in
+visualizzazione.» Una Ring il video lo apre in WebRTC dal servizio della marca,
+e su un Home Assistant di oggi lo dice soltanto la risposta a una domanda che la
+plancia fa all'avvio. Chi apriva il popup mentre quella risposta viaggiava — o
+dopo che la prima domanda era caduta — sceglieva senza, e senza una Ring non ha
+strade. Adesso il popup la aspetta, e se serve la rifà subito. La tessera «dal
+vivo» quella risposta non la leggeva nemmeno: adesso sì. Una telecamera che sa
+soltanto il WebRTC di Home Assistant ha venticinque secondi per svegliarsi, come
+le altre in cloud, anche se la marca nel nome non c'è; l'offerta è fatta come
+quella del lettore di Home Assistant; e una strada caduta dopo il suo tempo
+intero non si riprova da capo subito dopo.
+
+**Il nome stream go2rtc non tiene più ferme le telecamere dentro Home
+Assistant.** Quel nome si parla con l'estensione go2rtc da un filo suo, e da
+dentro Home Assistant quel filo non arriva: la strada cadeva sempre, e intanto,
+essendo quella scelta, teneva ferme le strade che lì dentro funzionano. Adesso
+da dentro il nome si lascia stare e la telecamera passa dalla sua entità. Con un
+indirizzo rtsp:// la scheda Telecamere propone come prima strada l'entità
+dell'integrazione che la telecamera ha già — Reolink, Tapo, Hikvision —, e da
+dentro Home Assistant non scrive più da sola un nome che non servirebbe.
+
+**L'ora di avvio di un ciclo la sa la casa, e adesso gliela chiediamo.** «Quando
+guardo la sezione elettrodomestici segna inizio ciclo anche se è già iniziato da
+1 ora.» Il contatore dei cicli sapeva già distinguere «l'ho visto partire» da
+«l'ho trovato già partito», e nel secondo caso scriveva «da prima di» — onesto,
+ma l'ora era comunque quella in cui si era guardato. Adesso, quando l'avvio è
+una supposizione, si chiede a Home Assistant la storia di quell'apparecchio e si
+va a vedere quando si è messo in funzione davvero. Una domanda per ciclo, e solo
+per i cicli trovati già in giro. Senza Recorder non cambia niente: resta la
+supposizione di prima, segnata come tale.
+
+**Il contatore di sempre non passa più per il consumo di oggi.** «Nella sezione
+dei consumi giornalieri degli elettrodomestici, per la lavatrice viene
+visualizzato il consumo totale cumulativo invece del consumo della singola
+giornata.» Quando la casella dell'energia giornaliera contiene lo stesso sensore
+di quella del totale, non sono due misure: è una misura sola, copiata. Adesso si
+riconosce, e quel contatore risponde come gli altri contatori — col consumo del
+giorno ricavato dal Recorder — invece di mostrare i kilowattora di tre anni.
+
+**Gli animali di casa hanno la loro tessera in Home.** «La sezione animali non
+appare nei widget della home»: e infatti non c'era. Adesso la tessera dice
+quanti sono e cosa vogliono adesso — la ciotola, l'acqua, la lettiera — si
+ordina e si spegne come le altre, e da lì si apre la sezione.
+
+**Le stanze in Home si spengono senza entrarci.** «Nelle stanze della home dove
+compare la lucina quando sono accese le luci, si può spegnere tutto senza
+entrare nella stanza?» Adesso sì. In fondo alla card di ogni stanza ci sono i
+tasti di quello che è acceso e si può spegnere — le luci, le prese, il clima —
+col numero di quante cose spegne ognuno. Il tocco chiede prima di fare
+(«Spegni 2 luci?»), e dopo resta per cinque secondi il modo di tornare
+indietro. Il resto della card porta dentro la stanza, come prima.
+
+**E la card è nuova.** È una tessera come quelle dei widget che le stanno
+sopra: il disegno della stanza, il nome, i gradi grandi, e sotto a parole
+quello che è acceso ma non ha un tasto — «Tapparelle · Musica». Si accende di
+giallo quando è accesa la luce, che è la cosa che si guarda da fuori.
+
+**Il clima si spegne da fuori anche nella pagina Stanze**, come le luci e le
+prese. E chi annulla lo ritrova nel modo in cui era — un condizionatore spento
+mentre raffrescava torna a raffrescare, non a quello che sceglie
+l'integrazione.
+
+**Una luce chiusa col lucchetto non entra più nel conto di quello che si
+spegne.** Il comando se lo rifiutava già, ma la domanda diceva «Spengo 2 luci?»
+e se ne spegneva una.
+
+**L'acqua e il gas hanno la loro sezione.** Tre richieste, la stessa cosa:
+«manca una sezione per monitorare portata e pressione dell'impianto idrico di
+casa, magari anche l'addolcitore per vedere il livello del sale», «sezioni come
+consumi e contatore acqua e energia gas», «una sezione consumo gas». Adesso c'è
+«Acqua e gas»: in cima quanta acqua si è usata oggi, poi la pressione sulla sua
+forcella — la stessa barra del pH della piscina — la portata, i giorni di sale
+che restano all'addolcitore, e il gas di oggi e del mese in metri cubi, in
+kilowattora e in euro. I numeri li dà il Recorder di Home Assistant, e ogni
+mese si confronta col mese prima.
+
+**E se l'acqua non si ferma mai, lo dice in rosso.** Una casa usa l'acqua a
+colpi — la doccia, la lavatrice, lo sciacquone — e fra un colpo e l'altro la
+portata torna a zero. Quando resta sopra zero per tre ore di fila è una
+perdita: la pagina lo scrive grande («Scorre da 3 ore»), aggiunge se in casa
+non c'è nessuno, e diventa l'elenco a semaforo dei Varchi, un contatore per
+riga. Chi non ha il sensore di portata ha lo stesso controllo dal contatore:
+un giorno intero senza un'ora ferma. La tessera in Home si accende di rosso
+con le stesse parole.
+
+**Si configura come le altre schede.** Nel Config, famiglia «Clima e acqua»,
+ogni riga è un sensore con il suo nome, il disegno e cosa misura; il prezzo
+dell'acqua e del gas, il coefficiente della bolletta e la forcella della
+pressione stanno dentro la riga a cui servono. La prima apertura della scheda
+prende i contatori che Home Assistant dichiara; la sezione compare nella barra
+solo quando ha almeno una riga. Il catalogo dei disegni ha tre oggetti nuovi:
+il contatore, il manometro e la fiamma del gas.
+
+**Le piante dicono quando vogliono l'acqua.** «Impostando una soglia minima ti
+avverte quando è ora di innaffiare, oppure anche se è ora di innaffiare ma è
+prevista pioggia a breve eviti di farlo.» Adesso c'è «Piante»: in cima quante
+sono da innaffiare e quali, sotto l'elenco a semaforo dei Varchi — rossa la
+pianta asciutta, verde quella che sta bene — e per ogni pianta l'umidità della
+terra sulla forcella della piscina, con la temperatura quando il sensore la
+misura. Ecowitt WH51 e WH52, Tuya, Xiaomi: basta che dia la terra in percento.
+
+**E se sta per piovere, aspetta.** Una pianta segnata «all'aperto» con la
+terra asciutta guarda le previsioni del meteo di casa: se nelle prossime dodici
+ore arrivano almeno cinque millimetri non chiede acqua, e la sua riga lo dice
+— «Piove fra 4 ore: 8,5 mm». Il ficus in salotto la pioggia non la prende, e
+non aspetta. La spunta è per pianta, spenta di serie.
+
+**Sa anche quando l'hai innaffiata, e quando toccherà di nuovo.** Dalle medie
+di ogni ora del Recorder un'innaffiata è un salto della terra in poche ore:
+la riga dice «ultima acqua 6 giorni fa», e per chi sta bene fra quanti giorni
+arriverà alla soglia, al passo con cui si sta asciugando. La tessera in Home
+dice quante ne hanno sete e chiede attenzione come la batteria da cambiare; chi
+aspetta la pioggia non la accende.
+
+**Si configura come le altre schede**, in «Clima e acqua»: il sensore della
+terra, il nome, il disegno, la temperatura accanto, la soglia sotto cui è da
+innaffiare e quella sopra cui è troppo bagnata. La prima apertura prende i
+sensori della terra che Home Assistant ha trovato, e propone la temperatura
+dello stesso vaso. Il catalogo ha un disegno nuovo: la pianta nel vaso.
+
+**L'acquario ha la sua sezione.** «Si potrebbe inserire una sezione con
+l'acquario?» Adesso c'è «Acquario»: in cima come sta la vasca — tutto nella
+norma, l'acqua troppo calda, da rabboccare, il cambio d'acqua da fare —, sotto
+le luci, il filtro e il riscaldatore sulle mattonelle della piscina, che si
+accendono e si spengono con un tocco (il lucchetto vale anche qui), e la
+temperatura e il pH sulla forcella della piscina: di serie 24–27 °C (75–81 °F
+con un sensore in Fahrenheit) e 6,5–7,5, da cambiare riga per riga.
+
+**Il livello dice quando rabboccare.** Un galleggiante dice alto o basso; un
+sensore di livello in percento dice anche fra quanti giorni arriva alla
+soglia, dalle medie di ogni ora del Recorder, al passo con cui l'acqua cala.
+
+**E il cambio d'acqua ha il suo anello.** Di serie ogni quattordici giorni:
+l'anello si riempie un giorno alla volta, «✓ Fatto oggi» lo segna — e per
+cinque secondi si può annullare —, e quando è ora diventa ambra e conta i
+giorni di ritardo. La tessera in Home dice la temperatura e chiede attenzione
+solo quando c'è da fare: un valore fuori norma, il rabbocco, il cambio in
+ritardo.
+
+**Si configura come le altre schede**, in «Clima e acqua»: in cima il nome
+della vasca, i litri, ogni quanti giorni si cambia l'acqua e quando è stata
+cambiata l'ultima volta; ogni riga è un'entità con cosa è — temperatura, pH,
+livello, luci, filtro, riscaldatore — e la sua forcella o la sua soglia. La
+prima apertura prende le entità che nel nome hanno acquario, reef o pesci. Il
+catalogo ha un disegno nuovo: l'acquario.
+
+**La TV ha il suo telecomando.** «Sarebbe possibile usarle anche qua per
+spegnerle, accenderle ed usare il loro telecomando virtuale se disponibile?»
+Accendere e spegnere è uscito nella 1.6.8; adesso c'è l'altra metà. Nella
+pagina Musica, sotto la scheda di una TV accesa, ci sono la croce con OK in
+mezzo e, sotto, indietro, la schermata iniziale, il menu e i canali: gli
+stessi tasti quadrati della scheda, con OK del colore del tasto in mezzo. Da
+spenta il telecomando non c'è, e per accenderla c'è già il tasto.
+
+**Ogni tasto ha il nome che gli dà la sua integrazione.** Home Assistant non
+dice quali tasti sa ricevere una TV, e un nome sbagliato non dà errore: non fa
+niente. Quindi la plancia chiede al registro di che integrazione è la TV, e
+conosce i tasti di Samsung (integrazione Samsung Smart TV), LG webOS, Sony
+Bravia, Philips, Android TV e Google TV, Apple TV e Roku. Per ognuna ci sono
+solo quelli che l'integrazione documenta: su Apple TV i canali non ci sono, e
+non compaiono. Un'integrazione che la plancia non conosce non ha telecomando.
+LG un'entità `remote` non ce l'ha: i tasti li prende la TV con
+`webostv.button`, e il ponte adesso lo lascia passare a tutti. Solo quello:
+`webostv.command` resta a chi amministra.
+
+**E il volume a passi.** Quasi tutte le TV il volume lo sanno solo alzare e
+abbassare, e la scheda guardava solo il cursore: adesso chi il cursore non ce
+l'ha trova − e +.
+
+**Si configura dove si configura la TV**: in Config → Musica, nella riga del
+lettore, la casella «Telecomando» con l'entità `remote.*`. Chi aggiunge la TV
+dal menu delle integrazioni se la trova già scritta, e il telecomando che
+porta il nome della TV e viene dalla stessa integrazione si trova da solo.
+Sotto la casella la scheda dice cosa ne verrà fuori — «Samsung Smart TV: le
+frecce, OK e gli altri tasti compaiono sotto la scheda, a TV accesa» — o
+perché non comparirà niente.
+
+**Le azioni rapide si dividono in gruppi.** «Ho notato la necessità di poter
+avere una divisione delle azioni rapide in gruppi (tapparelle luci clima…).»
+Il gruppo è una parola scritta accanto all'azione: in Config, nella riga di
+ogni azione rapida, c'è la casella «Gruppo», coi nomi già usati proposti. Le
+azioni con lo stesso gruppo — «Luci» e «luci» sono lo stesso — stanno insieme
+nel vassoio della Home, sotto un titolo col segno della prima azione, il nome
+e quante sono accese. Chi non scrive nessun gruppo non vede niente di
+diverso: una fila sola, come oggi.
+
+**E un gruppo si chiude con un tocco sul titolo.** Da chiuso il titolo dice
+lo stesso quante sono accese, o quante azioni ci sono dentro. Resta chiuso su
+quel telefono: è una cosa di chi guarda, non della casa, e sugli altri
+schermi resta aperto. I tasti non cambiano posto: si vedono raggruppati, ma
+per chi li colora, ci disegna il simbolo o ci posa la copertina restano
+nell'ordine in cui sono scritti.
+
+**La mappa della rete Zigbee arriva.** L'app aspettava venti secondi, e il
+ponte per fare il giro di tutti i dispositivi ce ne mette fino a novanta: la
+risposta arrivava sempre quando l'app aveva già rinunciato. Adesso per quella
+domanda sola aspetta due minuti. **E un dispositivo eliminato non resta più
+lì:** quando non risponde alla rimozione gentile, l'app lo dice e chiede se
+toglierlo per forza, scrivendo cosa costa — dopo va riassociato a mano.
+
+**Nell'app, due cose storte raddrizzate.** Nelle mattonelle del menu il
+disegno e la scritta stavano appoggiati all'angolo invece che in mezzo; e sopra
+la barra di sistema di Android la barra della plancia lasciava diciotto punti
+di vuoto, che si vedevano scorrendo.
+
+**Il navigatore conosce tutte le colonnine d'Italia, e sa quali sono
+libere.** gdanav arriva all'ultimo. Le colonnine vengono dalla Piattaforma
+Unica Nazionale, dove i gestori le devono scrivere, e sulla mappa ci sono
+tutte — più di quarantacinquemila — non solo le venticinque più vicine, coi
+nomi dei gestori al posto delle sigle. Lo stato di adesso, libera, occupata o
+guasta, si chiede alla PUN per tutta Italia in una volta, ogni dieci minuti
+mentre l'app è davanti, e ogni icona prende il suo colore. Nel cerchio c'è il
+numero delle prese, non delle stazioni.
+
+**Il percorso sceglie le soste libere.** «Nel calcolo del percorso devi vedere
+quelle libere e in servizio.» Quando il viaggio chiede una ricarica, fra due
+colonnine buone vince quella che ha una presa libera adesso, e una guasta o
+tutta occupata passa dietro. Dove un gestore lo stato vero non lo manda — e
+scrive «libera» qualunque cosa succeda — il navigatore non gli crede: quella
+colonnina resta senza stato, invece di dirsi libera.
+
+**E i prezzi, come il gestore li comunica alla PUN.** «Riesci a mettere anche i
+prezzi di ricarica?» Nella scheda della colonnina c'è quanto costa il
+kilowattora in alternata, in continua e ad alta potenza, la sosta al minuto e
+lo scatto d'avvio. Arrivano con lo stato, senza una domanda in più; chi non li
+comunica, la scheda lo dice invece di tacere.
+
+**Le corsie agli svincoli tornano**, anche coi percorsi di TomTom: le frecce di
+ogni corsia, accese quelle giuste. **E il traffico in auto** ha le linee più
+spesse, e quando non si vede la voce «Android Auto» del menu di gdanav dice
+dove si ferma: se lo strato c'è, se i riquadri arrivano da TomTom o tornano con
+un errore, quante code ci sono sullo schermo.
+
 ## 1.7.0
 
 **gdahome Premium esiste nel codice, e resta spento.** Fin qui era un progetto

@@ -79,10 +79,15 @@ export function stanzePerPiano(pagine, { piani = [] } = {}) {
 /* Quali pastiglie esistono, in che ordine, e quali comandano.
  *
  * L'ordine e' quello con cui si guarda una stanza da fuori: prima cosa e'
- * rimasto acceso — la luce, la presa — poi com'e' messa — i gradi, i varchi —
- * e in fondo quello che non va. Le prime due si comandano, le altre no: una
- * finestra non si chiude da una pastiglia, i gradi non sono un interruttore, e
- * un avviso si guarda, non si spegne.
+ * rimasto acceso — la luce, la presa — poi com'e' messa — i gradi, il clima, i
+ * varchi — e in fondo quello che non va.
+ *
+ * Si comandano le cose che si spengono: la luce, la presa e il clima. Il clima
+ * all'inizio portava dentro; spegnerlo da fuori e' la stessa domanda della
+ * luce — «spegnere tutto senza entrare nella stanza», l'ha chiesto chi arrivava
+ * da Fibaro — e un condizionatore dimenticato acceso costa piu' di una
+ * lampadina. Le altre no: una finestra non si chiude da una pastiglia, i gradi
+ * non sono un interruttore, e un avviso si guarda, non si spegne.
  *
  * `comanda` dice cosa fa il tocco: `spegni` porta il comando, `entra` porta
  * dentro la stanza. Non c'e' una terza risposta — «a volte comanda» — ed e'
@@ -92,7 +97,7 @@ export const PASTIGLIE_DELLA_STANZA = Object.freeze([
   Object.freeze({ chiave: "luci", icona: "💡", comanda: "spegni" }),
   Object.freeze({ chiave: "prese", icona: "🔌", comanda: "spegni" }),
   Object.freeze({ chiave: "gradi", icona: "🌡️", comanda: "entra" }),
-  Object.freeze({ chiave: "clima", icona: "❄️", comanda: "entra" }),
+  Object.freeze({ chiave: "clima", icona: "❄️", comanda: "spegni" }),
   Object.freeze({ chiave: "finestre", icona: "🪟", comanda: "entra" }),
   Object.freeze({ chiave: "porte", icona: "🚪", comanda: "entra" }),
   Object.freeze({ chiave: "mute", icona: "⚠️", comanda: "entra" }),

@@ -18,8 +18,8 @@
  * che compaiono sono quelli che il lettore sa eseguire davvero». La regola
  * c'era, e il tasto centrale ne era fuori.
  *
- * Il telecomando virtuale e' un'altra cosa e non sta qui: vuole un'entita'
- * `remote.*` e `remote.send_command`, che questa plancia ancora non tocca.
+ * Il telecomando virtuale e' un'altra cosa e non sta qui: sta in
+ * `core/telecomando.js`, e lo tiene fermo `la-tv-ha-il-telecomando.test.js`.
  */
 import assert from "node:assert/strict";
 import test from "node:test";

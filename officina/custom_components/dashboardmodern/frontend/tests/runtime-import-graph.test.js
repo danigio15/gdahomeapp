@@ -1463,8 +1463,44 @@ test("production graph is single-owner, acyclic and contains no facade pass-thro
   // perche' il gradino va guardato sul numero COME SI VEDRA' — 999,6 W scritti
   // interi sono «1000 W», che e' proprio la scritta che non si vuole — il che
   // e' una cosa che si prova a tavolino e non guardando uno schermo.
+  // 399 con l'ora vera dell'avvio: `core/quando-e-partito.js`. «Quando guardo
+  // la sezione elettrodomestici segna inizio ciclo anche se e' gia' iniziato da
+  // 1 ora.» Il contatore dei cicli sapeva DIRE che non lo sapeva — l'avvio
+  // segnato come supposto — ma l'ora restava quella in cui si era guardato, che
+  // e' onesta e non serve a niente. L'ora vera ce l'ha la casa: la storia di
+  // quell'entita' dice quando la macchina si e' messa in funzione. Preparare la
+  // domanda e camminare all'indietro nei cambi di stato — dove le righe sono i
+  // CAMBI e non i campioni, e una sosta breve non apre un ciclo nuovo — sono
+  // decisioni pure, e stanno qui perche' e' l'unico modo di provarle senza una
+  // lavatrice accesa e un Recorder in ascolto.
+  // 400, 401 e 402 con l'acqua e il gas (#115, #135, #137): il nucleo
+  // `core/contatori-di-casa.js`, la pagina `sections/contatori-section.js` e la
+  // sua scheda `sections/contatori-editor-section.js`. Tre richieste — la
+  // portata e la pressione, il contatore dell'acqua, il consumo del gas — e una
+  // pagina sola. Il nucleo sta da parte perche' le decisioni che contano sono
+  // pure e si provano a tavolino: da quando l'acqua scorre senza fermarsi, i
+  // giorni di sale che restano, oggi e il mese dai secchielli del Recorder.
+  // 403, 404, 405 e 406 con le piante (#159): `core/giorni-alla-soglia.js`,
+  // la retta che dice fra quanti giorni un livello che scende tocca la soglia
+  // — il sale dell'addolcitore e la terra di una pianta sono la stessa domanda,
+  // e la regola era scritta dentro i contatori —, il nucleo
+  // `core/le-piante-di-casa.js` con la soglia, la pioggia in arrivo e l'ultima
+  // innaffiata, la pagina `sections/piante-section.js` e la sua scheda
+  // `sections/piante-editor-section.js`.
+  // 407, 408, 409 e 410 con l'acquario (#127): `core/medie-di-ogni-ora.js`,
+  // la domanda delle medie di ogni ora che la terra delle piante e il livello
+  // dell'acquario fanno uguale — stava dentro le piante —, il nucleo
+  // `core/l-acquario-di-casa.js` con le forcelle, il rabbocco e il cambio
+  // d'acqua, la pagina `sections/acquario-section.js` e la sua scheda
+  // `sections/acquario-editor-section.js`.
+  // 411 col telecomando della TV (#132): `core/telecomando.js`, i nomi dei
+  // tasti integrazione per integrazione. La pagina e la scheda sono quelle
+  // della Musica, che c'erano già.
+  // 412 e 413 coi gruppi delle azioni rapide (#139): il nucleo
+  // `core/gruppi-delle-azioni.js` e `sections/azioni-rapide-gruppi-section.js`,
+  // che mette i titoli nel vassoio della Home e la casella nel Config.
   assert.ok(
-    relative.length <= 398,
+    relative.length <= 413,
     `production graph unexpectedly grew to ${relative.length} modules`,
   );
   assertAcyclic(edges);

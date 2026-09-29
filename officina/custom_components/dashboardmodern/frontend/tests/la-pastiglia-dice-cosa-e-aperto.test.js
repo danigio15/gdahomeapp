@@ -60,7 +60,12 @@ test("il verso girato scambia aperto e chiuso, e i due versi del movimento", () 
 
 test("quello che non si sa resta quello che non si sa", () => {
   for (const stato of ["unknown", "unavailable", "", null, undefined]) {
-    assert.equal(statoSecondoVerso(stato, true), String(stato ?? "").trim().toLowerCase());
+    assert.equal(
+      statoSecondoVerso(stato, true),
+      String(stato ?? "")
+        .trim()
+        .toLowerCase(),
+    );
   }
 });
 
@@ -83,17 +88,26 @@ test("la tapparella girata che non pubblica la posizione ora segue la spunta", (
  * chi la spunta ce l'ha messa. Il modello della tessera passa dallo stesso
  * conto del resto della plancia, e non ha piu' una lettura sua. */
 test("anche la tessera Finestre della Home gira la parola, non solo la posizione", async () => {
+  /* La regola e' uscita dalla tessera ed e' andata nel nucleo (#162), dove la
+   * legge anche la pastiglia delle tapparelle sotto il meteo: la prova segue
+   * la regola dove sta, e la prova col numero sta qui sotto. */
   const sorgente = await readFile(
     new URL("../src/sections/home-widgets-section.js", import.meta.url),
     "utf8",
   );
-  assert.match(sorgente, /const raw = statoSecondoVerso\(current\?\.state, girata\);/);
-  assert.match(sorgente, /statoSecondoVerso,\n\s*versoInvertito,\n\} from "\.\.\/core\/verso-aperture\.js";/);
+  assert.match(
+    sorgente,
+    /: coperturaAlzata\(item, current, readJson\(CHIAVE_SOGLIA_CHIUSA, 0\)\);/,
+  );
+  const nucleo = await readFile(new URL("../src/core/cover-kind.js", import.meta.url), "utf8");
   /* Il verso si sa prima di leggere la parola, o la lettura arriverebbe a
    * una spunta non ancora dichiarata. */
-  const spunta = sorgente.indexOf("const girata = versoInvertito(item);");
-  const lettura = sorgente.indexOf("const raw = statoSecondoVerso(current?.state, girata);");
+  const spunta = nucleo.indexOf("const girata = versoInvertito(item);");
+  const lettura = nucleo.indexOf("const parola = statoSecondoVerso(stato?.state, girata);");
   assert.ok(spunta > 0 && lettura > spunta, "prima la spunta, poi la parola");
-  /* E chi conta le aperte legge quella parola, non un'altra. */
-  assert.match(sorgente, /: raw === "open"\);/);
+  const { coperturaAlzata } = await import("../src/core/cover-kind.js");
+  /* Montata al contrario e senza posizione: «open» vuol dire giu'. */
+  assert.equal(coperturaAlzata({ invertita: true }, { state: "open" }), false);
+  assert.equal(coperturaAlzata({ invertita: true }, { state: "closed" }), true);
+  assert.equal(coperturaAlzata({}, { state: "open" }), true);
 });

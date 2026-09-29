@@ -446,3 +446,15 @@ test("chi non amministra chiama solo i servizi delle cose di casa", () => {
   assert.equal(servizioVietato("frontend", "set_theme", { amministra: true }), null);
   assert.ok(servizioVietato("hassio", "addon_start", { amministra: true }));
 });
+
+test("il telecomando della TV passa per tutti, i comandi di sistema della TV no (#132)", () => {
+  /* Le frecce, OK, i canali: per le TV col telecomando in Home Assistant e per
+   * le LG, che i tasti li prendono dal televisore. */
+  assert.equal(servizioVietato("remote", "send_command"), null);
+  assert.equal(servizioVietato("webostv", "button"), null);
+  /* Una richiesta qualunque al sistema della TV, o la riga di comando di un
+   * Android via ADB, non e' un tasto: resta a chi amministra. */
+  assert.ok(servizioVietato("webostv", "command"));
+  assert.ok(servizioVietato("androidtv", "adb_command"));
+  assert.equal(servizioVietato("webostv", "command", { amministra: true }), null);
+});

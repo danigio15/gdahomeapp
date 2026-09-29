@@ -30,6 +30,7 @@ import {
   videoInPausa,
 } from "../core/telecamera-webrtc.js";
 import { allStates, chiediAHomeAssistant, clean, doc, lexicalGlobal, root } from "./shared.js";
+import { capacitaDellaTelecamera, capacitaInArrivo } from "./telecamera-capacita-section.js";
 
 const KEY = "__DASHBOARDMODERN_TELECAMERA_WEBRTC__";
 const state = (root[KEY] ||= { installed: false, sessioni: new Map() });
@@ -227,8 +228,19 @@ export async function avviaWebRtcNativo(
       faiPartireIlVideo(video, { conAudio }).catch(() => {});
     }
   };
-  pc.addTransceiver("video", { direction: "recvonly" });
+  /* L'offerta com'e' quella del lettore di Home Assistant (#164): il canale
+   * dati quando l'integrazione lo chiede, poi l'audio, poi il video. Era video
+   * e poi audio, senza canale. Per go2rtc l'ordine non conta, ma una Ring o
+   * una Nest il video lo aprono dal servizio della marca, che si vede
+   * arrivare l'offerta di Home Assistant tutti i giorni: una diversa e' una
+   * variabile in piu' fra il tocco e il video, e toglierla non costa niente. */
+  if (ice.canaleDati) {
+    try {
+      pc.createDataChannel(ice.canaleDati);
+    } catch (_error) {}
+  }
   pc.addTransceiver("audio", { direction: "recvonly" });
+  pc.addTransceiver("video", { direction: "recvonly" });
   const offerta = await pc.createOffer();
   await pc.setLocalDescription(offerta);
   if (ice.tuttiPrima) await raccoltaIceFinita(pc);
@@ -417,8 +429,12 @@ export async function provaIlVideo(camera, image) {
   const entity = clean(camera?.entity);
   if (!entity || !image || !doc) return false;
   const stato = allStates()?.[entity];
-  const tipo = tipoDiFlusso(stato);
-  if (!tipo) return false;
+  /* Le capacita' chieste a Home Assistant, come nel popup (#164): senza, la
+   * tessera leggeva un attributo che non c'e' piu' e il video non partiva. */
+  const tipo = tipoDiFlusso(stato, await capacitaInArrivo(entity));
+  /* Mentre si aspettava la risposta la tessera puo' essere stata ridisegnata:
+   * un video per un'immagine che non c'e' piu' non lo guarderebbe nessuno. */
+  if (!tipo || image.isConnected === false) return false;
   const viva = state.sessioni.get(entity);
   if (viva) {
     if (viva.image === image) return true;
@@ -533,7 +549,7 @@ async function avviaPerIlPopup(entityId, videoEl) {
    * nativa: un tempo solo, e questa funzione lo rispetta invece di averne
    * uno suo. */
   const sessione = await avviaWebRtcNativo(entity, videoEl, {
-    attesa: attesaDelFlusso(allStates()?.[entity]),
+    attesa: attesaDelFlusso(allStates()?.[entity], capacitaDellaTelecamera(entity)),
     conAudio: true,
     quandoSiPuoChiudere: (chiudi) => {
       chiudiIlNegoziatoDelPopup = chiudi;

@@ -107,6 +107,24 @@ const CORPI = Object.freeze({
 
   pump: `${PANNELLO}<circle ${SCOCCA} cx="44" cy="50" r="27"/><circle ${FRONTALE} cx="44" cy="50" r="16"/><path ${ACCENTO} d="M44 38c7 0 11 5 10 10l-10 2zM56 56c-3 6-9 8-13 5l6-9zM32 56c-4-5-3-11 2-13l4 9z"/><circle ${SCOCCA} cx="44" cy="50" r="4"/><rect ${SCOCCA} x="66" y="34" width="14" height="14" rx="4"/><path ${TRATTO} d="M20 82h56"/>`,
 
+  /* I contatori di casa (#115, #135, #137): il contatore con la sua finestra
+   * delle cifre, il manometro della pressione, la fiamma del gas. Il gas aveva
+   * solo il rilevatore di fughe — «gas» porta al fumo, ed è giusto lì — e un
+   * contatore da cui si legge la bolletta non è un allarme. */
+  meter: `${PANNELLO}<rect ${SCOCCA} x="8" y="42" width="14" height="14" rx="4"/><rect ${SCOCCA} x="74" y="42" width="14" height="14" rx="4"/><circle ${SCOCCA} cx="48" cy="49" r="30"/><circle ${FRONTALE} cx="48" cy="49" r="22"/><rect ${SCOCCA} x="33.5" y="34" width="29" height="11" rx="3"/><rect ${FRONTALE} x="35.5" y="36" width="5.5" height="7" rx="1.5"/><rect ${FRONTALE} x="42.5" y="36" width="5.5" height="7" rx="1.5"/><rect ${FRONTALE} x="49.5" y="36" width="5.5" height="7" rx="1.5"/><rect ${ACCENTO} x="56.5" y="36" width="4.5" height="7" rx="1.5"/><path ${ACCENTO} d="M48 51c4 5 6.5 8 6.5 11a6.5 6.5 0 0 1-13 0c0-3 2.5-6 6.5-11Z"/>`,
+
+  gauge: `${PANNELLO}<rect ${SCOCCA} x="42" y="70" width="12" height="14" rx="3"/><rect ${SCOCCA} x="34" y="80" width="28" height="7" rx="3.5"/><circle ${SCOCCA} cx="48" cy="44" r="30"/><circle ${FRONTALE} cx="48" cy="44" r="23"/><path ${TRATTO} d="M35 57a18 18 0 1 1 26 0"/><path ${TRATTO_ACCENTO} d="M48 44 60 32"/><circle ${SCOCCA} cx="48" cy="44" r="4.5"/>`,
+
+  flame: `${PANNELLO}<rect ${SCOCCA} x="22" y="70" width="52" height="10" rx="5"/><rect ${SCOCCA} x="30" y="80" width="36" height="6" rx="3"/><path ${ACCENTO} d="M48 12c10 12 18 22 18 34 0 11-8 20-18 20s-18-9-18-20c0-8 5-14 9-19 1 6 4 9 7 10-2-9 0-17 2-25Z"/><path ${VETRO} d="M48 36c5 6 8 11 8 16a8 8 0 0 1-16 0c0-5 3-10 8-16Z"/>`,
+
+  /* La pianta in vaso (#159): tre foglie e il vaso. Il catalogo aveva il fiore
+   * e il giardino, ma un ficus in salotto non è né l'uno né l'altro. */
+  plant: `${PANNELLO}<path fill="none" stroke="#22c55e" stroke-width="3" stroke-linecap="round" d="M48 56V34"/><path ${VERDE} d="M47 52C44 40 36 34 24 34c2 11 10 18 23 18Z"/><path ${VERDE} d="M49 46c2-13 11-21 24-22-1 13-10 21-24 22Z"/><path ${VERDE} d="M48 36c-6-8-6-18 0-24 6 6 6 16 0 24Z"/><rect ${SCOCCA} x="28" y="56" width="40" height="9" rx="4"/><path ${SCOCCA} d="M32 63h32l-4 21H36Z"/><path ${TRATTO_CHIARO} d="M39 69l1.6 10"/>`,
+
+  /* L'acquario (#127): la vasca con l'acqua, la sabbia, due foglie e il pesce.
+   * Non è l'acqua di casa — quella è la goccia — ma la vasca che si guarda. */
+  aquarium: `${PANNELLO}<rect ${SCOCCA} x="12" y="20" width="72" height="56" rx="9"/><rect ${VETRO} x="18" y="30" width="60" height="40" rx="4"/><path ${TRATTO_CHIARO} d="M23 35h50"/><path ${SPENTO} d="M18 64h60v2a4 4 0 0 1-4 4H22a4 4 0 0 1-4-4Z"/><path ${VERDE} d="M27 65c-1-9 1-17 6-23-1 8-1 15 0 23Z"/><path ${VERDE} d="M33 65c1-7 4-12 9-15-3 5-4 10-4 15Z"/><path ${CALDO} d="M44 50c5-6 14-6 19 0-5 6-14 6-19 0Z"/><path ${CALDO} d="M63 50l7-5v10Z"/><circle ${SCOCCA} cx="49" cy="49" r="1.7"/><circle ${FRONTALE} cx="70" cy="43" r="2.2"/><circle ${FRONTALE} cx="66" cy="38.5" r="1.5"/><rect ${SCOCCA} x="20" y="76" width="56" height="8" rx="4"/>`,
+
   irrigation: `${PANNELLO}<rect ${SCOCCA} x="42" y="44" width="12" height="38" rx="5"/><rect ${SCOCCA} x="28" y="76" width="40" height="8" rx="4"/><path ${TRATTO_ACCENTO} d="M30 42c4-10 12-16 18-16s14 6 18 16"/><path ${VETRO} d="M24 30c3 4 4 6 4 8a4 4 0 0 1-8 0c0-2 1-4 4-8Z"/><path ${VETRO} d="M72 30c3 4 4 6 4 8a4 4 0 0 1-8 0c0-2 1-4 4-8Z"/><path ${VETRO} d="M48 14c3 4 4 6 4 8a4 4 0 0 1-8 0c0-2 1-4 4-8Z"/>`,
 
   sauna: `${PANNELLO}<rect ${SCOCCA} x="20" y="44" width="56" height="40" rx="10"/><circle ${SPENTO} cx="36" cy="56" r="6"/><circle ${SPENTO} cx="50" cy="53" r="7"/><circle ${SPENTO} cx="63" cy="57" r="6"/><rect ${ACCENTO} x="28" y="68" width="40" height="8" rx="4"/><path ${CALDO} d="M38 34c5-5 6-10 4-14 6 3 9 9 8 14 3-2 4-5 4-8 4 4 6 9 4 14H36z"/>`,
@@ -459,6 +477,20 @@ const ALIAS = Object.freeze({
   solare: "solar",
   batteria: "battery",
   pompa: "pump",
+  /* I contatori di casa: il contatore, il manometro, la fiamma del gas. */
+  contatore: "meter",
+  manometro: "gauge",
+  pressione: "gauge",
+  fiamma: "flame",
+  metano: "flame",
+  /* La pianta in vaso, come la chiama chi la cerca. */
+  pianta: "plant",
+  piante: "plant",
+  vaso: "plant",
+  /* L'acquario, come lo chiama chi lo cerca. */
+  acquario: "aquarium",
+  pesci: "aquarium",
+  pesce: "aquarium",
   irrigazione: "irrigation",
   ascensore: "lift",
   casa: "home",

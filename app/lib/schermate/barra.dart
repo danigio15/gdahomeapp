@@ -1041,53 +1041,64 @@ class _StatoDellaMattonella extends State<_Mattonella> {
     final scelta = widget.scelta;
     return Stack(
       children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(8, 12, 8, 10),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              /* Il disegno della sezione, lo stesso della plancia. Quella
+        /* `Positioned.fill` e non un figlio qualunque: dentro uno Stack un
+         * figlio non posizionato prende la sua larghezza **naturale** e viene
+         * appoggiato in alto a sinistra. Cosi' la colonna era larga quanto la
+         * scritta piu' lunga, e centrare dentro quella larghezza non centrava
+         * niente: «Plancia» e «Dispositivi» finivano a sinistra, e
+         * «Configurazione plancia» sembrava centrata solo perche' andando a
+         * capo era larga quasi quanto la mattonella. Riempiendola, il centro
+         * della colonna e' il centro della mattonella, e il disegno e la
+         * scritta ci stanno sopra. */
+        Positioned.fill(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(8, 12, 8, 10),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                /* Il disegno della sezione, lo stesso della plancia. Quella
                * che non si sta guardando lo tiene smorzato: il colore e'
                * l'unica cosa che dice «sei qui», e se ce l'hanno tutte non
                * lo dice nessuna. */
-              Oggetto(
-                sezione.disegno,
-                lato: 34,
-                quantoSpento: scelta ? 0 : 0.25,
-                velo: sezione.pronta ? 1 : 0.45,
-              ),
-              const SizedBox(height: 10),
-              Text(
-                sezione.titolo,
-                textAlign: TextAlign.center,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: 13,
-                  height: 1.15,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: -0.1,
-                  color: scritta,
+                Oggetto(
+                  sezione.disegno,
+                  lato: 34,
+                  quantoSpento: scelta ? 0 : 0.25,
+                  velo: sezione.pronta ? 1 : 0.45,
                 ),
-              ),
-              if (widget.plance case final c?) ...[
-                const SizedBox(height: 2),
+                const SizedBox(height: 10),
                 Text(
-                  _quale(c).titolo,
+                  sezione.titolo,
                   textAlign: TextAlign.center,
-                  maxLines: 1,
+                  maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    fontSize: 10.5,
-                    height: 1.1,
-                    fontWeight: FontWeight.w600,
-                    color: scelta
-                        ? colori.surface.withValues(alpha: 0.7)
-                        : colori.onSurfaceVariant,
+                    fontSize: 13,
+                    height: 1.15,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: -0.1,
+                    color: scritta,
                   ),
                 ),
+                if (widget.plance case final c?) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    _quale(c).titolo,
+                    textAlign: TextAlign.center,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 10.5,
+                      height: 1.1,
+                      fontWeight: FontWeight.w600,
+                      color: scelta
+                          ? colori.surface.withValues(alpha: 0.7)
+                          : colori.onSurfaceVariant,
+                    ),
+                  ),
+                ],
               ],
-            ],
+            ),
           ),
         ),
         if (widget.quanti > 0)

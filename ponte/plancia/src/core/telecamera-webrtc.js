@@ -14,13 +14,27 @@
  * video che non e' partito non si richiede ogni quattro secondi.
  */
 
+import { tipiDiFlusso } from "./strategie-telecamera.js";
+
 const pulito = (valore) => String(valore ?? "").trim();
 
-/** La strada che Home Assistant dichiara per questa telecamera. */
-export function tipoDiFlusso(stato = {}) {
-  const tipo = pulito(stato?.attributes?.frontend_stream_type).toLowerCase();
-  if (tipo === "web_rtc" || tipo === "webrtc") return "web_rtc";
-  if (tipo === "hls") return "hls";
+/**
+ * La strada che Home Assistant dichiara per questa telecamera.
+ *
+ * Leggeva il solo `frontend_stream_type`, che Home Assistant ha tolto dagli
+ * attributi nella 2025.6 (#164): da allora la tessera «dal vivo» non trovava
+ * mai una strada, e restava sul fotogramma — che per una Ring senza
+ * abbonamento non arriva nemmeno. Adesso la risposta e' la stessa del popup:
+ * le capacita' chieste a Home Assistant, poi l'attributo vecchio per chi ce
+ * l'ha ancora, poi il bit dei flussi. WebRTC prima, perche' dove c'e' e' la
+ * strada che Home Assistant stesso sceglie.
+ */
+export function tipoDiFlusso(stato = {}, capacita = null) {
+  const vecchio = pulito(stato?.attributes?.frontend_stream_type).toLowerCase();
+  if (!capacita && vecchio === "webrtc") return "web_rtc";
+  const tipi = tipiDiFlusso(stato || {}, capacita);
+  if (tipi.has("web_rtc")) return "web_rtc";
+  if (tipi.has("hls")) return "hls";
   return "";
 }
 
@@ -44,6 +58,11 @@ export function serverIce(risposta) {
     /* `getCandidatesUpfront`: alcuni server vogliono l'offerta gia' completa
      * dei candidati, senza trickle. Lo dice Home Assistant. */
     tuttiPrima: Boolean(risposta?.getCandidatesUpfront ?? configurazione.getCandidatesUpfront),
+    /* `dataChannel`: il canale dati che alcune integrazioni vogliono trovare
+     * nell'offerta (#164). Il lettore di Home Assistant lo apre quando c'e', e
+     * un'offerta senza e' un'offerta diversa da quella che l'integrazione ha
+     * provato. */
+    canaleDati: pulito(risposta?.dataChannel ?? configurazione.dataChannel),
   };
 }
 

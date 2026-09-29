@@ -1,5 +1,5 @@
-Your car now has the navigator. Say "Ok Google, take me to…" and it goes: map, lanes, the next turn and arrival time on the Android Auto cards, and the turn on the instrument cluster too. The voice ducks the music instead of talking over it.
+The navigator knows every charging station in Italy: the map shows which are free, busy or out of order, and the route picks free stops. The station card shows the prices, as the operator reports them. Lanes are back at junctions.
 
-The house stays one button away: what it is drawing, what the sun is making, who is home, your quick actions.
+In the dashboard: the Water and gas, Plants and Aquarium sections, a remote for the TV, quick actions in groups.
 
-Update gdahome in Home Assistant as well: what the car reads is left there by the dashboard, so you need both.
+Update gdahome in Home Assistant as well: the new sections come from there.

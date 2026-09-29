@@ -715,13 +715,19 @@ export function vistaAnimale(animale = {}, states = {}, adesso = 0) {
   }
   const soglie = suo.soglie;
   const avvisi = [];
-  const alza = (chiave, gravita) => avvisi.push({ chiave, gravita });
+  /* `campo` e' la casella da cui l'avviso e' nato. Serve a chi dall'avviso
+   * deve risalire all'ENTITA' — la tessera della Home ci apre lo storico
+   * (#145) — perche' le due chiavi non coincidono: l'avviso si chiama
+   * «cibo_scarso» e la casella «cibo_livello», e indovinare l'una dall'altra
+   * vorrebbe dire una seconda tabella da tenere in pari con questa. */
+  const alza = (chiave, gravita, campo) => avvisi.push({ chiave, gravita, campo });
 
   const cibo = letture.cibo_livello;
   if (sottoSoglia(cibo, soglie.cibo))
     alza(
       "cibo_scarso",
       cibo.valore !== null && cibo.valore <= soglie.cibo / 2 ? "urgente" : "attenzione",
+      "cibo_livello",
     );
 
   const acqua = letture.acqua_livello;
@@ -729,16 +735,19 @@ export function vistaAnimale(animale = {}, states = {}, adesso = 0) {
     alza(
       "acqua_scarsa",
       acqua.valore !== null && acqua.valore <= soglie.acqua / 2 ? "urgente" : "attenzione",
+      "acqua_livello",
     );
 
-  if (sottoSoglia(letture.acqua_filtro, soglie.filtro)) alza("filtro_finito", "attenzione");
+  if (sottoSoglia(letture.acqua_filtro, soglie.filtro))
+    alza("filtro_finito", "attenzione", "acqua_filtro");
 
   /* Il CASSETTO dei rifiuti e' l'unica quota che allarma da sopra: pieno e' il
    * guaio, vuoto e' come dev'essere. Vale solo quando l'entita' parla in
    * centesimi — un cassetto pesato in chili non ha un ottanta per cento. */
   const lettiera = letture.lettiera_riempimento;
   if (lettiera && !lettiera.muto && lettiera.unita === "%" && lettiera.valore !== null)
-    if (lettiera.valore >= soglie.lettiera) alza("lettiera_piena", "attenzione");
+    if (lettiera.valore >= soglie.lettiera)
+      alza("lettiera_piena", "attenzione", "lettiera_riempimento");
 
   /* La SABBIA invece resta, e allarma da sotto (#373): «se questa scende sotto
    * un valore stabilito dall'utente allora puo' mandare l'avviso che la
@@ -748,6 +757,7 @@ export function vistaAnimale(animale = {}, states = {}, adesso = 0) {
     alza(
       "sabbia_scarsa",
       sabbia.valore !== null && sabbia.valore <= soglie.sabbia / 2 ? "urgente" : "attenzione",
+      "lettiera_sabbia",
     );
 
   /* I consumabili contati in giorni: quando ne restano pochi si ordina il
@@ -758,23 +768,27 @@ export function vistaAnimale(animale = {}, states = {}, adesso = 0) {
   ]) {
     const voce = letture[chiave];
     if (!voce || voce.muto || voce.valore === null) continue;
-    if (voce.valore <= soglie.giorni) alza(avviso, voce.valore <= 0 ? "urgente" : "attenzione");
+    if (voce.valore <= soglie.giorni)
+      alza(avviso, voce.valore <= 0 ? "urgente" : "attenzione", chiave);
   }
 
   /* Il cestino della lettiera: «poterlo visualizzare sarebbe comodo per capire
    * quando sostituire il sacco». Un binary_sensor di guasto dice `on` quando
    * c'e' il problema, che e' la convenzione di Home Assistant. */
   const cestino = letture.lettiera_cestino;
-  if (cestino && !cestino.muto && cestino.acceso === true) alza("cestino_pieno", "attenzione");
+  if (cestino && !cestino.muto && cestino.acceso === true)
+    alza("cestino_pieno", "attenzione", "lettiera_cestino");
 
   const pulizia = letture.lettiera_ultima;
   if (pulizia && pulizia.minuti !== null && pulizia.minuti >= soglie.lettiera_ore * 60)
     alza(
       "lettiera_da_pulire",
       pulizia.minuti >= soglie.lettiera_ore * 120 ? "urgente" : "attenzione",
+      "lettiera_ultima",
     );
 
-  if (sottoSoglia(letture.collare_batteria, soglie.collare)) alza("collare_scarico", "attenzione");
+  if (sottoSoglia(letture.collare_batteria, soglie.collare))
+    alza("collare_scarico", "attenzione", "collare_batteria");
 
   const porta = letture.porta;
   return {

@@ -178,7 +178,9 @@ function parolaCasella(chiave) {
   }
 }
 
-function parolaAvviso(chiave) {
+/* Le parole degli avvisi le legge anche la tessera della Home (#145): sono
+ * le stesse di qui, e scritte due volte una delle due resterebbe indietro. */
+export function parolaAvviso(chiave) {
   switch (chiave) {
     case "cibo_scarso":
       return t("Cibo in esaurimento", "Food running low");
@@ -280,7 +282,7 @@ function quantoFa(minuti) {
 }
 
 /** Il testo di una lettura: la parola giusta per la forma che quella ha. */
-function testoLettura(voce) {
+export function testoLettura(voce) {
   /* Il trattino non e' una parola: non passa da `t()`, che vuole due lingue
    * diverse e un catalogo che le tenga. */
   if (!voce || voce.muto) return "—";

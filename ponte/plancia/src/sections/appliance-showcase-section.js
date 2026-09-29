@@ -27,8 +27,17 @@ import {
   formatPowerLabel,
   remainingInfo,
 } from "../core/appliance-card-view-model.js";
-import { createApplianceViewModel } from "../core/appliance-view-model.js";
+import { createApplianceViewModel, letturaDelloStato } from "../core/appliance-view-model.js";
 import { createCycleTracker } from "../core/appliance-cycle-tracker.js";
+import {
+  avvioDallaStoria,
+  daiWatt,
+  dalleParole,
+  dallInterruttore,
+  domandaDellAvvio,
+  finestraDellAvvio,
+  righeDellaStoria,
+} from "../core/quando-e-partito.js";
 import { scheduleApplianceNormalization } from "./appliances-section.js";
 import { iconGlyphMarkup } from "./icon-engine-section.js";
 import { roomOrderRank } from "../core/room-overview.js";
@@ -59,6 +68,10 @@ const state = (root[KEY] ||= {
   installed: false,
   listeners: false,
   tracker: null,
+  /* Di quali cicli si e' gia' chiesto l'avvio alla casa (#143): apparecchio →
+   * l'avvio supposto del ciclo di cui si e' chiesto. Un ciclo, una domanda:
+   * un ciclo nuovo ne fa un'altra, uno gia' chiesto non ne fa piu'. */
+  avviiChiesti: new Map(),
   signature: "",
   spark: [],
   sparkTs: 0,
@@ -223,24 +236,94 @@ export function campionaICicli() {
   const locale = activeLocale();
   const now = Date.now();
   const cycles = tracker();
+  const letti = list.map((device, index) => ({
+    id: deviceKey(device, index),
+    model: createApplianceViewModel(device, states, [], locale),
+    device,
+  }));
   cycles.update(
-    list.map((device, index) => {
-      const model = createApplianceViewModel(device, states, [], locale);
-      const key = deviceKey(device, index);
-      return {
-        id: key,
-        mode: model.mode,
-        watts: model.watts,
-        /* Da quando e' in funzione, quando la casa lo sa: e' l'avvio vero del
-         * ciclo, e senza di lui il contatore puo' solo dire «da quando
-         * guardo» (#65). */
-        iniziatoIl: model.iniziatoIl,
-        dailyKwh: dailyEnergyKwh(device, states),
-        remainingSeconds: remainingInfo(device, states, now, cycles.record(key))?.seconds,
-      };
-    }),
+    letti.map(({ id, model, device }) => ({
+      id,
+      mode: model.mode,
+      watts: model.watts,
+      /* Da quando e' in funzione, quando la casa lo sa: e' l'avvio vero del
+       * ciclo, e senza di lui il contatore puo' solo dire «da quando
+       * guardo» (#65). */
+      iniziatoIl: model.iniziatoIl,
+      dailyKwh: dailyEnergyKwh(device, states),
+      remainingSeconds: remainingInfo(device, states, now, cycles.record(id))?.seconds,
+    })),
   );
+  /* E per quelli trovati gia' in giro, l'ora vera si va a cercare (#143). Non
+   * si aspetta: la risposta arriva quando arriva, e intanto la card mostra la
+   * supposizione, che e' segnata come tale. */
+  cercaGliAvviiIncerti(letti, cycles, now);
   return true;
+}
+
+/* Quanto si aspetta la storia di un'entita' sola su un giorno: e' la domanda
+ * piu' leggera che si possa fare al Recorder, ed e' in sottofondo. */
+const ATTESA_DELLA_STORIA = 12000;
+
+/** La regola del «sta lavorando», nella forma che la storia sa leggere. */
+export function inFunzioneSecondo(regola) {
+  if (!regola?.entita) return null;
+  if (regola.come === "acceso") return dallInterruttore();
+  if (regola.come === "parole") return dalleParole(letturaDelloStato);
+  if (regola.come === "watt") return daiWatt(regola.soglia, regola.fattore);
+  return null;
+}
+
+/**
+ * L'avvio vero dei cicli che si sono trovati gia' in giro (#143).
+ *
+ * «Quando guardo la sezione elettrodomestici segna inizio ciclo anche se e'
+ *  gia' iniziato da 1 ora.»
+ *
+ * Il contatore dei cicli sa distinguere «l'ho visto partire» da «l'ho trovato
+ * gia' partito», e nel secondo caso segna l'avvio come supposto — ma l'ora
+ * resta quella in cui si e' guardato, che e' onesta e non serve a niente. La
+ * casa pero' l'ora vera ce l'ha: Home Assistant registra ogni cambio di
+ * stato, e la storia di quell'entita' dice quando quella macchina si e' messa
+ * in funzione.
+ *
+ * Si chiede una volta per ciclo, e solo per i cicli il cui avvio e' una
+ * supposizione: un apparecchio visto partire non fa nessuna domanda. Senza
+ * Recorder, o se la domanda non torna, non cambia niente — resta la
+ * supposizione di prima, scritta come tale.
+ */
+async function cercaGliAvviiIncerti(letti, cycles, adesso) {
+  const broker = root.DashboardModernEnergyService?.broker;
+  if (!broker?.request) return;
+  for (const { id, model } of letti) {
+    const active = cycles.record(id)?.active;
+    if (!active?.avvioIncerto) {
+      /* Il ciclo e' finito, o l'avvio non e' piu' una supposizione: la
+       * prossima volta che serve si ricomincia da capo. */
+      state.avviiChiesti.delete(id);
+      continue;
+    }
+    if (state.avviiChiesti.get(id) === active.startMs) continue;
+    state.avviiChiesti.set(id, active.startMs);
+    const regola = model.comeSiSaCheLavora;
+    const inFunzione = inFunzioneSecondo(regola);
+    if (!inFunzione) continue;
+    try {
+      const risposta = await broker.request(
+        domandaDellAvvio(regola.entita, adesso),
+        ATTESA_DELLA_STORIA,
+      );
+      const trovato = avvioDallaStoria(righeDellaStoria(risposta, regola.entita), {
+        inFunzione,
+        adesso,
+        da: finestraDellAvvio(adesso).da,
+      });
+      if (trovato) cycles.correggiLAvvio(id, trovato.quando, { certo: trovato.certo });
+    } catch (_errore) {
+      /* Niente storico — Recorder spento, domanda scaduta, casa lontana. Non
+       * e' un guasto: e' il caso in cui non si sa, ed e' gia' raccontato. */
+    }
+  }
 }
 
 function deviceKey(device, index) {

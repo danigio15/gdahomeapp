@@ -233,6 +233,31 @@ const PAGES = Object.freeze([
     it: ["Batterie", "Cariche · Scariche · Chi non risponde"],
     en: ["Batteries", "Charged · Low · Not reporting"],
   },
+  /* Acqua e gas, dalle segnalazioni #115, #135 e #137. Il nome non dice
+   * «Contatori» perché in Energia i contatori sono già quelli della corrente:
+   * due voci con lo stesso nome mandano a cercare nel posto sbagliato. */
+  {
+    id: "page-contatori",
+    tint: ["14,165,233", "234,88,12"],
+    it: ["Acqua e gas", "Contatori · Oggi e il mese"],
+    en: ["Water and gas", "Meters · Today and this month"],
+  },
+  /* Le piante, dalla segnalazione #159: la terra di ogni pianta, e quando
+   * innaffiarla. */
+  {
+    id: "page-piante",
+    tint: ["22,163,74", "14,165,233"],
+    it: ["Piante", "Terra · Quando innaffiare"],
+    en: ["Plant care", "Soil · When to water"],
+  },
+  /* L'acquario, dalla segnalazione #127: la vasca, le sue luci e il cambio
+   * d'acqua. */
+  {
+    id: "page-acquario",
+    tint: ["14,165,233", "16,185,129"],
+    it: ["Acquario", "Acqua · Luci · Cambio"],
+    en: ["Aquarium", "Water · Lights · Change"],
+  },
   /* Il calendario (#259) nasce con la sua pagina, e l'intestazione nasce con
    * lei: gli impegni di oggi e dei giorni che vengono. */
   {
