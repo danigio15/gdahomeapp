@@ -15,9 +15,12 @@
 /// che ha sempre fatto. I lucchetti si accendono insieme alla chiave, non
 /// prima: cosi' una build di oggi e le prove di oggi restano quelle.
 ///
-/// **Prima l'iPhone** ([licenzeSoloSullIPhone]): con la chiave scritta, i
-/// lucchetti e il negozio ci sono solo nell'app per iPhone. Su Android e nel
-/// browser la stessa app resta aperta come prima, e non chiede niente.
+/// **Con la chiave, i lucchetti valgono dappertutto**: nell'app per iPhone,
+/// in quella per Android e nel browser, con gli stessi limiti di Base.
+/// Premium si compra solo dall'app per iPhone (`negozio.dart`), e da li' vale
+/// per tutta la casa. Una casa col suo add-on vecchio resta Base finche' non
+/// lo aggiorna: li' Premium non si puo' comprare, e la pagina lo dice
+/// ([ComeStaLaLicenza.casaSenzaLicenze]).
 ///
 /// Niente schermi qui dentro: le schermate chiedono [GestoreLicenza.premium]
 /// e decidono loro cosa disegnare.
@@ -51,18 +54,9 @@ bool? get _forzatoDiSerie {
   };
 }
 
-/// Se le licenze contano in questa app, su questo telefono.
-///
-/// Serve la chiave; e prima dell'iPhone ([licenzeSoloSullIPhone]) serve anche
-/// essere l'app per iPhone. Nel browser mai, prima dell'iPhone: anche aperto
-/// da un iPhone, il browser non e' l'app del negozio.
-bool get licenzeInQuestaApp =>
-    chiavePubblicaLicenze.isNotEmpty && contanoQui(licenzeSoloSullIPhone);
-
-/// Se, con la chiave scritta, le licenze contano qui: sempre, o solo
-/// nell'app per iPhone.
-bool contanoQui(bool soloSullIPhone) =>
-    !soloSullIPhone || (!kIsWeb && defaultTargetPlatform == TargetPlatform.iOS);
+/// Se le licenze contano in questa app: da quando c'e' la chiave, su ogni
+/// telefono e nel browser.
+bool get licenzeInQuestaApp => chiavePubblicaLicenze.isNotEmpty;
 
 /// Come sta la licenza di una casa, per chi la deve scrivere a schermo.
 enum ComeStaLaLicenza {
@@ -74,8 +68,9 @@ enum ComeStaLaLicenza {
   maiChiesto,
 
   /// La casa ha detto che le licenze non le sa tenere: il suo add-on e' di
-  /// prima delle licenze, o le ha spente. Li' Premium non si puo' comprare,
-  /// e allora non c'e' nemmeno il lucchetto (`CasaConosciuta.senzaLicenze`).
+  /// prima delle licenze, o le ha spente. Li' Premium non si puo' comprare
+  /// finche' l'add-on non si aggiorna, e intanto la casa e' Base
+  /// (`CasaConosciuta.senzaLicenze`).
   casaSenzaLicenze,
 
   /// Chiesto, e la casa non ha un gettone che valga.
@@ -87,30 +82,18 @@ enum ComeStaLaLicenza {
 
 class GestoreLicenza extends ChangeNotifier {
   /// [chiave] si passa nelle prove (la coppia di prova del contratto); di
-  /// solito e' [chiavePubblicaLicenze]. [qui] dice se le licenze contano su
-  /// questo telefono: di solito lo decide [contanoQui], e le prove lo
-  /// passano per fare l'iPhone e l'Android. [forza] mette tutte le case
-  /// Premium (`true`) o tutte Base (`false`), e vince sulla chiave: serve
-  /// alle prove e alle fotografie.
-  GestoreLicenza({
-    String? chiave,
-    bool? qui,
-    bool? forza,
-    DateTime Function()? orologio,
-  }) : chiave = chiave ?? chiavePubblicaLicenze,
-       qui = qui ?? contanoQui(licenzeSoloSullIPhone),
-       _forza = forza ?? _forzatoDiSerie,
-       _orologio = orologio ?? DateTime.now {
+  /// solito e' [chiavePubblicaLicenze]. [forza] mette tutte le case Premium
+  /// (`true`) o tutte Base (`false`), e vince sulla chiave: serve alle prove
+  /// e alle fotografie.
+  GestoreLicenza({String? chiave, bool? forza, DateTime Function()? orologio})
+    : chiave = chiave ?? chiavePubblicaLicenze,
+      _forza = forza ?? _forzatoDiSerie,
+      _orologio = orologio ?? DateTime.now {
     premiumQui = ValueNotifier<bool>(_calcolaPremium());
   }
 
   /// La chiave pubblica con cui si controllano i gettoni.
   final String chiave;
-
-  /// Se le licenze contano su questo telefono. Prima dell'iPhone, su Android
-  /// e nel browser no: la chiave c'e', ma qui non si chiede e non si chiude
-  /// niente.
-  final bool qui;
   final DateTime Function() _orologio;
 
   bool? _forza;
@@ -129,10 +112,12 @@ class GestoreLicenza extends ChangeNotifier {
   /// quando Premium e' forzato a `false`, che e' il modo di vederli senza la
   /// chiave.
   bool get controlliAccesi =>
-      _forza == false || (_forza == null && chiave.isNotEmpty && qui);
+      _forza == false || (_forza == null && chiave.isNotEmpty);
 
   /// Se c'e' qualcosa da comprare: la pagina Premium ha senso solo cosi'.
-  bool get siVende => (chiave.isNotEmpty && qui) || _forza != null;
+  /// Anche dove non si compra — Android, il browser — perche' li' la pagina
+  /// dice come si ha Premium, e il codice regalo si riscatta da li'.
+  bool get siVende => chiave.isNotEmpty || _forza != null;
 
   /// Se c'e' una ricevuta del negozio che non e' ancora arrivata alla casa.
   ///
@@ -215,13 +200,13 @@ class GestoreLicenza extends ChangeNotifier {
     return ComeStaLaLicenza.base;
   }
 
-  /// Se questa casa e' Premium. Con i controlli spenti, si'; e si' anche in
-  /// una casa che le licenze non le sa tenere, dove non si puo' comprare.
+  /// Se questa casa e' Premium: coi controlli spenti si', se no solo con un
+  /// gettone che vale. Una casa che le licenze non le sa tenere e' Base
+  /// finche' non si aggiorna l'add-on.
   bool premiumDi(CasaConosciuta? casa) {
     if (_forza != null) return _forza!;
     if (!controlliAccesi) return true;
-    if (gettoneDi(casa) != null) return true;
-    return comeSta(casa) == ComeStaLaLicenza.casaSenzaLicenze;
+    return gettoneDi(casa) != null;
   }
 
   /// Se la casa in uso e' Premium.
@@ -259,19 +244,19 @@ class GestoreLicenza extends ChangeNotifier {
   /// Chiede alla casa il suo gettone, lo ricorda nell'archivio e lo controlla.
   ///
   /// Torna `true` se la casa ha risposto. Con la chiave vuota non si chiede
-  /// nemmeno: nessun gettone varrebbe; e nemmeno dove le licenze non contano.
+  /// nemmeno: nessun gettone varrebbe.
   ///
   /// Una casa che le licenze non le sa tenere lo dice in due modi: un add-on
   /// di prima non conosce il comando, uno con le licenze spente risponde
   /// `attive: false`. Tutti e due si ricordano come
-  /// [ComeStaLaLicenza.casaSenzaLicenze]: li' Premium non si puo' comprare, e
-  /// il lucchetto non si mette.
+  /// [ComeStaLaLicenza.casaSenzaLicenze]: li' Premium non si puo' comprare, la
+  /// casa resta Base, e la pagina Premium dice di aggiornare l'add-on.
   Future<bool> chiedi(
     Filo filo,
     CasaConosciuta casa,
     ArchivioDelleCase archivio,
   ) async {
-    if (chiave.isEmpty || !qui) return false;
+    if (chiave.isEmpty) return false;
     final Object? detto;
     try {
       detto = await filo.risultato({'type': 'ponte/licenza/stato'});

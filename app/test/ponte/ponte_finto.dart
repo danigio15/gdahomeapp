@@ -87,6 +87,11 @@ class PonteFinto {
   /// e' attaccata. Da fuori e' identico a un ponte vero che chiude in faccia.
   String? chiudeSubitoDicendo;
 
+  /// Il numero con cui chiude, insieme a [chiudeSubitoDicendo]. Il centralino
+  /// chiude con `4402` il telefono di una casa Base e con `4426` quello di una
+  /// casa dall'add-on vecchio. `null`: la chiusura normale.
+  int? chiudeSubitoColNumero;
+
   /// La versione minima dell'app, come la sa l'add-on dal centralino
   /// (`ponte/src/versione-minima.js`). Zero: entrano tutti.
   int versioneMinima = 0;
@@ -113,7 +118,10 @@ class PonteFinto {
       collegamenti += 1;
       final perche = chiudeSubitoDicendo;
       if (perche != null) {
-        await presa.close(WebSocketStatus.normalClosure, perche);
+        await presa.close(
+          chiudeSubitoColNumero ?? WebSocketStatus.normalClosure,
+          perche,
+        );
         continue;
       }
       final telefono = TelefonoCollegato(this, presa);

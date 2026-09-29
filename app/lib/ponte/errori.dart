@@ -103,6 +103,17 @@ class PremiumRichiesto extends ErroreDelPonte {
   const PremiumRichiesto(super.spiegazione);
 }
 
+/// La strada da fuori casa e' chiusa perche' l'add-on della casa e' vecchio.
+///
+/// La dice il centralino (`4426 aggiorna-add-on`): quell'add-on la licenza
+/// non la sa dire, e li' Premium non si puo' nemmeno comprare. E' un
+/// [PremiumRichiesto] per tutto il resto — da fuori non si entra, in casa si'
+/// — ma chi lo riceve si ricorda la casa come «senza licenze», e la schermata
+/// dice di aggiornare l'add-on invece di proporre l'acquisto.
+class AddonDaAggiornare extends PremiumRichiesto {
+  const AddonDaAggiornare(super.spiegazione);
+}
+
 /// Il filo si e' chiuso mentre si aspettava una risposta.
 class FiloCaduto extends ErroreDelPonte {
   const FiloCaduto(super.spiegazione);

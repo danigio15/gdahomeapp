@@ -26,6 +26,7 @@ import 'package:webview_flutter/webview_flutter.dart';
 import '../auto/qui.dart' as auto;
 import '../casa/collegamento.dart';
 import '../casa/impostazioni.dart';
+import '../licenza/licenza.dart' show ComeStaLaLicenza;
 import '../parole.dart';
 import '../plancia/servitore_qui/qui.dart';
 import '../ponte/filo.dart';
@@ -401,6 +402,52 @@ class PlanciaVeraState extends State<PlanciaVera> {
                     'Pair your home again with a new QR code, from the '
                     'gdahome page in Home Assistant.',
               ),
+        );
+      case ComeVa.irraggiungibile
+          when collegamento.fuoriCasaSenzaPremium &&
+              collegamento.licenza.comeSta(collegamento.casa) ==
+                  ComeStaLaLicenza.casaSenzaLicenze:
+        return _Stato(
+          collegamento: collegamento,
+          vaiAlleCase: widget.vaiAlleCase,
+          icona: Icons.system_update_alt_rounded,
+          titolo: inLingua(
+            it: 'Aggiorna l\'add-on gdahome',
+            en: 'Update the gdahome add-on',
+          ),
+          sotto: inLingua(
+            it:
+                'Per entrare da fuori casa serve gdahome Premium, ma l\'add-on '
+                'di «${collegamento.casa?.nome ?? 'casa'}» è una versione '
+                'vecchia che non lo supporta. Aggiornalo in Home Assistant. '
+                'Quando sei connesso al Wi-Fi di casa, l\'app funziona come '
+                'sempre.',
+            en:
+                'To get in from away you need gdahome Premium, but the add-on '
+                'of “${collegamento.casa?.nome ?? 'home'}” is an old version '
+                'that doesn\'t support it. Update it in Home Assistant. On '
+                'your home Wi-Fi the app works as always.',
+          ),
+          azione: FilledButton.icon(
+            onPressed: () => unawaited(
+              apriLaPaginaPremium(
+                context,
+                collegamento,
+                perche: PerchePremium.fuoriCasa,
+              ),
+            ),
+            style: FilledButton.styleFrom(
+              minimumSize: const Size(0, 48),
+              padding: const EdgeInsets.symmetric(horizontal: 22),
+            ),
+            icon: const Icon(Icons.star_rounded),
+            label: Text(
+              inLingua(
+                it: 'Scopri gdahome Premium',
+                en: 'Discover gdahome Premium',
+              ),
+            ),
+          ),
         );
       case ComeVa.irraggiungibile when collegamento.fuoriCasaSenzaPremium:
         /* Non e' un guasto: la casa c'e', e da fuori ci si arriva con

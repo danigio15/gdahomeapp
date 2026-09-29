@@ -292,7 +292,9 @@ class GestoreDegliAcquisti extends ChangeNotifier {
    * ([riprova]), e restano aperti nel negozio finche' non arrivano. */
   final List<PurchaseDetails> _inSospeso = [];
 
-  /// Se c'e' una ricevuta che aspetta la casa.
+  /// Se c'e' una ricevuta che aspetta la casa: pagato, e la casa non l'ha
+  /// ancora avuta. La pagina Premium lo dice al posto del bottone per
+  /// comprare, cosi' nessuno paga due volte.
   bool get ceUnaRicevutaInSospeso => _inSospeso.isNotEmpty;
 
   /// La casa e' di nuovo collegata: si portano le ricevute rimaste indietro.
@@ -304,6 +306,7 @@ class GestoreDegliAcquisti extends ChangeNotifier {
       for (final acquisto in List.of(_inSospeso)) {
         if (!await _portaAllaCasa(n, acquisto, zitto: true)) continue;
         _inSospeso.remove(acquisto);
+        notifyListeners();
         if (acquisto.pendingCompletePurchase) {
           try {
             await n.completa(acquisto);
@@ -411,7 +414,10 @@ class GestoreDegliAcquisti extends ChangeNotifier {
       switch (acquisto.status) {
         case PurchaseStatus.purchased || PurchaseStatus.restored:
           final arrivata = await _portaAllaCasa(n, acquisto);
-          if (!arrivata) _inSospeso.add(acquisto);
+          if (!arrivata) {
+            _inSospeso.add(acquisto);
+            notifyListeners();
+          }
           chiudi = arrivata && chiudi;
         case PurchaseStatus.error:
           _male(
@@ -464,13 +470,23 @@ class GestoreDegliAcquisti extends ChangeNotifier {
       inCorso = false;
       errore = null;
       fatto = inLingua(
-        it: 'Fatto: la casa è Premium.',
-        en: 'Done: your home is Premium.',
+        it: 'Fatto: ora la casa è Premium.',
+        en: 'Done: your home is now Premium.',
       );
       notifyListeners();
       return true;
     } on LicenzaRifiutata catch (no) {
-      if (!zitto) _male(no.spiegazione);
+      /* Un no di chi decide — il negozio che non conferma — si dice in rosso.
+       * Uno della strada no: il pagamento c'e', la ricevuta resta in sospeso
+       * e arriva da sola quando la casa risponde. La pagina lo dice senza
+       * allarmare ([ceUnaRicevutaInSospeso]). */
+      if (no.definitiva) {
+        if (!zitto) _male(no.spiegazione);
+      } else if (!zitto) {
+        inCorso = false;
+        errore = null;
+        notifyListeners();
+      }
       return no.definitiva;
     } catch (e) {
       if (!zitto) _male('$e');

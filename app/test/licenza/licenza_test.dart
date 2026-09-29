@@ -7,7 +7,6 @@ library;
 
 import 'dart:convert';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gdahome/casa/archivio_delle_case.dart';
 import 'package:gdahome/casa/casa_conosciuta.dart';
@@ -53,49 +52,31 @@ void main() {
       );
     });
 
-    test('prima dell\'iPhone, dove non contano non si chiude niente', () async {
-      /* La chiave c'e', ma questo telefono non e' l'app per iPhone: niente
-       * lucchetti, niente negozio, e Base non vuol dire niente. */
-      final licenza = GestoreLicenza(chiave: chiaveDiProva, qui: false);
-      await licenza.conosci([unaCasa('a', gettone: '')]);
-      licenza.inUso('a');
-      expect(licenza.controlliAccesi, isFalse);
-      expect(licenza.siVende, isFalse);
-      expect(licenza.premium, isTrue);
-      expect(licenza.premiumQui.value, isTrue);
-      expect(licenza.stradeDaFuoriPer(unaCasa('a', gettone: '')), isTrue);
-      expect(
-        licenza.comeSta(unaCasa('a', gettone: '')),
-        ComeStaLaLicenza.senzaControlli,
-      );
-    });
-
-    test('contano sempre, o solo nell\'app per iPhone', () {
-      addTearDown(() => debugDefaultTargetPlatformOverride = null);
-      expect(contanoQui(false), isTrue);
-      debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
-      expect(contanoQui(true), isTrue);
-      debugDefaultTargetPlatformOverride = TargetPlatform.android;
-      expect(contanoQui(true), isFalse);
-      /* Di serie la chiave e' vuota: in questa app oggi non contano. */
+    test('di serie la chiave è vuota, e in questa app non contano', () {
+      /* Con la chiave contano dappertutto: l'app per iPhone, quella per
+       * Android e il browser hanno gli stessi limiti di Base. */
       expect(licenzeInQuestaApp, isFalse);
     });
 
-    test('una casa che le licenze non le sa tenere resta aperta', () async {
-      /* Il suo add-on e' di prima, o le ha spente: li' Premium non si puo'
-       * comprare, e un lucchetto senza una chiave da comprare non si mette. */
-      final licenza = GestoreLicenza(chiave: chiaveDiProva);
-      final senza = unaCasa('a').con(senzaLicenze: true);
-      final base = unaCasa('b', gettone: '');
-      await licenza.conosci([senza, base]);
-      licenza.inUso('a');
-      expect(licenza.comeSta(senza), ComeStaLaLicenza.casaSenzaLicenze);
-      expect(licenza.premium, isTrue);
-      expect(licenza.stradeDaFuoriPer(senza), isTrue);
-      /* Le altre restano quello che sono. */
-      expect(licenza.premiumDi(base), isFalse);
-      expect(licenza.stradeDaFuoriPer(base), isFalse);
-    });
+    test(
+      'una casa con l\'add-on vecchio è Base finché non lo aggiorna',
+      () async {
+        /* Il suo add-on e' di prima, o le ha spente: li' Premium non si puo'
+       * comprare, e la pagina Premium dice di aggiornare l'add-on. Intanto la
+       * casa e' Base come le altre, e da fuori non si entra. */
+        final licenza = GestoreLicenza(chiave: chiaveDiProva);
+        final senza = unaCasa('a').con(senzaLicenze: true);
+        final base = unaCasa('b', gettone: '');
+        await licenza.conosci([senza, base]);
+        licenza.inUso('a');
+        expect(licenza.comeSta(senza), ComeStaLaLicenza.casaSenzaLicenze);
+        expect(licenza.premium, isFalse);
+        expect(licenza.stradeDaFuoriPer(senza), isFalse);
+        /* Le altre restano quello che sono. */
+        expect(licenza.premiumDi(base), isFalse);
+        expect(licenza.stradeDaFuoriPer(base), isFalse);
+      },
+    );
 
     test(
       'con una ricevuta da portare, da fuori si passa anche da Base',
@@ -346,29 +327,6 @@ void main() {
       expect(collegamento.licenza.premium, isTrue);
     });
 
-    test('prima dell\'iPhone, sull\'Android alla casa non si chiede', () async {
-      ponte.licenza = {'gettoni': <String, String>{}};
-      await archivio.aggiungi(
-        nome: 'Casa',
-        segno: segnoBuono,
-        identificativo: chiBuono,
-        chiave: chiaveBuona,
-        inCasa: ponte.indirizzo,
-      );
-      collegamento = Collegamento(
-        archivio: archivio,
-        sonda: sondaChe({ponte.indirizzo}),
-        licenza: GestoreLicenza(chiave: chiaveDiProva, qui: false),
-      );
-      await collegamento.apri();
-      await Future<void>.delayed(const Duration(milliseconds: 200));
-      expect(
-        ponte.chieste.where((una) => una['type'] == 'ponte/licenza/stato'),
-        isEmpty,
-      );
-      expect(collegamento.licenza.premium, isTrue);
-    });
-
     for (final (come, risponde) in [
       ('un add-on di prima delle licenze', null),
       (
@@ -376,13 +334,46 @@ void main() {
         <String, dynamic>{'attive': false, 'gettoni': <String, String>{}},
       ),
     ]) {
-      test('$come: si ricorda, e la casa non si chiude', () async {
-        ponte.licenza = risponde;
+      test(
+        '$come: si ricorda, e la casa è Base finché non si aggiorna',
+        () async {
+          ponte.licenza = risponde;
+          final casa = await archivio.aggiungi(
+            nome: 'Casa',
+            segno: segnoBuono,
+            identificativo: chiBuono,
+            chiave: chiaveBuona,
+            inCasa: ponte.indirizzo,
+          );
+          collegamento = Collegamento(
+            archivio: archivio,
+            sonda: sondaChe({ponte.indirizzo}),
+            licenza: GestoreLicenza(chiave: chiaveDiProva),
+          );
+          await collegamento.apri();
+          await aspetta(() => archivio.quella(casa.id)!.senzaLicenze);
+          expect(archivio.quella(casa.id)!.senzaLicenze, isTrue);
+          expect(collegamento.licenza.premium, isFalse);
+          expect(
+            collegamento.licenza.comeSta(archivio.quella(casa.id)),
+            ComeStaLaLicenza.casaSenzaLicenze,
+          );
+        },
+      );
+    }
+
+    test(
+      '«controlla di nuovo»: aggiornato l\'add-on, la casa lo dice',
+      () async {
+        /* La casa ha l'add-on vecchio: si ricorda, ed e' Base. Poi l'add-on si
+       * aggiorna, e il tasto della pagina Premium lo deve vedere subito. */
+        ponte.licenza = null;
         final casa = await archivio.aggiungi(
           nome: 'Casa',
           segno: segnoBuono,
           identificativo: chiBuono,
           chiave: chiaveBuona,
+          casaAlCentralino: casaDiProva,
           inCasa: ponte.indirizzo,
         );
         collegamento = Collegamento(
@@ -392,14 +383,42 @@ void main() {
         );
         await collegamento.apri();
         await aspetta(() => archivio.quella(casa.id)!.senzaLicenze);
-        expect(archivio.quella(casa.id)!.senzaLicenze, isTrue);
-        expect(collegamento.licenza.premium, isTrue);
         expect(
           collegamento.licenza.comeSta(archivio.quella(casa.id)),
           ComeStaLaLicenza.casaSenzaLicenze,
         );
-      });
-    }
+
+        ponte.licenza = {
+          'gettoni': {'gdahome': await firmaUnGettone()},
+        };
+        expect(await collegamento.ricontrollaLaLicenza(), isTrue);
+        expect(archivio.quella(casa.id)!.senzaLicenze, isFalse);
+        expect(collegamento.licenza.premium, isTrue);
+      },
+    );
+
+    test(
+      '«controlla di nuovo» con la casa che non si raggiunge dice di no',
+      () async {
+        final casa = await archivio.aggiungi(
+          nome: 'Casa',
+          segno: segnoBuono,
+          identificativo: chiBuono,
+          chiave: chiaveBuona,
+          inCasa: IndirizzoDelPonte.leggi('192.168.1.50')!,
+        );
+        await archivio.segnaSenzaLicenze(casa.id);
+        collegamento = Collegamento(
+          archivio: archivio,
+          /* Nessuno risponde: la casa e' spenta, o si e' fuori. */
+          sonda: sondaChe({}),
+          licenza: GestoreLicenza(chiave: chiaveDiProva),
+        );
+        await collegamento.apri();
+        expect(await collegamento.ricontrollaLaLicenza(), isFalse);
+        expect(archivio.quella(casa.id)!.senzaLicenze, isTrue);
+      },
+    );
 
     test('una ricevuta comprata fuori casa, con Base, apre la strada del '
         'centralino', () async {

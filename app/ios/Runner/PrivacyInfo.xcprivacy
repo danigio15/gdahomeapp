@@ -50,6 +50,22 @@
 				<string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
 			</array>
 		</dict>
+		<!-- Chi compra Premium: la ricevuta dell'App Store va alla casa e da li'
+		     al quadro, che la controlla con Apple e tiene l'identificativo
+		     dell'acquisto per sapere se si e' rinnovato. Della casa, non di una
+		     persona: nome e carta li tiene Apple. -->
+		<dict>
+			<key>NSPrivacyCollectedDataType</key>
+			<string>NSPrivacyCollectedDataTypePurchaseHistory</string>
+			<key>NSPrivacyCollectedDataTypeLinked</key>
+			<false/>
+			<key>NSPrivacyCollectedDataTypeTracking</key>
+			<false/>
+			<key>NSPrivacyCollectedDataTypePurposes</key>
+			<array>
+				<string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
+			</array>
+		</dict>
 		<!-- Qualche riga su come sta l'app, dentro una segnalazione. -->
 		<dict>
 			<key>NSPrivacyCollectedDataType</key>

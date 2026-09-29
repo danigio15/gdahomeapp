@@ -6,9 +6,9 @@
 ///
 /// La pagina e' fatta come quella di gdanav, riga per riga: il nome, una
 /// riga, cosa comprende, cosa resta gratis, i due piani da scegliere, un
-/// solo bottone, la nota del rinnovo, «Ripristina abbonamento», «Ho un
-/// codice regalo», Privacy e Condizioni d'uso. Cambiano i colori, che sono
-/// quelli di gdahome, e le parole.
+/// solo bottone, la nota del rinnovo, Termini d'uso e Privacy, «Ripristina
+/// abbonamento», «Ho un codice regalo». Cambiano i colori, che sono quelli
+/// di gdahome, e le parole.
 ///
 /// Premium e' **della casa**: si compra per la casa aperta, e tutti i
 /// telefoni abbinati a lei — e la webapp — lo diventano insieme. Sul web non
@@ -96,6 +96,7 @@ class SchermataPremium extends StatefulWidget {
     this.perche,
     this.sulWeb = kIsWeb,
     this.codiceRegalo,
+    this.siCompraQui,
   });
 
   final Collegamento collegamento;
@@ -118,6 +119,9 @@ class SchermataPremium extends StatefulWidget {
   /// casa. `null` vuol dire «come vuole questo telefono»; le prove lo dicono.
   final bool? codiceRegalo;
 
+  /// Se su questo telefono Premium si compra: solo nell'app per iPhone.
+  final bool? siCompraQui;
+
   /// L'informativa sulla privacy, sul sito.
   static const privacy = 'https://gdahome.org/privacy.html';
 
@@ -138,6 +142,10 @@ class _SchermataPremiumState extends State<SchermataPremium> {
 
   /// Il piano scelto: l'annuale, finche' non si tocca l'altro.
   var _scelto = pianoAnnuale;
+
+  /// Mentre si richiede alla casa come sta la licenza («Controlla di nuovo»,
+  /// «Riprova»): il tasto gira, e non lo si preme due volte.
+  var _controllo = false;
 
   @override
   void initState() {
@@ -163,7 +171,11 @@ class _SchermataPremiumState extends State<SchermataPremium> {
     final licenza = widget.collegamento.licenza;
     final casa = widget.collegamento.casa;
     final premium = licenza.premiumDi(casa);
+    final come = licenza.comeSta(casa);
     final acquisti = widget.acquisti;
+    final siCompraQui =
+        widget.siCompraQui ??
+        (!widget.sulWeb && defaultTargetPlatform == TargetPlatform.iOS);
     final s = Theme.of(context).colorScheme;
     final t = Theme.of(context).textTheme;
 
@@ -175,6 +187,19 @@ class _SchermataPremiumState extends State<SchermataPremium> {
         acquisti?.prezzoDi(piano) ?? prezzoDiRiserva(piano);
     final giorni = dalNegozio ? acquisti.provaDi(_scelto) : 0;
     final inCorso = acquisti?.inCorso ?? false;
+
+    /* Un link sotto la nota del rinnovo: il colore e il peso di «Ripristina
+     * abbonamento», ma piu' piccolo. */
+    Widget link(String scritta, String indirizzo) => TextButton(
+      onPressed: () => _apri(indirizzo),
+      style: TextButton.styleFrom(
+        textStyle: t.labelLarge?.copyWith(fontSize: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        minimumSize: Size.zero,
+        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+      ),
+      child: Text(scritta),
+    );
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
@@ -203,7 +228,7 @@ class _SchermataPremiumState extends State<SchermataPremium> {
                   licenza.controlliAccesi,
                   casa?.nome,
                 )
-              : _perChi(acquisti, dalNegozio),
+              : _perChi(acquisti, dalNegozio, siCompraQui),
           key: const Key('stato-premium'),
           style: t.bodyLarge,
         ),
@@ -236,7 +261,97 @@ class _SchermataPremiumState extends State<SchermataPremium> {
           ],
         ),
         const SizedBox(height: 16),
-        if (!premium) ...[
+        if (!premium && come == ComeStaLaLicenza.casaSenzaLicenze)
+          _Riquadro(
+            chiave: const Key('premium-addon-vecchio'),
+            icona: Icons.system_update_alt_rounded,
+            titolo: inLingua(
+              it: 'Aggiorna prima l\'add-on gdahome',
+              en: 'Update the gdahome add-on first',
+            ),
+            testo: inLingua(
+              it:
+                  'L\'add-on gdahome installato in «${casa?.nome ?? 'questa '
+                          'casa'}» è una versione vecchia e non può attivare '
+                  'Premium. Per questo l\'acquisto non è disponibile. '
+                  'Aggiorna l\'add-on in Home Assistant (Impostazioni → '
+                  'Componenti aggiuntivi → gdahome → Aggiorna), poi torna su '
+                  'questa pagina.',
+              en:
+                  'The gdahome add-on installed in “${casa?.nome ?? 'this '
+                          'home'}” is an old version and can\'t turn on Premium, '
+                  'so buying isn\'t available. Update the add-on in Home '
+                  'Assistant (Settings → Add-ons → gdahome → Update), then '
+                  'come back to this page.',
+            ),
+            azione: inLingua(
+              it: 'Ho aggiornato, controlla di nuovo',
+              en: 'I\'ve updated, check again',
+            ),
+            inCorso: _controllo,
+            fai: () => unawaited(_ricontrolla()),
+          )
+        else if (!premium && come == ComeStaLaLicenza.maiChiesto)
+          _Riquadro(
+            chiave: const Key('premium-mai-sentita'),
+            icona: Icons.sync_rounded,
+            titolo: inLingua(
+              it: 'L\'app non ha ancora parlato con la casa',
+              en: 'The app hasn\'t talked to your home yet',
+            ),
+            testo: inLingua(
+              it:
+                  'Per sapere se «${casa?.nome ?? 'questa casa'}» può passare '
+                  'a Premium, l\'app deve collegarsi alla casa almeno una '
+                  'volta. Apri l\'app mentre sei connesso al Wi-Fi di casa, '
+                  'oppure riprova tra poco.',
+              en:
+                  'To know whether “${casa?.nome ?? 'this home'}” can go '
+                  'Premium, the app has to connect to it at least once. Open '
+                  'the app while you\'re on your home Wi-Fi, or try again '
+                  'shortly.',
+            ),
+            azione: inLingua(it: 'Riprova', en: 'Try again'),
+            inCorso: _controllo,
+            fai: () => unawaited(_ricontrolla()),
+          )
+        else if (!premium && !widget.sulWeb && !siCompraQui)
+          _Riquadro(
+            chiave: const Key('premium-su-android'),
+            icona: Icons.phone_iphone,
+            titolo: inLingua(
+              it: 'Su Android l\'abbonamento non è ancora disponibile',
+              en: 'Subscriptions aren\'t available on Android yet',
+            ),
+            testo: inLingua(
+              it:
+                  'Qui puoi attivare Premium con un codice regalo. Puoi anche '
+                  'abbonarti dall\'app gdahome per iPhone: Premium vale per '
+                  'tutta la casa, quindi anche su questo telefono.',
+              en:
+                  'Here you can turn on Premium with a gift code. You can also '
+                  'subscribe in the gdahome app for iPhone: Premium covers the '
+                  'whole home, so this phone too.',
+            ),
+          )
+        else if (!premium && (acquisti?.ceUnaRicevutaInSospeso ?? false))
+          /* Pagato, e la ricevuta aspetta la casa: niente bottone per
+           * comprare di nuovo, solo quello che succede. */
+          _InAttesa(
+            inLingua(
+              it:
+                  'In questo momento «${casa?.nome ?? 'la casa'}» non '
+                  'risponde. L\'abbonamento è valido e si attiverà da solo '
+                  'appena la casa torna collegata: non devi acquistarlo di '
+                  'nuovo. Se la casa è spenta, riaccendila.',
+              en:
+                  '“${casa?.nome ?? 'Your home'}” isn\'t answering right now. '
+                  'Your subscription is valid and will turn on by itself as '
+                  'soon as your home is back online: you don\'t need to buy '
+                  'it again. If your home is switched off, turn it back on.',
+            ),
+          )
+        else if (!premium) ...[
           for (final id in [pianoAnnuale, pianoMensile])
             _Piano(
               id: id,
@@ -293,6 +408,26 @@ class _SchermataPremiumState extends State<SchermataPremium> {
                 style: t.bodySmall?.copyWith(color: s.onSurfaceVariant),
               ),
             ),
+            /* L'App Store vuole i due link accanto all'abbonamento (regola
+             * 3.1.2): subito sotto la nota, su una riga. */
+            Wrap(
+              alignment: WrapAlignment.center,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              children: [
+                link(
+                  inLingua(it: 'Termini d\'uso', en: 'Terms of Use'),
+                  SchermataPremium.condizioni,
+                ),
+                Text(
+                  '·',
+                  style: t.bodySmall?.copyWith(color: s.onSurfaceVariant),
+                ),
+                link(
+                  inLingua(it: 'Privacy', en: 'Privacy Policy'),
+                  SchermataPremium.privacy,
+                ),
+              ],
+            ),
             TextButton(
               onPressed: dalNegozio && !inCorso
                   ? () => unawaited(acquisti.ripristina())
@@ -306,8 +441,9 @@ class _SchermataPremiumState extends State<SchermataPremium> {
             ),
           ],
         ],
-        if (widget.codiceRegalo ??
-            (widget.sulWeb || defaultTargetPlatform != TargetPlatform.iOS))
+        if (come != ComeStaLaLicenza.casaSenzaLicenze &&
+            (widget.codiceRegalo ??
+                (widget.sulWeb || defaultTargetPlatform != TargetPlatform.iOS)))
           OutlinedButton.icon(
             key: const Key('codice-regalo'),
             onPressed: () => _ilCodice(context),
@@ -316,28 +452,52 @@ class _SchermataPremiumState extends State<SchermataPremium> {
               inLingua(it: 'Ho un codice regalo', en: 'I have a gift code'),
             ),
           ),
-        if (!premium)
-          /* L'App Store vuole i due link accanto all'abbonamento. */
-          Wrap(
-            alignment: WrapAlignment.center,
-            children: [
-              TextButton(
-                onPressed: () => _apri(SchermataPremium.privacy),
-                child: const Text('Privacy'),
-              ),
-              TextButton(
-                onPressed: () => _apri(SchermataPremium.condizioni),
-                child: Text(
-                  inLingua(it: 'Condizioni d\'uso', en: 'Terms of use'),
-                ),
-              ),
-            ],
-          ),
         if (acquisti?.errore case final errore?) _Riga(errore, colore: s.error),
         if (acquisti?.fatto case final fatto?)
           _Riga(fatto, colore: Colori.bene),
       ],
     );
+  }
+
+  /// «Controlla di nuovo» e «Riprova»: si richiede alla casa come sta la
+  /// licenza. Se la casa adesso non si raggiunge, o l'add-on e' ancora
+  /// quello vecchio, lo si dice: un tasto che non cambia niente a schermo
+  /// sembra un tasto rotto.
+  Future<void> _ricontrolla() async {
+    if (_controllo) return;
+    setState(() => _controllo = true);
+    final collegamento = widget.collegamento;
+    final rispose = await collegamento.ricontrollaLaLicenza();
+    if (!mounted) return;
+    setState(() => _controllo = false);
+    final nome =
+        collegamento.casa?.nome ?? inLingua(it: 'la casa', en: 'your home');
+    final vecchio =
+        collegamento.licenza.comeSta(collegamento.casa) ==
+        ComeStaLaLicenza.casaSenzaLicenze;
+    final String? detto = !rispose
+        ? inLingua(
+            it:
+                '«$nome» non risponde adesso. Riprova quando sei connesso '
+                'al Wi-Fi di casa.',
+            en:
+                '“$nome” isn\'t answering right now. Try again when you\'re '
+                'on your home Wi-Fi.',
+          )
+        : vecchio
+        ? inLingua(
+            it:
+                'L\'add-on di «$nome» risulta ancora la versione vecchia. Se '
+                'l\'hai appena aggiornato, aspetta un minuto che riparta e '
+                'riprova.',
+            en:
+                'The add-on of “$nome” is still the old version. If you just '
+                'updated it, wait a minute for it to restart and try again.',
+          )
+        : null;
+    if (detto == null) return;
+    ScaffoldMessenger.maybeOf(context)
+        ?.showSnackBar(SnackBar(content: Text(detto)));
   }
 
   Future<void> _ilCodice(BuildContext context) async {
@@ -370,11 +530,16 @@ class _SchermataPremiumState extends State<SchermataPremium> {
   /// La riga sotto il nome, per chi non ha Premium. La prova si promette
   /// solo se c'e': col negozio che risponde e dice «niente prova» (l'hai
   /// gia' usata) non la si nomina.
-  static String _perChi(GestoreDegliAcquisti? acquisti, bool dalNegozio) {
+  static String _perChi(
+    GestoreDegliAcquisti? acquisti,
+    bool dalNegozio,
+    bool siCompraQui,
+  ) {
     final senzaProva =
-        dalNegozio &&
-        acquisti!.provaDi(pianoMensile) == 0 &&
-        acquisti.provaDi(pianoAnnuale) == 0;
+        !siCompraQui ||
+        (dalNegozio &&
+            acquisti!.provaDi(pianoMensile) == 0 &&
+            acquisti.provaDi(pianoAnnuale) == 0);
     if (senzaProva) {
       return inLingua(
         it: 'Per la casa intera, su tutti i telefoni abbinati.',
@@ -714,18 +879,143 @@ class _SulWeb extends StatelessWidget {
             child: Text(
               inLingua(
                 it:
-                    'Da qui non si compra: abbonati dall\'app gdahome sul '
-                    'telefono, e Premium arriva anche qui. Un codice regalo '
-                    'invece lo puoi riscattare anche dal browser.',
+                    'Dal browser non si può acquistare. Abbonati dall\'app '
+                    'gdahome per iPhone, con 14 giorni di prova gratuita: '
+                    'Premium si attiva anche qui. Un codice regalo, invece, '
+                    'puoi usarlo anche dal browser.',
                 en:
-                    'You can\'t buy from here: subscribe in the gdahome app on '
-                    'your phone, and Premium shows up here too. A gift code, '
-                    'though, can be redeemed from the browser as well.',
+                    'You can\'t buy from here: subscribe in the gdahome app '
+                    'for iPhone, with a 14-day free trial, and Premium shows '
+                    'up here too. A gift code, though, can be redeemed from '
+                    'the browser as well.',
               ),
               style: Theme.of(context).textTheme.bodySmall
                   ?.copyWith(color: s.onSurfaceVariant),
             ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Un riquadro al posto dei piani, quando qui non si compra: perche', e
+/// cosa si fa invece.
+class _Riquadro extends StatelessWidget {
+  const _Riquadro({
+    required this.chiave,
+    required this.icona,
+    required this.titolo,
+    required this.testo,
+    this.azione,
+    this.fai,
+    this.inCorso = false,
+  });
+
+  final Key chiave;
+  final IconData icona;
+  final String titolo;
+  final String testo;
+  final String? azione;
+  final VoidCallback? fai;
+
+  /// Mentre l'azione lavora: il tasto gira e non si preme.
+  final bool inCorso;
+
+  @override
+  Widget build(BuildContext context) {
+    final s = Theme.of(context).colorScheme;
+    final t = Theme.of(context).textTheme;
+    return Container(
+      key: chiave,
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+      decoration: BoxDecoration(
+        color: s.secondaryContainer,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icona, color: s.onSecondaryContainer),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  titolo,
+                  style: t.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    color: s.onSecondaryContainer,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            testo,
+            style: t.bodyMedium?.copyWith(color: s.onSecondaryContainer),
+          ),
+          if (azione case final scritta?) ...[
+            const SizedBox(height: 12),
+            FilledButton(
+              key: const Key('premium-controlla'),
+              onPressed: inCorso ? null : fai,
+              style: FilledButton.styleFrom(
+                minimumSize: const Size.fromHeight(48),
+              ),
+              child: inCorso
+                  ? const SizedBox.square(
+                      dimension: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : Text(
+                      scritta,
+                      style: const TextStyle(fontWeight: FontWeight.w700),
+                    ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+/// Pagato, e la ricevuta aspetta la casa: non e' un errore, e non e' rosso.
+class _InAttesa extends StatelessWidget {
+  const _InAttesa(this.testo);
+  final String testo;
+
+  @override
+  Widget build(BuildContext context) {
+    final s = Theme.of(context).colorScheme;
+    final t = Theme.of(context).textTheme;
+    return Container(
+      key: const Key('ricevuta-in-attesa'),
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+      decoration: BoxDecoration(
+        color: s.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.schedule_rounded, color: s.primary),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  inLingua(it: 'Acquisto completato', en: 'Purchase complete'),
+                  style: t.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(testo, style: t.bodyMedium),
         ],
       ),
     );

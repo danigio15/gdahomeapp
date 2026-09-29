@@ -5,25 +5,17 @@
 /// centralino e in gdanav.
 ///
 /// **Di serie e' vuota**, e vuota vuol dire che i controlli sono spenti: ogni
-/// casa vale come Premium e l'app fa quello che ha sempre fatto. Non la si
-/// scrive a mano: prima del rilascio si lancia una volta
+/// casa vale come Premium e l'app fa quello che ha sempre fatto. Scritta, i
+/// lucchetti di Base valgono dappertutto — nell'app per iPhone, in quella per
+/// Android e nel browser — e Premium si compra dall'app per iPhone.
 ///
-///     node strumenti/chiave-licenze.mjs [--gdanav ../gdanav]
+/// Non la si scrive a mano. La coppia nasce sulla macchina del quadro, che
+/// stampa solo la pubblica, e la pubblica si scrive qui e negli altri file con
 ///
-/// che fabbrica la coppia e scrive la pubblica qui e negli altri file. La riga
-/// qui sotto la riscrive lo strumento: resti una riga sola, cosi'.
+///     node strumenti/chiave-licenze.mjs --senza-centralino --pubblica <x>
+///
+/// (`docs/ACCENDERE-GLI-ACQUISTI.md`). La riga qui sotto la riscrive lo
+/// strumento: resti una riga sola, cosi'.
 library;
 
 const chiavePubblicaLicenze = '';
-
-/// Prima l'iPhone: con `true` le licenze contano solo nell'app per iPhone.
-///
-/// E' la prima app che esce nel negozio col Premium da comprare. Li' ci sono
-/// i lucchetti e l'App Store; su Android e nel browser, anche con la chiave
-/// scritta, resta tutto aperto come oggi. La casa fa la sua parte — tiene i
-/// gettoni e gira le ricevute — senza limitare niente
-/// (`LICENZE_SOLO_SULL_IPHONE` in `ponte/src/chiave-licenze.js`).
-///
-/// La scrive `node strumenti/chiave-licenze.mjs --solo-iphone`, insieme alla
-/// chiave; il giorno che si accende per tutti torna `false`.
-const licenzeSoloSullIPhone = false;

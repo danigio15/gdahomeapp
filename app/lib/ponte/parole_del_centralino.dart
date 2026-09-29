@@ -30,9 +30,23 @@ String get fuoriCasaServePremium => inLingua(
       'only be reached on its own Wi-Fi.',
 );
 
+/// Quello che si dice a chi e' fuori casa con una casa dall'add-on vecchio.
+String get fuoriCasaAggiornaLAddon => inLingua(
+  it:
+      'Per entrare da fuori casa l\'add-on gdahome della casa va aggiornato: '
+      'intanto la casa si raggiunge dal suo Wi-Fi.',
+  en:
+      'To get in from away, your home\'s gdahome add-on needs updating: '
+      'meanwhile your home can be reached on its own Wi-Fi.',
+);
+
 /// Se il centralino ha chiuso perche' la casa non e' Premium.
 bool eIlNoDelPremium(String detto) =>
     detto.trim().toLowerCase() == 'premium-richiesto';
+
+/// Se il centralino ha chiuso perche' l'add-on della casa e' vecchio.
+bool eIlNoDellAddon(String detto) =>
+    detto.trim().toLowerCase() == 'aggiorna-add-on';
 
 /// La frase del centralino, in parole nostre.
 String inParoleNostre(String detto) {
@@ -55,6 +69,7 @@ String inParoleNostre(String detto) {
       en: 'too many phones on this home',
     ),
     'premium-richiesto' => fuoriCasaServePremium,
+    'aggiorna-add-on' => fuoriCasaAggiornaLAddon,
     _ => detto.trim(),
   };
 }
