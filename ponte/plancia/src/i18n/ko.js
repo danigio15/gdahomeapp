@@ -303,7 +303,7 @@ export default Object.freeze({
   "<strong>⚡ Energy configuration</strong><span><b>Current period:</b> uses configured Day / Month / Year sensors. <b>Previous months/years:</b> uses Total kWh counters through Recorder. Home is calculated with the same Home Assistant flow balance.</span>": "<strong>⚡ 에너지 설정</strong><span><b>현재 기간:</b> 설정한 일 / 월 / 연 센서를 씁니다. <b>지난 달과 연도:</b> Recorder를 통해 누적 kWh 계량기를 씁니다. 홈은 Home Assistant와 같은 흐름 수지로 계산합니다.</span>",
   "A /local path or an image entity, e.g. /local/car.png or image.car": "/local 아래 경로 또는 이미지 엔티티, 예: /local/car.png 또는 image.car",
   "A JSON file with the configuration as it is now.": "현재 구성을 담은 JSON 파일입니다.",
-  "A browser cannot open rtsp:// on its own: something has to repackage the stream. Two ways, and one is enough.": "브라우저는 rtsp://를 스스로 열지 못합니다. 스트림을 무언가가 다시 포장해 주어야 합니다. 길은 둘, 하나면 충분합니다.",
+  "A browser cannot open rtsp:// on its own: something has to repackage the stream. Three ways, and one is enough.": "브라우저는 rtsp://를 스스로 열지 못합니다. 스트림을 무언가가 다시 포장해 주어야 합니다. 길은 셋, 하나면 충분합니다.",
   "A button that appears on the pet card. A button.*, a script.* or a switch.* all work: the dashboard presses it with the right service for its domain.": "반려동물 카드에 나타나는 버튼입니다. button.*, script.*, switch.* 모두 됩니다: 대시보드가 해당 도메인에 맞는 서비스로 누릅니다.",
   "A button that opens the Home Assistant assistant: type the question, or tap the microphone and speak. Home Assistant understands the sentences — the dashboard just passes them along.": "Home Assistant 어시스턴트를 여는 버튼입니다. 질문을 입력하거나 마이크를 눌러 말하세요. 문장은 Home Assistant가 이해하고, 대시보드는 전달만 합니다.",
   "A button.*, select.* or switch.* entity is required — or input_button, input_select, input_boolean, script, scene.": "button.*, select.* 또는 switch.* 엔티티가 필요합니다 — 또는 input_button, input_select, input_boolean, script, scene.",
@@ -4043,4 +4043,9 @@ export default Object.freeze({
   "shutter open": "셔터 열림",
   "shutters open": "셔터 열림",
   "Under the weather, open doors and open windows are two pills. By default the class Home Assistant gives the contact decides; pick here when it is not the right one.": "날씨 아래에서 열린 문과 열린 창문은 두 개의 알약으로 나뉩니다. 기본적으로 Home Assistant가 접점에 부여한 클래스가 결정합니다. 맞지 않으면 여기에서 고르세요.",
+  "If the camera already has its own integration in Home Assistant — Reolink, Tapo, Hikvision — the entity is already there: pick it in the field above, and the video goes through it.": "카메라에 Home Assistant 전용 통합(Reolink, Tapo, Hikvision)이 이미 있다면 엔터티도 이미 있습니다. 위 칸에서 그것을 고르면 영상이 그쪽으로 전달됩니다.",
+  "The stream name only works with the dashboard opened outside Home Assistant: in here it cannot be reached, and the camera goes through its entity.": "스트림 이름은 대시보드를 Home Assistant 밖에서 열었을 때만 쓸 수 있습니다. 여기서는 닿지 않으므로 카메라는 자신의 엔터티를 통해 전달됩니다.",
+  "HLS: skipped, Home Assistant declares no stream for this camera": "HLS: 건너뜀, Home Assistant가 이 카메라의 스트림을 선언하지 않음",
+  "WebRTC: the go2rtc stream name only works with the dashboard opened outside Home Assistant — in here the camera goes through its entity": "WebRTC: go2rtc 스트림 이름은 대시보드를 Home Assistant 밖에서 열었을 때만 동작합니다 — 여기서는 카메라가 자신의 엔터티를 통해 전달됩니다",
+  "WebRTC: tried first with its full time, the video did not arrive": "WebRTC: 먼저 주어진 시간을 다 써서 시도했지만 영상이 오지 않았습니다",
 });

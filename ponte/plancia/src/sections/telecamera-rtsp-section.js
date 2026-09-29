@@ -25,6 +25,7 @@
  */
 import { analizzaRtsp, cosaManca, rigaGo2rtc, sembraRtsp } from "../core/telecamera-rtsp.js";
 import { clean, doc, esc, installStyle, onEditorRedraw, root, t } from "./shared.js";
+import { go2rtcRaggiungibile } from "./telecamera-subito-section.js";
 
 const KEY = "__DASHBOARDMODERN_TELECAMERA_RTSP__";
 const state = (root[KEY] ||= { installed: false });
@@ -72,15 +73,26 @@ function notaMarkup(indirizzo) {
   ]
     .filter(Boolean)
     .join(" · ");
+  /* Dentro Home Assistant il nome del flusso go2rtc non si raggiunge (#164):
+   * la terza strada si dice lo stesso, ma per quello che vale. */
+  const dentro = !go2rtcRaggiungibile();
   return `<span class="dm-rtsp-nota-riga dm-rtsp-letto">${esc(capito)}</span>
     <span class="dm-rtsp-nota-riga">${esc(
       t(
-        "Il browser non apre rtsp:// da solo: qualcuno deve riconfezionare il flusso. Due strade, e ne basta una.",
-        "A browser cannot open rtsp:// on its own: something has to repackage the stream. Two ways, and one is enough.",
+        "Il browser non apre rtsp:// da solo: qualcuno deve riconfezionare il flusso. Tre strade, e ne basta una.",
+        "A browser cannot open rtsp:// on its own: something has to repackage the stream. Three ways, and one is enough.",
       ),
     )}</span>
     <span class="dm-rtsp-strada${pronta ? " dm-rtsp-fatta" : ""}">
       <b>1.</b> ${esc(
+        t(
+          "Se la telecamera ha già la sua integrazione in Home Assistant — Reolink, Tapo, Hikvision — l'entità c'è già: sceglila nel campo qui sopra, e il video passa da lì.",
+          "If the camera already has its own integration in Home Assistant — Reolink, Tapo, Hikvision — the entity is already there: pick it in the field above, and the video goes through it.",
+        ),
+      )}
+    </span>
+    <span class="dm-rtsp-strada${pronta ? " dm-rtsp-fatta" : ""}">
+      <b>2.</b> ${esc(
         t(
           "Aggiungi una telecamera Generica in Home Assistant con questo indirizzo, poi incolla nel campo dell'entità quella che ne esce.",
           "Add a Generic camera in Home Assistant with this address, then paste the entity it creates into the entity field.",
@@ -91,7 +103,7 @@ function notaMarkup(indirizzo) {
       )}</a>
     </span>
     <span class="dm-rtsp-strada">
-      <b>2.</b> ${esc(
+      <b>3.</b> ${esc(
         t(
           "Se usi go2rtc o Frigate, metti questa riga sotto «streams:» nel loro file:",
           "If you run go2rtc or Frigate, put this line under “streams:” in their file:",
@@ -100,7 +112,16 @@ function notaMarkup(indirizzo) {
       <code class="dm-rtsp-riga">${esc(riga.trim())}</code>
       <button type="button" class="dm-rtsp-copia" data-dm-rtsp-copia>${esc(
         t("Copia", "Copy"),
-      )}</button>
+      )}</button>${
+        dentro
+          ? `<span class="dm-rtsp-nota-riga">${esc(
+              t(
+                "Il nome del flusso vale solo con la plancia aperta fuori da Home Assistant: qui dentro non si raggiunge, e la telecamera passa dalla sua entità.",
+                "The stream name only works with the dashboard opened outside Home Assistant: in here it cannot be reached, and the camera goes through its entity.",
+              ),
+            )}</span>`
+          : ""
+      }
     </span>`;
 }
 
@@ -117,6 +138,10 @@ function aggiornaNota() {
  * scritto vorrebbe dire cancellargli la configurazione di Frigate per una
  * convenzione. */
 function proponiIlNome() {
+  /* Dentro Home Assistant quel nome non porta a niente (#164): proporlo
+   * vorrebbe dire scrivere per conto di qualcuno una strada che non si
+   * raggiunge. */
+  if (!go2rtcRaggiungibile()) return;
   const campo = campoDelFlusso();
   const letto = analizzaRtsp(valoreDi(CAMPO));
   if (!campo || !letto?.nome || clean(campo.value)) return;

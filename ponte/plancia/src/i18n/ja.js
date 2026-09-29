@@ -303,7 +303,7 @@ export default Object.freeze({
   "<strong>⚡ Energy configuration</strong><span><b>Current period:</b> uses configured Day / Month / Year sensors. <b>Previous months/years:</b> uses Total kWh counters through Recorder. Home is calculated with the same Home Assistant flow balance.</span>": "<strong>⚡ エネルギーの設定</strong><span><b>現在の期間:</b> 設定した日・月・年のセンサーを使います。<b>過去の月と年:</b> Recorder 経由で積算 kWh メーターを使います。ホームは Home Assistant と同じ収支で計算します。</span>",
   "A /local path or an image entity, e.g. /local/car.png or image.car": "/local 以下のパス、または画像エンティティ（例: /local/car.png、image.car）",
   "A JSON file with the configuration as it is now.": "現在の設定を収めたJSONファイル。",
-  "A browser cannot open rtsp:// on its own: something has to repackage the stream. Two ways, and one is enough.": "ブラウザーは rtsp:// を自力では開けません。ストリームを何かが包み直す必要があります。道はふたつ、どちらか一方で足ります。",
+  "A browser cannot open rtsp:// on its own: something has to repackage the stream. Three ways, and one is enough.": "ブラウザーは rtsp:// を自力では開けません。ストリームを何かが包み直す必要があります。道はみっつ、どれかひとつで足ります。",
   "A button that appears on the pet card. A button.*, a script.* or a switch.* all work: the dashboard presses it with the right service for its domain.": "ペットのカードに出るボタンです。button.* でも script.* でも switch.* でも構いません。ダッシュボードがそのドメインに合ったサービスで押します。",
   "A button that opens the Home Assistant assistant: type the question, or tap the microphone and speak. Home Assistant understands the sentences — the dashboard just passes them along.": "Home Assistant のアシスタントを開くボタンです。質問を入力するか、マイクに触れて話してください。文を理解するのは Home Assistant で、ダッシュボードは渡すだけです。",
   "A button.*, select.* or switch.* entity is required — or input_button, input_select, input_boolean, script, scene.": "button.*、select.*、switch.* のエンティティが必要です — または input_button、input_select、input_boolean、script、scene。",
@@ -4043,4 +4043,9 @@ export default Object.freeze({
   "shutter open": "シャッターが開いています",
   "shutters open": "シャッターが開いています",
   "Under the weather, open doors and open windows are two pills. By default the class Home Assistant gives the contact decides; pick here when it is not the right one.": "天気の下では、開いているドアと開いている窓は 2 つのピルに分かれます。既定では Home Assistant が接点に与えるクラスで決まります。正しくないときはここで選んでください。",
+  "If the camera already has its own integration in Home Assistant — Reolink, Tapo, Hikvision — the entity is already there: pick it in the field above, and the video goes through it.": "カメラに Home Assistant の専用インテグレーション(Reolink、Tapo、Hikvision など)がすでにあるなら、エンティティはもうあります。上の欄でそれを選べば、映像はそこを通ります。",
+  "The stream name only works with the dashboard opened outside Home Assistant: in here it cannot be reached, and the camera goes through its entity.": "ストリーム名が使えるのは、ダッシュボードを Home Assistant の外で開いたときだけです。ここからは届かないので、カメラは自分のエンティティを通ります。",
+  "HLS: skipped, Home Assistant declares no stream for this camera": "HLS: スキップしました。Home Assistant はこのカメラのストリームを宣言していません",
+  "WebRTC: the go2rtc stream name only works with the dashboard opened outside Home Assistant — in here the camera goes through its entity": "WebRTC: go2rtcストリーム名が使えるのはダッシュボードを Home Assistant の外で開いたときだけです — ここではカメラは自分のエンティティを通ります",
+  "WebRTC: tried first with its full time, the video did not arrive": "WebRTC: 最初に持ち時間いっぱい試しましたが、映像は届きませんでした",
 });

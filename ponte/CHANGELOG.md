@@ -47,6 +47,28 @@ stanza contavano la tapparella su, e le «porte aperte» la serratura sbloccata.
 Adesso contano i contatti, porta o finestra come nei Varchi. Il catalogo dei
 disegni ha la finestra aperta.
 
+**La Ring si vede, anche quando nel nome non dice di essere una Ring.** «Ho
+delle telecamere configurate ma 2 in particolare non mi hanno mai funzionato in
+visualizzazione.» Una Ring il video lo apre in WebRTC dal servizio della marca,
+e su un Home Assistant di oggi lo dice soltanto la risposta a una domanda che la
+plancia fa all'avvio. Chi apriva il popup mentre quella risposta viaggiava — o
+dopo che la prima domanda era caduta — sceglieva senza, e senza una Ring non ha
+strade. Adesso il popup la aspetta, e se serve la rifà subito. La tessera «dal
+vivo» quella risposta non la leggeva nemmeno: adesso sì. Una telecamera che sa
+soltanto il WebRTC di Home Assistant ha venticinque secondi per svegliarsi, come
+le altre in cloud, anche se la marca nel nome non c'è; l'offerta è fatta come
+quella del lettore di Home Assistant; e una strada caduta dopo il suo tempo
+intero non si riprova da capo subito dopo.
+
+**Il nome stream go2rtc non tiene più ferme le telecamere dentro Home
+Assistant.** Quel nome si parla con l'estensione go2rtc da un filo suo, e da
+dentro Home Assistant quel filo non arriva: la strada cadeva sempre, e intanto,
+essendo quella scelta, teneva ferme le strade che lì dentro funzionano. Adesso
+da dentro il nome si lascia stare e la telecamera passa dalla sua entità. Con un
+indirizzo rtsp:// la scheda Telecamere propone come prima strada l'entità
+dell'integrazione che la telecamera ha già — Reolink, Tapo, Hikvision —, e da
+dentro Home Assistant non scrive più da sola un nome che non servirebbe.
+
 **L'ora di avvio di un ciclo la sa la casa, e adesso gliela chiediamo.** «Quando
 guardo la sezione elettrodomestici segna inizio ciclo anche se è già iniziato da
 1 ora.» Il contatore dei cicli sapeva già distinguere «l'ho visto partire» da

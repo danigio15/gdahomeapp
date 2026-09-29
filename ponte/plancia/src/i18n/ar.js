@@ -303,7 +303,7 @@ export default Object.freeze({
   "<strong>⚡ Energy configuration</strong><span><b>Current period:</b> uses configured Day / Month / Year sensors. <b>Previous months/years:</b> uses Total kWh counters through Recorder. Home is calculated with the same Home Assistant flow balance.</span>": "<strong>⚡ إعدادات الطاقة</strong><span><b>الفترة الحالية:</b> تستخدم حساسات اليوم / الشهر / السنة المُهيّأة. <b>الأشهر والسنوات السابقة:</b> تستخدم عدّادات الكيلوواط·ساعة الإجمالية عبر Recorder. ويُحسب «المنزل» بميزان التدفق نفسه المستخدَم في Home Assistant.</span>",
   "A /local path or an image entity, e.g. /local/car.png or image.car": "مسار ضمن ‎/local أو كيان صورة، مثلًا ‎/local/car.png أو image.car",
   "A JSON file with the configuration as it is now.": "ملف JSON يحوي الإعدادات كما هي الآن.",
-  "A browser cannot open rtsp:// on its own: something has to repackage the stream. Two ways, and one is enough.": "المتصفّح لا يفتح rtsp:// وحده: لا بدّ لشيء أن يعيد تغليف البثّ. طريقان، ويكفي واحد.",
+  "A browser cannot open rtsp:// on its own: something has to repackage the stream. Three ways, and one is enough.": "المتصفّح لا يفتح rtsp:// وحده: لا بدّ لشيء أن يعيد تغليف البثّ. ثلاث طرق، وتكفي واحدة منها.",
   "A button that appears on the pet card. A button.*, a script.* or a switch.* all work: the dashboard presses it with the right service for its domain.": "زر يظهر على بطاقة الحيوان. يصلح button.* أو script.* أو switch.*: تضغطه اللوحة بالخدمة المناسبة لنطاقه.",
   "A button that opens the Home Assistant assistant: type the question, or tap the microphone and speak. Home Assistant understands the sentences — the dashboard just passes them along.": "زر يفتح مساعد Home Assistant: اكتب السؤال، أو المس الميكروفون وتكلّم. الجمل يفهمها Home Assistant — اللوحة تمرّرها فقط.",
   "A button.*, select.* or switch.* entity is required — or input_button, input_select, input_boolean, script, scene.": "يلزم كيان button.* أو select.* أو switch.* — أو input_button أو input_select أو input_boolean أو script أو scene.",
@@ -4043,4 +4043,9 @@ export default Object.freeze({
   "shutter open": "ستارة مفتوحة",
   "shutters open": "ستائر مفتوحة",
   "Under the weather, open doors and open windows are two pills. By default the class Home Assistant gives the contact decides; pick here when it is not the right one.": "تحت الطقس، الأبواب المفتوحة والنوافذ المفتوحة حبّتان منفصلتان. افتراضيًا تقرّر الفئة التي يمنحها Home Assistant للمستشعر؛ اختر هنا عندما لا تكون الصحيحة.",
+  "If the camera already has its own integration in Home Assistant — Reolink, Tapo, Hikvision — the entity is already there: pick it in the field above, and the video goes through it.": "إذا كان للكاميرا تكاملها الخاص في Home Assistant — Reolink أو Tapo أو Hikvision — فالكيان موجود أصلًا: اختره في الخانة أعلاه، والفيديو يمرّ من خلاله.",
+  "The stream name only works with the dashboard opened outside Home Assistant: in here it cannot be reached, and the camera goes through its entity.": "اسم البثّ لا يعمل إلا عندما تُفتح اللوحة خارج Home Assistant: من هنا لا يمكن الوصول إليه، والكاميرا تمرّ عبر كيانها.",
+  "HLS: skipped, Home Assistant declares no stream for this camera": "HLS: تم التخطّي، لا يعلن Home Assistant عن بثّ لهذه الكاميرا",
+  "WebRTC: the go2rtc stream name only works with the dashboard opened outside Home Assistant — in here the camera goes through its entity": "WebRTC: اسم بث go2rtc لا يعمل إلا عندما تُفتح اللوحة خارج Home Assistant — هنا تمرّ الكاميرا عبر كيانها",
+  "WebRTC: tried first with its full time, the video did not arrive": "WebRTC: جُرّب أولًا بكامل وقته، ولم يصل الفيديو",
 });

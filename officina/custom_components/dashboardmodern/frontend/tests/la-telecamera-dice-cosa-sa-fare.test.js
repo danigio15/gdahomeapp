@@ -148,7 +148,15 @@ test("si chiede una volta sola, non si insiste — ma nemmeno ci si arrende", ()
    * riprova; una risposta vera, invece, non si richiede più. */
   assert.match(SEZIONE, /state\.dette\.set\(cercata, \{ caduta: Date\.now\(\) \}\);/);
   assert.match(SEZIONE, /const RIPROVA_DOPO = 30_000;/);
-  assert.match(SEZIONE, /if \(state\.inCorso\.has\(cercata\) \|\| !siPuoRichiedere\(cercata, adesso\)\)/);
+  assert.match(
+    SEZIONE,
+    /if \(capacitaChieste\(cercata\) \|\| \(!forza && !siPuoRichiedere\(cercata, adesso\)\)\)/,
+  );
+  /* Una domanda già in viaggio non si rifà: la si aspetta. */
+  assert.match(
+    SEZIONE,
+    /const inViaggio = state\.inCorso\.get\(cercata\);\n  if \(inViaggio\) return inViaggio;/,
+  );
   /* Chi ha risposto davvero non si richiede: la risposta c'è, è quella. */
   assert.match(SEZIONE, /Array\.isArray\(detta\.frontend_stream_types\)\)\n    return false;/);
   /* E non si scrive da nessuna parte: la risposta cambia quando cambia
@@ -159,7 +167,10 @@ test("si chiede una volta sola, non si insiste — ma nemmeno ci si arrende", ()
 test("chi apre la telecamera aspetta la risposta, e poi prende quella strada", () => {
   /* Aspettare qui è la differenza fra un video e una fotografia: la prima
    * apertura, senza, sceglierebbe al buio. */
-  assert.match(APERTURA, /if \(!capacitaChieste\(entity\)\) \{[\s\S]{0,120}?await chiediLeCapacita\(entity\);/);
+  assert.match(
+    APERTURA,
+    /if \(!capacitaChieste\(entity\)\) \{[\s\S]{0,120}?await chiediLeCapacita\(entity, Date\.now\(\), \{ forza: true \}\);/,
+  );
   /* E saputa la strada, la si prende: il ricordo dice «ieri è andata così», le
    * capacità dicono «sa fare così», e la seconda vale anche la prima volta. */
   assert.match(

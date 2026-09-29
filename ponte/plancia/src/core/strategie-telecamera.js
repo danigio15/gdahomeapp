@@ -104,14 +104,19 @@ export const SA_TRASMETTERE = 2;
  * integrato Home Assistant dichiara HLS e WebRTC per la stessa entita'.
  */
 export function tipiDiFlusso(stato = {}, capacita = null) {
-  const dette = capacita?.frontend_stream_types;
-  const elenco = dette instanceof Set ? [...dette] : Array.isArray(dette) ? dette : null;
+  const elenco = elencoDetto(capacita);
   if (elenco) return new Set(elenco.map((tipo) => pulito(tipo).toLowerCase()).filter(Boolean));
   const attributi = stato?.attributes || {};
   const vecchio = pulito(attributi.frontend_stream_type).toLowerCase();
   if (vecchio) return new Set([vecchio]);
   const sa = Number(attributi.supported_features);
   return new Set(Number.isFinite(sa) && (sa & SA_TRASMETTERE) === SA_TRASMETTERE ? ["hls"] : []);
+}
+
+/** L'elenco dei flussi nella risposta di Home Assistant, o `null` se una risposta non c'e'. */
+function elencoDetto(capacita) {
+  const dette = capacita?.frontend_stream_types;
+  return dette instanceof Set ? [...dette] : Array.isArray(dette) ? dette : null;
 }
 
 /* Le integrazioni le cui telecamere si accendono su richiesta.
@@ -168,8 +173,32 @@ export function siSveglia(stato = {}) {
  * interrompeva dieci secondi prima della fine. «E ancora telecamere non
  * funzionanti.» Un tempo solo, scritto una volta.
  */
-export function attesaDelFlusso(stato = {}) {
-  return siSveglia(stato) ? ATTESE.HLS_SVEGLIA : ATTESE.HLS_LOCALE;
+export function attesaDelFlusso(stato = {}, capacita = null) {
+  return siSveglia(stato) || soloWebRtcNativo(capacita) ? ATTESE.HLS_SVEGLIA : ATTESE.HLS_LOCALE;
+}
+
+/* Chi parla soltanto WebRTC nativo, e nessun HLS (#164).
+ *
+ * «camera_image: camera.cam_seminterrato_live_view» — una Ring, che nel suo
+ * nome «ring» non ce l'ha. Il tempo lungo lo prendeva solo chi si chiama come
+ * la sua marca, e questa ne aveva dieci secondi: per una telecamera che prima
+ * di rispondere deve svegliarsi dall'altra parte del mondo, e' la fine della
+ * trattativa proprio mentre stava per arrivare il video.
+ *
+ * Il nome non serve: lo dice Home Assistant. Una telecamera che sa fare
+ * WebRTC e non HLS e' una che non ha un flusso suo da riconfezionare — il
+ * video lo apre il servizio della marca, a richiesta: Ring, Nest. Una
+ * telecamera di casa con go2rtc dichiara tutti e due.
+ *
+ * Lo dice pero' solo la risposta a `camera/capabilities`, che e' un elenco.
+ * L'attributo vecchio aveva posto per un valore solo, e con go2rtc integrato
+ * scriveva `web_rtc` anche per la telecamera di casa che l'HLS ce l'ha: preso
+ * per «soltanto», avrebbe dato venticinque secondi a tutte. */
+export function soloWebRtcNativo(capacita = null) {
+  const elenco = elencoDetto(capacita);
+  if (!elenco) return false;
+  const tipi = new Set(elenco.map((tipo) => pulito(tipo).toLowerCase()));
+  return tipi.has("web_rtc") && !tipi.has("hls");
 }
 
 /**
@@ -185,8 +214,20 @@ export function attesaDelFlusso(stato = {}) {
  */
 export function strategieDellaTelecamera(cam = {}, stato = {}, opzioni = {}) {
   const nomeDelFlusso = pulito(cam.stream);
+  /* Il nome del flusso go2rtc si parla con un socket suo, diretto a
+   * `/api/webrtc/ws` dell'estensione (#164). Dentro Home Assistant — il
+   * pannello, il ponte — il socket della pagina e' il loro, e quella porta
+   * non si raggiunge: la strada si provava tre secondi e cadeva sempre. E,
+   * peggio, da scelta toglieva di mezzo il WebRTC nativo e l'HLS, che li'
+   * dentro funzionano. Chi apre la plancia fuori da Home Assistant ce l'ha
+   * ancora; dentro, la telecamera si guarda dalla sua entita'. */
+  const go2rtc = Boolean(nomeDelFlusso) && opzioni.go2rtcRaggiungibile !== false;
+  /* La strada che il popup ha appena percorso col suo tempo intero, ed e'
+   * caduta. Rifarla da capo nella fila vorrebbe dire far aspettare chi guarda
+   * due volte lo stesso no. */
+  const appenaCaduta = pulito(opzioni.appenaCaduta);
   const dorme = siSveglia(stato);
-  const attesaDelSuoFlusso = attesaDelFlusso(stato);
+  const attesaDelSuoFlusso = attesaDelFlusso(stato, opzioni.capacita);
   const webrtcNelBrowser = opzioni.webrtcNelBrowser !== false;
   const hlsNelBrowser = opzioni.hlsNelBrowser !== false;
   /* Home Assistant moderno parla WebRTC da solo: `frontend_stream_type` vale
@@ -226,8 +267,9 @@ export function strategieDellaTelecamera(cam = {}, stato = {}, opzioni = {}) {
   const GIA_SCELTA = "strada-gia-scelta";
 
   if (!webrtcNelBrowser) strade.push({ nome: "WebRTC", salta: "browser-senza-webrtc" });
-  else if (nomeDelFlusso)
-    strade.push({ nome: "WebRTC", attesa: ATTESE.WEBRTC, flusso: nomeDelFlusso });
+  else if (appenaCaduta === "WebRTC" && (go2rtc || nativa))
+    strade.push({ nome: "WebRTC", salta: "appena-caduta" });
+  else if (go2rtc) strade.push({ nome: "WebRTC", attesa: ATTESE.WEBRTC, flusso: nomeDelFlusso });
   else if (nativa)
     strade.push({
       nome: "WebRTC",
@@ -237,7 +279,11 @@ export function strategieDellaTelecamera(cam = {}, stato = {}, opzioni = {}) {
       attesa: attesaDelSuoFlusso,
       nativa: true,
     });
-  else strade.push({ nome: "WebRTC", salta: "senza-nome-di-flusso" });
+  else
+    strade.push({
+      nome: "WebRTC",
+      salta: nomeDelFlusso ? "go2rtc-fuori-portata" : "senza-nome-di-flusso",
+    });
 
   const webrtcInCorsa = scelta("WebRTC");
 

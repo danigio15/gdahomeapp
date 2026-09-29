@@ -38,7 +38,9 @@ const state = (root[KEY] ||= {
   /* entity → { frontend_stream_types: [...] } quando ha risposto, oppure
    * `{ caduta: quando }` quando la domanda è stata fatta e non ha risposto. */
   dette: new Map(),
-  inCorso: new Set(),
+  /* entity → la domanda che sta viaggiando: chi arriva mentre viaggia la
+   * aspetta, invece di rifarla o di andare avanti senza. */
+  inCorso: new Map(),
 });
 
 /** Quanto si aspetta una risposta: è una domanda piccola, non un flusso. */
@@ -107,13 +109,34 @@ export function capacitaChieste(entity) {
   return Boolean(capacitaDellaTelecamera(entity));
 }
 
-/** Chiede le capacità di una telecamera, una volta sola. */
-export async function chiediLeCapacita(entity, adesso = Date.now()) {
+/**
+ * Chiede le capacità di una telecamera, una volta sola.
+ *
+ * `forza` è per chi apre il popup (#164). Il mezzo minuto di pausa dopo una
+ * domanda caduta tiene il socket pulito dai giri di fondo, ma chi tocca una
+ * telecamera la vuole vedere adesso: se la prima domanda era partita contro un
+ * socket ancora in piedi a metà, per trenta secondi il popup sceglieva al buio
+ * — e al buio una Ring non ha nessuna strada, perché la sua è il WebRTC che
+ * solo questa risposta dichiara.
+ *
+ * Per lo stesso motivo una domanda già in viaggio si aspetta. La prima parte
+ * appena la plancia è in piedi, e chi apre il popup in quei secondi trovava
+ * «in corso» e sceglieva senza: la domanda era fatta, la risposta arrivava un
+ * attimo dopo, e intanto la Ring era già finita sull'HLS che non ha.
+ */
+export async function chiediLeCapacita(entity, adesso = Date.now(), { forza = false } = {}) {
   const cercata = clean(entity);
   if (!cercata.startsWith("camera.")) return null;
-  if (state.inCorso.has(cercata) || !siPuoRichiedere(cercata, adesso))
+  const inViaggio = state.inCorso.get(cercata);
+  if (inViaggio) return inViaggio;
+  if (capacitaChieste(cercata) || (!forza && !siPuoRichiedere(cercata, adesso)))
     return capacitaDellaTelecamera(cercata);
-  state.inCorso.add(cercata);
+  const domanda = chiedi(cercata).finally(() => state.inCorso.delete(cercata));
+  state.inCorso.set(cercata, domanda);
+  return domanda;
+}
+
+async function chiedi(cercata) {
   try {
     const risposta = await chiediAHomeAssistant(
       { type: "camera/capabilities", entity_id: cercata },
@@ -135,9 +158,24 @@ export async function chiediLeCapacita(entity, adesso = Date.now()) {
      * prima, così chi la domanda non ce l'ha non se la sente ripetere in
      * continuazione. */
     state.dette.set(cercata, { caduta: Date.now() });
-  } finally {
-    state.inCorso.delete(cercata);
   }
+  return capacitaDellaTelecamera(cercata);
+}
+
+/**
+ * Quello che si sa di questa telecamera, aspettando la risposta se la domanda
+ * è in viaggio — ma senza farne partire una nuova.
+ *
+ * È per le tessere dal vivo (#164), che si ridisegnano di continuo: una
+ * domanda a ogni giro sarebbe rumore sul socket, e a richiedere ci pensano già
+ * i giri di fondo. Ma quella partita all'avvio sì, la si aspetta: la tessera
+ * arriva spesso proprio in quei secondi, e senza la risposta una Ring prova
+ * l'HLS che non ha e resta ferma un minuto prima di riprovare.
+ */
+export async function capacitaInArrivo(entity) {
+  const cercata = clean(entity);
+  const inViaggio = state.inCorso.get(cercata);
+  if (inViaggio) await inViaggio.catch(() => null);
   return capacitaDellaTelecamera(cercata);
 }
 

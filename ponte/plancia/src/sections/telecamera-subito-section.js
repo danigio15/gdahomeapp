@@ -56,10 +56,47 @@ import {
   chiediLeCapacita,
 } from "./telecamera-capacita-section.js";
 import { fermaIlNegoziatoDelPopup } from "./telecamera-webrtc-section.js";
+import { isStructurallyHostedDashboard } from "../transport/hosted-bridge-guard.js";
 
 const KEY = "__DASHBOARDMODERN_TELECAMERA_SUBITO__";
 const STYLE_ID = "dm-cam-subito-style";
-const state = (root[KEY] ||= { installed: false });
+const state = (root[KEY] ||= { installed: false, caduta: null });
+
+/* Il nome del flusso go2rtc si raggiunge solo fuori da Home Assistant (#164).
+ *
+ * Quella strada apre un socket suo verso `/api/webrtc/ws` dell'estensione
+ * go2rtc. Dentro il pannello e dietro il ponte il socket della pagina e'
+ * quello di Home Assistant, e la porta dell'estensione da li' non c'e': la
+ * strada cadeva sempre dopo tre secondi, e intanto teneva fermi il WebRTC
+ * nativo e l'HLS, che invece li' dentro funzionano. */
+export function go2rtcRaggiungibile() {
+  try {
+    return !isStructurallyHostedDashboard();
+  } catch (_errore) {
+    return true;
+  }
+}
+
+/* Quanto vale il ricordo di una strada appena caduta: quanto basta alla fila
+ * del guscio per partire subito dopo, non di piu'. La prossima apertura
+ * ricomincia da capo. */
+const APPENA = 15_000;
+
+/**
+ * La strada che il popup ha appena provato col suo tempo intero ed e' caduta,
+ * per questa telecamera — o "".
+ *
+ * La fila del guscio la leggeva di nuovo e la rifaceva da capo: per una Ring
+ * voleva dire venticinque secondi, un no, e altri venticinque secondi per lo
+ * stesso no. Adesso la fila la salta e va avanti. Una strada presa dal
+ * ricordo, col tempo corto, invece la si rifa': li' il tempo intero non l'aveva
+ * avuto.
+ */
+export function stradaAppenaCaduta(entity, adesso = Date.now()) {
+  const caduta = state.caduta;
+  if (!caduta || caduta.entity !== clean(entity) || adesso - caduta.quando > APPENA) return "";
+  return caduta.nome;
+}
 
 /* Da quale elemento si capisce quale strada ha disegnato: sono gli
  * identificativi che il guscio da' ai suoi lettori, uno per strada. */
@@ -225,6 +262,7 @@ function stradeDiAdesso(cam) {
      * ancora detto vale `null`, e chi sceglie la strada si arrangia con quello
      * che trova negli attributi. */
     capacita: capacitaDellaTelecamera(clean(cam?.entity)),
+    go2rtcRaggiungibile: go2rtcRaggiungibile(),
   });
 }
 
@@ -275,6 +313,9 @@ export function installTelecameraSubito() {
      * cascata sotto ci mettera' venti secondi, e anche quando finira' male —
      * un'istantanea ferma e' piu' di un rettangolo nero. */
     mostraSubito(cam, content);
+    /* Ogni apertura ricomincia da capo: una strada caduta la volta prima non
+     * si salta adesso. */
+    state.caduta = null;
     if (!entity) return precedente.call(this, cam, title, content);
 
     /* Se Home Assistant non ha ancora detto che flussi sa fare questa
@@ -283,7 +324,7 @@ export function installTelecameraSubito() {
      * Chi ha gia' risposto non viene richiesto. */
     if (!capacitaChieste(entity)) {
       try {
-        await chiediLeCapacita(entity);
+        await chiediLeCapacita(entity, Date.now(), { forza: true });
       } catch (_errore) {}
     }
     const ricordo = ricordoDellaTelecamera(memoria(), entity, Date.now());
@@ -307,6 +348,10 @@ export function installTelecameraSubito() {
         imparaLaStrada(entity, corta.nome, Date.now() - inizio);
         return undefined;
       } catch (_errore) {
+        /* Col tempo intero, la fila non la rifa' (vedi `stradaAppenaCaduta`). */
+        const intera = strade.find((strada) => strada.nome === corta.nome && !strada.salta);
+        if (Number(corta.attesa) >= Number(intera?.attesa || 0))
+          state.caduta = { entity, nome: clean(corta.nome), quando: Date.now() };
         /* La strada di ieri oggi non regge, o il permesso corto non le e'
          * bastato. Si dimentica — insistere domani costerebbe di nuovo questo
          * tempo — e si riparte con la fila intera del guscio, che non e' stata

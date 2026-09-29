@@ -303,7 +303,7 @@ export default Object.freeze({
   "<strong>⚡ Energy configuration</strong><span><b>Current period:</b> uses configured Day / Month / Year sensors. <b>Previous months/years:</b> uses Total kWh counters through Recorder. Home is calculated with the same Home Assistant flow balance.</span>": "<strong>⚡ 能源设置</strong><span><b>当前周期：</b>使用已配置的日 / 月 / 年传感器。<b>往期月份和年份：</b>通过 Recorder 使用累计 kWh 电表。“首页”按与 Home Assistant 相同的能量平衡计算。</span>",
   "A /local path or an image entity, e.g. /local/car.png or image.car": "/local 下的路径或图像实体，例如 /local/car.png 或 image.car",
   "A JSON file with the configuration as it is now.": "一份包含当前配置的 JSON 文件。",
-  "A browser cannot open rtsp:// on its own: something has to repackage the stream. Two ways, and one is enough.": "浏览器无法自行打开 rtsp://：需要有东西把视频流重新封装。两条路，走通一条就够。",
+  "A browser cannot open rtsp:// on its own: something has to repackage the stream. Three ways, and one is enough.": "浏览器无法自行打开 rtsp://：需要有东西把视频流重新封装。三条路，走通一条就够。",
   "A button that appears on the pet card. A button.*, a script.* or a switch.* all work: the dashboard presses it with the right service for its domain.": "出现在宠物卡片上的按钮。button.*、script.* 或 switch.* 都可以：仪表盘会用对应域的正确服务来按它。",
   "A button that opens the Home Assistant assistant: type the question, or tap the microphone and speak. Home Assistant understands the sentences — the dashboard just passes them along.": "一个打开 Home Assistant 助手的按钮：打字提问，或者点一下麦克风说话。句子由 Home Assistant 理解，仪表盘只负责转达。",
   "A button.*, select.* or switch.* entity is required — or input_button, input_select, input_boolean, script, scene.": "需要 button.*、select.* 或 switch.* 实体 — 或 input_button、input_select、input_boolean、script、scene。",
@@ -4043,4 +4043,9 @@ export default Object.freeze({
   "shutter open": "扇卷帘开着",
   "shutters open": "扇卷帘开着",
   "Under the weather, open doors and open windows are two pills. By default the class Home Assistant gives the contact decides; pick here when it is not the right one.": "天气下方，开着的门和开着的窗是两个药丸。默认由 Home Assistant 给接触传感器的类别决定；不对时在这里选择。",
+  "If the camera already has its own integration in Home Assistant — Reolink, Tapo, Hikvision — the entity is already there: pick it in the field above, and the video goes through it.": "如果摄像头在 Home Assistant 里已经有自己的集成——Reolink、Tapo、Hikvision——实体就已经在了：在上面的栏里选中它，视频就从它那里走。",
+  "The stream name only works with the dashboard opened outside Home Assistant: in here it cannot be reached, and the camera goes through its entity.": "流名称只有在 Home Assistant 之外打开面板时才有效：在这里面无法访问，摄像头会通过它自己的实体播放。",
+  "HLS: skipped, Home Assistant declares no stream for this camera": "HLS：已跳过，Home Assistant 未为此摄像头声明视频流",
+  "WebRTC: the go2rtc stream name only works with the dashboard opened outside Home Assistant — in here the camera goes through its entity": "WebRTC：go2rtc 流名称只有在 Home Assistant 之外打开面板时才有效——在这里摄像头会通过它自己的实体播放",
+  "WebRTC: tried first with its full time, the video did not arrive": "WebRTC：已先用满全部时间尝试，视频没有到达",
 });

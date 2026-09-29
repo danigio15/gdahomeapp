@@ -5640,7 +5640,7 @@ function dmStreamName(cam) { return cam.stream || (cam.entity ? cam.entity.split
    mollava proprio sul piu' bello e si finiva sulle istantanee. Il modulo guarda
    cosa Home Assistant dichiara della telecamera e decide di conseguenza; qui
    restano le parole, che il modulo non sa in che lingua vanno dette. */
-const _DM_CAM_MOTIVI = { 'senza-nome-di-flusso': 'WebRTC: saltato — compila \u00abNome stream go2rtc\u00bb nella scheda Telecamere (il nome della telecamera non c\u2019entra)', 'browser-senza-webrtc': 'WebRTC: saltato, il browser non lo supporta', 'browser-senza-hls': 'HLS: saltato, hls.js non caricato', 'telecamera-che-dorme': 'MJPEG: saltato, la telecamera trasmette solo su richiesta' };
+const _DM_CAM_MOTIVI = { 'senza-nome-di-flusso': 'WebRTC: saltato — compila \u00abNome stream go2rtc\u00bb nella scheda Telecamere (il nome della telecamera non c\u2019entra)', 'browser-senza-webrtc': 'WebRTC: saltato, il browser non lo supporta', 'browser-senza-hls': 'HLS: saltato, hls.js non caricato', 'telecamera-che-dorme': 'MJPEG: saltato, la telecamera trasmette solo su richiesta', 'go2rtc-fuori-portata': 'WebRTC: il nome stream go2rtc funziona solo aprendo la plancia fuori da Home Assistant \u2014 qui dentro la telecamera passa dalla sua entit\u00e0', 'appena-caduta': 'WebRTC: provato per primo col suo tempo intero, il video non \u00e8 arrivato', 'senza-flusso-dichiarato': 'HLS: saltato, Home Assistant non dichiara un flusso per questa telecamera' };
 
 async function dmCamOpen(cam, title, content) {
     dmCamCleanup();
