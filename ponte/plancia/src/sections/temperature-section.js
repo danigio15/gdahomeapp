@@ -9,14 +9,12 @@ import {
   dashboardStore,
   doc,
   english,
-  esc,
   installStyle,
   root,
   section,
   t,
   temperatureCardLabels,
 } from "./shared.js";
-import { segnoDaValoreHtml, segnoHtml } from "../core/segni-del-catalogo.js";
 
 root.__DM_20260815C__ = true;
 const KEY = "__DASHBOARDMODERN_TEMPERATURE_SECTION__";
@@ -139,14 +137,6 @@ function makeText(className, value) {
   return node;
 }
 
-/* Lo stesso, con un disegno del catalogo davanti o al posto del testo. */
-function makeMarkup(className, markup) {
-  const node = doc.createElement("span");
-  node.className = className;
-  node.innerHTML = markup;
-  return node;
-}
-
 function openHistory(event, entity, name) {
   if (!entity) return;
   root.apriStorico?.(event, entity, name);
@@ -174,7 +164,7 @@ function createTemperatureCard(voce) {
   const icon = doc.createElement("div");
   icon.className = "cp-icon temp-room-icon";
   icon.dataset.roomIcon = clean(room.icon || "mdi:home");
-  icon.append(makeMarkup("dm-temperature-icon-fallback", segnoDaValoreHtml(glyph(room.icon), { ripiego: "home" })));
+  icon.append(makeText("dm-temperature-icon-fallback", glyph(room.icon)));
   const name = doc.createElement("div");
   name.className = "cp-name temp-room-name";
   name.textContent = cardTitle(voce);
@@ -201,7 +191,7 @@ function createTemperatureCard(voce) {
     const humidityBox = doc.createElement("div");
     humidityBox.className = "cp-temp-target";
     humidityBox.append(
-      makeMarkup("lbl", `${segnoHtml("water")} ${esc(labels.humidity)}`),
+      makeText("lbl", `💧 ${labels.humidity}`),
       makeText("val temp-hum-val", "—%"),
     );
     humidityBox.lastElementChild.id = `hv_${hid}`;
@@ -244,8 +234,7 @@ function updateCard(card, voce) {
     const fallback =
       icon.querySelector(".dm-temperature-icon-fallback") ||
       makeText("dm-temperature-icon-fallback", "");
-    const disegno = segnoDaValoreHtml(glyph(room.icon), { ripiego: "home" });
-    if (fallback.innerHTML !== disegno) fallback.innerHTML = disegno;
+    fallback.textContent = glyph(room.icon);
     if (!fallback.parentElement) icon.replaceChildren(fallback);
   }
   if (name) name.textContent = cardTitle(voce);
@@ -316,7 +305,7 @@ function syncEditRoomPresentation(form, roomId) {
   const room = rooms().find((item) => clean(item.id) === clean(roomId));
   const floor = form?.querySelector("[data-temperature-floor]");
   const icon = form?.querySelector("#dm-temperature-icon");
-  if (floor) floor.innerHTML = room?.floor ? `${segnoHtml("home")} ${esc(room.floor)}` : "";
+  if (floor) floor.textContent = room?.floor ? `🏢 ${room.floor}` : "";
   if (icon) icon.value = clean(room?.icon || "mdi:thermometer");
 }
 

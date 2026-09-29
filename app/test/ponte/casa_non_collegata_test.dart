@@ -106,6 +106,50 @@ void main() {
     },
   );
 
+  test('il no del Premium arriva come tale, non come una caduta', () async {
+    /* Il centralino chiude il telefono di una casa Base: la schermata lo
+     * dice col tasto di Premium, e non «non trovo la casa». */
+    ponte
+      ..chiudeSubitoDicendo = 'premium-richiesto'
+      ..chiudeSubitoColNumero = 4402;
+    final filo = filoCon();
+    await expectLater(
+      filo.apri(entro: const Duration(seconds: 2)),
+      throwsA(
+        isA<PremiumRichiesto>()
+            .having((uno) => uno is AddonDaAggiornare, 'add-on', isFalse)
+            .having(
+              (uno) => uno.spiegazione,
+              'spiegazione',
+              fuoriCasaServePremium,
+            ),
+      ),
+    );
+    await filo.chiudi();
+  });
+
+  test(
+    'e quello dell\'add-on vecchio pure, anche col numero soltanto',
+    () async {
+      /* La parola si puo' perdere per strada: basta il numero. */
+      ponte
+        ..chiudeSubitoDicendo = ''
+        ..chiudeSubitoColNumero = 4426;
+      final filo = filoCon();
+      await expectLater(
+        filo.apri(entro: const Duration(seconds: 2)),
+        throwsA(
+          isA<AddonDaAggiornare>().having(
+            (uno) => uno.spiegazione,
+            'spiegazione',
+            fuoriCasaAggiornaLAddon,
+          ),
+        ),
+      );
+      await filo.chiudi();
+    },
+  );
+
   test('la caduta resta scritta in diagnostica, in parole nostre', () async {
     ponte.chiudeSubitoDicendo = 'casa non collegata';
     final filo = filoCon();

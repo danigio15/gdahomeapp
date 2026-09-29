@@ -203,7 +203,7 @@ export function apriIlMenu(entity, azione = null) {
    * scritto come testo quel token si legge tale e quale sopra il titolo.
    * `writeIconGlyph` sa la differenza, ed e' la stessa strada che prende
    * la fascia sotto il meteo per la faccia della sua finestra. */
-  if (faccia) writeIconGlyph(faccia, azione?.icon, { size: 22, fallback: "sliders" });
+  if (faccia) writeIconGlyph(faccia, azione?.icon, { size: 22, fallback: "🎚️" });
   if (corpo)
     corpo.innerHTML = voci.length
       ? voci
@@ -261,7 +261,7 @@ function conConferma(azione, fai) {
   };
   if (azione?.confirm && typeof root.confermaAzione === "function") {
     root.confermaAzione({
-      icon: azione.icon || "power",
+      icon: azione.icon || "⚡",
       title: azione.name,
       message: azione.confirm,
       onConfirm: esegui,

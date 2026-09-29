@@ -95,15 +95,18 @@ class PresaSuWebSocket implements Presa {
         grezzo is String ? grezzo : String.fromCharCodes(grezzo as List<int>),
       ),
       handleDone: (sink) {
-        final perche = _canale.closeReason;
-        if (perche != null && perche.trim().isNotEmpty) {
-          /* Il centralino chiude i telefoni di una casa senza licenza: e' un
-           * no diverso dagli altri, e la schermata lo dice col suo tasto. */
-          sink.addError(
-            eIlNoDelPremium(perche) || _canale.closeCode == 4402
-                ? PremiumRichiesto(fuoriCasaServePremium)
-                : FiloCaduto(inParoleNostre(perche)),
-          );
+        final perche = _canale.closeReason ?? '';
+        final codice = _canale.closeCode;
+        /* Il centralino chiude i telefoni di una casa senza licenza, e quelli
+         * di una casa con l'add-on vecchio: sono due no diversi dagli altri,
+         * e la schermata li dice col loro tasto. Bastano il numero o la
+         * parola: uno dei due puo' perdersi per strada. */
+        if (eIlNoDelPremium(perche) || codice == 4402) {
+          sink.addError(PremiumRichiesto(fuoriCasaServePremium));
+        } else if (eIlNoDellAddon(perche) || codice == 4426) {
+          sink.addError(AddonDaAggiornare(fuoriCasaAggiornaLAddon));
+        } else if (perche.trim().isNotEmpty) {
+          sink.addError(FiloCaduto(inParoleNostre(perche)));
         }
         sink.close();
       },

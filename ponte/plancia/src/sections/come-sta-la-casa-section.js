@@ -64,7 +64,6 @@ import {
   writeJsonIfChanged,
   siComanda,
 } from "./shared.js";
-import { segnoHtml, senzaEmoji } from "../core/segni-del-catalogo.js";
 
 const KEY = "__DASHBOARDMODERN_COME_STA_LA_CASA__";
 const state = (root[KEY] ||= { installed: false, firma: "", pastiglie: [], elenco: "" });
@@ -1074,7 +1073,7 @@ function campoDellaMisura(chiave, valore) {
         esempioDellaCasella(chiave),
       )}" autocomplete="off" spellcheck="false"><button type="button" class="dm-entity-picker" data-dm-casa-pick-misura="${esc(
         chiave,
-      )}" aria-label="${esc(t("Scegli entità", "Choose entity"))}">${segnoHtml("search")}</button></span></label>`;
+      )}" aria-label="${esc(t("Scegli entità", "Choose entity"))}">🔍</button></span></label>`;
 }
 
 /* L'ora dopo la quale la pastiglia dei rifiuti guarda a domani (#565).
@@ -1130,7 +1129,7 @@ function rigaDellaMiaMarkup(mia, index) {
       )}</small></span>
       <button type="button" class="ed-del" data-dm-casa-mia-via aria-label="${esc(
         t("Elimina", "Remove"),
-      )}">${segnoHtml("trash")}</button>
+      )}">🗑️</button>
     </summary>
     <label class="ed-slot dm-casa-ed-campo"><span class="ed-slot-lbl">${esc(
       t("Entità da mostrare", "Entity to show"),
@@ -1139,7 +1138,7 @@ function rigaDellaMiaMarkup(mia, index) {
         entity,
       )}" placeholder="sensor.acqua_serbatoio" autocomplete="off" spellcheck="false"><button type="button" class="dm-entity-picker" data-dm-casa-mia-pick="entity" aria-label="${esc(
         t("Scegli entità", "Choose entity"),
-      )}">${segnoHtml("search")}</button></span></label>
+      )}">🔍</button></span></label>
     <label class="ed-slot dm-casa-ed-campo"><span class="ed-slot-lbl">${esc(
       t("Nome sotto il valore", "Name under the value"),
     )}</span>
@@ -1149,7 +1148,7 @@ function rigaDellaMiaMarkup(mia, index) {
     <div class="ed-form-row dm-casa-ed-mia-faccia">
       <input class="ed-input ed-icon-input" data-dm-casa-mia-campo="icona" value="${esc(
         clean(mia?.icona),
-      )}" placeholder="mdi:palm-tree" aria-label="${esc(t("Segno", "Icon"))}">
+      )}" placeholder="🌴 / mdi:palm-tree" aria-label="${esc(t("Segno", "Icon"))}">
       <input class="dm-casa-ed-tinta" type="color" data-dm-casa-mia-campo="tinta" value="${esc(
         clean(mia?.tinta) || TINTA_MIA,
       )}" aria-label="${esc(t("Colore", "Colour"))}" title="${esc(t("Colore", "Colour"))}">
@@ -1161,7 +1160,7 @@ function rigaDellaMiaMarkup(mia, index) {
         quando,
       )}" placeholder="input_boolean.vacanze" autocomplete="off" spellcheck="false"><button type="button" class="dm-entity-picker" data-dm-casa-mia-pick="quando" aria-label="${esc(
         t("Scegli entità", "Choose entity"),
-      )}">${segnoHtml("search")}</button></span></label>
+      )}">🔍</button></span></label>
     <label class="ed-slot dm-casa-ed-campo"><span class="ed-slot-lbl">${esc(
       t("…è in questo stato", "…is in this state"),
     )}</span>
@@ -1179,7 +1178,7 @@ function rigaDellaMiaMarkup(mia, index) {
 
 function mieMarkup(config) {
   const righe = config.mie.map((mia, index) => rigaDellaMiaMarkup(mia, index)).join("");
-  return `<div class="ed-sec-title dm-casa-ed-sep">${segnoHtml("star")} ${esc(
+  return `<div class="ed-sec-title dm-casa-ed-sep">✨ ${esc(
     t("Le tue entità nella fascia", "Your own entities in the bar"),
   )}</div>
     <div class="ed-intro">${esc(
@@ -1229,7 +1228,7 @@ function pannelloMarkup() {
       }>
     </label>`;
   }).join("");
-  return `<div class="ed-sec-title">${segnoHtml("home")} ${esc(
+  return `<div class="ed-sec-title">🏠 ${esc(
     t(IL_RIQUADRO_IN_ITALIANO, IL_RIQUADRO_IN_INGLESE),
   )}</div>
     <div class="ed-intro">${esc(
@@ -1249,7 +1248,7 @@ function pannelloMarkup() {
         esempioDellaCasella("posta"),
       )}" autocomplete="off" spellcheck="false"><button type="button" class="dm-entity-picker" data-dm-casa-pick aria-label="${esc(
         t("Scegli entità", "Choose entity"),
-      )}">${segnoHtml("search")}</button></span>
+      )}">🔍</button></span>
       <small>${esc(
         t(
           "Un contatto sulla cassetta: quando il postino apre lo sportello la pastiglia della posta compare, si muove per farsi notare e resta lì finché qualcuno non la tocca. La posta arriva mentre non si guarda, quindi non basta un lampo di due secondi.",
@@ -1273,7 +1272,7 @@ function pannelloMarkup() {
       ),
     )}</div>
     ${mieMarkup(config)}
-    <button type="button" class="ed-save-btn" data-dm-casa-salva>${segnoHtml("check")} ${esc(
+    <button type="button" class="ed-save-btn" data-dm-casa-salva>💾 ${esc(
       t("Salva la barra", "Save the bar"),
     )}</button>`;
 }
@@ -1405,7 +1404,7 @@ function onClickPannello(event) {
   if (!event.target.closest("[data-dm-casa-salva]")) return;
   event.preventDefault();
   salvaLaBarra(quelloCheDiceIlPannello(pannello));
-  root.edToast?.(senzaEmoji(t("💾 Barra salvata", "💾 Bar saved")));
+  root.edToast?.(t("💾 Barra salvata", "💾 Bar saved"));
 }
 
 /* ── stile ──────────────────────────────────────────────────────────────── */

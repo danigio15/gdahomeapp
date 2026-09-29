@@ -51,7 +51,6 @@ import {
   t,
 } from "./shared.js";
 import { nomeDaHomeAssistant } from "./editor-slots-section.js";
-import { segnoHtml } from "../core/segni-del-catalogo.js";
 
 const KEY = "__DASHBOARDMODERN_PIANTE__";
 const state = (root[KEY] ||= {
@@ -259,7 +258,7 @@ export function ensurePianteTab() {
   voce.className = "tab";
   voce.dataset.tab = PIANTE_TAB;
   voce.id = `tab-${PIANTE_TAB}`;
-  voce.innerHTML = `<span class="icon">${segnoHtml("plant")}</span><span class="text">${esc(t("Piante", "Plant care"))}</span>`;
+  voce.innerHTML = `<span class="icon">🪴</span><span class="text">${esc(t("Piante", "Plant care"))}</span>`;
   voce.addEventListener("click", () => {
     for (const nodo of doc.querySelectorAll(".tab")) nodo.classList.remove("active");
     for (const nodo of doc.querySelectorAll(".page")) nodo.classList.remove("active");
@@ -547,7 +546,7 @@ export function tesseraDellePiante(vista) {
   return {
     key: PIANTE_TAB,
     accent: sete ? "#dc2626" : "#16a34a",
-    icon: "plant",
+    icon: "🪴",
     label: t("Piante", "Plant care"),
     value: String(come.daInnaffiare.length),
     caption: sete ? testa.nomi : [testa.grande, testa.nomi].filter(Boolean).join(" · "),

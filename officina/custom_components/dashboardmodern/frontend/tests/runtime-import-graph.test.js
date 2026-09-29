@@ -1499,28 +1499,8 @@ test("production graph is single-owner, acyclic and contains no facade pass-thro
   // 412 e 413 coi gruppi delle azioni rapide (#139): il nucleo
   // `core/gruppi-delle-azioni.js` e `sections/azioni-rapide-gruppi-section.js`,
   // che mette i titoli nel vassoio della Home e la casella nel Config.
-  // 414 e 415 coi segni del catalogo al posto delle emoji: il nucleo
-  // `core/segni-del-catalogo.js`, che traduce una chiave o un'emoji nel
-  // disegno, e `sections/segni-del-catalogo-section.js`, il foglio che
-  // dipinge i segnaposti del guscio.
-  // 416, 417, 418 e 419 con le batterie di accumulo (#117): il nucleo
-  // `core/l-accumulo-di-casa.js` coi nomi dei BMS, la carica pesata e il
-  // delta delle celle, le parole e il disegno `sections/accumulo-section.js`
-  // — che la Home chiede per la tessera —, `sections/accumulo-in-energia-
-  // section.js`, che monta la linguetta dentro Energia e per farlo legge la
-  // Home, e la scheda `sections/accumulo-editor-section.js`. Le parole stanno
-  // staccate dal montaggio perché la Home le chiede e il montaggio chiede la
-  // Home: insieme sarebbero un giro.
-  // 420 con la stanza come tavola di comandi (#160): il nucleo
-  // `core/la-stanza-a-tessere.js`, con l'ordine delle tessere, quali sono
-  // larghe, il clima della testata e a che punto e' una tapparella. La tavola
-  // la disegna la pagina Stanze, che c'era gia'.
-  // 421 e 422 con la cottura (#71): il nucleo `core/la-cottura.js` — le fasi,
-  // i tempi in qualunque forma, i comandi che ci sono davvero e le caselle
-  // delle due friggitrici Philips — e `sections/cottura-section.js`, la voce
-  // «Cottura» dentro gli Elettrodomestici e la sua tessera in Home.
   assert.ok(
-    relative.length <= 422,
+    relative.length <= 413,
     `production graph unexpectedly grew to ${relative.length} modules`,
   );
   assertAcyclic(edges);
@@ -1617,14 +1597,6 @@ test("production graph is single-owner, acyclic and contains no facade pass-thro
    * questa sezione non fa proprio niente — sta zitto mentre la pagina non si
    * vede, e manda solo quando la firma di quello che c'e' da dire cambia.
    *
-   * Il tredicesimo e' il conto alla rovescia della Cottura (#71). La
-   * friggitrice dice quanti secondi mancano quando li misura, e poi tace: il
-   * tempo che passa non lo spinge nessuno, e senza un battito l'anello resta
-   * fermo su una cottura che sta andando. Un secondo, e la stessa disciplina
-   * degli altri: parte solo se la voce Cottura e' quella in scena e qualcosa
-   * sta cuocendo, tocca solo i numeri che cambiano, e si ferma da solo appena
-   * una delle due cose smette di essere vera.
-   *
    * These are the intervals production is allowed, and they are named here so
    * another one cannot arrive unnoticed. */
   const intervals = [...graph.entries()].filter(([, source]) =>
@@ -1634,7 +1606,6 @@ test("production graph is single-owner, acyclic and contains no facade pass-thro
     intervals.map(([file]) => path.relative(frontendRoot, file).replaceAll("\\", "/")).sort(),
     [
       "src/sections/assistenza-section.js",
-      "src/sections/cottura-section.js",
       "src/sections/english-runtime-strings-section.js",
       "src/sections/home-widgets-section.js",
       "src/sections/il-guscio-disegna-quando-serve-section.js",

@@ -34,7 +34,6 @@ import {
   t,
   writeJsonIfChanged,
 } from "./shared.js";
-import { senzaEmoji } from "../core/segni-del-catalogo.js";
 
 const KEY = "__DASHBOARDMODERN_ROOM_ASSIGN__";
 const STYLE_ID = "dm-room-assign-style";
@@ -206,11 +205,9 @@ function onChange(event) {
   event.stopPropagation();
   assegna(entity, select.value);
   root.edToast?.(
-    senzaEmoji(
-      clean(select.value)
-        ? t("📍 Assegnata alla stanza", "📍 Assigned to the room")
-        : t("📍 Senza stanza", "📍 No room"),
-    ),
+    clean(select.value)
+      ? t("📍 Assegnata alla stanza", "📍 Assigned to the room")
+      : t("📍 Senza stanza", "📍 No room"),
   );
 }
 

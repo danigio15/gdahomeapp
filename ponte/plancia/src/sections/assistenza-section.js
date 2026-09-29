@@ -34,7 +34,6 @@ import {
 } from "../core/avviso-chat.js";
 import { getLocale } from "../core/i18n.js";
 import { clean, doc, esc, installStyle, lexicalGlobal, root, t } from "./shared.js";
-import { segnoHtml } from "../core/segni-del-catalogo.js";
 
 const WS_STATE = "dashboardmodern/chat/state";
 const WS_THREAD = "dashboardmodern/chat/thread";
@@ -135,7 +134,7 @@ export function quando(scrittoIl) {
 export function avvertenzaMarkup() {
   return `
     <div class="dm-chat-patto">
-      <div class="dm-chat-patto-ico" aria-hidden="true">${segnoHtml("lock")}</div>
+      <div class="dm-chat-patto-ico" aria-hidden="true">🔒</div>
       <div>${esc(
         t(
           "Quello che scrivi qui arriva a chi mantiene la plancia, e a nessun altro. Non passa da GitHub e non diventa pubblico. Insieme al messaggio partono solo la versione della plancia, quella di Home Assistant e la lingua. Puoi cancellare la conversazione quando vuoi.",
@@ -175,7 +174,7 @@ export function filoMarkup(messaggi, dallaConsole = false) {
   if (!righe.length) {
     return `
       <div class="dm-chat-vuoto">
-        <div class="dm-chat-vuoto-ico" aria-hidden="true">${segnoHtml("chat")}</div>
+        <div class="dm-chat-vuoto-ico" aria-hidden="true">💬</div>
         <div>${esc(
           t(
             "Scrivi pure: dall'altra parte c'e' una persona, non un modulo.",
@@ -376,12 +375,12 @@ function miaMarkup() {
 function buttaMarkup(linea, lungo = false) {
   const armato = state.daButtare === linea;
   const titolo = t("Cancella la conversazione", "Delete the conversation");
-  const scritta = armato ? t("Confermi?", "Confirm?") : lungo ? titolo : "";
+  const scritta = armato ? t("Confermi?", "Confirm?") : lungo ? titolo : "🗑";
   return `
     <button type="button" class="dm-chat-butta${armato ? " armato" : ""}${
       lungo ? " lungo" : ""
     }" data-dm-chat-butta="${esc(linea)}" ${state.busy ? "disabled" : ""}
-      title="${esc(titolo)}" aria-label="${esc(titolo)}">${scritta ? esc(scritta) : segnoHtml("trash")}</button>`;
+      title="${esc(titolo)}" aria-label="${esc(titolo)}">${esc(scritta)}</button>`;
 }
 
 /* L'elenco, per chi risponde.
@@ -461,7 +460,7 @@ function tesseraMarkup() {
     ? `<span class="dm-chat-badge">${state.unread}</span>`
     : "";
   return `
-    <div class="cfg-card-ico" style="--cc-rgb: 34,197,94;">${segnoHtml("chat")}</div>
+    <div class="cfg-card-ico" style="--cc-rgb: 34,197,94;">💬</div>
     <div class="cfg-card-txt">
       <div class="cfg-card-nm">${esc(t("Assistenza", "Support"))}${pallino}</div>
       <div class="cfg-card-ds">${esc(
@@ -624,7 +623,7 @@ function finestra() {
     <div class="modal-card dm-chat-pannello" role="dialog" aria-modal="true"
          aria-labelledby="dm-chat-titolo">
       <div class="cfg-hero dm-chat-hero">
-        <div class="cfg-hero-ico" aria-hidden="true">${segnoHtml("chat")}</div>
+        <div class="cfg-hero-ico" aria-hidden="true">💬</div>
         <div class="cfg-hero-txt">
           <div class="cfg-hero-title" id="dm-chat-titolo" data-dm-chat="titolo"></div>
           <div class="cfg-hero-sub" data-dm-chat="sottotitolo"></div>

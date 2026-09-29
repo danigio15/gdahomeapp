@@ -364,7 +364,14 @@ class PresaCifrata implements PresaAperta {
        * per sempre invece di mandare l'utente a riabbinare. */
       onError: (Object errore) {
         _codaInEntrata = _codaInEntrata.then(
-          (_) => _finita(FiloCaduto(_leggibile(errore))),
+          (_) => _finita(
+            /* Il no del centralino a una casa Base, o a una dall'add-on
+             * vecchio, passa com'e': la schermata ci mette il suo tasto.
+             * Dentro una caduta qualunque diventava «non trovo la casa». */
+            errore is PremiumRichiesto
+                ? errore
+                : FiloCaduto(_leggibile(errore)),
+          ),
         );
       },
       onDone: () {

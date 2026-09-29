@@ -107,9 +107,6 @@ test("ogni tessera che ha una pagina ha la sua riga, col nome che la pagina dich
     contatori: CONTATORI_TAB,
     piante: PIANTE_TAB,
     acquario: ACQUARIO_TAB,
-    /* Le batterie di accumulo (#117) non hanno una voce loro: stanno nella
-     * linguetta «Batterie» di Energia, e il tasto porta a Energia. */
-    accumulo: "energy",
     ups: UPS_TAB,
     agenda: CALENDARIO_TAB,
     rifiuti: RIFIUTI_TAB,

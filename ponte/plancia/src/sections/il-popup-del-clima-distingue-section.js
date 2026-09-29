@@ -12,9 +12,8 @@
  * ogni riga — anche nel popup Riscaldamento — dice da quanto tempo e' cosi',
  * letta dal last_changed che Home Assistant gia' manda.
  */
-import { allStates, clean, doc, esc, installStyle, root, t } from "./shared.js";
+import { allStates, clean, doc, installStyle, root, t } from "./shared.js";
 import { daQuanto } from "./termico-del-caldo-section.js";
-import { emojiInSegni } from "../core/segni-del-catalogo.js";
 
 const KEY = "__DASHBOARDMODERN_POPUP_CLIMA_DISTINGUE__";
 const state = (root[KEY] ||= { installed: false });
@@ -43,7 +42,7 @@ function entitaDellaRiga(riga) {
 function testata(parole) {
   const nodo = doc.createElement("div");
   nodo.className = "dm-clpd-testata";
-  nodo.innerHTML = emojiInSegni(esc(parole));
+  nodo.textContent = parole;
   return nodo;
 }
 

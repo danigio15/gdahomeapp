@@ -43,7 +43,6 @@ import {
   section,
   t,
 } from "./shared.js";
-import { segnoHtml } from "../core/segni-del-catalogo.js";
 
 const KEY = "__DASHBOARDMODERN_ENERGY_PLANTS__";
 const state = (root[KEY] ||= { installed: false, frame: 0 });
@@ -135,7 +134,7 @@ export function tabsMarkup(lista, scelto, { conAggiunta = false } = {}) {
     .map((impianto, index) => {
       const attivo = impianto.id === scelto;
       return `<button type="button" class="sub-tab-btn dm-imp-tab${attivo ? " active" : ""}" data-dm-impianto="${esc(impianto.id)}" aria-selected="${attivo}">
-        <span class="dm-imp-tab-icon">${segnoHtml("home")}</span><span>${esc(plantLabel(impianto, index, NOME()))}</span>
+        <span class="dm-imp-tab-icon">🏠</span><span>${esc(plantLabel(impianto, index, NOME()))}</span>
       </button>`;
     })
     .join("");
@@ -218,7 +217,7 @@ function ensureConfigTabs() {
               "This is the main plant and cannot be removed: it is the one the dashboard has always read.",
             ),
           )}</p>`
-        : `<button type="button" class="dm-imp-cfg-del" data-dm-impianto-elimina="${esc(corrente.id)}">${segnoHtml("trash")} ${esc(
+        : `<button type="button" class="dm-imp-cfg-del" data-dm-impianto-elimina="${esc(corrente.id)}">🗑 ${esc(
             t("Elimina questo impianto", "Delete this plant"),
           )}</button>`
     }`;

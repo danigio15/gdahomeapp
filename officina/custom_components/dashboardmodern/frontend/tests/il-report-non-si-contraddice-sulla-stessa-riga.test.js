@@ -36,15 +36,15 @@ test("la quota si rifa' sullo stesso valore del numero a destra", () => {
   /* Il mese vero: casa 100 kWh, dalla rete 20 — un quinto dalla rete. E la
    * wallbox in quel mese ha caricato zero. */
   scriviLaQuota(riga, splitFor({ house: 100, gridImport: 20 }, 0));
-  assert.match(riga.pezzi[0].innerHTML, /^<i class="dm-segno" data-dm-segno="sun"[^>]*><\/i> 0,0 kWh$/);
-  assert.match(riga.pezzi[1].innerHTML, /^<i class="dm-segno" data-dm-segno="socket"[^>]*><\/i> 0,0 kWh$/);
+  assert.equal(riga.pezzi[0].textContent, "☀️ 0,0 kWh");
+  assert.equal(riga.pezzi[1].textContent, "🔌 0,0 kWh");
 });
 
 test("e quando il dispositivo ha consumato, la quota segue la casa", () => {
   const riga = rigaFinta("0.0", "0.0");
   scriviLaQuota(riga, splitFor({ house: 100, gridImport: 20 }, 10));
-  assert.match(riga.pezzi[0].innerHTML, /^<i class="dm-segno" data-dm-segno="sun"[^>]*><\/i> 8,0 kWh$/);
-  assert.match(riga.pezzi[1].innerHTML, /^<i class="dm-segno" data-dm-segno="socket"[^>]*><\/i> 2,0 kWh$/);
+  assert.equal(riga.pezzi[0].textContent, "☀️ 8,0 kWh");
+  assert.equal(riga.pezzi[1].textContent, "🔌 2,0 kWh");
 });
 
 test("una riga senza quel pezzo non fa danni", () => {

@@ -200,7 +200,7 @@ test("i dettagli comandano davvero, con le icone di cio' che raccontano", () => 
   // disegno vero, la luce la lampadina, il clima fiamma o fiocco.
   assert.match(sezione, /cdApplianceIcon/);
   assert.match(sezione, /function climateGlyph/);
-  assert.match(sezione, /segnoHtml\("battery", \{ classe: riga\.level <= 20/);
+  assert.match(sezione, /🪫/);
   // Niente piu' pallini anonimi nelle righe dei dettagli.
   assert.doesNotMatch(sezione, /dm-w-dot/);
 });

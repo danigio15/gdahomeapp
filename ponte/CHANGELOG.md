@@ -11,6 +11,26 @@ fuori. La plancia dentro continua a dire la sua, e si legge dov'è sempre
 stata: nella pastiglia «La plancia» della console. Sono due numeri perché
 sono due cose.
 
+## 1.9.1
+
+**Torna la plancia della 1.8.0.** Con la plancia della 1.9.0, su molte case,
+dopo le azioni rapide non compariva più niente: né la barra sotto il meteo, né
+le tessere, né le stanze, né la configurazione. Succedeva dentro Home Assistant
+e nell'app. La plancia della 1.8.0 era quella che funzionava per tutti, e torna
+com'era, con le sue icone. La configurazione resta quella di prima: il formato è
+lo stesso, e l'add-on tiene comunque le ultime cinque versioni.
+
+Le novità della plancia 1.9.0 per ora non ci sono: le batterie di accumulo, la
+cottura, la stanza a tessere, i varchi da escludere dall'antifurto e i disegni
+del catalogo al posto delle emoji. Tornano con la prossima versione, quando sarà
+chiaro perché su quelle case la plancia nuova non partiva.
+
+**La scheda Licenza della console dice meglio le cose.** Base è una sola
+plancia nell'app e nel browser, con l'accesso solo dalla rete di casa. Premium
+si acquista dall'app gdahome per iPhone e vale anche su Android e nel browser.
+
+Il resto della 1.9.0 resta com'è.
+
 ## 1.9.0
 
 **In auto c'è il traffico.** La diagnosi di Android Auto sulla 1.8.0 diceva

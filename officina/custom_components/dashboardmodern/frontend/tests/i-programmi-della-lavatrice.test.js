@@ -25,7 +25,7 @@ test("la config scritta comanda, e si normalizza", () => {
     voci.map((voce) => voce.name),
     ["Eco 40", "Lana"],
   );
-  assert.equal(voci[0].icon, "washer");
+  assert.equal(voci[0].icon, "🧺");
   assert.equal(voci[1].icon, "🧶");
 });
 

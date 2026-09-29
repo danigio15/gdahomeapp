@@ -72,7 +72,6 @@ import {
   selectedPeriod,
   t,
 } from "./shared.js";
-import { segnoHtml } from "../core/segni-del-catalogo.js";
 
 const KEY = "__DASHBOARDMODERN_REPORT_A_FASCE__";
 const state = (root[KEY] ||= {
@@ -169,19 +168,19 @@ export function ilBloccoDelleFasce(report, config, periodo) {
         : t("come una tariffa unica", "the same as a single rate");
     confronto = `
       <div class="dm-fasce-confronto" data-verso="${meglio ? "meglio" : peggio ? "peggio" : "pari"}">
-        <span aria-hidden="true">${segnoHtml(meglio ? "coin" : peggio ? "warning" : "gauge")}</span>
+        <span aria-hidden="true">${meglio ? "💰" : peggio ? "⚠️" : "⚖️"}</span>
         <span>${meglio || peggio ? `<b>${esc(soldi(Math.abs(report.risparmio)))}</b> ` : ""}${esc(verso)} <small>${esc(t("Con una tariffa unica", "With a single rate"))} ${formatNumber(report.unico.prezzo, 3)} €/kWh → ${soldi(report.unico.euro)}</small></span>
       </div>`;
   }
 
   /* Quanta parte e' misurata e quanta e' stimata: chi legge deve saperlo. */
   const nota = report.tuttoMisurato
-    ? `<span aria-hidden="true">${segnoHtml("check")}</span> ${esc(t("Misurato ora per ora su tutto il mese.", "Measured hour by hour for the whole month."))}`
-    : `<span aria-hidden="true">${segnoHtml("info")}</span> ${esc(t("Misurato ora per ora:", "Measured hour by hour:"))} <b>${formatNumber(report.misurato.kwh, 1)} kWh</b>. ${esc(t("Le ore più vecchie Home Assistant non le tiene.", "Home Assistant does not keep the oldest hours."))} ${esc(t("Stimati alla media delle fasce:", "Estimated at the average of the bands:"))} <b>${formatNumber(report.stimato.kwh, 1)} kWh</b> (${formatNumber(report.stimato.prezzo, 3)} €/kWh).`;
+    ? `<span aria-hidden="true">✅</span> ${esc(t("Misurato ora per ora su tutto il mese.", "Measured hour by hour for the whole month."))}`
+    : `<span aria-hidden="true">ℹ️</span> ${esc(t("Misurato ora per ora:", "Measured hour by hour:"))} <b>${formatNumber(report.misurato.kwh, 1)} kWh</b>. ${esc(t("Le ore più vecchie Home Assistant non le tiene.", "Home Assistant does not keep the oldest hours."))} ${esc(t("Stimati alla media delle fasce:", "Estimated at the average of the bands:"))} <b>${formatNumber(report.stimato.kwh, 1)} kWh</b> (${formatNumber(report.stimato.prezzo, 3)} €/kWh).`;
 
   return `
     <div class="dm-fasce-testata">
-      <div class="dm-fasce-titolo">${segnoHtml("timer")} ${esc(t("Come si divide il costo reale", "How the real cost breaks down"))}</div>
+      <div class="dm-fasce-titolo">🕐 ${esc(t("Come si divide il costo reale", "How the real cost breaks down"))}</div>
       <div class="dm-fasce-totale"><b>${soldi(report.euro)}</b> <small>${formatNumber(report.kwh, 1)} kWh ${esc(t("dalla rete", "from grid"))} · ${esc(ilMesePerEsteso(periodo))}</small></div>
     </div>
     <div class="dm-fasce-barra">${barra}</div>
@@ -243,7 +242,7 @@ export function ilProfiloDelleOre(report, config) {
 
   return `
     <div class="dm-profilo-testata">
-      <div class="dm-profilo-titolo">${segnoHtml("timer")} ${esc(t("A che ora compri dalla rete", "When you buy from the grid"))}</div>
+      <div class="dm-profilo-titolo">🕐 ${esc(t("A che ora compri dalla rete", "When you buy from the grid"))}</div>
       <div class="dm-profilo-legenda">${pallini}</div>
     </div>
     <div class="dm-profilo-grafico">${colonne}</div>

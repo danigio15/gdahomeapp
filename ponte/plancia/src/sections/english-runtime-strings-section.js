@@ -54,8 +54,7 @@ const MARCHIO = "__dmEnglishRuntimeStrings";
 /* Le frasi che portano un numero dietro — «Attivo da 1 min», «✅ Rilevate: 3»
  * — si traducono per prefisso, con le unita' della coda. */
 const PREFISSI = [
-  ["✅ Rilevate: ", "Detected: "],
-  ["Rilevate: ", "Detected: "],
+  ["✅ Rilevate: ", "✅ Detected: "],
   ["Attivo da ", "Active for "],
 ];
 const UNITA = [

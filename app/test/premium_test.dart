@@ -2,6 +2,8 @@
 /// regalo, la webapp. Fatta come quella di gdanav.
 library;
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gdahome/casa/archivio_delle_case.dart';
@@ -16,13 +18,17 @@ import 'package:in_app_purchase/in_app_purchase.dart';
 
 import 'licenza/gettoni_di_prova.dart';
 
-/// Un negozio finto che si ricorda cosa si e' comprato.
+/// Un negozio finto che si ricorda cosa si e' comprato, e che consegna gli
+/// acquisti quando glielo si dice ([consegna]).
 class _NegozioFinto implements NegozioGdahome {
   _NegozioFinto({this.giorni = 14});
 
   final int giorni;
   final comprati = <String>[];
   var ripristinati = 0;
+  final _acquisti = StreamController<List<PurchaseDetails>>.broadcast();
+
+  void consegna(PurchaseDetails acquisto) => _acquisti.add([acquisto]);
 
   @override
   String get piattaforma => 'android';
@@ -36,7 +42,7 @@ class _NegozioFinto implements NegozioGdahome {
     PianoGdahome(id: pianoAnnuale, prezzo: '49,99 €', giorniProva: giorni),
   ];
   @override
-  Stream<List<PurchaseDetails>> get acquisti => const Stream.empty();
+  Stream<List<PurchaseDetails>> get acquisti => _acquisti.stream;
   @override
   Future<void> compra(String piano) async => comprati.add(piano);
   @override
@@ -49,6 +55,7 @@ void main() {
   Future<Collegamento> casaSenzaFilo(
     WidgetTester tester, {
     String? gettone,
+    bool addonVecchio = false,
   }) async {
     late Collegamento collegamento;
     await tester.runAsync(() async {
@@ -60,7 +67,11 @@ void main() {
         casaAlCentralino: casaDiProva,
         inCasa: IndirizzoDelPonte.leggi('192.168.1.50'),
       );
-      await archivio.segnaIlGettone(casa.id, gettone ?? '');
+      if (addonVecchio) {
+        await archivio.segnaSenzaLicenze(casa.id);
+      } else {
+        await archivio.segnaIlGettone(casa.id, gettone ?? '');
+      }
       collegamento = Collegamento(
         archivio: archivio,
         licenza: GestoreLicenza(chiave: chiaveDiProva),
@@ -81,15 +92,18 @@ void main() {
 
   Future<GestoreDegliAcquisti> acquistiCon(
     WidgetTester tester,
-    _NegozioFinto negozio,
-  ) async {
+    _NegozioFinto negozio, {
+    PortaLaRicevuta? porta,
+  }) async {
     final acquisti = GestoreDegliAcquisti(
       negozio: negozio,
-      porta: ({
-        required piattaforma,
-        required prodotto,
-        required ricevuta,
-      }) async {},
+      porta:
+          porta ??
+          ({
+            required piattaforma,
+            required prodotto,
+            required ricevuta,
+          }) async {},
     );
     await tester.runAsync(acquisti.avvia);
     return acquisti;
@@ -104,7 +118,11 @@ void main() {
     final collegamento = await casaSenzaFilo(tester);
     await mostra(
       tester,
-      SchermataPremium(collegamento: collegamento, sulWeb: false),
+      SchermataPremium(
+        collegamento: collegamento,
+        sulWeb: false,
+        siCompraQui: true,
+      ),
     );
     expect(find.text('Premium'), findsOneWidget);
     expect(find.text('gdahome Premium'), findsOneWidget);
@@ -117,7 +135,7 @@ void main() {
     expect(ilBottone(tester).onPressed, isNull);
     expect(find.byKey(const Key('negozio-assente')), findsOneWidget);
     expect(find.text('Privacy'), findsOneWidget);
-    expect(find.text('Condizioni d\'uso'), findsOneWidget);
+    expect(find.text('Termini d\'uso'), findsOneWidget);
   });
 
   testWidgets('col negozio: si sceglie il piano e si compra quello', (
@@ -132,6 +150,7 @@ void main() {
         collegamento: collegamento,
         acquisti: acquisti,
         sulWeb: false,
+        siCompraQui: true,
       ),
     );
     expect(find.text('Prova gratis per 14 giorni'), findsOneWidget);
@@ -179,6 +198,7 @@ void main() {
         collegamento: collegamento,
         acquisti: acquisti,
         sulWeb: false,
+        siCompraQui: true,
       ),
     );
     expect(find.text('Abbonati a 49,99 €/anno'), findsOneWidget);
@@ -306,11 +326,11 @@ void main() {
     expect(find.textContaining('codice'), findsNothing);
     /* I due link che l'App Store vuole accanto all'abbonamento restano. */
     expect(find.text('Privacy'), findsOneWidget);
-    expect(find.text('Condizioni d\'uso'), findsOneWidget);
+    expect(find.text('Termini d\'uso'), findsOneWidget);
     expect(find.text('Ripristina abbonamento'), findsOneWidget);
   }, variant: TargetPlatformVariant.only(TargetPlatform.iOS));
 
-  testWidgets('sull\'Android e nel browser il codice regalo resta', (
+  testWidgets('sull\'Android non si compra, e il codice regalo resta', (
     tester,
   ) async {
     final collegamento = await casaSenzaFilo(tester);
@@ -318,6 +338,87 @@ void main() {
       tester,
       SchermataPremium(collegamento: collegamento, sulWeb: false),
     );
+    expect(find.byKey(const Key('premium-su-android')), findsOneWidget);
+    expect(find.byKey(const Key('compra-premium')), findsNothing);
+    expect(find.text('Ripristina abbonamento'), findsNothing);
     expect(find.byKey(const Key('codice-regalo')), findsOneWidget);
   }, variant: TargetPlatformVariant.only(TargetPlatform.android));
+
+  testWidgets(
+    'con l\'add-on vecchio non si compra: si aggiorna, e si ricontrolla',
+    (tester) async {
+      final collegamento = await casaSenzaFilo(tester, addonVecchio: true);
+      await mostra(
+        tester,
+        SchermataPremium(collegamento: collegamento, sulWeb: false),
+      );
+      expect(find.byKey(const Key('premium-addon-vecchio')), findsOneWidget);
+      expect(find.text('Aggiorna prima l\'add-on gdahome'), findsOneWidget);
+      expect(find.byKey(const Key('compra-premium')), findsNothing);
+      /* Un codice regalo li' non arriverebbe a nessuno: non si propone. */
+      expect(find.byKey(const Key('codice-regalo')), findsNothing);
+
+      /* La casa di questa prova non si raggiunge: il tasto lo dice, invece di
+     * non fare niente. */
+      await tester.runAsync(() async {
+        await tester.tap(find.byKey(const Key('premium-controlla')));
+        await Future<void>.delayed(const Duration(milliseconds: 200));
+      });
+      await tester.pump();
+      expect(find.textContaining('non risponde adesso'), findsOneWidget);
+    },
+    variant: TargetPlatformVariant.only(TargetPlatform.iOS),
+  );
+
+  testWidgets('pagato, e la casa non risponde: «Acquisto completato»', (
+    tester,
+  ) async {
+    final collegamento = await casaSenzaFilo(tester);
+    final negozio = _NegozioFinto();
+    final acquisti = await acquistiCon(
+      tester,
+      negozio,
+      porta: ({required piattaforma, required prodotto, required ricevuta}) =>
+          throw const LicenzaRifiutata(
+            'La casa non è collegata adesso.',
+            definitiva: false,
+          ),
+    );
+    await mostra(
+      tester,
+      SchermataPremium(
+        collegamento: collegamento,
+        acquisti: acquisti,
+        sulWeb: false,
+      ),
+    );
+    expect(find.byKey(const Key('compra-premium')), findsOneWidget);
+
+    await tester.runAsync(() async {
+      negozio.consegna(
+        PurchaseDetails(
+          purchaseID: '2000000123456789',
+          productID: 'gdahome_premium_mensile',
+          verificationData: PurchaseVerificationData(
+            localVerificationData: '',
+            serverVerificationData: '',
+            source: 'app_store',
+          ),
+          transactionDate: '0',
+          status: PurchaseStatus.purchased,
+        ),
+      );
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+    });
+    await tester.pump();
+
+    /* Niente rosso e niente bottone: chi ha pagato non deve pagare due
+     * volte, e l'abbonamento arriva alla casa quando risponde. */
+    expect(acquisti.ceUnaRicevutaInSospeso, isTrue);
+    expect(acquisti.errore, isNull);
+    expect(find.byKey(const Key('ricevuta-in-attesa')), findsOneWidget);
+    expect(find.text('Acquisto completato'), findsOneWidget);
+    expect(find.textContaining('«Casa al lago» non risponde'), findsOneWidget);
+    expect(find.byKey(const Key('compra-premium')), findsNothing);
+  }, variant: TargetPlatformVariant.only(TargetPlatform.iOS));
 }

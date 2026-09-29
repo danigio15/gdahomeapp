@@ -37,7 +37,6 @@ import {
   t,
   wrapFunction,
 } from "./shared.js";
-import { svgDelSegno } from "../core/segni-del-catalogo.js";
 
 const KEY = "__DASHBOARDMODERN_SOLAR_THERMAL_DESIGN__";
 const STYLE_ID = "dm-solar-thermal-design";
@@ -75,11 +74,6 @@ const BUTTON_LABELS = [
   ["b-c-pompasol", () => t("Pompa Sol.", "Solar Pump")],
   ["b-c-ricircolo", () => t("Ricircolo", "Recirc.")],
 ];
-
-/* Il disegno del catalogo come immagine di sfondo, per un `::before` che
- * prima portava un'emoji come contenuto. */
-const immagineDelSegno = (chiave) =>
-  `url("data:image/svg+xml,${encodeURIComponent(svgDelSegno(chiave)).replace(/'/g, "%27").replace(/"/g, "%22")}")`;
 
 function stylesheet() {
   const idle = t("Impianto in attesa", "System idle");
@@ -997,10 +991,10 @@ function stylesheet() {
     font-size:10.5px;
     letter-spacing:1.2px;
   }
-  #page-boiler .b-stat-card .lbl::before { font-size:13px; line-height:1; width:1.15em; height:1.15em; flex:0 0 auto; background:center/contain no-repeat; }
-  #page-boiler .b-stat-card:nth-child(1) .lbl::before { content:""; background-image:${immagineDelSegno("thermometer")}; }
-  #page-boiler .b-stat-card:nth-child(2) .lbl::before { content:""; background-image:${immagineDelSegno("water")}; }
-  #page-boiler .b-stat-card:nth-child(3) .lbl::before { content:""; background-image:${immagineDelSegno("power")}; }
+  #page-boiler .b-stat-card .lbl::before { font-size:13px; line-height:1; }
+  #page-boiler .b-stat-card:nth-child(1) .lbl::before { content:"🌡️"; }
+  #page-boiler .b-stat-card:nth-child(2) .lbl::before { content:"💧"; }
+  #page-boiler .b-stat-card:nth-child(3) .lbl::before { content:"⚡"; }
   #page-boiler .b-stat-card .val {
     font-size:clamp(23px, 2.7vw, 31px);
     line-height:1.05;

@@ -414,10 +414,10 @@ test("la coda dice se una segnalazione arriva da una plancia o da GitHub", () =>
   /* Non cambia cosa puoi fare — si risponde e si chiude allo stesso modo —
    * ma dice se chi ha scritto la risposta se la ritrovera' nella dashboard. */
   const dalla = codaVoceMarkup(inCoda({ origin: "plancia" }));
-  assert.ok(dalla.includes('data-dm-segno="home"'), "manca il segno della plancia");
+  assert.ok(dalla.includes("🏠"), "manca il segno della plancia");
   const daGithub = codaVoceMarkup(inCoda({ origin: "github" }));
-  assert.ok(daGithub.includes('data-dm-segno="globe"'), "manca il segno di GitHub");
-  assert.ok(!daGithub.includes('data-dm-segno="home"'), "una da GitHub si dice anche dalla plancia");
+  assert.ok(daGithub.includes("🐙"), "manca il segno di GitHub");
+  assert.ok(!daGithub.includes("🏠"), "una da GitHub si dice anche dalla plancia");
 });
 
 test("anche una aperta a mano su GitHub si puo' rispondere e chiudere", () => {
@@ -513,22 +513,22 @@ test("un indirizzo che arriva dal backend non diventa markup", () => {
  */
 
 test("la graffetta compare solo dove c'e' un allegato", () => {
-  assert.ok(codaVoceMarkup(inCoda({ attachments: 2, comments: 0 })).includes('data-dm-segno="link" aria-hidden="true"></i> 2'));
+  assert.ok(codaVoceMarkup(inCoda({ attachments: 2, comments: 0 })).includes("📎 2"));
   const nuda = codaVoceMarkup(inCoda({ attachments: 0, comments: 0 }));
-  assert.ok(!nuda.includes('data-dm-segno="link"'));
-  assert.ok(!nuda.includes('data-dm-segno="chat"'));
+  assert.ok(!nuda.includes("📎"));
+  assert.ok(!nuda.includes("💬"));
 });
 
 test("il contatore dei commenti compare solo dove ce ne sono", () => {
-  assert.ok(codaVoceMarkup(inCoda({ comments: 3 })).includes('data-dm-segno="chat" aria-hidden="true"></i> 3'));
-  assert.ok(!codaVoceMarkup(inCoda({ comments: 0 })).includes('data-dm-segno="chat"'));
+  assert.ok(codaVoceMarkup(inCoda({ comments: 3 })).includes("💬 3"));
+  assert.ok(!codaVoceMarkup(inCoda({ comments: 0 })).includes("💬"));
 });
 
 test("un conteggio che non e' un numero non stampa NaN", () => {
   /* Arriva da GitHub: un campo mancante non deve diventare «📎 NaN». */
   const markup = codaVoceMarkup(inCoda({ attachments: undefined, comments: null }));
   assert.ok(!markup.includes("NaN"));
-  assert.ok(!markup.includes('data-dm-segno="link"'));
+  assert.ok(!markup.includes("📎"));
 });
 
 test("ogni voce della coda offre di vedere tutto", () => {
@@ -903,9 +903,9 @@ test("prendere in carico e' l'assegnazione di GitHub, non un'etichetta inventata
 test("chi ce l'ha in carico si legge in testa alla riga", () => {
   /* Il nome, e non solo il simbolo: il giorno che i manutentori sono due,
    * «presa in carico» senza dire da chi e' l'informazione a meta'. */
-  assert.ok(codaVoceMarkup(inCoda({ assignees: ["danigio15"] })).includes('data-dm-segno="person" aria-hidden="true"></i> danigio15'));
-  assert.ok(!codaVoceMarkup(inCoda({ assignees: [] })).includes('data-dm-segno="person"'));
-  assert.ok(!codaVoceMarkup(inCoda()).includes('data-dm-segno="person"'));
+  assert.ok(codaVoceMarkup(inCoda({ assignees: ["danigio15"] })).includes("🙋 danigio15"));
+  assert.ok(!codaVoceMarkup(inCoda({ assignees: [] })).includes("🙋"));
+  assert.ok(!codaVoceMarkup(inCoda()).includes("🙋"));
 });
 
 test("una segnalazione gia' chiusa non si prende in carico", () => {
@@ -1007,18 +1007,18 @@ test("chi ha scritto si vede sulla riga, prima ancora di aprirla", () => {
    * dopo. Il pallino invece resta, ed e' quello che chi apre il cruscotto
    * legge senza dover scorrere riga per riga. */
   conINonLetti([{ number: 7, title: "x", messages: 2 }], () => {
-    assert.ok(codaVoceMarkup(inCoda({ number: 7 })).includes("● nuovo"));
-    assert.ok(!codaVoceMarkup(inCoda({ number: 8 })).includes("● nuovo"));
+    assert.ok(codaVoceMarkup(inCoda({ number: 7 })).includes("🔵"));
+    assert.ok(!codaVoceMarkup(inCoda({ number: 8 })).includes("🔵"));
   });
 });
 
 test("e sul lato di chi aspetta una risposta", () => {
   const voce = ticket({ remote_id: "9", issue_url: "https://github.com/x/y/issues/9" });
   conINonLetti([{ number: 9, title: "x", messages: 1 }], () => {
-    assert.ok(voceMarkup(voce).includes("● risposta"));
+    assert.ok(voceMarkup(voce).includes("🔵"));
   });
   conINonLetti([], () => {
-    assert.ok(!voceMarkup(voce).includes("● risposta"));
+    assert.ok(!voceMarkup(voce).includes("🔵"));
   });
 });
 

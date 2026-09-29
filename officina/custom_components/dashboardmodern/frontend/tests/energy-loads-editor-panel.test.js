@@ -236,8 +236,7 @@ test("each card previews the bubble it draws, with its own colour and index", ()
   assert.equal(preview.style.getPropertyValue("--dm-loads-color"), "#ea580c");
   assert.equal(preview.dataset.dmLoadsVisible, "true");
   assert.equal(first.querySelector(".dm-loads-preview-index").textContent, "1");
-  // L'emoji di serie esce come il disegno del catalogo, non come testo.
-  assert.match(first.querySelector(".dm-loads-preview-bubble").innerHTML, /data-dm-segno="socket"/);
+  assert.equal(first.querySelector(".dm-loads-preview-bubble").textContent, "🔌");
 });
 
 test("renaming a load updates its preview before it is saved", () => {
@@ -319,14 +318,13 @@ test("name, icon and colour are labelled fields, with the canonical icon picker"
   const picker = first.querySelector("[data-dm-load-icon-pick]");
   assert.ok(icon.id, "the input is addressable, so the picker can write into it");
   assert.equal(picker.classList.contains("dm-icon-picker"), false);
-  assert.match(picker.innerHTML, /data-dm-segno="socket"/, "the button previews the current icon");
-  assert.equal(icon.value, "🔌");
+  assert.equal(picker.textContent, icon.value, "the button previews the current icon");
 
   // The engine writes the glyph and fires change; the card must persist it.
   icon.value = "🔥";
   icon.dispatch("change");
   // The card is rebuilt on every edit, so the preview is read from the new one.
-  assert.match(cards()[0].querySelector(".dm-loads-preview-bubble").innerHTML, /data-dm-segno="radiator"/);
+  assert.equal(cards()[0].querySelector(".dm-loads-preview-bubble").textContent, "🔥");
 });
 
 test("the panel is the only renderer: an older list is cleared, not stacked on", () => {

@@ -42,7 +42,6 @@ import {
   t,
   wrapFunction,
 } from "./shared.js";
-import { segnoHtml } from "../core/segni-del-catalogo.js";
 
 const KEY = "__DASHBOARDMODERN_LINGUA__";
 const state = (root[KEY] ||= { installed: false });
@@ -103,7 +102,7 @@ function rigaMarkup() {
     ),
   ].join("");
   return `<div class="ed-slot dm-lingua" data-dm-lingua>
-    <div class="ed-slot-lbl">${segnoHtml("globe")} ${esc(t("Lingua della plancia", "Dashboard language"))}</div>
+    <div class="ed-slot-lbl">🌍 ${esc(t("Lingua della plancia", "Dashboard language"))}</div>
     <div class="dm-lingua-nota">${esc(
       t(
         "Lasciandola sulla lingua di Home Assistant la plancia segue il profilo di chi guarda. Sceglierne una la fissa per questa dashboard, anche se Home Assistant parla un'altra lingua.",

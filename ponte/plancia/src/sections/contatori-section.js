@@ -56,7 +56,6 @@ import {
   t,
 } from "./shared.js";
 import { nomeDaHomeAssistant } from "./editor-slots-section.js";
-import { segnoHtml } from "../core/segni-del-catalogo.js";
 
 const KEY = "__DASHBOARDMODERN_CONTATORI__";
 const state = (root[KEY] ||= {
@@ -321,7 +320,7 @@ export function ensureContatoriTab() {
   voce.className = "tab";
   voce.dataset.tab = CONTATORI_TAB;
   voce.id = `tab-${CONTATORI_TAB}`;
-  voce.innerHTML = `<span class="icon">${segnoHtml("water")}</span><span class="text">${esc(t("Acqua e gas", "Water and gas"))}</span>`;
+  voce.innerHTML = `<span class="icon">💧</span><span class="text">${esc(t("Acqua e gas", "Water and gas"))}</span>`;
   voce.addEventListener("click", () => {
     for (const nodo of doc.querySelectorAll(".tab")) nodo.classList.remove("active");
     for (const nodo of doc.querySelectorAll(".page")) nodo.classList.remove("active");
@@ -886,7 +885,7 @@ export function tesseraDeiContatori(vista) {
     key: CONTATORI_TAB,
     accent:
       come.stato === "perdita" ? "#dc2626" : come.stato === "pressione" ? "#f59e0b" : "#0ea5e9",
-    icon: "water",
+    icon: "💧",
     label: t("Acqua e gas", "Water and gas"),
     value,
     caption,

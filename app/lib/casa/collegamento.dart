@@ -385,6 +385,15 @@ class Collegamento {
        * rete che vede la casa, il filo si apre e lo stato si sistema. */
       _perche = errore.spiegazione;
       _fuoriSenzaPremium = errore is PremiumRichiesto;
+      /* Il centralino sa che l'add-on di questa casa e' vecchio: ce lo si
+       * ricorda come se l'avesse detto lei, cosi' da fuori non si bussa piu'
+       * e la pagina Premium dice di aggiornarlo. */
+      if (errore is AddonDaAggiornare) {
+        await archivio.segnaSenzaLicenze(casa.id);
+        await licenza.conosci(archivio.tutte);
+        if (_filo != filo) return;
+        _casa = archivio.quella(casa.id) ?? casa;
+      }
       _vai(ComeVa.irraggiungibile);
       _riprendiQuandoTorna(filo);
       return;
@@ -422,22 +431,25 @@ class Collegamento {
   /// schermata dice perche'. Se cambia qualcosa si rilegge la plancia: una
   /// casa appena diventata Premium riapre quella scelta l'ultima volta, una
   /// che non lo e' piu' torna alla principale.
-  Future<void> _chiediLaLicenza(Filo filo) async {
+  ///
+  /// Torna `true` se la casa ha risposto.
+  Future<bool> _chiediLaLicenza(Filo filo) async {
     final casa = _casa;
-    if (casa == null) return;
+    if (casa == null) return false;
     final prima = licenza.premium;
-    if (!await licenza.chiedi(filo, casa, archivio)) return;
-    if (_filo != filo) return;
+    if (!await licenza.chiedi(filo, casa, archivio)) return false;
+    if (_filo != filo) return true;
     final adesso = archivio.quella(casa.id) ?? casa;
     _casa = adesso;
     if (_daDove != null &&
         _daDove != DaDove.daDentro &&
         !licenza.stradeDaFuoriPer(adesso)) {
       await apri(forza: true);
-      return;
+      return true;
     }
     if (licenza.premium != prima) await _leggiLaPlancia(filo);
     _avvisa();
+    return true;
   }
 
   /// Richiede la licenza alla casa: dopo un acquisto, o dalla pagina Premium.
@@ -445,6 +457,22 @@ class Collegamento {
     final filo = _filo;
     if (filo == null || !filo.dentro) return;
     await _chiediLaLicenza(filo);
+  }
+
+  /// «Controlla di nuovo», dalla pagina Premium: dopo aver aggiornato
+  /// l'add-on, o con una casa che non aveva ancora risposto.
+  ///
+  /// Col filo su si richiede la licenza e basta. Col filo giu' — l'add-on che
+  /// si riavvia dopo l'aggiornamento lo butta giu' — si riapre, e appena
+  /// dentro la licenza la si chiede comunque. Torna `true` se la casa ha
+  /// risposto: `false` vuol dire che adesso non si raggiunge, e chi guarda lo
+  /// deve sapere invece di vedere un tasto che non fa niente.
+  Future<bool> ricontrollaLaLicenza() async {
+    if (!_pronta) {
+      await apri(forza: true);
+      if (!_pronta) return false;
+    }
+    return _chiediLaLicenza(_filo!);
   }
 
   /// Se questa plancia si puo' aprire: la principale sempre, le altre con

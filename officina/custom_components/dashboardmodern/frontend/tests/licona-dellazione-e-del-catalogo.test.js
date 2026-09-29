@@ -120,9 +120,9 @@ test("la tabella di che icona spetta a che tipo e' una sola", async () => {
     assert.match(sorgente, /azioneDiSerie/, `${dove} chiede il nome al catalogo`);
   }
   /* E le emoji della tendina degli editor se ne vanno col resto: un `<option>`
-   * sa tenere solo del testo, e la voce dice il tipo senza segno. */
-  assert.doesNotMatch(editor, /function actionTypeGlyph/);
-  assert.doesNotMatch(editor, /actionCatalogMatch\(azioneDiSerie\(value\)\)\?\.glyph/);
+   * sa tenere solo del testo, ma il segno lo da' il catalogo. */
+  assert.match(editor, /function actionTypeGlyph/);
+  assert.match(editor, /actionCatalogMatch\(azioneDiSerie\(value\)\)\?\.glyph/);
 });
 
 test("la passata delle icone degli Avvisi resta dentro la scheda degli Avvisi", async () => {

@@ -104,11 +104,10 @@ class CasaConosciuta {
   /// suo add-on e' di prima delle licenze, o le ha spente.
   ///
   /// Allora non ha gettoni, e non potrebbe averne: comprare Premium li' non
-  /// arriverebbe a nessuno. Un lucchetto senza una chiave da comprare e' solo
-  /// un lucchetto, e l'app quella casa la lascia aperta finche' l'add-on non
-  /// si aggiorna. Si ricorda, come il gettone: all'apertura si sa gia', prima
-  /// di bussare, e una casa lontana non resta fuori per un lucchetto che non
-  /// la riguarda.
+  /// arriverebbe a nessuno. La casa resta Base, e al posto dell'acquisto la
+  /// pagina Premium dice di aggiornare l'add-on; da fuori casa si legge lo
+  /// stesso invito. Si ricorda, come il gettone: all'apertura si sa gia',
+  /// prima di bussare.
   final bool senzaLicenze;
 
   /// `true` quando questa casa e' stata abbinata prima che esistessero le

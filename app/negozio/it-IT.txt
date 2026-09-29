@@ -1,5 +1,3 @@
 Il navigatore conosce le ZTL, ti chiede se hai il permesso e ti propone le strade a risparmio. Su Android Auto e CarPlay c'è il traffico, con le corsie agli svincoli. L'app è più veloce, soprattutto fuori casa.
 
-Nella plancia: la stanza diventa una tavola di comandi, le batterie di accumulo in Energia, la friggitrice negli Elettrodomestici, l'esclusione di un varco dall'antifurto.
-
-Aggiorna anche gdahome in Home Assistant: le sezioni nuove arrivano da lì.
+Aggiorna gdahome in Home Assistant alla 1.9.1: torna la plancia che funziona per tutti, con la configurazione di prima.

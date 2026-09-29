@@ -162,8 +162,8 @@ function onClick(event) {
   ensureAlarmModesBlock();
   root.edToast?.(
     fuori.has(mode)
-      ? t("Modalità nascosta", "Mode hidden")
-      : t("Modalità mostrata", "Mode shown"),
+      ? t("🛡️ Modalità nascosta", "🛡️ Mode hidden")
+      : t("🛡️ Modalità mostrata", "🛡️ Mode shown"),
   );
 }
 

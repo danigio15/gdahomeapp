@@ -14,7 +14,6 @@
  * Every write goes through the canonical `loads` section; the legacy popup keys
  * are re-derived from it on save. Event driven: no polling, no observer.
  */
-import { segnoHtml } from "../core/segni-del-catalogo.js";
 import { openIconPicker } from "./icon-engine-section.js";
 import { applianceArtwork } from "../core/appliance-artwork.js";
 import { IMPIANTO_SCELTO_KEY, PRIMO_IMPIANTO, plantAt, plantLabel } from "../core/energy-plants.js";
@@ -345,12 +344,6 @@ function element(tag, className = "", text = "") {
   return node;
 }
 
-/* Un tasto o un segno col disegno del catalogo dentro. */
-function segnato(node, chiave) {
-  node.innerHTML = segnoHtml(chiave);
-  return node;
-}
-
 function iconInto(target, icon) {
   writeIconGlyph(target, icon, { size: 24, kind: "load" });
 }
@@ -412,7 +405,7 @@ function iconField(id, valore, onChange) {
   input.dataset.dmLoadIcon = "true";
   input.dataset.iconCategory = "load";
   input.value = valore || "";
-  input.placeholder = "mdi:stove";
+  input.placeholder = "🍳 / mdi:stove";
   input.addEventListener("input", () => iconInto(pick, clean(input.value)));
   input.addEventListener("change", () => onChange(clean(input.value)));
   const pick = element("button", "dm-loads-icon-btn");
@@ -535,9 +528,7 @@ function subloadRow(panel, load, child, index) {
     segno.innerHTML = ritratto;
     title.append(segno, doc.createTextNode(` ${child.name}`));
   } else {
-    const icona = element("span", "dm-loads-subload-art");
-    iconInto(icona, child.icon);
-    title.append(icona, element("span", "", ` ${child.name}`));
+    title.textContent = `${child.icon || "🔌"} ${child.name}`;
   }
   const detail = element("div", "ed-row-old mono");
   detail.textContent =
@@ -556,7 +547,7 @@ function subloadRow(panel, load, child, index) {
     /* Si può anche toglierlo. Non si può modificarlo — quello si fa nella sua
      * sezione, ed è il senso del cartellino qui accanto — ma restare
      * incastrato nel cerchio in cui è finito non era una scelta di nessuno. */
-    const stacca = segnato(element("button", "ed-del"), "trash");
+    const stacca = element("button", "ed-del", "🗑️");
     stacca.type = "button";
     stacca.dataset.dmSubloadUnassign = "true";
     stacca.title = t("Togli dal carico", "Remove from the load");
@@ -576,7 +567,7 @@ function subloadRow(panel, load, child, index) {
     return [row];
   }
 
-  const edit = segnato(element("button", "ed-del"), "pencil");
+  const edit = element("button", "ed-del", "✏️");
   edit.type = "button";
   edit.dataset.dmSubloadEdit = "true";
   edit.title = t("Modifica", "Edit");
@@ -584,7 +575,7 @@ function subloadRow(panel, load, child, index) {
     state.editing = state.editing === child.id ? "" : child.id;
     render(panel);
   });
-  const remove = segnato(element("button", "ed-del"), "trash");
+  const remove = element("button", "ed-del", "🗑️");
   remove.type = "button";
   remove.dataset.dmSubloadDelete = "true";
   remove.title = t("Elimina", "Delete");
@@ -656,7 +647,7 @@ function loadCard(panel, load, index, total) {
    * la frase e il tasto stanno a un dito di distanza, appena si apre. */
   const doppione = travasoDelCerchio(load);
   if (doppione) {
-    const segno = segnato(element("span", "dm-loads-travaso-segno"), "warning");
+    const segno = element("span", "dm-loads-travaso-segno", "⚠️");
     segno.title = `${t("Questo sensore è configurato anche in", "This sensor is also configured in")} ${
       doppione.nomi.join(", ") || t("un altro impianto", "another plant")
     }`;
@@ -679,7 +670,7 @@ function loadCard(panel, load, index, total) {
     });
     controls.append(button);
   }
-  const remove = segnato(element("button", "ed-del"), "trash");
+  const remove = element("button", "ed-del", "🗑️");
   remove.type = "button";
   remove.title = t("Elimina carico", "Delete load");
   remove.addEventListener("click", (event) => {
@@ -760,7 +751,7 @@ function loadCard(panel, load, index, total) {
   let roomField = null;
   if (stanze.length && caricoDelPrimoImpianto(load)) {
     const riga = element("label", "ed-slot dm-loads-field dm-loads-room-circle");
-    riga.append(element("span", "ed-slot-lbl", t("Cerchio = stanza", "Circle = room")));
+    riga.append(element("span", "ed-slot-lbl", `🛋️ ${t("Cerchio = stanza", "Circle = room")}`));
     const scelta = doc.createElement("select");
     scelta.className = "ed-input";
     scelta.dataset.dmLoadRoom = "true";
@@ -1026,9 +1017,7 @@ function loadCard(panel, load, index, total) {
         segno.innerHTML = ritratto;
         choice.append(segno, element("span", "", clean(device.name)));
       } else {
-        const segno = element("span", "dm-loads-subload-art");
-        segno.innerHTML = segnoHtml("socket", { misura: 26 });
-        choice.append(segno, element("span", "", clean(device.name)));
+        choice.textContent = `🔌 ${clean(device.name)}`;
       }
       choice.addEventListener("click", () => {
         void assegnaElettrodomestico(panel, load, at).catch((error) => {
@@ -1140,7 +1129,7 @@ export function renderEnergyLoadsEditor(panel = doc?.querySelector?.(PANEL)) {
 
     const actions = element("div", "ed-action-bar");
     actions.dataset.state = state.dirty ? "dirty" : "clean";
-    const save = element("button", "ed-save-btn", t("Salva carichi", "Save loads"));
+    const save = element("button", "ed-save-btn", `💾 ${t("Salva carichi", "Save loads")}`);
     save.type = "button";
     save.dataset.dmLoadsSave = "true";
     save.disabled = !state.dirty;
@@ -1308,8 +1297,8 @@ export async function pulisciIlTravasoUnaVolta() {
   const quanti = puliti.filter((load, posto) => load !== carichi[posto]).length;
   root.edToast?.(
     t(
-      `${quanti} carichi ripuliti dal sensore dell'altro impianto`,
-      `${quanti} loads cleaned of the other plant's sensor`,
+      `🧹 ${quanti} carichi ripuliti dal sensore dell'altro impianto`,
+      `🧹 ${quanti} loads cleaned of the other plant's sensor`,
     ),
   );
   try {

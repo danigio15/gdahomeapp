@@ -2126,8 +2126,8 @@
         "gdahome",
         gdahome,
         due(
-          "Base: nell'app e nel browser una plancia, e solo da casa",
-          "Base: one dashboard in the app and the browser, and only at home",
+          "Base: una sola plancia nell'app e nel browser, e accesso solo dalla rete di casa",
+          "Base: one dashboard in the app and the browser, and access only from the home network",
         ),
       ),
     );

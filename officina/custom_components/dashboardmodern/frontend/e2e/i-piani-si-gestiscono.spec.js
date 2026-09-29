@@ -143,7 +143,7 @@ test("il cestino chiede prima, e dice quante stanze restano scoperte", async ({
   const domanda = page.locator('#dm-piani-pannello [data-chiede="si"]');
   await expect(domanda).toBeVisible();
   await expect(domanda).toContainText("3 stanze");
-  await expect(domanda).toContainText("non vengono cancellate");
+  await expect(domanda).toContainText("non si cancellano");
 
   /* Annullando non succede niente. */
   await domanda.locator("[data-dm-piano-annulla]").click();
@@ -181,56 +181,6 @@ test("un piano nuovo si aggiunge, e un nome già preso lo dice", async ({ page }
   await expect(
     page.locator('#dm-piani-pannello [data-dm-piano="Mansarda"] .dm-piano-stanze'),
   ).toHaveText("0 stanze");
-});
-
-/* «Nel momento in cui si prova a mettere il nome del piano non fa scrivere
- * nulla» (#170). Il pannello si ridisegna a ogni clic della scheda, e il clic
- * dentro la casella la sostituiva con una nuova, senza il cursore: si
- * scriveva nel vuoto. `fill` non se ne accorgeva, perché scrive senza
- * cliccare: qui si fa come una persona, clic e poi tasti. */
-for (const [come, stanze, piani, prima] of [
-  ["con due piani", STANZE, ["Piano terra", "Primo piano"], ["Piano terra", "Primo piano"]],
-  ["senza piani", STANZE.map(({ floor: _floor, ...resto }) => resto), [], []],
-]) {
-  test(`il nome di un piano nuovo si scrive cliccando nella casella, ${come}`, async ({
-    page,
-  }, testInfo) => {
-    await apriLeStanze(page, testInfo, stanze, piani);
-    const campo = page.locator("#dm-piani-pannello [data-dm-piano-nome]");
-    await campo.click();
-    await page.keyboard.type("Mansarda");
-    await expect(campo).toHaveValue("Mansarda");
-    await expect(campo).toBeFocused();
-    /* Un altro clic nella casella, per correggere: quello che c'è resta. */
-    await campo.click();
-    await page.keyboard.press("End");
-    await page.keyboard.type(" alta");
-    await expect(campo).toHaveValue("Mansarda alta");
-    await page.locator("#dm-piani-pannello [data-dm-piano-aggiungi]").click();
-    await expect.poll(() => nomiDeiPiani(page)).toEqual([...prima, "Mansarda alta"]);
-  });
-}
-
-test("un nome già preso lo dice, e lascia nella casella quello che hai scritto", async ({
-  page,
-}, testInfo) => {
-  await apriLeStanze(page, testInfo);
-  const campo = page.locator("#dm-piani-pannello [data-dm-piano-nome]");
-  await campo.click();
-  await page.keyboard.type("Primo piano");
-  await page.locator("#dm-piani-pannello [data-dm-piano-aggiungi]").click();
-  await expect(page.locator("#dm-piani-pannello [data-dm-piano-errore]")).toHaveText(
-    /si chiama già così/i,
-  );
-  /* Si corregge, non si riscrive da capo. */
-  await expect(campo).toHaveValue("Primo piano");
-  await campo.click();
-  await page.keyboard.press("End");
-  await page.keyboard.type(" bis");
-  await page.keyboard.press("Enter");
-  await expect
-    .poll(() => nomiDeiPiani(page))
-    .toEqual(["Piano terra", "Primo piano", "Primo piano bis"]);
 });
 
 test("senza piani il pannello c'è lo stesso, e dice cosa farne", async ({ page }, testInfo) => {
@@ -313,15 +263,8 @@ test("nella pagina Stanze ogni piano porta il suo segno", async ({ page }, testI
   /* Il foglio li scrive in maiuscolo e `innerText` stringe gli spazi: si
    * confronta quello che dicono. */
   expect(
-    (await titoli.allInnerTexts()).map((testo) => testo.replace(/\s+/g, " ").trim().toLowerCase()),
-  ).toEqual(["piano terra", "primo piano", "senza piano"]);
-  /* I segni salvati quando erano emoji escono come il disegno che dice la
-   * stessa cosa: la casa, e la mansarda per la scala. */
-  expect(
-    await titoli.evaluateAll((nodi) =>
-      nodi.map((nodo) => nodo.querySelector("[data-dm-segno]")?.dataset.dmSegno || ""),
-    ),
-  ).toEqual(["home", "room-attic", ""]);
+    (await titoli.allInnerTexts()).map((testo) => testo.replace(/\s+/g, " ").toLowerCase()),
+  ).toEqual(["🏠piano terra", "🪜primo piano", "senza piano"]);
   await page.locator("#page-stanze").screenshot({ path: `${SCATTI}/piani-stanze-vero.png` });
 });
 
@@ -331,28 +274,25 @@ test("il segno di un piano si sceglie da una striscia, e resta salvato", async (
   await apriLeStanze(page, testInfo);
   const riga = page.locator('#dm-piani-pannello [data-dm-piano="Piano terra"]');
   const segno = riga.locator("[data-dm-piano-segno]");
-  const disegno = (nodo) => nodo.locator("[data-dm-segno]").getAttribute("data-dm-segno");
-  /* Senza icona scelta porta quella di serie: la casa del catalogo. */
-  expect(await disegno(segno)).toBe("home");
+  /* Senza icona scelta porta quella di serie. */
+  await expect(segno).toHaveText("🏢");
   await expect(riga.locator(".dm-piano-segni")).toHaveCount(0);
 
   await segno.click();
   const striscia = riga.locator(".dm-piano-segni button");
   await expect(striscia).toHaveCount(8);
-  await riga.locator('[data-dm-piano-scegli="room-attic"]').click();
+  await riga.locator('[data-dm-piano-scegli="🪜"]').click();
 
-  await expect(segno.locator('[data-dm-segno="room-attic"]')).toHaveCount(1);
+  await expect(segno).toHaveText("🪜");
   /* La striscia si richiude da sola: scelto è scelto. */
   await expect(riga.locator(".dm-piano-segni")).toHaveCount(0);
   expect(await page.evaluate(() => JSON.parse(localStorage.getItem("cd_floor_icons")))).toEqual({
-    "Piano terra": "room-attic",
+    "Piano terra": "🪜",
   });
   /* E il piano accanto non si è mosso: si cambia uno per volta. */
   await expect(
-    page.locator(
-      '#dm-piani-pannello [data-dm-piano="Primo piano"] [data-dm-piano-segno] [data-dm-segno="home"]',
-    ),
-  ).toHaveCount(1);
+    page.locator('#dm-piani-pannello [data-dm-piano="Primo piano"] [data-dm-piano-segno]'),
+  ).toHaveText("🏢");
 
   /* Un secondo tocco sul segno richiude senza cambiare niente: la striscia è
    * un cassetto, non una finestra da chiudere con la crocetta. */
@@ -360,40 +300,5 @@ test("il segno di un piano si sceglie da una striscia, e resta salvato", async (
   await expect(riga.locator(".dm-piano-segni")).toHaveCount(1);
   await segno.click();
   await expect(riga.locator(".dm-piano-segni")).toHaveCount(0);
-  await expect(segno.locator('[data-dm-segno="room-attic"]')).toHaveCount(1);
-});
-
-/* «Nel momento si provi a mettere il nome del piano non fa scrivere nulla»
- * (#170). Il pannello si riscriveva a ogni tocco: il confronto col markup non
- * tornava mai, perche' il browser rilegge `data-dm-piano-nome` come
- * `data-dm-piano-nome=""`. Il tocco nella casella la metteva a fuoco, e subito
- * dopo la casella veniva sostituita da una nuova, senza fuoco: le lettere non
- * andavano da nessuna parte. `fill()` scrive il valore da solo e non se ne
- * accorgeva: qui si tocca e si batte a mano, come fa una persona. */
-test("nella casella del piano nuovo si scrive, dopo averla toccata", async ({ page }, testInfo) => {
-  await apriLeStanze(page, testInfo);
-  const campo = page.locator("#dm-piani-pannello [data-dm-piano-nome]");
-  await campo.click();
-  await expect(campo).toBeFocused();
-  await page.keyboard.type("Mansarda");
-  await expect(campo).toHaveValue("Mansarda");
-  await page.keyboard.press("Enter");
-  await expect.poll(() => nomiDeiPiani(page)).toEqual(["Piano terra", "Primo piano", "Mansarda"]);
-});
-
-test("un nome gia' preso non cancella quello che si e' scritto", async ({ page }, testInfo) => {
-  await apriLeStanze(page, testInfo);
-  const campo = page.locator("#dm-piani-pannello [data-dm-piano-nome]");
-  await campo.click();
-  await page.keyboard.type("Piano terra");
-  await page.keyboard.press("Enter");
-  await expect(page.locator("#dm-piani-pannello [data-dm-piano-errore]")).toHaveText(
-    /si chiama già così/i,
-  );
-  /* Il messaggio riscrive il pannello davvero: il nome resta, e il fuoco pure,
-   * cosi' si corregge senza ribattere tutto. */
-  await expect(campo).toHaveValue("Piano terra");
-  await expect(campo).toBeFocused();
-  await page.keyboard.type(" 2");
-  await expect(campo).toHaveValue("Piano terra 2");
+  await expect(segno).toHaveText("🪜");
 });
