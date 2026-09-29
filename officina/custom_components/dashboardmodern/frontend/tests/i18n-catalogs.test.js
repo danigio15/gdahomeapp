@@ -224,6 +224,10 @@ const LOCALE_IDENTITIES = {
     /* L'aquarium et ses litres (#127) s'écrivent pareil des deux côtés. */
     "Aquarium",
     "Litres",
+    /* Le compte d'un groupe fermé d'actions rapides (#139): «1 action»,
+     * «3 actions», le même mot en français et en anglais. */
+    "1 action",
+    "${quante} actions",
     "Animal",
     /* «Machines» s'écrit pareil des deux côtés: c'est le même mot, pas une
      * traduction oubliée. */

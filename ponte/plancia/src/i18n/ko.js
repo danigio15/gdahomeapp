@@ -4026,4 +4026,11 @@ export default Object.freeze({
   "These are in the house — one tap picks it:": "집에 있는 항목 — 탭하여 선택:",
   "Volume down": "볼륨 낮추기",
   "Volume up": "볼륨 높이기",
+  "${quante} actions": "작업 ${quante}개",
+  "1 action": "작업 1개",
+  "Close the ${nome} group": "${nome} 그룹 닫기",
+  "Open the ${nome} group": "${nome} 그룹 열기",
+  "The group is optional: actions with the same group sit together on Home, under a title that says how many are on and closes with a tap. Without groups it stays a single row.": "그룹은 선택 사항입니다. 같은 그룹의 작업은 홈에서 함께 모이며, 켜진 개수를 알려주는 제목 아래에 표시되고 탭하면 접힙니다. 그룹이 없으면 한 줄로 유지됩니다.",
+  "e.g. Lights, Shutters": "예: 조명, 셔터",
+  "💾 Group saved": "💾 그룹 저장됨",
 });

@@ -88,6 +88,7 @@ import { installReportEditorSection } from "./report-editor-section.js";
 import { installShutterSection } from "./shutter-section.js";
 import { installPageMastheadSection } from "./page-masthead-section.js";
 import { installAzioniRapideVassoio } from "./azioni-rapide-vassoio-section.js";
+import { installAzioniRapideGruppi } from "./azioni-rapide-gruppi-section.js";
 import { installAzioniServizioGiusto } from "./azioni-servizio-giusto-section.js";
 import { installFoglioDelGuscio } from "./foglio-del-guscio-section.js";
 import { installStrisceDiLinguette } from "./le-strisce-di-linguette-section.js";
@@ -1047,6 +1048,9 @@ export function installSectionRuntime() {
      * la Home, perche' il ripiano si mette attorno a una griglia che deve
      * gia' esistere. */
     installAzioniRapideVassoio();
+    /* E dentro il ripiano i gruppi (#139): i titoli si mettono fra i tasti che
+     * il ripiano ha gia' avvolto, senza spostarli. */
+    installAzioniRapideGruppi();
     installAzioniServizioGiusto();
     installFoglioDelGuscio();
     installStrisceDiLinguette();

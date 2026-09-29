@@ -169,6 +169,22 @@ Sotto la casella la scheda dice cosa ne verrà fuori — «Samsung Smart TV: le
 frecce, OK e gli altri tasti compaiono sotto la scheda, a TV accesa» — o
 perché non comparirà niente.
 
+**Le azioni rapide si dividono in gruppi.** «Ho notato la necessità di poter
+avere una divisione delle azioni rapide in gruppi (tapparelle luci clima…).»
+Il gruppo è una parola scritta accanto all'azione: in Config, nella riga di
+ogni azione rapida, c'è la casella «Gruppo», coi nomi già usati proposti. Le
+azioni con lo stesso gruppo — «Luci» e «luci» sono lo stesso — stanno insieme
+nel vassoio della Home, sotto un titolo col segno della prima azione, il nome
+e quante sono accese. Chi non scrive nessun gruppo non vede niente di
+diverso: una fila sola, come oggi.
+
+**E un gruppo si chiude con un tocco sul titolo.** Da chiuso il titolo dice
+lo stesso quante sono accese, o quante azioni ci sono dentro. Resta chiuso su
+quel telefono: è una cosa di chi guarda, non della casa, e sugli altri
+schermi resta aperto. I tasti non cambiano posto: si vedono raggruppati, ma
+per chi li colora, ci disegna il simbolo o ci posa la copertina restano
+nell'ordine in cui sono scritti.
+
 ## 1.7.0
 
 **gdahome Premium esiste nel codice, e resta spento.** Fin qui era un progetto

@@ -4026,4 +4026,11 @@ export default Object.freeze({
   "These are in the house — one tap picks it:": "Вот что есть в доме — одно касание выбирает:",
   "Volume down": "Тише",
   "Volume up": "Громче",
+  "${quante} actions": "Действий: ${quante}",
+  "1 action": "1 действие",
+  "Close the ${nome} group": "Свернуть группу «${nome}»",
+  "Open the ${nome} group": "Развернуть группу «${nome}»",
+  "The group is optional: actions with the same group sit together on Home, under a title that says how many are on and closes with a tap. Without groups it stays a single row.": "Группа необязательна: действия с одной группой стоят вместе на главной, под заголовком, который показывает, сколько включено, и сворачивается одним касанием. Без групп остаётся один ряд.",
+  "e.g. Lights, Shutters": "напр. Свет, Жалюзи",
+  "💾 Group saved": "💾 Группа сохранена",
 });

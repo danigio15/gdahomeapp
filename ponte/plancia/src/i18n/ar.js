@@ -4026,4 +4026,11 @@ export default Object.freeze({
   "These are in the house — one tap picks it:": "هذه موجودة في المنزل — لمسة واحدة تختاره:",
   "Volume down": "خفض الصوت",
   "Volume up": "رفع الصوت",
+  "${quante} actions": "${quante} إجراءات",
+  "1 action": "إجراء واحد",
+  "Close the ${nome} group": "إغلاق مجموعة ${nome}",
+  "Open the ${nome} group": "فتح مجموعة ${nome}",
+  "The group is optional: actions with the same group sit together on Home, under a title that says how many are on and closes with a tap. Without groups it stays a single row.": "المجموعة اختيارية: الإجراءات ذات المجموعة نفسها تظهر معًا في الرئيسية، تحت عنوان يبيّن كم منها قيد التشغيل ويُطوى بلمسة. بدون مجموعات يبقى صفًا واحدًا.",
+  "e.g. Lights, Shutters": "مثال: الأضواء، الستائر",
+  "💾 Group saved": "💾 تم حفظ المجموعة",
 });

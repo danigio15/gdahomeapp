@@ -4026,4 +4026,11 @@ export default Object.freeze({
   "These are in the house — one tap picks it:": "Te są w domu — jedno dotknięcie go wybiera:",
   "Volume down": "Ciszej",
   "Volume up": "Głośniej",
+  "${quante} actions": "Akcje: ${quante}",
+  "1 action": "1 akcja",
+  "Close the ${nome} group": "Zwiń grupę ${nome}",
+  "Open the ${nome} group": "Rozwiń grupę ${nome}",
+  "The group is optional: actions with the same group sit together on Home, under a title that says how many are on and closes with a tap. Without groups it stays a single row.": "Grupa jest opcjonalna: akcje z tą samą grupą są razem na Home, pod tytułem, który mówi, ile jest włączonych, i zwija się jednym dotknięciem. Bez grup zostaje jeden rząd.",
+  "e.g. Lights, Shutters": "np. Światła, Rolety",
+  "💾 Group saved": "💾 Grupa zapisana",
 });

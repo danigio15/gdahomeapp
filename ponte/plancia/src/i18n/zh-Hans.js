@@ -4026,4 +4026,11 @@ export default Object.freeze({
   "These are in the house — one tap picks it:": "家里有这些——点一下即可选择：",
   "Volume down": "调低音量",
   "Volume up": "调高音量",
+  "${quante} actions": "${quante} 个操作",
+  "1 action": "1 个操作",
+  "Close the ${nome} group": "收起分组“${nome}”",
+  "Open the ${nome} group": "展开分组“${nome}”",
+  "The group is optional: actions with the same group sit together on Home, under a title that says how many are on and closes with a tap. Without groups it stays a single row.": "分组是可选的：同一分组的操作在首页排在一起，位于一个标题下，标题显示有几个已开启，点一下即可收起。没有分组时仍是一行。",
+  "e.g. Lights, Shutters": "例如：灯光、卷帘",
+  "💾 Group saved": "💾 分组已保存",
 });

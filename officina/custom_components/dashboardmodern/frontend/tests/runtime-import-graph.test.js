@@ -1496,8 +1496,11 @@ test("production graph is single-owner, acyclic and contains no facade pass-thro
   // 411 col telecomando della TV (#132): `core/telecomando.js`, i nomi dei
   // tasti integrazione per integrazione. La pagina e la scheda sono quelle
   // della Musica, che c'erano già.
+  // 412 e 413 coi gruppi delle azioni rapide (#139): il nucleo
+  // `core/gruppi-delle-azioni.js` e `sections/azioni-rapide-gruppi-section.js`,
+  // che mette i titoli nel vassoio della Home e la casella nel Config.
   assert.ok(
-    relative.length <= 411,
+    relative.length <= 413,
     `production graph unexpectedly grew to ${relative.length} modules`,
   );
   assertAcyclic(edges);

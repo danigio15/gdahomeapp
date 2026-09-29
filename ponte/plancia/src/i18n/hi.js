@@ -4026,4 +4026,11 @@ export default Object.freeze({
   "These are in the house — one tap picks it:": "घर में ये हैं — एक टैप से चुन लें:",
   "Volume down": "आवाज़ कम करें",
   "Volume up": "आवाज़ बढ़ाएँ",
+  "${quante} actions": "${quante} क्रियाएँ",
+  "1 action": "1 क्रिया",
+  "Close the ${nome} group": "${nome} समूह बंद करें",
+  "Open the ${nome} group": "${nome} समूह खोलें",
+  "The group is optional: actions with the same group sit together on Home, under a title that says how many are on and closes with a tap. Without groups it stays a single row.": "समूह वैकल्पिक है: एक ही समूह की क्रियाएँ होम पर एक साथ रहती हैं, एक शीर्षक के नीचे जो बताता है कि कितनी चालू हैं और एक टैप से बंद होता है। बिना समूहों के यह एक ही पंक्ति रहती है।",
+  "e.g. Lights, Shutters": "जैसे लाइटें, शटर",
+  "💾 Group saved": "💾 समूह सहेजा गया",
 });

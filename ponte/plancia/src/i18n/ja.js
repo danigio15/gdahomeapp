@@ -4026,4 +4026,11 @@ export default Object.freeze({
   "These are in the house — one tap picks it:": "家にあるのはこちら — タップで選択:",
   "Volume down": "音量を下げる",
   "Volume up": "音量を上げる",
+  "${quante} actions": "${quante} 件のアクション",
+  "1 action": "1 件のアクション",
+  "Close the ${nome} group": "グループ「${nome}」を閉じる",
+  "Open the ${nome} group": "グループ「${nome}」を開く",
+  "The group is optional: actions with the same group sit together on Home, under a title that says how many are on and closes with a tap. Without groups it stays a single row.": "グループは任意です。同じグループのアクションはホームでまとめて並び、オンの数を示す見出しの下に表示され、タップで折りたためます。グループがなければ 1 列のままです。",
+  "e.g. Lights, Shutters": "例：照明、シャッター",
+  "💾 Group saved": "💾 グループを保存しました",
 });

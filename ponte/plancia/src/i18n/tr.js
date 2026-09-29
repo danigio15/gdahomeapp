@@ -4026,4 +4026,11 @@ export default Object.freeze({
   "These are in the house — one tap picks it:": "Evde bunlar var — bir dokunuşla seçilir:",
   "Volume down": "Sesi azalt",
   "Volume up": "Sesi artır",
+  "${quante} actions": "${quante} işlem",
+  "1 action": "1 işlem",
+  "Close the ${nome} group": "${nome} grubunu kapat",
+  "Open the ${nome} group": "${nome} grubunu aç",
+  "The group is optional: actions with the same group sit together on Home, under a title that says how many are on and closes with a tap. Without groups it stays a single row.": "Grup isteğe bağlıdır: aynı gruptaki işlemler Ana sayfada bir arada durur; kaç tanesinin açık olduğunu söyleyen ve bir dokunuşla kapanan bir başlığın altında. Grup yoksa tek sıra kalır.",
+  "e.g. Lights, Shutters": "örn. Işıklar, Panjurlar",
+  "💾 Group saved": "💾 Grup kaydedildi",
 });
