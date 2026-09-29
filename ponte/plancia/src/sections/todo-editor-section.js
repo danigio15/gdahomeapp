@@ -148,6 +148,8 @@ function catalogoTessere() {
     /* Le piante (#159): quante sono da innaffiare. Compare quando la sua
      * scheda ha una riga. */
     ["piante", "🪴", t("Piante", "Plant care")],
+    /* L'acquario (#127): la temperatura dell'acqua, e quando c'è da fare. */
+    ["acquario", "🐠", t("Acquario", "Aquarium")],
     ["batterie", "🔋", t("Batterie", "Batteries")],
     ["allagamenti", "💧", t("Allagamenti", "Floods")],
     /* Fumo e gas (#328): compare da sola coi rilevatori di casa, come gli

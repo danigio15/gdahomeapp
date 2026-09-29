@@ -196,6 +196,7 @@ import {
 import { parolaAvviso, testoLettura } from "./animali-section.js";
 import { EVENTO_CONTATORI, tesseraDeiContatori, vistaDeiContatori } from "./contatori-section.js";
 import { EVENTO_PIANTE, tesseraDellePiante, vistaDellePiante } from "./piante-section.js";
+import { EVENTO_ACQUARIO, tesseraDellAcquario, vistaDellAcquario } from "./acquario-section.js";
 import { disegnoDelBidone } from "../core/disegni-rifiuti.js";
 import { CHIAVE_VMC, entitaDellaVmc, letturaVmc, vmcDisegnabili, vmcParla } from "../core/vmc-model.js";
 import { avvisiAppenaAccesi } from "../core/avvisi-che-si-aprono.js";
@@ -5524,6 +5525,17 @@ function pianteModel(states) {
   return tessera && { ...tessera, key: "piante" };
 }
 
+/* L'acquario (#127): la temperatura dell'acqua, e la cosa da fare quando ce
+ * n'è una. Le parole le fa la sezione; qui si toglie quello che
+ * l'interruttore «nel widget» ha spento. */
+function acquarioModel(states) {
+  const fuori = widgetExcludedEntities("acquario");
+  const tessera = tesseraDellAcquario(
+    vistaDellAcquario(states, { dentro: (entity) => widgetIncludes(entity, fuori) }),
+  );
+  return tessera && { ...tessera, key: "acquario" };
+}
+
 /* La ventilazione meccanica (#371).
  *
  * La tessera dice la cosa che si guarda passando: a che temperatura sta
@@ -5638,6 +5650,7 @@ export function modelliDelleTessere(states) {
       irrigationModel(states),
       contatoriModel(states),
       pianteModel(states),
+      acquarioModel(states),
       batteriesModel(states),
       floodModel(states),
       fumoModel(states),
@@ -7789,6 +7802,8 @@ const SEZIONE_DEL_WIDGET = Object.freeze({
   contatori: "contatori",
   /* Le piante (#159) hanno la loro pagina. */
   piante: "piante",
+  /* E l'acquario (#127). */
+  acquario: "acquario",
   /* La ventilazione vive nella pagina del Clima: la tessera ci porta li'. */
   vmc: "clima",
   media: "media",
@@ -10809,6 +10824,8 @@ export function installHomeWidgetsSection() {
     EVENTO_CONTATORI,
     /* E le medie della terra e le previsioni delle piante, per lo stesso motivo. */
     EVENTO_PIANTE,
+    /* E le medie del livello dell'acquario. */
+    EVENTO_ACQUARIO,
     /* La chat di assistenza dice quando ha una risposta da leggere, e quando
        e' stata letta: la sua tessera compare e sparisce con quello. */
     "dashboardmodern:chat-stato",

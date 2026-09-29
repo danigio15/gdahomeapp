@@ -1487,8 +1487,14 @@ test("production graph is single-owner, acyclic and contains no facade pass-thro
   // `core/le-piante-di-casa.js` con la soglia, la pioggia in arrivo e l'ultima
   // innaffiata, la pagina `sections/piante-section.js` e la sua scheda
   // `sections/piante-editor-section.js`.
+  // 407, 408, 409 e 410 con l'acquario (#127): `core/medie-di-ogni-ora.js`,
+  // la domanda delle medie di ogni ora che la terra delle piante e il livello
+  // dell'acquario fanno uguale — stava dentro le piante —, il nucleo
+  // `core/l-acquario-di-casa.js` con le forcelle, il rabbocco e il cambio
+  // d'acqua, la pagina `sections/acquario-section.js` e la sua scheda
+  // `sections/acquario-editor-section.js`.
   assert.ok(
-    relative.length <= 406,
+    relative.length <= 410,
     `production graph unexpectedly grew to ${relative.length} modules`,
   );
   assertAcyclic(edges);

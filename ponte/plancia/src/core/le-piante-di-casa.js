@@ -22,6 +22,7 @@
  */
 import { conLaRiga, conLeRighe, righeDichiarate, senzaLaRiga } from "./elenco-dichiarato.js";
 import { giorniAllaSoglia } from "./giorni-alla-soglia.js";
+import { domandaDelleMedieDiOgniOra, serieDelleMedieDiOgniOra } from "./medie-di-ogni-ora.js";
 import { PIOGGIA_CHE_BASTA_MM, inMillimetri } from "./pioggia-caduta.js";
 
 const pulito = (valore) => String(valore ?? "").trim();
@@ -215,37 +216,16 @@ export function pianteDiCasa(states = {}, config, nomeDi = (entity) => entity) {
 /**
  * La domanda della terra: la media di ogni ora degli ultimi dieci giorni. Da
  * lì si vedono le innaffiate — un salto in poche ore — e il passo con cui la
- * terra si asciuga. `recorder/statistics_during_period`, al plurale: è quella
- * che il ponte lascia passare.
+ * terra si asciuga. La domanda è quella dell'acquario, e sta in
+ * `medie-di-ogni-ora.js`.
  */
 export function domandaDellaTerra(entita, adesso) {
-  const inizio = new Date(Number(adesso) - 10 * 24 * H);
-  inizio.setMinutes(0, 0, 0);
-  return {
-    type: "recorder/statistics_during_period",
-    start_time: inizio.toISOString(),
-    end_time: new Date(Number(adesso)).toISOString(),
-    statistic_ids: [...new Set((entita || []).map(pulito).filter(Boolean))],
-    period: "hour",
-    types: ["mean"],
-  };
-}
-
-function inizioDelSecchiello(voce) {
-  const inizio = voce?.start;
-  if (typeof inizio === "number") return inizio;
-  const letto = Date.parse(pulito(inizio));
-  return Number.isFinite(letto) ? letto : null;
+  return domandaDelleMedieDiOgniOra(entita, adesso);
 }
 
 /** Le medie di ogni ora, `{ quando, valore }`, dalla più vecchia. */
 export function serieDellaTerra(risposta, entity) {
-  const elenco = risposta?.[pulito(entity)];
-  return (Array.isArray(elenco) ? elenco : [])
-    .map((voce) => ({ quando: inizioDelSecchiello(voce), valore: numero(voce?.mean) }))
-    .filter((punto) => punto.quando !== null && punto.valore !== null)
-    .map((punto) => ({ quando: punto.quando + H / 2, valore: punto.valore }))
-    .sort((a, b) => a.quando - b.quando);
+  return serieDelleMedieDiOgniOra(risposta, entity);
 }
 
 /**

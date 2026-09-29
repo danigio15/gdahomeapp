@@ -164,6 +164,8 @@ import { installContatori } from "./contatori-section.js";
 import { installContatoriEditor } from "./contatori-editor-section.js";
 import { installPiante } from "./piante-section.js";
 import { installPianteEditor } from "./piante-editor-section.js";
+import { installAcquario } from "./acquario-section.js";
+import { installAcquarioEditor } from "./acquario-editor-section.js";
 import { installMacchine } from "./macchine-e-rete-section.js";
 import { installMacchineEditor } from "./macchine-editor-section.js";
 import { installNodiSection } from "./nodi-section.js";
@@ -1152,6 +1154,9 @@ export function installSectionRuntime() {
     /* Le piante (#159): la pagina e la sua scheda, nello stesso ordine. */
     installPiante();
     installPianteEditor();
+    /* L'acquario (#127): la pagina e la sua scheda, nello stesso ordine. */
+    installAcquario();
+    installAcquarioEditor();
     installMacchine();
     installMacchineEditor();
     installNodiSection();
@@ -1283,6 +1288,8 @@ export function installSectionRuntime() {
         "contatori-editor",
         "piante",
         "piante-editor",
+        "acquario",
+        "acquario-editor",
         "macchine-e-rete",
         "macchine-editor",
       ]),

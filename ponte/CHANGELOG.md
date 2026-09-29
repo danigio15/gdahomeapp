@@ -112,6 +112,32 @@ innaffiare e quella sopra cui è troppo bagnata. La prima apertura prende i
 sensori della terra che Home Assistant ha trovato, e propone la temperatura
 dello stesso vaso. Il catalogo ha un disegno nuovo: la pianta nel vaso.
 
+**L'acquario ha la sua sezione.** «Si potrebbe inserire una sezione con
+l'acquario?» Adesso c'è «Acquario»: in cima come sta la vasca — tutto nella
+norma, l'acqua troppo calda, da rabboccare, il cambio d'acqua da fare —, sotto
+le luci, il filtro e il riscaldatore sulle mattonelle della piscina, che si
+accendono e si spengono con un tocco (il lucchetto vale anche qui), e la
+temperatura e il pH sulla forcella della piscina: di serie 24–27 °C (75–81 °F
+con un sensore in Fahrenheit) e 6,5–7,5, da cambiare riga per riga.
+
+**Il livello dice quando rabboccare.** Un galleggiante dice alto o basso; un
+sensore di livello in percento dice anche fra quanti giorni arriva alla
+soglia, dalle medie di ogni ora del Recorder, al passo con cui l'acqua cala.
+
+**E il cambio d'acqua ha il suo anello.** Di serie ogni quattordici giorni:
+l'anello si riempie un giorno alla volta, «✓ Fatto oggi» lo segna — e per
+cinque secondi si può annullare —, e quando è ora diventa ambra e conta i
+giorni di ritardo. La tessera in Home dice la temperatura e chiede attenzione
+solo quando c'è da fare: un valore fuori norma, il rabbocco, il cambio in
+ritardo.
+
+**Si configura come le altre schede**, in «Clima e acqua»: in cima il nome
+della vasca, i litri, ogni quanti giorni si cambia l'acqua e quando è stata
+cambiata l'ultima volta; ogni riga è un'entità con cosa è — temperatura, pH,
+livello, luci, filtro, riscaldatore — e la sua forcella o la sua soglia. La
+prima apertura prende le entità che nel nome hanno acquario, reef o pesci. Il
+catalogo ha un disegno nuovo: l'acquario.
+
 ## 1.7.0
 
 **gdahome Premium esiste nel codice, e resta spento.** Fin qui era un progetto

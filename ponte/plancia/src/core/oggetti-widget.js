@@ -893,6 +893,29 @@ const OGGETTI = Object.freeze({
     <path d="M11.8 21.8l.6 5" stroke="#fff" stroke-opacity=".6" stroke-width="1.1"
       stroke-linecap="round" fill="none"/>`,
 
+  /* L'acquario (#127): la vasca con l'acqua, la sabbia, due foglie e il pesce
+   * rosso. Non è la piscina — quella è l'acqua dove si entra — ma la vasca che
+   * si guarda da fuori, col suo mobile sotto. */
+  acquario: `<defs>
+      <linearGradient id="dmoAcqA" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#bae6fd"/><stop offset=".55" stop-color="#38bdf8"/>
+        <stop offset="1" stop-color="#0369a1"/></linearGradient>
+      <linearGradient id="dmoAcqP" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#fde68a"/><stop offset=".5" stop-color="#f59e0b"/>
+        <stop offset="1" stop-color="#c2410c"/></linearGradient></defs>
+    ${OMBRA(16, 29.4, 12)}
+    <rect x="3" y="6.4" width="26" height="19.6" rx="2.6" fill="#0f2942"/>
+    <rect x="4.8" y="9.4" width="22.4" height="14.8" rx="1.4" fill="url(#dmoAcqA)"/>
+    <path d="M6.4 11.4h19.2" stroke="#fff" stroke-opacity=".6" stroke-width="1" stroke-linecap="round"/>
+    <path d="M4.8 21.8h22.4v1a1.4 1.4 0 0 1-1.4 1.4H6.2a1.4 1.4 0 0 1-1.4-1.4Z" fill="#cbd5e1"/>
+    <path d="M8 22.4c-.4-3.4.4-6.4 2.4-8.6-.4 3-.4 5.8 0 8.6Z" fill="#22c55e"/>
+    <path d="M10.4 22.4c.4-2.6 1.6-4.6 3.4-5.8-1 2-1.4 3.8-1.4 5.8Z" fill="#16a34a"/>
+    <path d="M14.4 16.6c2-2.4 5.6-2.4 7.6 0-2 2.4-5.6 2.4-7.6 0Z" fill="url(#dmoAcqP)"/>
+    <path d="M22 16.6l2.8-2v4Z" fill="url(#dmoAcqP)"/>
+    <circle cx="16.4" cy="16.3" r=".65" fill="#0f2942"/>
+    <circle cx="24.2" cy="13.6" r=".8" fill="#fff" fill-opacity=".85"/>
+    <rect x="5.4" y="26" width="21.2" height="2.6" rx="1.3" fill="#1e3a5f"/>`,
+
   /* I contatori di casa (#115, #135, #137): il contatore d'ottone con la
    * finestra delle cifre e la goccia. Non è l'umidità — quella è una goccia
    * dentro un quadrante di tacche — ma il contatore che si legge in cantina,

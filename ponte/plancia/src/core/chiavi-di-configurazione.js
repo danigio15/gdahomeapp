@@ -288,7 +288,12 @@
  * telefono deve essere quella con cui il tablet in cucina dice «da
  * innaffiare», o la stessa pianta sarebbe asciutta su un vetro e a posto
  * sull'altro. */
-export const CONFIG_KEYS_REVISION = 57;
+/* La revisione 58 aggiunge l'acquario (`cd_acquario`, #127): le sue righe,
+ * la vasca, ogni quanto si cambia l'acqua e quando è stata cambiata
+ * l'ultima volta. Quella data si segna da un telefono e si conta sul
+ * tablet in cucina: se restasse sul vetro che l'ha segnata, gli altri
+ * direbbero «cambio d'acqua da fare» per una vasca appena cambiata. */
+export const CONFIG_KEYS_REVISION = 58;
 
 // Complete shared dashboard configuration snapshot. Runtime counters/timers and
 // true per-device preferences (connection credentials, theme/navbar mode) stay
@@ -568,4 +573,7 @@ export const CONFIG_KEYS = Object.freeze([
   /* Le piante (#159): la ragione per cui stanno qui e' scritta accanto alla
    * revisione 57. */
   "cd_piante",
+  /* L'acquario (#127): la ragione per cui sta qui è scritta accanto alla
+   * revisione 58. */
+  "cd_acquario",
 ]);

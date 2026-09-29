@@ -250,6 +250,14 @@ const PAGES = Object.freeze([
     it: ["Piante", "Terra · Quando innaffiare"],
     en: ["Plant care", "Soil · When to water"],
   },
+  /* L'acquario, dalla segnalazione #127: la vasca, le sue luci e il cambio
+   * d'acqua. */
+  {
+    id: "page-acquario",
+    tint: ["14,165,233", "16,185,129"],
+    it: ["Acquario", "Acqua · Luci · Cambio"],
+    en: ["Aquarium", "Water · Lights · Change"],
+  },
   /* Il calendario (#259) nasce con la sua pagina, e l'intestazione nasce con
    * lei: gli impegni di oggi e dei giorni che vengono. */
   {

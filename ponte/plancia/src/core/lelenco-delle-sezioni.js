@@ -125,6 +125,8 @@ export const SEZIONI = Object.freeze(
     { scheda: "batterie", chiave: "batterie", glifo: "🔋", it: "Batterie", en: "Batteries" },
     /* Le piante (#159): la terra, e quando innaffiare. */
     { scheda: "piante", chiave: "piante", glifo: "🪴", it: "Piante", en: "Plant care" },
+    /* L'acquario (#127): la vasca, le luci, il cambio d'acqua. */
+    { scheda: "acquario", chiave: "acquario", glifo: "🐠", it: "Acquario", en: "Aquarium" },
     /* L'acqua e il gas (#115, #135, #137): i contatori, la pressione, la
      * portata e il sale. */
     {
