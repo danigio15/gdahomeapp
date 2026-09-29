@@ -11,6 +11,123 @@ fuori. La plancia dentro continua a dire la sua, e si legge dov'è sempre
 stata: nella pastiglia «La plancia» della console. Sono due numeri perché
 sono due cose.
 
+## 1.9.0
+
+**In auto c'è il traffico.** La diagnosi di Android Auto sulla 1.8.0 diceva
+«Strato del traffico — Non c'è: l'app è senza la chiave TomTom», ed era vero:
+l'app del negozio usciva senza la chiave del traffico, in auto e sul telefono.
+Adesso ce l'ha, su Android e su iPhone: su Android Auto e su CarPlay le code si
+vedono sulla mappa, e i percorsi arrivano da TomTom, con le corsie agli
+svincoli.
+
+**La stanza aperta è una tavola di comandi.** «Non trovo utile questa sezione
+così com'è… è l'unica parte che uso ancora della mia plancia vecchia.» La
+stanza era un elenco diviso per tipo, e per comandare quasi tutto bisognava
+andarsene. Adesso in cima c'è la card della stanza: il disegno, il nome, il
+piano e quante luci sono accese, la temperatura e l'umidità in grande, il clima
+coi gradi chiesti, e sulla stessa card Accendi tutto e Spegni tutto. Sotto ci
+sono le tessere, due per riga sul telefono e quattro sul computer, ognuna col
+suo comando vero: la luce con la levetta e il cursore, la presa coi watt, la
+tapparella su, ferma e giù, il clima col meno e il più, la musica coi suoi
+tasti. Il resto porta dove portava. Chi preferisce le righe le ritrova in
+Config → Stanze, alla voce «Vista della stanza».
+
+**Le batterie di accumulo hanno la loro linguetta in Energia.** «Poter
+aggiungere tutte le entità dei BMS, per esempio ho due BMS JK con stati di
+carica, stati di salute, correnti e tensioni varie.» Adesso in Energia, accanto
+a Istantanea, c'è «Batterie», che compare quando c'è almeno un pacco. In cima
+come sta l'accumulo: in carica, in scarica o a riposo, la carica di tutti i
+pacchi, quanto passa e da dove arriva, fra quanto è pieno o vuoto, e l'avviso
+quando un pacco ha le celle da bilanciare. Sotto c'è una scheda per pacco: la
+carica, la salute, tensione, corrente e potenza, le temperature, i cicli e la
+striscia delle celle, con la più bassa in ambra e la più alta in verde. Oltre
+la soglia di squilibrio — 30 mV di serie — il pacco dice «Da bilanciare». In
+Home c'è la tessera «Accumulo». Si configura in Config → Energia → «Batteria di
+accumulo», un pacco per riga: alla prima apertura i pacchi di JK, JBD, Daly e
+bms_ble si trovano da soli.
+
+**La friggitrice si pilota dagli Elettrodomestici.** «Mi piacerebbe pilotare
+la mia friggitrice ad aria della Philips.» Negli Elettrodomestici, accanto a
+Panoramica, adesso c'è «Cottura». In cima la risposta grande, «Pronta fra 8
+min», col programma, la temperatura e l'ora in cui sarà pronta. La scheda di
+chi cuoce ha l'anello che si svuota col tempo, la temperatura col meno e il
+più, e i tasti Pausa, Riprendi, +1 min e Stop: ognuno compare solo se è
+configurato e se in quel momento ha senso. Sotto, il forno, il piano cottura e
+la cappa hanno una riga ciascuno. In Home, mentre cuoce, c'è la sua tessera, e
+quando ha finito dice «Pronta». Nel Config gli apparecchi della cucina hanno la
+fascia «Cottura» col tasto «Compila», che riconosce l'integrazione
+`philips_airfryer` di HACS e Philips HomeID. Il ponte lascia usare i servizi di
+cottura di `philips_airfryer` anche a chi non amministra Home Assistant. E la
+«Card avanzata» del Config, che si apriva schiacciata in una riga, adesso si
+apre per intero.
+
+**Un varco si esclude dall'antifurto.** «Sono tutti binary sensor che già Home
+Assistant vede»: e allora l'interruttore dell'esclusione la plancia lo trova da
+sola, sullo stesso dispositivo del contatto o col nome `<contatto>_bypass` che
+pubblica Risco. Quello scritto nella riga del varco vince sempre. Nella pagina
+Varchi il tasto dice «Escludi» o «Includi»: escludere chiede prima sulla card
+e lascia cinque secondi per annullare, includere è immediato, e il lucchetto
+vale anche qui. Se la centrale rifiuta — molte non escludono ad antifurto
+inserito — la card scrive la sua risposta. Nella Sicurezza un varco escluso
+porta il lucchetto aperto, e la tessera Varchi in Home dice quanti sono
+esclusi.
+
+**Solo disegni del catalogo, niente emoji.** «Non deve esserci nulla che non
+sia nel nostro catalogo.» Circa duemila emoji — nel guscio, nella Home, nelle
+pagine, nel Config e nella pagina Stanze — sono diventate disegni del catalogo
+di casa, con cinque disegni nuovi nello stesso stile: moneta, lente, cestino,
+matita e catena. Le icone già salvate nella configurazione restano quelle, e si
+disegnano col catalogo quando si mostrano. Restano di proposito solo il
+selettore di emoji della chat con l'assistenza e i nomi che scrivi tu.
+
+**La telecamera che non dà la foto si vede anche nel muro della Sicurezza.**
+«Ora le telecamere se vado nel dettaglio si vedono regolarmente ma nella
+sezione Sicurezza dove c'è l'anteprima non si visualizzano.» Una Ring
+`…_live_view` un'istantanea non la dà, e la sua tessera restava su «in attesa
+del fotogramma». Adesso, quando la foto non arriva, la tessera prova il video,
+senza audio. Per le telecamere che le foto le danno non cambia niente.
+
+**Il clima acceso dal telecomando è acceso dappertutto.** «Ho inserito
+l'entità power del climatizzatore ma non mi dà acceso mentre il clima è acceso,
+se è stato acceso dal telecomando.» Un climatizzatore comandato all'infrarosso
+non dice a Home Assistant che il telecomando l'ha acceso: lo sa la presa, dal
+consumo. Con l'entità del consumo e la soglia lo sapeva solo la pagina Clima;
+adesso lo sanno anche la Home, le stanze, «Spegni tutto» e i tasti, e il tasto
+spegne quello che è acceso invece di riaccenderlo. Senza soglia decide lo stato
+del termostato, come prima.
+
+**Il nome di un piano nuovo si scrive di nuovo.** «Nel momento in cui si prova
+a mettere il nome del piano non fa scrivere nulla.» Il pannello «I piani della
+casa» si ridisegnava a ogni tocco, e la casella perdeva il cursore. Adesso
+quello che scrivi resta. **E la card del Clima non sparisce più dal telefono**
+con la modalità «In casa» di Tado: una vecchia correzione la scambiava per un
+titolo di stanza, e sotto i 760 punti i titoli si nascondono.
+
+**L'app è più veloce, soprattutto fuori casa.** «Tempo di caricamento app
+lentissimo.»
+
+- Quando l'app torna davanti dopo un po' in tasca, la plancia è quella di
+  prima: il filo si riapre e la pagina resta dov'è, invece di ricaricarsi da
+  capo passando tutta dal centralino.
+- «Apro la plancia…» se ne va appena la pagina è pronta, senza aspettare
+  l'ultima foto e l'ultima istantanea delle telecamere.
+- Da fuori casa la plancia arriva prima: i suoi pezzi viaggiano sempre quattro
+  alla volta, e ogni file va alla pagina prima di finire sul disco.
+- Chi l'ultima volta è entrato da fuori casa non aspetta più la strada di casa
+  a ogni apertura.
+- Il navigatore non si fa più mandare tutta la casa: chiede solo i sensori
+  dell'auto. E le sezioni nascoste dell'app stanno ferme.
+
+**In auto anche senza aprire l'app.** «Se non si apre l'app non lega il GPS e
+non legge i dati auto.» Su Android Auto il navigatore riceve la posizione e i
+dati dell'auto anche col telefono in tasca e l'app chiusa. E il lucchetto
+«all'avvio», se l'hai acceso, adesso chiede anche quando riapri l'app dopo
+averla chiusa.
+
+**Premium resta spento.** Nel codice continua il lavoro sulle licenze, ma per
+chi ha gdahome non cambia niente: nessun lucchetto, nessun limite, e da fuori
+casa si entra come prima.
+
 ## 1.8.0
 
 **La Gestione termica torna a mostrare i numeri.** «Dopo ultimo aggiornamento

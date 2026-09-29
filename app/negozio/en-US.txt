@@ -1,5 +1,5 @@
-The navigator knows every charging station in Italy: the map shows which are free, busy or out of order, and the route picks free stops. The station card shows the prices, as the operator reports them. Lanes are back at junctions.
+Traffic in the car: on Android Auto and CarPlay the navigator shows the jams, and the lanes at junctions. The app is faster, especially away from home: when you come back, the dashboard is already there.
 
-In the dashboard: the Water and gas, Plants and Aquarium sections, a remote for the TV, quick actions in groups.
+In the dashboard: the room becomes a control board, storage batteries in Energy, the air fryer in Appliances, excluding a door or window from the alarm.
 
 Update gdahome in Home Assistant as well: the new sections come from there.
