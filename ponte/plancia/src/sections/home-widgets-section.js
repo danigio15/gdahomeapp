@@ -328,6 +328,7 @@ import {
   siComanda,
   stanzaDiHomeAssistant,
   t,
+  senzaCadere,
 } from "./shared.js";
 import { disegnaComeStaLaCasa } from "./come-sta-la-casa-section.js";
 import { disegnoDelCatalogo } from "../core/catalogo-disegni.js";
@@ -11009,5 +11010,5 @@ export function installHomeWidgetsSection() {
 if (doc?.readyState === "loading") {
   doc.addEventListener("DOMContentLoaded", () => installHomeWidgetsSection(), { once: true });
 } else {
-  installHomeWidgetsSection();
+  senzaCadere(installHomeWidgetsSection);
 }

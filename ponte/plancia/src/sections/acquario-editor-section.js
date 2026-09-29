@@ -29,7 +29,7 @@ import {
 } from "../core/l-acquario-di-casa.js";
 import { ACQUARIO_TAB, renderAcquario } from "./acquario-section.js";
 import { costruisciSchedaDichiarata } from "./scheda-dichiarata-section.js";
-import { allStates, clean, esc, formatNumber, readJson, t, writeJsonIfChanged } from "./shared.js";
+import { allStates, clean, esc, formatNumber, readJson, t, writeJsonIfChanged, senzaCadere } from "./shared.js";
 import { nomeDaHomeAssistant } from "./editor-slots-section.js";
 
 export const ACQUARIO_EDITOR_TAB = ACQUARIO_TAB;
@@ -371,4 +371,4 @@ export function installAcquarioEditor() {
   return scheda.installa();
 }
 
-installAcquarioEditor();
+senzaCadere(installAcquarioEditor);

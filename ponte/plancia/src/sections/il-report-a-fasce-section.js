@@ -71,6 +71,7 @@ import {
   root,
   selectedPeriod,
   t,
+  senzaCadere,
 } from "./shared.js";
 import { segnoHtml } from "../core/segni-del-catalogo.js";
 
@@ -571,4 +572,4 @@ export function installReportAFasceSection() {
 
 if (doc?.readyState === "loading")
   doc.addEventListener("DOMContentLoaded", installReportAFasceSection, { once: true });
-else installReportAFasceSection();
+else senzaCadere(installReportAFasceSection);

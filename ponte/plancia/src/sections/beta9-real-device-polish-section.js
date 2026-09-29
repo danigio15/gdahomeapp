@@ -12,6 +12,7 @@ import {
   root,
   t,
   wrapFunction,
+  senzaCadere,
 } from "./shared.js";
 
 const KEY = "__DASHBOARDMODERN_BETA9_REAL_DEVICE_POLISH__";
@@ -676,4 +677,4 @@ export function installBeta9RealDevicePolishSection() {
   scheduleAfterLegacyWork();
 }
 
-installBeta9RealDevicePolishSection();
+senzaCadere(installBeta9RealDevicePolishSection);

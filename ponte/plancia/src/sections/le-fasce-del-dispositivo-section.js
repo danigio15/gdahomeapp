@@ -67,6 +67,7 @@ import {
   root,
   selectedPeriod,
   t,
+  senzaCadere,
 } from "./shared.js";
 import { segnoHtml } from "../core/segni-del-catalogo.js";
 
@@ -565,4 +566,4 @@ export function installLeFasceDelDispositivo() {
   return true;
 }
 
-installLeFasceDelDispositivo();
+senzaCadere(installLeFasceDelDispositivo);

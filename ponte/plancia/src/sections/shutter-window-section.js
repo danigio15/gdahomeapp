@@ -52,6 +52,7 @@ import {
   section,
   t,
   writeJsonIfChanged,
+  senzaCadere,
 } from "./shared.js";
 import { segnoHtml, senzaEmoji } from "../core/segni-del-catalogo.js";
 
@@ -1159,5 +1160,5 @@ export function installShutterWindowSection() {
 if (doc?.readyState === "loading") {
   doc.addEventListener("DOMContentLoaded", installShutterWindowSection, { once: true });
 } else {
-  installShutterWindowSection();
+  senzaCadere(installShutterWindowSection);
 }

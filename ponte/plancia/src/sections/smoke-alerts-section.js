@@ -30,6 +30,7 @@ import {
   t,
   wrapFunction,
   writeJsonIfChanged,
+  senzaCadere,
 } from "./shared.js";
 import { MARCHIO_TESSERA } from "../core/fuori-dai-widget.js";
 import { segnoHtml } from "../core/segni-del-catalogo.js";
@@ -480,4 +481,4 @@ export function installSmokeAlertsSection() {
 
 if (doc?.readyState === "loading")
   doc.addEventListener("DOMContentLoaded", installSmokeAlertsSection, { once: true });
-else installSmokeAlertsSection();
+else senzaCadere(installSmokeAlertsSection);

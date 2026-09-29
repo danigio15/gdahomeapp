@@ -32,7 +32,7 @@ import { iDispositiviRicordati } from "../core/i-dispositivi-di-home-assistant.j
 import { CHIAVE_VERSI, insiemeInvertiti } from "../core/verso-aperture.js";
 import { VARCHI_TAB, renderVarchi } from "./varchi-section.js";
 import { costruisciSchedaDichiarata } from "./scheda-dichiarata-section.js";
-import { allStates, clean, esc, readJson, root, t } from "./shared.js";
+import { allStates, clean, esc, readJson, root, t, senzaCadere } from "./shared.js";
 import { nomeDaHomeAssistant } from "./editor-slots-section.js";
 
 export const VARCHI_EDITOR_TAB = VARCHI_TAB;
@@ -269,4 +269,4 @@ export function installVarchiEditor() {
   return scheda.installa();
 }
 
-installVarchiEditor();
+senzaCadere(installVarchiEditor);

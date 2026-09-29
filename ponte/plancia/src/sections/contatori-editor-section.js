@@ -32,7 +32,7 @@ import {
 } from "../core/contatori-di-casa.js";
 import { CONTATORI_TAB, renderContatori } from "./contatori-section.js";
 import { costruisciSchedaDichiarata } from "./scheda-dichiarata-section.js";
-import { allStates, clean, esc, formatNumber, t } from "./shared.js";
+import { allStates, clean, esc, formatNumber, t, senzaCadere } from "./shared.js";
 import { nomeDaHomeAssistant } from "./editor-slots-section.js";
 
 export const CONTATORI_EDITOR_TAB = CONTATORI_TAB;
@@ -304,4 +304,4 @@ export function installContatoriEditor() {
   return scheda.installa();
 }
 
-installContatoriEditor();
+senzaCadere(installContatoriEditor);

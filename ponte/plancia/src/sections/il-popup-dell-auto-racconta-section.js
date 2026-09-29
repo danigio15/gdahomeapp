@@ -30,7 +30,7 @@ import { inKilowattora } from "../core/period-service.js";
 import { capacitaDellAutoInUso } from "./auto-termica-section.js";
 import { liveState } from "./ev-section.js";
 import { codiceDellaRicaricaAdesso, kilowattDellaColonnina } from "./ev-stato-e-target-section.js";
-import { clean, doc, installStyle, root, t, wrapFunction } from "./shared.js";
+import { clean, doc, installStyle, root, t, wrapFunction, senzaCadere } from "./shared.js";
 import { lEnergiaInParole, laPotenzaInParole } from "../core/le-unita-della-corrente.js";
 
 const KEY = "__DASHBOARDMODERN_POPUP_AUTO_RACCONTA__";
@@ -220,5 +220,5 @@ export function installPopupAutoRacconta() {
 if (doc?.readyState === "loading") {
   doc.addEventListener("DOMContentLoaded", installPopupAutoRacconta, { once: true });
 } else {
-  installPopupAutoRacconta();
+  senzaCadere(installPopupAutoRacconta);
 }

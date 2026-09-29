@@ -36,6 +36,7 @@ import {
   roomLabel,
   section,
   t,
+  senzaCadere,
 } from "./shared.js";
 
 // Single paint owner for the Tapparelle page.
@@ -1231,5 +1232,5 @@ export function installShutterSceneSection() {
 if (doc?.readyState === "loading") {
   doc.addEventListener("DOMContentLoaded", installShutterSceneSection, { once: true });
 } else {
-  installShutterSceneSection();
+  senzaCadere(installShutterSceneSection);
 }

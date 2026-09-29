@@ -11,7 +11,7 @@
  */
 import { segnoHtml } from "../core/segni-del-catalogo.js";
 import { climateUnits } from "./climate-thermal-section.js";
-import { clean, doc, esc, installStyle, onEditorRedraw, readJson, root, t, writeJsonIfChanged } from "./shared.js";
+import { clean, doc, esc, installStyle, onEditorRedraw, readJson, root, t, writeJsonIfChanged, senzaCadere } from "./shared.js";
 
 const KEY = "__DASHBOARDMODERN_TRV_EDITOR__";
 const state = (root[KEY] ||= { installed: false });
@@ -111,4 +111,4 @@ export function installTrvEditor() {
   return true;
 }
 
-installTrvEditor();
+senzaCadere(installTrvEditor);

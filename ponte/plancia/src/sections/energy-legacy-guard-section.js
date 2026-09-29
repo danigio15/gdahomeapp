@@ -257,9 +257,36 @@ function installBeta27EditorContractBridge() {
   return true;
 }
 
-installEnergyLegacyGuardSection();
-installBeta27SubloadPreservation();
-installBeta27EditorContractBridge();
+/* Chi cade non si porta dietro gli altri: vedi `senzaCadere` in shared.js. */
+try {
+  installEnergyLegacyGuardSection();
+} catch (errore) {
+  (globalThis.__DASHBOARDMODERN_PEZZI_CADUTI__ ||= []).push({
+    pezzo: "installEnergyLegacyGuardSection",
+    errore: String(errore?.message || errore),
+  });
+  globalThis.console?.error?.("[DashboardModern] installEnergyLegacyGuardSection non e' partito", errore);
+}
+/* Chi cade non si porta dietro gli altri: vedi `senzaCadere` in shared.js. */
+try {
+  installBeta27SubloadPreservation();
+} catch (errore) {
+  (globalThis.__DASHBOARDMODERN_PEZZI_CADUTI__ ||= []).push({
+    pezzo: "installBeta27SubloadPreservation",
+    errore: String(errore?.message || errore),
+  });
+  globalThis.console?.error?.("[DashboardModern] installBeta27SubloadPreservation non e' partito", errore);
+}
+/* Chi cade non si porta dietro gli altri: vedi `senzaCadere` in shared.js. */
+try {
+  installBeta27EditorContractBridge();
+} catch (errore) {
+  (globalThis.__DASHBOARDMODERN_PEZZI_CADUTI__ ||= []).push({
+    pezzo: "installBeta27EditorContractBridge",
+    errore: String(errore?.message || errore),
+  });
+  globalThis.console?.error?.("[DashboardModern] installBeta27EditorContractBridge non e' partito", errore);
+}
 /* Il guscio si annuncia dopo: se e' arrivato lui a definire i suoi nomi dopo
  * di noi, si rimettono le deleghe. */
 root.addEventListener?.("dashboardmodern:legacy-ready", () => {

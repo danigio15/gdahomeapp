@@ -13,6 +13,7 @@ import {
   t,
   wrapFunction,
   writeJsonIfChanged,
+  senzaCadere,
 } from "./shared.js";
 
 globalThis.__DM_20260815C__ = true;
@@ -387,4 +388,4 @@ export function installBeta16RealDeviceLayout() {
 }
 
 if (doc?.readyState === "loading") doc.addEventListener("DOMContentLoaded", installBeta16RealDeviceLayout, { once: true });
-else installBeta16RealDeviceLayout();
+else senzaCadere(installBeta16RealDeviceLayout);

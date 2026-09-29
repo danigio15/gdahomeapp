@@ -189,7 +189,7 @@ import { installStanzePerNome } from "./stanze-per-nome-section.js";
 import { installRadarMeteo } from "./radar-meteo-section.js";
 import { installMinipcShowcaseSection } from "./minipc-showcase-section.js";
 import { installLegacySections, LEGACY_SECTION_KEYS } from "./legacy-sections-registry.js";
-import { activeLocale, allStates, clean, english, section, t, wrapFunction } from "./shared.js";
+import { activeLocale, allStates, clean, english, section, senzaCadere, t, wrapFunction } from "./shared.js";
 import { segnoHtml, svgDelSegno } from "../core/segni-del-catalogo.js";
 
 /* Il disegno del catalogo come immagine di sfondo, per un `::before` che
@@ -840,387 +840,391 @@ export function installSectionRuntime() {
      * timer del guscio. I moduli qui sotto si agganciano a `render`, e
      * quanto spesso `render` giri lo decide chi possiede il nome prima di
      * loro. */
-    installGuscioQuandoServe();
+    senzaCadere(installGuscioQuandoServe);
     /* Prima di tutto: una domanda a Home Assistant che parte con l'indirizzo
      * sbagliato non arriva, e chi la fa non se ne accorge — «Failed to fetch»
      * al posto dello storico. Si ripara la sola cosa che serve, e si ripara
      * prima che qualcuno chieda. */
-    installIndirizzoDiCasa();
+    senzaCadere(installIndirizzoDiCasa);
     // Language first: every section below reads its copy while it renders, so
     // the locale has to be settled before the first of them runs.
-    installI18nSection();
-    installThemeFoundationSection();
+    senzaCadere(installI18nSection);
+    senzaCadere(installThemeFoundationSection);
     /* Subito dopo le fondamenta, e non prima: le tavolozze riscrivono gli
      * stessi token, e a parita' di peso vince chi viene dopo (#436). */
-    installTavolozzeSection();
+    senzaCadere(installTavolozzeSection);
     /* I segni del catalogo prima di ogni pagina: i segnaposti del guscio ci
      * sono gia' dal primo giro. */
-    installSegniDelCatalogoSection();
+    senzaCadere(installSegniDelCatalogoSection);
     /* Subito dopo le fondamenta del tema e prima di ogni disegno: il foglio
      * delle sfumature deve stare in cima al documento gia' al primo giro, o
      * i disegni nascono mezzi e si riparano solo al secondo. */
-    installIconeLeggibiliSection();
-    installHostedBridgeGuard();
-    installLegacySections();
-    installDataContractsSection();
-    installEnergyCalculationsSection();
-    installEnergyServicesSection();
-    installEnergySignedSection();
-    installEnergySection();
-    installEnergyRefreshSection();
+    senzaCadere(installIconeLeggibiliSection);
+    senzaCadere(installHostedBridgeGuard);
+    senzaCadere(installLegacySections);
+    senzaCadere(installDataContractsSection);
+    senzaCadere(installEnergyCalculationsSection);
+    senzaCadere(installEnergyServicesSection);
+    senzaCadere(installEnergySignedSection);
+    senzaCadere(installEnergySection);
+    senzaCadere(installEnergyRefreshSection);
     /* Le chiavi vere, non una copia: e' l'elenco della persistenza, quello
      * che dice cosa e' configurazione della casa. */
-    installStateEventGate(root.DashboardModernEnergyService?.broker, root, {
-      chiavi: CONFIG_KEYS,
-    });
-    installEnergyLegacyGuardSection();
-    installEnergyStabilitySection();
-    installHomeBlocchiSection();
-    installEnergyGuidanceSection();
-    installEnergyFlowSection();
-    installEnergyLoadsEditor();
-    installSubloadPopupSection();
-    installApplianceDetailPopupSection();
-    installEnergyAnalysisSection();
+    senzaCadere(
+      () =>
+        installStateEventGate(root.DashboardModernEnergyService?.broker, root, {
+          chiavi: CONFIG_KEYS,
+        }),
+      "installStateEventGate",
+    );
+    senzaCadere(installEnergyLegacyGuardSection);
+    senzaCadere(installEnergyStabilitySection);
+    senzaCadere(installHomeBlocchiSection);
+    senzaCadere(installEnergyGuidanceSection);
+    senzaCadere(installEnergyFlowSection);
+    senzaCadere(installEnergyLoadsEditor);
+    senzaCadere(installSubloadPopupSection);
+    senzaCadere(installApplianceDetailPopupSection);
+    senzaCadere(installEnergyAnalysisSection);
     /* Il blocco delle fasce sotto la griglia finanziaria della Panoramica
      * (#72): sta qui e non all'ingresso beta perche' le ore del mese le chiede
      * dalla porta dell'Energia, e all'ingresso beta l'Energia non c'e' ancora. */
-    installReportAFasceSection();
-    installHistorySection();
+    senzaCadere(installReportAFasceSection);
+    senzaCadere(installHistorySection);
     /* Il periodo anche nella cronologia della connettivita' (#302): l'altro
      * popup dello storico, che il guscio apre sui sette giorni. */
-    installStoricoConnettivita();
-    installTemperatureSection();
-    installTemperatureLayoutSection();
-    installTemperatureTrendSection();
-    installAppliancesSection();
-    installApplianceLayoutSection();
+    senzaCadere(installStoricoConnettivita);
+    senzaCadere(installTemperatureSection);
+    senzaCadere(installTemperatureLayoutSection);
+    senzaCadere(installTemperatureTrendSection);
+    senzaCadere(installAppliancesSection);
+    senzaCadere(installApplianceLayoutSection);
     // The showcase renderer must install before the KPI popups wrap
     // renderApplianceSection, so the popup sync keeps firing after every
     // showcase render.
-    installApplianceShowcaseSection();
-    installApplianceDailyPopupStyle();
-    installApplianceKpiPopups();
-    installFoglioDiSceltaSection();
+    senzaCadere(installApplianceShowcaseSection);
+    senzaCadere(installApplianceDailyPopupStyle);
+    senzaCadere(installApplianceKpiPopups);
+    senzaCadere(installFoglioDiSceltaSection);
     /* Gli spegnimenti programmati del clima (#364): il conto alla rovescia
      * lo tiene Home Assistant, qui si chiede una volta chi e' appeso. Prima
      * del Clima, che alla prima passata lo legge gia'. */
-    installSpegnimentoProgrammatoSection();
+    senzaCadere(installSpegnimentoProgrammatoSection);
     /* La riga per cercare vive sopra il corpo dell'editor: si installa con gli
      * altri moduli della configurazione, e si rimette a posto a ogni giro. */
-    installCercaNelConfigSection();
+    senzaCadere(installCercaNelConfigSection);
     /* Le pastiglie aperto/chiuso sulle righe che nominano un varco: vale in
      * ogni scheda dove un varco compare, non in una sola. */
-    installVarchiInConfigurazioneSection();
-    installApplianceEditorSection();
-    installReportTendinaDispositiviSection();
+    senzaCadere(installVarchiInConfigurazioneSection);
+    senzaCadere(installApplianceEditorSection);
+    senzaCadere(installReportTendinaDispositiviSection);
     // Il menu delle integrazioni veste la scheda che l'editor ha appena
     // disegnato e apre la finestra di modifica che l'editor ha appena
     // sostituito: viene dopo di lui.
-    installApplianceIntegrationSection();
-    installLightsAlertsSection();
+    senzaCadere(installApplianceIntegrationSection);
+    senzaCadere(installLightsAlertsSection);
     // The editor owns the light list and the rooms; the scene owns the popup
     // that controls them, so it installs after the model it reads.
-    installLightsSceneSection();
+    senzaCadere(installLightsSceneSection);
     // La pagina Luci legge lo stesso modello e apre la stessa scheda controlli
     // del popup: si installa dopo chi la possiede.
-    installLightsPageSection();
-    installAlertsSection();
+    senzaCadere(installLightsPageSection);
+    senzaCadere(installAlertsSection);
     /* L'allagamento e' una lista sorvegliata come le altre: si installa dove si
      * installano gli avvisi, subito dopo chi possiede il loro editor. */
-    installFloodAlertsSection();
+    senzaCadere(installFloodAlertsSection);
     /* Il fumo segue l'allagamento — stessa famiglia, stesso posto — e in piu'
      * porta il suo blocco nella pagina Sicurezza e il rilevamento continuo
      * delle aperture nuove. */
-    installSmokeAlertsSection();
+    senzaCadere(installSmokeAlertsSection);
     /* Sul guscio inglese, le parole italiane rimaste nel runtime vendorizzato
      * si traducono qui, finche' la correzione non arriva a monte. */
-    installEnglishRuntimeStrings();
+    senzaCadere(installEnglishRuntimeStrings);
     // The redesigned Security page must own #cam-grid before the live-ui camera
     // owner starts filling the thumbnails, so the first paint is already the new
     // wall instead of the legacy cards.
-    installSecurityShowcaseSection();
+    senzaCadere(installSecurityShowcaseSection);
     /* Le aperture stanno fra la centrale e le telecamere: si installano dopo
      * la vetrina che costruisce lo scheletro in cui si inseriscono. */
-    installSecurityDoorsSection();
-    installSecurityDoorsEditorSection();
+    senzaCadere(installSecurityDoorsSection);
+    senzaCadere(installSecurityDoorsEditorSection);
     /* L'indirizzo RTSP nella scheda delle telecamere: si mette accanto al
      * campo del flusso, che e' del guscio, e va installato dopo di lui. */
-    installTelecameraRtsp();
-    installTelecameraVivo();
-    installCentraliAllarmeEditor();
-    installOrologio();
+    senzaCadere(installTelecameraRtsp);
+    senzaCadere(installTelecameraVivo);
+    senzaCadere(installCentraliAllarmeEditor);
+    senzaCadere(installOrologio);
     /* La scelta dei tasti dell'antifurto chiede alla vetrina quali la centrale
      * accetta: si installa dopo di lei, che quella risposta la pubblica. */
-    installAlarmModesEditorSection();
-    installAntifurtoSuMisuraEditorSection();
-    installRilevamentiEditorSection();
+    senzaCadere(installAlarmModesEditorSection);
+    senzaCadere(installAntifurtoSuMisuraEditorSection);
+    senzaCadere(installRilevamentiEditorSection);
     /* La spunta «solo a casa vuota» sta sotto le telecamere, e delle telecamere
      * parla: dopo i rilevamenti, che stanno gia' li'. */
-    installTelecamereRiservateEditorSection();
-    installTelecamereSpenteEditorSection();
-    installTesseraDallaSchedaSection();
+    senzaCadere(installTelecamereRiservateEditorSection);
+    senzaCadere(installTelecamereSpenteEditorSection);
+    senzaCadere(installTesseraDallaSchedaSection);
     /* La fotografia per Android Auto: legge le tessere che la Home ha gia'
      * costruito, quindi si installa dopo di loro. Fuori dall'app non fa
      * niente — il canale non c'e'. */
-    installLaFotoVaInAuto();
-    installClimateThermalSection();
+    senzaCadere(installLaFotoVaInAuto);
+    senzaCadere(installClimateThermalSection);
     /* Le voci termiche del popup Caldo: dopo chi disegna il popup, cosi' il
      * pannello passa di mano una volta sola. */
-    installTermicoDelCaldo();
+    senzaCadere(installTermicoDelCaldo);
     /* Il popup Clima attivi separa caldo e freddo e dice da quanto: legge
      * le righe che il guscio ha appena disegnato. */
-    installPopupClimaDistingue();
+    senzaCadere(installPopupClimaDistingue);
     /* Il popup dell'Auto: l'ora di fine carica accanto al tempo che manca,
      * la frase d'analisi, i codici del cavo in parole. */
-    installPopupAutoRacconta();
+    senzaCadere(installPopupAutoRacconta);
     /* Il popup della lavatrice: programmi configurabili, immagine della
      * sezione, veste di casa. */
-    installPopupLavatrice();
+    senzaCadere(installPopupLavatrice);
     /* I parametri del tasto Clima rapido chiedono alle unita' cosa accettano:
      * si installano dopo chi quelle unita' le tiene. */
-    installQuickClimateEditorSection();
+    senzaCadere(installQuickClimateEditorSection);
     /* La valvola TRV (#300): una casella in piu' nella scheda dell'unita' clima. */
-    installTrvEditor();
-    installClimaCosaManca();
+    senzaCadere(installTrvEditor);
+    senzaCadere(installClimaCosaManca);
     /* La ventilazione meccanica (#371): la sua scheda si appende in fondo
      * alla configurazione del Clima, dov'e' che uno cerca l'aria di casa. */
-    installVmcEditor();
+    senzaCadere(installVmcEditor);
     /* Assist (#360): il tasto che apre l'assistente di Home Assistant, e la
      * riga che lo accende fra le Impostazioni. */
-    installAssistSection();
-    installAssistEditor();
-    installLiveUiSection();
+    senzaCadere(installAssistSection);
+    senzaCadere(installAssistEditor);
+    senzaCadere(installLiveUiSection);
     /* Il video vero delle telecamere (#294): WebRTC e HLS nelle tessere, e il
      * WebRTC nativo del popup negoziato con i server ICE di casa. */
-    installTelecameraWebRtc();
-    installConnectionRecoverySection();
-    installNavigationSection();
-    installUnifiedEditorsSection();
-    installEntitySearchSection();
-    installEntityAutodetectSection();
-    installEditorCrudSection();
-    installEditorContractsSection();
+    senzaCadere(installTelecameraWebRtc);
+    senzaCadere(installConnectionRecoverySection);
+    senzaCadere(installNavigationSection);
+    senzaCadere(installUnifiedEditorsSection);
+    senzaCadere(installEntitySearchSection);
+    senzaCadere(installEntityAutodetectSection);
+    senzaCadere(installEditorCrudSection);
+    senzaCadere(installEditorContractsSection);
     // Readable entity rows for every section tab of the editor.
-    installEditorSlotsSection();
+    senzaCadere(installEditorSlotsSection);
     // One section per tab, one switch, one save — installed after the editors
     // that print those parts, so it reconciles what they left behind.
-    installConfigUniformitySection();
-    installReportEditorSection();
-    installShutterSection();
-    installShutterSceneSection();
-    installShutterWindowSection();
+    senzaCadere(installConfigUniformitySection);
+    senzaCadere(installReportEditorSection);
+    senzaCadere(installShutterSection);
+    senzaCadere(installShutterSceneSection);
+    senzaCadere(installShutterWindowSection);
     // Il cielo si installa dopo chi disegna la finestra: ridefinisce solo le
     // variabili del fondo, e le trova gia' al loro posto.
-    installClimatePowerSection();
+    senzaCadere(installClimatePowerSection);
     /* L'HLS di una telecamera vale quando il video si muove davvero (#385):
      * si avvolge la strada del guscio, che si accontentava dell'intestazione. */
-    installVideoSiMuove();
+    senzaCadere(installVideoSiMuove);
     /* Il fotogramma si vede prima del negoziato, e la strada che ha funzionato
      * si prova per prima la volta dopo: «sono lentissime e non carica
      * immediatamente immagine». Si installa DOPO chi avvolge le singole
      * strade, cosi' la scorciatoia chiama quelle gia' corrette. */
-    installTelecameraCapacita();
-    installTelecameraSubito();
+    senzaCadere(installTelecameraCapacita);
+    senzaCadere(installTelecameraSubito);
     /* Le linguette del Config in ordine di alberatura, con l'insegna della
      * famiglia davanti a ognuna: si installa dopo tutti gli editor che una
      * linguetta se la aggiungono, cosi' al primo giro le trova gia' tutte. */
-    installAlberatura();
+    senzaCadere(installAlberatura);
     /* Lo scorrimento col dito non deve azionare quello che sfiora (#397): la
      * guardia sta sul documento, in cattura, e vale per ogni elenco lungo —
      * comprese le sezioni che ancora non esistono. */
-    installIlDitoScorreOTocca();
+    senzaCadere(installIlDitoScorreOTocca);
     /* L'elenco unico delle sezioni, in ⚙️ Impostazioni: cosa c'e' e se si
      * vede, senza aprire ventiquattro schede per scoprirlo. */
-    installElencoDelleSezioni();
+    senzaCadere(installElencoDelleSezioni);
     /* E l'interruttore del modo chiosco, nella stessa scheda (#480): c'era gia'
      * ma si accendeva solo tenendo premuto l'hamburger o scrivendo ?kiosk=1
      * nell'indirizzo, cioe' per chi lo cercava non c'era. */
-    installModoChiosco();
+    senzaCadere(installModoChiosco);
     /* E accanto, l'intestazione fissa (#521): «un'opzione che tiene ferma tutta
      * la parte iniziale, e se uno scorre verso il basso vede il resto». Sono
      * la stessa famiglia di scelte — come si vede la plancia su questo vetro. */
-    installTestaFissa();
+    senzaCadere(installTestaFissa);
     /* Le batterie hanno la loro pagina e la loro scheda (#398): «le batterie
      * quelle cariche non le fa vedere? sarebbe carino che stessero nel config
      * come le altre cose». */
-    installBatterie();
-    installBatterieEditor();
-    installShutterSkySection();
-    installPageMastheadSection();
+    senzaCadere(installBatterie);
+    senzaCadere(installBatterieEditor);
+    senzaCadere(installShutterSkySection);
+    senzaCadere(installPageMastheadSection);
     /* Il meteo si accoda al nome della casa nell'intestazione: si installa
      * dopo le intestazioni di pagina, che dell'intestazione della plancia non
      * si occupano, ma e' li' che si va a cercarle. */
-    installWeatherInMasthead();
+    senzaCadere(installWeatherInMasthead);
     /* E quando il riquadro scende in pagina diventa una card: si installa dopo
      * chi lo possiede, perche' la card e' il suo vestito da fuori — il
      * riquadro resta uno solo, e chi lo sposta resta uno solo. */
-    installLaCardDelMeteo();
+    senzaCadere(installLaCardDelMeteo);
     /* Le azioni rapide entrano nel loro ripiano: si installa dopo chi disegna
      * la Home, perche' il ripiano si mette attorno a una griglia che deve
      * gia' esistere. */
-    installAzioniRapideVassoio();
+    senzaCadere(installAzioniRapideVassoio);
     /* E dentro il ripiano i gruppi (#139): i titoli si mettono fra i tasti che
      * il ripiano ha gia' avvolto, senza spostarli. */
-    installAzioniRapideGruppi();
-    installAzioniServizioGiusto();
-    installFoglioDelGuscio();
-    installStrisceDiLinguette();
-    installPoolIrrigationSceneSection();
-    installPoolExtraSection();
-    installPoolEditorSection();
-    installRobotSection();
-    installPreseSection();
-    installRobotEditorSection();
-    installAutoIntegrazione();
-    installEnergiaCerchiStorico();
+    senzaCadere(installAzioniRapideGruppi);
+    senzaCadere(installAzioniServizioGiusto);
+    senzaCadere(installFoglioDelGuscio);
+    senzaCadere(installStrisceDiLinguette);
+    senzaCadere(installPoolIrrigationSceneSection);
+    senzaCadere(installPoolExtraSection);
+    senzaCadere(installPoolEditorSection);
+    senzaCadere(installRobotSection);
+    senzaCadere(installPreseSection);
+    senzaCadere(installRobotEditorSection);
+    senzaCadere(installAutoIntegrazione);
+    senzaCadere(installEnergiaCerchiStorico);
     /* Le Stanze leggono le assegnazioni di tutte le altre sezioni e
      * riusano la card della pagina Luci: si installano dopo di lei. */
-    installRoomsPageSection();
+    senzaCadere(installRoomsPageSection);
     /* Il blocco delle stanze in plancia (#493) chiede alla pagina Stanze chi
      * c'e' e dove portare col tocco: si installa dopo di lei. */
-    installStanzeInPlancia();
+    senzaCadere(installStanzeInPlancia);
     /* L'ordine delle stanze si cambia in configurazione: le frecce si
      * appoggiano alle righe che disegna il documento vendorizzato. */
-    installRoomsOrderEditor();
+    senzaCadere(installRoomsOrderEditor);
     /* L'assegnatore va dopo la pagina Stanze: le chiede quali entita' una
      * stanza ce l'hanno gia' per mestiere, e su quelle non mette niente. */
-    installRoomAssignSection();
+    senzaCadere(installRoomAssignSection);
     /* Le linguette degli impianti leggono la sezione Energia e le si
      * posano sopra: si installano dopo di lei. */
-    installEnergyPlantsSection();
+    senzaCadere(installEnergyPlantsSection);
     /* La soglia di potenza (#508) sta nelle impostazioni dell'Energia e legge
      * le letture che fa il ponte dei widget: si installa dopo l'una e dopo
      * l'altro, cosi' la sua scheda trova il pannello gia' in piedi. */
-    installLaSogliaDellaPotenza();
-    installEditorEntrySection();
-    installMediaPickerSection();
+    senzaCadere(installLaSogliaDellaPotenza);
+    senzaCadere(installEditorEntrySection);
+    senzaCadere(installMediaPickerSection);
     /* Le persone leggono `cd_people` e basta; il loro editor usa il selettore
      * foto, quindi si installano dopo di lui. */
-    installPeopleSection();
-    installPeopleEditorSection();
+    senzaCadere(installPeopleSection);
+    senzaCadere(installPeopleEditorSection);
     /* La riga sotto il meteo (#356, #357) prima del ponte: e' il ponte a
      * disegnarla, coi modelli delle tessere che ha appena fatto, e quando lo
      * fa deve trovare gia' installati lo stile, il tocco e la sua scheda. */
-    installComeStaLaCasa();
+    senzaCadere(installComeStaLaCasa);
     /* Gli animali di casa (#358): la loro voce si mette accanto a quella
      * delle Persone, quindi si installano dopo di lei; il loro editor usa il
      * selettore foto, che e' gia' in piedi qui sopra. */
-    installAnimaliSection();
-    installAnimaliEditorSection();
+    senzaCadere(installAnimaliSection);
+    senzaCadere(installAnimaliEditorSection);
     /* Il ponte dei widget sta sotto le persone in Home: si installa dopo,
      * cosi' trova gia' il suo ancoraggio. */
-    installHomeWidgetsSection();
+    senzaCadere(installHomeWidgetsSection);
     /* La scheda degli scollegati legge la stessa regola della tessera «non
      * connessi», e da lei prende anche l'elenco delle escluse: si installa
      * dopo, cosi' quando disegna la prima volta quel modulo c'e' gia'. */
-    installScollegatiSection();
+    senzaCadere(installScollegatiSection);
     /* E chi le due mappe dell'anagrafe le chiede al ponte, dove il ponte c'e'.
      * Dopo i due che le leggono, e non prima: la risposta arriva dalla rete e
      * arriva comunque dopo, e chi disegna sa gia' cavarsela senza. */
-    installIDispositiviDalPonte();
-    installTodoEditorSection();
-    installWidgetEntityChoiceSection();
+    senzaCadere(installIDispositiviDalPonte);
+    senzaCadere(installTodoEditorSection);
+    senzaCadere(installWidgetEntityChoiceSection);
     /* Il backup arriva per ultimo fra le schede: raccoglie le chiavi che gli
      * altri editor scrivono, non ne possiede nessuna. */
-    installBackupEditorSection();
-    installEvSection();
+    senzaCadere(installBackupEditorSection);
+    senzaCadere(installEvSection);
     // The skin installs after the EV owner so the vehicle picker it restyles is
     // already mounted, and re-renders itself on the same runtime events.
-    installEvShowcaseSection();
-    installEvStatoETargetSection();
+    senzaCadere(installEvShowcaseSection);
+    senzaCadere(installEvStatoETargetSection);
     /* L'auto a benzina (#208) si appoggia alla pagina EV gia' vestita: le
      * sue caselle entrano nella stessa scheda, e il suo quadro prende il
      * posto di quello della ricarica quando il motore non e' elettrico. */
-    installAutoTermica();
-    installAutoOMoto();
-    installLeFasceDelDispositivo();
-    installLaVentolaDellInverter();
-    installSolarThermalDesignSection();
+    senzaCadere(installAutoTermica);
+    senzaCadere(installAutoOMoto);
+    senzaCadere(installLeFasceDelDispositivo);
+    senzaCadere(installLaVentolaDellInverter);
+    senzaCadere(installSolarThermalDesignSection);
     /* Dopo il disegno del solare: le linguette e le due scene nuove gli si
      * mettono accanto, e per farlo devono trovarlo gia' al suo posto. */
-    installImpiantiTermiciSection();
-    installImpiantiTermiciEditor();
+    senzaCadere(installImpiantiTermiciSection);
+    senzaCadere(installImpiantiTermiciEditor);
     /* Il gruppo di continuita' (#256) ha una pagina sua, come le altre
      * macchine della casa, e una scheda sua nella configurazione: era una coda
      * della scheda «Energia», e li' non la trovava nessuno. La pagina prima
      * della scheda, cosi' la scheda trova gia' cosa ridisegnare quando salva. */
-    installUpsSection();
-    installUpsEditor();
+    senzaCadere(installUpsSection);
+    senzaCadere(installUpsEditor);
     /* Le allerte (#296) e la raccolta differenziata (#293): due pagine nate
      * a runtime come la Continuita', ognuna con la sua scheda. La pagina
      * prima della scheda, cosi' la scheda trova gia' cosa ridisegnare. */
-    installAllerte();
-    installAllerteEditor();
-    installRifiuti();
-    installRifiutiEditor();
-    installVarchi();
-    installVarchiEditor();
-    installPresenza();
-    installPresenzaEditor();
-    installCitofono();
-    installCitofonoEditor();
-    installStampanti();
-    installStampantiEditor();
+    senzaCadere(installAllerte);
+    senzaCadere(installAllerteEditor);
+    senzaCadere(installRifiuti);
+    senzaCadere(installRifiutiEditor);
+    senzaCadere(installVarchi);
+    senzaCadere(installVarchiEditor);
+    senzaCadere(installPresenza);
+    senzaCadere(installPresenzaEditor);
+    senzaCadere(installCitofono);
+    senzaCadere(installCitofonoEditor);
+    senzaCadere(installStampanti);
+    senzaCadere(installStampantiEditor);
     /* L'acqua e il gas (#115, #135, #137): una pagina e una scheda, come le
      * altre nate a runtime. La pagina prima della scheda, cosi' la scheda
      * trova gia' cosa ridisegnare quando salva. */
-    installContatori();
-    installContatoriEditor();
+    senzaCadere(installContatori);
+    senzaCadere(installContatoriEditor);
     /* Le piante (#159): la pagina e la sua scheda, nello stesso ordine. */
-    installPiante();
-    installPianteEditor();
+    senzaCadere(installPiante);
+    senzaCadere(installPianteEditor);
     /* L'acquario (#127): la pagina e la sua scheda, nello stesso ordine. */
-    installAcquario();
-    installAcquarioEditor();
+    senzaCadere(installAcquario);
+    senzaCadere(installAcquarioEditor);
     /* Le batterie di accumulo (#117): la linguetta dentro Energia e la sua
      * scheda, nello stesso ordine. */
-    installAccumuloInEnergia();
-    installAccumuloEditor();
-    installMacchine();
-    installMacchineEditor();
-    installNodiSection();
-    installNodiEditor();
+    senzaCadere(installAccumuloInEnergia);
+    senzaCadere(installAccumuloEditor);
+    senzaCadere(installMacchine);
+    senzaCadere(installMacchineEditor);
+    senzaCadere(installNodiSection);
+    senzaCadere(installNodiEditor);
     /* Il calendario (#259) ha una pagina sua accanto alla Home, e con le liste
      * ToDo una scheda sola nella configurazione: sono la stessa pagina, e chi
      * le configura le pensa nello stesso momento. */
-    installCalendarioSection();
-    installAgendaEditorSection();
+    senzaCadere(installCalendarioSection);
+    senzaCadere(installAgendaEditorSection);
     /* La lingua si sceglie fra le Impostazioni (#263): il motore c'era gia',
      * mancava la riga da cui dirlo. */
-    installLinguaSection();
+    senzaCadere(installLinguaSection);
     /* «Sostieni il progetto»: la pastiglia PayPal nella colonna delle schede e
      * la card in Impostazioni. Un canale solo, quello del README. */
-    installSostieniIlProgetto();
+    senzaCadere(installSostieniIlProgetto);
     /* Le sezioni che si fa l'utente: la pagina prima della sua scheda, come
      * per la Continuita' — la scheda chiama la pagina per ridisegnarla. */
-    installSezioniMie();
-    installSezioniMieEditor();
+    senzaCadere(installSezioniMie);
+    senzaCadere(installSezioniMieEditor);
     /* Le entita' che uno si aggiunge dove vuole (#271): il disegno prima
      * della scheda che lo compila, come per le sezioni proprie. */
-    installEntitaMie();
-    installEntitaMieEditor();
+    senzaCadere(installEntitaMie);
+    senzaCadere(installEntitaMieEditor);
     /* La musica (#269): la pagina, la scheda che dichiara i lettori, e la
      * copertina addosso al tasto nelle Azioni rapide. */
-    installMediaPlayer();
-    installMediaEditor();
-    installMediaInAzioni();
+    senzaCadere(installMediaPlayer);
+    senzaCadere(installMediaEditor);
+    senzaCadere(installMediaInAzioni);
     /* Una stanza si mostra col suo nome: gli elenchi del guscio scrivevano
      * l'identificativo che la tendina salva. */
-    installStanzePerNome();
+    senzaCadere(installStanzePerNome);
     /* I piani della casa, nella scheda Stanze del Config (#17): ordine,
      * rinomina, segno, e l'avviso quando due stanze si chiamano uguale. */
-    installIPianiSection();
+    senzaCadere(installIPianiSection);
     /* «Dove lo metto?» (#54): il foglietto che accoglie un dispositivo appena
      * abbinato dall'app. Il passo 4 e' della plancia perche' le forme delle
      * sezioni le conosce lei. */
-    installDoveLoMettoSection();
+    senzaCadere(installDoveLoMettoSection);
     /* Il radar meteo dentro la finestra delle previsioni: si aggancia al
      * guscio che quella finestra la disegna gia'. */
-    installRadarMeteo();
+    senzaCadere(installRadarMeteo);
     // The MiniPC skin owns the presentation of #page-server: it reads the bars,
     // the temperature arc and the status badges the legacy render loop writes.
-    installMinipcShowcaseSection();
+    senzaCadere(installMinipcShowcaseSection);
 
     root[RUNTIME_KEY] = Object.freeze({
       installed: true,
@@ -1340,4 +1344,4 @@ export function installSectionRuntime() {
   }
 }
 
-installSectionRuntime();
+senzaCadere(installSectionRuntime);

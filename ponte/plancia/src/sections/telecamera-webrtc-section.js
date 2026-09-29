@@ -29,7 +29,7 @@ import {
   tipoDiFlusso,
   videoInPausa,
 } from "../core/telecamera-webrtc.js";
-import { allStates, chiediAHomeAssistant, clean, doc, lexicalGlobal, root } from "./shared.js";
+import { allStates, chiediAHomeAssistant, clean, doc, lexicalGlobal, root, senzaCadere } from "./shared.js";
 import { capacitaDellaTelecamera, capacitaInArrivo } from "./telecamera-capacita-section.js";
 
 const KEY = "__DASHBOARDMODERN_TELECAMERA_WEBRTC__";
@@ -610,4 +610,4 @@ export function installTelecameraWebRtc() {
   return true;
 }
 
-installTelecameraWebRtc();
+senzaCadere(installTelecameraWebRtc);

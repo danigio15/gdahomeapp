@@ -15,6 +15,7 @@ import {
   section,
   t,
   temperatureCardLabels,
+  senzaCadere,
 } from "./shared.js";
 import { segnoDaValoreHtml, segnoHtml } from "../core/segni-del-catalogo.js";
 
@@ -649,4 +650,4 @@ export function installTemperatureSection() {
 
 if (doc?.readyState === "loading")
   doc.addEventListener("DOMContentLoaded", installTemperatureSection, { once: true });
-else installTemperatureSection();
+else senzaCadere(installTemperatureSection);

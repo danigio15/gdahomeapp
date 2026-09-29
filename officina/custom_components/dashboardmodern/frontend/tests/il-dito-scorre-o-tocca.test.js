@@ -76,7 +76,7 @@ test("è installata dal runtime, non da chi se la ricorda", () => {
     new URL("../src/sections/section-runtime.js", import.meta.url),
     "utf8",
   );
-  assert.match(runtime, /installIlDitoScorreOTocca\(\);/);
+  assert.match(runtime, /senzaCadere\(installIlDitoScorreOTocca\);/);
 });
 
 /* ── il dito si muove, ma la pagina no ─────────────────────────────────── */

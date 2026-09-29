@@ -33,7 +33,7 @@ import {
   rankMatches,
   searchEntityIndex,
 } from "../core/entity-search-index.js";
-import { allStates, clean, doc, esc, installStyle, lexicalGlobal, root, t } from "./shared.js";
+import { allStates, clean, doc, esc, installStyle, lexicalGlobal, root, t, senzaCadere } from "./shared.js";
 import { segnoHtml } from "../core/segni-del-catalogo.js";
 
 const KEY = "__DASHBOARDMODERN_ENTITY_SEARCH__";
@@ -555,4 +555,4 @@ export function installEntitySearchSection() {
   return true;
 }
 
-installEntitySearchSection();
+senzaCadere(installEntitySearchSection);

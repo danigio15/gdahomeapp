@@ -85,7 +85,7 @@ test("il modulo e' registrato nel runtime delle sezioni", () => {
     "utf8",
   );
   assert.match(runtime, /english-runtime-strings-section\.js/);
-  assert.match(runtime, /installEnglishRuntimeStrings\(\)/);
+  assert.match(runtime, /senzaCadere\(installEnglishRuntimeStrings\);/);
   assert.match(runtime, /"english-runtime-strings"/);
 });
 

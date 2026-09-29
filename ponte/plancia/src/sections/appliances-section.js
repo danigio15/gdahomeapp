@@ -19,6 +19,7 @@ import {
   section,
   t,
   wrapFunction,
+  senzaCadere,
 } from "./shared.js";
 
 const KEY = "__DASHBOARDMODERN_APPLIANCES_SECTION__";
@@ -745,5 +746,5 @@ export function installAppliancesSection() {
 if (doc?.readyState === "loading") {
   doc.addEventListener("DOMContentLoaded", installAppliancesSection, { once: true });
 } else {
-  installAppliancesSection();
+  senzaCadere(installAppliancesSection);
 }

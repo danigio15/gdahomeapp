@@ -37,6 +37,7 @@ import {
   root,
   stanzaDiHomeAssistant,
   t,
+  senzaCadere,
 } from "./shared.js";
 import { nomeDaHomeAssistant } from "./editor-slots-section.js";
 import { segnoHtml } from "../core/segni-del-catalogo.js";
@@ -417,4 +418,4 @@ export function installPresenza() {
   return true;
 }
 
-installPresenza();
+senzaCadere(installPresenza);

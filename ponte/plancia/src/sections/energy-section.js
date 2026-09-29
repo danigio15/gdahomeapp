@@ -50,6 +50,7 @@ import {
   selectedPeriod,
   t,
   wrapFunction,
+  senzaCadere,
 } from "./shared.js";
 import {
   isHostedDashboard,
@@ -2732,4 +2733,4 @@ export function installEnergySection() {
 
 if (doc?.readyState === "loading")
   doc.addEventListener("DOMContentLoaded", installEnergySection, { once: true });
-else installEnergySection();
+else senzaCadere(installEnergySection);

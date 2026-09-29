@@ -106,11 +106,11 @@ test("il gruppo si sceglie dove si scelgono gli altri", () => {
 
 test("la sezione e' installata insieme agli altri avvisi", () => {
   const runtime = leggi("sections/section-runtime.js");
-  assert.match(runtime, /installFloodAlertsSection\(\)/, "non viene installata");
+  assert.match(runtime, /senzaCadere\(installFloodAlertsSection\);/, "non viene installata");
   assert.match(runtime, /"flood-alerts"/, "non e' dichiarata fra le sezioni");
   // Dopo chi possiede l'editor degli avvisi, o la voce nel menu non trova posto.
   assert.ok(
-    runtime.indexOf("installFloodAlertsSection()") > runtime.indexOf("installAlertsSection()"),
+    runtime.indexOf("senzaCadere(installFloodAlertsSection);") > runtime.indexOf("senzaCadere(installAlertsSection);"),
     "va installata dopo l'editor degli avvisi",
   );
 });

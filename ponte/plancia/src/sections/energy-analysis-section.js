@@ -16,6 +16,7 @@ import {
   root,
   section,
   t,
+  senzaCadere,
 } from "./shared.js";
 import { lEnergiaInParole, laPotenzaInParole } from "../core/le-unita-della-corrente.js";
 import { segnoHtml } from "../core/segni-del-catalogo.js";
@@ -319,4 +320,4 @@ export function installEnergyAnalysisSection() {
 
 if (doc?.readyState === "loading")
   doc.addEventListener("DOMContentLoaded", installEnergyAnalysisSection, { once: true });
-else installEnergyAnalysisSection();
+else senzaCadere(installEnergyAnalysisSection);

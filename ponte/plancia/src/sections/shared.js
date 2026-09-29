@@ -26,6 +26,36 @@ import {
 export const root = globalThis;
 export const doc = root.document;
 
+/* Un pezzo che cade non si porta dietro gli altri (1.9.2).
+ *
+ * Nella 1.9.0 una sola riga sbagliata della pagina Sicurezza — una variabile
+ * che non esisteva, in una casa con le zone scritte sulla centrale — ha spento
+ * la Home di tutte le case con l'antifurto. Si accendeva mentre il suo modulo
+ * si caricava, e un errore a quel punto ferma il caricamento dell'intera parte
+ * a moduli: restavano la testata, il meteo e le azioni rapide.
+ *
+ * Adesso ogni accensione passa di qui: chi cade lo dice, e gli altri partono lo
+ * stesso. L'elenco di chi e' caduto resta in
+ * `window.__DASHBOARDMODERN_PEZZI_CADUTI__`, da leggere nella console.
+ *
+ * Sono funzioni dichiarate e usano `globalThis`, non `root`: un modulo che si
+ * accende dentro un giro di import le trova pronte anche prima che questo file
+ * sia arrivato alle sue righe. */
+export function segnaLaCaduta(nome, errore) {
+  const cadute = (globalThis.__DASHBOARDMODERN_PEZZI_CADUTI__ ||= []);
+  cadute.push({ pezzo: String(nome || "?"), errore: String(errore?.message || errore) });
+  globalThis.console?.error?.(`[DashboardModern] ${nome || "un pezzo"} non e' partito`, errore);
+}
+
+export function senzaCadere(installa, nome = installa?.name) {
+  try {
+    return installa();
+  } catch (errore) {
+    segnaLaCaduta(nome, errore);
+    return undefined;
+  }
+}
+
 export const clean = (value) => String(value ?? "").trim();
 export const finite = (value, fallback = 0) => {
   const parsed = Number(value);

@@ -10,6 +10,7 @@ import {
   readJson,
   root,
   t,
+  senzaCadere,
 } from "./shared.js";
 
 const capturedRooms = readJson("cd_stanze", []);
@@ -253,4 +254,4 @@ export function installBeta14RealDeviceHotfix() {
   schedule();
 }
 if (doc?.readyState === "loading") doc.addEventListener("DOMContentLoaded", installBeta14RealDeviceHotfix, { once: true });
-else installBeta14RealDeviceHotfix();
+else senzaCadere(installBeta14RealDeviceHotfix);

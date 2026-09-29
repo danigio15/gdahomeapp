@@ -16,7 +16,7 @@ import {
 } from "../core/presenza-in-casa.js";
 import { PRESENZA_TAB, renderPresenza } from "./presenza-section.js";
 import { costruisciSchedaDichiarata } from "./scheda-dichiarata-section.js";
-import { allStates, stanzaDiHomeAssistant, t } from "./shared.js";
+import { allStates, stanzaDiHomeAssistant, t, senzaCadere } from "./shared.js";
 import { nomeDaHomeAssistant } from "./editor-slots-section.js";
 
 export const PRESENZA_EDITOR_TAB = PRESENZA_TAB;
@@ -126,4 +126,4 @@ export function installPresenzaEditor() {
   return scheda.installa();
 }
 
-installPresenzaEditor();
+senzaCadere(installPresenzaEditor);

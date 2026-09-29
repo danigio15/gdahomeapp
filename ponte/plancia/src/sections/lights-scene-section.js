@@ -26,6 +26,7 @@ import {
   section,
   siComanda,
   t,
+  senzaCadere,
 } from "./shared.js";
 import { segnoHtml } from "../core/segni-del-catalogo.js";
 
@@ -1025,5 +1026,5 @@ export function installLightsSceneSection() {
 if (doc?.readyState === "loading") {
   doc.addEventListener("DOMContentLoaded", installLightsSceneSection, { once: true });
 } else {
-  installLightsSceneSection();
+  senzaCadere(installLightsSceneSection);
 }

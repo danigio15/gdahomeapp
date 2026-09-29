@@ -30,6 +30,7 @@ import {
   scriviSeCambia,
   t,
   writeJsonIfChanged,
+  senzaCadere,
 } from "./shared.js";
 import { segnoHtml } from "../core/segni-del-catalogo.js";
 
@@ -2104,5 +2105,5 @@ export function installPoolIrrigationSceneSection() {
 if (doc?.readyState === "loading") {
   doc.addEventListener("DOMContentLoaded", installPoolIrrigationSceneSection, { once: true });
 } else {
-  installPoolIrrigationSceneSection();
+  senzaCadere(installPoolIrrigationSceneSection);
 }

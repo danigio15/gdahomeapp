@@ -33,6 +33,7 @@ import {
   roomOptionsMarkup,
   t,
   writeJsonIfChanged,
+  senzaCadere,
 } from "./shared.js";
 import { senzaEmoji } from "../core/segni-del-catalogo.js";
 
@@ -256,5 +257,5 @@ export function installRoomAssignSection() {
 if (doc?.readyState === "loading") {
   doc.addEventListener("DOMContentLoaded", installRoomAssignSection, { once: true });
 } else {
-  installRoomAssignSection();
+  senzaCadere(installRoomAssignSection);
 }

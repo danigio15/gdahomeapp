@@ -248,7 +248,7 @@ if (typeof document !== "undefined") {
           reconcileOwnedIcons();
         }
       }, true);
-      reconcileOwnedIcons();
+      (() => { try { reconcileOwnedIcons(); } catch (errore) { (globalThis.__DASHBOARDMODERN_PEZZI_CADUTI__ ||= []).push({ pezzo: "reconcileOwnedIcons", errore: String(errore?.message || errore) }); globalThis.console?.error?.("[DashboardModern] reconcileOwnedIcons non e' partito", errore); } })();
     }
 
   }

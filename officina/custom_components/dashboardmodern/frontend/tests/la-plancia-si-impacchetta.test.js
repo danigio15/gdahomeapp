@@ -68,7 +68,8 @@ process.on("exit", () => rmSync(cartella, { recursive: true, force: true }));
 
 test("nel pacchetto c'e' ogni sezione che il runtime installa", () => {
   const runtime = readFileSync(join(FRONTEND, "src/sections/section-runtime.js"), "utf8");
-  const chiamati = [...new Set(runtime.match(/install[A-Za-z0-9]+(?=\(\))/g) || [])];
+  /* Chiamate dirette, `installX()`, o passate a `senzaCadere(installX)`. */
+  const chiamati = [...new Set(runtime.match(/install[A-Z][A-Za-z0-9]*(?=\(\)|\))/g) || [])];
   /* Non e' un numero tondo per caso: sono le sezioni che compongono la
    * plancia, e se il conto scende di molto vuol dire che la lettura qui sotto
    * ha smesso di funzionare, non che le sezioni sono sparite. */

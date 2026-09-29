@@ -20,7 +20,7 @@ import {
   programmaSpegnimento,
   scadenzaDi,
 } from "./spegnimento-programmato-section.js";
-import { allStates, clean, climaAccesoDaiWatt, readClimateUnits, root } from "./shared.js";
+import { allStates, clean, climaAccesoDaiWatt, readClimateUnits, root, senzaCadere } from "./shared.js";
 
 const KEY = "__DASHBOARDMODERN_CLIMATE_POWER__";
 const state = (root[KEY] ||= { installed: false, ultime: new Map() });
@@ -242,4 +242,4 @@ export function installClimatePowerSection() {
   });
 }
 
-installClimatePowerSection();
+senzaCadere(installClimatePowerSection);

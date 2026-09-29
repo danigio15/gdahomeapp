@@ -1,4 +1,4 @@
-import { doc, root } from "./shared.js";
+import { doc, root, senzaCadere } from "./shared.js";
 
 const KEY = "__DASHBOARDMODERN_ENERGY_REFRESH_SECTION__";
 const state = (root[KEY] ||= {
@@ -101,4 +101,4 @@ export function installEnergyRefreshSection() {
 
 if (doc?.readyState === "loading")
   doc.addEventListener("DOMContentLoaded", installEnergyRefreshSection, { once: true });
-else installEnergyRefreshSection();
+else senzaCadere(installEnergyRefreshSection);

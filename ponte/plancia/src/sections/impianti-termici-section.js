@@ -62,6 +62,7 @@ import {
   t,
   wrapFunction,
   writeJsonIfChanged,
+  senzaCadere,
 } from "./shared.js";
 import { segnoHtml } from "../core/segni-del-catalogo.js";
 
@@ -1267,4 +1268,4 @@ export function installImpiantiTermiciSection() {
   return true;
 }
 
-installImpiantiTermiciSection();
+senzaCadere(installImpiantiTermiciSection);

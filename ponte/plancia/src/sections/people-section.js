@@ -25,6 +25,7 @@ import {
   readJson,
   root,
   t,
+  senzaCadere,
 } from "./shared.js";
 import { segnoDaValoreHtml, segnoHtml } from "../core/segni-del-catalogo.js";
 
@@ -766,4 +767,4 @@ export function installPeopleSection() {
 
 if (doc?.readyState === "loading")
   doc.addEventListener("DOMContentLoaded", installPeopleSection, { once: true });
-else installPeopleSection();
+else senzaCadere(installPeopleSection);

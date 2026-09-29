@@ -73,8 +73,8 @@ test("la casella sta nelle due schede dell'unita': il form del guscio e la matit
   assert.match(matita, /name="valvola"/);
   assert.match(matita, /valvola: clean\(form\.elements\.valvola\?\.value\),/);
   const runtime = await leggi("sections/section-runtime.js");
-  const rapido = runtime.indexOf("installQuickClimateEditorSection();");
-  const trvInstall = runtime.indexOf("installTrvEditor();");
+  const rapido = runtime.indexOf("senzaCadere(installQuickClimateEditorSection);");
+  const trvInstall = runtime.indexOf("senzaCadere(installTrvEditor);");
   assert.ok(rapido > 0 && trvInstall > rapido, "la valvola si aggancia dopo il tasto rapido");
   assert.match(runtime, /"trv-editor",/);
 });

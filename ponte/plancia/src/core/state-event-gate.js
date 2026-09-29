@@ -211,4 +211,4 @@ export function armStateEventGate(root = globalThis) {
   return true;
 }
 
-armStateEventGate();
+(() => { try { armStateEventGate(); } catch (errore) { (globalThis.__DASHBOARDMODERN_PEZZI_CADUTI__ ||= []).push({ pezzo: "armStateEventGate", errore: String(errore?.message || errore) }); globalThis.console?.error?.("[DashboardModern] armStateEventGate non e' partito", errore); } })();

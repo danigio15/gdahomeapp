@@ -31,7 +31,7 @@ import {
 } from "./batterie-section.js";
 import { batterieSorvegliate, nomeDellaBatteria } from "./batterie-elenco-section.js";
 import { costruisciSchedaDichiarata } from "./scheda-dichiarata-section.js";
-import { allStates, clean, doc, esc, readJson, t, writeJsonIfChanged } from "./shared.js";
+import { allStates, clean, doc, esc, readJson, t, writeJsonIfChanged, senzaCadere } from "./shared.js";
 
 export const BATTERIE_EDITOR_TAB = BATTERIE_TAB;
 
@@ -248,4 +248,4 @@ export function installBatterieEditor() {
   return scheda.installa();
 }
 
-installBatterieEditor();
+senzaCadere(installBatterieEditor);

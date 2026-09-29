@@ -40,7 +40,7 @@ import { impiantoScelto } from "./energy-section.js";
 import { buildEntityIndex } from "../core/entity-search-index.js";
 import { ricordaLeStanze } from "../core/le-stanze-di-home-assistant.js";
 import { buildPostings, detectCategories, detectSlots, parseSlotPlan } from "../core/entity-autodetect.js";
-import { allStates, clean, dashboardStore, doc, esc, installStyle, lexicalGlobal, readJson, reloadDashboard, root, t } from "./shared.js";
+import { allStates, clean, dashboardStore, doc, esc, installStyle, lexicalGlobal, readJson, reloadDashboard, root, t, senzaCadere } from "./shared.js";
 import { accendiLeSezioniCheLeggonoLaCasa } from "./beta26-real-device-stability-section.js";
 import { segnoHtml, senzaEmoji } from "../core/segni-del-catalogo.js";
 
@@ -597,4 +597,4 @@ export function installEntityAutodetectSection() {
   return true;
 }
 
-installEntityAutodetectSection();
+senzaCadere(installEntityAutodetectSection);

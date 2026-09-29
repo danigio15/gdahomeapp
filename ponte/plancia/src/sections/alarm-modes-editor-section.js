@@ -28,6 +28,7 @@ import {
   t,
   tieniIlBloccoNellaScheda,
   writeJsonIfChanged,
+  senzaCadere,
 } from "./shared.js";
 
 const KEY = "__DASHBOARDMODERN_ALARM_MODES_EDITOR__";
@@ -203,5 +204,5 @@ export function installAlarmModesEditorSection() {
 if (doc?.readyState === "loading") {
   doc.addEventListener("DOMContentLoaded", installAlarmModesEditorSection, { once: true });
 } else {
-  installAlarmModesEditorSection();
+  senzaCadere(installAlarmModesEditorSection);
 }

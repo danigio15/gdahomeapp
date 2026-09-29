@@ -11,7 +11,7 @@
  */
 
 import { segnoDaValoreHtml, segnoHtml } from "../core/segni-del-catalogo.js";
-import { t } from "./shared.js";
+import { t, senzaCadere } from "./shared.js";
 import { intlLocale } from "../core/i18n.js";
 import { IMPIANTO_SCELTO_KEY, plantAt, plantLoads } from "../core/energy-plants.js";
 import { importRateEntity } from "../core/energy-calculations.js";
@@ -793,4 +793,4 @@ function install() {
 }
 
 if (doc?.readyState === "loading") doc.addEventListener("DOMContentLoaded", install, { once: true });
-else install();
+else senzaCadere(install);

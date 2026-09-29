@@ -32,6 +32,7 @@ import {
   t,
   wrapFunction,
   writeIconGlyph,
+  senzaCadere,
 } from "./shared.js";
 
 root.__DM_20260817A__ = true;
@@ -1397,4 +1398,4 @@ function rivendicaLeBolleDellaBatteria() {
 
 if (doc?.readyState === "loading")
   doc.addEventListener("DOMContentLoaded", installEnergyFlowSection, { once: true });
-else installEnergyFlowSection();
+else senzaCadere(installEnergyFlowSection);

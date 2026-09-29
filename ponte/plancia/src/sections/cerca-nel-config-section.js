@@ -29,6 +29,7 @@ import {
   readJson,
   root,
   t,
+  senzaCadere,
 } from "./shared.js";
 
 const KEY = "__DASHBOARDMODERN_CERCA_CONFIG__";
@@ -599,5 +600,5 @@ export function installCercaNelConfigSection() {
 if (doc?.readyState === "loading") {
   doc.addEventListener("DOMContentLoaded", installCercaNelConfigSection, { once: true });
 } else {
-  installCercaNelConfigSection();
+  senzaCadere(installCercaNelConfigSection);
 }

@@ -14,6 +14,7 @@ import {
   section,
   t,
   wrapFunction,
+  senzaCadere,
 } from "./shared.js";
 
 const KEY = "__DASHBOARDMODERN_BETA25_COMPATIBILITY__";
@@ -532,4 +533,4 @@ export function installBeta25Compatibility() {
 
 if (doc?.readyState === "loading")
   doc.addEventListener("DOMContentLoaded", installBeta25Compatibility, { once: true });
-else installBeta25Compatibility();
+else senzaCadere(installBeta25Compatibility);

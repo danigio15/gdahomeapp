@@ -31,7 +31,7 @@
  * `data-dm-ev-mode` from whichever `.evcc-mode-btn` carries `.active`.
  */
 import { evccPresence } from "../core/ev-console.js";
-import { allStates, clean, doc, installStyle, root, t } from "./shared.js";
+import { allStates, clean, doc, installStyle, root, t, senzaCadere } from "./shared.js";
 
 const KEY = "__DASHBOARDMODERN_EV_SHOWCASE__";
 const STYLE_ID = "dm-ev-showcase-style";
@@ -896,5 +896,5 @@ function evShowcaseCss() {
 if (doc?.readyState === "loading") {
   doc.addEventListener("DOMContentLoaded", installEvShowcaseSection, { once: true });
 } else {
-  installEvShowcaseSection();
+  senzaCadere(installEvShowcaseSection);
 }

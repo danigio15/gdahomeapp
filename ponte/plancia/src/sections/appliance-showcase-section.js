@@ -57,6 +57,7 @@ import {
   section,
   t,
   wrapFunction,
+  senzaCadere,
 } from "./shared.js";
 import { disegnoDelCatalogo } from "../core/catalogo-disegni.js";
 import { chiaveDelValore, emojiInSegni, segnoHtml } from "../core/segni-del-catalogo.js";
@@ -1829,5 +1830,5 @@ function showcaseCss() {
 if (doc?.readyState === "loading") {
   doc.addEventListener("DOMContentLoaded", installApplianceShowcaseSection, { once: true });
 } else {
-  installApplianceShowcaseSection();
+  senzaCadere(installApplianceShowcaseSection);
 }

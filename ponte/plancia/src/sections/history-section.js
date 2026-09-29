@@ -26,6 +26,7 @@ import {
   scriviTestoSeCambia,
   section,
   t,
+  senzaCadere,
 } from "./shared.js";
 import { segnoHtml } from "../core/segni-del-catalogo.js";
 
@@ -813,4 +814,4 @@ export function installHistorySection() {
 
 if (doc?.readyState === "loading")
   doc.addEventListener("DOMContentLoaded", installHistorySection, { once: true });
-else installHistorySection();
+else senzaCadere(installHistorySection);

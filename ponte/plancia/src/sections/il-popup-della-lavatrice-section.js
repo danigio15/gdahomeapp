@@ -33,6 +33,7 @@ import {
   section,
   t,
   wrapFunction,
+  senzaCadere,
 } from "./shared.js";
 import { segnoHtml } from "../core/segni-del-catalogo.js";
 
@@ -478,5 +479,5 @@ export function installPopupLavatrice() {
 if (doc?.readyState === "loading") {
   doc.addEventListener("DOMContentLoaded", installPopupLavatrice, { once: true });
 } else {
-  installPopupLavatrice();
+  senzaCadere(installPopupLavatrice);
 }

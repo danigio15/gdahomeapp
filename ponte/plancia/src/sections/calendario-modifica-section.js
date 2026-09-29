@@ -41,6 +41,7 @@ import {
   installStyle,
   root,
   t,
+  senzaCadere,
 } from "./shared.js";
 import { segnoHtml, senzaEmoji } from "../core/segni-del-catalogo.js";
 
@@ -721,4 +722,4 @@ export function installCalendarioModifica() {
   return true;
 }
 
-installCalendarioModifica();
+senzaCadere(installCalendarioModifica);

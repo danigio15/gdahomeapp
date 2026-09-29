@@ -12,6 +12,7 @@ import {
   root,
   section,
   t,
+  senzaCadere,
 } from "./shared.js";
 
 /* Il modello delle sonde e' sceso in core (room-overview): chi lo importava da
@@ -398,4 +399,4 @@ export function installBeta25RealDeviceFixes() {
 
 if (doc?.readyState === "loading")
   doc.addEventListener("DOMContentLoaded", installBeta25RealDeviceFixes, { once: true });
-else installBeta25RealDeviceFixes();
+else senzaCadere(installBeta25RealDeviceFixes);

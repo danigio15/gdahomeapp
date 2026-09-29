@@ -99,8 +99,8 @@ test("il cancello degli eventi conosce cd_todo", async () => {
 
 test("il runtime installa il ponte dei widget e l'editor delle liste", () => {
   const runtime = leggi("sections/section-runtime.js");
-  assert.match(runtime, /installHomeWidgetsSection\(\)/);
-  assert.match(runtime, /installTodoEditorSection\(\)/);
+  assert.match(runtime, /senzaCadere\(installHomeWidgetsSection\);/);
+  assert.match(runtime, /senzaCadere\(installTodoEditorSection\);/);
   assert.match(runtime, /"home-widgets"/);
   assert.match(runtime, /"todo-editor"/);
 });

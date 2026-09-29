@@ -22,7 +22,7 @@ import {
 } from "../core/le-piante-di-casa.js";
 import { PIANTE_TAB, renderPiante } from "./piante-section.js";
 import { costruisciSchedaDichiarata } from "./scheda-dichiarata-section.js";
-import { allStates, clean, esc, t } from "./shared.js";
+import { allStates, clean, esc, t, senzaCadere } from "./shared.js";
 import { nomeDaHomeAssistant } from "./editor-slots-section.js";
 
 export const PIANTE_EDITOR_TAB = PIANTE_TAB;
@@ -195,4 +195,4 @@ export function installPianteEditor() {
   return scheda.installa();
 }
 
-installPianteEditor();
+senzaCadere(installPianteEditor);

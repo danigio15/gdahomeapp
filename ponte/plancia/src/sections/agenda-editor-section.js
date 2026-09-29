@@ -42,6 +42,7 @@ import {
   t,
   wrapFunction,
   writeJsonIfChanged,
+  senzaCadere,
 } from "./shared.js";
 import { segnoHtml, senzaEmoji } from "../core/segni-del-catalogo.js";
 
@@ -547,4 +548,4 @@ export function installAgendaEditorSection() {
   return true;
 }
 
-installAgendaEditorSection();
+senzaCadere(installAgendaEditorSection);

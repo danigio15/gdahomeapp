@@ -34,7 +34,7 @@ import {
 import { ACCUMULO_TAB, tipoInParole } from "./accumulo-section.js";
 import { renderAccumulo } from "./accumulo-in-energia-section.js";
 import { costruisciSchedaDichiarata } from "./scheda-dichiarata-section.js";
-import { allStates, clean, esc, formatNumber, root, t } from "./shared.js";
+import { allStates, clean, esc, formatNumber, root, t, senzaCadere } from "./shared.js";
 import { nomeDaHomeAssistant } from "./editor-slots-section.js";
 import { segnoHtml } from "../core/segni-del-catalogo.js";
 
@@ -303,4 +303,4 @@ export function installAccumuloEditor() {
   return scheda.installa();
 }
 
-installAccumuloEditor();
+senzaCadere(installAccumuloEditor);

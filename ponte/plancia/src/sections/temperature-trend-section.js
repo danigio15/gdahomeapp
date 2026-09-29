@@ -56,6 +56,7 @@ import {
   section,
   t,
   writeJsonIfChanged,
+  senzaCadere,
 } from "./shared.js";
 import { segnoDaValoreHtml } from "../core/segni-del-catalogo.js";
 
@@ -873,4 +874,4 @@ export function installTemperatureTrendSection() {
 
 if (doc?.readyState === "loading")
   doc.addEventListener("DOMContentLoaded", installTemperatureTrendSection, { once: true });
-else installTemperatureTrendSection();
+else senzaCadere(installTemperatureTrendSection);

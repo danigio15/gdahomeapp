@@ -5,7 +5,7 @@ import {
   haOggettoWidget,
   oggettoWidget,
 } from "../core/oggetti-widget.js";
-import { clean, doc, esc, formatNumber, installStyle, root, t, wrapFunction } from "./shared.js";
+import { clean, doc, esc, formatNumber, installStyle, root, t, wrapFunction, senzaCadere } from "./shared.js";
 import { lEnergiaInParole, laPotenzaInParole } from "../core/le-unita-della-corrente.js";
 
 // Kept in the beta4 entry filename for release compatibility, but this module is
@@ -942,4 +942,4 @@ export function installBeta4MobilePolishSection() {
   schedule();
 }
 
-installBeta4MobilePolishSection();
+senzaCadere(installBeta4MobilePolishSection);

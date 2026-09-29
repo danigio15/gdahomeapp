@@ -137,7 +137,7 @@ test("il guscio si avvolge una volta sola, e ricorda chi c'era prima", async () 
   /* Il guscio storico non si tocca: si avvolge la sua funzione. */
   assert.match(sorgente, /root\.dmCamHLS = avvolta/);
   const runtime = readFileSync(join(qui, "..", "src/sections/section-runtime.js"), "utf8");
-  assert.match(runtime, /installVideoSiMuove\(\);/);
+  assert.match(runtime, /senzaCadere\(installVideoSiMuove\);/);
 });
 
 

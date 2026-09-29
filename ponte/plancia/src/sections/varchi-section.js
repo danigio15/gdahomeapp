@@ -66,6 +66,7 @@ import {
   root,
   siComanda,
   t,
+  senzaCadere,
 } from "./shared.js";
 import { nomeDaHomeAssistant } from "./editor-slots-section.js";
 import { segnoHtml } from "../core/segni-del-catalogo.js";
@@ -807,4 +808,4 @@ export function installVarchi() {
   return true;
 }
 
-installVarchi();
+senzaCadere(installVarchi);

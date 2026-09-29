@@ -23,6 +23,7 @@ import {
   readJson,
   root,
   section,
+  senzaCadere,
 } from "./shared.js";
 import { fermaIVideo, provaIlVideo } from "./telecamera-webrtc-section.js";
 import { normalizePeople } from "../core/person-model.js";
@@ -666,5 +667,5 @@ export function installLiveUiSection() {
 if (doc?.readyState === "loading") {
   doc.addEventListener("DOMContentLoaded", installLiveUiSection, { once: true });
 } else {
-  installLiveUiSection();
+  senzaCadere(installLiveUiSection);
 }

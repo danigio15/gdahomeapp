@@ -27,6 +27,7 @@ import {
   root,
   t,
   wrapFunction,
+  senzaCadere,
 } from "./shared.js";
 import { emojiInSegni, segnoHtml } from "../core/segni-del-catalogo.js";
 
@@ -322,4 +323,4 @@ export function installStoricoConnettivita() {
   return true;
 }
 
-installStoricoConnettivita();
+senzaCadere(installStoricoConnettivita);

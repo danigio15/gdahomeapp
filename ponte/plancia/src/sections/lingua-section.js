@@ -41,6 +41,7 @@ import {
   root,
   t,
   wrapFunction,
+  senzaCadere,
 } from "./shared.js";
 import { segnoHtml } from "../core/segni-del-catalogo.js";
 
@@ -217,4 +218,4 @@ export function installLinguaSection() {
   return true;
 }
 
-installLinguaSection();
+senzaCadere(installLinguaSection);

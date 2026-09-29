@@ -33,6 +33,7 @@ import {
   t,
   wrapFunction,
   writeJsonIfChanged,
+  senzaCadere,
 } from "./shared.js";
 import { segnoDaValoreHtml, segnoHtml, senzaEmoji } from "../core/segni-del-catalogo.js";
 
@@ -816,4 +817,4 @@ export function installTodoEditorSection() {
   ensureTodoEditor();
 }
 
-installTodoEditorSection();
+senzaCadere(installTodoEditorSection);

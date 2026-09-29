@@ -66,6 +66,7 @@ import {
   readJson,
   root,
   t,
+  senzaCadere,
 } from "./shared.js";
 import { emojiInSegni, segnoHtml } from "../core/segni-del-catalogo.js";
 
@@ -712,4 +713,4 @@ export function installCalendarioSection() {
   return true;
 }
 
-installCalendarioSection();
+senzaCadere(installCalendarioSection);

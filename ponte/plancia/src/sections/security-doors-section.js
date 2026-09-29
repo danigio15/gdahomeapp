@@ -28,6 +28,7 @@ import {
   root,
   t,
   wrapFunction,
+  senzaCadere,
 } from "./shared.js";
 import { chiaveDelValore, emojiInSegni, segnoHtml } from "../core/segni-del-catalogo.js";
 
@@ -608,4 +609,4 @@ export function installSecurityDoorsSection() {
   else schedule();
 }
 
-installSecurityDoorsSection();
+senzaCadere(installSecurityDoorsSection);

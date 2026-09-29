@@ -26,6 +26,7 @@ import {
   quandoSiCambiaPagina,
   root,
   t,
+  senzaCadere,
 } from "./shared.js";
 
 const KEY = "__DASHBOARDMODERN_PAGE_MASTHEAD__";
@@ -991,5 +992,5 @@ export function installPageMastheadSection() {
 if (doc?.readyState === "loading") {
   doc.addEventListener("DOMContentLoaded", installPageMastheadSection, { once: true });
 } else {
-  installPageMastheadSection();
+  senzaCadere(installPageMastheadSection);
 }

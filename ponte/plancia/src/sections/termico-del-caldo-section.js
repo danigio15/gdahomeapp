@@ -22,6 +22,7 @@ import {
   root,
   t,
   wrapFunction,
+  senzaCadere,
 } from "./shared.js";
 import { normalizzaCaldaie } from "../core/impianti-termici.js";
 import { iconGlyphMarkup, openIconPicker } from "./icon-engine-section.js";
@@ -453,5 +454,5 @@ export function installTermicoDelCaldo() {
 if (doc?.readyState === "loading") {
   doc.addEventListener("DOMContentLoaded", installTermicoDelCaldo, { once: true });
 } else {
-  installTermicoDelCaldo();
+  senzaCadere(installTermicoDelCaldo);
 }

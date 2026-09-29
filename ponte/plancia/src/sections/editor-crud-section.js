@@ -28,6 +28,7 @@ import {
   t,
   wrapFunction,
   writeJsonIfChanged,
+  senzaCadere,
 } from "./shared.js";
 
 globalThis.__DM_20260815C__ = true;
@@ -890,4 +891,4 @@ export function installEditorCrudSection() {
 
 if (doc?.readyState === "loading")
   doc.addEventListener("DOMContentLoaded", installEditorCrudSection, { once: true });
-else installEditorCrudSection();
+else senzaCadere(installEditorCrudSection);

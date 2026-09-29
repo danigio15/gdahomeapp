@@ -19,7 +19,7 @@
  * a mano quando lo si sa gia' sarebbe solo lavoro in piu'. Chi non li vuole li
  * toglie, e la rimozione resta — e' la stessa regola delle altre liste.
  */
-import { allStates, clean, doc, esc, lexicalGlobal, onEditorRedraw, readJson, root, scriviSeCambia, t, writeJsonIfChanged } from "./shared.js";
+import { allStates, clean, doc, esc, lexicalGlobal, onEditorRedraw, readJson, root, scriviSeCambia, t, writeJsonIfChanged, senzaCadere } from "./shared.js";
 import { MARCHIO_TESSERA } from "../core/fuori-dai-widget.js";
 import { segnoDaValoreHtml, segnoHtml } from "../core/segni-del-catalogo.js";
 
@@ -372,4 +372,4 @@ export function installFloodAlertsSection() {
 
 if (doc?.readyState === "loading")
   doc.addEventListener("DOMContentLoaded", installFloodAlertsSection, { once: true });
-else installFloodAlertsSection();
+else senzaCadere(installFloodAlertsSection);

@@ -17,7 +17,7 @@
  * una scheda nuova: la plancia vive in un riquadro dentro Home Assistant, e
  * navigare via da li' vorrebbe dire perdere la plancia.
  */
-import { doc, esc, installStyle, root, t } from "./shared.js";
+import { doc, esc, installStyle, root, t, senzaCadere } from "./shared.js";
 import { segnoHtml } from "../core/segni-del-catalogo.js";
 
 const KEY = "__DASHBOARDMODERN_SOSTIENI__";
@@ -181,4 +181,4 @@ export function installSostieniIlProgetto() {
   return true;
 }
 
-installSostieniIlProgetto();
+senzaCadere(installSostieniIlProgetto);

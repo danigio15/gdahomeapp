@@ -1,4 +1,4 @@
-import { clean, dashboardStore, doc, energyPeriodConflicts, english, esc, installStyle, onEditorRedraw, root, section, t, wrapFunction } from "./shared.js";
+import { clean, dashboardStore, doc, energyPeriodConflicts, english, esc, installStyle, onEditorRedraw, root, section, t, wrapFunction, senzaCadere } from "./shared.js";
 import { scriviNellImpianto } from "../core/energy-writer.js";
 import { plantModel } from "../core/energy-plants.js";
 import { impiantoScelto } from "./energy-section.js";
@@ -258,4 +258,4 @@ export function installEnergyGuidanceSection() {
 
 if (doc?.readyState === "loading")
   doc.addEventListener("DOMContentLoaded", installEnergyGuidanceSection, { once: true });
-else installEnergyGuidanceSection();
+else senzaCadere(installEnergyGuidanceSection);

@@ -57,7 +57,7 @@ test("l'interruttore sta in ⚙️ Impostazioni accanto al chiosco", () => {
   assert.match(sezione, /ORDINE_IMPOSTAZIONI\.testaFissa/);
   const runtime = leggi("sections/section-runtime.js");
   assert.match(runtime, /import \{ installTestaFissa \} from "\.\/testa-fissa-section\.js";/);
-  assert.match(runtime, /installTestaFissa\(\);/);
+  assert.match(runtime, /senzaCadere\(installTestaFissa\);/);
 });
 
 test("vale in tutti e due i posti dove l'intestazione può stare", () => {

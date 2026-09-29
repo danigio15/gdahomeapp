@@ -46,6 +46,7 @@ import {
   readJson,
   root,
   t,
+  senzaCadere,
 } from "./shared.js";
 import { segnoDaValoreHtml } from "../core/segni-del-catalogo.js";
 
@@ -237,4 +238,4 @@ export function installElencoDelleSezioni() {
   return true;
 }
 
-installElencoDelleSezioni();
+senzaCadere(installElencoDelleSezioni);

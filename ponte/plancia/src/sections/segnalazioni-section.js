@@ -21,7 +21,7 @@
  */
 
 import { ALTRO, partiDellaSezione, parteValida, sezioniOfferte } from "../core/dove-succede.js";
-import { clean, doc, esc, installStyle, root, t } from "./shared.js";
+import { clean, doc, esc, installStyle, root, t, senzaCadere } from "./shared.js";
 import { disegnoDelCatalogo } from "../core/catalogo-disegni.js";
 import { segnoHtml } from "../core/segni-del-catalogo.js";
 
@@ -2675,4 +2675,4 @@ export function uninstallSegnalazioniSection() {
   state.tab = "nuova";
 }
 
-installSegnalazioniSection();
+senzaCadere(installSegnalazioniSection);

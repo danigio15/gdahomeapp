@@ -12,7 +12,7 @@
  * ogni riga — anche nel popup Riscaldamento — dice da quanto tempo e' cosi',
  * letta dal last_changed che Home Assistant gia' manda.
  */
-import { allStates, clean, doc, esc, installStyle, root, t } from "./shared.js";
+import { allStates, clean, doc, esc, installStyle, root, t, senzaCadere } from "./shared.js";
 import { daQuanto } from "./termico-del-caldo-section.js";
 import { emojiInSegni } from "../core/segni-del-catalogo.js";
 
@@ -115,5 +115,5 @@ export function installPopupClimaDistingue() {
 if (doc?.readyState === "loading") {
   doc.addEventListener("DOMContentLoaded", installPopupClimaDistingue, { once: true });
 } else {
-  installPopupClimaDistingue();
+  senzaCadere(installPopupClimaDistingue);
 }

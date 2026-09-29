@@ -41,6 +41,7 @@ import {
   locale,
   root,
   t,
+  senzaCadere,
 } from "./shared.js";
 import { segnoHtml } from "../core/segni-del-catalogo.js";
 
@@ -477,5 +478,5 @@ export function installLaCardDelMeteo() {
 if (doc?.readyState === "loading") {
   doc.addEventListener("DOMContentLoaded", installLaCardDelMeteo, { once: true });
 } else {
-  installLaCardDelMeteo();
+  senzaCadere(installLaCardDelMeteo);
 }

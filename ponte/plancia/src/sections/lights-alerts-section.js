@@ -17,6 +17,7 @@ import {
   t,
   wrapFunction,
   writeJsonIfChanged,
+  senzaCadere,
 } from "./shared.js";
 import { segnoHtml } from "../core/segni-del-catalogo.js";
 
@@ -758,4 +759,4 @@ export function installLightsAlertsSection() {
 
 if (doc?.readyState === "loading")
   doc.addEventListener("DOMContentLoaded", installLightsAlertsSection, { once: true });
-else installLightsAlertsSection();
+else senzaCadere(installLightsAlertsSection);

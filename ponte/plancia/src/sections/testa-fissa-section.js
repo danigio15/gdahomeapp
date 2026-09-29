@@ -33,6 +33,7 @@ import {
   onEditorRedraw,
   root,
   t,
+  senzaCadere,
 } from "./shared.js";
 import { segnoHtml } from "../core/segni-del-catalogo.js";
 
@@ -209,4 +210,4 @@ export function installTestaFissa() {
   return true;
 }
 
-installTestaFissa();
+senzaCadere(installTestaFissa);

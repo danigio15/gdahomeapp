@@ -37,7 +37,7 @@
  */
 import { famigliaDellaScheda, famiglieConSchede, inOrdine } from "../core/alberatura-del-config.js";
 import { segnoDaValoreHtml, segnoHtml } from "../core/segni-del-catalogo.js";
-import { clean, doc, esc, installStyle, onEditorRedraw, root, t } from "./shared.js";
+import { clean, doc, esc, installStyle, onEditorRedraw, root, t, senzaCadere } from "./shared.js";
 
 const KEY = "__DASHBOARDMODERN_ALBERATURA__";
 const state = (root[KEY] ||= {
@@ -581,4 +581,4 @@ export function installAlberatura() {
   return true;
 }
 
-installAlberatura();
+senzaCadere(installAlberatura);

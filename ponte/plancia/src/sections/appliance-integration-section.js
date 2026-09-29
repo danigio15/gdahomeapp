@@ -45,6 +45,7 @@ import {
   section,
   t,
   writeJsonIfChanged,
+  senzaCadere,
 } from "./shared.js";
 import { segnoHtml } from "../core/segni-del-catalogo.js";
 
@@ -662,5 +663,5 @@ export function installApplianceIntegrationSection() {
 if (doc?.readyState === "loading") {
   doc.addEventListener("DOMContentLoaded", installApplianceIntegrationSection, { once: true });
 } else {
-  installApplianceIntegrationSection();
+  senzaCadere(installApplianceIntegrationSection);
 }

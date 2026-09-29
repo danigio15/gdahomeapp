@@ -51,6 +51,7 @@ import {
   root,
   t,
   writeJsonIfChanged,
+  senzaCadere,
 } from "./shared.js";
 import { segnoDaValoreHtml } from "../core/segni-del-catalogo.js";
 
@@ -470,4 +471,4 @@ export function installDoveLoMettoSection() {
 
 if (doc?.readyState === "loading")
   doc.addEventListener("DOMContentLoaded", installDoveLoMettoSection, { once: true });
-else installDoveLoMettoSection();
+else senzaCadere(installDoveLoMettoSection);

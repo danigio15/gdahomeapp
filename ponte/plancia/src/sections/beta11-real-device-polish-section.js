@@ -8,6 +8,7 @@ import {
   root,
   t,
   wrapFunction,
+  senzaCadere,
 } from "./shared.js";
 
 // Compatibility owner kept temporarily while EV and Alerts are absorbed by their
@@ -382,5 +383,5 @@ function install() {
 if (doc?.readyState === "loading") {
   doc.addEventListener("DOMContentLoaded", install, { once: true });
 } else {
-  install();
+  senzaCadere(install);
 }

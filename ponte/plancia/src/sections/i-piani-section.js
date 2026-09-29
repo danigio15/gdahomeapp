@@ -66,6 +66,7 @@ import {
   t,
   tieniIlBloccoNellaScheda,
   writeJsonIfChanged,
+  senzaCadere,
 } from "./shared.js";
 
 const KEY = "__DASHBOARDMODERN_I_PIANI__";
@@ -654,4 +655,4 @@ export function installIPianiSection() {
 
 if (doc?.readyState === "loading")
   doc.addEventListener("DOMContentLoaded", installIPianiSection, { once: true });
-else installIPianiSection();
+else senzaCadere(installIPianiSection);

@@ -19,6 +19,7 @@ import {
   section,
   t,
   writeJsonIfChanged,
+  senzaCadere,
 } from "./shared.js";
 import { catalogLabel } from "../core/personalization-catalog.js";
 import { bindApplianceToDevice, bindingLabel } from "../core/appliance-device-binding.js";
@@ -1689,4 +1690,4 @@ export function installApplianceEditorSection() {
 
 if (doc?.readyState === "loading")
   doc.addEventListener("DOMContentLoaded", installApplianceEditorSection, { once: true });
-else installApplianceEditorSection();
+else senzaCadere(installApplianceEditorSection);

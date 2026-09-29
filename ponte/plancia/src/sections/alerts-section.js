@@ -11,6 +11,7 @@ import {
   t,
   wrapFunction,
   writeJsonIfChanged,
+  senzaCadere,
 } from "./shared.js";
 import { chiaveDelValore, emojiInSegni, segnoHtml } from "../core/segni-del-catalogo.js";
 
@@ -560,4 +561,4 @@ export function installAlertsSection() {
 
 if (doc?.readyState === "loading")
   doc.addEventListener("DOMContentLoaded", installAlertsSection, { once: true });
-else installAlertsSection();
+else senzaCadere(installAlertsSection);
