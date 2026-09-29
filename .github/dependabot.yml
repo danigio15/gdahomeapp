@@ -36,7 +36,6 @@ updates:
     directories:
       - /
       - /collaudo
-      - /nuvola
       - /officina
     schedule:
       interval: monthly

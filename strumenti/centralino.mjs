@@ -1,6 +1,6 @@
 /* Cambia l'indirizzo del centralino, in tutti e due i posti dove sta scritto.
  *
- *     node strumenti/centralino.mjs wss://centralino.pippo.workers.dev
+ *     node strumenti/centralino.mjs wss://tramite.esempio.it
  *     node strumenti/centralino.mjs --nessuno
  *     node strumenti/centralino.mjs --dimmi
  *
@@ -81,7 +81,7 @@ function scrivi(quale, indirizzo) {
 }
 
 /* Un indirizzo, non una speranza: `wss://` e un nome, e niente altro dietro.
- * Chi incolla quello che stampa Cloudflare incolla `https://`, ed e' giusto
+ * Chi incolla l'indirizzo da un browser incolla `https://`, ed e' giusto
  * accettarlo e correggerlo invece di dire di no. */
 function pulisci(scritto) {
   let testo = String(scritto).trim().replace(/\/+$/, "");
@@ -89,7 +89,7 @@ function pulisci(scritto) {
   if (!/^wss?:\/\/[A-Za-z0-9._-]+(:\d+)?$/.test(testo)) {
     throw new Error(
       `«${scritto}» non e' un indirizzo di centralino.\n` +
-        "Deve essere fatto cosi': wss://centralino.qualcosa.workers.dev",
+        "Deve essere fatto cosi': wss://tramite.esempio.it",
     );
   }
   return testo;
@@ -113,7 +113,7 @@ if (!detto || detto === "--dimmi") {
   }
   if (!detto) {
     console.log("\nPer cambiarlo:");
-    console.log("  node strumenti/centralino.mjs wss://centralino.pippo.workers.dev");
+    console.log("  node strumenti/centralino.mjs wss://tramite.esempio.it");
   }
 } else {
   const indirizzo = detto === "--nessuno" ? "" : pulisci(detto);

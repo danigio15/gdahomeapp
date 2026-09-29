@@ -1,8 +1,8 @@
 /* Lo sportello, provato dalla parte da cui lo usa il ponte: bussando.
  *
  * Le regole che contano qui non sono quelle delle segnalazioni — quelle hanno
- * le loro prove nella nuvola, e il file e' lo stesso — ma quelle della
- * **porta**: chi entra, chi no, e cosa risponde a chi sbaglia. Sono le tre
+ * le loro prove in `segnalazioni.test.js` — ma quelle della **porta**: chi
+ * entra, chi no, e cosa risponde a chi sbaglia. Sono le tre
  * cose che, se si rompono, si rompono in silenzio: una porta troppo aperta non
  * da' nessun errore a nessuno.
  */

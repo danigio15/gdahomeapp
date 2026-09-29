@@ -2,7 +2,7 @@
 ///
 /// E' la `CHIAVE_PUBBLICA_LICENZE` di `docs/LICENZE.md`: la chiave pubblica
 /// Ed25519 grezza (32 byte) in base64url, la stessa scritta nel ponte, nel
-/// centralino, nella nuvola e in gdanav.
+/// centralino e in gdanav.
 ///
 /// **Di serie e' vuota**, e vuota vuol dire che i controlli sono spenti: ogni
 /// casa vale come Premium e l'app fa quello che ha sempre fatto. Non la si

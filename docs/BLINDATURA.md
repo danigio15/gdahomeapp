@@ -88,7 +88,7 @@ c'era; **adesso c'è**:
 | --- | --- |
 | il quadro che rilascia le licenze, le vie `/v1/licenze/*`, i codici regalo, i pacchetti degli installatori | `quadro/src/licenze.js`, `quadro/src/negozi.js` |
 | l'add-on che tiene la licenza della casa | `ponte/src/licenze.js`, `ponte/src/gettone.js` |
-| `chiave-licenze.js` in ponte, centralino, nuvola, app | `ponte/src/chiave-licenze.js`, `centralino/src/chiave-licenze.js`, `nuvola/src/chiave-licenze.js`, `app/lib/licenza/chiave.dart` |
+| `chiave-licenze.js` in ponte, centralino, app | `ponte/src/chiave-licenze.js`, `centralino/src/chiave-licenze.js`, `app/lib/licenza/chiave.dart` |
 | lo strumento che fabbrica la coppia e scrive la pubblica dappertutto | `strumenti/chiave-licenze.mjs` |
 | il centralino che chiude con `4402` | `centralino/src/centralino.js` (`PREMIUM_RICHIESTO`) |
 | `plance.aggiungi` che rifiuta la seconda plancia in Base | `ponte/src/plance.js` (`PremiumRichiesto`) |

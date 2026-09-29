@@ -1542,11 +1542,7 @@ test("strumenti/chiave-licenze.mjs scrive la stessa pubblica dappertutto, e stam
     const privata = /QUADRO_LICENZE_CHIAVE=([A-Za-z0-9_-]{43})/.exec(detto)[1];
     const pubblica = new Licenze({ cartella: radice, chiave: privata }).pubblica;
     const js = (via) => readFileSync(join(radice, via), "utf8");
-    for (const via of [
-      "ponte/src/chiave-licenze.js",
-      "centralino/src/chiave-licenze.js",
-      "nuvola/src/chiave-licenze.js",
-    ])
+    for (const via of ["ponte/src/chiave-licenze.js", "centralino/src/chiave-licenze.js"])
       assert.match(
         js(via),
         new RegExp(`export const CHIAVE_PUBBLICA_LICENZE = "${pubblica}";`),
@@ -1572,7 +1568,7 @@ test("strumenti/chiave-licenze.mjs scrive la stessa pubblica dappertutto, e stam
       },
     );
     assert.doesNotMatch(solo, /QUADRO_LICENZE_CHIAVE=/);
-    assert.match(js("nuvola/src/chiave-licenze.js"), new RegExp(PUBBLICA));
+    assert.match(js("centralino/src/chiave-licenze.js"), new RegExp(PUBBLICA));
     assert.match(js("app/lib/licenza/chiave.dart"), new RegExp(PUBBLICA));
   } finally {
     rmSync(radice, { recursive: true, force: true });
@@ -1581,8 +1577,8 @@ test("strumenti/chiave-licenze.mjs scrive la stessa pubblica dappertutto, e stam
 
 test("strumenti/chiave-licenze.mjs --senza-centralino: la casa e l'app, e nessuna coppia fatta qui", () => {
   /* Al primo passo la coppia nasce sulla macchina del quadro, e di li' esce
-   * solo la pubblica: lo strumento non ne fabbrica, e al centralino e alla
-   * nuvola la chiave la toglie — con la chiave chiuderebbero il fuori casa. */
+   * solo la pubblica: lo strumento non ne fabbrica, e al centralino la chiave
+   * la toglie — con la chiave chiuderebbe il fuori casa. */
   const radice = mkdtempSync(join(tmpdir(), "chiave-licenze-"));
   const strumento = join(
     dirname(fileURLToPath(import.meta.url)),
@@ -1610,21 +1606,21 @@ test("strumenti/chiave-licenze.mjs --senza-centralino: la casa e l'app, e nessun
     const leggi = (via) => readFileSync(join(radice, via), "utf8");
     assert.match(leggi("ponte/src/chiave-licenze.js"), new RegExp(`= "${PUBBLICA}";`));
     assert.match(leggi("app/lib/licenza/chiave.dart"), new RegExp(`= '${PUBBLICA}';`));
-    for (const via of ["centralino/src/chiave-licenze.js", "nuvola/src/chiave-licenze.js"])
-      assert.match(leggi(via), /export const CHIAVE_PUBBLICA_LICENZE = "";/, via);
+    assert.match(
+      leggi("centralino/src/chiave-licenze.js"),
+      /export const CHIAVE_PUBBLICA_LICENZE = "";/,
+    );
     /* Nessuna bandierina: la chiave e' l'unica cosa che lo strumento scrive. */
     for (const via of [
       "ponte/src/chiave-licenze.js",
       "centralino/src/chiave-licenze.js",
-      "nuvola/src/chiave-licenze.js",
       "app/lib/licenza/chiave.dart",
     ])
       assert.doesNotMatch(leggi(via), /SOLO_SULL_IPHONE|SoloSullIPhone/, via);
 
     /* E poi il centralino, con la stessa chiave. */
     lancia("--pubblica", PUBBLICA);
-    for (const via of ["centralino/src/chiave-licenze.js", "nuvola/src/chiave-licenze.js"])
-      assert.match(leggi(via), new RegExp(`= "${PUBBLICA}";`), via);
+    assert.match(leggi("centralino/src/chiave-licenze.js"), new RegExp(`= "${PUBBLICA}";`));
 
     /* E rilanciato col primo passo, la toglie di nuovo al centralino. */
     lancia("--senza-centralino", "--pubblica", PUBBLICA);

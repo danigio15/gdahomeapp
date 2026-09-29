@@ -16,7 +16,7 @@
 /// Li tiene insieme `ponte/test/centralino-di-difetto.test.js`, e si cambiano
 /// tutti e due insieme con:
 ///
-///     node strumenti/centralino.mjs wss://centralino.esempio.workers.dev
+///     node strumenti/centralino.mjs wss://tramite.esempio.it
 ///
 /// Per una compilazione sola se ne puo' mettere un altro senza toccare niente:
 ///

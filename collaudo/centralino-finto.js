@@ -1,6 +1,6 @@
 /* Un centralino finto: le segnalazioni, e la chat.
  *
- * Il ponte del collaudo chiama qui invece che sulla nuvola: accetta la
+ * Il ponte del collaudo chiama qui invece che al centralino vero: accetta la
  * chiamata della casa (cosi' il ponte si crede collegato da fuori), e tiene
  * le segnalazioni in memoria rispondendo come risponde il centralino vero. Il
  * manutentore finto risponde da solo dopo un attimo, cosi' nelle fotografie

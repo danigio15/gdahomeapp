@@ -20,21 +20,9 @@ gettone si verifica con le stesse regole nel ponte e nel centralino, e la
 chiave pubblica e' la stessa riga — la scrive `strumenti/chiave-licenze.mjs`
 in tutti i posti insieme.
 
-## E uno preso dalla nuvola
+## E due che adesso sono gli originali
 
-`segnalazioni.js` e' una copia identica di `../../nuvola/src/segnalazioni.js`,
-e la ragione e' un'altra: per un po' la stessa cosa gira in due posti — il
-Worker per le case che non hanno ancora aggiornato, la macchina per le altre —
-e due copie che divergono vorrebbero dire due comportamenti diversi a seconda
-di dove una casa e' finita.
-
-```bash
-cp nuvola/src/segnalazioni.js centralino/src/
-```
-
-Quando il Worker si spegnera', questa copia diventa l'originale e la riga qui
-sopra si cancella.
-
-Anche `versioni.js` (la versione minima dell'app, `GET /versioni`) viene
-dalla nuvola, per la stessa ragione: le due punte devono dire lo stesso
-numero allo stesso modo.
+`segnalazioni.js` e `versioni.js` erano copie di quelli del vecchio centralino
+su Cloudflare, finche' le case giravano in due posti. Quel centralino non c'e'
+piu': gli originali sono questi, e le prove delle segnalazioni stanno in
+`../test/segnalazioni.test.js`.

@@ -19,9 +19,6 @@
  * anche l'app nel browser da un'altra origine, e resta in memoria cinque
  * minuti — abbastanza da non far pagare una richiesta a ogni apertura, poco
  * abbastanza perche' il giorno che si cambia si veda subito.
- *
- * Questo file e' lo stesso nel centralino e sulla nuvola (lo tiene fermo
- * `centralino/test/copie.test.js`): niente di Node, niente di Cloudflare.
  */
 
 /* Quello che si legge dalla configurazione: un intero da zero in su. Tutto il

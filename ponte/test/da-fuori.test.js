@@ -338,9 +338,9 @@ test("tutta la casa in un messaggio solo arriva intera, spezzata per strada", as
    *
    * La prima cosa che chiede un telefono e' `get_states`: **tutta la casa in
    * un messaggio solo**, che su una casa vera sono due o tre megabyte. Dal
-   * centralino non passa — le funzioni sulla nuvola hanno un tetto di un
-   * megabyte per messaggio, e non e' un'impostazione — quindi le buste grandi
-   * si spezzano e si rimettono insieme dall'altra parte.
+   * centralino non passa — non lascia passare piu' di un megabyte per
+   * messaggio — quindi le buste grandi si spezzano e si rimettono insieme
+   * dall'altra parte.
    *
    * Senza questo, quello che si vede e' un'app che dice «il filo si e'
    * interrotto» ogni tre secondi, senza una riga di spiegazione da nessuna
