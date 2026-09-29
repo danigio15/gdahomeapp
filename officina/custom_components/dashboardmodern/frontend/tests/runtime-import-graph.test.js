@@ -1511,8 +1511,12 @@ test("production graph is single-owner, acyclic and contains no facade pass-thro
   // Home, e la scheda `sections/accumulo-editor-section.js`. Le parole stanno
   // staccate dal montaggio perché la Home le chiede e il montaggio chiede la
   // Home: insieme sarebbero un giro.
+  // 420 con la stanza come tavola di comandi (#160): il nucleo
+  // `core/la-stanza-a-tessere.js`, con l'ordine delle tessere, quali sono
+  // larghe, il clima della testata e a che punto e' una tapparella. La tavola
+  // la disegna la pagina Stanze, che c'era gia'.
   assert.ok(
-    relative.length <= 419,
+    relative.length <= 420,
     `production graph unexpectedly grew to ${relative.length} modules`,
   );
   assertAcyclic(edges);

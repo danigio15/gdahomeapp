@@ -44,8 +44,28 @@ import {
   roomSceneEntities,
   roomSceneSummary,
 } from "../core/room-overview.js";
-import { CHIAVE_VERSI, apertaSecondoVerso, insiemeInvertiti } from "../core/verso-aperture.js";
-import { contactEntity, inferriataEntity, windowOpenFromState } from "../core/shutter-window.js";
+import {
+  CHIAVE_VERSI,
+  apertaSecondoVerso,
+  insiemeInvertiti,
+  versoInvertito,
+} from "../core/verso-aperture.js";
+import {
+  contactEntity,
+  inferriataEntity,
+  isWindowOnly,
+  windowOpenFromState,
+} from "../core/shutter-window.js";
+import {
+  CHIAVE_VISTA_STANZA,
+  VISTA_RIGHE,
+  VISTA_TESSERE,
+  blocchiDellaTavola,
+  climaDellaStanza,
+  comeStaLaCopertura,
+  tesseraLarga,
+  vistaDellaStanza,
+} from "../core/la-stanza-a-tessere.js";
 import { coverEntries } from "../core/cover-kind.js";
 import {
   CHIAVE_VARCHI,
@@ -74,6 +94,7 @@ import { dipingiLeCardDelClima, laCardDelClima } from "./climate-thermal-section
 import { parolaDiStato } from "./le-parole-di-home-assistant.js";
 import { pageCardMarkup } from "./lights-page-section.js";
 import { comandiMediaMarkup } from "./media-player-section.js";
+import { consumoDellaPresa } from "./prese-section.js";
 import { azioniDellaPorta } from "../core/security-door-model.js";
 import { configuredSecurityDoors, parolaDelGesto } from "./security-doors-section.js";
 import { temperatureEntries } from "./beta25-real-device-fixes-section.js";
@@ -90,10 +111,13 @@ import {
   quandoSiCambiaPagina,
   readJson,
   root,
+  scriviSeCambia,
   section,
   siComanda,
   t,
+  tieniIlBloccoNellaScheda,
   wrapFunction,
+  writeJsonIfChanged,
 } from "./shared.js";
 
 const KEY = "__DASHBOARDMODERN_ROOMS_PAGE__";
@@ -716,7 +740,7 @@ export function sceneMarkup(pagina, states) {
  * nella configurazione stanno sulla riga della stanza stessa. Per questo la
  * card sta qui e non fra le voci: quelle sono cose dentro la stanza, questa e'
  * la stanza. */
-export function readingMarkup(pagina, states) {
+export function readingMarkup(pagina, states, { daLa = 0 } = {}) {
   /* Una stanza puo' avere piu' di una coppia di sensori.
    *
    * La scheda Temperature lo permette da tempo — «la stessa stanza puo' essere
@@ -727,7 +751,7 @@ export function readingMarkup(pagina, states) {
    *
    * Le associazioni le sa gia' chi le scrive, e si chiedono a lui. */
   const associazioni = temperatureEntries(pagina).filter((voce) => voce.temp || voce.hum);
-  if (!associazioni.length) return "";
+  if (associazioni.length <= daLa) return "";
   const leggi = (entity, coda) => {
     const value = clean(states?.[entity]?.state);
     return value && value !== "unknown" && value !== "unavailable" ? `${value}${coda}` : "—";
@@ -736,7 +760,10 @@ export function readingMarkup(pagina, states) {
     entity
       ? `<div><span>${esc(etichetta)}</span><b data-dm-stanza-lettura="${esc(entity)}" data-dm-stanza-coda="${esc(coda)}">${esc(leggi(entity, coda))}</b></div>`
       : "";
+  /* `daLa` salta le prime: nella vista a tessere la prima sonda la dice la
+   * testata della stanza, e qui restano le altre, col loro nome. */
   return associazioni
+    .slice(daLa)
     .map((voce) => {
       /* Col nome suo se ce l'ha: con tre righe uguali non si saprebbe quale
        * sonda sta dicendo cosa.
@@ -1036,6 +1063,324 @@ export function blockMarkup(blocco, states) {
         })();
   return `<h2 class="dm-stanze-h"><span>${esc(nomeBlocco(blocco))}</span><span class="dm-stanze-n">${blocco.voci.length}</span></h2>
     <div class="dm-stanze-grid">${card}</div>`;
+}
+
+/* ── la tavola dei comandi (#160) ────────────────────────────────────────── */
+
+/* «Non trovo utile questa sezione così com'è… è l'unica parte che uso ancora
+ * della mia plancia vecchia.»
+ *
+ * La stanza aperta era un elenco diviso per tipo: si leggeva, e per comandare
+ * quasi tutto bisognava andarsene. La tapparella era una riga che portava alla
+ * pagina Tapparelle, il condizionatore una card larga quanto lo schermo, e la
+ * temperatura della stanza stava in una card sua sotto la scena. La plancia
+ * vecchia — quella che si usava ancora solo per questo — faceva il contrario:
+ * una tavola di tessere, ognuna col suo comando addosso.
+ *
+ * La tavola non rifa' nessun comando. La luce e la presa sono la card della
+ * pagina Luci, con la sua levetta e il suo cursore; il clima e' la card della
+ * pagina Clima, col meno, il piu' e lo spegnimento; la tapparella ha i tre
+ * tasti della pagina Tapparelle, che chiamano la stessa `cdTappCmd`; la musica
+ * ha i tasti della pagina Musica. I loro gestori stanno sul documento, e il
+ * lucchetto «si vede ma non si comanda» lo fanno rispettare loro, com'e' in
+ * ogni altra pagina. Quello che non ha un comando suo e' la riga di sempre,
+ * vestita da tessera: il tocco porta dove portava.
+ *
+ * Le righe non spariscono: chi le preferisce le rimette dal Config, scheda
+ * Stanze. Qui sotto c'e' la tavola, e le decisioni che non chiedono un
+ * documento — l'ordine, le tessere larghe, il clima della testata, la
+ * posizione della tapparella — stanno in `core/la-stanza-a-tessere.js`. */
+
+/** La vista scelta in configurazione: le tessere, se nessuno ha chiesto le righe. */
+export function vistaDellaPagina() {
+  return vistaDellaStanza(readJson(CHIAVE_VISTA_STANZA, VISTA_TESSERE));
+}
+
+function valoreLetto(entity, coda, states) {
+  const valore = clean(states?.[entity]?.state);
+  return valore && valore !== "unknown" && valore !== "unavailable" ? `${valore}${coda}` : "—";
+}
+
+/* Le unita' del clima della stanza, per la testata. */
+function entitaDelClima(pagina) {
+  return ((pagina?.blocchi || []).find((blocco) => blocco.key === "clima")?.voci || [])
+    .map((voce) => entitaVoce(voce))
+    .filter(Boolean);
+}
+
+/* Il clima della stanza, dentro la testata: i gradi chiesti e la parola del
+ * modo, la stessa della pagina Clima. Il colore lo decide il modo — azzurro
+ * per il fresco, arancio per il caldo, grigio da spento — e lo dice un
+ * attributo, che il giro veloce riscrive senza rifare la testata. */
+function dentroAlClima(clima) {
+  const gradi = clima?.obiettivo == null ? "—" : `${clima.obiettivo}°`;
+  const modo = clima ? parolaDiStato(clima.modo) : t("Non disponibile", "Unavailable");
+  return `<b>${esc(gradi)}</b><small>${esc(modo)}</small>`;
+}
+
+function toniDelClima(clima) {
+  if (!clima?.acceso) return "spento";
+  return clima.modo === "heat" ? "caldo" : "fresco";
+}
+
+/* I due tasti della scena, gli stessi della vista a righe: stesso gesto,
+ * stesso gestore, stessi disegni. */
+function tastiDellaScena() {
+  return `<div class="dm-stanze-scena-btns">
+      <button type="button" data-dm-stanza-scena="on"><span class="dm-stanze-scena-ic" aria-hidden="true">${disegnoDelCatalogo("lights", 20)}</span> ${esc(t("Accendi tutto", "Turn everything on"))}</button>
+      <span class="dm-stanze-scena-div" aria-hidden="true"></span>
+      <button type="button" data-dm-stanza-scena="off"><span class="dm-stanze-scena-ic" aria-hidden="true">${disegnoDelCatalogo("moon", 20)}</span> ${esc(t("Spegni tutto", "Turn everything off"))}</button>
+    </div>`;
+}
+
+/* Quante luci sono accese, detto come si dice. Una luce sola non ha un «su
+ * uno»: e' accesa o spenta. */
+function luciAccese(pagina, states) {
+  const { totale, accese } = roomSceneSummary(pagina, states);
+  if (!totale) return "";
+  if (totale === 1)
+    return accese ? t("la luce è accesa", "the light is on") : t("la luce è spenta", "the light is off");
+  if (accese === 1) return t(`1 luce accesa su ${totale}`, `1 of ${totale} lights on`);
+  return t(`${accese} luci accese su ${totale}`, `${accese} of ${totale} lights on`);
+}
+
+/**
+ * La testata della stanza: chi e', dove sta, com'e' messa, e la scena.
+ *
+ * Tiene insieme quello che la vista a righe spargeva in tre posti — la scena
+ * in cima, la card dei sensori sotto, il clima in fondo — perche' sono le tre
+ * cose che si guardano entrando, e si guardano insieme. Le letture portano gli
+ * stessi segni della card dei sensori (`data-dm-stanza-lettura`), cosi' il
+ * giro veloce le riscrive senza sapere in che vista sta.
+ */
+export function testaDellaStanza(pagina, states = {}) {
+  const nome = pagina.senzaStanza ? t("Senza stanza", "No room") : pagina.name;
+  const sotto = [clean(pagina.floor), luciAccese(pagina, states)].filter(Boolean).join(" · ");
+  const coppia = temperatureEntries(pagina).find((voce) => voce.temp || voce.hum) || null;
+  const misura = (entity, etichetta, coda) =>
+    entity
+      ? `<div class="dm-stanze-testa-voce"><span>${esc(etichetta)}</span><b data-dm-stanza-lettura="${esc(entity)}" data-dm-stanza-coda="${esc(coda)}">${esc(valoreLetto(entity, coda, states))}</b></div>`
+      : "";
+  const climi = entitaDelClima(pagina);
+  const clima = climi.length ? climaDellaStanza(climi, states) : null;
+  const cellaDelClima = climi.length
+    ? `<div class="dm-stanze-testa-voce dm-stanze-testa-clima" data-dm-stanza-clima="${esc(climi.join(" "))}" data-tono="${toniDelClima(clima)}"><span>${esc(t("Clima", "Climate"))}</span><span class="dm-stanze-testa-clima-dentro" data-dm-stanza-clima-dentro>${dentroAlClima(clima)}</span></div>`
+    : "";
+  const misure = `${misura(coppia?.temp, t("Temperatura", "Temperature"), "°")}${misura(coppia?.hum, t("Umidità", "Humidity"), "%")}${cellaDelClima}`;
+  const scena = roomSceneSummary(pagina, states).totale
+    ? `<div class="dm-stanze-scena dm-stanze-testa-scena" role="group" aria-label="${esc(t("Scene della stanza", "Room scenes"))}">${tastiDellaScena()}</div>`
+    : "";
+  return `<section class="dm-stanze-testa" aria-label="${esc(nome)}">
+    <div class="dm-stanze-testa-su">
+      <span class="dm-stanze-orb dm-stanze-testa-orb" aria-hidden="true">${disegnoDellaStanza(pagina, 40)}</span>
+      <span class="dm-stanze-testa-nome"><b>${esc(nome)}</b>${sotto ? `<s>${esc(sotto)}</s>` : ""}</span>
+    </div>
+    ${misure ? `<div class="dm-stanze-testa-misure">${misure}</div>` : ""}
+    ${scena}
+  </section>`;
+}
+
+/* La parola di una tapparella, dalla lettura del nucleo. */
+function parolaDellaCopertura(lettura) {
+  switch (lettura?.stato) {
+    case "aperta":
+      return t("Aperta", "Open");
+    case "chiusa":
+      return t("Chiusa", "Closed");
+    case "sale":
+      return t("In apertura", "Opening");
+    case "scende":
+      return t("In chiusura", "Closing");
+    case "socchiusa":
+      return t(`Aperta al ${lettura.posizione}%`, `${lettura.posizione}% open`);
+    default:
+      return t("Non disponibile", "Unavailable");
+  }
+}
+
+/* La tessera di una tapparella: nome, a che punto e', e i tre tasti.
+ *
+ * I tasti sono quelli della pagina Tapparelle — `tapp-btn`, `data-svc`,
+ * `cdTappCmd(this)` — e la tessera porta `data-tapp` come la sua card: e' da
+ * li' che il comando sa a chi parlare, e il rele' al posto del motore (#199) o
+ * le tre coperture sulla stessa finestra li sa gia' distinguere lui. Una
+ * finestra che si apre a mano non ha tasti da dare: resta la riga, che dice
+ * aperta o chiusa. Il resto della tessera porta alla pagina Tapparelle, come
+ * la riga di prima. */
+function tesseraDellaCopertura(item, conTab, states, aperture) {
+  const coperture = coverEntries(item);
+  const entity = clean(coperture[0]?.entity);
+  if (!entity || isWindowOnly(item) || aperture.get(entity))
+    return rowMarkup(item, conTab, states, aperture);
+  const girata = versoInvertito(item);
+  const lettura = comeStaLaCopertura(states?.[entity], { invertita: girata });
+  const nome = nomeVoce(item, states);
+  const multiple = coperture.length > 1;
+  const tasto = (servizio, segno, parola) =>
+    `<button type="button" class="tapp-btn" data-svc="${servizio}" onclick="cdTappCmd(this)" aria-label="${esc(`${parola} ${nome}`)}">${segno}</button>`;
+  return `<article class="dm-stanze-card dm-stanze-voce dm-stanze-cop" data-tapp="${esc(entity)}"${
+    multiple ? ` data-dm-shutter-card data-dm-covers="${coperture.length}"` : ""
+  } data-dm-stanza-entita="${esc(entity)}" data-dm-stanza-vai="${esc(conTab.tab)}" role="button" tabindex="0" data-dm-stanza-copertura="${esc(entity)}" data-dm-stanza-girata="${girata}" data-aperta="${(lettura.posizione ?? 0) > 0}">
+    <div class="dm-stanze-card-row">
+      <span class="dm-stanze-orb">${segnoDaDisegnare(item, conTab)}</span>
+      <span class="dm-stanze-title"><b>${esc(nome)}</b><s data-dm-stanza-cop-stato>${esc(parolaDellaCopertura(lettura))}</s></span>
+    </div>
+    <span class="dm-stanze-cop-pos" aria-hidden="true"><i data-dm-stanza-cop-pos style="width:${lettura.posizione ?? 0}%"></i></span>
+    <div class="dm-stanze-cop-tasti">
+      ${tasto("open_cover", "▲", t("Apri", "Open"))}
+      ${tasto("stop_cover", "■", t("Ferma", "Stop"))}
+      ${tasto("close_cover", "▼", t("Chiudi", "Close"))}
+    </div>
+    ${multiple ? coperture.map((voce) => `<span hidden data-dm-bar="${esc(voce.entity)}"></span>`).join("") : ""}
+  </article>`;
+}
+
+/* La card della luce, per una luce o per una presa. La presa porta i suoi
+ * watt, gli stessi che scrive la pagina Prese (#465). */
+function tesseraDellaLuce(item, states, { presa = false } = {}) {
+  const entity = clean(item?.entity || item?.id);
+  const vista = lightView(entity, {
+    name: clean(item?.name),
+    state: states?.[entity],
+    comandabile: siComanda(entity),
+  });
+  const consumo = presa ? consumoDellaPresa(item, states) : "";
+  return pageCardMarkup(consumo ? { ...vista, consumo } : vista);
+}
+
+function tesseraDellaVoce(item, conTab, states, aperture) {
+  if (conTab.key === "luci") return tesseraDellaLuce(item, states);
+  if (conTab.key === "prese") return tesseraDellaLuce(item, states, { presa: true });
+  if (conTab.key === "coperture") return tesseraDellaCopertura(item, conTab, states, aperture);
+  if (conTab.key === "clima")
+    return (
+      laCardDelClima(entitaVoce(item), { stanza: false }) || rowMarkup(item, conTab, states, aperture)
+    );
+  return rowMarkup(item, conTab, states, aperture, comandiDellaVoce(item, conTab, states));
+}
+
+/**
+ * La tavola della stanza: la testata e le tessere.
+ *
+ * Le tessere stanno in una griglia sola — due per riga sul telefono, quattro
+ * sul computer — e non piu' sotto un titolo per tipo: in una tavola il tipo lo
+ * dice la tessera stessa. Il titolo resta per chi ascolta invece di guardare,
+ * nascosto agli occhi e fuori dalla griglia: per lui la tavola e' ancora
+ * divisa in luci, finestre, clima.
+ */
+export function tavolaMarkup(pagina, states = {}) {
+  const aperture = aperturePerEntita();
+  const tessere = blocchiDellaTavola(pagina)
+    .map((blocco) => {
+      const conTab = { ...blocco, tab: TAB_DI[blocco.key] ?? "" };
+      const larga = tesseraLarga(blocco.key) ? " data-larga" : "";
+      const caselle = blocco.voci
+        .map((item) => {
+          const dentro = tesseraDellaVoce(item, conTab, states, aperture);
+          if (!dentro) return "";
+          const watt = blocco.key === "prese" && clean(item?.power) ? ` data-dm-stanza-watt="${esc(clean(item.power))}"` : "";
+          return `<div class="dm-stanze-casella" data-dm-stanza-casella="${esc(blocco.key)}"${larga}${watt}>${dentro}</div>`;
+        })
+        .join("");
+      return `<h2 class="dm-stanze-a-voce">${esc(nomeBlocco(blocco))}</h2>${caselle}`;
+    })
+    .join("");
+  /* Le sonde oltre la prima: la testata ne dice una, le altre restano card
+   * col loro nome, larghe come il clima. */
+  const altre = readingMarkup(pagina, states, { daLa: 1 });
+  const griglia =
+    tessere || altre
+      ? `<div class="dm-stanze-grid dm-stanze-tavola" data-dm-stanza-vista="${VISTA_TESSERE}">${tessere}${altre}</div>`
+      : "";
+  return `${testaDellaStanza(pagina, states)}${griglia}`;
+}
+
+/* ── il giro veloce della tavola ─────────────────────────────────────────── */
+
+/* Quello che la tavola scrive e che cambia piu' spesso della sua forma: il
+ * clima della testata, la posizione delle tapparelle, i watt delle prese. Si
+ * riscrive al suo posto, come le letture dei sensori: rifare la tavola a ogni
+ * watt che cambia spegnerebbe il dito posato sul cursore di una luce. */
+function aggiornaLaTavola(wrap, states) {
+  for (const nodo of wrap.querySelectorAll("[data-dm-stanza-clima]")) {
+    const clima = climaDellaStanza(
+      clean(nodo.getAttribute("data-dm-stanza-clima")).split(/\s+/),
+      states,
+    );
+    nodo.setAttribute("data-tono", toniDelClima(clima));
+    scriviSeCambia(nodo.querySelector("[data-dm-stanza-clima-dentro]"), dentroAlClima(clima));
+  }
+  for (const nodo of wrap.querySelectorAll("[data-dm-stanza-copertura]")) {
+    const lettura = comeStaLaCopertura(states?.[nodo.getAttribute("data-dm-stanza-copertura")], {
+      invertita: nodo.getAttribute("data-dm-stanza-girata") === "true",
+    });
+    nodo.setAttribute("data-aperta", String((lettura.posizione ?? 0) > 0));
+    const parola = nodo.querySelector("[data-dm-stanza-cop-stato]");
+    const testo = parolaDellaCopertura(lettura);
+    if (parola && parola.textContent !== testo) parola.textContent = testo;
+    nodo.querySelector("[data-dm-stanza-cop-pos]")?.style?.setProperty("width", `${lettura.posizione ?? 0}%`);
+  }
+  for (const nodo of wrap.querySelectorAll("[data-dm-stanza-watt]")) {
+    const consumo = consumoDellaPresa({ power: nodo.getAttribute("data-dm-stanza-watt") }, states);
+    const pastiglia = nodo.querySelector('.dm-lucip-badge[data-kind="consumo"]');
+    if (consumo && pastiglia) scriviSeCambia(pastiglia, `${segnoHtml("power")} ${esc(consumo)}`);
+  }
+}
+
+/* ── la scelta della vista, nel Config (#160) ───────────────────────────── */
+
+/* Le righe restano, per chi le preferisce: la scelta sta nella scheda Stanze
+ * del Config, sotto i piani, ed e' della casa — viaggia con la configurazione,
+ * come tutte le altre scelte di come si presenta la plancia. */
+const ID_SCELTA_DELLA_VISTA = "dm-stanze-vista";
+
+export function sceltaDellaVistaMarkup(vista = VISTA_TESSERE) {
+  const scelta = vistaDellaStanza(vista);
+  const tasto = (valore, nome, spiega) =>
+    `<button type="button" role="radio" aria-checked="${scelta === valore}" data-dm-stanze-vista-scegli="${valore}"><b>${esc(nome)}</b><small>${esc(spiega)}</small></button>`;
+  return `<div class="dm-stanze-vista-testa">
+      <b>${esc(t("Vista della stanza", "Room view"))}</b>
+      <small>${esc(t("Come si presenta una stanza aperta nella pagina Stanze.", "How an open room looks on the Rooms page."))}</small>
+    </div>
+    <div class="dm-stanze-vista-scelta" role="radiogroup" aria-label="${esc(t("Vista della stanza", "Room view"))}">
+      ${tasto(VISTA_TESSERE, t("Tessere", "Tiles"), t("Ogni cosa col suo comando, in una griglia", "Everything with its own control, in a grid"))}
+      ${tasto(VISTA_RIGHE, t("Righe", "Rows"), t("L'elenco diviso per tipo, come prima", "The list split by type, as before"))}
+    </div>`;
+}
+
+function disegnaLaSceltaDellaVista() {
+  const corpo = doc?.getElementById("ed-body");
+  /* Solo nella scheda Stanze: il corpo e' lo stesso per tutte le linguette, e
+   * la scheda si riconosce dalla casella del nome di una stanza nuova. */
+  if (!corpo || !corpo.querySelector("#ed-room-name")) return false;
+  let pannello = doc.getElementById(ID_SCELTA_DELLA_VISTA);
+  if (!pannello) {
+    pannello = doc.createElement("div");
+    pannello.id = ID_SCELTA_DELLA_VISTA;
+    pannello.className = "dm-stanze-vista";
+  }
+  scriviSeCambia(pannello, sceltaDellaVistaMarkup(vistaDellaPagina()));
+  /* Dopo il pannello dei piani, se c'e': il piano e' il contenitore e si
+   * costruisce per primo; come si guarda una stanza viene dopo. */
+  const dopo = doc.getElementById("dm-piani-pannello") || corpo.querySelector(".ed-intro");
+  if (dopo) {
+    if (dopo.nextElementSibling !== pannello) dopo.after(pannello);
+  } else if (!pannello.isConnected) corpo.prepend(pannello);
+  return true;
+}
+
+function alToccoDellaVista(evento) {
+  const tasto = evento.target?.closest?.("[data-dm-stanze-vista-scegli]");
+  if (!tasto || !tasto.closest(`#${ID_SCELTA_DELLA_VISTA}`)) return;
+  evento.preventDefault();
+  writeJsonIfChanged(
+    CHIAVE_VISTA_STANZA,
+    vistaDellaStanza(tasto.getAttribute("data-dm-stanze-vista-scegli")),
+  );
+  root.navigator?.vibrate?.(8);
+  disegnaLaSceltaDellaVista();
+  state.signature = "";
+  schedule();
 }
 
 /* ── l'indice: le stanze, un piano alla volta (#17) ──────────────────────── */
@@ -1382,7 +1727,14 @@ export function roomPageMarkup(pagine, scelta, states = {}) {
    * indietro — sull'elenco direbbe due volte la stessa cosa. */
   if (!clean(scelta)) return indiceMarkup(pagine, states);
   const pagina = pickRoomPage(pagine, scelta);
-  const blocchi = pagina.blocchi.map((blocco) => blockMarkup(blocco, states)).join("");
+  /* La tavola dei comandi (#160) e' la vista di serie; le righe restano per
+   * chi le ha scelte nel Config. */
+  const aTessere = vistaDellaPagina() === VISTA_TESSERE;
+  const blocchi = aTessere
+    ? pagina.blocchi.some((blocco) => blocco.voci.length)
+      ? tavolaMarkup(pagina, states)
+      : ""
+    : pagina.blocchi.map((blocco) => blockMarkup(blocco, states)).join("");
   const vuota = blocchi
     ? ""
     : `<div class="dm-stanze-empty">${esc(
@@ -1393,6 +1745,8 @@ export function roomPageMarkup(pagine, scelta, states = {}) {
       )}</div>`;
   const indietro = `<button type="button" class="dm-stanze-indietro" data-dm-stanze-indice>
       <span aria-hidden="true">←</span> ${esc(t("Le stanze", "The rooms"))}</button>`;
+  if (aTessere)
+    return `${indietro}${pillsMarkup(pagine, pagina.id)}${blocchi || testaDellaStanza(pagina, states)}${vuota}`;
   return `${indietro}${pillsMarkup(pagine, pagina.id)}${sceneMarkup(pagina, states)}${readingMarkup(pagina, states)}${blocchi}${vuota}`;
 }
 
@@ -1401,6 +1755,8 @@ export function roomPageMarkup(pagine, scelta, states = {}) {
 function signature(pagine, scelta, states) {
   return [
     scelta,
+    /* La vista scelta nel Config: cambiarla cambia tutta la pagina. */
+    vistaDellaPagina(),
     pagine
       .map((pagina) =>
         [
@@ -1500,6 +1856,7 @@ function paint() {
   /* E i gradi delle card del clima, che non sono un `textContent` ma una barra,
    * una legenda e un colore: li rimette chi li sa mettere. */
   dipingiLeCardDelClima(wrap);
+  aggiornaLaTavola(wrap, states);
 }
 
 function repaint() {
@@ -1893,7 +2250,9 @@ function handleClick(event) {
    * lettore e il pannello del clima stanno DENTRO la riga, e la riga porta
    * altrove. Senza questo, mettere in pausa cambiava pagina. Chi esegue quei
    * comandi e' il gestore della loro sezione, che ascolta sul documento. */
-  if (event.target?.closest?.("[data-dm-mp],[data-dm-w-panel]")) return;
+  /* E i tre tasti della tapparella sulla sua tessera (#160): li esegue
+   * `cdTappCmd`, e la tessera porta alla pagina Tapparelle. */
+  if (event.target?.closest?.("[data-dm-mp],[data-dm-w-panel],.tapp-btn")) return;
   const vai = event.target?.closest?.("[data-dm-stanza-vai]");
   if (vai) {
     const entita = clean(vai.getAttribute("data-dm-stanza-entita"));
@@ -1933,6 +2292,9 @@ export function installRoomsPageSection() {
     "dashboardmodern:config-reset",
   ])
     root.addEventListener?.(event, schedule);
+  /* La scelta fra tessere e righe, nella scheda Stanze del Config (#160). */
+  doc.addEventListener("click", alToccoDellaVista, true);
+  tieniIlBloccoNellaScheda("__dmStanzeVista", disegnaLaSceltaDellaVista);
   schedule();
 }
 
@@ -2115,6 +2477,128 @@ function installStyles() {
       @media(max-width:560px){
         #page-stanze .dm-stanze-grid{grid-template-columns:1fr}
         #page-stanze .dm-stanze-scena-btns button{padding:11px 10px}
+      }
+
+      /* ── la tavola dei comandi (#160) ──────────────────────────────────
+         La testata: la stanza, le sue misure e la scena in una card sola. */
+      #page-stanze .dm-stanze-testa{display:grid;gap:14px;padding:18px;border:1px solid var(--divider-color,#dbe4ee);border-radius:22px;background:linear-gradient(180deg,var(--card-bg,#fff) 0%,color-mix(in srgb,#94a3b8 4%,var(--card-bg,#fff)) 100%);box-shadow:0 16px 32px -24px rgba(15,23,42,.45)}
+      #page-stanze .dm-stanze-testa-su{display:flex;align-items:center;gap:12px;min-width:0}
+      #page-stanze .dm-stanze-testa-orb{width:56px;height:56px;border-radius:18px;background:linear-gradient(160deg,color-mix(in srgb,var(--primary-color,#0ea5e9) 14%,var(--card-bg,#fff)),var(--secondary-background-color,#f1f5f9))}
+      #page-stanze .dm-stanze-testa-nome{display:grid;gap:3px;min-width:0}
+      #page-stanze .dm-stanze-testa-nome b{font-size:22px;font-weight:900;letter-spacing:-.3px;line-height:1.1;color:var(--text,#0f172a);overflow-wrap:anywhere}
+      #page-stanze .dm-stanze-testa-nome s{text-decoration:none;font-size:11px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:var(--secondary-text-color,#64748b)}
+      #page-stanze .dm-stanze-testa-misure{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+      #page-stanze .dm-stanze-testa-voce{display:grid;align-content:start;gap:3px;min-width:0}
+      #page-stanze .dm-stanze-testa-voce>span:first-child{font-size:9.5px;font-weight:900;letter-spacing:1px;text-transform:uppercase;color:var(--secondary-text-color,#64748b)}
+      #page-stanze .dm-stanze-testa-voce b{font-size:32px;font-weight:900;letter-spacing:-1px;line-height:1;color:var(--text,#0f172a);font-variant-numeric:tabular-nums;white-space:nowrap}
+      #page-stanze .dm-stanze-testa-clima-dentro{display:grid;gap:3px}
+      #page-stanze .dm-stanze-testa-clima small{font-size:10.5px;font-weight:900;letter-spacing:.6px;text-transform:uppercase;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+      #page-stanze .dm-stanze-testa-clima[data-tono="fresco"] b,#page-stanze .dm-stanze-testa-clima[data-tono="fresco"] small{color:#0284c7}
+      #page-stanze .dm-stanze-testa-clima[data-tono="caldo"] b,#page-stanze .dm-stanze-testa-clima[data-tono="caldo"] small{color:#ea580c}
+      #page-stanze .dm-stanze-testa-clima[data-tono="spento"] b{color:var(--secondary-text-color,#94a3b8)}
+      #page-stanze .dm-stanze-testa-clima[data-tono="spento"] small{color:var(--secondary-text-color,#64748b)}
+      #page-stanze .dm-stanze-testa-scena{margin:0}
+      #page-stanze .dm-stanze-testa-scena .dm-stanze-scena-btns{flex:1 1 100%;border-radius:16px;box-shadow:none;background:var(--surface-2,#f8fafc)}
+
+      /* Le tessere: due per riga sul telefono, quattro sul computer; il clima
+         e la musica ne prendono due. La griglia porta anche la classe delle
+         righe, e qui si tiene la sua forma contro le regole di quella. */
+      #page-stanze .dm-stanze-grid.dm-stanze-tavola{position:relative;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-auto-flow:row dense;gap:10px;margin-top:2px}
+      #page-stanze .dm-stanze-tavola>.dm-stanze-casella{display:grid;min-width:0}
+      #page-stanze .dm-stanze-tavola>.dm-stanze-casella[data-larga],#page-stanze .dm-stanze-tavola>.dm-stanze-clima{grid-column:span 2}
+      #page-stanze .dm-stanze-tavola .dm-stanze-casella>*{box-sizing:border-box;width:auto;min-width:0;max-width:none;flex:none;margin:0}
+      #page-stanze .dm-stanze-tavola>.dm-stanze-casella:not([data-larga])>*{aspect-ratio:1/1}
+      /* Il titolo di ogni gruppo e' per chi ascolta: fuori dalla griglia e
+         fuori dalla vista, ma letto nel suo posto. */
+      #page-stanze .dm-stanze-a-voce{position:absolute;width:1px;height:1px;margin:0;padding:0;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+
+      /* La card della luce, in piedi: il disegno e la levetta in alto, il
+         nome in basso, il cursore sotto. */
+      #page-stanze .dm-stanze-tavola .dm-lucip-card{grid-template-rows:1fr auto}
+      #page-stanze .dm-stanze-tavola .dm-lucip-main{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-rows:auto 1fr;align-items:start;gap:10px 8px;padding:13px 13px 6px}
+      #page-stanze .dm-stanze-tavola .dm-lucip-orb{width:44px;height:44px;border-radius:15px}
+      #page-stanze .dm-stanze-tavola .dm-lucip-orb svg{width:24px;height:24px}
+      #page-stanze .dm-stanze-tavola .dm-lucip-title{grid-column:1/-1;grid-row:2;align-self:end;min-width:0}
+      #page-stanze .dm-stanze-tavola .dm-lucip-title strong{font-size:14px;line-height:1.18}
+      #page-stanze .dm-stanze-tavola .dm-lucip-led{grid-column:2;grid-row:1}
+      #page-stanze .dm-stanze-tavola .dm-lucip-badge[data-kind="dim"]{display:none}
+      #page-stanze .dm-stanze-tavola .dm-lucip-badge[data-kind="rgb"]{display:none}
+      #page-stanze .dm-stanze-tavola .dm-lucip-badge[data-kind="switch"]{display:none}
+      #page-stanze .dm-stanze-tavola .dm-lucip-badge[data-kind="white"]{display:none}
+      #page-stanze .dm-stanze-tavola .dm-lucip-tools{padding:0 13px 11px;gap:8px}
+      #page-stanze .dm-stanze-tavola .dm-lucip-dim-head{display:none}
+      #page-stanze .dm-stanze-tavola .dm-lucip-tune{width:32px;height:32px;border-radius:10px}
+
+      /* Le righe che non hanno un comando loro, vestite da tessera: il segno e
+         il comando in alto, il nome e lo stato in basso. */
+      #page-stanze .dm-stanze-tavola .dm-stanze-casella>.dm-stanze-card{align-content:stretch}
+      #page-stanze .dm-stanze-tavola .dm-stanze-casella:not([data-larga]) .dm-stanze-card-row{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-rows:auto 1fr;align-items:start;gap:10px 8px;height:100%;box-sizing:border-box;padding:13px}
+      #page-stanze .dm-stanze-tavola .dm-stanze-casella:not([data-larga]) .dm-stanze-orb{grid-column:1;grid-row:1}
+      #page-stanze .dm-stanze-tavola .dm-stanze-casella:not([data-larga]) .dm-stanze-title{grid-column:1/-1;grid-row:2;align-self:end}
+      #page-stanze .dm-stanze-tavola .dm-stanze-casella:not([data-larga]) .dm-stanze-card-row>.dm-stanze-tocca{grid-column:2;grid-row:1}
+      #page-stanze .dm-stanze-tavola .dm-stanze-casella:not([data-larga]) .dm-stanze-card-row>.dm-stanze-avvia{grid-column:2;grid-row:1}
+      #page-stanze .dm-stanze-tavola .dm-stanze-casella:not([data-larga]) .dm-stanze-card-row>.dm-stanze-vai{grid-column:2;grid-row:1}
+      #page-stanze .dm-stanze-tavola .dm-stanze-orb{width:44px;height:44px;border-radius:15px}
+      #page-stanze .dm-stanze-tavola .dm-stanze-title b{font-size:14px;line-height:1.18}
+      #page-stanze .dm-stanze-tavola .dm-stanze-title s{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+      /* La tapparella: a che punto e', e i tre tasti. */
+      #page-stanze .dm-stanze-tavola .dm-stanze-cop{grid-template-rows:1fr auto auto;gap:8px;padding:0 0 12px}
+      #page-stanze .dm-stanze-tavola .dm-stanze-casella .dm-stanze-cop .dm-stanze-card-row{padding:13px 13px 0}
+      #page-stanze .dm-stanze-cop[data-aperta="true"]{border-color:color-mix(in srgb,#6366f1 35%,var(--divider-color,#dbe4ee))}
+      #page-stanze .dm-stanze-cop-pos{display:block;height:6px;margin:0 13px;border-radius:999px;background:rgba(148,163,184,.24);overflow:hidden}
+      #page-stanze .dm-stanze-cop-pos i{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,#818cf8,#6366f1);transition:width .3s ease}
+      #page-stanze .dm-stanze-cop-tasti{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;padding:0 13px}
+      #page-stanze .dm-stanze-cop-tasti .tapp-btn{min-height:40px;padding:0;border:1px solid var(--divider-color,#dbe4ee);border-radius:12px;background:var(--surface-2,#f8fafc);color:var(--text,#0f172a);font:inherit;font-size:13px;font-weight:900;cursor:pointer}
+      #page-stanze .dm-stanze-cop-tasti .tapp-btn[data-svc="open_cover"]{background:linear-gradient(140deg,#e0f2fe,#bae6fd);color:#0369a1;border-color:rgba(14,165,233,.35)}
+      #page-stanze .dm-stanze-cop-tasti .tapp-btn[data-svc="close_cover"]{background:linear-gradient(140deg,#0ea5e9,#0369a1);color:#fff;border-color:transparent}
+      #page-stanze .dm-stanze-cop-tasti .tapp-btn:active{transform:scale(.95)}
+      #page-stanze .dm-stanze-cop-tasti .tapp-btn:focus-visible{outline:2px solid var(--primary-color,#0ea5e9);outline-offset:2px}
+
+      /* Il clima: la card della pagina Clima, senza quello che in una tessera
+         non ci sta — la barra fra gli estremi, la curva, le pastiglie — e che
+         il suo tocco apre comunque, nella finestra del clima. */
+      #page-stanze .dm-stanze-tavola .dm-cl-card{height:100%}
+      #page-stanze .dm-stanze-tavola .dm-cl-card .dm-cl-rail{display:none!important}
+      #page-stanze .dm-stanze-tavola .dm-cl-card .dm-cl-spark{display:none!important}
+      #page-stanze .dm-stanze-tavola .dm-cl-card .dm-cl-pills{display:none!important}
+      #page-stanze .dm-stanze-tavola .dm-cl-card .dm-cl-valvola{display:none!important}
+      #page-stanze .dm-stanze-tavola .dm-cl-card .dm-cl-modes{display:none!important}
+      #page-stanze .dm-stanze-tavola .dm-cl-card [data-dm-cl-low]{display:none!important}
+      #page-stanze .dm-stanze-tavola .dm-cl-card [data-dm-cl-high]{display:none!important}
+      #page-stanze .dm-stanze-tavola .dm-cl-card .dm-cl-legend{justify-content:flex-start}
+      #page-stanze .dm-stanze-tavola .dm-cl-card .dm-cl-foot{justify-content:flex-end}
+
+      /* La musica: la riga col brano, e sotto i tasti. */
+      #page-stanze .dm-stanze-tavola .dm-stanze-casella[data-larga] .dm-stanze-card{align-content:space-between}
+      #page-stanze .dm-stanze-tavola .dm-stanze-casella[data-dm-stanza-casella="media"] .dm-stanze-title s{text-transform:none;letter-spacing:0;font-size:12px}
+
+      /* La scelta della vista, nel Config. */
+      .dm-stanze-vista{display:grid;gap:10px;margin:6px 0 18px;padding:15px 16px;border-radius:20px;background:var(--card-background-color,#fff);border:1px solid var(--divider-color,#e2e8f0)}
+      .dm-stanze-vista-testa{display:grid;gap:3px}
+      .dm-stanze-vista-testa b{font-size:14px;font-weight:900;color:var(--primary-text-color,#0f172a)}
+      .dm-stanze-vista-testa small{font-size:11.5px;font-weight:700;line-height:1.45;color:var(--secondary-text-color,#64748b)}
+      .dm-stanze-vista-scelta{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+      .dm-stanze-vista-scelta button{display:grid;gap:3px;justify-items:start;min-height:44px;padding:10px 12px;border:1.5px solid var(--divider-color,#e2e8f0);border-radius:14px;background:var(--secondary-background-color,#f6f8fb);color:var(--primary-text-color,#0f172a);font:inherit;text-align:left;cursor:pointer}
+      .dm-stanze-vista-scelta button b{font-size:13px;font-weight:900}
+      .dm-stanze-vista-scelta button small{font-size:10.5px;font-weight:700;line-height:1.35;color:var(--secondary-text-color,#64748b)}
+      .dm-stanze-vista-scelta button[aria-checked="true"]{border-color:var(--primary-color,#0ea5e9);background:color-mix(in srgb,var(--primary-color,#0ea5e9) 10%,var(--card-background-color,#fff));box-shadow:0 0 0 2px color-mix(in srgb,var(--primary-color,#0ea5e9) 22%,transparent)}
+      .dm-stanze-vista-scelta button:focus-visible{outline:2px solid var(--primary-color,#0ea5e9);outline-offset:2px}
+
+      @media(min-width:900px){
+        #page-stanze .dm-stanze-testa{grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:24px}
+        #page-stanze .dm-stanze-testa-scena .dm-stanze-scena-btns{min-width:340px}
+        #page-stanze .dm-stanze-grid.dm-stanze-tavola{grid-template-columns:repeat(4,minmax(0,1fr));grid-auto-rows:minmax(196px,auto);gap:14px}
+        #page-stanze .dm-stanze-tavola>.dm-stanze-casella:not([data-larga])>*{aspect-ratio:auto;height:100%}
+        #page-stanze .dm-stanze-tavola .dm-stanze-casella>.dm-lucip-card{max-width:none;flex:none}
+      }
+      @media(max-width:560px){
+        #page-stanze .dm-stanze-grid.dm-stanze-tavola{grid-template-columns:repeat(2,minmax(0,1fr))}
+        #page-stanze .dm-stanze-testa{padding:16px}
+        #page-stanze .dm-stanze-testa-voce b{font-size:28px}
+      }
+      @media(prefers-reduced-motion:reduce){
+        #page-stanze .dm-stanze-cop-pos i{transition:none}
       }
     `,
   );
