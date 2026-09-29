@@ -11,7 +11,7 @@ fuori. La plancia dentro continua a dire la sua, e si legge dov'è sempre
 stata: nella pastiglia «La plancia» della console. Sono due numeri perché
 sono due cose.
 
-## Non ancora uscita
+## 1.8.0
 
 **La Gestione termica torna a mostrare i numeri.** «Dopo ultimo aggiornamento
 al 1.7.0 non funziona più la gestione termica. Prima andava perfettamente.»
@@ -240,6 +240,34 @@ quel telefono: è una cosa di chi guarda, non della casa, e sugli altri
 schermi resta aperto. I tasti non cambiano posto: si vedono raggruppati, ma
 per chi li colora, ci disegna il simbolo o ci posa la copertina restano
 nell'ordine in cui sono scritti.
+
+**Il navigatore conosce tutte le colonnine d'Italia, e sa quali sono
+libere.** gdanav arriva all'ultimo. Le colonnine vengono dalla Piattaforma
+Unica Nazionale, dove i gestori le devono scrivere, e sulla mappa ci sono
+tutte — più di quarantacinquemila — non solo le venticinque più vicine, coi
+nomi dei gestori al posto delle sigle. Lo stato di adesso, libera, occupata o
+guasta, si chiede alla PUN per tutta Italia in una volta, ogni dieci minuti
+mentre l'app è davanti, e ogni icona prende il suo colore. Nel cerchio c'è il
+numero delle prese, non delle stazioni.
+
+**Il percorso sceglie le soste libere.** «Nel calcolo del percorso devi vedere
+quelle libere e in servizio.» Quando il viaggio chiede una ricarica, fra due
+colonnine buone vince quella che ha una presa libera adesso, e una guasta o
+tutta occupata passa dietro. Dove un gestore lo stato vero non lo manda — e
+scrive «libera» qualunque cosa succeda — il navigatore non gli crede: quella
+colonnina resta senza stato, invece di dirsi libera.
+
+**E i prezzi, come il gestore li comunica alla PUN.** «Riesci a mettere anche i
+prezzi di ricarica?» Nella scheda della colonnina c'è quanto costa il
+kilowattora in alternata, in continua e ad alta potenza, la sosta al minuto e
+lo scatto d'avvio. Arrivano con lo stato, senza una domanda in più; chi non li
+comunica, la scheda lo dice invece di tacere.
+
+**Le corsie agli svincoli tornano**, anche coi percorsi di TomTom: le frecce di
+ogni corsia, accese quelle giuste. **E il traffico in auto** ha le linee più
+spesse, e quando non si vede la voce «Android Auto» del menu di gdanav dice
+dove si ferma: se lo strato c'è, se i riquadri arrivano da TomTom o tornano con
+un errore, quante code ci sono sullo schermo.
 
 ## 1.7.0
 
