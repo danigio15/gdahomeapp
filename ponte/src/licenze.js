@@ -29,20 +29,22 @@
  * quadro, e `limitata` e' falso: la casa fa tutto quello che faceva ieri. Le
  * licenze si accendono il giorno in cui la chiave si scrive.
  *
- * ─── Prima l'iPhone ──────────────────────────────────────────────────────
+ * ─── La casa non limita niente ───────────────────────────────────────────
  *
- * Con `LICENZE_SOLO_SULL_IPHONE` (`chiave-licenze.js`) la chiave c'e' ma il
- * Premium si vende solo nell'app per iPhone. La casa fa meta' del lavoro:
- * bussa al quadro, tiene i gettoni, gira le ricevute — chi compra dall'iPhone
- * deve diventare Premium davvero — e non limita niente, perche' i lucchetti
- * li mette solo quell'app. `attive` e' vero, `limitata` resta falso.
+ * Con la chiave la casa fa la sua parte e basta: bussa al quadro, tiene la
+ * licenza, gira le ricevute di chi compra dall'app, e dice com'e' messa a chi
+ * lo chiede. Non chiude niente: le plance, Home Assistant e i telefoni da
+ * fuori restano come sempre. I lucchetti di Base li mettono l'app e il
+ * browser, leggendo la licenza da qui; il fuori casa, a suo tempo, lo chiude
+ * il centralino (`docs/ACCENDERE-GLI-ACQUISTI.md`). E' la scelta del 29
+ * settembre: «base funziona e anche addon funziona». `limitata` resta falso.
  */
 
 import { EventEmitter } from "node:events";
 import { join } from "node:path";
 
 import { Archivio } from "./archivio.js";
-import { CHIAVE_PUBBLICA_LICENZE, LICENZE_SOLO_SULL_IPHONE } from "./chiave-licenze.js";
+import { CHIAVE_PUBBLICA_LICENZE } from "./chiave-licenze.js";
 import { leggiGettone, valeAdesso, verificaGettone } from "./gettone.js";
 import { perchePreciso, QUADRO_DI_DIFETTO } from "./rapporto.js";
 
@@ -93,8 +95,6 @@ export class Licenze extends EventEmitter {
     segreto = () => "",
     cartella = "",
     chiave = CHIAVE_PUBBLICA_LICENZE,
-    /* Le licenze contano solo nell'app per iPhone: vedi in cima. */
-    soloSullIPhone = LICENZE_SOLO_SULL_IPHONE,
     /* Dove sta il quadro. Si sposta come si sposta quello del rapporto — con
      * `PONTE_QUADRO_DOVE` — che serve alle prove e a chi si rifa' gdahome per
      * se'. Nella scheda dell'add-on non c'e' una casella: il quadro delle
@@ -109,7 +109,6 @@ export class Licenze extends EventEmitter {
     this.casa = String(casa || "");
     this.segreto = typeof segreto === "function" ? segreto : () => String(segreto || "");
     this.chiave = String(chiave || "");
-    this.soloSullIPhone = soloSullIPhone === true;
     this.dove = String(dove || "").replace(/\/+$/, "");
     this.prendi = prendi;
     this.adesso = adesso;
@@ -174,15 +173,14 @@ export class Licenze extends EventEmitter {
     return Boolean(this._valido("gdahome"));
   }
 
-  /* Se questa casa sta nei limiti di Base.
+  /* Se questa casa sta nei limiti di Base: mai.
    *
-   * E' la domanda che fanno le plance, il portiere e le commissioni, e non e'
-   * `!premium`: con la chiave vuota le licenze sono spente, e allora non c'e'
-   * nessun limite — tutto come ieri. E nemmeno quando contano solo
-   * nell'iPhone: li' il lucchetto lo mette l'app, e la casa resta aperta a
-   * Android, al browser e ai telefoni da fuori. */
+   * E' la domanda che fanno le plance, il portiere e le commissioni, e la
+   * risposta e' sempre no — con la chiave o senza, Premium o Base. La casa
+   * non chiude niente: i lucchetti di Base li mettono l'app e il browser, e
+   * il fuori casa lo chiudera' il centralino (vedi in cima). */
   get limitata() {
-    return this.attive && !this.soloSullIPhone && !this.premium;
+    return false;
   }
 
   /* Il gettone da dare al centralino: quello di gdahome, cosi' com'e'. Lo
@@ -215,10 +213,9 @@ export class Licenze extends EventEmitter {
     }
     return {
       attive: this.attive,
-      /* Se la casa si sta limitando davvero, e se le licenze contano solo
-       * nell'app per iPhone: la console scrive «Base» in due modi diversi. */
+      /* Se la casa si limita: mai (vedi `limitata`). La console lo legge per
+       * non spegnere tasti che la casa non spegne. */
       limitata: this.limitata,
-      soloSullIPhone: this.attive && this.soloSullIPhone,
       casa: this.casa,
       gdahome: una("gdahome"),
       gdanav: una("gdanav"),

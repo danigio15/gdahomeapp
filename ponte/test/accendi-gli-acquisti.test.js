@@ -23,32 +23,30 @@ import {
   I_FILE_DELLA_CHIAVE,
   I_PASSI_A_MANO,
   comEMesso,
-  laBandierinaIn,
   laChiaveIn,
 } from "../../strumenti/accendi-gli-acquisti.mjs";
 
 const RADICE = dirname(dirname(dirname(fileURLToPath(import.meta.url))));
 
 /* Una copia di passaggio coi soli file della chiave, scritti come li scrive
- * `chiave-licenze.mjs`: la chiave, e la bandierina «prima l'iPhone». */
-function finta(chiavi, soloIPhone = false) {
+ * `chiave-licenze.mjs`. */
+function finta(chiavi) {
   const dove = mkdtempSync(join(tmpdir(), "acquisti-"));
   I_FILE_DELLA_CHIAVE.forEach((nome, i) => {
     const dentro = join(dove, nome);
     mkdirSync(dirname(dentro), { recursive: true });
     const valore = Array.isArray(chiavi) ? chiavi[i] : chiavi;
-    const bandierina = Array.isArray(soloIPhone) ? soloIPhone[i] : soloIPhone;
     writeFileSync(
       dentro,
       nome.endsWith(".dart")
-        ? `const chiavePubblicaLicenze = '${valore}';\nconst licenzeSoloSullIPhone = ${bandierina};\n`
-        : `export const CHIAVE_PUBBLICA_LICENZE = "${valore}";\nexport const LICENZE_SOLO_SULL_IPHONE = ${bandierina};\n`,
+        ? `const chiavePubblicaLicenze = '${valore}';\n`
+        : `export const CHIAVE_PUBBLICA_LICENZE = "${valore}";\n`,
     );
   });
   return dove;
 }
 
-/* Prima l'iPhone: la chiave nell'add-on e nell'app, non nel centralino e
+/* Il primo passo: la chiave nell'add-on e nell'app, non nel centralino e
  * nella nuvola. */
 const DI_PROVA = "6P9sdqQtlHcmH7Ve_SgzmyJmxJS28CNORRJJfjI3rnI";
 const soloCasaEApp = (x) =>
@@ -84,38 +82,58 @@ test("tutti d'accordo con una chiave vera: acceso", () => {
   assert.equal(come.chiave, "6P9sdqQtlHcmH7Ve_SgzmyJmxJS28CNORRJJfjI3rnI");
 });
 
-test("prima l'iPhone: la chiave nella casa e nell'app, la bandierina dappertutto", () => {
-  const come = comEMesso({ radice: finta(soloCasaEApp(DI_PROVA), true) });
-  assert.equal(come.stato, "solo-iphone", JSON.stringify(come, null, 2));
+test("il primo passo: la chiave nella casa e nell'app, il centralino senza", () => {
+  const come = comEMesso({ radice: finta(soloCasaEApp(DI_PROVA)) });
+  assert.equal(come.stato, "senza-centralino", JSON.stringify(come, null, 2));
   assert.equal(come.chiave, DI_PROVA);
 });
 
-test("prima l'iPhone con la chiave nel centralino: rotto", () => {
-  /* Il centralino con la chiave chiuderebbe fuori da casa i telefoni delle
-   * case Base, Android compresi: proprio quello che «solo iPhone» non vuole. */
-  const come = comEMesso({ radice: finta(DI_PROVA, true) });
-  assert.equal(come.stato, "rotto");
-  assert.match(come.perche, /centralino/);
-});
-
-test("la bandierina accesa a meta': rotto", () => {
-  const bandierine = I_FILE_DELLA_CHIAVE.map((nome) => nome.startsWith("app/"));
-  const come = comEMesso({ radice: finta(soloCasaEApp(DI_PROVA), bandierine) });
-  assert.equal(come.stato, "rotto");
-  assert.match(come.perche, /bandierina/);
-});
-
-test("la chiave solo nella casa e nell'app, ma senza bandierina: rotto", () => {
-  /* E' l'errore di chi scrive la chiave a mano: la casa si limiterebbe per
-   * tutti mentre il centralino lascia passare. */
-  const come = comEMesso({ radice: finta(soloCasaEApp(DI_PROVA), false) });
+test("la chiave nel centralino e non nella casa: rotto", () => {
+  /* Il centralino chiuderebbe fuori tutte le case, perche' nessuna gli
+   * direbbe una licenza che lui sappia leggere. */
+  const chiavi = I_FILE_DELLA_CHIAVE.map((nome) =>
+    nome.startsWith("centralino/") ? DI_PROVA : "",
+  );
+  const come = comEMesso({ radice: finta(chiavi) });
   assert.equal(come.stato, "rotto");
 });
 
-test("la bandierina si legge nelle due lingue, e dove non c'e' e' spenta", () => {
-  assert.equal(laBandierinaIn("export const LICENZE_SOLO_SULL_IPHONE = true;"), true);
-  assert.equal(laBandierinaIn("const licenzeSoloSullIPhone = false;"), false);
-  assert.equal(laBandierinaIn('export const CHIAVE_PUBBLICA_LICENZE = "";'), false);
+test("la chiave nella casa ma non nell'app: rotto", () => {
+  const chiavi = I_FILE_DELLA_CHIAVE.map((nome) => (nome.startsWith("ponte/") ? DI_PROVA : ""));
+  const come = comEMesso({ radice: finta(chiavi) });
+  assert.equal(come.stato, "rotto");
+});
+
+test("il primo passo con due chiavi diverse: rotto", () => {
+  const chiavi = I_FILE_DELLA_CHIAVE.map((nome) =>
+    nome.startsWith("ponte/") ? DI_PROVA : nome.startsWith("app/") ? "unAltraChiave" : "",
+  );
+  const come = comEMesso({ radice: finta(chiavi) });
+  assert.equal(come.stato, "rotto");
+});
+
+test("--fallo a interruttore spento non fabbrica una coppia qui", () => {
+  /* La privata stamperebbe su questo schermo: il suo posto e' solo la
+   * macchina del quadro. Si prova sul programma vero, su questa repository
+   * vera, che e' spenta: deve dire di no e non toccare niente. */
+  const prima = I_FILE_DELLA_CHIAVE.map((nome) => readFileSync(join(RADICE, nome), "utf8"));
+  let detto = "";
+  let uscita = 0;
+  try {
+    execFileSync("node", ["strumenti/accendi-gli-acquisti.mjs", "--fallo"], {
+      cwd: RADICE,
+      encoding: "utf8",
+      stdio: "pipe",
+    });
+  } catch (errore) {
+    uscita = errore.status;
+    detto = String(errore.stderr);
+  }
+  const dopo = I_FILE_DELLA_CHIAVE.map((nome) => readFileSync(join(RADICE, nome), "utf8"));
+  assert.deepEqual(dopo, prima);
+  assert.equal(uscita, 1);
+  assert.match(detto, /--senza-centralino --pubblica/);
+  assert.doesNotMatch(detto, /QUADRO_LICENZE_CHIAVE=/);
 });
 
 test("un file che non la pensa come gli altri: rotto, e si dice quale", () => {
@@ -162,11 +180,12 @@ test("i file che guarda sono quelli che la chiave ce l'hanno davvero", () => {
 });
 
 test("i passi a mano sono in ordine, e il centralino e' l'ultimo", () => {
-  /* E' l'ordine il contenuto: il centralino prima del rilascio chiude fuori
-   * ogni casa con l'add-on vecchio, pagante o no. */
+  /* E' l'ordine il contenuto: il centralino chiude il fuori casa, e va acceso
+   * quando l'app che lo sa spiegare e' gia' nei negozi. */
   assert.ok(I_PASSI_A_MANO.length >= 5);
   const ultimo = I_PASSI_A_MANO.at(-1);
   assert.match(ultimo.che, /centralino/i);
+  assert.match(ultimo.come, /aggiorna l'add-on/);
   assert.match(ultimo.come, /pronte_alla_licenza/);
   /* E i negozi stanno fra quelli di «prima»: una casa che diventa Base senza
    * un prodotto da comprare ha solo un lucchetto. */

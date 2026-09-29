@@ -16,7 +16,7 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { laBandierinaIn, laChiaveIn } from "../../strumenti/accendi-gli-acquisti.mjs";
+import { laChiaveIn } from "../../strumenti/accendi-gli-acquisti.mjs";
 
 const QUI = dirname(fileURLToPath(import.meta.url));
 const CENTRALINO = join(QUI, "..", "src");
@@ -39,8 +39,8 @@ const COPIATI = [
 ];
 
 /* La chiave delle licenze e' l'unica riga che puo' essere diversa, e solo
- * in un modo: prima dell'iPhone sta nell'add-on e il centralino e la nuvola
- * sono senza (`strumenti/accendi-gli-acquisti.mjs`, «solo iPhone»). Tutto il
+ * in un modo: al primo passo sta nell'add-on e il centralino e la nuvola sono
+ * senza (`strumenti/accendi-gli-acquisti.mjs`, «senza-centralino»). Tutto il
  * resto del file e' identico sempre, e se la chiave c'e' da tutte e due le
  * parti e' la stessa. */
 function laChiaveCome(copia, delPonte, dove) {
@@ -53,9 +53,11 @@ function laChiaveCome(copia, delPonte, dove) {
   );
   const sua = laChiaveIn(copia);
   const quella = laChiaveIn(delPonte);
+  /* Vuota si', finche' non tocca al centralino (il primo passo,
+   * `docs/ACCENDERE-GLI-ACQUISTI.md`); un'altra chiave mai. */
   assert.ok(
-    sua === quella || (sua === "" && laBandierinaIn(delPonte)),
-    `la chiave ${dove} non e' quella del ponte, e non e' «prima l'iPhone»`,
+    sua === quella || sua === "",
+    `la chiave ${dove} non e' quella del ponte, e non e' vuota`,
   );
 }
 
@@ -107,14 +109,16 @@ test("la chiave delle licenze e' la stessa nella nuvola", () => {
   );
 });
 
-test("prima dell'iPhone il centralino puo' restare senza chiave, e solo allora", () => {
-  const delPonte = (chiave, soloIPhone) =>
-    `export const CHIAVE_PUBBLICA_LICENZE = "${chiave}";\nexport const LICENZE_SOLO_SULL_IPHONE = ${soloIPhone};\n`;
+test("il centralino puo' restare senza la chiave della casa, ma non averne un'altra", () => {
+  const delPonte = (chiave) => `export const CHIAVE_PUBBLICA_LICENZE = "${chiave}";\n`;
   const x = "6P9sdqQtlHcmH7Ve_SgzmyJmxJS28CNORRJJfjI3rnI";
-  /* Prima l'iPhone: la casa con la chiave, il centralino senza. */
-  laChiaveCome(delPonte("", true), delPonte(x, true), "di prova");
-  /* Per tutti: senza la chiave il centralino lascerebbe entrare chi non paga. */
-  assert.throws(() => laChiaveCome(delPonte("", false), delPonte(x, false), "di prova"));
-  /* E una chiave diversa non va mai. */
-  assert.throws(() => laChiaveCome(delPonte("un'altra", true), delPonte(x, true), "di prova"));
+  /* Il primo passo: la casa con la chiave, il centralino senza. */
+  laChiaveCome(delPonte(""), delPonte(x), "di prova");
+  /* Tutti e due: la stessa. */
+  laChiaveCome(delPonte(x), delPonte(x), "di prova");
+  /* Una chiave diversa non va mai. */
+  assert.throws(() => laChiaveCome(delPonte("un'altra"), delPonte(x), "di prova"));
+  /* E il centralino con una chiave che la casa non ha chiuderebbe fuori
+   * tutte le case: nessuna gli direbbe una licenza. */
+  assert.throws(() => laChiaveCome(delPonte(x), delPonte(""), "di prova"));
 });
