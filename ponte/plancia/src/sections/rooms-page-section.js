@@ -79,6 +79,7 @@ import {
   allStates,
   chiamaServizio,
   clean,
+  climaAccesoDaiWatt,
   doc,
   esc,
   iconGlyphHtml,
@@ -1041,6 +1042,12 @@ const statoDi = (entity, states) => clean(states?.[clean(entity)]?.state);
 const SI_COMANDA_ACCESO = /^(on|playing|cleaning)$/i;
 const CLIMA_ACCESO = /^(heat|cool|auto|dry|fan_only|heat_cool)$/i;
 
+/* Un clima acceso, per la stanza: con la presa e la soglia lo dicono i watt
+ * (#490) — acceso dal telecomando, per Home Assistant resta «off» —,
+ * altrimenti il modo in cui sta. */
+const climaAcceso = (entity, stato, states) =>
+  climaAccesoDaiWatt(entity, states) ?? CLIMA_ACCESO.test(stato);
+
 /* Quante cose di un blocco sono accese adesso. */
 function acceseNelBlocco(pagina, chiave, states, prova) {
   const blocco = (pagina?.blocchi || []).find((voce) => voce.key === chiave);
@@ -1157,7 +1164,7 @@ export function contiDellaStanza(pagina, states, tipi = tipiDeiVarchi(states)) {
   return {
     luci: roomSceneSummary(pagina, states).accese,
     prese: acceseNelBlocco(pagina, "prese", states, (stato) => SI_COMANDA_ACCESO.test(stato)),
-    clima: acceseNelBlocco(pagina, "clima", states, (stato) => CLIMA_ACCESO.test(stato)),
+    clima: acceseNelBlocco(pagina, "clima", states, (stato, entity) => climaAcceso(entity, stato, states)),
     finestre: aperti.finestre,
     porte: aperti.porte,
     mute: muteNellaStanza(pagina, states),
@@ -1489,11 +1496,14 @@ export function cosaSiSpegne(pagina, chiave, states) {
       const vista = lightView(entity, { state: states[entity], comandabile: true });
       return vista.on && vista.available;
     });
-  const acceso = chiave === "clima" ? CLIMA_ACCESO : SI_COMANDA_ACCESO;
+  const acceso =
+    chiave === "clima"
+      ? (entity) => climaAcceso(entity, statoDi(entity, states), states)
+      : (entity) => SI_COMANDA_ACCESO.test(statoDi(entity, states));
   const blocco = (pagina?.blocchi || []).find((voce) => voce.key === chiave);
   return (blocco?.voci || [])
     .map((voce) => entitaVoce(voce))
-    .filter((entity) => entity && siComanda(entity) && acceso.test(statoDi(entity, states)));
+    .filter((entity) => entity && siComanda(entity) && acceso(entity));
 }
 
 /* Accende o spegne un elenco di entita', ognuna col comando che la sua specie

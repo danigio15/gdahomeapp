@@ -1,5 +1,6 @@
 // DM-FIX-20260812B
 import { disegnoDelCatalogo } from "../core/catalogo-disegni.js";
+import { accesoPerIlConsumo } from "../core/consumo-del-clima.js";
 import { canonicalClimateType } from "../core/device-model.js";
 import { isCumulativeEnergyEntity } from "../core/period-service.js";
 import {
@@ -80,6 +81,38 @@ export function readClimateUnits() {
   }
   if (!Array.isArray(values)) values = root.getClimaUnits?.().slice?.() || [];
   return values.map((item) => ({ ...item, type: canonicalClimateType(item?.type) }));
+}
+
+/**
+ * Il verdetto dei watt per un'unità del clima, cercata dalla sua entità (#490).
+ *
+ * «Ho inserito l'entità power del climatizzatore ma non mi dà acceso mentre il
+ * clima è acceso, se è stato acceso dal telecomando.» Un climatizzatore
+ * comandato all'infrarosso non dice a Home Assistant che il telecomando l'ha
+ * acceso: il suo `climate.*` resta «off», e la presa o il magnetotermico sotto
+ * sanno la verità. Con la presa e la soglia la pagina Clima lo sapeva già; la
+ * Home, le stanze e i tasti no — e il tasto di un clima acceso dal telecomando
+ * lo «riaccendeva» invece di spegnerlo. Adesso lo chiedono tutti qui.
+ *
+ * `true` o `false` quando chi la possiede le ha dato l'entità del consumo e la
+ * soglia, `null` quando non c'è niente da dire: allora decide lo stato
+ * dell'entità, come sempre.
+ */
+export function climaAccesoDaiWatt(entity, states = allStates()) {
+  const cercata = clean(entity);
+  if (!cercata) return null;
+  const risolta = clean(root.resolveEntity?.(cercata) || cercata);
+  let unita = null;
+  try {
+    unita =
+      readClimateUnits().find((voce) => {
+        const sua = clean(voce?.entity || voce?.entity_id || voce?.entities?.[0]);
+        return Boolean(sua) && (sua === cercata || sua === risolta);
+      }) || null;
+  } catch (_errore) {
+    return null;
+  }
+  return accesoPerIlConsumo(unita, states);
 }
 
 const ENERGY_RUNTIME_SOURCES = Object.freeze([

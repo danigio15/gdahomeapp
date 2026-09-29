@@ -281,6 +281,7 @@ import {
 } from "../core/verso-aperture.js";
 import { normalizeRobots, robotStateLabel, robotView } from "../core/robot-model.js";
 import { passoDellUnita, scalaDellUnita } from "../core/scala-clima.js";
+import { accesoPerIlConsumo } from "../core/consumo-del-clima.js";
 import { configuredLightGroups } from "./lights-alerts-section.js";
 import { floodEntities, floodIsWet, puoEssereUnaSonda } from "./flood-alerts-section.js";
 import {
@@ -1030,7 +1031,12 @@ function rigaClima(states, unit) {
   return {
     entity,
     name: clean(unit?.name) || entity,
-    on: Boolean(current) && raw !== "off" && raw !== "unavailable" && raw !== "unknown",
+    /* Con la presa e la soglia l'acceso lo dicono i watt, come sulla pagina
+     * Clima (#490): un climatizzatore acceso dal telecomando per Home
+     * Assistant resta «off», e in Home risultava spento. */
+    on:
+      accesoPerIlConsumo(unit, states) ??
+      (Boolean(current) && raw !== "off" && raw !== "unavailable" && raw !== "unknown"),
     mode: raw,
     ambient: numero(attributi.current_temperature),
     target: numero(attributi.temperature),

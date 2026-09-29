@@ -98,6 +98,37 @@ test("la lettura della card passa dai watt, e li porta con sé", () => {
   assert.match(dentro.slice(0, 1200), /watt: wattDellUnita\(unita, states\)/);
 });
 
+/* «Ho inserito l'entità power del climatizzatore ma non mi dà acceso mentre il
+ * clima è acceso, se è stato acceso dal telecomando.» Il verdetto dei watt lo
+ * sapeva solo la pagina Clima: la Home, le stanze e i tasti chiedevano ancora
+ * al `climate.*`, che del telecomando all'infrarosso non sa niente — e il tasto
+ * di un clima acceso così lo «riaccendeva» invece di spegnerlo. */
+test("i watt decidono anche in Home, nelle stanze e nei tasti", () => {
+  const condiviso = leggi("sections/shared.js");
+  const regola = condiviso.slice(condiviso.indexOf("export function climaAccesoDaiWatt"));
+  assert.match(regola.slice(0, 900), /return accesoPerIlConsumo\(unita, states\);/);
+
+  const tasti = leggi("sections/climate-power-section.js");
+  const commuta = tasti.slice(tasti.indexOf("export function commutaClima"));
+  /* Il verso lo decide quello che mostra la card, non il termostato. */
+  assert.match(commuta.slice(0, 900), /climaAccesoDaiWatt\(id\)/);
+  assert.match(commuta.slice(0, 900), /daiWatt === null \? climateIsOff\(stato\) : !daiWatt/);
+
+  const home = leggi("sections/home-widgets-section.js");
+  const riga = home.slice(home.indexOf("function rigaClima"));
+  assert.match(riga.slice(0, 1400), /accesoPerIlConsumo\(unit, states\) \?\?/);
+
+  const stanze = leggi("sections/rooms-page-section.js");
+  assert.match(stanze, /climaAccesoDaiWatt\(entity, states\) \?\? CLIMA_ACCESO\.test\(stato\)/);
+
+  const pagina = leggi("sections/climate-thermal-section.js");
+  const rapido = pagina.slice(pagina.indexOf("function tastoRapido"));
+  assert.match(rapido.slice(0, 900), /climaAccesoDaiWatt\(unita\.entity, states\) \?\? perLEntita/);
+  /* E quando la presa e Home Assistant non sono d'accordo, il tocco fa quello
+   * che il tasto mostra. */
+  assert.match(rapido, /acceso !== perLEntita\) commutaClima\(unita\.entity, !acceso, "freddo"\)/);
+});
+
 test("la scheda ha le due caselle, e non salva quelle vuote", () => {
   const editor = leggi("sections/unified-editors-section.js");
   assert.match(editor, /name="consumo"/);
