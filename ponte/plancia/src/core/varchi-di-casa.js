@@ -39,11 +39,57 @@ const clean = (valore) => String(valore ?? "").trim();
 /** Dove si scrive la configurazione dei varchi. */
 export const CHIAVE_VARCHI = "cd_varchi";
 
-/* Il campo in piu' che una riga di varco si tiene: l'interruttore che lo
- * esclude dall'antifurto (#136). Passa per nome dall'elenco dichiarato, come la
- * famiglia delle Macchine, perche' un elenco esplicito e' l'unica forma che
- * dice cosa si salva e cosa e' roba di passaggio. */
-export const CAMPI_IN_PIU = Object.freeze([CAMPO_ESCLUSIONE]);
+/* Porta o finestra, scritto da chi abita la casa (#162).
+ *
+ * «Varchi aperti somma insieme contatti di porte e finestre.» La fascia sotto
+ * il meteo adesso li dice separati, e per separarli basterebbe la classe che
+ * Home Assistant da' al contatto — `door`, `window`. Ma la classe la mette chi
+ * ha fatto l'integrazione, non chi abita la casa: «impianti dove i contatti
+ * porta-finestra possono avere classificazioni non uniformi». Una centrale
+ * d'allarme dichiara `opening` tutti i suoi ingressi, un modulo economico
+ * dichiara `door` anche la finestra del bagno.
+ *
+ * Quindi la riga si tiene una parola sua: porta o finestra. Vuota vuol dire
+ * «come dice Home Assistant», ed e' com'e' ogni riga di prima. */
+export const CAMPO_TIPO = "tipo";
+
+/** I due tipi di varco che la fascia sa dire. */
+export const TIPI_DEL_VARCO = Object.freeze(["porta", "finestra"]);
+
+/* I campi in piu' che una riga di varco si tiene: l'interruttore che lo
+ * esclude dall'antifurto (#136) e se e' una porta o una finestra (#162).
+ * Passano per nome dall'elenco dichiarato, come la famiglia delle Macchine,
+ * perche' un elenco esplicito e' l'unica forma che dice cosa si salva e cosa
+ * e' roba di passaggio. */
+export const CAMPI_IN_PIU = Object.freeze([CAMPO_ESCLUSIONE, CAMPO_TIPO]);
+
+/**
+ * Porta o finestra: la parola scritta nella riga, poi la casella delle
+ * Finestre, poi la classe di Home Assistant.
+ *
+ * Un contatto scritto nella casella dell'anta di una riga delle Finestre e'
+ * una finestra perche' qualcuno l'ha detto, e vale piu' della classe. Tutto
+ * quello che Home Assistant non chiama `window` e' una porta: la porta di
+ * casa, il portone del garage, l'«opening» generico delle centrali — e chi
+ * non e' d'accordo lo scrive nella riga.
+ */
+export function tipoDelVarco({ entity, classe, tipo } = {}, finestre = null) {
+  const scritto = clean(tipo);
+  if (TIPI_DEL_VARCO.includes(scritto)) return scritto;
+  if (finestre?.has?.(clean(entity))) return "finestra";
+  return clean(classe) === "window" ? "finestra" : "porta";
+}
+
+/* Solo un contatto dice se un'anta e' aperta (#162).
+ *
+ * «Usare esclusivamente sensori di contatto (binary_sensor) per lo stato
+ * aperto/chiuso.» La scheda dei Varchi accetta anche un `cover.*` — un
+ * lucernario motorizzato — e la pagina lo mostra, ma nel conto delle porte e
+ * delle finestre aperte entra solo chi ha un sensore sull'anta: una serratura
+ * sbloccata non e' una porta aperta, e un motore su non e' un'anta aperta. */
+export function eUnContatto(entity) {
+  return clean(entity).startsWith("binary_sensor.");
+}
 
 /** Le classi che contano come varco: le stesse del rilevamento, non una copia. */
 export { CLASSI_DEL_VARCO };
@@ -227,10 +273,16 @@ export function istanteDelCambio(stato) {
  * quattro pagine leggono, e rinominarlo era un giro di parole in piu' senza
  * niente in cambio.
  */
-export function varchiDiCasa(states = {}, config, invertiti, nomeDi = (entity) => entity) {
+export function varchiDiCasa(
+  states = {},
+  config,
+  invertiti,
+  nomeDi = (entity) => entity,
+  finestre = null,
+) {
   const dichiarate = righeDichiarate(config, CAMPI_IN_PIU);
   const scelte = normalizzaVarchi(config);
-  const letta = (entity, nome, icona, esclusione) => {
+  const letta = (entity, nome, icona, esclusione, tipoScritto = "") => {
     const stato = states?.[entity];
     const classe = clean(stato?.attributes?.device_class) || "door";
     const interruttore = clean(esclusione);
@@ -239,6 +291,10 @@ export function varchiDiCasa(states = {}, config, invertiti, nomeDi = (entity) =
       name: clean(nome) || clean(nomeDi(entity)) || entity,
       classe,
       glifo: clean(icona) || disegnoDelVarco(classe),
+      /* Porta o finestra (#162), e se lo ha detto qualcuno o lo si e' dedotto:
+       * la scheda mostra la differenza, la fascia sotto il meteo usa il primo. */
+      tipo: tipoDelVarco({ entity, classe, tipo: tipoScritto }, finestre),
+      tipoScritto: TIPI_DEL_VARCO.includes(clean(tipoScritto)) ? clean(tipoScritto) : "",
       stato: comeStaIlVarco(entity, stato, invertiti),
       /* Escluso dall'antifurto, o no (#136). Sono due campi e non uno perche'
        * sono due domande diverse: `esclusione` dice se questo varco si PUO'
@@ -263,7 +319,9 @@ export function varchiDiCasa(states = {}, config, invertiti, nomeDi = (entity) =
        * mostrare, e nel conto degli aperti sarebbe un muto inventato. */
       dichiarate
         .filter((riga) => riga.entity)
-        .map((riga) => letta(riga.entity, riga.name, riga.icon, riga[CAMPO_ESCLUSIONE]))
+        .map((riga) =>
+          letta(riga.entity, riga.name, riga.icon, riga[CAMPO_ESCLUSIONE], riga[CAMPO_TIPO]),
+        )
     : Object.entries(states || {})
         .filter(([entity, stato]) => eUnVarcoDiCasa(entity, stato, config))
         .map(([entity]) => letta(entity, scelte.nomi[entity], ""));
@@ -283,7 +341,16 @@ export function contoDeiVarchi(righe = []) {
   const tutte = Array.isArray(righe) ? righe : [];
   const aperti = tutte.filter((riga) => riga?.stato === "aperto");
   const muti = tutte.filter((riga) => !clean(riga?.stato));
+  /* Le porte e le finestre aperte, separate, e solo quelle col contatto
+   * (#162). Una riga senza `tipo` — letta da chi non passa per `varchiDiCasa` —
+   * si giudica dalla sua classe, con la stessa regola. */
+  const aperteDiTipo = (quale) =>
+    aperti.filter(
+      (riga) => eUnContatto(riga.entity) && (riga.tipo || tipoDelVarco(riga)) === quale,
+    );
   return {
+    porte: aperteDiTipo("porta"),
+    finestre: aperteDiTipo("finestra"),
     aperti: aperti.length,
     chiusi: tutte.length - aperti.length - muti.length,
     muti: muti.length,

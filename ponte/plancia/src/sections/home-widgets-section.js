@@ -205,7 +205,7 @@ import { iconaPresaMarkup } from "./prese-section.js";
 import { puntiDi, quandoArrivaLoStorico } from "./storico-condiviso-section.js";
 import {
   CHIAVE_SOGLIA_CHIUSA,
-  sogliaDellaCopertura,
+  coperturaAlzata,
   coverEntries,
   contoDelleAperture,
   coverKindLabel,
@@ -225,7 +225,9 @@ import { azioniDellaPorta } from "../core/security-door-model.js";
 import { humidityEntry } from "../core/room-overview.js";
 import {
   CHIAVE_VARCHI,
+  contattiDichiaratiNelleFinestre,
   contoDeiVarchi,
+  eUnContatto,
   varchiConLeFinestre,
   varchiDiCasa,
 } from "../core/varchi-di-casa.js";
@@ -275,7 +277,6 @@ import {
   apertaSecondoVerso,
   insiemeInvertiti,
   posizioneSecondoVerso,
-  statoSecondoVerso,
   versoInvertito,
 } from "../core/verso-aperture.js";
 import { normalizeRobots, robotStateLabel, robotView } from "../core/robot-model.js";
@@ -1208,26 +1209,21 @@ function coversModel(states) {
        * al verso della plancia — 100 e ON vogliono dire aperto — cosi' quello
        * che segue non deve saperne niente. */
       const girata = versoInvertito(item);
-      /* Anche la parola, non solo la posizione (#353): la tapparella montata
-       * al contrario che la posizione non la pubblica dichiara «open» quando
-       * e' giu', e la tessera la contava fra le aperte. */
-      const raw = statoSecondoVerso(current?.state, girata);
       const position = posizioneSecondoVerso(Number(current?.attributes?.current_position), girata);
       /* Il contatto parla la sua lingua — `on` e' aperto — e non ha posizione:
        * chiederla a lui vorrebbe dire inventarla. */
       /* Dove una posizione c'e', comanda lei — e sotto la soglia di casa
        * (#298) uno spiraglio e' una tapparella chiusa: «le imposto al 10%
        * per un minimo passaggio d'aria, ma il sistema le rileva aperte». Lo
-       * stato di Home Assistant resta per chi la posizione non la dichiara. */
+       * stato di Home Assistant resta per chi la posizione non la dichiara, e
+       * si gira col verso della riga (#353). La regola sta in
+       * `coperturaAlzata`, la stessa che usa la pagina Stanze (#162). */
       const open = soloSensore
         ? apertaSecondoVerso(
             windowOpenFromState(current?.state),
             insiemeInvertiti(readJson(CHIAVE_VERSI, [])).has(entity),
           ) === true
-        : raw === "opening" ||
-          (Number.isFinite(position)
-            ? position > sogliaDellaCopertura(item, readJson(CHIAVE_SOGLIA_CHIUSA, 0))
-            : raw === "open");
+        : coperturaAlzata(item, current, readJson(CHIAVE_SOGLIA_CHIUSA, 0));
       return {
         soloSensore: Boolean(soloSensore),
         entity,
@@ -1358,6 +1354,17 @@ function coversModel(states) {
      * suo, e due conti sulla stessa cosa non possono divergere se il conto e'
      * uno. */
     open: contate,
+    /* E per la fascia sotto il meteo escono separate (#162).
+     *
+     * «“Finestre aperte” in realtà conta le tapparelle/covers aperti.» La
+     * pastiglia leggeva `open`, che e' due cose diverse a seconda della casa.
+     * Adesso le tapparelle hanno la loro pastiglia, che conta i motori su e
+     * basta, e i contatti sull'anta vanno in quella delle finestre, insieme a
+     * quelli dei Varchi. Dei contatti solo quelli veri: un `binary_sensor`. */
+    alzate,
+    contattiAperti: aperte
+      .filter((riga) => eUnContatto(riga.entity))
+      .map((riga) => ({ entity: riga.entity, name: riga.name })),
     /* E tutto quello che la tessera conta: le ante aperte con i motori su.
      * Chi apre la tessera trova l'elenco, che e' quello che il numero dice. */
     aperteEAlzate: tutte,
@@ -4105,15 +4112,24 @@ function varchiModel(states) {
    * riunione la fanno adesso anche la pagina Varchi e la sua scheda, che prima
    * non ne sapevano niente — «in configurazione nessun contatto trovato,
    * invece nella home me li mette tutti e due» (#19). */
-  const conLeFinestre = varchiConLeFinestre(
-    readJson(CHIAVE_VARCHI, {}),
-    root.getTapparelle?.() || readJson("cd_tapparelle", []),
-  );
-  const righe = varchiDiCasa(states, conLeFinestre, girati, (entity) =>
-    friendlyName(states, entity),
+  const righeDelleFinestre = root.getTapparelle?.() || readJson("cd_tapparelle", []);
+  const conLeFinestre = varchiConLeFinestre(readJson(CHIAVE_VARCHI, {}), righeDelleFinestre);
+  /* I contatti scritti nelle Finestre sono finestre anche qui (#162): chi li
+   * ha messi nella casella dell'anta l'ha gia' detto, e la classe di Home
+   * Assistant non lo smentisce. Vince solo quello che si scrive nella riga
+   * del varco. */
+  const dichiaratiFinestre = new Set(contattiDichiaratiNelleFinestre(righeDelleFinestre));
+  const righe = varchiDiCasa(
+    states,
+    conLeFinestre,
+    girati,
+    (entity) => friendlyName(states, entity),
+    dichiaratiFinestre,
   ).filter((riga) => widgetIncludes(riga.entity, fuori));
   if (!righe.length) return null;
   const conto = contoDeiVarchi(righe);
+  const perLaFascia = (elenco) =>
+    elenco.map((riga) => ({ entity: riga.entity, name: clean(riga.name) || riga.entity }));
   return {
     key: "varchi",
     accent: conto.aperti ? "#dc2626" : "#16a34a",
@@ -4128,6 +4144,12 @@ function varchiModel(states) {
     /* Gli aperti escono col modello, per la fascia sotto il meteo (#482): la
      * stessa lista che qui sotto diventa la didascalia. */
     open: conto.aperte,
+    /* E divisi fra porte e finestre, solo i contatti (#162): «“Varchi aperti”
+     * somma insieme contatti di porte e finestre». La fascia li dice in due
+     * pastiglie; la tessera resta una, perche' la domanda «cosa e' aperto in
+     * casa» ha ancora una risposta sola. */
+    porteAperte: perLaFascia(conto.porte),
+    finestreAperte: perLaFascia(conto.finestre),
     rows: righe.map((riga) => ({
       entity: riga.entity,
       name: riga.name,

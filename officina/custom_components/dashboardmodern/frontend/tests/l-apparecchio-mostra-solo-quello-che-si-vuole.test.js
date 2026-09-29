@@ -105,7 +105,10 @@ test("la scheda offre le voci da spegnere, e le salva col resto", () => {
   /* Un elenco vuoto non resta scritto: e' la stessa regola degli altri comandi
    * e delle altre letture, e senza di essa ogni apparecchio aperto una volta
    * si portava dietro un campo vuoto. */
-  assert.match(scheda, /if \(nascoste\.length\) next\[NASCOSTE_CAMPO\] = nascoste;\s*else delete next\[NASCOSTE_CAMPO\];/);
+  assert.match(
+    scheda,
+    /if \(nascoste\.length\) next\[NASCOSTE_CAMPO\] = nascoste;\s*else delete next\[NASCOSTE_CAMPO\];/,
+  );
 });
 
 test("la voce che apre i comandi si chiama come quello che fa (#513)", () => {
@@ -115,10 +118,17 @@ test("la voce che apre i comandi si chiama come quello che fa (#513)", () => {
    * stesso posto. */
   for (const percorso of [
     "src/sections/home-widgets-section.js",
-    "src/sections/come-sta-la-casa-section.js",
     "src/sections/todo-editor-section.js",
   ]) {
     const testo = sorgente(percorso);
     assert.match(testo, /t\("Apri porte", "Openers"\)/, `${percorso} non usa il nome nuovo`);
   }
+  /* Nella barra sotto il meteo la voce di quella tessera dice quello che la
+   * sua pastiglia conta — le serrature sbloccate — da quando accanto ci sono
+   * le porte e le finestre aperte dei contatti (#162): «Apri porte» vicino a
+   * «Porte» sarebbero due nomi per due cose diverse che si somigliano. */
+  assert.match(
+    sorgente("src/sections/come-sta-la-casa-section.js"),
+    /porte: t\("Serrature", "Locks"\)/,
+  );
 });

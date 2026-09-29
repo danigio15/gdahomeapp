@@ -403,6 +403,29 @@ const OGGETTI = Object.freeze({
     <path d="M8.2 8.6h4.4M8.2 12.4h4.4" stroke="#f59e0b" stroke-opacity=".5" stroke-width="1.4"
       stroke-linecap="round" fill="none"/>`,
 
+  /* La finestra aperta (#162): il telaio, il cielo dove l'anta non c'e' piu',
+   * e l'anta girata verso chi guarda.
+   *
+   * «Separare “Varchi aperti” in due chip distinti.» La porta socchiusa qui
+   * sopra resta alle porte; alle finestre serviva la sua. Sono sorelle apposta
+   * — lo stesso legno, la stessa anta che gira — perche' sulla fascia stanno
+   * una accanto all'altra e dicono la stessa cosa di due varchi diversi. Il
+   * davanzale e il vetro celeste sono quello che fa dire «finestra» anche a
+   * sedici pixel. */
+  finestra: `<defs>
+      <linearGradient id="dmoFinT" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#fbbf24"/><stop offset=".5" stop-color="#f59e0b"/>
+        <stop offset="1" stop-color="#b45309"/></linearGradient>
+      <linearGradient id="dmoFinV" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#e0f2fe"/><stop offset="1" stop-color="#7dd3fc"/></linearGradient></defs>
+    ${OMBRA(16, 28.6, 9.4)}
+    <rect x="3.6" y="4.6" width="17.4" height="21" rx="1.8" fill="url(#dmoFinT)"/>
+    <rect x="5.9" y="6.9" width="12.8" height="16.4" rx="1" fill="url(#dmoFinV)"/>
+    <path d="M8.2 20.6 11.6 9.6" stroke="#fff" stroke-opacity=".75" stroke-width="1.6" stroke-linecap="round"/>
+    <path d="M18.7 6.9 27.6 4v22.4l-8.9-2.9z" fill="url(#dmoFinT)"/>
+    <path d="M20.5 9.1 25.9 7.4v16.2l-5.4-1.7z" fill="url(#dmoFinV)"/>
+    <path d="M2.6 26.9h20.2" stroke="#94a3b8" stroke-width="1.8" stroke-linecap="round"/>`,
+
   /* La stampante: il corpo, il foglio che esce e le quattro cartucce.
    *
    * «Volevo chiedere se c'era la possibilita' del controllo delle tv e
@@ -1030,7 +1053,14 @@ export const CLASSE_DELL_OGGETTO = "dm-oggetto";
  * UN'orma e la sezione sono gli animali. Senza questa riga la tessera esce col
  * ripiego — l'emoji — accanto a venti disegni, che e' proprio la cosa che il
  * catalogo esiste per non fare. */
-const ALTRI_NOMI = Object.freeze({ porte: "aperture", animali: "animale" });
+const ALTRI_NOMI = Object.freeze({
+  porte: "aperture",
+  animali: "animale",
+  /* Le due pastiglie dei contatti (#162): le porte aperte portano la porta
+   * socchiusa che era dei Varchi, le finestre la finestra aperta. */
+  porteAperte: "varchi",
+  finestreAperte: "finestra",
+});
 
 const nomeDelDisegno = (chiave) => {
   const nome = String(chiave || "");

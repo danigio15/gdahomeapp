@@ -44,7 +44,7 @@ test("com'è adesso si dice in parole, e le parole vengono da dove stanno tutte"
    * contatto dice `on` quando è aperto. */
   assert.match(
     fonte,
-    /const SI_APRONO = new Set\(\["varchi", "porte", "finestre", "tapparelle"\]\)/,
+    /const SI_APRONO = new Set\(\["porte", "porteAperte", "finestreAperte", "tapparelle"\]\)/,
   );
   assert.match(fonte, /\{ on: "open", off: "closed" \}/);
   assert.match(fonte, /parolaDellaPorta\(comeSiApre\)/);
@@ -91,7 +91,7 @@ test("ogni tipo di pastiglia dice la sua parola", () => {
 
   /* Le cose che si aprono: al femminile, e «aperta» anche quando il sensore
    * dice «on», che è come lo dicono i contatti. */
-  for (const chiave of ["varchi", "porte", "finestre", "tapparelle"]) {
+  for (const chiave of ["porte", "porteAperte", "finestreAperte", "tapparelle"]) {
     assert.equal(prova(chiave, "binary_sensor.finestra_contact", "on"), "Aperta", chiave);
     assert.equal(prova(chiave, "binary_sensor.finestra_contact", "off"), "Chiusa", chiave);
     /* E quando l'entità la sua parola ce l'ha già, si tiene quella. */

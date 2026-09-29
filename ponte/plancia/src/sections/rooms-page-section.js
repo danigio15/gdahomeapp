@@ -43,7 +43,17 @@ import {
   roomSceneSummary,
 } from "../core/room-overview.js";
 import { CHIAVE_VERSI, apertaSecondoVerso, insiemeInvertiti } from "../core/verso-aperture.js";
-import { windowOpenFromState } from "../core/shutter-window.js";
+import { contactEntity, inferriataEntity, windowOpenFromState } from "../core/shutter-window.js";
+import { coverEntries } from "../core/cover-kind.js";
+import {
+  CHIAVE_VARCHI,
+  contattiDichiaratiNelleFinestre,
+  eUnContatto,
+  tipoDelVarco,
+  varchiConLeFinestre,
+  varchiDiCasa,
+} from "../core/varchi-di-casa.js";
+import { eUnVarco } from "../core/varchi-in-configurazione.js";
 import { nonRisponde } from "../core/chi-non-risponde.js";
 import {
   QUANTO_DURA_LA_DOMANDA,
@@ -1030,10 +1040,6 @@ const statoDi = (entity, states) => clean(states?.[clean(entity)]?.state);
 
 const SI_COMANDA_ACCESO = /^(on|playing|cleaning)$/i;
 const CLIMA_ACCESO = /^(heat|cool|auto|dry|fan_only|heat_cool)$/i;
-/* Una porta che non e' chiusa. «Aperta» per una serratura vuol dire sbloccata,
- * e per un cancello a meta' corsa vuol dire in movimento: tutte e tre sono la
- * stessa notizia — non e' chiusa — ed e' quella che si vuole da fuori. */
-const VARCO_APERTO = /^(open|opening|closing|unlocked|on)$/i;
 
 /* Quante cose di un blocco sono accese adesso. */
 function acceseNelBlocco(pagina, chiave, states, prova) {
@@ -1047,28 +1053,79 @@ function acceseNelBlocco(pagina, chiave, states, prova) {
   return quante;
 }
 
-/* Le tapparelle e le finestre aperte, col verso giusto: chi ha un contatto che
- * dice ON da chiuso l'ha gia' dichiarato una volta per tutta la plancia. */
-function varchiAperti(pagina, states, girati) {
-  return acceseNelBlocco(pagina, "coperture", states, (stato, entity) => {
-    const aperto = apertaSecondoVerso(windowOpenFromState(stato), girati.has(entity));
-    return aperto === true;
-  });
+/* Porta o finestra, per ogni contatto che i Varchi conoscono (#162): la
+ * stessa risposta che da' la fascia sotto il meteo. Si fa una volta per giro,
+ * non una per stanza. */
+function tipiDeiVarchi(states) {
+  const righeDelleFinestre = root.getTapparelle?.() || readJson("cd_tapparelle", []);
+  const tipi = new Map();
+  try {
+    for (const riga of varchiDiCasa(
+      states,
+      varchiConLeFinestre(readJson(CHIAVE_VARCHI, {}), righeDelleFinestre),
+      insiemeInvertiti(readJson(CHIAVE_VERSI, [])),
+      (entity) => entity,
+      new Set(contattiDichiaratiNelleFinestre(righeDelleFinestre)),
+    ))
+      tipi.set(riga.entity, riga.tipo);
+  } catch (_error) {}
+  return tipi;
 }
 
-/* Le porte e i cancelli di questa stanza che non sono chiusi. Non stanno in un
- * blocco loro — una porta arriva dov'e' stata assegnata — quindi si guardano
- * tutte le voci della stanza e si tengono quelle che la sezione Apri porte
- * conosce. */
-function porteAperte(pagina, states, aperture) {
-  let quante = 0;
+/* Le finestre e le porte aperte di una stanza (#162).
+ *
+ * «“Finestre aperte” in realtà conta le tapparelle/covers aperti» e «non
+ * includere mai le entità lock.*». Le pastiglie delle stanze facevano lo
+ * stesso conto della fascia sotto il meteo, con gli stessi due difetti: la
+ * voce delle Finestre si leggeva dalla sua prima entita' — la tapparella,
+ * quando c'e', e il contatto dell'anta restava fuori — e le porte erano quelle
+ * della sezione Apri porte, serrature sbloccate comprese.
+ *
+ * Adesso contano i soli contatti, porta o finestra come lo dicono i Varchi.
+ * Un contatto scritto nella casella dell'anta e' una finestra; uno che la
+ * stanza ha per assegnazione conta se e' un varco. Lo stesso contatto una
+ * volta sola.
+ *
+ * Le tapparelle su non hanno una pastiglia loro: una stanza con la luce del
+ * giorno dentro non e' una notizia («sei tapparelle tirate su sono una casa
+ * normale», #442), e nella tessera la parola della pastiglia non si vede —
+ * due finestrelle uguali con due numeri diversi non si leggerebbero. Chi
+ * entra nella stanza le trova nel loro blocco, e la fascia sotto il meteo le
+ * conta nella sua pastiglia. */
+function apertiNellaStanza(pagina, states, girati, tipi) {
+  const conti = { finestre: 0, porte: 0 };
+  const visti = new Set();
+  const contatto = (valore, dellAnta) => {
+    const entity = clean(valore);
+    if (!eUnContatto(entity) || visti.has(entity)) return;
+    const stato = states?.[entity];
+    const suo = tipi.get(entity);
+    /* Un contatto che non e' un varco — un pulsante, un rilevatore di
+     * presenza — nel conto delle porte non c'entra. */
+    if (!suo && !dellAnta && !eUnVarco(entity, stato)) return;
+    visti.add(entity);
+    if (apertaSecondoVerso(windowOpenFromState(stato?.state), girati.has(entity)) !== true)
+      return;
+    const tipo =
+      suo ||
+      (dellAnta
+        ? "finestra"
+        : tipoDelVarco({ entity, classe: clean(stato?.attributes?.device_class) || "door" }));
+    conti[tipo === "finestra" ? "finestre" : "porte"] += 1;
+  };
   for (const blocco of pagina?.blocchi || [])
-    for (const voce of blocco.voci) {
-      const entity = entitaVoce(voce);
-      if (!entity || !aperture.has(entity)) continue;
-      if (VARCO_APERTO.test(statoDi(entity, states))) quante += 1;
+    for (const voce of blocco.voci || []) {
+      if (blocco.key !== "coperture") {
+        contatto(entitaVoce(voce), false);
+        continue;
+      }
+      /* Un contatto scritto nella casella della tapparella e' un'anta senza
+       * motore: e' una finestra, e si conta come le altre. */
+      for (const { entity } of coverEntries(voce)) contatto(entity, true);
+      contatto(contactEntity(voce), true);
+      contatto(inferriataEntity(voce), true);
     }
-  return quante;
+  return conti;
 }
 
 /* Cosa non risponde, in questa stanza. E' lo stesso «non risponde» della
@@ -1094,23 +1151,24 @@ function gradiDellaStanza(pagina, states) {
 }
 
 /** Quello che una stanza ha da dire da fuori, gia' contato. */
-export function contiDellaStanza(pagina, states, aperture = aperturePerEntita()) {
+export function contiDellaStanza(pagina, states, tipi = tipiDeiVarchi(states)) {
   const girati = insiemeInvertiti(readJson(CHIAVE_VERSI, []));
+  const aperti = apertiNellaStanza(pagina, states, girati, tipi);
   return {
     luci: roomSceneSummary(pagina, states).accese,
     prese: acceseNelBlocco(pagina, "prese", states, (stato) => SI_COMANDA_ACCESO.test(stato)),
     clima: acceseNelBlocco(pagina, "clima", states, (stato) => CLIMA_ACCESO.test(stato)),
-    finestre: varchiAperti(pagina, states, girati),
-    porte: porteAperte(pagina, states, aperture),
+    finestre: aperti.finestre,
+    porte: aperti.porte,
     mute: muteNellaStanza(pagina, states),
     gradi: gradiDellaStanza(pagina, states),
   };
 }
 
 function tuttiIConti(pagine, states) {
-  const aperture = aperturePerEntita();
+  const tipi = tipiDeiVarchi(states);
   const conti = {};
-  for (const pagina of pagine) conti[pagina.id] = contiDellaStanza(pagina, states, aperture);
+  for (const pagina of pagine) conti[pagina.id] = contiDellaStanza(pagina, states, tipi);
   return conti;
 }
 

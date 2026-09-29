@@ -14,6 +14,7 @@
  */
 
 import { SOURCE_LOCALE, getLocale, pick } from "./i18n.js";
+import { posizioneSecondoVerso, statoSecondoVerso, versoInvertito } from "./verso-aperture.js";
 
 const clean = (value) =>
   String(value ?? "")
@@ -338,6 +339,25 @@ export function sogliaDellaCopertura(item, globale = 0) {
     if (Number.isFinite(valore)) return coverClosedThreshold(valore);
   }
   return coverClosedThreshold(globale);
+}
+
+/* Se una copertura conta come alzata (#162).
+ *
+ * Era una riga dentro la tessera delle Finestre, e adesso decide anche una
+ * pastiglia tutta sua sotto il meteo — «tapparelle aperte» — che dice il
+ * numero a chi esce di casa. Qui si prova senza un documento. Dove c'e' la
+ * posizione comanda lei, sopra la soglia della riga (#298): una tapparella
+ * lasciata al dieci per cento e' chiusa per chi l'ha messa cosi'. Dove non
+ * c'e', la parola, girata col verso della riga (#353). Una tapparella che sta
+ * salendo e' gia' su. */
+export function coperturaAlzata(item, stato, sogliaDiCasa = 0) {
+  const girata = versoInvertito(item);
+  const parola = statoSecondoVerso(stato?.state, girata);
+  if (parola === "opening") return true;
+  const posizione = posizioneSecondoVerso(Number(stato?.attributes?.current_position), girata);
+  return Number.isFinite(posizione)
+    ? posizione > sogliaDellaCopertura(item, sogliaDiCasa)
+    : parola === "open";
 }
 
 /** Se a questa posizione la copertura conta come chiusa; `null` senza posizione. */

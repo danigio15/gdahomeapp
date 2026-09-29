@@ -15,8 +15,10 @@ import { readFileSync } from "node:fs";
 import test from "node:test";
 
 import {
+  TINTA_APERTA,
   TINTA_POSTA,
   VOCI_DELLA_BARRA,
+  finestreAperteDellaCasa,
   normalizzaBarra,
   pastiglieDellaCasa,
 } from "../src/core/come-sta-la-casa.js";
@@ -32,20 +34,40 @@ const luci = (accese, spente = 0) => ({
   rows: Array.from({ length: accese + spente }, (_, i) => ({ name: `Luce ${i + 1}` })),
 });
 
+/* La tessera delle Finestre: la fascia legge i motori su in `alzate` (#162). */
 const tapparelle = (aperte) => ({
   key: "tapparelle",
   icon: "🪟",
   open: Array.from({ length: aperte }, (_, i) => ({ name: `Finestra ${i + 1}`, open: true })),
+  alzate: Array.from({ length: aperte }, (_, i) => ({
+    entity: `cover.tapparella_${i + 1}`,
+    name: `Tapparella ${i + 1}`,
+    open: true,
+  })),
+  contattiAperti: [],
 });
 
 /* Le due tessere dei passaggi (#482). Portano le aperture nel campo `open`,
- * come le Finestre: la fascia legge quello. */
-const varchi = (aperti, chiusi = 0) => ({
+ * come le Finestre; dalla #162 i Varchi le portano anche divise fra porte e
+ * finestre, ed e' quello che la fascia legge. */
+const varchi = (porteAperte, finestreAperte = 0, chiusi = 0) => ({
   key: "varchi",
   icon: "🚪",
-  accent: aperti ? "#dc2626" : "#16a34a",
-  open: Array.from({ length: aperti }, (_, i) => ({ name: `Varco ${i + 1}` })),
-  rows: Array.from({ length: aperti + chiusi }, (_, i) => ({ name: `Varco ${i + 1}` })),
+  accent: porteAperte + finestreAperte ? "#dc2626" : "#16a34a",
+  open: Array.from({ length: porteAperte + finestreAperte }, (_, i) => ({
+    name: `Varco ${i + 1}`,
+  })),
+  porteAperte: Array.from({ length: porteAperte }, (_, i) => ({
+    entity: `binary_sensor.porta_${i + 1}`,
+    name: `Porta ${i + 1}`,
+  })),
+  finestreAperte: Array.from({ length: finestreAperte }, (_, i) => ({
+    entity: `binary_sensor.finestra_${i + 1}`,
+    name: `Finestra ${i + 1}`,
+  })),
+  rows: Array.from({ length: porteAperte + finestreAperte + chiusi }, (_, i) => ({
+    name: `Varco ${i + 1}`,
+  })),
 });
 
 const porte = (aperte) => ({
@@ -322,7 +344,6 @@ test("la posta chiama: l'alone e lo sportello restano nel foglio", () => {
   assert.match(riposo, /\[data-dm-casa="posta"\],/, "l'alone non si ferma con lo sportello");
 });
 
-
 /* ── i varchi e le porte, che nella fascia non c'erano (#482) ─────────────── */
 
 /* «Sotto al meteo non appare l'allert dei varchi aperti. Ho finestre aperte ma
@@ -331,20 +352,32 @@ test("la posta chiama: l'alone e lo sportello restano nel foglio", () => {
  * La card era regolare davvero: la fascia queste due voci non le aveva mai
  * avute. Non c'era un conto sbagliato da correggere, c'era una pastiglia da
  * fare. */
-test("tre varchi aperti diventano una pastiglia, e i nomi finiscono nel titolo", () => {
-  const pastiglie = pastiglieDellaCasa([varchi(3, 5)], {});
-  assert.equal(pastiglie.length, 1);
-  const varco = pastiglie[0];
-  assert.equal(varco.chiave, "varchi");
-  assert.equal(varco.conto, 3);
-  assert.equal(varco.tessera, "varchi", "toccandola si apre la tessera che racconta il resto");
+/* Porte e finestre, due pastiglie (#162).
+ *
+ * «“Varchi aperti” somma insieme contatti di porte e finestre.» Era una
+ * pastiglia sola; adesso sono due, e i nomi di ognuna finiscono nel suo
+ * titolo e nel suo elenco. */
+test("due porte e una finestra aperte diventano due pastiglie, coi loro nomi", () => {
+  const pastiglie = pastiglieDellaCasa([varchi(2, 1, 5)], {});
   assert.deepEqual(
-    varco.voci.map((voce) => voce.name),
-    ["Varco 1", "Varco 2", "Varco 3"],
+    pastiglie.map((voce) => [voce.chiave, voce.conto]),
+    [
+      ["porteAperte", 2],
+      ["finestreAperte", 1],
+    ],
   );
+  const [porta, finestra] = pastiglie;
+  assert.equal(porta.tessera, "varchi", "toccandola si apre la tessera che racconta il resto");
+  assert.deepEqual(
+    porta.voci.map((voce) => voce.name),
+    ["Porta 1", "Porta 2"],
+  );
+  assert.deepEqual(finestra.voci, [{ entity: "binary_sensor.finestra_1", name: "Finestra 1" }]);
+  /* Nessuna pastiglia «varchi»: la somma di prima non c'e' piu'. */
+  assert.ok(!pastiglie.some((voce) => voce.chiave === "varchi"));
 });
 
-test("due porte aperte diventano una pastiglia", () => {
+test("due serrature sbloccate diventano una pastiglia, che non si chiama porte aperte", () => {
   const pastiglie = pastiglieDellaCasa([porte(2)], {});
   assert.equal(pastiglie.length, 1);
   assert.equal(pastiglie[0].chiave, "porte");
@@ -355,31 +388,72 @@ test("due porte aperte diventano una pastiglia", () => {
   ]);
 });
 
-test("a casa chiusa le due pastiglie non ci sono", () => {
-  assert.deepEqual(pastiglieDellaCasa([varchi(0, 8), porte(0)], {}), []);
+test("a casa chiusa le pastiglie dei passaggi non ci sono", () => {
+  assert.deepEqual(pastiglieDellaCasa([varchi(0, 0, 8), porte(0)], {}), []);
 });
 
 /* Il conto e' quello della tessera, non un secondo conto fatto qui.
  *
- * E' la regola di tutta la fascia, e per queste due vale il doppio: un
- * contatto che non risponde non e' ne' aperto ne' chiuso, e rifiltrare le
- * righe qui vorrebbe dire deciderlo una seconda volta — con l'esito che, prima
- * o poi, la fascia e la tessera dicono due numeri diversi della stessa casa. */
+ * E' la regola di tutta la fascia, e per queste vale il doppio: un contatto
+ * che non risponde non e' ne' aperto ne' chiuso, e rifiltrare le righe qui
+ * vorrebbe dire deciderlo una seconda volta — con l'esito che, prima o poi, la
+ * fascia e la tessera dicono due numeri diversi della stessa casa. */
 test("la fascia legge il campo della tessera, non le righe", () => {
-  /* Otto righe, di cui la tessera ne dichiara aperte tre: la fascia dice tre.
-   * Se contasse le righe direbbe otto. */
-  const tessera = varchi(3, 5);
+  /* Otto righe, di cui la tessera ne dichiara aperte tre: due porte e una
+   * finestra. Se la fascia contasse le righe direbbe otto. */
+  const tessera = varchi(2, 1, 5);
   assert.equal(tessera.rows.length, 8);
-  assert.equal(pastiglieDellaCasa([tessera], {})[0].conto, 3);
+  const pastiglie = pastiglieDellaCasa([tessera], {});
+  assert.equal(pastiglie[0].conto + pastiglie[1].conto, 3);
+});
+
+/* Le finestre vengono da due tessere, e si contano una volta (#162). */
+test("le finestre dei Varchi e quelle delle Finestre si sommano senza doppioni", () => {
+  const dei = varchi(1, 1);
+  const delleFinestre = {
+    ...tapparelle(0),
+    contattiAperti: [
+      /* La stessa del Varco: una volta sola. */
+      { entity: "binary_sensor.finestra_1", name: "Finestra 1" },
+      /* Una che nei Varchi non c'e': la fascia la conta lo stesso. */
+      { entity: "binary_sensor.anta_bagno", name: "Bagno · Finestra" },
+      /* E una che nei Varchi qualcuno ha chiamato porta: resta porta. */
+      { entity: "binary_sensor.porta_1", name: "Porta-finestra" },
+    ],
+  };
+  assert.deepEqual(
+    finestreAperteDellaCasa(dei, delleFinestre).map((voce) => voce.entity),
+    ["binary_sensor.finestra_1", "binary_sensor.anta_bagno"],
+  );
+  /* Senza la tessera dei Varchi la pastiglia c'e' lo stesso, e porta alle
+   * Finestre. */
+  const [sola] = pastiglieDellaCasa([delleFinestre], {});
+  assert.equal(sola.chiave, "finestreAperte");
+  assert.equal(sola.conto, 3);
+  assert.equal(sola.tessera, "tapparelle");
+  assert.equal(sola.tinta, TINTA_APERTA);
 });
 
 /* Il posto nella fila conta: un varco aperto e' una notizia, non una cosa
  * rimasta accesa. Sta dopo l'antifurto e prima delle luci. */
-test("le due voci stanno fra la sicurezza e le luci", () => {
+test("le voci dei passaggi stanno fra la sicurezza e le luci", () => {
   const chiavi = VOCI_DELLA_BARRA.map((voce) => voce.chiave);
-  assert.ok(chiavi.indexOf("sicurezza") < chiavi.indexOf("porte"));
-  assert.ok(chiavi.indexOf("porte") < chiavi.indexOf("varchi"));
-  assert.ok(chiavi.indexOf("varchi") < chiavi.indexOf("luci"));
+  assert.ok(chiavi.indexOf("sicurezza") < chiavi.indexOf("porteAperte"));
+  assert.ok(chiavi.indexOf("porteAperte") < chiavi.indexOf("finestreAperte"));
+  assert.ok(chiavi.indexOf("finestreAperte") < chiavi.indexOf("porte"));
+  assert.ok(chiavi.indexOf("porte") < chiavi.indexOf("luci"));
+  assert.ok(!chiavi.includes("varchi"), "la somma di porte e finestre non torna");
+});
+
+/* Chi aveva spento «Varchi» non voleva i contatti nella fascia: le due voci
+ * nuove nascono spente anche loro, finche' non le riaccende. */
+test("chi aveva spento i Varchi trova spente porte e finestre", () => {
+  const vecchia = normalizzaBarra({ voci: { varchi: false } });
+  assert.equal(vecchia.voci.porteAperte, false);
+  assert.equal(vecchia.voci.finestreAperte, false);
+  const riaccesa = normalizzaBarra({ voci: { varchi: false, finestreAperte: true } });
+  assert.equal(riaccesa.voci.finestreAperte, true);
+  assert.equal(normalizzaBarra({}).voci.porteAperte, true);
 });
 
 /* Le parole sono tradotte, e non si costruiscono col numero dentro.
@@ -387,19 +461,30 @@ test("le due voci stanno fra la sicurezza e le luci", () => {
  * E' la lezione della passata precedente: una frase composta con un numero
  * interpolato non entra in nessuno dei tredici cataloghi, e in italiano non si
  * nota perche' l'italiano e' la lingua sorgente. */
-test("le parole delle due voci nuove stanno nella sezione, con la loro coppia", () => {
+test("le parole delle voci dei passaggi stanno nella sezione, con la loro coppia", () => {
   const sorgente = readFileSync(
     new URL("../src/sections/come-sta-la-casa-section.js", import.meta.url),
     "utf8",
   );
   for (const coppia of [
-    ['"porta aperta", "door open"'],
-    ['"porte aperte", "doors open"'],
-    ['"varco aperto", "opening open"'],
-    ['"varchi aperti", "openings open"'],
+    '"porta aperta", "door open"',
+    '"porte aperte", "doors open"',
+    '"finestra aperta", "window open"',
+    '"finestre aperte", "windows open"',
+    '"serratura sbloccata", "lock unlocked"',
+    '"serrature sbloccate", "locks unlocked"',
+    '"tapparella aperta", "shutter open"',
+    '"tapparelle aperte", "shutters open"',
   ]) {
-    assert.ok(sorgente.includes(coppia[0]), `manca la coppia ${coppia[0]}`);
+    assert.ok(sorgente.includes(coppia), `manca la coppia ${coppia}`);
   }
+  /* «Varchi aperti» non si dice piu', e nemmeno «porte aperte» per le
+   * serrature. */
+  assert.ok(!sorgente.includes('"varchi aperti", "openings open"'));
+  assert.match(
+    sorgente,
+    /if \(chiave === "porte"\)\s*\n\s*return uno\s*\n\s*\? t\("serratura sbloccata"/,
+  );
 });
 
 test("la riga vede tutte le tessere: a spegnere una pastiglia e' la spunta della riga", () => {
@@ -421,7 +506,7 @@ test("la riga vede tutte le tessere: a spegnere una pastiglia e' la spunta della
   );
   const giro = sorgente.slice(
     sorgente.indexOf("export function renderHomeWidgets("),
-    sorgente.indexOf("const host = doc?.getElementById?.(\"dm-widgets\")"),
+    sorgente.indexOf('const host = doc?.getElementById?.("dm-widgets")'),
   );
   assert.match(giro, /disegnaComeStaLaCasa\(tutti, states\)/);
   assert.doesNotMatch(giro, /disegnaComeStaLaCasa\(models/);

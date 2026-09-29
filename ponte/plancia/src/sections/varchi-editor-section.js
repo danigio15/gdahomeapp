@@ -17,7 +17,11 @@
  */
 import {
   CAMPI_IN_PIU,
+  CAMPO_TIPO,
   CHIAVE_VARCHI,
+  contattiDichiaratiNelleFinestre,
+  eUnContatto,
+  tipoDelVarco,
   varchiConLeFinestre,
   varchiDaImportare,
   varchiDiCasa,
@@ -88,6 +92,54 @@ function righeDelleFinestre() {
   return root.getTapparelle?.() || readJson("cd_tapparelle", []);
 }
 
+/* I contatti scritti nella casella dell'anta delle Finestre: sono finestre
+ * senza bisogno di dirlo di nuovo qui (#162). */
+function dichiaratiNelleFinestre() {
+  return new Set(contattiDichiaratiNelleFinestre(righeDelleFinestre()));
+}
+
+const parolaDelTipo = (tipo) => (tipo === "finestra" ? t("Finestra", "Window") : t("Porta", "Door"));
+
+/* Porta o finestra (#162).
+ *
+ * «Sarebbe utile rendere queste etichette e le inclusioni/esclusioni
+ * configurabili dall'editor, così da gestire impianti dove i contatti
+ * porta-finestra possono avere classificazioni non uniformi.» Le inclusioni e
+ * le esclusioni ci sono gia': sono le righe di questa scheda, e la X. Mancava
+ * l'etichetta. Di serie la decide la classe che Home Assistant da' al
+ * contatto — o la casella dell'anta delle Finestre, per i contatti scritti
+ * la' — e la prima voce del menu dice cosa ne e' uscito, cosi' si corregge
+ * solo quello che e' sbagliato.
+ *
+ * Solo per i contatti: una tapparella o un lucernario motorizzato nella
+ * pagina Varchi ci stanno, ma nelle pastiglie delle porte e delle finestre
+ * aperte non entrano, e chiedergli cosa sono non cambierebbe niente. */
+function campoDelTipo(riga, indice) {
+  if (!eUnContatto(riga.entity)) return "";
+  const scritto = clean(riga[CAMPO_TIPO]);
+  const stato = allStates()?.[riga.entity];
+  const dedotto = tipoDelVarco(
+    { entity: riga.entity, classe: clean(stato?.attributes?.device_class) || "door" },
+    dichiaratiNelleFinestre(),
+  );
+  const voce = (valore, parola) =>
+    `<option value="${valore}"${scritto === valore ? " selected" : ""}>${esc(parola)}</option>`;
+  return `<label class="ed-slot dm-dich-campo"><span class="ed-slot-lbl">${esc(
+    t("Porta o finestra", "Door or window"),
+  )}</span>
+    <select class="ed-input" data-dm-dich-campo="${esc(CAMPO_TIPO)}" data-dm-dich-riga="${indice}">
+      ${voce("", `${t("Automatico", "Automatic")} · ${parolaDelTipo(dedotto)}`)}
+      ${voce("porta", t("Porta", "Door"))}
+      ${voce("finestra", t("Finestra", "Window"))}
+    </select>
+    <small>${esc(
+      t(
+        "Sotto il meteo porte e finestre aperte sono due pastiglie. Di serie lo decide la classe che Home Assistant dà al contatto; scegli qui quando non è quella giusta.",
+        "Under the weather, open doors and open windows are two pills. By default the class Home Assistant gives the contact decides; pick here when it is not the right one.",
+      ),
+    )}</small></label>`;
+}
+
 const scheda = costruisciSchedaDichiarata({
   nome: "varchi",
   chiave: CHIAVE_VARCHI,
@@ -97,16 +149,20 @@ const scheda = costruisciSchedaDichiarata({
   ridisegnaPagina: renderVarchi,
   inPiu: CAMPI_IN_PIU,
 
-  campiInPiu: campoDellEsclusione,
+  campiInPiu: (riga, indice) => `${campoDelTipo(riga, indice)}${campoDellEsclusione(riga, indice)}`,
 
-  /* L'interruttore si legge dalla casella: la scheda condivisa tiene i campi in
-   * piu' com'erano, e non sa dove questa sezione ha messo il suo. */
+  /* L'interruttore e il tipo si leggono dalle caselle: la scheda condivisa
+   * tiene i campi in piu' com'erano, e non sa dove questa sezione ha messo i
+   * suoi. */
   bozzaInPiu(bozza, body, indice) {
-    const casella = body.querySelector(
-      `[data-dm-dich-campo="${CAMPO_ESCLUSIONE}"][data-dm-dich-riga="${indice}"]`,
-    );
-    if (!casella) return bozza;
-    return { ...bozza, [CAMPO_ESCLUSIONE]: clean(casella.value) };
+    const fuori = { ...bozza };
+    for (const campo of [CAMPO_ESCLUSIONE, CAMPO_TIPO]) {
+      const casella = body.querySelector(
+        `[data-dm-dich-campo="${campo}"][data-dm-dich-riga="${indice}"]`,
+      );
+      if (casella) fuori[campo] = clean(casella.value);
+    }
+    return fuori;
   },
 
   parole: {
@@ -159,6 +215,7 @@ const scheda = costruisciSchedaDichiarata({
         { righe: elenco },
         insiemeInvertiti(readJson(CHIAVE_VERSI, {})),
         (entity) => nomeDaHomeAssistant(entity, states),
+        dichiaratiNelleFinestre(),
       ).map((riga) => [riga.entity, riga]),
     );
   },

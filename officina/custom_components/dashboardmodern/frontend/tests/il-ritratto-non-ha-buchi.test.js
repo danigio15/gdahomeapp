@@ -25,6 +25,10 @@
  * tessera lo dice giusto dalla #442 — «sei tapparelle tirate su sono una casa
  * normale, sei finestre aperte sono una casa da chiudere» — ma alla fascia
  * arrivava solo il numero, e la parola era sempre la seconda.
+ *
+ * Dalla #162 la domanda non si pone piu': la pastiglia delle tapparelle conta
+ * i soli motori su, sempre, e le ante aperte stanno nella pastiglia delle
+ * finestre. Qui resta la prova che la parola e' quella giusta.
  */
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
@@ -46,40 +50,37 @@ test("senza attività il ritratto non porta nessuna pastiglia", () => {
   assert.match(sezione, /data-activity="true" aria-hidden="true">\$\{activity\}/);
 });
 
-/* La tessera delle Finestre come la fa la Home: solo motori, tre alzati. */
-const soloTapparelle = {
+/* La tessera delle Finestre come la fa la Home: tre motori su, e un'anta
+ * aperta che non e' affar suo. */
+const conLAnta = {
   key: "tapparelle",
   icon: "🪟",
   accent: "#0ea5e9",
-  open: [
+  open: [{ entity: "binary_sensor.anta_bagno", name: "Bagno" }],
+  alzate: [
     { entity: "cover.camera", name: "Camera" },
     { entity: "cover.sala", name: "Sala" },
     { entity: "cover.studio", name: "Studio" },
   ],
-  soloMotori: true,
+  contattiAperti: [{ entity: "binary_sensor.anta_bagno", name: "Bagno" }],
+  soloMotori: false,
 };
 
-test("la fascia sa se quel numero sono motori o contatti", () => {
-  const [pastiglia] = pastiglieDellaCasa([soloTapparelle], {
-    barra: { voci: { tapparelle: true } },
+test("la pastiglia delle tapparelle conta i motori su, anche con un'anta aperta", () => {
+  const [pastiglia] = pastiglieDellaCasa([conLAnta], {
+    barra: { voci: { tapparelle: true, finestreAperte: false } },
   });
   assert.equal(pastiglia.chiave, "tapparelle");
   assert.equal(pastiglia.conto, 3);
-  assert.equal(pastiglia.soloMotori, true, "senza questo la parola resta quella sbagliata");
+  assert.deepEqual(
+    pastiglia.voci.map((voce) => voce.entity),
+    ["cover.camera", "cover.sala", "cover.studio"],
+  );
 });
 
-test("con un contatto sull'anta il conto torna a essere finestre aperte", () => {
-  const [pastiglia] = pastiglieDellaCasa([{ ...soloTapparelle, soloMotori: false }], {
-    barra: { voci: { tapparelle: true } },
-  });
-  assert.equal(pastiglia.soloMotori, false);
-});
-
-test("e la parola la scrive di conseguenza", () => {
+test("e la parola e' tapparelle aperte, sempre", () => {
   const sezione = leggi("sections/come-sta-la-casa-section.js");
-  assert.match(sezione, /if \(modello\?\.soloMotori\)/);
-  assert.match(sezione, /t\("tapparelle alzate", "shutters up"\)/);
-  assert.match(sezione, /t\("finestre aperte", "windows open"\)/);
-  /* E il modello arriva fin lì: senza, la condizione sopra non si accende mai. */
-  assert.match(sezione, /parolaDelConto\(pastiglia\.chiave, pastiglia\.conto, pastiglia\)/);
+  assert.match(sezione, /t\("tapparelle aperte", "shutters open"\)/);
+  assert.doesNotMatch(sezione, /modello\?\.soloMotori/);
+  assert.doesNotMatch(sezione, /t\("tapparelle alzate", "shutters up"\)/);
 });

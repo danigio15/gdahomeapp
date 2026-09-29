@@ -23,6 +23,30 @@ o la scena di prima senza un valore. Adesso il pezzo c'è, e una prova nuova
 controlla in tutta la plancia che ogni file abbia quello che usa: la prova di
 prima leggeva la pagina come testo, e il testo era giusto.
 
+**Sotto il meteo porte, finestre e tapparelle si dicono ognuna per sé.**
+«“Varchi aperti” somma insieme contatti di porte e finestre. “Finestre aperte”
+in realtà conta le tapparelle.» Adesso sono pastiglie diverse: «porte aperte» e
+«finestre aperte» contano solo i contatti sull'anta — i `binary_sensor` —,
+«tapparelle aperte» conta solo i motori su. E la pastiglia che diceva «porte
+aperte» contando le serrature sbloccate della tessera Apri porte adesso dice
+quello che sa: «serrature sbloccate». Una serratura sbloccata non è più una
+porta aperta, da nessuna parte. Toccando una pastiglia si apre l'elenco di
+quello che conta; tapparelle e serrature si chiudono da lì.
+
+**Porta o finestra lo dice il contatto, e lo correggi tu.** Di serie decide la
+classe che Home Assistant dà al contatto — `window` è una finestra, tutto il
+resto una porta — e un contatto scritto nella casella dell'anta delle Finestre
+è una finestra. Dove le classi non tornano, come la centrale che chiama tutto
+«opening» o il modulo che chiama porta la finestra del bagno, in Config →
+Varchi ogni contatto ha la sua scelta «Porta o finestra». Le pastiglie si
+accendono e si spengono nella scheda Home, alla voce «Barra sotto il meteo»: chi
+aveva spento «Varchi» trova spente anche «Porte» e «Finestre».
+
+**E nella pagina Stanze vale la stessa regola.** Le «finestre aperte» di una
+stanza contavano la tapparella su, e le «porte aperte» la serratura sbloccata.
+Adesso contano i contatti, porta o finestra come nei Varchi. Il catalogo dei
+disegni ha la finestra aperta.
+
 **L'ora di avvio di un ciclo la sa la casa, e adesso gliela chiediamo.** «Quando
 guardo la sezione elettrodomestici segna inizio ciclo anche se è già iniziato da
 1 ora.» Il contatore dei cicli sapeva già distinguere «l'ho visto partire» da

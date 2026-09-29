@@ -63,11 +63,20 @@ test("la pagina Finestre e la tessera in Home leggono la stessa soglia", async (
   assert.match(scena, /soglia: sogliaDellaCopertura\(item, sogliaChiusa\(\)\)/);
   assert.match(scena, /view\.position > sogliaDi\(view\) \? "open" : "closed"/);
   assert.match(scena, /!view\.moving && view\.position > sogliaDi\(view\)/);
+  /* La tessera in Home chiede la regola al nucleo (#162), che la legge per la
+   * pastiglia delle tapparelle sotto il meteo. */
   const widgets = await leggi("sections/home-widgets-section.js");
-  assert.match(widgets, /position > sogliaDellaCopertura\(item, readJson\(CHIAVE_SOGLIA_CHIUSA, 0\)\)/);
+  assert.match(widgets, /coperturaAlzata\(item, current, readJson\(CHIAVE_SOGLIA_CHIUSA, 0\)\)/);
+  const nucleo = await leggi("core/cover-kind.js");
+  assert.match(nucleo, /posizione > sogliaDellaCopertura\(item, sogliaDiCasa\)/);
   /* E dove la posizione c'e' comanda lei: lo stato «open» di Home Assistant
    * non riapre una tapparella che la soglia dice chiusa. */
-  assert.match(widgets, /Number\.isFinite\(position\)\s*\?\s*position > sogliaDellaCopertura/);
+  assert.match(nucleo, /Number\.isFinite\(posizione\)\s*\?\s*posizione > sogliaDellaCopertura/);
+  const { coperturaAlzata } = await import("../src/core/cover-kind.js");
+  const alSette = { state: "open", attributes: { current_position: 7 } };
+  assert.equal(coperturaAlzata({}, alSette, 10), false, "sotto la soglia di casa e' chiusa");
+  assert.equal(coperturaAlzata({ soglia: 5 }, alSette, 10), true, "la riga vince sulla casa");
+  assert.equal(coperturaAlzata({}, { state: "opening" }, 10), true, "chi sale e' gia' su");
   /* La riga: la sua soglia vince, vuota vale quella di casa, zero scritto e' zero. */
   assert.equal(sogliaDellaCopertura({ soglia: 15 }, 10), 15);
   assert.equal(sogliaDellaCopertura({ soglia: "" }, 10), 10);
@@ -77,7 +86,10 @@ test("la pagina Finestre e la tessera in Home leggono la stessa soglia", async (
   const scheda = await leggi("sections/shutter-window-section.js");
   assert.match(scheda, /id="ed-tp-soglia-riga"/);
   const crud = await leggi("sections/editor-crud-section.js");
-  assert.match(crud, /const soglia = sogliaScritta\(doc\.getElementById\("ed-tp-soglia-riga"\)\?\.value\);/);
+  assert.match(
+    crud,
+    /const soglia = sogliaScritta\(doc\.getElementById\("ed-tp-soglia-riga"\)\?\.value\);/,
+  );
   assert.match(crud, /soglia: clean\(doc\.getElementById\("ed-tp-soglia-riga"\)\?\.value\),/);
 });
 
