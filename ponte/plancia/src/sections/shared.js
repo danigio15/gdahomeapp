@@ -1,6 +1,7 @@
 // DM-FIX-20260812B
 import { disegnoDelCatalogo } from "../core/catalogo-disegni.js";
 import { accesoPerIlConsumo } from "../core/consumo-del-clima.js";
+import { chiaveDelValore, emojiInSegni, segnoHtml } from "../core/segni-del-catalogo.js";
 import { canonicalClimateType } from "../core/device-model.js";
 import { isCumulativeEnergyEntity } from "../core/period-service.js";
 import {
@@ -373,9 +374,8 @@ export function roomOptionsMarkup(selected = "", vuoto = "") {
     const valore = String(room?.id || room?.name || "").trim();
     if (!valore) return "";
     const attiva = [room?.id, room?.name].map((voce) => String(voce ?? "").trim()).includes(scelto);
-    const simbolo = String(room?.icon || "").trim();
-    const glifo = simbolo && !simbolo.startsWith("mdi:") ? `${esc(simbolo)} ` : "";
-    return `<option value="${esc(valore)}"${attiva ? " selected" : ""}>${glifo}${esc(room?.name || valore)}</option>`;
+    /* Un'<option> non porta disegni: l'icona della stanza qui non si scrive. */
+    return `<option value="${esc(valore)}"${attiva ? " selected" : ""}>${esc(room?.name || valore)}</option>`;
   });
   return [`<option value="">— ${esc(vuoto)} —</option>`, ...righe.filter(Boolean)].join("");
 }
@@ -1024,11 +1024,12 @@ export function comfortBadgeText(label) {
  * resolves the same token to the glyph the picker itself shows while choosing,
  * so what is picked is what is drawn. `<ha-icon>` stays as a fallback for the
  * surfaces that do resolve it, and the raw token is never printed as text. */
-export function writeIconGlyph(target, icon, { size = 26, fallback = "🔌", kind = "action" } = {}) {
+export function writeIconGlyph(target, icon, { size = 26, fallback = "socket", kind = "action" } = {}) {
   if (!target) return false;
   const token = clean(icon) || fallback;
   if (!/^mdi:/i.test(token)) {
-    if (target.textContent !== token) target.textContent = token;
+    const markup = segnoOTesto(token, size);
+    if (target.innerHTML !== markup) target.innerHTML = markup;
     return true;
   }
   /* Il motore, quando puo', scrive lui dentro il nodo: sa cosa c'e' gia' e non
@@ -1053,9 +1054,14 @@ export function writeIconGlyph(target, icon, { size = 26, fallback = "🔌", kin
  * La regola adesso sta in una funzione sola e le due facce la dividono: quella
  * che scrive nel nodo chiama questa. `esc` sul ripiego perche' un simbolo
  * scelto a mano puo' contenere qualunque cosa, e questo esce come markup. */
-export function iconGlyphHtml(icon, { size = 26, fallback = "🔌", kind = "action" } = {}) {
+function segnoOTesto(valore, size) {
+  const chiave = chiaveDelValore(valore);
+  return chiave ? segnoHtml(chiave, { misura: size }) : emojiInSegni(esc(valore), { misura: size });
+}
+
+export function iconGlyphHtml(icon, { size = 26, fallback = "socket", kind = "action" } = {}) {
   const token = clean(icon) || fallback;
-  if (!/^mdi:/i.test(token)) return esc(token);
+  if (!/^mdi:/i.test(token)) return segnoOTesto(token, size);
   try {
     const markup = root.DashboardModernIconEngine?.markup?.(kind, token, { size });
     if (markup) return markup;
@@ -1064,7 +1070,7 @@ export function iconGlyphHtml(icon, { size = 26, fallback = "🔌", kind = "acti
     const legacy = root.cdIconMarkup?.(token, size);
     if (legacy && legacy !== token) return legacy;
   } catch (_error) {}
-  return esc(fallback);
+  return segnoOTesto(fallback, size);
 }
 
 /**

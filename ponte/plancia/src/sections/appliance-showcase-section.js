@@ -59,6 +59,7 @@ import {
   wrapFunction,
 } from "./shared.js";
 import { disegnoDelCatalogo } from "../core/catalogo-disegni.js";
+import { chiaveDelValore, emojiInSegni, segnoHtml } from "../core/segni-del-catalogo.js";
 
 const KEY = "__DASHBOARDMODERN_APPLIANCE_SHOWCASE__";
 const STYLE_ID = "dm-appliance-showcase-style";
@@ -473,7 +474,7 @@ function heroMarkup(model) {
     freezer: model.freezer,
     chiave: model.id || model.name,
   });
-  return artwork || `<span class="dm-ap-hero-fallback" aria-hidden="true">🔌</span>`;
+  return artwork || `<span class="dm-ap-hero-fallback" aria-hidden="true">${segnoHtml("socket")}</span>`;
 }
 
 function heroHasImage(model) {
@@ -524,17 +525,24 @@ function portaMarkup(model) {
   )}</i>${esc(t("Porta aperta", "Door open"))}</span>`;
 }
 
+/* Il glifo della fase o del fatto arriva dal nucleo: un'emoji o una chiave
+ * diventano il disegno del catalogo, un segno di scrittura (✓, ○) resta. */
+function glifoDisegnato(glifo) {
+  const chiave = chiaveDelValore(glifo);
+  return chiave ? segnoHtml(chiave) : emojiInSegni(esc(glifo));
+}
+
 function programMarkup(model) {
   const program = model.program;
   const porta = portaMarkup(model);
   if (!program?.phase && !program?.chips?.length) return porta ? `<div class="dm-ap-program">${porta}</div>` : "";
   const fase = program.phase
-    ? `<span class="dm-ap-phase"><i aria-hidden="true">${program.phase.glifo}</i>${esc(program.phase.label)}</span>`
+    ? `<span class="dm-ap-phase"><i aria-hidden="true">${glifoDisegnato(program.phase.glifo)}</i>${esc(program.phase.label)}</span>`
     : "";
   const chips = (program.chips || [])
     .map(
       (chip) =>
-        `<span class="dm-ap-fact" data-fact="${esc(chip.key)}"><i aria-hidden="true">${chip.glifo}</i>${esc(chip.label)}</span>`,
+        `<span class="dm-ap-fact" data-fact="${esc(chip.key)}"><i aria-hidden="true">${glifoDisegnato(chip.glifo)}</i>${esc(chip.label)}</span>`,
     )
     .join("");
   return `<div class="dm-ap-program">${fase}${porta}${chips}</div>`;
@@ -957,7 +965,7 @@ function renderGrid(shell, visible, labels, schede) {
   if (!grid) return;
   if (!visible.length) {
     const message = devices().length ? labels.emptyFilter : labels.empty;
-    const markup = `<div class="dm-appl-empty">🧺 ${esc(message)}</div>`;
+    const markup = `<div class="dm-appl-empty">${segnoHtml("washer")} ${esc(message)}</div>`;
     if (grid._dmEmpty !== message) {
       grid._dmEmpty = message;
       grid.innerHTML = markup;

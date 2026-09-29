@@ -24,6 +24,7 @@ import {
   wwwListMessage,
 } from "../core/media-picker.js";
 import { clean, doc, esc, gettoneDiAccesso, installStyle, lexicalGlobal, readJson, root, t } from "./shared.js";
+import { segnoHtml } from "../core/segni-del-catalogo.js";
 
 const KEY = "__DASHBOARDMODERN_MEDIA_PICKER__";
 const state = (root[KEY] ||= { installed: false });
@@ -158,7 +159,7 @@ async function fetchSigned(url) {
 function dialogMarkup() {
   return `<section class="dm-section-dialog dm-media-dialog" role="dialog" aria-modal="true" aria-labelledby="dm-media-title">
     <header>
-      <strong id="dm-media-title">📁 ${t("Scegli la foto", "Choose the photo")}</strong>
+      <strong id="dm-media-title">${segnoHtml("list")} ${t("Scegli la foto", "Choose the photo")}</strong>
       <button type="button" data-close aria-label="${t("Chiudi", "Close")}">✕</button>
     </header>
     <form class="dm-media-body" data-body novalidate>
@@ -166,7 +167,7 @@ function dialogMarkup() {
       <div class="dm-media-list" data-list></div>
       <output class="dm-media-status" data-status></output>
       <footer>
-        <label class="ed-btn-add dm-media-upload">⬆️ ${t("Dal dispositivo", "From this device")}
+        <label class="ed-btn-add dm-media-upload">↑ ${t("Dal dispositivo", "From this device")}
           <input type="file" accept="image/*" data-upload hidden>
         </label>
         <button type="button" class="ed-btn-add" data-cancel>${t("Annulla", "Cancel")}</button>
@@ -237,7 +238,7 @@ export function pickMediaImage() {
       row.type = "button";
       row.className = "dm-media-row";
       row.dataset.mediaKind = kind;
-      const icona = kind === "image" ? "🖼️" : kind === "source" ? "🗂️" : "📁";
+      const icona = segnoHtml(kind === "image" ? "scene" : "list");
       row.innerHTML = `<span class="dm-media-icon">${icona}</span><span class="dm-media-name">${esc(testo)}</span>${kind === "image" ? "" : '<span class="dm-media-go" aria-hidden="true">›</span>'}`;
       row.addEventListener("click", apri);
       list.append(row);

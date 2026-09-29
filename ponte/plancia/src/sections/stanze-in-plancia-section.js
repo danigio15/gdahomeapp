@@ -96,7 +96,7 @@ export function stanzeScelte() {
  * parola dentro la card. Il ripiego adesso e' un simbolo, ed e' `iconGlyphHtml`
  * a sceglierlo — la stessa regola di tutta la plancia, scritta una volta. */
 function disegnoDellaStanza(icona) {
-  return iconGlyphHtml(icona, { size: 34, kind: "room", fallback: "🛋️" });
+  return iconGlyphHtml(icona, { size: 34, kind: "room", fallback: "room-living" });
 }
 
 const numero = (entity, states) => {

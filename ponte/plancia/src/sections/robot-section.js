@@ -38,6 +38,7 @@ import {
   wrapFunction,
 } from "./shared.js";
 import { disegnoDelCatalogo } from "../core/catalogo-disegni.js";
+import { segnoHtml } from "../core/segni-del-catalogo.js";
 
 const KEY = "__DASHBOARDMODERN_ROBOT__";
 const state = (root[KEY] ||= {
@@ -103,7 +104,7 @@ export function ensureRobotTab() {
   tab.id = `tab-${ROBOT_TAB}`;
   /* La voce si chiama «Robot», non «Aspirapolvere»: da quando la sezione
    * accoglie anche i tagliaerba, il nome vecchio mentirebbe a meta' dei robot. */
-  tab.innerHTML = `<span class="icon">🤖</span><span class="text">${esc(t("Robot", "Robots"))}</span>`;
+  tab.innerHTML = `<span class="icon">${segnoHtml("robot")}</span><span class="text">${esc(t("Robot", "Robots"))}</span>`;
   /* Il gestore che il runtime lega alle voci lo lega una volta sola, al
    * caricamento: questa arriva dopo, e il suo tocco se lo deve gestire da se'.
    * Fa la stessa identica cosa, perche' due modi di cambiare pagina sarebbero

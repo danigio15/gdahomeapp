@@ -44,6 +44,7 @@ import {
   wrapFunction,
   writeJsonIfChanged,
 } from "./shared.js";
+import { segnoDaValoreHtml, segnoHtml } from "../core/segni-del-catalogo.js";
 
 const KEY = "__DASHBOARDMODERN_PRESE_SECTION__";
 const state = (root[KEY] ||= { installed: false, frame: 0, firma: "" });
@@ -66,7 +67,7 @@ export const ICONA_PRESA_PREDEFINITA = "mdi:power-plug";
 export function iconaPresaMarkup(icon, size = 24) {
   const token = clean(icon);
   const emoji = directEmoji(token);
-  if (emoji) return esc(emoji);
+  if (emoji) return segnoDaValoreHtml(emoji, { misura: size, ripiego: "socket" });
   return iconGlyphMarkup("load", token || ICONA_PRESA_PREDEFINITA, { size });
 }
 
@@ -165,7 +166,7 @@ export function ensurePreseTab() {
   voce.className = "tab";
   voce.dataset.tab = PRESE_TAB;
   voce.id = `tab-${PRESE_TAB}`;
-  voce.innerHTML = `<span class="icon">🔌</span><span class="text">${esc(t("Prese", "Sockets"))}</span>`;
+  voce.innerHTML = `<span class="icon">${segnoHtml("socket")}</span><span class="text">${esc(t("Prese", "Sockets"))}</span>`;
   /* Il gestore che il runtime lega alle voci lo lega una volta sola, al
    * caricamento: questa arriva dopo, e il suo tocco se lo deve gestire da se'.
    * Fa la stessa identica cosa, perche' due modi di cambiare pagina sarebbero
@@ -303,10 +304,10 @@ function rigaMarkup(presa, indice) {
     <div class="dm-presa-icon" aria-hidden="true">${iconaPresaMarkup(presa.icon, 22)}</div>
     <div class="ed-row-main">
       <div class="ed-row-new">${esc(presa.name)}</div>
-      <div class="ed-row-old mono">${esc(presa.entity)}${stanza ? ` · 🏠 ${esc(clean(stanza.name))}` : ""}${presa.power ? ` · ⚡ ${esc(presa.power)}` : ""}</div>
+      <div class="ed-row-old mono">${esc(presa.entity)}${stanza ? ` · ${segnoHtml("home")} ${esc(clean(stanza.name))}` : ""}${presa.power ? ` · ${segnoHtml("power")} ${esc(presa.power)}` : ""}</div>
     </div>
-    <button type="button" class="ed-del" data-presa-edit title="${esc(t("Modifica", "Edit"))}">✏️</button>
-    <button type="button" class="ed-del" data-presa-del title="${esc(t("Elimina", "Delete"))}">🗑️</button>
+    <button type="button" class="ed-del" data-presa-edit title="${esc(t("Modifica", "Edit"))}">${segnoHtml("pencil")}</button>
+    <button type="button" class="ed-del" data-presa-del title="${esc(t("Elimina", "Delete"))}">${segnoHtml("trash")}</button>
   </article>`;
 }
 
@@ -328,10 +329,10 @@ export function renderPreseEditor(target) {
         ? prese.map((presa, indice) => rigaMarkup(presa, indice)).join("")
         : `<div class="ed-empty">${esc(t("Nessuna presa", "No socket"))}</div>`
     }</div>
-    <div class="ed-sec-title">${corrente ? `✏️ ${esc(t("Modifica presa", "Edit socket"))}` : `＋ ${esc(t("Aggiungi presa", "Add socket"))}`}</div>
+    <div class="ed-sec-title">${corrente ? `${segnoHtml("pencil")} ${esc(t("Modifica presa", "Edit socket"))}` : `＋ ${esc(t("Aggiungi presa", "Add socket"))}`}</div>
     <label class="ed-slot"><span class="ed-slot-lbl">${esc(t("Nome", "Name"))}</span><input id="ed-presa-name" class="ed-input" value="${esc(corrente?.name || "")}" placeholder="${esc(t("TV Salotto", "Living-room TV"))}"></label>
-    <label class="ed-slot"><span class="ed-slot-lbl">${esc(t("Entità Home Assistant", "Home Assistant entity"))}</span><span class="ed-form-row"><input id="ed-presa-ent" class="ed-input mono" value="${esc(corrente?.entity || "")}" placeholder="switch.tv_salotto" autocomplete="off" spellcheck="false"><button type="button" class="dm-entity-picker" data-presa-pick aria-label="${esc(t("Scegli entità", "Choose entity"))}">🔍</button></span></label>
-    <label class="ed-slot"><span class="ed-slot-lbl">${esc(t("Consumo (facoltativo)", "Power draw (optional)"))}</span><span class="ed-form-row"><input id="ed-presa-power" class="ed-input mono" value="${esc(corrente?.power || "")}" placeholder="sensor.tv_salotto_power" autocomplete="off" spellcheck="false"><button type="button" class="dm-entity-picker" data-presa-power-pick aria-label="${esc(t("Scegli entità", "Choose entity"))}">🔍</button></span></label>
+    <label class="ed-slot"><span class="ed-slot-lbl">${esc(t("Entità Home Assistant", "Home Assistant entity"))}</span><span class="ed-form-row"><input id="ed-presa-ent" class="ed-input mono" value="${esc(corrente?.entity || "")}" placeholder="switch.tv_salotto" autocomplete="off" spellcheck="false"><button type="button" class="dm-entity-picker" data-presa-pick aria-label="${esc(t("Scegli entità", "Choose entity"))}">${segnoHtml("search")}</button></span></label>
+    <label class="ed-slot"><span class="ed-slot-lbl">${esc(t("Consumo (facoltativo)", "Power draw (optional)"))}</span><span class="ed-form-row"><input id="ed-presa-power" class="ed-input mono" value="${esc(corrente?.power || "")}" placeholder="sensor.tv_salotto_power" autocomplete="off" spellcheck="false"><button type="button" class="dm-entity-picker" data-presa-power-pick aria-label="${esc(t("Scegli entità", "Choose entity"))}">${segnoHtml("search")}</button></span></label>
     <div class="ed-hint">${esc(
       t(
         "Il wattmetro della presa, se ce l'ha: la card scrive quanto sta consumando accanto allo stato. Senza, la card resta com'è.",
@@ -349,7 +350,7 @@ export function renderPreseEditor(target) {
       ),
     )}</small></span></label>
     <output data-presa-error class="dm-presa-error"></output>
-    <button type="button" class="ed-btn-add" data-presa-save>${corrente ? `💾 ${esc(t("Salva modifiche", "Save changes"))}` : `＋ ${esc(t("Aggiungi presa", "Add socket"))}`}</button>
+    <button type="button" class="ed-btn-add" data-presa-save>${corrente ? `${segnoHtml("check")} ${esc(t("Salva modifiche", "Save changes"))}` : `＋ ${esc(t("Aggiungi presa", "Add socket"))}`}</button>
     ${corrente ? `<button type="button" class="ed-btn-add" data-presa-cancel>${esc(t("Annulla modifica", "Cancel edit"))}</button>` : ""}
   </section>`;
   /* Il selettore scrive il token nel campo e avvisa con `change`: il bottone

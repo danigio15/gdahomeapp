@@ -1,3 +1,4 @@
+import { segnoDaValoreHtml, segnoHtml } from "../core/segni-del-catalogo.js";
 import { applianceArtwork } from "../core/appliance-artwork.js";
 import { applianceArtworkType } from "../core/appliance-card-view-model.js";
 import { reportIconForDevice } from "../core/energy-projection.js";
@@ -98,7 +99,8 @@ function paintEmptyReportIcon(row, fields) {
     }
     return;
   }
-  if (button.textContent !== token) button.textContent = token;
+  const segno = segnoDaValoreHtml(token, { ripiego: "power" });
+  if (button.innerHTML !== segno) button.innerHTML = segno;
   button.dataset.dmReportIconToken = token;
 }
 
@@ -109,14 +111,14 @@ function openReportEditor(row) {
   modal.id = "dm-report-row-editor";
   modal.className = "dm-section-modal";
   modal.innerHTML = `<section class="dm-section-dialog" role="dialog" aria-modal="true" aria-labelledby="dm-report-row-title">
-    <header><strong id="dm-report-row-title">📊 ${t("Modifica voce Report", "Edit Report entry")}</strong><button type="button" data-close aria-label="${t("Chiudi", "Close")}">✕</button></header>
+    <header><strong id="dm-report-row-title">${segnoHtml("gauge")} ${t("Modifica voce Report", "Edit Report entry")}</strong><button type="button" data-close aria-label="${t("Chiudi", "Close")}">✕</button></header>
     <form data-form>
       <label class="dm-modal-check"><input type="checkbox" name="enabled" ${fields.enabled?.checked ? "checked" : ""}> <span>${t("Mostra nel Report", "Show in Report")}</span></label>
       <label class="ed-slot"><span class="ed-slot-lbl">${t("Etichetta", "Label")}</span><input class="ed-input" name="label" value="${esc(fields.label?.value)}" required></label>
-      <label class="ed-slot"><span class="ed-slot-lbl">${t("Icona", "Icon")}</span><span class="ed-form-row"><input class="ed-input" name="icon" value="${esc(fields.icon?.value)}"><button type="button" class="dm-report-icon-btn" data-dm-report-icona aria-label="${t("Scegli icona", "Choose icon")}" title="${t("Scegli icona", "Choose icon")}">🎨</button></span></label>
-      <label class="ed-slot"><span class="ed-slot-lbl">${t("Entità totale per lo storico", "Lifetime total entity")}</span><span class="ed-form-row"><input class="ed-input mono" name="entity" value="${esc(fields.entity?.value)}"><button type="button" class="dm-entity-picker" data-pick>🔍</button></span><small>${t("Contatore cumulativo kWh per mese selezionato, mesi precedenti e anno.", "Cumulative kWh meter for selected month, previous months and year.")}</small></label>
+      <label class="ed-slot"><span class="ed-slot-lbl">${t("Icona", "Icon")}</span><span class="ed-form-row"><input class="ed-input" name="icon" value="${esc(fields.icon?.value)}"><button type="button" class="dm-report-icon-btn" data-dm-report-icona aria-label="${t("Scegli icona", "Choose icon")}" title="${t("Scegli icona", "Choose icon")}">${segnoHtml("sliders")}</button></span></label>
+      <label class="ed-slot"><span class="ed-slot-lbl">${t("Entità totale per lo storico", "Lifetime total entity")}</span><span class="ed-form-row"><input class="ed-input mono" name="entity" value="${esc(fields.entity?.value)}"><button type="button" class="dm-entity-picker" data-pick>${segnoHtml("search")}</button></span><small>${t("Contatore cumulativo kWh per mese selezionato, mesi precedenti e anno.", "Cumulative kWh meter for selected month, previous months and year.")}</small></label>
       <output data-error></output>
-      <footer><button type="button" class="ed-btn-add" data-cancel>${t("Annulla", "Cancel")}</button><button type="submit" class="ed-save-btn">💾 ${t("Salva modifiche", "Save changes")}</button></footer>
+      <footer><button type="button" class="ed-btn-add" data-cancel>${t("Annulla", "Cancel")}</button><button type="submit" class="ed-save-btn">${segnoHtml("check")} ${t("Salva modifiche", "Save changes")}</button></footer>
     </form>
   </section>`;
   doc.body.append(modal);
@@ -195,7 +197,7 @@ export function normalizeReportEditorSection() {
         const edit = doc.createElement("button");
         edit.type = "button";
         edit.dataset.dmReportEdit = "true";
-        edit.textContent = "✏️";
+        edit.innerHTML = segnoHtml("pencil");
         edit.setAttribute("aria-label", t("Modifica voce Report", "Edit Report entry"));
         fields.actions.prepend(edit);
       }

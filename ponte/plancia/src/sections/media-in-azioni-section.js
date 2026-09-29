@@ -22,6 +22,7 @@
  */
 import { allStates, clean, doc, installStyle, root, t } from "./shared.js";
 import { apriIlLettore, letturaDiUnLettore } from "./media-player-section.js";
+import { senzaEmoji } from "../core/segni-del-catalogo.js";
 
 const KEY = "__DASHBOARDMODERN_MEDIA_AZIONI__";
 const STYLE_ID = "dm-media-azioni-style";
@@ -192,7 +193,7 @@ export function ensureVoceNellaTendina() {
   if (!tendina || tendina.querySelector(`option[value="${TIPO_MEDIA}"]`)) return false;
   const voce = doc.createElement("option");
   voce.value = TIPO_MEDIA;
-  voce.textContent = `🔊 ${t("Lettore multimediale", "Media player")}`;
+  voce.textContent = t("Lettore multimediale", "Media player");
   /* Accanto a «Toggle entità»: sono la stessa famiglia — un'entità che si
    * comanda — e chi cerca l'una guarda dov'è l'altra. */
   const toggle = tendina.querySelector('option[value="toggle"]');
@@ -216,10 +217,10 @@ function insegnaLaCasella() {
       if (riga) riga.style.display = "flex";
       const aiuto = doc?.getElementById?.("ed-qa-hint");
       if (aiuto)
-        aiuto.textContent = t(
+        aiuto.textContent = senzaEmoji(t(
           "🔊 Scegli il lettore: il tasto prenderà la copertina di quello che sta suonando, e al tocco mette in pausa o fa ripartire.",
           "🔊 Pick the player: the tile takes the artwork of whatever is playing, and tapping it pauses or resumes.",
-        );
+        ));
     } catch (_error) {}
     return esito;
   };

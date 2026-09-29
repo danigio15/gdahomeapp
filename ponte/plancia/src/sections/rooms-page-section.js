@@ -23,7 +23,9 @@
  */
 import { lightCommand, lightView, lightsSignature } from "../core/light-model.js";
 import { canonicalClimateType } from "../core/device-model.js";
-import { applianceGlyph } from "../core/appliance-artwork.js";
+import { applianceArtwork, canonicalArtworkType } from "../core/appliance-artwork.js";
+import { chiaviDaProvare, disegnoDelCatalogo } from "../core/catalogo-disegni.js";
+import { segnoHtml } from "../core/segni-del-catalogo.js";
 import { CHIAVE_MEDIA, letturaDelLettore, lettoriConfigurati } from "../core/media-player.js";
 import {
   comandoDelDispositivo,
@@ -31,7 +33,7 @@ import {
   siPuoScegliere as puoScegliere,
 } from "../core/comandi-accanto.js";
 import { CHIAVE_ENTITA_MIE, entitaMie } from "../core/entita-mie.js";
-import { roomGlyph } from "../core/personalization-catalog.js";
+import { actionCatalogMatch, roomCatalogMatch } from "../core/personalization-catalog.js";
 import { normalizePeople } from "../core/person-model.js";
 import { CHIAVE_RISERVATE, telecamereVisibili } from "../core/telecamere-riservate.js";
 import {
@@ -253,18 +255,20 @@ export function assignedItems(
 
 /* Come si chiama ogni blocco, e con che faccia. Le parole stanno qui e non nel
  * modulo puro, che non sa che lingua si parla. */
+/* Il terzo campo e' la chiave del disegno nel catalogo di casa: nella pagina
+ * Stanze non si scrive nessuna emoji. */
 const BLOCK_LABELS = Object.freeze({
-  clima: ["Clima", "Climate", "❄️"],
-  luci: ["Luci", "Lights", "💡"],
-  prese: ["Prese", "Plugs", "🔌"],
-  coperture: ["Finestre", "Windows", "🪟"],
-  elettrodomestici: ["Elettrodomestici", "Appliances", "🧺"],
-  media: ["Musica", "Music", "🎵"],
-  telecamere: ["Telecamere", "Cameras", "📹"],
-  carichi: ["Carichi", "Loads", "⚡"],
-  robot: ["Aspirapolvere", "Vacuums", "🤖"],
-  irrigazione: ["Irrigazione", "Irrigation", "💧"],
-  altro: ["Altro in questa stanza", "Also in this room", "📍"],
+  clima: ["Clima", "Climate", "air-conditioner"],
+  luci: ["Luci", "Lights", "lights"],
+  prese: ["Prese", "Plugs", "socket"],
+  coperture: ["Finestre", "Windows", "shutters"],
+  elettrodomestici: ["Elettrodomestici", "Appliances", "generic"],
+  media: ["Musica", "Music", "speaker"],
+  telecamere: ["Telecamere", "Cameras", "camera"],
+  carichi: ["Carichi", "Loads", "power"],
+  robot: ["Aspirapolvere", "Vacuums", "robot"],
+  irrigazione: ["Irrigazione", "Irrigation", "irrigation"],
+  altro: ["Altro in questa stanza", "Also in this room", "info"],
 });
 
 const nomeBlocco = (blocco) => {
@@ -272,7 +276,7 @@ const nomeBlocco = (blocco) => {
   return voce ? t(voce[0], voce[1]) : blocco.key;
 };
 
-const iconaBlocco = (blocco) => BLOCK_LABELS[blocco.key]?.[2] || "•";
+const iconaBlocco = (blocco) => BLOCK_LABELS[blocco.key]?.[2] || "info";
 
 /* Il fiocco di neve non va bene per tutto quello che si chiama «clima».
  *
@@ -281,7 +285,7 @@ const iconaBlocco = (blocco) => BLOCK_LABELS[blocco.key]?.[2] || "•";
  * righe affiancate — «Soggiorno» e «Clima Soggiorno» — diventavano due fiocchi
  * di neve identici sopra due cose che non fanno la stessa cosa. Il tipo la
  * configurazione lo sa gia': lo dice la casella. */
-const ICONE_CLIMA = Object.freeze({ termo: "🔥", pompa: "♨️", clima: "❄️" });
+const ICONE_CLIMA = Object.freeze({ termo: "radiator", pompa: "heat-pump", clima: "air-conditioner" });
 
 /* E il cestello non va bene per tutto quello che si chiama «elettrodomestico».
  *
@@ -332,66 +336,66 @@ export const segnoScelto = (item) => {
  * dell'entita' — batteria, porta, movimento — e, quando la classe non c'e', il
  * dominio, che almeno distingue una serratura da un termometro. */
 const ICONE_CLASSE = Object.freeze({
-  battery: "🔋",
-  temperature: "🌡️",
-  humidity: "💧",
-  moisture: "💦",
-  illuminance: "☀️",
-  pressure: "🧭",
-  power: "⚡",
-  energy: "⚡",
-  current: "⚡",
-  voltage: "⚡",
-  gas: "🫧",
-  co: "🫧",
-  co2: "🫧",
-  pm25: "🌫️",
-  aqi: "🌫️",
-  smoke: "🔥",
-  motion: "🏃",
-  occupancy: "🏃",
-  presence: "🏃",
-  door: "🚪",
-  garage_door: "🚗",
-  window: "🪟",
-  opening: "🪟",
-  lock: "🔒",
-  sound: "🔊",
-  vibration: "📳",
-  problem: "⚠️",
-  connectivity: "📶",
-  signal_strength: "📶",
-  timestamp: "🕒",
-  running: "▶️",
-  water: "🚰",
+  battery: "battery",
+  temperature: "thermometer",
+  humidity: "water",
+  moisture: "water",
+  illuminance: "sun",
+  pressure: "gauge",
+  power: "power",
+  energy: "power",
+  current: "power",
+  voltage: "power",
+  gas: "flame",
+  co: "wind",
+  co2: "wind",
+  pm25: "wind",
+  aqi: "wind",
+  smoke: "smoke",
+  motion: "motion",
+  occupancy: "motion",
+  presence: "radar",
+  door: "door",
+  garage_door: "garage-door",
+  window: "window",
+  opening: "doorway",
+  lock: "lock",
+  sound: "speaker",
+  vibration: "bell",
+  problem: "warning",
+  connectivity: "router",
+  signal_strength: "router",
+  timestamp: "timer",
+  running: "play",
+  water: "water",
 });
 
 const ICONE_DOMINIO = Object.freeze({
-  light: "💡",
-  switch: "🔌",
-  lock: "🔒",
-  cover: "🪟",
-  climate: "❄️",
-  fan: "🌀",
-  camera: "📹",
-  media_player: "🎵",
-  vacuum: "🤖",
-  humidifier: "💧",
-  water_heater: "🚿",
-  valve: "🚰",
-  siren: "🚨",
-  alarm_control_panel: "🛡️",
-  person: "🙋",
-  device_tracker: "📡",
-  scene: "🎬",
-  script: "📜",
-  automation: "⚙️",
-  button: "🔘",
-  number: "🔢",
-  select: "📋",
-  input_boolean: "🔘",
-  binary_sensor: "🔔",
-  sensor: "📈",
+  light: "lights",
+  switch: "socket",
+  lock: "lock",
+  cover: "shutters",
+  climate: "air-conditioner",
+  fan: "fan",
+  camera: "camera",
+  media_player: "speaker",
+  vacuum: "robot",
+  humidifier: "dehumidifier",
+  water_heater: "boiler",
+  valve: "water",
+  siren: "bell",
+  alarm_control_panel: "security",
+  person: "person",
+  device_tracker: "globe",
+  scene: "scene",
+  script: "script",
+  automation: "sliders",
+  button: "play",
+  number: "sliders",
+  select: "list",
+  input_boolean: "toggle",
+  binary_sensor: "bell",
+  sensor: "gauge",
 });
 
 const lower = (valore) => clean(valore).toLowerCase();
@@ -404,32 +408,70 @@ export function glifoDellaVoce(item) {
   return ICONE_DOMINIO[dominio] || "";
 }
 
-export function iconaVoce(item, blocco) {
-  const propria = segnoScelto(item);
-  if (propria) return propria;
-  if (blocco.key === "clima") return ICONE_CLIMA[canonicalClimateType(item?.type)] || "❄️";
-  if (blocco.key === "elettrodomestici")
-    return (
-      applianceGlyph(item?.visual_key) ||
-      applianceGlyph(item?.device_type) ||
-      applianceGlyph(item?.type) ||
-      applianceGlyph(item?.name) ||
-      iconaBlocco(blocco)
-    );
-  if (blocco.key === "altro") return glifoDellaVoce(item) || iconaBlocco(blocco);
-  return iconaBlocco(blocco);
+/* Il disegno di una chiave, dal catalogo di casa: prima quello
+ * dell'elettrodomestico, se la chiave ne nomina uno, poi il resto del catalogo.
+ * Una `mdi:` o un glifo scelti a mano si traducono nella voce del catalogo che
+ * li porta; quello che il catalogo non sa disegnare torna "", e chi chiama
+ * passa alla chiave dopo. Un'emoji qui non esce mai. */
+function disegnoDellaChiave(chiave, misura) {
+  const token = clean(chiave);
+  if (!token) return "";
+  const tipo = canonicalArtworkType(token);
+  if (tipo && tipo !== "generic") return applianceArtwork(tipo, misura);
+  const diretto = disegnoDelCatalogo(token, misura);
+  if (diretto) return diretto;
+  if (tipo) return applianceArtwork(tipo, misura);
+  const voce = /^mdi:/i.test(token) || UN_GLIFO.test(token) ? actionCatalogMatch(token) : null;
+  for (const nome of chiaviDaProvare("action", token, voce)) {
+    const elettrodomestico = canonicalArtworkType(nome);
+    if (elettrodomestico) return applianceArtwork(elettrodomestico, misura);
+    const disegno = disegnoDelCatalogo(nome, misura);
+    if (disegno) return disegno;
+  }
+  return "";
 }
 
-/* Il segno di una riga, gia' pronto da mettere nel markup.
- *
- * `iconaVoce` torna una parola: un glifo — che si scrive com'e' — oppure un
- * token `mdi:`, che si disegna. Stampare un token vorrebbe dire la scritta
- * «mdi:tune» sopra il nome, ed e' lo sbaglio contro cui `iconGlyphHtml`
- * esiste. Lei la differenza la sa, e scappa con `esc` quello che non e' un
- * token: da qui esce markup, e un simbolo scelto a mano puo' contenere di
- * tutto. */
+/* Le chiavi da provare per una riga, in ordine: quello scelto a mano, il tipo
+ * che la riga dichiara, e il disegno del blocco, che c'e' sempre. */
+function chiaviDellaVoce(item, blocco) {
+  const chiavi = [clean(item?.emoji_icon), clean(item?.icon)];
+  if (blocco.key === "clima") chiavi.push(ICONE_CLIMA[canonicalClimateType(item?.type)]);
+  if (blocco.key === "elettrodomestici")
+    chiavi.push(
+      canonicalArtworkType(item?.visual_key),
+      canonicalArtworkType(item?.device_type),
+      canonicalArtworkType(item?.type),
+      canonicalArtworkType(item?.name),
+    );
+  if (blocco.key === "altro") chiavi.push(glifoDellaVoce(item));
+  chiavi.push(iconaBlocco(blocco));
+  return chiavi.filter(Boolean);
+}
+
+/* La chiave del disegno che la riga porta: la prima, fra le sue, che il
+ * catalogo sa disegnare. */
+export function iconaVoce(item, blocco) {
+  return chiaviDellaVoce(item, blocco).find((chiave) => disegnoDellaChiave(chiave, 22)) || "info";
+}
+
+/* Il segno di una riga, gia' pronto da mettere nel markup: sempre un disegno
+ * del catalogo, mai un'emoji. «Non deve esserci nulla che non sia nel nostro
+ * catalogo»: il frigorifero col cubetto di ghiaccio e il forno con la pizza
+ * stavano accanto alla scocca blu notte della sezione Elettrodomestici. */
 function segnoDaDisegnare(item, blocco) {
-  return iconGlyphHtml(iconaVoce(item, blocco), { size: 22, fallback: iconaBlocco(blocco) });
+  return disegnoDellaChiave(iconaVoce(item, blocco), 34);
+}
+
+/* Il disegno di una stanza, dal catalogo delle stanze: lo stesso che la stanza
+ * porta in Home e nel Clima. Chi non ha stanza porta il pacco. */
+function disegnoDellaStanza(pagina, misura) {
+  if (pagina?.senzaStanza) return disegnoDelCatalogo("package", misura);
+  const token = clean(pagina?.icon);
+  for (const nome of chiaviDaProvare("room", token, token ? roomCatalogMatch(token) : null)) {
+    const disegno = disegnoDelCatalogo(nome, misura);
+    if (disegno) return disegno;
+  }
+  return disegnoDelCatalogo("home", misura);
 }
 
 /* Il nome di una voce, comunque sia stata configurata: quello scelto, quello
@@ -567,7 +609,7 @@ export function ensureRoomsTab() {
    * non si distinguono al volo. Il divano e' il segno delle stanze anche in
    * Home Assistant (mdi:sofa), ed e' lo stesso che la scheda porta in
    * configurazione. */
-  tab.innerHTML = `<span class="icon">🛋️</span><span class="text">${esc(t("Stanze", "Rooms"))}</span>`;
+  tab.innerHTML = `<span class="icon">${segnoHtml("room-living")}</span><span class="text">${esc(t("Stanze", "Rooms"))}</span>`;
   /* Il gestore che il runtime lega alle voci lo lega una volta sola, al
    * caricamento: questa arriva dopo, e il suo tocco se lo deve gestire da se'. */
   tab.addEventListener("click", () => {
@@ -636,11 +678,11 @@ export function pillsMarkup(pagine, scelta) {
        * cosi' finiva nella linguetta come parola, sopra il nome. Qui si
        * traduce nel simbolo, che e' quello che il resto della plancia disegna
        * per la stessa stanza. */
-      const icona = pagina.senzaStanza ? "📦" : roomGlyph(pagina.icon) || "🏠";
+      const icona = disegnoDellaStanza(pagina, 24);
       return `<button type="button" class="sub-tab-btn dm-stanze-tab${
         pagina.id === scelta ? " active" : ""
       }" data-dm-stanza="${esc(pagina.id)}" aria-selected="${pagina.id === scelta}">
-        <span class="dm-stanze-tab-icon">${esc(icona)}</span><span>${esc(nome)}</span><small>${pagina.count}</small>
+        <span class="dm-stanze-tab-icon" aria-hidden="true">${icona}</span><span>${esc(nome)}</span><small>${pagina.count}</small>
       </button>`;
     })
     .join("")}</nav>`;
@@ -663,9 +705,9 @@ export function sceneMarkup(pagina, states) {
       <small>${esc(quante)}</small>
     </div>
     <div class="dm-stanze-scena-btns">
-      <button type="button" data-dm-stanza-scena="on">💡 ${esc(t("Accendi tutto", "Turn everything on"))}</button>
+      <button type="button" data-dm-stanza-scena="on"><span class="dm-stanze-scena-ic" aria-hidden="true">${disegnoDelCatalogo("lights", 20)}</span> ${esc(t("Accendi tutto", "Turn everything on"))}</button>
       <span class="dm-stanze-scena-div" aria-hidden="true"></span>
-      <button type="button" data-dm-stanza-scena="off">🌙 ${esc(t("Spegni tutto", "Turn everything off"))}</button>
+      <button type="button" data-dm-stanza-scena="off"><span class="dm-stanze-scena-ic" aria-hidden="true">${disegnoDelCatalogo("moon", 20)}</span> ${esc(t("Spegni tutto", "Turn everything off"))}</button>
     </div>
   </section>`;
 }
@@ -710,7 +752,7 @@ export function readingMarkup(pagina, states) {
         associazioni.length > 1 ? clean(voce.name) || clean(pagina.name) : clean(pagina.name) || clean(voce.name);
       return `<article class="dm-stanze-card dm-stanze-clima">
     <div class="dm-stanze-card-row">
-      <span class="dm-stanze-orb">🌡️</span>
+      <span class="dm-stanze-orb">${disegnoDelCatalogo("thermometer", 34)}</span>
       <span class="dm-stanze-title"><b>${esc(titolo)}</b><s>${esc(t("Sensori della stanza", "Room sensors"))}</s></span>
     </div>
     <div class="dm-stanze-readings">
@@ -829,7 +871,7 @@ function rowMarkup(item, blocco, states, aperture = aperturePerEntita(), sotto =
       <span class="dm-stanze-title"><b>${esc(clean(porta.name) || nomeVoce(item, states))}</b><s>${esc(
         porta.pin ? `${parola} — ${t("chiede il PIN", "asks for the PIN")}` : parola,
       )}</s></span>
-      <span class="dm-stanze-vai" aria-hidden="true">${porta.pin ? "🔒" : "›"}</span>
+      <span class="dm-stanze-vai" aria-hidden="true">${porta.pin ? disegnoDelCatalogo("lock", 22) : "›"}</span>
     </div>
   </article>`;
   }
@@ -1204,7 +1246,7 @@ function pastigliaMarkup(pastiglia) {
       ? `${Math.round(pastiglia.valore)}°`
       : String(pastiglia.conto);
   const parola = paroleDellaPastiglia(pastiglia);
-  const dentro = `<i aria-hidden="true">${esc(pastiglia.icona)}</i><b>${esc(testo)}</b>
+  const dentro = `${segnoHtml(pastiglia.icona, { misura: 16 })}<b>${esc(testo)}</b>
       <span class="dm-stanze-pill-voce">${esc(parola)}</span>`;
   const comuni = `class="dm-stanze-pill" data-dm-stanza-pill="${esc(pastiglia.chiave)}"
       data-dm-comanda="${esc(pastiglia.comanda)}"`;
@@ -1278,11 +1320,11 @@ function veloDellaTessera(pagina, conti) {
 
 function tesseraDellaStanza(pagina, conti) {
   const nome = pagina.senzaStanza ? t("Senza stanza", "No room") : pagina.name;
-  const icona = pagina.senzaStanza ? "📦" : roomGlyph(pagina.icon) || "🏠";
+  const icona = disegnoDellaStanza(pagina, 40);
   const pastiglie = pastiglieDellaStanza(conti).map(pastigliaMarkup).join("");
   return `<article class="dm-stanze-tessera" data-dm-stanza="${esc(pagina.id)}" role="button" tabindex="0"
       aria-label="${esc(nome)}">
-      <span class="dm-stanze-tessera-ic" aria-hidden="true">${esc(icona)}</span>
+      <span class="dm-stanze-tessera-ic" aria-hidden="true">${icona}</span>
       <strong class="dm-stanze-tessera-nome">${esc(nome)}</strong>
       ${pastiglie ? `<span class="dm-stanze-pills">${pastiglie}</span>` : ""}
       ${veloDellaTessera(pagina, conti)}
@@ -1303,9 +1345,9 @@ function gruppoMarkup(gruppo, conti, segni = {}) {
   const nome = gruppo.piano || t("Senza piano", "No floor");
   /* Ogni piano col SUO segno. Le stanze che un piano non ce l'hanno non ne
    * portano nessuno: un segno inventato le farebbe sembrare un piano. */
-  const segno = gruppo.piano ? `${segnoDelPiano(segni, gruppo.piano)} ` : "";
+  const segno = gruppo.piano ? `${segnoHtml(segnoDelPiano(segni, gruppo.piano), { misura: 18 })} ` : "";
   const testa = gruppo.intitolare
-    ? `<h2 class="dm-stanze-piano"><span>${esc(segno)}${esc(nome)}</span><small>${esc(riassunto)}</small></h2>`
+    ? `<h2 class="dm-stanze-piano"><span>${segno}${esc(nome)}</span><small>${esc(riassunto)}</small></h2>`
     : "";
   return `${testa}<div class="dm-stanze-indice-griglia">${gruppo.stanze
     .map((pagina) => tesseraDellaStanza(pagina, conti[pagina.id] || {}))

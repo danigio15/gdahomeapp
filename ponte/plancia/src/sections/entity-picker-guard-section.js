@@ -1,5 +1,6 @@
 import { decorateEntityFields } from "./editor-slots-section.js";
 import { LENTE_SELECTOR, attributoSeCambia, classeSeCambia, clean, doc, installStyle, root, wrapFunction } from "./shared.js";
+import { segnoHtml } from "../core/segni-del-catalogo.js";
 
 const KEY = "__DASHBOARDMODERN_ENTITY_PICKER_GUARD__";
 const state = (root[KEY] ||= { installed: false, frame: 0, subscribed: false });
@@ -155,7 +156,7 @@ function mountOne(input) {
     button = doc.createElement("button");
     button.type = "button";
     button.className = "dm-entity-picker";
-    button.textContent = "🔍";
+    button.innerHTML = segnoHtml("search");
     button.dataset.dmPersistentPicker = "true";
     button.addEventListener("click", (event) => {
       event.preventDefault();

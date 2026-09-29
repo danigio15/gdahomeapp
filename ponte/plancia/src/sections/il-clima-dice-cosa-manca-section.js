@@ -89,7 +89,7 @@ function avvisa(quale) {
   try {
     campo(dove)?.focus?.();
   } catch (_errore) {}
-  if (typeof root.edToast === "function") root.edToast(`⚠️ ${detto}`);
+  if (typeof root.edToast === "function") root.edToast(detto);
   else root.alert?.(detto);
 }
 

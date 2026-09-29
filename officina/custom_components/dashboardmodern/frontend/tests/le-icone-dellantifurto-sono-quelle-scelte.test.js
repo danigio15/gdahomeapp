@@ -135,7 +135,7 @@ test("il guscio disegna il tondo, e scrive l'emoji solo se non c'è disegno", ()
     const guscio = leggi(nome);
     assert.match(guscio, /disegnoDelTondo = dmAlarmOrbMarkup\(chiaveDelTondo\)/, nome);
     assert.match(guscio, /if \(disegnoDelTondo\) alIconEl\.innerHTML = disegnoDelTondo;/, nome);
-    assert.match(guscio, /else alIconEl\.textContent = icon;/, nome);
+    assert.match(guscio, /else alIconEl\.innerHTML = icon;/, nome);
     /* E la chiave è quella giusta: allarme scattato prima di tutto, poi il
      * tasto scritto a mano acceso, poi lo stato della centrale. */
     assert.match(guscio, /let chiaveDelTondo = alarmTriggered \? 'triggered' : alarmState;/, nome);

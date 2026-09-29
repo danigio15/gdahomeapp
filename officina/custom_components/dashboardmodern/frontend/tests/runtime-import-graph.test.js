@@ -1499,8 +1499,12 @@ test("production graph is single-owner, acyclic and contains no facade pass-thro
   // 412 e 413 coi gruppi delle azioni rapide (#139): il nucleo
   // `core/gruppi-delle-azioni.js` e `sections/azioni-rapide-gruppi-section.js`,
   // che mette i titoli nel vassoio della Home e la casella nel Config.
+  // 414 e 415 coi segni del catalogo al posto delle emoji: il nucleo
+  // `core/segni-del-catalogo.js`, che traduce una chiave o un'emoji nel
+  // disegno, e `sections/segni-del-catalogo-section.js`, il foglio che
+  // dipinge i segnaposti del guscio.
   assert.ok(
-    relative.length <= 413,
+    relative.length <= 415,
     `production graph unexpectedly grew to ${relative.length} modules`,
   );
   assertAcyclic(edges);

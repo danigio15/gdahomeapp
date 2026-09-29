@@ -10,6 +10,7 @@
  * poi bypass, estate, filtri e le ventole. Ogni casella e' un'entita' e basta:
  * la macchina la comanda gia' l'integrazione, qui si dice solo dove guardare.
  */
+import { segnoHtml } from "../core/segni-del-catalogo.js";
 import {
   CAMPI_VMC,
   CHIAVE_VMC,
@@ -128,12 +129,12 @@ function esempio(chiave) {
 function campoMarkup(unita, indice, chiave) {
   const id = `dm-vmc-${indice}-${chiave}`;
   return `<label class="ed-slot dm-vmc-ed-campo"><span class="ed-slot-lbl">${esc(etichetta(chiave))}</span>
-    <span class="ed-form-row"><input id="${esc(id)}" class="ed-input mono" data-dm-vmc-campo="${esc(chiave)}" value="${esc(unita[chiave])}" placeholder="${esc(esempio(chiave))}" autocomplete="off" spellcheck="false"><button type="button" class="dm-entity-picker" data-dm-vmc-pick="${esc(id)}" aria-label="${esc(t("Scegli entità", "Choose entity"))}">🔍</button></span></label>`;
+    <span class="ed-form-row"><input id="${esc(id)}" class="ed-input mono" data-dm-vmc-campo="${esc(chiave)}" value="${esc(unita[chiave])}" placeholder="${esc(esempio(chiave))}" autocomplete="off" spellcheck="false"><button type="button" class="dm-entity-picker" data-dm-vmc-pick="${esc(id)}" aria-label="${esc(t("Scegli entità", "Choose entity"))}">${segnoHtml("search")}</button></span></label>`;
 }
 
-function fasciaMarkup(unita, indice, titolo, chiavi) {
+function fasciaMarkup(unita, indice, titolo, chiavi, segno = "") {
   return `<div class="dm-vmc-ed-fascia">
-    <span class="dm-vmc-ed-fascia-lbl">${esc(titolo)}</span>
+    <span class="dm-vmc-ed-fascia-lbl">${segno ? `${segnoHtml(segno)} ` : ""}${esc(titolo)}</span>
     ${chiavi.map((chiave) => campoMarkup(unita, indice, chiave)).join("")}
   </div>`;
 }
@@ -141,21 +142,21 @@ function fasciaMarkup(unita, indice, titolo, chiavi) {
 function unitaMarkup(unita, indice) {
   return `<article class="ed-row dm-vmc-ed-unita" data-dm-vmc-unita="${esc(unita.id)}">
     <div class="dm-vmc-ed-testa">
-      <span aria-hidden="true">🔄</span>
+      <span aria-hidden="true">${segnoHtml("refresh")}</span>
       <input class="ed-input" data-dm-vmc-campo="nome" value="${esc(unita.nome)}" placeholder="${esc(t("Nome (es. Comfoair)", "Name (e.g. Comfoair)"))}">
-      <button type="button" class="ed-del" data-dm-vmc-togli="${esc(unita.id)}" title="${esc(t("Togli", "Remove"))}" aria-label="${esc(t("Togli", "Remove"))}">🗑️</button>
+      <button type="button" class="ed-del" data-dm-vmc-togli="${esc(unita.id)}" title="${esc(t("Togli", "Remove"))}" aria-label="${esc(t("Togli", "Remove"))}">${segnoHtml("trash")}</button>
     </div>
-    ${fasciaMarkup(unita, indice, t("🌡️ Le quattro temperature", "🌡️ The four temperatures"), TEMPERATURE.map((voce) => voce.chiave))}
-    ${fasciaMarkup(unita, indice, t("🔀 Come sta lavorando", "🔀 How it is working"), INTERRUTTORI.map((voce) => voce.chiave))}
-    ${fasciaMarkup(unita, indice, t("🌀 Ventole e livelli", "🌀 Fans and levels"), NUMERI.map((voce) => voce.chiave))}
-    ${fasciaMarkup(unita, indice, t("🎛️ La macchina", "🎛️ The machine"), ["clima"])}
+    ${fasciaMarkup(unita, indice, t("Le quattro temperature", "The four temperatures"), TEMPERATURE.map((voce) => voce.chiave), "thermometer")}
+    ${fasciaMarkup(unita, indice, t("Come sta lavorando", "How it is working"), INTERRUTTORI.map((voce) => voce.chiave), "refresh")}
+    ${fasciaMarkup(unita, indice, t("Ventole e livelli", "Fans and levels"), NUMERI.map((voce) => voce.chiave), "fan")}
+    ${fasciaMarkup(unita, indice, t("La macchina", "The machine"), ["clima"], "sliders")}
   </article>`;
 }
 
 function corpoMarkup() {
   const elenco = configurate();
   const piene = elenco.length >= MASSIMO_VMC;
-  return `<div class="ed-sec-title">🔄 ${esc(t("Ventilazione meccanica", "Mechanical ventilation"))}</div>
+  return `<div class="ed-sec-title">${segnoHtml("refresh")} ${esc(t("Ventilazione meccanica", "Mechanical ventilation"))}</div>
   <div class="ed-intro">${esc(
     t(
       "Le quattro temperature di una VMC dicono da sole se la macchina sta lavorando: l'aria entra da fuori, si scalda con quella che esce, e la differenza fra le due è il recupero. La pagina del Clima le mostra incrociate come i due flussi, con il bypass, la stagione e i filtri.",
@@ -165,7 +166,7 @@ function corpoMarkup() {
   <div class="ed-list dm-vmc-ed-lista">
     ${elenco.map(unitaMarkup).join("")}
     <button type="button" class="ed-btn-add" data-dm-vmc-aggiungi${piene ? " disabled" : ""}>＋ ${esc(t("Aggiungi una VMC", "Add a ventilation unit"))}</button>
-    <button type="button" class="ed-save-btn" data-dm-vmc-salva>💾 ${esc(t("Salva ventilazione", "Save ventilation"))}</button>
+    <button type="button" class="ed-save-btn" data-dm-vmc-salva>${segnoHtml("check")} ${esc(t("Salva ventilazione", "Save ventilation"))}</button>
   </div>`;
 }
 

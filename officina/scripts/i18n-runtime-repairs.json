@@ -1,6 +1,5 @@
 {
   "_comment": "The vendored English runtime was translated by find-and-replace and the pass was never finished: 'Potenza' became 'Power' and the rest of the sentence stayed Italian. Each broken string here is mapped onto the English it should have had. The correct English becomes the catalog key, and both the Italian build and the broken English build map onto it — so English is repaired by the same mechanism that serves every other language. Regenerated files must not be edited instead: the runtime is vendored and comes back on the next sync.",
-
   "Antifurto · Total": "Alarm · Total",
   "Apri l'accordion Rooms per modificare": "Open the Rooms accordion to edit",
   "Cameras e allarme": "Cameras and alarm",
@@ -32,9 +31,9 @@
   "\"Room - Dettaglio\"": "\"Room - Detail\"",
   "Room name (es. Salone)": "Room name (e.g. Living room)",
   "Sezione Energy": "Energy section",
-  "⚙️ Configurazione → Configure Entities → 📑 Sections": "⚙️ Configuration → Configure Entities → 📑 Sections",
-  "❌ History non disponibile": "❌ History unavailable",
-  "📊 Aggiungi i tuoi dispositivi da ⚙️ → Configure Entities → Carichi → \"Report Analisi — voci\"": "📊 Add your devices from ⚙️ → Configure Entities → Loads → \"Analysis Report — entries\"",
-  "(entità cover). Compaiono nella pagina 🪟 Windows, raggruppate per piano e stanza.": "(cover entities). They appear on the 🪟 Windows page, grouped by floor and room.",
-  "(optional): solo questo utente HA vedrà la pagina ⚙️ Configurazione. Lascia vuoto per mostrarla a tutti.": "(optional): only this HA user will see the ⚙️ Configuration page. Leave it empty to show it to everyone."
+  "Configurazione → Configure Entities → Sections": "Configuration → Configure Entities → Sections",
+  "History non disponibile": "History unavailable",
+  "Aggiungi i tuoi dispositivi da → Configure Entities → Carichi → \"Report Analisi — voci\"": "Add your devices from → Configure Entities → Loads → \"Analysis Report — entries\"",
+  "(entità cover). Compaiono nella pagina Windows, raggruppate per piano e stanza.": "(cover entities). They appear on the Windows page, grouped by floor and room.",
+  "(optional): solo questo utente HA vedrà la pagina Configurazione. Lascia vuoto per mostrarla a tutti.": "(optional): only this HA user will see the Configuration page. Leave it empty to show it to everyone."
 }
