@@ -190,10 +190,19 @@ class Collegamento {
   ///
   /// Chi lo chiama aspetta un po' prima (`main.dart`): un'app che si guarda
   /// per due secondi e torna non deve rifare la strada da capo.
+  ///
+  /// **Si chiude il filo, non la plancia.** Dove sta la plancia di questa casa
+  /// si sapeva prima e si sa anche adesso: la casa e' la stessa. Prima qui si
+  /// dimenticava, e chi disegna, non sapendo piu' dove fosse, al ritorno
+  /// buttava via la pagina e scriveva «Cerco la plancia…» — e la pagina si
+  /// rifaceva da capo, moduli compresi, a ogni ritorno dopo mezzo minuto in
+  /// tasca. Da fuori casa era la plancia intera che ripassava dal centralino.
+  /// Adesso la pagina resta dov'e', e il suo WebSocket si ricollega da se'
+  /// quando il filo torna, come fa gia' a ogni caduta.
   Future<void> riposa() async {
     if (!_avviato || _filo == null || _aRiposo) return;
     _aRiposo = true;
-    await _chiudiIlFilo();
+    await _chiudiIlFilo(tieniLaPlancia: true);
     _vai(ComeVa.inCammino);
   }
 
@@ -256,9 +265,18 @@ class Collegamento {
         _casa!.id == archivio.attiva?.id) {
       return;
     }
-    await _chiudiIlFilo();
+    await _chiudiIlFilo(tieniLaPlancia: true);
 
     final casa = archivio.attiva;
+    /* La plancia si dimentica solo cambiando casa.
+     *
+     * Rifare il filo della **stessa** casa — al risveglio, tirando giu' per
+     * aggiornare, dopo aver imparato la strada corta — non cambia dove sta la
+     * sua plancia: la si rilegge appena il filo e' su, e se e' la stessa la
+     * pagina non si tocca. Dimenticarla vorrebbe dire far buttare via a chi
+     * disegna una pagina che funziona, per riaprirla uguale un secondo dopo.
+     * Un'altra casa invece ha un'altra plancia, e quella di prima non e' sua. */
+    if (casa?.id != _casa?.id) _dimenticaLaPlancia();
     _casa = casa;
     _daDove = null;
     _perche = null;
@@ -600,19 +618,34 @@ class Collegamento {
     /* Senza Premium si apre solo la principale: quella ricordata resta
      * scritta, e torna appena la casa lo diventa. */
     final voluto = profilo ?? (licenza.premium ? _casa?.plancia : null) ?? '';
+    PannelloDellaPlancia? trovato;
+    var nessunaPerMe = false;
     try {
-      _pannello = await trovaLaPlancia(filo, profilo: voluto);
-      _nessunaPerMe = false;
+      trovato = await trovaLaPlancia(filo, profilo: voluto);
     } on NessunaPlanciaPerTe {
       /* Le plance ci sono, ma non per questa utenza. Non si cerca altrove e
        * non si apre niente: la schermata lo scrive. */
-      _pannello = null;
-      _nessunaPerMe = true;
+      nessunaPerMe = true;
+    } on FiloCaduto {
+      /* Il filo e' caduto mentre si chiedeva: la casa non ha detto niente, e
+       * «niente» non vuol dire «la plancia non c'e'». Se si sapeva gia' dove
+       * stava, si tiene quello, e la pagina resta: si richiede quando il filo
+       * torna su. Se non si sapeva, si dice quello che si e' sempre detto. */
+      if (_pannelloLetto) return;
     } on ErroreDelPonte {
-      _pannello = null;
-      _nessunaPerMe = false;
+      /* Un altro no: si segna che si e' chiesto, e la schermata dice quello
+       * che sa. */
     }
+    /* Una risposta arrivata su un filo che non c'e' piu' non vale.
+     *
+     * Prima si scriveva lo stesso, e bastava: la plancia si dimenticava a ogni
+     * filo chiuso, e quello che restava scritto non lo guardava nessuno.
+     * Adesso fra un filo e l'altro della stessa casa la plancia resta — e una
+     * risposta vecchia, magari un «il filo e' caduto» di quello chiuso andando
+     * a riposo, cancellerebbe una plancia buona. */
     if (_filo != filo) return;
+    _pannello = trovato;
+    _nessunaPerMe = nessunaPerMe;
     _pannelloLetto = true;
     _avvisa();
   }
@@ -707,19 +740,25 @@ class Collegamento {
     _avvisa();
   }
 
-  Future<void> _chiudiIlFilo() async {
+  /// Chiude il filo. Con [tieniLaPlancia] si tiene quello che si sapeva della
+  /// plancia di questa casa: vedi [riposa] e [apri].
+  Future<void> _chiudiIlFilo({bool tieniLaPlancia = false}) async {
     await _guardaIlFilo?.cancel();
     await _guardaLaCasa?.cancel();
     _guardaIlFilo = null;
     _guardaLaCasa = null;
     await _stato?.stacca();
     _stato = null;
-    _pannello = null;
-    _pannelloLetto = false;
-    _nessunaPerMe = false;
+    if (!tieniLaPlancia) _dimenticaLaPlancia();
     await _filo?.chiudi();
     _filo = null;
     _daDove = null;
+  }
+
+  void _dimenticaLaPlancia() {
+    _pannello = null;
+    _pannelloLetto = false;
+    _nessunaPerMe = false;
   }
 
   Future<void> chiudi() async {
