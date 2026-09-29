@@ -1503,8 +1503,16 @@ test("production graph is single-owner, acyclic and contains no facade pass-thro
   // `core/segni-del-catalogo.js`, che traduce una chiave o un'emoji nel
   // disegno, e `sections/segni-del-catalogo-section.js`, il foglio che
   // dipinge i segnaposti del guscio.
+  // 416, 417, 418 e 419 con le batterie di accumulo (#117): il nucleo
+  // `core/l-accumulo-di-casa.js` coi nomi dei BMS, la carica pesata e il
+  // delta delle celle, le parole e il disegno `sections/accumulo-section.js`
+  // — che la Home chiede per la tessera —, `sections/accumulo-in-energia-
+  // section.js`, che monta la linguetta dentro Energia e per farlo legge la
+  // Home, e la scheda `sections/accumulo-editor-section.js`. Le parole stanno
+  // staccate dal montaggio perché la Home le chiede e il montaggio chiede la
+  // Home: insieme sarebbero un giro.
   assert.ok(
-    relative.length <= 415,
+    relative.length <= 419,
     `production graph unexpectedly grew to ${relative.length} modules`,
   );
   assertAcyclic(edges);

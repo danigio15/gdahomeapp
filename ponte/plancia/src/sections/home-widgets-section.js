@@ -198,6 +198,11 @@ import { parolaAvviso, testoLettura } from "./animali-section.js";
 import { EVENTO_CONTATORI, tesseraDeiContatori, vistaDeiContatori } from "./contatori-section.js";
 import { EVENTO_PIANTE, tesseraDellePiante, vistaDellePiante } from "./piante-section.js";
 import { EVENTO_ACQUARIO, tesseraDellAcquario, vistaDellAcquario } from "./acquario-section.js";
+import {
+  EVENTO_APRI_ACCUMULO,
+  tesseraDellAccumulo,
+  vistaDellAccumulo,
+} from "./accumulo-section.js";
 import { disegnoDelBidone } from "../core/disegni-rifiuti.js";
 import { CHIAVE_VMC, entitaDellaVmc, letturaVmc, vmcDisegnabili, vmcParla } from "../core/vmc-model.js";
 import { avvisiAppenaAccesi } from "../core/avvisi-che-si-aprono.js";
@@ -5576,6 +5581,22 @@ function acquarioModel(states) {
   return tessera && { ...tessera, key: "acquario" };
 }
 
+/* Le batterie di accumulo (#117): la carica di tutti i pacchi insieme, e la
+ * richiesta d'attenzione quando un pacco ha le celle da bilanciare. Le parole
+ * le fa la sezione; qui si toglie quello che l'interruttore «nel widget» ha
+ * spento, e si passano le letture di casa, che dicono da dove arriva la
+ * carica. */
+function accumuloModel(states) {
+  const fuori = widgetExcludedEntities("accumulo");
+  const tessera = tesseraDellAccumulo(
+    vistaDellAccumulo(states, {
+      dentro: (entity) => widgetIncludes(entity, fuori),
+      casa: lettureDiCasa(states),
+    }),
+  );
+  return tessera && { ...tessera, key: "accumulo" };
+}
+
 /* La ventilazione meccanica (#371).
  *
  * La tessera dice la cosa che si guarda passando: a che temperatura sta
@@ -5669,6 +5690,7 @@ export function modelliDelleTessere(states) {
       stampantiModel(states),
       camerasModel(states),
       ...energyModels(states),
+      accumuloModel(states),
       appliancesModel(states),
       temperatureModel(states),
       evModel(states),
@@ -7844,6 +7866,10 @@ const SEZIONE_DEL_WIDGET = Object.freeze({
   piante: "piante",
   /* E l'acquario (#127). */
   acquario: "acquario",
+  /* Le batterie di accumulo (#117) stanno dentro Energia, nella loro
+   * linguetta: il tasto porta alla pagina, e la linguetta la apre chi la
+   * monta, che ascolta la richiesta mandata qui sotto. */
+  accumulo: "energy",
   /* La ventilazione vive nella pagina del Clima: la tessera ci porta li'. */
   vmc: "clima",
   media: "media",
@@ -8970,6 +8996,11 @@ function onClick(event) {
       root.dispatchEvent?.(
         new CustomEvent("dashboardmodern:energy-plant-requested", { detail: { plant: impianto } }),
       );
+    /* L'accumulo non ha una pagina sua: sta nella linguetta «Batterie» di
+     * Energia, e la richiesta arriva prima del tocco sulla voce perché chi la
+     * apre aspetti la pagina accesa. */
+    if (clean(sezione.dataset.dmWSezione) === "accumulo")
+      root.dispatchEvent?.(new CustomEvent(EVENTO_APRI_ACCUMULO));
     chiudiPopup();
     voce?.click();
     return;

@@ -168,6 +168,8 @@ import { installPiante } from "./piante-section.js";
 import { installPianteEditor } from "./piante-editor-section.js";
 import { installAcquario } from "./acquario-section.js";
 import { installAcquarioEditor } from "./acquario-editor-section.js";
+import { installAccumuloInEnergia } from "./accumulo-in-energia-section.js";
+import { installAccumuloEditor } from "./accumulo-editor-section.js";
 import { installMacchine } from "./macchine-e-rete-section.js";
 import { installMacchineEditor } from "./macchine-editor-section.js";
 import { installNodiSection } from "./nodi-section.js";
@@ -1171,6 +1173,10 @@ export function installSectionRuntime() {
     /* L'acquario (#127): la pagina e la sua scheda, nello stesso ordine. */
     installAcquario();
     installAcquarioEditor();
+    /* Le batterie di accumulo (#117): la linguetta dentro Energia e la sua
+     * scheda, nello stesso ordine. */
+    installAccumuloInEnergia();
+    installAccumuloEditor();
     installMacchine();
     installMacchineEditor();
     installNodiSection();
@@ -1305,6 +1311,8 @@ export function installSectionRuntime() {
         "piante-editor",
         "acquario",
         "acquario-editor",
+        "accumulo",
+        "accumulo-editor",
         "macchine-e-rete",
         "macchine-editor",
       ]),
