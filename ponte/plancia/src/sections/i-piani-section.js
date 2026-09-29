@@ -60,6 +60,7 @@ import {
   installStyle,
   readJson,
   root,
+  scriviSeCambia,
   section,
   t,
   tieniIlBloccoNellaScheda,
@@ -404,7 +405,7 @@ export function disegnaIPiani() {
     segnoAperto: state.segnoAperto,
     errore: state.errore,
   });
-  if (pannello.innerHTML !== markup) pannello.innerHTML = markup;
+  riscriviTenendoLaCasella(pannello, markup);
   /* Sempre subito dopo la riga che spiega la scheda: il piano e' il
    * contenitore, la stanza e' quello che ci va dentro. */
   const intro = corpo.querySelector(".ed-intro");
@@ -422,6 +423,31 @@ export function disegnaIPiani() {
     }
   }
   return true;
+}
+
+/* Il pannello non si confronta con `innerHTML`: il browser lo rilegge a modo
+ * suo — `data-dm-piano-nome` torna `data-dm-piano-nome=""` — e il paragone non
+ * tornava mai. Si riscriveva a ogni tocco, e la casella appena toccata veniva
+ * sostituita da una nuova senza fuoco: non si riusciva a scrivere il nome del
+ * piano (#170). `scriviSeCambia` confronta con quello che abbiamo scritto noi.
+ *
+ * Quando riscrivere serve davvero — il messaggio «si chiama già così» — la
+ * casella del piano nuovo tiene quello che c'era scritto e il fuoco: ribattere
+ * tutto per correggere una lettera non e' una risposta. */
+function riscriviTenendoLaCasella(pannello, markup) {
+  const prima = pannello.querySelector("[data-dm-piano-nome]");
+  const scritto = prima?.value || "";
+  const aFuoco = !!prima && doc.activeElement === prima;
+  const inizio = aFuoco ? prima.selectionStart : null;
+  const fine = aFuoco ? prima.selectionEnd : null;
+  if (!scriviSeCambia(pannello, markup)) return;
+  const dopo = pannello.querySelector("[data-dm-piano-nome]");
+  if (!dopo) return;
+  if (scritto) dopo.value = scritto;
+  if (aFuoco) {
+    dopo.focus();
+    if (inizio !== null) dopo.setSelectionRange?.(inizio, fine);
+  }
 }
 
 /* ── i tocchi ────────────────────────────────────────────────────────────── */

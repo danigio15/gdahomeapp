@@ -249,6 +249,11 @@ function repairClimateRoomHeadings() {
         return;
       }
 
+      /* La scheda di oggi e' del Clima nuovo, coi suoi titoli: qui non e' un
+       * titolo niente di quello che disegna. Una card con la modalita' «In
+       * casa» ha il 🏠 nella pastiglia, e scambiata per titolo spariva dal
+       * telefono (#168). */
+      if (node.matches?.(".dm-cl-card,.dm-cl-room,.dm-cl-floor,[data-dm-cl]")) return;
       const text = clean(node.textContent);
       if (!text.includes("🏠")) return;
       const roomReference = clean(text.split("🏠").pop());
