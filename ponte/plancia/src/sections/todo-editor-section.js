@@ -156,6 +156,9 @@ function catalogoTessere() {
      * sotto — quella conta le pile dei sensori. Compare quando la sua scheda
      * ha un pacco. */
     ["accumulo", "battery", t("Accumulo", "Battery storage")],
+    /* La cottura (#71): la friggitrice che cuoce, e per un po' quella che ha
+     * finito. Compare da sola quando c'e' qualcosa sul fuoco. */
+    ["cottura", "air-fryer", t("Cottura", "Cooking")],
     ["batterie", "battery", t("Batterie", "Batteries")],
     ["allagamenti", "water", t("Allagamenti", "Floods")],
     /* Fumo e gas (#328): compare da sola coi rilevatori di casa, come gli

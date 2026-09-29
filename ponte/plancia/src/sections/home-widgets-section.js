@@ -203,6 +203,13 @@ import {
   tesseraDellAccumulo,
   vistaDellAccumulo,
 } from "./accumulo-section.js";
+import {
+  EVENTO_COTTURA,
+  TESSERA_COTTURA,
+  ceLaCucina,
+  tesseraDellaCottura,
+  vistaDellaCucina,
+} from "./cottura-section.js";
 import { disegnoDelBidone } from "../core/disegni-rifiuti.js";
 import { CHIAVE_VMC, entitaDellaVmc, letturaVmc, vmcDisegnabili, vmcParla } from "../core/vmc-model.js";
 import { avvisiAppenaAccesi } from "../core/avvisi-che-si-aprono.js";
@@ -5603,6 +5610,22 @@ function accumuloModel(states) {
   return tessera && { ...tessera, key: "accumulo" };
 }
 
+/* La cottura (#71): la friggitrice che cuoce, e per un po' quella che ha
+ * finito. Le parole le fa la sezione; qui si toglie quello che l'interruttore
+ * «nel widget» ha spento — se e' spenta l'entita' dello stato, la tessera non
+ * c'e'. */
+function cotturaModel(states) {
+  if (!ceLaCucina()) return null;
+  const vista = vistaDellaCucina(states);
+  const tessera = tesseraDellaCottura(vista);
+  if (!tessera) return null;
+  const fuori = widgetExcludedEntities("elettrodomestici");
+  const prima = vista.prima?.apparecchio || {};
+  const stato = clean(prima.cottura_stato || prima.state_entity);
+  if (stato && !widgetIncludes(stato, fuori)) return null;
+  return tessera;
+}
+
 /* La ventilazione meccanica (#371).
  *
  * La tessera dice la cosa che si guarda passando: a che temperatura sta
@@ -5698,6 +5721,7 @@ export function modelliDelleTessere(states) {
       ...energyModels(states),
       accumuloModel(states),
       appliancesModel(states),
+      cotturaModel(states),
       temperatureModel(states),
       evModel(states),
       robotsModel(states),
@@ -7055,6 +7079,8 @@ function pilloleDelloStato(widget) {
  * acceso/spento restano alle pillole, i comandi restano comandi. */
 const CHIAVI_A_CARTE = new Set([
   "evidenza",
+  /* La cottura (#71): il programma, i gradi, quanto manca. */
+  "cottura",
   "scaldabagno",
   "caldaia",
   "ups",
@@ -7852,6 +7878,8 @@ const SEZIONE_DEL_WIDGET = Object.freeze({
   macchine: "server",
   energia: "energy",
   elettrodomestici: "appliances-main",
+  /* La cottura (#71) vive dentro gli Elettrodomestici, sulla sua voce. */
+  cottura: "appliances-main",
   temperatura: "temp",
   ev: "ev",
   solare: "boiler",
@@ -8103,8 +8131,14 @@ function structureSignature(models) {
  * una finestra aperta. Chi sta guardando qualcos'altro ha gia' scelto cosa
  * guardare, e sovrapporsi non sarebbe avvisarlo: sarebbe interromperlo. */
 function apriGliAvvisiAppenaAccesi(models) {
+  /* Con gli avvisi personalizzati c'e' la fine della cottura (#71): la
+   * tessera si accende «pronta» una volta, quando succede, come un avviso. */
   const accesi = models
-    .filter((widget) => String(widget?.key || "").startsWith("custom-"))
+    .filter(
+      (widget) =>
+        String(widget?.key || "").startsWith("custom-") ||
+        (widget?.key === TESSERA_COTTURA && widget.avviso),
+    )
     .map((widget) => widget.key);
   const passo = avvisiAppenaAccesi(state.avvisiVisti ?? null, accesi);
   /* Niente da aprire, o la funzione e' spenta: si prende nota e si va avanti.
@@ -9007,6 +9041,9 @@ function onClick(event) {
      * apre aspetti la pagina accesa. */
     if (clean(sezione.dataset.dmWSezione) === "accumulo")
       root.dispatchEvent?.(new CustomEvent(EVENTO_APRI_ACCUMULO));
+    /* La cottura apre gli Elettrodomestici sulla Cottura, non su Panoramica. */
+    if (sezione.dataset.dmWSezione === TESSERA_COTTURA)
+      root.dispatchEvent?.(new CustomEvent(EVENTO_COTTURA));
     chiudiPopup();
     voce?.click();
     return;
@@ -9223,6 +9260,17 @@ function onClick(event) {
   const tile = event.target?.closest?.("#dm-widgets [data-dm-widget]");
   if (tile) {
     event.preventDefault();
+    /* La tessera della cottura (#71) porta dritta alla Cottura: quello che la
+     * finestra direbbe — quanto manca, a che gradi — la tessera lo dice gia',
+     * e quello che si vuole a quel punto sono i tasti. */
+    if (tile.dataset.dmWidget === TESSERA_COTTURA) {
+      const voce = voceDellaSezione(TESSERA_COTTURA);
+      if (voce) {
+        root.dispatchEvent?.(new CustomEvent(EVENTO_COTTURA));
+        voce.click();
+        return;
+      }
+    }
     toggleExpand(tile.dataset.dmWidget);
   }
 }

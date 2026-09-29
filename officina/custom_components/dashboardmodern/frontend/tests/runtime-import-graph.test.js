@@ -1515,8 +1515,12 @@ test("production graph is single-owner, acyclic and contains no facade pass-thro
   // `core/la-stanza-a-tessere.js`, con l'ordine delle tessere, quali sono
   // larghe, il clima della testata e a che punto e' una tapparella. La tavola
   // la disegna la pagina Stanze, che c'era gia'.
+  // 421 e 422 con la cottura (#71): il nucleo `core/la-cottura.js` — le fasi,
+  // i tempi in qualunque forma, i comandi che ci sono davvero e le caselle
+  // delle due friggitrici Philips — e `sections/cottura-section.js`, la voce
+  // «Cottura» dentro gli Elettrodomestici e la sua tessera in Home.
   assert.ok(
-    relative.length <= 420,
+    relative.length <= 422,
     `production graph unexpectedly grew to ${relative.length} modules`,
   );
   assertAcyclic(edges);
@@ -1613,6 +1617,14 @@ test("production graph is single-owner, acyclic and contains no facade pass-thro
    * questa sezione non fa proprio niente — sta zitto mentre la pagina non si
    * vede, e manda solo quando la firma di quello che c'e' da dire cambia.
    *
+   * Il tredicesimo e' il conto alla rovescia della Cottura (#71). La
+   * friggitrice dice quanti secondi mancano quando li misura, e poi tace: il
+   * tempo che passa non lo spinge nessuno, e senza un battito l'anello resta
+   * fermo su una cottura che sta andando. Un secondo, e la stessa disciplina
+   * degli altri: parte solo se la voce Cottura e' quella in scena e qualcosa
+   * sta cuocendo, tocca solo i numeri che cambiano, e si ferma da solo appena
+   * una delle due cose smette di essere vera.
+   *
    * These are the intervals production is allowed, and they are named here so
    * another one cannot arrive unnoticed. */
   const intervals = [...graph.entries()].filter(([, source]) =>
@@ -1622,6 +1634,7 @@ test("production graph is single-owner, acyclic and contains no facade pass-thro
     intervals.map(([file]) => path.relative(frontendRoot, file).replaceAll("\\", "/")).sort(),
     [
       "src/sections/assistenza-section.js",
+      "src/sections/cottura-section.js",
       "src/sections/english-runtime-strings-section.js",
       "src/sections/home-widgets-section.js",
       "src/sections/il-guscio-disegna-quando-serve-section.js",
