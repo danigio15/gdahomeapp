@@ -8,6 +8,7 @@ import { Centralino } from "./centralino.js";
 import { numeroDa } from "./freno.js";
 import { Contatti, Postino } from "./posta.js";
 import { apriIlRegistro } from "./registro.js";
+import { Ricevute } from "./ricevute.js";
 import { costruisciIlServer } from "./server.js";
 import { Sportello } from "./sportello.js";
 import { versioneMinimaDa } from "./versioni.js";
@@ -145,6 +146,7 @@ export async function alzaIlCentralino({
     sportello,
     chat,
     contatti,
+    ricevute: new Ricevute({ centralino, registro }),
     registro,
     dove: { sito: ilSito, app: lApp },
     versioneMinima: minima,

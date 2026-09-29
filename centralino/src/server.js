@@ -7,6 +7,7 @@
  *   GET  /versioni                    da quale numero in su un'app si puo' usare (`versioni.js`)
  *   GET  /console/                    la console della chat, e le sue vie
  *   POST /contatto                    il modulo «Contatti» del sito, che Caddy passa qui
+ *   POST /licenza/<casa_…>           la ricevuta di chi compra fuori casa (`ricevute.js`)
  *   WS   /casa/<casa_…>              una casa che chiama fuori
  *   WS   /telefono/<casa_…>?da=app    un telefono che va alla sua casa
  *   WS   /abbinamento/<impronta>      un telefono che si sta abbinando
@@ -148,6 +149,9 @@ export function costruisciIlServer({
   /* Il modulo dei contatti del sito, e la posta con cui spedisce. Senza, la
    * via risponde lo stesso e dice che non e' configurata. */
   contatti = null,
+  /* La porta delle ricevute di chi compra fuori casa (`ricevute.js`). Senza,
+   * la via non c'e'. */
+  ricevute = null,
   registro = null,
   acceso = Date.now(),
   /* Come si chiamano il sito e l'app di questo centralino, per la soglia.
@@ -253,6 +257,7 @@ export function costruisciIlServer({
       if (chat && (await chat.forseServe(richiesta, risposta, indirizzo))) return;
       if (sportello && (await sportello.forseServe(richiesta, risposta, via))) return;
       if (contatti && (await contatti.forseServe(richiesta, risposta, via))) return;
+      if (ricevute && (await ricevute.forseServe(richiesta, risposta, via))) return;
       json(risposta, { errore: "qui non c'e' niente" }, 404);
     })().catch((errore) => {
       registro?.errore?.(`una porta e' inciampata: ${errore?.stack || errore}`);

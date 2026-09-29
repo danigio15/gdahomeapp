@@ -59,6 +59,19 @@
  * e' Premium fino a…», e il centralino la verifica da se' con la chiave
  * pubblica. Non gli fa vedere niente di quello che passa sul filo. Con le
  * licenze spente — la chiave vuota — non parte niente.
+ *
+ * Con le licenze accese il gettone va anche **dentro la presentazione**, pure
+ * vuoto: cosi' il centralino sa dal primo istante che questa casa le licenze
+ * le conosce, e a un telefono che bussa in quel millisecondo non dice
+ * «aggiorna l'add-on» per sbaglio.
+ *
+ * ─── La ricevuta di chi compra fuori casa ─────────────────────────────────
+ *
+ * Il centralino puo' girare qui una ricevuta del negozio, consegnata a lui da
+ * un telefono che fuori casa non ha un filo — `{t: "ricevuta", n, corpo}` — e
+ * aspetta la risposta sullo stesso filo, `{t: "ricevuta", n, stato, corpo}`.
+ * Chi la controlla e la porta al quadro e' `ricevuta-da-fuori.js`, attaccato
+ * da `index.js` in `alRicevere`.
  */
 
 import { Canale } from "./canale.js";
@@ -135,6 +148,8 @@ export class Chiamata {
     /* L'ultimo gettone da dire al centralino. `null` vuol dire «licenze
      * spente»: non si manda niente, e il filo e' quello di sempre. */
     this._licenza = null;
+    /* Chi risponde alle ricevute girate dal centralino: `index.js`. */
+    this.alRicevere = null;
   }
 
   /* La casa ha un gettone nuovo (o non ne ha piu': stringa vuota). Si dice
@@ -210,6 +225,8 @@ export class Chiamata {
         t: "sono-io",
         casa: this.identita.casa,
         segreto: this.identita.segreto,
+        /* Con le licenze accese, anche vuoto: vedi in cima. */
+        ...(this._licenza === null ? {} : { gettone: this._licenza }),
       });
     });
 
@@ -283,6 +300,11 @@ export class Chiamata {
       return;
     }
 
+    if (detto.t === "ricevuta") {
+      void this._laRicevuta(detto);
+      return;
+    }
+
     const numero = detto.c;
     if (typeof numero !== "number") return;
 
@@ -320,6 +342,24 @@ export class Chiamata {
       default:
         return;
     }
+  }
+
+  /* ─── La ricevuta di chi compra fuori casa ──────────────────────────── */
+
+  /* Chi risponde e' `alRicevere(corpo)`, che torna `{stato, corpo}`. Senza di
+   * lui — licenze spente — si dice che qui non si sa farlo. Un suo errore non
+   * butta giu' il filo: diventa un 500, e il telefono riprova. */
+  async _laRicevuta(detto) {
+    let risposta;
+    try {
+      risposta = this.alRicevere
+        ? await this.alRicevere(detto.corpo)
+        : { stato: 501, corpo: { errore: "licenze-spente" } };
+    } catch (errore) {
+      this.registro.errore(`una ricevuta da fuori: ${errore?.message || errore}`);
+      risposta = { stato: 500, corpo: { errore: "ponte" } };
+    }
+    this._manda({ t: "ricevuta", n: detto.n, stato: risposta.stato, corpo: risposta.corpo });
   }
 
   /* ─── Il battito ─────────────────────────────────────────────────────── */

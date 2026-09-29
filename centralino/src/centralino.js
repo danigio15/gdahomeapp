@@ -33,7 +33,13 @@
  * "…"}` sul suo filo; il centralino lo verifica con la chiave pubblica di
  * `chiave-licenze.js` e si ricorda fino a quando vale. Un telefono che bussa a
  * `/telefono/<casa>` di una casa senza un gettone gdahome valido si chiude con
- * `4402` e `premium-richiesto`.
+ * `4402` e `premium-richiesto` — o con `4426` e `aggiorna-add-on`, se la casa
+ * la licenza non l'ha mai detta: il suo add-on e' di prima, e li' Premium non
+ * si puo' nemmeno comprare.
+ *
+ * Chi compra Premium fuori casa ha la casa chiusa proprio da qui: la sua
+ * ricevuta la porta `POST /licenza/<casa>` (`portaLaRicevuta`), che la gira
+ * alla casa sul suo filo e aspetta la risposta.
  *
  * Non cambia niente di quello che il centralino vede: il gettone e' una firma
  * del quadro, non un segreto, e i messaggi restano byte che si spostano.
@@ -100,6 +106,22 @@ const DATI_NON_ACCETTATI = 1003;
  * applicazioni, e 4402 ricorda il 402 di HTTP, «serve pagare». */
 export const PREMIUM_RICHIESTO = Object.freeze({ codice: 4402, motivo: "premium-richiesto" });
 
+/* Il telefono di una casa col suo add-on di prima delle licenze. Non serve
+ * pagare, serve aggiornare: quella casa una licenza non la puo' tenere, e una
+ * ricevuta non avrebbe dove arrivare. 4426 ricorda il 426 di HTTP, «Upgrade
+ * Required». L'app lo riconosce, dice di aggiornare l'add-on in Home
+ * Assistant, e a quella casa non vende niente. */
+export const ADDON_DA_AGGIORNARE = Object.freeze({ codice: 4426, motivo: "aggiorna-add-on" });
+
+/* Quanto aspetta una ricevuta la risposta della casa. La casa la porta al
+ * quadro, e il quadro la chiede ad Apple o a Google: di solito due secondi,
+ * con un negozio lento anche venti. */
+export const ATTESA_DELLA_RICEVUTA = 60_000;
+
+/* Quante ricevute insieme per una casa. Una famiglia che compra non ne manda
+ * piu' di una; il tetto e' per chi bussa a ripetizione. */
+const RICEVUTE_IN_VOLO = 3;
+
 /* Ogni quanto il centralino manda un colpetto alle case, per accorgersi di
  * quelle che se ne sono andate senza dire niente — una casa dietro un router
  * che si riavvia non chiude un bel niente, resta li' aperta e muta. */
@@ -119,6 +141,7 @@ export class Centralino {
     /* La chiave con cui si verificano i gettoni delle licenze. Vuota vuol
      * dire controllo spento. Si passa solo nelle prove. */
     chiaveLicenze = CHIAVE_PUBBLICA_LICENZE,
+    attesaDellaRicevuta = ATTESA_DELLA_RICEVUTA,
   } = {}) {
     this.case = case_;
     this.chiaveLicenze = String(chiaveLicenze || "");
@@ -137,6 +160,7 @@ export class Centralino {
     this.preseInTutto = preseInTutto;
     this.presePerIndirizzo = presePerIndirizzo;
     this.codaMassima = codaMassima;
+    this.attesaDellaRicevuta = attesaDellaRicevuta;
 
     /** Quanti fili aperti, in tutto e per indirizzo. */
     this.prese = 0;
@@ -328,9 +352,14 @@ export class Centralino {
     }
     /* Da fuori casa si entra con gdahome Premium. Dopo «casa non
      * collegata», e non prima: una casa che non c'e' non c'e', Premium o no,
-     * e il telefono deve riprovare fra poco invece di arrendersi. */
+     * e il telefono deve riprovare fra poco invece di arrendersi.
+     *
+     * E il no dice quale dei due: la casa col suo add-on nuovo ha bisogno di
+     * Premium, quella con l'add-on di prima ha bisogno di aggiornarlo — li'
+     * Premium non si puo' nemmeno comprare. */
     if (!this.ePremium(idDellaCasa)) {
-      presa.chiudi(PREMIUM_RICHIESTO.codice, PREMIUM_RICHIESTO.motivo);
+      const no = casa.dicelaLicenza ? PREMIUM_RICHIESTO : ADDON_DA_AGGIORNARE;
+      presa.chiudi(no.codice, no.motivo);
       return null;
     }
     return casa.apriUnCanale(presa, da, this._sorvegliaIlTelefono(presa), "telefono", che);
@@ -370,6 +399,29 @@ export class Centralino {
     this.premiumFino.delete(casa.id);
     casa.chiudiITelefoni(PREMIUM_RICHIESTO.codice, PREMIUM_RICHIESTO.motivo);
     return false;
+  }
+
+  /* ─── La ricevuta di chi compra fuori casa ────────────────────────────── */
+
+  /* Una ricevuta del negozio, portata alla casa sul suo filo.
+   *
+   * Chi compra Premium fuori casa lo compra proprio perche' da fuori la sua
+   * casa non si apre: il telefono non ha un canale su cui mandare la ricevuta.
+   * La consegna qui (`POST /licenza/<casa>`, vedi `ricevute.js`), e il
+   * centralino la gira alla casa cosi' com'e' e aspetta la risposta. Dentro
+   * non guarda: la ricevuta e' firmata dal telefono con la chiave del filo,
+   * che conoscono solo lui e la casa, e la firma la controlla la casa. Poi la
+   * casa la porta al quadro, e se il quadro dice si' ha un gettone nuovo: lo
+   * dice qui come sempre, e la sua risposta torna al telefono.
+   *
+   * Torna sempre `{stato, corpo}`, da scrivere cosi' com'e' nella risposta. */
+  async portaLaRicevuta(idDellaCasa, corpo) {
+    const casa = this.collegate.get(idDellaCasa);
+    if (!casa) return { stato: 503, corpo: { errore: "casa-non-collegata" } };
+    /* Un add-on di prima non saprebbe cosa farne: non la si manda, e si dice
+     * subito quello che serve, invece di aspettare un minuto per niente. */
+    if (!casa.dicelaLicenza) return { stato: 426, corpo: { errore: ADDON_DA_AGGIORNARE.motivo } };
+    return casa.chiediLaRicevuta(corpo);
   }
 
   /* Un telefono che si sta abbinando non sa ancora a quale casa va: sa solo il
@@ -429,6 +481,9 @@ class CasaCollegata {
      * Premium»: e' «il suo add-on sa che le licenze esistono». Vedi
      * `quantePronteAllaLicenza`. */
     this.dicelaLicenza = false;
+    /* Le ricevute girate alla casa che aspettano la sua risposta, per numero. */
+    this._ricevute = new Map();
+    this._prossimaRicevuta = 1;
   }
 
   get entrata() {
@@ -494,6 +549,9 @@ class CasaCollegata {
       case "licenza":
         this.centralino.laLicenzaDi(this, detto.gettone);
         return;
+      case "ricevuta":
+        this._laRispostaAllaRicevuta(detto);
+        return;
       default:
         /* Il contratto chiama il campo `tipo`: una casa scritta leggendo solo
          * quello manda `tipo` e basta, e va capita lo stesso. */
@@ -537,10 +595,13 @@ class CasaCollegata {
 
     this.id = detto.casa;
     this.centralino.collegate.set(this.id, this);
-    /* Il gettone puo' arrivare anche dentro la presentazione. Non e'
-     * obbligatorio — il ponte lo manda subito dopo, a parte — e se non c'e'
-     * non si dimentica quello di prima: la casa lo ridice appena entrata. */
-    if (typeof detto.gettone === "string" && detto.gettone) {
+    /* Il gettone puo' arrivare anche dentro la presentazione, e l'add-on
+     * nuovo ce lo mette sempre, anche vuoto: cosi' da qui si sa fin dal primo
+     * istante che quella casa le licenze le conosce, e un telefono che bussa
+     * nel millisecondo prima del messaggio a parte non si sente dire
+     * «aggiorna l'add-on» per sbaglio. Se non c'e' affatto, non si dimentica
+     * quello di prima: la casa lo ridice appena entrata. */
+    if (typeof detto.gettone === "string") {
       this.centralino.laLicenzaDi(this, detto.gettone);
     }
     this._manda(JSON.stringify({ t: "bene" }));
@@ -594,6 +655,54 @@ class CasaCollegata {
     for (const [impronta, attesa] of [...this.centralino.abbinamenti]) {
       if (attesa.casa === this.id) this.centralino.abbinamenti.delete(impronta);
     }
+  }
+
+  /* ─── Le ricevute ────────────────────────────────────────────────────── */
+
+  /* Gira alla casa una ricevuta e aspetta la sua risposta: `{stato, corpo}`.
+   * Non si aspetta per sempre, e non piu' di qualcuna insieme. */
+  chiediLaRicevuta(corpo) {
+    if (this.chiusa)
+      return Promise.resolve({ stato: 503, corpo: { errore: "casa-non-collegata" } });
+    if (this._ricevute.size >= RICEVUTE_IN_VOLO)
+      return Promise.resolve({ stato: 429, corpo: { errore: "troppe-ricevute" } });
+    const n = this._prossimaRicevuta++;
+    return new Promise((fatto) => {
+      const scade = setTimeout(() => {
+        this._ricevute.delete(n);
+        fatto({ stato: 504, corpo: { errore: "la-casa-non-risponde" } });
+      }, this.centralino.attesaDellaRicevuta);
+      scade.unref?.();
+      this._ricevute.set(n, { fatto, scade });
+      this._manda(JSON.stringify({ t: "ricevuta", n, corpo }));
+    });
+  }
+
+  /* La risposta della casa: lo stato come in HTTP, e il corpo cosi' com'e'.
+   * Uno stato storto diventa 502 — la casa ha risposto qualcosa che non si
+   * capisce — e un corpo che non e' un oggetto diventa vuoto. */
+  _laRispostaAllaRicevuta(detto) {
+    const attesa = this._ricevute.get(detto.n);
+    if (!attesa) return;
+    this._ricevute.delete(detto.n);
+    clearTimeout(attesa.scade);
+    const stato =
+      Number.isInteger(detto.stato) && detto.stato >= 200 && detto.stato <= 599 ? detto.stato : 502;
+    const corpo =
+      detto.corpo && typeof detto.corpo === "object" && !Array.isArray(detto.corpo)
+        ? detto.corpo
+        : {};
+    attesa.fatto({ stato, corpo });
+  }
+
+  /* La casa se ne va: chi aspettava la sua risposta la riceve adesso, e dice
+   * che la casa non c'e'. */
+  _lasciaLeRicevute() {
+    for (const { fatto, scade } of this._ricevute.values()) {
+      clearTimeout(scade);
+      fatto({ stato: 503, corpo: { errore: "casa-non-collegata" } });
+    }
+    this._ricevute.clear();
   }
 
   /* ─── I canali ───────────────────────────────────────────────────────── */
@@ -696,6 +805,7 @@ class CasaCollegata {
   }
 
   _staccaDalCentralino() {
+    this._lasciaLeRicevute();
     if (!this.id) return;
     this._chiudiGliAbbinamenti();
     if (this.centralino.collegate.get(this.id) === this) {

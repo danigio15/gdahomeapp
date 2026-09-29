@@ -120,6 +120,8 @@ export class Licenze extends EventEmitter {
       : { dati: {}, salva() {} };
     this._orologio = null;
     this._inCorso = null;
+    /* Le domande al quadro, in fila: vedi `_inFila`. */
+    this._fila = Promise.resolve();
     /* Com'e' andata l'ultima volta che si e' bussato. In memoria e basta: e'
      * per la console, e dopo un riavvio si riempie al primo giro. */
     this._esito = null;
@@ -254,7 +256,7 @@ export class Licenze extends EventEmitter {
     if (this._inCorso) return this._inCorso;
     this._inCorso = (async () => {
       try {
-        await this._chiedi("/v1/licenze/casa", {});
+        await this._inFila(() => this._chiedi("/v1/licenze/casa", {}));
       } catch (errore) {
         this.registro.attenzione(`licenze: ${errore?.message || errore}`);
       } finally {
@@ -278,12 +280,14 @@ export class Licenze extends EventEmitter {
     if (typeof ricevuta !== "string" || !ricevuta.trim() || ricevuta.length > 64 * 1024) {
       throw new LicenzaNo("ricevuta-mancante", "manca la ricevuta del negozio");
     }
-    await this._chiedi("/v1/licenze/negozio", {
-      app,
-      piattaforma,
-      prodotto: prodotto.trim(),
-      ricevuta,
-    });
+    await this._inFila(() =>
+      this._chiedi("/v1/licenze/negozio", {
+        app,
+        piattaforma,
+        prodotto: prodotto.trim(),
+        ricevuta,
+      }),
+    );
     return this.stato();
   }
 
@@ -294,9 +298,19 @@ export class Licenze extends EventEmitter {
     if (!codice) {
       throw new LicenzaNo("codice-storto", "un codice regalo e' fatto cosi': GDA-XXXX-XXXX-XXXX");
     }
-    await this._chiedi("/v1/licenze/riscatta", { codice });
+    await this._inFila(() => this._chiedi("/v1/licenze/riscatta", { codice }));
     this.registro.info("un codice regalo e' stato riscattato per questa casa");
     return this.stato();
+  }
+
+  /* Una domanda al quadro alla volta, e le risposte nell'ordine in cui sono
+   * partite. Senza, un rinnovo partito un attimo prima di un acquisto poteva
+   * tornare un attimo dopo, coi gettoni di prima, e togliere alla casa il
+   * Premium appena pagato fino al giro seguente — sei ore. */
+  _inFila(domanda) {
+    const questa = this._fila.then(domanda, domanda);
+    this._fila = questa.catch(() => {});
+    return questa;
   }
 
   _servonoLeLicenze() {
@@ -328,11 +342,21 @@ export class Licenze extends EventEmitter {
       this._esito = { andata: false, quando: this.adesso(), perche };
       throw new LicenzaNo("quadro-irraggiungibile", perche);
     }
-    let detto = {};
+    let detto = null;
     try {
       detto = await risposta.json();
     } catch (_errore) {
-      detto = {};
+      detto = null;
+    }
+    if (risposta.ok && !(detto?.gettoni && typeof detto.gettoni === "object")) {
+      /* Un si' che non e' la risposta del quadro — una pagina messa in mezzo
+       * da qualcuno, un JSON senza gettoni — non vuol dire «nessun gettone»:
+       * non vuol dire niente, e quelli di prima restano. */
+      const perche = "il quadro ha risposto qualcosa che non si capisce";
+      if (via === "/v1/licenze/casa") {
+        this._esito = { andata: false, quando: this.adesso(), perche };
+      }
+      throw new LicenzaNo("quadro-ha-detto-no", perche, 502);
     }
     if (!risposta.ok) {
       const codice = codiceDelNo(risposta.status, detto);

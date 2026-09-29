@@ -29,6 +29,7 @@ import { IL_CRUSCOTTO, LA_GESTIONE, VoceNellaBarra } from "./voci-nella-barra.js
 import { UtentiDiCasa } from "./utenti.js";
 import { Identita } from "./identita.js";
 import { Licenze } from "./licenze.js";
+import { laRicevutaDaFuori } from "./ricevuta-da-fuori.js";
 import { VersioneMinima } from "./versione-minima.js";
 import { Dispositivi } from "./dispositivi.js";
 import { leggiLeOpzioni } from "./opzioni.js";
@@ -143,7 +144,9 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
     cartella: opzioni.cartella,
     registro,
   });
-  /* Con gdahome Base la plancia e' una: `plance.aggiungi` lo sa da qui. */
+  /* Le plance chiedono qui se limitarsi, e la risposta e' no: i lucchetti di
+   * Base li mettono l'app e il browser (`licenze.js`, «La casa non limita
+   * niente»). Il cancello resta, spento. */
   plance.limitata = () => licenze.limitata;
   /* Le segnalazioni e la chat dell'app: dal ponte al centralino, e da li' a
    * chi mantiene il progetto. */
@@ -230,8 +233,7 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
     spegnimento,
     zigbee,
     aggiornamenti,
-    /* Le licenze: `ponte/licenza/*` sul filo, e la plancia principale sola
-     * per l'app di una casa Base. */
+    /* Le licenze: `ponte/licenza/*` sul filo. */
     licenze,
   });
   const ponte = new Ponte({ casa, dispositivi, registro, commissioni, utenti });
@@ -402,8 +404,9 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
     abbinamento,
     registro,
     ritorno,
-    /* Da fuori casa si entra con gdahome Premium; l'abbinamento resta aperto
-     * a tutti. Il perche' del taglio sta in `portiere.js`. */
+    /* Da fuori casa si entra con gdahome Premium, ma a chiudere e' il
+     * centralino, non la casa: `limitata` e' sempre falso, e questo taglio
+     * resta spento (`licenze.js`). */
     soloInCasa: () => licenze.limitata,
     versioneMinima,
   });
@@ -419,6 +422,10 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
   if (licenze.attive) {
     chiamata.diLaLicenza(licenze.gettonePerIlCentralino);
     licenze.on("cambio", () => chiamata.diLaLicenza(licenze.gettonePerIlCentralino));
+    /* E la ricevuta di chi compra fuori casa, che il centralino gira qui:
+     * passa solo se l'ha firmata un telefono abbinato (`ricevuta-da-fuori.js`). */
+    chiamata.alRicevere = (corpo) =>
+      laRicevutaDaFuori(corpo, { casa: identita.casa, dispositivi, licenze });
   }
   /* E qui il postino riceve da dove prendere i suoi numeri.
    *

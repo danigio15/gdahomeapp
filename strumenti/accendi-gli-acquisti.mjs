@@ -174,7 +174,8 @@ export const I_PASSI_A_MANO = Object.freeze([
     come: `\`--fallo\`, qui: la stessa chiave anche li'. Da quel momento il fuori casa e' Premium.
     Chi ha l'add-on vecchio si sente dire «aggiorna l'add-on», e nessuno ha pagato a vuoto:
     con l'add-on vecchio l'app non vende. Quante case lo sentiranno lo dice
-    \`pronte_alla_licenza\` contro \`case\`, nei numeri del centralino (\`GET /numeri\`).`,
+    \`pronte_alla_licenza\` contro \`case\`, in \`GET /salute\` del centralino chiesto dalla macchina
+    stessa (\`curl http://127.0.0.1:8099/salute\`): da fuori quei numeri non si vedono.`,
   },
 ]);
 
