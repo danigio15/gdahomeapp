@@ -244,7 +244,14 @@ test("togliere una chiave non alza la revisione", async () => {
    * è da innaffiare dev'essere la stessa sul telefono e sul tablet. */
   /* E la 58 con l'acquario (#127, `cd_acquario`): il cambio d'acqua segnato
    * dal telefono dev'essere lo stesso che conta il tablet in cucina. */
-  assert.equal(CONFIG_KEYS_REVISION, 58);
+  /* E la 59 con le batterie di accumulo (#117, `cd_accumulo`): i pacchi e le
+   * loro celle devono essere gli stessi sul telefono e sul tablet, o uno dei
+   * due direbbe «da bilanciare» e l'altro no. */
+  assert.equal(CONFIG_KEYS_REVISION, 59);
+  assert.ok(
+    CONFIG_KEYS.includes("cd_accumulo"),
+    "i pacchi dell'accumulo devono essere gli stessi anche sul tablet in cucina",
+  );
   assert.ok(
     CONFIG_KEYS.includes("cd_acquario"),
     "l'acquario e il suo ultimo cambio d'acqua devono essere gli stessi anche sul tablet in cucina",

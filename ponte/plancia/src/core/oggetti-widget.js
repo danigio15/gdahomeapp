@@ -939,6 +939,27 @@ const OGGETTI = Object.freeze({
     <circle cx="24.2" cy="13.6" r=".8" fill="#fff" fill-opacity=".85"/>
     <rect x="5.4" y="26" width="21.2" height="2.6" rx="1.3" fill="#1e3a5f"/>`,
 
+  /* L'accumulo (#117): il pacco di batterie in piedi, coi due poli in cima, la
+   * carica verde dietro il vetro e la saetta. Non è la pila dei sensori —
+   * quella è gialla e piccola — né il gruppo di continuità, che è una scatola
+   * scura col display: è il blocco che sta in garage accanto all'inverter. */
+  accumulo: `<defs>
+      <linearGradient id="dmoAccS" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#f1f5f9"/><stop offset=".55" stop-color="#cbd5e1"/>
+        <stop offset="1" stop-color="#94a3b8"/></linearGradient>
+      <linearGradient id="dmoAccB" x1="0" y1="1" x2="0" y2="0">
+        <stop offset="0" stop-color="#15803d"/><stop offset=".6" stop-color="#22c55e"/>
+        <stop offset="1" stop-color="#bbf7d0"/></linearGradient></defs>
+    ${OMBRA(16, 29, 8.4)}
+    <rect x="11" y="3.2" width="3.6" height="2.6" rx="1" fill="#475569"/>
+    <rect x="17.4" y="3.2" width="3.6" height="2.6" rx="1" fill="#475569"/>
+    <rect x="7.4" y="5.2" width="17.2" height="22.6" rx="3.2" fill="url(#dmoAccS)"/>
+    <rect x="9.8" y="8" width="12.4" height="17.4" rx="2" fill="#0f2918"/>
+    <rect x="10.8" y="13.2" width="10.4" height="11.2" rx="1.4" fill="url(#dmoAccB)"/>
+    <path d="M10.8 16.9h10.4M10.8 20.6h10.4" stroke="#0f2918" stroke-opacity=".35" stroke-width=".7"/>
+    <path d="M16.9 14.4 13.8 19.6h2.5l-.8 3.8 3.5-5.5h-2.5Z" fill="#fff" opacity=".9"/>
+    <path d="M9 7.2v18" stroke="#fff" stroke-opacity=".55" stroke-width="1.2" stroke-linecap="round"/>`,
+
   /* I contatori di casa (#115, #135, #137): il contatore d'ottone con la
    * finestra delle cifre e la goccia. Non è l'umidità — quella è una goccia
    * dentro un quadrante di tacche — ma il contatore che si legge in cantina,

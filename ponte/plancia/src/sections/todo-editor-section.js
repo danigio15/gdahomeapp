@@ -151,6 +151,11 @@ function catalogoTessere() {
     ["piante", "plant", t("Piante", "Plant care")],
     /* L'acquario (#127): la temperatura dell'acqua, e quando c'è da fare. */
     ["acquario", "aquarium", t("Acquario", "Aquarium")],
+    /* Le batterie di accumulo (#117): la carica di tutti i pacchi, e quando
+     * un pacco ha le celle da bilanciare. Non è la tessera delle Batterie qui
+     * sotto — quella conta le pile dei sensori. Compare quando la sua scheda
+     * ha un pacco. */
+    ["accumulo", "battery", t("Accumulo", "Battery storage")],
     ["batterie", "battery", t("Batterie", "Batteries")],
     ["allagamenti", "water", t("Allagamenti", "Floods")],
     /* Fumo e gas (#328): compare da sola coi rilevatori di casa, come gli

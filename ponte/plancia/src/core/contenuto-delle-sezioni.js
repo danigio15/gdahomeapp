@@ -260,6 +260,7 @@ const CHIAVI_DELLE_SEZIONI_CHE_SI_GOVERNANO = Object.freeze([
   "cd_media_player",
   "cd_piante",
   "cd_acquario",
+  "cd_accumulo",
   "cd_rifiuti",
   "cd_security_doors",
   "cd_sezioni_mie",
