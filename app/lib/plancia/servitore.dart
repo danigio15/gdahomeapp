@@ -186,14 +186,22 @@ class Servitore {
     this.portaAperta = false,
     bool leggera = false,
     void Function(String)? racconta,
+    Future<void> Function(String percorso)? primaDiTenere,
   }) : _trovaIlFilo = filo,
-       _racconta = racconta ?? ((_) {}) {
+       _racconta = racconta ?? ((_) {}),
+       // ignore: prefer_initializing_formals
+       _primaDiTenere = primaDiTenere {
     premesse
       ..lingua = lingua
       ..leggera = leggera;
   }
 
   final TrovaIlFilo _trovaIlFilo;
+
+  /// Serve alle prove, e soltanto a loro: quello che si aspetta prima di
+  /// tenere un file sul disco. Con un'attesa li' dentro si vede che il
+  /// browser il suo file lo riceve lo stesso, senza aspettare il disco.
+  final Future<void> Function(String percorso)? _primaDiTenere;
 
   /// `true` quando la radice (`/`) porta alla pagina, chiave compresa. Serve
   /// al servitore da riga di comando, dove chi bussa e' il collaudo; sul
@@ -377,6 +385,10 @@ class Servitore {
       await cucitura.chiudi();
     }
     await server?.close(force: true);
+    /* E quello che si sta scrivendo si finisce di scrivere: il disco viene
+     * dopo il browser (vedi [_metti]), e chi spegne non deve trovarsi una
+     * scrittura ancora in giro — ne' un file provvisorio lasciato li'. */
+    await Future.wait(List.of(_scritture));
   }
 
   Future<void> _ascolta(HttpServer server) async {
@@ -531,8 +543,16 @@ class Servitore {
     List<int>? byte;
     final inArrivo = _inArrivo[_voce(percorso)];
     if (siTiene && inArrivo == null && await sulDisco.exists()) {
-      byte = await sulDisco.readAsBytes();
-    } else {
+      final letti = await sulDisco.readAsBytes();
+      /* Un file vuoto sul disco vale come uno che non c'e'. I file si
+       * scrivono senza aspettare che il disco li abbia davvero (vedi
+       * [_metti]), e un telefono che si spegne di colpo puo' lasciare il nome
+       * giusto su un file vuoto: servito cosi', sarebbe un modulo rotto per
+       * sempre, perche' un file preso una volta vale finche' esiste. Si
+       * richiede, e si riscrive. */
+      if (letti.isNotEmpty) byte = letti;
+    }
+    if (byte == null) {
       final _Scaricato preso;
       try {
         preso =
@@ -593,20 +613,45 @@ class Servitore {
   ///
   /// Due richieste per lo stesso file mentre e' in arrivo aspettano la stessa
   /// risposta: la pagina chiede gli stessi moduli da piu' parti insieme, e
-  /// chiederli due volte al ponte e' sprecare la strada lenta. La scrittura
-  /// sul disco sta **dentro** l'attesa: chi arriva dopo trova il file, non un
-  /// file che sta per esserci.
+  /// chiederli due volte al ponte e' sprecare la strada lenta.
+  ///
+  /// **Prima a chi aspetta, poi al disco.** Qui prima il file si scriveva e
+  /// solo dopo andava al browser, che intanto stava fermo ad aspettare un
+  /// disco che con lui non c'entra niente. Adesso il browser lo riceve appena
+  /// arriva, e il disco viene dopo. L'attesa pero' resta in [_inArrivo]
+  /// finche' il file non e' scritto: chi arriva in mezzo lo prende da li', gia'
+  /// pronto, e chi arriva dopo trova il file — mai un file che sta per esserci.
   Future<_Scaricato> _scarica(String percorso, File sulDisco) {
     final voce = _voce(percorso);
-    return _inArrivo.putIfAbsent(voce, () async {
-      try {
-        final preso = await _commissione('GET', percorso);
-        if (preso.stato == 200) await _metti(sulDisco, preso.byte);
-        return preso;
-      } finally {
-        _inArrivo.remove(voce);
-      }
-    });
+    final gia = _inArrivo[voce];
+    if (gia != null) return gia;
+    final arriva = _commissione('GET', percorso);
+    _inArrivo[voce] = arriva;
+    unawaited(_poiSulDisco(voce, arriva, sulDisco));
+    return arriva;
+  }
+
+  Future<void> _poiSulDisco(
+    String voce,
+    Future<_Scaricato> arriva,
+    File sulDisco,
+  ) async {
+    try {
+      final preso = await arriva;
+      if (preso.stato == 200) await _metti(sulDisco, preso.byte);
+    } catch (_) {
+      /* Il perche' lo riceve chi aspettava il file: qui non c'e' niente da
+       * tenere, e niente da dire due volte. */
+    } finally {
+      _lascia(voce, arriva);
+    }
+  }
+
+  /// Toglie da [_inArrivo] l'attesa di [voce], se e' ancora [sua]: nel
+  /// frattempo potrebbe averla presa qualcun altro, un pacco o una richiesta
+  /// sola, e quella non e' da togliere.
+  void _lascia(String voce, Future<_Scaricato> sua) {
+    if (identical(_inArrivo[voce], sua)) _inArrivo.remove(voce);
   }
 
   /// I moduli della pagina, chiesti in pacchi prima che li chieda il browser.
@@ -617,7 +662,13 @@ class Servitore {
   /// giri sul filo invece di trecentosettantanove.
   ///
   /// Quelli che stanno gia' sul disco non si chiedono: dopo il primo avvio
-  /// questo giro non fa niente, ed e' giusto cosi'.
+  /// questo giro non fa niente, ed e' giusto cosi'. Per saperlo si guarda la
+  /// cartella della plancia **una volta**, tutta: prima si chiedeva al disco
+  /// file per file, quattrocento domande una dopo l'altra, e i pacchi
+  /// partivano solo dopo l'ultima risposta.
+  ///
+  /// I pacchi viaggiano quattro alla volta, sempre: appena uno torna ne parte
+  /// un altro ([aFinestra]).
   ///
   /// Non solleva mai. Un pacco che non arriva e' una plancia che si apre come
   /// si apriva ieri, un file per volta.
@@ -630,31 +681,42 @@ class Servitore {
       final quali = iPrecarichiDellaPagina(
         pagina,
         cartella: laCartellaDi(percorsoDellaPagina),
-      ).where(_siTiene);
-      final daChiedere = <String>[];
-      for (final quale in quali) {
-        if (_inArrivo.containsKey('$casa\n$quale')) continue;
-        if (await File('${dove.path}$quale').exists()) continue;
-        daChiedere.add(quale);
-      }
+      ).where(_siTiene).toList();
+      if (quali.isEmpty) return;
+      final sulDisco = await _giaSulDisco(dove, laCartellaComune(quali));
+      final daChiedere = [
+        for (final quale in quali)
+          if (!_inArrivo.containsKey('$casa\n$quale') &&
+              !sulDisco.contains('${dove.path}$quale'))
+            quale,
+      ];
       if (daChiedere.isEmpty) return;
       _racconta(
         'la plancia: ${daChiedere.length} moduli da prendere, in pacchi',
       );
 
-      final pacchi = aPacchi(daChiedere);
-      for (var da = 0; da < pacchi.length; da += pacchiInsieme) {
-        final adesso = pacchi.sublist(
-          da,
-          da + pacchiInsieme > pacchi.length
-              ? pacchi.length
-              : da + pacchiInsieme,
-        );
-        await Future.wait(adesso.map((uno) => _unPacco(uno, dove, casa)));
-      }
+      await aFinestra(aPacchi(daChiedere), (uno) => _unPacco(uno, dove, casa));
     } catch (errore) {
       _racconta('i pacchi della plancia non sono andati: $errore');
     }
+  }
+
+  /// I file che stanno gia' sotto [cartella], nel deposito [dove], con il
+  /// loro percorso intero: una passata sola sul disco.
+  Future<Set<String>> _giaSulDisco(Directory dove, String cartella) async {
+    final trovati = <String>{};
+    final radice = cartella == '/' ? dove.path : '${dove.path}$cartella';
+    try {
+      await for (final uno in Directory(
+        radice,
+      ).list(recursive: true, followLinks: false)) {
+        if (uno is File) trovati.add(uno.path);
+      }
+    } on FileSystemException {
+      /* La cartella non c'e' ancora: la prima volta sul disco non c'e' niente,
+       * e si chiede tutto. */
+    }
+    return trovati;
   }
 
   /// Un pacco: si prenota ogni file, si chiede, si tiene sul disco.
@@ -668,6 +730,12 @@ class Servitore {
   /// Quelli che nel pacco non ci stavano — il ponte lo riempie fino a
   /// trecentottantaquattro kilobyte e poi smette — si richiedono nel giro
   /// dopo, e il giro dopo e' piu' corto: cosi' finisce.
+  ///
+  /// Ogni file va a chi lo aspetta **appena arriva**, e al disco dopo: prima
+  /// il quarantesimo file di un pacco aspettava che i trentanove davanti a lui
+  /// fossero scritti uno per uno, col browser fermo dietro. E il disco non
+  /// tiene il posto sul filo: il pacco torna quando e' arrivato, e il
+  /// prossimo parte mentre questo si scrive.
   Future<void> _unPacco(List<String> quali, Directory dove, String casa) async {
     final attese = <String, Completer<_Scaricato>>{};
     for (final quale in quali) {
@@ -678,6 +746,7 @@ class Servitore {
       aspetta.future.ignore();
       _inArrivo['$casa\n$quale'] = aspetta.future;
     }
+    final daTenere = <(String, List<int>)>[];
     var restano = quali;
     try {
       while (restano.isNotEmpty) {
@@ -692,10 +761,8 @@ class Servitore {
             ancora.add(quale);
             continue;
           }
-          if (preso.stato == 200) {
-            await _metti(File('${dove.path}$quale'), preso.byte);
-          }
           attese[quale]!.complete(preso);
+          if (preso.stato == 200) daTenere.add((quale, preso.byte));
         }
         restano = ancora;
       }
@@ -703,14 +770,24 @@ class Servitore {
       for (final quale in restano) {
         if (!attese[quale]!.isCompleted) attese[quale]!.completeError(errore);
       }
-    } finally {
-      for (final quale in quali) {
-        final voce = '$casa\n$quale';
-        if (identical(_inArrivo[voce], attese[quale]!.future)) {
-          _inArrivo.remove(voce);
-        }
+    }
+    /* Quello che non va sul disco — un 404, un pacco non arrivato — lascia
+     * l'attesa subito: chi lo chiede dopo lo richiede. Quello che va sul
+     * disco la lascia quando e' scritto. */
+    final tenuti = {for (final (quale, _) in daTenere) quale};
+    for (final quale in quali) {
+      if (!tenuti.contains(quale)) {
+        _lascia('$casa\n$quale', attese[quale]!.future);
       }
     }
+    unawaited(
+      _sulDisco(() async {
+        for (final (quale, byte) in daTenere) {
+          await _metti(File('${dove.path}$quale'), byte);
+          _lascia('$casa\n$quale', attese[quale]!.future);
+        }
+      }()),
+    );
   }
 
   /// Il pacco, dal ponte. La stessa strada di [_commissione], con piu' file.
@@ -750,18 +827,55 @@ class Servitore {
     return _spacchetta(testo);
   }
 
-  Future<void> _metti(File dove, List<int> byte) async {
+  /// Tiene un file sul disco, tutto o niente.
+  ///
+  /// Prima un file a parte, nella stessa cartella, poi il nome vero: il
+  /// `rename` e' tutto o niente, e chi legge non trova mai un file scritto a
+  /// meta' — nemmeno se l'app muore mentre scrive, che lascia solo un file
+  /// provvisorio che nessuno legge. Il nome provvisorio e' uno per scrittura:
+  /// lo stesso modulo puo' arrivare da due strade insieme, e due scritture
+  /// sullo stesso file provvisorio se lo rovinerebbero a vicenda.
+  ///
+  /// **Senza `flush`.** Aspettare che ogni file fosse sul disco davvero voleva
+  /// dire una sincronizzazione per ognuno dei quattrocento moduli: secondi, a
+  /// freddo, e prima ancora che il browser li ricevesse. Quello che si
+  /// rischia e' poco — un telefono che si spegne di colpo puo' lasciare un
+  /// file vuoto col nome giusto — e un file vuoto vale come uno che non c'e'
+  /// (vedi [_file]).
+  Future<void> _metti(File dove, List<int> byte) =>
+      _sulDisco(_scrivi(dove, byte));
+
+  /// Le scritture sul disco ancora in corso: le aspetta [spegni].
+  final _scritture = <Future<void>>{};
+
+  /// Un lavoro sul disco, contato fra le [_scritture] finche' non e' finito.
+  /// Chi lo passa si impegna a non sollevare.
+  Future<void> _sulDisco(Future<void> lavoro) {
+    _scritture.add(lavoro);
+    unawaited(lavoro.whenComplete(() => _scritture.remove(lavoro)));
+    return lavoro;
+  }
+
+  Future<void> _scrivi(File dove, List<int> byte) async {
+    File? provvisorio;
     try {
+      await _primaDiTenere?.call(dove.path);
       await dove.parent.create(recursive: true);
-      /* Prima un file a parte, poi il nome vero: chi legge non deve mai
-       * trovare un file scritto a meta'. */
-      final provvisorio = File('${dove.path}.parte');
-      await provvisorio.writeAsBytes(byte, flush: true);
+      provvisorio = File('${dove.path}.${_provvisori++}.parte');
+      await provvisorio.writeAsBytes(byte);
       await provvisorio.rename(dove.path);
     } catch (errore) {
       _racconta('non riesco a tenere ${dove.path}: $errore');
+      try {
+        await provvisorio?.delete();
+      } catch (_) {
+        /* Non c'era, o non si lascia togliere: nessuno lo legge comunque. */
+      }
     }
   }
+
+  /// Il numero del prossimo file provvisorio: vedi [_metti].
+  static int _provvisori = 0;
 
   /// La pagina della plancia, con in testa quello che le serve sapere.
   ///

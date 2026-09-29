@@ -289,12 +289,21 @@ class PonteFinto {
         quanto += '${(risposta['result'] as Map)['corpo']}'.length;
         if (quanto >= paccoFinoA) break;
       }
-      _manda(presa, {
+      final pacco = {
         'id': id,
         'type': 'result',
         'success': true,
         'result': {'file': dentro},
-      });
+      };
+      final prima = primaDelPacco;
+      if (prima == null) {
+        _manda(presa, pacco);
+      } else {
+        unawaited(
+          prima([for (final uno in percorsi) '$uno'])
+              .then((_) => _manda(presa, pacco)),
+        );
+      }
       return;
     }
     if (detto['type'] == 'ponte/plancia') {
@@ -1047,6 +1056,11 @@ class PonteFinto {
   /// trecentottantaquattro kilobyte; nelle prove si mette piccolo per vedere
   /// cosa succede a quelli che non ci stanno.
   int paccoFinoA = 384 * 1024;
+
+  /// Quando c'e', il pacco si risponde dopo questo: e' un pacco lento, quello
+  /// grosso o quello che passa da un centralino affollato. Riceve i percorsi
+  /// chiesti, cosi' la prova sceglie quale fare aspettare.
+  Future<void> Function(List<String> percorsi)? primaDelPacco;
 
   Map<String, dynamic> _commissione(Map<String, dynamic> detto) {
     commissioni.add(detto);

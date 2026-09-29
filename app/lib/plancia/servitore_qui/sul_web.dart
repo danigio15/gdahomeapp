@@ -449,7 +449,9 @@ extension on _ServitoreSulWeb {
   /// E' la stessa cosa che fa il servitore sul telefono, e per la stessa
   /// ragione: la pagina porta l'elenco dei file che vuole subito, e chiederli
   /// in pacchi invece che uno per volta e' la differenza fra un minuto e
-  /// qualche secondo da fuori casa. Vedi `precarichi.dart`.
+  /// qualche secondo da fuori casa. Vedi `precarichi.dart`. E come li'
+  /// viaggiano quattro alla volta, sempre, e non a gruppi di quattro: un
+  /// pacco lento non tiene fermi gli altri tre posti ([aFinestra]).
   ///
   /// Non solleva mai: un pacco che non arriva e' una plancia che si apre come
   /// si apriva ieri.
@@ -465,16 +467,7 @@ extension on _ServitoreSulWeb {
           .toList();
       if (daChiedere.isEmpty) return;
 
-      final pacchi = aPacchi(daChiedere);
-      for (var da = 0; da < pacchi.length; da += pacchiInsieme) {
-        final adesso = pacchi.sublist(
-          da,
-          da + pacchiInsieme > pacchi.length
-              ? pacchi.length
-              : da + pacchiInsieme,
-        );
-        await Future.wait(adesso.map(_unPacco));
-      }
+      await aFinestra(aPacchi(daChiedere), _unPacco);
     } catch (_) {
       /* Niente da dire a nessuno: i file si chiedono come sempre. */
     }

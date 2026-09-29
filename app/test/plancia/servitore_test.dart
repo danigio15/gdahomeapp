@@ -402,15 +402,17 @@ void main() {
       expect(ponte.commissioni.single['percorso'], '$_base/src/core/uno.js');
       expect(ponte.commissioni.single['metodo'], 'GET');
 
+      /* Sul disco ci va subito dopo averlo dato: il browser non aspetta la
+       * scrittura (vedi «prima al browser, poi al disco», qui sotto). */
+      await _finoA(
+        () => File('${cartella.path}$_base/src/core/uno.js').existsSync(),
+      );
+
       /* La seconda volta il ponte non lo vede nemmeno. */
       final (stato2, _, byte2) = await prendi('$_base/src/core/uno.js');
       expect(stato2, 200);
       expect(utf8.decode(byte2), _modulo);
       expect(ponte.commissioni, hasLength(1));
-      expect(
-        File('${cartella.path}$_base/src/core/uno.js').existsSync(),
-        isTrue,
-      );
     },
   );
 
@@ -905,6 +907,11 @@ void main() {
     expect(prima.headers.value('cache-control'), 'no-cache');
     final segno = prima.headers.value('etag');
     expect(segno, isNotNull);
+    /* Il file va sul disco appena dopo averlo dato al WebView. */
+    await _finoA(
+      () =>
+          File('${servitore.deposito.path}$_base/src/core/uno.js').existsSync(),
+    );
 
     /* Stessa casa, stesso segno: «uguale», senza nemmeno il file. */
     final dinuovo = await chiedi(
@@ -966,6 +973,173 @@ void main() {
       expect((await prendi('$_base/src/core/$quale.js')).$1, 200);
     }
     expect(ponte.pacchi.length, 1, reason: 'niente di nuovo da prendere');
+  });
+
+  test('quelli che sono già sul disco restano fuori dal pacco', () async {
+    /* Cosa c'e' sul disco si guarda una volta, tutta la cartella della
+     * plancia insieme — non piu' file per file — e deve dire le stesse cose:
+     * qui due moduli su quattro ci sono gia'. */
+    laPlanciaColSuoElenco();
+    for (final quale in ['due', 'quattro']) {
+      File(sulDisco(quale))
+        ..createSync(recursive: true)
+        ..writeAsStringSync('$_modulo// sono $quale, dal disco\n');
+    }
+    await laPagina();
+    await _finoA(() => ponte.pacchi.isNotEmpty);
+    await _finoA(
+      () => _iSuoiModuli.every((quale) => File(sulDisco(quale)).existsSync()),
+    );
+    expect(ponte.pacchi.single, [
+      '$_base/src/core/uno.js',
+      '$_base/src/core/tre.js',
+    ]);
+  });
+
+  test('i pacchi viaggiano quattro alla volta, e uno lento non ferma gli '
+      'altri', () async {
+    /* Prima si andava a gruppi di quattro: il quinto pacco partiva quando
+     * erano tornati tutti e quattro i primi, e uno lento teneva vuoti gli
+     * altri tre posti sul filo. Qui il primo pacco non torna finche' la
+     * prova non lo lascia andare: il quinto deve partire lo stesso. */
+    final duecento = [for (var i = 0; i < 200; i += 1) 'm$i'];
+    laPlanciaColSuoElenco(duecento);
+    final ilPrimo = Completer<void>();
+    ponte.primaDelPacco = (percorsi) async {
+      if (percorsi.first == '$_base/src/core/m0.js') await ilPrimo.future;
+    };
+    await laPagina();
+
+    await _finoA(() => ponte.pacchi.length == 5);
+    expect(ilPrimo.isCompleted, isFalse);
+    expect(ponte.pacchi.last.first, '$_base/src/core/m160.js');
+
+    ilPrimo.complete();
+    await _finoA(
+      () => duecento.every((quale) => File(sulDisco(quale)).existsSync()),
+    );
+    expect(ponte.pacchi, hasLength(5));
+  });
+
+  group('prima al browser, poi al disco', () {
+    /// Un servitore il cui disco risponde quando lo dice la prova.
+    Future<(Servitore, Completer<void>)> colDiscoLento() async {
+      final disco = Completer<void>();
+      final lento = Servitore(
+        filo: () => filo,
+        cartella: cartella,
+        primaDiTenere: (_) => disco.future,
+      );
+      await lento.alza();
+      addTearDown(() async {
+        if (!disco.isCompleted) disco.complete();
+        await lento.spegni();
+      });
+      return (lento, disco);
+    }
+
+    Future<(int, String)> daLui(Servitore lui, String percorso) async {
+      final richiesta = await cliente.getUrl(
+        lui.radice.replace(path: percorso),
+      );
+      richiesta.cookies.add(Cookie('gdahome', lui.chiave));
+      final risposta = await richiesta.close();
+      return (
+        risposta.statusCode,
+        await risposta.transform(utf8.decoder).join(),
+      );
+    }
+
+    test(
+      'un file del pacco arriva al browser senza aspettare il disco',
+      () async {
+        /* Prima ogni file si scriveva, e solo dopo andava a chi lo aspettava:
+       * il quarantesimo di un pacco aspettava che i trentanove davanti a lui
+       * fossero sul disco, uno per uno, col browser fermo dietro. */
+        final (lento, disco) = await colDiscoLento();
+        laPlanciaColSuoElenco();
+        final richiesta = await cliente.getUrl(lento.paginaDi(pannello()));
+        await (await richiesta.close()).drain<void>();
+        await _finoA(() => ponte.pacchi.isNotEmpty);
+
+        final (stato, testo) = await daLui(lento, '$_base/src/core/tre.js');
+        expect(stato, 200);
+        expect(testo, contains('sono tre'));
+        expect(
+          File(sulDisco('tre')).existsSync(),
+          isFalse,
+          reason: 'il disco non ha ancora scritto niente',
+        );
+
+        disco.complete();
+        await _finoA(
+          () =>
+              _iSuoiModuli.every((quale) => File(sulDisco(quale)).existsSync()),
+        );
+        expect(ponte.commissioni.map((c) => c['percorso']), [
+          '$_base/legacy/dashboard.html',
+        ], reason: 'nessun modulo chiesto una seconda volta');
+      },
+    );
+
+    test('e anche un file chiesto da solo', () async {
+      final (lento, disco) = await colDiscoLento();
+      final (stato, testo) = await daLui(lento, '$_base/src/core/uno.js');
+      expect(stato, 200);
+      expect(testo, _modulo);
+      expect(
+        File('${cartella.path}$_base/src/core/uno.js').existsSync(),
+        isFalse,
+      );
+
+      disco.complete();
+      await _finoA(
+        () => File('${cartella.path}$_base/src/core/uno.js').existsSync(),
+      );
+      expect(ponte.commissioni, hasLength(1));
+    });
+  });
+
+  test(
+    'sul disco si scrive tutto o niente, e non resta niente a metà',
+    () async {
+      /* Senza aspettare il disco a ogni file, il nome vero arriva solo col
+     * `rename` di un file provvisorio nella stessa cartella: chi legge non
+     * trova mai un modulo a meta', e dei provvisori non ne resta nessuno. */
+      laPlanciaColSuoElenco();
+      await laPagina();
+      await _finoA(
+        () => _iSuoiModuli.every((quale) => File(sulDisco(quale)).existsSync()),
+      );
+      for (final quale in _iSuoiModuli) {
+        expect(
+          File(sulDisco(quale)).readAsStringSync(),
+          contains('sono $quale'),
+        );
+      }
+      final rimasti = Directory(cartella.path)
+          .listSync(recursive: true)
+          .where((uno) => uno.path.endsWith('.parte'));
+      expect(rimasti, isEmpty);
+    },
+  );
+
+  test('un file vuoto sul disco vale come uno che non c\'è', () async {
+    /* Un telefono che si spegne di colpo, con i file scritti senza aspettare
+     * il disco, puo' lasciare il nome giusto su un file vuoto. Servito cosi'
+     * sarebbe un modulo rotto per sempre: si richiede, e si riscrive. */
+    File('${cartella.path}$_base/src/core/uno.js')
+      ..createSync(recursive: true)
+      ..writeAsBytesSync(const []);
+    final (stato, _, byte) = await prendi('$_base/src/core/uno.js');
+    expect(stato, 200);
+    expect(utf8.decode(byte), _modulo);
+    expect(ponte.commissioni, hasLength(1));
+    await _finoA(
+      () =>
+          File('${cartella.path}$_base/src/core/uno.js').lengthSync() ==
+          utf8.encode(_modulo).length,
+    );
   });
 }
 

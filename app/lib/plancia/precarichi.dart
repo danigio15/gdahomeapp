@@ -46,7 +46,66 @@ const inUnPacco = 40;
 /// volo, che su un telefono sono memoria vera. Quattro bastano a tenere il
 /// filo pieno, e i primi file arrivano prima — che e' quello che serve, perche'
 /// la pagina li apre in ordine.
+///
+/// Quattro **sempre**, non a gruppi di quattro: vedi [aFinestra].
 const pacchiInsieme = 4;
+
+/// Fa [lavora] su ogni cosa di [cose], nell'ordine, tenendone in volo al piu'
+/// [quanti] insieme: appena una finisce parte la prossima.
+///
+/// Prima i pacchi andavano a gruppi di quattro, e il gruppo dopo partiva
+/// quando era finito **l'ultimo** del gruppo prima: bastava un pacco lento —
+/// uno grosso, o uno che ha dovuto rifare il giro per i file che non ci
+/// stavano — perche' gli altri tre posti restassero vuoti ad aspettarlo, e il
+/// filo mezzo fermo proprio quando da fuori casa ogni giro conta. Cosi' i
+/// posti non restano mai vuoti finche' c'e' qualcosa da chiedere.
+///
+/// Chi lavora non dovrebbe sollevare. Se lo fa, il suo posto passa alla
+/// prossima cosa lo stesso, e l'errore torna in fondo, quando tutto il resto
+/// e' finito: una cosa andata storta non ferma le altre.
+Future<void> aFinestra<T>(
+  List<T> cose,
+  Future<void> Function(T cosa) lavora, {
+  int quanti = pacchiInsieme,
+}) async {
+  var prossima = 0;
+  Object? primoErrore;
+  StackTrace? dove;
+  Future<void> unPosto() async {
+    while (prossima < cose.length) {
+      final questa = cose[prossima];
+      prossima += 1;
+      try {
+        await lavora(questa);
+      } catch (errore, pila) {
+        primoErrore ??= errore;
+        dove ??= pila;
+      }
+    }
+  }
+
+  final posti = quanti < 1 ? 1 : (quanti < cose.length ? quanti : cose.length);
+  await Future.wait([for (var i = 0; i < posti; i += 1) unPosto()]);
+  if (primoErrore != null) Error.throwWithStackTrace(primoErrore!, dove!);
+}
+
+/// La cartella piu' profonda che li contiene tutti: `/a/b/c.js` e `/a/d/e.js`
+/// stanno in `/a`. Per [iPrecarichiDellaPagina] e' la cartella della plancia
+/// con dentro la sua impronta, ed e' li' che si guarda cosa c'e' gia' sul
+/// disco: una volta sola, e non in quella intera, dove stanno anche le
+/// plance di prima di ogni aggiornamento.
+String laCartellaComune(Iterable<String> percorsi) {
+  final uno = percorsi.iterator;
+  if (!uno.moveNext()) return '/';
+  var comune = laCartellaDi(uno.current);
+  while (uno.moveNext()) {
+    final sua = laCartellaDi(uno.current);
+    while (comune != '/' && !'$sua/'.startsWith('$comune/')) {
+      comune = laCartellaDi(comune);
+    }
+  }
+  return comune;
+}
 
 /// I file che la pagina dice di volere subito, come percorsi interi.
 ///
