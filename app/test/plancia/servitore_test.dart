@@ -90,9 +90,14 @@ void main() {
       expect(primo.porta, greaterThanOrEqualTo(portaDiCasa));
       expect(primo.porta, lessThan(portaDiCasa + porteDaProvare));
 
-      /* Occupata: la prossima, non una a caso. */
+      /* Occupata: una delle vicine, non una a caso. Proprio quella dopo non
+       * si può pretendere: 43118 sta nella fascia che Linux dà a caso a chi
+       * apre un filo, e sulla macchina delle Prove una volta l'aveva già
+       * presa qualcun altro — la prova diceva 43119, ed era giusto così. */
       await secondo.alza(porta: portaDiCasa);
-      expect(secondo.porta, primo.porta + 1);
+      expect(secondo.porta, isNot(primo.porta));
+      expect(secondo.porta, greaterThanOrEqualTo(portaDiCasa));
+      expect(secondo.porta, lessThan(portaDiCasa + porteDaProvare));
     } finally {
       await primo.spegni();
       await secondo.spegni();
