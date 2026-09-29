@@ -4,11 +4,13 @@
  * tutti dei binary sensor che già Home Assistant vede mi dà la possibilità di
  * disabilitare. Possiamo farlo anche qui?»
  *
- * Qui si guarda quello che vede chi ha una centrale: lo scudo sulle carte a cui
- * ha scritto l'interruttore, sbarrato su quella esclusa, il conto in cima che lo
- * dice a parole, e — la cosa che conta — che premendolo parta il servizio giusto.
- * Niente scudo dove l'interruttore non c'è: un tasto che chiama un servizio che
- * non esiste è un tasto rotto.
+ * Qui si guarda quello che vede chi ha una centrale: lo scudo sulle carte che
+ * hanno un interruttore — scritto, o trovato sulla stessa zona della centrale —,
+ * «Esclusa dall'allarme» scritto su quella esclusa, il conto in cima che lo dice
+ * a parole, e — la cosa che conta — che premendolo parta il servizio giusto:
+ * dopo una domanda sulla carta quando si esclude, subito quando si include, e
+ * con cinque secondi per tornare indietro. Niente scudo dove l'interruttore non
+ * c'è: un tasto che chiama un servizio che non esiste è un tasto rotto.
  */
 import { expect, test } from "@playwright/test";
 import { bootNamespacedDashboard } from "./helpers/namespaced-dashboard.js";
@@ -87,14 +89,16 @@ const VARCHI = {
   ],
 };
 
-async function avvia(page, testInfo) {
+async function avvia(page, testInfo, prima = {}) {
   test.setTimeout(150_000);
   await page.route("https://**", (route) => route.fulfill({ status: 200, body: "" }));
   await bootNamespacedDashboard(page, "dashboard.html", testInfo, SEME);
   await page.locator("#setup-wizard").evaluateAll((nodi) => nodi.forEach((n) => n.remove()));
   await page.evaluate(
-    ({ stati, varchi }) => {
+    ({ stati, varchi, prima }) => {
       localStorage.setItem("cd_varchi", JSON.stringify(varchi));
+      for (const [chiave, valore] of Object.entries(prima))
+        localStorage.setItem(chiave, JSON.stringify(valore));
       window.__HASS__ = { states: { ...(window.__HASS__?.states || {}), ...stati } };
       const raw = window.eval("typeof _RAW_STATES !== 'undefined' ? _RAW_STATES : null");
       if (raw) Object.assign(raw, stati);
@@ -114,7 +118,11 @@ async function avvia(page, testInfo) {
       window.dispatchEvent(new CustomEvent("dashboardmodern:states-ready", { detail: {} }));
       window.renderVarchi?.();
     },
-    { stati: STATI, varchi: VARCHI },
+    {
+      stati: { ...STATI, ...(prima.__stati || {}) },
+      varchi: prima.__varchi || VARCHI,
+      prima: prima.__disco || {},
+    },
   );
   const voce = page.locator('.tab[data-tab="varchi"]');
   await expect(voce).toBeVisible({ timeout: 20_000 });
@@ -141,6 +149,9 @@ test("la finestra esclusa si vede esclusa, e resta aperta", async ({ page }, tes
   const bagno = carta(pagina, "Finestra bagno");
   await expect(bagno.locator("[data-dm-varco-scudo]")).toHaveAttribute("aria-pressed", "true");
   await expect(bagno).toHaveAttribute("data-escluso", "true");
+  /* Detto a parole, non solo col tratteggio: e il tasto dice cosa fa. */
+  await expect(bagno.locator(".dm-varco-esclusa")).toHaveText(/esclusa dall'allarme/i);
+  await expect(bagno.locator("[data-dm-varco-scudo]")).toHaveText(/includi/i);
   /* L'esclusione parla alla centrale, non all'infisso: aperta è aperta. */
   await expect(bagno).toHaveAttribute("data-varco", "aperto");
   await expect(bagno.locator(".dm-varco-stato")).toHaveText(/aperto/i);
@@ -148,6 +159,8 @@ test("la finestra esclusa si vede esclusa, e resta aperta", async ({ page }, tes
   const ingresso = carta(pagina, "Porta ingresso");
   await expect(ingresso.locator("[data-dm-varco-scudo]")).toHaveAttribute("aria-pressed", "false");
   await expect(ingresso).toHaveAttribute("data-escluso", "false");
+  await expect(ingresso.locator(".dm-varco-esclusa")).toHaveCount(0);
+  await expect(ingresso.locator("[data-dm-varco-scudo]")).toHaveText(/escludi/i);
 });
 
 test("il conto in cima dice quante sono escluse", async ({ page }, testInfo) => {
@@ -158,13 +171,25 @@ test("il conto in cima dice quante sono escluse", async ({ page }, testInfo) => 
   await expect(pagina.locator(".dm-varchi-sotto")).toContainText("1 escluso");
 });
 
-test("premendo lo scudo parte il servizio giusto, non un toggle", async ({ page }, testInfo) => {
-  const pagina = await avvia(page, testInfo);
+const servizi = (page) => page.evaluate(() => window.__SERVIZI__);
 
-  /* Sorvegliata → si accende l'interruttore, e la si esclude. */
-  await carta(pagina, "Porta ingresso").locator("[data-dm-varco-scudo]").click();
+test("escludere chiede sulla carta, e lascia cinque secondi per tornare indietro", async ({
+  page,
+}, testInfo) => {
+  const pagina = await avvia(page, testInfo);
+  const ingresso = carta(pagina, "Porta ingresso");
+
+  /* Il primo tocco chiede e basta: niente parte finché non si risponde. */
+  await ingresso.locator("[data-dm-varco-scudo]").click();
+  const domanda = ingresso.locator('[data-dm-varco-velo="chiesta"]');
+  await expect(domanda).toBeVisible();
+  await expect(domanda).toContainText(/escludere dall'allarme\?/i);
+  expect(await servizi(page)).toEqual([]);
+
+  /* Il sì: si accende l'interruttore, mai un `toggle`. */
+  await domanda.locator("[data-dm-varco-conferma]").click();
   await expect
-    .poll(() => page.evaluate(() => window.__SERVIZI__), { timeout: 10_000 })
+    .poll(() => servizi(page), { timeout: 10_000 })
     .toEqual([
       {
         domain: "switch",
@@ -173,15 +198,124 @@ test("premendo lo scudo parte il servizio giusto, non un toggle", async ({ page 
       },
     ]);
 
-  /* Esclusa → si spegne, e torna sorvegliata. Mai `toggle`: su uno stato letto
-   * male farebbe il contrario di quello che chi preme si aspetta. */
-  await carta(pagina, "Finestra bagno").locator("[data-dm-varco-scudo]").click();
+  /* E l'annulla, sulla stessa carta: rimette sotto sorveglianza quello che si
+   * era appena escluso. */
+  const annulla = ingresso.locator('[data-dm-varco-velo="annulla"]');
+  await expect(annulla).toBeVisible();
+  await annulla.locator("[data-dm-varco-annulla]").click();
   await expect
     .poll(() => page.evaluate(() => window.__SERVIZI__.at(-1)), { timeout: 10_000 })
     .toEqual({
       domain: "switch",
       service: "turn_off",
-      data: { entity_id: "switch.finestra_bagno_bypass" },
+      data: { entity_id: "switch.porta_ingresso_bypass" },
+    });
+  await expect(annulla).toHaveCount(0);
+});
+
+test("un tocco sul velo fuori dal tasto è un no", async ({ page }, testInfo) => {
+  const pagina = await avvia(page, testInfo);
+  const ingresso = carta(pagina, "Porta ingresso");
+  await ingresso.locator("[data-dm-varco-scudo]").click();
+  const domanda = ingresso.locator('[data-dm-varco-velo="chiesta"]');
+  await domanda.locator("span").first().click();
+  await expect(domanda).toHaveCount(0);
+  expect(await servizi(page)).toEqual([]);
+});
+
+test("includere si fa subito: rende la casa più sicura, non meno", async ({ page }, testInfo) => {
+  const pagina = await avvia(page, testInfo);
+  const bagno = carta(pagina, "Finestra bagno");
+  await bagno.locator("[data-dm-varco-scudo]").click();
+  await expect
+    .poll(() => servizi(page), { timeout: 10_000 })
+    .toEqual([
+      {
+        domain: "switch",
+        service: "turn_off",
+        data: { entity_id: "switch.finestra_bagno_bypass" },
+      },
+    ]);
+  await expect(bagno.locator("[data-dm-varco-velo]")).toHaveCount(0);
+});
+
+test("quando la centrale dice di no, la carta lo scrive", async ({ page }, testInfo) => {
+  /* Molte centrali non accettano un'esclusione ad antifurto inserito. Home
+   * Assistant lo rimanda come errore, e prima si perdeva in silenzio. */
+  const pagina = await avvia(page, testInfo);
+  await page.evaluate(() => {
+    window.dmCallHaService = () => Promise.reject(new Error("Zone cannot be bypassed while armed"));
+  });
+  const ingresso = carta(pagina, "Porta ingresso");
+  await ingresso.locator("[data-dm-varco-scudo]").click();
+  await ingresso.locator("[data-dm-varco-conferma]").click();
+  await expect(ingresso.locator(".dm-varco-errore")).toContainText(
+    "Zone cannot be bypassed while armed",
+  );
+  /* E l'annulla non resta: non c'è niente da annullare. */
+  await expect(ingresso.locator('[data-dm-varco-velo="annulla"]')).toHaveCount(0);
+});
+
+test("col lucchetto lo stato si vede, e il tasto non c'è", async ({ page }, testInfo) => {
+  const pagina = await avvia(page, testInfo, {
+    __disco: { cd_solo_lettura: { "switch.finestra_bagno_bypass": true } },
+  });
+  const bagno = carta(pagina, "Finestra bagno");
+  await expect(bagno.locator(".dm-varco-esclusa")).toBeVisible();
+  await expect(bagno.locator("[data-dm-varco-scudo]")).toHaveCount(0);
+  await expect(bagno.locator("[data-dm-varco-bloccato]")).toContainText(/solo lettura/i);
+});
+
+test("l'interruttore sulla stessa zona della centrale si trova da solo", async ({
+  page,
+}, testInfo) => {
+  /* La zona Risco rinominata: il contatto si chiama «Cantina», l'interruttore
+   * ha l'identificativo dell'integrazione. Nessuno l'ha scritto nella riga: lo
+   * dice il registro, che la plancia si ricorda. */
+  const pagina = await avvia(page, testInfo, {
+    __stati: {
+      "binary_sensor.cantina": {
+        entity_id: "binary_sensor.cantina",
+        state: "off",
+        attributes: { friendly_name: "Cantina", device_class: "door" },
+      },
+      "switch.zona_7_bypass": {
+        entity_id: "switch.zona_7_bypass",
+        state: "off",
+        attributes: { friendly_name: "Zona 7 Bypass" },
+      },
+    },
+    __varchi: {
+      righe: [...VARCHI.righe, { entity: "binary_sensor.cantina", name: "Cantina", icon: "door" }],
+    },
+    __disco: {
+      dm_dispositivi_di_home_assistant: {
+        di: { "binary_sensor.cantina": "zona7", "switch.zona_7_bypass": "zona7" },
+        nomi: { zona7: "Zona 7" },
+      },
+    },
+  });
+  const cantina = carta(pagina, "Cantina");
+  /* La mappa si rilegge dal disco di rado: si ridisegna finché non la si vede. */
+  await expect
+    .poll(
+      async () => {
+        await page.evaluate(() =>
+          window.dispatchEvent(new CustomEvent("dashboardmodern:state-changed", { detail: {} })),
+        );
+        return cantina.locator("[data-dm-varco-scudo]").count();
+      },
+      { timeout: 10_000 },
+    )
+    .toBe(1);
+  await cantina.locator("[data-dm-varco-scudo]").click();
+  await cantina.locator("[data-dm-varco-conferma]").click();
+  await expect
+    .poll(() => page.evaluate(() => window.__SERVIZI__.at(-1)), { timeout: 10_000 })
+    .toEqual({
+      domain: "switch",
+      service: "turn_on",
+      data: { entity_id: "switch.zona_7_bypass" },
     });
 });
 

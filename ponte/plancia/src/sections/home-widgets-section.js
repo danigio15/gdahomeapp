@@ -232,6 +232,7 @@ import {
   varchiConLeFinestre,
   varchiDiCasa,
 } from "../core/varchi-di-casa.js";
+import { contoDelleEsclusioni } from "../core/l-esclusione-del-varco.js";
 import {
   CHIAVE_RILEVAMENTI,
   rilevamentiAccesi,
@@ -4126,9 +4127,20 @@ function varchiModel(states) {
     girati,
     (entity) => friendlyName(states, entity),
     dichiaratiFinestre,
+    iDispositiviRicordati().di,
   ).filter((riga) => widgetIncludes(riga.entity, fuori));
   if (!righe.length) return null;
   const conto = contoDeiVarchi(righe);
+  /* Le escluse dall'antifurto (#136) si dicono anche qui, in coda alla
+   * didascalia: la tessera e' la prima cosa che si guarda uscendo di casa, e
+   * una finestra esclusa e' una cosa da sapere prima di inserire. Le parole
+   * sono quelle del conto della pagina Varchi, le stesse chiavi. */
+  const esclusioni = contoDelleEsclusioni(righe);
+  const escluse = esclusioni.esclusi
+    ? esclusioni.esclusi === 1
+      ? t("1 escluso", "1 bypassed")
+      : t(`${esclusioni.esclusi} esclusi`, `${esclusioni.esclusi} bypassed`)
+    : "";
   const perLaFascia = (elenco) =>
     elenco.map((riga) => ({ entity: riga.entity, name: clean(riga.name) || riga.entity }));
   return {
@@ -4138,9 +4150,14 @@ function varchiModel(states) {
     alert: conto.aperti > 0,
     label: t("Varchi", "Openings"),
     value: String(conto.aperti),
-    caption: conto.aperti
-      ? conto.nomi.join(" · ")
-      : t(`Tutto chiuso · ${conto.chiusi}`, `All closed · ${conto.chiusi}`),
+    caption: [
+      conto.aperti
+        ? conto.nomi.join(" · ")
+        : t(`Tutto chiuso · ${conto.chiusi}`, `All closed · ${conto.chiusi}`),
+      escluse,
+    ]
+      .filter(Boolean)
+      .join(" · "),
     ring: conto.totale ? Math.round((conto.aperti / conto.totale) * 100) : null,
     /* Gli aperti escono col modello, per la fascia sotto il meteo (#482): la
      * stessa lista che qui sotto diventa la didascalia. */
