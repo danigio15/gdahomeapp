@@ -1503,8 +1503,12 @@ test("production graph is single-owner, acyclic and contains no facade pass-thro
   // `core/segni-del-catalogo.js`, che traduce una chiave o un'emoji nel
   // disegno, e `sections/segni-del-catalogo-section.js`, il foglio che
   // dipinge i segnaposti del guscio.
+  // 416 con la stanza come tavola di comandi (#160): il nucleo
+  // `core/la-stanza-a-tessere.js`, con l'ordine delle tessere, quali sono
+  // larghe, il clima della testata e a che punto e' una tapparella. La tavola
+  // la disegna la pagina Stanze, che c'era gia'.
   assert.ok(
-    relative.length <= 415,
+    relative.length <= 416,
     `production graph unexpectedly grew to ${relative.length} modules`,
   );
   assertAcyclic(edges);

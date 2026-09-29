@@ -293,7 +293,11 @@
  * l'ultima volta. Quella data si segna da un telefono e si conta sul
  * tablet in cucina: se restasse sul vetro che l'ha segnata, gli altri
  * direbbero «cambio d'acqua da fare» per una vasca appena cambiata. */
-export const CONFIG_KEYS_REVISION = 58;
+/* La revisione 59 aggiunge la vista della stanza (#160, `cd_stanze_vista`):
+ * tessere o righe. E' una scelta della casa: chi si e' tenuto le righe le
+ * vuole sul telefono come sul tablet in cucina, e una stanza che cambia faccia
+ * a seconda del vetro da cui la si guarda sembrerebbe un errore. */
+export const CONFIG_KEYS_REVISION = 59;
 
 // Complete shared dashboard configuration snapshot. Runtime counters/timers and
 // true per-device preferences (connection credentials, theme/navbar mode) stay
@@ -308,6 +312,8 @@ export const CONFIG_KEYS = Object.freeze([
   "cd_sections_manual",
   "cd_section_names",
   "cd_stanze",
+  // Come si presenta una stanza aperta (#160): tessere o righe.
+  "cd_stanze_vista",
   "cd_floors",
   "cd_floor_icons",
   "cd_cameras",
