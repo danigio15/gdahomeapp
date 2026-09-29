@@ -28,9 +28,19 @@ import 'ponte/ponte_finto.dart';
 /// La plancia vera, senza WebView: un servitore che non serve niente e un
 /// riquadro che si conta.
 class _PlanciaFinta extends FabbricaDellaPlancia {
+  /// Con [daSola] il riquadro si dice caricato al primo fotogramma, come una
+  /// pagina che arriva; senza, cosa dice la pagina lo decide la prova.
+  _PlanciaFinta({this.daSola = true});
+
+  final bool daSola;
+
   /// Quante volte e' nato un riquadro, e quante ne e' morto uno.
   int nati = 0;
   int morti = 0;
+
+  /// Quello che la pagina direbbe: «sono finita», «mi vedo».
+  VoidCallback? caricata;
+  VoidCallback? siVede;
 
   @override
   Future<ServitoreDiQuestoSistema?> servitore(
@@ -48,13 +58,18 @@ class _PlanciaFinta extends FabbricaDellaPlancia {
     ({double alto, double basso}) margini = (alto: 0, basso: 0),
     void Function(String pagina)? quandoCambiaPagina,
     void Function()? quandoChiedeIlMenu,
+    VoidCallback? quandoSiVede,
     void Function(String foto)? quandoFotografaLaCasa,
-  }) => _RiquadroFinto(
-    key: chiave,
-    pagina: pagina,
-    fabbrica: this,
-    caricata: quandoCaricata,
-  );
+  }) {
+    caricata = quandoCaricata;
+    siVede = quandoSiVede;
+    return _RiquadroFinto(
+      key: chiave,
+      pagina: pagina,
+      fabbrica: this,
+      caricata: quandoCaricata,
+    );
+  }
 }
 
 class _ServitoreFinto implements ServitoreDiQuestoSistema {
@@ -98,7 +113,9 @@ class _RiquadroFintoState extends State<_RiquadroFinto> {
   void initState() {
     super.initState();
     widget.fabbrica.nati += 1;
-    WidgetsBinding.instance.addPostFrameCallback((_) => widget.caricata());
+    if (widget.fabbrica.daSola) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => widget.caricata());
+    }
   }
 
   @override
@@ -212,6 +229,102 @@ void main() {
     expect(plancia.morti, 0, reason: 'la pagina è stata buttata via');
     expect(plancia.nati, 1, reason: 'la pagina è stata rifatta da capo');
     expect(find.byType(LinearProgressIndicator), findsNothing);
+
+    await chiudiLaCasa(tester);
+  });
+
+  /* ─── Il velo ────────────────────────────────────────────────────────────
+   *
+   * «Apro la plancia…» copriva la pagina fino al suo `load`, che aspetta i
+   * moduli delle sezioni, i caratteri e ogni foto e istantanea delle
+   * telecamere: da fuori casa, secondi di rotella sopra una plancia gia' in
+   * piedi. Adesso la pagina dice quando si vede; il `load` resta il ripiego,
+   * e sotto a tutti e due c'e' una scadenza. */
+
+  Finder ilVelo() => find.text('Apro la plancia…');
+
+  testWidgets('il velo se ne va appena la pagina si vede, senza aspettare '
+      'che sia finita', (tester) async {
+    await apriLaCasa(tester);
+    final plancia = _PlanciaFinta(daSola: false);
+    await tester.pumpWidget(_laSchermata(collegamento, plancia, impostazioni));
+    await tester.pump();
+    await tester.pump();
+    expect(ilVelo(), findsOneWidget, reason: 'la pagina non ha detto niente');
+
+    plancia.siVede!();
+    await tester.pump();
+    expect(ilVelo(), findsNothing);
+
+    /* E quando poi e' finita non torna su niente. */
+    plancia.caricata!();
+    await tester.pump();
+    expect(ilVelo(), findsNothing);
+
+    await chiudiLaCasa(tester);
+  });
+
+  testWidgets('una pagina che non lo dice si scopre al load, come prima', (
+    tester,
+  ) async {
+    await apriLaCasa(tester);
+    final plancia = _PlanciaFinta(daSola: false);
+    await tester.pumpWidget(_laSchermata(collegamento, plancia, impostazioni));
+    await tester.pump();
+    await tester.pump();
+    expect(ilVelo(), findsOneWidget);
+
+    plancia.caricata!();
+    await tester.pump();
+    expect(ilVelo(), findsNothing);
+
+    await chiudiLaCasa(tester);
+  });
+
+  testWidgets(
+    'una pagina che non dice niente non tiene su il velo per sempre',
+    (tester) async {
+      await apriLaCasa(tester);
+      final plancia = _PlanciaFinta(daSola: false);
+      await tester.pumpWidget(
+        _laSchermata(collegamento, plancia, impostazioni),
+      );
+      await tester.pump();
+      await tester.pump();
+      expect(ilVelo(), findsOneWidget);
+
+      await tester.pump(quantoDuraAlPiuIlVelo - const Duration(seconds: 1));
+      expect(
+        ilVelo(),
+        findsOneWidget,
+        reason: 'la scadenza non è ancora passata',
+      );
+      await tester.pump(const Duration(seconds: 2));
+      expect(ilVelo(), findsNothing);
+
+      await chiudiLaCasa(tester);
+    },
+  );
+
+  testWidgets('ricaricando il velo torna, e aspetta di nuovo la pagina', (
+    tester,
+  ) async {
+    await apriLaCasa(tester);
+    final plancia = _PlanciaFinta(daSola: false);
+    await tester.pumpWidget(_laSchermata(collegamento, plancia, impostazioni));
+    await tester.pump();
+    await tester.pump();
+    plancia.siVede!();
+    await tester.pump();
+    expect(ilVelo(), findsNothing);
+
+    tester.state<PlanciaVeraState>(find.byType(PlanciaVera)).ricarica();
+    await tester.pump();
+    expect(ilVelo(), findsOneWidget, reason: 'la pagina si sta rifacendo');
+
+    plancia.siVede!();
+    await tester.pump();
+    expect(ilVelo(), findsNothing);
 
     await chiudiLaCasa(tester);
   });

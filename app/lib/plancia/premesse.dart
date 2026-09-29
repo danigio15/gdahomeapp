@@ -36,6 +36,12 @@ const String ilMenuDalTelefono = 'gdahome:menu';
 /// messaggio fatto a oggetto: `{gdahome: "menu"}`.
 const String ilMenuDalRiquadro = 'menu';
 
+/// Come la pagina dice all'app che la sua prima schermata c'e', sul
+/// telefono: vedi [Premesse.laPrimaSchermata]. Passa sullo stesso canale del
+/// menu e dei nomi delle pagine, e per la stessa ragione ha i due punti in
+/// mezzo: non e' il nome di nessuna linguetta, e non potra' esserlo.
+const String laPlanciaSiVede = 'gdahome:si-vede';
+
 /// Un valore scritto come JavaScript, **dentro uno `<script>`**.
 ///
 /// `jsonEncode` da solo non basta: fa una stringa giusta per JavaScript, ma
@@ -815,6 +821,43 @@ class Premesse {
       'else document.addEventListener("DOMContentLoaded",parti);'
       '})();</script>';
 
+  /// La pagina dice all'app quando la sua prima schermata c'e'.
+  ///
+  /// Sopra il riquadro l'app tiene un velo suo — «Apro la plancia…» — e lo
+  /// toglieva solo quando il WebView diceva «pagina finita». Quel «finita» e'
+  /// il `load` della pagina, che aspetta **tutto**: i trecento moduli delle
+  /// sezioni che la pagina si fa portare avanti ma usa dopo, i caratteri, e
+  /// ogni immagine — le foto di casa e le istantanee delle telecamere, che da
+  /// fuori passano dal centralino una per una. Erano secondi di rotella sopra
+  /// una plancia che intanto era gia' in piedi.
+  ///
+  /// Quindi la pagina lo dice a `DOMContentLoaded`: il documento e' intero e
+  /// i suoi script sono girati, e davanti c'e' il velo della plancia —
+  /// `cd-boot-overlay`, il primo pezzo del corpo, col logo, la rotella e la
+  /// parola di chi ha montato l'impianto ([leVesti]) — che e' fatto apposta
+  /// per coprire la pagina finche' la plancia non e' pronta. Non prima: quel
+  /// velo prende il suo colore da uno script che viene dopo di lui, e
+  /// scoprirlo appena dipinto vorrebbe dire, a chi ha la plancia scura, un
+  /// lampo chiaro. Lo dice sul canale del telefono ([laPlanciaSiVede]), una
+  /// volta sola; il `load` resta il ripiego dell'app, e sotto a tutti e due
+  /// c'e' una scadenza (`schermate/plancia_vera.dart`).
+  ///
+  /// Sta **in testa**, nello script delle premesse, perche' ascolti da
+  /// subito. Nel browser non dice niente: `gdahomeDice` li' non c'e', e il
+  /// velo dell'app nemmeno.
+  static const String laPrimaSchermata =
+      '(function(){'
+      'var detto=false;'
+      'var dico=function(){'
+      'if(detto)return;detto=true;'
+      'try{if(window.gdahomeDice&&window.gdahomeDice.postMessage)'
+      'window.gdahomeDice.postMessage("$laPlanciaSiVede");}catch(male){}'
+      '};'
+      'if(document.readyState==="loading")'
+      'document.addEventListener("DOMContentLoaded",dico);'
+      'else dico();'
+      '})();';
+
   /* Il tema, la tavolozza e la barra qui non si scrivono, e non e' una
    * dimenticanza. Sono tre comandi della pagina Config della plancia — «su
    * questo dispositivo», lo dice lei — e la pagina se li tiene nel deposito
@@ -926,6 +969,8 @@ class Premesse {
         /* Il cassetto di questa casa, se la pagina ha una casa: si riempie
            da quello di prima, e prima che la pagina lo legga. */
         '${ilCassettoDellaCasa(quale)}'
+        /* E chi dice all'app che la pagina si vede, in ascolto da subito. */
+        '$laPrimaSchermata'
         '</script>';
     final testa = RegExp(
       r'<head[^>]*>',

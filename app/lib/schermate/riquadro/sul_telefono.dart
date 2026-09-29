@@ -16,7 +16,7 @@ import 'package:webview_flutter_android/webview_flutter_android.dart';
 import 'package:webview_flutter_wkwebview/webview_flutter_wkwebview.dart';
 
 import '../../casa/fuori.dart';
-import '../../plancia/premesse.dart' show ilMenuDalTelefono;
+import '../../plancia/premesse.dart' show ilMenuDalTelefono, laPlanciaSiVede;
 import 'biglietto.dart';
 
 /// Un controllore pronto a caricare la plancia.
@@ -33,6 +33,10 @@ import 'biglietto.dart';
 /// toglie le scorciatoie che ha per una superficie opaca: con una plancia
 /// che si muove sempre e' lavoro in piu' sessanta volte al secondo, per
 /// mostrare un fondo che la pagina copre comunque.
+///
+/// [quandoCaricata] e' la pagina finita — il `load`, che aspetta tutto — e
+/// [quandoSiVede] la sua prima schermata, che la pagina dice da se' molto
+/// prima (`Premesse.laPrimaSchermata`).
 WebViewController costruisciIlControllore({
   required void Function() quandoCaricata,
   required void Function(String perche) quandoFallisce,
@@ -43,6 +47,7 @@ WebViewController costruisciIlControllore({
   Future<String> Function(String domanda, String diSerie)? faScrivere,
   void Function(String pagina)? quandoCambiaPagina,
   void Function()? quandoChiedeIlMenu,
+  void Function()? quandoSiVede,
   void Function(String foto)? quandoFotografaLaCasa,
 }) {
   final PlatformWebViewControllerCreationParams parametri;
@@ -77,14 +82,16 @@ WebViewController costruisciIlControllore({
         },
       ),
     );
-  /* Il canale da cui la pagina parla all'app. Ci passano due cose, e il
+  /* Il canale da cui la pagina parla all'app. Ci passano tre cose, e il
    * canale e' uno solo perche' uno solo ne serve: quale pagina della plancia
    * si e' accesa — al menu dell'app serve per non restare segnato su una
-   * voce mentre sotto c'e' un'altra pagina — e la richiesta del menu, che
-   * arriva quando si premono i tre trattini della plancia. Si distinguono
-   * dalla parola: quella del menu non e' il nome di nessuna pagina, e non
-   * potra' esserlo (`premesse.dart`). Il nome del canale e' quello che la
-   * pagina cerca. */
+   * voce mentre sotto c'e' un'altra pagina — la richiesta del menu, che
+   * arriva quando si premono i tre trattini della plancia, e la pagina che
+   * dice di essere in piedi, perche' l'app tolga il suo velo senza aspettare
+   * il `load`. Si distinguono dalla parola: quella del menu e quella della
+   * pagina in piedi non sono il nome di nessuna pagina, e non potranno
+   * esserlo (`premesse.dart`). Il nome del canale e' quello che la pagina
+   * cerca. */
   /* Il canale della fotografia per l'auto, e perche' e' un canale a parte.
    *
    * Di la' passano nomi di pagine: una fotografia mandata di la' un'app
@@ -104,7 +111,9 @@ WebViewController costruisciIlControllore({
       ),
     );
   }
-  if (quandoCambiaPagina != null || quandoChiedeIlMenu != null) {
+  if (quandoCambiaPagina != null ||
+      quandoChiedeIlMenu != null ||
+      quandoSiVede != null) {
     unawaited(
       controllore.addJavaScriptChannel(
         'gdahomeDice',
@@ -112,6 +121,10 @@ WebViewController costruisciIlControllore({
           final detto = messaggio.message;
           if (detto == ilMenuDalTelefono) {
             quandoChiedeIlMenu?.call();
+            return;
+          }
+          if (detto == laPlanciaSiVede) {
+            quandoSiVede?.call();
             return;
           }
           quandoCambiaPagina?.call(detto);
@@ -278,7 +291,8 @@ Future<void> ricarica(WebViewController controllore, Uri pagina) =>
     controllore.reload();
 
 /// Apre una pagina nel riquadro. Qui basta chiederlo: quando la pagina e'
-/// arrivata lo dice il WebView, con `onPageFinished`.
+/// arrivata lo dice il WebView, con `onPageFinished` — e prima ancora la
+/// pagina stessa, appena e' in piedi (vedi [costruisciIlControllore]).
 Future<void> apriLaPagina(WebViewController controllore, Uri pagina) =>
     controllore.loadRequest(pagina);
 
