@@ -913,8 +913,7 @@ export function actionVisual(value, size = 48) {
   const disegno =
     [item.id, String(item.mdi || "").replace(/^mdi:/, "")]
       .map((chiave) => segnoDelCatalogo(chiave, safeSize))
-      .find(Boolean) ||
-    segnoDelCatalogo(segnoPerEmoji(item.glyph) || "star", safeSize);
+      .find(Boolean) || segnoDelCatalogo(segnoPerEmoji(item.glyph) || "star", safeSize);
   return `<span class="dm-action-glyph" data-visual="${item.id}">${disegno}</span>`;
 }
 
