@@ -15,7 +15,7 @@ gettone vale, l'add-on non limita niente, l'app non mette lucchetti e il
 centralino lascia passare tutti. Non c'è nessun altro posto da toccare, e
 nessun altro modo di accendere per sbaglio.
 
-Sta in quattro file qui (`ponte`, `centralino`, `nuvola`, `app`) e in uno in
+Sta in tre file qui (`ponte`, `centralino`, `app`) e in uno in
 gdanav. Li scrive tutti `strumenti/chiave-licenze.mjs`, e una prova controlla
 che siano d'accordo fra loro: se uno restasse indietro, una parte verificherebbe
 e un'altra no, e non se ne accorgerebbe nessuno finché non chiama un cliente.
@@ -29,7 +29,7 @@ ancora in prova interna, e lì come nel browser resta tutto aperto.
 | | spento | prima l'iPhone | per tutti |
 |---|---|---|---|
 | chiave nell'add-on e nell'app | vuota | **sì** | sì |
-| chiave nel centralino e nella nuvola | vuota | vuota | sì |
+| chiave nel centralino | vuota | vuota | sì |
 | `LICENZE_SOLO_SULL_IPHONE` | `false` | **`true`** | `false` |
 | la casa chiede i gettoni e gira le ricevute | no | **sì** | sì |
 | la casa si limita (plance, telefoni da fuori) | no | **no** | sì, se Base |
@@ -66,8 +66,7 @@ Cosa fa l'app per iPhone, e perché:
 
 Il giorno che si accende per tutti, `--fallo` riconosce la tappa e **tiene
 la stessa chiave**: la privata è già sul quadro e ha già firmato i gettoni
-in giro. Scrive la pubblica anche nel centralino e nella nuvola, e spegne la
-bandierina.
+in giro. Scrive la pubblica anche nel centralino, e spegne la bandierina.
 
 ## L'ordine, e perché è quello
 
@@ -104,7 +103,7 @@ rimettercela.
    limiti locali scattano man mano, casa per casa.
 6. **Aspettare.** Il numero è `pronte_alla_licenza` contro `case`, nei numeri
    del centralino (`GET /numeri`).
-7. **Per ultimo il centralino, e la nuvola.**
+7. **Per ultimo il centralino.**
 
 ## Il passo 7 è quello che fa male
 

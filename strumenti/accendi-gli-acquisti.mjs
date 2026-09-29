@@ -21,9 +21,9 @@
  *   1. `chiave-licenze.mjs --senza-centralino --pubblica <x>`: la chiave
  *      nell'add-on e nell'app. La casa tiene la licenza e gira le ricevute
  *      senza limitare niente; l'app e il browser mettono i lucchetti di Base;
- *      il centralino e la nuvola restano senza chiave, e il fuori casa aperto.
- *   2. `--fallo`, qui: la stessa chiave nel centralino e nella nuvola. Da li'
- *      il fuori casa si chiude alle case che non sono Premium.
+ *      il centralino resta senza chiave, e il fuori casa aperto.
+ *   2. `--fallo`, qui: la stessa chiave nel centralino. Da li' il fuori casa
+ *      si chiude alle case che non sono Premium.
  *
  * ─── Perche' un programma e non un foglietto ─────────────────────────────
  *
@@ -43,7 +43,7 @@
  * ─── Cosa guarda da se', e cosa no ───────────────────────────────────────
  *
  * Da se' guarda quello che sta in questa repository: se l'interruttore e'
- * ancora spento, se i sei file che tengono la chiave sono tutti d'accordo, e
+ * ancora spento, se i file che tengono la chiave sono tutti d'accordo, e
  * se gdanav e' li' accanto da aggiornare insieme. Quello che sta fuori — i
  * prodotti nei negozi, le credenziali sulla macchina del quadro, quante case
  * si sono aggiornate — non lo puo' sapere, e allora non lo indovina: dice
@@ -61,7 +61,6 @@ const RADICE = dirname(dirname(fileURLToPath(import.meta.url)));
 export const I_FILE_DELLA_CHIAVE = Object.freeze([
   "ponte/src/chiave-licenze.js",
   "centralino/src/chiave-licenze.js",
-  "nuvola/src/chiave-licenze.js",
   "app/lib/licenza/chiave.dart",
 ]);
 
@@ -81,9 +80,9 @@ const CASA_E_APP = new Set(["ponte/src/chiave-licenze.js", "app/lib/licenza/chia
 /**
  * Com'e' messo l'interruttore, file per file.
  *
- * `spento` quando tutti e quattro hanno la chiave vuota, `acceso` quando tutti
- * e quattro hanno la **stessa** chiave, `senza-centralino` quando ce l'hanno
- * l'add-on e l'app e il centralino e la nuvola no; `rotto` quando non sono
+ * `spento` quando tutti e tre hanno la chiave vuota, `acceso` quando tutti e
+ * tre hanno la **stessa** chiave, `senza-centralino` quando ce l'hanno
+ * l'add-on e l'app e il centralino no; `rotto` quando non sono
  * d'accordo — ed e' il caso peggiore, perche' vorrebbe dire che una parte
  * verifica e l'altra no, e nessuno se ne accorge finche' un cliente non chiama.
  */
@@ -102,7 +101,7 @@ export function comEMesso({ radice = RADICE, file = I_FILE_DELLA_CHIAVE } = {}) 
     return { stato: sola === "" ? "spento" : "acceso", chiave: sola, dentro };
   }
   /* Il primo passo: la stessa chiave nella casa e nell'app, e nessuna nel
-   * centralino e nella nuvola. Qualunque altro miscuglio e' rotto — il
+   * centralino. Qualunque altro miscuglio e' rotto — il
    * centralino con una chiave che la casa non ha chiuderebbe fuori tutti. */
   const loro = dentro.filter((uno) => CASA_E_APP.has(uno.file));
   const gliAltri = dentro.filter((uno) => !CASA_E_APP.has(uno.file));
@@ -170,7 +169,7 @@ export const I_PASSI_A_MANO = Object.freeze([
   },
   {
     quando: "quando l'app nuova e' nei negozi",
-    che: "Il centralino e la nuvola, per ultimi",
+    che: "Il centralino, per ultimo",
     come: `\`--fallo\`, qui: la stessa chiave anche li'. Da quel momento il fuori casa e' Premium.
     Chi ha l'add-on vecchio si sente dire «aggiorna l'add-on», e nessuno ha pagato a vuoto:
     con l'add-on vecchio l'app non vende. Quante case lo sentiranno lo dice
@@ -186,7 +185,7 @@ function racconta(come, gdanav) {
     righe.push("Oggi nessuno e' limitato, e l'accesso da fuori casa e' di tutti.");
   } else if (come.stato === "senza-centralino") {
     righe.push(`L'interruttore e' ACCESO SENZA IL CENTRALINO: la chiave e' \`${come.chiave}\`.`);
-    righe.push("E' nell'add-on e nell'app; il centralino e la nuvola sono senza.");
+    righe.push("E' nell'add-on e nell'app; il centralino e' senza.");
     righe.push("La casa tiene la licenza e gira le ricevute senza limitare niente; i");
     righe.push("lucchetti di Base li mettono l'app e il browser. Il fuori casa e' ancora aperto.");
   } else if (come.stato === "acceso") {
@@ -277,6 +276,7 @@ if (process.argv[1] && process.argv[1].endsWith("accendi-gli-acquisti.mjs")) {
 
   console.log(`\n── E adesso ${"─".repeat(64)}\n`);
   console.log("  1. la chiave e' quella di prima: sul quadro non cambia niente.");
-  console.log("  2. si rilasciano il centralino e la nuvola. Da li' il fuori casa e' Premium,");
-  console.log("     e chi ha l'add-on vecchio si sente dire di aggiornarlo.\n");
+  console.log("  2. si rilascia il centralino, col bottone «Il tramite» su Actions.");
+  console.log("     Da li' il fuori casa e' Premium, e chi ha l'add-on vecchio si sente");
+  console.log("     dire di aggiornarlo.\n");
 }

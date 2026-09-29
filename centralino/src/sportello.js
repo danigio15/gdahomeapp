@@ -15,9 +15,9 @@
  * chiunque potrebbe prendersi l'identificativo di una casa spenta senza
  * nemmeno provare ad aprirci un filo.
  *
- * Questa e' la stessa porta che sul Worker stava dentro l'oggetto della casa
- * (`nuvola/src/casa.js`), con le stesse vie e le stesse risposte: il ponte non
- * si accorge di aver cambiato indirizzo.
+ * Prima questa porta stava nel vecchio centralino su Cloudflare, che non c'e'
+ * piu'. Le vie e le risposte sono rimaste le stesse: il ponte non si e'
+ * accorto del trasloco.
  */
 
 import { join } from "node:path";
@@ -70,10 +70,9 @@ export function json(risposta, corpo, stato = 200) {
 
 /* Il magazzino di una casa, con la faccia che `Segnalazioni` si aspetta.
  *
- * Sul Worker era lo `storage` dell'oggetto della casa: due chiavi,
- * `segnalazioni` e `scritture`, lette e scritte una alla volta. Qui e' un file
- * per casa, che e' la stessa cosa vista da vicino — e tenerli separati vuol
- * dire che una casa rumorosa non fa riscrivere l'archivio di tutte le altre.
+ * Due chiavi, `segnalazioni` e `scritture`, lette e scritte una alla volta,
+ * in un file per casa: tenerli separati vuol dire che una casa rumorosa non
+ * fa riscrivere l'archivio di tutte le altre.
  */
 class MagazzinoDellaCasa {
   constructor(cartella, casa) {

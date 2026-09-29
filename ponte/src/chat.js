@@ -4,9 +4,9 @@
  *  dashboardmodern v2.»
  *
  * Ed e' giusto, perche' quella chat esiste gia' e non passa da GitHub: sotto
- * ci sta un centralino suo — `centralino.<…>.workers.dev`, un altro da quello
- * di gdahome — e la finestra che si vede nella plancia parla con
- * l'integrazione di Home Assistant con otto comandi `dashboardmodern/chat/*`.
+ * ci sta un centralino — oggi lo stesso di gdahome — e la finestra che si
+ * vede nella plancia parla con l'integrazione di Home Assistant con otto
+ * comandi `dashboardmodern/chat/*`.
  *
  * Nell'app l'integrazione non c'e': quel mestiere lo fa il ponte, come lo fa
  * per la configurazione, per le foto e per il catalogo. Finora il ponte quegli
@@ -48,9 +48,8 @@ import { join } from "node:path";
 import { Archivio } from "./archivio.js";
 import { tagliaBene } from "./testo.js";
 
-/* Il centralino della chat della dashboard. E' scritto qui come sta scritto
- * in `const.py` dell'integrazione — `CHAT_CENTRALINO` — e non e' quello di
- * gdahome: sono due posti diversi, e questa chat e' la sua. */
+/* Il centralino della chat della dashboard: lo stesso di gdahome, scritto con
+ * `https://`. Lo cambia `strumenti/centralino.mjs` insieme agli altri due. */
 export const CENTRALINO_DELLA_CHAT = "https://tramite.gdahome.org";
 
 /* Gli stessi tetti dell'integrazione. */

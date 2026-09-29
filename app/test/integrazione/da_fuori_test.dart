@@ -46,11 +46,11 @@ void main() {
 
   /* La stessa prova, contro **un altro centralino**.
    *
-   *     CENTRALINO_ESTERNO=ws://127.0.0.1:8787 flutter test
+   *     CENTRALINO_ESTERNO=ws://127.0.0.1:8099 flutter test
    *
-   * Serve a quello su Cloudflare: e' un'altra scrittura dello stesso
-   * centralino, e l'unico modo serio di dire «sono intercambiabili» e' che la
-   * prova che conta passi identica contro tutti e due. */
+   * Serve a provare un centralino acceso a parte — quello di una macchina
+   * vera, per esempio — invece di quello che la prova accende da se': la
+   * prova che conta deve passare identica anche li'. */
   final esterno = Platform.environment['CENTRALINO_ESTERNO'];
 
   setUp(() async {
@@ -232,10 +232,10 @@ void main() {
      *
      * La prima cosa che l'app chiede e' `get_states`: **tutta la casa in un
      * messaggio solo**. Su una casa vera sono due o tre megabyte, e dal
-     * centralino non passano — le funzioni sulla nuvola hanno un tetto di un
-     * megabyte per messaggio, e non e' un'impostazione. Quello che si vedeva
-     * era un'app che diceva «il filo si e' interrotto» ogni tre secondi,
-     * senza una riga di spiegazione da nessuna parte.
+     * centralino non passano: non lascia passare piu' di un megabyte per
+     * messaggio. Quello che si vedeva era un'app che diceva «il filo si e'
+     * interrotto» ogni tre secondi, senza una riga di spiegazione da nessuna
+     * parte.
      *
      * Qui la casa finta ha ottomila entita', che fanno circa un megabyte e
      * mezzo — sopra al tetto, e sopra alla misura del pezzo. Se la busta non

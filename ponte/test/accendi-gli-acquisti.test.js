@@ -46,8 +46,7 @@ function finta(chiavi) {
   return dove;
 }
 
-/* Il primo passo: la chiave nell'add-on e nell'app, non nel centralino e
- * nella nuvola. */
+/* Il primo passo: la chiave nell'add-on e nell'app, non nel centralino. */
 const DI_PROVA = "6P9sdqQtlHcmH7Ve_SgzmyJmxJS28CNORRJJfjI3rnI";
 const soloCasaEApp = (x) =>
   I_FILE_DELLA_CHIAVE.map((nome) =>
@@ -173,9 +172,9 @@ test("i file che guarda sono quelli che la chiave ce l'hanno davvero", () => {
   /* E al contrario, che e' il verso che fa danno: un file a cui
    * `chiave-licenze.mjs` scrive la chiave e che qui non si guarda resterebbe
    * fuori dal conto. Gli elenchi sono due e devono dire la stessa cosa. */
-  const suoi = [
-    ...strumento.matchAll(/"((?:ponte|centralino|nuvola|app)\/[^"]+\.(?:js|dart))"/g),
-  ].map((uno) => uno[1]);
+  const suoi = [...strumento.matchAll(/"((?:ponte|centralino|app)\/[^"]+\.(?:js|dart))"/g)].map(
+    (uno) => uno[1],
+  );
   assert.deepEqual(new Set(suoi), new Set(I_FILE_DELLA_CHIAVE), suoi.join(" · "));
 });
 

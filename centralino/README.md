@@ -66,8 +66,7 @@ Davanti al centralino, sulla macchina, c'e' anche l'app compilata per il
 browser: sotto `/app/` sullo stesso nome, oltre che sul suo nome corto. Quei
 file li serve Caddy e non questo processo, ma l'indirizzo conta: e' quello che
 la console dell'add-on fabbrica da se' — il nome del centralino con `/app/` in
-fondo — ed e' l'unico che esiste su un centralino proprio. Sulla nuvola lo fa
-il centralino stesso.
+fondo — ed e' l'unico che esiste su un centralino proprio.
 
 La prima via non serve a niente di tecnico, e serve a una persona: l'indirizzo
 del centralino uno se lo tiene fra i segnalibri e prima o poi lo apre nudo.

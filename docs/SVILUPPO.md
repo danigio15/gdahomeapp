@@ -6,17 +6,17 @@ pubblica. Qui i pezzi si chiamano col loro nome di casa.
 
 ## I pezzi
 
-|                   | dove sta                                                                   | cosa fa                                                                                                                 |
-| ----------------- | -------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| **il ponte**      | [`ponte/`](../ponte/README.md)                                             | l'add-on: fa entrare l'app da dentro e da fuori casa, serve la plancia, tiene la configurazione e la licenza della casa |
-| **l'app**         | [`app/`](../app/README.md)                                                 | Flutter, per Android, iPhone e browser: si abbina, si collega, comanda ([iPhone e CarPlay](IPHONE.md))                  |
-| **la plancia**    | `ponte/plancia/`                                                           | i file di DashboardModern che il ponte serve dal disco, **con la sua licenza**                                          |
-| **l'officina**    | [`officina/`](../officina/LEGGIMI.md)                                      | il resto del progetto DashboardModern: gli attrezzi che costruiscono la plancia, le sue prove, i suoi documenti         |
-| **il centralino** | [`nuvola/`](../nuvola/README.md), [`centralino/`](../centralino/README.md) | fa incontrare un telefono e la sua casa, senza capire niente di quello che si dicono                                    |
-| **il quadro**     | [`quadro/`](../quadro/README.md)                                           | il cruscotto di chi installa, e le licenze Premium: le rilascia, le regala, controlla i rinnovi col negozio             |
-| **il collaudo**   | [`collaudo/`](../collaudo/README.md)                                       | guarda l'app davvero, con un ponte vero e le fotografie di ogni schermata                                               |
-| **il sito**       | [`sito/`](../sito/README.md)                                               | gdahome.org: racconta il progetto, e ne fa toccare **la plancia vera** da un browser                                    |
-| **il negozio**    | [`app/negozio/`](../app/negozio/LEGGIMI.md)                                | i testi del Play Store e dell'App Store, una lingua per file                                                            |
+|                   | dove sta                                    | cosa fa                                                                                                                 |
+| ----------------- | ------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| **il ponte**      | [`ponte/`](../ponte/README.md)              | l'add-on: fa entrare l'app da dentro e da fuori casa, serve la plancia, tiene la configurazione e la licenza della casa |
+| **l'app**         | [`app/`](../app/README.md)                  | Flutter, per Android, iPhone e browser: si abbina, si collega, comanda ([iPhone e CarPlay](IPHONE.md))                  |
+| **la plancia**    | `ponte/plancia/`                            | i file di DashboardModern che il ponte serve dal disco, **con la sua licenza**                                          |
+| **l'officina**    | [`officina/`](../officina/LEGGIMI.md)       | il resto del progetto DashboardModern: gli attrezzi che costruiscono la plancia, le sue prove, i suoi documenti         |
+| **il centralino** | [`centralino/`](../centralino/README.md)    | fa incontrare un telefono e la sua casa, senza capire niente di quello che si dicono                                    |
+| **il quadro**     | [`quadro/`](../quadro/README.md)            | il cruscotto di chi installa, e le licenze Premium: le rilascia, le regala, controlla i rinnovi col negozio             |
+| **il collaudo**   | [`collaudo/`](../collaudo/README.md)        | guarda l'app davvero, con un ponte vero e le fotografie di ogni schermata                                               |
+| **il sito**       | [`sito/`](../sito/README.md)                | gdahome.org: racconta il progetto, e ne fa toccare **la plancia vera** da un browser                                    |
+| **il negozio**    | [`app/negozio/`](../app/negozio/LEGGIMI.md) | i testi del Play Store e dell'App Store, una lingua per file                                                            |
 
 Come si installa l'add-on a mano per svilupparlo, e come si accende un
 centralino proprio: [`COME_PROVARLA.md`](../COME_PROVARLA.md).
@@ -45,11 +45,9 @@ in poi ogni messaggio è cifrato punta a punta. Una prova registra tutto quello
 che lo attraversa e controlla che non ci sia dentro niente di leggibile.
 
 Quello di gdahome è `tramite.gdahome.org`, scritto nel codice del ponte e
-dell'app. **Chi preferisce il proprio** se ne accende uno:
-[`nuvola/`](../nuvola/README.md) è la versione per Cloudflare,
-[`centralino/`](../centralino/README.md) la stessa cosa in Node per una
-macchina propria. Sono intercambiabili, e la prova dal vivo passa identica
-contro tutti e due.
+dell'app. **Chi preferisce il proprio** se ne accende uno su una macchina sua:
+è [`centralino/`](../centralino/README.md), in Node, con uno script che lo
+mette in piedi da zero.
 
 **Tre strade, una casa sola.** Quale funziona dipende da dove sta il telefono
 adesso, e cambia mentre l'app è aperta. L'app le chiede tutte insieme e tiene
@@ -150,13 +148,8 @@ vero** dell'app. L'altro, `da_fuori_test.dart`, accende la catena intera:
 ```
 
 e lì il telefono **non ha nessun indirizzo della casa**: ha la riga letta da un
-QR code, e basta quella. La stessa prova gira anche contro il centralino su
-Cloudflare:
-
-```bash
-cd nuvola && npx wrangler dev &
-cd app && CENTRALINO_ESTERNO=ws://127.0.0.1:8787 flutter test test/integrazione/da_fuori_test.dart
-```
+QR code, e basta quella. Con `CENTRALINO_ESTERNO=ws://…` la stessa prova gira
+contro un centralino acceso a parte, invece di quello che accende da sé.
 
 Per **guardarla** girare, con le fotografie delle schermate, c'è
 [`collaudo/`](../collaudo/README.md).

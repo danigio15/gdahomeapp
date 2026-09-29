@@ -1,7 +1,7 @@
 /* La chiave delle licenze: si fabbrica una volta, prima del rilascio.
  *
  * Il quadro firma i gettoni delle licenze con una privata Ed25519, e tutti gli
- * altri — l'add-on, il centralino, la nuvola, l'app gdahome, gdanav — li
+ * altri — l'add-on, il centralino, l'app gdahome, gdanav — li
  * verificano con la pubblica scritta nel loro codice (`docs/LICENZE.md`, «La
  * chiave»). Di serie la pubblica e' vuota, e nessun gettone vale: tutti sono
  * Base.
@@ -23,8 +23,8 @@
  *
  *     node strumenti/chiave-licenze.mjs --senza-centralino --pubblica <x>
  *
- * e' il primo passo: la pubblica va nell'add-on e nell'app, e il centralino e
- * la nuvola restano senza. La casa tiene la licenza e gira le ricevute, l'app
+ * e' il primo passo: la pubblica va nell'add-on e nell'app, e il centralino
+ * resta senza. La casa tiene la licenza e gira le ricevute, l'app
  * e il browser mettono i lucchetti di Base, e il fuori casa resta aperto a
  * tutti finche' non si rilancia senza `--senza-centralino`
  * (`docs/ACCENDERE-GLI-ACQUISTI.md`). Qui la coppia **non si fabbrica**: si e'
@@ -43,11 +43,7 @@ import { fileURLToPath } from "node:url";
 const QUI = dirname(fileURLToPath(import.meta.url));
 
 /* I file che tengono la pubblica, dentro questa repository. */
-const DI_QUI_JS = [
-  "ponte/src/chiave-licenze.js",
-  "centralino/src/chiave-licenze.js",
-  "nuvola/src/chiave-licenze.js",
-];
+const DI_QUI_JS = ["ponte/src/chiave-licenze.js", "centralino/src/chiave-licenze.js"];
 const DI_QUI_DART = ["app/lib/licenza/chiave.dart"];
 /* E quello dentro gdanav, che sta in un'altra repository. */
 const IN_GDANAV_DART = "packages/gdanav_app/lib/stato/chiave_licenze.dart";
@@ -169,8 +165,8 @@ if (x) {
 }
 
 /* Il primo passo mette la chiave dove serve alla casa e all'app, e toglie
- * quella del centralino e della nuvola, se c'era: con la chiave chiuderebbero
- * fuori da casa i telefoni delle case Base. Il secondo passo — senza
+ * quella del centralino, se c'era: con la chiave chiuderebbe fuori da casa i
+ * telefoni delle case Base. Il secondo passo — senza
  * `--senza-centralino` — la scrive dappertutto. */
 const CASA_E_APP = new Set(["ponte/src/chiave-licenze.js", "app/lib/licenza/chiave.dart"]);
 const senzaCentralino = detti.senzaCentralino;
@@ -198,9 +194,9 @@ process.stdout.write(
   `\n── La pubblica ────────────────────────────────────────────────────────\n\n  ${x}\n\n` +
     scritti.map(([file, come]) => `  ${come.padEnd(9)} ${bella(file)}\n`).join("") +
     (senzaCentralino
-      ? "\n  Primo passo: la chiave e' nell'add-on e nell'app, il centralino e la\n" +
-        "  nuvola restano senza. I lucchetti di Base li mettono l'app e il browser;\n" +
-        "  il fuori casa resta aperto finche' non si rilancia senza --senza-centralino.\n"
+      ? "\n  Primo passo: la chiave e' nell'add-on e nell'app, il centralino resta\n" +
+        "  senza. I lucchetti di Base li mettono l'app e il browser; il fuori casa\n" +
+        "  resta aperto finche' non si rilancia senza --senza-centralino.\n"
       : detti.gdanav
         ? ""
         : "\n  gdanav non e' stato toccato: rilancia con --pubblica e --gdanav <cartella>.\n"),
@@ -216,7 +212,7 @@ if (d) {
       "  Poi cancellala da qui: non va in nessun file della repository, in\n" +
       "  nessun segreto di GitHub e in nessuna chat. Chi ce l'ha fa Premium\n" +
       "  chiunque. Se esce, si rilancia questo script e si rilascia tutto.\n\n" +
-      "  Prima del rilascio: ponte, centralino, nuvola, app gdahome e gdanav\n" +
+      "  Prima del rilascio: ponte, centralino, app gdahome e gdanav\n" +
       "  devono uscire tutti con questa pubblica.\n\n",
   );
 }

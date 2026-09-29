@@ -285,7 +285,7 @@ export function costruisciIlServer({
     }
     /* Da chi arriva: quello vero, anche dietro Caddy. Serve a contare i fili
      * per indirizzo, ed e' quello che la casa si vede dire all'apertura di un
-     * canale — lo stesso che le dice il centralino sulla nuvola. */
+     * canale. */
     const da = daChi(richiesta);
     /* I fili si contano per rete (in IPv6 un /64 intero e' di una persona
      * sola), ma alla casa si dice l'indirizzo com'e'. */
@@ -303,10 +303,10 @@ export function costruisciIlServer({
 
     /* `/casa` e `/casa/<casa_…>` sono la stessa porta. L'identificativo
      * nell'indirizzo qui non serve — chi decide e' il `sono-io` che arriva
-     * subito dopo, ed e' l'unico che porta anche il segreto — ma il centralino
-     * sulla nuvola ne ha bisogno per sapere a quale casa consegnare il filo
-     * prima ancora di accettarlo. Le due punte parlano la stessa lingua a
-     * tutti e due. */
+     * subito dopo, ed e' l'unico che porta anche il segreto — ma i ponti lo
+     * mettono lo stesso (`ponte/src/chiamata.js`), e qui si accetta: e' la
+     * forma del contratto, e un centralino che instrada prima di accettare il
+     * filo non ha altro da guardare. */
     if (via === "/casa" || /^\/casa\/[A-Za-z0-9_]+$/.test(via)) {
       const presa = contaLaPresa(
         accetta(richiesta, socket, {

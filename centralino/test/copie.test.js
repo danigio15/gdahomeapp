@@ -21,7 +21,6 @@ import { laChiaveIn } from "../../strumenti/accendi-gli-acquisti.mjs";
 const QUI = dirname(fileURLToPath(import.meta.url));
 const CENTRALINO = join(QUI, "..", "src");
 const PONTE = join(QUI, "..", "..", "ponte", "src");
-const NUVOLA = join(QUI, "..", "..", "nuvola", "src");
 
 /* `gettone.js` e `chiave-licenze.js` ci sono dal giorno delle licenze: il
  * gettone si verifica con le stesse regole dappertutto (`docs/LICENZE.md`), e
@@ -39,8 +38,8 @@ const COPIATI = [
 ];
 
 /* La chiave delle licenze e' l'unica riga che puo' essere diversa, e solo
- * in un modo: al primo passo sta nell'add-on e il centralino e la nuvola sono
- * senza (`strumenti/accendi-gli-acquisti.mjs`, «senza-centralino»). Tutto il
+ * in un modo: al primo passo sta nell'add-on e il centralino e' senza
+ * (`strumenti/accendi-gli-acquisti.mjs`, «senza-centralino»). Tutto il
  * resto del file e' identico sempre, e se la chiave c'e' da tutte e due le
  * parti e' la stessa. */
 function laChiaveCome(copia, delPonte, dove) {
@@ -78,35 +77,6 @@ test("le copie prese dal ponte sono ancora identiche", () => {
         `  cp ponte/src/{${COPIATI.map((uno) => uno.replace(".js", "")).join(",")}}.js centralino/src/`,
     );
   }
-});
-
-/* `segnalazioni.js` invece viene dalla nuvola, ed e' una copia per un motivo
- * diverso: la stessa cosa gira in due posti — il Worker e la macchina — finche'
- * le case non saranno passate tutte di qua. Due copie che divergono vorrebbero
- * dire due comportamenti diversi a seconda di dove una casa e' finita, che e'
- * il genere di differenza che non si trova mai guardando il codice di una
- * parte sola. */
-const PRESI_DALLA_NUVOLA = ["segnalazioni.js", "versioni.js"];
-
-test("le copie prese dalla nuvola sono ancora identiche", () => {
-  for (const nome of PRESI_DALLA_NUVOLA) {
-    assert.equal(
-      readFileSync(join(CENTRALINO, nome), "utf8"),
-      readFileSync(join(NUVOLA, nome), "utf8"),
-      `\u00ab${nome}\u00bb e' diverso da quello della nuvola. Si riallinea cosi':\n` +
-        `  cp nuvola/src/${nome} centralino/src/`,
-    );
-  }
-});
-
-/* E la nuvola, che il gettone lo verifica con le sue funzioni, ha la stessa
- * chiave: la riga e' una, in tre posti. */
-test("la chiave delle licenze e' la stessa nella nuvola", () => {
-  laChiaveCome(
-    readFileSync(join(NUVOLA, "chiave-licenze.js"), "utf8"),
-    readFileSync(join(PONTE, "chiave-licenze.js"), "utf8"),
-    "della nuvola",
-  );
 });
 
 test("il centralino puo' restare senza la chiave della casa, ma non averne un'altra", () => {

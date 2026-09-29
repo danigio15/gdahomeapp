@@ -117,7 +117,6 @@ base64url. Sta, sempre uguale, in:
 
 - `ponte/src/chiave-licenze.js`
 - `centralino/src/chiave-licenze.js`
-- `nuvola/src/chiave-licenze.js`
 - `app/lib/licenza/chiave.dart`
 - in gdanav: `packages/gdanav_app/lib/stato/chiave_licenze.dart`
 
@@ -126,7 +125,7 @@ che fa oggi col negozio).
 
 **Prima l'iPhone**: con `LICENZE_SOLO_SULL_IPHONE = true` (nei tre file JS) e
 `licenzeSoloSullIPhone = true` (nell'app) la chiave sta solo nell'add-on e
-nell'app, e il centralino e la nuvola restano vuoti. La casa chiede i gettoni
+nell'app, e il centralino resta vuoto. La casa chiede i gettoni
 e gira le ricevute ma non si limita; i lucchetti ci sono solo nell'app per
 iPhone. Si scrive con `node strumenti/chiave-licenze.mjs --solo-iphone
 --pubblica <x>`, e il perche' sta in
@@ -239,7 +238,7 @@ Controllo delle ricevute: Google Play Developer API
 - La console dell'add-on mostra lo stato della licenza e un campo per il
   codice regalo.
 
-## Il centralino (centralino e nuvola)
+## Il centralino
 
 La casa manda il gettone quando si presenta e ogni volta che lo rinnova
 (messaggio `{"t": "licenza", "tipo": "licenza", "gettone": "…"}` sul filo della
@@ -281,13 +280,10 @@ non si ferma nessuno).
 
 **Come si accende.** Si scrive in `VERSIONE_MINIMA_APP` il numero di
 costruzione della prima versione pubblica a pagamento
-(`costruzioneDiQuestApp` in `app/lib/versione.dart`, per esempio `1070000`):
-
-- sulla nuvola: la riga `VERSIONE_MINIMA_APP = "0"` fra le `[vars]` di
-  `nuvola/wrangler.toml`, poi `npx wrangler deploy`;
-- sul centralino in Node: la variabile d'ambiente `VERSIONE_MINIMA_APP` (in
-  `/etc/tramite/ambiente`, o `VERSIONE_MINIMA_APP=1070000 bash accendi.sh`,
-  che la ricorda ai giri dopo), poi si riavvia il servizio.
+(`costruzioneDiQuestApp` in `app/lib/versione.dart`, per esempio `1070000`).
+E' una variabile d'ambiente del centralino: sta in `/etc/tramite/ambiente`, o
+si passa a `VERSIONE_MINIMA_APP=1070000 bash accendi.sh`, che la ricorda ai
+giri dopo. Poi si riavvia il servizio.
 
 Il centralino la dice a tutti su `GET /versioni` →
 `{"gdahome": {"minima": 1070000}}` (pubblica, CORS aperto, tenuta 5 minuti).

@@ -84,8 +84,8 @@ const CHIUSA_PER_REGOLA = 1008;
  *
  * La prima cosa che chiede un telefono e' `get_states`: **tutta la casa in un
  * messaggio solo**, che su una casa vera sono due o tre megabyte. Dal
- * centralino non passa: le funzioni sulla nuvola hanno un tetto di un
- * megabyte per messaggio, e non e' un'impostazione — e' come sono fatte.
+ * centralino non passa: non lascia passare piu' di un megabyte per messaggio
+ * (`MESSAGGIO_MASSIMO` in `centralino/src/centralino.js`).
  *
  * Quindi le buste grandi si spezzano. Un pezzo comincia con `|`, l'ultimo no:
  * chi riceve accumula finche' non arriva quello senza. Il segno sta **fuori**

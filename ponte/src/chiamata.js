@@ -31,9 +31,7 @@
  * Percio' si batte. Ogni mezzo minuto parte un colpetto e si aspetta la
  * risposta; se non arriva entro un minuto e mezzo, quel filo e' morto anche se
  * sembra aperto, e lo si chiude per ribussare. Deve farlo **questo** lato: e'
- * quello dietro il router, ed e' l'unico che possa richiamare. E costa niente
- * anche al centralino sulla nuvola, che risponde da solo senza svegliarsi —
- * vedi `nuvola/src/casa.js`.
+ * quello dietro il router, ed e' l'unico che possa richiamare.
  *
  * Con un centralino vecchio, che ai colpetti non risponde, non si butta giu'
  * niente: si scrive una volta che quel filo non si puo' sorvegliare, e si va
@@ -50,8 +48,8 @@
  *
  * `t` e' come si chiamano tutti i messaggi di questo filo; `tipo` e' come lo
  * chiama il contratto (`docs/LICENZE.md`). Tutt'e due, perche' costano sette
- * byte ogni sei ore e cosi' nessun centralino — questo, quello sulla nuvola,
- * uno scritto domani leggendo solo il contratto — ha da indovinare. Un
+ * byte ogni sei ore e cosi' nessun centralino — questo, o uno scritto domani
+ * leggendo solo il contratto — ha da indovinare. Un
  * centralino di ieri non lo conosce e lo lascia cadere, come fa con tutto
  * quello che non conosce.
  *
@@ -199,10 +197,10 @@ export class Chiamata {
     try {
       /* L'identificativo sta **nell'indirizzo**, non solo nel primo messaggio.
        *
-       * Al centralino in Node non servirebbe — legge `sono-io` e sa tutto. Ma
-       * un centralino fatto di funzioni sulla nuvola deve sapere *prima* di
-       * accettare il filo a quale casa consegnarlo, e prima c'e' solo
-       * l'indirizzo. Non e' un segreto: serve a instradare, e quello che fa
+       * Al centralino di oggi non servirebbe — legge `sono-io` e sa tutto. Ma
+       * e' la forma del contratto: un centralino che deve sapere *prima* di
+       * accettare il filo a quale casa consegnarlo ha solo l'indirizzo. Non
+       * e' un segreto: serve a instradare, e quello che fa
        * entrare — il segreto — resta dentro il primo messaggio, dove il
        * centralino lo confronta con quello che ha in casa. */
       presa = new this.Presa(`${this.dove}/casa/${this.identita.casa}`, {

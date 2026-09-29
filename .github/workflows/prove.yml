@@ -34,8 +34,6 @@ jobs:
         run: npm run test:ponte
       - name: Le prove del centralino
         run: npm run test:centralino
-      - name: Le prove del centralino sulla nuvola
-        run: npm run test:nuvola
       # Il quadro qui dentro non ci girava, e `npm test` lo chiamava gia' — era
       # solo questo elenco a saltarlo. Centocinquanta prove che non guardava
       # nessuno, su un pezzo che si rilascia da solo: la macchina del quadro le
