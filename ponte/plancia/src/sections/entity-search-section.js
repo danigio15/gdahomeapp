@@ -33,7 +33,8 @@ import {
   rankMatches,
   searchEntityIndex,
 } from "../core/entity-search-index.js";
-import { allStates, clean, doc, installStyle, lexicalGlobal, root, t } from "./shared.js";
+import { allStates, clean, doc, esc, installStyle, lexicalGlobal, root, t } from "./shared.js";
+import { segnoHtml } from "../core/segni-del-catalogo.js";
 
 const KEY = "__DASHBOARDMODERN_ENTITY_SEARCH__";
 const PAGE = 60;
@@ -255,12 +256,12 @@ function paintRow(row, entry) {
   row.dataset.hinted = entry.hinted ? "true" : "false";
   parts.name.textContent = record.name;
   parts.id.textContent = record.id;
-  parts.badge.textContent = entry.hinted ? "✨" : "";
+  parts.badge.innerHTML = entry.hinted ? segnoHtml("star") : "";
   const value = clean(record.state);
   parts.value.textContent = value && value !== "unknown" && value !== "unavailable"
     ? `${value}${record.unit ? ` ${record.unit}` : ""}`
     : "";
-  parts.area.textContent = record.area ? `🏠 ${record.area}` : "";
+  parts.area.innerHTML = record.area ? `${segnoHtml("home")} ${esc(record.area)}` : "";
   row.classList.remove("is-active");
 }
 
@@ -324,7 +325,8 @@ function paintChips(chips, counts, suggested) {
    * which is the fastest path on an instance where the right entity is one of
    * three thousand. */
   if (suggested) {
-    const chip = chipNode(`✨ ${t("Suggerite", "Suggested")} ${suggested}`, state.hintedOnly);
+    const chip = chipNode(`${t("Suggerite", "Suggested")} ${suggested}`, state.hintedOnly);
+    chip.insertAdjacentHTML("afterbegin", `${segnoHtml("star")} `);
     chip.dataset.dmSuggested = "true";
     chips.append(chip);
   }

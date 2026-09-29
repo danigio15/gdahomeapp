@@ -63,7 +63,7 @@ test("ogni sezione ha la sua tessera, col suo titolo e il suo disegno", () => {
   assert.match(dentro, /const chiave = chiaveDellaSezione\(sezione\.id\);/);
   assert.match(dentro, /key: chiave,/);
   assert.match(dentro, /label: sezione\.titolo/);
-  assert.match(dentro, /icon: sezione\.icona \|\| "⭐"/);
+  assert.match(dentro, /icon: sezione\.icona \|\| "star"/);
   /* Le righe si leggono con lo stesso verbo delle evidenze: un secondo modo di
    * leggere un'entità per una tessera sarebbe un secondo modo di sbagliarla. */
   assert.match(dentro, /rigaInEvidenza\(/);
@@ -77,7 +77,7 @@ test("si spostano e si spengono tutte insieme, sotto una voce sola", () => {
     EDITOR.indexOf("function catalogoTessere"),
     EDITOR.indexOf("function tessereOrdinate"),
   );
-  assert.match(catalogo, /\["mie", "🧰", t\("Sezioni mie", "My sections"\)\]/);
+  assert.match(catalogo, /\["mie", "tools", t\("Sezioni mie", "My sections"\)\]/);
 });
 
 test("la finestra le disegna a caselle, come le evidenze", () => {

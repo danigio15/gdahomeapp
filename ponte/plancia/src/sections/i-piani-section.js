@@ -175,7 +175,7 @@ export function pannelloDeiPiani(
       if (chiede === piano.nome)
         return `
         <div class="dm-piano" data-dm-piano="${esc(piano.nome)}" data-chiede="si">
-          <div class="dm-piano-icona">🗑️</div>
+          <div class="dm-piano-icona">${segnoHtml("trash", { misura: 26 })}</div>
           <div class="dm-piano-domanda">
             <b>${esc(t("Elimino", "Delete"))} «${esc(piano.nome)}»?</b>
             <span>${
@@ -213,8 +213,8 @@ export function pannelloDeiPiani(
         <button type="button" class="dm-piano-icona" data-dm-piano-segno data-dm-piano-segno-scelto="${esc(piano.segno)}" title="${esc(t("Cambia icona", "Change icon"))}">${segnoHtml(piano.segno, { misura: 26 })}</button>
         <div class="dm-piano-testa">${titolo}</div>
         <div class="dm-piano-tasti">
-          <button type="button" data-dm-piano-rinomina title="${esc(t("Rinomina", "Rename"))}" aria-label="${esc(t("Rinomina", "Rename"))}">${rinomina === piano.nome ? "💾" : "✏️"}</button>
-          <button type="button" data-dm-piano-chiedi title="${esc(t("Elimina", "Delete"))}" aria-label="${esc(t("Elimina", "Delete"))}">🗑️</button>
+          <button type="button" data-dm-piano-rinomina title="${esc(t("Rinomina", "Rename"))}" aria-label="${esc(t("Rinomina", "Rename"))}">${segnoHtml(rinomina === piano.nome ? "check" : "pencil")}</button>
+          <button type="button" data-dm-piano-chiedi title="${esc(t("Elimina", "Delete"))}" aria-label="${esc(t("Elimina", "Delete"))}">${segnoHtml("trash")}</button>
         </div>
         ${striscia}
       </div>`;
@@ -343,7 +343,7 @@ function intitolaIGruppi(corpo, stanze, piani, ripetuti) {
     if (!stanza || !ripetuti.has(clean(stanza.name).toLowerCase())) return;
     const avviso = doc.createElement("span");
     avviso.className = "dm-piano-doppio";
-    avviso.textContent = `⚠️ ${t("stesso nome di un'altra stanza", "same name as another room")}`;
+    avviso.innerHTML = `${segnoHtml("warning")} ${esc(t("stesso nome di un'altra stanza", "same name as another room"))}`;
     dove.append(avviso);
   });
   return true;

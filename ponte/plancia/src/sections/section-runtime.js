@@ -188,6 +188,12 @@ import { installRadarMeteo } from "./radar-meteo-section.js";
 import { installMinipcShowcaseSection } from "./minipc-showcase-section.js";
 import { installLegacySections, LEGACY_SECTION_KEYS } from "./legacy-sections-registry.js";
 import { activeLocale, allStates, clean, english, section, t, wrapFunction } from "./shared.js";
+import { segnoHtml, svgDelSegno } from "../core/segni-del-catalogo.js";
+
+/* Il disegno del catalogo come immagine di sfondo, per un `::before` che
+ * prima portava un'emoji come contenuto. */
+const immagineDelSegno = (chiave) =>
+  `url("data:image/svg+xml,${encodeURIComponent(svgDelSegno(chiave)).replace(/'/g, "%27").replace(/"/g, "%22")}")`;
 
 const root = globalThis;
 const RUNTIME_KEY = "__DASHBOARDMODERN_SECTION_RUNTIME__";
@@ -272,7 +278,7 @@ function installApplianceDailyPopupStyle() {
       box-shadow:0 13px 34px rgba(14,165,233,.10)!important;
     }
     #dm-appliance-daily-popup .dm-appliance-daily-total::before {
-      content:"⚡";
+      content:"";
       position:absolute;
       left:22px;
       top:50%;
@@ -283,7 +289,7 @@ function installApplianceDailyPopupStyle() {
       place-items:center;
       border:1px solid rgba(14,165,233,.16);
       border-radius:19px;
-      background:rgba(255,255,255,.78);
+      background:center/30px no-repeat ${immagineDelSegno("power")},rgba(255,255,255,.78);
       box-shadow:0 8px 24px rgba(14,165,233,.10);
       font-size:30px;
     }
@@ -315,7 +321,7 @@ function installApplianceDailyPopupStyle() {
       transition:transform .16s ease,box-shadow .16s ease!important;
     }
     #dm-appliance-daily-popup .dm-appliance-daily-row::before {
-      content:"⚡";
+      content:"";
       position:absolute;
       left:18px;
       top:50%;
@@ -325,7 +331,7 @@ function installApplianceDailyPopupStyle() {
       display:grid;
       place-items:center;
       border-radius:18px;
-      background:linear-gradient(145deg,#e0f2fe,#f0f9ff);
+      background:center/26px no-repeat ${immagineDelSegno("power")},linear-gradient(145deg,#e0f2fe,#f0f9ff);
       color:#0284c7;
       box-shadow:inset 0 0 0 1px rgba(14,165,233,.12),0 8px 22px rgba(14,165,233,.09);
       font-size:25px;
@@ -529,7 +535,7 @@ function applianceKpiArtwork(model) {
     (kind &&
       (applianceHeroArtwork(kind, 56, { chiave: `kpi-${model?.id || model?.name || ""}` }) ||
         applianceArtwork(kind, 72))) ||
-    '<span class="dm-appliance-kpi-fallback">⚡</span>'
+    `<span class="dm-appliance-kpi-fallback">${segnoHtml("power")}</span>`
   );
 }
 
@@ -556,7 +562,7 @@ function ensureApplianceKpiPopup(kind) {
       <button type="button" data-dm-appliance-kpi-close aria-label="${t("Chiudi", "Close")}">✕</button>
     </div>
     <div class="dm-appliance-kpi-summary">
-      <span class="dm-appliance-kpi-summary-icon">${isRunning ? "●" : "⚡"}</span>
+      <span class="dm-appliance-kpi-summary-icon">${isRunning ? "●" : segnoHtml("power")}</span>
       <span class="dm-appliance-kpi-summary-copy"><small>${summaryLabel}</small><strong data-dm-appliance-kpi-summary>—</strong></span>
     </div>
     <div class="dm-appliance-kpi-list" data-dm-appliance-kpi-list></div>
@@ -583,7 +589,7 @@ function applianceKpiRow(model, kind, totalWatts = 0) {
       : `<strong>${formatApplianceWatts(watts)}</strong><small>${totalWatts > 0 ? `${Math.round((Math.max(0, watts) / totalWatts) * 100)}%` : "0%"}</small>`;
   return `<div class="dm-appliance-kpi-row" data-appliance-id="${htmlEscape(model.id)}">
     <span class="dm-appliance-kpi-visual dm-ap-mech is-${htmlEscape(model?.mode === "running" ? "run" : model?.mode === "standby" ? "standby" : "off")}">${applianceKpiArtwork(model)}</span>
-    <span class="dm-appliance-kpi-row-main"><strong>${htmlEscape(model.name)}</strong>${room ? `<small>🏠 ${htmlEscape(room)}</small>` : ""}</span>
+    <span class="dm-appliance-kpi-row-main"><strong>${htmlEscape(model.name)}</strong>${room ? `<small>${segnoHtml("home")} ${htmlEscape(room)}</small>` : ""}</span>
     <span class="dm-appliance-kpi-row-value">${right}</span>
   </div>`;
 }

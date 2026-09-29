@@ -2,6 +2,7 @@ import { clean, dashboardStore, doc, energyPeriodConflicts, english, esc, instal
 import { scriviNellImpianto } from "../core/energy-writer.js";
 import { plantModel } from "../core/energy-plants.js";
 import { impiantoScelto } from "./energy-section.js";
+import { segnoHtml } from "../core/segni-del-catalogo.js";
 
 globalThis.__DM_20260815C__ = true;
 const KEY = "__DASHBOARDMODERN_ENERGY_GUIDANCE_SECTION__";
@@ -32,7 +33,7 @@ function groupContract(group) {
 function contractCard(group, title, icon) {
   const contract = groupContract(group);
   return `<article class="dm-energy-source-contract" data-energy-source-group="${group}">
-    <header><span>${icon}</span><strong>${title}</strong></header>
+    <header><span>${segnoHtml(icon)}</span><strong>${title}</strong></header>
     <dl>
       <div><dt>${t("Giorno", "Day")}</dt><dd>${contract.day}</dd></div>
       <div><dt>${t("Mese", "Month")}</dt><dd>${contract.month}</dd></div>
@@ -184,9 +185,9 @@ export function normalizeEnergyGuidance() {
       "When Solar and Grid are configured, Home consumption uses the same flow balance as Home Assistant. The total kWh meter wins: when one is set, day, month and year are derived from it through Recorder and the period fields are not read. The daily, monthly and annual fields are for when no total meter exists.",
     )}</span>
   </div>${clashNotice(energyClashes())}<div class="dm-energy-source-guide-grid">
-    ${contractCard("house", t("Casa (fallback)", "Home (fallback)"), "🏠")}
-    ${contractCard("solar", t("Fotovoltaico", "Solar"), "☀️")}
-    ${contractCard("grid", t("Rete prelevata", "Grid import"), "🔌")}
+    ${contractCard("house", t("Casa (fallback)", "Home (fallback)"), "home")}
+    ${contractCard("solar", t("Fotovoltaico", "Solar"), "sun")}
+    ${contractCard("grid", t("Rete prelevata", "Grid import"), "socket")}
   </div>`;
 
   editor.querySelectorAll(".dm-energy-total-field").forEach((field) => {

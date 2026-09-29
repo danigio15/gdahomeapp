@@ -199,8 +199,8 @@ test.describe("the configuration behaves the same on every tab", () => {
        * UN salvataggio, in fondo — e cambiano solo le parole. */
       const salvataggioAtteso =
         tab === "sez2"
-          ? [expect.stringMatching(/^💾 Salva (la nuova auto|le modifiche a .+|auto)$/)]
-          : ["💾 Salva sezione"];
+          ? [expect.stringMatching(/^Salva (la nuova auto|le modifiche a .+|auto)$/)]
+          : ["Salva sezione"];
       await settledTabState(
         page,
         (view) => view.saveLabels.filter((label) => !label.startsWith("＋")),

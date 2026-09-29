@@ -90,6 +90,7 @@ import {
   telecamereVisibili,
 } from "../core/telecamere-riservate.js";
 import { iconGlyphMarkup } from "./icon-engine-section.js";
+import { segnoHtml } from "../core/segni-del-catalogo.js";
 
 const KEY = "__DASHBOARDMODERN_SECURITY_SHOWCASE__";
 const STYLE_ID = "dm-security-showcase-style";
@@ -767,7 +768,7 @@ function skeletonMarkup(labels) {
       <span class="dm-sec-orb" aria-hidden="true">
         <span class="dm-sec-orb-track"></span>
         <span class="dm-sec-orb-sweep"></span>
-        <span class="dm-sec-orb-core"><span id="alarm-icon-new">🛡️</span></span>
+        <span class="dm-sec-orb-core"><span id="alarm-icon-new">${segnoHtml("security")}</span></span>
         <span class="dm-sec-beacon" id="alarm-status-dot"></span>
       </span>
       <div class="dm-sec-readout-copy">

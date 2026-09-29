@@ -1,3 +1,4 @@
+import { segnoHtml } from "../core/segni-del-catalogo.js";
 import { applianceArtwork } from "../core/appliance-artwork.js";
 import {
   APPLIANCE_CATALOG,
@@ -6,7 +7,6 @@ import {
   applianceVisualKey,
 } from "../core/device-model.js";
 import { apriIlFoglioDiScelta, chiudiIlFoglioDiScelta } from "./foglio-di-scelta-section.js";
-import { iconGlyph } from "./icon-engine-section.js";
 import {
   activeLocale,
   allStates,
@@ -60,18 +60,8 @@ function appliances() {
   return Array.isArray(stored) ? stored.slice() : readJson("cd_appliances", []);
 }
 
-/* L'unico posto della sezione dove l'emoji resta, e non e' una scelta.
- *
- * «Non voglio vedere icone che non sono nostre»: giusto, e dappertutto qui
- * intorno adesso c'e' il disegno del catalogo. Qui no, e non per dimenticanza:
- * questa e' la tendina delle stanze, e dentro un `<option>` il browser disegna
- * TESTO — nessun elemento, nessun disegno, nemmeno un'immagine. Per mettercelo
- * bisognerebbe rifare la tendina come menu nostro, che e' un'altra cosa e un
- * altro lavoro. Finche' e' un `<select>`, l'emoji e' quello che si puo'. */
-function roomIconEmoji(icon) {
-  return iconGlyph("room", clean(icon) || "mdi:home") || "🏠";
-}
-
+/* Dentro un `<option>` il browser disegna solo testo: la tendina delle stanze
+ * dice il nome, senza segno. */
 function roomOptions(selected) {
   const rooms = section("rooms", readJson("cd_stanze", []));
   return [
@@ -79,7 +69,7 @@ function roomOptions(selected) {
     ...rooms.map((room) => {
       const value = clean(room.id || room.name);
       const active = [room.id, room.name].map(clean).includes(clean(selected));
-      return `<option value="${esc(value)}" ${active ? "selected" : ""}>${roomIconEmoji(room.icon)} ${esc(room.name || value)}</option>`;
+      return `<option value="${esc(value)}" ${active ? "selected" : ""}>${esc(room.name || value)}</option>`;
     }),
   ].join("");
 }
@@ -99,8 +89,7 @@ function flowLoadOptions(selected) {
     ...circles.map((load) => {
       const value = clean(load?.metadata?.flow_group) || clean(load.id);
       const label = clean(load.name) || value;
-      const icon = clean(load.emoji_icon || load.icon) || "🔌";
-      return `<option value="${esc(value)}" ${value === clean(selected) ? "selected" : ""}>${esc(icon)} ${esc(label)}</option>`;
+      return `<option value="${esc(value)}" ${value === clean(selected) ? "selected" : ""}>${esc(label)}</option>`;
     }),
   ].join("");
 }
@@ -125,7 +114,7 @@ function typeIconMarkup(value, size = 42) {
   if (legacy) return legacy;
   const artwork = applianceArtwork(key, size);
   if (artwork) return artwork;
-  return `<span class="dm-appliance-editor-fallback">🔌</span>`;
+  return `<span class="dm-appliance-editor-fallback">${segnoHtml("socket")}</span>`;
 }
 
 function typeLabel(value) {
@@ -301,7 +290,7 @@ function cumulativeEntity(value) {
 }
 
 function entityField(name, label, value, help = "", extra = "") {
-  return `<label class="ed-slot"><span class="ed-slot-lbl">${label}</span><span class="ed-form-row"><input class="ed-input mono" name="${name}" value="${esc(value)}"><button type="button" class="dm-entity-picker" data-pick="${name}" aria-label="${t("Seleziona entità", "Select entity")}">🔍</button></span>${help ? `<small>${help}</small>` : ""}${extra}</label>`;
+  return `<label class="ed-slot"><span class="ed-slot-lbl">${label}</span><span class="ed-form-row"><input class="ed-input mono" name="${name}" value="${esc(value)}"><button type="button" class="dm-entity-picker" data-pick="${name}" aria-label="${t("Seleziona entità", "Select entity")}">${segnoHtml("search")}</button></span>${help ? `<small>${help}</small>` : ""}${extra}</label>`;
 }
 
 function numberField(name, label, value, help = "", { step = "0.1", placeholder = "" } = {}) {
@@ -362,7 +351,7 @@ function cardFieldsMarkup(device = {}) {
     clean(device.image || device.image_url) ||
     CARD_FIELD_KEYS.some((key) => clean(device[key]) !== "");
   return `<details class="dm-appliance-card-fields"${configured ? " open" : ""}>
-    <summary>🧩 ${t("Card avanzata — immagine, durata, temperatura, porta, costi", "Advanced card — image, duration, temperature, door, costs")}</summary>
+    <summary>${segnoHtml("sliders")} ${t("Card avanzata — immagine, durata, temperatura, porta, costi", "Advanced card — image, duration, temperature, door, costs")}</summary>
     <div class="dm-appliance-card-fields-intro">${t(
       "Tutti i campi sono facoltativi: la card mostra automaticamente ciò che è disponibile. Avvio, durata, consumo e costo dell'ultimo ciclo vengono calcolati da soli dalle transizioni di potenza se non indichi entità dedicate.",
       "Every field is optional: the card automatically shows what is available. Start, duration, energy and cost of the last cycle are computed automatically from power transitions unless you provide dedicated entities.",
@@ -775,7 +764,7 @@ function bindingMarkup(device = {}) {
     <div class="dm-appliance-binding-text"><strong data-binding-title></strong><small data-binding-note></small></div>
     <div class="dm-appliance-binding-actions">
       <button type="button" class="ed-btn-add dm-appliance-binding-link" data-binding-link></button>
-      <button type="button" class="ed-btn-add dm-appliance-binding-unlink" data-binding-unlink>✂️ ${t("Scollega", "Unlink")}</button>
+      <button type="button" class="ed-btn-add dm-appliance-binding-unlink" data-binding-unlink>${segnoHtml("tools")} ${t("Scollega", "Unlink")}</button>
     </div>
   </section>`;
 }
@@ -952,7 +941,7 @@ function disegnaNascoste(modal, form) {
           const spenta = nascoste.has(entity);
           return `<button type="button" class="dm-appl-cmd-chip dm-appl-nascosta" data-appl-nascosta="${esc(entity)}"
             data-on="${spenta ? "false" : "true"}" aria-pressed="${spenta ? "false" : "true"}"
-            title="${esc(entity)}"><span>${esc(nomeAccantoAlDispositivo(entity, apparecchio, states))}</span><i aria-hidden="true">${spenta ? "🚫" : "👁"}</i></button>`;
+            title="${esc(entity)}"><span>${esc(nomeAccantoAlDispositivo(entity, apparecchio, states))}</span><i aria-hidden="true">${spenta ? segnoHtml("stop") : segnoHtml("camera")}</i></button>`;
         })
         .join("")
     : `<small class="dm-appl-cmd-vuoto">${esc(t("Niente da scegliere: l'apparecchio non ha ancora entità.", "Nothing to choose: the appliance has no entities yet."))}</small>`;
@@ -1060,23 +1049,23 @@ function paintBinding(modal, form, note = "") {
       { ...values, device_entities: bindingSnapshot(values) },
       activeLocale(),
     );
-    title.textContent = `🔗 ${clean(values.device_name) || t("Dispositivo collegato", "Linked device")}${label ? ` · ${label}` : ""}`;
+    title.textContent = `${clean(values.device_name) || t("Dispositivo collegato", "Linked device")}${label ? ` · ${label}` : ""}`;
     small.textContent =
       note ||
       t(
         "Nel dettaglio dell'apparecchio escono tutte le entità del dispositivo; qui sotto quelle che disegnano la card.",
         "The appliance detail shows every entity of the device; below, the ones that draw the card.",
       );
-    link.textContent = `🔁 ${t("Cambia dispositivo", "Change device")}`;
+    link.textContent = t("Cambia dispositivo", "Change device");
   } else {
-    title.textContent = `🔗 ${t("Collega a un'integrazione", "Link to an integration")}`;
+    title.textContent = t("Collega a un'integrazione", "Link to an integration");
     small.textContent =
       note ||
       t(
         "hOn, Home Connect, Miele, LG ThinQ, una presa Shelly…: scegli il dispositivo e le caselle vuote si compilano da sole. Quelle scritte a mano restano.",
         "hOn, Home Connect, Miele, LG ThinQ, a Shelly plug…: pick the device and the empty fields fill themselves in. The ones written by hand stay.",
       );
-    link.textContent = `🔗 ${t("Scegli il dispositivo", "Pick the device")}`;
+    link.textContent = t("Scegli il dispositivo", "Pick the device");
   }
   /* Collegare o scollegare un dispositivo cambia quali comandi e quali letture
    * gli stanno accanto (#338, #471): le proposte si rifanno insieme alla
@@ -1193,20 +1182,20 @@ export function openApplianceEditor(index) {
   modal.id = "dm-appliance-editor-modal";
   modal.className = "dm-section-modal";
   modal.innerHTML = `<section class="dm-section-dialog dm-appliance-editor-dialog" role="dialog" aria-modal="true" aria-labelledby="dm-appliance-editor-title">
-    <header><strong id="dm-appliance-editor-title">🔌 ${t("Modifica elettrodomestico", "Edit appliance")}</strong><button type="button" data-close aria-label="${t("Chiudi", "Close")}">✕</button></header>
+    <header><strong id="dm-appliance-editor-title">${segnoHtml("socket")} ${t("Modifica elettrodomestico", "Edit appliance")}</strong><button type="button" data-close aria-label="${t("Chiudi", "Close")}">✕</button></header>
     <form data-form>
       ${bindingMarkup(device)}
       <div class="dm-modal-grid dm-appliance-main-fields">
         <label class="ed-slot"><span class="ed-slot-lbl">${t("Nome", "Name")}</span><input class="ed-input" name="name" value="${esc(device.name)}" required></label>
         <label class="ed-slot dm-appliance-icon-field"><span class="ed-slot-lbl">${t("Tipo / immagine", "Type / artwork")}</span><input type="hidden" name="icon" value="${esc(visual)}"><span class="dm-appliance-icon-row"><span class="dm-appliance-icon-preview" data-icon-preview data-dm-preview-source="canonical-picker" aria-hidden="false"></span><button type="button" class="ed-input dm-appliance-type-trigger" data-type-trigger aria-haspopup="listbox"></button></span><small>${t("Usa lo stesso catalogo e la stessa icona azzurra della prima configurazione.", "Uses the same catalog and blue icon as the first configuration.")}</small></label>
         <label class="ed-slot"><span class="ed-slot-lbl">${t("Stanza", "Room")}</span><select class="ed-input" name="room_id">${roomOptions(device.room_id || device.room)}</select></label>
-        <label class="ed-slot"><span class="ed-slot-lbl">${t("Carico energia", "Energy load")}</span><select class="ed-input" name="flow_group" data-dm-appliance-flow-group>${flowLoadOptions(device.metadata?.beta27_subload_group)}</select><small class="dm-appliance-flow-suggestion" data-dm-flow-suggestion${flowGroupSuggested(device) ? "" : " hidden"}>✨ ${t("Suggerito: ha una potenza mappata", "Suggested: it has a mapped power sensor")}</small><small>${t("Il cerchio del flusso in cui rientra. Il suo valore diventa la somma dei dispositivi assegnati, e il popup del cerchio lo elenca: non serve riconfigurarlo nei Carichi.", "The flow circle it belongs to. That circle becomes the total of the appliances assigned to it and its popup lists them, with nothing to configure again under Loads.")}</small></label>
+        <label class="ed-slot"><span class="ed-slot-lbl">${t("Carico energia", "Energy load")}</span><select class="ed-input" name="flow_group" data-dm-appliance-flow-group>${flowLoadOptions(device.metadata?.beta27_subload_group)}</select><small class="dm-appliance-flow-suggestion" data-dm-flow-suggestion${flowGroupSuggested(device) ? "" : " hidden"}>${segnoHtml("star")} ${t("Suggerito: ha una potenza mappata", "Suggested: it has a mapped power sensor")}</small><small>${t("Il cerchio del flusso in cui rientra. Il suo valore diventa la somma dei dispositivi assegnati, e il popup del cerchio lo elenca: non serve riconfigurarlo nei Carichi.", "The flow circle it belongs to. That circle becomes the total of the appliances assigned to it and its popup lists them, with nothing to configure again under Loads.")}</small></label>
         ${soglieMarkup(device)}
       </div>
       <section class="dm-appliance-entity-grid">
         ${entityField("control_entity", t("Entità comando", "Control entity"), controlInitial, t("Switch, light, fan o input_boolean usato dal pulsante Accendi/Spegni.", "Switch, light, fan or input_boolean used by the On/Off button."))}
         <label class="ed-check dm-appliance-switch-off"><input type="checkbox" name="switch_disabled"${device.switch_disabled ? " checked" : ""}> ${t("Senza tasto Accendi/Spegni", "Without the On/Off button")}<small>${t("L'entità comando resta per leggere lo stato, ma la card non mostra l'interruttore: il frigo non si spegne per sbaglio.", "The control entity still reads the state, but the card hides the switch: the fridge cannot be turned off by mistake.")}</small></label>
-        ${entityField("power_entity", t("Potenza istantanea", "Instant power"), powerInitial, t("Sensore W o kW mostrato nella card.", "W or kW sensor shown on the card."), `<small class="dm-appliance-power-warning" data-dm-power-warning${powerMuta ? "" : " hidden"}>⚠️ ${esc(powerMuta)}</small>`)}
+        ${entityField("power_entity", t("Potenza istantanea", "Instant power"), powerInitial, t("Sensore W o kW mostrato nella card.", "W or kW sensor shown on the card."), `<small class="dm-appliance-power-warning" data-dm-power-warning${powerMuta ? "" : " hidden"}>${segnoHtml("warning")} ${esc(powerMuta)}</small>`)}
         ${entityField("daily_energy_entity", t("Energia giornaliera", "Daily energy"), device.daily_energy_entity, t("Facoltativa: sostituisce il calcolo del giorno.", "Optional: overrides the daily calculation."))}
         ${entityField("monthly_energy_entity", t("Energia mensile", "Monthly energy"), device.monthly_energy_entity, t("Facoltativa: sostituisce il calcolo del mese corrente.", "Optional: overrides the current-month calculation."))}
         ${entityField("total_energy_entity", t("Energia totale per storico e Report", "Total energy for history and Report"), totalInitial, t("Deve essere un contatore cumulativo kWh con state_class total o total_increasing. Non usare qui il sensore mensile: questo campo serve per ricostruire anche i mesi precedenti.", "This must be a cumulative kWh meter with state_class total or total_increasing. Do not use the monthly sensor here: this field is required to reconstruct previous months."))}
@@ -1217,7 +1206,7 @@ export function openApplianceEditor(index) {
       ${coloranoMarkup(device)}
       ${cardFieldsMarkup(device)}
       <output data-error></output>
-      <footer><button type="button" class="ed-btn-add" data-cancel>${t("Annulla", "Cancel")}</button><button type="submit" class="ed-save-btn">💾 ${t("Salva modifiche", "Save changes")}</button></footer>
+      <footer><button type="button" class="ed-btn-add" data-cancel>${t("Annulla", "Cancel")}</button><button type="submit" class="ed-save-btn">${segnoHtml("check")} ${t("Salva modifiche", "Save changes")}</button></footer>
     </form>
   </section>`;
   doc.body.append(modal);
@@ -1251,7 +1240,7 @@ export function openApplianceEditor(index) {
   if (powerField && powerWarning) {
     const ridiLAvviso = () => {
       const motivo = percheLaPotenzaNonSiLegge(powerField.value);
-      powerWarning.textContent = motivo ? `⚠️ ${motivo}` : "";
+      powerWarning.innerHTML = motivo ? `${segnoHtml("warning")} ${esc(motivo)}` : "";
       powerWarning.hidden = !motivo;
     };
     powerField.addEventListener("input", ridiLAvviso);

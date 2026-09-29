@@ -18,6 +18,7 @@
  * come sensore a parte, e chi lo indica la vede al posto di quella (spesso
  * assente) dell'entita' del robot.
  */
+import { segnoHtml } from "../core/segni-del-catalogo.js";
 import {
   ESITI_ELENCO,
   bindRobotToDevice,
@@ -88,7 +89,7 @@ function nomeDi(robot, index) {
 
 function campo(id, label, value, placeholder, hint) {
   return `<label class="ed-slot dm-robot-field"><span class="ed-slot-lbl">${esc(label)}</span>
-    <span class="ed-form-row"><input id="${esc(id)}" class="ed-input mono" data-robot-field="${esc(id.split("-").at(-1))}" value="${esc(value)}" placeholder="${esc(placeholder)}" autocomplete="off" spellcheck="false"><button type="button" class="dm-robot-pick" data-robot-pick="${esc(id)}" aria-label="${t("Scegli entità", "Choose entity")}">🔍</button></span>
+    <span class="ed-form-row"><input id="${esc(id)}" class="ed-input mono" data-robot-field="${esc(id.split("-").at(-1))}" value="${esc(value)}" placeholder="${esc(placeholder)}" autocomplete="off" spellcheck="false"><button type="button" class="dm-robot-pick" data-robot-pick="${esc(id)}" aria-label="${t("Scegli entità", "Choose entity")}">${segnoHtml("search")}</button></span>
     ${hint ? `<small>${esc(hint)}</small>` : ""}</label>`;
 }
 
@@ -242,7 +243,7 @@ function listaMarkup(tipo, robot, index) {
         ? scelte.map((entity) => chipMarkup(entity, tipo, "del", "✕", robot, states)).join("")
         : `<small class="dm-robot-chips-vuoto">${esc(parole.vuoto)}</small>`
     }</div>
-    <span class="ed-form-row"><input id="dm-robot-${index}-${esc(tipo)}" class="ed-input mono" data-robot-chip-nuovo placeholder="${esc(regola.segnaposto)}" autocomplete="off" spellcheck="false"><button type="button" class="dm-robot-pick" data-robot-pick="dm-robot-${index}-${esc(tipo)}" aria-label="${t("Scegli entità", "Choose entity")}">🔍</button><button type="button" class="dm-robot-pick dm-robot-aggiungi" data-robot-chip-add="${esc(tipo)}" aria-label="${t("Aggiungi", "Add")}" title="${t("Aggiungi", "Add")}">＋</button></span>
+    <span class="ed-form-row"><input id="dm-robot-${index}-${esc(tipo)}" class="ed-input mono" data-robot-chip-nuovo placeholder="${esc(regola.segnaposto)}" autocomplete="off" spellcheck="false"><button type="button" class="dm-robot-pick" data-robot-pick="dm-robot-${index}-${esc(tipo)}" aria-label="${t("Scegli entità", "Choose entity")}">${segnoHtml("search")}</button><button type="button" class="dm-robot-pick dm-robot-aggiungi" data-robot-chip-add="${esc(tipo)}" aria-label="${t("Aggiungi", "Add")}" title="${t("Aggiungi", "Add")}">＋</button></span>
     ${
       proposte.length
         ? `<small>${esc(parole.invito)}</small>
@@ -257,13 +258,13 @@ function rigaMarkup(robot, index) {
   const aperto = state.aperto === index;
   /* L'icona della riga dice la specie: chi ha un aspirapolvere e un tagliaerba
    * li distingue dall'elenco, senza aprire le righe. */
-  const icona = robotSpecies(robot.entity) === "lawn_mower" ? "🌱" : "🤖";
+  const icona = robotSpecies(robot.entity) === "lawn_mower" ? "mower" : "robot";
   return `<article class="ed-row dm-robot-row" data-robot-index="${index}" data-open="${aperto}">
     <div class="dm-robot-row-head">
-      <span class="dm-robot-row-icon" aria-hidden="true">${icona}</span>
+      <span class="dm-robot-row-icon" aria-hidden="true">${segnoHtml(icona)}</span>
       <span class="ed-row-main"><strong class="ed-row-new">${esc(nomeDi(robot, index))}</strong><small class="ed-row-old mono">${esc(clean(robot.entity) || t("nessuna entità", "no entity"))}</small></span>
-      <button type="button" class="ed-del dm-robot-edit" data-robot-edit aria-label="${t("Modifica", "Edit")}">✏️</button>
-      <button type="button" class="ed-del dm-robot-del" data-robot-del aria-label="${t("Elimina", "Remove")}">🗑️</button>
+      <button type="button" class="ed-del dm-robot-edit" data-robot-edit aria-label="${t("Modifica", "Edit")}">${segnoHtml("pencil")}</button>
+      <button type="button" class="ed-del dm-robot-del" data-robot-del aria-label="${t("Elimina", "Remove")}">${segnoHtml("trash")}</button>
     </div>
     <div class="dm-robot-row-body"${aperto ? "" : " hidden"}>
       <label class="ed-slot dm-robot-field"><span class="ed-slot-lbl">${t("Nome", "Name")}</span><span class="ed-form-row"><input id="dm-robot-${index}-name" class="ed-input" data-robot-field="name" value="${esc(clean(robot.name))}" placeholder="${t("Robot del piano terra", "Ground floor robot")}"></span></label>
@@ -274,7 +275,7 @@ function rigaMarkup(robot, index) {
       ${listaMarkup("letture", robot, index)}
       <label class="ed-slot dm-robot-field"><span class="ed-slot-lbl">${t("Stanza", "Room")}</span><span class="ed-form-row"><select id="dm-robot-${index}-room" class="ed-input" data-robot-field="room">${roomOptionsMarkup(clean(robot.room), t("Nessuna stanza", "No room"))}</select></span></label>
       <output class="dm-robot-error" data-robot-error></output>
-      <button type="button" class="ed-save-btn" data-robot-save>💾 ${t("Salva robot", "Save robot")}</button>
+      <button type="button" class="ed-save-btn" data-robot-save>${segnoHtml("check")} ${t("Salva robot", "Save robot")}</button>
     </div>
   </article>`;
 }
@@ -298,7 +299,7 @@ function bodyMarkup(robots) {
         : `<div class="ed-empty">${t("Nessun robot configurato", "No robot configured")}</div>`
     }</div>
     <div class="dm-robot-invito">
-      <button type="button" class="ed-btn-add dm-robot-integ" data-robot-integ>🔗 ${t("Aggiungi da un'integrazione", "Add from an integration")}</button>
+      <button type="button" class="ed-btn-add dm-robot-integ" data-robot-integ>${segnoHtml("link")} ${t("Aggiungi da un'integrazione", "Add from an integration")}</button>
       <small>${t(
         "Roborock, Dreame, Ecovacs, Husqvarna… scegli il dispositivo e il robot arriva già fatto: la sua entità, le sue mappe, la batteria, i suoi programmi e le sue letture. Oppure, qui sotto, una casella alla volta.",
         "Roborock, Dreame, Ecovacs, Husqvarna… pick the device and the robot arrives ready-made: its entity, its maps, the battery, its programs and its readings. Or, below, one field at a time.",
@@ -544,7 +545,7 @@ async function onClick(event) {
     if (errore) errore.textContent = "";
     await salva(next);
     ridisegna();
-    root.edToast?.(t("💾 Robot salvato", "💾 Robot saved"));
+    root.edToast?.(t("Robot salvato", "Robot saved"));
   }
 }
 
@@ -565,7 +566,7 @@ export function ensureRobotEditorTab() {
   const tab = doc.createElement("button");
   tab.className = "ed-tab";
   tab.dataset.tab = ROBOT_EDITOR_TAB;
-  tab.textContent = `🤖 ${t("Robot", "Robots")}`;
+  tab.innerHTML = `${segnoHtml("robot")} ${esc(t("Robot", "Robots"))}`;
   tab.addEventListener("click", () => root.editorSwitch?.(ROBOT_EDITOR_TAB));
   const prima = tabs.querySelector('.ed-tab[data-tab="runtime"]');
   if (prima) prima.before(tab);

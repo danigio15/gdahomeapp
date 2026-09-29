@@ -45,10 +45,10 @@ const COLORI_STATO = Object.freeze({
 });
 const ETICHETTE_STATO = () => ({
   A: t("Non connessa", "Not connected"),
-  B: `🔌 ${t("Collegata", "Plugged in")}`,
-  C: `⚡ ${t("In carica", "Charging")}`,
+  B: t("Collegata", "Plugged in"),
+  C: t("In carica", "Charging"),
   N: t("Non in carica", "Not charging"),
-  F: `⚠️ ${t("Errore", "Error")}`,
+  F: t("Errore", "Error"),
 });
 
 /* Il cavo lo dice solo il suo sensore. Un «off» del sensore di carica non e'

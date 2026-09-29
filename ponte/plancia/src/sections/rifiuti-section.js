@@ -33,6 +33,7 @@ import {
 } from "./shared.js";
 import { disegnoDelBidone } from "../core/disegni-rifiuti.js";
 import { disegnoDelCatalogo } from "../core/catalogo-disegni.js";
+import { segnoHtml } from "../core/segni-del-catalogo.js";
 
 const KEY = "__DASHBOARDMODERN_RIFIUTI__";
 const state = (root[KEY] ||= { installed: false, frame: 0, firma: "" });
@@ -158,7 +159,7 @@ export function ensureRifiutiTab() {
   voce.className = "tab";
   voce.dataset.tab = RIFIUTI_TAB;
   voce.id = `tab-${RIFIUTI_TAB}`;
-  voce.innerHTML = `<span class="icon">♻️</span><span class="text">${esc(t("Rifiuti", "Waste"))}</span>`;
+  voce.innerHTML = `<span class="icon">${segnoHtml("refresh")}</span><span class="text">${esc(t("Rifiuti", "Waste"))}</span>`;
   voce.addEventListener("click", () => {
     for (const nodo of doc.querySelectorAll(".tab")) nodo.classList.remove("active");
     for (const nodo of doc.querySelectorAll(".page")) nodo.classList.remove("active");

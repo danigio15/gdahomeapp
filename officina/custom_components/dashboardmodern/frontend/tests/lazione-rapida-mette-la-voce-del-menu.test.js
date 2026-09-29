@@ -108,7 +108,7 @@ test("senza una voce fissata il tasto apre il popup, e il popup chiama il serviz
    * «mdi:home» si legge tale e quale sopra il titolo. */
   assert.match(
     sorgente,
-    /writeIconGlyph\(faccia, azione\?\.icon, \{ size: 22, fallback: "🎚️" \}\)/,
+    /writeIconGlyph\(faccia, azione\?\.icon, \{ size: 22, fallback: "sliders" \}\)/,
   );
   assert.doesNotMatch(sorgente, /faccia\.textContent = /);
   /* La veste e' quella delle altre finestre: il foglio dei widget la dichiara

@@ -254,6 +254,12 @@ function textOf(node, selector) {
   return node.querySelector(selector)?.textContent || "";
 }
 
+/* Un'emoji nella configurazione esce come il disegno del catalogo che le
+ * corrisponde: un segnaposto vuoto, niente testo. */
+function segnoOf(node, selector) {
+  return /data-dm-segno="([a-z0-9-]+)"/.exec(node.querySelector(selector)?.innerHTML || "")?.[1] || "";
+}
+
 function load(id, order, overrides = {}) {
   return {
     id,
@@ -304,7 +310,7 @@ test("a bubble carries the load name, icon and reading of its period", () => {
 
   const instant = bubbles(views.instant)[0];
   assert.equal(textOf(instant, ".node-label"), "Wallbox");
-  assert.equal(textOf(instant, ".node-icon"), "🚗");
+  assert.equal(segnoOf(instant, ".node-icon"), "ev");
   assert.equal(textOf(instant, ".dm-flow-value"), "7,10 kW");
   assert.equal(instant.style.getPropertyValue("--n-color"), "#06b6d4");
   assert.equal(textOf(bubbles(views.day)[0], ".dm-flow-value"), "18,4 kWh");
@@ -383,12 +389,13 @@ test("a connector with nothing flowing is not drawn at all", () => {
   assert.match(css, /\.flow-line:not\(\.active\):not\(\.dm-energy-flow-active\)\{opacity:0!important\}/);
 });
 
-test("an emoji icon still goes straight into the bubble", () => {
+test("an emoji icon goes into the bubble as its catalog drawing", () => {
   configure({
     loads: [load("auto", 0, { name: "Auto", icon: "🚗" })],
     states: { "sensor.auto_power": { state: "3200" } },
   });
-  assert.equal(textOf(bubbles(views.instant)[0], ".node-icon"), "🚗");
+  assert.equal(segnoOf(bubbles(views.instant)[0], ".node-icon"), "ev");
+  assert.equal(textOf(bubbles(views.instant)[0], ".node-icon"), "");
 });
 
 test("an active connector animates in its load colour, an idle one does not", () => {

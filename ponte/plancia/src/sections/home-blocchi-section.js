@@ -54,6 +54,7 @@ import {
 } from "./shared.js";
 import { CLASSE_DEL_TITOLO } from "./la-card-del-meteo-section.js";
 import { rigaDellaTestata } from "./weather-in-masthead-section.js";
+import { segnoHtml } from "../core/segni-del-catalogo.js";
 
 const KEY = "__DASHBOARDMODERN_HOME_BLOCCHI__";
 const state = (root[KEY] ||= { installed: false, inCoda: false });
@@ -343,7 +344,7 @@ function pannelloMarkup() {
       </div>`;
     })
     .join("");
-  return `<div class="ed-sec-title">🏠 ${esc(t("Ordine dei blocchi della Home", "Order of the Home blocks"))}</div>
+  return `<div class="ed-sec-title">${segnoHtml("home")} ${esc(t("Ordine dei blocchi della Home", "Order of the Home blocks"))}</div>
     <div class="ed-intro">${esc(
       t(
         "In che ordine si vedono in Home. Le prime due — la striscia col menù e il riquadro col meteo — finché stanno in cima restano sopra la pagina, dove sono sempre state; spostandole più in basso scendono in pagina insieme agli altri blocchi. La striscia col menù scende solo qui: sulle altre pagine torna in alto da sola, o l'hamburger sparirebbe. Dentro ogni blocco l'ordine si fa dove si configura quel blocco: le persone nella loro scheda, le tessere in Widget, le azioni rapide nella loro.",

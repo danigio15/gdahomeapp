@@ -39,6 +39,7 @@ import {
   t,
   wrapFunction,
 } from "./shared.js";
+import { segnoHtml } from "../core/segni-del-catalogo.js";
 
 const KEY = "__DASHBOARDMODERN_ASSIST__";
 const state = (root[KEY] ||= {
@@ -209,7 +210,7 @@ function battutaMarkup(battuta) {
 function corpoMarkup() {
   if (!state.battute.length)
     return `<div class="dm-assist-vuoto">
-      <span aria-hidden="true">🗣️</span>
+      <span aria-hidden="true">${segnoHtml("chat")}</span>
       <strong>${esc(t("Chiedi pure", "Just ask"))}</strong>
       <p>${esc(t("«Accendi la luce del salone», «quanti gradi ci sono in camera», «spegni tutto».", "“Turn on the living room light”, “how warm is the bedroom”, “turn everything off”."))}</p>
     </div>`;
@@ -226,7 +227,7 @@ function finestra() {
   modale.innerHTML = `
     <div class="modal-card dm-assist-pannello" role="dialog" aria-modal="true" aria-labelledby="dm-assist-titolo">
       <div class="cfg-hero dm-assist-hero">
-        <div class="cfg-hero-ico" aria-hidden="true">🗣️</div>
+        <div class="cfg-hero-ico" aria-hidden="true">${segnoHtml("chat")}</div>
         <div class="cfg-hero-txt">
           <div class="cfg-hero-title" id="dm-assist-titolo">Assist</div>
           <div class="cfg-hero-sub">${esc(t("Chiedi a casa, scrivendo o parlando", "Ask the house, by typing or speaking"))}</div>
@@ -239,7 +240,7 @@ function finestra() {
           placeholder="${esc(t("Scrivi la tua domanda…", "Type your question…"))}"
           aria-label="${esc(t("La tua domanda", "Your question"))}">
         <button type="button" class="dm-assist-mic" data-dm-assist-mic hidden
-          aria-label="${esc(t("Parla", "Speak"))}" title="${esc(t("Parla", "Speak"))}">🎙️</button>
+          aria-label="${esc(t("Parla", "Speak"))}" title="${esc(t("Parla", "Speak"))}">${segnoHtml("chat")}</button>
         <button type="submit" class="dm-assist-manda" aria-label="${esc(t("Manda", "Send"))}" title="${esc(t("Manda", "Send"))}">➤</button>
       </form>
     </div>`;
@@ -325,7 +326,7 @@ function ensureTasto() {
   tasto.type = "button";
   tasto.id = "dm-assist-tasto";
   tasto.className = "dm-assist-tasto";
-  tasto.textContent = "🗣️";
+  tasto.innerHTML = segnoHtml("chat");
   tasto.setAttribute("aria-label", t("Apri Assist", "Open Assist"));
   tasto.title = t("Apri Assist", "Open Assist");
   tasto.addEventListener("click", () => apriAssist());

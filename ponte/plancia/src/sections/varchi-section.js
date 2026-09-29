@@ -57,6 +57,7 @@ import {
   t,
 } from "./shared.js";
 import { nomeDaHomeAssistant } from "./editor-slots-section.js";
+import { segnoHtml } from "../core/segni-del-catalogo.js";
 
 const KEY = "__DASHBOARDMODERN_VARCHI__";
 const state = (root[KEY] ||= { installed: false, frame: 0, firma: "", sveglia: 0 });
@@ -132,7 +133,7 @@ export function ensureVarchiTab() {
   voce.className = "tab";
   voce.dataset.tab = VARCHI_TAB;
   voce.id = `tab-${VARCHI_TAB}`;
-  voce.innerHTML = `<span class="icon">🚪</span><span class="text">${esc(t("Varchi", "Openings"))}</span>`;
+  voce.innerHTML = `<span class="icon">${segnoHtml("door")}</span><span class="text">${esc(t("Varchi", "Openings"))}</span>`;
   voce.addEventListener("click", () => {
     for (const nodo of doc.querySelectorAll(".tab")) nodo.classList.remove("active");
     for (const nodo of doc.querySelectorAll(".page")) nodo.classList.remove("active");

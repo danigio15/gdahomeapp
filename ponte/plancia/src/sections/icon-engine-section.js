@@ -18,7 +18,7 @@ import {
 } from "../core/personalization-catalog.js";
 import { applianceArtwork, canonicalArtworkType } from "../core/appliance-artwork.js";
 import { chiaviDaProvare, disegnoDelCatalogo } from "../core/catalogo-disegni.js";
-import { segnoDelCatalogo, segnoPerEmoji } from "../core/segni-del-catalogo.js";
+import { segnoDelCatalogo, segnoHtml, segnoPerEmoji } from "../core/segni-del-catalogo.js";
 import { clean, doc, esc, installStyle, root, t } from "./shared.js";
 
 globalThis.__DM_20260815C__ = true;
@@ -248,27 +248,27 @@ function pickerCopy(kind) {
   const normalized = normalizeKind(kind);
   if (normalized === "car") {
     return {
-      icon: "🚘",
+      icon: "ev",
       title: t("Scegli il brand auto", "Choose car brand"),
       placeholder: t("Cerca brand…", "Search brand…"),
     };
   }
   if (normalized === "room") {
     return {
-      icon: "😀",
+      icon: "person",
       title: t("Scegli l'icona", "Choose icon"),
       placeholder: t("Cerca (es. acqua, porta, fuoco)…", "Search (e.g. water, door, fire)…"),
     };
   }
   if (normalized === "load") {
     return {
-      icon: "🔌",
+      icon: "socket",
       title: t("Scegli icona del carico", "Choose load icon"),
       placeholder: t("Cerca (es. cucina, forno, garage)…", "Search (e.g. kitchen, oven, garage)…"),
     };
   }
   return {
-    icon: "⚡",
+    icon: "power",
     title: t("Scegli icona azione", "Choose action icon"),
     placeholder: t("Cerca…", "Search…"),
   };
@@ -352,7 +352,7 @@ export function openIconPicker(input, kind = "action", options = {}) {
   modal.dataset.dmSingleGlyphOwner = "true";
   modal.dataset.dmBeta17Picker = normalized;
   modal.dataset.dmBeta12Colored = "true";
-  modal.innerHTML = `<section class="dm-section-dialog dm-picker-dialog" role="dialog" aria-modal="true"><header><strong>${copy.icon} ${copy.title}</strong><button type="button" data-close aria-label="${t("Chiudi", "Close")}">✕</button></header><div class="dm-picker-search"><input class="ed-input" type="search" placeholder="🔎 ${esc(copy.placeholder)}" data-search></div><div class="dm-picker-grid">${gridMarkup(rows, normalized)}</div></section>`;
+  modal.innerHTML = `<section class="dm-section-dialog dm-picker-dialog" role="dialog" aria-modal="true"><header><strong>${segnoHtml(copy.icon)} ${copy.title}</strong><button type="button" data-close aria-label="${t("Chiudi", "Close")}">✕</button></header><div class="dm-picker-search"><input class="ed-input" type="search" placeholder="${esc(copy.placeholder)}" data-search></div><div class="dm-picker-grid">${gridMarkup(rows, normalized)}</div></section>`;
   doc.body.append(modal);
 
   const close = () => modal.remove();

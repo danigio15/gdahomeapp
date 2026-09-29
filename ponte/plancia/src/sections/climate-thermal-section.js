@@ -91,6 +91,7 @@ import {
   wrapFunction,
 } from "./shared.js";
 import { lEnergiaInParole, laPotenzaInParole } from "../core/le-unita-della-corrente.js";
+import { segnoDaValoreHtml, segnoHtml } from "../core/segni-del-catalogo.js";
 
 const KEY = "__DASHBOARDMODERN_CLIMATE_THERMAL__";
 const STYLE_ID = "dm-climate-thermal-style";
@@ -420,7 +421,7 @@ function skeletonMarkup(labels) {
         <b data-dm-cl-average>--°</b>
       </div>
       <div class="dm-cl-kpi" data-dm-cl-caldaia hidden>
-        <span>🔥 <span data-dm-cl-caldaia-nome>${esc(t("Caldaia", "Boiler"))}</span></span>
+        <span>${segnoHtml("radiator")} <span data-dm-cl-caldaia-nome>${esc(t("Caldaia", "Boiler"))}</span></span>
         <b data-dm-cl-caldaia-stato>--</b>
       </div>
       <div class="dm-cl-bulk">
@@ -502,7 +503,7 @@ function cardMarkup(unit, labels) {
       </div>
       <div class="dm-cl-pills">
         <button type="button" class="dm-cl-modo" data-dm-cl-modo hidden><span data-dm-cl-modo-glifo aria-hidden="true"></span><span data-dm-cl-modo-nome></span></button>
-        <button type="button" class="dm-cl-timer" data-dm-cl-timer><span aria-hidden="true">⏱</span><span data-dm-cl-timer-testo></span></button>
+        <button type="button" class="dm-cl-timer" data-dm-cl-timer><span aria-hidden="true">${segnoHtml("timer")}</span><span data-dm-cl-timer-testo></span></button>
       </div>
       <div class="dm-cl-valvola" data-dm-cl-valvola hidden aria-hidden="true">
         <span class="dm-cl-valvola-lbl">${esc(t("Valvola", "Valve"))}</span>
@@ -685,7 +686,7 @@ function groupedMarkup(units, labels) {
         .slice()
         .sort((sinistra, destra) => stanza(sinistra.room) - stanza(destra.room));
       const heading =
-        floor && keys.length > 1 ? `<div class="dm-cl-floor">🏢 ${esc(floor)}</div>` : "";
+        floor && keys.length > 1 ? `<div class="dm-cl-floor">${segnoHtml("home")} ${esc(floor)}</div>` : "";
       if (!conStanze) return `${heading}${ordinate.map((unit) => cardMarkup(unit, labels)).join("")}`;
       let ultima = null;
       const corpo = ordinate
@@ -864,7 +865,7 @@ function paintModo(card, unit) {
   const lettura = letturaDelModo(unit.modo, resolvedState(unit.modo, allStates()), activeLocale());
   pastiglia.hidden = !lettura.disponibile;
   if (!lettura.disponibile) return;
-  scriviSeCambia(pastiglia.querySelector("[data-dm-cl-modo-glifo]"), lettura.glifo);
+  scriviSeCambia(pastiglia.querySelector("[data-dm-cl-modo-glifo]"), segnoDaValoreHtml(lettura.glifo, { ripiego: "sliders" }));
   scriviSeCambia(pastiglia.querySelector("[data-dm-cl-modo-nome]"), lettura.nome);
   pastiglia.dataset.dmClModoFamiglia = lettura.famiglia || "";
   pastiglia.dataset.dmClModoEnt = lettura.entita;
@@ -968,7 +969,7 @@ function paintSummary(shell, units, states, labels) {
   if (fuoriEl) {
     const quante = state.fuoriStagione;
     fuoriEl.hidden = !quante;
-    if (quante) scriviSeCambia(fuoriEl, `🗓️ ${labels.fuoriStagione(quante)}`);
+    if (quante) scriviSeCambia(fuoriEl, `${segnoHtml("calendar")} ${labels.fuoriStagione(quante)}`);
   }
   const averageEl = shell.querySelector("[data-dm-cl-average]");
   if (averageEl) {
@@ -1277,7 +1278,7 @@ function apriIlMenuDelModo(lettura) {
     riga.type = "button";
     riga.className = "dm-cl-modo-voce";
     riga.setAttribute("aria-pressed", voce.attuale ? "true" : "false");
-    riga.innerHTML = `<span aria-hidden="true">${esc(voce.glifo)}</span><span>${esc(voce.nome)}</span>`;
+    riga.innerHTML = `<span aria-hidden="true">${segnoDaValoreHtml(voce.glifo, { ripiego: "sliders" })}</span><span>${esc(voce.nome)}</span>`;
     riga.addEventListener("click", () => {
       chiudiIlFoglioDiScelta();
       mandaIlModo(lettura, voce.valore);
@@ -1650,10 +1651,10 @@ function tastoRapido(unita, states) {
    * l'icona porta nel clima». Senza stanza (nemmeno per nome), o senza
    * disegno, parla il modo — ma col disegno di casa, non con l'emoji. */
   const disegno = disegnoDellaStanza(unita.room, unita.name) || disegnoDelModo(freddo);
-  const icona = freddo ? "❄️" : "🔥";
+  const icona = freddo ? "air-conditioner" : "radiator";
   tasto.innerHTML =
     `${gradi ? `<span class="ns-clima-btn-temp">${esc(gradi)}</span>` : ""}` +
-    `<span class="ns-clima-btn-icon">${disegno || esc(icona)}</span>` +
+    `<span class="ns-clima-btn-icon">${disegno || segnoHtml(icona)}</span>` +
     `<span class="ns-clima-btn-name">${esc(nome)}</span>`;
   return tasto;
 }
@@ -1733,7 +1734,7 @@ function pannelloNellaFinestra(entity) {
  * simili; per tutte le altre resta il pezzo dopo il punto dell'entita'. In una
  * casa qualunque vuol dire aprire «Pompa Salone» e leggere «pompa». Il nome
  * vero e la stanza stanno nella configurazione, che e' dove li si e' scritti. */
-const ICONE_CLIMA = Object.freeze({ termo: "🔥", pompa: "♨️", clima: "❄️" });
+const ICONE_CLIMA = Object.freeze({ termo: "radiator", pompa: "heat-pump", clima: "air-conditioner" });
 
 function intestazioneDellaFinestra(entity) {
   const chiave = clean(entity);
@@ -1744,9 +1745,9 @@ function intestazioneDellaFinestra(entity) {
   if (!unita) return false;
   const nome = doc?.getElementById?.("cp-name");
   const stanza = doc?.getElementById?.("cp-room");
-  const glifo = ICONE_CLIMA[canonicalClimateType(grezza?.type)] || "🌡️";
+  const glifo = ICONE_CLIMA[canonicalClimateType(grezza?.type)] || "thermometer";
   if (nome && clean(unita.name)) nome.textContent = unita.name;
-  if (stanza) stanza.textContent = `${glifo} ${clean(unita.room) || t("Clima", "Climate")}`;
+  if (stanza) stanza.innerHTML = `${segnoHtml(glifo)} ${esc(clean(unita.room) || t("Clima", "Climate"))}`;
   return true;
 }
 

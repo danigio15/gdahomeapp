@@ -15,6 +15,7 @@
  * dentro c'è solo quello che dei varchi è davvero proprio. Le parole, i
  * disegni, e cosa propone il tasto d'importazione.
  */
+import { segnoHtml } from "../core/segni-del-catalogo.js";
 import {
   CAMPI_IN_PIU,
   CAMPO_TIPO,
@@ -70,7 +71,7 @@ function campoDellEsclusione(riga, indice) {
   const id = `dm-varco-esclusione-${indice}`;
   const proposta = esclusioneProposta(riga.entity, allStates());
   return `<details class="dm-dich-piu"${clean(riga[CAMPO_ESCLUSIONE]) ? " open" : ""}>
-    <summary>🛡️ ${esc(t("Esclusione dall'antifurto", "Alarm bypass"))}</summary>
+    <summary>${segnoHtml("security")} ${esc(t("Esclusione dall'antifurto", "Alarm bypass"))}</summary>
     <small>${esc(
       t(
         "Le centrali pubblicano accanto a ogni contatto un interruttore che dice alla centrale di non guardarlo: è quello che serve per inserire l'antifurto con una finestra aperta apposta. Scrivilo qui e nella pagina Varchi compare lo scudo per escludere questo varco. Acceso vuol dire escluso. Lasciala vuota e questo varco si guarda e basta, come prima.",
@@ -84,7 +85,7 @@ function campoDellEsclusione(riga, indice) {
         data-dm-dich-campo="${esc(CAMPO_ESCLUSIONE)}" data-dm-dich-riga="${indice}"
         value="${esc(clean(riga[CAMPO_ESCLUSIONE]))}" placeholder="${esc(proposta || "switch.porta_ingresso_bypass")}"
         autocomplete="off" spellcheck="false"><button type="button" class="dm-entity-picker"
-        data-dm-dich-pick="${esc(id)}" aria-label="${esc(t("Scegli entità", "Choose entity"))}">🔍</button></span></label>
+        data-dm-dich-pick="${esc(id)}" aria-label="${esc(t("Scegli entità", "Choose entity"))}">${segnoHtml("search")}</button></span></label>
   </details>`;
 }
 
@@ -166,7 +167,7 @@ const scheda = costruisciSchedaDichiarata({
   },
 
   parole: {
-    linguetta: `🚪 ${t("Varchi", "Openings")}`,
+    linguetta: `${t("Varchi", "Openings")}`,
     intro: t(
       "I varchi di casa: porte, finestre, portone, basculante. Ogni varco ha la sua riga — l'entità del contatto, il nome che vuoi tu, il disegno — e la pagina Varchi mostra queste, in quest'ordine: verde chiuso, rosso aperto, e in cima quanti sono aperti adesso.",
       "The openings at home: doors, windows, front door, garage door. Each opening has its own row — the contact entity, the name you want, the drawing — and the Openings page shows these, in this order: green closed, red open, and how many are open right now on top.",
@@ -176,7 +177,7 @@ const scheda = costruisciSchedaDichiarata({
     nuovo: t("Varco nuovo", "New opening"),
     senzaNome: t("Varco senza nome", "Unnamed opening"),
     salva: t("Salva varco", "Save opening"),
-    salvato: `🚪 ${t("Varco salvato", "Opening saved")}`,
+    salvato: `${t("Varco salvato", "Opening saved")}`,
     etichettaEntita: t("Entità del contatto", "Contact entity"),
     segnaposto: "binary_sensor.finestra_cucina",
     aiutoEntita: t(
@@ -197,7 +198,7 @@ const scheda = costruisciSchedaDichiarata({
         `Prendi i ${quanti} contatti che Home Assistant ha trovato`,
         `Take the ${quanti} contacts Home Assistant found`,
       ),
-    presi: (quanti) => t(`🚪 ${quanti} varchi aggiunti`, `🚪 ${quanti} openings added`),
+    presi: (quanti) => t(`${quanti} varchi aggiunti`, `${quanti} openings added`),
     notaImporta: t(
       "Li mette qui come righe, una volta sola: da lì in poi sono tue — le rinomini, gli dai il disegno, e quelle che elimini non tornano più.",
       "It puts them here as rows, once: from then on they are yours — rename them, give them a drawing, and the ones you remove do not come back.",

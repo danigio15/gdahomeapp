@@ -1,3 +1,4 @@
+import { segnoHtml } from "../core/segni-del-catalogo.js";
 import {
   clean,
   doc,
@@ -179,7 +180,7 @@ function renderServerCards(panel, slots, visibleRefs) {
     ? visible
         .map(
           (slot) =>
-            `<article class="ed-row dm-server-row" data-ref="${esc(slot.ref)}"><span class="dm-server-icon">🖥️</span><div class="dm-server-copy"><strong>${esc(slot.label)}</strong><small class="mono">${esc(slot.ref)}</small><span class="dm-server-entity-row"><input class="ed-input mono" data-server-value data-entity-input="true" value="${esc(slot.value)}" placeholder="sensor.entity"><button type="button" class="dm-entity-picker" data-entity-target="" aria-label="${t("Seleziona entità", "Choose entity")}">🔍</button></span></div><button type="button" class="ed-del" data-remove aria-label="${t("Rimuovi", "Remove")}">🗑️</button></article>`,
+            `<article class="ed-row dm-server-row" data-ref="${esc(slot.ref)}"><span class="dm-server-icon">${segnoHtml("computer")}</span><div class="dm-server-copy"><strong>${esc(slot.label)}</strong><small class="mono">${esc(slot.ref)}</small><span class="dm-server-entity-row"><input class="ed-input mono" data-server-value data-entity-input="true" value="${esc(slot.value)}" placeholder="sensor.entity"><button type="button" class="dm-entity-picker" data-entity-target="" aria-label="${t("Seleziona entità", "Choose entity")}">${segnoHtml("search")}</button></span></div><button type="button" class="ed-del" data-remove aria-label="${t("Rimuovi", "Remove")}">${segnoHtml("trash")}</button></article>`,
         )
         .join("")
     : `<div class="ed-empty">${t("Nessun parametro aggiunto. Scegline uno dal menu.", "No parameters added. Choose one from the menu.")}</div>`;
@@ -226,7 +227,7 @@ function ensureServerEditor() {
   const panel = doc.createElement("section");
   panel.className = "ed-form dm-server-compact";
   panel.dataset.serverCompact = "true";
-  panel.innerHTML = `<div class="ed-sec-title">🖥️ ${t("Monitoraggio server", "Server monitoring")}</div><div class="ed-intro">${t("Aggiungi solo i parametri che vuoi mostrare: ogni voce configurata popola automaticamente la card.", "Add only the parameters you want to show: each configured item automatically populates the card.")}</div><div class="dm-server-add"><select class="ed-input" data-slot-select><option value="">— ${t("Scegli parametro", "Choose parameter")} —</option>${slots.map((slot) => `<option value="${esc(slot.ref)}">${esc(slot.label)}</option>`).join("")}</select><button type="button" class="ed-btn-add" data-add>＋ ${t("Aggiungi", "Add")}</button></div><div class="ed-list dm-server-list" data-server-list></div><button type="button" class="ed-save-btn" data-save>💾 ${t("Salva server", "Save server")}</button>`;
+  panel.innerHTML = `<div class="ed-sec-title">${segnoHtml("computer")} ${t("Monitoraggio server", "Server monitoring")}</div><div class="ed-intro">${t("Aggiungi solo i parametri che vuoi mostrare: ogni voce configurata popola automaticamente la card.", "Add only the parameters you want to show: each configured item automatically populates the card.")}</div><div class="dm-server-add"><select class="ed-input" data-slot-select><option value="">— ${t("Scegli parametro", "Choose parameter")} —</option>${slots.map((slot) => `<option value="${esc(slot.ref)}">${esc(slot.label)}</option>`).join("")}</select><button type="button" class="ed-btn-add" data-add>＋ ${t("Aggiungi", "Add")}</button></div><div class="ed-list dm-server-list" data-server-list></div><button type="button" class="ed-save-btn" data-save>${segnoHtml("check")} ${t("Salva server", "Save server")}</button>`;
   body.prepend(panel);
   renderServerCards(panel, slots, visibleRefs);
   panel.querySelector("[data-add]")?.addEventListener("click", () => {
@@ -347,10 +348,10 @@ function polishCss() {
     [data-load-form][data-dm-load-form="clarified"]>[data-load-group="identity"]>*{min-width:0!important;flex:1 1 0!important}
     [data-load-form][data-dm-load-form="clarified"]>.ed-slot[data-load-group^="energy"]{position:relative!important;display:grid!important;gap:7px!important;min-width:0!important;margin:0!important;padding:14px!important;border:1px solid color-mix(in srgb,#0ea5e9 18%,var(--divider-color,#dbe4ee))!important;border-radius:16px!important;background:color-mix(in srgb,#0ea5e9 4%,var(--card-background-color,#fff))!important}
     [data-load-form][data-dm-load-form="clarified"]>.ed-slot[data-load-group="energy-primary"]{grid-column:1/-1!important;padding-top:42px!important}
-    [data-load-form][data-dm-load-form="clarified"]>.ed-slot[data-load-group="energy-primary"]::before{content:"${t("⚡ MISURE ENERGETICHE", "⚡ ENERGY READINGS")}";position:absolute;left:14px;top:12px;font-size:11px;font-weight:900;letter-spacing:.08em;color:#0284c7}
+    [data-load-form][data-dm-load-form="clarified"]>.ed-slot[data-load-group="energy-primary"]::before{content:"${t("MISURE ENERGETICHE", "ENERGY READINGS")}";position:absolute;left:14px;top:12px;font-size:11px;font-weight:900;letter-spacing:.08em;color:#0284c7}
     [data-load-form][data-dm-load-form="clarified"]>.ed-slot[data-load-group^="control"]{position:relative!important;display:grid!important;gap:7px!important;min-width:0!important;margin:0!important;padding:14px!important;border:1px solid color-mix(in srgb,#16a34a 18%,var(--divider-color,#dbe4ee))!important;border-radius:16px!important;background:color-mix(in srgb,#16a34a 4%,var(--card-background-color,#fff))!important}
     [data-load-form][data-dm-load-form="clarified"]>.ed-slot[data-load-group="control-primary"]{padding-top:42px!important}
-    [data-load-form][data-dm-load-form="clarified"]>.ed-slot[data-load-group="control-primary"]::before{content:"${t("🎛️ STATO E CONTROLLO", "🎛️ STATE AND CONTROL")}";position:absolute;left:14px;top:12px;font-size:11px;font-weight:900;letter-spacing:.08em;color:#15803d}
+    [data-load-form][data-dm-load-form="clarified"]>.ed-slot[data-load-group="control-primary"]::before{content:"${t("STATO E CONTROLLO", "STATE AND CONTROL")}";position:absolute;left:14px;top:12px;font-size:11px;font-weight:900;letter-spacing:.08em;color:#15803d}
     [data-load-form][data-dm-load-form="clarified"]>label[data-load-group="visibility"]{display:flex!important;align-items:center!important;gap:9px!important;margin:0!important;padding:12px 14px!important;border-radius:14px!important;background:var(--secondary-background-color,#f6f8fb)!important;border:1px solid var(--divider-color,#dbe4ee)!important;font-weight:750!important}
     [data-load-form][data-dm-load-form="clarified"]>[data-load-group="save"]{grid-column:1/-1!important;min-height:50px!important;margin-top:2px!important}
 

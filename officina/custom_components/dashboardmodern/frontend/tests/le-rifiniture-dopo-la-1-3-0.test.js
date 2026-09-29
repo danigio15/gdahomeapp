@@ -21,7 +21,7 @@ test("nella barra Stanze ha il divano: la casa e' Home, la porta e' Aperture", (
   const sezione = leggi("src/sections/rooms-page-section.js");
   const voce = sezione.slice(sezione.indexOf("export function ensureRoomsTab"));
   const icona = voce.match(/<span class="icon">(.+?)<\/span>/)?.[1];
-  assert.equal(icona, "🛋️", "ne' la casa di Home ne' la porta delle Aperture");
+  assert.equal(icona, '${segnoHtml("room-living")}', "ne' la casa di Home ne' la porta delle Aperture");
 });
 
 test("l'icona di una stanza si traduce nel disegno, non si scrive", async () => {
@@ -137,8 +137,8 @@ test("da telefono in piedi della linguetta resta il simbolo", () => {
   assert.match(padrone, /setAttribute\("aria-label", nome\)/);
   /* La casa nella barra e la casa in configurazione erano la stessa: da
    * telefono, col solo simbolo, sarebbero due voci indistinguibili. */
-  assert.match(padrone, /stanze: "🛋️"/);
-  assert.match(padrone, /doors: "🚪"/);
+  assert.match(padrone, /stanze: "room-living"/);
+  assert.match(padrone, /doors: "door"/);
 
   for (const file of ["dashboard-runtime-it.css", "dashboard-runtime-en.css"]) {
     const foglio = leggi(`legacy/${file}`);

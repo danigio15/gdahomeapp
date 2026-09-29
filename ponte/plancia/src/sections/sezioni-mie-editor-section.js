@@ -12,6 +12,7 @@
  * Fare il contrario — chiedere tutto prima di creare qualcosa — e' il modo in
  * cui una finestra di configurazione diventa un modulo da compilare.
  */
+import { segnoDaValoreHtml, segnoHtml } from "../core/segni-del-catalogo.js";
 import {
   FORMATI_SEZIONE,
   MASSIMO_SEZIONI,
@@ -129,18 +130,18 @@ function rigaVoceMarkup(voce, sezione, riga) {
   return `<div class="dm-mia-ed-voce" data-mia-voce="${riga}">
     <div class="dm-mia-ed-voce-testa">
       <input class="ed-input dm-mia-ed-icona" data-mia-campo="icona" value="${esc(clean(voce?.icona))}"
-        placeholder="⭐" aria-label="${esc(t("Icona", "Icon"))}" maxlength="4"
+        aria-label="${esc(t("Icona", "Icon"))}" maxlength="4"
         data-icon-category="load" data-icon-glifo="true" readonly>
       <input class="ed-input" data-mia-campo="nome" value="${esc(clean(voce?.nome))}"
         placeholder="${esc(t("Nome (facoltativo)", "Name (optional)"))}">
       <button type="button" class="ed-del dm-mia-ed-via" data-mia-voce-del
-        aria-label="${esc(t("Elimina", "Remove"))}">🗑️</button>
+        aria-label="${esc(t("Elimina", "Remove"))}">${segnoHtml("trash")}</button>
     </div>
     <label class="ed-slot dm-todo-ed-field">
       <span class="ed-form-row"><input id="${id}" class="ed-input mono" data-mia-campo="entity"
         value="${esc(clean(voce?.entity))}" placeholder="sensor.qualcosa" autocomplete="off"
         spellcheck="false"><button type="button" class="dm-entity-picker" data-mia-pick="${id}"
-        aria-label="${esc(t("Scegli entità", "Choose entity"))}">🔍</button></span>
+        aria-label="${esc(t("Scegli entità", "Choose entity"))}">${segnoHtml("search")}</button></span>
     </label>
   </div>`;
 }
@@ -151,7 +152,7 @@ function rigaSezioneMarkup(sezione, indice) {
   const titolo = clean(sezione?.titolo) || `${t("Sezione", "Section")} ${indice + 1}`;
   return `<article class="ed-row dm-todo-ed-row dm-mia-ed-riga" data-mia-sezione="${indice}" data-open="${aperta}">
     <div class="dm-todo-ed-head">
-      <span class="dm-todo-ed-icon" aria-hidden="true">${esc(clean(sezione?.icona) || "⭐")}</span>
+      <span class="dm-todo-ed-icon" aria-hidden="true">${segnoDaValoreHtml(sezione?.icona, { ripiego: "star" })}</span>
       <span class="ed-row-main">
         <strong class="ed-row-new">${esc(titolo)}</strong>
         <small class="ed-row-old">${voci.length} ${esc(
@@ -159,14 +160,14 @@ function rigaSezioneMarkup(sezione, indice) {
         )}${sezione?.mostra === false ? ` · ${esc(t("fuori dalla barra", "off the bar"))}` : ""}</small>
       </span>
       <button type="button" class="ed-del dm-todo-ed-edit" data-mia-edit
-        aria-label="${esc(t("Modifica", "Edit"))}">✏️</button>
+        aria-label="${esc(t("Modifica", "Edit"))}">${segnoHtml("pencil")}</button>
       <button type="button" class="ed-del dm-todo-ed-del" data-mia-del
-        aria-label="${esc(t("Elimina", "Remove"))}">🗑️</button>
+        aria-label="${esc(t("Elimina", "Remove"))}">${segnoHtml("trash")}</button>
     </div>
     <div class="dm-todo-ed-body"${aperta ? "" : " hidden"}>
       <div class="dm-mia-ed-testa">
         <input class="ed-input dm-mia-ed-icona" data-mia-campo="icona" value="${esc(clean(sezione?.icona) || "⭐")}"
-          placeholder="⭐" aria-label="${esc(t("Icona", "Icon"))}" maxlength="4"
+          aria-label="${esc(t("Icona", "Icon"))}" maxlength="4"
           data-icon-category="action" data-icon-glifo="true" readonly>
         <input class="ed-input" data-mia-campo="titolo" value="${esc(clean(sezione?.titolo))}"
           placeholder="${esc(t("Titolo della sezione", "Section title"))}">
@@ -183,7 +184,7 @@ function rigaSezioneMarkup(sezione, indice) {
       <button type="button" class="ed-btn-add" data-mia-voce-add>＋ ${esc(
         t("Aggiungi entità", "Add entity"),
       )}</button>
-      <button type="button" class="ed-save-btn" data-mia-save>💾 ${esc(
+      <button type="button" class="ed-save-btn" data-mia-save>${segnoHtml("check")} ${esc(
         t("Salva sezione", "Save section"),
       )}</button>
     </div>
@@ -193,7 +194,7 @@ function rigaSezioneMarkup(sezione, indice) {
 function corpoMarkup() {
   const lista = sezioni();
   return `${fasciaMarkup()}<div class="dm-mia-ed">
-  <div class="ed-sec-title">⭐ ${esc(t("Le tue sezioni", "Your sections"))}</div>
+  <div class="ed-sec-title">${segnoHtml("star")} ${esc(t("Le tue sezioni", "Your sections"))}</div>
   <div class="ed-intro">${esc(
     t(
       "Una sezione tua è un titolo e le entità che ci metti dentro: compare nella barra come le altre, dice come stanno e accende quelle che si accendono. Serve quando hai in casa qualcosa che la plancia non disegna ancora — e non toglie niente: il giorno che arriva la sezione fatta apposta, questa la puoi togliere.",
@@ -363,7 +364,7 @@ function onClick(event) {
     lista[indice] = leggiLaRiga(riga);
     salva(lista);
     ridisegna();
-    root.edToast?.(t("💾 Sezione salvata", "💾 Section saved"));
+    root.edToast?.(t("Sezione salvata", "Section saved"));
   }
 }
 
@@ -374,7 +375,7 @@ export function ensureSezioniMieTab() {
   const linguetta = doc.createElement("button");
   linguetta.className = "ed-tab";
   linguetta.dataset.tab = SEZIONI_MIE_EDITOR_TAB;
-  linguetta.textContent = `⭐ ${t("Le tue sezioni", "Your sections")}`;
+  linguetta.innerHTML = `${segnoHtml("star")} ${esc(t("Le tue sezioni", "Your sections"))}`;
   linguetta.addEventListener("click", () => root.editorSwitch?.(SEZIONI_MIE_EDITOR_TAB));
   const prima = linguette.querySelector('.ed-tab[data-tab="runtime"]');
   if (prima) prima.before(linguetta);

@@ -608,7 +608,7 @@ export function ensureRoomsTab() {
    * non si distinguono al volo. Il divano e' il segno delle stanze anche in
    * Home Assistant (mdi:sofa), ed e' lo stesso che la scheda porta in
    * configurazione. */
-  tab.innerHTML = `<span class="icon">🛋️</span><span class="text">${esc(t("Stanze", "Rooms"))}</span>`;
+  tab.innerHTML = `<span class="icon">${segnoHtml("room-living")}</span><span class="text">${esc(t("Stanze", "Rooms"))}</span>`;
   /* Il gestore che il runtime lega alle voci lo lega una volta sola, al
    * caricamento: questa arriva dopo, e il suo tocco se lo deve gestire da se'. */
   tab.addEventListener("click", () => {
