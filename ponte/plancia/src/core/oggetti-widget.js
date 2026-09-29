@@ -916,6 +916,23 @@ const OGGETTI = Object.freeze({
     <path d="M11.8 21.8l.6 5" stroke="#fff" stroke-opacity=".6" stroke-width="1.1"
       stroke-linecap="round" fill="none"/>`,
 
+  /* La cottura (#71): la friggitrice ad aria, col vetro acceso d'arancio e
+   * il cassetto con la maniglia. */
+  cottura: `<defs>
+      <linearGradient id="dmoCotC" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#475569"/><stop offset=".55" stop-color="#1e293b"/>
+        <stop offset="1" stop-color="#0b1220"/></linearGradient>
+      <radialGradient id="dmoCotV" cx=".45" cy=".4" r=".7">
+        <stop offset="0" stop-color="#fef3c7"/><stop offset=".5" stop-color="#fb923c"/>
+        <stop offset="1" stop-color="#c2410c"/></radialGradient></defs>
+    ${OMBRA(16, 29, 9.4)}
+    <path d="M10.4 3.6h11.2a4.6 4.6 0 0 1 4.6 4.6v11.4a8.4 8.4 0 0 1-8.4 8.4h-3.6a8.4 8.4 0 0 1-8.4-8.4V8.2a4.6 4.6 0 0 1 4.6-4.6Z" fill="url(#dmoCotC)"/>
+    <rect x="10.2" y="6.4" width="11.6" height="5.4" rx="2.7" fill="#e2e8f0" opacity=".9"/>
+    <circle cx="16" cy="9.1" r="1.9" fill="url(#dmoCotV)"/>
+    <path d="M7.8 16.4h16.4v3.2a6 6 0 0 1-6 6h-4.4a6 6 0 0 1-6-6Z" fill="url(#dmoCotV)"/>
+    <rect x="12.6" y="19.2" width="6.8" height="2.6" rx="1.3" fill="#0f172a" opacity=".75"/>
+    <path d="M9.4 6.6v6.6" stroke="#fff" stroke-opacity=".45" stroke-width="1.3" stroke-linecap="round"/>`,
+
   /* L'acquario (#127): la vasca con l'acqua, la sabbia, due foglie e il pesce
    * rosso. Non è la piscina — quella è l'acqua dove si entra — ma la vasca che
    * si guarda da fuori, col suo mobile sotto. */

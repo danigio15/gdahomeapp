@@ -212,6 +212,24 @@ const DOMINI_PER_TUTTI = new Map([
    * alla TV qualunque richiesta del suo sistema, e quello e' per chi
    * amministra. */
   ["webostv", new Set(["button"])],
+  /* La friggitrice Philips da HACS (#71): tasti non ne pubblica, e si comanda
+   * solo coi suoi servizi. Passano quelli della cottura — fermarla, farla
+   * ripartire, darle un minuto o cinque gradi in piu', accenderla e spegnerla —
+   * che sono i tasti che ha sul davanti. */
+  [
+    "philips_airfryer",
+    new Set([
+      "pause",
+      "start_resume",
+      "stop",
+      "adjust_time",
+      "adjust_temp",
+      "start_cooking",
+      "toggle_airspeed",
+      "turn_on",
+      "turn_off",
+    ]),
+  ],
   ["timer", true],
   ["counter", true],
   ["todo", true],

@@ -151,6 +151,9 @@ function catalogoTessere() {
     ["piante", "plant", t("Piante", "Plant care")],
     /* L'acquario (#127): la temperatura dell'acqua, e quando c'è da fare. */
     ["acquario", "aquarium", t("Acquario", "Aquarium")],
+    /* La cottura (#71): la friggitrice che cuoce, e per un po' quella che ha
+     * finito. Compare da sola quando c'e' qualcosa sul fuoco. */
+    ["cottura", "air-fryer", t("Cottura", "Cooking")],
     ["batterie", "battery", t("Batterie", "Batteries")],
     ["allagamenti", "water", t("Allagamenti", "Floods")],
     /* Fumo e gas (#328): compare da sola coi rilevatori di casa, come gli

@@ -458,3 +458,13 @@ test("il telecomando della TV passa per tutti, i comandi di sistema della TV no 
   assert.ok(servizioVietato("androidtv", "adb_command"));
   assert.equal(servizioVietato("webostv", "command", { amministra: true }), null);
 });
+
+test("la friggitrice Philips si comanda per tutti, coi servizi della cottura (#71)", () => {
+  /* `philips_airfryer` tasti non ne ha: la pausa, lo stop, il minuto in piu'
+   * e i gradi passano dai suoi servizi, e sono quelli che la Cottura preme. */
+  for (const servizio of ["pause", "start_resume", "stop", "adjust_time", "adjust_temp"])
+    assert.equal(servizioVietato("philips_airfryer", servizio), null, servizio);
+  /* Un servizio che la plancia non preme resta a chi amministra. */
+  assert.ok(servizioVietato("philips_airfryer", "reload"));
+  assert.ok(servizioVietato("philips_airfryer", "qualcosa_d_altro"));
+});
