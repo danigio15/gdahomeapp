@@ -91,14 +91,14 @@ class ComandoRapido {
   /// Lo stesso comando con un altro nome, o con o senza conferma.
   ComandoRapido cambiato({String? nome, bool? conferma, String? icona}) =>
       ComandoRapido(
-        id: id,
-        nome: nome == null || nome.trim().isEmpty ? this.nome : nome.trim(),
-        genere: genere,
-        ricetta: ricetta,
-        conferma: conferma ?? this.conferma,
-        provenienza: provenienza,
-        icona: icona ?? this.icona,
-      );
+    id: id,
+    nome: nome == null || nome.trim().isEmpty ? this.nome : nome.trim(),
+    genere: genere,
+    ricetta: ricetta,
+    conferma: conferma ?? this.conferma,
+    provenienza: provenienza,
+    icona: icona ?? this.icona,
+  );
 
   Map<String, Object?> get comeSiScrive => {
     'id': id,
