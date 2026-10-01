@@ -1095,7 +1095,13 @@ class _CambiaComandoState extends State<_CambiaComando> {
   late String _icona = widget.comando.icona ?? widget.comando.genere.name;
 
   static const _icone = <String>[
-    'varco', 'porta', 'luce', 'presa', 'scena', 'serratura', 'azione',
+    'varco',
+    'porta',
+    'luce',
+    'presa',
+    'scena',
+    'serratura',
+    'azione',
   ];
 
   static String _nomeIcona(String v) => switch (v) {
@@ -1160,19 +1166,22 @@ class _CambiaComandoState extends State<_CambiaComando> {
                   value: v,
                   child: Row(
                     children: [
-                      Oggetto(v == 'varco'
-                          ? 'varchi'
-                          : v == 'porta'
-                          ? 'aperture'
-                          : v == 'luce'
-                          ? 'luci'
-                          : v == 'presa'
-                          ? 'prese'
-                          : v == 'scena'
-                          ? 'evidenza'
-                          : v == 'serratura'
-                          ? 'sicurezza'
-                          : 'azioni', lato: 24),
+                      Oggetto(
+                        v == 'varco'
+                            ? 'varchi'
+                            : v == 'porta'
+                            ? 'aperture'
+                            : v == 'luce'
+                            ? 'luci'
+                            : v == 'presa'
+                            ? 'prese'
+                            : v == 'scena'
+                            ? 'evidenza'
+                            : v == 'serratura'
+                            ? 'sicurezza'
+                            : 'azioni',
+                        lato: 24,
+                      ),
                       const SizedBox(width: 10),
                       Text(_nomeIcona(v)),
                     ],
@@ -1200,11 +1209,11 @@ class _CambiaComandoState extends State<_CambiaComando> {
               const Spacer(),
               FilledButton(
                 onPressed: () => Navigator.of(context).pop((
-                    comando: c.cambiato(
-                      nome: _nome.text,
-                      conferma: _conferma,
-                      icona: _icona,
-                    ),
+                  comando: c.cambiato(
+                    nome: _nome.text,
+                    conferma: _conferma,
+                    icona: _icona,
+                  ),
                 )),
                 child: Text(inLingua(it: 'Salva', en: 'Save')),
               ),
