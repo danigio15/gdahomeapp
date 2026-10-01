@@ -277,12 +277,12 @@ test("un gettone che scade chiude i telefoni gia' aperti al giro di controllo, m
     });
     await attendi(() => b.centralino.ePremium(casa.id));
 
-    const daFuori = unTelefono(b.dove, "/telefono/"+casa.id);
+    const daFuori = unTelefono(b.dove, `/telefono/${casa.id}`);
     await daFuori.aperta;
     const codice = randomBytes(10).toString("hex");
     casa.manda({ t: "apri-abbinamento", impronta: impronta(codice) });
     await attendi(() => b.centralino.abbinamenti.size === 1);
-    const siAbbina = unTelefono(b.dove, "/abbinamento/"+impronta(codice));
+    const siAbbina = unTelefono(b.dove, `/abbinamento/${impronta(codice)}`);
     await siAbbina.aperta;
     await attendi(() => casa.canali().length === 2);
 
