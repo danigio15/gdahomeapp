@@ -70,6 +70,12 @@ jobs:
         with:
           python-version: "3.12"
       # Le prove della plancia non hanno dipendenze: girano su Node e basta.
+      # Il sigillo e' un artefatto della plancia: prima delle prove va sempre
+      # ricostruito dai file presenti in questo checkout, altrimenti una
+      # correzione legittima viene segnalata come modifica esterna.
+      - name: Risigilla la plancia
+        run: node ../strumenti/sigilla-la-plancia.mjs
+        working-directory: officina
       - name: Le prove della plancia
         run: npm run test:frontend
         working-directory: officina
