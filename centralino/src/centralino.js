@@ -297,8 +297,7 @@ export class Centralino {
     let andata = false;
     return () => {
       if (andata) return;
-      andata = true;
-      this.prese -= 1;
+      andata = true;      this.prese -= 1;
       const quante = (this.presePer.get(da) || 1) - 1;
       if (quante > 0) this.presePer.set(da, quante);
       else this.presePer.delete(da);
@@ -454,6 +453,13 @@ export class Centralino {
         casa.chiudi("nessun segno di vita");
         continue;
       }
+      /* Un gettone puo' scadere mentre un telefono e' gia' dentro. Le nuove
+       * connessioni vengono fermate da accogliUnTelefono, ma senza questo
+       * controllo il canale gia' aperto resterebbe vivo fino alla sua chiusura.
+       * L'abbinamento invece non si tocca: resta libero anche per una casa Base. */
+      if (this.chiaveLicenze && casa.dicelaLicenza && !this.ePremium(casa.id)) {
+        casa.chiudiITelefoni(PREMIUM_RICHIESTO.codice, PREMIUM_RICHIESTO.motivo);
+      }
       casa.presa.ping();
     }
   }
@@ -597,8 +603,7 @@ class CasaCollegata {
     this.centralino.collegate.set(this.id, this);
     /* Il gettone puo' arrivare anche dentro la presentazione, e l'add-on
      * nuovo ce lo mette sempre, anche vuoto: cosi' da qui si sa fin dal primo
-     * istante che quella casa le licenze le conosce, e un telefono che bussa
-     * nel millisecondo prima del messaggio a parte non si sente dire
+     * istante che quella casa le licenze le conosce, e un telefono che bussa     * nel millisecondo prima del messaggio a parte non si sente dire
      * «aggiorna l'add-on» per sbaglio. Se non c'e' affatto, non si dimentica
      * quello di prima: la casa lo ridice appena entrata. */
     if (typeof detto.gettone === "string") {
