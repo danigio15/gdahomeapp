@@ -802,7 +802,10 @@ class _Riga extends StatelessWidget {
                   color: colori.surfaceContainer,
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Oggetto(disegnoDelComando(comando.genere, comando.icona), lato: 24),
+                child: Oggetto(
+                  disegnoDelComando(comando.genere, comando.icona),
+                  lato: 24,
+                ),
               ),
               if (posto case final n?)
                 Positioned(
@@ -1091,7 +1094,9 @@ class _CambiaComandoState extends State<_CambiaComando> {
   late bool _conferma = widget.comando.conferma;
   late String _icona = widget.comando.icona ?? widget.comando.genere.name;
 
-  static const _icone = <String>['varco', 'porta', 'luce', 'presa', 'scena', 'serratura', 'azione'];
+  static const _icone = <String>[
+    'varco', 'porta', 'luce', 'presa', 'scena', 'serratura', 'azione',
+  ];
 
   static String _nomeIcona(String v) => switch (v) {
     'varco' => 'Cancello / varco',
@@ -1195,7 +1200,11 @@ class _CambiaComandoState extends State<_CambiaComando> {
               const Spacer(),
               FilledButton(
                 onPressed: () => Navigator.of(context).pop((
-                  comando: c.cambiato(nome: _nome.text, conferma: _conferma, icona: _icona),
+                    comando: c.cambiato(
+                      nome: _nome.text,
+                      conferma: _conferma,
+                      icona: _icona,
+                    ),
                 )),
                 child: Text(inLingua(it: 'Salva', en: 'Save')),
               ),
