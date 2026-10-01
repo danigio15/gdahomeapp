@@ -62,9 +62,6 @@ jobs:
             flutter build web --release --pwa-strategy=none --dart-define=VERSIONE="$VERSIONE"
           fi
 
-      - name: Risigilla la plancia
-        run: node strumenti/sigilla-la-plancia.mjs
-
       - name: Portala dentro il ponte
         run: node strumenti/porta-l-app.mjs
 
