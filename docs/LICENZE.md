@@ -120,8 +120,9 @@ base64url. Sta, sempre uguale, in:
 - `app/lib/licenza/chiave.dart`
 - in gdanav: `packages/gdanav_app/lib/stato/chiave_licenze.dart`
 
-**Di serie e' vuota**: nessun gettone vale, tutti sono Base (e gdanav fa quello
-che fa oggi col negozio).
+**Di serie e' vuota**: il controllo delle licenze e' spento. In questa
+modalita' il centralino non limita l'accesso da fuori e lascia passare i
+telefoni, come oggi.
 
 **Prima l'iPhone**: con `LICENZE_SOLO_SULL_IPHONE = true` (nei tre file JS) e
 `licenzeSoloSullIPhone = true` (nell'app) la chiave sta solo nell'add-on e
