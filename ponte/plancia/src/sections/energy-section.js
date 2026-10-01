@@ -2023,6 +2023,8 @@ async function eseguiIlRefresh(period, carico) {
       if (state.caricoInCorso === carico) segnaLAttesa();
     });
     if (!bundle) return false;
+    /* Un pacchetto nato per un periodo diverso non deve mai sovrascrivere la vista corrente. */
+    if (chiave !== chiaveDelCarico(selectedPeriod())) return null;
     commitDerived(bundle);
     state.bundle = bundle;
     state.selected = bundle.period;
