@@ -31,13 +31,13 @@ import '../vestito/oggetti.dart';
 
 /// Il disegno della plancia per ogni genere di comando.
 String disegnoDelComando(GenereDelComando genere, [String? icona]) => switch (icona ?? genere.name) {
-  GenereDelComando.varco => 'varchi',
-  GenereDelComando.porta => 'aperture',
-  GenereDelComando.luce => 'luci',
-  GenereDelComando.presa => 'prese',
-  GenereDelComando.scena => 'evidenza',
-  GenereDelComando.serratura => 'sicurezza',
-  GenereDelComando.azione => 'azioni',
+  'varco' => 'varchi',
+  'porta' => 'aperture',
+  'luce' => 'luci',
+  'presa' => 'prese',
+  'scena' => 'evidenza',
+  'serratura' => 'sicurezza',
+  'azione' => 'azioni',
   _ => switch (genere) {
     GenereDelComando.varco => 'varchi',
     GenereDelComando.porta => 'aperture',
