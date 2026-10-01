@@ -1,0 +1,33 @@
+name: Risigilla la plancia PR 174
+
+on:
+  push:
+    branches:
+      - claude/focused-meitner-28o114
+
+permissions:
+  contents: write
+
+jobs:
+  sigilla:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+        with:
+          node-version: "22"
+      - name: Risigilla
+        run: node strumenti/sigilla-la-plancia.mjs
+      - name: Salva il sigillo
+        run: |
+          if git diff --quiet -- ponte/plancia/ORIGINE.json; then
+            echo "Sigillo gia' aggiornato."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add ponte/plancia/ORIGINE.json
+          git commit -m "chore: aggiorna sigillo della plancia"
+          git push
