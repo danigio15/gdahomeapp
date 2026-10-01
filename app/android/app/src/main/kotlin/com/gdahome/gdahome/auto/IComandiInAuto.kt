@@ -46,6 +46,7 @@ data class ComandoInAuto(
     val id: String,
     val nome: String,
     val genere: String,
+    val icona: String,
     /* Il dominio della ricetta («cover», «light», «scene»…). Serve al disegno
      * quando il genere non lo sa dire: vedi [ilSegno]. */
     val dominio: String,
@@ -74,6 +75,7 @@ fun leggiIComandi(context: Context): IComandi {
                     id = id,
                     nome = nome,
                     genere = uno.optString("genere", "").trim(),
+                    icona = uno.optString("icona", "").trim(),
                     dominio = uno.optString("dominio", "").trim(),
                     conferma = uno.optBoolean("conferma", false),
                 ),
@@ -110,7 +112,7 @@ class IComandiInAuto(context: CarContext) : Screen(context) {
                      * uno spazio, perche' una tessera senza la riga sotto e'
                      * piu' bassa delle altre. */
                     .setText(sotto.ifBlank { " " })
-                    .setImage(ilSegno(carContext, comando.genere, comando.dominio))
+                    .setImage(ilSegno(carContext, comando.genere, comando.dominio, comando.icona))
                     .setOnClickListener { premiIlComando(this, comando) }
                     .build(),
             )
@@ -214,8 +216,8 @@ private fun ilGenere(genere: String, dominio: String): String {
  * li da' giusti tanto sul tema chiaro quanto sullo scuro: un disegno colorato
  * da noi, invece, resterebbe uguale su tutti e due.
  */
-fun ilSegno(context: CarContext, genere: String, dominio: String = ""): CarIcon {
-    val quale = ilGenere(genere, dominio)
+fun ilSegno(context: CarContext, genere: String, dominio: String = "", icona: String = ""): CarIcon {
+    val quale = if (icona.isNotEmpty()) icona else ilGenere(genere, dominio)
     val disegno = when (quale) {
         "varco" -> R.drawable.auto_varco
         "porta" -> R.drawable.auto_porta
