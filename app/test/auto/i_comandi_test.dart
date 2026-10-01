@@ -78,7 +78,7 @@ void main() {
     expect(primi.quelloDellArrivo?.nome, 'Cancello');
   });
 
-  test('l'icona scelta del comando viene scritta e riletta', () {
+  test('l\'icona scelta del comando viene scritta e riletta', () {
     final c = comandoPer(e('light.ingresso', nome: 'Luci ingresso'))!
         .cambiato(icona: 'serratura');
     final riletta = IComandiScelti.leggi(
