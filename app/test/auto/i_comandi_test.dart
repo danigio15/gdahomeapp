@@ -78,6 +78,17 @@ void main() {
     expect(primi.quelloDellArrivo?.nome, 'Cancello');
   });
 
+  test('l'icona scelta del comando viene scritta e riletta', () {
+    final c = comandoPer(e('light.ingresso', nome: 'Luci ingresso'))!
+        .cambiato(icona: 'serratura');
+    final riletta = IComandiScelti.leggi(
+      IComandiScelti(comandi: [c]).comeSiScrive,
+    ).comandi.single;
+    expect(riletta.icona, 'serratura');
+    final json = jsonDecode(IComandiScelti(comandi: [c]).comeSiScrive) as Map;
+    expect((json['comandi'] as List).single['icona'], 'serratura');
+  });
+
   test('scritti e riletti sono gli stessi, e sono al massimo dodici', () {
     final tanti = [
       for (var i = 0; i < 14; i++) comandoPer(e('light.l$i', nome: 'Luce $i'))!,
