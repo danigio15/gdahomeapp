@@ -198,9 +198,7 @@ test("fonti, dispositivi e carichi dello stesso arco costano una domanda sola", 
   /* I mesi chiusi non arrivano oltre l'inizio del mese in corso. Sono l'altra
    * domanda a giorni: quella che finisce prima. */
   const anno = aGiorni[1];
-  const primoDelMese = new Date();
-  primoDelMese.setDate(1);
-  primoDelMese.setHours(0, 0, 0, 0);
+  const primoDelMese = new Date(2026, 8, 1, 0, 0, 0, 0);
   assert.equal(anno.end.getTime(), primoDelMese.getTime());
 
   assert.ok(pacchetto.year.house >= pacchetto.month.house, "l'anno contiene il mese");
