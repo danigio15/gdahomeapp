@@ -1145,7 +1145,7 @@ class _CambiaComandoState extends State<_CambiaComando> {
           ),
           const SizedBox(height: 8),
           DropdownButtonFormField<String>(
-            value: _icona,
+            initialValue: _icona,
             decoration: InputDecoration(
               labelText: inLingua(it: 'Icona in auto', en: 'Car icon'),
             ),
