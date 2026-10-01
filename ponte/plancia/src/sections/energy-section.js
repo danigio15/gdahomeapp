@@ -768,7 +768,7 @@ export async function loadAtomicEnergyBundle(
    * Con le domande al Recorder in fila il giro dura di piu', e non arrivava
    * mai in fondo prima che qualcuno lo scavalcasse: «i dati non si
    * aggiornano», per sempre, senza nemmeno una riga che lo dicesse. */
-  if (chiave !== chiaveDelCarico(selectedPeriod())) return null;
+  if (chiave !== chiaveDelCarico(period)) return null;
 
   const record = {
     day: buildPeriodRecord(fonti.day, letture.fonteDay.valori),
