@@ -89,7 +89,8 @@ class ComandoRapido {
       '${ricetta.entita}|${ricetta.servizio}|${ricetta.dati['option'] ?? ''}';
 
   /// Lo stesso comando con un altro nome, o con o senza conferma.
-  ComandoRapido cambiato({String? nome, bool? conferma, String? icona}) => ComandoRapido(
+  ComandoRapido cambiato({String? nome, bool? conferma, String? icona}) =>
+      ComandoRapido(
     id: id,
     nome: nome == null || nome.trim().isEmpty ? this.nome : nome.trim(),
     genere: genere,
