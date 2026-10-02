@@ -678,7 +678,10 @@ class _ComeInAuto extends StatelessWidget {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Oggetto(disegnoDelComando(c.genere, c.icona), lato: 26),
+                        Oggetto(
+                          disegnoDelComando(c.genere, c.icona),
+                          lato: 26,
+                        ),
                         const SizedBox(height: 6),
                         Text(
                           c.nome,
