@@ -30,27 +30,25 @@ import '../parole.dart';
 import '../vestito/oggetti.dart';
 
 /// Il disegno della plancia per ogni genere di comando.
-String disegnoDelComando(
-  GenereDelComando genere, [
-  String? icona,
-]) => switch (icona ?? genere.name) {
-  'varco' => 'varchi',
-  'porta' => 'aperture',
-  'luce' => 'luci',
-  'presa' => 'prese',
-  'scena' => 'evidenza',
-  'serratura' => 'sicurezza',
-  'azione' => 'azioni',
-  _ => switch (genere) {
-    GenereDelComando.varco => 'varchi',
-    GenereDelComando.porta => 'aperture',
-    GenereDelComando.luce => 'luci',
-    GenereDelComando.presa => 'prese',
-    GenereDelComando.scena => 'evidenza',
-    GenereDelComando.serratura => 'sicurezza',
-    GenereDelComando.azione => 'azioni',
-  },
-};
+String disegnoDelComando(GenereDelComando genere, [String? icona]) =>
+    switch (icona ?? genere.name) {
+      'varco' => 'varchi',
+      'porta' => 'aperture',
+      'luce' => 'luci',
+      'presa' => 'prese',
+      'scena' => 'evidenza',
+      'serratura' => 'sicurezza',
+      'azione' => 'azioni',
+      _ => switch (genere) {
+        GenereDelComando.varco => 'varchi',
+        GenereDelComando.porta => 'aperture',
+        GenereDelComando.luce => 'luci',
+        GenereDelComando.presa => 'prese',
+        GenereDelComando.scena => 'evidenza',
+        GenereDelComando.serratura => 'sicurezza',
+        GenereDelComando.azione => 'azioni',
+      },
+    };
 
 /// Cosa fa un comando, in parole: «Apri o chiudi», «Accendi», «Attiva».
 String cosaFa(ComandoRapido c) {
@@ -678,10 +676,7 @@ class _ComeInAuto extends StatelessWidget {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Oggetto(
-                          disegnoDelComando(c.genere, c.icona),
-                          lato: 26,
-                        ),
+                        Oggetto(disegnoDelComando(c.genere, c.icona), lato: 26),
                         const SizedBox(height: 6),
                         Text(
                           c.nome,
