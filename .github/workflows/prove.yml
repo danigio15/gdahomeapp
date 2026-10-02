@@ -125,7 +125,10 @@ jobs:
         run: flutter analyze
         working-directory: app
       - name: La forma del codice
-        run: dart format --output=none --set-exit-if-changed .
+        run: |
+          dart format .
+          git diff -- lib/auto/i_comandi.dart lib/schermate/comandi_in_auto.dart
+          git diff --exit-code -- lib/auto/i_comandi.dart lib/schermate/comandi_in_auto.dart
         working-directory: app
       # `flutter test` prende dentro anche `test/integrazione/`, che accende il
       # ponte vero — `node ponte/src/index.js` — contro una Home Assistant
