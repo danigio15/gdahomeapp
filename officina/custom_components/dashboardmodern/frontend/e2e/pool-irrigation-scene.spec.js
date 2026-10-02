@@ -258,10 +258,10 @@ test("starting a zone sprays water and splashes it on the lawn", async ({ page }
     node.querySelector(".dm-zone-spray i").dataset.dmSprayProbe = "1";
   });
   await page.waitForTimeout(1400);
-  const chip = await page
-    .locator('#irr-grid [data-dm-irr-card="0"] [data-dm-card-chip]')
-    .textContent();
-  expect(chip).toMatch(/^💦 \d+:\d{2}$/);
+  const chipNode = page.locator('#irr-grid [data-dm-irr-card="0"] [data-dm-card-chip]');
+  const chip = await chipNode.textContent();
+  expect(chip).toMatch(/^ \d+:\d{2}$/);
+  expect(await chipNode.locator(".dm-segno").getAttribute("data-dm-segno")).toBe("water");
   const survived = await zone.evaluate(
     (node) => node.querySelector('.dm-zone-spray i[data-dm-spray-probe="1"]') !== null,
   );

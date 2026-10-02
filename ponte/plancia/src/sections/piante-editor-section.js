@@ -10,6 +10,7 @@
  * bagna uno solo. È spenta di serie, perché aspettare una pioggia che non
  * arriva mai in salotto vorrebbe dire lasciare il ficus a secco.
  */
+import { segnoHtml } from "../core/segni-del-catalogo.js";
 import {
   CAMPI_IN_PIU,
   CHIAVE_PIANTE,
@@ -21,7 +22,7 @@ import {
 } from "../core/le-piante-di-casa.js";
 import { PIANTE_TAB, renderPiante } from "./piante-section.js";
 import { costruisciSchedaDichiarata } from "./scheda-dichiarata-section.js";
-import { allStates, clean, esc, t } from "./shared.js";
+import { allStates, clean, esc, t, senzaCadere } from "./shared.js";
 import { nomeDaHomeAssistant } from "./editor-slots-section.js";
 
 export const PIANTE_EDITOR_TAB = PIANTE_TAB;
@@ -57,7 +58,7 @@ function campiDellaPianta(riga, indice) {
         data-dm-dich-campo="temperatura" data-dm-dich-riga="${indice}"
         value="${esc(clean(riga.temperatura))}" placeholder="${esc(proposta || "sensor.soil_temperature_1")}"
         autocomplete="off" spellcheck="false"><button type="button" class="dm-entity-picker"
-        data-dm-dich-pick="${esc(id)}" aria-label="${esc(t("Scegli entità", "Choose entity"))}">🔍</button></span>
+        data-dm-dich-pick="${esc(id)}" aria-label="${esc(t("Scegli entità", "Choose entity"))}">${segnoHtml("search")}</button></span>
       <small>${esc(
         t(
           "Facoltativa: il sensore della temperatura che sta nello stesso vaso. Lasciala vuota se il tuo misura solo l'umidità.",
@@ -124,7 +125,7 @@ const scheda = costruisciSchedaDichiarata({
   bozzaInPiu: conICampiDellaPianta,
 
   parole: {
-    linguetta: `🪴 ${t("Piante", "Plant care")}`,
+    linguetta: `${t("Piante", "Plant care")}`,
     intro: t(
       "Le piante di casa, una per riga: il sensore dell'umidità della terra, il nome, il disegno, e se c'è la temperatura. La pagina Piante dice quali sono da innaffiare, quali aspettano la pioggia e quando toccherà alle altre.",
       "The plants at home, one per row: the soil moisture sensor, the name, the drawing, and the temperature if there is one. The Plant care page says which need watering, which are waiting for rain and when the others will be due.",
@@ -134,7 +135,7 @@ const scheda = costruisciSchedaDichiarata({
     nuovo: t("Pianta nuova", "New plant"),
     senzaNome: t("Pianta senza nome", "Unnamed plant"),
     salva: t("Salva pianta", "Save this plant"),
-    salvato: `🪴 ${t("Pianta salvata", "Plant saved")}`,
+    salvato: `${t("Pianta salvata", "Plant saved")}`,
     etichettaEntita: t("Umidità della terra", "Soil moisture"),
     segnaposto: "sensor.soil_moisture_1",
     aiutoEntita: t(
@@ -155,7 +156,7 @@ const scheda = costruisciSchedaDichiarata({
         `Prendi i ${quante} sensori della terra che Home Assistant ha trovato`,
         `Take the ${quante} soil sensors Home Assistant found`,
       ),
-    presi: (quante) => t(`🪴 ${quante} piante aggiunte`, `🪴 ${quante} plants added`),
+    presi: (quante) => t(`${quante} piante aggiunte`, `${quante} plants added`),
     notaImporta: t(
       "Li mette qui come righe, una volta sola: da lì in poi sono tue — le rinomini, gli dai il disegno, e quelle che elimini non tornano più.",
       "It puts them here as rows, once: from then on they are yours — rename them, give them a drawing, and the ones you remove do not come back.",
@@ -194,4 +195,4 @@ export function installPianteEditor() {
   return scheda.installa();
 }
 
-installPianteEditor();
+senzaCadere(installPianteEditor);

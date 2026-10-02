@@ -55,6 +55,7 @@ import {
   t,
   writeJsonIfChanged,
 } from "./shared.js";
+import { chiaveDelValore, segnoDaValoreHtml, segnoHtml, senzaEmoji } from "../core/segni-del-catalogo.js";
 
 const KEY = "__DASHBOARDMODERN_PEOPLE_EDITOR__";
 const state = (root[KEY] ||= { installed: false, aperto: -1 });
@@ -403,7 +404,7 @@ const NOMI_VESTITI = () => ({
 function builderMarkup(person) {
   const face = person.avatar.face;
   if (!face)
-    return `<button type="button" class="ed-btn-add dm-face-create" data-face-create>🧑‍🎨 ${t("Crea il ritratto", "Create the portrait")}</button>
+    return `<button type="button" class="ed-btn-add dm-face-create" data-face-create>${segnoHtml("person")} ${t("Crea il ritratto", "Create the portrait")}</button>
       <small>${t("Oppure scrivi un'emoji qui sotto — o lascia vuoto per le iniziali del nome.", "Or type an emoji below — or leave it empty for the initials of the name.")}</small>`;
   const righe = fileRitratto(face)
     .map(({ k, label, valori, nomi, nudo, cerchi }) => {
@@ -429,7 +430,7 @@ function builderMarkup(person) {
   return `<div class="dm-face-workbench">
       <span class="dm-face-preview" data-face-anteprima-viva style="--dm-person-color:${esc(clean(person.avatar.color) || "#0ea5e9")}"></span>
       <div class="dm-face-side">
-        <button type="button" class="ed-btn-add dm-face-dice" data-face-random>🎲 ${t("Sorteggia", "Shuffle")}</button>
+        <button type="button" class="ed-btn-add dm-face-dice" data-face-random>${segnoHtml("refresh")} ${t("Sorteggia", "Shuffle")}</button>
         <small>${t(
           "Qualunque testa su qualunque vestito: i pezzi si combinano liberamente.",
           "Any head on any outfit: the pieces combine freely.",
@@ -484,25 +485,25 @@ function rigaMarkup(person, index, ultima = false) {
       <button type="button" class="ed-del dm-people-move" data-person-up aria-label="${t("Più in alto", "Move up")}"${index === 0 ? " disabled" : ""}>▲</button>
       <button type="button" class="ed-del dm-people-move" data-person-down aria-label="${t("Più in basso", "Move down")}"${ultima ? " disabled" : ""}>▼</button>
       <button type="button" class="dm-people-shown" data-person-shown data-on="${person.nascosta !== true}" aria-label="${t("Visibile in Home", "Shown on Home")}"><i></i></button>
-      <button type="button" class="ed-del" data-person-edit aria-label="${t("Modifica", "Edit")}">✏️</button>
-      <button type="button" class="ed-del" data-person-del aria-label="${t("Elimina", "Remove")}">🗑️</button>
+      <button type="button" class="ed-del" data-person-edit aria-label="${t("Modifica", "Edit")}">${segnoHtml("pencil")}</button>
+      <button type="button" class="ed-del" data-person-del aria-label="${t("Elimina", "Remove")}">${segnoHtml("trash")}</button>
     </div>
     <div class="dm-people-row-body"${aperto ? "" : " hidden"}>
       <label class="ed-slot dm-people-field"><span class="ed-slot-lbl">${t("Nome", "Name")}</span><span class="ed-form-row"><input id="dm-person-${index}-name" class="ed-input" data-person-field="name" value="${esc(clean(person.name))}" placeholder="${t("Chi è, col suo nome di casa", "Who this is, by their home name")}"></span></label>
       ${campoEntita(`dm-person-${index}-entity`, "entity", t("Entità persona", "Person entity"), person.entity, "person.nome", t("È l'entità person.* di Home Assistant, oppure un device_tracker.*.", "The person.* entity from Home Assistant, or a device_tracker.*."))}
       ${campoEntita(`dm-person-${index}-battery`, "battery", t("Batteria (facoltativa)", "Battery (optional)"), person.battery, "sensor.telefono_battery_level", t("Il sensore di batteria del telefono. Senza, la card usa quella che l'entità conosce già.", "The phone battery sensor. Without it, the card uses what the entity already knows."))}
-      <details class="ed-acc dm-people-sensors"><summary class="ed-acc-head">📡 ${t("Sensori del telefono", "Phone sensors")}</summary><div class="ed-acc-body">
+      <details class="ed-acc dm-people-sensors"><summary class="ed-acc-head">${segnoHtml("router")} ${t("Sensori del telefono", "Phone sensors")}</summary><div class="ed-acc-body">
         <small class="dm-people-sensors-intro">${t(
           "I sensori della Companion App, di Waze o di Proximity: compila quelli che hai, oppure lasciali trovare al pulsante. Il viaggio — distanza, tempo di rientro, direzione — compare sulla card solo quando la persona è fuori; l'indirizzo si legge sempre, anche a casa.",
           "The Companion App, Waze or Proximity sensors: fill the ones you have, or let the button find them. The journey — distance, time home, heading — only shows on the card when the person is away; the address is always readable, at home too.",
         )}</small>
-        <button type="button" class="ed-btn-add dm-people-detect" data-person-detect>🪄 ${t("Rileva dal telefono", "Detect from the phone")}</button>
+        <button type="button" class="ed-btn-add dm-people-detect" data-person-detect>${segnoHtml("star")} ${t("Rileva dal telefono", "Detect from the phone")}</button>
         ${sensoriCampi(index, person)}
       </div></details>
       <div class="ed-slot dm-people-field"><span class="ed-slot-lbl">${t("Foto", "Photo")}</span>
         <input type="hidden" data-person-field="photo" value="${esc(person.photo)}">
         <span class="ed-form-row dm-people-photo-row">
-          <button type="button" class="ed-btn-add dm-people-photo-btn" data-person-photo>📁 ${t("Scegli la foto", "Choose the photo")}</button>
+          <button type="button" class="ed-btn-add dm-people-photo-btn" data-person-photo>${segnoHtml("list")} ${t("Scegli la foto", "Choose the photo")}</button>
           <button type="button" class="ed-btn-add dm-people-photo-btn dm-people-photo-clear" data-person-photo-clear${person.photo ? "" : " hidden"}>✕ ${t("Togli la foto", "Remove the photo")}</button>
         </span>
         <small>${t("Con una foto l'avatar non si vede: la foto vince.", "With a photo the avatar is not shown: the photo wins.")}</small>
@@ -511,12 +512,12 @@ function rigaMarkup(person, index, ultima = false) {
         <input type="hidden" data-person-field="color" value="${esc(person.avatar.color)}">
         <input type="hidden" data-person-field="face" value="${esc(person.avatar.face ? JSON.stringify(person.avatar.face) : "")}">
         <div class="dm-face-builder" data-face-builder>${builderMarkup(person)}</div>
-        <span class="ed-form-row"><input id="dm-person-${index}-emoji" class="ed-input dm-people-emoji" data-person-field="emoji" value="${esc(person.avatar.emoji)}" placeholder="${t("Vuoto: le iniziali del nome", "Empty: the initials of the name")}" autocomplete="off" spellcheck="false"><button type="button" class="dm-people-pick" data-person-emoji="dm-person-${index}-emoji" aria-label="${t("Scegli un'emoji", "Choose an emoji")}">😀</button></span>
+        <span class="ed-form-row"><input id="dm-person-${index}-emoji" class="ed-input dm-people-emoji" data-person-field="emoji" value="${esc(person.avatar.emoji)}" placeholder="${t("Vuoto: le iniziali del nome", "Empty: the initials of the name")}" autocomplete="off" spellcheck="false"><button type="button" class="dm-people-pick" data-person-emoji="dm-person-${index}-emoji" aria-label="${t("Scegli un'emoji", "Choose an emoji")}">${segnoHtml("person")}</button></span>
         <span class="dm-face-row-lbl">${t("Sfondo", "Background")}</span>
         <span class="dm-people-colors">${colori}</span>
       </div>
       <output class="dm-people-error" data-person-error></output>
-      <button type="button" class="ed-save-btn" data-person-save>💾 ${t("Salva persona", "Save person")}</button>
+      <button type="button" class="ed-save-btn" data-person-save>${segnoHtml("check")} ${t("Salva persona", "Save person")}</button>
     </div>
   </article>`;
 }
@@ -535,7 +536,7 @@ function bodyMarkup(people) {
     }</div>
     <div class="ed-form-row dm-people-actions">
       <button type="button" class="ed-btn-add" data-person-add>＋ ${t("Aggiungi persona", "Add person")}</button>
-      <button type="button" class="ed-btn-add dm-people-import" data-person-import>⤵️ ${t("Importa da Home Assistant", "Import from Home Assistant")}</button>
+      <button type="button" class="ed-btn-add dm-people-import" data-person-import>${segnoHtml("inbox")} ${t("Importa da Home Assistant", "Import from Home Assistant")}</button>
     </div>`;
 }
 
@@ -1021,7 +1022,7 @@ async function onClick(event) {
     if (errore) errore.textContent = "";
     salva(next);
     ridisegna();
-    root.edToast?.(t("💾 Persona salvata", "💾 Person saved"));
+    root.edToast?.(senzaEmoji(t("💾 Persona salvata", "💾 Person saved")));
   }
 }
 
@@ -1049,9 +1050,15 @@ function apriAvatarPicker(inputId) {
   /* Non un <header>: quello di pagina ha uno stile suo — padding, colonna,
    * ombra — e se lo porterebbe dentro alla finestra. */
   overlay.innerHTML = `<div class="dm-avatar-sheet" role="dialog" aria-modal="true">
-    <div class="dm-avatar-head"><strong>😊 ${t("Scegli l'avatar", "Choose the avatar")}</strong><button type="button" data-close aria-label="${t("Chiudi", "Close")}">✕</button></div>
-    <div class="dm-avatar-grid">${AVATAR_EMOJI.map(
-      (emoji) => `<button type="button" data-avatar-emoji="${esc(emoji)}">${esc(emoji)}</button>`,
+    <div class="dm-avatar-head"><strong>${segnoHtml("person")} ${t("Scegli l'avatar", "Choose the avatar")}</strong><button type="button" data-close aria-label="${t("Chiudi", "Close")}">✕</button></div>
+    <div class="dm-avatar-grid">${AVATAR_EMOJI.filter(
+      /* Ogni scelta si mostra col disegno del catalogo: le facce che danno lo
+       * stesso disegno si offrono una volta sola. Il valore salvato resta
+       * l'emoji, cosi' le configurazioni gia' fatte continuano a valere. */
+      (emoji, indice, tutte) =>
+        tutte.findIndex((altra) => chiaveDelValore(altra, "person") === chiaveDelValore(emoji, "person")) === indice,
+    ).map(
+      (emoji) => `<button type="button" data-avatar-emoji="${esc(emoji)}">${segnoDaValoreHtml(emoji, { ripiego: "person" })}</button>`,
     ).join("")}</div>
   </div>`;
   overlay.addEventListener("click", (event) => {
@@ -1080,7 +1087,7 @@ export function ensurePeopleEditorTab() {
   const tab = doc.createElement("button");
   tab.className = "ed-tab";
   tab.dataset.tab = PEOPLE_EDITOR_TAB;
-  tab.textContent = `👥 ${t("Persone", "People")}`;
+  tab.innerHTML = `${segnoHtml("person")} ${esc(t("Persone", "People"))}`;
   tab.addEventListener("click", () => root.editorSwitch?.(PEOPLE_EDITOR_TAB));
   const prima = tabs.querySelector('.ed-tab[data-tab="runtime"]');
   if (prima) prima.before(tab);

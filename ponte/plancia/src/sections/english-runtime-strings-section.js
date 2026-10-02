@@ -47,14 +47,15 @@ export const RUNTIME_EN = Object.freeze({
     "No EV entity mapped to save: map the Car section entities first",
 });
 
-import { paginaVisibile, planciaVisibile, quandoSiCambiaPagina } from "./shared.js";
+import { paginaVisibile, planciaVisibile, quandoSiCambiaPagina, senzaCadere } from "./shared.js";
 
 const MARCHIO = "__dmEnglishRuntimeStrings";
 
 /* Le frasi che portano un numero dietro — «Attivo da 1 min», «✅ Rilevate: 3»
  * — si traducono per prefisso, con le unita' della coda. */
 const PREFISSI = [
-  ["✅ Rilevate: ", "✅ Detected: "],
+  ["✅ Rilevate: ", "Detected: "],
+  ["Rilevate: ", "Detected: "],
   ["Attivo da ", "Active for "],
 ];
 const UNITA = [
@@ -180,5 +181,5 @@ if (typeof document !== "undefined") {
     document.addEventListener("DOMContentLoaded", () => installEnglishRuntimeStrings(), {
       once: true,
     });
-  else installEnglishRuntimeStrings();
+  else senzaCadere(installEnglishRuntimeStrings);
 }

@@ -37,8 +37,10 @@ import {
   root,
   stanzaDiHomeAssistant,
   t,
+  senzaCadere,
 } from "./shared.js";
 import { nomeDaHomeAssistant } from "./editor-slots-section.js";
+import { segnoHtml } from "../core/segni-del-catalogo.js";
 
 const KEY = "__DASHBOARDMODERN_PRESENZA__";
 const state = (root[KEY] ||= { installed: false, frame: 0, firma: "", sveglia: 0 });
@@ -105,7 +107,7 @@ export function ensurePresenzaTab() {
   voce.className = "tab";
   voce.dataset.tab = PRESENZA_TAB;
   voce.id = `tab-${PRESENZA_TAB}`;
-  voce.innerHTML = `<span class="icon">🏃</span><span class="text">${esc(t("Presenza", "Presence"))}</span>`;
+  voce.innerHTML = `<span class="icon">${segnoHtml("motion")}</span><span class="text">${esc(t("Presenza", "Presence"))}</span>`;
   voce.addEventListener("click", () => {
     for (const nodo of doc.querySelectorAll(".tab")) nodo.classList.remove("active");
     for (const nodo of doc.querySelectorAll(".page")) nodo.classList.remove("active");
@@ -416,4 +418,4 @@ export function installPresenza() {
   return true;
 }
 
-installPresenza();
+senzaCadere(installPresenza);

@@ -30,15 +30,25 @@ import '../parole.dart';
 import '../vestito/oggetti.dart';
 
 /// Il disegno della plancia per ogni genere di comando.
-String disegnoDelComando(GenereDelComando genere) => switch (genere) {
-  GenereDelComando.varco => 'varchi',
-  GenereDelComando.porta => 'aperture',
-  GenereDelComando.luce => 'luci',
-  GenereDelComando.presa => 'prese',
-  GenereDelComando.scena => 'evidenza',
-  GenereDelComando.serratura => 'sicurezza',
-  GenereDelComando.azione => 'azioni',
-};
+String disegnoDelComando(GenereDelComando genere, [String? icona]) =>
+    switch (icona ?? genere.name) {
+      'varco' => 'varchi',
+      'porta' => 'aperture',
+      'luce' => 'luci',
+      'presa' => 'prese',
+      'scena' => 'evidenza',
+      'serratura' => 'sicurezza',
+      'azione' => 'azioni',
+      _ => switch (genere) {
+        GenereDelComando.varco => 'varchi',
+        GenereDelComando.porta => 'aperture',
+        GenereDelComando.luce => 'luci',
+        GenereDelComando.presa => 'prese',
+        GenereDelComando.scena => 'evidenza',
+        GenereDelComando.serratura => 'sicurezza',
+        GenereDelComando.azione => 'azioni',
+      },
+    };
 
 /// Cosa fa un comando, in parole: «Apri o chiudi», «Accendi», «Attiva».
 String cosaFa(ComandoRapido c) {
@@ -666,7 +676,7 @@ class _ComeInAuto extends StatelessWidget {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Oggetto(disegnoDelComando(c.genere), lato: 26),
+                        Oggetto(disegnoDelComando(c.genere, c.icona), lato: 26),
                         const SizedBox(height: 6),
                         Text(
                           c.nome,
@@ -793,7 +803,10 @@ class _Riga extends StatelessWidget {
                   color: colori.surfaceContainer,
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Oggetto(disegnoDelComando(comando.genere), lato: 24),
+                child: Oggetto(
+                  disegnoDelComando(comando.genere, comando.icona),
+                  lato: 24,
+                ),
               ),
               if (posto case final n?)
                 Positioned(
@@ -1080,6 +1093,27 @@ class _CambiaComando extends StatefulWidget {
 class _CambiaComandoState extends State<_CambiaComando> {
   late final _nome = TextEditingController(text: widget.comando.nome);
   late bool _conferma = widget.comando.conferma;
+  late String _icona = widget.comando.icona ?? widget.comando.genere.name;
+
+  static const _icone = <String>[
+    'varco',
+    'porta',
+    'luce',
+    'presa',
+    'scena',
+    'serratura',
+    'azione',
+  ];
+
+  static String _nomeIcona(String v) => switch (v) {
+    'varco' => 'Cancello / varco',
+    'porta' => 'Porta / garage',
+    'luce' => 'Luce',
+    'presa' => 'Presa / interruttore',
+    'scena' => 'Scena',
+    'serratura' => 'Serratura',
+    _ => 'Azione',
+  };
 
   @override
   void dispose() {
@@ -1121,6 +1155,42 @@ class _CambiaComandoState extends State<_CambiaComando> {
               ),
             ),
           ),
+          const SizedBox(height: 8),
+          DropdownButtonFormField<String>(
+            initialValue: _icona,
+            decoration: InputDecoration(
+              labelText: inLingua(it: 'Icona in auto', en: 'Car icon'),
+            ),
+            items: [
+              for (final v in _icone)
+                DropdownMenuItem(
+                  value: v,
+                  child: Row(
+                    children: [
+                      Oggetto(
+                        v == 'varco'
+                            ? 'varchi'
+                            : v == 'porta'
+                            ? 'aperture'
+                            : v == 'luce'
+                            ? 'luci'
+                            : v == 'presa'
+                            ? 'prese'
+                            : v == 'scena'
+                            ? 'evidenza'
+                            : v == 'serratura'
+                            ? 'sicurezza'
+                            : 'azioni',
+                        lato: 24,
+                      ),
+                      const SizedBox(width: 10),
+                      Text(_nomeIcona(v)),
+                    ],
+                  ),
+                ),
+            ],
+            onChanged: (v) => setState(() => _icona = v ?? _icona),
+          ),
           SwitchListTile(
             contentPadding: EdgeInsets.zero,
             title: Text(
@@ -1140,7 +1210,11 @@ class _CambiaComandoState extends State<_CambiaComando> {
               const Spacer(),
               FilledButton(
                 onPressed: () => Navigator.of(context).pop((
-                  comando: c.cambiato(nome: _nome.text, conferma: _conferma),
+                  comando: c.cambiato(
+                    nome: _nome.text,
+                    conferma: _conferma,
+                    icona: _icona,
+                  ),
                 )),
                 child: Text(inLingua(it: 'Salva', en: 'Save')),
               ),

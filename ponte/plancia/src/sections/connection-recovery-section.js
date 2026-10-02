@@ -26,6 +26,7 @@ import {
   root,
   scriviTestoSeCambia,
   t,
+  senzaCadere,
 } from "./shared.js";
 
 const KEY = "__DASHBOARDMODERN_CONNECTION_RECOVERY__";
@@ -267,5 +268,5 @@ export function installConnectionRecoverySection() {
 if (doc?.readyState === "loading") {
   doc.addEventListener("DOMContentLoaded", installConnectionRecoverySection, { once: true });
 } else if (doc) {
-  installConnectionRecoverySection();
+  senzaCadere(installConnectionRecoverySection);
 }

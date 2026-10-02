@@ -57,8 +57,19 @@ import {
   section,
   t,
   wrapFunction,
+  senzaCadere,
 } from "./shared.js";
 import { disegnoDelCatalogo } from "../core/catalogo-disegni.js";
+import { chiaveDelValore, emojiInSegni, segnoHtml } from "../core/segni-del-catalogo.js";
+import {
+  EVENTO_COTTURA,
+  avviaLOrologio,
+  ceLaCucina,
+  installCottura,
+  paginaDellaCottura,
+  scriviLaCottura,
+  vistaDellaCucina,
+} from "./cottura-section.js";
 
 const KEY = "__DASHBOARDMODERN_APPLIANCE_SHOWCASE__";
 const STYLE_ID = "dm-appliance-showcase-style";
@@ -75,7 +86,9 @@ const state = (root[KEY] ||= {
   signature: "",
   spark: [],
   sparkTs: 0,
-  ui: { filter: "all", room: "all", sort: "power-desc", view: "grid" },
+  /* `pane` e' la voce aperta accanto a Panoramica: "" per le schede,
+   * "cottura" per la Cottura (#71). */
+  ui: { filter: "all", room: "all", sort: "power-desc", view: "grid", pane: "" },
 });
 
 const copy = () => ({
@@ -91,6 +104,7 @@ const copy = () => ({
    * nella lingua del guscio. Ne ha una sua. */
   viewToggle: t("Vista griglia o elenco", "Grid or list view"),
   overview: t("Panoramica", "Overview"),
+  cooking: t("Cottura", "Cooking"),
   rooms: t("Stanze", "Rooms"),
   allRooms: t("Tutte le stanze", "All rooms"),
   noRoom: t("Senza stanza", "No room"),
@@ -258,6 +272,12 @@ export function campionaICicli() {
    * si aspetta: la risposta arriva quando arriva, e intanto la card mostra la
    * supposizione, che e' segnata come tale. */
   cercaGliAvviiIncerti(letti, cycles, now);
+  /* E la cottura si guarda con lo stesso respiro (#71): una friggitrice che
+   * finisce e torna in standby mentre nessuno guarda la pagina deve risultare
+   * «pronta» lo stesso, e lo sa solo chi l'ha vista cuocere. */
+  try {
+    if (ceLaCucina()) vistaDellaCucina(states, now);
+  } catch (_errore) {}
   return true;
 }
 
@@ -473,7 +493,7 @@ function heroMarkup(model) {
     freezer: model.freezer,
     chiave: model.id || model.name,
   });
-  return artwork || `<span class="dm-ap-hero-fallback" aria-hidden="true">🔌</span>`;
+  return artwork || `<span class="dm-ap-hero-fallback" aria-hidden="true">${segnoHtml("socket")}</span>`;
 }
 
 function heroHasImage(model) {
@@ -524,17 +544,24 @@ function portaMarkup(model) {
   )}</i>${esc(t("Porta aperta", "Door open"))}</span>`;
 }
 
+/* Il glifo della fase o del fatto arriva dal nucleo: un'emoji o una chiave
+ * diventano il disegno del catalogo, un segno di scrittura (✓, ○) resta. */
+function glifoDisegnato(glifo) {
+  const chiave = chiaveDelValore(glifo);
+  return chiave ? segnoHtml(chiave) : emojiInSegni(esc(glifo));
+}
+
 function programMarkup(model) {
   const program = model.program;
   const porta = portaMarkup(model);
   if (!program?.phase && !program?.chips?.length) return porta ? `<div class="dm-ap-program">${porta}</div>` : "";
   const fase = program.phase
-    ? `<span class="dm-ap-phase"><i aria-hidden="true">${program.phase.glifo}</i>${esc(program.phase.label)}</span>`
+    ? `<span class="dm-ap-phase"><i aria-hidden="true">${glifoDisegnato(program.phase.glifo)}</i>${esc(program.phase.label)}</span>`
     : "";
   const chips = (program.chips || [])
     .map(
       (chip) =>
-        `<span class="dm-ap-fact" data-fact="${esc(chip.key)}"><i aria-hidden="true">${chip.glifo}</i>${esc(chip.label)}</span>`,
+        `<span class="dm-ap-fact" data-fact="${esc(chip.key)}"><i aria-hidden="true">${glifoDisegnato(chip.glifo)}</i>${esc(chip.label)}</span>`,
     )
     .join("");
   return `<div class="dm-ap-program">${fase}${porta}${chips}</div>`;
@@ -752,6 +779,9 @@ function skeletonMarkup(labels) {
     <div class="dm-appl-layout">
       <aside class="dm-appl-side">
         <button type="button" class="dm-side-overview" data-dm-side-overview><span aria-hidden="true">${ICONS.home}</span>${esc(labels.overview)}</button>
+        <!-- La Cottura (#71): una voce accanto a Panoramica, non una sezione
+             nella barra. C'e' solo se in casa c'e' qualcosa che cuoce. -->
+        <button type="button" class="dm-side-overview dm-side-cottura" data-dm-side-cottura hidden><span class="dm-side-cottura-ic" aria-hidden="true">${segnoHtml("air-fryer")}</span><span>${esc(labels.cooking)}</span><b class="dm-side-cottura-n" data-dm-cottura-conto hidden></b></button>
         <div class="dm-side-cap">${esc(labels.rooms)}</div>
         <nav class="dm-side-rooms" data-dm-rooms></nav>
         <div class="dm-side-cap">${esc(labels.stateCap)}</div>
@@ -809,6 +839,7 @@ function skeletonMarkup(labels) {
           </label>
         </div>
         <div id="appl-grid-overview" class="appl-main-view active dm-appl-grid" data-dm-grid></div>
+        <div class="dm-cot" data-dm-cottura></div>
       </main>
     </div>
   </div>`;
@@ -913,9 +944,19 @@ function renderSidebar(shell, models, counts, rooms, labels) {
       ].join(""),
     );
   }
+  const inCottura = state.ui.pane === "cottura";
   const overview = shell.querySelector("[data-dm-side-overview]");
   if (overview)
-    overview.classList.toggle("active", state.ui.filter === "all" && state.ui.room === "all");
+    overview.classList.toggle(
+      "active",
+      !inCottura && state.ui.filter === "all" && state.ui.room === "all",
+    );
+  /* Nella Cottura le stanze e gli stati non filtrano niente: nessuno dei due
+   * resta acceso come se lo facesse. */
+  if (inCottura)
+    shell
+      .querySelectorAll(".dm-side-item.active")
+      .forEach((voce) => voce.classList.remove("active"));
   const watts = shell.querySelector("[data-dm-total-watts]");
   if (watts) {
     const label = formatPowerLabel(counts.watts);
@@ -952,12 +993,45 @@ function renderToolbar(shell) {
   if (sort && sort.value !== state.ui.sort) sort.value = state.ui.sort;
 }
 
+/* La Cottura (#71): la voce c'e' se in casa c'e' qualcosa che cuoce, e dice
+ * quanti stanno cuocendo; la pagina si disegna solo quando e' aperta. */
+function renderCottura(shell) {
+  const voce = shell.querySelector("[data-dm-side-cottura]");
+  const presente = ceLaCucina();
+  if (!presente && state.ui.pane === "cottura") state.ui.pane = "";
+  const aperta = state.ui.pane === "cottura";
+  shell.dataset.pane = aperta ? "cottura" : "";
+  if (voce) {
+    voce.hidden = !presente;
+    voce.classList.toggle("active", aperta);
+    voce.setAttribute("aria-pressed", aperta ? "true" : "false");
+  }
+  if (!presente) return "";
+  const vista = vistaDellaCucina();
+  const conto = shell.querySelector("[data-dm-cottura-conto]");
+  if (conto) {
+    const testo = vista.vive ? String(vista.vive) : "";
+    if (conto.textContent !== testo) conto.textContent = testo;
+    conto.hidden = !vista.vive;
+  }
+  if (!aperta) return `${vista.vive}`;
+  const markup = paginaDellaCottura(vista);
+  scriviLaCottura(shell.querySelector("[data-dm-cottura]"), markup);
+  if (
+    vista.voci.some(
+      (uno) => uno.lettura.fase === "cottura" || uno.lettura.fase === "preriscaldamento",
+    )
+  )
+    avviaLOrologio();
+  return markup;
+}
+
 function renderGrid(shell, visible, labels, schede) {
   const grid = shell.querySelector("[data-dm-grid]");
   if (!grid) return;
   if (!visible.length) {
     const message = devices().length ? labels.emptyFilter : labels.empty;
-    const markup = `<div class="dm-appl-empty">🧺 ${esc(message)}</div>`;
+    const markup = `<div class="dm-appl-empty">${segnoHtml("washer")} ${esc(message)}</div>`;
     if (grid._dmEmpty !== message) {
       grid._dmEmpty = message;
       grid.innerHTML = markup;
@@ -1098,9 +1172,14 @@ export function renderShowcase(force) {
       return [String(model.id), { markup, firma: firmaDellaScheda(markup, state.ui.view) }];
     }),
   );
+  /* La Cottura si scrive da se', e solo dove e' cambiata: non aspetta la
+   * firma delle schede, che il suo conto alla rovescia non lo vede. */
+  const cottura = renderCottura(shell);
   const signature = [
     built,
     Math.floor(now / 60000),
+    state.ui.pane,
+    cottura.length,
     state.ui.filter,
     state.ui.room,
     state.ui.sort,
@@ -1165,25 +1244,30 @@ function onShellClick(event) {
     setUi({ view: view.dataset.dmView === "list" ? "list" : "grid" });
     return;
   }
+  const cottura = target.closest?.("[data-dm-side-cottura]");
+  if (cottura) {
+    setUi({ pane: "cottura" });
+    return;
+  }
   const overview = target.closest?.("[data-dm-side-overview]");
   if (overview) {
-    setUi({ filter: "all", room: "all" });
+    setUi({ filter: "all", room: "all", pane: "" });
     return;
   }
   const roomButton = target.closest?.("[data-dm-room]");
   if (roomButton) {
-    setUi({ room: roomButton.dataset.dmRoom });
+    setUi({ room: roomButton.dataset.dmRoom, pane: "" });
     return;
   }
   const stateButton = target.closest?.("[data-dm-state]");
   if (stateButton) {
     const next = stateButton.dataset.dmState;
-    setUi({ filter: state.ui.filter === next ? "all" : next });
+    setUi({ filter: state.ui.filter === next && !state.ui.pane ? "all" : next, pane: "" });
     return;
   }
   const chip = target.closest?.("[data-dm-filter]");
   if (chip) {
-    setUi({ filter: chip.dataset.dmFilter });
+    setUi({ filter: chip.dataset.dmFilter, pane: "" });
     return;
   }
   const power = target.closest?.('[data-dm-power-toggle="true"]');
@@ -1280,6 +1364,7 @@ function installOverrides() {
 export function installApplianceShowcaseSection() {
   if (!doc) return;
   installShowcaseStyle();
+  installCottura();
   installOverrides();
   if (!state.listeners) {
     state.listeners = true;
@@ -1309,6 +1394,12 @@ export function installApplianceShowcaseSection() {
       installOverrides();
     });
     root.addEventListener?.("pageshow", installOverrides);
+    /* La tessera della cottura in Home porta qui, sulla Cottura (#71): chi la
+     * tocca chiede la voce, e poi preme la linguetta degli Elettrodomestici. */
+    root.addEventListener?.(EVENTO_COTTURA, () => {
+      state.ui.pane = "cottura";
+      if (vetrinaVisibile()) renderShowcase(true);
+    });
     doc.addEventListener(
       "click",
       (event) => {
@@ -1367,6 +1458,13 @@ function showcaseCss() {
 .dm-side-overview svg{width:17px;height:17px}
 .dm-side-overview:hover,.dm-side-item:hover{background:var(--dm-soft)}
 .dm-side-overview.active,.dm-side-item.active{background:#e0f2fe;color:var(--dm-blue-deep)}
+/* La Cottura (#71): la voce accanto a Panoramica, col conto di chi cuoce. */
+.dm-side-cottura[hidden]{display:none!important}
+.dm-side-cottura-ic{display:inline-grid;place-items:center;width:18px;height:18px}
+.dm-side-cottura-n{margin-left:auto;min-width:22px;padding:1px 7px;border-radius:999px;background:rgba(234,88,12,.14);color:#c2410c;font-size:10.5px;font-weight:900;text-align:center}
+.dm-side-cottura-n[hidden]{display:none}
+.dm-appl-shell[data-pane="cottura"] .dm-appl-toolbar,.dm-appl-shell[data-pane="cottura"] #appl-grid-overview.dm-appl-grid{display:none!important}
+.dm-appl-shell:not([data-pane="cottura"]) [data-dm-cottura]{display:none}
 .dm-side-ic{display:grid;place-items:center;width:20px;flex:0 0 20px;font-size:14px;color:var(--dm-dim)}
 .dm-side-ic svg{width:16px;height:16px}
 .dm-side-item.active .dm-side-ic{color:var(--dm-blue-deep)}
@@ -1661,6 +1759,7 @@ function showcaseCss() {
 .dm-appl-side{position:static;flex-direction:row;flex-wrap:wrap;align-items:center;gap:6px;padding:10px;min-width:0;max-width:100%}
 .dm-side-cap{flex:0 0 auto;margin:0 4px}
 .dm-side-overview{width:auto}
+.dm-side-cottura-n{margin-left:6px}
 .dm-side-rooms,.dm-side-states{display:flex;gap:6px;overflow-x:auto;flex:1 1 100%;min-width:0;max-width:100%;padding-bottom:2px;-webkit-overflow-scrolling:touch}
 .dm-side-item{width:auto;flex:0 0 auto;padding:8px 12px}
 .dm-side-label{overflow:visible}
@@ -1731,5 +1830,5 @@ function showcaseCss() {
 if (doc?.readyState === "loading") {
   doc.addEventListener("DOMContentLoaded", installApplianceShowcaseSection, { once: true });
 } else {
-  installApplianceShowcaseSection();
+  senzaCadere(installApplianceShowcaseSection);
 }

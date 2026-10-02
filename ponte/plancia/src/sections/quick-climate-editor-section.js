@@ -41,6 +41,7 @@ import {
   root,
   t,
   writeJsonIfChanged,
+  senzaCadere,
 } from "./shared.js";
 
 const KEY = "__DASHBOARDMODERN_QUICK_CLIMATE_EDITOR__";
@@ -330,5 +331,5 @@ export function installQuickClimateEditorSection() {
 if (doc?.readyState === "loading") {
   doc.addEventListener("DOMContentLoaded", installQuickClimateEditorSection, { once: true });
 } else {
-  installQuickClimateEditorSection();
+  senzaCadere(installQuickClimateEditorSection);
 }

@@ -47,6 +47,7 @@ import {
   planciaVisibile,
   root,
   wrapFunction,
+  senzaCadere,
 } from "./shared.js";
 
 const KEY = "__DASHBOARDMODERN_GUSCIO_QUANDO_SERVE__";
@@ -529,5 +530,5 @@ export function installGuscioQuandoServe() {
 if (doc?.readyState === "loading") {
   doc.addEventListener("DOMContentLoaded", installGuscioQuandoServe, { once: true });
 } else if (doc) {
-  installGuscioQuandoServe();
+  senzaCadere(installGuscioQuandoServe);
 }

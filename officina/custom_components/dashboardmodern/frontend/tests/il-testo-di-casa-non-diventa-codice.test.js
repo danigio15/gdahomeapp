@@ -21,6 +21,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
 import vm from "node:vm";
+import { segnoDaValoreHtml } from "../src/core/segni-del-catalogo.js";
 
 const leggi = (percorso) => readFileSync(new URL(percorso, import.meta.url), "utf8");
 
@@ -134,7 +135,7 @@ function paginaFinta() {
 
 /* ── il guscio ──────────────────────────────────────────────────────────── */
 
-const AIUTANTI = ["cdEsc", "cdJs", "cdUrlOk", "cdUrl", "cdColor", "cdIconMarkup"];
+const AIUTANTI = ["cdEsc", "cdJs", "cdUrlOk", "cdUrl", "cdColor", "cdSegno", "cdIconMarkup"];
 
 for (const lingua of ["it", "en"]) {
   const sorgente = leggi(`../legacy/dashboard-runtime-${lingua}.js`);
@@ -180,13 +181,17 @@ for (const lingua of ["it", "en"]) {
     assert.equal(c.cdColor('red;"><img src=x>', "#fff"), "#fff");
   });
 
-  test(`${lingua}: un'icona che non e' mdi: esce come testo, non come markup`, () => {
-    const c = vm.createContext({});
+  test(`${lingua}: un'icona che non e' mdi: diventa il segno del catalogo, mai markup suo`, () => {
+    /* «Ste emoji non le voglio vedere da nessuna parte»: l'emoji scelta resta
+     * nella configurazione, ma sullo schermo va il segnaposto del catalogo. E
+     * un nome cattivo non passa: diventa il segno di ripiego, senza testo. */
+    const c = vm.createContext({ window: { dmSegnoDaValore: segnoDaValoreHtml } });
     vm.runInContext(conAiutanti(), c);
-    assert.equal(c.cdIconMarkup("🛋️", 22), "🛋️");
+    assert.equal(c.cdIconMarkup("🛋️", 22), segnoDaValoreHtml("🛋️", { misura: 22 }));
+    assert.match(c.cdIconMarkup("🛋️", 22), /data-dm-segno="room-living"/);
     const icona = c.cdIconMarkup(CATTIVO, 22);
-    assert.deepEqual(tagDi(icona), []);
-    assert.equal(testoDi(icona), CATTIVO);
+    assert.deepEqual(forma(icona), ["i[aria-hidden,class,data-dm-segno,style]"]);
+    assert.equal(testoDi(icona), "");
     const mdi = c.cdIconMarkup('mdi:sofa" onclick="alert(1)', 22);
     assert.deepEqual(forma(mdi), ["ha-icon[icon,style]"]);
   });

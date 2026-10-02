@@ -27,6 +27,7 @@ import {
   section,
   t,
   writeIconGlyph,
+  senzaCadere,
 } from "./shared.js";
 
 const KEY = "__DASHBOARDMODERN_SUBLOAD_POPUP__";
@@ -629,4 +630,4 @@ export function installSubloadPopupSection() {
 
 if (doc?.readyState === "loading")
   doc.addEventListener("DOMContentLoaded", installSubloadPopupSection, { once: true });
-else installSubloadPopupSection();
+else senzaCadere(installSubloadPopupSection);

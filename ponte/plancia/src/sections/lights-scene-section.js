@@ -26,7 +26,9 @@ import {
   section,
   siComanda,
   t,
+  senzaCadere,
 } from "./shared.js";
+import { segnoHtml } from "../core/segni-del-catalogo.js";
 
 /* Single paint owner for the Gestione Luci popup and for the controls of one
  * light.
@@ -315,7 +317,7 @@ function groupMarkup(group, previousFloor) {
   const summary = lightSummary(group.views);
   const floorHeading =
     group.floor && group.floor !== previousFloor
-      ? `<div class="lgx-zona dm-lightx-floor">🏢 ${esc(group.floor.toUpperCase())}</div>`
+      ? `<div class="lgx-zona dm-lightx-floor">${segnoHtml("home")} ${esc(group.floor.toUpperCase())}</div>`
       : "";
   const action = summary.on ? "off" : "on";
   const label = summary.on ? t("Spegni", "All off") : t("Accendi", "All on");
@@ -636,7 +638,7 @@ export function renderLightControlMarkup(view) {
         }</p>`
       : "";
   return `<section class="dm-section-dialog dm-lightctl-dialog" role="dialog" aria-modal="true" aria-labelledby="dm-lightctl-title" style="--dm-light-color:${esc(color)};--dm-light-ink:${readableInk(color)};--dm-light-level:${view.on ? Math.max(12, level) : 0}%">
-    <header><strong id="dm-lightctl-title">${view.domain === "light" ? "💡" : "🔌"} ${esc(view.name)}</strong><button type="button" data-close aria-label="${t("Chiudi", "Close")}">✕</button></header>
+    <header><strong id="dm-lightctl-title">${segnoHtml(view.domain === "light" ? "lights" : "socket")} ${esc(view.name)}</strong><button type="button" data-close aria-label="${t("Chiudi", "Close")}">✕</button></header>
     <div class="dm-lightctl-body">
       <div class="dm-lightctl-hero">
         <span class="dm-lightctl-orb">${view.domain === "light" ? BULB : PLUG}</span>
@@ -646,7 +648,7 @@ export function renderLightControlMarkup(view) {
         </span>
         ${
           view.comandabile === false
-            ? `<span class="dm-lightctl-bloccata">🔒 ${esc(t("Solo lettura", "Read only"))}</span>`
+            ? `<span class="dm-lightctl-bloccata">${segnoHtml("lock")} ${esc(t("Solo lettura", "Read only"))}</span>`
             : `<button type="button" class="dm-lightctl-power" data-dm-light-power aria-pressed="${view.on}">${view.on ? t("Spegni", "Turn off") : t("Accendi", "Turn on")}</button>`
         }
       </div>
@@ -1024,5 +1026,5 @@ export function installLightsSceneSection() {
 if (doc?.readyState === "loading") {
   doc.addEventListener("DOMContentLoaded", installLightsSceneSection, { once: true });
 } else {
-  installLightsSceneSection();
+  senzaCadere(installLightsSceneSection);
 }

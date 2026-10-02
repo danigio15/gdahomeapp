@@ -220,8 +220,8 @@ test("the section runtime installs the showcase before the KPI popups wrap", asy
     new URL("../src/sections/section-runtime.js", import.meta.url),
     "utf8",
   );
-  const showcase = source.lastIndexOf("installApplianceShowcaseSection()");
-  const popups = source.lastIndexOf("installApplianceKpiPopups()");
+  const showcase = source.lastIndexOf("senzaCadere(installApplianceShowcaseSection);");
+  const popups = source.lastIndexOf("senzaCadere(installApplianceKpiPopups);");
   assert.ok(showcase > 0 && popups > 0 && showcase < popups);
   assert.match(source, /"appliance-showcase"/);
 });

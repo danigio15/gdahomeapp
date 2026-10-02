@@ -108,8 +108,8 @@ test("il cancello degli eventi conosce cd_security_doors", async () => {
 
 test("il runtime installa le card e l'editor delle aperture", () => {
   const runtime = leggi("sections/section-runtime.js");
-  assert.match(runtime, /installSecurityDoorsSection\(\)/);
-  assert.match(runtime, /installSecurityDoorsEditorSection\(\)/);
+  assert.match(runtime, /senzaCadere\(installSecurityDoorsSection\);/);
+  assert.match(runtime, /senzaCadere\(installSecurityDoorsEditorSection\);/);
   assert.match(runtime, /"security-doors"/);
 });
 

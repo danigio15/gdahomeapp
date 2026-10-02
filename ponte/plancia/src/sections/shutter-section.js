@@ -1,4 +1,4 @@
-import { doc, installStyle, root } from "./shared.js";
+import { doc, installStyle, root, senzaCadere } from "./shared.js";
 
 globalThis.__DM_20260815C__ = true;
 const KEY = "__DASHBOARDMODERN_SHUTTER_SECTION__";
@@ -334,5 +334,5 @@ export function installShutterSection() {
 if (doc?.readyState === "loading") {
   doc.addEventListener("DOMContentLoaded", installShutterSection, { once: true });
 } else {
-  installShutterSection();
+  senzaCadere(installShutterSection);
 }

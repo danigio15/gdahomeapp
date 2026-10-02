@@ -29,7 +29,7 @@
  * `data-dm-si-trascina`.
  */
 import { eraUnoScorrimento } from "../core/il-dito-scorre-o-tocca.js";
-import { doc, root } from "./shared.js";
+import { doc, root, senzaCadere } from "./shared.js";
 
 const KEY = "__DASHBOARDMODERN_DITO__";
 const state = (root[KEY] ||= { installed: false, partenza: null, id: null, scorrimenti: null });
@@ -108,4 +108,4 @@ export function installIlDitoScorreOTocca() {
   return true;
 }
 
-installIlDitoScorreOTocca();
+senzaCadere(installIlDitoScorreOTocca);

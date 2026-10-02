@@ -103,7 +103,7 @@ test("ogni stanza ha il suo conto e il suo comando, che parla al contrario", () 
 
 test("la sezione e' installata dal runtime e la pagina ha la sua intestazione", async () => {
   const runtime = await read("../src/sections/section-runtime.js");
-  assert.match(runtime, /installLightsPageSection\(\)/);
+  assert.match(runtime, /senzaCadere\(installLightsPageSection\);/);
   const masthead = await read("../src/sections/page-masthead-section.js");
   assert.match(masthead, new RegExp(`id: "${LIGHTS_PAGE_ID}"`));
 });

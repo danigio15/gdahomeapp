@@ -17,10 +17,14 @@ async function sectionSources() {
 }
 
 test("canonical room/action visuals never create blue SVG first frames", () => {
-  assert.match(roomVisual("mdi:bed-king-outline", 40), /🛏️/);
-  assert.match(actionVisual("mdi:lightbulb", 40), /💡/);
-  assert.doesNotMatch(roomVisual("mdi:bed-king-outline", 40), /<svg|ha-icon/);
-  assert.doesNotMatch(actionVisual("mdi:lightbulb", 40), /<svg|ha-icon/);
+  /* Il primo fotogramma e' gia' il disegno del catalogo di casa: niente
+   * `ha-icon` da riempire dopo, e niente emoji del sistema. */
+  assert.match(roomVisual("mdi:bed-king-outline", 40), /data-dm-art="room-bedroom"/);
+  assert.match(actionVisual("mdi:lightbulb", 40), /data-dm-art="lights"/);
+  for (const markup of [roomVisual("mdi:bed-king-outline", 40), actionVisual("mdi:lightbulb", 40)]) {
+    assert.doesNotMatch(markup, /ha-icon/);
+    assert.doesNotMatch(markup, /\p{Extended_Pictographic}/u);
+  }
 });
 
 test("la finestra di conferma la disegna il motore, e nessuno la aggira", async () => {

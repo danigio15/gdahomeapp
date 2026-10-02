@@ -44,6 +44,7 @@ import {
   readJson,
   root,
   t,
+  senzaCadere,
 } from "./shared.js";
 import {
   batterieSorvegliate,
@@ -52,6 +53,7 @@ import {
   CHIAVE_NOMI_SCELTI,
   nomeDellaBatteria,
 } from "./batterie-elenco-section.js";
+import { segnoHtml } from "../core/segni-del-catalogo.js";
 
 const KEY = "__DASHBOARDMODERN_BATTERIE__";
 const state = (root[KEY] ||= { installed: false, frame: 0, firma: "" });
@@ -126,7 +128,7 @@ export function ensureBatterieTab() {
   voce.className = "tab";
   voce.dataset.tab = BATTERIE_TAB;
   voce.id = `tab-${BATTERIE_TAB}`;
-  voce.innerHTML = `<span class="icon">🔋</span><span class="text">${esc(t("Batterie", "Batteries"))}</span>`;
+  voce.innerHTML = `<span class="icon">${segnoHtml("battery")}</span><span class="text">${esc(t("Batterie", "Batteries"))}</span>`;
   voce.addEventListener("click", () => {
     for (const nodo of doc.querySelectorAll(".tab")) nodo.classList.remove("active");
     for (const nodo of doc.querySelectorAll(".page")) nodo.classList.remove("active");
@@ -178,9 +180,9 @@ export function titoloDelleBatterie(conto) {
 /* Il glifo segue il livello, come lo segue una batteria vera: piena, mezza,
  * quasi finita. Muta è muta, e si vede che lo è. */
 function glifoDelLivello(riga) {
-  if (riga.muta) return "❔";
-  if (riga.scarica) return "🪫";
-  return "🔋";
+  if (riga.muta) return "info";
+  if (riga.scarica) return "battery";
+  return "battery";
 }
 
 /* ── il disegno ───────────────────────────────────────────────────────── */
@@ -221,7 +223,7 @@ function rigaMarkup(riga, states = {}) {
   const stato = riga.muta ? "muta" : riga.scarica ? "scarica" : "carica";
   const quanto = riga.muta ? 0 : Math.max(0, Math.min(100, riga.level));
   return `<article class="dm-batt" data-batt="${esc(stato)}" data-dm-entita="${esc(riga.entity)}">
-    <span class="dm-batt-ic" aria-hidden="true">${riga.disegno ? disegnoDiCasa(riga.disegno, { misura: 26 }) : esc(glifoDelLivello(riga))}</span>
+    <span class="dm-batt-ic" aria-hidden="true">${riga.disegno ? disegnoDiCasa(riga.disegno, { misura: 26 }) : segnoHtml(glifoDelLivello(riga), { misura: 26 })}</span>
     <div class="dm-batt-testo">
       <strong>${esc(riga.name)}</strong>
       <span class="dm-batt-barra"><i style="width:${esc(String(quanto))}%"></i></span>
@@ -446,4 +448,4 @@ export function installBatterie() {
   return true;
 }
 
-installBatterie();
+senzaCadere(installBatterie);

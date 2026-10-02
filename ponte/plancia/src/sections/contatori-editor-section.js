@@ -32,7 +32,7 @@ import {
 } from "../core/contatori-di-casa.js";
 import { CONTATORI_TAB, renderContatori } from "./contatori-section.js";
 import { costruisciSchedaDichiarata } from "./scheda-dichiarata-section.js";
-import { allStates, clean, esc, formatNumber, t } from "./shared.js";
+import { allStates, clean, esc, formatNumber, t, senzaCadere } from "./shared.js";
 import { nomeDaHomeAssistant } from "./editor-slots-section.js";
 
 export const CONTATORI_EDITOR_TAB = CONTATORI_TAB;
@@ -204,7 +204,7 @@ const scheda = costruisciSchedaDichiarata({
   bozzaInPiu: conICampiDelContatore,
 
   parole: {
-    linguetta: `💧 ${t("Acqua e gas", "Water and gas")}`,
+    linguetta: `${t("Acqua e gas", "Water and gas")}`,
     intro: t(
       "I contatori di casa: l'acqua, il gas, e quello che dice l'impianto. Ogni riga è un sensore — l'entità, il nome che vuoi tu, il disegno e cosa misura — e la pagina Acqua e gas mostra oggi, ieri e il mese, la pressione nella sua forcella, e l'acqua che non smette mai di scorrere.",
       "The meters of the house: water, gas, and what the plumbing says. Each row is a sensor — the entity, the name you want, the drawing and what it measures — and the Water and gas page shows today, yesterday and the month, the pressure within its range, and water that never stops flowing.",
@@ -214,7 +214,7 @@ const scheda = costruisciSchedaDichiarata({
     nuovo: t("Contatore nuovo", "New meter"),
     senzaNome: t("Contatore senza nome", "Unnamed meter"),
     salva: t("Salva contatore", "Save meter"),
-    salvato: `💧 ${t("Contatore salvato", "Meter saved")}`,
+    salvato: `${t("Contatore salvato", "Meter saved")}`,
     etichettaEntita: t("Entità del sensore", "Sensor entity"),
     segnaposto: "sensor.contatore_acqua",
     aiutoEntita: t(
@@ -235,7 +235,7 @@ const scheda = costruisciSchedaDichiarata({
         `Prendi i ${quanti} contatori che Home Assistant ha trovato`,
         `Take the ${quanti} meters Home Assistant found`,
       ),
-    presi: (quanti) => t(`💧 ${quanti} contatori aggiunti`, `💧 ${quanti} meters added`),
+    presi: (quanti) => t(`${quanti} contatori aggiunti`, `${quanti} meters added`),
     notaImporta: t(
       "Li mette qui come righe, una volta sola: da lì in poi sono tue — le rinomini, gli dai il disegno, e quelle che elimini non tornano più.",
       "It puts them here as rows, once: from then on they are yours — rename them, give them a drawing, and the ones you remove do not come back.",
@@ -304,4 +304,4 @@ export function installContatoriEditor() {
   return scheda.installa();
 }
 
-installContatoriEditor();
+senzaCadere(installContatoriEditor);

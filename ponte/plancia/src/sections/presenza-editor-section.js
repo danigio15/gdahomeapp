@@ -16,7 +16,7 @@ import {
 } from "../core/presenza-in-casa.js";
 import { PRESENZA_TAB, renderPresenza } from "./presenza-section.js";
 import { costruisciSchedaDichiarata } from "./scheda-dichiarata-section.js";
-import { allStates, stanzaDiHomeAssistant, t } from "./shared.js";
+import { allStates, stanzaDiHomeAssistant, t, senzaCadere } from "./shared.js";
 import { nomeDaHomeAssistant } from "./editor-slots-section.js";
 
 export const PRESENZA_EDITOR_TAB = PRESENZA_TAB;
@@ -50,7 +50,7 @@ const scheda = costruisciSchedaDichiarata({
   ridisegnaPagina: renderPresenza,
 
   parole: {
-    linguetta: `👁️ ${t("Presenza", "Presence")}`,
+    linguetta: `${t("Presenza", "Presence")}`,
     intro: t(
       "I rilevatori di presenza. Ogni riga è un rilevatore — l'entità, il nome che vuoi tu, il disegno — e la pagina Presenza mostra queste: in cima quante stanze hanno qualcuno dentro, sotto una card per rilevatore con da quanto è così.",
       "The presence detectors. Each row is a detector — the entity, the name you want, the drawing — and the Presence page shows these: how many rooms have someone in them on top, and one card per detector below with how long it has been that way.",
@@ -60,7 +60,7 @@ const scheda = costruisciSchedaDichiarata({
     nuovo: t("Rilevatore nuovo", "New detector"),
     senzaNome: t("Rilevatore senza nome", "Unnamed detector"),
     salva: t("Salva rilevatore", "Save detector"),
-    salvato: `👁️ ${t("Rilevatore salvato", "Detector saved")}`,
+    salvato: `${t("Rilevatore salvato", "Detector saved")}`,
     etichettaEntita: t("Entità del rilevatore", "Detector entity"),
     segnaposto: "binary_sensor.movimento_corridoio",
     aiutoEntita: t(
@@ -79,7 +79,7 @@ const scheda = costruisciSchedaDichiarata({
         `Take the ${quanti} detectors Home Assistant found`,
       ),
     presi: (quanti) =>
-      t(`👁️ ${quanti} rilevatori aggiunti`, `👁️ ${quanti} detectors added`),
+      t(`${quanti} rilevatori aggiunti`, `${quanti} detectors added`),
     notaImporta: t(
       "Li mette qui come righe, una volta sola: da lì in poi sono tuoi — li rinomini, gli dai il disegno, e quelli che elimini non tornano più.",
       "It puts them here as rows, once: from then on they are yours — rename them, give them a drawing, and the ones you remove do not come back.",
@@ -126,4 +126,4 @@ export function installPresenzaEditor() {
   return scheda.installa();
 }
 
-installPresenzaEditor();
+senzaCadere(installPresenzaEditor);

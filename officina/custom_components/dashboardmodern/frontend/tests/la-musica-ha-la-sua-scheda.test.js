@@ -302,9 +302,9 @@ test("il disegno della cassa è di casa, e la scheda viaggia con la plancia", as
     "la revisione non e' mai stata alzata per questa chiave",
   );
   const runtime = leggi("sections/section-runtime.js");
-  assert.match(runtime, /installMediaPlayer\(\);/);
-  assert.match(runtime, /installMediaEditor\(\);/);
-  assert.match(runtime, /installMediaInAzioni\(\);/);
+  assert.match(runtime, /senzaCadere\(installMediaPlayer\);/);
+  assert.match(runtime, /senzaCadere\(installMediaEditor\);/);
+  assert.match(runtime, /senzaCadere\(installMediaInAzioni\);/);
 });
 
 /* ── la tessera in Home ─────────────────────────────────────────────────
@@ -328,7 +328,7 @@ test("la tessera dice cosa sta suonando, non solo quante casse", () => {
    * senza potersi né spostare né spegnere. */
   assert.match(
     leggi("sections/todo-editor-section.js"),
-    /\["media", "🔊", t\("Musica", "Media"\)\]/,
+    /\["media", "speaker", t\("Musica", "Media"\)\]/,
   );
   /* Dalla finestra si arriva alla sezione. */
   assert.match(ponte, /media: "media",\n\}\);/);

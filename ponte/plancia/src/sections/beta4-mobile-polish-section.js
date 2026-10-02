@@ -1,10 +1,11 @@
+import { segnoDaValoreHtml, segnoHtml } from "../core/segni-del-catalogo.js";
 import { catalogLabel, ROOM_CATALOG, roomVisual } from "../core/personalization-catalog.js";
 import {
   disegnoGiaNellaCasella,
   haOggettoWidget,
   oggettoWidget,
 } from "../core/oggetti-widget.js";
-import { clean, doc, esc, formatNumber, installStyle, root, t, wrapFunction } from "./shared.js";
+import { clean, doc, esc, formatNumber, installStyle, root, t, wrapFunction, senzaCadere } from "./shared.js";
 import { lEnergiaInParole, laPotenzaInParole } from "../core/le-unita-della-corrente.js";
 
 // Kept in the beta4 entry filename for release compatibility, but this module is
@@ -14,47 +15,47 @@ const KEY = "__DASHBOARDMODERN_BETA5_ROOT_CAUSES__";
 const state = (root[KEY] ||= { installed: false, frame: 0, listeners: false, dailyChart: null });
 
 const TAB_ICONS = Object.freeze({
-  visib: "⚙️",
-  sez0: "🏠",
-  sez1: "⚡",
-  sez2: "🚗",
-  sez3: "🌞",
-  sez4: "🛡️",
-  sez6: "🖥️",
-  sez7: "🌡️",
-  sez8: "⚡",
-  sez9: "❄️",
-  appliances: "🧺",
-  luci: "💡",
+  visib: "sliders",
+  sez0: "home",
+  sez1: "power",
+  sez2: "ev",
+  sez3: "sun",
+  sez4: "security",
+  sez6: "computer",
+  sez7: "thermometer",
+  sez8: "power",
+  sez9: "air-conditioner",
+  appliances: "washer",
+  luci: "lights",
   /* Il divano, non la porta: la porta e' delle Aperture (`doors`, qui
    * sotto), e da telefono — dove della linguetta resta il solo simbolo —
    * due porte affiancate non si distinguono. */
-  stanze: "🛋️",
-  avvisi: "🔔",
-  tapp: "🪟",
-  irr: "💧",
-  pool: "🏊",
+  stanze: "room-living",
+  avvisi: "bell",
+  tapp: "window",
+  irr: "water",
+  pool: "room-pool",
   /* Le schede nate dopo questa tabella. Senza il loro nome qui la linguetta
    * restava tutta intera — simbolo e parola insieme — e da telefono, dove la
    * colonna si stringe a un simbolo solo, quelle quattro uscivano fuori misura
    * col nome accavallato. Il simbolo e' lo stesso che ognuna si scrive. */
-  todo: "🧩",
-  backup: "💾",
-  people: "👥",
-  robot: "🤖",
-  doors: "🚪",
-  agenda: "📅",
-  ups: "🔌",
-  allerte: "⚠️",
-  rifiuti: "♻️",
+  todo: "sliders",
+  backup: "check",
+  people: "person",
+  robot: "robot",
+  doors: "door",
+  agenda: "calendar",
+  ups: "socket",
+  allerte: "warning",
+  rifiuti: "refresh",
   /* Le due della beta.12: la Musica (#269) e le entita' che uno si aggiunge
    * (#271). Senza il loro simbolo qui la linguetta restava intera anche dove
    * la colonna si stringe, ed e' lo stesso difetto delle quattro sopra. */
-  media: "🔊",
-  entita: "⭐",
+  media: "speaker",
+  entita: "star",
   /* Gli animali (#358): stessa storia, stessa cura — il simbolo e' quello che
    * la scheda si scrive da se'. */
-  animali: "🐾",
+  animali: "pet",
 });
 
 /* Quale disegno di casa porta ogni scheda della configurazione.
@@ -186,6 +187,10 @@ function activeTab() {
 
 /* Il simbolo con cui una linguetta comincia, se ne ha uno. */
 function primoSimbolo(button) {
+  /* Un segno gia' disegnato — qui o dal markup della linguetta — dice la sua
+   * chiave del catalogo. */
+  const segno = button.querySelector(":scope > .dm-beta4-tab-icon [data-dm-segno],:scope > [data-dm-segno]");
+  if (segno?.dataset?.dmSegno) return segno.dataset.dmSegno;
   const gia = clean(button.querySelector(":scope > .dm-beta4-tab-icon")?.textContent);
   if (gia) return gia;
   const testo = clean(button.textContent);
@@ -261,7 +266,8 @@ function syncConfigTabIcons() {
       }
     } else {
       delete iconNode.dataset.dmOggetto;
-      iconNode.textContent = icon;
+      const segno = segnoDaValoreHtml(icon, { ripiego: "sliders" });
+      if (iconNode.innerHTML !== segno) iconNode.innerHTML = segno;
     }
     if (!clean(labelNode.textContent)) labelNode.textContent = labelText;
     /* Il nome anche fuori dal pezzo che lo scrive.
@@ -321,7 +327,7 @@ function openRoomPicker(input) {
   const modal = doc.createElement("div");
   modal.id = "dm-beta5-room-picker";
   modal.className = "dm-section-modal dm-visual-picker";
-  modal.innerHTML = `<section class="dm-section-dialog dm-picker-dialog" role="dialog" aria-modal="true"><header><strong>🏠 ${t("Scegli l'icona stanza", "Choose room icon")}</strong><button type="button" data-close aria-label="${t("Chiudi", "Close")}">✕</button></header><div class="dm-picker-search"><input class="ed-input" type="search" placeholder="🔎 ${t("Cerca…", "Search…")}" data-search></div><div class="dm-picker-grid">${ROOM_CATALOG.map((item, index) => `<button type="button" class="dm-picker-option" data-index="${index}" data-search-text="${esc(`${item.it} ${item.en} ${item.keywords || ""}`.toLowerCase())}"><span class="dm-picker-visual">${roomVisual(item.mdi, 46)}</span><b>${esc(catalogLabel(item))}</b></button>`).join("")}</div></section>`;
+  modal.innerHTML = `<section class="dm-section-dialog dm-picker-dialog" role="dialog" aria-modal="true"><header><strong>${segnoHtml("home")} ${t("Scegli l'icona stanza", "Choose room icon")}</strong><button type="button" data-close aria-label="${t("Chiudi", "Close")}">✕</button></header><div class="dm-picker-search"><input class="ed-input" type="search" placeholder="${t("Cerca…", "Search…")}" data-search></div><div class="dm-picker-grid">${ROOM_CATALOG.map((item, index) => `<button type="button" class="dm-picker-option" data-index="${index}" data-search-text="${esc(`${item.it} ${item.en} ${item.keywords || ""}`.toLowerCase())}"><span class="dm-picker-visual">${roomVisual(item.mdi, 46)}</span><b>${esc(catalogLabel(item))}</b></button>`).join("")}</div></section>`;
   doc.body.append(modal);
   modal.querySelector("[data-close]")?.addEventListener("click", closeRoomPicker);
   modal.addEventListener("click", (event) => { if (event.target === modal) closeRoomPicker(); });
@@ -371,7 +377,7 @@ function polishRoomFirstInsert() {
     trigger.innerHTML =
       root.DashboardModernIconEngine?.markup?.("room", value, { size: 40 }) ||
       roomVisual(value, 46) ||
-      `<span aria-hidden="true">🏠</span>`;
+      `<span aria-hidden="true">${segnoHtml("home")}</span>`;
   };
   if (trigger.dataset.dmBeta5Bound !== "true") {
     trigger.dataset.dmBeta5Bound = "true";
@@ -393,7 +399,7 @@ function removeAlertFlash(form, customMode) {
   form.querySelectorAll("button,.dm-action-glyph").forEach((node) => {
     const text = clean(node.textContent);
     const powerGlyph = node.matches?.('.dm-action-glyph[data-action="power"]') || node.querySelector?.('.dm-action-glyph[data-action="power"]');
-    if ((text === "⚡" || powerGlyph) && !node.closest(".ed-row")) node.remove();
+    if ((text === "⚡" || (!text && node.querySelector?.('[data-dm-segno="power"]')) || powerGlyph) && !node.closest(".ed-row")) node.remove();
   });
 }
 
@@ -573,7 +579,7 @@ function chartMessage(message) {
   if (canvas) canvas.style.display = "none";
   if (loading) {
     loading.style.display = "flex";
-    loading.innerHTML = `<span aria-hidden="true">ℹ️</span> ${message}`;
+    loading.innerHTML = `<span aria-hidden="true">${segnoHtml("info")}</span> ${message}`;
   }
 }
 
@@ -936,4 +942,4 @@ export function installBeta4MobilePolishSection() {
   schedule();
 }
 
-installBeta4MobilePolishSection();
+senzaCadere(installBeta4MobilePolishSection);

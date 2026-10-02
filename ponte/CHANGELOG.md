@@ -11,6 +11,35 @@ fuori. La plancia dentro continua a dire la sua, e si legge dov'è sempre
 stata: nella pastiglia «La plancia» della console. Sono due numeri perché
 sono due cose.
 
+## 1.9.2
+
+**Torna la plancia della 1.9.0, con la correzione che mancava.** Tornano la
+stanza aperta come tavola di comandi, le batterie di accumulo in Energia, la
+cottura negli Elettrodomestici, i varchi da escludere dall'antifurto, i disegni
+del catalogo al posto delle emoji, e le correzioni arrivate con la 1.9.0: il
+clima acceso dal telecomando, il nome del piano nuovo, la card del Clima sul
+telefono e le telecamere nel muro della Sicurezza. Cosa fa ognuna è scritto
+qui sotto, nella 1.9.0.
+
+**Perché la 1.9.0 si fermava dopo le azioni rapide.** Nella pagina Sicurezza la
+riga delle zone della centrale usava un nome che in quel punto non esiste.
+Bastava una zona scritta sulla centrale perché la riga si fermasse con un
+errore. La pagina Sicurezza si prepara mentre la plancia si carica, e quell'errore
+fermava tutta la parte nuova: restavano la testata, il meteo e le azioni
+rapide. Nella casa di prova le zone non ci sono, per questo le prove erano
+verdi. Adesso la riga delle zone si disegna, e il lucchetto aperto sta
+sull'ingresso escluso, dove deve stare.
+
+**Un pezzo che si rompe non spegne più la Home.** La plancia accende i suoi
+pezzi uno per uno: se uno cade lo scrive nella console del browser, e gli altri
+partono lo stesso. Rimettendo apposta l'errore della 1.9.0, la Home esce
+intera e manca solo la riga delle zone.
+
+**Il no allo spegnimento programmato si legge di nuovo.** Quando Home Assistant
+rifiutava uno spegnimento programmato, invece dell'avviso arrivava un errore
+della plancia. Adesso compare il messaggio che dice di aggiornare
+l'integrazione.
+
 ## 1.9.1
 
 **Torna la plancia della 1.8.0.** Con la plancia della 1.9.0, su molte case,

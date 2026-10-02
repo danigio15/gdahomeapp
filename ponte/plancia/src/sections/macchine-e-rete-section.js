@@ -55,6 +55,7 @@ import {
   readJson,
   root,
   t,
+  senzaCadere,
 } from "./shared.js";
 import { disegnoDelCatalogo } from "../core/catalogo-disegni.js";
 import { nomeDaHomeAssistant } from "./editor-slots-section.js";
@@ -409,4 +410,4 @@ export function installMacchine() {
   return true;
 }
 
-installMacchine();
+senzaCadere(installMacchine);

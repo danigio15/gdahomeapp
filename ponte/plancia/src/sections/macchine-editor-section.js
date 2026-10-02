@@ -41,7 +41,7 @@ import {
   serverPerDispositivo,
 } from "./macchine-e-rete-section.js";
 import { costruisciSchedaDichiarata } from "./scheda-dichiarata-section.js";
-import { allStates, clean, doc, esc, readJson, root, t, writeJsonIfChanged } from "./shared.js";
+import { allStates, clean, doc, esc, readJson, root, t, writeJsonIfChanged, senzaCadere } from "./shared.js";
 import { nomeDaHomeAssistant } from "./editor-slots-section.js";
 
 const KEY = "__DASHBOARDMODERN_MACCHINE_EDITOR__";
@@ -192,7 +192,7 @@ const scheda = costruisciSchedaDichiarata({
     nuovo: t("Macchina nuova", "New machine"),
     senzaNome: t("Macchina senza nome", "Unnamed machine"),
     salva: t("Salva macchina", "Save machine"),
-    salvato: `🖥️ ${t("Macchina salvata", "Machine saved")}`,
+    salvato: `${t("Macchina salvata", "Machine saved")}`,
     etichettaEntita: t("Entità della macchina", "Machine entity"),
     segnaposto: "binary_sensor.pve_qemu_103_running",
     aiutoEntita: t(
@@ -212,7 +212,7 @@ const scheda = costruisciSchedaDichiarata({
         `Prendi le ${quanti} che Home Assistant ha trovato`,
         `Take the ${quanti} Home Assistant found`,
       ),
-    presi: (quanti) => t(`🖥️ ${quanti} righe aggiunte`, `🖥️ ${quanti} rows added`),
+    presi: (quanti) => t(`${quanti} righe aggiunte`, `${quanti} rows added`),
     notaImporta: t(
       "Le mette qui come righe, una volta sola: da lì in poi sono tue — le rinomini, gli dai il disegno, e quelle che elimini non tornano più.",
       "It puts them here as rows, once: from then on they are yours — rename them, give them a drawing, and the ones you remove do not come back.",
@@ -292,4 +292,4 @@ export function installMacchineEditor() {
   return scheda.installa();
 }
 
-installMacchineEditor();
+senzaCadere(installMacchineEditor);

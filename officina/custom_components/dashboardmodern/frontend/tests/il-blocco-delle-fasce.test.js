@@ -128,8 +128,8 @@ test("il blocco dice quanta parte è misurata e quanta è stimata", () => {
     TRE,
     SETTEMBRE,
   );
-  assert.ok(tutto.includes("✅"));
-  assert.ok(!tutto.includes("ℹ️"));
+  assert.ok(tutto.includes('data-dm-segno="check"'));
+  assert.ok(!tutto.includes('data-dm-segno="info"'));
 });
 
 test("senza report non si disegna niente", () => {

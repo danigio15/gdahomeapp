@@ -39,8 +39,8 @@ test("il cancello degli eventi conosce cd_people", async () => {
 
 test("il runtime installa le card e l'editor delle persone", () => {
   const runtime = leggi("sections/section-runtime.js");
-  assert.match(runtime, /installPeopleSection\(\)/);
-  assert.match(runtime, /installPeopleEditorSection\(\)/);
+  assert.match(runtime, /senzaCadere\(installPeopleSection\);/);
+  assert.match(runtime, /senzaCadere\(installPeopleEditorSection\);/);
 });
 
 test("le card stanno in cima alla Home e ricadono sull'avatar se la foto è rotta", () => {

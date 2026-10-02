@@ -839,6 +839,11 @@ cat >/etc/caddy/Caddyfile <<FINE
 $NOME_DEL_TRAMITE {
 	encode zstd gzip
 
+	# L'app e' pubblica solo in HTTPS. HSTS fa si' che, dopo il primo
+	# ingresso sicuro, il browser non torni a chiedere questo nome in HTTP
+	# neppure seguendo un vecchio preferito o un link memorizzato.
+	header Strict-Transport-Security "max-age=31536000; includeSubDomains"
+
 	# L'app anche da qui, sotto \`/app/\`.
 	#
 	# Non e' un doppione per comodita': e' l'indirizzo che la console
@@ -861,7 +866,7 @@ $NOME_DEL_TRAMITE {
 	header /app/* {
 		X-Content-Type-Options nosniff
 		X-Frame-Options DENY
-		Content-Security-Policy "frame-ancestors 'none'"
+		Content-Security-Policy "frame-ancestors 'none'; upgrade-insecure-requests"
 		Cross-Origin-Opener-Policy same-origin-allow-popups
 	}
 	header /console* {

@@ -1,4 +1,5 @@
 // DM-FIX-20260813L
+import { segnoDaValoreHtml } from "../core/segni-del-catalogo.js";
 import { directEmoji, roomGlyph } from "../core/personalization-catalog.js";
 import {
   clean,
@@ -9,6 +10,7 @@ import {
   readJson,
   root,
   t,
+  senzaCadere,
 } from "./shared.js";
 
 const capturedRooms = readJson("cd_stanze", []);
@@ -76,8 +78,8 @@ export function repairClimateLabels() {
     if (!select) continue;
     const cool = select.querySelector?.('option[value="clima"]');
     const heat = select.querySelector?.('option[value="termo"],option[value="termostato"]');
-    if (cool) cool.textContent = t("❄️ Freddo", "❄️ Cool");
-    if (heat) heat.textContent = t("🔥 Caldo", "🔥 Heat");
+    if (cool) cool.textContent = t("Freddo", "Cool");
+    if (heat) heat.textContent = t("Caldo", "Heat");
     // La pompa di calore (#195) e' un tipo che il markup vendored non conosce:
     // la voce si aggiunge qui, cosi' tutti e tre gli editor offrono le stesse.
     let pump = select.querySelector?.('option[value="pompa"]');
@@ -86,7 +88,7 @@ export function repairClimateLabels() {
       pump.value = "pompa";
       select.append?.(pump);
     }
-    if (pump) pump.textContent = t("♨️ Pompa di calore", "♨️ Heat pump");
+    if (pump) pump.textContent = t("Pompa di calore", "Heat pump");
     repaired = true;
   }
   return repaired;
@@ -109,7 +111,8 @@ function installTemperatureCompatibleIconEngine() {
       fallback = doc.createElement("span");
       fallback.className = "dm-temperature-icon-fallback";
     }
-    if (clean(fallback.textContent) !== glyph) fallback.textContent = glyph;
+    const segno = segnoDaValoreHtml(glyph, { ripiego: "home" });
+    if (fallback.innerHTML !== segno) fallback.innerHTML = segno;
     if (target.children.length !== 1 || target.firstElementChild !== fallback) {
       target.replaceChildren(fallback);
     }
@@ -135,7 +138,8 @@ function setRoomGlyph(target, room) {
     visual.className = "dm-beta14-room-glyph";
     target.replaceChildren(visual);
   }
-  if (clean(visual.textContent) !== glyph) visual.textContent = glyph;
+  const segno = segnoDaValoreHtml(glyph, { ripiego: "home" });
+  if (visual.innerHTML !== segno) visual.innerHTML = segno;
 }
 
 export function repairRoomRows() {
@@ -178,7 +182,10 @@ export function repairTemperatureRoomIcons() {
       || rooms.find((item) => name && clean(item.name).toLowerCase() === name.toLowerCase());
     if (!room) return;
     const target = card.querySelector?.(".room-icon,.temp-icon,[data-room-icon]");
-    if (target) target.textContent = directEmoji(room.icon) || roomGlyph(room.icon);
+    if (target) {
+      const segno = segnoDaValoreHtml(directEmoji(room.icon) || roomGlyph(room.icon), { ripiego: "home" });
+      if (target.innerHTML !== segno) target.innerHTML = segno;
+    }
   });
 }
 
@@ -247,4 +254,4 @@ export function installBeta14RealDeviceHotfix() {
   schedule();
 }
 if (doc?.readyState === "loading") doc.addEventListener("DOMContentLoaded", installBeta14RealDeviceHotfix, { once: true });
-else installBeta14RealDeviceHotfix();
+else senzaCadere(installBeta14RealDeviceHotfix);

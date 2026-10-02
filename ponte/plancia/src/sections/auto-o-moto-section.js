@@ -63,6 +63,7 @@ import {
   t,
   wrapFunction,
   writeJsonIfChanged,
+  senzaCadere,
 } from "./shared.js";
 
 const KEY = "__DASHBOARDMODERN_AUTO_O_MOTO__";
@@ -341,4 +342,4 @@ export function installAutoOMoto() {
   return true;
 }
 
-installAutoOMoto();
+senzaCadere(installAutoOMoto);

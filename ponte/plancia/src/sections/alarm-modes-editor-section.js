@@ -28,6 +28,7 @@ import {
   t,
   tieniIlBloccoNellaScheda,
   writeJsonIfChanged,
+  senzaCadere,
 } from "./shared.js";
 
 const KEY = "__DASHBOARDMODERN_ALARM_MODES_EDITOR__";
@@ -162,8 +163,8 @@ function onClick(event) {
   ensureAlarmModesBlock();
   root.edToast?.(
     fuori.has(mode)
-      ? t("🛡️ Modalità nascosta", "🛡️ Mode hidden")
-      : t("🛡️ Modalità mostrata", "🛡️ Mode shown"),
+      ? t("Modalità nascosta", "Mode hidden")
+      : t("Modalità mostrata", "Mode shown"),
   );
 }
 
@@ -203,5 +204,5 @@ export function installAlarmModesEditorSection() {
 if (doc?.readyState === "loading") {
   doc.addEventListener("DOMContentLoaded", installAlarmModesEditorSection, { once: true });
 } else {
-  installAlarmModesEditorSection();
+  senzaCadere(installAlarmModesEditorSection);
 }

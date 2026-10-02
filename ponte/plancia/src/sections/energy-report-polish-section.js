@@ -12,7 +12,7 @@ import {
   tintaDellaFascia,
 } from "../core/fasce-della-tariffa.js";
 import { salvaLeFasceDellaScheda } from "./beta22-load-slots-hotfix-section.js";
-import { allStates, clean, doc, formatNumber, installStyle, readJson, registraIlContoDelleFasce, root, scriviTestoSeCambia, t, wrapFunction } from "./shared.js";
+import { allStates, clean, doc, formatNumber, installStyle, readJson, registraIlContoDelleFasce, root, scriviTestoSeCambia, t, wrapFunction, senzaCadere } from "./shared.js";
 import { lEnergiaInParole, laPotenzaInParole } from "../core/le-unita-della-corrente.js";
 
 const KEY = "__DASHBOARDMODERN_ENERGY_REPORT_POLISH__";
@@ -567,4 +567,4 @@ export function installEnergyReportPolishSection() {
   schedule();
 }
 
-installEnergyReportPolishSection();
+senzaCadere(installEnergyReportPolishSection);

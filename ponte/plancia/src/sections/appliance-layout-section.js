@@ -11,7 +11,7 @@
  * finestra dei consumi di giornata, ogni riga si porta dentro il disegno che
  * quell'elettrodomestico ha nella sua scheda, invece del fulmine uguale per
  * tutti. */
-import { clean, doc, installStyle, root, section } from "./shared.js";
+import { clean, doc, installStyle, root, section, senzaCadere } from "./shared.js";
 
 globalThis.__DM_20260815C__ = true;
 const KEY = "__DASHBOARDMODERN_APPLIANCE_LAYOUT_SECTION__";
@@ -185,4 +185,4 @@ export function installApplianceLayoutSection() {
 
 if (doc?.readyState === "loading")
   doc.addEventListener("DOMContentLoaded", installApplianceLayoutSection, { once: true });
-else installApplianceLayoutSection();
+else senzaCadere(installApplianceLayoutSection);

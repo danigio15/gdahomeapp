@@ -167,11 +167,11 @@ test("il gruppo si sceglie dove si scelgono gli altri", () => {
 
 test("la sezione e' installata insieme agli altri avvisi", () => {
   const runtime = leggi("sections/section-runtime.js");
-  assert.match(runtime, /installSmokeAlertsSection\(\)/, "non viene installata");
+  assert.match(runtime, /senzaCadere\(installSmokeAlertsSection\);/, "non viene installata");
   assert.match(runtime, /"smoke-alerts"/, "non e' dichiarata fra le sezioni");
   // Dopo l'allagamento, che a sua volta segue l'editor degli avvisi.
   assert.ok(
-    runtime.indexOf("installSmokeAlertsSection()") > runtime.indexOf("installFloodAlertsSection()"),
+    runtime.indexOf("senzaCadere(installSmokeAlertsSection);") > runtime.indexOf("senzaCadere(installFloodAlertsSection);"),
     "va installata dopo gli allagamenti",
   );
 });

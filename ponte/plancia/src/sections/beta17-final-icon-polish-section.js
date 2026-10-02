@@ -6,7 +6,7 @@ import {
   directEmoji,
   roomGlyph,
 } from "../core/personalization-catalog.js";
-import { clean, dashboardStore, doc, root, t } from "./shared.js";
+import { clean, dashboardStore, doc, root, t, senzaCadere } from "./shared.js";
 
 root.__DM_20260815C__ = true;
 const KEY = "__DASHBOARDMODERN_BETA17_FINAL_ICON_POLISH__";
@@ -484,4 +484,4 @@ function install() {
   }
 }
 
-install();
+senzaCadere(install);

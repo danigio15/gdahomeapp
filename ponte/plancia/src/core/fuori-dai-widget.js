@@ -202,6 +202,8 @@ export const TESSERE_PER_SCHEDA = Object.freeze({
   piante: "piante",
   /* L'acquario (#127): la scheda parla di una tessera sola. */
   acquario: "acquario",
+  /* Le batterie di accumulo (#117): la scheda parla di una tessera sola. */
+  accumulo: "accumulo",
 });
 
 /**

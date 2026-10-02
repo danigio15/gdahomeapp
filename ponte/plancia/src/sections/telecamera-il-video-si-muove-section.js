@@ -61,7 +61,7 @@
  * ricordarsi di ripulire. Chi aspetta vede la sua telecamera, ferma, invece
  * del nero; e se il video parte, parte sopra la stessa immagine.
  */
-import { allStates, clean, doc, root, t } from "./shared.js";
+import { allStates, clean, doc, root, t, senzaCadere } from "./shared.js";
 
 const KEY = "__DASHBOARDMODERN_VIDEO_SI_MUOVE__";
 const state = (root[KEY] ||= { installed: false });
@@ -205,4 +205,4 @@ export function installVideoSiMuove() {
   return true;
 }
 
-installVideoSiMuove();
+senzaCadere(installVideoSiMuove);

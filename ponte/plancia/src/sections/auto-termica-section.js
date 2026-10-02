@@ -69,7 +69,9 @@ import {
   t,
   wrapFunction,
   writeJsonIfChanged,
+  senzaCadere,
 } from "./shared.js";
+import { segnoHtml } from "../core/segni-del-catalogo.js";
 
 const KEY = "__DASHBOARDMODERN_AUTO_TERMICA__";
 const state = (root[KEY] ||= {
@@ -261,7 +263,7 @@ export function mettiLeCaselle() {
    * le vetture a benzina e le moto (#75), e una scheda che si chiama «Auto»
    * mentre dentro ci sta una moto dice il falso a chi la apre. */
   if (/auto elettrica|electric|^.?\s*auto$|^.?\s*car$/i.test(String(sezione.label || "")))
-    sezione.label = `🚗 ${t("Veicoli", "Vehicles")}`;
+    sezione.label = t("Veicoli", "Vehicles");
   let aggiunte = 0;
   for (const voce of CASELLE_TERMICHE) {
     if (sezione.slots.some((slot) => slot?.ref === voce.ref)) continue;
@@ -296,7 +298,7 @@ export function rinominaLaLinguettaDellAuto() {
   }
   const nuda = doc?.querySelector?.('.ed-tab[data-tab="sez2"]:not(:has(.dm-beta4-tab-label))');
   if (nuda && !clean(nuda.textContent).includes(nome)) {
-    nuda.textContent = `🚗 ${nome}`;
+    nuda.innerHTML = `${segnoHtml("ev")} ${esc(nome)}`;
     fatto = true;
   }
   return fatto;
@@ -526,14 +528,14 @@ function arco(percentuale) {
 }
 
 function pillola(glifo, testo, tono) {
-  return `<span class="dm-termica-pillola" data-tono="${esc(tono)}"><i aria-hidden="true">${glifo}</i>${esc(testo)}</span>`;
+  return `<span class="dm-termica-pillola" data-tono="${esc(tono)}">${segnoHtml(glifo)}${esc(testo)}</span>`;
 }
 
 function misura(glifo, etichetta, valore, unita, ref, cifre = 0) {
   if (valore === null || valore === undefined) return "";
   const nome = etichettaScelta(ref, etichetta);
   return `<button type="button" class="dm-termica-misura" data-dm-storico="${esc(ref)}" data-dm-nome="${esc(nome)}">
-    <i aria-hidden="true">${glifo}</i>
+    ${segnoHtml(glifo)}
     <span class="dm-termica-misura-testo"><small>${esc(nome)}</small><b>${esc(formatNumber(valore, cifre))}<em>${esc(unita)}</em></b></span>
   </button>`;
 }
@@ -563,8 +565,8 @@ function gommeMarkup(lettura) {
   const riassunto = !riepilogo
     ? ""
     : riepilogo.pressione !== null
-      ? misura("🛞", t("Pneumatici", "Tyres"), riepilogo.pressione, ` ${riepilogo.unita}`, "dm.ev_pneumatici", 1)
-      : pillola("🛞", riepilogo.avviso ? t("Pneumatici da controllare", "Check the tyres") : t("Pneumatici a posto", "Tyres fine"), riepilogo.avviso ? "attento" : "bene");
+      ? misura("ev", t("Pneumatici", "Tyres"), riepilogo.pressione, ` ${riepilogo.unita}`, "dm.ev_pneumatici", 1)
+      : pillola("ev", riepilogo.avviso ? t("Pneumatici da controllare", "Check the tyres") : t("Pneumatici a posto", "Tyres fine"), riepilogo.avviso ? "attento" : "bene");
   if (!ruote.length) return { riassunto, quadretto: "" };
   const perRuota = new Map(ruote.map((voce) => [voce.ruota, voce]));
   const cella = (ruota) => {
@@ -578,7 +580,7 @@ function gommeMarkup(lettura) {
       : `<span class="dm-termica-gomma" data-vuota="true"><small>${esc(etichettaScelta(posto?.ref, parolaDellaRuota(ruota)))}</small><b>—</b></span>`;
   };
   const quadretto = `<div class="dm-termica-gomme">
-      <span class="dm-termica-gomme-titolo"><i aria-hidden="true">🛞</i>${esc(t("Pneumatici", "Tyres"))}</span>
+      <span class="dm-termica-gomme-titolo">${segnoHtml("ev")}${esc(t("Pneumatici", "Tyres"))}</span>
       <div class="dm-termica-gomme-quadro">
         ${cella("antSx")}${cella("antDx")}${cella("postSx")}${cella("postDx")}
       </div>
@@ -599,22 +601,22 @@ function quadroMarkup(lettura, tipo) {
   const pillole = [];
   if (lettura.motore === true || lettura.motore === false)
     pillole.push(
-      pillola("🔑", lettura.motore ? t("Motore acceso", "Engine running") : t("Motore spento", "Engine off"), lettura.motore ? "acceso" : "spento"),
+      pillola("key", lettura.motore ? t("Motore acceso", "Engine running") : t("Motore spento", "Engine off"), lettura.motore ? "acceso" : "spento"),
     );
   if (lettura.portiere)
     pillole.push(
-      pillola("🚪", parolaDellePortiere(lettura.portiere), lettura.portiere === "bloccate" || lettura.portiere === "chiuse" ? "bene" : "attento"),
+      pillola("door", parolaDellePortiere(lettura.portiere), lettura.portiere === "bloccate" || lettura.portiere === "chiuse" ? "bene" : "attento"),
     );
   if (lettura.finestrini)
     pillole.push(
-      pillola("🪟", lettura.finestrini === "aperti" ? t("Finestrini aperti", "Windows open") : t("Finestrini chiusi", "Windows closed"), lettura.finestrini === "aperti" ? "attento" : "bene"),
+      pillola("window", lettura.finestrini === "aperti" ? t("Finestrini aperti", "Windows open") : t("Finestrini chiusi", "Windows closed"), lettura.finestrini === "aperti" ? "attento" : "bene"),
     );
   /* Bagagliaio e cofano (#326): due aperture come i finestrini, e come loro
    * si leggono a colpo d'occhio — aperto e' la cosa che si vuole sapere. */
   if (lettura.bagagliaio)
     pillole.push(
       pillola(
-        "🧳",
+        "package",
         lettura.bagagliaio === "aperti"
           ? t("Bagagliaio aperto", "Boot open")
           : t("Bagagliaio chiuso", "Boot closed"),
@@ -624,7 +626,7 @@ function quadroMarkup(lettura, tipo) {
   if (lettura.cofano)
     pillole.push(
       pillola(
-        "🔧",
+        "tools",
         lettura.cofano === "aperti"
           ? t("Cofano aperto", "Bonnet open")
           : t("Cofano chiuso", "Bonnet closed"),
@@ -633,14 +635,14 @@ function quadroMarkup(lettura, tipo) {
     );
   if (lettura.allarme)
     pillole.push(
-      pillola("🚨", parolaDellAllarme(lettura.allarme), lettura.allarme === "scattato" ? "male" : lettura.allarme === "inserito" ? "bene" : "spento"),
+      pillola("warning", parolaDellAllarme(lettura.allarme), lettura.allarme === "scattato" ? "male" : lettura.allarme === "inserito" ? "bene" : "spento"),
     );
   /* Dove sta (#326): una parola, quella che dice il device_tracker. Il tono
    * e' neutro — un'auto fuori casa non e' un problema, e' un fatto. */
   if (lettura.posizione)
     pillole.push(
       pillola(
-        "📍",
+        "home",
         lettura.posizione === "casa"
           ? t("A casa", "At home")
           : lettura.posizione === "fuori"
@@ -662,9 +664,9 @@ function quadroMarkup(lettura, tipo) {
       <span>${esc(carburante <= 10 ? t("In riserva", "Reserve") : etichettaScelta("dm.ev_carburante", t("Carburante", "Fuel")))}</span>
     </div>`;
   const righe = [
-    misura("🛣️", t("Autonomia", "Range"), lettura.autonomia, ` ${lettura.autonomiaUnita}`, "dm.ev_autonomia"),
-    misura("🧭", t("Odometro", "Odometer"), lettura.odometro, ` ${lettura.odometroUnita}`, "dm.ev_odometro"),
-    misura("🧭", t("Ultimo viaggio", "Last trip"), lettura.ultimoViaggio, " km", "dm.ev_ultimo_viaggio", 1),
+    misura("ev", t("Autonomia", "Range"), lettura.autonomia, ` ${lettura.autonomiaUnita}`, "dm.ev_autonomia"),
+    misura("gauge", t("Odometro", "Odometer"), lettura.odometro, ` ${lettura.odometroUnita}`, "dm.ev_odometro"),
+    misura("gauge", t("Ultimo viaggio", "Last trip"), lettura.ultimoViaggio, " km", "dm.ev_ultimo_viaggio", 1),
   ].join("");
   const gomme = gommeMarkup(lettura);
   const tessere = [
@@ -672,16 +674,16 @@ function quadroMarkup(lettura, tipo) {
      * scritto qui: «e' a 14 V, mi da' 14%» (#348). I volt vogliono un decimale,
      * perche' fra 12,4 e 12,8 c'e' la differenza fra carica e scarica. */
     misura(
-      "🔋",
+      "battery",
       t("Batteria 12 V", "12 V battery"),
       lettura.batteriaServizio,
       lettura.batteriaServizioUnita === "%" ? "%" : ` ${lettura.batteriaServizioUnita}`,
       "dm.ev_batteria_servizio",
       lettura.batteriaServizioUnita === "%" ? 0 : 1,
     ),
-    misura("🛢️", t("Olio", "Oil"), lettura.olio, "°", "dm.ev_temperatura_olio"),
-    misura("🌡️", t("Esterna", "Outside"), lettura.esterna, "°", "dm.ev_temperatura_esterna"),
-    misura("⛽", t("Consumato in totale", "Total fuel used"), lettura.carburanteTotale, " L", "dm.ev_carburante_totale"),
+    misura("gauge", t("Olio", "Oil"), lettura.olio, "°", "dm.ev_temperatura_olio"),
+    misura("thermometer", t("Esterna", "Outside"), lettura.esterna, "°", "dm.ev_temperatura_esterna"),
+    misura("ev", t("Consumato in totale", "Total fuel used"), lettura.carburanteTotale, " L", "dm.ev_carburante_totale"),
     gomme.riassunto,
   ].join("");
   const vuoto =
@@ -1012,4 +1014,4 @@ export function installAutoTermica() {
   return true;
 }
 
-installAutoTermica();
+senzaCadere(installAutoTermica);

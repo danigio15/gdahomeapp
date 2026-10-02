@@ -45,7 +45,7 @@ test("i nomi del tema di Home Assistant risolvono sui token della plancia (#206)
 
 test("la sezione e' installata col runtime", () => {
   const runtime = leggi("sections/section-runtime.js");
-  assert.match(runtime, /installThemeFoundationSection\(\)/);
+  assert.match(runtime, /senzaCadere\(installThemeFoundationSection\);/);
   assert.match(runtime, /"theme-foundation"/);
 });
 
