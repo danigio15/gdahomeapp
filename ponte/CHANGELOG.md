@@ -64,6 +64,13 @@ più larga di com'era.
 tornare in HTTP per il suo indirizzo, e di chiedere in HTTPS anche le risorse
 scritte con l'indirizzo in chiaro.
 
+**Prima di mandare una segnalazione, l'app dice che sarà pubblica.** Sopra
+«Manda» c'è un riquadro: la segnalazione diventa una pagina su GitHub che
+chiunque può leggere, con le foto e i video, e non va scritto niente di
+personale. In inglese la schermata adesso è tutta in inglese: «Foto e video»,
+l'avanzamento degli allegati e l'avviso di un allegato non partito erano
+rimasti in italiano.
+
 ## 1.9.1
 
 **Torna la plancia della 1.8.0.** Con la plancia della 1.9.0, su molte case,

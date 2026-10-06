@@ -632,8 +632,14 @@ class _NuovaSegnalazioneState extends State<NuovaSegnalazione> {
     while (_allegati.isNotEmpty) {
       final uno = _allegati.first;
       setState(
-        () => _passo =
-            'Mando ${uno.foto ? 'la foto' : 'il video'} ${fatti + 1} di $quanti…',
+        () => _passo = inLingua(
+          it:
+              'Mando ${uno.foto ? 'la foto' : 'il video'} ${fatti + 1} di '
+              '$quanti…',
+          en:
+              'Sending ${uno.foto ? 'photo' : 'video'} ${fatti + 1} of '
+              '$quanti…',
+        ),
       );
       try {
         aperta = await widget.segnalazioni.allega(aperta!.numero, uno);
@@ -646,10 +652,16 @@ class _NuovaSegnalazioneState extends State<NuovaSegnalazione> {
         setState(() {
           _mandando = false;
           _passo = null;
-          _perche =
-              'La segnalazione #$numero è partita, ma «${uno.nome}» no: '
-              '${spiegaLErrore(errore)} Premi «Manda» per riprovare gli '
-              'allegati, o vai avanti senza.';
+          _perche = inLingua(
+            it:
+                'La segnalazione #$numero è partita, ma «${uno.nome}» no: '
+                '${spiegaLErrore(errore)} Premi «Manda» per riprovare gli '
+                'allegati, o vai avanti senza.',
+            en:
+                'Report #$numero was sent, but “${uno.nome}” wasn\'t: '
+                '${spiegaLErrore(errore)} Press “Send” to retry the '
+                'attachments, or go on without them.',
+          );
         });
         return;
       }
@@ -731,6 +743,8 @@ class _NuovaSegnalazioneState extends State<NuovaSegnalazione> {
           ),
           const SizedBox(height: 18),
           _CosaSiAllega(widget.diagnostica),
+          const SizedBox(height: 14),
+          const _SaraPubblica(),
           if (_perche != null) ...[
             const SizedBox(height: 14),
             Text(_perche!, style: TextStyle(color: colori.error)),
@@ -798,7 +812,7 @@ class GliAllegati extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Foto e video',
+          inLingua(it: 'Foto e video', en: 'Photos and videos'),
           style: testi.titleSmall?.copyWith(color: colori.onSurfaceVariant),
         ),
         const SizedBox(height: 4),
@@ -920,6 +934,61 @@ class _CosaSiAllega extends StatelessWidget {
               en: 'No credentials, no entity names, no addresses.',
             ),
             style: testi.bodySmall?.copyWith(color: colori.onSurfaceVariant),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Prima di mandare, detto chiaro: la segnalazione diventa una pagina
+/// pubblica su GitHub. La finestra della plancia nel browser lo scrive sopra
+/// «Invia»; qui sta sopra «Manda», perche' e' una cosa da sapere prima.
+class _SaraPubblica extends StatelessWidget {
+  const _SaraPubblica();
+
+  @override
+  Widget build(BuildContext context) {
+    final colori = Theme.of(context).colorScheme;
+    final testi = Theme.of(context).textTheme;
+    return Scheda(
+      bordo: colori.primary.withValues(alpha: 0.35),
+      padding: const EdgeInsets.fromLTRB(14, 12, 16, 12),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Cerchietto(icona: Icons.public_rounded, lato: 32),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  inLingua(it: 'Sarà pubblica', en: 'It will be public'),
+                  style: testi.labelLarge?.copyWith(
+                    color: colori.onSurface,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  inLingua(
+                    it:
+                        'Diventa una pagina su GitHub che chiunque può '
+                        'leggere, con le foto e i video. Non scriverci '
+                        'password o dati personali. La risposta arriva qui.',
+                    en:
+                        'It becomes a page on GitHub that anyone can read, '
+                        'along with the photos and videos. Don\'t put '
+                        'passwords or personal data in it. The reply comes '
+                        'back here.',
+                  ),
+                  style: testi.bodySmall?.copyWith(
+                    color: colori.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
