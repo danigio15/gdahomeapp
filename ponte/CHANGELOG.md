@@ -40,6 +40,23 @@ rifiutava uno spegnimento programmato, invece dell'avviso arrivava un errore
 della plancia. Adesso compare il messaggio che dice di aggiornare
 l'integrazione.
 
+**In auto l'icona del comando rapido la scegli tu.** Nell'app, in «Comandi
+rapidi in auto», toccando un comando c'è «Icona in auto»: cancello, porta,
+luce, presa, scena, serratura o azione. Si vede su Android Auto e su CarPlay.
+La tendina parte dall'icona che il comando ha già in auto, e cambiare solo il
+nome non cambia l'icona.
+
+**Il navigatore ricorda la voce spenta.** Se togli la voce, resta tolta anche
+quando l'app riparte. Su Android Auto toccare un punto sulla mappa non chiude più
+il navigatore, e la scheda della colonnina si apre anche quando lo
+stato di adesso non arriva. Agli svincoli la curva si misura senza entrare
+nella manovra dopo: con due manovre vicine, una poteva sembrare più stretta o
+più larga di com'era.
+
+**L'app nel browser resta in HTTPS.** Il tramite chiede al browser di non
+tornare in HTTP per il suo indirizzo, e di chiedere in HTTPS anche le risorse
+scritte con l'indirizzo in chiaro.
+
 ## 1.9.1
 
 **Torna la plancia della 1.8.0.** Con la plancia della 1.9.0, su molte case,
