@@ -619,7 +619,9 @@ class _SchermataPremiumState extends State<SchermataPremium> {
             it: ' Vale per «$casa» e per tutti i suoi telefoni.',
             en: ' It covers “$casa” and all of its phones.',
           );
-    final scade = gettone.scade;
+    /* Di un abbonamento si scrive la fine del periodo pagato, non quella coi
+     * giorni di margine per il rinnovo ([Gettone.pagato]). */
+    final scade = gettone.pagato ?? gettone.scade;
     if (gettone.prova && scade != null) {
       return inLingua(
             it: 'Prova gratuita fino ${_alGiorno(scade)}.',

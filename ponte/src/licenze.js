@@ -202,6 +202,10 @@ export class Licenze extends EventEmitter {
       return {
         attiva: Boolean(valido),
         scade: valido ? (valido.scade ?? null) : null,
+        /* Un abbonamento vale qualche giorno oltre il periodo pagato, il
+         * tempo che il rinnovo arrivi: `scade` e' fino a quando vale,
+         * `pagato` fino a quando e' pagato. A schermo si scrive questa. */
+        pagato: valido && typeof valido.pagato === "number" ? valido.pagato : null,
         origine: valido ? String(valido.origine || "") || null : null,
         /* Fino a quando vale **questo** gettone: dopo si rinnova da se'. */
         fino: valido ? valido.fino : null,

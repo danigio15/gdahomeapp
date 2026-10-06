@@ -77,6 +77,7 @@ class Collegamento {
     this.apriLaPresa,
     GestoreLicenza? licenza,
     this.attesaPerLaRicevuta = const Duration(seconds: 20),
+    this.ogniQuantoLaLicenza = const Duration(hours: 6),
   }) : _sonda = sonda ?? const Sonda(),
        licenza = licenza ?? GestoreLicenza(),
        _licenzaMia = licenza == null {
@@ -89,6 +90,11 @@ class Collegamento {
   /// Quanto una ricevuta comprata fuori casa aspetta la strada del
   /// centralino prima di restare al negozio (`mandaLaRicevuta`).
   final Duration attesaPerLaRicevuta;
+
+  /// Ogni quanto si richiede la licenza alla casa mentre il filo resta su:
+  /// ogni sei ore, come la casa la richiede al quadro.
+  final Duration ogniQuantoLaLicenza;
+  Timer? _rileggiLaLicenza;
 
   /// gdahome Premium: quale casa lo e', e cosa si apre (`licenza/`).
   ///
@@ -416,6 +422,16 @@ class Collegamento {
     await _leggiLaPlancia(filo);
     /* La licenza, a ogni collegamento: e' la casa che la tiene. */
     unawaited(_chiediLaLicenza(filo));
+    /* E poi ogni sei ore, finche' il filo resta su. Il gettone che l'app si
+     * tiene vale otto giorni al massimo (un abbonamento, fino a tre giorni
+     * dopo il periodo pagato), e la casa intanto lo rinnova: un'app aperta
+     * per giorni senza che il filo cada mai — il tablet sul muro — col
+     * gettone di quando si e' collegata tornerebbe Base con la casa
+     * Premium. */
+    _rileggiLaLicenza?.cancel();
+    _rileggiLaLicenza = Timer.periodic(ogniQuantoLaLicenza, (_) {
+      if (_filo == filo && filo.dentro) unawaited(_chiediLaLicenza(filo));
+    });
     /* E se si e' entrati dalla strada lunga, si chiede alla casa dov'e'. Non
      * si aspetta: la casa e' gia' aperta, e questo e' solo per andarci piu'
      * dritti. */
@@ -836,6 +852,8 @@ class Collegamento {
   /// Chiude il filo. Con [tieniLaPlancia] si tiene quello che si sapeva della
   /// plancia di questa casa: vedi [riposa] e [apri].
   Future<void> _chiudiIlFilo({bool tieniLaPlancia = false}) async {
+    _rileggiLaLicenza?.cancel();
+    _rileggiLaLicenza = null;
     await _guardaIlFilo?.cancel();
     await _guardaLaCasa?.cancel();
     _guardaIlFilo = null;

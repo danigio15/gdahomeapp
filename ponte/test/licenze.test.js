@@ -178,6 +178,42 @@ test("lo stato per l'app ha la forma del contratto, e gdanav e' compreso", async
   assert.equal(stato.ultima.andata, true);
 });
 
+test("un abbonamento nei giorni del margine vale, e si scrive la fine del periodo pagato", async () => {
+  /* Il periodo pagato e' finito ieri e il rinnovo non e' ancora arrivato: il
+   * quadro da' il gettone fino a tre giorni dopo, e dice in `pagato` fino a
+   * quando era pagato. La casa non fa niente di speciale: verifica `scade`
+   * come sempre, e passa `pagato` a chi lo scrive. */
+  const pagato = ADESSO - GIORNO;
+  const gettone = unGettone(
+    {
+      sog: CASA,
+      origine: "negozio",
+      scade: pagato + 3 * GIORNO,
+      fino: pagato + 3 * GIORNO,
+      pagato,
+    },
+    { adesso: ADESSO - 2 * GIORNO },
+  );
+  const { licenze } = leLicenze({
+    risposte: { "/v1/licenze/casa": conGettoni({ gdahome: gettone }) },
+  });
+  await licenze.rinnova();
+  assert.equal(licenze.premium, true, "chi paga resta Premium mentre il rinnovo arriva");
+  const stato = licenze.stato();
+  assert.equal(stato.gdahome.attiva, true);
+  assert.equal(stato.gdahome.pagato, pagato);
+  assert.equal(stato.gdahome.scade, pagato + 3 * GIORNO);
+
+  /* Un regalo il campo non ce l'ha. */
+  const { licenze: regalo } = leLicenze({
+    risposte: {
+      "/v1/licenze/casa": conGettoni({ gdahome: unGettone({ sog: CASA }, { adesso: ADESSO }) }),
+    },
+  });
+  await regalo.rinnova();
+  assert.equal(regalo.stato().gdahome.pagato, null);
+});
+
 test("i gettoni stanno in licenze.json, e restano dopo un riavvio", async () => {
   const cartella = unPosto();
   try {

@@ -289,6 +289,32 @@ void main() {
     expect(find.byKey(const Key('codice-regalo')), findsOneWidget);
   });
 
+  testWidgets(
+    'un abbonamento scrive la fine del periodo pagato, non quella col margine',
+    (tester) async {
+      late String gettone;
+      await tester.runAsync(() async {
+        gettone = await firmaUnGettone(
+          origine: 'negozio',
+          scade: DateTime(2027, 3, 15),
+          pagato: DateTime(2027, 3, 12),
+        );
+      });
+      final collegamento = await casaSenzaFilo(tester, gettone: gettone);
+      await mostra(
+        tester,
+        SchermataPremium(collegamento: collegamento, sulWeb: false),
+      );
+      expect(
+        find.textContaining(
+          'Premium è attivo fino al 12 marzo 2027 · abbonamento',
+        ),
+        findsOneWidget,
+      );
+      expect(find.textContaining('15 marzo'), findsNothing);
+    },
+  );
+
   testWidgets('durante la prova: «Prova gratuita fino al»', (tester) async {
     late String gettone;
     await tester.runAsync(() async {

@@ -29,6 +29,37 @@ void main() {
     expect(letto.vale(soggetto: casaDiProva), isTrue);
   });
 
+  test(
+    'un abbonamento nei giorni del margine vale, e dice fino a quando è pagato',
+    () async {
+      /* Il periodo pagato è finito ieri e il rinnovo non è ancora arrivato:
+       * il quadro dà il gettone fino a tre giorni dopo, e in `pagato` la fine
+       * vera. Si verifica `scade` come sempre: `pagato` serve a scriverla. */
+      final adesso = DateTime.now();
+      final pagato = adesso.subtract(const Duration(days: 1));
+      final letto = await leggiIlGettone(
+        await firmaUnGettone(
+          scade: pagato.add(const Duration(days: 3)),
+          pagato: pagato,
+        ),
+        chiave: chiaveDiProva,
+      );
+      expect(letto, isNotNull);
+      expect(letto!.vale(soggetto: casaDiProva), isTrue);
+      expect(
+        letto.pagato!.millisecondsSinceEpoch,
+        pagato.millisecondsSinceEpoch,
+      );
+
+      /* Un regalo il campo non ce l'ha. */
+      final regalo = await leggiIlGettone(
+        await firmaUnGettone(origine: 'regalo'),
+        chiave: chiaveDiProva,
+      );
+      expect(regalo!.pagato, isNull);
+    },
+  );
+
   test('firmato da un altro non vale', () async {
     final gettone = await firmaUnGettone(privata: privataSbagliata);
     expect(await leggiIlGettone(gettone, chiave: chiaveDiProva), isNull);

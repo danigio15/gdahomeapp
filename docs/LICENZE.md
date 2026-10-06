@@ -51,6 +51,13 @@ Prodotti:
    telefono) chiede i gettoni e ogni ora per tutte, al massimo una volta
    l'ora per licenza. Rinnovato, `scade` va avanti; scaduto o rimborsato, la
    licenza scade da se'; il negozio che non risponde non toglie niente.
+   Il rinnovo pero' il negozio lo fa a periodo finito (Google alla scadenza,
+   Apple nel giorno prima), e fra il quadro che lo scopre e la casa che
+   richiede i gettoni passano delle ore: per questo una licenza del negozio
+   **vale ancora tre giorni dopo la fine del periodo pagato**
+   (`MARGINE_DEL_RINNOVO` in `quadro/src/licenze.js`). Chi paga non resta mai
+   Base per un rinnovo in ritardo, per un quadro fermo o per una casa senza
+   rete in quei giorni; chi disdice tiene Premium al massimo tre giorni in piu'.
 2. **Regalo del gestore**: dalla pagina del gestore del quadro si regalano
    licenze a una casa (per `casa_…`) o si generano **codici regalo** (per
    gdahome o gdanav, di N mesi o per sempre).
@@ -88,9 +95,10 @@ base64url senza `=`. Il payload:
   "sog": "casa_0123…",       // "casa_…" oppure "tel_…"
   "lic": "lic_9f2c…",        // l'identificativo della licenza nel quadro
   "origine": "negozio",      // "negozio" | "regalo" | "installatore"
-  "scade": 1767225600000,    // quando finisce la licenza (ms), null = per sempre
+  "scade": 1767484800000,    // fino a quando vale la licenza (ms), null = per sempre
   "fino": 1759999999000,     // quando smette di valere QUESTO gettone (ms)
   "emesso": 1759300000000,
+  "pagato": 1767225600000,   // facoltativo: la fine del periodo pagato (negozio)
   "prova": true              // facoltativo: c'e' solo durante la prova gratuita
 }
 ```
@@ -98,6 +106,13 @@ base64url senza `=`. Il payload:
 `prova` c'e' **solo** quando e' vero (un abbonamento del negozio nei suoi
 giorni gratis): chi verifica non lo guarda per decidere, e i campi che non
 conosce li lascia stare.
+
+`pagato` c'e' solo nei gettoni delle licenze del negozio. Li' `scade` e' la
+fine del periodo pagato **piu' i tre giorni del margine del rinnovo**, ed e'
+quella che si verifica; `pagato` e' la fine del periodo pagato, ed e' quella
+che l'app e la console scrivono a schermo («Premium è attivo fino al…»). Chi
+verifica non lo guarda per decidere. Per i regali e gli installatori `scade`
+e' la fine della licenza, e `pagato` non c'e'.
 
 Regole di verifica, uguali ovunque:
 
@@ -227,7 +242,7 @@ Controllo delle ricevute: Google Play Developer API
   **Questa chiamata e' separata dal rapporto** (che resta spento di serie):
   manda solo `casa` e `segreto`.
 - Comandi sul filo cifrato: `ponte/licenza/stato` → `{gdahome: {attiva,
-  scade, origine}, gdanav: {…}, gettoni: {…}}`; `ponte/licenza/negozio`
+  scade, pagato, origine}, gdanav: {…}, gettoni: {…}}`; `ponte/licenza/negozio`
   `{app, piattaforma, prodotto, ricevuta}`; `ponte/licenza/riscatta` `{codice}`.
 - Il segreto che manda al quadro e' quello che la casa ha gia' per il quadro
   (`/data/quadro.json`), non quello del centralino: il segreto del centralino
@@ -252,8 +267,10 @@ controllo e' spento (tutti passano, come oggi): si accende insieme alla chiave.
 
 ## L'app gdahome
 
-- Chiede `ponte/licenza/stato` a ogni collegamento, verifica il gettone, lo
-  ricorda per casa. Premium = la casa in uso ha un gettone gdahome valido.
+- Chiede `ponte/licenza/stato` a ogni collegamento, e ogni 6 ore finche' il
+  filo resta su (un tablet acceso per giorni non torna Base col gettone
+  vecchio); verifica il gettone, lo ricorda per casa. Premium = la casa in uso
+  ha un gettone gdahome valido.
 - Una casa che le licenze non le sa tenere — il comando non lo conosce, o
   risponde `attive: false` — si ricorda come `senza_licenze` e resta aperta:
   li' Premium non si puo' comprare.

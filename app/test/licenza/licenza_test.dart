@@ -420,6 +420,40 @@ void main() {
       },
     );
 
+    test('col filo sempre su la licenza si richiede ogni tanto: il tablet sul '
+        'muro non torna Base', () async {
+      ponte.licenza = {
+        'gettoni': {'gdahome': await firmaUnGettone()},
+      };
+      await archivio.aggiungi(
+        nome: 'Casa',
+        segno: segnoBuono,
+        identificativo: chiBuono,
+        chiave: chiaveBuona,
+        casaAlCentralino: casaDiProva,
+        inCasa: ponte.indirizzo,
+      );
+      collegamento = Collegamento(
+        archivio: archivio,
+        sonda: sondaChe({ponte.indirizzo}),
+        licenza: GestoreLicenza(chiave: chiaveDiProva),
+        ogniQuantoLaLicenza: const Duration(milliseconds: 100),
+      );
+      int chieste() => ponte.chieste
+          .where((una) => una['type'] == 'ponte/licenza/stato')
+          .length;
+      await collegamento.apri();
+      await aspetta(() => chieste() >= 3);
+      expect(chieste(), greaterThanOrEqualTo(3));
+      expect(collegamento.licenza.premium, isTrue);
+
+      /* Chiuso il filo, non si chiede piu' niente. */
+      await collegamento.chiudi();
+      final quante = chieste();
+      await Future<void>.delayed(const Duration(milliseconds: 300));
+      expect(chieste(), quante);
+    });
+
     test('una ricevuta comprata fuori casa, con Base, apre la strada del '
         'centralino', () async {
       final centralino = IndirizzoDelCentralino.leggi(

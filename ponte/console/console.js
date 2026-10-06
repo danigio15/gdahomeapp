@@ -2081,10 +2081,13 @@
     var sotto = vediPagina.createElement("span");
     var pezzi = [];
     if (sua.attiva) {
+      /* Di un abbonamento si scrive la fine del periodo pagato, non quella
+       * coi giorni di margine per il rinnovo. */
+      var finoAl = sua.pagato != null ? sua.pagato : sua.scade;
       pezzi.push(
-        sua.scade == null
+        finoAl == null
           ? due("Premium per sempre", "Premium for good")
-          : due("Premium fino al ", "Premium until ") + unGiorno(sua.scade),
+          : due("Premium fino al ", "Premium until ") + unGiorno(finoAl),
       );
       if (sua.compresa)
         pezzi.push(due("compreso in gdahome Premium", "included in gdahome Premium"));
