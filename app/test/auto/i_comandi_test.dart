@@ -89,6 +89,91 @@ void main() {
     expect((json['comandi'] as List).single['icona'], 'serratura');
   });
 
+  /* Un cancello scritto prima che il genere ci fosse: «azione», e il disegno
+   * in auto glielo dava il dominio della ricetta. */
+  const cancelloDiPrima = ComandoRapido(
+    id: 'c|cover.cancello|toggle',
+    nome: 'Cancello',
+    genere: GenereDelComando.azione,
+    ricetta: RicettaDellAzione(
+      id: 'c|cover.cancello|toggle',
+      dominio: 'cover',
+      servizio: 'toggle',
+      entita: 'cover.cancello',
+    ),
+  );
+
+  test('l\'icona in auto: quella scelta, se no il genere, e per un\'azione '
+      'il dominio, come in IComandiInAuto.kt', () {
+    ComandoRapido azione(String dominio) => ComandoRapido(
+      id: 'c|$dominio.x|toggle',
+      nome: 'X',
+      genere: GenereDelComando.azione,
+      ricetta: RicettaDellAzione(
+        id: 'c|$dominio.x|toggle',
+        dominio: dominio,
+        servizio: 'toggle',
+        entita: '$dominio.x',
+      ),
+    );
+    expect(cancelloDiPrima.iconaInAuto, 'varco');
+    expect(azione('script').iconaInAuto, 'scena');
+    expect(azione('lock').iconaInAuto, 'serratura');
+    expect(azione('light').iconaInAuto, 'luce');
+    expect(azione('fan').iconaInAuto, 'presa');
+    expect(azione('media_player').iconaInAuto, 'azione');
+    expect(cancelloDiPrima.cambiato(icona: 'luce').iconaInAuto, 'luce');
+    expect(
+      comandoPer(e('lock.porta', nome: 'Porta di casa'))!.iconaInAuto,
+      'serratura',
+    );
+  });
+
+  testWidgets('rinominare un comando non gli fissa un\'icona; sceglierla sì', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1170, 2532);
+    tester.view.devicePixelRatio = 3;
+    addTearDown(tester.view.reset);
+    IComandiScelti? scritti;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: ComandiInAuto(
+          leggi: () async => const IComandiScelti(comandi: [cancelloDiPrima]),
+          scrivi: (s) async {
+            scritti = s;
+            return true;
+          },
+          azioni: () async => const AzioniDellaPlancia([]),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    /* La tendina parte dal disegno che il cancello ha in auto, non dal
+     * fulmine dell'«azione». */
+    await tester.tap(find.text('Cancello').last);
+    await tester.pumpAndSettle();
+    expect(find.text('Cancello / varco'), findsOneWidget);
+    await tester.enterText(find.byType(TextField).last, 'Cancello di casa');
+    await tester.tap(find.text('Salva'));
+    await tester.pumpAndSettle();
+    expect(scritti!.comandi.single.nome, 'Cancello di casa');
+    expect(scritti!.comandi.single.icona, isNull);
+    expect(scritti!.comandi.single.iconaInAuto, 'varco');
+
+    /* Un'icona scelta invece si scrive. */
+    await tester.tap(find.text('Cancello di casa').last);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Cancello / varco'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Luce').last);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Salva'));
+    await tester.pumpAndSettle();
+    expect(scritti!.comandi.single.icona, 'luce');
+  });
+
   test('scritti e riletti sono gli stessi, e sono al massimo dodici', () {
     final tanti = [
       for (var i = 0; i < 14; i++) comandoPer(e('light.l$i', nome: 'Luce $i'))!,

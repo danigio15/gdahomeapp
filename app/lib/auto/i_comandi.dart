@@ -83,6 +83,25 @@ class ComandoRapido {
   /// Se assente si usa il genere del comando.
   final String? icona;
 
+  /// Il disegno che il comando ha adesso in auto: quello scelto, se c'e';
+  /// se no il genere; e per un'«azione», che e' anche il ripiego dei comandi
+  /// scritti prima che il genere ci fosse, il dominio della ricetta. E' la
+  /// stessa regola di `ilGenere` in `IComandiInAuto.kt`: la tendina «Icona in
+  /// auto» parte da qui, cosi' rinominare un cancello non lo fa diventare un
+  /// fulmine.
+  String get iconaInAuto {
+    if (icona case final scelta? when scelta.isNotEmpty) return scelta;
+    if (genere != GenereDelComando.azione) return genere.name;
+    return switch (ricetta.dominio) {
+      'scene' || 'script' => 'scena',
+      'cover' => 'varco',
+      'lock' => 'serratura',
+      'light' => 'luce',
+      'switch' || 'input_boolean' || 'fan' => 'presa',
+      _ => 'azione',
+    };
+  }
+
   /// Cosa fa davvero — su quale entita', con quale servizio e quale voce —
   /// per riconoscere due comandi uguali venuti da posti diversi.
   String get impronta =>

@@ -1093,7 +1093,12 @@ class _CambiaComando extends StatefulWidget {
 class _CambiaComandoState extends State<_CambiaComando> {
   late final _nome = TextEditingController(text: widget.comando.nome);
   late bool _conferma = widget.comando.conferma;
-  late String _icona = widget.comando.icona ?? widget.comando.genere.name;
+
+  /// Il disegno che il comando ha adesso in auto. Se resta quello non si
+  /// scrive niente: un comando rinominato non si ritrova un'icona fissata che
+  /// nessuno ha scelto.
+  late final String _iconaDiPrima = widget.comando.iconaInAuto;
+  late String _icona = _iconaDiPrima;
 
   static const _icone = <String>[
     'varco',
@@ -1106,13 +1111,13 @@ class _CambiaComandoState extends State<_CambiaComando> {
   ];
 
   static String _nomeIcona(String v) => switch (v) {
-    'varco' => 'Cancello / varco',
-    'porta' => 'Porta / garage',
-    'luce' => 'Luce',
-    'presa' => 'Presa / interruttore',
-    'scena' => 'Scena',
-    'serratura' => 'Serratura',
-    _ => 'Azione',
+    'varco' => inLingua(it: 'Cancello / varco', en: 'Gate'),
+    'porta' => inLingua(it: 'Porta / garage', en: 'Door / garage'),
+    'luce' => inLingua(it: 'Luce', en: 'Light'),
+    'presa' => inLingua(it: 'Presa / interruttore', en: 'Plug / switch'),
+    'scena' => inLingua(it: 'Scena', en: 'Scene'),
+    'serratura' => inLingua(it: 'Serratura', en: 'Lock'),
+    _ => inLingua(it: 'Azione', en: 'Action'),
   };
 
   @override
@@ -1158,6 +1163,10 @@ class _CambiaComandoState extends State<_CambiaComando> {
           const SizedBox(height: 8),
           DropdownButtonFormField<String>(
             initialValue: _icona,
+            /* Larga quanto la scheda, e la voce lunga si accorcia coi
+             * puntini: «Presa / interruttore» a 390 punti, col testo
+             * ingrandito, usciva dal bordo. */
+            isExpanded: true,
             decoration: InputDecoration(
               labelText: inLingua(it: 'Icona in auto', en: 'Car icon'),
             ),
@@ -1167,24 +1176,15 @@ class _CambiaComandoState extends State<_CambiaComando> {
                   value: v,
                   child: Row(
                     children: [
-                      Oggetto(
-                        v == 'varco'
-                            ? 'varchi'
-                            : v == 'porta'
-                            ? 'aperture'
-                            : v == 'luce'
-                            ? 'luci'
-                            : v == 'presa'
-                            ? 'prese'
-                            : v == 'scena'
-                            ? 'evidenza'
-                            : v == 'serratura'
-                            ? 'sicurezza'
-                            : 'azioni',
-                        lato: 24,
-                      ),
+                      Oggetto(disegnoDelComando(c.genere, v), lato: 24),
                       const SizedBox(width: 10),
-                      Text(_nomeIcona(v)),
+                      Flexible(
+                        child: Text(
+                          _nomeIcona(v),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -1213,7 +1213,7 @@ class _CambiaComandoState extends State<_CambiaComando> {
                   comando: c.cambiato(
                     nome: _nome.text,
                     conferma: _conferma,
-                    icona: _icona,
+                    icona: _icona == _iconaDiPrima ? null : _icona,
                   ),
                 )),
                 child: Text(inLingua(it: 'Salva', en: 'Save')),
