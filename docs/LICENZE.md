@@ -293,8 +293,11 @@ controllo e' spento (tutti passano, come oggi): si accende insieme alla chiave.
   volta, e ripristinarlo li' lo toglie alla casa dove sta: la domanda lo dice,
   col nome dell'altra casa se l'app ne conosce una Premium con un abbonamento.
 - Una ricevuta che non arriva alla casa resta aperta nel negozio e si
-  riprova. Se non arriva perche' si e' fuori casa con Base, per portarla si
-  prende la strada del centralino. Su Google Play un acquisto pagato con l'app
+  riprova. Se non arriva perche' si e' fuori casa con Base, la porta il
+  centralino (`POST /licenza/<casa>`): l'app la firma con la chiave del filo
+  (`app/lib/licenza/ricevuta_da_fuori.dart`), la casa controlla la firma e la
+  gira al quadro, e il gettone torna indietro con la risposta. Se il
+  centralino non ci riesce, si prova la strada di sempre. Su Google Play un acquisto pagato con l'app
   chiusa prima che la casa rispondesse non torna da solo: all'avvio l'app
   chiede quelli non ancora confermati e li riporta alla casa. Solo quelli: uno
   gia' confermato non si sposta, se non con «Ripristina».

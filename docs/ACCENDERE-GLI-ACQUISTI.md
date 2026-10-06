@@ -95,10 +95,12 @@ Cosa fa l'app, e perché:
   Android, dalla scheda gdahome in Home Assistant o dal browser, e Premium
   arriva anche sull'iPhone: è della casa.
 - **Chi compra fuori casa entra subito.** Con la casa Base le strade di fuori
-  sono chiuse, e la ricevuta aspetterebbe il Wi-Fi di casa. Con una ricevuta
-  da portare invece si bussa al centralino — che al primo passo lascia
-  passare — e appena la casa l'ha avuta è Premium. È anche quello che fa chi
-  rivede l'app per Apple o per Google, da lontano, con una casa di prova Base.
+  sono chiuse, e la ricevuta aspetterebbe il Wi-Fi di casa. Invece la porta
+  il centralino: l'app gliela consegna firmata con la chiave del telefono, la
+  casa controlla la firma e la gira al quadro, e il gettone torna indietro
+  subito. Funziona al primo passo e al secondo, col fuori casa chiuso. È anche
+  quello che fa chi rivede l'app per Apple o per Google, da lontano, con una
+  casa di prova Base.
 - **Un acquisto rimasto a metà non si perde.** Su Google Play un acquisto
   pagato con l'app chiusa prima che la casa rispondesse non torna da solo:
   all'avvio l'app chiede quelli non ancora confermati e li riporta alla casa.

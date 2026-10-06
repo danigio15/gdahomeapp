@@ -125,7 +125,9 @@ gettone firmato, che l'add-on, il centralino e l'app controllano da soli.
 Chi compra Premium dall'app: la ricevuta del negozio (il codice d'acquisto di
 Google Play o l'identificativo della transazione di Apple) passa cifrata dal
 telefono all'add-on e da lì al quadro, che la controlla con Google o Apple.
-Il quadro conserva, per ogni licenza: la casa, da dove arriva (negozio, regalo,
+Se si compra fuori casa con la casa in Base, arriva all'add-on passando dal
+centralino, in HTTPS e firmata dal telefono: il centralino la gira senza
+conservarla. Il quadro conserva, per ogni licenza: la casa, da dove arriva (negozio, regalo,
 installatore), quando scade, se è nella prova gratuita, e l'identificativo
 dell'acquisto (il codice d'acquisto di Google Play o l'identificativo della
 transazione originale di Apple), che gli serve per chiedere a Google o ad

@@ -14,6 +14,7 @@ import 'package:gdahome/casa/cassaforte.dart';
 import 'package:gdahome/casa/collegamento.dart';
 import 'package:gdahome/licenza/chiave.dart';
 import 'package:gdahome/licenza/licenza.dart';
+import 'package:gdahome/licenza/ricevuta_da_fuori.dart';
 import 'package:gdahome/ponte/indirizzo.dart';
 import 'package:gdahome/ponte/sonda.dart';
 import 'package:gdahome/schermate/barra.dart';
@@ -473,12 +474,18 @@ void main() {
         inCasa: IndirizzoDelPonte.leggi('192.168.1.50')!,
       );
       await archivio.segnaIlGettone(casa.id, '');
+      final consegnate = <Uri>[];
       collegamento = Collegamento(
         archivio: archivio,
         sonda: sondaChe({}),
         licenza: GestoreLicenza(chiave: chiaveDiProva),
         /* Il centralino di prova non risponde: si aspetta poco. */
         attesaPerLaRicevuta: const Duration(milliseconds: 300),
+        /* E la casa, per lui, non e' collegata: la ricevuta non la porta. */
+        consegnaAlCentralino: (dove, _) async {
+          consegnate.add(dove);
+          return (503, '{"errore":"casa-non-collegata"}');
+        },
       );
       await collegamento.apri();
       expect(collegamento.fuoriCasaSenzaPremium, isTrue);
@@ -499,8 +506,115 @@ void main() {
         ),
       );
       expect(collegamento.licenza.ricevutaDaPortare, isTrue);
+      /* Prima si e' provato a fargliela portare dal centralino. */
+      expect(consegnate, [centralino.ricevuta(casaDiProva)]);
       await aspetta(() => !collegamento.fuoriCasaSenzaPremium);
       expect(collegamento.fuoriCasaSenzaPremium, isFalse);
+    });
+
+    test('col centralino acceso la ricevuta la porta lui, firmata, e la casa '
+        'è Premium subito', () async {
+      final centralino = IndirizzoDelCentralino.leggi(
+        'wss://centralino.esempio.it',
+      )!;
+      final casa = await archivio.aggiungi(
+        nome: 'Casa',
+        segno: segnoBuono,
+        identificativo: chiBuono,
+        chiave: chiaveBuona,
+        casaAlCentralino: casaDiProva,
+        centralino: centralino,
+        inCasa: IndirizzoDelPonte.leggi('192.168.1.50')!,
+      );
+      await archivio.segnaIlGettone(casa.id, '');
+      final gettone = await firmaUnGettone(origine: 'negozio');
+      Uri? dove;
+      Map<String, Object?>? corpo;
+      collegamento = Collegamento(
+        archivio: archivio,
+        sonda: sondaChe({}),
+        licenza: GestoreLicenza(chiave: chiaveDiProva),
+        attesaPerLaRicevuta: const Duration(milliseconds: 300),
+        consegnaAlCentralino: (d, c) async {
+          dove = d;
+          corpo = (jsonDecode(c) as Map).cast<String, Object?>();
+          return (
+            200,
+            jsonEncode({
+              'gdahome': {'attiva': true, 'origine': 'negozio'},
+              'gettoni': {'gdahome': gettone},
+            }),
+          );
+        },
+      );
+      await collegamento.apri();
+      expect(collegamento.fuoriCasaSenzaPremium, isTrue);
+
+      await collegamento.mandaLaRicevuta(
+        piattaforma: 'android',
+        prodotto: 'gdahome_premium',
+        ricevuta: 'token-play-della-prova-0123456789',
+      );
+      expect(dove, centralino.ricevuta(casaDiProva));
+      expect(corpo!['chi'], chiBuono);
+      expect(corpo!['piattaforma'], 'android');
+      /* Firmata con la chiave del filo, come la controlla la casa. */
+      expect(
+        corpo!['firma'],
+        await firmaDellaRicevuta(
+          chiaveDelFilo: chiaveBuona,
+          casa: casaDiProva,
+          chi: chiBuono,
+          quando: corpo!['quando']! as int,
+          app: 'gdahome',
+          piattaforma: 'android',
+          prodotto: 'gdahome_premium',
+          ricevuta: 'token-play-della-prova-0123456789',
+        ),
+      );
+      expect(archivio.quella(casa.id)!.gettone, gettone);
+      expect(collegamento.licenza.premium, isTrue);
+      expect(collegamento.licenza.ricevutaDaPortare, isFalse);
+    });
+
+    test('il no del negozio, dal centralino, chiude la faccenda', () async {
+      final casa = await archivio.aggiungi(
+        nome: 'Casa',
+        segno: segnoBuono,
+        identificativo: chiBuono,
+        chiave: chiaveBuona,
+        casaAlCentralino: casaDiProva,
+        centralino: IndirizzoDelCentralino.leggi(
+          'wss://centralino.esempio.it',
+        )!,
+        inCasa: IndirizzoDelPonte.leggi('192.168.1.50')!,
+      );
+      await archivio.segnaIlGettone(casa.id, '');
+      collegamento = Collegamento(
+        archivio: archivio,
+        sonda: sondaChe({}),
+        licenza: GestoreLicenza(chiave: chiaveDiProva),
+        attesaPerLaRicevuta: const Duration(milliseconds: 300),
+        consegnaAlCentralino: (_, _) async =>
+            (402, '{"errore":"ricevuta-non-valida"}'),
+      );
+      await collegamento.apri();
+      await expectLater(
+        collegamento.mandaLaRicevuta(
+          piattaforma: 'ios',
+          prodotto: 'gdahome_premium_mensile',
+          ricevuta: '2000000123456789',
+        ),
+        throwsA(
+          isA<LicenzaRifiutata>().having(
+            (no) => no.definitiva,
+            'definitiva',
+            true,
+          ),
+        ),
+      );
+      expect(collegamento.licenza.ricevutaDaPortare, isFalse);
+      expect(collegamento.licenza.premium, isFalse);
     });
 
     test('a ogni collegamento si chiede, e il gettone resta', () async {
