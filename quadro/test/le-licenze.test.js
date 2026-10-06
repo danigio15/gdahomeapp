@@ -1518,6 +1518,11 @@ test("un gettone firmato a mano con una chiave che non e' quella non passa", () 
 
 /* ─── Lo strumento che scrive la pubblica ─────────────────────────────────── */
 
+/* Una pubblica fatta al momento, per lo strumento: la pubblica di prova dei
+ * documenti lo strumento la rifiuta, perche' con lei chiunque si farebbe
+ * Premium da solo (`ponte/test/la-chiave-di-prova-non-si-accende.test.js`). */
+const UNA_PUBBLICA = generateKeyPairSync("ed25519").publicKey.export({ format: "jwk" }).x;
+
 test("strumenti/chiave-licenze.mjs scrive la stessa pubblica dappertutto, e stampa la privata giusta", () => {
   const radice = mkdtempSync(join(tmpdir(), "chiave-licenze-"));
   const strumento = join(
@@ -1562,14 +1567,14 @@ test("strumenti/chiave-licenze.mjs scrive la stessa pubblica dappertutto, e stam
     /* Con --pubblica non si fabbrica niente, e non si stampa nessuna privata. */
     const solo = execFileSync(
       process.execPath,
-      [strumento, "--radice", radice, "--pubblica", PUBBLICA],
+      [strumento, "--radice", radice, "--pubblica", UNA_PUBBLICA],
       {
         encoding: "utf8",
       },
     );
     assert.doesNotMatch(solo, /QUADRO_LICENZE_CHIAVE=/);
-    assert.match(js("centralino/src/chiave-licenze.js"), new RegExp(PUBBLICA));
-    assert.match(js("app/lib/licenza/chiave.dart"), new RegExp(PUBBLICA));
+    assert.match(js("centralino/src/chiave-licenze.js"), new RegExp(UNA_PUBBLICA));
+    assert.match(js("app/lib/licenza/chiave.dart"), new RegExp(UNA_PUBBLICA));
   } finally {
     rmSync(radice, { recursive: true, force: true });
   }
@@ -1597,15 +1602,21 @@ test("strumenti/chiave-licenze.mjs --senza-centralino: la casa e l'app, e nessun
     mkdirSync(join(radice, "gdanav", "packages"), { recursive: true });
     assert.throws(
       () =>
-        lancia("--senza-centralino", "--pubblica", PUBBLICA, "--gdanav", join(radice, "gdanav")),
+        lancia(
+          "--senza-centralino",
+          "--pubblica",
+          UNA_PUBBLICA,
+          "--gdanav",
+          join(radice, "gdanav"),
+        ),
       /gdanav/,
     );
 
-    const detto = lancia("--senza-centralino", "--pubblica", PUBBLICA);
+    const detto = lancia("--senza-centralino", "--pubblica", UNA_PUBBLICA);
     assert.doesNotMatch(detto, /QUADRO_LICENZE_CHIAVE=/);
     const leggi = (via) => readFileSync(join(radice, via), "utf8");
-    assert.match(leggi("ponte/src/chiave-licenze.js"), new RegExp(`= "${PUBBLICA}";`));
-    assert.match(leggi("app/lib/licenza/chiave.dart"), new RegExp(`= '${PUBBLICA}';`));
+    assert.match(leggi("ponte/src/chiave-licenze.js"), new RegExp(`= "${UNA_PUBBLICA}";`));
+    assert.match(leggi("app/lib/licenza/chiave.dart"), new RegExp(`= '${UNA_PUBBLICA}';`));
     assert.match(
       leggi("centralino/src/chiave-licenze.js"),
       /export const CHIAVE_PUBBLICA_LICENZE = "";/,
@@ -1619,13 +1630,13 @@ test("strumenti/chiave-licenze.mjs --senza-centralino: la casa e l'app, e nessun
       assert.doesNotMatch(leggi(via), /SOLO_SULL_IPHONE|SoloSullIPhone/, via);
 
     /* E poi il centralino, con la stessa chiave. */
-    lancia("--pubblica", PUBBLICA);
-    assert.match(leggi("centralino/src/chiave-licenze.js"), new RegExp(`= "${PUBBLICA}";`));
+    lancia("--pubblica", UNA_PUBBLICA);
+    assert.match(leggi("centralino/src/chiave-licenze.js"), new RegExp(`= "${UNA_PUBBLICA}";`));
 
     /* E rilanciato col primo passo, la toglie di nuovo al centralino. */
-    lancia("--senza-centralino", "--pubblica", PUBBLICA);
+    lancia("--senza-centralino", "--pubblica", UNA_PUBBLICA);
     assert.match(leggi("centralino/src/chiave-licenze.js"), /CHIAVE_PUBBLICA_LICENZE = "";/);
-    assert.match(leggi("ponte/src/chiave-licenze.js"), new RegExp(`= "${PUBBLICA}";`));
+    assert.match(leggi("ponte/src/chiave-licenze.js"), new RegExp(`= "${UNA_PUBBLICA}";`));
   } finally {
     rmSync(radice, { recursive: true, force: true });
   }
