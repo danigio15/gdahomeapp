@@ -79,12 +79,17 @@ colleghi il telefono all'auto con Android Auto o CarPlay. Per guidarti usa la
 **posizione del telefono**, anche a schermo spento mentre sei in viaggio, e la
 manda **solo** ai servizi che servono a guidare, senza nome né account:
 
-- i percorsi: Valhalla di OpenStreetMap (`valhalla1.openstreetmap.de`);
+- i percorsi e il traffico: TomTom (`api.tomtom.com`);
 - la ricerca degli indirizzi: Photon (`photon.komoot.io`);
-- la mappa: OpenFreeMap (`tiles.openfreemap.org`), e il traffico da TomTom
-  (`api.tomtom.com`);
-- le colonnine: Open Charge Map (`api.openchargemap.io`); i distributori e i
-  loro prezzi dal Ministero (`carburanti.mise.gov.it`) e da OpenStreetMap;
+- la mappa: OpenFreeMap (`tiles.openfreemap.org`);
+- le colonnine: Open Charge Map (`api.openchargemap.io`) e OpenStreetMap
+  (`overpass-api.de`). Lo stato delle colonnine in tempo reale arriva dalla
+  Piattaforma Unica Nazionale (`api.pun.piattaformaunicanazionale.it`), che
+  riceve solo quali colonnine stai guardando; per chiederlo l'app usa un
+  accesso anonimo ad Amazon Web Services (Cognito), lo stesso del sito
+  pubblico della PUN;
+- i distributori e i loro prezzi: il Ministero (`carburanti.mise.gov.it`) e
+  OpenStreetMap (`overpass-api.de`);
 - le segnalazioni della strada (incidenti, lavori, autovelox) e l'abbinamento
   con Home Assistant passano da `gdanav.gdahome.org`, cifrati.
 
@@ -93,6 +98,14 @@ dell'auto: la lettura resta sul telefono. I comandi rapidi in auto, e la
 fotografia della casa che l'auto mostra, stanno in un file dentro l'app e
 non escono dal telefono: il comando lo esegue l'app, sul filo cifrato di
 sempre.
+
+## Il radar della pioggia
+
+Se nella plancia metti la sezione Radar meteo, la plancia chiede le immagini
+della pioggia a RainViewer (`api.rainviewer.com`) e la mappa sotto a Esri
+(`server.arcgisonline.com`), o al servizio che scegli nella Configurazione.
+Ricevono la zona della mappa che stai guardando, non chi sei. Senza quella
+sezione non parte niente.
 
 ## La fotocamera
 

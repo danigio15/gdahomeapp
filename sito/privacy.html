@@ -209,25 +209,29 @@
           la manda <strong>solo</strong> ai servizi che servono a guidare, senza nome né account:
         </p>
         <ul>
-          <li
-            data-en="routes: OpenStreetMap's Valhalla (&lt;code&gt;valhalla1.openstreetmap.de&lt;/code&gt;);"
-          >
-            i percorsi: Valhalla di OpenStreetMap (<code>valhalla1.openstreetmap.de</code>);
+          <li data-en="routes and traffic: TomTom (&lt;code&gt;api.tomtom.com&lt;/code&gt;);">
+            i percorsi e il traffico: TomTom (<code>api.tomtom.com</code>);
           </li>
           <li data-en="address search: Photon (&lt;code&gt;photon.komoot.io&lt;/code&gt;);">
             la ricerca degli indirizzi: Photon (<code>photon.komoot.io</code>);
           </li>
-          <li
-            data-en="the map: OpenFreeMap (&lt;code&gt;tiles.openfreemap.org&lt;/code&gt;), and traffic from TomTom (&lt;code&gt;api.tomtom.com&lt;/code&gt;);"
-          >
-            la mappa: OpenFreeMap (<code>tiles.openfreemap.org</code>), e il traffico da TomTom
-            (<code>api.tomtom.com</code>);
+          <li data-en="the map: OpenFreeMap (&lt;code&gt;tiles.openfreemap.org&lt;/code&gt;);">
+            la mappa: OpenFreeMap (<code>tiles.openfreemap.org</code>);
           </li>
           <li
-            data-en="chargers: Open Charge Map (&lt;code&gt;api.openchargemap.io&lt;/code&gt;); fuel stations and their prices from the Italian Ministry (&lt;code&gt;carburanti.mise.gov.it&lt;/code&gt;) and from OpenStreetMap;"
+            data-en="chargers: Open Charge Map (&lt;code&gt;api.openchargemap.io&lt;/code&gt;) and OpenStreetMap (&lt;code&gt;overpass-api.de&lt;/code&gt;). The live status of the chargers comes from Italy’s National Single Platform (&lt;code&gt;api.pun.piattaformaunicanazionale.it&lt;/code&gt;), which only receives which chargers you are looking at; to ask for it the app uses anonymous access to Amazon Web Services (Cognito), the same as the platform’s public website;"
           >
-            le colonnine: Open Charge Map (<code>api.openchargemap.io</code>); i distributori e i
-            loro prezzi dal Ministero (<code>carburanti.mise.gov.it</code>) e da OpenStreetMap;
+            le colonnine: Open Charge Map (<code>api.openchargemap.io</code>) e OpenStreetMap
+            (<code>overpass-api.de</code>). Lo stato delle colonnine in tempo reale arriva dalla
+            Piattaforma Unica Nazionale (<code>api.pun.piattaformaunicanazionale.it</code>), che
+            riceve solo quali colonnine stai guardando; per chiederlo l’app usa un accesso anonimo
+            ad Amazon Web Services (Cognito), lo stesso del sito pubblico della PUN;
+          </li>
+          <li
+            data-en="fuel stations and their prices: the Italian Ministry (&lt;code&gt;carburanti.mise.gov.it&lt;/code&gt;) and OpenStreetMap (&lt;code&gt;overpass-api.de&lt;/code&gt;);"
+          >
+            i distributori e i loro prezzi: il Ministero (<code>carburanti.mise.gov.it</code>) e
+            OpenStreetMap (<code>overpass-api.de</code>);
           </li>
           <li
             data-en="road reports (accidents, roadworks, speed cameras) and pairing with Home Assistant go through &lt;code&gt;gdanav.gdahome.org&lt;/code&gt;, encrypted."
@@ -243,6 +247,19 @@
           batteria dell'auto: la lettura resta sul telefono. I comandi rapidi in auto, e la
           fotografia della casa che l'auto mostra, stanno in un file dentro l'app e non escono dal
           telefono: il comando lo esegue l'app, sul filo cifrato di sempre.
+        </p>
+      </section>
+
+      <section>
+        <h2 data-en="The rain radar">Il radar della pioggia</h2>
+        <p
+          data-en="If you add the Weather radar section to the dashboard, the dashboard asks RainViewer (&lt;code&gt;api.rainviewer.com&lt;/code&gt;) for the rain images and Esri (&lt;code&gt;server.arcgisonline.com&lt;/code&gt;) for the map underneath, or the service you pick in the Configuration. They receive the area of the map you are looking at, not who you are. Without that section, nothing leaves."
+        >
+          Se nella plancia metti la sezione Radar meteo, la plancia chiede le immagini della pioggia
+          a RainViewer (<code>api.rainviewer.com</code>) e la mappa sotto a Esri
+          (<code>server.arcgisonline.com</code>), o al servizio che scegli nella Configurazione.
+          Ricevono la zona della mappa che stai guardando, non chi sei. Senza quella sezione non
+          parte niente.
         </p>
       </section>
 
