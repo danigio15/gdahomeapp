@@ -1,6 +1,6 @@
 /// Quello che si apre fuori dall'app, e a chi si da' una chiave.
 ///
-/// Due regole piccole, tenute in un posto solo perche' valgono in piu' punti:
+/// Tre regole piccole, tenute in un posto solo perche' valgono in piu' punti:
 /// i link delle note degli aggiornamenti, quelli che escono dal cruscotto e
 /// dalla plancia, e l'indirizzo del quadro a cui si consegna il codice.
 library;
@@ -15,6 +15,19 @@ library;
 bool siApreFuori(Uri quale) =>
     (quale.scheme == 'http' || quale.scheme == 'https') &&
     quale.host.isNotEmpty;
+
+/// Un pagamento che non passa dal negozio: PayPal, dove porta «Sostieni il
+/// progetto» della plancia.
+///
+/// Su iPhone l'app non porta fuori a pagare (App Store, regola 3.1.1). Nella
+/// plancia dell'app quel tasto e' gia' nascosto (`premesse.dart`); questa e'
+/// la rete sotto, se un tasto sfugge. Chi lo chiede guarda la piattaforma:
+/// qui dentro niente Flutter, come nel resto di questo file.
+bool eUnPagamentoFuori(Uri quale) {
+  final host = quale.host.toLowerCase();
+  bool di(String dominio) => host == dominio || host.endsWith('.$dominio');
+  return di('paypal.com') || di('paypal.me');
+}
 
 /// Un quadro a cui si puo' dare il codice: solo in `https`.
 ///

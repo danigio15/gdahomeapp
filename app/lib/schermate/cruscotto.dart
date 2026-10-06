@@ -39,6 +39,7 @@ library;
 
 import 'dart:async';
 
+import 'package:flutter/foundation.dart' show defaultTargetPlatform;
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:webview_flutter/webview_flutter.dart';
@@ -180,7 +181,11 @@ class _StatoDelCruscotto extends State<SchermataDelCruscotto> {
   /// biglietto nell'indirizzo (vedi `riquadro/`).
   Future<void> _fuori([Uri? quale]) async {
     if (quale != null) {
-      if (siApreFuori(quale)) {
+      /* Su iPhone non si esce a pagare: vedi [eUnPagamentoFuori]. */
+      final aPagare =
+          defaultTargetPlatform == TargetPlatform.iOS &&
+          eUnPagamentoFuori(quale);
+      if (siApreFuori(quale) && !aPagare) {
         await launchUrl(quale, mode: LaunchMode.externalApplication);
       }
       return;
