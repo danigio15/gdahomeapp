@@ -106,6 +106,10 @@ class PonteVero {
         /* La console risponde solo al proxy dell'ingress di Home Assistant:
          * al banco il proxy e' la prova stessa, da questa macchina. */
         'PONTE_PROXY_INGRESS': '127.0.0.1',
+        /* Con la chiave delle licenze nel codice la casa bussa al quadro
+         * appena si accende: al banco bussa a una porta chiusa di questa
+         * macchina, e mai al quadro vero. */
+        'PONTE_QUADRO_DOVE': 'http://127.0.0.1:9',
       },
     );
 

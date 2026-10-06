@@ -9,9 +9,13 @@ import 'package:gdahome/licenza/gettone.dart';
 import 'gettoni_di_prova.dart';
 
 void main() {
-  test('di serie la chiave è vuota, e allora nessun gettone vale', () async {
-    expect(chiavePubblicaLicenze, isEmpty);
+  test('con la chiave vuota nessun gettone vale', () async {
     final gettone = await firmaUnGettone();
+    expect(await leggiIlGettone(gettone, chiave: ''), isNull);
+    /* Con la chiave dell'app — vuota oggi, una vera il giorno che si accende,
+     * mai quella di prova dei documenti — un gettone firmato con la coppia di
+     * prova non vale. */
+    expect(chiavePubblicaLicenze, isNot(chiaveDiProva));
     expect(await leggiIlGettone(gettone), isNull);
   });
 

@@ -139,21 +139,23 @@ base64url. Sta, sempre uguale, in:
 modalita' il centralino non limita l'accesso da fuori e lascia passare i
 telefoni, come oggi.
 
-**Prima l'iPhone**: con `LICENZE_SOLO_SULL_IPHONE = true` (nei tre file JS) e
-`licenzeSoloSullIPhone = true` (nell'app) la chiave sta solo nell'add-on e
-nell'app, e il centralino resta vuoto. La casa chiede i gettoni
-e gira le ricevute ma non si limita; i lucchetti ci sono solo nell'app per
-iPhone. Si scrive con `node strumenti/chiave-licenze.mjs --solo-iphone
---pubblica <x>`, e il perche' sta in
-[`ACCENDERE-GLI-ACQUISTI.md`](ACCENDERE-GLI-ACQUISTI.md).
+**La coppia nasce sulla macchina del quadro**, con
+`node strumenti/chiave-licenze.mjs --radice /tmp/chiave-licenze`: la privata
+va in `/etc/quadro/ambiente` come `QUADRO_LICENZE_CHIAVE` (32 byte base64url,
+il `d` di una JWK Ed25519), e di li' esce solo la pubblica. Qui si scrive la
+pubblica e basta, in due passi con la stessa chiave:
 
-Prima del rilascio per tutti si lancia una volta
+1. `node strumenti/chiave-licenze.mjs --senza-centralino --pubblica <x>`: la
+   chiave nell'add-on e nell'app, il centralino resta vuoto. La casa chiede i
+   gettoni e gira le ricevute; l'app e il browser mettono i lucchetti di Base;
+   il fuori casa resta aperto a tutti.
+2. `node strumenti/accendi-gli-acquisti.mjs --fallo`, quando l'app nuova e'
+   nei negozi: la stessa chiave anche nel centralino (e in gdanav), e da li'
+   il fuori casa vuole Premium.
 
-    node strumenti/chiave-licenze.mjs [--gdanav ../gdanav]
-
-che fabbrica la coppia, scrive la pubblica in tutti i file qui sopra e stampa
-la privata, da mettere **solo** sulla macchina del quadro come
-`QUADRO_LICENZE_CHIAVE` (32 byte base64url, il `d` di una JWK Ed25519).
+Il perche' dell'ordine, e tutto il resto, sta in
+[`ACCENDERE-GLI-ACQUISTI.md`](ACCENDERE-GLI-ACQUISTI.md). Lo strumento rifiuta
+la pubblica di prova qui sotto.
 
 Per le prove c'e' una coppia **di prova**, che non va mai in un file di
 produzione:
@@ -247,10 +249,11 @@ Controllo delle ricevute: Google Play Developer API
 - Il segreto che manda al quadro e' quello che la casa ha gia' per il quadro
   (`/data/quadro.json`), non quello del centralino: il segreto del centralino
   non esce verso un'altra macchina.
-- Base: `plance.aggiungi` rifiuta la seconda plancia (`premium-richiesto`,
-  `POST /api/plance` risponde 402), le plance oltre la principale non si
-  servono all'app; un canale che arriva dal centralino e non e' un abbinamento
-  viene rifiutato con `motivo: "premium-richiesto"` (l'abbinamento si').
+- **La casa non limita niente**, con la chiave o senza, Premium o Base
+  (`limitata` e' sempre falso): i lucchetti di Base li mettono l'app e il
+  browser, e il fuori casa lo chiude il centralino. Le strade per limitare
+  (`premium-richiesto` in `plance.js`, `portiere.js` e `commissioni.js`)
+  restano nel codice, spente.
 - La console dell'add-on mostra lo stato della licenza e un campo per il
   codice regalo.
 
@@ -272,16 +275,17 @@ controllo e' spento (tutti passano, come oggi): si accende insieme alla chiave.
   vecchio); verifica il gettone, lo ricorda per casa. Premium = la casa in uso
   ha un gettone gdahome valido.
 - Una casa che le licenze non le sa tenere — il comando non lo conosce, o
-  risponde `attive: false` — si ricorda come `senza_licenze` e resta aperta:
-  li' Premium non si puo' comprare.
-- Prima dell'iPhone tutto questo vale solo nell'app per iPhone: su Android e
-  nel browser non si chiede niente alla casa e non c'e' nessun lucchetto.
+  risponde `attive: false` — si ricorda come `senza_licenze` e resta Base: li'
+  Premium non si puo' comprare, e la pagina Premium dice di aggiornare
+  l'add-on.
+- Con la chiave i lucchetti valgono dappertutto: nell'app per iPhone, in
+  quella per Android e nel browser, con gli stessi limiti di Base.
 - Base: una casa sola (la seconda si aggiunge solo se una casa gia' abbinata
   e' Premium), solo la plancia principale, niente strade fuori casa (centralino
   e indirizzo pubblico), «Configurazione» e «Zigbee» con il lucchetto che porta
   alla pagina Premium.
-- La pagina Premium: i due piani coi prezzi del negozio, «Ripristina acquisti»,
-  «Ho un codice regalo». Sul web non si compra: si riscatta un codice, o si
+- La pagina Premium: i due piani coi prezzi del negozio, «Ripristina
+  abbonamento», «Ho un codice regalo». Sul web non si compra: si riscatta un codice, o si
   compra dal telefono. Sull'iPhone il codice regalo non c'e' (App Store, regola
   3.1.1): si riscatta in Home Assistant o dal browser.
 - Una ricevuta che non arriva alla casa resta aperta nel negozio e si

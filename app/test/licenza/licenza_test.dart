@@ -12,6 +12,7 @@ import 'package:gdahome/casa/archivio_delle_case.dart';
 import 'package:gdahome/casa/casa_conosciuta.dart';
 import 'package:gdahome/casa/cassaforte.dart';
 import 'package:gdahome/casa/collegamento.dart';
+import 'package:gdahome/licenza/chiave.dart';
 import 'package:gdahome/licenza/licenza.dart';
 import 'package:gdahome/ponte/indirizzo.dart';
 import 'package:gdahome/ponte/sonda.dart';
@@ -52,10 +53,13 @@ void main() {
       );
     });
 
-    test('di serie la chiave è vuota, e in questa app non contano', () {
-      /* Con la chiave contano dappertutto: l'app per iPhone, quella per
-       * Android e il browser hanno gli stessi limiti di Base. */
-      expect(licenzeInQuestaApp, isFalse);
+    test('le licenze contano in questa app solo con la chiave', () {
+      /* Vuota oggi; il giorno che si accende, contano dappertutto: l'app per
+       * iPhone, quella per Android e il browser hanno gli stessi limiti di
+       * Base. E la chiave non è mai quella di prova dei documenti. */
+      expect(licenzeInQuestaApp, chiavePubblicaLicenze.isNotEmpty);
+      expect(chiavePubblicaLicenze, isNot(chiaveDiProva));
+      expect(GestoreLicenza().controlliAccesi, licenzeInQuestaApp);
     });
 
     test(

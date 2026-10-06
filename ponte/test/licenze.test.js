@@ -46,11 +46,20 @@ function unPosto() {
 
 /* ─── Il gettone ─────────────────────────────────────────────────────────── */
 
-test("nel codice la chiave e' vuota: di serie le licenze sono spente", () => {
-  assert.equal(CHIAVE_PUBBLICA_LICENZE, "");
-  /* E con la chiave vuota non vale nessun gettone, nemmeno uno buono. */
+test("con la chiave vuota le licenze sono spente, e nessun gettone vale", () => {
+  /* Vuota oggi; il giorno che si accende, una pubblica vera. Mai quella di
+   * prova dei documenti: con lei chiunque si firma da se' un gettone. */
+  assert.ok(
+    CHIAVE_PUBBLICA_LICENZE === "" || /^[A-Za-z0-9_-]{43}$/.test(CHIAVE_PUBBLICA_LICENZE),
+    "la chiave del codice e' vuota o 32 byte in base64url",
+  );
+  assert.notEqual(CHIAVE_PUBBLICA_LICENZE, PUBBLICA_DI_PROVA);
+  /* Un gettone firmato con la coppia di prova non vale con la chiave del
+   * codice, qualunque sia; e con la chiave vuota non vale nemmeno uno buono. */
   const buono = unGettone({ sog: CASA }, { adesso: ADESSO });
+  assert.equal(vale(buono, { chiave: CHIAVE_PUBBLICA_LICENZE }), null);
   assert.equal(vale(buono, { chiave: "" }), null);
+  assert.equal(new Licenze({ casa: CASA, chiave: "" }).attive, false);
 });
 
 test("un gettone del quadro, per questa casa, vale; e dice cosa c'e' dentro", () => {

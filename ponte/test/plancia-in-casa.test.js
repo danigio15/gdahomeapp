@@ -140,10 +140,15 @@ async function banco() {
     casa: process.env.PONTE_CASA,
     segno: process.env.SUPERVISOR_TOKEN,
     supervisor: process.env.PONTE_SUPERVISOR,
+    quadro: process.env.PONTE_QUADRO_DOVE,
   };
   process.env.PONTE_CASA = ha.indirizzo;
   process.env.PONTE_SUPERVISOR = ha.indirizzo;
   process.env.SUPERVISOR_TOKEN = SEGNO_DEL_SUPERVISOR;
+  /* Con la chiave delle licenze nel codice la casa bussa al quadro appena si
+   * accende: qui bussa a una porta chiusa di questa macchina, e mai al quadro
+   * vero. */
+  process.env.PONTE_QUADRO_DOVE = "http://127.0.0.1:9";
   const avviato = await alzaIlPonte({
     cartella,
     portaDellApp: 0,
@@ -170,6 +175,7 @@ async function banco() {
         ["PONTE_CASA", prima.casa],
         ["SUPERVISOR_TOKEN", prima.segno],
         ["PONTE_SUPERVISOR", prima.supervisor],
+        ["PONTE_QUADRO_DOVE", prima.quadro],
       ]) {
         if (valore === undefined) delete process.env[chiave];
         else process.env[chiave] = valore;

@@ -21,6 +21,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:gdahome/casa/archivio_delle_case.dart';
 import 'package:gdahome/casa/cassaforte.dart';
 import 'package:gdahome/casa/collegamento.dart';
+import 'package:gdahome/licenza/licenza.dart';
 import 'package:gdahome/ponte/abbinamento.dart';
 import 'package:gdahome/ponte/errori.dart';
 import 'package:gdahome/ponte/indirizzo.dart';
@@ -109,7 +110,12 @@ void main() {
       centralino: abbinato.centralino,
     );
 
-    final collegamento = Collegamento(archivio: archivio);
+    /* Qui si prova la strada da fuori, non la licenza: senza chiave l'app
+     * la prende come oggi, qualunque sia la chiave scritta nel codice. */
+    final collegamento = Collegamento(
+      archivio: archivio,
+      licenza: GestoreLicenza(chiave: ''),
+    );
     await collegamento.apri();
     /* Le entita' si leggono quando servono: qui servono. */
     await collegamento.serveLaCasa();

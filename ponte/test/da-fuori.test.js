@@ -104,7 +104,12 @@ async function catena() {
 
   const ha = await homeAssistantFinta();
 
-  const centralino = new Centralino({ case: new Case({ cartella: nuovaCartella("case") }) });
+  /* Qui si prova il centralino, non la licenza: senza chiave, come oggi,
+   * qualunque sia quella scritta nel codice (`docs/LICENZE.md`). */
+  const centralino = new Centralino({
+    case: new Case({ cartella: nuovaCartella("case") }),
+    chiaveLicenze: "",
+  });
   const serverDelCentralino = costruisciIlServer({ centralino });
   await new Promise((ok) => serverDelCentralino.listen(0, "127.0.0.1", ok));
   const doveIlCentralino = `ws://127.0.0.1:${serverDelCentralino.address().port}`;

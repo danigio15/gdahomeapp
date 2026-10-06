@@ -1,9 +1,14 @@
 /// Il centralino vero, acceso per davvero.
 ///
-/// `node centralino/src/index.js`: lo stesso processo che girerebbe su un
-/// server, con il suo archivio delle case. Serve a una prova sola ma
-/// importante — quella in cui il telefono non ha **nessun** indirizzo della
-/// casa e ci arriva lo stesso.
+/// Un processo `node` che lo alza con `alzaIlCentralino`, la stessa funzione
+/// che usa `centralino/src/index.js` su un server, con il suo archivio delle
+/// case. Serve a una prova sola ma importante — quella in cui il telefono non
+/// ha **nessun** indirizzo della casa e ci arriva lo stesso.
+///
+/// Una cosa sola e' diversa dal server: la chiave delle licenze e' vuota. Qui
+/// si prova la strada da fuori, non la licenza; e il giorno che la chiave e'
+/// scritta anche nel centralino, una casa di prova non ha un gettone firmato
+/// dal quadro vero, e il centralino la chiuderebbe fuori.
 library;
 
 import 'dart:async';
@@ -57,9 +62,20 @@ class CentralinoVero {
     );
     final porta = (await porteLibere(1)).single;
 
+    final alza = File('${archivio.path}/alza.mjs');
+    await alza.writeAsString(
+      'import { alzaIlCentralino } from '
+      '${jsonEncode(Uri.file('${cartella.path}/src/index.js').toString())};\n'
+      'const acceso = await alzaIlCentralino({ chiaveLicenze: "" });\n'
+      'for (const segnale of ["SIGTERM", "SIGINT"]) {\n'
+      '  process.on(segnale, () => acceso.abbassa().finally(() => '
+      'process.exit(0)));\n'
+      '}\n',
+    );
+
     final processo = await Process.start(
       'node',
-      ['${cartella.path}/src/index.js'],
+      [alza.path],
       environment: {
         'CENTRALINO_PORTA': '$porta',
         'CENTRALINO_DATI': archivio.path,
