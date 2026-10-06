@@ -1,6 +1,6 @@
 # Privacy di gdahome
 
-Ultimo aggiornamento: 27 settembre 2026.
+Ultimo aggiornamento: 6 ottobre 2026.
 
 gdahome è l'app che apre la plancia di Home Assistant sul telefono. Questa
 pagina dice, in modo chiaro e senza giri di parole, **quali dati ci sono di
@@ -52,9 +52,16 @@ quando la scrivi:
   casa regge), che serve a capire il problema;
 - quello che scrivi nella chat di assistenza.
 
-Vanno a chi mantiene gdahome, per rispondere. Non vanno a nessun altro, non
-vengono usate per profilare niente e non finiscono in nessuna pubblicità. Se
-non scrivi una segnalazione, non parte niente.
+**Le segnalazioni sono pubbliche.** Diventano pagine su GitHub, nella
+repository di gdahome: chiunque può leggerle, comprese le foto, i video e le
+righe su come sta l'app. Per questo non scriverci password, indirizzi o altri
+dati personali, e allega solo foto e video che non ti dispiace far vedere.
+
+**La chat di assistenza non è pubblica.** Non passa da GitHub: la legge solo
+chi mantiene gdahome, per risponderti.
+
+Niente di tutto questo viene usato per profilare o per fare pubblicità. Se non
+scrivi, non parte niente.
 
 ## Il modulo dei contatti sul sito
 
@@ -130,11 +137,12 @@ nemmeno da loro.
 
 Disinstallando l'app, quello che stava sul telefono se ne va con lei. Dalla
 pagina dell'add-on, «Telefoni abbinati → Togli associazione», la credenziale di
-quel telefono smette di valere all'istante. Le segnalazioni già mandate si
-cancellano chiedendolo dalla chat di assistenza.
+quel telefono smette di valere all'istante. Le segnalazioni già mandate, con
+le loro foto e i video, si cancellano chiedendolo dalla chat di assistenza.
 
 ## Chi risponde
 
 gdahome è mantenuta da danigio15 — <https://github.com/danigio15/gdahomeapp>.
 Per qualunque cosa su questa pagina, si apre una segnalazione dall'app o una
-issue sulla repository.
+issue sulla repository. Per una cosa che non vuoi rendere pubblica, scrivi
+nella chat di assistenza o ad assistenza@gdahome.org.
