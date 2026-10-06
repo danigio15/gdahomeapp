@@ -79,6 +79,7 @@ export function laSoglia({ sito = "", app = "" } = {}) {
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Il centralino di gdahome</title>
 <meta name="robots" content="noindex" />
+<meta name="description" content="Accesso da remoto per l'app domotica gdahome (Home Assistant). Il traffico è cifrato fra il telefono e la casa." />
 <style>${STILE}</style>
 </head>
 <body>
@@ -86,9 +87,10 @@ export function laSoglia({ sito = "", app = "" } = {}) {
   <h1>gdahome</h1>
   <p class="sotto">Il centralino</p>
   <p>
-    Qui non c'è niente da aprire, ed è come deve essere: questa macchina fa
-    incontrare un telefono e la sua casa, e di quello che si dicono non capisce
-    niente.
+    È il servizio di accesso da remoto di gdahome, l'app per la casa
+    domotica con Home Assistant: collega l'app alla propria casa quando si è
+    fuori, con i dati cifrati fra il telefono e la casa. Da qui non si apre
+    niente: gdahome si usa dall'app o dal browser.
   </p>
   ${lApp ? `<p><a class="tasto" href="https://${lApp}">Apri gdahome</a></p>` : ""}
   <ul>
