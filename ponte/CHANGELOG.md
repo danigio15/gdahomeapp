@@ -40,6 +40,13 @@ rifiutava uno spegnimento programmato, invece dell'avviso arrivava un errore
 della plancia. Adesso compare il messaggio che dice di aggiornare
 l'integrazione.
 
+**Dopo un riavvio di Home Assistant il telefono non risulta più staccato.**
+Mentre Home Assistant si riavviava o si aggiornava, l'add-on rispondeva al
+telefono come a un telefono tolto: l'app diceva «Questo telefono è stato
+staccato», smetteva di riprovare e chiedeva di riabbinarsi. Adesso l'add-on
+dice «riprova più tardi», e l'app torna da sola appena Home Assistant è di
+nuovo su. Un telefono tolto davvero dalla console resta staccato, come prima.
+
 **In auto l'icona del comando rapido la scegli tu.** Nell'app, in «Comandi
 rapidi in auto», toccando un comando c'è «Icona in auto»: cancello, porta,
 luce, presa, scena, serratura o azione. Si vede su Android Auto e su CarPlay.
