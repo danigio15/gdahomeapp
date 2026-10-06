@@ -17,8 +17,8 @@
 ///
 /// **Con la chiave, i lucchetti valgono dappertutto**: nell'app per iPhone,
 /// in quella per Android e nel browser, con gli stessi limiti di Base.
-/// Premium si compra solo dall'app per iPhone (`negozio.dart`), e da li' vale
-/// per tutta la casa. Una casa col suo add-on vecchio resta Base finche' non
+/// Premium si compra dall'app, sull'iPhone e su Android (`negozio.dart`), e
+/// da li' vale per tutta la casa. Una casa col suo add-on vecchio resta Base finche' non
 /// lo aggiorna: li' Premium non si puo' comprare, e la pagina lo dice
 /// ([ComeStaLaLicenza.casaSenzaLicenze]).
 ///

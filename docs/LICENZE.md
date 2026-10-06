@@ -140,9 +140,9 @@ modalita' il centralino non limita l'accesso da fuori e lascia passare i
 telefoni, come oggi.
 
 **La coppia nasce sulla macchina del quadro**, con
-`node strumenti/chiave-licenze.mjs --radice /tmp/chiave-licenze`: la privata
-va in `/etc/quadro/ambiente` come `QUADRO_LICENZE_CHIAVE` (32 byte base64url,
-il `d` di una JWK Ed25519), e di li' esce solo la pubblica. Qui si scrive la
+`node /opt/quadro/quadro/le-licenze.mjs chiave`: la privata va in
+`/etc/quadro/ambiente` come `QUADRO_LICENZE_CHIAVE` (32 byte base64url, il `d`
+di una JWK Ed25519), e di li' esce solo la pubblica. Qui si scrive la
 pubblica e basta, in due passi con la stessa chiave:
 
 1. `node strumenti/chiave-licenze.mjs --senza-centralino --pubblica <x>`: la
@@ -285,12 +285,19 @@ controllo e' spento (tutti passano, come oggi): si accende insieme alla chiave.
   e indirizzo pubblico), «Configurazione» e «Zigbee» con il lucchetto che porta
   alla pagina Premium.
 - La pagina Premium: i due piani coi prezzi del negozio, «Ripristina
-  abbonamento», «Ho un codice regalo». Sul web non si compra: si riscatta un codice, o si
-  compra dal telefono. Sull'iPhone il codice regalo non c'e' (App Store, regola
-  3.1.1): si riscatta in Home Assistant o dal browser.
+  abbonamento», «Ho un codice regalo». Si compra nell'app per iPhone e in
+  quella per Android; sul web no: si riscatta un codice, o si compra dal
+  telefono. Sull'iPhone il codice regalo non c'e' (App Store, regola 3.1.1): si
+  riscatta in Home Assistant o dal browser.
+- «Ripristina abbonamento» prima chiede. Un abbonamento vale per una casa alla
+  volta, e ripristinarlo li' lo toglie alla casa dove sta: la domanda lo dice,
+  col nome dell'altra casa se l'app ne conosce una Premium con un abbonamento.
 - Una ricevuta che non arriva alla casa resta aperta nel negozio e si
   riprova. Se non arriva perche' si e' fuori casa con Base, per portarla si
-  prende la strada del centralino.
+  prende la strada del centralino. Su Google Play un acquisto pagato con l'app
+  chiusa prima che la casa rispondesse non torna da solo: all'avvio l'app
+  chiede quelli non ancora confermati e li riporta alla casa. Solo quelli: uno
+  gia' confermato non si sposta, se non con «Ripristina».
 - gdanav riceve `premiumOspite` = la casa in uso e' Premium.
 
 ## Il giorno dei pagamenti: le app vecchie si fermano

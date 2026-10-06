@@ -23,6 +23,7 @@ import 'package:flutter/foundation.dart'
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../casa/casa_conosciuta.dart';
 import '../casa/collegamento.dart';
 import '../licenza/gettone.dart';
 import '../licenza/licenza.dart';
@@ -119,7 +120,9 @@ class SchermataPremium extends StatefulWidget {
   /// casa. `null` vuol dire «come vuole questo telefono»; le prove lo dicono.
   final bool? codiceRegalo;
 
-  /// Se su questo telefono Premium si compra: solo nell'app per iPhone.
+  /// Se su questo telefono Premium si compra: nell'app per iPhone e in
+  /// quella per Android, non nel browser. `null` vuol dire «come vuole questo
+  /// telefono»; le prove lo dicono.
   final bool? siCompraQui;
 
   /// L'informativa sulla privacy, sul sito.
@@ -175,7 +178,9 @@ class _SchermataPremiumState extends State<SchermataPremium> {
     final acquisti = widget.acquisti;
     final siCompraQui =
         widget.siCompraQui ??
-        (!widget.sulWeb && defaultTargetPlatform == TargetPlatform.iOS);
+        (!widget.sulWeb &&
+            (defaultTargetPlatform == TargetPlatform.iOS ||
+                defaultTargetPlatform == TargetPlatform.android));
     final s = Theme.of(context).colorScheme;
     final t = Theme.of(context).textTheme;
 
@@ -315,25 +320,6 @@ class _SchermataPremiumState extends State<SchermataPremium> {
             inCorso: _controllo,
             fai: () => unawaited(_ricontrolla()),
           )
-        else if (!premium && !widget.sulWeb && !siCompraQui)
-          _Riquadro(
-            chiave: const Key('premium-su-android'),
-            icona: Icons.phone_iphone,
-            titolo: inLingua(
-              it: 'Su Android l\'abbonamento non è ancora disponibile',
-              en: 'Subscriptions aren\'t available on Android yet',
-            ),
-            testo: inLingua(
-              it:
-                  'Qui puoi attivare Premium con un codice regalo. Puoi anche '
-                  'abbonarti dall\'app gdahome per iPhone: Premium vale per '
-                  'tutta la casa, quindi anche su questo telefono.',
-              en:
-                  'Here you can turn on Premium with a gift code. You can also '
-                  'subscribe in the gdahome app for iPhone: Premium covers the '
-                  'whole home, so this phone too.',
-            ),
-          )
         else if (!premium && (acquisti?.ceUnaRicevutaInSospeso ?? false))
           /* Pagato, e la ricevuta aspetta la casa: niente bottone per
            * comprare di nuovo, solo quello che succede. */
@@ -429,8 +415,9 @@ class _SchermataPremiumState extends State<SchermataPremium> {
               ],
             ),
             TextButton(
+              key: const Key('ripristina-abbonamento'),
               onPressed: dalNegozio && !inCorso
-                  ? () => unawaited(acquisti.ripristina())
+                  ? () => unawaited(_ripristina(acquisti))
                   : null,
               child: Text(
                 inLingua(
@@ -457,6 +444,34 @@ class _SchermataPremiumState extends State<SchermataPremium> {
           _Riga(fatto, colore: Colori.bene),
       ],
     );
+  }
+
+  /// «Ripristina abbonamento»: prima si dice cosa succede. Un abbonamento
+  /// vale per una casa alla volta, e ripristinarlo qui lo toglie alla casa
+  /// dove sta: chi ha due case non lo deve scoprire dopo.
+  Future<void> _ripristina(GestoreDegliAcquisti acquisti) async {
+    final qui =
+        widget.collegamento.casa?.nome ??
+        inLingua(it: 'questa casa', en: 'this home');
+    final si = await showDialog<bool>(
+      context: context,
+      builder: (_) =>
+          _ConfermaIlRipristino(qui: qui, altra: _unAltraCasaAbbonata()?.nome),
+    );
+    if (si != true || !mounted) return;
+    await acquisti.ripristina();
+  }
+
+  /// Un'altra delle tue case che oggi e' Premium con un abbonamento del
+  /// negozio: se e' lo stesso, ripristinando qui la si perde.
+  CasaConosciuta? _unAltraCasaAbbonata() {
+    final collegamento = widget.collegamento;
+    final qui = collegamento.casa?.id;
+    for (final una in collegamento.archivio.tutte) {
+      if (una.id == qui) continue;
+      if (collegamento.licenza.gettoneDi(una)?.origine == 'negozio') return una;
+    }
+    return null;
   }
 
   /// «Controlla di nuovo» e «Riprova»: si richiede alla casa come sta la
@@ -622,6 +637,16 @@ class _SchermataPremiumState extends State<SchermataPremium> {
     /* Di un abbonamento si scrive la fine del periodo pagato, non quella coi
      * giorni di margine per il rinnovo ([Gettone.pagato]). */
     final scade = gettone.pagato ?? gettone.scade;
+    final pagato = gettone.pagato;
+    if (pagato != null && !pagato.isAfter(DateTime.now())) {
+      /* Il periodo pagato e' finito e il rinnovo non e' ancora arrivato:
+       * sono i giorni del margine. Una data gia' passata non si scrive. */
+      final attivo = inLingua(
+        it: 'Premium è attivo · abbonamento',
+        en: 'Premium is active · subscription',
+      );
+      return '$attivo.$perChi';
+    }
     if (gettone.prova && scade != null) {
       return inLingua(
             it: 'Prova gratuita fino ${_alGiorno(scade)}.',
@@ -882,14 +907,14 @@ class _SulWeb extends StatelessWidget {
               inLingua(
                 it:
                     'Dal browser non si può acquistare. Abbonati dall\'app '
-                    'gdahome per iPhone, con 14 giorni di prova gratuita: '
-                    'Premium si attiva anche qui. Un codice regalo, invece, '
-                    'puoi usarlo anche dal browser.',
+                    'gdahome sul telefono, iPhone o Android, con 14 giorni di '
+                    'prova gratuita: Premium si attiva anche qui. Un codice '
+                    'regalo, invece, puoi usarlo anche dal browser.',
                 en:
                     'You can\'t buy from here: subscribe in the gdahome app '
-                    'for iPhone, with a 14-day free trial, and Premium shows '
-                    'up here too. A gift code, though, can be redeemed from '
-                    'the browser as well.',
+                    'on your phone, iPhone or Android, with a 14-day free '
+                    'trial, and Premium shows up here too. A gift code, '
+                    'though, can be redeemed from the browser as well.',
               ),
               style: Theme.of(context).textTheme.bodySmall
                   ?.copyWith(color: s.onSurfaceVariant),
@@ -897,6 +922,67 @@ class _SulWeb extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// La domanda prima di «Ripristina abbonamento»: cosa succede alla casa dove
+/// l'abbonamento sta adesso.
+class _ConfermaIlRipristino extends StatelessWidget {
+  const _ConfermaIlRipristino({required this.qui, this.altra});
+
+  /// La casa aperta, dove l'abbonamento arriva.
+  final String qui;
+
+  /// Un'altra delle tue case che oggi e' Premium con un abbonamento.
+  final String? altra;
+
+  @override
+  Widget build(BuildContext context) {
+    final altra = this.altra;
+    return AlertDialog(
+      key: const Key('conferma-ripristino'),
+      icon: const Icon(Icons.swap_horiz_rounded),
+      title: Text(
+        inLingua(
+          it: 'Ripristinare l\'abbonamento qui?',
+          en: 'Restore the subscription here?',
+        ),
+      ),
+      content: Text(
+        altra == null
+            ? inLingua(
+                it:
+                    'Un abbonamento vale per una casa alla volta. Se il tuo è '
+                    'già attivo su un\'altra casa, passa a «$qui» e l\'altra '
+                    'casa torna Base.',
+                en:
+                    'A subscription covers one home at a time. If yours is '
+                    'already active on another home, it moves to “$qui” and '
+                    'the other home goes back to Base.',
+              )
+            : inLingua(
+                it:
+                    'Un abbonamento vale per una casa alla volta. «$altra» '
+                    'oggi è Premium con un abbonamento: se è lo stesso, passa '
+                    'a «$qui» e «$altra» torna Base.',
+                en:
+                    'A subscription covers one home at a time. “$altra” is '
+                    'Premium with a subscription today: if it\'s the same '
+                    'one, it moves to “$qui” and “$altra” goes back to Base.',
+              ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(false),
+          child: Text(inLingua(it: 'Annulla', en: 'Cancel')),
+        ),
+        FilledButton(
+          key: const Key('ripristina-qui'),
+          onPressed: () => Navigator.of(context).pop(true),
+          child: Text(inLingua(it: 'Ripristina qui', en: 'Restore here')),
+        ),
+      ],
     );
   }
 }
