@@ -67,9 +67,10 @@ scritte con l'indirizzo in chiaro.
 **Prima di mandare una segnalazione, l'app dice che sarà pubblica.** Sopra
 «Manda» c'è un riquadro: la segnalazione diventa una pagina su GitHub che
 chiunque può leggere, con le foto e i video, e non va scritto niente di
-personale. In inglese la schermata adesso è tutta in inglese: «Foto e video»,
-l'avanzamento degli allegati e l'avviso di un allegato non partito erano
-rimasti in italiano.
+personale. In inglese le segnalazioni adesso sono tutte in inglese: erano
+rimasti in italiano «Foto e video», l'avanzamento degli allegati, l'avviso di
+un allegato non partito, lo stato di ogni segnalazione («aperta», «chiusa»),
+il conto dei messaggi, e sotto i fumetti «tu» e «chi fa l'app».
 
 ## 1.9.1
 
