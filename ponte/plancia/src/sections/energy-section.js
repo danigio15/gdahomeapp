@@ -761,7 +761,9 @@ export async function loadAtomicEnergyBundle(
   }
 
   /* Un pacchetto si butta via solo se nel frattempo e' cambiato cio' che
-   * legge: un altro periodo, un altro impianto, una configurazione nuova.
+   * legge: un altro impianto, una configurazione nuova. Il mese scelto sulla
+   * pagina lo guarda chi l'ha chiesto (`eseguiIlRefresh`): da qui si puo'
+   * chiedere anche un mese che non e' quello sullo schermo.
    * Prima bastava che PARTISSE una richiesta nuova — e ne partono di
    * continuo: il guscio a ogni giro, gli stati che cambiano, la pagina che si
    * apre — perche' quella in corso, a risposta arrivata, venisse scartata.
@@ -2023,8 +2025,11 @@ async function eseguiIlRefresh(period, carico) {
       if (state.caricoInCorso === carico) segnaLAttesa();
     });
     if (!bundle) return false;
-    /* Un pacchetto nato per un periodo diverso non deve mai sovrascrivere la vista corrente. */
-    if (chiave !== chiaveDelCarico(selectedPeriod())) return null;
+    /* Un pacchetto chiesto per un mese che nel frattempo non e' piu' quello
+     * scelto non si dipinge sopra la vista di adesso. La chiave e' quella del
+     * carico che l'ha chiesto: qui dentro non ce n'e' un'altra, e il nome
+     * `chiave` da solo faceva cadere ogni aggiornamento dell'Energia. */
+    if (carico.chiave !== chiaveDelCarico(selectedPeriod())) return false;
     commitDerived(bundle);
     state.bundle = bundle;
     state.selected = bundle.period;

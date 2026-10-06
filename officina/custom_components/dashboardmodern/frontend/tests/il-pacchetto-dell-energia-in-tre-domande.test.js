@@ -229,7 +229,7 @@ test("una domanda caduta lascia in piedi gli archi che sono arrivati", async () 
    * distingue piu' per il passo, si distingue perche' e' l'unico che va a
    * pescare indietro fino a gennaio. E la domanda parte dalla BASELINE, due
    * giorni prima del confine, quindi il suo inizio cade a fine dicembre. */
-  const primoFebbraio = new Date(new Date().getFullYear(), 1, 1).getTime();
+  const primoFebbraio = new Date(ORA_FERMA.getFullYear(), 1, 1).getTime();
   recorderFinto({ cade: (_period, _ids, inizio) => inizio.getTime() < primoFebbraio });
   const pacchetto = await energia.loadAtomicEnergyBundle(periodoDiOggi(), () => {}, ORA_FERMA);
 
