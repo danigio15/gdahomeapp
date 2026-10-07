@@ -376,9 +376,16 @@ class GestoreDegliAcquisti extends ChangeNotifier {
   /// Si mette in ascolto del negozio. Va fatto presto: un acquisto finito
   /// mentre l'app era chiusa arriva appena ci si mette in ascolto, e la sua
   /// ricevuta deve andare alla casa.
+  ///
+  /// Le volte dopo la prima — la pagina Premium la chiama ogni volta che si
+  /// apre — rilegge solo i piani ([_rileggiIPiani]).
   Future<void> avvia() async {
     final n = negozio;
-    if (n == null || _avviato) return;
+    if (n == null) return;
+    if (_avviato) {
+      await _rileggiIPiani(n);
+      return;
+    }
     _avviato = true;
     try {
       disponibile = await n.disponibile();
@@ -405,6 +412,32 @@ class GestoreDegliAcquisti extends ChangeNotifier {
       if (rimasti.isNotEmpty) await _arrivati(rimasti);
     } catch (e) {
       debugPrint('negozio: $e');
+    }
+  }
+
+  bool _rileggendo = false;
+
+  /* I prezzi e la prova si richiedono a ogni apertura della pagina Premium.
+   * L'app resta aperta anche per giorni, e intanto chi vende cambia il
+   * prezzo, o chi ha appena usato la prova non ce l'ha piu'. Letti una volta
+   * sola, la pagina diceva i prezzi di quando l'app era partita, mentre il
+   * Play Store, al momento di pagare, chiedeva quelli nuovi.
+   *
+   * Un negozio che non risponde, o che risponde vuoto, lascia i piani che
+   * c'erano. */
+  Future<void> _rileggiIPiani(NegozioGdahome n) async {
+    if (!disponibile || _rileggendo) return;
+    _rileggendo = true;
+    try {
+      final nuovi = await n.piani();
+      if (nuovi.isNotEmpty) {
+        piani = nuovi;
+        notifyListeners();
+      }
+    } catch (e) {
+      debugPrint('negozio: $e');
+    } finally {
+      _rileggendo = false;
     }
   }
 

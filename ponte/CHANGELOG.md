@@ -31,6 +31,14 @@ l'app 1.10.1 e l'add-on 1.10.1; con l'add-on di prima l'app dice di
 aggiornarlo, e intanto il codice si riscatta dalla console dell'add-on o
 dall'app sul Wi-Fi di casa.
 
+**I prezzi della pagina Premium sono sempre quelli del negozio.** L'app
+chiedeva prezzi e prova gratuita al Play Store, o all'App Store, una volta
+sola, quando partiva. Se restava aperta, la pagina Premium continuava a
+mostrare i prezzi di allora, mentre al momento di pagare il negozio chiedeva
+quelli nuovi. Adesso li richiede ogni volta che si apre la pagina: si vede
+subito un prezzo cambiato o una prova appena accesa, e la prova sparisce a
+chi l'ha già usata. Se il negozio non risponde, restano i prezzi di prima.
+
 ## 1.10.0
 
 **gdahome Premium si accende.** Da questa versione una casa è Premium se ha una
