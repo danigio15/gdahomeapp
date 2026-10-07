@@ -32227,7 +32227,7 @@ else i.m(0,"chi",b)
 i.m(0,"apertura",B.dd.glc().bn(n))
 i.m(0,"mia",B.dd.glc().bn(m))
 i.m(0,"mucchio",!0)
-i.m(0,"app",1100200)
+i.m(0,"app",1100300)
 m=B.ah.jN(i,null)
 a.a.gDs().a.B(0,m)
 s=4
@@ -111436,7 +111436,7 @@ q=q.aF(p==null?m.k3:p)}p=t.p
 q=A.cH(A.bd(A.b([k,B.N7,s,B.bK,A.M(r,o,o,o,o,q,B.am,o)],p),B.y,B.d3,B.n))
 r=A.j8(o,o,B.j6,o,o,o,o)
 k=A.o_(B.a_O,A.M(l===B.T?A.h("Update from the App Store","Aggiorna dall'App Store"):A.h("Update from Google Play","Aggiorna dal Play Store"),o,o,o,o,o,o,o),new A.azV(this),r)
-s=A.h("This is 1.10.2 (1100200)","Questa \xe8 la 1.10.2 (1100200)")
+s=A.h("This is 1.10.3 (1100300)","Questa \xe8 la 1.10.3 (1100300)")
 r=n.Q
 if(r==null)l=o
 else{l=m.rx
@@ -116894,9 +116894,9 @@ else{l=a5.rx
 l=n.aF(l==null?a5.k3:l)}l=A.M(o,a4,a4,a4,a4,l,a4,a4)
 o=a6.w
 k=A.M(A.h("This app","Questa app"),a4,a4,a4,a4,o,a4,a4)
-j=p.$2(A.h("Version","Versione"),"1.10.2 (1100200)")
+j=p.$2(A.h("Version","Versione"),"1.10.3 (1100300)")
 i=A.h("Package","Pacchetto")
-i=p.$2(i,"82-419f674")
+i=p.$2(i,"83-70c3ac9")
 h=A.h("Relay","Centralino")
 g=$.Sj()
 g=g==null?a4:g.a
@@ -117218,7 +117218,7 @@ $S:12}
 A.G8.prototype={
 E(a){var s,r,q=null,p=A.w(a).ax,o=$.Sj(),n=o==null?q:o.a
 if(n==null)n=A.h("no relay","nessun centralino")
-o=this.d?"gdahome 1.10.2 (1100200) \xb7 "+n:"gdahome 1.10.2 (1100200)"
+o=this.d?"gdahome 1.10.3 (1100300) \xb7 "+n:"gdahome 1.10.3 (1100300)"
 s=A.w(a).ok.Q
 if(s==null)s=q
 else{r=p.rx
@@ -117297,7 +117297,7 @@ case 1:return A.m(q,r)}})
 return A.n($async$vA,r)},
 ans(){var s,r,q=null,p=this.a.c,o=t.N
 o=A.v(o,o)
-o.m(0,"app","82-419f674")
+o.m(0,"app","83-70c3ac9")
 o.m(0,"sistema","web")
 s=p.cy
 s=s==null?q:s.b
