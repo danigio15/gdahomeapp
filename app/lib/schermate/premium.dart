@@ -14,6 +14,10 @@
 /// telefoni abbinati a lei — e la webapp — lo diventano insieme. Sul web non
 /// si compra: li' non c'e' un negozio, e la pagina manda al telefono. Un
 /// codice regalo invece si riscatta anche da li'.
+///
+/// Sul telefono entrato col codice della casa di prova i piani restano in
+/// vista anche con la casa Premium: chi rivede l'app per l'App Store deve
+/// poter provare l'acquisto ([GestoreLicenza.telefonoDiProva]).
 library;
 
 import 'dart:async';
@@ -175,6 +179,10 @@ class _SchermataPremiumState extends State<SchermataPremium> {
     final casa = widget.collegamento.casa;
     final premium = licenza.premiumDi(casa);
     final come = licenza.comeSta(casa);
+    /* Chi rivede l'app per i negozi entra col codice della casa di prova, e
+     * la casa di prova e' Premium: su quel telefono gli abbonamenti restano
+     * in vista lo stesso, da provare ([GestoreLicenza.telefonoDiProva]). */
+    final diProva = premium && licenza.telefonoDiProva(casa);
     final acquisti = widget.acquisti;
     final siCompraQui =
         widget.siCompraQui ??
@@ -337,7 +345,8 @@ class _SchermataPremiumState extends State<SchermataPremium> {
                   'it again. If your home is switched off, turn it back on.',
             ),
           )
-        else if (!premium) ...[
+        else if (!premium || diProva) ...[
+          if (diProva) const _DiProva(),
           for (final id in [pianoAnnuale, pianoMensile])
             _Piano(
               id: id,
@@ -766,6 +775,57 @@ class _IlPerche extends StatelessWidget {
           Expanded(
             child: Text(
               testo,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: s.onSecondaryContainer,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Sopra i piani, sul telefono entrato col codice della casa di prova: perche'
+/// gli abbonamenti ci sono anche se la casa e' gia' Premium. Lo legge chi
+/// rivede l'app per i negozi, e nessun altro.
+class _DiProva extends StatelessWidget {
+  const _DiProva();
+
+  @override
+  Widget build(BuildContext context) {
+    final s = Theme.of(context).colorScheme;
+    return Container(
+      key: const Key('premium-casa-di-prova'),
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+      decoration: BoxDecoration(
+        color: s.secondaryContainer,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(
+            Icons.info_outline_rounded,
+            size: 18,
+            color: s.onSecondaryContainer,
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              inLingua(
+                it:
+                    'Questo telefono è entrato con il codice della casa di '
+                    'prova. Premium è già attivo, così puoi provare tutte le '
+                    'funzioni, e qui sotto puoi provare anche l\'acquisto di '
+                    'un abbonamento.',
+                en:
+                    'This phone joined with the demo home code. Premium is '
+                    'already active so you can try every feature, and you can '
+                    'still test buying a subscription below.',
+              ),
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 color: s.onSecondaryContainer,
                 fontWeight: FontWeight.w600,

@@ -575,9 +575,17 @@ export class Commissioni {
    * regola sola, quella di gdahome Base: all'app si serve solo la plancia
    * principale. Dentro Home Assistant le plance stanno fra le Dashboard, e
    * quelle le governa Home Assistant. */
+  /* `diProva` dice che chi chiede e' un telefono entrato col codice della
+   * casa di prova (`ponte.js`). Serve solo alle licenze: vedi `_laLicenza`. */
   async rispondi(
     detto,
-    { chiChiede = "", amministra = null, puoAmministrare = false, dalTelefono = false } = {},
+    {
+      chiChiede = "",
+      amministra = null,
+      puoAmministrare = false,
+      dalTelefono = false,
+      diProva = false,
+    } = {},
   ) {
     const id = detto?.id ?? null;
     const tipo = detto?.type;
@@ -591,7 +599,7 @@ export class Commissioni {
     if (tipo === TIPO_MOLTI) return this._molti(detto, chiChiede, amministra);
     if (tipo === TIPO_PLANCIA) return this._laPlancia(detto, chiChiede, amministra, soloLaPrima);
     if (PLANCE.has(tipo)) return this._lePlance(detto, chiChiede, amministra, soloLaPrima);
-    if (LICENZA.has(tipo)) return this._laLicenza(detto);
+    if (LICENZA.has(tipo)) return this._laLicenza(detto, { diProva });
     if (typeof tipo === "string" && tipo.startsWith("ponte/chat/")) return this._chatDellApp(detto);
     if (tipo === IL_QUADRO) return this._ilQuadro(detto, chiChiede, amministra, puoAmministrare);
     if (typeof tipo === "string" && tipo.startsWith("ponte/segnalazioni/"))
@@ -1183,11 +1191,20 @@ export class Commissioni {
    *
    * La risposta e' sempre lo stato intero, anche dopo una ricevuta o un
    * codice: l'app ridisegna la pagina Premium da quello, e non deve fare una
-   * seconda domanda per sapere cosa e' cambiato. */
-  async _laLicenza(detto) {
+   * seconda domanda per sapere cosa e' cambiato.
+   *
+   * A un telefono entrato col codice della casa di prova lo stato dice anche
+   * `telefonoDiProva: true`. Chi rivede l'app per i negozi entra con quel
+   * codice, e i negozi vogliono due cose diverse: Google la casa Premium,
+   * perche' li' non si compra; Apple gli abbonamenti in vista, da provare.
+   * Con questa riga la casa resta Premium per tutti e due, e l'app, solo su
+   * quei telefoni, lascia in vista gli abbonamenti. Agli altri telefoni non
+   * si dice niente: la loro pagina Premium resta quella di sempre. */
+  async _laLicenza(detto, { diProva = false } = {}) {
     const id = detto?.id ?? null;
     const licenze = this.licenze;
     const cosa = LICENZA.get(detto?.type);
+    const aChiChiede = (stato) => (diProva === true ? { ...stato, telefonoDiProva: true } : stato);
     if (cosa === "stato") {
       if (!licenze) {
         const spenta = { attiva: false, scade: null, pagato: null, origine: null, fino: null };
@@ -1200,22 +1217,24 @@ export class Commissioni {
           ultima: null,
         });
       }
-      return si(id, licenze.stato());
+      return si(id, aChiChiede(licenze.stato()));
     }
     if (!licenze) return no(id, "licenze-spente", "questo ponte non ha le licenze");
     try {
       if (cosa === "negozio") {
         return si(
           id,
-          await licenze.negozio({
-            app: detto.app,
-            piattaforma: detto.piattaforma,
-            prodotto: detto.prodotto,
-            ricevuta: detto.ricevuta,
-          }),
+          aChiChiede(
+            await licenze.negozio({
+              app: detto.app,
+              piattaforma: detto.piattaforma,
+              prodotto: detto.prodotto,
+              ricevuta: detto.ricevuta,
+            }),
+          ),
         );
       }
-      return si(id, await licenze.riscatta(detto.codice));
+      return si(id, aChiChiede(await licenze.riscatta(detto.codice)));
     } catch (errore) {
       if (errore instanceof LicenzaNo) return no(id, errore.codice, errore.message);
       this.registro.errore(`la licenza e' andata storta: ${errore?.message || errore}`);

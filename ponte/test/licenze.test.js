@@ -629,3 +629,42 @@ test("ponte/licenza/* li chiede qualunque telefono abbinato, non solo chi ammini
   assert.equal(spente.success, true);
   assert.equal(spente.result.attive, false);
 });
+
+test("ponte/licenza/*: al telefono della casa di prova si dice che e' di prova, agli altri no", async () => {
+  /* Chi rivede l'app per i negozi entra col codice della casa di prova, e la
+   * casa di prova e' Premium: l'app, solo su quel telefono, lascia in vista
+   * gli abbonamenti. Si dice in ogni risposta, anche dopo un codice o una
+   * ricevuta, perche' l'app ridisegna la pagina da quella. */
+  const premium = () => ({ attive: true, gdahome: { attiva: true, origine: "regalo" } });
+  const licenze = {
+    limitata: false,
+    stato: premium,
+    riscatta: async () => premium(),
+    negozio: async () => premium(),
+  };
+  const commissioni = new Commissioni({ licenze, registro: ZITTO });
+  const comandi = [
+    { type: "ponte/licenza/stato" },
+    { type: "ponte/licenza/riscatta", codice: "GDA-AAAA-BBBB-CCCC" },
+    {
+      type: "ponte/licenza/negozio",
+      app: "gdahome",
+      piattaforma: "ios",
+      prodotto: "gdahome_premium_annuale",
+      ricevuta: "ricevuta",
+    },
+  ];
+  for (const [id, comando] of comandi.entries()) {
+    const diProva = await commissioni.rispondi(
+      { id, ...comando },
+      { dalTelefono: true, diProva: true },
+    );
+    assert.equal(diProva.success, true, comando.type);
+    assert.equal(diProva.result.telefonoDiProva, true, comando.type);
+    assert.equal(diProva.result.gdahome.attiva, true, comando.type);
+
+    const diCasa = await commissioni.rispondi({ id, ...comando }, { dalTelefono: true });
+    assert.equal(diCasa.success, true, comando.type);
+    assert.equal("telefonoDiProva" in diCasa.result, false, comando.type);
+  }
+});

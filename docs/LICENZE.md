@@ -275,6 +275,9 @@ questo cambia chi e' Premium: lo decide la scadenza.
 - Comandi sul filo cifrato: `ponte/licenza/stato` → `{gdahome: {attiva,
   scade, pagato, origine}, gdanav: {…}, gettoni: {…}}`; `ponte/licenza/negozio`
   `{app, piattaforma, prodotto, ricevuta}`; `ponte/licenza/riscatta` `{codice}`.
+- A un telefono entrato col codice della casa di prova ogni risposta di questi
+  tre comandi dice anche `telefonoDiProva: true` (dalla 1.10.4). Agli altri
+  telefoni non si dice niente: il campo non c'è.
 - Il segreto che manda al quadro e' quello che la casa ha gia' per il quadro
   (`/data/quadro.json`), non quello del centralino: il segreto del centralino
   non esce verso un'altra macchina.
@@ -314,7 +317,11 @@ controllo e' spento (tutti passano, come oggi): si accende insieme alla chiave.
   e indirizzo pubblico), «Configurazione» e «Zigbee» con il lucchetto che porta
   alla pagina Premium.
 - La pagina Premium: i due piani coi prezzi del negozio, «Ripristina
-  abbonamento», «Ho un codice regalo». Si compra nell'app per iPhone e in
+  abbonamento», «Ho un codice regalo». Con la casa Premium i piani non ci
+  sono, tranne sul telefono entrato col codice della casa di prova
+  (`telefonoDiProva`): lì restano, con una riga che spiega perché, così chi
+  rivede l'app per Apple prova l'acquisto in una casa che resta Premium per
+  Google. Si compra nell'app per iPhone e in
   quella per Android; sul web no: si riscatta un codice, o si compra dal
   telefono. Sull'iPhone il codice regalo non c'e' (App Store, regola 3.1.1): si
   riscatta in Home Assistant o dal browser.

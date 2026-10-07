@@ -11,6 +11,7 @@ import 'package:gdahome/casa/cassaforte.dart';
 import 'package:gdahome/casa/collegamento.dart';
 import 'package:gdahome/licenza/licenza.dart';
 import 'package:gdahome/licenza/negozio.dart';
+import 'package:gdahome/ponte/filo.dart';
 import 'package:gdahome/ponte/indirizzo.dart';
 import 'package:gdahome/schermate/premium.dart';
 import 'package:gdahome/vestito/tema.dart';
@@ -54,6 +55,28 @@ class _NegozioFinto implements NegozioGdahome {
   Future<void> completa(PurchaseDetails acquisto) async {}
   @override
   Future<List<PurchaseDetails>> rimastiAMeta() async => rimasti;
+}
+
+/// La casa di prova come risponde sul filo, alla domanda sulla licenza:
+/// Premium regalato, e questo telefono e' entrato col codice della casa di
+/// prova. Il resto del filo alla pagina Premium non serve.
+class _FiloDellaCasaDiProva implements Filo {
+  _FiloDellaCasaDiProva(this.gettone);
+
+  final String gettone;
+
+  @override
+  Future<dynamic> risultato(
+    Map<String, dynamic> comando, {
+    Duration? entro,
+  }) async => {
+    'attive': true,
+    'gettoni': {'gdahome': gettone},
+    'telefonoDiProva': true,
+  };
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
 /// Un'altra casa, «Casa al mare», Premium con un abbonamento.
@@ -359,8 +382,62 @@ void main() {
     );
     expect(find.byKey(const Key('compra-premium')), findsNothing);
     expect(find.byKey(const Key('piano-$pianoAnnuale')), findsNothing);
+    expect(find.byKey(const Key('premium-casa-di-prova')), findsNothing);
     expect(find.byKey(const Key('codice-regalo')), findsOneWidget);
   });
+
+  testWidgets(
+    'sul telefono della casa di prova, con Premium, gli abbonamenti restano',
+    (tester) async {
+      /* Chi rivede l'app per i negozi entra col codice della casa di prova, e
+       * la casa di prova e' Premium: Apple deve poter provare l'acquisto. */
+      late String gettone;
+      await tester.runAsync(() async {
+        gettone = await firmaUnGettone(
+          origine: 'regalo',
+          scade: DateTime(2027, 3, 12),
+        );
+      });
+      final collegamento = await casaSenzaFilo(tester, gettone: gettone);
+      await tester.runAsync(
+        () => collegamento.licenza.chiedi(
+          _FiloDellaCasaDiProva(gettone),
+          collegamento.casa!,
+          collegamento.archivio,
+        ),
+      );
+      expect(collegamento.licenza.premium, isTrue);
+      final negozio = _NegozioFinto();
+      final acquisti = await acquistiCon(tester, negozio);
+      await mostra(
+        tester,
+        SchermataPremium(
+          collegamento: collegamento,
+          acquisti: acquisti,
+          sulWeb: false,
+          siCompraQui: true,
+        ),
+      );
+      expect(
+        find.textContaining('Premium è attivo fino al 12 marzo 2027 · regalo'),
+        findsOneWidget,
+      );
+      expect(find.byKey(const Key('premium-casa-di-prova')), findsOneWidget);
+      expect(
+        find.textContaining('entrato con il codice della casa di prova'),
+        findsOneWidget,
+      );
+      expect(find.byKey(const Key('piano-$pianoAnnuale')), findsOneWidget);
+      expect(find.byKey(const Key('piano-$pianoMensile')), findsOneWidget);
+      expect(find.text('Ripristina abbonamento'), findsOneWidget);
+      expect(find.text('Termini d\'uso'), findsOneWidget);
+      expect(find.text('Privacy'), findsOneWidget);
+
+      await tester.tap(find.byKey(const Key('compra-premium')));
+      await tester.pump();
+      expect(negozio.comprati, [pianoAnnuale]);
+    },
+  );
 
   testWidgets(
     'un abbonamento scrive la fine del periodo pagato, non quella col margine',

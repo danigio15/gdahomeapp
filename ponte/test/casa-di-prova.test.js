@@ -190,10 +190,16 @@ test("un telefono di prova scade col suo codice: non entra, non si conta, e lo s
     );
     assert.ok(dispositivi.riconosci(diProva.segno));
     assert.equal(dispositivi.chiaveDi(diProva.dispositivo.id), diProva.chiave);
+    /* Il filo lo chiede per la licenza: l'app, li', lascia in vista gli
+     * abbonamenti. */
+    assert.equal(dispositivi.diProva(diProva.dispositivo.id), true);
+    assert.equal(dispositivi.diProva(diCasa.dispositivo.id), false);
+    assert.equal(dispositivi.diProva("dm_che_non_c_e"), false);
 
     tempo.avanti(GIORNO);
     /* Lo spazzino non e' ancora passato, e il telefono e' gia' fuori. */
     assert.equal(dispositivi.riconosci(diProva.segno), null);
+    assert.equal(dispositivi.diProva(diProva.dispositivo.id), false);
     assert.equal(dispositivi.chiaveDi(diProva.dispositivo.id), null);
     assert.equal(dispositivi.chiaveRevocataDi(diProva.dispositivo.id), diProva.chiave);
     assert.equal(dispositivi.utenteDi(diProva.dispositivo.id), "");

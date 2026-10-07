@@ -161,9 +161,13 @@ c'è la **casa di prova** dell'add-on (dalla 1.10.1): un codice che vale fino a
 
 1. In Home Assistant: Impostazioni → Persone → Aggiungi persona, per esempio
    «Revisione», **senza** «Amministratore» e con l'accesso consentito.
-2. La casa deve avere l'add-on gdahome **1.10.1 o più nuovo**, restare accesa
-   per tutta la revisione, ed essere **Base**: chi rivede deve trovare
-   qualcosa da comprare.
+2. La casa deve avere l'add-on gdahome **1.10.4 o più nuovo**, restare accesa
+   per tutta la revisione, ed essere **Premium**: dalla Gestione gdahome,
+   «Regala una licenza» alla casa, che duri più della revisione. Resta
+   Premium anche per Google, e a ogni versione non si cambia niente: sul
+   telefono entrato col codice di prova la pagina Premium tiene in vista gli
+   abbonamenti anche con la casa Premium (dall'app 1.10.4), e chi rivede per
+   Apple li può provare.
 3. Nella console dell'add-on, scheda «Casa di prova»: per chi è «Revisione»,
    quanto dura «7 giorni», poi «Fai il codice di prova».
 4. Le lettere vanno nelle note qui sotto, al posto di `XXXX-XXXX-XXXX-XXXX`.
@@ -184,13 +188,16 @@ scheda (regola 3.1.2).
 >    XXXX-XXXX-XXXX-XXXX
 >    (or scan the attached QR code). The code works for 7 days and for more
 >    than one device, so you can use it on iPhone and on iPad.
-> 2. The demo home is on gdahome Base, the free tier: away from the home's own
->    Wi-Fi it only opens with gdahome Premium, so the app shows the Premium
->    page. Subscribe with your sandbox account (monthly or yearly, with a
->    14-day free trial): the home becomes Premium within a few seconds and
->    opens. Our server verifies the transaction with the App Store Server API.
-> 3. You are now inside the demo home as a user who isn't an administrator:
->    dashboard, lights, climate, shutters, energy, cameras.
+> 2. You are now inside the demo home as a user who isn't an administrator:
+>    dashboard, lights, climate, shutters, energy, cameras. The demo home
+>    already has gdahome Premium, so every feature is unlocked, including
+>    access away from the home's own Wi-Fi.
+> 3. To test the in-app purchase, tap ☰ (top left) and then "gdahome
+>    Premium". On a phone that joined with the demo code the page still offers
+>    both subscriptions (monthly or yearly, with a 14-day free trial). Subscribe
+>    with your sandbox account: our server verifies the transaction with the
+>    App Store Server API, and the page confirms "Done: your home is now
+>    Premium."
 >
 > gdahome Premium is an auto-renewable subscription that belongs to the paired
 > home: every phone paired with that home gets it. "Restore subscription"

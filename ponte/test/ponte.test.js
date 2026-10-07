@@ -73,23 +73,29 @@ async function casaFinta({ rifiutaIlSegno = false, muta = false } = {}) {
 
 async function banco(
   opzioniDellaCasa = {},
-  { da = "prova", mucchio = false, conLePlance = false, utenti = null } = {},
+  { da = "prova", mucchio = false, conLePlance = false, utenti = null, licenze = null } = {},
 ) {
   const cartella = mkdtempSync(join(tmpdir(), "ponte-prova-"));
   const ha = await casaFinta(opzioniDellaCasa);
   const casa = new Casa({ indirizzo: ha.indirizzo, segno: SEGNO_DEL_SUPERVISOR });
   const dispositivi = new Dispositivi({ cartella });
   const registro = { info: () => {}, attenzione: () => {}, errore: () => {} };
-  /* Le plance servono solo a chi le prova: gli altri banchi restano come
-   * erano, senza commissioni, e per loro non cambia niente. */
+  /* Le plance e le licenze servono solo a chi le prova: gli altri banchi
+   * restano come erano, senza commissioni, e per loro non cambia niente. */
   const plance = conLePlance ? new Plance({ cartella, registro }) : null;
-  const commissioni = plance
-    ? new Commissioni({
-        plance,
-        plancia: { cE: true, descrizione: () => ({ base: "/dashboardmodern_static/x" }) },
-        registro,
-      })
-    : undefined;
+  const commissioni =
+    plance || licenze
+      ? new Commissioni({
+          ...(plance
+            ? {
+                plance,
+                plancia: { cE: true, descrizione: () => ({ base: "/dashboardmodern_static/x" }) },
+              }
+            : {}),
+          ...(licenze ? { licenze } : {}),
+          registro,
+        })
+      : undefined;
   const ponte = new Ponte({ casa, dispositivi, registro, commissioni, utenti });
 
   const server = createServer((_r, risposta) => risposta.end());
@@ -777,6 +783,50 @@ test("un elenco di comandi non porta a Home Assistant quelli della plancia", asy
     );
     assert.equal(b.plance.elenco().length, 1, "e la plancia e' ancora li'");
     t.chiudi();
+  } finally {
+    await b.spegni();
+  }
+});
+
+test("la licenza dice «telefono di prova» al telefono della casa di prova, e a nessun altro", async () => {
+  /* Chi rivede l'app per i negozi entra col codice della casa di prova, e la
+   * casa di prova e' Premium: l'app, solo su quel telefono, lascia in vista
+   * gli abbonamenti. Lo sa perche' glielo dice la casa, qui. */
+  const licenze = {
+    limitata: false,
+    stato: () => ({
+      attive: true,
+      gdahome: { attiva: true, origine: "regalo" },
+      gettoni: { gdahome: "gettone" },
+    }),
+  };
+  const b = await banco({}, { licenze });
+  try {
+    const comeRisponde = async ({ segno }) => {
+      const t = telefono(b.indirizzo);
+      await t.aperta;
+      await t.aspetta("auth_required");
+      t.manda({ type: "auth", access_token: segno });
+      await t.aspetta("auth_ok");
+      t.manda({ id: 1, type: "ponte/licenza/stato" });
+      const detto = await laRisposta(t, 1);
+      t.chiudi();
+      return detto;
+    };
+
+    const diProva = await comeRisponde(
+      b.dispositivi.abbina({ nome: "Revisione", sistema: "ios", finoA: Date.now() + 60_000 }),
+    );
+    assert.equal(diProva.success, true);
+    assert.equal(diProva.result.telefonoDiProva, true);
+    assert.equal(diProva.result.gdahome.attiva, true, "e la casa resta Premium");
+
+    const diCasa = await comeRisponde(
+      b.dispositivi.abbina({ nome: "Di casa", sistema: "android" }),
+    );
+    assert.equal(diCasa.success, true);
+    assert.equal("telefonoDiProva" in diCasa.result, false);
+    assert.equal(diCasa.result.gdahome.attiva, true);
   } finally {
     await b.spegni();
   }
