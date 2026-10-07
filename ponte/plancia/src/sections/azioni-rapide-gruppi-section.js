@@ -41,7 +41,6 @@ import {
   wrapFunction,
   writeJsonIfChanged,
 } from "./shared.js";
-import { senzaEmoji } from "../core/segni-del-catalogo.js";
 
 const KEY = "__DASHBOARDMODERN_AZIONI_GRUPPI__";
 const STYLE_ID = "dm-azioni-gruppi-style";
@@ -312,7 +311,7 @@ function onChange(evento) {
     root.buildQuickActions?.();
   } catch (_errore) {}
   caselleDeiGruppi();
-  root.edToast?.(senzaEmoji(t("💾 Gruppo salvato", "💾 Group saved")));
+  root.edToast?.(t("💾 Gruppo salvato", "💾 Group saved"));
 }
 
 /* ── stile ────────────────────────────────────────────────────────────── */

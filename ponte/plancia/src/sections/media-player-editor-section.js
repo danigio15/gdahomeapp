@@ -8,7 +8,6 @@
  * Home Assistant, e chiederlo qui vorrebbe dire farlo scrivere a mano a chi
  * lo sa già.
  */
-import { segnoDaValoreHtml, segnoHtml } from "../core/segni-del-catalogo.js";
 import { CHIAVE_MEDIA, ridisegnaMediaPlayer } from "./media-player-section.js";
 import { bindLettoreToDevice } from "../core/media-player.js";
 import { comandiVicini, elencoComandi, genereDelComando } from "../core/comandi-accanto.js";
@@ -138,7 +137,7 @@ function listaMarkup(tipo, voce, indice) {
         ? scelte.map((entity) => pastigliaMarkup(entity, tipo, "del", "✕", voce, states)).join("")
         : `<small class="dm-mp-chips-vuoto">${esc(regola.vuoto())}</small>`
     }</div>
-    <span class="ed-form-row"><input id="dm-mp-ed-${indice}-${esc(tipo)}" class="ed-input mono" data-mp-chip-nuovo placeholder="${esc(regola.segnaposto)}" autocomplete="off" spellcheck="false"><button type="button" class="dm-entity-picker" data-mp-pick="dm-mp-ed-${indice}-${esc(tipo)}" aria-label="${esc(t("Scegli entità", "Choose entity"))}">${segnoHtml("search")}</button><button type="button" class="dm-entity-picker dm-mp-aggiungi" data-mp-chip-add="${esc(tipo)}" aria-label="${esc(t("Aggiungi", "Add"))}" title="${esc(t("Aggiungi", "Add"))}">＋</button></span>
+    <span class="ed-form-row"><input id="dm-mp-ed-${indice}-${esc(tipo)}" class="ed-input mono" data-mp-chip-nuovo placeholder="${esc(regola.segnaposto)}" autocomplete="off" spellcheck="false"><button type="button" class="dm-entity-picker" data-mp-pick="dm-mp-ed-${indice}-${esc(tipo)}" aria-label="${esc(t("Scegli entità", "Choose entity"))}">🔍</button><button type="button" class="dm-entity-picker dm-mp-aggiungi" data-mp-chip-add="${esc(tipo)}" aria-label="${esc(t("Aggiungi", "Add"))}" title="${esc(t("Aggiungi", "Add"))}">＋</button></span>
     ${
       proposte.length
         ? `<small>${esc(t("Trovate accanto al lettore — un tocco le aggiunge:", "Found next to the player — one tap adds them:"))}</small>
@@ -214,7 +213,7 @@ function telecomandoMarkup(voce, indice) {
   const id = `dm-mp-ed-${indice}-telecomando`;
   return `<div class="ed-slot dm-mp-ed-campo dm-mp-lista" data-mp-tele>
     <span class="ed-slot-lbl">${esc(t("Telecomando", "Remote control"))}</span>
-    <span class="ed-form-row"><input id="${id}" class="ed-input mono" data-mp-campo="telecomando" value="${esc(scelto)}" placeholder="remote.tv_salotto" autocomplete="off" spellcheck="false"><button type="button" class="dm-entity-picker" data-mp-pick="${id}" aria-label="${esc(t("Scegli entità", "Choose entity"))}">${segnoHtml("search")}</button></span>
+    <span class="ed-form-row"><input id="${id}" class="ed-input mono" data-mp-campo="telecomando" value="${esc(scelto)}" placeholder="remote.tv_salotto" autocomplete="off" spellcheck="false"><button type="button" class="dm-entity-picker" data-mp-pick="${id}" aria-label="${esc(t("Scegli entità", "Choose entity"))}">🔍</button></span>
     ${
       proposte.length
         ? `<small>${esc(t("In casa ci sono questi — un tocco lo sceglie:", "These are in the house — one tap picks it:"))}</small>
@@ -297,21 +296,21 @@ function rigaMarkup(voce, indice) {
   const nome = clean(voce?.nome) || clean(voce?.entity) || t("Lettore nuovo", "New player");
   return `<article class="ed-row dm-todo-ed-row dm-mp-ed-riga" data-mp-voce="${indice}" data-open="${aperta}">
     <div class="dm-todo-ed-head">
-      <span class="dm-todo-ed-icon" aria-hidden="true">${segnoDaValoreHtml(voce?.icona, { ripiego: "speaker" })}</span>
+      <span class="dm-todo-ed-icon" aria-hidden="true">${esc(clean(voce?.icona) || "🔊")}</span>
       <span class="ed-row-main">
         <strong class="ed-row-new">${esc(nome)}</strong>
         <small class="ed-row-old mono">${esc(clean(voce?.entity))}</small>
       </span>
       <button type="button" class="ed-del dm-todo-ed-edit" data-mp-edit
-        aria-label="${esc(t("Modifica", "Edit"))}">${segnoHtml("pencil")}</button>
+        aria-label="${esc(t("Modifica", "Edit"))}">✏️</button>
       <button type="button" class="ed-del dm-todo-ed-del" data-mp-del
-        aria-label="${esc(t("Elimina", "Remove"))}">${segnoHtml("trash")}</button>
+        aria-label="${esc(t("Elimina", "Remove"))}">🗑️</button>
     </div>
     <div class="dm-todo-ed-body"${aperta ? "" : " hidden"}>
       <div class="dm-mp-ed-testa">
         <input class="ed-input dm-mp-ed-icona" data-mp-campo="icona" value="${esc(
           clean(voce?.icona),
-        )}" aria-label="${esc(t("Icona", "Icon"))}" maxlength="4">
+        )}" placeholder="🔊" aria-label="${esc(t("Icona", "Icon"))}" maxlength="4">
         <input class="ed-input" data-mp-campo="nome" value="${esc(clean(voce?.nome))}"
           placeholder="${esc(t("Nome (facoltativo)", "Name (optional)"))}">
       </div>
@@ -321,7 +320,7 @@ function rigaMarkup(voce, indice) {
         data-mp-campo="entity" value="${esc(clean(voce?.entity))}"
         placeholder="media_player.salotto" autocomplete="off" spellcheck="false"
         ><button type="button" class="dm-entity-picker" data-mp-pick="${id}"
-        aria-label="${esc(t("Scegli entità", "Choose entity"))}">${segnoHtml("search")}</button></span></label>
+        aria-label="${esc(t("Scegli entità", "Choose entity"))}">🔍</button></span></label>
       <label class="ed-slot dm-mp-ed-campo"><span class="ed-slot-lbl">${esc(
         t("Stanza", "Room"),
       )}</span><span class="ed-form-row"><select id="${id}-room" class="ed-input"
@@ -333,7 +332,7 @@ function rigaMarkup(voce, indice) {
       ${listaMarkup("comandi", voce, indice)}
       ${listaMarkup("letture", voce, indice)}
       <output class="dm-mp-ed-errore" data-mp-errore></output>
-      <button type="button" class="ed-save-btn" data-mp-save>${segnoHtml("check")} ${esc(
+      <button type="button" class="ed-save-btn" data-mp-save>💾 ${esc(
         t("Salva lettore", "Save player"),
       )}</button>
     </div>
@@ -343,7 +342,7 @@ function rigaMarkup(voce, indice) {
 function corpoMarkup() {
   const lista = lettori();
   return `${fasciaMarkup()}<div class="dm-mp-ed">
-  <div class="ed-sec-title">${segnoHtml("speaker")} ${esc(t("Musica", "Media"))}</div>
+  <div class="ed-sec-title">🔊 ${esc(t("Musica", "Media"))}</div>
   <div class="ed-intro">${esc(
     t(
       "I lettori che dichiari qui hanno una scheda tutta loro, e come sfondo la copertina di quello che stanno suonando. I tasti che compaiono sono quelli che il lettore sa eseguire davvero: se non ha il brano successivo, quel tasto non viene disegnato. Puoi anche metterli fra le Azioni rapide della Home: lì il tasto prende la copertina come sfondo, e premerlo mette in pausa o fa ripartire.",
@@ -358,7 +357,7 @@ function corpoMarkup() {
         )}</div>`
   }</div>
   <div class="dm-mp-invito">
-    <button type="button" class="ed-btn-add dm-mp-integ" data-mp-integ>${segnoHtml("link")} ${esc(
+    <button type="button" class="ed-btn-add dm-mp-integ" data-mp-integ>🔗 ${esc(
       t("Aggiungi da un'integrazione", "Add from an integration"),
     )}</button>
     <small>${esc(
@@ -579,7 +578,7 @@ function onClick(event) {
     lista[indice] = leggiLaRiga(riga);
     salva(lista);
     ridisegna();
-    root.edToast?.(t("Lettore salvato", "Player saved"));
+    root.edToast?.(t("💾 Lettore salvato", "💾 Player saved"));
   }
 }
 
@@ -604,7 +603,7 @@ export function ensureMediaTab() {
   const linguetta = doc.createElement("button");
   linguetta.className = "ed-tab";
   linguetta.dataset.tab = MEDIA_EDITOR_TAB;
-  linguetta.innerHTML = `${segnoHtml("speaker")} ${esc(t("Musica", "Media"))}`;
+  linguetta.textContent = `🔊 ${t("Musica", "Media")}`;
   linguetta.addEventListener("click", () => root.editorSwitch?.(MEDIA_EDITOR_TAB));
   const prima =
     linguette.querySelector('.ed-tab[data-tab="luci"]')?.nextSibling ||

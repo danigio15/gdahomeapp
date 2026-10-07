@@ -10,7 +10,6 @@
  * Event driven only: no setInterval and no document-wide MutationObserver.
  */
 
-import { segnoDaValoreHtml, segnoHtml } from "../core/segni-del-catalogo.js";
 import { t, senzaCadere } from "./shared.js";
 import { intlLocale } from "../core/i18n.js";
 import { IMPIANTO_SCELTO_KEY, plantAt, plantLoads } from "../core/energy-plants.js";
@@ -230,17 +229,14 @@ function setConnector(scope, slot, suffix, visible, loadId = "") {
 function writeLoadNode(node, load, period, value) {
   if (!node || !load) return;
   const name = clean(load.name) || (t("Carico", "Load"));
-  const icon = clean(load.emoji_icon || load.icon || "socket");
+  const icon = clean(load.emoji_icon || load.icon || "🔌");
   const label = node.querySelector?.(".node-label,.n-label,[data-node-label]");
   const iconNode = node.querySelector?.(".node-icon,.n-icon,[data-node-icon]");
   if (label) label.textContent = name;
   if (iconNode) {
     if (/^mdi:/i.test(icon) && typeof root.cdIconMarkup === "function")
       iconNode.innerHTML = root.cdIconMarkup(icon, 28);
-    else {
-          const segno = segnoDaValoreHtml(icon, { misura: 28, ripiego: "socket" });
-          if (iconNode.innerHTML !== segno) iconNode.innerHTML = segno;
-        }
+    else iconNode.textContent = icon;
   }
   const valueTarget = valueNode(node.closest?.("#view-ist,#view-day,#view-month") || doc, node.dataset.dmFlowSlot || "", period, node);
   if (valueTarget) valueTarget.textContent = formatValue(value, period);
@@ -282,14 +278,11 @@ function syncCanonicalLoadBubbles() {
       const label = node.querySelector?.(".node-label,.n-label,[data-node-label]");
       const iconNode = node.querySelector?.(".node-icon,.n-icon,[data-node-icon]");
       if (label) label.textContent = clean(load.name) || "Carico";
-      const icon = clean(load.emoji_icon || load.icon || "socket");
+      const icon = clean(load.emoji_icon || load.icon || "🔌");
       if (iconNode) {
         if (/^mdi:/i.test(icon) && typeof root.cdIconMarkup === "function")
           iconNode.innerHTML = root.cdIconMarkup(icon, 28);
-        else {
-          const segno = segnoDaValoreHtml(icon, { misura: 28, ripiego: "socket" });
-          if (iconNode.innerHTML !== segno) iconNode.innerHTML = segno;
-        }
+        else iconNode.textContent = icon;
       }
       const target = valueNode(scope, slot, period, node);
       if (target) target.textContent = formatValue(value, period);
@@ -398,7 +391,7 @@ function repairEnergyCostEditor() {
   card.dataset.dmCostOwner = "beta22-hotfix";
   card.dataset.dmImportRateMode = entitaSalvata ? "entity" : "number";
   card.innerHTML = `
-    <div class="ed-sec-title">${segnoHtml("coin")} ${t("Costo energia", "Energy cost")}</div>
+    <div class="ed-sec-title">💶 ${t("Costo energia", "Energy cost")}</div>
     <div class="ed-hint">${t("Tariffe usate dal Report Energia.", "Rates used by the Energy Report.")}</div>
     <div class="dm-energy-cost-grid">
       <div class="dm-energy-cost-field"><span>${t("Energia acquistata", "Purchased energy")} <small>€/kWh</small></span>
@@ -413,7 +406,7 @@ function repairEnergyCostEditor() {
       <div class="dm-energy-cost-field"><span>${t("Energia venduta", "Sold energy")} <small>€/kWh</small></span><input id="ed-prezzo-imm" class="ed-input" type="number" inputmode="decimal" step="0.001" min="0" value="${escapeHtml(sell)}" placeholder="0,000"></div>
     </div>
     ${leFasceMarkup()}
-    <button type="button" class="ed-save-btn" data-dm-save-energy-costs>${segnoHtml("check")} ${t("Salva costi", "Save costs")}</button>`;
+    <button type="button" class="ed-save-btn" data-dm-save-energy-costs>💾 ${t("Salva costi", "Save costs")}</button>`;
   /* Il campo entita' e' quello vero, lo stesso dell'editor Carichi: casella
    * piu' lente, e la scelta passa dal selettore canonico del runtime. */
   const slot = card.querySelector("[data-dm-rate-entity-slot]");
@@ -539,7 +532,7 @@ function leFasceMarkup() {
   const scelta = (quante, parola) =>
     `<option value="${quante}"${config.quante === quante ? " selected" : ""}>${escapeHtml(parola)}</option>`;
   return `<div class="dm-energy-fasce" data-dm-fasce>
-      <div class="ed-sec-title">${segnoHtml("timer")} ${escapeHtml(t("Fasce orarie", "Time-of-use bands"))}</div>
+      <div class="ed-sec-title">⏱️ ${escapeHtml(t("Fasce orarie", "Time-of-use bands"))}</div>
       <label class="dm-energy-fasce-quante"><span>${escapeHtml(
         t("Quante fasce", "How many bands"),
       )}</span>

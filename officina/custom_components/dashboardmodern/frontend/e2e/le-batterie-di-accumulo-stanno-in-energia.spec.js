@@ -140,8 +140,6 @@ async function fotografa(page, testInfo, nome, { intera = "" } = {}) {
   if (intera) await page.setViewportSize(prima);
 }
 
-const EMOJI = /\p{Extended_Pictographic}/u;
-
 test("la scheda del Config trova i due JK da sola, con le loro celle", async ({
   page,
 }, testInfo) => {
@@ -187,7 +185,6 @@ test("la scheda del Config trova i due JK da sola, con le loro celle", async ({
   await expect(corpo.locator('[data-dm-dich-campo="celle"]')).toHaveValue(
     /sensor\.jk_bms_2_cell_voltage_1\n[\s\S]*sensor\.jk_bms_2_cell_voltage_16$/,
   );
-  expect(EMOJI.test(await page.locator("#ed-body").innerText())).toBe(false);
   await fotografa(page, testInfo, "config-celle");
 });
 
@@ -223,7 +220,7 @@ test("la linguetta Batterie in Energia: due pacchi, uno da bilanciare", async ({
   await expect(pacchi.nth(1).locator('.dm-accu-cella[data-tipo="min"] em')).toHaveText("13");
   await expect(pacchi.nth(1).locator('.dm-accu-cella[data-tipo="max"] em')).toHaveText("8");
   await expect(pacchi.nth(0).locator('[data-dm-accu-dato="corrente"]')).toContainText("in carica");
-  expect(EMOJI.test(await vista.innerText())).toBe(false);
+  await expect(pacchi.nth(0).locator(".dm-pool-card-title")).toContainText("🔋");
 
   /* Niente esce dal bordo: la pagina non scorre di lato. */
   const largo = await page.evaluate(

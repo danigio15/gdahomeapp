@@ -29,7 +29,6 @@ import {
   wrapFunction,
   senzaCadere,
 } from "./shared.js";
-import { emojiInSegni, segnoHtml } from "../core/segni-del-catalogo.js";
 
 const KEY = "__DASHBOARDMODERN_STORICO_CONNETTIVITA__";
 const state = (root[KEY] ||= { installed: false, tipo: "", generazione: 0, intervallo: null });
@@ -120,7 +119,7 @@ function cronologiaMarkup(cambi, mappa) {
           ${ultimo ? "" : '<div class="srv-event-line"></div>'}
         </div>
         <div class="srv-event-info">
-          <div class="srv-event-state" style="color:${esc(info.col)}">${emojiInSegni(esc(info.label))}</div>
+          <div class="srv-event-state" style="color:${esc(info.col)}">${esc(info.label)}</div>
           <div class="srv-event-time">${esc(scrivi(voce.quando))}</div>
           ${quanto ? `<div class="srv-event-duration">${esc(t("Durata", "Duration"))}: ${esc(quanto)}</div>` : ""}
         </div>
@@ -168,7 +167,7 @@ async function ricarica(intervallo) {
     return true;
   } catch (errore) {
     if (generazione !== state.generazione) return false;
-    cronologia.innerHTML = `<div style="text-align:center;padding:24px;color:#ef4444;font-weight:800;font-size:12px;">${segnoHtml("error")} ${esc(t("Storico non disponibile", "History unavailable"))}<br><span style="color:var(--text-dim);font-size:10px;">${esc(errore?.message || errore)}</span></div>`;
+    cronologia.innerHTML = `<div style="text-align:center;padding:24px;color:#ef4444;font-weight:800;font-size:12px;">❌ ${esc(t("Storico non disponibile", "History unavailable"))}<br><span style="color:var(--text-dim);font-size:10px;">${esc(errore?.message || errore)}</span></div>`;
     return false;
   }
 }

@@ -47,7 +47,6 @@ import { iDispositiviRicordati } from "../core/i-dispositivi-di-home-assistant.j
 import { entitaConfigurate } from "../core/entita-configurate.js";
 import { CONFIG_KEYS } from "../core/chiavi-di-configurazione.js";
 import { iconGlyphMarkup } from "./icon-engine-section.js";
-import { emojiInSegni, segnoHtml } from "../core/segni-del-catalogo.js";
 import {
   bricioleDellaSezione,
   fraseDellaTessera,
@@ -872,7 +871,7 @@ function todoModel() {
      * non c'e'. */
     parte: "cose",
     accent: "#059669",
-    icon: "check",
+    icon: "✅",
     label: t("Da fare", "To-do"),
     value: String(pending),
     caption: t(`${pending} da fare`, `${pending} to do`),
@@ -961,7 +960,7 @@ function calendarioModel() {
     // L'altra meta' dell'Agenda (#259): gli impegni. Vedi `todoModel` sopra.
     parte: "impegni",
     accent: "#6366f1",
-    icon: "calendar",
+    icon: "📅",
     label: t("Impegni", "Appointments"),
     /* Quanti ne restano oggi, non quanti ce ne sono in tutto: «diciotto» non
      * dice se stasera si e' liberi, «due oggi» si'. E a oggi vuoto si guarda
@@ -1014,7 +1013,7 @@ function lightsModel(states) {
   return {
     key: "luci",
     accent: "#f59e0b",
-    icon: "lights",
+    icon: "💡",
     label: t("Luci", "Lights"),
     value: String(on.length),
     caption: nomiAccesi(on, () => true, t(`${on.length} accese`, `${on.length} on`)),
@@ -1120,7 +1119,7 @@ function climateModel(states) {
   return {
     key: "clima",
     accent: "#0ea5e9",
-    icon: "air-conditioner",
+    icon: "❄️",
     label: t("Clima", "Climate"),
     value: sola
       ? sola.ambient == null
@@ -1350,7 +1349,7 @@ function coversModel(states) {
   return {
     key: "tapparelle",
     accent: "#8b5cf6",
-    icon: "window",
+    icon: "🪟",
     /* Il nome dice cosa c'e' dentro: senza un solo contatto sull'anta questa
      * tessera parla di motori, e si chiama come loro. */
     /* Col nome di quello che conta (#64): dove ci sono tutte e due le cose la
@@ -1445,7 +1444,7 @@ function securityModel(states) {
   return {
     key: "sicurezza",
     accent: triggered ? "#e11d48" : "#10b981",
-    icon: "security",
+    icon: "🛡️",
     alert: triggered,
     label: t("Sicurezza", "Security"),
     value,
@@ -1512,7 +1511,7 @@ function aggiornamentiModel(states) {
   return {
     key: "aggiornamenti",
     accent: "#d97706",
-    icon: "refresh",
+    icon: "⬆️",
     /* Questa tessera esiste solo quando c'e' qualcosa da fare — e allora c'e'
      * sempre qualcosa da fare. Non dicendolo nasceva calma come una tessera
      * senza niente sotto: «ci sono aggiornamenti ma la card resta spenta»
@@ -1547,7 +1546,7 @@ function porteModel(states) {
   return {
     key: "porte",
     accent: aperte.length ? "#dc2626" : serrature.length ? "#16a34a" : "#d97706",
-    icon: "door",
+    icon: "🚪",
     alert: aperte.length > 0,
     /* «Porte» dice cosa c'e' dentro, non cosa fa: e cio' che c'e' dentro sono
      * i comandi che aprono — «alla fine dentro ci si aggiunge i comandi che
@@ -1618,7 +1617,7 @@ function camerasModel(states = allStates()) {
   return {
     key: "telecamere",
     accent: primo ? "#dc2626" : "#0284c7",
-    icon: primo ? primo.segno : "camera",
+    icon: primo ? primo.segno : "📹",
     label: t("Telecamere", "Cameras"),
     value: primo ? primo.parola : String(rows.length),
     caption: primo ? `${primo.nome} · ${oraDelRilevamento(primo.quando)}` : rows[0].name,
@@ -1791,10 +1790,10 @@ export function lettureDiCasa(states = allStates()) {
  * della sua finestra: due mappe uguali sarebbero il modo di far comparire un
  * sole in un posto e una spina nell'altro per la stessa corrente. */
 const GLIFI_ENERGIA = Object.freeze({
-  house: segnoHtml("home"),
-  solar: segnoHtml("sun"),
-  grid: segnoHtml("socket"),
-  battery: segnoHtml("battery"),
+  house: "🏠",
+  solar: "☀️",
+  grid: "🔌",
+  battery: "🔋",
 });
 
 const PAROLE_DI_OGGI = Object.freeze([
@@ -1881,7 +1880,7 @@ function paroleDelSovraccarico(verdetto) {
   if (verdetto.livello === LIVELLO_QUIETE) return "";
   const dove =
     verdetto.sorgente === SORGENTE_RETE ? t("dalla rete", "from the grid") : t("in casa", "at home");
-  return `${t("Sovraccarico", "Overload")} ${dove} · ${formatWatts(verdetto.watt)} / ${formatWatts(verdetto.limite)}`;
+  return `⚠️ ${t("Sovraccarico", "Overload")} ${dove} · ${formatWatts(verdetto.watt)} / ${formatWatts(verdetto.limite)}`;
 }
 
 function tesseraEnergia(
@@ -1905,7 +1904,7 @@ function tesseraEnergia(
     /* L'avviso e' cio' che fa muovere la pastiglia e accende la tessera: e'
      * lo stesso segnale con cui una porta aperta si fa notare. */
     alert: verdetto.livello !== LIVELLO_QUIETE,
-    icon: "power",
+    icon: "⚡",
     label: label || t("Energia", "Energy"),
     /* Di quale impianto parla: la sua finestra porta alla sezione aperta su
      * di lui, non su quello che era rimasto acceso (#286, dal campo). */
@@ -2022,7 +2021,7 @@ function appliancesModel(states) {
   return {
     key: "elettrodomestici",
     accent: "#06b6d4",
-    icon: "washer",
+    icon: "🫧",
     label: t("Elettrodomestici", "Appliances"),
     value: String(running.length),
     caption: nomiAccesi(running, () => true, t("in funzione", "running")),
@@ -2069,7 +2068,7 @@ function temperatureModel(states) {
   return {
     key: "temperatura",
     accent: "#ef4444",
-    icon: "thermometer",
+    icon: "🌡️",
     label: t("Temperatura", "Temperature"),
     value: `${formatNumber(sola ? sola.temperature : average, 1)}°`,
     caption: sola
@@ -2355,17 +2354,17 @@ function rigaDaEntita(states, entity, glifo = "•") {
 /* Il disegno di una casella dell'auto, indovinato dal nome del riferimento:
  * sono venti caselle e nessuna porta un'icona scritta da nessuna parte. */
 const GLIFI_EV = Object.freeze([
-  [/soc|batteria/, segnoHtml("battery")],
-  [/autonomia|odometro|km/, segnoHtml("ev")],
-  [/cavo|stato_ricarica|modalita/, segnoHtml("socket")],
-  [/energia|potenza|power|prelievo|tensione/, segnoHtml("power")],
-  [/temperatura/, segnoHtml("thermometer")],
-  [/solare/, segnoHtml("sun")],
+  [/soc|batteria/, "🔋"],
+  [/autonomia|odometro|km/, "🛣️"],
+  [/cavo|stato_ricarica|modalita/, "🔌"],
+  [/energia|potenza|power|prelievo|tensione/, "⚡"],
+  [/temperatura/, "🌡️"],
+  [/solare/, "☀️"],
 ]);
 
 function glifoEv(riferimento) {
   for (const [prova, glifo] of GLIFI_EV) if (prova.test(riferimento)) return glifo;
-  return segnoHtml("ev");
+  return "🚗";
 }
 
 /* Tutte le caselle dell'auto che sono state mappate, meno quelle gia' dette e
@@ -2453,21 +2452,21 @@ function righeVettura(lettura, conNome) {
   const dellaVettura = (riga) => ({ ...riga, carburante: lettura.carburante === true });
   if (lettura.percentuale != null)
     righe.push(dellaVettura({
-      glyph: lettura.carburante ? segnoHtml("ev") : segnoHtml("battery"),
+      glyph: lettura.carburante ? "⛽" : "🔋",
       name: `${prefisso}${lettura.carburante ? t("Carburante", "Fuel") : t("Carica", "Charge")}`,
       entity: lettura.caricaEntita || "",
       value: `${Math.round(lettura.percentuale)}%`,
     }));
   if (lettura.km != null)
     righe.push(dellaVettura({
-      glyph: segnoHtml("ev"),
+      glyph: "🛣️",
       name: `${prefisso}${t("Autonomia", "Range")}`,
       entity: lettura.kmEntita || "",
       value: `${formatNumber(lettura.km, 0)} km`,
     }));
   if (lettura.ricarica)
     righe.push(dellaVettura({
-      glyph: segnoHtml("socket"),
+      glyph: "🔌",
       name: `${prefisso}${t("Ricarica", "Charging")}`,
       entity: lettura.ricaricaEntita || "",
       /* La parola, non il codice: «C» e' il gergo della wallbox, e in una
@@ -2591,7 +2590,7 @@ function evModel(states) {
   return {
     key: "ev",
     accent: "#06b6d4",
-    icon: "ev",
+    icon: "🚗",
     label: t("Auto", "Car"),
     value: percentuale == null ? `${formatNumber(primaKm, 0)} km` : `${Math.round(percentuale)}%`,
     caption: didascalia,
@@ -2645,7 +2644,7 @@ function robotsModel(states) {
   return {
     key: "robot",
     accent: "#7c3aed",
-    icon: "robot",
+    icon: "🤖",
     label: t("Robot", "Robots"),
     value: attivi.length
       ? `${attivi.length}`
@@ -2707,21 +2706,21 @@ function robotsModel(states) {
  * pressione in bar e la potenza in watt, che un numero grezzo ce l'hanno.
  * `sonda: true` sta solo su cio' che misura una temperatura in un punto. */
 const CASELLE_SOLARE = Object.freeze([
-  { ref: "dm.boiler_sonda_temperatura_1", glyph: segnoHtml("thermometer"), unita: "°", cifre: 1, sonda: true },
-  { ref: "dm.boiler_sonda_temperatura_2", glyph: segnoHtml("thermometer"), unita: "°", cifre: 1, sonda: true },
-  { ref: "dm.boiler_sonda_temperatura_3", glyph: segnoHtml("thermometer"), unita: "°", cifre: 1, sonda: true },
-  { ref: "dm.boiler_temperatura", glyph: segnoHtml("thermometer"), unita: "°", cifre: 1, sonda: true },
-  { ref: "dm.boiler_delta_temperatura", glyph: segnoHtml("gauge"), unita: "°", cifre: 1 },
-  { ref: "dm.boiler_pressione_acqua", glyph: segnoHtml("water"), unita: " bar", cifre: 1 },
-  { ref: "dm.boiler_potenza_resistenza_boiler", glyph: segnoHtml("power"), unita: " W", cifre: 0 },
-  { ref: "dm.boiler_potenza", glyph: segnoHtml("power"), unita: " W", cifre: 0 },
-  { ref: "dm.boiler_stato_pompa_solare", glyph: segnoHtml("pump"), acceso: true },
-  { ref: "dm.boiler_sensore_pompa_solare", glyph: segnoHtml("pump"), acceso: true },
-  { ref: "dm.boiler_pompa_solare", glyph: segnoHtml("pump"), acceso: true },
-  { ref: "dm.boiler_centralina_solare_termico", glyph: segnoHtml("sliders"), acceso: true },
-  { ref: "dm.boiler_interruttore_solare_termico", glyph: segnoHtml("socket"), acceso: true },
-  { ref: "dm.boiler_interruttore_boiler", glyph: segnoHtml("socket"), acceso: true },
-  { ref: "dm.boiler_valvola_di_sicurezza", glyph: segnoHtml("security"), acceso: true },
+  { ref: "dm.boiler_sonda_temperatura_1", glyph: "🌡️", unita: "°", cifre: 1, sonda: true },
+  { ref: "dm.boiler_sonda_temperatura_2", glyph: "🌡️", unita: "°", cifre: 1, sonda: true },
+  { ref: "dm.boiler_sonda_temperatura_3", glyph: "🌡️", unita: "°", cifre: 1, sonda: true },
+  { ref: "dm.boiler_temperatura", glyph: "🌡️", unita: "°", cifre: 1, sonda: true },
+  { ref: "dm.boiler_delta_temperatura", glyph: "📐", unita: "°", cifre: 1 },
+  { ref: "dm.boiler_pressione_acqua", glyph: "💧", unita: " bar", cifre: 1 },
+  { ref: "dm.boiler_potenza_resistenza_boiler", glyph: "⚡", unita: " W", cifre: 0 },
+  { ref: "dm.boiler_potenza", glyph: "⚡", unita: " W", cifre: 0 },
+  { ref: "dm.boiler_stato_pompa_solare", glyph: "🔄", acceso: true },
+  { ref: "dm.boiler_sensore_pompa_solare", glyph: "🔄", acceso: true },
+  { ref: "dm.boiler_pompa_solare", glyph: "🔄", acceso: true },
+  { ref: "dm.boiler_centralina_solare_termico", glyph: "🎛️", acceso: true },
+  { ref: "dm.boiler_interruttore_solare_termico", glyph: "🔌", acceso: true },
+  { ref: "dm.boiler_interruttore_boiler", glyph: "🔌", acceso: true },
+  { ref: "dm.boiler_valvola_di_sicurezza", glyph: "🛡️", acceso: true },
 ]);
 
 const STATI_ACCESI = /^(on|true|1|running|attiva|attivo|open|aperta|heat|heating)$/i;
@@ -2758,7 +2757,7 @@ function solarThermalModel(states) {
       const quando = stateOf(states, dato.entity);
       const cambiato = Date.parse(quando?.last_changed ?? quando?.last_updated ?? "");
       righe.push({
-        glyph: /^[a-z-]+$/.test(casella.glyph) ? segnoHtml(casella.glyph) : casella.glyph,
+        glyph: casella.glyph,
         name: friendlyName(states, dato.entity),
         entity: dato.entity,
         on: attivo,
@@ -2771,7 +2770,7 @@ function solarThermalModel(states) {
     if (primaSonda == null && casella.ref.startsWith("dm.boiler_sonda")) primaSonda = dato.value;
     visti.add(dato.entity);
     righe.push({
-      glyph: /^[a-z-]+$/.test(casella.glyph) ? segnoHtml(casella.glyph) : casella.glyph,
+      glyph: casella.glyph,
       name: friendlyName(states, dato.entity),
       entity: dato.entity,
       /* Il testo e' per gli occhi, `raw` per i conti: `Number("68°")` non e' un
@@ -2803,7 +2802,7 @@ function solarThermalModel(states) {
   return {
     key: "solare",
     accent: "#f59e0b",
-    icon: "solar",
+    icon: "🌞",
     label: t("Solare termico", "Solar thermal"),
     value: inGrande,
     caption:
@@ -2822,7 +2821,7 @@ function solarThermalModel(states) {
 /* Le caselle di una vasca che sono comandi, non letture: la pompa, il
  * riscaldamento, la luce. Si accendono e si spengono, e nella finestra devono
  * avere un interruttore invece di una scritta. */
-const COMANDI_PISCINA = Object.freeze({ pumpEnt: segnoHtml("pump"), heatEnt: segnoHtml("flame"), lightEnt: segnoHtml("lights") });
+const COMANDI_PISCINA = Object.freeze({ pumpEnt: "🔄", heatEnt: "🔥", lightEnt: "💡" });
 
 /* La tessera dello scaldabagno (#253).
  *
@@ -2838,11 +2837,11 @@ export function configuredScaldabagni() {
 }
 
 const GLIFI_SCALDABAGNO = Object.freeze({
-  interruttore: segnoHtml("socket"),
-  temperatura: segnoHtml("thermometer"),
-  obiettivo: segnoHtml("gauge"),
-  potenza: segnoHtml("power"),
-  energia: segnoHtml("calendar"),
+  interruttore: "🔌",
+  temperatura: "🌡️",
+  obiettivo: "🎯",
+  potenza: "⚡",
+  energia: "📅",
 });
 
 function scaldabagnoModel(states) {
@@ -2920,7 +2919,7 @@ function scaldabagnoModel(states) {
   return {
     key: "scaldabagno",
     accent: "#ea580c",
-    icon: "storage-boiler",
+    icon: "🚿",
     label: t("Scaldabagno", "Water heater"),
     value:
       testa.temperatura != null
@@ -2980,7 +2979,7 @@ function caldaiaModel(states) {
         : testo;
     if (clean(dato.fiamma) || clean(dato.stato))
       rows.push({
-        glyph: segnoHtml("flame"),
+        glyph: "🔥",
         name: suo(t("Bruciatore", "Burner")),
         entity: clean(dato.fiamma) || clean(dato.stato),
         on: riga.fiamma === true || riga.acceso === true,
@@ -2997,11 +2996,11 @@ function caldaiaModel(states) {
         value: `${formatNumber(valore, cifre)}${unita}`,
       });
     };
-    misura("mandata", t("Mandata", "Flow"), segnoHtml("thermometer"), riga.mandata, 1, "°");
-    misura("ritorno", t("Ritorno", "Return"), segnoHtml("thermometer"), riga.ritorno, 1, "°");
-    misura("acquaCalda", t("Acqua calda", "Hot water"), segnoHtml("water"), riga.acquaCalda, 1, "°");
-    misura("pressione", t("Pressione", "Pressure"), segnoHtml("gauge"), riga.pressione, 1, " bar");
-    misura("modulazione", t("Modulazione", "Modulation"), segnoHtml("gauge"), riga.modulazione, 0, "%");
+    misura("mandata", t("Mandata", "Flow"), "🌡️", riga.mandata, 1, "°");
+    misura("ritorno", t("Ritorno", "Return"), "🌡️", riga.ritorno, 1, "°");
+    misura("acquaCalda", t("Acqua calda", "Hot water"), "🚿", riga.acquaCalda, 1, "°");
+    misura("pressione", t("Pressione", "Pressure"), "📊", riga.pressione, 1, " bar");
+    misura("modulazione", t("Modulazione", "Modulation"), "📶", riga.modulazione, 0, "%");
   });
   if (!rows.length) return null;
 
@@ -3019,7 +3018,7 @@ function caldaiaModel(states) {
   return {
     key: "caldaia",
     accent: "#ef4444",
-    icon: "boiler",
+    icon: "🔥",
     label: t("Caldaia", "Boiler"),
     value:
       lettura.mandata != null
@@ -3062,7 +3061,7 @@ function righeDellUps(config, lettura, conIlNome) {
   const casella = clean(dato.rete) || clean(dato.stato);
   if (casella)
     rows.push({
-      glyph: segnoHtml("socket"),
+      glyph: "🔌",
       name: nome(t("Rete elettrica", "Mains power")),
       entity: casella,
       on: lettura.rete === true,
@@ -3087,12 +3086,12 @@ function righeDellUps(config, lettura, conIlNome) {
       })(),
     });
   };
-  misura("batteria", t("Batteria", "Battery"), segnoHtml("battery"), lettura.batteria, 0, "%");
-  misura("carico", t("Carico", "Load"), segnoHtml("gauge"), lettura.carico, 0, "%");
-  misura("autonomia", t("Autonomia residua", "Runtime left"), segnoHtml("timer"), lettura.autonomia, 0, " min");
-  misura("tensione", t("Tensione", "Voltage"), segnoHtml("power"), lettura.tensione, 0, " V");
-  misura("potenza", t("Potenza", "Power"), segnoHtml("power"), lettura.potenza, 0, " W");
-  misura("temperatura", t("Temperatura", "Temperature"), segnoHtml("thermometer"), lettura.temperatura, 1, "°");
+  misura("batteria", t("Batteria", "Battery"), "🔋", lettura.batteria, 0, "%");
+  misura("carico", t("Carico", "Load"), "📊", lettura.carico, 0, "%");
+  misura("autonomia", t("Autonomia residua", "Runtime left"), "⏳", lettura.autonomia, 0, " min");
+  misura("tensione", t("Tensione", "Voltage"), "⚡", lettura.tensione, 0, " V");
+  misura("potenza", t("Potenza", "Power"), "🔥", lettura.potenza, 0, " W");
+  misura("temperatura", t("Temperatura", "Temperature"), "🌡️", lettura.temperatura, 1, "°");
   return rows;
 }
 
@@ -3176,7 +3175,7 @@ function upsModel(states) {
   return {
     key: "ups",
     accent: "#0ea5e9",
-    icon: "battery",
+    icon: "🔋",
     label: t("UPS", "UPS"),
     /* A rete caduta parla l'autonomia, perche' e' il tempo che resta; a rete
      * presente parla la batteria, perche' e' la conferma che il tempo c'e'. */
@@ -3245,7 +3244,7 @@ function agendaModel(states) {
   return {
     key: "agenda",
     accent: "#6366f1",
-    icon: "calendar",
+    icon: "📅",
     label: t("Agenda", "Agenda"),
     /* Il numero grande resta quello degli impegni di oggi quando c'e' un
      * calendario; chi ha solo le liste vede quante cose gli restano, che per
@@ -3315,9 +3314,9 @@ function poolModel(states) {
         entity,
       });
     };
-    leggi("tempEnt", t("Acqua", "Water"), segnoHtml("thermometer"), "°");
-    leggi("phEnt", "pH", segnoHtml("gauge"));
-    leggi("clEnt", t("Cloro", "Chlorine"), segnoHtml("water"));
+    leggi("tempEnt", t("Acqua", "Water"), "🌡️", "°");
+    leggi("phEnt", "pH", "🧪");
+    leggi("clEnt", t("Cloro", "Chlorine"), "💧");
 
     /* E tutto il resto che e' stato mappato: pompa, riscaldamento, luce.
      *
@@ -3357,7 +3356,7 @@ function poolModel(states) {
   return {
     key: "piscina",
     accent: "#0ea5e9",
-    icon: "room-pool",
+    icon: "🏊",
     label: t("Piscina", "Pool"),
     value: testa.value,
     caption: compagna ? `${compagna.name} ${compagna.value}` : "",
@@ -3417,7 +3416,7 @@ function preseModel(states) {
   return {
     key: "prese",
     accent: "#475569",
-    icon: "socket",
+    icon: "🔌",
     label: t("Prese", "Sockets"),
     value: String(accese),
     caption: accese === 1 ? t("1 accesa", "1 on") : t(`${accese} accese`, `${accese} on`),
@@ -3472,7 +3471,7 @@ function mediaModel(states) {
   return {
     key: "media",
     accent: "#8b5cf6",
-    icon: "speaker",
+    icon: "🔊",
     label: t("Musica", "Media"),
     /* La copertina al posto dell'altoparlante mentre suona: il disegno smette
      * di dire cos'e' la tessera — lo dice il nome — e dice cosa sta suonando. */
@@ -3516,7 +3515,7 @@ const CASELLE_MINIPC = Object.freeze([
     chiave: "cpu",
     it: "CPU",
     en: "CPU",
-    glyph: "computer",
+    glyph: "🧠",
     unita: "%",
     cifre: 0,
     quota: true,
@@ -3526,7 +3525,7 @@ const CASELLE_MINIPC = Object.freeze([
     chiave: "ram",
     it: "RAM",
     en: "RAM",
-    glyph: "gauge",
+    glyph: "📊",
     unita: "%",
     cifre: 0,
     quota: true,
@@ -3536,7 +3535,7 @@ const CASELLE_MINIPC = Object.freeze([
     chiave: "disco",
     it: "Disco",
     en: "Disk",
-    glyph: "server",
+    glyph: "💽",
     unita: "%",
     cifre: 0,
     quota: true,
@@ -3545,7 +3544,7 @@ const CASELLE_MINIPC = Object.freeze([
     ref: "dm.server_temperatura_cpu",
     it: "Temperatura CPU",
     en: "CPU temperature",
-    glyph: "thermometer",
+    glyph: "🌡️",
     unita: "°",
     cifre: 1,
   },
@@ -3553,7 +3552,7 @@ const CASELLE_MINIPC = Object.freeze([
     ref: "dm.server_temperature",
     it: "Temperatura",
     en: "Temperature",
-    glyph: "thermometer",
+    glyph: "🌡️",
     unita: "°",
     cifre: 1,
   },
@@ -3561,7 +3560,7 @@ const CASELLE_MINIPC = Object.freeze([
     ref: "dm.server_potenza_raspberry_server",
     it: "Potenza",
     en: "Power",
-    glyph: "power",
+    glyph: "⚡",
     unita: " W",
     cifre: 0,
   },
@@ -3569,7 +3568,7 @@ const CASELLE_MINIPC = Object.freeze([
     ref: "dm.server_speedtest_download",
     it: "Download",
     en: "Download",
-    glyph: "↓",
+    glyph: "⬇️",
     unita: " Mb/s",
     cifre: 0,
   },
@@ -3577,17 +3576,17 @@ const CASELLE_MINIPC = Object.freeze([
     ref: "dm.server_speedtest_upload",
     it: "Upload",
     en: "Upload",
-    glyph: "↑",
+    glyph: "⬆️",
     unita: " Mb/s",
     cifre: 0,
   },
-  { ref: "dm.server_ping_internet", it: "Ping", en: "Ping", glyph: "router", unita: " ms", cifre: 0 },
-  { ref: "dm.server_stato_internet", it: "Internet", en: "Internet", glyph: "globe", acceso: true },
+  { ref: "dm.server_ping_internet", it: "Ping", en: "Ping", glyph: "📡", unita: " ms", cifre: 0 },
+  { ref: "dm.server_stato_internet", it: "Internet", en: "Internet", glyph: "🌐", acceso: true },
   {
     ref: "dm.server_raggiungibilita_google",
     it: "Rete raggiungibile",
     en: "Network reachable",
-    glyph: "globe",
+    glyph: "🌐",
     acceso: true,
   },
 ]);
@@ -3653,7 +3652,7 @@ export function minipcModel(states) {
       visti.add(dato.entity);
       const attivo = STATI_ACCESI.test(dato.state);
       rows.push({
-        glyph: /^[a-z-]+$/.test(casella.glyph) ? segnoHtml(casella.glyph) : casella.glyph,
+        glyph: casella.glyph,
         name: friendlyName(states, dato.entity),
         entity: dato.entity,
         on: attivo,
@@ -3671,7 +3670,7 @@ export function minipcModel(states) {
     )
       carico = dato.value;
     rows.push({
-      glyph: /^[a-z-]+$/.test(casella.glyph) ? segnoHtml(casella.glyph) : casella.glyph,
+      glyph: casella.glyph,
       name: t(casella.it, casella.en),
       /* Il nome della misura, non la parola tradotta.
        *
@@ -3689,7 +3688,7 @@ export function minipcModel(states) {
   return {
     key: "minipc",
     accent: "#334155",
-    icon: "computer",
+    icon: "🖥️",
     label: t("MiniPC", "MiniPC"),
     value: carico != null ? `${formatNumber(carico, 0)}%` : rows[0].value,
     /* Le altre due quote in didascalia: sono la coppia che si guarda insieme
@@ -3734,7 +3733,7 @@ function irrigationModel(states) {
   return {
     key: "irrigazione",
     accent: "#10b981",
-    icon: "irrigation",
+    icon: "💧",
     label: t("Irrigazione", "Irrigation"),
     value: inFunzione.length
       ? `${inFunzione.length}`
@@ -3755,7 +3754,7 @@ function irrigationModel(states) {
      * conti: due mestieri, due campi. */
     rows: [
       ...attive.map((zona) => ({
-        glyph: segnoHtml("irrigation"),
+        glyph: "🌱",
         name: clean(zona.name) || clean(zona.entity),
         on: zonaInFunzione(states, zona),
         entity: clean(zona.entity),
@@ -3770,7 +3769,7 @@ function irrigationModel(states) {
         ? []
         : [
             {
-              glyph: segnoHtml("water"),
+              glyph: "💦",
               name: t("Umidità terreno", "Soil moisture"),
               entity: terreno,
               value: `${Math.round(umidita)}%`,
@@ -3794,7 +3793,7 @@ function rowsDetail(widget) {
     .map((row) => {
       const livello = livelloMarkup(percentualeDellaRiga(row));
       return rowShell(
-        `<span class="dm-w-glyph" data-on="${row.on === true}" aria-hidden="true">${emojiInSegni(row.glyph || "•")}</span>
+        `<span class="dm-w-glyph" data-on="${row.on === true}" aria-hidden="true">${row.glyph || "•"}</span>
          <span class="dm-w-name">${esc(row.name)}${livello}</span>
          <button type="button" class="dm-w-switch" data-dm-w-light="${esc(row.entity)}" data-on="${row.on === true}"
            aria-label="${esc(row.name)}"><i></i></button>`,
@@ -3831,7 +3830,7 @@ function nonRispondeDetail(widget) {
   return (widget.rows || [])
     .map((riga) =>
       rowShell(
-        `<span class="dm-w-glyph" data-on="false" aria-hidden="true">${riga.glyph || segnoHtml("router")}</span>
+        `<span class="dm-w-glyph" data-on="false" aria-hidden="true">${esc(riga.glyph || "📡")}</span>
          <span class="dm-w-name">${esc(riga.name)}</span>
          <span class="dm-w-pill" data-tono="allarme">${esc(riga.value)}</span>`,
       ),
@@ -4002,7 +4001,7 @@ function batteriesModel(states) {
   return {
     key: "batterie",
     accent: scariche ? "#eab308" : "#94a3b8",
-    icon: "battery",
+    icon: "🔋",
     alert: scariche,
     label: t("Batterie", "Batteries"),
     value: String(scariche ? low.length : rows.length),
@@ -4065,7 +4064,7 @@ function ariaModel(states) {
     accent: { buona: "#16a34a", discreta: "#f59e0b", scarsa: "#f97316", cattiva: "#dc2626" }[
       giudizio.grado
     ],
-    icon: "wind",
+    icon: "🍃",
     /* Rossa in cima come gli allagamenti solo quando l'aria e' da cambiare:
      * un avviso che si accende sempre non e' piu' un avviso. */
     alert: giudizio.grado === "cattiva",
@@ -4165,7 +4164,7 @@ function varchiModel(states) {
   return {
     key: "varchi",
     accent: conto.aperti ? "#dc2626" : "#16a34a",
-    icon: "door",
+    icon: "🚪",
     alert: conto.aperti > 0,
     label: t("Varchi", "Openings"),
     value: String(conto.aperti),
@@ -4231,7 +4230,7 @@ function presenzaModel(states) {
   return {
     key: "presenza",
     accent: conto.attivi ? "#2563eb" : "#16a34a",
-    icon: "motion",
+    icon: "🏃",
     label: t("Presenza", "Presence"),
     value: String(conto.attivi),
     caption: conto.attivi
@@ -4304,7 +4303,7 @@ export function citofonoModel(states) {
   return {
     key: "citofono",
     accent: riassunto.suona ? "#f97316" : riassunto.conPosta ? "#2563eb" : "#16a34a",
-    icon: "mail",
+    icon: "📮",
     label: t("Citofono e posta", "Intercom and mail"),
     value: riassunto.suona ? t("Suona", "Ringing") : String(riassunto.conPosta),
     caption: riassunto.suona
@@ -4316,7 +4315,7 @@ export function citofonoModel(states) {
       ...citofoni.map((voce) => ({
         entity: voce.campanello || voce.apri,
         name: voce.nome,
-        glyph: segnoHtml("bell"),
+        glyph: "🔔",
         on: voce.suona === true,
         tono: voce.suona === true ? "acceso" : "",
         value:
@@ -4329,7 +4328,7 @@ export function citofonoModel(states) {
       ...cassette.map((voce) => ({
         entity: voce.posta || voce.ritiro,
         name: voce.nome,
-        glyph: segnoHtml("mail"),
+        glyph: "📬",
         on: voce.ce === true,
         tono: voce.ce === true ? "acceso" : voce.ce === false ? "quiete" : "",
         value:
@@ -4383,7 +4382,7 @@ function stampantiModel(states) {
     daDire,
     ferme: riassunto.ferme.length,
     accent: riassunto.verdetto === "ferma" ? "#dc2626" : daDire ? "#f59e0b" : "#0ea5e9",
-    icon: "printer",
+    icon: "🖨️",
     label: t("Stampanti", "Printers"),
     value: String(daDire || letture.length),
     caption: daDire
@@ -4458,7 +4457,7 @@ function macchineModel(states) {
   return {
     key: "macchine",
     accent: conto.giu ? "#dc2626" : "#6366f1",
-    icon: "server",
+    icon: "🖥️",
     alert: conto.giu > 0,
     label: t("Server e rete", "Server and network"),
     value: conto.giu ? String(conto.giu) : String(conto.su),
@@ -4588,7 +4587,7 @@ function floodModel(states) {
   return {
     key: "allagamenti",
     accent: wet.length ? "#38bdf8" : "#94a3b8",
-    icon: "water",
+    icon: "💧",
     alert: wet.length > 0,
     label: t("Allagamenti", "Floods"),
     value: String(wet.length || rows.length),
@@ -4733,7 +4732,7 @@ export function evidenzaModel(states) {
   return {
     key: "evidenza",
     accent: "#eab308",
-    icon: "star",
+    icon: "⭐",
     label: t("In evidenza", "Highlights"),
     // Il numero grande dice quante cose si stanno tenendo d'occhio; il
     // riassunto sotto le nomina una per una col loro valore.
@@ -4825,7 +4824,7 @@ export function sezioniMieModels(states) {
       return {
         key: chiave,
         accent: "#f59e0b",
-        icon: sezione.icona || "star",
+        icon: sezione.icona || "⭐",
         label: sezione.titolo,
         /* Quante cose ci sono dentro. Quali sono accese lo dice la didascalia
          * una per una, che e' l'unico modo onesto quando le righe sono di
@@ -5151,7 +5150,7 @@ function segnalazioniModel() {
   return {
     key: "segnalazioni",
     accent: "#0ea5e9",
-    icon: "chat",
+    icon: "🎫",
     label: t("Segnalazioni", "Reports"),
     value: String(conto.quante),
     /* Senza niente da lavorare la didascalia non elenca zeri: dice che non c'e'
@@ -5231,7 +5230,7 @@ function nonRispondeModel(states) {
   return {
     key: "nonrisponde",
     accent: "#dc2626",
-    icon: "router",
+    icon: "📡",
     alert: true,
     label: t("Dispositivi non connessi", "Disconnected devices"),
     value: String(mute.length),
@@ -5239,7 +5238,7 @@ function nonRispondeModel(states) {
     ring: null,
     attiva: true,
     rows: mute.map((una) => ({
-      glyph: segnoHtml("router"),
+      glyph: "📡",
       name: una.nome,
       entity: una.entity,
       tono: "allarme",
@@ -5284,7 +5283,7 @@ function allerteModel(states) {
   return {
     key: "allerte",
     accent: "#f59e0b",
-    icon: "warning",
+    icon: "⚠️",
     label: t("Allerte", "Alerts"),
     value: attive.length ? String(attive.length) : mute.length ? "—" : "OK",
     caption: attive.length
@@ -5422,7 +5421,7 @@ function rifiutiModel(states) {
   return {
     key: "rifiuti",
     accent: "#22c55e",
-    icon: "refresh",
+    icon: "♻️",
     label: t("Rifiuti", "Waste"),
     /* La faccia della tessera e' il bidone del prossimo ritiro (#384).
      *
@@ -5526,7 +5525,7 @@ export function animaliModel(states) {
     /* L'arancio dell'orma: lo stesso della zampa nel catalogo, e lo stesso a
      * cui si e' abituato chi apre la sezione. */
     accent: urgenti ? "#dc2626" : daFare.length ? "#f59e0b" : "#f97316",
-    icon: "pet",
+    icon: "🐾",
     label: t("Animali", "Pets"),
     value: String(viste.length),
     caption: daFare.length
@@ -5657,7 +5656,7 @@ function vmcModel(states) {
   return {
     key: "vmc",
     accent: "#0ea5e9",
-    icon: "fan",
+    icon: "🔄",
     label: t("Ventilazione", "Ventilation"),
     value: valore,
     caption: parti.length ? parti.join(" · ") : t("Aria in casa", "Air into the house"),
@@ -6104,7 +6103,7 @@ function todoItemMarkup(list, item, today) {
   const dueDay = item.due ? item.due.slice(0, 10) : "";
   const overdue = !done && dueDay && dueDay < today;
   const due = dueDay
-    ? `<span class="dm-todo-due"${overdue ? ' data-overdue="true"' : ""}>${segnoHtml(overdue ? "warning" : "calendar")} ${esc(dueDay)}</span>`
+    ? `<span class="dm-todo-due"${overdue ? ' data-overdue="true"' : ""}>${overdue ? "⚠️" : "📅"} ${esc(dueDay)}</span>`
     : "";
   return `<li class="dm-todo-item${done ? " is-done" : ""}">
       <button type="button" class="dm-todo-check" data-dm-todo-check data-dm-todo-list="${esc(list.id)}"
@@ -6115,7 +6114,7 @@ function todoItemMarkup(list, item, today) {
       <button type="button" class="dm-todo-del" data-dm-todo-del data-dm-todo-list="${esc(list.id)}"
         data-dm-todo-uid="${esc(item.uid)}" data-dm-todo-summary="${esc(item.summary)}"
         title="${esc(t("Togli dalla lista", "Remove from the list"))}"
-        aria-label="${esc(t(`Togli dalla lista: ${item.summary}`, `Remove from the list: ${item.summary}`))}">${segnoHtml("trash")}</button>
+        aria-label="${esc(t(`Togli dalla lista: ${item.summary}`, `Remove from the list: ${item.summary}`))}">🗑️</button>
     </li>`;
 }
 
@@ -6174,7 +6173,7 @@ function todoDetail(widget) {
       let body;
       if (items === null) body = `<p class="dm-w-empty">${esc(t("Caricamento…", "Loading…"))}</p>`;
       else if (!shown.length)
-        body = `<p class="dm-w-empty">${segnoHtml("star")} ${esc(t("Tutto fatto", "All done"))}</p>`;
+        body = `<p class="dm-w-empty">✨ ${esc(t("Tutto fatto", "All done"))}</p>`;
       else
         body = `<ul class="dm-todo-items">${shown.map((item) => todoItemMarkup(list, item, today)).join("")}</ul>${
           extra > 0
@@ -6272,7 +6271,7 @@ function calendarioDetail(widget, scadenze = []) {
    * per trovarla — appartiene ad adesso. */
   const arretrati = ritardo.length
     ? `<div class="dm-w-block" data-dm-ritardo="true">
-        <span class="dm-w-block-title">${segnoHtml("warning")} ${esc(parole.inRitardo)}</span>
+        <span class="dm-w-block-title">⚠️ ${esc(parole.inRitardo)}</span>
         <ul class="dm-cal-lista">${ritardo
           .map((riga) => rigaAgendaMarkup(riga, adesso, parole, lingua, piuCalendari))
           .join("")}</ul>
@@ -6280,11 +6279,11 @@ function calendarioDetail(widget, scadenze = []) {
     : "";
 
   if (!giorni.length && !arretrati)
-    return `${modulo}${testa}<p class="dm-w-empty">${emojiInSegni(esc(
+    return `${modulo}${testa}<p class="dm-w-empty">${esc(
       widget.inArrivo
         ? t("Caricamento…", "Loading…")
         : t("✨ Niente in programma", "✨ Nothing scheduled"),
-    ))}</p>`;
+    )}</p>`;
 
   const elenco = giorni
     .slice(0, GIORNI_NEL_PANNELLO)
@@ -6315,11 +6314,11 @@ function agendaDetail(widget, states) {
   if (!impegni) return cose;
   if (!cose) return impegni;
   return `<div class="dm-ag-parte" data-dm-ag="impegni">
-      <h5 class="dm-ag-titolo">${segnoHtml("calendar")} ${esc(t("Impegni", "Appointments"))}</h5>
+      <h5 class="dm-ag-titolo">📅 ${esc(t("Impegni", "Appointments"))}</h5>
       ${impegni}
     </div>
     <div class="dm-ag-parte" data-dm-ag="cose">
-      <h5 class="dm-ag-titolo">${segnoHtml("check")} ${esc(t("Da fare", "To-do"))}</h5>
+      <h5 class="dm-ag-titolo">✅ ${esc(t("Da fare", "To-do"))}</h5>
       ${cose}
     </div>`;
 }
@@ -6347,7 +6346,7 @@ function lightsDetail(widget) {
           <button type="button" class="dm-w-tutte-btn" data-dm-w-lights-off="${esc(
             spegnibili.map((row) => clean(row.entity)).filter(Boolean).join(" "),
           )}" aria-label="${esc(t("Spegni tutte le luci", "Turn all lights off"))}">
-            <span aria-hidden="true">${segnoHtml("moon")}</span>${esc(t("Spegni tutte", "Turn all off"))}
+            <span aria-hidden="true">🌙</span>${esc(t("Spegni tutte", "Turn all off"))}
             <b>${spegnibili.length}</b>
           </button>
         </div>`
@@ -6357,11 +6356,11 @@ function lightsDetail(widget) {
     rows
       .map((row) =>
         rowShell(
-          `<span class="dm-w-glyph" data-on="${row.on}" aria-hidden="true">${segnoHtml("lights")}</span>
+          `<span class="dm-w-glyph" data-on="${row.on}" aria-hidden="true">💡</span>
          <span class="dm-w-name">${esc(row.name)}<small>${esc(row.room)}</small></span>
          ${
            row.comando === false
-             ? `<span class="dm-w-bloccata" title="${esc(t("Si vede ma non si comanda", "Shown but not controllable"))}" aria-hidden="true">${segnoHtml("lock")}</span>`
+             ? `<span class="dm-w-bloccata" title="${esc(t("Si vede ma non si comanda", "Shown but not controllable"))}" aria-hidden="true">🔒</span>`
              : `<button type="button" class="dm-w-switch" data-dm-w-light="${esc(row.entity)}" data-on="${row.on}"
            aria-label="${esc(row.name)}"><i></i></button>`
          }`,
@@ -6380,15 +6379,15 @@ function lightsDetail(widget) {
  * dove il clima sono i termosifoni voleva dire tutte le righe col fiocco,
  * anche d'inverno a caldaia accesa. Quando lo stato non lo dice, lo dice il
  * tipo scelto in configurazione — lo stesso che le Stanze disegnano gia'. */
-const ICONE_CLIMA = Object.freeze({ termo: segnoHtml("radiator"), pompa: segnoHtml("heat-pump"), clima: segnoHtml("air-conditioner") });
+const ICONE_CLIMA = Object.freeze({ termo: "🔥", pompa: "♨️", clima: "❄️" });
 
 function climateGlyph(mode, tipo = "clima") {
-  if (mode.includes("heat") && mode.includes("cool")) return ICONE_CLIMA[tipo] || segnoHtml("air-conditioner");
-  if (mode.includes("heat")) return segnoHtml("radiator");
-  if (mode.includes("cool")) return segnoHtml("air-conditioner");
-  if (mode.includes("dry")) return segnoHtml("dehumidifier");
-  if (mode.includes("fan")) return segnoHtml("fan");
-  return ICONE_CLIMA[tipo] || segnoHtml("air-conditioner");
+  if (mode.includes("heat") && mode.includes("cool")) return ICONE_CLIMA[tipo] || "❄️";
+  if (mode.includes("heat")) return "🔥";
+  if (mode.includes("cool")) return "❄️";
+  if (mode.includes("dry")) return "💧";
+  if (mode.includes("fan")) return "🌀";
+  return ICONE_CLIMA[tipo] || "❄️";
 }
 
 /* I nomi delle modalita', gli stessi che usa la scheda del Clima rapido in
@@ -6632,12 +6631,12 @@ function positionSelectMarkup(row) {
   const voci = coverPositionChoices(row.preset)
     .map((value) => {
       const coda = value === 100 ? t("Aperta", "Open") : value === 0 ? t("Chiusa", "Closed") : "";
-      return `<option value="${value}">${value === row.preset ? "★ " : ""}${value}%${coda ? ` · ${esc(coda)}` : ""}</option>`;
+      return `<option value="${value}">${value === row.preset ? "⭐ " : ""}${value}%${coda ? ` · ${esc(coda)}` : ""}</option>`;
     })
     .join("");
   return `<select class="dm-w-position" data-dm-w-position="${esc(row.entity)}"
       data-dm-w-verso="${row.invertita ? "1" : ""}"
-      aria-label="${esc(invito)}" title="${esc(invito)}"><option value="">⇅</option>${voci}</select>`;
+      aria-label="${esc(invito)}" title="${esc(invito)}"><option value="">↕</option>${voci}</select>`;
 }
 
 /* Un comando della tapparella: il disegno dentro, la parola nell'etichetta —
@@ -6653,7 +6652,7 @@ function coversDetail(widget) {
   return widget.rows
     .map((row) =>
       rowShell(
-        `<span class="dm-w-glyph" data-on="${row.open}" aria-hidden="true">${segnoHtml("window")}</span>
+        `<span class="dm-w-glyph" data-on="${row.open}" aria-hidden="true">🪟</span>
          <span class="dm-w-name">${esc(row.name)}<small>${
            /* La finestra col solo contatto non ha una percentuale da mostrare:
             * al suo posto dice quello che sa, cioe' se e' aperta. */
@@ -6718,7 +6717,7 @@ function securityDetail(widget, states) {
       .join("");
     parts.push(
       rowShell(
-        `<span class="dm-w-glyph" data-on="${widget.armed || widget.triggered}" aria-hidden="true">${segnoHtml("security")}</span>
+        `<span class="dm-w-glyph" data-on="${widget.armed || widget.triggered}" aria-hidden="true">🛡️</span>
          <span class="dm-w-name">${esc(t("Antifurto", "Alarm"))}<small>${esc(widget.value)}</small></span>
          <span class="dm-w-alarm">${tasti}</span>`,
       ),
@@ -6774,7 +6773,7 @@ function porteDetail(widget, states) {
                 data-dm-door-gesto="${esc(azione.gesto)}"
                 title="${esc(invito)}"
                 aria-label="${esc(`${invito}: ${door.name || door.entity}`)}">${esc(parola)}${
-                  chiede ? ` <span aria-hidden="true">${segnoHtml("lock")}</span>` : ""
+                  chiede ? ' <span aria-hidden="true">🔐</span>' : ""
                 }</button>`;
     };
     parts.push(
@@ -6785,7 +6784,7 @@ function porteDetail(widget, states) {
            azioni.length
              ? `<span class="dm-w-porte-gesti">${azioni.map(tastoDelGesto).join("")}</span>`
              : door.pin
-               ? '<span class="dm-w-glyph" aria-hidden="true">${segnoHtml("lock")}</span>'
+               ? '<span class="dm-w-glyph" aria-hidden="true">🔒</span>'
                : ""
          }`,
       ),
@@ -6824,7 +6823,7 @@ let apertoInFinestra = "";
 function appliancesDetail(widget) {
   const righe = Array.isArray(widget.rows) ? widget.rows : [];
   if (!righe.length)
-    return `<p class="dm-w-empty">${segnoHtml("star")} ${esc(t("Tutto spento", "Everything off"))}</p>`;
+    return `<p class="dm-w-empty">✨ ${esc(t("Tutto spento", "Everything off"))}</p>`;
   const aperto = righe.some((riga) => riga.id === apertoInFinestra)
     ? apertoInFinestra
     : righe.length === 1
@@ -6839,7 +6838,7 @@ function appliancesDetail(widget) {
       const watt =
         acceso && Number.isFinite(Number(riga.watts)) ? laPotenzaInParole(riga.watts) : "";
       return `<button type="button" class="dm-w-appl-chip" data-dm-appl-chip="${esc(riga.id)}" data-on="${acceso ? "true" : "false"}" aria-expanded="${scelta ? "true" : "false"}">
-        <span class="dm-w-appl-art" aria-hidden="true">${applianceArtwork(riga.type, 26) || segnoHtml("socket")}</span>
+        <span class="dm-w-appl-art" aria-hidden="true">${applianceArtwork(riga.type, 26) || "🔌"}</span>
         <span class="dm-w-appl-nome">${esc(riga.name)}</span>
         ${watt ? `<span class="dm-w-appl-watt">${esc(watt)}</span>` : ""}
       </button>`;
@@ -6866,7 +6865,7 @@ function floodDetail(widget) {
   return widget.rows
     .map((row) =>
       rowShell(
-        `<span class="dm-w-glyph" data-on="${row.on ? "true" : "false"}" aria-hidden="true">${segnoHtml("water")}</span>
+        `<span class="dm-w-glyph" data-on="${row.on ? "true" : "false"}" aria-hidden="true">💧</span>
          <span class="dm-w-name">${esc(row.name)}</span>
          <span class="dm-w-val">${esc(row.on ? t("Bagnato", "Wet") : t("Asciutto", "Dry"))}</span>`,
       ),
@@ -6929,7 +6928,7 @@ function aggiornamentiDetail(widget) {
                )}</button>`
           : "";
       return rowShell(
-        `<span class="dm-w-glyph" data-on="true" aria-hidden="true">↑</span>
+        `<span class="dm-w-glyph" data-on="true" aria-hidden="true">\u2B06\uFE0F</span>
          <span class="dm-w-name">${esc(clean(voce?.nome) || entity)}</span>
          <span class="dm-w-val">${esc(versioni || t("Disponibile", "Available"))}</span>
          ${
@@ -7062,7 +7061,7 @@ function pilloleDelloStato(widget) {
             clean(riga.tono) ? ` data-tono="${esc(clean(riga.tono))}"` : ""
           }${!tutte && indice >= MISURE_IN_VISTA ? " hidden" : ""}>${
             riga.glyph
-              ? `<span class="dm-w-pillola-ic" aria-hidden="true">${emojiInSegni(riga.glyph)}</span>`
+              ? `<span class="dm-w-pillola-ic" aria-hidden="true">${riga.glyph}</span>`
               : ""
           }<span class="dm-w-pillola-nome">${esc(clean(riga.name))}</span>${
             clean(riga.value) ? `<b>${esc(clean(riga.value))}</b>` : ""
@@ -7185,7 +7184,7 @@ export function carteDalleRighe(widget) {
         .join(" · "),
     };
     return righe.map((riga) => ({
-      glyph: glifi[riga.group] || segnoHtml("power"),
+      glyph: glifi[riga.group] || "⚡",
       /* La batteria dice anche quanto e' piena: watt e percentuale insieme,
        * o la sola percentuale quando la potenza non e' mappata. */
       valore:
@@ -7210,7 +7209,7 @@ export function carteDalleRighe(widget) {
      * tra temperatura e umidita'». Adesso i gradi restano il numero della
      * casella e l'umidita' e' la sua riga, con la goccia davanti. */
     return righe.map((riga) => ({
-      glyph: segnoHtml("thermometer"),
+      glyph: "🌡️",
       valore: `${formatNumber(riga.temperature, 1)}°`,
       etichetta: clean(riga.name),
       sotto: riga.humidity == null ? "" : `💧 ${Math.round(riga.humidity)}%`,
@@ -7218,7 +7217,7 @@ export function carteDalleRighe(widget) {
   }
   if (chiave === "batterie") {
     return righe.map((riga) => ({
-      glyph: segnoHtml("battery", { classe: riga.level <= 20 ? "dm-scarica" : "" }),
+      glyph: riga.level <= 20 ? "🪫" : "🔋",
       valore: `${Math.round(riga.level)}%`,
       etichetta: clean(riga.name),
     }));
@@ -7227,7 +7226,7 @@ export function carteDalleRighe(widget) {
     /* Chi sta lavorando, coi suoi watt e il suo disegno vero: la lavatrice
      * ha l'oblo', il forno lo sportello. */
     return (Array.isArray(widget.running) ? widget.running : []).map((riga) => ({
-      glyph: root.cdApplianceIcon?.(riga.type, 20) || segnoHtml("washer"),
+      glyph: root.cdApplianceIcon?.(riga.type, 20) || "🫧",
       valore: riga.watts == null ? t("in funzione", "running") : formatWatts(riga.watts),
       etichetta: clean(riga.name),
     }));
@@ -7299,10 +7298,10 @@ function caselleDelleMisure(widget) {
         (voce, indice) =>
           `<div class="dm-w-casella"${!tutte && indice >= MISURE_IN_VISTA ? " hidden" : ""}>${
             voce.glyph
-              ? `<span class="dm-w-casella-ic" aria-hidden="true">${emojiInSegni(voce.glyph)}</span>`
+              ? `<span class="dm-w-casella-ic" aria-hidden="true">${voce.glyph}</span>`
               : ""
           }<b>${esc(voce.valore)}</b>${
-            voce.sotto ? `<i class="dm-w-casella-sotto">${emojiInSegni(esc(voce.sotto))}</i>` : ""
+            voce.sotto ? `<i class="dm-w-casella-sotto">${esc(voce.sotto)}</i>` : ""
           }<span>${esc(voce.etichetta)}</span></div>`,
       )
       .join("")}</div>${oltre ? tastoMostraTutte(chiave, voci.length, tutte) : ""}`;
@@ -7618,7 +7617,7 @@ function chatDetail(widget) {
   const bolla = widget.anteprima
     ? `<div class="dm-w-chat">
         <div class="dm-w-chat-testa">
-          <span aria-hidden="true">${segnoHtml("chat")}</span>
+          <span aria-hidden="true">💬</span>
           <b>${esc(t("L'ultima risposta", "The latest reply"))}</b>
           ${ora ? `<small class="dm-w-chat-quando">${esc(ora)}</small>` : ""}
         </div>
@@ -7671,9 +7670,9 @@ function detailBody(widget, states) {
      * per il singolare. */
     const oggiPerTipo = conto.oggiPerTipo || {};
     const generi = [
-      ["bug", segnoHtml("bug"), t("Difetti", "Bugs")],
-      ["feature", segnoHtml("star"), t("Idee", "Ideas")],
-      ["assistenza", segnoHtml("chat"), t("Aiuto", "Help")],
+      ["bug", "🐞", t("Difetti", "Bugs")],
+      ["feature", "✨", t("Idee", "Ideas")],
+      ["assistenza", "💬", t("Aiuto", "Help")],
       ["senza", "•", t("Senza tipo", "Untyped")],
     ].filter(([id]) => Number(oggiPerTipo[id]) > 0);
     const oggiMarkup = generi.length
@@ -7711,7 +7710,7 @@ function detailBody(widget, states) {
     const chatMarkup = conversazioni.length
       ? `<div class="dm-w-chat">
           <div class="dm-w-chat-testa">
-            <span aria-hidden="true">${segnoHtml("chat")}</span>
+            <span aria-hidden="true">💬</span>
             <b>${esc(
               t(
                 `${conversazioni.length} con messaggi nuovi`,

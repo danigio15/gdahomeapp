@@ -17,7 +17,7 @@ test("il cancello sul programma: override con marker, mai wrapFunction, e «forz
   assert.match(source, /gated\.__dmPrevious = current/);
   assert.match(source, /root\.cdIrrProgram = gated/);
   /* Lo skip scrive l'avviso dove la card gia' lo legge. */
-  assert.match(source, /CD_IRR\.skip = `\$\{t\("Terreno al"/);
+  assert.match(source, /CD_IRR\.skip = `🌱/);
   assert.match(source, /if \(!force\) \{/);
 });
 

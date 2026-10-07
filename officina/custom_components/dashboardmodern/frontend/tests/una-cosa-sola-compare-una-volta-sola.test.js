@@ -150,22 +150,21 @@ const ALTRO = { key: "altro" };
 test("una batteria assegnata a mano porta la faccia di una batteria", () => {
   assert.equal(
     iconaVoce({ entity: "sensor.telecomando_battery", device_class: "battery" }, ALTRO),
-    "battery",
+    "🔋",
   );
 });
 
 test("senza classe resta il dominio, che almeno distingue una serratura da un termometro", () => {
-  assert.equal(glifoDellaVoce({ entity: "lock.porta" }), "lock");
-  assert.equal(glifoDellaVoce({ entity: "media_player.sonos" }), "speaker");
-  assert.equal(glifoDellaVoce({ entity: "binary_sensor.qualcosa" }), "bell");
+  assert.equal(glifoDellaVoce({ entity: "lock.porta" }), "🔒");
+  assert.equal(glifoDellaVoce({ entity: "media_player.sonos" }), "🎵");
+  assert.equal(glifoDellaVoce({ entity: "binary_sensor.qualcosa" }), "🔔");
 });
 
 test("quando non si sa niente resta il puntatore del blocco, non un vuoto", () => {
   assert.equal(glifoDellaVoce({ entity: "cosa.strana" }), "");
-  assert.equal(iconaVoce({ entity: "cosa.strana" }, ALTRO), "info");
+  assert.equal(iconaVoce({ entity: "cosa.strana" }, ALTRO), "📍");
 });
 
-test("un'icona scritta a mano vince se e' nel catalogo; un'emoji fuori catalogo no", () => {
-  assert.equal(iconaVoce({ entity: "sensor.x", device_class: "battery", icon: "star" }, ALTRO), "star");
-  assert.equal(iconaVoce({ entity: "sensor.x", device_class: "battery", icon: "🎯" }, ALTRO), "battery");
+test("un'icona scritta a mano vince comunque, come dappertutto", () => {
+  assert.equal(iconaVoce({ entity: "sensor.x", device_class: "battery", icon: "🎯" }, ALTRO), "🎯");
 });

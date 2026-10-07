@@ -126,7 +126,7 @@ function vestiIlSelettore() {
   riga.dataset.dmTavolozze = "true";
   riga.innerHTML = TAVOLOZZE.map(
     (voce) =>
-      `<button type="button" class="theme-opt" data-dm-tavolozza-opt="${esc(voce.chiave)}" data-dm-famiglia="${esc(voce.famiglia)}"><span class="theme-opt-ico" aria-hidden="true"></span><span>${esc(nomeDi(voce.chiave))}</span></button>`,
+      `<button type="button" class="theme-opt" data-dm-tavolozza-opt="${esc(voce.chiave)}" data-dm-famiglia="${esc(voce.famiglia)}"><span class="theme-opt-ico">${esc(voce.glifo)}</span><span>${esc(nomeDi(voce.chiave))}</span></button>`,
   ).join("");
   seg.after(riga);
   segnaIlTastoAcceso(tavolozzaScelta());

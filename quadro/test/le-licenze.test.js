@@ -1034,7 +1034,7 @@ test("una ricevuta di Google Play diventa una licenza fino alla scadenza, una so
 
 /* Un Apple finto: la produzione non conosce la transazione, il sandbox si',
  * e la risponde firmata con una catena di prova. */
-function unAppleFinto(transazioni, { radice = RADICE_DI_PROVA, stati = {} } = {}) {
+function unAppleFinto(transazioni, { radice = RADICE_DI_PROVA, stati = {}, rinnovi = {} } = {}) {
   const { privateKey, publicKey } = generateKeyPairSync("ec", { namedCurve: "P-256" });
   const foglia = createPrivateKey(CHIAVE_DELLA_FOGLIA);
   const firmata = (corpo) => {
@@ -1090,7 +1090,7 @@ function unAppleFinto(transazioni, { radice = RADICE_DI_PROVA, stati = {} } = {}
                   originalTransactionId: originale,
                   status: 1,
                   signedTransactionInfo: firmata(stati[originale]),
-                  signedRenewalInfo: "",
+                  signedRenewalInfo: rinnovi[originale] ? firmata(rinnovi[originale]) : "",
                 },
               ],
             },
@@ -1622,6 +1622,266 @@ test("Apple: la prova, il rinnovo chiesto con la transazione originale, e un rim
     una.ricontrollata = Date.now() - 2 * ORA;
     assert.equal(await b.licenze.rinnova(b.negozi), 0);
     assert.equal(chiesti.length, quante);
+  } finally {
+    await b.chiudi();
+  }
+});
+
+/* ─── 7. Gli abbonamenti ─────────────────────────────────────────────────── */
+
+/* Una riga di Google com'e' fatta davvero: il piano base, l'offerta, la fase,
+ * e il piano che si rinnova col suo prezzo. */
+const unaRigaDiGoogle = ({ fra, piano, prova = false, rinnovo = true, euro }) => ({
+  productId: "gdahome_premium",
+  expiryTime: new Date(Date.now() + fra).toISOString(),
+  offerDetails: { basePlanId: piano, ...(prova ? { offerId: "prova-14-giorni" } : {}) },
+  offerPhase: prova ? { freeTrial: {} } : { basePrice: {} },
+  autoRenewingPlan: {
+    autoRenewEnabled: rinnovo,
+    recurringPrice: {
+      currencyCode: "EUR",
+      units: String(Math.floor(euro)),
+      nanos: Math.round((euro % 1) * 100) * 10_000_000,
+    },
+  },
+});
+
+const abbonamentiDelGestore = (b) => b.gestore("/abbonamenti").then((uno) => uno.detto);
+
+test("Google dice com'e' fatto l'abbonamento, e la Gestione lo conta (e i tester no)", async () => {
+  const inizio = "2026-10-01T09:30:00.000Z";
+  const { negozi } = unGoogleFinto({
+    "token-annuale-in-prova-0001": {
+      subscriptionState: "SUBSCRIPTION_STATE_ACTIVE",
+      acknowledgementState: "ACKNOWLEDGEMENT_STATE_ACKNOWLEDGED",
+      startTime: inizio,
+      regionCode: "IT",
+      lineItems: [
+        unaRigaDiGoogle({ fra: 10 * GIORNO, piano: "annuale", prova: true, euro: 49.99 }),
+      ],
+    },
+    "token-mensile-pagato-00001": {
+      subscriptionState: "SUBSCRIPTION_STATE_ACTIVE",
+      acknowledgementState: "ACKNOWLEDGEMENT_STATE_ACKNOWLEDGED",
+      startTime: inizio,
+      regionCode: "IT",
+      lineItems: [unaRigaDiGoogle({ fra: 5 * GIORNO, piano: "mensile", euro: 4.99 })],
+    },
+    /* Disdetto: vale fino alla scadenza, e non si rinnova. */
+    "token-mensile-disdetto-001": {
+      subscriptionState: "SUBSCRIPTION_STATE_CANCELED",
+      acknowledgementState: "ACKNOWLEDGEMENT_STATE_ACKNOWLEDGED",
+      startTime: inizio,
+      lineItems: [
+        unaRigaDiGoogle({ fra: 20 * GIORNO, piano: "mensile", rinnovo: false, euro: 4.99 }),
+      ],
+    },
+    /* Un tester della Play Console: si vede, non si conta. */
+    "token-del-tester-00000001": {
+      subscriptionState: "SUBSCRIPTION_STATE_ACTIVE",
+      acknowledgementState: "ACKNOWLEDGEMENT_STATE_ACKNOWLEDGED",
+      testPurchase: {},
+      startTime: inizio,
+      lineItems: [unaRigaDiGoogle({ fra: 3 * GIORNO, piano: "mensile", euro: 4.99 })],
+    },
+  });
+  const b = await banco({ negozi });
+  try {
+    const QUARTA = "casa_5e0b9d21c4f7a8336e12d9b04a7fc193";
+    const compra = (casa, token) =>
+      b.fuori("negozio", {
+        casa,
+        segreto: SEGRETO,
+        app: "gdahome",
+        piattaforma: "android",
+        prodotto: "gdahome_premium",
+        ricevuta: token,
+      });
+    assert.equal((await compra(UNA, "token-annuale-in-prova-0001")).stato, 200);
+    assert.equal((await compra(ALTRA, "token-mensile-pagato-00001")).stato, 200);
+    assert.equal((await compra(TERZA, "token-mensile-disdetto-001")).stato, 200);
+    assert.equal((await compra(QUARTA, "token-del-tester-00000001")).stato, 200);
+
+    const detto = await abbonamentiDelGestore(b);
+    assert.deepEqual(detto.conti, {
+      attivi: 3,
+      mensili: 2,
+      annuali: 1,
+      prova: 1,
+      disdetti: 1,
+      /* Il mensile pagato si rinnova fra cinque giorni; la prova fra dieci. */
+      rinnovi7: 1,
+      finiti30: 0,
+      prove: { finite: 0, pagate: 0 },
+      /* Paga solo il mensile: la prova non paga, e chi ha disdetto nemmeno. */
+      alMese: { EUR: 4.99 },
+    });
+    assert.equal(detto.negozi.android.attivi, 3);
+    assert.equal(detto.negozi.ios.attivi, 0);
+    assert.equal(detto.prove, 1, "il tester sta da parte");
+
+    assert.equal(detto.elenco.length, 4);
+    const [primo] = detto.elenco;
+    assert.equal(primo.sog, UNA, "la prova per prima");
+    assert.equal(primo.stato, "prova");
+    assert.equal(primo.piano, "annuale");
+    assert.equal(primo.prezzo, 49.99);
+    assert.equal(primo.valuta, "EUR");
+    assert.equal(primo.rinnovo, true);
+    assert.equal(primo.paese, "IT");
+    assert.equal(primo.inizio, Date.parse(inizio));
+    assert.equal(primo.piattaforma, "android");
+    assert.equal(detto.elenco.find((uno) => uno.sog === TERZA).stato, "disdetto");
+    const tester = detto.elenco.at(-1);
+    assert.equal(tester.sog, QUARTA, "il tester in fondo");
+    assert.equal(tester.sandbox, true);
+
+    /* Gli abbonamenti si leggono solo con la chiave della gestione. */
+    const senza = await fetch(`http://127.0.0.1:${b.porta}/gestore/abbonamenti`);
+    assert.equal(senza.status, 401);
+  } finally {
+    await b.chiudi();
+  }
+});
+
+test("la prova passa a pagamento, e chi disdice a meta' periodo si sa il giorno dopo", async () => {
+  const TOKEN = "token-annuale-che-cambia-01";
+  const google = {
+    [TOKEN]: {
+      subscriptionState: "SUBSCRIPTION_STATE_ACTIVE",
+      acknowledgementState: "ACKNOWLEDGEMENT_STATE_ACKNOWLEDGED",
+      startTime: "2026-09-20T08:00:00.000Z",
+      lineItems: [unaRigaDiGoogle({ fra: 4 * GIORNO, piano: "annuale", prova: true, euro: 49.99 })],
+    },
+  };
+  const { negozi, chiesti } = unGoogleFinto(google);
+  const b = await banco({ negozi });
+  try {
+    const presa = await b.fuori("negozio", {
+      casa: UNA,
+      segreto: SEGRETO,
+      app: "gdahome",
+      piattaforma: "android",
+      prodotto: "gdahome_premium",
+      ricevuta: TOKEN,
+    });
+    const una = b.licenze.quella(presa.detto.licenze[0].lic);
+    assert.equal(una.fuInProva, true);
+    /* Appena comprato non si richiede: il negozio l'ha appena detto. */
+    assert.equal(await b.licenze.aggiorna(b.negozi), 0);
+
+    /* La prova e' finita e Google ha incassato il primo anno. */
+    google[TOKEN] = {
+      ...google[TOKEN],
+      lineItems: [unaRigaDiGoogle({ fra: 365 * GIORNO, piano: "annuale", euro: 49.99 })],
+    };
+    const indietro = () => {
+      una.negozio.aggiornata = Date.now() - 2 * GIORNO;
+      una.ricontrollata = Date.now() - 2 * ORA;
+    };
+    indietro();
+    assert.equal(await b.licenze.aggiorna(b.negozi), 1);
+    assert.equal(una.prova, false);
+    assert.equal(una.pagatoDopoLaProva, true);
+    let detto = await abbonamentiDelGestore(b);
+    assert.deepEqual(detto.conti.prove, { finite: 1, pagate: 1 });
+    assert.equal(detto.elenco[0].stato, "attivo");
+    /* Un annuale conta un dodicesimo al mese. */
+    assert.deepEqual(detto.conti.alMese, { EUR: 4.17 });
+
+    /* Il giorno dopo non si richiede di nuovo prima che passi il giorno. */
+    const quante = chiesti.length;
+    una.ricontrollata = Date.now() - 2 * ORA;
+    assert.equal(await b.licenze.aggiorna(b.negozi), 0);
+    assert.equal(chiesti.length, quante);
+
+    /* Disdetto a meta' anno: vale fino alla scadenza, e si sa subito. */
+    google[TOKEN] = {
+      ...google[TOKEN],
+      subscriptionState: "SUBSCRIPTION_STATE_CANCELED",
+      lineItems: [
+        unaRigaDiGoogle({ fra: 365 * GIORNO, piano: "annuale", rinnovo: false, euro: 49.99 }),
+      ],
+    };
+    indietro();
+    assert.equal(await b.licenze.aggiorna(b.negozi), 1);
+    detto = await abbonamentiDelGestore(b);
+    assert.equal(detto.conti.disdetti, 1);
+    assert.equal(detto.conti.attivi, 1, "disdetto vale ancora");
+    assert.deepEqual(detto.conti.alMese, {}, "chi ha disdetto non paga piu'");
+    assert.equal(detto.elenco[0].stato, "disdetto");
+    const gettone = (await b.fuori("casa", { casa: UNA, segreto: SEGRETO })).detto.gettoni.gdahome;
+    assert.ok(gettone, "Premium resta fino alla scadenza");
+
+    /* Il negozio non lo conosce piu': resta com'e', e non si richiede piu'. */
+    delete google[TOKEN];
+    indietro();
+    assert.equal(await b.licenze.aggiorna(b.negozi), 0);
+    assert.equal(una.negozio.finito, "ricevuta-sconosciuta");
+    indietro();
+    const ancora = chiesti.length;
+    assert.equal(await b.licenze.aggiorna(b.negozi), 0);
+    assert.equal(chiesti.length, ancora, "finito: non si richiede piu'");
+  } finally {
+    await b.chiudi();
+  }
+});
+
+test("Apple: il piano dal prodotto, il prezzo in millesimi, il sandbox, e il rinnovo a parte", async () => {
+  const originale = "2000000700000000";
+  const comprata = Date.parse("2026-10-02T18:00:00.000Z");
+  const transazione = {
+    transactionId: originale,
+    originalTransactionId: originale,
+    bundleId: "com.gdahome.gdahome",
+    productId: "gdahome_premium_annuale",
+    type: "Auto-Renewable Subscription",
+    expiresDate: Date.now() + 300 * GIORNO,
+    originalPurchaseDate: comprata,
+    price: 49990,
+    currency: "EUR",
+    environment: "Sandbox",
+    storefront: "ITA",
+  };
+  const rinnovi = {};
+  const { negozi } = unAppleFinto(
+    { [originale]: transazione },
+    { stati: { [originale]: transazione }, rinnovi },
+  );
+  const b = await banco({ negozi });
+  try {
+    const presa = await b.fuori("negozio", {
+      casa: UNA,
+      segreto: SEGRETO,
+      app: "gdahome",
+      piattaforma: "ios",
+      prodotto: "gdahome_premium_annuale",
+      ricevuta: originale,
+    });
+    assert.equal(presa.stato, 200);
+    const una = b.licenze.quella(presa.detto.licenze[0].lic);
+    assert.deepEqual(una.negozio.abbonamento, {
+      piano: "annuale",
+      prezzo: 49.99,
+      valuta: "EUR",
+      /* Il primo acquisto non dice il rinnovo: lo dice il giro di ogni giorno. */
+      rinnovo: null,
+      sandbox: true,
+      inizio: comprata,
+      paese: "ITA",
+    });
+
+    /* Disdetto da TestFlight: lo dicono le informazioni di rinnovo. */
+    rinnovi[originale] = { originalTransactionId: originale, autoRenewStatus: 0 };
+    una.ricontrollata = Date.now() - 2 * ORA;
+    assert.equal(await b.licenze.aggiorna(b.negozi), 1);
+    assert.equal(una.negozio.abbonamento.rinnovo, false);
+    const detto = await abbonamentiDelGestore(b);
+    assert.equal(detto.conti.attivi, 0, "un acquisto di prova non si conta");
+    assert.equal(detto.prove, 1);
+    assert.equal(detto.elenco[0].stato, "disdetto");
+    assert.equal(detto.elenco[0].sandbox, true);
+    assert.equal(detto.elenco[0].piattaforma, "ios");
   } finally {
     await b.chiudi();
   }

@@ -61,7 +61,7 @@ test("i riquadri restano in attesa, cosi' cambiando dispositivo non mentono", as
     "ed-dkpi-anno-costo-kwh",
   ])
     assert.match(source, new RegExp(`"${id}"`), id);
-  assert.match(source, /for \(const id of RIQUADRI_DELL_ANNO\) setText\(id, "—"\);/);
+  assert.match(source, /for \(const id of RIQUADRI_DELL_ANNO\) setText\(id, "⏳ —"\);/);
   /* E la nostra passata parte subito dopo: e' lei che ci mette i numeri. */
   assert.match(source, /iRiquadriDellAnnoAspettano\(selYear\);\s*scheduleProjection\(\);/);
 });

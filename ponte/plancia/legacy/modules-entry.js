@@ -204,7 +204,7 @@ createRenderCoordinator(store, {
       return;
     }
     if (tab === "appliances") {
-      body.innerHTML = globalThis.cdSecToggleHtml("appliances") + globalThis.editorRenderAppliances() + '<button class="ed-btn-add" style="width:100%; margin-top:10px;" onclick="edSecSave()"><i class="dm-segno" data-dm-segno="check" aria-hidden="true"></i> Salva sezione</button>';
+      body.innerHTML = globalThis.cdSecToggleHtml("appliances") + globalThis.editorRenderAppliances() + '<button class="ed-btn-add" style="width:100%; margin-top:10px;" onclick="edSecSave()">💾 Salva sezione</button>';
       globalThis.edApplRenderEnts?.();
     } else if (tab === "load") mountLoadsEditor(body);
     else if (tab === "stanze") body.innerHTML = globalThis.editorRenderStanze();
@@ -260,12 +260,12 @@ function renderEnergyEditorTab(target) {
          * padrone canonico delle tariffe. */
         const entitaPrezzo = String(store.getSection("energy")?.rates?.import_entity ?? "").trim();
         settings.innerHTML = `${globalThis.cdEnViewsHtml?.() || ""}
-          <div class="ed-form dm-energy-cost-card" data-dm-import-rate-mode="${entitaPrezzo ? "entity" : "number"}"><div class="ed-sec-title"><i class="dm-segno" data-dm-segno="coin" aria-hidden="true"></i> ${t("energyCost")}</div>
+          <div class="ed-form dm-energy-cost-card" data-dm-import-rate-mode="${entitaPrezzo ? "entity" : "number"}"><div class="ed-sec-title">💶 ${t("energyCost")}</div>
           <div class="ed-hint">${t("energyRates")}</div>
           <div class="dm-rate-mode" role="group"><button type="button" class="dm-rate-mode-btn" data-dm-rate-mode="number">${t("rateNumber")}</button><button type="button" class="dm-rate-mode-btn" data-dm-rate-mode="entity">${t("rateEntity")}</button></div>
           <div class="ed-form-row"><input id="ed-costo-kwh" class="ed-input" type="number" step="0.001" min="0" placeholder="€/kWh prelevato" value="${esc(globalThis.cdCfg?.("cd_costo_kwh") || "")}"><input id="ed-prezzo-imm" class="ed-input" type="number" step="0.001" min="0" placeholder="€/kWh immesso" value="${esc(globalThis.cdCfg?.("cd_prezzo_immissione") || "")}"></div>
           <span data-dm-rate-entity-slot hidden></span><small class="dm-rate-entity-note" data-dm-rate-entity-note hidden></small>
-          <button class="ed-save-btn" onclick="edSaveCosti()"><i class="dm-segno" data-dm-segno="check" aria-hidden="true"></i> ${t("saveCosts")}</button></div>`;
+          <button class="ed-save-btn" onclick="edSaveCosti()">💾 ${t("saveCosts")}</button></div>`;
         const card = settings.querySelector(".dm-energy-cost-card");
         const slot = card.querySelector("[data-dm-rate-entity-slot]");
         const nota = card.querySelector("[data-dm-rate-entity-note]");
@@ -312,7 +312,7 @@ function renderEnergyEditorTab(target) {
         const raffreddamento = globalThis.document.createElement("div");
         raffreddamento.className = "ed-form dm-energy-cooling-card";
         raffreddamento.dataset.energyCooling = "";
-        raffreddamento.innerHTML = `<div class="ed-sec-title"><i class="dm-segno" data-dm-segno="thermometer" aria-hidden="true"></i> ${t("coolingTitle")}</div><div class="ed-hint">${t("coolingHint")}</div>`;
+        raffreddamento.innerHTML = `<div class="ed-sec-title">🌡️ ${t("coolingTitle")}</div><div class="ed-hint">${t("coolingHint")}</div>`;
         const campiRaffreddamento = [
           ["inverter_ac_temperature", t("coolingAcTemp"), "°C", "sensor.inverter_temp_ac"],
           ["inverter_dc_temperature", t("coolingDcTemp"), "°C", "sensor.inverter_temp_dc"],
@@ -435,11 +435,11 @@ const esc = (value) =>
 export function createEntityField({ id, label, value = "", placeholder = "sensor.entity", domain = "", optional = true } = {}) {
   const domainAttr = domain ? ` data-domain="${esc(domain)}"` : "";
   const opt = optional ? ` <span class="ed-acc-n">${t("optional")}</span>` : "";
-  return `<label class="ed-slot dm-entity-field" data-entity-field><span class="ed-slot-lbl">${esc(label)}${opt}</span><span class="ed-form-row"><input id="${esc(id)}" class="ed-input ed-slot-in mono" value="${esc(value)}" placeholder="${esc(placeholder)}"${domainAttr}><button type="button" class="dm-entity-picker" data-entity-target="${esc(id)}" aria-label="${t("select")} ${esc(label)}"><i class="dm-segno" data-dm-segno="search" aria-hidden="true"></i></button></span></label>`;
+  return `<label class="ed-slot dm-entity-field" data-entity-field><span class="ed-slot-lbl">${esc(label)}${opt}</span><span class="ed-form-row"><input id="${esc(id)}" class="ed-input ed-slot-in mono" value="${esc(value)}" placeholder="${esc(placeholder)}"${domainAttr}><button type="button" class="dm-entity-picker" data-entity-target="${esc(id)}" aria-label="${t("select")} ${esc(label)}">🔍</button></span></label>`;
 }
 function createIconField(id, value = "", category = "") {
   const categoryAttr = category ? ` data-icon-category="${esc(category)}"` : "";
-  return `<span class="ed-form-row dm-icon-field" data-icon-field><input id="${esc(id)}" class="ed-input ed-icon-input" value="${esc(value)}"${categoryAttr}><button type="button" class="dm-icon-picker" data-icon-target="${esc(id)}"${categoryAttr} aria-label="${t("select")} icon"><i class="dm-segno" data-dm-segno="sliders" aria-hidden="true"></i></button></span>`;
+  return `<span class="ed-form-row dm-icon-field" data-icon-field><input id="${esc(id)}" class="ed-input ed-icon-input" value="${esc(value)}"${categoryAttr}><button type="button" class="dm-icon-picker" data-icon-target="${esc(id)}"${categoryAttr} aria-label="${t("select")} icon">🎨</button></span>`;
 }
 const entityField = (id, label, value, placeholder) => createEntityField({ id, label, value, placeholder });
 
@@ -449,10 +449,10 @@ export function renderTemperatureEditor(target) {
   const rows = configured.map((room) => {
     const label = String(room.name || "").trim() || String(room.id || "").trim() || (pick("Stanza", "Room"));
     return `<article class="ed-row dm-temperature-card" data-temperature-room data-room-id="${esc(room.id)}" data-room-name="${esc(label)}">
-    <div class="dm-temperature-card-icon">${globalThis.cdIconMarkup?.(room.icon || "🌡️", 28) || (globalThis.dmSegnoDaValore?.(room.icon, { ripiego: "thermometer" }) ?? "")}</div>
-    <div class="ed-row-main"><div class="ed-row-new">${esc(label)}</div><div class="ed-row-old">${room.floor ? `<i class="dm-segno" data-dm-segno="home" aria-hidden="true"></i> ${esc(room.floor)} · ` : ""}<span class="mono">${esc(room.temp)}</span>${room.hum ? ` · <span class="mono">${esc(room.hum)}</span>` : ""}</div></div>
-    <button type="button" class="ed-del dm-temperature-edit" data-temperature-edit aria-label="${pick("Modifica", "Edit")}"><i class="dm-segno" data-dm-segno="pencil" aria-hidden="true"></i></button>
-    <button type="button" class="ed-del" data-temperature-delete aria-label="${t("remove")}"><i class="dm-segno" data-dm-segno="trash" aria-hidden="true"></i></button>
+    <div class="dm-temperature-card-icon">${globalThis.cdIconMarkup?.(room.icon || "🌡️", 28) || esc(room.icon || "🌡️")}</div>
+    <div class="ed-row-main"><div class="ed-row-new">${esc(label)}</div><div class="ed-row-old">${room.floor ? `🏢 ${esc(room.floor)} · ` : ""}<span class="mono">${esc(room.temp)}</span>${room.hum ? ` · <span class="mono">${esc(room.hum)}</span>` : ""}</div></div>
+    <button type="button" class="ed-del dm-temperature-edit" data-temperature-edit aria-label="${pick("Modifica", "Edit")}">✏️</button>
+    <button type="button" class="ed-del" data-temperature-delete aria-label="${t("remove")}">🗑️</button>
   </article>`;
   }).join("");
   const options = allRooms.map((room) => `<option value="${esc(room.id)}" ${(room.temp || room.hum) ? "disabled" : ""}>${esc(room.name)}${(room.temp || room.hum) ? (pick(" — configurata", " — configured")) : ""}</option>`).join("");
@@ -488,7 +488,7 @@ export function mountTemperatureEditor(_section, target) {
     select.value = selectedRoomId;
     const iconInput = target.querySelector("#dm-temperature-icon");
     if (!iconInput.value || iconInput.value === "🌡️") iconInput.value = room?.icon || "🌡️";
-    target.querySelector("[data-temperature-floor]").textContent = room?.floor ? room.floor : "";
+    target.querySelector("[data-temperature-floor]").textContent = room?.floor ? `🏢 ${room.floor}` : "";
     target.querySelector("[data-temperature-form-title]").textContent = `＋ ${pick("Aggiungi temperatura", "Add temperature")}`;
     target.querySelector("[data-temperature-submit]").textContent = t("add");
     target.querySelector("[data-temperature-cancel]").hidden = true;
@@ -503,7 +503,7 @@ export function mountTemperatureEditor(_section, target) {
     target.querySelector("#dm-temperature-icon").value = room?.icon || "🌡️";
     target.querySelector("#ed-pl-temp").value = room?.temp || "";
     target.querySelector("#dm-humidity-new").value = room?.hum || "";
-    target.querySelector("[data-temperature-floor]").textContent = room?.floor ? room.floor : "";
+    target.querySelector("[data-temperature-floor]").textContent = room?.floor ? `🏢 ${room.floor}` : "";
     target.querySelector("[data-temperature-form-title]").textContent = `${pick("Modifica", "Edit")} ${room.name}`;
     target.querySelector("[data-temperature-submit]").textContent = pick("Salva modifiche", "Save changes");
     target.querySelector("[data-temperature-cancel]").hidden = false;
@@ -578,7 +578,7 @@ export function mountEntityPickers(target) {
       button = document.createElement("button");
       button.type = "button";
       button.className = "dm-entity-picker";
-      button.innerHTML = '<i class="dm-segno" data-dm-segno="search" aria-hidden="true"></i>';
+      button.textContent = "🔍";
       input.insertAdjacentElement("afterend", button);
     }
     attributoSeCambia(button, "data-entity-target", input.id);
@@ -613,7 +613,7 @@ export function renderReportRow(item, index) {
     ${createIconField(`dm-report-icon-${fieldToken}`, item.report_icon || reportIconForDevice(item))}
     ${createEntityField({ id: `dm-report-entity-${fieldToken}`, label: t("reportEntity"), value: reportEntityForDevice(item, globalThis.STATES || {}), optional: false })}
     ${item.category === "manual-report" ? createEntityField({ id: `dm-report-history-${fieldToken}`, label: t("history"), value: item.history_entity }) : ""}
-    <span><button type="button" data-report-up aria-label="${t("moveUp")}">▲</button><button type="button" data-report-down aria-label="${t("moveDown")}">▼</button>${item.category === "manual-report" ? `<button type="button" data-report-delete aria-label="${t("remove")}"><i class="dm-segno" data-dm-segno="trash" aria-hidden="true"></i></button>` : ""}</span>
+    <span><button type="button" data-report-up aria-label="${t("moveUp")}">▲</button><button type="button" data-report-down aria-label="${t("moveDown")}">▼</button>${item.category === "manual-report" ? `<button type="button" data-report-delete aria-label="${t("remove")}">🗑️</button>` : ""}</span>
     <input type="hidden" data-report-name value="${esc(item.name)}"><input type="hidden" data-report-category value="${esc(item.category)}">
   </div>`;
 }
@@ -625,7 +625,7 @@ function renderReportEditor(target) {
   target.innerHTML = `<div class="ed-intro">${t("reportIntro")}</div><div class="ed-list" data-report-list>${items.map(renderReportRow).join("") || `<div class="ed-empty">${t("empty")}</div>`}</div>
     <button type="button" class="ed-btn-add" data-report-add>＋ ${t("addManual")}</button>
     <div class="ed-form" data-report-manual hidden><input class="ed-input" data-manual-name placeholder="${t("name")}">${createIconField("dm-manual-report-icon")}${createEntityField({ id: "dm-manual-report-entity", label: t("entity"), optional: false })}${createEntityField({ id: "dm-manual-report-history", label: t("history") })}<button type="button" class="ed-btn-add" data-manual-confirm>${t("add")}</button></div>
-    <div class="ed-action-bar" data-report-actions data-state="clean"><button type="button" class="ed-save-btn" data-report-save disabled><i class="dm-segno" data-dm-segno="check" aria-hidden="true"></i> ${t("saveReport")}</button><output data-report-status>${t("saved")}</output></div>`;
+    <div class="ed-action-bar" data-report-actions data-state="clean"><button type="button" class="ed-save-btn" data-report-save disabled>💾 ${t("saveReport")}</button><output data-report-status>${t("saved")}</output></div>`;
 }
 
 function mountReportRowControls(row, list, dirty) {
@@ -842,7 +842,7 @@ function renderDiagnostics(target) {
     Transfer: pesoScaricato(),
     Boot: tempoDiAvvio(),
   };
-  target.innerHTML = `<div class="ed-sec-title"><i class="dm-segno" data-dm-segno="heart" aria-hidden="true"></i> ${t("diagnostics")}</div><div class="ed-list">${Object.entries(rows).map(([key, value]) => `<div class="ed-row"><div class="ed-row-main"><div class="ed-row-new">${esc(key)}</div><div class="ed-row-old mono" data-dm-voce="${esc(key)}">${esc(value)}</div></div></div>`).join("")}</div>`;
+  target.innerHTML = `<div class="ed-sec-title">🩺 ${t("diagnostics")}</div><div class="ed-list">${Object.entries(rows).map(([key, value]) => `<div class="ed-row"><div class="ed-row-main"><div class="ed-row-new">${esc(key)}</div><div class="ed-row-old mono" data-dm-voce="${esc(key)}">${esc(value)}</div></div></div>`).join("")}</div>`;
   target.dataset.runtimeDiagnostics = "true";
   chiediComeArrivano(target);
 }
@@ -909,7 +909,7 @@ export function registerEditorTabs(root = globalThis.document) {
     prese.type = "button";
     prese.className = "ed-tab";
     prese.dataset.tab = "prese";
-    prese.innerHTML = '<i class="dm-segno" data-dm-segno="socket" aria-hidden="true"></i> Prese';
+    prese.textContent = "🔌 Prese";
     prese.addEventListener("click", () => globalThis.editorSwitch?.("prese"));
     const luci = tabs.querySelector('[data-tab="luci"]');
     if (luci) luci.after(prese);
@@ -917,7 +917,7 @@ export function registerEditorTabs(root = globalThis.document) {
   }
   if (tabs.querySelector('[data-tab="runtime"]')) return;
   const button = root.createElement("button"); button.type = "button"; button.className = "ed-tab";
-  button.dataset.tab = "runtime"; button.innerHTML = '<i class="dm-segno" data-dm-segno="heart" aria-hidden="true"></i> Runtime';
+  button.dataset.tab = "runtime"; button.textContent = "🩺 Runtime";
   button.addEventListener("click", () => renderEditorTab("runtime")); tabs.append(button);
 }
 
@@ -945,10 +945,10 @@ function mountLoadsEditor(target, editId = "") {
   const loads = store.getSection("loads");
   const appliances = store.getSection("appliances");
   const current = loads.find((item) => item.id === editId) || {};
-  const cards = (items, readOnly = false) => items.map((item) => `<div class="ed-row" data-load-id="${esc(item.id)}"><div class="ed-row-main"><div class="ed-row-new">${globalThis.dmSegnoDaValore?.(item.emoji_icon || item.icon, { ripiego: "socket" }) ?? ""} ${esc(item.name || t("newLoad"))}</div><div class="ed-row-old">${esc(item.category || "secondary")}</div></div>${readOnly ? "" : `<button class="ed-del" data-edit-load="${esc(item.id)}" title="${t("editLoad")}"><i class="dm-segno" data-dm-segno="pencil" aria-hidden="true"></i></button><button class="ed-del" data-delete-load="${esc(item.id)}" title="${t("remove")}"><i class="dm-segno" data-dm-segno="trash" aria-hidden="true"></i></button>`}</div>`).join("") || `<div class="ed-empty">${t("noLoads")}</div>`;
+  const cards = (items, readOnly = false) => items.map((item) => `<div class="ed-row" data-load-id="${esc(item.id)}"><div class="ed-row-main"><div class="ed-row-new">${esc(item.emoji_icon || item.icon || "🔌")} ${esc(item.name || t("newLoad"))}</div><div class="ed-row-old">${esc(item.category || "secondary")}</div></div>${readOnly ? "" : `<button class="ed-del" data-edit-load="${esc(item.id)}" title="${t("editLoad")}">✏️</button><button class="ed-del" data-delete-load="${esc(item.id)}" title="${t("remove")}">🗑️</button>`}</div>`).join("") || `<div class="ed-empty">${t("noLoads")}</div>`;
   target.innerHTML = `<div class="ed-intro">${t("loadsIntro")}</div><details class="ed-acc" open><summary class="ed-acc-head">A. ${t("appliances")} <span class="ed-acc-n">${appliances.length}</span></summary><div class="ed-acc-body">${cards(appliances, true)}</div></details>
     <details class="ed-acc" open><summary class="ed-acc-head">B. ${t("secondaryLoads")} <span class="ed-acc-n">${loads.filter((x) => x.category !== "manual-report").length}</span></summary><div class="ed-acc-body">${cards(loads.filter((x) => x.category !== "manual-report"))}</div></details>
-    <div class="ed-form" data-load-form><div class="ed-sec-title">${editId ? t("editLoad") : t("newLoad")}</div><div class="ed-form-row"><input id="dm-load-name" class="ed-input" placeholder="${t("name")}" value="${esc(current.name)}"><input id="dm-load-icon" class="ed-input ed-icon-input" placeholder="mdi:power-plug" value="${esc(current.emoji_icon || current.icon)}"></div><div class="ed-form-row"><select id="dm-load-room" class="ed-input">${globalThis.cdRoomOptions?.(current.room_id) || ""}</select></div>${entityField("dm-load-power", t("powerEntity"), current.power_entity, "sensor.load_power")}${entityField("dm-load-day", t("dailyEnergy"), current.daily_energy_entity)}${entityField("dm-load-month", t("monthlyEnergy"), current.monthly_energy_entity)}${entityField("dm-load-total", t("totalEnergy"), current.total_energy_entity)}${entityField("dm-load-history", t("history"), current.history_entity)}${entityField("dm-load-state", t("state"), current.state_entity)}${entityField("dm-load-control", t("control"), current.control_entity, "switch.load")}<label class="ed-intro"><input id="dm-load-report" type="checkbox" ${current.show_in_report !== false ? "checked" : ""}> ${t("visibleReport")}</label><label class="ed-intro"><input id="dm-load-dashboard" type="checkbox" ${current.show_in_dashboard !== false ? "checked" : ""}> ${t("visibleDashboard")}</label><button class="ed-btn-add" data-save-load><i class="dm-segno" data-dm-segno="check" aria-hidden="true"></i> ${editId ? t("saveChanges") : t("addLoad")}</button></div>`;
+    <div class="ed-form" data-load-form><div class="ed-sec-title">${editId ? t("editLoad") : t("newLoad")}</div><div class="ed-form-row"><input id="dm-load-name" class="ed-input" placeholder="${t("name")}" value="${esc(current.name)}"><input id="dm-load-icon" class="ed-input ed-icon-input" placeholder="🔌 / mdi:power-plug" value="${esc(current.emoji_icon || current.icon)}"></div><div class="ed-form-row"><select id="dm-load-room" class="ed-input">${globalThis.cdRoomOptions?.(current.room_id) || ""}</select></div>${entityField("dm-load-power", t("powerEntity"), current.power_entity, "sensor.load_power")}${entityField("dm-load-day", t("dailyEnergy"), current.daily_energy_entity)}${entityField("dm-load-month", t("monthlyEnergy"), current.monthly_energy_entity)}${entityField("dm-load-total", t("totalEnergy"), current.total_energy_entity)}${entityField("dm-load-history", t("history"), current.history_entity)}${entityField("dm-load-state", t("state"), current.state_entity)}${entityField("dm-load-control", t("control"), current.control_entity, "switch.load")}<label class="ed-intro"><input id="dm-load-report" type="checkbox" ${current.show_in_report !== false ? "checked" : ""}> ${t("visibleReport")}</label><label class="ed-intro"><input id="dm-load-dashboard" type="checkbox" ${current.show_in_dashboard !== false ? "checked" : ""}> ${t("visibleDashboard")}</label><button class="ed-btn-add" data-save-load>💾 ${editId ? t("saveChanges") : t("addLoad")}</button></div>`;
   target.querySelectorAll?.("[data-edit-load]").forEach((button) => button.addEventListener("click", () => mountLoadsEditor(target, button.dataset.editLoad)));
   target.querySelectorAll?.("[data-delete-load]").forEach((button) => button.addEventListener("click", async () => { try { await store.removeItem("loads", button.dataset.deleteLoad); } catch (error) { globalThis.alert?.(error.message); } }));
   target.querySelector?.("[data-save-load]")?.addEventListener("click", async () => {

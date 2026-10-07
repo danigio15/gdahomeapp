@@ -117,10 +117,9 @@ test("la linguetta: una scheda per pacco, le celle con la più bassa e la più a
   /* Lo squilibrio sulla forcella, con la soglia di serie. */
   assert.match(piano(markup), /Δ 42 mV/);
   assert.match(piano(markup), /oltre la soglia di 30 mV/);
-  /* Nessuna emoji: i segni vengono dal catalogo. */
-  assert.doesNotMatch(markup, /\p{Extended_Pictographic}/u);
-  assert.match(markup, /data-dm-segno="battery"/);
-  assert.match(markup, /data-dm-segno="warning"/);
+  /* Le icone sono le emoji della 1.8.0, come nelle altre sezioni. */
+  assert.match(markup, /<i aria-hidden="true">🔋<\/i>/);
+  assert.match(markup, /<i aria-hidden="true">⚠️<\/i>/);
 });
 
 test("la tessera in Home: la carica, il verso e l'attenzione solo per le celle", () => {
@@ -154,6 +153,6 @@ test("la linguetta sta dentro Energia, accanto a Istantanea, e c'è solo coi pac
   /* La scheda si riempie alla prima apertura dal rilevamento dei BMS. */
   assert.match(scheda, /pacchiDaImportare/);
   assert.match(scheda, /costruisciSchedaDichiarata/);
-  for (const sorgente of [montaggio, scheda, parole])
-    assert.doesNotMatch(sorgente, /\p{Extended_Pictographic}/u);
+  /* La linguetta porta la batteria davanti al nome, come «☀️ Solare». */
+  assert.match(montaggio, /`🔋 \$\{esc\(t\("Batterie", "Batteries"\)\)\}`/);
 });

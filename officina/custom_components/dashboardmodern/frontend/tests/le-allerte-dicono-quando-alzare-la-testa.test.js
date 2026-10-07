@@ -332,7 +332,7 @@ test("la pagina, la scheda e la tessera sono presentate a tutti i posti che le c
   /* La mappa scheda→chiave sta nel core da quando la legge anche l'elenco unico
    * degli interruttori: si guarda là, non nel testo di chi la ospita. */
   assert.match(await leggi("core/lelenco-delle-sezioni.js"), /chiave: "allerte"/);
-  assert.match(await leggi("sections/todo-editor-section.js"), /\["allerte", "warning"/);
+  assert.match(await leggi("sections/todo-editor-section.js"), /\["allerte", "⚠️"/);
   assert.match(await leggi("sections/home-widgets-section.js"), /key: "allerte",/);
   assert.match(await leggi("core/chiavi-di-configurazione.js"), /"cd_allerte"/);
   /* Il disegno c'e': la tessera e la barra non restano col simbolo di ripiego. */

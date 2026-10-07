@@ -248,7 +248,7 @@ test("la tessera in Home: senza batteria il livello e' il carburante, e lo dice"
   assert.equal((home.match(/misura\("dm\.ev_carburante"\)/g) || []).length, 3);
   assert.match(home, /const aBenzina = clean\(auto\?\.tipo\) === "termica";/);
   assert.equal((home.match(/carburante: Boolean\(serbatoio\),/g) || []).length, 2);
-  assert.match(home, /lettura\.carburante \? segnoHtml\("ev"\) : segnoHtml\("battery"\)/);
+  assert.match(home, /lettura\.carburante \? "⛽" : "🔋"/);
 });
 
 test("il modulo e' installato dal runtime, dopo il vestito della pagina Auto", async () => {

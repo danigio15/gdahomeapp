@@ -313,15 +313,8 @@ test("nella pagina Stanze ogni piano porta il suo segno", async ({ page }, testI
   /* Il foglio li scrive in maiuscolo e `innerText` stringe gli spazi: si
    * confronta quello che dicono. */
   expect(
-    (await titoli.allInnerTexts()).map((testo) => testo.replace(/\s+/g, " ").trim().toLowerCase()),
-  ).toEqual(["piano terra", "primo piano", "senza piano"]);
-  /* I segni salvati quando erano emoji escono come il disegno che dice la
-   * stessa cosa: la casa, e la mansarda per la scala. */
-  expect(
-    await titoli.evaluateAll((nodi) =>
-      nodi.map((nodo) => nodo.querySelector("[data-dm-segno]")?.dataset.dmSegno || ""),
-    ),
-  ).toEqual(["home", "room-attic", ""]);
+    (await titoli.allInnerTexts()).map((testo) => testo.replace(/\s+/g, " ").toLowerCase()),
+  ).toEqual(["🏠piano terra", "🪜primo piano", "senza piano"]);
   await page.locator("#page-stanze").screenshot({ path: `${SCATTI}/piani-stanze-vero.png` });
 });
 
@@ -331,28 +324,25 @@ test("il segno di un piano si sceglie da una striscia, e resta salvato", async (
   await apriLeStanze(page, testInfo);
   const riga = page.locator('#dm-piani-pannello [data-dm-piano="Piano terra"]');
   const segno = riga.locator("[data-dm-piano-segno]");
-  const disegno = (nodo) => nodo.locator("[data-dm-segno]").getAttribute("data-dm-segno");
-  /* Senza icona scelta porta quella di serie: la casa del catalogo. */
-  expect(await disegno(segno)).toBe("home");
+  /* Senza icona scelta porta quella di serie. */
+  await expect(segno).toHaveText("🏢");
   await expect(riga.locator(".dm-piano-segni")).toHaveCount(0);
 
   await segno.click();
   const striscia = riga.locator(".dm-piano-segni button");
   await expect(striscia).toHaveCount(8);
-  await riga.locator('[data-dm-piano-scegli="room-attic"]').click();
+  await riga.locator('[data-dm-piano-scegli="🪜"]').click();
 
-  await expect(segno.locator('[data-dm-segno="room-attic"]')).toHaveCount(1);
+  await expect(segno).toHaveText("🪜");
   /* La striscia si richiude da sola: scelto è scelto. */
   await expect(riga.locator(".dm-piano-segni")).toHaveCount(0);
   expect(await page.evaluate(() => JSON.parse(localStorage.getItem("cd_floor_icons")))).toEqual({
-    "Piano terra": "room-attic",
+    "Piano terra": "🪜",
   });
   /* E il piano accanto non si è mosso: si cambia uno per volta. */
   await expect(
-    page.locator(
-      '#dm-piani-pannello [data-dm-piano="Primo piano"] [data-dm-piano-segno] [data-dm-segno="home"]',
-    ),
-  ).toHaveCount(1);
+    page.locator('#dm-piani-pannello [data-dm-piano="Primo piano"] [data-dm-piano-segno]'),
+  ).toHaveText("🏢");
 
   /* Un secondo tocco sul segno richiude senza cambiare niente: la striscia è
    * un cassetto, non una finestra da chiudere con la crocetta. */
@@ -360,7 +350,7 @@ test("il segno di un piano si sceglie da una striscia, e resta salvato", async (
   await expect(riga.locator(".dm-piano-segni")).toHaveCount(1);
   await segno.click();
   await expect(riga.locator(".dm-piano-segni")).toHaveCount(0);
-  await expect(segno.locator('[data-dm-segno="room-attic"]')).toHaveCount(1);
+  await expect(segno).toHaveText("🪜");
 });
 
 /* «Nel momento si provi a mettere il nome del piano non fa scrivere nulla»

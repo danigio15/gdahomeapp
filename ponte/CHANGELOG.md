@@ -11,6 +11,61 @@ fuori. La plancia dentro continua a dire la sua, e si legge dov'è sempre
 stata: nella pastiglia «La plancia» della console. Sono due numeri perché
 sono due cose.
 
+## 1.10.0
+
+**gdahome Premium si accende.** Da questa versione una casa è Premium se ha una
+licenza, comprata nell'app o regalata, e Base se non ce l'ha. La licenza è della
+casa: sono Premium insieme a lei tutti i telefoni abbinati e il browser.
+
+- **Base**, gratis: una casa, la plancia principale, l'accesso dalla rete di
+  casa.
+- **Premium**: fino a 8 plance e 10 case, l'accesso da fuori casa, la
+  configurazione della plancia e i dispositivi Zigbee dall'app, e gdanav
+  Premium compreso.
+
+**Premium si compra nell'app gdahome, sull'iPhone e su Android.** C'è
+l'abbonamento mensile e quello annuale, ai prezzi scritti nel negozio, e la
+prima volta i primi 14 giorni sono gratis. Si disdice dal negozio, quando si
+vuole. Chi cambia telefono ritrova l'abbonamento con «Ripristina
+abbonamento»: se sta su un'altra casa, l'app prima chiede, perché un
+abbonamento vale per una casa alla volta.
+
+**La casa deve avere l'add-on 1.10.0.** È l'add-on che tiene la licenza della
+casa e la rinnova da solo. Con un add-on più vecchio la casa resta Base, e la
+pagina Premium dell'app dice di aggiornarlo invece di proporre l'abbonamento:
+nessuno paga per una casa che non può diventare Premium.
+
+**Le licenze regalate valgono.** Quelle date dalla Gestione o
+dall'installatore arrivano alla casa da sole. Un codice regalo si riscatta
+dall'app per Android, dal browser o dalla console dell'add-on. Sull'iPhone il
+codice non si inserisce, per le regole dell'App Store, ma Premium arriva anche
+lì, perché è della casa.
+
+**La matricola della casa si copia.** Nella console dell'add-on, scheda
+«Licenza», c'è la riga «Matricola di questa casa» con il tasto «Copia»: è
+quella che serve a chi deve regalare Premium a questa casa.
+
+**Le icone tornano quelle della 1.8.0, meteo compreso.** I disegni che con la
+1.9.2 avevano preso il posto delle emoji non ci sono più: nella Home, nel
+meteo, nelle stanze e negli editor tornano le icone di prima. Restano tutte le
+novità della 1.9.0 e della 1.9.2, con le icone della 1.8.0: la stanza come
+tavola di comandi, le batterie di accumulo, la cottura e i varchi da escludere
+dall'antifurto.
+
+**Nella Gestione gdahome ci sono gli abbonamenti.** Una pagina nuova,
+«Abbonamenti», dice quanti abbonamenti ci sono su App Store e su Google Play,
+quanti mensili e quanti annuali, quanti in prova gratuita e quanti disdetti,
+quanti sono finiti negli ultimi 30 giorni e quante prove sono passate a
+pagamento. Sotto c'è l'elenco, un abbonamento per riga, con la casa, il piano,
+il prezzo e cosa succede dopo. Gli acquisti di prova (TestFlight e tester di
+Google) si vedono, ma non entrano nei conti. Una volta al giorno il quadro
+richiede ogni abbonamento al negozio, così chi disdice si vede il giorno dopo.
+
+**Regalare Premium a una casa è più semplice.** In «Licenze» la casa si sceglie
+da un elenco con tutte le case degli installatori, col loro nome. Per una casa
+che non è di nessun installatore resta la casella della matricola, e nella
+scheda di un impianto la matricola è intera, con «Copia».
+
 ## 1.9.2
 
 **Torna la plancia della 1.9.0, con la correzione che mancava.** Tornano la

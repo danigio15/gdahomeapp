@@ -555,7 +555,7 @@ function presetOptions(preferita) {
     .map((value) => {
       // La coda passa fuori da esc(): clean() mangerebbe lo spazio davanti.
       const coda = value === 100 ? t("Aperta", "Open") : value === 0 ? t("Chiusa", "Closed") : "";
-      const stella = value === preferita ? "★ " : "";
+      const stella = value === preferita ? "⭐ " : "";
       return `<option value="${value}">${stella}${value}%${coda ? ` · ${esc(coda)}` : ""}</option>`;
     })
     .join("");
@@ -566,7 +566,7 @@ function presetSelectMarkup(view, tutte) {
   const label = t("Scegli la posizione", "Choose the position");
   return `<span class="tapp-btn dm-tapp-preset">
       <select data-dm-preset aria-label="${esc(label)}" title="${esc(label)}">
-        <option value="">${esc(label)}</option>
+        <option value="">↕ ${esc(label)}</option>
         ${presetOptions(view.preset)}
       </select>
     </span>`;

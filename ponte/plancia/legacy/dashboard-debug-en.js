@@ -37,11 +37,11 @@ function updateDebug() {
     sensors.forEach(([eid, label]) => {
         const s = STATES[eid];
         if (!s) {
-            html += `<div style="color:#ef4444"><i class="dm-segno" data-dm-segno="error" aria-hidden="true"></i> ${label}: <span style="color:#f87171">${eid}</span> — NON TROVATO</div>`;
+            html += `<div style="color:#ef4444">❌ ${label}: <span style="color:#f87171">${eid}</span> — NON TROVATO</div>`;
         } else {
             const ago = Math.round((Date.now() - new Date(s.last_updated).getTime()) / 60000);
             const col = ago > 60 ? '#f59e0b' : '#34d399';
-            html += `<div style="color:${col}"><i class="dm-segno" data-dm-segno="check" aria-hidden="true"></i> ${label}: <strong>${String(s.state).replace(/[&<>"']/g, (c) => '&#' + c.charCodeAt(0) + ';')}</strong> <span style="color:#94a3b8;font-size:10px;">(${ago}min fa · ${eid})</span></div>`;
+            html += `<div style="color:${col}">✅ ${label}: <strong>${String(s.state).replace(/[&<>"']/g, (c) => '&#' + c.charCodeAt(0) + ';')}</strong> <span style="color:#94a3b8;font-size:10px;">(${ago}min fa · ${eid})</span></div>`;
         }
     });
     panel.innerHTML = html;

@@ -46,7 +46,6 @@ import {
   t,
   wrapFunction,
 } from "./shared.js";
-import { segnoHtml, senzaEmoji } from "../core/segni-del-catalogo.js";
 
 const KEY = "__DASHBOARDMODERN_LIGHTS_PAGE__";
 const state = (root[KEY] ||= {
@@ -196,7 +195,7 @@ export function renderLightsHeroMarkup(views) {
       <span class="dm-lucip-count ${summary.on ? "is-on" : ""}" data-dm-lucip-summary>${pageSummaryMarkup(summary)}</span>
     </div>
     <div class="dm-lucip-bulk">
-      <button type="button" data-dm-lucip-all="on">${segnoHtml("lights")} ${esc(t("Accendi tutte", "Turn all on"))}</button>
+      <button type="button" data-dm-lucip-all="on">💡 ${esc(t("Accendi tutte", "Turn all on"))}</button>
       <span class="dm-lucip-bulk-div" aria-hidden="true"></span>
       <button type="button" data-dm-lucip-all="off">${esc(t("Spegni tutte", "Turn all off"))}</button>
     </div>
@@ -246,8 +245,8 @@ export function pageCardMarkup(view) {
         <strong>${esc(view.name)}</strong>
         <span class="dm-lucip-meta">
           <small class="dm-lucip-state" data-dm-lucip-state>${stateText(view)}</small>
-          ${view.consumo ? `<span class="dm-lucip-badge" data-kind="consumo">${segnoHtml("power")} ${esc(view.consumo)}</span>` : ""}
-          ${bloccata ? `<span class="dm-lucip-badge" data-kind="bloccata">${segnoHtml("lock")} ${esc(t("Solo lettura", "Read only"))}</span>` : ""}
+          ${view.consumo ? `<span class="dm-lucip-badge" data-kind="consumo">⚡ ${esc(view.consumo)}</span>` : ""}
+          ${bloccata ? `<span class="dm-lucip-badge" data-kind="bloccata">🔒 ${esc(t("Solo lettura", "Read only"))}</span>` : ""}
           ${badge ? `<span class="dm-lucip-badge" data-kind="${badge.kind}">${badge.label}</span>` : ""}
         </span>
       </span>
@@ -330,7 +329,7 @@ export function ensureLightsTab() {
   tab.className = "tab";
   tab.dataset.tab = LIGHTS_TAB;
   tab.id = `tab-${LIGHTS_TAB}`;
-  tab.innerHTML = `<span class="icon">${segnoHtml("lights")}</span><span class="text">${esc(t("Luci", "Lights"))}</span>`;
+  tab.innerHTML = `<span class="icon">💡</span><span class="text">${esc(t("Luci", "Lights"))}</span>`;
   /* Il gestore che il runtime lega alle voci lo lega una volta sola, al
    * caricamento: questa arriva dopo, e il suo tocco se lo deve gestire da
    * se', facendo la stessa identica cosa. */
@@ -882,7 +881,7 @@ function installGuardiaSoloLettura() {
   if (typeof originale !== "function" || originale.__dmGuardiaSoloLettura) return false;
   function toggleGuardato(entity, ...resto) {
     if (!siComanda(clean(entity))) {
-      root.edToast?.(senzaEmoji(t("🔒 Si vede ma non si comanda", "🔒 Shown but not controllable")));
+      root.edToast?.(t("🔒 Si vede ma non si comanda", "🔒 Shown but not controllable"));
       return undefined;
     }
     return originale.call(this, entity, ...resto);

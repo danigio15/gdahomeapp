@@ -92,7 +92,6 @@ import {
   telecamereVisibili,
 } from "../core/telecamere-riservate.js";
 import { iconGlyphMarkup } from "./icon-engine-section.js";
-import { segnoHtml } from "../core/segni-del-catalogo.js";
 
 const KEY = "__DASHBOARDMODERN_SECURITY_SHOWCASE__";
 const STYLE_ID = "dm-security-showcase-style";
@@ -490,7 +489,7 @@ function pastigliaDellIngresso(riga) {
     : riga.entity;
   return `<span class="dm-sec-zona" data-stato="${esc(come)}" data-escluso="${escluso}" title="${esc(titolo)}">
     <i aria-hidden="true">${disegnoDiCasa(riga.glifo, { misura: 20, ripiego: "door" })}</i><b>${esc(riga.name)}</b>${
-      escluso ? `<em class="dm-sec-zona-esclusa">${segnoHtml("unlock")}</em>` : ""
+      escluso ? `<em class="dm-sec-zona-esclusa">🔓</em>` : ""
     }</span>`;
 }
 
@@ -786,7 +785,7 @@ function skeletonMarkup(labels) {
       <span class="dm-sec-orb" aria-hidden="true">
         <span class="dm-sec-orb-track"></span>
         <span class="dm-sec-orb-sweep"></span>
-        <span class="dm-sec-orb-core"><span id="alarm-icon-new">${segnoHtml("security")}</span></span>
+        <span class="dm-sec-orb-core"><span id="alarm-icon-new">🛡️</span></span>
         <span class="dm-sec-beacon" id="alarm-status-dot"></span>
       </span>
       <div class="dm-sec-readout-copy">

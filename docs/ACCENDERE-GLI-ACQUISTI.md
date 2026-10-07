@@ -1,7 +1,9 @@
 # Accendere gli acquisti
 
-Tutto è pronto e **spento**. Questa pagina è quello che si legge il giorno che
-si accende. Non serve ricordarsi niente: c'è un comando che dice a che punto
+**Dalla 1.10.0 il primo passo è fatto**: la chiave è nell'add-on e nell'app, il
+centralino è ancora senza. Fino alla 1.9.2 tutto era pronto e spento. Questa
+pagina dice come si accende, e cosa resta: il secondo passo, quello del
+centralino. Non serve ricordarsi niente: c'è un comando che dice a che punto
 sei.
 
     node strumenti/accendi-gli-acquisti.mjs
@@ -11,10 +13,11 @@ l'ultimo passo, quello del centralino.
 
 ## L'interruttore è uno solo
 
-`CHIAVE_PUBBLICA_LICENZE`. Finché è la stringa vuota — com'è oggi — nessun
-gettone vale, l'app non mette lucchetti e il centralino lascia passare tutti.
-Non c'è nessun altro posto da toccare, e nessun altro modo di accendere per
-sbaglio.
+`CHIAVE_PUBBLICA_LICENZE`. Finché è la stringa vuota — com'è stata fino alla
+1.9.2 — nessun gettone vale, l'app non mette lucchetti e il centralino lascia
+passare tutti. Non c'è nessun altro posto da toccare, e nessun altro modo di
+accendere per sbaglio. Dalla 1.10.0 nell'add-on e nell'app c'è la pubblica
+della macchina del quadro; nel centralino è ancora vuota.
 
 Sta in tre file qui (`ponte`, `centralino`, `app`) e in uno in gdanav. Li
 scrive tutti `strumenti/chiave-licenze.mjs`, e una prova controlla che siano
@@ -27,7 +30,7 @@ Premium si vende nell'app gdahome, sull'iPhone e su Android, e vale per tutta
 la casa: anche sugli altri telefoni abbinati e nel browser. Si accende in due
 passi.
 
-| | spento | primo passo | secondo passo |
+| | spento (fino alla 1.9.2) | primo passo (dalla 1.10.0) | secondo passo |
 |---|---|---|---|
 | chiave nell'add-on e nell'app | vuota | **sì** | sì |
 | chiave nel centralino | vuota | vuota | **sì** |

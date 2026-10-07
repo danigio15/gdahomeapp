@@ -1,5 +1,4 @@
 // Beta 25 real-device fixes: multi-sensor temperatures and appliance artwork ownership.
-import { segnoDaValoreHtml, segnoHtml } from "../core/segni-del-catalogo.js";
 import { applianceArtwork, canonicalArtworkType } from "../core/appliance-artwork.js";
 import { directEmoji, roomGlyph } from "../core/personalization-catalog.js";
 import { humidityEntry, normalizeTemperatureEntry, temperatureEntries } from "../core/room-overview.js";
@@ -130,7 +129,7 @@ function scriviCampoEntita(input, valore) {
 }
 
 function entityField(id, label, value = "", optional = true) {
-  return `<label class="ed-slot"><span class="ed-slot-lbl">${esc(label)}${optional ? ` <span class="ed-acc-n">${t("Facoltativo", "Optional")}</span>` : ""}</span><span class="ed-form-row"><input id="${id}" class="ed-input ed-slot-in mono" value="${esc(value)}" placeholder="sensor.entity"><button type="button" class="dm-entity-picker" data-beta25-pick="${id}" aria-label="${t("Seleziona entità", "Select entity")}">${segnoHtml("search")}</button></span></label>`;
+  return `<label class="ed-slot"><span class="ed-slot-lbl">${esc(label)}${optional ? ` <span class="ed-acc-n">${t("Facoltativo", "Optional")}</span>` : ""}</span><span class="ed-form-row"><input id="${id}" class="ed-input ed-slot-in mono" value="${esc(value)}" placeholder="sensor.entity"><button type="button" class="dm-entity-picker" data-beta25-pick="${id}" aria-label="${t("Seleziona entità", "Select entity")}">🔍</button></span></label>`;
 }
 
 function temperatureRowsMarkup() {
@@ -138,7 +137,7 @@ function temperatureRowsMarkup() {
     .map(({ room, entry }) => {
       const sensors = [clean(entry.temp), humidityEntity(entry)].filter(Boolean).join(" · ");
       const detail = [clean(entry.name), sensors].filter(Boolean).join(" · ");
-      return `<article class="ed-row dm-temperature-card" data-beta25-temperature-row data-room-id="${esc(room.id)}" data-temperature-id="${esc(entry.id)}"><div class="dm-temperature-card-icon">${(/^mdi:/i.test(clean(room.icon)) && root.cdIconMarkup?.(room.icon, 28)) || segnoDaValoreHtml(glyph(room.icon), { misura: 28, ripiego: "thermometer" })}</div><div class="ed-row-main"><div class="ed-row-new">${esc(clean(room.name) || (t("Stanza", "Room")))}</div><div class="ed-row-old">${esc(detail)}</div></div><button type="button" class="ed-del" data-beta25-temperature-edit>${segnoHtml("pencil")}</button><button type="button" class="ed-del" data-beta25-temperature-delete>${segnoHtml("trash")}</button></article>`;
+      return `<article class="ed-row dm-temperature-card" data-beta25-temperature-row data-room-id="${esc(room.id)}" data-temperature-id="${esc(entry.id)}"><div class="dm-temperature-card-icon">${root.cdIconMarkup?.(room.icon || "🌡️", 28) || esc(glyph(room.icon))}</div><div class="ed-row-main"><div class="ed-row-new">${esc(clean(room.name) || (t("Stanza", "Room")))}</div><div class="ed-row-old">${esc(detail)}</div></div><button type="button" class="ed-del" data-beta25-temperature-edit>✏️</button><button type="button" class="ed-del" data-beta25-temperature-delete>🗑️</button></article>`;
     })
     .join("");
 }

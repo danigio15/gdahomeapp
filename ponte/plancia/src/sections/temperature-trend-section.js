@@ -48,7 +48,6 @@ import {
   clean,
   doc,
   english,
-  esc,
   installStyle,
   locale,
   readJson,
@@ -58,7 +57,6 @@ import {
   writeJsonIfChanged,
   senzaCadere,
 } from "./shared.js";
-import { segnoDaValoreHtml } from "../core/segni-del-catalogo.js";
 
 const KEY = "__DASHBOARDMODERN_TEMPERATURE_TREND__";
 const state = (root[KEY] ||= {
@@ -430,9 +428,7 @@ function ensurePanel() {
    * guardo, e da quando. */
   const misure = element("div", "dm-trend-misure");
   for (const misura of MISURE) {
-    const button = element("button", "dm-trend-misura");
-    /* Il segno della misura e' il disegno del catalogo, non l'emoji. */
-    button.innerHTML = `${segnoDaValoreHtml(misura.glifo, { ripiego: "thermometer" })} ${esc(t(misura.it, misura.en))}`;
+    const button = element("button", "dm-trend-misura", `${misura.glifo} ${t(misura.it, misura.en)}`);
     button.type = "button";
     button.dataset.dmMisura = misura.chiave;
     button.addEventListener("click", () => {

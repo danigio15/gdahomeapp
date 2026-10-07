@@ -31,15 +31,14 @@ test("il simbolo in tabella e' quello che la scheda si scrive", () => {
   /* Due simboli diversi per la stessa scheda sarebbero due padroni: qui si
    * controlla che chi disegna la linguetta e chi la stringe dicano lo stesso. */
   const scritti = {
-    backup: ["sections/backup-editor-section.js", "check"],
-    people: ["sections/people-editor-section.js", "person"],
-    robot: ["sections/robot-editor-section.js", "robot"],
-    doors: ["sections/security-doors-editor-section.js", "door"],
-    todo: ["sections/todo-editor-section.js", "sliders"],
+    backup: ["sections/backup-editor-section.js", "💾"],
+    people: ["sections/people-editor-section.js", "👥"],
+    robot: ["sections/robot-editor-section.js", "🤖"],
+    doors: ["sections/security-doors-editor-section.js", "🚪"],
+    todo: ["sections/todo-editor-section.js", "🧩"],
   };
-  /* Il simbolo e' la chiave del disegno del catalogo, non un'emoji. */
   for (const [scheda, [file, simbolo]] of Object.entries(scritti)) {
-    assert.match(leggi(file), new RegExp(`tab\\.innerHTML = \`\\$\\{segnoHtml\\("${simbolo}"\\)\\} `), file);
+    assert.match(leggi(file), new RegExp(`tab\\.textContent = \`${simbolo} `), file);
     assert.match(rifiniture, new RegExp(`\\n  ${scheda}: "${simbolo}"`), scheda);
   }
 });

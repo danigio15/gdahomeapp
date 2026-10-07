@@ -19,7 +19,6 @@
  * Quello che gia' c'e' scritto non si tocca: chi aveva le persone e poi le
  * toglie non si vede sparire la sua scelta, si vede spiegare cosa manca.
  */
-import { segnoHtml } from "../core/segni-del-catalogo.js";
 import {
   CHIAVE_RISERVATE,
   conLaRiservata,
@@ -86,7 +85,7 @@ function rigaMarkup(camera, acceso) {
       <b>${esc(camera.name)}</b>
       <small class="mono">${esc(camera.entity)}</small>
     </span>
-    <span class="dm-camp-segno" aria-hidden="true">${acceso ? segnoHtml("lock") : ""}</span>
+    <span class="dm-camp-segno" aria-hidden="true">${acceso ? "🔒" : ""}</span>
   </label>`;
 }
 

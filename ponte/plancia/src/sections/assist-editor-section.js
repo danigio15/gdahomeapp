@@ -14,7 +14,6 @@
  * stessa del guscio, con la stessa chiave — la casella di prima e' sparita,
  * perche' due modi di dire la stessa cosa sono due modi di tenerli allineati.
  */
-import { segnoHtml } from "../core/segni-del-catalogo.js";
 import { CHIAVE_ASSIST, SEZIONE_ASSIST, normalizzaAssist } from "../core/assist-model.js";
 import { siPuoParlare } from "./assist-section.js";
 import {
@@ -80,7 +79,7 @@ function rigaMarkup() {
   const config = configurazione();
   const senzaVoce = !siPuoParlare();
   return `<div class="ed-slot dm-assist-ed" data-dm-assist-ed>
-    <div class="ed-slot-lbl">${segnoHtml("chat")} Assist</div>
+    <div class="ed-slot-lbl">🗣️ Assist</div>
     <div class="dm-assist-ed-nota">${esc(
       t(
         "Un tasto che apre l'assistente di Home Assistant: si scrive la domanda, oppure si tocca il microfono e si parla. Le frasi le capisce Home Assistant — la plancia gliele passa e basta.",
@@ -95,7 +94,7 @@ function rigaMarkup() {
       <span>${esc(t("Assistente (vuoto = quello di serie)", "Assistant (empty = the default one)"))}</span>
       <span class="ed-form-row dm-editor-entity-row">
         <input id="dm-assist-agente" class="ed-input mono" data-dm-assist-agente value="${esc(config.agente)}" placeholder="conversation.home_assistant" autocomplete="off" spellcheck="false">
-        <button type="button" class="dm-entity-picker" data-dm-assist-pick="dm-assist-agente" aria-label="${esc(t("Scegli entità", "Choose entity"))}">${segnoHtml("search")}</button>
+        <button type="button" class="dm-entity-picker" data-dm-assist-pick="dm-assist-agente" aria-label="${esc(t("Scegli entità", "Choose entity"))}">🔍</button>
       </span>
     </label>
     ${

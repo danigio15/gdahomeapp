@@ -35,7 +35,6 @@ import {
   writeJsonIfChanged,
   senzaCadere,
 } from "./shared.js";
-import { segnoDaValoreHtml, segnoHtml, senzaEmoji } from "../core/segni-del-catalogo.js";
 
 const KEY = "__DASHBOARDMODERN_TODO_EDITOR__";
 const state = (root[KEY] ||= { installed: false, evidAperto: -1 });
@@ -56,12 +55,12 @@ function catalogoTessere() {
     /* L'avviso della chat di assistenza: compare solo con una risposta da
      * leggere, e di serie sta per primo — e' una risposta a chi ha chiesto
      * aiuto. Chi non lo vuole in Home deve poterlo spegnere da qui. */
-    ["assistenza", "chat", t("Assistenza", "Support")],
-    ["evidenza", "star", t("In evidenza", "Highlights")],
+    ["assistenza", "💬", t("Assistenza", "Support")],
+    ["evidenza", "⭐", t("In evidenza", "Highlights")],
     /* Le sezioni che si fa l'utente (#262): una voce sola per tutte, come gli
      * avvisi personalizzati. Sono tante quante uno se ne fa, e una riga a testa
      * riempirebbe il catalogo di voci diverse da una casa all'altra. */
-    ["mie", "tools", t("Sezioni mie", "My sections")],
+    ["mie", "🧰", t("Sezioni mie", "My sections")],
     /* Le segnalazioni: la riga sta qui per tutti, ma la tessera in Home la
      * vede solo chi tiene la repository — il suo modello torna `null` per
      * chiunque altro. Chi non ha la console trova quindi un interruttore che
@@ -69,106 +68,106 @@ function catalogoTessere() {
      * al contrario: chi ce l'ha deve poterla spostare e spegnere come le
      * altre, e una tessera senza la sua riga qui non si puo' ne' ordinare ne'
      * nascondere. */
-    ["segnalazioni", "chat", t("Segnalazioni", "Reports")],
+    ["segnalazioni", "🎫", t("Segnalazioni", "Reports")],
     /* Cosa c'e' da aggiornare in casa (#498). Come le segnalazioni, la riga
      * sta qui per tutti e la tessera compare solo quando c'e' qualcosa da
      * fare: senza aggiornamenti in attesa il suo modello torna `null`. Chi
      * non vuole vederli nemmeno quando ci sono lo spegne da qui. */
-    ["aggiornamenti", "refresh", t("Aggiornamenti", "Updates")],
+    ["aggiornamenti", "⬆️", t("Aggiornamenti", "Updates")],
     /* Impegni e cose da fare stanno in una tessera sola (#259): erano due
      * mattonelle con la stessa faccia, e chi guardava doveva ricordarsi quale
      * era quale. Dentro restano due blocchi, perche' un appuntamento succede a
      * un'ora e non si spunta, e una cosa da fare si spunta e un'ora non ce
      * l'ha. */
-    ["agenda", "calendar", t("Agenda", "Agenda")],
-    ["luci", "lights", t("Luci", "Lights")],
-    ["clima", "air-conditioner", t("Clima", "Climate")],
-    ["tapparelle", "window", t("Finestre", "Windows")],
-    ["sicurezza", "security", t("Sicurezza", "Security")],
+    ["agenda", "📅", t("Agenda", "Agenda")],
+    ["luci", "💡", t("Luci", "Lights")],
+    ["clima", "❄️", t("Clima", "Climate")],
+    ["tapparelle", "🪟", t("Finestre", "Windows")],
+    ["sicurezza", "🛡️", t("Sicurezza", "Security")],
     /* Le porte e i cancelli (#457): erano dentro la Sicurezza, e adesso hanno
      * tessera loro perche' rispondono a un'altra domanda — non «come sta la
      * casa» ma «aprimi il portone». Si ordinano e si spengono ognuna per se'. */
-    ["porte", "door", t("Apri porte", "Openers")],
-    ["telecamere", "camera", t("Telecamere", "Cameras")],
-    ["energia", "power", t("Energia", "Energy")],
-    ["elettrodomestici", "washer", t("Elettrodomestici", "Appliances")],
-    ["temperatura", "thermometer", t("Temperatura", "Temperature")],
+    ["porte", "🚪", t("Apri porte", "Openers")],
+    ["telecamere", "📹", t("Telecamere", "Cameras")],
+    ["energia", "⚡", t("Energia", "Energy")],
+    ["elettrodomestici", "🫧", t("Elettrodomestici", "Appliances")],
+    ["temperatura", "🌡️", t("Temperatura", "Temperature")],
     /* Il MiniPC mancava del tutto: aveva la sua pagina e le sue caselle, e in
      * Home non c'era modo ne' di vederlo ne' di dire che non lo si vuole. */
-    ["minipc", "computer", t("MiniPC", "MiniPC")],
-    ["ev", "ev", t("Auto", "Car")],
+    ["minipc", "🖥️", t("MiniPC", "MiniPC")],
+    ["ev", "🚗", t("Auto", "Car")],
     /* «Non esiste piu' aspirapolvere ma si chiama Robot»: la sezione ha
      * cambiato nome, e la tessera che la racconta deve chiamarsi come lei. */
-    ["robot", "robot", t("Robot", "Robots")],
-    ["solare", "sun", t("Solare termico", "Solar thermal")],
+    ["robot", "🤖", t("Robot", "Robots")],
+    ["solare", "🌞", t("Solare termico", "Solar thermal")],
     /* Lo scaldabagno elettrico (#253): la scheda del solare guardava il salto
      * fra le sonde, questo guarda quanto manca all'acqua calda. */
-    ["scaldabagno", "room-bathroom", t("Scaldabagno", "Water heater")],
-    ["caldaia", "radiator", t("Caldaia", "Boiler")],
-    ["piscina", "room-pool", t("Piscina", "Pool")],
-    ["prese", "socket", t("Prese", "Sockets")],
-    ["media", "speaker", t("Musica", "Media")],
-    ["irrigazione", "water", t("Irrigazione", "Irrigation")],
+    ["scaldabagno", "🚿", t("Scaldabagno", "Water heater")],
+    ["caldaia", "🔥", t("Caldaia", "Boiler")],
+    ["piscina", "🏊", t("Piscina", "Pool")],
+    ["prese", "🔌", t("Prese", "Sockets")],
+    ["media", "🔊", t("Musica", "Media")],
+    ["irrigazione", "💧", t("Irrigazione", "Irrigation")],
     /* Il gruppo di continuita' (#256): non e' la tessera delle batterie —
      * quella conta le pile dei sensori, questa dice se la casa ha corrente. */
-    ["ups", "socket", t("UPS", "UPS")],
+    ["ups", "🔌", t("UPS", "UPS")],
     /* Le allerte (#296): si accende quando una fonte ha qualcosa da dire. */
-    ["allerte", "warning", t("Allerte", "Alerts")],
+    ["allerte", "⚠️", t("Allerte", "Alerts")],
     /* Chi non risponde (#33): l'unica tessera che di solito NON c'è. Compare
      * quando qualcosa di configurato va offline, e sparisce quando torna. Sta
      * fra le tessere che si possono spegnere come le altre, perché chi ha una
      * casa con un'entità cronicamente muta deve poterla zittire — ma di serie
      * è accesa: un guasto muto è il guasto che dura di più. */
-    ["nonrisponde", "router", t("Dispositivi non connessi", "Disconnected devices")],
+    ["nonrisponde", "📡", t("Dispositivi non connessi", "Disconnected devices")],
     /* La raccolta differenziata (#293): dice cosa mettere fuori stasera. */
-    ["rifiuti", "refresh", t("Rifiuti", "Waste")],
+    ["rifiuti", "♻️", t("Rifiuti", "Waste")],
     /* Gli animali di casa (#145): «la sezione animali non appare nei widget
      * della home». La sezione c'era da un pezzo, la tessera no, e senza una
      * riga qui non si sarebbe potuta ne' ordinare ne' spegnere. */
-    ["animali", "pet", t("Animali", "Pets")],
-    ["varchi", "door", t("Varchi", "Openings")],
+    ["animali", "🐾", t("Animali", "Pets")],
+    ["varchi", "🚪", t("Varchi", "Openings")],
     /* La presenza (#432): dice in quante stanze c'e' qualcuno adesso, e sta
      * accanto ai varchi perche' e' la stessa domanda su un'altra famiglia di
      * sensori. */
-    ["presenza", "motion", t("Presenza", "Presence")],
+    ["presenza", "🏃", t("Presenza", "Presence")],
     /* Il citofono e la posta (#449): chi suona alla porta, e cosa c'e' in
      * cassetta. Sta accanto alla presenza perche' e' la stessa porta, vista da
      * fuori. */
-    ["citofono", "mail", t("Citofono e posta", "Intercom and mail")],
+    ["citofono", "📮", t("Citofono e posta", "Intercom and mail")],
     /* Le stampanti (#469): sono nella famiglia delle macchine, e la tessera
      * dice la stessa cosa della pagina — se sono pronte e quanto inchiostro
      * resta. */
-    ["stampanti", "printer", t("Stampanti", "Printers")],
-    ["macchine", "computer", t("Server e rete", "Server and network")],
+    ["stampanti", "🖨️", t("Stampanti", "Printers")],
+    ["macchine", "🖥️", t("Server e rete", "Server and network")],
     /* La ventilazione meccanica (#371): la tessera dice a che temperatura sta
      * entrando l'aria e quanto la macchina se n'e' ripreso, e porta alla
      * pagina del Clima, dove le quattro temperature stanno incrociate. */
-    ["vmc", "refresh", t("Ventilazione", "Ventilation")],
+    ["vmc", "🔄", t("Ventilazione", "Ventilation")],
     /* L'acqua e il gas (#115, #135, #137): l'acqua di oggi, e la perdita in
      * rosso quando c'è. Compare quando la sua scheda ha una riga. */
-    ["contatori", "water", t("Acqua e gas", "Water and gas")],
+    ["contatori", "💧", t("Acqua e gas", "Water and gas")],
     /* Le piante (#159): quante sono da innaffiare. Compare quando la sua
      * scheda ha una riga. */
-    ["piante", "plant", t("Piante", "Plant care")],
+    ["piante", "🪴", t("Piante", "Plant care")],
     /* L'acquario (#127): la temperatura dell'acqua, e quando c'è da fare. */
-    ["acquario", "aquarium", t("Acquario", "Aquarium")],
+    ["acquario", "🐠", t("Acquario", "Aquarium")],
     /* Le batterie di accumulo (#117): la carica di tutti i pacchi, e quando
      * un pacco ha le celle da bilanciare. Non è la tessera delle Batterie qui
      * sotto — quella conta le pile dei sensori. Compare quando la sua scheda
      * ha un pacco. */
-    ["accumulo", "battery", t("Accumulo", "Battery storage")],
+    ["accumulo", "🔋", t("Accumulo", "Battery storage")],
     /* La cottura (#71): la friggitrice che cuoce, e per un po' quella che ha
      * finito. Compare da sola quando c'e' qualcosa sul fuoco. */
-    ["cottura", "air-fryer", t("Cottura", "Cooking")],
-    ["batterie", "battery", t("Batterie", "Batteries")],
-    ["allagamenti", "water", t("Allagamenti", "Floods")],
+    ["cottura", "🍟", t("Cottura", "Cooking")],
+    ["batterie", "🔋", t("Batterie", "Batteries")],
+    ["allagamenti", "💧", t("Allagamenti", "Floods")],
     /* Fumo e gas (#328): compare da sola coi rilevatori di casa, come gli
      * allagamenti, e da qui si sposta o si spegne. */
-    ["fumo", "wind", t("Fumo e gas", "Smoke and gas")],
+    ["fumo", "💨", t("Fumo e gas", "Smoke and gas")],
     /* La qualita' dell'aria (#321): compare da sola con un sensore dell'aria
      * in casa, e da qui si sposta o si spegne come le altre. */
-    ["aria", "plant", t("Aria", "Air")],
-    ["custom", "warning", t("Avvisi personalizzati", "Custom alerts")],
+    ["aria", "🍃", t("Aria", "Air")],
+    ["custom", "⚠️", t("Avvisi personalizzati", "Custom alerts")],
   ];
 }
 
@@ -303,7 +302,7 @@ function tessereMarkup() {
         [key, icon, label],
         index,
       ) => `<div class="ed-row dm-widget-pref" data-widget-key="${esc(key)}">
-        <span class="dm-widget-pref-icon" aria-hidden="true">${oggettoWidget(key, "", `pref-${key}`) || segnoHtml(icon)}</span>
+        <span class="dm-widget-pref-icon" aria-hidden="true">${oggettoWidget(key, icon, `pref-${key}`)}</span>
         <span class="ed-row-main"><strong class="ed-row-new">${esc(label)}</strong>${sorgenteMarkup(key)}</span>
         <button type="button" class="ed-del dm-widget-move" data-widget-up aria-label="${t("Più in alto", "Move up")}"${index === 0 ? " disabled" : ""}>▲</button>
         <button type="button" class="ed-del dm-widget-move" data-widget-down aria-label="${t("Più in basso", "Move down")}"${index === rows.length - 1 ? " disabled" : ""}>▼</button>
@@ -381,16 +380,16 @@ function rigaEvidenzaMarkup(voce, index) {
   const scelta = clean(voce?.room_id);
   return `<article class="ed-row dm-todo-ed-row dm-evid-row" data-evid-index="${index}" data-open="${aperto}">
     <div class="dm-todo-ed-head">
-      <span class="dm-todo-ed-icon" aria-hidden="true">${segnoDaValoreHtml(voce?.icon, { ripiego: "star" })}</span>
+      <span class="dm-todo-ed-icon" aria-hidden="true">${esc(clean(voce?.icon) || "⭐")}</span>
       <span class="ed-row-main"><strong class="ed-row-new">${esc(nome)}</strong><small class="ed-row-old mono">${esc(clean(voce?.entity) || t("nessuna entità", "no entity"))}</small></span>
-      <button type="button" class="ed-del dm-todo-ed-edit" data-evid-edit aria-label="${t("Modifica", "Edit")}">${segnoHtml("pencil")}</button>
-      <button type="button" class="ed-del dm-todo-ed-del" data-evid-del aria-label="${t("Elimina", "Remove")}">${segnoHtml("trash")}</button>
+      <button type="button" class="ed-del dm-todo-ed-edit" data-evid-edit aria-label="${t("Modifica", "Edit")}">✏️</button>
+      <button type="button" class="ed-del dm-todo-ed-del" data-evid-del aria-label="${t("Elimina", "Remove")}">🗑️</button>
     </div>
     <div class="dm-todo-ed-body"${aperto ? "" : " hidden"}>
       <label class="ed-slot dm-todo-ed-field"><span class="ed-slot-lbl">${t("Nome", "Name")}</span><span class="ed-form-row"><input id="dm-evid-${index}-name" class="ed-input" data-evid-field="name" value="${esc(clean(voce?.name))}" placeholder="${t("Quadro elettrico", "Main panel")}"></span></label>
-      <label class="ed-slot dm-todo-ed-field"><span class="ed-slot-lbl">${t("Icona (facoltativa)", "Icon (optional)")}</span><span class="ed-form-row"><input id="dm-evid-${index}-icon" class="ed-input" data-evid-field="icon" value="${esc(clean(voce?.icon))}" maxlength="4" data-icon-category="load" data-icon-glifo="true" readonly></span></label>
+      <label class="ed-slot dm-todo-ed-field"><span class="ed-slot-lbl">${t("Icona (facoltativa)", "Icon (optional)")}</span><span class="ed-form-row"><input id="dm-evid-${index}-icon" class="ed-input" data-evid-field="icon" value="${esc(clean(voce?.icon))}" placeholder="⭐" maxlength="4" data-icon-category="load" data-icon-glifo="true" readonly></span></label>
       <label class="ed-slot dm-todo-ed-field"><span class="ed-slot-lbl">${t("Entità", "Entity")}</span>
-        <span class="ed-form-row"><input id="dm-evid-${index}-entity" class="ed-input mono" data-evid-field="entity" value="${esc(clean(voce?.entity))}" placeholder="sensor.quadro_temperatura" autocomplete="off" spellcheck="false"><button type="button" class="dm-entity-picker" data-evid-pick="dm-evid-${index}-entity" aria-label="${t("Scegli entità", "Choose entity")}">${segnoHtml("search")}</button></span>
+        <span class="ed-form-row"><input id="dm-evid-${index}-entity" class="ed-input mono" data-evid-field="entity" value="${esc(clean(voce?.entity))}" placeholder="sensor.quadro_temperatura" autocomplete="off" spellcheck="false"><button type="button" class="dm-entity-picker" data-evid-pick="dm-evid-${index}-entity" aria-label="${t("Scegli entità", "Choose entity")}">🔍</button></span>
         <small>${t("Qualunque entità di Home Assistant: la tessera ne mostra lo stato, con l'unità quando c'è.", "Any Home Assistant entity: the tile shows its state, with the unit when there is one.")}</small></label>
       <label class="ed-slot dm-todo-ed-field"><span class="ed-slot-lbl">${t("Stanza (facoltativa)", "Room (optional)")}</span><span class="ed-form-row"><select class="ed-input" data-evid-field="room_id"><option value="">${t("Nessuna", "None")}</option>${stanze
         .map(
@@ -401,7 +400,7 @@ function rigaEvidenzaMarkup(voce, index) {
       <label class="ed-slot dm-todo-ed-field dm-evid-sola"><span class="ed-form-row dm-evid-sola-riga"><input type="checkbox" data-evid-field="sola"${voce?.sola === true || voce?.sola === "true" ? " checked" : ""}><span>${t("Tessera a sé in Home", "Its own tile on Home")}</span></span>
         <small>${t("Invece di stare nel riassunto «In evidenza», questa entità ha la sua tessera in Home, che al tocco si apre su di lei.", "Instead of sitting in the “Highlights” summary, this entity gets its own tile on Home, which opens on it when tapped.")}</small></label>
       <output class="dm-todo-ed-error" data-evid-error></output>
-      <button type="button" class="ed-save-btn" data-evid-save>${segnoHtml("check")} ${t("Salva entità", "Save entity")}</button>
+      <button type="button" class="ed-save-btn" data-evid-save>💾 ${t("Salva entità", "Save entity")}</button>
     </div>
   </article>`;
 }
@@ -409,7 +408,7 @@ function rigaEvidenzaMarkup(voce, index) {
 /* Il blocco «In evidenza» della scheda: le righe, e il tasto per aggiungerne. */
 function evidenzaMarkup() {
   const voci = evidenze();
-  return `<div class="ed-sec-title dm-widget-ed-sep">${segnoHtml("star")} ${esc(
+  return `<div class="ed-sec-title dm-widget-ed-sep">⭐ ${esc(
     t("In evidenza · le tue tessere", "Highlights · your own tiles"),
   )}</div>
   <div class="ed-intro">${t(
@@ -446,7 +445,7 @@ function avvisiMarkup() {
    * riscrive `potaGruppiOrfani`, e cercarla come «la prima ed-intro dopo un
    * separatore» vorrebbe dire riscrivere quella del primo blocco che capita —
    * quella delle evidenze, che di avvisi non parla. */
-  return `<div class="ed-sec-title dm-widget-ed-sep dm-avvisi-ed-sep">${segnoHtml("bell")} ${esc(
+  return `<div class="ed-sec-title dm-widget-ed-sep dm-avvisi-ed-sep">🔔 ${esc(
     t("Widget di avviso", "Alert widgets"),
   )}</div>${markup}`;
 }
@@ -664,7 +663,7 @@ function onClick(event) {
       state.evidAperto = -1;
       salvaEvidenze(next);
       ridisegna();
-      root.edToast?.(senzaEmoji(t("💾 Entità salvata", "💾 Entity saved")));
+      root.edToast?.(t("💾 Entità salvata", "💾 Entity saved"));
     }
   }
 }
@@ -711,7 +710,7 @@ export function ensureTodoEditorTab() {
   const tab = doc.createElement("button");
   tab.className = "ed-tab";
   tab.dataset.tab = TODO_EDITOR_TAB;
-  tab.innerHTML = `${segnoHtml("sliders")} ${esc(t("Widget", "Widgets"))}`;
+  tab.textContent = `🧩 ${t("Widget", "Widgets")}`;
   tab.addEventListener("click", () => root.editorSwitch?.(TODO_EDITOR_TAB));
   const prima = tabs.querySelector('.ed-tab[data-tab="runtime"]');
   if (prima) prima.before(tab);

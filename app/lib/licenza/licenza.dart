@@ -10,10 +10,10 @@
 ///    delle case;
 ///  - Premium vuol dire: la casa in uso ha un gettone gdahome che vale.
 ///
-/// **Con la chiave vuota — com'e' di serie — i controlli sono spenti**: ogni
-/// casa vale come Premium, non si chiede niente alla casa e l'app fa quello
-/// che ha sempre fatto. I lucchetti si accendono insieme alla chiave, non
-/// prima: cosi' una build di oggi e le prove di oggi restano quelle.
+/// **Con la chiave vuota — com'e' stata fino alla 1.9.2 — i controlli sono
+/// spenti**: ogni casa vale come Premium, non si chiede niente alla casa e
+/// l'app fa quello che ha sempre fatto. I lucchetti si accendono insieme alla
+/// chiave, non prima: e' scritta dalla 1.10.0.
 ///
 /// **Con la chiave, i lucchetti valgono dappertutto**: nell'app per iPhone,
 /// in quella per Android e nel browser, con gli stessi limiti di Base.

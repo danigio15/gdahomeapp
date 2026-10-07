@@ -1499,11 +1499,7 @@ test("production graph is single-owner, acyclic and contains no facade pass-thro
   // 412 e 413 coi gruppi delle azioni rapide (#139): il nucleo
   // `core/gruppi-delle-azioni.js` e `sections/azioni-rapide-gruppi-section.js`,
   // che mette i titoli nel vassoio della Home e la casella nel Config.
-  // 414 e 415 coi segni del catalogo al posto delle emoji: il nucleo
-  // `core/segni-del-catalogo.js`, che traduce una chiave o un'emoji nel
-  // disegno, e `sections/segni-del-catalogo-section.js`, il foglio che
-  // dipinge i segnaposti del guscio.
-  // 416, 417, 418 e 419 con le batterie di accumulo (#117): il nucleo
+  // 414, 415, 416 e 417 con le batterie di accumulo (#117): il nucleo
   // `core/l-accumulo-di-casa.js` coi nomi dei BMS, la carica pesata e il
   // delta delle celle, le parole e il disegno `sections/accumulo-section.js`
   // — che la Home chiede per la tessera —, `sections/accumulo-in-energia-
@@ -1511,16 +1507,18 @@ test("production graph is single-owner, acyclic and contains no facade pass-thro
   // Home, e la scheda `sections/accumulo-editor-section.js`. Le parole stanno
   // staccate dal montaggio perché la Home le chiede e il montaggio chiede la
   // Home: insieme sarebbero un giro.
-  // 420 con la stanza come tavola di comandi (#160): il nucleo
+  // 418 con la stanza come tavola di comandi (#160): il nucleo
   // `core/la-stanza-a-tessere.js`, con l'ordine delle tessere, quali sono
   // larghe, il clima della testata e a che punto e' una tapparella. La tavola
   // la disegna la pagina Stanze, che c'era gia'.
-  // 421 e 422 con la cottura (#71): il nucleo `core/la-cottura.js` — le fasi,
+  // 419 e 420 con la cottura (#71): il nucleo `core/la-cottura.js` — le fasi,
   // i tempi in qualunque forma, i comandi che ci sono davvero e le caselle
   // delle due friggitrici Philips — e `sections/cottura-section.js`, la voce
   // «Cottura» dentro gli Elettrodomestici e la sua tessera in Home.
+  // I segni del catalogo della 1.9.0 (due moduli) non ci sono piu': le icone
+  // sono tornate le emoji della 1.8.0.
   assert.ok(
-    relative.length <= 422,
+    relative.length <= 420,
     `production graph unexpectedly grew to ${relative.length} modules`,
   );
   assertAcyclic(edges);

@@ -159,8 +159,10 @@ export async function alzaIlQuadro({
 
   /* I rinnovi: ogni ora, le licenze del negozio che scadono entro un giorno o
    * sono scadute da poco si richiedono al negozio, anche quelle di chi non
-   * chiede (`licenze.js`, «I rinnovi»). Uno alla volta: se il giro prima non
-   * ha finito, questo salta. */
+   * chiede (`licenze.js`, «I rinnovi»). Poi, nello stesso giro, gli
+   * abbonamenti non richiesti da un giorno: chi ha disdetto si sa il giorno
+   * dopo, non alla scadenza («Gli abbonamenti»). Uno alla volta: se il giro
+   * prima non ha finito, questo salta. */
   let rinnoviInCorso = false;
   const rinnovi = setInterval(() => {
     if (rinnoviInCorso || !licenze.accese) return;
@@ -169,6 +171,7 @@ export async function alzaIlQuadro({
       .rinnova(iNegozi, { registro })
       .then((quante) => {
         if (quante) registro.info(`${quante} abbonamenti rinnovati dal negozio`);
+        return licenze.aggiorna(iNegozi, { registro });
       })
       .catch((errore) =>
         registro.attenzione(`il giro dei rinnovi non e' andato: ${errore?.message}`),

@@ -1,3 +1,3 @@
-The navigator knows Italy's limited traffic zones (ZTL), asks whether you have a permit and suggests energy-saving routes. Android Auto and CarPlay show traffic, with the lanes at junctions. The app is faster, especially away from home. Each quick command in the car can have the icon you choose, and a muted navigator voice stays muted.
+gdahome Premium is here. Buy it in the app, on iPhone and Android, with a monthly or yearly subscription: the first time, the first 14 days are free. It covers the whole home: every paired phone and the browser. Base stays free, with one home, the main dashboard and access from your home network. The icons are back to the earlier ones, weather included.
 
-Update gdahome in Home Assistant to 1.9.2: the room as a control board, home batteries, cooking and bypassing openings from the alarm are back.
+Update gdahome in Home Assistant to 1.10.0: the add-on is what holds your home's licence.

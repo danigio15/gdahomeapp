@@ -1,3 +1,3 @@
-Il navigatore conosce le ZTL, ti chiede se hai il permesso e ti propone le strade a risparmio. Su Android Auto e CarPlay c'è il traffico, con le corsie agli svincoli. L'app è più veloce, soprattutto fuori casa. Ogni comando rapido in auto può avere l'icona che scegli, e la voce del navigatore spenta resta spenta.
+Arriva gdahome Premium. Si compra nell'app, sull'iPhone e su Android, con l'abbonamento mensile o annuale, e la prima volta i primi 14 giorni sono gratis. Vale per tutta la casa: per tutti i telefoni abbinati e per il browser. Base resta gratis, con una casa, la plancia principale e l'accesso dalla rete di casa. Le icone tornano quelle di prima, meteo compreso.
 
-Aggiorna gdahome in Home Assistant alla 1.9.2: tornano la stanza come tavola di comandi, le batterie di accumulo, la cottura e i varchi da escludere dall'antifurto.
+Aggiorna gdahome in Home Assistant alla 1.10.0: è l'add-on che tiene la licenza della casa.

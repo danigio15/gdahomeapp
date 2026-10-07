@@ -132,7 +132,7 @@ test("l'anteprima dell'icona di un avviso disegna i nomi mdi col motore (dal cam
   );
   assert.match(
     sezione,
-    /if \(disegnata\) preview\.innerHTML = disegnata;\s*else preview\.innerHTML = segnoDaValoreHtml\(valore, \{ misura: 34, ripiego: "bell" \}\);/,
+    /if \(disegnata\) preview\.innerHTML = disegnata;\s*else preview\.textContent = valore;/,
   );
   assert.equal(/preview\.textContent = clean\(input\.value\) \|\| "🔔";/.test(sezione), false);
   /* E il riquadro non lascia piu' uscire un testo lungo. */

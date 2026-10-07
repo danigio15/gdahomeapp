@@ -69,7 +69,6 @@ import {
   senzaCadere,
 } from "./shared.js";
 import { nomeDaHomeAssistant } from "./editor-slots-section.js";
-import { segnoHtml } from "../core/segni-del-catalogo.js";
 
 const KEY = "__DASHBOARDMODERN_VARCHI__";
 const state = (root[KEY] ||= {
@@ -166,7 +165,7 @@ export function ensureVarchiTab() {
   voce.className = "tab";
   voce.dataset.tab = VARCHI_TAB;
   voce.id = `tab-${VARCHI_TAB}`;
-  voce.innerHTML = `<span class="icon">${segnoHtml("door")}</span><span class="text">${esc(t("Varchi", "Openings"))}</span>`;
+  voce.innerHTML = `<span class="icon">🚪</span><span class="text">${esc(t("Varchi", "Openings"))}</span>`;
   voce.addEventListener("click", () => {
     for (const nodo of doc.querySelectorAll(".tab")) nodo.classList.remove("active");
     for (const nodo of doc.querySelectorAll(".page")) nodo.classList.remove("active");
@@ -274,36 +273,35 @@ function vivoPer(momento, entity) {
  * guardare, e un interruttore muto non si comanda — vedi
  * `l-esclusione-del-varco.js`.
  *
- * ── Due segni del catalogo, e una parola ─────────────────────────────────
+ * ── Due emoji, e una parola ──────────────────────────────────────────────
  *
  * Nella prima versione erano due scudi disegnati qui, uno sbarrato, e nessuna
- * parola. I disegni adesso vengono dal catalogo come tutti gli altri — «non
- * deve esserci nulla che non sia nel nostro catalogo» — e sul tasto c'e' il
- * verbo di quello che fa: «Escludi» o «Includi». Uno scudo da solo diceva
- * com'era, non cosa sarebbe successo premendolo, e su un antifurto e' la
- * seconda cosa che serve sapere.
+ * parola. Adesso sono le emoji del resto della plancia, come nella 1.8.0 —
+ * 🛡️ sorvegliato, 🔓 escluso — e sul tasto c'e' il verbo di quello che fa:
+ * «Escludi» o «Includi». Uno scudo da solo diceva com'era, non cosa sarebbe
+ * successo premendolo, e su un antifurto e' la seconda cosa che serve sapere.
  *
  * Le parole sono nuove e scritte per l'antifurto. «Escluso» c'era gia' nel
  * vocabolario — lo dice la VMC del recupero di calore — e riusarlo avrebbe
  * scritto in tredici lingue la parola dell'AERAZIONE addosso a una zona
  * d'allarme: in tedesco «umgangen» invece di «uberbruckt».
  *
- * Col lucchetto il tasto non c'e': al suo posto il segno del lucchetto e «Solo
- * lettura», la stessa scritta delle luci chiuse. Lo stato si vede lo stesso. */
+ * Col lucchetto il tasto non c'e': al suo posto 🔒 e «Solo lettura», la
+ * stessa scritta delle luci chiuse. Lo stato si vede lo stesso. */
 function scudoMarkup(riga, states) {
   if (!clean(riga.esclusione) || !clean(riga.escluso)) return "";
   const giu = riga.escluso === "escluso";
   const { mossa } = laMossaDelloScudo(riga, states, (entity) => siComanda(entity));
   if (mossa === "bloccato")
     return `<span class="dm-varco-scudo" data-dm-varco-bloccato
-      title="${esc(t("Esclusione dall'antifurto", "Alarm bypass"))}">${segnoHtml("lock")}<span>${esc(
+      title="${esc(t("Esclusione dall'antifurto", "Alarm bypass"))}">🔒<span>${esc(
         t("Solo lettura", "Read only"),
       )}</span></span>`;
   const verbo = giu ? t("Includi", "Re-include") : t("Escludi", "Bypass");
   const titolo = `${verbo} · ${t("Esclusione dall'antifurto", "Alarm bypass")}`;
   return `<button type="button" class="dm-varco-scudo" data-dm-varco-scudo="${esc(riga.entity)}"
     aria-pressed="${giu}" aria-label="${esc(titolo)}" title="${esc(titolo)}">
-    ${segnoHtml(giu ? "security" : "unlock")}<span>${esc(verbo)}</span>
+    ${giu ? "🛡️" : "🔓"}<span>${esc(verbo)}</span>
   </button>`;
 }
 
@@ -314,7 +312,7 @@ function scudoMarkup(riga, states) {
  * esclusa o no, aperta e' aperta. */
 function esclusaMarkup(riga) {
   if (riga.escluso !== "escluso") return "";
-  return `<span class="dm-varco-esclusa">${segnoHtml("unlock")}<span>${esc(
+  return `<span class="dm-varco-esclusa">🔓<span>${esc(
     t("Esclusa dall'allarme", "Bypassed from the alarm"),
   )}</span></span>`;
 }
@@ -329,12 +327,12 @@ function esclusaMarkup(riga) {
 function veloMarkup(riga) {
   if (vivoPer(state.chiesta, riga.entity))
     return `<div class="dm-varco-velo" data-dm-varco-velo="chiesta">
-      <span>${segnoHtml("warning")}<span>${esc(t("Escludere dall'allarme?", "Bypass from the alarm?"))}</span></span>
+      <span>⚠️<span>${esc(t("Escludere dall'allarme?", "Bypass from the alarm?"))}</span></span>
       <button type="button" data-dm-varco-conferma="${esc(riga.entity)}">${esc(t("Escludi", "Bypass"))}</button>
     </div>`;
   if (vivoPer(state.annulla, riga.entity))
     return `<div class="dm-varco-velo" data-dm-varco-velo="annulla">
-      <span>${segnoHtml("unlock")}<span>${esc(t("Esclusa dall'allarme", "Bypassed from the alarm"))}</span></span>
+      <span>🔓<span>${esc(t("Esclusa dall'allarme", "Bypassed from the alarm"))}</span></span>
       <button type="button" data-dm-varco-annulla="${esc(riga.entity)}">${esc(t("Annulla", "Undo"))}</button>
     </div>`;
   return "";
@@ -350,7 +348,7 @@ function veloMarkup(riga) {
 function erroreMarkup(riga) {
   if (!vivoPer(state.errore, riga.entity)) return "";
   const perche = clean(state.errore.testo);
-  return `<small class="dm-varco-errore" role="alert">${segnoHtml("warning")}<span>${esc(
+  return `<small class="dm-varco-errore" role="alert">⚠️<span>${esc(
     t("La centrale non ha accettato", "The alarm panel refused"),
   )}${perche ? `: ${esc(perche)}` : ""}</span></small>`;
 }
@@ -749,7 +747,6 @@ function installStyles() {
       background:var(--card-bg,#fff);color:var(--text-dim,#64748b);
       font-size:10px;font-weight:900;letter-spacing:.04em;text-transform:uppercase;
       -webkit-tap-highlight-color:transparent}
-    ${P} .dm-varco-scudo .dm-segno{--dm-segno:15px}
     ${P} .dm-varco-scudo[aria-pressed="true"]{
       border-color:#f59e0b;background:color-mix(in srgb,#f59e0b 16%,var(--card-bg,#fff));color:#b45309}
     ${P} .dm-varco-scudo[data-dm-varco-bloccato]{cursor:default;opacity:.75}

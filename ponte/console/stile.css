@@ -1019,6 +1019,37 @@ h2 > .ic {
   color: var(--acceso);
 }
 
+/* La matricola della casa, da copiare per chi regala Premium. Sta sotto le
+   due righe delle app, staccata da una riga, e va a capo dove capita: e' una
+   parola sola di 37 lettere. */
+.matricola {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--bordo);
+}
+
+.etichetta-della-matricola {
+  font-size: 0.82rem;
+  font-weight: 650;
+  color: var(--tenue);
+}
+
+.matricola .riga-di-tasti {
+  margin-top: 6px;
+}
+
+.matricola .codice {
+  flex: 1 1 16em;
+  margin: 0;
+  text-align: left;
+  user-select: all;
+  color: var(--testo);
+}
+
+.matricola .minuta {
+  margin-top: 8px;
+}
+
 #codice-regalo {
   font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
   letter-spacing: 0.04em;

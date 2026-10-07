@@ -129,8 +129,6 @@ const stati = {
   },
 };
 
-const EMOJI = /\p{Extended_Pictographic}/u;
-
 async function apriIlSalone(page, testInfo) {
   await page.route("https://**", (route) => route.fulfill({ status: 200, body: "" }));
   await bootNamespacedDashboard(page, "dashboard.html", testInfo, seme);
@@ -222,9 +220,6 @@ test("il Salone e' una tavola: la testata e le tessere, due o quattro per riga",
   /* Il clima prende due posti: largo due tessere piu' lo spazio fra loro. */
   expect(forma.clima).toBeGreaterThan(forma.luce * 1.9);
   expect(forma.scorre, "la pagina non deve scorrere di lato").toBe(false);
-
-  /* Nessuna emoji, da nessuna parte della stanza. */
-  expect(await pagina.innerText()).not.toMatch(EMOJI);
 
   if (SCATTI) {
     /* La pagina scorre dentro la plancia, non nel documento: per la foto
@@ -331,7 +326,6 @@ test("chi preferisce le righe le rimette dal Config", async ({ page }, testInfo)
   /* Di serie: le tessere. */
   await expect(tessere).toHaveAttribute("aria-checked", "true");
   await expect(righe).toHaveAttribute("aria-checked", "false");
-  expect(await scelta.innerText()).not.toMatch(EMOJI);
   if (SCATTI && testInfo.project.name === "mobile")
     await scelta.screenshot({ path: `${SCATTI}/stanze-config.png` });
 

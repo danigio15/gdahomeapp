@@ -24,7 +24,6 @@
  * del solare, che sono del guscio, vengono portate dentro la loro: restano le
  * sue, cambia la stanza.
  */
-import { segnoHtml } from "../core/segni-del-catalogo.js";
 import {
   CASELLE_CALDAIA,
   CASELLE_SOLARE,
@@ -126,7 +125,7 @@ function salvaScelta(tipo, acceso) {
 
 function sceltaMarkup() {
   const { acceso } = scelta();
-  return `<div class="ed-sec-title dm-it-ed-sep">${segnoHtml("radiator")} ${esc(t("Cosa c'è nel locale caldaia", "What is in the boiler room"))}</div>
+  return `<div class="ed-sec-title dm-it-ed-sep">🔥 ${esc(t("Cosa c'è nel locale caldaia", "What is in the boiler room"))}</div>
   <div class="ed-intro">${esc(
     t(
       "Spunta quello che hai davvero: la pagina mostra solo quello, e con due o tre compaiono in alto le linguette per passare dall'uno all'altro.",
@@ -360,7 +359,7 @@ function caselleSolare(index, voce) {
       <span class="ed-form-row"><input id="${id}" class="ed-input mono" data-solare-field="${esc(ref)}"
         value="${esc(clean(voce?.caselle?.[ref]))}" placeholder="sensor.qualcosa" autocomplete="off"
         spellcheck="false"><button type="button" class="dm-entity-picker" data-solare-pick="${id}"
-        aria-label="${t("Scegli entità", "Choose entity")}">${segnoHtml("search")}</button></span></label>`;
+        aria-label="${t("Scegli entità", "Choose entity")}">🔍</button></span></label>`;
   }).join("");
 }
 
@@ -369,7 +368,7 @@ function rigaSolareMarkup(voce, index) {
   const quante = Object.keys(voce?.caselle || {}).length;
   return `<article class="ed-row dm-todo-ed-row dm-solare-row" data-solare-index="${index}" data-open="${aperto}">
     <div class="dm-todo-ed-head">
-      <span class="dm-todo-ed-icon" aria-hidden="true">${segnoHtml("sun")}</span>
+      <span class="dm-todo-ed-icon" aria-hidden="true">🌞</span>
       <span class="ed-row-main"><strong class="ed-row-new">${esc(nomeDelSolare(voce, index, [t("Solare termico", "Solar thermal"), ""]))}</strong><small class="ed-row-old">${
         voce?.corrente
           ? esc(t("in pagina adesso", "on the page now"))
@@ -378,15 +377,15 @@ function rigaSolareMarkup(voce, index) {
       ${
         voce?.corrente
           ? ""
-          : `<button type="button" class="ed-del dm-solare-mostra" data-solare-mostra aria-label="${t("Mostra in pagina", "Show on the page")}" title="${t("Mostra in pagina", "Show on the page")}">${segnoHtml("camera")}</button>`
+          : `<button type="button" class="ed-del dm-solare-mostra" data-solare-mostra aria-label="${t("Mostra in pagina", "Show on the page")}" title="${t("Mostra in pagina", "Show on the page")}">👁️</button>`
       }
-      <button type="button" class="ed-del dm-todo-ed-edit" data-solare-edit aria-label="${t("Modifica", "Edit")}">${segnoHtml("pencil")}</button>
-      <button type="button" class="ed-del dm-todo-ed-del" data-solare-del aria-label="${t("Elimina", "Remove")}">${segnoHtml("trash")}</button>
+      <button type="button" class="ed-del dm-todo-ed-edit" data-solare-edit aria-label="${t("Modifica", "Edit")}">✏️</button>
+      <button type="button" class="ed-del dm-todo-ed-del" data-solare-del aria-label="${t("Elimina", "Remove")}">🗑️</button>
     </div>
     <div class="dm-todo-ed-body"${aperto ? "" : " hidden"}>
       <label class="ed-slot dm-todo-ed-field"><span class="ed-slot-lbl">${t("Nome", "Name")}</span><span class="ed-form-row"><input id="dm-solare-${index}-nome" class="ed-input" data-solare-nome value="${esc(clean(voce?.nome))}" placeholder="${esc(t("Casa di sopra", "Upstairs"))}"></span></label>
       ${caselleSolare(index, voce)}
-      <button type="button" class="ed-save-btn" data-solare-save>${segnoHtml("check")} ${esc(t("Salva impianto", "Save plant"))}</button>
+      <button type="button" class="ed-save-btn" data-solare-save>💾 ${esc(t("Salva impianto", "Save plant"))}</button>
     </div>
   </article>`;
 }
@@ -406,7 +405,7 @@ function solareMarkup() {
       ),
     )}</div></div>`;
   }
-  return `<div class="dm-it-ed-solari"><div class="ed-sec-title dm-it-ed-sep">${segnoHtml("sun")} ${esc(
+  return `<div class="dm-it-ed-solari"><div class="ed-sec-title dm-it-ed-sep">🌞 ${esc(
     t("I tuoi impianti solari", "Your solar plants"),
   )}</div>
   <div class="ed-intro">${esc(
@@ -446,7 +445,7 @@ function leggiSolare(riga, voce) {
  * di una macchina sola: chi ha una caldaia a gas deve capire a colpo d'occhio
  * che da questa riga in giu' non c'e' niente di suo. */
 function titoloPellet() {
-  return `<div class="ed-sec-title dm-it-ed-pellet">${segnoHtml("fireplace")} ${esc(
+  return `<div class="ed-sec-title dm-it-ed-pellet">🪵 ${esc(
     t("Combustibile solido: pellet o legna", "Solid fuel: pellet or wood"),
   )}</div>
   <div class="ed-intro">${esc(
@@ -471,7 +470,7 @@ function caselleCaldaia(index, voce) {
       <span class="ed-form-row"><input id="${id}" class="ed-input mono" data-caldaia-field="${esc(campo)}"
         value="${esc(clean(voce?.[campo]))}" placeholder="${esc(esempio)}" autocomplete="off" spellcheck="false"><button
         type="button" class="dm-entity-picker" data-caldaia-pick="${id}"
-        aria-label="${t("Scegli entità", "Choose entity")}">${segnoHtml("search")}</button></span>${
+        aria-label="${t("Scegli entità", "Choose entity")}">🔍</button></span>${
           aiutoIt ? `<small>${esc(t(aiutoIt, aiutoEn))}</small>` : ""
         }</label>`;
   }).join("");
@@ -487,10 +486,10 @@ function rigaCaldaiaMarkup(voce, index) {
     t("nessuna entità", "no entity");
   return `<article class="ed-row dm-todo-ed-row dm-caldaia-row" data-caldaia-index="${index}" data-open="${aperto}">
     <div class="dm-todo-ed-head">
-      <span class="dm-todo-ed-icon" aria-hidden="true">${segnoHtml("radiator")}</span>
+      <span class="dm-todo-ed-icon" aria-hidden="true">🔥</span>
       <span class="ed-row-main"><strong class="ed-row-new">${esc(nome)}</strong><small class="ed-row-old mono">${esc(sotto)}</small></span>
-      <button type="button" class="ed-del dm-todo-ed-edit" data-caldaia-edit aria-label="${t("Modifica", "Edit")}">${segnoHtml("pencil")}</button>
-      <button type="button" class="ed-del dm-todo-ed-del" data-caldaia-del aria-label="${t("Elimina", "Remove")}">${segnoHtml("trash")}</button>
+      <button type="button" class="ed-del dm-todo-ed-edit" data-caldaia-edit aria-label="${t("Modifica", "Edit")}">✏️</button>
+      <button type="button" class="ed-del dm-todo-ed-del" data-caldaia-del aria-label="${t("Elimina", "Remove")}">🗑️</button>
     </div>
     <div class="dm-todo-ed-body"${aperto ? "" : " hidden"}>
       <label class="ed-slot dm-todo-ed-field"><span class="ed-slot-lbl">${t("Nome", "Name")}</span><span class="ed-form-row"><input id="dm-caldaia-${index}-name" class="ed-input" data-caldaia-field="name" value="${esc(clean(voce?.name))}" placeholder="${esc(t("Zona giorno", "Day zone"))}"></span></label>
@@ -514,14 +513,14 @@ function rigaCaldaiaMarkup(voce, index) {
             "It changes the drawing at the other end of the pipe: whoever has a boiler serving only the tank was shown a radiator they do not have.",
           ),
         )}</small></label>
-      <button type="button" class="ed-save-btn" data-caldaia-save>${segnoHtml("check")} ${esc(t("Salva caldaia", "Save boiler"))}</button>
+      <button type="button" class="ed-save-btn" data-caldaia-save>💾 ${esc(t("Salva caldaia", "Save boiler"))}</button>
     </div>
   </article>`;
 }
 
 function caldaiaMarkup() {
   const voci = caldaie();
-  return `<div class="ed-sec-title dm-it-ed-sep">${segnoHtml("radiator")} ${esc(t("Caldaia", "Boiler"))}</div>
+  return `<div class="ed-sec-title dm-it-ed-sep">🔥 ${esc(t("Caldaia", "Boiler"))}</div>
   <div class="ed-intro">${esc(
     t(
       "La differenza fra mandata e ritorno dice se l'impianto sta davvero cedendo calore; la pressione è l'unica cosa che ogni tanto va rabboccata a mano. Nessuna casella è obbligatoria: col solo stato la scheda mostra la caldaia accesa o spenta, senza numeri che non ha. Se ne hai più d'una — una per zona — aggiungile qui e in pagina compare la fila per passare dall'una all'altra.",
@@ -608,7 +607,7 @@ function caselleScaldabagno(index, voce) {
       <span class="ed-form-row"><input id="${id}" class="ed-input mono" data-scald-field="${campo}"
         value="${esc(clean(voce?.[campo]))}" placeholder="${esc(esempio)}" autocomplete="off" spellcheck="false"><button
         type="button" class="dm-entity-picker" data-scald-pick="${id}"
-        aria-label="${t("Scegli entità", "Choose entity")}">${segnoHtml("search")}</button></span>${
+        aria-label="${t("Scegli entità", "Choose entity")}">🔍</button></span>${
           aiuto ? `<small>${esc(aiuto)}</small>` : ""
         }</label>`;
     })
@@ -623,23 +622,23 @@ function rigaScaldabagnoMarkup(voce, index) {
     clean(voce?.entity) || clean(voce?.interruttore) || t("nessuna entità", "no entity");
   return `<article class="ed-row dm-todo-ed-row dm-scald-row" data-scald-index="${index}" data-open="${aperto}">
     <div class="dm-todo-ed-head">
-      <span class="dm-todo-ed-icon" aria-hidden="true">${segnoHtml("room-bathroom")}</span>
+      <span class="dm-todo-ed-icon" aria-hidden="true">🚿</span>
       <span class="ed-row-main"><strong class="ed-row-new">${esc(nome)}</strong><small class="ed-row-old mono">${esc(sotto)}</small></span>
-      <button type="button" class="ed-del dm-todo-ed-edit" data-scald-edit aria-label="${t("Modifica", "Edit")}">${segnoHtml("pencil")}</button>
-      <button type="button" class="ed-del dm-todo-ed-del" data-scald-del aria-label="${t("Elimina", "Remove")}">${segnoHtml("trash")}</button>
+      <button type="button" class="ed-del dm-todo-ed-edit" data-scald-edit aria-label="${t("Modifica", "Edit")}">✏️</button>
+      <button type="button" class="ed-del dm-todo-ed-del" data-scald-del aria-label="${t("Elimina", "Remove")}">🗑️</button>
     </div>
     <div class="dm-todo-ed-body"${aperto ? "" : " hidden"}>
       <label class="ed-slot dm-todo-ed-field"><span class="ed-slot-lbl">${t("Nome", "Name")}</span><span class="ed-form-row"><input id="dm-scald-${index}-name" class="ed-input" data-scald-field="name" value="${esc(clean(voce?.name))}" placeholder="${t("Bagno grande", "Main bathroom")}"></span></label>
       ${caselleScaldabagno(index, voce)}
       <output class="dm-todo-ed-error" data-scald-error></output>
-      <button type="button" class="ed-save-btn" data-scald-save>${segnoHtml("check")} ${t("Salva scaldabagno", "Save water heater")}</button>
+      <button type="button" class="ed-save-btn" data-scald-save>💾 ${t("Salva scaldabagno", "Save water heater")}</button>
     </div>
   </article>`;
 }
 
 function scaldabagnoMarkup() {
   const voci = scaldabagni();
-  return `<div class="ed-sec-title dm-widget-ed-sep">${segnoHtml("room-bathroom")} ${esc(t("Scaldabagno", "Water heater"))}</div>
+  return `<div class="ed-sec-title dm-widget-ed-sep">🚿 ${esc(t("Scaldabagno", "Water heater"))}</div>
   <div class="ed-intro">${t(
     "Lo scaldabagno elettrico, per chi l'acqua calda non la fa col sole: la tessera dice a che punto è l'acqua e quanto manca all'obiettivo. Con un water_heater di Home Assistant basta la prima casella.",
     "The electric water heater, for whoever does not make hot water with the sun: the tile says where the water is and how far it is from the target. With a Home Assistant water_heater the first field is enough.",
@@ -650,7 +649,7 @@ function scaldabagnoMarkup() {
       : `<div class="ed-empty">${t("Nessuno scaldabagno configurato", "No water heater configured")}</div>`
   }</div>
   <button type="button" class="ed-btn-add" data-scald-add>＋ ${t("Aggiungi scaldabagno", "Add water heater")}</button>
-  <button type="button" class="ed-btn-add" data-scald-detect>${segnoHtml("star")} ${t("Rileva da Home Assistant", "Detect from Home Assistant")}</button>`;
+  <button type="button" class="ed-btn-add" data-scald-detect>🪄 ${t("Rileva da Home Assistant", "Detect from Home Assistant")}</button>`;
 }
 
 /* ── il disegno della scheda ──────────────────────────────────────────── */
@@ -659,9 +658,9 @@ function scaldabagnoMarkup() {
  * tre macchine e riconoscerle due volte in due modi e' una cosa in piu' da
  * imparare. */
 const ICONE_LINGUETTA = Object.freeze({
-  solare: "sun",
-  scaldabagno: "room-bathroom",
-  caldaia: "radiator",
+  solare: "🌞",
+  scaldabagno: "🚿",
+  caldaia: "🔥",
 });
 
 /* Quale macchina si sta configurando adesso.
@@ -681,7 +680,7 @@ function linguetteMarkup(scelti, attiva) {
     .map(
       (tipo) => `<button type="button" class="dm-it-ed-tab" data-dm-it-ed-tab="${esc(tipo)}"
         role="tab" aria-selected="${tipo === attiva}"${tipo === attiva ? ' data-on="true"' : ""}>
-        <span aria-hidden="true">${segnoHtml(ICONE_LINGUETTA[tipo])}</span>
+        <span aria-hidden="true">${ICONE_LINGUETTA[tipo] || ""}</span>
         <span>${esc(t(...ETICHETTE_TERMICHE[tipo]))}</span>
       </button>`,
     )
@@ -913,7 +912,7 @@ function onClick(event) {
         lista[indice].id,
       );
       ridisegna();
-      root.edToast?.(t("Impianto in pagina", "Plant on the page"));
+      root.edToast?.(t("🌞 Impianto in pagina", "🌞 Plant on the page"));
       return;
     }
     if (event.target.closest("[data-solare-del]")) {
@@ -941,7 +940,7 @@ function onClick(event) {
       state.solAperto = -1;
       salvaSolari(prossimi, solareAcceso(lista));
       ridisegna();
-      root.edToast?.(t("Impianto salvato", "Plant saved"));
+      root.edToast?.(t("💾 Impianto salvato", "💾 Plant saved"));
     }
     return;
   }
@@ -977,7 +976,7 @@ function onClick(event) {
       state.calAperto = -1;
       salvaCaldaie(prossime);
       ridisegna();
-      root.edToast?.(t("Caldaia salvata", "Boiler saved"));
+      root.edToast?.(t("💾 Caldaia salvata", "💾 Boiler saved"));
     }
     return;
   }
@@ -1007,7 +1006,7 @@ function onClick(event) {
       ...trovati.map((trovato) => ({ name: trovato.name, entity: trovato.entity })),
     ]);
     ridisegna();
-    root.edToast?.(t("Scaldabagni aggiunti", "Water heaters added"));
+    root.edToast?.(t("🪄 Scaldabagni aggiunti", "🪄 Water heaters added"));
     return;
   }
   const pickScald = event.target.closest("[data-scald-pick]");
@@ -1070,7 +1069,7 @@ function onClick(event) {
       state.aperto = -1;
       salvaScaldabagni(next);
       ridisegna();
-      root.edToast?.(t("Scaldabagno salvato", "Water heater saved"));
+      root.edToast?.(t("💾 Scaldabagno salvato", "💾 Water heater saved"));
     }
     return;
   }

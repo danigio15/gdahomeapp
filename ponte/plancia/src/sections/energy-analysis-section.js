@@ -19,7 +19,6 @@ import {
   senzaCadere,
 } from "./shared.js";
 import { lEnergiaInParole, laPotenzaInParole } from "../core/le-unita-della-corrente.js";
-import { segnoHtml } from "../core/segni-del-catalogo.js";
 
 globalThis.__DM_20260815C__ = true;
 const KEY = "__DASHBOARDMODERN_ENERGY_ANALYSIS_SECTION__";
@@ -178,7 +177,7 @@ function ensureWeeklyHeader(card) {
   if (!title) return;
   if (title.dataset.dmWeeklyTitle === "true") return;
   title.dataset.dmWeeklyTitle = "true";
-  title.innerHTML = `<span>${segnoHtml("refresh")} ${t("Confronto Settimanale", "Weekly comparison")}</span><small>${segnoHtml("home")} ${t("Consumi Casa", "Home consumption")}</small>`;
+  title.innerHTML = `<span>🔄 ${t("Confronto Settimanale", "Weekly comparison")}</span><small>🏠 ${t("Consumi Casa", "Home consumption")}</small>`;
   const labels = card.querySelectorAll(".ed-weekly-lbl");
   if (labels[0]) labels[0].textContent = t("Settimana scorsa", "Last week");
   if (labels[1]) labels[1].textContent = t("Questa settimana", "This week");

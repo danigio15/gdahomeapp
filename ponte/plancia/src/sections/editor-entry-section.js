@@ -12,7 +12,6 @@
  * configurazione che aprono la voce e il cartello — nessuna seconda strada da
  * tenere allineata, solo un'altra maniglia sulla stessa porta.
  */
-import { segnoHtml } from "../core/segni-del-catalogo.js";
 import { doc, installStyle, root, t, wrapFunction } from "./shared.js";
 
 const KEY = "__DASHBOARDMODERN_EDITOR_ENTRY__";
@@ -49,7 +48,7 @@ export function ensureEditorEntry() {
   const label = t("Configurazione", "Configuration");
   button.setAttribute("aria-label", label);
   button.title = label;
-  button.innerHTML = `<span aria-hidden="true">${segnoHtml("sliders")}</span>`;
+  button.innerHTML = `<span aria-hidden="true">⚙️</span>`;
   button.addEventListener("click", (event) => {
     event.preventDefault();
     if (root.navigator?.vibrate) root.navigator.vibrate(8);

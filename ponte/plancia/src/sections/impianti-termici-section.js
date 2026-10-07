@@ -64,7 +64,6 @@ import {
   writeJsonIfChanged,
   senzaCadere,
 } from "./shared.js";
-import { segnoHtml } from "../core/segni-del-catalogo.js";
 
 const KEY = "__DASHBOARDMODERN_IMPIANTI_TERMICI__";
 const STYLE_ID = "dm-impianti-termici-style";
@@ -764,7 +763,7 @@ export function rinominaLaSezione() {
   }
   const nuda = doc?.querySelector?.('.ed-tab[data-tab="sez3"]:not(:has(.dm-beta4-tab-label))');
   if (nuda && !clean(nuda.textContent).includes(nome)) {
-    nuda.innerHTML = `${segnoHtml("sun")} ${esc(nome)}`;
+    nuda.textContent = `🌞 ${nome}`;
     fatto = true;
   }
   return fatto;

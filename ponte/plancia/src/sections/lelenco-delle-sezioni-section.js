@@ -48,7 +48,6 @@ import {
   t,
   senzaCadere,
 } from "./shared.js";
-import { segnoDaValoreHtml } from "../core/segni-del-catalogo.js";
 
 const KEY = "__DASHBOARDMODERN_ELENCO_SEZIONI__";
 const state = (root[KEY] ||= { installed: false });
@@ -74,7 +73,7 @@ function rigaMarkup(voce, sezioni) {
     <button type="button" class="dm-elenco-int" role="switch" aria-checked="${accesa ? "true" : "false"}"
       data-dm-sezione-int="${esc(voce.chiave)}"
       aria-label="${esc(accesa ? t("Nascondi", "Hide") : t("Mostra", "Show"))} ${esc(nome)}"><i aria-hidden="true"></i></button>
-    <span class="dm-elenco-glifo" aria-hidden="true">${segnoDaValoreHtml(voce.glifo)}</span>
+    <span class="dm-elenco-glifo" aria-hidden="true">${esc(voce.glifo)}</span>
     <span class="dm-elenco-nome">${esc(nome)}</span>
     <button type="button" class="dm-elenco-vai" data-dm-sezione-vai="${esc(voce.scheda)}">${esc(t("Configura", "Configure"))}</button>
   </div>`;
@@ -86,7 +85,7 @@ function corpoMarkup() {
   const gruppi = sezioniPerFamiglia(SEZIONI)
     .map(
       (famiglia) => `<div class="dm-elenco-famiglia">
-        <span class="dm-elenco-insegna"><span aria-hidden="true">${segnoDaValoreHtml(famiglia.glifo)}</span>${esc(t(famiglia.it, famiglia.en))}</span>
+        <span class="dm-elenco-insegna"><span aria-hidden="true">${esc(famiglia.glifo)}</span>${esc(t(famiglia.it, famiglia.en))}</span>
         ${famiglia.sezioni.map((voce) => rigaMarkup(voce, sezioni)).join("")}
       </div>`,
     )

@@ -96,9 +96,9 @@ test("la card della sezione in cima, caselle e comandi al posto dell'elenco di s
   ).toHaveText("OFF");
   await expect(
     lista.locator(
-      '.dm-apde-comando[data-dm-apde-entity="script.condizionatore_cucina"] .dm-apde-tasto .dm-segno',
+      '.dm-apde-comando[data-dm-apde-entity="script.condizionatore_cucina"] .dm-apde-tasto',
     ),
-  ).toHaveAttribute("data-dm-segno", "play");
+  ).toHaveText("▶");
 });
 
 /* I sensori arrivano spesso col friendly name uguale allo slug — W_KWH_FRIGO,
@@ -156,9 +156,7 @@ test("gli slug diventano parole e i kWh perdono la batteria", async ({ page }, t
   expect(testo).not.toContain("ENERGY_OGGI_FRIGO");
   expect(testo).not.toContain("🔋");
   /* La potenza veste il fulmine anche se il suo slug giura «kwh». */
-  const glifi = await lista
-    .locator(".dm-apde-casella-ic .dm-segno")
-    .evaluateAll((nodi) => nodi.map((nodo) => nodo.dataset.dmSegno));
-  expect(glifi.filter((g) => g === "power").length).toBe(1);
-  expect(glifi.filter((g) => g === "gauge").length).toBe(1);
+  const glifi = await lista.locator(".dm-apde-casella-ic").allTextContents();
+  expect(glifi.filter((g) => g.includes("⚡")).length).toBe(1);
+  expect(glifi.filter((g) => g.includes("📊")).length).toBe(1);
 });
