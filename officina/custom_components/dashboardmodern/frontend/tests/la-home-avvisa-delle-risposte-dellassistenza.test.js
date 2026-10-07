@@ -167,7 +167,7 @@ test("la Home disegna la tessera, la ridisegna all'annuncio, e la sua finestra p
   assert.match(home, /closest\?\.\("\[data-dm-apri-cruscotto\],\[data-dm-apri-chat\]"\)\) chiudiPopup\(\);/);
   /* Si ordina e si nasconde dalla scheda Widget come le altre. */
   const editor = leggi("src/sections/todo-editor-section.js");
-  assert.match(editor, /return \[\s*(?:\/\*[\s\S]*?\*\/\s*)?\["assistenza", "💬", t\("Assistenza", "Support"\)\],\s*\["evidenza"/);
+  assert.match(editor, /return \[\s*(?:\/\*[\s\S]*?\*\/\s*)?\["assistenza", "chat", t\("Assistenza", "Support"\)\],\s*\["evidenza"/);
   magazzino.set("cd_widgets", JSON.stringify({ hidden: ["assistenza"] }));
   const tessera = tesseraDellaChat({ enabled: true, unread: 1 });
   assert.deepEqual(applyWidgetPreferences([tessera, { key: "luci" }]).map((w) => w.key), ["luci"]);

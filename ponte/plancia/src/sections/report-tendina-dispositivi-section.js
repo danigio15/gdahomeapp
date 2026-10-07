@@ -29,7 +29,7 @@
 import { canonicalReportDevices } from "../core/energy-projection.js";
 import { apriIlFoglioDiScelta, chiudiIlFoglioDiScelta } from "./foglio-di-scelta-section.js";
 import { iconGlyphMarkup } from "./icon-engine-section.js";
-import { clean, doc, esc, installStyle, root, section, t, wrapFunction } from "./shared.js";
+import { clean, doc, esc, installStyle, root, section, t, wrapFunction, senzaCadere } from "./shared.js";
 
 const KEY = "__DASHBOARDMODERN_REPORT_TENDINA__";
 const state = (root[KEY] ||= { installed: false });
@@ -266,5 +266,5 @@ export function installReportTendinaDispositiviSection() {
 if (doc?.readyState === "loading") {
   doc.addEventListener("DOMContentLoaded", installReportTendinaDispositiviSection, { once: true });
 } else {
-  installReportTendinaDispositiviSection();
+  senzaCadere(installReportTendinaDispositiviSection);
 }

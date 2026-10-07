@@ -423,6 +423,10 @@ async function main() {
        * ce l'ha una casa sola al mondo; qui ce l'ha perche' le due meta' della
        * chat si vedano nella stessa fotografia. */
       PONTE_CHIAVE_CONSOLE: CHIAVE_DELLA_CONSOLE,
+      /* Con la chiave delle licenze nel codice la casa bussa al quadro appena
+       * si accende: dal banco bussa a una porta chiusa di questa macchina, e
+       * mai al quadro vero. */
+      PONTE_QUADRO_DOVE: "http://127.0.0.1:9",
     },
     stdio: ["ignore", "pipe", "pipe"],
   });

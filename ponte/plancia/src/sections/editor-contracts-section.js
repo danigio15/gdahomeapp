@@ -1,5 +1,6 @@
+import { segnoDaValoreHtml, segnoHtml } from "../core/segni-del-catalogo.js";
 import { applianceArtwork } from "../core/appliance-artwork.js";
-import { clean, doc, english, installStyle, onEditorRedraw, root, scriviSeCambia, t, wrapFunction } from "./shared.js";
+import { clean, doc, english, installStyle, onEditorRedraw, root, scriviSeCambia, t, wrapFunction, senzaCadere } from "./shared.js";
 
 root.__DM_20260815C__ = true;
 const KEY = "__DASHBOARDMODERN_EDITOR_CONTRACTS_SECTION__";
@@ -166,8 +167,8 @@ function normalizeTemperatureEditor() {
 function selectedOptionGlyph(select) {
   const option = select?.selectedOptions?.[0] || select?.options?.[select?.selectedIndex];
   const text = clean(option?.textContent || option?.label);
-  if (!text) return "🔌";
-  return text.split(/\s+/)[0] || "🔌";
+  if (!text) return "socket";
+  return text.split(/\s+/)[0] || "socket";
 }
 
 export function syncApplianceEditorPreview(
@@ -183,7 +184,7 @@ export function syncApplianceEditorPreview(
     scriviSeCambia(preview, artwork);
   } else {
     const glyph = selectedOptionGlyph(select);
-    preview.innerHTML = `<span class="dm-appliance-menu-glyph">${glyph}</span>`;
+    preview.innerHTML = `<span class="dm-appliance-menu-glyph">${segnoDaValoreHtml(glyph, { ripiego: "socket" })}</span>`;
   }
   preview.dataset.dmPreviewSource = "artwork";
   preview.setAttribute("aria-label", clean(select.selectedOptions?.[0]?.textContent) || value);
@@ -219,10 +220,10 @@ function updateEnergyVisibilityButton(button) {
   button.dataset.visible = String(visible);
   button.textContent = visible
     ? t(
-        "🟢 Sezione visibile in dashboard — tocca per nascondere",
-        "🟢 Section visible — tap to hide",
+        "● Sezione visibile in dashboard — tocca per nascondere",
+        "● Section visible — tap to hide",
       )
-    : t("⚪ Sezione nascosta — tocca per mostrare", "⚪ Section hidden — tap to show");
+    : t("○ Sezione nascosta — tocca per mostrare", "○ Section hidden — tap to show");
   button.setAttribute("aria-pressed", String(visible));
 }
 
@@ -267,7 +268,7 @@ function normalizeEnergyGuide() {
   const intro = guide.querySelector(".dm-energy-source-guide-intro");
   if (intro && intro.dataset.dmPolished !== "true") {
     intro.dataset.dmPolished = "true";
-    intro.innerHTML = `<strong>⚡ ${t("Come leggere la configurazione Energia", "How to read the Energy configuration")}</strong>
+    intro.innerHTML = `<strong>${segnoHtml("power")} ${t("Come leggere la configurazione Energia", "How to read the Energy configuration")}</strong>
       <div class="dm-energy-guide-steps">
         <span><b>1 · ${t("Storico e mesi precedenti", "History and previous months")}</b><small>${t("usa il contatore totale kWh tramite Recorder", "use the total kWh meter through Recorder")}</small></span>
         <span><b>2 · ${t("Giorno / Mese / Anno", "Day / Month / Year")}</b><small>${t("servono solo se non c'è un contatore totale: quando c'è, comanda lui", "only used when there is no total meter: when there is one, it wins")}</small></span>
@@ -316,10 +317,10 @@ function normalizeEnergyHelp() {
     if (!visibility) body.prepend(overview);
   }
   const markup = t(
-    "<strong>⚡ Configurazione Energia</strong><span><b>Periodo corrente:</b> usa i sensori Giorno / Mese / Anno configurati. <b>Mesi precedenti:</b> usa i contatori Totali kWh tramite Recorder. Casa viene calcolata con lo stesso bilancio dei flussi di Home Assistant.</span>",
-    "<strong>⚡ Energy configuration</strong><span><b>Current period:</b> uses configured Day / Month / Year sensors. <b>Previous months/years:</b> uses Total kWh counters through Recorder. Home is calculated with the same Home Assistant flow balance.</span>",
+    "<strong>Configurazione Energia</strong><span><b>Periodo corrente:</b> usa i sensori Giorno / Mese / Anno configurati. <b>Mesi precedenti:</b> usa i contatori Totali kWh tramite Recorder. Casa viene calcolata con lo stesso bilancio dei flussi di Home Assistant.</span>",
+    "<strong>Energy configuration</strong><span><b>Current period:</b> uses configured Day / Month / Year sensors. <b>Previous months/years:</b> uses Total kWh counters through Recorder. Home is calculated with the same Home Assistant flow balance.</span>",
   );
-  scriviSeCambia(overview, markup);
+  scriviSeCambia(overview, markup.replace("<strong>", `<strong>${segnoHtml("power")} `));
   doc?.querySelectorAll("#editor-modal .dm-energy-total-note").forEach((note) => {
     const label = t(
       "Storico · contatore totale kWh (total / total_increasing)",
@@ -336,7 +337,8 @@ function hasEntityPicker(container) {
     (button) =>
       button.classList.contains("dm-entity-picker") ||
       button.dataset.dmEntityPicker === "true" ||
-      clean(button.textContent).includes("🔍"),
+      clean(button.textContent).includes("🔍") ||
+      Boolean(button.querySelector?.('[data-dm-segno="search"]')),
   );
 }
 
@@ -353,7 +355,7 @@ function normalizeEntityPickers() {
     picker.className = "dm-entity-picker dm-contract-entity-picker";
     picker.dataset.dmEntityPicker = "true";
     picker.setAttribute("aria-label", t("Cerca entità", "Search entity"));
-    picker.textContent = "🔍";
+    picker.innerHTML = segnoHtml("search");
     picker.addEventListener("click", (event) => {
       event.preventDefault();
       event.stopPropagation();
@@ -612,5 +614,5 @@ export function installEditorContractsSection() {
 if (doc?.readyState === "loading") {
   doc.addEventListener("DOMContentLoaded", installEditorContractsSection, { once: true });
 } else {
-  installEditorContractsSection();
+  senzaCadere(installEditorContractsSection);
 }

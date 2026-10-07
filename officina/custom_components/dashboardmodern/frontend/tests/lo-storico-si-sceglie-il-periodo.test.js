@@ -161,7 +161,7 @@ test("la cronologia della connettivita' ha la sua barra, e ricostruisce le stess
   assert.match(sezione, /\/api\/history\/period\//);
   assert.match(sezione, /srv-history-event/);
   const runtime = await leggi("sections/section-runtime.js");
-  assert.match(runtime, /installStoricoConnettivita\(\);/);
+  assert.match(runtime, /senzaCadere\(installStoricoConnettivita\);/);
   assert.match(runtime, /"storico-connettivita",/);
   /* I cambi di stato: uno per cambio, dal piu' recente, al massimo trenta. */
   const righe = [

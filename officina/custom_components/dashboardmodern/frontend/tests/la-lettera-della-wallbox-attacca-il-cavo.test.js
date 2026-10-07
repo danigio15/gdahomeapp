@@ -44,7 +44,8 @@ test("le lettere che la pillola conosce sono le stesse che sceglie la foto", () 
   const runtime = readFileSync(join(RADICE, "legacy", "dashboard-runtime-it.js"), "utf8");
   const tabella = runtime.slice(runtime.indexOf("const statiEV = {"));
   assert.match(tabella.slice(0, 200), /'A':'Non Connessa'/);
-  assert.match(tabella.slice(0, 200), /'B':'\u{1F50C} Collegata'/u);
-  assert.match(tabella.slice(0, 200), /'C':'⚡ In Carica'/u);
-  assert.match(tabella.slice(0, 200), /'D':'⚡ In Carica'/u);
+  /* La pillola scrive testo: le emoji di una volta non ci sono piu'. */
+  assert.match(tabella.slice(0, 200), /'B':'Collegata'/u);
+  assert.match(tabella.slice(0, 200), /'C':'In Carica'/u);
+  assert.match(tabella.slice(0, 200), /'D':'In Carica'/u);
 });

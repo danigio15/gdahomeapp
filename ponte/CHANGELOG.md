@@ -11,6 +11,67 @@ fuori. La plancia dentro continua a dire la sua, e si legge dov'è sempre
 stata: nella pastiglia «La plancia» della console. Sono due numeri perché
 sono due cose.
 
+## 1.9.2
+
+**Torna la plancia della 1.9.0, con la correzione che mancava.** Tornano la
+stanza aperta come tavola di comandi, le batterie di accumulo in Energia, la
+cottura negli Elettrodomestici, i varchi da escludere dall'antifurto, i disegni
+del catalogo al posto delle emoji, e le correzioni arrivate con la 1.9.0: il
+clima acceso dal telecomando, il nome del piano nuovo, la card del Clima sul
+telefono e le telecamere nel muro della Sicurezza. Cosa fa ognuna è scritto
+qui sotto, nella 1.9.0.
+
+**Perché la 1.9.0 si fermava dopo le azioni rapide.** Nella pagina Sicurezza la
+riga delle zone della centrale usava un nome che in quel punto non esiste.
+Bastava una zona scritta sulla centrale perché la riga si fermasse con un
+errore. La pagina Sicurezza si prepara mentre la plancia si carica, e quell'errore
+fermava tutta la parte nuova: restavano la testata, il meteo e le azioni
+rapide. Nella casa di prova le zone non ci sono, per questo le prove erano
+verdi. Adesso la riga delle zone si disegna, e il lucchetto aperto sta
+sull'ingresso escluso, dove deve stare.
+
+**Un pezzo che si rompe non spegne più la Home.** La plancia accende i suoi
+pezzi uno per uno: se uno cade lo scrive nella console del browser, e gli altri
+partono lo stesso. Rimettendo apposta l'errore della 1.9.0, la Home esce
+intera e manca solo la riga delle zone.
+
+**Il no allo spegnimento programmato si legge di nuovo.** Quando Home Assistant
+rifiutava uno spegnimento programmato, invece dell'avviso arrivava un errore
+della plancia. Adesso compare il messaggio che dice di aggiornare
+l'integrazione.
+
+**Dopo un riavvio di Home Assistant il telefono non risulta più staccato.**
+Mentre Home Assistant si riavviava o si aggiornava, l'add-on rispondeva al
+telefono come a un telefono tolto: l'app diceva «Questo telefono è stato
+staccato», smetteva di riprovare e chiedeva di riabbinarsi. Adesso l'add-on
+dice «riprova più tardi», e l'app torna da sola appena Home Assistant è di
+nuovo su. Un telefono tolto davvero dalla console resta staccato, come prima.
+
+**In auto l'icona del comando rapido la scegli tu.** Nell'app, in «Comandi
+rapidi in auto», toccando un comando c'è «Icona in auto»: cancello, porta,
+luce, presa, scena, serratura o azione. Si vede su Android Auto e su CarPlay.
+La tendina parte dall'icona che il comando ha già in auto, e cambiare solo il
+nome non cambia l'icona.
+
+**Il navigatore ricorda la voce spenta.** Se togli la voce, resta tolta anche
+quando l'app riparte. Su Android Auto toccare un punto sulla mappa non chiude più
+il navigatore, e la scheda della colonnina si apre anche quando lo
+stato di adesso non arriva. Agli svincoli la curva si misura senza entrare
+nella manovra dopo: con due manovre vicine, una poteva sembrare più stretta o
+più larga di com'era.
+
+**L'app nel browser resta in HTTPS.** Il tramite chiede al browser di non
+tornare in HTTP per il suo indirizzo, e di chiedere in HTTPS anche le risorse
+scritte con l'indirizzo in chiaro.
+
+**Prima di mandare una segnalazione, l'app dice che sarà pubblica.** Sopra
+«Manda» c'è un riquadro: la segnalazione diventa una pagina su GitHub che
+chiunque può leggere, con le foto e i video, e non va scritto niente di
+personale. In inglese le segnalazioni adesso sono tutte in inglese: erano
+rimasti in italiano «Foto e video», l'avanzamento degli allegati, l'avviso di
+un allegato non partito, lo stato di ogni segnalazione («aperta», «chiusa»),
+il conto dei messaggi, e sotto i fumetti «tu» e «chi fa l'app».
+
 ## 1.9.1
 
 **Torna la plancia della 1.8.0.** Con la plancia della 1.9.0, su molte case,

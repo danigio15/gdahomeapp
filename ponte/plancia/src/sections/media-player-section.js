@@ -62,6 +62,7 @@ import {
   root,
   t,
 } from "./shared.js";
+import { segnoDaValoreHtml } from "../core/segni-del-catalogo.js";
 
 const KEY = "__DASHBOARDMODERN_MEDIA_PLAYER__";
 const STYLE_ID = "dm-media-player-style";
@@ -316,7 +317,7 @@ function copertinaMarkup(riga) {
     return `<img class="dm-mp-arte" alt="" aria-hidden="true" loading="lazy">
       <img class="dm-mp-fondo" alt="" aria-hidden="true" loading="lazy">`;
   return `<span class="dm-mp-arte dm-mp-arte-vuota" aria-hidden="true">${
-    riga.icona ? esc(riga.icona) : oggettoWidget("media", "", `mp-${riga.entity}`)
+    riga.icona ? segnoDaValoreHtml(riga.icona, { ripiego: "speaker" }) : oggettoWidget("media", "", `mp-${riga.entity}`)
   }</span>`;
 }
 

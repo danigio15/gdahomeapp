@@ -273,5 +273,5 @@ test("il modulo è installato dal runtime, come le altre righe delle Impostazion
     "utf8",
   );
   assert.match(runtime, /import \{ installModoChiosco \} from "\.\/modo-chiosco-section\.js";/);
-  assert.match(runtime, /installModoChiosco\(\);/);
+  assert.match(runtime, /senzaCadere\(installModoChiosco\);/);
 });

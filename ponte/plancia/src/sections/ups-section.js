@@ -38,8 +38,10 @@ import {
   readJson,
   root,
   t,
+  senzaCadere,
 } from "./shared.js";
 import { laMisuraDallUnita } from "../core/le-unita-della-corrente.js";
+import { segnoHtml } from "../core/segni-del-catalogo.js";
 
 const KEY = "__DASHBOARDMODERN_UPS_SECTION__";
 const state = (root[KEY] ||= { installed: false, frame: 0, firma: "" });
@@ -100,7 +102,7 @@ export function ensureUpsTab() {
   voce.className = "tab";
   voce.dataset.tab = UPS_TAB;
   voce.id = `tab-${UPS_TAB}`;
-  voce.innerHTML = `<span class="icon">🔌</span><span class="text">${esc(t("UPS", "UPS"))}</span>`;
+  voce.innerHTML = `<span class="icon">${segnoHtml("socket")}</span><span class="text">${esc(t("UPS", "UPS"))}</span>`;
   /* Il gestore che il runtime lega alle voci lo lega una volta sola, al
    * caricamento: questa arriva dopo, e il suo tocco se lo deve gestire da se'.
    * Fa la stessa identica cosa, perche' due modi di cambiare pagina sarebbero
@@ -690,4 +692,4 @@ export function installUpsSection() {
   return true;
 }
 
-installUpsSection();
+senzaCadere(installUpsSection);

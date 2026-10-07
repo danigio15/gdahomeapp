@@ -2,7 +2,7 @@
 import { CONFIG_KEYS, CONFIG_KEYS_REVISION } from "../core/chiavi-di-configurazione.js";
 import { runSteps, stepReporter } from "../core/runtime-steps.js";
 import { normalizeSection } from "../core/migrations.js";
-import { reloadDashboard, root, t } from "./shared.js";
+import { reloadDashboard, root, t, senzaCadere } from "./shared.js";
 
 const KEY = "__DASHBOARDMODERN_CONFIG_PERSISTENCE__";
 const USER_DATA_VERSION = 1;
@@ -1336,4 +1336,4 @@ export function installConfigPersistenceSection() {
   });
 }
 
-installConfigPersistenceSection();
+senzaCadere(installConfigPersistenceSection);

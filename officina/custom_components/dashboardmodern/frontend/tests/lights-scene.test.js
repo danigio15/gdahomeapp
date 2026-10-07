@@ -119,7 +119,7 @@ test("a dimmer gets a dimmer, and a relay gets a power button and an explanation
   assert.doesNotMatch(plain, /data-block=/);
   assert.match(plain, /data-dm-light-power/);
   assert.match(plain, /collegata a uno switch/);
-  assert.match(plain, /🔌/);
+  assert.match(plain, /data-dm-segno="socket"/);
 
   const gone = renderLightControlMarkup(missing);
   assert.match(gone, /Entità non disponibile/);
@@ -139,7 +139,7 @@ test("the popup has one paint owner and stays event-driven", () => {
   assert.match(scene, /lightsSignature\(views\) !== state\.signature/);
   assert.match(scene, /function syncCard\(card, view\)/);
   assert.equal((runtime.match(/lights-scene-section\.js/g) || []).length, 1);
-  assert.equal((runtime.match(/installLightsSceneSection\(\)/g) || []).length, 1);
+  assert.equal((runtime.match(/senzaCadere\(installLightsSceneSection\);/g) || []).length, 1);
 });
 
 test("commands go through the model and the legacy service bridge", () => {

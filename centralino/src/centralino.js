@@ -454,6 +454,13 @@ export class Centralino {
         casa.chiudi("nessun segno di vita");
         continue;
       }
+      /* Un gettone puo' scadere mentre un telefono e' gia' dentro. Le nuove
+       * connessioni vengono fermate da accogliUnTelefono, ma senza questo
+       * controllo il canale gia' aperto resterebbe vivo fino alla sua chiusura.
+       * L'abbinamento invece non si tocca: resta libero anche per una casa Base. */
+      if (this.chiaveLicenze && casa.dicelaLicenza && !this.ePremium(casa.id)) {
+        casa.chiudiITelefoni(PREMIUM_RICHIESTO.codice, PREMIUM_RICHIESTO.motivo);
+      }
       casa.presa.ping();
     }
   }

@@ -30,7 +30,9 @@ const unSegreto = () => randomBytes(32).toString("hex");
 async function banco({ giorniDiSilenzio = 180 } = {}) {
   const cartella = mkdtempSync(join(tmpdir(), "centralino-"));
   const case_ = new Case({ cartella, giorniDiSilenzio });
-  const centralino = new Centralino({ case: case_ });
+  /* Qui si prova il centralino, non la licenza: senza chiave, come oggi,
+   * qualunque sia quella scritta nel codice (`docs/LICENZE.md`). */
+  const centralino = new Centralino({ case: case_, chiaveLicenze: "" });
   const server = costruisciIlServer({ centralino });
   await new Promise((ok) => server.listen(0, "127.0.0.1", ok));
   const dove = `ws://127.0.0.1:${server.address().port}`;

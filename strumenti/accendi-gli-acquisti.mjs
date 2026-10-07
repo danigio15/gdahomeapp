@@ -16,7 +16,8 @@
  * toccare, e nessun altro modo di accenderli per sbaglio.
  *
  * Si accende in due passi, con la stessa chiave. La coppia si fa sulla
- * macchina del quadro, e di li' esce solo la pubblica:
+ * macchina del quadro (`node le-licenze.mjs chiave`, nella cartella del
+ * quadro), e di li' esce solo la pubblica:
  *
  *   1. `chiave-licenze.mjs --senza-centralino --pubblica <x>`: la chiave
  *      nell'add-on e nell'app. La casa tiene la licenza e gira le ricevute
@@ -150,9 +151,9 @@ export const I_PASSI_A_MANO = Object.freeze([
   {
     quando: "prima",
     che: "Le credenziali dei negozi sulla macchina del quadro",
-    come: `\`QUADRO_GOOGLE_SERVICE_ACCOUNT\` (il JSON intero), e per Apple \`QUADRO_APPLE_CHIAVE\`,
-    \`QUADRO_APPLE_KEY_ID\`, \`QUADRO_APPLE_ISSUER\`, \`QUADRO_APPLE_BUNDLE\`.
-    Senza, i regali funzionano e gli acquisti rispondono 503.`,
+    come: `Sulla macchina del quadro, da root, nella sua cartella (/opt/quadro/quadro):
+    \`node le-licenze.mjs google <file.json>\` e \`node le-licenze.mjs apple <file.p8> <key id> <issuer id>\`,
+    poi \`systemctl restart quadro\`. Senza, i regali funzionano e gli acquisti rispondono 503.`,
   },
   {
     quando: "prima",
@@ -174,7 +175,9 @@ export const I_PASSI_A_MANO = Object.freeze([
     Chi ha l'add-on vecchio si sente dire «aggiorna l'add-on», e nessuno ha pagato a vuoto:
     con l'add-on vecchio l'app non vende. Quante case lo sentiranno lo dice
     \`pronte_alla_licenza\` contro \`case\`, in \`GET /salute\` del centralino chiesto dalla macchina
-    stessa (\`curl http://127.0.0.1:8099/salute\`): da fuori quei numeri non si vedono.`,
+    stessa (\`curl http://127.0.0.1:8099/salute\`): da fuori quei numeri non si vedono.
+    Poi la versione minima delle app (\`VERSIONE_MINIMA_APP\` sul centralino), quando la prima
+    versione con la chiave si scarica da tutti e due i negozi: le app di prima hanno tutto aperto.`,
   },
 ]);
 
@@ -224,7 +227,11 @@ if (process.argv[1] && process.argv[1].endsWith("accendi-gli-acquisti.mjs")) {
       for (const riga of passo.come.split("\n")) console.log(`    ${riga.trim()}`);
       console.log("");
     }
-    console.log("La coppia si fa sulla macchina del quadro, e di li' esce solo la pubblica:\n");
+    console.log(
+      "La coppia si fa sulla macchina del quadro, da root, e di li' esce solo la pubblica:\n",
+    );
+    console.log("    cd /opt/quadro/quadro && node le-licenze.mjs chiave\n");
+    console.log("Poi la pubblica si scrive qui:\n");
     console.log(
       "    node strumenti/chiave-licenze.mjs --senza-centralino --pubblica <la pubblica>\n",
     );
@@ -250,8 +257,9 @@ if (process.argv[1] && process.argv[1].endsWith("accendi-gli-acquisti.mjs")) {
     /* Qui una coppia non si fabbrica: la privata stamperebbe su questo
      * schermo, e il suo posto e' solo la macchina del quadro. */
     console.error(
-      "\nPrima il primo passo. La coppia si fa sulla macchina del quadro, e di li' esce\n" +
-        "solo la pubblica, che si scrive con\n\n" +
+      "\nPrima il primo passo. La coppia si fa sulla macchina del quadro, da root\n" +
+        "(cd /opt/quadro/quadro && node le-licenze.mjs chiave), e di li' esce solo la\n" +
+        "pubblica, che si scrive con\n\n" +
         "    node strumenti/chiave-licenze.mjs --senza-centralino --pubblica <la pubblica>\n",
     );
     process.exit(1);

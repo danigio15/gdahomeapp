@@ -30,8 +30,10 @@ import {
   t,
   wrapFunction,
   writeJsonIfChanged,
+  senzaCadere,
 } from "./shared.js";
 import { MARCHIO_TESSERA } from "../core/fuori-dai-widget.js";
+import { segnoHtml } from "../core/segni-del-catalogo.js";
 
 const KEY = "__DASHBOARDMODERN_SMOKE_ALERTS__";
 const STYLE_ID = "dm-smoke-alerts-style";
@@ -162,7 +164,7 @@ function ensureGroupOption(select) {
   if (!select || select.querySelector(`option[value="${SMOKE_GROUP}"]`)) return false;
   const option = doc.createElement("option");
   option.value = SMOKE_GROUP;
-  option.textContent = `${SMOKE_ICON} ${smokeName()}`;
+  option.textContent = smokeName();
   const custom = select.querySelector('option[value="custom"]');
   if (custom) custom.before(option);
   else select.append(option);
@@ -215,12 +217,12 @@ function ensureSmokeEditorRows() {
         `<div class="ed-row" data-dm-smoke-row="${esc(id)}">` +
         `<div class="ed-row-main"><div class="ed-row-new">${esc(nome)}</div>` +
         `<div class="ed-row-old mono">${esc(id)}</div></div>` +
-        `<div class="ed-del" data-dm-smoke-del="${esc(id)}">🗑️</div></div>`
+        `<div class="ed-del" data-dm-smoke-del="${esc(id)}">${segnoHtml("trash")}</div></div>`
       );
     })
     .join("");
   const markup =
-    `<summary class="ed-acc-head">${SMOKE_ICON} ${esc(smokeName())} ` +
+    `<summary class="ed-acc-head">${segnoHtml("smoke")} ${esc(smokeName())} ` +
     `<span class="ed-acc-n">${entities.length}</span></summary>` +
     `<div class="ed-acc-body"><div class="ed-list">${righe}</div></div>`;
   scriviSeCambia(acc, markup);
@@ -258,7 +260,7 @@ function smokeStateLabel(stato) {
 
 function smokeRowMarkup(id, nome) {
   return `<div class="dm-smoke-row" data-dm-smoke="${esc(id)}">
-      <span class="dm-smoke-ic" aria-hidden="true">${SMOKE_ICON}</span>
+      <span class="dm-smoke-ic" aria-hidden="true">${segnoHtml("smoke")}</span>
       <span class="dm-smoke-copy">
         <strong class="dm-smoke-name">${esc(nome)}</strong>
         <span class="dm-smoke-state" data-dm-smoke-state></span>
@@ -278,7 +280,7 @@ function blockMarkup(entities, nomi, states) {
     .map((id) => smokeRowMarkup(id, nomeDelRilevatore(id, nomi, states)))
     .join("");
   return `<div class="dm-sec-smoke-head">
-      <span class="dm-sec-smoke-ic" aria-hidden="true">${SMOKE_ICON}</span>
+      <span class="dm-sec-smoke-ic" aria-hidden="true">${segnoHtml("smoke")}</span>
       <h3>${esc(smokeName())}</h3>
       <span class="dm-sec-smoke-hint" data-dm-smoke-hint></span>
     </div>
@@ -479,4 +481,4 @@ export function installSmokeAlertsSection() {
 
 if (doc?.readyState === "loading")
   doc.addEventListener("DOMContentLoaded", installSmokeAlertsSection, { once: true });
-else installSmokeAlertsSection();
+else senzaCadere(installSmokeAlertsSection);

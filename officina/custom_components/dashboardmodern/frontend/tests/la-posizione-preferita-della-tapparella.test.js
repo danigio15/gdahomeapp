@@ -76,7 +76,7 @@ test("la card offre la tendina a chi accetta una posizione, non un tasto fisso",
   // La tendina non chiede piu' una preferita: basta che qualcuno accetti la
   // posizione. La preferita, se c'e', porta la stella.
   assert.match(scena, /if \(!tutte\.some\(\(cover\) => cover\.settable\)\) return ""/);
-  assert.match(scena, /value === preferita \? "⭐ "/);
+  assert.match(scena, /value === preferita \? "★ "/);
   // La scelta riusa il percorso del cursore: grab, anteprima e servizio, e
   // poi la tendina torna alla voce d'invito.
   assert.match(scena, /function applyPreset/);
@@ -94,7 +94,7 @@ test("in Home la tendina sta nella tessera del ponte, solo per chi puo' usarla",
   assert.match(ponte, /function positionSelectMarkup/);
   assert.match(ponte, /if \(!row\.settable\) return ""/);
   assert.match(ponte, /coverPositionChoices\(row\.preset\)/);
-  assert.match(ponte, /value === row\.preset \? "⭐ "/);
+  assert.match(ponte, /value === row\.preset \? "★ "/);
   assert.match(ponte, /"set_cover_position"/);
   // La tendina si apre da sola: il click non deve richiudere la tessera.
   assert.match(ponte, /closest\?\.\("\[data-dm-w-position\]"\)\) return/);

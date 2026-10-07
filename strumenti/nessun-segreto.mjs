@@ -176,6 +176,12 @@ export const LE_ECCEZIONI = Object.freeze([
     perche:
       "la chiave della foglia di una catena di certificati di prova (radice e intermedio «di prova»), per provare la verifica delle risposte firmate di Apple senza Apple: non firma niente fuori dalla prova",
   },
+  {
+    file: "quadro/test/le-licenze-sul-quadro.test.js",
+    segno: "credenziale-del-progetto",
+    perche:
+      "un file d'ambiente finto, in una cartella di passaggio, per provare che lo strumento del quadro (`quadro/le-licenze.mjs`) non tocca una QUADRO_LICENZE_CHIAVE storta gia' scritta: il valore e' «non-e-una-chiave», e le chiavi vere le fa lo strumento sulla macchina del quadro",
+  },
 ]);
 
 const suUnaRiga = (segno, riga) => segno.come.exec(riga);

@@ -63,6 +63,7 @@ class ComandoRapido {
     required this.ricetta,
     this.conferma = false,
     this.provenienza = '',
+    this.icona,
   });
 
   /// «c|cover.cancello|toggle»: lo stesso segno che il tasto lascia scritto.
@@ -78,20 +79,45 @@ class ComandoRapido {
   /// Da dove viene, in parole: «Azione rapida», «Scena», «Cancello»…
   final String provenienza;
 
+  /// Disegno scelto dall'utente, indipendente dal tipo reale del comando.
+  /// Se assente si usa il genere del comando.
+  final String? icona;
+
+  /// Il disegno che il comando ha adesso in auto: quello scelto, se c'e';
+  /// se no il genere; e per un'«azione», che e' anche il ripiego dei comandi
+  /// scritti prima che il genere ci fosse, il dominio della ricetta. E' la
+  /// stessa regola di `ilGenere` in `IComandiInAuto.kt`: la tendina «Icona in
+  /// auto» parte da qui, cosi' rinominare un cancello non lo fa diventare un
+  /// fulmine.
+  String get iconaInAuto {
+    if (icona case final scelta? when scelta.isNotEmpty) return scelta;
+    if (genere != GenereDelComando.azione) return genere.name;
+    return switch (ricetta.dominio) {
+      'scene' || 'script' => 'scena',
+      'cover' => 'varco',
+      'lock' => 'serratura',
+      'light' => 'luce',
+      'switch' || 'input_boolean' || 'fan' => 'presa',
+      _ => 'azione',
+    };
+  }
+
   /// Cosa fa davvero — su quale entita', con quale servizio e quale voce —
   /// per riconoscere due comandi uguali venuti da posti diversi.
   String get impronta =>
       '${ricetta.entita}|${ricetta.servizio}|${ricetta.dati['option'] ?? ''}';
 
   /// Lo stesso comando con un altro nome, o con o senza conferma.
-  ComandoRapido cambiato({String? nome, bool? conferma}) => ComandoRapido(
-    id: id,
-    nome: nome == null || nome.trim().isEmpty ? this.nome : nome.trim(),
-    genere: genere,
-    ricetta: ricetta,
-    conferma: conferma ?? this.conferma,
-    provenienza: provenienza,
-  );
+  ComandoRapido cambiato({String? nome, bool? conferma, String? icona}) =>
+      ComandoRapido(
+        id: id,
+        nome: nome == null || nome.trim().isEmpty ? this.nome : nome.trim(),
+        genere: genere,
+        ricetta: ricetta,
+        conferma: conferma ?? this.conferma,
+        provenienza: provenienza,
+        icona: icona ?? this.icona,
+      );
 
   Map<String, Object?> get comeSiScrive => {
     'id': id,
@@ -99,6 +125,7 @@ class ComandoRapido {
     'genere': genere.name,
     if (conferma) 'conferma': true,
     if (provenienza.isNotEmpty) 'provenienza': provenienza,
+    if (icona != null && icona!.isNotEmpty) 'icona': icona,
     'dominio': ricetta.dominio,
     'servizio': ricetta.servizio,
     'entita': ricetta.entita,
@@ -128,6 +155,7 @@ class ComandoRapido {
           GenereDelComando.azione,
       conferma: grezzo['conferma'] == true,
       provenienza: testo('provenienza'),
+      icona: testo('icona').isEmpty ? null : testo('icona'),
       ricetta: RicettaDellAzione(
         id: id,
         dominio: dominio,

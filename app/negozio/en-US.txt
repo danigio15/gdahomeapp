@@ -1,3 +1,3 @@
-The navigator knows Italy's limited traffic zones (ZTL), asks whether you have a permit and suggests energy-saving routes. Android Auto and CarPlay show traffic, with the lanes at junctions. The app is faster, especially away from home.
+The navigator knows Italy's limited traffic zones (ZTL), asks whether you have a permit and suggests energy-saving routes. Android Auto and CarPlay show traffic, with the lanes at junctions. The app is faster, especially away from home. Each quick command in the car can have the icon you choose, and a muted navigator voice stays muted.
 
-Update gdahome in Home Assistant to 1.9.1: the dashboard that works for everyone is back, with your configuration as it was.
+Update gdahome in Home Assistant to 1.9.2: the room as a control board, home batteries, cooking and bypassing openings from the alarm are back.

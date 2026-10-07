@@ -343,7 +343,13 @@ class Collegamento {
       const perche =
         errore instanceof CasaIrraggiungibile ? errore.message : "non riesco a parlare con la casa";
       this.ponte.registro?.errore?.(`filo non aperto per ${dispositivo.nome}: ${perche}`);
-      this._rifiuta(perche);
+      /* Il segno del telefono era buono: e' Home Assistant che adesso non
+       * risponde — si riavvia, si aggiorna. Con `auth_invalid` il telefono
+       * leggeva «sei stato staccato», smetteva di riprovare e chiedeva di
+       * riabbinarsi, a ogni riavvio di Home Assistant. Si chiude e basta, con
+       * «riprova piu' tardi» (1013): l'app ribussa da se', con le sue attese,
+       * e `auth_invalid` resta di chi ha un segno che non vale. */
+      this.chiudi(1013, perche);
       return;
     }
 

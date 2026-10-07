@@ -144,7 +144,16 @@ test("una richiesta in corso con la stessa chiave si tiene, non si butta via", (
     energia,
     /if \(state\.caricoInCorso\?\.chiave === chiave\) return state\.caricoInCorso\.promessa;/,
   );
-  assert.match(energia, /if \(chiave !== chiaveDelCarico\(selectedPeriod\(\)\)\) return null;/);
+  /* Il mese scelto lo guarda chi ha chiesto il carico, con la chiave del suo
+   * carico (1.9.2: lo stesso controllo con un `chiave` che li' non esisteva
+   * faceva cadere ogni aggiornamento, e questa riga lo lasciava passare).
+   * Il caricatore guarda l'impianto e la configurazione del periodo che gli
+   * si e' chiesto. Il giro vero sta in `laggiornamento-dellenergia-arriva-in-fondo`. */
+  assert.match(
+    energia,
+    /if \(carico\.chiave !== chiaveDelCarico\(selectedPeriod\(\)\)\) return false;/,
+  );
+  assert.match(energia, /if \(chiave !== chiaveDelCarico\(period\)\) return null;/);
   assert.doesNotMatch(energia, /if \(generation !== state\.generation\) return null;/);
   /* La chiave porta il periodo, l'impianto e il numero della configurazione,
    * e quel numero cresce a ogni modifica salvata nel magazzino (osservazione

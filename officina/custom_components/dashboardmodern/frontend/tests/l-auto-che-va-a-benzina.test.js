@@ -248,14 +248,14 @@ test("la tessera in Home: senza batteria il livello e' il carburante, e lo dice"
   assert.equal((home.match(/misura\("dm\.ev_carburante"\)/g) || []).length, 3);
   assert.match(home, /const aBenzina = clean\(auto\?\.tipo\) === "termica";/);
   assert.equal((home.match(/carburante: Boolean\(serbatoio\),/g) || []).length, 2);
-  assert.match(home, /lettura\.carburante \? "⛽" : "🔋"/);
+  assert.match(home, /lettura\.carburante \? segnoHtml\("ev"\) : segnoHtml\("battery"\)/);
 });
 
 test("il modulo e' installato dal runtime, dopo il vestito della pagina Auto", async () => {
   const runtime = await leggi("sections/section-runtime.js");
   assert.match(runtime, /import \{ installAutoTermica \} from "\.\/auto-termica-section\.js";/);
-  const vestito = runtime.indexOf("installEvShowcaseSection();");
-  const termica = runtime.indexOf("installAutoTermica();");
+  const vestito = runtime.indexOf("senzaCadere(installEvShowcaseSection);");
+  const termica = runtime.indexOf("senzaCadere(installAutoTermica);");
   assert.ok(vestito > 0 && termica > vestito);
   assert.match(runtime, /"auto-termica",/);
 });

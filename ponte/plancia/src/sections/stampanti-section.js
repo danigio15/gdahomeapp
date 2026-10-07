@@ -37,6 +37,7 @@ import {
   readJson,
   root,
   t,
+  senzaCadere,
 } from "./shared.js";
 
 const KEY = "__DASHBOARDMODERN_STAMPANTI__";
@@ -398,4 +399,4 @@ export function installStampanti() {
   return true;
 }
 
-installStampanti();
+senzaCadere(installStampanti);

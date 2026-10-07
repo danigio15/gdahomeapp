@@ -1,7 +1,7 @@
 import { hasConfiguredData, VISIBILITY_SECTION } from "../core/dashboard-store.js";
 import { sectionForEditorSlot } from "../core/editor-slots.js";
 import { SECTION_KEYS } from "../core/migrations.js";
-import { clean, dashboardStore, doc, root, t } from "./shared.js";
+import { clean, dashboardStore, doc, root, t, senzaCadere } from "./shared.js";
 
 const KEY = "__DASHBOARDMODERN_SAVE_ENGINE__";
 const state = (root[KEY] ||= {
@@ -268,4 +268,4 @@ export function installSaveEngineSection() {
     });
 }
 
-installSaveEngineSection();
+senzaCadere(installSaveEngineSection);

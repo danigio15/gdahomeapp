@@ -50,6 +50,7 @@ import {
   selectedPeriod,
   t,
   wrapFunction,
+  senzaCadere,
 } from "./shared.js";
 import {
   isHostedDashboard,
@@ -67,6 +68,7 @@ import { persistEnergyField as writeEnergyField } from "../core/energy-writer.js
 import { runtimeMetrics } from "../core/runtime-metrics.js";
 import { BUILD_INFO } from "../../legacy/build-info.js";
 import { lEnergiaInParole, laPotenzaInParole } from "../core/le-unita-della-corrente.js";
+import { segnoHtml } from "../core/segni-del-catalogo.js";
 
 root.__DM_20260815C__ = true;
 const KEY = "__DASHBOARDMODERN_RUNTIME_ROOT__";
@@ -759,14 +761,16 @@ export async function loadAtomicEnergyBundle(
   }
 
   /* Un pacchetto si butta via solo se nel frattempo e' cambiato cio' che
-   * legge: un altro periodo, un altro impianto, una configurazione nuova.
+   * legge: un altro impianto, una configurazione nuova. Il mese scelto sulla
+   * pagina lo guarda chi l'ha chiesto (`eseguiIlRefresh`): da qui si puo'
+   * chiedere anche un mese che non e' quello sullo schermo.
    * Prima bastava che PARTISSE una richiesta nuova — e ne partono di
    * continuo: il guscio a ogni giro, gli stati che cambiano, la pagina che si
    * apre — perche' quella in corso, a risposta arrivata, venisse scartata.
    * Con le domande al Recorder in fila il giro dura di piu', e non arrivava
    * mai in fondo prima che qualcuno lo scavalcasse: «i dati non si
    * aggiornano», per sempre, senza nemmeno una riga che lo dicesse. */
-  if (chiave !== chiaveDelCarico(selectedPeriod())) return null;
+  if (chiave !== chiaveDelCarico(period)) return null;
 
   const record = {
     day: buildPeriodRecord(fonti.day, letture.fonteDay.valori),
@@ -1021,9 +1025,9 @@ function applyReportOverview(bundle) {
   const chips = doc?.getElementById("ed-yoy-chips");
   if (chips) {
     const value = [
-      ilSole ? `<span class="ed-yoy-chip">☀️ ${kwh(data.solar)}</span>` : "",
-      `<span class="ed-yoy-chip">🏠 ${kwh(data.house)}</span>`,
-      `<span class="ed-yoy-chip">⚡ ${kwh(data.gridImport)} ${t("da Rete", "from Grid")}</span>`,
+      ilSole ? `<span class="ed-yoy-chip">${segnoHtml("sun")} ${kwh(data.solar)}</span>` : "",
+      `<span class="ed-yoy-chip">${segnoHtml("home")} ${kwh(data.house)}</span>`,
+      `<span class="ed-yoy-chip">${segnoHtml("power")} ${kwh(data.gridImport)} ${t("da Rete", "from Grid")}</span>`,
     ].join("");
     scriviSeCambia(chips, value);
   }
@@ -1150,8 +1154,8 @@ export function scriviLaQuota(row, quota) {
   if (!riga) return;
   const pezzi = riga.querySelectorAll("span");
   if (pezzi.length < 2) return;
-  pezzi[0].textContent = `☀️ ${lEnergiaInParole(quota.solar)}`;
-  pezzi[1].textContent = `🔌 ${lEnergiaInParole(quota.grid)}`;
+  pezzi[0].innerHTML = `${segnoHtml("sun")} ${esc(lEnergiaInParole(quota.solar))}`;
+  pezzi[1].innerHTML = `${segnoHtml("socket")} ${esc(lEnergiaInParole(quota.grid))}`;
   riga.dataset.dmQuota = VERSION;
 }
 
@@ -1610,11 +1614,11 @@ function scriviLAmmanco(bundle, source) {
   scriviTestoSeCambia(
     riga,
     testa.contata
-      ? `✅ ${formatNumber(testa.quanta, 1)} kWh ${t(
+      ? `${formatNumber(testa.quanta, 1)} kWh ${t(
           "compresi qui: il contatore li aveva già fatti prima che ne cominciassero le statistiche",
           "included here: the counter had already made them before its statistics began",
         )}`
-      : `⚠️ ${formatNumber(testa.quanta, 1)} kWh ${t(
+      : `${formatNumber(testa.quanta, 1)} kWh ${t(
           "non contati: il contatore li aveva già fatti prima che ne cominciassero le statistiche, e sono troppi per essere di questo periodo",
           "not counted: the counter had already made them before its statistics began, and they are too many to belong to this period",
         )}`,
@@ -2021,6 +2025,11 @@ async function eseguiIlRefresh(period, carico) {
       if (state.caricoInCorso === carico) segnaLAttesa();
     });
     if (!bundle) return false;
+    /* Un pacchetto chiesto per un mese che nel frattempo non e' piu' quello
+     * scelto non si dipinge sopra la vista di adesso. La chiave e' quella del
+     * carico che l'ha chiesto: qui dentro non ce n'e' un'altra, e il nome
+     * `chiave` da solo faceva cadere ogni aggiornamento dell'Energia. */
+    if (carico.chiave !== chiaveDelCarico(selectedPeriod())) return false;
     commitDerived(bundle);
     state.bundle = bundle;
     state.selected = bundle.period;
@@ -2258,7 +2267,7 @@ function createTotalField(definition, value) {
   picker.type = "button";
   picker.className = "dm-entity-picker";
   picker.dataset.entityTarget = input.id;
-  picker.textContent = "🔍";
+  picker.innerHTML = segnoHtml("search");
   picker.setAttribute("aria-label", `${t("Seleziona", "Select")} ${label}`);
   picker.addEventListener("click", () => root.wzPickEntity?.(input));
   row.append(input, picker);
@@ -2312,7 +2321,7 @@ function entityField(label, key, value, placeholder) {
   const picker = doc.createElement("button");
   picker.type = "button";
   picker.className = "dm-entity-picker";
-  picker.textContent = "🔍";
+  picker.innerHTML = segnoHtml("search");
   picker.addEventListener("click", () => root.wzPickEntity?.(input));
   row.append(input, picker);
   wrap.append(row);
@@ -2546,7 +2555,7 @@ const RIQUADRI_DELL_ANNO = Object.freeze([
 
 function iRiquadriDellAnnoAspettano(selYear) {
   setText("ed-dkpi-year-lbl", String(selYear ?? ""));
-  for (const id of RIQUADRI_DELL_ANNO) setText(id, "⏳ —");
+  for (const id of RIQUADRI_DELL_ANNO) setText(id, "—");
 }
 
 function spegniIlTotaleAnnoDelGuscio() {
@@ -2731,4 +2740,4 @@ export function installEnergySection() {
 
 if (doc?.readyState === "loading")
   doc.addEventListener("DOMContentLoaded", installEnergySection, { once: true });
-else installEnergySection();
+else senzaCadere(installEnergySection);

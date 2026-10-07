@@ -60,7 +60,7 @@ test("navigation has one canonical owner with dark-mode contrast", async () => {
   const runtime = await read("src/sections/section-runtime.js");
   const navigation = await read("src/sections/navigation-section.js");
   assert.equal((runtime.match(/navigation-section\.js/g) || []).length, 1);
-  assert.equal((runtime.match(/installNavigationSection\(\)/g) || []).length, 1);
+  assert.equal((runtime.match(/senzaCadere\(installNavigationSection\);/g) || []).length, 1);
   assert.equal((runtime.match(/"navigation"/g) || []).length, 1);
   assert.match(navigation, /bottom-nav-bar/);
   assert.match(navigation, /#cbd5e1/);
@@ -77,7 +77,7 @@ test("temperature mobile card is owned by the canonical temperature renderer", a
   const legacyLayout = await read("src/sections/temperature-layout-section.js");
 
   assert.equal((runtime.match(/temperature-section\.js/g) || []).length, 1);
-  assert.equal((runtime.match(/installTemperatureSection\(\)/g) || []).length, 1);
+  assert.equal((runtime.match(/senzaCadere\(installTemperatureSection\);/g) || []).length, 1);
   assert.match(source, /renderTemperatureCards/);
   assert.match(source, /data-dm-temperature-canonical/);
   // Mobile card metrics of the current design; update deliberately with it.

@@ -10,6 +10,7 @@
  * Il ripristino non cancella mai: scrive le chiavi che il backup porta, e
  * lascia stare le altre. E prima di scrivere chiede conferma — inline, mai
  * col dialogo nativo del browser: l'app di Home Assistant lo blocca. */
+import { segnoHtml } from "../core/segni-del-catalogo.js";
 import { CONFIG_KEYS, CONFIG_KEYS_REVISION } from "./config-persistence-section.js";
 import {
   clean,
@@ -20,6 +21,7 @@ import {
   reloadDashboard,
   root,
   t,
+  senzaCadere,
 } from "./shared.js";
 
 const KEY = "__DASHBOARDMODERN_BACKUP_EDITOR__";
@@ -109,28 +111,28 @@ function bodyMarkup() {
     "The backup gathers the whole dashboard configuration into one file: sections, rooms, entities, people, cars, everything. Restore puts it back and reloads.",
   )}</div>
   <article class="ed-row dm-backup-card">
-    <h3>⬇️ ${t("Scarica il backup", "Download the backup")}</h3>
+    <h3>↓ ${t("Scarica il backup", "Download the backup")}</h3>
     <p>${t("Un file JSON con la configurazione di adesso.", "A JSON file with the configuration as it is now.")}</p>
     <div class="dm-backup-actions">
-      <button type="button" class="ed-btn-add" data-backup-download>💾 ${t("Scarica il file", "Download the file")}</button>
-      <button type="button" class="ed-btn-add" data-backup-copy>📋 ${t("Copia negli appunti", "Copy to clipboard")}</button>
+      <button type="button" class="ed-btn-add" data-backup-download>${segnoHtml("check")} ${t("Scarica il file", "Download the file")}</button>
+      <button type="button" class="ed-btn-add" data-backup-copy>${segnoHtml("list")} ${t("Copia negli appunti", "Copy to clipboard")}</button>
     </div>
   </article>
   <article class="ed-row dm-backup-card">
-    <h3>♻️ ${t("Ripristina da un backup", "Restore from a backup")}</h3>
+    <h3>${segnoHtml("refresh")} ${t("Ripristina da un backup", "Restore from a backup")}</h3>
     <p>${t(
       "Scegli il file, oppure incolla qui il testo del backup. Le chiavi che il backup non porta restano come sono.",
       "Choose the file, or paste the backup text here. Keys the backup does not carry stay as they are.",
     )}</p>
     <input type="file" accept=".json,application/json" data-backup-file hidden>
     <div class="dm-backup-actions">
-      <button type="button" class="ed-btn-add" data-backup-pick>📁 ${t("Scegli il file", "Choose the file")}</button>
+      <button type="button" class="ed-btn-add" data-backup-pick>${segnoHtml("list")} ${t("Scegli il file", "Choose the file")}</button>
     </div>
     <textarea class="ed-input dm-backup-paste" data-backup-paste rows="3" placeholder='{"format":"${BACKUP_FORMAT}", …}'></textarea>
     <div class="dm-backup-confirm" data-backup-confirm hidden>
       <b data-backup-summary></b>
       <div class="dm-backup-actions">
-        <button type="button" class="ed-btn-add dm-backup-go" data-backup-apply>✅ ${t("Ripristina e ricarica", "Restore and reload")}</button>
+        <button type="button" class="ed-btn-add dm-backup-go" data-backup-apply>${segnoHtml("check")} ${t("Ripristina e ricarica", "Restore and reload")}</button>
         <button type="button" class="ed-btn-add" data-backup-cancel>✕ ${t("Annulla", "Cancel")}</button>
       </div>
     </div>
@@ -194,7 +196,7 @@ function scarica() {
     link.click();
     link.remove();
     root.setTimeout?.(() => URL.revokeObjectURL(url), 4000);
-    root.edToast?.(t("💾 Backup scaricato", "💾 Backup downloaded"));
+    root.edToast?.(t("Backup scaricato", "Backup downloaded"));
   } catch (_error) {
     root.edToast?.(
       t("Il download qui non passa: usa «Copia»", "Download blocked here: use “Copy”"),
@@ -205,7 +207,7 @@ function scarica() {
 async function copia() {
   try {
     await root.navigator?.clipboard?.writeText?.(backupJson());
-    root.edToast?.(t("📋 Backup copiato", "📋 Backup copied"));
+    root.edToast?.(t("Backup copiato", "Backup copied"));
   } catch (_error) {
     root.edToast?.(t("Appunti non disponibili qui", "Clipboard unavailable here"));
   }
@@ -222,7 +224,7 @@ function applica(body) {
     root.cdMarkDirty?.();
     root.cdSyncPush?.();
   } catch (_error) {}
-  root.edToast?.(`♻️ ${scritte} ${t("voci ripristinate", "entries restored")}`);
+  root.edToast?.(`${scritte} ${t("voci ripristinate", "entries restored")}`);
   mostraErrore(body, "");
   root.setTimeout?.(() => reloadDashboard(), 600);
 }
@@ -273,7 +275,7 @@ export function ensureBackupEditorTab() {
   const tab = doc.createElement("button");
   tab.className = "ed-tab";
   tab.dataset.tab = BACKUP_EDITOR_TAB;
-  tab.textContent = `💾 ${t("Backup", "Backup")}`;
+  tab.innerHTML = `${segnoHtml("check")} ${esc(t("Backup", "Backup"))}`;
   tab.addEventListener("click", () => root.editorSwitch?.(BACKUP_EDITOR_TAB));
   const prima = tabs.querySelector('.ed-tab[data-tab="runtime"]');
   if (prima) prima.before(tab);
@@ -322,4 +324,4 @@ export function installBackupEditorSection() {
   ensureBackupEditor();
 }
 
-installBackupEditorSection();
+senzaCadere(installBackupEditorSection);

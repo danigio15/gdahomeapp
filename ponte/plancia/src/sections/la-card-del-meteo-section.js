@@ -41,7 +41,9 @@ import {
   locale,
   root,
   t,
+  senzaCadere,
 } from "./shared.js";
+import { segnoHtml } from "../core/segni-del-catalogo.js";
 
 const KEY = "__DASHBOARDMODERN_CARD_DEL_METEO__";
 const state = (root[KEY] ||= {
@@ -241,7 +243,7 @@ function misureInPiu(riquadro) {
   const tramonto = Date.parse(clean(states["sun.sun"]?.attributes?.next_setting));
   const voci = [];
   if (pressione !== null)
-    voci.push(["pressione", "🧭", t("Pressione", "Pressure"), `${Math.round(pressione)} ${unita}`]);
+    voci.push(["pressione", "gauge", t("Pressione", "Pressure"), `${Math.round(pressione)} ${unita}`]);
   if (Number.isFinite(tramonto)) {
     let ora = "";
     try {
@@ -249,7 +251,7 @@ function misureInPiu(riquadro) {
         new Date(tramonto),
       );
     } catch (_errore) {}
-    if (ora) voci.push(["tramonto", "🌅", t("Tramonto", "Sunset"), ora]);
+    if (ora) voci.push(["tramonto", "sun", t("Tramonto", "Sunset"), ora]);
   }
   const vive = new Set(voci.map(([chiave]) => chiave));
   for (const nodo of destra.querySelectorAll(":scope > [data-dm-meteo-extra]"))
@@ -262,7 +264,7 @@ function misureInPiu(riquadro) {
       nodo.dataset.dmMeteoExtra = chiave;
       destra.append(nodo);
     }
-    const testo = `${segno} <span class="dm-meteo-parola">${esc(etichetta)}</span> <b>${esc(
+    const testo = `${segnoHtml(segno)} <span class="dm-meteo-parola">${esc(etichetta)}</span> <b>${esc(
       valore,
     )}</b>`;
     if (nodo.innerHTML !== testo) nodo.innerHTML = testo;
@@ -476,5 +478,5 @@ export function installLaCardDelMeteo() {
 if (doc?.readyState === "loading") {
   doc.addEventListener("DOMContentLoaded", installLaCardDelMeteo, { once: true });
 } else {
-  installLaCardDelMeteo();
+  senzaCadere(installLaCardDelMeteo);
 }

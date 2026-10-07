@@ -21,7 +21,7 @@
  * un grigio troppo tenue per la carta quasi bianca su cui sta.
  */
 import { ID_FOGLIO_OGGETTI, foglioDegliOggetti } from "../core/oggetti-widget.js";
-import { doc, installStyle, root } from "./shared.js";
+import { doc, installStyle, root, senzaCadere } from "./shared.js";
 
 const KEY = "__DASHBOARDMODERN_ICONE_LEGGIBILI__";
 const STYLE_ID = "dm-icone-leggibili-style";
@@ -92,4 +92,4 @@ export function installIconeLeggibiliSection() {
   return true;
 }
 
-installIconeLeggibiliSection();
+senzaCadere(installIconeLeggibiliSection);

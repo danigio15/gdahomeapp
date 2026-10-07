@@ -26,7 +26,9 @@ import {
   scriviTestoSeCambia,
   section,
   t,
+  senzaCadere,
 } from "./shared.js";
+import { segnoHtml } from "../core/segni-del-catalogo.js";
 
 const KEY = "__DASHBOARDMODERN_HISTORY_SECTION__";
 const state = (root[KEY] ||= {
@@ -138,13 +140,13 @@ function setLoading(kind, message = "") {
   }
   if (kind === "empty") {
     loading.style.display = "flex";
-    loading.innerHTML = `<div style="font-size:32px;margin-bottom:6px">📭</div>${message || t("Nessun dato registrato", "No recorded data")}`;
+    loading.innerHTML = `<div style="font-size:32px;margin-bottom:6px">${segnoHtml("mail")}</div>${message || t("Nessun dato registrato", "No recorded data")}`;
     container.style.display = "none";
     return;
   }
   if (kind === "error") {
     loading.style.display = "flex";
-    loading.innerHTML = `<div style="font-size:32px;margin-bottom:6px;color:#e11d48">⚠️</div>${message || t("Errore caricamento storico", "History loading error")}`;
+    loading.innerHTML = `<div style="font-size:32px;margin-bottom:6px;color:#e11d48">${segnoHtml("warning")}</div>${message || t("Errore caricamento storico", "History loading error")}`;
     container.style.display = "none";
     return;
   }
@@ -812,4 +814,4 @@ export function installHistorySection() {
 
 if (doc?.readyState === "loading")
   doc.addEventListener("DOMContentLoaded", installHistorySection, { once: true });
-else installHistorySection();
+else senzaCadere(installHistorySection);

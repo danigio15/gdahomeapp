@@ -60,6 +60,18 @@
  * chiedono i gettoni, e ogni ora per tutte. Una volta l'ora al massimo per
  * licenza; se il negozio non risponde si tiene quello che si sapeva, e se dice
  * che e' finito (scaduto, rimborsato) la licenza scade da se'.
+ *
+ * Il rinnovo pero' il negozio lo fa a periodo finito, o quasi: Google alla
+ * scadenza, Apple nel giorno prima. Fra il rinnovo, il quadro che lo scopre
+ * (entro un'ora) e la casa che richiede i gettoni (ogni sei ore) passano delle
+ * ore, e con il gettone fermo alla fine del periodo pagato chi paga
+ * resterebbe Base per tutto quel tempo, a ogni rinnovo. Percio' una licenza
+ * del negozio vale ancora **tre giorni** dopo la fine del periodo pagato
+ * (`MARGINE_DEL_RINNOVO`): bastano per un rinnovo in ritardo, per un quadro
+ * fermo un fine settimana, per una casa senza rete in quei giorni. Nel
+ * gettone `scade` e' la fine del periodo piu' il margine, e la fine vera sta
+ * in `pagato`: e' quella che si scrive a schermo. Chi disdice tiene Premium
+ * al massimo tre giorni in piu'; chi paga non lo perde per un ritardo.
  */
 
 import {
@@ -106,6 +118,10 @@ export const DOPO_SCADUTA = 35 * 24 * 60 * 60 * 1000;
 
 /** Una licenza si richiede al negozio al massimo una volta in questo tempo. */
 export const UNA_VOLTA_OGNI = 60 * 60 * 1000;
+
+/** Quanto vale ancora una licenza del negozio dopo il periodo pagato: il tempo
+ * che il rinnovo arrivi fino alla casa («I rinnovi», in cima). */
+export const MARGINE_DEL_RINNOVO = 3 * 24 * 60 * 60 * 1000;
 
 /** Quanto si aspetta il negozio mentre qualcuno aspetta i suoi gettoni. */
 export const ATTESA_DEL_NEGOZIO = 5000;
@@ -395,9 +411,21 @@ export class Licenze {
 
   /* ─── Quello che si risponde a chi chiede ────────────────────────────── */
 
-  /** Se una licenza vale adesso: non tolta, e non scaduta. */
+  /** Se una licenza vale adesso: non tolta, e non finita. */
   vale(una, ora = this.adesso()) {
-    return Boolean(una) && !una.revocata && (una.scade === null || una.scade > ora);
+    if (!una || una.revocata) return false;
+    const fine = this.fineDi(una);
+    return fine === null || fine > ora;
+  }
+
+  /**
+   * Fino a quando vale una licenza: la sua scadenza, e per una del negozio
+   * tre giorni dopo, il tempo che il rinnovo arrivi (`MARGINE_DEL_RINNOVO`).
+   * `null`: per sempre.
+   */
+  fineDi(una) {
+    if (una.scade === null) return null;
+    return una.origine === "negozio" ? una.scade + MARGINE_DEL_RINNOVO : una.scade;
   }
 
   /**
@@ -418,10 +446,7 @@ export class Licenze {
     for (const app of APP) {
       const migliore = sue
         .filter((una) => una.app === app)
-        .sort(
-          (a, b) =>
-            (a.scade === null ? Infinity : a.scade) - (b.scade === null ? Infinity : b.scade),
-        )
+        .sort((a, b) => (this.fineDi(a) ?? Infinity) - (this.fineDi(b) ?? Infinity))
         .at(-1);
       if (migliore) gettoni[app] = this.gettone(migliore, ora);
     }
@@ -438,20 +463,25 @@ export class Licenze {
   }
 
   /**
-   * Il gettone di una licenza, firmato adesso. `prova` c'e' solo quando e'
-   * vero: chi verifica i campi che non conosce li lascia stare.
+   * Il gettone di una licenza, firmato adesso. `scade` e' fino a quando la
+   * licenza vale (`fineDi`); `pagato` c'e' quando la fine del periodo pagato
+   * e' un'altra — le licenze del negozio — ed e' quella da scrivere a
+   * schermo. `pagato` e `prova` ci sono solo quando servono: chi verifica i
+   * campi che non conosce li lascia stare.
    */
   gettone(una, ora = this.adesso()) {
-    const fino = una.scade === null ? ora + OTTO_GIORNI : Math.min(ora + OTTO_GIORNI, una.scade);
+    const fine = this.fineDi(una);
+    const fino = fine === null ? ora + OTTO_GIORNI : Math.min(ora + OTTO_GIORNI, fine);
     return firmaIlGettone(this.privata, {
       v: 1,
       app: una.app,
       sog: una.sog,
       lic: una.lic,
       origine: una.origine,
-      scade: una.scade,
+      scade: fine,
       fino,
       emesso: ora,
+      ...(fine !== una.scade ? { pagato: una.scade } : {}),
       ...(una.prova ? { prova: true } : {}),
     });
   }

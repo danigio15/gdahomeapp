@@ -17,6 +17,7 @@
  * scarica; chi ha un UPS letto da un'integrazione qualunque compila le sonde
  * che ha. Quello che manca non si disegna.
  */
+import { segnoHtml } from "../core/segni-del-catalogo.js";
 import {
   CASELLE_UPS,
   CAMPO_UID_UPS,
@@ -39,6 +40,7 @@ import {
   t,
   wrapFunction,
   writeJsonIfChanged,
+  senzaCadere,
 } from "./shared.js";
 
 const KEY = "__DASHBOARDMODERN_UPS_EDITOR__";
@@ -128,7 +130,7 @@ function campiMarkup(config) {
       <span class="ed-form-row"><input id="${id}" class="ed-input mono" data-dm-ups-field="${esc(campo)}"
         value="${esc(config[campo])}" placeholder="${esc(esempio)}" autocomplete="off" spellcheck="false"><button
         type="button" class="dm-entity-picker" data-dm-ups-pick="${id}"
-        aria-label="${t("Scegli entità", "Choose entity")}">🔍</button></span>${
+        aria-label="${t("Scegli entità", "Choose entity")}">${segnoHtml("search")}</button></span>${
           aiuto ? `<small>${esc(t(...aiuto))}</small>` : ""
         }</label>`;
   }).join("");
@@ -163,7 +165,7 @@ function gruppoMarkup(config, posizione) {
   const titolo = clean(config.name) || `${t("Gruppo", "Unit")} ${posizione + 1}`;
   return `<article class="ed-row dm-todo-ed-row dm-ups-ed-gruppo" data-open="true" data-dm-ups-gruppo="${esc(uid)}">
       <div class="dm-todo-ed-body">
-        <label class="ed-slot dm-todo-ed-field"><span class="ed-slot-lbl">${esc(t("Nome", "Name"))}</span><span class="ed-form-row"><input id="dm-ups-${esc(uid)}-name" class="ed-input" data-dm-ups-field="name" value="${esc(config.name)}" placeholder="${esc(t("UPS del rack", "Rack UPS"))}"><button type="button" class="ed-btn-add dm-ups-ed-togli" data-dm-ups-togli="${esc(uid)}" aria-label="${esc(t("Togli", "Remove"))} ${esc(titolo)}" title="${esc(t("Togli questo gruppo", "Remove this unit"))}">🗑️</button></span></label>
+        <label class="ed-slot dm-todo-ed-field"><span class="ed-slot-lbl">${esc(t("Nome", "Name"))}</span><span class="ed-form-row"><input id="dm-ups-${esc(uid)}-name" class="ed-input" data-dm-ups-field="name" value="${esc(config.name)}" placeholder="${esc(t("UPS del rack", "Rack UPS"))}"><button type="button" class="ed-btn-add dm-ups-ed-togli" data-dm-ups-togli="${esc(uid)}" aria-label="${esc(t("Togli", "Remove"))} ${esc(titolo)}" title="${esc(t("Togli questo gruppo", "Remove this unit"))}">${segnoHtml("trash")}</button></span></label>
         ${campiMarkup(config)}
         <label class="ed-slot dm-todo-ed-field dm-ups-ed-verso">
           <span class="ed-form-row"><input type="checkbox" id="dm-ups-${esc(uid)}-invertita" data-dm-ups-flag="invertita"${
@@ -187,7 +189,7 @@ function corpoMarkup() {
    * piu' per arrivare dove si voleva arrivare. */
   const schede = elenco.length ? elenco : [nuovoUps([], "", metadati())];
   return `${fasciaMarkup()}<div class="dm-ups-ed">
-  <div class="ed-sec-title">🔌 ${esc(t("Gruppi di continuità (UPS)", "Uninterruptible power supplies"))}</div>
+  <div class="ed-sec-title">${segnoHtml("socket")} ${esc(t("Gruppi di continuità (UPS)", "Uninterruptible power supplies"))}</div>
   <div class="ed-intro">${esc(
     t(
       "A rete presente la tessera mostra la carica della batteria; quando la corrente cade mostra i minuti che restano e si accende. Nessuna casella è obbligatoria: con il solo stato di NUT la tessera sa già dire se c'è tensione. Se ne hai più di uno, aggiungili qui sotto: ognuno ha la sua scena nella pagina UPS.",
@@ -198,7 +200,7 @@ function corpoMarkup() {
     ${schede.map((config, posizione) => gruppoMarkup(config, posizione)).join("")}
   </div>
   <button type="button" class="ed-btn-add dm-ups-ed-aggiungi" data-dm-ups-aggiungi>＋ ${esc(t("Aggiungi un UPS", "Add a UPS"))}</button>
-  <button type="button" class="ed-save-btn" data-dm-ups-save>💾 ${esc(t("Salva UPS", "Save UPS"))}</button>
+  <button type="button" class="ed-save-btn" data-dm-ups-save>${segnoHtml("check")} ${esc(t("Salva UPS", "Save UPS"))}</button>
 </div>`;
 }
 
@@ -239,7 +241,7 @@ function onClick(event) {
      * riempito due schede e ne butta una non deve perdere l'altra. */
     salva(togliUps(schedeAperte(body), clean(togli.dataset.dmUpsTogli)));
     ridisegna();
-    root.edToast?.(t("🗑️ UPS tolto", "🗑️ UPS removed"));
+    root.edToast?.(t("UPS tolto", "UPS removed"));
     return;
   }
   if (event.target.closest("[data-dm-ups-aggiungi]")) {
@@ -265,7 +267,7 @@ function onClick(event) {
     event.preventDefault();
     salva(schedeAperte(body));
     ridisegna();
-    root.edToast?.(t("💾 UPS salvato", "💾 UPS saved"));
+    root.edToast?.(t("UPS salvato", "UPS saved"));
   }
 }
 
@@ -295,7 +297,7 @@ export function ensureUpsEditorTab() {
   const linguetta = doc.createElement("button");
   linguetta.className = "ed-tab";
   linguetta.dataset.tab = UPS_EDITOR_TAB;
-  linguetta.textContent = `🔌 ${t("UPS", "UPS")}`;
+  linguetta.innerHTML = `${segnoHtml("socket")} ${esc(t("UPS", "UPS"))}`;
   linguetta.addEventListener("click", () => root.editorSwitch?.(UPS_EDITOR_TAB));
   const prima = linguette.querySelector('.ed-tab[data-tab="runtime"]');
   if (prima) prima.before(linguetta);
@@ -351,4 +353,4 @@ export function installUpsEditor() {
   return true;
 }
 
-installUpsEditor();
+senzaCadere(installUpsEditor);

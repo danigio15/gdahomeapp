@@ -1,5 +1,7 @@
 // DM-FIX-20260812B
 import { disegnoDelCatalogo } from "../core/catalogo-disegni.js";
+import { accesoPerIlConsumo } from "../core/consumo-del-clima.js";
+import { chiaveDelValore, emojiInSegni, segnoHtml } from "../core/segni-del-catalogo.js";
 import { canonicalClimateType } from "../core/device-model.js";
 import { isCumulativeEnergyEntity } from "../core/period-service.js";
 import {
@@ -23,6 +25,36 @@ import {
 
 export const root = globalThis;
 export const doc = root.document;
+
+/* Un pezzo che cade non si porta dietro gli altri (1.9.2).
+ *
+ * Nella 1.9.0 una sola riga sbagliata della pagina Sicurezza — una variabile
+ * che non esisteva, in una casa con le zone scritte sulla centrale — ha spento
+ * la Home di tutte le case con l'antifurto. Si accendeva mentre il suo modulo
+ * si caricava, e un errore a quel punto ferma il caricamento dell'intera parte
+ * a moduli: restavano la testata, il meteo e le azioni rapide.
+ *
+ * Adesso ogni accensione passa di qui: chi cade lo dice, e gli altri partono lo
+ * stesso. L'elenco di chi e' caduto resta in
+ * `window.__DASHBOARDMODERN_PEZZI_CADUTI__`, da leggere nella console.
+ *
+ * Sono funzioni dichiarate e usano `globalThis`, non `root`: un modulo che si
+ * accende dentro un giro di import le trova pronte anche prima che questo file
+ * sia arrivato alle sue righe. */
+export function segnaLaCaduta(nome, errore) {
+  const cadute = (globalThis.__DASHBOARDMODERN_PEZZI_CADUTI__ ||= []);
+  cadute.push({ pezzo: String(nome || "?"), errore: String(errore?.message || errore) });
+  globalThis.console?.error?.(`[DashboardModern] ${nome || "un pezzo"} non e' partito`, errore);
+}
+
+export function senzaCadere(installa, nome = installa?.name) {
+  try {
+    return installa();
+  } catch (errore) {
+    segnaLaCaduta(nome, errore);
+    return undefined;
+  }
+}
 
 export const clean = (value) => String(value ?? "").trim();
 export const finite = (value, fallback = 0) => {
@@ -80,6 +112,38 @@ export function readClimateUnits() {
   }
   if (!Array.isArray(values)) values = root.getClimaUnits?.().slice?.() || [];
   return values.map((item) => ({ ...item, type: canonicalClimateType(item?.type) }));
+}
+
+/**
+ * Il verdetto dei watt per un'unità del clima, cercata dalla sua entità (#490).
+ *
+ * «Ho inserito l'entità power del climatizzatore ma non mi dà acceso mentre il
+ * clima è acceso, se è stato acceso dal telecomando.» Un climatizzatore
+ * comandato all'infrarosso non dice a Home Assistant che il telecomando l'ha
+ * acceso: il suo `climate.*` resta «off», e la presa o il magnetotermico sotto
+ * sanno la verità. Con la presa e la soglia la pagina Clima lo sapeva già; la
+ * Home, le stanze e i tasti no — e il tasto di un clima acceso dal telecomando
+ * lo «riaccendeva» invece di spegnerlo. Adesso lo chiedono tutti qui.
+ *
+ * `true` o `false` quando chi la possiede le ha dato l'entità del consumo e la
+ * soglia, `null` quando non c'è niente da dire: allora decide lo stato
+ * dell'entità, come sempre.
+ */
+export function climaAccesoDaiWatt(entity, states = allStates()) {
+  const cercata = clean(entity);
+  if (!cercata) return null;
+  const risolta = clean(root.resolveEntity?.(cercata) || cercata);
+  let unita = null;
+  try {
+    unita =
+      readClimateUnits().find((voce) => {
+        const sua = clean(voce?.entity || voce?.entity_id || voce?.entities?.[0]);
+        return Boolean(sua) && (sua === cercata || sua === risolta);
+      }) || null;
+  } catch (_errore) {
+    return null;
+  }
+  return accesoPerIlConsumo(unita, states);
 }
 
 const ENERGY_RUNTIME_SOURCES = Object.freeze([
@@ -340,9 +404,8 @@ export function roomOptionsMarkup(selected = "", vuoto = "") {
     const valore = String(room?.id || room?.name || "").trim();
     if (!valore) return "";
     const attiva = [room?.id, room?.name].map((voce) => String(voce ?? "").trim()).includes(scelto);
-    const simbolo = String(room?.icon || "").trim();
-    const glifo = simbolo && !simbolo.startsWith("mdi:") ? `${esc(simbolo)} ` : "";
-    return `<option value="${esc(valore)}"${attiva ? " selected" : ""}>${glifo}${esc(room?.name || valore)}</option>`;
+    /* Un'<option> non porta disegni: l'icona della stanza qui non si scrive. */
+    return `<option value="${esc(valore)}"${attiva ? " selected" : ""}>${esc(room?.name || valore)}</option>`;
   });
   return [`<option value="">— ${esc(vuoto)} —</option>`, ...righe.filter(Boolean)].join("");
 }
@@ -991,11 +1054,12 @@ export function comfortBadgeText(label) {
  * resolves the same token to the glyph the picker itself shows while choosing,
  * so what is picked is what is drawn. `<ha-icon>` stays as a fallback for the
  * surfaces that do resolve it, and the raw token is never printed as text. */
-export function writeIconGlyph(target, icon, { size = 26, fallback = "🔌", kind = "action" } = {}) {
+export function writeIconGlyph(target, icon, { size = 26, fallback = "socket", kind = "action" } = {}) {
   if (!target) return false;
   const token = clean(icon) || fallback;
   if (!/^mdi:/i.test(token)) {
-    if (target.textContent !== token) target.textContent = token;
+    const markup = segnoOTesto(token, size);
+    if (target.innerHTML !== markup) target.innerHTML = markup;
     return true;
   }
   /* Il motore, quando puo', scrive lui dentro il nodo: sa cosa c'e' gia' e non
@@ -1020,9 +1084,14 @@ export function writeIconGlyph(target, icon, { size = 26, fallback = "🔌", kin
  * La regola adesso sta in una funzione sola e le due facce la dividono: quella
  * che scrive nel nodo chiama questa. `esc` sul ripiego perche' un simbolo
  * scelto a mano puo' contenere qualunque cosa, e questo esce come markup. */
-export function iconGlyphHtml(icon, { size = 26, fallback = "🔌", kind = "action" } = {}) {
+function segnoOTesto(valore, size) {
+  const chiave = chiaveDelValore(valore);
+  return chiave ? segnoHtml(chiave, { misura: size }) : emojiInSegni(esc(valore), { misura: size });
+}
+
+export function iconGlyphHtml(icon, { size = 26, fallback = "socket", kind = "action" } = {}) {
   const token = clean(icon) || fallback;
-  if (!/^mdi:/i.test(token)) return esc(token);
+  if (!/^mdi:/i.test(token)) return segnoOTesto(token, size);
   try {
     const markup = root.DashboardModernIconEngine?.markup?.(kind, token, { size });
     if (markup) return markup;
@@ -1031,7 +1100,7 @@ export function iconGlyphHtml(icon, { size = 26, fallback = "🔌", kind = "acti
     const legacy = root.cdIconMarkup?.(token, size);
     if (legacy && legacy !== token) return legacy;
   } catch (_error) {}
-  return esc(fallback);
+  return segnoOTesto(fallback, size);
 }
 
 /**

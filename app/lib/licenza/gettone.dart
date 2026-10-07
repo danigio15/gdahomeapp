@@ -40,11 +40,18 @@ class Gettone {
     required this.fino,
     required this.emesso,
     this.prova = false,
+    this.pagato,
   });
 
   /// Un abbonamento nei giorni di prova gratuita (`"prova": true` nel
   /// gettone, che il quadro mette solo quando e' vero).
   final bool prova;
+
+  /// Fino a quando e' pagato un abbonamento del negozio. Il quadro lo fa
+  /// valere qualche giorno di piu' — il tempo che il rinnovo arrivi — e
+  /// [scade] e' quello; a schermo si scrive questa. `null` per le licenze
+  /// che finiscono quando dicono, i regali.
+  final DateTime? pagato;
 
   /// Il gettone com'e' arrivato: si ricorda questo, non i pezzi.
   final String grezzo;
@@ -129,6 +136,7 @@ Future<Gettone?> leggiIlGettone(String? grezzo, {String? chiave}) async {
     final fino = detto['fino'];
     final emesso = detto['emesso'];
     final scade = detto['scade'];
+    final pagato = detto['pagato'];
     if (app is! String || soggetto is! String) return null;
     if (fino is! num || emesso is! num) return null;
     if (scade != null && scade is! num) return null;
@@ -151,6 +159,10 @@ Future<Gettone?> leggiIlGettone(String? grezzo, {String? chiave}) async {
       fino: finoIl,
       emesso: emessoIl,
       prova: detto['prova'] == true,
+      /* Serve solo a scrivere la data: uno storto non toglie il gettone. */
+      pagato: pagato is num
+          ? DateTime.fromMillisecondsSinceEpoch(pagato.toInt())
+          : null,
     );
   } catch (_) {
     /* Base64 storto, JSON storto, una chiave che non e' una chiave: non vale,

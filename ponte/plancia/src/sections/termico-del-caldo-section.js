@@ -22,9 +22,11 @@ import {
   root,
   t,
   wrapFunction,
+  senzaCadere,
 } from "./shared.js";
 import { normalizzaCaldaie } from "../core/impianti-termici.js";
-import { openIconPicker } from "./icon-engine-section.js";
+import { iconGlyphMarkup, openIconPicker } from "./icon-engine-section.js";
+import { segnoDaValoreHtml, segnoHtml } from "../core/segni-del-catalogo.js";
 
 const KEY = "__DASHBOARDMODERN_TERMICO_CALDO__";
 const STYLE_ID = "dm-termico-caldo-style";
@@ -51,7 +53,7 @@ function normalizza(voce) {
   const name = clean(voce?.name);
   const entity = clean(voce?.entity);
   if (!name || !entity.includes(".")) return null;
-  return { name, entity, icon: clean(voce?.icon) || "🔥" };
+  return { name, entity, icon: clean(voce?.icon) || "radiator" };
 }
 
 /** La lista delle voci, pura: dalla config se scritta, altrimenti la semina
@@ -135,7 +137,7 @@ function riga(voce) {
   nodo.className = `ns-thermal-row${commutabile(voce.entity) ? " is-clickable" : ""}`;
   nodo.dataset.dmTermico = voce.entity;
   nodo.innerHTML =
-    `<span class="ns-thermal-icon">${esc(voce.icon)}</span>` +
+    `<span class="ns-thermal-icon">${/^mdi:/i.test(voce.icon) ? iconGlyphMarkup("action", voce.icon, { size: 18 }) : segnoDaValoreHtml(voce.icon, { ripiego: "radiator" })}</span>` +
     `<span class="ns-thermal-label">${esc(voce.name)}</span>` +
     `<span class="ns-thermal-state ${acceso ? "on" : "off"}"><span class="ns-thermal-dot"></span>` +
     `<span>${noto ? (acceso ? "ON" : "OFF") : "N/D"}${da ? `<small class="dm-termico-da">${esc(t(`da ${da}`, `for ${da}`))}</small>` : ""}</span></span>`;
@@ -284,12 +286,12 @@ function rigaEditor(voce, indice) {
   nodo.className = "dm-termico-riga";
   nodo.innerHTML =
     /* Anche qui l'icona viene dal catalogo di casa, col suo tasto. */
-    `<span class="ed-form-row dm-termico-icona-riga"><input class="ed-input dm-termico-icona" maxlength="24" value="${esc(voce.icon || "")}" placeholder="🔥" aria-label="${t("Icona", "Icon")}">` +
-    `<button type="button" class="dm-termico-icona-btn" aria-label="${t("Scegli icona", "Choose icon")}">🎨</button></span>` +
+    `<span class="ed-form-row dm-termico-icona-riga"><input class="ed-input dm-termico-icona" maxlength="24" value="${esc(voce.icon || "")}" placeholder="radiator" aria-label="${t("Icona", "Icon")}">` +
+    `<button type="button" class="dm-termico-icona-btn" aria-label="${t("Scegli icona", "Choose icon")}">${segnoHtml("sliders")}</button></span>` +
     `<input class="ed-input dm-termico-nome" value="${esc(voce.name || "")}" placeholder="${t("Nome (es. Caldaia)", "Name (e.g. Boiler)")}">` +
     `<span class="ed-form-row dm-termico-presa"><input class="ed-input ed-slot-in mono dm-termico-entita" value="${esc(voce.entity || "")}" placeholder="switch.caldaia" aria-label="${t("Entità del consenso", "Call-for-heat entity")}" title="${t("L'entità che dice se è acceso o spento", "The entity that says whether it is on or off")}">` +
-    `<button type="button" class="dm-entity-picker" aria-label="${t("Seleziona", "Select")}">🔍</button></span>` +
-    `<button type="button" class="ed-del dm-termico-via" aria-label="${t("Elimina", "Delete")}">🗑️</button>`;
+    `<button type="button" class="dm-entity-picker" aria-label="${t("Seleziona", "Select")}">${segnoHtml("search")}</button></span>` +
+    `<button type="button" class="ed-del dm-termico-via" aria-label="${t("Elimina", "Delete")}">${segnoHtml("trash")}</button>`;
   nodo.dataset.indice = String(indice);
   return nodo;
 }
@@ -333,7 +335,7 @@ function montaEditor() {
     root.cdCfg?.("cd_entity_overrides") || {},
   );
   carta.innerHTML =
-    `<div class="ed-sec-title">🔥 ${t("Stato termico (Caldo)", "Thermal status (Heat)")}</div>` +
+    `<div class="ed-sec-title">${segnoHtml("radiator")} ${t("Stato termico (Caldo)", "Thermal status (Heat)")}</div>` +
     /* La spiegazione dice cosa sono queste voci, non dove finiscono.
      *
      * Parlava di «voci sotto le stanze del popup Caldo»: e' il posto in cui
@@ -358,7 +360,7 @@ function montaEditor() {
       return;
     }
     if (evento.target?.closest?.(".dm-termico-aggiungi")) {
-      righe.append(rigaEditor({ icon: "🔥", name: "", entity: "" }, righe.children.length));
+      righe.append(rigaEditor({ icon: "radiator", name: "", entity: "" }, righe.children.length));
       return;
     }
     const catalogo = evento.target?.closest?.(".dm-termico-icona-btn");
@@ -452,5 +454,5 @@ export function installTermicoDelCaldo() {
 if (doc?.readyState === "loading") {
   doc.addEventListener("DOMContentLoaded", installTermicoDelCaldo, { once: true });
 } else {
-  installTermicoDelCaldo();
+  senzaCadere(installTermicoDelCaldo);
 }

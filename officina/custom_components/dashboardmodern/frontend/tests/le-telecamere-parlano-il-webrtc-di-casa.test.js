@@ -156,8 +156,8 @@ test("il popup negozia con i server ICE di casa, rispettando la pulizia del gusc
   assert.match(sezione, /root\._dmNativeSubId = sessione\.idSottoscrizione;/);
   assert.match(sezione, /avvolto\.keepAlive = true;/);
   const runtime = await leggi("sections/section-runtime.js");
-  const vivo = runtime.indexOf("installLiveUiSection();");
-  const webrtc = runtime.indexOf("installTelecameraWebRtc();");
+  const vivo = runtime.indexOf("senzaCadere(installLiveUiSection);");
+  const webrtc = runtime.indexOf("senzaCadere(installTelecameraWebRtc);");
   assert.ok(vivo > 0 && webrtc > vivo);
   assert.match(runtime, /"telecamera-webrtc",/);
 });

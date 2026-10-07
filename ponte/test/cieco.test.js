@@ -91,7 +91,12 @@ async function catena() {
   };
 
   const ha = await homeAssistantFinta();
-  const centralino = new Centralino({ case: new Case({ cartella: nuova("case") }) });
+  /* Qui si prova il centralino, non la licenza: senza chiave, come oggi,
+   * qualunque sia quella scritta nel codice (`docs/LICENZE.md`). */
+  const centralino = new Centralino({
+    case: new Case({ cartella: nuova("case") }),
+    chiaveLicenze: "",
+  });
 
   /* Il registratore. Si mette dentro il centralino, dove passano i byte. */
   const visto = [];

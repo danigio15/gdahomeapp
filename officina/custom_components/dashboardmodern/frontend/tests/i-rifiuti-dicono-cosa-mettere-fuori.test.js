@@ -188,14 +188,14 @@ test("la pagina, la scheda e la tessera sono presentate a tutti i posti che le c
   /* Accanto all'Agenda: un ritiro e' un impegno con una data. */
   assert.match(sezione, /\.tab\[data-tab="calendario"\]/);
   const runtime = await leggi("sections/section-runtime.js");
-  assert.match(runtime, /installRifiuti\(\);/);
-  assert.match(runtime, /installRifiutiEditor\(\);/);
+  assert.match(runtime, /senzaCadere\(installRifiuti\);/);
+  assert.match(runtime, /senzaCadere\(installRifiutiEditor\);/);
   assert.match(await leggi("sections/page-masthead-section.js"), /id: "page-rifiuti"/);
   assert.match(await leggi("sections/navigation-section.js"), /rifiuti: "rifiuti",/);
   /* La mappa scheda→chiave sta nel core da quando la legge anche l'elenco unico
    * degli interruttori: si guarda là, non nel testo di chi la ospita. */
   assert.match(await leggi("core/lelenco-delle-sezioni.js"), /chiave: "rifiuti"/);
-  assert.match(await leggi("sections/todo-editor-section.js"), /\["rifiuti", "♻️"/);
+  assert.match(await leggi("sections/todo-editor-section.js"), /\["rifiuti", "refresh"/);
   assert.match(await leggi("sections/home-widgets-section.js"), /key: "rifiuti",/);
   assert.match(await leggi("core/chiavi-di-configurazione.js"), /"cd_rifiuti"/);
   assert.equal(haOggettoWidget("rifiuti"), true);

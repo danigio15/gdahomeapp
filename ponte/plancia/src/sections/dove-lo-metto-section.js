@@ -51,7 +51,9 @@ import {
   root,
   t,
   writeJsonIfChanged,
+  senzaCadere,
 } from "./shared.js";
+import { segnoDaValoreHtml } from "../core/segni-del-catalogo.js";
 
 const KEY = "__DASHBOARDMODERN_DOVE_LO_METTO__";
 const state = (root[KEY] ||= { installed: false, voce: null, scelta: "" });
@@ -188,7 +190,7 @@ export function ilFoglietto(voce = {}, scelta = "", { stanze = "" } = {}) {
     .map(
       (una) =>
         `<button type="button" class="dm-dove-altra" data-dm-dove-sezione="${esc(una.chiave)}">
-          <span aria-hidden="true">${esc(una.icona)}</span><span>${esc(nomeDellaSezione(una))}</span>
+          <span aria-hidden="true">${segnoDaValoreHtml(una.icona)}</span><span>${esc(nomeDellaSezione(una))}</span>
         </button>`,
     )
     .join("");
@@ -196,7 +198,7 @@ export function ilFoglietto(voce = {}, scelta = "", { stanze = "" } = {}) {
   const testa = suo
     ? `<div class="dm-dove-proposta">
         <div class="dm-dove-scelta">
-          <span class="dm-dove-segno" aria-hidden="true">${esc(suo.icona)}</span>
+          <span class="dm-dove-segno" aria-hidden="true">${segnoDaValoreHtml(suo.icona)}</span>
           <div>
             <div class="dm-dove-nome">${esc(nomeDellaSezione(suo))}</div>
             <div class="dm-dove-perche">${esc(
@@ -469,4 +471,4 @@ export function installDoveLoMettoSection() {
 
 if (doc?.readyState === "loading")
   doc.addEventListener("DOMContentLoaded", installDoveLoMettoSection, { once: true });
-else installDoveLoMettoSection();
+else senzaCadere(installDoveLoMettoSection);

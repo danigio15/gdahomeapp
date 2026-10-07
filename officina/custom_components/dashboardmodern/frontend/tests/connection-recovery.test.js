@@ -87,7 +87,7 @@ test("the runtime registry installs it", () => {
     "utf8",
   );
   assert.match(runtime, /connection-recovery-section\.js/);
-  assert.match(runtime, /installConnectionRecoverySection\(\)/);
+  assert.match(runtime, /senzaCadere\(installConnectionRecoverySection\);/);
 });
 
 /* Un padrone solo per la riconnessione.

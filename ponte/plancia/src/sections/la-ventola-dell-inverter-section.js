@@ -31,7 +31,7 @@ import {
   RIFERIMENTO_DELLA_VENTOLA,
   ilComandoDellaVentola,
 } from "../core/la-ventola-dell-inverter.js";
-import { clean, doc, root, t } from "./shared.js";
+import { clean, doc, root, t, senzaCadere } from "./shared.js";
 
 const KEY = "__DASHBOARDMODERN_VENTOLA_INVERTER__";
 const state = (root[KEY] ||= { installed: false, frame: 0 });
@@ -173,4 +173,4 @@ export function installLaVentolaDellInverter() {
   return true;
 }
 
-installLaVentolaDellInverter();
+senzaCadere(installLaVentolaDellInverter);

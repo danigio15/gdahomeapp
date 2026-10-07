@@ -1,6 +1,6 @@
 // DM-FIX-20260817A
 import { markUndo, restoreDeclarations } from "../core/kiosk-undo.js";
-import { clean, doc, installStyle, root, t } from "./shared.js";
+import { clean, doc, installStyle, root, t, senzaCadere } from "./shared.js";
 
 // Beta18: all room/action icons are owned by icon-engine-section. This historical
 // module keeps only the kiosk contract; it must never observe or repaint icon DOM.
@@ -738,7 +738,7 @@ if (!state.listeners) {
   root.dmReleaseOwnerDocument = releaseOwnerDocument;
 }
 
-installStyle("dm-beta12-room-color-lock-style", `
+senzaCadere(() => installStyle("dm-beta12-room-color-lock-style", `
   html[data-dm-ios-kiosk="true"],html[data-dm-ios-kiosk="true"] body{
     width:100%!important;min-width:0!important;height:var(--dm-ios-kiosk-height,100dvh)!important;
     min-height:var(--dm-ios-kiosk-height,100dvh)!important;max-height:none!important;margin:0!important;
@@ -761,6 +761,6 @@ installStyle("dm-beta12-room-color-lock-style", `
     background:rgba(15,23,42,.92);color:#f8fafc;font-size:13px;font-weight:800;letter-spacing:.02em;
     pointer-events:none;opacity:0;transition:opacity .2s ease,transform .2s ease}
   #dm-kiosk-toast[data-visible="true"]{opacity:1;transform:translate(-50%,0)}
-`);
+`), "installStyle");
 
-syncIosKiosk();
+senzaCadere(syncIosKiosk);

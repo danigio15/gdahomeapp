@@ -1,4 +1,5 @@
 // DM-FIX-20260813E
+import { segnoDaValoreHtml, segnoHtml } from "../core/segni-del-catalogo.js";
 import {
   coverClosedThreshold,
   coverDownRelay,
@@ -9,7 +10,7 @@ import {
 import { contactEntity, inferriataEntity } from "../core/shutter-window.js";
 import { SOGLIA_MASSIMA as UMIDITA_MASSIMA, umiditaDellaRiga } from "../core/arieggiare.js";
 import { canonicalClimateType } from "../core/device-model.js";
-import { actionCatalogMatch, azioneDiSerie } from "../core/personalization-catalog.js";
+import { azioneDiSerie } from "../core/personalization-catalog.js";
 import {
   FERMI_DELLO_SLIDER,
   durataScritta,
@@ -32,6 +33,7 @@ import {
   root,
   t,
   writeJsonIfChanged,
+  senzaCadere,
 } from "./shared.js";
 
 const KEY = "__DASHBOARDMODERN_UNIFIED_EDITORS_SECTION__";
@@ -134,32 +136,27 @@ function actionTypeIcon(value) {
   return azioneDiSerie(value);
 }
 
-/* Un `<option>` sa tenere solo del testo: qui, e soltanto qui, il segno serve
- * davvero — e lo si chiede al catalogo invece di riscriverlo a mano. */
-function actionTypeGlyph(value) {
-  return actionCatalogMatch(azioneDiSerie(value))?.glyph || "⚡";
-}
-
 function actionTypeOptions(item) {
   const selected = actionTypeValue(item);
   return ACTION_TYPES
-    .map(([value, it, en]) => `<option value="${value}" ${value === selected ? "selected" : ""}>${actionTypeGlyph(value)} ${t(it, en)}</option>`)
+    .map(([value, it, en]) => `<option value="${value}" ${value === selected ? "selected" : ""}>${t(it, en)}</option>`)
     .join("");
 }
 
-function iconMarkup(value, fallback = "🔘", size = 34) {
+function iconMarkup(value, fallback = "toggle", size = 34) {
   const icon = clean(value) || fallback;
-  const kind = fallback === "🏠" ? "room" : "action";
+  const kind = fallback === "home" ? "room" : "action";
+  const ripiego = kind === "room" ? "home" : "toggle";
   try {
     const markup = root.DashboardModernIconEngine?.markup?.(kind, icon, { size });
     if (markup) return markup;
   } catch (_error) {}
-  if (!icon.startsWith("mdi:")) return esc(icon);
+  if (!icon.startsWith("mdi:")) return segnoDaValoreHtml(icon, { misura: size, ripiego });
   try {
     const legacy = root.cdIconMarkup?.(icon, size);
     if (legacy) return legacy;
   } catch (_error) {}
-  return esc(fallback);
+  return segnoDaValoreHtml(fallback, { misura: size, ripiego });
 }
 
 function renderIconPreview(target, kind, value, fallback, size = 36) {
@@ -172,13 +169,13 @@ function renderIconPreview(target, kind, value, fallback, size = 36) {
   return true;
 }
 
-function modalShell(kind, title, body, headerIcon = "✏️") {
+function modalShell(kind, title, body, headerIcon = "pencil") {
   const modal = doc.createElement("div");
   modal.id = `dm-${kind}-editor-modal`;
   modal.className = "dm-section-modal";
   modal.innerHTML = `<section class="dm-section-dialog" role="dialog" aria-modal="true" aria-labelledby="dm-${kind}-editor-title">
-    <header><strong id="dm-${kind}-editor-title"><span class="dm-editor-header-icon" aria-hidden="true">${headerIcon}</span> ${title}</strong><button type="button" data-close aria-label="${t("Chiudi", "Close")}">✕</button></header>
-    <form data-form>${body}<output data-error></output><footer><button type="button" class="ed-btn-add" data-cancel>${t("Annulla", "Cancel")}</button><button type="submit" class="ed-save-btn">💾 ${t("Salva modifiche", "Save changes")}</button></footer></form>
+    <header><strong id="dm-${kind}-editor-title"><span class="dm-editor-header-icon" aria-hidden="true">${segnoDaValoreHtml(headerIcon, { ripiego: "pencil" })}</span> ${title}</strong><button type="button" data-close aria-label="${t("Chiudi", "Close")}">✕</button></header>
+    <form data-form>${body}<output data-error></output><footer><button type="button" class="ed-btn-add" data-cancel>${t("Annulla", "Cancel")}</button><button type="submit" class="ed-save-btn">${segnoHtml("check")} ${t("Salva modifiche", "Save changes")}</button></footer></form>
   </section>`;
   doc.body.append(modal);
   const close = () => modal.remove();
@@ -230,7 +227,7 @@ function syncActionEditor(form) {
   const header = form.closest(".dm-section-dialog")?.querySelector(".dm-editor-header-icon");
   /* Si DISEGNA, non si stampa: da quando qui passa il nome della voce, un
    * `textContent` scriveva «mdi:snowflake» in cima alla finestra. */
-  if (header) renderIconPreview(header, "action", canonical, "⚡", 24);
+  if (header) renderIconPreview(header, "action", canonical, "power", 24);
 }
 
 function openActionEditor(item, index) {
@@ -246,7 +243,7 @@ function openActionEditor(item, index) {
     `<label class="ed-slot"><span class="ed-slot-lbl">${t("Tipo", "Type")}</span><select class="ed-input" name="type">${actionTypeOptions(item)}</select></label>
      <label class="ed-slot"><span class="ed-slot-lbl">${t("Nome", "Name")}</span><input class="ed-input" name="name" value="${esc(item.name)}" required></label>
      <label class="ed-slot"><span class="ed-slot-lbl">${t("Icona", "Icon")}</span><span class="dm-unified-icon-row"><span class="dm-unified-icon-preview" data-action-icon-preview aria-hidden="true">${iconMarkup(initialIcon, actionTypeIcon(selectedType), 36)}</span><input class="ed-input" name="icon" value="${esc(initialIcon)}"></span><small>${t("L’icona è personalizzabile anche per le azioni integrate e viene mostrata nella Home.", "The icon is customizable for built-in actions too and is shown on Home.")}</small></label>
-     <label class="ed-slot" data-action-entity-field><span class="ed-slot-lbl">${t("Entità Home Assistant", "Home Assistant entity")}</span><span class="ed-form-row"><input class="ed-input mono" name="entity" value="${esc(item.entity)}"><button type="button" class="dm-entity-picker" data-pick>🔍</button></span></label>
+     <label class="ed-slot" data-action-entity-field><span class="ed-slot-lbl">${t("Entità Home Assistant", "Home Assistant entity")}</span><span class="ed-form-row"><input class="ed-input mono" name="entity" value="${esc(item.entity)}"><button type="button" class="dm-entity-picker" data-pick>${segnoHtml("search")}</button></span></label>
      <label class="ed-slot"><span class="ed-slot-lbl">${t("Conferma opzionale", "Optional confirmation")}</span><textarea class="ed-input" name="confirm">${esc(item.confirm || item.confirmation)}</textarea></label>
      <div data-action-washer-host></div>`,
     actionTypeIcon(selectedType),
@@ -346,18 +343,18 @@ function openClimateEditor(item, index) {
   const { form, close } = modalShell(
     "climate",
     t("Modifica Freddo / Caldo", "Edit Cool / Heat"),
-    `<label class="ed-slot"><span class="ed-slot-lbl">${t("Tipo", "Type")}</span><select class="ed-input" name="type"><option value="clima" ${selectedType === "clima" ? "selected" : ""}>❄️ ${t("Freddo", "Cool")}</option><option value="termo" ${selectedType === "termo" ? "selected" : ""}>🔥 ${t("Caldo", "Heat")}</option><option value="pompa" ${selectedType === "pompa" ? "selected" : ""}>♨️ ${t("Pompa di calore (freddo + caldo)", "Heat pump (cool + heat)")}</option></select></label>
+    `<label class="ed-slot"><span class="ed-slot-lbl">${t("Tipo", "Type")}</span><select class="ed-input" name="type"><option value="clima" ${selectedType === "clima" ? "selected" : ""}>${t("Freddo", "Cool")}</option><option value="termo" ${selectedType === "termo" ? "selected" : ""}>${t("Caldo", "Heat")}</option><option value="pompa" ${selectedType === "pompa" ? "selected" : ""}>${t("Pompa di calore (freddo + caldo)", "Heat pump (cool + heat)")}</option></select></label>
      <label class="ed-slot"><span class="ed-slot-lbl">${t("Nome", "Name")}</span><input class="ed-input" name="name" value="${esc(item.name)}" required></label>
-     <label class="ed-slot"><span class="ed-slot-lbl">${t("Entità Home Assistant", "Home Assistant entity")}</span><span class="ed-form-row"><input class="ed-input mono" name="entity" value="${esc(item.entity)}" required><button type="button" class="dm-entity-picker" data-pick>🔍</button></span></label>
+     <label class="ed-slot"><span class="ed-slot-lbl">${t("Entità Home Assistant", "Home Assistant entity")}</span><span class="ed-form-row"><input class="ed-input mono" name="entity" value="${esc(item.entity)}" required><button type="button" class="dm-entity-picker" data-pick>${segnoHtml("search")}</button></span></label>
      <label class="ed-slot"><span class="ed-slot-lbl">${t("Stanza", "Room")}</span><select class="ed-input" name="room">${roomsOptions(item.room || item.room_id)}</select></label>
-     <label class="ed-slot"><span class="ed-slot-lbl">${t("Valvola TRV (posizione %)", "TRV valve (position %)")}</span><span class="ed-form-row"><input class="ed-input mono" name="valvola" value="${esc(clean(item.valvola))}" placeholder="sensor.trv_valve_position"><button type="button" class="dm-entity-picker" data-pick-valvola>🔍</button></span><small>${t("Il sensore o il number con la posizione della valvola termostatica, da 0 a 100: la card mostra quanto è aperta e quanto chiusa. Se l'unità climate espone già valve_position, non serve.", "The sensor or number with the thermostatic valve position, 0 to 100: the card shows how open and how closed it is. If the climate entity already exposes valve_position, you do not need it.")}</small></label>
-     <label class="ed-slot"><span class="ed-slot-lbl">${t("Entità della modalità (In casa / Fuori / Vacanza)", "Mode entity (Home / Away / Holiday)")}</span><span class="ed-form-row"><input class="ed-input mono" name="modo" value="${esc(clean(item.modo))}" placeholder="select.tado_home_mode" data-domain="select input_select sensor climate"><button type="button" class="dm-entity-picker" data-pick-modo>🔍</button></span><small>${t("I termostati smart espongono la modalità del riscaldamento su un'entità a parte: TADO ha In casa e Fuori, altri aggiungono Vacanza o Boost. La card la mostra, e se l'entità è un select o un input_select la si cambia da lì.", "Smart thermostats publish the heating mode on a separate entity: TADO has Home and Away, others add Holiday or Boost. The card shows it, and if the entity is a select or an input_select you can change it right there.")}</small></label>
+     <label class="ed-slot"><span class="ed-slot-lbl">${t("Valvola TRV (posizione %)", "TRV valve (position %)")}</span><span class="ed-form-row"><input class="ed-input mono" name="valvola" value="${esc(clean(item.valvola))}" placeholder="sensor.trv_valve_position"><button type="button" class="dm-entity-picker" data-pick-valvola>${segnoHtml("search")}</button></span><small>${t("Il sensore o il number con la posizione della valvola termostatica, da 0 a 100: la card mostra quanto è aperta e quanto chiusa. Se l'unità climate espone già valve_position, non serve.", "The sensor or number with the thermostatic valve position, 0 to 100: the card shows how open and how closed it is. If the climate entity already exposes valve_position, you do not need it.")}</small></label>
+     <label class="ed-slot"><span class="ed-slot-lbl">${t("Entità della modalità (In casa / Fuori / Vacanza)", "Mode entity (Home / Away / Holiday)")}</span><span class="ed-form-row"><input class="ed-input mono" name="modo" value="${esc(clean(item.modo))}" placeholder="select.tado_home_mode" data-domain="select input_select sensor climate"><button type="button" class="dm-entity-picker" data-pick-modo>${segnoHtml("search")}</button></span><small>${t("I termostati smart espongono la modalità del riscaldamento su un'entità a parte: TADO ha In casa e Fuori, altri aggiungono Vacanza o Boost. La card la mostra, e se l'entità è un select o un input_select la si cambia da lì.", "Smart thermostats publish the heating mode on a separate entity: TADO has Home and Away, others add Holiday or Boost. The card shows it, and if the entity is a select or an input_select you can change it right there.")}</small></label>
      <label class="ed-slot"><span class="ed-slot-lbl">${t("Entit\u00e0 consumo (presa)", "Power entity (smart plug)")}</span><span class="ed-form-row"><input class="ed-input mono" name="consumo" value="${esc(clean(item.consumo))}" placeholder="sensor.presa_condizionatore_potenza" data-domain="sensor number input_number"><button type="button" class="dm-entity-picker" data-pick-consumo>\ud83d\udd0d</button></span><small>${t("Il sensore in watt della presa sotto cui sta l'unit\u00e0. Con la soglia qui sotto \u00e8 lui a dire se \u00e8 accesa: un climatizzatore comandato da una presa lo sa meglio del suo termostato.", "The watt sensor of the plug the unit sits under. With the threshold below, it is the one that says whether the unit is running: an air conditioner driven by a plug knows it better than its own thermostat.")}</small></label>
      <label class="ed-slot"><span class="ed-slot-lbl">${t("Soglia acceso (W)", "On threshold (W)")}</span><input class="ed-input" type="number" min="0" step="1" name="soglia_consumo" value="${esc(item.soglia_consumo ?? "")}" placeholder="${t("es. 20", "e.g. 20")}"><small>${t("Da questi watt in su l'unit\u00e0 \u00e8 accesa, sotto \u00e8 spenta. \u00abIl condizionatore da spento mi d\u00e0 7 W\u00bb: con 20 scritto qui, quei 7 W restano spento. Vuoto = decide lo stato dell'entit\u00e0, come prima.", "From these watts up the unit is on, below it is off. “My air conditioner draws 7 W while off”: with 20 written here, those 7 W stay off. Empty = the entity state decides, as before.")}</small></label>
      <label class="ed-slot"><span class="ed-slot-lbl">${t("Spegnimento automatico", "Automatic switch-off")}</span><select class="ed-input" name="minuti">${durateOpzioni(item.minuti)}</select><small>${t("Quanto resta accesa dal momento dell'accensione. Il conto alla rovescia lo tiene Home Assistant, non questa pagina: si può chiudere la plancia e l'unità si spegne lo stesso. Sulla card resta modificabile ogni volta.", "How long it stays on from the moment you switch it on. Home Assistant keeps the countdown, not this page: you can close the dashboard and the unit still switches off. On the card you can change it every time.")}</small></label>
      <div class="ed-slot"><span class="ed-slot-lbl">${t("Mesi in cui mostrarla", "Months to show it")}</span><small>${t("Un condizionatore da maggio a settembre, i termosifoni da ottobre ad aprile: fuori da quei mesi la card non compare. Nessun mese acceso vuol dire tutto l'anno. Un'unità accesa si vede sempre, anche fuori stagione.", "An air conditioner from May to September, radiators from October to April: outside those months the card does not appear. No month lit means all year. A unit that is on always shows, even out of season.")}</small>${mesiMarkup(item.mesi)}</div>
      <div class="ed-slot"><span class="ed-slot-lbl">${t("Tasto Clima rapido", "Quick climate button")}</span><small>${t("Cosa fa il tasto di questa unità nel popup Clima della Home. Vuoto = non toccare.", "What this unit's button does in the Home climate popup. Empty = leave alone.")}</small>${quickClimateFieldsMarkup(clean(item.entity), null, selectedType === "termo" ? "caldo" : "")}</div>`,
-    selectedType === "termo" ? "🔥" : selectedType === "pompa" ? "♨️" : "❄️",
+    selectedType === "termo" ? "radiator" : selectedType === "pompa" ? "heat-pump" : "air-conditioner",
   );
   form.querySelector("[data-pick]").addEventListener("click", () => root.wzPickEntity?.(form.elements.entity));
   form
@@ -449,17 +446,17 @@ function openShutterEditor(item, index) {
     "shutter",
     t("Modifica tapparella o tenda", "Edit shutter or curtain"),
     `<label class="ed-slot"><span class="ed-slot-lbl">${t("Nome", "Name")}</span><input class="ed-input" name="name" value="${esc(item.name)}" required></label>
-     <label class="ed-slot"><span class="ed-slot-lbl">${t("Entità tapparella", "Cover entity")}</span><span class="ed-form-row"><input class="ed-input mono" name="entity" value="${esc(item.entity)}"><button type="button" class="dm-entity-picker" data-pick>🔍</button></span></label>
-     <label class="ed-slot"><span class="ed-slot-lbl">${t("Relè di discesa", "Down relay")}</span><span class="ed-form-row"><input class="ed-input mono" name="down" value="${esc(coverDownRelay(item))}" placeholder="switch.tapparella_giu"><button type="button" class="dm-entity-picker" data-pick-down>🔍</button></span><small>${t("Serve solo se la tapparella è comandata da due relè — uno che manda su, uno che manda giù — come uno Shelly lasciato in modalità interruttore: allora «Chiudi» accende questo, e «Ferma» li spegne entrambi. Con una cover.* vera lascia vuoto.", "Only needed when the shutter is driven by two relays — one that sends it up, one that sends it down — like a Shelly left in switch mode: then “Close” switches this one on, and “Stop” switches both off. With a real cover.* leave it empty.")}</small></label>
-     <label class="ed-slot"><span class="ed-slot-lbl">${coverKindLabel("tenda")}</span><span class="ed-form-row"><input class="ed-input mono" name="tenda" value="${esc(item.tenda)}" placeholder="cover.tenda_salotto"><button type="button" class="dm-entity-picker" data-pick-tenda>🔍</button></span></label>
-     <label class="ed-slot"><span class="ed-slot-lbl">${coverKindLabel("tenda_sole")}</span><span class="ed-form-row"><input class="ed-input mono" name="tendaSole" value="${esc(item.tendaSole)}" placeholder="cover.tenda_da_sole"><button type="button" class="dm-entity-picker" data-pick-tendasole>🔍</button></span><small>${t("Su una finestra ci stanno tutte e tre: compila le caselle che hai, il tipo lo dice la casella.", "One window can carry all three: fill in the boxes you have, the box tells the type.")}</small></label>
+     <label class="ed-slot"><span class="ed-slot-lbl">${t("Entità tapparella", "Cover entity")}</span><span class="ed-form-row"><input class="ed-input mono" name="entity" value="${esc(item.entity)}"><button type="button" class="dm-entity-picker" data-pick>${segnoHtml("search")}</button></span></label>
+     <label class="ed-slot"><span class="ed-slot-lbl">${t("Relè di discesa", "Down relay")}</span><span class="ed-form-row"><input class="ed-input mono" name="down" value="${esc(coverDownRelay(item))}" placeholder="switch.tapparella_giu"><button type="button" class="dm-entity-picker" data-pick-down>${segnoHtml("search")}</button></span><small>${t("Serve solo se la tapparella è comandata da due relè — uno che manda su, uno che manda giù — come uno Shelly lasciato in modalità interruttore: allora «Chiudi» accende questo, e «Ferma» li spegne entrambi. Con una cover.* vera lascia vuoto.", "Only needed when the shutter is driven by two relays — one that sends it up, one that sends it down — like a Shelly left in switch mode: then “Close” switches this one on, and “Stop” switches both off. With a real cover.* leave it empty.")}</small></label>
+     <label class="ed-slot"><span class="ed-slot-lbl">${coverKindLabel("tenda")}</span><span class="ed-form-row"><input class="ed-input mono" name="tenda" value="${esc(item.tenda)}" placeholder="cover.tenda_salotto"><button type="button" class="dm-entity-picker" data-pick-tenda>${segnoHtml("search")}</button></span></label>
+     <label class="ed-slot"><span class="ed-slot-lbl">${coverKindLabel("tenda_sole")}</span><span class="ed-form-row"><input class="ed-input mono" name="tendaSole" value="${esc(item.tendaSole)}" placeholder="cover.tenda_da_sole"><button type="button" class="dm-entity-picker" data-pick-tendasole>${segnoHtml("search")}</button></span><small>${t("Su una finestra ci stanno tutte e tre: compila le caselle che hai, il tipo lo dice la casella.", "One window can carry all three: fill in the boxes you have, the box tells the type.")}</small></label>
      <label class="ed-slot"><span class="ed-slot-lbl">${t("Stanza", "Room")}</span><select class="ed-input" name="room">${roomsOptions(item.room || item.room_id)}</select></label>
-     <label class="ed-slot"><span class="ed-slot-lbl">${t("Sensore apertura infisso", "Window contact sensor")}</span><span class="ed-form-row"><input class="ed-input mono" name="contact" value="${esc(contactEntity(item))}" placeholder="binary_sensor.finestra_camera"><button type="button" class="dm-entity-picker" data-pick-contact>🔍</button></span><small>${t("Se lo compili, la card mostra la finestra aperta quando il contatto lo dice.", "Fill it in and the card shows the window open when the contact says so.")}</small></label>
-     <label class="ed-slot"><span class="ed-slot-lbl">${t("Sensore apertura inferriata", "Grate contact sensor")}</span><span class="ed-form-row"><input class="ed-input mono" name="inferriata" value="${esc(inferriataEntity(item))}" placeholder="binary_sensor.inferriata_camera"><button type="button" class="dm-entity-picker" data-pick-inferriata>🔍</button></span></label>
+     <label class="ed-slot"><span class="ed-slot-lbl">${t("Sensore apertura infisso", "Window contact sensor")}</span><span class="ed-form-row"><input class="ed-input mono" name="contact" value="${esc(contactEntity(item))}" placeholder="binary_sensor.finestra_camera"><button type="button" class="dm-entity-picker" data-pick-contact>${segnoHtml("search")}</button></span><small>${t("Se lo compili, la card mostra la finestra aperta quando il contatto lo dice.", "Fill it in and the card shows the window open when the contact says so.")}</small></label>
+     <label class="ed-slot"><span class="ed-slot-lbl">${t("Sensore apertura inferriata", "Grate contact sensor")}</span><span class="ed-form-row"><input class="ed-input mono" name="inferriata" value="${esc(inferriataEntity(item))}" placeholder="binary_sensor.inferriata_camera"><button type="button" class="dm-entity-picker" data-pick-inferriata>${segnoHtml("search")}</button></span></label>
      <label class="ed-slot"><span class="ed-slot-lbl">${t("Chiusa sotto il (%)", "Closed below (%)")}</span><input class="ed-input" type="number" min="0" max="${SOGLIA_CHIUSA_MASSIMA}" step="1" name="soglia" value="${esc(sogliaRiga)}" placeholder="${esc(t("come la casa", "as the house"))}"><small>${t("Solo per questa finestra: ferma a questa percentuale o sotto conta come chiusa. Vuota, vale la soglia di casa scritta in cima.", "For this window only: resting at this percentage or below counts as closed. Empty, the house threshold at the top applies.")}</small></label>
      <label class="ed-slot"><span class="ed-slot-lbl">${t("Arieggia sopra il (%)", "Air out above (%)")}</span><input class="ed-input" type="number" min="0" max="${UMIDITA_MASSIMA}" step="1" name="umidita" value="${esc(umiditaRiga)}" placeholder="${esc(t("come la casa", "as the house"))}"><small>${t("Solo per questa finestra: quando l'umidità della sua stanza supera questa quota, la card dice di aprirla per arieggiare. Vuota, vale la soglia di casa scritta in cima; zero spegne il consiglio su questa finestra.", "For this window only: when its room's humidity goes above this level, the card says to open it to air out. Empty, the house threshold at the top applies; zero turns the advice off on this window.")}</small></label>
      <label class="ed-slot"><span class="ed-slot-lbl">${t("Posizione preferita (%)", "Favorite position (%)")}</span><input class="ed-input" type="number" min="0" max="100" step="1" name="preset" value="${esc(coverPresetPosition(item) ?? "")}" placeholder="es. 5"><small>${t("La card e il popup offrono sempre la tendina con tutte le percentuali: 0 = chiusa, 100 = aperta. Qui scegli quella di casa — 5 chiude quasi tutto lasciando passare un po' d'aria — e nella tendina compare con la stella. Vuoto = nessuna preferita.", "The card and the popup always offer the dropdown with every percentage: 0 = closed, 100 = open. Here you pick your usual one — 5 closes almost fully while letting some air through — and it shows up starred in the dropdown. Empty = no favorite.")}</small></label>`,
-    "🪟",
+    "window",
   );
   form.querySelector("[data-pick]").addEventListener("click", () => root.wzPickEntity?.(form.elements.entity));
   for (const [selettore, campo] of [
@@ -651,14 +648,14 @@ function openRoomEditor(item, index) {
     "room",
     t("Modifica stanza", "Edit room"),
     `<label class="ed-slot"><span class="ed-slot-lbl">${t("Nome", "Name")}</span><input class="ed-input" name="name" value="${esc(item.name)}" required></label>
-     <label class="ed-slot"><span class="ed-slot-lbl">${t("Icona", "Icon")}</span><span class="dm-unified-icon-row"><span class="dm-unified-icon-preview" data-room-icon-preview aria-hidden="true">${iconMarkup(initialIcon, "🏠", 36)}</span><input class="ed-input" name="icon" value="${esc(initialIcon)}"></span><small>${t("L’anteprima usa lo stesso renderer dell’icona stanza nella dashboard.", "The preview uses the same room-icon renderer as the dashboard.")}</small></label>
+     <label class="ed-slot"><span class="ed-slot-lbl">${t("Icona", "Icon")}</span><span class="dm-unified-icon-row"><span class="dm-unified-icon-preview" data-room-icon-preview aria-hidden="true">${iconMarkup(initialIcon, "home", 36)}</span><input class="ed-input" name="icon" value="${esc(initialIcon)}"></span><small>${t("L’anteprima usa lo stesso renderer dell’icona stanza nella dashboard.", "The preview uses the same room-icon renderer as the dashboard.")}</small></label>
      <label class="ed-slot"><span class="ed-slot-lbl">${t("Piano", "Floor")}</span>${tendinaDeiPiani(item.floor)}<small>${t("I piani si creano e si ordinano qui sopra, nella scheda Stanze.", "Floors are created and ordered above, in the Rooms tab.")}</small></label>`,
-    "🏠",
+    "home",
   );
   const preview = form.querySelector("[data-room-icon-preview]");
-  renderIconPreview(preview, "room", initialIcon, "🏠", 36);
+  renderIconPreview(preview, "room", initialIcon, "home", 36);
   form.elements.icon.addEventListener("input", () => {
-    renderIconPreview(preview, "room", form.elements.icon.value, "🏠", 36);
+    renderIconPreview(preview, "room", form.elements.icon.value, "home", 36);
   });
   form.addEventListener("submit", (event) => {
     event.preventDefault();
@@ -738,4 +735,4 @@ export function installUnifiedEditorsSection() {
 
 if (doc?.readyState === "loading")
   doc.addEventListener("DOMContentLoaded", installUnifiedEditorsSection, { once: true });
-else installUnifiedEditorsSection();
+else senzaCadere(installUnifiedEditorsSection);

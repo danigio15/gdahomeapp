@@ -23,4 +23,13 @@ export function installEnergyServicesSection() {
   return api;
 }
 
-installEnergyServicesSection();
+/* Chi cade non si porta dietro gli altri: vedi `senzaCadere` in shared.js. */
+try {
+  installEnergyServicesSection();
+} catch (errore) {
+  (globalThis.__DASHBOARDMODERN_PEZZI_CADUTI__ ||= []).push({
+    pezzo: "installEnergyServicesSection",
+    errore: String(errore?.message || errore),
+  });
+  globalThis.console?.error?.("[DashboardModern] installEnergyServicesSection non e' partito", errore);
+}

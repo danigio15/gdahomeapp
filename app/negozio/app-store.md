@@ -53,6 +53,12 @@ home assistant,domotica,casa,luci,clima,tapparelle,telecamere,consumi,carplay,na
 > gdahome Base è gratuita. gdahome Premium (abbonamento mensile o annuale)
 > aggiunge più plance e più case, il collegamento da fuori casa, la
 > configurazione e Zigbee dall'app, e comprende gdanav Premium.
+>
+> L'abbonamento si rinnova da solo e si disdice quando vuoi dalle
+> impostazioni dell'App Store; la prima volta ci sono 14 giorni di prova
+> gratuita. Termini d'uso:
+> https://www.apple.com/legal/internet-services/itunes/dev/stdeula/ ·
+> Privacy: https://gdahome.org/privacy.html
 
 **URL di supporto**: `https://gdahome.org`
 **URL della privacy**: `https://gdahome.org/privacy.html`
@@ -106,6 +112,11 @@ home assistant,smart home,lights,climate,shutters,cameras,energy,carplay,navigat
 > gdahome Base is free. gdahome Premium (monthly or yearly subscription) adds
 > several dashboards and homes, access from away, configuration and Zigbee
 > from the app, and includes gdanav Premium.
+>
+> The subscription renews automatically and can be cancelled any time from
+> your App Store settings; the first time there is a 14-day free trial. Terms
+> of Use: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/ ·
+> Privacy: https://gdahome.org/privacy.html
 
 ## Novità (What's New)
 
@@ -150,3 +161,23 @@ e «Ok Google» con «Ehi Siri».
 Il codice o il QR della casa di prova si allegano nella stessa pagina: va
 generato dalla console dell'add-on di una casa che resti accesa per tutta la
 revisione (qualche giorno).
+
+### Con Premium in vendita
+
+Dalla prima versione con la chiave delle licenze, chi rivede compra davvero,
+col suo account sandbox. Alle note sopra si aggiunge:
+
+> gdahome Premium is an auto-renewable subscription (monthly or yearly, with a
+> 14-day free trial) that belongs to the paired home: every phone paired with
+> that home gets it. The demo home is on Base. To test the purchase, open the
+> menu → Premium, pick a plan and subscribe with a sandbox account: the home
+> becomes Premium within a few seconds (our server verifies the transaction
+> with the App Store Server API). "Restore subscription" moves an existing
+> subscription to the home that is open, after asking. Gift codes are not
+> offered in the iPhone app.
+
+La casa di prova, per la revisione di quella versione, deve avere l'add-on
+della **stessa versione** dell'app — con l'add-on vecchio l'app non vende, e
+chi rivede non trova niente da comprare — e deve essere **Base**: se è
+Premium, non c'è niente da comprare lo stesso. Il link ai Termini d'uso e
+quello alla privacy vanno anche nei campi della scheda (regola 3.1.2).

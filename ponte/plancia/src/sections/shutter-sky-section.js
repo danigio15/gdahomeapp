@@ -12,7 +12,7 @@
  * il resto. Un solo proprietario per il cielo, come per tutto il resto.
  */
 import { daylightPhase, millisToNextPhase } from "../core/daylight.js";
-import { doc, installStyle, root } from "./shared.js";
+import { doc, installStyle, root, senzaCadere } from "./shared.js";
 
 const KEY = "__DASHBOARDMODERN_SHUTTER_SKY__";
 const state = (root[KEY] ||= { installed: false, timer: 0, phase: "" });
@@ -154,4 +154,4 @@ export function installShutterSkySection() {
   ridipingi();
 }
 
-installShutterSkySection();
+senzaCadere(installShutterSkySection);

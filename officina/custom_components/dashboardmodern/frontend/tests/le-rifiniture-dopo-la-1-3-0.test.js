@@ -21,21 +21,24 @@ test("nella barra Stanze ha il divano: la casa e' Home, la porta e' Aperture", (
   const sezione = leggi("src/sections/rooms-page-section.js");
   const voce = sezione.slice(sezione.indexOf("export function ensureRoomsTab"));
   const icona = voce.match(/<span class="icon">(.+?)<\/span>/)?.[1];
-  assert.equal(icona, "🛋️", "ne' la casa di Home ne' la porta delle Aperture");
+  assert.equal(icona, '${segnoHtml("room-living")}', "ne' la casa di Home ne' la porta delle Aperture");
 });
 
-test("l'icona di una stanza si traduce nel simbolo, non si scrive", () => {
+test("l'icona di una stanza si traduce nel disegno, non si scrive", async () => {
   /* Le stanze la tengono come mdi — «mdi:sofa» — e la linguetta la stampava
-   * cosi' com'era, sopra il nome. */
-  const sezione = leggi("src/sections/rooms-page-section.js");
-  assert.match(sezione, /import \{ roomGlyph \} from "\.\.\/core\/personalization-catalog\.js";/);
-  const pillole = sezione.slice(sezione.indexOf("export function pillsMarkup"));
-  assert.match(pillole, /roomGlyph\(pagina\.icon\)/);
-  assert.doesNotMatch(
-    pillole.slice(0, pillole.indexOf("</nav>")),
-    /const icona = pagina\.icon \|\|/,
-    "l'icona grezza non arriva mai alla linguetta",
+   * cosi' com'era, sopra il nome. Poi diventava un'emoji; adesso e' il disegno
+   * della stanza nel catalogo di casa. */
+  const { pillsMarkup } = await import("../src/sections/rooms-page-section.js");
+  const html = pillsMarkup(
+    [
+      { id: "r1", name: "Salone", icon: "mdi:sofa", count: 3 },
+      { id: "r2", name: "Nessuna", senzaStanza: true, count: 1 },
+    ],
+    "r1",
   );
+  assert.doesNotMatch(html, /mdi:sofa/, "l'icona grezza non arriva mai alla linguetta");
+  assert.doesNotMatch(html, /\p{Extended_Pictographic}/u, "nessuna emoji nella linguetta");
+  assert.equal(html.match(/<svg/g)?.length, 2, "ogni linguetta porta il suo disegno");
 });
 
 test("la didascalia della tessera ha una riga sua", () => {
@@ -134,8 +137,8 @@ test("da telefono in piedi della linguetta resta il simbolo", () => {
   assert.match(padrone, /setAttribute\("aria-label", nome\)/);
   /* La casa nella barra e la casa in configurazione erano la stessa: da
    * telefono, col solo simbolo, sarebbero due voci indistinguibili. */
-  assert.match(padrone, /stanze: "🛋️"/);
-  assert.match(padrone, /doors: "🚪"/);
+  assert.match(padrone, /stanze: "room-living"/);
+  assert.match(padrone, /doors: "door"/);
 
   for (const file of ["dashboard-runtime-it.css", "dashboard-runtime-en.css"]) {
     const foglio = leggi(`legacy/${file}`);

@@ -440,12 +440,12 @@ class _RigaDellaSegnalazione extends StatelessWidget {
                      * della riga invece di quelle del tasto. */
                     Bollino(
                       switch (segnalazione.gruppo) {
-                        Gruppo.aperte => 'aperta',
+                        Gruppo.aperte => inLingua(it: 'aperta', en: 'open'),
                         Gruppo.inCarico => inLingua(
                           it: 'in lavorazione',
                           en: 'in progress',
                         ),
-                        Gruppo.chiuse => 'chiusa',
+                        Gruppo.chiuse => inLingua(it: 'chiusa', en: 'closed'),
                       },
                       colore: switch (segnalazione.gruppo) {
                         Gruppo.aperte => Colori.bene,
@@ -465,8 +465,7 @@ class _RigaDellaSegnalazione extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   [
-                    '${segnalazione.quantiMessaggi} '
-                        '${segnalazione.quantiMessaggi == 1 ? 'messaggio' : 'messaggi'}',
+                    _quantiMessaggi(segnalazione.quantiMessaggi),
                     if (quando != null) _giorno(quando),
                   ].join(' · '),
                   style: testi.bodySmall?.copyWith(
@@ -482,6 +481,10 @@ class _RigaDellaSegnalazione extends StatelessWidget {
     );
   }
 }
+
+String _quantiMessaggi(int quanti) => quanti == 1
+    ? inLingua(it: '1 messaggio', en: '1 message')
+    : inLingua(it: '$quanti messaggi', en: '$quanti messages');
 
 Color _coloreDelTipo(TipoDiSegnalazione tipo) => switch (tipo) {
   TipoDiSegnalazione.problema => Colori.male,
@@ -632,8 +635,14 @@ class _NuovaSegnalazioneState extends State<NuovaSegnalazione> {
     while (_allegati.isNotEmpty) {
       final uno = _allegati.first;
       setState(
-        () => _passo =
-            'Mando ${uno.foto ? 'la foto' : 'il video'} ${fatti + 1} di $quanti…',
+        () => _passo = inLingua(
+          it:
+              'Mando ${uno.foto ? 'la foto' : 'il video'} ${fatti + 1} di '
+              '$quanti…',
+          en:
+              'Sending ${uno.foto ? 'photo' : 'video'} ${fatti + 1} of '
+              '$quanti…',
+        ),
       );
       try {
         aperta = await widget.segnalazioni.allega(aperta!.numero, uno);
@@ -646,10 +655,16 @@ class _NuovaSegnalazioneState extends State<NuovaSegnalazione> {
         setState(() {
           _mandando = false;
           _passo = null;
-          _perche =
-              'La segnalazione #$numero è partita, ma «${uno.nome}» no: '
-              '${spiegaLErrore(errore)} Premi «Manda» per riprovare gli '
-              'allegati, o vai avanti senza.';
+          _perche = inLingua(
+            it:
+                'La segnalazione #$numero è partita, ma «${uno.nome}» no: '
+                '${spiegaLErrore(errore)} Premi «Manda» per riprovare gli '
+                'allegati, o vai avanti senza.',
+            en:
+                'Report #$numero was sent, but “${uno.nome}” wasn\'t: '
+                '${spiegaLErrore(errore)} Press “Send” to retry the '
+                'attachments, or go on without them.',
+          );
         });
         return;
       }
@@ -731,6 +746,8 @@ class _NuovaSegnalazioneState extends State<NuovaSegnalazione> {
           ),
           const SizedBox(height: 18),
           _CosaSiAllega(widget.diagnostica),
+          const SizedBox(height: 14),
+          const _SaraPubblica(),
           if (_perche != null) ...[
             const SizedBox(height: 14),
             Text(_perche!, style: TextStyle(color: colori.error)),
@@ -798,7 +815,7 @@ class GliAllegati extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Foto e video',
+          inLingua(it: 'Foto e video', en: 'Photos and videos'),
           style: testi.titleSmall?.copyWith(color: colori.onSurfaceVariant),
         ),
         const SizedBox(height: 4),
@@ -927,6 +944,61 @@ class _CosaSiAllega extends StatelessWidget {
   }
 }
 
+/// Prima di mandare, detto chiaro: la segnalazione diventa una pagina
+/// pubblica su GitHub. La finestra della plancia nel browser lo scrive sopra
+/// «Invia»; qui sta sopra «Manda», perche' e' una cosa da sapere prima.
+class _SaraPubblica extends StatelessWidget {
+  const _SaraPubblica();
+
+  @override
+  Widget build(BuildContext context) {
+    final colori = Theme.of(context).colorScheme;
+    final testi = Theme.of(context).textTheme;
+    return Scheda(
+      bordo: colori.primary.withValues(alpha: 0.35),
+      padding: const EdgeInsets.fromLTRB(14, 12, 16, 12),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Cerchietto(icona: Icons.public_rounded, lato: 32),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  inLingua(it: 'Sarà pubblica', en: 'It will be public'),
+                  style: testi.labelLarge?.copyWith(
+                    color: colori.onSurface,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  inLingua(
+                    it:
+                        'Diventa una pagina su GitHub che chiunque può '
+                        'leggere, con le foto e i video. Non scriverci '
+                        'password o dati personali. La risposta arriva qui.',
+                    en:
+                        'It becomes a page on GitHub that anyone can read, '
+                        'along with the photos and videos. Don\'t put '
+                        'passwords or personal data in it. The reply comes '
+                        'back here.',
+                  ),
+                  style: testi.bodySmall?.copyWith(
+                    color: colori.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 /// Il filo di una segnalazione: le parole, le risposte, e una casella per
 /// continuare.
 class FiloDellaSegnalazione extends StatefulWidget {
@@ -992,7 +1064,11 @@ class _FiloDellaSegnalazioneState extends State<FiloDellaSegnalazione> {
           children: [
             Bollino(_filo.tipo.nome, colore: _coloreDelTipo(_filo.tipo)),
             const SizedBox(width: 8),
-            Bollino(_filo.aperta ? 'aperta' : 'chiusa'),
+            Bollino(
+              _filo.aperta
+                  ? inLingua(it: 'aperta', en: 'open')
+                  : inLingua(it: 'chiusa', en: 'closed'),
+            ),
             if (_filo.numero > 0) ...[
               const SizedBox(width: 8),
               Text(
@@ -1035,8 +1111,8 @@ class Conversazione extends StatefulWidget {
     this.intestazione,
     this.perche,
     this.vuota,
-    this.suggerimento = 'Scrivi…',
-    this.laltro = 'chi fa l\'app',
+    this.suggerimento,
+    this.laltro,
     this.allega,
     this.scegli = scegliDalTelefono,
   });
@@ -1058,11 +1134,16 @@ class Conversazione extends StatefulWidget {
   /// stessa conversazione dall'altro capo, e l'altro e' la casa che ha chiesto
   /// aiuto — chiamarla «chi fa l'app» vorrebbe dire leggere la propria domanda
   /// come una risposta.
-  final String laltro;
+  ///
+  /// Senza, e' «chi fa l'app» nella lingua dell'app: per questo non e' un
+  /// valore di partenza scritto qui, che sarebbe solo in italiano.
+  final String? laltro;
 
   /// Cosa si vede quando non c'e' ancora niente.
   final Widget? vuota;
-  final String suggerimento;
+
+  /// Cosa c'e' scritto nella casella vuota. Senza, «Scrivi…».
+  final String? suggerimento;
 
   @override
   State<Conversazione> createState() => _ConversazioneState();
@@ -1156,7 +1237,15 @@ class _ConversazioneState extends State<Conversazione> {
                 if (widget.messaggi.isEmpty && widget.vuota != null)
                   widget.vuota!,
                 for (final uno in widget.messaggi)
-                  _Fumetto(uno, laltro: widget.laltro),
+                  _Fumetto(
+                    uno,
+                    laltro:
+                        widget.laltro ??
+                        inLingua(
+                          it: 'chi fa l\'app',
+                          en: 'whoever makes the app',
+                        ),
+                  ),
                 if (perche != null)
                   Padding(
                     padding: const EdgeInsets.only(top: 8),
@@ -1186,7 +1275,9 @@ class _ConversazioneState extends State<Conversazione> {
                     maxLines: 5,
                     textCapitalization: TextCapitalization.sentences,
                     decoration: InputDecoration(
-                      hintText: widget.suggerimento,
+                      hintText:
+                          widget.suggerimento ??
+                          inLingua(it: 'Scrivi…', en: 'Write…'),
                       isDense: true,
                     ),
                     onSubmitted: (_) => _manda(),
@@ -1214,7 +1305,7 @@ class _ConversazioneState extends State<Conversazione> {
 }
 
 class _Fumetto extends StatelessWidget {
-  const _Fumetto(this.messaggio, {this.laltro = 'chi fa l\'app'});
+  const _Fumetto(this.messaggio, {required this.laltro});
   final Messaggio messaggio;
   final String laltro;
 
@@ -1250,7 +1341,7 @@ class _Fumetto extends StatelessWidget {
             const SizedBox(height: 4),
             Text(
               [
-                mio ? 'tu' : laltro,
+                mio ? inLingua(it: 'tu', en: 'you') : laltro,
                 if (messaggio.il != null) _giorno(messaggio.il!),
               ].join(' · '),
               style: testi.labelSmall?.copyWith(

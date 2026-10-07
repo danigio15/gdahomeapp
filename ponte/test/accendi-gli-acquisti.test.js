@@ -14,7 +14,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { execFileSync } from "node:child_process";
-import { mkdtempSync, mkdirSync, writeFileSync, readFileSync } from "node:fs";
+import { copyFileSync, mkdtempSync, mkdirSync, writeFileSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -25,8 +25,16 @@ import {
   comEMesso,
   laChiaveIn,
 } from "../../strumenti/accendi-gli-acquisti.mjs";
+import { PUBBLICA_DI_PROVA } from "./gettoni-di-prova.js";
 
 const RADICE = dirname(dirname(dirname(fileURLToPath(import.meta.url))));
+
+/* Come racconta lo stato, la prima riga: quello che si cerca nell'uscita. */
+const LA_PAROLA = {
+  spento: /SPENTO/,
+  "senza-centralino": /ACCESO SENZA IL CENTRALINO/,
+  acceso: /L'interruttore e' ACCESO:/,
+};
 
 /* Una copia di passaggio coi soli file della chiave, scritti come li scrive
  * `chiave-licenze.mjs`. */
@@ -46,6 +54,22 @@ function finta(chiavi) {
   return dove;
 }
 
+/* Una copia di passaggio **spenta** con i due programmi veri dentro: li' si
+ * puo' chiedere `--fallo` senza toccare questa repository, qualunque sia il
+ * suo stato. */
+function copiaSpenta() {
+  const dove = finta("");
+  for (const nome of [
+    "strumenti/accendi-gli-acquisti.mjs",
+    "strumenti/chiave-licenze.mjs",
+    "ponte/test/gettoni-di-prova.js",
+  ]) {
+    mkdirSync(dirname(join(dove, nome)), { recursive: true });
+    copyFileSync(join(RADICE, nome), join(dove, nome));
+  }
+  return dove;
+}
+
 /* Il primo passo: la chiave nell'add-on e nell'app, non nel centralino. */
 const DI_PROVA = "6P9sdqQtlHcmH7Ve_SgzmyJmxJS28CNORRJJfjI3rnI";
 const soloCasaEApp = (x) =>
@@ -54,9 +78,10 @@ const soloCasaEApp = (x) =>
   );
 
 test("chiamato senza chiedere niente, NON accende", () => {
-  /* Gira il programma vero, su questa repository vera, e poi guarda che la
-   * chiave sia ancora vuota dov'e' scritta. E' la prova che permette di
-   * lasciarlo qui dentro. */
+  /* Gira il programma vero, su questa repository vera, e poi guarda che i
+   * file della chiave siano com'erano. E' la prova che permette di lasciarlo
+   * qui dentro. Racconta lo stato che c'e' — spento oggi, acceso a meta' o
+   * del tutto il giorno che si accende — e non cambia niente. */
   const prima = I_FILE_DELLA_CHIAVE.map((nome) => readFileSync(join(RADICE, nome), "utf8"));
   const detto = execFileSync("node", ["strumenti/accendi-gli-acquisti.mjs"], {
     cwd: RADICE,
@@ -64,15 +89,17 @@ test("chiamato senza chiedere niente, NON accende", () => {
   });
   const dopo = I_FILE_DELLA_CHIAVE.map((nome) => readFileSync(join(RADICE, nome), "utf8"));
   assert.deepEqual(dopo, prima, "ha toccato i file senza che nessuno glielo chiedesse");
-  assert.match(detto, /SPENTO/);
+  assert.match(detto, LA_PAROLA[comEMesso({ radice: RADICE }).stato]);
 });
 
-test("oggi, in questa repository, l'interruttore e' spento", () => {
-  /* Se un giorno questa diventa rossa, e' perche' qualcuno ha acceso gli
-   * acquisti — e allora e' una notizia, non un guasto. */
+test("in questa repository l'interruttore non e' mai rotto, ne' con la chiave di prova", () => {
+  /* Spento oggi; il giorno che si accende, prima senza il centralino e poi
+   * dappertutto. Rotto mai: vorrebbe dire che una parte verifica e un'altra
+   * no. E la chiave non e' mai quella di prova dei documenti, con cui
+   * chiunque si fa Premium da solo. */
   const come = comEMesso({ radice: RADICE });
-  assert.equal(come.stato, "spento", JSON.stringify(come.dentro, null, 2));
-  assert.equal(come.chiave, "");
+  assert.ok(come.stato in LA_PAROLA, JSON.stringify(come, null, 2));
+  assert.notEqual(come.chiave, PUBBLICA_DI_PROVA);
 });
 
 test("tutti d'accordo con una chiave vera: acceso", () => {
@@ -113,14 +140,18 @@ test("il primo passo con due chiavi diverse: rotto", () => {
 
 test("--fallo a interruttore spento non fabbrica una coppia qui", () => {
   /* La privata stamperebbe su questo schermo: il suo posto e' solo la
-   * macchina del quadro. Si prova sul programma vero, su questa repository
-   * vera, che e' spenta: deve dire di no e non toccare niente. */
-  const prima = I_FILE_DELLA_CHIAVE.map((nome) => readFileSync(join(RADICE, nome), "utf8"));
+   * macchina del quadro. Si prova sul programma vero, ma in una copia di
+   * passaggio spenta, e **mai su questa repository**: il giorno del primo
+   * passo, qui `--fallo` accenderebbe davvero il centralino, e rifarebbe
+   * tutte le prove dentro questa. */
+  const copia = copiaSpenta();
+  const prima = I_FILE_DELLA_CHIAVE.map((nome) => readFileSync(join(copia, nome), "utf8"));
+  const qui = I_FILE_DELLA_CHIAVE.map((nome) => readFileSync(join(RADICE, nome), "utf8"));
   let detto = "";
   let uscita = 0;
   try {
     execFileSync("node", ["strumenti/accendi-gli-acquisti.mjs", "--fallo"], {
-      cwd: RADICE,
+      cwd: copia,
       encoding: "utf8",
       stdio: "pipe",
     });
@@ -128,11 +159,16 @@ test("--fallo a interruttore spento non fabbrica una coppia qui", () => {
     uscita = errore.status;
     detto = String(errore.stderr);
   }
-  const dopo = I_FILE_DELLA_CHIAVE.map((nome) => readFileSync(join(RADICE, nome), "utf8"));
+  const dopo = I_FILE_DELLA_CHIAVE.map((nome) => readFileSync(join(copia, nome), "utf8"));
   assert.deepEqual(dopo, prima);
   assert.equal(uscita, 1);
   assert.match(detto, /--senza-centralino --pubblica/);
   assert.doesNotMatch(detto, /QUADRO_LICENZE_CHIAVE=/);
+  assert.deepEqual(
+    I_FILE_DELLA_CHIAVE.map((nome) => readFileSync(join(RADICE, nome), "utf8")),
+    qui,
+    "questa repository non si tocca",
+  );
 });
 
 test("un file che non la pensa come gli altri: rotto, e si dice quale", () => {

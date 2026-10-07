@@ -35,4 +35,23 @@ void main() {
     expect(eUnQuadroSicuro(Uri.parse('http://[::1]:8080/')), isTrue);
     expect(eUnQuadroSicuro(Uri.parse('ftp://quadro.gdahome.org/')), isFalse);
   });
+
+  test(
+    'PayPal e\' un pagamento fuori dal negozio, e su iPhone non si apre',
+    () {
+      /* Il «Sostieni il progetto» della plancia, com'e' scritto li'. */
+      expect(
+        eUnPagamentoFuori(
+          Uri.parse('https://www.paypal.com/paypalme/giovannidaniello15'),
+        ),
+        isTrue,
+      );
+      expect(eUnPagamentoFuori(Uri.parse('https://paypal.me/x')), isTrue);
+      expect(eUnPagamentoFuori(Uri.parse('https://WWW.PayPal.com/x')), isTrue);
+      /* Un nome che finisce come PayPal non e' PayPal, e il resto passa. */
+      expect(eUnPagamentoFuori(Uri.parse('https://nopaypal.com/x')), isFalse);
+      expect(eUnPagamentoFuori(Uri.parse('https://www.windy.com/')), isFalse);
+      expect(eUnPagamentoFuori(Uri.parse('https://github.com/x')), isFalse);
+    },
+  );
 }

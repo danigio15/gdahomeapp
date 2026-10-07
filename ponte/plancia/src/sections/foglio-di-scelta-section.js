@@ -14,7 +14,7 @@
  * righe. Sono due contenuti diversi per la stessa finestra, ed e' esattamente
  * la riga di taglio giusta.
  */
-import { doc, installStyle, root, t } from "./shared.js";
+import { doc, installStyle, root, t, senzaCadere } from "./shared.js";
 
 const KEY = "__DASHBOARDMODERN_FOGLIO_DI_SCELTA__";
 const state = (root[KEY] ||= { installed: false, aperto: null });
@@ -106,5 +106,5 @@ export function installFoglioDiSceltaSection() {
 if (doc?.readyState === "loading") {
   doc.addEventListener("DOMContentLoaded", installFoglioDiSceltaSection, { once: true });
 } else {
-  installFoglioDiSceltaSection();
+  senzaCadere(installFoglioDiSceltaSection);
 }

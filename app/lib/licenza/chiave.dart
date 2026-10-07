@@ -7,7 +7,8 @@
 /// **Di serie e' vuota**, e vuota vuol dire che i controlli sono spenti: ogni
 /// casa vale come Premium e l'app fa quello che ha sempre fatto. Scritta, i
 /// lucchetti di Base valgono dappertutto — nell'app per iPhone, in quella per
-/// Android e nel browser — e Premium si compra dall'app per iPhone.
+/// Android e nel browser — e Premium si compra dall'app, sull'iPhone e su
+/// Android.
 ///
 /// Non la si scrive a mano. La coppia nasce sulla macchina del quadro, che
 /// stampa solo la pubblica, e la pubblica si scrive qui e negli altri file con

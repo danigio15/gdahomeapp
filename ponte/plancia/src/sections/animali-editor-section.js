@@ -46,6 +46,7 @@ import {
   writeJsonIfChanged,
 } from "./shared.js";
 import { disegnoDelCatalogo } from "../core/catalogo-disegni.js";
+import { emojiInSegni, segnoHtml, senzaEmoji } from "../core/segni-del-catalogo.js";
 
 const KEY = "__DASHBOARDMODERN_ANIMALI_EDITOR__";
 const state = (root[KEY] ||= { installed: false, aperto: -1 });
@@ -258,7 +259,7 @@ function campoMarkup(animale, indice, campo) {
   const id = `dm-animale-${indice}-${campo.chiave}`;
   const aiuto = aiutoCampo(campo.chiave);
   return `<label class="ed-slot dm-animale-field"><span class="ed-slot-lbl">${esc(etichettaCampo(campo.chiave))}</span>
-    <span class="ed-form-row"><input id="${esc(id)}" class="ed-input mono" data-animale-field="${esc(campo.chiave)}" value="${esc(animale[campo.chiave])}" placeholder="${esc(esempioCampo(campo.chiave))}" autocomplete="off" spellcheck="false"><button type="button" class="dm-animale-pick" data-animale-pick="${esc(id)}" aria-label="${t("Scegli entità", "Choose entity")}">🔍</button></span>
+    <span class="ed-form-row"><input id="${esc(id)}" class="ed-input mono" data-animale-field="${esc(campo.chiave)}" value="${esc(animale[campo.chiave])}" placeholder="${esc(esempioCampo(campo.chiave))}" autocomplete="off" spellcheck="false"><button type="button" class="dm-animale-pick" data-animale-pick="${esc(id)}" aria-label="${t("Scegli entità", "Choose entity")}">${segnoHtml("search")}</button></span>
     ${aiuto ? `<small>${esc(aiuto)}</small>` : ""}</label>`;
 }
 
@@ -274,7 +275,7 @@ function gruppiMarkup(animale, indice) {
   return [...gruppi.entries()]
     .map(
       ([gruppo, campi]) => `<div class="dm-animale-gruppo">
-        <span class="dm-animale-gruppo-lbl">${esc(titoloGruppo(gruppo))}</span>
+        <span class="dm-animale-gruppo-lbl">${emojiInSegni(esc(titoloGruppo(gruppo)))}</span>
         ${campi.map((campo) => campoMarkup(animale, indice, campo)).join("")}
       </div>`,
     )
@@ -300,7 +301,7 @@ function titoloGruppo(gruppo) {
 
 function soglieMarkup(animale, indice) {
   return `<div class="dm-animale-gruppo dm-animale-soglie">
-    <span class="dm-animale-gruppo-lbl">${esc(t("⚠️ Quando avvisare", "⚠️ When to warn"))}</span>
+    <span class="dm-animale-gruppo-lbl">${emojiInSegni(esc(t("⚠️ Quando avvisare", "⚠️ When to warn")))}</span>
     ${CHIAVI_SOGLIE.map(
       (chiave) =>
         `<label class="ed-slot dm-animale-field"><span class="ed-slot-lbl">${esc(etichettaSoglia(chiave))}</span>
@@ -315,7 +316,7 @@ function dispositiviMarkup(animale) {
   return `<div class="dm-animale-legami">${animale.dispositivi
     .map(
       (voce) =>
-        `<span class="dm-animale-legame" title="${esc(voce.id)}">🔗 ${esc([voce.nome, voce.integrazione_nome].filter(Boolean).join(" · "))}</span>`,
+        `<span class="dm-animale-legame" title="${esc(voce.id)}">${segnoHtml("link")} ${esc([voce.nome, voce.integrazione_nome].filter(Boolean).join(" · "))}</span>`,
     )
     .join("")}</div>`;
 }
@@ -326,8 +327,8 @@ function rigaMarkup(animale, indice) {
     <div class="dm-animale-row-head">
       <span class="dm-animale-row-icon" aria-hidden="true">${disegnoDelCatalogo(specieDiSerie(animale.specie).disegno, 26)}</span>
       <span class="ed-row-main"><strong class="ed-row-new">${esc(nomeDi(animale, indice))}</strong><small class="ed-row-old mono">${esc(clean(animale.cibo_livello) || clean(animale.lettiera_ultima) || clean(animale.porta) || t("nessuna entità", "no entity"))}</small></span>
-      <button type="button" class="ed-del dm-animale-edit" data-animale-edit aria-label="${t("Modifica", "Edit")}">✏️</button>
-      <button type="button" class="ed-del dm-animale-del" data-animale-del aria-label="${t("Elimina", "Remove")}">🗑️</button>
+      <button type="button" class="ed-del dm-animale-edit" data-animale-edit aria-label="${t("Modifica", "Edit")}">${segnoHtml("pencil")}</button>
+      <button type="button" class="ed-del dm-animale-del" data-animale-del aria-label="${t("Elimina", "Remove")}">${segnoHtml("trash")}</button>
     </div>
     <div class="dm-animale-row-body"${aperto ? "" : " hidden"}>
       <label class="ed-slot dm-animale-field"><span class="ed-slot-lbl">${t("Nome", "Name")}</span><span class="ed-form-row"><input id="dm-animale-${indice}-nome" class="ed-input" data-animale-field="nome" value="${esc(animale.nome)}" placeholder="${t("Micio", "Whiskers")}"></span></label>
@@ -341,18 +342,18 @@ function rigaMarkup(animale, indice) {
         <span class="ed-slot-lbl">${t("Foto", "Photo")}</span>
         <input type="hidden" data-animale-field="foto" value="${esc(animale.foto)}">
         <span class="ed-form-row dm-animale-foto-riga">
-          <button type="button" class="ed-btn-add dm-animale-foto-btn" data-animale-foto>📁 ${t("Scegli la foto", "Choose the photo")}</button>
+          <button type="button" class="ed-btn-add dm-animale-foto-btn" data-animale-foto>${segnoHtml("list")} ${t("Scegli la foto", "Choose the photo")}</button>
           <button type="button" class="ed-btn-add dm-animale-foto-btn dm-animale-foto-togli" data-animale-foto-togli${animale.foto ? "" : " hidden"}>✕ ${t("Togli la foto", "Remove the photo")}</button>
         </span>
         <small>${t("Senza foto la scheda mostra il simbolo della specie.", "Without a photo the card shows the species symbol.")}</small>
       </div>
       <label class="ed-slot dm-animale-field"><span class="ed-slot-lbl">${t("Stanza", "Room")}</span><span class="ed-form-row"><select id="dm-animale-${indice}-stanza" class="ed-input" data-animale-field="stanza">${roomOptionsMarkup(animale.stanza, t("Nessuna stanza", "No room"))}</select></span></label>
       ${dispositiviMarkup(animale)}
-      <button type="button" class="ed-btn-add dm-animale-integ-riga" data-animale-integ-riga>🔗 ${t("Collega un altro dispositivo", "Link another device")}</button>
+      <button type="button" class="ed-btn-add dm-animale-integ-riga" data-animale-integ-riga>${segnoHtml("link")} ${t("Collega un altro dispositivo", "Link another device")}</button>
       ${gruppiMarkup(animale, indice)}
       ${soglieMarkup(animale, indice)}
       <output class="dm-animale-error" data-animale-error></output>
-      <button type="button" class="ed-save-btn" data-animale-save>💾 ${t("Salva animale", "Save pet")}</button>
+      <button type="button" class="ed-save-btn" data-animale-save>${segnoHtml("check")} ${t("Salva animale", "Save pet")}</button>
     </div>
   </article>`;
 }
@@ -382,7 +383,7 @@ function bodyMarkup(animali) {
         : `<div class="ed-empty">${t("Nessun animale configurato", "No pet configured")}</div>`
     }</div>
     <div class="dm-animale-invito">
-      <button type="button" class="ed-btn-add dm-animale-integ" data-animale-integ>🔗 ${t("Aggiungi da un'integrazione", "Add from an integration")}</button>
+      <button type="button" class="ed-btn-add dm-animale-integ" data-animale-integ>${segnoHtml("link")} ${t("Aggiungi da un'integrazione", "Add from an integration")}</button>
       <small>${t(
         "PetKit, SurePetcare, Tractive, Litter-Robot… scegli il dispositivo e la scheda arriva già fatta: il livello del cibo, la lettiera, il filtro dell'acqua, il collare. Oppure, qui sotto, una casella alla volta.",
         "PetKit, SurePetcare, Tractive, Litter-Robot… pick the device and the card arrives ready-made: the food level, the litter box, the water filter, the collar. Or, below, one field at a time.",
@@ -645,7 +646,7 @@ async function onClick(event) {
     if (errore) errore.textContent = "";
     salva(next);
     ridisegna();
-    root.edToast?.(t("💾 Animale salvato", "💾 Pet saved"));
+    root.edToast?.(senzaEmoji(t("💾 Animale salvato", "💾 Pet saved")));
   }
 }
 
@@ -661,7 +662,7 @@ export function ensureAnimaliEditorTab() {
   const linguetta = doc.createElement("button");
   linguetta.className = "ed-tab";
   linguetta.dataset.tab = ANIMALI_EDITOR_TAB;
-  linguetta.textContent = `🐾 ${t("Animali", "Pets")}`;
+  linguetta.innerHTML = `${segnoHtml("pet")} ${esc(t("Animali", "Pets"))}`;
   linguetta.addEventListener("click", () => root.editorSwitch?.(ANIMALI_EDITOR_TAB));
   const prima = linguette.querySelector('.ed-tab[data-tab="runtime"]');
   if (prima) prima.before(linguetta);

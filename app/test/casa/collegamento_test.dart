@@ -9,6 +9,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:gdahome/casa/archivio_delle_case.dart';
 import 'package:gdahome/casa/cassaforte.dart';
 import 'package:gdahome/casa/collegamento.dart';
+import 'package:gdahome/licenza/licenza.dart';
 import 'package:gdahome/ponte/indirizzo.dart';
 import 'package:gdahome/ponte/presa.dart';
 import 'package:gdahome/ponte/sonda.dart';
@@ -252,6 +253,9 @@ void main() {
     collegamento = Collegamento(
       archivio: archivio,
       sonda: sondaChe({ponte.indirizzo}),
+      /* Qui si prova la strada, non la licenza: senza chiave, la casa e'
+       * Premium come oggi, qualunque sia la chiave dell'app. */
+      licenza: GestoreLicenza(chiave: ''),
     );
     await collegamento.apri();
     await Future<void>.delayed(const Duration(milliseconds: 120));
@@ -786,6 +790,9 @@ void main() {
     collegamento = Collegamento(
       archivio: archivio,
       sonda: sondaChe({ponte.indirizzo}),
+      /* Qui si prova la strada, non la licenza: senza chiave, la casa e'
+       * Premium come oggi, qualunque sia la chiave dell'app. */
+      licenza: GestoreLicenza(chiave: ''),
     );
     await collegamento.apri();
     await _finoA(() => collegamento.pannelloLetto);
@@ -810,6 +817,9 @@ void main() {
     collegamento = Collegamento(
       archivio: archivio,
       sonda: sondaChe({ponte.indirizzo}),
+      /* Qui si prova la strada, non la licenza: senza chiave, la casa e'
+       * Premium come oggi, qualunque sia la chiave dell'app. */
+      licenza: GestoreLicenza(chiave: ''),
     );
     await collegamento.apri();
     await _finoA(() => collegamento.pannelloLetto);
@@ -838,6 +848,9 @@ void main() {
     collegamento = Collegamento(
       archivio: archivio,
       sonda: sondaChe({ponte.indirizzo}),
+      /* Qui si prova la strada, non la licenza: senza chiave, la casa e'
+       * Premium come oggi, qualunque sia la chiave dell'app. */
+      licenza: GestoreLicenza(chiave: ''),
     );
     await collegamento.apri();
     await _finoA(() => collegamento.pannelloLetto);
@@ -851,6 +864,9 @@ void main() {
     collegamento = Collegamento(
       archivio: archivio,
       sonda: sondaChe({ponte.indirizzo}),
+      /* Qui si prova la strada, non la licenza: senza chiave, la casa e'
+       * Premium come oggi, qualunque sia la chiave dell'app. */
+      licenza: GestoreLicenza(chiave: ''),
     );
     await collegamento.apri();
     await _finoA(() => collegamento.pannelloLetto);

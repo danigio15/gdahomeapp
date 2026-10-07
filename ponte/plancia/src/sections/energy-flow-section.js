@@ -32,6 +32,7 @@ import {
   t,
   wrapFunction,
   writeIconGlyph,
+  senzaCadere,
 } from "./shared.js";
 
 root.__DM_20260817A__ = true;
@@ -779,7 +780,7 @@ function disegnaLoSbilancio() {
    * regola del riquadro delle fasce, scritta li' per esteso. */
   scriviTestoSeCambia(
     nota,
-    `⚠️ ${t("I conti non tornano", "The numbers do not add up")} · ${Math.round(
+    `${t("I conti non tornano", "The numbers do not add up")} · ${Math.round(
       detto.entra,
     )} W → ${Math.round(detto.esce)} W. ${t(
       "Esce più corrente di quanta ne entra: di solito è il verso di un sensore al contrario, e si cambia nella scheda Energia.",
@@ -1397,4 +1398,4 @@ function rivendicaLeBolleDellaBatteria() {
 
 if (doc?.readyState === "loading")
   doc.addEventListener("DOMContentLoaded", installEnergyFlowSection, { once: true });
-else installEnergyFlowSection();
+else senzaCadere(installEnergyFlowSection);

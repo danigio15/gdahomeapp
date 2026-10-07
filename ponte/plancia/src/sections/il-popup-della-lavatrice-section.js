@@ -33,7 +33,9 @@ import {
   section,
   t,
   wrapFunction,
+  senzaCadere,
 } from "./shared.js";
+import { segnoHtml } from "../core/segni-del-catalogo.js";
 
 const KEY = "__DASHBOARDMODERN_POPUP_LAVATRICE__";
 const state = (root[KEY] ||= { installed: false });
@@ -53,7 +55,7 @@ function normalizza(voce) {
   const name = clean(voce?.name);
   const entity = clean(voce?.entity);
   if (!name || !entity.includes(".")) return null;
-  return { name, entity, icon: clean(voce?.icon) || "🧺" };
+  return { name, entity, icon: clean(voce?.icon) || "washer" };
 }
 
 /** I programmi, puri: dalla config se scritta, altrimenti la semina storica
@@ -177,11 +179,11 @@ function rigaEditor(voce) {
     /* L'icona si sceglie dal catalogo di casa, non si batte a mano: il campo
      * resta scrivibile per chi vuole un'emoji sua, ma il tasto apre il
      * selettore unico — «non e' possibile mettere icone per i programmi». */
-    `<span class="ed-form-row dm-lav-icona-riga"><input class="ed-input dm-lav-icona" maxlength="40" value="${esc(voce.icon || "")}" placeholder="🧺" aria-label="${t("Icona", "Icon")}">` +
-    `<button type="button" class="dm-lav-icona-btn" aria-label="${t("Scegli icona", "Choose icon")}">🎨</button></span>` +
+    `<span class="ed-form-row dm-lav-icona-riga"><input class="ed-input dm-lav-icona" maxlength="40" value="${esc(voce.icon || "")}" placeholder="washer" aria-label="${t("Icona", "Icon")}">` +
+    `<button type="button" class="dm-lav-icona-btn" aria-label="${t("Scegli icona", "Choose icon")}">${segnoHtml("sliders")}</button></span>` +
     `<input class="ed-input dm-lav-nome" value="${esc(voce.name || "")}" placeholder="${t("Nome (es. Rapido 30')", "Name (e.g. Quick 30')")}">` +
     `<input class="ed-input ed-slot-in mono dm-lav-entita" value="${esc(voce.entity || "")}" placeholder="script.lavatrice_rapido">` +
-    `<button type="button" class="ed-del dm-lav-via" aria-label="${t("Elimina", "Delete")}">🗑️</button>`;
+    `<button type="button" class="ed-del dm-lav-via" aria-label="${t("Elimina", "Delete")}">${segnoHtml("trash")}</button>`;
   return nodo;
 }
 
@@ -289,14 +291,14 @@ function creaCarta() {
   carta.className = "ed-form dm-lav-carta";
   carta.dataset.dmLavProgrammi = "";
   carta.innerHTML =
-    `<div class="ed-sec-title">🧺 ${t("Programmi rapidi del popup", "Quick programs of the popup")}</div>` +
+    `<div class="ed-sec-title">${segnoHtml("washer")} ${t("Programmi rapidi del popup", "Quick programs of the popup")}</div>` +
     `<div class="ed-hint">${t(
       "I tasti dei programmi nel popup della lavatrice: nome, entità (script o switch), icona — quanti ne vuoi. Senza programmi la griglia sparisce.",
       "The program buttons in the washing machine popup: name, entity (script or switch), icon — as many as you need. With no programs the grid disappears.",
     )}</div>` +
     `<div class="dm-lav-righe"></div>` +
     `<button type="button" class="ed-btn-add dm-lav-aggiungi">＋ ${t("Aggiungi programma", "Add program")}</button>` +
-    `<div class="ed-sec-title dm-lav-caselle-titolo">🎛️ ${t("Il resto del popup", "The rest of the popup")}</div>` +
+    `<div class="ed-sec-title dm-lav-caselle-titolo">${segnoHtml("sliders")} ${t("Il resto del popup", "The rest of the popup")}</div>` +
     `<div class="ed-hint">${t(
       "Le entità che riempiono la finestra: la presa, l'avvio del ciclo, la fase, il tempo e i tre menu. Sono le stesse della scheda Lavatrice in Sezioni: quello che scrivi qui lo trovi anche lì.",
       "The entities that fill the window: the socket, the cycle start, the phase, the time and the three menus. They are the same as the Washing machine card under Sections: what you write here shows up there too.",
@@ -348,7 +350,7 @@ function creaCarta() {
       return;
     }
     if (evento.target?.closest?.(".dm-lav-aggiungi"))
-      righe.append(rigaEditor({ icon: "🧺", name: "", entity: "" }));
+      righe.append(rigaEditor({ icon: "washer", name: "", entity: "" }));
   });
   return carta;
 }
@@ -477,5 +479,5 @@ export function installPopupLavatrice() {
 if (doc?.readyState === "loading") {
   doc.addEventListener("DOMContentLoaded", installPopupLavatrice, { once: true });
 } else {
-  installPopupLavatrice();
+  senzaCadere(installPopupLavatrice);
 }

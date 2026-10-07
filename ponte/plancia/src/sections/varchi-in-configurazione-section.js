@@ -28,6 +28,7 @@ import {
   root,
   t,
   wrapFunction,
+  senzaCadere,
 } from "./shared.js";
 
 const KEY = "__DASHBOARDMODERN_VARCHI_CONFIG__";
@@ -157,5 +158,5 @@ export function installVarchiInConfigurazioneSection() {
 if (doc?.readyState === "loading") {
   doc.addEventListener("DOMContentLoaded", installVarchiInConfigurazioneSection, { once: true });
 } else {
-  installVarchiInConfigurazioneSection();
+  senzaCadere(installVarchiInConfigurazioneSection);
 }

@@ -28,7 +28,9 @@ import {
   root,
   t,
   wrapFunction,
+  senzaCadere,
 } from "./shared.js";
+import { chiaveDelValore, emojiInSegni, segnoHtml } from "../core/segni-del-catalogo.js";
 
 const KEY = "__DASHBOARDMODERN_SECURITY_DOORS__";
 const STYLE_ID = "dm-security-doors-style";
@@ -86,12 +88,13 @@ function doorStateLabel(door, states) {
  * come testo l'icona «spariva» (si leggeva mdi:gate al posto del disegno).
  * Chi sa disegnare il token e' il motore; l'emoji passa com'e'. */
 export function iconaPortaMarkup(icon, size = 22) {
-  const token = clean(icon) || "🚪";
+  const token = clean(icon) || "door";
   if (/^mdi:/i.test(token)) {
     const disegnata = root.DashboardModernIconEngine?.markup?.("action", token, { size });
-    return disegnata || "🚪";
+    return disegnata || segnoHtml("door", { misura: size });
   }
-  return esc(token);
+  const chiave = chiaveDelValore(token);
+  return chiave ? segnoHtml(chiave, { misura: size }) : emojiInSegni(esc(token), { misura: size });
 }
 
 /** Come si chiama un gesto, sul tasto. */
@@ -107,7 +110,7 @@ function dentroLaPorta(door) {
         <strong class="dm-door-name">${esc(door.name || door.entity)}</strong>
         <span class="dm-door-state" data-dm-door-state></span>
       </span>
-      ${door.pin ? `<span class="dm-door-pin" title="${esc(t("Protetta da PIN", "PIN protected"))}" aria-hidden="true">🔒</span>` : ""}`;
+      ${door.pin ? `<span class="dm-door-pin" title="${esc(t("Protetta da PIN", "PIN protected"))}" aria-hidden="true">${segnoHtml("lock")}</span>` : ""}`;
 }
 
 /* Una porta con un gesto solo resta il tasto grande di sempre — è la stragrande
@@ -133,7 +136,7 @@ function doorMarkup(door, states) {
 
 function blockMarkup(doors, states) {
   return `<div class="dm-sec-doors-head">
-      <span class="dm-sec-doors-ic" aria-hidden="true">🚪</span>
+      <span class="dm-sec-doors-ic" aria-hidden="true">${segnoHtml("door")}</span>
       <span class="dm-sec-doors-hint">${esc(t("Il tocco chiede conferma; col PIN, il codice.", "A tap asks to confirm; with a PIN, the code."))}</span>
     </div>
     <div class="dm-door-grid">${doors.map((door) => doorMarkup(door, states)).join("")}</div>`;
@@ -208,7 +211,7 @@ function ensureVoce() {
   voce.className = "tab";
   voce.dataset.tab = APERTURE_TAB;
   voce.id = `tab-${APERTURE_TAB}`;
-  voce.innerHTML = `<span class="icon">🚪</span><span class="text">${esc(
+  voce.innerHTML = `<span class="icon">${segnoHtml("door")}</span><span class="text">${esc(
     t("Apri porte", "Openers"),
   )}</span>`;
   /* Accanto alla Sicurezza, da cui esce: chi la cercava lì la trova lì
@@ -348,7 +351,7 @@ function confirmAndOpen(door, gesto = "") {
         /* L'icona della porta, com'e': la finestra la disegna col motore
          * delle icone (#320), quindi un nome mdi non va piu' sostituito con
          * un'emoji generica per non vederlo scritto. */
-        icon: clean(door.icon) || "🚪",
+        icon: clean(door.icon) || "door",
         title: clean(door.name) || t("Apri", "Open"),
         /* La domanda dice quale dei due gesti si sta per fare: «confermi
          * l'apertura?» davanti a uno sblocco sarebbe una domanda su un'altra
@@ -606,4 +609,4 @@ export function installSecurityDoorsSection() {
   else schedule();
 }
 
-installSecurityDoorsSection();
+senzaCadere(installSecurityDoorsSection);

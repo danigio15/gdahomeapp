@@ -6,6 +6,7 @@ import {
   readJson,
   root,
   writeJsonIfChanged,
+  senzaCadere,
 } from "./shared.js";
 import {
   eDiQuestoApparecchio,
@@ -413,4 +414,4 @@ export function installDataContractsSection() {
 
 if (doc?.readyState === "loading")
   doc.addEventListener("DOMContentLoaded", installDataContractsSection, { once: true });
-else if (doc) installDataContractsSection();
+else if (doc) senzaCadere(installDataContractsSection);

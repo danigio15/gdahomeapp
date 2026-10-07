@@ -1,5 +1,6 @@
 // Beta 25/26 compatibility owner: keep the real-device fixes while preserving
 // the stable DOM/runtime contracts used by the existing dashboard renderers.
+import { segnoHtml } from "../core/segni-del-catalogo.js";
 import { applianceArtwork, canonicalArtworkType } from "../core/appliance-artwork.js";
 import { preferredApplianceVisual } from "./beta25-real-device-fixes-section.js";
 import {
@@ -13,6 +14,7 @@ import {
   section,
   t,
   wrapFunction,
+  senzaCadere,
 } from "./shared.js";
 
 const KEY = "__DASHBOARDMODERN_BETA25_COMPATIBILITY__";
@@ -300,7 +302,7 @@ function iconPreviewMarkup(token, size = 27) {
   return (
     root.DashboardModernIconEngine?.markup?.("action", clean(token) || "mdi:power-plug", {
       size,
-    }) || "🎨"
+    }) || segnoHtml("sliders")
   );
 }
 
@@ -531,4 +533,4 @@ export function installBeta25Compatibility() {
 
 if (doc?.readyState === "loading")
   doc.addEventListener("DOMContentLoaded", installBeta25Compatibility, { once: true });
-else installBeta25Compatibility();
+else senzaCadere(installBeta25Compatibility);

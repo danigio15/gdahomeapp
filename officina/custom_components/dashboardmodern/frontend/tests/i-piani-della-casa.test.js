@@ -93,15 +93,25 @@ test("i nomi si ripuliscono: niente vuoti, niente doppioni", () => {
 /* ── il segno ───────────────────────────────────────────────────────────── */
 
 test("un piano senza icona scelta porta quella di serie, e lo dichiara", () => {
-  const piani = iPianiDellaCasa(PIANI, STANZE, { "Primo piano": "🪜" });
+  const piani = iPianiDellaCasa(PIANI, STANZE, { "Primo piano": "room-attic" });
   assert.deepEqual(
     piani.map((piano) => [piano.segno, piano.suo]),
     [
       [SEGNO_DI_SERIE, false],
-      ["🪜", true],
+      ["room-attic", true],
     ],
   );
   assert.equal(segnoDelPiano({}, "Boh"), SEGNO_DI_SERIE);
+  /* Il segno di serie e' un disegno del catalogo, non un'emoji. */
+  assert.equal(SEGNO_DI_SERIE, "home");
+});
+
+test("un segno salvato quando erano emoji diventa il disegno che dice la stessa cosa", () => {
+  assert.equal(segnoDelPiano({ Mansarda: "🪜" }, "Mansarda"), "room-attic");
+  assert.equal(segnoDelPiano({ Garage: "🚗" }, "Garage"), "room-garage");
+  assert.equal(segnoDelPiano({ Terra: "🏢" }, "Terra"), "home");
+  /* Un'emoji che non conosciamo torna al segno di serie invece di uscire. */
+  assert.equal(segnoDelPiano({ Strano: "🦄" }, "Strano"), SEGNO_DI_SERIE);
 });
 
 test("il segno si mette e si toglie", () => {

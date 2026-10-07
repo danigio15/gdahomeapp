@@ -17,8 +17,8 @@
 ///
 /// **Con la chiave, i lucchetti valgono dappertutto**: nell'app per iPhone,
 /// in quella per Android e nel browser, con gli stessi limiti di Base.
-/// Premium si compra solo dall'app per iPhone (`negozio.dart`), e da li' vale
-/// per tutta la casa. Una casa col suo add-on vecchio resta Base finche' non
+/// Premium si compra dall'app, sull'iPhone e su Android (`negozio.dart`), e
+/// da li' vale per tutta la casa. Una casa col suo add-on vecchio resta Base finche' non
 /// lo aggiorna: li' Premium non si puo' comprare, e la pagina lo dice
 /// ([ComeStaLaLicenza.casaSenzaLicenze]).
 ///
@@ -273,7 +273,7 @@ class GestoreLicenza extends ChangeNotifier {
       await conosci(archivio.tutte);
       return true;
     }
-    await _ricordaLaRisposta(detto, casa, archivio);
+    await ricordaLaRisposta(detto, casa, archivio);
     return true;
   }
 
@@ -312,7 +312,7 @@ class GestoreLicenza extends ChangeNotifier {
     } on ErroreDelPonte catch (errore) {
       throw LicenzaRifiutata(_spiega(errore));
     }
-    await _ricordaLaRisposta(detto, casa, archivio);
+    await ricordaLaRisposta(detto, casa, archivio);
     /* La risposta puo' non avere il gettone dentro: si richiede. */
     await chiedi(filo, casa, archivio);
   }
@@ -349,11 +349,14 @@ class GestoreLicenza extends ChangeNotifier {
         definitiva: tutto.contains('402') || tutto.contains('ricevuta'),
       );
     }
-    await _ricordaLaRisposta(detto, casa, archivio);
+    await ricordaLaRisposta(detto, casa, archivio);
     await chiedi(filo, casa, archivio);
   }
 
-  Future<void> _ricordaLaRisposta(
+  /// Ricorda i gettoni di una risposta della casa — sul filo, o portata dal
+  /// centralino per chi compra fuori casa (`ricevuta_da_fuori.dart`) — e li
+  /// controlla.
+  Future<void> ricordaLaRisposta(
     Object? detto,
     CasaConosciuta casa,
     ArchivioDelleCase archivio,

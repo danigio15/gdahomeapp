@@ -41,12 +41,18 @@ async function attendi(condizione, entro = 3000) {
   throw new Error("non e' successo in tempo");
 }
 
-async function banco({ chiaveLicenze = PUBBLICA_DI_PROVA, attesaDellaRicevuta, freno } = {}) {
+async function banco({
+  chiaveLicenze = PUBBLICA_DI_PROVA,
+  attesaDellaRicevuta,
+  freno,
+  adesso,
+} = {}) {
   const cartella = mkdtempSync(join(tmpdir(), "centralino-licenza-"));
   const centralino = new Centralino({
     case: new Case({ cartella }),
     chiaveLicenze,
     ...(attesaDellaRicevuta ? { attesaDellaRicevuta } : {}),
+    ...(adesso ? { adesso } : {}),
   });
   const ricevute = new Ricevute({ centralino, ...(freno ? { freno } : {}) });
   const server = costruisciIlServer({ centralino, ricevute });
@@ -252,6 +258,46 @@ test("un gettone storto non apre niente: di un'altra casa, scaduto, firmato da a
       casa.detti.length = 0;
       assert.equal(b.centralino.ePremium(casa.id), false);
     }
+    casa.chiudi();
+  } finally {
+    await b.spegni();
+  }
+});
+
+test("un gettone che scade chiude i telefoni gia' aperti al giro di controllo, ma non l'abbinamento", async () => {
+  let ora = 0;
+  const b = await banco({ adesso: () => ora });
+  try {
+    const casa = unaCasa(b.dove);
+    await casa.entra();
+    casa.manda({
+      t: "licenza",
+      tipo: "licenza",
+      gettone: unGettone({ sog: casa.id, fino: 1_000, emesso: 0 }, { adesso: 0 }),
+    });
+    await attendi(() => b.centralino.ePremium(casa.id));
+
+    const daFuori = unTelefono(b.dove, `/telefono/${casa.id}`);
+    await daFuori.aperta;
+    const codice = randomBytes(10).toString("hex");
+    casa.manda({ t: "apri-abbinamento", impronta: impronta(codice) });
+    await attendi(() => b.centralino.abbinamenti.size === 1);
+    const siAbbina = unTelefono(b.dove, `/abbinamento/${impronta(codice)}`);
+    await siAbbina.aperta;
+    await attendi(() => casa.canali().length === 2);
+
+    ora = 1_001;
+    b.centralino._giroDiControllo();
+
+    assert.deepEqual(await daFuori.chiusa, {
+      codice: PREMIUM_RICHIESTO.codice,
+      motivo: PREMIUM_RICHIESTO.motivo,
+    });
+    assert.equal(b.centralino.ePremium(casa.id), false);
+    assert.equal(casa.chiusi().length, 1);
+    assert.equal(siAbbina.presa.readyState, WebSocket.OPEN);
+
+    siAbbina.chiudi();
     casa.chiudi();
   } finally {
     await b.spegni();

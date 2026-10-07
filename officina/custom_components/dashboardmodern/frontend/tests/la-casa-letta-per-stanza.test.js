@@ -183,7 +183,7 @@ test("la sezione riusa la card della pagina Luci invece di rifarne una", async (
 
 test("la sezione e' installata dal runtime e ha la sua voce nella barra", async () => {
   const runtime = await leggi("../src/sections/section-runtime.js");
-  assert.match(runtime, /installRoomsPageSection\(\)/);
+  assert.match(runtime, /senzaCadere\(installRoomsPageSection\);/);
   const sezione = await leggi("../src/sections/rooms-page-section.js");
   // La voce si nasconde come tutte: la mappa di cdApplyNavVis la deve sapere.
   assert.match(sezione, /cdNavVisMap/);

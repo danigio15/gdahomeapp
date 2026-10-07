@@ -241,6 +241,16 @@ test("il tramite ascolta solo da qui, e Caddy mette le intestazioni a app e cons
   assert.match(blocco[1], /header \/console\* \{[\s\S]*?X-Frame-Options DENY/);
   /* E nessuno parla col tramite se non da questa macchina. */
   assert.doesNotMatch(ACCENDI, /CENTRALINO_INDIRIZZO=0\.0\.0\.0/);
+  assert.match(
+    blocco[1],
+    /header Strict-Transport-Security "max-age=31536000; includeSubDomains"/,
+    "il tramite non forza HTTPS nel browser",
+  );
+  assert.match(
+    blocco[1],
+    /Content-Security-Policy "frame-ancestors 'none'; upgrade-insecure-requests"/,
+    "l'app non chiede al browser di aggiornare le risorse in chiaro",
+  );
 });
 
 test("la chiave scelta a mano e' lunga almeno trentadue caratteri", () => {

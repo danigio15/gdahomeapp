@@ -61,6 +61,6 @@ test("la porta e' una tessera della pagina Configurazione, l'ultima della grigli
 
 test("il modulo e' installato dal runtime, con la lingua e le altre preferenze", async () => {
   const runtime = await leggi("../src/sections/section-runtime.js");
-  assert.match(runtime, /installSostieniIlProgetto\(\);/);
+  assert.match(runtime, /senzaCadere\(installSostieniIlProgetto\);/);
   assert.match(runtime, /"sostieni-il-progetto",/);
 });

@@ -108,7 +108,7 @@
       '<input id="luce-add-ent" class="ed-input mono" placeholder="' +
       entityPlaceholder +
       '">' +
-      '<button type="button" class="dm-entity-picker" data-entity-target="luce-add-ent">🔍</button>' +
+      '<button type="button" class="dm-entity-picker" data-entity-target="luce-add-ent"><i class="dm-segno" data-dm-segno="search" aria-hidden="true"></i></button>' +
       "</div>" +
       '<input id="luce-add-name" class="ed-input" placeholder="' +
       namePlaceholder +

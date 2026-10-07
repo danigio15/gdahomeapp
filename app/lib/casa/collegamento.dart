@@ -21,6 +21,7 @@ library;
 import 'dart:async';
 
 import '../licenza/licenza.dart';
+import '../licenza/ricevuta_da_fuori.dart';
 import '../parole.dart';
 import '../plancia/pannello.dart';
 import '../ponte/abbinamento.dart';
@@ -77,6 +78,8 @@ class Collegamento {
     this.apriLaPresa,
     GestoreLicenza? licenza,
     this.attesaPerLaRicevuta = const Duration(seconds: 20),
+    this.ogniQuantoLaLicenza = const Duration(hours: 6),
+    this.consegnaAlCentralino,
   }) : _sonda = sonda ?? const Sonda(),
        licenza = licenza ?? GestoreLicenza(),
        _licenzaMia = licenza == null {
@@ -89,6 +92,15 @@ class Collegamento {
   /// Quanto una ricevuta comprata fuori casa aspetta la strada del
   /// centralino prima di restare al negozio (`mandaLaRicevuta`).
   final Duration attesaPerLaRicevuta;
+
+  /// Ogni quanto si richiede la licenza alla casa mentre il filo resta su:
+  /// ogni sei ore, come la casa la richiede al quadro.
+  final Duration ogniQuantoLaLicenza;
+
+  /// Chi consegna al centralino la ricevuta di chi compra fuori casa: di
+  /// serie una POST vera (`ricevuta_da_fuori.dart`), nelle prove una finta.
+  final ConsegnaAlCentralino? consegnaAlCentralino;
+  Timer? _rileggiLaLicenza;
 
   /// gdahome Premium: quale casa lo e', e cosa si apre (`licenza/`).
   ///
@@ -416,6 +428,16 @@ class Collegamento {
     await _leggiLaPlancia(filo);
     /* La licenza, a ogni collegamento: e' la casa che la tiene. */
     unawaited(_chiediLaLicenza(filo));
+    /* E poi ogni sei ore, finche' il filo resta su. Il gettone che l'app si
+     * tiene vale otto giorni al massimo (un abbonamento, fino a tre giorni
+     * dopo il periodo pagato), e la casa intanto lo rinnova: un'app aperta
+     * per giorni senza che il filo cada mai — il tablet sul muro — col
+     * gettone di quando si e' collegata tornerebbe Base con la casa
+     * Premium. */
+    _rileggiLaLicenza?.cancel();
+    _rileggiLaLicenza = Timer.periodic(ogniQuantoLaLicenza, (_) {
+      if (_filo == filo && filo.dentro) unawaited(_chiediLaLicenza(filo));
+    });
     /* E se si e' entrati dalla strada lunga, si chiede alla casa dov'e'. Non
      * si aspetta: la casa e' gia' aperta, e questo e' solo per andarci piu'
      * dritti. */
@@ -506,6 +528,16 @@ class Collegamento {
     if (!_pronta) {
       licenza.ricevutaDaPortare = true;
       if (_fuoriSenzaPremium) {
+        /* Col centralino acceso il filo verso una casa Base da fuori non si
+         * apre: la ricevuta la porta lui, firmata da questo telefono. Se non
+         * ci riesce, si prova la strada di sempre. */
+        if (await _laRicevutaDalCentralino(
+          piattaforma: piattaforma,
+          prodotto: prodotto,
+          ricevuta: ricevuta,
+        )) {
+          return;
+        }
         unawaited(apri(forza: true));
         await _aspettaLaCasa(attesaPerLaRicevuta);
       }
@@ -528,6 +560,56 @@ class Collegamento {
     }
     licenza.ricevutaDaPortare = false;
     await _dopoLaLicenza(filo, casa);
+  }
+
+  /* La ricevuta portata alla casa dal centralino (`ricevuta_da_fuori.dart`).
+   * `true` se la casa l'ha avuta; un no del negozio solleva, definitivo; per
+   * tutto il resto `false`, e si prova la strada di sempre. */
+  Future<bool> _laRicevutaDalCentralino({
+    required String piattaforma,
+    required String prodotto,
+    required String ricevuta,
+  }) async {
+    final aperta = _casa ?? archivio.attiva;
+    final casa = aperta == null ? null : archivio.quella(aperta.id) ?? aperta;
+    final centralino = casa?.centralino;
+    final idDellaCasa = casa?.casaAlCentralino;
+    final chi = casa?.identificativo;
+    final chiave = casa?.chiave;
+    if (casa == null ||
+        centralino == null ||
+        idDellaCasa == null ||
+        chi == null ||
+        chiave == null) {
+      return false;
+    }
+    final esito = await portaLaRicevutaDaFuori(
+      centralino: centralino,
+      casa: idDellaCasa,
+      chi: chi,
+      chiaveDelFilo: chiave,
+      piattaforma: piattaforma,
+      prodotto: prodotto,
+      ricevuta: ricevuta,
+      consegna: consegnaAlCentralino,
+    );
+    if (esito.rifiutataDalNegozio) {
+      licenza.ricevutaDaPortare = false;
+      throw LicenzaRifiutata(
+        inLingua(
+          it: 'Il negozio non ha confermato l\'acquisto.',
+          en: 'The store didn\'t confirm the purchase.',
+        ),
+        definitiva: true,
+      );
+    }
+    if (!esito.arrivata) return false;
+    await licenza.ricordaLaRisposta(esito.detto, casa, archivio);
+    licenza.ricevutaDaPortare = false;
+    /* La casa e' Premium, e l'ha gia' detto al centralino: da fuori adesso
+     * si entra. */
+    unawaited(apri(forza: true));
+    return true;
   }
 
   /* Se c'e' una casa aperta a cui dire qualcosa adesso. */
@@ -836,6 +918,8 @@ class Collegamento {
   /// Chiude il filo. Con [tieniLaPlancia] si tiene quello che si sapeva della
   /// plancia di questa casa: vedi [riposa] e [apri].
   Future<void> _chiudiIlFilo({bool tieniLaPlancia = false}) async {
+    _rileggiLaLicenza?.cancel();
+    _rileggiLaLicenza = null;
     await _guardaIlFilo?.cancel();
     await _guardaLaCasa?.cancel();
     _guardaIlFilo = null;

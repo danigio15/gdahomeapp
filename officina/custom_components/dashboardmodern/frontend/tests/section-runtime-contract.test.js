@@ -19,7 +19,7 @@ test("native renderer owns energy configuration while runtime owns flow renderin
   const renderer = await read("src/core/renderers.js");
   assert.doesNotMatch(runtime, /energy-config-section\.js/);
   assert.match(runtime, /energy-flow-section\.js/);
-  assert.match(runtime, /installEnergyFlowSection\(\)/);
+  assert.match(runtime, /senzaCadere\(installEnergyFlowSection\);/);
   assert.match(renderer, /Contatore energia totale/);
 });
 

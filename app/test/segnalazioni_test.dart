@@ -11,6 +11,7 @@ import 'package:gdahome/casa/archivio_delle_case.dart';
 import 'package:gdahome/casa/cassaforte.dart';
 import 'package:gdahome/casa/collegamento.dart';
 import 'package:gdahome/casa/segnalazioni.dart';
+import 'package:gdahome/parole.dart';
 import 'package:gdahome/ponte/sonda.dart';
 import 'package:gdahome/schermate/assistenza.dart';
 import 'package:gdahome/schermate/segnalazioni.dart';
@@ -436,6 +437,168 @@ void main() {
     await tester.tap(find.text('Tutte'));
     await tester.pumpAndSettle();
     expect(find.text('Come si abbina un telefono'), findsOneWidget);
+
+    await tester.runAsync(() async {
+      await collegamento.chiudi();
+      await ponte.spegni();
+    });
+  });
+
+  /* Una segnalazione diventa una pagina pubblica su GitHub, e la schermata lo
+   * dice prima del tasto: chi scrive lo deve sapere prima di premere, non
+   * scoprirlo dopo. */
+  testWidgets('prima di mandare si legge che la segnalazione sarà pubblica', (
+    tester,
+  ) async {
+    late PonteFinto ponte;
+    late Collegamento collegamento;
+    await tester.runAsync(() async {
+      ponte = await PonteFinto.alza();
+      collegamento = await _casaCollegata(ponte);
+    });
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: SchermataDelleSegnalazioni(
+          collegamento: collegamento,
+          diagnostica: _diagnostica,
+        ),
+      ),
+    );
+    await tester.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 200)),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Nuova segnalazione'));
+    await tester.pumpAndSettle();
+
+    await _scorriFinoA(tester, find.text('Manda'));
+    expect(find.text('Sarà pubblica'), findsOneWidget);
+    expect(find.textContaining('chiunque può leggere'), findsOneWidget);
+    expect(find.textContaining('Non scriverci password'), findsOneWidget);
+    /* Sopra il tasto, non sotto. */
+    expect(
+      tester.getTopLeft(find.text('Sarà pubblica')).dy,
+      lessThan(tester.getTopLeft(find.text('Manda')).dy),
+    );
+
+    await tester.runAsync(() async {
+      await collegamento.chiudi();
+      await ponte.spegni();
+    });
+  });
+
+  /* In inglese la schermata nuova e' tutta in inglese: «Foto e video» era
+   * rimasto in italiano. */
+  testWidgets('in inglese la segnalazione nuova parla inglese', (tester) async {
+    late PonteFinto ponte;
+    late Collegamento collegamento;
+    await tester.runAsync(() async {
+      ponte = await PonteFinto.alza();
+      collegamento = await _casaCollegata(ponte);
+      for (var volta = 0; volta < 40 && collegamento.filo == null; volta++) {
+        await Future<void>.delayed(const Duration(milliseconds: 50));
+      }
+    });
+    laLingua = Lingua.inglese;
+    addTearDown(() => laLingua = Lingua.italiano);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: NuovaSegnalazione(
+          segnalazioni: Segnalazioni(collegamento.filo!),
+          diagnostica: _diagnostica(),
+          quandoMandata: (_) async {},
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Photos and videos'), findsOneWidget);
+    expect(find.text('Foto e video'), findsNothing);
+
+    await _scorriFinoA(tester, find.text('Send'));
+    expect(find.text('It will be public'), findsOneWidget);
+    expect(find.text('Sarà pubblica'), findsNothing);
+
+    await tester.runAsync(() async {
+      await collegamento.chiudi();
+      await ponte.spegni();
+    });
+  });
+
+  /* In inglese anche l'elenco e il filo: lo stato di ogni segnalazione, il
+   * conto dei messaggi e chi ha scritto sotto ogni fumetto erano rimasti in
+   * italiano. */
+  testWidgets('in inglese l\'elenco e il filo parlano inglese', (tester) async {
+    late PonteFinto ponte;
+    late Collegamento collegamento;
+    await tester.runAsync(() async {
+      ponte = await PonteFinto.alza();
+      collegamento = await _casaCollegata(ponte);
+      ponte.segnalazioni.addAll([
+        {
+          'numero': 1,
+          'tipo': 'problema',
+          'titolo': 'The kitchen light',
+          'stato': 'aperta',
+          'aperta_il': '2026-09-08T10:00:00Z',
+          'url': '',
+          'messaggi': [
+            {'da': 'casa', 'testo': 'it does not turn on', 'il': ''},
+          ],
+        },
+        {
+          'numero': 2,
+          'tipo': 'domanda',
+          'titolo': 'How do I pair a phone',
+          'stato': 'chiusa',
+          'aperta_il': '2026-09-08T12:00:00Z',
+          'url': '',
+          'messaggi': [
+            {'da': 'casa', 'testo': 'how?', 'il': ''},
+            {'da': 'manutentore', 'testo': 'From the add-on page.', 'il': ''},
+            {'da': 'casa', 'testo': 'thanks', 'il': ''},
+          ],
+        },
+      ]);
+    });
+    laLingua = Lingua.inglese;
+    addTearDown(() => laLingua = Lingua.italiano);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: SchermataDelleSegnalazioni(
+          collegamento: collegamento,
+          diagnostica: _diagnostica,
+        ),
+      ),
+    );
+    await tester.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 200)),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('open'), findsOneWidget);
+    expect(find.text('closed'), findsOneWidget);
+    expect(find.textContaining('1 message ·'), findsOneWidget);
+    expect(find.textContaining('3 messages ·'), findsOneWidget);
+    for (final italiano in ['aperta', 'chiusa', 'messaggi', 'messaggio']) {
+      expect(find.textContaining(italiano), findsNothing, reason: italiano);
+    }
+
+    await tester.tap(find.text('How do I pair a phone'));
+    await tester.pumpAndSettle();
+    await tester.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 300)),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('closed'), findsOneWidget);
+    expect(find.text('From the add-on page.'), findsOneWidget);
+    expect(find.text('you'), findsNWidgets(2));
+    expect(find.text('whoever makes the app'), findsOneWidget);
+    expect(find.text('tu'), findsNothing);
+    expect(find.text('chi fa l\'app'), findsNothing);
 
     await tester.runAsync(() async {
       await collegamento.chiudi();

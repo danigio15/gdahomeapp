@@ -48,8 +48,8 @@
           </div>
         </div>
         <h1 data-en="Privacy">Privacy</h1>
-        <p class="sottotitolo" data-en="Last updated: 27 September 2026.">
-          Ultimo aggiornamento: 27 settembre 2026.
+        <p class="sottotitolo" data-en="Last updated: 6 October 2026.">
+          Ultimo aggiornamento: 6 ottobre 2026.
         </p>
       </header>
 
@@ -163,11 +163,24 @@
           </li>
         </ul>
         <p
-          data-en="They go to whoever maintains gdahome, to answer. They go to nobody else, they are not used to profile anything and they end up in no advertising. If you do not write a report, nothing leaves."
+          data-en="&lt;strong&gt;Reports are public.&lt;/strong&gt; They become pages on GitHub, in gdahome’s repository: anyone can read them, including the photos, the videos and the lines on how the app is doing. So do not put passwords, addresses or other personal data in them, and only attach photos and videos you do not mind showing."
         >
-          Vanno a chi mantiene gdahome, per rispondere. Non vanno a nessun altro, non vengono usate
-          per profilare niente e non finiscono in nessuna pubblicità. Se non scrivi una
-          segnalazione, non parte niente.
+          <strong>Le segnalazioni sono pubbliche.</strong> Diventano pagine su GitHub, nella
+          repository di gdahome: chiunque può leggerle, comprese le foto, i video e le righe su come
+          sta l’app. Per questo non scriverci password, indirizzi o altri dati personali, e allega
+          solo foto e video che non ti dispiace far vedere.
+        </p>
+        <p
+          data-en="&lt;strong&gt;The support chat is not public.&lt;/strong&gt; It does not go through GitHub: only whoever maintains gdahome reads it, to answer you."
+        >
+          <strong>La chat di assistenza non è pubblica.</strong> Non passa da GitHub: la legge solo
+          chi mantiene gdahome, per risponderti.
+        </p>
+        <p
+          data-en="None of this is used for profiling or advertising. If you do not write, nothing leaves."
+        >
+          Niente di tutto questo viene usato per profilare o per fare pubblicità. Se non scrivi, non
+          parte niente.
         </p>
       </section>
 
@@ -196,25 +209,29 @@
           la manda <strong>solo</strong> ai servizi che servono a guidare, senza nome né account:
         </p>
         <ul>
-          <li
-            data-en="routes: OpenStreetMap's Valhalla (&lt;code&gt;valhalla1.openstreetmap.de&lt;/code&gt;);"
-          >
-            i percorsi: Valhalla di OpenStreetMap (<code>valhalla1.openstreetmap.de</code>);
+          <li data-en="routes and traffic: TomTom (&lt;code&gt;api.tomtom.com&lt;/code&gt;);">
+            i percorsi e il traffico: TomTom (<code>api.tomtom.com</code>);
           </li>
           <li data-en="address search: Photon (&lt;code&gt;photon.komoot.io&lt;/code&gt;);">
             la ricerca degli indirizzi: Photon (<code>photon.komoot.io</code>);
           </li>
-          <li
-            data-en="the map: OpenFreeMap (&lt;code&gt;tiles.openfreemap.org&lt;/code&gt;), and traffic from TomTom (&lt;code&gt;api.tomtom.com&lt;/code&gt;);"
-          >
-            la mappa: OpenFreeMap (<code>tiles.openfreemap.org</code>), e il traffico da TomTom
-            (<code>api.tomtom.com</code>);
+          <li data-en="the map: OpenFreeMap (&lt;code&gt;tiles.openfreemap.org&lt;/code&gt;);">
+            la mappa: OpenFreeMap (<code>tiles.openfreemap.org</code>);
           </li>
           <li
-            data-en="chargers: Open Charge Map (&lt;code&gt;api.openchargemap.io&lt;/code&gt;); fuel stations and their prices from the Italian Ministry (&lt;code&gt;carburanti.mise.gov.it&lt;/code&gt;) and from OpenStreetMap;"
+            data-en="chargers: Open Charge Map (&lt;code&gt;api.openchargemap.io&lt;/code&gt;) and OpenStreetMap (&lt;code&gt;overpass-api.de&lt;/code&gt;). The live status of the chargers comes from Italy’s National Single Platform (&lt;code&gt;api.pun.piattaformaunicanazionale.it&lt;/code&gt;), which only receives which chargers you are looking at; to ask for it the app uses anonymous access to Amazon Web Services (Cognito), the same as the platform’s public website;"
           >
-            le colonnine: Open Charge Map (<code>api.openchargemap.io</code>); i distributori e i
-            loro prezzi dal Ministero (<code>carburanti.mise.gov.it</code>) e da OpenStreetMap;
+            le colonnine: Open Charge Map (<code>api.openchargemap.io</code>) e OpenStreetMap
+            (<code>overpass-api.de</code>). Lo stato delle colonnine in tempo reale arriva dalla
+            Piattaforma Unica Nazionale (<code>api.pun.piattaformaunicanazionale.it</code>), che
+            riceve solo quali colonnine stai guardando; per chiederlo l’app usa un accesso anonimo
+            ad Amazon Web Services (Cognito), lo stesso del sito pubblico della PUN;
+          </li>
+          <li
+            data-en="fuel stations and their prices: the Italian Ministry (&lt;code&gt;carburanti.mise.gov.it&lt;/code&gt;) and OpenStreetMap (&lt;code&gt;overpass-api.de&lt;/code&gt;);"
+          >
+            i distributori e i loro prezzi: il Ministero (<code>carburanti.mise.gov.it</code>) e
+            OpenStreetMap (<code>overpass-api.de</code>);
           </li>
           <li
             data-en="road reports (accidents, roadworks, speed cameras) and pairing with Home Assistant go through &lt;code&gt;gdanav.gdahome.org&lt;/code&gt;, encrypted."
@@ -230,6 +247,19 @@
           batteria dell'auto: la lettura resta sul telefono. I comandi rapidi in auto, e la
           fotografia della casa che l'auto mostra, stanno in un file dentro l'app e non escono dal
           telefono: il comando lo esegue l'app, sul filo cifrato di sempre.
+        </p>
+      </section>
+
+      <section>
+        <h2 data-en="The rain radar">Il radar della pioggia</h2>
+        <p
+          data-en="If you add the Weather radar section to the dashboard, the dashboard asks RainViewer (&lt;code&gt;api.rainviewer.com&lt;/code&gt;) for the rain images and Esri (&lt;code&gt;server.arcgisonline.com&lt;/code&gt;) for the map underneath, or the service you pick in the Configuration. They receive the area of the map you are looking at, not who you are. Without that section, nothing leaves."
+        >
+          Se nella plancia metti la sezione Radar meteo, la plancia chiede le immagini della pioggia
+          a RainViewer (<code>api.rainviewer.com</code>) e la mappa sotto a Esri
+          (<code>server.arcgisonline.com</code>), o al servizio che scegli nella Configurazione.
+          Ricevono la zona della mappa che stai guardando, non chi sei. Senza quella sezione non
+          parte niente.
         </p>
       </section>
 
@@ -255,16 +285,18 @@
           La risposta è un gettone firmato, che l’add-on, il centralino e l’app controllano da soli.
         </p>
         <p
-          data-en="If you buy Premium in the app, the store receipt (the Google Play purchase token or the Apple transaction identifier) travels encrypted from the phone to the add-on and from there to the quadro, which checks it with Google or Apple. For each licence the quadro keeps: the home, where it comes from (store, gift, installer), when it expires, whether it is in the free trial, and the purchase identifier (the Google Play purchase token or the Apple original transaction identifier), which it needs to ask Google or Apple whether the subscription has renewed. Payment is handled by Google and Apple: gdahome never receives your name or card details."
+          data-en="If you buy Premium in the app, the store receipt (the Google Play purchase token or the Apple transaction identifier) travels encrypted from the phone to the add-on and from there to the quadro, which checks it with Google or Apple. If you buy away from home and your home is on Base, it reaches the add-on through the relay, over HTTPS and signed by your phone: the relay passes it on without keeping it. For each licence the quadro keeps: the home, where it comes from (store, gift, installer), when it expires, whether it is in the free trial, and the purchase identifier (the Google Play purchase token or the Apple original transaction identifier), which it needs to ask Google or Apple whether the subscription has renewed. Payment is handled by Google and Apple: gdahome never receives your name or card details."
         >
           Chi compra Premium dall’app: la ricevuta del negozio (il codice d’acquisto di Google Play
           o l’identificativo della transazione di Apple) passa cifrata dal telefono all’add-on e da
-          lì al quadro, che la controlla con Google o Apple. Il quadro conserva, per ogni licenza:
-          la casa, da dove arriva (negozio, regalo, installatore), quando scade, se è nella prova
-          gratuita, e l’identificativo dell’acquisto (il codice d’acquisto di Google Play o
-          l’identificativo della transazione originale di Apple), che gli serve per chiedere a
-          Google o ad Apple se l’abbonamento si è rinnovato. Il pagamento lo gestiscono Google e
-          Apple: a gdahome non arrivano né il nome né i dati della carta.
+          lì al quadro, che la controlla con Google o Apple. Se si compra fuori casa con la casa in
+          Base, arriva all’add-on passando dal centralino, in HTTPS e firmata dal telefono: il
+          centralino la gira senza conservarla. Il quadro conserva, per ogni licenza: la casa, da
+          dove arriva (negozio, regalo, installatore), quando scade, se è nella prova gratuita, e
+          l’identificativo dell’acquisto (il codice d’acquisto di Google Play o l’identificativo
+          della transazione originale di Apple), che gli serve per chiedere a Google o ad Apple se
+          l’abbonamento si è rinnovato. Il pagamento lo gestiscono Google e Apple: a gdahome non
+          arrivano né il nome né i dati della carta.
         </p>
         <p
           data-en="gdanav on its own uses, for gift codes, a phone identifier (&lt;code&gt;tel_…&lt;/code&gt;) made at random on the phone, which says nothing about who you are."
@@ -297,24 +329,25 @@
       <section>
         <h2 data-en="Deleting everything">Cancellare tutto</h2>
         <p
-          data-en="Uninstalling the app, what was on the phone goes with it. From the add-on’s page, “Paired phones → Unpair”, that phone’s credential stops being valid instantly. Reports already sent are deleted by asking from the support chat."
+          data-en="Uninstalling the app, what was on the phone goes with it. From the add-on’s page, “Paired phones → Unpair”, that phone’s credential stops being valid instantly. Reports already sent, with their photos and videos, are deleted by asking from the support chat."
         >
           Disinstallando l’app, quello che stava sul telefono se ne va con lei. Dalla pagina
           dell’add-on, «Telefoni abbinati → Togli associazione», la credenziale di quel telefono
-          smette di valere all’istante. Le segnalazioni già mandate si cancellano chiedendolo dalla
-          chat di assistenza.
+          smette di valere all’istante. Le segnalazioni già mandate, con le loro foto e i video, si
+          cancellano chiedendolo dalla chat di assistenza.
         </p>
       </section>
 
       <section>
         <h2 data-en="Who answers">Chi risponde</h2>
         <p
-          data-en='gdahome is maintained by danigio15 — &lt;a href="https://github.com/danigio15/gdahomeapp"&gt;github.com/danigio15/gdahomeapp&lt;/a&gt;. For anything about this page, open a report from the app or an issue on the repository.'
+          data-en='gdahome is maintained by danigio15 — &lt;a href="https://github.com/danigio15/gdahomeapp"&gt;github.com/danigio15/gdahomeapp&lt;/a&gt;. For anything about this page, open a report from the app or an issue on the repository. For something you do not want to make public, write in the support chat or to assistenza@gdahome.org.'
         >
           gdahome è mantenuta da danigio15 —
           <a href="https://github.com/danigio15/gdahomeapp">github.com/danigio15/gdahomeapp</a>. Per
           qualunque cosa su questa pagina, si apre una segnalazione dall'app o una issue sulla
-          repository.
+          repository. Per una cosa che non vuoi rendere pubblica, scrivi nella chat di assistenza o
+          ad assistenza@gdahome.org.
         </p>
       </section>
 

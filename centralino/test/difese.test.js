@@ -44,7 +44,9 @@ async function attendi(condizione, entro = 5000) {
 async function banco({ centralino: opzioni = {}, case: perLeCase = {}, ...altro } = {}) {
   const cartella = mkdtempSync(join(tmpdir(), "difese-"));
   const case_ = new Case({ cartella, ...perLeCase });
-  const centralino = new Centralino({ case: case_, ...opzioni });
+  /* Qui si prova il centralino, non la licenza: senza chiave, come oggi,
+   * qualunque sia quella scritta nel codice (`docs/LICENZE.md`). */
+  const centralino = new Centralino({ case: case_, chiaveLicenze: "", ...opzioni });
   const server = costruisciIlServer({ centralino, ...altro });
   await new Promise((ok) => server.listen(0, "127.0.0.1", ok));
   const porta = server.address().port;
@@ -232,7 +234,7 @@ test("un telefono parla in testo: un telaio binario lo chiude", async () => {
 });
 
 test("chi non legge non fa crescere la coda: oltre la soglia il filo si chiude", () => {
-  const centralino = new Centralino({ case: {}, codaMassima: 100 });
+  const centralino = new Centralino({ case: {}, codaMassima: 100, chiaveLicenze: "" });
   try {
     const chiuse = [];
     const mandati = [];

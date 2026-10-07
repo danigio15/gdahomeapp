@@ -5,6 +5,8 @@ library;
 import 'dart:convert';
 import 'dart:async';
 
+import 'package:flutter/foundation.dart'
+    show TargetPlatform, defaultTargetPlatform;
 import 'package:flutter/painting.dart' show Color;
 import 'package:flutter/services.dart' show HapticFeedback;
 import 'package:flutter/widgets.dart' show Widget;
@@ -279,6 +281,10 @@ List<String> _iTipi(List<String> chiesti) => [
 Future<void> _fuori(String indirizzo) async {
   final dove = Uri.tryParse(indirizzo);
   if (dove == null || !siApreFuori(dove)) return;
+  /* Su iPhone non si esce a pagare: vedi [eUnPagamentoFuori]. */
+  if (defaultTargetPlatform == TargetPlatform.iOS && eUnPagamentoFuori(dove)) {
+    return;
+  }
   try {
     await launchUrl(dove, mode: LaunchMode.externalApplication);
   } catch (_) {

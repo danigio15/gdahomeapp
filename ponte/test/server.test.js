@@ -87,15 +87,25 @@ async function casaFinta() {
   };
 }
 
+/* Una porta di questa macchina dove non ascolta nessuno: chi ci bussa si
+ * sente dire di no subito, e niente esce di qui. */
+const QUADRO_CHIUSO = "http://127.0.0.1:9";
+
 async function banco({ quadro = null, installatore = false, chiaveDelCruscotto = "" } = {}) {
   const cartella = mkdtempSync(join(tmpdir(), "ponte-server-"));
   const ha = await casaFinta();
   const primaCasa = process.env.PONTE_CASA;
   const primoSegno = process.env.SUPERVISOR_TOKEN;
   const primoSupervisor = process.env.PONTE_SUPERVISOR;
+  const primoQuadro = process.env.PONTE_QUADRO_DOVE;
   process.env.PONTE_CASA = ha.indirizzo;
   process.env.PONTE_SUPERVISOR = ha.indirizzo;
   process.env.SUPERVISOR_TOKEN = SEGNO_DEL_SUPERVISOR;
+  /* Con la chiave delle licenze nel codice la casa bussa al quadro appena
+   * si accende: nelle prove bussa qui, a una porta chiusa di questa
+   * macchina, e mai al quadro vero. Chi prova il quadro ne accende uno
+   * finto e lo dice lui (`unQuadroFinto`). */
+  if (primoQuadro === undefined) process.env.PONTE_QUADRO_DOVE = QUADRO_CHIUSO;
 
   const avviato = await alzaIlPonte({
     cartella,
@@ -131,6 +141,8 @@ async function banco({ quadro = null, installatore = false, chiaveDelCruscotto =
       else process.env.SUPERVISOR_TOKEN = primoSegno;
       if (primoSupervisor === undefined) delete process.env.PONTE_SUPERVISOR;
       else process.env.PONTE_SUPERVISOR = primoSupervisor;
+      if (primoQuadro === undefined) delete process.env.PONTE_QUADRO_DOVE;
+      else process.env.PONTE_QUADRO_DOVE = primoQuadro;
     },
   };
 }
@@ -710,6 +722,10 @@ async function unQuadroFinto(
   return {
     dove,
     viste,
+    /* Le domande del cruscotto. Con la chiave delle licenze nel codice la casa
+     * chiede anche i suoi gettoni (`/v1/licenze/casa`): sono affare suo, e
+     * qui non si contano. */
+    delCruscotto: () => viste.filter((una) => una.via.startsWith("/console/")),
     async spegni() {
       await new Promise((ok) => quadro.close(ok));
       if (prima === undefined) delete process.env.PONTE_QUADRO_DOVE;
@@ -734,7 +750,7 @@ test("il tasto del cruscotto riceve un biglietto chiesto con la chiave delle opz
     assert.equal(detto.dove, `${q.dove}/console/?biglietto=${"b".repeat(32)}`);
     assert.deepEqual(Object.keys(detto), ["dove"]);
     /* La chiave e' andata al quadro, con la sua via, e alla pagina no. */
-    assert.deepEqual(q.viste, [
+    assert.deepEqual(q.delCruscotto(), [
       { via: "/console/biglietto", metodo: "POST", chiave: "la-chiave-del-cruscotto-di-rossi" },
     ]);
     assert.ok(!JSON.stringify(detto).includes("la-chiave-del-cruscotto-di-rossi"));
@@ -756,7 +772,7 @@ test("senza cruscotto, o con un quadro che dice di no, il biglietto non c'e' —
       body: "{}",
     });
     assert.equal(risposta.status, 404);
-    assert.deepEqual(q.viste, [], "senza cruscotto il quadro non si disturba nemmeno");
+    assert.deepEqual(q.delCruscotto(), [], "senza cruscotto il quadro non si disturba nemmeno");
   } finally {
     await senza.spegni();
   }

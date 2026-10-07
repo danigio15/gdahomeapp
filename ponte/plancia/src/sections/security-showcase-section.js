@@ -55,6 +55,7 @@ import {
 } from "../core/le-telecamere-si-vedono.js";
 import { CHIAVE_PRESENZA, contoDellaPresenza, presenzaDiCasa } from "../core/presenza-in-casa.js";
 import { CHIAVE_VARCHI, contoDeiVarchi, varchiDiCasa } from "../core/varchi-di-casa.js";
+import { iDispositiviRicordati } from "../core/i-dispositivi-di-home-assistant.js";
 import {
   CHIAVE_ANTIFURTO_SU_MISURA,
   chiamataDelModo,
@@ -82,6 +83,7 @@ import {
   stanzaDiHomeAssistant,
   t,
   writeJsonIfChanged,
+  senzaCadere,
 } from "./shared.js";
 import { disegnoDelCatalogo } from "../core/catalogo-disegni.js";
 import { normalizePeople } from "../core/person-model.js";
@@ -90,6 +92,7 @@ import {
   telecamereVisibili,
 } from "../core/telecamere-riservate.js";
 import { iconGlyphMarkup } from "./icon-engine-section.js";
+import { segnoHtml } from "../core/segni-del-catalogo.js";
 
 const KEY = "__DASHBOARDMODERN_SECURITY_SHOWCASE__";
 const STYLE_ID = "dm-security-showcase-style";
@@ -443,6 +446,11 @@ function righeDeiVarchi() {
     readJson(CHIAVE_VARCHI, {}),
     readJson("cd_stati_invertiti", []),
     (entity) => clean(allStates()?.[entity]?.attributes?.friendly_name),
+    null,
+    /* L'esclusione trovata sulla stessa zona della centrale (#136): la stessa
+     * che vede la pagina Varchi, o qui si direbbe sorvegliata una finestra che
+     * di la' e' esclusa. */
+    iDispositiviRicordati().di,
   );
 }
 
@@ -464,7 +472,16 @@ function pastigliaDellaZona(riga) {
  * che serve a questa fila.
  *
  * La parola resta quella dell'infisso: esclusa o no, aperta e' aperta. La
- * differenza la fa il tratteggio, la stessa che usa la carta di la'. */
+ * differenza la fanno il tratteggio, la stessa che usa la carta di la', e il
+ * lucchetto aperto del catalogo accanto al nome, che si legge anche da chi il
+ * tratteggio non lo nota.
+ *
+ * Il lucchetto sta qui, e solo qui (1.9.2). Nella 1.9.0 era finito nella
+ * pastiglia della ZONA, che `escluso` non ce l'ha: in una casa con le zone
+ * scritte sulla centrale la fila si fermava con un ReferenceError, e siccome
+ * questa pagina si disegna mentre il modulo si carica, con lei cadeva tutta
+ * la parte a moduli della plancia. Una zona della Presenza non si esclude:
+ * si escludono gli ingressi. */
 function pastigliaDellIngresso(riga) {
   const come = riga.stato === "aperto" ? "aperto" : riga.stato === "chiuso" ? "chiuso" : "muto";
   const escluso = riga.escluso === "escluso";
@@ -472,10 +489,12 @@ function pastigliaDellIngresso(riga) {
     ? `${riga.entity} · ${t("Esclusione dall'antifurto", "Alarm bypass")}`
     : riga.entity;
   return `<span class="dm-sec-zona" data-stato="${esc(come)}" data-escluso="${escluso}" title="${esc(titolo)}">
-    <i aria-hidden="true">${disegnoDiCasa(riga.glifo, { misura: 20, ripiego: "door" })}</i><b>${esc(riga.name)}</b></span>`;
+    <i aria-hidden="true">${disegnoDiCasa(riga.glifo, { misura: 20, ripiego: "door" })}</i><b>${esc(riga.name)}</b>${
+      escluso ? `<em class="dm-sec-zona-esclusa">${segnoHtml("unlock")}</em>` : ""
+    }</span>`;
 }
 
-function riquadroDelleZone(zone, ingressi, labels) {
+export function riquadroDelleZone(zone, ingressi, labels) {
   const conto = contoDellaPresenza(zone);
   const varchi = contoDeiVarchi(ingressi);
   const fila = (titolo, sommario, pastiglie) =>
@@ -767,7 +786,7 @@ function skeletonMarkup(labels) {
       <span class="dm-sec-orb" aria-hidden="true">
         <span class="dm-sec-orb-track"></span>
         <span class="dm-sec-orb-sweep"></span>
-        <span class="dm-sec-orb-core"><span id="alarm-icon-new">🛡️</span></span>
+        <span class="dm-sec-orb-core"><span id="alarm-icon-new">${segnoHtml("security")}</span></span>
         <span class="dm-sec-beacon" id="alarm-status-dot"></span>
       </span>
       <div class="dm-sec-readout-copy">
@@ -1495,6 +1514,7 @@ function securityCss() {
    nella pagina Varchi. Sopra il colore dello stato, non al posto suo: com'e' la
    finestra e se la centrale la guarda sono due cose, e si leggono insieme. */
 .dm-sec-zona[data-escluso="true"]{border-style:dashed;border-color:#f59e0b}
+.dm-sec-zona-esclusa{display:inline-flex;align-items:center;font-style:normal;color:#b45309}
 .dm-sec-area{
   flex:1 1 140px;display:flex;flex-direction:column;gap:2px;align-items:flex-start;
   padding:9px 13px;border-radius:14px;font:inherit;text-align:left;cursor:pointer;
@@ -1777,5 +1797,5 @@ function securityCss() {
 if (doc?.readyState === "loading") {
   doc.addEventListener("DOMContentLoaded", installSecurityShowcaseSection, { once: true });
 } else {
-  installSecurityShowcaseSection();
+  senzaCadere(installSecurityShowcaseSection);
 }

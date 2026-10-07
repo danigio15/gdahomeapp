@@ -220,6 +220,11 @@ class IndirizzoDelCentralino {
   /// `aggiornamento_obbligatorio.dart`.
   Uri get versioni => _via(sicuro ? 'https' : 'http', '/versioni');
 
+  /// Dove si consegna la ricevuta di chi compra fuori casa: il centralino la
+  /// gira alla casa (`licenza/ricevuta_da_fuori.dart`).
+  Uri ricevuta(String idDellaCasa) =>
+      _via(sicuro ? 'https' : 'http', '/licenza/$idDellaCasa');
+
   Uri _via(String schema, String percorso, {Map<String, String>? con}) =>
       porta == null
       ? Uri(scheme: schema, host: casa, path: percorso, queryParameters: con)

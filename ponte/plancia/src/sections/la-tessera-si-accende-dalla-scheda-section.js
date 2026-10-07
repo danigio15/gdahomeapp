@@ -43,6 +43,7 @@ import {
   tieniIlBloccoNellaScheda,
   writeJsonIfChanged,
 } from "./shared.js";
+import { segnoHtml } from "../core/segni-del-catalogo.js";
 
 const KEY = "__DASHBOARDMODERN_TESSERA_DALLA_SCHEDA__";
 const STYLE_ID = "dm-tessera-scheda-style";
@@ -83,7 +84,7 @@ function salva(mostra) {
 
 function markup(acceso) {
   return `<label class="dm-tessc-riga">
-    <span class="dm-tessc-ic" aria-hidden="true">${oggettoWidget(TESSERA, "🖥️", "tessc-minipc")}</span>
+    <span class="dm-tessc-ic" aria-hidden="true">${oggettoWidget(TESSERA, "", "tessc-minipc") || segnoHtml("computer")}</span>
     <span class="dm-tessc-testo">
       <b>${esc(t("Si vede in Home", "Shown on Home"))}</b>
       <small>${esc(
