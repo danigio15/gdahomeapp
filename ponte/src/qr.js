@@ -42,6 +42,8 @@
  * codice che non gira mai — cioe' codice che non si accorge di essere rotto.
  */
 
+import { deflateSync } from "node:zlib";
+
 /* Da `rs_blocks(versione, M)`: per ogni blocco, [codeword totali, di dati]. */
 const BLOCCHI = {
   1: [[26, 16]],
@@ -681,4 +683,80 @@ export function qrInSvg(testo, { bordo = 4, titolo = "Codice di abbinamento" } =
     `<path d="${pezzi.join("")}" fill="#000"/>`,
     "</svg>",
   ].join("");
+}
+
+/* ─── Lo stesso, in PNG ─────────────────────────────────────────────────────
+ *
+ * Per chi lo deve **allegare**: le note per chi rivede l'app su App Store
+ * Connect, una mail, un documento. Un SVG non lo prende chiunque; un PNG si'.
+ *
+ * Scritto a mano come il resto, e per la stessa ragione: il formato e' tre
+ * pezzi — la testata, i pixel compressi, la fine — ognuno con la sua somma di
+ * controllo, e la compressione la fa `node:zlib`, che c'e' gia'. Grigio a otto
+ * bit, un byte per pixel: e' il modo piu' semplice di scriverlo, e compresso
+ * pesa pochi chilobyte, perche' un QR e' fatto di file di pixel uguali. */
+
+/* Il CRC-32 dei pezzi del PNG: quello di zlib, col suo polinomio. */
+const TABELLA_DEL_CRC = (() => {
+  const tabella = new Uint32Array(256);
+  for (let n = 0; n < 256; n += 1) {
+    let c = n;
+    for (let k = 0; k < 8; k += 1) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
+    tabella[n] = c >>> 0;
+  }
+  return tabella;
+})();
+
+function crc32(byte) {
+  let c = 0xffffffff;
+  for (const uno of byte) c = TABELLA_DEL_CRC[(c ^ uno) & 0xff] ^ (c >>> 8);
+  return (c ^ 0xffffffff) >>> 0;
+}
+
+/* Un pezzo del PNG: quanto e' lungo, come si chiama, cosa c'e' dentro, e la
+ * somma di controllo di nome e contenuto. */
+function pezzoPng(nome, dentro) {
+  const testa = Buffer.alloc(8);
+  testa.writeUInt32BE(dentro.length, 0);
+  testa.write(nome, 4, "ascii");
+  const coda = Buffer.alloc(4);
+  coda.writeUInt32BE(crc32(Buffer.concat([testa.subarray(4), dentro])), 0);
+  return Buffer.concat([testa, dentro, coda]);
+}
+
+/* `scala` e' quanti pixel per quadretto: dieci fanno un'immagine di sette,
+ * ottocento pixel di lato, che si legge anche stampata. */
+export function qrInPng(testo, { bordo = 4, scala = 10 } = {}) {
+  const quadretti = qr(testo);
+  const moduli = quadretti.length + bordo * 2;
+  const lato = moduli * scala;
+
+  /* Ogni riga comincia col suo filtro: zero, cioe' nessuno. */
+  const righe = Buffer.alloc((lato + 1) * lato, 0xff);
+  for (let y = 0; y < lato; y += 1) {
+    const inizio = y * (lato + 1);
+    righe[inizio] = 0;
+    const i = Math.floor(y / scala) - bordo;
+    if (i < 0 || i >= quadretti.length) continue;
+    for (let x = 0; x < lato; x += 1) {
+      const j = Math.floor(x / scala) - bordo;
+      if (j >= 0 && j < quadretti.length && quadretti[i][j]) righe[inizio + 1 + x] = 0;
+    }
+  }
+
+  const testata = Buffer.alloc(13);
+  testata.writeUInt32BE(lato, 0);
+  testata.writeUInt32BE(lato, 4);
+  testata[8] = 8; /* otto bit per pixel */
+  testata[9] = 0; /* grigio */
+  testata[10] = 0; /* compressione: deflate, l'unica */
+  testata[11] = 0; /* filtri: quelli di serie */
+  testata[12] = 0; /* niente interlacciato */
+
+  return Buffer.concat([
+    Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
+    pezzoPng("IHDR", testata),
+    pezzoPng("IDAT", deflateSync(righe, { level: 9 })),
+    pezzoPng("IEND", Buffer.alloc(0)),
+  ]);
 }

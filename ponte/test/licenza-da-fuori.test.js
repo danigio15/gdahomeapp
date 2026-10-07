@@ -42,7 +42,7 @@ import { Plance } from "../src/plance.js";
 import { Ponte } from "../src/ponte.js";
 import { Portiere } from "../src/portiere.js";
 import { accetta } from "../src/presa.js";
-import { firmaDellaRicevuta, laRicevutaDaFuori } from "../src/ricevuta-da-fuori.js";
+import { firmaDelRegalo, firmaDellaRicevuta, laRicevutaDaFuori } from "../src/ricevuta-da-fuori.js";
 import { costruisciLaConsole } from "../src/server.js";
 import { telefonoCifrato } from "./telefono-cifrato.js";
 import { PUBBLICA_DI_PROVA, unGettone } from "./gettoni-di-prova.js";
@@ -122,8 +122,9 @@ async function catena({ chiaveDelCentralino = PUBBLICA_DI_PROVA } = {}) {
   const identita = new Identita({ cartella: nuovaCartella("identita") });
 
   /* Il quadro finto: risponde il gettone che la prova ha deciso, e una
-   * ricevuta del negozio la prende per buona e fa la casa Premium. */
-  const quadro = { gettoni: {}, ricevute: [] };
+   * ricevuta del negozio la prende per buona e fa la casa Premium. Un codice
+   * regalo lo prende per buono una volta sola, come quello vero. */
+  const quadro = { gettoni: {}, ricevute: [], regali: [] };
   const licenze = new Licenze({
     casa: identita.casa,
     segreto: () => "segreto-della-casa-per-il-quadro-0123456789",
@@ -133,6 +134,14 @@ async function catena({ chiaveDelCentralino = PUBBLICA_DI_PROVA } = {}) {
       if (dove.endsWith("/v1/licenze/negozio")) {
         quadro.ricevute.push(JSON.parse(opzioni.body));
         quadro.gettoni = { gdahome: unGettone({ sog: identita.casa, origine: "negozio" }) };
+      }
+      if (dove.endsWith("/v1/licenze/riscatta")) {
+        const { codice } = JSON.parse(opzioni.body);
+        if (quadro.regali.includes(codice)) {
+          return { ok: false, status: 409, json: async () => ({ errore: "codice-gia-usato" }) };
+        }
+        quadro.regali.push(codice);
+        quadro.gettoni = { gdahome: unGettone({ sog: identita.casa, origine: "regalo" }) };
       }
       return { ok: true, status: 200, json: async () => ({ gettoni: quadro.gettoni }) };
     },
@@ -373,6 +382,99 @@ test("una ricevuta che non ha firmato un telefono della casa non arriva al quadr
     const staccato = await portaLaRicevuta(c, buona);
     assert.equal(staccato.status, 403);
     assert.equal(c.quadro.ricevute.length, 0);
+    assert.equal(c.centralino.ePremium(c.identita.casa), false);
+  } finally {
+    await c.spegni();
+  }
+});
+
+/* Un codice regalo portato da fuori: lo stesso giro, con `regalo` al posto
+ * della ricevuta e la firma sua. */
+function unRegalo(c, { chi, chiave }, regalo = "GDA-ABCD-EFGH-JKMN") {
+  const quando = Date.now();
+  return {
+    v: 1,
+    chi,
+    quando,
+    regalo,
+    firma: firmaDelRegalo({ chiaveDelFilo: chiave, casa: c.identita.casa, chi, quando, regalo }),
+  };
+}
+
+test("chi ha un codice regalo fuori casa: passa dal centralino, la casa diventa Premium, e il telefono entra", async () => {
+  /* «Ho provato a generare un codice ma non funziona»: da fuori, con la casa
+   * Base, il filo non c'e', e il regalo si fermava li'. */
+  const c = await catena();
+  try {
+    const { chiave, dispositivo } = c.dispositivi.abbina({ nome: "Android di chi ha il regalo" });
+    const risposta = await portaLaRicevuta(c, unRegalo(c, { chi: dispositivo.id, chiave }));
+    assert.equal(risposta.status, 200);
+    const detto = await risposta.json();
+    assert.equal(detto.gdahome.attiva, true);
+    assert.equal(detto.gdahome.origine, "regalo");
+    assert.equal(typeof detto.gettoni.gdahome, "string");
+    assert.deepEqual(c.quadro.regali, ["GDA-ABCD-EFGH-JKMN"]);
+    assert.equal(c.quadro.ricevute.length, 0, "non e' una ricevuta");
+    await attendi(() => c.centralino.ePremium(c.identita.casa));
+
+    const dopo = telefonoCifrato(`${c.doveIlCentralino}/telefono/${c.identita.casa}`, {
+      chi: dispositivo.id,
+      chiave,
+    });
+    await dopo.dentro;
+    assert.equal((await dopo.aspetta("auth_required")).type, "auth_required");
+    dopo.chiudi();
+
+    /* Lo stesso codice un'altra volta: il quadro dice che e' gia' usato, e
+     * da fuori si sente dire lo stesso. */
+    const ancora = await portaLaRicevuta(c, unRegalo(c, { chi: dispositivo.id, chiave }));
+    assert.equal(ancora.status, 409);
+    assert.deepEqual(await ancora.json(), { errore: "codice-gia-usato" });
+  } finally {
+    await c.spegni();
+  }
+});
+
+test("un codice regalo che non ha firmato un telefono della casa non arriva al quadro", async () => {
+  const c = await catena();
+  try {
+    const { chiave, dispositivo } = c.dispositivi.abbina({ nome: "un telefono" });
+    /* Firmato con un'altra chiave. */
+    const storto = await portaLaRicevuta(
+      c,
+      unRegalo(c, { chi: dispositivo.id, chiave: "ab".repeat(32) }),
+    );
+    assert.equal(storto.status, 403);
+    assert.deepEqual(await storto.json(), { errore: "firma-sbagliata" });
+    /* Con la firma di una ricevuta: le etichette sono due apposta. */
+    const giusto = unRegalo(c, { chi: dispositivo.id, chiave });
+    const conLaFirmaSbagliata = {
+      ...giusto,
+      firma: firmaDellaRicevuta({
+        chiaveDelFilo: chiave,
+        casa: c.identita.casa,
+        chi: dispositivo.id,
+        quando: giusto.quando,
+        app: "gdahome",
+        piattaforma: "android",
+        prodotto: "gdahome_premium",
+        ricevuta: giusto.regalo,
+      }),
+    };
+    assert.equal((await portaLaRicevuta(c, conLaFirmaSbagliata)).status, 403);
+    /* Vecchio di un'ora: non vale. */
+    const vecchio = { ...giusto, quando: giusto.quando - 60 * 60 * 1000 };
+    vecchio.firma = firmaDelRegalo({
+      chiaveDelFilo: chiave,
+      casa: c.identita.casa,
+      chi: dispositivo.id,
+      quando: vecchio.quando,
+      regalo: vecchio.regalo,
+    });
+    assert.equal((await portaLaRicevuta(c, vecchio)).status, 403);
+    /* Storto: niente codice, o un codice che non e' testo. */
+    assert.equal((await portaLaRicevuta(c, { ...giusto, regalo: 42 })).status, 400);
+    assert.deepEqual(c.quadro.regali, []);
     assert.equal(c.centralino.ePremium(c.identita.casa), false);
   } finally {
     await c.spegni();

@@ -24,8 +24,9 @@ import { laVede, vedeQualcosa } from "./plance.js";
 import { Cucitura } from "./cucitura.js";
 import { eConfigurata } from "./configurazione.js";
 import { conLePremesse, linguaPulita, paginaDellaLingua } from "./premesse.js";
-import { qrInSvg } from "./qr.js";
+import { qrInPng, qrInSvg } from "./qr.js";
 import { impronta } from "./segreti.js";
+import { InUso, TELEFONI_DI_PROVA } from "./casa-di-prova.js";
 
 /* Un corpo piu' grande di cosi' non e' una richiesta della console. */
 const CORPO_MASSIMO = 4 * 1024;
@@ -391,6 +392,9 @@ export function costruisciLaConsole({
   zigbee,
   dispositivi,
   abbinamento,
+  /* La casa di prova (`casa-di-prova.js`): il codice per chi rivede l'app.
+   * Senza, la sua scheda dice che non c'e'. */
+  casaDiProva = null,
   opzioni,
   registro: scritto,
   chiamata,
@@ -483,6 +487,7 @@ export function costruisciLaConsole({
           zigbee,
           dispositivi,
           abbinamento,
+          casaDiProva,
           opzioni,
           registro,
           chiamata,
@@ -893,6 +898,7 @@ async function api({
   zigbee,
   dispositivi,
   abbinamento,
+  casaDiProva = null,
   opzioni,
   registro,
   chiamata,
@@ -1301,6 +1307,11 @@ async function api({
        * no**. */
       assistenza: { console: Boolean(chat?.eLaConsole) },
       abbinamento: abbinamento.stato(),
+      /* La casa di prova, in due parole: se c'e', fino a quando, e quanti
+       * telefoni sono entrati. Il codice no: quello la console lo chiede a
+       * `api/prova` quando lo deve disegnare, come fa con quello di tutti i
+       * giorni. */
+      prova: laProvaInBreve(casaDiProva, dispositivi),
       dispositivi: dispositivi
         .elenco()
         .map((uno) => ({ ...uno, collegati: collegati.get(uno.id) || 0 })),
@@ -1408,6 +1419,120 @@ async function api({
     return;
   }
 
+  /* ─── La casa di prova ──────────────────────────────────────────────────
+   *
+   * Il codice per chi rivede l'app (`casa-di-prova.js`): fino a sette
+   * giorni, per piu' telefoni, per un utente che non amministra. Queste vie
+   * stanno dietro l'autenticazione di Home Assistant, come quelle del codice
+   * di tutti i giorni, e per lo stesso motivo il codice da qui esce: e' il
+   * posto dove lo si deve poter ricopiare. */
+  if (via === "/api/prova" && metodo === "GET") {
+    json(risposta, laProvaPerLaConsole(casaDiProva, dispositivi));
+    return;
+  }
+
+  if (via === "/api/prova" && metodo === "POST") {
+    if (!casaDiProva) {
+      male(risposta, 404, "questo add-on non sa fare la casa di prova");
+      return;
+    }
+    let detto = {};
+    try {
+      detto = await corpoDiJson(richiesta);
+    } catch (_errore) {
+      detto = {};
+    }
+    /* Per chi: un utente di questa casa che **non amministra**, ed e' la
+     * condizione che tiene in piedi tutto il resto. Chi entra col codice di
+     * prova entra come lui: vede le plance che vede lui, e la dogana gli
+     * lascia fare quello che puo' fare lui. Un amministratore — o nessuno,
+     * che per un telefono vuol dire lo stesso — darebbe a uno sconosciuto la
+     * casa intera. Se Home Assistant non sa dire chi amministra, non si fa
+     * niente: «non si sa» non e' un no. */
+    const voluto = String(detto?.utente || "").trim();
+    if (!voluto) {
+      male(risposta, 400, "scegli per chi è la casa di prova");
+      return;
+    }
+    let lui = null;
+    try {
+      lui = (await utenti?.elenco?.())?.find((uno) => uno.id === voluto) ?? null;
+    } catch (_errore) {
+      male(risposta, 503, "Home Assistant non dice chi sono i suoi utenti: riprova fra poco");
+      return;
+    }
+    if (!lui) {
+      male(risposta, 400, "questo utente in Home Assistant non c'è");
+      return;
+    }
+    if (lui.amministratore !== false) {
+      male(risposta, 400, "per la casa di prova serve un utente che non amministra");
+      return;
+    }
+    if (lui.attivo === false) {
+      male(risposta, 400, "questo utente in Home Assistant è disattivato");
+      return;
+    }
+    let prova;
+    try {
+      prova = casaDiProva.nuova({ utente: voluto, giorni: detto?.giorni });
+    } catch (errore) {
+      if (errore instanceof InUso) {
+        male(risposta, 409, errore.message);
+        return;
+      }
+      throw errore;
+    }
+    /* Al centralino l'impronta, come per il codice di tutti i giorni: il
+     * codice li' non arriva mai. */
+    chiamata?.apriLaProva(impronta(prova.codice), prova.scadeIl);
+    registro.info("casa di prova fatta dalla console");
+    json(risposta, laProvaPerLaConsole(casaDiProva, dispositivi));
+    return;
+  }
+
+  /* Revocare: il codice smette di valere, e i telefoni entrati con lui
+   * escono subito — via dall'elenco, e i loro fili chiusi adesso. */
+  if (via === "/api/prova" && metodo === "DELETE") {
+    const cera = casaDiProva?.togli() ?? false;
+    chiamata?.chiudiLaProva();
+    const usciti = dispositivi.viaQuelliDiProva?.({ tutti: true }) ?? [];
+    let fili = 0;
+    for (const id of usciti) fili += ponte?.scollega?.(id) ?? 0;
+    registro.info(`casa di prova revocata: ${usciti.length} telefoni usciti, ${fili} fili chiusi`);
+    json(risposta, { revocata: cera, telefoni: usciti.length });
+    return;
+  }
+
+  /* Il QR della casa di prova: da guardare nella console (SVG) e da
+   * scaricare per le note di chi rivede l'app (PNG, che si allega
+   * dappertutto). Dentro c'e' l'invito, come in quello di tutti i giorni. */
+  if ((via === "/api/prova/qr.svg" || via === "/api/prova/qr.png") && metodo === "GET") {
+    const viva = casaDiProva?.viva();
+    if (!viva) {
+      male(risposta, 404, "non c'è una casa di prova");
+      return;
+    }
+    const dentro = await unInvito(viva.codice, ritorno, chiamata);
+    if (via.endsWith(".png")) {
+      const byte = qrInPng(dentro);
+      risposta.writeHead(200, {
+        "content-type": "image/png",
+        "content-length": byte.length,
+        "content-disposition": 'attachment; filename="gdahome-casa-di-prova.png"',
+        "cache-control": "no-store",
+      });
+      risposta.end(byte);
+      return;
+    }
+    risposta.writeHead(200, {
+      "content-type": "image/svg+xml; charset=utf-8",
+      "cache-control": "no-store",
+    });
+    risposta.end(qrInSvg(dentro, { titolo: "Codice della casa di prova" }));
+    return;
+  }
+
   const telefono = /^\/api\/dispositivi\/([A-Za-z0-9_]+)$/.exec(via);
   if (telefono && metodo === "DELETE") {
     const id = telefono[1];
@@ -1439,6 +1564,33 @@ async function api({
   }
 
   male(risposta, 404, "qui non c'e' niente");
+}
+
+/* La casa di prova per `api/stato`: se c'e', fino a quando, quanti
+ * telefoni. Il codice no. */
+function laProvaInBreve(casaDiProva, dispositivi) {
+  const viva = casaDiProva?.viva?.() ?? null;
+  if (!viva) return { attiva: false };
+  return {
+    attiva: true,
+    scadeIl: viva.scadeIl,
+    telefoni: dispositivi?.quantiDiProva?.() ?? 0,
+  };
+}
+
+/* La casa di prova per la sua scheda: tutto, codice compreso. */
+function laProvaPerLaConsole(casaDiProva, dispositivi) {
+  const viva = casaDiProva?.viva?.() ?? null;
+  if (!viva) return { attiva: false };
+  return {
+    attiva: true,
+    codice: viva.codice,
+    natoIl: viva.natoIl,
+    scadeIl: viva.scadeIl,
+    utente: viva.utente,
+    telefoni: dispositivi?.quantiDiProva?.() ?? 0,
+    telefoniMassimi: TELEFONI_DI_PROVA,
+  };
 }
 
 /* Quello che va dentro il QR code: il codice, e come si arriva a

@@ -1,3 +1,3 @@
-Arriva gdahome Premium. Si compra nell'app, sull'iPhone e su Android, con l'abbonamento mensile o annuale, e la prima volta i primi 14 giorni sono gratis. Vale per tutta la casa: per tutti i telefoni abbinati e per il browser. Base resta gratis, con una casa, la plancia principale e l'accesso dalla rete di casa. Le icone tornano quelle di prima, meteo compreso.
+Il codice regalo di gdahome Premium si riscatta anche fuori casa, senza essere sul Wi-Fi di casa. Arriva anche la casa di prova: un codice che vale fino a 7 giorni per far provare l'app a qualcuno, che entra come un utente senza amministrazione.
 
-Aggiorna gdahome in Home Assistant alla 1.10.0: è l'add-on che tiene la licenza della casa.
+Aggiorna gdahome in Home Assistant alla 1.10.1: le due novità passano dall'add-on.

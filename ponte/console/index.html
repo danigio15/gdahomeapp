@@ -393,6 +393,102 @@
         </div>
       </div>
 
+      <!-- ⑧ La casa di prova: il codice per chi rivede l'app — Apple, prima
+           di pubblicarla — che vale fino a sette giorni e per più telefoni,
+           entra come un utente che non amministra, e porta via con sé i
+           telefoni entrati quando scade o si revoca. Il perché sta in
+           `src/casa-di-prova.js`. Due facce: prima del codice le due scelte
+           e il tasto; dopo, il QR, le lettere e la revoca. -->
+      <section class="scheda" id="scheda-prova">
+        <div class="testa-di-scheda">
+          <h2>
+            <svg class="ic" aria-hidden="true"><use href="#ic-stella" /></svg
+            ><span data-en="Test home">Casa di prova</span>
+          </h2>
+          <span class="conta" id="prova-conta" data-en="for whoever reviews the app"
+            >per chi rivede l'app</span
+          >
+        </div>
+        <div id="prova-da-fare">
+          <p
+            class="minuta"
+            data-en="Before publishing the app, Apple tries it with a real home, sometimes for a few days. Here you make a code that works &lt;b&gt;for up to 7 days&lt;/b&gt; and &lt;b&gt;for more than one phone&lt;/b&gt;: you put it in the review notes, and whoever uses it comes in as the user you pick below. When the review is over you revoke it, and the phones that came in with it leave."
+          >
+            Prima di pubblicare l'app, Apple la prova con una casa vera, anche per qualche giorno.
+            Qui fai un codice che vale <b>fino a 7 giorni</b> e <b>per più telefoni</b>: lo metti
+            nelle note per la revisione, e chi lo usa entra come l'utente che scegli qui sotto.
+            Finita la revisione lo revochi, e i telefoni entrati con lui escono.
+          </p>
+          <div class="riga-di-tasti">
+            <label class="etichetta" for="prova-per-chi" data-en="Who it's for">Per chi è</label>
+            <select id="prova-per-chi" class="scelta"></select>
+          </div>
+          <div class="riga-di-tasti">
+            <label class="etichetta" for="prova-quanto" data-en="How long">Quanto dura</label>
+            <select id="prova-quanto" class="scelta">
+              <option value="7" data-en="7 days">7 giorni</option>
+              <option value="3" data-en="3 days">3 giorni</option>
+              <option value="1" data-en="1 day">1 giorno</option>
+            </select>
+          </div>
+          <div class="bottoni staccati">
+            <button id="prova-fai" type="button" data-en="Make the test code">
+              Fai il codice di prova
+            </button>
+          </div>
+          <p
+            class="minuta"
+            id="prova-chi-scegliere"
+            data-en="Pick a Home Assistant user who is not an administrator: whoever reviews the app will see only what that user sees."
+          >
+            Scegli un utente di Home Assistant che non amministra: chi rivede l'app vedrà solo
+            quello che vede lui.
+          </p>
+        </div>
+        <div class="abbinamento" id="prova-fatta" hidden>
+          <div class="qr-suo">
+            <img
+              id="prova-qr"
+              class="qr"
+              alt="Codice della casa di prova"
+              data-en-alt="Test home code"
+            />
+            <p class="scadenza" id="prova-scadenza"></p>
+          </div>
+          <div class="parole">
+            <p
+              class="minuta"
+              data-en="In the review notes put the code, or the downloaded QR. In the app it is typed in &#8220;Enter the code&#8221;."
+            >
+              Nelle note per la revisione metti il codice, o il QR scaricato. Nell'app si scrive in
+              «Inserisci il codice».
+            </p>
+            <p class="codice" id="prova-codice"></p>
+            <div class="bottoni staccati">
+              <a
+                class="bottone"
+                id="prova-scarica"
+                href="api/prova/qr.png"
+                download="gdahome-casa-di-prova.png"
+                data-en="Download the QR"
+                >Scarica il QR</a
+              >
+              <button id="prova-copia" type="button" class="tenue" data-en="Copy the code">
+                Copia il codice
+              </button>
+            </div>
+            <p class="minuta" id="prova-chi"></p>
+            <div class="bottoni staccati">
+              <button id="prova-revoca" type="button" class="toglie" data-en="Revoke now">
+                Revoca adesso
+              </button>
+            </div>
+            <p class="minuta" id="prova-revoca-spiega"></p>
+          </div>
+        </div>
+        <p class="avviso" id="avviso-prova" hidden></p>
+      </section>
+
       <!-- ⑥ Il quadro di chi ha fatto l'impianto.
            Si vede **solo** dove quella casella e' piena, cioe' quasi mai: una
            casa che nessuno ha installato per mestiere non ha nessun motivo di

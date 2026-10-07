@@ -371,6 +371,12 @@ class GestoreLicenza extends ChangeNotifier {
     await conosci(archivio.tutte);
   }
 
+  /// La frase per un no detto da fuori, cioe' portato dal centralino
+  /// (`ricevuta_da_fuori.dart`): lo stato HTTP della casa e il suo codice,
+  /// detti come li dice il filo.
+  static String spiegaIlNo(int stato, String codice) =>
+      _spiega(ComandoRifiutato('$stato $codice', codice: codice));
+
   static String _spiega(ErroreDelPonte errore) {
     final codice = errore is ComandoRifiutato ? (errore.codice ?? '') : '';
     final tutto = '$codice ${errore.spiegazione}'.toLowerCase();

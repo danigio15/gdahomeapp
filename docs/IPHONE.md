@@ -124,9 +124,12 @@ revisione. La prima volta servono:
   dell'app, niente collegato a un account, **niente tracciamento**;
 - **la classificazione per età** (il questionario: tutte «no»);
 - **per la revisione**: gdahome senza una casa non mostra niente. Nelle note
-  per chi rivede l'app va scritto come abbinarla a una casa di prova (un
-  codice di abbinamento valido per qualche giorno, o un video), altrimenti la
-  risposta è la regola 2.1, «non si riesce a provare l'app».
+  per chi rivede l'app va scritto come abbinarla a una casa di prova,
+  altrimenti la risposta è la regola 2.1, «non si riesce a provare l'app».
+  Il codice lo fa la scheda «Casa di prova» della console dell'add-on (dalla
+  1.10.1): vale fino a 7 giorni, per più telefoni, per un utente che non
+  amministra. I passi e le note da incollare sono in
+  [`app/negozio/app-store.md`](../app/negozio/app-store.md).
 
 Le «Novità» di ogni versione stanno in `app/negozio/it-IT.txt` e `en-US.txt`,
 per il Play Store; per l'App Store, per ora, si incollano a mano nella scheda

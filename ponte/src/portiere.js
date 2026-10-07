@@ -56,6 +56,13 @@
  * vivo), `tentativi`, `codice`, `telefoni`. Non si fa dipendere un
  * comportamento dal testo di una frase.
  *
+ * I codici vivi possono essere due: quello di tutti i giorni, e quello della
+ * casa di prova (`casa-di-prova.js`). Il telefono non dice quale ha in mano
+ * — il codice non viaggia, e l'app e' la stessa per tutti e due — e allora
+ * la casa fa una chiave per ognuno e le prova sulla prima busta: quella che
+ * la apre dice quale codice era. Il codice di tutti i giorni si spende; quello
+ * di prova no, e il telefono che entra con lui scade con lui.
+ *
  * ─── Il telefono staccato ─────────────────────────────────────────────────
  *
  * Il `riabbina` in chiaro non lo firma nessuno: chi sta in mezzo lo potrebbe
@@ -76,7 +83,9 @@ import {
   VERSIONE_DELL_ABBINAMENTO,
 } from "./cifra.js";
 import { CodiceSbagliato, TroppiTentativi } from "./abbinamento.js";
+import { TELEFONI_DI_PROVA } from "./casa-di-prova.js";
 import { TroppiDispositivi } from "./dispositivi.js";
+import { impronta, stessoSegreto } from "./segreti.js";
 
 const CHIUSA_PER_REGOLA = 1008;
 
@@ -140,7 +149,11 @@ export class Portiere {
     /* La versione minima dell'app (`versione-minima.js`). Di serie nessuna:
      * entrano tutti, come prima. */
     versioneMinima = null,
+    /* Il codice della casa di prova (`casa-di-prova.js`), se c'e'. Di serie
+     * nessuno: si entra solo col codice di tutti i giorni. */
+    casaDiProva = null,
   }) {
+    this.casaDiProva = casaDiProva;
     this.soloInCasa = soloInCasa;
     this.versioneMinima = versioneMinima;
     this.ponte = ponte;
@@ -369,8 +382,15 @@ export class Portiere {
       );
       return;
     }
+    /* I codici vivi: quello di tutti i giorni, e quello della casa di prova.
+     * Uno basta. */
     const vivo = this.abbinamento.vivo();
-    if (!vivo) {
+    const prova = this._laProva();
+    const codici = [
+      ...(vivo ? [{ codice: vivo.codice, prova: false }] : []),
+      ...(prova ? [{ codice: prova.codice, prova: true }] : []),
+    ];
+    if (!codici.length) {
       this._no(presa, "nessun codice di abbinamento e' attivo", { motivo: MOTIVO.nessuno });
       return;
     }
@@ -380,17 +400,21 @@ export class Portiere {
       return;
     }
 
+    /* Una chiave per codice, con la stessa chiave effimera: il `pronto` e'
+     * uno solo, e il telefono ricava la sua dal codice che ha. */
     const mia = coppiaEffimera();
-    let chiaveDiQuestoFilo;
+    let chiavi;
     try {
-      chiaveDiQuestoFilo = chiaveDiSessione({
-        miaPrivata: mia.privata,
-        suaPubblica: detto.mia,
-        delTelefono: Buffer.from(detto.mia, "base64"),
-        dellaCasa: mia.pubblica,
-        apertura,
-        codice: vivo.codice,
-      });
+      chiavi = codici.map(({ codice }) =>
+        chiaveDiSessione({
+          miaPrivata: mia.privata,
+          suaPubblica: detto.mia,
+          delTelefono: Buffer.from(detto.mia, "base64"),
+          dellaCasa: mia.pubblica,
+          apertura,
+          codice,
+        }),
+      );
     } catch (_errore) {
       this._no(presa, "stretta di mano sbagliata");
       return;
@@ -407,7 +431,9 @@ export class Portiere {
     };
     const timer = this._aTempo(presa, "la conferma dell'abbinamento non e' arrivata");
     let sentito = false;
-    const cifrata = new PresaCifrata(presa, chiaveDiQuestoFilo, {
+    const cifrata = new PresaCifrata(presa, chiavi[0], {
+      /* Le chiavi degli altri codici vivi, da provare sulla prima busta. */
+      altre: chiavi.slice(1),
       /* Una busta che non si apre, qui, vuol dire quasi sempre un codice
        * sbagliato: chi l'ha chiusa aveva un altro codice, o nessuno. Si conta
        * come tale, e glielo si dice in chiaro — non c'e' una chiave in
@@ -427,7 +453,14 @@ export class Portiere {
       if (sentito) return;
       sentito = true;
       clearTimeout(timer);
-      this._laConferma(cifrata, dentro, { da, codice: vivo.codice, pubbliche }).catch((errore) => {
+      /* La chiave che ha aperto la busta dice con quale codice e' arrivato. */
+      const usato = codici[cifrata.quale] ?? codici[0];
+      this._laConferma(cifrata, dentro, {
+        da,
+        codice: usato.codice,
+        prova: usato.prova,
+        pubbliche,
+      }).catch((errore) => {
         this.registro.errore(`abbinamento andato storto: ${errore?.message || errore}`);
         cifrata.chiudi(1011, "");
       });
@@ -435,7 +468,7 @@ export class Portiere {
     cifrata.onChiusa = () => clearTimeout(timer);
   }
 
-  async _laConferma(cifrata, testo, { da, codice, pubbliche }) {
+  async _laConferma(cifrata, testo, { da, codice, prova = false, pubbliche }) {
     let detto;
     try {
       detto = JSON.parse(testo);
@@ -461,13 +494,23 @@ export class Portiere {
     }
 
     let perChi = "";
+    let finoA = null;
     try {
-      /* Il codice e' quello con cui si e' stretta la mano, e il telefono ha
-       * appena dimostrato di averlo. `consuma` lo spegne — un codice si usa
-       * una volta — e dice **per chi** era: il telefono si intesta a quello
-       * li', e da quel momento vede le plance che vede lui. Se nel frattempo
-       * la console ne ha fatto un altro, questo non vale piu'. */
-      perChi = this.abbinamento.consuma(codice, { da })?.utente || "";
+      if (prova) {
+        /* Il codice della casa di prova non si spende: vale per piu'
+         * telefoni, fino alla sua scadenza. Il telefono si intesta
+         * all'utente scelto nella console, e scade col codice. */
+        const entra = this._chiEntraDiProva(codice);
+        perChi = entra.utente;
+        finoA = entra.scadeIl;
+      } else {
+        /* Il codice e' quello con cui si e' stretta la mano, e il telefono
+         * ha appena dimostrato di averlo. `consuma` lo spegne — un codice si
+         * usa una volta — e dice **per chi** era: il telefono si intesta a
+         * quello li', e da quel momento vede le plance che vede lui. Se nel
+         * frattempo la console ne ha fatto un altro, questo non vale piu'. */
+        perChi = this.abbinamento.consuma(codice, { da })?.utente || "";
+      }
     } catch (errore) {
       if (errore instanceof TroppiTentativi) {
         cifrata.manda(
@@ -479,6 +522,8 @@ export class Portiere {
         );
       } else if (errore instanceof CodiceSbagliato) {
         cifrata.manda(JSON.stringify({ t: "no", perche: "codice scaduto", motivo: MOTIVO.codice }));
+      } else if (errore instanceof TroppiDispositivi) {
+        cifrata.manda(JSON.stringify({ t: "no", perche: errore.message, motivo: MOTIVO.telefoni }));
       } else {
         cifrata.manda(JSON.stringify({ t: "no", perche: "non ha funzionato" }));
       }
@@ -492,6 +537,7 @@ export class Portiere {
         nome: detto?.nome,
         sistema: detto?.sistema,
         utente: perChi,
+        ...(finoA ? { finoA } : {}),
       });
     } catch (errore) {
       const telefoni = errore instanceof TroppiDispositivi;
@@ -507,8 +553,14 @@ export class Portiere {
     }
 
     const { dispositivo, segno, chiave } = abbinato;
-    this.chiamata?.chiudiLAbbinamento();
-    this.registro.info(`abbinato «${dispositivo.nome}» da ${da}`);
+    /* Il codice di tutti i giorni e' speso, e la sua attesa al centralino si
+     * chiude; quella della casa di prova resta per il prossimo telefono. */
+    if (!prova) this.chiamata?.chiudiLAbbinamento();
+    this.registro.info(
+      prova
+        ? `abbinato «${dispositivo.nome}» da ${da}, col codice della casa di prova`
+        : `abbinato «${dispositivo.nome}» da ${da}`,
+    );
     /* Dove tornare. Chi si e' abbinato inquadrando un QR code non ha
      * battuto nessun indirizzo, e senza questo non saprebbe dove ribussare
      * domani. Se il
@@ -526,6 +578,35 @@ export class Portiere {
       return this.soloInCasa?.() === true;
     } catch (_errore) {
       return false;
+    }
+  }
+
+  /* Chi entra col codice della casa di prova: l'utente e la scadenza.
+   *
+   * Si riguarda adesso, e non alla stretta di mano: in mezzo la console puo'
+   * averlo revocato, o fatto scadere. E ha un tetto suo di telefoni
+   * (`TELEFONI_DI_PROVA`), che non e' quello della casa. */
+  _chiEntraDiProva(codice) {
+    const ancora = this._laProva();
+    if (!ancora || !stessoSegreto(impronta(ancora.codice), impronta(codice))) {
+      throw new CodiceSbagliato("codice scaduto");
+    }
+    if ((this.dispositivi.quantiDiProva?.() ?? 0) >= TELEFONI_DI_PROVA) {
+      throw new TroppiDispositivi(
+        `con il codice di prova sono gia' entrati ${TELEFONI_DI_PROVA} telefoni`,
+      );
+    }
+    return { utente: ancora.utente, scadeIl: ancora.scadeIl };
+  }
+
+  /* Il codice della casa di prova, se ce n'e' uno vivo. Un archivio che non
+   * si legge vuol dire nessuno: l'abbinamento di tutti i giorni non deve
+   * fermarsi per colpa sua. */
+  _laProva() {
+    try {
+      return this.casaDiProva?.viva() ?? null;
+    } catch (_errore) {
+      return null;
     }
   }
 
@@ -547,10 +628,19 @@ export class Portiere {
 export class PresaCifrata {
   /* `onGuasta`: chi vuole sapere di una busta che non si apre prima che il
    * filo si chiuda. Serve all'abbinamento, dove una busta cosi' e' un codice
-   * sbagliato. */
-  constructor(sotto, chiave, { comprime = false, onGuasta = null } = {}) {
+   * sbagliato.
+   *
+   * `altre`: chiavi in piu' da provare sulla **prima** busta, se quella
+   * principale non la apre. Serve ancora all'abbinamento, dove i codici vivi
+   * possono essere due e il telefono non dice quale ha. La chiave che apre la
+   * prima busta resta per tutto il filo, e `quale` dice qual era: 0 la
+   * principale, 1 la prima delle altre, e cosi' via. Dopo la prima busta non
+   * si prova piu' niente: un filo ha una chiave sola. */
+  constructor(sotto, chiave, { comprime = false, onGuasta = null, altre = [] } = {}) {
     this.sotto = sotto;
     this.busta = new Busta(chiave, { io: "casa", comprime });
+    this._altre = altre.map((una) => new Busta(una, { io: "casa", comprime }));
+    this.quale = 0;
     this.viva = true;
     this._pezzi = "";
     /* Finche' non se ne e' aperta una, chi sta dall'altra parte non ha ancora
@@ -613,7 +703,7 @@ export class PresaCifrata {
 
     let dentro;
     try {
-      dentro = this.busta.apri(intero);
+      dentro = this._apri(intero);
     } catch (errore) {
       if (!(errore instanceof BustaGuasta)) throw errore;
       try {
@@ -625,10 +715,35 @@ export class PresaCifrata {
       return;
     }
     this._fidata = true;
+    this._altre = [];
     try {
       this.onMessaggio(dentro);
     } catch (_errore) {
       this.chiudi(1011, "");
+    }
+  }
+
+  /* Apre con la chiave del filo, e — finche' non se n'e' aperta nessuna —
+   * con le altre. Una busta che non si apre si prova con tutte prima di
+   * dirla guasta; una busta fuori ordine e' fuori ordine per tutte. */
+  _apri(intero) {
+    try {
+      return this.busta.apri(intero);
+    } catch (errore) {
+      if (!(errore instanceof BustaGuasta) || this._fidata) throw errore;
+      for (let i = 0; i < this._altre.length; i += 1) {
+        let dentro;
+        try {
+          dentro = this._altre[i].apri(intero);
+        } catch (altro) {
+          if (!(altro instanceof BustaGuasta)) throw altro;
+          continue;
+        }
+        this.busta = this._altre[i];
+        this.quale = i + 1;
+        return dentro;
+      }
+      throw errore;
     }
   }
 
