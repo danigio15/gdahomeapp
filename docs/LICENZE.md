@@ -183,6 +183,21 @@ quel segreto entra):
 **Dal gestore** (sessione della pagina del gestore):
 
 - `GET /gestore/licenze` — tutte le licenze e i codici;
+- `GET /gestore/abbonamenti` — gli abbonamenti comprati nell'app, per la
+  schermata «Abbonamenti»: `{accese, conti, negozi: {ios, android}, prove,
+  elenco}`. `conti` (e cosi' quelli di ogni negozio) e' `{attivi, mensili,
+  annuali, prova, disdetti, rinnovi7, finiti30, prove: {finite, pagate},
+  alMese: {EUR: …}}`: quelli che valgono adesso, divisi per piano; «di cui» in
+  prova gratuita e col rinnovo spento; quelli che si rinnovano entro sette
+  giorni; finiti negli ultimi trenta; le prove gratuite finite e quante sono
+  passate a pagamento; quanto pagano al mese i clienti degli abbonamenti che
+  si rinnovano (IVA compresa, prima della commissione; un annuale conta un
+  dodicesimo). Gli acquisti di prova (TestFlight, tester di Google) stanno in
+  `elenco` con `sandbox: true` e fuori dai conti; `prove` dice quanti sono.
+  Una riga di `elenco`: `{lic, app, sog, piattaforma, prodotto, piano, prezzo,
+  valuta, rinnovo, sandbox, paese, inizio, pagato, vale, stato, prova,
+  fuInProva, pagatoDopoLaProva, finito, aggiornata}`, con `stato` uno fra
+  `prova`, `attivo`, `disdetto` (vale ma non si rinnova), `scaduto`;
 - `POST /gestore/licenze` `{app, casa, mesi|null, nota}` — regalo a una casa;
 - `POST /gestore/codici` `{app, quanti, mesi|null, nota}` — codici regalo;
 - `DELETE /gestore/licenze/:lic` — revoca;
@@ -236,6 +251,18 @@ Controllo delle ricevute: Google Play Developer API
 `GET /inApps/v1/subscriptions/{originalTransactionId}`) con `QUADRO_APPLE_CHIAVE`,
 `QUADRO_APPLE_KEY_ID`, `QUADRO_APPLE_ISSUER`, `QUADRO_APPLE_BUNDLE`. Senza,
 `503`: i regali funzionano lo stesso.
+
+Del negozio il quadro tiene anche com'e' fatto l'abbonamento
+(`negozio.abbonamento`): il piano (Google `offerDetails.basePlanId`, Apple dal
+prodotto), il prezzo che paga il cliente (Google
+`autoRenewingPlan.recurringPrice`, Apple `price` in millesimi; durante la prova
+Apple dice zero e si tiene quello di prima), il rinnovo automatico (Google
+`autoRenewEnabled` o lo stato annullato, Apple `autoRenewStatus` delle
+informazioni di rinnovo), se e' un acquisto di prova (Google `testPurchase`,
+Apple l'ambiente `Sandbox`), da quando e il paese. Una volta al giorno, nel
+giro di ogni ora, il quadro richiede al negozio **ogni** abbonamento, non solo
+quelli vicini alla scadenza: chi disdice si sa il giorno dopo. Niente di
+questo cambia chi e' Premium: lo decide la scadenza.
 
 ## L'add-on
 

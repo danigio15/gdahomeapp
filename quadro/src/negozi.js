@@ -52,6 +52,28 @@
  * nella riga (e, se la fase non c'e', dai tag o dal nome dell'offerta), Apple
  * con `offerType` 1 e `offerDiscountType` «FREE_TRIAL».
  *
+ * ─── Com'e' fatto l'abbonamento ──────────────────────────────────────────
+ *
+ * Per la schermata «Abbonamenti» della Gestione, oltre a fino a quando vale,
+ * il negozio dice com'e' fatto (`abbonamento`, vedi `lAbbonamento`):
+ *
+ *  - il **piano**: Google col piano base della riga (`offerDetails.basePlanId`,
+ *    «mensile» o «annuale»), Apple dal prodotto (`gdahome_premium_mensile`);
+ *  - il **prezzo**, quello che paga il cliente, IVA compresa: Google col
+ *    prezzo del piano che si rinnova (`autoRenewingPlan.recurringPrice`),
+ *    Apple con quello della transazione (`price`, in millesimi). Durante la
+ *    prova Apple dice zero, e zero non e' il prezzo del piano: si lascia vuoto;
+ *  - il **rinnovo automatico**: Google con `autoRenewEnabled` (o lo stato
+ *    «annullato»), Apple con `autoRenewStatus` delle informazioni di rinnovo,
+ *    che arrivano solo con «Get All Subscription Statuses» — sul primo
+ *    acquisto non si sa ancora, e si scopre al primo giro (`licenze.js`);
+ *  - se e' un **acquisto di prova**: Google con `testPurchase`, Apple con
+ *    l'ambiente «Sandbox». Non si contano: sono le prove di chi vende;
+ *  - **da quando** c'e', e il **paese** del negozio.
+ *
+ * Niente di questo decide se la licenza vale: lo decide la scadenza, come
+ * sempre. E' quello che si legge, non quello che si fa.
+ *
  * Senza chiavi, `configurato` dice di no e il server risponde 503: i regali
  * funzionano lo stesso.
  */
@@ -114,6 +136,52 @@ function inProvaSuGoogle(riga) {
 /* Una transazione di Apple e' in prova gratuita: un'offerta introduttiva
  * (`offerType` 1) che non costa niente. */
 const inProvaSuApple = (t) => t?.offerType === 1 && t?.offerDiscountType === "FREE_TRIAL";
+
+/** Il piano di un abbonamento, da come lo chiama il negozio: «mensile»,
+ * «annuale», o la parola del negozio se non e' una delle due. */
+export function ilPianoDetto(detto) {
+  const parola = String(detto ?? "")
+    .trim()
+    .toLowerCase();
+  if (!parola) return "";
+  if (/(^|[_.:-])(mensile|monthly|month|mese|1m|p1m)$/.test(parola) || parola === "mensile")
+    return "mensile";
+  if (/(^|[_.:-])(annuale|annual|yearly|year|anno|12m|1y|p1y)$/.test(parola)) return "annuale";
+  return parola.slice(0, 40);
+}
+
+/* Il prezzo di Google: un `Money`, con le unita' in stringa e i miliardesimi.
+ * `{currencyCode: "EUR", units: "4", nanos: 990000000}` e' 4,99 euro. */
+function ilPrezzoDiGoogle(soldi) {
+  if (!soldi || typeof soldi !== "object") return { prezzo: null, valuta: "" };
+  const valore = Number(soldi.units ?? 0) + Number(soldi.nanos ?? 0) / 1e9;
+  if (!Number.isFinite(valore) || valore <= 0) return { prezzo: null, valuta: "" };
+  return {
+    prezzo: Math.round(valore * 100) / 100,
+    valuta: String(soldi.currencyCode || "").slice(0, 3),
+  };
+}
+
+/** Com'e' fatto un abbonamento, nella forma che tiene il quadro. */
+export function lAbbonamento({
+  piano = "",
+  prezzo = null,
+  valuta = "",
+  rinnovo = null,
+  sandbox = false,
+  inizio = null,
+  paese = "",
+} = {}) {
+  return {
+    piano: ilPianoDetto(piano),
+    prezzo: Number.isFinite(prezzo) && prezzo > 0 ? Math.round(prezzo * 100) / 100 : null,
+    valuta: String(valuta || "").slice(0, 3),
+    rinnovo: typeof rinnovo === "boolean" ? rinnovo : null,
+    sandbox: Boolean(sandbox),
+    inizio: Number.isFinite(inizio) && inizio > 0 ? inizio : null,
+    paese: String(paese || "").slice(0, 3),
+  };
+}
 
 /** Il corpo di una JWS, **senza** verificarla. Chi lo usa sa perche'. */
 export function ilCorpoDi(jws) {
@@ -342,6 +410,8 @@ export class Negozi {
       }
     }
 
+    const piano = ultima?.autoRenewingPlan ?? null;
+    const { prezzo, valuta } = ilPrezzoDiGoogle(piano?.recurringPrice);
     return {
       app,
       prodotto: riga.productId,
@@ -350,6 +420,22 @@ export class Negozi {
       prima: detto.linkedPurchaseToken || null,
       prova: inProvaSuGoogle(ultima),
       ricevuta: { token, prodotto: riga.productId },
+      abbonamento: lAbbonamento({
+        piano: ultima?.offerDetails?.basePlanId || riga?.offerDetails?.basePlanId || "",
+        prezzo,
+        valuta,
+        /* Annullato vuol dire «non si rinnova»: lo dice anche lo stato,
+         * quando la riga non porta il suo `autoRenewEnabled`. */
+        rinnovo:
+          typeof piano?.autoRenewEnabled === "boolean"
+            ? piano.autoRenewEnabled
+            : detto.subscriptionState === "SUBSCRIPTION_STATE_CANCELED"
+              ? false
+              : null,
+        sandbox: Boolean(detto.testPurchase),
+        inizio: Date.parse(detto.startTime) || null,
+        paese: detto.regionCode || "",
+      }),
     };
   }
 
@@ -425,11 +511,29 @@ export class Negozi {
     const t = verificaLaJwsDiApple(sua.signedTransactionInfo, this.apple.radice, this.adesso());
     if (String(t.originalTransactionId) !== originale)
       throw new RicevutaNonValida("ricevuta-sconosciuta");
-    return this._laTransazione(t);
+    /* Il rinnovo automatico sta nelle informazioni di rinnovo, firmate a
+     * parte. Se non ci sono, o non si verificano, non si sa: si dice `null`,
+     * e la licenza vale lo stesso. */
+    let rinnovo = null;
+    if (sua.signedRenewalInfo) {
+      try {
+        const r = verificaLaJwsDiApple(sua.signedRenewalInfo, this.apple.radice, this.adesso());
+        if (
+          String(r.originalTransactionId ?? originale) === originale &&
+          r.autoRenewStatus !== undefined
+        )
+          rinnovo = Number(r.autoRenewStatus) === 1;
+      } catch (errore) {
+        this.registro.attenzione(
+          `apple: le informazioni di rinnovo non si verificano: ${errore?.errore || errore?.message}`,
+        );
+      }
+    }
+    return this._laTransazione(t, { rinnovo });
   }
 
   /** Una transazione di Apple gia' verificata, nella forma di `controlla`. */
-  _laTransazione(t) {
+  _laTransazione(t, { rinnovo = null } = {}) {
     if (t.bundleId !== this.apple.bundle) throw new RicevutaNonValida("ricevuta-di-un-altra-app");
     const app = laAppDel(t.productId);
     if (!app) throw new RicevutaNonValida("prodotto-sconosciuto");
@@ -447,6 +551,18 @@ export class Negozi {
       prima: null,
       prova: inProvaSuApple(t),
       ricevuta: { originale: String(t.originalTransactionId || t.transactionId) },
+      abbonamento: lAbbonamento({
+        /* Il piano Apple sta nel nome del prodotto: `gdahome_premium_mensile`. */
+        piano: t.productId,
+        /* In millesimi della valuta. Durante la prova e' zero: non e' il
+         * prezzo del piano, e `lAbbonamento` lo lascia vuoto. */
+        prezzo: Number.isFinite(t.price) ? t.price / 1000 : null,
+        valuta: t.currency || "",
+        rinnovo,
+        sandbox: t.environment === "Sandbox",
+        inizio: Number(t.originalPurchaseDate) || null,
+        paese: t.storefront || "",
+      }),
     };
   }
 }
