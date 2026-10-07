@@ -30253,7 +30253,7 @@ alN:function alN(){},
 alO:function alO(a){this.a=a},
 alP:function alP(){},
 bnM(a){var s=null,r=t.Hl,q=t.N,p=A.byg(),o=$.at()
-q=new A.Gm("",A.bAP(),p,A.v(q,q),A.v(q,t.ry),A.v(q,t.NP),o)
+q=new A.Gm("nncMs_O8r-wFCWnViI8oN598ee7Ns8JT5G1CFps6rG8",A.bAP(),p,A.v(q,q),A.v(q,t.ry),A.v(q,t.NP),o)
 p=q.jV(q.gpU())
 q.y!==$&&A.b7()
 q.y=new A.cb(p,o)
@@ -32139,7 +32139,7 @@ else i.m(0,"chi",b)
 i.m(0,"apertura",B.dd.gm_().bv(n))
 i.m(0,"mia",B.dd.gm_().bv(m))
 i.m(0,"mucchio",!0)
-i.m(0,"app",1090200)
+i.m(0,"app",11e5)
 m=B.at.la(i,null)
 a.a.gDp().a.B(0,m)
 s=4
@@ -111340,7 +111340,7 @@ q=q.aF(p==null?m.k3:p)}p=t.p
 q=A.cH(A.bd(A.b([k,B.N7,s,B.bK,A.M(r,o,o,o,o,q,B.al,o)],p),B.y,B.d3,B.n))
 r=A.j7(o,o,B.j5,o,o,o,o)
 k=A.nZ(B.a_L,A.M(l===B.T?A.h("Update from the App Store","Aggiorna dall'App Store"):A.h("Update from Google Play","Aggiorna dal Play Store"),o,o,o,o,o,o,o),new A.azQ(this),r)
-s=A.h("This is 1.9.2 (1090200)","Questa \xe8 la 1.9.2 (1090200)")
+s=A.h("This is 1.10.0 (1100000)","Questa \xe8 la 1.10.0 (1100000)")
 r=n.Q
 if(r==null)l=o
 else{l=m.rx
@@ -116753,9 +116753,9 @@ else{l=a5.rx
 l=n.aF(l==null?a5.k3:l)}l=A.M(o,a4,a4,a4,a4,l,a4,a4)
 o=a6.w
 k=A.M(A.h("This app","Questa app"),a4,a4,a4,a4,o,a4,a4)
-j=p.$2(A.h("Version","Versione"),"1.9.2 (1090200)")
+j=p.$2(A.h("Version","Versione"),"1.10.0 (1100000)")
 i=A.h("Package","Pacchetto")
-i=p.$2(i,"79-86ab98e")
+i=p.$2(i,"80-c625331")
 h=A.h("Relay","Centralino")
 g=$.Sg()
 g=g==null?a4:g.a
@@ -117077,7 +117077,7 @@ $S:11}
 A.G6.prototype={
 E(a){var s,r,q=null,p=A.w(a).ax,o=$.Sg(),n=o==null?q:o.a
 if(n==null)n=A.h("no relay","nessun centralino")
-o=this.d?"gdahome 1.9.2 (1090200) \xb7 "+n:"gdahome 1.9.2 (1090200)"
+o=this.d?"gdahome 1.10.0 (1100000) \xb7 "+n:"gdahome 1.10.0 (1100000)"
 s=A.w(a).ok.Q
 if(s==null)s=q
 else{r=p.rx
@@ -117156,7 +117156,7 @@ case 1:return A.m(q,r)}})
 return A.n($async$vy,r)},
 anq(){var s,r,q=null,p=this.a.c,o=t.N
 o=A.v(o,o)
-o.m(0,"app","79-86ab98e")
+o.m(0,"app","80-c625331")
 o.m(0,"sistema","web")
 s=p.cy
 s=s==null?q:s.b
