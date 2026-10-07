@@ -162,13 +162,13 @@ export const LE_ECCEZIONI = Object.freeze([
     file: "docs/LICENZE.md",
     segno: "chiave-ed25519-grezza",
     perche:
-      "la coppia di prova delle licenze, scritta nel documento perche' chi prova ne ha bisogno e non deve inventarsene una. Quella vera nasce con `strumenti/chiave-licenze.mjs` e sta solo sulla macchina del quadro",
+      "la coppia di prova delle licenze, scritta nel documento perche' chi prova ne ha bisogno e non deve inventarsene una. Quella vera nasce sulla macchina del quadro (`quadro/le-licenze.mjs chiave`), e la sua privata sta solo li'",
   },
   {
     file: "quadro/test/le-licenze.test.js",
     segno: "chiave-ed25519-grezza",
     perche:
-      "la stessa coppia di prova di `docs/LICENZE.md`: il quadro ci firma i gettoni delle prove, e le prove degli altri pezzi li verificano con la pubblica di prova. Non vale in nessuna casa: la chiave di serie e' vuota, e quella vera nasce con `strumenti/chiave-licenze.mjs`",
+      "la stessa coppia di prova di `docs/LICENZE.md`: il quadro ci firma i gettoni delle prove, e le prove degli altri pezzi li verificano con la pubblica di prova. Non vale in nessuna casa: quella vera e' un'altra, nata sulla macchina del quadro, e `strumenti/chiave-licenze.mjs` rifiuta di scrivere questa",
   },
   {
     file: "quadro/test/le-licenze.test.js",

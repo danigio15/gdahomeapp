@@ -20,4 +20,4 @@
  * La coppia **di prova** del contratto non va mai scritta qui: le prove se la
  * passano da se'.
  */
-export const CHIAVE_PUBBLICA_LICENZE = "";
+export const CHIAVE_PUBBLICA_LICENZE = "nncMs_O8r-wFCWnViI8oN598ee7Ns8JT5G1CFps6rG8";

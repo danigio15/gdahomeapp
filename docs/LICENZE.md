@@ -135,9 +135,11 @@ base64url. Sta, sempre uguale, in:
 - `app/lib/licenza/chiave.dart`
 - in gdanav: `packages/gdanav_app/lib/stato/chiave_licenze.dart`
 
-**Di serie e' vuota**: il controllo delle licenze e' spento. In questa
-modalita' il centralino non limita l'accesso da fuori e lascia passare i
-telefoni, come oggi.
+**Vuota, il controllo delle licenze e' spento**: nessun gettone vale, e il
+centralino non limita l'accesso da fuori e lascia passare i telefoni. Fino
+alla 1.9.2 era vuota dappertutto. **Dalla 1.10.0** nell'add-on e nell'app c'e'
+la pubblica vera, quella della macchina del quadro (il primo passo, qui
+sotto); nel centralino e' ancora vuota, e lo resta fino al secondo.
 
 **La coppia nasce sulla macchina del quadro**, con
 `node /opt/quadro/quadro/le-licenze.mjs chiave`: la privata va in
