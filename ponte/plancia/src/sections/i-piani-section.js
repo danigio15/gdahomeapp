@@ -60,10 +60,12 @@ import {
   installStyle,
   readJson,
   root,
+  scriviSeCambia,
   section,
   t,
   tieniIlBloccoNellaScheda,
   writeJsonIfChanged,
+  senzaCadere,
 } from "./shared.js";
 
 const KEY = "__DASHBOARDMODERN_I_PIANI__";
@@ -404,7 +406,38 @@ export function disegnaIPiani() {
     segnoAperto: state.segnoAperto,
     errore: state.errore,
   });
-  if (pannello.innerHTML !== markup) pannello.innerHTML = markup;
+  /* «Nel momento in cui si prova a mettere il nome del piano non fa scrivere
+   * nulla» (#170).
+   *
+   * Il pannello si ridisegna a ogni clic della scheda (vedi
+   * `tieniIlBloccoNellaScheda`), e si paragonava con `innerHTML`: il browser
+   * lo rende con `data-dm-piano-nome=""` dove il markup dice
+   * `data-dm-piano-nome`, quindi il paragone non tornava mai e ogni clic
+   * riscriveva tutto. Anche il clic dentro la casella del piano nuovo: quella
+   * appena cliccata spariva, al suo posto ne nasceva una senza cursore, e i
+   * tasti non andavano da nessuna parte. Si paragona con quello che si è
+   * scritto, come fanno le altre sezioni.
+   *
+   * E quando il pannello si rifà davvero — un avviso che compare, un piano
+   * rinominato — quello che uno stava scrivendo resta, e resta il cursore: un
+   * nome già preso si corregge, non si riscrive da capo. */
+  const primaDi = pannello.querySelector("[data-dm-piano-nome]");
+  const bozza = primaDi?.value || "";
+  const scrivendo = Boolean(primaDi) && doc.activeElement === primaDi;
+  const cursore = scrivendo ? [primaDi.selectionStart, primaDi.selectionEnd] : null;
+  const rifatto = scriviSeCambia(pannello, markup);
+  if (rifatto && (bozza || scrivendo)) {
+    const campo = pannello.querySelector("[data-dm-piano-nome]");
+    if (campo) {
+      campo.value = bozza;
+      if (scrivendo) {
+        campo.focus();
+        try {
+          campo.setSelectionRange(...cursore);
+        } catch (_errore) {}
+      }
+    }
+  }
   /* Sempre subito dopo la riga che spiega la scheda: il piano e' il
    * contenitore, la stanza e' quello che ci va dentro. */
   const intro = corpo.querySelector(".ed-intro");
@@ -414,7 +447,10 @@ export function disegnaIPiani() {
   intitolaIGruppi(corpo, stanze, piani, ripetuti);
   togliIlVecchioElenco(corpo);
 
-  if (state.rinomina) {
+  /* La casella della rinomina prende il cursore quando si apre, non a ogni
+   * clic: altrimenti un clic in qualunque altra casella della scheda glielo
+   * riportava qui. */
+  if (rifatto && state.rinomina) {
     const campo = pannello.querySelector("[data-dm-piano-nuovo-nome]");
     if (campo && doc.activeElement !== campo) {
       campo.focus();
@@ -618,4 +654,4 @@ export function installIPianiSection() {
 
 if (doc?.readyState === "loading")
   doc.addEventListener("DOMContentLoaded", installIPianiSection, { once: true });
-else installIPianiSection();
+else senzaCadere(installIPianiSection);

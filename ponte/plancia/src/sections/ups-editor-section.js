@@ -39,6 +39,7 @@ import {
   t,
   wrapFunction,
   writeJsonIfChanged,
+  senzaCadere,
 } from "./shared.js";
 
 const KEY = "__DASHBOARDMODERN_UPS_EDITOR__";
@@ -351,4 +352,4 @@ export function installUpsEditor() {
   return true;
 }
 
-installUpsEditor();
+senzaCadere(installUpsEditor);

@@ -63,6 +63,6 @@ test("la scheda rispetta i contratti dell'editor", async () => {
   assert.doesNotMatch(source, /setInterval\s*\(|MutationObserver/);
   assert.match(source, /data-backup-confirm/);
   const runtime = await readFile(new URL("../src/sections/section-runtime.js", import.meta.url), "utf8");
-  assert.match(runtime, /installBackupEditorSection\(\)/);
+  assert.match(runtime, /senzaCadere\(installBackupEditorSection\);/);
   assert.match(runtime, /"backup-editor"/);
 });

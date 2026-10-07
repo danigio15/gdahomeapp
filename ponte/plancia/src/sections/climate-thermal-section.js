@@ -75,6 +75,7 @@ import {
   activeLocale,
   allStates,
   clean,
+  climaAccesoDaiWatt,
   doc,
   english,
   esc,
@@ -1600,7 +1601,9 @@ function disegnoDelModo(freddo) {
 function toccoCaldoTermostato(entity) {
   const stato = allStates()?.[entity] || null;
   root.navigator?.vibrate?.(15);
-  if (stato && !climateIsOff(stato)) {
+  /* Acceso o spento come lo mostra il tasto: con la presa e la soglia lo
+   * dicono i watt (#490), non il termostato che del telecomando non sa niente. */
+  if (climaAccesoDaiWatt(entity) ?? (Boolean(stato) && !climateIsOff(stato))) {
     commutaClima(entity, false, "caldo");
   } else {
     let passi = null;
@@ -1625,7 +1628,10 @@ function toccoCaldoTermostato(entity) {
 function tastoRapido(unita, states) {
   const stato = states?.[unita.entity];
   const grezzo = clean(stato?.state).toLowerCase();
-  const acceso = Boolean(grezzo) && !["off", "unavailable", "unknown"].includes(grezzo);
+  const perLEntita = Boolean(grezzo) && !["off", "unavailable", "unknown"].includes(grezzo);
+  /* Con la presa e la soglia l'acceso lo dicono i watt, come sulla pagina
+   * Clima (#490): acceso dal telecomando, per Home Assistant è «off». */
+  const acceso = climaAccesoDaiWatt(unita.entity, states) ?? perLEntita;
   const modo = clean(lexicalGlobal("currentClimaMode")).toLowerCase() || "freddo";
   const freddo = modo !== "caldo";
   let gradi = "";
@@ -1640,7 +1646,11 @@ function tastoRapido(unita, states) {
   tasto.className = `ns-clima-btn${acceso ? (freddo ? " on-clima" : " on-heat") : ""}`;
   tasto.setAttribute("data-entity", unita.entity);
   tasto.onclick = () => {
-    if (freddo) root.nsToggleClima?.(unita.entity);
+    /* Il tasto di sempre decide da Home Assistant. Quando i watt dicono
+     * un'altra cosa, il tocco fa quello che il tasto mostra: spegne un clima
+     * acceso dal telecomando, riaccende quello che la presa dà spento. */
+    if (freddo && acceso !== perLEntita) commutaClima(unita.entity, !acceso, "freddo");
+    else if (freddo) root.nsToggleClima?.(unita.entity);
     else if (clean(unita.entity).startsWith("climate.")) toccoCaldoTermostato(unita.entity);
     else root.nsToggleTerm?.(unita.entity);
   };

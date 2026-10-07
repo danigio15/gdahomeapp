@@ -38,6 +38,7 @@ import {
   readJson,
   root,
   t,
+  senzaCadere,
 } from "./shared.js";
 import { laMisuraDallUnita } from "../core/le-unita-della-corrente.js";
 
@@ -690,4 +691,4 @@ export function installUpsSection() {
   return true;
 }
 
-installUpsSection();
+senzaCadere(installUpsSection);

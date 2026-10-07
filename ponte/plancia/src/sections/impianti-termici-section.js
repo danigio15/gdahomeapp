@@ -62,6 +62,7 @@ import {
   t,
   wrapFunction,
   writeJsonIfChanged,
+  senzaCadere,
 } from "./shared.js";
 
 const KEY = "__DASHBOARDMODERN_IMPIANTI_TERMICI__";
@@ -1266,4 +1267,4 @@ export function installImpiantiTermiciSection() {
   return true;
 }
 
-installImpiantiTermiciSection();
+senzaCadere(installImpiantiTermiciSection);

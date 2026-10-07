@@ -1,6 +1,6 @@
 # Privacy di gdahome
 
-Ultimo aggiornamento: 27 settembre 2026.
+Ultimo aggiornamento: 6 ottobre 2026.
 
 gdahome è l'app che apre la plancia di Home Assistant sul telefono. Questa
 pagina dice, in modo chiaro e senza giri di parole, **quali dati ci sono di
@@ -52,9 +52,16 @@ quando la scrivi:
   casa regge), che serve a capire il problema;
 - quello che scrivi nella chat di assistenza.
 
-Vanno a chi mantiene gdahome, per rispondere. Non vanno a nessun altro, non
-vengono usate per profilare niente e non finiscono in nessuna pubblicità. Se
-non scrivi una segnalazione, non parte niente.
+**Le segnalazioni sono pubbliche.** Diventano pagine su GitHub, nella
+repository di gdahome: chiunque può leggerle, comprese le foto, i video e le
+righe su come sta l'app. Per questo non scriverci password, indirizzi o altri
+dati personali, e allega solo foto e video che non ti dispiace far vedere.
+
+**La chat di assistenza non è pubblica.** Non passa da GitHub: la legge solo
+chi mantiene gdahome, per risponderti.
+
+Niente di tutto questo viene usato per profilare o per fare pubblicità. Se non
+scrivi, non parte niente.
 
 ## Il modulo dei contatti sul sito
 
@@ -72,12 +79,17 @@ colleghi il telefono all'auto con Android Auto o CarPlay. Per guidarti usa la
 **posizione del telefono**, anche a schermo spento mentre sei in viaggio, e la
 manda **solo** ai servizi che servono a guidare, senza nome né account:
 
-- i percorsi: Valhalla di OpenStreetMap (`valhalla1.openstreetmap.de`);
+- i percorsi e il traffico: TomTom (`api.tomtom.com`);
 - la ricerca degli indirizzi: Photon (`photon.komoot.io`);
-- la mappa: OpenFreeMap (`tiles.openfreemap.org`), e il traffico da TomTom
-  (`api.tomtom.com`);
-- le colonnine: Open Charge Map (`api.openchargemap.io`); i distributori e i
-  loro prezzi dal Ministero (`carburanti.mise.gov.it`) e da OpenStreetMap;
+- la mappa: OpenFreeMap (`tiles.openfreemap.org`);
+- le colonnine: Open Charge Map (`api.openchargemap.io`) e OpenStreetMap
+  (`overpass-api.de`). Lo stato delle colonnine in tempo reale arriva dalla
+  Piattaforma Unica Nazionale (`api.pun.piattaformaunicanazionale.it`), che
+  riceve solo quali colonnine stai guardando; per chiederlo l'app usa un
+  accesso anonimo ad Amazon Web Services (Cognito), lo stesso del sito
+  pubblico della PUN;
+- i distributori e i loro prezzi: il Ministero (`carburanti.mise.gov.it`) e
+  OpenStreetMap (`overpass-api.de`);
 - le segnalazioni della strada (incidenti, lavori, autovelox) e l'abbinamento
   con Home Assistant passano da `gdanav.gdahome.org`, cifrati.
 
@@ -86,6 +98,14 @@ dell'auto: la lettura resta sul telefono. I comandi rapidi in auto, e la
 fotografia della casa che l'auto mostra, stanno in un file dentro l'app e
 non escono dal telefono: il comando lo esegue l'app, sul filo cifrato di
 sempre.
+
+## Il radar della pioggia
+
+Se nella plancia metti la sezione Radar meteo, la plancia chiede le immagini
+della pioggia a RainViewer (`api.rainviewer.com`) e la mappa sotto a Esri
+(`server.arcgisonline.com`), o al servizio che scegli nella Configurazione.
+Ricevono la zona della mappa che stai guardando, non chi sei. Senza quella
+sezione non parte niente.
 
 ## La fotocamera
 
@@ -105,7 +125,9 @@ gettone firmato, che l'add-on, il centralino e l'app controllano da soli.
 Chi compra Premium dall'app: la ricevuta del negozio (il codice d'acquisto di
 Google Play o l'identificativo della transazione di Apple) passa cifrata dal
 telefono all'add-on e da lì al quadro, che la controlla con Google o Apple.
-Il quadro conserva, per ogni licenza: la casa, da dove arriva (negozio, regalo,
+Se si compra fuori casa con la casa in Base, arriva all'add-on passando dal
+centralino, in HTTPS e firmata dal telefono: il centralino la gira senza
+conservarla. Il quadro conserva, per ogni licenza: la casa, da dove arriva (negozio, regalo,
 installatore), quando scade, se è nella prova gratuita, e l'identificativo
 dell'acquisto (il codice d'acquisto di Google Play o l'identificativo della
 transazione originale di Apple), che gli serve per chiedere a Google o ad
@@ -130,11 +152,12 @@ nemmeno da loro.
 
 Disinstallando l'app, quello che stava sul telefono se ne va con lei. Dalla
 pagina dell'add-on, «Telefoni abbinati → Togli associazione», la credenziale di
-quel telefono smette di valere all'istante. Le segnalazioni già mandate si
-cancellano chiedendolo dalla chat di assistenza.
+quel telefono smette di valere all'istante. Le segnalazioni già mandate, con
+le loro foto e i video, si cancellano chiedendolo dalla chat di assistenza.
 
 ## Chi risponde
 
 gdahome è mantenuta da danigio15 — <https://github.com/danigio15/gdahomeapp>.
 Per qualunque cosa su questa pagina, si apre una segnalazione dall'app o una
-issue sulla repository.
+issue sulla repository. Per una cosa che non vuoi rendere pubblica, scrivi
+nella chat di assistenza o ad assistenza@gdahome.org.

@@ -38,6 +38,7 @@ import {
   readJson,
   root,
   t,
+  senzaCadere,
 } from "./shared.js";
 import { disegnoDelCatalogo } from "../core/catalogo-disegni.js";
 
@@ -977,4 +978,4 @@ export function installAllerte() {
   return true;
 }
 
-installAllerte();
+senzaCadere(installAllerte);

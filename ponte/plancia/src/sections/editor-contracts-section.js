@@ -1,5 +1,5 @@
 import { applianceArtwork } from "../core/appliance-artwork.js";
-import { clean, doc, english, installStyle, onEditorRedraw, root, scriviSeCambia, t, wrapFunction } from "./shared.js";
+import { clean, doc, english, installStyle, onEditorRedraw, root, scriviSeCambia, t, wrapFunction, senzaCadere } from "./shared.js";
 
 root.__DM_20260815C__ = true;
 const KEY = "__DASHBOARDMODERN_EDITOR_CONTRACTS_SECTION__";
@@ -612,5 +612,5 @@ export function installEditorContractsSection() {
 if (doc?.readyState === "loading") {
   doc.addEventListener("DOMContentLoaded", installEditorContractsSection, { once: true });
 } else {
-  installEditorContractsSection();
+  senzaCadere(installEditorContractsSection);
 }

@@ -1,3 +1,1 @@
-Il navigatore conosce le ZTL, ti chiede se hai il permesso e ti propone le strade a risparmio. Su Android Auto e CarPlay c'è il traffico, con le corsie agli svincoli. L'app è più veloce, soprattutto fuori casa.
-
-Aggiorna gdahome in Home Assistant alla 1.9.1: torna la plancia che funziona per tutti, con la configurazione di prima.
+In auto, toccando una colonnina sulla mappa si apre la sua scheda, a pagina intera, invece di un errore. E il tasto con la casa, poi «Dispositivi», non fa più chiudere l'app: le azioni rapide sono dietro il fulmine in alto, accanto a «Casa».

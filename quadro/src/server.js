@@ -67,6 +67,7 @@
  *   DELETE /gestore/installatore/<id>    eliminalo, con tutto quello che e' suo
  *   PATCH  /gestore/installatori/<id>    il suo pacchetto di licenze (anche nome e limite)
  *   GET    /gestore/licenze              tutte le licenze e tutti i codici
+ *   GET    /gestore/abbonamenti          gli abbonamenti dei negozi, coi conti
  *   POST   /gestore/licenze              una licenza in regalo a una casa
  *   DELETE /gestore/licenze/<lic_…>      toglila
  *   POST   /gestore/codici               codici regalo, quanti se ne vuole
@@ -2068,6 +2069,12 @@ export function costruisciIlServer({
 
     if (via === "/licenze" && metodo === "GET") {
       json(risposta, licenze.elenco());
+      return;
+    }
+
+    /* Gli abbonamenti comprati nell'app, per la schermata «Abbonamenti». */
+    if (via === "/abbonamenti" && metodo === "GET") {
+      json(risposta, licenze.abbonamenti());
       return;
     }
 

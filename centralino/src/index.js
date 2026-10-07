@@ -55,6 +55,12 @@ export async function alzaIlCentralino({
    * cosa che `/salute` dice invece di farla scoprire il giorno in cui qualcuno
    * chiede aiuto. */
   chiaveDellaConsole = process.env.CHIAVE_CONSOLE || "",
+  /* La chiave pubblica delle licenze. Di serie quella scritta nel codice
+   * (`chiave-licenze.js`), ed e' l'unica strada in produzione: qui non c'e'
+   * nessuna variabile d'ambiente che la cambi. Si passa solo da chi chiama
+   * questa funzione — le prove dell'app, che accendono il centralino vero e
+   * provano la strada da fuori, non la licenza. */
+  chiaveLicenze = undefined,
   /* Se una linea della chat nasce solo col nome e il segreto di una casa
    * gia' presentata dal filo. Vedi `chat.js`: si accende quando il ponte
    * scrivera' in chat con l'identita' del filo. */
@@ -96,7 +102,11 @@ export async function alzaIlCentralino({
     giorniDiSilenzio,
     ...definiti({ nuovePerIndirizzo: caseNuovePerIndirizzo, nuoveInTutto: caseNuoveInTutto }),
   });
-  const centralino = new Centralino({ case: case_, registro });
+  const centralino = new Centralino({
+    case: case_,
+    registro,
+    ...(chiaveLicenze === undefined ? {} : { chiaveLicenze }),
+  });
   const sportello = new Sportello({
     case: case_,
     cartella,

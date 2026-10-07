@@ -711,6 +711,84 @@ summary:focus-visible {
   color: inherit;
 }
 
+/* ─── La casa di prova ───────────────────────────────────────────────────── */
+
+/* Le due scelte — per chi, e quanto dura — in colonna: l'etichetta ha una
+   larghezza fissa, cosi' le due caselle partono dallo stesso punto. In rem e
+   non in em: l'em dell'etichetta e' quello del suo carattere piccolo, e
+   «QUANTO DURA» ci andava a capo. Sul telefono la casella va sotto
+   l'etichetta, e il nome dell'utente si legge intero. */
+#scheda-prova .riga-di-tasti .etichetta {
+  flex: 0 0 7.5rem;
+  margin: 0;
+  white-space: nowrap;
+}
+
+.scelta {
+  font: inherit;
+  flex: 1 1 16em;
+  min-width: 0;
+  max-width: 28em;
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 1px solid var(--bordo);
+  border-radius: 12px;
+  background: var(--carta);
+  color: inherit;
+}
+
+/* Sul telefono l'etichetta sta sopra e la casella sotto, larga quanto la
+   scheda: «Revisione · senza amministrazione» si legge intero, e non e' un
+   dettaglio — e' la parte che dice che quell'utente non amministra. */
+@media (max-width: 520px) {
+  #scheda-prova .riga-di-tasti {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+  }
+
+  /* In colonna la base fissa dell'etichetta varrebbe in altezza. */
+  #scheda-prova .riga-di-tasti .etichetta,
+  #scheda-prova .scelta {
+    flex: none;
+    max-width: none;
+  }
+}
+
+/* Un gruppo di tasti staccato da quello che gli sta sopra. */
+.bottoni.staccati {
+  margin-top: 12px;
+}
+
+/* Il nome di un telefono di prova e il suo bollino, sulla stessa riga: il
+   nome si accorcia coi puntini se non ci sta, il bollino no. */
+.elenco .nome .riga-del-nome {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.elenco .nome .riga-del-nome strong {
+  min-width: 0;
+}
+
+/* «di prova · fino al 6 ott», accanto al nome di un telefono entrato con la
+   casa di prova: del giallo degli avvisi, perche' e' una cosa a tempo. Col
+   selettore lungo apposta: quello delle righe sotto il nome
+   (`.elenco .nome span`) lo vestirebbe di grigio. */
+.elenco .nome .etichetta-prova {
+  flex: none;
+  padding: 1px 8px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  white-space: nowrap;
+  color: var(--giallo);
+  background: color-mix(in srgb, var(--giallo) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--giallo) 35%, transparent);
+}
+
 .vuoto {
   color: var(--tenue);
   padding: 6px 0;
@@ -1017,6 +1095,37 @@ h2 > .ic {
 
 .faccia.premium .ic {
   color: var(--acceso);
+}
+
+/* La matricola della casa, da copiare per chi regala Premium. Sta sotto le
+   due righe delle app, staccata da una riga, e va a capo dove capita: e' una
+   parola sola di 37 lettere. */
+.matricola {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--bordo);
+}
+
+.etichetta-della-matricola {
+  font-size: 0.82rem;
+  font-weight: 650;
+  color: var(--tenue);
+}
+
+.matricola .riga-di-tasti {
+  margin-top: 6px;
+}
+
+.matricola .codice {
+  flex: 1 1 16em;
+  margin: 0;
+  text-align: left;
+  user-select: all;
+  color: var(--testo);
+}
+
+.matricola .minuta {
+  margin-top: 8px;
 }
 
 #codice-regalo {

@@ -29,6 +29,7 @@ import {
   root,
   t,
   writeJsonIfChanged,
+  senzaCadere,
 } from "./shared.js";
 
 const KEY = "__DASHBOARDMODERN_SECURITY_DOORS_EDITOR__";
@@ -465,4 +466,4 @@ export function installSecurityDoorsEditorSection() {
   ensureDoorsEditor();
 }
 
-installSecurityDoorsEditorSection();
+senzaCadere(installSecurityDoorsEditorSection);

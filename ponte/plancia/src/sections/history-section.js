@@ -26,6 +26,7 @@ import {
   scriviTestoSeCambia,
   section,
   t,
+  senzaCadere,
 } from "./shared.js";
 
 const KEY = "__DASHBOARDMODERN_HISTORY_SECTION__";
@@ -812,4 +813,4 @@ export function installHistorySection() {
 
 if (doc?.readyState === "loading")
   doc.addEventListener("DOMContentLoaded", installHistorySection, { once: true });
-else installHistorySection();
+else senzaCadere(installHistorySection);

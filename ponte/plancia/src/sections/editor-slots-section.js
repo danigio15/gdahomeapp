@@ -36,6 +36,7 @@ import {
   root,
   t,
   wrapFunction,
+  senzaCadere,
 } from "./shared.js";
 
 const KEY = "__DASHBOARDMODERN_EDITOR_SLOTS__";
@@ -1155,5 +1156,5 @@ export function installEditorSlotsSection() {
 if (doc?.readyState === "loading") {
   doc.addEventListener("DOMContentLoaded", installEditorSlotsSection, { once: true });
 } else {
-  installEditorSlotsSection();
+  senzaCadere(installEditorSlotsSection);
 }

@@ -67,6 +67,6 @@ test("ogni tessera rispetta le esclusioni, e chi non sceglie vede tutto", async 
 
 test("il runtime installa la scelta", () => {
   const runtime = leggi("sections/section-runtime.js");
-  assert.match(runtime, /installWidgetEntityChoiceSection\(\)/);
+  assert.match(runtime, /senzaCadere\(installWidgetEntityChoiceSection\);/);
   assert.match(runtime, /"widget-entity-choice"/);
 });

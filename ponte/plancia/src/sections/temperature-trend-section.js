@@ -55,6 +55,7 @@ import {
   section,
   t,
   writeJsonIfChanged,
+  senzaCadere,
 } from "./shared.js";
 
 const KEY = "__DASHBOARDMODERN_TEMPERATURE_TREND__";
@@ -869,4 +870,4 @@ export function installTemperatureTrendSection() {
 
 if (doc?.readyState === "loading")
   doc.addEventListener("DOMContentLoaded", installTemperatureTrendSection, { once: true });
-else installTemperatureTrendSection();
+else senzaCadere(installTemperatureTrendSection);

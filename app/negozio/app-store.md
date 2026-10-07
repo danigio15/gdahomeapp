@@ -53,6 +53,12 @@ home assistant,domotica,casa,luci,clima,tapparelle,telecamere,consumi,carplay,na
 > gdahome Base è gratuita. gdahome Premium (abbonamento mensile o annuale)
 > aggiunge più plance e più case, il collegamento da fuori casa, la
 > configurazione e Zigbee dall'app, e comprende gdanav Premium.
+>
+> L'abbonamento si rinnova da solo e si disdice quando vuoi dalle
+> impostazioni dell'App Store; la prima volta ci sono 14 giorni di prova
+> gratuita. Termini d'uso:
+> https://www.apple.com/legal/internet-services/itunes/dev/stdeula/ ·
+> Privacy: https://gdahome.org/privacy.html
 
 **URL di supporto**: `https://gdahome.org`
 **URL della privacy**: `https://gdahome.org/privacy.html`
@@ -106,6 +112,11 @@ home assistant,smart home,lights,climate,shutters,cameras,energy,carplay,navigat
 > gdahome Base is free. gdahome Premium (monthly or yearly subscription) adds
 > several dashboards and homes, access from away, configuration and Zigbee
 > from the app, and includes gdanav Premium.
+>
+> The subscription renews automatically and can be cancelled any time from
+> your App Store settings; the first time there is a 14-day free trial. Terms
+> of Use: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/ ·
+> Privacy: https://gdahome.org/privacy.html
 
 ## Novità (What's New)
 
@@ -141,12 +152,50 @@ e «Ok Google» con «Ehi Siri».
 
 ## Per la revisione (App Review Information)
 
-> gdahome is a companion app for Home Assistant: without a paired home it only
-> shows the pairing screen. To review it, scan the QR code attached below (or
-> enter the pairing code) — it pairs with a demo home that stays online during
-> the review. CarPlay: gdahome embeds an EV navigator (gdanav) and uses the
-> CarPlay navigation template; home controls are behind a button on the map.
+gdahome senza una casa abbinata mostra solo la schermata dell'abbinamento, e
+chi rivede l'app sta lontano dalla casa e la prova per qualche giorno. Per lui
+c'è la **casa di prova** dell'add-on (dalla 1.10.1): un codice che vale fino a
+7 giorni e per più telefoni, che entra come un utente che non amministra.
 
-Il codice o il QR della casa di prova si allegano nella stessa pagina: va
-generato dalla console dell'add-on di una casa che resti accesa per tutta la
-revisione (qualche giorno).
+### Prima di mandare in revisione
+
+1. In Home Assistant: Impostazioni → Persone → Aggiungi persona, per esempio
+   «Revisione», **senza** «Amministratore» e con l'accesso consentito.
+2. La casa deve avere l'add-on gdahome **1.10.1 o più nuovo**, restare accesa
+   per tutta la revisione, ed essere **Base**: chi rivede deve trovare
+   qualcosa da comprare.
+3. Nella console dell'add-on, scheda «Casa di prova»: per chi è «Revisione»,
+   quanto dura «7 giorni», poi «Fai il codice di prova».
+4. Le lettere vanno nelle note qui sotto, al posto di `XXXX-XXXX-XXXX-XXXX`.
+   Il QR («Scarica il QR», un PNG) si può mettere come allegato.
+5. Finita la revisione: «Revoca adesso». Il codice smette di valere e i
+   telefoni entrati con lui escono subito; alla scadenza succede da solo.
+
+Il link ai Termini d'uso e quello alla privacy vanno anche nei campi della
+scheda (regola 3.1.2).
+
+### Le note (in inglese, si incollano così)
+
+> gdahome is a companion app for Home Assistant: without a paired home it only
+> shows the pairing screen. We set up a demo home that stays online for the
+> whole review.
+>
+> 1. Open the app and tap "Enter the code", then type:
+>    XXXX-XXXX-XXXX-XXXX
+>    (or scan the attached QR code). The code works for 7 days and for more
+>    than one device, so you can use it on iPhone and on iPad.
+> 2. The demo home is on gdahome Base, the free tier: away from the home's own
+>    Wi-Fi it only opens with gdahome Premium, so the app shows the Premium
+>    page. Subscribe with your sandbox account (monthly or yearly, with a
+>    14-day free trial): the home becomes Premium within a few seconds and
+>    opens. Our server verifies the transaction with the App Store Server API.
+> 3. You are now inside the demo home as a user who isn't an administrator:
+>    dashboard, lights, climate, shutters, energy, cameras.
+>
+> gdahome Premium is an auto-renewable subscription that belongs to the paired
+> home: every phone paired with that home gets it. "Restore subscription"
+> moves an existing subscription to the home that is open, after asking. Gift
+> codes are not offered in the iPhone app.
+>
+> CarPlay: gdahome embeds an EV navigator (gdanav) and uses the CarPlay
+> navigation template; home controls are behind a button on the map.

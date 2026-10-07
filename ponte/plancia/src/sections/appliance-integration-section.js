@@ -45,6 +45,7 @@ import {
   section,
   t,
   writeJsonIfChanged,
+  senzaCadere,
 } from "./shared.js";
 
 const KEY = "__DASHBOARDMODERN_APPLIANCE_INTEGRATION__";
@@ -661,5 +662,5 @@ export function installApplianceIntegrationSection() {
 if (doc?.readyState === "loading") {
   doc.addEventListener("DOMContentLoaded", installApplianceIntegrationSection, { once: true });
 } else {
-  installApplianceIntegrationSection();
+  senzaCadere(installApplianceIntegrationSection);
 }

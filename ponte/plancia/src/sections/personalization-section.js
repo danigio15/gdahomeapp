@@ -1,5 +1,5 @@
 import { ACTION_ICON_CATALOG, CAR_BRANDS, ROOM_CATALOG, actionVisual, carBrandVisual, roomVisual } from "../core/personalization-catalog.js";
-import { clean, doc, esc, installStyle, readJson, root, scriviSeCambia, t, wrapFunction, writeJsonIfChanged } from "./shared.js";
+import { clean, doc, esc, installStyle, readJson, root, scriviSeCambia, t, wrapFunction, writeJsonIfChanged, senzaCadere } from "./shared.js";
 import { VEHICLE_KEY_FIELD, stessoModello, tipoMotore } from "../core/vehicle-model.js";
 import { bozzaAperta, editedVehicle, profiles, salvaAuto } from "./ev-section.js";
 
@@ -881,4 +881,4 @@ export function installPersonalizationSection() {
   schedule();
 }
 
-installPersonalizationSection();
+senzaCadere(installPersonalizationSection);

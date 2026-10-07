@@ -9,6 +9,7 @@ import {
   t,
   writeJsonIfChanged,
   wrapFunction,
+  senzaCadere,
 } from "./shared.js";
 import { CASELLA_DI_RETE, CASELLE_VECCHIE } from "./minipc-showcase-section.js";
 
@@ -397,4 +398,4 @@ export function installEditorPolishSection() {
   schedule();
 }
 
-installEditorPolishSection();
+senzaCadere(installEditorPolishSection);

@@ -274,17 +274,29 @@ QUADRO_GESTORE='qualcosa di lungo e a caso' npm run avvia
 | `QUADRO_OSPITI` | le origini che possono tenere il cruscotto in un riquadro e consegnargli la chiave senza chiedere (separate da spazi o virgole, anche `https://*.dominio`). Vuoto: in un riquadro lo mette chiunque, ma una chiave consegnata da un'origine nuova si usa solo dopo un «sì» di chi guarda, che il browser ricorda |
 | `QUADRO_DATI` | dove tiene i suoi file, `./dati` |
 | `QUADRO_REGISTRO` | quanto parla: `debug`, `info`, `attenzione`, `errore` |
-| `QUADRO_LICENZE_CHIAVE` | la chiave **privata** Ed25519 delle licenze (il `d` in base64url), quella che stampa `node strumenti/chiave-licenze.mjs`. Senza, le vie `/v1/licenze/*` rispondono 503 e nessuna casa diventa Premium; gestore e installatori le licenze le vedono lo stesso ([`docs/LICENZE.md`](../docs/LICENZE.md)) |
+| `QUADRO_LICENZE_CHIAVE` | la chiave **privata** Ed25519 delle licenze (il `d` in base64url), quella che scrive `node le-licenze.mjs chiave`. Senza, le vie `/v1/licenze/*` rispondono 503 e nessuna casa diventa Premium; gestore e installatori le licenze le vedono lo stesso ([`docs/LICENZE.md`](../docs/LICENZE.md)) |
 | `QUADRO_GOOGLE_SERVICE_ACCOUNT` | il JSON del service account di Google Play, per controllare gli abbonamenti comprati su Android. `QUADRO_GOOGLE_PACCHETTO` di serie `com.gdahome.gdahome` |
 | `QUADRO_APPLE_CHIAVE`, `QUADRO_APPLE_KEY_ID`, `QUADRO_APPLE_ISSUER`, `QUADRO_APPLE_BUNDLE` | la chiave `.p8` della App Store Server API e i suoi dati, per gli abbonamenti comprati su iPhone. `QUADRO_APPLE_RADICE` sostituisce l'impronta del certificato radice di Apple, da controllare prima del rilascio |
 
 Sulla macchina queste righe stanno in `/etc/quadro/ambiente`. La chiave delle
-licenze e quelle dei negozi ce le mette a mano chi tiene il quadro, e
-`accendi.sh` rilanciato **non le tocca**: riscrive le sue cinque e rimette le
-altre in fondo, uguali. La `.p8` va su una riga sola, fra apici singoli e con
-`\n` al posto degli a capo (`QUADRO_APPLE_CHIAVE='-----BEGIN PRIVATE
-KEY-----\nMIGT…\n-----END PRIVATE KEY-----'`): senza apici systemd si mangia le
-barre, e la chiave non si legge piu'.
+licenze e quelle dei negozi ce le mette chi tiene il quadro, con lo strumento
+che sta accanto a `src/`, da root:
+
+```sh
+cd /opt/quadro/quadro
+node le-licenze.mjs                                   # cosa c'e' e cosa manca
+node le-licenze.mjs chiave                            # la coppia; stampa solo la pubblica
+node le-licenze.mjs google /root/google.json          # il service account di Google Play
+node le-licenze.mjs apple /root/AuthKey_XXXXXXXXXX.p8 XXXXXXXXXX <issuer id>
+systemctl restart quadro
+```
+
+Non stampa mai un segreto, e una chiave delle licenze che c'e' gia' non la
+cambia: ne ridice la pubblica, che e' anche il modo di ritrovarla. Le righe le
+scrive come le vuole systemd: il JSON di Google e la `.p8` su una riga sola,
+fra apici singoli, coi `\n` scritti — senza apici systemd si mangia le barre, e
+la chiave non si legge piu'. `accendi.sh` rilanciato **non le tocca**: riscrive
+le sue cinque e rimette le altre in fondo, uguali.
 
 > **`quadro.gdahome.org` deve risolvere prima di rilasciare l'add-on.** Quel
 > nome sta scritto dentro il ponte (`QUADRO_DI_DIFETTO` in

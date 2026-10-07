@@ -25,6 +25,7 @@ import {
   readJson,
   root,
   t,
+  senzaCadere,
 } from "./shared.js";
 
 const KEY = "__DASHBOARDMODERN_PEOPLE__";
@@ -765,4 +766,4 @@ export function installPeopleSection() {
 
 if (doc?.readyState === "loading")
   doc.addEventListener("DOMContentLoaded", installPeopleSection, { once: true });
-else installPeopleSection();
+else senzaCadere(installPeopleSection);

@@ -299,7 +299,12 @@ class Segnalazioni {
 
   static Segnalazione _una(Object? letto) {
     if (letto is! Map) {
-      throw const ComandoRifiutato('la casa ha risposto una cosa strana');
+      throw ComandoRifiutato(
+        inLingua(
+          it: 'la casa ha risposto una cosa strana',
+          en: 'the home sent back something strange',
+        ),
+      );
     }
     return Segnalazione.leggi(Map<String, dynamic>.from(letto));
   }

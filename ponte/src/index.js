@@ -14,6 +14,7 @@ import { Aggiornamento } from "./aggiornamento.js";
 import { fabbricaIlRapporto, Postino, QUADRO_DI_DIFETTO } from "./rapporto.js";
 import { Segni } from "./segni.js";
 import { Casa } from "./casa.js";
+import { CasaDiProva } from "./casa-di-prova.js";
 import { Chat } from "./chat.js";
 import { Chiamata } from "./chiamata.js";
 import { Commissioni } from "./commissioni.js";
@@ -37,6 +38,7 @@ import { Ponte } from "./ponte.js";
 import { Portiere } from "./portiere.js";
 import { Ritorno } from "./ritorno.js";
 import { Segnalazioni } from "./segnalazioni.js";
+import { impronta } from "./segreti.js";
 import { Spegnimento } from "./spegnimento.js";
 import { Zigbee } from "./zigbee.js";
 import { Aggiornamenti } from "./aggiornamenti.js";
@@ -49,6 +51,11 @@ import { Registri } from "./registri.js";
 /* Ogni quanto si guarda se qualche telefono e' sparito da troppo tempo. */
 const POTATURA = 6 * 60 * 60 * 1000;
 
+/* Ogni quanto passa lo spazzino della casa di prova: un codice scaduto si
+ * toglie, e con lui i telefoni entrati. Fino ad allora non aprono niente lo
+ * stesso (`dispositivi.js`): lo spazzino chiude i fili ancora aperti. */
+const SPAZZINO_DELLA_PROVA = 60 * 1000;
+
 export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
   const registro = apriIlRegistro(opzioni.registro);
   const casa = new Casa();
@@ -58,6 +65,9 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
     giorniDiSilenzio: opzioni.giorniDiSilenzio,
   });
   const abbinamento = new Abbinamento({ minutiDelCodice: opzioni.minutiDelCodice });
+  /* Il codice per chi rivede l'app: fino a sette giorni, per piu' telefoni,
+   * per un utente che non amministra. Il perche' sta in `casa-di-prova.js`. */
+  const casaDiProva = new CasaDiProva({ cartella: opzioni.cartella });
   /* Chi ha montato questo impianto: il nome e il logo che la plancia indossa.
    *
    * Nasce **prima** della plancia perche' e' lei a doverlo chiedere, e nasce
@@ -409,6 +419,7 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
      * resta spento (`licenze.js`). */
     soloInCasa: () => licenze.limitata,
     versioneMinima,
+    casaDiProva,
   });
   const chiamata = new Chiamata({
     dove: opzioni.centralino,
@@ -417,6 +428,10 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
     registro,
   });
   portiere.chiamata = chiamata;
+  /* Una casa di prova fatta prima di un riavvio vale ancora: al centralino
+   * la si ridice appena il filo e' su. */
+  const provaViva = casaDiProva.viva();
+  if (provaViva) chiamata.apriLaProva(impronta(provaViva.codice), provaViva.scadeIl);
   /* Il gettone al centralino: appena entrati, e a ogni rinnovo. Con le
    * licenze spente non si dice niente, e il filo e' quello di sempre. */
   if (licenze.attive) {
@@ -492,6 +507,8 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
     zigbee,
     dispositivi,
     abbinamento,
+    /* La casa di prova: la scheda per farla, rimostrarla e revocarla. */
+    casaDiProva,
     opzioni,
     registro,
     chiamata,
@@ -611,11 +628,34 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
   }, POTATURA);
   giro.unref?.();
 
+  /* Lo spazzino della casa di prova. Alla scadenza il codice smette di
+   * valere da solo; qui lo si toglie dal disco e dal centralino, e si
+   * chiudono i fili dei telefoni entrati con lui, che dalla stessa ora non
+   * valgono piu'. */
+  const spazzino = setInterval(() => {
+    try {
+      if (casaDiProva.scaduta()) {
+        casaDiProva.togli();
+        chiamata.chiudiLaProva();
+        registro.info("la casa di prova e' scaduta");
+      }
+      const usciti = dispositivi.viaQuelliDiProva();
+      for (const id of usciti) ponte.scollega(id);
+      if (usciti.length) {
+        registro.info(`${usciti.length} telefoni della casa di prova usciti alla scadenza`);
+      }
+    } catch (errore) {
+      registro.errore(`lo spazzino della casa di prova: ${errore?.message || errore}`);
+    }
+  }, SPAZZINO_DELLA_PROVA);
+  spazzino.unref?.();
+
   const abbassa = async () => {
     registro.info("il ponte si abbassa");
     planceInCasa.smettiDiSorvegliare();
     for (const una of leVoci) una.ferma();
     clearInterval(giro);
+    clearInterval(spazzino);
     chiamata.spegni();
     postino.ferma();
     licenze.ferma();
@@ -632,6 +672,7 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
     portiere,
     dispositivi,
     abbinamento,
+    casaDiProva,
     casa,
     identita,
     chiamata,

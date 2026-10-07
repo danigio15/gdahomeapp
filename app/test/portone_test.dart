@@ -19,6 +19,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:gdahome/casa/archivio_delle_case.dart';
 import 'package:gdahome/casa/cassaforte.dart';
 import 'package:gdahome/casa/collegamento.dart';
+import 'package:gdahome/licenza/licenza.dart';
 import 'package:gdahome/main.dart';
 import 'package:gdahome/parole.dart';
 import 'package:gdahome/versione.dart';
@@ -549,6 +550,9 @@ void main() {
         collegamento = Collegamento(
           archivio: archivio,
           sonda: Sonda(bussa: (dove) async => dove == ponte.indirizzo.salute),
+          /* Qui si prova la home e il menu, non la licenza: senza chiave,
+           * come oggi, qualunque sia la chiave scritta nell'app. */
+          licenza: GestoreLicenza(chiave: ''),
         );
         await collegamento.apri();
         await _finoAllaPlancia(collegamento);

@@ -51,6 +51,13 @@ Prodotti:
    telefono) chiede i gettoni e ogni ora per tutte, al massimo una volta
    l'ora per licenza. Rinnovato, `scade` va avanti; scaduto o rimborsato, la
    licenza scade da se'; il negozio che non risponde non toglie niente.
+   Il rinnovo pero' il negozio lo fa a periodo finito (Google alla scadenza,
+   Apple nel giorno prima), e fra il quadro che lo scopre e la casa che
+   richiede i gettoni passano delle ore: per questo una licenza del negozio
+   **vale ancora tre giorni dopo la fine del periodo pagato**
+   (`MARGINE_DEL_RINNOVO` in `quadro/src/licenze.js`). Chi paga non resta mai
+   Base per un rinnovo in ritardo, per un quadro fermo o per una casa senza
+   rete in quei giorni; chi disdice tiene Premium al massimo tre giorni in piu'.
 2. **Regalo del gestore**: dalla pagina del gestore del quadro si regalano
    licenze a una casa (per `casa_…`) o si generano **codici regalo** (per
    gdahome o gdanav, di N mesi o per sempre).
@@ -88,9 +95,10 @@ base64url senza `=`. Il payload:
   "sog": "casa_0123…",       // "casa_…" oppure "tel_…"
   "lic": "lic_9f2c…",        // l'identificativo della licenza nel quadro
   "origine": "negozio",      // "negozio" | "regalo" | "installatore"
-  "scade": 1767225600000,    // quando finisce la licenza (ms), null = per sempre
+  "scade": 1767484800000,    // fino a quando vale la licenza (ms), null = per sempre
   "fino": 1759999999000,     // quando smette di valere QUESTO gettone (ms)
   "emesso": 1759300000000,
+  "pagato": 1767225600000,   // facoltativo: la fine del periodo pagato (negozio)
   "prova": true              // facoltativo: c'e' solo durante la prova gratuita
 }
 ```
@@ -98,6 +106,13 @@ base64url senza `=`. Il payload:
 `prova` c'e' **solo** quando e' vero (un abbonamento del negozio nei suoi
 giorni gratis): chi verifica non lo guarda per decidere, e i campi che non
 conosce li lascia stare.
+
+`pagato` c'e' solo nei gettoni delle licenze del negozio. Li' `scade` e' la
+fine del periodo pagato **piu' i tre giorni del margine del rinnovo**, ed e'
+quella che si verifica; `pagato` e' la fine del periodo pagato, ed e' quella
+che l'app e la console scrivono a schermo («Premium è attivo fino al…»). Chi
+verifica non lo guarda per decidere. Per i regali e gli installatori `scade`
+e' la fine della licenza, e `pagato` non c'e'.
 
 Regole di verifica, uguali ovunque:
 
@@ -120,24 +135,29 @@ base64url. Sta, sempre uguale, in:
 - `app/lib/licenza/chiave.dart`
 - in gdanav: `packages/gdanav_app/lib/stato/chiave_licenze.dart`
 
-**Di serie e' vuota**: nessun gettone vale, tutti sono Base (e gdanav fa quello
-che fa oggi col negozio).
+**Vuota, il controllo delle licenze e' spento**: nessun gettone vale, e il
+centralino non limita l'accesso da fuori e lascia passare i telefoni. Fino
+alla 1.9.2 era vuota dappertutto. **Dalla 1.10.0** nell'add-on e nell'app c'e'
+la pubblica vera, quella della macchina del quadro (il primo passo, qui
+sotto); nel centralino e' ancora vuota, e lo resta fino al secondo.
 
-**Prima l'iPhone**: con `LICENZE_SOLO_SULL_IPHONE = true` (nei tre file JS) e
-`licenzeSoloSullIPhone = true` (nell'app) la chiave sta solo nell'add-on e
-nell'app, e il centralino resta vuoto. La casa chiede i gettoni
-e gira le ricevute ma non si limita; i lucchetti ci sono solo nell'app per
-iPhone. Si scrive con `node strumenti/chiave-licenze.mjs --solo-iphone
---pubblica <x>`, e il perche' sta in
-[`ACCENDERE-GLI-ACQUISTI.md`](ACCENDERE-GLI-ACQUISTI.md).
+**La coppia nasce sulla macchina del quadro**, con
+`node /opt/quadro/quadro/le-licenze.mjs chiave`: la privata va in
+`/etc/quadro/ambiente` come `QUADRO_LICENZE_CHIAVE` (32 byte base64url, il `d`
+di una JWK Ed25519), e di li' esce solo la pubblica. Qui si scrive la
+pubblica e basta, in due passi con la stessa chiave:
 
-Prima del rilascio per tutti si lancia una volta
+1. `node strumenti/chiave-licenze.mjs --senza-centralino --pubblica <x>`: la
+   chiave nell'add-on e nell'app, il centralino resta vuoto. La casa chiede i
+   gettoni e gira le ricevute; l'app e il browser mettono i lucchetti di Base;
+   il fuori casa resta aperto a tutti.
+2. `node strumenti/accendi-gli-acquisti.mjs --fallo`, quando l'app nuova e'
+   nei negozi: la stessa chiave anche nel centralino (e in gdanav), e da li'
+   il fuori casa vuole Premium.
 
-    node strumenti/chiave-licenze.mjs [--gdanav ../gdanav]
-
-che fabbrica la coppia, scrive la pubblica in tutti i file qui sopra e stampa
-la privata, da mettere **solo** sulla macchina del quadro come
-`QUADRO_LICENZE_CHIAVE` (32 byte base64url, il `d` di una JWK Ed25519).
+Il perche' dell'ordine, e tutto il resto, sta in
+[`ACCENDERE-GLI-ACQUISTI.md`](ACCENDERE-GLI-ACQUISTI.md). Lo strumento rifiuta
+la pubblica di prova qui sotto.
 
 Per le prove c'e' una coppia **di prova**, che non va mai in un file di
 produzione:
@@ -165,6 +185,21 @@ quel segreto entra):
 **Dal gestore** (sessione della pagina del gestore):
 
 - `GET /gestore/licenze` — tutte le licenze e i codici;
+- `GET /gestore/abbonamenti` — gli abbonamenti comprati nell'app, per la
+  schermata «Abbonamenti»: `{accese, conti, negozi: {ios, android}, prove,
+  elenco}`. `conti` (e cosi' quelli di ogni negozio) e' `{attivi, mensili,
+  annuali, prova, disdetti, rinnovi7, finiti30, prove: {finite, pagate},
+  alMese: {EUR: …}}`: quelli che valgono adesso, divisi per piano; «di cui» in
+  prova gratuita e col rinnovo spento; quelli che si rinnovano entro sette
+  giorni; finiti negli ultimi trenta; le prove gratuite finite e quante sono
+  passate a pagamento; quanto pagano al mese i clienti degli abbonamenti che
+  si rinnovano (IVA compresa, prima della commissione; un annuale conta un
+  dodicesimo). Gli acquisti di prova (TestFlight, tester di Google) stanno in
+  `elenco` con `sandbox: true` e fuori dai conti; `prove` dice quanti sono.
+  Una riga di `elenco`: `{lic, app, sog, piattaforma, prodotto, piano, prezzo,
+  valuta, rinnovo, sandbox, paese, inizio, pagato, vale, stato, prova,
+  fuInProva, pagatoDopoLaProva, finito, aggiornata}`, con `stato` uno fra
+  `prova`, `attivo`, `disdetto` (vale ma non si rinnova), `scaduto`;
 - `POST /gestore/licenze` `{app, casa, mesi|null, nota}` — regalo a una casa;
 - `POST /gestore/codici` `{app, quanti, mesi|null, nota}` — codici regalo;
 - `DELETE /gestore/licenze/:lic` — revoca;
@@ -219,6 +254,18 @@ Controllo delle ricevute: Google Play Developer API
 `QUADRO_APPLE_KEY_ID`, `QUADRO_APPLE_ISSUER`, `QUADRO_APPLE_BUNDLE`. Senza,
 `503`: i regali funzionano lo stesso.
 
+Del negozio il quadro tiene anche com'e' fatto l'abbonamento
+(`negozio.abbonamento`): il piano (Google `offerDetails.basePlanId`, Apple dal
+prodotto), il prezzo che paga il cliente (Google
+`autoRenewingPlan.recurringPrice`, Apple `price` in millesimi; durante la prova
+Apple dice zero e si tiene quello di prima), il rinnovo automatico (Google
+`autoRenewEnabled` o lo stato annullato, Apple `autoRenewStatus` delle
+informazioni di rinnovo), se e' un acquisto di prova (Google `testPurchase`,
+Apple l'ambiente `Sandbox`), da quando e il paese. Una volta al giorno, nel
+giro di ogni ora, il quadro richiede al negozio **ogni** abbonamento, non solo
+quelli vicini alla scadenza: chi disdice si sa il giorno dopo. Niente di
+questo cambia chi e' Premium: lo decide la scadenza.
+
 ## L'add-on
 
 - `ponte/src/licenze.js` chiede `POST /v1/licenze/casa` all'accensione e ogni
@@ -226,15 +273,16 @@ Controllo delle ricevute: Google Play Developer API
   **Questa chiamata e' separata dal rapporto** (che resta spento di serie):
   manda solo `casa` e `segreto`.
 - Comandi sul filo cifrato: `ponte/licenza/stato` → `{gdahome: {attiva,
-  scade, origine}, gdanav: {…}, gettoni: {…}}`; `ponte/licenza/negozio`
+  scade, pagato, origine}, gdanav: {…}, gettoni: {…}}`; `ponte/licenza/negozio`
   `{app, piattaforma, prodotto, ricevuta}`; `ponte/licenza/riscatta` `{codice}`.
 - Il segreto che manda al quadro e' quello che la casa ha gia' per il quadro
   (`/data/quadro.json`), non quello del centralino: il segreto del centralino
   non esce verso un'altra macchina.
-- Base: `plance.aggiungi` rifiuta la seconda plancia (`premium-richiesto`,
-  `POST /api/plance` risponde 402), le plance oltre la principale non si
-  servono all'app; un canale che arriva dal centralino e non e' un abbinamento
-  viene rifiutato con `motivo: "premium-richiesto"` (l'abbinamento si').
+- **La casa non limita niente**, con la chiave o senza, Premium o Base
+  (`limitata` e' sempre falso): i lucchetti di Base li mettono l'app e il
+  browser, e il fuori casa lo chiude il centralino. Le strade per limitare
+  (`premium-richiesto` in `plance.js`, `portiere.js` e `commissioni.js`)
+  restano nel codice, spente.
 - La console dell'add-on mostra lo stato della licenza e un campo per il
   codice regalo.
 
@@ -251,24 +299,37 @@ controllo e' spento (tutti passano, come oggi): si accende insieme alla chiave.
 
 ## L'app gdahome
 
-- Chiede `ponte/licenza/stato` a ogni collegamento, verifica il gettone, lo
-  ricorda per casa. Premium = la casa in uso ha un gettone gdahome valido.
+- Chiede `ponte/licenza/stato` a ogni collegamento, e ogni 6 ore finche' il
+  filo resta su (un tablet acceso per giorni non torna Base col gettone
+  vecchio); verifica il gettone, lo ricorda per casa. Premium = la casa in uso
+  ha un gettone gdahome valido.
 - Una casa che le licenze non le sa tenere — il comando non lo conosce, o
-  risponde `attive: false` — si ricorda come `senza_licenze` e resta aperta:
-  li' Premium non si puo' comprare.
-- Prima dell'iPhone tutto questo vale solo nell'app per iPhone: su Android e
-  nel browser non si chiede niente alla casa e non c'e' nessun lucchetto.
+  risponde `attive: false` — si ricorda come `senza_licenze` e resta Base: li'
+  Premium non si puo' comprare, e la pagina Premium dice di aggiornare
+  l'add-on.
+- Con la chiave i lucchetti valgono dappertutto: nell'app per iPhone, in
+  quella per Android e nel browser, con gli stessi limiti di Base.
 - Base: una casa sola (la seconda si aggiunge solo se una casa gia' abbinata
   e' Premium), solo la plancia principale, niente strade fuori casa (centralino
   e indirizzo pubblico), «Configurazione» e «Zigbee» con il lucchetto che porta
   alla pagina Premium.
-- La pagina Premium: i due piani coi prezzi del negozio, «Ripristina acquisti»,
-  «Ho un codice regalo». Sul web non si compra: si riscatta un codice, o si
-  compra dal telefono. Sull'iPhone il codice regalo non c'e' (App Store, regola
-  3.1.1): si riscatta in Home Assistant o dal browser.
+- La pagina Premium: i due piani coi prezzi del negozio, «Ripristina
+  abbonamento», «Ho un codice regalo». Si compra nell'app per iPhone e in
+  quella per Android; sul web no: si riscatta un codice, o si compra dal
+  telefono. Sull'iPhone il codice regalo non c'e' (App Store, regola 3.1.1): si
+  riscatta in Home Assistant o dal browser.
+- «Ripristina abbonamento» prima chiede. Un abbonamento vale per una casa alla
+  volta, e ripristinarlo li' lo toglie alla casa dove sta: la domanda lo dice,
+  col nome dell'altra casa se l'app ne conosce una Premium con un abbonamento.
 - Una ricevuta che non arriva alla casa resta aperta nel negozio e si
-  riprova. Se non arriva perche' si e' fuori casa con Base, per portarla si
-  prende la strada del centralino.
+  riprova. Se non arriva perche' si e' fuori casa con Base, la porta il
+  centralino (`POST /licenza/<casa>`): l'app la firma con la chiave del filo
+  (`app/lib/licenza/ricevuta_da_fuori.dart`), la casa controlla la firma e la
+  gira al quadro, e il gettone torna indietro con la risposta. Se il
+  centralino non ci riesce, si prova la strada di sempre. Su Google Play un acquisto pagato con l'app
+  chiusa prima che la casa rispondesse non torna da solo: all'avvio l'app
+  chiede quelli non ancora confermati e li riporta alla casa. Solo quelli: uno
+  gia' confermato non si sposta, se non con «Ripristina».
 - gdanav riceve `premiumOspite` = la casa in uso e' Premium.
 
 ## Il giorno dei pagamenti: le app vecchie si fermano

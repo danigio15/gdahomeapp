@@ -15,7 +15,7 @@ test("the Tapparelle page has exactly one render owner, installed once", () => {
   // legacy markup first and this module's markup over it on every tick.
   assert.doesNotMatch(scene, /wrapFunction/);
   assert.equal((runtime.match(/shutter-scene-section\.js/g) || []).length, 1);
-  assert.equal((runtime.match(/installShutterSceneSection\(\)/g) || []).length, 1);
+  assert.equal((runtime.match(/senzaCadere\(installShutterSceneSection\);/g) || []).length, 1);
 });
 
 test("markup is rebuilt per structural signature, not per repaint", () => {

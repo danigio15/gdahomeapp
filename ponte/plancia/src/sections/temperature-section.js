@@ -14,6 +14,7 @@ import {
   section,
   t,
   temperatureCardLabels,
+  senzaCadere,
 } from "./shared.js";
 
 root.__DM_20260815C__ = true;
@@ -638,4 +639,4 @@ export function installTemperatureSection() {
 
 if (doc?.readyState === "loading")
   doc.addEventListener("DOMContentLoaded", installTemperatureSection, { once: true });
-else installTemperatureSection();
+else senzaCadere(installTemperatureSection);

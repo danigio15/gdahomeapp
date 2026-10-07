@@ -42,6 +42,7 @@ import {
   t,
   wrapFunction,
   writeJsonIfChanged,
+  senzaCadere,
 } from "./shared.js";
 
 const KEY = "__DASHBOARDMODERN_AGENDA_EDITOR__";
@@ -546,4 +547,4 @@ export function installAgendaEditorSection() {
   return true;
 }
 
-installAgendaEditorSection();
+senzaCadere(installAgendaEditorSection);

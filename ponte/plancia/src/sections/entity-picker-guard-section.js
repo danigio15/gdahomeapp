@@ -1,5 +1,5 @@
 import { decorateEntityFields } from "./editor-slots-section.js";
-import { LENTE_SELECTOR, attributoSeCambia, classeSeCambia, clean, doc, installStyle, root, wrapFunction } from "./shared.js";
+import { LENTE_SELECTOR, attributoSeCambia, classeSeCambia, clean, doc, installStyle, root, wrapFunction, senzaCadere } from "./shared.js";
 
 const KEY = "__DASHBOARDMODERN_ENTITY_PICKER_GUARD__";
 const state = (root[KEY] ||= { installed: false, frame: 0, subscribed: false });
@@ -261,4 +261,4 @@ export function installEntityPickerGuardSection() {
   schedule();
 }
 
-installEntityPickerGuardSection();
+senzaCadere(installEntityPickerGuardSection);

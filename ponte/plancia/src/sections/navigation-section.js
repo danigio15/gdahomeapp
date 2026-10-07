@@ -4,7 +4,7 @@ import {
   haOggettoWidget,
   oggettoWidget,
 } from "../core/oggetti-widget.js";
-import { clean, doc, installStyle, root, t } from "./shared.js";
+import { clean, doc, installStyle, root, t, senzaCadere } from "./shared.js";
 
 const KEY = "__DASHBOARDMODERN_NAVIGATION_SECTION__";
 const state = (root[KEY] ||= {
@@ -1379,5 +1379,5 @@ export function installNavigationSection() {
 if (doc?.readyState === "loading") {
   doc.addEventListener("DOMContentLoaded", installNavigationSection, { once: true });
 } else {
-  installNavigationSection();
+  senzaCadere(installNavigationSection);
 }

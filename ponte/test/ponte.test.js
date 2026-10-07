@@ -268,8 +268,36 @@ test("se la casa rifiuta il ponte, il telefono lo viene a sapere invece di resta
     await t.aperta;
     await t.aspetta("auth_required");
     t.manda({ type: "auth", access_token: segno });
-    assert.equal((await t.aspetta("auth_invalid")).type, "auth_invalid");
-    await t.chiusa;
+    /* Lo viene a sapere dalla chiusura, «riprova piu' tardi». Non da
+     * `auth_invalid`: il segno del telefono e' buono, e l'app che legge
+     * `auth_invalid` si crede staccata e smette di riprovare. */
+    assert.equal((await t.chiusa).code, 1013);
+    assert.equal(
+      t.detti.some((uno) => uno.type === "auth_invalid"),
+      false,
+    );
+  } finally {
+    await b.spegni();
+  }
+});
+
+test("Home Assistant spenta non stacca il telefono: si chiude con «riprova piu' tardi»", async () => {
+  /* E' il riavvio di Home Assistant, o un suo aggiornamento: il ponte resta
+   * su, la casa no. Il telefono abbinato bussa col suo segno buono. */
+  const b = await banco();
+  try {
+    await b.ha.spegni();
+    const { segno } = b.dispositivi.abbina({ nome: "di casa" });
+    const t = telefono(b.indirizzo);
+    await t.aperta;
+    await t.aspetta("auth_required");
+    t.manda({ type: "auth", access_token: segno });
+    assert.equal((await t.chiusa).code, 1013);
+    assert.equal(
+      t.detti.some((uno) => uno.type === "auth_invalid"),
+      false,
+    );
+    assert.equal(b.ponte.quantiCollegati(), 0);
   } finally {
     await b.spegni();
   }

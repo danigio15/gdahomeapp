@@ -40,6 +40,8 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { PUBBLICA_DI_PROVA } from "../ponte/test/gettoni-di-prova.js";
+
 const QUI = dirname(fileURLToPath(import.meta.url));
 
 /* I file che tengono la pubblica, dentro questa repository. */
@@ -157,6 +159,13 @@ if (detti.senzaCentralino && detti.gdanav)
 if (x) {
   if (!eUnaChiave(x))
     fermati("la pubblica deve essere 32 byte in base64url (43 caratteri, senza `=`)");
+  /* La coppia di prova e' scritta nei documenti, privata compresa: sta li'
+   * apposta, per le prove. Con la sua pubblica nei file, chiunque abbia letto
+   * `docs/LICENZE.md` firma da se' gettoni Premium che non si possono togliere. */
+  if (x === PUBBLICA_DI_PROVA)
+    fermati(
+      "questa e' la pubblica di prova dei documenti: con lei chiunque si fa Premium da solo. Serve quella che stampa la macchina del quadro",
+    );
 } else {
   const { privateKey } = generateKeyPairSync("ed25519");
   const jwk = privateKey.export({ format: "jwk" });

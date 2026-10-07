@@ -338,4 +338,13 @@ function installRuntimeRecovery() {
   requestInitialRemoteReconcile();
 }
 
-installRuntimeRecovery();
+/* Chi cade non si porta dietro gli altri: vedi `senzaCadere` in shared.js. */
+try {
+  installRuntimeRecovery();
+} catch (errore) {
+  (globalThis.__DASHBOARDMODERN_PEZZI_CADUTI__ ||= []).push({
+    pezzo: "installRuntimeRecovery",
+    errore: String(errore?.message || errore),
+  });
+  globalThis.console?.error?.("[DashboardModern] installRuntimeRecovery non e' partito", errore);
+}

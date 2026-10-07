@@ -71,6 +71,7 @@ import {
   root,
   selectedPeriod,
   t,
+  senzaCadere,
 } from "./shared.js";
 
 const KEY = "__DASHBOARDMODERN_REPORT_A_FASCE__";
@@ -570,4 +571,4 @@ export function installReportAFasceSection() {
 
 if (doc?.readyState === "loading")
   doc.addEventListener("DOMContentLoaded", installReportAFasceSection, { once: true });
-else installReportAFasceSection();
+else senzaCadere(installReportAFasceSection);

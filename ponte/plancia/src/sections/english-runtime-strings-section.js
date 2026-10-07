@@ -47,7 +47,7 @@ export const RUNTIME_EN = Object.freeze({
     "No EV entity mapped to save: map the Car section entities first",
 });
 
-import { paginaVisibile, planciaVisibile, quandoSiCambiaPagina } from "./shared.js";
+import { paginaVisibile, planciaVisibile, quandoSiCambiaPagina, senzaCadere } from "./shared.js";
 
 const MARCHIO = "__dmEnglishRuntimeStrings";
 
@@ -180,5 +180,5 @@ if (typeof document !== "undefined") {
     document.addEventListener("DOMContentLoaded", () => installEnglishRuntimeStrings(), {
       once: true,
     });
-  else installEnglishRuntimeStrings();
+  else senzaCadere(installEnglishRuntimeStrings);
 }

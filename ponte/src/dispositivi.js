@@ -52,6 +52,16 @@ const VISITA_SUL_DISCO = 5 * 60 * 1000;
 const GIORNI_DEI_REVOCATI = 180;
 const REVOCATI_AL_MASSIMO = 100;
 
+/* ─── I telefoni di prova ─────────────────────────────────────────────────
+ *
+ * Un telefono entrato col codice della casa di prova (`casa-di-prova.js`) ha
+ * una scadenza sua, `finoA`: quella del codice con cui e' entrato. Dopo
+ * quell'ora per questa casa non c'e' piu' — non si riconosce, non ha una
+ * chiave del filo, non si conta — anche prima che lo spazzino passi a
+ * toglierlo dal file (`viaQuelliDiProva`). Lo spazzino gira ogni minuto, ma
+ * un minuto di troppo e' proprio quello che non si deve regalare a chi la
+ * casa non la abita. */
+
 const nomePulito = (scritto) =>
   String(scritto ?? "")
     .replace(/\s+/g, " ")
@@ -84,10 +94,21 @@ export class Dispositivi {
      * domanda cinque minuti di approssimazione non cambiano niente. */
     this._visitaSalvataIl = this.adesso();
     this.potatura();
+    this.viaQuelliDiProva();
   }
 
   get lista() {
     return this.archivio.dati.dispositivi;
+  }
+
+  /* Un telefono di prova la cui ora e' passata. Gli altri non scadono. */
+  _scaduto(uno) {
+    return Number.isFinite(uno?.finoA) && uno.finoA <= this.adesso();
+  }
+
+  /* I telefoni che valgono adesso: tutti, meno quelli di prova scaduti. */
+  get _vivi() {
+    return this.lista.filter((uno) => !this._scaduto(uno));
   }
 
   get _revocati() {
@@ -98,6 +119,14 @@ export class Dispositivi {
   /* La chiave del filo di un telefono staccato, se lo si ricorda ancora: vedi
    * «I telefoni staccati». `null` se non c'e', o se e' passato troppo tempo. */
   chiaveRevocataDi(id) {
+    /* Un telefono di prova scaduto e' gia' staccato, anche se lo spazzino
+     * non e' ancora passato: gli si dice cifrato, come agli altri. */
+    const scaduto = this.lista.find((uno) => uno.id === id && this._scaduto(uno));
+    if (scaduto) {
+      return typeof scaduto.chiave === "string" && scaduto.chiave.length === 64
+        ? scaduto.chiave
+        : null;
+    }
     const limite = this.adesso() - GIORNI_DEI_REVOCATI * GIORNO;
     const trovato = this._revocati.find((uno) => uno.id === id && (uno.staccatoIl || 0) >= limite);
     const chiave = trovato?.chiave;
@@ -123,7 +152,7 @@ export class Dispositivi {
 
   /* Quello che si puo' far vedere: l'impronta resta dentro. */
   elenco() {
-    return this.lista.map(({ id, nome, sistema, natoIl, vistoIl, utente }) => ({
+    return this._vivi.map(({ id, nome, sistema, natoIl, vistoIl, utente, finoA }) => ({
       id,
       nome,
       sistema,
@@ -132,25 +161,33 @@ export class Dispositivi {
       /* Di chi e'. Va detto a schermo: un telefono senza padrone vede tutte
        * le plance, ed e' esattamente quello di cui bisogna accorgersi. */
       utente: utentePulito(utente),
+      /* Fino a quando, per un telefono della casa di prova: la console lo
+       * scrive accanto al nome. Gli altri non ce l'hanno. */
+      ...(Number.isFinite(finoA) ? { finoA } : {}),
     }));
   }
 
   /* Di chi e' questo telefono. `""` per uno che non c'e' e per uno abbinato
    * prima di oggi — e in tutti e due i casi vuol dire «vede tutto». */
   utenteDi(id) {
-    return utentePulito(this.lista.find((uno) => uno.id === id)?.utente);
+    return utentePulito(this._vivi.find((uno) => uno.id === id)?.utente);
   }
 
   quanti() {
-    return this.lista.length;
+    return this._vivi.length;
+  }
+
+  /* Quanti telefoni sono entrati con la casa di prova, e valgono ancora. */
+  quantiDiProva() {
+    return this._vivi.filter((uno) => Number.isFinite(uno.finoA)).length;
   }
 
   /* Abbina un telefono e restituisce il segno.
    *
    * Il segno esce da qui una volta sola, adesso. Chi lo perde riabbina: non
    * c'e' nessuna strada per rileggerlo, ed e' voluto. */
-  abbina({ nome, sistema, utente = "" } = {}) {
-    if (this.lista.length >= this.massimi) {
+  abbina({ nome, sistema, utente = "", finoA = null } = {}) {
+    if (this._vivi.length >= this.massimi) {
       throw new TroppiDispositivi(`sono gia' abbinati ${this.massimi} dispositivi`);
     }
     const segno = segnoNuovo();
@@ -175,6 +212,9 @@ export class Dispositivi {
        * come sono i telefoni abbinati prima di oggi, e non si spengono a
        * tradimento il giorno dell'aggiornamento. */
       utente: utentePulito(utente),
+      /* Un telefono della casa di prova scade col codice con cui e' entrato:
+       * vedi «I telefoni di prova». */
+      ...(Number.isFinite(finoA) ? { finoA } : {}),
     };
     this.lista.push(dispositivo);
     this.archivio.salva();
@@ -187,7 +227,7 @@ export class Dispositivi {
    * che le chiavi esistessero: quello si riabbina, e finche' non lo fa parla
    * in chiaro come faceva prima. */
   chiaveDi(id) {
-    const dispositivo = this.lista.find((uno) => uno.id === id);
+    const dispositivo = this._vivi.find((uno) => uno.id === id);
     const chiave = dispositivo?.chiave;
     return typeof chiave === "string" && chiave.length === 64 ? chiave : null;
   }
@@ -202,7 +242,7 @@ export class Dispositivi {
     for (const dispositivo of this.lista) {
       if (stessoSegreto(dispositivo.impronta, cercata)) trovato = dispositivo;
     }
-    if (!trovato) return null;
+    if (!trovato || this._scaduto(trovato)) return null;
     trovato.vistoIl = this.adesso();
     this._forseSalva();
     return this._pulito(trovato);
@@ -223,6 +263,23 @@ export class Dispositivi {
     this._ricordaStaccati(andati);
     this.archivio.salva();
     return andati.length;
+  }
+
+  /* Via i telefoni della casa di prova: quelli scaduti, oppure — con
+   * `tutti` — anche quelli ancora nel loro tempo, perche' il codice e' stato
+   * revocato. Della loro chiave la casa si ricorda, come di ogni telefono
+   * staccato: a chi ribussa dice di no cifrato. Torna gli identificativi,
+   * cosi' chi chiama chiude i loro fili ancora aperti. */
+  viaQuelliDiProva({ tutti = false } = {}) {
+    const andati = this.lista.filter(
+      (uno) => Number.isFinite(uno.finoA) && (tutti || this._scaduto(uno)),
+    );
+    if (!andati.length) return [];
+    const via = new Set(andati.map((uno) => uno.id));
+    this.archivio.dati.dispositivi = this.lista.filter((uno) => !via.has(uno.id));
+    this._ricordaStaccati(andati);
+    this.archivio.salva();
+    return [...via];
   }
 
   rinomina(id, nome) {

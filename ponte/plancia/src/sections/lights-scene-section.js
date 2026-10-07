@@ -26,6 +26,7 @@ import {
   section,
   siComanda,
   t,
+  senzaCadere,
 } from "./shared.js";
 
 /* Single paint owner for the Gestione Luci popup and for the controls of one
@@ -1024,5 +1025,5 @@ export function installLightsSceneSection() {
 if (doc?.readyState === "loading") {
   doc.addEventListener("DOMContentLoaded", installLightsSceneSection, { once: true });
 } else {
-  installLightsSceneSection();
+  senzaCadere(installLightsSceneSection);
 }

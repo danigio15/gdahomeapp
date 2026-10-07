@@ -26,6 +26,9 @@ class _NegozioFinto implements NegozioGdahome {
   final int giorni;
   final comprati = <String>[];
   var ripristinati = 0;
+
+  /// Quelli che il negozio dice rimasti a meta', all'avvio.
+  List<PurchaseDetails> rimasti = const [];
   final _acquisti = StreamController<List<PurchaseDetails>>.broadcast();
 
   void consegna(PurchaseDetails acquisto) => _acquisti.add([acquisto]);
@@ -49,18 +52,36 @@ class _NegozioFinto implements NegozioGdahome {
   Future<void> ripristina() async => ripristinati += 1;
   @override
   Future<void> completa(PurchaseDetails acquisto) async {}
+  @override
+  Future<List<PurchaseDetails>> rimastiAMeta() async => rimasti;
 }
+
+/// Un'altra casa, «Casa al mare», Premium con un abbonamento.
+const _altraCasa = 'casa_ffffffffffffffffffffffffffffffff';
 
 void main() {
   Future<Collegamento> casaSenzaFilo(
     WidgetTester tester, {
     String? gettone,
     bool addonVecchio = false,
+    bool conUnAltraAbbonata = false,
   }) async {
     late Collegamento collegamento;
     await tester.runAsync(() async {
       final archivio = ArchivioDelleCase(CassaforteInMemoria());
       await archivio.apri();
+      if (conUnAltraAbbonata) {
+        final mare = await archivio.aggiungi(
+          nome: 'Casa al mare',
+          segno: 'segno-mare',
+          casaAlCentralino: _altraCasa,
+          inCasa: IndirizzoDelPonte.leggi('192.168.2.50'),
+        );
+        await archivio.segnaIlGettone(
+          mare.id,
+          await firmaUnGettone(sog: _altraCasa, origine: 'negozio'),
+        );
+      }
       final casa = await archivio.aggiungi(
         nome: 'Casa al lago',
         segno: 'segno',
@@ -72,6 +93,7 @@ void main() {
       } else {
         await archivio.segnaIlGettone(casa.id, gettone ?? '');
       }
+      await archivio.scegli(casa.id);
       collegamento = Collegamento(
         archivio: archivio,
         licenza: GestoreLicenza(chiave: chiaveDiProva),
@@ -182,10 +204,60 @@ void main() {
     acquisti.inCorso = false;
     await tester.tap(find.byKey(const Key('piano-$pianoAnnuale')));
     await tester.pump();
+
+    /* «Ripristina abbonamento» prima dice cosa succede: con Annulla non
+     * succede niente. */
     await tester.tap(find.text('Ripristina abbonamento'));
-    await tester.pump();
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('conferma-ripristino')), findsOneWidget);
+    expect(find.text('Ripristinare l\'abbonamento qui?'), findsOneWidget);
+    expect(find.textContaining('una casa alla volta'), findsOneWidget);
+    expect(find.textContaining('passa a «Casa al lago»'), findsOneWidget);
+    await tester.tap(find.text('Annulla'));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('conferma-ripristino')), findsNothing);
+    expect(negozio.ripristinati, 0);
+
+    await tester.tap(find.text('Ripristina abbonamento'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('ripristina-qui')));
+    await tester.pumpAndSettle();
     expect(negozio.ripristinati, 1);
   });
+
+  testWidgets(
+    '«Ripristina» dice il nome dell\'altra casa che ha l\'abbonamento',
+    (tester) async {
+      final collegamento = await casaSenzaFilo(
+        tester,
+        conUnAltraAbbonata: true,
+      );
+      final negozio = _NegozioFinto();
+      final acquisti = await acquistiCon(tester, negozio);
+      await mostra(
+        tester,
+        SchermataPremium(
+          collegamento: collegamento,
+          acquisti: acquisti,
+          sulWeb: false,
+        ),
+      );
+      /* La casa aperta e' quella al lago, Base: si compra o si ripristina. */
+      expect(find.byKey(const Key('compra-premium')), findsOneWidget);
+      await tester.tap(find.byKey(const Key('ripristina-abbonamento')));
+      await tester.pumpAndSettle();
+      expect(
+        find.textContaining(
+          '«Casa al mare» oggi è Premium con un abbonamento: se è lo stesso, '
+          'passa a «Casa al lago» e «Casa al mare» torna Base.',
+        ),
+        findsOneWidget,
+      );
+      await tester.tap(find.byKey(const Key('ripristina-qui')));
+      await tester.pumpAndSettle();
+      expect(negozio.ripristinati, 1);
+    },
+  );
 
   testWidgets('la prova gia\' usata: «Abbonati a», e della prova niente', (
     tester,
@@ -261,6 +333,7 @@ void main() {
     expect(find.byKey(const Key('compra-premium')), findsNothing);
     expect(find.text('Ripristina abbonamento'), findsNothing);
     expect(find.byKey(const Key('premium-sul-web')), findsOneWidget);
+    expect(find.textContaining('iPhone o Android'), findsOneWidget);
     expect(find.byKey(const Key('codice-regalo')), findsOneWidget);
     expect(find.textContaining('Android Auto e CarPlay'), findsOneWidget);
   });
@@ -288,6 +361,58 @@ void main() {
     expect(find.byKey(const Key('piano-$pianoAnnuale')), findsNothing);
     expect(find.byKey(const Key('codice-regalo')), findsOneWidget);
   });
+
+  testWidgets(
+    'un abbonamento scrive la fine del periodo pagato, non quella col margine',
+    (tester) async {
+      late String gettone;
+      await tester.runAsync(() async {
+        gettone = await firmaUnGettone(
+          origine: 'negozio',
+          scade: DateTime(2027, 3, 15),
+          pagato: DateTime(2027, 3, 12),
+        );
+      });
+      final collegamento = await casaSenzaFilo(tester, gettone: gettone);
+      await mostra(
+        tester,
+        SchermataPremium(collegamento: collegamento, sulWeb: false),
+      );
+      expect(
+        find.textContaining(
+          'Premium è attivo fino al 12 marzo 2027 · abbonamento',
+        ),
+        findsOneWidget,
+      );
+      expect(find.textContaining('15 marzo'), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'nei giorni del margine del rinnovo: attivo, e nessuna data già passata',
+    (tester) async {
+      late String gettone;
+      await tester.runAsync(() async {
+        final ieri = DateTime.now().subtract(const Duration(days: 1));
+        gettone = await firmaUnGettone(
+          origine: 'negozio',
+          pagato: ieri,
+          scade: ieri.add(const Duration(days: 3)),
+        );
+      });
+      final collegamento = await casaSenzaFilo(tester, gettone: gettone);
+      await mostra(
+        tester,
+        SchermataPremium(collegamento: collegamento, sulWeb: false),
+      );
+      expect(
+        find.textContaining('Premium è attivo · abbonamento.'),
+        findsOneWidget,
+      );
+      expect(find.textContaining('fino al'), findsNothing);
+      expect(find.byKey(const Key('compra-premium')), findsNothing);
+    },
+  );
 
   testWidgets('durante la prova: «Prova gratuita fino al»', (tester) async {
     late String gettone;
@@ -330,18 +455,33 @@ void main() {
     expect(find.text('Ripristina abbonamento'), findsOneWidget);
   }, variant: TargetPlatformVariant.only(TargetPlatform.iOS));
 
-  testWidgets('sull\'Android non si compra, e il codice regalo resta', (
+  testWidgets('su Android si compra dal Play Store, e il codice regalo resta', (
     tester,
   ) async {
     final collegamento = await casaSenzaFilo(tester);
+    final acquisti = await acquistiCon(tester, _NegozioFinto());
     await mostra(
       tester,
-      SchermataPremium(collegamento: collegamento, sulWeb: false),
+      SchermataPremium(
+        collegamento: collegamento,
+        acquisti: acquisti,
+        sulWeb: false,
+      ),
     );
-    expect(find.byKey(const Key('premium-su-android')), findsOneWidget);
-    expect(find.byKey(const Key('compra-premium')), findsNothing);
-    expect(find.text('Ripristina abbonamento'), findsNothing);
+    expect(find.text('Prova gratis per 14 giorni'), findsOneWidget);
+    expect(ilBottone(tester).onPressed, isNotNull);
+    expect(find.textContaining('14 giorni di prova gratuita'), findsOneWidget);
+    expect(
+      find.textContaining('Disdici quando vuoi dal Play Store'),
+      findsOneWidget,
+    );
+    expect(find.text('Ripristina abbonamento'), findsOneWidget);
+    expect(find.text('Privacy'), findsOneWidget);
+    expect(find.text('Termini d\'uso'), findsOneWidget);
     expect(find.byKey(const Key('codice-regalo')), findsOneWidget);
+    expect(find.textContaining('Android Auto'), findsOneWidget);
+    expect(find.textContaining('CarPlay'), findsNothing);
+    expect(find.textContaining('non è ancora disponibile'), findsNothing);
   }, variant: TargetPlatformVariant.only(TargetPlatform.android));
 
   testWidgets(

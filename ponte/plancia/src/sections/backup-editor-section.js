@@ -20,6 +20,7 @@ import {
   reloadDashboard,
   root,
   t,
+  senzaCadere,
 } from "./shared.js";
 
 const KEY = "__DASHBOARDMODERN_BACKUP_EDITOR__";
@@ -322,4 +323,4 @@ export function installBackupEditorSection() {
   ensureBackupEditor();
 }
 
-installBackupEditorSection();
+senzaCadere(installBackupEditorSection);

@@ -39,6 +39,7 @@ import {
   onEditorRedraw,
   root,
   t,
+  senzaCadere,
 } from "./shared.js";
 
 const KEY = "__DASHBOARDMODERN_MODO_CHIOSCO__";
@@ -159,4 +160,4 @@ export function installModoChiosco() {
   return true;
 }
 
-installModoChiosco();
+senzaCadere(installModoChiosco);

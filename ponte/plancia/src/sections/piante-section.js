@@ -49,6 +49,7 @@ import {
   readJson,
   root,
   t,
+  senzaCadere,
 } from "./shared.js";
 import { nomeDaHomeAssistant } from "./editor-slots-section.js";
 
@@ -717,4 +718,4 @@ export function installPiante() {
   return true;
 }
 
-installPiante();
+senzaCadere(installPiante);

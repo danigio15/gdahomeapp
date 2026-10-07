@@ -30,6 +30,7 @@ import {
   readJson,
   root,
   t,
+  senzaCadere,
 } from "./shared.js";
 import { disegnoDelBidone } from "../core/disegni-rifiuti.js";
 import { disegnoDelCatalogo } from "../core/catalogo-disegni.js";
@@ -453,4 +454,4 @@ export function installRifiuti() {
   return true;
 }
 
-installRifiuti();
+senzaCadere(installRifiuti);

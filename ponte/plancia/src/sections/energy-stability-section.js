@@ -1,5 +1,5 @@
 import { ATTESA_COL_VELO } from "./energy-section.js";
-import { clean, doc, root, section } from "./shared.js";
+import { clean, doc, root, section, senzaCadere } from "./shared.js";
 
 const KEY = "__DASHBOARDMODERN_ENERGY_STABILITY_SECTION__";
 const state = (root[KEY] ||= {
@@ -109,4 +109,4 @@ export function installEnergyStabilitySection() {
 
 if (doc?.readyState === "loading")
   doc.addEventListener("DOMContentLoaded", installEnergyStabilitySection, { once: true });
-else installEnergyStabilitySection();
+else senzaCadere(installEnergyStabilitySection);

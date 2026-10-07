@@ -17,6 +17,7 @@ import {
   t,
   wrapFunction,
   writeJsonIfChanged,
+  senzaCadere,
 } from "./shared.js";
 
 const KEY = "__DASHBOARDMODERN_LIGHTS_ALERTS_SECTION__";
@@ -757,4 +758,4 @@ export function installLightsAlertsSection() {
 
 if (doc?.readyState === "loading")
   doc.addEventListener("DOMContentLoaded", installLightsAlertsSection, { once: true });
-else installLightsAlertsSection();
+else senzaCadere(installLightsAlertsSection);

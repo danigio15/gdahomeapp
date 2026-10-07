@@ -36,6 +36,7 @@ import {
   root,
   t,
   writeJsonIfChanged,
+  senzaCadere,
 } from "./shared.js";
 
 const KEY = "__DASHBOARDMODERN_CITOFONO__";
@@ -501,4 +502,4 @@ export function installCitofono() {
   return true;
 }
 
-installCitofono();
+senzaCadere(installCitofono);

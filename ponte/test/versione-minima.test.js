@@ -103,7 +103,9 @@ async function banco({ minima = 0 } = {}) {
     return dove;
   };
   const case_ = new Case({ cartella: nuova("case") });
-  const centralino = new Centralino({ case: case_ });
+  /* Qui si prova il centralino, non la licenza: senza chiave, come oggi,
+   * qualunque sia quella scritta nel codice (`docs/LICENZE.md`). */
+  const centralino = new Centralino({ case: case_, chiaveLicenze: "" });
   const server = costruisciIlServer({ centralino, versioneMinima: minima });
   await new Promise((ok) => server.listen(0, "127.0.0.1", ok));
   const doveIlCentralino = `ws://127.0.0.1:${server.address().port}`;

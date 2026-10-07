@@ -587,9 +587,9 @@ test("le particelle della ricarica girano solo con la pagina EV in vista", () =>
 
 test("il runtime delle sezioni la installa per prima, prima di ogni involucro", () => {
   assert.match(SECTION_RUNTIME, /il-guscio-disegna-quando-serve-section\.js/);
-  const installazione = SECTION_RUNTIME.indexOf("installGuscioQuandoServe();");
+  const installazione = SECTION_RUNTIME.indexOf("senzaCadere(installGuscioQuandoServe);");
   assert.ok(installazione > 0);
-  assert.ok(installazione < SECTION_RUNTIME.indexOf("installIndirizzoDiCasa();"));
+  assert.ok(installazione < SECTION_RUNTIME.indexOf("senzaCadere(installIndirizzoDiCasa);"));
   assert.match(SECTION_RUNTIME, /sections: Object\.freeze\(\[\s*"il-guscio-disegna-quando-serve",/);
 });
 

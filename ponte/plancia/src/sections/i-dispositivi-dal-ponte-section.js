@@ -49,7 +49,7 @@ import {
   nonSiSaNiente,
   ricordaIDispositivi,
 } from "../core/i-dispositivi-di-home-assistant.js";
-import { clean, doc, root } from "./shared.js";
+import { clean, doc, root, senzaCadere } from "./shared.js";
 
 const KEY = "__DASHBOARDMODERN_DISPOSITIVI_DAL_PONTE__";
 /** Dove sta il conto delle prove, per chi le deve guardare. */
@@ -215,4 +215,4 @@ export function installIDispositiviDalPonte() {
   return true;
 }
 
-installIDispositiviDalPonte();
+senzaCadere(installIDispositiviDalPonte);

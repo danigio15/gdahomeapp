@@ -2,7 +2,7 @@ import { applianceArtwork } from "../core/appliance-artwork.js";
 import { applianceArtworkType } from "../core/appliance-card-view-model.js";
 import { reportIconForDevice } from "../core/energy-projection.js";
 import { openIconPicker } from "./icon-engine-section.js";
-import { clean, doc, esc, installStyle, isLifetimeMeter, onEditorRedraw, root, section, t, wrapFunction } from "./shared.js";
+import { clean, doc, esc, installStyle, isLifetimeMeter, onEditorRedraw, root, section, t, wrapFunction, senzaCadere } from "./shared.js";
 
 globalThis.__DM_20260815C__ = true;
 const KEY = "__DASHBOARDMODERN_REPORT_EDITOR_SECTION__";
@@ -320,4 +320,4 @@ export function installReportEditorSection() {
 
 if (doc?.readyState === "loading")
   doc.addEventListener("DOMContentLoaded", installReportEditorSection, { once: true });
-else installReportEditorSection();
+else senzaCadere(installReportEditorSection);

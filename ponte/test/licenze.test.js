@@ -46,11 +46,20 @@ function unPosto() {
 
 /* ─── Il gettone ─────────────────────────────────────────────────────────── */
 
-test("nel codice la chiave e' vuota: di serie le licenze sono spente", () => {
-  assert.equal(CHIAVE_PUBBLICA_LICENZE, "");
-  /* E con la chiave vuota non vale nessun gettone, nemmeno uno buono. */
+test("con la chiave vuota le licenze sono spente, e nessun gettone vale", () => {
+  /* Vuota oggi; il giorno che si accende, una pubblica vera. Mai quella di
+   * prova dei documenti: con lei chiunque si firma da se' un gettone. */
+  assert.ok(
+    CHIAVE_PUBBLICA_LICENZE === "" || /^[A-Za-z0-9_-]{43}$/.test(CHIAVE_PUBBLICA_LICENZE),
+    "la chiave del codice e' vuota o 32 byte in base64url",
+  );
+  assert.notEqual(CHIAVE_PUBBLICA_LICENZE, PUBBLICA_DI_PROVA);
+  /* Un gettone firmato con la coppia di prova non vale con la chiave del
+   * codice, qualunque sia; e con la chiave vuota non vale nemmeno uno buono. */
   const buono = unGettone({ sog: CASA }, { adesso: ADESSO });
+  assert.equal(vale(buono, { chiave: CHIAVE_PUBBLICA_LICENZE }), null);
   assert.equal(vale(buono, { chiave: "" }), null);
+  assert.equal(new Licenze({ casa: CASA, chiave: "" }).attive, false);
 });
 
 test("un gettone del quadro, per questa casa, vale; e dice cosa c'e' dentro", () => {
@@ -176,6 +185,42 @@ test("lo stato per l'app ha la forma del contratto, e gdanav e' compreso", async
   assert.deepEqual(stato.gettoni, { gdahome: gettone });
   assert.equal(stato.licenze[0].lic, "lic_1");
   assert.equal(stato.ultima.andata, true);
+});
+
+test("un abbonamento nei giorni del margine vale, e si scrive la fine del periodo pagato", async () => {
+  /* Il periodo pagato e' finito ieri e il rinnovo non e' ancora arrivato: il
+   * quadro da' il gettone fino a tre giorni dopo, e dice in `pagato` fino a
+   * quando era pagato. La casa non fa niente di speciale: verifica `scade`
+   * come sempre, e passa `pagato` a chi lo scrive. */
+  const pagato = ADESSO - GIORNO;
+  const gettone = unGettone(
+    {
+      sog: CASA,
+      origine: "negozio",
+      scade: pagato + 3 * GIORNO,
+      fino: pagato + 3 * GIORNO,
+      pagato,
+    },
+    { adesso: ADESSO - 2 * GIORNO },
+  );
+  const { licenze } = leLicenze({
+    risposte: { "/v1/licenze/casa": conGettoni({ gdahome: gettone }) },
+  });
+  await licenze.rinnova();
+  assert.equal(licenze.premium, true, "chi paga resta Premium mentre il rinnovo arriva");
+  const stato = licenze.stato();
+  assert.equal(stato.gdahome.attiva, true);
+  assert.equal(stato.gdahome.pagato, pagato);
+  assert.equal(stato.gdahome.scade, pagato + 3 * GIORNO);
+
+  /* Un regalo il campo non ce l'ha. */
+  const { licenze: regalo } = leLicenze({
+    risposte: {
+      "/v1/licenze/casa": conGettoni({ gdahome: unGettone({ sog: CASA }, { adesso: ADESSO }) }),
+    },
+  });
+  await regalo.rinnova();
+  assert.equal(regalo.stato().gdahome.pagato, null);
 });
 
 test("i gettoni stanno in licenze.json, e restano dopo un riavvio", async () => {

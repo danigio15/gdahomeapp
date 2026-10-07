@@ -48,6 +48,7 @@ import {
   siComanda,
   t,
   writeJsonIfChanged,
+  senzaCadere,
 } from "./shared.js";
 import { nomeDaHomeAssistant } from "./editor-slots-section.js";
 
@@ -837,4 +838,4 @@ export function installAcquario() {
   return true;
 }
 
-installAcquario();
+senzaCadere(installAcquario);

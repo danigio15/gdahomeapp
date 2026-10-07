@@ -46,6 +46,7 @@ import {
   readJson,
   root,
   t,
+  senzaCadere,
 } from "./shared.js";
 
 const KEY = "__DASHBOARDMODERN_ELENCO_SEZIONI__";
@@ -236,4 +237,4 @@ export function installElencoDelleSezioni() {
   return true;
 }
 
-installElencoDelleSezioni();
+senzaCadere(installElencoDelleSezioni);

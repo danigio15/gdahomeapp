@@ -135,6 +135,10 @@ export const SCHEDE = Object.freeze({
   sez1: { famiglia: "energia", posizione: 10 }, // Contatori, fasce, tariffe
   sez2: { famiglia: "energia", posizione: 20 }, // Auto elettrica, colonnina, evcc
   ups: { famiglia: "energia", posizione: 30 }, // UPS (#390)
+  /* Le batterie di accumulo (#117): i pacchi e i loro BMS. Stanno con
+   * l'Energia e non con le Batterie di Casa — quelle sono le pile dei
+   * sensori — perché la loro linguetta è dentro la pagina Energia. */
+  accumulo: { famiglia: "energia", posizione: 15 },
 
   /* ── 🌡️ Clima e acqua ──────────────────────────────────────────────── */
   sez9: { famiglia: "clima", posizione: 10 }, // Clima: termostati, VMC

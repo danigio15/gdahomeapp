@@ -62,6 +62,7 @@ import {
   t,
   wrapFunction,
   writeJsonIfChanged,
+  senzaCadere,
 } from "./shared.js";
 import { MARCHIO_TESSERA } from "../core/fuori-dai-widget.js";
 
@@ -1171,4 +1172,4 @@ export function installImpiantiTermiciEditor() {
   return true;
 }
 
-installImpiantiTermiciEditor();
+senzaCadere(installImpiantiTermiciEditor);

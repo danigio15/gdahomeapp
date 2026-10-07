@@ -17,7 +17,7 @@
  * avvisato. Senza timer appesi il battito non parte nemmeno.
  */
 import { timerVivi } from "../core/spegnimento-programmato.js";
-import { chiediAHomeAssistant, clean, doc, root } from "./shared.js";
+import { chiediAHomeAssistant, clean, doc, root, t } from "./shared.js";
 
 const KEY = "__DASHBOARDMODERN_SPEGNIMENTO__";
 const state = (root[KEY] ||= {

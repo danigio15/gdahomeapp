@@ -67,6 +67,7 @@ import {
   root,
   selectedPeriod,
   t,
+  senzaCadere,
 } from "./shared.js";
 
 const KEY = "__DASHBOARDMODERN_FASCE_DEL_DISPOSITIVO__";
@@ -564,4 +565,4 @@ export function installLeFasceDelDispositivo() {
   return true;
 }
 
-installLeFasceDelDispositivo();
+senzaCadere(installLeFasceDelDispositivo);

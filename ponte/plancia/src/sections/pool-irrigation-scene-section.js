@@ -30,6 +30,7 @@ import {
   scriviSeCambia,
   t,
   writeJsonIfChanged,
+  senzaCadere,
 } from "./shared.js";
 
 // Single visual owner for the Pool and Irrigation pages.
@@ -2099,5 +2100,5 @@ export function installPoolIrrigationSceneSection() {
 if (doc?.readyState === "loading") {
   doc.addEventListener("DOMContentLoaded", installPoolIrrigationSceneSection, { once: true });
 } else {
-  installPoolIrrigationSceneSection();
+  senzaCadere(installPoolIrrigationSceneSection);
 }

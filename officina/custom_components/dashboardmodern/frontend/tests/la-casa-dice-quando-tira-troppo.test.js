@@ -177,7 +177,7 @@ test("il posto dove si scrive la soglia e' dentro le impostazioni dell'Energia",
   assert.match(testo, /view-ist/);
   assert.match(testo, /paginaVisibile\("page-energy"\)/);
   const runtime = sorgente("src/sections/section-runtime.js");
-  assert.match(runtime, /installLaSogliaDellaPotenza\(\);/);
+  assert.match(runtime, /senzaCadere\(installLaSogliaDellaPotenza\);/);
 });
 
 test("il sovraccarico di rete non si disegna con un router", () => {

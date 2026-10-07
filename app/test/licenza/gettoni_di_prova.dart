@@ -32,6 +32,7 @@ Future<String> firmaUnGettone({
   DateTime? emesso,
   int v = 1,
   bool prova = false,
+  DateTime? pagato,
   String privata = privataDiProva,
 }) async {
   final adesso = DateTime.now();
@@ -49,6 +50,7 @@ Future<String> firmaUnGettone({
         (fino ?? adesso.add(const Duration(days: 7))).millisecondsSinceEpoch,
     'emesso': (emesso ?? adesso).millisecondsSinceEpoch,
     if (prova) 'prova': true,
+    'pagato': ?pagato?.millisecondsSinceEpoch,
   };
   final primo = _b64(utf8.encode(jsonEncode(payload)));
   final coppia = await Ed25519().newKeyPairFromSeed(

@@ -60,6 +60,37 @@
  * chiedono i gettoni, e ogni ora per tutte. Una volta l'ora al massimo per
  * licenza; se il negozio non risponde si tiene quello che si sapeva, e se dice
  * che e' finito (scaduto, rimborsato) la licenza scade da se'.
+ *
+ * Il rinnovo pero' il negozio lo fa a periodo finito, o quasi: Google alla
+ * scadenza, Apple nel giorno prima. Fra il rinnovo, il quadro che lo scopre
+ * (entro un'ora) e la casa che richiede i gettoni (ogni sei ore) passano delle
+ * ore, e con il gettone fermo alla fine del periodo pagato chi paga
+ * resterebbe Base per tutto quel tempo, a ogni rinnovo. Percio' una licenza
+ * del negozio vale ancora **tre giorni** dopo la fine del periodo pagato
+ * (`MARGINE_DEL_RINNOVO`): bastano per un rinnovo in ritardo, per un quadro
+ * fermo un fine settimana, per una casa senza rete in quei giorni. Nel
+ * gettone `scade` e' la fine del periodo piu' il margine, e la fine vera sta
+ * in `pagato`: e' quella che si scrive a schermo. Chi disdice tiene Premium
+ * al massimo tre giorni in piu'; chi paga non lo perde per un ritardo.
+ *
+ * ─── Gli abbonamenti ─────────────────────────────────────────────────────
+ *
+ * La Gestione ha una schermata «Abbonamenti»: quanti sono attivi, mensili e
+ * annuali, in prova gratuita, disdetti, per App Store e per Google Play, e
+ * uno per riga (`abbonamenti`). Per questo una licenza del negozio tiene
+ * anche com'e' fatto l'abbonamento (`negozio.abbonamento`: piano, prezzo,
+ * rinnovo automatico, acquisto di prova, da quando, paese — `negozi.js`), e
+ * due cose della sua storia: se e' stata in prova gratuita (`fuInProva`) e se
+ * dopo la prova ha pagato (`pagatoDopoLaProva`).
+ *
+ * Il rinnovo automatico si spegne quando il cliente disdice, e il negozio non
+ * lo dice a nessuno. Chi aspettasse la scadenza per saperlo vedrebbe un
+ * annuale disdetto a gennaio solo a dicembre. Percio' una volta al giorno il
+ * quadro richiede al negozio **ogni** abbonamento, non solo quelli vicini
+ * alla scadenza (`aggiorna`, nel giro di ogni ora). Una richiesta al giorno
+ * per abbonamento: i limiti dei negozi sono lontanissimi.
+ *
+ * Niente di questo cambia chi e' Premium: lo decide la scadenza, come prima.
  */
 
 import {
@@ -107,8 +138,18 @@ export const DOPO_SCADUTA = 35 * 24 * 60 * 60 * 1000;
 /** Una licenza si richiede al negozio al massimo una volta in questo tempo. */
 export const UNA_VOLTA_OGNI = 60 * 60 * 1000;
 
+/** Quanto vale ancora una licenza del negozio dopo il periodo pagato: il tempo
+ * che il rinnovo arrivi fino alla casa («I rinnovi», in cima). */
+export const MARGINE_DEL_RINNOVO = 3 * 24 * 60 * 60 * 1000;
+
 /** Quanto si aspetta il negozio mentre qualcuno aspetta i suoi gettoni. */
 export const ATTESA_DEL_NEGOZIO = 5000;
+
+/** Ogni quanto si richiede al negozio un abbonamento, anche lontano dalla scadenza. */
+export const UNA_VOLTA_AL_GIORNO = 24 * 60 * 60 * 1000;
+
+/** Quanti abbonamenti si mandano alla Gestione, al massimo, uno per riga. */
+export const ABBONAMENTI_IN_ELENCO = 500;
 
 /** Quanti mesi al massimo per un regalo a tempo: dieci anni. Oltre, «per sempre». */
 export const MESI_AL_MASSIMO = 120;
@@ -330,6 +371,61 @@ export function ilPacchettoDetto(detto) {
   return fuori;
 }
 
+/**
+ * I conti degli abbonamenti, dalle righe di `Licenze.abbonamenti`.
+ *
+ * - `attivi`: quelli che valgono adesso, prova gratuita compresa; `mensili`
+ *   e `annuali` sono gli stessi divisi per piano, `prova` e `disdetti` sono
+ *   «di cui»: in prova gratuita, e col rinnovo spento (finiscono a scadenza);
+ * - `rinnovi7`: quelli che si rinnovano — o passano a pagamento — entro
+ *   sette giorni;
+ * - `finiti30`: quelli finiti negli ultimi trenta giorni;
+ * - `prove`: le prove gratuite finite, e quante sono passate a pagamento;
+ * - `alMese`: quello che pagano al mese i clienti degli abbonamenti che si
+ *   rinnovano, valuta per valuta, IVA compresa e prima della commissione del
+ *   negozio — un annuale conta un dodicesimo. La prova non paga, e chi ha
+ *   disdetto non paga piu'.
+ */
+export function contaGliAbbonamenti(righe, ora = Date.now()) {
+  const GIORNO = 24 * 60 * 60 * 1000;
+  const valide = righe.filter((riga) => riga.vale);
+  const quante = (filtro) => valide.filter(filtro).length;
+  const alMese = {};
+  for (const riga of valide) {
+    if (riga.prova || riga.rinnovo === false || !(riga.prezzo > 0) || !riga.valuta) continue;
+    const alMeseSuo =
+      riga.piano === "annuale" ? riga.prezzo / 12 : riga.piano === "mensile" ? riga.prezzo : null;
+    if (alMeseSuo === null) continue;
+    alMese[riga.valuta] = Math.round(((alMese[riga.valuta] || 0) + alMeseSuo) * 100) / 100;
+  }
+  return {
+    attivi: valide.length,
+    mensili: quante((riga) => riga.piano === "mensile"),
+    annuali: quante((riga) => riga.piano === "annuale"),
+    prova: quante((riga) => riga.prova),
+    disdetti: quante((riga) => riga.rinnovo === false),
+    rinnovi7: quante(
+      (riga) =>
+        riga.rinnovo !== false &&
+        riga.pagato !== null &&
+        riga.pagato >= ora &&
+        riga.pagato - ora <= 7 * GIORNO,
+    ),
+    finiti30: righe.filter(
+      (riga) =>
+        !riga.vale &&
+        riga.pagato !== null &&
+        riga.pagato <= ora &&
+        ora - riga.pagato <= 30 * GIORNO,
+    ).length,
+    prove: {
+      finite: righe.filter((riga) => riga.fuInProva && !(riga.vale && riga.prova)).length,
+      pagate: righe.filter((riga) => riga.fuInProva && riga.pagatoDopoLaProva).length,
+    },
+    alMese,
+  };
+}
+
 export class Licenze {
   /**
    * @param {object} opzioni
@@ -395,9 +491,21 @@ export class Licenze {
 
   /* ─── Quello che si risponde a chi chiede ────────────────────────────── */
 
-  /** Se una licenza vale adesso: non tolta, e non scaduta. */
+  /** Se una licenza vale adesso: non tolta, e non finita. */
   vale(una, ora = this.adesso()) {
-    return Boolean(una) && !una.revocata && (una.scade === null || una.scade > ora);
+    if (!una || una.revocata) return false;
+    const fine = this.fineDi(una);
+    return fine === null || fine > ora;
+  }
+
+  /**
+   * Fino a quando vale una licenza: la sua scadenza, e per una del negozio
+   * tre giorni dopo, il tempo che il rinnovo arrivi (`MARGINE_DEL_RINNOVO`).
+   * `null`: per sempre.
+   */
+  fineDi(una) {
+    if (una.scade === null) return null;
+    return una.origine === "negozio" ? una.scade + MARGINE_DEL_RINNOVO : una.scade;
   }
 
   /**
@@ -418,10 +526,7 @@ export class Licenze {
     for (const app of APP) {
       const migliore = sue
         .filter((una) => una.app === app)
-        .sort(
-          (a, b) =>
-            (a.scade === null ? Infinity : a.scade) - (b.scade === null ? Infinity : b.scade),
-        )
+        .sort((a, b) => (this.fineDi(a) ?? Infinity) - (this.fineDi(b) ?? Infinity))
         .at(-1);
       if (migliore) gettoni[app] = this.gettone(migliore, ora);
     }
@@ -438,20 +543,25 @@ export class Licenze {
   }
 
   /**
-   * Il gettone di una licenza, firmato adesso. `prova` c'e' solo quando e'
-   * vero: chi verifica i campi che non conosce li lascia stare.
+   * Il gettone di una licenza, firmato adesso. `scade` e' fino a quando la
+   * licenza vale (`fineDi`); `pagato` c'e' quando la fine del periodo pagato
+   * e' un'altra — le licenze del negozio — ed e' quella da scrivere a
+   * schermo. `pagato` e `prova` ci sono solo quando servono: chi verifica i
+   * campi che non conosce li lascia stare.
    */
   gettone(una, ora = this.adesso()) {
-    const fino = una.scade === null ? ora + OTTO_GIORNI : Math.min(ora + OTTO_GIORNI, una.scade);
+    const fine = this.fineDi(una);
+    const fino = fine === null ? ora + OTTO_GIORNI : Math.min(ora + OTTO_GIORNI, fine);
     return firmaIlGettone(this.privata, {
       v: 1,
       app: una.app,
       sog: una.sog,
       lic: una.lic,
       origine: una.origine,
-      scade: una.scade,
+      scade: fine,
       fino,
       emesso: ora,
+      ...(fine !== una.scade ? { pagato: una.scade } : {}),
       ...(una.prova ? { prova: true } : {}),
     });
   }
@@ -633,6 +743,7 @@ export class Licenze {
     prodotto,
     prova = false,
     ricevuta = null,
+    abbonamento = null,
   }) {
     unaApp(app);
     const chiave = createHash("sha256").update(`${piattaforma}:${acquisto}`).digest("hex");
@@ -653,16 +764,57 @@ export class Licenze {
         negozio: { chiave, piattaforma, prodotto, ...(ricevuta ? { ricevuta } : {}) },
       });
     } else {
+      /* Com'e' fatto l'abbonamento resta: lo stesso acquisto, visto ancora. */
+      const { abbonamento: suo, aggiornata } = una.negozio || {};
       una.sog = sog;
       una.app = app;
       una.scade = scade;
-      una.negozio = { chiave, piattaforma, prodotto, ...(ricevuta ? { ricevuta } : {}) };
+      una.negozio = {
+        chiave,
+        piattaforma,
+        prodotto,
+        ...(ricevuta ? { ricevuta } : {}),
+        ...(suo ? { abbonamento: suo } : {}),
+        ...(aggiornata ? { aggiornata } : {}),
+      };
       una.visto = this.adesso();
     }
-    una.prova = Boolean(prova);
+    this._laProva(una, prova);
+    this._lAbbonamento(una, abbonamento);
     una.ricontrollata = this.adesso();
     this.archivio.salva();
     return una;
+  }
+
+  /* La prova gratuita, e la sua storia: se c'e' stata, e se dopo si e'
+   * pagato. Una licenza che era in prova e adesso non lo e' piu', e il
+   * negozio la da' ancora buona, e' passata a pagamento. */
+  _laProva(una, prova) {
+    una.prova = Boolean(prova);
+    if (una.prova) una.fuInProva = true;
+    else if (una.fuInProva) una.pagatoDopoLaProva = true;
+  }
+
+  /* Com'e' fatto l'abbonamento, da quello che il negozio ha appena detto e da
+   * quello che si sapeva. Quello che il negozio stavolta non dice — il
+   * rinnovo, che Apple dice solo a volte, o il prezzo, che durante la prova
+   * non dice — resta com'era. */
+  _lAbbonamento(una, detto) {
+    if (!detto || typeof detto !== "object") return;
+    const prima = una.negozio.abbonamento || {};
+    una.negozio.abbonamento = {
+      piano: detto.piano || prima.piano || "",
+      prezzo: detto.prezzo ?? prima.prezzo ?? null,
+      valuta:
+        (detto.prezzo ?? null) !== null ? detto.valuta || "" : prima.valuta || detto.valuta || "",
+      rinnovo: typeof detto.rinnovo === "boolean" ? detto.rinnovo : (prima.rinnovo ?? null),
+      sandbox: Boolean(detto.sandbox),
+      inizio: detto.inizio ?? prima.inizio ?? null,
+      paese: detto.paese || prima.paese || "",
+    };
+    /* Col rinnovo detto, la richiesta di ogni giorno puo' aspettare domani. */
+    if (typeof detto.rinnovo === "boolean") una.negozio.aggiornata = this.adesso();
+    delete una.negozio.finito;
   }
 
   /* ─── I rinnovi ─────────────────────────────────────────────────────── */
@@ -741,13 +893,148 @@ export class Licenze {
    * quella: un rinnovo non sposta niente. */
   _dalRicontrollo(una, esito) {
     if (!esito || esito.app !== una.app) return false;
-    una.prova = Boolean(esito.prova);
+    this._laProva(una, esito.prova);
     if (esito.prodotto) una.negozio.prodotto = esito.prodotto;
     if (esito.ricevuta) una.negozio.ricevuta = esito.ricevuta;
+    this._lAbbonamento(una, esito.abbonamento);
+    una.negozio.aggiornata = this.adesso();
     const allungata = Number(esito.scade) > (una.scade ?? Infinity);
     if (allungata) una.scade = Number(esito.scade);
     this.archivio.salva();
     return allungata;
+  }
+
+  /**
+   * Gli abbonamenti da richiedere al negozio oggi, anche lontani dalla
+   * scadenza: per sapere chi ha disdetto, e com'e' fatto l'abbonamento. Non
+   * tolti, con quello che serve per chiederli, non finiti (il negozio ha gia'
+   * detto che sono scaduti o rimborsati), non richiesti nell'ultimo giorno e
+   * nemmeno nell'ultima ora per il rinnovo.
+   */
+  daAggiornare({ ora = this.adesso() } = {}) {
+    return this.licenze.filter(
+      (una) =>
+        una.origine === "negozio" &&
+        !una.revocata &&
+        una.negozio?.ricevuta &&
+        !una.negozio.finito &&
+        una.scade !== null &&
+        ora - una.scade < DOPO_SCADUTA &&
+        !(una.negozio.aggiornata && ora - una.negozio.aggiornata < UNA_VOLTA_AL_GIORNO) &&
+        !(una.ricontrollata && ora - una.ricontrollata < UNA_VOLTA_OGNI),
+    );
+  }
+
+  /**
+   * Richiede al negozio gli abbonamenti di `daAggiornare`, uno alla volta.
+   * Non solleva mai. Un abbonamento che il negozio dice finito (scaduto,
+   * rimborsato) resta com'e' — scade da se', come per i rinnovi — e si segna
+   * `finito`, cosi' non si richiede piu'. Se il negozio non risponde si
+   * riprova al giro dopo. Torna quanti ne ha aggiornati.
+   */
+  async aggiorna(negozi, { attesa = ATTESA_DEL_NEGOZIO, registro = null } = {}) {
+    const ora = this.adesso();
+    const quali = this.daAggiornare({ ora }).filter((una) =>
+      negozi?.configurato?.(una.negozio.piattaforma),
+    );
+    let aggiornati = 0;
+    for (const una of quali) {
+      una.ricontrollata = ora;
+      const lavoro = negozi
+        .ricontrolla({ piattaforma: una.negozio.piattaforma, ricevuta: una.negozio.ricevuta })
+        .then((esito) => {
+          this._dalRicontrollo(una, esito);
+          aggiornati += 1;
+        })
+        .catch((errore) => {
+          if (errore?.errore) {
+            una.negozio.finito = errore.errore;
+            una.negozio.aggiornata = ora;
+          }
+          registro?.[errore?.errore ? "info" : "attenzione"]?.(
+            `l'abbonamento di ${una.lic} non si e' potuto aggiornare: ${errore?.errore || errore?.message || errore}`,
+          );
+        });
+      let timer;
+      const scaduto = new Promise((ok) => {
+        timer = setTimeout(ok, attesa);
+        timer.unref?.();
+      });
+      await Promise.race([lavoro, scaduto]);
+      clearTimeout(timer);
+    }
+    if (quali.length) this.archivio.salva();
+    return aggiornati;
+  }
+
+  /* ─── Gli abbonamenti, per la Gestione ──────────────────────────────── */
+
+  /* Un abbonamento del negozio, come lo legge la schermata «Abbonamenti».
+   * `pagato` e' la fine del periodo pagato, o della prova: quella che si
+   * scrive. Lo stato e' uno solo: scaduto, disdetto (vale ancora ma non si
+   * rinnova), in prova, attivo. Gli acquisti di prova hanno lo stato vero
+   * come gli altri, e in piu' `sandbox`: si vedono, e non si contano. */
+  _rigaDellAbbonamento(una, ora) {
+    const suo = una.negozio.abbonamento || {};
+    const vale = this.vale(una, ora);
+    const rinnovo = typeof suo.rinnovo === "boolean" ? suo.rinnovo : null;
+    return {
+      lic: una.lic,
+      app: una.app,
+      sog: una.sog,
+      piattaforma: una.negozio.piattaforma,
+      prodotto: una.negozio.prodotto || "",
+      piano: suo.piano || "",
+      prezzo: suo.prezzo ?? null,
+      valuta: suo.valuta || "",
+      rinnovo,
+      sandbox: Boolean(suo.sandbox),
+      paese: suo.paese || "",
+      inizio: suo.inizio ?? una.creata ?? null,
+      pagato: una.scade,
+      vale,
+      stato: !vale ? "scaduto" : rinnovo === false ? "disdetto" : una.prova ? "prova" : "attivo",
+      prova: Boolean(una.prova),
+      fuInProva: Boolean(una.fuInProva),
+      pagatoDopoLaProva: Boolean(una.pagatoDopoLaProva),
+      finito: una.negozio.finito || null,
+      aggiornata: una.negozio.aggiornata || null,
+    };
+  }
+
+  /**
+   * La schermata «Abbonamenti»: i conti di tutti, quelli di App Store e di
+   * Google Play, e uno per riga. Gli acquisti di prova stanno nell'elenco e
+   * fuori dai conti.
+   */
+  abbonamenti(ora = this.adesso()) {
+    const ORDINE = { prova: 0, attivo: 1, disdetto: 2, scaduto: 3 };
+    const righe = this.licenze
+      .filter((una) => una.origine === "negozio" && una.negozio)
+      .map((una) => this._rigaDellAbbonamento(una, ora))
+      .sort(
+        (a, b) =>
+          Number(a.sandbox) - Number(b.sandbox) ||
+          ORDINE[a.stato] - ORDINE[b.stato] ||
+          (b.inizio ?? 0) - (a.inizio ?? 0),
+      );
+    const vere = righe.filter((riga) => !riga.sandbox);
+    return {
+      accese: this.accese,
+      conti: contaGliAbbonamenti(vere, ora),
+      negozi: {
+        ios: contaGliAbbonamenti(
+          vere.filter((riga) => riga.piattaforma === "ios"),
+          ora,
+        ),
+        android: contaGliAbbonamenti(
+          vere.filter((riga) => riga.piattaforma === "android"),
+          ora,
+        ),
+      },
+      prove: righe.length - vere.length,
+      elenco: righe.slice(0, ABBONAMENTI_IN_ELENCO),
+    };
   }
 
   /* ─── Il pacchetto degli installatori ───────────────────────────────── */

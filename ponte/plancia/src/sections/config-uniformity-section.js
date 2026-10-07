@@ -25,7 +25,7 @@
  * runtime's own `edSecTog` handler.
  */
 import { CHIAVI_PER_SCHEDA } from "../core/lelenco-delle-sezioni.js";
-import { clean, doc, installStyle, onEditorRedraw, root, t, wrapFunction } from "./shared.js";
+import { clean, doc, installStyle, onEditorRedraw, root, t, wrapFunction, senzaCadere } from "./shared.js";
 
 const KEY = "__DASHBOARDMODERN_CONFIG_UNIFORMITY__";
 const STYLE_ID = "dm-config-uniformity-style";
@@ -533,5 +533,5 @@ export function installConfigUniformitySection() {
 if (doc?.readyState === "loading") {
   doc.addEventListener("DOMContentLoaded", installConfigUniformitySection, { once: true });
 } else {
-  installConfigUniformitySection();
+  senzaCadere(installConfigUniformitySection);
 }

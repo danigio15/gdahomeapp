@@ -221,6 +221,6 @@ test("la scelta viaggia con la plancia, come le sezioni proprie", () => {
   );
   /* E la plancia le installa: senza questo non le disegnerebbe nessuno. */
   const runtime = leggi("sections/section-runtime.js");
-  assert.match(runtime, /installEntitaMie\(\);/);
-  assert.match(runtime, /installEntitaMieEditor\(\);/);
+  assert.match(runtime, /senzaCadere\(installEntitaMie\);/);
+  assert.match(runtime, /senzaCadere\(installEntitaMieEditor\);/);
 });

@@ -41,7 +41,7 @@ import {
   serverPerDispositivo,
 } from "./macchine-e-rete-section.js";
 import { costruisciSchedaDichiarata } from "./scheda-dichiarata-section.js";
-import { allStates, clean, doc, esc, readJson, root, t, writeJsonIfChanged } from "./shared.js";
+import { allStates, clean, doc, esc, readJson, root, t, writeJsonIfChanged, senzaCadere } from "./shared.js";
 import { nomeDaHomeAssistant } from "./editor-slots-section.js";
 
 const KEY = "__DASHBOARDMODERN_MACCHINE_EDITOR__";
@@ -292,4 +292,4 @@ export function installMacchineEditor() {
   return scheda.installa();
 }
 
-installMacchineEditor();
+senzaCadere(installMacchineEditor);

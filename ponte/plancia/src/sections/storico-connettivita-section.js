@@ -27,6 +27,7 @@ import {
   root,
   t,
   wrapFunction,
+  senzaCadere,
 } from "./shared.js";
 
 const KEY = "__DASHBOARDMODERN_STORICO_CONNETTIVITA__";
@@ -321,4 +322,4 @@ export function installStoricoConnettivita() {
   return true;
 }
 
-installStoricoConnettivita();
+senzaCadere(installStoricoConnettivita);

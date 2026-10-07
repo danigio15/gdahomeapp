@@ -69,6 +69,7 @@ import {
   t,
   wrapFunction,
   writeJsonIfChanged,
+  senzaCadere,
 } from "./shared.js";
 
 const KEY = "__DASHBOARDMODERN_AUTO_TERMICA__";
@@ -1012,4 +1013,4 @@ export function installAutoTermica() {
   return true;
 }
 
-installAutoTermica();
+senzaCadere(installAutoTermica);

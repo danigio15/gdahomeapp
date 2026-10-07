@@ -11,6 +11,168 @@ fuori. La plancia dentro continua a dire la sua, e si legge dov'è sempre
 stata: nella pastiglia «La plancia» della console. Sono due numeri perché
 sono due cose.
 
+## 1.10.2
+
+**In auto «Dispositivi» non chiude più l'app.** Sulla mappa del navigatore,
+il tasto con la casa e poi «Dispositivi» facevano chiudere gdahome. La barra
+in alto di quella schermata aveva due tasti scritti, «Azioni» e «Casa», ma
+sopra una griglia Android Auto ne accetta uno solo: l'altro dev'essere
+un'icona. Adesso le azioni rapide hanno il fulmine, lo stesso della loro
+schermata, e «Casa» resta scritto.
+
+**In auto la scheda della colonnina si apre.** Toccando una colonnina sulla
+mappa, l'auto mostrava «Si è verificato un errore imprevisto nell'app
+gdahome»: Android Auto rifiutava la scheda disegnata sopra la mappa, un
+modello che nella libreria dell'app è ancora sperimentale. Adesso la scheda si
+apre come pagina a sé, col cerchio dello stato, la potenza, le prese libere,
+il prezzo e «Vai»; la freccia in alto riporta alla mappa.
+
+Le due correzioni sono tutte nell'app: l'add-on cambia solo numero.
+
+## 1.10.1
+
+**La casa di prova.** Nella console dell'add-on c'è una scheda nuova, «Casa di
+prova», per chi deve provare l'app senza abitare la casa: chi la rivede per
+l'App Store prima di pubblicarla. Fa un codice che vale fino a 7 giorni e per
+più telefoni, da mettere nelle note per la revisione, anche come QR da
+scaricare. Chi lo usa entra come un utente di Home Assistant che non
+amministra, scelto nella scheda, e vede solo quello che vede lui. I telefoni
+entrati con quel codice hanno accanto al nome «di prova · fino al …», ed
+escono da soli alla scadenza; «Revoca adesso» li fa uscire subito. Il codice
+di tutti i giorni resta com'era, e i due non si disturbano.
+
+**Il codice regalo si riscatta anche fuori casa.** Con la casa Base, da fuori
+casa l'app non si collega, e il codice regalo si fermava con «La casa non è
+collegata adesso». Adesso lo porta il centralino, firmato dal telefono, come
+già la ricevuta di chi compra: la casa diventa Premium e l'app entra. Serve
+l'app 1.10.1 e l'add-on 1.10.1; con l'add-on di prima l'app dice di
+aggiornarlo, e intanto il codice si riscatta dalla console dell'add-on o
+dall'app sul Wi-Fi di casa.
+
+**I prezzi della pagina Premium sono sempre quelli del negozio.** L'app
+chiedeva prezzi e prova gratuita al Play Store, o all'App Store, una volta
+sola, quando partiva. Se restava aperta, la pagina Premium continuava a
+mostrare i prezzi di allora, mentre al momento di pagare il negozio chiedeva
+quelli nuovi. Adesso li richiede ogni volta che si apre la pagina: si vede
+subito un prezzo cambiato o una prova appena accesa, e la prova sparisce a
+chi l'ha già usata. Se il negozio non risponde, restano i prezzi di prima.
+
+## 1.10.0
+
+**gdahome Premium si accende.** Da questa versione una casa è Premium se ha una
+licenza, comprata nell'app o regalata, e Base se non ce l'ha. La licenza è della
+casa: sono Premium insieme a lei tutti i telefoni abbinati e il browser.
+
+- **Base**, gratis: una casa, la plancia principale, l'accesso dalla rete di
+  casa.
+- **Premium**: fino a 8 plance e 10 case, l'accesso da fuori casa, la
+  configurazione della plancia e i dispositivi Zigbee dall'app, e gdanav
+  Premium compreso.
+
+**Premium si compra nell'app gdahome, sull'iPhone e su Android.** C'è
+l'abbonamento mensile e quello annuale, ai prezzi scritti nel negozio, e la
+prima volta i primi 14 giorni sono gratis. Si disdice dal negozio, quando si
+vuole. Chi cambia telefono ritrova l'abbonamento con «Ripristina
+abbonamento»: se sta su un'altra casa, l'app prima chiede, perché un
+abbonamento vale per una casa alla volta.
+
+**La casa deve avere l'add-on 1.10.0.** È l'add-on che tiene la licenza della
+casa e la rinnova da solo. Con un add-on più vecchio la casa resta Base, e la
+pagina Premium dell'app dice di aggiornarlo invece di proporre l'abbonamento:
+nessuno paga per una casa che non può diventare Premium.
+
+**Le licenze regalate valgono.** Quelle date dalla Gestione o
+dall'installatore arrivano alla casa da sole. Un codice regalo si riscatta
+dall'app per Android, dal browser o dalla console dell'add-on. Sull'iPhone il
+codice non si inserisce, per le regole dell'App Store, ma Premium arriva anche
+lì, perché è della casa.
+
+**La matricola della casa si copia.** Nella console dell'add-on, scheda
+«Licenza», c'è la riga «Matricola di questa casa» con il tasto «Copia»: è
+quella che serve a chi deve regalare Premium a questa casa.
+
+**Le icone tornano quelle della 1.8.0, meteo compreso.** I disegni che con la
+1.9.2 avevano preso il posto delle emoji non ci sono più: nella Home, nel
+meteo, nelle stanze e negli editor tornano le icone di prima. Restano tutte le
+novità della 1.9.0 e della 1.9.2, con le icone della 1.8.0: la stanza come
+tavola di comandi, le batterie di accumulo, la cottura e i varchi da escludere
+dall'antifurto.
+
+**Nella Gestione gdahome ci sono gli abbonamenti.** Una pagina nuova,
+«Abbonamenti», dice quanti abbonamenti ci sono su App Store e su Google Play,
+quanti mensili e quanti annuali, quanti in prova gratuita e quanti disdetti,
+quanti sono finiti negli ultimi 30 giorni e quante prove sono passate a
+pagamento. Sotto c'è l'elenco, un abbonamento per riga, con la casa, il piano,
+il prezzo e cosa succede dopo. Gli acquisti di prova (TestFlight e tester di
+Google) si vedono, ma non entrano nei conti. Una volta al giorno il quadro
+richiede ogni abbonamento al negozio, così chi disdice si vede il giorno dopo.
+
+**Regalare Premium a una casa è più semplice.** In «Licenze» la casa si sceglie
+da un elenco con tutte le case degli installatori, col loro nome. Per una casa
+che non è di nessun installatore resta la casella della matricola, e nella
+scheda di un impianto la matricola è intera, con «Copia».
+
+## 1.9.2
+
+**Torna la plancia della 1.9.0, con la correzione che mancava.** Tornano la
+stanza aperta come tavola di comandi, le batterie di accumulo in Energia, la
+cottura negli Elettrodomestici, i varchi da escludere dall'antifurto, i disegni
+del catalogo al posto delle emoji, e le correzioni arrivate con la 1.9.0: il
+clima acceso dal telecomando, il nome del piano nuovo, la card del Clima sul
+telefono e le telecamere nel muro della Sicurezza. Cosa fa ognuna è scritto
+qui sotto, nella 1.9.0.
+
+**Perché la 1.9.0 si fermava dopo le azioni rapide.** Nella pagina Sicurezza la
+riga delle zone della centrale usava un nome che in quel punto non esiste.
+Bastava una zona scritta sulla centrale perché la riga si fermasse con un
+errore. La pagina Sicurezza si prepara mentre la plancia si carica, e quell'errore
+fermava tutta la parte nuova: restavano la testata, il meteo e le azioni
+rapide. Nella casa di prova le zone non ci sono, per questo le prove erano
+verdi. Adesso la riga delle zone si disegna, e il lucchetto aperto sta
+sull'ingresso escluso, dove deve stare.
+
+**Un pezzo che si rompe non spegne più la Home.** La plancia accende i suoi
+pezzi uno per uno: se uno cade lo scrive nella console del browser, e gli altri
+partono lo stesso. Rimettendo apposta l'errore della 1.9.0, la Home esce
+intera e manca solo la riga delle zone.
+
+**Il no allo spegnimento programmato si legge di nuovo.** Quando Home Assistant
+rifiutava uno spegnimento programmato, invece dell'avviso arrivava un errore
+della plancia. Adesso compare il messaggio che dice di aggiornare
+l'integrazione.
+
+**Dopo un riavvio di Home Assistant il telefono non risulta più staccato.**
+Mentre Home Assistant si riavviava o si aggiornava, l'add-on rispondeva al
+telefono come a un telefono tolto: l'app diceva «Questo telefono è stato
+staccato», smetteva di riprovare e chiedeva di riabbinarsi. Adesso l'add-on
+dice «riprova più tardi», e l'app torna da sola appena Home Assistant è di
+nuovo su. Un telefono tolto davvero dalla console resta staccato, come prima.
+
+**In auto l'icona del comando rapido la scegli tu.** Nell'app, in «Comandi
+rapidi in auto», toccando un comando c'è «Icona in auto»: cancello, porta,
+luce, presa, scena, serratura o azione. Si vede su Android Auto e su CarPlay.
+La tendina parte dall'icona che il comando ha già in auto, e cambiare solo il
+nome non cambia l'icona.
+
+**Il navigatore ricorda la voce spenta.** Se togli la voce, resta tolta anche
+quando l'app riparte. Su Android Auto toccare un punto sulla mappa non chiude più
+il navigatore, e la scheda della colonnina si apre anche quando lo
+stato di adesso non arriva. Agli svincoli la curva si misura senza entrare
+nella manovra dopo: con due manovre vicine, una poteva sembrare più stretta o
+più larga di com'era.
+
+**L'app nel browser resta in HTTPS.** Il tramite chiede al browser di non
+tornare in HTTP per il suo indirizzo, e di chiedere in HTTPS anche le risorse
+scritte con l'indirizzo in chiaro.
+
+**Prima di mandare una segnalazione, l'app dice che sarà pubblica.** Sopra
+«Manda» c'è un riquadro: la segnalazione diventa una pagina su GitHub che
+chiunque può leggere, con le foto e i video, e non va scritto niente di
+personale. In inglese le segnalazioni adesso sono tutte in inglese: erano
+rimasti in italiano «Foto e video», l'avanzamento degli allegati, l'avviso di
+un allegato non partito, lo stato di ogni segnalazione («aperta», «chiusa»),
+il conto dei messaggi, e sotto i fumetti «tu» e «chi fa l'app».
+
 ## 1.9.1
 
 **Torna la plancia della 1.8.0.** Con la plancia della 1.9.0, su molte case,

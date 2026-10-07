@@ -37,6 +37,7 @@ import {
   temperatureCardLabels,
   writeIconGlyph,
   writeJsonIfChanged,
+  senzaCadere,
 } from "./shared.js";
 
 const KEY = "__DASHBOARDMODERN_BETA26_REAL_DEVICE_STABILITY__";
@@ -1545,4 +1546,4 @@ export function installBeta26RealDeviceStability() {
 
 if (doc?.readyState === "loading")
   doc.addEventListener("DOMContentLoaded", installBeta26RealDeviceStability, { once: true });
-else installBeta26RealDeviceStability();
+else senzaCadere(installBeta26RealDeviceStability);

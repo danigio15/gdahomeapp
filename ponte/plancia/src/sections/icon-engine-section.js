@@ -18,7 +18,7 @@ import {
 } from "../core/personalization-catalog.js";
 import { applianceArtwork, canonicalArtworkType } from "../core/appliance-artwork.js";
 import { chiaviDaProvare, disegnoDelCatalogo } from "../core/catalogo-disegni.js";
-import { clean, doc, esc, installStyle, root, t } from "./shared.js";
+import { clean, doc, esc, installStyle, root, t, senzaCadere } from "./shared.js";
 
 globalThis.__DM_20260815C__ = true;
 const KEY = "__DASHBOARDMODERN_ICON_ENGINE__";
@@ -1033,4 +1033,4 @@ root.DashboardModernIconEngine = Object.freeze({
   syncEditor: syncEditorIconSurfaces,
 });
 
-installIconEngine();
+senzaCadere(installIconEngine);

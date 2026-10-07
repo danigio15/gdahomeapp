@@ -28,6 +28,7 @@ import {
   root,
   t,
   wrapFunction,
+  senzaCadere,
 } from "./shared.js";
 
 const KEY = "__DASHBOARDMODERN_SECURITY_DOORS__";
@@ -606,4 +607,4 @@ export function installSecurityDoorsSection() {
   else schedule();
 }
 
-installSecurityDoorsSection();
+senzaCadere(installSecurityDoorsSection);

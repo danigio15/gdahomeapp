@@ -43,6 +43,7 @@ import {
   t,
   wrapFunction,
   writeJsonIfChanged,
+  senzaCadere,
 } from "./shared.js";
 import { disegnoDelBidone } from "../core/disegni-rifiuti.js";
 
@@ -560,4 +561,4 @@ export function installRifiutiEditor() {
   return true;
 }
 
-installRifiutiEditor();
+senzaCadere(installRifiutiEditor);

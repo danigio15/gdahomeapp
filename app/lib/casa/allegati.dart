@@ -93,7 +93,9 @@ Future<Allegato?> scegliDalTelefono(DaDoveLAllegato daDove) async {
     );
   }
   return Allegato(
-    nome: file.name.isEmpty ? 'allegato' : file.name,
+    nome: file.name.isEmpty
+        ? inLingua(it: 'allegato', en: 'attachment')
+        : file.name,
     tipo: file.mimeType ?? tipoDalNome(file.name),
     byte: byte,
   );

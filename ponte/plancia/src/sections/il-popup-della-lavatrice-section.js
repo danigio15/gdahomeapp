@@ -33,6 +33,7 @@ import {
   section,
   t,
   wrapFunction,
+  senzaCadere,
 } from "./shared.js";
 
 const KEY = "__DASHBOARDMODERN_POPUP_LAVATRICE__";
@@ -477,5 +478,5 @@ export function installPopupLavatrice() {
 if (doc?.readyState === "loading") {
   doc.addEventListener("DOMContentLoaded", installPopupLavatrice, { once: true });
 } else {
-  installPopupLavatrice();
+  senzaCadere(installPopupLavatrice);
 }

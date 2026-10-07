@@ -22,7 +22,9 @@ import { leVersioni, versioneMinimaDa } from "../src/versioni.js";
 async function banco(opzioni = {}) {
   const cartella = mkdtempSync(join(tmpdir(), "versioni-"));
   const case_ = new Case({ cartella });
-  const centralino = new Centralino({ case: case_ });
+  /* Qui si prova il centralino, non la licenza: senza chiave, come oggi,
+   * qualunque sia quella scritta nel codice (`docs/LICENZE.md`). */
+  const centralino = new Centralino({ case: case_, chiaveLicenze: "" });
   const server = costruisciIlServer({ centralino, ...opzioni });
   await new Promise((ok) => server.listen(0, "127.0.0.1", ok));
   return {

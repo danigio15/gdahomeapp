@@ -50,6 +50,7 @@ import {
   selectedPeriod,
   t,
   wrapFunction,
+  senzaCadere,
 } from "./shared.js";
 import {
   isHostedDashboard,
@@ -759,14 +760,16 @@ export async function loadAtomicEnergyBundle(
   }
 
   /* Un pacchetto si butta via solo se nel frattempo e' cambiato cio' che
-   * legge: un altro periodo, un altro impianto, una configurazione nuova.
+   * legge: un altro impianto, una configurazione nuova. Il mese scelto sulla
+   * pagina lo guarda chi l'ha chiesto (`eseguiIlRefresh`): da qui si puo'
+   * chiedere anche un mese che non e' quello sullo schermo.
    * Prima bastava che PARTISSE una richiesta nuova — e ne partono di
    * continuo: il guscio a ogni giro, gli stati che cambiano, la pagina che si
    * apre — perche' quella in corso, a risposta arrivata, venisse scartata.
    * Con le domande al Recorder in fila il giro dura di piu', e non arrivava
    * mai in fondo prima che qualcuno lo scavalcasse: «i dati non si
    * aggiornano», per sempre, senza nemmeno una riga che lo dicesse. */
-  if (chiave !== chiaveDelCarico(selectedPeriod())) return null;
+  if (chiave !== chiaveDelCarico(period)) return null;
 
   const record = {
     day: buildPeriodRecord(fonti.day, letture.fonteDay.valori),
@@ -2021,6 +2024,11 @@ async function eseguiIlRefresh(period, carico) {
       if (state.caricoInCorso === carico) segnaLAttesa();
     });
     if (!bundle) return false;
+    /* Un pacchetto chiesto per un mese che nel frattempo non e' piu' quello
+     * scelto non si dipinge sopra la vista di adesso. La chiave e' quella del
+     * carico che l'ha chiesto: qui dentro non ce n'e' un'altra, e il nome
+     * `chiave` da solo faceva cadere ogni aggiornamento dell'Energia. */
+    if (carico.chiave !== chiaveDelCarico(selectedPeriod())) return false;
     commitDerived(bundle);
     state.bundle = bundle;
     state.selected = bundle.period;
@@ -2731,4 +2739,4 @@ export function installEnergySection() {
 
 if (doc?.readyState === "loading")
   doc.addEventListener("DOMContentLoaded", installEnergySection, { once: true });
-else installEnergySection();
+else senzaCadere(installEnergySection);

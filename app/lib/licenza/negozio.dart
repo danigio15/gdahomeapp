@@ -88,6 +88,14 @@ abstract interface class NegozioGdahome {
   Future<void> compra(String piano);
   Future<void> ripristina();
   Future<void> completa(PurchaseDetails acquisto);
+
+  /// Gli acquisti pagati che la casa non ha ancora avuto, da riportarle.
+  ///
+  /// Su Google Play sono quelli non ancora confermati: l'app chiusa prima
+  /// che la casa rispondesse. Google non li ripropone da solo, e senza
+  /// conferma dopo tre giorni li rimborsa. Sull'App Store niente: li'
+  /// StoreKit ripropone da solo, a ogni avvio, quelli non ancora chiusi.
+  Future<List<PurchaseDetails>> rimastiAMeta();
 }
 
 /// Il negozio di questo telefono. `null` sul web e dove un negozio non c'e'.
@@ -166,6 +174,24 @@ class NegozioGooglePlay implements NegozioGdahome {
   @override
   Future<void> completa(PurchaseDetails acquisto) =>
       _iap.completePurchase(acquisto);
+
+  @override
+  Future<List<PurchaseDetails>> rimastiAMeta() async {
+    final risposta = await _iap
+        .getPlatformAddition<InAppPurchaseAndroidPlatformAddition>()
+        .queryPastPurchases();
+    /* Solo quelli pagati e non confermati. Uno confermato la casa l'ha gia'
+     * avuto: riportarlo a ogni avvio sposterebbe l'abbonamento sulla casa
+     * aperta, che e' il lavoro di «Ripristina abbonamento», e lo fa solo
+     * chi lo chiede. */
+    return [
+      for (final acquisto in risposta.pastPurchases)
+        if (eDiGdahomePremium(acquisto.productID) &&
+            acquisto.status == PurchaseStatus.purchased &&
+            acquisto.pendingCompletePurchase)
+          acquisto,
+    ];
+  }
 }
 
 class NegozioAppStore implements NegozioGdahome {
@@ -238,6 +264,9 @@ class NegozioAppStore implements NegozioGdahome {
   @override
   Future<void> completa(PurchaseDetails acquisto) =>
       _iap.completePurchase(acquisto);
+
+  @override
+  Future<List<PurchaseDetails>> rimastiAMeta() async => const [];
 }
 
 /// «P14D», «P2W», «P1M» → giorni.
@@ -347,9 +376,16 @@ class GestoreDegliAcquisti extends ChangeNotifier {
   /// Si mette in ascolto del negozio. Va fatto presto: un acquisto finito
   /// mentre l'app era chiusa arriva appena ci si mette in ascolto, e la sua
   /// ricevuta deve andare alla casa.
+  ///
+  /// Le volte dopo la prima — la pagina Premium la chiama ogni volta che si
+  /// apre — rilegge solo i piani ([_rileggiIPiani]).
   Future<void> avvia() async {
     final n = negozio;
-    if (n == null || _avviato) return;
+    if (n == null) return;
+    if (_avviato) {
+      await _rileggiIPiani(n);
+      return;
+    }
     _avviato = true;
     try {
       disponibile = await n.disponibile();
@@ -366,6 +402,43 @@ class GestoreDegliAcquisti extends ChangeNotifier {
       debugPrint('negozio: $e');
     }
     notifyListeners();
+    /* Un acquisto pagato la volta scorsa, con l'app chiusa prima che la casa
+     * lo avesse: su Google Play non torna da solo come sull'App Store, e lo
+     * si va a prendere. La sua ricevuta parte come quella di un acquisto
+     * appena fatto, o aspetta la casa ([riprova]). */
+    if (!disponibile) return;
+    try {
+      final rimasti = await n.rimastiAMeta();
+      if (rimasti.isNotEmpty) await _arrivati(rimasti);
+    } catch (e) {
+      debugPrint('negozio: $e');
+    }
+  }
+
+  bool _rileggendo = false;
+
+  /* I prezzi e la prova si richiedono a ogni apertura della pagina Premium.
+   * L'app resta aperta anche per giorni, e intanto chi vende cambia il
+   * prezzo, o chi ha appena usato la prova non ce l'ha piu'. Letti una volta
+   * sola, la pagina diceva i prezzi di quando l'app era partita, mentre il
+   * Play Store, al momento di pagare, chiedeva quelli nuovi.
+   *
+   * Un negozio che non risponde, o che risponde vuoto, lascia i piani che
+   * c'erano. */
+  Future<void> _rileggiIPiani(NegozioGdahome n) async {
+    if (!disponibile || _rileggendo) return;
+    _rileggendo = true;
+    try {
+      final nuovi = await n.piani();
+      if (nuovi.isNotEmpty) {
+        piani = nuovi;
+        notifyListeners();
+      }
+    } catch (e) {
+      debugPrint('negozio: $e');
+    } finally {
+      _rileggendo = false;
+    }
   }
 
   Future<void> compra(String piano) async {
@@ -409,7 +482,23 @@ class GestoreDegliAcquisti extends ChangeNotifier {
     final n = negozio;
     if (n == null) return;
     for (final acquisto in elenco) {
+      /* Su Google Play un acquisto annullato, o andato male prima ancora di
+       * esistere, arriva senza prodotto: e' la risposta a quello in corso.
+       * Saltarlo lascerebbe il bottone a girare finche' non si riapre
+       * l'app. */
+      if (acquisto.productID.isEmpty) {
+        if (acquisto.status == PurchaseStatus.error) {
+          _male(_ilNoDelNegozio(n, acquisto.error));
+        } else if (acquisto.status != PurchaseStatus.pending) {
+          inCorso = false;
+          notifyListeners();
+        }
+        continue;
+      }
       if (!eDiGdahomePremium(acquisto.productID)) continue;
+      /* Lo stesso acquisto due volte — quello rimasto a meta' e il negozio
+       * che lo ripropone — e' una ricevuta sola. */
+      if (_inSospeso.any((uno) => _loStesso(uno, acquisto))) continue;
       var chiudi = acquisto.pendingCompletePurchase;
       switch (acquisto.status) {
         case PurchaseStatus.purchased || PurchaseStatus.restored:
@@ -420,10 +509,7 @@ class GestoreDegliAcquisti extends ChangeNotifier {
           }
           chiudi = arrivata && chiudi;
         case PurchaseStatus.error:
-          _male(
-            acquisto.error?.message ??
-                inLingua(it: 'Acquisto non riuscito.', en: 'Purchase failed.'),
-          );
+          _male(_ilNoDelNegozio(n, acquisto.error));
         case PurchaseStatus.canceled:
           inCorso = false;
           notifyListeners();
@@ -498,6 +584,41 @@ class GestoreDegliAcquisti extends ChangeNotifier {
     inCorso = false;
     errore = messaggio;
     notifyListeners();
+  }
+
+  /// Il no del negozio, detto a chi compra. Google Play risponde con un
+  /// codice («BillingResponse.itemAlreadyOwned») e StoreKit col nome di un
+  /// dominio («SKErrorDomain»): a chi compra non dicono niente.
+  static String _ilNoDelNegozio(NegozioGdahome n, IAPError? errore) {
+    /* Un abbonamento per account: chi ce l'ha gia' — su un'altra casa — non
+     * ne compra un secondo, lo sposta. */
+    if ((errore?.message ?? '').contains('itemAlreadyOwned')) {
+      return inLingua(
+        it:
+            'Con questo account l\'abbonamento c\'è già. Se è attivo su '
+            'un\'altra casa, «Ripristina abbonamento» lo porta qui.',
+        en:
+            'This account already has the subscription. If it\'s active on '
+            'another home, “Restore subscription” moves it here.',
+      );
+    }
+    return inLingua(
+      it: 'Acquisto non riuscito: ${n.nome} non l\'ha completato. Riprova.',
+      en: 'Purchase failed: the ${n.nome} didn\'t complete it. Try again.',
+    );
+  }
+
+  /// Lo stesso acquisto: dalla transazione, se tutti e due ce l'hanno, se no
+  /// dal token di Google. Non dal token e basta: sull'App Store
+  /// `serverVerificationData` e' la ricevuta dell'app intera, la stessa per
+  /// tutti gli acquisti.
+  static bool _loStesso(PurchaseDetails uno, PurchaseDetails altro) {
+    final id = uno.purchaseID ?? '';
+    final suo = altro.purchaseID ?? '';
+    if (id.isNotEmpty && suo.isNotEmpty) return id == suo;
+    final token = uno.verificationData.serverVerificationData;
+    return token.isNotEmpty &&
+        token == altro.verificationData.serverVerificationData;
   }
 
   @override

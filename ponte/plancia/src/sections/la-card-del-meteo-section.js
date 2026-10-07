@@ -41,6 +41,7 @@ import {
   locale,
   root,
   t,
+  senzaCadere,
 } from "./shared.js";
 
 const KEY = "__DASHBOARDMODERN_CARD_DEL_METEO__";
@@ -476,5 +477,5 @@ export function installLaCardDelMeteo() {
 if (doc?.readyState === "loading") {
   doc.addEventListener("DOMContentLoaded", installLaCardDelMeteo, { once: true });
 } else {
-  installLaCardDelMeteo();
+  senzaCadere(installLaCardDelMeteo);
 }

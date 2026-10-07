@@ -916,6 +916,23 @@ const OGGETTI = Object.freeze({
     <path d="M11.8 21.8l.6 5" stroke="#fff" stroke-opacity=".6" stroke-width="1.1"
       stroke-linecap="round" fill="none"/>`,
 
+  /* La cottura (#71): la friggitrice ad aria, col vetro acceso d'arancio e
+   * il cassetto con la maniglia. */
+  cottura: `<defs>
+      <linearGradient id="dmoCotC" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#475569"/><stop offset=".55" stop-color="#1e293b"/>
+        <stop offset="1" stop-color="#0b1220"/></linearGradient>
+      <radialGradient id="dmoCotV" cx=".45" cy=".4" r=".7">
+        <stop offset="0" stop-color="#fef3c7"/><stop offset=".5" stop-color="#fb923c"/>
+        <stop offset="1" stop-color="#c2410c"/></radialGradient></defs>
+    ${OMBRA(16, 29, 9.4)}
+    <path d="M10.4 3.6h11.2a4.6 4.6 0 0 1 4.6 4.6v11.4a8.4 8.4 0 0 1-8.4 8.4h-3.6a8.4 8.4 0 0 1-8.4-8.4V8.2a4.6 4.6 0 0 1 4.6-4.6Z" fill="url(#dmoCotC)"/>
+    <rect x="10.2" y="6.4" width="11.6" height="5.4" rx="2.7" fill="#e2e8f0" opacity=".9"/>
+    <circle cx="16" cy="9.1" r="1.9" fill="url(#dmoCotV)"/>
+    <path d="M7.8 16.4h16.4v3.2a6 6 0 0 1-6 6h-4.4a6 6 0 0 1-6-6Z" fill="url(#dmoCotV)"/>
+    <rect x="12.6" y="19.2" width="6.8" height="2.6" rx="1.3" fill="#0f172a" opacity=".75"/>
+    <path d="M9.4 6.6v6.6" stroke="#fff" stroke-opacity=".45" stroke-width="1.3" stroke-linecap="round"/>`,
+
   /* L'acquario (#127): la vasca con l'acqua, la sabbia, due foglie e il pesce
    * rosso. Non è la piscina — quella è l'acqua dove si entra — ma la vasca che
    * si guarda da fuori, col suo mobile sotto. */
@@ -938,6 +955,27 @@ const OGGETTI = Object.freeze({
     <circle cx="16.4" cy="16.3" r=".65" fill="#0f2942"/>
     <circle cx="24.2" cy="13.6" r=".8" fill="#fff" fill-opacity=".85"/>
     <rect x="5.4" y="26" width="21.2" height="2.6" rx="1.3" fill="#1e3a5f"/>`,
+
+  /* L'accumulo (#117): il pacco di batterie in piedi, coi due poli in cima, la
+   * carica verde dietro il vetro e la saetta. Non è la pila dei sensori —
+   * quella è gialla e piccola — né il gruppo di continuità, che è una scatola
+   * scura col display: è il blocco che sta in garage accanto all'inverter. */
+  accumulo: `<defs>
+      <linearGradient id="dmoAccS" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#f1f5f9"/><stop offset=".55" stop-color="#cbd5e1"/>
+        <stop offset="1" stop-color="#94a3b8"/></linearGradient>
+      <linearGradient id="dmoAccB" x1="0" y1="1" x2="0" y2="0">
+        <stop offset="0" stop-color="#15803d"/><stop offset=".6" stop-color="#22c55e"/>
+        <stop offset="1" stop-color="#bbf7d0"/></linearGradient></defs>
+    ${OMBRA(16, 29, 8.4)}
+    <rect x="11" y="3.2" width="3.6" height="2.6" rx="1" fill="#475569"/>
+    <rect x="17.4" y="3.2" width="3.6" height="2.6" rx="1" fill="#475569"/>
+    <rect x="7.4" y="5.2" width="17.2" height="22.6" rx="3.2" fill="url(#dmoAccS)"/>
+    <rect x="9.8" y="8" width="12.4" height="17.4" rx="2" fill="#0f2918"/>
+    <rect x="10.8" y="13.2" width="10.4" height="11.2" rx="1.4" fill="url(#dmoAccB)"/>
+    <path d="M10.8 16.9h10.4M10.8 20.6h10.4" stroke="#0f2918" stroke-opacity=".35" stroke-width=".7"/>
+    <path d="M16.9 14.4 13.8 19.6h2.5l-.8 3.8 3.5-5.5h-2.5Z" fill="#fff" opacity=".9"/>
+    <path d="M9 7.2v18" stroke="#fff" stroke-opacity=".55" stroke-width="1.2" stroke-linecap="round"/>`,
 
   /* I contatori di casa (#115, #135, #137): il contatore d'ottone con la
    * finestra delle cifre e la goccia. Non è l'umidità — quella è una goccia

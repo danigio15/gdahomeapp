@@ -33,6 +33,7 @@ import {
   roomOptionsMarkup,
   t,
   writeJsonIfChanged,
+  senzaCadere,
 } from "./shared.js";
 
 const KEY = "__DASHBOARDMODERN_ROOM_ASSIGN__";
@@ -253,5 +254,5 @@ export function installRoomAssignSection() {
 if (doc?.readyState === "loading") {
   doc.addEventListener("DOMContentLoaded", installRoomAssignSection, { once: true });
 } else {
-  installRoomAssignSection();
+  senzaCadere(installRoomAssignSection);
 }

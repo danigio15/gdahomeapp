@@ -63,6 +63,13 @@ enum LaCasaInCarPlay {
     let nome: String
     let genere: String
     let conferma: Bool
+    /// Il disegno scelto sul telefono («Icona in auto»); vuoto se non se n'e'
+    /// scelto uno.
+    let icona: String
+
+    /// Quello che si disegna: l'icona scelta, se no il genere. Come
+    /// `ilSegno` in `IComandiInAuto.kt`.
+    var disegno: String { icona.isEmpty ? genere : icona }
   }
 
   /// I comandi rapidi scelti sul telefono, quello dell'arrivo e a quanti metri.
@@ -72,7 +79,13 @@ enum LaCasaInCarPlay {
       let id = testo(uno["id"])
       let nome = testo(uno["nome"])
       guard !id.isEmpty, !nome.isEmpty else { return nil }
-      return Comando(id: id, nome: nome, genere: testo(uno["genere"]), conferma: (uno["conferma"] as? Bool) == true)
+      return Comando(
+        id: id,
+        nome: nome,
+        genere: testo(uno["genere"]),
+        conferma: (uno["conferma"] as? Bool) == true,
+        icona: testo(uno["icona"])
+      )
     }
     let quale = testo(json["arrivo"])
     let metri = min(max((json["metri"] as? NSNumber)?.doubleValue ?? 500, 50), 5000)
@@ -156,7 +169,7 @@ enum LaCasaInCarPlay {
       return t
     }
     let tasti = scelti.prefix(8).map { c in
-      CPGridButton(titleVariants: [c.nome], image: segno(c.genere)) { [weak controllore] _ in
+      CPGridButton(titleVariants: [c.nome], image: segno(c.disegno)) { [weak controllore] _ in
         premiIlComando(c, controllore)
       }
     }
@@ -291,7 +304,7 @@ enum LaCasaInCarPlay {
     GdanavCarPlay.proponi(
       "Quasi a casa",
       sotto: comando.nome,
-      immagine: segno(comando.genere),
+      immagine: segno(comando.disegno),
       si: "Fallo",
       no: "Non ora"
     ) {

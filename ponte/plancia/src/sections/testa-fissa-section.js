@@ -33,6 +33,7 @@ import {
   onEditorRedraw,
   root,
   t,
+  senzaCadere,
 } from "./shared.js";
 
 const KEY = "__DASHBOARDMODERN_TESTA_FISSA__";
@@ -208,4 +209,4 @@ export function installTestaFissa() {
   return true;
 }
 
-installTestaFissa();
+senzaCadere(installTestaFissa);

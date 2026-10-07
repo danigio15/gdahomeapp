@@ -30,7 +30,9 @@ const unSegreto = () => randomBytes(32).toString("hex");
 async function banco({ giorniDiSilenzio = 180 } = {}) {
   const cartella = mkdtempSync(join(tmpdir(), "centralino-"));
   const case_ = new Case({ cartella, giorniDiSilenzio });
-  const centralino = new Centralino({ case: case_ });
+  /* Qui si prova il centralino, non la licenza: senza chiave, come oggi,
+   * qualunque sia quella scritta nel codice (`docs/LICENZE.md`). */
+  const centralino = new Centralino({ case: case_, chiaveLicenze: "" });
   const server = costruisciIlServer({ centralino });
   await new Promise((ok) => server.listen(0, "127.0.0.1", ok));
   const dove = `ws://127.0.0.1:${server.address().port}`;
@@ -533,6 +535,81 @@ test("quando la casa se ne va, il suo abbinamento se ne va con lei", async () =>
 
     casa.chiudi();
     await attendi(() => b.centralino.abbinamenti.size === 0);
+  } finally {
+    await b.spegni();
+  }
+});
+
+/* ─── La casa di prova ───────────────────────────────────────────────────
+ *
+ * Il codice per chi rivede l'app: la casa lo dice con `apri-prova`, e la sua
+ * attesa vive quanto dice lei — fino a sette giorni — accanto a quella del
+ * codice di tutti i giorni. Nessuna delle due spegne l'altra. */
+
+test("l'attesa della casa di prova vive accanto a quella di tutti i giorni", async () => {
+  const b = await banco();
+  try {
+    const casa = unaCasa(b.dove);
+    await casa.entra();
+    const GIORNO = 24 * 60 * 60 * 1000;
+
+    casa.manda({ t: "apri-prova", impronta: impronta("PROVA234"), vale: 3 * GIORNO });
+    casa.manda({ t: "apri-abbinamento", impronta: impronta("CASA2345") });
+    await attendi(() => b.centralino.abbinamenti.size === 2);
+    const prova = b.centralino.abbinamenti.get(impronta("PROVA234"));
+    assert.equal(prova.prova, true);
+    assert.ok(prova.scadeIl - Date.now() > 3 * GIORNO - 60_000, "tre giorni, non sei minuti");
+
+    /* Un telefono di casa si abbina: si chiude la sua attesa, non l'altra. */
+    casa.manda({ t: "chiudi-abbinamento" });
+    await attendi(() => !b.centralino.abbinamenti.has(impronta("CASA2345")));
+    assert.ok(b.centralino.abbinamenti.has(impronta("PROVA234")));
+
+    /* Un codice nuovo di casa non spegne la prova; la revoca della prova
+     * non spegne il codice di casa. */
+    casa.manda({ t: "apri-abbinamento", impronta: impronta("NUOVO234") });
+    await attendi(() => b.centralino.abbinamenti.has(impronta("NUOVO234")));
+    assert.ok(b.centralino.abbinamenti.has(impronta("PROVA234")));
+    casa.manda({ t: "chiudi-prova" });
+    await attendi(() => !b.centralino.abbinamenti.has(impronta("PROVA234")));
+    assert.ok(b.centralino.abbinamenti.has(impronta("NUOVO234")));
+
+    /* E chi bussa con l'impronta della prova arriva alla casa. */
+    casa.manda({ t: "apri-prova", impronta: impronta("ANCORA23"), vale: GIORNO });
+    await attendi(() => b.centralino.abbinamenti.has(impronta("ANCORA23")));
+    const telefono = unTelefono(b.dove, `/abbinamento/${impronta("ANCORA23")}`);
+    await telefono.aperta;
+    await attendi(() => casa.canali().length === 1);
+    telefono.chiudi();
+
+    /* Quando la casa se ne va, le due attese se ne vanno con lei. */
+    casa.chiudi();
+    await attendi(() => b.centralino.abbinamenti.size === 0);
+  } finally {
+    await b.spegni();
+  }
+});
+
+test("all'attesa della casa di prova non si crede oltre i sette giorni", async () => {
+  const b = await banco();
+  try {
+    const casa = unaCasa(b.dove);
+    await casa.entra();
+    const GIORNO = 24 * 60 * 60 * 1000;
+
+    casa.manda({ t: "apri-prova", impronta: impronta("ZERO2345"), vale: 0 });
+    casa.manda({ t: "apri-prova", impronta: impronta("FINTA234"), vale: "mai" });
+    casa.manda({ t: "apri-prova", impronta: "non-un-impronta", vale: GIORNO });
+    casa.manda({ t: "apri-prova", impronta: impronta("ANNO2345"), vale: 365 * GIORNO });
+    await attendi(() => b.centralino.abbinamenti.size === 1);
+    const anno = b.centralino.abbinamenti.get(impronta("ANNO2345"));
+    assert.ok(anno.scadeIl - Date.now() <= 7 * GIORNO, "sette giorni, non un anno");
+
+    /* Una alla volta: la seconda prende il posto della prima. */
+    casa.manda({ t: "apri-prova", impronta: impronta("ALTRA234"), vale: GIORNO });
+    await attendi(() => b.centralino.abbinamenti.has(impronta("ALTRA234")));
+    assert.equal(b.centralino.abbinamenti.has(impronta("ANNO2345")), false);
+    casa.chiudi();
   } finally {
     await b.spegni();
   }

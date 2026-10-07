@@ -591,7 +591,24 @@
           ? due("collegato adesso", "connected right now")
           : due("visto ", "seen ") + dataLeggibile(uno.vistoIl)) +
         (diChi ? " · " + diChi : "");
-      nome.appendChild(forte);
+      /* Un telefono entrato con la casa di prova lo dice accanto al nome, con
+       * la sua scadenza: e' l'ora in cui uscira' da solo. Sulla stessa riga
+       * del nome, che si accorcia lui se non c'e' posto. */
+      if (uno.finoA) {
+        var rigaDelNome = vediPagina.createElement("div");
+        rigaDelNome.className = "riga-del-nome";
+        var aTempo = vediPagina.createElement("span");
+        aTempo.className = "etichetta-prova";
+        aTempo.textContent = due(
+          "di prova · fino al " + unGiornoCorto(uno.finoA),
+          "test · until " + unGiornoCorto(uno.finoA),
+        );
+        rigaDelNome.appendChild(forte);
+        rigaDelNome.appendChild(aTempo);
+        nome.appendChild(rigaDelNome);
+      } else {
+        nome.appendChild(forte);
+      }
       nome.appendChild(sotto);
       riga.appendChild(nome);
 
@@ -1714,6 +1731,7 @@
         disegnaIlLink(stato.app);
         disegnaIlLinkDiFuori(stato.app ? stato.centralino : null);
         disegnaIDispositivi(stato.dispositivi, stato.massimi);
+        seguiLaProva(stato.prova);
         disegnaLePlance(stato.plance);
         /* La riga si scrive subito con quello che si sa, e si riscrive quando
          * la prova della cartina torna: chi guarda vede una frase giusta
@@ -1849,6 +1867,266 @@
       aggiornaTutto();
     });
   });
+
+  /* ─── La casa di prova ──────────────────────────────────────────────────
+   *
+   * Il codice per chi rivede l'app: vale fino a sette giorni e per piu'
+   * telefoni, e chi entra con lui entra come l'utente scelto qui, che non
+   * amministra. Il codice si chiede ad `api/prova` solo quando lo si deve
+   * disegnare: lo stato, ogni dieci secondi, dice soltanto se c'e', fino a
+   * quando, e quanti telefoni sono entrati. */
+  var laProva = null;
+
+  function avvisaLaProva(testo) {
+    var avviso = trova("avviso-prova");
+    avviso.textContent = testo || "";
+    avviso.hidden = !testo;
+  }
+
+  /* «6 ott», per il bollino accanto al nome di un telefono. */
+  function unGiornoCorto(quando) {
+    try {
+      return new Date(quando).toLocaleDateString([], { day: "numeric", month: "short" });
+    } catch (_errore) {
+      return "—";
+    }
+  }
+
+  /* «lunedì 6 ottobre, 23:10»: sotto il QR, dove si legge fino a quando vale. */
+  function unGiornoIntero(quando) {
+    try {
+      var q = new Date(quando);
+      return (
+        q.toLocaleDateString([], { weekday: "long", day: "numeric", month: "long" }) +
+        ", " +
+        q.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+      );
+    } catch (_errore) {
+      return "—";
+    }
+  }
+
+  function quantiTelefoni(quanti) {
+    return due(
+      quanti === 1 ? "1 telefono" : quanti + " telefoni",
+      quanti === 1 ? "1 phone" : quanti + " phones",
+    );
+  }
+
+  /* Per chi: solo gli utenti che non amministrano. Chi entra col codice di
+   * prova entra come lui, e un amministratore darebbe a uno sconosciuto la
+   * casa intera: la console non lo propone, e il ponte comunque lo rifiuta. */
+  function riempiIlPerChiDellaProva() {
+    var scelta = trova("prova-per-chi");
+    var tasto = trova("prova-fai");
+    chiediGliUtenti()
+      .then(function (utenti) {
+        var prima = scelta.value;
+        scelta.textContent = "";
+        var buoni = utenti.filter(function (uno) {
+          return !uno.amministratore && uno.attivo !== false;
+        });
+        buoni.forEach(function (uno) {
+          var voce = vediPagina.createElement("option");
+          voce.value = uno.id;
+          /* `textContent`: il nome di un utente l'ha scritto una persona. */
+          voce.textContent = due(
+            uno.nome + " · senza amministrazione",
+            uno.nome + " · not an administrator",
+          );
+          scelta.appendChild(voce);
+        });
+        if (!buoni.length) {
+          var nessuno = vediPagina.createElement("option");
+          nessuno.value = "";
+          nessuno.textContent = due(
+            "nessun utente che non amministra",
+            "no user who isn't an administrator",
+          );
+          scelta.appendChild(nessuno);
+          trova("prova-chi-scegliere").textContent = due(
+            "In Home Assistant non c'è ancora un utente che non amministra. Creane uno — " +
+              "Impostazioni › Persone › Aggiungi persona, senza «Amministratore» — e riapri " +
+              "questa pagina.",
+            "Home Assistant has no user yet who isn't an administrator. Make one — Settings › " +
+              "People › Add person, without \u201CAdministrator\u201D — and reopen this page.",
+          );
+        } else if (prima) {
+          scelta.value = prima;
+        }
+        tasto.disabled = !buoni.length;
+      })
+      .catch(function () {
+        tasto.disabled = true;
+        avvisaLaProva(
+          due(
+            "Non riesco a sapere chi sono gli utenti di Home Assistant: riapri la pagina fra poco.",
+            "I can't find out who Home Assistant's users are: reopen the page in a moment.",
+          ),
+        );
+      });
+  }
+
+  /* Le due facce della scheda: senza codice le scelte e il tasto, con il
+   * codice il QR, le lettere, chi entra e la revoca. */
+  function disegnaLaProva(prova) {
+    laProva = prova && prova.attiva ? prova : null;
+    trova("prova-da-fare").hidden = Boolean(laProva);
+    trova("prova-fatta").hidden = !laProva;
+    if (!laProva) {
+      trova("prova-conta").textContent = due("per chi rivede l'app", "for whoever reviews the app");
+      return;
+    }
+    trova("prova-codice").textContent = aGruppi(laProva.codice);
+    /* La marca e' l'ora in cui il codice e' nato: un codice nuovo ha un QR
+     * nuovo, e il browser non rimette quello di prima. */
+    trova("prova-qr").src = "api/prova/qr.svg?" + laProva.natoIl;
+    trova("prova-scarica").href = "api/prova/qr.png?" + laProva.natoIl;
+    trova("prova-scadenza").textContent =
+      due("Vale fino a ", "Good until ") + unGiornoIntero(laProva.scadeIl);
+    disegnaChiEntraDiProva();
+  }
+
+  /* Le righe che cambiano col numero dei telefoni entrati. Il nome
+   * dell'utente lo ha scritto una persona: va in un nodo di testo, mai in
+   * `innerHTML`. */
+  function disegnaChiEntraDiProva() {
+    if (!laProva) return;
+    var quanti = Number(laProva.telefoni) || 0;
+    trova("prova-conta").textContent = due("attiva · ", "active · ") + quantiTelefoni(quanti);
+    var chi = trova("prova-chi");
+    chi.textContent = "";
+    var nome = "";
+    (gliUtenti || []).forEach(function (uno) {
+      if (uno.id === laProva.utente) nome = uno.nome;
+    });
+    chi.appendChild(
+      vediPagina.createTextNode(
+        due("Chi entra con questo codice è ", "Whoever uses this code is "),
+      ),
+    );
+    var forte = vediPagina.createElement("b");
+    forte.textContent = nome || due("l'utente scelto", "the chosen user");
+    chi.appendChild(forte);
+    chi.appendChild(
+      vediPagina.createTextNode(
+        due(". Entrati finora: ", ". So far: ") + quantiTelefoni(quanti) + ".",
+      ),
+    );
+    trova("prova-revoca-spiega").textContent =
+      (quanti
+        ? due(
+            "Revocando, il codice smette di valere e " +
+              (quanti === 1
+                ? "il telefono entrato con lui esce subito."
+                : "i " + quanti + " telefoni entrati con lui escono subito."),
+            "Revoking stops the code, and " +
+              (quanti === 1
+                ? "the phone that came in with it leaves right away."
+                : "the " + quanti + " phones that came in with it leave right away."),
+          )
+        : due("Revocando, il codice smette di valere.", "Revoking stops the code.")) +
+      " " +
+      due("Alla scadenza succede lo stesso da solo.", "At expiry the same happens by itself.");
+  }
+
+  /* Dallo stato di ogni dieci secondi: il codice si richiede solo se e'
+   * nato adesso, o cambiato; per il resto basta ridisegnare i conti. */
+  function seguiLaProva(breve) {
+    if (!breve || !breve.attiva) {
+      if (laProva) disegnaLaProva(null);
+      return;
+    }
+    if (laProva && laProva.scadeIl === breve.scadeIl) {
+      laProva.telefoni = breve.telefoni;
+      disegnaChiEntraDiProva();
+      return;
+    }
+    chiedi("api/prova")
+      .then(disegnaLaProva)
+      .catch(function (errore) {
+        avvisaLaProva(errore.message);
+      });
+  }
+
+  trova("prova-fai").addEventListener("click", function () {
+    var tasto = trova("prova-fai");
+    avvisaLaProva("");
+    tasto.disabled = true;
+    chiedi("api/prova", {
+      method: "POST",
+      body: JSON.stringify({
+        utente: trova("prova-per-chi").value,
+        giorni: Number(trova("prova-quanto").value) || 7,
+      }),
+    })
+      .then(function (fatta) {
+        tasto.disabled = false;
+        disegnaLaProva(fatta);
+        return aggiornaTutto();
+      })
+      .catch(function (errore) {
+        tasto.disabled = false;
+        avvisaLaProva(errore.message);
+      });
+  });
+
+  /* «Copia il codice», a gruppi come si legge. Dentro il telaio di Home
+   * Assistant gli appunti possono non esserci: allora si seleziona il testo,
+   * e lo si copia a mano. Come per la matricola. */
+  trova("prova-copia").addEventListener("click", function () {
+    var tasto = trova("prova-copia");
+    var testo = trova("prova-codice").textContent;
+    if (!testo) return;
+    var fatto = function () {
+      tasto.textContent = due("Copiato", "Copied");
+      setTimeout(function () {
+        tasto.textContent = due("Copia il codice", "Copy the code");
+      }, 1800);
+    };
+    var aMano = function () {
+      var scelta = vediPagina.defaultView.getSelection();
+      var tratto = vediPagina.createRange();
+      tratto.selectNodeContents(trova("prova-codice"));
+      scelta.removeAllRanges();
+      scelta.addRange(tratto);
+      tasto.textContent = due("Selezionato: copialo", "Selected: copy it");
+    };
+    var appunti = navigator.clipboard;
+    if (!appunti || !appunti.writeText) {
+      aMano();
+      return;
+    }
+    appunti.writeText(testo).then(fatto, aMano);
+  });
+
+  trova("prova-revoca").addEventListener("click", function () {
+    if (
+      !window.confirm(
+        due(
+          "Revocare la casa di prova? Il codice smette di valere e i telefoni entrati con lui " +
+            "escono subito.",
+          "Revoke the test home? The code stops working and the phones that came in with it " +
+            "leave right away.",
+        ),
+      )
+    )
+      return;
+    var tasto = trova("prova-revoca");
+    tasto.disabled = true;
+    chiedi("api/prova", { method: "DELETE" })
+      .then(function () {
+        tasto.disabled = false;
+        disegnaLaProva(null);
+        return aggiornaTutto();
+      })
+      .catch(function (errore) {
+        tasto.disabled = false;
+        avvisaLaProva(errore.message);
+      });
+  });
+
+  riempiIlPerChiDellaProva();
 
   /* ─── Il quadro di chi ha fatto l'impianto ──────────────────────────────
    *
@@ -2081,10 +2359,13 @@
     var sotto = vediPagina.createElement("span");
     var pezzi = [];
     if (sua.attiva) {
+      /* Di un abbonamento si scrive la fine del periodo pagato, non quella
+       * coi giorni di margine per il rinnovo. */
+      var finoAl = sua.pagato != null ? sua.pagato : sua.scade;
       pezzi.push(
-        sua.scade == null
+        finoAl == null
           ? due("Premium per sempre", "Premium for good")
-          : due("Premium fino al ", "Premium until ") + unGiorno(sua.scade),
+          : due("Premium fino al ", "Premium until ") + unGiorno(finoAl),
       );
       if (sua.compresa)
         pezzi.push(due("compreso in gdahome Premium", "included in gdahome Premium"));
@@ -2143,6 +2424,10 @@
     );
     /* Quando e' stata chiesta l'ultima volta: la casa la rinnova da se' ogni
      * sei ore, e chi guarda deve poter vedere che lo fa. */
+    /* La matricola: si vede appena il ponte la dice. */
+    var matricola = String(stato.casa || "");
+    trova("matricola").hidden = !matricola;
+    trova("licenza-casa").textContent = matricola;
     var ultima = stato.ultima;
     trova("licenza-quando").textContent = !ultima
       ? ""
@@ -2233,6 +2518,34 @@
   }
 
   trova("riscatta").addEventListener("click", riscattaIlCodice);
+
+  /* «Copia» la matricola. Dentro il telaio di Home Assistant gli appunti
+   * possono non esserci: allora si seleziona il testo, e lo si copia a mano. */
+  trova("copia-matricola").addEventListener("click", function () {
+    var tasto = trova("copia-matricola");
+    var testo = trova("licenza-casa").textContent;
+    if (!testo) return;
+    var fatto = function () {
+      tasto.textContent = due("Copiata", "Copied");
+      setTimeout(function () {
+        tasto.textContent = due("Copia", "Copy");
+      }, 1800);
+    };
+    var aMano = function () {
+      var scelta = vediPagina.defaultView.getSelection();
+      var tratto = vediPagina.createRange();
+      tratto.selectNodeContents(trova("licenza-casa"));
+      scelta.removeAllRanges();
+      scelta.addRange(tratto);
+      tasto.textContent = due("Selezionata: copiala", "Selected: copy it");
+    };
+    var appunti = navigator.clipboard;
+    if (!appunti || !appunti.writeText) {
+      aMano();
+      return;
+    }
+    appunti.writeText(testo).then(fatto, aMano);
+  });
   trova("codice-regalo").addEventListener("keydown", function (evento) {
     if (evento.key === "Enter") riscattaIlCodice();
   });

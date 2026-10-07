@@ -66,6 +66,7 @@ import {
   readJson,
   root,
   t,
+  senzaCadere,
 } from "./shared.js";
 
 const KEY = "__DASHBOARDMODERN_CALENDARIO_SECTION__";
@@ -711,4 +712,4 @@ export function installCalendarioSection() {
   return true;
 }
 
-installCalendarioSection();
+senzaCadere(installCalendarioSection);

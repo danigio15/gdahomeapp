@@ -1,5 +1,6 @@
 // DM-FIX-20260812B
 import { disegnoDelCatalogo } from "../core/catalogo-disegni.js";
+import { accesoPerIlConsumo } from "../core/consumo-del-clima.js";
 import { canonicalClimateType } from "../core/device-model.js";
 import { isCumulativeEnergyEntity } from "../core/period-service.js";
 import {
@@ -23,6 +24,36 @@ import {
 
 export const root = globalThis;
 export const doc = root.document;
+
+/* Un pezzo che cade non si porta dietro gli altri (1.9.2).
+ *
+ * Nella 1.9.0 una sola riga sbagliata della pagina Sicurezza — una variabile
+ * che non esisteva, in una casa con le zone scritte sulla centrale — ha spento
+ * la Home di tutte le case con l'antifurto. Si accendeva mentre il suo modulo
+ * si caricava, e un errore a quel punto ferma il caricamento dell'intera parte
+ * a moduli: restavano la testata, il meteo e le azioni rapide.
+ *
+ * Adesso ogni accensione passa di qui: chi cade lo dice, e gli altri partono lo
+ * stesso. L'elenco di chi e' caduto resta in
+ * `window.__DASHBOARDMODERN_PEZZI_CADUTI__`, da leggere nella console.
+ *
+ * Sono funzioni dichiarate e usano `globalThis`, non `root`: un modulo che si
+ * accende dentro un giro di import le trova pronte anche prima che questo file
+ * sia arrivato alle sue righe. */
+export function segnaLaCaduta(nome, errore) {
+  const cadute = (globalThis.__DASHBOARDMODERN_PEZZI_CADUTI__ ||= []);
+  cadute.push({ pezzo: String(nome || "?"), errore: String(errore?.message || errore) });
+  globalThis.console?.error?.(`[DashboardModern] ${nome || "un pezzo"} non e' partito`, errore);
+}
+
+export function senzaCadere(installa, nome = installa?.name) {
+  try {
+    return installa();
+  } catch (errore) {
+    segnaLaCaduta(nome, errore);
+    return undefined;
+  }
+}
 
 export const clean = (value) => String(value ?? "").trim();
 export const finite = (value, fallback = 0) => {
@@ -80,6 +111,38 @@ export function readClimateUnits() {
   }
   if (!Array.isArray(values)) values = root.getClimaUnits?.().slice?.() || [];
   return values.map((item) => ({ ...item, type: canonicalClimateType(item?.type) }));
+}
+
+/**
+ * Il verdetto dei watt per un'unità del clima, cercata dalla sua entità (#490).
+ *
+ * «Ho inserito l'entità power del climatizzatore ma non mi dà acceso mentre il
+ * clima è acceso, se è stato acceso dal telecomando.» Un climatizzatore
+ * comandato all'infrarosso non dice a Home Assistant che il telecomando l'ha
+ * acceso: il suo `climate.*` resta «off», e la presa o il magnetotermico sotto
+ * sanno la verità. Con la presa e la soglia la pagina Clima lo sapeva già; la
+ * Home, le stanze e i tasti no — e il tasto di un clima acceso dal telecomando
+ * lo «riaccendeva» invece di spegnerlo. Adesso lo chiedono tutti qui.
+ *
+ * `true` o `false` quando chi la possiede le ha dato l'entità del consumo e la
+ * soglia, `null` quando non c'è niente da dire: allora decide lo stato
+ * dell'entità, come sempre.
+ */
+export function climaAccesoDaiWatt(entity, states = allStates()) {
+  const cercata = clean(entity);
+  if (!cercata) return null;
+  const risolta = clean(root.resolveEntity?.(cercata) || cercata);
+  let unita = null;
+  try {
+    unita =
+      readClimateUnits().find((voce) => {
+        const sua = clean(voce?.entity || voce?.entity_id || voce?.entities?.[0]);
+        return Boolean(sua) && (sua === cercata || sua === risolta);
+      }) || null;
+  } catch (_errore) {
+    return null;
+  }
+  return accesoPerIlConsumo(unita, states);
 }
 
 const ENERGY_RUNTIME_SOURCES = Object.freeze([

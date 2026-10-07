@@ -136,6 +136,8 @@ class _NegozioConLaProva implements NegozioGdahome {
   Future<void> ripristina() async {}
   @override
   Future<void> completa(PurchaseDetails acquisto) async {}
+  @override
+  Future<List<PurchaseDetails>> rimastiAMeta() async => const [];
 }
 
 /// Ogni fotografia due volte: Android e iPhone. La variante mette

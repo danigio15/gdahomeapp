@@ -1424,6 +1424,32 @@
         overflow-wrap: anywhere;
       }
 
+      /* La matricola intera della casa, sopra la targa: serve per regalarle
+         una licenza, e una matricola tagliata non si incolla da nessuna parte.
+         Va a capo dove capita, perche' e' una parola sola lunga 37 lettere. */
+      .matricola-intera {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 6px 10px;
+        margin: 0 0 12px;
+      }
+
+      .matricola-etichetta {
+        font-size: 0.74rem;
+        font-weight: 700;
+        color: var(--ink-3);
+        flex: 0 0 100%;
+      }
+
+      .matricola-valore {
+        font-size: 0.9rem;
+        font-weight: 600;
+        word-break: break-all;
+        flex: 1 1 18em;
+        min-width: 0;
+      }
+
       /* I nomi scelti per le plance: si leggono, e basta. Una colonna larga
          per plancia: due nomi su due righe, senza andare a capo a meta'. */
       .targa.vesti-lette {
@@ -3465,6 +3491,13 @@
        * generati, che si mostrano in cima finche' non si chiudono. */
       let LICENZE = { accese: true, licenze: [], codici: [] };
       let CODICI_APPENA = null;
+      /* Quello che si sta scrivendo nel modulo del regalo. La pagina si
+       * ridisegna da sola ogni minuto, e una casa scelta dall'elenco non deve
+       * sparire perche' nel frattempo si e' guardato altrove. */
+      let IL_REGALO = {};
+      /* Gli abbonamenti dei negozi (`/gestore/abbonamenti`), coi conti fatti
+       * dal quadro. `null` finche' non arrivano. */
+      let ABBONAMENTI = null;
 
       let schermata = "installatori";
       /* La casa aperta nel foglio, o `null`: di chi e', quale, e se il foglio
@@ -4311,6 +4344,12 @@
         } catch (male) {
           if (male instanceof ChiaveNoNo) throw male;
         }
+        /* Gli abbonamenti: lo stesso, si tiene quello che c'era. */
+        try {
+          ABBONAMENTI = await chiedi("/abbonamenti");
+        } catch (male) {
+          if (male instanceof ChiaveNoNo) throw male;
+        }
         /* I numeri non sono essenziali: se non arrivano, la pagina va avanti
          * e lo dice nel suo riquadro. Una chiave rifiutata invece si dice. */
         try {
@@ -4502,6 +4541,9 @@
           '<svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M10 4v12M4 10h12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>',
         licenze:
           '<svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M3 6.5A1.5 1.5 0 0 1 4.5 5h11A1.5 1.5 0 0 1 17 6.5V8a2 2 0 0 0 0 4v1.5a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 3 13.5V12a2 2 0 0 0 0-4z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M10 7.6l.8 1.6 1.7.2-1.3 1.2.3 1.7-1.5-.8-1.5.8.3-1.7-1.3-1.2 1.7-.2z" fill="currentColor"/></svg>',
+        /* Due frecce in tondo: qualcosa che si rinnova da se'. */
+        abbonamenti:
+          '<svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M15.5 7.5A6 6 0 0 0 4.6 6M4.5 12.5A6 6 0 0 0 15.4 14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M15.8 3.6v4h-4M4.2 16.4v-4h4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
         /* Le cinque del riquadro «Il servizio»: due macchine e tre conti. */
         quadro:
           '<svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><rect x="2.6" y="4" width="14.8" height="12" rx="2.6" stroke="currentColor" stroke-width="1.8"/><path d="M2.6 8h14.8M7 12.2h6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>',
@@ -4573,6 +4615,7 @@
           ["installatori", "Installatori", 0],
           ["aggiungi", "Aggiungi", 0],
           ["licenze", "Licenze", 0],
+          ["abbonamenti", "Abbonamenti", 0],
         ]
           .map(
             ([quale, parola, quanti]) => `
@@ -4595,7 +4638,9 @@
             ? gliInstallatori()
             : schermata === "licenze"
               ? leLicenze()
-              : aggiungi()) + ilFoglio();
+              : schermata === "abbonamenti"
+                ? gliAbbonamenti()
+                : aggiungi()) + ilFoglio();
 
         if (primaVolta) {
           apriGliArchi(dove);
@@ -5111,6 +5156,244 @@
         });
       }
 
+      /* ─── Gli abbonamenti ───────────────────────────────────────────
+       *
+       * gdahome Premium comprato nell'app, su App Store e su Google Play: i
+       * conti li fa il quadro (`licenze.js`, «Gli abbonamenti»), qui si
+       * scrivono. Gli importi sono quelli che pagano i clienti, IVA compresa:
+       * quello che arriva davvero, tolte le commissioni e le tasse, lo dicono
+       * App Store Connect e la Play Console, e qui lo si dice. */
+
+      /* «4 ott», o «2 set 2027» se non e' quest'anno. */
+      const ilGiornoCorto = (quando) => {
+        const data = new Date(quando);
+        return data.toLocaleDateString("it-IT", {
+          day: "numeric",
+          month: "short",
+          ...(data.getFullYear() === new Date().getFullYear() ? {} : { year: "numeric" }),
+        });
+      };
+
+      /* «il 4 ott», ma «l'8 ott»: davanti a 1, 8 e 11 l'articolo si elide, e
+       * con lui la preposizione (al/all', dal/dall'). */
+      function conLArticolo(preposizione, quando) {
+        const giorno = new Date(quando).getDate();
+        const elisa = giorno === 1 || giorno === 8 || giorno === 11;
+        const [piena, apostrofo] = {
+          il: ["il ", "l'"],
+          al: ["al ", "all'"],
+          dal: ["dal ", "dall'"],
+        }[preposizione];
+        return `${elisa ? apostrofo : piena}${ilGiornoCorto(quando)}`;
+      }
+
+      /* «4,99 €»: i soldi come si scrivono in Italia, nella valuta del negozio. */
+      function iSoldi(valore, valuta, cifre = 2) {
+        try {
+          return new Intl.NumberFormat("it-IT", {
+            style: "currency",
+            currency: valuta || "EUR",
+            minimumFractionDigits: cifre,
+            maximumFractionDigits: cifre,
+          }).format(valore);
+        } catch (_valutaStrana) {
+          return `${numero(valore)} ${valuta}`;
+        }
+      }
+
+      /* Quanto pagano al mese, valuta per valuta: «≈ 81 €», o «—». */
+      function alMeseDetto(alMese) {
+        const voci = Object.entries(alMese || {}).filter(([, valore]) => valore > 0);
+        if (!voci.length) return "—";
+        return `≈ ${voci
+          .map(([valuta, valore]) => iSoldi(valore, valuta, valore >= 100 ? 0 : 2))
+          .join(" + ")}`;
+      }
+
+      const PASTIGLIA_DELLO_STATO = {
+        prova: ["lavoro", "in prova"],
+        attivo: ["bene", "attivo"],
+        disdetto: ["attenta", "disdetto"],
+        scaduto: ["offline", "scaduto"],
+      };
+
+      /* Cosa succede dopo, in una frase: si rinnova, finisce, e' finito. */
+      function laFraseDellAbbonamento(uno) {
+        const fine = (preposizione) => conLArticolo(preposizione, uno.pagato);
+        if (uno.stato === "prova") return `In prova fino ${fine("al")}, poi si rinnova`;
+        if (uno.stato === "disdetto")
+          return uno.prova
+            ? `In prova fino ${fine("al")}, poi finisce`
+            : `Disdetto: finisce ${fine("il")}`;
+        if (uno.stato === "scaduto")
+          return uno.finito === "acquisto-rimborsato" ? "Rimborsato" : `Scaduto ${fine("il")}`;
+        return uno.pagato >= Date.now()
+          ? `Si rinnova ${fine("il")}`
+          : `Rinnovo atteso ${fine("dal")}`;
+      }
+
+      function gliAbbonamenti() {
+        const A = ABBONAMENTI;
+        const testa = `
+          <h1 class="titolone">Abbonamenti</h1>
+          <p class="sottotitolo">
+            gdahome Premium comprato nell'app, su <b>App Store</b> e su <b>Google Play</b>. Il quadro li richiede al negozio una volta al giorno: chi disdice si vede il giorno dopo. I regali e le licenze degli installatori stanno in Licenze.
+          </p>`;
+        if (!A)
+          return `${/* già HTML */ testa}
+            <section class="riquadro" style="margin-top: 14px">
+              <div class="vuoto"><b>Gli abbonamenti non sono arrivati</b> Riprova fra poco, o premi «Aggiorna».</div>
+            </section>`;
+
+        const conto = (tinta, disegno, valore, nome) =>
+          `<div class="servizio-conto ${testo(tinta)}">
+             <span class="servizio-conto-ic" aria-hidden="true">${LE_ICONE[disegno]}</span>
+             <b>${testo(valore)}</b><span>${testo(nome)}</span>
+           </div>`;
+        const tutti = A.conti;
+        const prove = tutti.prove || { finite: 0, pagate: 0 };
+        const negozio = ([chiave, nome]) => {
+          const suoi = A.negozi?.[chiave] || {};
+          const alMese = alMeseDetto(suoi.alMese);
+          return `
+          <div class="servizio-blocco">
+            <div class="servizio-capo">
+              <span class="servizio-ic" aria-hidden="true">${LE_ICONE["telefono"]}</span>
+              <div class="servizio-chi">
+                <b>${testo(nome)}</b>
+                <span>${testo(plurale(suoi.attivi || 0, "abbonamento attivo", "abbonamenti attivi"))}${alMese === "—" ? "" : ` · ${testo(alMese)} al mese`}</span>
+              </div>
+              <span class="pastiglia ${suoi.rinnovi7 ? "posto" : ""}">${
+                suoi.rinnovi7
+                  ? `${testo(plurale(suoi.rinnovi7, "rinnovo", "rinnovi"))} in 7 giorni`
+                  : "nessun rinnovo in 7 giorni"
+              }</span>
+            </div>
+            <div class="servizio-conti">
+              ${/* già HTML */ conto("blu", "abbonamenti", suoi.mensili || 0, "mensili")}
+              ${/* già HTML */ conto("verde", "abbonamenti", suoi.annuali || 0, "annuali")}
+              ${/* già HTML */ conto("ambra", "licenze", suoi.prova || 0, "di cui in prova gratuita")}
+              ${/* già HTML */ conto("ambra", "abbonamenti", suoi.disdetti || 0, "di cui disdetti: finiscono a scadenza")}
+            </div>
+          </div>`;
+        };
+        const riga = (uno) => {
+          const casa = String(uno.sog || "").startsWith("casa_")
+            ? ilNomeDellaCasa(uno.sog) || `Senza nome · ${String(uno.sog).slice(5, 13)}`
+            : `Telefono · ${String(uno.sog || "").slice(4, 12)}`;
+          const dove =
+            uno.piattaforma === "ios"
+              ? uno.sandbox
+                ? "App Store (TestFlight)"
+                : "App Store"
+              : uno.sandbox
+                ? "Google Play (tester)"
+                : "Google Play";
+          const piano = `${
+            uno.piano === "mensile"
+              ? "Mensile"
+              : uno.piano === "annuale"
+                ? "Annuale"
+                : uno.piano || "Piano non detto"
+          }${uno.prezzo ? ` ${iSoldi(uno.prezzo, uno.valuta)}` : ""}`;
+          const [tinta, parola] = uno.sandbox
+            ? ["", "di prova"]
+            : PASTIGLIA_DELLO_STATO[uno.stato] || ["", uno.stato];
+          const pezzi = [
+            `${uno.app === "gdanav" ? "gdanav · " : ""}${dove}`,
+            piano,
+            ...(uno.inizio ? [conLArticolo("dal", uno.inizio)] : []),
+            ...(uno.pagato ? [laFraseDellAbbonamento(uno)] : []),
+            ...(uno.sandbox ? ["non entra nei conti"] : []),
+          ];
+          return `
+          <li>
+            <span class="che">
+              <b>${testo(casa)}</b>
+              <span>${pezzi.map(testo).join(" · ")}</span>
+            </span>
+            <span class="pastiglia ${testo(tinta)}">${testo(parola)}</span>
+          </li>`;
+        };
+        const vere = A.elenco.filter((uno) => !uno.sandbox).length;
+
+        return `${/* già HTML */ testa}
+          ${
+            A.accese
+              ? ""
+              : `<div class="avvertenza" style="margin: 14px 0 0">
+                   <span class="gettone" aria-hidden="true">!</span>
+                   <span><b>Le licenze sono spente.</b> Senza la chiave delle licenze nessuno può comprare Premium: vedi Licenze.</span>
+                 </div>`
+          }
+          <section class="riquadro" style="margin-top: 14px">
+            <div class="capoRiquadro"><h3>In tutto</h3></div>
+            <div class="servizio-conti">
+              ${/* già HTML */ conto("verde", "abbonamenti", tutti.attivi, "abbonamenti attivi")}
+              ${/* già HTML */ conto("blu", "abbonamenti", tutti.mensili, "mensili")}
+              ${/* già HTML */ conto("blu", "abbonamenti", tutti.annuali, "annuali")}
+              ${/* già HTML */ conto("ambra", "licenze", tutti.prova, "di cui in prova gratuita")}
+              ${/* già HTML */ conto("ambra", "abbonamenti", tutti.disdetti, "di cui disdetti: finiscono a scadenza")}
+              ${/* già HTML */ conto("blu", "abbonamenti", tutti.finiti30, "finiti negli ultimi 30 giorni")}
+              ${/* già HTML */ conto("verde", "licenze", prove.finite ? `${Number(prove.pagate)} su ${Number(prove.finite)}` : "—", "prove finite che sono passate a pagamento")}
+              ${/* già HTML */ conto("verde", "abbonamenti", alMeseDetto(tutti.alMese), "al mese, quello che pagano i clienti")}
+            </div>
+          </section>
+          <section class="riquadro" style="margin-top: 14px">
+            <div class="capoRiquadro"><h3>Per negozio</h3></div>
+            ${[
+              ["ios", "App Store"],
+              ["android", "Google Play"],
+            ]
+              .map(negozio)
+              .join("")}
+          </section>
+          <section class="riquadro" style="margin-top: 14px">
+            <div class="capoRiquadro">
+              <h3>Gli abbonamenti</h3>
+              <span class="conta">${Number(vere)}${A.prove ? ` + ${Number(A.prove)} di prova` : ""}</span>
+            </div>
+            ${
+              A.elenco.length
+                ? `<ul class="righe">${A.elenco.map(riga).join("")}</ul>`
+                : `<div class="vuoto"><b>Ancora nessun abbonamento</b> Compaiono qui da soli quando qualcuno compra gdahome Premium nell'app.</div>`
+            }
+          </section>
+          <p class="minuta" style="margin-top: 14px">
+            Gli importi sono quelli che pagano i clienti, IVA compresa: Apple e Google trattengono la loro commissione e versano il resto. Il conto preciso, con le tasse di ogni paese, sta in App Store Connect e nella Play Console. Gli acquisti di prova (TestFlight e tester di Google) si vedono nell'elenco ma non entrano nei conti.
+          </p>`;
+      }
+
+      /* Le case che il quadro conosce per nome: quelle degli installatori.
+       * Una casa senza installatore non manda rapporti e qui non c'e': si
+       * riconosce dalla matricola, che si incolla nella casella sotto. */
+      function leCaseConosciute() {
+        const tutte = [];
+        for (const uno of INSTALLATORI) {
+          for (const casa of LE_CASE_DI.get(uno.chi)?.case || []) {
+            tutte.push({
+              casa: String(casa.casa),
+              nome: casa.senzaNome ? `Senza nome · ${String(casa.casa).slice(5, 13)}` : casa.nome,
+              di: uno.nome || "un installatore",
+            });
+          }
+        }
+        return tutte;
+      }
+
+      /* Il nome di una casa dalla matricola, o "" se il quadro non la conosce. */
+      function ilNomeDellaCasa(matricola) {
+        return leCaseConosciute().find((una) => una.casa === matricola)?.nome || "";
+      }
+
+      function leCaseDaRegalare() {
+        const righe = leCaseConosciute().map(
+          (una) =>
+            `<option value="${testo(una.casa)}">${testo(una.nome)} · ${testo(una.di)}</option>`,
+        );
+        return `<option value="">${righe.length ? "— scegli una casa —" : "— nessuna casa degli installatori —"}</option>${righe.join("")}`;
+      }
+
       function leLicenze() {
         const tutte = LICENZE.licenze || [];
         const valgono = tutte.filter((una) => una.vale);
@@ -5126,6 +5409,7 @@
           <li>
             <span class="che">
               <b>${testo(IL_NOME_DELLA_APP[una.app] || una.app)}</b>
+              ${ilNomeDellaCasa(una.sog) ? `<span>${testo(ilNomeDellaCasa(una.sog))}</span>` : ""}
               <span class="mono">${testo(una.sog)}</span>
               <span>${testo(DA_DOVE[una.origine] || una.origine)}${una.installatore ? ` · ${testo(nomeDi(una.installatore))}` : ""} · ${testo(laScadenza(una))}${una.nota ? ` · ${testo(una.nota)}` : ""}</span>
             </span>
@@ -5145,7 +5429,7 @@
               : `<div class="avvertenza" style="margin: 0 0 14px">
                    <span class="gettone" aria-hidden="true">!</span>
                    <span>
-                     <b>Le licenze sono spente.</b> Su questa macchina manca <span class="mono">QUADRO_LICENZE_CHIAVE</span>: puoi regalare licenze e generare codici, ma le case e i telefoni non ricevono niente finché la chiave non c'è. Si fabbrica con <span class="mono">node strumenti/chiave-licenze.mjs</span>.
+                     <b>Le licenze sono spente.</b> Su questa macchina manca <span class="mono">QUADRO_LICENZE_CHIAVE</span>: puoi regalare licenze e generare codici, ma le case e i telefoni non ricevono niente finché la chiave non c'è. Si fa sulla macchina del quadro, da <span class="mono">/opt/quadro/quadro</span>, con <span class="mono">node le-licenze.mjs chiave</span>.
                    </span>
                  </div>`
           }
@@ -5171,7 +5455,7 @@
               <section class="riquadro tinto">
                 <div class="capoRiquadro"><h3>Regala una licenza a una casa</h3></div>
                 <p class="minuta">
-                  La matricola della casa è quella che comincia per <span class="mono">casa_</span>: la trovi nella console dell'add-on, o nella scheda dell'impianto.
+                  Scegli la casa dall'elenco: ci sono tutte quelle seguite dagli installatori. Una casa che non è nell'elenco si riconosce dalla sua matricola, quella che comincia per <span class="mono">casa_</span>: chi ci abita la copia dalla console dell'add-on, nella scheda «Licenza», e te la manda.
                 </p>
                 <div class="due-campi pari">
                   <div class="campo">
@@ -5187,8 +5471,12 @@
                   </div>
                 </div>
                 <div class="campo">
-                  <label for="regalo-casa">Casa</label>
-                  <input type="text" id="regalo-casa" maxlength="37" placeholder="casa_0123…" autocomplete="off" spellcheck="false" />
+                  <label for="regalo-scelta">Casa</label>
+                  <select id="regalo-scelta">${/* già HTML */ leCaseDaRegalare()}</select>
+                </div>
+                <div class="campo">
+                  <label for="regalo-casa">Oppure la matricola di un'altra casa</label>
+                  <input type="text" id="regalo-casa" maxlength="37" placeholder="casa_0123… (incollala dalla console dell'add-on)" autocomplete="off" spellcheck="false" />
                 </div>
                 <div class="campo">
                   <label for="regalo-nota">Nota</label>
@@ -5288,10 +5576,19 @@
       }
 
       async function regala(tasto) {
-        const casa = document.getElementById("regalo-casa")?.value.trim().toLowerCase() || "";
+        /* La casa scelta dall'elenco, o la matricola scritta: una sola delle
+         * due, perche' toccarne una svuota l'altra (vedi `aggancia`). */
+        const scelta = document.getElementById("regalo-scelta")?.value || "";
+        const scritta = document.getElementById("regalo-casa")?.value.trim().toLowerCase() || "";
+        const casa = scelta || scritta;
+        if (!casa) {
+          document.getElementById("regalo-scelta")?.focus();
+          avvisa("Scegli una casa dall'elenco, o incolla la sua matricola");
+          return;
+        }
         if (!/^casa_[0-9a-f]{32}$/.test(casa)) {
           document.getElementById("regalo-casa")?.focus();
-          avvisa("La casa è casa_ seguito da 32 cifre esadecimali");
+          avvisa("La matricola è casa_ seguito da 32 cifre esadecimali");
           return;
         }
         const app = document.getElementById("regalo-app")?.value || "gdahome";
@@ -5302,7 +5599,10 @@
             method: "POST",
             body: JSON.stringify({ app, casa, mesi: durata ? Number(durata) : null, nota }),
           });
-          avvisa(`${IL_NOME_DELLA_APP[app]} regalato a ${casa.slice(0, 13)}…`);
+          IL_REGALO = {};
+          avvisa(
+            `${IL_NOME_DELLA_APP[app]} regalato a ${ilNomeDellaCasa(casa) || `${casa.slice(0, 13)}…`}`,
+          );
         });
       }
 
@@ -5473,11 +5773,12 @@
 
           <section class="riquadro">
             ${stato.perché ? `<p class="perché">${testo(stato.perché)}</p>` : ""}
+            <div class="matricola-intera">
+              <span class="matricola-etichetta">Matricola</span>
+              <span class="mono matricola-valore">${testo(String(c.casa || casa.casa))}</span>
+              <button type="button" class="tasto copia" data-copia="${testo(String(c.casa || casa.casa))}">Copia</button>
+            </div>
             <dl class="targa">
-              <div>
-                <dt>Matricola</dt>
-                <dd class="mono">${testo(String(c.casa || casa.casa).slice(0, 13))}…</dd>
-              </div>
               <div><dt>Abbinato il</dt><dd>${testo(ilGiorno(casa.da))}</dd></div>
               <div>
                 <dt>Ultimo rapporto</dt>
@@ -5811,6 +6112,29 @@
         });
         const regalaT = dove.querySelector("[data-regala]");
         if (regalaT) regalaT.onclick = () => regala(regalaT);
+        for (const id of [
+          "regalo-app",
+          "regalo-durata",
+          "regalo-scelta",
+          "regalo-casa",
+          "regalo-nota",
+        ]) {
+          const campo = document.getElementById(id);
+          if (!campo) continue;
+          if (id in IL_REGALO) campo.value = IL_REGALO[id];
+          campo.oninput = campo.onchange = () => {
+            IL_REGALO[id] = campo.value;
+            /* La casa e' una: scelta dall'elenco o scritta. Toccarne una
+             * svuota l'altra, cosi' non si regala a quella sbagliata. */
+            const altra =
+              id === "regalo-scelta" ? "regalo-casa" : id === "regalo-casa" ? "regalo-scelta" : "";
+            if (altra && campo.value) {
+              const quella = document.getElementById(altra);
+              if (quella) quella.value = "";
+              IL_REGALO[altra] = "";
+            }
+          };
+        }
         const codiciT = dove.querySelector("[data-genera-codici]");
         if (codiciT) codiciT.onclick = () => generaICodici(codiciT);
         const chiudiCodici = dove.querySelector("[data-chiudi-codici]");

@@ -51,6 +51,7 @@ import {
   root,
   t,
   writeJsonIfChanged,
+  senzaCadere,
 } from "./shared.js";
 
 const KEY = "__DASHBOARDMODERN_DOVE_LO_METTO__";
@@ -469,4 +470,4 @@ export function installDoveLoMettoSection() {
 
 if (doc?.readyState === "loading")
   doc.addEventListener("DOMContentLoaded", installDoveLoMettoSection, { once: true });
-else installDoveLoMettoSection();
+else senzaCadere(installDoveLoMettoSection);

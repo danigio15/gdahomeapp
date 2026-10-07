@@ -33,7 +33,7 @@ import {
   statoDellaChat as letturaDelloStato,
 } from "../core/avviso-chat.js";
 import { getLocale } from "../core/i18n.js";
-import { clean, doc, esc, installStyle, lexicalGlobal, root, t } from "./shared.js";
+import { clean, doc, esc, installStyle, lexicalGlobal, root, t, senzaCadere } from "./shared.js";
 
 const WS_STATE = "dashboardmodern/chat/state";
 const WS_THREAD = "dashboardmodern/chat/thread";
@@ -1258,4 +1258,4 @@ export function uninstallAssistenzaSection() {
   state.bozza = "";
 }
 
-installAssistenzaSection();
+senzaCadere(installAssistenzaSection);

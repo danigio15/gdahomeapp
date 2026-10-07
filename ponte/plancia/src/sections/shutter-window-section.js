@@ -52,6 +52,7 @@ import {
   section,
   t,
   writeJsonIfChanged,
+  senzaCadere,
 } from "./shared.js";
 
 const KEY = "__DASHBOARDMODERN_SHUTTER_WINDOW__";
@@ -1157,5 +1158,5 @@ export function installShutterWindowSection() {
 if (doc?.readyState === "loading") {
   doc.addEventListener("DOMContentLoaded", installShutterWindowSection, { once: true });
 } else {
-  installShutterWindowSection();
+  senzaCadere(installShutterWindowSection);
 }

@@ -41,6 +41,7 @@ import {
   root,
   t,
   wrapFunction,
+  senzaCadere,
 } from "./shared.js";
 
 const KEY = "__DASHBOARDMODERN_LINGUA__";
@@ -216,4 +217,4 @@ export function installLinguaSection() {
   return true;
 }
 
-installLinguaSection();
+senzaCadere(installLinguaSection);

@@ -44,6 +44,7 @@ import {
   readJson,
   root,
   t,
+  senzaCadere,
 } from "./shared.js";
 import {
   batterieSorvegliate,
@@ -446,4 +447,4 @@ export function installBatterie() {
   return true;
 }
 
-installBatterie();
+senzaCadere(installBatterie);

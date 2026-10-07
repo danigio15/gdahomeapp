@@ -33,6 +33,7 @@ import {
   t,
   wrapFunction,
   writeJsonIfChanged,
+  senzaCadere,
 } from "./shared.js";
 
 const KEY = "__DASHBOARDMODERN_TODO_EDITOR__";
@@ -150,6 +151,14 @@ function catalogoTessere() {
     ["piante", "🪴", t("Piante", "Plant care")],
     /* L'acquario (#127): la temperatura dell'acqua, e quando c'è da fare. */
     ["acquario", "🐠", t("Acquario", "Aquarium")],
+    /* Le batterie di accumulo (#117): la carica di tutti i pacchi, e quando
+     * un pacco ha le celle da bilanciare. Non è la tessera delle Batterie qui
+     * sotto — quella conta le pile dei sensori. Compare quando la sua scheda
+     * ha un pacco. */
+    ["accumulo", "🔋", t("Accumulo", "Battery storage")],
+    /* La cottura (#71): la friggitrice che cuoce, e per un po' quella che ha
+     * finito. Compare da sola quando c'e' qualcosa sul fuoco. */
+    ["cottura", "🍟", t("Cottura", "Cooking")],
     ["batterie", "🔋", t("Batterie", "Batteries")],
     ["allagamenti", "💧", t("Allagamenti", "Floods")],
     /* Fumo e gas (#328): compare da sola coi rilevatori di casa, come gli
@@ -807,4 +816,4 @@ export function installTodoEditorSection() {
   ensureTodoEditor();
 }
 
-installTodoEditorSection();
+senzaCadere(installTodoEditorSection);

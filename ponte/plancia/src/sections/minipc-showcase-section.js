@@ -54,6 +54,7 @@ import {
   t,
   wrapFunction,
   writeJsonIfChanged,
+  senzaCadere,
 } from "./shared.js";
 
 const KEY = "__DASHBOARDMODERN_MINIPC_SHOWCASE__";
@@ -1470,5 +1471,5 @@ html[data-theme="dark"] #page-server.dm-srvx .dm-srvx-status-ico{background:rgba
 if (doc?.readyState === "loading") {
   doc.addEventListener("DOMContentLoaded", installMinipcShowcaseSection, { once: true });
 } else {
-  installMinipcShowcaseSection();
+  senzaCadere(installMinipcShowcaseSection);
 }

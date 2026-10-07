@@ -1190,7 +1190,7 @@ export class Commissioni {
     const cosa = LICENZA.get(detto?.type);
     if (cosa === "stato") {
       if (!licenze) {
-        const spenta = { attiva: false, scade: null, origine: null, fino: null };
+        const spenta = { attiva: false, scade: null, pagato: null, origine: null, fino: null };
         return si(id, {
           attive: false,
           gdahome: spenta,

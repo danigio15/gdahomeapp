@@ -45,6 +45,7 @@ import {
   t,
   writeIconGlyph,
   writeJsonIfChanged,
+  senzaCadere,
 } from "./shared.js";
 
 root.__DM_20260817B__ = true;
@@ -1377,4 +1378,4 @@ export function installEnergyLoadsEditor() {
 
 if (doc?.readyState === "loading")
   doc.addEventListener("DOMContentLoaded", installEnergyLoadsEditor, { once: true });
-else installEnergyLoadsEditor();
+else senzaCadere(installEnergyLoadsEditor);

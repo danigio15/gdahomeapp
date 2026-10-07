@@ -1,4 +1,4 @@
-import { doc, root } from "./shared.js";
+import { doc, root, senzaCadere } from "./shared.js";
 import { activeVehicle, profiles } from "./ev-section.js";
 import { vehicleIndex } from "../core/vehicle-model.js";
 
@@ -149,4 +149,4 @@ function install() {
   doc.head?.append(style);
 }
 
-install();
+senzaCadere(install);

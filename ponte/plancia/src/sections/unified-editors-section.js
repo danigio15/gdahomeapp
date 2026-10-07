@@ -32,6 +32,7 @@ import {
   root,
   t,
   writeJsonIfChanged,
+  senzaCadere,
 } from "./shared.js";
 
 const KEY = "__DASHBOARDMODERN_UNIFIED_EDITORS_SECTION__";
@@ -738,4 +739,4 @@ export function installUnifiedEditorsSection() {
 
 if (doc?.readyState === "loading")
   doc.addEventListener("DOMContentLoaded", installUnifiedEditorsSection, { once: true });
-else installUnifiedEditorsSection();
+else senzaCadere(installUnifiedEditorsSection);

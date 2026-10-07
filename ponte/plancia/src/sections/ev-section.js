@@ -22,7 +22,7 @@ import {
   vehiclePhotos,
 } from "../core/vehicle-model.js";
 import { pickMediaImage } from "./media-picker-section.js";
-import { allStates, clean, dashboardStore, doc, esc, installStyle, onEditorRedraw, readJson, root, section, setLexicalGlobal, t, wrapFunction, writeJsonIfChanged } from "./shared.js";
+import { allStates, clean, dashboardStore, doc, esc, installStyle, onEditorRedraw, readJson, root, section, setLexicalGlobal, t, wrapFunction, writeJsonIfChanged, senzaCadere } from "./shared.js";
 
 globalThis.__DM_20260815C__ = true;
 const KEY = "__DASHBOARDMODERN_EV_SECTION__";
@@ -2159,4 +2159,4 @@ export function installEvSection() {
     root.addEventListener?.("dashboardmodern:state-changed",(event)=>{ if (stateChangeAffectsEv(event)) scheduleEvSync(); });
   }
 }
-if(doc?.readyState==="loading")doc.addEventListener("DOMContentLoaded",installEvSection,{once:true});else installEvSection();
+if(doc?.readyState==="loading")doc.addEventListener("DOMContentLoaded",installEvSection,{once:true});else senzaCadere(installEvSection);

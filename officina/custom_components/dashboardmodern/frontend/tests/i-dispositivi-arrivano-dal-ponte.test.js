@@ -155,7 +155,7 @@ test("il ponte risponde con le stesse due chiavi che la plancia legge", async ()
 
 test("la sezione la installa il guscio, come tutte le altre", async () => {
   const runtime = await read("src/sections/section-runtime.js");
-  assert.match(runtime, /installIDispositiviDalPonte\(\)/);
+  assert.match(runtime, /senzaCadere\(installIDispositiviDalPonte\);/);
 });
 
 /* ── E il tentativo che non si deve bruciare ───────────────────────────────

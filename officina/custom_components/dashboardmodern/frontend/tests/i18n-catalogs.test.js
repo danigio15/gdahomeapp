@@ -133,6 +133,13 @@ test("no translation is left as its English source", async () => {
 const SHARED_ACROSS_LANGUAGES = new Set([
   ".",
   "24 h",
+  /* I minuti e le ore della Cottura (#71): «min» e «h» sono i simboli delle
+   * unita', e mezza Europa li scrive cosi'. Dove non e' vero — tedesco, russo,
+   * turco, e gli alfabeti che non sono il nostro — il catalogo li traduce. */
+  "+1 min",
+  "${minuti} min",
+  "${ore} h",
+  "${ore} h ${resto} min",
   /* «Humidex» e' il nome dell'indice, non una parola: lo scrivono cosi' anche
    * i servizi meteo che non parlano inglese, e tradurlo vorrebbe dire
    * inventarne uno che nessuno cerca. */

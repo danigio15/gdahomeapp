@@ -34,6 +34,7 @@ import {
   root,
   t,
   writeJsonIfChanged,
+  senzaCadere,
 } from "./shared.js";
 
 const KEY = "__DASHBOARDMODERN_STAMPANTI_EDITOR__";
@@ -291,4 +292,4 @@ export function installStampantiEditor() {
   return true;
 }
 
-installStampantiEditor();
+senzaCadere(installStampantiEditor);

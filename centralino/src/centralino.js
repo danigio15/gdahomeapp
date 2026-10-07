@@ -58,6 +58,12 @@ const TELEFONI_PER_CASA = 20;
 /* Quanto vive l'attesa di un abbinamento: la stessa finestra del codice. */
 const ABBINAMENTO_VIVE = 6 * 60 * 1000;
 
+/* Quanto puo' vivere, al massimo, l'attesa di una casa di prova: il codice
+ * che una casa fa per chi rivede l'app, e che vale fino a sette giorni e per
+ * piu' telefoni (`ponte/src/casa-di-prova.js`). La casa dice quanto le
+ * manca; oltre questo tetto non si crede a nessuno. */
+const PROVA_VIVE_AL_MASSIMO = 7 * 24 * 60 * 60 * 1000;
+
 /* Un messaggio piu' lungo di cosi' non e' un comando a Home Assistant. */
 export const MESSAGGIO_MASSIMO = 1024 * 1024;
 
@@ -168,7 +174,8 @@ export class Centralino {
 
     /** Le case collegate adesso, per identificativo. */
     this.collegate = new Map();
-    /** Le attese di abbinamento vive, per impronta del codice. */
+    /** Le attese di abbinamento vive, per impronta del codice: quelle del
+     * codice di tutti i giorni, e quelle delle case di prova (`prova: true`). */
     this.abbinamenti = new Map();
 
     this._battito = setInterval(() => this._giroDiControllo(), BATTITO);
@@ -454,6 +461,13 @@ export class Centralino {
         casa.chiudi("nessun segno di vita");
         continue;
       }
+      /* Un gettone puo' scadere mentre un telefono e' gia' dentro. Le nuove
+       * connessioni vengono fermate da accogliUnTelefono, ma senza questo
+       * controllo il canale gia' aperto resterebbe vivo fino alla sua chiusura.
+       * L'abbinamento invece non si tocca: resta libero anche per una casa Base. */
+      if (this.chiaveLicenze && casa.dicelaLicenza && !this.ePremium(casa.id)) {
+        casa.chiudiITelefoni(PREMIUM_RICHIESTO.codice, PREMIUM_RICHIESTO.motivo);
+      }
       casa.presa.ping();
     }
   }
@@ -539,6 +553,15 @@ class CasaCollegata {
         return;
       case "chiudi-abbinamento":
         this._chiudiGliAbbinamenti();
+        return;
+      /* La casa di prova: un'attesa che vive fino a sette giorni e che un
+       * telefono che entra non chiude. Sta accanto a quella di tutti i
+       * giorni, e nessuna delle due spegne l'altra. */
+      case "apri-prova":
+        this._apriUnaProva(detto.impronta, detto.vale);
+        return;
+      case "chiudi-prova":
+        this._chiudiLeProve();
         return;
       case "d":
         this._versoIlTelefono(detto.c, detto.m);
@@ -628,12 +651,36 @@ class CasaCollegata {
   }
 
   _apriUnAbbinamento(impronta) {
-    if (typeof impronta !== "string" || !/^[0-9a-f]{64}$/.test(impronta)) return;
-    /* Un'impronta gia' presa da un'altra casa, ancora collegata e ancora nel
-     * suo tempo, resta sua. Chi arriva secondo con la stessa impronta non ha
-     * fabbricato lui quel codice — i codici sono ottanta bit di caso — e
-     * lasciarglielo riscrivere vorrebbe dire mandare a lui il telefono che
-     * si sta abbinando all'altra. */
+    if (!this._sePuoPrenderla(impronta)) return;
+    this._chiudiGliAbbinamenti();
+    this.centralino.abbinamenti.set(impronta, {
+      casa: this.id,
+      scadeIl: this.centralino.adesso() + ABBINAMENTO_VIVE,
+    });
+  }
+
+  /* La casa di prova. `vale` e' quanto le manca, in millisecondi, e non
+   * l'ora in cui scade: l'orologio di una casa puo' essere indietro o
+   * avanti, ma la differenza la misura giusta. Una alla volta per casa, come
+   * il codice di tutti i giorni, e con un tetto. */
+  _apriUnaProva(impronta, vale) {
+    const quanto = Math.min(Number(vale) || 0, PROVA_VIVE_AL_MASSIMO);
+    if (!(quanto > 0) || !this._sePuoPrenderla(impronta)) return;
+    this._chiudiLeProve();
+    this.centralino.abbinamenti.set(impronta, {
+      casa: this.id,
+      scadeIl: this.centralino.adesso() + quanto,
+      prova: true,
+    });
+  }
+
+  /* Un'impronta gia' presa da un'altra casa, ancora collegata e ancora nel
+   * suo tempo, resta sua. Chi arriva secondo con la stessa impronta non ha
+   * fabbricato lui quel codice — i codici sono ottanta bit di caso — e
+   * lasciarglielo riscrivere vorrebbe dire mandare a lui il telefono che si
+   * sta abbinando all'altra. */
+  _sePuoPrenderla(impronta) {
+    if (typeof impronta !== "string" || !/^[0-9a-f]{64}$/.test(impronta)) return false;
     const gia = this.centralino.abbinamenti.get(impronta);
     if (
       gia &&
@@ -642,18 +689,23 @@ class CasaCollegata {
       this.centralino.collegate.has(gia.casa)
     ) {
       this.centralino.registro.attenzione(`un'impronta gia' presa da un'altra casa: ${this.da}`);
-      return;
+      return false;
     }
-    this._chiudiGliAbbinamenti();
-    this.centralino.abbinamenti.set(impronta, {
-      casa: this.id,
-      scadeIl: this.centralino.adesso() + ABBINAMENTO_VIVE,
-    });
+    return true;
   }
 
+  /* Le attese del codice di tutti i giorni: quella della casa di prova
+   * resta. Un telefono che si abbina col codice di casa non deve chiudere
+   * la porta a chi sta rivedendo l'app. */
   _chiudiGliAbbinamenti() {
     for (const [impronta, attesa] of [...this.centralino.abbinamenti]) {
-      if (attesa.casa === this.id) this.centralino.abbinamenti.delete(impronta);
+      if (attesa.casa === this.id && !attesa.prova) this.centralino.abbinamenti.delete(impronta);
+    }
+  }
+
+  _chiudiLeProve() {
+    for (const [impronta, attesa] of [...this.centralino.abbinamenti]) {
+      if (attesa.casa === this.id && attesa.prova) this.centralino.abbinamenti.delete(impronta);
     }
   }
 
@@ -807,7 +859,18 @@ class CasaCollegata {
   _staccaDalCentralino() {
     this._lasciaLeRicevute();
     if (!this.id) return;
-    this._chiudiGliAbbinamenti();
+    /* Le attese se ne vanno con la casa: quando si ricollega le ridice lei.
+     * Ma solo se questo filo e' ancora quello della casa. Un filo vecchio che
+     * si chiude dopo che la casa si e' gia' ricollegata — il suo fantasma —
+     * non deve portarsi via quello che la casa vera ha appena detto: per un
+     * abbinamento sarebbero cinque minuti, per una casa di prova giorni. */
+    if (
+      !this.centralino.collegate.has(this.id) ||
+      this.centralino.collegate.get(this.id) === this
+    ) {
+      this._chiudiGliAbbinamenti();
+      this._chiudiLeProve();
+    }
     if (this.centralino.collegate.get(this.id) === this) {
       this.centralino.collegate.delete(this.id);
     }
