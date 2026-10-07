@@ -18,8 +18,16 @@ il tasto con la casa e poi «Dispositivi» facevano chiudere gdahome. La barra
 in alto di quella schermata aveva due tasti scritti, «Azioni» e «Casa», ma
 sopra una griglia Android Auto ne accetta uno solo: l'altro dev'essere
 un'icona. Adesso le azioni rapide hanno il fulmine, lo stesso della loro
-schermata, e «Casa» resta scritto. La correzione è tutta nell'app: l'add-on
-cambia solo numero.
+schermata, e «Casa» resta scritto.
+
+**In auto la scheda della colonnina si apre.** Toccando una colonnina sulla
+mappa, l'auto mostrava «Si è verificato un errore imprevisto nell'app
+gdahome»: Android Auto rifiutava la scheda disegnata sopra la mappa, un
+modello che nella libreria dell'app è ancora sperimentale. Adesso la scheda si
+apre come pagina a sé, col cerchio dello stato, la potenza, le prese libere,
+il prezzo e «Vai»; la freccia in alto riporta alla mappa.
+
+Le due correzioni sono tutte nell'app: l'add-on cambia solo numero.
 
 ## 1.10.1
 

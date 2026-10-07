@@ -1,1 +1,1 @@
-In auto, il tasto con la casa e poi «Dispositivi» non fanno più chiudere l'app: le azioni rapide sono dietro il fulmine in alto, accanto a «Casa».
+In auto, toccando una colonnina sulla mappa si apre la sua scheda, a pagina intera, invece di un errore. E il tasto con la casa, poi «Dispositivi», non fa più chiudere l'app: le azioni rapide sono dietro il fulmine in alto, accanto a «Casa».

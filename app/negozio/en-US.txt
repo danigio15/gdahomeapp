@@ -1,1 +1,1 @@
-On Android Auto, opening your home's devices from the house button no longer closes the app: quick actions are behind the lightning bolt at the top, next to «Casa».
+On Android Auto, tapping a charging station on the map now opens its full-page card instead of an error. Opening your home's devices from the house button no longer closes the app: quick actions are behind the lightning bolt at the top, next to «Casa».
