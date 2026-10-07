@@ -11,6 +11,16 @@ fuori. La plancia dentro continua a dire la sua, e si legge dov'è sempre
 stata: nella pastiglia «La plancia» della console. Sono due numeri perché
 sono due cose.
 
+## 1.10.2
+
+**In auto «Dispositivi» non chiude più l'app.** Sulla mappa del navigatore,
+il tasto con la casa e poi «Dispositivi» facevano chiudere gdahome. La barra
+in alto di quella schermata aveva due tasti scritti, «Azioni» e «Casa», ma
+sopra una griglia Android Auto ne accetta uno solo: l'altro dev'essere
+un'icona. Adesso le azioni rapide hanno il fulmine, lo stesso della loro
+schermata, e «Casa» resta scritto. La correzione è tutta nell'app: l'add-on
+cambia solo numero.
+
 ## 1.10.1
 
 **La casa di prova.** Nella console dell'add-on c'è una scheda nuova, «Casa di

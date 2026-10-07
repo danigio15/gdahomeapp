@@ -1,5 +1,1 @@
-Your gdahome Premium gift code can now be redeemed away from home, without being on your home Wi-Fi. Also new, the test home: a code that works for up to 7 days to let someone try the app, as a user who isn't an administrator.
-
-Update gdahome in Home Assistant to 1.10.1: these two changes go through the add-on.
-
-Also, the Premium page now always shows the store's current prices.
+On Android Auto, opening your home's devices from the house button no longer closes the app: quick actions are behind the lightning bolt at the top, next to «Casa».

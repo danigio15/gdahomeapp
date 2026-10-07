@@ -88,12 +88,23 @@ class LaCasaInAuto(context: CarContext) : Screen(context) {
 
     /* I due tasti in alto. Due e non tre: la barra in macchina e' stretta, e
      * questa schermata ne ha bisogno di due — quello che fa partire le cose
-     * scritte a mano, e quello che racconta la casa. */
+     * scritte a mano, e quello che racconta la casa.
+     *
+     * Una scritta sola, pero': sopra una griglia Android Auto accetta al piu'
+     * un tasto con le parole, e l'altro dev'essere un segno. Con «Azioni» e
+     * «Casa» tutti e due scritti la libreria rifiutava la schermata appena la
+     * si apriva — «Action list exceeded max number of 1 actions with custom
+     * titles» — e l'app si chiudeva. Allora le azioni hanno il fulmine, lo
+     * stesso che portano nella loro griglia, e la parola resta alla casa. */
     private fun iDueTasti(): ActionStrip =
         ActionStrip.Builder()
             .addAction(
                 Action.Builder()
-                    .setTitle(carContext.getString(R.string.auto_azioni_breve))
+                    .setIcon(
+                        CarIcon.Builder(IconCompat.createWithResource(carContext, R.drawable.auto_azione))
+                            .setTint(CarColor.DEFAULT)
+                            .build(),
+                    )
                     .setOnClickListener { screenManager.push(LeAzioniInAuto(carContext)) }
                     .build(),
             )
