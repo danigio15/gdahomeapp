@@ -11,6 +11,26 @@ fuori. La plancia dentro continua a dire la sua, e si legge dov'è sempre
 stata: nella pastiglia «La plancia» della console. Sono due numeri perché
 sono due cose.
 
+## 1.10.3
+
+**Comandi rapidi in auto: c'è «Salva».** Toccando un comando nella pagina
+«Comandi rapidi in auto» si apre la sua scheda, col nome, l'icona e la
+conferma, ma il tasto «Salva» non compariva: accanto a «Togli» non trovava
+posto e non veniva disegnato. Chiudendo la scheda, l'icona scelta si perdeva.
+Adesso «Salva» è il tasto grande, largo quanto la scheda, e «Togli» sta
+sotto, più piccolo.
+
+**Le schede non finiscono più sotto i tasti di Android.** La scheda di un
+comando e quella per crearne uno arrivavano fino al bordo dello schermo,
+sotto la barra coi tre tasti: «Togli» si vedeva a metà, e con le scritte
+grandi «Aggiungi in auto» ci finiva sotto. Adesso lasciano quello spazio, e
+con le scritte grandi scorrono.
+
+Le icone nella lista e nell'anteprima sono quelle che si vedono in auto,
+anche per i comandi creati prima che l'icona si potesse scegliere.
+
+La correzione è tutta nell'app: l'add-on cambia solo numero.
+
 ## 1.10.2
 
 **In auto «Dispositivi» non chiude più l'app.** Sulla mappa del navigatore,

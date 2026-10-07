@@ -1,1 +1,1 @@
-On Android Auto, tapping a charging station on the map now opens its full-page card instead of an error. Opening your home's devices from the house button no longer closes the app: quick actions are behind the lightning bolt at the top, next to «Casa».
+In the car quick commands, tapping a command now shows "Save": the name, icon and confirmation you pick are kept. The sheet no longer slides under the Android navigation buttons, and with large text it scrolls.

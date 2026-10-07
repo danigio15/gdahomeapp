@@ -1,1 +1,1 @@
-In auto, toccando una colonnina sulla mappa si apre la sua scheda, a pagina intera, invece di un errore. E il tasto con la casa, poi «Dispositivi», non fa più chiudere l'app: le azioni rapide sono dietro il fulmine in alto, accanto a «Casa».
+Nei comandi rapidi in auto, toccando un comando adesso c'è «Salva»: il nome, l'icona e la conferma che scegli restano. E la scheda non finisce più sotto i tasti di Android: con le scritte grandi scorre.
