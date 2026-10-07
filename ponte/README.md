@@ -44,6 +44,7 @@ app, dentro il browser, senza installare niente.
 | **Telefoni abbinati**     | chi entra in questa casa. **Togli associazione** spegne un telefono all'istante: il filo aperto cade, e con quel segno non si rientra più                                    |
 | **Le plance**             | se ne tengono fino a otto, ognuna con le sue sezioni, le sue tessere, le sue stanze, e ognuna con i suoi utenti abilitati. Compaiono anche fra le «Plance» di Home Assistant |
 | **Aprila in un browser**  | l'app qui dentro, e l'indirizzo per aprirla da fuori                                                                                                                         |
+| **Casa di prova**         | un codice per chi deve provare l'app senza abitarci — chi rivede l'app per l'App Store — che vale fino a 7 giorni e per più telefoni. Vedi sotto                             |
 | **Se qualcosa non torna** | chiuso: dentro c'è lo stato per bene e i rimedi. È il posto da aprire il giorno che qualcosa non va                                                                          |
 
 ## Chi vede quale plancia
@@ -117,6 +118,26 @@ fuori casa** in cima alla pagina, e se non ci arriva dice anche perché.
 
 Spegnendo `da_fuori_casa` la casa non chiama nessuno e l'app funziona solo sotto
 il Wi-Fi di casa. Per chi la guarda dal divano va benissimo.
+
+## La casa di prova
+
+Prima di pubblicare l'app, Apple la prova con una casa vera: da lontano, e
+anche per qualche giorno. Il codice di tutti i giorni non basta — vale cinque
+minuti e una volta sola — e per questo c'è la scheda **Casa di prova**:
+
+- il codice vale **fino a 7 giorni** e per **più telefoni** (al massimo
+  cinque), e si può usare anche da fuori casa;
+- chi entra con lui entra come **un utente di Home Assistant che non
+  amministra**, scelto nella scheda: vede le plance che vede lui e fa solo
+  quello che può fare lui. Un amministratore la scheda non lo propone, e
+  l'add-on lo rifiuta;
+- i telefoni entrati con lui hanno accanto al nome «di prova · fino al …» in
+  **Telefoni abbinati**, ed escono da soli alla scadenza. **Revoca adesso**
+  li fa uscire subito;
+- il codice sopravvive a un riavvio dell'add-on, e convive con quello di tutti
+  i giorni: abbinare il proprio telefono durante la revisione non lo spegne.
+
+Il QR si scarica in PNG, da allegare alle note per la revisione.
 
 ## Le opzioni
 
@@ -279,6 +300,8 @@ d'altri.
 ### Cosa finisce sul disco
 
 `/data/dispositivi.json` con l'**impronta** di ogni segno, mai il segno;
+`/data/casa-di-prova.json` col codice della casa di prova, finché c'è — in
+chiaro, perché la stretta di mano vuole il codice e la scheda lo rimostra;
 `/data/plancia.json` con la configurazione delle plance; `/data/plance.json` con
 l'elenco; `/data/segnalazioni.json` con una copia di quello che hai scritto,
 così l'app mostra subito qualcosa anche quando il centralino è lento. L'ora

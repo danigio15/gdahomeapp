@@ -617,6 +617,140 @@ void main() {
       expect(collegamento.licenza.premium, isFalse);
     });
 
+    test('un codice regalo fuori casa, con Base, lo porta il centralino, '
+        'firmato, e la casa è Premium subito', () async {
+      /* «Ho provato a generare un codice ma non funziona»: da fuori, con
+       * la casa Base, il filo non c'e', e il regalo si fermava li'. */
+      final centralino = IndirizzoDelCentralino.leggi(
+        'wss://centralino.esempio.it',
+      )!;
+      final casa = await archivio.aggiungi(
+        nome: 'Casa',
+        segno: segnoBuono,
+        identificativo: chiBuono,
+        chiave: chiaveBuona,
+        casaAlCentralino: casaDiProva,
+        centralino: centralino,
+        inCasa: IndirizzoDelPonte.leggi('192.168.1.50')!,
+      );
+      await archivio.segnaIlGettone(casa.id, '');
+      final gettone = await firmaUnGettone(origine: 'regalo');
+      Uri? dove;
+      Map<String, Object?>? corpo;
+      collegamento = Collegamento(
+        archivio: archivio,
+        sonda: sondaChe({}),
+        licenza: GestoreLicenza(chiave: chiaveDiProva),
+        consegnaAlCentralino: (d, c) async {
+          dove = d;
+          corpo = (jsonDecode(c) as Map).cast<String, Object?>();
+          return (
+            200,
+            jsonEncode({
+              'gdahome': {'attiva': true, 'origine': 'regalo'},
+              'gettoni': {'gdahome': gettone},
+            }),
+          );
+        },
+      );
+      await collegamento.apri();
+      expect(collegamento.fuoriCasaSenzaPremium, isTrue);
+
+      await collegamento.riscatta('gda-86da-rsdw-waft');
+      expect(dove, centralino.ricevuta(casaDiProva));
+      expect(corpo!['chi'], chiBuono);
+      expect(corpo!['regalo'], 'GDA-86DA-RSDW-WAFT', reason: 'scritto pulito');
+      expect(corpo!.containsKey('ricevuta'), isFalse);
+      /* Firmato con la chiave del filo e l'etichetta del regalo, come lo
+       * controlla la casa. */
+      expect(
+        corpo!['firma'],
+        await firmaDelRegalo(
+          chiaveDelFilo: chiaveBuona,
+          casa: casaDiProva,
+          chi: chiBuono,
+          quando: corpo!['quando']! as int,
+          regalo: 'GDA-86DA-RSDW-WAFT',
+        ),
+      );
+      expect(archivio.quella(casa.id)!.gettone, gettone);
+      expect(collegamento.licenza.premium, isTrue);
+    });
+
+    test(
+      'un codice regalo già usato, da fuori, lo dice come dal filo',
+      () async {
+        final casa = await archivio.aggiungi(
+          nome: 'Casa',
+          segno: segnoBuono,
+          identificativo: chiBuono,
+          chiave: chiaveBuona,
+          casaAlCentralino: casaDiProva,
+          centralino: IndirizzoDelCentralino.leggi(
+            'wss://centralino.esempio.it',
+          )!,
+          inCasa: IndirizzoDelPonte.leggi('192.168.1.50')!,
+        );
+        await archivio.segnaIlGettone(casa.id, '');
+        var risposta = (409, '{"errore":"codice-gia-usato"}');
+        var consegnati = 0;
+        collegamento = Collegamento(
+          archivio: archivio,
+          sonda: sondaChe({}),
+          licenza: GestoreLicenza(chiave: chiaveDiProva),
+          consegnaAlCentralino: (_, _) async {
+            consegnati += 1;
+            return risposta;
+          },
+        );
+        await collegamento.apri();
+        await expectLater(
+          collegamento.riscatta('GDA-86DA-RSDW-WAFT'),
+          throwsA(
+            isA<LicenzaRifiutata>().having(
+              (no) => no.spiegazione,
+              'spiegazione',
+              contains('già stato usato'),
+            ),
+          ),
+        );
+
+        /* Un codice storto non parte nemmeno. */
+        await expectLater(
+          collegamento.riscatta('ciao'),
+          throwsA(isA<LicenzaRifiutata>()),
+        );
+        expect(consegnati, 1);
+
+        /* Una casa con l'add-on di prima: la strada c'e', il regalo no. */
+        risposta = (400, '{"errore":"ricevuta-storta"}');
+        await expectLater(
+          collegamento.riscatta('GDA-86DA-RSDW-WAFT'),
+          throwsA(
+            isA<LicenzaRifiutata>().having(
+              (no) => no.spiegazione,
+              'spiegazione',
+              contains('aggiorna gdahome'),
+            ),
+          ),
+        );
+
+        /* E il centralino che non trova la casa: si dice come prima. */
+        risposta = (503, '{"errore":"casa-non-collegata"}');
+        await expectLater(
+          collegamento.riscatta('GDA-86DA-RSDW-WAFT'),
+          throwsA(
+            isA<LicenzaRifiutata>().having(
+              (no) => no.spiegazione,
+              'spiegazione',
+              contains('non è collegata'),
+            ),
+          ),
+        );
+        expect(collegamento.licenza.premium, isFalse);
+      },
+    );
+
     test('a ogni collegamento si chiede, e il gettone resta', () async {
       final gettone = await firmaUnGettone();
       ponte.licenza = {

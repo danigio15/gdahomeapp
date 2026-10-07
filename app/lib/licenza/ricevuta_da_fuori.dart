@@ -18,6 +18,15 @@
 ///     chiave = HKDF-SHA256(chiave del filo, sale = "casa_…", info = etichetta, 32 byte)
 ///     firma  = base64url(HMAC-SHA256(chiave, JSON di
 ///              [etichetta, casa, chi, quando, app, piattaforma, prodotto, ricevuta]))
+///
+/// La stessa strada porta anche un **codice regalo**: chi lo ha in mano fuori
+/// casa, con la casa Base, il filo non ce l'ha, ed e' proprio il momento in
+/// cui gli serve. Il corpo ha `regalo` al posto della ricevuta, e la firma ha
+/// un'etichetta sua:
+///
+///     corpo = {v: 1, chi, quando, regalo, firma}
+///     firma = base64url(HMAC-SHA256(chiave, JSON di
+///             [etichetta del regalo, casa, chi, quando, regalo]))
 library;
 
 import 'dart:convert';
@@ -31,6 +40,10 @@ import '../ponte/indirizzo.dart';
 /// Il nome di questa firma: sta nella chiave e nel testo firmato, cosi' una
 /// firma fatta per qualcos'altro li' non vale. Lo stesso del ponte.
 const etichettaDellaRicevuta = 'gdahome/ricevuta/v1';
+
+/// Il nome della firma di un codice regalo portato dal centralino. Lo stesso
+/// del ponte.
+const etichettaDelRegalo = 'gdahome/regalo/v1';
 
 /// Quanto si aspetta il centralino: lui aspetta la casa un minuto, e la casa
 /// il quadro, che chiede al negozio.
@@ -73,22 +86,38 @@ Future<String> firmaDellaRicevuta({
   required String piattaforma,
   required String prodotto,
   required String ricevuta,
-}) async {
+}) => _firmata(etichettaDellaRicevuta, chiaveDelFilo, casa, [
+  chi,
+  quando,
+  app,
+  piattaforma,
+  prodotto,
+  ricevuta,
+]);
+
+/// La firma di un codice regalo, come la controlla la casa.
+Future<String> firmaDelRegalo({
+  required String chiaveDelFilo,
+  required String casa,
+  required String chi,
+  required int quando,
+  required String regalo,
+}) => _firmata(etichettaDelRegalo, chiaveDelFilo, casa, [chi, quando, regalo]);
+
+/// La chiave si ricava per etichetta e per casa, e il testo firmato comincia
+/// con la stessa etichetta: una firma fatta per una cosa non vale per l'altra.
+Future<String> _firmata(
+  String etichetta,
+  String chiaveDelFilo,
+  String casa,
+  List<Object> campi,
+) async {
   final chiave = await Hkdf(hmac: Hmac.sha256(), outputLength: 32).deriveKey(
     secretKey: SecretKey(_daEsadecimale(chiaveDelFilo)),
     nonce: utf8.encode(casa),
-    info: utf8.encode(etichettaDellaRicevuta),
+    info: utf8.encode(etichetta),
   );
-  final testo = jsonEncode([
-    etichettaDellaRicevuta,
-    casa,
-    chi,
-    quando,
-    app,
-    piattaforma,
-    prodotto,
-    ricevuta,
-  ]);
+  final testo = jsonEncode([etichetta, casa, ...campi]);
   final firma = await Hmac.sha256().calculateMac(
     utf8.encode(testo),
     secretKey: chiave,
@@ -144,6 +173,49 @@ Future<EsitoDellaRicevuta> portaLaRicevutaDaFuori({
   } catch (_) {
     /* Niente rete, un centralino che non risponde, una chiave che non si
      * legge: la ricevuta resta al negozio e si riprova. */
+    return const EsitoDellaRicevuta(0, null);
+  }
+}
+
+/// Porta un codice regalo alla casa passando dal centralino. Non solleva:
+/// com'e' andata lo dice l'[EsitoDellaRicevuta], coi no della casa — `409`
+/// gia' usato, `404` inesistente — come li dice lei.
+Future<EsitoDellaRicevuta> portaIlRegaloDaFuori({
+  required IndirizzoDelCentralino centralino,
+  required String casa,
+  required String chi,
+  required String chiaveDelFilo,
+  required String regalo,
+  DateTime Function() adesso = DateTime.now,
+  ConsegnaAlCentralino? consegna,
+}) async {
+  try {
+    final quando = adesso().millisecondsSinceEpoch;
+    final corpo = jsonEncode({
+      'v': 1,
+      'chi': chi,
+      'quando': quando,
+      'regalo': regalo,
+      'firma': await firmaDelRegalo(
+        chiaveDelFilo: chiaveDelFilo,
+        casa: casa,
+        chi: chi,
+        quando: quando,
+        regalo: regalo,
+      ),
+    });
+    final (stato, detto) = await (consegna ?? _consegna)(
+      centralino.ricevuta(casa),
+      corpo,
+    );
+    Object? letto;
+    try {
+      letto = jsonDecode(detto);
+    } catch (_) {
+      letto = null;
+    }
+    return EsitoDellaRicevuta(stato, letto);
+  } catch (_) {
     return const EsitoDellaRicevuta(0, null);
   }
 }

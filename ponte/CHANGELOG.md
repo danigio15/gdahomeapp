@@ -11,6 +11,34 @@ fuori. La plancia dentro continua a dire la sua, e si legge dov'è sempre
 stata: nella pastiglia «La plancia» della console. Sono due numeri perché
 sono due cose.
 
+## 1.10.1
+
+**La casa di prova.** Nella console dell'add-on c'è una scheda nuova, «Casa di
+prova», per chi deve provare l'app senza abitare la casa: chi la rivede per
+l'App Store prima di pubblicarla. Fa un codice che vale fino a 7 giorni e per
+più telefoni, da mettere nelle note per la revisione, anche come QR da
+scaricare. Chi lo usa entra come un utente di Home Assistant che non
+amministra, scelto nella scheda, e vede solo quello che vede lui. I telefoni
+entrati con quel codice hanno accanto al nome «di prova · fino al …», ed
+escono da soli alla scadenza; «Revoca adesso» li fa uscire subito. Il codice
+di tutti i giorni resta com'era, e i due non si disturbano.
+
+**Il codice regalo si riscatta anche fuori casa.** Con la casa Base, da fuori
+casa l'app non si collega, e il codice regalo si fermava con «La casa non è
+collegata adesso». Adesso lo porta il centralino, firmato dal telefono, come
+già la ricevuta di chi compra: la casa diventa Premium e l'app entra. Serve
+l'app 1.10.1 e l'add-on 1.10.1; con l'add-on di prima l'app dice di
+aggiornarlo, e intanto il codice si riscatta dalla console dell'add-on o
+dall'app sul Wi-Fi di casa.
+
+**I prezzi della pagina Premium sono sempre quelli del negozio.** L'app
+chiedeva prezzi e prova gratuita al Play Store, o all'App Store, una volta
+sola, quando partiva. Se restava aperta, la pagina Premium continuava a
+mostrare i prezzi di allora, mentre al momento di pagare il negozio chiedeva
+quelli nuovi. Adesso li richiede ogni volta che si apre la pagina: si vede
+subito un prezzo cambiato o una prova appena accesa, e la prova sparisce a
+chi l'ha già usata. Se il negozio non risponde, restano i prezzi di prima.
+
 ## 1.10.0
 
 **gdahome Premium si accende.** Da questa versione una casa è Premium se ha una

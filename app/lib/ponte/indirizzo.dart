@@ -7,8 +7,6 @@
 /// una porta e' un modo per farlo sbagliare.
 library;
 
-import 'package:flutter/foundation.dart' show kIsWeb;
-
 import '../parole.dart';
 
 /// Se [casa] e' un nome o un numero che vive solo dentro una rete di casa.
@@ -175,7 +173,12 @@ class IndirizzoDelPonte {
 /// dall'`Origin` della stretta di mano (un browser lo manda sempre, `dart:io`
 /// mai), e infatti il centralino lo fa per le versioni che non lo dicono; ma
 /// indovinare e' indovinare, e dirlo costa una parola.
-const String _cosaSiamo = kIsWeb ? 'web' : 'app';
+///
+/// `dart.library.js_interop` e' la domanda di `kIsWeb` fatta senza Flutter:
+/// questo file gira anche in `bin/servitore.dart`, con Dart e basta.
+const String _cosaSiamo = bool.fromEnvironment('dart.library.js_interop')
+    ? 'web'
+    : 'app';
 
 /// Dove si chiama per entrare da fuori.
 ///

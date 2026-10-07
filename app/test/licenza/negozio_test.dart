@@ -22,6 +22,16 @@ class _GooglePlayFinto implements NegozioGdahome {
   /// Quelli che il negozio dice rimasti a meta', all'avvio.
   List<PurchaseDetails> rimasti = const [];
 
+  /// Quante volte gli si sono chiesti quelli rimasti a meta'.
+  var volteDeiRimasti = 0;
+
+  /// I piani come li dice adesso la Play Console: si possono cambiare a
+  /// meta' prova, come fa chi vende.
+  List<PianoGdahome> listino = const [
+    PianoGdahome(id: pianoMensile, prezzo: '4,99 €', giorniProva: 14),
+    PianoGdahome(id: pianoAnnuale, prezzo: '49,99 €', giorniProva: 14),
+  ];
+
   final _acquisti = StreamController<List<PurchaseDetails>>.broadcast();
 
   void consegna(PurchaseDetails acquisto) => _acquisti.add([acquisto]);
@@ -33,10 +43,7 @@ class _GooglePlayFinto implements NegozioGdahome {
   @override
   Future<bool> disponibile() async => true;
   @override
-  Future<List<PianoGdahome>> piani() async => const [
-    PianoGdahome(id: pianoMensile, prezzo: '4,99 €', giorniProva: 14),
-    PianoGdahome(id: pianoAnnuale, prezzo: '49,99 €', giorniProva: 14),
-  ];
+  Future<List<PianoGdahome>> piani() async => listino;
   @override
   Stream<List<PurchaseDetails>> get acquisti => _acquisti.stream;
   @override
@@ -46,7 +53,10 @@ class _GooglePlayFinto implements NegozioGdahome {
   @override
   Future<void> completa(PurchaseDetails acquisto) async => completati += 1;
   @override
-  Future<List<PurchaseDetails>> rimastiAMeta() async => rimasti;
+  Future<List<PurchaseDetails>> rimastiAMeta() async {
+    volteDeiRimasti += 1;
+    return rimasti;
+  }
 }
 
 /// Un acquisto di Google Play: col prodotto e col token, o — com'e' un
@@ -204,5 +214,45 @@ void main() {
     expect(portate, [_token]);
     expect(acquisti.ceUnaRicevutaInSospeso, isFalse);
     expect(negozio.completati, 1);
+  });
+
+  test('prezzi e prova si rileggono a ogni apertura della pagina Premium: '
+      'chi vende li cambia mentre l\'app resta aperta', () async {
+    final negozio = _GooglePlayFinto()
+      ..listino = const [
+        PianoGdahome(id: pianoMensile, prezzo: '5,99 €'),
+        PianoGdahome(id: pianoAnnuale, prezzo: '59,99 €'),
+      ];
+    final acquisti = GestoreDegliAcquisti(
+      negozio: negozio,
+      porta: ({required piattaforma, required prodotto, required ricevuta}) =>
+          fail('niente da portare alla casa'),
+    );
+    await acquisti.avvia();
+    expect(acquisti.prezzoDi(pianoAnnuale), '59,99 €/anno');
+    expect(acquisti.provaDi(pianoAnnuale), 0);
+
+    /* Nella Play Console il prezzo scende e la prova si accende; l'app e'
+     * rimasta aperta, e la pagina Premium si riapre. */
+    negozio.listino = const [
+      PianoGdahome(id: pianoMensile, prezzo: '4,99 €', giorniProva: 14),
+      PianoGdahome(id: pianoAnnuale, prezzo: '49,99 €', giorniProva: 14),
+    ];
+    var avvisi = 0;
+    acquisti.addListener(() => avvisi += 1);
+    await acquisti.avvia();
+    expect(acquisti.prezzoDi(pianoAnnuale), '49,99 €/anno');
+    expect(acquisti.prezzoDi(pianoMensile), '4,99 €/mese');
+    expect(acquisti.provaDi(pianoAnnuale), 14);
+    expect(avvisi, 1);
+
+    /* Un negozio che risponde vuoto non cancella quello che si sapeva. */
+    negozio.listino = const [];
+    await acquisti.avvia();
+    expect(acquisti.prezzoDi(pianoAnnuale), '49,99 €/anno');
+
+    /* Le volte dopo la prima si rileggono solo i piani: quelli rimasti a
+     * meta' si chiedono una volta, all'avvio. */
+    expect(negozio.volteDeiRimasti, 1);
   });
 }

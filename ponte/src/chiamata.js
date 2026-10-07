@@ -138,6 +138,8 @@ export class Chiamata {
     this._tentativi = 0;
     this._riprova = null;
     this._impronta = null;
+    /* La casa di prova: `{impronta, scadeIl}`, o `null`. */
+    this._prova = null;
     this._battito = null;
     this._vistoIl = 0;
     /* `null` finche' non si sa: diventa vero al primo colpetto tornato
@@ -187,6 +189,31 @@ export class Chiamata {
   chiudiLAbbinamento() {
     this._impronta = null;
     if (this.dentro) this._manda({ t: "chiudi-abbinamento" });
+  }
+
+  /* La casa di prova (`casa-di-prova.js`): come l'abbinamento, ma l'attesa al
+   * centralino dura quanto il codice — fino a sette giorni — e un telefono
+   * che entra non la chiude. Al centralino si dice quanto manca e non l'ora
+   * della scadenza: gli orologi delle due macchine non devono andare
+   * d'accordo. Un centralino di prima non conosce queste parole e le lascia
+   * cadere: da fuori, allora, col codice di prova non si entra, e in casa
+   * si'. */
+  apriLaProva(impronta, scadeIl) {
+    this._prova = { impronta, scadeIl };
+    if (this.dentro) this._mandaLaProva();
+  }
+
+  chiudiLaProva() {
+    const cera = Boolean(this._prova);
+    this._prova = null;
+    if (cera && this.dentro) this._manda({ t: "chiudi-prova" });
+  }
+
+  _mandaLaProva() {
+    if (!this._prova) return;
+    const vale = this._prova.scadeIl - Date.now();
+    if (vale <= 0) return;
+    this._manda({ t: "apri-prova", impronta: this._prova.impronta, vale });
   }
 
   /* ─── Il filo ────────────────────────────────────────────────────────── */
@@ -274,6 +301,9 @@ export class Chiamata {
        * altrimenti chi sta davanti allo schermo col codice in mano vedrebbe
        * l'app dire che non trova niente, senza sapere perche'. */
       if (this._impronta) this._manda({ t: "apri-abbinamento", impronta: this._impronta });
+      /* E la casa di prova, che al centralino vive in memoria: un centralino
+       * che si riavvia la dimentica, e la casa gliela ridice qui. */
+      this._mandaLaProva();
       return;
     }
     if (detto.t === "no") {
