@@ -2146,6 +2146,10 @@
     );
     /* Quando e' stata chiesta l'ultima volta: la casa la rinnova da se' ogni
      * sei ore, e chi guarda deve poter vedere che lo fa. */
+    /* La matricola: si vede appena il ponte la dice. */
+    var matricola = String(stato.casa || "");
+    trova("matricola").hidden = !matricola;
+    trova("licenza-casa").textContent = matricola;
     var ultima = stato.ultima;
     trova("licenza-quando").textContent = !ultima
       ? ""
@@ -2236,6 +2240,34 @@
   }
 
   trova("riscatta").addEventListener("click", riscattaIlCodice);
+
+  /* «Copia» la matricola. Dentro il telaio di Home Assistant gli appunti
+   * possono non esserci: allora si seleziona il testo, e lo si copia a mano. */
+  trova("copia-matricola").addEventListener("click", function () {
+    var tasto = trova("copia-matricola");
+    var testo = trova("licenza-casa").textContent;
+    if (!testo) return;
+    var fatto = function () {
+      tasto.textContent = due("Copiata", "Copied");
+      setTimeout(function () {
+        tasto.textContent = due("Copia", "Copy");
+      }, 1800);
+    };
+    var aMano = function () {
+      var scelta = vediPagina.defaultView.getSelection();
+      var tratto = vediPagina.createRange();
+      tratto.selectNodeContents(trova("licenza-casa"));
+      scelta.removeAllRanges();
+      scelta.addRange(tratto);
+      tasto.textContent = due("Selezionata: copiala", "Selected: copy it");
+    };
+    var appunti = navigator.clipboard;
+    if (!appunti || !appunti.writeText) {
+      aMano();
+      return;
+    }
+    appunti.writeText(testo).then(fatto, aMano);
+  });
   trova("codice-regalo").addEventListener("keydown", function (evento) {
     if (evento.key === "Enter") riscattaIlCodice();
   });

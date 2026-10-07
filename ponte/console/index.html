@@ -335,8 +335,10 @@
                cioe' quando nel codice c'e' la chiave per verificarle — e
                finche' non lo sono questa pagina e' quella di sempre. Qui non
                si compra niente: si compra dall'app sul telefono. Qui si
-               guarda, e si riscatta un codice regalo, che e' la cosa che
-               capita a chi ha l'impianto fatto da qualcuno. -->
+               guarda, si riscatta un codice regalo, che e' la cosa che
+               capita a chi ha l'impianto fatto da qualcuno, e si copia la
+               matricola della casa, che e' quello che serve a chi vuole
+               regalarle Premium dalla Gestione. -->
           <section class="scheda" id="scheda-licenza" hidden>
             <div class="testa-di-scheda">
               <h2>
@@ -346,6 +348,24 @@
               <span class="conta" id="licenza-quando"></span>
             </div>
             <ul id="elenco-licenze" class="elenco"></ul>
+            <div class="matricola" id="matricola" hidden>
+              <span class="etichetta-della-matricola" data-en="This home's serial number"
+                >Matricola di questa casa</span
+              >
+              <div class="riga-di-tasti">
+                <code class="codice piccolo" id="licenza-casa"></code>
+                <button id="copia-matricola" type="button" class="tenue" data-en="Copy">
+                  Copia
+                </button>
+              </div>
+              <p
+                class="minuta"
+                data-en="It's what whoever gives you gdahome Premium needs: send it to them, and the licence reaches this home."
+              >
+                Serve a chi ti regala gdahome Premium: gliela mandi, e la licenza arriva a questa
+                casa.
+              </p>
+            </div>
             <div class="riga-di-tasti">
               <input
                 id="codice-regalo"
