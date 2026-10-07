@@ -1,5 +1,1 @@
-Il codice regalo di gdahome Premium si riscatta anche fuori casa, senza essere sul Wi-Fi di casa. Arriva anche la casa di prova: un codice che vale fino a 7 giorni per far provare l'app a qualcuno, che entra come un utente senza amministrazione.
-
-Aggiorna gdahome in Home Assistant alla 1.10.1: queste due novità passano dall'add-on.
-
-Inoltre la pagina Premium mostra sempre i prezzi aggiornati del negozio.
+In auto, toccando una colonnina sulla mappa si apre la sua scheda, a pagina intera, invece di un errore. E il tasto con la casa, poi «Dispositivi», non fa più chiudere l'app: le azioni rapide sono dietro il fulmine in alto, accanto a «Casa».

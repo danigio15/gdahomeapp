@@ -9,8 +9,9 @@
          fare guidando, ed e' per questo che stanno davanti a tutto. -->
     <string name="auto_dispositivi">Dispositivi</string>
     <string name="auto_senza_dispositivi">Nessun dispositivo da comandare. Apri gdahome sul telefono e configura varchi, luci o prese: da lì in poi li trovi qui.</string>
-    <!-- I due tasti in alto: corti, perché in macchina la barra è stretta. -->
-    <string name="auto_azioni_breve">Azioni</string>
+    <!-- Il tasto scritto in alto, accanto al fulmine delle azioni: corto,
+         perché in macchina la barra è stretta. Uno solo con le parole: sopra
+         una griglia Android Auto non ne accetta due. -->
     <string name="auto_casa_breve">Casa</string>
     <string name="auto_come_sta">Come sta la casa</string>
     <string name="auto_senza_niente_da_dire">Non c\'è ancora niente da dire su questa casa</string>
