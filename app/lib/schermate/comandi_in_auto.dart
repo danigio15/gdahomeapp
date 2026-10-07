@@ -348,13 +348,13 @@ class _ComandiInAutoState extends State<ComandiInAuto> {
                       child: Text(
                         inLingua(
                           it:
-                              'Tocca un comando per cambiare nome o conferma, '
-                              'tieni premuto per spostarlo. I primi '
+                              'Tocca un comando per cambiare nome, icona o '
+                              'conferma, tieni premuto per spostarlo. I primi '
                               '$comandiSempreInVista si vedono su ogni auto.',
                           en:
-                              'Tap a command to rename it, long-press to '
-                              'move it. The first $comandiSempreInVista '
-                              'show on every car.',
+                              'Tap a command to change its name, icon or '
+                              'confirmation, long-press to move it. The first '
+                              '$comandiSempreInVista show on every car.',
                         ),
                         style: TextStyle(
                           fontSize: 12.5,
@@ -676,7 +676,13 @@ class _ComeInAuto extends StatelessWidget {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Oggetto(disegnoDelComando(c.genere, c.icona), lato: 26),
+                        /* Lo stesso disegno dell'auto: anche per i comandi
+                         * scritti prima del genere, che l'auto riconosce
+                         * dal dominio. */
+                        Oggetto(
+                          disegnoDelComando(c.genere, c.iconaInAuto),
+                          lato: 26,
+                        ),
                         const SizedBox(height: 6),
                         Text(
                           c.nome,
@@ -804,7 +810,7 @@ class _Riga extends StatelessWidget {
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Oggetto(
-                  disegnoDelComando(comando.genere, comando.icona),
+                  disegnoDelComando(comando.genere, comando.iconaInAuto),
                   lato: 24,
                 ),
               ),
@@ -987,7 +993,15 @@ class _NuovoComandoState extends State<_NuovoComando> {
     final scelte = cosaSiPuoFare(e);
     final cosa = scelte[_cosa.clamp(0, scelte.length - 1)];
     return ListView(
-      padding: const EdgeInsets.fromLTRB(12, 0, 20, 20),
+      /* Sotto, anche lo spazio della barra coi tasti di Android: con le
+       * scritte grandi «Aggiungi in auto» arriva in fondo, e ci finiva
+       * sotto. */
+      padding: EdgeInsets.fromLTRB(
+        12,
+        0,
+        20,
+        20 + MediaQuery.paddingOf(context).bottom,
+      ),
       children: [
         Row(
           children: [
@@ -1080,7 +1094,7 @@ class _NuovoComandoState extends State<_NuovoComando> {
   }
 }
 
-/// Cambiare un comando scelto: il nome, la conferma, o toglierlo.
+/// Cambiare un comando scelto: il nome, l'icona, la conferma, o toglierlo.
 class _CambiaComando extends StatefulWidget {
   const _CambiaComando({required this.comando});
 
@@ -1129,13 +1143,16 @@ class _CambiaComandoState extends State<_CambiaComando> {
   @override
   Widget build(BuildContext context) {
     final c = widget.comando;
-    return Padding(
-      padding: EdgeInsets.fromLTRB(
-        20,
-        0,
-        20,
-        20 + MediaQuery.viewInsetsOf(context).bottom,
-      ),
+    /* La scheda arriva fino al bordo dello schermo, sotto la barra coi tasti
+     * di Android (o la striscia dell'iPhone): quello spazio va lasciato qui,
+     * o «Togli» ci finiva sotto a meta'. Con la tastiera aperta, invece, la
+     * barra e' coperta e conta solo la tastiera. E con le scritte grandi la
+     * scheda scorre, invece di tagliare il fondo. */
+    final sotto =
+        MediaQuery.viewInsetsOf(context).bottom +
+        MediaQuery.paddingOf(context).bottom;
+    return SingleChildScrollView(
+      padding: EdgeInsets.fromLTRB(20, 0, 20, 20 + sotto),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1199,26 +1216,29 @@ class _CambiaComandoState extends State<_CambiaComando> {
             value: _conferma,
             onChanged: (v) => setState(() => _conferma = v),
           ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              TextButton.icon(
-                onPressed: () => Navigator.of(context).pop((comando: null)),
-                icon: const Icon(Icons.delete_outline_rounded),
-                label: Text(inLingua(it: 'Togli', en: 'Remove')),
+          const SizedBox(height: 12),
+          /* «Salva» e' il tasto pieno, largo quanto la scheda come in tutta
+           * l'app. Stava in fila accanto a «Togli»: il tema lo vuole largo
+           * quanto lo schermo, in una riga non c'era posto e non si
+           * disegnava affatto — l'icona scelta non si salvava mai. «Togli»,
+           * che non si annulla, sta sotto e piu' piccolo. */
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop((
+              comando: c.cambiato(
+                nome: _nome.text,
+                conferma: _conferma,
+                icona: _icona == _iconaDiPrima ? null : _icona,
               ),
-              const Spacer(),
-              FilledButton(
-                onPressed: () => Navigator.of(context).pop((
-                  comando: c.cambiato(
-                    nome: _nome.text,
-                    conferma: _conferma,
-                    icona: _icona == _iconaDiPrima ? null : _icona,
-                  ),
-                )),
-                child: Text(inLingua(it: 'Salva', en: 'Save')),
-              ),
-            ],
+            )),
+            child: Text(inLingua(it: 'Salva', en: 'Save')),
+          ),
+          const SizedBox(height: 4),
+          Center(
+            child: TextButton.icon(
+              onPressed: () => Navigator.of(context).pop((comando: null)),
+              icon: const Icon(Icons.delete_outline_rounded),
+              label: Text(inLingua(it: 'Togli', en: 'Remove')),
+            ),
           ),
         ],
       ),
