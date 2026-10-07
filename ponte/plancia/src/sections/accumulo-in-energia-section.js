@@ -36,7 +36,6 @@ import {
   t,
   senzaCadere,
 } from "./shared.js";
-import { segnoHtml } from "../core/segni-del-catalogo.js";
 
 const KEY = "__DASHBOARDMODERN_ACCUMULO__";
 const state = (root[KEY] ||= {
@@ -109,7 +108,7 @@ export function ensureLinguetta() {
   linguetta.type = "button";
   linguetta.className = "sub-tab-btn";
   linguetta.dataset.dmEnergiaVista = ACCUMULO_TAB;
-  linguetta.innerHTML = `${segnoHtml("battery")} ${esc(t("Batterie", "Batteries"))}`;
+  linguetta.innerHTML = `🔋 ${esc(t("Batterie", "Batteries"))}`;
   linguetta.addEventListener("click", () => {
     if (root.navigator?.vibrate) root.navigator.vibrate(5);
     apriLAccumulo();
@@ -239,7 +238,6 @@ function installStyles() {
     ${V} .dm-accu-sotto{font-size:12px;font-weight:700;color:var(--text-dim,#64748b)}
     ${V} .dm-accu-avviso{display:flex;align-items:center;gap:8px;margin-top:6px;padding:8px 12px;border-radius:12px;
       background:rgba(245,158,11,.12);color:#b45309;font-size:12px;font-weight:800;line-height:1.35}
-    ${V} .dm-accu-avviso .dm-segno{flex:0 0 auto}
 
     ${V} .dm-accu-pacchi{align-items:start}
     ${V} .dm-accu-pacco{display:grid;gap:12px;min-width:0}

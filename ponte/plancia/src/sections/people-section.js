@@ -27,7 +27,6 @@ import {
   t,
   senzaCadere,
 } from "./shared.js";
-import { segnoDaValoreHtml, segnoHtml } from "../core/segni-del-catalogo.js";
 
 const KEY = "__DASHBOARDMODERN_PEOPLE__";
 const state = (root[KEY] ||= { installed: false, listeners: false, frame: 0, clock: 0 });
@@ -63,26 +62,26 @@ function presenceLabel(view) {
 }
 
 function presenceIcon(view) {
-  if (view.presence === "home") return segnoHtml("home");
-  if (view.presence === "zone") return segnoHtml("home");
-  return view.known ? segnoHtml("motion") : segnoHtml("info");
+  if (view.presence === "home") return "🏠";
+  if (view.presence === "zone") return "📍";
+  return view.known ? "🚶" : "❔";
 }
 
 function batteryIcon(battery) {
   if (battery === null) return "";
-  if (battery <= 20) return segnoHtml("battery");
-  return segnoHtml("battery");
+  if (battery <= 20) return "🪫";
+  return "🔋";
 }
 
 /* L'attivita' della Companion App, disegnata: sta nel pallino di stato del
  * ritratto, che quando la persona si muove smette di essere un pallino e
  * dice come si sta muovendo. */
 const ACTIVITY_EMOJI = Object.freeze({
-  automotive: segnoHtml("ev"),
-  cycling: segnoHtml("moto"),
-  running: segnoHtml("motion"),
-  walking: segnoHtml("motion"),
-  still: segnoHtml("person"),
+  automotive: "🚗",
+  cycling: "🚴",
+  running: "🏃",
+  walking: "🚶",
+  still: "🧍",
 });
 
 /* Il ritratto: la foto quando c'e', altrimenti l'avatar — l'emoji scelta, o le
@@ -97,7 +96,7 @@ function portraitMarkup(view) {
     view.avatar.face
       ? ""
       : view.avatar.emoji
-        ? segnoDaValoreHtml(view.avatar.emoji, { ripiego: "person" })
+        ? esc(view.avatar.emoji)
         : `<b>${esc(view.initials)}</b>`
   }</span>`;
   const photo = view.photo
@@ -137,7 +136,7 @@ function distanceLabel(distance) {
 function tripMarkup(view) {
   const parts = [];
   if (view.distance) {
-    const arrow = view.direction === "towards" ? ` →${segnoHtml("home")}` : view.direction === "away" ? ` ←${segnoHtml("home")}` : "";
+    const arrow = view.direction === "towards" ? " →🏠" : view.direction === "away" ? " ←🏠" : "";
     const title =
       view.direction === "towards"
         ? t("Si sta avvicinando a casa", "Approaching home")
@@ -145,12 +144,12 @@ function tripMarkup(view) {
           ? t("Si sta allontanando da casa", "Moving away from home")
           : t("Distanza da casa", "Distance from home");
     parts.push(
-      `<span title="${esc(title)}">${segnoHtml("gauge")} ${esc(distanceLabel(view.distance))}${arrow}</span>`,
+      `<span title="${esc(title)}">🧭 ${esc(distanceLabel(view.distance))}${arrow}</span>`,
     );
   }
   if (view.travel !== null)
     parts.push(
-      `<span title="${t("Tempo di rientro", "Time to home")}">${segnoHtml("timer")} ${view.travel} min</span>`,
+      `<span title="${t("Tempo di rientro", "Time to home")}">⏱ ${view.travel} min</span>`,
     );
   if (!parts.length) return "";
   return `<div class="dm-person-trip">${parts.join("")}</div>`;
@@ -163,18 +162,18 @@ function footMarkup(view) {
   const parts = [];
   if (view.battery !== null)
     parts.push(
-      `<span class="dm-person-batt${view.batteryLow ? " low" : ""}" title="${view.charging ? t("In carica", "Charging") : ""}">${batteryIcon(view.battery)} ${Math.round(view.battery)}%${view.charging ? `<b class="dm-person-bolt">${segnoHtml("power")}</b>` : ""}</span>`,
+      `<span class="dm-person-batt${view.batteryLow ? " low" : ""}" title="${view.charging ? t("In carica", "Charging") : ""}">${batteryIcon(view.battery)} ${Math.round(view.battery)}%${view.charging ? '<b class="dm-person-bolt">⚡</b>' : ""}</span>`,
     );
   if (view.watch !== null)
     parts.push(
-      `<span class="dm-person-watch${view.watchLow ? " low" : ""}" title="${t("Batteria orologio", "Watch battery")}">${segnoHtml("timer")} ${Math.round(view.watch)}%</span>`,
+      `<span class="dm-person-watch${view.watchLow ? " low" : ""}" title="${t("Batteria orologio", "Watch battery")}">⌚ ${Math.round(view.watch)}%</span>`,
     );
   if (view.wifi)
     parts.push(
-      `<span class="dm-person-wifi" title="${t("Rete WiFi", "WiFi network")}: ${esc(view.wifi)}">${segnoHtml("router")} ${esc(view.wifi)}</span>`,
+      `<span class="dm-person-wifi" title="${t("Rete WiFi", "WiFi network")}: ${esc(view.wifi)}">📶 ${esc(view.wifi)}</span>`,
     );
   const ago = elapsedLabel(view.elapsed);
-  if (ago) parts.push(`<span class="dm-person-ago">${segnoHtml("timer")} ${esc(ago)}</span>`);
+  if (ago) parts.push(`<span class="dm-person-ago">🕐 ${esc(ago)}</span>`);
   if (!parts.length) return "";
   return `<div class="dm-person-foot">${parts.join("")}</div>`;
 }
@@ -285,43 +284,43 @@ function popupTiles(view) {
       popupTile(
         batteryIcon(view.battery),
         t("Batteria telefono", "Phone battery"),
-        `${Math.round(view.battery)}%${view.charging ? ` <i class="dm-person-bolt">${segnoHtml("power")}</i>` : ""}`,
+        `${Math.round(view.battery)}%${view.charging ? ' <i class="dm-person-bolt">⚡</i>' : ""}`,
         view.batteryLow ? " low" : "",
       ),
     );
   if (view.watch !== null)
     tiles.push(
       popupTile(
-        segnoHtml("timer"),
+        "⌚",
         t("Batteria orologio", "Watch battery"),
         `${Math.round(view.watch)}%`,
         view.watchLow ? " low" : "",
       ),
     );
-  if (view.wifi) tiles.push(popupTile(segnoHtml("router"), t("Rete WiFi", "WiFi network"), esc(view.wifi)));
+  if (view.wifi) tiles.push(popupTile("📶", t("Rete WiFi", "WiFi network"), esc(view.wifi)));
   const activity = ACTIVITY_LABELS[view.activity];
   if (activity && view.presence !== "home")
     tiles.push(
       popupTile(
-        ACTIVITY_EMOJI[view.activity] || segnoHtml("person"),
+        ACTIVITY_EMOJI[view.activity] || "🧍",
         t("Attività", "Activity"),
         esc(t(activity[0], activity[1])),
       ),
     );
   if (view.distance) {
-    const arrow = view.direction === "towards" ? ` →${segnoHtml("home")}` : view.direction === "away" ? ` ←${segnoHtml("home")}` : "";
+    const arrow = view.direction === "towards" ? " →🏠" : view.direction === "away" ? " ←🏠" : "";
     tiles.push(
       popupTile(
-        segnoHtml("gauge"),
+        "🧭",
         t("Distanza da casa", "Distance from home"),
         `${esc(distanceLabel(view.distance))}${arrow}`,
       ),
     );
   }
   if (view.travel !== null)
-    tiles.push(popupTile(segnoHtml("timer"), t("Tempo di rientro", "Time to home"), `${view.travel} min`));
+    tiles.push(popupTile("⏱", t("Tempo di rientro", "Time to home"), `${view.travel} min`));
   const ago = elapsedLabel(view.elapsed);
-  if (ago) tiles.push(popupTile(segnoHtml("timer"), t("Ultimo aggiornamento", "Last update"), esc(ago)));
+  if (ago) tiles.push(popupTile("🕐", t("Ultimo aggiornamento", "Last update"), esc(ago)));
   return tiles.join("");
 }
 
@@ -336,7 +335,7 @@ function popupBodyMarkup(view, people) {
       <strong>${esc(view.name)}</strong>
       <span class="dm-person-zone">${presenceIcon(view)} ${esc(presenceLabel(view))}</span>
       ${view.address ? `<small class="dm-person-pop-address">${esc(view.address)}</small>` : ""}
-      ${mapUrl ? `<a class="dm-person-pop-map" data-person-mappa="${esc(view.entity)}" href="${esc(mapUrl)}" target="_blank" rel="noopener">${segnoHtml("globe")} ${t("Apri in mappa", "Open in map")}</a>` : ""}
+      ${mapUrl ? `<a class="dm-person-pop-map" data-person-mappa="${esc(view.entity)}" href="${esc(mapUrl)}" target="_blank" rel="noopener">🗺 ${t("Apri in mappa", "Open in map")}</a>` : ""}
     </div>
     <div class="dm-person-pop-tiles">${popupTiles(view)}</div>`;
 }

@@ -247,7 +247,7 @@ const scheda = costruisciSchedaDichiarata({
   bozzaInPiu: conICampiDellaRiga,
 
   parole: {
-    linguetta: `${t("Acquario", "Aquarium")}`,
+    linguetta: `🐠 ${t("Acquario", "Aquarium")}`,
     intro: t(
       "L'acquario di casa. In cima la vasca: il nome, i litri e ogni quanti giorni si cambia l'acqua. Sotto un'entità per riga: la temperatura e il pH con la loro forcella, il livello dell'acqua, le luci, il filtro e il riscaldatore.",
       "The aquarium at home. At the top, the tank: its name, the litres and how often the water is changed. Below, one entity per row: temperature and pH with their ideal range, the water level, the lights, the filter and the heater.",
@@ -257,7 +257,7 @@ const scheda = costruisciSchedaDichiarata({
     nuovo: t("Entità nuova", "New entity"),
     senzaNome: t("Entità senza nome", "Unnamed entity"),
     salva: t("Salva entità", "Save entity"),
-    salvato: `${t("Entità salvata", "Entity saved")}`,
+    salvato: `🐠 ${t("Entità salvata", "Entity saved")}`,
     etichettaEntita: t("Entità", "Entity"),
     segnaposto: "sensor.acquario_temperatura",
     aiutoEntita: t(
@@ -278,7 +278,7 @@ const scheda = costruisciSchedaDichiarata({
         `Prendi le ${quante} entità dell'acquario che Home Assistant ha trovato`,
         `Take the ${quante} aquarium entities Home Assistant found`,
       ),
-    presi: (quante) => t(`${quante} entità aggiunte`, `${quante} entities added`),
+    presi: (quante) => t(`🐠 ${quante} entità aggiunte`, `🐠 ${quante} entities added`),
     notaImporta: t(
       "Li mette qui come righe, una volta sola: da lì in poi sono tue — le rinomini, gli dai il disegno, e quelle che elimini non tornano più.",
       "It puts them here as rows, once: from then on they are yours — rename them, give them a drawing, and the ones you remove do not come back.",

@@ -48,7 +48,7 @@ test("la config comanda, e le voci storpie non passano", () => {
 });
 
 test("una voce senza icona prende la fiamma, non il vuoto", () => {
-  assert.equal(vociTermiche([{ name: "Caldaia", entity: "switch.c" }])[0].icon, "radiator");
+  assert.equal(vociTermiche([{ name: "Caldaia", entity: "switch.c" }])[0].icon, "🔥");
 });
 
 /* «La doppia caldaia va inserita la possibilita' di aggiungere piu' caldaie

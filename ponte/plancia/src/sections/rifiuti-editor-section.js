@@ -46,7 +46,6 @@ import {
   senzaCadere,
 } from "./shared.js";
 import { disegnoDelBidone } from "../core/disegni-rifiuti.js";
-import { segnoHtml, senzaEmoji } from "../core/segni-del-catalogo.js";
 
 const KEY = "__DASHBOARDMODERN_RIFIUTI_EDITOR__";
 const state = (root[KEY] ||= { installed: false, bozza: null, contatore: 0 });
@@ -100,13 +99,13 @@ function rigaMarkup(riga, indice) {
       <span class="dm-rifiuti-ed-ic" aria-hidden="true">${disegnoDelBidone(voce.chiave, voce.colore, 32)}</span>
       <input type="hidden" data-dm-rifiuti-campo="materiale" value="${esc(voce.chiave)}">
       <button type="button" class="ed-input dm-rifiuti-ed-materiale" data-dm-rifiuti-materiale aria-label="${esc(t("Materiale", "Material"))}"><span data-dm-rifiuti-materiale-nome>${esc(nomeDelMateriale(voce.chiave))}</span></button>
-      <button type="button" class="ed-del" data-dm-rifiuti-togli="${esc(riga.id)}" title="${esc(t("Togli", "Remove"))}" aria-label="${esc(t("Togli", "Remove"))}">${segnoHtml("trash")}</button>
+      <button type="button" class="ed-del" data-dm-rifiuti-togli="${esc(riga.id)}" title="${esc(t("Togli", "Remove"))}" aria-label="${esc(t("Togli", "Remove"))}">🗑️</button>
     </div>
     <div class="dm-todo-ed-body">
       <label class="ed-slot dm-todo-ed-field"><span class="ed-slot-lbl">${esc(t("Nome (facoltativo)", "Name (optional)"))}</span>
         <span class="ed-form-row"><input class="ed-input" data-dm-rifiuti-campo="nome" value="${esc(riga.nome)}" placeholder="${esc(nomeDelMateriale(voce.chiave))}"></span></label>
       <label class="ed-slot dm-todo-ed-field"><span class="ed-slot-lbl">${esc(t("Sensore o calendario del ritiro", "Collection sensor or calendar"))}</span>
-        <span class="ed-form-row"><input id="${id}" class="ed-input mono" data-dm-rifiuti-campo="entity" value="${esc(riga.entity)}" placeholder="sensor.raccolta_${esc(voce.chiave)}" autocomplete="off" spellcheck="false"><button type="button" class="dm-entity-picker" data-dm-rifiuti-pick="${id}" aria-label="${esc(t("Scegli entità", "Choose entity"))}">${segnoHtml("search")}</button></span>
+        <span class="ed-form-row"><input id="${id}" class="ed-input mono" data-dm-rifiuti-campo="entity" value="${esc(riga.entity)}" placeholder="sensor.raccolta_${esc(voce.chiave)}" autocomplete="off" spellcheck="false"><button type="button" class="dm-entity-picker" data-dm-rifiuti-pick="${id}" aria-label="${esc(t("Scegli entità", "Choose entity"))}">🔍</button></span>
         <small>${esc(
           t(
             "Un sensore con la prossima data (nello stato o negli attributi), o un calendar.* con un evento per ritiro.",
@@ -189,7 +188,7 @@ function turnoMarkup(dato) {
     })
     .join("");
   return `<div class="dm-turno">
-    <div class="ed-sec-title">${segnoHtml("calendar")} ${esc(t("Il calendario di casa", "Your own rota"))}</div>
+    <div class="ed-sec-title">🗓️ ${esc(t("Il calendario di casa", "Your own rota"))}</div>
     <div class="ed-intro">${esc(
       t(
         "Due settimane che si ripetono, scritte a mano: tocca un giorno e scegli cosa esce. Non serve nessun sensore e nessun calendario di Home Assistant — la pagina e la tessera in Home leggono questo esattamente come leggerebbero un'integrazione. Un materiale che ha già il suo sensore qui sopra non si ripete: comanda il sensore.",
@@ -330,7 +329,7 @@ function corpoMarkup() {
   const dato = bozza();
   const piene = dato.righe.length >= MASSIMO_RIGHE;
   return `${fasciaMarkup()}<div class="dm-rifiuti-ed">
-  <div class="ed-sec-title">${segnoHtml("refresh")} ${esc(t("Raccolta differenziata", "Recycling collection"))}</div>
+  <div class="ed-sec-title">♻️ ${esc(t("Raccolta differenziata", "Recycling collection"))}</div>
   <div class="ed-intro">${esc(
     t(
       "Un bidone per materiale, e per ognuno il sensore che dice quando passa il ritiro: la pagina risponde alla domanda della sera — cosa metto fuori stasera — e la tessera in Home si accende il giorno prima. Chi ha un calendario solo, con un evento per ritiro, lo mette nella casella in fondo.",
@@ -343,7 +342,7 @@ function corpoMarkup() {
       t("Aggiungi materiale", "Add material"),
     )}</button>
     <label class="ed-slot dm-todo-ed-field"><span class="ed-slot-lbl">${esc(t("Calendario o sensore unico (facoltativo)", "Single calendar or sensor (optional)"))}</span>
-      <span class="ed-form-row"><input id="dm-rifiuti-calendario" class="ed-input mono" data-dm-rifiuti-calendario value="${esc(dato.calendario)}" placeholder="calendar.raccolta_rifiuti o sensor.prossimi_ritiri" autocomplete="off" spellcheck="false"><button type="button" class="dm-entity-picker" data-dm-rifiuti-pick="dm-rifiuti-calendario" aria-label="${esc(t("Scegli entità", "Choose entity"))}">${segnoHtml("search")}</button></span>
+      <span class="ed-form-row"><input id="dm-rifiuti-calendario" class="ed-input mono" data-dm-rifiuti-calendario value="${esc(dato.calendario)}" placeholder="calendar.raccolta_rifiuti o sensor.prossimi_ritiri" autocomplete="off" spellcheck="false"><button type="button" class="dm-entity-picker" data-dm-rifiuti-pick="dm-rifiuti-calendario" aria-label="${esc(t("Scegli entità", "Choose entity"))}">🔍</button></span>
       <small>${esc(
         t(
           "Se i ritiri stanno in un posto solo, mettilo qui: un calendar.* con un evento per ritiro, oppure un sensor.* che porta l'elenco dei prossimi ritiri negli attributi. Ogni voce diventa una riga, col materiale indovinato dal nome.",
@@ -351,7 +350,7 @@ function corpoMarkup() {
         ),
       )}</small></label>
     ${turnoMarkup(dato)}
-    <button type="button" class="ed-save-btn" data-dm-rifiuti-save>${segnoHtml("check")} ${esc(t("Salva rifiuti", "Save waste"))}</button>
+    <button type="button" class="ed-save-btn" data-dm-rifiuti-save>💾 ${esc(t("Salva rifiuti", "Save waste"))}</button>
   </div></div>`;
 }
 
@@ -458,7 +457,7 @@ function onClick(event) {
     event.preventDefault();
     state.bozza = salva(raccogli(body));
     ridisegna();
-    root.edToast?.(senzaEmoji(t("💾 Rifiuti salvati", "💾 Waste saved")));
+    root.edToast?.(t("💾 Rifiuti salvati", "💾 Waste saved"));
   }
 }
 
@@ -484,7 +483,7 @@ export function ensureRifiutiEditorTab() {
   const linguetta = doc.createElement("button");
   linguetta.className = "ed-tab";
   linguetta.dataset.tab = RIFIUTI_EDITOR_TAB;
-  linguetta.innerHTML = `${segnoHtml("refresh")} ${esc(t("Rifiuti", "Waste"))}`;
+  linguetta.textContent = `♻️ ${t("Rifiuti", "Waste")}`;
   linguetta.addEventListener("click", () => root.editorSwitch?.(RIFIUTI_EDITOR_TAB));
   const prima = linguette.querySelector('.ed-tab[data-tab="runtime"]');
   if (prima) prima.before(linguetta);

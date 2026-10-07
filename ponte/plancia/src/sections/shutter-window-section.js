@@ -54,7 +54,6 @@ import {
   writeJsonIfChanged,
   senzaCadere,
 } from "./shared.js";
-import { segnoHtml, senzaEmoji } from "../core/segni-del-catalogo.js";
 
 const KEY = "__DASHBOARDMODERN_SHUTTER_WINDOW__";
 const STYLE_ID = "dm-shutter-window-style";
@@ -287,12 +286,11 @@ function ensureArieggia(card, cover, states, model = null) {
   const soglia = esito.soglia === null ? "" : `${Math.round(esito.soglia)}%`;
   const fuori = esito.fuori === null ? "" : `${Math.round(esito.fuori)}%`;
   const testo = esito.arieggia
-    ? `${t("Apri per arieggiare", "Open to air out")} · ${dentro}${soglia ? ` > ${soglia}` : ""}${
+    ? `💨 ${t("Apri per arieggiare", "Open to air out")} · ${dentro}${soglia ? ` > ${soglia}` : ""}${
         esito.fuoriPiuUmido ? ` · ${t("fuori è più umido", "wetter outside")} (${fuori})` : ""
       }`
-    : `${t("Umidità", "Humidity")} ${dentro}${soglia ? ` · ${t("soglia", "threshold")} ${soglia}` : ""}`;
-  if (riga.textContent !== ` ${testo}`)
-    riga.innerHTML = `${segnoHtml(esito.arieggia ? "wind" : "water")} ${esc(testo)}`;
+    : `💧 ${t("Umidità", "Humidity")} ${dentro}${soglia ? ` · ${t("soglia", "threshold")} ${soglia}` : ""}`;
+  if (riga.textContent !== testo) riga.textContent = testo;
   const titolo = [
     `${t("Umidità in stanza", "Room humidity")} ${dentro}`,
     soglia ? `${t("soglia", "threshold")} ${soglia}` : "",
@@ -485,7 +483,7 @@ function diciLUmiditaDellaStanza(riquadro, tendina) {
     );
   } else if (igrometro) {
     nota.dataset.dmUmiditaStanza = "pronto";
-    nota.textContent = `${t("Umidità della stanza", "Room humidity")}: ${igrometro}`;
+    nota.textContent = `💧 ${t("Umidità della stanza", "Room humidity")}: ${igrometro}`;
   } else {
     nota.dataset.dmUmiditaStanza = "senza";
     /* Il nome della stanza sta FUORI dalla frase da tradurre: una chiave con
@@ -531,7 +529,7 @@ function casella(id, etichetta, esempio) {
     `<input id="${id}" class="ed-input mono" style="flex:1;" autocomplete="off" data-entity-input="true"` +
     ` placeholder="${esempio}">` +
     `<button type="button" class="dm-entity-picker" data-entity-target="${id}"` +
-    ` aria-label="${t("Seleziona entità", "Choose entity")}">${segnoHtml("search")}</button>` +
+    ` aria-label="${t("Seleziona entità", "Choose entity")}">🔍</button>` +
     "</div>";
   return holder;
 }
@@ -714,8 +712,8 @@ function aggiornaCosaManca(riquadro) {
     ).length,
   });
   const testo = mancanze.length
-    ? frasiDiCosaManca(mancanze).join(" ")
-    : `${t(
+    ? `⚠️ ${frasiDiCosaManca(mancanze).join(" ")}`
+    : `✅ ${t(
         "C'è tutto: la card della finestra mostra l'umidità della sua stanza e dice di aprire appena supera la soglia.",
         "Everything is here: the window's card shows its room's humidity and says to open as soon as it goes above the threshold.",
       )}`;
@@ -890,10 +888,10 @@ export function ensureContactField(body = doc?.getElementById("ed-body")) {
   const intro = body.querySelector(".ed-intro");
   if (intro && !intro.dataset.dmTwIntro) {
     intro.dataset.dmTwIntro = "true";
-    intro.textContent = senzaEmoji(t(
+    intro.textContent = t(
       "Le tapparelle e le tende compaiono nella pagina 🪟 Finestre, raggruppate per piano e stanza. Ogni riga accetta un'entità cover.* — con posizione e percentuali — oppure un relè switch.*: uno solo se accendendolo la tapparella sta su, due se ce n'è uno per la salita e uno per la discesa, come uno Shelly in modalità interruttore. Se la finestra si apre a mano — persiane, scuri, una maniglia — lascia vuote le caselle dei comandi e compila solo il sensore di apertura: la card la disegna lo stesso e dice se è aperta.",
       "Shutters and curtains show up on the 🪟 Windows page, grouped by floor and room. Every row accepts a cover.* entity — with position and percentages — or a switch.* relay: one when switching it on keeps the shutter up, two when one relay sends it up and another sends it down, like a Shelly in switch mode. When the window opens by hand — shutters, blinds, a handle — leave the command boxes empty and fill in the contact sensor alone: the card still draws it and says whether it is open.",
-    ));
+    );
   }
   /* Il menu del tipo non ha piu' ragione di esistere: se e' rimasto da una
    * versione precedente se ne va, o direbbe una cosa che nessuno legge. */

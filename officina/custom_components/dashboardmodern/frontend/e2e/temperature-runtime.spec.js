@@ -237,7 +237,7 @@ for (const variant of ["dashboard.html", "dashboard-en.html"]) {
     // must always have a visible local icon in the live dashboard.
     const roomIcon = temperatureCard.locator(".dm-temperature-icon-fallback");
     await expect(roomIcon).toBeVisible();
-    await expect(roomIcon.locator(".dm-segno")).toHaveAttribute("data-dm-segno", "room-living");
+    await expect(roomIcon).toHaveText("🛋️");
     await expect(temperatureCard).not.toContainText("🔥");
     await expect(page.locator("#temp-grid .temp-value")).toContainText("21.5");
     await page.evaluate(() => {

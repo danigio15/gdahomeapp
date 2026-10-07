@@ -19,7 +19,6 @@ import {
   writeJsonIfChanged,
   senzaCadere,
 } from "./shared.js";
-import { segnoHtml } from "../core/segni-del-catalogo.js";
 
 const KEY = "__DASHBOARDMODERN_LIGHTS_ALERTS_SECTION__";
 const state = (root[KEY] ||= {
@@ -144,7 +143,7 @@ function lightMeta(id) {
   if (view.domain !== "light") badges.push({ kind: "domain", label: view.domain.toUpperCase() });
   return {
     view,
-    glyph: segnoHtml(view.domain === "light" ? "lights" : "socket"),
+    glyph: view.domain === "light" ? "💡" : "🔌",
     badges: badges
       .map(
         (badge) =>
@@ -163,7 +162,7 @@ export function renderCanonicalLightsEditor() {
    * riassegnata in un secondo passaggio. */
   const add = `<form class="ed-form dm-light-add-form" data-light-add-form onsubmit="event.preventDefault();dmLuceAdd()">
     <div class="ed-sec-title">＋ ${t("AGGIUNGI LUCE", "ADD LIGHT")}</div>
-    <div class="ed-form-row"><input id="luce-add-ent" class="ed-input mono" data-entity-input data-light-add-entity data-domain="${LIGHT_DOMAINS.join(" ")}" placeholder="light.salone · switch.lampada"><button type="button" class="dm-entity-picker" data-entity-target="luce-add-ent" onclick="wzPickEntity(document.getElementById('luce-add-ent'))" aria-label="${t("Seleziona entità luce", "Select light entity")}">${segnoHtml("search")}</button></div>
+    <div class="ed-form-row"><input id="luce-add-ent" class="ed-input mono" data-entity-input data-light-add-entity data-domain="${LIGHT_DOMAINS.join(" ")}" placeholder="light.salone · switch.lampada"><button type="button" class="dm-entity-picker" data-entity-target="luce-add-ent" onclick="wzPickEntity(document.getElementById('luce-add-ent'))" aria-label="${t("Seleziona entità luce", "Select light entity")}">🔍</button></div>
     <input id="luce-add-name" class="ed-input" placeholder="${t("Nome luce", "Light name")}">
     <label class="dm-light-add-room-slot"><span>${t("Stanza", "Room")}</span><select id="luce-add-room" class="ed-input" aria-label="${t("Stanza", "Room")}">${roomOptions("")}</select></label>
     <div class="dm-light-add-hint">${t("Una luce può essere un'entità light.* oppure uno switch.*: una lampada dietro un relè si aggiunge esattamente allo stesso modo.", "A light can be a light.* entity or a switch.*: a lamp behind a relay is added in exactly the same way.")}</div>
@@ -182,12 +181,12 @@ export function renderCanonicalLightsEditor() {
             <span class="dm-light-order"><button type="button" class="ed-del" ${index === 0 ? "disabled" : ""} onclick="dmLightMove(${jsArg(id)},-1)" aria-label="${t("Sposta su", "Move up")}">▲</button><button type="button" class="ed-del" ${index === group.entities.length - 1 ? "disabled" : ""} onclick="dmLightMove(${jsArg(id)},1)" aria-label="${t("Sposta giù", "Move down")}">▼</button></span>
             <div class="ed-row-main"><div class="ed-row-new">${meta.glyph} ${esc(name)}</div><div class="ed-row-old mono">${esc(id)}</div><div class="dm-light-badges">${meta.badges}</div></div>
             <select class="ed-input dm-light-room" data-light-entity="${esc(id)}" onchange="dmLightSetRoom(${jsArg(id)},this.value)">${roomOptions(assignments[id])}</select>
-            <button type="button" class="ed-del dm-light-edit" onclick="dmOpenLightEditor(${jsArg(id)})" aria-label="${t("Modifica luce", "Edit light")}">${segnoHtml("pencil")}</button>
-            <button type="button" class="ed-del" onclick="dmLuceDel(${jsArg(id)})" aria-label="${t("Elimina luce", "Delete light")}">${segnoHtml("trash")}</button>
+            <button type="button" class="ed-del dm-light-edit" onclick="dmOpenLightEditor(${jsArg(id)})" aria-label="${t("Modifica luce", "Edit light")}">✏️</button>
+            <button type="button" class="ed-del" onclick="dmLuceDel(${jsArg(id)})" aria-label="${t("Elimina luce", "Delete light")}">🗑️</button>
           </article>`;
         })
         .join("");
-      return `<section class="dm-light-group" data-light-room="${esc(group.room)}"><header class="ed-acc-head"><span>${segnoHtml("home")} ${esc(group.room)} · ${group.entities.length}</span><span class="dm-light-room-order"><button type="button" class="ed-del" ${groupIndex === 0 ? "disabled" : ""} onclick="dmLightRoomMove(${jsArg(group.room)},-1)">▲</button><button type="button" class="ed-del" ${groupIndex === groups.length - 1 ? "disabled" : ""} onclick="dmLightRoomMove(${jsArg(group.room)},1)">▼</button></span></header><div class="ed-list">${rows}</div></section>`;
+      return `<section class="dm-light-group" data-light-room="${esc(group.room)}"><header class="ed-acc-head"><span>🏠 ${esc(group.room)} · ${group.entities.length}</span><span class="dm-light-room-order"><button type="button" class="ed-del" ${groupIndex === 0 ? "disabled" : ""} onclick="dmLightRoomMove(${jsArg(group.room)},-1)">▲</button><button type="button" class="ed-del" ${groupIndex === groups.length - 1 ? "disabled" : ""} onclick="dmLightRoomMove(${jsArg(group.room)},1)">▼</button></span></header><div class="ed-list">${rows}</div></section>`;
     })
     .join("");
   return `<div class="ed-intro">${t("Sono mostrate solo le stanze che contengono almeno una luce. Modifica apre tutti i dati della luce, non una finestra del browser. Le pastiglie dicono cosa sa fare ogni luce — RGB, bianco regolabile, dimmer o solo acceso/spento — ed è quello che comanda i controlli nel popup.", "Only rooms containing a light are shown. Edit opens all light fields, not a browser prompt. The pills say what each light can do — RGB, tunable white, dimmer or plain on/off — and that is what drives the controls in the popup.")}</div>${body}${add}`;
@@ -299,12 +298,12 @@ export function openLightEditor(entityId) {
     <header><strong id="dm-light-editor-title">${meta.glyph} ${t("Modifica luce", "Edit light")}</strong><button type="button" data-close aria-label="${t("Chiudi", "Close")}">✕</button></header>
     <form data-form>
       <label class="ed-slot"><span class="ed-slot-lbl">${t("Nome", "Name")}</span><input class="ed-input" name="name" value="${esc(names[oldId])}" required></label>
-      <label class="ed-slot"><span class="ed-slot-lbl">${t("Entità Home Assistant", "Home Assistant entity")}</span><span class="ed-form-row"><input class="ed-input mono" name="entity" value="${esc(oldId)}" required data-domain="${LIGHT_DOMAINS.join(" ")}"><button type="button" class="dm-entity-picker" data-pick>${segnoHtml("search")}</button></span></label>
+      <label class="ed-slot"><span class="ed-slot-lbl">${t("Entità Home Assistant", "Home Assistant entity")}</span><span class="ed-form-row"><input class="ed-input mono" name="entity" value="${esc(oldId)}" required data-domain="${LIGHT_DOMAINS.join(" ")}"><button type="button" class="dm-entity-picker" data-pick>🔍</button></span></label>
       <div class="ed-slot"><span class="dm-light-caps-lbl">${t("Cosa sa fare", "What it can do")}</span><div class="dm-light-caps"><div class="dm-light-badges" data-capabilities>${meta.badges}</div><button type="button" class="dm-light-caps-try" data-controls>${t("Prova i controlli", "Try the controls")}</button></div><small class="dm-light-caps-note">${t("Letto da Home Assistant. Una luce dietro uno switch accende e spegne soltanto; luminosità e colore compaiono nel popup solo se l'entità li dichiara.", "Read from Home Assistant. A light behind a switch only turns on and off; brightness and colour appear in the popup only when the entity declares them.")}</small></div>
       <label class="ed-slot"><span class="ed-slot-lbl">${t("Stanza", "Room")}</span><select class="ed-input" name="room">${roomOptions(assignments[oldId])}</select></label>
       <label class="ed-slot dm-solo-lettura"><span class="ed-slot-lbl">${t("Si vede ma non si comanda", "Shown but not controllable")}</span><span class="ed-form-row dm-solo-lettura-riga"><input type="checkbox" name="soloLettura" ${siComanda(oldId) ? "" : "checked"}><small>${t("Per le luci che vuoi solo vedere, senza rischiare un tocco: la riga resta dov'è, il tasto smette di rispondere.", "For lights you only want to see, with no accidental taps: the row stays where it is, the button stops responding.")}</small></span></label>
       <output data-error></output>
-      <footer><button type="button" class="ed-btn-add" data-cancel>${t("Annulla", "Cancel")}</button><button type="submit" class="ed-save-btn">${segnoHtml("check")} ${t("Salva modifiche", "Save changes")}</button></footer>
+      <footer><button type="button" class="ed-btn-add" data-cancel>${t("Annulla", "Cancel")}</button><button type="submit" class="ed-save-btn">💾 ${t("Salva modifiche", "Save changes")}</button></footer>
     </form>
   </section>`;
   doc.body.append(modal);
@@ -484,11 +483,11 @@ export function openLightDeleteConfirm(entityId) {
   modal.id = "dm-light-delete-modal";
   modal.className = "dm-section-modal";
   modal.innerHTML = `<section class="dm-section-dialog dm-light-delete-dialog" role="dialog" aria-modal="true" aria-labelledby="dm-light-delete-title">
-    <header><strong id="dm-light-delete-title">${segnoHtml("trash")} ${t("Elimina luce", "Delete light")}</strong><button type="button" data-close aria-label="${t("Chiudi", "Close")}">✕</button></header>
+    <header><strong id="dm-light-delete-title">🗑️ ${t("Elimina luce", "Delete light")}</strong><button type="button" data-close aria-label="${t("Chiudi", "Close")}">✕</button></header>
     <form data-form>
       <p class="dm-light-delete-question">${t(`Rimuovere "${nome}" dalla dashboard?`, `Remove "${nome}" from the dashboard?`)}</p>
       <p class="dm-light-delete-entity mono">${esc(entity)}</p>
-      <footer><button type="button" class="ed-btn-add" data-cancel>${t("Annulla", "Cancel")}</button><button type="submit" class="ed-save-btn dm-light-delete-confirm">${segnoHtml("trash")} ${t("Elimina luce", "Delete light")}</button></footer>
+      <footer><button type="button" class="ed-btn-add" data-cancel>${t("Annulla", "Cancel")}</button><button type="submit" class="ed-save-btn dm-light-delete-confirm">🗑️ ${t("Elimina luce", "Delete light")}</button></footer>
     </form>
   </section>`;
   doc.body.append(modal);
@@ -560,10 +559,10 @@ export function openOrderedLightPicker(groupName, onDone, preselected = []) {
   modal.id = "dm-light-picker-0152";
   modal.className = "dm-section-modal";
   modal.innerHTML = `<section class="dm-section-dialog dm-light-picker-dialog" role="dialog" aria-modal="true">
-    <header><strong>${segnoHtml("lights")} ${esc(groupName)}</strong><button type="button" data-close aria-label="${t("Chiudi", "Close")}">✕</button></header>
+    <header><strong>💡 ${esc(groupName)}</strong><button type="button" data-close aria-label="${t("Chiudi", "Close")}">✕</button></header>
     <input class="ed-input" data-search placeholder="${t("Cerca luce", "Search light")}">
     <div class="ed-list dm-light-picker-list" data-list></div>
-    <footer><button type="button" class="ed-btn-add" data-cancel>${t("Annulla", "Cancel")}</button><button type="button" class="ed-save-btn" data-save>${segnoHtml("check")} ${t("Salva selezione", "Save selection")}</button></footer>
+    <footer><button type="button" class="ed-btn-add" data-cancel>${t("Annulla", "Cancel")}</button><button type="button" class="ed-save-btn" data-save>💾 ${t("Salva selezione", "Save selection")}</button></footer>
   </section>`;
   doc.body.append(modal);
   const list = modal.querySelector("[data-list]");

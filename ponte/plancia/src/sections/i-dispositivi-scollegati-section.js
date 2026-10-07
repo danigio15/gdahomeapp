@@ -55,7 +55,6 @@ import {
   t,
   writeJsonIfChanged,
 } from "./shared.js";
-import { segnoHtml, senzaEmoji } from "../core/segni-del-catalogo.js";
 
 const KEY = "__DASHBOARDMODERN_SCOLLEGATI_EDITOR__";
 const state = (root[KEY] ||= { installed: false });
@@ -127,13 +126,13 @@ function rigaViva(una) {
    * giro dopo, con dentro quella. */
   const quali = (Array.isArray(una.entita) ? una.entita : [una.entity]).join(" ");
   return `<div class="ed-row ${BLOCCO}-riga">
-    <div class="${BLOCCO}-segno" aria-hidden="true">${segnoHtml("router")}</div>
+    <div class="${BLOCCO}-segno" aria-hidden="true">📡</div>
     <div class="ed-row-main ${BLOCCO}-testo">
       <div class="ed-row-new">${esc(una.nome)}</div>
       <div class="ed-row-old mono">${esc(sottoLaRiga(una))} · ${esc(daQuandoTace(una.da))}</div>
     </div>
     <button type="button" class="ed-del ${BLOCCO}-via" data-dm-scollegati-via="${esc(quali)}"
-      aria-label="${esc(t("Non avvisarmi più per questo", "Stop warning me about this"))}">${segnoHtml("trash")}</button>
+      aria-label="${esc(t("Non avvisarmi più per questo", "Stop warning me about this"))}">🗑️</button>
   </div>`;
 }
 
@@ -148,13 +147,13 @@ function rigaMessaDaParte(una) {
    * le aveva portate via tutte insieme. */
   const quali = (Array.isArray(una.entita) ? una.entita : [una.entity]).join(" ");
   return `<div class="ed-row ${BLOCCO}-riga ${BLOCCO}-fuori">
-    <div class="${BLOCCO}-segno" aria-hidden="true">${segnoHtml("bell")}</div>
+    <div class="${BLOCCO}-segno" aria-hidden="true">🔕</div>
     <div class="ed-row-main ${BLOCCO}-testo">
       <div class="ed-row-new">${esc(una.nome)}</div>
       <div class="ed-row-old mono">${esc(sottoLaRiga(una))} · ${esc(nota)}</div>
     </div>
     <button type="button" class="ed-del ${BLOCCO}-torna" data-dm-scollegati-torna="${esc(quali)}"
-      aria-label="${esc(t("Avvisami di nuovo per questo", "Warn me about this again"))}">${segnoHtml("bell")}</button>
+      aria-label="${esc(t("Avvisami di nuovo per questo", "Warn me about this again"))}">🔔</button>
   </div>`;
 }
 
@@ -245,7 +244,7 @@ function onClick(event) {
   if (root.confirm && !root.confirm(domanda)) return;
   salvaLeEscluse(mettiDaParte(widgetPreferences().excluded, entita));
   ridisegna();
-  root.edToast?.(senzaEmoji(t("🔕 Non avviso più per questo", "🔕 No longer warning about this")));
+  root.edToast?.(t("🔕 Non avviso più per questo", "🔕 No longer warning about this"));
 }
 
 /* E il campanello: rimette nell'avviso quello che il cestino ne aveva tolto.
@@ -262,7 +261,7 @@ function onTorna(event) {
   if (!entita.length) return;
   salvaLeEscluse(rimettiInElenco(widgetPreferences().excluded, entita));
   ridisegna();
-  root.edToast?.(senzaEmoji(t("🔔 Torna nell'avviso", "🔔 Back in the warning")));
+  root.edToast?.(t("🔔 Torna nell'avviso", "🔔 Back in the warning"));
 }
 
 /* La voce nella barra della configurazione.
@@ -276,7 +275,7 @@ export function ensureScollegatiTab() {
   const linguetta = doc.createElement("button");
   linguetta.className = "ed-tab";
   linguetta.dataset.tab = SCOLLEGATI_TAB;
-  linguetta.innerHTML = `${segnoHtml("router")} ${esc(t("Dispositivi non connessi", "Disconnected devices"))}`;
+  linguetta.textContent = `📡 ${t("Dispositivi non connessi", "Disconnected devices")}`;
   linguetta.addEventListener("click", () => root.editorSwitch?.(SCOLLEGATI_TAB));
   const prima = linguette.querySelector('.ed-tab[data-tab="runtime"]');
   if (prima) prima.before(linguetta);

@@ -43,7 +43,6 @@ import {
   t,
   senzaCadere,
 } from "./shared.js";
-import { segnoHtml, senzaEmoji } from "../core/segni-del-catalogo.js";
 
 const KEY = "__DASHBOARDMODERN_CALENDARIO_MODIFICA__";
 const state = (root[KEY] ||= {
@@ -102,12 +101,12 @@ export function azioniDellEventoMarkup(evento, chiave) {
   return `<span class="dm-calm-azioni">${
     puoiModificare
       ? `<button type="button" class="dm-calm-tasto" data-dm-calm-modifica="${riferimento}"
-          title="${esc(t("Modifica", "Edit"))}" aria-label="${esc(t("Modifica", "Edit"))}">${segnoHtml("pencil")}</button>`
+          title="${esc(t("Modifica", "Edit"))}" aria-label="${esc(t("Modifica", "Edit"))}">✏️</button>`
       : ""
   }${
     puoiCancellare
       ? `<button type="button" class="dm-calm-tasto" data-dm-calm-elimina="${riferimento}"
-          title="${esc(t("Elimina", "Delete"))}" aria-label="${esc(t("Elimina", "Delete"))}">${segnoHtml("trash")}</button>`
+          title="${esc(t("Elimina", "Delete"))}" aria-label="${esc(t("Elimina", "Delete"))}">🗑️</button>`
       : ""
   }</span>`;
 }
@@ -126,7 +125,7 @@ export function azioneDellaCosaMarkup(voce, lista) {
   const chiave = chiaveDellaCosa(voce, lista);
   return `<button type="button" class="dm-calm-tasto dm-calm-tasto-cosa"
     data-dm-calm-cosa="${esc(chiave)}"
-    title="${esc(t("Modifica", "Edit"))}" aria-label="${esc(t("Modifica", "Edit"))}">${segnoHtml("pencil")}</button>`;
+    title="${esc(t("Modifica", "Edit"))}" aria-label="${esc(t("Modifica", "Edit"))}">✏️</button>`;
 }
 
 /* La stessa matita, per una scadenza gia' dentro l'agenda.
@@ -447,7 +446,7 @@ async function salva() {
     state.inCorso = false;
     state.bozza = null;
     root.edToast?.(
-      senzaEmoji(nuovo ? t("📅 Impegno segnato", "📅 Event added") : t("📅 Impegno aggiornato", "📅 Event updated")),
+      nuovo ? t("📅 Impegno segnato", "📅 Event added") : t("📅 Impegno aggiornato", "📅 Event updated"),
     );
     rileggi();
   } catch (guaio) {
@@ -492,7 +491,7 @@ async function salvaLaCosa() {
     state.inCorso = false;
     state.bozza = null;
     root.edToast?.(
-      senzaEmoji(nuova ? t("✅ Aggiunta alla lista", "✅ Added to the list") : t("✅ Aggiornata", "✅ Updated")),
+      nuova ? t("✅ Aggiunta alla lista", "✅ Added to the list") : t("✅ Aggiornata", "✅ Updated"),
     );
     rileggi();
   } catch (guaio) {
@@ -516,7 +515,7 @@ async function elimina(evento) {
         ? { recurrence_id: evento.recurrenceId, recurrence_range: "" }
         : {}),
     });
-    root.edToast?.(senzaEmoji(t("🗑️ Impegno eliminato", "🗑️ Event deleted")));
+    root.edToast?.(t("🗑️ Impegno eliminato", "🗑️ Event deleted"));
     rileggi();
   } catch (guaio) {
     root.edToast?.(clean(guaio?.message) || t("Non è riuscito.", "It did not work."));

@@ -410,18 +410,6 @@ const CORPI = Object.freeze({
    * Non e' un varco, ma arriva con loro: la scheda Presenza aveva lo stesso
    * problema, e un mmWave disegnato come un occhio non lo riconosce nessuno. */
   radar: `${PANNELLO}<rect ${SCOCCA} x="26" y="12" width="44" height="26" rx="8"/><circle ${VETRO} cx="48" cy="25" r="7"/><path ${TRATTO_ACCENTO} d="M30 52a26 26 0 0 1 36 0"/><path ${TRATTO_ACCENTO} d="M24 66a38 38 0 0 1 48 0"/><path ${TRATTO_ACCENTO} d="M18 80a50 50 0 0 1 60 0"/>`,
-
-  /* La moneta e la lente, per togliere le ultime emoji: i soldi del Report
-   * dell'energia — pagato, risparmiato, venduto — e il cerca. */
-  coin: `${PANNELLO}<circle ${SCOCCA} cx="48" cy="50" r="32"/><circle ${FRONTALE} cx="48" cy="50" r="24"/><path fill="none" stroke="#0f2942" stroke-width="5" stroke-linecap="round" d="M59 39a15 15 0 1 0 0 22"/><path fill="none" stroke="#0ea5e9" stroke-width="4" stroke-linecap="round" d="M33 46h19M33 54h19"/>`,
-
-  trash: `${PANNELLO}<rect ${SCOCCA} x="22" y="22" width="52" height="9" rx="4.5"/><rect ${SCOCCA} x="38" y="14" width="20" height="10" rx="4"/><path ${SCOCCA} d="M27 35h42l-4 45a6 6 0 0 1-6 5H37a6 6 0 0 1-6-5z"/><path ${TRATTO_CHIARO} d="M40 45v29M48 45v29M56 45v29"/>`,
-
-  pencil: `${PANNELLO}<path ${SCOCCA} d="M62 14l20 20-44 44H18V58z"/><path ${FRONTALE} d="M24 60l34-34 12 12-34 34H24z"/><path ${ACCENTO} d="M62 14l20 20-7 7-20-20z"/><path ${SCOCCA} d="M18 78l6-18 12 12z"/>`,
-
-  link: `${PANNELLO}<rect fill="none" stroke="#0f2942" stroke-width="9" x="14" y="36" width="38" height="24" rx="12" transform="rotate(-35 33 48)"/><rect fill="none" stroke="#0ea5e9" stroke-width="9" x="44" y="36" width="38" height="24" rx="12" transform="rotate(-35 63 48)"/>`,
-
-  search: `${PANNELLO}<circle ${SCOCCA} cx="42" cy="42" r="25"/><circle ${VETRO} cx="42" cy="42" r="15"/><path fill="none" stroke="#0f2942" stroke-width="10" stroke-linecap="round" d="M61 61l17 17"/><path ${TRATTO_CHIARO} d="M35 36a9 9 0 0 1 8-5"/>`,
 });
 
 /* I nomi con cui il resto della plancia chiede la stessa cosa. Un disegno solo,

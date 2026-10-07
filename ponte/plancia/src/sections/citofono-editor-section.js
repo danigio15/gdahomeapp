@@ -13,7 +13,6 @@
  * una riga che dice quando qualcosa si è mosso. Una casella vuota è una cosa
  * che non si mostra, non un errore.
  */
-import { segnoHtml } from "../core/segni-del-catalogo.js";
 import {
   CAMPI_DELLA_CASSETTA,
   CAMPI_DEL_CITOFONO,
@@ -51,7 +50,7 @@ export const CITOFONO_EDITOR_TAB = CITOFONO_TAB;
  * l'icona, il tetto, le caselle, e come si compilano da un'integrazione. */
 const LISTE = () => ({
   citofoni: {
-    glifo: "bell",
+    glifo: "🔔",
     tetto: CITOFONI_MASSIMI,
     campi: CAMPI_DEL_CITOFONO,
     lega: bindCitofonoToDevice,
@@ -62,7 +61,7 @@ const LISTE = () => ({
     esempioNome: "Cancello",
   },
   cassette: {
-    glifo: "mail",
+    glifo: "📬",
     tetto: CASSETTE_MASSIME,
     campi: CAMPI_DELLA_CASSETTA,
     lega: bindCassettaToDevice,
@@ -120,7 +119,7 @@ function campoMarkup(lista, indice, campo, valore) {
   const [etichetta, esempio] = ETICHETTE()[campo];
   const id = `dm-citofono-${lista}-${indice}-${campo}`;
   return `<label class="ed-slot dm-cit-ed-campo"><span class="ed-slot-lbl">${esc(etichetta)}</span>
-    <span class="ed-form-row"><input id="${esc(id)}" class="ed-input mono" data-dm-cit-campo="${esc(campo)}" value="${esc(valore)}" placeholder="${esc(esempio)}" autocomplete="off" spellcheck="false"><button type="button" class="dm-entity-picker" data-dm-cit-pick="${esc(id)}" aria-label="${esc(t("Scegli entità", "Choose entity"))}">${segnoHtml("search")}</button></span></label>`;
+    <span class="ed-form-row"><input id="${esc(id)}" class="ed-input mono" data-dm-cit-campo="${esc(campo)}" value="${esc(valore)}" placeholder="${esc(esempio)}" autocomplete="off" spellcheck="false"><button type="button" class="dm-entity-picker" data-dm-cit-pick="${esc(id)}" aria-label="${esc(t("Scegli entità", "Choose entity"))}">🔍</button></span></label>`;
 }
 
 function sogliaMarkup(voce) {
@@ -137,20 +136,20 @@ function rigaMarkup(lista, voce, indice) {
   const quante = regole.campi.filter((campo) => clean(voce?.[campo])).length;
   return `<article class="ed-row dm-cit-ed-riga" data-dm-cit-lista="${esc(lista)}" data-dm-cit-indice="${indice}" data-open="${aperto}">
     <div class="dm-cit-ed-head">
-      <span class="dm-cit-ed-ic" aria-hidden="true">${segnoHtml(regole.glifo)}</span>
+      <span class="dm-cit-ed-ic" aria-hidden="true">${esc(regole.glifo)}</span>
       <span class="ed-row-main">
         <strong class="ed-row-new">${esc(clean(voce?.nome) || regole.nuovo)}</strong>
         <small class="ed-row-old mono">${esc(clean(voce?.[regole.campi[0]]) || `${quante}/${regole.campi.length}`)}</small>
       </span>
-      <button type="button" class="ed-del" data-dm-cit-apri aria-label="${esc(t("Modifica", "Edit"))}">${segnoHtml("pencil")}</button>
-      <button type="button" class="ed-del" data-dm-cit-togli aria-label="${esc(t("Elimina", "Remove"))}">${segnoHtml("trash")}</button>
+      <button type="button" class="ed-del" data-dm-cit-apri aria-label="${esc(t("Modifica", "Edit"))}">✏️</button>
+      <button type="button" class="ed-del" data-dm-cit-togli aria-label="${esc(t("Elimina", "Remove"))}">🗑️</button>
     </div>
     <div class="dm-cit-ed-body"${aperto ? "" : " hidden"}>
       <label class="ed-slot dm-cit-ed-campo"><span class="ed-slot-lbl">${esc(t("Nome", "Name"))}</span>
         <span class="ed-form-row"><input class="ed-input" data-dm-cit-campo="nome" value="${esc(clean(voce?.nome))}" placeholder="${esc(regole.esempioNome)}"></span></label>
       ${regole.campi.map((campo) => campoMarkup(lista, indice, campo, clean(voce?.[campo]))).join("")}
       ${lista === "cassette" ? sogliaMarkup(voce) : ""}
-      <button type="button" class="ed-save-btn" data-dm-cit-salva>${segnoHtml("check")} ${esc(t("Salva", "Save"))}</button>
+      <button type="button" class="ed-save-btn" data-dm-cit-salva>💾 ${esc(t("Salva", "Save"))}</button>
     </div>
   </article>`;
 }
@@ -168,7 +167,7 @@ function invitoMarkup(lista) {
           "IKEA's Vallhorn, a Zigbee contact on the flap, a light sensor… pick the mailbox device and whichever fields that integration publishes fill themselves in. One sensor alone is enough too.",
         );
   return `<div class="dm-cit-ed-invito">
-    <button type="button" class="ed-btn-add dm-cit-ed-integ" data-dm-cit-integ="${esc(lista)}">${segnoHtml("link")} ${esc(
+    <button type="button" class="ed-btn-add dm-cit-ed-integ" data-dm-cit-integ="${esc(lista)}">🔗 ${esc(
       t("Aggiungi da un'integrazione", "Add from an integration"),
     )}</button>
     <small>${esc(spiega)}</small>
@@ -181,7 +180,7 @@ function invitoMarkup(lista) {
 function elencoMarkup(lista) {
   const regole = LISTE()[lista];
   const righe = configurazione()[lista];
-  return `<div class="ed-sec-title">${segnoHtml(regole.glifo)} ${esc(regole.titolo)}</div>
+  return `<div class="ed-sec-title">${esc(regole.glifo)} ${esc(regole.titolo)}</div>
     <div class="ed-list dm-cit-ed-list">${
       righe.length
         ? righe.map((voce, indice) => rigaMarkup(lista, voce, indice)).join("")
@@ -216,7 +215,7 @@ export function ensureCitofonoEditorTab() {
   const tab = doc.createElement("button");
   tab.className = "ed-tab";
   tab.dataset.tab = CITOFONO_EDITOR_TAB;
-  tab.innerHTML = `${segnoHtml("mail")} ${esc(t("Citofono e posta", "Intercom and mail"))}`;
+  tab.textContent = `📮 ${t("Citofono e posta", "Intercom and mail")}`;
   tab.addEventListener("click", () => root.editorSwitch?.(CITOFONO_EDITOR_TAB));
   const prima = tabs.querySelector('.ed-tab[data-tab="runtime"]');
   if (prima) prima.before(tab);
@@ -368,7 +367,7 @@ function onClick(event) {
     prossime[indice] = leggiLaRiga(riga, righe[indice]);
     salva({ ...tutte, [lista]: prossime });
     ridisegna();
-    root.edToast?.(t("Salvato", "Saved"));
+    root.edToast?.(t("💾 Salvato", "💾 Saved"));
   }
 }
 

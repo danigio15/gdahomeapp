@@ -23,7 +23,6 @@
 import { ALTRO, partiDellaSezione, parteValida, sezioniOfferte } from "../core/dove-succede.js";
 import { clean, doc, esc, installStyle, root, t, senzaCadere } from "./shared.js";
 import { disegnoDelCatalogo } from "../core/catalogo-disegni.js";
-import { segnoHtml } from "../core/segni-del-catalogo.js";
 
 const KEY = "__DASHBOARDMODERN_SEGNALAZIONI__";
 const state = (root[KEY] ||= {
@@ -762,7 +761,7 @@ function tesseraMarkup() {
   const daInviare = state.tickets.filter((ticket) => ticket.state === "bozza").length;
   const pallino = daInviare ? `<span class="dm-tkt-badge">${daInviare}</span>` : "";
   return `
-    <div class="cfg-card-ico" style="--cc-rgb: 14,165,233;">${segnoHtml("chat")}</div>
+    <div class="cfg-card-ico" style="--cc-rgb: 14,165,233;">🎫</div>
     <div class="cfg-card-txt">
       <div class="cfg-card-nm">${esc(t("Segnalazioni", "Reports"))}${pallino}</div>
       <div class="cfg-card-ds">${esc(
@@ -819,7 +818,7 @@ function finestra() {
     <div class="modal-card dm-tkt-pannello" role="dialog" aria-modal="true"
          aria-labelledby="dm-tkt-titolo">
       <div class="cfg-hero dm-tkt-hero">
-        <div class="cfg-hero-ico" aria-hidden="true">${segnoHtml("chat")}</div>
+        <div class="cfg-hero-ico" aria-hidden="true">🎫</div>
         <div class="cfg-hero-txt">
           <div class="cfg-hero-title" id="dm-tkt-titolo"
                data-dm-tkt="titolo"></div>
@@ -1073,7 +1072,7 @@ function moduloMarkup() {
   ).join("");
   const nonConfigurato = state.delivery
     ? ""
-    : `<div class="dm-tkt-nota"><span class="dm-tkt-nota-ico" aria-hidden="true">${segnoHtml("moon")}</span><span>${esc(
+    : `<div class="dm-tkt-nota"><span class="dm-tkt-nota-ico" aria-hidden="true">💤</span><span>${esc(
         t(
           "L'invio non e' configurato su questa plancia: la segnalazione resta qui e partira' da sola quando lo sara'.",
           "Sending is not configured on this dashboard: the report stays here and will be sent on its own once it is.",
@@ -1105,7 +1104,7 @@ function moduloMarkup() {
       <dl data-dm-tkt="diag"></dl>
     </details>
     <div class="dm-tkt-nota">
-      <span class="dm-tkt-nota-ico" aria-hidden="true">${segnoHtml("link")}</span>
+      <span class="dm-tkt-nota-ico" aria-hidden="true">📎</span>
       <span>${esc(
         t(
           "Foto e video si aggiungono dopo, sulla pagina della segnalazione: te lo ricorda lei appena l'hai spedita.",
@@ -1114,7 +1113,7 @@ function moduloMarkup() {
       )}</span>
     </div>
     <div class="dm-tkt-pubblica">
-      <span class="dm-tkt-pubblica-ico" aria-hidden="true">${segnoHtml("globe")}</span>
+      <span class="dm-tkt-pubblica-ico" aria-hidden="true">🌍</span>
       <span>${esc(
         t(
           "La segnalazione diventa una pagina pubblica su github.com, aperta a tuo nome: chiunque potra' leggerla. La risposta arriva qui, sotto la discussione.",
@@ -1299,7 +1298,7 @@ export function voceMarkup(ticket) {
   const data = ticket.created_at ? new Date(ticket.created_at).toLocaleDateString() : "";
   const risposta = ticket.reply ? `<div class="dm-tkt-risposta">${esc(ticket.reply)}</div>` : "";
   const errore = ticket.delivery_error
-    ? `<div class="dm-tkt-voce-pie">${segnoHtml("warning")} ${esc(ticket.delivery_error)}</div>`
+    ? `<div class="dm-tkt-voce-pie">⚠︎ ${esc(ticket.delivery_error)}</div>`
     : "";
   /* La discussione si apre qui, non su github.com. Portare fuori chi voleva
    * solo leggere la risposta vorrebbe dire mandarlo via proprio dal posto che
@@ -1330,7 +1329,7 @@ export function voceMarkup(ticket) {
           nonLetto(numero)
             ? `<span class="dm-tkt-segno nuovo" title="${esc(
                 t("Messaggi nuovi", "New messages"),
-              )}">● ${esc(t("risposta", "reply"))}</span>`
+              )}">🔵 ${esc(t("risposta", "reply"))}</span>`
             : ""
         }
         ${statoMarkup(ticket.state)}
@@ -1373,7 +1372,7 @@ export function appenaApertaMarkup(appena = state.appena) {
   return `
     <div class="dm-tkt-aperta">
       <div class="dm-tkt-aperta-testa">
-        <span class="dm-tkt-aperta-ico" aria-hidden="true">${segnoHtml("check")}</span>
+        <span class="dm-tkt-aperta-ico" aria-hidden="true">✅</span>
         <span><b>${esc(t("Segnalazione aperta", "Report opened"))}</b> ${numero}</span>
       </div>
       <div class="dm-tkt-aperta-testo">${esc(
@@ -1398,7 +1397,7 @@ function elencoMarkup() {
   if (!state.tickets.length) {
     return `
       <div class="dm-tkt-vuoto">
-        <div class="dm-tkt-vuoto-ico" aria-hidden="true">${segnoHtml("chat")}</div>
+        <div class="dm-tkt-vuoto-ico" aria-hidden="true">🎫</div>
         <div>${esc(
           t("Non hai ancora aperto nessuna segnalazione.", "You have not opened any report yet."),
         )}</div>
@@ -1620,12 +1619,12 @@ function segniMarkup(ticket) {
     segni.push(
       `<span class="dm-tkt-segno" title="${esc(
         t("Allegati", "Attachments"),
-      )}">${segnoHtml("link")} ${allegati}</span>`,
+      )}">📎 ${allegati}</span>`,
     );
   }
   if (commenti) {
     segni.push(
-      `<span class="dm-tkt-segno" title="${esc(t("Commenti", "Comments"))}">${segnoHtml("chat")} ${commenti}</span>`,
+      `<span class="dm-tkt-segno" title="${esc(t("Commenti", "Comments"))}">💬 ${commenti}</span>`,
     );
   }
   if (nonLetto(ticket.number)) {
@@ -1635,7 +1634,7 @@ function segniMarkup(ticket) {
     segni.push(
       `<span class="dm-tkt-segno nuovo" title="${esc(
         t("Messaggi nuovi", "New messages"),
-      )}">● ${esc(t("nuovo", "new"))}</span>`,
+      )}">🔵 ${esc(t("nuovo", "new"))}</span>`,
     );
   }
   const incaricati = Array.isArray(ticket.assignees) ? ticket.assignees.map(clean) : [];
@@ -1643,7 +1642,7 @@ function segniMarkup(ticket) {
     /* Il nome, e non solo il simbolo: il giorno che i manutentori sono due,
      * «presa in carico» senza dire da chi e' l'informazione a meta'. */
     segni.push(
-      `<span class="dm-tkt-segno" title="${esc(t("Presa in carico", "Taken"))}">${segnoHtml("person")} ${esc(
+      `<span class="dm-tkt-segno" title="${esc(t("Presa in carico", "Taken"))}">🙋 ${esc(
         incaricati.join(", "),
       )}</span>`,
     );
@@ -1674,7 +1673,7 @@ export function allegatiMarkup(allegati) {
       return `
         <a class="dm-tkt-allegato solo-link" href="${esc(url)}"
            target="_blank" rel="noreferrer noopener">
-          <span>${segnoHtml("scene")} ${esc(nome || t("Apri l'allegato", "Open the attachment"))}</span>
+          <span>🎬 ${esc(nome || t("Apri l'allegato", "Open the attachment"))}</span>
         </a>`;
     })
     .join("")}</div>`;
@@ -1745,14 +1744,14 @@ function provenienzaMarkup(ticket) {
         "Arrivata da una dashboard: la risposta le torna dentro",
         "Came from a dashboard: the reply goes back into it",
       ),
-    )}">${segnoHtml("home")} ${esc(t("dalla plancia", "from a dashboard"))}</span>`;
+    )}">🏠 ${esc(t("dalla plancia", "from a dashboard"))}</span>`;
   }
   return `<span class="dm-tkt-segno" title="${esc(
     t(
       "Aperta direttamente su GitHub: la risposta resta li'",
       "Opened directly on GitHub: the reply stays there",
     ),
-  )}">${segnoHtml("globe")} ${esc(t("da GitHub", "from GitHub"))}</span>`;
+  )}">🐙 ${esc(t("da GitHub", "from GitHub"))}</span>`;
 }
 
 /* Il segnaposto dice dove va a finire quello che si sta per scrivere, e su una
@@ -2008,7 +2007,7 @@ function creaVoceCruscotto() {
   voce.className = "tab";
   voce.dataset.tab = CRUSCOTTO_TAB;
   voce.id = `tab-${CRUSCOTTO_TAB}`;
-  voce.innerHTML = `<span class="icon">${segnoHtml("chat")}</span><span class="text">${esc(
+  voce.innerHTML = `<span class="icon">🎫</span><span class="text">${esc(
     t("Cruscotto", "Console"),
   )}</span>`;
   /* Il gestore che il runtime lega alle voci lo lega una volta sola, al
@@ -2097,7 +2096,7 @@ function disegnaCruscotto() {
   const quante = Array.isArray(state.queue) ? state.queue.length : 0;
   dentro.innerHTML = `
     <div class="cfg-hero dm-tkt-hero">
-      <div class="cfg-hero-ico" aria-hidden="true">${segnoHtml("chat")}</div>
+      <div class="cfg-hero-ico" aria-hidden="true">🎫</div>
       <div class="cfg-hero-txt">
         <div class="cfg-hero-title">${esc(t("Cruscotto", "Console"))}</div>
         <div class="cfg-hero-sub">${esc(

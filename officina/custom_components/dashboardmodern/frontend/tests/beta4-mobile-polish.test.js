@@ -29,7 +29,7 @@ test("config tab names preserve their dedicated icon nodes", async () => {
   const source = await read("src/sections/beta4-mobile-polish-section.js");
   assert.match(source, /labelNode\.dataset\.dmConfigName = "true"/);
   assert.match(source, /dm-beta4-tab-icon/);
-  assert.match(source, /iconNode\.innerHTML = segno/);
+  assert.match(source, /iconNode\.textContent = icon/);
 });
 
 test("room first insert uses its icon as the only visible picker trigger", async () => {
@@ -48,7 +48,7 @@ test("alerts hide custom-only controls and physically remove the orphan flash", 
   assert.match(source, /const visible = clean\(group\.value\) === "custom"/);
   assert.match(source, /custom\.hidden = !visible/);
   assert.match(source, /removeAlertFlash\(form, visible\)/);
-  assert.match(source, /text === "⚡" \|\| \(!text && node\.querySelector\?\.\('\[data-dm-segno="power"\]'\)\) \|\| powerGlyph/);
+  assert.match(source, /text === "⚡" \|\| powerGlyph/);
   assert.match(source, /dm-beta5-alert-entity-row/);
   assert.match(source, /grid-template-columns:minmax\(0,1fr\) 52px/);
 });

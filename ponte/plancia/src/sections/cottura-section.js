@@ -40,7 +40,7 @@ import {
   orologio,
   tipoDellaCucina,
 } from "../core/la-cottura.js";
-import { segnoHtml } from "../core/segni-del-catalogo.js";
+import { applianceGlyph } from "../core/appliance-artwork.js";
 import {
   activeLocale,
   allStates,
@@ -251,7 +251,7 @@ const PIU = `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke=
 function anelloMarkup(lettura) {
   if (lettura.fase === "pronta")
     return `<div class="dm-ring dm-cot-ring" data-fase="pronta" style="--pct:100">
-      <span class="dm-ring-core"><b class="dm-cot-fatto">${segnoHtml("check", { misura: 30 })}</b><i>${esc(parolaDellaFase(lettura))}</i></span>
+      <span class="dm-ring-core"><b class="dm-cot-fatto">✅</b><i>${esc(parolaDellaFase(lettura))}</i></span>
     </div>`;
   if (lettura.rimasti == null) return "";
   const pieno = lettura.frazione == null ? 100 : Math.round(lettura.frazione * 1000) / 10;
@@ -348,23 +348,23 @@ function temperaturaMarkup(voce) {
       })()
     : "";
   return `<div class="dm-cot-temp">
-    <span class="dm-cot-temp-l">${segnoHtml("thermometer")} ${esc(t("Temperatura", "Temperature"))}${dentro}</span>
+    <span class="dm-cot-temp-l">🌡️ ${esc(t("Temperatura", "Temperature"))}${dentro}</span>
     <div class="dm-cot-step">${meno}<b data-dm-cot-gradi>${esc(String(Math.round(lettura.gradi.valore)))}<i>${esc(lettura.gradi.unita)}</i></b>${piu}</div>
   </div>`;
 }
 
 function azioniMarkup(voce) {
   const tasti = [
-    tastoMarkup(voce, "pausa", "dm-btn dm-ghost", segnoHtml("pause"), t("Pausa", "Pause")),
-    tastoMarkup(voce, "riprendi", "dm-btn dm-ghost", segnoHtml("play"), t("Riprendi", "Resume")),
+    tastoMarkup(voce, "pausa", "dm-btn dm-ghost", "⏸️", t("Pausa", "Pause")),
+    tastoMarkup(voce, "riprendi", "dm-btn dm-ghost", "▶️", t("Riprendi", "Resume")),
     tastoMarkup(
       voce,
       "piu_un_minuto",
       "dm-btn dm-ghost",
-      segnoHtml("timer"),
+      "⏱️",
       t("+1 min", "+1 min"),
     ),
-    tastoMarkup(voce, "stop", "dm-btn dm-warn", segnoHtml("stop"), t("Stop", "Stop")),
+    tastoMarkup(voce, "stop", "dm-btn dm-warn", "⏹️", t("Stop", "Stop")),
   ].filter(Boolean);
   if (!tasti.length) return "";
   return `<div class="dm-pool-actions dm-cot-azioni" style="--dm-cot-tasti:${tasti.length}">${tasti.join("")}</div>`;
@@ -386,7 +386,7 @@ function schedaMarkup(voce) {
   const anello = anelloMarkup(lettura);
   return `<article class="dm-pool-card dm-cot-card" data-fase="${esc(lettura.fase)}" data-dm-cot-scheda="${esc(voce.chiave)}">
     <div class="dm-pool-card-head">
-      <span class="dm-pool-card-title">${segnoHtml(lettura.tipo || "air-fryer")}<span class="dm-cot-tit"><span data-dm-no-i18n>${esc(voce.nome)}</span>${sotto ? `<small data-dm-no-i18n>${esc(sotto)}</small>` : ""}</span></span>
+      <span class="dm-pool-card-title"><i aria-hidden="true">${applianceGlyph(lettura.tipo) || "🍟"}</i><span class="dm-cot-tit"><span data-dm-no-i18n>${esc(voce.nome)}</span>${sotto ? `<small data-dm-no-i18n>${esc(sotto)}</small>` : ""}</span></span>
       <span class="dm-pool-badge dm-cot-fase" data-fase="${esc(lettura.fase)}">${esc(parolaDellaFase(lettura))}</span>
     </div>
     <div class="dm-cot-corpo${anello ? "" : " dm-cot-senza-anello"}">
@@ -433,7 +433,7 @@ function altriMarkup(altri) {
       : parolaDellaFase(altri[0].lettura);
   return `<article class="dm-pool-card dm-cot-altri">
     <div class="dm-pool-card-head">
-      <span class="dm-pool-card-title">${segnoHtml("flame")}${esc(t("Gli altri in cucina", "The rest of the kitchen"))}</span>
+      <span class="dm-pool-card-title"><i aria-hidden="true">🔥</i>${esc(t("Gli altri in cucina", "The rest of the kitchen"))}</span>
       <span class="dm-pool-badge"${accesi ? ' data-on="true"' : ""}>${esc(pastiglia)}</span>
     </div>
     ${altri.map(rigaDegliAltri).join("")}
@@ -564,21 +564,21 @@ export function tesseraDellaCottura(vista = vistaDellaCucina()) {
   if (lettura.programma)
     righe.push({
       name: t("Programma", "Program"),
-      glyph: segnoHtml(lettura.tipo || "air-fryer"),
+      glyph: applianceGlyph(lettura.tipo) || "🍟",
       value: lettura.programma,
       tono: "quiete",
     });
   if (lettura.gradi)
     righe.push({
       name: t("Temperatura", "Temperature"),
-      glyph: segnoHtml("thermometer"),
+      glyph: "🌡️",
       value: gradi,
       tono: "quiete",
     });
   if (lettura.rimasti != null && !pronta)
     righe.push({
       name: t("Rimangono", "Remaining"),
-      glyph: segnoHtml("timer"),
+      glyph: "⏱️",
       value: minutiESecondi(lettura.rimasti),
       tono: "quiete",
     });
@@ -652,7 +652,6 @@ function installStyles() {
     .dm-cot-schede{align-items:start}
     .dm-cot-card,.dm-cot-altri{min-width:0}
     .dm-cot .dm-pool-card-title{min-width:0}
-    .dm-cot .dm-pool-card-title>.dm-segno{flex:0 0 auto}
     .dm-cot-tit{display:grid;gap:1px;min-width:0}
     .dm-cot-tit>span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
     .dm-cot-tit small{font-size:10.5px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;color:var(--text-dim,#64748b);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}

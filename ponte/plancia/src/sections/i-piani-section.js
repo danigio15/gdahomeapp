@@ -52,7 +52,6 @@ import {
   stanzeSenzaPiano,
   stessoOrdine,
 } from "../core/i-piani-della-casa.js";
-import { segnoHtml } from "../core/segni-del-catalogo.js";
 import { nomiRipetuti } from "../core/room-overview.js";
 import {
   clean,
@@ -92,14 +91,14 @@ const state = (root[KEY] ||= {
  * ce ne stanno otto, quelli che un piano puo' davvero essere, e si scelgono
  * con un tocco sopra la riga invece che in una finestra sopra la finestra. */
 export const SEGNI_DEI_PIANI = Object.freeze([
-  "home",
-  "room-attic",
-  "lift",
-  "room-bedroom",
-  "room-cellar",
-  "room-garage",
-  "room-garden",
-  "room-terrace",
+  "🏢",
+  "🏠",
+  "🪜",
+  "🛗",
+  "🛏️",
+  "🏚️",
+  "🚗",
+  "🌳",
 ]);
 
 const ID_PANNELLO = "dm-piani-pannello";
@@ -176,7 +175,7 @@ export function pannelloDeiPiani(
       if (chiede === piano.nome)
         return `
         <div class="dm-piano" data-dm-piano="${esc(piano.nome)}" data-chiede="si">
-          <div class="dm-piano-icona">${segnoHtml("trash", { misura: 26 })}</div>
+          <div class="dm-piano-icona">🗑️</div>
           <div class="dm-piano-domanda">
             <b>${esc(t("Elimino", "Delete"))} «${esc(piano.nome)}»?</b>
             <span>${
@@ -202,7 +201,7 @@ export function pannelloDeiPiani(
         segnoAperto === piano.nome
           ? `<div class="dm-piano-segni">${SEGNI_DEI_PIANI.map(
               (voce) =>
-                `<button type="button" data-dm-piano-scegli="${esc(voce)}"${voce === piano.segno ? ' aria-pressed="true"' : ""}>${segnoHtml(voce, { misura: 24 })}</button>`,
+                `<button type="button" data-dm-piano-scegli="${esc(voce)}"${voce === piano.segno ? ' aria-pressed="true"' : ""}>${esc(voce)}</button>`,
             ).join("")}</div>`
           : "";
       return `
@@ -211,11 +210,11 @@ export function pannelloDeiPiani(
           <button type="button" data-dm-piano-su ${indice === 0 ? "disabled" : ""} title="${esc(t("Più in alto", "Move up"))}" aria-label="${esc(t("Più in alto", "Move up"))}">▲</button>
           <button type="button" data-dm-piano-giu ${indice === piani.length - 1 ? "disabled" : ""} title="${esc(t("Più in basso", "Move down"))}" aria-label="${esc(t("Più in basso", "Move down"))}">▼</button>
         </div>
-        <button type="button" class="dm-piano-icona" data-dm-piano-segno data-dm-piano-segno-scelto="${esc(piano.segno)}" title="${esc(t("Cambia icona", "Change icon"))}">${segnoHtml(piano.segno, { misura: 26 })}</button>
+        <button type="button" class="dm-piano-icona" data-dm-piano-segno title="${esc(t("Cambia icona", "Change icon"))}">${esc(piano.segno)}</button>
         <div class="dm-piano-testa">${titolo}</div>
         <div class="dm-piano-tasti">
-          <button type="button" data-dm-piano-rinomina title="${esc(t("Rinomina", "Rename"))}" aria-label="${esc(t("Rinomina", "Rename"))}">${segnoHtml(rinomina === piano.nome ? "check" : "pencil")}</button>
-          <button type="button" data-dm-piano-chiedi title="${esc(t("Elimina", "Delete"))}" aria-label="${esc(t("Elimina", "Delete"))}">${segnoHtml("trash")}</button>
+          <button type="button" data-dm-piano-rinomina title="${esc(t("Rinomina", "Rename"))}" aria-label="${esc(t("Rinomina", "Rename"))}">${rinomina === piano.nome ? "💾" : "✏️"}</button>
+          <button type="button" data-dm-piano-chiedi title="${esc(t("Elimina", "Delete"))}" aria-label="${esc(t("Elimina", "Delete"))}">🗑️</button>
         </div>
         ${striscia}
       </div>`;
@@ -241,7 +240,7 @@ export function pannelloDeiPiani(
 
   return `
     <div class="dm-piani-testata">
-      <div class="dm-piani-titolo">${segnoHtml("home", { misura: 18 })} ${esc(t("I piani della casa", "The floors of the house"))}</div>
+      <div class="dm-piani-titolo">🏢 ${esc(t("I piani della casa", "The floors of the house"))}</div>
       <div class="dm-piani-conto">${esc(
         piani.length === 1 ? t("1 piano", "1 floor") : `${piani.length} ${t("piani", "floors")}`,
       )} · ${esc(quante(tutte))}</div>
@@ -344,7 +343,7 @@ function intitolaIGruppi(corpo, stanze, piani, ripetuti) {
     if (!stanza || !ripetuti.has(clean(stanza.name).toLowerCase())) return;
     const avviso = doc.createElement("span");
     avviso.className = "dm-piano-doppio";
-    avviso.innerHTML = `${segnoHtml("warning")} ${esc(t("stesso nome di un'altra stanza", "same name as another room"))}`;
+    avviso.textContent = `⚠️ ${t("stesso nome di un'altra stanza", "same name as another room")}`;
     dove.append(avviso);
   });
   return true;

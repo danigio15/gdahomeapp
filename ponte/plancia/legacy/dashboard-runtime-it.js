@@ -160,8 +160,8 @@ function dmIconPicker(targetSel, category) {
     ov.id = 'dm-iconpick';
     ov.style.cssText = 'position:fixed; inset:0; background:rgba(15,23,42,0.6); z-index:100001; display:flex; align-items:center; justify-content:center; padding:16px;';
     ov.innerHTML = `<div style="background:var(--card-bg,#fff); border-radius:22px; padding:18px; width:min(420px,100%); max-height:78vh; display:flex; flex-direction:column; box-shadow:0 20px 60px rgba(0,0,0,0.35);">
-        <div style="font-weight:900; font-size:14.5px; margin-bottom:8px; color:var(--text,#0f172a);"><i class="dm-segno" data-dm-segno="person" aria-hidden="true"></i> Scegli l'icona</div>
-        <input id="dm-icon-search" class="ed-input" style="margin-bottom:8px;" placeholder="Cerca (es. acqua, porta, fuoco)…" oninput="dmIconFilter(this.value)">
+        <div style="font-weight:900; font-size:14.5px; margin-bottom:8px; color:var(--text,#0f172a);">😀 Scegli l'icona</div>
+        <input id="dm-icon-search" class="ed-input" style="margin-bottom:8px;" placeholder="🔍 Cerca (es. acqua, porta, fuoco)…" oninput="dmIconFilter(this.value)">
         <div id="dm-icon-grid" style="overflow-y:auto; flex:1; display:grid; grid-template-columns:repeat(auto-fill,minmax(46px,1fr)); gap:6px;"></div>
         <button type="button" data-icon-picker-close aria-label="Chiudi selettore icone" style="margin-top:10px; padding:11px; border:none; border-radius:12px; background:#94a3b8; color:#fff; font-weight:800; cursor:pointer;" onclick="document.getElementById('dm-iconpick').remove()">Chiudi</button>
       </div>`;
@@ -177,7 +177,7 @@ function dmIconFilter(q) {
     if (!grid) return;
     const dataset = window._dmIconDataset || DM_ICONS;
     const rows = q ? dataset.filter(x => x.k.includes(q) || x.e === q) : dataset;
-    grid.innerHTML = rows.map(x => `<button type="button" onclick="dmIconChoose('${x.e}')" style="font-size:24px; padding:8px 0; border:1px solid var(--card-border,#e2e8f0); border-radius:12px; background:rgba(148,163,184,0.08); cursor:pointer;">${cdSegno(x.e, 24)}</button>`).join('') || '<div style="grid-column:1/-1; text-align:center; padding:16px; color:var(--text-dim); font-weight:700;">Nessuna icona</div>';
+    grid.innerHTML = rows.map(x => `<button type="button" onclick="dmIconChoose('${x.e}')" style="font-size:24px; padding:8px 0; border:1px solid var(--card-border,#e2e8f0); border-radius:12px; background:rgba(148,163,184,0.08); cursor:pointer;">${x.e}</button>`).join('') || '<div style="grid-column:1/-1; text-align:center; padding:16px; color:var(--text-dim); font-weight:700;">Nessuna icona</div>';
 }
 function dmIconChoose(e) {
     const sel = window._dmIconTarget;
@@ -244,13 +244,7 @@ function cdApplianceIcon(type, size) {
 }
 function cdApplianceName(type){ const x=DM_APPLIANCES.find(a=>a.t===type); return x?x.n:'Elettrodomestico'; }
 function cdApplianceDisplayName(a){ const api=window.DashboardModernModules&&DashboardModernModules.data; return api&&api.applianceName?api.applianceName(a,STATES,'Elettrodomestico'):(String(a&&a.name||'').trim()||'Elettrodomestico'); }
-function cdIconMarkup(icon,size){ icon=String(icon||''); size=parseFloat(size)||30; if(icon.indexOf('mdi:')===0) return '<ha-icon icon="'+cdEsc(icon)+'" style="--mdc-icon-size:'+size+'px;width:'+size+'px;height:'+size+'px"></ha-icon>'; return icon ? cdSegno(icon, size) : ''; }
-/* I segni del catalogo. Il guscio non scrive emoji: mette il segnaposto
-   che il foglio dei segni dipinge col disegno del catalogo. Un valore che
-   arriva dalla configurazione (un'emoji scelta, o una chiave) passa di qui. */
-function cdSegno(v, misura, ripiego){ try { var s=String(v==null?'':v).trim(); if(s.indexOf('<i class="dm-segno"')===0) return s; if(typeof window.dmSegnoDaValore==='function') return window.dmSegnoDaValore(s,{misura:misura||0,ripiego:ripiego||'star'}); } catch(_) {} return ''; }
-/* Un posto che tiene solo un segno: si riscrive solo se e' cambiato, come setHtml. */
-function cdMettiSegno(el, html){ try { html=String(html==null?'':html); if(el && (el.dataset.dmSegnoScritto!==html || el.textContent!==el.dataset.dmSegnoTesto)){ el.innerHTML=html; el.dataset.dmSegnoScritto=html; el.dataset.dmSegnoTesto=el.textContent; } } catch(_) {} }
+function cdIconMarkup(icon,size){ icon=String(icon||''); size=parseFloat(size)||30; if(icon.indexOf('mdi:')===0) return '<ha-icon icon="'+cdEsc(icon)+'" style="--mdc-icon-size:'+size+'px;width:'+size+'px;height:'+size+'px"></ha-icon>'; return cdEsc(icon); }
 function cdApplianceType(a){
   const raw=String((a&&(a.device_type||a.type||a.icon))||'generico').toLowerCase();
   const aliases={frigorifero:'frigo',caffettiera:'caffe',televisore:'tv'};
@@ -276,8 +270,8 @@ function cdRoomList(){ try { var raw=(typeof getStanze==='function'?getStanze():
 function cdRoomsUsed(){ try { var all=cdRoomList(); var used={}; all.forEach(function(r){ if(r&&r.temp&&r.name) used[r.name]=1; }); var lr=cdCfg('cd_luci_rooms')||{}; Object.keys(lr).forEach(function(k){ if(lr[k]) used[lr[k]]=1; }); try { getClimaUnits().forEach(function(u){ if(u&&u.room) used[u.room]=1; }); } catch(e2){} try { cdCfgList('cd_appliances').forEach(function(a){ if(a&&a.room) used[a.room]=1; }); } catch(e2){} try { (cdCfgList('cd_tapparelle')||[]).forEach(function(t){ if(t&&t.room) used[t.room]=1; }); } catch(e2){} var out=all.filter(function(r){ return r&&r.name&&used[r.name]; }); return out.length?out:all; } catch(e){ return cdRoomList(); } } function cdRoomOptions(sel){ var rooms=cdRoomList(); var o='<option value="">— Nessuna stanza —</option>'; rooms.forEach(function(r){ var id=String(r.id||''); var selected=String(sel||'')===id||String(sel||'')===String(r.name||''); o+='<option value="'+cdEsc(id)+'"'+(selected?' selected':'')+'>'+cdEsc((r.icon&&r.icon.indexOf('mdi:')!==0?r.icon+' ':'')+(r.name||id))+'</option>'; }); return o; }
 function cdRoomOf(item){ return (item && item.room) ? String(item.room) : ''; }
 function cdFloorNames(){ var fl=[]; try{ fl=JSON.parse(localStorage.getItem('cd_floors'))||[]; }catch(e){} var seen={}; var outv=[]; fl.forEach(function(f){ f=String(f); if(f&&!seen[f]){ seen[f]=1; outv.push(f); } }); cdRoomList().forEach(function(r){ if(r&&r.floor){ var f=String(r.floor); if(!seen[f]){ seen[f]=1; outv.push(f); } } }); return outv; }
-function cdFloorSelOptions(cur){ var o='<option value="">— Nessun piano —</option>'; cdFloorNames().forEach(function(f){ o+='<option value="'+cdEsc(f)+'"'+(cur===f?' selected':'')+'>'+cdEsc(f)+'</option>'; }); return o; }
-function cdFloorRowsHtml(){ var names=cdFloorNames(); var rows = names.length ? names.map(function(f,i){ return '<div class="ed-row" style="align-items:center;"><div class="ed-row-main"><div class="ed-row-new"><i class="dm-segno" data-dm-segno="home" aria-hidden="true"></i> '+cdEsc(f)+'</div></div><div class="ed-del" onclick="edFloorDel('+i+')"><i class="dm-segno" data-dm-segno="trash" aria-hidden="true"></i></div></div>'; }).join('') : '<div class="ed-intro">Nessun piano. Aggiungine uno qui sotto.</div>'; return '<div class="ed-intro" style="margin-top:16px;">Gestisci qui i <b>piani</b>. Ogni piano creato qui compare nel menù a tendina delle stanze.</div>'+rows+'<div style="display:flex;gap:8px;margin:8px 0;"><input id="ed-floor-name" class="ed-input" style="flex:1;" placeholder="Nome piano (es. Piano terra)"><button class="ed-btn-add" style="flex:0 0 auto;" onclick="edFloorAdd()">＋ Aggiungi piano</button></div>'; }
+function cdFloorSelOptions(cur){ var o='<option value="">— Nessun piano —</option>'; cdFloorNames().forEach(function(f){ o+='<option value="'+cdEsc(f)+'"'+(cur===f?' selected':'')+'>🏢 '+cdEsc(f)+'</option>'; }); return o; }
+function cdFloorRowsHtml(){ var names=cdFloorNames(); var rows = names.length ? names.map(function(f,i){ return '<div class="ed-row" style="align-items:center;"><div class="ed-row-main"><div class="ed-row-new">🏢 '+cdEsc(f)+'</div></div><div class="ed-del" onclick="edFloorDel('+i+')">🗑️</div></div>'; }).join('') : '<div class="ed-intro">Nessun piano. Aggiungine uno qui sotto.</div>'; return '<div class="ed-intro" style="margin-top:16px;">Gestisci qui i <b>piani</b>. Ogni piano creato qui compare nel menù a tendina delle stanze.</div>'+rows+'<div style="display:flex;gap:8px;margin:8px 0;"><input id="ed-floor-name" class="ed-input" style="flex:1;" placeholder="Nome piano (es. Piano terra)"><button class="ed-btn-add" style="flex:0 0 auto;" onclick="edFloorAdd()">＋ Aggiungi piano</button></div>'; }
 function edFloorAdd(){ var n=(document.getElementById('ed-floor-name').value||'').trim(); if(!n) return; var fl=[]; try{ fl=JSON.parse(localStorage.getItem('cd_floors'))||[]; }catch(e){} if(fl.indexOf(n)<0) fl.push(n); localStorage.setItem('cd_floors', JSON.stringify(fl)); try{ cdMarkDirty(); cdSyncPush(); }catch(e){} editorSwitch('stanze'); }
 function edFloorDel(i){ var names=cdFloorNames(); var n=names[i]; if(!n) return; var fl=[]; try{ fl=JSON.parse(localStorage.getItem('cd_floors'))||[]; }catch(e){} fl=fl.filter(function(x){ return x!==n; }); localStorage.setItem('cd_floors', JSON.stringify(fl)); var rooms=cdRoomList().slice(); var ch=false; rooms.forEach(function(r){ if(r&&r.floor===n){ delete r.floor; ch=true; } }); if(ch) localStorage.setItem('cd_stanze', JSON.stringify(rooms)); try{ cdMarkDirty(); cdSyncPush(); }catch(e){} editorSwitch('stanze'); }
 function getAppliances(){ const a=cdCfg('cd_appliances'); return Array.isArray(a)?a:[]; }
@@ -361,15 +355,15 @@ function cdApplMainCard(a) {
   const nm=String(typeof cdApplianceDisplayName==='function'?cdApplianceDisplayName(a):(a&&a.name?a.name:cdApplianceName(a.icon)));
   const metrics=[];
   const powerValue=p?cdApplVal(p,''):(st.w!=null?cdW(st.w):'');
-  if(powerValue) metrics.push('<div class="appl-primary"><span><i class="dm-segno" data-dm-segno="power" aria-hidden="true"></i> Consumo</span><strong>'+cdEsc(powerValue)+'</strong></div>');
-  if(e) metrics.push('<span class="appl-mini"><i class="dm-segno" data-dm-segno="battery" aria-hidden="true"></i> '+cdEsc(cdApplVal(e,''))+'</span>');
-  if(d) metrics.push('<span class="appl-mini"><i class="dm-segno" data-dm-segno="timer" aria-hidden="true"></i> '+cdEsc(cdApplVal(d,''))+'</span>');
+  if(powerValue) metrics.push('<div class="appl-primary"><span>⚡ Consumo</span><strong>'+cdEsc(powerValue)+'</strong></div>');
+  if(e) metrics.push('<span class="appl-mini">🔋 '+cdEsc(cdApplVal(e,''))+'</span>');
+  if(d) metrics.push('<span class="appl-mini">⏱ '+cdEsc(cdApplVal(d,''))+'</span>');
   return `<article class="appl-wide-card dm-control-device ${st.cls==='run'?'on':''}" data-appliance-id="${cdEsc(a.id||'')}">
     <div class="appl-visual"><span class="appl-ic">${cdApplianceVisual(a,76)}</span></div>
-    <div class="appl-info"><div class="appl-heading"><div><div class="appl-wide-name">${cdEsc(nm)}</div>${roomValid?`<div class="appl-wide-cat dm-room-label"><i class="dm-segno" data-dm-segno="home" aria-hidden="true"></i> ${cdEsc(room.name)}</div>`:''}</div><span class="appl-st ${st.cls}">● ${st.label}</span></div>
+    <div class="appl-info"><div class="appl-heading"><div><div class="appl-wide-name">${cdEsc(nm)}</div>${roomValid?`<div class="appl-wide-cat dm-room-label">🏠 ${cdEsc(room.name)}</div>`:''}</div><span class="appl-st ${st.cls}">● ${st.label}</span></div>
     <div class="appl-live">${metrics.join('')}</div>
     ${h?'<div class="appl-spark" aria-label="Dati storici disponibili"><i></i><i></i><i></i><i></i><i></i></div>':''}
-    <div class="appl-actions">${sw?`<button class="appl-action-btn ${((STATES[sw]&&STATES[sw].state)==='on')?'on':''}" onclick="event.stopPropagation();cdApplEntTog(${cdJs(sw)},this)">⏻</button>`:''}${h?`<button class="appl-action-btn" onclick="apriStorico(event,${cdJs(h)},${cdJs(nm)})"><i class="dm-segno" data-dm-segno="gauge" aria-hidden="true"></i> Storico</button>`:`<button class="appl-action-btn" disabled aria-disabled="true"><i class="dm-segno" data-dm-segno="gauge" aria-hidden="true"></i> Storico</button>`}</div></div>
+    <div class="appl-actions">${sw?`<button class="appl-action-btn ${((STATES[sw]&&STATES[sw].state)==='on')?'on':''}" onclick="event.stopPropagation();cdApplEntTog(${cdJs(sw)},this)">⏻</button>`:''}${h?`<button class="appl-action-btn" onclick="apriStorico(event,${cdJs(h)},${cdJs(nm)})">📈 Storico</button>`:`<button class="appl-action-btn" disabled aria-disabled="true">📈 Storico</button>`}</div></div>
   </article>`;
 }
 function switchApplianceView(view, ev) {
@@ -389,7 +383,7 @@ function renderApplianceSection(force) {
   const grouped=dataApi?dataApi.applianceGroups(list,cdRoomList()):{groups:[],unassigned:list,all:list};
   if(window._dmApplRoom===undefined) window._dmApplRoom='all';
   const tabBar=document.querySelector('#page-appliances-main .sub-tabs-energy');
-  if(tabBar){ const tabs=[['all','gauge','Panoramica']].concat(grouped.groups.map(g=>[g.room.id,g.room.icon||'home',g.room.name])); if(grouped.unassigned.length) tabs.push(['unassigned','info','Nessuna stanza']); tabBar.innerHTML=tabs.map(t=>'<button class="sub-tab-btn appl-section-tab'+(window._dmApplRoom===t[0]?' active':'')+'" onclick="window._dmApplRoom='+cdJs(t[0])+';renderApplianceSection(true)">'+cdSegno(t[1])+' '+cdEsc(t[2])+'</button>').join(''); }
+  if(tabBar){ const tabs=[['all','📊 Panoramica']].concat(grouped.groups.map(g=>[g.room.id,(g.room.icon||'🏠')+' '+g.room.name])); if(grouped.unassigned.length) tabs.push(['unassigned','❓ Nessuna stanza']); tabBar.innerHTML=tabs.map(t=>'<button class="sub-tab-btn appl-section-tab'+(window._dmApplRoom===t[0]?' active':'')+'" onclick="window._dmApplRoom='+cdJs(t[0])+';renderApplianceSection(true)">'+cdEsc(t[1])+'</button>').join(''); }
   const roomList=window._dmApplRoom==='all'?list:(window._dmApplRoom==='unassigned'?grouped.unassigned:((grouped.groups.find(g=>g.room.id===window._dmApplRoom)||{}).appliances||[]));
   const sig = list.map(a => { const st = cdApplStatus(a); return [a.id, a.name, a.icon, cdApplCategory(a), st.cls, Math.round(st.w || 0), cdApplConfiguredEntities(a).map(en => en + ':' + (STATES[en] && STATES[en].state || '')).join(',')].join('|'); }).join('||');
   const active = document.querySelector('.appl-main-view.active')?.id || 'appl-view-overview';
@@ -401,7 +395,7 @@ function renderApplianceSection(force) {
   const watts = list.reduce((t, a) => t + (cdApplStatus(a).w || 0), 0);
   const day = list.reduce((t, a) => t + cdApplNum(cdApplEntity(a, ['energy_today','daily_energy'])), 0);
   const alerts = list.filter(a => !cdApplConfiguredEntities(a).length).length;
-  setHtml('appl-kpi-grid', [[labs[0], on, '●'], [labs[1], cdW(watts), '<i class="dm-segno" data-dm-segno="power" aria-hidden="true"></i>'], [labs[2], (day != null ? cdKwh(day) : '—'), '<i class="dm-segno" data-dm-segno="calendar" aria-hidden="true"></i>'], [labs[3], alerts, '<i class="dm-segno" data-dm-segno="warning" aria-hidden="true"></i>']].map(x => `<div class="glance-card" style="--g-rgb:14,165,233;display:flex;"><div class="g-info"><span class="g-name">${x[0]}</span><span class="g-val">${x[1]}</span></div><div class="g-icon-wrap">${x[2]}</div></div>`).join(''));
+  setHtml('appl-kpi-grid', [[labs[0], on, '🟢'], [labs[1], cdW(watts), '⚡'], [labs[2], (day != null ? cdKwh(day) : '—'), '📅'], [labs[3], alerts, '⚠️']].map(x => `<div class="glance-card" style="--g-rgb:14,165,233;display:flex;"><div class="g-info"><span class="g-name">${x[0]}</span><span class="g-val">${x[1]}</span></div><div class="g-icon-wrap">${x[2]}</div></div>`).join(''));
   setTxt('appl-main-sub', list.length ? '' : 'Nessun elettrodomestico configurato.');
   const cats = {
     overview: roomList,
@@ -410,11 +404,11 @@ function renderApplianceSection(force) {
     home: list.filter(a => cdApplCategory(a) === 'home'),
     other: list.filter(a => cdApplCategory(a) === 'other')
   };
-  Object.entries(cats).forEach(([k, arr]) => setHtml('appl-grid-' + k, arr.length ? arr.map(cdApplMainCard).join('') : `<div class="appl-empty"><i class="dm-segno" data-dm-segno="washer" aria-hidden="true"></i> Nessun elettrodomestico in questa categoria</div>`));
+  Object.entries(cats).forEach(([k, arr]) => setHtml('appl-grid-' + k, arr.length ? arr.map(cdApplMainCard).join('') : `<div class="appl-empty">🧺 Nessun elettrodomestico in questa categoria</div>`));
   const max = Math.max(1, ...list.map(a => cdApplStatus(a).w || 0));
   setHtml('appl-consumption-list', list.length ? list.map(a => { const st = cdApplStatus(a), w = st.w || 0, nm = cdEsc(a.name || cdApplianceName(a.icon)); return `<div class="appl-cons-row"><div><div class="appl-wide-name">${nm}</div><div class="appl-cons-bar"><div class="appl-cons-fill" style="width:${Math.min(100, w / max * 100)}%"></div></div></div><div class="appl-pwr">${Math.round(w)} W</div></div>`; }).join('') : `<div class="appl-empty">Nessun elettrodomestico configurato</div>`);
   const autos = list.filter(a => Array.isArray(a.automations) && a.automations.length);
-  setHtml('appl-grid-automations', autos.length ? autos.map(a => `<div class="appl-wide-card"><div class="appl-wide-name"><i class="dm-segno" data-dm-segno="robot" aria-hidden="true"></i> ${cdEsc(a.name || cdApplianceName(a.icon))}</div><div class="appl-wide-cat">${cdEsc(a.automations.map(x => x.name || x.entity || x).join(' · '))}</div></div>`).join('') : `<div class="appl-empty"><i class="dm-segno" data-dm-segno="robot" aria-hidden="true"></i> Nessuna automazione configurata</div>`);
+  setHtml('appl-grid-automations', autos.length ? autos.map(a => `<div class="appl-wide-card"><div class="appl-wide-name">🤖 ${cdEsc(a.name || cdApplianceName(a.icon))}</div><div class="appl-wide-cat">${cdEsc(a.automations.map(x => x.name || x.entity || x).join(' · '))}</div></div>`).join('') : `<div class="appl-empty">🤖 Nessuna automazione configurata</div>`);
 }
 
 /* ───────── EDITOR: tab Elettrodomestici ───────── */
@@ -423,7 +417,7 @@ function editorRenderAppliances(){
   const list=getAppliances();
   const rows=list.map((a,i)=>{
     const ents=(a.entities||[]).map(e=>typeof e==='string'?e:e.entity);
-    return '<div class="ed-row"><div class="ed-row-main"><div class="ed-row-new"><span style="display:inline-flex;vertical-align:middle;color:#0ea5e9;">'+cdApplianceIcon(a.icon,18)+'</span> '+cdEsc(a&&a.name?a.name:cdApplianceName(a.icon))+' <span style="color:var(--text-dim,#94a3b8);font-size:11px;font-weight:700;">· '+ents.length+' entità</span></div><div class="ed-row-old mono">'+cdEsc(ents.join(', '))+'</div></div><div class="ed-del" onclick="edApplEdit('+i+')" style="color:#0ea5e9;" title="Modifica"><i class="dm-segno" data-dm-segno="pencil" aria-hidden="true"></i></div><div class="ed-del" onclick="edApplDel('+i+')" title="Elimina"><i class="dm-segno" data-dm-segno="trash" aria-hidden="true"></i></div></div>';
+    return '<div class="ed-row"><div class="ed-row-main"><div class="ed-row-new"><span style="display:inline-flex;vertical-align:middle;color:#0ea5e9;">'+cdApplianceIcon(a.icon,18)+'</span> '+cdEsc(a&&a.name?a.name:cdApplianceName(a.icon))+' <span style="color:var(--text-dim,#94a3b8);font-size:11px;font-weight:700;">· '+ents.length+' entità</span></div><div class="ed-row-old mono">'+cdEsc(ents.join(', '))+'</div></div><div class="ed-del" onclick="edApplEdit('+i+')" style="color:#0ea5e9;" title="Modifica">✏️</div><div class="ed-del" onclick="edApplDel('+i+')" title="Elimina">🗑️</div></div>';
   }).join('') || '<div class="ed-empty">Nessun elettrodomestico configurato</div>';
   const editing=(_applEditIdx!=null && list[_applEditIdx]);
   const ed=editing?list[_applEditIdx]:{};
@@ -433,18 +427,18 @@ function editorRenderAppliances(){
     +'<div class="ed-list">'+rows+'</div>'
     +'<div class="ed-form">'
     +'<div style="display:flex;gap:10px;align-items:center;margin-bottom:8px;"><button type="button" id="appl-icon-btn" onclick="dmAppliancePicker()" style="flex:0 0 54px;height:54px;border:1px solid var(--card-border);border-radius:14px;background:linear-gradient(135deg,#e0f2fe,#bae6fd);color:#0369a1;cursor:pointer;display:flex;align-items:center;justify-content:center;">'+cdApplianceIcon(curIcon,30)+'</button><input id="appl-name" class="ed-input" style="flex:1;margin:0;" value="'+(editing?esc(ed.name):'')+'" placeholder="Nome (es. Lavatrice, Forno cucina…)"><input type="hidden" id="appl-icon" value="'+cdEsc(curIcon)+'"></div>' +'<div style="margin-bottom:8px;"><label style="font-size:11px;font-weight:700;color:var(--text-dim,#94a3b8);display:block;margin-bottom:4px;">STANZA</label><select id="appl-room" class="ed-input" style="margin:0;width:100%;">'+cdRoomOptions(editing?(ed.room_id||ed.room):'')+'</select></div>'
-    +'<div style="display:flex;gap:6px;"><input id="appl-ent" class="ed-input mono" data-entity-input autocomplete="off" style="flex:1;" placeholder="sensor.forno_potenza (W) o switch.forno"><button type="button" class="dm-entity-picker" data-entity-target="appl-ent" aria-label="Seleziona entity_id"><i class="dm-segno" data-dm-segno="search" aria-hidden="true"></i></button></div>'
+    +'<div style="display:flex;gap:6px;"><input id="appl-ent" class="ed-input mono" data-entity-input autocomplete="off" style="flex:1;" placeholder="sensor.forno_potenza (W) o switch.forno"><button type="button" class="dm-entity-picker" data-entity-target="appl-ent" aria-label="Seleziona entity_id">🔍</button></div>'
     +'<button type="button" class="ed-btn-add" style="background:linear-gradient(135deg,#0ea5e9,#0369a1);margin-bottom:8px;" onclick="edApplAddEntity()">＋ Aggiungi questa entità</button>'
     +'<div id="appl-ents" style="margin-bottom:8px;"></div>'
     +'<input id="appl-thr" class="ed-input" type="number" value="'+cdEsc(editing&&ed.threshold_run!=null?ed.threshold_run:5)+'" placeholder="Soglia \'in funzione\' (Watt)">'
     +'<div style="font-size:11px;color:var(--text-dim);margin:-4px 2px 8px;font-weight:700;">Sopra questa potenza = In funzione. Per elettrodomestici non-wifi imposta ~5 W.</div>'
-    +'<button class="ed-btn-add" onclick="edApplSave()">'+(editing?'<i class="dm-segno" data-dm-segno="check" aria-hidden="true"></i> Salva modifiche':'＋ Aggiungi elettrodomestico')+'</button>'
-    +(editing?'<button type="button" class="ed-btn-add" style="background:#94a3b8;margin-top:6px;" onclick="edApplCancel()">× Annulla modifica</button>':'')
+    +'<button class="ed-btn-add" onclick="edApplSave()">'+(editing?'💾 Salva modifiche':'＋ Aggiungi elettrodomestico')+'</button>'
+    +(editing?'<button type="button" class="ed-btn-add" style="background:#94a3b8;margin-top:6px;" onclick="edApplCancel()">✖ Annulla modifica</button>':'')
     +'</div>';
 }
 function edApplRenderEnts(){
   const box=document.getElementById('appl-ents'); if(!box) return;
-  if(!_applEnts.length){ box.innerHTML='<div style="font-size:11px;color:var(--text-dim);font-weight:700;padding:2px 2px 0;">Nessuna entità aggiunta — scrivi/scegli e premi +</div>'; return; }
+  if(!_applEnts.length){ box.innerHTML='<div style="font-size:11px;color:var(--text-dim);font-weight:700;padding:2px 2px 0;">Nessuna entità aggiunta — scrivi/scegli e premi ➕</div>'; return; }
   box.innerHTML=_applEnts.map((en,i)=>'<span style="display:inline-flex;align-items:center;gap:7px;background:rgba(14,165,233,0.12);color:#0369a1;border-radius:100px;padding:5px 11px;font-size:11.5px;font-weight:800;margin:0 6px 6px 0;font-family:monospace;">'+cdEsc(en)+'<span onclick="edApplRemoveEntity('+i+')" style="cursor:pointer;font-weight:900;font-family:sans-serif;">✕</span></span>').join('');
 }
 function edApplAddEntity(){ const inp=document.getElementById('appl-ent'); const v=((inp&&inp.value)||'').trim(); if(!v.includes('.')){alert('Inserisci una entità valida');return;} if(!_applEnts.includes(v))_applEnts.push(v); if(inp)inp.value=''; edApplRenderEnts(); }
@@ -461,7 +455,7 @@ async function edApplSave(){
   const thr=parseFloat(document.getElementById('appl-thr').value); 
   const typed=(document.getElementById('appl-ent').value||'').trim();
   const entities=_applEnts.slice(); if(typed.includes('.')&&!entities.includes(typed)) entities.push(typed);
-  if(!entities.length){ alert('Aggiungi almeno un\'entità (premi +)'); return; }
+  if(!entities.length){ alert('Aggiungi almeno un\'entità (premi ➕)'); return; }
   const roomSel=(document.getElementById('appl-room')||{}).value||''; const previous=(_applEditIdx!=null&&getAppliances()[_applEditIdx])?getAppliances()[_applEditIdx]:{}; const item={ id:'appl_'+Date.now().toString(36), name:name||cdApplianceDisplayName(Object.assign({},previous,{name:'',entities:entities}))||'Elettrodomestico', icon, entities, room_id:roomSel, threshold_run:isNaN(thr)?5:thr, threshold_standby:1 }; ['image','image_url','type','device_type'].forEach(function(k){ if(previous[k]!=null) item[k]=previous[k]; }); const _rm=((document.getElementById('appl-room')||{}).value||'').trim(); if(_rm) item.room_id=_rm;
   const list=getAppliances();
   if(_applEditIdx!=null&&list[_applEditIdx]){ item.id=list[_applEditIdx].id||item.id; list[_applEditIdx]=item; } else list.push(item);
@@ -565,7 +559,7 @@ function cdRenderCustomAvvisi() {
     wrap._sig = sig;
     wrap.innerHTML = active.map(({ a, idx, count }) => {
         const nm = cdEsc(a.name || 'Avviso');
-        const ic = cdSegno(a.icon, 0, 'warning');
+        const ic = cdEsc(a.icon || '⚠️');
         return `<div class="glance-card" style="--g-rgb: 245,158,11; display:flex;" onclick="apriAvvisoCustom(${idx})"><div class="g-info"><span class="g-name">${nm}</span><span class="g-val">${count}</span></div><div class="g-icon-wrap anim-ping" style="color:#f59e0b;">${ic}</div></div>`;
     }).join('');
 }
@@ -590,7 +584,7 @@ function _avvRenderPopup(a, idx, force) {
     if (!list) return;
     const ents = a.entities || (a.entity ? [a.entity] : []);
     const matches = ents.filter(en => { const s = STATES[en]; return s && cdAvvisoActive(a, s); });
-    document.getElementById('details-title').innerHTML = cdSegno(a.icon, 0, 'warning') + ' ' + cdEsc(String(a.name || 'Avviso').toUpperCase());
+    document.getElementById('details-title').innerHTML = cdEsc(a.icon || '⚠️') + ' ' + cdEsc(String(a.name || 'Avviso').toUpperCase());
     const sig = 'avv' + idx + '|' + matches.map(en => en + ':' + (STATES[en] && STATES[en].state)).join(',');
     if (!force && list._avvSig === sig) return;   // niente ridisegno se nulla è cambiato
     list._avvSig = sig;
@@ -602,7 +596,7 @@ function _avvRenderPopup(a, idx, force) {
         const s = STATES[en];
         const nm = (s && s.attributes && s.attributes.friendly_name) || en;
         const st = s ? String(s.state).toUpperCase() : '—';
-        return `<div class="detail-row"><div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0;overflow:hidden;"><div class="d-icon" style="flex-shrink:0;">${cdSegno(a.icon, 0, 'warning')}</div><div class="d-info" style="min-width:0;flex:1;overflow:hidden;"><div class="d-name" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:14px;">${cdEsc(nm)}</div><div class="d-state"><span style="font-family:monospace; font-size:11px; color:var(--text-dim,#64748b);">${cdEsc(en)}</span> · <span style="font-weight:900; color:#f59e0b;">${cdEsc(st)}</span></div></div></div></div>`;
+        return `<div class="detail-row"><div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0;overflow:hidden;"><div class="d-icon" style="flex-shrink:0;">${cdEsc(a.icon || '⚠️')}</div><div class="d-info" style="min-width:0;flex:1;overflow:hidden;"><div class="d-name" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:14px;">${cdEsc(nm)}</div><div class="d-state"><span style="font-family:monospace; font-size:11px; color:var(--text-dim,#64748b);">${cdEsc(en)}</span> · <span style="font-weight:900; color:#f59e0b;">${cdEsc(st)}</span></div></div></div></div>`;
     }).join('');
 }
 
@@ -970,7 +964,7 @@ function renderInverterTemp() {
       if (peggioP === 4) {
         // C'è almeno una CRITICA
         pill.classList.add('alert');
-        pillTxt.textContent = `${peggio.nome}: critica`;
+        pillTxt.textContent = `⚠ ${peggio.nome}: critica`;
       } else if (peggioP === 3) {
         // C'è almeno una Calda
         pill.classList.add('warning');
@@ -996,7 +990,7 @@ function renderInverterTemp() {
 }
 
 // Toggle dello switch ventola
-function getTapparelle(){ try { return JSON.parse(localStorage.getItem('cd_tapparelle'))||[]; } catch(e){ return []; } } function cdTappCmd(btn){ try { if(navigator.vibrate) navigator.vibrate(15); if(btn.getAttribute('data-all')){ var svc2=btn.getAttribute('data-svc'); getTapparelle().forEach(function(t){ try { ws.send(JSON.stringify({ id: msgId++, type:'call_service', domain:'cover', service:svc2, target:{ entity_id: t.entity } })); } catch(e2){} }); return; } var card=btn.closest('[data-tapp]'); var ent=card&&card.getAttribute('data-tapp'); var svc=btn.getAttribute('data-svc'); if(!ent||!svc||!ws||ws.readyState!==1) return; ws.send(JSON.stringify({ id: msgId++, type:'call_service', domain:'cover', service:svc, target:{ entity_id: ent } })); } catch(e){} } function cdTappCard(t){ var st=(typeof STATES!=='undefined'&&STATES[t.entity])?STATES[t.entity]:null; var state=st?String(st.state):'unknown'; var hasPos=!!(st&&st.attributes&&st.attributes.current_position!=null); var pos=hasPos?Math.max(0,Math.min(100,+st.attributes.current_position)):(state==='open'?100:(state==='closed'?0:50)); if(t.invertita&&hasPos){ pos=100-pos; } var moving=(state==='opening'||state==='closing'); var lbl=state==='open'?'Aperta':state==='closed'?'Chiusa':state==='opening'?'In apertura':state==='closing'?'In chiusura':'—'; var shutterH=100-pos; var nm=cdEsc(t.name||t.entity); return '<div class="tapp-card" data-tapp="'+cdEsc(t.entity)+'">'+'<div class="tapp-head"><span class="tapp-name">'+nm+'</span>'+'<span class="tapp-state tapp-st-'+cdEsc(state)+'">'+lbl+'</span></div>'+'<div class="tapp-win"><div class="tapp-glass"></div>'+'<div class="tapp-shutter'+(state==='opening'?' opening':'')+(state==='closing'?' closing':'')+'" style="height:'+shutterH+'%;">'+'<i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div>'+'<div class="tapp-pos">'+(hasPos?(pos+'%'):'')+'</div>'+'<div class="tapp-ctl">'+'<button class="tapp-btn" data-svc="open_cover" onclick="cdTappCmd(this)">▲</button>'+'<button class="tapp-btn" data-svc="stop_cover" onclick="cdTappCmd(this)">■</button>'+'<button class="tapp-btn" data-svc="close_cover" onclick="cdTappCmd(this)">▼</button>'+'</div></div>'; } function renderTapparelle(){ var grid=document.getElementById('tapp-grid'); if(!grid) return; var list=getTapparelle();  if(!list.length){ grid.innerHTML='<div class="ed-empty" style="grid-column:1/-1;">Nessuna tapparella configurata</div>'; return; } grid.innerHTML='<div style="grid-column:1/-1; display:flex; gap:8px;">'+'<button class="tapp-btn" data-all="1" data-svc="open_cover" onclick="cdTappCmd(this)">▲ Apri tutte</button>'+'<button class="tapp-btn" data-all="1" data-svc="close_cover" onclick="cdTappCmd(this)">▼ Chiudi tutte</button>'+'</div>'+cdGroupCards(list, cdTappCard); } /* Home alert owned exclusively by runtime-hotfix.js. */ setInterval(function(){ try {  var pg=document.getElementById('page-tapparelle'); if(pg && pg.offsetParent!==null) renderTapparelle(); } catch(e){} }, 2000); function getIrr(){ var o={}; try { o=JSON.parse(localStorage.getItem('cd_irrigazione'))||{}; } catch(e){} if(!o.zones) o.zones=[]; if(o.rainThr==null) o.rainThr=60; if(!o.time) o.time='06:30'; return o; } function saveIrr(o){ localStorage.setItem('cd_irrigazione', JSON.stringify(o)); try{ cdMarkDirty(); cdSyncPush(); }catch(e){} } var CD_IRR = { seq:[], cur:-1, until:0, skip:'' }; function cdIrrCmd(ent,on){ try { if(!ent||!ws||ws.readyState!==1) return; var d=String(ent).split('.')[0]; var dom, svc; if(d==='valve'){ dom='valve'; svc=on?'open_valve':'close_valve'; } else { dom='homeassistant'; svc=on?'turn_on':'turn_off'; } ws.send(JSON.stringify({ id: msgId++, type:'call_service', domain:dom, service:svc, target:{ entity_id: ent } })); } catch(e){} } function cdIrrRain(){ var o=getIrr(); if(!o.rainEnt) return null; var st=(typeof STATES!=='undefined')?STATES[o.rainEnt]:null; if(!st) return null; var v=parseFloat(st.state); return isNaN(v)?null:v; } function cdIrrStartSeq(seq){ var o=getIrr(); if(!seq.length) return; CD_IRR.skip=''; CD_IRR.seq=seq.slice(); CD_IRR.cur=-1; cdIrrNext(); } function cdIrrNext(){ var o=getIrr(); if(CD_IRR.cur>=0){ var pz=o.zones[CD_IRR.seq[CD_IRR.cur]]; if(pz) cdIrrCmd(pz.entity,false); } CD_IRR.cur++; if(CD_IRR.cur>=CD_IRR.seq.length){ CD_IRR.seq=[]; CD_IRR.cur=-1; CD_IRR.until=0; renderIrrigazione(); return; } var z=o.zones[CD_IRR.seq[CD_IRR.cur]]; if(!z){ cdIrrNext(); return; } cdIrrCmd(z.entity,true); var m=parseFloat(z.mins); if(isNaN(m)||m<=0) m=10; CD_IRR.until=Date.now()+m*60000; renderIrrigazione(); } function cdIrrStopAll(){ var o=getIrr(); o.zones.forEach(function(z){ if(z) cdIrrCmd(z.entity,false); }); CD_IRR.seq=[]; CD_IRR.cur=-1; CD_IRR.until=0; renderIrrigazione(); } function cdIrrProgram(force){ var o=getIrr(); if(!o.zones.length) return; var pr=cdIrrRain(); if(!force && o.rainEnt && pr!=null && pr>=(+o.rainThr||60)){ CD_IRR.skip='<i class="dm-segno" data-dm-segno="storm" aria-hidden="true"></i> Pioggia prevista '+Math.round(pr)+'% — programma saltato'; renderIrrigazione(); return; } cdIrrStartSeq(o.zones.map(function(_z,i){ return i; })); } function cdIrrBtn(btn){ try { if(navigator.vibrate) navigator.vibrate(15); var act=btn.getAttribute('data-act'); var idx=parseInt(btn.getAttribute('data-idx')||'-1',10); if(act==='zstart'){ cdIrrStartSeq([idx]); } else if(act==='pstart'){ cdIrrProgram(false); } else if(act==='pforce'){ cdIrrProgram(true); } else { cdIrrStopAll(); } } catch(e){} } function cdIrrCard(z){ var o=getIrr(); var i=z._idx; var running=(CD_IRR.cur>=0 && CD_IRR.seq[CD_IRR.cur]===i); var m=parseFloat(z.mins); if(isNaN(m)||m<=0) m=10; var nm=cdEsc(z.name||z.entity); var chip='Pronta · '+m+' min'; var barw=0; if(running){ var left=Math.max(0,CD_IRR.until-Date.now()); var mm=Math.floor(left/60000), ss=Math.floor(left%60000/1000); chip='<i class="dm-segno" data-dm-segno="water" aria-hidden="true"></i> '+mm+':'+(ss<10?'0':'')+ss; barw=Math.round(100-(left/(m*60000))*100); } return '<div class="irr-card'+(running?' irr-run':'')+'">'+'<div class="irr-drops"><b></b><b></b><b></b></div>'+'<div class="irr-head2"><span class="irr-name"><i class="dm-segno" data-dm-segno="plant" aria-hidden="true"></i> '+nm+'</span>'+'<span class="irr-chip">'+chip+'</span></div>'+'<div class="irr-bar"><b style="width:'+barw+'%"></b></div>'+'<div class="irr-ctl">'+'<button class="irr-btn" data-act="zstart" data-idx="'+i+'" onclick="cdIrrBtn(this)"><i class="dm-segno" data-dm-segno="play" aria-hidden="true"></i></button>'+'<button class="irr-btn stop" data-act="stop" onclick="cdIrrBtn(this)"><i class="dm-segno" data-dm-segno="stop" aria-hidden="true"></i></button>'+'</div></div>'; } function renderIrrigazione(){ var head=document.getElementById('irr-head'); var grid=document.getElementById('irr-grid'); var o=getIrr();  if(!head||!grid) return; if(!o.zones.length){ head.innerHTML=''; grid.innerHTML='<div class="ed-empty" style="grid-column:1/-1;">Nessuna zona configurata</div>'; return; } var met=''; if(o.weatherEnt && typeof STATES!=='undefined' && STATES[o.weatherEnt]){ var w=STATES[o.weatherEnt]; met+='<i class="dm-segno" data-dm-segno="sun" aria-hidden="true"></i> '+cdEsc(w.state)+((w.attributes&&w.attributes.temperature!=null)?(' · '+cdEsc(w.attributes.temperature)+'°'):''); } var pr=cdIrrRain(); if(pr!=null) met+=(met?' · ':'')+'<i class="dm-segno" data-dm-segno="storm" aria-hidden="true"></i> Prob. pioggia '+Math.round(pr)+'% (soglia '+(+o.rainThr||60)+'%)'; var runP=(CD_IRR.cur>=0 && CD_IRR.seq.length>1); head.innerHTML='<div class="irr-prog">'+'<div class="irr-head2"><span class="irr-name"><i class="dm-segno" data-dm-segno="water" aria-hidden="true"></i> Programma irrigazione</span><span class="irr-chip">'+(o.enabled?('<i class="dm-segno" data-dm-segno="timer" aria-hidden="true"></i> ogni giorno alle '+cdEsc(o.time)):'spento')+'</span></div>'+(met?('<div class="irr-meteo">'+met+'</div>'):'')+(CD_IRR.skip?('<div class="irr-skip">'+CD_IRR.skip+'</div>'):'')+'<div class="irr-ctl">'+'<button class="irr-btn" data-act="pstart" onclick="cdIrrBtn(this)"><i class="dm-segno" data-dm-segno="play" aria-hidden="true"></i> Avvia programma</button>'+'<button class="irr-btn" data-act="pforce" onclick="cdIrrBtn(this)"><i class="dm-segno" data-dm-segno="power" aria-hidden="true"></i> Forza (ignora pioggia)</button>'+'<button class="irr-btn stop" data-act="stop" onclick="cdIrrBtn(this)"><i class="dm-segno" data-dm-segno="stop" aria-hidden="true"></i> Stop</button>'+'</div></div>'; grid.innerHTML=cdGroupCards(o.zones.map(function(z,i){ return Object.assign({},z,{_idx:i}); }), cdIrrCard); } setInterval(function(){ try { if(CD_IRR.cur>=0 && Date.now()>CD_IRR.until) cdIrrNext();  var pg=document.getElementById('page-irrigazione'); if(pg && pg.offsetParent!==null) renderIrrigazione(); } catch(e){} }, 1000); setInterval(function(){ try { var o=getIrr(); if(!o.enabled || !o.zones.length || CD_IRR.cur>=0) return; var d=new Date(); var hm=(d.getHours()<10?'0':'')+d.getHours()+':'+(d.getMinutes()<10?'0':'')+d.getMinutes(); if(hm!==o.time) return; var today=d.toDateString(); if(localStorage.getItem('cd_irr_lastrun')===today) return; localStorage.setItem('cd_irr_lastrun', today); cdIrrProgram(false); } catch(e){} }, 30000); function getPool(){ var o={}; try { o=JSON.parse(localStorage.getItem('cd_piscina'))||{}; } catch(e){} if(o.phMin==null) o.phMin=7.0; if(o.phMax==null) o.phMax=7.6; if(!o.filterStart) o.filterStart='09:00'; if(o.filterHours==null) o.filterHours=8; if(o.autoHours==null) o.autoHours=true; return o; } function savePool(o){ localStorage.setItem('cd_piscina', JSON.stringify(o)); try{ cdMarkDirty(); cdSyncPush(); }catch(e){} } var CD_POOL = { stopAt:0 }; function cdPoolNum(ent){ if(!ent) return null; var st=(typeof STATES!=='undefined')?STATES[ent]:null; if(!st) return null; var v=parseFloat(st.state); return isNaN(v)?null:v; } function cdPoolOn(ent){ if(!ent) return false; var st=(typeof STATES!=='undefined')?STATES[ent]:null; return !!(st && st.state==='on'); } function cdPoolSvc(ent,svc){ try { if(!ent||!ws||ws.readyState!==1) return; ws.send(JSON.stringify({ id: msgId++, type:'call_service', domain:'homeassistant', service:svc, target:{ entity_id: ent } })); } catch(e){} } function cdPoolTargetHours(){ var o=getPool(); if(o.autoHours){ var t=cdPoolNum(o.tempEnt); if(t!=null){ var h=t/2; if(h<2) h=2; if(h>12) h=12; return Math.round(h*2)/2; } } var f=parseFloat(o.filterHours); return (isNaN(f)||f<=0)?8:f; } function cdPoolRunToday(){ var r={}; try { r=JSON.parse(localStorage.getItem('cd_pool_run'))||{}; } catch(e){} var today=(new Date()).toDateString(); if(r.d!==today){ r={ d:today, s:0 }; } return r; } function cdPoolStartFilter(){ var o=getPool(); if(!o.pumpEnt) return; var target=cdPoolTargetHours()*3600; var run=cdPoolRunToday(); var remaining=target-run.s; if(remaining<60){ remaining=60; } cdPoolSvc(o.pumpEnt,'turn_on'); CD_POOL.stopAt=Date.now()+remaining*1000; renderPiscina(); } function cdPoolStopFilter(){ var o=getPool(); if(o.pumpEnt) cdPoolSvc(o.pumpEnt,'turn_off'); CD_POOL.stopAt=0; renderPiscina(); } function cdPoolBtn(btn){ try { if(navigator.vibrate) navigator.vibrate(15); var act=btn.getAttribute('data-act'); var o=getPool(); if(act==='fstart'){ cdPoolStartFilter(); } else if(act==='fstop'){ cdPoolStopFilter(); } else if(act==='pump'){ cdPoolSvc(o.pumpEnt,'toggle'); } else if(act==='heat'){ cdPoolSvc(o.heatEnt,'toggle'); } else if(act==='light'){ cdPoolSvc(o.lightEnt,'toggle'); } setTimeout(renderPiscina, 600); } catch(e){} } function cdPoolQualRow(lbl, val, mn, mx, unit){ if(val==null) return ''; var bad = (mn!=null && !isNaN(mn) && val<mn) ? 'basso' : (mx!=null && !isNaN(mx) && val>mx) ? 'alto' : ''; return '<div class="pool-row"><span class="pool-k">'+lbl+'</span>'+'<span><span class="pool-v">'+val+(unit||'')+'</span> '+'<span class="pool-badge'+(bad?' warn':'')+'">'+(bad?('<i class="dm-segno" data-dm-segno="warning" aria-hidden="true"></i> '+bad):'ok')+'</span></span></div>'; } function renderPiscina(){ var wrap=document.getElementById('pool-wrap');  var o=getPool(); var configured=!!(o.tempEnt||o.pumpEnt||o.phEnt);  if(!wrap) return; if(!configured){ wrap.innerHTML='<div class="ed-empty">Nessuna piscina configurata</div>'; return; } var t=cdPoolNum(o.tempEnt); var chips=''; if(o.pumpEnt) chips+='<button class="pool-tg'+(cdPoolOn(o.pumpEnt)?' on':'')+'" data-act="pump" onclick="cdPoolBtn(this)"><i class="dm-segno" data-dm-segno="sliders" aria-hidden="true"></i> Pompa</button>'; if(o.heatEnt) chips+='<button class="pool-tg'+(cdPoolOn(o.heatEnt)?' on':'')+'" data-act="heat" onclick="cdPoolBtn(this)"><i class="dm-segno" data-dm-segno="radiator" aria-hidden="true"></i> Riscaldamento</button>'; if(o.lightEnt) chips+='<button class="pool-tg'+(cdPoolOn(o.lightEnt)?' on':'')+'" data-act="light" onclick="cdPoolBtn(this)"><i class="dm-segno" data-dm-segno="lights" aria-hidden="true"></i> Luce</button>'; var html='<div class="pool-hero">'+'<div class="pool-temp">'+(t!=null?(t+'°'):'—')+'</div>'+'<div class="pool-sub">Temperatura acqua</div>'+'<div class="pool-chips">'+chips+'</div>'+'<div class="pool-wave"></div><div class="pool-wave w2"></div></div>'; var ph=cdPoolNum(o.phEnt); var cl=cdPoolNum(o.clEnt); var qual=cdPoolQualRow('pH', ph, parseFloat(o.phMin), parseFloat(o.phMax), '')+cdPoolQualRow('Cloro/Redox', cl, parseFloat(o.clMin), parseFloat(o.clMax), ''); if(qual) html+='<div class="pool-card">'+'<div class="pool-k"><i class="dm-segno" data-dm-segno="gauge" aria-hidden="true"></i> Qualità acqua</div>'+qual+'</div>'; if(o.pumpEnt){ var target=cdPoolTargetHours(); var run=cdPoolRunToday(); var doneH=Math.round(run.s/360)/10; var pct=Math.min(100, Math.round(run.s/(target*36))); var pumpOn=cdPoolOn(o.pumpEnt); html+='<div class="pool-card">'+'<div class="pool-row"><span class="pool-k"><i class="dm-segno" data-dm-segno="fan" aria-hidden="true"></i> Filtrazione</span><span class="pool-badge'+(pumpOn?'':' warn')+'">'+(pumpOn?'in funzione':'ferma')+'</span></div>'+'<div class="pool-sub" style="color:inherit;opacity:0.75;font-size:12px;">Oggi '+doneH+'h su '+target+'h'+(o.autoHours?' (auto: temperatura/2)':'')+(o.enabled?(' · avvio '+cdEsc(o.filterStart)):'')+'</div>'+'<div class="pool-bar"><b style="width:'+pct+'%"></b></div>'+'<div class="pool-row" style="gap:6px;">'+'<button class="pool-btn" data-act="fstart" onclick="cdPoolBtn(this)"><i class="dm-segno" data-dm-segno="play" aria-hidden="true"></i> Avvia filtrazione</button>'+'<button class="pool-btn stop" data-act="fstop" onclick="cdPoolBtn(this)"><i class="dm-segno" data-dm-segno="stop" aria-hidden="true"></i> Stop</button>'+'</div></div>'; } wrap.innerHTML=html; } setInterval(function(){ try { if(CD_POOL.stopAt && Date.now()>CD_POOL.stopAt){ cdPoolStopFilter(); }  var pg=document.getElementById('page-piscina'); if(pg && pg.offsetParent!==null) renderPiscina(); } catch(e){} }, 2000); setInterval(function(){ try { var o=getPool(); if(o.pumpEnt && cdPoolOn(o.pumpEnt)){ var r=cdPoolRunToday(); r.s+=30; localStorage.setItem('cd_pool_run', JSON.stringify(r)); } if(!o.enabled || !o.pumpEnt || CD_POOL.stopAt) return; var d=new Date(); var hm=(d.getHours()<10?'0':'')+d.getHours()+':'+(d.getMinutes()<10?'0':'')+d.getMinutes(); if(hm!==o.filterStart) return; var today=d.toDateString(); if(localStorage.getItem('cd_pool_lastrun')===today) return; localStorage.setItem('cd_pool_lastrun', today); cdPoolStartFilter(); } catch(e){} }, 30000); function getEvCars(){ try { return JSON.parse(localStorage.getItem('cd_ev_cars'))||[]; } catch(e){ return []; } } function saveEvCars(a){ localStorage.setItem('cd_ev_cars', JSON.stringify(a)); try{ cdMarkDirty(); cdSyncPush(); }catch(e){} } function cdEvActive(){ var v=parseInt(localStorage.getItem('cd_ev_car_active')||'-1',10); return isNaN(v)?-1:v; } function cdEvCaptureProfile(){ var ov={}; try { document.querySelectorAll('input.ed-slot-in[data-ref^="dm.ev_"]').forEach(function(el){ try { edSetSlot(el); } catch(e3){} }); } catch(e2){} try { Object.keys(ENTITY_OVERRIDES||{}).forEach(function(k){ if(k.indexOf('dm.ev_')===0) ov[k]=ENTITY_OVERRIDES[k]; }); } catch(e){} var img=''; try { var v=cdCfg('cd_ev_image'); img=(typeof v==='string')?v:((v&&v.url)||''); } catch(e){} return { ov: ov, img: img }; } function cdEvApplyCar(i){ var cars=getEvCars(); var c=cars[i]; if(!c) return; var ov={}; try { ov=JSON.parse(localStorage.getItem('cd_entity_overrides'))||{}; } catch(e){} Object.keys(ov).forEach(function(k){ if(k.indexOf('dm.ev_')===0) delete ov[k]; }); Object.keys(c.ov||{}).forEach(function(k){ ov[k]=c.ov[k]; }); localStorage.setItem('cd_entity_overrides', JSON.stringify(ov)); try { Object.keys(ENTITY_OVERRIDES).forEach(function(k){ if(k.indexOf('dm.ev_')===0) delete ENTITY_OVERRIDES[k]; }); Object.keys(c.ov||{}).forEach(function(k){ ENTITY_OVERRIDES[k]=c.ov[k]; }); } catch(e){} if(c.img!=null){ localStorage.setItem('cd_ev_image', JSON.stringify(c.img||'')); try { var im=document.getElementById('ev-mod-car-img'); if(im && c.img){ delete im.dataset.evFailed; im.src=cdUrlOk(c.img); } } catch(e){} } localStorage.setItem('cd_ev_car_active', String(i)); try{ cdMarkDirty(); cdSyncPush(); }catch(e){} try{ if(typeof render==='function') render(); }catch(e){} cdEvCarsRefresh(); } function cdEvCarSel(sel){ var i=parseInt(sel.value,10); if(!isNaN(i)) cdEvApplyCar(i); } function cdEvCarsRefresh(){ var box=document.getElementById('ev-car-picker'); var sel=document.getElementById('ev-car-sel'); if(!box||!sel) return; var cars=getEvCars(); box.style.display = cars.length>1 ? '' : 'none'; if(cars.length<2) return; var act=cdEvActive(); sel.innerHTML = cars.map(function(c,i){ return '<option value="'+i+'"'+(i===act?' selected':'')+'>'+cdEsc(c.name||('Auto '+(i+1)))+'</option>'; }).join(''); } setInterval(function(){ try { cdEvCarsRefresh(); } catch(e){} }, 2000); function getEnViews(){ try { return JSON.parse(localStorage.getItem('cd_energy_views'))||{}; } catch(e){ return {}; } } function cdEnList(){ return [['ist','power','Istantanea (mappa flussi)'],['day','calendar','Giornaliera'],['month','calendar','Mensile'],['panoramica','gauge','Report (elettrodomestici e analisi)'],['temp','thermometer','Temperature inverter']]; } function cdMappedKey(k){ try { return !!(ENTITY_OVERRIDES && ENTITY_OVERRIDES[k]); } catch(e){ return true; } } function cdApplyFlowMinimal(){ try { var noSolar=!cdMappedKey('dm.energy_potenza_fotovoltaico'); var noBatt=!cdMappedKey('dm.energy_potenza_batteria'); function hide(id,h){ var el=document.getElementById(id); if(el) el.style.display=h?'none':''; } hide('n-solar', noSolar); hide('n-battery', noBatt); ['line-solar-home','line-solar-grid','m-line-solar-home','m-line-solar-grid','line-solar-home-day','line-solar-grid-day','m-line-solar-home-day','m-line-solar-grid-day'].forEach(function(id){ hide(id, noSolar); }); ['line-battery-home','m-line-battery-home','line-battery-home-day','m-line-battery-home-day'].forEach(function(id){ hide(id, noBatt); }); ['line-solar-battery','m-line-solar-battery','line-solar-battery-day','m-line-solar-battery-day'].forEach(function(id){ hide(id, noSolar||noBatt); }); } catch(e){} } function cdEnergyOpen(k){ try { document.querySelectorAll('.sub-tab-btn').forEach(function(b){ b.classList.remove('active'); var m=String(b.getAttribute('onclick')||'').match(/switchEnergyView\('(\w+)'\)/); if(m && m[1]===k) b.classList.add('active'); }); document.querySelectorAll('.flow-view').forEach(function(pv){ pv.classList.remove('active'); }); var panel=document.getElementById('view-'+k); if(panel) panel.classList.add('active'); if(k==='panoramica'){ try{ renderEnergyDashboard(); }catch(e2){} } if(k==='temp'){ try{ renderInverterTemp(); }catch(e2){} } } catch(e){} } function cdApplyEnergyViews(){ try { var v=getEnViews(); var firstOn=null; var activeHidden=false; document.querySelectorAll('.sub-tab-btn').forEach(function(b){ var m=String(b.getAttribute('onclick')||'').match(/switchEnergyView\('(\w+)'\)/); if(!m) return; var k=m[1]; var on=(v[k]!==false); b.style.display=on?'':'none'; if(on && !firstOn) firstOn=k; if(!on && b.classList.contains('active')) activeHidden=true; }); if(activeHidden && firstOn) cdEnergyOpen(firstOn); cdApplyFlowMinimal(); } catch(e){} } setTimeout(cdApplyEnergyViews, 1800); function cdNavOrder(){ try { var v=JSON.parse(localStorage.getItem('cd_navbar_order'))||[]; return Array.isArray(v)?v:[]; } catch(e){ return []; } } function cdNavTabs(){ var out=[]; document.querySelectorAll('.tab[data-tab]').forEach(function(b){ var t=(b.textContent||'').trim(); out.push({ k:b.getAttribute('data-tab'), lbl:t }); }); return out; } function cdNavKeys(){ var tabs=cdNavTabs(); var ord=cdNavOrder(); var keys=[]; ord.forEach(function(k){ if(tabs.some(function(t){ return t.k===k; }) && keys.indexOf(k)<0) keys.push(k); }); tabs.forEach(function(t){ if(keys.indexOf(t.k)<0) keys.push(t.k); }); return keys; } function cdApplyNavOrder(){ try { var ord=cdNavOrder(); if(!ord.length) return; var btns=document.querySelectorAll('.tab[data-tab]'); if(!btns.length) return; var nav=btns[0].parentElement; var map={}; btns.forEach(function(b){ map[b.getAttribute('data-tab')]=b; }); cdNavKeys().forEach(function(k){ if(map[k]) nav.appendChild(map[k]); }); } catch(e){} } setTimeout(function(){ try { cdApplyNavOrder(); } catch(e){} }, 1200); function cdSecShow(k){ try { if(!k) return; setTimeout(function(){ try { cdApplyNavVis(); } catch(e2){} }, 60); var cur=cdCfg('cd_sections')||{}; if(cur[k]===false){ cur[k]=true; localStorage.setItem('cd_sections', JSON.stringify(cur)); try { cdMarkDirty(); cdSyncPush(); } catch(e2){} try { if(typeof updateEditButtonVisibility==='function') updateEditButtonVisibility(); } catch(e2){} try { if(typeof render==='function') render(); } catch(e2){} } } catch(e){} } function cdSecShowByRef(ref){ try { var r=String(ref||''); var mapp=[['dm.energy_','energy'],['dm.ev_','ev'],['dm.boiler_','boiler'],['dm.security_','security'],['dm.server_','server'],['dm.home_','home']]; for(var i=0;i<mapp.length;i++){ if(r.indexOf(mapp[i][0])===0){ cdSecShow(mapp[i][1]); return; } } } catch(e){} } function cdSecLS(k){ try { return JSON.parse(localStorage.getItem(k)); } catch(e){ return null; } } function cdSecHasContent(k){ try { var ov=cdSecLS('cd_entity_overrides')||{}; var oks=Object.keys(ov); function pref(p){ for(var i=0;i<oks.length;i++){ if(oks[i].indexOf(p)===0) return true; } return false; } if(k==='energy') return pref('dm.energy_'); if(k==='ev') return pref('dm.ev_'); if(k==='boiler') return pref('dm.boiler_'); if(k==='server') return pref('dm.server_'); if(k==='security') return pref('dm.security_') || ((cdSecLS('cd_cameras')||[]).length>0); if(k==='clima') return (cdSecLS('cd_clima_units')||[]).length>0; if(k==='temp'){ var st=cdSecLS('cd_stanze')||[]; for(var i2=0;i2<st.length;i2++){ if(st[i2]&&st[i2].temp) return true; } return false; } if(k==='appliances') return (cdSecLS('cd_appliances')||[]).length>0; if(k==='tapparelle') return (cdSecLS('cd_tapparelle')||[]).length>0; if(k==='irrigazione'){ var irr=cdSecLS('cd_irrigazione')||{}; return ((irr.zones)||[]).length>0; } if(k==='piscina'){ var pc=cdSecLS('cd_piscina')||{}; return Object.keys(pc).length>0; } return true; } catch(e){ return true; } } function cdSecBoot(){ try { window.__CD_SBRUN=(window.__CD_SBRUN||0)+1; if(!window.__DASHBOARDMODERN_HOSTED__) return; var _cs=localStorage.getItem('cd_sections'); if(_cs){ try { var cur2=JSON.parse(_cs)||{}; var ch2=false; ['energy','appliances','ev','boiler','clima','temp','security','server','tapparelle','irrigazione','piscina'].forEach(function(k){ if(!(k in cur2)){ cur2[k]=cdSecHasContent(k)?true:false; ch2=true; } }); if(ch2){ localStorage.setItem('cd_sections', JSON.stringify(cur2)); try { cdApplyNavVis(); } catch(e3){} } } catch(e4){} return; } var out={}; ['energy','appliances','ev','boiler','clima','temp','security','server','tapparelle','irrigazione','piscina'].forEach(function(k){ out[k]=cdSecHasContent(k)?true:false; }); localStorage.setItem('cd_sections', JSON.stringify(out)); try { cdApplyNavVis(); } catch(e2){} try { if(typeof render==='function') render(); } catch(e2){} } catch(e){} } cdSecBoot(); setTimeout(cdSecBoot, 1200);  function cdRegEnrich(done){ try { var fin=false; var to=setTimeout(function(){ if(!fin){ fin=true; done(); } }, 9000); var so=new WebSocket((location.protocol==='https:'?'wss:':'ws:')+'//'+location.host+'/api/websocket'); var mid=1; var want={}; var out={ floors:null, areas:null, ents:null, devs:null }; function fire(type,slot){ var id=mid++; want[id]=slot; so.send(JSON.stringify({ id:id, type:type })); } function finish(){ if(fin) return; fin=true; clearTimeout(to); try { so.close(); } catch(e2){} try { cdRegApply(out); } catch(e2){} done(); } so.onerror=function(){ finish(); }; so.onmessage=function(ev){ try { var m=JSON.parse(ev.data); if(m.type==='auth_required'){ so.send(JSON.stringify({ type:'auth', access_token:(window.__DASHBOARDMODERN_REAL_TOKEN__||'') })); return; } if(m.type==='auth_ok'){ fire('config/floor_registry/list','floors'); fire('config/area_registry/list','areas'); fire('config/entity_registry/list','ents'); fire('config/device_registry/list','devs'); return; } if(m.type==='result' && want[m.id]){ out[want[m.id]] = m.success ? (m.result||[]) : []; delete want[m.id]; if(out.floors&&out.areas&&out.ents&&out.devs) finish(); } } catch(e3){} }; } catch(e){ done(); } } function cdRegApply(o){ try { var floors=(o.floors||[]).slice().sort(function(a,b){ return (a.level||0)-(b.level||0); }); var fName={}; floors.forEach(function(f){ fName[f.floor_id]=f.name; }); if(floors.length){ localStorage.setItem('cd_floors', JSON.stringify(floors.map(function(f){ return f.name; }))); } var aName={}; var aFloor={}; (o.areas||[]).forEach(function(a){ aName[a.area_id]=a.name; aFloor[a.area_id]=fName[a.floor_id]||''; }); if((o.areas||[]).length){ var st=cdCfgList('cd_stanze').slice(); (o.areas||[]).forEach(function(a){ var ex=null; for(var i=0;i<st.length;i++){ if(st[i]&&st[i].name===a.name){ ex=st[i]; break; } } if(ex){ if(!ex.floor && aFloor[a.area_id]) ex.floor=aFloor[a.area_id]; } else { var r={ name:a.name, icon:'🏠' }; if(aFloor[a.area_id]) r.floor=aFloor[a.area_id]; st.push(r); } }); localStorage.setItem('cd_stanze', JSON.stringify(st)); } var devArea={}; (o.devs||[]).forEach(function(d){ if(d.area_id) devArea[d.id]=d.area_id; }); var entArea={}; (o.ents||[]).forEach(function(e){ var ar=e.area_id||devArea[e.device_id]; if(ar) entArea[e.entity_id]=aName[ar]||''; }); var rooms={}; try { rooms=cdCfg('cd_luci_rooms')||{}; } catch(e2){} var ch=false; Object.keys(cdCfg('cd_luci')||{}).forEach(function(id){ if(!rooms[id] && entArea[id]){ rooms[id]=entArea[id]; ch=true; } }); if(ch) localStorage.setItem('cd_luci_rooms', JSON.stringify(rooms)); var units=getClimaUnits().slice(); var uc=false; units.forEach(function(u){ if(u && !u.room && entArea[u.entity]){ u.room=entArea[u.entity]; uc=true; } }); if(uc) localStorage.setItem('cd_clima_units', JSON.stringify(units)); var cams=cdCfgList('cd_cameras').slice(); var cc=false; cams.forEach(function(c){ var ce=c&&(c.entity||c.cam); if(c && !c.room && ce && entArea[ce]){ c.room=entArea[ce]; cc=true; } }); if(cc) localStorage.setItem('cd_cameras', JSON.stringify(cams)); try { if((cdCfgList('cd_stanze')||[]).some(function(r){ return r&&r.temp; })) cdSecShow('temp'); if(getClimaUnits().length) cdSecShow('clima'); if(cdCfgList('cd_cameras').length) cdSecShow('security'); var ov=cdCfg('cd_entity_overrides')||{}; Object.keys(ov).forEach(function(k){ cdSecShowByRef(k); }); } catch(e4){} try { cdMarkDirty(); cdSyncPush(); } catch(e5){} } catch(e){} } function cdNavVisMap(){ return { home:'home', energy:'energy', appliances:'appliances-main', ev:'ev', boiler:'boiler', clima:'clima', temp:'temp', security:'security', server:'server', tapparelle:'tapparelle', irrigazione:'irrigazione', piscina:'piscina' }; } window.__CD_NVRUN=(window.__CD_NVRUN||0); function cdApplyNavVis(){ try { window.__CD_NVRUN++; var cur=cdCfg('cd_sections')||{}; var mp=cdNavVisMap(); Object.keys(mp).forEach(function(k){ document.querySelectorAll('.tab[data-tab="'+mp[k]+'"]').forEach(function(b){ if(cur[k]===false) b.style.setProperty('display','none','important'); else b.style.removeProperty('display'); }); }); } catch(e){} } try { cdApplyNavVis(); } catch(e) {} setTimeout(function(){ try { cdApplyNavVis(); } catch(e) {} }, 1500); setInterval(function(){ try { cdApplyNavVis(); } catch(e) {} }, 3000); function cdApplEntTog(en, btn){ try { if(navigator.vibrate) navigator.vibrate(12); var dom=String(en).split('.')[0]; var cur=(STATES[en]&&STATES[en].state)||'off'; var svc=(cur==='on')?'turn_off':'turn_on'; ws.send(JSON.stringify({ id: msgId++, type:'call_service', domain: dom, service: svc, target:{ entity_id: en } })); if(btn){ btn.style.opacity='0.45'; setTimeout(function(){ try { btn.style.opacity=''; var st2=(STATES[en]&&STATES[en].state)||''; btn.textContent=(st2==='on')?'OFF':'ON'; btn.classList.toggle('on', st2==='on'); } catch(e2){} }, 900); } } catch(e){} } setTimeout(function(){ try { buildTempCards(); } catch(e){} }, 2200); function cdApplBridge(){ try { if(typeof APPLIANCES==='undefined') return; var list=cdCfgList('cd_appliances'); if(!list.length) return; APPLIANCES.length=0; list.forEach(function(a){ if(!a) return; var ents=a.entities||[]; var pw=null, sw=null, en2=null; ents.forEach(function(e){ var d=String(e).split('.')[0]; if(d==='switch'&&!sw) sw=e; else if(/energy|kwh/i.test(e)&&!en2) en2=e; else if(d==='sensor'&&!pw) pw=e; }); APPLIANCES.push({ name:a.name||'?', icon:a.icon||'\ud83e\uddfa', category:String(a.room||'altro').toLowerCase(), power:pw, energy:en2, duration:null, switch:sw, history:pw||en2 }); }); try { var pg=document.getElementById('page-appliances-main'); var bar=pg&&pg.querySelector('.sub-tabs-energy'); if(bar){ var cats=[]; APPLIANCES.forEach(function(a){ if(a.category&&cats.indexOf(a.category)<0) cats.push(a.category); }); var bh='<button class="sub-tab-btn appl-section-tab active" onclick="switchApplianceView(\'overview\', event)"><i class="dm-segno" data-dm-segno="gauge" aria-hidden="true"></i> Panoramica</button>'; cats.forEach(function(c){ var lb=c.charAt(0).toUpperCase()+c.slice(1); bh+='<button class="sub-tab-btn appl-section-tab" onclick="switchApplianceView('+cdJs(c)+', event)"><i class="dm-segno" data-dm-segno="home" aria-hidden="true"></i> '+cdEsc(lb)+'</button>'; }); bar.innerHTML=bh; } if(pg){ pg.querySelectorAll('button').forEach(function(b){ var t=(b.textContent||''); if(t.indexOf('CONFIGURA')>=0||t.indexOf('Configura')>=0){ var card=b.closest('div'); if(card&&card.parentElement) card.parentElement.style.display='none'; } }); } } catch(e3){} try { if(typeof renderApplianceSection==='function') renderApplianceSection(true); } catch(e2){} } catch(e){} } setTimeout(cdApplBridge, 2600); setInterval(cdApplBridge, 15000); function toggleVentola() {
+function getTapparelle(){ try { return JSON.parse(localStorage.getItem('cd_tapparelle'))||[]; } catch(e){ return []; } } function cdTappCmd(btn){ try { if(navigator.vibrate) navigator.vibrate(15); if(btn.getAttribute('data-all')){ var svc2=btn.getAttribute('data-svc'); getTapparelle().forEach(function(t){ try { ws.send(JSON.stringify({ id: msgId++, type:'call_service', domain:'cover', service:svc2, target:{ entity_id: t.entity } })); } catch(e2){} }); return; } var card=btn.closest('[data-tapp]'); var ent=card&&card.getAttribute('data-tapp'); var svc=btn.getAttribute('data-svc'); if(!ent||!svc||!ws||ws.readyState!==1) return; ws.send(JSON.stringify({ id: msgId++, type:'call_service', domain:'cover', service:svc, target:{ entity_id: ent } })); } catch(e){} } function cdTappCard(t){ var st=(typeof STATES!=='undefined'&&STATES[t.entity])?STATES[t.entity]:null; var state=st?String(st.state):'unknown'; var hasPos=!!(st&&st.attributes&&st.attributes.current_position!=null); var pos=hasPos?Math.max(0,Math.min(100,+st.attributes.current_position)):(state==='open'?100:(state==='closed'?0:50)); if(t.invertita&&hasPos){ pos=100-pos; } var moving=(state==='opening'||state==='closing'); var lbl=state==='open'?'Aperta':state==='closed'?'Chiusa':state==='opening'?'In apertura':state==='closing'?'In chiusura':'—'; var shutterH=100-pos; var nm=cdEsc(t.name||t.entity); return '<div class="tapp-card" data-tapp="'+cdEsc(t.entity)+'">'+'<div class="tapp-head"><span class="tapp-name">'+nm+'</span>'+'<span class="tapp-state tapp-st-'+cdEsc(state)+'">'+lbl+'</span></div>'+'<div class="tapp-win"><div class="tapp-glass"></div>'+'<div class="tapp-shutter'+(state==='opening'?' opening':'')+(state==='closing'?' closing':'')+'" style="height:'+shutterH+'%;">'+'<i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div>'+'<div class="tapp-pos">'+(hasPos?(pos+'%'):'')+'</div>'+'<div class="tapp-ctl">'+'<button class="tapp-btn" data-svc="open_cover" onclick="cdTappCmd(this)">▲</button>'+'<button class="tapp-btn" data-svc="stop_cover" onclick="cdTappCmd(this)">■</button>'+'<button class="tapp-btn" data-svc="close_cover" onclick="cdTappCmd(this)">▼</button>'+'</div></div>'; } function renderTapparelle(){ var grid=document.getElementById('tapp-grid'); if(!grid) return; var list=getTapparelle();  if(!list.length){ grid.innerHTML='<div class="ed-empty" style="grid-column:1/-1;">Nessuna tapparella configurata</div>'; return; } grid.innerHTML='<div style="grid-column:1/-1; display:flex; gap:8px;">'+'<button class="tapp-btn" data-all="1" data-svc="open_cover" onclick="cdTappCmd(this)">▲ Apri tutte</button>'+'<button class="tapp-btn" data-all="1" data-svc="close_cover" onclick="cdTappCmd(this)">▼ Chiudi tutte</button>'+'</div>'+cdGroupCards(list, cdTappCard); } /* Home alert owned exclusively by runtime-hotfix.js. */ setInterval(function(){ try {  var pg=document.getElementById('page-tapparelle'); if(pg && pg.offsetParent!==null) renderTapparelle(); } catch(e){} }, 2000); function getIrr(){ var o={}; try { o=JSON.parse(localStorage.getItem('cd_irrigazione'))||{}; } catch(e){} if(!o.zones) o.zones=[]; if(o.rainThr==null) o.rainThr=60; if(!o.time) o.time='06:30'; return o; } function saveIrr(o){ localStorage.setItem('cd_irrigazione', JSON.stringify(o)); try{ cdMarkDirty(); cdSyncPush(); }catch(e){} } var CD_IRR = { seq:[], cur:-1, until:0, skip:'' }; function cdIrrCmd(ent,on){ try { if(!ent||!ws||ws.readyState!==1) return; var d=String(ent).split('.')[0]; var dom, svc; if(d==='valve'){ dom='valve'; svc=on?'open_valve':'close_valve'; } else { dom='homeassistant'; svc=on?'turn_on':'turn_off'; } ws.send(JSON.stringify({ id: msgId++, type:'call_service', domain:dom, service:svc, target:{ entity_id: ent } })); } catch(e){} } function cdIrrRain(){ var o=getIrr(); if(!o.rainEnt) return null; var st=(typeof STATES!=='undefined')?STATES[o.rainEnt]:null; if(!st) return null; var v=parseFloat(st.state); return isNaN(v)?null:v; } function cdIrrStartSeq(seq){ var o=getIrr(); if(!seq.length) return; CD_IRR.skip=''; CD_IRR.seq=seq.slice(); CD_IRR.cur=-1; cdIrrNext(); } function cdIrrNext(){ var o=getIrr(); if(CD_IRR.cur>=0){ var pz=o.zones[CD_IRR.seq[CD_IRR.cur]]; if(pz) cdIrrCmd(pz.entity,false); } CD_IRR.cur++; if(CD_IRR.cur>=CD_IRR.seq.length){ CD_IRR.seq=[]; CD_IRR.cur=-1; CD_IRR.until=0; renderIrrigazione(); return; } var z=o.zones[CD_IRR.seq[CD_IRR.cur]]; if(!z){ cdIrrNext(); return; } cdIrrCmd(z.entity,true); var m=parseFloat(z.mins); if(isNaN(m)||m<=0) m=10; CD_IRR.until=Date.now()+m*60000; renderIrrigazione(); } function cdIrrStopAll(){ var o=getIrr(); o.zones.forEach(function(z){ if(z) cdIrrCmd(z.entity,false); }); CD_IRR.seq=[]; CD_IRR.cur=-1; CD_IRR.until=0; renderIrrigazione(); } function cdIrrProgram(force){ var o=getIrr(); if(!o.zones.length) return; var pr=cdIrrRain(); if(!force && o.rainEnt && pr!=null && pr>=(+o.rainThr||60)){ CD_IRR.skip='🌧️ Pioggia prevista '+Math.round(pr)+'% — programma saltato'; renderIrrigazione(); return; } cdIrrStartSeq(o.zones.map(function(_z,i){ return i; })); } function cdIrrBtn(btn){ try { if(navigator.vibrate) navigator.vibrate(15); var act=btn.getAttribute('data-act'); var idx=parseInt(btn.getAttribute('data-idx')||'-1',10); if(act==='zstart'){ cdIrrStartSeq([idx]); } else if(act==='pstart'){ cdIrrProgram(false); } else if(act==='pforce'){ cdIrrProgram(true); } else { cdIrrStopAll(); } } catch(e){} } function cdIrrCard(z){ var o=getIrr(); var i=z._idx; var running=(CD_IRR.cur>=0 && CD_IRR.seq[CD_IRR.cur]===i); var m=parseFloat(z.mins); if(isNaN(m)||m<=0) m=10; var nm=cdEsc(z.name||z.entity); var chip='Pronta · '+m+' min'; var barw=0; if(running){ var left=Math.max(0,CD_IRR.until-Date.now()); var mm=Math.floor(left/60000), ss=Math.floor(left%60000/1000); chip='💦 '+mm+':'+(ss<10?'0':'')+ss; barw=Math.round(100-(left/(m*60000))*100); } return '<div class="irr-card'+(running?' irr-run':'')+'">'+'<div class="irr-drops"><b></b><b></b><b></b></div>'+'<div class="irr-head2"><span class="irr-name">🌱 '+nm+'</span>'+'<span class="irr-chip">'+chip+'</span></div>'+'<div class="irr-bar"><b style="width:'+barw+'%"></b></div>'+'<div class="irr-ctl">'+'<button class="irr-btn" data-act="zstart" data-idx="'+i+'" onclick="cdIrrBtn(this)">▶</button>'+'<button class="irr-btn stop" data-act="stop" onclick="cdIrrBtn(this)">⏹</button>'+'</div></div>'; } function renderIrrigazione(){ var head=document.getElementById('irr-head'); var grid=document.getElementById('irr-grid'); var o=getIrr();  if(!head||!grid) return; if(!o.zones.length){ head.innerHTML=''; grid.innerHTML='<div class="ed-empty" style="grid-column:1/-1;">Nessuna zona configurata</div>'; return; } var met=''; if(o.weatherEnt && typeof STATES!=='undefined' && STATES[o.weatherEnt]){ var w=STATES[o.weatherEnt]; met+='⛅ '+cdEsc(w.state)+((w.attributes&&w.attributes.temperature!=null)?(' · '+cdEsc(w.attributes.temperature)+'°'):''); } var pr=cdIrrRain(); if(pr!=null) met+=(met?' · ':'')+'🌧️ Prob. pioggia '+Math.round(pr)+'% (soglia '+(+o.rainThr||60)+'%)'; var runP=(CD_IRR.cur>=0 && CD_IRR.seq.length>1); head.innerHTML='<div class="irr-prog">'+'<div class="irr-head2"><span class="irr-name">💧 Programma irrigazione</span><span class="irr-chip">'+(o.enabled?('⏰ ogni giorno alle '+cdEsc(o.time)):'spento')+'</span></div>'+(met?('<div class="irr-meteo">'+met+'</div>'):'')+(CD_IRR.skip?('<div class="irr-skip">'+CD_IRR.skip+'</div>'):'')+'<div class="irr-ctl">'+'<button class="irr-btn" data-act="pstart" onclick="cdIrrBtn(this)">▶ Avvia programma</button>'+'<button class="irr-btn" data-act="pforce" onclick="cdIrrBtn(this)">⚡ Forza (ignora pioggia)</button>'+'<button class="irr-btn stop" data-act="stop" onclick="cdIrrBtn(this)">⏹ Stop</button>'+'</div></div>'; grid.innerHTML=cdGroupCards(o.zones.map(function(z,i){ return Object.assign({},z,{_idx:i}); }), cdIrrCard); } setInterval(function(){ try { if(CD_IRR.cur>=0 && Date.now()>CD_IRR.until) cdIrrNext();  var pg=document.getElementById('page-irrigazione'); if(pg && pg.offsetParent!==null) renderIrrigazione(); } catch(e){} }, 1000); setInterval(function(){ try { var o=getIrr(); if(!o.enabled || !o.zones.length || CD_IRR.cur>=0) return; var d=new Date(); var hm=(d.getHours()<10?'0':'')+d.getHours()+':'+(d.getMinutes()<10?'0':'')+d.getMinutes(); if(hm!==o.time) return; var today=d.toDateString(); if(localStorage.getItem('cd_irr_lastrun')===today) return; localStorage.setItem('cd_irr_lastrun', today); cdIrrProgram(false); } catch(e){} }, 30000); function getPool(){ var o={}; try { o=JSON.parse(localStorage.getItem('cd_piscina'))||{}; } catch(e){} if(o.phMin==null) o.phMin=7.0; if(o.phMax==null) o.phMax=7.6; if(!o.filterStart) o.filterStart='09:00'; if(o.filterHours==null) o.filterHours=8; if(o.autoHours==null) o.autoHours=true; return o; } function savePool(o){ localStorage.setItem('cd_piscina', JSON.stringify(o)); try{ cdMarkDirty(); cdSyncPush(); }catch(e){} } var CD_POOL = { stopAt:0 }; function cdPoolNum(ent){ if(!ent) return null; var st=(typeof STATES!=='undefined')?STATES[ent]:null; if(!st) return null; var v=parseFloat(st.state); return isNaN(v)?null:v; } function cdPoolOn(ent){ if(!ent) return false; var st=(typeof STATES!=='undefined')?STATES[ent]:null; return !!(st && st.state==='on'); } function cdPoolSvc(ent,svc){ try { if(!ent||!ws||ws.readyState!==1) return; ws.send(JSON.stringify({ id: msgId++, type:'call_service', domain:'homeassistant', service:svc, target:{ entity_id: ent } })); } catch(e){} } function cdPoolTargetHours(){ var o=getPool(); if(o.autoHours){ var t=cdPoolNum(o.tempEnt); if(t!=null){ var h=t/2; if(h<2) h=2; if(h>12) h=12; return Math.round(h*2)/2; } } var f=parseFloat(o.filterHours); return (isNaN(f)||f<=0)?8:f; } function cdPoolRunToday(){ var r={}; try { r=JSON.parse(localStorage.getItem('cd_pool_run'))||{}; } catch(e){} var today=(new Date()).toDateString(); if(r.d!==today){ r={ d:today, s:0 }; } return r; } function cdPoolStartFilter(){ var o=getPool(); if(!o.pumpEnt) return; var target=cdPoolTargetHours()*3600; var run=cdPoolRunToday(); var remaining=target-run.s; if(remaining<60){ remaining=60; } cdPoolSvc(o.pumpEnt,'turn_on'); CD_POOL.stopAt=Date.now()+remaining*1000; renderPiscina(); } function cdPoolStopFilter(){ var o=getPool(); if(o.pumpEnt) cdPoolSvc(o.pumpEnt,'turn_off'); CD_POOL.stopAt=0; renderPiscina(); } function cdPoolBtn(btn){ try { if(navigator.vibrate) navigator.vibrate(15); var act=btn.getAttribute('data-act'); var o=getPool(); if(act==='fstart'){ cdPoolStartFilter(); } else if(act==='fstop'){ cdPoolStopFilter(); } else if(act==='pump'){ cdPoolSvc(o.pumpEnt,'toggle'); } else if(act==='heat'){ cdPoolSvc(o.heatEnt,'toggle'); } else if(act==='light'){ cdPoolSvc(o.lightEnt,'toggle'); } setTimeout(renderPiscina, 600); } catch(e){} } function cdPoolQualRow(lbl, val, mn, mx, unit){ if(val==null) return ''; var bad = (mn!=null && !isNaN(mn) && val<mn) ? 'basso' : (mx!=null && !isNaN(mx) && val>mx) ? 'alto' : ''; return '<div class="pool-row"><span class="pool-k">'+lbl+'</span>'+'<span><span class="pool-v">'+val+(unit||'')+'</span> '+'<span class="pool-badge'+(bad?' warn':'')+'">'+(bad?('⚠️ '+bad):'ok')+'</span></span></div>'; } function renderPiscina(){ var wrap=document.getElementById('pool-wrap');  var o=getPool(); var configured=!!(o.tempEnt||o.pumpEnt||o.phEnt);  if(!wrap) return; if(!configured){ wrap.innerHTML='<div class="ed-empty">Nessuna piscina configurata</div>'; return; } var t=cdPoolNum(o.tempEnt); var chips=''; if(o.pumpEnt) chips+='<button class="pool-tg'+(cdPoolOn(o.pumpEnt)?' on':'')+'" data-act="pump" onclick="cdPoolBtn(this)">⚙️ Pompa</button>'; if(o.heatEnt) chips+='<button class="pool-tg'+(cdPoolOn(o.heatEnt)?' on':'')+'" data-act="heat" onclick="cdPoolBtn(this)">🔥 Riscaldamento</button>'; if(o.lightEnt) chips+='<button class="pool-tg'+(cdPoolOn(o.lightEnt)?' on':'')+'" data-act="light" onclick="cdPoolBtn(this)">💡 Luce</button>'; var html='<div class="pool-hero">'+'<div class="pool-temp">'+(t!=null?(t+'°'):'—')+'</div>'+'<div class="pool-sub">Temperatura acqua</div>'+'<div class="pool-chips">'+chips+'</div>'+'<div class="pool-wave"></div><div class="pool-wave w2"></div></div>'; var ph=cdPoolNum(o.phEnt); var cl=cdPoolNum(o.clEnt); var qual=cdPoolQualRow('pH', ph, parseFloat(o.phMin), parseFloat(o.phMax), '')+cdPoolQualRow('Cloro/Redox', cl, parseFloat(o.clMin), parseFloat(o.clMax), ''); if(qual) html+='<div class="pool-card">'+'<div class="pool-k">🧪 Qualità acqua</div>'+qual+'</div>'; if(o.pumpEnt){ var target=cdPoolTargetHours(); var run=cdPoolRunToday(); var doneH=Math.round(run.s/360)/10; var pct=Math.min(100, Math.round(run.s/(target*36))); var pumpOn=cdPoolOn(o.pumpEnt); html+='<div class="pool-card">'+'<div class="pool-row"><span class="pool-k">🌀 Filtrazione</span><span class="pool-badge'+(pumpOn?'':' warn')+'">'+(pumpOn?'in funzione':'ferma')+'</span></div>'+'<div class="pool-sub" style="color:inherit;opacity:0.75;font-size:12px;">Oggi '+doneH+'h su '+target+'h'+(o.autoHours?' (auto: temperatura/2)':'')+(o.enabled?(' · ⏰ avvio '+cdEsc(o.filterStart)):'')+'</div>'+'<div class="pool-bar"><b style="width:'+pct+'%"></b></div>'+'<div class="pool-row" style="gap:6px;">'+'<button class="pool-btn" data-act="fstart" onclick="cdPoolBtn(this)">▶ Avvia filtrazione</button>'+'<button class="pool-btn stop" data-act="fstop" onclick="cdPoolBtn(this)">⏹ Stop</button>'+'</div></div>'; } wrap.innerHTML=html; } setInterval(function(){ try { if(CD_POOL.stopAt && Date.now()>CD_POOL.stopAt){ cdPoolStopFilter(); }  var pg=document.getElementById('page-piscina'); if(pg && pg.offsetParent!==null) renderPiscina(); } catch(e){} }, 2000); setInterval(function(){ try { var o=getPool(); if(o.pumpEnt && cdPoolOn(o.pumpEnt)){ var r=cdPoolRunToday(); r.s+=30; localStorage.setItem('cd_pool_run', JSON.stringify(r)); } if(!o.enabled || !o.pumpEnt || CD_POOL.stopAt) return; var d=new Date(); var hm=(d.getHours()<10?'0':'')+d.getHours()+':'+(d.getMinutes()<10?'0':'')+d.getMinutes(); if(hm!==o.filterStart) return; var today=d.toDateString(); if(localStorage.getItem('cd_pool_lastrun')===today) return; localStorage.setItem('cd_pool_lastrun', today); cdPoolStartFilter(); } catch(e){} }, 30000); function getEvCars(){ try { return JSON.parse(localStorage.getItem('cd_ev_cars'))||[]; } catch(e){ return []; } } function saveEvCars(a){ localStorage.setItem('cd_ev_cars', JSON.stringify(a)); try{ cdMarkDirty(); cdSyncPush(); }catch(e){} } function cdEvActive(){ var v=parseInt(localStorage.getItem('cd_ev_car_active')||'-1',10); return isNaN(v)?-1:v; } function cdEvCaptureProfile(){ var ov={}; try { document.querySelectorAll('input.ed-slot-in[data-ref^="dm.ev_"]').forEach(function(el){ try { edSetSlot(el); } catch(e3){} }); } catch(e2){} try { Object.keys(ENTITY_OVERRIDES||{}).forEach(function(k){ if(k.indexOf('dm.ev_')===0) ov[k]=ENTITY_OVERRIDES[k]; }); } catch(e){} var img=''; try { var v=cdCfg('cd_ev_image'); img=(typeof v==='string')?v:((v&&v.url)||''); } catch(e){} return { ov: ov, img: img }; } function cdEvApplyCar(i){ var cars=getEvCars(); var c=cars[i]; if(!c) return; var ov={}; try { ov=JSON.parse(localStorage.getItem('cd_entity_overrides'))||{}; } catch(e){} Object.keys(ov).forEach(function(k){ if(k.indexOf('dm.ev_')===0) delete ov[k]; }); Object.keys(c.ov||{}).forEach(function(k){ ov[k]=c.ov[k]; }); localStorage.setItem('cd_entity_overrides', JSON.stringify(ov)); try { Object.keys(ENTITY_OVERRIDES).forEach(function(k){ if(k.indexOf('dm.ev_')===0) delete ENTITY_OVERRIDES[k]; }); Object.keys(c.ov||{}).forEach(function(k){ ENTITY_OVERRIDES[k]=c.ov[k]; }); } catch(e){} if(c.img!=null){ localStorage.setItem('cd_ev_image', JSON.stringify(c.img||'')); try { var im=document.getElementById('ev-mod-car-img'); if(im && c.img){ delete im.dataset.evFailed; im.src=cdUrlOk(c.img); } } catch(e){} } localStorage.setItem('cd_ev_car_active', String(i)); try{ cdMarkDirty(); cdSyncPush(); }catch(e){} try{ if(typeof render==='function') render(); }catch(e){} cdEvCarsRefresh(); } function cdEvCarSel(sel){ var i=parseInt(sel.value,10); if(!isNaN(i)) cdEvApplyCar(i); } function cdEvCarsRefresh(){ var box=document.getElementById('ev-car-picker'); var sel=document.getElementById('ev-car-sel'); if(!box||!sel) return; var cars=getEvCars(); box.style.display = cars.length>1 ? '' : 'none'; if(cars.length<2) return; var act=cdEvActive(); sel.innerHTML = cars.map(function(c,i){ return '<option value="'+i+'"'+(i===act?' selected':'')+'>🚗 '+cdEsc(c.name||('Auto '+(i+1)))+'</option>'; }).join(''); } setInterval(function(){ try { cdEvCarsRefresh(); } catch(e){} }, 2000); function getEnViews(){ try { return JSON.parse(localStorage.getItem('cd_energy_views'))||{}; } catch(e){ return {}; } } function cdEnList(){ return [['ist','⚡','Istantanea (mappa flussi)'],['day','📅','Giornaliera'],['month','📆','Mensile'],['panoramica','📊','Report (elettrodomestici e analisi)'],['temp','🌡️','Temperature inverter']]; } function cdMappedKey(k){ try { return !!(ENTITY_OVERRIDES && ENTITY_OVERRIDES[k]); } catch(e){ return true; } } function cdApplyFlowMinimal(){ try { var noSolar=!cdMappedKey('dm.energy_potenza_fotovoltaico'); var noBatt=!cdMappedKey('dm.energy_potenza_batteria'); function hide(id,h){ var el=document.getElementById(id); if(el) el.style.display=h?'none':''; } hide('n-solar', noSolar); hide('n-battery', noBatt); ['line-solar-home','line-solar-grid','m-line-solar-home','m-line-solar-grid','line-solar-home-day','line-solar-grid-day','m-line-solar-home-day','m-line-solar-grid-day'].forEach(function(id){ hide(id, noSolar); }); ['line-battery-home','m-line-battery-home','line-battery-home-day','m-line-battery-home-day'].forEach(function(id){ hide(id, noBatt); }); ['line-solar-battery','m-line-solar-battery','line-solar-battery-day','m-line-solar-battery-day'].forEach(function(id){ hide(id, noSolar||noBatt); }); } catch(e){} } function cdEnergyOpen(k){ try { document.querySelectorAll('.sub-tab-btn').forEach(function(b){ b.classList.remove('active'); var m=String(b.getAttribute('onclick')||'').match(/switchEnergyView\('(\w+)'\)/); if(m && m[1]===k) b.classList.add('active'); }); document.querySelectorAll('.flow-view').forEach(function(pv){ pv.classList.remove('active'); }); var panel=document.getElementById('view-'+k); if(panel) panel.classList.add('active'); if(k==='panoramica'){ try{ renderEnergyDashboard(); }catch(e2){} } if(k==='temp'){ try{ renderInverterTemp(); }catch(e2){} } } catch(e){} } function cdApplyEnergyViews(){ try { var v=getEnViews(); var firstOn=null; var activeHidden=false; document.querySelectorAll('.sub-tab-btn').forEach(function(b){ var m=String(b.getAttribute('onclick')||'').match(/switchEnergyView\('(\w+)'\)/); if(!m) return; var k=m[1]; var on=(v[k]!==false); b.style.display=on?'':'none'; if(on && !firstOn) firstOn=k; if(!on && b.classList.contains('active')) activeHidden=true; }); if(activeHidden && firstOn) cdEnergyOpen(firstOn); cdApplyFlowMinimal(); } catch(e){} } setTimeout(cdApplyEnergyViews, 1800); function cdNavOrder(){ try { var v=JSON.parse(localStorage.getItem('cd_navbar_order'))||[]; return Array.isArray(v)?v:[]; } catch(e){ return []; } } function cdNavTabs(){ var out=[]; document.querySelectorAll('.tab[data-tab]').forEach(function(b){ var t=(b.textContent||'').trim(); out.push({ k:b.getAttribute('data-tab'), lbl:t }); }); return out; } function cdNavKeys(){ var tabs=cdNavTabs(); var ord=cdNavOrder(); var keys=[]; ord.forEach(function(k){ if(tabs.some(function(t){ return t.k===k; }) && keys.indexOf(k)<0) keys.push(k); }); tabs.forEach(function(t){ if(keys.indexOf(t.k)<0) keys.push(t.k); }); return keys; } function cdApplyNavOrder(){ try { var ord=cdNavOrder(); if(!ord.length) return; var btns=document.querySelectorAll('.tab[data-tab]'); if(!btns.length) return; var nav=btns[0].parentElement; var map={}; btns.forEach(function(b){ map[b.getAttribute('data-tab')]=b; }); cdNavKeys().forEach(function(k){ if(map[k]) nav.appendChild(map[k]); }); } catch(e){} } setTimeout(function(){ try { cdApplyNavOrder(); } catch(e){} }, 1200); function cdSecShow(k){ try { if(!k) return; setTimeout(function(){ try { cdApplyNavVis(); } catch(e2){} }, 60); var cur=cdCfg('cd_sections')||{}; if(cur[k]===false){ cur[k]=true; localStorage.setItem('cd_sections', JSON.stringify(cur)); try { cdMarkDirty(); cdSyncPush(); } catch(e2){} try { if(typeof updateEditButtonVisibility==='function') updateEditButtonVisibility(); } catch(e2){} try { if(typeof render==='function') render(); } catch(e2){} } } catch(e){} } function cdSecShowByRef(ref){ try { var r=String(ref||''); var mapp=[['dm.energy_','energy'],['dm.ev_','ev'],['dm.boiler_','boiler'],['dm.security_','security'],['dm.server_','server'],['dm.home_','home']]; for(var i=0;i<mapp.length;i++){ if(r.indexOf(mapp[i][0])===0){ cdSecShow(mapp[i][1]); return; } } } catch(e){} } function cdSecLS(k){ try { return JSON.parse(localStorage.getItem(k)); } catch(e){ return null; } } function cdSecHasContent(k){ try { var ov=cdSecLS('cd_entity_overrides')||{}; var oks=Object.keys(ov); function pref(p){ for(var i=0;i<oks.length;i++){ if(oks[i].indexOf(p)===0) return true; } return false; } if(k==='energy') return pref('dm.energy_'); if(k==='ev') return pref('dm.ev_'); if(k==='boiler') return pref('dm.boiler_'); if(k==='server') return pref('dm.server_'); if(k==='security') return pref('dm.security_') || ((cdSecLS('cd_cameras')||[]).length>0); if(k==='clima') return (cdSecLS('cd_clima_units')||[]).length>0; if(k==='temp'){ var st=cdSecLS('cd_stanze')||[]; for(var i2=0;i2<st.length;i2++){ if(st[i2]&&st[i2].temp) return true; } return false; } if(k==='appliances') return (cdSecLS('cd_appliances')||[]).length>0; if(k==='tapparelle') return (cdSecLS('cd_tapparelle')||[]).length>0; if(k==='irrigazione'){ var irr=cdSecLS('cd_irrigazione')||{}; return ((irr.zones)||[]).length>0; } if(k==='piscina'){ var pc=cdSecLS('cd_piscina')||{}; return Object.keys(pc).length>0; } return true; } catch(e){ return true; } } function cdSecBoot(){ try { window.__CD_SBRUN=(window.__CD_SBRUN||0)+1; if(!window.__DASHBOARDMODERN_HOSTED__) return; var _cs=localStorage.getItem('cd_sections'); if(_cs){ try { var cur2=JSON.parse(_cs)||{}; var ch2=false; ['energy','appliances','ev','boiler','clima','temp','security','server','tapparelle','irrigazione','piscina'].forEach(function(k){ if(!(k in cur2)){ cur2[k]=cdSecHasContent(k)?true:false; ch2=true; } }); if(ch2){ localStorage.setItem('cd_sections', JSON.stringify(cur2)); try { cdApplyNavVis(); } catch(e3){} } } catch(e4){} return; } var out={}; ['energy','appliances','ev','boiler','clima','temp','security','server','tapparelle','irrigazione','piscina'].forEach(function(k){ out[k]=cdSecHasContent(k)?true:false; }); localStorage.setItem('cd_sections', JSON.stringify(out)); try { cdApplyNavVis(); } catch(e2){} try { if(typeof render==='function') render(); } catch(e2){} } catch(e){} } cdSecBoot(); setTimeout(cdSecBoot, 1200);  function cdRegEnrich(done){ try { var fin=false; var to=setTimeout(function(){ if(!fin){ fin=true; done(); } }, 9000); var so=new WebSocket((location.protocol==='https:'?'wss:':'ws:')+'//'+location.host+'/api/websocket'); var mid=1; var want={}; var out={ floors:null, areas:null, ents:null, devs:null }; function fire(type,slot){ var id=mid++; want[id]=slot; so.send(JSON.stringify({ id:id, type:type })); } function finish(){ if(fin) return; fin=true; clearTimeout(to); try { so.close(); } catch(e2){} try { cdRegApply(out); } catch(e2){} done(); } so.onerror=function(){ finish(); }; so.onmessage=function(ev){ try { var m=JSON.parse(ev.data); if(m.type==='auth_required'){ so.send(JSON.stringify({ type:'auth', access_token:(window.__DASHBOARDMODERN_REAL_TOKEN__||'') })); return; } if(m.type==='auth_ok'){ fire('config/floor_registry/list','floors'); fire('config/area_registry/list','areas'); fire('config/entity_registry/list','ents'); fire('config/device_registry/list','devs'); return; } if(m.type==='result' && want[m.id]){ out[want[m.id]] = m.success ? (m.result||[]) : []; delete want[m.id]; if(out.floors&&out.areas&&out.ents&&out.devs) finish(); } } catch(e3){} }; } catch(e){ done(); } } function cdRegApply(o){ try { var floors=(o.floors||[]).slice().sort(function(a,b){ return (a.level||0)-(b.level||0); }); var fName={}; floors.forEach(function(f){ fName[f.floor_id]=f.name; }); if(floors.length){ localStorage.setItem('cd_floors', JSON.stringify(floors.map(function(f){ return f.name; }))); } var aName={}; var aFloor={}; (o.areas||[]).forEach(function(a){ aName[a.area_id]=a.name; aFloor[a.area_id]=fName[a.floor_id]||''; }); if((o.areas||[]).length){ var st=cdCfgList('cd_stanze').slice(); (o.areas||[]).forEach(function(a){ var ex=null; for(var i=0;i<st.length;i++){ if(st[i]&&st[i].name===a.name){ ex=st[i]; break; } } if(ex){ if(!ex.floor && aFloor[a.area_id]) ex.floor=aFloor[a.area_id]; } else { var r={ name:a.name, icon:'🏠' }; if(aFloor[a.area_id]) r.floor=aFloor[a.area_id]; st.push(r); } }); localStorage.setItem('cd_stanze', JSON.stringify(st)); } var devArea={}; (o.devs||[]).forEach(function(d){ if(d.area_id) devArea[d.id]=d.area_id; }); var entArea={}; (o.ents||[]).forEach(function(e){ var ar=e.area_id||devArea[e.device_id]; if(ar) entArea[e.entity_id]=aName[ar]||''; }); var rooms={}; try { rooms=cdCfg('cd_luci_rooms')||{}; } catch(e2){} var ch=false; Object.keys(cdCfg('cd_luci')||{}).forEach(function(id){ if(!rooms[id] && entArea[id]){ rooms[id]=entArea[id]; ch=true; } }); if(ch) localStorage.setItem('cd_luci_rooms', JSON.stringify(rooms)); var units=getClimaUnits().slice(); var uc=false; units.forEach(function(u){ if(u && !u.room && entArea[u.entity]){ u.room=entArea[u.entity]; uc=true; } }); if(uc) localStorage.setItem('cd_clima_units', JSON.stringify(units)); var cams=cdCfgList('cd_cameras').slice(); var cc=false; cams.forEach(function(c){ var ce=c&&(c.entity||c.cam); if(c && !c.room && ce && entArea[ce]){ c.room=entArea[ce]; cc=true; } }); if(cc) localStorage.setItem('cd_cameras', JSON.stringify(cams)); try { if((cdCfgList('cd_stanze')||[]).some(function(r){ return r&&r.temp; })) cdSecShow('temp'); if(getClimaUnits().length) cdSecShow('clima'); if(cdCfgList('cd_cameras').length) cdSecShow('security'); var ov=cdCfg('cd_entity_overrides')||{}; Object.keys(ov).forEach(function(k){ cdSecShowByRef(k); }); } catch(e4){} try { cdMarkDirty(); cdSyncPush(); } catch(e5){} } catch(e){} } function cdNavVisMap(){ return { home:'home', energy:'energy', appliances:'appliances-main', ev:'ev', boiler:'boiler', clima:'clima', temp:'temp', security:'security', server:'server', tapparelle:'tapparelle', irrigazione:'irrigazione', piscina:'piscina' }; } window.__CD_NVRUN=(window.__CD_NVRUN||0); function cdApplyNavVis(){ try { window.__CD_NVRUN++; var cur=cdCfg('cd_sections')||{}; var mp=cdNavVisMap(); Object.keys(mp).forEach(function(k){ document.querySelectorAll('.tab[data-tab="'+mp[k]+'"]').forEach(function(b){ if(cur[k]===false) b.style.setProperty('display','none','important'); else b.style.removeProperty('display'); }); }); } catch(e){} } try { cdApplyNavVis(); } catch(e) {} setTimeout(function(){ try { cdApplyNavVis(); } catch(e) {} }, 1500); setInterval(function(){ try { cdApplyNavVis(); } catch(e) {} }, 3000); function cdApplEntTog(en, btn){ try { if(navigator.vibrate) navigator.vibrate(12); var dom=String(en).split('.')[0]; var cur=(STATES[en]&&STATES[en].state)||'off'; var svc=(cur==='on')?'turn_off':'turn_on'; ws.send(JSON.stringify({ id: msgId++, type:'call_service', domain: dom, service: svc, target:{ entity_id: en } })); if(btn){ btn.style.opacity='0.45'; setTimeout(function(){ try { btn.style.opacity=''; var st2=(STATES[en]&&STATES[en].state)||''; btn.textContent=(st2==='on')?'OFF':'ON'; btn.classList.toggle('on', st2==='on'); } catch(e2){} }, 900); } } catch(e){} } setTimeout(function(){ try { buildTempCards(); } catch(e){} }, 2200); function cdApplBridge(){ try { if(typeof APPLIANCES==='undefined') return; var list=cdCfgList('cd_appliances'); if(!list.length) return; APPLIANCES.length=0; list.forEach(function(a){ if(!a) return; var ents=a.entities||[]; var pw=null, sw=null, en2=null; ents.forEach(function(e){ var d=String(e).split('.')[0]; if(d==='switch'&&!sw) sw=e; else if(/energy|kwh/i.test(e)&&!en2) en2=e; else if(d==='sensor'&&!pw) pw=e; }); APPLIANCES.push({ name:a.name||'?', icon:a.icon||'\ud83e\uddfa', category:String(a.room||'altro').toLowerCase(), power:pw, energy:en2, duration:null, switch:sw, history:pw||en2 }); }); try { var pg=document.getElementById('page-appliances-main'); var bar=pg&&pg.querySelector('.sub-tabs-energy'); if(bar){ var cats=[]; APPLIANCES.forEach(function(a){ if(a.category&&cats.indexOf(a.category)<0) cats.push(a.category); }); var bh='<button class="sub-tab-btn appl-section-tab active" onclick="switchApplianceView(\'overview\', event)">📊 Panoramica</button>'; cats.forEach(function(c){ var lb=c.charAt(0).toUpperCase()+c.slice(1); bh+='<button class="sub-tab-btn appl-section-tab" onclick="switchApplianceView('+cdJs(c)+', event)">🏠 '+cdEsc(lb)+'</button>'; }); bar.innerHTML=bh; } if(pg){ pg.querySelectorAll('button').forEach(function(b){ var t=(b.textContent||''); if(t.indexOf('CONFIGURA')>=0||t.indexOf('Configura')>=0){ var card=b.closest('div'); if(card&&card.parentElement) card.parentElement.style.display='none'; } }); } } catch(e3){} try { if(typeof renderApplianceSection==='function') renderApplianceSection(true); } catch(e2){} } catch(e){} } setTimeout(cdApplBridge, 2600); setInterval(cdApplBridge, 15000); function toggleVentola() {
   if (navigator.vibrate) navigator.vibrate(30);
   if (!ws || ws.readyState !== WebSocket.OPEN) return;
   ws.send(JSON.stringify({
@@ -1241,12 +1235,12 @@ window.setEVSempre = function(valore) {
 function dmEvccTastoGrande(m) {
   return '<div class="lm-evcc-btn evcc-mode-btn" id="m-btn-' + cdEsc(m.id) + '" onclick="setEVMode(' + cdJs(m.id) + ')"'
     + ' style="--btn-col:' + cdColor(m.colore, '#64748b') + ';--btn-bg:' + cdColor(m.sfondo, '#f1f5f9') + ';">'
-    + '<span class="ev-ic">' + cdSegno(m.icona) + '</span><span class="ev-lbl">' + cdEsc(m.it) + '</span></div>';
+    + '<span class="ev-ic">' + cdEsc(m.icona) + '</span><span class="ev-lbl">' + cdEsc(m.it) + '</span></div>';
 }
 function dmEvccTastoPopup(m) {
   return '<div class="ev-popup-mode-btn evcc-mode-btn" id="p-btn-' + cdEsc(m.id) + '" onclick="setEVMode(' + cdJs(m.id) + ')"'
     + ' style="--btn-col: ' + cdColor(m.colore, '#64748b') + '; --btn-bg: ' + cdColor(m.sfondo, '#f1f5f9') + ';">'
-    + '<div class="icon">' + cdSegno(m.icona) + '</div><div class="txt">' + cdEsc(m.it) + '</div></div>';
+    + '<div class="icon">' + cdEsc(m.icona) + '</div><div class="txt">' + cdEsc(m.it) + '</div></div>';
 }
 function dmEvccDisegnaIModi() {
   const api = window.DashboardModernModules && DashboardModernModules.evcc;
@@ -1375,14 +1369,14 @@ function mostraModalEditPlancia() {
     modal.innerHTML = `
         <div class="modal-card" style="max-width: 480px; padding: 28px 24px;">
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; padding-bottom:14px; border-bottom:1px solid var(--card-border);">
-            <div style="font-family:'Oswald',sans-serif; font-size:20px; font-weight:700; color:var(--text);"><i class="dm-segno" data-dm-segno="pencil" aria-hidden="true"></i> MODIFICA PLANCIA</div>
+            <div style="font-family:'Oswald',sans-serif; font-size:20px; font-weight:700; color:var(--text);">✏️ MODIFICA PLANCIA</div>
             <div onclick="document.getElementById('edit-plancia-modal').remove()" style="cursor:pointer; width:32px; height:32px; border-radius:50%; background: var(--surface-3); display:flex; align-items:center; justify-content:center; font-size:14px; color:var(--text-dim);">✕</div>
           </div>
           <div style="font-size:14px; color:var(--text); line-height:1.6; margin-bottom:18px;">
             Sei nell'<b>app HA Companion</b>. Per modificare la plancia hai 2 opzioni:
           </div>
           <div style="background: var(--surface-2); border:1px solid var(--card-border); border-radius:16px; padding:16px; margin-bottom:14px;">
-            <div style="font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:1px; color:#0369a1; margin-bottom:8px;"><i class="dm-segno" data-dm-segno="info" aria-hidden="true"></i> Opzione 1 - Da app</div>
+            <div style="font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:1px; color:#0369a1; margin-bottom:8px;">🅰️ Opzione 1 - Da app</div>
             <ol style="margin:0; padding-left:18px; font-size:13px; line-height:1.7; color:var(--text);">
               <li>Tocca l'icona <b>profilo utente</b> in basso a destra dell'app HA</li>
               <li>Tocca <b>"Impostazioni"</b></li>
@@ -1390,14 +1384,14 @@ function mostraModalEditPlancia() {
             </ol>
           </div>
           <div style="background:#f0f9ff; border:1px solid rgba(14,165,233,0.25); border-radius:16px; padding:16px; margin-bottom:18px;">
-            <div style="font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:1px; color:#0369a1; margin-bottom:8px;"><i class="dm-segno" data-dm-segno="info" aria-hidden="true"></i> Opzione 2 - Da browser</div>
+            <div style="font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:1px; color:#0369a1; margin-bottom:8px;">🅱️ Opzione 2 - Da browser</div>
             <div style="font-size:13px; line-height:1.6; color:var(--text); margin-bottom:10px;">
               Apri questo URL in Chrome (esci dall'app):
             </div>
             <div style="background: var(--card-bg); border:1px solid var(--card-border); border-radius:10px; padding:10px 12px; font-family:monospace; font-size:11px; word-break:break-all; color:var(--text-dim);">${cdEsc(fullUrl)}</div>
           </div>
           <div style="display:flex; gap:10px;">
-            <button onclick="copyEditUrl()" style="flex:1; padding:13px 14px; border:none; border-radius:14px; background:linear-gradient(135deg,#e0f2fe 0%,#bae6fd 100%); color:#0369a1; font-weight:800; font-size:13px; letter-spacing:0.5px; text-transform:uppercase; cursor:pointer;"><i class="dm-segno" data-dm-segno="list" aria-hidden="true"></i> Copia URL</button>
+            <button onclick="copyEditUrl()" style="flex:1; padding:13px 14px; border:none; border-radius:14px; background:linear-gradient(135deg,#e0f2fe 0%,#bae6fd 100%); color:#0369a1; font-weight:800; font-size:13px; letter-spacing:0.5px; text-transform:uppercase; cursor:pointer;">📋 Copia URL</button>
             <button onclick="document.getElementById('edit-plancia-modal').remove()" style="flex:1; padding:13px 14px; border:none; border-radius:14px; background: var(--surface-3); color:var(--text); font-weight:800; font-size:13px; letter-spacing:0.5px; text-transform:uppercase; cursor:pointer;">CHIUDI</button>
           </div>
         </div>
@@ -1431,29 +1425,29 @@ function apriConfigEntita() {
         <div class="ed-head">
           <div class="ed-head-title">${cdBrandLogo(40)} EDITOR DASHBOARD</div>
           <div style="display:flex; gap:8px;">
-            ${window.__DASHBOARDMODERN_HOSTED__ ? '' : '<div class="ed-head-close" title="Scarica la dashboard con token e configurazione integrati nel file" onclick="cdBakeDownload()"><i class="dm-segno" data-dm-segno="check" aria-hidden="true"></i></div>'}
+            ${window.__DASHBOARDMODERN_HOSTED__ ? '' : '<div class="ed-head-close" title="Scarica la dashboard con token e configurazione integrati nel file" onclick="cdBakeDownload()">💾</div>'}
             <div class="ed-head-close" onclick="document.getElementById('editor-modal').remove()">✕</div>
           </div>
         </div>
         <div class="ed-tabs">
-          <button class="ed-tab" data-tab="visib" onclick="editorSwitch('visib')"><i class="dm-segno" data-dm-segno="sliders" aria-hidden="true"></i> Impostazioni</button>
-          <button class="ed-tab" data-tab="sez0" onclick="editorSwitch('sez0')"><i class="dm-segno" data-dm-segno="home" aria-hidden="true"></i> Home</button>
-          <button class="ed-tab" data-tab="sez1" onclick="editorSwitch('sez1')"><i class="dm-segno" data-dm-segno="power" aria-hidden="true"></i> Energia</button>
-          <button class="ed-tab" data-tab="sez2" onclick="editorSwitch('sez2')"><i class="dm-segno" data-dm-segno="ev" aria-hidden="true"></i> EV</button>
-          <button class="ed-tab" data-tab="sez3" onclick="editorSwitch('sez3')"><i class="dm-segno" data-dm-segno="sun" aria-hidden="true"></i> Solare</button>
-          <button class="ed-tab" data-tab="sez4" onclick="editorSwitch('sez4')"><i class="dm-segno" data-dm-segno="security" aria-hidden="true"></i> Sicurezza</button>
-          <button class="ed-tab" data-tab="sez6" onclick="editorSwitch('sez6')"><i class="dm-segno" data-dm-segno="computer" aria-hidden="true"></i> MiniPC</button>
-          <button class="ed-tab" data-tab="sez7" onclick="editorSwitch('sez7')"><i class="dm-segno" data-dm-segno="thermometer" aria-hidden="true"></i> Temperatura</button>
-          <button class="ed-tab" data-tab="sez8" onclick="editorSwitch('sez8')"><i class="dm-segno" data-dm-segno="power" aria-hidden="true"></i> Azioni</button>
-          <button class="ed-tab" data-tab="sez9" onclick="editorSwitch('sez9')"><i class="dm-segno" data-dm-segno="air-conditioner" aria-hidden="true"></i> Clima</button>
-          <button class="ed-tab" data-tab="pool" onclick="editorSwitch('pool')"><i class="dm-segno" data-dm-segno="room-pool" aria-hidden="true"></i> Piscina</button>
-          <button class="ed-tab" data-tab="irr" onclick="editorSwitch('irr')"><i class="dm-segno" data-dm-segno="water" aria-hidden="true"></i> Irrigazione</button>
-          <button class="ed-tab" data-tab="tapp" onclick="editorSwitch('tapp')"><i class="dm-segno" data-dm-segno="window" aria-hidden="true"></i> Finestre</button>
-          <button class="ed-tab" data-tab="stanze" onclick="editorSwitch('stanze')"><i class="dm-segno" data-dm-segno="room-living" aria-hidden="true"></i> Stanze</button>
-          <button class="ed-tab" data-tab="luci"  onclick="editorSwitch('luci')"><i class="dm-segno" data-dm-segno="lights" aria-hidden="true"></i> Luci</button>
-          <button class="ed-tab" data-tab="appliances" onclick="editorSwitch('appliances')"><i class="dm-segno" data-dm-segno="washer" aria-hidden="true"></i> Elettrodom.</button>
-          <button class="ed-tab" data-tab="avvisi" onclick="editorSwitch('avvisi')"><i class="dm-segno" data-dm-segno="bell" aria-hidden="true"></i> Avvisi</button>
-          <button class="ed-tab" data-tab="runtime" onclick="editorSwitch('runtime')"><i class="dm-segno" data-dm-segno="heart" aria-hidden="true"></i> Runtime</button>
+          <button class="ed-tab" data-tab="visib" onclick="editorSwitch('visib')">⚙️ Impostazioni</button>
+          <button class="ed-tab" data-tab="sez0" onclick="editorSwitch('sez0')">🏠 Home</button>
+          <button class="ed-tab" data-tab="sez1" onclick="editorSwitch('sez1')">⚡ Energia</button>
+          <button class="ed-tab" data-tab="sez2" onclick="editorSwitch('sez2')">🚗 EV</button>
+          <button class="ed-tab" data-tab="sez3" onclick="editorSwitch('sez3')">🌞 Solare</button>
+          <button class="ed-tab" data-tab="sez4" onclick="editorSwitch('sez4')">🛡️ Sicurezza</button>
+          <button class="ed-tab" data-tab="sez6" onclick="editorSwitch('sez6')">🖥️ MiniPC</button>
+          <button class="ed-tab" data-tab="sez7" onclick="editorSwitch('sez7')">🌡️ Temperatura</button>
+          <button class="ed-tab" data-tab="sez8" onclick="editorSwitch('sez8')">⚡ Azioni</button>
+          <button class="ed-tab" data-tab="sez9" onclick="editorSwitch('sez9')">❄️ Clima</button>
+          <button class="ed-tab" data-tab="pool" onclick="editorSwitch('pool')">🏊 Piscina</button>
+          <button class="ed-tab" data-tab="irr" onclick="editorSwitch('irr')">💧 Irrigazione</button>
+          <button class="ed-tab" data-tab="tapp" onclick="editorSwitch('tapp')">🪟 Finestre</button>
+          <button class="ed-tab" data-tab="stanze" onclick="editorSwitch('stanze')">🛋️ Stanze</button>
+          <button class="ed-tab" data-tab="luci"  onclick="editorSwitch('luci')">💡 Luci</button>
+          <button class="ed-tab" data-tab="appliances" onclick="editorSwitch('appliances')">🧺 Elettrodom.</button>
+          <button class="ed-tab" data-tab="avvisi" onclick="editorSwitch('avvisi')">🔔 Avvisi</button>
+          <button class="ed-tab" data-tab="runtime" onclick="editorSwitch('runtime')">🩺 Runtime</button>
           
         </div>
         <div class="ed-body" id="ed-body"></div>
@@ -1480,7 +1474,7 @@ function editorSwitch(tab) {
     if (tab === 'tapp') body.innerHTML = cdSecToggleHtml('tapparelle') + editorRenderTapparelle();
     if (tab === 'stanze') body.innerHTML = editorRenderStanze();
     if (tab === 'luci')   body.innerHTML = editorRenderLuci();
-    if (tab === 'appliances') { body.innerHTML = cdSecToggleHtml('appliances') + editorRenderAppliances() + '<button class="ed-btn-add" style="width:100%; margin-top:10px;" onclick="edSecSave()"><i class="dm-segno" data-dm-segno="check" aria-hidden="true"></i> Salva sezione</button>'; try { edApplRenderEnts(); } catch(e){} }
+    if (tab === 'appliances') { body.innerHTML = cdSecToggleHtml('appliances') + editorRenderAppliances() + '<button class="ed-btn-add" style="width:100%; margin-top:10px;" onclick="edSecSave()">💾 Salva sezione</button>'; try { edApplRenderEnts(); } catch(e){} }
     if (tab === 'avvisi') { body.innerHTML = editorRenderAvvisi(); try { edAvvRenderEnts(); } catch(e){} }
     if (tab === 'testi')  body.innerHTML = editorRenderTesti();
     if (tab === 'hide')   body.innerHTML = editorRenderHide();
@@ -1496,14 +1490,14 @@ function editorRenderSost() {
           <div class="ed-row-old">${cdEsc(o)}</div>
           <div class="ed-row-new">→ ${cdEsc(n)}</div>
         </div>
-        <div class="ed-del" onclick="edDelOverride(${cdJs(o)})"><i class="dm-segno" data-dm-segno="trash" aria-hidden="true"></i></div>
+        <div class="ed-del" onclick="edDelOverride(${cdJs(o)})">🗑️</div>
       </div>`).join('') || '<div class="ed-empty">Nessuna sostituzione attiva</div>';
     return `
       <div class="ed-intro">Sostituisci un'entità usata dalla dashboard con un'altra, ovunque essa compaia (card, popup, storico, comandi). Utile se cambi una presa smart o un sensore.</div>
       <div class="ed-list">${rows}</div>
       <div class="ed-form">
-        <div style="display:flex; gap:8px; margin-bottom:6px;"><input id="ed-ov-old" style="flex:1;" class="ed-input mono" placeholder="Entità attuale (in dashboard)"><button type="button" onclick="wzPickEntity('#ed-ov-old')" style="flex:0 0 38px; height:38px; border:none; border-radius:10px; background:linear-gradient(135deg,#0ea5e9,#0369a1); color:#fff; font-size:14px; cursor:pointer;"><i class="dm-segno" data-dm-segno="search" aria-hidden="true"></i></button></div>
-        <div style="display:flex; gap:8px; margin-bottom:6px;"><input id="ed-ov-new" style="flex:1;" class="ed-input mono" placeholder="Nuova entità (sostituto)"><button type="button" onclick="wzPickEntity('#ed-ov-new')" style="flex:0 0 38px; height:38px; border:none; border-radius:10px; background:linear-gradient(135deg,#0ea5e9,#0369a1); color:#fff; font-size:14px; cursor:pointer;"><i class="dm-segno" data-dm-segno="search" aria-hidden="true"></i></button></div>
+        <div style="display:flex; gap:8px; margin-bottom:6px;"><input id="ed-ov-old" style="flex:1;" class="ed-input mono" placeholder="Entità attuale (in dashboard)"><button type="button" onclick="wzPickEntity('#ed-ov-old')" style="flex:0 0 38px; height:38px; border:none; border-radius:10px; background:linear-gradient(135deg,#0ea5e9,#0369a1); color:#fff; font-size:14px; cursor:pointer;">🔍</button></div>
+        <div style="display:flex; gap:8px; margin-bottom:6px;"><input id="ed-ov-new" style="flex:1;" class="ed-input mono" placeholder="Nuova entità (sostituto)"><button type="button" onclick="wzPickEntity('#ed-ov-new')" style="flex:0 0 38px; height:38px; border:none; border-radius:10px; background:linear-gradient(135deg,#0ea5e9,#0369a1); color:#fff; font-size:14px; cursor:pointer;">🔍</button></div>
         <button class="ed-btn-add" onclick="edAddOverride()">＋ Aggiungi sostituzione</button>
       </div>`;
 }
@@ -1529,11 +1523,11 @@ function buildReportSelect() {
     const sel = document.getElementById('ed-dev-selector');
     if (!sel) return;
     if (typeof ED_DEVICES !== 'undefined' && ED_DEVICES.length) {
-        sel.innerHTML = ED_DEVICES.map(d => `<option value="${cdEsc(d.sensor)}">${cdEsc(d.name)}</option>`).join('');
+        sel.innerHTML = ED_DEVICES.map(d => `<option value="${cdEsc(d.sensor)}">${cdEsc(d.icon || '⚡')} ${cdEsc(d.name)}</option>`).join('');
         return;
     }
     const runtimeError = window.__DM_REPORT_RUNTIME_ERROR__;
-    sel.innerHTML = `<option value="">${runtimeError ? '' + cdEsc(runtimeError) : '— Nessun elemento Report configurato —'}</option>`;
+    sel.innerHTML = `<option value="">${runtimeError ? '⚠️ ' + cdEsc(runtimeError) : '— Nessun elemento Report configurato —'}</option>`;
 }
 document.addEventListener('DOMContentLoaded', buildReportSelect);
 
@@ -1585,7 +1579,7 @@ function edEditStanza2(i) {
     document.getElementById('ed-st2-hum').value = r.hum || '';
     window._edEditStanzaIdx = i;
     const btn = document.getElementById('ed-st2-btn') || document.querySelector('[onclick="edAddStanza2()"]');
-    if (btn) btn.textContent = 'Salva modifica';
+    if (btn) btn.textContent = '💾 Salva modifica';
     const inp = document.getElementById('ed-st2-name');
     if (inp) { const det = inp.closest('details'); if (det) det.open = true; try { inp.scrollIntoView({ block: 'center' }); } catch(e) {} try { inp.focus(); } catch(e) {} }
 }
@@ -1754,12 +1748,12 @@ function cdLuciRoomList() {
     try { (typeof getStanze==='function'?getStanze():[]).forEach(r => { if (r && r.name && !set.includes(r.name)) set.push(r.name); }); } catch(e) {} return set;
 }
 
-function cdDbgStatus(){ try { return '<div class="ed-intro mono" style="font-size:11px;opacity:0.75;">v'+(typeof DASHBOARD_VERSION==='undefined'?'?':DASHBOARD_VERSION)+' | hosted:'+(window.__DASHBOARDMODERN_HOSTED__?1:0)+' | bridge:'+(window.__DASHBOARDMODERN_BRIDGED__?1:0)+' | token:'+(window.__DASHBOARDMODERN_REAL_TOKEN__?1:0)+' | sync:'+cdEsc(localStorage.getItem('cd_sync_ts')||0)+' | inst:'+cdEsc(String(window.__DASHBOARDMODERN_STORAGE_NS__||'-').slice(0,10))+' | prim:'+(window.__DASHBOARDMODERN_PRIMARY__===false?0:1)+' | q:'+cdEsc(String(location.search||'').slice(0,18))+' | key:'+(('dashboardmodern_integration_config' + (window.__DASHBOARDMODERN_PRIMARY__===false && window.__DASHBOARDMODERN_INSTANCE__ ? '__'+String(window.__DASHBOARDMODERN_INSTANCE__).replace(/[^a-zA-Z0-9_-]/g,'').slice(0,16) : ''))).slice(-14)+'</div>'; } catch(e){ return ''; } } function cdNavDiag(){ try { var mp=cdNavVisMap(); var cur=cdCfg('cd_sections')||{}; var L=[]; L.push('ver=0.12.1-int url='+location.pathname.slice(-46)); L.push('inst='+String(window.__DASHBOARDMODERN_STORAGE_NS__||'-').slice(0,12)+' prim='+(window.__DASHBOARDMODERN_PRIMARY__===false?0:1)); L.push('secboot='+(window.__CD_SBRUN||0)+' navvis='+(window.__CD_NVRUN||0)); L.push('cd_sections='+String(localStorage.getItem('cd_sections'))); Object.keys(mp).forEach(function(k){ var sel='.tab[data-tab="'+mp[k]+'"]'; var els=document.querySelectorAll(sel); var pg=document.getElementById('page-'+mp[k]); var st=els.length?getComputedStyle(els[0]).display:'-'; L.push(k+': cfg='+String(cur[k])+' tabs='+els.length+' disp='+st+' page='+(pg?1:0)); }); try { var st3=cdSecLS('cd_stanze')||[]; var wt=st3.filter(function(r){ return r&&r.temp; }); L.push('stanze='+st3.length+' con-temp='+wt.length+' CD_TEMP_FLOOR='+String(typeof CD_TEMP_FLOOR!=='undefined'?CD_TEMP_FLOOR:'?')); var g3=document.getElementById('temp-grid'); var errT=''; try { buildTempCards(); } catch(eT){ errT=eT.message; } L.push('temp-grid='+(g3?g3.children.length:'assente')+(errT?' ERR='+errT:'')); } catch(eX){ L.push('temp-diag-err'); } try { var ap3=cdCfgList('cd_appliances'); ap3.forEach(function(a){ if(!a) return; var ents=(a.entities||[]); var hasE=false; ents.forEach(function(en2){ var s4=STATES[en2]||{}; var at=(s4.attributes||{}); if(at.device_class==='energy'||/wh$/i.test(String(at.unit_of_measurement||''))) hasE=true; }); L.push('appl '+(a.name||'?')+': ents='+ents.length+' kwh='+(hasE?1:0)); }); } catch(eY){ L.push('appl-diag-err'); } var rep=L.join('\n'); try { console.log('[NavDiag]\n'+rep); } catch(e2){} prompt('Diagnosi navbar (tieni premuto per copiare)', rep); } catch(e){ alert('diag err: '+e.message); } } function editorRenderRileva(){ var st=cdDbgStatus(); st+='<button class="ed-btn-add" style="width:100%; margin:6px 0 10px;" onclick="cdNavDiag()"><i class="dm-segno" data-dm-segno="gauge" aria-hidden="true"></i> Diagnosi navbar</button>'; return st+'<div class="ed-intro"><i class="dm-segno" data-dm-segno="star" aria-hidden="true"></i> <b>Autorilevamento</b>: analizza tutte le entità di Home Assistant e compila da solo luci, clima, stanze, telecamere e collegamenti. Puoi correggere tutto dopo nelle altre schede.</div>'+'<button class="ed-btn-add" style="width:100%;" onclick="edAutoRileva()"><i class="dm-segno" data-dm-segno="star" aria-hidden="true"></i> Avvia autorilevamento</button>'+'<div id="ed-rileva-out" style="margin-top:10px;"></div>'+'<div style="margin-top:22px;border-top:1px solid rgba(220,38,38,0.3);padding-top:12px;"><button class="ed-btn-add" style="width:100%;background:linear-gradient(135deg,#ef4444,#b91c1c);color:#fff;" onclick="wzResetAll()"><i class="dm-segno" data-dm-segno="trash" aria-hidden="true"></i> Reset totale configurazione</button></div>'; } function edAutoRilevaLog(t){ var o=document.getElementById('ed-rileva-out'); if(o) o.innerHTML='<div class="ed-intro">'+t+'</div>'; } /* t e' testo nostro; gli errori passano da cdEsc dove si chiama */ function edAutoRileva(){ try { apriSetupWizard(); var wz=document.getElementById('setup-wizard'); if(wz) wz.remove(); } catch(e){} edAutoRilevaLog('<i class="dm-segno" data-dm-segno="timer" aria-hidden="true"></i> Carico tutte le entità da Home Assistant…'); try { wzLoadAllEntities(); } catch(e){} var tries=0; var t=setInterval(function(){ tries++; if (typeof WIZ!=='undefined' && WIZ && WIZ.allMeta && WIZ.allMeta.length){ clearInterval(t); try { wzAutoDetect(); } catch(e){ edAutoRilevaLog('<i class="dm-segno" data-dm-segno="error" aria-hidden="true"></i> '+cdEsc(e.message)); return; } try { if (WIZ.luci && Object.keys(WIZ.luci).length) localStorage.setItem('cd_luci', JSON.stringify(WIZ.luci)); if (WIZ.stanze && WIZ.stanze.length) localStorage.setItem('cd_stanze', JSON.stringify(WIZ.stanze)); if (WIZ.climaUnits && WIZ.climaUnits.length) localStorage.setItem('cd_clima_units', JSON.stringify(WIZ.climaUnits)); if (WIZ.cameras && WIZ.cameras.length) localStorage.setItem('cd_cameras', JSON.stringify(WIZ.cameras)); if (WIZ.entities && Object.keys(WIZ.entities).length){ var ov={}; try{ ov=JSON.parse(localStorage.getItem('cd_entity_overrides'))||{}; }catch(e){} Object.keys(WIZ.entities).forEach(function(k){ ov[k]=WIZ.entities[k]; }); localStorage.setItem('cd_entity_overrides', JSON.stringify(ov)); } try{ cdMarkDirty(); cdSyncPush(); }catch(e){} edAutoRilevaLog('<i class="dm-segno" data-dm-segno="check" aria-hidden="true"></i> Rilevate: '+Object.keys(WIZ.luci||{}).length+' luci · '+(WIZ.stanze||[]).length+' stanze · '+(WIZ.climaUnits||[]).length+' clima · '+(WIZ.cameras||[]).length+' camere · '+Object.keys(WIZ.entities||{}).length+' entità.<br>Ricarico…'); cdRegEnrich(function(){ setTimeout(function(){ location.reload(); }, 400); }); } catch(e){ edAutoRilevaLog('<i class="dm-segno" data-dm-segno="error" aria-hidden="true"></i> '+cdEsc(e.message)); } } else if (tries>40){ clearInterval(t); edAutoRilevaLog('<i class="dm-segno" data-dm-segno="error" aria-hidden="true"></i> Timeout nel caricamento entità. Riprova.'); } }, 500); } function cdVisibSez(){ return [['home','home','Home','Meteo, avvisi, azioni rapide'],['energy','power','Energia','Fotovoltaico e consumi'],['ev','ev','Auto elettrica','EV + wallbox (EVCC)'],['boiler','sun','Solare termico','Boiler solare'],['clima','air-conditioner','Clima','Condizionatori e riscaldamento'],['temp','thermometer','Temperatura','Temperature e umidità'],['security','security','Sicurezza','Telecamere e allarme'],['server','computer','MiniPC','Monitoraggio server']]; } function e2Gen(v){ return cdEsc(v||''); } function cdGenHtml(){ var br=cdCfg('cd_branding')||{}; var cn2=cdCfg('cd_connection')||{}; var adm=(cn2.admin_users&&cn2.admin_users[0])||''; return "<div class='ed-intro'><b>Generali</b>: nome della dashboard e utente amministratore.</div>" +"<input id='ed-gen-title' class='ed-input' style='margin-bottom:8px;' placeholder='Nome dashboard (es. SMART HOME)' value='"+e2Gen(br.title)+"'>" +"<input id='ed-gen-sub' class='ed-input' style='margin-bottom:8px;' placeholder='Sottotitolo' value='"+e2Gen(br.subtitle)+"'>" +"<input id='ed-gen-admin' class='ed-input' style='margin-bottom:8px;' placeholder='Utente admin (vuoto = Config visibile a tutti)' value='"+e2Gen(adm)+"'>" +"<button class='ed-btn-add' style='width:100%;margin-bottom:16px;' onclick='edSaveGeneral()'><i class=\"dm-segno\" data-dm-segno=\"check\" aria-hidden=\"true\"></i> Salva generali</button>"; } function cdEvCarsHtml(){ var cars=getEvCars(); var act=cdEvActive(); var rows = cars.length ? cars.map(function(c,i){ return '<div class="ed-row" style="align-items:center;"><div class="ed-row-main"><div class="ed-row-new"><i class="dm-segno" data-dm-segno="ev" aria-hidden="true"></i> '+cdEsc(c.name||('Auto '+(i+1)))+(i===act?' <span class="pool-badge">✓ attiva</span>':'')+'</div><div class="ed-row-old">'+Object.keys(c.ov||{}).length+' entità mappate</div></div><button class="ed-btn-add" style="flex:0 0 auto; margin-right:6px;" data-act="use" data-idx="'+i+'" onclick="cdEvCarBtn(this)">Usa</button><div class="ed-del" data-act="del" data-idx="'+i+'" onclick="cdEvCarBtn(this)"><i class="dm-segno" data-dm-segno="trash" aria-hidden="true"></i></div></div>'; }).join('') : '<div class="ed-intro">Nessun profilo auto salvato.</div>'; var sel2 = cars.length ? '<select class="ed-input" style="width:100%; margin:8px 0;" onchange="cdEvCarSelEd(this)">'+'<option value="">— Scegli un profilo da modificare —</option>'+cars.map(function(c,i){ return '<option value="'+i+'"'+(i===act?' selected':'')+'>'+cdEsc(c.name||('Auto '+(i+1)))+'</option>'; }).join('')+'</select>' : ''; return sel2+'<div class="ed-intro" style="margin-top:16px;"><i class="dm-segno" data-dm-segno="ev" aria-hidden="true"></i> <b>Auto elettriche</b>: mappa le entità EV come sempre, poi salvale come profilo. Con due o più profili, nella pagina Auto compare la tendina per scegliere quale vedere.</div>'+rows+'<div style="display:flex; gap:8px; margin:8px 0 16px;"><input id="ed-evcar-name" class="ed-input" style="flex:1; margin:0;" placeholder="Nome auto (es. Leapmotor B10)"><button class="ed-btn-add" style="flex:0 0 auto;" onclick="edEvCarAdd()">＋ Salva attuale</button></div>'; } function edEvCarAdd(){ var n=(document.getElementById('ed-evcar-name').value||'').trim(); if(!n){ alert('Dai un nome al profilo auto'); return; } var prof=cdEvCaptureProfile(); if(!Object.keys(prof.ov).length){ alert('Nessuna entità EV mappata da salvare: mappa prima le entità della sezione Auto'); return; } var cars=getEvCars(); var found=-1; for(var ci=0;ci<cars.length;ci++){ if(cars[ci] && cars[ci].name===n){ found=ci; break; } } if(found>=0){ cars[found]={ name:n, ov:prof.ov, img:prof.img }; localStorage.setItem('cd_ev_car_active', String(found)); } else { cars.push({ name:n, ov:prof.ov, img:prof.img }); localStorage.setItem('cd_ev_car_active', String(cars.length-1)); } saveEvCars(cars); editorSwitch((typeof EDITOR_TAB !== 'undefined' && EDITOR_TAB) ? EDITOR_TAB : 'visib'); } function cdEvCarSelEd(sel){ try { var i=parseInt(sel.value,10); if(isNaN(i)) return; cdEvApplyCar(i); try { editorSwitch((typeof EDITOR_TAB !== 'undefined' && EDITOR_TAB) ? EDITOR_TAB : 'sez2'); } catch(e2){} } catch(e){} } function cdEvCarBtn(btn){ try { var act=btn.getAttribute('data-act'); var i=parseInt(btn.getAttribute('data-idx')||'-1',10); if(act==='use'){ cdEvApplyCar(i); } else { var cars=getEvCars(); cars.splice(i,1); saveEvCars(cars); var a=cdEvActive(); if(a===i) localStorage.setItem('cd_ev_car_active','-1'); else if(a>i) localStorage.setItem('cd_ev_car_active', String(a-1)); } editorSwitch((typeof EDITOR_TAB !== 'undefined' && EDITOR_TAB) ? EDITOR_TAB : 'visib'); } catch(e){} } function cdEnViewsHtml(){ var lst=cdEnList(); var cur=getEnViews(); var rows=lst.map(function(x,idx){ var k=x[0]; var on=(cur[k]!==false); return '<div class="ed-row" style="align-items:center;"><div class="ed-row-main"><div class="ed-row-new">'+cdSegno(x[1])+' '+x[2]+'</div></div><div onclick="edEnViewToggle('+idx+')" style="cursor:pointer;flex:0 0 52px;height:30px;border-radius:15px;background:'+(on?'#0ea5e9':'#cbd5e1')+';position:relative;transition:.2s;"><div style="position:absolute;top:3px;'+(on?'right:3px':'left:3px')+';width:24px;height:24px;border-radius:50%;background:#fff;"></div></div></div>'; }).join(''); return '<div class="ed-intro" style="margin-top:16px;"><i class="dm-segno" data-dm-segno="power" aria-hidden="true"></i> <b>Sezione Energia</b>: scegli quali viste mostrare. Chi non ha il fotovoltaico può tenere solo il Report; con la sola pinza sui consumi la mappa flussi nasconde da sola solare e batteria non mappati.</div>'+rows; } function edEnViewToggle(idx){ var lst=cdEnList(); var x=lst[idx]; if(!x) return; var k=x[0]; var cur=getEnViews(); cur[k]=(cur[k]===false); localStorage.setItem('cd_energy_views', JSON.stringify(cur)); try{ cdMarkDirty(); cdSyncPush(); }catch(e){} try{ cdApplyEnergyViews(); }catch(e){} editorSwitch((typeof EDITOR_TAB !== 'undefined' && EDITOR_TAB) ? EDITOR_TAB : 'visib'); } function cdSecKeyByOrd(n){ return ['home','energy','ev','boiler','security','','server','temp','','clima',''][n]||''; } function cdSecToggleHtml(k){ if(!k) return ''; var cur=cdCfg('cd_sections')||{}; var on=(cur[k]!==false); return '<button class="ed-btn-add" style="width:100%; margin:10px 0; background:'+(on?'linear-gradient(135deg,#10b981,#047857)':'linear-gradient(135deg,#94a3b8,#64748b)')+'; color:#fff;" data-key="'+k+'" onclick="edSecTog(this)">'+(on?'● Sezione visibile in dashboard — tocca per nascondere':'○ Sezione nascosta — tocca per mostrare')+'</button>'; } function edSecTog(btn){ try { var k=btn.getAttribute('data-key'); if(!k) return; var cur=cdCfg('cd_sections')||{}; cur[k]=(cur[k]===false); localStorage.setItem('cd_sections', JSON.stringify(cur)); try { cdMarkDirty(); cdSyncPush(); } catch(e2){} try { cdApplyNavVis(); } catch(e2){} try { if(typeof render==='function') render(); } catch(e2){} try { buildTempCards(); } catch(e2){} editorSwitch((typeof EDITOR_TAB !== 'undefined' && EDITOR_TAB) ? EDITOR_TAB : 'visib'); } catch(e){} } function edSecSave(){ try { cdMarkDirty(); cdSyncPush(); } catch(e){} try { edToast('Sezione salvata'); } catch(e){} } function edCostSplit(el, mode){ try { var kids=Array.prototype.slice.call(el.children); var start=-1; for(var i=0;i<kids.length;i++){ var t=(kids[i].textContent||''); if(t.indexOf('Costo energia')!==-1||t.indexOf('Energia cost')!==-1){ start=i; break; } } if(start<0) return null; if(mode==='hide'){ for(var j=start;j<kids.length;j++) kids[j].style.display='none'; return null; } var frag=document.createElement('div'); for(var k2=start;k2<kids.length;k2++) frag.appendChild(kids[k2]); return frag; } catch(e){ return null; } } function edFilterSez(el, n){ try { var ds=el.querySelectorAll('details.ed-acc'); for (var i=0;i<ds.length;i++){ var alsoN=(n===4)?10:-1; if(i===n||i===alsoN){ ds[i].open=true; } else { ds[i].style.display='none'; } } var it=el.querySelector('.ed-intro'); if(it && !it.closest('details')) it.style.display='none'; var extra=''; var k=cdSecKeyByOrd(n); if(k) extra+=cdSecToggleHtml(k); if(n===2){ try { extra+=cdEvCarsHtml(); } catch(e2){} }  if(extra){ var w=document.createElement('div'); w.innerHTML=extra; el.insertBefore(w, el.firstChild); } if(n===0){ ['dm.home_interruttore_antifurto','dm.home_script_apertura_cancello'].forEach(function(rf){ var inp=el.querySelector('input[data-ref="'+rf+'"]'); var blk=inp && (inp.closest('.ed-slot')||inp.parentElement); if(blk) blk.style.display='none'; }); }  try { el.querySelectorAll('input.ed-slot-in').forEach(function(inp){ var nx=inp.nextElementSibling; if(nx && nx.tagName==='BUTTON') return; var b=document.createElement('button'); b.type='button'; b.innerHTML='<i class="dm-segno" data-dm-segno="search" aria-hidden="true"></i>'; b.className='dm-entity-picker'; b.onclick=function(){ try { wzPickEntity(inp.getAttribute('data-ref')||inp); } catch(e2){} }; var par=inp.parentElement; if(par){ par.style.display='flex'; par.style.gap='6px'; inp.style.flex='1'; } inp.insertAdjacentElement('afterend', b); }); } catch(eL){} if(n>=7){ var sv=document.createElement('div'); sv.innerHTML='<button class="ed-btn-add" style="width:100%; margin-top:10px;" onclick="edSecSave()"><i class="dm-segno" data-dm-segno="check" aria-hidden="true"></i> Salva sezione</button>'; el.appendChild(sv); } } catch(e){} } function cdNavOrderHtml(){ try { var tabs=cdNavTabs(); if(!tabs.length) return ''; var lbl={}; tabs.forEach(function(t){ lbl[t.k]=t.lbl; }); var keys=cdNavKeys(); var rows=keys.map(function(k,i){ return '<div class="ed-row" style="align-items:center;"><div style="display:flex; gap:4px;"><div class="ed-del" style="'+(i===0?'opacity:0.25;pointer-events:none;':'')+'" data-i="'+i+'" data-d="-1" onclick="edNavMove(this)">▲</div><div class="ed-del" style="'+(i===keys.length-1?'opacity:0.25;pointer-events:none;':'')+'" data-i="'+i+'" data-d="1" onclick="edNavMove(this)">▼</div></div><div class="ed-row-main"><div class="ed-row-new">'+cdEsc(lbl[k]||k)+'</div></div></div>'; }).join(''); return '<div class="ed-intro" style="margin-top:16px;"><b>Ordine navbar</b>: disponi le sezioni della barra come preferisci.</div>'+rows; } catch(e){ return ''; } } function edNavMove(btn){ try { var i=parseInt(btn.getAttribute('data-i'),10); var d=parseInt(btn.getAttribute('data-d'),10); var keys=cdNavKeys(); var j=i+d; if(isNaN(i)||isNaN(d)||j<0||j>=keys.length) return; var t=keys[i]; keys[i]=keys[j]; keys[j]=t; localStorage.setItem('cd_navbar_order', JSON.stringify(keys)); try { cdMarkDirty(); cdSyncPush(); } catch(e2){} cdApplyNavOrder(); editorSwitch('visib'); } catch(e){} } function cdLuceRen(id){ try { var luci=cdCfg('cd_luci')||{}; var cur=luci[id]||id; var n=prompt('Nome luce', cur); if(n===null) return; n=String(n).trim(); if(!n) return; luci[id]=n; localStorage.setItem('cd_luci', JSON.stringify(luci)); try { cdMarkDirty(); cdSyncPush(); } catch(e2){} try { if(typeof updateGestioneLuci==='function') updateGestioneLuci(); } catch(e2){} editorSwitch('luci'); } catch(e){} } function cdLuceDel(id){ try { if(!confirm('Rimuovere questa luce dalla dashboard?')) return; var luci=cdCfg('cd_luci')||{}; delete luci[id]; localStorage.setItem('cd_luci', JSON.stringify(luci)); var rooms=cdCfg('cd_luci_rooms')||{}; if(rooms[id]!==undefined){ delete rooms[id]; localStorage.setItem('cd_luci_rooms', JSON.stringify(rooms)); } try { cdMarkDirty(); cdSyncPush(); } catch(e2){} try { if(typeof updateGestioneLuci==='function') updateGestioneLuci(); } catch(e2){} editorSwitch('luci'); } catch(e){} } function cdLuceAdd(){ try { var e1=document.getElementById('luce-add-ent'); var n1=document.getElementById('luce-add-name'); var ent=(e1&&e1.value||'').trim(); if(ent.indexOf('.')<0){ alert('Inserisci una entità light/switch valida'); return; } var nm=(n1&&n1.value||'').trim()||ent.split('.')[1]; var luci=cdCfg('cd_luci')||{}; luci[ent]=nm; localStorage.setItem('cd_luci', JSON.stringify(luci)); try { cdMarkDirty(); cdSyncPush(); } catch(e2){} try { cdSecShow('home'); } catch(e2){} editorSwitch('luci'); edToast('Luce aggiunta'); } catch(e){} } function edSaveGeneral(){ var t=(document.getElementById('ed-gen-title').value||'').trim(); var st2=(document.getElementById('ed-gen-sub').value||'').trim(); var a=(document.getElementById('ed-gen-admin').value||'').trim(); var br=cdCfg('cd_branding')||{}; if(t) br.title=t; else delete br.title; if(st2) br.subtitle=st2; else delete br.subtitle; localStorage.setItem('cd_branding', JSON.stringify(br)); var cn=cdCfg('cd_connection')||{}; cn.admin_users = a ? [a] : []; localStorage.setItem('cd_connection', JSON.stringify(cn)); try{ cdMarkDirty(); cdSyncPush(); }catch(e){} try{ edToast('Salvato'); }catch(e){} setTimeout(function(){ location.reload(); }, 700); } function editorRenderVisib(){ var sez=cdVisibSez(); var cur=cdCfg('cd_sections')||{}; var rows=sez.map(function(x,idx){ var k=x[0]; var on=(cur[k]!==false); return '<div class="ed-row" style="align-items:center;"><div class="ed-row-main"><div class="ed-row-new">'+cdSegno(x[1])+' '+x[2]+'</div><div class="ed-row-old">'+x[3]+'</div></div><div onclick="edVisibToggle('+idx+')" style="cursor:pointer;flex:0 0 52px;height:30px;border-radius:15px;background:'+(on?'#0ea5e9':'#cbd5e1')+';position:relative;transition:.2s;"><div style="position:absolute;top:3px;'+(on?'right:3px':'left:3px')+';width:24px;height:24px;border-radius:50%;background:#fff;"></div></div></div>'; }).join(''); var _rl2=''; try { _rl2=editorRenderRileva(); } catch(e) {} return cdGenHtml()+cdNavOrderHtml()+'<div class="ed-intro" style="margin-top:18px;"><b>Rilevamento e manutenzione</b>: autorilevamento entità e reset.</div>'+_rl2+'<div style="display:none;">'+'<div class="ed-intro">Attiva o disattiva intere <b>sezioni</b> della dashboard. Le sezioni disattivate spariscono dalla vista.</div><div class="ed-list">'+rows+'</div>'; } function edVisibToggle(idx){ var sez=cdVisibSez(); var x=sez[idx]; if(!x) return; var k=x[0]; setTimeout(function(){ try { cdApplyNavVis(); } catch(e){} }, 50); var cur=cdCfg('cd_sections')||{}; cur[k]=(cur[k]===false); localStorage.setItem('cd_sections', JSON.stringify(cur)); try { cdMarkDirty(); cdSyncPush(); } catch(e){} try { if(typeof render==='function') render(); } catch(e){} editorSwitch((typeof EDITOR_TAB !== 'undefined' && EDITOR_TAB) ? EDITOR_TAB : 'visib'); } function editorRenderPiscina(){ var o=getPool(); return '<div class="ed-intro">Gestione <b>piscina</b>: sensori, comandi e filtrazione automatica giornaliera. In modalità auto le ore di filtrazione sono temperatura/2 (min 2, max 12).</div>'+'<div style="display:flex; gap:8px; margin-bottom:8px;"><input id="ed-pl-temp" class="ed-input mono" autocomplete="off" style="flex:1;" placeholder="sensor.piscina_temperatura" value="'+cdEsc(o.tempEnt||'')+'"><button type="button" onclick="wzPickEntity(this.previousElementSibling)" style="flex:0 0 38px; height:38px; border:none; border-radius:10px; background:linear-gradient(135deg,#0ea5e9,#0369a1); color:#fff; font-size:14px; cursor:pointer;"><i class="dm-segno" data-dm-segno="search" aria-hidden="true"></i></button></div>'+'<div style="display:flex; gap:8px; margin-bottom:8px;"><input id="ed-pl-ph" class="ed-input mono" autocomplete="off" style="flex:1;" placeholder="sensor.piscina_ph (facoltativo)" value="'+cdEsc(o.phEnt||'')+'"><button type="button" onclick="wzPickEntity(this.previousElementSibling)" style="flex:0 0 38px; height:38px; border:none; border-radius:10px; background:linear-gradient(135deg,#0ea5e9,#0369a1); color:#fff; font-size:14px; cursor:pointer;"><i class="dm-segno" data-dm-segno="search" aria-hidden="true"></i></button></div>'+'<div style="display:flex; gap:8px; margin-bottom:8px;"><input id="ed-pl-cl" class="ed-input mono" autocomplete="off" style="flex:1;" placeholder="sensor.piscina_cloro (facoltativo)" value="'+cdEsc(o.clEnt||'')+'"><button type="button" onclick="wzPickEntity(this.previousElementSibling)" style="flex:0 0 38px; height:38px; border:none; border-radius:10px; background:linear-gradient(135deg,#0ea5e9,#0369a1); color:#fff; font-size:14px; cursor:pointer;"><i class="dm-segno" data-dm-segno="search" aria-hidden="true"></i></button></div>'+'<div style="display:flex; gap:8px; margin-bottom:8px;"><input id="ed-pl-pump" class="ed-input mono" autocomplete="off" style="flex:1;" placeholder="switch.pompa_piscina" value="'+cdEsc(o.pumpEnt||'')+'"><button type="button" onclick="wzPickEntity(this.previousElementSibling)" style="flex:0 0 38px; height:38px; border:none; border-radius:10px; background:linear-gradient(135deg,#0ea5e9,#0369a1); color:#fff; font-size:14px; cursor:pointer;"><i class="dm-segno" data-dm-segno="search" aria-hidden="true"></i></button></div>'+'<div style="display:flex; gap:8px; margin-bottom:8px;"><input id="ed-pl-heat" class="ed-input mono" autocomplete="off" style="flex:1;" placeholder="switch.riscaldamento_piscina (facoltativo)" value="'+cdEsc(o.heatEnt||'')+'"><button type="button" onclick="wzPickEntity(this.previousElementSibling)" style="flex:0 0 38px; height:38px; border:none; border-radius:10px; background:linear-gradient(135deg,#0ea5e9,#0369a1); color:#fff; font-size:14px; cursor:pointer;"><i class="dm-segno" data-dm-segno="search" aria-hidden="true"></i></button></div>'+'<div style="display:flex; gap:8px; margin-bottom:8px;"><input id="ed-pl-light" class="ed-input mono" autocomplete="off" style="flex:1;" placeholder="light.piscina (facoltativo)" value="'+cdEsc(o.lightEnt||'')+'"><button type="button" onclick="wzPickEntity(this.previousElementSibling)" style="flex:0 0 38px; height:38px; border:none; border-radius:10px; background:linear-gradient(135deg,#0ea5e9,#0369a1); color:#fff; font-size:14px; cursor:pointer;"><i class="dm-segno" data-dm-segno="search" aria-hidden="true"></i></button></div>'+'<div class="ed-intro">Soglie qualità (avvisi) e filtrazione.</div>'+'<div style="display:flex; gap:8px; margin-bottom:8px;"><input id="ed-pl-phmin" type="number" step="0.1" class="ed-input" style="flex:1; margin:0;" title="pH minimo" value="'+cdEsc(o.phMin!=null?o.phMin:7.0)+'"><input id="ed-pl-phmax" type="number" step="0.1" class="ed-input" style="flex:1; margin:0;" title="pH massimo" value="'+cdEsc(o.phMax!=null?o.phMax:7.6)+'"></div>'+'<div style="display:flex; gap:8px; margin-bottom:8px;"><input id="ed-pl-clmin" type="number" step="0.1" class="ed-input" style="flex:1; margin:0;" title="Cloro minimo" placeholder="Cloro min" value="'+cdEsc(o.clMin!=null?o.clMin:'')+'"><input id="ed-pl-clmax" type="number" step="0.1" class="ed-input" style="flex:1; margin:0;" title="Cloro massimo" placeholder="Cloro max" value="'+cdEsc(o.clMax!=null?o.clMax:'')+'"></div>'+'<label class="ed-intro" style="display:flex; gap:8px; align-items:center;"><input id="ed-pl-auto" type="checkbox" '+(o.autoHours?'checked':'')+'> Ore automatiche (temperatura/2)</label>'+'<div style="display:flex; gap:8px; margin-bottom:8px;"><input id="ed-pl-hours" type="number" min="1" max="24" class="ed-input" style="flex:1; margin:0;" title="Ore fisse" value="'+(+o.filterHours||8)+'"><input id="ed-pl-time" type="time" class="ed-input" style="flex:1; margin:0;" value="'+cdEsc(o.filterStart||'09:00')+'"></div>'+'<label class="ed-intro" style="display:flex; gap:8px; align-items:center;"><input id="ed-pl-en" type="checkbox" '+(o.enabled?'checked':'')+'> Filtrazione giornaliera attiva (col tablet acceso)</label>'+'<button class="ed-btn-add" style="width:100%;" onclick="edPoolSaveCfg()"><i class="dm-segno" data-dm-segno="check" aria-hidden="true"></i> Salva piscina</button>'; } function edPoolSaveCfg(){ var o=getPool(); o.tempEnt=(document.getElementById('ed-pl-temp').value||'').trim(); o.phEnt=(document.getElementById('ed-pl-ph').value||'').trim(); o.clEnt=(document.getElementById('ed-pl-cl').value||'').trim(); o.pumpEnt=(document.getElementById('ed-pl-pump').value||'').trim(); o.heatEnt=(document.getElementById('ed-pl-heat').value||'').trim(); o.lightEnt=(document.getElementById('ed-pl-light').value||'').trim(); var a=parseFloat(document.getElementById('ed-pl-phmin').value); o.phMin=isNaN(a)?7.0:a; var b=parseFloat(document.getElementById('ed-pl-phmax').value); o.phMax=isNaN(b)?7.6:b; var c=parseFloat(document.getElementById('ed-pl-clmin').value); o.clMin=isNaN(c)?null:c; var d2=parseFloat(document.getElementById('ed-pl-clmax').value); o.clMax=isNaN(d2)?null:d2; o.autoHours=!!document.getElementById('ed-pl-auto').checked; var h=parseFloat(document.getElementById('ed-pl-hours').value); o.filterHours=(isNaN(h)||h<=0)?8:h; o.filterStart=(document.getElementById('ed-pl-time').value||'09:00'); o.enabled=!!document.getElementById('ed-pl-en').checked; savePool(o); try{ renderPiscina(); }catch(ex){} try{ edToast('Piscina salvata'); }catch(ex){} editorSwitch('pool'); } function editorRenderIrrigazione(){ var o=getIrr(); var rows = o.zones.length ? o.zones.map(function(z,i){ var fl=cdRoomFloorOf(z.room||''); return '<div class="ed-row" style="align-items:center;"><div class="ed-row-main"><div class="ed-row-new"><i class="dm-segno" data-dm-segno="plant" aria-hidden="true"></i> '+cdEsc(z.name||z.entity)+' · '+(parseFloat(z.mins)||10)+' min</div><div class="ed-row-old">'+cdEsc((z.room?(''+z.room):'')+(fl?(' · '+fl):''))+'</div></div><div class="ed-del" onclick="edIrrDel('+i+')"><i class="dm-segno" data-dm-segno="trash" aria-hidden="true"></i></div></div>'; }).join('') : '<div class="ed-intro">Nessuna zona. Aggiungine una qui sotto.</div>'; return '<div class="ed-intro">Zone di <b>irrigazione</b> (switch o valve). Il programma le avvia in sequenza, ognuna per la sua durata, e salta quando la probabilità di pioggia supera la soglia.</div>'+rows+'<input id="ed-irr-name" class="ed-input" style="margin:8px 0;" placeholder="Nome zona (es. Prato davanti)">'+'<div style="display:flex; gap:8px; margin-bottom:8px;"><input id="ed-irr-ent" class="ed-input mono" autocomplete="off" style="flex:1;" placeholder="switch.irrigazione_zona1"><button type="button" onclick="wzPickEntity(this.previousElementSibling)" style="flex:0 0 38px; height:38px; border:none; border-radius:10px; background:linear-gradient(135deg,#0ea5e9,#0369a1); color:#fff; font-size:14px; cursor:pointer;"><i class="dm-segno" data-dm-segno="search" aria-hidden="true"></i></button></div>'+'<div style="display:flex; gap:8px; margin-bottom:8px;"><select id="ed-irr-room" class="ed-input" style="flex:1; margin:0;">'+cdRoomOptions('')+'</select><input id="ed-irr-min" type="number" min="1" max="180" value="10" class="ed-input" style="flex:0 0 90px; margin:0;" title="Durata (minuti)"></div>'+'<button class="ed-btn-add" style="width:100%; margin-bottom:16px;" onclick="edIrrAddZone()">＋ Aggiungi zona</button>'+'<div class="ed-intro"><b>Meteo e programma</b>: sensore % pioggia, soglia, meteo (facoltativo) e orario di avvio.</div>'+'<div style="display:flex; gap:8px; margin-bottom:8px;"><input id="ed-irr-rain" class="ed-input mono" autocomplete="off" style="flex:1;" placeholder="sensor.prob_pioggia_oggi (%)\\" value="'+cdEsc(o.rainEnt||'')+'"><button type="button" onclick="wzPickEntity(this.previousElementSibling)" style="flex:0 0 38px; height:38px; border:none; border-radius:10px; background:linear-gradient(135deg,#0ea5e9,#0369a1); color:#fff; font-size:14px; cursor:pointer;"><i class="dm-segno" data-dm-segno="search" aria-hidden="true"></i></button></div>'+'<div style="display:flex; gap:8px; margin-bottom:8px;"><input id="ed-irr-weather" class="ed-input mono" autocomplete="off" style="flex:1;" placeholder="weather.casa (facoltativo)\\" value="'+cdEsc(o.weatherEnt||'')+'"><button type="button" onclick="wzPickEntity(this.previousElementSibling)" style="flex:0 0 38px; height:38px; border:none; border-radius:10px; background:linear-gradient(135deg,#0ea5e9,#0369a1); color:#fff; font-size:14px; cursor:pointer;"><i class="dm-segno" data-dm-segno="search" aria-hidden="true"></i></button></div>'+'<div style="display:flex; gap:8px; margin-bottom:8px;"><input id="ed-irr-thr" type="number" min="0" max="100" value="'+(+o.rainThr||60)+'" class="ed-input" style="flex:1; margin:0;" title="Soglia pioggia %"><input id="ed-irr-time" type="time" value="'+cdEsc(o.time||'06:30')+'" class="ed-input" style="flex:1; margin:0;"></div>'+'<label class="ed-intro" style="display:flex; gap:8px; align-items:center;"><input id="ed-irr-en" type="checkbox" '+(o.enabled?'checked':'')+'> Programma attivo (ogni giorno, col tablet acceso)</label>'+'<button class="ed-btn-add" style="width:100%;" onclick="edIrrSaveCfg()"><i class="dm-segno" data-dm-segno="check" aria-hidden="true"></i> Salva impostazioni</button>'; } function edIrrAddZone(){ var n=(document.getElementById('ed-irr-name').value||'').trim(); var e=(document.getElementById('ed-irr-ent').value||'').trim(); var r=(document.getElementById('ed-irr-room').value||'').trim(); var m=parseFloat(document.getElementById('ed-irr-min').value); if(!e || e.indexOf('.')<0){ alert('Inserisci una entità valida (switch o valve)'); return; } var o=getIrr(); var z={ name:n||e, entity:e, mins:(isNaN(m)||m<=0)?10:m }; if(r) z.room=r; o.zones.push(z); saveIrr(o); try{ renderIrrigazione(); }catch(ex){} editorSwitch('irr'); } function edIrrDel(i){ var o=getIrr(); o.zones.splice(i,1); saveIrr(o); try{ renderIrrigazione(); }catch(ex){} editorSwitch('irr'); } function edIrrSaveCfg(){ var o=getIrr(); o.rainEnt=(document.getElementById('ed-irr-rain').value||'').trim(); o.weatherEnt=(document.getElementById('ed-irr-weather').value||'').trim(); var t=parseFloat(document.getElementById('ed-irr-thr').value); o.rainThr=(isNaN(t)||t<0)?60:Math.min(100,t); o.time=(document.getElementById('ed-irr-time').value||'06:30'); o.enabled=!!document.getElementById('ed-irr-en').checked; saveIrr(o); try{ renderIrrigazione(); }catch(ex){} try{ edToast('Impostazioni irrigazione salvate'); }catch(ex){} editorSwitch('irr'); } function editorRenderTapparelle(){ var list=getTapparelle(); var rows = list.length ? list.map(function(t,i){ var fl=cdRoomFloorOf(t.room||''); return '<div class="ed-row" style="align-items:center;"><div class="ed-row-main"><div class="ed-row-new"><i class="dm-segno" data-dm-segno="window" aria-hidden="true"></i> '+cdEsc(t.name||t.entity)+'</div><div class="ed-row-old">'+cdEsc((t.room?(''+t.room):'')+(fl?(' · '+fl):''))+'</div></div><div class="ed-del" title="Inverti le percentuali (100 = chiusa)" style="'+(t.invertita?'background:linear-gradient(135deg,#0ea5e9,#0369a1);color:#fff;':'')+'" onclick="edTappInv('+i+')">⇄</div><div class="ed-del" onclick="edTappDel('+i+')"><i class="dm-segno" data-dm-segno="trash" aria-hidden="true"></i></div></div>'; }).join('') : '<div class="ed-intro">Nessuna tapparella. Aggiungine una qui sotto.</div>'; return '<div class="ed-intro">Gestisci le <b>tapparelle</b> (entità cover). Compaiono nella pagina Finestre, raggruppate per piano e stanza.</div>'+rows+'<input id="ed-tp-name" class="ed-input" style="margin:8px 0;" placeholder="Nome (es. Tapparella salone)">'+'<div style="display:flex; gap:8px; margin-bottom:8px;"><input id="ed-tp-ent" class="ed-input mono" autocomplete="off" style="flex:1;" placeholder="cover.tapparella_x"><button type="button" onclick="wzPickEntity(this.previousElementSibling)" style="flex:0 0 38px; height:38px; border:none; border-radius:10px; background:linear-gradient(135deg,#0ea5e9,#0369a1); color:#fff; font-size:14px; cursor:pointer;"><i class="dm-segno" data-dm-segno="search" aria-hidden="true"></i></button></div>'+'<select id="ed-tp-room" class="ed-input" style="margin-bottom:8px;">'+cdRoomOptions('')+'</select>'+'<label style="display:flex;align-items:center;gap:8px;margin-bottom:8px;font-size:13px;cursor:pointer;"><input type="checkbox" id="ed-tp-inv"> Percentuali invertite (100% = chiusa)</label>'+'<button class="ed-btn-add" style="width:100%;" onclick="edTappAdd()">＋ Aggiungi tapparella</button>'; } function edTappAdd(){ var n=(document.getElementById('ed-tp-name').value||'').trim(); var e=(document.getElementById('ed-tp-ent').value||'').trim(); var r=(document.getElementById('ed-tp-room').value||'').trim(); if(!e || e.indexOf('.')<0){ alert('Inserisci una entità cover valida'); return; } var list=getTapparelle().slice(); var it={ name: n||e, entity: e }; if(r) it.room=r; try { var inv=document.getElementById('ed-tp-inv'); if(inv&&inv.checked) it.invertita=true; } catch(einv){} list.push(it); localStorage.setItem('cd_tapparelle', JSON.stringify(list)); try{ cdMarkDirty(); cdSyncPush(); }catch(ex){} try{ renderTapparelle(); }catch(ex){} editorSwitch('tapp'); } function edTappDel(i){ var list=getTapparelle().slice(); list.splice(i,1); localStorage.setItem('cd_tapparelle', JSON.stringify(list)); try{ cdMarkDirty(); cdSyncPush(); }catch(ex){} try{ renderTapparelle(); }catch(ex){} editorSwitch('tapp'); } function editorRenderStanze(){ var rooms = (typeof getStanze==='function'?getStanze():[])||[]; var esc=function(x){return String(x==null?'':x).replace(/"/g,'&quot;');}; var rowsHtml = rooms.map(function(r,i){ return '<div class="ed-row"><div class="ed-row-main"><div class="ed-row-new">'+((r.icon?cdIconMarkup(r.icon,22)+' ':'<i class="dm-segno" data-dm-segno="home" aria-hidden="true"></i> ')+cdEsc(r.name||'Stanza'))+'</div>'+(r.floor?'<div class="ed-row-old"><i class="dm-segno" data-dm-segno="home" aria-hidden="true"></i> '+cdEsc(r.floor)+'</div>':'')+'</div>'+'<div class="ed-del" onclick="edStanzaRoomDel('+i+')" title="Elimina"><i class="dm-segno" data-dm-segno="trash" aria-hidden="true"></i></div></div>'; }).join('') || '<div class="ed-empty">Nessuna stanza. Aggiungine una qui sotto.</div>'; return '<div class="ed-intro">Gestisci qui le tue <b>stanze</b>. Ogni stanza creata qui compare nel menù a tendina di elettrodomestici, clima e telecamere. Per i sensori di temperatura usa la sezione dedicata.</div>'+'<div class="ed-list">'+rowsHtml+'</div>'+'<div class="ed-form">'+'<div style="display:flex;gap:8px;margin-bottom:8px;"><span id="ed-room-icon-preview" style="flex:0 0 34px;display:flex;align-items:center;justify-content:center;"><i class="dm-segno" data-dm-segno="home" aria-hidden="true"></i></span><input id="ed-room-icon" class="ed-input" style="flex:0 0 120px;text-align:center;" placeholder="mdi:sofa" value="🏠" oninput="document.getElementById(&quot;ed-room-icon-preview&quot;).innerHTML=cdIconMarkup(this.value,26)"><button type="button" onclick="dmIconPicker(&quot;#ed-room-icon&quot;, &quot;rooms&quot;)" title="Selettore icone" style="flex:0 0 38px;border:0;border-radius:10px;cursor:pointer;"><i class="dm-segno" data-dm-segno="sliders" aria-hidden="true"></i></button><input id="ed-room-name" class="ed-input" style="flex:1;" placeholder="Nome stanza (es. Cucina)"></div><select id="ed-room-floor" class="ed-input" style="margin-bottom:8px;">'+cdFloorSelOptions()+'</select>'+'<button class="ed-btn-add" onclick="edStanzaRoomAdd()">＋ Aggiungi stanza</button>'+cdFloorRowsHtml()+''+'</div>'; } function edStanzaRoomAdd(){ var name=(document.getElementById('ed-room-name').value||'').trim(); if(!name){ alert('Inserisci il nome della stanza'); return; } var icon=(document.getElementById('ed-room-icon').value||'🏠').trim(); var floor=(document.getElementById('ed-room-floor').value||'').trim(); if(floor==='__new__') floor=''; var rooms=(typeof getStanze==='function'?getStanze():[]).slice(); var r={ id:'room_'+Date.now().toString(36), name:name, icon:icon }; if(floor) r.floor=floor; rooms.push(r); localStorage.setItem('cd_stanze', JSON.stringify(rooms)); try { cdMarkDirty(); cdSyncPush(); } catch(e){} try { buildTempCards(); } catch(e){} editorSwitch('stanze'); } function edStanzaRoomDel(i){ var rooms=(typeof getStanze==='function'?getStanze():[]).slice(); rooms.splice(i,1); localStorage.setItem('cd_stanze', JSON.stringify(rooms)); try { cdMarkDirty(); cdSyncPush(); } catch(e){} try { buildTempCards(); } catch(e){} editorSwitch('stanze'); } function editorRenderLuci() {
+function cdDbgStatus(){ try { return '<div class="ed-intro mono" style="font-size:11px;opacity:0.75;">v'+(typeof DASHBOARD_VERSION==='undefined'?'?':DASHBOARD_VERSION)+' | hosted:'+(window.__DASHBOARDMODERN_HOSTED__?1:0)+' | bridge:'+(window.__DASHBOARDMODERN_BRIDGED__?1:0)+' | token:'+(window.__DASHBOARDMODERN_REAL_TOKEN__?1:0)+' | sync:'+cdEsc(localStorage.getItem('cd_sync_ts')||0)+' | inst:'+cdEsc(String(window.__DASHBOARDMODERN_STORAGE_NS__||'-').slice(0,10))+' | prim:'+(window.__DASHBOARDMODERN_PRIMARY__===false?0:1)+' | q:'+cdEsc(String(location.search||'').slice(0,18))+' | key:'+(('dashboardmodern_integration_config' + (window.__DASHBOARDMODERN_PRIMARY__===false && window.__DASHBOARDMODERN_INSTANCE__ ? '__'+String(window.__DASHBOARDMODERN_INSTANCE__).replace(/[^a-zA-Z0-9_-]/g,'').slice(0,16) : ''))).slice(-14)+'</div>'; } catch(e){ return ''; } } function cdNavDiag(){ try { var mp=cdNavVisMap(); var cur=cdCfg('cd_sections')||{}; var L=[]; L.push('ver=0.12.1-int url='+location.pathname.slice(-46)); L.push('inst='+String(window.__DASHBOARDMODERN_STORAGE_NS__||'-').slice(0,12)+' prim='+(window.__DASHBOARDMODERN_PRIMARY__===false?0:1)); L.push('secboot='+(window.__CD_SBRUN||0)+' navvis='+(window.__CD_NVRUN||0)); L.push('cd_sections='+String(localStorage.getItem('cd_sections'))); Object.keys(mp).forEach(function(k){ var sel='.tab[data-tab="'+mp[k]+'"]'; var els=document.querySelectorAll(sel); var pg=document.getElementById('page-'+mp[k]); var st=els.length?getComputedStyle(els[0]).display:'-'; L.push(k+': cfg='+String(cur[k])+' tabs='+els.length+' disp='+st+' page='+(pg?1:0)); }); try { var st3=cdSecLS('cd_stanze')||[]; var wt=st3.filter(function(r){ return r&&r.temp; }); L.push('stanze='+st3.length+' con-temp='+wt.length+' CD_TEMP_FLOOR='+String(typeof CD_TEMP_FLOOR!=='undefined'?CD_TEMP_FLOOR:'?')); var g3=document.getElementById('temp-grid'); var errT=''; try { buildTempCards(); } catch(eT){ errT=eT.message; } L.push('temp-grid='+(g3?g3.children.length:'assente')+(errT?' ERR='+errT:'')); } catch(eX){ L.push('temp-diag-err'); } try { var ap3=cdCfgList('cd_appliances'); ap3.forEach(function(a){ if(!a) return; var ents=(a.entities||[]); var hasE=false; ents.forEach(function(en2){ var s4=STATES[en2]||{}; var at=(s4.attributes||{}); if(at.device_class==='energy'||/wh$/i.test(String(at.unit_of_measurement||''))) hasE=true; }); L.push('appl '+(a.name||'?')+': ents='+ents.length+' kwh='+(hasE?1:0)); }); } catch(eY){ L.push('appl-diag-err'); } var rep=L.join('\n'); try { console.log('[NavDiag]\n'+rep); } catch(e2){} prompt('Diagnosi navbar (tieni premuto per copiare)', rep); } catch(e){ alert('diag err: '+e.message); } } function editorRenderRileva(){ var st=cdDbgStatus(); st+='<button class="ed-btn-add" style="width:100%; margin:6px 0 10px;" onclick="cdNavDiag()">🧪 Diagnosi navbar</button>'; return st+'<div class="ed-intro">🪄 <b>Autorilevamento</b>: analizza tutte le entità di Home Assistant e compila da solo luci, clima, stanze, telecamere e collegamenti. Puoi correggere tutto dopo nelle altre schede.</div>'+'<button class="ed-btn-add" style="width:100%;" onclick="edAutoRileva()">🪄 Avvia autorilevamento</button>'+'<div id="ed-rileva-out" style="margin-top:10px;"></div>'+'<div style="margin-top:22px;border-top:1px solid rgba(220,38,38,0.3);padding-top:12px;"><button class="ed-btn-add" style="width:100%;background:linear-gradient(135deg,#ef4444,#b91c1c);color:#fff;" onclick="wzResetAll()">🗑️ Reset totale configurazione</button></div>'; } function edAutoRilevaLog(t){ var o=document.getElementById('ed-rileva-out'); if(o) o.innerHTML='<div class="ed-intro">'+t+'</div>'; } /* t e' testo nostro; gli errori passano da cdEsc dove si chiama */ function edAutoRileva(){ try { apriSetupWizard(); var wz=document.getElementById('setup-wizard'); if(wz) wz.remove(); } catch(e){} edAutoRilevaLog('⏳ Carico tutte le entità da Home Assistant…'); try { wzLoadAllEntities(); } catch(e){} var tries=0; var t=setInterval(function(){ tries++; if (typeof WIZ!=='undefined' && WIZ && WIZ.allMeta && WIZ.allMeta.length){ clearInterval(t); try { wzAutoDetect(); } catch(e){ edAutoRilevaLog('❌ '+cdEsc(e.message)); return; } try { if (WIZ.luci && Object.keys(WIZ.luci).length) localStorage.setItem('cd_luci', JSON.stringify(WIZ.luci)); if (WIZ.stanze && WIZ.stanze.length) localStorage.setItem('cd_stanze', JSON.stringify(WIZ.stanze)); if (WIZ.climaUnits && WIZ.climaUnits.length) localStorage.setItem('cd_clima_units', JSON.stringify(WIZ.climaUnits)); if (WIZ.cameras && WIZ.cameras.length) localStorage.setItem('cd_cameras', JSON.stringify(WIZ.cameras)); if (WIZ.entities && Object.keys(WIZ.entities).length){ var ov={}; try{ ov=JSON.parse(localStorage.getItem('cd_entity_overrides'))||{}; }catch(e){} Object.keys(WIZ.entities).forEach(function(k){ ov[k]=WIZ.entities[k]; }); localStorage.setItem('cd_entity_overrides', JSON.stringify(ov)); } try{ cdMarkDirty(); cdSyncPush(); }catch(e){} edAutoRilevaLog('✅ Rilevate: '+Object.keys(WIZ.luci||{}).length+' luci · '+(WIZ.stanze||[]).length+' stanze · '+(WIZ.climaUnits||[]).length+' clima · '+(WIZ.cameras||[]).length+' camere · '+Object.keys(WIZ.entities||{}).length+' entità.<br>Ricarico…'); cdRegEnrich(function(){ setTimeout(function(){ location.reload(); }, 400); }); } catch(e){ edAutoRilevaLog('❌ '+cdEsc(e.message)); } } else if (tries>40){ clearInterval(t); edAutoRilevaLog('❌ Timeout nel caricamento entità. Riprova.'); } }, 500); } function cdVisibSez(){ return [['home','🏠','Home','Meteo, avvisi, azioni rapide'],['energy','⚡','Energia','Fotovoltaico e consumi'],['ev','🚗','Auto elettrica','EV + wallbox (EVCC)'],['boiler','🌞','Solare termico','Boiler solare'],['clima','❄️','Clima','Condizionatori e riscaldamento'],['temp','🌡️','Temperatura','Temperature e umidità'],['security','🛡️','Sicurezza','Telecamere e allarme'],['server','🖥️','MiniPC','Monitoraggio server']]; } function e2Gen(v){ return cdEsc(v||''); } function cdGenHtml(){ var br=cdCfg('cd_branding')||{}; var cn2=cdCfg('cd_connection')||{}; var adm=(cn2.admin_users&&cn2.admin_users[0])||''; return "<div class='ed-intro'><b>Generali</b>: nome della dashboard e utente amministratore.</div>" +"<input id='ed-gen-title' class='ed-input' style='margin-bottom:8px;' placeholder='Nome dashboard (es. SMART HOME)' value='"+e2Gen(br.title)+"'>" +"<input id='ed-gen-sub' class='ed-input' style='margin-bottom:8px;' placeholder='Sottotitolo' value='"+e2Gen(br.subtitle)+"'>" +"<input id='ed-gen-admin' class='ed-input' style='margin-bottom:8px;' placeholder='Utente admin (vuoto = Config visibile a tutti)' value='"+e2Gen(adm)+"'>" +"<button class='ed-btn-add' style='width:100%;margin-bottom:16px;' onclick='edSaveGeneral()'>💾 Salva generali</button>"; } function cdEvCarsHtml(){ var cars=getEvCars(); var act=cdEvActive(); var rows = cars.length ? cars.map(function(c,i){ return '<div class="ed-row" style="align-items:center;"><div class="ed-row-main"><div class="ed-row-new">🚗 '+cdEsc(c.name||('Auto '+(i+1)))+(i===act?' <span class="pool-badge">✓ attiva</span>':'')+'</div><div class="ed-row-old">'+Object.keys(c.ov||{}).length+' entità mappate</div></div><button class="ed-btn-add" style="flex:0 0 auto; margin-right:6px;" data-act="use" data-idx="'+i+'" onclick="cdEvCarBtn(this)">Usa</button><div class="ed-del" data-act="del" data-idx="'+i+'" onclick="cdEvCarBtn(this)">🗑️</div></div>'; }).join('') : '<div class="ed-intro">Nessun profilo auto salvato.</div>'; var sel2 = cars.length ? '<select class="ed-input" style="width:100%; margin:8px 0;" onchange="cdEvCarSelEd(this)">'+'<option value="">— Scegli un profilo da modificare —</option>'+cars.map(function(c,i){ return '<option value="'+i+'"'+(i===act?' selected':'')+'>🚗 '+cdEsc(c.name||('Auto '+(i+1)))+'</option>'; }).join('')+'</select>' : ''; return sel2+'<div class="ed-intro" style="margin-top:16px;">🚗 <b>Auto elettriche</b>: mappa le entità EV come sempre, poi salvale come profilo. Con due o più profili, nella pagina Auto compare la tendina per scegliere quale vedere.</div>'+rows+'<div style="display:flex; gap:8px; margin:8px 0 16px;"><input id="ed-evcar-name" class="ed-input" style="flex:1; margin:0;" placeholder="Nome auto (es. Leapmotor B10)"><button class="ed-btn-add" style="flex:0 0 auto;" onclick="edEvCarAdd()">＋ Salva attuale</button></div>'; } function edEvCarAdd(){ var n=(document.getElementById('ed-evcar-name').value||'').trim(); if(!n){ alert('Dai un nome al profilo auto'); return; } var prof=cdEvCaptureProfile(); if(!Object.keys(prof.ov).length){ alert('Nessuna entità EV mappata da salvare: mappa prima le entità della sezione Auto'); return; } var cars=getEvCars(); var found=-1; for(var ci=0;ci<cars.length;ci++){ if(cars[ci] && cars[ci].name===n){ found=ci; break; } } if(found>=0){ cars[found]={ name:n, ov:prof.ov, img:prof.img }; localStorage.setItem('cd_ev_car_active', String(found)); } else { cars.push({ name:n, ov:prof.ov, img:prof.img }); localStorage.setItem('cd_ev_car_active', String(cars.length-1)); } saveEvCars(cars); editorSwitch((typeof EDITOR_TAB !== 'undefined' && EDITOR_TAB) ? EDITOR_TAB : 'visib'); } function cdEvCarSelEd(sel){ try { var i=parseInt(sel.value,10); if(isNaN(i)) return; cdEvApplyCar(i); try { editorSwitch((typeof EDITOR_TAB !== 'undefined' && EDITOR_TAB) ? EDITOR_TAB : 'sez2'); } catch(e2){} } catch(e){} } function cdEvCarBtn(btn){ try { var act=btn.getAttribute('data-act'); var i=parseInt(btn.getAttribute('data-idx')||'-1',10); if(act==='use'){ cdEvApplyCar(i); } else { var cars=getEvCars(); cars.splice(i,1); saveEvCars(cars); var a=cdEvActive(); if(a===i) localStorage.setItem('cd_ev_car_active','-1'); else if(a>i) localStorage.setItem('cd_ev_car_active', String(a-1)); } editorSwitch((typeof EDITOR_TAB !== 'undefined' && EDITOR_TAB) ? EDITOR_TAB : 'visib'); } catch(e){} } function cdEnViewsHtml(){ var lst=cdEnList(); var cur=getEnViews(); var rows=lst.map(function(x,idx){ var k=x[0]; var on=(cur[k]!==false); return '<div class="ed-row" style="align-items:center;"><div class="ed-row-main"><div class="ed-row-new">'+x[1]+' '+x[2]+'</div></div><div onclick="edEnViewToggle('+idx+')" style="cursor:pointer;flex:0 0 52px;height:30px;border-radius:15px;background:'+(on?'#0ea5e9':'#cbd5e1')+';position:relative;transition:.2s;"><div style="position:absolute;top:3px;'+(on?'right:3px':'left:3px')+';width:24px;height:24px;border-radius:50%;background:#fff;"></div></div></div>'; }).join(''); return '<div class="ed-intro" style="margin-top:16px;">⚡ <b>Sezione Energia</b>: scegli quali viste mostrare. Chi non ha il fotovoltaico può tenere solo il Report; con la sola pinza sui consumi la mappa flussi nasconde da sola solare e batteria non mappati.</div>'+rows; } function edEnViewToggle(idx){ var lst=cdEnList(); var x=lst[idx]; if(!x) return; var k=x[0]; var cur=getEnViews(); cur[k]=(cur[k]===false); localStorage.setItem('cd_energy_views', JSON.stringify(cur)); try{ cdMarkDirty(); cdSyncPush(); }catch(e){} try{ cdApplyEnergyViews(); }catch(e){} editorSwitch((typeof EDITOR_TAB !== 'undefined' && EDITOR_TAB) ? EDITOR_TAB : 'visib'); } function cdSecKeyByOrd(n){ return ['home','energy','ev','boiler','security','','server','temp','','clima',''][n]||''; } function cdSecToggleHtml(k){ if(!k) return ''; var cur=cdCfg('cd_sections')||{}; var on=(cur[k]!==false); return '<button class="ed-btn-add" style="width:100%; margin:10px 0; background:'+(on?'linear-gradient(135deg,#10b981,#047857)':'linear-gradient(135deg,#94a3b8,#64748b)')+'; color:#fff;" data-key="'+k+'" onclick="edSecTog(this)">'+(on?'🟢 Sezione visibile in dashboard — tocca per nascondere':'⚪ Sezione nascosta — tocca per mostrare')+'</button>'; } function edSecTog(btn){ try { var k=btn.getAttribute('data-key'); if(!k) return; var cur=cdCfg('cd_sections')||{}; cur[k]=(cur[k]===false); localStorage.setItem('cd_sections', JSON.stringify(cur)); try { cdMarkDirty(); cdSyncPush(); } catch(e2){} try { cdApplyNavVis(); } catch(e2){} try { if(typeof render==='function') render(); } catch(e2){} try { buildTempCards(); } catch(e2){} editorSwitch((typeof EDITOR_TAB !== 'undefined' && EDITOR_TAB) ? EDITOR_TAB : 'visib'); } catch(e){} } function edSecSave(){ try { cdMarkDirty(); cdSyncPush(); } catch(e){} try { edToast('Sezione salvata'); } catch(e){} } function edCostSplit(el, mode){ try { var kids=Array.prototype.slice.call(el.children); var start=-1; for(var i=0;i<kids.length;i++){ var t=(kids[i].textContent||''); if(t.indexOf('Costo energia')!==-1||t.indexOf('Energia cost')!==-1){ start=i; break; } } if(start<0) return null; if(mode==='hide'){ for(var j=start;j<kids.length;j++) kids[j].style.display='none'; return null; } var frag=document.createElement('div'); for(var k2=start;k2<kids.length;k2++) frag.appendChild(kids[k2]); return frag; } catch(e){ return null; } } function edFilterSez(el, n){ try { var ds=el.querySelectorAll('details.ed-acc'); for (var i=0;i<ds.length;i++){ var alsoN=(n===4)?10:-1; if(i===n||i===alsoN){ ds[i].open=true; } else { ds[i].style.display='none'; } } var it=el.querySelector('.ed-intro'); if(it && !it.closest('details')) it.style.display='none'; var extra=''; var k=cdSecKeyByOrd(n); if(k) extra+=cdSecToggleHtml(k); if(n===2){ try { extra+=cdEvCarsHtml(); } catch(e2){} }  if(extra){ var w=document.createElement('div'); w.innerHTML=extra; el.insertBefore(w, el.firstChild); } if(n===0){ ['dm.home_interruttore_antifurto','dm.home_script_apertura_cancello'].forEach(function(rf){ var inp=el.querySelector('input[data-ref="'+rf+'"]'); var blk=inp && (inp.closest('.ed-slot')||inp.parentElement); if(blk) blk.style.display='none'; }); }  try { el.querySelectorAll('input.ed-slot-in').forEach(function(inp){ var nx=inp.nextElementSibling; if(nx && nx.tagName==='BUTTON') return; var b=document.createElement('button'); b.type='button'; b.textContent='🔍'; b.className='dm-entity-picker'; b.onclick=function(){ try { wzPickEntity(inp.getAttribute('data-ref')||inp); } catch(e2){} }; var par=inp.parentElement; if(par){ par.style.display='flex'; par.style.gap='6px'; inp.style.flex='1'; } inp.insertAdjacentElement('afterend', b); }); } catch(eL){} if(n>=7){ var sv=document.createElement('div'); sv.innerHTML='<button class="ed-btn-add" style="width:100%; margin-top:10px;" onclick="edSecSave()">💾 Salva sezione</button>'; el.appendChild(sv); } } catch(e){} } function cdNavOrderHtml(){ try { var tabs=cdNavTabs(); if(!tabs.length) return ''; var lbl={}; tabs.forEach(function(t){ lbl[t.k]=t.lbl; }); var keys=cdNavKeys(); var rows=keys.map(function(k,i){ return '<div class="ed-row" style="align-items:center;"><div style="display:flex; gap:4px;"><div class="ed-del" style="'+(i===0?'opacity:0.25;pointer-events:none;':'')+'" data-i="'+i+'" data-d="-1" onclick="edNavMove(this)">▲</div><div class="ed-del" style="'+(i===keys.length-1?'opacity:0.25;pointer-events:none;':'')+'" data-i="'+i+'" data-d="1" onclick="edNavMove(this)">▼</div></div><div class="ed-row-main"><div class="ed-row-new">'+cdEsc(lbl[k]||k)+'</div></div></div>'; }).join(''); return '<div class="ed-intro" style="margin-top:16px;"><b>Ordine navbar</b>: disponi le sezioni della barra come preferisci.</div>'+rows; } catch(e){ return ''; } } function edNavMove(btn){ try { var i=parseInt(btn.getAttribute('data-i'),10); var d=parseInt(btn.getAttribute('data-d'),10); var keys=cdNavKeys(); var j=i+d; if(isNaN(i)||isNaN(d)||j<0||j>=keys.length) return; var t=keys[i]; keys[i]=keys[j]; keys[j]=t; localStorage.setItem('cd_navbar_order', JSON.stringify(keys)); try { cdMarkDirty(); cdSyncPush(); } catch(e2){} cdApplyNavOrder(); editorSwitch('visib'); } catch(e){} } function cdLuceRen(id){ try { var luci=cdCfg('cd_luci')||{}; var cur=luci[id]||id; var n=prompt('Nome luce', cur); if(n===null) return; n=String(n).trim(); if(!n) return; luci[id]=n; localStorage.setItem('cd_luci', JSON.stringify(luci)); try { cdMarkDirty(); cdSyncPush(); } catch(e2){} try { if(typeof updateGestioneLuci==='function') updateGestioneLuci(); } catch(e2){} editorSwitch('luci'); } catch(e){} } function cdLuceDel(id){ try { if(!confirm('Rimuovere questa luce dalla dashboard?')) return; var luci=cdCfg('cd_luci')||{}; delete luci[id]; localStorage.setItem('cd_luci', JSON.stringify(luci)); var rooms=cdCfg('cd_luci_rooms')||{}; if(rooms[id]!==undefined){ delete rooms[id]; localStorage.setItem('cd_luci_rooms', JSON.stringify(rooms)); } try { cdMarkDirty(); cdSyncPush(); } catch(e2){} try { if(typeof updateGestioneLuci==='function') updateGestioneLuci(); } catch(e2){} editorSwitch('luci'); } catch(e){} } function cdLuceAdd(){ try { var e1=document.getElementById('luce-add-ent'); var n1=document.getElementById('luce-add-name'); var ent=(e1&&e1.value||'').trim(); if(ent.indexOf('.')<0){ alert('Inserisci una entità light/switch valida'); return; } var nm=(n1&&n1.value||'').trim()||ent.split('.')[1]; var luci=cdCfg('cd_luci')||{}; luci[ent]=nm; localStorage.setItem('cd_luci', JSON.stringify(luci)); try { cdMarkDirty(); cdSyncPush(); } catch(e2){} try { cdSecShow('home'); } catch(e2){} editorSwitch('luci'); edToast('Luce aggiunta'); } catch(e){} } function edSaveGeneral(){ var t=(document.getElementById('ed-gen-title').value||'').trim(); var st2=(document.getElementById('ed-gen-sub').value||'').trim(); var a=(document.getElementById('ed-gen-admin').value||'').trim(); var br=cdCfg('cd_branding')||{}; if(t) br.title=t; else delete br.title; if(st2) br.subtitle=st2; else delete br.subtitle; localStorage.setItem('cd_branding', JSON.stringify(br)); var cn=cdCfg('cd_connection')||{}; cn.admin_users = a ? [a] : []; localStorage.setItem('cd_connection', JSON.stringify(cn)); try{ cdMarkDirty(); cdSyncPush(); }catch(e){} try{ edToast('Salvato'); }catch(e){} setTimeout(function(){ location.reload(); }, 700); } function editorRenderVisib(){ var sez=cdVisibSez(); var cur=cdCfg('cd_sections')||{}; var rows=sez.map(function(x,idx){ var k=x[0]; var on=(cur[k]!==false); return '<div class="ed-row" style="align-items:center;"><div class="ed-row-main"><div class="ed-row-new">'+x[1]+' '+x[2]+'</div><div class="ed-row-old">'+x[3]+'</div></div><div onclick="edVisibToggle('+idx+')" style="cursor:pointer;flex:0 0 52px;height:30px;border-radius:15px;background:'+(on?'#0ea5e9':'#cbd5e1')+';position:relative;transition:.2s;"><div style="position:absolute;top:3px;'+(on?'right:3px':'left:3px')+';width:24px;height:24px;border-radius:50%;background:#fff;"></div></div></div>'; }).join(''); var _rl2=''; try { _rl2=editorRenderRileva(); } catch(e) {} return cdGenHtml()+cdNavOrderHtml()+'<div class="ed-intro" style="margin-top:18px;"><b>Rilevamento e manutenzione</b>: autorilevamento entità e reset.</div>'+_rl2+'<div style="display:none;">'+'<div class="ed-intro">Attiva o disattiva intere <b>sezioni</b> della dashboard. Le sezioni disattivate spariscono dalla vista.</div><div class="ed-list">'+rows+'</div>'; } function edVisibToggle(idx){ var sez=cdVisibSez(); var x=sez[idx]; if(!x) return; var k=x[0]; setTimeout(function(){ try { cdApplyNavVis(); } catch(e){} }, 50); var cur=cdCfg('cd_sections')||{}; cur[k]=(cur[k]===false); localStorage.setItem('cd_sections', JSON.stringify(cur)); try { cdMarkDirty(); cdSyncPush(); } catch(e){} try { if(typeof render==='function') render(); } catch(e){} editorSwitch((typeof EDITOR_TAB !== 'undefined' && EDITOR_TAB) ? EDITOR_TAB : 'visib'); } function editorRenderPiscina(){ var o=getPool(); return '<div class="ed-intro">Gestione <b>piscina</b>: sensori, comandi e filtrazione automatica giornaliera. In modalità auto le ore di filtrazione sono temperatura/2 (min 2, max 12).</div>'+'<div style="display:flex; gap:8px; margin-bottom:8px;"><input id="ed-pl-temp" class="ed-input mono" autocomplete="off" style="flex:1;" placeholder="sensor.piscina_temperatura" value="'+cdEsc(o.tempEnt||'')+'"><button type="button" onclick="wzPickEntity(this.previousElementSibling)" style="flex:0 0 38px; height:38px; border:none; border-radius:10px; background:linear-gradient(135deg,#0ea5e9,#0369a1); color:#fff; font-size:14px; cursor:pointer;">🔍</button></div>'+'<div style="display:flex; gap:8px; margin-bottom:8px;"><input id="ed-pl-ph" class="ed-input mono" autocomplete="off" style="flex:1;" placeholder="sensor.piscina_ph (facoltativo)" value="'+cdEsc(o.phEnt||'')+'"><button type="button" onclick="wzPickEntity(this.previousElementSibling)" style="flex:0 0 38px; height:38px; border:none; border-radius:10px; background:linear-gradient(135deg,#0ea5e9,#0369a1); color:#fff; font-size:14px; cursor:pointer;">🔍</button></div>'+'<div style="display:flex; gap:8px; margin-bottom:8px;"><input id="ed-pl-cl" class="ed-input mono" autocomplete="off" style="flex:1;" placeholder="sensor.piscina_cloro (facoltativo)" value="'+cdEsc(o.clEnt||'')+'"><button type="button" onclick="wzPickEntity(this.previousElementSibling)" style="flex:0 0 38px; height:38px; border:none; border-radius:10px; background:linear-gradient(135deg,#0ea5e9,#0369a1); color:#fff; font-size:14px; cursor:pointer;">🔍</button></div>'+'<div style="display:flex; gap:8px; margin-bottom:8px;"><input id="ed-pl-pump" class="ed-input mono" autocomplete="off" style="flex:1;" placeholder="switch.pompa_piscina" value="'+cdEsc(o.pumpEnt||'')+'"><button type="button" onclick="wzPickEntity(this.previousElementSibling)" style="flex:0 0 38px; height:38px; border:none; border-radius:10px; background:linear-gradient(135deg,#0ea5e9,#0369a1); color:#fff; font-size:14px; cursor:pointer;">🔍</button></div>'+'<div style="display:flex; gap:8px; margin-bottom:8px;"><input id="ed-pl-heat" class="ed-input mono" autocomplete="off" style="flex:1;" placeholder="switch.riscaldamento_piscina (facoltativo)" value="'+cdEsc(o.heatEnt||'')+'"><button type="button" onclick="wzPickEntity(this.previousElementSibling)" style="flex:0 0 38px; height:38px; border:none; border-radius:10px; background:linear-gradient(135deg,#0ea5e9,#0369a1); color:#fff; font-size:14px; cursor:pointer;">🔍</button></div>'+'<div style="display:flex; gap:8px; margin-bottom:8px;"><input id="ed-pl-light" class="ed-input mono" autocomplete="off" style="flex:1;" placeholder="light.piscina (facoltativo)" value="'+cdEsc(o.lightEnt||'')+'"><button type="button" onclick="wzPickEntity(this.previousElementSibling)" style="flex:0 0 38px; height:38px; border:none; border-radius:10px; background:linear-gradient(135deg,#0ea5e9,#0369a1); color:#fff; font-size:14px; cursor:pointer;">🔍</button></div>'+'<div class="ed-intro">Soglie qualità (avvisi) e filtrazione.</div>'+'<div style="display:flex; gap:8px; margin-bottom:8px;"><input id="ed-pl-phmin" type="number" step="0.1" class="ed-input" style="flex:1; margin:0;" title="pH minimo" value="'+cdEsc(o.phMin!=null?o.phMin:7.0)+'"><input id="ed-pl-phmax" type="number" step="0.1" class="ed-input" style="flex:1; margin:0;" title="pH massimo" value="'+cdEsc(o.phMax!=null?o.phMax:7.6)+'"></div>'+'<div style="display:flex; gap:8px; margin-bottom:8px;"><input id="ed-pl-clmin" type="number" step="0.1" class="ed-input" style="flex:1; margin:0;" title="Cloro minimo" placeholder="Cloro min" value="'+cdEsc(o.clMin!=null?o.clMin:'')+'"><input id="ed-pl-clmax" type="number" step="0.1" class="ed-input" style="flex:1; margin:0;" title="Cloro massimo" placeholder="Cloro max" value="'+cdEsc(o.clMax!=null?o.clMax:'')+'"></div>'+'<label class="ed-intro" style="display:flex; gap:8px; align-items:center;"><input id="ed-pl-auto" type="checkbox" '+(o.autoHours?'checked':'')+'> Ore automatiche (temperatura/2)</label>'+'<div style="display:flex; gap:8px; margin-bottom:8px;"><input id="ed-pl-hours" type="number" min="1" max="24" class="ed-input" style="flex:1; margin:0;" title="Ore fisse" value="'+(+o.filterHours||8)+'"><input id="ed-pl-time" type="time" class="ed-input" style="flex:1; margin:0;" value="'+cdEsc(o.filterStart||'09:00')+'"></div>'+'<label class="ed-intro" style="display:flex; gap:8px; align-items:center;"><input id="ed-pl-en" type="checkbox" '+(o.enabled?'checked':'')+'> Filtrazione giornaliera attiva (col tablet acceso)</label>'+'<button class="ed-btn-add" style="width:100%;" onclick="edPoolSaveCfg()">💾 Salva piscina</button>'; } function edPoolSaveCfg(){ var o=getPool(); o.tempEnt=(document.getElementById('ed-pl-temp').value||'').trim(); o.phEnt=(document.getElementById('ed-pl-ph').value||'').trim(); o.clEnt=(document.getElementById('ed-pl-cl').value||'').trim(); o.pumpEnt=(document.getElementById('ed-pl-pump').value||'').trim(); o.heatEnt=(document.getElementById('ed-pl-heat').value||'').trim(); o.lightEnt=(document.getElementById('ed-pl-light').value||'').trim(); var a=parseFloat(document.getElementById('ed-pl-phmin').value); o.phMin=isNaN(a)?7.0:a; var b=parseFloat(document.getElementById('ed-pl-phmax').value); o.phMax=isNaN(b)?7.6:b; var c=parseFloat(document.getElementById('ed-pl-clmin').value); o.clMin=isNaN(c)?null:c; var d2=parseFloat(document.getElementById('ed-pl-clmax').value); o.clMax=isNaN(d2)?null:d2; o.autoHours=!!document.getElementById('ed-pl-auto').checked; var h=parseFloat(document.getElementById('ed-pl-hours').value); o.filterHours=(isNaN(h)||h<=0)?8:h; o.filterStart=(document.getElementById('ed-pl-time').value||'09:00'); o.enabled=!!document.getElementById('ed-pl-en').checked; savePool(o); try{ renderPiscina(); }catch(ex){} try{ edToast('Piscina salvata'); }catch(ex){} editorSwitch('pool'); } function editorRenderIrrigazione(){ var o=getIrr(); var rows = o.zones.length ? o.zones.map(function(z,i){ var fl=cdRoomFloorOf(z.room||''); return '<div class="ed-row" style="align-items:center;"><div class="ed-row-main"><div class="ed-row-new">🌱 '+cdEsc(z.name||z.entity)+' · '+(parseFloat(z.mins)||10)+' min</div><div class="ed-row-old">'+cdEsc((z.room?('🏠 '+z.room):'')+(fl?(' · 🏢 '+fl):''))+'</div></div><div class="ed-del" onclick="edIrrDel('+i+')">🗑️</div></div>'; }).join('') : '<div class="ed-intro">Nessuna zona. Aggiungine una qui sotto.</div>'; return '<div class="ed-intro">Zone di <b>irrigazione</b> (switch o valve). Il programma le avvia in sequenza, ognuna per la sua durata, e salta quando la probabilità di pioggia supera la soglia.</div>'+rows+'<input id="ed-irr-name" class="ed-input" style="margin:8px 0;" placeholder="Nome zona (es. Prato davanti)">'+'<div style="display:flex; gap:8px; margin-bottom:8px;"><input id="ed-irr-ent" class="ed-input mono" autocomplete="off" style="flex:1;" placeholder="switch.irrigazione_zona1"><button type="button" onclick="wzPickEntity(this.previousElementSibling)" style="flex:0 0 38px; height:38px; border:none; border-radius:10px; background:linear-gradient(135deg,#0ea5e9,#0369a1); color:#fff; font-size:14px; cursor:pointer;">🔍</button></div>'+'<div style="display:flex; gap:8px; margin-bottom:8px;"><select id="ed-irr-room" class="ed-input" style="flex:1; margin:0;">'+cdRoomOptions('')+'</select><input id="ed-irr-min" type="number" min="1" max="180" value="10" class="ed-input" style="flex:0 0 90px; margin:0;" title="Durata (minuti)"></div>'+'<button class="ed-btn-add" style="width:100%; margin-bottom:16px;" onclick="edIrrAddZone()">＋ Aggiungi zona</button>'+'<div class="ed-intro"><b>Meteo e programma</b>: sensore % pioggia, soglia, meteo (facoltativo) e orario di avvio.</div>'+'<div style="display:flex; gap:8px; margin-bottom:8px;"><input id="ed-irr-rain" class="ed-input mono" autocomplete="off" style="flex:1;" placeholder="sensor.prob_pioggia_oggi (%)\\" value="'+cdEsc(o.rainEnt||'')+'"><button type="button" onclick="wzPickEntity(this.previousElementSibling)" style="flex:0 0 38px; height:38px; border:none; border-radius:10px; background:linear-gradient(135deg,#0ea5e9,#0369a1); color:#fff; font-size:14px; cursor:pointer;">🔍</button></div>'+'<div style="display:flex; gap:8px; margin-bottom:8px;"><input id="ed-irr-weather" class="ed-input mono" autocomplete="off" style="flex:1;" placeholder="weather.casa (facoltativo)\\" value="'+cdEsc(o.weatherEnt||'')+'"><button type="button" onclick="wzPickEntity(this.previousElementSibling)" style="flex:0 0 38px; height:38px; border:none; border-radius:10px; background:linear-gradient(135deg,#0ea5e9,#0369a1); color:#fff; font-size:14px; cursor:pointer;">🔍</button></div>'+'<div style="display:flex; gap:8px; margin-bottom:8px;"><input id="ed-irr-thr" type="number" min="0" max="100" value="'+(+o.rainThr||60)+'" class="ed-input" style="flex:1; margin:0;" title="Soglia pioggia %"><input id="ed-irr-time" type="time" value="'+cdEsc(o.time||'06:30')+'" class="ed-input" style="flex:1; margin:0;"></div>'+'<label class="ed-intro" style="display:flex; gap:8px; align-items:center;"><input id="ed-irr-en" type="checkbox" '+(o.enabled?'checked':'')+'> Programma attivo (ogni giorno, col tablet acceso)</label>'+'<button class="ed-btn-add" style="width:100%;" onclick="edIrrSaveCfg()">💾 Salva impostazioni</button>'; } function edIrrAddZone(){ var n=(document.getElementById('ed-irr-name').value||'').trim(); var e=(document.getElementById('ed-irr-ent').value||'').trim(); var r=(document.getElementById('ed-irr-room').value||'').trim(); var m=parseFloat(document.getElementById('ed-irr-min').value); if(!e || e.indexOf('.')<0){ alert('Inserisci una entità valida (switch o valve)'); return; } var o=getIrr(); var z={ name:n||e, entity:e, mins:(isNaN(m)||m<=0)?10:m }; if(r) z.room=r; o.zones.push(z); saveIrr(o); try{ renderIrrigazione(); }catch(ex){} editorSwitch('irr'); } function edIrrDel(i){ var o=getIrr(); o.zones.splice(i,1); saveIrr(o); try{ renderIrrigazione(); }catch(ex){} editorSwitch('irr'); } function edIrrSaveCfg(){ var o=getIrr(); o.rainEnt=(document.getElementById('ed-irr-rain').value||'').trim(); o.weatherEnt=(document.getElementById('ed-irr-weather').value||'').trim(); var t=parseFloat(document.getElementById('ed-irr-thr').value); o.rainThr=(isNaN(t)||t<0)?60:Math.min(100,t); o.time=(document.getElementById('ed-irr-time').value||'06:30'); o.enabled=!!document.getElementById('ed-irr-en').checked; saveIrr(o); try{ renderIrrigazione(); }catch(ex){} try{ edToast('Impostazioni irrigazione salvate'); }catch(ex){} editorSwitch('irr'); } function editorRenderTapparelle(){ var list=getTapparelle(); var rows = list.length ? list.map(function(t,i){ var fl=cdRoomFloorOf(t.room||''); return '<div class="ed-row" style="align-items:center;"><div class="ed-row-main"><div class="ed-row-new">🪟 '+cdEsc(t.name||t.entity)+'</div><div class="ed-row-old">'+cdEsc((t.room?('🏠 '+t.room):'')+(fl?(' · 🏢 '+fl):''))+'</div></div><div class="ed-del" title="Inverti le percentuali (100 = chiusa)" style="'+(t.invertita?'background:linear-gradient(135deg,#0ea5e9,#0369a1);color:#fff;':'')+'" onclick="edTappInv('+i+')">⇄</div><div class="ed-del" onclick="edTappDel('+i+')">🗑️</div></div>'; }).join('') : '<div class="ed-intro">Nessuna tapparella. Aggiungine una qui sotto.</div>'; return '<div class="ed-intro">Gestisci le <b>tapparelle</b> (entità cover). Compaiono nella pagina 🪟 Finestre, raggruppate per piano e stanza.</div>'+rows+'<input id="ed-tp-name" class="ed-input" style="margin:8px 0;" placeholder="Nome (es. Tapparella salone)">'+'<div style="display:flex; gap:8px; margin-bottom:8px;"><input id="ed-tp-ent" class="ed-input mono" autocomplete="off" style="flex:1;" placeholder="cover.tapparella_x"><button type="button" onclick="wzPickEntity(this.previousElementSibling)" style="flex:0 0 38px; height:38px; border:none; border-radius:10px; background:linear-gradient(135deg,#0ea5e9,#0369a1); color:#fff; font-size:14px; cursor:pointer;">🔍</button></div>'+'<select id="ed-tp-room" class="ed-input" style="margin-bottom:8px;">'+cdRoomOptions('')+'</select>'+'<label style="display:flex;align-items:center;gap:8px;margin-bottom:8px;font-size:13px;cursor:pointer;"><input type="checkbox" id="ed-tp-inv"> Percentuali invertite (100% = chiusa)</label>'+'<button class="ed-btn-add" style="width:100%;" onclick="edTappAdd()">＋ Aggiungi tapparella</button>'; } function edTappAdd(){ var n=(document.getElementById('ed-tp-name').value||'').trim(); var e=(document.getElementById('ed-tp-ent').value||'').trim(); var r=(document.getElementById('ed-tp-room').value||'').trim(); if(!e || e.indexOf('.')<0){ alert('Inserisci una entità cover valida'); return; } var list=getTapparelle().slice(); var it={ name: n||e, entity: e }; if(r) it.room=r; try { var inv=document.getElementById('ed-tp-inv'); if(inv&&inv.checked) it.invertita=true; } catch(einv){} list.push(it); localStorage.setItem('cd_tapparelle', JSON.stringify(list)); try{ cdMarkDirty(); cdSyncPush(); }catch(ex){} try{ renderTapparelle(); }catch(ex){} editorSwitch('tapp'); } function edTappDel(i){ var list=getTapparelle().slice(); list.splice(i,1); localStorage.setItem('cd_tapparelle', JSON.stringify(list)); try{ cdMarkDirty(); cdSyncPush(); }catch(ex){} try{ renderTapparelle(); }catch(ex){} editorSwitch('tapp'); } function editorRenderStanze(){ var rooms = (typeof getStanze==='function'?getStanze():[])||[]; var esc=function(x){return String(x==null?'':x).replace(/"/g,'&quot;');}; var rowsHtml = rooms.map(function(r,i){ return '<div class="ed-row"><div class="ed-row-main"><div class="ed-row-new">'+((r.icon?cdIconMarkup(r.icon,22)+' ':'🏠 ')+cdEsc(r.name||'Stanza'))+'</div>'+(r.floor?'<div class="ed-row-old">🏢 '+cdEsc(r.floor)+'</div>':'')+'</div>'+'<div class="ed-del" onclick="edStanzaRoomDel('+i+')" title="Elimina">🗑️</div></div>'; }).join('') || '<div class="ed-empty">Nessuna stanza. Aggiungine una qui sotto.</div>'; return '<div class="ed-intro">Gestisci qui le tue <b>stanze</b>. Ogni stanza creata qui compare nel menù a tendina di elettrodomestici, clima e telecamere. Per i sensori di temperatura usa la sezione dedicata.</div>'+'<div class="ed-list">'+rowsHtml+'</div>'+'<div class="ed-form">'+'<div style="display:flex;gap:8px;margin-bottom:8px;"><span id="ed-room-icon-preview" style="flex:0 0 34px;display:flex;align-items:center;justify-content:center;">🏠</span><input id="ed-room-icon" class="ed-input" style="flex:0 0 120px;text-align:center;" placeholder="mdi:sofa / 🏠" value="🏠" oninput="document.getElementById(&quot;ed-room-icon-preview&quot;).innerHTML=cdIconMarkup(this.value,26)"><button type="button" onclick="dmIconPicker(&quot;#ed-room-icon&quot;, &quot;rooms&quot;)" title="Selettore icone" style="flex:0 0 38px;border:0;border-radius:10px;cursor:pointer;">🎨</button><input id="ed-room-name" class="ed-input" style="flex:1;" placeholder="Nome stanza (es. Cucina)"></div><select id="ed-room-floor" class="ed-input" style="margin-bottom:8px;">'+cdFloorSelOptions()+'</select>'+'<button class="ed-btn-add" onclick="edStanzaRoomAdd()">＋ Aggiungi stanza</button>'+cdFloorRowsHtml()+''+'</div>'; } function edStanzaRoomAdd(){ var name=(document.getElementById('ed-room-name').value||'').trim(); if(!name){ alert('Inserisci il nome della stanza'); return; } var icon=(document.getElementById('ed-room-icon').value||'🏠').trim(); var floor=(document.getElementById('ed-room-floor').value||'').trim(); if(floor==='__new__') floor=''; var rooms=(typeof getStanze==='function'?getStanze():[]).slice(); var r={ id:'room_'+Date.now().toString(36), name:name, icon:icon }; if(floor) r.floor=floor; rooms.push(r); localStorage.setItem('cd_stanze', JSON.stringify(rooms)); try { cdMarkDirty(); cdSyncPush(); } catch(e){} try { buildTempCards(); } catch(e){} editorSwitch('stanze'); } function edStanzaRoomDel(i){ var rooms=(typeof getStanze==='function'?getStanze():[]).slice(); rooms.splice(i,1); localStorage.setItem('cd_stanze', JSON.stringify(rooms)); try { cdMarkDirty(); cdSyncPush(); } catch(e){} try { buildTempCards(); } catch(e){} editorSwitch('stanze'); } function editorRenderLuci() {
     const luci = cdCfg('cd_luci') || {};
     const ids = Object.keys(luci);
     if (!ids.length) {
         return `<div style="padding:20px; text-align:center; color:var(--text-dim,#64748b); font-size:13px;">
-            <i class="dm-segno" data-dm-segno="lights" aria-hidden="true"></i> <div style="display:flex; gap:6px; margin:10px 0;"><input id="luce-add-ent" class="ed-input mono" style="flex:1;" placeholder="light.salone o switch.lampada" autocomplete="off"><button type="button" onclick="wzPickEntity('#luce-add-ent')" style="flex:0 0 38px; height:38px; border:none; border-radius:10px; background:linear-gradient(135deg,#38bdf8,#0284c7); cursor:pointer; font-size:15px;"><i class="dm-segno" data-dm-segno="search" aria-hidden="true"></i></button></div><input id="luce-add-name" class="ed-input" style="width:100%; margin-bottom:8px;" placeholder="Nome luce (facoltativo)"><button class="ed-btn-add" style="width:100%;" onclick="cdLuceAdd()">+ Aggiungi luce</button>Nessuna luce configurata.<br>Aggiungi le luci dal wizard iniziale (passo "Luci"), poi torna qui per organizzarle in stanze.
+            💡 <div style="display:flex; gap:6px; margin:10px 0;"><input id="luce-add-ent" class="ed-input mono" style="flex:1;" placeholder="light.salone o switch.lampada" autocomplete="off"><button type="button" onclick="wzPickEntity('#luce-add-ent')" style="flex:0 0 38px; height:38px; border:none; border-radius:10px; background:linear-gradient(135deg,#38bdf8,#0284c7); cursor:pointer; font-size:15px;">🔍</button></div><input id="luce-add-name" class="ed-input" style="width:100%; margin-bottom:8px;" placeholder="Nome luce (facoltativo)"><button class="ed-btn-add" style="width:100%;" onclick="cdLuceAdd()">+ Aggiungi luce</button>Nessuna luce configurata.<br>Aggiungi le luci dal wizard iniziale (passo "Luci"), poi torna qui per organizzarle in stanze.
           </div>`;
     }
     const rooms = cdLuciRoomList();
@@ -1793,26 +1787,26 @@ function cdDbgStatus(){ try { return '<div class="ed-intro mono" style="font-siz
               <button class="ed-ord-btn" ${idx===count-1?'disabled':''} onclick="cdLuciMove(${cdJs(id)}, 1)" style="width:26px; height:22px; border:none; border-radius:6px; background:rgba(148,163,184,0.18); cursor:pointer; font-size:11px; ${idx===count-1?'opacity:0.3;':''}">▼</button>
             </div>
             <div style="flex:1; min-width:0;">
-              <div style="font-weight:800; font-size:12.5px; color:var(--text,#0f172a); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"><i class="dm-segno" data-dm-segno="lights" aria-hidden="true"></i> ${cdEsc(dett)}</div>
+              <div style="font-weight:800; font-size:12.5px; color:var(--text,#0f172a); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">💡 ${cdEsc(dett)}</div>
               <div style="font-family:monospace; font-size:9.5px; color:var(--text-dim,#94a3b8); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${cdEsc(id)}</div>
             </div>
-            <select class="ed-input" style="flex:0 0 40%; font-size:11.5px; padding:6px;" onchange="cdLuciSetRoom(${cdJs(id)}, this.value)">${roomOptions(room)}</select> <button class="ed-ord-btn" title="Rinomina" onclick="cdLuceRen(${cdJs(id)})" style="width:26px; height:22px; border:none; border-radius:6px; background:rgba(14,165,233,0.15); cursor:pointer; font-size:11px;"><i class="dm-segno" data-dm-segno="pencil" aria-hidden="true"></i></button> <button class="ed-ord-btn" title="Elimina" onclick="cdLuceDel(${cdJs(id)})" style="width:26px; height:22px; border:none; border-radius:6px; background:rgba(239,68,68,0.15); cursor:pointer; font-size:11px;"><i class="dm-segno" data-dm-segno="trash" aria-hidden="true"></i></button>
+            <select class="ed-input" style="flex:0 0 40%; font-size:11.5px; padding:6px;" onchange="cdLuciSetRoom(${cdJs(id)}, this.value)">${roomOptions(room)}</select> <button class="ed-ord-btn" title="Rinomina" onclick="cdLuceRen(${cdJs(id)})" style="width:26px; height:22px; border:none; border-radius:6px; background:rgba(14,165,233,0.15); cursor:pointer; font-size:11px;">\u270f\ufe0f</button> <button class="ed-ord-btn" title="Elimina" onclick="cdLuceDel(${cdJs(id)})" style="width:26px; height:22px; border:none; border-radius:6px; background:rgba(239,68,68,0.15); cursor:pointer; font-size:11px;">🗑️</button>
           </div>`;
     };
 
     let html = `<div style="font-size:12px; color:var(--text-dim,#64748b); margin-bottom:12px; line-height:1.5;">
-        <i class="dm-segno" data-dm-segno="lights" aria-hidden="true"></i> Assegna ogni luce a una stanza e riordina con le frecce. Le stanze e l'ordine si riflettono nel popup <b>Gestione Luci</b>.
+        💡 Assegna ogni luce a una stanza e riordina con le frecce. Le stanze e l'ordine si riflettono nel popup <b>Gestione Luci</b>.
       </div>`;
 
     // Le stanze sono gestite esclusivamente dall’editor Stanze. Qui si salva solo
     // l’ordine di visualizzazione e l’assegnazione tramite room_id.
-    html += `<div class="ed-intro dm-lights-room-notice"><i class="dm-segno" data-dm-segno="home" aria-hidden="true"></i> Crea, rinomina ed elimina le stanze nella sezione <b>Stanze</b>. Qui puoi soltanto assegnare e riordinare le luci.</div>`;
+    html += `<div class="ed-intro dm-lights-room-notice">🏠 Crea, rinomina ed elimina le stanze nella sezione <b>Stanze</b>. Qui puoi soltanto assegnare e riordinare le luci.</div>`;
 
     // Luci raggruppate
     rooms.forEach(r => {
         const list = grouped[r] || [];
         html += `<div style="margin-bottom:14px;">
-            <div style="font-weight:900; font-size:12px; letter-spacing:0.5px; text-transform:uppercase; color:#0369a1; margin-bottom:6px;"><i class="dm-segno" data-dm-segno="home" aria-hidden="true"></i> ${cdEsc(r)} <span style="color:var(--text-dim,#94a3b8); font-weight:700;">· ${list.length}</span></div>
+            <div style="font-weight:900; font-size:12px; letter-spacing:0.5px; text-transform:uppercase; color:#0369a1; margin-bottom:6px;">🏠 ${cdEsc(r)} <span style="color:var(--text-dim,#94a3b8); font-weight:700;">· ${list.length}</span></div>
             ${list.length ? list.map((id, i) => lightRow(id, r, i, list.length)).join('') : '<div style="font-size:11px; color:var(--text-dim,#94a3b8); padding:4px 10px;">Nessuna luce in questa stanza.</div>'}
           </div>`;
     });
@@ -1820,13 +1814,13 @@ function cdDbgStatus(){ try { return '<div class="ed-intro mono" style="font-siz
     const altre = grouped['__altre__'] || [];
     if (altre.length) {
         html += `<div style="margin-bottom:14px;">
-            <div style="font-weight:900; font-size:12px; letter-spacing:0.5px; text-transform:uppercase; color:var(--text-dim,#64748b); margin-bottom:6px;"><i class="dm-segno" data-dm-segno="package" aria-hidden="true"></i> Altre zone <span style="font-weight:700;">· ${altre.length}</span></div>
+            <div style="font-weight:900; font-size:12px; letter-spacing:0.5px; text-transform:uppercase; color:var(--text-dim,#64748b); margin-bottom:6px;">📦 Altre zone <span style="font-weight:700;">· ${altre.length}</span></div>
             ${altre.map((id, i) => lightRow(id, '', i, altre.length)).join('')}
           </div>`;
     }
 
-    html += `<button class="ed-save-btn" onclick="edToast('Organizzazione luci salvata — ricarica per applicare'); cdSyncPush && cdSyncPush();"><i class="dm-segno" data-dm-segno="check" aria-hidden="true"></i> Salva organizzazione luci</button>`;
-    html += `<div class="ed-form dm-light-add-form"><div class="ed-sec-title">＋ ${document.documentElement.lang === 'en' ? 'ADD LIGHT' : 'AGGIUNGI LUCE'}</div><div class="ed-form-row"><input id="luce-add-ent" class="ed-input mono" placeholder="light.salone"><button type="button" class="dm-entity-picker" data-entity-target="luce-add-ent"><i class="dm-segno" data-dm-segno="search" aria-hidden="true"></i></button></div><input id="luce-add-name" class="ed-input" placeholder="Nome luce (facoltativo)"><button class="ed-btn-add" onclick="cdLuceAdd()">＋ ${document.documentElement.lang === 'en' ? 'Add light' : 'Aggiungi luce'}</button></div>`;
+    html += `<button class="ed-save-btn" onclick="edToast('💾 Organizzazione luci salvata — ricarica per applicare'); cdSyncPush && cdSyncPush();">💾 Salva organizzazione luci</button>`;
+    html += `<div class="ed-form dm-light-add-form"><div class="ed-sec-title">＋ ${document.documentElement.lang === 'en' ? 'ADD LIGHT' : 'AGGIUNGI LUCE'}</div><div class="ed-form-row"><input id="luce-add-ent" class="ed-input mono" placeholder="light.salone"><button type="button" class="dm-entity-picker" data-entity-target="luce-add-ent">🔍</button></div><input id="luce-add-name" class="ed-input" placeholder="Nome luce (facoltativo)"><button class="ed-btn-add" onclick="cdLuceAdd()">＋ ${document.documentElement.lang === 'en' ? 'Add light' : 'Aggiungi luce'}</button></div>`;
     return html;
 }
 
@@ -1897,7 +1891,7 @@ let _avvNewEntities = [];
 let _avvEditIdx = null;
 function editorRenderAvvisi() {
     const extN = edGetExtra('cd_avvisi_names_extra');
-    const GRP_LBL = { win: '<i class="dm-segno" data-dm-segno="door" aria-hidden="true"></i> Aperture', batt: '<i class="dm-segno" data-dm-segno="battery" aria-hidden="true"></i> Batterie', luci: '<i class="dm-segno" data-dm-segno="lights" aria-hidden="true"></i> Luci', clima: '<i class="dm-segno" data-dm-segno="air-conditioner" aria-hidden="true"></i> Clima', risc: '<i class="dm-segno" data-dm-segno="radiator" aria-hidden="true"></i> Riscaldamento' };
+    const GRP_LBL = { win: '🚪 Aperture', batt: '🔋 Batterie', luci: '💡 Luci', clima: '❄️ Clima', risc: '🔥 Riscaldamento' };
     /* v0.8.1: un accordion per sezione (Aperture, Batterie, Luci…) invece della lista piatta */
     let rows = '';
     Object.entries(GRP_LBL).forEach(([grp, glbl]) => {
@@ -1910,7 +1904,7 @@ function editorRenderAvvisi() {
                 <div class="ed-row-new">${cdEsc(nm)}</div>
                 <div class="ed-row-old mono">${cdEsc(id)}</div>
               </div>
-              <div class="ed-del" onclick="edDelAvviso(${cdJs(grp)},${cdJs(id)})"><i class="dm-segno" data-dm-segno="trash" aria-hidden="true"></i></div>
+              <div class="ed-del" onclick="edDelAvviso(${cdJs(grp)},${cdJs(id)})">🗑️</div>
             </div>`;
         }).join('');
         rows += `<details class="ed-acc"><summary class="ed-acc-head">${glbl} <span class="ed-acc-n">${ids.length}</span></summary>
@@ -1921,9 +1915,9 @@ function editorRenderAvvisi() {
     if (customList.length) {
         const cinner = customList.map((a, i) => {
             const ents = a.entities || (a.entity ? [a.entity] : []);
-            return `<div class="ed-row"><div class="ed-row-main"><div class="ed-row-new">${cdSegno(a.icon, 0, 'warning')} ${cdEsc(a.name||ents[0]||'')} <span style="color:var(--text-dim,#94a3b8); font-size:11px; font-weight:700;">· ${cdEsc(cdAvvisoCondLabel(a))}${ents.length>1?' · '+ents.length+' entità':''}</span></div><div class="ed-row-old mono">${cdEsc(ents.join(', '))}</div></div><div class="ed-del" onclick="edEditAvvisoCustom(${i})" style="color:#0ea5e9;" title="Modifica"><i class="dm-segno" data-dm-segno="pencil" aria-hidden="true"></i></div><div class="ed-del" onclick="edDelAvvisoCustom(${i})" title="Elimina"><i class="dm-segno" data-dm-segno="trash" aria-hidden="true"></i></div></div>`;
+            return `<div class="ed-row"><div class="ed-row-main"><div class="ed-row-new">${cdEsc(a.icon||'⚠️')} ${cdEsc(a.name||ents[0]||'')} <span style="color:var(--text-dim,#94a3b8); font-size:11px; font-weight:700;">· ${cdEsc(cdAvvisoCondLabel(a))}${ents.length>1?' · '+ents.length+' entità':''}</span></div><div class="ed-row-old mono">${cdEsc(ents.join(', '))}</div></div><div class="ed-del" onclick="edEditAvvisoCustom(${i})" style="color:#0ea5e9;" title="Modifica">✏️</div><div class="ed-del" onclick="edDelAvvisoCustom(${i})" title="Elimina">🗑️</div></div>`;
         }).join('');
-        rows += `<details class="ed-acc" open><summary class="ed-acc-head"><i class="dm-segno" data-dm-segno="star" aria-hidden="true"></i> Personalizzati <span class="ed-acc-n">${customList.length}</span></summary><div class="ed-acc-body"><div class="ed-list">${cinner}</div></div></details>`;
+        rows += `<details class="ed-acc" open><summary class="ed-acc-head">⭐ Personalizzati <span class="ed-acc-n">${customList.length}</span></summary><div class="ed-acc-body"><div class="ed-list">${cinner}</div></div></details>`;
     }
     if (!rows) rows = '<div class="ed-empty">Nessun avviso configurato</div>';
     const editing = (_avvEditIdx !== null && customList[_avvEditIdx]);
@@ -1932,22 +1926,22 @@ function editorRenderAvvisi() {
     const cOpt = (v, l) => `<option value="${v}"${(editing && ed.cond === v) ? ' selected' : ''}>${l}</option>`;
     const showVal = editing && ['eq','neq','gt','lt'].includes(ed.cond);
     return `
-      <div class="ed-intro">Aggiungi sensori al Quadro Avvisi con un nome pulito, oppure crea un avviso <b><i class="dm-segno" data-dm-segno="star" aria-hidden="true"></i> Personalizzato</b> su una o <b>più entità</b>, con condizione, <b>stato/valore a mano</b> e icona a scelta. Col puoi <b>modificare</b> un avviso già creato.</div>
+      <div class="ed-intro">Aggiungi sensori al Quadro Avvisi con un nome pulito, oppure crea un avviso <b>⭐ Personalizzato</b> su una o <b>più entità</b>, con condizione, <b>stato/valore a mano</b> e icona a scelta. Col ✏️ puoi <b>modificare</b> un avviso già creato.</div>
       <div class="ed-list">${rows}</div>
       <div class="ed-form">
         <select id="ed-avv-grp" class="ed-input" onchange="var c=document.getElementById('ed-avv-custom'); if(c) c.style.display = this.value==='custom' ? 'block' : 'none';">
-          <option value="win">Aperture (contact)</option>
-          <option value="batt">Batterie (%)</option>
-          <option value="luci">Luci</option>
-          <option value="clima">Clima</option>
-          <option value="risc">Riscaldamento</option>
-          <option value="tapp">Finestre (cover)</option><option value="custom"${editing ? ' selected' : ''}>Personalizzato</option>
+          <option value="win">🚪 Aperture (contact)</option>
+          <option value="batt">🔋 Batterie (%)</option>
+          <option value="luci">💡 Luci</option>
+          <option value="clima">❄️ Clima</option>
+          <option value="risc">🔥 Riscaldamento</option>
+          <option value="tapp">🪟 Finestre (cover)</option><option value="custom"${editing ? ' selected' : ''}>⭐ Personalizzato</option>
         </select>
-        <div style="display:flex; gap:6px;"><input id="ed-avv-ent" class="ed-input mono" style="flex:1;" autocomplete="off" placeholder="binary_sensor.finestra_x_contact"><button type="button" onclick="wzPickEntity('#ed-avv-ent')" style="flex:0 0 40px; height:40px; border:none; border-radius:10px; background:linear-gradient(135deg,#0ea5e9,#0369a1); color:#fff; font-size:15px; cursor:pointer;"><i class="dm-segno" data-dm-segno="search" aria-hidden="true"></i></button></div>
+        <div style="display:flex; gap:6px;"><input id="ed-avv-ent" class="ed-input mono" style="flex:1;" autocomplete="off" placeholder="binary_sensor.finestra_x_contact"><button type="button" onclick="wzPickEntity('#ed-avv-ent')" style="flex:0 0 40px; height:40px; border:none; border-radius:10px; background:linear-gradient(135deg,#0ea5e9,#0369a1); color:#fff; font-size:15px; cursor:pointer;">🔍</button></div>
         <input id="ed-avv-name" class="ed-input" value="${editing ? esc(ed.name) : ''}" placeholder="Nome dell'avviso (es. Finestre aperte)">
         <!-- L'icona vale per OGNI avviso, non solo per i personalizzati: era chiusa
              dentro il blocco custom, e per le Aperture non c'era modo di sceglierla (#229). -->
-        <div style="display:flex; gap:6px;"><input id="ed-avv-icon" class="ed-input" style="flex:1;" value="${editing ? esc(ed.icon || '⚠️') : '⚠️'}" placeholder="Icona"><button type="button" onclick="dmIconPicker('#ed-avv-icon')" style="flex:0 0 40px; height:40px; border:none; border-radius:10px; background:linear-gradient(135deg,#0ea5e9,#0369a1); color:#fff; font-size:15px; cursor:pointer;"><i class="dm-segno" data-dm-segno="search" aria-hidden="true"></i></button></div>
+        <div style="display:flex; gap:6px;"><input id="ed-avv-icon" class="ed-input" style="flex:1;" value="${editing ? esc(ed.icon || '⚠️') : '⚠️'}" placeholder="Icona (es. ⚠️ 💧 🌡️)"><button type="button" onclick="dmIconPicker('#ed-avv-icon')" style="flex:0 0 40px; height:40px; border:none; border-radius:10px; background:linear-gradient(135deg,#0ea5e9,#0369a1); color:#fff; font-size:15px; cursor:pointer;">🔍</button></div>
         <div id="ed-avv-custom" style="display:${editing ? 'block' : 'none'};">
           <button type="button" class="ed-btn-add" style="background:linear-gradient(135deg,#0ea5e9,#0369a1); margin-bottom:8px;" onclick="edAvvAddEntity()">＋ Aggiungi questa entità alla lista</button>
           <div id="ed-avv-ents" style="margin-bottom:8px;"></div>
@@ -1962,8 +1956,8 @@ function editorRenderAvvisi() {
           <input id="ed-avv-val" class="ed-input" value="${editing ? esc(ed.value) : ''}" placeholder="stato o valore a mano (es. heat, 23.5, open)" style="display:${showVal ? 'block' : 'none'};">
           
         </div>
-        <button class="ed-btn-add" onclick="edAddAvviso()">${editing ? '<i class="dm-segno" data-dm-segno="check" aria-hidden="true"></i> Salva modifiche' : '＋ Aggiungi avviso'}</button>
-        ${editing ? '<button type="button" class="ed-btn-add" style="background:#94a3b8; margin-top:6px;" onclick="edAvvCancelEdit()">× Annulla modifica</button>' : ''}
+        <button class="ed-btn-add" onclick="edAddAvviso()">${editing ? '💾 Salva modifiche' : '＋ Aggiungi avviso'}</button>
+        ${editing ? '<button type="button" class="ed-btn-add" style="background:#94a3b8; margin-top:6px;" onclick="edAvvCancelEdit()">✖ Annulla modifica</button>' : ''}
       </div>`;
 }
 
@@ -1977,7 +1971,7 @@ function edAddAvviso() {
         const icon  = (((document.getElementById('ed-avv-icon') || {}).value) || '⚠️').trim() || '⚠️';
         const entities = _avvNewEntities.slice();
         if (ent.includes('.') && !entities.includes(ent)) entities.push(ent);
-        if (!entities.length) { alert('Aggiungi almeno un\'entità (premi + Aggiungi questa entità alla lista)'); return; }
+        if (!entities.length) { alert('Aggiungi almeno un\'entità (premi ➕ Aggiungi questa entità alla lista)'); return; }
         if (['eq','neq','gt','lt'].includes(cond) && value === '') { alert('Inserisci lo stato/valore per la condizione scelta'); return; }
         const item = { entities, name: name || entities[0], icon, cond, value };
         const list = cdCfgList('cd_avvisi_custom');
@@ -2048,7 +2042,7 @@ function edDelAvvisoCustom(i) {
 function edAvvRenderEnts() {
     const box = document.getElementById('ed-avv-ents');
     if (!box) return;
-    if (!_avvNewEntities.length) { box.innerHTML = '<div style="font-size:11px; color:var(--text-dim); font-weight:700; padding:2px 2px 0;">Nessuna entità nella lista — scrivi/scegli un\'entità e premi +</div>'; return; }
+    if (!_avvNewEntities.length) { box.innerHTML = '<div style="font-size:11px; color:var(--text-dim); font-weight:700; padding:2px 2px 0;">Nessuna entità nella lista — scrivi/scegli un\'entità e premi ➕</div>'; return; }
     box.innerHTML = _avvNewEntities.map((en, i) => `<span style="display:inline-flex; align-items:center; gap:7px; background:rgba(14,165,233,0.12); color:#0369a1; border-radius:100px; padding:5px 11px; font-size:11.5px; font-weight:800; margin:0 6px 6px 0; font-family:monospace;">${cdEsc(en)}<span onclick="edAvvRemoveEntity(${i})" style="cursor:pointer; font-weight:900; font-family:sans-serif;">✕</span></span>`).join('');
 }
 function edAvvAddEntity() {
@@ -2079,7 +2073,7 @@ function editorRenderTesti() {
           <div class="ed-row-old" style="text-decoration:line-through;">${cdEsc(o)}</div>
           <div class="ed-row-new">→ ${cdEsc(n)}</div>
         </div>
-        <div class="ed-del" onclick="edDelText(${cdJs(encodeURIComponent(o))})"><i class="dm-segno" data-dm-segno="trash" aria-hidden="true"></i></div>
+        <div class="ed-del" onclick="edDelText(${cdJs(encodeURIComponent(o))})">🗑️</div>
       </div>`).join('') || '<div class="ed-empty">Nessun testo modificato</div>';
     return `
       <div class="ed-intro">Rinomina qualsiasi etichetta/testo visibile nella dashboard. Scrivi il testo <b>esatto</b> attuale e il nuovo. Applica a tutte le occorrenze di quel testo.</div>
@@ -2189,20 +2183,20 @@ function editorRenderExport() {
     return `
       <div class="ed-dl-hero">
         <div class="ed-dl-hero-txt">
-          <div class="ed-dl-hero-title"><i class="dm-segno" data-dm-segno="check" aria-hidden="true"></i> Scarica HTML modificato</div>
+          <div class="ed-dl-hero-title">💾 Scarica HTML modificato</div>
           <div class="ed-dl-hero-sub">Genera il file con le tue <b>${count}</b> personalizzazioni integrate in modo permanente. Poi caricalo su Home Assistant al posto del file attuale.</div>
         </div>
-        <button class="ed-dl-btn" onclick="edDownloadHTML()">↓ SCARICA</button>
+        <button class="ed-dl-btn" onclick="edDownloadHTML()">⬇ SCARICA</button>
       </div>
       <div class="ed-intro" style="margin-top:18px;">In alternativa puoi copiare la configurazione come testo (JSON) e incollarla a Claude, oppure importarla su un altro dispositivo.</div>
       <textarea id="ed-export-box" class="ed-export" readonly>${cdEsc(json)}</textarea>
       <div class="ed-form-row">
-        <button class="ed-btn-add" style="flex:1;" onclick="edCopyExport()"><i class="dm-segno" data-dm-segno="list" aria-hidden="true"></i> Copia configurazione</button>
+        <button class="ed-btn-add" style="flex:1;" onclick="edCopyExport()">📋 Copia configurazione</button>
         <button class="ed-btn-reset" onclick="edResetAll()">Reset tutto</button>
       </div>
-      <div class="ed-imp-title"><i class="dm-segno" data-dm-segno="person" aria-hidden="true"></i> Setup guidato</div>
+      <div class="ed-imp-title">🧙 Setup guidato</div>
       <button class="ed-btn-add" style="margin-bottom:18px; width:100%;" onclick="document.getElementById('editor-modal').remove(); apriSetupWizard();">Riapri il Setup Wizard (connessione · nome · sezioni · luci)</button>
-      <div class="ed-imp-title"><i class="dm-segno" data-dm-segno="inbox" aria-hidden="true"></i> Importa configurazione</div>
+      <div class="ed-imp-title">📥 Importa configurazione</div>
       <textarea id="ed-import-box" class="ed-export" placeholder="Incolla qui un JSON di configurazione e premi Importa..."></textarea>
       <button class="ed-btn-add" onclick="edImport()">Importa e applica</button>`;
 }
@@ -2302,7 +2296,7 @@ function wzRender() {
     let body = '';
 
     if (WIZ.step === 1) body = `
-        <div class="wz-title"><i class="dm-segno" data-dm-segno="socket" aria-hidden="true"></i> Collega Home Assistant</div>
+        <div class="wz-title">🔌 Collega Home Assistant</div>
         <div class="wz-sub">Serve un <b>token di accesso a lunga scadenza</b>:<br>
         1. Apri HA → click sul tuo <b>profilo utente</b> (in basso a sinistra)<br>
         2. Tab <b>Sicurezza</b> → in fondo <b>"Token di accesso a lunga scadenza"</b><br>
@@ -2314,27 +2308,27 @@ function wzRender() {
         <button class="wz-btn" onclick="wzTestToken()">Verifica connessione →</button>`;
 
     if (WIZ.step === 2) body = `
-        <div class="wz-title"><i class="dm-segno" data-dm-segno="home" aria-hidden="true"></i> Come si chiama casa tua?</div>
+        <div class="wz-title">🏠 Come si chiama casa tua?</div>
         <div class="wz-sub">Il nome compare nell'intestazione della dashboard.</div>
         <input id="wz-title-in" class="wz-input" value="${cdEsc(WIZ.title)}" placeholder="Casa Mia">
         <input id="wz-sub-in" class="wz-input" value="${cdEsc(WIZ.subtitle)}" placeholder="Smart Home Dashboard">
-        <div class="wz-sub" style="margin-top:8px;"><i class="dm-segno" data-dm-segno="person" aria-hidden="true"></i> <b>Utente amministratore</b> (facoltativo): solo questo utente HA vedrà la pagina Configurazione. Lascia vuoto per mostrarla a tutti.</div>
+        <div class="wz-sub" style="margin-top:8px;">👤 <b>Utente amministratore</b> (facoltativo): solo questo utente HA vedrà la pagina ⚙️ Configurazione. Lascia vuoto per mostrarla a tutti.</div>
         <input id="wz-admin-in" class="wz-input" value="${cdEsc(WIZ.admin || getCurrentHassUser() || '')}" placeholder="es. Mario">
         <button class="wz-btn" onclick="WIZ.title=document.getElementById('wz-title-in').value.trim()||'Casa Mia'; WIZ.subtitle=document.getElementById('wz-sub-in').value.trim(); WIZ.admin=document.getElementById('wz-admin-in').value.trim(); WIZ.step=3; wzRender();">Avanti →</button>`;
 
     if (WIZ.step === 3) {
         const sezioni = [
-            ['home','home','Home','Meteo, avvisi, azioni rapide'], ['energy','power','Energia','Fotovoltaico e consumi'],
-            ['ev','ev','Auto elettrica','EV + wallbox (EVCC)'], ['boiler','sun','Solare termico','Boiler solare'],
-            ['clima','air-conditioner','Clima','Condizionatori e riscaldamento'], ['temp','thermometer','Stanze','Temperature e umidità'],
-            ['security','security','Sicurezza','Telecamere e allarme'], ['server','computer','MiniPC','Monitoraggio server']
+            ['home','🏠','Home','Meteo, avvisi, azioni rapide'], ['energy','⚡','Energia','Fotovoltaico e consumi'],
+            ['ev','🚗','Auto elettrica','EV + wallbox (EVCC)'], ['boiler','🌞','Solare termico','Boiler solare'],
+            ['clima','❄️','Clima','Condizionatori e riscaldamento'], ['temp','🌡️','Stanze','Temperature e umidità'],
+            ['security','🛡️','Sicurezza','Telecamere e allarme'], ['server','🖥️','MiniPC','Monitoraggio server']
         ];
         body = `
-        <div class="wz-title"><i class="dm-segno" data-dm-segno="list" aria-hidden="true"></i> Quali sezioni ti servono?</div>
+        <div class="wz-title">📑 Quali sezioni ti servono?</div>
         <div class="wz-sub">Attiva solo quelle rilevanti per casa tua — potrai cambiarle in seguito.</div>
         <div class="wz-sect-grid">${sezioni.map(([k,ic,nm,ds]) => `
           <div class="wz-sect ${WIZ.sections[k] !== false ? 'on' : ''}">
-            <div class="wz-sect-ico" onclick="WIZ.sections['${k}'] = !(WIZ.sections['${k}'] !== false); wzRender();">${cdSegno(ic)}</div>
+            <div class="wz-sect-ico" onclick="WIZ.sections['${k}'] = !(WIZ.sections['${k}'] !== false); wzRender();">${ic}</div>
             <div class="wz-sect-txt">
               ${WIZ.sections[k] !== false
                 ? `<input class="wz-sect-rename" value="${cdEsc((WIZ.sectionNames && WIZ.sectionNames[k]) || nm)}" data-def="${cdEsc(nm)}" onchange="if(!WIZ.sectionNames)WIZ.sectionNames={}; const v=this.value.trim(); if(v && v!==this.dataset.def) WIZ.sectionNames['${k}']=v; else delete WIZ.sectionNames['${k}'];">`
@@ -2344,14 +2338,14 @@ function wzRender() {
             <div class="wz-check" onclick="WIZ.sections['${k}'] = !(WIZ.sections['${k}'] !== false); wzRender();">${WIZ.sections[k] !== false ? '✓' : ''}</div>
           </div>`).join('')}</div>
         <div style="margin-top:12px; padding:12px 14px; background:rgba(148,163,184,0.08); border-radius:14px;">
-          <div style="font-weight:800; font-size:13px; margin-bottom:8px;"><i class="dm-segno" data-dm-segno="star" aria-hidden="true"></i> Barra di navigazione</div>
+          <div style="font-weight:800; font-size:13px; margin-bottom:8px;">📌 Barra di navigazione</div>
           <div style="display:flex; gap:8px;">
-            <button type="button" class="wz-btn" style="flex:1; font-size:12.5px; ${(localStorage.getItem('cd_navbar_mode')||'auto') !== 'fixed' ? '' : 'background:#94a3b8;'}" onclick="wzSetNavMode('auto')"><i class="dm-segno" data-dm-segno="sliders" aria-hidden="true"></i> A scomparsa</button>
-            <button type="button" class="wz-btn" style="flex:1; font-size:12.5px; ${(localStorage.getItem('cd_navbar_mode')||'auto') === 'fixed' ? '' : 'background:#94a3b8;'}" onclick="wzSetNavMode('fixed')"><i class="dm-segno" data-dm-segno="star" aria-hidden="true"></i> Sempre visibile</button>
+            <button type="button" class="wz-btn" style="flex:1; font-size:12.5px; ${(localStorage.getItem('cd_navbar_mode')||'auto') !== 'fixed' ? '' : 'background:#94a3b8;'}" onclick="wzSetNavMode('auto')">👆 A scomparsa</button>
+            <button type="button" class="wz-btn" style="flex:1; font-size:12.5px; ${(localStorage.getItem('cd_navbar_mode')||'auto') === 'fixed' ? '' : 'background:#94a3b8;'}" onclick="wzSetNavMode('fixed')">📌 Sempre visibile</button>
           </div>
           <div style="font-size:11px; color:var(--text-dim); margin-top:6px;">A scomparsa: appare con swipe/tocco sulla linguetta. Fissa: sempre in vista.</div>
         </div>
-        <button class="wz-btn" style="background:linear-gradient(135deg,#059669,#10b981);" onclick="wzFinishV7(true)"><i class="dm-segno" data-dm-segno="star" aria-hidden="true"></i> Rileva tutto e apri l'editor →</button>
+        <button class="wz-btn" style="background:linear-gradient(135deg,#059669,#10b981);" onclick="wzFinishV7(true)">🪄 Rileva tutto e apri l'editor →</button>
         <button class="wz-btn" style="background:#94a3b8; margin-top:8px;" onclick="wzFinishV7(false)">Salta il rilevamento →</button>
         <div style="font-size:11px; color:var(--text-dim); margin-top:8px; text-align:center;">Il wizard finisce qui: luci, entità, stanze e tutto il resto si configurano nell'editor — lo stesso strumento che userai per ogni modifica futura.</div>`;
     }
@@ -2359,9 +2353,9 @@ function wzRender() {
     if (WIZ.step === 4) {
         const sel = Object.keys(WIZ.luci);
         body = `
-        <div class="wz-title"><i class="dm-segno" data-dm-segno="lights" aria-hidden="true"></i> Scegli le tue luci</div>
+        <div class="wz-title">💡 Scegli le tue luci</div>
         <div class="wz-sub">Seleziona le luci da gestire e dai a ognuna un nome nel formato <b>"Stanza - Dettaglio"</b> (attiva il raggruppamento automatico). <b>${sel.length}</b> selezionate.</div>
-        <input class="wz-input" style="margin-bottom:8px;" placeholder="Cerca luce… (nome o entità)" value="${cdEsc(WIZ.lightsFilter||'')}" oninput="WIZ.lightsFilter = this.value.trim().toLowerCase(); wzRenderLights();">
+        <input class="wz-input" style="margin-bottom:8px;" placeholder="🔍 Cerca luce… (nome o entità)" value="${cdEsc(WIZ.lightsFilter||'')}" oninput="WIZ.lightsFilter = this.value.trim().toLowerCase(); wzRenderLights();">
         <div class="wz-lights" id="wz-lights"><div class="wz-loading">Carico le luci dal tuo HA…</div></div>
         <button class="wz-btn" onclick="WIZ.step=5; wzRender();">Avanti →</button>`;
     }
@@ -2373,58 +2367,58 @@ function wzRender() {
             const rows = sec.slots.map(sl => {
                 const cur = (WIZ.entities && WIZ.entities[sl.ref]) || ENTITY_OVERRIDES[sl.ref] || '';
                 const auto = WIZ.autoDetected && WIZ.autoDetected[sl.ref];
-                return `<div class="ed-slot"><div class="ed-slot-lbl"><input class="wz-lbl-edit" value="${cdEsc(cdCfg('cd_slot_labels')[sl.ref] || sl.lbl)}" onchange="wzRenameSlot(${cdJs(sl.ref)}, this.value)" title="Tocca per rinominare">${auto ? ' <span style=\"background:#dcfce7; color:#15803d; font-size:9.5px; font-weight:800; padding:1px 7px; border-radius:8px; vertical-align:1px;\"><i class="dm-segno" data-dm-segno="star" aria-hidden="true"></i> auto</span>' : ''}</div>
+                return `<div class="ed-slot"><div class="ed-slot-lbl"><input class="wz-lbl-edit" value="${cdEsc(cdCfg('cd_slot_labels')[sl.ref] || sl.lbl)}" onchange="wzRenameSlot(${cdJs(sl.ref)}, this.value)" title="Tocca per rinominare">${auto ? ' <span style=\"background:#dcfce7; color:#15803d; font-size:9.5px; font-weight:800; padding:1px 7px; border-radius:8px; vertical-align:1px;\">🪄 auto</span>' : ''}</div>
                   <div style="display:flex; gap:6px; align-items:center;">
                     <input class="wz-input mono" style="margin-bottom:0; flex:1; font-family:monospace; font-size:11.5px; ${auto ? 'background:#f0fdf4; border-color:#86efac;' : ''}" autocomplete="off"
                            data-ref="${cdEsc(sl.ref)}" value="${cdEsc(cur)}" placeholder="es. dm.core_039" onchange="wzSetSlot(this); if(WIZ.autoDetected) delete WIZ.autoDetected[this.dataset.ref];">
-                    <button type="button" onclick="wzPickEntity(${cdJs(sl.ref)})" style="flex:0 0 40px; height:40px; border:none; border-radius:12px; background:linear-gradient(135deg,#0ea5e9,#0369a1); color:#fff; font-size:15px; cursor:pointer;"><i class="dm-segno" data-dm-segno="search" aria-hidden="true"></i></button>
+                    <button type="button" onclick="wzPickEntity(${cdJs(sl.ref)})" style="flex:0 0 40px; height:40px; border:none; border-radius:12px; background:linear-gradient(135deg,#0ea5e9,#0369a1); color:#fff; font-size:15px; cursor:pointer;">🔍</button>
                   </div></div>`;
             }).join('');
-            const evImg = key === 'ev' ? `<div class="ed-slot"><div class="ed-slot-lbl"><i class="dm-segno" data-dm-segno="scene" aria-hidden="true"></i> URL immagine auto (es. /local/mia_auto.png)</div>
+            const evImg = key === 'ev' ? `<div class="ed-slot"><div class="ed-slot-lbl">🖼️ URL immagine auto (es. /local/mia_auto.png)</div>
                   <input class="wz-input mono" style="margin-bottom:0; font-family:monospace; font-size:11.5px;" value="${cdEsc(WIZ.evImage||'')}" placeholder="/local/mia_auto.png" onchange="WIZ.evImage = this.value.trim();"></div>` : '';
             const done = sec.slots.filter(sl => (WIZ.entities && WIZ.entities[sl.ref]) || ENTITY_OVERRIDES[sl.ref]).length;
             return `<details class="ed-acc"><summary class="ed-acc-head">${sec.label} <span class="ed-acc-n" style="${done ? 'background:#dcfce7; color:#166534;' : ''}">${done}/${sec.slots.length} collegate</span></summary><div class="ed-acc-body">${rows}${evImg}</div></details>`;
         }).join('');
         const dl = '<datalist id="wz-entity-list">' + (WIZ.allEntities||[]).map(e => `<option value="${cdEsc(e)}">`).join('') + '</datalist>';
         body = `
-        <div class="wz-title"><i class="dm-segno" data-dm-segno="sliders" aria-hidden="true"></i> Collega le tue entità</div>
-        <button id="wz-autodetect" class="wz-btn" style="width:100%; margin-bottom:10px; background:linear-gradient(135deg,#10b981,#047857); color:#ffffff; font-weight:800; text-shadow:0 1px 2px rgba(0,0,0,0.25); border:none;" onclick="wzAutoDetect()" ${(WIZ.allMeta && WIZ.allMeta.length) ? '' : 'disabled style="width:100%; margin-bottom:10px; background:#94a3b8; color:#ffffff; font-weight:800; border:none;"'}><i class="dm-segno" data-dm-segno="star" aria-hidden="true"></i> Rileva automaticamente le mie entità</button>
-        <div class="wz-sub">Per ogni voce scrivi la <b>tua</b> entità HA (autocomplete attivo). Puoi saltare questo passo e completarlo dopo da <b><i class="dm-segno" data-dm-segno="sliders" aria-hidden="true"></i> Configurazione → Configura Entità → Sezioni</b>. Le voci vuote mostreranno "—".</div>
+        <div class="wz-title">🧩 Collega le tue entità</div>
+        <button id="wz-autodetect" class="wz-btn" style="width:100%; margin-bottom:10px; background:linear-gradient(135deg,#10b981,#047857); color:#ffffff; font-weight:800; text-shadow:0 1px 2px rgba(0,0,0,0.25); border:none;" onclick="wzAutoDetect()" ${(WIZ.allMeta && WIZ.allMeta.length) ? '' : 'disabled style="width:100%; margin-bottom:10px; background:#94a3b8; color:#ffffff; font-weight:800; border:none;"'}>🪄 Rileva automaticamente le mie entità</button>
+        <div class="wz-sub">Per ogni voce scrivi la <b>tua</b> entità HA (autocomplete attivo). Puoi saltare questo passo e completarlo dopo da <b>⚙️ Configurazione → Configura Entità → 📑 Sezioni</b>. Le voci vuote mostreranno "—".</div>
         ${dl}
         <div style="max-height:46vh; overflow-y:auto; margin-bottom:14px;">${acc}${WIZ.sections['home'] !== false ? `
-        <details class="ed-acc"><summary class="ed-acc-head"><i class="dm-segno" data-dm-segno="power" aria-hidden="true"></i> Azioni rapide <span class="ed-acc-n">${(WIZ.quickActions||[]).length}</span></summary>
+        <details class="ed-acc"><summary class="ed-acc-head">⚡ Azioni rapide <span class="ed-acc-n">${(WIZ.quickActions||[]).length}</span></summary>
           <div class="ed-acc-body">
-            ${(WIZ.quickActions||[]).map((a, i) => `<div class="ed-row"><div style="font-size:15px;">${cdSegno(a.icon, 0, 'power')}</div><div class="ed-row-main"><div class="ed-row-new">${cdEsc(a.name||a.builtin||'?')}</div><div class="ed-row-old mono">${a.type === 'luci_group' ? '<i class="dm-segno" data-dm-segno="lights" aria-hidden="true"></i> ' + ((a.lights||[]).length) + ' luci' : cdEsc(a.type)}</div></div>${a.type === 'luci_group' ? `<div class="ed-del" style="background:rgba(14,165,233,0.12);" onclick="wzEditLightGroup(${i})"><i class="dm-segno" data-dm-segno="pencil" aria-hidden="true"></i></div>` : ''}<div class="ed-del" onclick="WIZ.quickActions.splice(${i},1); wzRender();"><i class="dm-segno" data-dm-segno="trash" aria-hidden="true"></i></div></div>`).join('')}
+            ${(WIZ.quickActions||[]).map((a, i) => `<div class="ed-row"><div style="font-size:15px;">${cdEsc(a.icon||'⚡')}</div><div class="ed-row-main"><div class="ed-row-new">${cdEsc(a.name||a.builtin||'?')}</div><div class="ed-row-old mono">${a.type === 'luci_group' ? '💡 ' + ((a.lights||[]).length) + ' luci' : cdEsc(a.type)}</div></div>${a.type === 'luci_group' ? `<div class="ed-del" style="background:rgba(14,165,233,0.12);" onclick="wzEditLightGroup(${i})">✏️</div>` : ''}<div class="ed-del" onclick="WIZ.quickActions.splice(${i},1); wzRender();">🗑️</div></div>`).join('')}
             <div style="display:flex; gap:8px; margin-bottom:8px;">
               <select id="wz-qa-type" class="wz-input" style="margin-bottom:0; flex:0 0 44%;" onchange="wzQaTypeChanged()">
-                <option value="luci_group">Popup luci — scegli TU le luci</option>
-                <option value="builtin_luci">Popup TUTTE le luci</option><option value="builtin_prese">Popup TUTTE le prese</option><option value="builtin_clima">Popup Clima</option>
-                <option value="builtin_antifurto">Popup Antifurto</option><option value="builtin_lavatrice">Popup Lavatrice</option>
-                <option value="toggle">Toggle entità</option><option value="script">Script</option><option value="scene">Scena</option>
+                <option value="luci_group">💡 Popup luci — scegli TU le luci</option>
+                <option value="builtin_luci">💡 Popup TUTTE le luci</option><option value="builtin_prese">🔌 Popup TUTTE le prese</option><option value="builtin_clima">❄️ Popup Clima</option>
+                <option value="builtin_antifurto">🛡️ Popup Antifurto</option><option value="builtin_lavatrice">🧺 Popup Lavatrice</option>
+                <option value="toggle">🔀 Toggle entità</option><option value="script">📜 Script</option><option value="scene">🎬 Scena</option>
               </select>
               <input id="wz-qa-name" class="wz-input" style="margin-bottom:0; flex:1;" placeholder="Nome">
             </div>
             <div id="wz-qa-ent-row" style="display:none; gap:6px; margin-bottom:8px;">
               <input id="wz-qa-ent" class="wz-input mono" autocomplete="off" placeholder="dm.core_054 — l'entità da comandare" style="margin-bottom:0; flex:1; font-family:monospace;">
-              <button type="button" onclick="wzPickEntity('__qa__')" style="flex:0 0 40px; height:40px; border:none; border-radius:12px; background:linear-gradient(135deg,#0ea5e9,#0369a1); color:#fff; font-size:15px; cursor:pointer;"><i class="dm-segno" data-dm-segno="search" aria-hidden="true"></i></button>
+              <button type="button" onclick="wzPickEntity('__qa__')" style="flex:0 0 40px; height:40px; border:none; border-radius:12px; background:linear-gradient(135deg,#0ea5e9,#0369a1); color:#fff; font-size:15px; cursor:pointer;">🔍</button>
             </div>
-            <div id="wz-qa-hint" style="font-size:11.5px; color:var(--text-dim); margin-bottom:8px; padding:0 2px;"><i class="dm-segno" data-dm-segno="lights" aria-hidden="true"></i> Dai un nome (es. "Piano Terra") e premi Aggiungi: sceglierai le luci da una lista con ricerca.</div>
+            <div id="wz-qa-hint" style="font-size:11.5px; color:var(--text-dim); margin-bottom:8px; padding:0 2px;">💡 Dai un nome (es. "Piano Terra") e premi Aggiungi: sceglierai le luci da una lista con ricerca.</div>
             <button class="ed-btn-add" style="width:100%;" onclick="wzAddQA()">＋ Aggiungi azione</button>
           </div>
         </details>` : ''}${WIZ.sections['home'] !== false ? `
-        <details class="ed-acc"><summary class="ed-acc-head"><i class="dm-segno" data-dm-segno="bell" aria-hidden="true"></i> Quadro Avvisi <span class="ed-acc-n">${(GRUPPI_MONITORAGGIO['win']||[]).length + (GRUPPI_MONITORAGGIO['batt']||[]).length + cdCfgList('cd_avvisi_custom').length}</span></summary>
+        <details class="ed-acc"><summary class="ed-acc-head">🔔 Quadro Avvisi <span class="ed-acc-n">${(GRUPPI_MONITORAGGIO['win']||[]).length + (GRUPPI_MONITORAGGIO['batt']||[]).length + cdCfgList('cd_avvisi_custom').length}</span></summary>
           <div class="ed-acc-body">
-            <div class="ed-slot-lbl" style="margin-bottom:4px;">Aperture (porte/finestre) e batterie monitorate nella Home. Con <b><i class="dm-segno" data-dm-segno="star" aria-hidden="true"></i> Personalizzato</b> crei un avviso su qualsiasi entità, con nome, condizione e icona a scelta.</div>
+            <div class="ed-slot-lbl" style="margin-bottom:4px;">Aperture (porte/finestre) e batterie monitorate nella Home. Con <b>⭐ Personalizzato</b> crei un avviso su qualsiasi entità, con nome, condizione e icona a scelta.</div>
             ${['win','batt'].map(grp => (GRUPPI_MONITORAGGIO[grp]||[]).map(id => {
                 const nm = cdCfg('cd_avvisi_names_extra')[id] || AVVISI_NAMES[id] || id;
-                return `<div class="ed-row"><div style="font-size:15px;">${grp==='win'?'<i class="dm-segno" data-dm-segno="door" aria-hidden="true"></i>':'<i class="dm-segno" data-dm-segno="battery" aria-hidden="true"></i>'}</div><div class="ed-row-main"><div class="ed-row-new">${cdEsc(nm)}</div><div class="ed-row-old mono">${cdEsc(id)}</div></div>${grp==='win'?`<div class="ed-del" title="Inverti il verso (ON = chiusa)" style="${dmVersoInvertito(id)?'background:linear-gradient(135deg,#0ea5e9,#0369a1);color:#fff;':''}" onclick="edAvvVerso(${cdJs(id)})">⇄</div>`:''}<div class="ed-del" onclick="wzDelAvviso(${cdJs(grp)},${cdJs(id)})"><i class="dm-segno" data-dm-segno="trash" aria-hidden="true"></i></div></div>`;
+                return `<div class="ed-row"><div style="font-size:15px;">${grp==='win'?'🚪':'🔋'}</div><div class="ed-row-main"><div class="ed-row-new">${cdEsc(nm)}</div><div class="ed-row-old mono">${cdEsc(id)}</div></div>${grp==='win'?`<div class="ed-del" title="Inverti il verso (ON = chiusa)" style="${dmVersoInvertito(id)?'background:linear-gradient(135deg,#0ea5e9,#0369a1);color:#fff;':''}" onclick="edAvvVerso(${cdJs(id)})">⇄</div>`:''}<div class="ed-del" onclick="wzDelAvviso(${cdJs(grp)},${cdJs(id)})">🗑️</div></div>`;
             }).join('')).join('')}
-            ${cdCfgList('cd_avvisi_custom').map((a, i) => `<div class="ed-row"><div style="font-size:15px;">${cdSegno(a.icon, 0, 'warning')}</div><div class="ed-row-main"><div class="ed-row-new">${cdEsc(a.name||a.entity)} <span style="font-weight:700; color:var(--text-dim,#94a3b8); font-size:10.5px;">· ${cdEsc(cdAvvisoCondLabel(a))}</span></div><div class="ed-row-old mono">${cdEsc(a.entity)}</div></div><div class="ed-del" onclick="wzDelAvvisoCustom(${i})"><i class="dm-segno" data-dm-segno="trash" aria-hidden="true"></i></div></div>`).join('')}
+            ${cdCfgList('cd_avvisi_custom').map((a, i) => `<div class="ed-row"><div style="font-size:15px;">${cdEsc(a.icon||'⚠️')}</div><div class="ed-row-main"><div class="ed-row-new">${cdEsc(a.name||a.entity)} <span style="font-weight:700; color:var(--text-dim,#94a3b8); font-size:10.5px;">· ${cdEsc(cdAvvisoCondLabel(a))}</span></div><div class="ed-row-old mono">${cdEsc(a.entity)}</div></div><div class="ed-del" onclick="wzDelAvvisoCustom(${i})">🗑️</div></div>`).join('')}
             <div style="display:flex; gap:8px; margin-bottom:8px; margin-top:6px;">
-              <select id="wz-av-grp" class="wz-input" style="margin-bottom:0; flex:0 0 46%;" onchange="var c=document.getElementById('wz-av-custom'); if(c) c.style.display = this.value==='custom' ? 'block' : 'none';"><option value="win">Apertura</option><option value="batt">Batteria</option><option value="tapp">Finestre (cover)</option><option value="custom">Personalizzato</option></select>
+              <select id="wz-av-grp" class="wz-input" style="margin-bottom:0; flex:0 0 46%;" onchange="var c=document.getElementById('wz-av-custom'); if(c) c.style.display = this.value==='custom' ? 'block' : 'none';"><option value="win">🚪 Apertura</option><option value="batt">🔋 Batteria</option><option value="tapp">🪟 Finestre (cover)</option><option value="custom">⭐ Personalizzato</option></select>
               <input id="wz-av-name" class="wz-input" style="margin-bottom:0; flex:1;" placeholder="Nome (es. Perdita acqua)">
             </div>
-            <div style="display:flex; gap:6px; margin-bottom:8px;"><input id="wz-av-ent" class="wz-input mono" autocomplete="off" placeholder="binary_sensor.finestra_studio_contact" style="margin-bottom:0; flex:1; font-family:monospace;"><button type="button" onclick="wzPickEntity('#wz-av-ent')" style="flex:0 0 40px; height:40px; border:none; border-radius:12px; background:linear-gradient(135deg,#0ea5e9,#0369a1); color:#fff; font-size:15px; cursor:pointer;"><i class="dm-segno" data-dm-segno="search" aria-hidden="true"></i></button></div>
+            <div style="display:flex; gap:6px; margin-bottom:8px;"><input id="wz-av-ent" class="wz-input mono" autocomplete="off" placeholder="binary_sensor.finestra_studio_contact" style="margin-bottom:0; flex:1; font-family:monospace;"><button type="button" onclick="wzPickEntity('#wz-av-ent')" style="flex:0 0 40px; height:40px; border:none; border-radius:12px; background:linear-gradient(135deg,#0ea5e9,#0369a1); color:#fff; font-size:15px; cursor:pointer;">🔍</button></div>
             <div id="wz-av-custom" style="display:none; background:rgba(148,163,184,0.09); border-radius:12px; padding:10px; margin-bottom:8px;">
               <div class="ed-slot-lbl" style="margin-bottom:6px;">Mostra l'avviso quando l'entità è…</div>
               <div style="display:flex; gap:8px;">
@@ -2440,84 +2434,84 @@ function wzRender() {
               </div>
               <div style="display:flex; gap:8px; margin-top:8px; align-items:center;">
                 <span class="ed-slot-lbl" style="margin:0;">Icona</span>
-                <input id="wz-av-icon" class="wz-input" style="margin-bottom:0; flex:0 0 74px; text-align:center; font-size:16px;" value="⚠️" placeholder="">
+                <input id="wz-av-icon" class="wz-input" style="margin-bottom:0; flex:0 0 74px; text-align:center; font-size:16px;" value="⚠️" placeholder="⚠️">
               </div>
             </div>
             <button class="ed-btn-add" style="width:100%;" onclick="wzAddAvviso()">＋ Aggiungi al Quadro Avvisi</button>
           </div>
         </details>` : ''}${WIZ.sections['home'] !== false ? `
-        <details class="ed-acc"><summary class="ed-acc-head"><i class="dm-segno" data-dm-segno="socket" aria-hidden="true"></i> Dispositivi (lavastoviglie, stufa…) <span class="ed-acc-n">${(WIZ.devices||[]).length}</span></summary>
+        <details class="ed-acc"><summary class="ed-acc-head">🔌 Dispositivi (lavastoviglie, stufa…) <span class="ed-acc-n">${(WIZ.devices||[]).length}</span></summary>
           <div class="ed-acc-body">
-            ${(WIZ.devices||[]).map((d, i) => `<div class="ed-row"><div style="font-size:15px;">${cdSegno(d.icon, 0, 'socket')}</div><div class="ed-row-main"><div class="ed-row-new">${cdEsc(d.name)}</div><div class="ed-row-old mono">${cdEsc([d.switch,d.power,d.sensor].filter(Boolean).join(' · '))}</div></div><div class="ed-del" onclick="WIZ.devices.splice(${i},1); wzRender();"><i class="dm-segno" data-dm-segno="trash" aria-hidden="true"></i></div></div>`).join('')}
+            ${(WIZ.devices||[]).map((d, i) => `<div class="ed-row"><div style="font-size:15px;">${cdEsc(d.icon||'🔌')}</div><div class="ed-row-main"><div class="ed-row-new">${cdEsc(d.name)}</div><div class="ed-row-old mono">${cdEsc([d.switch,d.power,d.sensor].filter(Boolean).join(' · '))}</div></div><div class="ed-del" onclick="WIZ.devices.splice(${i},1); wzRender();">🗑️</div></div>`).join('')}
             <div style="display:flex; gap:8px; margin-bottom:8px;">
-              <input id="wz-dev-icon" class="wz-input" style="margin-bottom:0; flex:0 0 64px; text-align:center;" placeholder="" maxlength="4">
+              <input id="wz-dev-icon" class="wz-input" style="margin-bottom:0; flex:0 0 64px; text-align:center;" placeholder="🧺" maxlength="4">
               <input id="wz-dev-name" class="wz-input" style="margin-bottom:0; flex:1;" placeholder="Nome (es. Lavastoviglie)">
             </div>
-            <div style="display:flex; gap:6px; margin-bottom:8px;"><input id="wz-dev-sw" class="wz-input mono" autocomplete="off" placeholder="dm.core_052 (facoltativo)" style="margin-bottom:0; flex:1; font-family:monospace;"><button type="button" onclick="wzPickEntity('#wz-dev-sw')" style="flex:0 0 40px; height:40px; border:none; border-radius:12px; background:linear-gradient(135deg,#0ea5e9,#0369a1); color:#fff; font-size:15px; cursor:pointer;"><i class="dm-segno" data-dm-segno="search" aria-hidden="true"></i></button></div>
-            <div style="display:flex; gap:6px; margin-bottom:8px;"><input id="wz-dev-pw" class="wz-input mono" autocomplete="off" placeholder="dm.core_040 (facoltativo)" style="margin-bottom:0; flex:1; font-family:monospace;"><button type="button" onclick="wzPickEntity('#wz-dev-pw')" style="flex:0 0 40px; height:40px; border:none; border-radius:12px; background:linear-gradient(135deg,#0ea5e9,#0369a1); color:#fff; font-size:15px; cursor:pointer;"><i class="dm-segno" data-dm-segno="search" aria-hidden="true"></i></button></div>
-            <div style="display:flex; gap:6px; margin-bottom:8px;"><input id="wz-dev-sv" class="wz-input mono" autocomplete="off" placeholder="dm.core_038 (facoltativo)" style="margin-bottom:0; flex:1; font-family:monospace;"><button type="button" onclick="wzPickEntity('#wz-dev-sv')" style="flex:0 0 40px; height:40px; border:none; border-radius:12px; background:linear-gradient(135deg,#0ea5e9,#0369a1); color:#fff; font-size:15px; cursor:pointer;"><i class="dm-segno" data-dm-segno="search" aria-hidden="true"></i></button></div>
+            <div style="display:flex; gap:6px; margin-bottom:8px;"><input id="wz-dev-sw" class="wz-input mono" autocomplete="off" placeholder="dm.core_052 (facoltativo)" style="margin-bottom:0; flex:1; font-family:monospace;"><button type="button" onclick="wzPickEntity('#wz-dev-sw')" style="flex:0 0 40px; height:40px; border:none; border-radius:12px; background:linear-gradient(135deg,#0ea5e9,#0369a1); color:#fff; font-size:15px; cursor:pointer;">🔍</button></div>
+            <div style="display:flex; gap:6px; margin-bottom:8px;"><input id="wz-dev-pw" class="wz-input mono" autocomplete="off" placeholder="dm.core_040 (facoltativo)" style="margin-bottom:0; flex:1; font-family:monospace;"><button type="button" onclick="wzPickEntity('#wz-dev-pw')" style="flex:0 0 40px; height:40px; border:none; border-radius:12px; background:linear-gradient(135deg,#0ea5e9,#0369a1); color:#fff; font-size:15px; cursor:pointer;">🔍</button></div>
+            <div style="display:flex; gap:6px; margin-bottom:8px;"><input id="wz-dev-sv" class="wz-input mono" autocomplete="off" placeholder="dm.core_038 (facoltativo)" style="margin-bottom:0; flex:1; font-family:monospace;"><button type="button" onclick="wzPickEntity('#wz-dev-sv')" style="flex:0 0 40px; height:40px; border:none; border-radius:12px; background:linear-gradient(135deg,#0ea5e9,#0369a1); color:#fff; font-size:15px; cursor:pointer;">🔍</button></div>
             <button class="ed-btn-add" style="width:100%;" onclick="wzAddDevice()">＋ Aggiungi dispositivo</button>
           </div>
         </details>` : ''}${WIZ.sections['energy'] !== false ? `
-        <details class="ed-acc"><summary class="ed-acc-head"><i class="dm-segno" data-dm-segno="gauge" aria-hidden="true"></i> Report Analisi (consumi per dispositivo) <span class="ed-acc-n">${(WIZ.reportDevices||[]).length}</span></summary>
+        <details class="ed-acc"><summary class="ed-acc-head">📊 Report Analisi (consumi per dispositivo) <span class="ed-acc-n">${(WIZ.reportDevices||[]).length}</span></summary>
           <div class="ed-acc-body">
             <div class="ed-slot-lbl" style="margin-bottom:6px;">Le voci del Report mensile in Energia → Analisi: nome, icona ed entità (kWh mese) a tua scelta.</div>
-            ${(WIZ.reportDevices||[]).map((d, i) => `<div class="ed-row"><div style="font-size:15px;">${cdSegno(d.icon, 0, 'power')}</div><div class="ed-row-main"><div class="ed-row-new">${cdEsc(d.name)}</div><div class="ed-row-old mono">${cdEsc(d.entity)}</div></div><div class="ed-del" onclick="WIZ.reportDevices.splice(${i},1); wzRender();"><i class="dm-segno" data-dm-segno="trash" aria-hidden="true"></i></div></div>`).join('')}
+            ${(WIZ.reportDevices||[]).map((d, i) => `<div class="ed-row"><div style="font-size:15px;">${cdEsc(d.icon||'⚡')}</div><div class="ed-row-main"><div class="ed-row-new">${cdEsc(d.name)}</div><div class="ed-row-old mono">${cdEsc(d.entity)}</div></div><div class="ed-del" onclick="WIZ.reportDevices.splice(${i},1); wzRender();">🗑️</div></div>`).join('')}
             <div style="display:flex; gap:8px; margin-bottom:8px;">
-              <input id="wz-rep-icon" class="wz-input" style="flex:0 0 64px; margin-bottom:0;" placeholder="" maxlength="4">
+              <input id="wz-rep-icon" class="wz-input" style="flex:0 0 64px; margin-bottom:0;" placeholder="⚡" maxlength="4">
               <input id="wz-rep-name" class="wz-input" style="flex:1; margin-bottom:0;" placeholder="Nome (es. Piscina)">
             </div>
             <div style="display:flex; gap:6px; margin-bottom:8px;">
               <input id="wz-rep-ent" class="wz-input mono" autocomplete="off" placeholder="dm.core_028 (kWh)" style="margin-bottom:0; flex:1; font-family:monospace;">
-              <button type="button" onclick="wzPickEntity('#wz-rep-ent')" style="flex:0 0 40px; height:40px; border:none; border-radius:12px; background:linear-gradient(135deg,#0ea5e9,#0369a1); color:#fff; font-size:15px; cursor:pointer;"><i class="dm-segno" data-dm-segno="search" aria-hidden="true"></i></button>
+              <button type="button" onclick="wzPickEntity('#wz-rep-ent')" style="flex:0 0 40px; height:40px; border:none; border-radius:12px; background:linear-gradient(135deg,#0ea5e9,#0369a1); color:#fff; font-size:15px; cursor:pointer;">🔍</button>
             </div>
             <button class="ed-btn-add" style="width:100%;" onclick="wzAddReportDevice()">＋ Aggiungi al Report</button>
           </div>
         </details>` : ''}${WIZ.sections['temp'] !== false ? `
-        <details class="ed-acc"><summary class="ed-acc-head"><i class="dm-segno" data-dm-segno="thermometer" aria-hidden="true"></i> Temperatura <span class="ed-acc-n">${(WIZ.stanze||[]).length}</span></summary>
+        <details class="ed-acc"><summary class="ed-acc-head">🌡️ Temperatura <span class="ed-acc-n">${(WIZ.stanze||[]).length}</span></summary>
           <div class="ed-acc-body">
-            ${(WIZ.stanze||[]).map((r, i) => !(r && r.temp) ? '' : `<div class="ed-row"><div style="display:flex; flex-direction:column; gap:2px;"><div class="ed-del" style="width:24px; height:20px; font-size:10px; ${i===0?'opacity:0.25; pointer-events:none;':''}" onclick="wzMoveStanza(${i},-1)">▲</div><div class="ed-del" style="width:24px; height:20px; font-size:10px; ${i===WIZ.stanze.length-1?'opacity:0.25; pointer-events:none;':''}" onclick="wzMoveStanza(${i},1)">▼</div></div><div style="font-size:15px;">${cdSegno(r.icon, 30, 'home')}</div><div class="ed-row-main"><div class="ed-row-new">${cdEsc(r.name)}</div><div class="ed-row-old mono">${cdEsc(r.temp || "")}</div></div></div>`).join('')}
+            ${(WIZ.stanze||[]).map((r, i) => !(r && r.temp) ? '' : `<div class="ed-row"><div style="display:flex; flex-direction:column; gap:2px;"><div class="ed-del" style="width:24px; height:20px; font-size:10px; ${i===0?'opacity:0.25; pointer-events:none;':''}" onclick="wzMoveStanza(${i},-1)">▲</div><div class="ed-del" style="width:24px; height:20px; font-size:10px; ${i===WIZ.stanze.length-1?'opacity:0.25; pointer-events:none;':''}" onclick="wzMoveStanza(${i},1)">▼</div></div><div style="font-size:15px;">${cdEsc(r.icon||'🏠')}</div><div class="ed-row-main"><div class="ed-row-new">${cdEsc(r.name)}</div><div class="ed-row-old mono">${cdEsc(r.temp || "")}</div></div></div>`).join('')}
             <div style="display:flex; gap:8px; margin-bottom:8px;">
-              <input id="wz-st-icon" class="wz-input" style="margin-bottom:0; flex:0 0 64px; text-align:center;" placeholder="" maxlength="4"><button type="button" onclick="wzPickIcon('#wz-st-icon')" style="flex:0 0 38px; height:38px; border:none; border-radius:10px; background:linear-gradient(135deg,#f59e0b,#d97706); color:#fff; font-size:16px; cursor:pointer;"><i class="dm-segno" data-dm-segno="person" aria-hidden="true"></i></button>
+              <input id="wz-st-icon" class="wz-input" style="margin-bottom:0; flex:0 0 64px; text-align:center;" placeholder="🛋️" maxlength="4"><button type="button" onclick="wzPickIcon('#wz-st-icon')" style="flex:0 0 38px; height:38px; border:none; border-radius:10px; background:linear-gradient(135deg,#f59e0b,#d97706); color:#fff; font-size:16px; cursor:pointer;">😀</button>
               <input id="wz-st-name" class="wz-input" style="margin-bottom:0; flex:1;" placeholder="Nome stanza (es. Salone)">
               <input id="wz-st-floor" class="wz-input" style="margin-bottom:0; flex:0 0 34%;" placeholder="Piano (opz.)" autocomplete="off">
             </div>
-            <div style="display:flex; gap:6px; margin-bottom:8px;"><input id="wz-st-temp" class="wz-input mono" autocomplete="off" placeholder="sensor.temperatura_salone (temperatura)" style="margin-bottom:0; flex:1; font-family:monospace;"><button type="button" onclick="wzPickEntity('#wz-st-temp')" style="flex:0 0 40px; height:40px; border:none; border-radius:12px; background:linear-gradient(135deg,#0ea5e9,#0369a1); color:#fff; font-size:15px; cursor:pointer;"><i class="dm-segno" data-dm-segno="search" aria-hidden="true"></i></button></div>
-            <div style="display:flex; gap:6px; margin-bottom:8px;"><input id="wz-st-hum" class="wz-input mono" autocomplete="off" placeholder="sensor.umidita_salone (facoltativo)" style="margin-bottom:0; flex:1; font-family:monospace;"><button type="button" onclick="wzPickEntity('#wz-st-hum')" style="flex:0 0 40px; height:40px; border:none; border-radius:12px; background:linear-gradient(135deg,#0ea5e9,#0369a1); color:#fff; font-size:15px; cursor:pointer;"><i class="dm-segno" data-dm-segno="search" aria-hidden="true"></i></button></div>
+            <div style="display:flex; gap:6px; margin-bottom:8px;"><input id="wz-st-temp" class="wz-input mono" autocomplete="off" placeholder="sensor.temperatura_salone (temperatura)" style="margin-bottom:0; flex:1; font-family:monospace;"><button type="button" onclick="wzPickEntity('#wz-st-temp')" style="flex:0 0 40px; height:40px; border:none; border-radius:12px; background:linear-gradient(135deg,#0ea5e9,#0369a1); color:#fff; font-size:15px; cursor:pointer;">🔍</button></div>
+            <div style="display:flex; gap:6px; margin-bottom:8px;"><input id="wz-st-hum" class="wz-input mono" autocomplete="off" placeholder="sensor.umidita_salone (facoltativo)" style="margin-bottom:0; flex:1; font-family:monospace;"><button type="button" onclick="wzPickEntity('#wz-st-hum')" style="flex:0 0 40px; height:40px; border:none; border-radius:12px; background:linear-gradient(135deg,#0ea5e9,#0369a1); color:#fff; font-size:15px; cursor:pointer;">🔍</button></div>
             <button class="ed-btn-add" style="width:100%;" onclick="wzAddStanza()" id="wz-st-add-btn">＋ Aggiungi stanza</button>
           </div>
         
           <div style="display:flex; gap:8px; margin:10px 0 8px;">
-            <input id="ed-st2-icon" class="ed-input" style="flex:0 0 56px;" placeholder="" maxlength="4"><button type="button" onclick="wzPickIcon('#ed-st2-icon')" style="flex:0 0 38px; height:38px; border:none; border-radius:10px; background:linear-gradient(135deg,#f59e0b,#d97706); color:#fff; font-size:16px; cursor:pointer;"><i class="dm-segno" data-dm-segno="person" aria-hidden="true"></i></button>
+            <input id="ed-st2-icon" class="ed-input" style="flex:0 0 56px;" placeholder="🌡️" maxlength="4"><button type="button" onclick="wzPickIcon('#ed-st2-icon')" style="flex:0 0 38px; height:38px; border:none; border-radius:10px; background:linear-gradient(135deg,#f59e0b,#d97706); color:#fff; font-size:16px; cursor:pointer;">😀</button>
             <select id="ed-st2-name" class="ed-input" style="flex:1;"></select>
-            <input id="ed-st2-floor" class="ed-input" style="flex:0 0 32%;" placeholder="Piano (opz.)"><input id="ed-st2-flicon" class="ed-input" style="flex:0 0 52px;" placeholder="" maxlength="4" title="Icona del piano"><button type="button" onclick="wzPickIcon('#ed-st2-flicon')" style="flex:0 0 38px; height:38px; border:none; border-radius:10px; background:linear-gradient(135deg,#f59e0b,#d97706); color:#fff; font-size:16px; cursor:pointer;"><i class="dm-segno" data-dm-segno="person" aria-hidden="true"></i></button>
+            <input id="ed-st2-floor" class="ed-input" style="flex:0 0 32%;" placeholder="Piano (opz.)"><input id="ed-st2-flicon" class="ed-input" style="flex:0 0 52px;" placeholder="🏢" maxlength="4" title="Icona del piano"><button type="button" onclick="wzPickIcon('#ed-st2-flicon')" style="flex:0 0 38px; height:38px; border:none; border-radius:10px; background:linear-gradient(135deg,#f59e0b,#d97706); color:#fff; font-size:16px; cursor:pointer;">😀</button>
           </div>
           <div style="display:flex; gap:6px; margin-bottom:6px;">
             <input id="ed-st2-temp" class="ed-input mono" autocomplete="off" placeholder="sensor.temperatura_x" style="flex:1; font-family:monospace;">
-            <button type="button" onclick="wzPickEntity('#ed-st2-temp')" style="flex:0 0 38px; height:38px; border:none; border-radius:10px; background:linear-gradient(135deg,#0ea5e9,#0369a1); color:#fff; font-size:14px; cursor:pointer;"><i class="dm-segno" data-dm-segno="search" aria-hidden="true"></i></button>
+            <button type="button" onclick="wzPickEntity('#ed-st2-temp')" style="flex:0 0 38px; height:38px; border:none; border-radius:10px; background:linear-gradient(135deg,#0ea5e9,#0369a1); color:#fff; font-size:14px; cursor:pointer;">🔍</button>
           </div>
           <div style="display:flex; gap:6px; margin-bottom:8px;">
             <input id="ed-st2-hum" class="ed-input mono" autocomplete="off" placeholder="sensor.umidita_x (facoltativo)" style="flex:1; font-family:monospace;">
-            <button type="button" onclick="wzPickEntity('#ed-st2-hum')" style="flex:0 0 38px; height:38px; border:none; border-radius:10px; background:linear-gradient(135deg,#0ea5e9,#0369a1); color:#fff; font-size:14px; cursor:pointer;"><i class="dm-segno" data-dm-segno="search" aria-hidden="true"></i></button>
+            <button type="button" onclick="wzPickEntity('#ed-st2-hum')" style="flex:0 0 38px; height:38px; border:none; border-radius:10px; background:linear-gradient(135deg,#0ea5e9,#0369a1); color:#fff; font-size:14px; cursor:pointer;">🔍</button>
           </div>
           <button class="ed-btn-add" style="width:100%;" onclick="edAddStanza2()">＋ Aggiungi stanza</button>
         </details>` : ''}${WIZ.sections['clima'] !== false ? `
-        <details class="ed-acc"><summary class="ed-acc-head"><i class="dm-segno" data-dm-segno="air-conditioner" aria-hidden="true"></i> Unità clima <span class="ed-acc-n">${(WIZ.climaUnits||[]).length}</span></summary>
+        <details class="ed-acc"><summary class="ed-acc-head">❄️ Unità clima <span class="ed-acc-n">${(WIZ.climaUnits||[]).length}</span></summary>
           <div class="ed-acc-body">
-            ${(WIZ.climaUnits||[]).map((u, i) => `<div class="ed-row"><div style="font-size:15px;">${u.type==='termo'?'<i class="dm-segno" data-dm-segno="radiator" aria-hidden="true"></i>':'<i class="dm-segno" data-dm-segno="air-conditioner" aria-hidden="true"></i>'}</div><div class="ed-row-main"><div class="ed-row-new">${cdEsc(u.name)}</div><div class="ed-row-old mono">${cdEsc(u.entity)}</div></div><div class="ed-del" onclick="WIZ.climaUnits.splice(${i},1); wzRender();"><i class="dm-segno" data-dm-segno="trash" aria-hidden="true"></i></div></div>`).join('')}
+            ${(WIZ.climaUnits||[]).map((u, i) => `<div class="ed-row"><div style="font-size:15px;">${u.type==='termo'?'🔥':'❄️'}</div><div class="ed-row-main"><div class="ed-row-new">${cdEsc(u.name)}</div><div class="ed-row-old mono">${cdEsc(u.entity)}</div></div><div class="ed-del" onclick="WIZ.climaUnits.splice(${i},1); wzRender();">🗑️</div></div>`).join('')}
             <div style="display:flex; gap:8px; margin-bottom:8px;">
-              <select id="wz-cl-type" class="wz-input" style="margin-bottom:0; flex:0 0 46%;"><option value="clima">Condizionatore</option><option value="termo">Termosifone</option></select>
+              <select id="wz-cl-type" class="wz-input" style="margin-bottom:0; flex:0 0 46%;"><option value="clima">❄️ Condizionatore</option><option value="termo">🔥 Termosifone</option></select>
               <input id="wz-cl-name" class="wz-input" style="margin-bottom:0; flex:1;" placeholder="Nome (es. Studio)">
             </div>
-            <div style="display:flex; gap:6px; margin-bottom:8px;"><input id="wz-cl-ent" class="wz-input mono" autocomplete="off" placeholder="climate.studio" style="margin-bottom:0; flex:1; font-family:monospace;"><button type="button" onclick="wzPickEntity('#wz-cl-ent')" style="flex:0 0 40px; height:40px; border:none; border-radius:12px; background:linear-gradient(135deg,#0ea5e9,#0369a1); color:#fff; font-size:15px; cursor:pointer;"><i class="dm-segno" data-dm-segno="search" aria-hidden="true"></i></button></div>
+            <div style="display:flex; gap:6px; margin-bottom:8px;"><input id="wz-cl-ent" class="wz-input mono" autocomplete="off" placeholder="climate.studio" style="margin-bottom:0; flex:1; font-family:monospace;"><button type="button" onclick="wzPickEntity('#wz-cl-ent')" style="flex:0 0 40px; height:40px; border:none; border-radius:12px; background:linear-gradient(135deg,#0ea5e9,#0369a1); color:#fff; font-size:15px; cursor:pointer;">🔍</button></div>
             <button class="ed-btn-add" style="width:100%;" onclick="wzAddClima()">＋ Aggiungi unità</button>
-            <div class="ed-slot" style="margin-top:12px;"><div class="ed-slot-lbl"><i class="dm-segno" data-dm-segno="radiator" aria-hidden="true"></i> Entità caldaia (switch — facoltativa)</div><div style="display:flex;gap:6px;"><input id="wz-boiler-ent" class="wz-input mono" style="margin-bottom:0; font-family:monospace; font-size:11.5px;" autocomplete="off"
-                     data-ref="switch.caldaia" value="${cdEsc((WIZ.entities && WIZ.entities['switch.caldaia']) || ENTITY_OVERRIDES['switch.caldaia'] || '')}" placeholder="switch.caldaia" onchange="wzSetSlot(this)"><button type="button" onclick="wzPickEntity('#wz-boiler-ent')" style="flex:0 0 40px;height:40px;border:none;border-radius:12px;background:linear-gradient(135deg,#0ea5e9,#0369a1);color:#fff;cursor:pointer;"><i class="dm-segno" data-dm-segno="search" aria-hidden="true"></i></button></div></div></div></details>` : ''}${WIZ.sections['security'] !== false ? `
-      <details class="ed-acc"><summary class="ed-acc-head"><i class="dm-segno" data-dm-segno="camera" aria-hidden="true"></i> Telecamere <span class="ed-acc-n">${(WIZ.cameras||[]).length}</span></summary>
+            <div class="ed-slot" style="margin-top:12px;"><div class="ed-slot-lbl">🔥 Entità caldaia (switch — facoltativa)</div><div style="display:flex;gap:6px;"><input id="wz-boiler-ent" class="wz-input mono" style="margin-bottom:0; font-family:monospace; font-size:11.5px;" autocomplete="off"
+                     data-ref="switch.caldaia" value="${cdEsc((WIZ.entities && WIZ.entities['switch.caldaia']) || ENTITY_OVERRIDES['switch.caldaia'] || '')}" placeholder="switch.caldaia" onchange="wzSetSlot(this)"><button type="button" onclick="wzPickEntity('#wz-boiler-ent')" style="flex:0 0 40px;height:40px;border:none;border-radius:12px;background:linear-gradient(135deg,#0ea5e9,#0369a1);color:#fff;cursor:pointer;">🔍</button></div></div></div></details>` : ''}${WIZ.sections['security'] !== false ? `
+      <details class="ed-acc"><summary class="ed-acc-head">📹 Telecamere <span class="ed-acc-n">${(WIZ.cameras||[]).length}</span></summary>
           <div class="ed-acc-body">
-            ${(WIZ.cameras||[]).map((cam, i) => `<div class="ed-row"><div class="ed-row-main"><div class="ed-row-new">${cdEsc(cam.name)}</div><div class="ed-row-old mono">${cdEsc(cam.entity)}</div></div><div class="ed-del" onclick="WIZ.cameras.splice(${i},1); wzRender();"><i class="dm-segno" data-dm-segno="trash" aria-hidden="true"></i></div></div>`).join('')}
+            ${(WIZ.cameras||[]).map((cam, i) => `<div class="ed-row"><div class="ed-row-main"><div class="ed-row-new">${cdEsc(cam.name)}</div><div class="ed-row-old mono">${cdEsc(cam.entity)}</div></div><div class="ed-del" onclick="WIZ.cameras.splice(${i},1); wzRender();">🗑️</div></div>`).join('')}
             <input id="wz-cam-name" class="wz-input" placeholder="Nome (es. Giardino)" style="margin-bottom:8px;">
-            <div style="display:flex; gap:6px; margin-bottom:8px;"><input id="wz-cam-ent" class="wz-input mono" autocomplete="off" placeholder="camera.giardino" style="margin-bottom:0; flex:1; font-family:monospace;"><button type="button" onclick="wzPickEntity('#wz-cam-ent')" style="flex:0 0 40px; height:40px; border:none; border-radius:12px; background:linear-gradient(135deg,#0ea5e9,#0369a1); color:#fff; font-size:15px; cursor:pointer;"><i class="dm-segno" data-dm-segno="search" aria-hidden="true"></i></button></div>
+            <div style="display:flex; gap:6px; margin-bottom:8px;"><input id="wz-cam-ent" class="wz-input mono" autocomplete="off" placeholder="camera.giardino" style="margin-bottom:0; flex:1; font-family:monospace;"><button type="button" onclick="wzPickEntity('#wz-cam-ent')" style="flex:0 0 40px; height:40px; border:none; border-radius:12px; background:linear-gradient(135deg,#0ea5e9,#0369a1); color:#fff; font-size:15px; cursor:pointer;">🔍</button></div>
             <input id="wz-cam-stream" class="wz-input mono" placeholder="Stream go2rtc (facoltativo)" style="margin-bottom:8px; font-family:monospace;">
             <button class="ed-btn-add" style="width:100%;" onclick="wzAddCamera()">＋ Aggiungi telecamera</button>
           </div>
@@ -2527,27 +2521,27 @@ function wzRender() {
     }
 
     if (WIZ.step === 6) body = `
-        <div class="wz-title"><i class="dm-segno" data-dm-segno="star" aria-hidden="true"></i> Tutto pronto!</div>
+        <div class="wz-title">🎉 Tutto pronto!</div>
         <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:14px; padding:12px 16px; margin-bottom:12px; font-size:12.5px; color:#166534; line-height:1.7;">
-          <i class="dm-segno" data-dm-segno="list" aria-hidden="true"></i> <b>Riepilogo:</b>
-          <i class="dm-segno" data-dm-segno="sliders" aria-hidden="true"></i> ${Object.keys(WIZ.entities||{}).length + Object.keys(ENTITY_OVERRIDES||{}).length} entità ·
-          <i class="dm-segno" data-dm-segno="lights" aria-hidden="true"></i> ${Object.keys(WIZ.luci||{}).length} luci ·
-          <i class="dm-segno" data-dm-segno="thermometer" aria-hidden="true"></i> ${(WIZ.stanze||[]).length} stanze ·
-          <i class="dm-segno" data-dm-segno="air-conditioner" aria-hidden="true"></i> ${(WIZ.climaUnits||[]).length} clima ·
-          <i class="dm-segno" data-dm-segno="camera" aria-hidden="true"></i> ${(WIZ.cameras||[]).length} camere ·
-          <i class="dm-segno" data-dm-segno="power" aria-hidden="true"></i> ${(WIZ.quickActions||[]).length} azioni
+          📋 <b>Riepilogo:</b>
+          🧩 ${Object.keys(WIZ.entities||{}).length + Object.keys(ENTITY_OVERRIDES||{}).length} entità ·
+          💡 ${Object.keys(WIZ.luci||{}).length} luci ·
+          🌡️ ${(WIZ.stanze||[]).length} stanze ·
+          ❄️ ${(WIZ.climaUnits||[]).length} clima ·
+          📹 ${(WIZ.cameras||[]).length} camere ·
+          ⚡ ${(WIZ.quickActions||[]).length} azioni
         </div>
         <div class="wz-sub">La configurazione è salvata <b>su questo dispositivo</b> (con HACS sopravvive agli aggiornamenti).<br><br>
-        <i class="dm-segno" data-dm-segno="star" aria-hidden="true"></i> <b>Per tornare in configurazione in qualsiasi momento:</b><br>
-        • Pagina <b><i class="dm-segno" data-dm-segno="sliders" aria-hidden="true"></i> Config</b> nel menu (visibile agli admin)<br>
+        📌 <b>Per tornare in configurazione in qualsiasi momento:</b><br>
+        • Pagina <b>⚙️ Config</b> nel menu (visibile agli admin)<br>
        <br>
-        Per rendere la config multi-dispositivo: → Configura Entità → Esporta.</div>
+        Per rendere la config multi-dispositivo: ⚙️ → Configura Entità → 📤 Esporta.</div>
         <button class="wz-btn wz-btn-green" onclick="wzFinish()">Salva e avvia la dashboard ✓</button>`;
 
     card.innerHTML = `<div class="wz-ver">v${DASHBOARD_VERSION}</div><div class="wz-logo-wrap" style="display:flex; justify-content:center; margin-bottom:16px;">${cdBrandLogo(46, true)}</div><div class="wz-dots">${dots}</div>${body}
         ${WIZ.step > 1 && WIZ.step < 6 ? '<div class="wz-back" onclick="WIZ.step--; wzRender();">← Indietro</div>' : ''}
         <div class="wz-skip" onclick="document.getElementById('setup-wizard').remove()">Chiudi senza salvare</div>
-        <div class="wz-skip" style="color:#fca5a5;" onclick="wzResetAll()"><i class="dm-segno" data-dm-segno="trash" aria-hidden="true"></i> Reset totale configurazione (questo dispositivo)</div>`;
+        <div class="wz-skip" style="color:#fca5a5;" onclick="wzResetAll()">🗑️ Reset totale configurazione (questo dispositivo)</div>`;
     if (WIZ.step === 4) wzRenderLights();
 }
 
@@ -2637,7 +2631,7 @@ function cdSyncPush(silent = true) {
         localStorage.setItem('cd_sync_ts', String(payload.__ts));
         localStorage.removeItem('cd_sync_dirty'); // inviate: non più dirty
         ws.send(JSON.stringify({ id: msgId++, type: 'frontend/set_user_data', key: (window.__DASHBOARDMODERN_HOSTED__ ? ('dashboardmodern_integration_config' + (window.__DASHBOARDMODERN_PRIMARY__ === false && window.__DASHBOARDMODERN_INSTANCE__ ? '__' + String(window.__DASHBOARDMODERN_INSTANCE__).replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 16) : '')) : 'dashboard' + '_modern_config'), value: payload }));
-        if (!silent && typeof edToast === 'function') edToast('Configurazione salvata su Home Assistant');
+        if (!silent && typeof edToast === 'function') edToast('☁️ Configurazione salvata su Home Assistant');
         console.log('[Sync] configurazione inviata a HA');
     } catch(e) { console.warn('[Sync] push fallito:', e); }
 }
@@ -2682,17 +2676,17 @@ function wzTestToken() {
     WIZ.remoteUrl = (document.getElementById('wz-remote') ? document.getElementById('wz-remote').value.trim() : WIZ.remoteUrl || '');
     const tk = (document.getElementById('wz-token').value || '').trim();
     const res = document.getElementById('wz-test-result');
-    if (!tk || !tk.startsWith('eyJ')) { res.innerHTML = '<div class="wz-err"><i class="dm-segno" data-dm-segno="warning" aria-hidden="true"></i> Il token non sembra valido (deve iniziare con eyJ)</div>'; return; }
-    res.innerHTML = '<div class="wz-info"><i class="dm-segno" data-dm-segno="timer" aria-hidden="true"></i> Verifico…</div>';
+    if (!tk || !tk.startsWith('eyJ')) { res.innerHTML = '<div class="wz-err">⚠️ Il token non sembra valido (deve iniziare con eyJ)</div>'; return; }
+    res.innerHTML = '<div class="wz-info">⏳ Verifico…</div>';
     const _ha = cdResolveHaWs();
-    if (!_ha.ok) { res.innerHTML = '<div class="wz-err"><i class="dm-segno" data-dm-segno="warning" aria-hidden="true"></i> Inserisci l\'URL di Home Assistant (campo qui sopra) prima di verificare — questo file è aperto fuori da HA.</div>'; return; }
+    if (!_ha.ok) { res.innerHTML = '<div class="wz-err">⚠️ Inserisci l\'URL di Home Assistant (campo qui sopra) prima di verificare — questo file è aperto fuori da HA.</div>'; return; }
     try {
         const tws = new WebSocket(_ha.ws);
         let done = false;
         tws.onmessage = (ev) => {
             const m = JSON.parse(ev.data);
             if (m.type === 'auth_required') tws.send(JSON.stringify({ type: 'auth', access_token: tk }));
-            if (m.type === 'auth_ok') { done = true; WIZ.token = tk; res.innerHTML = '<div class="wz-ok"><i class="dm-segno" data-dm-segno="check" aria-hidden="true"></i> Connesso a Home Assistant!</div>'; tws.close();
+            if (m.type === 'auth_ok') { done = true; WIZ.token = tk; res.innerHTML = '<div class="wz-ok">✅ Connesso a Home Assistant!</div>'; tws.close();
                 // v270: config trovata su HA (da un altro dispositivo)? Proponi l'importazione
                 cdSyncPull(tk, (data) => {
                     // v301: l'import automatico avviene SOLO se questo dispositivo è vergine.
@@ -2703,7 +2697,7 @@ function wzTestToken() {
                         {
                             const n = cdSyncApply(data);
                             try { const conn = JSON.parse(localStorage.getItem('cd_connection') || '{}'); conn.token = tk; if (!window.__DASHBOARDMODERN_HOSTED__) localStorage.setItem('cd_connection', JSON.stringify(conn)); } catch(e) { localStorage.setItem('cd_connection', JSON.stringify({ token: tk })); }
-                            alert('Importate ' + n + ' impostazioni. La dashboard si ricarica.');
+                            alert('✅ Importate ' + n + ' impostazioni. La dashboard si ricarica.');
                             document.getElementById('setup-wizard')?.remove();
                             location.reload();
                             return;
@@ -2712,11 +2706,11 @@ function wzTestToken() {
                     setTimeout(() => { WIZ.step = 2; wzRender(); }, 300);
                 });
             }
-            if (m.type === 'auth_invalid') { done = true; res.innerHTML = '<div class="wz-err"><i class="dm-segno" data-dm-segno="error" aria-hidden="true"></i> Token rifiutato da HA. Ricontrolla di averlo copiato tutto.</div>'; tws.close(); }
+            if (m.type === 'auth_invalid') { done = true; res.innerHTML = '<div class="wz-err">❌ Token rifiutato da HA. Ricontrolla di averlo copiato tutto.</div>'; tws.close(); }
         };
-        tws.onerror = () => { if (!done) res.innerHTML = '<div class="wz-err"><i class="dm-segno" data-dm-segno="error" aria-hidden="true"></i> Impossibile raggiungere HA a ' + cdEsc(_ha.base || location.host) + '.<br>Controlla URL e che HA sia raggiungibile da questo dispositivo. Se il file è aperto da un download, l\'URL qui sopra è obbligatorio.</div>'; };
-        setTimeout(() => { if (!done) { res.innerHTML = '<div class="wz-err"><i class="dm-segno" data-dm-segno="error" aria-hidden="true"></i> Timeout. Riprova.</div>'; try{tws.close();}catch(e){} } }, 8000);
-    } catch(e) { res.innerHTML = '<div class="wz-err"><i class="dm-segno" data-dm-segno="error" aria-hidden="true"></i> ' + cdEsc(e.message) + '</div>'; }
+        tws.onerror = () => { if (!done) res.innerHTML = '<div class="wz-err">❌ Impossibile raggiungere HA a ' + cdEsc(_ha.base || location.host) + '.<br>Controlla URL e che HA sia raggiungibile da questo dispositivo. Se il file è aperto da un download, l\'URL qui sopra è obbligatorio.</div>'; };
+        setTimeout(() => { if (!done) { res.innerHTML = '<div class="wz-err">❌ Timeout. Riprova.</div>'; try{tws.close();}catch(e){} } }, 8000);
+    } catch(e) { res.innerHTML = '<div class="wz-err">❌ ' + cdEsc(e.message) + '</div>'; }
 }
 
 function wzLoadLights() {
@@ -2844,8 +2838,8 @@ function wzQaTypeChanged() {
     if (entRow) entRow.style.display = needsEntity ? 'flex' : 'none';
     if (hint) {
         hint.textContent = t === 'luci_group'
-            ? 'Dai un nome (es. "Piano Terra") e premi Aggiungi: sceglierai le luci da una lista con ricerca.'
-            : (needsEntity ? 'Scrivi o scegli con l\'entità da comandare.' : 'Questo popup è pronto: dai solo un nome (opzionale) e premi Aggiungi.');
+            ? '💡 Dai un nome (es. "Piano Terra") e premi Aggiungi: sceglierai le luci da una lista con ricerca.'
+            : (needsEntity ? '🔀 Scrivi o scegli con 🔍 l\'entità da comandare.' : '✨ Questo popup è pronto: dai solo un nome (opzionale) e premi Aggiungi.');
     }
 }
 
@@ -2884,11 +2878,11 @@ function wzPickIcon(sel) {
     ov.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,0.55);z-index:2147483000;display:flex;align-items:center;justify-content:center;padding:20px;';
     ov.innerHTML = `<div style="background:var(--card-bg,#fff);border-radius:18px;max-width:440px;width:100%;max-height:70vh;overflow:auto;padding:16px;box-shadow:0 20px 60px rgba(0,0,0,0.35);">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-        <div style="font-weight:900;font-size:15px;"><i class="dm-segno" data-dm-segno="person" aria-hidden="true"></i> Scegli un'icona</div>
+        <div style="font-weight:900;font-size:15px;">😀 Scegli un'icona</div>
         <button type="button" onclick="document.getElementById('cd-icon-picker').remove()" style="border:none;background:rgba(148,163,184,0.15);border-radius:50%;width:32px;height:32px;font-size:15px;cursor:pointer;">✕</button>
       </div>
       <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(46px,1fr));gap:4px;">
-      ${CD_EMOJI_SET.map(e => `<button type="button" style="font-size:23px;padding:8px 0;border:none;background:transparent;border-radius:10px;cursor:pointer;" onclick="cdSetIcon(${cdJs(sel)},${cdJs(e)})">${cdSegno(e, 23)}</button>`).join('')}
+      ${CD_EMOJI_SET.map(e => `<button type="button" style="font-size:23px;padding:8px 0;border:none;background:transparent;border-radius:10px;cursor:pointer;" onclick="cdSetIcon(${cdJs(sel)},${cdJs(e)})">${e}</button>`).join('')}
       </div></div>`;
     ov.addEventListener('click', ev => { if (ev.target === ov) ov.remove(); });
     document.body.appendChild(ov);
@@ -2941,8 +2935,8 @@ function wzPickEntity(ref) {
     ov.id = 'cd-entpick';
     ov.style.cssText = 'position:fixed; inset:0; background:rgba(15,23,42,0.6); z-index:100000; display:flex; align-items:center; justify-content:center; padding:16px;';
     ov.innerHTML = `<div style="background:var(--card-bg,#fff); border-radius:22px; padding:18px; width:min(460px,100%); max-height:82vh; display:flex; flex-direction:column; box-shadow:0 20px 60px rgba(0,0,0,0.35);">
-        <div style="font-weight:900; font-size:14.5px; margin-bottom:8px; color:var(--text,#0f172a);"><i class="dm-segno" data-dm-segno="sliders" aria-hidden="true"></i> Scegli l'entità</div>
-        <input id="cd-ep-search" class="wz-input" style="margin-bottom:8px;" placeholder="Cerca… (nome o entità)" autofocus
+        <div style="font-weight:900; font-size:14.5px; margin-bottom:8px; color:var(--text,#0f172a);">🧩 Scegli l'entità</div>
+        <input id="cd-ep-search" class="wz-input" style="margin-bottom:8px;" placeholder="🔍 Cerca… (nome o entità)" autofocus
                oninput="cdEpFilter(this.value)">
         <div id="cd-ep-list" style="overflow-y:auto; flex:1; display:flex; flex-direction:column; gap:4px;"></div>
         <button class="wz-btn" style="margin-top:10px; background:#94a3b8;" onclick="document.getElementById('cd-entpick').remove()">Annulla</button>
@@ -3022,9 +3016,9 @@ function cdPickLights(groupName, onDone, preselected) {
     ov.id = 'cd-lightpick';
     ov.style.cssText = 'position:fixed; inset:0; background:rgba(15,23,42,0.55); z-index:99999; display:flex; align-items:center; justify-content:center; padding:18px;';
     ov.innerHTML = `<div style="background:var(--card-bg,#fff); border-radius:22px; padding:20px; width:min(430px,100%); max-height:80vh; display:flex; flex-direction:column; box-shadow:0 20px 60px rgba(0,0,0,0.3);">
-        <div style="font-weight:900; font-size:15px; margin-bottom:4px; color:var(--text,#0f172a);"><i class="dm-segno" data-dm-segno="lights" aria-hidden="true"></i> Luci del gruppo "${cdEsc(groupName)}"</div>
+        <div style="font-weight:900; font-size:15px; margin-bottom:4px; color:var(--text,#0f172a);">💡 Luci del gruppo "${cdEsc(groupName)}"</div>
         <div style="font-size:11.5px; color:var(--text-dim,#64748b); margin-bottom:10px;">Spunta le luci che questo popup deve mostrare.</div>
-        <input id="cd-lp-search" class="wz-input" style="margin-bottom:8px;" placeholder="Cerca…" oninput="document.querySelectorAll('#cd-lp-list > label').forEach(l => { l.style.display = l.textContent.toLowerCase().includes(this.value.toLowerCase()) ? '' : 'none'; })">
+        <input id="cd-lp-search" class="wz-input" style="margin-bottom:8px;" placeholder="🔍 Cerca…" oninput="document.querySelectorAll('#cd-lp-list > label').forEach(l => { l.style.display = l.textContent.toLowerCase().includes(this.value.toLowerCase()) ? '' : 'none'; })">
         <div id="cd-lp-list" style="overflow-y:auto; flex:1; display:flex; flex-direction:column; gap:4px;">
           ${ids.map(id => `<label style="display:flex; gap:10px; align-items:center; padding:8px 10px; border-radius:12px; background:rgba(148,163,184,0.08); cursor:pointer; font-size:12.5px; color:var(--text,#0f172a);"><input type="checkbox" value="${cdEsc(id)}" ${(preselected||[]).includes(id) ? 'checked' : ''} style="width:17px; height:17px; accent-color:#0ea5e9;"> <span><b>${cdEsc(all[id])}</b><br><span style="font-family:monospace; font-size:10px; color:var(--text-dim,#64748b);">${cdEsc(id)}</span></span></label>`).join('')}
         </div>
@@ -3309,13 +3303,13 @@ function wzAutoDetect() {
 
     wzRender();
     const _counts = { nSlot, nLuci, nClima, nCam, nStanze, nAvvisi };
-    if (!WIZ._silentDetect) alert('Rilevamento completato!\n\n' +
-        (nSlot ? '' + nSlot + ' entità collegate\n' : '') +
-        (nLuci ? '' + nLuci + ' luci\n' : '') +
-        (nClima ? '' + nClima + ' unità clima\n' : '') +
-        (nCam ? '' + nCam + ' telecamere\n' : '') +
-        (nStanze ? '' + nStanze + ' stanze\n' : '') +
-        (nAvvisi ? '' + nAvvisi + ' avvisi\n' : '') +
+    if (!WIZ._silentDetect) alert('🪄 Rilevamento completato!\n\n' +
+        (nSlot ? '🧩 ' + nSlot + ' entità collegate\n' : '') +
+        (nLuci ? '💡 ' + nLuci + ' luci\n' : '') +
+        (nClima ? '❄️ ' + nClima + ' unità clima\n' : '') +
+        (nCam ? '📹 ' + nCam + ' telecamere\n' : '') +
+        (nStanze ? '🌡️ ' + nStanze + ' stanze\n' : '') +
+        (nAvvisi ? '🔔 ' + nAvvisi + ' avvisi\n' : '') +
         '\nControlla le proposte negli accordion: puoi correggere o rimuovere tutto liberamente.');
     return _counts;
 }
@@ -3355,7 +3349,7 @@ function wzEditStanza(i) {
     const flEl = document.getElementById('wz-st-floor'); if (flEl) flEl.value = s.floor || '';
     WIZ._editStanza = i;
     const btn = document.getElementById('wz-st-add-btn');
-    if (btn) btn.textContent = 'Salva modifica';
+    if (btn) btn.textContent = '💾 Salva modifica';
     document.getElementById('wz-st-name')?.focus();
 }
 
@@ -3475,7 +3469,7 @@ function wzAddCamera() {
     wzRender();
 }
 function wzResetAll() {
-    if (!confirm('Cancellare TUTTA la configurazione salvata?\n\nLa config è sincronizzata tramite Home Assistant: verrà rimossa da TUTTI i dispositivi collegati. Poi riconfiguri tutto dal pannello Config.')) return;
+    if (!confirm('Cancellare TUTTA la configurazione salvata?\n\n⚠️ La config è sincronizzata tramite Home Assistant: verrà rimossa da TUTTI i dispositivi collegati. Poi riconfiguri tutto dal pannello Config.')) return;
     window._cdResetting = true;   // ferma i loop di render durante il teardown (niente errori null)
     // 1) svuota la copia su Home Assistant, così la sincronizzazione non la ripristina al riavvio
     try { if (typeof ws !== 'undefined' && ws && ws.readyState === 1) ws.send(JSON.stringify({ id: msgId++, type: 'frontend/set_user_data', key: (window.__DASHBOARDMODERN_HOSTED__ ? ('dashboardmodern_integration_config' + (window.__DASHBOARDMODERN_PRIMARY__ === false && window.__DASHBOARDMODERN_INSTANCE__ ? '__' + String(window.__DASHBOARDMODERN_INSTANCE__).replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 16) : '')) : 'dashboard' + '_modern_config'), value: { __ts: Date.now() } })); } catch(e) {}
@@ -3527,7 +3521,7 @@ async function wzFinishV7(withDetect) {
         /* v0.8.3: se le entità non sono ancora arrivate le carico e ASPETTO (fino a 15s),
            invece di fermarmi con "Attendi il caricamento…" */
         if (!WIZ.allMeta || !WIZ.allMeta.length) {
-            wzShowWait('<i class="dm-segno" data-dm-segno="timer" aria-hidden="true"></i> Leggo tutte le entità da Home Assistant…');
+            wzShowWait('⏳ Leggo tutte le entità da Home Assistant…');
             try { wzLoadAllEntities(); } catch(e) {}
             const t0 = Date.now();
             while ((!WIZ.allMeta || !WIZ.allMeta.length) && Date.now() - t0 < 15000) {
@@ -3536,7 +3530,7 @@ async function wzFinishV7(withDetect) {
             wzHideWait();
         }
         if (!WIZ.allMeta || !WIZ.allMeta.length) {
-            alert('Non riesco a leggere le entità da Home Assistant.\nVerifica URL e token nel passo della connessione, poi riprova.');
+            alert('⚠️ Non riesco a leggere le entità da Home Assistant.\nVerifica URL e token nel passo della connessione, poi riprova.');
             return;
         }
         let counts = null;
@@ -3562,12 +3556,12 @@ function wzHideWait() { const ov = document.getElementById('cd-wz-wait'); if (ov
 /* v0.8.3: RIEPILOGO RILEVAMENTO — quante entità e DOVE sono state assegnate */
 function wzShowDetectSummary(n) {
     const rows = [
-        ['<i class="dm-segno" data-dm-segno="sliders" aria-hidden="true"></i>', 'Entità delle sezioni (Energia, Boiler, EV, MiniPC…)', n.nSlot],
-        ['<i class="dm-segno" data-dm-segno="lights" aria-hidden="true"></i>', 'Luci', n.nLuci],
-        ['<i class="dm-segno" data-dm-segno="air-conditioner" aria-hidden="true"></i>', 'Unità clima', n.nClima],
-        ['<i class="dm-segno" data-dm-segno="camera" aria-hidden="true"></i>', 'Telecamere', n.nCam],
-        ['<i class="dm-segno" data-dm-segno="thermometer" aria-hidden="true"></i>', 'Stanze (temperatura + umidità)', n.nStanze],
-        ['<i class="dm-segno" data-dm-segno="bell" aria-hidden="true"></i>', 'Quadro avvisi (aperture, batterie, luci, clima)', n.nAvvisi],
+        ['🧩', 'Entità delle sezioni (Energia, Boiler, EV, MiniPC…)', n.nSlot],
+        ['💡', 'Luci', n.nLuci],
+        ['❄️', 'Unità clima', n.nClima],
+        ['📹', 'Telecamere', n.nCam],
+        ['🌡️', 'Stanze (temperatura + umidità)', n.nStanze],
+        ['🔔', 'Quadro avvisi (aperture, batterie, luci, clima)', n.nAvvisi],
     ].filter(r => r[2] > 0);
     const tot = rows.reduce((s, r) => s + r[2], 0);
     let ov = document.getElementById('cd-wz-summary'); if (ov) ov.remove();
@@ -3581,11 +3575,11 @@ function wzShowDetectSummary(n) {
             const ov = Object.keys(cdCfg('cd_entity_overrides')).length;
             const st = cdCfgList('cd_stanze').length, lu = Object.keys(cdCfg('cd_luci')).length;
             const cl = cdCfgList('cd_clima_units').length, cam = cdCfgList('cd_cameras').length;
-            if (ov) existing.push('<i class="dm-segno" data-dm-segno="sliders" aria-hidden="true"></i> ' + ov + ' entità');
-            if (lu) existing.push('<i class="dm-segno" data-dm-segno="lights" aria-hidden="true"></i> ' + lu + ' luci');
-            if (cl) existing.push('<i class="dm-segno" data-dm-segno="air-conditioner" aria-hidden="true"></i> ' + cl + ' clima');
-            if (cam) existing.push('<i class="dm-segno" data-dm-segno="camera" aria-hidden="true"></i> ' + cam + ' telecamere');
-            if (st) existing.push('<i class="dm-segno" data-dm-segno="thermometer" aria-hidden="true"></i> ' + st + ' stanze');
+            if (ov) existing.push('🧩 ' + ov + ' entità');
+            if (lu) existing.push('💡 ' + lu + ' luci');
+            if (cl) existing.push('❄️ ' + cl + ' clima');
+            if (cam) existing.push('📹 ' + cam + ' telecamere');
+            if (st) existing.push('🌡️ ' + st + ' stanze');
         } catch(e) {}
     }
     let already = 0;
@@ -3593,14 +3587,14 @@ function wzShowDetectSummary(n) {
     const body = tot
         ? rows.map(r => `<div style="display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:14px;background:rgba(148,163,184,0.10);"><span style="font-size:20px;">${r[0]}</span><span style="flex:1;font-weight:800;font-size:13px;">${r[1]}</span><span style="font-family:'Oswald',sans-serif;font-size:20px;font-weight:700;color:#059669;">${r[2]}</span></div>`).join('')
         : (existing.length
-            ? '<div style="padding:14px;border-radius:14px;background:rgba(16,185,129,0.10);color:#047857;font-weight:800;font-size:13px;"><i class="dm-segno" data-dm-segno="check" aria-hidden="true"></i> Tutto già configurato (' + existing.join(' · ') + ').<br>Il rilevamento aggiunge solo ciò che manca: niente doppioni.</div>'
-            : (already > 0 ? '<div style="padding:14px;border-radius:14px;background:rgba(16,185,129,0.12);color:#047857;font-weight:800;font-size:13px;"><i class="dm-segno" data-dm-segno="check" aria-hidden="true"></i> Tutto già configurato (' + already + ' elementi attivi): nessuna novità da aggiungere — il rilevamento propone solo ciò che manca, senza toccare le tue scelte.</div>' : '<div style="padding:14px;border-radius:14px;background:rgba(245,158,11,0.12);color:#b45309;font-weight:800;font-size:13px;"><i class="dm-segno" data-dm-segno="person" aria-hidden="true"></i> Nessuna entità riconosciuta automaticamente: potrai assegnarle a mano dall\'editor con la ricerca <i class="dm-segno" data-dm-segno="search" aria-hidden="true"></i>.</div>'));
+            ? '<div style="padding:14px;border-radius:14px;background:rgba(16,185,129,0.10);color:#047857;font-weight:800;font-size:13px;">✅ Tutto già configurato (' + existing.join(' · ') + ').<br>Il rilevamento aggiunge solo ciò che manca: niente doppioni.</div>'
+            : (already > 0 ? '<div style="padding:14px;border-radius:14px;background:rgba(16,185,129,0.12);color:#047857;font-weight:800;font-size:13px;">✅ Tutto già configurato (' + already + ' elementi attivi): nessuna novità da aggiungere — il rilevamento propone solo ciò che manca, senza toccare le tue scelte.</div>' : '<div style="padding:14px;border-radius:14px;background:rgba(245,158,11,0.12);color:#b45309;font-weight:800;font-size:13px;">😕 Nessuna entità riconosciuta automaticamente: potrai assegnarle a mano dall\'editor con la ricerca 🔍.</div>'));
     ov.innerHTML = `<div style="background:var(--card-bg,#fff);border-radius:24px;padding:24px;width:min(460px,100%);max-height:82vh;overflow:auto;box-shadow:0 20px 60px rgba(0,0,0,0.4);display:flex;flex-direction:column;gap:8px;">
-        <div style="font-weight:900;font-size:18px;margin-bottom:4px;"><i class="dm-segno" data-dm-segno="star" aria-hidden="true"></i> Rilevamento completato</div>
+        <div style="font-weight:900;font-size:18px;margin-bottom:4px;">🪄 Rilevamento completato</div>
         ${tot ? '<div style="font-weight:800;font-size:13px;color:var(--text-dim,#64748b);margin-bottom:6px;">' + tot + ' elementi assegnati automaticamente:</div>' : ''}
         ${body}
         <div style="font-size:12px;color:var(--text-dim,#64748b);font-weight:700;margin-top:6px;">Potrai controllare, correggere o rimuovere ogni proposta dall\'editor.</div>
-        <button class="ed-save-btn" style="margin-top:10px;" onclick="sessionStorage.setItem('cd_open_editor_after_reload','1'); document.getElementById('cd-wz-summary').remove(); wzFinish();"><i class="dm-segno" data-dm-segno="check" aria-hidden="true"></i> Perfetto, apri l'editor →</button>
+        <button class="ed-save-btn" style="margin-top:10px;" onclick="sessionStorage.setItem('cd_open_editor_after_reload','1'); document.getElementById('cd-wz-summary').remove(); wzFinish();">✅ Perfetto, apri l'editor →</button>
     </div>`;
     document.body.appendChild(ov);
 }
@@ -3639,7 +3633,7 @@ function wzFinish() {
    Il configuratore UI (tab Sezioni dell'editor) le presenta come form: l'utente
    sceglie la propria entità e il sistema salva un override. Il motore non cambia. ═══ */
 const CD_SLOTS = {
-    home: { label: 'Home', slots: [
+    home: { label: '🏠 Home', slots: [
         { ref: 'dm.home_meteo',                 lbl: 'Meteo (entità weather)' },
         { ref: 'dm.home_meteo_temperatura', lbl: 'Stazione meteo: temperatura esterna (sensore)' },
         { ref: 'dm.home_meteo_umidita', lbl: 'Stazione meteo: umidità (sensore)' },
@@ -3650,7 +3644,7 @@ const CD_SLOTS = {
         { ref: 'dm.home_interruttore_antifurto',     lbl: 'Interruttore antifurto (switch)' },
         { ref: 'dm.home_script_apertura_cancello',         lbl: 'Script apertura cancello' },
     ]},
-    energy: { label: 'Energia', slots: [
+    energy: { label: '⚡ Energia', slots: [
         { ref: 'dm.energy_produzione_solare_oggi',        lbl: 'Produzione solare oggi (kWh)' },
         { ref: 'dm.energy_consumo_casa_oggi',  lbl: 'Consumo casa oggi (kWh)' },
         { ref: 'dm.energy_energia_prelevata_oggi',     lbl: 'Energia prelevata oggi (kWh)' },
@@ -3688,7 +3682,7 @@ const CD_SLOTS = {
         { ref: 'dm.energy_potenza_ventola_inverter', lbl: 'Potenza ventola inverter (W)' },
         { ref: 'dm.energy_interruttore_ventola_inverter',       lbl: 'Interruttore ventola inverter' },
     ]},
-    ev: { label: 'Auto elettrica', slots: [
+    ev: { label: '🚗 Auto elettrica', slots: [
         { ref: 'dm.ev_batteria_auto',  lbl: 'Batteria auto (%)' },
         { ref: 'dm.ev_autonomia',    lbl: 'Autonomia (km)' },
         { ref: 'dm.ev_odometro', lbl: 'Odometro (km)' },
@@ -3708,7 +3702,7 @@ const CD_SLOTS = {
         { ref: 'dm.ev_energia_wallbox_oggi',  lbl: 'Energia wallbox oggi (kWh)' },
         { ref: 'dm.ev_energia_wallbox_mese',  lbl: 'Energia wallbox mese (kWh)' },
     ]},
-    boiler: { label: 'Solare termico', slots: [
+    boiler: { label: '🌞 Solare termico', slots: [
         { ref: 'dm.boiler_potenza_resistenza_boiler',                lbl: 'Potenza resistenza boiler (W)' },
         { ref: 'dm.boiler_interruttore_boiler',                      lbl: 'Interruttore boiler' },
         { ref: 'dm.boiler_interruttore_solare_termico',              lbl: 'Interruttore solare termico' },
@@ -3723,10 +3717,10 @@ const CD_SLOTS = {
         { ref: 'dm.boiler_sonda_temperatura_2', lbl: 'Sonda temperatura 2 (°C)' },
         { ref: 'dm.boiler_sonda_temperatura_3', lbl: 'Sonda temperatura 3 (°C)' },
     ]},
-    security: { label: 'Sicurezza', slots: [
+    security: { label: '🛡️ Sicurezza', slots: [
         { ref: 'dm.security_centrale_allarme', lbl: 'Centrale allarme' },
     ]},
-    lavatrice: { label: 'Lavatrice', slots: [
+    lavatrice: { label: '🧺 Lavatrice', slots: [
         { ref: 'dm.lavatrice_presa_avvio_lavatrice',                lbl: 'Presa/avvio lavatrice (switch)' },
         { ref: 'dm.lavatrice_potenza_presa_lavatrice_per_lavatrici_no', lbl: 'Potenza presa lavatrice (W) — per lavatrici non smart: >5W = in funzione' },
         { ref: 'dm.lavatrice_avvio_ciclo',      lbl: 'Avvio ciclo (switch dispositivo)' },
@@ -3740,7 +3734,7 @@ const CD_SLOTS = {
         { ref: 'dm.lavatrice_script_programma_59',           lbl: 'Script programma 59\'' },
         { ref: 'dm.lavatrice_script_programma_misto_colorati', lbl: 'Script programma misto/colorati' },
     ]},
-    server: { label: 'MiniPC', slots: [
+    server: { label: '🖥️ MiniPC', slots: [
         { ref: 'dm.server_cpu',    lbl: 'CPU (%)' },
         { ref: 'dm.server_ram',   lbl: 'RAM (%)' },
         { ref: 'dm.server_disco',   lbl: 'Disco (%)' },
@@ -3773,9 +3767,9 @@ function editorRenderSezioni() {
             <div class="ed-del" style="width:24px; height:20px; font-size:10px; ${i===0?'opacity:0.25; pointer-events:none;':''}" onclick="edMoveStanza(${i},-1)">▲</div>
             <div class="ed-del" style="width:24px; height:20px; font-size:10px; ${i===stanze.length-1?'opacity:0.25; pointer-events:none;':''}" onclick="edMoveStanza(${i},1)">▼</div>
           </div>
-          <div style="font-size:17px; flex-shrink:0;">${cdSegno(r.icon, 0, 'thermometer')}</div>
+          <div style="font-size:17px; flex-shrink:0;">${cdEsc(r.icon||'🌡️')}</div>
           <div class="ed-row-main">
-            <div class="ed-row-new">${cdEsc(r.name)}${r.floor ? ' <span style="font-size:10px; color:var(--text-dim); font-weight:800;">· ' + cdEsc(r.floor) + '</span>' : ''}</div>
+            <div class="ed-row-new">${cdEsc(r.name)}${r.floor ? ' <span style="font-size:10px; color:var(--text-dim); font-weight:800;">· 🏢 ' + cdEsc(r.floor) + '</span>' : ''}</div>
             <div class="ed-row-old mono">${cdEsc(r.temp || "")}</div>
           </div>
           
@@ -3792,111 +3786,111 @@ function editorRenderSezioni() {
                 <input class="ed-input mono ed-slot-in" autocomplete="off" style="flex:1;"
                        data-ref="${cdEsc(sl.ref)}" value="${cdEsc(cur)}" placeholder="es. dm.core_039"
                        onchange="edSetSlot(this)">
-                <button type="button" onclick="wzPickEntity(${cdJs(sl.ref)})" style="flex:0 0 38px; height:38px; border:none; border-radius:10px; background:linear-gradient(135deg,#0ea5e9,#0369a1); color:#fff; font-size:14px; cursor:pointer;"><i class="dm-segno" data-dm-segno="search" aria-hidden="true"></i></button>
+                <button type="button" onclick="wzPickEntity(${cdJs(sl.ref)})" style="flex:0 0 38px; height:38px; border:none; border-radius:10px; background:linear-gradient(135deg,#0ea5e9,#0369a1); color:#fff; font-size:14px; cursor:pointer;">🔍</button>
               </div>
             </div>`;
         }).join('');
-        const evImgEd = key === 'ev' ? `<div class="ed-slot"><div class="ed-slot-lbl"><i class="dm-segno" data-dm-segno="scene" aria-hidden="true"></i> URL immagine auto (es. /local/mia_auto.png)</div>
+        const evImgEd = key === 'ev' ? `<div class="ed-slot"><div class="ed-slot-lbl">🖼️ URL immagine auto (es. /local/mia_auto.png)</div>
             <input class="ed-input mono" value="${cdEsc((function(){ const v = cdCfg('cd_ev_image'); return (typeof v === 'string' ? v : (v && v.url) || ''); })())}" placeholder="/local/mia_auto.png"
                    onchange="localStorage.setItem('cd_ev_image', JSON.stringify(this.value.trim())); edToast('Immagine salvata — ricarica per applicare');"></div>` : '';
         return `<details class="ed-acc"><summary class="ed-acc-head">${sec.label} <span class="ed-acc-n">${sec.slots.length} entità</span></summary>
-            <div class="ed-acc-body">${rows}${evImgEd}<button type="button" class="ed-save-btn" onclick="edSaveSezione(this)"><i class="dm-segno" data-dm-segno="check" aria-hidden="true"></i> Salva sezione</button></div></details>`;
+            <div class="ed-acc-body">${rows}${evImgEd}<button type="button" class="ed-save-btn" onclick="edSaveSezione(this)">💾 Salva sezione</button></div></details>`;
     }).join('');
 
     return `
       <div class="ed-intro">Configura le entità di ogni sezione con le <b>tue</b> entità HA. Lascia vuoto per usare il riferimento di default (se non esiste nel tuo HA, la card mostra "—").</div>
       ${sezAccordions}
 
-      <details class="ed-acc"><summary class="ed-acc-head"><i class="dm-segno" data-dm-segno="thermometer" aria-hidden="true"></i> Temperatura <span class="ed-acc-n">${stanze.length} stanze</span></summary>
+      <details class="ed-acc"><summary class="ed-acc-head">🌡️ Temperatura <span class="ed-acc-n">${stanze.length} stanze</span></summary>
         <div class="ed-acc-body">
           <div class="ed-list">${stanzeRows}
           <div style="display:flex; gap:8px; margin:10px 0 8px;">
-            <input id="ed-st2-icon" class="ed-input" style="flex:0 0 56px;" placeholder="" maxlength="4"><button type="button" onclick="wzPickIcon('#ed-st2-icon')" style="flex:0 0 38px; height:38px; border:none; border-radius:10px; background:linear-gradient(135deg,#f59e0b,#d97706); color:#fff; font-size:16px; cursor:pointer;"><i class="dm-segno" data-dm-segno="person" aria-hidden="true"></i></button>
+            <input id="ed-st2-icon" class="ed-input" style="flex:0 0 56px;" placeholder="🌡️" maxlength="4"><button type="button" onclick="wzPickIcon('#ed-st2-icon')" style="flex:0 0 38px; height:38px; border:none; border-radius:10px; background:linear-gradient(135deg,#f59e0b,#d97706); color:#fff; font-size:16px; cursor:pointer;">😀</button>
             <select id="ed-st2-name" class="ed-input" style="flex:1;"></select>
-            <input id="ed-st2-floor" class="ed-input" style="flex:0 0 30%;" placeholder="Piano (opz.)"><input id="ed-st2-flicon" class="ed-input" style="flex:0 0 52px;" placeholder="" maxlength="4" title="Icona del piano"><button type="button" onclick="wzPickIcon('#ed-st2-flicon')" style="flex:0 0 38px; height:38px; border:none; border-radius:10px; background:linear-gradient(135deg,#f59e0b,#d97706); color:#fff; font-size:16px; cursor:pointer;"><i class="dm-segno" data-dm-segno="person" aria-hidden="true"></i></button>
+            <input id="ed-st2-floor" class="ed-input" style="flex:0 0 30%;" placeholder="Piano (opz.)"><input id="ed-st2-flicon" class="ed-input" style="flex:0 0 52px;" placeholder="🏢" maxlength="4" title="Icona del piano"><button type="button" onclick="wzPickIcon('#ed-st2-flicon')" style="flex:0 0 38px; height:38px; border:none; border-radius:10px; background:linear-gradient(135deg,#f59e0b,#d97706); color:#fff; font-size:16px; cursor:pointer;">😀</button>
           </div>
           <div style="display:flex; gap:6px; margin-bottom:6px;">
             <input id="ed-st2-temp" class="ed-input mono" autocomplete="off" placeholder="sensor.temperatura_x" style="flex:1; font-family:monospace;">
-            <button type="button" onclick="wzPickEntity('#ed-st2-temp')" style="flex:0 0 38px; height:38px; border:none; border-radius:10px; background:linear-gradient(135deg,#0ea5e9,#0369a1); color:#fff; font-size:14px; cursor:pointer;"><i class="dm-segno" data-dm-segno="search" aria-hidden="true"></i></button>
+            <button type="button" onclick="wzPickEntity('#ed-st2-temp')" style="flex:0 0 38px; height:38px; border:none; border-radius:10px; background:linear-gradient(135deg,#0ea5e9,#0369a1); color:#fff; font-size:14px; cursor:pointer;">🔍</button>
           </div>
           <div style="display:flex; gap:6px; margin-bottom:8px;">
             <input id="ed-st2-hum" class="ed-input mono" autocomplete="off" placeholder="sensor.umidita_x (facoltativo)" style="flex:1; font-family:monospace;">
-            <button type="button" onclick="wzPickEntity('#ed-st2-hum')" style="flex:0 0 38px; height:38px; border:none; border-radius:10px; background:linear-gradient(135deg,#0ea5e9,#0369a1); color:#fff; font-size:14px; cursor:pointer;"><i class="dm-segno" data-dm-segno="search" aria-hidden="true"></i></button>
+            <button type="button" onclick="wzPickEntity('#ed-st2-hum')" style="flex:0 0 38px; height:38px; border:none; border-radius:10px; background:linear-gradient(135deg,#0ea5e9,#0369a1); color:#fff; font-size:14px; cursor:pointer;">🔍</button>
           </div>
           <button class="ed-btn-add" id="ed-st2-btn" style="width:100%;" onclick="edAddStanza2()">＋ Aggiungi stanza</button></div>
           <div class="ed-form" style="display:none;">
             <div class="ed-form-row">
-              <input id="ed-st-icon" class="ed-input ed-icon-input" placeholder="" maxlength="4"><button type="button" onclick="wzPickIcon('#ed-st-icon')" style="flex:0 0 38px; height:38px; border:none; border-radius:10px; background:linear-gradient(135deg,#f59e0b,#d97706); color:#fff; font-size:16px; cursor:pointer;"><i class="dm-segno" data-dm-segno="person" aria-hidden="true"></i></button>
+              <input id="ed-st-icon" class="ed-input ed-icon-input" placeholder="🛋️" maxlength="4"><button type="button" onclick="wzPickIcon('#ed-st-icon')" style="flex:0 0 38px; height:38px; border:none; border-radius:10px; background:linear-gradient(135deg,#f59e0b,#d97706); color:#fff; font-size:16px; cursor:pointer;">😀</button>
               <input id="ed-st-name" class="ed-input" placeholder="Nome stanza" style="flex:1;">
             </div>
-            <div style="display:flex; gap:8px; margin-bottom:6px;"><input id="ed-st-temp" style="flex:1;" class="ed-input mono" placeholder="sensor.temperatura_x (temperatura)"><button type="button" onclick="wzPickEntity('#ed-st-temp')" style="flex:0 0 38px; height:38px; border:none; border-radius:10px; background:linear-gradient(135deg,#0ea5e9,#0369a1); color:#fff; font-size:14px; cursor:pointer;"><i class="dm-segno" data-dm-segno="search" aria-hidden="true"></i></button></div>
-            <div style="display:flex; gap:8px; margin-bottom:6px;"><input id="ed-st-hum" style="flex:1;" class="ed-input mono" placeholder="sensor.umidita_x (facoltativo — auto se vuoto)"><button type="button" onclick="wzPickEntity('#ed-st-hum')" style="flex:0 0 38px; height:38px; border:none; border-radius:10px; background:linear-gradient(135deg,#0ea5e9,#0369a1); color:#fff; font-size:14px; cursor:pointer;"><i class="dm-segno" data-dm-segno="search" aria-hidden="true"></i></button></div>
+            <div style="display:flex; gap:8px; margin-bottom:6px;"><input id="ed-st-temp" style="flex:1;" class="ed-input mono" placeholder="sensor.temperatura_x (temperatura)"><button type="button" onclick="wzPickEntity('#ed-st-temp')" style="flex:0 0 38px; height:38px; border:none; border-radius:10px; background:linear-gradient(135deg,#0ea5e9,#0369a1); color:#fff; font-size:14px; cursor:pointer;">🔍</button></div>
+            <div style="display:flex; gap:8px; margin-bottom:6px;"><input id="ed-st-hum" style="flex:1;" class="ed-input mono" placeholder="sensor.umidita_x (facoltativo — auto se vuoto)"><button type="button" onclick="wzPickEntity('#ed-st-hum')" style="flex:0 0 38px; height:38px; border:none; border-radius:10px; background:linear-gradient(135deg,#0ea5e9,#0369a1); color:#fff; font-size:14px; cursor:pointer;">🔍</button></div>
             <button class="ed-btn-add" onclick="edAddStanza()">＋ Aggiungi stanza</button>
           </div>
         </div>
       </details>
-        <details class="ed-acc"><summary class="ed-acc-head"><i class="dm-segno" data-dm-segno="power" aria-hidden="true"></i> Azioni rapide (Home) <span class="ed-acc-n">${getQuickActions().length} azioni</span></summary>
+        <details class="ed-acc"><summary class="ed-acc-head">⚡ Azioni rapide (Home) <span class="ed-acc-n">${getQuickActions().length} azioni</span></summary>
         <div class="ed-acc-body">
           <div class="ed-list">${getQuickActions().map((a, i) => {
             const b = a.type === 'builtin' ? CD_QA_BUILTINS[a.builtin] : null;
             return `<div class="ed-row">
-              <div style="font-size:16px; flex-shrink:0;">${cdSegno(a.icon || (b && b.icon), 0, 'power')}</div>
+              <div style="font-size:16px; flex-shrink:0;">${cdEsc(a.icon || (b && b.icon) || '⚡')}</div>
               <div class="ed-row-main">
                 <div class="ed-row-new">${cdEsc(a.name || (b && b.name) || '?')}</div>
-                <div class="ed-row-old mono">${cdEsc(a.type === 'builtin' ? 'popup nativo: ' + a.builtin : (a.type === 'luci_group' ? 'gruppo · ' + ((a.lights||[]).length) + ' luci' : a.type + ' · ' + (a.entity||'') + (a.option ? ' → ' + a.option : '')))}</div>
+                <div class="ed-row-old mono">${cdEsc(a.type === 'builtin' ? 'popup nativo: ' + a.builtin : (a.type === 'luci_group' ? '💡 gruppo · ' + ((a.lights||[]).length) + ' luci' : a.type + ' · ' + (a.entity||'') + (a.option ? ' → ' + a.option : '')))}</div>
               </div>
-              ${a.type === 'luci_group' ? `<div class="ed-del" style="background:rgba(14,165,233,0.12);" onclick="edEditLightGroup(${i})"><i class="dm-segno" data-dm-segno="pencil" aria-hidden="true"></i></div>` : ''}
-              <div class="ed-del" onclick="edDelQA(${i})"><i class="dm-segno" data-dm-segno="trash" aria-hidden="true"></i></div>
+              ${a.type === 'luci_group' ? `<div class="ed-del" style="background:rgba(14,165,233,0.12);" onclick="edEditLightGroup(${i})">✏️</div>` : ''}
+              <div class="ed-del" onclick="edDelQA(${i})">🗑️</div>
             </div>`;
           }).join('')}</div>
           <div class="ed-form">
             <div class="ed-form-row">
               <select id="ed-qa-type" class="ed-input" style="flex:0 0 40%;" onchange="edQaTypeChanged()">
-                <option value="luci_group">Popup luci — scegli TU le luci</option>
-                <option value="builtin_luci">Popup TUTTE le luci</option>
-                <option value="builtin_prese">Popup TUTTE le prese</option>
-                <option value="builtin_clima">Popup Clima</option>
-                <option value="builtin_antifurto">Popup Antifurto</option>
-                <option value="builtin_lavatrice">Popup Lavatrice</option>
-                <option value="toggle">Toggle entità</option>
-                <option value="script">Script</option>
-                <option value="scene">Scena</option>
+                <option value="luci_group">💡 Popup luci — scegli TU le luci</option>
+                <option value="builtin_luci">💡 Popup TUTTE le luci</option>
+                <option value="builtin_prese">🔌 Popup TUTTE le prese</option>
+                <option value="builtin_clima">❄️ Popup Clima</option>
+                <option value="builtin_antifurto">🛡️ Popup Antifurto</option>
+                <option value="builtin_lavatrice">🧺 Popup Lavatrice</option>
+                <option value="toggle">🔀 Toggle entità</option>
+                <option value="script">📜 Script</option>
+                <option value="scene">🎬 Scena</option>
               </select>
-              <input id="ed-qa-icon" class="ed-input ed-icon-input" placeholder="" maxlength="4">
+              <input id="ed-qa-icon" class="ed-input ed-icon-input" placeholder="⚡" maxlength="4">
               <input id="ed-qa-name" class="ed-input" placeholder="Nome azione" style="flex:1;">
             </div>
-            <div id="ed-qa-ent-row" style="display:none; gap:6px;"><input id="ed-qa-ent" autocomplete="off" oninput="edQaEntityChanged()" class="ed-input mono" placeholder="dm.core_054 / dm.core_023 / scene.x (non serve per i popup)"><button type="button" onclick="wzPickEntity('__ed_qa__')" style="flex:0 0 38px; height:38px; border:none; border-radius:10px; background:linear-gradient(135deg,#0ea5e9,#0369a1); color:#fff; font-size:14px; cursor:pointer;"><i class="dm-segno" data-dm-segno="search" aria-hidden="true"></i></button></div>
+            <div id="ed-qa-ent-row" style="display:none; gap:6px;"><input id="ed-qa-ent" autocomplete="off" oninput="edQaEntityChanged()" class="ed-input mono" placeholder="dm.core_054 / dm.core_023 / scene.x (non serve per i popup)"><button type="button" onclick="wzPickEntity('__ed_qa__')" style="flex:0 0 38px; height:38px; border:none; border-radius:10px; background:linear-gradient(135deg,#0ea5e9,#0369a1); color:#fff; font-size:14px; cursor:pointer;">🔍</button></div>
             <div id="ed-qa-option-row" style="display:none; gap:6px; align-items:center;"><span style="font-size:11px; color:var(--text-dim); flex:0 0 auto;">Quale voce</span><select id="ed-qa-option" class="ed-input" style="flex:1;"></select></div>
-              <div id="ed-qa-hint" style="font-size:11px; color:var(--text-dim); padding:0 2px;"><i class="dm-segno" data-dm-segno="lights" aria-hidden="true"></i> Dai un nome e premi Aggiungi: sceglierai le luci da una lista con ricerca.</div>
+              <div id="ed-qa-hint" style="font-size:11px; color:var(--text-dim); padding:0 2px;">💡 Dai un nome e premi Aggiungi: sceglierai le luci da una lista con ricerca.</div>
             <input id="ed-qa-confirm" class="ed-input" placeholder="Messaggio di conferma (facoltativo, es. Sei sicuro?)">
             <button class="ed-btn-add" onclick="edAddQA()">＋ Aggiungi azione rapida</button>
           </div>
         </div>
       </details>
-      <details class="ed-acc"><summary class="ed-acc-head"><i class="dm-segno" data-dm-segno="air-conditioner" aria-hidden="true"></i> Unità clima <span class="ed-acc-n">${getClimaUnits().length} unità</span></summary>
+      <details class="ed-acc"><summary class="ed-acc-head">❄️ Unità clima <span class="ed-acc-n">${getClimaUnits().length} unità</span></summary>
         <div class="ed-acc-body">
           <div class="ed-list">${getClimaUnits().map((u, i) => `
             <div class="ed-row">
-              <div style="font-size:16px; flex-shrink:0;">${u.type === 'termo' ? '<i class="dm-segno" data-dm-segno="radiator" aria-hidden="true"></i>' : '<i class="dm-segno" data-dm-segno="air-conditioner" aria-hidden="true"></i>'}</div>
+              <div style="font-size:16px; flex-shrink:0;">${u.type === 'termo' ? '🔥' : '❄️'}</div>
               <div class="ed-row-main">
                 <div class="ed-row-new">${cdEsc(u.name)} <span style="font-weight:600; color:var(--text-dim); font-size:10px;">(${u.type === 'termo' ? 'termosifone' : 'condizionatore'})</span></div>
                 <div class="ed-row-old mono">${cdEsc(u.entity)}</div>
               </div>
-              <div class="ed-del" onclick="edDelClima(${i})"><i class="dm-segno" data-dm-segno="trash" aria-hidden="true"></i></div>
+              <div class="ed-del" onclick="edDelClima(${i})">🗑️</div>
             </div>`).join('')}</div>
           <div class="ed-form">
             <div class="ed-form-row">
-              <select id="ed-cl-type" class="ed-input" style="flex:0 0 46%;"><option value="clima">Condizionatore</option><option value="termo">Termosifone</option></select>
+              <select id="ed-cl-type" class="ed-input" style="flex:0 0 46%;"><option value="clima">❄️ Condizionatore</option><option value="termo">🔥 Termosifone</option></select>
               <input id="ed-cl-name" class="ed-input" placeholder="Nome (es. Studio)" style="flex:1;">
             </div>
-            <div style="display:flex; gap:8px; margin-bottom:6px;"><input id="ed-cl-ent" style="flex:1;" class="ed-input mono" placeholder="climate.studio"><button type="button" onclick="wzPickEntity('#ed-cl-ent')" style="flex:0 0 38px; height:38px; border:none; border-radius:10px; background:linear-gradient(135deg,#0ea5e9,#0369a1); color:#fff; font-size:14px; cursor:pointer;"><i class="dm-segno" data-dm-segno="search" aria-hidden="true"></i></button></div>
+            <div style="display:flex; gap:8px; margin-bottom:6px;"><input id="ed-cl-ent" style="flex:1;" class="ed-input mono" placeholder="climate.studio"><button type="button" onclick="wzPickEntity('#ed-cl-ent')" style="flex:0 0 38px; height:38px; border:none; border-radius:10px; background:linear-gradient(135deg,#0ea5e9,#0369a1); color:#fff; font-size:14px; cursor:pointer;">🔍</button></div>
             <select id="ed-cl-room" class="ed-input" style="margin-bottom:6px;width:100%;"></select><button class="ed-btn-add" onclick="edAddClima()">＋ Aggiungi unità clima</button>
-            <div class="ed-slot" style="margin-top:10px;"><div class="ed-slot-lbl"><i class="dm-segno" data-dm-segno="radiator" aria-hidden="true"></i> Entità caldaia (switch — facoltativa)</div>
-              <div style="display:flex; gap:8px; margin-bottom:6px;"><input style="flex:1;" class="ed-input mono ed-slot-in" data-ref="switch.caldaia" value="${cdEsc(ENTITY_OVERRIDES['switch.caldaia'] || '')}" placeholder="switch.caldaia" onchange="edSetSlot(this)"><button type="button" onclick="wzPickEntity(this.previousElementSibling)" style="flex:0 0 38px; height:38px; border:none; border-radius:10px; background:linear-gradient(135deg,#0ea5e9,#0369a1); color:#fff; font-size:14px; cursor:pointer;"><i class="dm-segno" data-dm-segno="search" aria-hidden="true"></i></button></div></div>
+            <div class="ed-slot" style="margin-top:10px;"><div class="ed-slot-lbl">🔥 Entità caldaia (switch — facoltativa)</div>
+              <div style="display:flex; gap:8px; margin-bottom:6px;"><input style="flex:1;" class="ed-input mono ed-slot-in" data-ref="switch.caldaia" value="${cdEsc(ENTITY_OVERRIDES['switch.caldaia'] || '')}" placeholder="switch.caldaia" onchange="edSetSlot(this)"><button type="button" onclick="wzPickEntity(this.previousElementSibling)" style="flex:0 0 38px; height:38px; border:none; border-radius:10px; background:linear-gradient(135deg,#0ea5e9,#0369a1); color:#fff; font-size:14px; cursor:pointer;">🔍</button></div></div>
           </div>
         </div>
       </details>
-      <details class="ed-acc"><summary class="ed-acc-head"><i class="dm-segno" data-dm-segno="camera" aria-hidden="true"></i> Telecamere <span class="ed-acc-n">${getCameras().length} camere</span></summary>
+      <details class="ed-acc"><summary class="ed-acc-head">📹 Telecamere <span class="ed-acc-n">${getCameras().length} camere</span></summary>
         <div class="ed-acc-body">
           <div class="ed-list">${getCameras().map((cam, i) => `
             <div class="ed-row">
@@ -3904,41 +3898,41 @@ function editorRenderSezioni() {
                 <div class="ed-row-new">${cdEsc(cam.name)}</div>
                 <div class="ed-row-old mono">${cdEsc(cam.entity)}${cam.stream ? ' · stream: ' + cdEsc(cam.stream) : ''}</div>
               </div>
-              <div class="ed-del" onclick="edEditCamera(${i})"><i class="dm-segno" data-dm-segno="pencil" aria-hidden="true"></i></div><div class="ed-del" onclick="edDelCamera(${i})"><i class="dm-segno" data-dm-segno="trash" aria-hidden="true"></i></div>
+              <div class="ed-del" onclick="edEditCamera(${i})">✏️</div><div class="ed-del" onclick="edDelCamera(${i})">🗑️</div>
             </div>`).join('')}</div>
           <div class="ed-form">
             <input id="ed-cam-name" class="ed-input" placeholder="Nome (es. Giardino)">
-            <div style="display:flex; gap:8px; margin-bottom:6px;"><input id="ed-cam-ent" style="flex:1;" class="ed-input mono" placeholder="camera.giardino"><button type="button" onclick="wzPickEntity('#ed-cam-ent')" style="flex:0 0 38px; height:38px; border:none; border-radius:10px; background:linear-gradient(135deg,#0ea5e9,#0369a1); color:#fff; font-size:14px; cursor:pointer;"><i class="dm-segno" data-dm-segno="search" aria-hidden="true"></i></button></div>
+            <div style="display:flex; gap:8px; margin-bottom:6px;"><input id="ed-cam-ent" style="flex:1;" class="ed-input mono" placeholder="camera.giardino"><button type="button" onclick="wzPickEntity('#ed-cam-ent')" style="flex:0 0 38px; height:38px; border:none; border-radius:10px; background:linear-gradient(135deg,#0ea5e9,#0369a1); color:#fff; font-size:14px; cursor:pointer;">🔍</button></div>
             <input id="ed-cam-stream" class="ed-input mono" placeholder="Nome stream go2rtc (facoltativo, per WebRTC)"><small style="display:block;font-size:11px;color:var(--text-dim,#64748b);margin:2px 2px 0;">\u00c8 QUESTO campo ad accendere WebRTC: il nome del flusso come sta scritto dentro go2rtc/Frigate. Il nome della telecamera non c'entra.</small>
-            <select id="ed-cam-room" class="ed-input" style="margin-bottom:6px;width:100%;"></select><button class="ed-btn-add" onclick="edAddCamera()">＋ Aggiungi telecamera</button><button type="button" class="ed-save-btn" onclick="edSaveSezione(this)"><i class="dm-segno" data-dm-segno="check" aria-hidden="true"></i> Salva sezione</button>
+            <select id="ed-cam-room" class="ed-input" style="margin-bottom:6px;width:100%;"></select><button class="ed-btn-add" onclick="edAddCamera()">＋ Aggiungi telecamera</button><button type="button" class="ed-save-btn" onclick="edSaveSezione(this)">💾 Salva sezione</button>
           </div>
         </div>
       </details>
-      <details class="ed-acc"><summary class="ed-acc-head"><i class="dm-segno" data-dm-segno="lights" aria-hidden="true"></i> Luci <span class="ed-acc-n">${Object.keys((function(){ try { return JSON.parse(localStorage.getItem('cd_luci')) || {}; } catch(e) { return {}; } })()).length}</span></summary>
+      <details class="ed-acc"><summary class="ed-acc-head">💡 Luci <span class="ed-acc-n">${Object.keys((function(){ try { return JSON.parse(localStorage.getItem('cd_luci')) || {}; } catch(e) { return {}; } })()).length}</span></summary>
         <div class="ed-acc-body">
           <div class="ed-slot-lbl" style="margin-bottom:6px;">Le luci gestite dalla dashboard. Nomina "Stanza - Dettaglio" per il raggruppamento automatico.</div>
-          ${(function(){ let L = {}; try { L = JSON.parse(localStorage.getItem('cd_luci')) || {}; } catch(e) {} return Object.entries(L).map(([id, nm]) => `<div class="ed-row"><div style="font-size:15px;"><i class="dm-segno" data-dm-segno="lights" aria-hidden="true"></i></div><div class="ed-row-main"><div class="ed-row-new">${cdEsc(nm)}</div><div class="ed-row-old mono">${cdEsc(id)}</div></div><div class="ed-del" onclick="edDelLuce(${cdJs(id)})"><i class="dm-segno" data-dm-segno="trash" aria-hidden="true"></i></div></div>`).join('') || '<div class="ed-empty">Nessuna luce configurata</div>'; })()}
+          ${(function(){ let L = {}; try { L = JSON.parse(localStorage.getItem('cd_luci')) || {}; } catch(e) {} return Object.entries(L).map(([id, nm]) => `<div class="ed-row"><div style="font-size:15px;">💡</div><div class="ed-row-main"><div class="ed-row-new">${cdEsc(nm)}</div><div class="ed-row-old mono">${cdEsc(id)}</div></div><div class="ed-del" onclick="edDelLuce(${cdJs(id)})">🗑️</div></div>`).join('') || '<div class="ed-empty">Nessuna luce configurata</div>'; })()}
           <div style="display:flex; gap:8px; margin:10px 0 8px;">
             <input id="ed-lu-name" class="ed-input" style="flex:1;" placeholder="Nome (es. Salone - Piantana)">
           </div>
           <div style="display:flex; gap:6px; margin-bottom:8px;">
             <input id="ed-lu-ent" class="ed-input mono" autocomplete="off" placeholder="dm.core_022" style="flex:1; font-family:monospace;">
-            <button type="button" onclick="wzPickEntity('#ed-lu-ent')" style="flex:0 0 38px; height:38px; border:none; border-radius:10px; background:linear-gradient(135deg,#0ea5e9,#0369a1); color:#fff; font-size:14px; cursor:pointer;"><i class="dm-segno" data-dm-segno="search" aria-hidden="true"></i></button>
+            <button type="button" onclick="wzPickEntity('#ed-lu-ent')" style="flex:0 0 38px; height:38px; border:none; border-radius:10px; background:linear-gradient(135deg,#0ea5e9,#0369a1); color:#fff; font-size:14px; cursor:pointer;">🔍</button>
           </div>
           <select id="ed-lu-room" class="ed-input" style="margin-bottom:6px;width:100%;"></select><button class="ed-btn-add" style="width:100%;" onclick="edAddLuce()">＋ Aggiungi luce</button>
         </div>
       </details>
-      <details class="ed-acc"><summary class="ed-acc-head"><i class="dm-segno" data-dm-segno="gauge" aria-hidden="true"></i> Report Analisi <span class="ed-acc-n">${cdCfgList('cd_report_devices').length} voci</span></summary>
+      <details class="ed-acc"><summary class="ed-acc-head">📊 Report Analisi <span class="ed-acc-n">${cdCfgList('cd_report_devices').length} voci</span></summary>
         <div class="ed-acc-body">
           <div class="ed-slot-lbl" style="margin-bottom:6px;">Le voci del Report mensile (Energia → Analisi): nome, icona ed entità liberi.</div>
-          ${cdCfgList('cd_report_devices').map((d, ri) => `<div class="ed-row"><div style="font-size:15px;">${cdSegno(d.icon, 0, 'power')}</div><div class="ed-row-main"><div class="ed-row-new">${cdEsc(d.name)}</div><div class="ed-row-old mono">${cdEsc(d.entity)}</div></div><div class="ed-del" onclick="edDelReportDevice(${ri})"><i class="dm-segno" data-dm-segno="trash" aria-hidden="true"></i></div></div>`).join('') || '<div class="ed-empty">Nessuna voce</div>'}
+          ${cdCfgList('cd_report_devices').map((d, ri) => `<div class="ed-row"><div style="font-size:15px;">${cdEsc(d.icon||'⚡')}</div><div class="ed-row-main"><div class="ed-row-new">${cdEsc(d.name)}</div><div class="ed-row-old mono">${cdEsc(d.entity)}</div></div><div class="ed-del" onclick="edDelReportDevice(${ri})">🗑️</div></div>`).join('') || '<div class="ed-empty">Nessuna voce</div>'}
           <div style="display:flex; gap:8px; margin-bottom:8px;">
-            <input id="ed-rep2-icon" class="ed-input" style="flex:0 0 60px;" placeholder="" maxlength="4"><button type="button" onclick="wzPickIcon('#ed-rep2-icon')" style="flex:0 0 38px; height:38px; border:none; border-radius:10px; background:linear-gradient(135deg,#f59e0b,#d97706); color:#fff; font-size:16px; cursor:pointer;"><i class="dm-segno" data-dm-segno="person" aria-hidden="true"></i></button>
+            <input id="ed-rep2-icon" class="ed-input" style="flex:0 0 60px;" placeholder="⚡" maxlength="4"><button type="button" onclick="wzPickIcon('#ed-rep2-icon')" style="flex:0 0 38px; height:38px; border:none; border-radius:10px; background:linear-gradient(135deg,#f59e0b,#d97706); color:#fff; font-size:16px; cursor:pointer;">😀</button>
             <input id="ed-rep2-name" class="ed-input" style="flex:1;" placeholder="Nome (es. Piscina)">
           </div>
           <div style="display:flex; gap:6px; margin-bottom:8px;">
             <input id="ed-rep2-ent" class="ed-input mono" autocomplete="off" placeholder="dm.core_028" style="flex:1; font-family:monospace;">
-            <button type="button" onclick="wzPickEntity('#ed-rep2-ent')" style="flex:0 0 38px; height:38px; border:none; border-radius:10px; background:linear-gradient(135deg,#0ea5e9,#0369a1); color:#fff; font-size:14px; cursor:pointer;"><i class="dm-segno" data-dm-segno="search" aria-hidden="true"></i></button>
+            <button type="button" onclick="wzPickEntity('#ed-rep2-ent')" style="flex:0 0 38px; height:38px; border:none; border-radius:10px; background:linear-gradient(135deg,#0ea5e9,#0369a1); color:#fff; font-size:14px; cursor:pointer;">🔍</button>
           </div>
           <button class="ed-btn-add" style="width:100%;" onclick="edAddReportDevice2()">＋ Aggiungi voce Report</button>
         </div>
@@ -3954,8 +3948,8 @@ function edQaTypeChanged() {
     const needsEntity = ['toggle','script','scene'].includes(t);
     if (entRow) entRow.style.display = needsEntity ? 'flex' : 'none';
     if (hint) hint.textContent = t === 'luci_group'
-        ? 'Dai un nome e premi Aggiungi: sceglierai le luci da una lista con ricerca.'
-        : (needsEntity ? 'Scrivi o scegli con l\'entità da comandare.' : 'Popup pronto: nome opzionale e premi Aggiungi.');
+        ? '💡 Dai un nome e premi Aggiungi: sceglierai le luci da una lista con ricerca.'
+        : (needsEntity ? '🔀 Scrivi o scegli con 🔍 l\'entità da comandare.' : '✨ Popup pronto: nome opzionale e premi Aggiungi.');
     edQaEntityChanged();
 }
 
@@ -3983,7 +3977,7 @@ function edQaEntityChanged() {
     sel.innerHTML = '<option value="">— si sceglie ogni volta, dal popup —</option>' + voci.map(v => `<option value="${esc(v)}">${esc(v)}</option>`).join('');
     if (voci.includes(prima)) sel.value = prima;
     row.style.display = 'flex';
-    if (hint) hint.textContent = 'Questa entità è un menu a tendina: il tasto apre un popup con le sue voci. Oppure fissane una qui.';
+    if (hint) hint.textContent = '🎚️ Questa entità è un menu a tendina: il tasto apre un popup con le sue voci. Oppure fissane una qui.';
 }
 
 function edEditLightGroup(i) {
@@ -4116,7 +4110,7 @@ function edSaveCosti() {
     if (cv > 0) localStorage.setItem('cd_costo_kwh', JSON.stringify(cv)); else localStorage.removeItem('cd_costo_kwh');
     if (pv > 0) localStorage.setItem('cd_prezzo_immissione', JSON.stringify(pv)); else localStorage.removeItem('cd_prezzo_immissione');
     try { cdMarkDirty(); cdSyncPush(); } catch(e){}
-    edToast('Costi salvati — ricarica per applicare');
+    edToast('💶 Costi salvati — ricarica per applicare');
 }
 
 /* v0.8.0: SCARICA DASHBOARD CONFIGURATA — integra token e TUTTA la configurazione nel file,
@@ -4147,7 +4141,7 @@ async function cdBakeDownload() {
         a.download = fname;
         document.body.appendChild(a); a.click();
         setTimeout(() => { try { document.body.removeChild(a); URL.revokeObjectURL(a.href); } catch(e){} }, 1000);
-        edToast('File scaricato — sostituisci quello in /config/www: token e configurazione inclusi');
+        edToast('💾 File scaricato — sostituisci quello in /config/www: token e configurazione inclusi');
     } catch(e) { alert('Download non riuscito: ' + e.message + '\n\nRiapri la dashboard da dentro Home Assistant (/local/...) e riprova.'); }
 }
 
@@ -4167,7 +4161,7 @@ function edSaveSezione(btn) {
     localStorage.setItem('cd_entity_overrides', JSON.stringify(ENTITY_OVERRIDES));
     try { cdMarkDirty(); cdSyncPush(); } catch(e){}
     try { cdAutoHide(); } catch(e){}
-    edToast(bad ? ('' + bad + ' entità non valide ignorate — il resto è salvato') : (n ? 'Sezione salvata (' + n + ' modifiche) — ricarica per applicare' : 'Sezione salvata'));
+    edToast(bad ? ('⚠️ ' + bad + ' entità non valide ignorate — il resto è salvato') : (n ? '💾 Sezione salvata (' + n + ' modifiche) — ricarica per applicare' : '💾 Sezione salvata'));
 }
 
 function edAddStanza() {
@@ -4339,9 +4333,9 @@ function cdOpenAppMenu() {
     const grip = document.createElement('div');
     grip.style.cssText = 'width:42px; height:4px; border-radius:99px; background:rgba(148,163,184,0.4); margin:8px auto 12px;';
     card.appendChild(grip);
-    card.appendChild(mkItem('<i class="dm-segno" data-dm-segno="sliders" aria-hidden="true"></i>', 'Configurazione / Editor', () => apriConfigEntita()));
+    card.appendChild(mkItem('⚙️', 'Configurazione / Editor', () => apriConfigEntita()));
     
-    card.appendChild(mkItem('<i class="dm-segno" data-dm-segno="refresh" aria-hidden="true"></i>', 'Reset totale', () => wzResetAll(), '#dc2626'));
+    card.appendChild(mkItem('🔄', 'Reset totale', () => wzResetAll(), '#dc2626'));
     card.appendChild(mkItem('✕', 'Chiudi', () => {}, 'opacity:0.55'));
     const st = document.createElement('style');
     st.textContent = '@keyframes cdMenuUp{from{transform:translateY(30px);opacity:0}to{transform:translateY(0);opacity:1}}';
@@ -4384,7 +4378,7 @@ function confermaAzione(opts) {
   if (!modal) return;
   
   // Imposta contenuti
-  setHtml('confirm-icon', cdSegno(opts.icon, 0, 'warning'));
+  setTxt('confirm-icon', opts.icon || '⚠️');
   setTxt('confirm-title', opts.title || 'Conferma azione');
   setTxt('confirm-message', opts.message || 'Procedere?');
   
@@ -4421,7 +4415,7 @@ function apriSubLoads(type) {
 function renderSubLoads(type) {
     const conf = SUBLOADS_CONFIG[type];
     if(!conf) return;
-    document.getElementById('subloads-title').innerHTML = `<span style="font-size:24px;">${cdSegno(conf.icon)}</span> ${cdEsc(conf.title)}`;
+    document.getElementById('subloads-title').innerHTML = `<span style="font-size:24px;">${cdEsc(conf.icon)}</span> ${cdEsc(conf.title)}`;
     
     let html = '';
     conf.items.forEach(item => {
@@ -4440,7 +4434,7 @@ function renderSubLoads(type) {
         html += `
         <div class="s-load-card hist-clickable" onclick="apriStorico(event, ${cdJs(item.pwr)}, ${cdJs(item.name)})">
             <div class="s-load-top" style="background:${bg};">
-                <div class="s-load-icon">${cdSegno(item.icon)}</div>
+                <div class="s-load-icon">${cdEsc(item.icon)}</div>
                 <div>${cdEsc(item.name)}<br><span style="font-size:10px; opacity:0.9;">${txt}</span></div>
             </div>
             <div class="s-load-bot">
@@ -4468,7 +4462,7 @@ function apriGestioneLuci(isClick = false, luciFilter = null, customTitle = null
   currentPopupType = 'gestione_luci';
   const list = document.getElementById('details-list');
   const scrollTop = list.scrollTop;
-  document.getElementById('details-title').innerHTML = window._luciPopupTitle ? ('<i class="dm-segno" data-dm-segno="lights" aria-hidden="true"></i> ' + cdEsc(window._luciPopupTitle.toUpperCase())) : '<i class="dm-segno" data-dm-segno="lights" aria-hidden="true"></i> GESTIONE LUCI';
+  document.getElementById('details-title').innerHTML = window._luciPopupTitle ? ('💡 ' + cdEsc(window._luciPopupTitle.toUpperCase())) : '💡 GESTIONE LUCI';
 
   // v255: raggruppo per stanza usando il pattern "Stanza - Dettaglio"
   let onCount = 0;
@@ -4543,7 +4537,7 @@ function apriGestioneLuci(isClick = false, luciFilter = null, customTitle = null
   ordine.forEach(zona => {
     const luci = gruppi[zona];
     if (luci.length === 1) { singole.push({ ...luci[0], zona }); return; }
-    try { const _f = cdRoomFloorOf(zona); if (_f && _f !== _lastFloor) { _lastFloor = _f; html += `<div class="lgx-zona" style="opacity:0.7; font-size:12px; letter-spacing:1.2px;"><i class="dm-segno" data-dm-segno="home" aria-hidden="true"></i> ${cdEsc(_f.toUpperCase())}</div>`; } } catch(e) {}
+    try { const _f = cdRoomFloorOf(zona); if (_f && _f !== _lastFloor) { _lastFloor = _f; html += `<div class="lgx-zona" style="opacity:0.7; font-size:12px; letter-spacing:1.2px;">🏢 ${cdEsc(_f.toUpperCase())}</div>`; } } catch(e) {}
         html += `<div class="lgx-zona">${cdEsc(zona.toUpperCase())}</div>`;
     html += `<div class="lgx-grid">${luci.map(l => cardHtml(l, false)).join('')}</div>`;
   });
@@ -4982,7 +4976,7 @@ function buildQuickActions() {
         const icon = a.icon || (b && b.icon) || '⚡';
         const color = cdColor(a.color || (b && b.color), '#0ea5e9');
         return `<div class="qa-btn" onclick="qaRun(${i})">
-        <div class="icon" style="filter: drop-shadow(0 6px 12px ${color}66); color: ${color};">${cdSegno(icon)}</div>
+        <div class="icon" style="filter: drop-shadow(0 6px 12px ${color}66); color: ${color};">${cdEsc(icon)}</div>
         ${cdEsc(name)}
       </div>`;
     }).join('');
@@ -5015,7 +5009,7 @@ function cdApplyFlowNodeLite(nodeId, conf, defIcon, defName) {
         const lbl = node.querySelector('.node-label');
         const ico = node.querySelector('.node-icon');
         if (lbl && lbl.textContent !== name) lbl.textContent = name;
-        if (ico) cdMettiSegno(ico, cdSegno(icon));
+        if (ico && ico.textContent !== icon) ico.textContent = icon;
         if (conf && conf.group) node.setAttribute('onclick', "apriSubLoads('" + conf.group + "')");
     } catch(e) {}
 }
@@ -5030,7 +5024,7 @@ function cdApplyFlowNode(nodeId, conf, defGroup, defIcon, defName) {
         const lbl = node.querySelector('.node-label');
         const ico = node.querySelector('.node-icon');
         if (lbl && lbl.textContent !== name) lbl.textContent = name;
-        if (ico) cdMettiSegno(ico, cdSegno(icon));
+        if (ico && ico.textContent !== icon) ico.textContent = icon;
         if (group) node.setAttribute('onclick', "apriSubLoads('" + group + "')");
         else if (conf && conf.pwr) node.setAttribute('onclick', "apriStorico(event, '" + conf.pwr + "', '" + name.replace(/'/g,'') + "')");
     } catch(e) {}
@@ -5243,20 +5237,20 @@ function updateClimaCards() {
                 
                 if(s.state === 'cool') {
                     card.style.setProperty('--cp-rgb', '14, 165, 233'); // Azzurro Condizionatori
-                    if(icon) cdMettiSegno(icon, '<i class="dm-segno" data-dm-segno="air-conditioner" aria-hidden="true"></i>');
+                    if(icon) icon.textContent = '❄️';
                 } else if(s.state === 'heat' || s.state === 'heating') {
                     card.style.setProperty('--cp-rgb', '234, 88, 12'); // Arancione Termosifoni
-                    if(icon) cdMettiSegno(icon, '<i class="dm-segno" data-dm-segno="radiator" aria-hidden="true"></i>');
+                    if(icon) icon.textContent = '🔥';
                 } else {
                     card.style.setProperty('--cp-rgb', '16, 185, 129'); // Verde
-                    if(icon) cdMettiSegno(icon, '<i class="dm-segno" data-dm-segno="wind" aria-hidden="true"></i>');
+                    if(icon) icon.textContent = '🌬️';
                 }
                 
                 badge.textContent = s.state.toUpperCase();
                 
             } else {
                 badge.textContent = 'SPENTO';
-                if(icon) cdMettiSegno(icon, id.includes('termosifone') ? '<i class="dm-segno" data-dm-segno="radiator" aria-hidden="true"></i>' : '<i class="dm-segno" data-dm-segno="air-conditioner" aria-hidden="true"></i>');
+                if(icon) icon.textContent = id.includes('termosifone') ? '🔥' : '❄️';
             }
             
             cur.textContent = (s.attributes.current_temperature || '--') + '°';
@@ -5289,7 +5283,7 @@ function buildDeviceCards() {
         const nm = cdEsc(d.name || '');
         return `<div class="dev-card" id="dev-card-${i}" onclick="devCardTap(${i})">
             ${d.switch ? `<button class="dev-pwr" onclick="event.stopPropagation(); toggle(${cdJs(d.switch)})"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/></svg></button>` : ''}
-            <div class="dev-ico">${cdSegno(d.icon, 0, 'socket')}</div>
+            <div class="dev-ico">${cdEsc(d.icon || '🔌')}</div>
             <div class="dev-nm">${nm}</div>
             <div class="dev-st" id="dev-st-${i}">—</div>
             <div class="dev-val" id="dev-val-${i}"></div>
@@ -5333,14 +5327,14 @@ function devCardTap(i) {
 document.addEventListener('DOMContentLoaded', buildDeviceCards);
 setInterval(() => { try { if (Object.keys(_RAW_STATES).length) updateDeviceCards(); } catch(e) {} }, 20000);
 
-function cdRoomFloorOf(roomName){ if(!roomName) return ''; var rs=(typeof getStanze==='function'?getStanze():[]); for(var i=0;i<rs.length;i++){ if(rs[i]&&rs[i].name===roomName) return rs[i].floor||''; } return ''; } function cdGroupCards(items, cardFn){ try { var anyRoom=false; items.forEach(function(u){ if(u&&u.room) anyRoom=true; }); if(!anyRoom) return items.map(cardFn).join(''); var floors=(typeof cdFloorNames==='function'?cdFloorNames():[]); function fIdx(f){ var i=floors.indexOf(f); return i<0?9999:i; } var sorted=items.slice().sort(function(a,b){ var fa=cdRoomFloorOf(a.room), fb=cdRoomFloorOf(b.room); if(fIdx(fa)!==fIdx(fb)) return fIdx(fa)-fIdx(fb); var ra=a.room||'zzzz', rb=b.room||'zzzz'; if(ra!==rb) return ra<rb?-1:1; return 0; }); var out=''; var lastKey=null; sorted.forEach(function(u){ var f=cdRoomFloorOf(u.room); var key=(f||'')+'|'+(u.room||''); if(key!==lastKey){ lastKey=key; var lbl = u.room ? ((f?(''+f+' · '):'')+''+u.room) : 'Nessuna stanza'; out += '<div style="grid-column:1/-1; font-weight:800; opacity:0.75; font-size:13px; letter-spacing:0.5px; padding:8px 2px 0;">'+cdEsc(lbl)+'</div>'; } out += cardFn(u); }); return out; } catch(e){ return items.map(cardFn).join(''); } } function buildClimaCards() {
+function cdRoomFloorOf(roomName){ if(!roomName) return ''; var rs=(typeof getStanze==='function'?getStanze():[]); for(var i=0;i<rs.length;i++){ if(rs[i]&&rs[i].name===roomName) return rs[i].floor||''; } return ''; } function cdGroupCards(items, cardFn){ try { var anyRoom=false; items.forEach(function(u){ if(u&&u.room) anyRoom=true; }); if(!anyRoom) return items.map(cardFn).join(''); var floors=(typeof cdFloorNames==='function'?cdFloorNames():[]); function fIdx(f){ var i=floors.indexOf(f); return i<0?9999:i; } var sorted=items.slice().sort(function(a,b){ var fa=cdRoomFloorOf(a.room), fb=cdRoomFloorOf(b.room); if(fIdx(fa)!==fIdx(fb)) return fIdx(fa)-fIdx(fb); var ra=a.room||'zzzz', rb=b.room||'zzzz'; if(ra!==rb) return ra<rb?-1:1; return 0; }); var out=''; var lastKey=null; sorted.forEach(function(u){ var f=cdRoomFloorOf(u.room); var key=(f||'')+'|'+(u.room||''); if(key!==lastKey){ lastKey=key; var lbl = u.room ? ((f?('🏢 '+f+' · '):'')+'🏠 '+u.room) : '🏠 Nessuna stanza'; out += '<div style="grid-column:1/-1; font-weight:800; opacity:0.75; font-size:13px; letter-spacing:0.5px; padding:8px 2px 0;">'+cdEsc(lbl)+'</div>'; } out += cardFn(u); }); return out; } catch(e){ return items.map(cardFn).join(''); } } function buildClimaCards() {
     const gF = document.getElementById('clima-grid-freddo');
     const gC = document.getElementById('clima-grid-caldo');
     if (!gF && !gC) return;
     const card = (u) => {
         const htmlId = u.entity.replace(/\./g, '-');
         const nm = cdEsc(u.name || '');
-        const icon = u.type === 'termo' ? '<i class="dm-segno" data-dm-segno="radiator" aria-hidden="true"></i>' : '<i class="dm-segno" data-dm-segno="air-conditioner" aria-hidden="true"></i>';
+        const icon = u.type === 'termo' ? '🔥' : '❄️';
         return `<div class="cp-card" id="card-${cdEsc(htmlId)}" onclick="apriClimaPopup(${cdJs(u.entity)}, event)" style="--cp-rgb: 148, 163, 184;">
            <div class="cp-header">
               <div class="cp-title-wrap"><div class="cp-icon">${icon}</div><div class="cp-name">${nm}</div></div>
@@ -5351,9 +5345,9 @@ function cdRoomFloorOf(roomName){ if(!roomName) return ''; var rs=(typeof getSta
               <div class="cp-temp-current-wrap"><span class="cp-temp-current-lbl">Ambiente</span><span class="cp-temp-current">--°</span></div>
            </div>
            <div class="cp-controls">
-              <button class="cp-btn" onclick="event.stopPropagation(); setTemp(${cdJs(u.entity)}, 'down')">−</button>
+              <button class="cp-btn" onclick="event.stopPropagation(); setTemp(${cdJs(u.entity)}, 'down')">➖</button>
               <button class="cp-btn cp-pwr" onclick="event.stopPropagation(); toggleClima(${cdJs(u.entity)})"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/></svg></button>
-              <button class="cp-btn" onclick="event.stopPropagation(); setTemp(${cdJs(u.entity)}, 'up')">+</button>
+              <button class="cp-btn" onclick="event.stopPropagation(); setTemp(${cdJs(u.entity)}, 'up')">➕</button>
            </div>
         </div>`;
     };
@@ -5553,7 +5547,7 @@ function cdEmptyStateCheck() {
     const b = document.createElement('div');
     b.id = 'cd-empty-banner';
     b.style.cssText = 'margin:14px 0; padding:18px 20px; border-radius:20px; background:linear-gradient(135deg,#e0f2fe,#bae6fd); border:1px solid #7dd3fc; color:#0c4a6e; font-size:13.5px; line-height:1.65; box-shadow:0 4px 14px rgba(2,132,199,0.12);';
-    b.innerHTML = '<b style="font-size:15px;"><i class="dm-segno" data-dm-segno="person" aria-hidden="true"></i> La dashboard è quasi pronta!</b><br>Non hai ancora collegato le tue entità, quindi le card sono nascoste.<br><button onclick="(window.__DASHBOARDMODERN_HOSTED__ ? apriConfigEntita : apriSetupWizard)()" style="margin-top:12px; width:100%; padding:13px; border:none; border-radius:14px; background:linear-gradient(135deg,#0ea5e9,#0369a1); color:#fff; font-weight:800; font-size:14px; letter-spacing:0.5px; cursor:pointer; box-shadow:0 6px 16px rgba(2,132,199,0.35);"><i class="dm-segno" data-dm-segno="sliders" aria-hidden="true"></i> Configura la dashboard</button><br><span style="opacity:0.75; font-size:12px; display:block; margin-top:8px;"></span>';
+    b.innerHTML = '<b style="font-size:15px;">👋 La dashboard è quasi pronta!</b><br>Non hai ancora collegato le tue entità, quindi le card sono nascoste.<br><button onclick="(window.__DASHBOARDMODERN_HOSTED__ ? apriConfigEntita : apriSetupWizard)()" style="margin-top:12px; width:100%; padding:13px; border:none; border-radius:14px; background:linear-gradient(135deg,#0ea5e9,#0369a1); color:#fff; font-weight:800; font-size:14px; letter-spacing:0.5px; cursor:pointer; box-shadow:0 6px 16px rgba(2,132,199,0.35);">⚙️ Configura la dashboard</button><br><span style="opacity:0.75; font-size:12px; display:block; margin-top:8px;"></span>';
     home.insertBefore(b, home.firstChild);
 }
 document.addEventListener('DOMContentLoaded', () => setTimeout(cdEmptyStateCheck, 500));
@@ -5615,11 +5609,11 @@ function apriCamera(camId, title) {
     if (navigator.vibrate) navigator.vibrate(10);
     currentPopupType = 'camera_view';
     const list = document.getElementById('details-list');
-    document.getElementById('details-title').innerHTML = '<i class="dm-segno" data-dm-segno="camera" aria-hidden="true"></i> ' + cdEsc(title);
+    document.getElementById('details-title').innerHTML = '📹 ' + cdEsc(title);
     document.getElementById('details-modal').classList.add('show');
     let cam = null;
     getCameras().forEach((c, i) => { if (camSlug(c, i) === camId) cam = c; });
-    if (!cam) { list.innerHTML = '<div class="cam-popup-error"><i class="dm-segno" data-dm-segno="warning" aria-hidden="true"></i> Telecamera non trovata</div>'; return; }
+    if (!cam) { list.innerHTML = '<div class="cam-popup-error">⚠️ Telecamera non trovata</div>'; return; }
     dmCamOpen(cam, title, list);
 }
 
@@ -5651,10 +5645,10 @@ const _DM_CAM_MOTIVI = { 'senza-nome-di-flusso': 'WebRTC: saltato — compila \u
 async function dmCamOpen(cam, title, content) {
     dmCamCleanup();
     _dmCurrentCam = cam;
-    if (!cam || !cam.entity) { content.innerHTML = '<div class="cam-popup-error"><i class="dm-segno" data-dm-segno="warning" aria-hidden="true"></i> Telecamera senza entita\'<br><span style="font-weight:500;opacity:.85;font-size:12px;text-transform:none;letter-spacing:0;">Nella scheda Telecamere manca l\'entita\' di Home Assistant</span></div>'; return; }
+    if (!cam || !cam.entity) { content.innerHTML = '<div class="cam-popup-error">⚠️ Telecamera senza entita\'<br><span style="font-weight:500;opacity:.85;font-size:12px;text-transform:none;letter-spacing:0;">Nella scheda Telecamere manca l\'entita\' di Home Assistant</span></div>'; return; }
     const camState = STATES[cam.entity] && STATES[cam.entity].state;
     if (camState === 'unavailable' || camState === 'unknown') {
-        content.innerHTML = `<div class="cam-popup-error"><i class="dm-segno" data-dm-segno="warning" aria-hidden="true"></i> Telecamera offline<br><span style="font-weight:500;opacity:.85;font-size:12px;text-transform:none;letter-spacing:0;">${cdEsc(cam.entity)} non risponde (stato: ${cdEsc(camState || 'sconosciuto')})</span></div>`;
+        content.innerHTML = `<div class="cam-popup-error">⚠️ Telecamera offline<br><span style="font-weight:500;opacity:.85;font-size:12px;text-transform:none;letter-spacing:0;">${cdEsc(cam.entity)} non risponde (stato: ${cdEsc(camState || 'sconosciuto')})</span></div>`;
         return;
     }
     const api = (window.DashboardModernModules && DashboardModernModules.telecamere) || null;
@@ -5690,7 +5684,7 @@ async function dmCamOpen(cam, title, content) {
     const righe = (api ? api.diagnosi(tentativi) : tentativi).map(function (voce) {
         return voce.salta ? (_DM_CAM_MOTIVI[voce.salta] || (voce.nome + ': ' + voce.salta)) : (voce.nome + ': ' + voce.errore);
     });
-    content.innerHTML = '<div class="cam-popup-error"><i class="dm-segno" data-dm-segno="warning" aria-hidden="true"></i> Impossibile aprire la telecamera<br><span style="font-weight:500;opacity:.85;font-size:12px;text-transform:none;letter-spacing:0;">' + righe.map(function (riga) { return cdEsc(riga); }).join('<br>') + '</span></div>';
+    content.innerHTML = '<div class="cam-popup-error">⚠️ Impossibile aprire la telecamera<br><span style="font-weight:500;opacity:.85;font-size:12px;text-transform:none;letter-spacing:0;">' + righe.map(function (riga) { return cdEsc(riga); }).join('<br>') + '</span></div>';
 }
 
 const _DM_FS_BTNS = `<button id="close-fullscreen-btn" class="close-fullscreen-btn" style="display:none; position:absolute; top:16px; right:16px; z-index:99999; background:rgba(15,23,42,0.85); border:2px solid rgba(255,255,255,0.4); color:#fff; border-radius:50%; width:52px; height:52px; font-size:22px; font-weight:bold; cursor:pointer; align-items:center; justify-content:center; backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); box-shadow:0 10px 25px rgba(0,0,0,0.6);" onclick="toggleFullScreenCam()">✕</button>`;
@@ -5701,7 +5695,7 @@ async function dmCamWebRTC(cam, strada, content, attesa) {
        go2rtc col nome del flusso. La strada dice quale parlare. */
     const streamName = (strada && strada.flusso) || dmStreamName(cam);
     const nativa = Boolean(strada && strada.nativa);
-    content.innerHTML = `<div class="cam-popup-body"><div id="video-iframe-container" class="cam-zoom-container" style="position:relative; padding-top:56.25%;"><video id="cam-video" autoplay playsinline></video><div id="cam-audio-mini" class="cam-audio-mini-banner" onclick="dmUnlockAudioWebRTC()"><i class="dm-segno" data-dm-segno="speaker" aria-hidden="true"></i> Tap per audio</div><div id="cam-video-loader" class="cam-video-loader-overlay"><div class="cam-popup-spinner"></div><div>Connessione WebRTC…</div></div>${_DM_FS_BTNS}</div><button id="toggle-fs-main-btn" class="cam-fs-btn" onclick="toggleFullScreenCam()"><i class="dm-segno" data-dm-segno="toggle" aria-hidden="true"></i> Schermo Intero</button></div>`;
+    content.innerHTML = `<div class="cam-popup-body"><div id="video-iframe-container" class="cam-zoom-container" style="position:relative; padding-top:56.25%;"><video id="cam-video" autoplay playsinline></video><div id="cam-audio-mini" class="cam-audio-mini-banner" onclick="dmUnlockAudioWebRTC()">🔇 Tap per audio</div><div id="cam-video-loader" class="cam-video-loader-overlay"><div class="cam-popup-spinner"></div><div>Connessione WebRTC…</div></div>${_DM_FS_BTNS}</div><button id="toggle-fs-main-btn" class="cam-fs-btn" onclick="toggleFullScreenCam()">🔲 Schermo Intero</button></div>`;
     const videoEl = document.getElementById('cam-video');
     const loaderEl = document.getElementById('cam-video-loader');
     videoEl.volume = 1.0; videoEl.muted = false;
@@ -5724,7 +5718,7 @@ async function dmCamHLS(cam, content, attesa) {
         pendingWsCallbacks[reqId] = (m) => { clearTimeout(tid); if (m.success && m.result && m.result.url) resolve(m.result.url); else reject(new Error((m.error && m.error.message) || 'HLS non disponibile')); };
         ws.send(JSON.stringify({ id: reqId, type: 'camera/stream', entity_id: cam.entity, format: 'hls' }));
     });
-    content.innerHTML = `<div class="cam-popup-body"><div id="video-iframe-container" class="cam-zoom-container" style="position:relative; padding-top:56.25%;"><video id="cam-hls" autoplay playsinline controls></video><div id="cam-audio-mini" class="cam-audio-mini-banner" onclick="dmUnlockAudio()"><i class="dm-segno" data-dm-segno="speaker" aria-hidden="true"></i> Tap per audio</div><div id="cam-video-loader" class="cam-video-loader-overlay"><div class="cam-popup-spinner"></div><div>Connessione…</div></div>${_DM_FS_BTNS}</div><button id="toggle-fs-main-btn" class="cam-fs-btn" onclick="toggleFullScreenCam()"><i class="dm-segno" data-dm-segno="toggle" aria-hidden="true"></i> Schermo Intero</button><div id="cam-audio-panel" class="cam-audio-panel"><div class="cam-audio-panel-row"><div id="cam-audio-status" class="cam-audio-status muted"><i class="dm-segno" data-dm-segno="speaker" aria-hidden="true"></i> Audio</div><button class="cam-audio-toggle-btn" onclick="dmToggleAudio()" title="Muta/attiva"><i class="dm-segno" data-dm-segno="speaker" aria-hidden="true"></i></button><input id="cam-audio-volume" class="cam-audio-volume" type="range" min="0" max="100" value="100" oninput="dmSetVolume(this.value)"><button class="cam-audio-info-btn" onclick="dmToggleDiag(this)" title="Diagnostica"><i class="dm-segno" data-dm-segno="info" aria-hidden="true"></i></button></div><div id="cam-audio-diag" class="cam-audio-diag">In attesa…</div></div></div>`;
+    content.innerHTML = `<div class="cam-popup-body"><div id="video-iframe-container" class="cam-zoom-container" style="position:relative; padding-top:56.25%;"><video id="cam-hls" autoplay playsinline controls></video><div id="cam-audio-mini" class="cam-audio-mini-banner" onclick="dmUnlockAudio()">🔇 Tap per audio</div><div id="cam-video-loader" class="cam-video-loader-overlay"><div class="cam-popup-spinner"></div><div>Connessione…</div></div>${_DM_FS_BTNS}</div><button id="toggle-fs-main-btn" class="cam-fs-btn" onclick="toggleFullScreenCam()">🔲 Schermo Intero</button><div id="cam-audio-panel" class="cam-audio-panel"><div class="cam-audio-panel-row"><div id="cam-audio-status" class="cam-audio-status muted">🔊 Audio</div><button class="cam-audio-toggle-btn" onclick="dmToggleAudio()" title="Muta/attiva">🔊</button><input id="cam-audio-volume" class="cam-audio-volume" type="range" min="0" max="100" value="100" oninput="dmSetVolume(this.value)"><button class="cam-audio-info-btn" onclick="dmToggleDiag(this)" title="Diagnostica">ℹ</button></div><div id="cam-audio-diag" class="cam-audio-diag">In attesa…</div></div></div>`;
     const videoEl = document.getElementById('cam-hls');
     const loaderEl = document.getElementById('cam-video-loader');
     videoEl.volume = 1.0; videoEl.muted = false;
@@ -5758,7 +5752,7 @@ async function dmCamMJPEG(cam, content, attesa) {
         try { streamUrl = await dmGetSignedPath('/api/camera_proxy_stream/' + cam.entity, 14400); }
         catch (e) { throw new Error('Nessun URL MJPEG: ' + (e.message || e)); }
     }
-    content.innerHTML = `<div class="cam-popup-body"><div id="video-iframe-container" class="cam-zoom-container" style="position:relative; padding-top:56.25%;"><img id="cam-mjpeg" src="${cdUrl(streamUrl)}" alt="${cdEsc(cam.entity)}"><div id="cam-video-loader" class="cam-video-loader-overlay"><div class="cam-popup-spinner"></div><div>Connessione stream…</div></div>${_DM_FS_BTNS}</div><button id="toggle-fs-main-btn" class="cam-fs-btn" onclick="toggleFullScreenCam()"><i class="dm-segno" data-dm-segno="toggle" aria-hidden="true"></i> Schermo Intero</button><div class="cam-popup-hint"><span class="cam-mode-badge mjpeg">MJPEG</span> Stream live continuo</div></div>`;
+    content.innerHTML = `<div class="cam-popup-body"><div id="video-iframe-container" class="cam-zoom-container" style="position:relative; padding-top:56.25%;"><img id="cam-mjpeg" src="${cdUrl(streamUrl)}" alt="${cdEsc(cam.entity)}"><div id="cam-video-loader" class="cam-video-loader-overlay"><div class="cam-popup-spinner"></div><div>Connessione stream…</div></div>${_DM_FS_BTNS}</div><button id="toggle-fs-main-btn" class="cam-fs-btn" onclick="toggleFullScreenCam()">🔲 Schermo Intero</button><div class="cam-popup-hint"><span class="cam-mode-badge mjpeg">MJPEG</span> Stream live continuo</div></div>`;
     const mjpegEl = document.getElementById('cam-mjpeg');
     const loaderEl = document.getElementById('cam-video-loader');
     await new Promise((resolve, reject) => {
@@ -5776,9 +5770,9 @@ async function dmCamPolling(cam, content) {
         const path = state.attributes.entity_picture;
         return path + (path.includes('?') ? '&' : '?') + 't=' + Date.now();
     };
-    if (!buildUrl()) { content.innerHTML = `<div class="cam-popup-error"><i class="dm-segno" data-dm-segno="warning" aria-hidden="true"></i> Stream non disponibile<br><span style="font-weight:500;opacity:.85;font-size:12px;text-transform:none;letter-spacing:0;">La camera ${cdEsc(cam.entity)} non espone snapshot</span></div>`; return; }
+    if (!buildUrl()) { content.innerHTML = `<div class="cam-popup-error">⚠️ Stream non disponibile<br><span style="font-weight:500;opacity:.85;font-size:12px;text-transform:none;letter-spacing:0;">La camera ${cdEsc(cam.entity)} non espone snapshot</span></div>`; return; }
     const slug = camSlug(cam, 0);
-    content.innerHTML = `<div class="cam-popup-body"><div id="video-iframe-container" class="cam-zoom-container" style="position:relative; padding-top:56.25%;"><img id="cam-polling" alt="${cdEsc(cam.entity)}"><div id="cam-video-loader" class="cam-video-loader-overlay"><div class="cam-popup-spinner"></div><div>Caricamento…</div></div>${_DM_FS_BTNS}</div><button id="toggle-fs-main-btn" class="cam-fs-btn" onclick="toggleFullScreenCam()"><i class="dm-segno" data-dm-segno="toggle" aria-hidden="true"></i> Schermo Intero</button><button id="cam-audio-activate-btn" class="cam-audio-btn" onclick="dmAttivaAudio()"><i class="dm-segno" data-dm-segno="speaker" aria-hidden="true"></i> Attiva audio</button><div class="cam-popup-hint"><span class="cam-mode-badge polling">SNAPSHOT</span> Anteprima ~2 fps · Tocca "Attiva audio" per audio + video</div></div>`;
+    content.innerHTML = `<div class="cam-popup-body"><div id="video-iframe-container" class="cam-zoom-container" style="position:relative; padding-top:56.25%;"><img id="cam-polling" alt="${cdEsc(cam.entity)}"><div id="cam-video-loader" class="cam-video-loader-overlay"><div class="cam-popup-spinner"></div><div>Caricamento…</div></div>${_DM_FS_BTNS}</div><button id="toggle-fs-main-btn" class="cam-fs-btn" onclick="toggleFullScreenCam()">🔲 Schermo Intero</button><button id="cam-audio-activate-btn" class="cam-audio-btn" onclick="dmAttivaAudio()">🔊 Attiva audio</button><div class="cam-popup-hint"><span class="cam-mode-badge polling">SNAPSHOT</span> Anteprima ~2 fps · Tocca "Attiva audio" per audio + video</div></div>`;
     const imgEl = document.getElementById('cam-polling');
     const loaderEl = document.getElementById('cam-video-loader');
     if (_dmPollInt) { clearTimeout(_dmPollInt); _dmPollInt = null; }
@@ -5815,7 +5809,7 @@ async function dmCamPolling(cam, content) {
             _dmPollFail++;
             if (Date.now() - daQuando >= DM_POLL_RESA) {
                 smetti();
-                content.innerHTML = '<div class="cam-popup-error"><i class="dm-segno" data-dm-segno="warning" aria-hidden="true"></i> Telecamera non risponde<br><span style="font-weight:500;opacity:.85;font-size:12px;text-transform:none;letter-spacing:0;">Venti secondi senza un\'immagine: può essere spenta, o solo molto lenta</span><br><button id="cam-riprova" class="cam-fs-btn">↻ Riprova</button></div>';
+                content.innerHTML = '<div class="cam-popup-error">⚠️ Telecamera non risponde<br><span style="font-weight:500;opacity:.85;font-size:12px;text-transform:none;letter-spacing:0;">Venti secondi senza un\'immagine: può essere spenta, o solo molto lenta</span><br><button id="cam-riprova" class="cam-fs-btn">↻ Riprova</button></div>';
                 const riprova = document.getElementById('cam-riprova');
                 if (riprova) riprova.onclick = () => dmCamPolling(cam, content);
                 return;
@@ -5970,9 +5964,9 @@ function dmUpdateAudioStatus() {
     let tracks = 'n/a';
     try { if (v.audioTracks) tracks = v.audioTracks.length; else if (_dmHls && _dmHls.audioTracks) tracks = _dmHls.audioTracks.length; } catch (e) {}
     const vol = Math.round(v.volume * 100);
-    if (v.muted || vol === 0) { st.textContent = 'Muto'; st.className = 'cam-audio-status muted'; }
-    else if (tracks === 0) { st.textContent = 'No audio'; st.className = 'cam-audio-status no-track'; }
-    else { st.textContent = '' + vol + '%'; st.className = 'cam-audio-status active'; }
+    if (v.muted || vol === 0) { st.textContent = '🔇 Muto'; st.className = 'cam-audio-status muted'; }
+    else if (tracks === 0) { st.textContent = '⚠ No audio'; st.className = 'cam-audio-status no-track'; }
+    else { st.textContent = '🔊 ' + vol + '%'; st.className = 'cam-audio-status active'; }
     if (dg) dg.textContent = 'Tracce: ' + tracks + ' · muted=' + v.muted + ' · vol=' + vol + '% · state=' + v.readyState;
 }
 
@@ -5989,7 +5983,7 @@ window.dmAttivaAudio = async function () {
     const content = document.getElementById('details-list'); if (!content) return;
     content.innerHTML = '<div class="cam-popup-body"><div class="cam-zoom-container" style="position:relative;padding-top:56.25%;"><div class="cam-video-loader-overlay"><div class="cam-popup-spinner"></div><div>Avvio audio HLS…</div></div></div></div>';
     try { await dmCamHLS(cam, content); const v = document.getElementById('cam-hls'); if (v) { v.muted = false; v.volume = 1.0; await v.play().catch(() => {}); } }
-    catch (e) { content.innerHTML = `<div class="cam-popup-error"><i class="dm-segno" data-dm-segno="warning" aria-hidden="true"></i> Audio non disponibile<br><span style="font-weight:500;opacity:.85;font-size:12px;text-transform:none;letter-spacing:0;">${cdEsc(e.message || e)}</span></div>`; setTimeout(() => { const c = document.getElementById('details-list'); if (c) dmCamPolling(cam, c); }, 3500); }
+    catch (e) { content.innerHTML = `<div class="cam-popup-error">⚠️ Audio non disponibile<br><span style="font-weight:500;opacity:.85;font-size:12px;text-transform:none;letter-spacing:0;">${cdEsc(e.message || e)}</span></div>`; setTimeout(() => { const c = document.getElementById('details-list'); if (c) dmCamPolling(cam, c); }, 3500); }
 };
 
 var _dmNativeSubId = null;
@@ -6020,7 +6014,7 @@ function renderFallbackMjpeg() {
     if(video) video.style.display = 'none'; 
     if(fallbackImg) fallbackImg.style.display = 'block'; 
     
-    if(instr) instr.innerHTML = `<span style="color:#10b981;"><i class="dm-segno" data-dm-segno="check" aria-hidden="true"></i> Stream Diretto MJPEG a latenza zero</span>`;
+    if(instr) instr.innerHTML = `<span style="color:#10b981;">✔️ Stream Diretto MJPEG a latenza zero</span>`;
 }
 
 function updateCamClocks() {
@@ -6041,7 +6035,7 @@ async function apriMeteo() {
   let entityId = (typeof resolveEntity === 'function' ? resolveEntity('dm.core_055') : 'dm.core_055');
   try { const _w = cdFirstMapped('dm.core_055', 'weather.home', 'dm.home_meteo'); if (_w && _w.entity_id && _w.entity_id !== 'dm.unmapped') entityId = _w.entity_id; } catch(e) {}
   currentWeatherEntity = entityId;
-  if (entityId.indexOf('dm.') === 0) { list.innerHTML = '<div style="text-align:center; padding: 20px; color:var(--text-dim); font-weight:800;">Configura l\'entità meteo da → Sezioni → Meteo per vedere le previsioni</div>'; return; }
+  if (entityId.indexOf('dm.') === 0) { list.innerHTML = '<div style="text-align:center; padding: 20px; color:var(--text-dim); font-weight:800;">Configura l\'entità meteo da ⚙️ → Sezioni → Meteo per vedere le previsioni</div>'; return; }
 
   if (ws && ws.readyState === WebSocket.OPEN) {
       const reqId = msgId++;
@@ -6071,10 +6065,10 @@ async function apriMeteo() {
 function renderForecasts(forecasts) {
   const list = document.getElementById('weather-forecast-list');
   if(!forecasts || forecasts.length === 0) { var nfRadar = document.querySelector('.dm-radar-blocco') ? ' Il radar qui sopra è un’altra cosa e funziona per conto suo.' : ''; list.innerHTML = `<div style="text-align:center; padding:20px; color:var(--text-dim,#64748b); line-height:1.5;"><strong style="display:block; font-size:14px; font-weight:800; color:var(--text,#0f172a); margin-bottom:6px;">Questa entità meteo non dà le previsioni</strong>Dice che tempo fa adesso, non i prossimi giorni. Per vedere i sette giorni scegli un’altra entità meteo in Configurazione › Sezioni › Meteo.${nfRadar}<code style="display:block; margin-top:10px; font-size:11px; color:var(--text-dim,#64748b);">${cdEsc(currentWeatherEntity || '')}</code></div>`; return; }
-  const wMap = { 'clear-night': '<i class="dm-segno" data-dm-segno="moon" aria-hidden="true"></i>', 'cloudy': '<i class="dm-segno" data-dm-segno="storm" aria-hidden="true"></i>', 'fog': '<div class=\"w-fog-anim\"><div class=\"fog-line\"></div><div class=\"fog-line\"></div><div class=\"fog-line\"></div><div class=\"fog-line\"></div><div class=\"fog-line\"></div></div>', 'hail': '<div class=\"w-fog-anim\"><div class=\"fog-line\"></div><div class=\"fog-line\"></div><div class=\"fog-line\"></div><div class=\"fog-line\"></div><div class=\"fog-line\"></div></div>', 'lightning': '<i class="dm-segno" data-dm-segno="storm" aria-hidden="true"></i>', 'lightning-rainy': '<i class="dm-segno" data-dm-segno="storm" aria-hidden="true"></i>', 'partlycloudy': '<i class="dm-segno" data-dm-segno="sun" aria-hidden="true"></i>', 'pouring': '<i class="dm-segno" data-dm-segno="storm" aria-hidden="true"></i>', 'rainy': '<i class="dm-segno" data-dm-segno="storm" aria-hidden="true"></i>', 'snowy': '<i class="dm-segno" data-dm-segno="air-conditioner" aria-hidden="true"></i>', 'snowy-rainy': '<i class="dm-segno" data-dm-segno="storm" aria-hidden="true"></i>', 'sunny': '<i class="dm-segno" data-dm-segno="sun" aria-hidden="true"></i>', 'windy': '<i class="dm-segno" data-dm-segno="wind" aria-hidden="true"></i>', 'windy-variant': '<i class="dm-segno" data-dm-segno="wind" aria-hidden="true"></i>' };
+  const wMap = { 'clear-night': '🌙', 'cloudy': '☁️', 'fog': '<div class=\"w-fog-anim\"><div class=\"fog-line\"></div><div class=\"fog-line\"></div><div class=\"fog-line\"></div><div class=\"fog-line\"></div><div class=\"fog-line\"></div></div>', 'hail': '<div class=\"w-fog-anim\"><div class=\"fog-line\"></div><div class=\"fog-line\"></div><div class=\"fog-line\"></div><div class=\"fog-line\"></div><div class=\"fog-line\"></div></div>', 'lightning': '⛈️', 'lightning-rainy': '⛈️', 'partlycloudy': '⛅', 'pouring': '🌧️', 'rainy': '🌧️', 'snowy': '❄️', 'snowy-rainy': '🌨️', 'sunny': '☀️', 'windy': '💨', 'windy-variant': '💨' };
   let fHtml = '';
   forecasts.slice(0, 7).forEach(f => {
-      let d = new Date(f.datetime); let day = d.toLocaleDateString('it-IT', {weekday:'long', day:'numeric'}).toUpperCase(); let icon = wMap[f.condition] || '<i class="dm-segno" data-dm-segno="sun" aria-hidden="true"></i>';
+      let d = new Date(f.datetime); let day = d.toLocaleDateString('it-IT', {weekday:'long', day:'numeric'}).toUpperCase(); let icon = wMap[f.condition] || '☀️';
       fHtml += `<div class="detail-row" style="padding:16px 20px; display:flex; justify-content:space-between; align-items:center; cursor:pointer;" onclick="apriMeteoOrario(${cdJs(f.datetime)})">
           <div style="display:flex; align-items:center; gap:18px;"><div style="font-size:32px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));">${icon}</div><div style="font-weight:800; font-size:13px; color:var(--text-dim); letter-spacing:0.5px;">${day}</div></div>
           <div style="font-family:'Oswald', sans-serif; font-size:22px; font-weight:700;">${f.templow !== undefined ? `<span style="color:#0ea5e9;">${cdEsc(f.templow)}°</span>` : ''} <span style="color:#e11d48; margin-left:12px;">${cdEsc(f.temperature)}°</span></div></div>`;
@@ -6107,13 +6101,13 @@ function apriMeteoOrario(targetDateStr) {
 function renderHourlyForecasts(forecasts) {
   const list = document.getElementById('weather-hourly-list');
   if(!forecasts || forecasts.length === 0) { list.innerHTML = '<div style="text-align:center; padding: 20px; font-weight:800; color:#e11d48;">Nessun dato orario disponibile per questo giorno.</div>'; return; }
-  const wMap = { 'clear-night': '<i class="dm-segno" data-dm-segno="moon" aria-hidden="true"></i>', 'cloudy': '<i class="dm-segno" data-dm-segno="storm" aria-hidden="true"></i>', 'fog': '<div class=\"w-fog-anim\"><div class=\"fog-line\"></div><div class=\"fog-line\"></div><div class=\"fog-line\"></div><div class=\"fog-line\"></div><div class=\"fog-line\"></div></div>', 'hail': '<div class=\"w-fog-anim\"><div class=\"fog-line\"></div><div class=\"fog-line\"></div><div class=\"fog-line\"></div><div class=\"fog-line\"></div><div class=\"fog-line\"></div></div>', 'lightning': '<i class="dm-segno" data-dm-segno="storm" aria-hidden="true"></i>', 'lightning-rainy': '<i class="dm-segno" data-dm-segno="storm" aria-hidden="true"></i>', 'partlycloudy': '<i class="dm-segno" data-dm-segno="sun" aria-hidden="true"></i>', 'pouring': '<i class="dm-segno" data-dm-segno="storm" aria-hidden="true"></i>', 'rainy': '<i class="dm-segno" data-dm-segno="storm" aria-hidden="true"></i>', 'snowy': '<i class="dm-segno" data-dm-segno="air-conditioner" aria-hidden="true"></i>', 'snowy-rainy': '<i class="dm-segno" data-dm-segno="storm" aria-hidden="true"></i>', 'sunny': '<i class="dm-segno" data-dm-segno="sun" aria-hidden="true"></i>', 'windy': '<i class="dm-segno" data-dm-segno="wind" aria-hidden="true"></i>', 'windy-variant': '<i class="dm-segno" data-dm-segno="wind" aria-hidden="true"></i>' };
+  const wMap = { 'clear-night': '🌙', 'cloudy': '☁️', 'fog': '<div class=\"w-fog-anim\"><div class=\"fog-line\"></div><div class=\"fog-line\"></div><div class=\"fog-line\"></div><div class=\"fog-line\"></div><div class=\"fog-line\"></div></div>', 'hail': '<div class=\"w-fog-anim\"><div class=\"fog-line\"></div><div class=\"fog-line\"></div><div class=\"fog-line\"></div><div class=\"fog-line\"></div><div class=\"fog-line\"></div></div>', 'lightning': '⛈️', 'lightning-rainy': '⛈️', 'partlycloudy': '⛅', 'pouring': '🌧️', 'rainy': '🌧️', 'snowy': '❄️', 'snowy-rainy': '🌨️', 'sunny': '☀️', 'windy': '💨', 'windy-variant': '💨' };
   let fHtml = '';
   forecasts.forEach(f => {
-      let d = new Date(f.datetime); let hour = d.toLocaleTimeString('it-IT', {hour: '2-digit', minute:'2-digit'}); let icon = wMap[f.condition] || '<i class="dm-segno" data-dm-segno="sun" aria-hidden="true"></i>';
+      let d = new Date(f.datetime); let hour = d.toLocaleTimeString('it-IT', {hour: '2-digit', minute:'2-digit'}); let icon = wMap[f.condition] || '☀️';
       fHtml += `<div class="detail-row" style="padding:12px 20px; display:flex; justify-content:space-between; align-items:center;">
           <div style="display:flex; align-items:center; gap:18px;"><div style="font-size:26px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));">${icon}</div><div style="font-weight:800; font-size:15px; color:var(--text); letter-spacing:0.5px;">${hour}</div></div>
-          <div style="font-family:'Oswald', sans-serif; font-size:20px; font-weight:700; color:#e11d48;">${cdEsc(f.temperature)}°${f.precipitation ? `<span style="font-size:12px; color:#0ea5e9; margin-left:8px; font-family:'Inter', sans-serif;"><i class="dm-segno" data-dm-segno="water" aria-hidden="true"></i> ${cdEsc(f.precipitation)}mm</span>` : ''}</div></div>`;
+          <div style="font-family:'Oswald', sans-serif; font-size:20px; font-weight:700; color:#e11d48;">${cdEsc(f.temperature)}°${f.precipitation ? `<span style="font-size:12px; color:#0ea5e9; margin-left:8px; font-family:'Inter', sans-serif;">💧 ${cdEsc(f.precipitation)}mm</span>` : ''}</div></div>`;
   });
   list.innerHTML = fHtml;
 }
@@ -6151,7 +6145,7 @@ async function apriStorico(e, entityId, name, hours = 24) {
     const json = await res.json(); 
     const data = json[0];
     
-    if (!data || data.length === 0) { document.getElementById('hist-loading').innerHTML = '<div style="font-size:32px; margin-bottom:6px;"><i class="dm-segno" data-dm-segno="mail" aria-hidden="true"></i></div>Nessun dato registrato'; return; }
+    if (!data || data.length === 0) { document.getElementById('hist-loading').innerHTML = '<div style="font-size:32px; margin-bottom:6px;">📭</div>Nessun dato registrato'; return; }
 
     let labels = []; let values = []; let isCategorical = false;
     data.forEach(d => {
@@ -6172,7 +6166,7 @@ async function apriStorico(e, entityId, name, hours = 24) {
       type: 'line', data: { labels: labels, datasets: [{ label: name, data: values, borderColor: '#0284c7', backgroundColor: gradient, borderWidth: 3, fill: true, pointRadius: 0, pointHoverRadius: 7, tension: isCategorical ? 0 : 0.45, stepped: isCategorical }] },
       options: { responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false }, scales: { x: { ticks: { maxTicksLimit: 8 }, grid: { color: 'rgba(0,0,0,0.04)' } }, y: { grid: { color: 'rgba(0,0,0,0.04)' } } }, plugins: { legend: { display: false }, tooltip: { backgroundColor: '#fff', titleColor: '#0a0e17', bodyColor: '#0284c7', borderColor: '#e2e8f0', borderWidth: 1, cornerRadius: 14, padding: 12, boxShadow: '0 10px 20px rgba(0,0,0,0.1)' } } }
     });
-  } catch(e) { document.getElementById('hist-loading').innerHTML = '<div style="font-size:32px; margin-bottom:6px; color:#e11d48;"><i class="dm-segno" data-dm-segno="warning" aria-hidden="true"></i></div>Errore caricamento storico'; }
+  } catch(e) { document.getElementById('hist-loading').innerHTML = '<div style="font-size:32px; margin-bottom:6px; color:#e11d48;">⚠️</div>Errore caricamento storico'; }
 }
 
 function apriDettagli(e, tipo) {
@@ -6180,23 +6174,23 @@ function apriDettagli(e, tipo) {
   currentPopupType = tipo;
   const list = document.getElementById('details-list'); const scrollTop = list.scrollTop;
   let html = ''; let items = [];
-  const map = {'luci':'<i class="dm-segno" data-dm-segno="lights" aria-hidden="true"></i> LUCI ATTIVE', 'clima':'<i class="dm-segno" data-dm-segno="air-conditioner" aria-hidden="true"></i> CLIMA ATTIVI', 'risc':'<i class="dm-segno" data-dm-segno="radiator" aria-hidden="true"></i> RISCALDAMENTO', 'win':'<i class="dm-segno" data-dm-segno="door" aria-hidden="true"></i> APERTURE', 'batt':'<i class="dm-segno" data-dm-segno="battery" aria-hidden="true"></i> BATTERIE'};
+  const map = {'luci':'💡 LUCI ATTIVE', 'clima':'❄️ CLIMA ATTIVI', 'risc':'🔥 RISCALDAMENTO', 'win':'🚪 APERTURE', 'batt':'🔋 BATTERIE'};
   document.getElementById('details-title').innerHTML = map[tipo] || 'DETTAGLI';
 
   (GRUPPI_MONITORAGGIO[tipo] || []).forEach(id => {
     const sObj = STATES[id]; if(!sObj) return; const st = sObj.state; let nm = AVVISI_NAMES[id] || LUCI_NAMES[id] || sObj.attributes?.friendly_name || id;
-    if(tipo === 'luci' && st === 'on') items.push({ id, nm, st: 'ACCESA', icon: 'lights', canOff: true });
-    else if(tipo === 'clima' && !['off', 'unavailable', 'unknown'].includes(st)) items.push({ id, nm, st: st.toUpperCase(), icon: 'air-conditioner', canOff: true });
-    else if(tipo === 'risc' && ['heat', 'heating', 'on'].includes(st)) items.push({ id, nm, st: 'ACCESO', icon: 'radiator', canOff: true });
+    if(tipo === 'luci' && st === 'on') items.push({ id, nm, st: 'ACCESA', icon: '💡', canOff: true });
+    else if(tipo === 'clima' && !['off', 'unavailable', 'unknown'].includes(st)) items.push({ id, nm, st: st.toUpperCase(), icon: '❄️', canOff: true });
+    else if(tipo === 'risc' && ['heat', 'heating', 'on'].includes(st)) items.push({ id, nm, st: 'ACCESO', icon: '🔥', canOff: true });
     else if(tipo === 'win' && (st === 'on' || st === 'off') && ((st === 'on') !== dmVersoInvertito(id))) {
       // v296: SOLO le aperture aperte (coerente col contatore)
-      const winIcon = /porta/i.test(nm) ? 'door' : 'window';
+      const winIcon = /porta/i.test(nm) ? '🚪' : '🪟';
       items.push({ id, nm, st: 'APERTA', icon: winIcon, canOff: false });
     }
     else if(tipo === 'batt') {
       // v296: SOLO le batterie scariche (≤20%)
       let v = parseFloat(st);
-      if(!isNaN(v) && v <= 20) items.push({ id, nm, st: v + '%', icon: 'battery', canOff: false, ord: v });
+      if(!isNaN(v) && v <= 20) items.push({ id, nm, st: v + '%', icon: '🪫', canOff: false, ord: v });
     }
   });
   if (tipo === 'batt') items.sort((a, b) => (a.ord ?? 0) - (b.ord ?? 0));
@@ -6214,11 +6208,11 @@ function apriDettagli(e, tipo) {
     } else if (it.canOff) {
       btnHtml = `<button class="d-action" title="Spegni" onclick="spegniEntitaDettaglio(${cdJs(it.id)});"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/></svg></button>`;
     }
-    const modeIT = { 'COOL':'Raffresca', 'HEAT':'Riscalda', 'FAN_ONLY':'Ventola',
-                       'DRY':'Deumidifica', 'AUTO':'Auto', 'HEAT_COOL':'Auto' };
+    const modeIT = { 'COOL':'❄️ Raffresca', 'HEAT':'🔥 Riscalda', 'FAN_ONLY':'💨 Ventola',
+                       'DRY':'💧 Deumidifica', 'AUTO':'⚙️ Auto', 'HEAT_COOL':'🔄 Auto' };
     const stateDisplay = modeIT[it.st] || it.st;
     const stStyle = it.ok === true ? 'opacity:0.55;' : (it.ok === false ? 'color:#dc2626; font-weight:900;' : '');
-    html += `<div class="detail-row"><div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0;overflow:hidden;"><div class="d-icon" style="flex-shrink:0;${it.icon === 'lights' ? 'background:#fef08a;border-color:#fde047;' : it.icon === 'air-conditioner' ? 'background:#e0f2fe;' : it.icon === 'radiator' ? 'background:#fff7ed;' : ''}">${cdSegno(it.icon)}</div><div class="d-info" style="min-width:0;flex:1;overflow:hidden;"><div class="d-name" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:14px;">${cdEsc(it.nm)}</div><div class="d-state"><span style="${stStyle}">${cdEsc(stateDisplay)}</span></div></div></div>${btnHtml}</div>`;
+    html += `<div class="detail-row"><div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0;overflow:hidden;"><div class="d-icon" style="flex-shrink:0;${it.icon === '💡' ? 'background:#fef08a;border-color:#fde047;' : it.icon === '❄️' ? 'background:#e0f2fe;' : it.icon === '🔥' ? 'background:#fff7ed;' : ''}">${cdEsc(it.icon)}</div><div class="d-info" style="min-width:0;flex:1;overflow:hidden;"><div class="d-name" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:14px;">${cdEsc(it.nm)}</div><div class="d-state"><span style="${stStyle}">${cdEsc(stateDisplay)}</span></div></div></div>${btnHtml}</div>`;
   }); }
   list.innerHTML = html; list.scrollTop = scrollTop; document.getElementById('details-modal').classList.add('show');
 }
@@ -6466,8 +6460,8 @@ function render() {
       if(weatherEnt && !wUnmapped) {
         const wLangMap = { 'clear-night': 'Sereno (Notte)', 'cloudy': 'Nuvoloso', 'fog': 'Nebbia', 'hail': 'Grandine', 'lightning': 'Fulmini', 'lightning-rainy': 'Temporale', 'partlycloudy': 'Poco Nuvoloso', 'pouring': 'Acquazzone', 'rainy': 'Pioggia', 'snowy': 'Neve', 'snowy-rainy': 'Nevischio', 'sunny': 'Soleggiato', 'windy': 'Ventoso', 'windy-variant': 'Vento Forte' };
         setTxt('w-state', wLangMap[weatherEnt.state] || weatherEnt.state.replace('-', ' '));
-        const wMap = { 'clear-night': '<i class="dm-segno" data-dm-segno="moon" aria-hidden="true"></i>', 'cloudy': '<i class="dm-segno" data-dm-segno="storm" aria-hidden="true"></i>', 'fog': '<div class=\"w-fog-anim\"><div class=\"fog-line\"></div><div class=\"fog-line\"></div><div class=\"fog-line\"></div><div class=\"fog-line\"></div><div class=\"fog-line\"></div></div>', 'hail': '<div class=\"w-fog-anim\"><div class=\"fog-line\"></div><div class=\"fog-line\"></div><div class=\"fog-line\"></div><div class=\"fog-line\"></div><div class=\"fog-line\"></div></div>', 'lightning': '<i class="dm-segno" data-dm-segno="storm" aria-hidden="true"></i>', 'lightning-rainy': '<i class="dm-segno" data-dm-segno="storm" aria-hidden="true"></i>', 'partlycloudy': '<i class="dm-segno" data-dm-segno="sun" aria-hidden="true"></i>', 'pouring': '<i class="dm-segno" data-dm-segno="storm" aria-hidden="true"></i>', 'rainy': '<i class="dm-segno" data-dm-segno="storm" aria-hidden="true"></i>', 'snowy': '<i class="dm-segno" data-dm-segno="air-conditioner" aria-hidden="true"></i>', 'snowy-rainy': '<i class="dm-segno" data-dm-segno="storm" aria-hidden="true"></i>', 'sunny': '<i class="dm-segno" data-dm-segno="sun" aria-hidden="true"></i>', 'windy': '<i class="dm-segno" data-dm-segno="wind" aria-hidden="true"></i>', 'windy-variant': '<i class="dm-segno" data-dm-segno="wind" aria-hidden="true"></i>' };
-        setHtml('w-icon', wMap[weatherEnt.state] || '<i class="dm-segno" data-dm-segno="sun" aria-hidden="true"></i>');
+        const wMap = { 'clear-night': '🌙', 'cloudy': '☁️', 'fog': '<div class=\"w-fog-anim\"><div class=\"fog-line\"></div><div class=\"fog-line\"></div><div class=\"fog-line\"></div><div class=\"fog-line\"></div><div class=\"fog-line\"></div></div>', 'hail': '<div class=\"w-fog-anim\"><div class=\"fog-line\"></div><div class=\"fog-line\"></div><div class=\"fog-line\"></div><div class=\"fog-line\"></div><div class=\"fog-line\"></div></div>', 'lightning': '⛈️', 'lightning-rainy': '⛈️', 'partlycloudy': '⛅', 'pouring': '🌧️', 'rainy': '🌧️', 'snowy': '❄️', 'snowy-rainy': '🌨️', 'sunny': '☀️', 'windy': '💨', 'windy-variant': '💨' };
+        setHtml('w-icon', wMap[weatherEnt.state] || '☀️');
       }
 
       const updateGlance = (id, sensor) => { let val = parseInt(getRawState(sensor)) || 0; let el = document.getElementById(id); if(el) { el.style.display = val > 0 ? 'flex' : 'none'; const valEl = document.getElementById(id.replace('glance-', 'g-val-')); if(valEl) valEl.textContent = val; } };
@@ -6511,12 +6505,12 @@ function render() {
         glanceAlarm.style.animation = '';
         glanceAlarm.style.border    = '';
         
-        let show = false, modeText = '', name = 'Antifurto', rgb = '124,58,237', icon = '<i class="dm-segno" data-dm-segno="security" aria-hidden="true"></i>';
+        let show = false, modeText = '', name = 'Antifurto', rgb = '124,58,237', icon = '🛡️';
         let sourceObj = alarmStateObj;
         
         // PRIORITÀ 1: allarme scattato (switch acceso)
         if (alarmTriggered) {
-          show = true; modeText = 'ALLARME'; rgb = '220,38,38'; icon = '<i class="dm-segno" data-dm-segno="warning" aria-hidden="true"></i>'; name = 'ALLARME!';
+          show = true; modeText = 'ALLARME'; rgb = '220,38,38'; icon = '🚨'; name = 'ALLARME!';
           sourceObj = triggerObj || alarmStateObj;
           // Stile critico: lampeggio + bordo rosso solo in stato urgente
           glanceAlarm.style.animation = 'alarmTriggeredPulse 0.7s ease-in-out infinite';
@@ -6525,13 +6519,13 @@ function render() {
         }
         // PRIORITÀ 2: modalità armata normale (stile soft come altre card)
         else if (alarmHomeState === 'armed_away') {
-          show = true; modeText = 'TOTALE';    rgb = '225,29,72';  icon = '<i class="dm-segno" data-dm-segno="security" aria-hidden="true"></i>'; name = 'Antifurto';
+          show = true; modeText = 'TOTALE';    rgb = '225,29,72';  icon = '🛡️'; name = 'Antifurto';
         } else if (alarmHomeState === 'armed_night') {
-          show = true; modeText = 'NOTTE';     rgb = '124,58,237'; icon = '<i class="dm-segno" data-dm-segno="moon" aria-hidden="true"></i>'; name = 'Antifurto';
+          show = true; modeText = 'NOTTE';     rgb = '124,58,237'; icon = '🌙'; name = 'Antifurto';
         } else if (alarmHomeState === 'armed_home') {
-          show = true; modeText = 'CASA';      rgb = '6,182,212';  icon = '<i class="dm-segno" data-dm-segno="home" aria-hidden="true"></i>'; name = 'Antifurto';
+          show = true; modeText = 'CASA';      rgb = '6,182,212';  icon = '🏡'; name = 'Antifurto';
         } else if (alarmHomeState === 'pending' || alarmHomeState === 'arming') {
-          show = true; modeText = 'IN USCITA'; rgb = '245,158,11'; icon = '<i class="dm-segno" data-dm-segno="timer" aria-hidden="true"></i>'; name = 'Antifurto';
+          show = true; modeText = 'IN USCITA'; rgb = '245,158,11'; icon = '⏳'; name = 'Antifurto';
         }
         
         glanceAlarm.style.display = show ? 'flex' : 'none';
@@ -6540,7 +6534,7 @@ function render() {
           gNameAlarm.textContent = name;
           glanceAlarm.style.setProperty('--g-rgb', rgb);
           gValAlarm.style.color  = `rgb(${rgb})`;
-          if (gIconAlarm) cdMettiSegno(gIconAlarm, icon);
+          if (gIconAlarm) gIconAlarm.textContent = icon;
           
           // Timer "da X minuti" sotto la modalità
           if (gTimeAlarm && sourceObj && sourceObj.last_changed) {
@@ -6633,7 +6627,7 @@ function render() {
           cdSetPeriodLoad('lav',    _lm(_nLav.mapped, 'dm.energy_somma_lavanderia_oggi', 'dm.energy_somma_lavanderia_mese'));
           cdSetPeriodLoad('cuc',    _lm(_nCuc.mapped, 'dm.energy_somma_cucina_oggi', 'dm.energy_somma_cucina_mese'));
       } catch(e) {}
-      const statiEV = {'A':'Non Connessa','B':'Collegata','C':'In Carica','D':'In Carica','F':'Errore'}; 
+      const statiEV = {'A':'Non Connessa','B':'🔌 Collegata','C':'⚡ In Carica','D':'⚡ In Carica','F':'⚠️ Errore'}; 
       const codeEV = getRawState('dm.ev_stato_ricarica'); 
       const socCarNum = parseFloat(getRawState('dm.ev_batteria_auto')) || 0; 
       const isCharging = (codeEV === 'C' || codeEV === 'D');
@@ -6726,22 +6720,22 @@ function render() {
       const evPopupBadge = document.getElementById('ev-popup-badge');
       if(evPopupBadge) {
           if (codeEV === 'C' || codeEV === 'D') {
-              evPopupBadge.innerHTML = '<i class="dm-segno" data-dm-segno="power" aria-hidden="true"></i> IN CARICA';
+              evPopupBadge.innerHTML = '⚡ IN CARICA';
               evPopupBadge.style.background = '#fef3c7';
               evPopupBadge.style.color = '#d97706';
               evPopupBadge.style.borderColor = '#fde68a';
           } else if (codeEV === 'B') {
-              evPopupBadge.innerHTML = '● COLLEGATA (IN ATTESA)';
+              evPopupBadge.innerHTML = '🔵 COLLEGATA (IN ATTESA)';
               evPopupBadge.style.background = '#e0f2fe';
               evPopupBadge.style.color = '#0284c7';
               evPopupBadge.style.borderColor = '#bae6fd';
           } else if (codeEV === 'F') {
-              evPopupBadge.innerHTML = '● ERRORE';
+              evPopupBadge.innerHTML = '🔴 ERRORE';
               evPopupBadge.style.background = '#ffe4e6';
               evPopupBadge.style.color = '#e11d48';
               evPopupBadge.style.borderColor = '#fecaca';
           } else {
-              evPopupBadge.innerHTML = '○ SCOLLEGATA';
+              evPopupBadge.innerHTML = '⚪ SCOLLEGATA';
               evPopupBadge.style.background = '#f1f5f9';
               evPopupBadge.style.color = '#64748b';
               evPopupBadge.style.borderColor = '#e2e8f0';
@@ -6753,7 +6747,7 @@ function render() {
       if (isNaN(targetSoc)) targetSoc = 100;
       
       let lblRemainPop = document.getElementById('lbl-ev-remain-popup');
-      if(lblRemainPop) lblRemainPop.innerHTML = `<i class="dm-segno" data-dm-segno="timer" aria-hidden="true"></i> TEMPO AL ${targetSoc}%`;
+      if(lblRemainPop) lblRemainPop.innerHTML = `⏱️ TEMPO AL ${targetSoc}%`;
 
       let remainText = "IN ATTESA"; 
       if (socCarNum >= targetSoc) {
@@ -6867,7 +6861,7 @@ function render() {
               ring.setAttribute('stroke', tempVal > 75 ? '#ef4444' : tempVal > 55 ? '#f59e0b' : '#7c3aed');
           }
           const stEl = document.getElementById('v-srv-temp-status');
-          if (stEl) stEl.textContent = tempVal > 75 ? '● Alta — Controllare' : tempVal > 55 ? '● Nella norma' : '● Ottimale';
+          if (stEl) stEl.textContent = tempVal > 75 ? '🔴 Alta — Controllare' : tempVal > 55 ? '🟡 Nella norma' : '🟢 Ottimale';
       }
 
       document.querySelectorAll('.v-ev-pow').forEach(el => el.textContent = getDisplay('dm.ev_potenza_wallbox')); document.querySelectorAll('.v-ev-volt').forEach(el => el.textContent = getDisplay('dm.ev_tensione_wallbox')); document.querySelectorAll('.v-ev-range').forEach(el => el.textContent = getDisplay('dm.ev_autonomia')); document.querySelectorAll('.v-ev-km-ric').forEach(el => el.textContent = getDisplay('dm.ev_km_dall_ultima_ricarica')); document.querySelectorAll('.v-ev-odo').forEach(el => el.textContent = getDisplay('dm.ev_odometro')); document.querySelectorAll('.v-ev-ac-tot').forEach(el => el.textContent = getDisplay('dm.ev_prelievo_ac_totale_auto')); document.querySelectorAll('.v-ev-temp-wb').forEach(el => el.textContent = getDisplay('dm.ev_temperatura_wallbox'));
@@ -6884,7 +6878,7 @@ function render() {
           let lavFase = getDisplay('dm.lavatrice_fase_corrente');
           const lavPw = parseFloat(STATES['dm.lavatrice_potenza_presa_lavatrice_per_lavatrici_no']?.state);
           if ((lavFase === '—' || lavFase === '--' || !lavFase) && !isNaN(lavPw)) {
-              lavFase = lavPw > 5 ? 'In funzione (' + Math.round(lavPw) + ' W)' : 'Spenta';
+              lavFase = lavPw > 5 ? '🌀 In funzione (' + Math.round(lavPw) + ' W)' : 'Spenta';
           }
           setTxt('v-lav-fase', lavFase); setTxt('v-lav-tempo', getDisplay('dm.lavatrice_tempo_rimanente'));
           /* v274 (issue #2): lavatrici non smart — nascondi i controlli programma/centrifuga/temperatura
@@ -6899,9 +6893,9 @@ function render() {
           }
           const elPwrLav = document.getElementById('v-lav-power-w'); if(elPwrLav) elPwrLav.textContent = getDisplay('dm.core_037');
           const mainPwrSwitch = STATES['dm.lavatrice_presa_avvio_lavatrice']; const btnMainPwr = document.getElementById('lav-btn-power'); const txtMainPwr = document.getElementById('lav-txt-power');
-          if (btnMainPwr && mainPwrSwitch) { const isOn = mainPwrSwitch.state === 'on'; btnMainPwr.classList.toggle('active', isOn); txtMainPwr.textContent = isOn ? 'ACCESA' : 'SPENTA'; btnMainPwr.querySelector('.icon').innerHTML = isOn ? '<i class="dm-segno" data-dm-segno="power" aria-hidden="true"></i>' : '<i class="dm-segno" data-dm-segno="socket" aria-hidden="true"></i>'; if(isOn) { btnMainPwr.style.setProperty('--btn-col', '#0ea5e9'); btnMainPwr.style.setProperty('--btn-bg', '#e0f2fe'); } else { btnMainPwr.style.setProperty('--btn-col', '#64748b'); btnMainPwr.style.setProperty('--btn-bg', '#fff'); } }
+          if (btnMainPwr && mainPwrSwitch) { const isOn = mainPwrSwitch.state === 'on'; btnMainPwr.classList.toggle('active', isOn); txtMainPwr.textContent = isOn ? 'ACCESA' : 'SPENTA'; btnMainPwr.querySelector('.icon').textContent = isOn ? '⚡' : '🔌'; if(isOn) { btnMainPwr.style.setProperty('--btn-col', '#0ea5e9'); btnMainPwr.style.setProperty('--btn-bg', '#e0f2fe'); } else { btnMainPwr.style.setProperty('--btn-col', '#64748b'); btnMainPwr.style.setProperty('--btn-bg', '#fff'); } }
           const playSwitch = STATES['dm.lavatrice_avvio_ciclo']; const btnPlay = document.getElementById('lav-txt-play');
-          if (btnPlay && playSwitch) { const isPlaying = playSwitch.state === 'on'; btnPlay.classList.toggle('active', isPlaying); btnPlay.textContent = isPlaying ? 'IN CORSO' : 'PAUSA'; btnPlay.querySelector('.icon').innerHTML = isPlaying ? '<i class="dm-segno" data-dm-segno="refresh" aria-hidden="true"></i>' : '<i class="dm-segno" data-dm-segno="play" aria-hidden="true"></i>'; if(isPlaying) { btnPlay.style.setProperty('--btn-col', '#ea580c'); btnPlay.style.setProperty('--btn-bg', '#ffedd5'); } else { btnPlay.style.setProperty('--btn-col', '#10b981'); btnPlay.style.setProperty('--btn-bg', '#d1fae5'); } }
+          if (btnPlay && playSwitch) { const isPlaying = playSwitch.state === 'on'; btnPlay.classList.toggle('active', isPlaying); btnPlay.textContent = isPlaying ? 'IN CORSO' : 'PAUSA'; btnPlay.querySelector('.icon').textContent = isPlaying ? '🔄' : '▶️'; if(isPlaying) { btnPlay.style.setProperty('--btn-col', '#ea580c'); btnPlay.style.setProperty('--btn-bg', '#ffedd5'); } else { btnPlay.style.setProperty('--btn-col', '#10b981'); btnPlay.style.setProperty('--btn-bg', '#d1fae5'); } }
           const acLav = STATES['dm.core_001']; const imgLav = document.getElementById('img-lavatrice'); if(imgLav && acLav && acLav.entity_id && acLav.entity_id !== 'dm.unmapped' && imgLav.style.display !== 'none') { imgLav.src = acLav.state === 'on' ? '/local/foto-pkg/lavatrice_on.gif' : '/local/foto-pkg/lavatrice_off.png'; }
       }
 
@@ -6942,28 +6936,28 @@ function render() {
         document.querySelectorAll('.alarm-mode-btn').forEach(b => b.classList.remove('active'));
         
         // Determina stato visivo
-        let color = '#059669', rgb = '5,150,105', text = 'DISARMATO', icon = '<i class="dm-segno" data-dm-segno="unlock" aria-hidden="true"></i>', activeBtn = 'disarm', isArmed = false, sourceObj = alarmStateObj;
+        let color = '#059669', rgb = '5,150,105', text = 'DISARMATO', icon = '🔓', activeBtn = 'disarm', isArmed = false, sourceObj = alarmStateObj;
         
         if (alarmTriggered) {
           // PRIORITÀ MASSIMA: allarme scattato
-          color = '#dc2626'; rgb = '220,38,38'; text = 'ALLARME!'; icon = '<i class="dm-segno" data-dm-segno="warning" aria-hidden="true"></i>';
+          color = '#dc2626'; rgb = '220,38,38'; text = 'ALLARME!'; icon = '🚨';
           activeBtn = ''; sourceObj = triggerObj || alarmStateObj;
           alStage.classList.add('triggered');
           if (navigator.vibrate) navigator.vibrate([200, 100, 200, 100, 200]);
         } else if (alarmState === 'armed_away') {
-          color = '#e11d48'; rgb = '225,29,72'; text = 'ARMATO · FUORI'; icon = '<i class="dm-segno" data-dm-segno="security" aria-hidden="true"></i>'; activeBtn = 'away'; isArmed = true;
+          color = '#e11d48'; rgb = '225,29,72'; text = 'ARMATO · FUORI'; icon = '🛡️'; activeBtn = 'away'; isArmed = true;
         } else if (alarmState === 'armed_night') {
-          color = '#7c3aed'; rgb = '124,58,237'; text = 'ARMATO · NOTTE'; icon = '<i class="dm-segno" data-dm-segno="moon" aria-hidden="true"></i>'; activeBtn = 'night'; isArmed = true;
+          color = '#7c3aed'; rgb = '124,58,237'; text = 'ARMATO · NOTTE'; icon = '🌙'; activeBtn = 'night'; isArmed = true;
         } else if (alarmState === 'armed_home') {
-          color = '#06b6d4'; rgb = '6,182,212';  text = 'ARMATO · CASA';  icon = '<i class="dm-segno" data-dm-segno="home" aria-hidden="true"></i>'; activeBtn = 'home'; isArmed = true;
+          color = '#06b6d4'; rgb = '6,182,212';  text = 'ARMATO · CASA';  icon = '🏡'; activeBtn = 'home'; isArmed = true;
         } else if (alarmState === 'armed_custom_bypass') {
-          color = '#e11d48'; rgb = '225,29,72'; text = 'ARMATO · PARZIALE'; icon = '<i class="dm-segno" data-dm-segno="sliders" aria-hidden="true"></i>'; activeBtn = 'custom'; isArmed = true;
+          color = '#e11d48'; rgb = '225,29,72'; text = 'ARMATO · PARZIALE'; icon = '🎚️'; activeBtn = 'custom'; isArmed = true;
         } else if (alarmState === 'armed_vacation') {
-          color = '#e11d48'; rgb = '225,29,72'; text = 'ARMATO · VACANZA'; icon = '<i class="dm-segno" data-dm-segno="plane" aria-hidden="true"></i>'; activeBtn = 'vacation'; isArmed = true;
+          color = '#e11d48'; rgb = '225,29,72'; text = 'ARMATO · VACANZA'; icon = '✈️'; activeBtn = 'vacation'; isArmed = true;
         } else if (alarmState === 'pending' || alarmState === 'arming') {
-          color = '#f59e0b'; rgb = '245,158,11'; text = 'IN USCITA...';   icon = '<i class="dm-segno" data-dm-segno="timer" aria-hidden="true"></i>'; activeBtn = ''; isArmed = true;
+          color = '#f59e0b'; rgb = '245,158,11'; text = 'IN USCITA...';   icon = '⏳'; activeBtn = ''; isArmed = true;
         } else if (alarmState === 'disarmed') {
-          color = '#059669'; rgb = '5,150,105';  text = 'DISARMATO';      icon = '<i class="dm-segno" data-dm-segno="unlock" aria-hidden="true"></i>'; activeBtn = 'disarm';
+          color = '#059669'; rgb = '5,150,105';  text = 'DISARMATO';      icon = '🔓'; activeBtn = 'disarm';
         }
         
         /* v1.4.28 (#547): il cartello lo dice chi sa tutto l'antifurto.
@@ -6987,7 +6981,7 @@ function render() {
             if (suMisura) {
               color = '#e11d48'; rgb = '225,29,72';
               text = 'ARMATO \u00B7 ' + String(suMisura.label || '').toUpperCase();
-              icon = cdSegno(suMisura.icon, 0, 'security');
+              icon = suMisura.icon || '\u{1F6E1}\u{FE0F}';
               activeBtn = suMisura.mode; isArmed = true;
               chiaveDelTondo = suMisura.mode;
             }
@@ -7014,7 +7008,7 @@ function render() {
         alTextEl.textContent = text;
         if (alIconEl) {
           if (disegnoDelTondo) alIconEl.innerHTML = disegnoDelTondo;
-          else alIconEl.innerHTML = icon;
+          else alIconEl.textContent = icon;
         }
         if (isArmed) alStage.classList.add('armed');
         
@@ -7039,7 +7033,7 @@ function render() {
             const days  = Math.floor(hours / 24);
             let label;
             if (alarmTriggered) {
-              label = `<i class="dm-segno" data-dm-segno="warning" aria-hidden="true"></i> Scattato ${mins > 0 ? mins + ' min fa' : 'ora'}`;
+              label = `⚠️ Scattato ${mins > 0 ? mins + ' min fa' : 'ora'}`;
             } else if (alarmState === 'pending' || alarmState === 'arming') {
               label = 'Inserimento in corso...';
             } else if (days > 0)       label = `Attivo da ${days}g ${hours % 24}h`;
@@ -7093,7 +7087,7 @@ function render() {
                   ring.setAttribute('stroke', tempC > 75 ? '#ef4444' : tempC > 55 ? '#f59e0b' : '#7c3aed');
               }
               const stEl = document.getElementById('v-srv-temp-status');
-              if (stEl) stEl.textContent = tempC > 75 ? '● Alta — Controllare' : tempC > 55 ? '● Nella norma' : '● Ottimale';
+              if (stEl) stEl.textContent = tempC > 75 ? '🔴 Alta — Controllare' : tempC > 55 ? '🟡 Nella norma' : '🟢 Ottimale';
           }
       })(); // fine IIFE MiniPC metriche
 
@@ -7229,7 +7223,7 @@ function setQuickClimaMode(mode) {
     // Aggiorna titolo + hint
     const titleEl = document.getElementById('quick-clima-title');
     const hintEl  = document.getElementById('quick-clima-hint');
-    if (titleEl) titleEl.textContent = mode === 'freddo' ? 'CLIMA · FREDDO' : 'CLIMA · CALDO';
+    if (titleEl) titleEl.textContent = mode === 'freddo' ? '❄️ CLIMA · FREDDO' : '🔥 CLIMA · CALDO';
     if (hintEl) {
         // Quello che il tasto fara' davvero, non un esempio: i tre passi li
         // sceglie la configurazione, e la scritta li legge dalla stessa fonte.
@@ -7347,30 +7341,30 @@ function renderAllarmeBanner() {
     banner.classList.remove('triggered');
 
     // Logica priorità: triggered > armed_* > pending/arming > altro
-    let show = false, icon = '<i class="dm-segno" data-dm-segno="security" aria-hidden="true"></i>', text = 'Antifurto', rgb = '124,58,237', textRgb = '91,33,182';
+    let show = false, icon = '🛡️', text = 'Antifurto', rgb = '124,58,237', textRgb = '91,33,182';
 
     if (triggerOn) {
       show = true;
-      icon = '<i class="dm-segno" data-dm-segno="warning" aria-hidden="true"></i>';
+      icon = '🚨';
       text = 'Allarme!';
       rgb = '220,38,38';
       textRgb = '153,27,27';
       banner.classList.add('triggered');
     } else if (stato === 'armed_away') {
-      show = true; icon = '<i class="dm-segno" data-dm-segno="security" aria-hidden="true"></i>'; text = 'Antifurto · Totale'; rgb = '225,29,72';  textRgb = '157,23,53';
+      show = true; icon = '🛡️'; text = 'Antifurto · Totale'; rgb = '225,29,72';  textRgb = '157,23,53';
     } else if (stato === 'armed_night') {
-      show = true; icon = '<i class="dm-segno" data-dm-segno="moon" aria-hidden="true"></i>'; text = 'Antifurto · Notte';  rgb = '124,58,237'; textRgb = '91,33,182';
+      show = true; icon = '🌙'; text = 'Antifurto · Notte';  rgb = '124,58,237'; textRgb = '91,33,182';
     } else if (stato === 'armed_home') {
-      show = true; icon = '<i class="dm-segno" data-dm-segno="home" aria-hidden="true"></i>'; text = 'Antifurto · Casa';   rgb = '6,182,212';  textRgb = '14,116,144';
+      show = true; icon = '🏡'; text = 'Antifurto · Casa';   rgb = '6,182,212';  textRgb = '14,116,144';
     } else if (stato === 'armed_custom_bypass') {
-      show = true; icon = '<i class="dm-segno" data-dm-segno="security" aria-hidden="true"></i>'; text = 'Antifurto · Parziale'; rgb = '225,29,72'; textRgb = '157,23,53';
+      show = true; icon = '🛡️'; text = 'Antifurto · Parziale'; rgb = '225,29,72'; textRgb = '157,23,53';
     } else if (stato === 'pending' || stato === 'arming') {
-      show = true; icon = '<i class="dm-segno" data-dm-segno="timer" aria-hidden="true"></i>'; text = 'Antifurto · In uscita'; rgb = '245,158,11'; textRgb = '154,87,4';
+      show = true; icon = '⏳'; text = 'Antifurto · In uscita'; rgb = '245,158,11'; textRgb = '154,87,4';
     }
 
     banner.classList.toggle('show', show);
     if (show) {
-      if (iconEl) cdMettiSegno(iconEl, icon);
+      if (iconEl) iconEl.textContent = icon;
       if (textEl) textEl.textContent = text;
       banner.style.setProperty('--pill-rgb', rgb);
       banner.style.setProperty('--pill-text-rgb', textRgb);
@@ -7422,7 +7416,7 @@ function renderQuickClima() {
       };
       btn.innerHTML = `
         ${tempLabel ? `<span class="ns-clima-btn-temp">${cdEsc(tempLabel)}</span>` : ''}
-        <span class="ns-clima-btn-icon">${cdSegno(s.icona)}</span>
+        <span class="ns-clima-btn-icon">${cdEsc(s.icona)}</span>
         <span class="ns-clima-btn-name">${cdEsc(s.nome)}</span>
       `;
       grid.appendChild(btn);
@@ -7715,8 +7709,8 @@ async function edCalcolaBilancioAnno(selYear) {
     if (!pagatoEl) return;
     
     if (yearLbl) yearLbl.textContent = selYear;
-    pagatoEl.textContent = '—';
-    rispEl.textContent   = '—';
+    pagatoEl.textContent = '⏳ —';
+    rispEl.textContent   = '⏳ —';
     
     const now = new Date();
     const isCurrentYear = selYear === now.getFullYear();
@@ -7798,9 +7792,9 @@ async function edAggiornaCipYoY(selMonth, selYear, prodCorrente, consCorrente, p
     const labelMesePrec = monthNames[selMonth - 1] + ' ' + (selYear - 1);
 
     // Segnaposto durante il caricamento
-    yoyEl.innerHTML = `<span class="ed-yoy-chip solar" style="opacity:0.5;"><i class="dm-segno" data-dm-segno="sun" aria-hidden="true"></i> ...</span>
-                       <span class="ed-yoy-chip home" style="opacity:0.5;"><i class="dm-segno" data-dm-segno="home" aria-hidden="true"></i> ...</span>` +
-                      (prelevato > 0 ? `<span class="ed-yoy-chip grid"><i class="dm-segno" data-dm-segno="power" aria-hidden="true"></i> ${prelevato.toFixed(0)} kWh Rete</span>` : '');
+    yoyEl.innerHTML = `<span class="ed-yoy-chip solar" style="opacity:0.5;">☀️ ...</span>
+                       <span class="ed-yoy-chip home" style="opacity:0.5;">🏠 ...</span>` +
+                      (prelevato > 0 ? `<span class="ed-yoy-chip grid">⚡ ${prelevato.toFixed(0)} kWh Rete</span>` : '');
 
     try {
         // Stesso mese dell'anno precedente
@@ -7832,22 +7826,22 @@ async function edAggiornaCipYoY(selMonth, selYear, prodCorrente, consCorrente, p
         // Chip produzione solare
         if (prodPrec > 0) {
             const diff = ((prodCorrente - prodPrec) / prodPrec * 100).toFixed(0);
-            chips += `<span class="ed-yoy-chip solar"><i class="dm-segno" data-dm-segno="sun" aria-hidden="true"></i> ${diff > 0 ? '+' : ''}${diff}% vs ${labelMesePrec}</span>`;
+            chips += `<span class="ed-yoy-chip solar">☀️ ${diff > 0 ? '+' : ''}${diff}% vs ${labelMesePrec}</span>`;
         } else if (prodCorrente > 0) {
-            chips += `<span class="ed-yoy-chip solar"><i class="dm-segno" data-dm-segno="sun" aria-hidden="true"></i> ${prodCorrente.toFixed(0)} kWh</span>`;
+            chips += `<span class="ed-yoy-chip solar">☀️ ${prodCorrente.toFixed(0)} kWh</span>`;
         }
 
         // Chip consumo
         if (consPrec > 0) {
             const diff = ((consCorrente - consPrec) / consPrec * 100).toFixed(0);
-            chips += `<span class="ed-yoy-chip home"><i class="dm-segno" data-dm-segno="home" aria-hidden="true"></i> ${diff > 0 ? '+' : ''}${diff}% Consumo</span>`;
+            chips += `<span class="ed-yoy-chip home">🏠 ${diff > 0 ? '+' : ''}${diff}% Consumo</span>`;
         } else if (consCorrente > 0) {
-            chips += `<span class="ed-yoy-chip home"><i class="dm-segno" data-dm-segno="home" aria-hidden="true"></i> ${consCorrente.toFixed(0)} kWh</span>`;
+            chips += `<span class="ed-yoy-chip home">🏠 ${consCorrente.toFixed(0)} kWh</span>`;
         }
 
         // Chip rete
         if (prelevato > 0) {
-            chips += `<span class="ed-yoy-chip grid"><i class="dm-segno" data-dm-segno="power" aria-hidden="true"></i> ${prelevato.toFixed(0)} kWh da Rete</span>`;
+            chips += `<span class="ed-yoy-chip grid">⚡ ${prelevato.toFixed(0)} kWh da Rete</span>`;
         }
 
         yoyEl.innerHTML = chips || '';
@@ -7856,8 +7850,8 @@ async function edAggiornaCipYoY(selMonth, selYear, prodCorrente, consCorrente, p
         console.warn('YoY fetch error:', e.message);
         // Fallback senza confronto
         let chips = '';
-        if (prodCorrente > 0) chips += `<span class="ed-yoy-chip solar"><i class="dm-segno" data-dm-segno="sun" aria-hidden="true"></i> ${prodCorrente.toFixed(0)} kWh prodotti</span>`;
-        if (prelevato > 0)    chips += `<span class="ed-yoy-chip grid"><i class="dm-segno" data-dm-segno="power" aria-hidden="true"></i> ${prelevato.toFixed(0)} kWh da Rete</span>`;
+        if (prodCorrente > 0) chips += `<span class="ed-yoy-chip solar">☀️ ${prodCorrente.toFixed(0)} kWh prodotti</span>`;
+        if (prelevato > 0)    chips += `<span class="ed-yoy-chip grid">⚡ ${prelevato.toFixed(0)} kWh da Rete</span>`;
         yoyEl.innerHTML = chips;
     }
 }
@@ -8051,8 +8045,8 @@ async function renderEnergyDashboard() {
         ];
         
         // Mostra stato di caricamento
-        edSetText('ed-kpi-prod', '<i class="dm-segno" data-dm-segno="timer" aria-hidden="true"></i> <small>kWh</small>');
-        edSetText('ed-kpi-cons', '<i class="dm-segno" data-dm-segno="timer" aria-hidden="true"></i> <small>kWh</small>');
+        edSetText('ed-kpi-prod', '⏳ <small>kWh</small>');
+        edSetText('ed-kpi-cons', '⏳ <small>kWh</small>');
         
         let statsOk = false;
         
@@ -8240,14 +8234,14 @@ async function renderEnergyDashboard() {
     if (badgesEl) {
         const deficit = Math.max(0, cons - prod).toFixed(0);
         badgesEl.innerHTML =
-            `<span class="ed-badge green"><i class="dm-segno" data-dm-segno="check" aria-hidden="true"></i> ${autosufficienza}% Autosufficiente</span>` +
+            `<span class="ed-badge green">✅ ${autosufficienza}% Autosufficiente</span>` +
             (parseFloat(deficit) > 0
-                ? `<span class="ed-badge red"><i class="dm-segno" data-dm-segno="warning" aria-hidden="true"></i> -${deficit} kWh deficit</span>`
-                : `<span class="ed-badge green"><i class="dm-segno" data-dm-segno="gauge" aria-hidden="true"></i> Zero deficit</span>`) +
-            `<span class="ed-badge blue"><i class="dm-segno" data-dm-segno="power" aria-hidden="true"></i> ${prod.toFixed(0)} kWh prodotti</span>`;
+                ? `<span class="ed-badge red">⚠️ -${deficit} kWh deficit</span>`
+                : `<span class="ed-badge green">🎯 Zero deficit</span>`) +
+            `<span class="ed-badge blue">⚡ ${prod.toFixed(0)} kWh prodotti</span>`;
         /* v0.8.1: mese passato senza alcuna statistica → nota chiara al posto di zeri sicuri */
         if (!isCurrentMonth && prod <= 0 && cons <= 0 && prelevato <= 0) {
-            badgesEl.innerHTML = '<span class="ed-badge" style="background:rgba(245,158,11,0.14); color:#b45309;"><i class="dm-segno" data-dm-segno="warning" aria-hidden="true"></i> Nessuna statistica disponibile per questo mese</span>';
+            badgesEl.innerHTML = '<span class="ed-badge" style="background:rgba(245,158,11,0.14); color:#b45309;">⚠️ Nessuna statistica disponibile per questo mese</span>';
         }
     }
 
@@ -8296,7 +8290,7 @@ async function renderEdDeviceList(selMonth, selYear, isCurrentMonth, cons = 0, p
            Con entità mensili (che ripartono da ~0) il risultato è identico a prima;
            con entità TOTALI cumulative diventa finalmente corretto. */
         if (!ED_DEVICES.length) {
-            list.innerHTML = '<div style="text-align:center; padding:26px; color:var(--text-dim); font-weight:800;"><i class="dm-segno" data-dm-segno="gauge" aria-hidden="true"></i> Aggiungi i tuoi dispositivi da → Configura Entità → Carichi → "Report Analisi — voci"<br><span style="font-weight:600; font-size:12px;">Puoi usare entità mensili oppure TOTALI cumulative: i mesi vengono calcolati da soli.</span></div>';
+            list.innerHTML = '<div style="text-align:center; padding:26px; color:var(--text-dim); font-weight:800;">📊 Aggiungi i tuoi dispositivi da ⚙️ → Configura Entità → Carichi → "Report Analisi — voci"<br><span style="font-weight:600; font-size:12px;">Puoi usare entità mensili oppure TOTALI cumulative: i mesi vengono calcolati da soli.</span></div>';
             return;
         }
         ED_DEVICES.forEach(d => { devValues[d.key] = parseFloat(getRawState(d.sensor)) || 0; });
@@ -8324,7 +8318,7 @@ async function renderEdDeviceList(selMonth, selYear, isCurrentMonth, cons = 0, p
         const tStart = new Date(selYear, selMonth-1, 1).toISOString();
         const tEnd   = new Date(selYear, selMonth, 1).toISOString();
         const sensorIds = ED_DEVICES.map(d => d.sensor);
-        list.innerHTML = '<div style="text-align:center;padding:30px;color:var(--text-dim);font-weight:800;"><i class="dm-segno" data-dm-segno="timer" aria-hidden="true"></i> Caricamento dati storici...</div>';
+        list.innerHTML = '<div style="text-align:center;padding:30px;color:var(--text-dim);font-weight:800;">⏳ Caricamento dati storici...</div>';
         
         let statsOk = false;
         
@@ -8393,17 +8387,17 @@ async function renderEdDeviceList(selMonth, selYear, isCurrentMonth, cons = 0, p
     /* v0.7.5: se il mese selezionato non ha né produzione né consumi principali ma i contatori
        dei dispositivi riportano energia, lo si segnala: quei delta possono includere periodi precedenti. */
     const _warn = (!isCurrentMonth && cons <= 0 && prodM <= 0 && totalKwh > 0)
-        ? '<div style="padding:10px 14px; margin-bottom:8px; border-radius:14px; background:rgba(245,158,11,0.12); color:#b45309; font-size:11.5px; font-weight:700;"><i class="dm-segno" data-dm-segno="warning" aria-hidden="true"></i> Produzione e consumi principali non disponibili per questo mese: i valori qui sotto derivano dallo storico dei contatori e potrebbero includere periodi precedenti.</div>'
+        ? '<div style="padding:10px 14px; margin-bottom:8px; border-radius:14px; background:rgba(245,158,11,0.12); color:#b45309; font-size:11.5px; font-weight:700;">⚠️ Produzione e consumi principali non disponibili per questo mese: i valori qui sotto derivano dallo storico dei contatori e potrebbero includere periodi precedenti.</div>'
         : '';
     list.innerHTML = _warn + devData.map(d => {
         const pct = maxVal > 0 ? (d.val / maxVal * 100).toFixed(1) : 0;
         return `
         <div class="ed-device-row" onclick="apriStorico(event,${cdJs(d.sensor)},${cdJs(d.name)})">
-            <div class="ed-dev-icon" style="background:${cdEsc(d.bg)};">${cdSegno(d.icon)}</div>
+            <div class="ed-dev-icon" style="background:${cdEsc(d.bg)};">${cdEsc(d.icon)}</div>
             <div class="ed-dev-name">
               ${cdEsc(d.name)}
               <div style="font-size:10px; font-weight:700; color:var(--text-dim); margin-top:2px; letter-spacing:0;">
-                <span style="color:#059669;"><i class="dm-segno" data-dm-segno="sun" aria-hidden="true"></i> ${d.kwhFV.toFixed(1)} kWh</span> &nbsp;<span style="color:#dc2626;"><i class="dm-segno" data-dm-segno="socket" aria-hidden="true"></i> ${d.kwhRete.toFixed(1)} kWh</span>
+                <span style="color:#059669;">☀️ ${d.kwhFV.toFixed(1)} kWh</span> &nbsp;<span style="color:#dc2626;">🔌 ${d.kwhRete.toFixed(1)} kWh</span>
               </div>
             </div>
             <div class="ed-dev-bar-wrap">
@@ -8417,7 +8411,7 @@ async function renderEdDeviceList(selMonth, selYear, isCurrentMonth, cons = 0, p
     /* v0.8.4 (#6): risposta alla domanda "da dove prende i dati?" — se tutto è a zero,
        quasi sempre le entità non hanno le Long-Term Statistics. */
     if (totalKwh <= 0 && ED_DEVICES.length) {
-        list.innerHTML += '<div style="padding:10px 14px; margin-top:8px; border-radius:14px; background:rgba(14,165,233,0.08); color:#0369a1; font-size:11.5px; font-weight:700;"><i class="dm-segno" data-dm-segno="info" aria-hidden="true"></i> Il Report legge le <b>Long-Term Statistics</b> di Home Assistant. Se i valori restano a zero, verifica che le entità abbiano <code>state_class: total_increasing</code> (o <code>total</code>): Strumenti per sviluppatori → Statistiche.</div>';
+        list.innerHTML += '<div style="padding:10px 14px; margin-top:8px; border-radius:14px; background:rgba(14,165,233,0.08); color:#0369a1; font-size:11.5px; font-weight:700;">ℹ️ Il Report legge le <b>Long-Term Statistics</b> di Home Assistant. Se i valori restano a zero, verifica che le entità abbiano <code>state_class: total_increasing</code> (o <code>total</code>): Strumenti per sviluppatori → Statistiche.</div>';
     }
 
     setTimeout(() => {
@@ -8466,7 +8460,7 @@ async function renderEdDailyChart(daysInMonth, selMonth, selYear, isCurrentMonth
 
     if (edDailyChart) { edDailyChart.destroy(); edDailyChart = null; }
     loading.style.display = 'flex';
-    loading.innerHTML = '<span style="animation:spinAnim 1s linear infinite;display:inline-block;"><i class="dm-segno" data-dm-segno="timer" aria-hidden="true"></i></span>&nbsp;Caricamento storico...';
+    loading.innerHTML = '<span style="animation:spinAnim 1s linear infinite;display:inline-block;">⏳</span>&nbsp;Caricamento storico...';
     canvas.style.display = 'none';
 
     let prodData = [], consData = [], labels = [];
@@ -8563,7 +8557,7 @@ async function renderEdDailyChart(daysInMonth, selMonth, selYear, isCurrentMonth
 
     // Se non abbiamo proprio niente da mostrare
     if (labels.length === 0) {
-        loading.innerHTML = '<i class="dm-segno" data-dm-segno="mail" aria-hidden="true"></i> Nessun dato disponibile per questo periodo';
+        loading.innerHTML = '📭 Nessun dato disponibile per questo periodo';
         return;
     }
 
@@ -8660,9 +8654,9 @@ function buildTempCards() {
         tabs = '<div style="grid-column:1/-1; justify-content:center; flex-wrap:wrap; display:flex; gap:10px; overflow-x:auto; padding:4px 2px 10px; -webkit-overflow-scrolling:touch;">' + floors.map((f, fi) => {
             const act = f === CD_TEMP_FLOOR;
             const fEsc = cdEsc(f);
-            const fIco = (cdCfg('cd_floor_icons') || {})[f] || 'home';
+            const fIco = (cdCfg('cd_floor_icons') || {})[f] || '🏢';
             return `<button type="button" class="sub-tab-btn${act ? ' active' : ''}" data-floor="${fEsc}" onclick="cdSetTempFloor(this.dataset.floor)" style="display:flex; align-items:center; gap:9px; flex:0 0 auto; font-family:inherit;">
-              <span>${cdSegno(fIco)} ${cdEsc(f)}</span><span class="tfl-avg" data-floor="${fEsc}" style="font-family:'Oswald',sans-serif; font-size:15px; font-weight:700; letter-spacing:0;">—°</span>
+              <span>${cdEsc(fIco)} ${cdEsc(f)}</span><span class="tfl-avg" data-floor="${fEsc}" style="font-family:'Oswald',sans-serif; font-size:15px; font-weight:700; letter-spacing:0;">—°</span>
             </button>`;
         }).join('') + '</div>';
         visible = _rooms.filter(r => (r.floor || r.name || 'Altro') === CD_TEMP_FLOOR);
@@ -8675,7 +8669,7 @@ function buildTempCards() {
         const hid = hum.replace(/\./g,'_').replace(/-/g,'_');
         const rgb = r.rgb || STANZE_RGB_PALETTE[i % STANZE_RGB_PALETTE.length];
         const nm = String(r.name||'');
-        return `<article class="temp-card" onclick="apriStorico(event, ${cdJs(temp)}, ${cdJs(nm)})" style="--cp-rgb: 148, 163, 184;"> <div class="temp-card-header"><div class="cp-title-wrap"><div class="cp-icon">${typeof cdIconMarkup === 'function' ? cdIconMarkup(r.icon||'mdi:home', 30) : cdSegno(r.icon, 30, 'home')}</div><div class="cp-name">${cdEsc(r.name)}</div></div><div class="cp-badge temp-comfort-badge" id="tc_${cdEsc(tid)}">—</div></div><div class="temp-card-body"><div class="cp-temp-current-wrap"><span class="cp-temp-current-lbl">Temperatura</span><span class="cp-temp-current temp-value" id="tv_${cdEsc(tid)}">—</span></div><div class="cp-temp-target" onclick="event.stopPropagation(); apriStorico(event, ${cdJs(hum)}, ${cdJs(nm + ' Umidità')})"><span class="lbl"><i class="dm-segno" data-dm-segno="water" aria-hidden="true"></i> Umidità</span><span class="val temp-hum-val" id="hv_${cdEsc(hid)}">—%</span></div></div></article>`;
+        return `<article class="temp-card" onclick="apriStorico(event, ${cdJs(temp)}, ${cdJs(nm)})" style="--cp-rgb: 148, 163, 184;"> <div class="temp-card-header"><div class="cp-title-wrap"><div class="cp-icon">${typeof cdIconMarkup === 'function' ? cdIconMarkup(r.icon||'mdi:home', 30) : cdEsc(r.icon||'🏠')}</div><div class="cp-name">${cdEsc(r.name)}</div></div><div class="cp-badge temp-comfort-badge" id="tc_${cdEsc(tid)}">—</div></div><div class="temp-card-body"><div class="cp-temp-current-wrap"><span class="cp-temp-current-lbl">Temperatura</span><span class="cp-temp-current temp-value" id="tv_${cdEsc(tid)}">—</span></div><div class="cp-temp-target" onclick="event.stopPropagation(); apriStorico(event, ${cdJs(hum)}, ${cdJs(nm + ' Umidità')})"><span class="lbl">💧 Umidità</span><span class="val temp-hum-val" id="hv_${cdEsc(hid)}">—%</span></div></div></article>`;
     }).join('');
 }
 function cdSetTempFloor(f) {
@@ -8760,12 +8754,12 @@ function renderTemperature() {
                 if (tblEl) tblEl.textContent = temp.toFixed(1) + '°';
 
                 // Badge comfort - solo emoji nel cerchietto, etichetta nel tooltip
-                let badge = '●', label = 'Comfort';
-                if      (temp < 16) { badge = '<i class="dm-segno" data-dm-segno="air-conditioner" aria-hidden="true"></i>'; label = 'Freddo'; }
-                else if (temp < 19) { badge = '●'; label = 'Fresco'; }
-                else if (temp > 27) { badge = '<i class="dm-segno" data-dm-segno="radiator" aria-hidden="true"></i>'; label = 'Caldo'; }
-                else if (temp > 24) { badge = '●'; label = 'Tiepido'; }
-                if (tcEl) { cdMettiSegno(tcEl, badge); tcEl.setAttribute('title', label); }
+                let badge = '🟢', label = 'Comfort';
+                if      (temp < 16) { badge = '❄️'; label = 'Freddo'; }
+                else if (temp < 19) { badge = '🔵'; label = 'Fresco'; }
+                else if (temp > 27) { badge = '🔥'; label = 'Caldo'; }
+                else if (temp > 24) { badge = '🟡'; label = 'Tiepido'; }
+                if (tcEl) { tcEl.textContent = badge; tcEl.setAttribute('title', label); }
             }
         }
 
@@ -8883,27 +8877,27 @@ async function apriSrvHistory(tipo) {
     const config = {
         connettivita: {
             sensor: 'dm.server_raggiungibilita_google',
-            title:    'Connettività',
+            title:    '📡 Connettività',
             subtitle: 'Internet · Ultimi 7 giorni',
             stateMap: {
-                'on':          { label: '● Online',      cls: 'connected',    col: '#10b981' },
-                'off':         { label: '● Offline',     cls: 'disconnected', col: '#ef4444' },
-                'unavailable': { label: '● Non disp.',   cls: 'unknown',      col: '#94a3b8' },
+                'on':          { label: '🟢 Online',      cls: 'connected',    col: '#10b981' },
+                'off':         { label: '🔴 Offline',     cls: 'disconnected', col: '#ef4444' },
+                'unavailable': { label: '⚫ Non disp.',   cls: 'unknown',      col: '#94a3b8' },
             },
             currState: () => getRawState('dm.server_raggiungibilita_google'),
         },
         inverter: {
             sensor:   'dm.energy_stato_rete',
-            title:    'Inverter Fotovoltaico',
+            title:    '⚡ Inverter Fotovoltaico',
             subtitle: 'Stato griglia · Ultimi 7 giorni',
             stateMap: {
-                'on':          { label: '● Connesso alla rete',     cls: 'ongrid',       col: '#10b981' },
-                'on-grid':     { label: '● Connesso alla rete',     cls: 'ongrid',       col: '#10b981' },
-                'on_grid':     { label: '● Connesso alla rete',     cls: 'ongrid',       col: '#10b981' },
-                'off':         { label: '● Isolato dalla rete',    cls: 'offgrid',      col: '#f59e0b' },
-                'off-grid':    { label: '● Isolato dalla rete',    cls: 'offgrid',      col: '#f59e0b' },
-                'off_grid':    { label: '● Isolato dalla rete',    cls: 'offgrid',      col: '#f59e0b' },
-                'unavailable': { label: '● Non disp.',   cls: 'unknown',      col: '#94a3b8' },
+                'on':          { label: '🟢 Connesso alla rete',     cls: 'ongrid',       col: '#10b981' },
+                'on-grid':     { label: '🟢 Connesso alla rete',     cls: 'ongrid',       col: '#10b981' },
+                'on_grid':     { label: '🟢 Connesso alla rete',     cls: 'ongrid',       col: '#10b981' },
+                'off':         { label: '🟡 Isolato dalla rete',    cls: 'offgrid',      col: '#f59e0b' },
+                'off-grid':    { label: '🟡 Isolato dalla rete',    cls: 'offgrid',      col: '#f59e0b' },
+                'off_grid':    { label: '🟡 Isolato dalla rete',    cls: 'offgrid',      col: '#f59e0b' },
+                'unavailable': { label: '⚫ Non disp.',   cls: 'unknown',      col: '#94a3b8' },
             },
             currState: () => getRawState('dm.energy_stato_rete'),
         }
@@ -8997,7 +8991,7 @@ async function apriSrvHistory(tipo) {
 
     } catch(e) {
         console.error('SrvHistory error:', e);
-        timeline.innerHTML = `<div style="text-align:center;padding:24px;color:#ef4444;font-weight:800;font-size:12px;"><i class="dm-segno" data-dm-segno="error" aria-hidden="true"></i> Storico non disponibile<br><span style="color:var(--text-dim);font-size:10px;">${cdEsc(e.message)}</span></div>`;
+        timeline.innerHTML = `<div style="text-align:center;padding:24px;color:#ef4444;font-weight:800;font-size:12px;">❌ Storico non disponibile<br><span style="color:var(--text-dim);font-size:10px;">${cdEsc(e.message)}</span></div>`;
     }
 }
 
@@ -9026,18 +9020,18 @@ function apriClimaPopup(entity, event) {
     const fanMode   = s.attributes?.fan_mode ?? 'auto';
     const hvacMode  = s.attributes?.hvac_mode ?? s.state;
     const names     = {
-        'dm.core_005':                    ['Condizionatore','Salone'],
-        'dm.core_004':                    ['Condizionatore','Cucina'],
-        'dm.core_002':           ['Condizionatore','Telecamera da Letto'],
-        'dm.core_003':                 ['Condizionatore','Cameretta'],
-        'dm.core_010':        ['Termosifone','Salone'],
-        'dm.core_009':        ['Termosifone','Cucina'],
-        'dm.core_007':['Termosifone','Telecamera da Letto'],
-        'dm.core_008':     ['Termosifone','Cameretta'],
-        'dm.core_006':         ['Termosifone','Bagno'],
-        'dm.core_011':        ['Termosifone','Studio'],
+        'dm.core_005':                    ['❄️ Condizionatore','Salone'],
+        'dm.core_004':                    ['❄️ Condizionatore','Cucina'],
+        'dm.core_002':           ['❄️ Condizionatore','Telecamera da Letto'],
+        'dm.core_003':                 ['❄️ Condizionatore','Cameretta'],
+        'dm.core_010':        ['🔥 Termosifone','Salone'],
+        'dm.core_009':        ['🔥 Termosifone','Cucina'],
+        'dm.core_007':['🔥 Termosifone','Telecamera da Letto'],
+        'dm.core_008':     ['🔥 Termosifone','Cameretta'],
+        'dm.core_006':         ['🔥 Termosifone','Bagno'],
+        'dm.core_011':        ['🔥 Termosifone','Studio'],
     };
-    const [room, name] = names[entity] || ['Clima', entity.split('.')[1]];
+    const [room, name] = names[entity] || ['🌡️ Clima', entity.split('.')[1]];
 
     setTxt('cp-room', room);
     setTxt('cp-name', name);
@@ -9141,8 +9135,8 @@ async function edCalcolaTotaliAnnoDispositivo(sensor, selYear) {
     if (!rispEur || !costoEur) return;
     
     if (yearLbl) yearLbl.textContent = selYear;
-    rispEur.textContent  = '—';
-    costoEur.textContent = '—';
+    rispEur.textContent  = '⏳ —';
+    costoEur.textContent = '⏳ —';
     
     const now = new Date();
     const isCurrentYear = selYear === now.getFullYear();
@@ -9208,11 +9202,11 @@ async function edCaricaDettaglio() {
     if (wbGrid) wbGrid.style.display = isWallbox ? 'grid' : 'none';
     
     if (!sensor) {
-        if (msgEl) { msgEl.style.display='flex'; msgEl.textContent='Seleziona un dispositivo'; }
+        if (msgEl) { msgEl.style.display='flex'; msgEl.textContent='☝️ Seleziona un dispositivo'; }
         if (canvas) canvas.style.display='none';
         return;
     }
-    if (msgEl) { msgEl.style.display='flex'; msgEl.innerHTML='<span style="animation:spinAnim 1s linear infinite;display:inline-block"><i class="dm-segno" data-dm-segno="timer" aria-hidden="true"></i></span>&nbsp;Caricamento...'; }
+    if (msgEl) { msgEl.style.display='flex'; msgEl.innerHTML='<span style="animation:spinAnim 1s linear infinite;display:inline-block">⏳</span>&nbsp;Caricamento...'; }
     if (canvas) canvas.style.display='none';
 
     // ── Periodo selezionato dall'utente ──
@@ -9226,7 +9220,7 @@ async function edCaricaDettaglio() {
     const tEnd       = isCurrentMonth ? now.toISOString() : new Date(selYear, selMonth, 1).toISOString();
 
     // ── Reset stato visuale prima del fetch ──
-    setTxt('ed-dkpi-mese', '—');
+    setTxt('ed-dkpi-mese', '⏳ —');
     setTxt('ed-dkpi-mese-eur', '— €');
     setTxt('ed-dkpi-media', '— kWh');
     
@@ -9432,7 +9426,7 @@ async function edCaricaDettaglio() {
         console.warn('edCaricaDettaglio error:', e);
         setTxt('ed-dkpi-picco', '—');
         setTxt('ed-dkpi-picco-sub', 'Storico N/D');
-        if (msgEl) { msgEl.style.display='flex'; msgEl.textContent='Storico non disponibile'; }
+        if (msgEl) { msgEl.style.display='flex'; msgEl.textContent='❌ Storico non disponibile'; }
     }
 }
 

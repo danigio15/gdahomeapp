@@ -25,7 +25,6 @@
  * Nothing here reads or writes Home Assistant state beyond the friendly name of
  * an entity already in `_RAW_STATES`.
  */
-import { segnoHtml } from "../core/segni-del-catalogo.js";
 import { isRetiredEditorSlot } from "../core/editor-slots.js";
 import {
   LENTE_SELECTOR,
@@ -119,7 +118,7 @@ function ensureSlotClear(slot, input) {
   const clear = doc.createElement("button");
   clear.type = "button";
   clear.className = "dm-slot-clear";
-  clear.innerHTML = `<span aria-hidden="true">${segnoHtml("trash")}</span><span class="dm-slot-clear-tx">${esc(t("Elimina", "Remove"))}</span>`;
+  clear.innerHTML = `<span aria-hidden="true">🗑</span><span class="dm-slot-clear-tx">${esc(t("Elimina", "Remove"))}</span>`;
   clear.setAttribute(
     "aria-label",
     t("Togli l'entità da questo campo", "Remove the entity from this field"),
@@ -350,8 +349,8 @@ const PLACEHOLDERS = Object.freeze({
 });
 
 const GENERIC_PLACEHOLDER = Object.freeze([
-  "Scegli con la lente, oppure scrivi l'entità: dominio.nome",
-  "Pick with the magnifier, or type the entity: domain.name",
+  "Scegli con 🔍, oppure scrivi l'entità: dominio.nome",
+  "Pick with 🔍, or type the entity: domain.name",
 ]);
 
 const PLACEHOLDER_SELECTOR = [
@@ -655,14 +654,14 @@ function decorateField(input) {
   const manual = doc.createElement("button");
   manual.type = "button";
   manual.className = "dm-chip-manual";
-  manual.innerHTML = `<span aria-hidden="true">${segnoHtml("pencil")}</span><span class="dm-chip-manual-tx">${esc(t("Modifica", "Edit"))}</span>`;
+  manual.innerHTML = `<span aria-hidden="true">✏️</span><span class="dm-chip-manual-tx">${esc(t("Modifica", "Edit"))}</span>`;
   manual.setAttribute("aria-label", t("Modifica manuale", "Edit by hand"));
   manual.setAttribute("aria-pressed", "false");
 
   const clearField = doc.createElement("button");
   clearField.type = "button";
   clearField.className = "dm-chip-clear";
-  clearField.innerHTML = `<span aria-hidden="true">${segnoHtml("trash")}</span><span class="dm-chip-manual-tx">${esc(t("Elimina", "Remove"))}</span>`;
+  clearField.innerHTML = `<span aria-hidden="true">🗑</span><span class="dm-chip-manual-tx">${esc(t("Elimina", "Remove"))}</span>`;
   clearField.setAttribute(
     "aria-label",
     t("Togli l'entità da questo campo", "Remove the entity from this field"),

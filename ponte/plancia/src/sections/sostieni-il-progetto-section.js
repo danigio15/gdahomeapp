@@ -18,7 +18,6 @@
  * navigare via da li' vorrebbe dire perdere la plancia.
  */
 import { doc, esc, installStyle, root, t, senzaCadere } from "./shared.js";
-import { segnoHtml } from "../core/segni-del-catalogo.js";
 
 const KEY = "__DASHBOARDMODERN_SOSTIENI__";
 const state = (root[KEY] ||= { installed: false });
@@ -49,7 +48,7 @@ function finestra() {
   modale.innerHTML = `
     <div class="modal-card dm-sostieni-pannello" role="dialog" aria-modal="true" aria-labelledby="dm-sostieni-titolo">
       <div class="cfg-hero dm-sostieni-hero">
-        <div class="cfg-hero-ico" aria-hidden="true">${segnoHtml("heart")}</div>
+        <div class="cfg-hero-ico" aria-hidden="true">💙</div>
         <div class="cfg-hero-txt">
           <div class="cfg-hero-title" id="dm-sostieni-titolo">${esc(t("Sostieni il progetto", "Support the project"))}</div>
           <div class="cfg-hero-sub">${esc(t("Perché, e come", "Why, and how"))}</div>
@@ -71,7 +70,7 @@ function finestra() {
           ),
         )}</p>
         <div class="dm-sostieni-azioni">
-          ${linkMarkup("dm-sostieni-tasto", `<span aria-hidden="true">${segnoHtml("heart")}</span><span>${esc(t("Dona con PayPal", "Donate with PayPal"))}</span>`)}
+          ${linkMarkup("dm-sostieni-tasto", `<span aria-hidden="true">💙</span><span>${esc(t("Dona con PayPal", "Donate with PayPal"))}</span>`)}
           <small>${esc(t("Il pagamento avviene su PayPal, in una scheda nuova.", "Payment happens on PayPal, in a new tab."))}</small>
         </div>
       </div>
@@ -104,7 +103,7 @@ export function chiudi() {
 const TESSERA_ID = "dm-sostieni-card";
 
 function tesseraMarkup() {
-  return `<div class="cfg-card-ico" style="--cc-rgb: 59,130,246;">${segnoHtml("heart")}</div>
+  return `<div class="cfg-card-ico" style="--cc-rgb: 59,130,246;">💙</div>
     <div class="cfg-card-txt">
       <div class="cfg-card-nm">${esc(t("Sostieni il progetto", "Support the project"))}</div>
       <div class="cfg-card-ds">${esc(

@@ -46,11 +46,7 @@ test("la riga della percepita esiste nel markup, nascosta finche' non serve", as
     [htmlEnUrl, "Feels like"],
   ]) {
     const html = await readFile(url, "utf8");
-    /* Il termometro davanti e' il disegno del catalogo, non l'emoji. */
-    assert.match(
-      html,
-      new RegExp(`id="w-feel-row" style="display:none"><i class="dm-segno" data-dm-segno="thermometer" aria-hidden="true"></i> ${label}`),
-    );
+    assert.match(html, new RegExp(`id="w-feel-row" style="display:none">🌡️ ${label}`));
     assert.match(html, /id="w-feel"/);
   }
 });

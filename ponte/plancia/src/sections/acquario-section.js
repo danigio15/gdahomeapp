@@ -51,7 +51,6 @@ import {
   senzaCadere,
 } from "./shared.js";
 import { nomeDaHomeAssistant } from "./editor-slots-section.js";
-import { segnoHtml } from "../core/segni-del-catalogo.js";
 
 const KEY = "__DASHBOARDMODERN_ACQUARIO__";
 const state = (root[KEY] ||= {
@@ -261,7 +260,7 @@ export function ensureAcquarioTab() {
   voce.className = "tab";
   voce.dataset.tab = ACQUARIO_TAB;
   voce.id = `tab-${ACQUARIO_TAB}`;
-  voce.innerHTML = `<span class="icon">${segnoHtml("aquarium")}</span><span class="text">${esc(t("Acquario", "Aquarium"))}</span>`;
+  voce.innerHTML = `<span class="icon">🐠</span><span class="text">${esc(t("Acquario", "Aquarium"))}</span>`;
   voce.addEventListener("click", () => {
     for (const nodo of doc.querySelectorAll(".tab")) nodo.classList.remove("active");
     for (const nodo of doc.querySelectorAll(".page")) nodo.classList.remove("active");
@@ -468,10 +467,10 @@ function testaMarkup(testa) {
 /* Le mattonelle della Piscina: la luce gialla, il riscaldatore arancio, il
  * resto azzurro. Il comando non sta in `data-act`, che è della piscina. */
 const MATTONELLA = Object.freeze({
-  luci: { vestito: "light", glifo: "lights" },
-  filtro: { vestito: "pump", glifo: "fan" },
-  riscaldatore: { vestito: "heat", glifo: "radiator" },
-  comando: { vestito: "pump", glifo: "socket" },
+  luci: { vestito: "light", glifo: "💡" },
+  filtro: { vestito: "pump", glifo: "🌀" },
+  riscaldatore: { vestito: "heat", glifo: "🔥" },
+  comando: { vestito: "pump", glifo: "🔌" },
 });
 
 function mattonellaMarkup(lettura) {
@@ -480,7 +479,7 @@ function mattonellaMarkup(lettura) {
   const comandabile = !lettura.muto && siComanda(lettura.entity);
   return `<button type="button" class="dm-pool-tile" data-dm-pool-tile="${vestito}" data-on="${acceso}"
       aria-pressed="${acceso}" data-dm-acq-comando="${esc(lettura.entity)}"${comandabile ? "" : ' aria-disabled="true"'}>
-    <span class="dm-pool-tile-icon" aria-hidden="true">${segnoHtml(glifo)}</span>
+    <span class="dm-pool-tile-icon" aria-hidden="true">${glifo}</span>
     <span class="dm-pool-tile-label">${esc(lettura.name)}</span>
     <span class="dm-pool-tile-state">${esc(statoDelComando(lettura))}</span>
   </button>`;
@@ -556,7 +555,7 @@ function qualitaMarkup(come) {
   if (!misure && !livelli) return "";
   return `<article class="dm-pool-card dm-acq-qualita">
     <div class="dm-pool-card-head">
-      <span class="dm-pool-card-title">${segnoHtml("gauge")}${esc(t("Qualità acqua", "Water quality"))}</span>
+      <span class="dm-pool-card-title"><i aria-hidden="true">🧪</i>${esc(t("Qualità acqua", "Water quality"))}</span>
     </div>
     ${misure ? `<div class="dm-pool-gauges">${misure}</div>` : ""}
     ${livelli}
@@ -581,7 +580,7 @@ function cambioMarkup(come) {
     : `<button type="button" class="dm-btn dm-primary" data-dm-acq-cambio>✓ ${esc(t("Fatto oggi", "Done today"))}</button>`;
   return `<article class="dm-pool-card dm-acq-cambio" data-stato="${cambio.scaduto ? "scaduto" : "ok"}">
     <div class="dm-pool-card-head">
-      <span class="dm-pool-card-title">${segnoHtml("broom")}${esc(t("Cambio d'acqua", "Water change"))}</span>
+      <span class="dm-pool-card-title"><i aria-hidden="true">🪣</i>${esc(t("Cambio d'acqua", "Water change"))}</span>
       <span class="dm-pool-badge">${esc(ogniInParole(cambio.ogni))}</span>
     </div>
     <div class="dm-pool-filtration-body">
@@ -637,7 +636,7 @@ export function tesseraDellAcquario(vista) {
   return {
     key: ACQUARIO_TAB,
     accent: daFare ? "#f59e0b" : "#0ea5e9",
-    icon: "aquarium",
+    icon: "🐠",
     label: t("Acquario", "Aquarium"),
     value: acqua ? `${formatNumber(acqua.valore, 1)}°` : "—",
     caption: [testa.grande, daFare ? testa.nomi : cambioInParole(come.cambio)]

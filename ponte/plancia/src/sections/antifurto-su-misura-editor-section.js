@@ -17,7 +17,6 @@
  * a quello delle modalita' da mostrare; la regola di cosa fanno sta in
  * `core/antifurto-su-misura.js`, qui c'e' solo il modo di dirla.
  */
-import { segnoHtml } from "../core/segni-del-catalogo.js";
 import {
   CHIAVE_ANTIFURTO_SU_MISURA,
   normalizzaModoSuMisura,
@@ -72,7 +71,7 @@ function rigaMarkup(modo, indice) {
   return `<article class="ed-row dm-suo-row" data-suo-index="${indice}">
     <div class="dm-suo-head">
       <strong class="ed-row-new">${esc(nomeDi(modo, indice))}</strong>
-      <button type="button" class="ed-del" data-suo-del aria-label="${esc(t("Elimina", "Remove"))}">${segnoHtml("trash")}</button>
+      <button type="button" class="ed-del" data-suo-del aria-label="${esc(t("Elimina", "Remove"))}">🗑️</button>
     </div>
     <label class="ed-slot"><span class="ed-slot-lbl">${esc(t("Nome del tasto", "Button name"))}</span>
       <span class="ed-form-row"><input id="dm-suo-${indice}-nome" class="ed-input" data-suo-field="nome"
@@ -81,12 +80,12 @@ function rigaMarkup(modo, indice) {
       <span class="ed-form-row"><input id="dm-suo-${indice}-icona" class="ed-input" data-suo-field="icona"
         value="${esc(clean(modo?.icona) || ICONA_DI_SERIE)}" maxlength="40"><button type="button"
         class="dm-suo-icona" data-suo-icona="dm-suo-${indice}-icona"
-        aria-label="${esc(t("Scegli icona", "Choose icon"))}">${segnoHtml("sliders")}</button></span></label>
+        aria-label="${esc(t("Scegli icona", "Choose icon"))}">🎨</button></span></label>
     <label class="ed-slot"><span class="ed-slot-lbl">${esc(t("Cosa premere", "What to press"))}</span>
       <span class="ed-form-row"><input id="dm-suo-${indice}-entita" class="ed-input mono" data-suo-field="entita"
         value="${esc(entita)}" placeholder="script.inserisci_antifurto" autocomplete="off"
         spellcheck="false"><button type="button" class="dm-entity-picker" data-suo-pick="dm-suo-${indice}-entita"
-        aria-label="${esc(t("Scegli entità", "Choose entity"))}">${segnoHtml("search")}</button></span>
+        aria-label="${esc(t("Scegli entità", "Choose entity"))}">🔍</button></span>
       <small>${esc(
         t(
           "Lo script, la scena, il pulsante, l'interruttore o l'elenco che inserisce: il servizio giusto lo sceglie la plancia dal dominio dell'entità.",
@@ -105,7 +104,7 @@ function rigaMarkup(modo, indice) {
       <span class="ed-form-row"><input id="dm-suo-${indice}-stato" class="ed-input mono" data-suo-field="stato"
         value="${esc(clean(modo?.stato))}" placeholder="${esc(entita || "sensor.antifurto")}" autocomplete="off"
         spellcheck="false"><button type="button" class="dm-entity-picker" data-suo-pick="dm-suo-${indice}-stato"
-        aria-label="${esc(t("Scegli entità", "Choose entity"))}">${segnoHtml("search")}</button></span></label>
+        aria-label="${esc(t("Scegli entità", "Choose entity"))}">🔍</button></span></label>
     <label class="ed-slot"><span class="ed-slot-lbl">${esc(t("Il valore che vuol dire «inserito»", "The value that means “armed”"))}</span>
       <span class="ed-form-row"><input id="dm-suo-${indice}-valore" class="ed-input" data-suo-field="valore"
         value="${esc(clean(modo?.valore))}" placeholder="on"></span>
@@ -139,7 +138,7 @@ function rigaMarkup(modo, indice) {
             ),
           )}</output>`
     }
-    <button type="button" class="ed-save-btn" data-suo-save>${segnoHtml("check")} ${esc(t("Salva il tasto", "Save the button"))}</button>
+    <button type="button" class="ed-save-btn" data-suo-save>💾 ${esc(t("Salva il tasto", "Save the button"))}</button>
   </article>`;
 }
 
@@ -227,7 +226,7 @@ function onClick(event) {
     event.preventDefault();
     salva(modi.filter((_voce, quale) => quale !== indice));
     ridisegna();
-    root.edToast?.(t("Tasto eliminato", "Button removed"));
+    root.edToast?.(t("🛡️ Tasto eliminato", "🛡️ Button removed"));
     return;
   }
   const icona = event.target.closest("[data-suo-icona]");
@@ -262,7 +261,7 @@ function onClick(event) {
     ridisegna();
     root.edToast?.(
       normalizzaModoSuMisura(prossimi[indice], indice)
-        ? t("Tasto salvato", "Button saved")
+        ? t("🛡️ Tasto salvato", "🛡️ Button saved")
         : t("Scegli cosa deve premere", "Pick what it has to press"),
     );
   }

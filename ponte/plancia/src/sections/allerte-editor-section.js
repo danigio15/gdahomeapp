@@ -14,7 +14,6 @@
  * sensore: e' la domanda che chi configura si fa davanti alla lente, e la
  * risposta sta li' dove nasce.
  */
-import { segnoDaValoreHtml, segnoHtml } from "../core/segni-del-catalogo.js";
 import { CATEGORIE, CHIAVE_ALLERTE, normalizzaAllerte } from "../core/allerte-model.js";
 import { misureDellAria, normalizzaAria } from "../core/aria-model.js";
 import { categoriaDelleAllerte, renderAllerte } from "./allerte-section.js";
@@ -221,7 +220,7 @@ function fonteMarkup(chiave, config) {
         <span class="ed-form-row"><input id="${id}" class="ed-input mono" data-dm-allerte-fonte="${esc(chiave)}"
           data-dm-allerte-campo="${esc(campo)}" value="${esc(config[chiave][campo])}" placeholder="${esc(esempio)}"
           autocomplete="off" spellcheck="false"><button type="button" class="dm-entity-picker"
-          data-dm-allerte-pick="${id}" aria-label="${esc(t("Scegli entità", "Choose entity"))}">${segnoHtml("search")}</button></span>${
+          data-dm-allerte-pick="${id}" aria-label="${esc(t("Scegli entità", "Choose entity"))}">🔍</button></span>${
             aiuto ? `<small>${esc(aiuto)}</small>` : ""
           }</label>`;
     })
@@ -262,7 +261,7 @@ function ariaMarkup(config) {
       const scelta = scelte.soglie[misura.classe] || misura.soglie;
       const suo = Boolean(scelte.soglie[misura.classe]);
       return `<div class="dm-aria-ed-misura"${suo ? ' data-dm-aria-mia="true"' : ""}>
-        <span class="dm-aria-ed-nome"><span aria-hidden="true">${segnoDaValoreHtml(misura.glifo, { ripiego: "wind" })}</span> ${esc(misura.nome)}<small>${esc(misura.unita)}</small></span>
+        <span class="dm-aria-ed-nome"><span aria-hidden="true">${misura.glifo}</span> ${esc(misura.nome)}<small>${esc(misura.unita)}</small></span>
         ${scelta
           .map(
             (valore, indice) =>
@@ -292,7 +291,7 @@ function ariaMarkup(config) {
    * quella delle allerte: stanno nella stessa scheda, e chi mette un sensore
    * fuori dai widget da qui non sta parlando dei temporali. */
   return `<article class="ed-row dm-todo-ed-row dm-allerte-ed-fonte dm-aria-ed" data-open="true" data-dm-allerte-fonte-riga="${CHIAVE_ARIA}" ${MARCHIO_TESSERA}="${CHIAVE_ARIA}">
-    <div class="dm-allerte-ed-testa"><span aria-hidden="true">${segnoHtml("plant")}</span><strong>${esc(t("Qualità dell'aria", "Air quality"))}</strong></div>
+    <div class="dm-allerte-ed-testa"><span aria-hidden="true">🍃</span><strong>${esc(t("Qualità dell'aria", "Air quality"))}</strong></div>
     <div class="dm-todo-ed-body">
       <div class="ed-intro">${esc(
         t(
@@ -304,7 +303,7 @@ function ariaMarkup(config) {
       <label class="ed-slot dm-todo-ed-field"><span class="ed-slot-lbl">${esc(t("La misura in copertina", "The reading on the cover"))}</span>
         <span class="ed-form-row"><input id="dm-aria-principale" class="ed-input mono" placeholder="sensor.qualita_aria"
           value="${esc(scelte.principale)}" autocomplete="off" spellcheck="false"><button type="button" class="dm-entity-picker"
-          data-dm-allerte-pick="dm-aria-principale" aria-label="${esc(t("Scegli entità", "Choose entity"))}">${segnoHtml("search")}</button>
+          data-dm-allerte-pick="dm-aria-principale" aria-label="${esc(t("Scegli entità", "Choose entity"))}">🔍</button>
           <button type="button" class="ed-btn-add dm-aria-ed-piu" data-dm-aria-principale>${esc(t("Metti", "Set"))}</button></span>
         <small>${esc(t("Lasciala vuota e in copertina va la misura messa peggio, che è la risposta giusta quando non si dice niente. Chi ha una centralina che pubblica già il suo indice mette quella qui: il numero grande diventa il suo, e le sostanze una per una si leggono aprendo la scheda. Il giudizio resta della misura peggiore — un indice che dice «buona» non deve coprire una polvere che dice «cattiva».", "Leave it empty and the worst reading goes on the cover, which is the right answer when nothing is said. If your station already publishes its own index, put it here: the big number becomes its own, and the substances are read one by one by opening the card. The verdict still belongs to the worst reading — an index saying “good” must not hide a particulate saying “bad”."))}</small>
       </label>
@@ -313,7 +312,7 @@ function ariaMarkup(config) {
       <label class="ed-slot dm-todo-ed-field"><span class="ed-slot-lbl">${esc(t("Non contare questo sensore", "Do not count this sensor"))}</span>
         <span class="ed-form-row"><input id="dm-aria-escludi" class="ed-input mono" placeholder="sensor.outdoor_co"
           autocomplete="off" spellcheck="false"><button type="button" class="dm-entity-picker"
-          data-dm-allerte-pick="dm-aria-escludi" aria-label="${esc(t("Scegli entità", "Choose entity"))}">${segnoHtml("search")}</button>
+          data-dm-allerte-pick="dm-aria-escludi" aria-label="${esc(t("Scegli entità", "Choose entity"))}">🔍</button>
           <button type="button" class="ed-btn-add dm-aria-ed-piu" data-dm-aria-escludi>${esc(t("Togli", "Drop"))}</button></span>
         <small>${esc(t("La centralina esterna detta il verdetto di tutta la casa: da qui si toglie di mezzo senza spegnere la tessera.", "The outdoor station dictates the verdict for the whole house: this drops it without turning the tile off."))}</small>
       </label>
@@ -322,9 +321,9 @@ function ariaMarkup(config) {
       <label class="ed-slot dm-todo-ed-field"><span class="ed-slot-lbl">${esc(t("Aggiungi un sensore che non viene trovato", "Add a sensor that is not found"))}</span>
         <span class="ed-form-row"><input id="dm-aria-aggiungi" class="ed-input mono" placeholder="sensor.mio_pm25"
           autocomplete="off" spellcheck="false"><button type="button" class="dm-entity-picker"
-          data-dm-allerte-pick="dm-aria-aggiungi" aria-label="${esc(t("Scegli entità", "Choose entity"))}">${segnoHtml("search")}</button></span>
+          data-dm-allerte-pick="dm-aria-aggiungi" aria-label="${esc(t("Scegli entità", "Choose entity"))}">🔍</button></span>
         <span class="ed-form-row"><select id="dm-aria-classe" class="ed-input">${misure
-          .map((misura) => `<option value="${esc(misura.classe)}">${esc(misura.nome)}</option>`)
+          .map((misura) => `<option value="${esc(misura.classe)}">${misura.glifo} ${esc(misura.nome)}</option>`)
           .join("")}</select>
           <button type="button" class="ed-btn-add dm-aria-ed-piu" data-dm-aria-aggiungi>${esc(t("Aggiungi", "Add"))}</button></span>
         <small>${esc(t("Un sensore che Home Assistant non ha etichettato — un template fatto in casa — non viene trovato: qui gli si dice che misura è.", "A sensor Home Assistant has not labelled — a template of your own — is not found: here you say which measure it is."))}</small>
@@ -375,7 +374,7 @@ function sezioneNascosta() {
 function corpoMarkup() {
   const config = configurazione();
   return `${fasciaMarkup()}<div class="dm-allerte-ed">
-  <div class="ed-sec-title">${segnoHtml("warning")} ${esc(t("Allerte", "Alerts"))}</div>
+  <div class="ed-sec-title">⚠️ ${esc(t("Allerte", "Alerts"))}</div>
   <div class="ed-intro">${esc(
     t(
       "Terremoti, avvisi della protezione civile, fulmini, pollini, comfort termico e voli sopra casa: per ognuno scegli il sensore che la sua integrazione ha già portato in Home Assistant. Nessuna casella è obbligatoria, e ognuna basta da sola: la pagina mostra solo le fonti che hai. La plancia non chiama nessun servizio, legge quello che c'è.",
@@ -385,7 +384,7 @@ function corpoMarkup() {
   <div class="ed-list dm-todo-ed-list">
     ${CATEGORIE.map(({ chiave }) => fonteMarkup(chiave, config)).join("")}
     ${ariaMarkup(config)}
-    <button type="button" class="ed-save-btn" data-dm-allerte-save>${segnoHtml("check")} ${esc(t("Salva allerte", "Save alerts"))}</button>
+    <button type="button" class="ed-save-btn" data-dm-allerte-save>💾 ${esc(t("Salva allerte", "Save alerts"))}</button>
   </div></div>`;
 }
 
@@ -451,7 +450,7 @@ function ariaClick(event, body) {
     const entity = clean(body.querySelector("#dm-aria-principale")?.value);
     if (!entity.includes(".")) return true;
     salvaAria({ ...scelte, principale: entity }, body);
-    root.edToast?.(t("Misura messa in copertina", "Reading put on the cover"));
+    root.edToast?.(t("🍃 Misura messa in copertina", "🍃 Reading put on the cover"));
     return true;
   }
 
@@ -467,7 +466,7 @@ function ariaClick(event, body) {
     const entity = clean(body.querySelector("#dm-aria-escludi")?.value);
     if (!entity.includes(".")) return true;
     salvaAria({ ...scelte, escluse: [...new Set([...scelte.escluse, entity])] }, body);
-    root.edToast?.(t("Sensore tolto dai conti dell'aria", "Sensor dropped from the air"));
+    root.edToast?.(t("🍃 Sensore tolto dai conti dell'aria", "🍃 Sensor dropped from the air"));
     return true;
   }
 
@@ -489,7 +488,7 @@ function ariaClick(event, body) {
     const classe = clean(body.querySelector("#dm-aria-classe")?.value);
     if (!entity.includes(".") || !classe) return true;
     salvaAria({ ...scelte, aggiunte: { ...scelte.aggiunte, [entity]: classe } }, body);
-    root.edToast?.(t("Sensore dell'aria aggiunto", "Air sensor added"));
+    root.edToast?.(t("🍃 Sensore dell'aria aggiunto", "🍃 Air sensor added"));
     return true;
   }
 
@@ -508,7 +507,7 @@ function ariaClick(event, body) {
     /* Rimettere le norme vuol dire cancellare le proprie, non riscriverle: cosi'
      * chi aggiorna la plancia si ritrova i confini nuovi se le norme cambiano. */
     salvaAria({ ...scelte, soglie: {} }, body);
-    root.edToast?.(t("Confini rimessi alle norme", "Boundaries back to the norms"));
+    root.edToast?.(t("🍃 Confini rimessi alle norme", "🍃 Boundaries back to the norms"));
     return true;
   }
   return false;
@@ -556,7 +555,7 @@ function onClick(event) {
     event.preventDefault();
     salva(versaLeCaselle(configurazione(), body));
     ridisegna();
-    root.edToast?.(t("Allerte salvate", "Alerts saved"));
+    root.edToast?.(t("💾 Allerte salvate", "💾 Alerts saved"));
   }
 }
 
@@ -567,7 +566,7 @@ export function ensureAllerteEditorTab() {
   const linguetta = doc.createElement("button");
   linguetta.className = "ed-tab";
   linguetta.dataset.tab = ALLERTE_EDITOR_TAB;
-  linguetta.innerHTML = `${segnoHtml("warning")} ${esc(t("Allerte", "Alerts"))}`;
+  linguetta.textContent = `⚠️ ${t("Allerte", "Alerts")}`;
   linguetta.addEventListener("click", () => root.editorSwitch?.(ALLERTE_EDITOR_TAB));
   const prima = linguette.querySelector('.ed-tab[data-tab="runtime"]');
   if (prima) prima.before(linguetta);

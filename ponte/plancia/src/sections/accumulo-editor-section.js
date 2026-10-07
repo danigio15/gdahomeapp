@@ -36,7 +36,6 @@ import { renderAccumulo } from "./accumulo-in-energia-section.js";
 import { costruisciSchedaDichiarata } from "./scheda-dichiarata-section.js";
 import { allStates, clean, esc, formatNumber, root, t, senzaCadere } from "./shared.js";
 import { nomeDaHomeAssistant } from "./editor-slots-section.js";
-import { segnoHtml } from "../core/segni-del-catalogo.js";
 
 export const ACCUMULO_EDITOR_TAB = ACCUMULO_TAB;
 
@@ -94,7 +93,7 @@ function campoEntita(campo, indice, riga, etichetta, esempio, aiuto = "") {
     <span class="ed-form-row"><input id="${id}" class="ed-input mono" data-dm-dich-campo="${esc(campo)}"
       data-dm-dich-riga="${indice}" value="${esc(clean(riga?.[campo]))}" placeholder="${esc(esempio)}"
       autocomplete="off" spellcheck="false"><button type="button" class="dm-entity-picker"
-      data-dm-dich-pick="${id}" aria-label="${esc(t("Scegli entità", "Choose entity"))}">${segnoHtml("search")}</button></span>
+      data-dm-dich-pick="${id}" aria-label="${esc(t("Scegli entità", "Choose entity"))}">🔍</button></span>
     ${aiuto ? `<small>${esc(aiuto)}</small>` : ""}</label>`;
 }
 
@@ -129,7 +128,7 @@ function campiDellaRiga(riga, indice) {
     <textarea class="ed-input mono dm-accu-ed-celle" rows="${Math.min(8, Math.max(3, celle.length))}"
       data-dm-dich-campo="celle" data-dm-dich-riga="${indice}" spellcheck="false"
       placeholder="sensor.jk_bms_cell_voltage_1&#10;sensor.jk_bms_cell_voltage_2">${esc(celle.join("\n"))}</textarea>
-    <span class="ed-form-row"><button type="button" class="ed-btn-import dm-accu-ed-trova" data-dm-accu-trova="${indice}">${segnoHtml("search")} ${esc(t("Trova le celle", "Find the cells"))}</button></span>
+    <span class="ed-form-row"><button type="button" class="ed-btn-import dm-accu-ed-trova" data-dm-accu-trova="${indice}">🔍 ${esc(t("Trova le celle", "Find the cells"))}</button></span>
     <small>${esc(
       t(
         "Una tensione di cella per riga, nell'ordine delle celle. Si possono incollare tutte insieme, anche separate da virgole; «Trova le celle» le prende da Home Assistant col prefisso delle altre entità del pacco.",

@@ -30,7 +30,6 @@ import {
 import { forcellaMarkup } from "./pool-irrigation-scene-section.js";
 import { allStates, esc, formatNumber, readJson, t } from "./shared.js";
 import { nomeDaHomeAssistant } from "./editor-slots-section.js";
-import { segnoDelCatalogo, segnoHtml } from "../core/segni-del-catalogo.js";
 
 /* La chiave dell'accumulo: la linguetta in Energia, la scheda del Config e la
  * tessera in Home si chiamano tutte così. */
@@ -236,7 +235,7 @@ function testaMarkup(testa) {
     ${testa.avvisi
       .map(
         (avviso) =>
-          `<span class="dm-accu-avviso" data-dm-accu-avviso>${segnoHtml("warning")}<span>${esc(avviso)}</span></span>`,
+          `<span class="dm-accu-avviso" data-dm-accu-avviso><i aria-hidden="true">⚠️</i><span>${esc(avviso)}</span></span>`,
       )
       .join("")}
   </div>`;
@@ -391,7 +390,7 @@ function paccoMarkup(pacco) {
   const stato = pacco.muto ? "muto" : pacco.sbilanciato ? "attenzione" : "bene";
   return `<article class="dm-pool-card dm-accu-pacco" data-stato="${stato}" data-dm-accu-pacco="${esc(pacco.entity)}">
     <div class="dm-pool-card-head">
-      <span class="dm-pool-card-title">${segnoHtml("battery")}<span class="dm-accu-tit"><span>${esc(pacco.name)}</span><small class="dm-accu-marca">${esc(marca)}</small></span></span>
+      <span class="dm-pool-card-title"><i aria-hidden="true">🔋</i><span class="dm-accu-tit"><span>${esc(pacco.name)}</span><small class="dm-accu-marca">${esc(marca)}</small></span></span>
       ${pastigliaDelPacco(pacco)}
     </div>
     <div class="dm-pool-filtration-body dm-accu-corpo">
@@ -457,7 +456,7 @@ export function tesseraDellAccumulo(vista) {
     rows: pacchi.map((pacco) => ({
       entity: pacco.entity,
       name: pacco.name,
-      glyph: segnoDelCatalogo("battery", 20),
+      glyph: "🔋",
       value: pacco.muto
         ? t("Non risponde", "Not answering")
         : [

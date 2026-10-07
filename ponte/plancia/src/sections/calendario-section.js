@@ -68,7 +68,6 @@ import {
   t,
   senzaCadere,
 } from "./shared.js";
-import { emojiInSegni, segnoHtml } from "../core/segni-del-catalogo.js";
 
 const KEY = "__DASHBOARDMODERN_CALENDARIO_SECTION__";
 const state = (root[KEY] ||= { installed: false, frame: 0, firma: "", giorno: "" });
@@ -139,7 +138,7 @@ export function ensureCalendarioTab() {
   voce.className = "tab";
   voce.dataset.tab = CALENDARIO_TAB;
   voce.id = `tab-${CALENDARIO_TAB}`;
-  voce.innerHTML = `<span class="icon">${segnoHtml("calendar")}</span><span class="text">${esc(t("Agenda", "Agenda"))}</span>`;
+  voce.innerHTML = `<span class="icon">📅</span><span class="text">${esc(t("Agenda", "Agenda"))}</span>`;
   /* Il gestore che il runtime lega alle voci lo lega una volta sola, al
    * caricamento: questa arriva dopo, e il suo tocco se lo deve gestire da se'.
    * Fa la stessa identica cosa, perche' due modi di cambiare pagina sarebbero
@@ -363,7 +362,7 @@ function dipingi() {
       chiGuarda +
       (soleCose
         ? `<section class="dm-calp-cose">
-          <h3 class="dm-calp-titolo">${segnoHtml("check")} ${esc(t("Da fare", "To-do"))}</h3>
+          <h3 class="dm-calp-titolo">✅ ${esc(t("Da fare", "To-do"))}</h3>
           ${soleCose}
         </section>`
         : vuotoMarkup());
@@ -393,7 +392,7 @@ function dipingi() {
   const daFare = bloccoDaFareMarkup();
   const cose = daFare
     ? `<section class="dm-calp-cose">
-        <h3 class="dm-calp-titolo">${segnoHtml("check")} ${esc(t("Da fare", "To-do"))}</h3>
+        <h3 class="dm-calp-titolo">✅ ${esc(t("Da fare", "To-do"))}</h3>
         ${daFare}
       </section>`
     : "";
@@ -421,7 +420,7 @@ function dipingi() {
   const ritardoMarkup =
     arretrati.length && !state.giorno
       ? `<section class="dm-calp-giorno" data-dm-ritardo="true">
-          <h3 class="dm-calp-titolo">${segnoHtml("warning")} ${esc(paroleDelCalendario().inRitardo)}</h3>
+          <h3 class="dm-calp-titolo">⚠️ ${esc(paroleDelCalendario().inRitardo)}</h3>
           <ul class="dm-calp-lista">${arretrati
             .map((evento) => eventoMarkup(evento, adesso, lingua, calendari, piuCalendari))
             .join("")}</ul>
@@ -439,13 +438,13 @@ function dipingi() {
       </section>`,
         )
         .join("")
-    : `<p class="dm-calp-niente">${emojiInSegni(esc(
+    : `<p class="dm-calp-niente">${esc(
         inArrivo
           ? t("Caricamento…", "Loading…")
           : state.giorno
             ? t("Niente in programma questo giorno", "Nothing scheduled that day")
             : t("✨ Niente in programma", "✨ Nothing scheduled"),
-      ))}</p>`;
+      )}</p>`;
 
   /* Nella legenda entra anche «Da fare», ma solo se qualche scadenza c'e'
    * davvero: una voce che spiega un colore assente e' una riga in piu' da
@@ -476,7 +475,7 @@ function dipingi() {
   dove.innerHTML = `${chiGuarda}${fasciaMarkup(giorni, adesso, lingua, calendari)}${legenda}
     ${
       state.giorno
-        ? `<button type="button" class="dm-calp-tutto" data-dm-calp-tutto>← ${esc(
+        ? `<button type="button" class="dm-calp-tutto" data-dm-calp-tutto>↩ ${esc(
             t("Tutti i giorni", "All days"),
           )}</button>`
         : ""

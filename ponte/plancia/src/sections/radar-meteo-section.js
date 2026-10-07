@@ -85,7 +85,6 @@ import {
   scriviTestoSeCambia,
   t,
 } from "./shared.js";
-import { emojiInSegni, segnoHtml } from "../core/segni-del-catalogo.js";
 
 const KEY = "__DASHBOARDMODERN_RADAR_METEO__";
 const state = (root[KEY] ||= {
@@ -445,7 +444,7 @@ function blocco() {
   nodo = doc.createElement("div");
   nodo.className = BLOCCO;
   nodo.innerHTML = `<div class="dm-radar-testa">
-      <span aria-hidden="true">${segnoHtml("router")}</span>
+      <span aria-hidden="true">📡</span>
       <strong class="dm-radar-nome"></strong>
       <small class="dm-radar-nota"></small>
     </div>
@@ -457,12 +456,12 @@ function blocco() {
       <span class="dm-radar-muto">${esc(
         t("Il radar non sta rispondendo.", "The radar is not reporting."),
       )}</span>
-      <span class="dm-radar-fondo-muto">${emojiInSegni(esc(
+      <span class="dm-radar-fondo-muto">${esc(
         t(
           "La mappa di fondo non risponde. La pioggia c'è: puoi cambiare mappa in ⚙️ → Meteo e radar.",
           "The base map is not answering. The rain is there: you can change map under ⚙️ → Weather and radar.",
         ),
-      ))}</span>
+      )}</span>
     </div>
     <div class="dm-radar-legenda" data-dm-radar-legenda>
       <small>${esc(t("Pioggia", "Rain"))}</small>
@@ -1190,7 +1189,7 @@ function casellaMarkup(config) {
       data-dm-radar-campo="entity" value="${esc(clean(config.entity))}"
       placeholder="camera.radar" autocomplete="off" spellcheck="false"><button type="button"
       class="dm-entity-picker" data-dm-radar-pick="dm-radar-entita"
-      aria-label="${esc(t("Scegli entità", "Choose entity"))}">${segnoHtml("search")}</button></span>
+      aria-label="${esc(t("Scegli entità", "Choose entity"))}">🔍</button></span>
     <small>${esc(
       t(
         "Un'entità camera o image del tuo Home Assistant: il fotogramma passa dal tuo server e da casa non esce niente. Chi ha portato dentro il radar con la sua integrazione ha già l'entità qui sotto.",

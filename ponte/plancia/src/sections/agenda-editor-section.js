@@ -44,7 +44,6 @@ import {
   writeJsonIfChanged,
   senzaCadere,
 } from "./shared.js";
-import { segnoHtml, senzaEmoji } from "../core/segni-del-catalogo.js";
 
 const KEY = "__DASHBOARDMODERN_AGENDA_EDITOR__";
 const state = (root[KEY] ||= { installed: false, calAperto: -1, todoAperto: -1 });
@@ -165,29 +164,29 @@ function rigaCalendarioMarkup(voce, index) {
   const colore = clean(voce?.colore);
   return `<article class="ed-row dm-todo-ed-row dm-cal-ed-row" data-cal-index="${index}" data-open="${aperto}">
     <div class="dm-todo-ed-head">
-      <span class="dm-todo-ed-icon" aria-hidden="true">${segnoHtml("calendar")}</span>
+      <span class="dm-todo-ed-icon" aria-hidden="true">📅</span>
       <span class="ed-row-main"><strong class="ed-row-new">${esc(nomeDelCalendario(voce, index))}</strong><small class="ed-row-old mono">${esc(clean(voce?.entity) || t("nessuna entità", "no entity"))}</small></span>
-      <button type="button" class="ed-del dm-todo-ed-edit" data-cal-edit aria-label="${t("Modifica", "Edit")}">${segnoHtml("pencil")}</button>
-      <button type="button" class="ed-del dm-todo-ed-del" data-cal-del aria-label="${t("Elimina", "Remove")}">${segnoHtml("trash")}</button>
+      <button type="button" class="ed-del dm-todo-ed-edit" data-cal-edit aria-label="${t("Modifica", "Edit")}">✏️</button>
+      <button type="button" class="ed-del dm-todo-ed-del" data-cal-del aria-label="${t("Elimina", "Remove")}">🗑️</button>
     </div>
     <div class="dm-todo-ed-body"${aperto ? "" : " hidden"}>
       <label class="ed-slot dm-todo-ed-field"><span class="ed-slot-lbl">${t("Nome", "Name")}</span><span class="ed-form-row"><input id="dm-cal-${index}-name" class="ed-input" data-cal-field="name" value="${esc(clean(voce?.name))}" placeholder="${t("Famiglia", "Family")}"></span></label>
       <label class="ed-slot dm-todo-ed-field"><span class="ed-slot-lbl">${t("Entità del calendario", "Calendar entity")}</span>
-        <span class="ed-form-row"><input id="dm-cal-${index}-entity" class="ed-input mono" data-cal-field="entity" value="${esc(clean(voce?.entity))}" placeholder="calendar.famiglia" autocomplete="off" spellcheck="false"><button type="button" class="dm-entity-picker" data-cal-pick="dm-cal-${index}-entity" aria-label="${t("Scegli entità", "Choose entity")}">${segnoHtml("search")}</button></span>
+        <span class="ed-form-row"><input id="dm-cal-${index}-entity" class="ed-input mono" data-cal-field="entity" value="${esc(clean(voce?.entity))}" placeholder="calendar.famiglia" autocomplete="off" spellcheck="false"><button type="button" class="dm-entity-picker" data-cal-pick="dm-cal-${index}-entity" aria-label="${t("Scegli entità", "Choose entity")}">🔍</button></span>
         <small>${t("È l'entità calendar.* di Home Assistant: la tessera mostra i prossimi due impegni, la sezione l'agenda giorno per giorno.", "The calendar.* entity from Home Assistant: the tile shows the next two appointments, the section the day-by-day agenda.")}</small></label>
       <label class="ed-slot dm-todo-ed-field"><span class="ed-slot-lbl">${t("Colore", "Colour")}</span>
         <span class="ed-form-row dm-cal-ed-colore"><input type="color" id="dm-cal-${index}-colore" class="dm-cal-ed-swatch" data-cal-field="colore" value="${esc(colore || "#6366f1")}"><button type="button" class="ed-del" data-cal-colore-via>${t("Automatico", "Automatic")}</button></span>
         <small>${t("Serve a distinguere due agende nello stesso giorno. Lasciandolo automatico ne riceve uno suo, sempre lo stesso.", "It tells two agendas apart on the same day. Left automatic it gets one of its own, always the same.")}</small></label>
       ${personeMarkup(voce, index)}
       <output class="dm-todo-ed-error" data-cal-error></output>
-      <button type="button" class="ed-save-btn" data-cal-save>${segnoHtml("check")} ${t("Salva calendario", "Save calendar")}</button>
+      <button type="button" class="ed-save-btn" data-cal-save>💾 ${t("Salva calendario", "Save calendar")}</button>
     </div>
   </article>`;
 }
 
 function calendariMarkup() {
   const voci = calendariGrezzi();
-  return `<div class="ed-sec-title">${segnoHtml("calendar")} ${esc(t("Calendario", "Calendar"))}</div>
+  return `<div class="ed-sec-title">📅 ${esc(t("Calendario", "Calendar"))}</div>
   <div class="ed-intro">${t(
     "I calendari che hai già in Home Assistant: la tessera in Home mostra i prossimi due impegni, e aprendola c'è l'elenco giorno per giorno. La sezione «Agenda» compare nella barra appena ne scegli uno.",
     "The calendars you already have in Home Assistant: the Home tile shows the next two appointments, and opening it gives the day-by-day list. The «Agenda» section appears in the bar as soon as you pick one.",
@@ -198,7 +197,7 @@ function calendariMarkup() {
       : `<div class="ed-empty">${t("Nessun calendario configurato", "No calendar configured")}</div>`
   }</div>
   <button type="button" class="ed-btn-add" data-cal-add>＋ ${t("Aggiungi calendario", "Add calendar")}</button>
-  <button type="button" class="ed-btn-add" data-cal-detect>${segnoHtml("star")} ${t("Rileva da Home Assistant", "Detect from Home Assistant")}</button>`;
+  <button type="button" class="ed-btn-add" data-cal-detect>🪄 ${t("Rileva da Home Assistant", "Detect from Home Assistant")}</button>`;
 }
 
 /* ── le cose da fare ──────────────────────────────────────────────────────── */
@@ -207,25 +206,25 @@ function rigaListaMarkup(list, index) {
   const aperto = state.todoAperto === index;
   return `<article class="ed-row dm-todo-ed-row" data-todo-index="${index}" data-open="${aperto}">
     <div class="dm-todo-ed-head">
-      <span class="dm-todo-ed-icon" aria-hidden="true">${segnoHtml("check")}</span>
+      <span class="dm-todo-ed-icon" aria-hidden="true">✅</span>
       <span class="ed-row-main"><strong class="ed-row-new">${esc(nomeDellaLista(list, index))}</strong><small class="ed-row-old mono">${esc(clean(list?.entity) || t("nessuna entità", "no entity"))}</small></span>
-      <button type="button" class="ed-del dm-todo-ed-edit" data-todo-edit aria-label="${t("Modifica", "Edit")}">${segnoHtml("pencil")}</button>
-      <button type="button" class="ed-del dm-todo-ed-del" data-todo-del aria-label="${t("Elimina", "Remove")}">${segnoHtml("trash")}</button>
+      <button type="button" class="ed-del dm-todo-ed-edit" data-todo-edit aria-label="${t("Modifica", "Edit")}">✏️</button>
+      <button type="button" class="ed-del dm-todo-ed-del" data-todo-del aria-label="${t("Elimina", "Remove")}">🗑️</button>
     </div>
     <div class="dm-todo-ed-body"${aperto ? "" : " hidden"}>
       <label class="ed-slot dm-todo-ed-field"><span class="ed-slot-lbl">${t("Nome", "Name")}</span><span class="ed-form-row"><input id="dm-todo-${index}-name" class="ed-input" data-todo-field="name" value="${esc(clean(list?.name))}" placeholder="${t("Spesa", "Groceries")}"></span></label>
       <label class="ed-slot dm-todo-ed-field"><span class="ed-slot-lbl">${t("Entità della lista", "List entity")}</span>
-        <span class="ed-form-row"><input id="dm-todo-${index}-entity" class="ed-input mono" data-todo-field="entity" value="${esc(clean(list?.entity))}" placeholder="todo.spesa" autocomplete="off" spellcheck="false"><button type="button" class="dm-entity-picker" data-todo-pick="dm-todo-${index}-entity" aria-label="${t("Scegli entità", "Choose entity")}">${segnoHtml("search")}</button></span>
+        <span class="ed-form-row"><input id="dm-todo-${index}-entity" class="ed-input mono" data-todo-field="entity" value="${esc(clean(list?.entity))}" placeholder="todo.spesa" autocomplete="off" spellcheck="false"><button type="button" class="dm-entity-picker" data-todo-pick="dm-todo-${index}-entity" aria-label="${t("Scegli entità", "Choose entity")}">🔍</button></span>
         <small>${t("È l'entità todo.* di Home Assistant: le voci con una scadenza finiscono nell'agenda, le altre restano nell'elenco.", "The todo.* entity from Home Assistant: items with a due date land in the agenda, the others stay in the list.")}</small></label>
       <output class="dm-todo-ed-error" data-todo-error></output>
-      <button type="button" class="ed-save-btn" data-todo-save>${segnoHtml("check")} ${t("Salva lista", "Save list")}</button>
+      <button type="button" class="ed-save-btn" data-todo-save>💾 ${t("Salva lista", "Save list")}</button>
     </div>
   </article>`;
 }
 
 function listeMarkup() {
   const voci = listeGrezze();
-  return `<div class="ed-sec-title dm-agenda-ed-sep">${segnoHtml("check")} ${esc(t("Cose da fare", "To-do"))}</div>
+  return `<div class="ed-sec-title dm-agenda-ed-sep">✅ ${esc(t("Cose da fare", "To-do"))}</div>
   <div class="ed-intro">${t(
     "Le liste ToDo di Home Assistant: si spuntano dalla tessera in Home e dalla sezione Agenda, e quelle con una scadenza compaiono nel giorno in cui scadono.",
     "Home Assistant to-do lists: tick them off from the Home tile and from the Agenda section, and the ones with a due date show up on the day they are due.",
@@ -236,7 +235,7 @@ function listeMarkup() {
       : `<div class="ed-empty">${t("Nessuna lista configurata", "No list configured")}</div>`
   }</div>
   <button type="button" class="ed-btn-add" data-todo-add>＋ ${t("Aggiungi lista", "Add list")}</button>
-  <button type="button" class="ed-btn-add" data-todo-detect>${segnoHtml("star")} ${t("Rileva da Home Assistant", "Detect from Home Assistant")}</button>`;
+  <button type="button" class="ed-btn-add" data-todo-detect>🪄 ${t("Rileva da Home Assistant", "Detect from Home Assistant")}</button>`;
 }
 
 function bodyMarkup() {
@@ -390,7 +389,7 @@ function onClick(event) {
       state.calAperto = -1;
       salvaCalendari(prossimi);
       ridisegna();
-      root.edToast?.(senzaEmoji(t("💾 Calendario salvato", "💾 Calendar saved")));
+      root.edToast?.(t("💾 Calendario salvato", "💾 Calendar saved"));
     }
     return;
   }
@@ -467,7 +466,7 @@ function onClick(event) {
     state.todoAperto = -1;
     salvaListe(prossime);
     ridisegna();
-    root.edToast?.(senzaEmoji(t("💾 Lista salvata", "💾 List saved")));
+    root.edToast?.(t("💾 Lista salvata", "💾 List saved"));
   }
 }
 
@@ -477,7 +476,7 @@ export function ensureAgendaEditorTab() {
   const linguetta = doc.createElement("button");
   linguetta.className = "ed-tab";
   linguetta.dataset.tab = AGENDA_EDITOR_TAB;
-  linguetta.innerHTML = `${segnoHtml("calendar")} ${esc(t("Agenda", "Agenda"))}`;
+  linguetta.textContent = `📅 ${t("Agenda", "Agenda")}`;
   linguetta.addEventListener("click", () => root.editorSwitch?.(AGENDA_EDITOR_TAB));
   const prima = tabs.querySelector('.ed-tab[data-tab="runtime"]');
   if (prima) prima.before(linguetta);

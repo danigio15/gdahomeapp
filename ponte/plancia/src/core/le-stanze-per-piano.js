@@ -94,14 +94,13 @@ export function stanzePerPiano(pagine, { piani = [] } = {}) {
  * voluto: la mano impara un gesto solo.
  */
 export const PASTIGLIE_DELLA_STANZA = Object.freeze([
-  /* `icona` e' la chiave del disegno nel catalogo di casa, non un'emoji. */
-  Object.freeze({ chiave: "luci", icona: "lights", comanda: "spegni" }),
-  Object.freeze({ chiave: "prese", icona: "socket", comanda: "spegni" }),
-  Object.freeze({ chiave: "gradi", icona: "thermometer", comanda: "entra" }),
-  Object.freeze({ chiave: "clima", icona: "air-conditioner", comanda: "spegni" }),
-  Object.freeze({ chiave: "finestre", icona: "window", comanda: "entra" }),
-  Object.freeze({ chiave: "porte", icona: "door", comanda: "entra" }),
-  Object.freeze({ chiave: "mute", icona: "warning", comanda: "entra" }),
+  Object.freeze({ chiave: "luci", icona: "💡", comanda: "spegni" }),
+  Object.freeze({ chiave: "prese", icona: "🔌", comanda: "spegni" }),
+  Object.freeze({ chiave: "gradi", icona: "🌡️", comanda: "entra" }),
+  Object.freeze({ chiave: "clima", icona: "❄️", comanda: "spegni" }),
+  Object.freeze({ chiave: "finestre", icona: "🪟", comanda: "entra" }),
+  Object.freeze({ chiave: "porte", icona: "🚪", comanda: "entra" }),
+  Object.freeze({ chiave: "mute", icona: "⚠️", comanda: "entra" }),
 ]);
 
 /**

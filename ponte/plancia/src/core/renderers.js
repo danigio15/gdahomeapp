@@ -4,7 +4,6 @@ import { getDeviceDisplayName, getDeviceVisual } from "./device-model.js";
 import { pick } from "./i18n.js";
 import { spentoAMano } from "./il-fotovoltaico-di-questa-casa.js";
 import { runtimeMetrics } from "./runtime-metrics.js";
-import { segnoHtml } from "./segni-del-catalogo.js";
 
 function metric(states, entity, expectedUnit) {
   const state = entity && states[entity];
@@ -209,7 +208,7 @@ export const ENERGY_GROUPS = [
   ],
 ];
 
-const ENERGY_ICONS = { house: "home", grid: "socket", solar: "sun", battery: "battery" };
+const ENERGY_ICONS = { house: "🏠", grid: "🔌", solar: "☀️", battery: "🔋" };
 const ENERGY_EN = Object.freeze({
   // Il collante del rimando: il nome del campo e quello del riquadro arrivano
   // gia' tradotti, questa e' l'unica parte che va detta anche in inglese.
@@ -260,7 +259,7 @@ const ENERGY_UI_SOURCE = Object.freeze({
   optional: ["Facoltativo", "Optional"],
   entityHint: ["Entità Home Assistant, es.", "Home Assistant entity, e.g."],
   configured: ["configurati", "configured"],
-  save: ["Salva Energia", "Save Energy"],
+  save: ["💾 Salva Energia", "💾 Save Energy"],
   clean: ["Nessuna modifica non salvata", "No unsaved changes"],
   dirty: ["Modifiche non salvate", "Unsaved changes"],
 });
@@ -308,7 +307,7 @@ export function createEntityPickerField(
   picker.className = "dm-entity-picker";
   picker.dataset.entityTarget = input.id;
   picker.dataset.pickerMounted = "true";
-  picker.innerHTML = segnoHtml("search");
+  picker.textContent = "🔍";
   picker.setAttribute("aria-label", `${copy.select} ${label}`);
   picker.addEventListener("click", () => onPick?.(input));
   input.addEventListener("change", () => onChange?.(input.value, input));
@@ -334,7 +333,7 @@ export function createEntityPickerField(
 const SIGNED_UI = Object.freeze({
   it: {
     grid: {
-      title: "Una sola entità con segno",
+      title: "🔀 Una sola entità con segno",
       hint: "Se il tuo inverter pubblica un solo sensore che diventa negativo quando il verso si inverte, dichiaralo qui: prelievo e immissione vengono ricavati dal segno e le caselle dei due versi si spengono.",
       toggle: "Ho una sola entità con segno per la rete",
       positive: "I valori positivi sono",
@@ -350,7 +349,7 @@ const SIGNED_UI = Object.freeze({
       managed: "Ricavato dalla sorgente unica con segno.",
     },
     battery: {
-      title: "Una sola entità con segno",
+      title: "🔀 Una sola entità con segno",
       hint: "Se la batteria pubblica un solo sensore che diventa negativo quando passa da carica a scarica, dichiaralo qui: carica e scarica vengono ricavate dal segno e le caselle dei due versi si spengono.",
       toggle: "Ho una sola entità con segno per la batteria",
       positive: "I valori positivi sono",
@@ -368,7 +367,7 @@ const SIGNED_UI = Object.freeze({
   },
   en: {
     grid: {
-      title: "A single signed entity",
+      title: "🔀 A single signed entity",
       hint: "If your inverter publishes one sensor that goes negative when the direction flips, declare it here: import and export are derived from the sign and the per-direction fields switch off.",
       toggle: "I have a single signed entity for the grid",
       positive: "Positive values mean",
@@ -384,7 +383,7 @@ const SIGNED_UI = Object.freeze({
       managed: "Derived from the single signed entity.",
     },
     battery: {
-      title: "A single signed entity",
+      title: "🔀 A single signed entity",
       hint: "If the battery publishes one sensor that goes negative when it switches between charge and discharge, declare it here: charge and discharge are derived from the sign and the per-direction fields switch off.",
       toggle: "I have a single signed entity for the battery",
       positive: "Positive values mean",
@@ -495,7 +494,7 @@ function createSignedCard(document, group, model, states, locale, handlers) {
   toggle.checked = dichiarate;
   toggle.dataset.energySignedToggle = group;
   const title = document.createElement("span");
-  title.innerHTML = `<strong>${segnoHtml("refresh")} ${copy.title}</strong><small>${copy.toggle}</small>`;
+  title.innerHTML = `<strong>${copy.title}</strong><small>${copy.toggle}</small>`;
   head.append(toggle, title);
 
   const body = document.createElement("div");
@@ -719,7 +718,7 @@ export function renderEnergyEditor(
     const heading = document.createElement("summary");
     heading.className = "ed-acc-head";
     const configured = fields.filter(([key]) => Boolean(model[group]?.[key])).length;
-    heading.innerHTML = `<span>${segnoHtml(ENERGY_ICONS[group])} ${energyLabel(title, locale)}</span><small>${configured}/${fields.length} ${copy.configured}</small>`;
+    heading.innerHTML = `<span>${ENERGY_ICONS[group]} ${energyLabel(title, locale)}</span><small>${configured}/${fields.length} ${copy.configured}</small>`;
     block.append(heading);
     /* Il riquadro dice di quale gruppo parla: serve a chi deve infilarci
      * dentro qualcosa — la spunta del fotovoltaico qui sotto — senza cercarlo

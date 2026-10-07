@@ -12,7 +12,6 @@
  *   · le due soglie di ricarica, per quello che si ricarica invece di
  *     cambiarsi — il tablet a muro, un accumulatore.
  */
-import { segnoHtml } from "../core/segni-del-catalogo.js";
 import {
   CHIAVE_BATTERIE,
   batterieDichiarate,
@@ -101,7 +100,7 @@ function campoDellaSoglia(riga, quale, etichetta, esempio) {
       placeholder="${esc(esempio)}" autocomplete="off" spellcheck="false"
       data-dm-batt-ricarica="${esc(riga.entity)}" data-dm-batt-quale="${esc(quale)}"><button type="button"
       class="dm-entity-picker" data-dm-dich-pick="${esc(id)}"
-      aria-label="${esc(t("Scegli entità", "Choose entity"))}">${segnoHtml("search")}</button></span></label>`;
+      aria-label="${esc(t("Scegli entità", "Choose entity"))}">🔍</button></span></label>`;
 }
 
 /* ── la scheda ────────────────────────────────────────────────────────── */
@@ -115,7 +114,7 @@ const scheda = costruisciSchedaDichiarata({
   ridisegnaPagina: renderBatterie,
 
   parole: {
-    linguetta: `${t("Batterie", "Batteries")}`,
+    linguetta: `🔋 ${t("Batterie", "Batteries")}`,
     intro: t(
       "Le batterie che vuoi tenere d'occhio. Ogni riga è una batteria — l'entità in percentuale, il nome che vuoi tu, il disegno — e la pagina Batterie le mostra dalla più scarica alla più piena, con in cima quante sono da cambiare.",
       "The batteries you want to keep an eye on. Each row is a battery — the entity in percent, the name you want, the drawing — and the Batteries page shows them from the flattest to the fullest, with how many need replacing on top.",
@@ -125,7 +124,7 @@ const scheda = costruisciSchedaDichiarata({
     nuovo: t("Batteria nuova", "New battery"),
     senzaNome: t("Batteria senza nome", "Unnamed battery"),
     salva: t("Salva batteria", "Save battery"),
-    salvato: `${t("Batteria salvata", "Battery saved")}`,
+    salvato: `🔋 ${t("Batteria salvata", "Battery saved")}`,
     etichettaEntita: t("Entità della batteria", "Battery entity"),
     segnaposto: "sensor.porta_camera_battery",
     aiutoEntita: t(
@@ -146,7 +145,7 @@ const scheda = costruisciSchedaDichiarata({
         `Prendi le ${quanti} batterie che Home Assistant ha trovato`,
         `Take the ${quanti} batteries Home Assistant found`,
       ),
-    presi: (quanti) => t(`${quanti} batterie aggiunte`, `${quanti} batteries added`),
+    presi: (quanti) => t(`🔋 ${quanti} batterie aggiunte`, `🔋 ${quanti} batteries added`),
     notaImporta: t(
       "Le mette qui come righe, una volta sola: da lì in poi sono tue — le rinomini, gli dai il disegno, e quelle che elimini non tornano più.",
       "It puts them here as rows, once: from then on they are yours — rename them, give them a drawing, and the ones you remove do not come back.",
@@ -174,7 +173,7 @@ const scheda = costruisciSchedaDichiarata({
       normalizzaRicariche(readJson(CHIAVE_RICARICA, [])),
     );
     return `<details class="dm-dich-piu"${ricarica ? " open" : ""}>
-      <summary>${segnoHtml("power")} ${esc(t("Soglie di ricarica", "Charge thresholds"))}</summary>
+      <summary>⚡ ${esc(t("Soglie di ricarica", "Charge thresholds"))}</summary>
       <small>${esc(
         t(
           "Per quello che si ricarica e non si cambia: il tablet a muro, un accumulatore. Le due entità sono number.* o input_number.*, quelle che il dispositivo espone per dire sotto quanto riparte e sopra quanto si ferma. Lasciale vuote e questa resta una batteria come le altre.",

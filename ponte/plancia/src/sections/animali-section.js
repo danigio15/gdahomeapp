@@ -37,7 +37,6 @@ import {
   wrapFunction,
 } from "./shared.js";
 import { disegnoDelCatalogo } from "../core/catalogo-disegni.js";
-import { segnoDaValoreHtml, segnoHtml } from "../core/segni-del-catalogo.js";
 /* La tendina delle voci: quella delle azioni rapide, non una seconda. Due
  * tendine nella stessa plancia sono due comportamenti da tenere allineati. */
 import { apriIlMenu } from "./azioni-servizio-giusto-section.js";
@@ -88,7 +87,7 @@ export function ensureAnimaliTab() {
   voce.className = "tab";
   voce.dataset.tab = ANIMALI_TAB;
   voce.id = `tab-${ANIMALI_TAB}`;
-  voce.innerHTML = `<span class="icon">${segnoHtml("pet")}</span><span class="text">${esc(t("Animali", "Pets"))}</span>`;
+  voce.innerHTML = `<span class="icon">🐾</span><span class="text">${esc(t("Animali", "Pets"))}</span>`;
   /* Il gestore che il runtime lega alle voci lo lega una volta sola, al
    * caricamento: questa arriva dopo, e il suo tocco se lo deve gestire da se'.
    * Fa la stessa identica cosa, perche' due modi di cambiare pagina sarebbero
@@ -255,17 +254,17 @@ function parolaGruppo(gruppo) {
 function simboloGruppo(gruppo) {
   switch (gruppo) {
     case "ciotola":
-      return segnoHtml("pet");
+      return "🍽️";
     case "lettiera":
-      return segnoHtml("room-wc");
+      return "🚽";
     case "acqua":
-      return segnoHtml("water");
+      return "💧";
     case "porta":
-      return segnoHtml("door");
+      return "🚪";
     case "collare":
-      return segnoHtml("router");
+      return "📡";
     default:
-      return segnoHtml("pet");
+      return "🐾";
   }
 }
 
@@ -323,7 +322,7 @@ function avvisiMarkup(vista) {
     .map(
       (avviso) =>
         `<li data-dm-animale-avviso="${esc(avviso.chiave)}" data-gravita="${esc(avviso.gravita)}">
-          <span aria-hidden="true">●</span>${esc(parolaAvviso(avviso.chiave))}
+          <span aria-hidden="true">${avviso.gravita === "urgente" ? "🔴" : "🟠"}</span>${esc(parolaAvviso(avviso.chiave))}
         </li>`,
     )
     .join("")}</ul>`;
@@ -367,8 +366,8 @@ function azioneMarkup(azione) {
   const scelta = azione.modo === "scegli";
   const parola = parolaAzione(azione.chiave);
   return `<button type="button" class="dm-animale-tasto" data-dm-animale-azione="${esc(azione.entita)}"
-    data-dm-animale-modo="${esc(azione.modo || "premi")}" data-dm-animale-glifo="${esc(azione.glifo)}"
-    title="${esc(parola)}"><span aria-hidden="true">${segnoDaValoreHtml(azione.glifo, { ripiego: "pet" })}</span><span>${esc(scelta ? `${parola}…` : parola)}</span></button>`;
+    data-dm-animale-modo="${esc(azione.modo || "premi")}"
+    title="${esc(parola)}"><span aria-hidden="true">${esc(azione.glifo)}</span><span>${esc(scelta ? `${parola}…` : parola)}</span></button>`;
 }
 
 /* Una fascia per dispositivo, col suo titolo (#373).
@@ -576,7 +575,7 @@ function premiIlTasto(evento) {
   if (tasto.dataset.dmAnimaleModo === "scegli") {
     /* Il nome e il disegno li porta gia' il tasto: riderivarli dalla chiave
      * vorrebbe dire due posti che devono dire la stessa parola. */
-    apriIlMenu(quale, { name: tasto.title, icon: tasto.dataset.dmAnimaleGlifo || "🍽️" });
+    apriIlMenu(quale, { name: tasto.title, icon: tasto.firstElementChild?.textContent || "🍽️" });
     return;
   }
   const chiamata = pressioneDellAzione(quale);

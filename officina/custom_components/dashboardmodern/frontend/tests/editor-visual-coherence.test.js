@@ -29,8 +29,7 @@ test("built-in action editor derives a default icon but persists a custom choice
    * catalogo. La colonna con le emoji scritte a mano era la terza copia della
    * stessa tabella, e diceva una cosa diversa dalle altre due. */
   assert.match(source, /\["builtin_luci", "Gestione Luci", "Lights control"\]/);
-  /* Dentro un `<option>` ci sta solo testo: nessun segno, nemmeno un'emoji. */
-  assert.doesNotMatch(source, /function actionTypeGlyph/);
+  assert.match(source, /function actionTypeGlyph/);
   assert.match(source, /actionTypeIcon\(value\) \{\s*return azioneDiSerie\(value\);/);
   assert.match(source, /icon\.readOnly = false/);
   assert.match(source, /entityField\.hidden = builtin/);
