@@ -207,10 +207,14 @@ Dopo, gli aggiornamenti arrivano dal negozio come per ogni altro add-on.
 
 **A mano**, per chi vuole tenersene una copia sua: si copia la cartella `ponte`
 dentro la cartella `addons` di Home Assistant — con Samba, un terminale o
-Studio Code Server, finché c'è `addons/ponte/config.yaml` — poi **Negozio degli
-add-on → i tre puntini → Ricarica**. Lì compare anche il bottone **Aggiorna
-gdahome** dentro la pagina, che si porta dentro le versioni nuove da sé: serve
-a chi non ha nessun negozio dietro.
+Studio Code Server, finché c'è `addons/gdahome/config.yaml` — poi **Negozio
+degli add-on → i tre puntini → Ricarica**. Una copia così non ha nessun negozio
+dietro: per aggiornarla si ricopia la cartella e si ripete **Ricarica**, e
+nella pagina dell'add-on compare **Aggiorna** ([`COME_PROVARLA.md`](../COME_PROVARLA.md)
+lo fa anche in un colpo solo, dal terminale). Dentro la pagina di gdahome non
+c'è più un bottone che lo fa da sé: voleva la cartella `addons` in scrittura e
+un ruolo da amministratore del Supervisor, e l'add-on non li chiede più — il
+perché sta in `config.yaml`.
 
 ---
 

@@ -280,12 +280,13 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
     porta: opzioni.portaDellApp,
     registro,
   });
-  /* Il ponte si aggiorna da se'.
+  /* L'aggiornamento da se', che oggi dorme.
    *
-   * Un add-on locale non ha nessun negozio dietro: se nessuno porta i file
-   * nuovi in `/addons/gdahome`, in Home Assistant non compare mai nessun
-   * «Aggiorna». Prima quei file li portava dentro un comando da terminale con
-   * un gettone da incollare ogni volta; adesso e' un bottone nella console. */
+   * Serviva a chi teneva l'add-on copiato in `/addons/gdahome`, che non ha un
+   * negozio dietro. Il manifesto quella cartella non la monta piu' — il perche'
+   * sta in `config.yaml` — quindi qui `locale()` dice di no, e la console dice
+   * da dove arrivano gli aggiornamenti invece di mostrare un bottone. Resta per
+   * chi nella sua copia si rimette la cartella. */
   const aggiornamento = new Aggiornamento({
     mia: opzioni.versione,
     gettone: opzioni.gettone,

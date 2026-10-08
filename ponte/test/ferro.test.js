@@ -1,12 +1,12 @@
-/* Le prove del ferro: la macchina, la rete e gli add-on.
+/* Le prove del ferro: la macchina e la rete.
  *
  * Quello che si prova davvero: che i tre numeri che il Supervisor **non ha** —
  * CPU, memoria, temperatura — restano `null` invece di diventare zero, perche'
  * scrivere «CPU al 3%» su una scheda in ginocchio e' peggio che non scrivere
  * niente; che **l'SSID non esce**, che e' la sola cosa di questo rapporto che
- * parlerebbe di una persona; che un add-on fermo si conta solo se parte
- * all'avvio; e che un Supervisor mezzo muto da' mezza rapporto invece di
- * nessuna.
+ * parlerebbe di una persona; che al Supervisor si chiedono solo le vie che
+ * apre a chi legge e basta; e che un Supervisor mezzo muto da' mezza rapporto
+ * invece di nessuna.
  */
 
 import { test } from "node:test";
@@ -14,7 +14,6 @@ import assert from "node:assert/strict";
 
 import {
   Ferro,
-  gliAddon,
   gliApparati,
   laMacchina,
   laRete,
@@ -372,27 +371,31 @@ test("per un apparato, «non risponde» e «Home Assistant non ci parla piu'» s
   assert.deepEqual(conto, { quante: 3, giu: 2 });
 });
 
-test("fermo vuol dire fermo **e** con l'avvio automatico", () => {
-  const conto = gliAddon({
-    addons: [
-      { name: "Mosquitto broker", state: "stopped", boot: "auto" },
-      /* Spento a mano da chi ci abita: e' una scelta, non un guasto, e
-       * ripeterglielo ogni quarto d'ora insegna a non guardare piu'. */
-      { name: "Studio Code Server", state: "stopped", boot: "manual" },
-      { name: "gdahome", state: "started", boot: "auto" },
-    ],
+test("al Supervisor si chiedono solo letture, e `/addons` non piu'", async () => {
+  /* Qui c'era la prova di `gliAddon` — «fermo vuol dire fermo e con l'avvio
+   * automatico» — che contava gli add-on letti da `/addons`. Quella via il
+   * Supervisor la apre solo a un add-on `manager`, il ponte quel ruolo l'ha
+   * lasciato, e con lui l'elenco degli add-on: il perche' sta in cima a
+   * `ferro.js`. Al suo posto si tiene fermo il confine nuovo: ogni domanda
+   * finisce in `/info`, che e' quello che il ruolo di serie lascia chiedere. */
+  const chieste = [];
+  const ferro = new Ferro({
+    supervisor: "http://supervisor",
+    segno: "segno-finto",
+    registro: ZITTO,
+    async fetch(dove, come = {}) {
+      chieste.push({ dove, metodo: come.method ?? "GET" });
+      return { ok: true, json: async () => ({ data: {} }) };
+    },
   });
-  assert.equal(conto.quanti, 3);
-  assert.equal(conto.accesi, 1);
-  assert.equal(conto.spentiCheDovrebbero, 1);
-  /* In ordine alfabetico, cosi' due rapporti di fila non sembrano diverse.
-   * Non e' l'ordine di `aggiornamentiDaFare`, che mette le cose nostre in
-   * cima: li' serve a far trovare subito gdahome in un elenco di sei righe
-   * uguali, qui l'elenco e' di pastiglie e si legge tutto insieme. */
-  assert.deepEqual(
-    conto.elenco.map((uno) => uno.nome),
-    ["gdahome", "Mosquitto broker", "Studio Code Server"],
-  );
+  const detto = await ferro.chiedi();
+  assert.ok(chieste.length > 0);
+  for (const { dove, metodo } of chieste) {
+    assert.equal(metodo, "GET", dove);
+    assert.match(dove, /^http:\/\/supervisor\/[a-z]+\/info$/, dove);
+  }
+  assert.ok(!chieste.some(({ dove }) => dove.endsWith("/addons")));
+  assert.ok(!("addons" in detto));
 });
 
 test("un Supervisor mezzo muto da' mezza rapporto, non nessuna", async () => {
@@ -401,14 +404,11 @@ test("un Supervisor mezzo muto da' mezza rapporto, non nessuna", async () => {
     registro: ZITTO,
     async fetch(dove) {
       if (dove.endsWith("/network/info")) return { ok: false, status: 403 };
-      if (dove.endsWith("/addons"))
-        return { ok: true, json: async () => ({ data: { addons: [{ name: "gdahome" }] } }) };
       return { ok: true, json: async () => ({ data: { board: "odroid-n2" } }) };
     },
   });
   const detto = await ferro.chiedi();
   assert.equal(detto.network, null);
-  assert.equal(detto.addons.length, 1);
   assert.equal(detto.os.board, "odroid-n2");
 });
 
@@ -441,8 +441,9 @@ test("una risposta vale un minuto: quaranta rapporti non fanno quaranta giri di 
   });
   await ferro.chiedi();
   await ferro.chiedi();
-  assert.equal(quante, 6, "sei vie, chieste una volta sola");
+  /* Erano sei: `/addons` se n'e' andata col ruolo `manager`. */
+  assert.equal(quante, 5, "cinque vie, chieste una volta sola");
   ora += 61_000;
   await ferro.chiedi();
-  assert.equal(quante, 12);
+  assert.equal(quante, 10);
 });

@@ -32,7 +32,7 @@ import {
   Postino,
   secondiDiFreno,
 } from "../src/rapporto.js";
-import { gliAddon, laMacchina, laRete } from "../src/ferro.js";
+import { laMacchina, laRete } from "../src/ferro.js";
 import { ilBackup, leBatterie, leEntita } from "../src/salute.js";
 import { Aggiornamenti } from "../src/aggiornamenti.js";
 import { ilSegnoDi } from "../src/segni.js";
@@ -196,7 +196,6 @@ test("dal rapporto esce il nome di cio' che non risponde, e nient'altro di casa"
       stati,
     }),
     rete: laRete({ network, filoSu: true }),
-    addon: gliAddon({ addons: [{ name: "Mosquitto broker", state: "started", boot: "auto" }] }),
     entita: leEntita(stati, { registri }),
     batterie: leBatterie(stati),
     backup: ilBackup(stati, { adesso: () => Date.parse("2026-09-18T09:00:00Z") }),
@@ -399,7 +398,6 @@ test("la fabbrica mette insieme quello che c'e', e chiama ogni volta", async () 
       os: { board: "odroid-n2", version: "14.2" },
       host: { disk_total: 32, disk_used: 16 },
       network: { interfaces: [{ interface: "eth0", type: "ethernet", connected: true }] },
-      addons: [{ name: "gdahome", state: "started", boot: "auto" }],
       core: { version: "2026.9.1" },
       supervisor: { version: "2026.08.3" },
     }),
@@ -416,7 +414,10 @@ test("la fabbrica mette insieme quello che c'e', e chiama ogni volta", async () 
   assert.equal(foglio.sistema, "Home Assistant OS 14.2");
   assert.equal(foglio.macchina.scheda, "ODROID-N2");
   assert.equal(foglio.rete.internet, true);
-  assert.equal(foglio.addon.quanti, 1);
+  /* Qui si contava un add-on, letto da `/addons`. Quella via voleva il ruolo
+   * `manager`, che il ponte ha lasciato: il rapporto esce senza `addon`, e il
+   * quadro scrive che questa casa non l'ha detto invece di inventarlo. */
+  assert.ok(!("addon" in foglio));
   assert.equal(foglio.entita.giu, 1);
   assert.deepEqual(foglio.entita.nomi, ["Sonda cantina"]);
   assert.deepEqual(foglio.fuori, { acceso: true, filo: true });
@@ -450,7 +451,7 @@ test("i registri che non rispondono lasciano il rapporto senza il conto dei disp
         throw new Error("questo comando non lo conosco");
       },
     },
-    ferro: ferroFinto({ os: {}, host: {}, network: null, addons: [] }),
+    ferro: ferroFinto({ os: {}, host: {}, network: null }),
     registro: ZITTO,
     adesso: () => Date.parse("2026-09-18T09:41:12Z"),
   });
@@ -475,7 +476,7 @@ test("mezza rapporto e' meglio di nessuna, e quel giorno e' la piu' importante",
         throw new Error("il filo e' caduto");
       },
     },
-    ferro: ferroFinto({ os: { board: "odroid-n2" }, host: {}, network: null, addons: [] }),
+    ferro: ferroFinto({ os: { board: "odroid-n2" }, host: {}, network: null }),
     registro: ZITTO,
   });
 
@@ -644,7 +645,7 @@ test("dell'aggiornamento partono il marchio e cosa cambia, e non l'entita'", asy
         return [];
       },
     },
-    ferro: ferroFinto({ os: {}, host: {}, network: null, addons: [] }),
+    ferro: ferroFinto({ os: {}, host: {}, network: null }),
     aggiornamenti: new Aggiornamenti({
       casa: { chiedi: async () => stati },
       registro: ZITTO,
@@ -693,7 +694,7 @@ test("l'indirizzo delle note passa solo se e' un indirizzo da cliccare", async (
     const fabbrica = fabbricaIlRapporto({
       identita: { casa: "casa_abc" },
       casa: { chiedi: async ({ type }) => (type === "get_states" ? stati : []) },
-      ferro: ferroFinto({ os: {}, host: {}, network: null, addons: [] }),
+      ferro: ferroFinto({ os: {}, host: {}, network: null }),
       aggiornamenti: new Aggiornamenti({ casa: { chiedi: async () => stati }, registro: ZITTO }),
       registro: ZITTO,
       adesso: () => Date.parse("2026-09-18T09:41:12Z"),
@@ -774,7 +775,7 @@ test("il rapporto dice sempre se la manutenzione e' aperta, anche quando e' chiu
     fabbricaIlRapporto({
       identita: { casa: "casa_abc" },
       casa: { chiedi: async () => [] },
-      ferro: ferroFinto({ os: {}, host: {}, network: null, addons: [] }),
+      ferro: ferroFinto({ os: {}, host: {}, network: null }),
       manutenzione,
       registro: ZITTO,
       adesso: () => Date.parse("2026-09-18T09:41:12Z"),

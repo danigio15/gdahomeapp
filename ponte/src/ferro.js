@@ -1,10 +1,10 @@
-/* Il ferro sotto Home Assistant: la macchina, la rete e gli add-on.
+/* Il ferro sotto Home Assistant: la macchina e la rete.
  *
  * Quasi tutto lo dice il **Supervisor**, e questo e' il motivo per cui questa
  * parte esiste invece di chiedere a chi ci abita di installare qualcosa: un
  * installatore non puo' contare sul fatto che in ogni casa qualcuno abbia
- * aggiunto l'integrazione giusta. Il disco, la scheda, le interfacce di rete e
- * gli add-on ci sono sempre, in ogni casa, senza che nessuno configuri niente.
+ * aggiunto l'integrazione giusta. Il disco, la scheda e le interfacce di rete
+ * ci sono sempre, in ogni casa, senza che nessuno configuri niente.
  *
  * ─── Quello che il Supervisor NON dice, e va detto ────────────────────────
  *
@@ -23,13 +23,45 @@
  *   /os/info          la scheda (`board`: `odroid-n2`), la versione del sistema
  *   /host/info        i dischi, e `disk_life_time`
  *   /network/info     le interfacce — la stessa via che `ritorno.js` chiama gia'
- *   /addons           gli add-on, con `state` e `boot`
  *   /core/info        la versione di Home Assistant
  *   /supervisor/info  la versione del Supervisor
+ *
+ * Tutte e cinque finiscono in `/info`, e non e' un caso: e' la sola forma di
+ * via che il Supervisor apre a un add-on col ruolo di serie, quello che legge
+ * e basta.
  *
  * Le funzioni che leggono quelle risposte stanno fuori dalla classe e non
  * sanno cosa sia la rete: la forma di quelle risposte non la decidiamo noi, e
  * va letta senza fidarsi di niente.
+ *
+ * ─── Gli add-on: non ci sono, e mancano apposta ───────────────────────────
+ *
+ * C'era una sesta via, `/addons`: il nome, `state` e `boot` di ogni add-on,
+ * per rispondere a una domanda sola — «c'e' un add-on che parte all'avvio ed
+ * e' fermo?». Ma quella via il Supervisor la apre solo a un add-on con
+ * `hassio_role: manager`, cioe' a uno che per lui e' un amministratore, e il
+ * ponte quel ruolo non ce l'ha piu' (il perche' sta in `config.yaml`).
+ *
+ * Le strade di ripiego si sono guardate tutte, e nessuna va bene:
+ *
+ *  - `/addons/<add-on>/info`, una per add-on, si apre anche col ruolo di
+ *    serie; ma i Supervisor fino a giugno 2026 ci mettono dentro anche le
+ *    **opzioni** di quell'add-on — le password di chi ci abita — e per sapere
+ *    se un add-on e' acceso non si vanno a leggere le chiavi di tutti gli
+ *    altri;
+ *  - l'elenco dentro `/supervisor/info` il Supervisor lo segna come vecchio,
+ *    nelle sue vie nuove (`/v2`) non c'e' gia' piu', e `boot` non l'ha mai
+ *    avuto;
+ *  - le entita' `update.` di Home Assistant dicono nome e versioni di ogni
+ *    add-on, ma non se gira. E il riquadro del quadro e' fatto per quella
+ *    domanda: un add-on di cui non si sa se gira lo disegnerebbe «spento
+ *    manualmente», che e' una risposta sbagliata detta con sicurezza. Quelli
+ *    con una versione nuova in attesa, poi, nel rapporto ci sono gia': stanno
+ *    fra gli aggiornamenti, col nome e le due versioni.
+ *
+ * Quindi il rapporto esce senza `addon`, e il quadro lo dice com'e': «questo
+ * impianto non ha comunicato i suoi add-on». Un `null` detto, di nuovo, invece
+ * di un numero inventato.
  *
  * Qui dentro si **legge**, con una sola eccezione dichiarata: `spegniLaRapporto`
  * svuota la casella del quadro nelle opzioni dell'add-on, ed e' quello che sta
@@ -408,39 +440,9 @@ export function gliApparati(stati, { scelte = [] } = {}) {
 }
 
 /**
- * Gli add-on, e la sola domanda che conta.
- *
- * `addons` e' il `data.addons` di `/addons`.
- *
- * Non «quanti sono spenti»: **quanti partono all'avvio e sono fermi**. Nessuno
- * spegne un add-on lasciandogli l'avvio automatico, quindi quello li' si e'
- * fermato da solo ed e' una cosa da andare a vedere. Uno messo a mano e
- * lasciato fermo e' una scelta di chi ci abita, e dirglielo ogni quarto d'ora
- * insegna a non guardare piu' le spie.
- */
-export function gliAddon({ addons = [] } = {}) {
-  const dentro = Array.isArray(addons) ? addons : [];
-  const elenco = dentro
-    .map((uno) => ({
-      nome: pulito(uno?.name) || pulito(uno?.slug),
-      su: pulito(uno?.state) === "started",
-      allAvvio: pulito(uno?.boot) === "auto",
-      aggiornabile: uno?.update_available === true,
-    }))
-    .filter((uno) => uno.nome)
-    .sort((una, altra) => una.nome.localeCompare(altra.nome));
-  return {
-    quanti: elenco.length,
-    accesi: elenco.filter((uno) => uno.su).length,
-    spentiCheDovrebbero: elenco.filter((uno) => !uno.su && uno.allAvvio).length,
-    elenco,
-  };
-}
-
-/**
  * Chi va a chiedere tutto questo al Supervisor.
  *
- * Quattro domande in parallelo e una risposta tenuta un minuto. Una che va
+ * Cinque domande in parallelo e una risposta tenuta un minuto. Una che va
  * male non fa fallire le altre: un Supervisor senza il permesso della rete
  * deve dare un rapporto senza la rete, non nessun rapporto.
  */
@@ -467,7 +469,7 @@ export class Ferro {
     this._dettoIlGuaio = false;
   }
 
-  /** Le quattro risposte grezze, o quello che si e' riusciti ad avere. */
+  /** Le cinque risposte grezze, o quello che si e' riusciti ad avere. */
   async chiedi() {
     const ora = this.adesso();
     if (this._ultimo && ora - this._quando < this.quantoDura) return this._ultimo;
@@ -485,15 +487,15 @@ export class Ferro {
   }
 
   async _vai() {
-    const [os, host, network, addons, core, supervisor] = await Promise.all([
+    /* `/addons` qui non c'e' piu': vedi «Gli add-on» in cima al file. */
+    const [os, host, network, core, supervisor] = await Promise.all([
       this._via("/os/info"),
       this._via("/host/info"),
       this._via("/network/info"),
-      this._via("/addons"),
       this._via("/core/info"),
       this._via("/supervisor/info"),
     ]);
-    const nessuna = !os && !host && !network && !addons && !core && !supervisor;
+    const nessuna = !os && !host && !network && !core && !supervisor;
     if (nessuna && !this._dettoIlGuaio) {
       this.registro.attenzione(
         "il Supervisor non risponde: il rapporto parte lo stesso, senza la macchina ne' la rete",
@@ -501,7 +503,7 @@ export class Ferro {
       this._dettoIlGuaio = true;
     }
     if (!nessuna) this._dettoIlGuaio = false;
-    return { os, host, network, addons: addons?.addons ?? [], core, supervisor };
+    return { os, host, network, core, supervisor };
   }
 
   /* Svuotare la casella del quadro nelle opzioni dell'add-on.

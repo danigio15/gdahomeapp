@@ -19,7 +19,7 @@ configuration:
         description: >-
           Leave it empty. If an installer set your home up, they give you a code to
           paste here, and from then on this home sends them a few lines of numbers:
-          the versions, how full the disk is, which add-ons are running, how many
+          the versions, how full the disk is, which updates are waiting, how many
           entities stopped answering, what your dashboards are called — so they can
           choose their names from their side. That way they find out something is wrong
           before you have to call them. Plus the name of the devices that are not

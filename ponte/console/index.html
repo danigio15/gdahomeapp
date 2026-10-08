@@ -683,10 +683,11 @@
           </details>
         </div>
 
-        <!-- L'aggiornamento. Sta qui e non in Home Assistant perché un add-on
-             locale non ha nessun negozio dietro: HA guarda il manifesto che
-             trova in `/addons/gdahome`, quindi finché quei file non cambiano
-             «Aggiorna» non compare mai. Da questo bottone se li porta da sé. -->
+        <!-- La versione, e da dove arrivano gli aggiornamenti: dal negozio di
+             Home Assistant, come per ogni altro add-on. I due bottoni qui sotto
+             servivano a chi teneva l'add-on copiato in `/addons/gdahome`, e si
+             mostrano solo dove quella cartella si vede: il manifesto non la
+             monta più, quindi in nessuna casa (vedi `config.yaml`). -->
         <div class="blocco" id="aggiornamento" hidden>
           <p class="etichetta" data-en="The version">La versione</p>
           <p class="spiegazione" id="aggiornamento-riga">…</p>
