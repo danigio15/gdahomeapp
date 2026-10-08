@@ -222,17 +222,23 @@ perché sta in `config.yaml`.
 
 ### Le due porte, che sono tutta la sicurezza
 
-|             | dove arriva                                                        | cosa si può fare                                                                |
-| ----------- | ------------------------------------------------------------------ | ------------------------------------------------------------------------------- |
-| **ingress** | solo da Home Assistant, che ci mette davanti la sua autenticazione | fabbricare un codice, vedere i telefoni, staccarli, aprire gdahome nel browser  |
-| **8098**    | l'unica che può finire esposta                                     | chiedere se è vivo, presentare un codice, aprire il filo con un segno già avuto |
+|             | dove arriva                                                        | cosa si può fare                                                                                                                            |
+| ----------- | ------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| **ingress** | solo da Home Assistant, che ci mette davanti la sua autenticazione | fabbricare un codice, vedere i telefoni, staccarli, aprire gdahome nel browser                                                              |
+| **8098**    | l'unica che può finire esposta                                     | chiedere se è vivo, presentare un codice, aprire il filo con un segno già avuto, scaricare i file di gdahome per il browser e della plancia |
 
 Un codice di abbinamento **nasce solo dalla pagina**. Sulla porta esposta non
 c'è nessuna via per farne nascere uno: da lì si può soltanto presentarne uno che
 esiste già. È la differenza fra un ponte e una porta aperta.
 
-Le due vie della porta dell'app: `GET /salute` dice che è vivo, e `WS /casa`
-apre il filo. Anche l'abbinamento passa da lì: il telefono presenta il codice
+Le vie della porta dell'app: `GET /salute` dice che è vivo, `WS /casa` apre il
+filo, e `GET /app/…` e `GET /dashboardmodern_static/…` danno i file di gdahome
+per il browser e quelli della plancia — così un browser di casa non fa il giro
+del centralino. Sono file e basta, gli stessi byte che il centralino pubblica a
+tutti e che stanno in questa repository: niente segreti, e senza un segno valido
+sul filo non aprono niente. La pagina della plancia con le sue premesse, quella
+che sa chi la guarda, su questa porta non c'è. Anche l'abbinamento passa dal
+filo: il telefono presenta il codice
 dentro una stretta di mano cifrata con il codice stesso, e il segno esce solo
 dentro quella — mai in chiaro, nemmeno in casa. Sul filo l'add-on **si presenta come Home Assistant**:
 manda `auth_required`, aspetta `auth` col proprio segno al posto di quello di
@@ -289,17 +295,23 @@ che scrive nella cartella di Home Assistant.
 
 ### Le foto: due cartelle
 
-|                    | dove sta                      | cosa si può fare   | indirizzo                       |
-| ------------------ | ----------------------------- | ------------------ | ------------------------------- |
-| **l'add-on**       | `/data/www`                   | leggere e caricare | `/dashboardmodern_static/www/…` |
-| **Home Assistant** | `config/www`, in sola lettura | solo leggere       | `/local/…`                      |
+|                    | dove sta     | cosa si può fare   | indirizzo                       |
+| ------------------ | ------------ | ------------------ | ------------------------------- |
+| **l'add-on**       | `/data/www`  | leggere e caricare | `/dashboardmodern_static/www/…` |
+| **Home Assistant** | `config/www` | solo leggere       | `/local/…`                      |
 
 La seconda è quella che serviva davvero: chi ha una casa da qualche anno ha lì
 dentro le foto delle auto, i loghi e gli sfondi, e la plancia li chiama
-`/local/…` da sempre. Si legge e non si scrive: in quella cartella ci sono le
-automazioni, i temi e i segreti di chi ci abita, e un add-on che ci lascia
-dentro file è un add-on che, il giorno che si disinstalla, lascia sporco in casa
-d'altri.
+`/local/…` da sempre. Le foto lì si leggono e non si scrivono: in quella
+cartella ci sono le automazioni, i temi e i segreti di chi ci abita, e quello
+che si carica dall'app finisce nella cartella dell'add-on.
+
+Il manifesto, però, la cartella di Home Assistant la monta **in scrittura**
+(`homeassistant_config:rw`), e va detto chiaro: Home Assistant non sa montarne
+un pezzo solo, e la cartina delle «Plance» deve stare lì dentro. L'add-on ci
+scrive una cartella sola, `www/gdahome/` — la cartina e un `LEGGIMI.txt` che
+dice di chi è — e una prova tiene fermo che non scriva altrove. Disinstallando
+l'add-on quella cartella resta: si cancella a mano, e non rompe niente.
 
 ### Cosa finisce sul disco
 

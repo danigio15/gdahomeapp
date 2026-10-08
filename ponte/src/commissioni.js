@@ -1770,9 +1770,9 @@ export class Commissioni {
      * ancora: creala» — rispondendo di un'altra cartella, e dando torto a una
      * persona che aveva ragione.
      *
-     * Se la cartella di Home Assistant non e' montata — l'add-on senza
-     * `homeassistant_config:ro`, o aggiornato e non ancora riavviato — si
-     * ripiega su quella del ponte: e' meglio mostrare le foto caricate
+     * Se la cartella di Home Assistant non e' montata — un manifesto senza
+     * `homeassistant_config`, o un add-on aggiornato e non ancora riavviato —
+     * si ripiega su quella del ponte: e' meglio mostrare le foto caricate
      * dall'app che non mostrare niente. */
     const diCasa =
       detto.root === "casa" || (detto.root !== "ponte" && Boolean(this.fotoDiCasa?.cE));

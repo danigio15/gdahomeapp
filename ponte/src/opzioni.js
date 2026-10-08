@@ -253,9 +253,13 @@ export function leggiLeOpzioni(cartella = process.env.PONTE_ARCHIVIO || "/data")
      * anno tiene le foto delle auto, i loghi, gli sfondi.
      *
      * Il Supervisor la monta su `/homeassistant` quando il manifesto chiede
-     * `homeassistant_config:ro`. Se non c'e' — l'add-on aggiornato ma non
-     * riavviato, o una prova — non e' un guaio: quella meta' della maschera
-     * delle foto semplicemente non compare. */
+     * `homeassistant_config`, e il nostro la chiede in scrittura (`:rw`):
+     * Home Assistant non sa montarne un pezzo solo, e la cartina delle
+     * «Plance» deve stare li' dentro. Ci si scrive soltanto `www/gdahome/`
+     * (`doveVaLaCarta`, in `plance-in-casa.js`); le foto da li' si leggono e
+     * basta. Se non c'e' — l'add-on aggiornato ma non riavviato, o una
+     * prova — non e' un guaio: quella meta' della maschera delle foto
+     * semplicemente non compare. */
     wwwDiCasa: process.env.PONTE_WWW_CASA || "/homeassistant/www",
     /* Il centralino della **chat** di assistenza, che non e' quello di
      * gdahome: e' quello della dashboard, scritto in `chat.js` com'e' scritto

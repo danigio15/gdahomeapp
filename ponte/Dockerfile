@@ -41,8 +41,12 @@ COPY marchio/ /app/marchio/
 COPY plancia/ /app/plancia/
 # gdahome da aprire in un browser: la stessa app del telefono, costruita da
 # `flutter build web` e portata dentro da `strumenti/porta-l-app.mjs`. Il ponte
-# la serve sotto `/app/`, dietro l'ingress — cioe' solo a chi e' gia' entrato
-# in Home Assistant.
+# la serve sotto `/app/` da tutte e due le porte: dall'ingress, a chi e' gia'
+# entrato in Home Assistant, e dalla porta dell'app (8098), cosi' un browser di
+# casa non fa il giro del centralino. Da li' escono file e basta, gli stessi
+# byte che il centralino pubblica a tutti: senza un segno valido sul filo non
+# aprono niente (il perche' per intero sta in `costruisciLaPortaDellApp`,
+# `src/server.js`).
 COPY app/ /app/app/
 COPY run.sh /
 RUN chmod a+x /run.sh
