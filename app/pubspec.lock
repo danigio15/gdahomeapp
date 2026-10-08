@@ -361,8 +361,8 @@ packages:
     dependency: "direct main"
     description:
       path: "packages/gdanav_app"
-      ref: main
-      resolved-ref: ea97af629d3886e3186037d861769168761ba50f
+      ref: "claude/focused-meitner-28o114"
+      resolved-ref: "15b3cf9b0d25bb3d504046eadd1c6a5610eeef0c"
       url: "https://github.com/danigio15/gdanav.git"
     source: git
     version: "0.1.0"
@@ -370,8 +370,8 @@ packages:
     dependency: transitive
     description:
       path: "packages/gdanav_core"
-      ref: ea97af629d3886e3186037d861769168761ba50f
-      resolved-ref: ea97af629d3886e3186037d861769168761ba50f
+      ref: "15b3cf9b0d25bb3d504046eadd1c6a5610eeef0c"
+      resolved-ref: "15b3cf9b0d25bb3d504046eadd1c6a5610eeef0c"
       url: "https://github.com/danigio15/gdanav.git"
     source: git
     version: "0.1.0"

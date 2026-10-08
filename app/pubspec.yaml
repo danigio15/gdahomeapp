@@ -123,7 +123,9 @@ dependencies:
       path: packages/gdanav_app
       # Il commit preciso sta in pubspec.lock, e lo porta avanti il workflow
       # «Aggiorna gdanav».
-      ref: main
+      # PER ORA il ramo di danigio15/gdanav#19 (portamiA, per «Apri in mappa»
+      # sulla persona): torna `main` appena quella e' unita.
+      ref: claude/focused-meitner-28o114
 
 dev_dependencies:
   flutter_test:

@@ -47,10 +47,12 @@ test("la mappa è quella di casa, non quella di Google", () => {
 
 test("toccare il luogo apre la scheda dell'entità, e non anche la persona", () => {
   /* Il gestore della card sta in cattura su tutto il documento: senza uscire
-   * qui il tocco aprirebbe la scheda grande e la mappa insieme. */
+   * qui il tocco aprirebbe la scheda grande e la mappa insieme. Dentro l'app,
+   * prima ancora, la persona va al navigatore
+   * (`la-persona-nel-navigatore.test.js`). */
   assert.match(
     sezione,
-    /const mappa = event\.target\?\.closest\?\.\("\[data-person-mappa\]"\);\s*if \(mappa\) \{\s*if \(apriLaMappaDiCasa\(mappa\.dataset\.personMappa\)\) event\.preventDefault\(\);\s*return;\s*\}/,
+    /const mappa = event\.target\?\.closest\?\.\("\[data-person-mappa\]"\);\s*if \(mappa\) \{[\s\S]*?if \(apriLaMappaDiCasa\(mappa\.dataset\.personMappa\)\) event\.preventDefault\(\);\s*return;\s*\}/,
   );
   /* L'annuncio è quello che usa qualunque card di Home Assistant, e parte dal
    * pannello che ospita la cornice: da lì sale fino a chi apre le schede. */

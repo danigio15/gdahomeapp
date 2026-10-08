@@ -608,6 +608,13 @@ class _HomeState extends State<Home> {
                              * menu, qui dove la barra del titolo non c'e'. */
                                   quandoChiedeIlMenu: () =>
                                       _barra.currentState?.apri(),
+                                  /* «Apri in mappa» sulla scheda di una
+                                   * persona: il navigatore, con la strada
+                                   * fino a lei. */
+                                  quandoApreLaPersona: (detto) {
+                                    _vai(Sezione.navigatore);
+                                    unawaited(portamiDallaPersona(detto));
+                                  },
                                 ),
                                 Sezione.dispositivi => Dispositivi(
                                   collegamento: collegamento,

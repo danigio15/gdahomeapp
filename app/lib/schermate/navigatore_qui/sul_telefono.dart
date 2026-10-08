@@ -13,6 +13,7 @@
 library;
 
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/foundation.dart' show ValueListenable;
 import 'package:flutter/material.dart';
@@ -381,6 +382,35 @@ Future<void> portamiA({required bool casa}) async {
   if (dove == null) return;
   await luoghi?.usato(dove.luogo);
   await app.viaggio.vaiA(dove.luogo);
+}
+
+/// Porta da una persona della plancia: «Apri in mappa» sulla sua scheda.
+///
+/// [detto] e' quello che manda la pagina sul canale `gdahomeNavigatore`
+/// (`ponte/plancia/src/core/la-persona-nel-navigatore.js`): `{nome, lat,
+/// lon, indirizzo}` in JSON. Accende gdanav se non c'e', e calcola il viaggio
+/// fin li', con la persona come meta. Torna `false` se il messaggio non porta
+/// un punto: allora non c'e' niente da aprire.
+Future<bool> portamiDallaPersona(String detto) async {
+  final Object? letto;
+  try {
+    letto = jsonDecode(detto);
+  } catch (_) {
+    return false;
+  }
+  if (letto is! Map) return false;
+  final lat = letto['lat'];
+  final lon = letto['lon'];
+  if (lat is! num || lon is! num) return false;
+  final nome = '${letto['nome'] ?? ''}'.trim();
+  final app = await accendiIlNavigatore();
+  await app.portamiA(
+    nome: nome.isEmpty ? inLingua(it: 'Persona', en: 'Person') : nome,
+    lat: lat.toDouble(),
+    lon: lon.toDouble(),
+    descrizione: '${letto['indirizzo'] ?? ''}'.trim(),
+  );
+  return true;
 }
 
 /// La tessera di gdanav in testa alla barra di gdahome: viva.

@@ -46,3 +46,7 @@ Widget? laTesseraDelNavigatore({
   required VoidCallback impostazioni,
   Object? fonte,
 }) => null;
+
+/// Nel browser il navigatore non c'e', e la pagina non lo chiede nemmeno:
+/// il canale `gdahomeNavigatore` lo registra solo l'app sul telefono.
+Future<bool> portamiDallaPersona(String detto) async => false;
