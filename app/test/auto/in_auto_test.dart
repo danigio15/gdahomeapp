@@ -83,8 +83,27 @@ void main() {
       },
       leRicette: () async => const [_ricetta],
       apriLaCasa: () => throw StateError('la casa non c\'è'),
+      premium: () async => true,
     );
     expect(finita, ComeEFinitaInAuto.senzaCasa);
     expect(letture, 1);
+  });
+
+  test('senza Premium il comando non apre il filo con la casa', () async {
+    /* «Si è attivato Android Auto anche non avendo il Premium.» In auto la
+       casa è Premium: un comando premuto in macchina con la casa Base non
+       arriva a Home Assistant, e il filo non si apre nemmeno. */
+    var aperto = false;
+    final finita = await eseguiIlComandoDellAuto(
+      prendiIlComando: () async => '0|Cancello',
+      leRicette: () async => const [_ricetta],
+      apriLaCasa: () {
+        aperto = true;
+        throw StateError('non si doveva arrivare qui');
+      },
+      premium: () async => false,
+    );
+    expect(finita, ComeEFinitaInAuto.senzaPremium);
+    expect(aperto, isFalse);
   });
 }

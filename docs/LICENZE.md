@@ -338,6 +338,20 @@ controllo e' spento (tutti passano, come oggi): si accende insieme alla chiave.
   chiede quelli non ancora confermati e li riporta alla casa. Solo quelli: uno
   gia' confermato non si sposta, se non con «Ripristina».
 - gdanav riceve `premiumOspite` = la casa in uso e' Premium.
+- **In auto la casa e' Premium**, come il navigatore. Android Auto e CarPlay
+  sono codice nativo e la licenza la sa il Dart: l'app lascia all'auto un
+  biglietto nella sua cartella privata, `gdahome-auto-licenza.json`, con
+  `premium` e `fino` (il primo momento in cui il gettone della casa in uso
+  smette di valere; `null` senza scadenza, quando le licenze in questa app
+  sono spente). Lo riscrive a ogni cambiamento della licenza, e mai prima di
+  aver letto le case (`lib/auto/la_licenza.dart`, `lib/main.dart`).
+  L'auto lo rilegge a ogni schermata e a ogni tasto (`LaLicenzaInAuto.kt`,
+  `LaCasaInCarPlay.swift`) e sbaglia dalla parte chiusa: biglietto che manca,
+  storto o scaduto = Base. Senza Premium: dispositivi, azioni rapide, comandi
+  rapidi, «Come sta la casa» e «Quasi a casa» non ci sono, e al loro posto
+  c'e' una schermata sola che dice cosa serve e dove si fa (sul telefono). Il
+  comando lasciato in macchina si ricontrolla anche nel motore che lo esegue
+  (`lib/auto/in_auto.dart`), e senza Premium il filo con la casa non si apre.
 
 ## Il giorno dei pagamenti: le app vecchie si fermano
 

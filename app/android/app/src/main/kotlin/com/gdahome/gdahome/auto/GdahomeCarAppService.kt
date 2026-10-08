@@ -75,5 +75,7 @@ class SessioneInAuto : Session() {
         )
     }
 
+    /* `LaCasaInAuto` guarda da se' la licenza a ogni disegno, e senza Premium
+     * mostra la schermata che lo dice (`LaLicenzaInAuto.kt`). */
     override fun onCreateScreen(intent: android.content.Intent) = LaCasaInAuto(carContext)
 }

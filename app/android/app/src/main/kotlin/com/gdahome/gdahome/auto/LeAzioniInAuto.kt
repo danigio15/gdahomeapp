@@ -27,6 +27,7 @@ import com.gdahome.gdahome.R
 
 class LeAzioniInAuto(context: CarContext) : Screen(context) {
     override fun onGetTemplate(): Template {
+        if (!LaLicenzaInAuto.premium(carContext)) return senzaPremium(carContext)
         val azioni = leggiLaFoto(carContext)?.azioni.orEmpty()
         val elenco = ItemList.Builder()
         if (azioni.isEmpty()) {

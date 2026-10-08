@@ -48,6 +48,7 @@ import {
   escluseDellaTessera,
   ilGruppoNonHaTessera,
   MARCHIO_TESSERA,
+  SENZA_TESSERA,
   rimettiNellaTessera,
   tesseraDelBlocco,
   tesseraDelGruppo,
@@ -278,6 +279,13 @@ export function ensureEntityChoices() {
     // Il modulo delle caselle salta le stesse che salta lui: il form dei
     // carichi riusa la stessa classe per una cosa che casella non e'.
     if (slot.closest("[data-load-form]")) continue;
+    /* Nemmeno le caselle di chi in Home non ha una tessera — la stufa a
+     * pellet (#183): l'interruttore prometterebbe di togliere dalla Home una
+     * cosa che in Home non c'e'. */
+    if (slot.closest(`[${SENZA_TESSERA}]`)) {
+      slot.querySelector(`:scope [${CHOICE_ATTRIBUTE}]`)?.remove();
+      continue;
+    }
     const entities = entitiesOfSlot(slot);
     if (!entities.length) {
       slot.querySelector(`:scope [${CHOICE_ATTRIBUTE}]`)?.remove();
@@ -332,6 +340,11 @@ export function ensureEntityChoices() {
      * dentro dove il cestino promette «per sempre». Si riconosce dalla classe
      * della riga: e' struttura, non parole. */
     if (row.matches(".dm-scollegati-riga")) {
+      row.querySelector(`[${CHOICE_ATTRIBUTE}]`)?.remove();
+      continue;
+    }
+    /* Nemmeno la riga di chi una tessera in Home non ce l'ha (#183). */
+    if (row.closest(`[${SENZA_TESSERA}]`)) {
       row.querySelector(`[${CHOICE_ATTRIBUTE}]`)?.remove();
       continue;
     }

@@ -36,13 +36,20 @@ const sorgenti = CARTELLE.flatMap((cartella) => {
 const senzaCommenti = (testo) =>
   testo.replace(/\/\*[\s\S]*?\*\//g, "").replace(/(^|[^:\\])\/\/[^\n]*/g, "$1");
 
-/* Le funzioni che ogni modulo esporta col proprio nome, quelle col nome
+/* Le funzioni che ogni modulo dichiara col proprio nome, quelle col nome
  * composto — `laMisuraDallUnita`, `contoDeiVarchi`. Le parole semplici restano
  * fuori: «translate» o «filtra» sono anche funzioni dei fogli di stile e nomi
  * di parametri, e scambiarle per una chiamata vorrebbe dire una prova che
- * grida per niente. */
+ * grida per niente.
+ *
+ * Anche quelle **non esportate** (#190). La 1.10.0 ha tolto da
+ * `rooms-page-section.js` la sua `disegnoDellaStanza`, aggiornando due
+ * chiamate su tre: la terza, nella testata della stanza aperta, chiamava un
+ * nome che li' non c'era piu' — e ogni stanza si apriva vuota. Contare solo le
+ * esportate lasciava passare proprio questo caso: una funzione di casa sua
+ * che sparisce, mentre una con lo stesso nome vive in un altro file. */
 function esportate({ testo }) {
-  return [...testo.matchAll(/^export (?:async )?function\*? ?([A-Za-z_$][\w$]*)/gm)]
+  return [...testo.matchAll(/^(?:export )?(?:async )?function\*? ?([A-Za-z_$][\w$]*)/gm)]
     .map((trovato) => trovato[1])
     .filter((nome) => /[a-z][A-Z]/.test(nome));
 }

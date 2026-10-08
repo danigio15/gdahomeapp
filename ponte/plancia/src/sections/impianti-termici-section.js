@@ -20,6 +20,11 @@
  *
  * Qui non si scrive niente in Home Assistant: si legge, si disegna, e
  * l'interruttore chiama il servizio che chiamava gia' la tessera.
+ *
+ * Poi e' arrivata la quarta, la stufa a pellet (#183), con una scena sua e un
+ * quadro di comandi: accesa e spenta, l'obiettivo, la potenza, il
+ * ventilatore. Anche quelli chiamano il servizio e basta, col gesto
+ * dell'interruttore della caldaia: un tocco, nessuna conferma.
  */
 import {
   BRICIOLA_SEZIONE,
@@ -28,21 +33,33 @@ import {
   CHIAVE_IMPIANTI,
   CHIAVE_SOLARE_SCELTO,
   CHIAVE_SOLARI,
+  CHIAVE_STUFE,
   ETICHETTE_TERMICHE,
+  FASI_STUFA,
   NOME_SEZIONE,
   TITOLI_TERMICI,
+  comandoAccensione,
+  comandoLivello,
+  comandoObiettivo,
   entitaDelleCaldaie,
+  entitaDelleStufe,
   impiantiScelti,
   impiantiSolari,
   lettureCaldaie,
+  lettureStufe,
+  livelloConValore,
   nomeDelSolare,
   overridesPerSolare,
   pelletScarso,
+  prossimoLivello,
+  prossimoObiettivo,
+  serbatoiDellaCaldaia,
   servonoLinguette,
   tabAttiva,
   verdettoPressione,
 } from "../core/impianti-termici.js";
 import { laMisuraDallUnita } from "../core/le-unita-della-corrente.js";
+import { parolaDiStato } from "./le-parole-di-home-assistant.js";
 import {
   SCALDABAGNI_KEY,
   lettureScaldabagni,
@@ -51,6 +68,7 @@ import {
 import { registraTitoloDiPagina, renderPageMastheads } from "./page-masthead-section.js";
 import {
   allStates,
+  chiamaServizio,
   clean,
   doc,
   esc,
@@ -67,7 +85,14 @@ import {
 
 const KEY = "__DASHBOARDMODERN_IMPIANTI_TERMICI__";
 const STYLE_ID = "dm-impianti-termici-style";
-const state = (root[KEY] ||= { installed: false, frame: 0, tab: "", firma: "", quale: {} });
+const state = (root[KEY] ||= {
+  installed: false,
+  frame: 0,
+  tab: "",
+  firma: "",
+  quale: {},
+  richieste: {},
+});
 
 const PAGINA = "page-boiler";
 
@@ -80,6 +105,10 @@ function scaldabagniConfigurati() {
 
 function caldaiaConfigurata() {
   return entitaDelleCaldaie(readJson(CHIAVE_CALDAIA, {})).length > 0;
+}
+
+function stufaConfigurata() {
+  return entitaDelleStufe(readJson(CHIAVE_STUFE, [])).length > 0;
 }
 
 /* Il solare risulta configurato se qualcuna delle sue caselle e' mappata: e'
@@ -98,6 +127,7 @@ export function impiantiDiCasa() {
     solare: solareConfigurato(),
     scaldabagno: scaldabagniConfigurati(),
     caldaia: caldaiaConfigurata(),
+    stufa: stufaConfigurata(),
   });
 }
 
@@ -122,6 +152,10 @@ const ICONE = Object.freeze({
     '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="2.8" width="10" height="16.4" rx="5"/><path d="M9.4 12.6h5.2"/><path d="M9.2 21.2v1.2M14.8 21.2v1.2"/><path d="M12 6.2v3"/></svg>',
   caldaia:
     '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3.4" y="3.4" width="17.2" height="13.2" rx="2.6"/><path d="M7.4 20.4v-3.8M16.6 20.4v-3.8"/><path d="M12 7.2c1.5 1.5 2.2 2.7 2.2 3.8a2.2 2.2 0 0 1-4.4 0c0-.7.3-1.3.8-1.9.1.7.5 1.1 1 1.2-.2-1.1 0-2.2.4-3.1Z"/></svg>',
+  /* La stufa (#183): il corpo in piedi, il vetro col fuoco dentro e la canna
+   * che sale — la caldaia e' una scatola appesa, questa sta sul pavimento. */
+  stufa:
+    '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9.6 6V2.4"/><rect x="5" y="6" width="14" height="13.6" rx="2.6"/><rect x="8.1" y="9.1" width="7.8" height="7.2" rx="1.4"/><path d="M12 10.9c.9.9 1.3 1.6 1.3 2.3a1.3 1.3 0 0 1-2.6 0c0-.6.4-1.1.8-1.5"/><path d="M7.4 19.6v2M16.6 19.6v2"/></svg>',
 });
 
 /* ── le due scene nuove ────────────────────────────────────────────────── */
@@ -402,12 +436,19 @@ function combustioneMarkup(lettura) {
  * chili — una bilancia sotto il silo — non ha una quota da riempire: quel
  * numero e' quello che e', e disegnare mezzo serbatoio sarebbe inventarselo. */
 function pelletMarkup(lettura) {
-  const quota = lettura.pellet;
+  /* Con due serbatoi (#182) la scena li mette affiancati; con uno solo resta
+   * il disegno di sempre, nello stesso posto e con le stesse parole — chi ha
+   * un serbatoio solo non deve accorgersi di niente. Uno solo e' il primo, o
+   * il secondo quando e' l'unico che risponde. */
+  const serbatoi = serbatoiDellaCaldaia(lettura);
+  if (serbatoi.length > 1) return dueSerbatoiMarkup(serbatoi);
+  const solo = serbatoi[0] || { pellet: null, chili: null };
+  const quota = solo.pellet;
   if (quota == null)
     return nodoTarghetta(
       "left:11%;top:80%",
       t("Pellet", "Pellet"),
-      lettura.pelletChili,
+      solo.chili,
       " kg",
       "#d97706",
       0,
@@ -422,6 +463,41 @@ function pelletMarkup(lettura) {
       <span class="dm-it-pellet-liv" style="height:${pieno}%"></span>
     </div>
     <span class="dm-it-nome">${esc(scritta)}</span>
+  </div>`;
+}
+
+/* I due serbatoi (#182), affiancati in un nodo solo.
+ *
+ * «Ce n'e' una ma la utilizzo gia'. E me ne servirebbe una seconda.» Sono due
+ * misure della stessa scorta, e la scena le tiene vicine come le due sonde del
+ * boiler: «Pellet 1» e «Pellet 2», ognuno col suo riempimento e il suo numero
+ * dentro. Diventano rossi uno per uno — quello che sta finendo e' quello da
+ * riempire, e un serbatoio pieno accanto non lo deve coprire. Uno in chili
+ * resta un numero anche qui: non si disegna una quota che nessuno ha dato. */
+function dueSerbatoiMarkup(serbatoi) {
+  const disegni = serbatoi.map((serbatoio, indice) => {
+    const nome = `${t("Pellet", "Pellet")} ${indice + 1}`;
+    if (serbatoio.pellet == null)
+      return `<div class="dm-it-serbatoio">
+        <div class="dm-it-pellet dm-it-pellet-chili" role="img"
+          aria-label="${esc(`${nome}: ${NUMERO(serbatoio.chili, 0)} kg`)}">
+          <b class="dm-it-pellet-cifra">${esc(NUMERO(serbatoio.chili, 0))}<i>kg</i></b>
+        </div>
+        <span class="dm-it-nome">${esc(nome)}</span>
+      </div>`;
+    const pieno = Math.max(0, Math.min(100, serbatoio.pellet));
+    const cifra = `${NUMERO(serbatoio.pellet, 0)}%`;
+    return `<div class="dm-it-serbatoio">
+      <div class="dm-it-pellet" data-scarso="${serbatoio.scarso}" role="img"
+        aria-label="${esc(`${nome}: ${cifra}`)}">
+        <span class="dm-it-pellet-liv" style="height:${pieno}%"></span>
+        <b class="dm-it-pellet-cifra">${esc(cifra)}</b>
+      </div>
+      <span class="dm-it-nome" data-scarso="${serbatoio.scarso}">${esc(nome)}</span>
+    </div>`;
+  });
+  return `<div class="dm-it-nodo dm-it-nodo-serbatoi" style="left:12%;top:79%">
+    <div class="dm-it-serbatoi">${disegni.join("")}</div>
   </div>`;
 }
 
@@ -604,6 +680,424 @@ function scenaCaldaia(lettura) {
   </div>`;
 }
 
+/* ── la stufa a pellet (#183) ───────────────────────────────────────────
+ *
+ * «E' possibile inserire una scheda per inserire i dati delle stufe a
+ * pellet?»
+ *
+ * La stufa sta in piedi in mezzo alla scena, nella stessa lingua della
+ * caldaia: il corpo chiaro, il vetro scuro col fuoco dietro, la canna fumaria
+ * che sale con la sua targhetta, il serbatoio accanto, la stanza che scalda.
+ * Il fuoco c'e' solo quando brucia, e cresce con la potenza; nello spegnimento
+ * resta la brace. L'aria calda esce dalla griglia tanto piu' svelta quanto piu'
+ * gira il ventilatore.
+ *
+ * I comandi stanno in un quadro a parte, a destra sul computer e sotto la
+ * scena sul telefono: accesa e spenta, l'obiettivo, la potenza, il
+ * ventilatore. Ognuno compare solo se c'e' qualcosa da comandare, e un «+» in
+ * cima alla scala e' spento prima di premerlo invece che dopo. */
+
+/* La parola della fase: quella della pagina se la fase si riconosce, la
+ * parola della stufa com'e' se non la si riconosce — come la caldaia con una
+ * fase che non conosce — e accesa o spenta quando una fase non c'e'. */
+function parolaDellaFase(lettura) {
+  if (lettura.fase) return t(...FASI_STUFA[lettura.fase]);
+  const grezza = clean(lettura.statoTesto);
+  if (grezza && !STATI_MUTI.has(grezza.toLowerCase())) return grezza;
+  if (lettura.acceso === true) return t("Accesa", "On");
+  if (lettura.acceso === false) return t("Spenta", "Off");
+  return t("Stato non mappato", "State not mapped");
+}
+
+/* Quanto e' alto il fuoco: piccolo mentre si accende, basso quando modula,
+ * e nel lavoro tanto piu' alto quanto piu' alta e' la potenza. Senza potenza
+ * mappata, la meta' giusta. */
+function altezzaDelFuoco(lettura) {
+  if (lettura.fase === "accensione") return 0.55;
+  if (lettura.fase === "modulazione") return 0.7;
+  const potenza = lettura.potenza;
+  if (potenza?.livello != null && potenza.quanti)
+    return Math.round((0.62 + 0.5 * Math.min(1, potenza.livello / potenza.quanti)) * 100) / 100;
+  return 0.9;
+}
+
+/* Il ventilatore gira, e quanto. Il disegno dell'aria calda e la ventola del
+ * quadro usano la stessa misura: un giro lungo a velocita' uno, corto alla
+ * cinque. Senza ventilatore mappato l'aria esce mentre la stufa brucia, a
+ * velocita' media — la convezione c'e' comunque. */
+function ventoDellaStufa(lettura) {
+  const ventola = lettura.ventilatore;
+  if (!ventola) return { gira: lettura.brucia === true, durata: 1.4 };
+  const fermo =
+    ventola.acceso === false ||
+    ventola.valore === 0 ||
+    (ventola.modo === "interruttore" && ventola.acceso !== true);
+  if (fermo) return { gira: false, durata: 1.4 };
+  const quota =
+    ventola.livello != null && ventola.quanti ? Math.min(1, ventola.livello / ventola.quanti) : 0.5;
+  return { gira: true, durata: Math.round((2 - 1.4 * quota) * 100) / 100 };
+}
+
+function disegnoStufa(lettura) {
+  const potenza = lettura.potenza;
+  /* Sul display si legge la potenza a cui brucia, come su quello vero. */
+  const display = lettura.brucia && potenza?.livello != null ? `P${potenza.livello}` : "";
+  return `<div class="dm-it-stufa">
+    <span class="dm-it-stufa-piano" aria-hidden="true">${
+      display ? `<i class="dm-it-stufa-display">${esc(display)}</i>` : ""
+    }</span>
+    <span class="dm-it-stufa-griglia" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+    <span class="dm-it-stufa-porta" aria-hidden="true">
+      <span class="dm-it-stufa-vetro">
+        <i class="dm-it-stufa-brace"></i>
+        <i class="dm-it-stufa-lingua"></i><i class="dm-it-stufa-lingua"></i><i class="dm-it-stufa-lingua"></i>
+      </span>
+      <i class="dm-it-stufa-maniglia"></i>
+    </span>
+    <span class="dm-it-stufa-cassetto" aria-hidden="true"></span>
+    <span class="dm-it-stufa-piedi" aria-hidden="true"><i></i><i></i></span>
+  </div>`;
+}
+
+/* Il serbatoio della stufa: lo stesso disegno di quello della caldaia.
+ *
+ * In percentuale si riempie, in chili e' una targhetta, e col solo
+ * `binary_sensor` di «pellet in esaurimento» la quota non si inventa: il
+ * serbatoio resta del colore dell'acciaio finche' va tutto bene, e diventa
+ * rosso e quasi vuoto quando il sensore scatta. */
+function pelletDellaStufaMarkup(lettura) {
+  const posto = "left:12%;top:71%";
+  const classe = "dm-it-nodo dm-it-nodo-pellet-stufa";
+  if (lettura.pelletAvviso) {
+    if (lettura.pelletScarso == null) return "";
+    const scarso = lettura.pelletScarso === true;
+    const scritta = scarso
+      ? t("Pellet in esaurimento", "Pellet running low")
+      : t("Pellet a posto", "Pellet OK");
+    return `<div class="${classe}" style="${posto}">
+      <div class="dm-it-pellet dm-it-pellet-avviso" data-scarso="${scarso}" role="img"
+        aria-label="${esc(scritta)}"><span class="dm-it-pellet-liv" style="height:${scarso ? 14 : 100}%"></span></div>
+      <span class="dm-it-nome" data-scarso="${scarso}">${esc(scritta)}</span>
+    </div>`;
+  }
+  if (lettura.pellet == null)
+    return nodoTarghetta(
+      posto,
+      t("Pellet", "Pellet"),
+      lettura.pelletChili,
+      " kg",
+      "#d97706",
+      0,
+      "",
+      "dm-it-nodo-pellet-stufa",
+    );
+  const scarso = pelletScarso(lettura.pellet) === true;
+  const pieno = Math.max(0, Math.min(100, lettura.pellet));
+  const scritta = `${t("Pellet", "Pellet")} ${NUMERO(lettura.pellet, 0)}%`;
+  return `<div class="${classe}" style="${posto}">
+    <div class="dm-it-pellet" data-scarso="${scarso}" role="img" aria-label="${esc(scritta)}">
+      <span class="dm-it-pellet-liv" style="height:${pieno}%"></span>
+    </div>
+    <span class="dm-it-nome" data-scarso="${scarso}">${esc(scritta)}</span>
+  </div>`;
+}
+
+/* La fascia rossa dell'allarme.
+ *
+ * Un allarme di una stufa non e' una lettura fra le altre: vuol dire che si e'
+ * fermata, o che non riesce a partire, e di solito c'e' da andare a guardarla.
+ * Si dice col testo che la stufa ha scritto — «Mancata accensione», «A01» — e
+ * quando il sensore dice solo «acceso», si manda a guardare il display. */
+function allarmeDellaStufaMarkup(lettura) {
+  if (!lettura?.allarme?.attivo) return "";
+  const testo =
+    clean(lettura.allarme.testo) ||
+    t("Guarda il display della stufa.", "Check the stove's display.");
+  return `<div class="dm-it-stufa-allarme" role="alert">
+    <span class="dm-it-stufa-allarme-ic" aria-hidden="true">⚠</span>
+    <span class="dm-it-stufa-allarme-parole">
+      <b>${esc(t("Allarme della stufa", "Stove alarm"))}</b>
+      <span class="dm-it-stufa-allarme-testo">${esc(testo)}</span>
+    </span>
+  </div>`;
+}
+
+/* I pallini di un livello: tanti quanti i suoi scatti, accesi fino al suo. */
+function pallini(livello) {
+  if (!livello?.quanti) return "";
+  const acceso = Math.max(0, Math.min(livello.quanti, Number(livello.livello) || 0));
+  return `<span class="dm-it-stufa-punti" aria-hidden="true">${Array.from(
+    { length: livello.quanti },
+    (_voce, indice) => `<i data-on="${indice < acceso}"></i>`,
+  ).join("")}</span>`;
+}
+
+/* Il valore di un livello, scritto: il numero, la scelta, la percentuale. Una
+ * scelta passa dalle parole di Home Assistant — `auto` e' «Automatico» — e
+ * quella che non si conosce, «P3» o «high», resta com'e'. */
+function scrittaDelLivello(livello) {
+  if (!livello || livello.disponibile === false) return "—";
+  if (livello.modo === "percento") return `${NUMERO(livello.valore ?? 0, 0)}%`;
+  if (livello.modo === "interruttore")
+    return livello.acceso === true ? t("Acceso", "On") : t("Spento", "Off");
+  if (livello.valore === null || livello.valore === undefined || livello.valore === "") return "—";
+  if (typeof livello.valore === "number") return NUMERO(livello.valore, livello.passo < 1 ? 1 : 0);
+  return parolaDiStato(livello.valore);
+}
+
+/* La ventola del quadro: gira quando gira quella vera, e allo stesso passo
+ * dell'aria calda della scena. */
+function ventola(vento) {
+  const pala = "M12 10.2C10.3 9.4 9.5 6.9 10.4 5c.8-1.6 3.1-1.5 3.6.3.5 1.9-.4 3.9-2 4.9Z";
+  return `<svg class="dm-it-stufa-ventola" viewBox="0 0 24 24" aria-hidden="true"
+    data-gira="${vento.gira}" style="--dm-it-giro:${vento.durata}s">
+    <circle class="dm-it-stufa-ventola-anello" cx="12" cy="12" r="10.6"/>
+    <g class="dm-it-stufa-ventola-pale">
+      <path d="${pala}"/><path d="${pala}" transform="rotate(120 12 12)"/>
+      <path d="${pala}" transform="rotate(240 12 12)"/><circle cx="12" cy="12" r="1.9"/>
+    </g>
+  </svg>`;
+}
+
+/* Una riga del quadro: il nome, il «−», il valore, il «+».
+ *
+ * I due tasti dicono gia' prima del tocco se c'e' un passo da fare: in cima e
+ * in fondo alla scala si spengono, e chi non puo' comandare quell'entita' —
+ * quelle che si guardano e basta — li trova spenti tutti e due. */
+function rigaDelQuadro(campo, etichetta, valore, { giu, su, nomi }) {
+  return `<div class="dm-it-stufa-riga" data-dm-it-stufa-riga="${esc(campo)}">
+    <span class="dm-it-stufa-lbl">${esc(etichetta)}</span>
+    <span class="dm-it-stufa-regola">
+      <button type="button" class="dm-it-stufa-passo" data-dm-it-stufa-passo="${esc(campo)}"
+        data-verso="-1" aria-label="${esc(nomi[0])}"${giu ? "" : " disabled"}>−</button>
+      <span class="dm-it-stufa-val">${valore}</span>
+      <button type="button" class="dm-it-stufa-passo" data-dm-it-stufa-passo="${esc(campo)}"
+        data-verso="1" aria-label="${esc(nomi[1])}"${su ? "" : " disabled"}>+</button>
+    </span>
+  </div>`;
+}
+
+function quadroDellaStufa(lettura) {
+  const righe = [];
+  const comando = clean(lettura.comando);
+  /* In testa la fase, e accanto il tasto che accende e spegne.
+   *
+   * Lo stato lo dice gia' la fase, qui a sinistra: il tasto dice quello che
+   * fa. Con la parola dello stato si leggeva «Spenta» due volte di fila su una
+   * stufa spenta — due modi di dire la stessa cosa, e nessuno che dicesse cosa
+   * succede a premere. Il colore resta quello della pagina: arancio vuol dire
+   * accesa, come la resistenza dello scaldabagno. */
+  const acceso = lettura.acceso === true;
+  const tasto =
+    comando && siComanda(comando)
+      ? `<button type="button" class="dm-it-interruttore dm-it-stufa-accendi"
+          data-dm-it-stufa-accendi="${!acceso}" data-on="${acceso}">
+          <span class="dm-it-interruttore-ic" aria-hidden="true">⏻</span>
+          <span>${esc(acceso ? t("Spegni", "Turn off") : t("Accendi", "Turn on"))}</span>
+        </button>`
+      : "";
+  righe.push(`<div class="dm-it-stufa-testa">
+    <span class="dm-it-stufa-fase" data-fase="${esc(lettura.fase || "")}"
+      data-brucia="${lettura.brucia}">${esc(parolaDellaFase(lettura))}</span>${tasto}
+  </div>`);
+  if (lettura.obiettivo != null) {
+    const libero = siComanda(lettura.clima);
+    righe.push(
+      rigaDelQuadro(
+        "obiettivo",
+        t("Obiettivo", "Target"),
+        `<b>${esc(NUMERO(lettura.obiettivo, 1))}</b><span class="dm-it-stufa-unita">°C</span>`,
+        {
+          giu: libero && prossimoObiettivo(lettura, -1) !== null,
+          su: libero && prossimoObiettivo(lettura, 1) !== null,
+          nomi: [
+            t("Abbassa l'obiettivo", "Lower the target"),
+            t("Alza l'obiettivo", "Raise the target"),
+          ],
+        },
+      ),
+    );
+  }
+  if (lettura.potenza) {
+    const libero = siComanda(lettura.potenza.entity);
+    righe.push(
+      rigaDelQuadro(
+        "potenza",
+        t("Potenza", "Power level"),
+        `${pallini(lettura.potenza)}<b>${esc(scrittaDelLivello(lettura.potenza))}</b>`,
+        {
+          giu: libero && prossimoLivello(lettura.potenza, -1) !== null,
+          su: libero && prossimoLivello(lettura.potenza, 1) !== null,
+          nomi: [
+            t("Abbassa la potenza", "Lower the power"),
+            t("Alza la potenza", "Raise the power"),
+          ],
+        },
+      ),
+    );
+  }
+  if (lettura.ventilatore) {
+    const libero = siComanda(lettura.ventilatore.entity);
+    righe.push(
+      rigaDelQuadro(
+        "ventilatore",
+        t("Ventilatore", "Fan"),
+        `${ventola(ventoDellaStufa(lettura))}<b>${esc(scrittaDelLivello(lettura.ventilatore))}</b>`,
+        {
+          giu: libero && prossimoLivello(lettura.ventilatore, -1) !== null,
+          su: libero && prossimoLivello(lettura.ventilatore, 1) !== null,
+          nomi: [
+            t("Rallenta il ventilatore", "Slow the fan down"),
+            t("Accelera il ventilatore", "Speed the fan up"),
+          ],
+        },
+      ),
+    );
+  }
+  return `<div class="dm-it-stufa-pannello" data-dm-it-stufa="${esc(lettura.id)}" role="group"
+    aria-label="${esc(t("Comandi della stufa", "Stove controls"))}">${righe.join("")}</div>`;
+}
+
+function scenaStufa(lettura) {
+  if (!lettura)
+    return `<div class="dm-it-vuoto">${esc(
+      t(
+        "Nessuna stufa configurata: aggiungila dalla scheda Gestione termica della configurazione.",
+        "No stove configured: add one from the Thermal management tab in settings.",
+      ),
+    )}</div>`;
+  const vento = ventoDellaStufa(lettura);
+  /* La canna parte da dietro la stufa e sale: il primo tratto e' coperto dal
+   * corpo, cosi' esce dal piano qualunque sia l'altezza a cui lo schermo
+   * disegna la stufa. Il fumo sale solo quando brucia. */
+  const canna = "M 300 300 L 300 92 L 360 62 L 360 -20";
+  /* L'aria calda va dalla griglia della stufa alla stanza: parte da dietro il
+   * corpo e finisce dietro la targhetta della stanza. Le strade sono due
+   * perche' sul telefono la targhetta sta altrove — in colonna a destra — e
+   * una curva sola finirebbe nel vuoto. Senza la temperatura della stanza non
+   * c'e' una targhetta dove l'aria arrivi, e la curva non si disegna. */
+  const aria =
+    lettura.temperatura == null
+      ? ""
+      : [
+          ["computer", "M 300 248 C 430 248 470 300 550 300"],
+          ["telefono", "M 300 216 C 450 216 640 228 750 228"],
+        ]
+          .map(
+            ([dove, strada]) => `<path class="dm-it-aria-scia dm-it-aria-${dove}" d="${strada}"/>
+          <path class="dm-it-aria-calda dm-it-aria-${dove}" d="${strada}"/>`,
+          )
+          .join("");
+  return `${allarmeDellaStufaMarkup(lettura)}<div class="dm-it-scena" data-dm-it-scena="stufa"
+      data-acceso="${lettura.acceso === true}" data-brucia="${lettura.brucia === true}"
+      data-brace="${lettura.brace === true}" data-fase="${esc(lettura.fase || "")}"
+      data-aria="${vento.gira}" data-allarme="${lettura.allarme?.attivo === true}"
+      style="--dm-it-fuoco:${altezzaDelFuoco(lettura)};--dm-it-aria:${vento.durata}s">
+    <svg class="dm-it-tubi" viewBox="0 0 1000 600" preserveAspectRatio="none" aria-hidden="true">
+      <path class="dm-it-canna" d="${canna}"/>
+      <path class="dm-it-canna-int" d="${canna}"/>
+      <path class="dm-it-flusso dm-it-flusso-fumo" d="${canna}"/>
+      ${aria}
+    </svg>
+
+    <div class="dm-it-nodo dm-it-nodo-stufa" style="left:30%;top:55%">
+      ${disegnoStufa(lettura)}
+      <span class="dm-it-nome">${esc(lettura.name || t("Stufa a pellet", "Pellet stove"))}</span>
+    </div>
+
+    ${pelletDellaStufaMarkup(lettura)}
+    ${nodoTarghetta("left:46%;top:17%", t("Fumi", "Flue gas"), lettura.fumi, "°C", "#f97316", 0, "", "dm-it-nodo-fumi")}
+    ${nodoTarghetta("left:55%;top:50%", t("Stanza", "Room"), lettura.temperatura, "°C", "#fbbf24", 1, "", "dm-it-nodo-stanza")}
+  </div>${quadroDellaStufa(lettura)}`;
+}
+
+/* ── i comandi della stufa ──────────────────────────────────────────────
+ *
+ * Il tocco chiama il servizio come lo chiama l'interruttore della caldaia
+ * (#274): subito, senza chiedere conferma, e senza aspettare. Quello che si e'
+ * chiesto pero' si ricorda per qualche secondo: fra il tocco e lo stato nuovo
+ * passa un secondo, a volte tre, e chi preme «+» due volte di fila vuole due
+ * passi — senza questa memoria il secondo tocco partirebbe dallo stato vecchio
+ * e chiederebbe di nuovo lo stesso numero. Intanto la scena mostra gia' il
+ * valore chiesto; quando lo stato lo raggiunge, o quando passa il tempo,
+ * torna a parlare la stufa. */
+const ATTESA_RICHIESTA = 6000;
+
+function conLeRichieste(lettura) {
+  if (!lettura) return lettura;
+  const fuori = { ...lettura };
+  const richiesta = (campo, reale, applica) => {
+    const chiave = `${lettura.id}|${campo}`;
+    const voce = state.richieste?.[chiave];
+    if (!voce) return;
+    if (voce.valore === reale || Date.now() > voce.fino) {
+      delete state.richieste[chiave];
+      return;
+    }
+    applica(voce.valore);
+  };
+  const livelloLetto = (livello) =>
+    livello?.modo === "interruttore"
+      ? livello.acceso === true
+        ? "on"
+        : livello.acceso === false
+          ? "off"
+          : null
+      : livello?.valore;
+  richiesta("acceso", lettura.acceso, (valore) => {
+    fuori.acceso = valore;
+  });
+  richiesta("obiettivo", lettura.obiettivo, (valore) => {
+    fuori.obiettivo = valore;
+  });
+  for (const campo of ["potenza", "ventilatore"])
+    richiesta(campo, livelloLetto(lettura[campo]), (valore) => {
+      fuori[campo] = livelloConValore(lettura[campo], valore);
+    });
+  return fuori;
+}
+
+function stufeDiCasa(states = allStates(), resolve = root.resolveEntity || ((value) => value)) {
+  return lettureStufe(readJson(CHIAVE_STUFE, []), states, resolve).map(conLeRichieste);
+}
+
+function comandaLaStufa(tasto) {
+  const id = clean(tasto.closest("[data-dm-it-stufa]")?.dataset?.dmItStufa);
+  const lettura = stufeDiCasa().find((riga) => riga.id === id);
+  if (!lettura) return;
+  let campo = "";
+  let valore = null;
+  let comando = null;
+  if (tasto.hasAttribute("data-dm-it-stufa-accendi")) {
+    campo = "acceso";
+    valore = tasto.dataset.dmItStufaAccendi === "true";
+    comando = comandoAccensione(lettura, valore);
+  } else {
+    campo = clean(tasto.dataset.dmItStufaPasso);
+    const verso = Number(tasto.dataset.verso) || 0;
+    if (campo === "obiettivo") {
+      valore = prossimoObiettivo(lettura, verso);
+      comando = comandoObiettivo(lettura, verso);
+    } else if (campo === "potenza" || campo === "ventilatore") {
+      valore = prossimoLivello(lettura[campo], verso);
+      comando = comandoLivello(lettura[campo], verso);
+    }
+  }
+  if (!comando || valore === null) return;
+  root.navigator?.vibrate?.(8);
+  chiamaServizio(comando);
+  state.richieste = { ...(state.richieste || {}) };
+  state.richieste[`${id}|${campo}`] = { valore, fino: Date.now() + ATTESA_RICHIESTA };
+  state.firma = "";
+  renderImpiantiTermici();
+  /* Se lo stato non arriva, allo scadere si ridisegna quello che dice la
+   * stufa: un valore chiesto e mai confermato non resta sullo schermo. */
+  root.setTimeout?.(() => {
+    state.firma = "";
+    renderImpiantiTermici();
+  }, ATTESA_RICHIESTA + 200);
+}
+
 /* ── il disegno della pagina ───────────────────────────────────────────── */
 
 function pagina() {
@@ -640,13 +1134,17 @@ export function renderImpiantiTermici() {
       : [];
   const caldaie =
     attiva === "caldaia" ? lettureCaldaie(readJson(CHIAVE_CALDAIA, {}), states, resolve) : [];
+  /* Le stufe (#183) entrano nella firma con le richieste ancora in volo: il
+   * valore appena chiesto cambia la scena, e la cambia di nuovo quando arriva
+   * o scade. */
+  const stufe = attiva === "stufa" ? stufeDiCasa(states, resolve) : [];
   /* Quale delle macchine di questo tipo si sta guardando: la scelta e' per
    * tipo, cosi' passando da Caldaia a Scaldabagno e tornando indietro non si
    * torna sempre alla prima. */
-  const quali = attiva === "caldaia" ? caldaie : letture;
+  const quali = attiva === "caldaia" ? caldaie : attiva === "stufa" ? stufe : letture;
   const scelta = macchinaScelta(attiva, quali);
   const solari = attiva === "solare" ? impiantiSolariDiCasa() : [];
-  const firma = JSON.stringify([scelti, attiva, letture, caldaie, scelta, solari]);
+  const firma = JSON.stringify([scelti, attiva, letture, caldaie, stufe, scelta, solari]);
   if (firma === state.firma) return true;
   state.firma = firma;
 
@@ -718,12 +1216,24 @@ export function renderImpiantiTermici() {
      * che non sceglie niente. E vale per tutti e due i tipi: gli scaldabagni
      * erano gia' una lista in configurazione, ma la pagina ne disegnava uno. */
     const dentro = quali.find((riga) => riga.id === scelta) || quali[0] || null;
-    const markup =
-      filaDelleMacchine(quali, scelta) +
-      (attiva === "caldaia" ? scenaCaldaia(dentro) : scenaScaldabagno(dentro ? [dentro] : []));
+    const scena =
+      attiva === "caldaia"
+        ? scenaCaldaia(dentro)
+        : attiva === "stufa"
+          ? scenaStufa(dentro)
+          : scenaScaldabagno(dentro ? [dentro] : []);
+    const markup = filaDelleMacchine(quali, scelta) + scena;
     if (mia.dataset.dmItTipo !== attiva || mia.innerHTML !== markup) {
       mia.dataset.dmItTipo = attiva;
       mia.innerHTML = markup;
+    }
+    /* Due serbatoi (#182) sul telefono chiedono una mensola in fondo al
+     * palco, e a dirlo e' il palco, perche' e' lui che si allunga. Con un
+     * serbatoio solo l'attributo non c'e', come prima. */
+    const mensola = attiva === "caldaia" && serbatoiDellaCaldaia(dentro).length > 1 ? "2" : "";
+    if ((mia.dataset.dmItSerbatoi || "") !== mensola) {
+      if (mensola) mia.dataset.dmItSerbatoi = mensola;
+      else delete mia.dataset.dmItSerbatoi;
     }
   } else if (mia) {
     mia.hidden = true;
@@ -800,6 +1310,14 @@ function onClick(event) {
       root.dmCallHaService?.(dominio, "toggle", { entity_id: entity }) ??
         root.callService?.({ domain: dominio, service: "toggle", data: { entity_id: entity } });
     } catch (_error) {}
+    return;
+  }
+  /* I comandi della stufa (#183): accesa e spenta, l'obiettivo, la potenza,
+   * il ventilatore. Senza conferma, come l'interruttore della caldaia. */
+  const stufa = event.target?.closest?.("[data-dm-it-stufa-accendi],[data-dm-it-stufa-passo]");
+  if (stufa) {
+    event.preventDefault();
+    if (!stufa.disabled) comandaLaStufa(stufa);
     return;
   }
   const solare = event.target?.closest?.("[data-dm-it-solare]");
@@ -1159,6 +1677,203 @@ function installStyles() {
       box-shadow:0 8px 20px -12px rgba(15,23,42,.5)}
     #${PAGINA} .dm-it-etichetta[data-on="true"]{color:#c2410c}
 
+    /* ── i due serbatoi della caldaia (#182) ─────────────────────────────
+       Affiancati in un nodo solo, col numero dentro il disegno: sono due
+       misure della stessa scorta, e stanno vicine come le due sonde del
+       boiler. Il nome sotto dice quale e', e si fa rosso con lui. */
+    #${PAGINA} .dm-it-serbatoi{display:flex;align-items:flex-end;gap:14px}
+    #${PAGINA} .dm-it-serbatoio{display:flex;flex-direction:column;align-items:center;gap:10px}
+    #${PAGINA} .dm-it-pellet-cifra{
+      position:absolute;left:0;right:0;top:7px;z-index:1;text-align:center;
+      font-family:'Oswald',sans-serif;font-size:14px;font-weight:500;line-height:1;
+      font-variant-numeric:tabular-nums;color:#334155}
+    #${PAGINA} .dm-it-pellet-cifra i{font-style:normal;font-size:.7em;margin-left:1px}
+    /* In chili non c'e' una quota da riempire: il serbatoio e' color
+       acciaio, e il numero sta in mezzo. */
+    #${PAGINA} .dm-it-pellet-chili{background:linear-gradient(180deg,#cbd5e1,#94a3b8)}
+    #${PAGINA} .dm-it-pellet-chili .dm-it-pellet-cifra{top:50%;transform:translateY(-50%);color:#fff}
+    #${PAGINA} .dm-it-nome[data-scarso="true"]{color:#b91c1c}
+    /* Il serbatoio della stufa col solo avviso (#183): la quota non si sa.
+       Finche' il sensore tace e' pieno e color acciaio, senza numeri; quando
+       scatta prende il rosso del pellet scarso. */
+    #${PAGINA} .dm-it-pellet-avviso[data-scarso="false"] .dm-it-pellet-liv{
+      background:linear-gradient(180deg,#cbd5e1,#94a3b8)}
+
+    /* ── la stufa a pellet (#183) ──────────────────────────────────────
+       In piedi sul pavimento invece che appesa al muro: un corpo di
+       ceramica chiara, il piano e la cornice del vetro in ghisa, il fuoco
+       dietro il vetro. Le parti stanno in percentuale del corpo, cosi' sul
+       telefono basta stringere lui. */
+    #${PAGINA} .dm-it-stufa{
+      position:relative;width:172px;height:244px;border-radius:28px 28px 14px 14px;
+      background:linear-gradient(100deg,#fffaf2,#f1e7d8 46%,#d6c6ae);
+      box-shadow:0 30px 52px -26px rgba(15,23,42,.6),inset 0 0 0 1px rgba(168,148,120,.45)}
+    #${PAGINA} .dm-it-stufa-piano{
+      position:absolute;top:-3%;left:-4%;right:-4%;height:10%;border-radius:12px;
+      display:flex;align-items:center;justify-content:flex-end;padding:0 12px;
+      background:linear-gradient(180deg,#4b5563,#1f2937);
+      box-shadow:0 6px 12px -6px rgba(15,23,42,.6),inset 0 1px 0 rgba(255,255,255,.18)}
+    #${PAGINA} .dm-it-stufa-display{
+      font-style:normal;font-family:'Oswald',sans-serif;font-size:11px;line-height:1;
+      padding:3px 6px;border-radius:5px;background:#0b1220;color:#fb923c;letter-spacing:.04em}
+    #${PAGINA} .dm-it-stufa-griglia{
+      position:absolute;top:12.5%;left:20%;right:20%;height:4.5%;display:flex;gap:6%}
+    #${PAGINA} .dm-it-stufa-griglia i{
+      flex:1;border-radius:3px;background:rgba(31,41,55,.42);box-shadow:inset 0 1px 1px rgba(0,0,0,.25)}
+    #${PAGINA} .dm-it-stufa-porta{
+      position:absolute;top:21%;left:11%;right:11%;height:54%;border-radius:16px;
+      background:linear-gradient(160deg,#374151,#111827);
+      box-shadow:0 10px 20px -12px rgba(15,23,42,.7),inset 0 1px 0 rgba(255,255,255,.12)}
+    #${PAGINA} .dm-it-stufa-vetro{
+      position:absolute;inset:8%;border-radius:10px;overflow:hidden;
+      background:radial-gradient(120% 90% at 50% 112%,#1f2937,#0b0f19 70%);
+      box-shadow:inset 0 0 0 2px rgba(148,163,184,.35),inset 0 10px 22px rgba(0,0,0,.65);
+      transition:background .8s ease}
+    #${PAGINA} .dm-it-scena[data-brucia="true"] .dm-it-stufa-vetro{
+      background:radial-gradient(120% 90% at 50% 112%,#7c2d12,#1c0d06 62%,#0b0f19)}
+    /* Il riflesso del vetro, sopra il fuoco. */
+    #${PAGINA} .dm-it-stufa-vetro::after{
+      content:"";position:absolute;inset:0;pointer-events:none;
+      background:linear-gradient(125deg,rgba(255,255,255,.16) 0 18%,rgba(255,255,255,0) 32%)}
+    #${PAGINA} .dm-it-stufa-maniglia{
+      position:absolute;right:-4px;top:30%;width:6px;height:30%;border-radius:4px;
+      background:linear-gradient(90deg,#9ca3af,#4b5563)}
+    #${PAGINA} .dm-it-stufa-cassetto{
+      position:absolute;top:80%;left:24%;right:24%;height:3.4%;border-radius:4px;
+      background:rgba(31,41,55,.3);box-shadow:inset 0 1px 2px rgba(0,0,0,.25)}
+    #${PAGINA} .dm-it-stufa-piedi{
+      position:absolute;bottom:-5%;left:12%;right:12%;height:5%;display:flex;
+      justify-content:space-between}
+    #${PAGINA} .dm-it-stufa-piedi i{
+      width:16%;border-radius:0 0 6px 6px;background:linear-gradient(180deg,#4b5563,#1f2937)}
+    /* Il fuoco: tre lingue che crescono con la potenza. Spente finche' la
+       stufa non brucia: una fiamma su una stufa ferma direbbe una cosa che
+       non sta succedendo. */
+    #${PAGINA} .dm-it-stufa-lingua{
+      position:absolute;bottom:12%;left:20%;width:24%;height:calc(58% * var(--dm-it-fuoco,.9));
+      border-radius:50% 50% 42% 42% / 64% 64% 36% 36%;transform-origin:50% 100%;
+      background:linear-gradient(to top,#f97316,#fb923c 40%,#fde68a);
+      opacity:0;transform:scaleY(.2);transition:opacity .8s ease,transform .8s ease,height .8s ease}
+    #${PAGINA} .dm-it-stufa-lingua:nth-child(3){left:37%;width:26%;height:calc(74% * var(--dm-it-fuoco,.9))}
+    #${PAGINA} .dm-it-stufa-lingua:nth-child(4){left:56%}
+    #${PAGINA} .dm-it-scena[data-brucia="true"] .dm-it-stufa-lingua{
+      opacity:1;transform:scaleY(1);animation:dmItLingua 1.4s ease-in-out infinite alternate;
+      filter:drop-shadow(0 0 9px rgba(251,146,60,.75))}
+    #${PAGINA} .dm-it-scena[data-brucia="true"] .dm-it-stufa-lingua:nth-child(3){
+      animation-duration:1.1s;animation-delay:-.45s}
+    #${PAGINA} .dm-it-scena[data-brucia="true"] .dm-it-stufa-lingua:nth-child(4){animation-delay:-.8s}
+    @keyframes dmItLingua{
+      0%{transform:scaleY(.86) scaleX(1.04) skewX(-3deg)}100%{transform:scaleY(1.1) scaleX(.92) skewX(4deg)}}
+    /* Il braciere: sotto la fiamma quando brucia, da solo e piu' scuro nello
+       spegnimento — la brace che si raffredda. */
+    #${PAGINA} .dm-it-stufa-brace{
+      position:absolute;left:14%;right:14%;bottom:7%;height:9%;border-radius:8px;
+      background:radial-gradient(60% 120% at 50% 100%,#fdba74,#c2410c 60%,#431407);
+      opacity:0;transition:opacity .8s ease}
+    #${PAGINA} .dm-it-scena[data-brucia="true"] .dm-it-stufa-brace{
+      opacity:.95;box-shadow:0 0 18px 6px rgba(249,115,22,.45)}
+    #${PAGINA} .dm-it-scena[data-brace="true"] .dm-it-stufa-brace{
+      opacity:.85;animation:dmItBrace 3s ease-in-out infinite}
+    @keyframes dmItBrace{0%,100%{filter:brightness(.7)}50%{filter:brightness(1.15)}}
+    /* L'aria calda che va dalla griglia alla stanza: una scia tenue e i
+       granelli che la percorrono, tanto piu' svelti quanto piu' gira il
+       ventilatore. Il tratto non si stira col palco — sul computer e' piu'
+       largo che alto — se no i granelli diventerebbero ovali. */
+    #${PAGINA} .dm-it-aria-scia,#${PAGINA} .dm-it-aria-calda{
+      fill:none;stroke-linecap:round;vector-effect:non-scaling-stroke;opacity:0;
+      transition:opacity .6s ease}
+    #${PAGINA} .dm-it-aria-scia{stroke:#fdba74;stroke-width:14}
+    #${PAGINA} .dm-it-aria-calda{stroke:#f97316;stroke-width:5;stroke-dasharray:1 15}
+    #${PAGINA} .dm-it-aria-telefono{display:none}
+    #${PAGINA} .dm-it-scena[data-aria="true"] .dm-it-aria-scia{opacity:.32}
+    #${PAGINA} .dm-it-scena[data-aria="true"] .dm-it-aria-calda{
+      opacity:.9;animation:dmItAria var(--dm-it-aria,1.4s) linear infinite}
+    @keyframes dmItAria{from{stroke-dashoffset:32}to{stroke-dashoffset:0}}
+    /* La canna fumaria: acciaio scuro, non il tubo chiaro dell'acqua. Il fumo
+       sale solo mentre la stufa brucia. */
+    #${PAGINA} .dm-it-canna{
+      fill:none;stroke:#64748b;stroke-width:20;stroke-linecap:round;stroke-linejoin:round}
+    #${PAGINA} .dm-it-canna-int{
+      fill:none;stroke:#94a3b8;stroke-width:11;stroke-linecap:round;stroke-linejoin:round}
+    #${PAGINA} .dm-it-scena[data-dm-it-scena="stufa"] .dm-it-flusso-fumo{
+      stroke:#f1f5f9;stroke-width:7;stroke-dasharray:16 96;opacity:0;animation:none}
+    #${PAGINA} .dm-it-scena[data-dm-it-scena="stufa"][data-brucia="true"] .dm-it-flusso-fumo{
+      opacity:.9;animation:dmItFumo 3.2s linear infinite}
+    @keyframes dmItFumo{from{stroke-dashoffset:112}to{stroke-dashoffset:0}}
+
+    /* Il quadro dei comandi: a destra della scena sul computer, sotto la
+       scena sul telefono. Ogni riga e' il nome, il «−», il valore e il «+». */
+    #${PAGINA} .dm-it-stufa-pannello{
+      position:absolute;right:28px;top:50%;transform:translateY(-50%);z-index:5;
+      width:336px;display:grid;gap:10px;padding:14px;border-radius:24px;
+      background:rgba(255,255,255,.94);border:1px solid var(--card-border,#e2e8f0);
+      box-shadow:0 26px 50px -30px rgba(15,23,42,.6)}
+    #${PAGINA} .dm-it-stufa-testa{
+      display:flex;align-items:center;justify-content:space-between;gap:10px;padding:2px 2px 4px}
+    #${PAGINA} .dm-it-stufa-fase{
+      display:inline-flex;align-items:center;gap:8px;min-width:0;padding:8px 13px;
+      border-radius:999px;border:1px solid var(--card-border,#e2e8f0);
+      background:var(--bg-sculpted,#f0f4f8);color:var(--text-dim,#64748b);
+      font-size:11px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;
+      white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    #${PAGINA} .dm-it-stufa-fase::before{
+      content:"";flex:0 0 auto;width:8px;height:8px;border-radius:50%;background:#cbd5e1}
+    #${PAGINA} .dm-it-stufa-fase[data-brucia="true"]{
+      color:#c2410c;background:#fff7ed;border-color:rgba(249,115,22,.45)}
+    #${PAGINA} .dm-it-stufa-fase[data-brucia="true"]::before{
+      background:#f97316;box-shadow:0 0 0 4px rgba(249,115,22,.18)}
+    #${PAGINA} .dm-it-stufa-fase[data-fase="spegnimento"]{color:#b45309}
+    #${PAGINA} .dm-it-stufa-fase[data-fase="spegnimento"]::before{background:#f59e0b}
+    #${PAGINA} .dm-it-stufa-fase[data-fase="allarme"]{
+      color:#b91c1c;background:#fef2f2;border-color:rgba(220,38,38,.45)}
+    #${PAGINA} .dm-it-stufa-fase[data-fase="allarme"]::before{background:#dc2626}
+    #${PAGINA} .dm-it-stufa-accendi{flex:0 0 auto;min-height:46px;padding:0 18px}
+    #${PAGINA} .dm-it-stufa-riga{
+      display:flex;align-items:center;justify-content:space-between;gap:10px;
+      padding:8px 8px 8px 14px;border-radius:16px;background:var(--bg-sculpted,#f0f4f8)}
+    #${PAGINA} .dm-it-stufa-lbl{
+      min-width:0;font-size:10.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;
+      color:var(--text-dim,#64748b);overflow:hidden;text-overflow:ellipsis}
+    #${PAGINA} .dm-it-stufa-regola{display:flex;align-items:center;gap:6px;flex:0 0 auto}
+    #${PAGINA} .dm-it-stufa-passo{
+      width:44px;height:44px;flex:0 0 auto;display:grid;place-items:center;padding:0;
+      border-radius:14px;border:1px solid var(--card-border,#e2e8f0);background:var(--card-bg,#fff);
+      cursor:pointer;font:inherit;font-size:22px;font-weight:700;line-height:1;color:#3d4d66;
+      box-shadow:0 6px 14px -10px rgba(15,23,42,.55);transition:transform .12s ease,opacity .2s ease}
+    #${PAGINA} .dm-it-stufa-passo:active{transform:scale(.94)}
+    #${PAGINA} .dm-it-stufa-passo:disabled{opacity:.35;cursor:default;box-shadow:none}
+    #${PAGINA} .dm-it-stufa-val{
+      min-width:96px;display:flex;align-items:center;justify-content:center;gap:7px;
+      font-family:'Oswald',sans-serif;font-variant-numeric:tabular-nums;color:#1e293b}
+    #${PAGINA} .dm-it-stufa-val b{font-size:20px;font-weight:500;line-height:1}
+    #${PAGINA} .dm-it-stufa-unita{font-size:12px;opacity:.75;margin-left:-5px}
+    #${PAGINA} .dm-it-stufa-punti{display:flex;gap:4px}
+    #${PAGINA} .dm-it-stufa-punti i{width:8px;height:8px;border-radius:50%;background:#cbd5e1}
+    #${PAGINA} .dm-it-stufa-punti i[data-on="true"]{
+      background:linear-gradient(135deg,#fb923c,#ea580c);box-shadow:0 0 6px rgba(234,88,12,.45)}
+    #${PAGINA} .dm-it-stufa-ventola{width:26px;height:26px;flex:0 0 auto;color:#94a3b8}
+    #${PAGINA} .dm-it-stufa-ventola-anello{fill:none;stroke:currentColor;stroke-width:1.6;opacity:.4}
+    #${PAGINA} .dm-it-stufa-ventola-pale{fill:currentColor;transform-origin:12px 12px}
+    #${PAGINA} .dm-it-stufa-ventola[data-gira="true"]{color:#ea580c}
+    #${PAGINA} .dm-it-stufa-ventola[data-gira="true"] .dm-it-stufa-ventola-pale{
+      animation:dmItGiro var(--dm-it-giro,1.4s) linear infinite}
+    @keyframes dmItGiro{to{transform:rotate(360deg)}}
+    /* La fascia rossa dell'allarme: in fondo alla scena, larga quanto il
+       disegno. Un allarme di una stufa vuol dire andare a guardarla. */
+    #${PAGINA} .dm-it-stufa-allarme{
+      position:absolute;left:24px;right:388px;bottom:20px;z-index:7;
+      display:flex;align-items:center;gap:14px;padding:12px 18px;border-radius:16px;
+      background:linear-gradient(135deg,#dc2626,#b91c1c);color:#fff;
+      box-shadow:0 16px 32px -16px rgba(185,28,28,.85)}
+    #${PAGINA} .dm-it-stufa-allarme-ic{
+      flex:0 0 auto;display:grid;place-items:center;width:38px;height:38px;border-radius:50%;
+      background:rgba(255,255,255,.18);font-size:19px;line-height:1}
+    #${PAGINA} .dm-it-stufa-allarme-parole{display:grid;gap:2px;min-width:0}
+    #${PAGINA} .dm-it-stufa-allarme b{
+      font-size:10.5px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;opacity:.85}
+    #${PAGINA} .dm-it-stufa-allarme-testo{
+      font-size:16px;font-weight:800;line-height:1.25;overflow-wrap:anywhere}
+
     /* ── tema scuro ─────────────────────────────────────────────────────── */
     html[data-theme="dark"] #${PAGINA} .dm-it-tubo{stroke:#26324b}
     html[data-theme="dark"] #${PAGINA} .dm-it-tubo-int{stroke:#141d31}
@@ -1173,6 +1888,32 @@ function installStyles() {
       background:linear-gradient(180deg,#1b2439,#111a2c)}
     html[data-theme="dark"] #${PAGINA} .dm-it-tab{color:#b9c7dc}
     html[data-theme="dark"] #${PAGINA} .dm-it-strip{background:#0c1322;border-color:#26324b}
+    html[data-theme="dark"] #${PAGINA} .dm-it-pellet-cifra{color:#e2e8f0}
+    html[data-theme="dark"] #${PAGINA} .dm-it-pellet-chili .dm-it-pellet-cifra{color:#0f172a}
+    html[data-theme="dark"] #${PAGINA} .dm-it-nome[data-scarso="true"]{color:#fca5a5}
+    /* La stufa al buio: la ceramica un tono sotto, perche' un bianco pieno su
+       un palco scuro abbaglia, e la canna un acciaio che si veda ancora. */
+    html[data-theme="dark"] #${PAGINA} .dm-it-stufa{
+      background:linear-gradient(100deg,#ece4d6,#d2c5b2 46%,#a99780);
+      box-shadow:0 30px 52px -26px rgba(0,0,0,.85),inset 0 0 0 1px rgba(255,255,255,.1)}
+    html[data-theme="dark"] #${PAGINA} .dm-it-canna{stroke:#475569}
+    html[data-theme="dark"] #${PAGINA} .dm-it-canna-int{stroke:#64748b}
+    html[data-theme="dark"] #${PAGINA} .dm-it-stufa-pannello{
+      background:rgba(20,29,49,.95);border-color:#26324b;box-shadow:0 26px 50px -30px rgba(0,0,0,.9)}
+    html[data-theme="dark"] #${PAGINA} .dm-it-stufa-riga{background:#0f172a}
+    html[data-theme="dark"] #${PAGINA} .dm-it-stufa-passo{background:#1b2439;border-color:#2c3a55;color:#e2e8f0}
+    html[data-theme="dark"] #${PAGINA} .dm-it-stufa-val{color:#e2e8f0}
+    html[data-theme="dark"] #${PAGINA} .dm-it-stufa-lbl{color:#93a5c0}
+    html[data-theme="dark"] #${PAGINA} .dm-it-stufa-punti i{background:#334155}
+    html[data-theme="dark"] #${PAGINA} .dm-it-stufa-punti i[data-on="true"]{
+      background:linear-gradient(135deg,#fb923c,#ea580c)}
+    html[data-theme="dark"] #${PAGINA} .dm-it-stufa-fase{background:#0f172a;border-color:#26324b;color:#93a5c0}
+    html[data-theme="dark"] #${PAGINA} .dm-it-stufa-fase[data-brucia="true"]{
+      background:rgba(249,115,22,.12);border-color:rgba(249,115,22,.45);color:#fdba74}
+    html[data-theme="dark"] #${PAGINA} .dm-it-stufa-fase[data-fase="allarme"]{
+      background:rgba(220,38,38,.14);color:#fca5a5}
+    html[data-theme="dark"] #${PAGINA} .dm-it-stufa-accendi:not([data-on="true"]){
+      background:#1b2439;border-color:#2c3a55;color:#cbd5e1}
 
     /* ── telefono: il palco si accorcia e le targhette rientrano ────────── */
     @media (max-width:768px){
@@ -1205,9 +1946,50 @@ function installStyles() {
       #${PAGINA} .dm-it-tab{font-size:11px;padding:10px 8px;letter-spacing:.04em}
       #${PAGINA} .dm-it-tab span:last-child{display:none}
       #${PAGINA} .dm-it-tab-ic{transform:scale(1.25)}
+      /* I due serbatoi (#182) sul telefono non hanno un angolo libero: in
+         quello in basso a destra, dove sta il serbatoio da solo, due non ci
+         stanno accanto a Ritorno, e quello in basso a sinistra e' dell'acqua
+         calda. Il palco allora si allunga di una mensola: la scena resta alta
+         quanto prima — le altre letture non si spostano di un pixel —, i
+         serbatoi stanno sotto, in mezzo, e lo stato con la leva scende in
+         fondo, dove sta sempre. L'avviso della pressione bassa scende con
+         loro, sopra la leva come prima: non sulla mensola. */
+      #${PAGINA} .dm-it-stage[data-dm-it-serbatoi="2"]{height:578px}
+      #${PAGINA} .dm-it-stage[data-dm-it-serbatoi="2"]>.dm-it-scena{bottom:108px}
+      #${PAGINA} .dm-it-stage[data-dm-it-serbatoi="2"] .dm-it-nodo-serbatoi{
+        left:50%!important;top:calc(100% + 12px)!important}
+      #${PAGINA} .dm-it-stage[data-dm-it-serbatoi="2"] .dm-it-comandi-caldaia{bottom:-98px}
+      #${PAGINA} .dm-it-stage[data-dm-it-serbatoi="2"] .dm-it-allarme{bottom:-98px}
+      #${PAGINA} .dm-it-serbatoi{gap:10px}
+      #${PAGINA} .dm-it-serbatoio{gap:7px}
+      #${PAGINA} .dm-it-nodo-serbatoi .dm-it-nome{font-size:9px;padding:4px 9px}
+      #${PAGINA} .dm-it-pellet-cifra{font-size:11.5px;top:5px}
+      /* La stufa (#183): il palco si allunga quanto serve, perche' sotto la
+         scena viene il quadro dei comandi; la scena resta un'altezza sua, e
+         le letture fanno colonna a destra della stufa. */
+      #${PAGINA} .dm-it-stage[data-dm-it-tipo="stufa"]{height:auto;min-height:220px}
+      #${PAGINA} .dm-it-stage[data-dm-it-tipo="stufa"]>.dm-it-scena{position:relative;inset:auto;height:336px}
+      #${PAGINA} .dm-it-stage[data-dm-it-tipo="stufa"]>.dm-it-vuoto{position:relative;inset:auto;min-height:220px}
+      #${PAGINA} .dm-it-stufa{width:128px;height:182px;border-radius:22px 22px 11px 11px}
+      #${PAGINA} .dm-it-stufa-piano{padding:0 8px;border-radius:9px}
+      #${PAGINA} .dm-it-stufa-display{font-size:9px;padding:2px 4px}
+      #${PAGINA} .dm-it-stufa-porta{border-radius:12px}
+      #${PAGINA} .dm-it-aria-computer{display:none}
+      #${PAGINA} .dm-it-aria-telefono{display:inline}
+      #${PAGINA} .dm-it-nodo-fumi{left:75%!important;top:12%!important}
+      #${PAGINA} .dm-it-nodo-stanza{left:75%!important;top:38%!important}
+      #${PAGINA} .dm-it-nodo-pellet-stufa{left:75%!important;top:70%!important}
+      #${PAGINA} .dm-it-nodo-pellet-stufa .dm-it-nome{font-size:9.5px;padding:4px 10px}
+      #${PAGINA} .dm-it-stufa-pannello{
+        position:static;transform:none;width:auto;margin:0 12px 14px;padding:12px;border-radius:20px}
+      #${PAGINA} .dm-it-stufa-passo{width:48px;height:48px;border-radius:15px}
+      #${PAGINA} .dm-it-stufa-val{min-width:84px}
+      #${PAGINA} .dm-it-stufa-allarme{position:static;margin:14px 12px 0}
     }
     @media (prefers-reduced-motion:reduce){
       #${PAGINA} .dm-it-flusso,#${PAGINA} .dm-it-fiamma,#${PAGINA} .dm-it-plate{animation:none!important}
+      #${PAGINA} .dm-it-stufa-lingua,#${PAGINA} .dm-it-stufa-brace,#${PAGINA} .dm-it-aria-calda,
+      #${PAGINA} .dm-it-stufa-ventola-pale{animation:none!important}
     }
     `,
   );

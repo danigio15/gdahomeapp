@@ -929,10 +929,12 @@ export class Commissioni {
      * Supervisor, non di un utente amministratore di Home Assistant.
      *
      * Al Supervisor la stessa cosa si chiede diretta — `http://supervisor/
-     * addons/<add-on>/icon` — e li' il segno e' il suo, ed e' quello giusto:
-     * l'add-on dichiara `hassio_api: true` e `hassio_role: manager` nel
-     * manifesto proprio per poterlo fare. Una strada in meno in mezzo, e le
-     * regole di quella strada non c'entrano piu' niente. */
+     * addons/<add-on>/icon` — e li' non serve nessun permesso: e' la via da
+     * cui la pagina di Home Assistant prende le icone di tutti gli add-on, e
+     * il Supervisor la serve a chiunque senza guardare il segno. Qui c'era
+     * scritto che per farlo serviva `hassio_role: manager`, ed era falso: il
+     * segno che parte qui sotto non apre niente in piu'. Una strada in meno
+     * in mezzo, e le regole di quella strada non c'entrano piu' niente. */
     const dellAddon = /^\/api\/hassio\/(addons\/[^/]+\/(?:icon|logo))$/.exec(dove);
     if (dellAddon && this.casa?.supervisor && this.casa?.segno) {
       return this._logoDalSupervisor(id, entita, dellAddon[1]);
@@ -1768,9 +1770,9 @@ export class Commissioni {
      * ancora: creala» — rispondendo di un'altra cartella, e dando torto a una
      * persona che aveva ragione.
      *
-     * Se la cartella di Home Assistant non e' montata — l'add-on senza
-     * `homeassistant_config:ro`, o aggiornato e non ancora riavviato — si
-     * ripiega su quella del ponte: e' meglio mostrare le foto caricate
+     * Se la cartella di Home Assistant non e' montata — un manifesto senza
+     * `homeassistant_config`, o un add-on aggiornato e non ancora riavviato —
+     * si ripiega su quella del ponte: e' meglio mostrare le foto caricate
      * dall'app che non mostrare niente. */
     const diCasa =
       detto.root === "casa" || (detto.root !== "ponte" && Boolean(this.fotoDiCasa?.cE));

@@ -1569,11 +1569,18 @@
 
   /* ─── L'aggiornamento del ponte ──────────────────────────────────────────
    *
-   * Un add-on locale non ha nessun negozio dietro: Home Assistant guarda il
-   * manifesto che trova in `/addons/gdahome`, e quella e' l'unica versione che
-   * conosce. Finche' quei file non cambiano, «Aggiorna» non compare mai —
-   * e a cambiarli serviva un terminale e un gettone da incollare ogni volta.
-   * Da qui lo fa il ponte.
+   * Gli aggiornamenti arrivano dal negozio di Home Assistant, come per ogni
+   * altro add-on, e questa scheda lo dice: quale versione gira, e dove si
+   * preme «Aggiorna».
+   *
+   * Qui c'era anche un bottone che si portava dentro la versione nuova da se'.
+   * Serviva a chi teneva l'add-on copiato in `/addons/gdahome`, e per farlo il
+   * ponte voleva quella cartella in scrittura e un ruolo da amministratore del
+   * Supervisor. Il manifesto non li chiede piu' — il perche' sta in
+   * `config.yaml` — e allora il ponte risponde `locale: false` in ogni casa:
+   * il bottone, e quello che guarda su GitHub se c'e' una versione nuova, non
+   * si mostrano. Chi li vede e' solo chi quella cartella se l'e' rimessa nella
+   * sua copia dell'add-on.
    */
   function avvisaSullAggiornamento(testo) {
     var avviso = trova("aggiornamento-avviso");
@@ -1582,8 +1589,29 @@
   }
 
   function disegnaLAggiornamento(stato) {
-    trova("aggiornamento").hidden = !stato.locale;
-    if (!stato.locale) return;
+    trova("aggiornamento").hidden = false;
+    var laMia = stato.mia
+      ? due(
+          "Questo add-on è la versione " + stato.mia + ". ",
+          "This add-on is version " + stato.mia + ". ",
+        )
+      : "";
+    if (stato.locale !== true) {
+      trova("aggiornamento-riga").textContent =
+        laMia +
+        due(
+          "Gli aggiornamenti arrivano da Home Assistant, come per ogni altro add-on.",
+          "Updates come from Home Assistant, like for any other add-on.",
+        );
+      trova("aggiornamento-spiega").textContent = due(
+        "Quando ce n'è uno nuovo: Impostazioni → Componenti aggiuntivi → gdahome → Aggiorna.",
+        "When there is a new one: Settings → Add-ons → gdahome → Update.",
+      );
+      trova("aggiorna-il-ponte").hidden = true;
+      trova("riguarda").hidden = true;
+      return;
+    }
+    trova("riguarda").hidden = false;
     var riga = due(
       "Questo add-on è la versione " + (stato.mia || "—") + ".",
       "This add-on is version " + (stato.mia || "—") + ".",

@@ -1130,7 +1130,7 @@ export function testaDellaStanza(pagina, states = {}) {
     : "";
   return `<section class="dm-stanze-testa" aria-label="${esc(nome)}">
     <div class="dm-stanze-testa-su">
-      <span class="dm-stanze-orb dm-stanze-testa-orb" aria-hidden="true">${disegnoDellaStanza(pagina, 40)}</span>
+      <span class="dm-stanze-orb dm-stanze-testa-orb" aria-hidden="true">${esc(pagina.senzaStanza ? "📦" : roomGlyph(pagina.icon) || "🏠")}</span>
       <span class="dm-stanze-testa-nome"><b>${esc(nome)}</b>${sotto ? `<s>${esc(sotto)}</s>` : ""}</span>
     </div>
     ${misure ? `<div class="dm-stanze-testa-misure">${misure}</div>` : ""}

@@ -1,5 +1,17 @@
 /* Il ponte si aggiorna da se'.
  *
+ * **Oggi dorme, e va detto per primo.** Il manifesto non monta piu' la
+ * cartella `/addons` — il perche' per intero sta in `config.yaml` — quindi in
+ * ogni casa `locale()` risponde di no: la console il bottone non lo mostra, e
+ * dice invece da dove arrivano gli aggiornamenti, cioe' dal negozio
+ * (Impostazioni → Componenti aggiuntivi → gdahome → Aggiorna). Il codice
+ * resta, con le sue prove, per chi si tiene una copia sua dell'add-on e si
+ * rimette quella riga nel manifesto sapendo cos'e': la cartella di tutti gli
+ * add-on locali della casa aperta in scrittura. Il ruolo `manager`, che
+ * `rifalla()` usa per far rileggere il negozio al Supervisor, il manifesto ce
+ * l'ha gia', per il rapporto all'installatore. Quello che segue racconta come
+ * funziona quando e' sveglio.
+ *
  * Un add-on **locale** — quello che sta in `/addons/gdahome`, installato
  * copiandoci i file dentro — non ha nessun negozio dietro: Home Assistant
  * guarda il `config.yaml` che trova in quella cartella, e la versione che
@@ -326,8 +338,9 @@ export class Aggiornamento {
      * console lo dice. */
     chiave = CHIAVE_DI_CHI_PUBBLICA,
     /* La cartella degli add-on locali, che il Supervisor monta qui quando il
-     * manifesto chiede `addons:rw`. Fuori dal Supervisor non c'e', e allora
-     * non si aggiorna niente: lo si dice, invece di provarci. */
+     * manifesto chiede `addons:rw` — e quello di gdahome oggi non la chiede
+     * piu' (vedi in cima). Dove non c'e' non si aggiorna niente: lo si dice,
+     * invece di provarci. */
     addon = process.env.PONTE_ADDONS || "/addons",
     nome = "gdahome",
     passaggio = process.env.PONTE_PASSAGGIO || join(tmpdir(), "ponte-nuovo"),
@@ -371,8 +384,10 @@ export class Aggiornamento {
    * Chi l'ha installato da un archivio di add-on non ha bisogno di niente di
    * tutto questo — li' l'aggiornamento arriva dal negozio come per ogni altro
    * add-on — e chi lo fa girare da una copia della repository non ha nessuna
-   * cartella da scambiare. In tutti e due i casi il bottone non si mostra
-   * nemmeno: un bottone che non puo' funzionare e' peggio di nessun bottone.
+   * cartella da scambiare. E da quando il manifesto non monta piu' `/addons`
+   * la cartella non si vede da nessuna parte, quindi qui la risposta e' no in
+   * ogni casa. Il bottone allora non si mostra nemmeno: un bottone che non puo'
+   * funzionare e' peggio di nessun bottone.
    */
   locale() {
     return this.attrezzi.esiste(this.dove) && this.attrezzi.esiste(join(this.dove, "config.yaml"));
@@ -637,7 +652,9 @@ export class Aggiornamento {
     }
     /* Prima rileggere il negozio, se no il Supervisor ricostruisce da quello
      * che credeva ci fosse. Le due vie sono la nuova e quella di prima: le
-     * versioni vecchie del Supervisor conoscono solo la seconda. */
+     * versioni vecchie del Supervisor conoscono solo la seconda. Tutte e due
+     * il Supervisor le lascia chiedere solo a un add-on `manager`: senza quel
+     * ruolo rispondono di no, e si va avanti lo stesso. */
     for (const via of ["/store/reload", "/addons/reload"]) {
       if (await this._bussa(via)) break;
     }

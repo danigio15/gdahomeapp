@@ -19,6 +19,11 @@
  * regola sta fuori dal disegno perche' la stessa risposta serve alla pagina,
  * alla scheda di configurazione e alla barra di navigazione, e tre copie della
  * stessa domanda sono tre occasioni di rispondere diverso.
+ *
+ * Poi e' arrivata la quarta, la STUFA A PELLET (#183). L'acqua calda non la
+ * fa: scalda la stanza in cui sta. Ma e' una macchina del caldo di casa come
+ * le altre, e col serbatoio del pellet in comune con la caldaia; il suo
+ * modello sta in fondo a questo file.
  */
 
 import {
@@ -30,19 +35,27 @@ import {
   normalizzaVoce,
   overridesPerScelto,
 } from "./piu-di-uno.js";
+import { passoDellUnita, scalaDellUnita } from "./scala-clima.js";
 
 /** La chiave in cui vive la scelta. */
 export const CHIAVE_IMPIANTI = "cd_impianti_termici";
 
 /* L'ordine e' quello in cui si presentano le linguette, e non e' alfabetico:
  * e' l'ordine in cui il calore arriva in casa — prima quello che e' gratis,
- * poi quello che si paga a corrente, poi quello che si paga a gas. */
-export const TIPI_TERMICI = Object.freeze(["solare", "scaldabagno", "caldaia"]);
+ * poi quello che si paga a corrente, poi quello che si paga a gas.
+ *
+ * La stufa a pellet viene per ultima (#183), e non per anzianita': e' l'unica
+ * delle quattro che non porta il calore in giro per la casa con l'acqua. Lo fa
+ * nella stanza in cui sta, a sacchi comprati uno per volta — dopo il gas, nella
+ * stessa fila, c'e' il fuoco che si vede. In coda, poi, non sposta nessuno:
+ * chi aveva gia' scelto le sue tre linguette le ritrova nello stesso posto. */
+export const TIPI_TERMICI = Object.freeze(["solare", "scaldabagno", "caldaia", "stufa"]);
 
 export const ETICHETTE_TERMICHE = Object.freeze({
   solare: ["Solare termico", "Solar thermal"],
   scaldabagno: ["Scaldabagno", "Water heater"],
   caldaia: ["Caldaia", "Boiler"],
+  stufa: ["Stufa a pellet", "Pellet stove"],
 });
 
 /* Come si chiama la sezione, adesso che non e' piu' una macchina sola.
@@ -63,16 +76,22 @@ export const TITOLI_TERMICI = Object.freeze({
   solare: ["Impianto solare termico", "Solar thermal plant"],
   scaldabagno: ["Scaldabagno elettrico", "Electric water heater"],
   caldaia: ["Caldaia", "Boiler"],
+  stufa: ["Stufa a pellet", "Pellet stove"],
 });
 
+/* La briciola della sezione dice quali macchine ricopre, e da quando c'e' la
+ * stufa (#183) sono quattro: lasciarla a tre voleva dire, a chi ha caldaia e
+ * stufa, un sottotitolo che nomina due macchine che non ha e tace quella che
+ * sta guardando. */
 export const BRICIOLE_TERMICHE = Object.freeze({
-  sezione: ["Solare · Scaldabagno · Caldaia", "Solar · Water heater · Boiler"],
+  sezione: ["Solare · Scaldabagno · Caldaia · Stufa", "Solar · Water heater · Boiler · Stove"],
   solare: [
     "Circuito primario · Boiler · Ricircolo sanitario",
     "Primary loop · Tank · Recirculation",
   ],
   scaldabagno: ["Acqua calda · Resistenza · Consumo", "Hot water · Element · Consumption"],
   caldaia: ["Mandata · Ritorno · Pressione", "Flow · Return · Pressure"],
+  stufa: ["Fiamma · Potenza · Pellet", "Flame · Power · Pellet"],
 });
 
 /* Come si chiama la sezione, adesso che non e' piu' una macchina sola.
@@ -104,7 +123,7 @@ export function normalizzaScelta(stored) {
     scelta[tipo] = acceso;
     if (acceso) almenoUna = true;
   }
-  /* Una scelta salvata con tutti e tre spenti e' una scelta: chi ha tolto ogni
+  /* Una scelta salvata con tutto spento e' una scelta: chi ha tolto ogni
    * spunta vuole la sezione vuota, e riempirgliela sarebbe disobbedire. Si
    * distingue dal «non ha mai scelto» perche' l'oggetto in memoria c'e'. */
   return { ...scelta, vuota: !almenoUna };
@@ -214,6 +233,18 @@ export const CASELLE_CALDAIA = Object.freeze([
   { campo: "ventilatoreFumi", tipo: "percento", gruppo: GRUPPO_PELLET },
   { campo: "ossigeno", tipo: "percento", gruppo: GRUPPO_PELLET },
   { campo: "pellet", tipo: "percento", gruppo: GRUPPO_PELLET },
+  /* Il secondo serbatoio (#182).
+   *
+   * «Potresti aggiungere ancora una lettura pellet in %? Ce n'e' una ma la
+   * utilizzo gia'. Attualmente ho messo la seconda lettura pellet nella
+   * cartella ossigeno.» La casella dell'ossigeno faceva da serbatoio, e la
+   * scena la scriveva come ossigeno: un numero giusto sotto il nome sbagliato.
+   *
+   * Sta subito dopo il primo perche' e' la stessa domanda — quanto pellet
+   * resta — fatta a un altro serbatoio: stessa lettura in percentuale o in
+   * chili, stessa soglia sotto cui si ordina. La chiave del primo resta
+   * `pellet`: chi ne ha uno solo non ha niente da migrare. */
+  { campo: "pellet2", tipo: "percento", gruppo: GRUPPO_PELLET },
   { campo: "mandataCalcolata", tipo: "gradi", gruppo: GRUPPO_PELLET },
 ]);
 
@@ -421,6 +452,7 @@ export function letturaCaldaia(config, states = {}, resolve = (value) => value) 
   };
   const mandata = numero(leggi(dato.mandata)?.state);
   const ritorno = numero(leggi(dato.ritorno)?.state);
+  const secondoSerbatoio = letturaPellet(leggi(dato.pellet2));
   const statoEntita = leggi(dato.stato);
   const fiammaEntita = leggi(dato.fiamma);
   const fiamma = accesoCaldaia(fiammaEntita?.state);
@@ -478,8 +510,29 @@ export function letturaCaldaia(config, states = {}, resolve = (value) => value) 
     ventilatore: letturaVentilatore(dato.ventilatoreFumi, leggi(dato.ventilatoreFumi)),
     ossigeno: numero(leggi(dato.ossigeno)?.state),
     ...letturaPellet(leggi(dato.pellet)),
+    /* Il secondo serbatoio (#182), letto come il primo: in percentuale
+     * riempie il disegno, in chili resta un numero. */
+    pellet2: secondoSerbatoio.pellet,
+    pellet2Chili: secondoSerbatoio.pelletChili,
     mandataCalcolata: numero(leggi(dato.mandataCalcolata)?.state),
   };
+}
+
+/**
+ * I serbatoi della caldaia che dicono qualcosa, nell'ordine delle caselle.
+ *
+ * Uno, due o nessuno (#182): un serbatoio che nessuno ha mappato — o che in
+ * questo momento non risponde — non e' un serbatoio vuoto, e non si disegna.
+ * Ognuno porta la sua quota o i suoi chili, e se sta finendo: la soglia e'
+ * la stessa per tutti e due, perche' e' la stessa domanda — quando ordinare.
+ */
+export function serbatoiDellaCaldaia(lettura) {
+  return [
+    { campo: "pellet", pellet: lettura?.pellet ?? null, chili: lettura?.pelletChili ?? null },
+    { campo: "pellet2", pellet: lettura?.pellet2 ?? null, chili: lettura?.pellet2Chili ?? null },
+  ]
+    .filter((serbatoio) => serbatoio.pellet != null || serbatoio.chili != null)
+    .map((serbatoio) => ({ ...serbatoio, scarso: pelletScarso(serbatoio.pellet) === true }));
 }
 
 /* La pressione di un impianto domestico sta fra un bar e mezzo e due e mezzo;
@@ -628,4 +681,688 @@ export function entitaDeiSolari(lista) {
  */
 export function overridesPerSolare(overrides, impianto) {
   return overridesPerScelto(overrides, impianto, REFS_SOLARE);
+}
+
+/* ── la stufa a pellet (#183) ─────────────────────────────────────────────
+ *
+ * «E' possibile inserire una scheda per inserire i dati delle stufe a
+ * pellet?»
+ *
+ * Non e' la caldaia a pellet con un altro nome. La caldaia scalda l'acqua e la
+ * manda ai termosifoni, e di lei si guarda la mandata; la stufa sta in
+ * soggiorno, scalda l'aria della stanza in cui sta, e di lei si guarda la
+ * fiamma dietro il vetro, la potenza a cui brucia, il ventilatore che spinge
+ * l'aria calda e il serbatoio che si svuota. Edilkamin, MCZ, Palazzetti, le
+ * Micronova di Extraflame, Ravelli e Jolly Mec, le Rika: ognuna arriva in Home
+ * Assistant con la sua integrazione e con le sue parole, ma le caselle sono
+ * quasi sempre le stesse — un termostato, una fase, un livello di potenza, un
+ * ventilatore, un serbatoio.
+ *
+ * Sta in questo modulo perche' divide con la caldaia il serbatoio — la stessa
+ * lettura in percentuale o in chili, la stessa soglia — e la regola con cui si
+ * scrive una fase che non si conosce. Le sue caselle invece stanno in una
+ * chiave sua, `cd_stufe`, come quelle delle caldaie stanno in `cd_caldaia`:
+ * sono un'altra macchina.
+ *
+ * Qui non c'e' DOM e non si chiama nessun servizio: si legge, e si dice quale
+ * servizio chiamare. A chiamarlo e' la pagina. */
+export const CHIAVE_STUFE = "cd_stufe";
+
+/* Le caselle di una stufa, tutte facoltative: quello che non e' mappato non si
+ * disegna.
+ *
+ * Il termostato prima di tutto, perche' da solo dice quasi tutto — accesa o
+ * spenta, l'obiettivo, la temperatura della stanza e, se li ha, i modi del
+ * ventilatore. L'interruttore subito dopo, per chi un termostato non ce l'ha.
+ * Poi le letture, nell'ordine in cui si guardano: la fase, la stanza, la
+ * potenza, il ventilatore, i fumi, il pellet, e l'allarme per ultimo, che e'
+ * l'unica casella che si spera resti muta. */
+export const CASELLE_STUFA = Object.freeze([
+  { campo: "clima", tipo: "termostato" },
+  { campo: "interruttore", tipo: "acceso" },
+  { campo: "stato", tipo: "fase" },
+  { campo: "temperatura", tipo: "gradi" },
+  { campo: "potenza", tipo: "livello" },
+  { campo: "ventilatore", tipo: "livello" },
+  { campo: "fumi", tipo: "gradi" },
+  { campo: "pellet", tipo: "percento" },
+  { campo: "allarme", tipo: "allarme" },
+]);
+
+/** Una stufa, ripulita. */
+export function normalizzaStufa(stored) {
+  const dato = stored && typeof stored === "object" && !Array.isArray(stored) ? stored : {};
+  const fuori = { name: clean(dato.name) };
+  for (const { campo } of CASELLE_STUFA) fuori[campo] = clean(dato[campo]);
+  return fuori;
+}
+
+/* Le stufe di casa, che possono essere piu' d'una: una in soggiorno e una in
+ * mansarda e' il caso comune. La forma e' quella delle caldaie (#281) — una
+ * lista con un id per riga — e anche qui una riga senza nemmeno un'entita' non
+ * e' una stufa: e' quella appena aggiunta, che vive nella scheda finche' non
+ * la si compila. */
+export function normalizzaStufe(stored) {
+  const righe = Array.isArray(stored)
+    ? stored
+    : stored && typeof stored === "object"
+      ? [stored]
+      : [];
+  return righe
+    .map((riga, indice) => ({
+      ...normalizzaStufa(riga),
+      id: clean(riga?.id) || `stufa-${indice + 1}`,
+    }))
+    .filter((riga) => CASELLE_STUFA.some(({ campo }) => riga[campo]));
+}
+
+/** Le entita' che una stufa tiene d'occhio. */
+export function entitaDellaStufa(config) {
+  const dato = normalizzaStufa(config);
+  return CASELLE_STUFA.map(({ campo }) => dato[campo]).filter(Boolean);
+}
+
+/** Le entita' di tutte le stufe. */
+export function entitaDelleStufe(stored) {
+  return normalizzaStufe(stored).flatMap((riga) => entitaDellaStufa(riga));
+}
+
+/* Le parole che non dicono niente: non sono una fase, sono un'assenza. */
+const MUTE = new Set(["", "unavailable", "unknown", "none", "null"]);
+
+const muto = (stato) => !stato || MUTE.has(clean(stato.state).toLowerCase());
+
+/* Una parola pareggiata prima di guardarla: senza accenti ne' dieresi —
+ * «Zündung» e «Zundung» sono la stessa —, senza maiuscole, e con uno spazio al
+ * posto di trattini, sottolineature e due punti: `burning_mod` e «Burning
+ * mod» sono la stessa fase. La dieresi scritta «ue» resta com'e': per quella
+ * ci pensano le regole. */
+function pareggia(testo) {
+  return clean(testo)
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+}
+
+/* Le fasi di una stufa, e come le dice la pagina.
+ *
+ * Il ciclo e' lo stesso per tutte le marche: si accende — pulizia, carico del
+ * pellet, la candeletta, la fiamma che si stabilizza —, lavora a una potenza,
+ * ogni tanto pulisce il braciere, rallenta quando la stanza e' quasi calda, si
+ * spegne raffreddandosi e resta in attesa o spenta. Le parole invece sono di
+ * chi ha scritto l'integrazione, nella lingua dell'account: Micronova dice
+ * «Lavoro» e «Pulizia braciere», MCZ «Power 3» e «Cleaning hot», Palazzetti
+ * manda la chiave del suo stato — `burning_mod`, `cool_fluid` — e Rika parla
+ * tedesco.
+ *
+ * Qui stanno le otto fasi che la pagina sa disegnare. Una parola che non si
+ * riconosce non viene fatta entrare a forza in una di queste: resta la parola
+ * che e', e la pagina la scrive cosi' — come fa la caldaia con «Stoerung». */
+export const FASI_STUFA = Object.freeze({
+  accensione: ["Accensione", "Ignition"],
+  lavoro: ["Lavoro", "Working"],
+  modulazione: ["Modulazione", "Modulating"],
+  pulizia: ["Pulizia braciere", "Brazier cleaning"],
+  spegnimento: ["Spegnimento", "Shutting down"],
+  attesa: ["In attesa", "Standby"],
+  spenta: ["Spenta", "Off"],
+  allarme: ["In allarme", "In alarm"],
+});
+
+/* Come si riconoscono, in italiano, in inglese e in tedesco, nell'ordine in
+ * cui si guardano.
+ *
+ * L'ordine e' la regola. Un allarme prima di tutto: «Allarme pellet esaurito»
+ * contiene «pellet», ma e' un allarme, e chi lo legge come una fase qualunque
+ * lo perde. Poi lo spegnimento, perche' «pulizia finale» e «final cleaning»
+ * sono la stufa che si spegne e non quella che pulisce il braciere mentre
+ * lavora; poi la pulizia, che di giorno interrompe il lavoro; poi
+ * l'accensione, la modulazione e il lavoro, e per ultime l'attesa e la stufa
+ * spenta, che sono le parole piu' corte e quindi le piu' facili da trovare
+ * dentro un'altra.
+ *
+ * Un avviso di manutenzione — «Cleaning warning», «Wartung» — non e' una fase
+ * ne' un allarme: e' un promemoria, e resta la parola che e'. */
+const FASI_RICONOSCIUTE = Object.freeze([
+  [
+    "allarme",
+    new RegExp(
+      [
+        "\\b(?:allarm[ei]|alarm[es]?|alarma|error[ei]?|err|st(?:o|oe)rung|guast[oi]|fault|failure",
+        "|failed|blocc(?:o|ata|ato)|blocked|lock ?out|pellet (?:esaurit[oa]|finit[oa]|finished|empty",
+        "|leer)|(?:firewood|legna) (?:esaurit[oa]|finit[oa]|finished)|no pellets?",
+        "|(?:mancata|fallita) accensione|ignition fail\\w*|door open|porta aperta|t(?:u|ue)r offen",
+        "|troppo alt[ao]|surriscald\\w*|(?:temp|temperature|temperatura) (?:too )?high)\\b|fehler",
+        "|^(?:a|al|e|er|err) ?\\d{1,3}$",
+      ].join(""),
+    ),
+  ],
+  [null, /\b(?:warning|avviso|wartung|manutenzione|maintenance)\b/],
+  [
+    "spegnimento",
+    new RegExp(
+      [
+        "\\b(?:spegniment\\w*|raffreddament\\w*|shut ?down|shutting down|switch(?:ing)? off",
+        "|turning off|extinguish\\w*|cool(?:ing)?(?: ?down)?|cool fluid|fire stop|final clean\\w*",
+        "|pulizia finale|fine combustione|burn ?out|ausbrand|abschalt\\w*|abk(?:u|ue)hl\\w*",
+        "|ausk(?:u|ue)hl\\w*|erl(?:o|oe)sch\\w*|nachlauf)\\b",
+      ].join(""),
+    ),
+  ],
+  ["pulizia", /\b(?:pulizia|pulitura|clean\w*)\b|reinigung/],
+  [
+    "accensione",
+    new RegExp(
+      [
+        "\\b(?:accension\\w*|avvio|partenza|preriscald\\w*|preparazion\\w*",
+        "|carica(?:mento)? pellet|carico pellet|fiamma presente|attesa fiamma|stabilizz\\w*",
+        "|controllo fiamma|ignit\\w*|start\\w*|preheat\\w*|pre heat\\w*|fuel\\w*|load\\w*",
+        "|heat ?up|ign test|test fire|fire present|flame (?:light|present)|stabili[sz]\\w*",
+        "|check\\w*|anheiz\\w*|vorheiz\\w*|vorw(?:a|ae)rm\\w*|vorbereit\\w*)\\b",
+        "|z(?:u|ue)nd|anz(?:u|ue)nd",
+      ].join(""),
+    ),
+  ],
+  ["modulazione", /\b(?:modula\w*|burning mod|regelbetrieb|reduziert\w*)\b/],
+  [
+    "lavoro",
+    new RegExp(
+      [
+        "\\b(?:lavoro|in funzione|funzionament\\w*|riscaldament\\w*|work\\w*|heat|heating",
+        "|burn\\w*|running|power ?\\d|potenza ?\\d|p ?\\d|heizen|heizbetrieb|betrieb|brennt",
+        "|leistung ?\\d|stufe ?\\d|accesa|acceso|on)\\b",
+      ].join(""),
+    ),
+  ],
+  [
+    "attesa",
+    /\b(?:stand ?by|attesa|in attesa|pronta|pronto|ready|bereit|idle|wait\w*|pausa|pause|sleep|ruhe\w*)\b/,
+  ],
+  ["spenta", /\b(?:spent[ao]|off|aus|ausgeschaltet|stop\w*|ferm[ao]|false|disattivat[ao])\b|^0$/],
+]);
+
+/**
+ * La fase di una stufa dalla parola che scrive, o `null` se non la sappiamo.
+ *
+ * `null` non e' «spenta»: e' una parola che non conosciamo, e la pagina la
+ * scrive com'e'. Le parole di sempre — on e off, heat e idle — valgono anche
+ * qui, attraverso le stesse della caldaia.
+ */
+export function faseStufa(testo) {
+  const parola = pareggia(testo);
+  if (MUTE.has(parola)) return null;
+  for (const [fase, regola] of FASI_RICONOSCIUTE) if (regola.test(parola)) return fase;
+  const acceso = accesoCaldaia(testo);
+  return acceso === true ? "lavoro" : acceso === false ? "spenta" : null;
+}
+
+/* Le fasi in cui dietro il vetro c'e' il fuoco. Nello spegnimento resta la
+ * brace, che la pagina disegna a parte: una fiamma che danza sopra una stufa
+ * che si sta spegnendo direbbe il contrario di quello che succede. */
+const FASI_COL_FUOCO = new Set(["accensione", "lavoro", "modulazione", "pulizia"]);
+
+/* La fase che il termostato lascia capire, per chi non ha mappato quella della
+ * stufa: `hvac_action` dice se sta scaldando, e il modo se e' spenta. */
+function faseDalTermostato(stato) {
+  if (muto(stato)) return null;
+  const azione = clean(stato.attributes?.hvac_action).toLowerCase();
+  if (azione === "heating") return "lavoro";
+  if (azione === "preheating") return "accensione";
+  if (azione === "idle") return "attesa";
+  if (azione === "off" || clean(stato.state).toLowerCase() === "off") return "spenta";
+  return null;
+}
+
+/* Cosa si puo' accendere e spegnere: un termostato, un interruttore, un
+ * ventilatore. Un `binary_sensor` messo nella casella sbagliata si legge, ma
+ * non diventa un tasto che non comanda niente. */
+const DOMINI_COMANDABILI = new Set(["climate", "switch", "input_boolean", "light", "fan"]);
+
+/* Quanti pallini al massimo: oltre dieci non e' piu' un livello a scatti, e'
+ * una scala, e si scrive il numero. */
+const PALLINI_MASSIMI = 10;
+
+const arrotonda = (valore) => Math.round(valore * 1000) / 1000;
+
+/* Quale pallino e' acceso per un livello numerico: dal valore quando i
+ * pallini contano il valore, dal posto nella scala negli altri casi. */
+function pallinoDelNumero({ min, passo, quanti, contaDalValore }, valore) {
+  if (valore === null || valore === undefined || !quanti) return null;
+  return contaDalValore ? Math.round(valore) : Math.round((valore - min) / passo) + 1;
+}
+
+/* Quanti pallini e quale e' acceso, per un livello che va per scelte. */
+function conLeScelte(livello) {
+  const quanti = livello.opzioni.length;
+  const indice = livello.opzioni.indexOf(livello.valore);
+  return {
+    ...livello,
+    quanti: quanti >= 2 && quanti <= PALLINI_MASSIMI ? quanti : null,
+    livello: indice >= 0 ? indice + 1 : null,
+  };
+}
+
+/**
+ * Il livello di una cosa che si regola a scatti: la potenza a cui brucia, la
+ * velocita' del ventilatore.
+ *
+ * Ogni integrazione lo pubblica a modo suo. C'e' chi lo da' come `number` da
+ * 1 a 5, chi come `select` con «P1»…«P5» o «Power 1»…«Power 5»; il ventilatore
+ * e' spesso un `fan` con la percentuale o coi suoi preset. A chi configura non
+ * si chiede quale sia: lo dicono il dominio e gli attributi al momento della
+ * lettura, come per il ventilatore dei fumi della caldaia. Un `sensor` si
+ * legge e basta: e' un livello che si guarda, non uno che si comanda.
+ *
+ * `null` quando non e' mappato: un livello che non c'e' non e' un livello a
+ * zero.
+ */
+export function livelloDa(entity, stato) {
+  const id = clean(entity);
+  if (!id) return null;
+  const dominio = id.split(".")[0];
+  const attributi = stato?.attributes || {};
+  const disponibile = !muto(stato);
+  const base = { entity: id, dominio, disponibile };
+  if (dominio === "number" || dominio === "input_number") {
+    const min = numero(attributi.min) ?? 1;
+    const max = numero(attributi.max) ?? 5;
+    const passo = numero(attributi.step) > 0 ? numero(attributi.step) : 1;
+    const valore = disponibile ? numero(stato.state) : null;
+    /* I pallini contano dal valore quando il passo e' uno e la scala parte da
+     * zero o da uno — 3 su 5 accende tre pallini, e lo zero non ne accende
+     * nessuno —, e dal posto nella scala negli altri casi. */
+    const contaDalValore = passo === 1 && min >= 0 && min <= 1 && max <= PALLINI_MASSIMI;
+    const posti = Math.round((max - min) / passo) + 1;
+    const quanti = contaDalValore ? max : posti >= 2 && posti <= PALLINI_MASSIMI ? posti : null;
+    const numerico = { ...base, modo: "numero", valore, min, max, passo, quanti, contaDalValore };
+    return { ...numerico, livello: pallinoDelNumero(numerico, valore) };
+  }
+  if (dominio === "select" || dominio === "input_select") {
+    const opzioni = (Array.isArray(attributi.options) ? attributi.options : [])
+      .map(clean)
+      .filter(Boolean);
+    const valore = disponibile ? clean(stato.state) : null;
+    return conLeScelte({ ...base, modo: "scelta", valore, opzioni });
+  }
+  if (dominio === "fan") {
+    const acceso = disponibile ? accesoCaldaia(stato.state) : null;
+    const percento = numero(attributi.percentage);
+    const passo =
+      numero(attributi.percentage_step) > 0
+        ? numero(attributi.percentage_step)
+        : numero(attributi.speed_count) > 0
+          ? 100 / numero(attributi.speed_count)
+          : null;
+    if (percento !== null || passo !== null) {
+      const scatto = passo ?? 20;
+      const quanti = Math.round(100 / scatto);
+      /* Un ventilatore spento spesso non ha percentuale: e' a zero, non ignoto. */
+      const valore = disponibile ? (acceso === false ? 0 : percento) : null;
+      return {
+        ...base,
+        modo: "percento",
+        valore,
+        min: 0,
+        max: 100,
+        passo: scatto,
+        acceso,
+        quanti: quanti >= 2 && quanti <= PALLINI_MASSIMI ? quanti : null,
+        livello: valore === null ? null : Math.round(valore / scatto),
+      };
+    }
+    const preset = (Array.isArray(attributi.preset_modes) ? attributi.preset_modes : [])
+      .map(clean)
+      .filter(Boolean);
+    if (preset.length)
+      return conLeScelte({
+        ...base,
+        modo: "preset",
+        valore: disponibile ? clean(attributi.preset_mode) || null : null,
+        opzioni: preset,
+        acceso,
+      });
+    return { ...base, modo: "interruttore", valore: null, acceso, quanti: null, livello: null };
+  }
+  /* Un sensore, o qualunque altra cosa che si legge soltanto. */
+  const valore = disponibile ? (numero(stato.state) ?? clean(stato.state)) : null;
+  return { ...base, modo: "lettura", valore, quanti: null, livello: null };
+}
+
+/**
+ * Il ventilatore dai modi del termostato, per chi non ha un'entita' sua.
+ *
+ * Molte stufe arrivano con un solo `climate`, e la velocita' dell'aria sta li'
+ * dentro: `fan_modes` e `fan_mode`. Senza modi non c'e' niente da regolare.
+ */
+export function livelloDaiModi(entity, stato) {
+  const id = clean(entity);
+  const modi = stato?.attributes?.fan_modes;
+  if (!id || !Array.isArray(modi)) return null;
+  const opzioni = modi.map(clean).filter(Boolean);
+  if (!opzioni.length) return null;
+  const disponibile = !muto(stato);
+  return conLeScelte({
+    entity: id,
+    dominio: "climate",
+    disponibile,
+    modo: "modi",
+    valore: disponibile ? clean(stato.attributes?.fan_mode) || null : null,
+    opzioni,
+  });
+}
+
+/**
+ * Lo stesso livello con un altro valore: quello appena chiesto, che Home
+ * Assistant non ha ancora confermato. I pallini si ricontano con la regola
+ * della lettura, cosi' la pagina mostra subito il passo fatto.
+ */
+export function livelloConValore(livello, valore) {
+  if (!livello) return livello;
+  if (livello.modo === "numero")
+    return { ...livello, valore, livello: pallinoDelNumero(livello, valore) };
+  if (livello.modo === "percento")
+    return {
+      ...livello,
+      valore,
+      acceso: valore > 0,
+      livello: valore === null ? null : Math.round(valore / livello.passo),
+    };
+  if (livello.modo === "scelta" || livello.modo === "preset" || livello.modo === "modi")
+    return conLeScelte({ ...livello, valore });
+  if (livello.modo === "interruttore") return { ...livello, acceso: valore === "on" };
+  return livello;
+}
+
+/**
+ * Il valore che viene dopo, un passo su (`verso` positivo) o giu'.
+ *
+ * Mai fuori dalla scala che l'entita' dichiara — `min`, `max`, le opzioni —
+ * e mai un comando che non cambia niente: in cima e in fondo si torna `null`,
+ * e la pagina lo sa prima di premere. Da un valore che non si sa non si fa un
+ * passo, tranne che per le scelte: un «+» da nessuna parte e' la prima.
+ */
+export function prossimoLivello(livello, verso) {
+  const direzione = Math.sign(Number(verso) || 0);
+  if (!livello || !direzione || livello.disponibile === false) return null;
+  if (livello.modo === "numero") {
+    const { valore, min, max, passo } = livello;
+    if (valore === null || valore === undefined) return null;
+    const grezzo = min + Math.round((valore + direzione * passo - min) / passo) * passo;
+    const prossimo = arrotonda(Math.min(max, Math.max(min, grezzo)));
+    return prossimo === valore ? null : prossimo;
+  }
+  if (livello.modo === "percento") {
+    const valore = livello.valore ?? 0;
+    const grezzo = Math.round((valore + direzione * livello.passo) / livello.passo) * livello.passo;
+    const prossimo = Math.round(Math.min(100, Math.max(0, grezzo)));
+    return prossimo === Math.round(valore) ? null : prossimo;
+  }
+  if (livello.modo === "scelta" || livello.modo === "preset" || livello.modo === "modi") {
+    const opzioni = livello.opzioni || [];
+    if (!opzioni.length) return null;
+    const indice = opzioni.indexOf(livello.valore);
+    if (indice < 0) return direzione > 0 ? opzioni[0] : null;
+    const prossimo = Math.min(opzioni.length - 1, Math.max(0, indice + direzione));
+    return prossimo === indice ? null : opzioni[prossimo];
+  }
+  if (livello.modo === "interruttore") {
+    if (direzione > 0) return livello.acceso === true ? null : "on";
+    return livello.acceso === false ? null : "off";
+  }
+  return null;
+}
+
+/** Il servizio che porta il livello un passo piu' su o piu' giu', o `null`. */
+export function comandoLivello(livello, verso) {
+  const prossimo = prossimoLivello(livello, verso);
+  if (prossimo === null) return null;
+  const entity_id = livello.entity;
+  if (livello.modo === "numero")
+    return { domain: livello.dominio, service: "set_value", data: { entity_id, value: prossimo } };
+  if (livello.modo === "scelta")
+    return {
+      domain: livello.dominio,
+      service: "select_option",
+      data: { entity_id, option: prossimo },
+    };
+  if (livello.modo === "percento")
+    return { domain: "fan", service: "set_percentage", data: { entity_id, percentage: prossimo } };
+  if (livello.modo === "preset")
+    return {
+      domain: "fan",
+      service: "set_preset_mode",
+      data: { entity_id, preset_mode: prossimo },
+    };
+  if (livello.modo === "modi")
+    return { domain: "climate", service: "set_fan_mode", data: { entity_id, fan_mode: prossimo } };
+  if (livello.modo === "interruttore")
+    return {
+      domain: livello.dominio,
+      service: prossimo === "on" ? "turn_on" : "turn_off",
+      data: { entity_id },
+    };
+  return null;
+}
+
+/* Il passo dell'obiettivo quando la stufa non lo dichiara: mezzo grado, come
+ * fa la scheda del termostato di Home Assistant con i gradi Celsius. Un grado
+ * intero sarebbe troppo per una stanza sola — fra venti e ventuno c'e' la
+ * differenza fra un maglione e l'altro. */
+const PASSO_STUFA = 0.5;
+
+/**
+ * L'obiettivo un passo piu' su o piu' giu', dentro la scala della stufa.
+ *
+ * Passo e scala sono quelli che il termostato dichiara — `target_temp_step`,
+ * `min_temp`, `max_temp` — e la griglia parte dal minimo, come sulla barra
+ * del Clima: su una scala che comincia a 7 col mezzo grado i gradi buoni sono
+ * 7, 7,5, 8. In cima e in fondo `null`: un tasto che non cambia niente non
+ * manda niente.
+ */
+export function prossimoObiettivo(lettura, verso) {
+  const direzione = Math.sign(Number(verso) || 0);
+  const ora = numero(lettura?.obiettivo);
+  if (!direzione || ora === null || !Array.isArray(lettura?.scala)) return null;
+  const [min, max] = lettura.scala;
+  const passo = numero(lettura.passoObiettivo) > 0 ? numero(lettura.passoObiettivo) : PASSO_STUFA;
+  const grezzo = min + Math.round((ora + direzione * passo - min) / passo) * passo;
+  const prossimo = arrotonda(Math.min(max, Math.max(min, grezzo)));
+  return prossimo === ora ? null : prossimo;
+}
+
+/** Il servizio che sposta l'obiettivo, o `null`. */
+export function comandoObiettivo(lettura, verso) {
+  const temperatura = prossimoObiettivo(lettura, verso);
+  if (temperatura === null || !clean(lettura?.clima)) return null;
+  return {
+    domain: "climate",
+    service: "set_temperature",
+    data: { entity_id: clean(lettura.clima), temperature: temperatura },
+  };
+}
+
+/**
+ * Il servizio che accende o spegne la stufa.
+ *
+ * Col termostato si cambia il modo, che e' quello che fa la stufa vera: si
+ * accende in `heat` — o nel primo modo che dichiara, se `heat` non ce l'ha — e
+ * si spegne in `off`. Senza termostato si chiama l'interruttore, e si chiama
+ * per quello che si vuole e non con un «inverti»: una stufa che ci mette un
+ * quarto d'ora ad accendersi non deve finire spenta perche' lo stato letto era
+ * vecchio di un secondo.
+ */
+export function comandoAccensione(lettura, accendi) {
+  const clima = clean(lettura?.clima);
+  if (clima) {
+    const modi = (Array.isArray(lettura.modiClima) ? lettura.modiClima : [])
+      .map(clean)
+      .filter(Boolean);
+    const modo = accendi
+      ? modi.includes("heat")
+        ? "heat"
+        : modi.find((voce) => voce !== "off") || "heat"
+      : "off";
+    return {
+      domain: "climate",
+      service: "set_hvac_mode",
+      data: { entity_id: clima, hvac_mode: modo },
+    };
+  }
+  const interruttore = clean(lettura?.interruttore);
+  const dominio = interruttore.split(".")[0];
+  if (!interruttore || !DOMINI_COMANDABILI.has(dominio)) return null;
+  return {
+    domain: dominio,
+    service: accendi ? "turn_on" : "turn_off",
+    data: { entity_id: interruttore },
+  };
+}
+
+/* Le parole con cui un sensore d'allarme dice che va tutto bene. Sono tante
+ * perche' ognuno lo dice a modo suo, e nessuna di loro deve diventare una
+ * fascia rossa: un allarme finto insegna a non guardare quelli veri. */
+const NESSUN_ALLARME = new RegExp(
+  [
+    "^(?:|0|ok|okay|none|no|nessun[oa]?|nessun allarme|nessun errore|no alarms?|no errors?",
+    "|no faults?|keine?|kein alarm|keine st(?:o|oe)rung|kein fehler|normale?|off|false",
+    "|unknown|unavailable|null|assente|tutto ok|all ok)$",
+  ].join(""),
+);
+
+/**
+ * L'allarme della stufa: se c'e', e con che parole.
+ *
+ * Un `binary_sensor` dice acceso o spento, e acceso e' l'allarme. Un sensore
+ * di testo dice la sua parola — «Mancata accensione», «A01», «Pellet
+ * esaurito» — e quella parola e' proprio quello che si deve leggere nella
+ * fascia rossa. Un codice zero, o un «nessun allarme», non e' un allarme.
+ */
+export function allarmeDellaStufa(entity, stato) {
+  const id = clean(entity);
+  if (!id) return null;
+  const valore = clean(stato?.state);
+  if (DOMINI_INTERRUTTORE.has(id.split(".")[0]))
+    return { entity: id, attivo: accesoCaldaia(valore) === true, testo: "" };
+  if (NESSUN_ALLARME.test(pareggia(valore))) return { entity: id, attivo: false, testo: "" };
+  return { entity: id, attivo: true, testo: valore };
+}
+
+/**
+ * Il serbatoio della stufa: come quello della caldaia, oppure un avviso.
+ *
+ * Una percentuale o dei chili si leggono come il serbatoio della caldaia, con
+ * la stessa soglia. Ma molte stufe non sanno quanto pellet resta: hanno un
+ * sensore nel serbatoio che scatta quando sta finendo, e lo passano come
+ * `binary_sensor`. Acceso vuol dire «pellet in esaurimento», e la quota non si
+ * inventa — si sa solo se sta finendo o no.
+ */
+export function pelletDellaStufa(entity, stato) {
+  const id = clean(entity);
+  if (!id) return { pellet: null, pelletChili: null, pelletScarso: null, pelletAvviso: false };
+  if (DOMINI_INTERRUTTORE.has(id.split(".")[0]))
+    return {
+      pellet: null,
+      pelletChili: null,
+      pelletScarso: accesoCaldaia(stato?.state),
+      pelletAvviso: true,
+    };
+  const { pellet, pelletChili } = letturaPellet(stato);
+  return { pellet, pelletChili, pelletScarso: pelletScarso(pellet), pelletAvviso: false };
+}
+
+/**
+ * La lettura di una stufa: cosa dicono adesso le sue caselle.
+ *
+ * La fase arriva dalla parola che la stufa scrive, se qualcuno l'ha mappata;
+ * altrimenti da quello che il termostato lascia capire. Se la parola c'e' ma
+ * non la conosciamo, la fase resta `null` e la parola viaggia in `statoTesto`:
+ * la pagina la scrive com'e'.
+ */
+export function letturaStufa(config, states = {}, resolve = (value) => value) {
+  const dato = normalizzaStufa(config);
+  const leggi = (riferimento) => {
+    const chiave = clean(riferimento);
+    if (!chiave) return null;
+    let entity = chiave;
+    try {
+      entity = clean(resolve(chiave)) || chiave;
+    } catch (_error) {
+      entity = chiave;
+    }
+    return states?.[entity] || states?.[chiave] || null;
+  };
+  const clima = leggi(dato.clima);
+  const attributi = clima?.attributes || {};
+  const climaVivo = Boolean(dato.clima) && !muto(clima);
+  const statoEntita = leggi(dato.stato);
+  const statoTesto = muto(statoEntita) ? "" : clean(statoEntita.state);
+  const fase = statoTesto ? faseStufa(statoTesto) : faseDalTermostato(clima);
+
+  /* Accesa vuol dire comandata accesa: il modo del termostato, o
+   * l'interruttore. Chi ha mappato solo la fase la legge da li' — una stufa
+   * che lavora o si sta spegnendo e' accesa, una in allarme non si sa. */
+  const interruttore = leggi(dato.interruttore);
+  const acceso = climaVivo
+    ? clean(clima.state).toLowerCase() !== "off"
+    : dato.interruttore && !muto(interruttore)
+      ? accesoCaldaia(interruttore.state)
+      : fase === "spenta"
+        ? false
+        : fase && fase !== "allarme"
+          ? true
+          : null;
+
+  const allarmeEntita = allarmeDellaStufa(dato.allarme, leggi(dato.allarme));
+  return {
+    name: dato.name,
+    clima: dato.clima,
+    interruttore: dato.interruttore,
+    /* L'entita' che accende e spegne: il termostato se c'e', l'interruttore
+     * se no. Viaggia con la lettura perche' chi disegna il tasto deve sapere
+     * quale chiamare. */
+    comando:
+      dato.clima ||
+      (DOMINI_COMANDABILI.has(dato.interruttore.split(".")[0]) ? dato.interruttore : ""),
+    modiClima: Array.isArray(attributi.hvac_modes) ? attributi.hvac_modes.map(clean) : [],
+    acceso,
+    fase,
+    statoTesto,
+    /* Il fuoco dietro il vetro: c'e' nelle fasi in cui la stufa brucia, e
+     * quando la fase non si sa lo dice l'acceso — come l'oblo' della caldaia
+     * per chi ha mappato solo lo stato. Nello spegnimento resta la brace. */
+    brucia: fase ? FASI_COL_FUOCO.has(fase) : acceso === true,
+    brace: fase === "spegnimento",
+    temperatura:
+      numero(leggi(dato.temperatura)?.state) ??
+      (climaVivo ? numero(attributi.current_temperature) : null),
+    obiettivo: climaVivo ? numero(attributi.temperature) : null,
+    scala: scalaDellUnita(attributi),
+    passoObiettivo: passoDellUnita(attributi, PASSO_STUFA),
+    potenza: livelloDa(dato.potenza, leggi(dato.potenza)),
+    /* Il ventilatore e' la sua entita' se c'e'; altrimenti i modi del
+     * termostato, se ne ha. */
+    ventilatore: dato.ventilatore
+      ? livelloDa(dato.ventilatore, leggi(dato.ventilatore))
+      : livelloDaiModi(dato.clima, clima),
+    fumi: numero(leggi(dato.fumi)?.state),
+    ...pelletDellaStufa(dato.pellet, leggi(dato.pellet)),
+    /* L'allarme e' quello del suo sensore, o la fase quando la fase e' un
+     * allarme: «Allarme pellet esaurito» scritto come stato e' un allarme anche
+     * se nessuno ha mappato la casella apposta. */
+    allarme: {
+      attivo: allarmeEntita?.attivo === true || fase === "allarme",
+      testo:
+        (allarmeEntita?.attivo && allarmeEntita.testo) || (fase === "allarme" ? statoTesto : ""),
+    },
+  };
+}
+
+/** Le letture di tutte le stufe, nell'ordine in cui sono scritte. */
+export function lettureStufe(stored, states = {}, resolve = (value) => value) {
+  return normalizzaStufe(stored).map((riga) => ({
+    ...letturaStufa(riga, states, resolve),
+    id: riga.id,
+  }));
 }

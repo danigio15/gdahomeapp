@@ -227,15 +227,16 @@ export function leggiLeOpzioni(cartella = process.env.PONTE_ARCHIVIO || "/data")
      *
      * **Nella scheda dell'add-on non c'e' piu' nessuna casella.** La
      * repository di gdahome e' pubblica: chi installa dal negozio riceve gli
-     * aggiornamenti dal negozio, e chi tiene l'add-on in `/addons/gdahome` li
-     * prende col bottone nella console, che legge un manifesto pubblico senza
-     * presentarsi. Una casella che tutti devono lasciare vuota e' una casella
-     * che prima o poi qualcuno riempie.
+     * aggiornamenti dal negozio, e chi tiene l'add-on copiato a mano lo
+     * aggiorna ricopiando la cartella. Il bottone della console che se li
+     * portava dentro da se' dorme, perche' il manifesto non monta piu'
+     * `/addons` (vedi `aggiornamento.js`). Una casella che tutti devono
+     * lasciare vuota e' una casella che prima o poi qualcuno riempie.
      *
-     * La riga resta per chi si tiene una copia **privata** di questo add-on:
-     * li' il manifesto senza gettone non si legge, e glielo si passa
-     * dall'ambiente. Non finisce in nessun registro e non esce da nessuna
-     * risposta. */
+     * La riga resta per chi si tiene una copia **privata** di questo add-on e
+     * quel bottone se l'e' riacceso: li' il manifesto senza gettone non si
+     * legge, e glielo si passa dall'ambiente. Non finisce in nessun registro e
+     * non esce da nessuna risposta. */
     gettone: String(process.env.PONTE_GETTONE || scritte.gettone || ""),
     /* La cartella della console si cerca di fianco al codice, non dentro la
      * cartella da cui si e' stati lanciati: `npm test` e l'add-on partono da
@@ -252,9 +253,13 @@ export function leggiLeOpzioni(cartella = process.env.PONTE_ARCHIVIO || "/data")
      * anno tiene le foto delle auto, i loghi, gli sfondi.
      *
      * Il Supervisor la monta su `/homeassistant` quando il manifesto chiede
-     * `homeassistant_config:ro`. Se non c'e' — l'add-on aggiornato ma non
-     * riavviato, o una prova — non e' un guaio: quella meta' della maschera
-     * delle foto semplicemente non compare. */
+     * `homeassistant_config`, e il nostro la chiede in scrittura (`:rw`):
+     * Home Assistant non sa montarne un pezzo solo, e la cartina delle
+     * «Plance» deve stare li' dentro. Ci si scrive soltanto `www/gdahome/`
+     * (`doveVaLaCarta`, in `plance-in-casa.js`); le foto da li' si leggono e
+     * basta. Se non c'e' — l'add-on aggiornato ma non riavviato, o una
+     * prova — non e' un guaio: quella meta' della maschera delle foto
+     * semplicemente non compare. */
     wwwDiCasa: process.env.PONTE_WWW_CASA || "/homeassistant/www",
     /* Il centralino della **chat** di assistenza, che non e' quello di
      * gdahome: e' quello della dashboard, scritto in `chat.js` com'e' scritto

@@ -56,9 +56,15 @@ home assistant,domotica,casa,luci,clima,tapparelle,telecamere,consumi,carplay,na
 >
 > L'abbonamento si rinnova da solo e si disdice quando vuoi dalle
 > impostazioni dell'App Store; la prima volta ci sono 14 giorni di prova
-> gratuita. Termini d'uso:
-> https://www.apple.com/legal/internet-services/itunes/dev/stdeula/ ·
-> Privacy: https://gdahome.org/privacy.html
+> gratuita.
+>
+> Termini d'uso (EULA): https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
+> Informativa sulla privacy: https://gdahome.org/privacy.html
+
+Le due ultime righe vanno così, ognuna da sola. Nella 1.10.4 il link stava in
+mezzo a una frase, col «·» accanto, e il controllo automatico di Apple ha
+respinto la versione per la regola 3.1.2 («does not include a functional link
+to the Terms of Use (EULA)»).
 
 **URL di supporto**: `https://gdahome.org`
 **URL della privacy**: `https://gdahome.org/privacy.html`
@@ -114,9 +120,10 @@ home assistant,smart home,lights,climate,shutters,cameras,energy,carplay,navigat
 > from the app, and includes gdanav Premium.
 >
 > The subscription renews automatically and can be cancelled any time from
-> your App Store settings; the first time there is a 14-day free trial. Terms
-> of Use: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/ ·
-> Privacy: https://gdahome.org/privacy.html
+> your App Store settings; the first time there is a 14-day free trial.
+>
+> Terms of Use (EULA): https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
+> Privacy Policy: https://gdahome.org/privacy.html
 
 ## Novità (What's New)
 
@@ -178,8 +185,23 @@ c'è la **casa di prova** dell'add-on (dalla 1.10.1): un codice che vale fino a
 Il link ai Termini d'uso e quello alla privacy vanno anche nei campi della
 scheda (regola 3.1.2).
 
+### L'accesso: il codice va anche nei campi, non solo nelle note
+
+Il controllo automatico di Apple cerca un account di prova nei campi
+dell'accesso, e la 1.10.4 è stata respinta per la regola 2.1 perché il codice
+stava solo nelle note («submitted without a demo account»). gdahome non ha
+nome utente né password, ma i campi si riempiono lo stesso:
+
+- spunta «Accesso richiesto» (Sign-in required);
+- **Nome utente**: `demo`;
+- **Password**: il codice della casa di prova, lo stesso delle note.
+
 ### Le note (in inglese, si incollano così)
 
+> Sign-in: gdahome has no username or password. The "password" above is the
+> demo pairing code: open the app, tap "Enter the code" and type it. The user
+> name is not used.
+>
 > gdahome is a companion app for Home Assistant: without a paired home it only
 > shows the pairing screen. We set up a demo home that stays online for the
 > whole review.

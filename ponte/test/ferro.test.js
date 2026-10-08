@@ -446,3 +446,130 @@ test("una risposta vale un minuto: quaranta rapporti non fanno quaranta giri di 
   await ferro.chiedi();
   assert.equal(quante, 12);
 });
+
+/* ─── Il tasto «smetti» ──────────────────────────────────────────────────
+ *
+ * L'unica cosa che il ferro scrive: la casella del quadro, svuotata nelle
+ * opzioni dell'add-on. Il Supervisor le opzioni non le mescola — quello che
+ * gli arriva prende il posto di tutto, e deve tornare con lo schema — quindi
+ * quello che parte deve essere la scheda intera, uguale a prima tranne una
+ * casella. Prima partiva `{ quadro: "" }` da solo: il Supervisor diceva di
+ * no, e il tasto non svuotava niente. */
+
+/* Le opzioni di una casa vera, nelle cinque sezioni del manifesto. */
+const LE_OPZIONI = Object.freeze({
+  casa: {
+    da_fuori_casa: true,
+    quadro: "K7M2-9XQF-3BHT-R4VN",
+    quadro_ogni: 5,
+    quadro_manutenzione: true,
+    quadro_configurazione: false,
+    quadro_marchio: true,
+    minuti_del_codice: 7,
+    giorni_di_silenzio: 30,
+    dispositivi_massimi: 4,
+  },
+  chi_installa: { acceso: true, chiave: "una-chiave-finta-del-cruscotto" },
+  gestione: { chiave: "" },
+  assistenza: { chiave: "" },
+  avanzate: { porta_app: 8098, registro: "attenzione" },
+});
+
+/* Un Supervisor finto: alla scheda di se stesso risponde con le opzioni che
+ * gli si danno (o con quello che si vuole), e si segna tutto quello che gli
+ * arriva, nell'ordine in cui arriva. */
+function unSupervisorFinto({ opzioni = LE_OPZIONI, scheda = null, scrittura = null } = {}) {
+  const arrivate = [];
+  const prendi = async (dove, come = {}) => {
+    arrivate.push({
+      via: `${come.method ?? "GET"} ${dove}`,
+      corpo: typeof come.body === "string" ? JSON.parse(come.body) : null,
+    });
+    if (dove === "http://supervisor/addons/self/info") {
+      return (
+        scheda ?? {
+          ok: true,
+          status: 200,
+          json: async () => ({ result: "ok", data: { slug: "gdahome", options: opzioni } }),
+        }
+      );
+    }
+    if (dove === "http://supervisor/addons/self/options") {
+      return scrittura ?? { ok: true, status: 200, json: async () => ({ result: "ok", data: {} }) };
+    }
+    return { ok: false, status: 404, json: async () => ({}) };
+  };
+  return { arrivate, prendi };
+}
+
+const unFerroCon = (prendi) =>
+  new Ferro({
+    supervisor: "http://supervisor",
+    segno: "segno-finto",
+    registro: ZITTO,
+    fetch: prendi,
+  });
+
+test("«smetti» svuota solo la casella del quadro, e riscrive tutto il resto com'era", async () => {
+  const supervisor = unSupervisorFinto({ opzioni: structuredClone(LE_OPZIONI) });
+  assert.deepEqual(await unFerroCon(supervisor.prendi).spegniLaRapporto(), {
+    spento: true,
+    perche: "",
+  });
+  /* Prima si legge, poi si scrive: una domanda e una scrittura, in quest'ordine. */
+  assert.deepEqual(
+    supervisor.arrivate.map((una) => una.via),
+    ["GET http://supervisor/addons/self/info", "POST http://supervisor/addons/self/options"],
+  );
+  const scritte = supervisor.arrivate[1].corpo.options;
+  const attese = structuredClone(LE_OPZIONI);
+  attese.casa.quadro = "";
+  assert.deepEqual(scritte, attese);
+  /* E nessuna chiave `quadro` in cima alla scheda: per lo schema non esiste,
+   * ed era quella che faceva dire di no al Supervisor. */
+  assert.ok(!("quadro" in scritte));
+});
+
+test("se le opzioni non si leggono, «smetti» non scrive niente", async () => {
+  for (const [come, scheda] of [
+    ["un no del Supervisor", { ok: false, status: 403, json: async () => ({}) }],
+    ["una scheda senza opzioni", { ok: true, status: 200, json: async () => ({ data: {} }) }],
+    [
+      "opzioni senza la sezione casa",
+      { ok: true, status: 200, json: async () => ({ data: { options: { quadro: "x" } } }) },
+    ],
+  ]) {
+    const supervisor = unSupervisorFinto({ scheda });
+    const esito = await unFerroCon(supervisor.prendi).spegniLaRapporto();
+    assert.equal(esito.spento, false, come);
+    /* Chi legge il registro sa cosa fare a mano. */
+    assert.match(esito.perche, /svuota la casella/, come);
+    assert.deepEqual(
+      supervisor.arrivate.map((una) => una.via),
+      ["GET http://supervisor/addons/self/info"],
+      `${come}: dopo una lettura andata male non parte nessuna scrittura`,
+    );
+  }
+
+  /* E nemmeno quando la domanda cade per strada. */
+  const tentate = [];
+  const caduto = unFerroCon(async (dove, come = {}) => {
+    tentate.push(`${come.method ?? "GET"} ${dove}`);
+    throw new Error("connessione rifiutata");
+  });
+  assert.deepEqual(await caduto.spegniLaRapporto(), {
+    spento: false,
+    perche: "connessione rifiutata",
+  });
+  assert.deepEqual(tentate, ["GET http://supervisor/addons/self/info"]);
+});
+
+test("se il Supervisor rifiuta la scheda, «smetti» lo dice invece di dire che e' andata", async () => {
+  const supervisor = unSupervisorFinto({
+    scrittura: { ok: false, status: 400, json: async () => ({ result: "error" }) },
+  });
+  const esito = await unFerroCon(supervisor.prendi).spegniLaRapporto();
+  assert.equal(esito.spento, false);
+  assert.match(esito.perche, /400/);
+  assert.match(esito.perche, /svuota la casella/);
+});

@@ -35,11 +35,17 @@ export const BASE_DELLE_FOTO = "/dashboardmodern_static/www";
  * gli sfondi — e li sceglieva da li'. Il ponte non ci entrava, e la maschera
  * delle foto dell'app diceva «nessuna foto» a chi ne aveva duecento.
  *
- * Ci entra in sola lettura (`homeassistant_config:ro` nel manifesto), e
- * l'indirizzo che scrive e' quello vero: `/local/…`, lo stesso che scrive la
- * Config della dashboard. Cosi' una configurazione fatta dall'app si vede
- * uguale nella plancia dentro Home Assistant, e viceversa — che e' tutto il
- * punto. */
+ * Da qui ci si entra in sola lettura, e l'indirizzo che si scrive e' quello
+ * vero: `/local/…`, lo stesso che scrive la Config della dashboard. Cosi' una
+ * configurazione fatta dall'app si vede uguale nella plancia dentro Home
+ * Assistant, e viceversa — che e' tutto il punto.
+ *
+ * «Da qui» e non «il ponte»: il manifesto la cartella di Home Assistant la
+ * monta in scrittura (`homeassistant_config:rw`), perche' Home Assistant non
+ * sa montarne un pezzo solo e la cartina delle «Plance» deve stare li'
+ * dentro. Chi ci scrive e' `plance-in-casa.js`, in `www/gdahome/` e basta
+ * (`doveVaLaCarta`). Questo modulo, sulla cartella di casa, legge e non
+ * scrive: la sua istanza nasce con `scrivibile: false` (`index.js`). */
 export const BASE_DI_CASA = "/local";
 
 /* Dove finiscono i caricamenti, per non sparpagliare. */

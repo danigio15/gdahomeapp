@@ -42,4 +42,10 @@
     <string name="auto_quasi_a_casa">Quasi a casa</string>
     <string name="auto_arrivo_fai">Fallo</string>
     <string name="auto_arrivo_non_ora">Non ora</string>
+    <!-- Senza Premium la casa in auto non c'e' (`LaLicenzaInAuto.kt`): una
+         schermata sola, che dice cosa serve e dove si fa. Niente tasti per
+         comprare: guidando non si compra. -->
+    <string name="auto_premium">gdahome Premium</string>
+    <string name="auto_serve_premium">La casa in auto è compresa in gdahome Premium. Si attiva dall\'app gdahome sul telefono, a macchina ferma.</string>
+    <string name="auto_comando_serve_premium">%1$s: serve gdahome Premium</string>
 </resources>

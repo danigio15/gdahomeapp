@@ -1,1 +1,1 @@
-For phones that joined with the demo home code: the Premium page shows the subscriptions even when the home is already Premium. Nothing changes for everyone else.
+The navigator no longer freezes while driving: if the phone's GPS goes silent, it restarts it and says so. The route always stays on the map, the range is the car's own, and with Android Auto the car's GPS is used when the car provides it. In the car, the home is a Premium feature. On the dashboard: the pellet stove, a second pellet hopper, rooms that opened empty, and rain shown only when it rains.

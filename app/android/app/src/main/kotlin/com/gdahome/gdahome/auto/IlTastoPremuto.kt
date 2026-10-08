@@ -24,6 +24,9 @@ import com.gdahome.gdahome.R
  * fotografia.
  */
 fun premiEDillo(carContext: CarContext, id: String, nome: String, subito: Boolean) {
+    /* Una schermata rimasta aperta mentre Premium finiva: il tasto non parte,
+     * e lo dice (`LaLicenzaInAuto.kt`). */
+    if (!premiumPerIlTasto(carContext, nome)) return
     val scritto = lasciaIlComando(carContext, id)
     /* Scritto il comando, si sveglia l'app: un motore Dart senza schermo, che
      * lo esegue subito. Il telefono resta spento e in mano non compare niente

@@ -38,11 +38,9 @@ aggiorna da sé.
    che fa i codici di abbinamento e che stacca i telefoni.
 
 Da qui in poi gli aggiornamenti arrivano come per ogni altro add-on: quando si
-pubblica una versione nuova, la scheda dell'add-on mostra **Aggiorna**. Non
-serve nessun gettone di GitHub, e il bottone «Aggiorna gdahome» dentro la
-console non compare nemmeno — in un add-on che ha un negozio dietro non
-servirebbe a niente, e un bottone che non può funzionare è peggio di nessun
-bottone.
+pubblica una versione nuova, la scheda dell'add-on mostra **Aggiorna**
+(Impostazioni → Componenti aggiuntivi → gdahome → Aggiorna). Non serve nessun
+gettone di GitHub.
 
 ### B. A mano, per svilupparlo
 
@@ -64,7 +62,7 @@ Serve a chi cambia il codice e lo vuole provare senza pubblicare niente.
    sezione **Local add-ons** con dentro **gdahome**.
 5. Installalo e avvialo.
 
-#### Per aggiornarlo: glielo chiedi, e lo fa lui
+#### Per aggiornarlo: si ricopia la cartella
 
 Un add-on tenuto in `/addons/gdahome` non ha nessun negozio dietro: Home
 Assistant guarda il manifesto che trova in quella cartella, e quella è l'unica
@@ -72,19 +70,18 @@ versione che conosce. Finché quei file non cambiano **sul disco di casa**,
 «Aggiorna» non compare mai, per quante versioni si pubblichino. Non è un
 difetto del negozio: è che il negozio non c'è.
 
-Quindi ci pensa lui. Apri **gdahome** dalla barra laterale, e in fondo alla
-pagina la scheda **«La versione»** dice che versione è e se ce n'è una più
-nuova. Il bottone **«Aggiorna gdahome»** se la scarica, la mette al posto di
-questa e si ricostruisce. Ci mette qualche minuto, e mentre lo fa quella pagina non
-risponde: è normale, torna da sé.
+Quindi i file nuovi ce li porti tu: riscarichi lo ZIP, risostituisci la
+cartella, e nel negozio premi **Ricarica**; poi nella pagina dell'add-on premi
+**Aggiorna** (o, dai tre puntini, **Ricostruisci**, se la versione è rimasta
+la stessa). Il blocco qui sotto fa tutto il giro dal terminale.
 
-Non serve nessun gettone di GitHub, e infatti nella configurazione
-dell'add-on quella casella non c'è più: serviva a quando la repository era
-privata, e adesso è pubblica — il manifesto e il pacchetto li legge chiunque.
-
-A mano si può ancora: riscarichi lo ZIP, risostituisci la cartella, e nel
-negozio premi **Ricarica**; poi nella pagina dell'add-on premi **Aggiorna**
-(o, dai tre puntini, **Ricostruisci**).
+Prima lo faceva l'add-on da sé, con un bottone «Aggiorna gdahome» nella sua
+pagina. Per riuscirci voleva la cartella `addons` di Home Assistant in
+scrittura — quella di tutti gli add-on locali, non solo la sua — e anche così,
+alla fine, «Aggiorna» toccava premerlo a mano, perché un add-on non può
+aggiornare se stesso. Per la strada che si spiega a tutti, il negozio, non
+serviva a niente: quella cartella l'add-on non la chiede più, e il bottone non
+c'è. Il perché per intero sta in `ponte/config.yaml`.
 
 #### Dal terminale, in un colpo solo
 

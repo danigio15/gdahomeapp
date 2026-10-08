@@ -11,6 +11,62 @@ fuori. La plancia dentro continua a dire la sua, e si legge dov'è sempre
 stata: nella pastiglia «La plancia» della console. Sono due numeri perché
 sono due cose.
 
+## 1.10.5
+
+**La stanza aperta non è più vuota.** Dalla 1.10.0, aprendo una stanza con la
+vista «Tessere» la pagina restava vuota. Adesso si apre di nuovo, con tutte le
+sue entità.
+
+**La pioggia solo quando piove.** La pastiglia della pioggia sotto il meteo
+compare quando piove davvero, e quella di oggi quando è caduto qualcosa:
+niente più «0,0 mm/h» tutto l'anno.
+
+**La Ring nel muro della Sicurezza.** Una telecamera che all'avvio non aveva
+detto cosa sa fare restava su «In attesa del fotogramma». Adesso il muro lo
+richiede, e il video dal vivo parte come nel dettaglio.
+
+**La stufa a pellet.** Nella Gestione termica c'è la «Stufa a pellet», accanto
+a solare, scaldabagno e caldaia, anche più d'una: la fiamma, i fumi, la stanza,
+il serbatoio, l'allarme, e i tasti per accenderla e spegnerla, l'obiettivo, la
+potenza e il ventilatore. Nessuna casella è obbligatoria: col solo termostato
+della stufa la pagina ha già quasi tutto.
+
+**Il secondo serbatoio del pellet.** La caldaia a pellet ha una casella in più,
+«Livello del pellet, secondo serbatoio»: in pagina compaiono «Pellet 1» e
+«Pellet 2», e ognuno diventa rosso da solo quando sta finendo. Chi aveva messo
+la seconda lettura in un'altra casella la sposti in quella nuova.
+
+**In auto la casa è Premium.** Android Auto e CarPlay aprono la casa — i
+dispositivi, i comandi rapidi, il cancello «quasi a casa» — solo se la casa è
+Premium, come dice la licenza. Senza Premium, in auto compare una pagina che
+spiega come attivarlo.
+
+**Più sicurezza per i telefoni abbinati.**
+- Un telefono, anche di chi amministra, non può più scrivere automazioni,
+  script o scene, cambiare le risorse e le dashboard di Home Assistant,
+  toccare blueprint, HACS e backup, né spegnere Home Assistant. L'app non usa
+  nessuna di queste cose, e così un telefono perso non diventa una chiave della
+  casa. Riavviare Home Assistant e installare gli aggiornamenti dall'app si
+  può come prima.
+- Il tasto «smetti» della scheda «Il quadro» adesso toglie davvero il codice
+  dell'installatore: prima la modifica veniva rifiutata, e al riavvio il
+  rapporto ripartiva.
+- L'add-on non chiede più la cartella degli add-on in scrittura: serviva solo
+  all'aggiornamento da sé, che dal negozio non funzionava. Gli aggiornamenti
+  arrivano dal negozio, come per tutti gli add-on.
+
+**Il navigatore, nell'app.**
+- In guida la mappa non resta più ferma: se il GPS del telefono smette di
+  mandare posizioni, e con Android Auto succede, gdanav se ne accorge in pochi
+  secondi e lo fa ripartire. Intanto sullo schermo c'è «GPS assente».
+- La linea del percorso non resta mai vuota.
+- L'autonomia è quella dell'auto anche se la sua lettura è di qualche ora
+  prima: non più una stima che col consumo di città arrivava al doppio.
+- Con Android Auto, se l'auto passa la sua posizione, gdanav usa quella.
+
+La plancia e la sicurezza arrivano con l'add-on; il navigatore e la casa in
+auto con l'app 1.10.5.
+
 ## 1.10.4
 
 **La casa di prova può restare Premium.** Chi rivede l'app per l'App Store e

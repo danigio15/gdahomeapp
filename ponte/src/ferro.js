@@ -27,15 +27,22 @@
  *   /core/info        la versione di Home Assistant
  *   /supervisor/info  la versione del Supervisor
  *
+ * Le vie in `/info` il Supervisor le apre a ogni add-on. `/addons` no: la apre
+ * solo a chi dichiara `hassio_role: manager`, ed e' per lei che il manifesto
+ * lo dichiara. Si chiede solo dove la casa ha messo il codice del suo
+ * installatore — senza, questo pezzo non gira — perche' l'installatore deve
+ * vedere tutto quello che la casa gli ha permesso di vedere: «c'e' un add-on
+ * che parte all'avvio ed e' fermo?» e' una delle prime domande che si fa.
+ *
  * Le funzioni che leggono quelle risposte stanno fuori dalla classe e non
  * sanno cosa sia la rete: la forma di quelle risposte non la decidiamo noi, e
  * va letta senza fidarsi di niente.
  *
  * Qui dentro si **legge**, con una sola eccezione dichiarata: `spegniLaRapporto`
- * svuota la casella del quadro nelle opzioni dell'add-on, ed e' quello che sta
- * dietro il tasto «smetti» della console. Sta qui e non altrove perche' e'
- * una chiamata al Supervisor, e le chiamate al Supervisor stanno in un posto
- * solo.
+ * svuota la casella del quadro nelle opzioni dell'add-on — riscrivendole tutte
+ * com'erano, tranne quella — ed e' quello che sta dietro il tasto «smetti»
+ * della console. Sta qui e non altrove perche' e' una chiamata al Supervisor,
+ * e le chiamate al Supervisor stanno in un posto solo.
  */
 
 /** Quanto si aspetta il Supervisor prima di lasciar perdere. */
@@ -246,6 +253,10 @@ const GIORNO = 24 * 60 * 60 * 1000;
 
 const pulito = (valore) => String(valore ?? "").trim();
 
+/* Un oggetto vero: non `null`, e non un elenco. */
+const unOggetto = (valore) =>
+  Boolean(valore) && typeof valore === "object" && !Array.isArray(valore);
+
 const numero = (valore) => {
   const letto = Number(valore);
   return Number.isFinite(letto) ? letto : null;
@@ -440,9 +451,9 @@ export function gliAddon({ addons = [] } = {}) {
 /**
  * Chi va a chiedere tutto questo al Supervisor.
  *
- * Quattro domande in parallelo e una risposta tenuta un minuto. Una che va
- * male non fa fallire le altre: un Supervisor senza il permesso della rete
- * deve dare un rapporto senza la rete, non nessun rapporto.
+ * Sei domande in parallelo e una risposta tenuta un minuto. Una che va male
+ * non fa fallire le altre: un Supervisor senza il permesso della rete deve
+ * dare un rapporto senza la rete, non nessun rapporto.
  */
 export class Ferro {
   constructor({
@@ -467,7 +478,7 @@ export class Ferro {
     this._dettoIlGuaio = false;
   }
 
-  /** Le quattro risposte grezze, o quello che si e' riusciti ad avere. */
+  /** Le sei risposte grezze, o quello che si e' riusciti ad avere. */
   async chiedi() {
     const ora = this.adesso();
     if (this._ultimo && ora - this._quando < this.quantoDura) return this._ultimo;
@@ -512,27 +523,59 @@ export class Ferro {
    * lascia la riga nella scheda dell'add-on, e al primo riavvio la casa
    * ricomincia a parlare senza che nessuno l'abbia chiesto.
    *
-   * La via e' quella del Supervisor per le proprie opzioni, la stessa famiglia
-   * di `/addons/self/rebuild` che `aggiornamento.js` usa gia'. Si scrive solo
-   * questa chiave: quello che c'e' d'altro nella scheda non si tocca. */
+   * La via e' quella del Supervisor per le proprie opzioni, `/addons/self/…`,
+   * che il Supervisor lascia a ogni add-on senza chiedere nessun ruolo.
+   *
+   * **Si riscrive la scheda intera, non la casella.** Il Supervisor non
+   * mescola: quello che gli arriva in `options` **prende il posto** di tutte
+   * le opzioni, e prima lo confronta con lo schema del manifesto. Qui si
+   * mandava `{ quadro: "" }` da solo, e non andava bene in nessuno dei due
+   * modi: la casella sta dentro `casa`, quindi per lo schema `quadro` era una
+   * chiave che non esiste e mancava tutta la sezione `casa` — il Supervisor
+   * diceva di no, e il tasto «smetti» non svuotava niente — e se un giorno
+   * avesse detto di si', avrebbe buttato ogni altra opzione della casa.
+   *
+   * Allora prima si leggono le opzioni come sono adesso (`/addons/self/info`),
+   * si svuota `casa.quadro` e nient'altro, e si rimanda tutto. Se la lettura
+   * non riesce non si scrive niente: una casella rimasta piena, e detta, e'
+   * meglio di una scheda riscritta a meta'. */
   async spegniLaRapporto() {
     if (!this.segno || typeof this.prendi !== "function") {
       return { spento: false, perche: "qui non c'e' nessun Supervisor a cui dirlo" };
     }
+    const aMano =
+      "svuota la casella «Il codice di chi ti ha fatto l'impianto» nella scheda dell'add-on";
     try {
+      const letta = await this.prendi(`${this.supervisor}/addons/self/info`, {
+        headers: { authorization: `Bearer ${this.segno}` },
+        signal: AbortSignal.timeout(ATTESA),
+      });
+      if (!letta.ok) {
+        return {
+          spento: false,
+          perche: `il Supervisor ha risposto ${letta.status} chiedendo le opzioni: ${aMano}`,
+        };
+      }
+      const opzioni = (await letta.json())?.data?.options;
+      if (!unOggetto(opzioni) || !unOggetto(opzioni.casa)) {
+        return {
+          spento: false,
+          perche: `le opzioni dell'add-on non hanno la forma che conosco: ${aMano}`,
+        };
+      }
       const risposta = await this.prendi(`${this.supervisor}/addons/self/options`, {
         method: "POST",
         headers: {
           authorization: `Bearer ${this.segno}`,
           "content-type": "application/json",
         },
-        body: JSON.stringify({ options: { quadro: "" } }),
+        body: JSON.stringify({ options: { ...opzioni, casa: { ...opzioni.casa, quadro: "" } } }),
         signal: AbortSignal.timeout(ATTESA),
       });
       if (!risposta.ok) {
         return {
           spento: false,
-          perche: `il Supervisor ha risposto ${risposta.status}: svuota la casella «Il quadro» nella scheda dell'add-on`,
+          perche: `il Supervisor ha risposto ${risposta.status}: ${aMano}`,
         };
       }
       this.registro.info("il rapporto non parte piu': la casella del quadro e' stata svuotata");

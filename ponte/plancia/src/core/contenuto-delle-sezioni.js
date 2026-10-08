@@ -86,7 +86,11 @@ export const MAGAZZINO_DELLE_SEZIONI = Object.freeze({
     chiavi: ["cd_ev_cars", "cd_ev_visual", "cd_ev_meta"],
     testi: ["cd_ev_image"],
   }),
-  boiler: Object.freeze({ chiavi: ["cd_caldaia", "cd_scaldabagni", "cd_impianti_termici"] }),
+  /* La stufa a pellet (#183) sta nella stessa sezione: chi ha solo lei non
+   * deve vedersi spegnere la Gestione termica che l'ha configurata. */
+  boiler: Object.freeze({
+    chiavi: ["cd_caldaia", "cd_scaldabagni", "cd_impianti_termici", "cd_stufe"],
+  }),
   /* Le porte non stanno piu' qui: dalla 1.4.5 si disegnano nella loro pagina,
    * che si accende e si spegne da sola. Contarle ancora come contenuto di
    * Sicurezza teneva in barra una scheda vuota a chi ha solo le porte. */

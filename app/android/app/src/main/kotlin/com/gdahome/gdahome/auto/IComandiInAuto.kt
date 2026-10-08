@@ -98,6 +98,7 @@ fun premiIlComando(screen: Screen, comando: ComandoInAuto) {
 
 class IComandiInAuto(context: CarContext) : Screen(context) {
     override fun onGetTemplate(): Template {
+        if (!LaLicenzaInAuto.premium(carContext)) return senzaPremium(carContext)
         val comandi = leggiIComandi(carContext).comandi
         val elenco = ItemList.Builder()
         if (comandi.isEmpty()) {

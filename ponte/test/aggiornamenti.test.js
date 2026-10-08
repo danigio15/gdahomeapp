@@ -587,8 +587,10 @@ test("l'icona di un add-on la chiede al Supervisor, non al proxy di casa", async
   /* In una casa vera il proxy di Home Assistant ha risposto **403** per
    * l'icona di un add-on di un altro, mentre dava la nostra: il segno che
    * abbiamo e' quello del Supervisor, non di un amministratore di Home
-   * Assistant. Al Supervisor la stessa cosa si chiede diretta, col suo segno,
-   * ed e' per questo che il manifesto dichiara `hassio_role: manager`. */
+   * Assistant. Al Supervisor la stessa cosa si chiede diretta. Non per un
+   * permesso in piu' — qui c'era scritto che serviva `hassio_role: manager`,
+   * e non era vero — ma perche' quella via il Supervisor la serve a chiunque:
+   * e' da li' che prende le icone la pagina di Home Assistant. */
   const casa = casaFinta({
     stati: [
       unAggiornamento("update.un_altro_addon", {

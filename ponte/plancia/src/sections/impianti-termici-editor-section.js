@@ -23,16 +23,22 @@
  * una per macchina scelta — e sotto c'e' soltanto quella accesa. Le caselle
  * del solare, che sono del guscio, vengono portate dentro la loro: restano le
  * sue, cambia la stanza.
+ *
+ * La stufa a pellet (#183) e' la quarta spunta: le sue caselle stanno in una
+ * chiave sua, `cd_stufe`, con la forma di quelle delle caldaie — una lista,
+ * una riga per stufa.
  */
 import {
   CASELLE_CALDAIA,
   CASELLE_SOLARE,
+  CASELLE_STUFA,
   GRUPPO_PELLET,
   USCITE_CALDAIA,
   CHIAVE_CALDAIA,
   CHIAVE_IMPIANTI,
   CHIAVE_SOLARE_SCELTO,
   CHIAVE_SOLARI,
+  CHIAVE_STUFE,
   ETICHETTE_TERMICHE,
   TIPI_TERMICI,
   PRIMO_SOLARE,
@@ -64,7 +70,7 @@ import {
   writeJsonIfChanged,
   senzaCadere,
 } from "./shared.js";
-import { MARCHIO_TESSERA } from "../core/fuori-dai-widget.js";
+import { MARCHIO_TESSERA, SENZA_TESSERA } from "../core/fuori-dai-widget.js";
 
 const KEY = "__DASHBOARDMODERN_IMPIANTI_TERMICI_EDITOR__";
 const state = (root[KEY] ||= {
@@ -74,6 +80,7 @@ const state = (root[KEY] ||= {
   firma: "",
   linguetta: "",
   solAperto: -1,
+  stufaAperta: -1,
 });
 
 /* La scheda del solare del guscio: e' li' che questa roba deve comparire,
@@ -86,6 +93,13 @@ function schedaAttiva() {
 
 /* ── la domanda che viene prima di tutte ──────────────────────────────── */
 
+/* Una riga per macchina, sotto il suo nome.
+ *
+ * Quella della stufa (#183) dice che scalda una stanza: non e' la caldaia a
+ * pellet, e chi ha una caldaia a pellet non deve spuntarla per sbaglio. La
+ * tabella e' fra quelle che l'estrattore delle traduzioni legge, e il
+ * commento sta qui e non fra le righe — come per la caldaia — perche' una
+ * parentesi in mezzo all'oggetto gli sembrerebbe una chiamata di funzione. */
 const AIUTI = Object.freeze({
   solare: [
     "Pannelli sul tetto e accumulo: le caselle sono quelle qui sotto.",
@@ -98,6 +112,10 @@ const AIUTI = Object.freeze({
   caldaia: [
     "Una caldaia a gas, a pellet o a legna: mandata, ritorno, pressione, combustione.",
     "A gas, pellet or wood boiler: flow, return, pressure, combustion.",
+  ],
+  stufa: [
+    "Una stufa a pellet in una stanza: la fiamma, la potenza, il ventilatore e il serbatoio. Anche più d'una.",
+    "A pellet stove in a room: the flame, the power, the fan and the hopper. More than one, too.",
   ],
 });
 
@@ -123,13 +141,15 @@ function salvaScelta(tipo, acceso) {
   } catch (_error) {}
 }
 
+/* «Con due o tre» erano tutte le combinazioni possibili finche' le macchine
+ * erano tre; con la stufa (#183) sono quattro, e l'aiuto dice «piu' d'uno». */
 function sceltaMarkup() {
   const { acceso } = scelta();
   return `<div class="ed-sec-title dm-it-ed-sep">🔥 ${esc(t("Cosa c'è nel locale caldaia", "What is in the boiler room"))}</div>
   <div class="ed-intro">${esc(
     t(
-      "Spunta quello che hai davvero: la pagina mostra solo quello, e con due o tre compaiono in alto le linguette per passare dall'uno all'altro.",
-      "Tick what you actually have: the page shows only that, and with two or three the tabs appear at the top to switch between them.",
+      "Spunta quello che hai davvero: la pagina mostra solo quello, e con più d'uno compaiono in alto le linguette per passare dall'uno all'altro.",
+      "Tick what you actually have: the page shows only that, and with more than one the tabs appear at the top to switch between them.",
     ),
   )}</div>
   <div class="ed-list dm-it-ed-scelte">${TIPI_TERMICI.map(
@@ -260,6 +280,15 @@ const CAMPI_CALDAIA = Object.freeze({
     aiutoIt: "In percentuale diventa il serbatoio disegnato in pagina; in kg si legge in chili.",
     aiutoEn:
       "As a percentage it becomes the hopper drawn on the page; in kg it is read in kilograms.",
+  },
+  pellet2: {
+    it: "Livello del pellet, secondo serbatoio",
+    en: "Pellet level, second hopper",
+    esempio: "sensor.caldaia_pellet_2",
+    aiutoIt:
+      "Per chi ha due serbatoi: in pagina compaiono affiancati, Pellet 1 e Pellet 2, con la stessa soglia del primo.",
+    aiutoEn:
+      "For whoever has two hoppers: the page shows them side by side, Pellet 1 and Pellet 2, with the same threshold as the first.",
   },
   mandataCalcolata: {
     it: "Mandata calcolata",
@@ -535,6 +564,168 @@ function caldaiaMarkup() {
   <button type="button" class="ed-btn-add" data-caldaia-add>＋ ${t("Aggiungi caldaia", "Add boiler")}</button>`;
 }
 
+/* ── la stufa a pellet (#183) ─────────────────────────────────────────── */
+
+/* Le caselle della stufa, con le loro parole.
+ *
+ * Stessa forma di quelle della caldaia — `{it, en, esempio, aiutoIt,
+ * aiutoEn}` — e per la stessa ragione: l'estrattore delle traduzioni la legge
+ * da qui, ed e' elencata in `SECTION_TABLES`. Gli esempi sono entita' e non
+ * descrizioni: `climate.stufa_soggiorno` dice di che dominio e' la casella
+ * meglio di qualunque frase.
+ *
+ * Il commento sta qui e non fra le righe, come per la caldaia: chi legge la
+ * tabella per portarla nei cataloghi la prende com'e' scritta. */
+const CAMPI_STUFA = Object.freeze({
+  clima: {
+    it: "Termostato della stufa",
+    en: "Stove thermostat",
+    esempio: "climate.stufa_soggiorno",
+    aiutoIt:
+      "Da solo basta quasi a tutto: accesa e spenta, l'obiettivo, la temperatura della stanza e, se li ha, i modi del ventilatore.",
+    aiutoEn:
+      "On its own it covers nearly everything: on and off, the target, the room temperature and, if it has them, the fan modes.",
+  },
+  interruttore: {
+    it: "Interruttore (se non c'è il termostato)",
+    en: "Switch (when there is no thermostat)",
+    esempio: "switch.stufa_soggiorno",
+  },
+  stato: {
+    it: "Fase della stufa",
+    en: "Stove phase",
+    esempio: "sensor.stufa_soggiorno_stato",
+    aiutoIt:
+      "La parola che la stufa scrive sul display: accensione, lavoro, pulizia braciere, spegnimento… Se la pagina non la conosce, la scrive com'è.",
+    aiutoEn:
+      "The word the stove shows on its display: ignition, working, brazier cleaning, shutdown… If the page does not know it, it shows it as it is.",
+  },
+  temperatura: {
+    it: "Temperatura della stanza",
+    en: "Room temperature",
+    esempio: "sensor.soggiorno_temperatura",
+    aiutoIt: "Senza, si legge quella del termostato.",
+    aiutoEn: "Without it, the thermostat's own reading is used.",
+  },
+  potenza: {
+    it: "Livello di potenza",
+    en: "Power level",
+    esempio: "number.stufa_soggiorno_potenza",
+    aiutoIt:
+      "Un number o un select, da 1 a 5 o da P1 a P5: in pagina diventa i pallini col meno e il più.",
+    aiutoEn:
+      "A number or a select, 1 to 5 or P1 to P5: on the page it becomes the dots with minus and plus.",
+  },
+  ventilatore: {
+    it: "Ventilatore",
+    en: "Fan",
+    esempio: "fan.stufa_soggiorno",
+    aiutoIt:
+      "Un fan, un number o un select. Senza, si usano i modi del ventilatore del termostato, se li ha.",
+    aiutoEn:
+      "A fan, a number or a select. Without it, the thermostat's fan modes are used, if it has any.",
+  },
+  fumi: {
+    it: "Temperatura dei fumi",
+    en: "Flue gas temperature",
+    esempio: "sensor.stufa_soggiorno_fumi",
+  },
+  pellet: {
+    it: "Livello del pellet",
+    en: "Pellet level",
+    esempio: "sensor.stufa_soggiorno_pellet",
+    aiutoIt:
+      "In percentuale o in kg, come quello della caldaia; oppure un binary_sensor che si accende quando il pellet sta finendo.",
+    aiutoEn:
+      "As a percentage or in kg, like the boiler's; or a binary_sensor that turns on when the pellet is running low.",
+  },
+  allarme: {
+    it: "Allarme della stufa",
+    en: "Stove alarm",
+    esempio: "sensor.stufa_soggiorno_allarme",
+    aiutoIt:
+      "Un sensore col testo dell'allarme o un binary_sensor: quando scatta, in pagina compare la fascia rossa con le sue parole.",
+    aiutoEn:
+      "A sensor with the alarm text or a binary_sensor: when it trips, the page shows the red banner with its words.",
+  },
+});
+
+/* Le righe grezze delle stufe: come per le caldaie, una appena aggiunta e'
+ * vuota, e la normalizzazione la scarterebbe prima che la si possa compilare.
+ * La chiave e' nuova, quindi e' una lista da subito; un oggetto solo — scritto
+ * a mano, o arrivato da chissa' dove — si legge lo stesso come una riga. */
+function stufe() {
+  const stored = readJson(CHIAVE_STUFE, []);
+  if (Array.isArray(stored)) return stored;
+  return stored && typeof stored === "object" && Object.keys(stored).length ? [stored] : [];
+}
+
+function salvaStufe(voci) {
+  writeJsonIfChanged(CHIAVE_STUFE, voci);
+  try {
+    renderImpiantiTermici();
+  } catch (_error) {}
+}
+
+function caselleStufa(index, voce) {
+  return CASELLE_STUFA.map(({ campo }) => {
+    const { it, en, esempio, aiutoIt, aiutoEn } = CAMPI_STUFA[campo];
+    const id = `dm-stufa-${index}-${campo}`;
+    return `<label class="ed-slot dm-todo-ed-field"><span class="ed-slot-lbl">${esc(t(it, en))}</span>
+      <span class="ed-form-row"><input id="${id}" class="ed-input mono" data-stufa-field="${esc(campo)}"
+        value="${esc(clean(voce?.[campo]))}" placeholder="${esc(esempio)}" autocomplete="off" spellcheck="false"><button
+        type="button" class="dm-entity-picker" data-stufa-pick="${id}"
+        aria-label="${t("Scegli entità", "Choose entity")}">🔍</button></span>${
+          aiutoIt ? `<small>${esc(t(aiutoIt, aiutoEn))}</small>` : ""
+        }</label>`;
+  }).join("");
+}
+
+function rigaStufaMarkup(voce, index) {
+  const aperta = state.stufaAperta === index;
+  const nome = clean(voce?.name) || `${t("Stufa", "Stove")} ${index + 1}`;
+  const sotto =
+    clean(voce?.clima) ||
+    clean(voce?.interruttore) ||
+    clean(voce?.stato) ||
+    t("nessuna entità", "no entity");
+  return `<article class="ed-row dm-todo-ed-row dm-stufa-row" data-stufa-index="${index}" data-open="${aperta}">
+    <div class="dm-todo-ed-head">
+      <span class="dm-todo-ed-icon" aria-hidden="true">🪵</span>
+      <span class="ed-row-main"><strong class="ed-row-new">${esc(nome)}</strong><small class="ed-row-old mono">${esc(sotto)}</small></span>
+      <button type="button" class="ed-del dm-todo-ed-edit" data-stufa-edit aria-label="${t("Modifica", "Edit")}">✏️</button>
+      <button type="button" class="ed-del dm-todo-ed-del" data-stufa-del aria-label="${t("Elimina", "Remove")}">🗑️</button>
+    </div>
+    <div class="dm-todo-ed-body"${aperta ? "" : " hidden"}>
+      <label class="ed-slot dm-todo-ed-field"><span class="ed-slot-lbl">${t("Nome", "Name")}</span><span class="ed-form-row"><input id="dm-stufa-${index}-name" class="ed-input" data-stufa-field="name" value="${esc(clean(voce?.name))}" placeholder="${esc(t("Stufa del soggiorno", "Living room stove"))}"></span></label>
+      ${caselleStufa(index, voce)}
+      <button type="button" class="ed-save-btn" data-stufa-save>💾 ${esc(t("Salva stufa", "Save stove"))}</button>
+    </div>
+  </article>`;
+}
+
+/* Il blocco delle stufe.
+ *
+ * In Home la stufa non ha (ancora) una tessera sua, e il blocco lo dichiara:
+ * l'interruttore «nel widget» accanto alle caselle prometterebbe di togliere
+ * dalla Home una cosa che in Home non c'e'. */
+function stufaMarkup() {
+  const voci = stufe();
+  return `<div class="ed-sec-title dm-it-ed-sep">🪵 ${esc(t("Stufa a pellet", "Pellet stove"))}</div>
+  <div class="ed-intro">${esc(
+    t(
+      "La stufa scalda la stanza in cui sta: la pagina disegna la fiamma, la potenza, il ventilatore, la canna fumaria e il serbatoio, e dà i tasti per accenderla, l'obiettivo, la potenza e il ventilatore. Nessuna casella è obbligatoria: col solo termostato la pagina ha già quasi tutto. Se ne hai più d'una aggiungile qui, e in pagina compare la fila per passare dall'una all'altra.",
+      "The stove heats the room it stands in: the page draws the flame, the power, the fan, the flue and the hopper, and gives you the buttons for on and off, the target, the power and the fan. No field is required: with just the thermostat the page already has almost everything. With more than one, add them here and the page grows a row to switch between them.",
+    ),
+  )}</div>
+  <div class="ed-list dm-todo-ed-list dm-stufa-list">${
+    voci.length
+      ? voci.map((voce, index) => rigaStufaMarkup(voce, index)).join("")
+      : `<div class="ed-empty">${t("Nessuna stufa configurata", "No stove configured")}</div>`
+  }</div>
+  <button type="button" class="ed-btn-add" data-stufa-add>＋ ${t("Aggiungi stufa", "Add stove")}</button>`;
+}
+
 /* ── lo scaldabagno elettrico (#253) ──────────────────────────────────── */
 
 /* Le righe grezze: come per le altre, una riga appena aggiunta e' vuota e va
@@ -655,12 +846,13 @@ function scaldabagnoMarkup() {
 /* ── il disegno della scheda ──────────────────────────────────────────── */
 
 /* I disegnini delle linguette: gli stessi della pagina, perche' sono le stesse
- * tre macchine e riconoscerle due volte in due modi e' una cosa in piu' da
+ * macchine e riconoscerle due volte in due modi e' una cosa in piu' da
  * imparare. */
 const ICONE_LINGUETTA = Object.freeze({
   solare: "🌞",
   scaldabagno: "🚿",
   caldaia: "🔥",
+  stufa: "🪵",
 });
 
 /* Quale macchina si sta configurando adesso.
@@ -704,6 +896,11 @@ function pannelloMarkup(attiva) {
     return `<div class="dm-it-ed-pannello" ${MARCHIO_TESSERA}="scaldabagno">${scaldabagnoMarkup()}</div>`;
   if (attiva === "caldaia")
     return `<div class="dm-it-ed-pannello" ${MARCHIO_TESSERA}="caldaia">${caldaiaMarkup()}</div>`;
+  /* La stufa (#183) una tessera in Home non ce l'ha: il pannello lo dice, e
+   * l'interruttore «nel widget» qui non compare — senza, avrebbe preso la
+   * tessera della linguetta, cioe' quella del solare. */
+  if (attiva === "stufa")
+    return `<div class="dm-it-ed-pannello" ${SENZA_TESSERA}>${stufaMarkup()}</div>`;
   return "";
 }
 
@@ -739,8 +936,10 @@ export function ensureImpiantiTermiciEditor() {
     state.aperto,
     state.calAperto,
     state.solAperto,
+    state.stufaAperta,
     scaldabagni(),
     caldaie(),
+    stufe(),
     solari(),
   ]);
   let blocco = body.querySelector(":scope > .dm-it-ed");
@@ -813,6 +1012,13 @@ function leggiScaldabagno(riga, voce) {
   const letta = { ...voce };
   for (const campo of riga.querySelectorAll("[data-scald-field]"))
     letta[clean(campo.dataset.scaldField)] = clean(campo.value);
+  return letta;
+}
+
+function leggiStufa(riga, voce) {
+  const letta = { ...voce };
+  for (const campo of riga.querySelectorAll("[data-stufa-field]"))
+    letta[clean(campo.dataset.stufaField)] = clean(campo.value);
   return letta;
 }
 
@@ -981,6 +1187,55 @@ function onClick(event) {
     return;
   }
 
+  /* ── le stufe a pellet (#183): gli stessi gesti delle caldaie ── */
+  const vociStufa = stufe();
+  if (event.target.closest("[data-stufa-add]")) {
+    event.preventDefault();
+    state.stufaAperta = vociStufa.length;
+    salvaStufe([...vociStufa, { id: `stufa-${Date.now().toString(36)}`, name: "" }]);
+    ridisegna();
+    return;
+  }
+  const pickStufa = event.target.closest("[data-stufa-pick]");
+  if (pickStufa) {
+    event.preventDefault();
+    const input = body.querySelector(`#${CSS.escape(clean(pickStufa.dataset.stufaPick))}`);
+    if (input) root.wzPickEntity?.(input);
+    return;
+  }
+  const rigaStufa = event.target.closest("[data-stufa-index]");
+  if (rigaStufa) {
+    const indice = Number(rigaStufa.dataset.stufaIndex);
+    if (!Number.isFinite(indice) || !vociStufa[indice]) return;
+    if (event.target.closest("[data-stufa-edit]")) {
+      event.preventDefault();
+      state.stufaAperta = state.stufaAperta === indice ? -1 : indice;
+      ridisegna();
+      return;
+    }
+    if (event.target.closest("[data-stufa-del]")) {
+      event.preventDefault();
+      const nome = clean(vociStufa[indice]?.name) || `${t("Stufa", "Stove")} ${indice + 1}`;
+      if (root.confirm && !root.confirm(t(`Tolgo "${nome}"?`, `Remove "${nome}"?`))) return;
+      state.stufaAperta = -1;
+      salvaStufe(vociStufa.filter((_voce, posto) => posto !== indice));
+      ridisegna();
+      return;
+    }
+    if (event.target.closest("[data-stufa-save]")) {
+      event.preventDefault();
+      /* Come per le caldaie: si leggono tutte le righe prima di scrivere, o
+       * con due stufe aperte la seconda non si memorizzerebbe. */
+      const prossime = righeDelDocumento(body, "data-stufa-index", vociStufa, leggiStufa);
+      prossime[indice] = leggiStufa(rigaStufa, vociStufa[indice]);
+      state.stufaAperta = -1;
+      salvaStufe(prossime);
+      ridisegna();
+      root.edToast?.(t("💾 Stufa salvata", "💾 Stove saved"));
+    }
+    return;
+  }
+
   /* ── il blocco «Scaldabagno» (#253) ── */
   if (event.target.closest("[data-scald-add]")) {
     event.preventDefault();
@@ -1137,10 +1392,14 @@ function installStyles() {
          i due pezzi in linea, e con due caldaie in fila il nome finiva
          appiccicato all'id — «Zona giornobinary_sensor.c1_stato». Sono due
          informazioni diverse: quale macchina e' e da dove legge. */
-      #ed-body .dm-caldaia-row .ed-row-main{display:block;min-width:0}
+      #ed-body .dm-caldaia-row .ed-row-main,
+      #ed-body .dm-stufa-row .ed-row-main{display:block;min-width:0}
       #ed-body .dm-caldaia-row .ed-row-new,
-      #ed-body .dm-caldaia-row .ed-row-old{display:block;overflow:hidden;text-overflow:ellipsis}
-      #ed-body .dm-caldaia-row .ed-row-old{margin-top:3px;color:var(--text-dim,#64748b)}
+      #ed-body .dm-caldaia-row .ed-row-old,
+      #ed-body .dm-stufa-row .ed-row-new,
+      #ed-body .dm-stufa-row .ed-row-old{display:block;overflow:hidden;text-overflow:ellipsis}
+      #ed-body .dm-caldaia-row .ed-row-old,
+      #ed-body .dm-stufa-row .ed-row-old{margin-top:3px;color:var(--text-dim,#64748b)}
       /* Il titolo del gruppo del pellet, dentro la riga della caldaia (#346):
          un filo sopra e un po' d'aria, come le altre separazioni della
          scheda — ma dentro un corpo aperto, non fra due sezioni. */

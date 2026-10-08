@@ -162,6 +162,13 @@ export function rimettiNellaTessera(elenco, chiave, entita) {
  * sola direbbe la tessera sbagliata. */
 export const MARCHIO_TESSERA = "data-dm-tessera";
 
+/* E il segno di chi una tessera in Home non ce l'ha: la stufa a pellet (#183),
+ * che si configura nella linguetta del Solare come la caldaia ma in Home non
+ * ha niente. Senza, l'interruttore «nel widget» accanto alle sue caselle
+ * avrebbe preso la tessera della linguetta — quella del solare — e avrebbe
+ * tolto dalla tessera sbagliata un'entita' che li' non c'e'. */
+export const SENZA_TESSERA = "data-dm-senza-tessera";
+
 /**
  * La tessera di una linguetta del Config, quando ne serve una sola.
  *

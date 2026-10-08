@@ -26,6 +26,7 @@ import {
   senzaCadere,
 } from "./shared.js";
 import { fermaIVideo, provaIlVideo } from "./telecamera-webrtc-section.js";
+import { chiediLeCapacitaDiTutte } from "./telecamera-capacita-section.js";
 import { normalizePeople } from "../core/person-model.js";
 import { CHIAVE_RISERVATE, telecamereVisibili } from "../core/telecamere-riservate.js";
 
@@ -516,6 +517,14 @@ export async function refreshCameraThumbnails({ force = false } = {}) {
       }
     }
   }
+  /* Le capacita' delle telecamere, richieste col muro aperto (#164). Quelle
+   * dell'avvio possono essere cadute — il filo con Home Assistant non era
+   * ancora pronto — e nessuno le richiedeva piu': senza, la Ring del muro
+   * non provava mai il video dal vivo e restava su «In attesa del
+   * fotogramma», mentre nel dettaglio, che le richiede sempre, si vedeva.
+   * La pausa di mezzo minuto fra una domanda e l'altra la tiene
+   * `chiediLeCapacita`, e le tessere da sole continuano a non chiederne. */
+  chiediLeCapacitaDiTutte();
   await Promise.all(cameras.map(loadCameraImage));
   // However the page was reached — a tab, a card, a restored session — asking
   // for frames is also what arms the timer that keeps them coming.

@@ -153,9 +153,33 @@ class GestoreLicenza extends ChangeNotifier {
   /// (`premiumOspite`), che dentro gdahome Premium e' compreso.
   late final ValueNotifier<bool> premiumQui;
 
+  /// Se le case si sono gia' lette almeno una volta ([conosci]). Prima di
+  /// allora «non Premium» vuol dire «non lo so ancora», e chi lo scrive da
+  /// qualche parte — il biglietto per l'auto — aspetta.
+  bool get conosciute => _conosciute;
+  bool _conosciute = false;
+
+  /// Se la casa in uso e' Premium, e fino a quando: e' il biglietto che si
+  /// lascia allo schermo dell'auto (`auto/la_licenza.dart`). [fino] e' il
+  /// primo momento in cui il suo gettone smette di valere, `null` quando
+  /// Premium non dipende da un gettone (controlli spenti, o forzato).
+  ({bool premium, DateTime? fino}) get premiumPerLAuto {
+    final casa = casaInUso;
+    if (!premiumDi(casa)) return (premium: false, fino: null);
+    if (_forza != null || !controlliAccesi) return (premium: true, fino: null);
+    final gettone = gettoneDi(casa);
+    if (gettone == null) return (premium: false, fino: null);
+    final scade = gettone.scade;
+    final fino = scade != null && scade.isBefore(gettone.fino)
+        ? scade
+        : gettone.fino;
+    return (premium: true, fino: fino);
+  }
+
   /// Le case che l'app conosce, coi loro gettoni: si chiama all'apertura e
   /// ogni volta che un gettone cambia. Controlla le firme nuove.
   Future<void> conosci(Iterable<CasaConosciuta> tutte) async {
+    _conosciute = true;
     _case
       ..clear()
       ..addEntries(tutte.map((una) => MapEntry(una.id, una)));

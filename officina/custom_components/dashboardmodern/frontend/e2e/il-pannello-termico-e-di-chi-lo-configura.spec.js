@@ -290,6 +290,8 @@ test("le caselle del pellet stanno nella scheda, sotto il loro titolo", async ({
     await expect(casella).toHaveValue(valore);
   }
 
-  /* Le caselle di sempre sono ancora prima, e nessuna si è persa per strada. */
-  await expect(riga.locator("[data-caldaia-field]")).toHaveCount(20);
+  /* Le caselle di sempre sono ancora prima, e nessuna si è persa per strada:
+   * il nome, le diciannove entità — col secondo serbatoio del pellet (#182) —
+   * e l'uscita. */
+  await expect(riga.locator("[data-caldaia-field]")).toHaveCount(21);
 });

@@ -8,17 +8,22 @@ export PONTE_ARCHIVIO="/data"
 export PONTE_CONSOLE="/app/console"
 
 # Qui c'era una domanda al Supervisor: «c'e' un broker MQTT in casa?». Serviva a
-# Zigbee2MQTT, che pero' non e' ancora arrivato.
+# Zigbee2MQTT, quando ancora non c'era.
 #
-# Il guaio e' che quella domanda vuole `hassio_api: true`, che il ponte non ha
-# e non gli serve: senza, il Supervisor risponde di no e bashio stampa
-# «ERROR: Unable to access the API, forbidden» a ogni avvio. Un add-on che al
-# primo accendersi scrive ERROR e' un add-on che sembra rotto, e chi lo installa
-# non ha modo di sapere che quell'errore non conta niente.
+# Il guaio e' che quella domanda il Supervisor la lascia fare solo a chi
+# dichiara il servizio nel manifesto — `services: [mqtt:want]` — e il ponte non
+# lo dichiara. `hassio_api: true` invece il manifesto ce l'ha (serve alle
+# domande in sola lettura, `/network/info` e le altre `…/info`), ma per i
+# servizi non basta: il Supervisor risponde di no e bashio stampa «ERROR:
+# Unable to access the API, forbidden» a ogni avvio. Un add-on che al primo
+# accendersi scrive ERROR e' un add-on che sembra rotto, e chi lo installa non
+# ha modo di sapere che quell'errore non conta niente.
 #
-# Quindi via. Tornera' insieme a Zigbee2MQTT, e con il permesso dichiarato come
-# si deve — `services: [mqtt:want]` nel manifesto — invece che chiesto di
-# nascosto e negato.
+# Quindi via, e non e' tornata: Zigbee2MQTT adesso il ponte lo comanda
+# passando da Home Assistant, col servizio `mqtt.publish` (`src/zigbee.js`),
+# e un broker suo non gli serve. Se un giorno servisse, il permesso si dichiara
+# come si deve nel manifesto, invece di chiederlo di nascosto e sentirsi dire
+# di no.
 
 bashio::log.info "Il ponte si alza."
 exec node /app/src/index.js
