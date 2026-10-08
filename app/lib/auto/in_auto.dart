@@ -61,6 +61,10 @@ enum ComeEFinitaInAuto {
 
   /// La casa non si e' raggiunta.
   senzaCasa,
+
+  /// La casa non e' Premium: in auto la casa non c'e' (`la_licenza.dart`).
+  /// Il tasto in macchina l'ha gia' detto; qui non si apre nemmeno il filo.
+  senzaPremium,
 }
 
 /// Il punto da cui il servizio dell'auto accende il motore Dart.
@@ -115,11 +119,12 @@ Future<ComeEFinitaInAuto> eseguiIlComandoDellAuto({
   Future<String?> Function()? prendiIlComando,
   Future<List<RicettaDellAzione>> Function()? leRicette,
   Collegamento Function()? apriLaCasa,
+  Future<bool> Function()? premium,
 }) async {
   if (_inCorso) return ComeEFinitaInAuto.niente;
   _inCorso = true;
   try {
-    return await _esegui(prendiIlComando, leRicette, apriLaCasa);
+    return await _esegui(prendiIlComando, leRicette, apriLaCasa, premium);
   } finally {
     _inCorso = false;
   }
@@ -129,6 +134,7 @@ Future<ComeEFinitaInAuto> _esegui(
   Future<String?> Function()? prendiIlComando,
   Future<List<RicettaDellAzione>> Function()? leRicette,
   Collegamento Function()? apriLaCasa,
+  Future<bool> Function()? premium,
 ) async {
   final segno = await (prendiIlComando ?? auto.prendiIlComandoDellAuto)();
   if (segno == null || segno.isEmpty) return ComeEFinitaInAuto.niente;
@@ -143,6 +149,15 @@ Future<ComeEFinitaInAuto> _esegui(
    * qui a naso vorrebbe dire indovinare un servizio, e dall'altra parte c'e'
    * un cancello. */
   if (ricetta == null) return ComeEFinitaInAuto.aspettaLApp;
+
+  /* In auto la casa e' Premium. Il tasto in macchina lo guarda gia', ma il
+   * comando si puo' trovare scritto da prima: lo si guarda di nuovo qui, con
+   * lo stesso biglietto (`la_licenza.dart`), e senza Premium il filo non si
+   * apre nemmeno. Il comando e' gia' stato tolto, quindi non resta li' a
+   * ripartire. */
+  if (!await (premium ?? auto.laLicenzaDellAuto)()) {
+    return ComeEFinitaInAuto.senzaPremium;
+  }
 
   Collegamento? collegamento;
   try {

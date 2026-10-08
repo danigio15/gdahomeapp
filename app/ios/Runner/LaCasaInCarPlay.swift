@@ -29,7 +29,9 @@ enum LaCasaInCarPlay {
   /// Si aggancia al motore dell'app e mette il tasto con la casa sulla mappa.
   static func accendi(motore: FlutterEngine) {
     guarda = FlutterMethodChannel(name: "gdahome/auto/guarda", binaryMessenger: motore.binaryMessenger)
-    GdanavCarPlay.casa = { comandi($0) }
+    /* Senza Premium dietro il tasto con la casa c'e' la schermata che lo
+     * dice: in auto la casa e' Premium (`lib/auto/la_licenza.dart`). */
+    GdanavCarPlay.casa = { premium() ? comandi($0) : senzaPremium() }
   }
 
   /// Saliti o scesi dalla macchina: «Quasi a casa» si guarda solo in auto.
@@ -96,10 +98,38 @@ enum LaCasaInCarPlay {
   /// fotovoltaico, persone.
   private static func laFoto() -> [String: Any]? { leggi("gdahome-auto.json") }
 
+  // MARK: - Premium
+
+  /// Se la casa in uso e' Premium adesso, per il biglietto che ha lasciato il
+  /// Dart (`lib/auto/la_licenza.dart`, e `LaLicenzaInAuto.kt` su Android).
+  /// Tutto quello che non e' un biglietto giusto e ancora valido e' «no».
+  static func premium() -> Bool {
+    guard let json = leggi("gdahome-auto-licenza.json"), (json["premium"] as? Bool) == true else { return false }
+    guard let fino = json["fino"], !(fino is NSNull) else { return true }
+    guard let millisecondi = (fino as? NSNumber)?.doubleValue else { return false }
+    return millisecondi > Date().timeIntervalSince1970 * 1000
+  }
+
+  /// La schermata per chi non ha Premium: cosa serve, e dove si fa. Un elenco
+  /// vuoto col suo messaggio, come «Comandi rapidi» senza comandi: un'app di
+  /// navigazione `CPInformationTemplate` non lo puo' usare.
+  static func senzaPremium() -> CPTemplate {
+    let t = CPListTemplate(title: "gdahome Premium", sections: [])
+    t.emptyViewTitleVariants = [
+      "La casa in auto è compresa in gdahome Premium. Si attiva dall'app gdahome sul telefono, a macchina ferma."
+    ]
+    return t
+  }
+
   // MARK: - Premere
 
   /// Lascia scritto il comando, sveglia il Dart, e dice cosa aspettarsi.
   static func premi(_ id: String, _ nome: String, subito: Bool) {
+    /* Uno schermo rimasto aperto mentre Premium finiva: il tasto non parte. */
+    guard premium() else {
+      GdanavCarPlay.mostra("\(nome): serve gdahome Premium")
+      return
+    }
     var scritto = false
     if let cartella {
       try? FileManager.default.createDirectory(at: cartella, withIntermediateDirectories: true)
@@ -187,6 +217,7 @@ enum LaCasaInCarPlay {
 
   /// I dispositivi di casa, e un tocco per girarli.
   static func dispositivi(_ controllore: CPInterfaceController) -> CPTemplate {
+    guard premium() else { return senzaPremium() }
     let foto = laFoto()
     let elenco = (foto?["dispositivi"] as? [[String: Any]] ?? []).compactMap { uno -> (String, String, String, String)? in
       let id = testo(uno["id"])
@@ -230,6 +261,7 @@ enum LaCasaInCarPlay {
 
   /// Le azioni rapide della plancia: sei, e non una di piu'.
   static func azioni() -> CPTemplate {
+    guard premium() else { return senzaPremium() }
     let elenco = (laFoto()?["azioni"] as? [[String: Any]] ?? []).compactMap { uno -> (String, String, Bool)? in
       let id = testo(uno["id"])
       let nome = testo(uno["nome"])
@@ -250,6 +282,7 @@ enum LaCasaInCarPlay {
 
   /// Com'e' la casa: di quando e' la fotografia, il sole, chi c'e'.
   static func comeStaLaCasa() -> CPTemplate {
+    guard premium() else { return senzaPremium() }
     var righe: [CPListItem] = []
     if let foto = laFoto() {
       righe.append(CPListItem(text: quando(foto), detailText: nil))
@@ -290,6 +323,8 @@ enum LaCasaInCarPlay {
    * l'arrivo. Solo **arrivando**: dopo essere stati piu' lontani (almeno un
    * chilometro, o il doppio della distanza scelta), e una volta per arrivo. */
   private static func controllaLArrivo() {
+    /* «Quasi a casa» e' la casa in auto: senza Premium non si propone. */
+    guard premium() else { return }
     guard let qui = GdanavCarPlay.posizione, let casa = GdanavCarPlay.casaSalvata else { return }
     let distanza = CLLocation(latitude: qui.latitude, longitude: qui.longitude)
       .distance(from: CLLocation(latitude: casa.latitude, longitude: casa.longitude))

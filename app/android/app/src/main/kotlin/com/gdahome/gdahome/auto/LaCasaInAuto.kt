@@ -48,6 +48,8 @@ import com.gdahome.gdahome.R
 class LaCasaInAuto(context: CarContext) : Screen(context) {
 
     override fun onGetTemplate(): Template {
+        /* Senza Premium la casa in auto non c'e' (`LaLicenzaInAuto.kt`). */
+        if (!LaLicenzaInAuto.premium(carContext)) return senzaPremium(carContext, radice = true)
         val foto = leggiLaFoto(carContext)
         val elenco = ItemList.Builder()
         val dispositivi = foto?.dispositivi.orEmpty()

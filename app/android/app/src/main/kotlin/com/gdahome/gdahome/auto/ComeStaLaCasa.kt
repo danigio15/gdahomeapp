@@ -37,6 +37,7 @@ private const val RIGHE_AL_MASSIMO = 6
 class ComeStaLaCasa(context: CarContext) : Screen(context) {
 
     override fun onGetTemplate(): Template {
+        if (!LaLicenzaInAuto.premium(carContext)) return senzaPremium(carContext)
         val foto = leggiLaFoto(carContext)
         val elenco = ItemList.Builder()
         val righe = mutableListOf<Row>()

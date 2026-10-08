@@ -19,6 +19,7 @@ import 'package:path_provider/path_provider.dart';
 
 import 'i_comandi.dart';
 import 'la_foto.dart';
+import 'la_licenza.dart';
 
 /// Scrive la fotografia, se c'e' da scriverla. Torna `true` se l'ha scritta.
 ///
@@ -142,6 +143,46 @@ Future<bool> scriviIComandi(IComandiScelti scelti) async {
     await mezzo.writeAsString(scelti.comeSiScrive, flush: true);
     await mezzo.rename('${cartella.path}/$nomeDeiComandi');
     return true;
+  } catch (_) {
+    return false;
+  }
+}
+
+/// Dice all'auto se la casa e' Premium, e fino a quando (`la_licenza.dart`).
+///
+/// Come la fotografia: prima un file a parte e poi al suo posto, perche'
+/// l'auto non legga mai un biglietto a meta' — che varrebbe «no» proprio a chi
+/// ha pagato. Se non si riesce a scrivere resta quello di prima, che scade da
+/// solo.
+Future<bool> diciLaLicenzaAllAuto({
+  required bool premium,
+  DateTime? fino,
+}) async {
+  try {
+    final cartella = await getApplicationSupportDirectory();
+    final mezzo = File('${cartella.path}/$nomeDellaLicenza.mezzo');
+    await mezzo.writeAsString(
+      laLicenzaScritta(premium: premium, fino: fino),
+      flush: true,
+    );
+    await mezzo.rename('${cartella.path}/$nomeDellaLicenza');
+    return true;
+  } catch (_) {
+    return false;
+  }
+}
+
+/// Se il biglietto lasciato all'auto dice Premium adesso: lo legge il motore
+/// senza schermo prima di eseguire un comando premuto in macchina.
+Future<bool> laLicenzaDellAuto() async {
+  try {
+    final cartella = await getApplicationSupportDirectory();
+    final file = File('${cartella.path}/$nomeDellaLicenza');
+    if (!await file.exists()) return false;
+    return laLicenzaVale(
+      await file.readAsString(),
+      adesso: DateTime.now().millisecondsSinceEpoch,
+    );
   } catch (_) {
     return false;
   }

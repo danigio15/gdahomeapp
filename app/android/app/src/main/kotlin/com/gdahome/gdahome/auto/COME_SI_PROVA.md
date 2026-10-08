@@ -151,6 +151,22 @@ non si fa niente: è il verso giusto in cui sbagliare. Per questo il tasto in
 macchina dice «parte appena apri gdahome sul telefono, entro due minuti», e
 non «è partito».
 
+## Senza Premium
+
+In auto la casa è Premium (`docs/LICENZE.md`). L'app lascia scritto
+`filesDir/gdahome-auto-licenza.json` — `{"premium":true,"fino":<ms>}`, oppure
+`{"premium":false,"fino":null}` — e ogni schermata della casa lo rilegge
+(`LaLicenzaInAuto.kt`). Per provare senza una casa Base vera, con il DHU
+attaccato:
+
+```
+adb shell run-as com.gdahome.gdahome sh -c 'echo "{\"premium\":false,\"fino\":null}" > files/gdahome-auto-licenza.json'
+```
+
+e si torna sullo schermo dell'auto: al posto dei dispositivi c'è «gdahome
+Premium». Togliere il file fa lo stesso — un biglietto che manca vale «no».
+L'app, alla prossima lettura delle case, lo riscrive giusto.
+
 ## A schermo spento
 
 Android Auto tiene su il **processo** dell'app — il servizio dell'auto gira lì

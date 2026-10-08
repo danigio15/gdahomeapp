@@ -29,3 +29,12 @@ Future<IComandiScelti> leggiIComandi() async => const IComandiScelti();
 Future<bool> scriviIComandi(IComandiScelti scelti) async => false;
 
 Future<List<ComandoRapido>> leAzioniRapide() async => const [];
+
+/// Nel browser non c'e' nessuna auto a cui dirlo.
+Future<bool> diciLaLicenzaAllAuto({
+  required bool premium,
+  DateTime? fino,
+}) async => false;
+
+/// Nel browser nessuna auto: niente Premium in auto da guardare.
+Future<bool> laLicenzaDellAuto() async => false;

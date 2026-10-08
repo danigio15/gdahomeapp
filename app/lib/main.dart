@@ -16,6 +16,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'aggiornamento_obbligatorio.dart';
 import 'auto/in_auto.dart' as auto;
+import 'auto/qui.dart' as al_lauto;
 import 'casa/archivio_delle_case.dart';
 import 'casa/cassaforte.dart';
 import 'casa/collegamento.dart';
@@ -334,9 +335,35 @@ bool nonSiGuardaPiu(AppLifecycleState stato) =>
 Collegamento? _filoDiCasa;
 
 /// Il filo con la casa dell'app. Lo crea chi lo chiede per primo.
-Collegamento ilFiloConLaCasa() => _filoDiCasa ??= Collegamento(
-  archivio: ArchivioDelleCase(const CassaforteDelSistema()),
+Collegamento ilFiloConLaCasa() => _filoDiCasa ??= _conIlBigliettoPerLAuto(
+  Collegamento(archivio: ArchivioDelleCase(const CassaforteDelSistema())),
 );
+
+/* Se la casa e' Premium, detto allo schermo dell'auto.
+ *
+ * In auto la casa e' Premium (`auto/la_licenza.dart`), e la licenza la sa
+ * questo filo: a ogni suo cambiamento — una casa diversa, un gettone nuovo o
+ * scaduto — si riscrive il biglietto che l'auto rilegge. Prima che le case si
+ * siano lette non si scrive niente: «non Premium» li' vuol dire «non lo so
+ * ancora», e chi ha pagato vedrebbe in macchina la pagina sbagliata per il
+ * tempo di aprire l'archivio. */
+Collegamento _conIlBigliettoPerLAuto(Collegamento filo) {
+  final licenza = filo.licenza;
+  ({bool premium, DateTime? fino})? scritto;
+  void scrivi() {
+    if (!licenza.conosciute) return;
+    final adesso = licenza.premiumPerLAuto;
+    if (adesso == scritto) return;
+    scritto = adesso;
+    unawaited(
+      al_lauto.diciLaLicenzaAllAuto(premium: adesso.premium, fino: adesso.fino),
+    );
+  }
+
+  licenza.addListener(scrivi);
+  scrivi();
+  return filo;
+}
 
 /// Apre il filo con la casa: l'archivio, poi la casa attiva.
 ///

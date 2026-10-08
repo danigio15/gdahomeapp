@@ -138,8 +138,13 @@ class NavigatoreCarAppService : CarAppService() {
     override fun onCreate() {
         super.onCreate()
         /* Il tasto con la casa, sulla mappa: i comandi rapidi scelti sul
-         * telefono. Dietro, i dispositivi di sempre. */
-        GdanavInAuto.casa = { IComandiInAuto(it) }
+         * telefono. Dietro, i dispositivi di sempre. Senza Premium dietro il
+         * tasto c'e' la schermata che lo dice: anche la pagina Premium del
+         * navigatore ha un tasto «Casa», e da li' la casa si apriva tutta
+         * (`LaLicenzaInAuto.kt`). */
+        GdanavInAuto.casa = {
+            if (LaLicenzaInAuto.premium(it)) IComandiInAuto(it) else CasaSenzaPremium(it)
+        }
     }
 
     override fun onCreateSession(sessionInfo: SessionInfo): Session = SessioneNavigatore()
@@ -208,12 +213,14 @@ class ArrivoACasa(private val auto: () -> CarContext) {
     }
 
     private fun controlla() {
+        /* «Quasi a casa» e' la casa in auto: senza Premium non si propone. */
+        val carContext = auto()
+        if (!LaLicenzaInAuto.premium(carContext)) return
         val qui = PonteAuto.qui ?: return
         val casa = PonteAuto.casa() ?: return
         val metri = FloatArray(1)
         Location.distanceBetween(qui[0], qui[1], casa.lat, casa.lon, metri)
         val distanza = metri[0]
-        val carContext = auto()
         val scelti = leggiIComandi(carContext)
         val vicino = scelti.metri
         if (distanza > maxOf(LONTANO_M, vicino * 2)) {
