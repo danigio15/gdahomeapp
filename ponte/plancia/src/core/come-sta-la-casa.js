@@ -24,6 +24,7 @@
  * visibile finche' uno non l'ha vista». Un lampo di due secondi mentre non si
  * guarda non serve a niente.
  */
+import { inMillimetri, stapiovendo } from "./pioggia-caduta.js";
 
 const pulito = (valore) => String(valore ?? "").trim();
 
@@ -609,6 +610,18 @@ export function pastiglieDellaCasa(modelli, { barra, posta, misure, mie, adesso 
       /* Un sensore che non risponde non scrive «—»: la pastiglia non c'e', come
        * per tutte le altre voci che non hanno niente da dire. */
       if (!Number.isFinite(Number(letta?.valore))) continue;
+      /* La pioggia solo quando piove (#184). «Non è possibile far attivare la
+       * pioggia solo quando effettivamente la misuri, anziché sia sempre
+       * presente?» Fino a qui la pioggia si trattava come la temperatura —
+       * un numero c'e', la pastiglia pure — e sotto il meteo restava scritto
+       * «0,0 mm/h» tutto l'anno. Adesso compare da quando piove davvero, con
+       * la stessa soglia con cui l'irrigazione salta il giro
+       * (`pioggia-caduta.js`), e quella di oggi da quando e' caduto qualcosa.
+       * Le unita' si convertono prima di giudicare: 0,01 pollici sono piu' di
+       * zero. */
+      if (voce.chiave === "pioggia" && !stapiovendo(inMillimetri(letta.valore, letta.unita)))
+        continue;
+      if (voce.chiave === "pioggiaOggi" && !(inMillimetri(letta.valore, letta.unita) > 0)) continue;
       fuori.push({
         chiave: voce.chiave,
         tessera: voce.tessera,
