@@ -212,9 +212,8 @@ degli add-on → i tre puntini → Ricarica**. Una copia così non ha nessun neg
 dietro: per aggiornarla si ricopia la cartella e si ripete **Ricarica**, e
 nella pagina dell'add-on compare **Aggiorna** ([`COME_PROVARLA.md`](../COME_PROVARLA.md)
 lo fa anche in un colpo solo, dal terminale). Dentro la pagina di gdahome non
-c'è più un bottone che lo fa da sé: voleva la cartella `addons` in scrittura e
-un ruolo da amministratore del Supervisor, e l'add-on non li chiede più — il
-perché sta in `config.yaml`.
+c'è più un bottone che lo fa da sé: voleva la cartella `addons` in scrittura, e
+l'add-on non la chiede più — il perché sta in `config.yaml`.
 
 ---
 

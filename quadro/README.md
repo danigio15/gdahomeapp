@@ -618,11 +618,9 @@ export function laMacchina({ os, host, stats, temperatura }) → object
  * L'SSID si butta apposta, e una prova tiene fermo che non esca. */
 export function laRete({ network, filoSu }) → object
 
-/* `gliAddon` non c'è più. Leggeva `/addons` — nome, `state`, `boot` — e quella
- * via il Supervisor la apre solo a un add-on `hassio_role: manager`, un ruolo
- * che il ponte ha lasciato. Il rapporto adesso esce senza `addon`, e qui si
- * legge «questo impianto non ha comunicato i suoi add-on»: le strade di
- * ripiego, e perché nessuna va, stanno in cima a `ponte/src/ferro.js`. */
+/* `/addons`: nome, `state`, `boot`, `update_available`. La sola domanda che
+ * conta è `boot === "auto" && state !== "started"`. */
+export function gliAddon({ addons }) → object
 ```
 
 Le due cose che il Supervisor **non** dice sono la temperatura della scheda e

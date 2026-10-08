@@ -53,7 +53,14 @@
 import { randomBytes } from "node:crypto";
 import { join } from "node:path";
 
-import { gliApparati, iNodiDelCluster, laMacchina, laRete, leCaselleDelMiniPc } from "./ferro.js";
+import {
+  gliAddon,
+  gliApparati,
+  iNodiDelCluster,
+  laMacchina,
+  laRete,
+  leCaselleDelMiniPc,
+} from "./ferro.js";
 import { ilSegnoDi } from "./segni.js";
 import { ilBackup, leBatterie, leEntita } from "./salute.js";
 import { PROFILI_AL_MASSIMO, profiloBuono, senzaFlussi } from "./plancia-da-lontano.js";
@@ -292,10 +299,7 @@ export function compila({
   nodi = null,
   rete = null,
   apparati = null,
-  /* Qui c'era `addon`, l'elenco degli add-on col loro stato. Non c'e' piu':
-   * per saperlo il Supervisor voleva un permesso da amministratore, e il
-   * perche' per intero sta in cima a `ferro.js`. Il quadro, senza, scrive
-   * che questa casa non l'ha detto. */
+  addon = null,
   aggiornamenti = null,
   manutenzione = false,
   configurazione = false,
@@ -340,6 +344,7 @@ export function compila({
     macchina,
     nodi,
     rete,
+    addon,
     aggiornamenti,
     lavoro,
     plance,
@@ -525,6 +530,7 @@ export function fabbricaIlRapporto({
         ? laRete({ network: detto.network, filoSu: chiamata?.accesa === true })
         : null,
       apparati: quelli ? gliApparati(quelli, { scelte: apparatiScelti() }) : null,
+      addon: detto ? gliAddon({ addons: detto.addons }) : null,
       aggiornamenti: daFare ? iConti(daFare, marchi, iSegni) : null,
       /* Il secondo interruttore, detto al quadro.
        *

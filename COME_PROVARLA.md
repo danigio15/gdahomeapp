@@ -77,12 +77,11 @@ la stessa). Il blocco qui sotto fa tutto il giro dal terminale.
 
 Prima lo faceva l'add-on da sé, con un bottone «Aggiorna gdahome» nella sua
 pagina. Per riuscirci voleva la cartella `addons` di Home Assistant in
-scrittura — quella di tutti gli add-on locali, non solo la sua — e un ruolo
-che il Supervisor ascolta come un amministratore; e anche così, alla fine,
-«Aggiorna» toccava premerlo a mano, perché un add-on non può aggiornare se
-stesso. Per la strada che si spiega a tutti, il negozio, non serviva a niente:
-quei due permessi l'add-on non li chiede più, e il bottone non c'è. Il perché
-per intero sta in `ponte/config.yaml`.
+scrittura — quella di tutti gli add-on locali, non solo la sua — e anche così,
+alla fine, «Aggiorna» toccava premerlo a mano, perché un add-on non può
+aggiornare se stesso. Per la strada che si spiega a tutti, il negozio, non
+serviva a niente: quella cartella l'add-on non la chiede più, e il bottone non
+c'è. Il perché per intero sta in `ponte/config.yaml`.
 
 #### Dal terminale, in un colpo solo
 

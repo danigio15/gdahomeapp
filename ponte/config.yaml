@@ -132,35 +132,30 @@ map:
 
 # Le domande al Supervisor, e sono tutte letture.
 #
-# Col ruolo di serie — qui sotto non se ne chiede nessun altro — il Supervisor
-# a un add-on risponde, oltre che su se stesso, sulle vie che finiscono in
-# `/info`, e basta. Il ponte ne usa poche: su quali indirizzi si trova questa
-# casa sulla rete locale (`/network/info`), per dirlo ai telefoni quando si
-# abbinano, cosi' in casa l'app va dritta invece di fare il giro dal
-# centralino; dove Home Assistant serve i suoi file (`/core/info`); e, solo
-# dove c'e' il codice di un installatore, la macchina, il disco e le versioni
-# del rapporto (`src/ferro.js`). Se si toglie, tutto funziona lo stesso: piu'
-# lento sul divano, e un rapporto senza la macchina.
+# Su quali indirizzi si trova questa casa sulla rete locale (`/network/info`),
+# per dirlo ai telefoni quando si abbinano, cosi' in casa l'app va dritta
+# invece di fare il giro dal centralino; dove Home Assistant serve i suoi file
+# (`/core/info`); e, solo dove c'e' il codice di un installatore, la macchina,
+# il disco, le versioni e gli add-on del rapporto (`src/ferro.js`). Se si
+# toglie, tutto funziona lo stesso: piu' lento sul divano, e un rapporto senza
+# la macchina.
 hassio_api: true
 
-# `hassio_role` non c'e', cioe' il ruolo e' quello di serie: chi legge e basta.
+# Il ruolo con cui il Supervisor ascolta il ponte, e va detto chiaro invece che
+# nascosto: con `manager` il ponte parla al Supervisor come un amministratore.
 #
-# C'era `manager`, il permesso piu' grosso che questo manifesto abbia mai
-# chiesto: un add-on `manager` il Supervisor lo ascolta come un amministratore
-# — installa e toglie add-on, tocca la rete, i backup, la macchina. Il ponte lo
-# usava per due cose sole, e nessuna delle due valeva quel prezzo:
+# Serve all'installatore. Il rapporto che parte verso il suo quadro porta
+# l'elenco degli add-on col loro stato — quale gira, quale parte all'avvio ed
+# e' fermo — e quella lettura (`/addons`) il Supervisor la da' solo a un
+# add-on `manager`: col ruolo di serie si leggono le vie in `/info` e basta.
+# La casa che ha incollato il codice del suo installatore gli ha permesso di
+# vedere tutto questo, e l'installatore deve vederlo tutto. Dove quel codice
+# non c'e' il rapporto non parte, e `/addons` non lo chiede nessuno.
 #
-#  - far rileggere il negozio al Supervisor dopo l'aggiornamento da se'
-#    (`src/aggiornamento.js`), che senza la cartella degli add-on qui sopra
-#    non ha piu' niente da portare dentro;
-#  - l'elenco degli add-on, col loro stato, nel rapporto all'installatore
-#    (`/addons`). Il rapporto adesso esce senza, e il quadro scrive che questa
-#    casa non l'ha detto; perche' non c'e' un'altra strada buona per saperlo
-#    sta scritto in `src/ferro.js`.
-#
-# Quello che resta non lo chiede: le opzioni e la scheda di se stesso
-# (`/addons/self/…`), che il Supervisor lascia a ogni add-on, e le icone degli
-# add-on, che da' a chiunque senza guardare nessun segno.
+# Le chiamate al Supervisor stanno tutte in chiaro in `src/ferro.js`. Le
+# opzioni e la scheda di se stesso (`/addons/self/…`) e le icone degli add-on
+# non chiedono questo ruolo: il Supervisor le da' comunque.
+hassio_role: manager
 
 options:
   # ─────────────────────────────────────────────────────────────────────────
@@ -194,9 +189,9 @@ options:
     # installatore: lui ti da' un codice da incollare qui — venti caratteri, tipo
     # `K7M2-9XQF-3BHT-R4VN` — e da quel momento
     # questa casa gli manda ogni minuto **poche righe di numeri** — le
-    # versioni, quanto e' pieno il disco, quali aggiornamenti aspettano, quante
-    # entita' non rispondono. Cosi' si accorge che qualcosa non va prima che
-    # tocchi a te telefonargli.
+    # versioni, quanto e' pieno il disco, quali add-on girano, quante entita'
+    # non rispondono. Cosi' si accorge che qualcosa non va prima che tocchi a te
+    # telefonargli.
     #
     # Piu' **una cosa che numero non e'**, e te la diciamo prima: il **nome dei
     # dispositivi che in quel momento non rispondono**. Solo quelli. Serve a chi

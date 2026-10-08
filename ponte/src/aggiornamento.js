@@ -1,16 +1,16 @@
 /* Il ponte si aggiorna da se'.
  *
- * **Oggi dorme, e va detto per primo.** Il manifesto non monta piu' `/addons`
- * e non chiede piu' `hassio_role: manager` — il perche' per intero sta in
- * `config.yaml` — quindi in ogni casa `locale()` risponde di no: la console il
- * bottone non lo mostra, e dice invece da dove arrivano gli aggiornamenti,
- * cioe' dal negozio (Impostazioni → Componenti aggiuntivi → gdahome →
- * Aggiorna). Il codice resta, con le sue prove, per chi si tiene una copia
- * sua dell'add-on e si rimette quelle due righe nel manifesto sapendo cosa
- * sono: la cartella di tutti gli add-on locali della casa aperta in
- * scrittura, e un ruolo che il Supervisor ascolta come un amministratore —
- * serve a `rifalla()`, per fargli rileggere il negozio. Quello che segue
- * racconta come funziona quando e' sveglio.
+ * **Oggi dorme, e va detto per primo.** Il manifesto non monta piu' la
+ * cartella `/addons` — il perche' per intero sta in `config.yaml` — quindi in
+ * ogni casa `locale()` risponde di no: la console il bottone non lo mostra, e
+ * dice invece da dove arrivano gli aggiornamenti, cioe' dal negozio
+ * (Impostazioni → Componenti aggiuntivi → gdahome → Aggiorna). Il codice
+ * resta, con le sue prove, per chi si tiene una copia sua dell'add-on e si
+ * rimette quella riga nel manifesto sapendo cos'e': la cartella di tutti gli
+ * add-on locali della casa aperta in scrittura. Il ruolo `manager`, che
+ * `rifalla()` usa per far rileggere il negozio al Supervisor, il manifesto ce
+ * l'ha gia', per il rapporto all'installatore. Quello che segue racconta come
+ * funziona quando e' sveglio.
  *
  * Un add-on **locale** — quello che sta in `/addons/gdahome`, installato
  * copiandoci i file dentro — non ha nessun negozio dietro: Home Assistant
