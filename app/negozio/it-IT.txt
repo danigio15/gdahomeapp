@@ -1,1 +1,1 @@
-Per chi prova l'app con il codice della casa di prova: la pagina Premium mostra gli abbonamenti anche quando la casa è già Premium. Per tutti gli altri non cambia niente.
+Il navigatore non si ferma più in guida: se il GPS del telefono tace, lo fa ripartire e lo dice. Il percorso resta sempre sulla mappa, l'autonomia è quella dell'auto, e con Android Auto si usa il GPS dell'auto quando lo passa. In auto la casa è Premium. Nella plancia: la stufa a pellet, il secondo serbatoio del pellet, la stanza che si apriva vuota e la pioggia solo quando piove.
