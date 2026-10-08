@@ -26,6 +26,7 @@ import {
   lettoriConfigurati,
   orologio,
   posizioneOra,
+  volumeDopoIlPasso,
 } from "../core/media-player.js";
 import {
   ilComandoPerSuonare,
@@ -338,10 +339,14 @@ function volumeMarkup(riga) {
    * il cursore. Prima non aveva niente: il passo lo dichiarava, e la scheda
    * guardava solo il numero. Da spenta non ci sono, come il telecomando. */
   const aPassi = riga.puo.passiVolume && !riga.puo.volume && !riga.spento && !riga.muto;
+  /* Chi il volume lo sa mettere a un numero ha il meno e il piu' accanto al
+   * cursore: un punto a tocco (`PASSO_DEL_VOLUME`), per l'ultimo ritocco che
+   * col dito sul cursore non si riesce a fare. */
+  const aTocchi = riga.puo.volume && !riga.spento;
   if (!riga.puo.volume && !riga.puo.muto && !aPassi) return "";
   const percento = Math.round((riga.volume ?? 0) * 100);
   return `<div class="dm-mp-volume">
-    ${aPassi ? tastoMarkup(riga, "abbassa", t("Abbassa il volume", "Volume down"), GLIFI.abbassa) : ""}
+    ${aPassi || aTocchi ? tastoMarkup(riga, "abbassa", t("Abbassa il volume", "Volume down"), GLIFI.abbassa) : ""}
     ${
       riga.puo.muto
         ? tastoMarkup(
@@ -362,6 +367,7 @@ function volumeMarkup(riga) {
            <span class="dm-mp-percento" data-dm-mp-percento>${percento}%</span>`
         : ""
     }
+    ${aTocchi ? tastoMarkup(riga, "alza", t("Alza il volume", "Volume up"), GLIFI.alza) : ""}
   </div>`;
 }
 
@@ -1182,6 +1188,10 @@ function onClick(event) {
     return;
   }
   const riga = letturaDi(entity);
+  if ((comando === "alza" || comando === "abbassa") && riga?.puo?.volume) {
+    toccaIlVolume(entity, riga, comando === "alza" ? 1 : -1);
+    return;
+  }
   const servizio = comandoDelLettore(comando, riga);
   if (!servizio) return;
   if (comando === "muto") {
@@ -1192,6 +1202,28 @@ function onClick(event) {
     return;
   }
   chiamaHa("media_player", servizio, { entity_id: entity });
+}
+
+/* L'ultimo volume chiesto con i tasti, per lettore. Due tocchi di fila
+ * arrivano prima che Home Assistant abbia risposto al primo: contati dal
+ * volume che dice lui, il secondo rifarebbe il primo invece di aggiungersi. */
+const volumiChiesti = new Map();
+const ATTESA_DEL_VOLUME = 2500;
+
+function toccaIlVolume(entity, riga, verso) {
+  const chiesto = volumiChiesti.get(entity);
+  const daQui =
+    chiesto && Date.now() - chiesto.quando < ATTESA_DEL_VOLUME ? chiesto.volume : riga.volume;
+  const volume = volumeDopoIlPasso(daQui, verso);
+  volumiChiesti.set(entity, { volume, quando: Date.now() });
+  /* Il numero e il cursore si spostano subito, come quando si trascina. */
+  for (const cursore of root.document?.querySelectorAll?.("[data-dm-mp-volume]") || []) {
+    if (clean(cursore.dataset.dmMpVolume) !== entity) continue;
+    cursore.value = String(Math.round(volume * 100));
+    const scritta = cursore.parentElement?.querySelector("[data-dm-mp-percento]");
+    if (scritta) scritta.textContent = `${Math.round(volume * 100)}%`;
+  }
+  chiamaHa("media_player", "volume_set", { entity_id: entity, volume_level: volume });
 }
 
 function onInput(event) {
