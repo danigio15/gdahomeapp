@@ -231,7 +231,10 @@ caddy validate --config /etc/caddy/Caddyfile
 ### 4 · Il primo installatore
 
 Si apre `https://quadro.gdahome.org/gestore/`, si incolla la chiave di
-gestione, e da lì si aggiunge. Oppure da riga di comando, che è la stessa cosa:
+gestione, e nella sezione «Installatori» si preme «Nuovo installatore». La
+pagina ha cinque sezioni: Panoramica (come va, e cosa c'è da guardare), Case,
+Installatori, Regali e codici, Abbonamenti. Oppure da riga di comando, che è
+la stessa cosa:
 
 vedi [Aggiungere un installatore](#aggiungere-un-installatore) qui sotto.
 

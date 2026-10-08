@@ -17,8 +17,14 @@ import { dirname, join } from "node:path";
 const QUI = dirname(fileURLToPath(import.meta.url));
 const GESTORE = readFileSync(join(QUI, "..", "gestore", "index.html"), "utf8");
 
-test("la voce «Abbonamenti» sta nella barra, dopo Licenze", () => {
-  assert.match(GESTORE, /\["licenze", "Licenze", 0\],\s*\["abbonamenti", "Abbonamenti", 0\],/);
+/* La voce delle licenze si chiama «Regali e codici» dalla Gestione a sezioni:
+ * dentro ci sono i regali e i codici, e quello che si compra sta qui accanto,
+ * in «Abbonamenti». */
+test("la voce «Abbonamenti» sta nella barra, dopo «Regali e codici»", () => {
+  assert.match(
+    GESTORE,
+    /\["licenze", "Regali e codici", 0\],\s*\["abbonamenti", "Abbonamenti", 0\],/,
+  );
   assert.match(GESTORE, /abbonamenti:\s*'<svg/);
   assert.match(GESTORE, /schermata === "abbonamenti"\s*\? gliAbbonamenti\(\)/);
 });
