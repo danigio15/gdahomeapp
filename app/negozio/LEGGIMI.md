@@ -117,3 +117,25 @@ Quindi l'ordine è questo, e costa dieci minuti di macchina:
 2. Solo quando dice di sì: **«L'etichetta»**, e poi «L'app da provare» su
    quell'etichetta, con la pista e la casella della prova **vuota**. Quella
    volta va su per davvero, e con lei nasce la release.
+
+## Per la revisione di Google («Sign in details»)
+
+Chi rivede l'app per Google la prova da lontano, come chi la rivede per Apple,
+e lì non compra niente. Entra col codice della **casa di prova** (la scheda
+«Casa di prova» della console dell'add-on), e la casa di prova è **Premium**,
+regalata dalla Gestione gdahome: così vede tutto. È lo stesso codice delle note
+per Apple (`app-store.md`): ne esiste uno solo alla volta, dura 7 giorni, e
+entrano fino a cinque telefoni. Quando si rifà, va cambiato in tutti e due i
+posti.
+
+Si scrive in Play Console → Monitor and improve → Policy and programs → App
+content → Actioned → **Sign in details** → Manage: nome «Demo home», nome
+utente e password vuoti (o «Not needed (pairing code)» se li vuole per forza),
+e nelle altre informazioni, col codice al posto delle X:
+
+> gdahome needs a paired Home Assistant home. Open the app, tap "Enter the
+> code" and type XXXX-XXXX-XXXX-XXXX (valid for 7 days, on several devices).
+> You enter our demo home as a non-admin user. The demo home has gdahome
+> Premium, so every feature is unlocked, also away from the home's Wi-Fi.
+> Premium is an auto-renewable subscription (☰ → gdahome Premium); buying it
+> is not needed to review the app.
