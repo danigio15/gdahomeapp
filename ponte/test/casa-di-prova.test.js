@@ -579,7 +579,7 @@ async function homeAssistantFinta() {
   };
 }
 
-async function catena() {
+async function catena({ gestore = true } = {}) {
   const cartelle = [];
   const nuovaCartella = (nome) => {
     const dove = mkdtempSync(join(tmpdir(), `${nome}-`));
@@ -637,7 +637,9 @@ async function catena() {
     dispositivi,
     abbinamento,
     casaDiProva,
-    opzioni: { portaDellApp: 8098, dispositiviMassimi: 10 },
+    /* La casa di prova si fa solo dall'Home Assistant del gestore: qui lo e',
+     * tranne dove la prova dice di no. */
+    opzioni: { portaDellApp: 8098, dispositiviMassimi: 10, gestore },
     registro: null,
     chiamata,
     identita,
@@ -693,6 +695,50 @@ test("la console non fa una casa di prova per chi amministra, ne' per nessuno", 
     });
     assert.equal(risposta.status, 400, "un utente che in casa non c'e'");
     assert.equal(c.casaDiProva.viva(), null);
+  } finally {
+    await c.spegni();
+  }
+});
+
+test("la casa di prova si fa solo dall'Home Assistant del gestore", async () => {
+  /* «La casa di prova deve essere solo per me gestore, non per tutti.» Serve
+   * a chi pubblica l'app, e quella casa e' una sola: altrove la console non
+   * la mostra, e il ponte non la fa nemmeno se qualcuno la chiede a mano. */
+  const c = await catena({ gestore: false });
+  try {
+    const risposta = await c.allaConsole("/api/prova", {
+      method: "POST",
+      corpo: { utente: REVISIONE, giorni: 3 },
+    });
+    assert.equal(risposta.status, 403);
+    assert.match((await risposta.json()).errore, /gestore/);
+    assert.equal(c.casaDiProva.viva(), null);
+
+    /* Lo stato lo dice, con un si' o un no: la console decide da qui se
+     * mostrare la scheda. */
+    const stato = await (await c.allaConsole("/api/stato")).json();
+    assert.equal(stato.gestore, false);
+    assert.deepEqual(stato.prova, { attiva: false });
+
+    /* Guardarla e revocarla restano: una casa di prova fatta prima di questa
+     * regola si deve poter chiudere da qualunque casa. */
+    const { codice, scadeIl } = c.casaDiProva.nuova({ utente: REVISIONE });
+    c.chiamata.apriLaProva(impronta(codice), scadeIl);
+    const vista = await (await c.allaConsole("/api/prova")).json();
+    assert.equal(vista.attiva, true);
+    const revocata = await (await c.allaConsole("/api/prova", { method: "DELETE" })).json();
+    assert.equal(revocata.revocata, true);
+    assert.equal(c.casaDiProva.viva(), null);
+  } finally {
+    await c.spegni();
+  }
+});
+
+test("lo stato dice al gestore che e' il gestore, e la chiave non esce", async () => {
+  const c = await catena();
+  try {
+    const stato = await (await c.allaConsole("/api/stato")).json();
+    assert.equal(stato.gestore, true);
   } finally {
     await c.spegni();
   }

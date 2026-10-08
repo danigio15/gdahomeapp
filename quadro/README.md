@@ -538,9 +538,16 @@ sul cliente.
 
 Adesso viaggiano i **nomi** — al massimo dodici, e **solo di quelli che non
 rispondono**. La regola è stretta, ed è scritta anche nelle prove del ponte
-(`ponte/test/rapporto.test.js`): i nomi dei dispositivi che funzionano non
-escono, gli stati dei sensori non escono, e tutto il resto della riga qui
-sopra resta com'era.
+(`ponte/test/rapporto.test.js`): gli stati dei sensori non escono, e tutto il
+resto della riga qui sopra resta com'era.
+
+**E i nomi di quello che va aggiornato.** Quando c'è un aggiornamento da fare,
+`aggiornamenti.elenco` porta il nome di ognuno — quello che Home Assistant
+scrive nella sua pagina degli aggiornamenti: «Home Assistant Core», un add-on,
+o il firmware di un dispositivo, che porta il nome che gli ha dato chi ci
+abita («Switch casa»). Senza, l'installatore saprebbe che c'è da aggiornare e
+non cosa. La console dell'add-on lo dice a chi ci abita, nell'elenco «Cosa
+vede».
 Nella prima versione si possono anche lasciar fuori: contarli basta a far
 suonare la spia.
 

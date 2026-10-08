@@ -32,25 +32,29 @@ cioè su quali indirizzi la si trova sul Wi-Fi e a quale centralino chiama. È i
 motivo per cui non si deve scrivere nessun indirizzo, nemmeno la prima volta e
 nemmeno da fuori.
 
-Non hai il telefono sotto mano? Nella pagina c'è **Apri gdahome**: la stessa
-app, dentro il browser, senza installare niente.
+Non hai il telefono sotto mano? Nella Panoramica c'è **gdahome nel browser**:
+la stessa app, dentro il browser, senza installare niente. Con gdahome Base,
+da quell'indirizzo la casa non si apre: serve Premium.
 
 ## Cosa c'è nella pagina
 
-|                           |                                                                                                                                                                              |
-| ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **la striscia in cima**   | tre pastiglie con un pallino: Home Assistant, Da fuori casa, La plancia. È il «come sta», e si legge in un secondo                                                           |
-| **Abbina un telefono**    | il QR code e il codice in lettere                                                                                                                                            |
-| **Telefoni abbinati**     | chi entra in questa casa. **Togli associazione** spegne un telefono all'istante: il filo aperto cade, e con quel segno non si rientra più                                    |
-| **Le plance**             | se ne tengono fino a otto, ognuna con le sue sezioni, le sue tessere, le sue stanze, e ognuna con i suoi utenti abilitati. Compaiono anche fra le «Plance» di Home Assistant |
-| **Aprila in un browser**  | l'app qui dentro, e l'indirizzo per aprirla da fuori                                                                                                                         |
-| **Casa di prova**         | un codice per chi deve provare l'app senza abitarci — chi rivede l'app per l'App Store — che vale fino a 7 giorni e per più telefoni. Vedi sotto                             |
-| **Se qualcosa non torna** | chiuso: dentro c'è lo stato per bene e i rimedi. È il posto da aprire il giorno che qualcosa non va                                                                          |
+La pagina è divisa in **sei sezioni**, scelte dalle linguette in cima. La
+sezione resta scritta nell'indirizzo (`#telefoni`): una pagina ricaricata torna
+dov'era.
+
+| sezione          | cosa c'è                                                                                                                                                                                                                                             |
+| ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Panoramica**   | come sta la casa, una riga per ogni cosa che conta: Home Assistant, da fuori casa, la licenza, i telefoni, le plance, l'installatore, la versione. Quando qualcosa non va, sotto la sua riga c'è il perché                                           |
+| **Telefoni**     | **Abbina un nuovo telefono** (il QR code e il codice in lettere) e **Telefoni abbinati**: chi entra in questa casa. **Rinomina** cambia il nome; **Togli** spegne un telefono all'istante — il filo aperto cade, e con quel segno non si rientra più |
+| **Plance**       | se ne tengono fino a otto, ognuna con le sue sezioni, le sue tessere, le sue stanze, e ognuna con i suoi utenti abilitati. Compaiono anche fra le «Plance» di Home Assistant                                                                         |
+| **Licenza**      | Base o Premium, il codice regalo e la matricola della casa. C'è solo dove le licenze sono accese                                                                                                                                                     |
+| **Installatore** | chi ti ha fatto l'impianto, **cosa vede e cosa non vede**, l'ultimo rapporto parola per parola e il tasto per smettere. C'è solo dove la casa manda il rapporto, o sull'Home Assistant di chi installa                                               |
+| **Avanzate**     | il link per aprire gdahome nel browser, la versione, e la **casa di prova** — solo sull'Home Assistant del gestore. Chi risponde alle segnalazioni ci trova anche «Se qualcosa non torna»                                                            |
 
 ## Chi vede quale plancia
 
 Le plance si tengono fino a otto, e ognuna può essere riservata a **chi decidi
-tu**: nella scheda «Le plance» ogni riga ha **Chi la vede**, e sotto ci sono due
+tu**: nella sezione «Plance» ogni riga ha **Chi la vede**, e sotto ci sono due
 modi di dirlo. Serve a chi tiene una plancia per sé e una per chi abita con lui,
 e a chi ha un tablet in cucina che deve aprire una plancia sola.
 
@@ -121,9 +125,16 @@ il Wi-Fi di casa. Per chi la guarda dal divano va benissimo.
 
 ## La casa di prova
 
-Prima di pubblicare l'app, Apple la prova con una casa vera: da lontano, e
-anche per qualche giorno. Il codice di tutti i giorni non basta — vale cinque
-minuti e una volta sola — e per questo c'è la scheda **Casa di prova**:
+Prima di pubblicare l'app, Apple e Google la provano con una casa vera: da
+lontano, e anche per qualche giorno. Il codice di tutti i giorni non basta —
+vale cinque minuti e una volta sola — e per questo c'è la scheda **Casa di
+prova**, in «Avanzate».
+
+La scheda c'è **solo sull'Home Assistant del gestore**, cioè quello con la
+chiave della Gestione nelle opzioni: la casa che si fa provare ai negozi è una
+sola, e su tutte le altre sarebbe una porta in più. Da ogni altra casa l'add-on
+rifiuta di farla anche se qualcuno la chiede a mano. Una casa di prova già
+fatta invece si vede dappertutto, finché non scade o non si revoca.
 
 - il codice vale **fino a 7 giorni** e per **più telefoni** (al massimo
   cinque), e si può usare anche da fuori casa;
@@ -148,23 +159,23 @@ casa ne riguarda **una**.
 
 ### `casa` — la tua parte
 
-|                       |                                                                                                       |
-| --------------------- | ----------------------------------------------------------------------------------------------------- |
-| `da_fuori_casa`       | acceso: si passa dal centralino di gdahome, e non c'è niente da scrivere. Spento: solo la rete di casa |
-| `quadro`              | il codice che ti ha dato chi ti ha fatto l'impianto. Vuoto: non parte niente                          |
-| `quadro_ogni`         | ogni quanti minuti parte un rapporto (1)                                                              |
-| `quadro_manutenzione` | lascia che chi ti ha fatto l'impianto faccia partire un aggiornamento da lontano. Spento di serie     |
+|                         |                                                                                                                                             |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| `da_fuori_casa`         | acceso: si passa dal centralino di gdahome, e non c'è niente da scrivere. Spento: solo la rete di casa                                      |
+| `quadro`                | il codice che ti ha dato chi ti ha fatto l'impianto. Vuoto: non parte niente                                                                |
+| `quadro_ogni`           | ogni quanti minuti parte un rapporto (1)                                                                                                    |
+| `quadro_manutenzione`   | lascia che chi ti ha fatto l'impianto faccia partire un aggiornamento da lontano. Spento di serie                                           |
 | `quadro_configurazione` | lascia che chi ti ha fatto l'impianto configuri la plancia da lontano: la vede com'è fatta e la riscrive, senza telecamere. Spento di serie |
-| `minuti_del_codice`   | quanto vive il QR che abbina un telefono (5)                                                          |
-| `giorni_di_silenzio`  | dopo quanto un telefono sparito viene tolto da solo; zero vuol dire mai (90)                          |
-| `dispositivi_massimi` | quanti telefoni possono restare abbinati insieme (10)                                                 |
+| `minuti_del_codice`     | quanto vive il QR che abbina un telefono (5)                                                                                                |
+| `giorni_di_silenzio`    | dopo quanto un telefono sparito viene tolto da solo; zero vuol dire mai (90)                                                                |
+| `dispositivi_massimi`   | quanti telefoni possono restare abbinati insieme (10)                                                                                       |
 
 ### `chi_installa` — solo se gdahome lo monti in casa d'altri
 
-|           |                                                                                    |
-| --------- | ------------------------------------------------------------------------------------ |
-| `acceso`  | questo Home Assistant è il tuo, quello da cui tieni d'occhio gli impianti che hai montato |
-| `chiave`  | la chiave che apre il tuo cruscotto. Senza, l'interruttore qui sopra non accende niente  |
+|          |                                                                                           |
+| -------- | ----------------------------------------------------------------------------------------- |
+| `acceso` | questo Home Assistant è il tuo, quello da cui tieni d'occhio gli impianti che hai montato |
+| `chiave` | la chiave che apre il tuo cruscotto. Senza, l'interruttore qui sopra non accende niente   |
 
 ### `gestione`, `assistenza` — una casa sola al mondo, e non è la tua
 
@@ -174,9 +185,9 @@ la gestione degli installatori, la seconda la coda delle segnalazioni di tutti.
 ### `avanzate`
 
 |             |                                              |
-| ----------- | ---------------------------------------------- |
-| `porta_app` | la porta su cui bussa l'app (di serie: 8098)   |
-| `registro`  | `debug`, `info`, `attenzione`, `errore`        |
+| ----------- | -------------------------------------------- |
+| `porta_app` | la porta su cui bussa l'app (di serie: 8098) |
+| `registro`  | `debug`, `info`, `attenzione`, `errore`      |
 
 `gettone` non è più una casella: da quando la repository è pubblica non serve.
 Chi si tiene una copia privata dell'add-on lo passa dall'ambiente.
@@ -186,7 +197,7 @@ Chi si tiene una copia privata dell'add-on lo passa dall'ambiente.
 | cosa vedi                                          | cos'è, e cosa si fa                                                                                                                                                                                                                                                                                                                                                         |
 | -------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | la plancia esce con **«Errore di configurazione»** | Home Assistant non ha ancora la cartina della plancia. Nella pagina, in «Se qualcosa non torna», c'è scritto quale dei tre passaggi manca e il bottone **Carica la cartina adesso**. Se dice di riavviare Home Assistant, riavvialo una volta: la cartella `www` l'ha creata l'add-on, e i file che stanno lì dentro Home Assistant li serve solo se c'era quando è partito |
-| **da fuori casa non entra**                        | guarda la pastiglia «Da fuori casa». Se dice `getaddrinfo` o `SERVFAIL`, il nome del centralino non si risolve: è il DNS di casa, non l'add-on. Se dice «ci rifiuta», il motivo è scritto di fianco                                                                                                                                                                         |
+| **da fuori casa non entra**                        | guarda la riga «Da fuori casa» nella Panoramica: sotto c'è il perché. Se dice che il nome non si risolve (`getaddrinfo`), è il DNS di casa, non l'add-on. Se dice che il centralino rifiuta la casa, il motivo è scritto lì                                                                                                                                                 |
 | **l'app va a scatti**                              | apri «Chi parla di più» (c'è solo per chi risponde alle segnalazioni): nomina le entità che mandano più eventi. A quelle due o tre si mette un filtro in Home Assistant, e il traffico cala di dieci volte                                                                                                                                                                  |
 | la plancia **nel browser non si disegna**          | Home Assistant è aperta su un indirizzo `http`. La plancia nel browser ha bisogno di `https` — è una regola dei browser, non nostra. Sul telefono si vede comunque                                                                                                                                                                                                          |
 | il codice **non funziona più**                     | vale cinque minuti e una volta sola: fanne un altro                                                                                                                                                                                                                                                                                                                         |

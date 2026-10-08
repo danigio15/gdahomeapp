@@ -22,13 +22,14 @@ configuration:
           the versions, how full the disk is, which add-ons are running, how many
           entities stopped answering, what your dashboards are called — so they can
           choose their names from their side. That way they find out something is wrong
-          before you have to call them. Plus the name of the devices that are not
-          answering at that moment, and only those: it is what tells the person who
-          has to come and fix them what to expect, so if the socket is called
-          "Kitchen light" they read "Kitchen light". Nothing else — no sensor
-          states, no people, no names of the devices that work, not your Wi-Fi name
-          and not your address. What does go out you can read word for word in the
-          gdahome console, where the button to stop it also is.
+          before you have to call them. Plus two kinds of names: the devices that
+          are not answering at that moment — it tells the person who has to come
+          and fix them what to expect, so if the socket is called "Kitchen light"
+          they read "Kitchen light" — and the things that have an update waiting.
+          Nothing else — not whether the lights are on or the doors open, not
+          people, not your Wi-Fi name, not your public address. What does go out
+          you can read word for word in the gdahome console, under Installer,
+          where the button to stop it also is.
       quadro_ogni:
         name: How often a status report goes out
         description: >-

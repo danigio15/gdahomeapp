@@ -1325,6 +1325,10 @@ async function api({
        * `api/prova` quando lo deve disegnare, come fa con quello di tutti i
        * giorni. */
       prova: laProvaInBreve(casaDiProva, dispositivi),
+      /* Se questo e' l'Home Assistant di chi tiene la Gestione: solo li' la
+       * console mostra la scheda per fare la casa di prova. Esce un si' o un
+       * no, mai la chiave. */
+      gestore: Boolean(opzioni.gestore),
       dispositivi: dispositivi
         .elenco()
         .map((uno) => ({ ...uno, collegati: collegati.get(uno.id) || 0 })),
@@ -1447,6 +1451,20 @@ async function api({
   if (via === "/api/prova" && metodo === "POST") {
     if (!casaDiProva) {
       male(risposta, 404, "questo add-on non sa fare la casa di prova");
+      return;
+    }
+    /* Solo nell'Home Assistant di chi tiene la Gestione.
+     *
+     * La casa di prova serve a chi pubblica l'app — Apple e Google la provano
+     * con una casa vera — e quella casa e' una sola. Su ogni altro Home
+     * Assistant un codice da sette giorni per piu' telefoni non serve a
+     * nessuno, ed e' una porta in piu' da lasciare aperta per sbaglio. Il
+     * segno e' la chiave della Gestione nelle opzioni: c'e' in una casa sola.
+     *
+     * Solo **farla**: guardarla e revocarla restano per tutti, perche' una
+     * casa di prova fatta prima di questa regola si deve poter chiudere. */
+    if (!opzioni.gestore) {
+      male(risposta, 403, "la casa di prova si fa solo dall'Home Assistant del gestore");
       return;
     }
     let detto = {};

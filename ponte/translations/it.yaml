@@ -60,14 +60,14 @@ configuration:
           codice da incollare qui, e da quel momento questa casa gli manda poche
           righe di numeri: le versioni, quanto e' pieno il disco, quali add-on
           girano, quante entita' non rispondono, come si chiamano le tue plance —
-          cosi' dal suo cruscotto sceglie come chiamarle. Piu' il nome dei
-          dispositivi che
-          in quel momento non rispondono, e solo quelli: serve a chi deve venire a
-          ripararli, e vuol dire che se la presa si chiama «Luce cucina» lui legge
-          «Luce cucina». Tutto il resto no — nessuno stato di nessun sensore,
-          nessuna persona, nessun nome dei dispositivi che funzionano, ne' il nome
-          del tuo Wi-Fi ne' il tuo indirizzo. Quello che parte lo leggi parola per
-          parola nella console di gdahome, dove c'e' anche il tasto per smettere.
+          cosi' dal suo cruscotto sceglie come chiamarle. Piu' due nomi: quello dei
+          dispositivi che in quel momento non rispondono — serve a chi deve venire
+          a ripararli, e se la presa si chiama «Luce cucina» lui legge «Luce
+          cucina» — e quello delle cose che hanno un aggiornamento da fare. Tutto
+          il resto no — se le luci sono accese o le porte aperte, le persone, il
+          nome del tuo Wi-Fi, il tuo indirizzo pubblico. Quello che parte lo leggi
+          parola per parola nella console di gdahome, alla voce Installatore, dove
+          c'e' anche il tasto per smettere.
       quadro_ogni:
         name: Ogni quanto parte un rapporto
         description: >-
