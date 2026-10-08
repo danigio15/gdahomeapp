@@ -64,10 +64,10 @@
  * di un numero inventato.
  *
  * Qui dentro si **legge**, con una sola eccezione dichiarata: `spegniLaRapporto`
- * svuota la casella del quadro nelle opzioni dell'add-on, ed e' quello che sta
- * dietro il tasto «smetti» della console. Sta qui e non altrove perche' e'
- * una chiamata al Supervisor, e le chiamate al Supervisor stanno in un posto
- * solo.
+ * svuota la casella del quadro nelle opzioni dell'add-on — riscrivendole tutte
+ * com'erano, tranne quella — ed e' quello che sta dietro il tasto «smetti»
+ * della console. Sta qui e non altrove perche' e' una chiamata al Supervisor,
+ * e le chiamate al Supervisor stanno in un posto solo.
  */
 
 /** Quanto si aspetta il Supervisor prima di lasciar perdere. */
@@ -277,6 +277,10 @@ export function iNodiDelCluster(valori, stati = []) {
 const GIORNO = 24 * 60 * 60 * 1000;
 
 const pulito = (valore) => String(valore ?? "").trim();
+
+/* Un oggetto vero: non `null`, e non un elenco. */
+const unOggetto = (valore) =>
+  Boolean(valore) && typeof valore === "object" && !Array.isArray(valore);
 
 const numero = (valore) => {
   const letto = Number(valore);
@@ -514,27 +518,59 @@ export class Ferro {
    * lascia la riga nella scheda dell'add-on, e al primo riavvio la casa
    * ricomincia a parlare senza che nessuno l'abbia chiesto.
    *
-   * La via e' quella del Supervisor per le proprie opzioni, la stessa famiglia
-   * di `/addons/self/rebuild` che `aggiornamento.js` usa gia'. Si scrive solo
-   * questa chiave: quello che c'e' d'altro nella scheda non si tocca. */
+   * La via e' quella del Supervisor per le proprie opzioni, `/addons/self/…`,
+   * che il Supervisor lascia a ogni add-on senza chiedere nessun ruolo.
+   *
+   * **Si riscrive la scheda intera, non la casella.** Il Supervisor non
+   * mescola: quello che gli arriva in `options` **prende il posto** di tutte
+   * le opzioni, e prima lo confronta con lo schema del manifesto. Qui si
+   * mandava `{ quadro: "" }` da solo, e non andava bene in nessuno dei due
+   * modi: la casella sta dentro `casa`, quindi per lo schema `quadro` era una
+   * chiave che non esiste e mancava tutta la sezione `casa` — il Supervisor
+   * diceva di no, e il tasto «smetti» non svuotava niente — e se un giorno
+   * avesse detto di si', avrebbe buttato ogni altra opzione della casa.
+   *
+   * Allora prima si leggono le opzioni come sono adesso (`/addons/self/info`),
+   * si svuota `casa.quadro` e nient'altro, e si rimanda tutto. Se la lettura
+   * non riesce non si scrive niente: una casella rimasta piena, e detta, e'
+   * meglio di una scheda riscritta a meta'. */
   async spegniLaRapporto() {
     if (!this.segno || typeof this.prendi !== "function") {
       return { spento: false, perche: "qui non c'e' nessun Supervisor a cui dirlo" };
     }
+    const aMano =
+      "svuota la casella «Il codice di chi ti ha fatto l'impianto» nella scheda dell'add-on";
     try {
+      const letta = await this.prendi(`${this.supervisor}/addons/self/info`, {
+        headers: { authorization: `Bearer ${this.segno}` },
+        signal: AbortSignal.timeout(ATTESA),
+      });
+      if (!letta.ok) {
+        return {
+          spento: false,
+          perche: `il Supervisor ha risposto ${letta.status} chiedendo le opzioni: ${aMano}`,
+        };
+      }
+      const opzioni = (await letta.json())?.data?.options;
+      if (!unOggetto(opzioni) || !unOggetto(opzioni.casa)) {
+        return {
+          spento: false,
+          perche: `le opzioni dell'add-on non hanno la forma che conosco: ${aMano}`,
+        };
+      }
       const risposta = await this.prendi(`${this.supervisor}/addons/self/options`, {
         method: "POST",
         headers: {
           authorization: `Bearer ${this.segno}`,
           "content-type": "application/json",
         },
-        body: JSON.stringify({ options: { quadro: "" } }),
+        body: JSON.stringify({ options: { ...opzioni, casa: { ...opzioni.casa, quadro: "" } } }),
         signal: AbortSignal.timeout(ATTESA),
       });
       if (!risposta.ok) {
         return {
           spento: false,
-          perche: `il Supervisor ha risposto ${risposta.status}: svuota la casella «Il quadro» nella scheda dell'add-on`,
+          perche: `il Supervisor ha risposto ${risposta.status}: ${aMano}`,
         };
       }
       this.registro.info("il rapporto non parte piu': la casella del quadro e' stata svuotata");

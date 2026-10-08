@@ -32,10 +32,42 @@ const GLI_UTENTI = [
   { id: UN_OSPITE, name: "Ospite", is_owner: false, group_ids: ["system-users"] },
 ];
 
+/* Le opzioni dell'add-on come le tiene il Supervisor finto: nelle loro
+ * sezioni, come nel manifesto. */
+const LE_OPZIONI_DELLA_CASA = Object.freeze({
+  casa: { da_fuori_casa: true, quadro: "CHIAVE-LUNGA-ABBASTANZA", quadro_ogni: 15 },
+  chi_installa: { acceso: false, chiave: "" },
+  avanzate: { porta_app: 8098, registro: "errore" },
+});
+
 async function casaFinta() {
   const prese = [];
+  /* Quello che il ponte scrive nelle sue opzioni: la prova di «smetti» guarda
+   * cosa arriva qui. */
+  const opzioniScritte = [];
   const server = createServer((richiesta, risposta) => {
     risposta.writeHead(200, { "content-type": "application/json" });
+    /* La scheda dell'add-on, con le sue opzioni. «Smetti» la legge prima di
+     * riscriverla, perche' il Supervisor le opzioni le prende intere: prima
+     * qui bastava rispondere «API running.» a tutto, perche' il ponte mandava
+     * la casella da sola senza leggere niente — ed era il difetto. Lo `slug`
+     * non c'e' apposta: chi altro legge questa scheda (`plance-in-casa.js`)
+     * deve trovarla com'era. */
+    if ((richiesta.url || "").startsWith("/addons/self/info")) {
+      risposta.end(JSON.stringify({ result: "ok", data: { options: LE_OPZIONI_DELLA_CASA } }));
+      return;
+    }
+    if ((richiesta.url || "").startsWith("/addons/self/options") && richiesta.method === "POST") {
+      let corpo = "";
+      richiesta.on("data", (pezzo) => {
+        corpo += pezzo;
+      });
+      richiesta.on("end", () => {
+        opzioniScritte.push(JSON.parse(corpo || "{}"));
+        risposta.end(JSON.stringify({ result: "ok", data: {} }));
+      });
+      return;
+    }
     /* Il Supervisor finto: e' da qui che il ponte impara su quale indirizzo
      * lo trovano i telefoni quando sono in casa. */
     if ((richiesta.url || "").startsWith("/network/info")) {
@@ -80,6 +112,7 @@ async function casaFinta() {
   await new Promise((ok) => server.listen(0, "127.0.0.1", ok));
   return {
     indirizzo: `http://127.0.0.1:${server.address().port}`,
+    opzioniScritte,
     spegni: async () => {
       for (const presa of prese) presa.chiudi();
       await new Promise((ok) => server.close(ok));
@@ -131,6 +164,7 @@ async function banco({ quadro = null, installatore = false, chiaveDelCruscotto =
     app,
     consolle,
     filo: app.replace("http", "ws"),
+    opzioniScritte: ha.opzioniScritte,
     spegni: async () => {
       await avviato.abbassa();
       await ha.spegni();
@@ -660,10 +694,17 @@ test("«smetti» ferma il postino e svuota la casella, che se no al riavvio rico
     assert.equal(b.postino.acceso, true);
     const esito = await (await prendi(`${b.consolle}/api/quadro`, { method: "DELETE" })).json();
     assert.equal(esito.acceso, false);
-    /* Il Supervisor finto risponde a tutto, quindi la casella si e' svuotata:
-     * quello che conta e' che si sia **provato** a svuotarla, e che l'esito
-     * arrivi a chi ha premuto invece di essere ingoiato. */
+    /* La casella si e' svuotata, e l'esito arriva a chi ha premuto invece di
+     * essere ingoiato. */
     assert.equal(esito.spento, true);
+    /* E quello che e' arrivato al Supervisor e' la scheda intera, con la sola
+     * casella del quadro vuota. Qui prima bastava che si fosse **provato**:
+     * il Supervisor finto diceva di si' a tutto, anche a `{ quadro: "" }` da
+     * solo, che quello vero rifiuta — e se l'accettasse butterebbe tutte le
+     * altre opzioni. */
+    const attese = structuredClone(LE_OPZIONI_DELLA_CASA);
+    attese.casa.quadro = "";
+    assert.deepEqual(b.opzioniScritte, [{ options: attese }]);
   } finally {
     await b.spegni();
   }
