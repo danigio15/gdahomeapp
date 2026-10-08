@@ -105,11 +105,14 @@ Future<void> main() async {
     apriIlFilo: apriIlFiloConLaCasa,
     laCasa: ilFiloConLaCasa,
   );
-  /* Sull'iPhone il comando lasciato da CarPlay lo esegue questo motore, che
-   * e' uno solo e gia' acceso; su Android lo esegue un motore a parte, senza
-   * schermo (`inAuto`, qui sopra). */
-  if (!kIsWeb && defaultTargetPlatform == TargetPlatform.iOS) {
-    auto.ascoltaIlColpetto();
+  /* Il comando lasciato in macchina lo esegue questo motore, col filo con la
+   * casa dell'app: sull'iPhone sempre, e su Android nella versione col
+   * navigatore in auto, dove questo motore e' acceso da quando si e' saliti
+   * (`IlPonteDellAuto.kt` lo cerca prima di accenderne un altro). Senza, su
+   * Android lo esegue un motore a parte, senza schermo (`inAuto`, qui
+   * sopra). */
+  if (!kIsWeb) {
+    auto.ascoltaIlColpetto(laCasaDellApp: ilFiloConLaCasa);
   }
   /* Il giorno dei pagamenti: se questa costruzione e' sotto la versione
    * minima, l'app si copre con la pagina «aggiornala». Non si aspetta: la

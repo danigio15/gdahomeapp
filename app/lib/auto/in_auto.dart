@@ -90,11 +90,19 @@ Future<void> inAuto() async {
 /// Sull'iPhone il motore e' uno solo, quello dell'app, ed e' sempre acceso
 /// (CarPlay lo tiene su): il colpetto di `ios/Runner/LaCasaInCarPlay.swift`
 /// arriva a lui, e lo sente da qui. La chiama `main`.
-void ascoltaIlColpetto() {
+void ascoltaIlColpetto({Collegamento Function()? laCasaDellApp}) {
   const MethodChannel(canaleDellAuto).setMethodCallHandler((_) async {
-    await eseguiIlComandoDellAuto();
+    await eseguiIlComandoDellAuto(laCasaDellApp: laCasaDellApp);
     return null;
   });
+  /* Un comando lasciato mentre questo motore partiva: il colpetto e' arrivato
+   * prima che ci fosse chi lo sentiva, ma il file c'e' ancora (lo toglie solo
+   * chi lo legge). Vale due minuti, come sempre. */
+  if (laCasaDellApp != null) {
+    scheduleMicrotask(
+      () => unawaited(eseguiIlComandoDellAuto(laCasaDellApp: laCasaDellApp)),
+    );
+  }
 }
 
 /// Da dove arriva il colpetto. Lo stesso nome sta in `IlPonteDellAuto.kt`: i
@@ -120,11 +128,18 @@ Future<ComeEFinitaInAuto> eseguiIlComandoDellAuto({
   Future<List<RicettaDellAzione>> Function()? leRicette,
   Collegamento Function()? apriLaCasa,
   Future<bool> Function()? premium,
+  Collegamento Function()? laCasaDellApp,
 }) async {
   if (_inCorso) return ComeEFinitaInAuto.niente;
   _inCorso = true;
   try {
-    return await _esegui(prendiIlComando, leRicette, apriLaCasa, premium);
+    return await _esegui(
+      prendiIlComando,
+      leRicette,
+      apriLaCasa,
+      premium,
+      laCasaDellApp,
+    );
   } finally {
     _inCorso = false;
   }
@@ -135,6 +150,7 @@ Future<ComeEFinitaInAuto> _esegui(
   Future<List<RicettaDellAzione>> Function()? leRicette,
   Collegamento Function()? apriLaCasa,
   Future<bool> Function()? premium,
+  Collegamento Function()? laCasaDellApp,
 ) async {
   final segno = await (prendiIlComando ?? auto.prendiIlComandoDellAuto)();
   if (segno == null || segno.isEmpty) return ComeEFinitaInAuto.niente;
@@ -159,12 +175,24 @@ Future<ComeEFinitaInAuto> _esegui(
     return ComeEFinitaInAuto.senzaPremium;
   }
 
+  /* Il filo dell'app, quando l'app e' gia' accesa: nella versione col
+   * navigatore in auto lo e' sempre, e quel filo e' gia' aperto — e' quello
+   * che porta a gdanav i dati dell'auto. Prima se ne apriva un altro, da
+   * capo, in un secondo motore: la casa da ritrovare, la stretta di mano,
+   * il centralino, il tutto in dodici secondi. «Se clicco apri cancello non
+   * fa nulla, come se il comando non arrivasse.» Quello dell'app non si
+   * chiude dopo: e' suo. */
+  final condiviso = laCasaDellApp != null;
   Collegamento? collegamento;
   try {
     collegamento =
+        laCasaDellApp?.call() ??
         apriLaCasa?.call() ??
         Collegamento(archivio: ArchivioDelleCase(const CassaforteDelSistema()));
-    await collegamento.archivio.apri();
+    if (!collegamento.archivio.aperto) await collegamento.archivio.apri();
+    if (condiviso && collegamento.aRiposo) collegamento.sveglia();
+    /* Su un filo gia' aperto `apri` non fa niente; su uno che dorme o che si
+     * sta ricollegando lo rimette in piedi. */
     await collegamento.apri().timeout(quantoSiAspettaIlFilo);
     final stato = collegamento.stato;
     if (!collegamento.dentro || stato == null) {
@@ -192,8 +220,8 @@ Future<ComeEFinitaInAuto> _esegui(
   } finally {
     /* Il motore muore subito dopo, ma chiudere il filo e' comunque la cosa
      * giusta: la casa vede una presa che si chiude invece di una che smette
-     * di rispondere. */
-    if (collegamento != null) {
+     * di rispondere. Quello dell'app invece resta: e' suo. */
+    if (collegamento != null && !condiviso) {
       await collegamento.chiudi().catchError((Object _) {});
     }
   }
