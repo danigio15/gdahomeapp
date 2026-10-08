@@ -2935,13 +2935,13 @@
         margin-left: 6px;
       }
 
+      /* Va a capo invece di tagliarsi: in fondo c'è la licenza della casa,
+         e sul telefono «Premium · abbon…» non si capiva. */
       .case-sue .come {
         grid-column: 2;
         grid-row: 2;
+        min-width: 0;
         font-size: 0.78rem;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
         color: var(--ink-2);
         font-weight: 600;
       }
@@ -3294,14 +3294,22 @@
         gap: 14px;
       }
 
-      .griglia > .griglia {
-        align-content: start;
-      }
-
       .griglia + .griglia,
       .griglia + .scheda,
       .scheda + .griglia {
         margin-top: 14px;
+      }
+
+      /* Dentro una griglia lo spazio lo fa la griglia: un margine in più
+         abbasserebbe una colonna sola, e le due non partirebbero alla stessa
+         altezza (nella Panoramica, «Il servizio» sotto «Da guardare»). */
+      .griglia > .griglia,
+      .griglia > .scheda {
+        margin-top: 0;
+      }
+
+      .griglia > .griglia {
+        align-content: start;
       }
 
       .scheda {
@@ -3808,7 +3816,8 @@
         font-weight: 700;
       }
 
-      .carta-installatore[data-stato="limite"] .metro i {
+      .carta-installatore[data-stato="limite"] .metro i,
+      .foglio[data-stato="limite"] .metro i {
         background: var(--ambra);
       }
 
@@ -5513,8 +5522,15 @@
 
       function disegna() {
         CONTI = iConti();
-        document.getElementById("sottotitolo").textContent =
-          `${plurale(INSTALLATORI.length, "installatore", "installatori")} · ${plurale(CONTI.tutte.length, "casa", "case")} · ${CONTI.premium} Premium`;
+        /* Il numero resta attaccato alla sua parola: sul telefono la riga va
+           a capo fra un pezzo e l'altro, non fra «7» e «Premium». */
+        document.getElementById("sottotitolo").textContent = [
+          plurale(INSTALLATORI.length, "installatore", "installatori"),
+          plurale(CONTI.tutte.length, "casa", "case"),
+          `${CONTI.premium} Premium`,
+        ]
+          .map((pezzo) => pezzo.replace(" ", " "))
+          .join(" · ");
 
         doveNav.innerHTML = [
           /* Una sola linguetta porta il numero: la Panoramica, e conta le
@@ -7665,7 +7681,9 @@
           ? { "regalo-scelta": matricola, "regalo-casa": "" }
           : { "regalo-scelta": "", "regalo-casa": matricola };
         vaiA("licenze");
-        document.getElementById("regala-qui")?.scrollIntoView({ block: "start" });
+        /* Solo quanto basta: sul computer il modulo si vede già, e la pagina
+           resta ferma col suo titolo; sul telefono sale fino al modulo. */
+        document.getElementById("regala-qui")?.scrollIntoView({ block: "nearest" });
         document.getElementById("regalo-durata")?.focus({ preventScroll: true });
       }
 
