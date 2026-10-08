@@ -714,6 +714,59 @@ test("chi amministra passa quasi con tutto, ma le credenziali e il Supervisor no
   }
 });
 
+test("chi amministra non mette programmi in Home Assistant, e non la spegne", async () => {
+  /* I giri che una revisione ha trovato, sul filo vero: una risorsa delle
+   * dashboard che punta a un programma messo fuori — girerebbe nel browser di
+   * chi amministra davvero, con tutti i suoi poteri — una configurazione di
+   * dashboard, un pacchetto di HACS, un backup intero, e lo spegnimento di
+   * Home Assistant. Accanto, quello che l'app e la plancia mandano davvero da
+   * chi amministra, che deve continuare ad arrivare. Vale per un telefono
+   * intestato a chi amministra e per uno di prima, senza nessuno addosso,
+   * che conta uguale. */
+  for (const chi of [AMMINISTRA, ""]) {
+    const b = await banco({}, { utenti: utentiFinti });
+    try {
+      const t = await dentroCome(b, chi);
+      t.manda({
+        id: 1,
+        type: "lovelace/resources/create",
+        res_type: "module",
+        url: "https://altrove.example/x.js",
+      });
+      t.manda({ id: 2, type: "lovelace/config/save", config: { views: [] } });
+      t.manda({ id: 3, type: "hacs/repository/download", repository: "123" });
+      t.manda({ id: 4, type: "call_service", domain: "hassio", service: "backup_full" });
+      t.manda({ id: 5, type: "call_service", domain: "homeassistant", service: "stop" });
+      t.manda({
+        id: 6,
+        type: "call_service",
+        domain: "update",
+        service: "install",
+        target: { entity_id: "update.gdahome_update" },
+      });
+      t.manda({ id: 7, type: "call_service", domain: "homeassistant", service: "restart" });
+      t.manda({ id: 8, type: "lovelace/resources" });
+      t.manda({ id: 9, type: "frontend/set_user_data", key: "x", value: 1 });
+      for (const id of [1, 2, 3, 4, 5]) {
+        assert.equal((await laRisposta(t, id)).error.code, "unauthorized", `${chi}: il ${id}`);
+      }
+      for (const id of [6, 7, 8, 9]) {
+        assert.equal((await laRisposta(t, id)).success, true, `${chi}: il ${id}`);
+      }
+      assert.deepEqual(
+        b.ha.arrivati.map((detto) =>
+          detto.type === "call_service" ? `${detto.domain}.${detto.service}` : detto.type,
+        ),
+        ["update.install", "homeassistant.restart", "lovelace/resources", "frontend/set_user_data"],
+        "a Home Assistant e' arrivato solo quello che passa",
+      );
+      t.chiudi();
+    } finally {
+      await b.spegni();
+    }
+  }
+});
+
 test("un telefono di prima, senza nessuno addosso, vale come chi amministra", async () => {
   const b = await banco({}, { utenti: utentiFinti });
   try {

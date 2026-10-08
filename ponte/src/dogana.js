@@ -12,12 +12,38 @@
  *
  * Qui il limite si scrive. Tre regole, in quest'ordine:
  *
- *  1. **Quello che non passa per nessuno.** Le credenziali (fabbricare o
- *     buttare gettoni, gli utenti e le loro password), il Supervisor e i suoi
- *     backup, e i servizi che eseguono comandi sulla macchina. Non li usa ne'
- *     l'app ne' la plancia, e chi li vuole li ha dentro Home Assistant, con la
- *     sua utenza. Vale anche per chi amministra: un telefono si perde, e un
- *     telefono perso non deve essere una chiave della macchina.
+ *  1. **Quello che non passa per nessuno**, nemmeno per chi amministra: un
+ *     telefono si perde, e un telefono perso non deve essere una chiave della
+ *     macchina, ne' una chiave di Home Assistant per conto di qualcun altro.
+ *     Non lo usano ne' l'app ne' la plancia, e chi lo vuole ce l'ha dentro
+ *     Home Assistant, con la sua utenza. Sono:
+ *      - le credenziali: fabbricare o buttare gettoni, gli utenti e le loro
+ *        password;
+ *      - il Supervisor e i backup, per nessuna delle loro strade
+ *        (`supervisor/`, `hassio/`, `backup/`, `/api/hassio…`,
+ *        `/api/backup…`, e i servizi qui sotto);
+ *      - i servizi che eseguono comandi sulla macchina o parlano al
+ *        Supervisor (`hassio`, `backup`, `shell_command`, `python_script`,
+ *        `pyscript`, `command_line`), e `homeassistant.stop`. Riavviare la
+ *        casa si puo' — e' un tasto dell'app — ma spegnerla no: con il
+ *        Supervisor resta giu' finche' qualcuno non la riaccende dalla
+ *        macchina, e dall'app non si riaccende;
+ *      - **scrivere quello che poi gira da solo**, che e' la strada lunga per
+ *        arrivare agli stessi posti. Le automazioni, gli script e le scene
+ *        (REST `/api/config/{automation,script,scene}/…`, tutto tranne
+ *        leggerli) e i blueprint su cui si reggono girano come Home
+ *        Assistant, e il controllo sui servizi qui sotto non li vede mai:
+ *        un'automazione scritta con dentro `hassio.addon_stdin` e fatta
+ *        partire con `automation.trigger` passerebbe tutto quello che qui si
+ *        ferma. Per lo stesso motivo non passa un copione scritto al momento
+ *        (`execute_script`). Le risorse e le configurazioni delle dashboard di
+ *        Home Assistant (`lovelace/resources/*`, `lovelace/config/save` e
+ *        `/delete`) sono programmi che girano nel browser di chiunque apra
+ *        Home Assistant, anche di chi lo amministra davvero; i pacchetti di
+ *        HACS (`hacs/…`) sono codice che Home Assistant esegue al prossimo
+ *        avvio; e un'integrazione nuova o riconfigurata
+ *        (`/api/config/config_entries/…/flow`) e' un pezzo di casa che si
+ *        mette su senza che nessuno lo veda.
  *  2. **Chi amministra** — o un telefono abbinato prima che i telefoni si
  *     intestassero a qualcuno, che fino a oggi era trattato cosi' — passa con
  *     tutto il resto, com'era.
@@ -26,6 +52,44 @@
  *     storico, le telecamere, i registri in lettura. E' un elenco e non un
  *     divieto: un comando nuovo di Home Assistant resta fuori finche' qualcuno
  *     non decide che puo' entrare.
+ *
+ * ─── Quello che chi amministra usa davvero, e che deve passare ───────────
+ *
+ * La regola 1 si e' scritta dopo aver cercato cosa mandano per davvero l'app
+ * (`app/lib`), la plancia (`ponte/plancia/src` e `legacy/`) e il ponte
+ * stesso: un divieto che rompe un tasto e' un divieto che prima o poi
+ * qualcuno toglie. Di qui, da chi amministra, passano:
+ *
+ *  - le letture: `get_states`, `get_config`, `get_services`, `get_panels`,
+ *    `subscribe_events` e `subscribe_entities`, i registri
+ *    (`config/*_registry/list`), lo storico e le statistiche, le telecamere
+ *    (`camera/*`), i media, `frontend/get_user_data`;
+ *  - dalla plancia, `frontend/set_user_data` e il calendario
+ *    (`calendar/event/*`);
+ *  - `call_service` sui domini delle cose di casa, preso dall'entita' che si
+ *    tocca — anche `scene.turn_on`, `script.turn_on`,
+ *    `homeassistant.turn_on/turn_off/toggle` — e `update.install`, che la
+ *    tessera degli aggiornamenti della plancia preme da se';
+ *  - `auth/sign_path` sulle vie delle telecamere (anche `/api/webrtc/ws`),
+ *    delle immagini e del calendario;
+ *  - REST, da `ponte/http`: `/api/camera_proxy/` e `/api/camera_proxy_stream/`,
+ *    `/api/calendars/`, `/api/image/serve/`, `POST /api/image/upload`,
+ *    `/api/history/period/`.
+ *
+ * Altre cose da amministratore non passano di qui, perche' le fa il ponte coi
+ * suoi comandi e sul filo suo, con le sue regole su chi amministra
+ * (`commissioni.js`, `SOLO_CHI_AMMINISTRA`): il riavvio di Home Assistant e
+ * l'installazione di un aggiornamento dall'app (`ponte/aggiornamenti/*`), la
+ * rete Zigbee (`ponte/zigbee/*`), le plance e la loro configurazione
+ * (`ponte/plance/*`, `dashboardmodern/config/*`), e le voci fra le «Plance» di
+ * Home Assistant con la loro risorsa e la loro configurazione, che scrive
+ * `plance-in-casa.js`. Nessun pezzo dell'app o della plancia scrive di qui
+ * automazioni, script, scene, blueprint, risorse o configurazioni delle
+ * dashboard di Home Assistant, ne' aggiunge integrazioni o tocca HACS; e
+ * nessuno cambia di qui i registri o le preferenze dell'energia, che pero'
+ * restano a chi amministra perche' non fanno girare niente.
+ * `homeassistant.restart` diretto resta anche lui: e' lo stesso potere del
+ * tasto dell'app.
  *
  * Un no si dice come lo direbbe Home Assistant — `{id, type: "result",
  * success: false, error}` — cosi' chi ha chiesto riceve una risposta e non
@@ -52,6 +116,27 @@ const MAI = Object.freeze([
   /* Un copione scritto al momento: puo' chiamare qualunque servizio, cioe'
    * anche quelli qui sotto. */
   "execute_script",
+  /* I programmi delle pagine di Home Assistant. Una risorsa e' un file
+   * JavaScript che il browser di chiunque apra Home Assistant carica ed
+   * esegue con la sua sessione — anche quello di chi lo amministra davvero,
+   * che da li' puo' tutto, Supervisor compreso. La configurazione di una
+   * dashboard fa lo stesso dove c'e' una scheda che esegue quello che ha
+   * scritto dentro (una `custom:button-card` coi suoi `[[[ … ]]]`). Leggerle
+   * resta per tutti; scriverle no. */
+  "lovelace/resources/create",
+  "lovelace/resources/update",
+  "lovelace/resources/delete",
+  "lovelace/config/save",
+  "lovelace/config/delete",
+  /* I blueprint: sono il corpo delle automazioni che li usano, e
+   * riscriverne uno vuol dire riscrivere quelle automazioni senza passare
+   * dalla porta REST, che qui sotto e' chiusa. Leggerli resta. */
+  "blueprint/save",
+  "blueprint/import",
+  "blueprint/delete",
+  /* HACS scarica e installa codice che Home Assistant esegue al prossimo
+   * avvio, e il riavvio un telefono di chi amministra lo sa chiedere. */
+  "hacs/",
 ]);
 
 /* Di `auth/…` passa una cosa sola: la firma di un indirizzo, che serve alle
@@ -59,14 +144,27 @@ const MAI = Object.freeze([
  * credenziali. */
 const DI_AUTH_PASSA = new Set(["auth/sign_path"]);
 
-/* I servizi che eseguono qualcosa sulla macchina, o parlano al Supervisor. */
+/* I servizi che eseguono qualcosa sulla macchina, o parlano al Supervisor.
+ *
+ * `backup` e' l'integrazione dei backup di Home Assistant: su una casa col
+ * Supervisor i backup li fa per mano sua, ed e' l'altra strada per arrivare
+ * dove `hassio.backup_full` e `backup/` non arrivano. Nessun pezzo dell'app o
+ * della plancia la chiama. */
 const DOMINI_MAI = new Set([
   "hassio",
+  "backup",
   "shell_command",
   "python_script",
   "pyscript",
   "command_line",
 ]);
+
+/* E uno solo, per nome, di un dominio che per il resto passa: spegnere Home
+ * Assistant. `homeassistant.restart` invece resta a chi amministra — l'app ha
+ * il suo tasto per riavviare, e la casa torna da sola — mentre una casa
+ * spenta col Supervisor resta spenta finche' qualcuno non la riaccende dalla
+ * macchina, e dall'app non si riaccende. */
+const SERVIZI_MAI = new Set(["homeassistant.stop"]);
 
 /* ─── Chi non amministra ───────────────────────────────────────────────── */
 
@@ -320,6 +418,7 @@ export function servizioVietato(dominio, servizio, { amministra = false } = {}) 
    * non amministra non gli fa nemmeno la domanda. */
   if (!suo || !quale) return amministra ? null : "servizio non valido";
   if (DOMINI_MAI.has(suo)) return `i servizi di ${suo} non passano dal ponte`;
+  if (SERVIZI_MAI.has(`${suo}.${quale}`)) return `${suo}.${quale} non passa dal ponte`;
   if (amministra) return null;
   const permessi = DOMINI_PER_TUTTI.get(suo);
   const passa =
@@ -438,6 +537,20 @@ const VIE_MAI = Object.freeze([
   "/api/websocket",
 ]);
 
+/* Quelle che si leggono e basta, anche per chi amministra: scriverci vuol
+ * dire mettere in casa qualcosa che poi gira da solo con i poteri di Home
+ * Assistant (vedi la regola 1 in cima). Un'automazione, uno script o una
+ * scena si scrivono qui, con `POST` o `DELETE`; un'integrazione si aggiunge o
+ * si riconfigura con i giri di domande dei `flow`. */
+const VIE_DA_NON_SCRIVERE = Object.freeze([
+  "/api/config/automation",
+  "/api/config/script",
+  "/api/config/scene",
+  "/api/config/config_entries/flow",
+  "/api/config/config_entries/options/flow",
+  "/api/config/config_entries/subentries/flow",
+]);
+
 /* Quelle da amministratore, per chi non lo e'. */
 const VIE_DI_CHI_AMMINISTRA = Object.freeze([
   "/api/config/",
@@ -487,6 +600,8 @@ export function perLaVia({ metodo = "GET", percorso = "", amministra = false } =
     const no = servizioVietato(servizio[1], servizio[2], { amministra: admin });
     if (no) return no;
   }
+  if (verbo !== "GET" && VIE_DA_NON_SCRIVERE.some((una) => sottoLaVia(via, una)))
+    return `${verbo} ${via} non passa dal ponte`;
   if (admin) return null;
   /* `GET /api/states` e `/api/config` da soli sono letture che un utente
    * qualunque fa; scriverli, o entrare sotto `/api/config/`, no. */

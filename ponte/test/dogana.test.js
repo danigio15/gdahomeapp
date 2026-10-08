@@ -62,7 +62,12 @@ test("chi amministra passa con il resto; chi non amministra solo con l'elenco", 
     { type: "call_service", domain: "recorder", service: "purge" },
     { type: "call_service", domain: "automation", service: "reload" },
     { type: "call_service", domain: "rest_command", service: "x" },
-    { type: "lovelace/config/save", config: {} },
+    /* Qui c'era anche `lovelace/config/save`. Adesso non passa nemmeno a chi
+     * amministra: una configurazione di dashboard puo' portarsi dietro
+     * programmi che girano nel browser di chi apre Home Assistant, e nessun
+     * pezzo dell'app o della plancia la scrive di qui. Le prove di quello che
+     * a chi amministra resta chiuso stanno piu' sotto. */
+    { type: "lovelace/dashboards/create", url_path: "x", title: "x" },
   ];
   for (const detto of daAmministratore) {
     assert.equal(perche(detto, { amministra: true }), null, JSON.stringify(detto));
@@ -467,4 +472,221 @@ test("la friggitrice Philips si comanda per tutti, coi servizi della cottura (#7
   /* Un servizio che la plancia non preme resta a chi amministra. */
   assert.ok(servizioVietato("philips_airfryer", "reload"));
   assert.ok(servizioVietato("philips_airfryer", "qualcosa_d_altro"));
+});
+
+/* ─── Chi amministra, e quello che neanche lui ──────────────────────────────
+ *
+ * Un telefono intestato a chi amministra passava con quasi tutto, e dentro
+ * quel «quasi» c'erano due giri per arrivare dove la regola 1 di `dogana.js`
+ * non voleva: scriversi un'automazione con dentro un servizio che qui non
+ * passa e poi farla partire, o mettere un programma fra le risorse delle
+ * dashboard, che poi gira nel browser di chi amministra davvero. Queste prove
+ * li tengono chiusi — e tengono aperto, messaggio per messaggio, quello che
+ * l'app e la plancia mandano davvero, perche' un divieto che rompe un tasto e'
+ * un divieto che qualcuno togliera'. */
+
+const CHI_AMMINISTRA = { amministra: true };
+
+test("chi amministra non si scrive un'automazione da far partire: la scrittura si ferma", () => {
+  /* Il giro intero: `POST /api/config/automation/config/<id>` con dentro
+   * `hassio.addon_stdin`, poi `automation.trigger`. L'automazione gira come
+   * Home Assistant, e il controllo sui servizi non la vede mai. Il secondo
+   * passo e' un tasto della casa e deve restare: si chiude il primo. */
+  for (const [metodo, percorso] of [
+    ["POST", "/api/config/automation/config/porta_aperta"],
+    ["PUT", "/api/config/automation/config/porta_aperta"],
+    ["DELETE", "/api/config/automation/config/porta_aperta"],
+    ["POST", "/api/config/script/config/fai_tutto"],
+    ["DELETE", "/api/config/script/config/fai_tutto"],
+    ["POST", "/api/config/scene/config/1712345678"],
+    /* Con le maiuscole, la barra in fondo o una domanda dopo il `?`, la via
+     * e' la stessa. */
+    ["POST", "/api/Config/Automation/config/x"],
+    ["POST", "/api/config/automation/config/x/"],
+    ["POST", "/api/config/automation/config/x?y=1"],
+    /* E un'integrazione nuova, o riconfigurata, non si mette su di qui. */
+    ["POST", "/api/config/config_entries/flow"],
+    ["POST", "/api/config/config_entries/flow/0123abcd"],
+    ["POST", "/api/config/config_entries/options/flow"],
+    ["POST", "/api/config/config_entries/subentries/flow"],
+  ]) {
+    assert.ok(perLaVia({ metodo, percorso, amministra: true }), `${metodo} ${percorso}`);
+  }
+  /* Leggerle resta: non fa girare niente. */
+  assert.equal(
+    perLaVia({ percorso: "/api/config/automation/config/porta_aperta", amministra: true }),
+    null,
+  );
+  assert.equal(
+    perLaVia({ percorso: "/api/config/script/config/fai_tutto", amministra: true }),
+    null,
+  );
+  /* E il secondo passo resta quello che e': un servizio delle cose di casa. */
+  assert.equal(
+    perche({ type: "call_service", domain: "automation", service: "trigger" }, CHI_AMMINISTRA),
+    null,
+  );
+});
+
+test("da `ponte/http`, l'automazione di chi amministra non arriva nemmeno a Home Assistant", async () => {
+  const chieste = [];
+  const commissioni = new Commissioni({
+    casa: new Casa({
+      indirizzo: "http://supervisor/core",
+      segno: SEGNO,
+      plancia: "http://172.30.32.1:8123",
+    }),
+    registro: ZITTO,
+    scarica: async (quale) => {
+      chieste.push(quale);
+      return { stato: 200, tipo: "application/json", corpo: Buffer.from("{}") };
+    },
+  });
+  const automazione = {
+    alias: "Porta aperta",
+    triggers: [],
+    actions: [{ action: "hassio.addon_stdin", data: { addon: "core_ssh", input: "x" } }],
+  };
+  const scritta = await commissioni.rispondi(
+    {
+      id: 1,
+      type: TIPO,
+      metodo: "POST",
+      percorso: "/api/config/automation/config/porta_aperta",
+      corpo: Buffer.from(JSON.stringify(automazione)).toString("base64"),
+      tipo: "application/json",
+    },
+    { puoAmministrare: true },
+  );
+  assert.equal(scritta.success, false);
+  assert.equal(scritta.error.code, "unauthorized");
+  assert.equal(chieste.length, 0, "a Home Assistant non e' arrivato niente");
+
+  /* Quello che la plancia chiede di qui, invece, ci arriva. */
+  for (const [metodo, percorso] of [
+    ["GET", "/api/camera_proxy/camera.ingresso"],
+    ["GET", "/api/calendars/calendar.casa?start=2026-10-01T00%3A00%3A00Z"],
+    ["GET", "/api/history/period/2026-10-01T00:00:00Z"],
+    ["POST", "/api/image/upload"],
+  ]) {
+    const passata = await commissioni.rispondi(
+      { id: 2, type: TIPO, metodo, percorso },
+      { puoAmministrare: true },
+    );
+    assert.equal(passata.success, true, `${metodo} ${percorso}`);
+  }
+  assert.equal(chieste.length, 4);
+});
+
+test("chi amministra non mette programmi nelle pagine di Home Assistant", () => {
+  for (const detto of [
+    { type: "lovelace/resources/create", res_type: "module", url: "https://altrove.example/x.js" },
+    { type: "lovelace/resources/update", resource_id: "abc", url: "/local/x.js" },
+    { type: "lovelace/resources/delete", resource_id: "abc" },
+    { type: "lovelace/config/save", url_path: "x", config: { views: [] } },
+    { type: "lovelace/config/delete", url_path: "x" },
+  ]) {
+    assert.ok(perche(detto, CHI_AMMINISTRA), JSON.stringify(detto));
+  }
+  /* Leggerle resta, per tutti. */
+  for (const detto of [
+    { type: "lovelace/resources" },
+    { type: "lovelace/config" },
+    { type: "lovelace/dashboards/list" },
+  ]) {
+    assert.equal(perche(detto, CHI_AMMINISTRA), null, JSON.stringify(detto));
+    assert.equal(perche(detto, { amministra: false }), null, JSON.stringify(detto));
+  }
+});
+
+test("ne' blueprint, ne' HACS, ne' una casa spenta: nemmeno a chi amministra", () => {
+  for (const detto of [
+    {
+      type: "blueprint/save",
+      domain: "automation",
+      path: "x.yaml",
+      yaml: "",
+      allow_override: true,
+    },
+    { type: "blueprint/import", url: "https://altrove.example/x.yaml" },
+    { type: "blueprint/delete", domain: "automation", path: "x.yaml" },
+    { type: "hacs/repositories/add", repository: "qualcuno/qualcosa", category: "integration" },
+    { type: "hacs/repository/download", repository: "123" },
+    { type: "call_service", domain: "homeassistant", service: "stop" },
+    { type: "call_service", domain: "HomeAssistant", service: "STOP" },
+    { type: "call_service", domain: "hassio", service: "addon_stdin" },
+    { type: "call_service", domain: "hassio", service: "backup_full" },
+    { type: "call_service", domain: "backup", service: "create_automatic" },
+    { type: "call_service", domain: "shell_command", service: "qualunque" },
+    { type: "call_service", domain: "python_script", service: "qualunque" },
+    { type: "call_service", domain: "pyscript", service: "qualunque" },
+  ]) {
+    assert.ok(perche(detto, CHI_AMMINISTRA), JSON.stringify(detto));
+  }
+  for (const percorso of [
+    "/api/services/homeassistant/stop",
+    "/api/services/hassio/addon_stdin",
+    "/api/services/hassio/backup_full",
+    "/api/services/backup/create_automatic",
+    "/api/services/shell_command/qualunque",
+  ]) {
+    assert.ok(perLaVia({ metodo: "POST", percorso, amministra: true }), percorso);
+  }
+  /* Leggere i blueprint resta: non fa girare niente. */
+  assert.equal(perche({ type: "blueprint/list", domain: "automation" }, CHI_AMMINISTRA), null);
+});
+
+test("quello che l'app e la plancia mandano davvero passa ancora per chi amministra", () => {
+  /* L'elenco in cima a `dogana.js`, messaggio per messaggio: e' quello che si
+   * e' trovato cercando nell'app, nella plancia e nel ponte. */
+  for (const detto of [
+    { type: "get_states" },
+    { type: "get_config" },
+    { type: "get_services" },
+    { type: "get_panels" },
+    { type: "subscribe_events", event_type: "state_changed" },
+    { type: "subscribe_entities", entity_ids: ["light.x"] },
+    { type: "config/entity_registry/list" },
+    { type: "config/device_registry/list" },
+    { type: "config/area_registry/list" },
+    { type: "config/floor_registry/list" },
+    { type: "history/history_during_period", start_time: "2026-10-01T00:00:00Z" },
+    { type: "recorder/statistics_during_period", statistic_ids: ["sensor.x"] },
+    { type: "camera/stream", entity_id: "camera.x" },
+    { type: "camera/webrtc/offer", entity_id: "camera.x", offer: "v=0" },
+    { type: "media_source/browse_media" },
+    { type: "media_player/browse_media", entity_id: "media_player.x" },
+    { type: "frontend/get_user_data", key: "x" },
+    { type: "frontend/set_user_data", key: "x", value: {} },
+    { type: "calendar/event/create", entity_id: "calendar.x", event: {} },
+    { type: "auth/sign_path", path: "/api/camera_proxy_stream/camera.porta" },
+    { type: "auth/sign_path", path: "/api/webrtc/ws?url=rtsp%3A%2F%2Fx" },
+    { type: "call_service", domain: "light", service: "turn_on" },
+    { type: "call_service", domain: "scene", service: "turn_on" },
+    { type: "call_service", domain: "script", service: "turn_on" },
+    { type: "call_service", domain: "homeassistant", service: "toggle" },
+    { type: "call_service", domain: "update", service: "install" },
+    /* E le cose da amministratore che non fanno girare niente, anche se oggi
+     * nessuno le chiede di qui: il riavvio — lo stesso potere del tasto
+     * dell'app — i registri, l'energia, il titolo di una dashboard. */
+    { type: "call_service", domain: "homeassistant", service: "restart" },
+    { type: "config/entity_registry/update", entity_id: "light.x", name: "x" },
+    { type: "config/area_registry/update", area_id: "x", name: "x" },
+    { type: "energy/save_prefs", energy_sources: [] },
+    { type: "lovelace/dashboards/update", dashboard_id: "x", title: "x" },
+  ]) {
+    assert.equal(perche(detto, CHI_AMMINISTRA), null, JSON.stringify(detto));
+  }
+  for (const [metodo, percorso] of [
+    ["GET", "/api/camera_proxy/camera.ingresso"],
+    ["GET", "/api/camera_proxy_stream/camera.ingresso"],
+    ["GET", "/api/calendars/calendar.casa?start=2026-10-01T00%3A00%3A00Z"],
+    ["GET", "/api/image/serve/abc/original"],
+    ["POST", "/api/image/upload"],
+    ["GET", "/api/history/period/2026-10-01T00:00:00Z"],
+    ["POST", "/api/services/update/install"],
+    ["POST", "/api/services/homeassistant/restart"],
+  ]) {
+    assert.equal(perLaVia({ metodo, percorso, amministra: true }), null, `${metodo} ${percorso}`);
+  }
 });
