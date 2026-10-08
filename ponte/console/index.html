@@ -348,6 +348,19 @@
               <span class="conta" id="licenza-quando"></span>
             </div>
             <ul id="elenco-licenze" class="elenco"></ul>
+            <!-- «Ricontrolla adesso»: la casa chiede la licenza al quadro da
+                 sola ogni sei ore, e senza questo tasto un regalo fatto dalla
+                 Gestione, o il rinnovo di un abbonamento, qui si vedrebbero
+                 fino a sei ore dopo. -->
+            <div class="riga-di-tasti">
+              <button id="ricontrolla" type="button" class="tenue" data-en="Check now">
+                Ricontrolla adesso
+              </button>
+              <span class="conta" data-en="The home checks it by itself every 6 hours"
+                >La casa la ricontrolla da sola ogni 6 ore</span
+              >
+            </div>
+            <p class="avviso" id="avviso-ricontrolla" hidden></p>
             <div class="matricola" id="matricola" hidden>
               <span class="etichetta-della-matricola" data-en="This home's serial number"
                 >Matricola di questa casa</span

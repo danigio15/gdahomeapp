@@ -553,6 +553,41 @@ test("la console: lo stato della licenza e il codice regalo; le plance non si li
   }
 });
 
+test("la console: «Ricontrolla adesso» fa vedere subito un regalo fatto dalla Gestione", async () => {
+  const c = await catena();
+  const console_ = await laConsole(c);
+  try {
+    let bussate = 0;
+    const prendi = c.licenze.prendi;
+    c.licenze.prendi = (dove, opzioni) => {
+      if (dove.endsWith("/v1/licenze/casa")) bussate += 1;
+      return prendi(dove, opzioni);
+    };
+    /* Il regalo nasce nella Gestione: il quadro lo sa, la casa non ancora. */
+    c.quadro.gettoni = { gdahome: unGettone({ sog: c.identita.casa, origine: "regalo" }) };
+    assert.equal((await console_.chiedi("/api/licenza")).detto.gdahome.attiva, false);
+
+    const dopo = await console_.chiedi("/api/licenza/ricontrolla", { method: "POST" });
+    assert.equal(dopo.stato, 200);
+    assert.equal(dopo.detto.gdahome.attiva, true);
+    assert.equal(dopo.detto.gdahome.origine, "regalo");
+    assert.equal(dopo.detto.gdahome.scade, null, "per sempre");
+    assert.equal(dopo.detto.ultima.andata, true);
+    assert.equal("gettoni" in dopo.detto, false, "i gettoni alla pagina non servono");
+    assert.equal(bussate, 1);
+
+    /* Premuto di nuovo subito: la risposta e' la stessa, e al quadro non si
+     * bussa un'altra volta. */
+    const ancora = await console_.chiedi("/api/licenza/ricontrolla", { method: "POST" });
+    assert.equal(ancora.stato, 200);
+    assert.equal(ancora.detto.gdahome.origine, "regalo");
+    assert.equal(bussate, 1);
+  } finally {
+    await console_.chiudi();
+    await c.spegni();
+  }
+});
+
 test("la console senza licenze: la scheda non c'e', e le plance sono quelle di sempre", async () => {
   const c = await catena();
   c.licenze.chiave = "";
@@ -571,6 +606,9 @@ test("la console senza licenze: la scheda non c'e', e le plance sono quelle di s
       body: JSON.stringify({ codice: "GDA-ABCD-EFGH-JKMN" }),
     });
     assert.equal(riscatto.stato, 409);
+    const ricontrolla = await console_.chiedi("/api/licenza/ricontrolla", { method: "POST" });
+    assert.equal(ricontrolla.stato, 409);
+    assert.equal(ricontrolla.detto.errore, "licenze-spente");
   } finally {
     await console_.chiudi();
     await c.spegni();

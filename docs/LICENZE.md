@@ -110,7 +110,10 @@ conosce li lascia stare.
 `pagato` c'e' solo nei gettoni delle licenze del negozio. Li' `scade` e' la
 fine del periodo pagato **piu' i tre giorni del margine del rinnovo**, ed e'
 quella che si verifica; `pagato` e' la fine del periodo pagato, ed e' quella
-che l'app e la console scrivono a schermo («Premium è attivo fino al…»). Chi
+che l'app e la console scrivono a schermo («Premium è attivo fino al…»). Nei
+giorni del margine — `pagato` gia' passato, `scade` no — una data passata non
+si scrive: l'app dice «Premium è attivo · abbonamento», la console «Premium
+fino al … · abbonamento · rinnovo in attesa», con la data di `scade`. Chi
 verifica non lo guarda per decidere. Per i regali e gli installatori `scade`
 e' la fine della licenza, e `pagato` non c'e'.
 
@@ -286,8 +289,12 @@ questo cambia chi e' Premium: lo decide la scadenza.
   browser, e il fuori casa lo chiude il centralino. Le strade per limitare
   (`premium-richiesto` in `plance.js`, `portiere.js` e `commissioni.js`)
   restano nel codice, spente.
-- La console dell'add-on mostra lo stato della licenza e un campo per il
-  codice regalo.
+- La console dell'add-on mostra lo stato della licenza, un campo per il
+  codice regalo e il tasto «Ricontrolla adesso» (`POST /api/licenza/ricontrolla`):
+  la casa chiede subito i gettoni al quadro, invece di aspettare il giro delle
+  6 ore, e un regalo fatto dalla Gestione si vede subito. Una domanda di meno
+  di 15 secondi prima vale ancora: premuto di fila, il tasto bussa una volta
+  sola e non consuma il freno del quadro.
 
 ## Il centralino
 

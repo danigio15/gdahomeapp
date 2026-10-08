@@ -2388,8 +2388,12 @@
     var pezzi = [];
     if (sua.attiva) {
       /* Di un abbonamento si scrive la fine del periodo pagato, non quella
-       * coi giorni di margine per il rinnovo. */
-      var finoAl = sua.pagato != null ? sua.pagato : sua.scade;
+       * coi giorni di margine per il rinnovo. Nei giorni del margine — il
+       * periodo pagato e' finito e il rinnovo non e' ancora arrivato — una
+       * data gia' passata non si scrive: si scrive fino a quando vale, e che
+       * il rinnovo si aspetta. */
+      var nelMargine = sua.pagato != null && sua.pagato <= Date.now();
+      var finoAl = sua.pagato != null && !nelMargine ? sua.pagato : sua.scade;
       pezzi.push(
         finoAl == null
           ? due("Premium per sempre", "Premium for good")
@@ -2397,7 +2401,10 @@
       );
       if (sua.compresa)
         pezzi.push(due("compreso in gdahome Premium", "included in gdahome Premium"));
-      else if (daDove(sua.origine)) pezzi.push(daDove(sua.origine));
+      else {
+        if (daDove(sua.origine)) pezzi.push(daDove(sua.origine));
+        if (nelMargine) pezzi.push(due("rinnovo in attesa", "renewal pending"));
+      }
     } else {
       pezzi.push(perBase);
     }
@@ -2546,6 +2553,62 @@
   }
 
   trova("riscatta").addEventListener("click", riscattaIlCodice);
+
+  /* «Ricontrolla adesso»: la casa chiede subito la licenza al quadro, invece
+   * di aspettare il giro delle sei ore. Com'e' andata lo dice `ultima`: un
+   * quadro che non risponde lascia la licenza di prima, e si dice. */
+  var finisceIlFatto = null;
+  function avvisaIlControllo(testo, bene) {
+    clearTimeout(finisceIlFatto);
+    var avviso = trova("avviso-ricontrolla");
+    avviso.textContent = testo || "";
+    avviso.className = "avviso" + (bene ? " bene" : "");
+    avviso.hidden = !testo;
+    /* Il «fatto» si legge e se ne va; un no resta, finche' non si riprova. */
+    if (bene)
+      finisceIlFatto = setTimeout(function () {
+        avvisaIlControllo("");
+      }, 8000);
+  }
+
+  trova("ricontrolla").addEventListener("click", function () {
+    var tasto = trova("ricontrolla");
+    avvisaIlControllo("");
+    tasto.disabled = true;
+    tasto.textContent = due("Ricontrollo…", "Checking…");
+    chiedi("api/licenza/ricontrolla", { method: "POST" })
+      .then(function (stato) {
+        var prima = soloBase;
+        disegnaLaLicenza(stato);
+        var ultima = stato && stato.ultima;
+        if (ultima && ultima.andata)
+          avvisaIlControllo(
+            due("Fatto: la licenza è aggiornata.", "Done: the licence is up to date."),
+            true,
+          );
+        else
+          avvisaIlControllo(
+            due(
+              "Il quadro delle licenze non risponde: resta la licenza di prima. Riprova fra poco.",
+              "The licence server isn't answering: the previous licence stays. Try again shortly.",
+            ),
+          );
+        if (prima !== soloBase) return aggiornaTutto();
+        return undefined;
+      })
+      .catch(function () {
+        avvisaIlControllo(
+          due(
+            "Non è stato possibile ricontrollare: riprova fra poco.",
+            "It couldn't be checked: try again shortly.",
+          ),
+        );
+      })
+      .finally(function () {
+        tasto.disabled = false;
+        tasto.textContent = due("Ricontrolla adesso", "Check now");
+      });
+  });
 
   /* «Copia» la matricola. Dentro il telaio di Home Assistant gli appunti
    * possono non esserci: allora si seleziona il testo, e lo si copia a mano. */

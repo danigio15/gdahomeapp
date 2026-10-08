@@ -1164,6 +1164,19 @@ async function api({
     return;
   }
 
+  /* «Ricontrolla adesso»: la casa chiede subito i suoi gettoni al quadro, e
+   * risponde lo stato di dopo. Un quadro che non risponde non e' un errore di
+   * questa via: lo dice `ultima`, e restano i gettoni di prima. */
+  if (via === "/api/licenza/ricontrolla" && metodo === "POST") {
+    if (!licenze || !licenze.attive) {
+      json(risposta, { errore: "licenze-spente" }, 409);
+      return;
+    }
+    const { gettoni: _gettoni, ...stato } = await licenze.ricontrolla();
+    json(risposta, stato);
+    return;
+  }
+
   if (via === "/api/licenza/riscatta" && metodo === "POST") {
     if (!licenze || !licenze.attive) {
       json(risposta, { errore: "licenze-spente" }, 409);
