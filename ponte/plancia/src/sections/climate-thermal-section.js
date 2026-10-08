@@ -108,6 +108,10 @@ const state = (root[KEY] ||= {
   /* Quante unita' la stagione sta tenendo fuori (#365): il numero lo dice
    * l'intestazione, o le card sparirebbero senza che nessuno spieghi. */
   fuoriStagione: 0,
+  /* «Mostrale lo stesso»: chi tocca il tasto sotto una zona tutta fuori
+   * stagione le vede fino a quando la pagina non si ricarica. La stagione
+   * scritta in configurazione resta quella. */
+  mostraFuoriStagione: false,
 });
 
 /* Scale of the rail. Cooling units are set between 16° and 30°, radiators
@@ -179,6 +183,18 @@ const copy = () => ({
   timerVia: t("Togli lo spegnimento", "Remove the switch-off"),
   fuoriStagione: (quante) =>
     t(`${quante} fuori stagione`, `${quante} out of season`),
+  coldOutOfSeason: t("Condizionatori fuori stagione", "Air conditioners out of season"),
+  warmOutOfSeason: t("Termosifoni fuori stagione", "Radiators out of season"),
+  seasonHint: (periodo) =>
+    t(
+      `Si vedono: ${periodo}. Se li accendi compaiono comunque.`,
+      `They show: ${periodo}. Switched on, they show anyway.`,
+    ),
+  seasonHintMixed: t(
+    "Ognuno ha i suoi mesi nella Configurazione della plancia. Se li accendi compaiono comunque.",
+    "Each one has its months in the dashboard configuration. Switched on, they show anyway.",
+  ),
+  showAnyway: t("Mostrali lo stesso", "Show them anyway"),
   unitsOne: t("1 unità", "1 unit"),
   units: (value) => t(`${value} unità`, `${value} units`),
   floorsOne: t("1 piano", "1 floor"),
@@ -456,6 +472,29 @@ function emptyMarkup(zone, labels) {
       <span class="dm-cl-empty-ic" aria-hidden="true">${zone === "caldo" ? ICONS.flame : ICONS.snow}</span>
       <strong>${esc(zone === "caldo" ? labels.emptyWarm : labels.emptyCold)}</strong>
       <p>${esc(labels.emptyHint)}</p>
+    </div>`;
+}
+
+/* La zona e' vuota perche' la stagione la tiene fuori, non perche' manca
+ * qualcosa (#196).
+ *
+ * «Nessun condizionatore configurato, anche se presenti nella
+ * configurazione»: l'8 ottobre i condizionatori di maggio-settembre stanno
+ * fuori, e la griglia diceva di andarli ad aggiungere. Chi legge pensa di
+ * aver perso la configurazione — la paura che l'intestazione «2 fuori
+ * stagione» doveva togliere, e che la griglia sotto rimetteva. */
+export function seasonEmptyMarkup(zone, fuori, labels = copy()) {
+  const periodi = new Set(fuori.map((unit) => comeSiLeggeIlPeriodo(unit.mesi, activeLocale())));
+  /* «Da maggio a settembre» apre una frase; dopo i due punti si scrive
+   * minuscolo. In inglese i mesi restano maiuscoli. */
+  const [periodo] = periodi;
+  const scritto = activeLocale() === "it" ? periodo.toLowerCase() : periodo;
+  const hint = periodi.size === 1 ? labels.seasonHint(scritto) : labels.seasonHintMixed;
+  return `<div class="dm-cl-empty" data-dm-cl-fuori-stagione="${fuori.length}">
+      <span class="dm-cl-empty-ic" aria-hidden="true">${zone === "caldo" ? ICONS.flame : ICONS.snow}</span>
+      <strong>${esc(zone === "caldo" ? labels.warmOutOfSeason : labels.coldOutOfSeason)} · ${fuori.length}</strong>
+      <p>${esc(hint)}</p>
+      <button type="button" class="dm-cl-empty-btn" data-dm-cl-mostra-fuori>${esc(labels.showAnyway)}</button>
     </div>`;
 }
 
@@ -749,12 +788,14 @@ function signature(units) {
  * Contare i figli non dice CHI ha svuotato la griglia — quello resta da
  * trovare — ma toglie a chiunque lo faccia il potere di renderlo definitivo:
  * al giro dopo la griglia si riscrive da sola. */
-function syncGrid(grid, units, labels) {
-  const current = signature(units);
+function syncGrid(grid, units, labels, fuori = []) {
+  const current = `${signature(units)}|${signature(fuori)}`;
   if (grid._dmClimaSig === current && grid._dmClimaFigli === grid.childElementCount) return false;
   grid.innerHTML = units.length
     ? groupedMarkup(units, labels)
-    : emptyMarkup(grid.dataset.dmClZone, labels);
+    : fuori.length
+      ? seasonEmptyMarkup(grid.dataset.dmClZone, fuori, labels)
+      : emptyMarkup(grid.dataset.dmClZone, labels);
   grid._dmClimaSig = current;
   grid._dmClimaFigli = grid.childElementCount;
   return true;
@@ -1123,8 +1164,9 @@ export function renderClimate({ rebuild = false, force = false } = {}) {
     adesso: new Date(),
     accesa: (unita) => climateReading(unita.entity, statiOra).on,
   });
-  const units = stagione.dentro;
-  state.fuoriStagione = stagione.fuori.length;
+  const units = state.mostraFuoriStagione ? tutte : stagione.dentro;
+  const fuori = state.mostraFuoriStagione ? [] : stagione.fuori;
+  state.fuoriStagione = fuori.length;
   /* Marcato qui, sul guscio che questa passata ha in mano: `paintSummary` puo'
    * mandare la pagina sull'altra zona, e di li' riparte un disegno.
    *
@@ -1145,6 +1187,7 @@ export function renderClimate({ rebuild = false, force = false } = {}) {
       grid,
       units.filter((unit) => unit.zone === zone),
       labels,
+      fuori.filter((unit) => unit.zone === zone),
     );
   }
 
@@ -1211,6 +1254,12 @@ function suiPastiglie(event) {
 }
 
 function onClick(event) {
+  if (event.target?.closest?.("[data-dm-cl-mostra-fuori]")) {
+    event.preventDefault();
+    state.mostraFuoriStagione = true;
+    renderClimate({ rebuild: true, force: true });
+    return;
+  }
   const button = event.target?.closest?.("[data-dm-cl-bulk]");
   if (!button || button.disabled) return;
   event.preventDefault();
@@ -2052,6 +2101,10 @@ function climateCss() {
 .dm-cl-empty-ic{display:grid;place-items:center;width:44px;height:44px;border-radius:14px;background:var(--dm-cl-sunk);color:var(--dm-cl-dim)}
 .dm-cl-empty strong{font-size:14px;font-weight:800}
 .dm-cl-empty p{margin:0;font-size:12.5px;color:var(--dm-cl-dim)}
+.dm-cl-empty-btn{
+  margin-top:6px;padding:8px 14px;border:1px solid var(--dm-cl-line);border-radius:999px;
+  background:var(--dm-cl-sunk);color:var(--dm-cl-text);font:inherit;font-size:12.5px;font-weight:700;cursor:pointer
+}
 
 /* ── card ─────────────────────────────────────────────────────────────── */
 .dm-cl-card{

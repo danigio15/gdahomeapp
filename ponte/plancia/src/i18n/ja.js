@@ -4227,4 +4227,9 @@ export default Object.freeze({
   "The word the stove shows on its display: ignition, working, brazier cleaning, shutdown… If the page does not know it, it shows it as it is.": "ストーブが表示に出す言葉：点火、運転、燃焼皿の掃除、消火… ページが知らない言葉はそのまま表示します。",
   "Without it, the thermostat's own reading is used.": "なければサーモスタット自身の測定値を使います。",
   "Working": "運転中",
+  "Air conditioners out of season": "シーズン外のエアコン",
+  "Radiators out of season": "シーズン外のラジエーター",
+  "They show: ${periodo}. Switched on, they show anyway.": "表示期間: ${periodo}。オンのときは常に表示されます。",
+  "Each one has its months in the dashboard configuration. Switched on, they show anyway.": "それぞれの月はダッシュボードの設定にあります。オンのときは常に表示されます。",
+  "Show them anyway": "それでも表示",
 });
