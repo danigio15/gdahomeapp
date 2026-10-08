@@ -253,7 +253,14 @@ test("togliere una chiave non alza la revisione", async () => {
   );
   /* E la 60 con la vista della stanza (#160, `cd_stanze_vista`): tessere o
    * righe si scelgono una volta, per tutti i vetri di casa. */
-  assert.equal(CONFIG_KEYS_REVISION, 60);
+  /* E la 61 con le stufe a pellet (#183, `cd_stufe`): la stufa configurata dal
+   * computer deve accendersi anche dal telefono, e il pellet in esaurimento
+   * deve dirlo il tablet in cucina come lo dice il computer. */
+  assert.equal(CONFIG_KEYS_REVISION, 61);
+  assert.ok(
+    CONFIG_KEYS.includes("cd_stufe"),
+    "le stufe dichiarate qui devono essere le stesse anche sul tablet in cucina",
+  );
   assert.ok(
     CONFIG_KEYS.includes("cd_stanze_vista"),
     "la vista scelta per le stanze dev'essere la stessa anche sul tablet in cucina",

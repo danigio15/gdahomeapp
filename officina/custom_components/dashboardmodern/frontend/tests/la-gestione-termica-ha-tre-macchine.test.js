@@ -50,8 +50,10 @@ test("si sceglie quello che si ha, uno o tutti e tre", () => {
     "caldaia",
   ]);
   /* L'ordine non e' alfabetico: e' quello in cui il calore arriva in casa —
-   * prima quello gratis, poi quello a corrente, poi quello a gas. */
-  assert.deepEqual([...TIPI_TERMICI], ["solare", "scaldabagno", "caldaia"]);
+   * prima quello gratis, poi quello a corrente, poi quello a gas, e per
+   * ultima la stufa a pellet (#183), che scalda la stanza in cui sta. In coda,
+   * perche' chi aveva gia' le sue linguette le ritrova dov'erano. */
+  assert.deepEqual([...TIPI_TERMICI], ["solare", "scaldabagno", "caldaia", "stufa"]);
 });
 
 test("chi non ha ancora scelto non perde la pagina che vedeva ieri", () => {
@@ -294,9 +296,13 @@ test("la pagina mostra una macchina alla volta, con la fila per cambiare", async
    * e' un tasto che non sceglie niente. */
   assert.match(sezione, /if \(righe\.length < 2\) return "";/);
   assert.match(sezione, /data-dm-it-quale=/);
-  /* E vale per tutti e due i tipi: gli scaldabagni erano gia' una lista in
-   * configurazione, ma la pagina ne disegnava uno. */
-  assert.match(sezione, /const quali = attiva === "caldaia" \? caldaie : letture;/);
+  /* E vale per tutti i tipi: gli scaldabagni erano gia' una lista in
+   * configurazione, ma la pagina ne disegnava uno; le stufe (#183) nascono
+   * lista. */
+  assert.match(
+    sezione,
+    /const quali = attiva === "caldaia" \? caldaie : attiva === "stufa" \? stufe : letture;/,
+  );
 });
 
 test("la fila delle macchine si tocca anche sopra la scena (#281, dal campo)", async () => {

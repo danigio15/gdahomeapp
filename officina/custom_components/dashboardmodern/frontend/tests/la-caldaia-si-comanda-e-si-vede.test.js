@@ -155,6 +155,8 @@ test("le caselle del pellet stanno in coda a quelle di sempre, nel loro gruppo",
     "pressione",
     "modulazione",
   ]);
+  /* Il secondo serbatoio (#182) sta subito dopo il primo: e' la stessa
+   * domanda fatta a un altro serbatoio. */
   assert.deepEqual(campi.slice(10), [
     "temperaturaCaldaia",
     "boilerAlto",
@@ -163,6 +165,7 @@ test("le caselle del pellet stanno in coda a quelle di sempre, nel loro gruppo",
     "ventilatoreFumi",
     "ossigeno",
     "pellet",
+    "pellet2",
     "mandataCalcolata",
   ]);
   /* E si riconoscono da sole: la scheda le raccoglie sotto un titolo, e per

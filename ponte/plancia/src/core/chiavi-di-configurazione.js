@@ -302,7 +302,13 @@
  * tessere o righe. E' una scelta della casa: chi si e' tenuto le righe le
  * vuole sul telefono come sul tablet in cucina, e una stanza che cambia faccia
  * a seconda del vetro da cui la si guarda sembrerebbe un errore. */
-export const CONFIG_KEYS_REVISION = 60;
+/* La revisione 61 aggiunge le stufe a pellet (#183, `cd_stufe`): quali
+ * entita' dicono la fase, la potenza, il ventilatore e il serbatoio di ogni
+ * stufa. Sono della casa come le caldaie accanto a cui stanno: la stufa
+ * configurata dal computer deve accendersi anche dal telefono, e un pellet in
+ * esaurimento detto su un vetro e taciuto sull'altro e' proprio l'avviso che
+ * non arriva. */
+export const CONFIG_KEYS_REVISION = 61;
 
 // Complete shared dashboard configuration snapshot. Runtime counters/timers and
 // true per-device preferences (connection credentials, theme/navbar mode) stay
@@ -387,6 +393,8 @@ export const CONFIG_KEYS = Object.freeze([
   "cd_scaldabagni",
   "cd_impianti_termici",
   "cd_caldaia",
+  // Le stufe a pellet (#183): la quarta macchina della Gestione termica.
+  "cd_stufe",
   // Gli impianti solari e quale di loro sta in pagina (#253 → più d'uno).
   "cd_solari",
   "cd_solare_scelto",

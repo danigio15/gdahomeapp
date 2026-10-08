@@ -50,6 +50,7 @@ const ESEMPI = {
   cd_caldaia: { temperatura: "sensor.caldaia" },
   cd_scaldabagni: [{ name: "Boiler", entity: "water_heater.b" }],
   cd_impianti_termici: [{ name: "Pompa", entity: "climate.pompa" }],
+  cd_stufe: [{ name: "Stufa del soggiorno", clima: "climate.stufa_soggiorno" }],
   cd_cameras: [{ name: "Ingresso", entity: "camera.ingresso" }],
   cd_security_doors: [{ name: "Porta", entity: "binary_sensor.porta" }],
   cd_clima_units: [{ entity: "climate.salone" }],

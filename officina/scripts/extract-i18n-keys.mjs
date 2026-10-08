@@ -147,6 +147,14 @@ const SECTION_TABLES = Object.freeze([
      italiano. */
   { file: "impianti-termici-editor-section.js", name: "CAMPI_CALDAIA", rows: "values", at: ["it", "en"] },
   { file: "impianti-termici-editor-section.js", name: "CAMPI_CALDAIA", rows: "values", at: ["aiutoIt", "aiutoEn"] },
+  /* E quelle della stufa a pellet (#183), nella stessa forma. */
+  { file: "impianti-termici-editor-section.js", name: "CAMPI_STUFA", rows: "values", at: ["it", "en"] },
+  { file: "impianti-termici-editor-section.js", name: "CAMPI_STUFA", rows: "values", at: ["aiutoIt", "aiutoEn"] },
+  /* Gli aiuti sotto la scelta delle macchine: la pagina li scrive con
+     `t(...AIUTI[tipo])`, che la prova delle tabelle non vede, e stavano fuori
+     dai cataloghi — tredici lingue li leggevano in inglese. Se n'e' accorta
+     la riga della stufa (#183), che ci si aggiungeva. */
+  { file: "impianti-termici-editor-section.js", name: "AIUTI", rows: "values", at: [0, 1] },
   { file: "lights-scene-section.js", name: "SWATCHES", rows: "items", at: ["it", "en"] },
   { file: "people-section.js", name: "ACTIVITY_LABELS", rows: "values", at: [0, 1] },
   { file: "lights-scene-section.js", name: "KELVIN_PRESETS", rows: "items", at: ["it", "en"] },

@@ -80,6 +80,9 @@ const SCHEDA_DELLA_CASELLA = Object.freeze({
   cd_caldaia: "sez9",
   cd_scaldabagni: "sez9",
   cd_impianti_termici: "sez9",
+  /* La stufa a pellet (#183) si configura nella Gestione termica, che e' la
+   * linguetta del solare: e' li' che il risultato deve portare. */
+  cd_stufe: "sez3",
   cd_quick_actions: "sez8",
   cd_tapparelle: "tapp",
   cd_tapparelle_soglia: "tapp",
