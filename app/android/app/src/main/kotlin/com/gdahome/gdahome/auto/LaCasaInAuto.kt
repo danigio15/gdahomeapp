@@ -47,9 +47,19 @@ import com.gdahome.gdahome.R
 
 class LaCasaInAuto(context: CarContext) : Screen(context) {
 
+    /* Se questa e' la prima schermata, o ci si e' arrivati da un'altra.
+     *
+     * In gdahome in auto e' la prima, e in alto ha il segno dell'app. Nel
+     * navigatore invece ci si arriva dalla mappa, passando dai comandi della
+     * casa: li' col segno dell'app al posto della freccia non si tornava piu'
+     * alla mappa — «se clicco su Dispositivi non ho modo di ritornare al
+     * navigatore». Quando sotto c'e' qualcosa, in alto c'e' la freccia. */
+    private val radice: Boolean
+        get() = screenManager.stackSize <= 1
+
     override fun onGetTemplate(): Template {
         /* Senza Premium la casa in auto non c'e' (`LaLicenzaInAuto.kt`). */
-        if (!LaLicenzaInAuto.premium(carContext)) return senzaPremium(carContext, radice = true)
+        if (!LaLicenzaInAuto.premium(carContext)) return senzaPremium(carContext, radice = radice)
         val foto = leggiLaFoto(carContext)
         val elenco = ItemList.Builder()
         val dispositivi = foto?.dispositivi.orEmpty()
@@ -83,7 +93,7 @@ class LaCasaInAuto(context: CarContext) : Screen(context) {
             .setTitle(
                 foto?.casa?.ifBlank { null } ?: carContext.getString(R.string.auto_dispositivi),
             )
-            .setHeaderAction(Action.APP_ICON)
+            .setHeaderAction(if (radice) Action.APP_ICON else Action.BACK)
             .setActionStrip(iDueTasti())
             .build()
     }
