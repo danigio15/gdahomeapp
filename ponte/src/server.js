@@ -18,6 +18,7 @@ import { createServer } from "node:http";
 import { extname, join, normalize, sep } from "node:path";
 
 import { invito } from "./invito.js";
+import { arrivaDaCasa } from "./da-casa.js";
 import { accetta, eUnaSalita, SaliteSenzaNome } from "./presa.js";
 import { BASE } from "./plancia.js";
 import { laVede, vedeQualcosa } from "./plance.js";
@@ -328,7 +329,11 @@ export function costruisciLaPortaDellApp({
      * collegati non sono affari di chi bussa a una porta esposta: l'app legge
      * solo `vivo`, e la console quei numeri li ha per conto suo. */
     if (metodo === "GET" && via === "/salute") {
-      json(risposta, { vivo: true });
+      /* `da_casa`: se chi chiede sta sulla rete di casa (`da-casa.js`). Dice a
+       * chi bussa una cosa di se', non della casa: con gdahome Base l'app
+       * prende l'indirizzo pubblico solo quando qui si arriva da casa — la
+       * web app aperta in casa con l'indirizzo di fuori. */
+      json(risposta, { vivo: true, da_casa: arrivaDaCasa(richiesta) });
       return;
     }
 
@@ -364,7 +369,7 @@ export function costruisciLaPortaDellApp({
     /* Anche in casa si passa dal portiere: la rete di casa non e' cifrata, e
      * chi ci sta sopra non deve poter leggere piu' di chi sta sul centralino.
      * E soprattutto: cosi' l'app ha **una strada sola** invece di due. */
-    if (presa) portiere.accogli(presa, { da });
+    if (presa) portiere.accogli(presa, { da, daCasa: arrivaDaCasa(richiesta) });
   });
   /* Un errore sulla presa di chi bussa e' suo, non del ponte. */
   server.on("clientError", (_errore, socket) => {

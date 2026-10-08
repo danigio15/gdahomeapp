@@ -36,6 +36,10 @@ import 'stretta.dart';
 
 export 'cifra.dart' show codicePulito;
 
+/// Cosa risponde un ponte a «ci sei?»: se c'e', e se chi chiede sta sulla
+/// rete di casa (`null` quando non lo dice).
+typedef SaluteDetta = ({bool vivo, bool? daCasa});
+
 /// Quanto si aspetta il ponte prima di dire che non c'e'.
 const Duration _attesa = Duration(seconds: 12);
 
@@ -302,6 +306,28 @@ class Abbinamento {
   /// Vale sia per il ponte sia per il centralino: tutti e due hanno un
   /// `/salute` che dice `{"vivo":true}`, ed e' apposta — chi cerca da dove si
   /// entra li chiede tutti allo stesso modo, senza sapere chi sono.
+  /// Come [cePonte], e in piu' quello che il ponte dice di chi bussa: se
+  /// sta sulla rete di casa (`da_casa`, vedi `ponte/src/da-casa.js`). Un
+  /// ponte di prima non lo dice, e [SaluteDetta.daCasa] resta `null`.
+  static Future<SaluteDetta> salute(Uri salute, {http.Client? cliente}) async {
+    final suo = cliente == null;
+    final chi = cliente ?? http.Client();
+    try {
+      final risposta = await chi.get(salute).timeout(_attesa);
+      if (risposta.statusCode != 200) return (vivo: false, daCasa: null);
+      final detto = _leggi(risposta.body);
+      final daCasa = detto['da_casa'];
+      return (
+        vivo: detto['vivo'] == true,
+        daCasa: daCasa is bool ? daCasa : null,
+      );
+    } catch (_) {
+      return (vivo: false, daCasa: null);
+    } finally {
+      if (suo) chi.close();
+    }
+  }
+
   static Future<bool> cePonte(Uri salute, {http.Client? cliente}) async {
     final suo = cliente == null;
     final chi = cliente ?? http.Client();

@@ -32,6 +32,7 @@ import '../parole.dart';
 import 'abbinamento.dart';
 import 'errori.dart';
 import 'indirizzo.dart';
+import 'parole_del_centralino.dart' show fuoriCasaServePremium;
 
 /// Quanto si aspetta una risposta prima di considerare morta una strada.
 ///
@@ -62,16 +63,50 @@ const Duration vantaggioDelleStradeDirette = Duration(milliseconds: 400);
 
 typedef Bussata = Future<bool> Function(Uri salute);
 
+/// Come si bussa quando conta anche **da dove**: vedi [Sonda.dove] con
+/// `soloDaCasa`.
+typedef BussataDaCasa = Future<SaluteDetta> Function(Uri salute);
+
 Future<bool> _bussataVera(Uri salute) => Abbinamento.cePonte(salute);
 
+/// L'indirizzo del ponte che ha servito questa pagina, nel browser.
+///
+/// La web app la serve l'add-on, su `/app/` alla radice della sua porta —
+/// o del dominio che qualcuno gli ha messo davanti. Quella porta e' un ponte,
+/// e da li' la pagina e' gia' arrivata: e' la strada che con gdahome Base si
+/// prova anche se nell'archivio non c'e', quando chi l'ha aperta sta in casa
+/// e ha scritto l'indirizzo di fuori. Sotto l'ingress di Home Assistant il
+/// percorso comincia altrove, e li' non c'e' niente da prendere: `null`.
+IndirizzoDelPonte? get indirizzoDellaPagina {
+  if (!kIsWeb) return null;
+  final pagina = Uri.base;
+  if (!pagina.path.startsWith('/app/') || pagina.host.isEmpty) return null;
+  final sicuro = pagina.isScheme('https');
+  if (!sicuro && !pagina.isScheme('http')) return null;
+  return IndirizzoDelPonte(
+    casa: pagina.host.toLowerCase(),
+    porta: pagina.port,
+    sicuro: sicuro,
+  );
+}
+
 class Sonda {
-  const Sonda({
+  Sonda({
     Bussata? bussa,
+    BussataDaCasa? bussaDaCasa,
     this.attesa = attesaDellaSonda,
     this.vantaggio = vantaggioDelleStradeDirette,
-  }) : _bussa = bussa ?? _bussataVera;
+  }) : _bussa = bussa ?? _bussataVera,
+       /* Chi da' una bussata sua (le prove) e non quella col «da dove» si
+        * ritrova con un ponte che non lo dice: com'era prima. */
+       _bussaDaCasa =
+           bussaDaCasa ??
+           (bussa == null
+               ? Abbinamento.salute
+               : (salute) async => (vivo: await bussa(salute), daCasa: null));
 
   final Bussata _bussa;
+  final BussataDaCasa _bussaDaCasa;
   final Duration attesa;
   final Duration vantaggio;
 
@@ -86,7 +121,15 @@ class Sonda {
   /// Solleva [PonteIrraggiungibile] quando non risponde nessuna: e' una cosa
   /// diversa da «segno rifiutato», e la schermata la racconta in un altro
   /// modo.
-  Future<Approdo> dove(CasaConosciuta casa) async {
+  ///
+  /// Con [soloDaCasa] — gdahome Base — il centralino non si prova, e una
+  /// strada diretta vale solo se il ponte dice che chi bussa sta sulla sua
+  /// rete. Un ponte di prima non lo dice: allora vale la strada di casa e
+  /// basta, come prima. Se una strada risponde ma da fuori, solleva
+  /// [PremiumRichiesto] invece di [PonteIrraggiungibile]: la casa c'e', e da
+  /// li' ci si entra con Premium.
+  Future<Approdo> dove(CasaConosciuta casa, {bool soloDaCasa = false}) async {
+    if (soloDaCasa) return _soloDaCasa(casa);
     final candidati = casa.approdi(soloSicuri: inChiaroNonSiPuo);
     if (candidati.isEmpty) {
       throw PonteIrraggiungibile(_perche(casa));
@@ -159,6 +202,55 @@ class Sonda {
       );
     }
     return vincitore.future;
+  }
+
+  Future<Approdo> _soloDaCasa(CasaConosciuta casa) async {
+    final candidati = casa
+        .approdi(soloSicuri: inChiaroNonSiPuo)
+        .where((uno) => uno.da != DaDove.dalCentralino)
+        .toList();
+    if (candidati.isEmpty) throw PonteIrraggiungibile(_perche(casa));
+
+    final vincitore = Completer<Approdo>();
+    var quantiHannoDettoNo = 0;
+    var quantiDaFuori = 0;
+    for (final candidato in candidati) {
+      unawaited(
+        _chiedi(candidato.salute).then((detto) {
+          if (vincitore.isCompleted) return;
+          final daCasa = detto.daCasa ?? candidato.da == DaDove.daDentro;
+          if (detto.vivo && daCasa) {
+            vincitore.complete(candidato);
+            return;
+          }
+          if (detto.vivo) quantiDaFuori += 1;
+          quantiHannoDettoNo += 1;
+          if (quantiHannoDettoNo < candidati.length) return;
+          vincitore.completeError(
+            quantiDaFuori > 0
+                ? PremiumRichiesto(fuoriCasaServePremium)
+                : PonteIrraggiungibile(_perche(casa)),
+          );
+        }),
+      );
+    }
+    return vincitore.future;
+  }
+
+  Future<SaluteDetta> _chiedi(Uri salute) async {
+    try {
+      /* Un futuro nuovo, del tipo giusto: quello di chi bussa puo' portare un
+       * tipo piu' stretto — `daCasa` mai nullo — e il `timeout` che risponde
+       * col nullo si romperebbe prima ancora di aspettare. */
+      final detto = _bussaDaCasa(salute)
+          .then<SaluteDetta>((uno) => (vivo: uno.vivo, daCasa: uno.daCasa));
+      return await detto.timeout(
+        attesa,
+        onTimeout: () => (vivo: false, daCasa: null),
+      );
+    } catch (_) {
+      return (vivo: false, daCasa: null);
+    }
   }
 
   Future<bool> _risponde(Uri salute) async {

@@ -18,7 +18,7 @@
 ///
 ///     telefono → casa   {v:1, chi:"dm_…", apertura:"…", mia:"…", gzip:true, app:N}   telefono noto
 ///     telefono → casa   {v:1, abbina:2, apertura:"…", mia:"…", app:N}              telefono nuovo
-///     casa → telefono   {v:1, pronto:true, mia:"…", gzip:true, mucchio:true}
+///     casa → telefono   {v:1, pronto:true, mia:"…", gzip:true, mucchio:true, da_casa:true}
 ///     casa → telefono   {v:1, no:"…"}                              e basta
 ///     casa → telefono   {v:1, no:"…", riabbina:true}               non ti conosco
 ///     casa → telefono   {v:1, no:"…", motivo:"…"}                  l'abbinamento non parte
@@ -52,6 +52,12 @@
 /// `mucchio: true` dice «so spacchettare un mucchio di eventi»: il ponte, da
 /// fuori casa, li manda insieme invece di uno per uno. Vedi `filo.dart` e
 /// `ponte/src/ponte.js`.
+///
+/// `da_casa` dice se il filo arriva dalla rete della casa. Con gdahome Base
+/// fuori casa non si entra, e l'app lo chiede alla casa invece di indovinarlo
+/// dall'indirizzo: un indirizzo `https` pubblico si apre anche dal divano, e
+/// un indirizzo «di casa» scritto nel QR si apre anche da fuori se e'
+/// pubblico. Vedi `casa/collegamento.dart`.
 ///
 /// `app` e' il numero di costruzione di quest'app (`costruzioneDiQuestApp`):
 /// la casa lo confronta con la versione minima del giorno dei pagamenti, e a
@@ -194,6 +200,8 @@ Future<PresaCifrata> stringiLaMano(
         throw const StrettaRifiutata('la casa non ha stretto la mano');
       }
       cifrata._suaPubblica = sua;
+      final daCasa = detto['da_casa'];
+      cifrata._daCasa = daCasa is bool ? daCasa : null;
 
       return chiaveDiSessione(
         miaPrivata: mia.privata,
@@ -288,6 +296,11 @@ class PresaCifrata implements PresaAperta {
   /// Quella della casa, come e' arrivata nel `pronto`.
   String? get suaPubblica => _suaPubblica;
   String? _suaPubblica;
+
+  /// Se la casa dice che questo filo arriva dalla sua rete, come l'ha detto
+  /// nel `pronto` (`ponte/src/da-casa.js`). `null` da un ponte di prima.
+  bool? get daCasa => _daCasa;
+  bool? _daCasa;
 
   /// Se questa e' la presa di un abbinamento. Li', dopo la stretta, si
   /// ascolta anche una riga in chiaro: il no a una conferma che non si e'

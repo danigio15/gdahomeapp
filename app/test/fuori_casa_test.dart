@@ -116,4 +116,41 @@ void main() {
     expect(find.text('Aggiorna l\'add-on gdahome'), findsOneWidget);
     expect(find.textContaining('è una versione vecchia'), findsOneWidget);
   });
+
+  testWidgets(
+    'un indirizzo «di casa» pubblico, aperto da fuori con Base, propone Premium',
+    (tester) async {
+      /* Il QR fatto con un indirizzo https pubblico al posto di quello di
+       * casa: risponde da ovunque, ma la casa dice che non si è in casa
+       * (`da_casa: false`). Prima si entrava come dal divano. */
+      final pubblico = IndirizzoDelPonte.leggi('https://casa.esempio.it')!;
+      late Collegamento collegamento;
+      await tester.runAsync(() async {
+        final archivio = ArchivioDelleCase(CassaforteInMemoria());
+        await archivio.apri();
+        final casa = await archivio.aggiungi(
+          nome: 'Casa al lago',
+          segno: segnoBuono,
+          identificativo: chiBuono,
+          chiave: chiaveBuona,
+          inCasa: pubblico,
+        );
+        await archivio.segnaIlGettone(casa.id, '');
+        collegamento = Collegamento(
+          archivio: archivio,
+          sonda: Sonda(
+            attesa: const Duration(milliseconds: 100),
+            bussaDaCasa: (salute) async =>
+                (vivo: salute == pubblico.salute, daCasa: false),
+          ),
+          licenza: GestoreLicenza(chiave: chiaveDiProva),
+        );
+        await collegamento.apri();
+      });
+      addTearDown(() => tester.runAsync(collegamento.chiudi));
+      expect(collegamento.fuoriCasaSenzaPremium, isTrue);
+      await mostra(tester, collegamento);
+      expect(find.text('Scopri gdahome Premium'), findsOneWidget);
+    },
+  );
 }

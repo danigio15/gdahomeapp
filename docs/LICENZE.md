@@ -323,6 +323,18 @@ controllo e' spento (tutti passano, come oggi): si accende insieme alla chiave.
   e' Premium), solo la plancia principale, niente strade fuori casa (centralino
   e indirizzo pubblico), «Configurazione» e «Zigbee» con il lucchetto che porta
   alla pagina Premium.
+- «Fuori casa» lo dice la casa, non l'indirizzo. Il ponte vede da dove
+  arriva la presa (`ponte/src/da-casa.js`: un indirizzo di rete privata, e
+  nessun proxy davanti che scriva un visitatore pubblico) e lo dice nel
+  `/salute` e nel `pronto` (`da_casa`). Con Base l'app prende solo le strade
+  dirette che la casa vede arrivare da casa: anche l'indirizzo pubblico,
+  quando dal divano si apre la web app con quello (e anche la pagina stessa
+  che l'ha servita, se nell'archivio non c'e'). Un filo che la casa dice da
+  fuori l'app lo chiude, anche se l'ha aperto da un indirizzo scritto come
+  «di casa»: un QR fatto con un `https` pubblico non apre piu' la casa Base
+  dalla stazione. L'abbinamento resta aperto da ovunque; appena la casa dice
+  Base, il filo da fuori si chiude e si propone Premium. Un ponte di prima
+  non dice `da_casa`, e vale com'era: l'indirizzo di casa si', il resto no.
 - La pagina Premium: i due piani coi prezzi del negozio, «Ripristina
   abbonamento», «Ho un codice regalo». Con la casa Premium i piani non ci
   sono, tranne sul telefono entrato col codice della casa di prova
