@@ -13,7 +13,7 @@ publish_to: "none"
 # sempre**. Si ricava dalla versione invece di batterlo a mano:
 # 1.4.24 → 1 × 10000 + 4 × 100 + 24 = 10424. Finche' il minore e la patch
 # stanno sotto cento, cresce insieme alla versione e non si sbaglia.
-version: 1.10.3+1100300
+version: 1.10.4+1100400
 
 environment:
   sdk: ^3.13.0

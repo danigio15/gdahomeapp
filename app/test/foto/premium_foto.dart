@@ -35,6 +35,7 @@ import 'package:gdahome/casa/la_guardia.dart';
 import 'package:gdahome/licenza/licenza.dart';
 import 'package:gdahome/licenza/negozio.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
+import 'package:gdahome/parole.dart';
 import 'package:gdahome/plancia/servitore_qui/qui.dart';
 import 'package:gdahome/ponte/filo.dart';
 import 'package:gdahome/ponte/indirizzo.dart';
@@ -93,12 +94,12 @@ class _SenzaPlancia extends FabbricaDellaPlancia {
   }) async => null;
 }
 
-Widget _lApp(Widget home) => MaterialApp(
+Widget _lApp(Widget home, {Locale lingua = const Locale('it')}) => MaterialApp(
   debugShowCheckedModeBanner: false,
   theme: temaChiaro(),
   darkTheme: temaScuro(),
   themeMode: ThemeMode.light,
-  locale: const Locale('it'),
+  locale: lingua,
   supportedLocales: const [Locale('it'), Locale('en')],
   localizationsDelegates: const [
     GlobalMaterialLocalizations.delegate,
@@ -138,6 +139,29 @@ class _NegozioConLaProva implements NegozioGdahome {
   Future<void> completa(PurchaseDetails acquisto) async {}
   @override
   Future<List<PurchaseDetails>> rimastiAMeta() async => const [];
+}
+
+/// La casa di prova come risponde sul filo, alla domanda sulla licenza:
+/// Premium regalato, e questo telefono e' entrato col codice della casa di
+/// prova. Il resto del filo non serve alla pagina Premium.
+class _FiloDellaCasaDiProva implements Filo {
+  _FiloDellaCasaDiProva(this.gettone);
+
+  final String gettone;
+
+  @override
+  Future<dynamic> risultato(
+    Map<String, dynamic> comando, {
+    Duration? entro,
+  }) async => {
+    'attive': true,
+    'gdahome': {'attiva': true, 'origine': 'regalo'},
+    'gettoni': {'gdahome': gettone},
+    'telefonoDiProva': true,
+  };
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
 /// Ogni fotografia due volte: Android e iPhone. La variante mette
@@ -298,6 +322,65 @@ void main() {
     await passa(tester);
     await scatta(tester, 'premium-in-prova', _sistema);
   }, variant: _sistemi);
+
+  /* Chi rivede l'app per i negozi entra col codice della casa di prova, e la
+   * casa di prova e' Premium: su quel telefono gli abbonamenti restano in
+   * vista. Due fotografie: la cima della pagina, e il fondo coi piani e il
+   * bottone. Anche in inglese, la lingua di chi rivede per Apple. */
+  for (final inglese in [false, true]) {
+    testWidgets('la pagina Premium sul telefono della casa di prova'
+        '${inglese ? ', in inglese' : ''}', (tester) async {
+      quantoGrande(tester);
+      if (inglese) {
+        laLingua = Lingua.inglese;
+        addTearDown(() => laLingua = Lingua.italiano);
+      }
+      late String gettone;
+      await tester.runAsync(() async {
+        gettone = await firmaUnGettone(
+          origine: 'regalo',
+          scade: DateTime(2027, 3, 12),
+        );
+      });
+      final collegamento = await casaSenzaFilo(tester, gettone: gettone);
+      await tester.runAsync(
+        () => collegamento.licenza.chiedi(
+          _FiloDellaCasaDiProva(gettone),
+          collegamento.casa!,
+          collegamento.archivio,
+        ),
+      );
+      expect(collegamento.licenza.premium, isTrue);
+      expect(collegamento.licenza.telefonoDiProva(collegamento.casa), isTrue);
+      final acquisti = GestoreDegliAcquisti(
+        negozio: _NegozioConLaProva(iPhone: _iPhone),
+        porta: ({
+          required piattaforma,
+          required prodotto,
+          required ricevuta,
+        }) async {},
+      );
+      await tester.runAsync(acquisti.avvia);
+      await tester.pumpWidget(
+        _lApp(
+          SchermataPremium(
+            collegamento: collegamento,
+            sulWeb: false,
+            acquisti: acquisti,
+          ),
+          lingua: Locale(inglese ? 'en' : 'it'),
+        ),
+      );
+      await passa(tester);
+      final nome = inglese
+          ? 'premium-casa-di-prova-en'
+          : 'premium-casa-di-prova';
+      await scatta(tester, nome, _sistema);
+      await tester.drag(find.byType(ListView), const Offset(0, -2000));
+      await passa(tester);
+      await scatta(tester, '$nome-sotto', _sistema);
+    }, variant: _sistemi);
+  }
 
   testWidgets('le case: la seconda col lucchetto, e dove porta', (
     tester,

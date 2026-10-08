@@ -11,6 +11,22 @@ fuori. La plancia dentro continua a dire la sua, e si legge dov'è sempre
 stata: nella pastiglia «La plancia» della console. Sono due numeri perché
 sono due cose.
 
+## 1.10.4
+
+**La casa di prova può restare Premium.** Chi rivede l'app per l'App Store e
+per Google Play entra col codice della casa di prova, e i due negozi vogliono
+cose diverse: Google vuole provare tutte le funzioni, e lì chi rivede non può
+comprare; Apple vuole provare l'acquisto. Finora la casa di prova andava
+passata da Base a Premium a ogni invio. Adesso può restare Premium: sul
+telefono entrato col codice di prova la pagina Premium mostra comunque i due
+abbonamenti e il tasto per provarli, con una riga che spiega perché.
+
+Sugli altri telefoni non cambia niente: con la casa Premium gli abbonamenti
+non compaiono, come prima.
+
+Servono tutti e due, l'add-on e l'app 1.10.4: è la casa che dice all'app
+quale telefono è entrato col codice di prova.
+
 ## 1.10.3
 
 **Comandi rapidi in auto: c'è «Salva».** Toccando un comando nella pagina

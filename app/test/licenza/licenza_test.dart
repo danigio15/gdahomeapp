@@ -403,6 +403,46 @@ void main() {
     );
 
     test(
+      'il telefono della casa di prova lo dice la casa, a ogni risposta',
+      () async {
+        /* Chi rivede l'app per i negozi entra col codice della casa di prova, e
+       * la casa di prova e' Premium: la pagina Premium, su quel telefono,
+       * lascia in vista gli abbonamenti ([GestoreLicenza.telefonoDiProva]). */
+        ponte.licenza = {
+          'gettoni': {'gdahome': await firmaUnGettone(origine: 'regalo')},
+          'telefonoDiProva': true,
+        };
+        final casa = await archivio.aggiungi(
+          nome: 'Casa',
+          segno: segnoBuono,
+          identificativo: chiBuono,
+          chiave: chiaveBuona,
+          casaAlCentralino: casaDiProva,
+          inCasa: ponte.indirizzo,
+        );
+        collegamento = Collegamento(
+          archivio: archivio,
+          sonda: sondaChe({ponte.indirizzo}),
+          licenza: GestoreLicenza(chiave: chiaveDiProva),
+        );
+        await collegamento.apri();
+        final licenza = collegamento.licenza;
+        await aspetta(() => licenza.telefonoDiProva(archivio.quella(casa.id)));
+        expect(licenza.telefonoDiProva(archivio.quella(casa.id)), isTrue);
+        expect(licenza.premium, isTrue, reason: 'e la casa resta Premium');
+
+        /* Una risposta che non lo dice vuol dire che non lo e' piu'. */
+        ponte.licenza = {
+          'gettoni': {'gdahome': await firmaUnGettone(origine: 'regalo')},
+        };
+        expect(await collegamento.ricontrollaLaLicenza(), isTrue);
+        expect(licenza.telefonoDiProva(archivio.quella(casa.id)), isFalse);
+        expect(licenza.premium, isTrue);
+        expect(licenza.telefonoDiProva(null), isFalse);
+      },
+    );
+
+    test(
       '«controlla di nuovo» con la casa che non si raggiunge dice di no',
       () async {
         final casa = await archivio.aggiungi(

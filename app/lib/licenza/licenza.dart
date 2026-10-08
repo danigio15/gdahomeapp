@@ -144,6 +144,11 @@ class GestoreLicenza extends ChangeNotifier {
   String? _inUso;
   Timer? _allaScadenza;
 
+  /* Le case in cui questo telefono e' entrato col codice della casa di
+   * prova: vedi [telefonoDiProva]. Non si scrive da nessuna parte: lo dice
+   * la casa a ogni collegamento. */
+  final Set<String> _diProva = {};
+
   /// Premium la casa in uso, da ascoltare: e' quello che riceve gdanav
   /// (`premiumOspite`), che dentro gdahome Premium e' compreso.
   late final ValueNotifier<bool> premiumQui;
@@ -156,6 +161,7 @@ class GestoreLicenza extends ChangeNotifier {
       ..addEntries(tutte.map((una) => MapEntry(una.id, una)));
     _grezzi.removeWhere((id, _) => !_case.containsKey(id));
     _letti.removeWhere((id, _) => !_case.containsKey(id));
+    _diProva.removeWhere((id) => !_case.containsKey(id));
     for (final casa in _case.values) {
       final grezzo = casa.gettone ?? '';
       if (_grezzi[casa.id] == grezzo && _letti.containsKey(casa.id)) continue;
@@ -212,6 +218,17 @@ class GestoreLicenza extends ChangeNotifier {
   /// Se la casa in uso e' Premium.
   bool get premium => premiumDi(casaInUso);
 
+  /// Se in questa casa il telefono e' entrato col codice della casa di prova.
+  ///
+  /// Lo dice la casa nella risposta sulla licenza (`telefonoDiProva`). Chi
+  /// rivede l'app per i negozi entra cosi', e la casa di prova resta Premium:
+  /// Google lo vuole, perche' li' chi rivede non compra. Apple invece vuole
+  /// provare l'acquisto, e allora su questo telefono la pagina Premium lascia
+  /// in vista gli abbonamenti anche con la casa Premium. Agli altri telefoni
+  /// non cambia niente.
+  bool telefonoDiProva(CasaConosciuta? casa) =>
+      casa != null && _diProva.contains(casa.id);
+
   /// Se almeno una delle case e' Premium: e' quello che serve per
   /// aggiungerne un'altra.
   bool get almenoUnaPremium {
@@ -262,11 +279,23 @@ class GestoreLicenza extends ChangeNotifier {
       detto = await filo.risultato({'type': 'ponte/licenza/stato'});
     } on ComandoRifiutato catch (no) {
       if (!_nonLoConosce(no)) return false;
+      _diProva.remove(casa.id);
       await archivio.segnaSenzaLicenze(casa.id);
       await conosci(archivio.tutte);
       return true;
     } on ErroreDelPonte {
       return false;
+    }
+    /* Se questo telefono e' di prova lo dice ogni risposta: chi non lo dice
+     * non lo e' ([telefonoDiProva]). */
+    final diProva = detto is Map && detto['telefonoDiProva'] == true;
+    if (diProva != _diProva.contains(casa.id)) {
+      if (diProva) {
+        _diProva.add(casa.id);
+      } else {
+        _diProva.remove(casa.id);
+      }
+      _ricalcola();
     }
     if (detto is Map && detto['attive'] == false) {
       await archivio.segnaSenzaLicenze(casa.id);

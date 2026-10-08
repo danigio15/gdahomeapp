@@ -173,6 +173,14 @@ export class Dispositivi {
     return utentePulito(this._vivi.find((uno) => uno.id === id)?.utente);
   }
 
+  /* Se questo telefono e' entrato col codice della casa di prova, e vale
+   * ancora (vedi «I telefoni di prova»). Lo chiede il filo per le licenze:
+   * a un telefono di prova l'app lascia in vista gli abbonamenti anche con la
+   * casa Premium (`commissioni.js`). */
+  diProva(id) {
+    return Number.isFinite(this._vivi.find((uno) => uno.id === id)?.finoA);
+  }
+
   quanti() {
     return this._vivi.length;
   }

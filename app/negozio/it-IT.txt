@@ -1,1 +1,1 @@
-Nei comandi rapidi in auto, toccando un comando adesso c'è «Salva»: il nome, l'icona e la conferma che scegli restano. E la scheda non finisce più sotto i tasti di Android: con le scritte grandi scorre.
+Per chi prova l'app con il codice della casa di prova: la pagina Premium mostra gli abbonamenti anche quando la casa è già Premium. Per tutti gli altri non cambia niente.

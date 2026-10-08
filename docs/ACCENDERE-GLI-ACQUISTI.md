@@ -101,9 +101,14 @@ Cosa fa l'app, e perché:
   sono chiuse, e la ricevuta aspetterebbe il Wi-Fi di casa. Invece la porta
   il centralino: l'app gliela consegna firmata con la chiave del telefono, la
   casa controlla la firma e la gira al quadro, e il gettone torna indietro
-  subito. Funziona al primo passo e al secondo, col fuori casa chiuso. È anche
-  quello che fa chi rivede l'app per Apple o per Google, da lontano, con una
-  casa di prova Base.
+  subito. Funziona al primo passo e al secondo, col fuori casa chiuso.
+- **La casa di prova resta Premium.** Chi rivede l'app per Apple o per Google
+  entra da lontano col codice della casa di prova, e la casa di prova ha
+  Premium regalato: Google vede tutto senza comprare, perché lì chi rivede non
+  compra. Apple invece vuole provare l'acquisto, e allora sul telefono entrato
+  con quel codice la pagina Premium tiene in vista gli abbonamenti anche con
+  la casa Premium (`telefonoDiProva` in `ponte/licenza/stato`, dalla 1.10.4).
+  Sugli altri telefoni la pagina resta quella di sempre.
 - **Un acquisto rimasto a metà non si perde.** Su Google Play un acquisto
   pagato con l'app chiusa prima che la casa rispondesse non torna da solo:
   all'avvio l'app chiede quelli non ancora confermati e li riporta alla casa.

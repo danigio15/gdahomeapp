@@ -311,6 +311,9 @@ class Collegamento {
           /* Chi sta su questo filo e' l'app: con gdahome Base le si serve la
            * plancia principale e basta (`commissioni.js`). */
           dalTelefono: true,
+          /* Un telefono entrato col codice della casa di prova: la licenza
+           * glielo dice, e l'app gli lascia in vista gli abbonamenti. */
+          diProva: this.ponte.dispositivi?.diProva?.(this.dispositivo?.id) === true,
         })
       : Promise.resolve(no(detto.id ?? null, "unknown_command", "questo ponte non lo sa fare"));
     risposta
