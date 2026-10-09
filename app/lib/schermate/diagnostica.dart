@@ -170,10 +170,13 @@ class _SchermataDellaDiagnosticaState extends State<SchermataDellaDiagnostica> {
                 inLingua(it: 'Pacchetto', en: 'Package'),
                 versioneDelPacchetto,
               ),
+              /* Se c'e', non dove sta: l'indirizzo del centralino non si
+               * legge dall'interfaccia (`firma.dart`). */
               riga(
                 inLingua(it: 'Centralino', en: 'Relay'),
-                centralinoDiDifetto?.casa ??
-                    inLingua(it: 'nessuno', en: 'none'),
+                centralinoDiDifetto == null
+                    ? inLingua(it: 'nessuno', en: 'none')
+                    : inLingua(it: 'gdahome', en: 'gdahome'),
               ),
             ],
           ),

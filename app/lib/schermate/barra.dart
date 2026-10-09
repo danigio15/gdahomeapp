@@ -560,7 +560,7 @@ class BarraDelleSezioniState extends State<BarraDelleSezioni>
          * legge sempre, che e' il motivo per cui e' nel menu. */
         Padding(
           padding: EdgeInsets.fromLTRB(14, 2, 14, bordi.bottom + 12),
-          child: const Firma(spazioSopra: 0, conIlCentralino: false),
+          child: const Firma(spazioSopra: 0),
         ),
       ],
     );
