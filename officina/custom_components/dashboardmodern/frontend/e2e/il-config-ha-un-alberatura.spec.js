@@ -71,8 +71,9 @@ test("le linguette stanno in ordine di famiglia, e nessuna si perde", async ({
   /* Rifiuti non sta più fra il backup e i varchi: sta con gli avvisi. */
   expect(posto("rifiuti")).toBeGreaterThan(posto("avvisi"));
   expect(posto("rifiuti")).toBeLessThan(posto("sez6"));
-  /* E il server è l'ultimo: è l'unica cosa che non parla della casa. */
-  expect(posto("sez6")).toBe(ordine.length - 1);
+  /* E le macchine chiudono la fila: il server, e dietro i dispositivi che non
+   * rispondono, che stanno con lui perché la ragione è quasi sempre la rete. */
+  expect(ordine.slice(posto("sez6"))).toEqual(["sez6", "scollegati"]);
 });
 
 test("ogni famiglia ha la sua insegna, davanti al suo gruppo", async ({ page }, testInfo) => {

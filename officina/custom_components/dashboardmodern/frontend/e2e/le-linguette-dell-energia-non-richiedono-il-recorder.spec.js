@@ -137,7 +137,9 @@ test("cambiare linguetta dentro l'Energia non chiede niente al Recorder", async 
   const prima = await generazione(page);
   expect(prima).toBeGreaterThan(0);
 
-  const linguette = page.locator("#page-energy .sub-tab-btn");
+  /* Solo quelle che si vedono: «Batterie» resta nascosta finché la casa non
+   * ha un accumulo, e una linguetta nascosta non si può premere. */
+  const linguette = page.locator("#page-energy .sub-tab-btn:not([hidden])");
   const quante = await linguette.count();
   expect(quante).toBeGreaterThan(2);
   for (let giro = 0; giro < 2; giro += 1) {
