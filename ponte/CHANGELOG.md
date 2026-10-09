@@ -10,6 +10,24 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.10.9
+
+**Acquari e terrari negli Animali.** La sezione Animali tiene anche le vasche:
+acquari e terrari con temperatura, umidità, lampada riscaldante, UVB e
+nebulizzatore, ognuno con i suoi intervalli. Gli acquari di prima ci entrano
+da soli.
+
+**Il volume della musica sotto il brano.** La barra del volume occupa tutta la
+larghezza della scheda, più facile da prendere col dito.
+
+**Più aree dell'antifurto con un codice solo.** Tenendo premuta un'area se ne
+scelgono altre, e si inseriscono o disinseriscono insieme. La finestra rapida
+dell'antifurto si aggiorna quando la centrale cambia stato.
+
+**Il navigatore.** Mappa in 3D anche senza guida, audio a tre stati (Tutto,
+Solo avvisi, Silenzio), ricalcolo più rapido quando si esce dal percorso, e il
+traffico dentro la linea celeste del percorso, come in Waze.
+
 ## 1.10.8
 
 **In auto la batteria c'è.** Con la casa Premium il navigatore diceva «La

@@ -11,10 +11,10 @@
 library;
 
 /// Come si chiama: e' la versione della plancia che l'app ha dentro.
-const String versioneDiQuestApp = "1.10.8";
+const String versioneDiQuestApp = "1.10.9";
 
 /// Il numero di costruzione, quello che vogliono i negozi.
-const int costruzioneDiQuestApp = 1100800;
+const int costruzioneDiQuestApp = 1100900;
 
 /// Come si scrive per chi legge: `1.4.30 (104301)`.
-const String numeroDiQuestApp = "1.10.8 (1100800)";
+const String numeroDiQuestApp = "1.10.9 (1100900)";

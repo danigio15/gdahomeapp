@@ -18,17 +18,36 @@
  * I conti non stanno qui: quello che una lettura vuol dire e quando c'e' da
  * allarmarsi lo decide `core/animali-model.js`, che e' puro e si prova a
  * secco. Qui c'e' il disegno e le parole.
+ *
+ * ── Le vasche ────────────────────────────────────────────────────────────
+ *
+ * Una voce puo' essere anche un acquario o un terrario, e di vasche ce ne
+ * possono essere quante se ne hanno. La loro scheda ha la stessa testa di
+ * quella di una bestia — la foto o il disegno, il nome, la stanza — e sotto
+ * il corpo che sa fare `acquario-section.js`: le misure sulla forcella, le
+ * lampade, il cambio d'acqua. In cima alla pagina, quando ci sono voci di piu'
+ * tipi, le pastiglie per guardarne uno solo: Tutti, Cani, Gatti, Acquari,
+ * Terrari — solo quelli che ci sono.
  */
 import {
   CHIAVE_ANIMALI,
   animaliDisegnabili,
+  eUnaVasca,
   pressioneDellAzione,
   vistaAnimale,
 } from "../core/animali-model.js";
 import {
+  EVENTO_ACQUARIO,
+  corpoDellaVasca,
+  gravitaDellaVasca,
+  parolaDelTipo,
+  vistaDellaVasca,
+} from "./acquario-section.js";
+import {
   allStates,
   doc,
   esc,
+  formatNumber,
   installStyle,
   readJson,
   root,
@@ -42,7 +61,15 @@ import { disegnoDelCatalogo } from "../core/catalogo-disegni.js";
 import { apriIlMenu } from "./azioni-servizio-giusto-section.js";
 
 const KEY = "__DASHBOARDMODERN_ANIMALI__";
-const state = (root[KEY] ||= { installed: false, frame: 0, firma: "" });
+const state = (root[KEY] ||= {
+  installed: false,
+  frame: 0,
+  firma: "",
+  filtro: "tutti",
+  corpi: new Map(),
+});
+state.corpi ||= new Map();
+state.filtro ||= "tutti";
 
 export const ANIMALI_PAGE_ID = "page-animali";
 export const ANIMALI_TAB = "animali";
@@ -136,7 +163,55 @@ function insegnaLaVisibilita() {
 function parolaSpecie(specie) {
   if (specie === "gatto") return t("Gatto", "Cat");
   if (specie === "cane") return t("Cane", "Dog");
+  if (eUnaVasca(specie)) return parolaDelTipo(specie);
   return t("Animale", "Pet");
+}
+
+/* ── i filtri per tipo ───────────────────────────────────────────────────
+ *
+ * «Tutti · Cani · Gatti · Acquari · Terrari»: le pastiglie in cima alla
+ * pagina. Solo i tipi che ci sono, e solo quando sono piu' d'uno: con due
+ * gatti e basta una pastiglia «Gatti» non filtrerebbe niente. */
+export const FILTRI = Object.freeze(["tutti", "cane", "gatto", "altro", "acquario", "terrario"]);
+
+function parolaFiltro(filtro) {
+  switch (filtro) {
+    case "cane":
+      return t("Cani", "Dogs");
+    case "gatto":
+      return t("Gatti", "Cats");
+    case "altro":
+      return t("Altri animali", "Other pets");
+    case "acquario":
+      return t("Acquari", "Aquariums");
+    case "terrario":
+      return t("Terrari", "Terrariums");
+    default:
+      return t("Tutti", "All");
+  }
+}
+
+/** Le pastiglie che servono a queste voci: `[{ filtro, quante }]`, vuoto se non servono. */
+export function filtriPresenti(voci = []) {
+  const conto = new Map();
+  for (const voce of voci) conto.set(voce.specie, (conto.get(voce.specie) || 0) + 1);
+  const tipi = FILTRI.filter((filtro) => conto.has(filtro));
+  if (tipi.length < 2) return [];
+  return [
+    { filtro: "tutti", quante: voci.length },
+    ...tipi.map((filtro) => ({ filtro, quante: conto.get(filtro) })),
+  ];
+}
+
+export function filtriMarkup(filtri, scelto) {
+  if (!filtri.length) return "";
+  return `<div class="dm-animali-filtri" role="toolbar" aria-label="${esc(t("Mostra", "Show"))}">${filtri
+    .map(
+      ({ filtro, quante }) =>
+        `<button type="button" class="dm-animali-filtro" data-dm-animali-filtro="${esc(filtro)}"
+          aria-pressed="${filtro === scelto}">${esc(parolaFiltro(filtro))}<b>${quante}</b></button>`,
+    )
+    .join("")}</div>`;
 }
 
 function parolaCasella(chiave) {
@@ -400,7 +475,38 @@ function pastigliaMarkup(vista) {
   return `<span class="dm-animale-dove" data-dentro="${vista.dentro}">${esc(vista.dentro ? t("In casa", "Inside") : t("Fuori", "Outside"))}</span>`;
 }
 
+/* La scheda di una vasca: la stessa testa delle bestie, e il corpo che sa
+ * fare la sezione delle vasche. Il corpo si riscrive da solo quando cambia,
+ * senza rifare le schede accanto. */
+function sottoDellaVasca(vista) {
+  const { voce, come } = vista;
+  const litri = come.litri ? `${formatNumber(come.litri, 0)} L` : "";
+  return [parolaDelTipo(vista.tipo), litri, roomLabel(voce.stanza)].filter(Boolean).join(" · ");
+}
+
+function vascaMarkup(vista) {
+  const { voce } = vista;
+  const nome = voce.nome || parolaDelTipo(vista.tipo);
+  const ritratto = ritrattoMarkup({
+    foto: voce.foto,
+    disegno: vista.tipo === "terrario" ? "terrarium" : "aquarium",
+  });
+  const corpo = corpoDellaVasca(vista);
+  state.corpi.set(voce.id, corpo);
+  return `<article class="dm-animale-card dm-vasca-card" data-dm-animale="${esc(voce.id)}" data-dm-vasca="${esc(vista.tipo)}" data-gravita="${esc(gravitaDellaVasca(vista.come))}">
+    <div class="dm-animale-head">
+      ${ritratto}
+      <span class="dm-animale-titolo">
+        <strong>${esc(nome)}</strong>
+        <small>${esc(sottoDellaVasca(vista))}</small>
+      </span>
+    </div>
+    <div class="dm-vasca-corpo">${corpo}</div>
+  </article>`;
+}
+
 function schedaMarkup(vista) {
+  if (vista.vasca) return vascaMarkup(vista);
   const sotto = [parolaSpecie(vista.specie), roomLabel(vista.stanza)].filter(Boolean).join(" · ");
   const nome = vista.nome || parolaSpecie(vista.specie);
   return `<article class="dm-animale-card" data-dm-animale="${esc(vista.id)}" data-gravita="${esc(vista.gravita)}">
@@ -427,7 +533,16 @@ function vuotoMarkup() {
 function firmaDi(viste) {
   return viste
     .map((vista) =>
-      [
+      vista.vasca
+        ? [
+            vista.voce.id,
+            vista.voce.nome,
+            vista.tipo,
+            vista.voce.foto ? "foto" : "",
+            roomLabel(vista.voce.stanza),
+            vista.come.litri ?? "",
+          ].join("~")
+        : [
         vista.id,
         vista.nome,
         vista.specie,
@@ -448,6 +563,16 @@ function firmaDi(viste) {
 }
 
 function sincronizza(card, vista) {
+  if (vista.vasca) {
+    card.dataset.gravita = gravitaDellaVasca(vista.come);
+    const corpo = card.querySelector(".dm-vasca-corpo");
+    const markup = corpoDellaVasca(vista);
+    if (corpo && state.corpi.get(vista.voce.id) !== markup) {
+      state.corpi.set(vista.voce.id, markup);
+      corpo.innerHTML = markup;
+    }
+    return;
+  }
   card.dataset.gravita = vista.gravita;
   for (const voce of Object.values(vista.letture)) {
     if (!voce || voce.muto) continue;
@@ -472,7 +597,12 @@ export function renderAnimali() {
   if (!pagina.classList.contains("active")) return true;
   const states = allStates();
   const adesso = Date.now();
-  const viste = animaliConfigurati().map((animale) => vistaAnimale(animale, states, adesso));
+  const voci = animaliConfigurati();
+  const viste = voci.map((animale) =>
+    eUnaVasca(animale)
+      ? { ...vistaDellaVasca(animale, states, { adesso }), vasca: true }
+      : vistaAnimale(animale, states, adesso),
+  );
 
   if (!viste.length) {
     if (state.firma !== "vuoto") {
@@ -482,16 +612,40 @@ export function renderAnimali() {
     return true;
   }
 
-  const firma = firmaDi(viste);
+  /* Il filtro scelto resta finche' il suo tipo c'e': tolto l'ultimo terrario,
+   * la pagina torna a «Tutti» invece di restare vuota. */
+  const filtri = filtriPresenti(voci);
+  if (!filtri.some((voce) => voce.filtro === state.filtro)) state.filtro = "tutti";
+  const mostrate = viste.filter(
+    (_vista, posto) => state.filtro === "tutti" || voci[posto].specie === state.filtro,
+  );
+  const firma = `${state.filtro}#${filtri.map((voce) => `${voce.filtro}:${voce.quante}`).join(",")}#${firmaDi(mostrate)}`;
   if (state.firma !== firma || !wrap.querySelector("[data-dm-animale]")) {
     state.firma = firma;
-    wrap.innerHTML = viste.map(schedaMarkup).join("");
+    state.corpi.clear();
+    wrap.innerHTML = `${filtriMarkup(filtri, state.filtro)}${mostrate.map(schedaMarkup).join("")}`;
+    /* Sul telefono la fila scorre: la pastiglia scelta deve restare in vista,
+     * o «Terrari» acceso sta fuori dallo schermo e sembra di vedere «Tutti».
+     * Si sposta la fila, non la pagina. */
+    const fila = wrap.querySelector(".dm-animali-filtri");
+    const scelta = fila?.querySelector('[aria-pressed="true"]');
+    if (fila && scelta && fila.scrollWidth > fila.clientWidth)
+      fila.scrollLeft = Math.max(0, scelta.offsetLeft - fila.offsetLeft - 16);
   }
-  for (const vista of viste) {
-    const card = wrap.querySelector(`[data-dm-animale="${CSS.escape(vista.id)}"]`);
+  for (const vista of mostrate) {
+    const id = vista.vasca ? vista.voce.id : vista.id;
+    const card = wrap.querySelector(`[data-dm-animale="${CSS.escape(id)}"]`);
     if (card) sincronizza(card, vista);
   }
   return true;
+}
+
+function scegliIlFiltro(evento) {
+  const pastiglia = evento.target?.closest?.("[data-dm-animali-filtro]");
+  if (!pastiglia || !pastiglia.closest(`#${ANIMALI_PAGE_ID}`)) return;
+  evento.preventDefault();
+  state.filtro = pastiglia.dataset.dmAnimaliFiltro || "tutti";
+  renderAnimali();
 }
 
 function paint() {
@@ -511,7 +665,7 @@ function installStyles() {
     `
       /* La larghezza non se la sceglie questa sezione: sta in un posto solo,
        * --dm-page-room, e tutte le pagine la seguono insieme. */
-      #page-animali .dm-animali-wrap{box-sizing:border-box;width:100%;max-width:var(--dm-page-room,none);margin:0 auto;padding:0 4px 18px;display:grid;gap:14px;grid-template-columns:repeat(auto-fill,minmax(min(300px,100%),1fr))}
+      #page-animali .dm-animali-wrap{box-sizing:border-box;width:100%;max-width:var(--dm-page-room,none);margin:0 auto;padding:0 4px 18px;display:grid;gap:14px;grid-template-columns:repeat(auto-fill,minmax(min(300px,100%),1fr));align-items:start}
       #page-animali .dm-animale-card{display:grid;align-content:start;gap:12px;padding:14px;border:1px solid var(--divider-color,#dbe4ee);border-radius:20px;background:var(--card-bg,#fff);box-shadow:0 18px 34px -28px rgba(15,23,42,.55)}
       #page-animali .dm-animale-card[data-gravita="attenzione"]{border-color:color-mix(in srgb,#f59e0b 55%,transparent)}
       #page-animali .dm-animale-card[data-gravita="urgente"]{border-color:color-mix(in srgb,#dc2626 55%,transparent)}
@@ -552,6 +706,17 @@ function installStyles() {
       #page-animali .dm-animale-barra[data-male="true"] b{background:#dc2626}
       #page-animali .dm-animale-nulla{margin:0;font-size:12px;font-weight:700;color:var(--secondary-text-color,#64748b)}
       #page-animali .dm-animale-vuoto{grid-column:1/-1}
+      /* Le pastiglie dei tipi, in cima: una riga che scorre se non ci sta. */
+      #page-animali .dm-animali-filtri{grid-column:1/-1;display:flex;gap:7px;overflow-x:auto;padding:2px 1px 4px;scrollbar-width:none}
+      #page-animali .dm-animali-filtri::-webkit-scrollbar{display:none}
+      #page-animali .dm-animali-filtro{flex:0 0 auto;display:inline-flex;align-items:center;gap:7px;padding:8px 13px;border:1px solid var(--divider-color,#dbe4ee);border-radius:999px;background:var(--card-bg,#fff);color:var(--text,#0f172a);font:inherit;font-size:12.5px;font-weight:850;line-height:1;cursor:pointer}
+      #page-animali .dm-animali-filtro b{min-width:18px;padding:3px 6px;border-radius:999px;background:var(--secondary-background-color,#eef3f8);color:var(--secondary-text-color,#64748b);font-size:10.5px;font-weight:900;text-align:center}
+      #page-animali .dm-animali-filtro[aria-pressed="true"]{border-color:transparent;background:linear-gradient(135deg,#f97316,#ea580c);color:#fff;box-shadow:0 8px 18px -10px rgba(234,88,12,.8)}
+      #page-animali .dm-animali-filtro[aria-pressed="true"] b{background:rgba(255,255,255,.25);color:#fff}
+      #page-animali .dm-animali-filtro:focus-visible{outline:3px solid color-mix(in srgb,#f97316 40%,transparent);outline-offset:2px}
+      /* La scheda di una vasca: lo stesso vestito, il corpo della vasca. */
+      #page-animali .dm-vasca-corpo{display:grid;gap:10px;min-width:0}
+      #page-animali .dm-vasca-card[data-dm-vasca="terrario"] .dm-animale-ritratto{background:color-mix(in srgb,#16a34a 14%,var(--secondary-background-color,#eef3f8))}
       @media(prefers-reduced-motion:reduce){#page-animali .dm-animale-barra b{transition:none}}
     `,
   );
@@ -601,6 +766,7 @@ export function installAnimaliSection() {
   installStyles();
   ensureAnimaliPage();
   doc.addEventListener("click", premiIlTasto);
+  doc.addEventListener("click", scegliIlFiltro);
   insegnaLaVisibilita();
   ensureAnimaliTab();
   for (const nome of ["render", "cdApplyNavVis"]) wrapFunction(nome, "__dmAnimaliSection", schedule);
@@ -609,6 +775,8 @@ export function installAnimaliSection() {
     "dashboardmodern:states-ready",
     "dashboardmodern:state-changed",
     "dashboardmodern:persistence-restored",
+    /* Le vasche: la storia del livello arrivata, un cambio d'acqua segnato. */
+    EVENTO_ACQUARIO,
   ])
     root.addEventListener?.(evento, schedule);
   schedule();

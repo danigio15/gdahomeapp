@@ -1,4 +1,4 @@
-/* L'acquario di casa (#127).
+/* L'acquario di casa (#127), e il terrario accanto.
  *
  * «Si potrebbe inserire una sezione con l'acquario?»
  *
@@ -18,6 +18,16 @@
  * livello, oppure un comando: le luci, il filtro, il riscaldatore. La vasca,
  * i litri e ogni quanto si cambia l'acqua sono della vasca, non di una riga,
  * e stanno accanto alle righe nella stessa configurazione.
+ *
+ * ── Il terrario ─────────────────────────────────────────────────────────
+ *
+ * «Ho tre terrari.» Acquari e terrari adesso sono voci degli Animali, e ce ne
+ * possono essere quanti se ne hanno. Il terrario è lo stesso mestiere con
+ * altre righe: l'umidità con la sua forcella, la lampada calda, l'UVB, il
+ * nebulizzatore; e le forcelle di serie dipendono dal TIPO — il lato caldo di
+ * un terrario sta fra 28 e 35 gradi, che in un acquario tropicale sarebbe una
+ * zuppa. Il cambio d'acqua è solo dell'acquario: il terrario, se lo si vuole,
+ * ha una pulizia generica, e senza un ritmo scritto non la ricorda a nessuno.
  *
  * È puro: entrano stati, righe e serie; escono letture e giudizi. Niente rete,
  * niente DOM, niente orologio — l'adesso lo passa chi chiama.
@@ -43,9 +53,68 @@ export const CHIAVE_ACQUARIO = "cd_acquario";
 
 /* Cosa può essere una riga. Le misure si giudicano sulla loro forcella, il
  * livello su quanto manca al rabbocco, i comandi si accendono e si spengono. */
-export const MISURE = Object.freeze(["temperatura", "ph", "misura"]);
-export const COMANDI = Object.freeze(["luci", "filtro", "riscaldatore", "comando"]);
+export const MISURE = Object.freeze([
+  "temperatura",
+  "temperatura_fresca",
+  "umidita",
+  "ph",
+  "misura",
+]);
+export const COMANDI = Object.freeze([
+  "luci",
+  "lampada",
+  "uvb",
+  "nebulizzatore",
+  "filtro",
+  "riscaldatore",
+  "comando",
+]);
 export const GENERI = Object.freeze([...MISURE, "livello", ...COMANDI]);
+
+/* I due tipi di vasca. Il tipo sta nella voce degli Animali — «acquario» o
+ * «terrario» — e qui decide due cose sole: quali generi si offrono, e le
+ * forcelle di serie. */
+export const TIPI = Object.freeze(["acquario", "terrario"]);
+
+/** Il tipo, se è uno dei due; l'acquario altrimenti, che è com'era prima. */
+export function tipoValido(tipo) {
+  const scritto = pulito(tipo);
+  return TIPI.includes(scritto) ? scritto : "acquario";
+}
+
+/* I generi che ogni tipo offre, nell'ordine della tendina. Il terrario non ha
+ * il pH né il filtro; l'acquario non ha l'UVB né il nebulizzatore. La lampada
+ * calda del terrario è anche il suo riscaldamento: il tappetino riscaldante si
+ * accende e si spegne come lei. */
+export const GENERI_DEL_TIPO = Object.freeze({
+  acquario: Object.freeze([
+    "temperatura",
+    "ph",
+    "misura",
+    "livello",
+    "luci",
+    "filtro",
+    "riscaldatore",
+    "comando",
+  ]),
+  terrario: Object.freeze([
+    "temperatura",
+    "temperatura_fresca",
+    "umidita",
+    "misura",
+    "livello",
+    "luci",
+    "lampada",
+    "uvb",
+    "nebulizzatore",
+    "comando",
+  ]),
+});
+
+/** I generi che si offrono per questo tipo. */
+export function generiDelTipo(tipo) {
+  return GENERI_DEL_TIPO[tipoValido(tipo)];
+}
 
 /* I campi in più di una riga: cosa è, la forcella delle misure, la soglia del
  * livello sotto cui si rabbocca. */
@@ -59,6 +128,19 @@ export const FORCELLA_IN_CELSIUS = Object.freeze({ minimo: 24, massimo: 27 });
 export const FORCELLA_IN_FAHRENHEIT = Object.freeze({ minimo: 75, massimo: 81 });
 export const FORCELLA_DEL_PH = Object.freeze({ minimo: 6.5, massimo: 7.5 });
 
+/* Il terrario ha due lati: il caldo, sotto la lampada, e il fresco, dove
+ * l'animale va a riposare. I numeri sono quelli di un rettile del deserto —
+ * un pogona, un geco leopardino —, che è il terrario più comune; chi tiene una
+ * rana o un pitone verde li riscrive nella riga, come chi ha un marino. */
+export const FORCELLA_DEL_LATO_CALDO = Object.freeze({ minimo: 28, massimo: 35 });
+export const FORCELLA_DEL_LATO_CALDO_F = Object.freeze({ minimo: 82, massimo: 95 });
+export const FORCELLA_DEL_LATO_FRESCO = Object.freeze({ minimo: 22, massimo: 28 });
+export const FORCELLA_DEL_LATO_FRESCO_F = Object.freeze({ minimo: 72, massimo: 82 });
+
+/* L'umidità: fra 40 e 80 per cento è la forcella larga che va bene a quasi
+ * tutto quello che vive in un terrario, dal deserto alla foresta. */
+export const FORCELLA_DELL_UMIDITA = Object.freeze({ minimo: 40, massimo: 80 });
+
 /* Ogni quanti giorni si cambia l'acqua, se non lo si dice: due settimane, il
  * ritmo più largo che una vasca di comunità regge senza pensarci. */
 export const CAMBIO_OGNI_GIORNI = 14;
@@ -70,6 +152,11 @@ export const SALTO_DEL_RABBOCCO = 1;
 /* Il disegno di serie di ogni genere, dal catalogo. */
 const DISEGNO_DEL_GENERE = Object.freeze({
   temperatura: "thermometer",
+  temperatura_fresca: "thermometer",
+  umidita: "humidity",
+  lampada: "heat-lamp",
+  uvb: "uvb",
+  nebulizzatore: "mist",
   ph: "gauge",
   misura: "gauge",
   livello: "water",
@@ -86,8 +173,13 @@ export function genereValido(genere) {
 }
 
 /** Il disegno di serie di un genere. */
-export function disegnoDelGenere(genere) {
-  return DISEGNO_DEL_GENERE[genereValido(genere)] || "aquarium";
+export function disegnoDelGenere(genere, tipo = "acquario") {
+  return DISEGNO_DEL_GENERE[genereValido(genere)] || disegnoDelTipo(tipo);
+}
+
+/** Il disegno della vasca intera. */
+export function disegnoDelTipo(tipo) {
+  return tipoValido(tipo) === "terrario" ? "terrarium" : "aquarium";
 }
 
 /* ── cosa è un'entità dell'acquario ──────────────────────────────────────── */
@@ -95,20 +187,42 @@ export function disegnoDelGenere(genere) {
 /* «Vasca» no: in questa plancia le vasche sono anche quelle della piscina. */
 const PAROLE_DELL_ACQUARIO = /acquari|aquari|reef|pesci|\bfish/i;
 
+/* Il terrario si riconosce dal nome suo o da quello di chi ci vive. */
+const PAROLE_DEL_TERRARIO =
+  /terrari|vivari|paludari|rettil|reptil|gec[ok]|pogona|bearded|python|pitone|serpent|snake|tartarug|turtle|tortoise|camaleont|chameleon|iguana|lizard|lucertol|anfibi|amphibi/i;
+
+/** Le parole con cui si riconoscono le entità di un tipo. */
+export function paroleDelTipo(tipo) {
+  return tipoValido(tipo) === "terrario" ? PAROLE_DEL_TERRARIO : PAROLE_DELL_ACQUARIO;
+}
+
 /**
  * Che genere di riga sarebbe questa entità, da come si chiama e da cosa
- * dichiara; `""` se non è niente che un acquario usi.
+ * dichiara; `""` se non è niente che un acquario — o un terrario — usi.
  */
-export function genereDelSensore(entity, stato) {
+export function genereDelSensore(entity, stato, tipo = "acquario") {
   const id = pulito(entity);
   const dominio = id.split(".")[0];
   const attributi = stato?.attributes || {};
   const testo = `${id} ${pulito(attributi.friendly_name)}`.toLowerCase();
   const classe = pulito(attributi.device_class).toLowerCase();
   const unita = pulito(attributi.unit_of_measurement);
+  const terrario = tipoValido(tipo) === "terrario";
+  const comando = dominio === "switch" || dominio === "input_boolean" || dominio === "fan";
+  /* Nel terrario un interruttore è quasi sempre una lampada, e quale lampada
+   * lo dice il nome: l'UVB, la calda, o la luce del giorno. */
+  if (terrario && (comando || dominio === "light")) {
+    if (/(^|[._\s])uv(a|b)?([._\s]|$)|uvb|ultraviolet/.test(testo)) return "uvb";
+    if (/nebuli|mist|fog|rain|pioggia|spruzz|spray/.test(testo)) return "nebulizzatore";
+    if (/calda|caldo|basking|heat|riscald|tappetin|cavetto|ceramic|spot/.test(testo))
+      return "lampada";
+    if (dominio === "light" || /luc[ei]|light|\bled|lamp/.test(testo)) return "luci";
+    return "comando";
+  }
   if (dominio === "light") return "luci";
-  if (dominio === "climate" || dominio === "water_heater") return "riscaldatore";
-  if (dominio === "switch" || dominio === "input_boolean" || dominio === "fan") {
+  if (dominio === "climate" || dominio === "water_heater")
+    return terrario ? "lampada" : "riscaldatore";
+  if (comando) {
     if (/riscald|heater|\bheat/.test(testo)) return "riscaldatore";
     if (/filtr|filter|pomp|pump|wave|corrente/.test(testo)) return "filtro";
     if (/luc[ei]|light|\bled|lamp/.test(testo)) return "luci";
@@ -118,7 +232,11 @@ export function genereDelSensore(entity, stato) {
   if (dominio === "binary_sensor")
     return /livell|level|float|galleggi|\bato\b/.test(testo) ? "livello" : "";
   if (dominio !== "sensor") return "";
-  if (classe === "temperature" || /°\s*[CF]$/i.test(unita)) return "temperatura";
+  if (classe === "temperature" || /°\s*[CF]$/i.test(unita)) {
+    if (terrario && /fredd|fresc|cool|cold/.test(testo)) return "temperatura_fresca";
+    return "temperatura";
+  }
+  if (classe === "humidity" || (unita === "%" && /umid|humid/.test(testo))) return "umidita";
   if (classe === "ph" || /^ph$/i.test(unita) || /(^|[._\s])ph([._\s]|$)/.test(testo)) return "ph";
   if (/livell|level|altezza|float|galleggi/.test(testo)) return "livello";
   return "misura";
@@ -141,23 +259,39 @@ export function acquarioConfigurato(config) {
   return righeDellAcquario(config).length > 0;
 }
 
-/** Come si chiama la vasca, se glielo si è dato. */
+/** Come si chiama la vasca: il nome della voce degli Animali, o quello di prima. */
 export function nomeDellaVasca(config) {
-  return pulito(config?.vasca);
+  return pulito(config?.nome) || pulito(config?.vasca);
 }
 
 const MUTI = new Set(["", "unknown", "unavailable", "none"]);
 
-/** Le righe che il rilevamento proporrebbe adesso, nell'ordine dei generi. */
-export function righeDaImportare(states = {}, config, nomeDi = (entity) => entity) {
-  const gia = new Set(righeDellAcquario(config).map((riga) => riga.entity));
+/**
+ * Le righe che il rilevamento proporrebbe adesso, nell'ordine dei generi.
+ *
+ * `tipo` dice con che parole si cerca e che generi valgono; `esclusi` le
+ * entità che stanno già in un'altra vasca — con tre terrari, la stessa lampada
+ * proposta a tutti e tre sarebbe tre volte la stessa domanda.
+ */
+export function righeDaImportare(
+  states = {},
+  config,
+  nomeDi = (entity) => entity,
+  { tipo = "acquario", esclusi = [] } = {},
+) {
+  const gia = new Set([
+    ...righeDellAcquario(config).map((riga) => riga.entity),
+    ...(esclusi instanceof Set ? esclusi : Array.isArray(esclusi) ? esclusi : []),
+  ]);
+  const parole = paroleDelTipo(tipo);
+  const generi = generiDelTipo(tipo);
   const righe = [];
   for (const [entity, stato] of Object.entries(states || {})) {
     if (gia.has(entity)) continue;
     const testo = `${entity} ${pulito(stato?.attributes?.friendly_name)}`;
-    if (!PAROLE_DELL_ACQUARIO.test(testo)) continue;
-    const genere = genereDelSensore(entity, stato);
-    if (!genere) continue;
+    if (!parole.test(testo)) continue;
+    const genere = genereDelSensore(entity, stato, tipo);
+    if (!genere || !generi.includes(genere)) continue;
     /* Una misura che non è un numero non è una misura: un sensore di testo
      * con «acquario» nel nome non ha una forcella. */
     const grezzo = pulito(stato?.state).toLowerCase();
@@ -166,7 +300,7 @@ export function righeDaImportare(states = {}, config, nomeDi = (entity) => entit
     righe.push({
       entity,
       name: pulito(nomeDi(entity)) || entity,
-      icon: disegnoDelGenere(genere),
+      icon: disegnoDelGenere(genere, tipo),
       genere,
     });
   }
@@ -176,10 +310,20 @@ export function righeDaImportare(states = {}, config, nomeDi = (entity) => entit
 
 /* ── una riga, letta ─────────────────────────────────────────────────────── */
 
-/** La forcella di serie di una misura, nell'unità del suo sensore; `null` se non ne ha. */
-export function forcellaDiSerie(genere, unita = "") {
-  if (genere === "temperatura")
-    return /F/i.test(pulito(unita)) ? FORCELLA_IN_FAHRENHEIT : FORCELLA_IN_CELSIUS;
+/**
+ * La forcella di serie di una misura, nell'unità del suo sensore e per il
+ * tipo della vasca; `null` se non ne ha.
+ */
+export function forcellaDiSerie(genere, unita = "", tipo = "acquario") {
+  const fahrenheit = /F/i.test(pulito(unita));
+  const terrario = tipoValido(tipo) === "terrario";
+  if (genere === "temperatura") {
+    if (terrario) return fahrenheit ? FORCELLA_DEL_LATO_CALDO_F : FORCELLA_DEL_LATO_CALDO;
+    return fahrenheit ? FORCELLA_IN_FAHRENHEIT : FORCELLA_IN_CELSIUS;
+  }
+  if (genere === "temperatura_fresca")
+    return fahrenheit ? FORCELLA_DEL_LATO_FRESCO_F : FORCELLA_DEL_LATO_FRESCO;
+  if (genere === "umidita") return FORCELLA_DELL_UMIDITA;
   if (genere === "ph") return FORCELLA_DEL_PH;
   return null;
 }
@@ -205,17 +349,22 @@ function eAcceso(entity, grezzo) {
  * `massimo`, `null` se non ce n'è una); il livello il `valore` e la `soglia`,
  * o — se è un galleggiante — `binario` e `basso`; i comandi `acceso`.
  */
-export function letturaDellaRiga(riga, states = {}, nomeDi = (entity) => entity) {
+export function letturaDellaRiga(
+  riga,
+  states = {},
+  nomeDi = (entity) => entity,
+  tipo = "acquario",
+) {
   const entity = pulito(riga?.entity);
   const stato = states?.[entity];
   const attributi = stato?.attributes || {};
-  const genere = genereValido(riga?.genere) || genereDelSensore(entity, stato) || "misura";
+  const genere = genereValido(riga?.genere) || genereDelSensore(entity, stato, tipo) || "misura";
   const grezzo = pulito(stato?.state).toLowerCase();
   const tace = !stato || MUTI.has(grezzo);
   const base = {
     entity,
     name: pulito(riga?.name) || pulito(nomeDi(entity)) || entity,
-    icon: pulito(riga?.icon) || disegnoDelGenere(genere),
+    icon: pulito(riga?.icon) || disegnoDelGenere(genere, tipo),
     genere,
     unita: pulito(attributi.unit_of_measurement),
     da: istanteDelCambio(stato),
@@ -248,7 +397,7 @@ export function letturaDellaRiga(riga, states = {}, nomeDi = (entity) => entity)
       soglia: numero(riga?.soglia),
       basso: null,
     });
-  const serie = forcellaDiSerie(genere, base.unita);
+  const serie = forcellaDiSerie(genere, base.unita, tipo);
   const minimo = numero(riga?.minimo) ?? serie?.minimo ?? null;
   const massimo = numero(riga?.massimo) ?? serie?.massimo ?? null;
   const forcella = minimo !== null && massimo !== null && massimo > minimo;
@@ -261,9 +410,14 @@ export function letturaDellaRiga(riga, states = {}, nomeDi = (entity) => entity)
   });
 }
 
-/** Le righe dichiarate, lette, nell'ordine in cui le si è scritte. */
+/**
+ * Le righe dichiarate, lette, nell'ordine in cui le si è scritte. Il tipo lo
+ * dice la configurazione — una voce degli Animali porta la sua `specie` —, e
+ * senza è un acquario, com'era la sezione da cui tutto è partito.
+ */
 export function acquarioDiCasa(states = {}, config, nomeDi = (entity) => entity) {
-  return righeDellAcquario(config).map((riga) => letturaDellaRiga(riga, states, nomeDi));
+  const tipo = tipoValido(config?.specie);
+  return righeDellAcquario(config).map((riga) => letturaDellaRiga(riga, states, nomeDi, tipo));
 }
 
 /* ── le domande a Home Assistant ─────────────────────────────────────────── */
@@ -339,13 +493,38 @@ export function cambioDAcqua(config, adesso) {
   return { ultimo, ogni, giorni, fra, scaduto: fra <= 0 };
 }
 
-/** La configurazione con il cambio d'acqua segnato a `quando`; senza, se `quando` è vuoto. */
+/**
+ * La configurazione con il cambio d'acqua segnato a `quando`; senza, se
+ * `quando` è vuoto. Per un terrario la data è quella della pulizia.
+ */
 export function conIlCambio(config, quando) {
   const fuori = { ...(config && typeof config === "object" ? config : {}) };
+  const campo = tipoValido(fuori.specie) === "terrario" ? "pulizia" : "cambio";
   const istante = Number.isFinite(quando) ? quando : Date.parse(pulito(quando));
-  if (Number.isFinite(istante)) fuori.cambio = new Date(istante).toISOString();
-  else delete fuori.cambio;
+  if (Number.isFinite(istante)) fuori[campo] = new Date(istante).toISOString();
+  else delete fuori[campo];
   return fuori;
+}
+
+/**
+ * La pulizia del terrario: come il cambio d'acqua, ma facoltativa. Senza un
+ * ritmo scritto non scade mai — dice solo da quanto, se una data c'è —, e
+ * senza né ritmo né data non c'è: `null`, e la scheda non la disegna.
+ */
+export function puliziaDelTerrario(config, adesso) {
+  const scritto = numero(config?.ogni);
+  const ultimo = Date.parse(pulito(config?.pulizia));
+  if (scritto === null && !Number.isFinite(ultimo)) return null;
+  if (scritto !== null) return cambioDAcqua({ ogni: scritto, cambio: config?.pulizia }, adesso);
+  const giorni = Math.max(0, Math.round((mezzanotte(adesso) - mezzanotte(ultimo)) / GIORNO_MS));
+  return { ultimo, ogni: null, giorni, fra: null, scaduto: false };
+}
+
+/** La manutenzione: il cambio d'acqua dell'acquario, o la pulizia del terrario. */
+export function manutenzioneDellaVasca(config, adesso) {
+  return tipoValido(config?.specie) === "terrario"
+    ? puliziaDelTerrario(config, adesso)
+    : cambioDAcqua(config, adesso);
 }
 
 /**
@@ -383,16 +562,17 @@ export function comeStaLAcquario(letture = [], { serie = {}, config = {}, adesso
   const fuori = misure.filter((voce) => voce.verdetto === "low" || voce.verdetto === "high");
   const bassi = livelli.filter((voce) => voce.basso);
   const mute = elenco.filter((lettura) => lettura.muto);
-  const cambio = cambioDAcqua(config, adesso);
+  const cambio = manutenzioneDellaVasca(config, adesso);
   const rabbocco =
     livelli.filter((voce) => voce.giorni !== null).sort((a, b) => a.giorni - b.giorni)[0] || null;
   let stato = "bene";
   if (!elenco.length) stato = "vuoto";
   else if (fuori.length) stato = "fuori";
   else if (bassi.length) stato = "livello";
-  else if (cambio.scaduto) stato = "cambio";
+  else if (cambio?.scaduto) stato = "cambio";
   else if (mute.length === elenco.length) stato = "mute";
   return {
+    tipo: tipoValido(config?.specie),
     vasca: nomeDellaVasca(config),
     litri: numero(config?.litri),
     misure,

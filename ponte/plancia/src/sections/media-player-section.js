@@ -530,6 +530,15 @@ function firmaDelLettore(riga) {
   ].join("|");
 }
 
+/* Sotto copertina e comandi, larghe quanto la card: la sorgente e quello
+ * che l'integrazione mette accanto. Stavano nella colonna del testo, e
+ * scendendo il volume a tutta larghezza (vedi `.dm-mp-volume`) sarebbero
+ * rimaste sopra di lui, staccate dai tasti del brano. */
+function altroMarkup(riga) {
+  const dentro = `${sorgenteMarkup(riga)}${comandiAccantoMarkup(riga)}${lettureAccantoMarkup(riga)}`;
+  return dentro.trim() ? `<div class="dm-mp-altro">${dentro}</div>` : "";
+}
+
 function cardMarkup(riga) {
   /* «Ha una copertina» sta scritto sulla card e non si deduce con `:has()`:
    * quella regola sui WebView di qualche telefono non c'e', e la card sarebbe
@@ -546,11 +555,9 @@ function cardMarkup(riga) {
       <span class="dm-mp-sotto">${esc(sottoDelLettore(riga))}</span>
       ${barraMarkup(riga)}
       ${comandiMediaMarkup(riga)}
-      ${volumeMarkup(riga)}
-      ${sorgenteMarkup(riga)}
-      ${comandiAccantoMarkup(riga)}
-      ${lettureAccantoMarkup(riga)}
     </div>
+    ${volumeMarkup(riga)}
+    ${altroMarkup(riga)}
     ${telecomandoMarkup(riga)}
   </article>`;
 }
@@ -1316,7 +1323,9 @@ function installStyles() {
         content:"";position:absolute;inset:0;z-index:0;pointer-events:none;
         background:linear-gradient(105deg,rgba(2,6,23,.82),rgba(2,6,23,.52))}
       .dm-mp-card[data-arte="true"] .dm-mp-arte-box,
-      .dm-mp-card[data-arte="true"] .dm-mp-testo{position:relative;z-index:2}
+      .dm-mp-card[data-arte="true"] .dm-mp-testo,
+      .dm-mp-card[data-arte="true"] .dm-mp-volume,
+      .dm-mp-card[data-arte="true"] .dm-mp-altro{position:relative;z-index:2}
       .dm-mp-card[data-arte="true"] .dm-mp-titolo,
       .dm-mp-card[data-arte="true"] .dm-mp-ora,
       .dm-mp-card[data-arte="true"] .dm-mp-percento{color:#f8fafc}
@@ -1397,8 +1406,17 @@ function installStyles() {
       .dm-mp-tasto-ch>.dm-mp-ch{font-size:9px;font-weight:900;letter-spacing:.08em;line-height:1;opacity:.72}
       .dm-mp-tasto-ch>b{font-size:17px;font-weight:900;line-height:1}
       .dm-mp-card[data-arte="true"] .dm-mp-tele{border-top-color:rgba(248,250,252,.18)}
-      .dm-mp-volume{display:flex;align-items:center;gap:10px;margin-top:8px}
-      .dm-mp-slider{flex:1 1 auto;min-width:0;accent-color:#8b5cf6}
+      /* Il volume ha la sua riga, larga quanto la card.
+
+         «Lo slide cercherei di metterlo in una posizione dove è più lungo,
+         altrimenti è troppo piccolo per muovere.» Stava nella colonna accanto
+         alla copertina, dopo tre tasti e la percentuale: sul telefono al
+         cursore restavano poche decine di pixel. Qui sotto prende tutto quello
+         che c'è tra il muto e la percentuale, e il pollice è più grande. */
+      .dm-mp-volume{
+        grid-column:1/-1;display:flex;align-items:center;gap:10px;margin-top:-2px}
+      .dm-mp-slider{flex:1 1 auto;min-width:0;height:32px;margin:0;accent-color:#8b5cf6;cursor:pointer}
+      .dm-mp-altro{grid-column:1/-1;display:grid;grid-template-columns:minmax(0,1fr);gap:5px;min-width:0;margin-top:-12px}
       .dm-mp-percento{
         font-size:10.5px;font-weight:800;color:var(--text-dim,#64748b);
         font-variant-numeric:tabular-nums;flex:0 0 34px;text-align:right}

@@ -166,7 +166,6 @@ import { installContatoriEditor } from "./contatori-editor-section.js";
 import { installPiante } from "./piante-section.js";
 import { installPianteEditor } from "./piante-editor-section.js";
 import { installAcquario } from "./acquario-section.js";
-import { installAcquarioEditor } from "./acquario-editor-section.js";
 import { installAccumuloInEnergia } from "./accumulo-in-energia-section.js";
 import { installAccumuloEditor } from "./accumulo-editor-section.js";
 import { installMacchine } from "./macchine-e-rete-section.js";
@@ -1164,9 +1163,10 @@ export function installSectionRuntime() {
     /* Le piante (#159): la pagina e la sua scheda, nello stesso ordine. */
     senzaCadere(installPiante);
     senzaCadere(installPianteEditor);
-    /* L'acquario (#127): la pagina e la sua scheda, nello stesso ordine. */
+    /* Le vasche (#127): la storia del livello, i comandi, il cambio d'acqua e
+     * il travaso di `cd_acquario` negli Animali. La pagina e la scheda sono
+     * quelle degli Animali. */
     senzaCadere(installAcquario);
-    senzaCadere(installAcquarioEditor);
     /* Le batterie di accumulo (#117): la linguetta dentro Energia e la sua
      * scheda, nello stesso ordine. */
     senzaCadere(installAccumuloInEnergia);
@@ -1303,7 +1303,6 @@ export function installSectionRuntime() {
         "piante",
         "piante-editor",
         "acquario",
-        "acquario-editor",
         "accumulo",
         "accumulo-editor",
         "macchine-e-rete",

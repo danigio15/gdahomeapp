@@ -69,6 +69,7 @@ import {
 import {
   activeLocale,
   allStates,
+  chiamaServizio,
   clean,
   disegnoDiCasa,
   doc,
@@ -161,6 +162,13 @@ const copy = () => ({
   areaMuta: "—",
   areaSpenta: t("Disinserita", "Disarmed"),
   areaAccesa: (modo) => t(`Inserita · ${modo}`, `Armed · ${modo}`),
+  areeInsieme: (quante) =>
+    t(`${quante} aree insieme: i tasti valgono per tutte`, `${quante} areas together: the buttons apply to all`),
+  areeAnnulla: t("Annulla", "Cancel"),
+  areeSuggerimento: t(
+    "Tieni premuta un'area per sceglierne più d'una",
+    "Press and hold an area to pick more than one",
+  ),
   loading: t("CARICAMENTO", "LOADING"),
   modes: {
     home: { label: t("Casa", "Home"), hint: t("Solo perimetro", "Perimeter only") },
@@ -369,6 +377,90 @@ function passaAllAreaAllarme(id) {
   return true;
 }
 
+/* ── più aree insieme, con un codice solo ─────────────────────────────────
+ *
+ * «Quando uno ha più partizioni, si potrebbe selezionarne più di una tenendole
+ * premute e digitare il codice una volta sola? Nelle app normali il codice lo
+ * metti all'inizio e poi le partizioni le inserisci senza.»
+ *
+ * Un tocco su un'area resta quello di sempre: si passa a lei. Tenerla premuta
+ * la mette nel gruppo — insieme a quella in pagina — e da lì ogni tocco ne
+ * aggiunge o ne toglie una. Con due o più aree nel gruppo i tasti del
+ * quadrante valgono per tutte: il codice si chiede una volta, e parte un
+ * comando per ogni area con quel codice. Uno per area e non uno con l'elenco:
+ * se un'area un modo non lo conosce, il rifiuto di Home Assistant resta suo e
+ * le altre si inseriscono lo stesso.
+ *
+ * Il gruppo vive solo in questa pagina e solo finché serve: non si salva, e
+ * dopo il comando si scioglie. Il tastierino della finestra rapida, in Home,
+ * non lo vede — lì si comanda l'area in pagina, come sempre. */
+const ATTESA_DELLA_PRESSIONE = 550;
+const insieme = new Set();
+/* Quando e' scattata l'ultima pressione lunga: il tocco che la chiude non
+ * deve anche cambiare area. Un'ora e non un si'/no, perche' dopo il menu del
+ * tocco lungo di Android il tocco non sempre arriva, e un si' rimasto appeso
+ * si mangerebbe il tocco vero dopo. */
+let premutaALungoIl = 0;
+let pressione = null;
+
+function areeInsieme() {
+  if (insieme.size < 2) return [];
+  return centraliDiCasa().filter((riga) => insieme.has(riga.id));
+}
+
+function sciogliIlGruppo() {
+  if (!insieme.size) return false;
+  insieme.clear();
+  return true;
+}
+
+function nelGruppo(id) {
+  if (!insieme.size) {
+    const corrente = centraliDiCasa().find((riga) => riga.corrente);
+    if (corrente) insieme.add(corrente.id);
+  }
+  if (insieme.has(id)) insieme.delete(id);
+  else insieme.add(id);
+  if (insieme.size < 2) insieme.clear();
+}
+
+function iniziaLaPressione(event) {
+  const area = event.target?.closest?.("[data-dm-area]");
+  if (!area) return;
+  fermaLaPressione();
+  const id = clean(area.dataset.dmArea);
+  pressione = {
+    x: event.clientX,
+    y: event.clientY,
+    timer: setTimeout(() => {
+      pressione = null;
+      pressioneLunga(id);
+    }, ATTESA_DELLA_PRESSIONE),
+  };
+}
+
+function pressioneLunga(id) {
+  /* Due strade arrivano qui per lo stesso dito — il nostro orologio e il
+   * menu del tocco lungo del telefono —: conta la prima. */
+  if (Date.now() - premutaALungoIl < 1000) return;
+  premutaALungoIl = Date.now();
+  nelGruppo(id);
+  root.navigator?.vibrate?.(15);
+  try {
+    renderSecurity();
+  } catch (_error) {}
+}
+
+function seSiMuove(event) {
+  if (!pressione) return;
+  if (Math.hypot(event.clientX - pressione.x, event.clientY - pressione.y) > 10) fermaLaPressione();
+}
+
+function fermaLaPressione() {
+  if (pressione) clearTimeout(pressione.timer);
+  pressione = null;
+}
+
 /* La fila delle aree, sopra il quadrante. Ogni area porta il suo nome e come
  * sta adesso: con due aree si vuole sapere se l'altra è inserita senza dover
  * passare di là, e un selettore che dice solo i nomi non lo direbbe. */
@@ -384,14 +476,22 @@ function filaDelleAree(lista, labels) {
       let come = labels.areaMuta;
       if (acceso) come = testi ? labels.areaAccesa(testi.label) : labels.areaSpenta;
       else if (stato) come = labels.areaSpenta;
+      const scelta = insieme.size >= 2 && insieme.has(riga.id);
       return `<button type="button" class="dm-sec-area" data-dm-area="${esc(riga.id)}"
-        role="tab" aria-selected="${riga.corrente === true}"${riga.corrente ? ' data-on="true"' : ""}
-        data-armata="${acceso}">
+        role="tab" aria-selected="${riga.corrente === true}"${riga.corrente && !insieme.size ? ' data-on="true"' : ""}
+        data-armata="${acceso}"${scelta ? ' data-scelta="true"' : ""}>
         <b>${esc(nomeDellaCentrale(riga, indice, labels.area))}</b>
         <small>${esc(come)}</small>
       </button>`;
     })
-    .join("")}</div>`;
+    .join("")}</div>${
+    insieme.size >= 2
+      ? `<div class="dm-sec-insieme" data-dm-aree-insieme="${insieme.size}">
+          <span>${esc(labels.areeInsieme(insieme.size))}</span>
+          <button type="button" data-dm-aree-annulla>${esc(labels.areeAnnulla)}</button>
+        </div>`
+      : `<p class="dm-sec-aree-aiuto">${esc(labels.areeSuggerimento)}</p>`
+  }`;
 }
 
 function syncAree(shell, labels) {
@@ -678,6 +778,24 @@ function vesteLaFinestraRapida() {
 /* La plancia storica ridisegna quella finestra a ogni apertura e a ogni
  * cambio di stato della centrale: le si sta dietro rivestendola dopo, come si
  * fa con le altre finestre del guscio. */
+/* La finestra rapida dell'antifurto, se e' aperta, segue la centrale.
+ *
+ * «Se tolgo antifurto da widget si toglie correttamente ma il widget non si
+ * aggiorna.» Il guscio la ridisegnava solo quando l'entita' cambiata era
+ * `dm.security_centrale_allarme` — il nome nostro della centrale — ma Home
+ * Assistant manda quello vero (`alarm_control_panel.…`): non coincidevano
+ * mai, e la finestra restava su «CASA» finche' non la si riapriva. Il guscio
+ * e' quello del fornitore e non si tocca a mano; qui si ascolta lo stesso
+ * cambio di stato che ridisegna la pagina, e la finestra aperta si rifa'.
+ * Costa poco: si rifa' solo mentre e' davanti agli occhi. */
+export function ridisegnaLaFinestraRapidaAperta() {
+  const finestra = doc?.getElementById?.("quick-alarm-modal");
+  if (!finestra?.classList?.contains("show")) return false;
+  if (typeof root.renderQuickAntifurto !== "function") return false;
+  root.renderQuickAntifurto();
+  return true;
+}
+
 function agganciaLaFinestraRapida() {
   const originale = root.renderQuickAntifurto;
   if (typeof originale !== "function" || originale.__dmTastiVeri) return false;
@@ -973,7 +1091,26 @@ function openCamera(card) {
 
 function onShellClick(event) {
   const target = event.target;
+  if (target?.closest?.("[data-dm-aree-annulla]")) {
+    event.preventDefault();
+    if (sciogliIlGruppo()) renderSecurity();
+    return;
+  }
   const area = target?.closest?.("[data-dm-area]");
+  if (area && Date.now() - premutaALungoIl < 1500) {
+    /* Il dito si alza dopo la pressione lunga: quel tocco l'ha gia' fatta lei. */
+    premutaALungoIl = 0;
+    event.preventDefault();
+    return;
+  }
+  if (area && insieme.size) {
+    event.preventDefault();
+    nelGruppo(clean(area.dataset.dmArea));
+    try {
+      renderSecurity();
+    } catch (_error) {}
+    return;
+  }
   if (area) {
     event.preventDefault();
     if (passaAllAreaAllarme(clean(area.dataset.dmArea))) {
@@ -1221,6 +1358,38 @@ function agganciaIlCodiceDeiModiSuMisura() {
   return true;
 }
 
+/* Il comando, per tutte le aree del gruppo, col codice battuto una volta.
+ *
+ * Il guscio chiama `callAlarmService(servizio, codice)` all'OK del
+ * tastierino — o subito, se nessuna area vuole il codice — e sa mandarlo solo
+ * all'area in pagina. Con un gruppo qui si manda a ognuna; poi il gruppo si
+ * scioglie, perché il comando l'ha già usato. */
+function agganciaLeAreeInsieme() {
+  const nome = "callAlarmService";
+  const originale = root[nome];
+  if (typeof originale !== "function" || originale.__dmAreeInsieme) return false;
+  function avvolta(...argomenti) {
+    const [servizio, codice] = argomenti;
+    const gruppo = securityVisible() && !modoDalServizio(servizio) ? areeInsieme() : [];
+    if (!gruppo.length) return originale.apply(this, argomenti);
+    for (const riga of gruppo) {
+      const data = { entity_id: entitaDellaCentrale(riga) };
+      if (codice) data.code = codice;
+      chiamaServizio({ domain: "alarm_control_panel", service: clean(servizio), data });
+    }
+    sciogliIlGruppo();
+    try {
+      renderSecurity();
+    } catch (_error) {}
+    return undefined;
+  }
+  Object.assign(avvolta, originale);
+  avvolta.__dmAreeInsieme = true;
+  avvolta.__dmPrevious = originale;
+  root[nome] = avvolta;
+  return true;
+}
+
 /* Le due domande sulla centrale, per il runtime vecchio.
  *
  * Il tasto acceso e il tastierino li disegna e li apre la plancia storica, che
@@ -1238,6 +1407,12 @@ function publishAlarmHelpers() {
   root.dmAlarmCodeNeeded = (service) => {
     const id = modoDalServizio(service);
     if (id) return ilModoChiedeIlCodice(modiSuMisura().find((voce) => voce.id === id));
+    /* Più aree insieme: il codice si chiede se anche una sola lo vuole. */
+    const gruppo = securityVisible() ? areeInsieme() : [];
+    if (gruppo.length) {
+      const states = allStates();
+      return gruppo.some((riga) => alarmCodeNeeded(states?.[entitaDellaCentrale(riga)], service));
+    }
     return alarmCodeNeeded(alarmStateObject(), service);
   };
   /* Quale tasto e' acceso, con due domande separate.
@@ -1292,6 +1467,7 @@ export function installSecurityShowcaseSection() {
   installOverrides();
   agganciaIModiSuMisura();
   agganciaIlCodiceDeiModiSuMisura();
+  agganciaLeAreeInsieme();
   agganciaIlControlloDegliIngressi();
   agganciaLaFinestraRapida();
   if (!state.listeners) {
@@ -1300,6 +1476,21 @@ export function installSecurityShowcaseSection() {
      * rebuild it — nothing else can reach text inside `content:`. */
     restyleOnLocaleChange(STYLE_ID, securityCss);
     doc.addEventListener("click", onShellClick);
+    doc.addEventListener("pointerdown", iniziaLaPressione, { passive: true });
+    doc.addEventListener("pointermove", seSiMuove, { passive: true });
+    doc.addEventListener("pointerup", fermaLaPressione, { passive: true });
+    doc.addEventListener("pointercancel", fermaLaPressione, { passive: true });
+    /* Il tocco lungo del telefono: il browser a volte annulla il dito
+     * (`pointercancel`) e apre il suo menu. Sull'area il menu non si apre, e
+     * quel tocco lungo e' la pressione lunga — anche se il nostro orologio e'
+     * stato fermato dall'annullamento. */
+    doc.addEventListener("contextmenu", (event) => {
+      const area = event.target?.closest?.("[data-dm-area]");
+      if (!area) return;
+      event.preventDefault();
+      fermaLaPressione();
+      pressioneLunga(clean(area.dataset.dmArea));
+    });
     doc.addEventListener("keydown", onShellKeydown);
     for (const eventName of [
       "dashboardmodern:legacy-ready",
@@ -1310,6 +1501,7 @@ export function installSecurityShowcaseSection() {
         installOverrides();
         agganciaIModiSuMisura();
         agganciaIlCodiceDeiModiSuMisura();
+        agganciaLeAreeInsieme();
         agganciaIlControlloDegliIngressi();
         agganciaLaFinestraRapida();
         renderSecurity();
@@ -1325,6 +1517,7 @@ export function installSecurityShowcaseSection() {
     // camera owner and the clock from the legacy `updateCamClocks()` timer.
     root.addEventListener?.("dashboardmodern:state-changed", () => {
       if (securityVisible()) renderSecurity();
+      ridisegnaLaFinestraRapidaAperta();
     });
     doc.addEventListener(
       "click",
@@ -1527,6 +1720,25 @@ function securityCss() {
   border-color:var(--primary-color,#0ea5e9);
   box-shadow:0 0 0 1px var(--primary-color,#0ea5e9) inset
 }
+/* Le aree del gruppo: piene del colore, e la spunta in alto. */
+.dm-sec-area{position:relative;-webkit-touch-callout:none;user-select:none;touch-action:manipulation}
+.dm-sec-area[data-scelta="true"]{
+  border-color:var(--primary-color,#0ea5e9);
+  background:color-mix(in srgb,var(--primary-color,#0ea5e9) 14%,var(--surface-2,#f8fafc));
+  box-shadow:0 0 0 2px var(--primary-color,#0ea5e9) inset
+}
+.dm-sec-area[data-scelta="true"]::after{
+  content:"✓";position:absolute;top:6px;right:9px;font-size:12px;font-weight:900;
+  color:var(--primary-color,#0ea5e9)}
+.dm-sec-insieme{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;
+  margin:-6px 0 14px;padding:8px 12px;border-radius:12px;font-size:12px;font-weight:800;
+  color:var(--primary-color,#0ea5e9);
+  background:color-mix(in srgb,var(--primary-color,#0ea5e9) 10%,transparent)}
+.dm-sec-insieme button{
+  padding:5px 12px;border-radius:999px;font:inherit;font-size:11.5px;cursor:pointer;
+  color:inherit;background:transparent;border:1px solid currentColor}
+.dm-sec-aree-aiuto{margin:-8px 0 12px;font-size:11px;font-weight:600;opacity:.6}
 
 /* La griglia della finestra rapida del banner, che sta nel guscio: fino a
    quattro tasti in fila, di piu' a capo. Il guscio la scrive a colonne e basta,

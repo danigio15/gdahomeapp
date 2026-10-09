@@ -196,7 +196,8 @@ import {
 import { parolaAvviso, testoLettura } from "./animali-section.js";
 import { EVENTO_CONTATORI, tesseraDeiContatori, vistaDeiContatori } from "./contatori-section.js";
 import { EVENTO_PIANTE, tesseraDellePiante, vistaDellePiante } from "./piante-section.js";
-import { EVENTO_ACQUARIO, tesseraDellAcquario, vistaDellAcquario } from "./acquario-section.js";
+
+import { EVENTO_ACQUARIO, tesseraDellAcquario, vistaDelleVasche } from "./acquario-section.js";
 import {
   EVENTO_APRI_ACCUMULO,
   tesseraDellAccumulo,
@@ -5583,15 +5584,26 @@ function pianteModel(states) {
   return tessera && { ...tessera, key: "piante" };
 }
 
-/* L'acquario (#127): la temperatura dell'acqua, e la cosa da fare quando ce
- * n'è una. Le parole le fa la sezione; qui si toglie quello che
- * l'interruttore «nel widget» ha spento. */
+/* Le vasche (#127): gli acquari e i terrari, che adesso sono voci degli
+ * Animali. Una tessera sola per tutte — con una vasca dice la sua temperatura
+ * e la cosa da fare, con più vasche una riga per vasca — e la chiave resta
+ * «acquario», quella che aveva: chi l'aveva spostata o spenta la ritrova
+ * com'era. Le parole le fa la sezione; qui si toglie quello che
+ * l'interruttore «nel widget» ha spento, nella tessera di prima o in quella
+ * degli Animali, dove le vasche adesso si configurano. */
 function acquarioModel(states) {
-  const fuori = widgetExcludedEntities("acquario");
+  const fuori = new Set([
+    ...widgetExcludedEntities("acquario"),
+    ...widgetExcludedEntities("animali"),
+  ]);
   const tessera = tesseraDellAcquario(
-    vistaDellAcquario(states, { dentro: (entity) => widgetIncludes(entity, fuori) }),
+    vistaDelleVasche(states, { dentro: (entity) => widgetIncludes(entity, fuori) }),
   );
-  return tessera && { ...tessera, key: "acquario" };
+  if (!tessera) return null;
+  /* Solo terrari: il disegno è il terrario, non la vasca coi pesci. */
+  const faccia =
+    tessera.icon === "🦎" ? oggettoWidget("terrario", "", "tessera-acquario") : undefined;
+  return { ...tessera, key: "acquario", ...(faccia ? { faccia } : {}) };
 }
 
 /* Le batterie di accumulo (#117): la carica di tutti i pacchi insieme, e la
@@ -7098,6 +7110,8 @@ const CHIAVI_A_CARTE = new Set([
   "allerte",
   "rifiuti",
   "animali",
+  /* Le vasche: una casella per vasca, o per misura quando la vasca è una. */
+  "acquario",
   "vmc",
   "elettrodomestici",
   /* «Sui widget il mini pc non incolonna bene le scritte.»
@@ -7898,8 +7912,8 @@ const SEZIONE_DEL_WIDGET = Object.freeze({
   contatori: "contatori",
   /* Le piante (#159) hanno la loro pagina. */
   piante: "piante",
-  /* E l'acquario (#127). */
-  acquario: "acquario",
+  /* E le vasche (#127): gli acquari e i terrari stanno negli Animali. */
+  acquario: "animali",
   /* Le batterie di accumulo (#117) stanno dentro Energia, nella loro
    * linguetta: il tasto porta alla pagina, e la linguetta la apre chi la
    * monta, che ascolta la richiesta mandata qui sotto. */

@@ -207,8 +207,8 @@ export const TESSERE_PER_SCHEDA = Object.freeze({
   contatori: "contatori",
   /* Le piante (#159): la scheda parla di una tessera sola. */
   piante: "piante",
-  /* L'acquario (#127): la scheda parla di una tessera sola. */
-  acquario: "acquario",
+  /* L'acquario (#127) non ha piu' una scheda: le vasche si configurano negli
+   * Animali, e la tessera delle vasche ascolta anche quella. */
   /* Le batterie di accumulo (#117): la scheda parla di una tessera sola. */
   accumulo: "accumulo",
 });

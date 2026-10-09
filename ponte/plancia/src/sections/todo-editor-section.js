@@ -149,8 +149,9 @@ function catalogoTessere() {
     /* Le piante (#159): quante sono da innaffiare. Compare quando la sua
      * scheda ha una riga. */
     ["piante", "🪴", t("Piante", "Plant care")],
-    /* L'acquario (#127): la temperatura dell'acqua, e quando c'è da fare. */
-    ["acquario", "🐠", t("Acquario", "Aquarium")],
+    /* Le vasche (#127): gli acquari e i terrari degli Animali — la
+     * temperatura, e quando c'è da fare. */
+    ["acquario", "🐠", t("Acquari e terrari", "Aquariums and terrariums")],
     /* Le batterie di accumulo (#117): la carica di tutti i pacchi, e quando
      * un pacco ha le celle da bilanciare. Non è la tessera delle Batterie qui
      * sotto — quella conta le pile dei sensori. Compare quando la sua scheda

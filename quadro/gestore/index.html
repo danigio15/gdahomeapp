@@ -3969,6 +3969,30 @@
         .griglia-4 {
           grid-template-columns: repeat(4, minmax(0, 1fr));
         }
+
+        /* Cinque caselle: tre sopra e due sotto, larghe uguali per riga. */
+        .griglia-5 {
+          grid-template-columns: repeat(6, minmax(0, 1fr));
+        }
+
+        .griglia-5 > * {
+          grid-column: span 2;
+        }
+
+        .griglia-5 > :nth-child(n + 4) {
+          grid-column: span 3;
+        }
+      }
+
+      @media (min-width: 80rem) {
+        .griglia-5 {
+          grid-template-columns: repeat(5, minmax(0, 1fr));
+        }
+
+        .griglia-5 > *,
+        .griglia-5 > :nth-child(n + 4) {
+          grid-column: auto;
+        }
       }
 
       @media (min-width: 64rem) {
@@ -4000,8 +4024,14 @@
           line-height: 1.2;
         }
 
-        .griglia-4 {
+        .griglia-4,
+        .griglia-5 {
           grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        /* Sul telefono la quinta resta sola: prende la riga intera. */
+        .griglia-5 > :last-child {
+          grid-column: 1 / -1;
         }
 
         .capo-sezione h2 {
@@ -5377,7 +5407,10 @@
           tutte,
           nomi,
           seguite: tutte.filter((una) => una.casa),
-          premium: tutte.filter((una) => una.licenza.premium).length,
+          /* Premium pagato o dato dall'installatore: i regali si contano a parte. */
+          premium: tutte.filter(
+            (una) => una.licenza.premium && una.licenza.buona.origine !== "regalo",
+          ).length,
           daGuardare: leCoseDaGuardare(tutte, nomi),
         };
       }
@@ -5526,7 +5559,7 @@
            a capo fra un pezzo e l'altro, non fra «7» e «Premium». */
         document.getElementById("sottotitolo").textContent = [
           plurale(INSTALLATORI.length, "installatore", "installatori"),
-          plurale(CONTI.tutte.length, "casa", "case"),
+          plurale(CONTI.seguite.length, "casa", "case"),
           `${CONTI.premium} Premium`,
         ]
           .map((pezzo) => pezzo.replace(" ", " "))
@@ -5604,26 +5637,48 @@
       function laPanoramica() {
         const { tutte, seguite, daGuardare } = CONTI;
         const offline = seguite.filter((una) => una.casa.stato.chiave === "offline").length;
-        const soloLicenza = tutte.length - seguite.length;
         const sospesi = INSTALLATORI.filter((uno) => uno.congelato).length;
         const alLimite = INSTALLATORI.filter((uno) => !uno.congelato && uno.pieno).length;
-        const premium = tutte.filter((una) => una.licenza.premium);
+        const premium = tutte.filter(
+          (una) => una.licenza.premium && una.licenza.buona.origine !== "regalo",
+        );
         const daDove = (origine) =>
           premium.filter((una) => una.licenza.buona.origine === origine).length;
         const A = ABBONAMENTI;
         const alMese = A ? alMeseDetto(A.conti?.alMese) : "—";
 
-        const dettaglioCase = !tutte.length
-          ? "ancora nessuna"
+        /* «Case» conta quelle che segue un installatore: le altre il quadro le
+         * conosce solo per la licenza, e i regali hanno la loro casella. */
+        const dettaglioCase = !seguite.length
+          ? "nessuna seguita da un installatore"
           : [
-              seguite.length
-                ? `${seguite.length - offline} ${seguite.length - offline === 1 ? "risponde" : "rispondono"}`
-                : "",
+              `${seguite.length - offline} ${seguite.length - offline === 1 ? "risponde" : "rispondono"}`,
               offline ? `${offline} offline` : "",
-              soloLicenza ? `${soloLicenza} senza installatore` : "",
             ]
               .filter(Boolean)
               .join(" · ");
+
+        /* I regali: le licenze date da te o dagli installatori che valgono
+         * ancora, e i codici fatti che nessuno ha usato. Come in «Regali e
+         * codici», da dove si arriva premendo. */
+        const regalate = (LICENZE.licenze || []).filter(
+          (una) => una.origine !== "negozio" && una.vale,
+        );
+        const aCase = regalate.filter((una) => String(una.sog || "").startsWith("casa_")).length;
+        const aTelefoni = regalate.length - aCase;
+        const codiciLiberi = (LICENZE.codici || []).filter(
+          (uno) => !uno.usatoDa && !uno.annullato,
+        ).length;
+        const dettaglioRegali =
+          !regalate.length && !codiciLiberi
+            ? "nessun regalo, per adesso"
+            : [
+                aCase ? plurale(aCase, "casa", "case") : "",
+                aTelefoni ? plurale(aTelefoni, "telefono", "telefoni") : "",
+                codiciLiberi ? `${plurale(codiciLiberi, "codice", "codici")} da usare` : "",
+              ]
+                .filter(Boolean)
+                .join(" · ");
         const dettaglioInstallatori = !INSTALLATORI.length
           ? "ancora nessuno"
           : [
@@ -5637,7 +5692,6 @@
           ? "nessuna casa, per adesso"
           : [
               daDove("negozio") ? plurale(daDove("negozio"), "abbonamento", "abbonamenti") : "",
-              daDove("regalo") ? plurale(daDove("regalo"), "regalo", "regali") : "",
               daDove("installatore") ? `${daDove("installatore")} dagli installatori` : "",
             ]
               .filter(Boolean)
@@ -5718,10 +5772,11 @@
             </div>
           </div>
 
-          <div class="griglia griglia-4">
-            ${/* già HTML */ numerone("case", "casa", "Case", numero(tutte.length), dettaglioCase)}
+          <div class="griglia griglia-5">
+            ${/* già HTML */ numerone("case", "casa", "Case", numero(seguite.length), dettaglioCase)}
             ${/* già HTML */ numerone("installatori", "installatori", "Installatori", numero(INSTALLATORI.length), dettaglioInstallatori)}
             ${/* già HTML */ numerone("case", "stella", "Case Premium", numero(premium.length), dettaglioPremium)}
+            ${/* già HTML */ numerone("licenze", "regalo", "Regali", numero(regalate.length), dettaglioRegali)}
             ${/* già HTML */ numerone("abbonamenti", "euro", "Incassi stimati", alMese, "quello che pagano i clienti, IVA compresa", alMese === "—" ? "" : "/mese")}
           </div>
 

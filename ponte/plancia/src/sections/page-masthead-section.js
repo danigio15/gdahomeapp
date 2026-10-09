@@ -171,8 +171,8 @@ const PAGES = Object.freeze([
   {
     id: "page-animali",
     tint: ["245,158,11", "236,72,153"],
-    it: ["Animali", "Ciotola · Lettiera · Acqua · Collare"],
-    en: ["Pets", "Bowl · Litter · Water · Collar"],
+    it: ["Animali", "Ciotola · Lettiera · Acquari · Terrari"],
+    en: ["Pets", "Bowl · Litter · Aquariums · Terrariums"],
   },
   /* I varchi: i contatti porta-finestra, guardati e basta. La sottotitolatura
    * dice le tre cose che la pagina risponde — quanti sono aperti, quali, e chi
@@ -251,14 +251,8 @@ const PAGES = Object.freeze([
     it: ["Piante", "Terra · Quando innaffiare"],
     en: ["Plant care", "Soil · When to water"],
   },
-  /* L'acquario, dalla segnalazione #127: la vasca, le sue luci e il cambio
-   * d'acqua. */
-  {
-    id: "page-acquario",
-    tint: ["14,165,233", "16,185,129"],
-    it: ["Acquario", "Acqua · Luci · Cambio"],
-    en: ["Aquarium", "Water · Lights · Change"],
-  },
+  /* L'acquario, dalla segnalazione #127, non ha piu' una pagina sua: le
+   * vasche stanno negli Animali, e l'intestazione e' quella. */
   /* Il calendario (#259) nasce con la sua pagina, e l'intestazione nasce con
    * lei: gli impegni di oggi e dei giorni che vengono. */
   {
