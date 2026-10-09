@@ -161,7 +161,7 @@ export function configProfileFor({ profile = "", primary = true } = {}) {
   return primary !== false ? PRIMARY_PROFILE : "";
 }
 
-function currentProfile() {
+export function currentProfile() {
   return configProfileFor({
     profile: root.__DASHBOARDMODERN_PROFILE__ || parentProfile() || "",
     primary: laPrincipale(),
@@ -489,7 +489,7 @@ function sharedStoreEnabled() {
   return Boolean(hostedBridge() && currentProfile());
 }
 
-function bridgeRequest(type, payload = {}) {
+export function bridgeRequest(type, payload = {}) {
   if (!hostedBridge()) return Promise.resolve(null);
   return new Promise((resolve, reject) => {
     const Socket = root.__DASHBOARDMODERN_BRIDGE_WS__ || root.WebSocket;

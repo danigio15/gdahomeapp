@@ -126,6 +126,9 @@ export const SCHEDE = Object.freeze({
    * Tre schede rispondono alla stessa domanda: cosa c'e' sulla Home e in che
    * ordine. Adesso stanno nella stessa famiglia, una dopo l'altra. */
   sez8: { famiglia: "plancia", posizione: 35 }, // ⚡ Azioni rapide della Home
+  /* La plancia a muro: come diventa questa plancia su un tablet fisso. E'
+   * una scelta della plancia, non una cosa di casa, e sta con le altre. */
+  muro: { famiglia: "plancia", posizione: 37 }, // 📟 A muro
   entita: { famiglia: "plancia", posizione: 40 }, // ⭐ Le tue entità
   mie: { famiglia: "plancia", posizione: 50 }, // ⭐ Le tue sezioni
   backup: { famiglia: "plancia", posizione: 60 }, // 💾 Backup e ripristino

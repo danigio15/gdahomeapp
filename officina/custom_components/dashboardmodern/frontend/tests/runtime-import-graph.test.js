@@ -1519,8 +1519,11 @@ test("production graph is single-owner, acyclic and contains no facade pass-thro
   // sono tornate le emoji della 1.8.0.
   // 421 con «Apri in mappa» nell'app: `core/la-persona-nel-navigatore.js`,
   // il messaggio che porta la persona al navigatore dell'app.
+  // 424 con la plancia a muro: il nucleo `core/plancia-a-muro.js` — il
+  // config, la fonte, i comandi proposti dalla stanza, il riposo — il pannello
+  // `sections/plancia-a-muro-section.js` e la sua scheda nel config.
   assert.ok(
-    relative.length <= 421,
+    relative.length <= 424,
     `production graph unexpectedly grew to ${relative.length} modules`,
   );
   assertAcyclic(edges);
@@ -1625,6 +1628,13 @@ test("production graph is single-owner, acyclic and contains no facade pass-thro
    * sta cuocendo, tocca solo i numeri che cambiano, e si ferma da solo appena
    * una delle due cose smette di essere vera.
    *
+   * Il quattordicesimo e' la plancia a muro. Il tablet fisso deve sapere
+   * quando sono passati i minuti del riposo, cambiare l'orologio e
+   * rinfrescare il fotogramma del citofono: nessun evento di Home Assistant
+   * lo dice. Un battito ogni quindici secondi, uno solo, che parte quando il
+   * pannello compare e si ferma quando se ne va: su una plancia che non e' a
+   * muro non c'e'.
+   *
    * These are the intervals production is allowed, and they are named here so
    * another one cannot arrive unnoticed. */
   const intervals = [...graph.entries()].filter(([, source]) =>
@@ -1642,6 +1652,7 @@ test("production graph is single-owner, acyclic and contains no facade pass-thro
       "src/sections/live-ui-section.js",
       "src/sections/media-player-section.js",
       "src/sections/people-section.js",
+      "src/sections/plancia-a-muro-section.js",
       "src/sections/pool-extra-section.js",
       "src/sections/radar-meteo-section.js",
       "src/sections/segnalazioni-section.js",

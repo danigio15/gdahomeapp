@@ -256,7 +256,10 @@ test("togliere una chiave non alza la revisione", async () => {
   /* E la 61 con le stufe a pellet (#183, `cd_stufe`): la stufa configurata dal
    * computer deve accendersi anche dal telefono, e il pellet in esaurimento
    * deve dirlo il tablet in cucina come lo dice il computer. */
-  assert.equal(CONFIG_KEYS_REVISION, 61);
+  /* E la 62 con la plancia a muro (`cd_muro`): il config del tablet scritto
+   * dal computer deve arrivare al tablet. */
+  assert.equal(CONFIG_KEYS_REVISION, 62);
+  assert.ok(CONFIG_KEYS.includes("cd_muro"), "il config a muro deve arrivare al tablet");
   assert.ok(
     CONFIG_KEYS.includes("cd_stufe"),
     "le stufe dichiarate qui devono essere le stesse anche sul tablet in cucina",

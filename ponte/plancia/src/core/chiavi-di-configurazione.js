@@ -308,7 +308,12 @@
  * configurata dal computer deve accendersi anche dal telefono, e un pellet in
  * esaurimento detto su un vetro e taciuto sull'altro e' proprio l'avviso che
  * non arriva. */
-export const CONFIG_KEYS_REVISION = 61;
+/* La revisione 62 aggiunge la plancia a muro (`cd_muro`): se questa plancia
+ * diventa un pannello per un tablet fisso, da quale plancia prende le cose,
+ * le sue pagine e le funzioni a muro. E' della plancia, non del vetro: il
+ * tablet in cucina e chi lo configura dal computer devono leggere la stessa
+ * cosa, e il config scritto dal computer deve arrivare al tablet. */
+export const CONFIG_KEYS_REVISION = 62;
 
 // Complete shared dashboard configuration snapshot. Runtime counters/timers and
 // true per-device preferences (connection credentials, theme/navbar mode) stay
@@ -509,6 +514,7 @@ export const CONFIG_KEYS = Object.freeze([
   "cd_energy_model",
   "cd_entity_overrides",
   "cd_quick_actions",
+  "cd_muro",
   "cd_navbar_order",
   // La barra a scomparsa o ferma e' una scelta della plancia, non del
   // dispositivo che l'ha fatta: chi la mette ferma sul telefono se la ritrova
