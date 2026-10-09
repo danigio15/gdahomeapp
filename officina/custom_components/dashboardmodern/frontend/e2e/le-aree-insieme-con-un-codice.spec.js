@@ -40,38 +40,41 @@ const centrale = (entity_id, nome) => ({
 async function avvia(page, testInfo) {
   test.setTimeout(150_000);
   await page.route("https://**", (route) => route.fulfill({ status: 200, body: "" }));
-  await page.addInitScript((stati) => {
-    window.__CHIAMATE__ = [];
-    class PresaFinta extends EventTarget {
-      static OPEN = 1;
-      readyState = 1;
-      onopen = null;
-      onmessage = null;
-      onclose = null;
-      constructor() {
-        super();
-        queueMicrotask(() => {
-          this.onopen?.({});
-          this.onmessage?.({ data: JSON.stringify({ type: "auth_ok" }) });
-        });
+  await page.addInitScript(
+    (stati) => {
+      window.__CHIAMATE__ = [];
+      class PresaFinta extends EventTarget {
+        static OPEN = 1;
+        readyState = 1;
+        onopen = null;
+        onmessage = null;
+        onclose = null;
+        constructor() {
+          super();
+          queueMicrotask(() => {
+            this.onopen?.({});
+            this.onmessage?.({ data: JSON.stringify({ type: "auth_ok" }) });
+          });
+        }
+        send(raw) {
+          const message = JSON.parse(raw);
+          if (message.type === "auth") return;
+          let result = null;
+          if (message.type === "get_states") result = stati;
+          if (message.type === "frontend/get_user_data") result = { value: null };
+          if (message.type === "call_service") window.__CHIAMATE__.push(message);
+          queueMicrotask(() =>
+            this.onmessage?.({
+              data: JSON.stringify({ id: message.id, type: "result", success: true, result }),
+            }),
+          );
+        }
+        close() {}
       }
-      send(raw) {
-        const message = JSON.parse(raw);
-        if (message.type === "auth") return;
-        let result = null;
-        if (message.type === "get_states") result = stati;
-        if (message.type === "frontend/get_user_data") result = { value: null };
-        if (message.type === "call_service") window.__CHIAMATE__.push(message);
-        queueMicrotask(() =>
-          this.onmessage?.({
-            data: JSON.stringify({ id: message.id, type: "result", success: true, result }),
-          }),
-        );
-      }
-      close() {}
-    }
-    window.WebSocket = PresaFinta;
-  }, [centrale(GIORNO, "Giorno"), centrale(NOTTE, "Notte")]);
+      window.WebSocket = PresaFinta;
+    },
+    [centrale(GIORNO, "Giorno"), centrale(NOTTE, "Notte")],
+  );
   await bootNamespacedDashboard(page, "dashboard.html", testInfo, SEME);
   await page.waitForFunction((id) => Boolean(eval("_RAW_STATES")[id]), NOTTE);
   await page.evaluate(
@@ -145,10 +148,7 @@ test("tenendo premuta un'area si comandano tutte e due, col codice una volta", a
           .sort(),
       ),
     )
-    .toEqual([
-      `alarm_arm_away|${GIORNO}|1234`,
-      `alarm_arm_away|${NOTTE}|1234`,
-    ]);
+    .toEqual([`alarm_arm_away|${GIORNO}|1234`, `alarm_arm_away|${NOTTE}|1234`]);
   /* Usato il gruppo, si scioglie. */
   await expect(page.locator('.dm-sec-area[data-scelta="true"]')).toHaveCount(0);
 });

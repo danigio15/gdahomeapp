@@ -42,7 +42,9 @@ async function scrivi(page, stato) {
       const registro = window.eval(`typeof ${nome} !== 'undefined' ? ${nome} : null`);
       if (registro) registro[valore.entity_id] = structuredClone(valore);
     }
-    window.__HASS__ = { states: { ...(window.__HASS__?.states || {}), [valore.entity_id]: valore } };
+    window.__HASS__ = {
+      states: { ...(window.__HASS__?.states || {}), [valore.entity_id]: valore },
+    };
   }, stato);
 }
 
