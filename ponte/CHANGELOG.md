@@ -10,6 +10,25 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.10.7
+
+**I codici arrivano ai cruscotti.** Dall'app, «Gestione installatore» e
+«Gestione gdahome» si aprono di nuovo senza chiedere la chiave: l'app la
+scrive dentro la pagina, e i cruscotti adesso la prendono.
+
+**Le persone, scritte bene.** Sotto il nome non compare più «home» né lo
+stato grezzo del tracker: solo un indirizzo vero, accorciato a via, numero e
+città, oppure niente.
+
+**Le persone di casa nel navigatore.** «Apri in mappa» porta il navigatore
+sulla persona, senza calcolare il percorso: la strada si chiede toccando il
+suo segnaposto. Sulla mappa di gdanav ci sono tutte le persone della plancia,
+e un tasto le inquadra insieme.
+
+**Le tue case.** Il cestino chiede «Eliminare?» e dice cosa succede; la casa
+eliminata sparisce subito. In fondo alle pagine si legge solo la versione,
+non più l'indirizzo del centralino.
+
 ## 1.10.6
 
 **La console in sei sezioni.** La pagina dell'add-on non è più una colonna di
