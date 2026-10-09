@@ -49,6 +49,10 @@ const _portachiavi = FlutterSecureStorage(
 /// `IlFiloDellaVettura`, finche' la home c'e' (`la_vettura.dart`).
 final _vettura = SorgenteGdahome();
 
+/// Le persone della plancia sulla mappa di gdanav: le riempie lo stesso filo
+/// dell'auto (`le_persone.dart`).
+final _persone = GestorePersone();
+
 /// gdanav Premium dentro gdahome: e' compreso in gdahome Premium, e segue la
 /// casa in uso (`docs/LICENZE.md`). Lo tiene aggiornato [IlNavigatore], dalla
 /// licenza del collegamento; finche' non c'e', vale quello che si sa senza
@@ -152,7 +156,8 @@ void _seguiLaCasa(Object chi, Collegamento? casa) {
   _licenzaSeguita?.removeListener(_copiaIlPremium);
   _licenzaSeguita = casa.licenza..addListener(_copiaIlPremium);
   _filoDellaVettura?.ferma();
-  _filoDellaVettura = IlFiloDellaVettura(casa, _vettura)..avvia();
+  _filoDellaVettura = IlFiloDellaVettura(casa, _vettura, persone: _persone)
+    ..avvia();
   _copiaIlPremium();
 }
 
@@ -176,6 +181,7 @@ Future<GdanavApp> accendiIlNavigatore() => _acceso ??= () async {
   return preparaGdanav(
     portachiavi: _portachiavi,
     gdahome: _vettura,
+    persone: _persone,
     /* gdanav Premium lo decide gdahome: la casa in uso e' Premium, e gdanav
      * con lei. Niente negozio di gdanav qui dentro: se manca, gdanav dice di
      * prenderlo in gdahome. */
@@ -384,13 +390,15 @@ Future<void> portamiA({required bool casa}) async {
   await app.viaggio.vaiA(dove.luogo);
 }
 
-/// Porta da una persona della plancia: «Apri in mappa» sulla sua scheda.
+/// Mostra una persona della plancia: «Apri in mappa» sulla sua scheda.
 ///
 /// [detto] e' quello che manda la pagina sul canale `gdahomeNavigatore`
-/// (`ponte/plancia/src/core/la-persona-nel-navigatore.js`): `{nome, lat,
-/// lon, indirizzo}` in JSON. Accende gdanav se non c'e', e calcola il viaggio
-/// fin li', con la persona come meta. Torna `false` se il messaggio non porta
-/// un punto: allora non c'e' niente da aprire.
+/// (`ponte/plancia/src/core/la-persona-nel-navigatore.js`): `{id, nome, lat,
+/// lon, indirizzo}` in JSON. Accende gdanav se non c'e' e porta la mappa
+/// sulla persona, **senza** calcolare il viaggio: «non deve calcolare il
+/// percorso ma deve mostrare dove e' presente sulla mappa». La strada, se
+/// serve, la si chiede toccando il suo segnaposto. Torna `false` se il
+/// messaggio non porta un punto: allora non c'e' niente da aprire.
 Future<bool> portamiDallaPersona(String detto) async {
   final Object? letto;
   try {
@@ -403,13 +411,15 @@ Future<bool> portamiDallaPersona(String detto) async {
   final lon = letto['lon'];
   if (lat is! num || lon is! num) return false;
   final nome = '${letto['nome'] ?? ''}'.trim();
-  final app = await accendiIlNavigatore();
-  await app.portamiA(
+  final id = '${letto['id'] ?? ''}'.trim();
+  final persona = PersonaSullaMappa(
+    id: id.isNotEmpty ? id : nome,
     nome: nome.isEmpty ? inLingua(it: 'Persona', en: 'Person') : nome,
-    lat: lat.toDouble(),
-    lon: lon.toDouble(),
-    descrizione: '${letto['indirizzo'] ?? ''}'.trim(),
+    posizione: Punto(lat.toDouble(), lon.toDouble()),
+    dove: '${letto['indirizzo'] ?? ''}'.trim(),
   );
+  await accendiIlNavigatore();
+  _persone.mostra(persona);
   return true;
 }
 

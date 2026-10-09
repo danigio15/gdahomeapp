@@ -35,8 +35,15 @@ class LeCase extends StatelessWidget {
   final Impostazioni impostazioni;
   final LaGuardia guardia;
 
+  /* Tolta una casa, la pagina si ridisegna subito: prima restava li' finche'
+   * non si tornava indietro. */
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => StreamBuilder<void>(
+    stream: collegamento.cambiamenti,
+    builder: (context, _) => _pagina(context),
+  );
+
+  Widget _pagina(BuildContext context) {
     final archivio = collegamento.archivio;
     final aperta = collegamento.casa;
     final licenza = collegamento.licenza;
@@ -109,36 +116,47 @@ class LeCase extends StatelessWidget {
     BuildContext context,
     CasaConosciuta casa,
   ) async {
+    /* Il cestino dice «elimina», e la finestra dice la stessa cosa: cosa
+     * sparisce, cosa resta, e come la si riprende. Prima si chiamava
+     * «dimentica» e parlava solo di quello che restava. */
+    final unica = collegamento.archivio.tutte.length == 1;
     final sicuro = await showDialog<bool>(
       context: context,
       builder: (contesto) => AlertDialog(
         title: Text(
           inLingua(
-            it: 'Dimenticare «${casa.nome}»?',
-            en: 'Forget “${casa.nome}”?',
+            it: 'Eliminare «${casa.nome}»?',
+            en: 'Remove “${casa.nome}”?',
           ),
         ),
         content: Text(
           inLingua(
             it:
-                'Il telefono resta abbinato dalla parte della casa: per '
-                'staccarlo davvero, toglilo anche dalla pagina di gdahome in '
-                'Home Assistant.',
+                'La casa sparisce da questo telefono. Per riaverla dovrai '
+                'abbinarla di nuovo col QR di gdahome in Home Assistant.'
+                '${unica ? '' : '\n\nSe era quella aperta, si apre un\'altra delle tue case.'}'
+                '\n\nDalla parte della casa il telefono resta nell\'elenco: '
+                'per toglierlo del tutto, eliminalo anche dalla pagina di '
+                'gdahome in Home Assistant.',
             en:
-                'The phone stays paired on your home\'s side: to unpair it '
-                'for real, remove it from the gdahome page in Home Assistant '
+                'The home disappears from this phone. To get it back you will '
+                'have to pair it again with the gdahome QR code in Home '
+                'Assistant.'
+                '${unica ? '' : '\n\nIf it was the open one, another of your homes opens.'}'
+                '\n\nOn the home\'s side the phone stays listed: to remove it '
+                'completely, delete it from the gdahome page in Home Assistant '
                 'as well.',
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(contesto).pop(false),
-            child: Text(inLingua(it: 'No', en: 'No')),
+            child: Text(inLingua(it: 'Annulla', en: 'Cancel')),
           ),
           FilledButton(
             onPressed: () => Navigator.of(contesto).pop(true),
             style: FilledButton.styleFrom(minimumSize: const Size(0, 44)),
-            child: Text(inLingua(it: 'Dimentica', en: 'Forget')),
+            child: Text(inLingua(it: 'Elimina', en: 'Remove')),
           ),
         ],
       ),
@@ -150,6 +168,11 @@ class LeCase extends StatelessWidget {
     if (!context.mounted) return;
     if (!await _seIlLucchettoLoChiede(context)) return;
     await collegamento.dimentica(casa.id);
+    /* Era l'ultima: qui non resta niente da scegliere, e dietro c'e' gia'
+     * la pagina per aggiungerne una. */
+    if (context.mounted && collegamento.archivio.vuoto) {
+      Navigator.of(context).pop();
+    }
   }
 
   /// Se il lucchetto protegge questo momento, lo chiede. `true` per passare.
@@ -274,7 +297,7 @@ class _Casa extends StatelessWidget {
           ),
           IconButton(
             icon: const Icon(Icons.delete_outline_rounded),
-            tooltip: inLingua(it: 'Dimentica', en: 'Forget'),
+            tooltip: inLingua(it: 'Elimina', en: 'Remove'),
             onPressed: quandoTolta,
           ),
         ],

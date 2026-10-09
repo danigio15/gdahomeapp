@@ -1,18 +1,21 @@
 /// Che pacchetto e' questo.
 ///
-/// Una riga in grigio, in fondo, che dice la versione e a quale centralino
-/// punta. Sembra un vezzo da programmatore e invece e' l'unica risposta a una
+/// Una riga in grigio, in fondo, che dice la versione. Sembra un vezzo da programmatore e invece e' l'unica risposta a una
 /// domanda che ci si fa davvero: **quello che ho installato e' quello nuovo?**
 ///
 /// Senza, l'unico modo di esserne sicuri e' disinstallare e reinstallare — e
 /// disinstallando si perde l'abbinamento, perche' il segno della casa sta nel
 /// portachiavi del telefono. Una riga di testo evita quel giro intero.
+///
+/// **Il centralino no.** C'era anche «· tramite.gdahome.org»: «in qualsiasi
+/// maschera devi togliere l'indirizzo, non si deve leggere
+/// dall'interfaccia». L'indirizzo del centralino non serve a chi usa l'app,
+/// e scritto li' e' solo un indirizzo in piu' da conoscere.
 library;
 
 import 'package:flutter/material.dart';
 
 import '../parole.dart';
-import '../ponte/centralino.dart';
 import '../versione.dart';
 
 /// La passa il workflow che costruisce il pacchetto. Fuori da li' non c'e' —
@@ -27,34 +30,19 @@ String get versioneDelPacchetto =>
     _detta.isEmpty ? inLingua(it: 'dal codice', en: 'from source') : _detta;
 
 class Firma extends StatelessWidget {
-  const Firma({super.key, this.spazioSopra = 24, this.conIlCentralino = true});
+  const Firma({super.key, this.spazioSopra = 24});
 
   /// Quanto stare sotto quello che c'e' prima: in fondo a una lista lunga
   /// serve aria, in fondo a un menu no.
   final double spazioSopra;
 
-  /// Se dire anche a quale centralino punta questo pacchetto.
-  ///
-  /// In fondo al menu no: la barra e' larga centonovantadue punti, e
-  /// «gdahome 1.4.31 (104310) · tramite.gdahome.org» ci va a capo. La
-  /// versione da sola ci sta su una riga, ed e' quella la domanda —
-  /// **che versione ho?**. Il centralino lo dicono le pagine larghe, dove
-  /// c'e' posto.
-  final bool conIlCentralino;
-
   @override
   Widget build(BuildContext context) {
     final colori = Theme.of(context).colorScheme;
-    final dove =
-        centralinoDiDifetto?.casa ??
-        inLingua(it: 'nessun centralino', en: 'no relay');
-
     return Padding(
       padding: EdgeInsets.only(top: spazioSopra),
       child: Text(
-        conIlCentralino
-            ? 'gdahome $numeroDiQuestApp · $dove'
-            : 'gdahome $numeroDiQuestApp',
+        'gdahome $numeroDiQuestApp',
         textAlign: TextAlign.center,
         style: Theme.of(context).textTheme.bodySmall?.copyWith(
           color: colori.onSurfaceVariant.withValues(alpha: 0.7),

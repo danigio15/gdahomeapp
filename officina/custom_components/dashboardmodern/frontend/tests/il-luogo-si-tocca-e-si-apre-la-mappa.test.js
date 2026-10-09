@@ -73,8 +73,10 @@ test("senza Home Assistant intorno non si annuncia a nessuno", () => {
 test("l'url della mappa si scrive in un posto solo", () => {
   /* Era scritto due volte — card e popup — e due copie della stessa riga
    * diventano due comportamenti diversi al primo ritocco. */
-  assert.equal((sezione.match(/MAPPA_DI_CASA/g) || []).length, 2);
-  assert.match(sezione, /const mapUrl = mappaDi\(view\.address\);/);
+  /* La costante, chi la usa per l'indirizzo, e il popup nell'app: li' la
+   * mappa e' il navigatore, che basta il punto anche senza un indirizzo. */
+  assert.equal((sezione.match(/MAPPA_DI_CASA/g) || []).length, 3);
+  assert.match(sezione, /const mapUrl = mappaDi\(view\.address\) \|\| \(nelNavigatore \? MAPPA_DI_CASA : ""\);/);
 });
 
 test("la persona sa come si chiama la sua entità", () => {
