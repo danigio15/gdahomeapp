@@ -74,3 +74,17 @@ test("la risposta si prende solo da chi ci tiene, e da un'origine nuova solo dop
   assert.doesNotMatch(CRUSCOTTO, /localStorage\.setItem\(DOVE_STA_LA_CHIAVE/);
   assert.match(CRUSCOTTO, /localStorage\.removeItem\(DOVE_STA_LA_CHIAVE\)/);
 });
+
+test("dall'app gdahome la chiave arriva dalla pagina stessa, e si prende", () => {
+  /* «Da app gdahome non vengono passati i codici.» La WebView dell'app scrive
+   * `window.postMessage(...)` dentro la pagina: il messaggio parte da questa
+   * finestra, non da chi la contiene ne' da chi l'ha aperta. Si scartava, e
+   * l'installatore e il gestore si vedevano chiedere la chiave. */
+  assert.match(
+    CRUSCOTTO,
+    /const daChiCiTiene = \(sorgente\) => \{[\s\S]{0,400}if \(sorgente === window\) return true;/,
+  );
+  const GESTORE = readFileSync(join(QUI, "..", "gestore", "index.html"), "utf8");
+  const ascolto = GESTORE.slice(GESTORE.indexOf('addEventListener("message"')).slice(0, 1200);
+  assert.match(ascolto, /daChi !== window &&\s*daChi !== window\.opener/);
+});

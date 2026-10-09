@@ -8204,9 +8204,13 @@
         const detto = evento?.data;
         if (!detto || detto.gdahome !== "chiave") return;
         const daChi = evento.source;
+        /* Dalla WebView dell'app gdahome la chiave si scrive dentro la pagina
+         * stessa: il messaggio parte da questa finestra. */
         if (
           !daChi ||
-          (daChi !== window.opener && (window.parent === window || daChi !== window.parent))
+          (daChi !== window &&
+            daChi !== window.opener &&
+            (window.parent === window || daChi !== window.parent))
         )
           return;
         const arrivata = String(detto.chiave || "").trim();
