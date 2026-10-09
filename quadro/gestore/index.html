@@ -5407,7 +5407,10 @@
           tutte,
           nomi,
           seguite: tutte.filter((una) => una.casa),
-          premium: tutte.filter((una) => una.licenza.premium).length,
+          /* Premium pagato o dato dall'installatore: i regali si contano a parte. */
+          premium: tutte.filter(
+            (una) => una.licenza.premium && una.licenza.buona.origine !== "regalo",
+          ).length,
           daGuardare: leCoseDaGuardare(tutte, nomi),
         };
       }
@@ -5636,7 +5639,9 @@
         const offline = seguite.filter((una) => una.casa.stato.chiave === "offline").length;
         const sospesi = INSTALLATORI.filter((uno) => uno.congelato).length;
         const alLimite = INSTALLATORI.filter((uno) => !uno.congelato && uno.pieno).length;
-        const premium = tutte.filter((una) => una.licenza.premium);
+        const premium = tutte.filter(
+          (una) => una.licenza.premium && una.licenza.buona.origine !== "regalo",
+        );
         const daDove = (origine) =>
           premium.filter((una) => una.licenza.buona.origine === origine).length;
         const A = ABBONAMENTI;
@@ -5687,7 +5692,6 @@
           ? "nessuna casa, per adesso"
           : [
               daDove("negozio") ? plurale(daDove("negozio"), "abbonamento", "abbonamenti") : "",
-              daDove("regalo") ? plurale(daDove("regalo"), "regalo", "regali") : "",
               daDove("installatore") ? `${daDove("installatore")} dagli installatori` : "",
             ]
               .filter(Boolean)

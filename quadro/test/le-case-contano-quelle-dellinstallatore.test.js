@@ -35,3 +35,8 @@ test("i regali hanno la loro casella, che porta a «Regali e codici»", () => {
   assert.equal(regali.valore, "numero(regalate.length)");
   assert.match(GESTORE, /codiciLiberi[\s\S]{0,200}da usare/);
 });
+
+test("«Case Premium» non conta i regali, che stanno nella loro casella", () => {
+  assert.match(GESTORE, /const premium = tutte\.filter\([\s\S]{0,120}origine !== "regalo"/);
+  assert.equal(GESTORE.includes('plurale(daDove("regalo")'), false);
+});
