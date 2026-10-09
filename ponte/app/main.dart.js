@@ -32328,7 +32328,7 @@ else i.m(0,"chi",b)
 i.m(0,"apertura",B.de.gld().bo(n))
 i.m(0,"mia",B.de.gld().bo(m))
 i.m(0,"mucchio",!0)
-i.m(0,"app",1100700)
+i.m(0,"app",1100800)
 m=B.ah.jQ(i,null)
 a.a.gDu().a.B(0,m)
 s=4
@@ -111635,7 +111635,7 @@ q=q.aF(p==null?m.k3:p)}p=t.p
 q=A.cF(A.bd(A.b([k,B.Nc,s,B.bK,A.M(r,o,o,o,o,q,B.am,o)],p),B.y,B.d4,B.n))
 r=A.ja(o,o,B.j6,o,o,o,o)
 k=A.o3(B.a_R,A.M(l===B.T?A.h("Update from the App Store","Aggiorna dall'App Store"):A.h("Update from Google Play","Aggiorna dal Play Store"),o,o,o,o,o,o,o),new A.aA5(this),r)
-s=A.h("This is 1.10.7 (1100700)","Questa \xe8 la 1.10.7 (1100700)")
+s=A.h("This is 1.10.8 (1100800)","Questa \xe8 la 1.10.8 (1100800)")
 r=n.Q
 if(r==null)l=o
 else{l=m.rx
@@ -117206,9 +117206,9 @@ else{l=a5.rx
 l=n.aF(l==null?a5.k3:l)}l=A.M(o,a4,a4,a4,a4,l,a4,a4)
 o=a6.w
 k=A.M(A.h("This app","Questa app"),a4,a4,a4,a4,o,a4,a4)
-j=p.$2(A.h("Version","Versione"),"1.10.7 (1100700)")
+j=p.$2(A.h("Version","Versione"),"1.10.8 (1100800)")
 i=A.h("Package","Pacchetto")
-i=p.$2(i,"87-559e9af")
+i=p.$2(i,"88-2132e6e")
 h=A.h("Relay","Centralino")
 g=t.p
 h=A.bd(A.b([k,B.bL,j,i,p.$2(h,$.ajd()==null?A.h("none","nessuno"):A.h("gdahome","gdahome"))],g),B.I,B.k,B.n)
@@ -117529,7 +117529,7 @@ A.Gf.prototype={
 E(a){var s,r=null,q=A.v(a).ax,p=A.v(a).ok.Q
 if(p==null)p=r
 else{s=q.rx
-p=p.AP((s==null?q.k3:s).dN(0.7),11)}return new A.b3(new A.a8(0,this.c,0,0),A.M("gdahome 1.10.7 (1100700)",r,r,r,r,p,B.am,r),r)}}
+p=p.AP((s==null?q.k3:s).dN(0.7),11)}return new A.b3(new A.a8(0,this.c,0,0),A.M("gdahome 1.10.8 (1100800)",r,r,r,r,p,B.am,r),r)}}
 A.GD.prototype={
 ah(){return new A.NY(new A.bo(null,t.Pq),new A.bo(null,t.dS),B.cQ,new A.bo(null,t.b7),new A.cb(!1,$.at()))}}
 A.NY.prototype={
@@ -117604,7 +117604,7 @@ case 1:return A.m(q,r)}})
 return A.n($async$vB,r)},
 any(){var s,r,q=null,p=this.a.c,o=t.N
 o=A.w(o,o)
-o.m(0,"app","87-559e9af")
+o.m(0,"app","88-2132e6e")
 o.m(0,"sistema","web")
 s=p.cy
 s=s==null?q:s.b
