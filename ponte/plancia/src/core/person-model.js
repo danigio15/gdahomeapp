@@ -260,6 +260,66 @@ function readableState(entityState) {
   return MISSING_STATES.has(value.toLowerCase()) ? "" : value;
 }
 
+/* L'indirizzo come lo si legge su una card.
+ *
+ * «Nella card persona esce quella scritta home che non mi piace. E anche
+ * quando e' fuori casa esce un'altra scritta: o metti l'indirizzo di dove si
+ * trova, ma fatto bene, oppure lo togli.» La casella «indirizzo» prende lo
+ * stato di un'entita' qualunque, e non sempre e' il `geocoded_location`: un
+ * tracker o la persona stessa dicono `home` / `not_home`, che non e' un
+ * indirizzo. E il geocoded del telefono e' tutto in fila — «Via Toledo, 12,
+ * 80134 Napoli NA, Italia» — troppo per una riga.
+ *
+ * Qui: se e' un indirizzo, via e numero con la citta' («Via Toledo 12,
+ * Napoli»); se non lo e', niente. Dagli attributi del geocoded quando ci
+ * sono (Android e iPhone li scrivono: Thoroughfare, Sub Thoroughfare,
+ * Locality), altrimenti dalla riga, togliendo CAP, sigla della provincia e
+ * paese. */
+const NON_INDIRIZZI = new Set(["home", "not_home", "away", "casa", "fuori casa"]);
+const DOMINI_SENZA_INDIRIZZO = new Set(["person", "device_tracker", "zone"]);
+
+export function indirizzoLeggibile(entityState) {
+  const raw = readableState(entityState);
+  if (!raw) return "";
+  const dominio = clean(entityState?.entity_id).split(".")[0];
+  if (DOMINI_SENZA_INDIRIZZO.has(dominio)) return "";
+  if (NON_INDIRIZZI.has(raw.toLowerCase())) return "";
+  // Solo coordinate: non si leggono.
+  if (/^-?\d+(?:\.\d+)?\s*,\s*-?\d+(?:\.\d+)?$/.test(raw)) return "";
+  const a = entityState?.attributes || {};
+  const via = clean(a.Thoroughfare);
+  const civico = clean(a["Sub Thoroughfare"]);
+  const citta = clean(a.Locality) || clean(a["Sub Administrative Area"]);
+  if (via && citta) return `${via}${civico ? ` ${civico}` : ""}, ${citta}`;
+  return accorciaIndirizzo(raw, clean(a.Country));
+}
+
+function accorciaIndirizzo(riga, paese) {
+  let parti = riga
+    .split(",")
+    .map((parte) => clean(parte))
+    .filter(Boolean);
+  // Il paese in coda: quello scritto negli attributi, o l'ultima parte di tre o piu'.
+  if (parti.length > 1 && paese && parti.at(-1).toLowerCase() === paese.toLowerCase()) parti = parti.slice(0, -1);
+  else if (parti.length >= 4 && !/\d/.test(parti.at(-1))) parti = parti.slice(0, -1);
+  const pulite = [];
+  for (const parte of parti) {
+    // Il civico da solo («12») va con la via prima.
+    if (/^\d+[a-z]?(?:\/\w+)?$/i.test(parte) && pulite.length) {
+      pulite[pulite.length - 1] += ` ${parte}`;
+      continue;
+    }
+    // «80134 Napoli NA» → «Napoli»: via il CAP e la sigla della provincia.
+    const senza = parte
+      .replace(/^\d{4,6}\s+/, "")
+      .replace(/\s+\d{4,6}$/, "")
+      .replace(/\s+[A-Z]{2}$/, "")
+      .trim();
+    if (senza && !/^\d+$/.test(senza)) pulite.push(senza);
+  }
+  return pulite.slice(0, 2).join(", ");
+}
+
 /**
  * La distanza come la si scrive su una card: numero corto e unita' del
  * sensore. I metri della Companion App e di Proximity diventano chilometri
@@ -505,7 +565,7 @@ export function personViewModel(person, states = {}, nowMs = null) {
     distance: away ? distanceParts(states?.[person.distance]) : null,
     travel: away ? travelMinutes(states?.[person.travel]) : null,
     direction: away ? directionKey(states?.[person.direction]) : "",
-    address: clean(readableState(states?.[person.address])),
+    address: indirizzoLeggibile(states?.[person.address]),
     activity: away ? activityKey(states?.[person.activity]) : "",
     wifi: clean(readableState(states?.[person.wifi])),
     elapsed: known ? elapsedParts(lastChangedMs(entityState), nowMs ?? Date.now()) : null,

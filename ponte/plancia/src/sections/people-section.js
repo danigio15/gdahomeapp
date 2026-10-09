@@ -15,7 +15,11 @@ import { VELO_DELLE_FINESTRE, tokenDelVelo } from "../core/il-velo-delle-finestr
 import { fermaRitrattiPersi, installAvatar3dStyle, ritrattoVivo } from "./person-avatar-section.js";
 import { normalizePeople, personViewModel } from "../core/person-model.js";
 import { apriLaSchedaDellEntita } from "./la-scheda-di-home-assistant.js";
-import { mandaLaPersonaAlNavigatore } from "../core/la-persona-nel-navigatore.js";
+import {
+  cIlNavigatore,
+  laPersonaPerIlNavigatore,
+  mandaLaPersonaAlNavigatore,
+} from "../core/la-persona-nel-navigatore.js";
 import {
   allStates,
   clean,
@@ -337,7 +341,10 @@ function popupTiles(view) {
 
 function popupBodyMarkup(view, people) {
   const molte = people.length > 1;
-  const mapUrl = mappaDi(view.address);
+  /* Nell'app la mappa e' il navigatore, e li' basta il punto: anche senza un
+   * indirizzo scritto la persona si vede. */
+  const nelNavigatore = cIlNavigatore(root) && laPersonaPerIlNavigatore(view, allStates()) !== null;
+  const mapUrl = mappaDi(view.address) || (nelNavigatore ? MAPPA_DI_CASA : "");
   return `
     <button type="button" class="dm-person-pop-close" data-person-pop-close aria-label="${t("Chiudi", "Close")}">✕</button>
     ${molte ? `<button type="button" class="dm-person-pop-nav" data-person-pop-nav="-1" aria-label="${t("Persona precedente", "Previous person")}">‹</button><button type="button" class="dm-person-pop-nav dm-next" data-person-pop-nav="1" aria-label="${t("Persona successiva", "Next person")}">›</button>` : ""}

@@ -17,6 +17,7 @@ const states = {
 
 test("la persona col suo punto, il nome e l'indirizzo", () => {
   assert.deepEqual(laPersonaPerIlNavigatore(view, states), {
+    id: "person.giovanni",
     nome: "Giovanni",
     lat: 40.8466,
     lon: 14.2497,

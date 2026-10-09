@@ -28,6 +28,7 @@ import '../../casa/entita.dart';
 import '../../plancia/cucitura.dart' show laPlanciaHaScritto;
 import '../../ponte/errori.dart' show ComandoRifiutato;
 import '../../ponte/filo.dart' show Filo;
+import 'le_persone.dart';
 
 /// La vettura come la racconta la configurazione della plancia.
 class LaVettura {
@@ -282,10 +283,15 @@ class LaVettura {
 /// - e ogni minuto, per quello che si cambia da un altro telefono o dal
 ///   browser.
 class IlFiloDellaVettura {
-  IlFiloDellaVettura(this.collegamento, this.fonte);
+  IlFiloDellaVettura(this.collegamento, this.fonte, {this.persone});
 
   final Collegamento collegamento;
   final SorgenteGdahome fonte;
+
+  /// Le persone della plancia sulla mappa di gdanav (`le_persone.dart`): lo
+  /// stesso filo, la stessa configurazione, lo stesso abbonamento.
+  final GestorePersone? persone;
+  List<PersonaDellaPlancia> _diCasa = const [];
 
   /// Ogni quanto si rilegge la configurazione anche senza motivi: un'auto
   /// cambiata dal browser o da un altro telefono non avvisa nessuno.
@@ -349,9 +355,9 @@ class IlFiloDellaVettura {
       });
       final valori = risposta is Map ? risposta['snapshot'] : null;
       if (_spento || valori is! Map || valori['values'] is! Map) return;
-      _vettura = LaVettura.daiValori(
-        Map<String, dynamic>.from(valori['values'] as Map),
-      );
+      final tutti = Map<String, dynamic>.from(valori['values'] as Map);
+      _vettura = LaVettura.daiValori(tutti);
+      if (persone != null) _diCasa = lePersoneDallaPlancia(tutti);
       fonte.descrivi(_vettura?.auto);
       await _abbonati(filo);
       _aggiorna();
@@ -377,6 +383,10 @@ class IlFiloDellaVettura {
     final ids = <String>{
       for (final id in _vettura?.sensori.values ?? const <String>[])
         if (!id.startsWith('dm.')) id,
+      for (final p in _diCasa) ...[
+        p.entita,
+        if (p.indirizzo.isNotEmpty) p.indirizzo,
+      ],
     }.toList()..sort();
     final quali = ids.join(',');
     if (identical(filo, _filoAbbonato) && quali == _abbonatiA) return;
@@ -429,13 +439,16 @@ class IlFiloDellaVettura {
   }
 
   void _aggiorna() {
-    final v = _vettura;
-    if (v == null || _spento) return;
+    if (_spento) return;
     /* I suoi sensori dall'abbonamento; e se qualcun altro ha gia' chiesto
      * tutta la casa (l'elenco dei dispositivi, un ponte di prima), anche da
      * li'. */
     final casa = collegamento.stato;
-    final l = v.lettura((id) => _valori[id] ?? casa?[id]);
+    Entita? stato(String id) => _valori[id] ?? casa?[id];
+    persone?.aggiorna([for (final p in _diCasa) ?sullaMappa(p, stato)]);
+    final v = _vettura;
+    if (v == null) return;
+    final l = v.lettura(stato);
     if (l == null || _uguale(l, _mandata)) return;
     _mandata = l;
     fonte.manda(l);

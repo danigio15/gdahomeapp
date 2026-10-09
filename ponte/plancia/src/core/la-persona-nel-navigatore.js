@@ -3,8 +3,11 @@
  * «Da app gdahome quando clicco sulla persona e premo su Apri mappa, apri la
  * posizione su gdanav direttamente.» Nell'app il navigatore c'e' gia', e la
  * mappa di Home Assistant — quella che il tocco apriva (#438) — dentro un
- * riquadro non porta da nessuna parte: si vede il segnaposto e basta. Nel
- * navigatore invece c'e' la strada per arrivarci.
+ * riquadro non porta da nessuna parte.
+ *
+ * Il navigatore mostra la persona sulla mappa, e basta: «non deve calcolare
+ * il percorso ma deve mostrare dove e' sulla mappa». La strada fin li', se
+ * serve, si chiede toccando il suo segnaposto.
  *
  * La pagina lo sa fare solo se l'app la ascolta: il canale `gdahomeNavigatore`
  * lo registra l'app (`app/lib/schermate/riquadro/sul_telefono.dart`), e nel
@@ -23,8 +26,9 @@ export const CANALE_DEL_NAVIGATORE = "gdahomeNavigatore";
 /**
  * Il messaggio per il navigatore, o `null` se la persona non ha un punto.
  *
- * `{nome, lat, lon, indirizzo}`: il nome e l'indirizzo sono quelli che la
- * scheda mostra, cosi' nel navigatore la meta si chiama come la persona.
+ * `{id, nome, lat, lon, indirizzo}`: l'id e' l'entita' (lo stesso con cui
+ * l'app mette sulla mappa tutte le persone di casa), il nome e l'indirizzo
+ * sono quelli che la scheda mostra.
  */
 export function laPersonaPerIlNavigatore(view, states = {}) {
   const attributi = states?.[view?.entity]?.attributes || {};
@@ -32,11 +36,17 @@ export function laPersonaPerIlNavigatore(view, states = {}) {
   const lon = longitudine(attributi.longitude);
   if (lat === null || lon === null) return null;
   return {
+    id: String(view?.entity ?? ""),
     nome: String(view?.name ?? "").trim() || String(view?.entity ?? ""),
     lat,
     lon,
     indirizzo: String(view?.address ?? "").trim(),
   };
+}
+
+/** Se la pagina sta nell'app, che col navigatore la persona la sa mostrare. */
+export function cIlNavigatore(root = globalThis) {
+  return typeof root?.[CANALE_DEL_NAVIGATORE]?.postMessage === "function";
 }
 
 /**
