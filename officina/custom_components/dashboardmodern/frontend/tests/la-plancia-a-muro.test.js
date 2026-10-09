@@ -14,6 +14,7 @@ import {
   eNotte,
   fonteDaiValori,
   ingressoProposto,
+  muroDiPartenza,
   muroPulito,
   nuovaPagina,
   PAGINE_AL_MASSIMO,
@@ -23,6 +24,7 @@ import {
   temaDelMomento,
   verso,
 } from "../src/core/plancia-a-muro.js";
+import { sharedReconcileAction } from "../src/sections/config-persistence-section.js";
 
 const STATO = {
   schema_version: 4,
@@ -51,7 +53,9 @@ const VALORI = {
     { name: "Luci", type: "builtin", builtin: "luci" },
   ]),
   cd_people: JSON.stringify([{ entity: "person.anna", name: "Anna" }]),
-  cd_entity_overrides: JSON.stringify({ "dm.security_centrale_allarme": "alarm_control_panel.casa" }),
+  cd_entity_overrides: JSON.stringify({
+    "dm.security_centrale_allarme": "alarm_control_panel.casa",
+  }),
 };
 
 test("dalla plancia principale si leggono stanze, dispositivi, azioni e centrale", () => {
@@ -99,7 +103,9 @@ test("finche' nessuno li sceglie, i comandi seguono la stanza", () => {
     ["light.cucina", "Cinema", "Esco", "Rientro"],
   );
   const scelto = muroPulito({
-    pagine: [{ modello: "stanza", stanza: "Cucina", comandi: [{ tipo: "luce", entita: "light.tavolo" }] }],
+    pagine: [
+      { modello: "stanza", stanza: "Cucina", comandi: [{ tipo: "luce", entita: "light.tavolo" }] },
+    ],
   });
   assert.equal(scelto.pagine[0].scelti, true);
   assert.deepEqual(
@@ -113,12 +119,18 @@ test("sei posti, quattro pagine, e un comando senza entita' vera non entra", () 
   const muro = muroPulito({
     pagine: Array.from({ length: 6 }, () => ({
       modello: "stanza",
-      comandi: [...troppi, { tipo: "luce", entita: "non un'entita" }, { tipo: "boh", entita: "light.x" }],
+      comandi: [
+        ...troppi,
+        { tipo: "luce", entita: "non un'entita" },
+        { tipo: "boh", entita: "light.x" },
+      ],
     })),
   });
   assert.equal(muro.pagine.length, PAGINE_AL_MASSIMO);
   assert.equal(muro.pagine[0].comandi.length, POSTI);
-  assert.ok(muro.pagine[0].comandi.every((c) => c.tipo === "luce" && /^light\.l\d$/.test(c.entita)));
+  assert.ok(
+    muro.pagine[0].comandi.every((c) => c.tipo === "luce" && /^light\.l\d$/.test(c.entita)),
+  );
   assert.equal(new Set(muro.pagine.map((p) => p.id)).size, muro.pagine.length, "id diversi");
 });
 
@@ -180,6 +192,43 @@ test("le pagine nuove nascono gia' piene", () => {
   assert.equal(ingresso.telecamera, "camera.cancello");
   assert.equal(ingresso.esco, "Esco");
   assert.equal(ingresso.rientro, "Rientro");
+});
+
+test("una plancia nata a muro e' gia' accesa, con le pagine che la casa permette", () => {
+  const muro = muroDiPartenza(fonteDaiValori(VALORI));
+  assert.equal(muro.attiva, true);
+  assert.equal(muro.fonte, "primary");
+  assert.deepEqual(
+    muro.pagine.map((p) => p.modello),
+    ["stanza", "scene", "ingresso"],
+  );
+  assert.equal(muro.pagine[0].stanza, "Soggiorno");
+  assert.equal(muro.pagine[0].scelti, false, "i comandi seguono la stanza");
+  assert.deepEqual(muroPulito(JSON.stringify(muro)), muro);
+  /* Senza scene ne' centrale ne' telecamere resta la stanza sola. */
+  assert.deepEqual(
+    muroDiPartenza({}).pagine.map((p) => p.modello),
+    ["stanza"],
+  );
+});
+
+test("un tablet nuovo su una plancia nata a muro si prende il suo config", () => {
+  /* La plancia nata dalla console ha nel cassetto solo `cd_muro`: deve contare
+   * come configurata, se no il tablet non la scarica e resta sulla plancia
+   * vuota del primo giorno. */
+  const scelta = sharedReconcileAction({
+    snapshot: {
+      revision: 1,
+      updated_at: 1_800_000_000_000,
+      keys_revision: 62,
+      writer_generation: 0,
+      values: { cd_muro: JSON.stringify(muroDiPartenza(fonteDaiValori(VALORI))) },
+    },
+    local: {},
+    localConfigured: false,
+    syncedRevision: 0,
+  });
+  assert.equal(scelta, "restore-remote");
 });
 
 test("sul riposo si vedono gli avvisi accesi della casa e l'antifurto che suona", async () => {

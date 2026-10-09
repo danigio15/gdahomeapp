@@ -61,6 +61,7 @@ import { I_MARCHI, QuestoNoNo } from "./aggiornamenti.js";
 import { CentralinoHaDettoNo, SenzaCentralino } from "./segnalazioni.js";
 import { SegnalazioniDellaPlancia } from "./segnalazioni-della-plancia.js";
 import { laVede, PremiumRichiesto, QuellaPlanciaNo, TroppePlance } from "./plance.js";
+import { aggiungiUnaPlancia } from "./plancia-nuova.js";
 import { LicenzaNo } from "./licenze.js";
 import { perLaVia, percorsoSenzaTrucchi } from "./dogana.js";
 import { iFili, iRami, laMappaDisegnata } from "./mappa-zigbee.js";
@@ -1149,7 +1150,14 @@ export class Commissioni {
         case "elenco":
           return si(id, { plance: sue() });
         case "aggiungi": {
-          const nuova = plance.aggiungi(titolo);
+          const nuova = aggiungiUnaPlancia(
+            { plance, configurazione: this.configurazione, registro: this.registro },
+            {
+              titolo,
+              modello: detto.modello,
+              utenti: Array.isArray(detto.utenti) ? detto.utenti : null,
+            },
+          );
           return si(id, { plance: sue(), quale: nuova });
         }
         case "rinomina":

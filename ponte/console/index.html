@@ -424,6 +424,45 @@
             <span class="conta" id="plance-conta"></span>
           </div>
           <ul id="elenco-plance" class="elenco"></ul>
+          <!-- Una plancia nuova: il modello, chi la vede, il nome. «Quando si
+               sceglie di aggiungere altre plance si sceglie il modello, se la
+               classica o a muro, e anche l'utente che deve vederla.» Una
+               plancia a muro nasce gia' accesa: le sue pagine le riempie il
+               ponte dalla plancia principale. -->
+          <div class="nuova-plancia" id="nuova-plancia">
+            <p class="etichetta" data-en="New dashboard · template">Plancia nuova · modello</p>
+            <div
+              class="modelli"
+              role="radiogroup"
+              aria-label="Modello"
+              data-en-aria-label="Template"
+            >
+              <label class="modello">
+                <input type="radio" name="modello-plancia" value="muro" checked />
+                <span>
+                  <strong data-en="📟 On the wall">📟 A muro</strong>
+                  <small
+                    data-en="A panel for wall tablets and NSPanels: big controls, one screen. It starts ready, with the rooms, scenes and entrance of the main dashboard."
+                    >Un pannello per tablet a muro e NSPanel: comandi grandi, una schermata sola.
+                    Nasce già pronto, con le stanze, le scene e l'ingresso della principale.</small
+                  >
+                </span>
+              </label>
+              <label class="modello">
+                <input type="radio" name="modello-plancia" value="classica" />
+                <span>
+                  <strong data-en="🏠 Classic">🏠 Classica</strong>
+                  <small
+                    data-en="A complete dashboard of its own, with its sections, cards and rooms, to set up from scratch."
+                    >Una plancia completa tutta sua, con le sue sezioni, tessere e stanze, da
+                    configurare da zero.</small
+                  >
+                </span>
+              </label>
+            </div>
+            <p class="etichetta" data-en="Who sees it">Chi la vede</p>
+            <div class="chi-la-vede-nuova" id="utenti-plancia-nuova"></div>
+          </div>
           <div class="riga-di-tasti">
             <input
               id="titolo-plancia"

@@ -213,6 +213,24 @@ export function muroPulito(input) {
   };
 }
 
+/**
+ * La plancia a muro appena nata, gia' accesa e gia' riempita.
+ *
+ * «Gestiscila tu la creazione: per default parte a muro.» Chi aggiunge una
+ * plancia «a muro» dalla console non deve poi aprirne il config per vedere
+ * qualcosa sul tablet: nasce con le pagine che la fonte permette. Una Stanza
+ * sempre — la prima della casa, coi suoi comandi che la seguono — le Scene se
+ * fra le Azioni ce n'e' almeno una, l'Ingresso se c'e' una centrale o una
+ * telecamera. Le stesse proposte di chi aggiunge le pagine a mano.
+ */
+export function muroDiPartenza(fonte = {}) {
+  const pagine = [nuovaPagina("stanza", fonte, 0)];
+  if (scenePropose(fonte).length) pagine.push(nuovaPagina("scene", fonte, pagine.length));
+  if (elenco(fonte.centrali).length || elenco(fonte.telecamere).length)
+    pagine.push(nuovaPagina("ingresso", fonte, pagine.length));
+  return muroPulito({ ...MURO_VUOTO, attiva: true, fonte: PROFILO_DI_ORIGINE, pagine });
+}
+
 /** Una pagina nuova del modello scelto, gia' pronta a mostrare qualcosa. */
 export function nuovaPagina(modello, fonte = {}, indice = 0) {
   const pagina = paginaPulita({ id: nuovoId().slice(0, 24), modello }, indice);
