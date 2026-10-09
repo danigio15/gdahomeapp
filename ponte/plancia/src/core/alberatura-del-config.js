@@ -158,9 +158,7 @@ export const SCHEDE = Object.freeze({
   /* Le piante (#159): accanto all'irrigazione, perché è la stessa domanda —
    * quando dare l'acqua — per chi un impianto non ce l'ha. */
   piante: { famiglia: "clima", posizione: 42 },
-  /* L'acquario (#127): accanto alla piscina e alle piante, fra l'acqua di
-   * casa. */
-  acquario: { famiglia: "clima", posizione: 43 },
+  /* L'acquario (#127) non ha piu' una scheda: sta negli Animali. */
 
   /* ── 🛋️ Casa ───────────────────────────────────────────────────────── */
   stanze: { famiglia: "casa", posizione: 10 },

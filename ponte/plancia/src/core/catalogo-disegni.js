@@ -206,6 +206,25 @@ const CORPI = Object.freeze({
 
   smoke: `${PANNELLO}<rect ${SCOCCA} x="18" y="56" width="60" height="26" rx="10"/><rect ${ACCENTO} x="27" y="65" width="10" height="8" rx="4"/><path ${TRATTO} d="M36 46c0-8 10-8 10-16s-8-8-8-14M56 46c0-6 8-7 8-14"/>`,
 
+  /* Il terrario (le vasche dentro gli Animali): la teca di vetro con la
+   * lampada sopra, la sabbia, il ramo, il sasso e il geco. È la vasca
+   * dell'acquario vista da chi ci tiene un rettile: stessa scocca, dentro la
+   * terra calda invece dell'acqua. */
+  terrarium: `${PANNELLO}<rect ${SCOCCA} x="32" y="12" width="32" height="10" rx="5"/><path ${CALDO} d="M36 22h24l-4 7H40Z"/><rect ${SCOCCA} x="12" y="26" width="72" height="50" rx="9"/><rect ${FRONTALE} x="18" y="33" width="60" height="36" rx="4"/><path ${CALDO} d="M18 60h60v5a4 4 0 0 1-4 4H22a4 4 0 0 1-4-4Z"/><ellipse ${SPENTO} cx="66" cy="60" rx="8" ry="4.6"/><path ${TRATTO} d="M22 58c9-6 17-9 28-18"/><path ${VERDE} d="M28 52c5-5 12-6 18-4 3 1 3 3 0 4-6 3-12 3-18 0Z"/><path fill="none" stroke="#22c55e" stroke-width="3" stroke-linecap="round" d="M45 50c5 0 9 3 11 7"/><circle ${SCOCCA} cx="31.5" cy="51" r="1.4"/><rect ${SCOCCA} x="20" y="76" width="56" height="8" rx="4"/>`,
+
+  /* La lampada calda del terrario: la cupola, il bulbo acceso e il caldo che
+   * scende. Non è la fiamma — quella è il gas — né la lampadina delle luci. */
+  "heat-lamp": `${PANNELLO}<rect ${SCOCCA} x="44" y="10" width="8" height="14" rx="3"/><path ${SCOCCA} d="M22 46a26 26 0 0 1 52 0Z"/><path ${FRONTALE} d="M30 46a18 18 0 0 1 36 0Z" opacity=".35"/><circle ${CALDO} cx="48" cy="48" r="10"/><path fill="none" stroke="#fbbf24" stroke-width="3.4" stroke-linecap="round" d="M34 64c3 4 0 8 3 12M48 64c3 4 0 8 3 12M62 64c3 4 0 8 3 12"/>`,
+
+  /* L'UVB: il tubo con la luce viola e i raggi. */
+  uvb: `${PANNELLO}<rect ${SCOCCA} x="10" y="22" width="76" height="18" rx="9"/><rect ${FRONTALE} x="17" y="26.5" width="62" height="9" rx="4.5"/><rect ${SCOCCA} x="20" y="16" width="8" height="8" rx="2"/><rect ${SCOCCA} x="68" y="16" width="8" height="8" rx="2"/><path fill="none" stroke="#0ea5e9" stroke-width="3.4" stroke-linecap="round" d="M28 50l-5 14M48 50v18M68 50l5 14M38 50l-2 16M58 50l2 16"/>`,
+
+  /* Il nebulizzatore: l'ugello e la nuvola di goccioline. */
+  mist: `${PANNELLO}<rect ${SCOCCA} x="40" y="10" width="16" height="22" rx="5"/><path ${SCOCCA} d="M34 32h28l-5 9H39Z"/><path fill="none" stroke="#0ea5e9" stroke-width="3" stroke-linecap="round" d="M42 46l-12 16M48 46v20M54 46l12 16"/><circle ${VETRO} cx="26" cy="70" r="4"/><circle ${VETRO} cx="38" cy="76" r="3.4"/><circle ${VETRO} cx="48" cy="80" r="4"/><circle ${VETRO} cx="58" cy="76" r="3.4"/><circle ${VETRO} cx="70" cy="70" r="4"/><circle ${VETRO} cx="33" cy="60" r="2.6"/><circle ${VETRO} cx="63" cy="60" r="2.6"/>`,
+
+  /* L'umidità: la goccia col segno del percento. */
+  humidity: `${PANNELLO}<path ${VETRO} d="M48 10c15 19 24 31 24 41a24 24 0 0 1-48 0c0-10 9-22 24-41Z"/><circle ${SCOCCA} cx="40" cy="50" r="4.6"/><circle ${SCOCCA} cx="57" cy="67" r="4.6"/><path ${TRATTO} stroke-width="4" d="M59 46 38 71"/>`,
+
   thermometer: `${PANNELLO}<rect ${SCOCCA} x="40" y="12" width="16" height="46" rx="8"/><circle ${SCOCCA} cx="48" cy="68" r="16"/><circle ${ACCENTO} cx="48" cy="68" r="9"/><rect ${ACCENTO} x="45" y="32" width="6" height="30" rx="3"/><path ${TRATTO} d="M62 26h8M62 36h8M62 46h8"/>`,
 
   sun: `${PANNELLO}<circle ${CALDO} cx="48" cy="48" r="19"/><path ${TRATTO} d="M48 12v9M48 75v9M12 48h9M75 48h9M23 23l6 6M67 67l6 6M73 23l-6 6M29 67l-6 6"/>`,
@@ -487,6 +506,14 @@ const ALIAS = Object.freeze({
   pianta: "plant",
   piante: "plant",
   vaso: "plant",
+  /* Il terrario e le sue lampade, come li chiama chi li cerca. */
+  terrario: "terrarium",
+  terrari: "terrarium",
+  rettile: "terrarium",
+  rettili: "terrarium",
+  geco: "terrarium",
+  "lampada-calda": "heat-lamp",
+  nebulizzatore: "mist",
   /* L'acquario, come lo chiama chi lo cerca. */
   acquario: "aquarium",
   pesci: "aquarium",
@@ -521,8 +548,7 @@ const ALIAS = Object.freeze({
   flood: "water",
   allagamento: "water",
   temperatura: "thermometer",
-  humidity: "water",
-  umidita: "water",
+  umidita: "humidity",
   sole: "sun",
   notte: "moon",
   vento: "wind",

@@ -1,13 +1,14 @@
-/* La pagina dell'acquario (#127).
+/* La scheda dell'acquario (#127), che adesso vive negli Animali.
  *
  * «Si potrebbe inserire una sezione con l'acquario?»
  *
  * Qui si tiene ferma la parte che si prova senza una casa vera: cosa dice la
- * risposta grande — tutto nella norma, l'acqua troppo calda, da rabboccare, il
+ * risposta — tutto nella norma, l'acqua troppo calda, da rabboccare, il
  * cambio d'acqua da fare —, che le mattonelle sono quelle della Piscina ma non
  * i suoi comandi, che il cambio d'acqua ha l'anello e il tasto, che la tessera
  * in Home chiede attenzione solo quando c'è da fare, e che la storia del
- * livello passa dal ponte senza un battito che gira.
+ * livello passa dal ponte senza un battito che gira. La pagina sua non c'è
+ * più: il corpo della vasca lo mette la scheda degli Animali.
  */
 import assert from "node:assert/strict";
 import test from "node:test";
@@ -17,7 +18,7 @@ import { acquarioDiCasa, comeStaLAcquario } from "../src/core/l-acquario-di-casa
 
 const {
   cambioInParole,
-  paginaDellAcquario,
+  corpoDellaVasca,
   prossimoCambioInParole,
   rabboccoInParole,
   tesseraDellAcquario,
@@ -70,7 +71,13 @@ const vista = (stati = CASA, altro = {}) => {
     ...altro,
   };
   const letture = acquarioDiCasa(stati, config);
-  return { letture, adesso: ADESSO, come: comeStaLAcquario(letture, { config, adesso: ADESSO }) };
+  return {
+    voce: { id: "acquario" },
+    tipo: "acquario",
+    letture,
+    adesso: ADESSO,
+    come: comeStaLAcquario(letture, { config, adesso: ADESSO }),
+  };
 };
 
 test("tutto nella norma: la vasca, i litri e da quanto è stata cambiata l'acqua", () => {
@@ -80,10 +87,10 @@ test("tutto nella norma: la vasca, i litri e da quanto è stata cambiata l'acqua
   assert.equal(testa.grande, "Tutto nella norma");
   assert.equal(piano(testa.nomi), "Vasca tropicale · 240 L");
   assert.equal(testa.sotto, "Cambio d'acqua 11 giorni fa");
-  const pagina = piano(paginaDellAcquario(casa));
+  const pagina = piano(corpoDellaVasca(casa));
   /* Le mattonelle della Piscina: la luce gialla, il filtro azzurro, il
    * riscaldatore spento. */
-  assert.match(pagina, /class="dm-pool-tiles"/);
+  assert.match(pagina, /class="dm-pool-tiles /);
   assert.match(pagina, /data-dm-pool-tile="light" data-on="true"[\s\S]*?>accese</);
   assert.match(pagina, /data-dm-pool-tile="pump" data-on="true"[\s\S]*?>acceso</);
   assert.match(pagina, /data-dm-pool-tile="heat" data-on="false"[\s\S]*?>spento</);
@@ -102,7 +109,11 @@ test("tutto nella norma: la vasca, i litri e da quanto è stata cambiata l'acqua
   assert.match(pagina, /<b>11<\/b><i>\/ 14<\/i>/);
   /* Nella pagina l'apostrofo è scritto come entità, come ogni testo. */
   assert.match(pagina, /Cambio d&#39;acqua 11 giorni fa · il prossimo fra 3 giorni/);
-  assert.match(pagina, /data-dm-acq-cambio>✓ Fatto oggi</);
+  /* Il tasto dice di QUALE vasca: le vasche adesso possono essere tante. */
+  assert.match(pagina, /data-dm-acq-cambio="acquario">✓ Fatto oggi</);
+  /* Il nome e i litri li dice la testa della scheda: la risposta non li
+   * ripete quando va tutto bene. */
+  assert.doesNotMatch(pagina, /dm-acq-nomi/);
   assert.match(pagina, /ogni 14 giorni/);
 });
 
@@ -119,7 +130,7 @@ test("l'acqua troppo calda viene prima di tutto, con la sua forcella sotto", () 
   assert.equal(testa.grande, "Acqua troppo calda");
   assert.equal(piano(testa.nomi), "Temperatura · 29,1 °C");
   assert.equal(piano(testa.sotto), "ideale 24 – 27 °C");
-  assert.match(paginaDellAcquario(vista(caldo)), /data-verdict="high"/);
+  assert.match(corpoDellaVasca(vista(caldo)), /data-verdict="high"/);
   /* Due misure fuori: si contano, e si dicono i nomi. */
   const due = testaDellAcquario(vista({ ...caldo, "sensor.acquario_ph": stato(8.3) }).come);
   assert.equal(due.grande, "2 valori fuori norma");
@@ -135,7 +146,7 @@ test("il galleggiante basso chiede il rabbocco, e il cambio in ritardo si conta"
   assert.equal(livello.stato, "livello");
   assert.equal(livello.grande, "Da rabboccare");
   assert.equal(livello.nomi, "Livello");
-  assert.match(paginaDellAcquario(vista(basso)), /data-stato="basso"[\s\S]*?da rabboccare/);
+  assert.match(corpoDellaVasca(vista(basso)), /data-stato="basso"[\s\S]*?da rabboccare/);
 
   const vecchio = vista(CASA, { cambio: new Date(ADESSO - 16 * GIORNO).toISOString() });
   const cambio = testaDellAcquario(vecchio.come);
@@ -144,11 +155,11 @@ test("il galleggiante basso chiede il rabbocco, e il cambio in ritardo si conta"
   assert.equal(cambio.nomi, "Vasca tropicale · Cambio d'acqua 16 giorni fa");
   assert.equal(cambio.sotto, "in ritardo di 2 giorni");
   assert.match(
-    paginaDellAcquario(vecchio),
-    /class="dm-pool-card dm-acq-cambio" data-stato="scaduto"/,
+    corpoDellaVasca(vecchio),
+    /class="dm-acq-blocco dm-acq-cambio" data-stato="scaduto"/,
   );
   /* Senza una data segnata non si sa niente, e lo si dice. */
-  const mai = paginaDellAcquario(vista(CASA, { cambio: "" }));
+  const mai = corpoDellaVasca(vista(CASA, { cambio: "" }));
   assert.match(mai, /Non è ancora segnato/);
   assert.match(mai, /<b>—<\/b>/);
 });
@@ -211,7 +222,7 @@ test("la storia del livello passa dal ponte, e non c'è un battito che gira", ()
   assert.doesNotMatch(sorgente, /setInterval/);
   assert.match(sorgente, /root\.setTimeout\?\.\(\(\) => \{\s*state\.sveglia = 0;/);
   assert.match(sorgente, /if \(serveLeggere\(\)\) \{\s*aggiornaIDati\(\);/);
-  assert.match(sorgente, /\.dm-tile\[data-dm-widget="\$\{ACQUARIO_TAB\}"\]/);
+  assert.match(sorgente, /\.dm-tile\[data-dm-widget="\$\{TESSERA_DELLE_VASCHE\}"\]/);
   /* Solo i livelli con una soglia hanno bisogno della storia, e prima degli
    * stati non si chiede niente. */
   assert.match(sorgente, /const livelli = livelliDaSeguire\(letture\);/);
@@ -219,17 +230,20 @@ test("la storia del livello passa dal ponte, e non c'è un battito che gira", ()
 });
 
 test("la scheda nel Config: la vasca in cima, e in ogni riga cosa è", () => {
-  assert.match(scheda, /costruisciSchedaDichiarata\(\{/);
-  assert.match(scheda, /inTesta: vascaMarkup,/);
-  assert.match(scheda, /data-dm-acq-genere="\$\{indice\}"/);
+  /* Non è più una scheda sua: sono i pezzi che la riga di una vasca monta
+   * dentro la scheda degli Animali. */
+  assert.doesNotMatch(scheda, /costruisciSchedaDichiarata/);
+  assert.doesNotMatch(scheda, /export function installAcquarioEditor/);
+  assert.match(scheda, /export function vascaEditorMarkup\(/);
+  assert.match(scheda, /data-vasca-campo="genere"/);
   assert.match(
     scheda,
-    /campoDellaVasca\(\s*"cambio",\s*t\("Ultimo cambio d'acqua", "Last water change"\)/,
+    /campoDellaVasca\(indice, "cambio", t\("Ultimo cambio d'acqua", "Last water change"\)/,
   );
   assert.match(scheda, /tipo: "date"/);
   /* Il galleggiante non ha una soglia da scrivere. */
   assert.match(
     scheda,
-    /genere === "livello" && !clean\(riga\?\.entity\)\.startsWith\("binary_sensor\."\)/,
+    /genere === "livello" && !clean\(entity\)\.startsWith\("binary_sensor\."\)/,
   );
 });

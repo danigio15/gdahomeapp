@@ -956,6 +956,29 @@ const OGGETTI = Object.freeze({
     <circle cx="24.2" cy="13.6" r=".8" fill="#fff" fill-opacity=".85"/>
     <rect x="5.4" y="26" width="21.2" height="2.6" rx="1.3" fill="#1e3a5f"/>`,
 
+  /* Il terrario (le vasche dentro gli Animali): la teca con la lampada calda
+   * sopra, la sabbia, il ramo, il sasso e il geco verde. Lo stesso mobile
+   * dell'acquario, perché chi li ha tutti e due li vede uno accanto all'altro. */
+  terrario: `<defs>
+      <linearGradient id="dmoTerA" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#fffbeb"/><stop offset=".6" stop-color="#fef3c7"/>
+        <stop offset="1" stop-color="#fde68a"/></linearGradient>
+      <linearGradient id="dmoTerG" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#86efac"/><stop offset=".55" stop-color="#22c55e"/>
+        <stop offset="1" stop-color="#15803d"/></linearGradient></defs>
+    ${OMBRA(16, 29.4, 12)}
+    <rect x="11" y="3.6" width="10" height="3.6" rx="1.8" fill="#1e3a5f"/>
+    <path d="M12.4 7.2h7.2l-1.2 2h-4.8Z" fill="#fbbf24"/>
+    <rect x="3" y="9" width="26" height="17" rx="2.6" fill="#0f2942"/>
+    <rect x="4.8" y="11.6" width="22.4" height="12.6" rx="1.4" fill="url(#dmoTerA)"/>
+    <path d="M4.8 21.2h22.4v1.6a1.4 1.4 0 0 1-1.4 1.4H6.2a1.4 1.4 0 0 1-1.4-1.4Z" fill="#fbbf24"/>
+    <ellipse cx="22.6" cy="21" rx="3.2" ry="1.8" fill="#94a3b8"/>
+    <path d="M6.4 20.6c3.2-2.2 6.2-3.2 10-6.4" stroke="#92400e" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+    <path d="M8.6 18.4c1.8-1.8 4.4-2.2 6.6-1.4 1.1.4 1.1 1.2 0 1.6-2.2.9-4.4.9-6.6-.2Z" fill="url(#dmoTerG)"/>
+    <path d="M15 17.6c1.8 0 3.2.9 3.9 2.4" stroke="#15803d" stroke-width="1" fill="none" stroke-linecap="round"/>
+    <circle cx="9.9" cy="17.9" r=".5" fill="#0f2942"/>
+    <rect x="5.4" y="26" width="21.2" height="2.6" rx="1.3" fill="#1e3a5f"/>`,
+
   /* L'accumulo (#117): il pacco di batterie in piedi, coi due poli in cima, la
    * carica verde dietro il vetro e la saetta. Non è la pila dei sensori —
    * quella è gialla e piccola — né il gruppo di continuità, che è una scatola
