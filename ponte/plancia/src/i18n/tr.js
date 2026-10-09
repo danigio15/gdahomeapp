@@ -4023,6 +4023,8 @@ export default Object.freeze({
   "Volume down": "Sesi azalt",
   "Volume up": "Sesi artır",
   "${quante} actions": "${quante} işlem",
+  "${quante} areas together: the buttons apply to all": "${quante} bölge birlikte: düğmeler hepsine uygulanır",
+  "Press and hold an area to pick more than one": "Birden fazla seçmek için bir bölgeye basılı tutun",
   "1 action": "1 işlem",
   "Close the ${nome} group": "${nome} grubunu kapat",
   "Open the ${nome} group": "${nome} grubunu aç",

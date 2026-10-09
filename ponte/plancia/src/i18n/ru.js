@@ -4023,6 +4023,8 @@ export default Object.freeze({
   "Volume down": "Тише",
   "Volume up": "Громче",
   "${quante} actions": "Действий: ${quante}",
+  "${quante} areas together: the buttons apply to all": "Зон вместе: ${quante} — кнопки действуют на все",
+  "Press and hold an area to pick more than one": "Удерживайте зону, чтобы выбрать несколько",
   "1 action": "1 действие",
   "Close the ${nome} group": "Свернуть группу «${nome}»",
   "Open the ${nome} group": "Развернуть группу «${nome}»",

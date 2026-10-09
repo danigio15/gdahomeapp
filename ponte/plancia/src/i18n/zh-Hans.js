@@ -4023,6 +4023,8 @@ export default Object.freeze({
   "Volume down": "调低音量",
   "Volume up": "调高音量",
   "${quante} actions": "${quante} 个操作",
+  "${quante} areas together: the buttons apply to all": "${quante} 个区域一起：按钮对所有区域生效",
+  "Press and hold an area to pick more than one": "长按一个区域可选择多个",
   "1 action": "1 个操作",
   "Close the ${nome} group": "收起分组“${nome}”",
   "Open the ${nome} group": "展开分组“${nome}”",

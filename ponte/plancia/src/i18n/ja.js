@@ -4023,6 +4023,8 @@ export default Object.freeze({
   "Volume down": "音量を下げる",
   "Volume up": "音量を上げる",
   "${quante} actions": "${quante} 件のアクション",
+  "${quante} areas together: the buttons apply to all": "${quante} 個のエリアをまとめて操作：ボタンはすべてに適用されます",
+  "Press and hold an area to pick more than one": "エリアを長押しすると複数選択できます",
   "1 action": "1 件のアクション",
   "Close the ${nome} group": "グループ「${nome}」を閉じる",
   "Open the ${nome} group": "グループ「${nome}」を開く",

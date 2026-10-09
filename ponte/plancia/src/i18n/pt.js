@@ -4023,6 +4023,8 @@ export default Object.freeze({
   "Volume down": "Baixar o volume",
   "Volume up": "Subir o volume",
   "${quante} actions": "${quante} ações",
+  "${quante} areas together: the buttons apply to all": "${quante} áreas juntas: os botões valem para todas",
+  "Press and hold an area to pick more than one": "Mantenha uma área pressionada para escolher mais de uma",
   "1 action": "1 ação",
   "Close the ${nome} group": "Fechar o grupo ${nome}",
   "Open the ${nome} group": "Abrir o grupo ${nome}",

@@ -4023,6 +4023,8 @@ export default Object.freeze({
   "Volume down": "볼륨 낮추기",
   "Volume up": "볼륨 높이기",
   "${quante} actions": "작업 ${quante}개",
+  "${quante} areas together: the buttons apply to all": "구역 ${quante}개 함께: 버튼이 모두에 적용됩니다",
+  "Press and hold an area to pick more than one": "구역을 길게 눌러 여러 개를 선택하세요",
   "1 action": "작업 1개",
   "Close the ${nome} group": "${nome} 그룹 닫기",
   "Open the ${nome} group": "${nome} 그룹 열기",
