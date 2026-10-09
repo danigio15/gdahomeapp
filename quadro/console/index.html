@@ -6789,6 +6789,10 @@
         OSPITI_SCRITTI.some((scritta) => combacia(origine, scritta)) ||
         gliConfermati().includes(origine);
       const daChiCiTiene = (sorgente) => {
+        /* L'app gdahome apre il cruscotto in una sua WebView e la chiave la
+         * scrive dentro la pagina stessa: il messaggio parte da questa
+         * finestra. Un altro sito non puo' farlo partire da qui. */
+        if (sorgente === window) return true;
         try {
           if (window.parent && window.parent !== window && sorgente === window.parent) return true;
         } catch (_niente) {}
