@@ -40,7 +40,14 @@ sono fuori stagione, quando si vedono, e ha il tasto «Mostrali lo stesso»
 **Il volume un punto alla volta.** Nella Musica, accanto al cursore del volume,
 il meno e il più spostano il volume dell'1% a ogni tocco.
 
+**«Apri in mappa» porta dalla persona.** Nell'app, sulla scheda di una
+persona, «Apri in mappa» apre il navigatore con la strada fino a lei. Nel
+browser, o senza una posizione GPS, resta la mappa di Home Assistant.
+
 **In auto.**
+- I comandi della casa premuti in macchina — il cancello, le luci — partono
+  dal collegamento che l'app ha già aperto, invece di aprirne un altro da
+  capo: prima, se non ci riusciva in tempo, il comando si perdeva.
 - Da «Dispositivi» si torna al navigatore con la freccia indietro.
 - Senza una casa abbinata il navigatore in Android Auto parte, in versione
   base; da quando c'è una casa vale il suo abbonamento.
