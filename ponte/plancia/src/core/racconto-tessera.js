@@ -203,6 +203,24 @@ const nomeDi = (riga) => String(riga?.name || "").trim();
 /* ─────────────────────────── le frasi, una per sezione ───────────────────── */
 
 const FRASI = Object.freeze({
+  /* Le vasche (#127): gli acquari e i terrari. Contare le righe direbbe
+   * «4 cose, nessuna in funzione» — e una vasca non è una cosa che funziona o
+   * no: sta bene o vuole qualcosa. La tessera porta quante sono e quante
+   * vogliono qualcosa, e la frase dice quello. */
+  acquario: (tr, _righe, tessera) => {
+    const quante = Number(tessera?.vasche) || 0;
+    const daGuardare = Number(tessera?.daGuardare) || 0;
+    if (!quante) return tr("Qui non c'e' ancora niente.", "Nothing configured here yet.");
+    if (!daGuardare)
+      return quante === 1
+        ? tr("Tutto nella norma.", "All in range.")
+        : tr(`Tutte e ${quante} nella norma.`, `All ${quante} in range.`);
+    if (quante === 1) return tr("C'e' qualcosa da guardare.", "Something needs a look.");
+    return tr(
+      `${daGuardare} su ${quante} vogliono qualcosa.`,
+      `${daGuardare} of ${quante} need something.`,
+    );
+  },
   /* Lo scaldabagno (#253) non si racconta contando righe.
    *
    * La frase generica dice «uno su otto in funzione» perche' conta le righe

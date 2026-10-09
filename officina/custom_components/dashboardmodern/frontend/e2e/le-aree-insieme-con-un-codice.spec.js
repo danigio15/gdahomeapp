@@ -102,11 +102,16 @@ async function avvia(page, testInfo) {
 }
 
 async function tieniPremuta(page, area) {
-  const box = await area.boundingBox();
-  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
-  await page.mouse.down();
-  await page.waitForTimeout(800);
-  await page.mouse.up();
+  /* Gli eventi partono sull'area stessa, non su un punto dello schermo: sotto
+     carico la pagina finisce di disegnarsi mentre si misura, e un dito messo
+     su coordinate calcolate un attimo prima cadeva fuori dal tasto. Un dito
+     vero resta giu' piu' dei 550 ms che servono; qui di piu' ancora, perche'
+     l'orologio della pagina puo' arrivare in ritardo. */
+  await expect(area).toBeVisible();
+  await area.dispatchEvent("pointerdown", { bubbles: true, clientX: 10, clientY: 10 });
+  await page.waitForTimeout(1200);
+  await area.dispatchEvent("pointerup", { bubbles: true });
+  await area.dispatchEvent("click", { bubbles: true });
 }
 
 test("tenendo premuta un'area si comandano tutte e due, col codice una volta", async ({

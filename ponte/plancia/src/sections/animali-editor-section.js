@@ -16,6 +16,11 @@
  * lettiera di un'altra, il collare di una terza — e per questo dentro la riga
  * c'e' un secondo tasto che collega un dispositivo IN PIU', sommandosi a
  * quello che c'e' gia' invece di sostituirlo.
+ *
+ * Una voce puo' essere anche una vasca: un acquario o un terrario, scelto
+ * nella tendina del tipo. La sua riga aperta non ha la ciotola e la lettiera,
+ * ha la vasca e le sue entita' — i pezzi stanno in `acquario-editor-section.js`
+ * e si salvano con lo stesso 💾 del resto della voce.
  */
 import {
   AZIONI,
@@ -25,11 +30,20 @@ import {
   SOGLIE_DI_SERIE,
   SPECIE,
   collegaAnimaleAlDispositivo,
+  eUnaVasca,
   normalizzaAnimali,
   proponiCaselle,
   specieDiSerie,
 } from "../core/animali-model.js";
 import { roomForArea } from "../core/appliance-device-binding.js";
+import {
+  daPrendereNellaVasca,
+  installaStileDellaVasca,
+  leggiLaVasca,
+  rigaNuovaDellaVasca,
+  vascaEditorMarkup,
+} from "./acquario-editor-section.js";
+import { renderAcquario } from "./acquario-section.js";
 import { apriMenuIntegrazioni } from "./appliance-integration-section.js";
 import { pickMediaImage } from "./media-picker-section.js";
 import {
@@ -58,6 +72,17 @@ function lista() {
 
 function salva(animali) {
   writeJsonIfChanged(CHIAVE_ANIMALI, normalizzaAnimali(animali));
+  /* Le vasche hanno chi le aspetta: la storia del livello e la tessera. */
+  if (animali.some(eUnaVasca)) renderAcquario();
+}
+
+/* Le entita' gia' prese dalle ALTRE vasche: con tre terrari, la lampada del
+ * primo non si propone al secondo. */
+function entitaDelleAltreVasche(animali, indice) {
+  return animali
+    .filter((voce, posto) => posto !== indice && eUnaVasca(voce))
+    .flatMap((voce) => (voce.righe || []).map((riga) => riga.entity))
+    .filter(Boolean);
 }
 
 function activeTab() {
@@ -320,18 +345,34 @@ function dispositiviMarkup(animale) {
     .join("")}</div>`;
 }
 
-function rigaMarkup(animale, indice) {
+/* Sotto il nome, nella riga chiusa: per una bestia la prima entita', per una
+ * vasca il tipo e quante righe ha. */
+function sottoDellaRiga(animale) {
+  if (eUnaVasca(animale)) {
+    const quante = (animale.righe || []).filter((riga) => riga.entity).length;
+    return `${nomeSpecie(animale.specie)} · ${quante === 1 ? t("1 entità", "1 entity") : `${quante} ${t("entità", "entities")}`}`;
+  }
+  return (
+    clean(animale.cibo_livello) ||
+    clean(animale.lettiera_ultima) ||
+    clean(animale.porta) ||
+    t("nessuna entità", "no entity")
+  );
+}
+
+function rigaMarkup(animale, indice, animali = []) {
   const aperto = state.aperto === indice;
+  const vasca = eUnaVasca(animale);
   return `<article class="ed-row dm-animale-row" data-animale-index="${indice}" data-open="${aperto}">
     <div class="dm-animale-row-head">
       <span class="dm-animale-row-icon" aria-hidden="true">${disegnoDelCatalogo(specieDiSerie(animale.specie).disegno, 26)}</span>
-      <span class="ed-row-main"><strong class="ed-row-new">${esc(nomeDi(animale, indice))}</strong><small class="ed-row-old mono">${esc(clean(animale.cibo_livello) || clean(animale.lettiera_ultima) || clean(animale.porta) || t("nessuna entità", "no entity"))}</small></span>
+      <span class="ed-row-main"><strong class="ed-row-new">${esc(nomeDi(animale, indice))}</strong><small class="ed-row-old mono">${esc(sottoDellaRiga(animale))}</small></span>
       <button type="button" class="ed-del dm-animale-edit" data-animale-edit aria-label="${t("Modifica", "Edit")}">✏️</button>
       <button type="button" class="ed-del dm-animale-del" data-animale-del aria-label="${t("Elimina", "Remove")}">🗑️</button>
     </div>
     <div class="dm-animale-row-body"${aperto ? "" : " hidden"}>
       <label class="ed-slot dm-animale-field"><span class="ed-slot-lbl">${t("Nome", "Name")}</span><span class="ed-form-row"><input id="dm-animale-${indice}-nome" class="ed-input" data-animale-field="nome" value="${esc(animale.nome)}" placeholder="${t("Micio", "Whiskers")}"></span></label>
-      <label class="ed-slot dm-animale-field"><span class="ed-slot-lbl">${t("Specie", "Species")}</span><span class="ed-form-row"><select id="dm-animale-${indice}-specie" class="ed-input" data-animale-field="specie">${SPECIE.map(
+      <label class="ed-slot dm-animale-field"><span class="ed-slot-lbl">${t("Tipo", "Type")}</span><span class="ed-form-row"><select id="dm-animale-${indice}-specie" class="ed-input" data-animale-field="specie">${SPECIE.map(
         (voce) =>
           /* Dentro un <option> ci sta solo testo: il disegno della specie
            * sta accanto, nella riga. */
@@ -344,15 +385,19 @@ function rigaMarkup(animale, indice) {
           <button type="button" class="ed-btn-add dm-animale-foto-btn" data-animale-foto>📁 ${t("Scegli la foto", "Choose the photo")}</button>
           <button type="button" class="ed-btn-add dm-animale-foto-btn dm-animale-foto-togli" data-animale-foto-togli${animale.foto ? "" : " hidden"}>✕ ${t("Togli la foto", "Remove the photo")}</button>
         </span>
-        <small>${t("Senza foto la scheda mostra il simbolo della specie.", "Without a photo the card shows the species symbol.")}</small>
+        <small>${t("Senza foto la scheda mostra il disegno del tipo.", "Without a photo the card shows the drawing of its type.")}</small>
       </div>
       <label class="ed-slot dm-animale-field"><span class="ed-slot-lbl">${t("Stanza", "Room")}</span><span class="ed-form-row"><select id="dm-animale-${indice}-stanza" class="ed-input" data-animale-field="stanza">${roomOptionsMarkup(animale.stanza, t("Nessuna stanza", "No room"))}</select></span></label>
-      ${dispositiviMarkup(animale)}
+      ${
+        vasca
+          ? vascaEditorMarkup(animale, indice, { esclusi: entitaDelleAltreVasche(animali, indice) })
+          : `${dispositiviMarkup(animale)}
       <button type="button" class="ed-btn-add dm-animale-integ-riga" data-animale-integ-riga>🔗 ${t("Collega un altro dispositivo", "Link another device")}</button>
       ${gruppiMarkup(animale, indice)}
-      ${soglieMarkup(animale, indice)}
+      ${soglieMarkup(animale, indice)}`
+      }
       <output class="dm-animale-error" data-animale-error></output>
-      <button type="button" class="ed-save-btn" data-animale-save>💾 ${t("Salva animale", "Save pet")}</button>
+      <button type="button" class="ed-save-btn" data-animale-save>💾 ${vasca ? t("Salva", "Save") : t("Salva animale", "Save pet")}</button>
     </div>
   </article>`;
 }
@@ -360,7 +405,9 @@ function rigaMarkup(animale, indice) {
 function nomeSpecie(chiave) {
   if (chiave === "gatto") return t("Gatto", "Cat");
   if (chiave === "cane") return t("Cane", "Dog");
-  return t("Altro", "Other");
+  if (chiave === "acquario") return t("Acquario", "Aquarium");
+  if (chiave === "terrario") return t("Terrario", "Terrarium");
+  return t("Altro animale", "Other pet");
 }
 
 function bodyMarkup(animali) {
@@ -373,12 +420,12 @@ function bodyMarkup(animali) {
   })();
   return `${fascia}
     <div class="ed-intro">${t(
-      "Gli animali di casa: una scheda per ognuno, con la sua foto e quello che lo riguarda — la ciotola, la lettiera, l'acqua, la porta col microchip, il collare.",
-      "The pets of the house: one card each, with its photo and what concerns it — the bowl, the litter box, the water, the microchip door, the collar.",
+      "Gli animali di casa: una scheda per ognuno, con la sua foto e quello che lo riguarda — la ciotola, la lettiera, l'acqua, la porta col microchip, il collare. Anche gli acquari e i terrari, quanti ne hai: ognuno con le sue entità.",
+      "The pets of the house: one card each, with its photo and what concerns it — the bowl, the litter box, the water, the microchip door, the collar. Aquariums and terrariums too, as many as you have: each with its own entities.",
     )}</div>
     <div class="ed-list dm-animale-list">${
       animali.length
-        ? animali.map((animale, indice) => rigaMarkup(animale, indice)).join("")
+        ? animali.map((animale, indice) => rigaMarkup(animale, indice, animali)).join("")
         : `<div class="ed-empty">${t("Nessun animale configurato", "No pet configured")}</div>`
     }</div>
     <div class="dm-animale-invito">
@@ -388,7 +435,11 @@ function bodyMarkup(animali) {
         "PetKit, SurePetcare, Tractive, Litter-Robot… pick the device and the card arrives ready-made: the food level, the litter box, the water filter, the collar. Or, below, one field at a time.",
       )}</small>
     </div>
-    <button type="button" class="ed-btn-add" data-animale-add>＋ ${t("Aggiungi animale", "Add pet")}</button>`;
+    <div class="dm-animale-aggiungi">
+      <button type="button" class="ed-btn-add" data-animale-add>＋ ${t("Aggiungi animale", "Add pet")}</button>
+      <button type="button" class="ed-btn-add" data-animale-add="acquario">＋ 🐠 ${t("Acquario", "Aquarium")}</button>
+      <button type="button" class="ed-btn-add" data-animale-add="terrario">＋ 🦎 ${t("Terrario", "Terrarium")}</button>
+    </div>`;
 }
 
 function leggiRiga(riga, animale) {
@@ -400,6 +451,9 @@ function leggiRiga(riga, animale) {
     const scritto = clean(input.value);
     next.soglie[chiave] = scritto === "" ? SOGLIE_DI_SERIE[chiave] : scritto;
   }
+  /* La vasca si legge dalle sue caselle solo se le ha davanti: una voce che
+   * e' appena diventata un terrario dalla tendina non ne ha ancora. */
+  if (eUnaVasca(animale) && eUnaVasca(next)) return leggiLaVasca(riga, next);
   return next;
 }
 
@@ -525,6 +579,10 @@ export function ensureAnimaliEditor() {
         animale.specie,
         animale.foto ? "foto" : "",
         animale.dispositivi.map((voce) => voce.id).join("+"),
+        /* Una vasca cambia forma quando cambiano le sue righe o i suoi dati. */
+        eUnaVasca(animale)
+          ? JSON.stringify([animale.righe, animale.litri, animale.ogni, animale.cambio, animale.pulizia])
+          : "",
         [...CAMPI, ...AZIONI].map((campo) => animale[campo.chiave]).join(","),
       ].join("~"),
     ),
@@ -560,10 +618,22 @@ async function onClick(event) {
     });
     return;
   }
-  if (event.target.closest("[data-animale-add]")) {
+  const aggiungi = event.target.closest("[data-animale-add]");
+  if (aggiungi) {
     event.preventDefault();
+    /* Un acquario o un terrario nascono col loro tipo e una riga da riempire:
+     * la tendina di quella riga dice subito che generi ha. */
+    const tipo = clean(aggiungi.dataset.animaleAdd);
+    const nuova = eUnaVasca(tipo)
+      ? {
+          id: `${tipo}-${animali.length + 1}`,
+          nome: nomeSpecie(tipo),
+          specie: tipo,
+          righe: [rigaNuovaDellaVasca(tipo)],
+        }
+      : { id: `animale-${animali.length + 1}`, nome: "" };
     state.aperto = animali.length;
-    salva([...animali, { id: `animale-${animali.length + 1}`, nome: "" }]);
+    salva([...animali, nuova]);
     ridisegna();
     return;
   }
@@ -602,6 +672,31 @@ async function onClick(event) {
     if (togli) togli.hidden = false;
     return;
   }
+  /* Le righe della vasca: aggiungerne, toglierne, prendere quelle trovate.
+   * Quello che si sta scrivendo nelle altre caselle si salva prima, come per
+   * il secondo dispositivo: un tocco su ＋ non deve costare il nome appena
+   * battuto. */
+  const vascaAggiungi = event.target.closest("[data-vasca-aggiungi]");
+  const vascaTogli = event.target.closest("[data-vasca-togli]");
+  const vascaPrendi = event.target.closest("[data-vasca-prendi]");
+  if (vascaAggiungi || vascaTogli || vascaPrendi) {
+    event.preventDefault();
+    const bozza = leggiRiga(riga, animali[indice]);
+    const righe = [...(bozza.righe || [])];
+    if (vascaAggiungi) righe.push(rigaNuovaDellaVasca(bozza.specie));
+    if (vascaTogli) righe.splice(Number(vascaTogli.dataset.vascaTogli), 1);
+    if (vascaPrendi)
+      righe.push(
+        ...daPrendereNellaVasca(bozza, entitaDelleAltreVasche(animali, indice)).filter(
+          (nuova) => !righe.some((voce) => voce.entity === nuova.entity),
+        ),
+      );
+    const next = animali.slice();
+    next[indice] = { ...bozza, righe };
+    salva(next);
+    ridisegna();
+    return;
+  }
   if (event.target.closest("[data-animale-integ-riga]")) {
     event.preventDefault();
     /* Quello che si sta scrivendo non si perde perche' si collega un secondo
@@ -633,7 +728,8 @@ async function onClick(event) {
      * una riga vuota che in pagina non compare, e nessuno direbbe perche'. */
     const vuoto =
       !clean(next[indice].nome) &&
-      [...CAMPI, ...AZIONI].every((campo) => !clean(next[indice][campo.chiave]));
+      [...CAMPI, ...AZIONI].every((campo) => !clean(next[indice][campo.chiave])) &&
+      !(next[indice].righe || []).some((voce) => clean(voce.entity));
     if (vuoto) {
       if (errore)
         errore.textContent = t(
@@ -645,8 +741,32 @@ async function onClick(event) {
     if (errore) errore.textContent = "";
     salva(next);
     ridisegna();
-    root.edToast?.(t("💾 Animale salvato", "💾 Pet saved"));
+    root.edToast?.(
+      eUnaVasca(next[indice]) ? t("💾 Salvato", "💾 Saved") : t("💾 Animale salvato", "💾 Pet saved"),
+    );
   }
+}
+
+/* Cambiare il tipo, o il genere di una riga della vasca, cambia le caselle che
+ * servono: si salva quello che c'e' scritto e si ridisegna, come nell'Acqua e
+ * gas. */
+function onChange(event) {
+  const body = doc?.getElementById("ed-body");
+  if (!body || activeTab() !== ANIMALI_EDITOR_TAB || !body.contains(event.target)) return;
+  const campo = event.target?.closest?.('[data-animale-field="specie"],[data-vasca-campo="genere"]');
+  if (!campo) return;
+  const riga = campo.closest("[data-animale-index]");
+  const indice = Number(riga?.dataset.animaleIndex);
+  const animali = lista();
+  if (!riga || !Number.isFinite(indice) || !animali[indice]) return;
+  const next = animali.slice();
+  const bozza = leggiRiga(riga, animali[indice]);
+  /* Diventata una vasca, la voce comincia con una riga da riempire. */
+  if (eUnaVasca(bozza) && !eUnaVasca(animali[indice]) && !(bozza.righe || []).length)
+    bozza.righe = [rigaNuovaDellaVasca(bozza.specie)];
+  next[indice] = bozza;
+  salva(next);
+  ridisegna();
 }
 
 /* La voce nella barra della configurazione.
@@ -699,6 +819,11 @@ function installStyles() {
       #ed-body .dm-animale-field .ed-form-row>input,#ed-body .dm-animale-field .ed-form-row>select{flex:1 1 auto;min-width:0}
       #ed-body .dm-animale-pick{flex:0 0 38px;height:38px;border:none;border-radius:10px;background:linear-gradient(135deg,#0ea5e9,#0369a1);color:#fff;font-size:14px;cursor:pointer}
       #ed-body .dm-animale-error:not(:empty){color:var(--error-color,#dc2626);font-size:12px;font-weight:800}
+      /* Il nome sopra, quello che c'e' dentro sotto: in fila si attaccavano. */
+      #ed-body .dm-animale-row-head .ed-row-main{display:grid!important;gap:2px;min-width:0;flex:1 1 auto}
+      #ed-body .dm-animale-row-head .ed-row-old{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px;opacity:.75}
+      #ed-body .dm-animale-aggiungi{display:grid;grid-template-columns:minmax(0,1.4fr) repeat(2,minmax(0,1fr));gap:8px}
+      #ed-body .dm-animale-aggiungi .ed-btn-add{margin:0!important}
       .dm-animale-anteprima-nota{margin:6px 0 0;font-size:11px;font-weight:700;color:var(--text-dim,#64748b)}
     `,
   );
@@ -708,8 +833,10 @@ export function installAnimaliEditorSection() {
   if (!doc || state.installed) return;
   state.installed = true;
   installStyles();
+  installaStileDellaVasca();
   ensureAnimaliEditorTab();
   doc.addEventListener("click", onClick);
+  doc.addEventListener("change", onChange);
   onEditorRedraw("__dmAnimaliEditor", () => {
     root.queueMicrotask?.(() => {
       ensureAnimaliEditorTab();

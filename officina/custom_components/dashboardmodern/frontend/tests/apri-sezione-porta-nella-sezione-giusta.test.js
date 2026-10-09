@@ -24,7 +24,7 @@ import { CALENDARIO_TAB } from "../src/sections/calendario-section.js";
 import { CITOFONO_TAB } from "../src/sections/citofono-section.js";
 import { CONTATORI_TAB } from "../src/sections/contatori-section.js";
 import { PIANTE_TAB } from "../src/sections/piante-section.js";
-import { ACQUARIO_TAB } from "../src/sections/acquario-section.js";
+import { ANIMALI_TAB } from "../src/sections/animali-section.js";
 import { LIGHTS_TAB } from "../src/sections/lights-page-section.js";
 import { MEDIA_TAB } from "../src/sections/media-player-section.js";
 import { PRESE_TAB } from "../src/sections/prese-section.js";
@@ -106,7 +106,8 @@ test("ogni tessera che ha una pagina ha la sua riga, col nome che la pagina dich
     stampanti: STAMPANTI_TAB,
     contatori: CONTATORI_TAB,
     piante: PIANTE_TAB,
-    acquario: ACQUARIO_TAB,
+    /* Le vasche (#127) stanno negli Animali: la tessera porta lì. */
+    acquario: ANIMALI_TAB,
     /* Le batterie di accumulo (#117) non hanno una voce loro: stanno nella
      * linguetta «Batterie» di Energia, e il tasto porta a Energia. */
     accumulo: "energy",

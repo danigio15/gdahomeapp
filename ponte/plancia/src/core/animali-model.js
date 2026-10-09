@@ -25,6 +25,9 @@
  * dirlo a schermo stanno nella sezione, non qui.
  */
 
+import { righeDichiarate } from "./elenco-dichiarato.js";
+import { CAMPI_IN_PIU } from "./l-acquario-di-casa.js";
+
 const pulito = (valore) => String(valore ?? "").trim();
 const minuscolo = (valore) => pulito(valore).toLowerCase();
 /* Gli stati con cui Home Assistant dice «non lo so». */
@@ -38,9 +41,12 @@ const NON_RISPONDE = /^unavailable$/i;
 /** La chiave in cui vive la configurazione degli animali. */
 export const CHIAVE_ANIMALI = "cd_animali";
 
-/* Un tetto alle schede: dodici animali sono gia' un canile, e una pagina che
- * scorre all'infinito non aiuta nessuno. */
-export const MASSIMO_ANIMALI = 12;
+/* Un tetto alle schede: una pagina che scorre all'infinito non aiuta nessuno.
+ * Erano dodici, quando una voce era una bestia; adesso una voce puo' essere
+ * anche una vasca — «ho tre terrari» — e chi ha due gatti, un cane, un
+ * acquario e tre terrari e' gia' a sette senza essere un canile. Ventiquattro
+ * lascia il posto a tutti e due i mondi. */
+export const MASSIMO_ANIMALI = 24;
 
 /* Le specie che si sanno riconoscere. Il `disegno` e' il nome nel catalogo —
  * un dato, come il simbolo: qui dentro non ci va HTML, questo modulo e' puro.
@@ -50,10 +56,30 @@ export const SPECIE = Object.freeze([
   Object.freeze({ chiave: "gatto", icona: "🐱", disegno: "cat" }),
   Object.freeze({ chiave: "cane", icona: "🐶", disegno: "dog" }),
   Object.freeze({ chiave: "altro", icona: "🐾", disegno: "pet" }),
+  /* Le vasche (#127 e il terrario): non sono una bestia, sono la casa di chi
+   * ci vive dentro — i pesci, il geco, il pitone. Stanno qui perche' chi li
+   * ha li guarda insieme al cane e al gatto, in una sezione sola: e invece di
+   * una ciotola e una lettiera hanno righe, come la vecchia pagina
+   * dell'Acquario. */
+  Object.freeze({ chiave: "acquario", icona: "🐠", disegno: "aquarium", vasca: true }),
+  Object.freeze({ chiave: "terrario", icona: "🦎", disegno: "terrarium", vasca: true }),
 ]);
 
+const ALTRO = SPECIE.find((voce) => voce.chiave === "altro");
+
 export function specieDiSerie(chiave) {
-  return SPECIE.find((voce) => voce.chiave === pulito(chiave)) || SPECIE[SPECIE.length - 1];
+  return SPECIE.find((voce) => voce.chiave === pulito(chiave)) || ALTRO;
+}
+
+/** Le specie che sono vasche: l'acquario e il terrario. */
+export const SPECIE_VASCA = Object.freeze(
+  SPECIE.filter((voce) => voce.vasca).map((voce) => voce.chiave),
+);
+
+/** Se questa voce e' una vasca — un acquario, un terrario — invece di una bestia. */
+export function eUnaVasca(voce) {
+  const specie = typeof voce === "string" ? voce : voce?.specie;
+  return SPECIE_VASCA.includes(pulito(specie));
 }
 
 /* Che bestia e', letto da come si chiamano il dispositivo e le sue entita'. */
@@ -387,6 +413,18 @@ function sogliaScritta(valore, difetto) {
   return letto;
 }
 
+/* I campi di una vasca, oltre alle righe. `vasca` e' il nome che la vecchia
+ * sezione dell'Acquario dava alla vasca, `origine` dice da dove la voce e'
+ * arrivata quando l'ha portata un travaso. */
+export const CAMPI_DELLA_VASCA = Object.freeze([
+  "litri",
+  "ogni",
+  "cambio",
+  "pulizia",
+  "vasca",
+  "origine",
+]);
+
 export function normalizzaAnimale(input = {}, indice = 0) {
   const grezzo = input && typeof input === "object" ? input : {};
   const animale = {
@@ -412,6 +450,17 @@ export function normalizzaAnimale(input = {}, indice = 0) {
       animale.lettiera_sabbia = animale.lettiera_riempimento;
       animale.lettiera_riempimento = "";
     }
+  }
+  /* Quello che e' della vasca: le righe, i litri, ogni quanto si cambia
+   * l'acqua o si pulisce, e quando lo si e' fatto. Si tiene anche quando la
+   * voce non e' (piu') una vasca: cambiare la tendina da «Terrario» a «Altro»
+   * per sbaglio non deve costare dieci righe scritte a mano. */
+  const vasca = eUnaVasca(animale.specie);
+  if (vasca || Array.isArray(grezzo.righe))
+    animale.righe = righeDichiarate({ righe: grezzo.righe || [] }, CAMPI_IN_PIU) || [];
+  for (const campo of CAMPI_DELLA_VASCA) {
+    const scritto = pulito(grezzo[campo]);
+    if (scritto) animale[campo] = scritto;
   }
   const soglie = grezzo.soglie && typeof grezzo.soglie === "object" ? grezzo.soglie : {};
   animale.soglie = {};
@@ -455,12 +504,74 @@ export function normalizzaAnimali(input = []) {
   return fuori;
 }
 
-/** Gli animali che una scheda ce l'hanno: un nome, o almeno una casella. */
+/** Gli animali che una scheda ce l'hanno: un nome, almeno una casella, o una riga. */
 export function animaliDisegnabili(input = []) {
   return normalizzaAnimali(input).filter(
     (animale) =>
-      !animale.nascosto && (animale.nome || CHIAVI_CAMPI.some((chiave) => pulito(animale[chiave]))),
+      !animale.nascosto &&
+      (animale.nome ||
+        CHIAVI_CAMPI.some((chiave) => pulito(animale[chiave])) ||
+        (eUnaVasca(animale) && animale.righe?.some((riga) => riga.entity))),
   );
+}
+
+/* ── il travaso dell'Acquario ─────────────────────────────────────────────
+ *
+ * L'Acquario era una sezione sua, con una vasca sola in `cd_acquario`. Adesso
+ * e' una voce degli Animali, e le vasche possono essere quante se ne hanno.
+ * Chi l'aveva configurato se lo deve ritrovare uguale — le righe, il nome
+ * della vasca, i litri, il ritmo e la data dell'ultimo cambio d'acqua — senza
+ * rifare niente.
+ *
+ * Il travaso si fa UNA volta. Il segno sta dentro `cd_acquario` stesso
+ * (`travasato`), che viaggia con la configurazione: un altro vetro di casa
+ * non lo rifa', e chi elimina la voce dell'acquario dagli Animali non se la
+ * vede tornare al giro dopo. `cd_acquario` non si cancella: lo leggono ancora
+ * le plance di prima, e un travaso che butta via l'originale non si puo'
+ * piu' rifare se qualcosa va storto.
+ */
+export const ID_DELL_ACQUARIO_TRAVASATO = "acquario";
+
+/** Se in `cd_acquario` c'e' qualcosa da portare: righe, o almeno la vasca. */
+function acquarioDaTravasare(acquario) {
+  if (!acquario || typeof acquario !== "object" || Array.isArray(acquario)) return false;
+  if (acquario.travasato) return false;
+  const righe = righeDichiarate(acquario, CAMPI_IN_PIU) || [];
+  return righe.length > 0 || ["vasca", "litri", "cambio"].some((campo) => pulito(acquario[campo]));
+}
+
+/**
+ * Gli animali con l'acquario di `cd_acquario` portato dentro, e il nuovo
+ * `cd_acquario` col segno del travaso. `null` quando non c'e' niente da fare:
+ * gia' travasato, vuoto, o gia' presente fra gli animali.
+ */
+export function travasaLAcquario(animali = [], acquario = {}) {
+  if (!acquarioDaTravasare(acquario)) return null;
+  const elenco = Array.isArray(animali) ? animali : [];
+  const segnato = { ...acquario, travasato: true };
+  /* Gia' dentro — un altro vetro l'ha portato, e il segno non e' ancora
+   * arrivato qui —: non lo si porta una seconda volta, si mette solo il segno. */
+  if (elenco.some((voce) => pulito(voce?.origine) === "cd_acquario"))
+    return { animali: elenco, acquario: segnato };
+  /* Col tetto pieno non si travasa e non si segna: l'acquario aspetta in
+   * `cd_acquario`, intero, e arriva appena si libera un posto. Buttare fuori
+   * un animale per fargli spazio sarebbe perdere quello invece di lui. */
+  if (elenco.length >= MASSIMO_ANIMALI) return null;
+  const usati = new Set(elenco.map((voce) => pulito(voce?.id)));
+  let id = ID_DELL_ACQUARIO_TRAVASATO;
+  for (let scarto = 2; usati.has(id); scarto += 1) id = `${ID_DELL_ACQUARIO_TRAVASATO}-${scarto}`;
+  const voce = {
+    id,
+    nome: pulito(acquario.vasca),
+    specie: "acquario",
+    righe: righeDichiarate(acquario, CAMPI_IN_PIU) || [],
+    origine: "cd_acquario",
+  };
+  for (const campo of ["vasca", "litri", "ogni", "cambio"])
+    if (pulito(acquario[campo])) voce[campo] = pulito(acquario[campo]);
+  /* Davanti agli altri no, in fondo si': chi apre la pagina ritrova i suoi
+   * animali dove li aveva lasciati, e l'acquario dopo di loro. */
+  return { animali: [...elenco, voce], acquario: segnato };
 }
 
 /* ── il legame con un dispositivo ─────────────────────────────────────── */

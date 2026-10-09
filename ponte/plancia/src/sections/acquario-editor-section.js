@@ -1,133 +1,149 @@
-/* La scheda dell'acquario in configurazione (#127).
+/* La vasca in configurazione: acquari e terrari, dentro la scheda Animali (#127).
  *
- * È la scheda dichiarata di tutte le altre — `scheda-dichiarata-section.js` —
- * e qui c'è solo quello che dell'acquario è davvero proprio:
+ * L'Acquario aveva una scheda sua nel Config, con una vasca sola. Adesso una
+ * vasca è una voce degli Animali — si sceglie «Acquario» o «Terrario» nella
+ * tendina del tipo — e la sua riga, aperta, ha al posto della ciotola e della
+ * lettiera quello che di una vasca è davvero proprio:
  *
- *   · in cima la vasca, che vale per tutte le righe: come si chiama, quanti
- *     litri, ogni quanti giorni si cambia l'acqua e quando è stata cambiata
- *     l'ultima volta — come la soglia delle Batterie, che vale per tutte;
- *   · in ogni riga cosa è, come nell'Acqua e gas: una misura con la sua
- *     forcella, il livello con la soglia del rabbocco, o un comando — e dentro
- *     la riga solo le caselle di quel genere.
+ *   · in cima la vasca, che vale per tutte le righe: i litri, ogni quanti
+ *     giorni si cambia l'acqua e quando è stata cambiata l'ultima volta — per
+ *     un terrario la pulizia, che è facoltativa;
+ *   · sotto un'entità per riga, e in ogni riga cosa è, come nell'Acqua e gas:
+ *     una misura con la sua forcella, il livello con la soglia del rabbocco, o
+ *     un comando — e dentro la riga solo le caselle di quel genere. I generi
+ *     sono quelli del tipo: il terrario ha l'umidità, la lampada calda, l'UVB
+ *     e il nebulizzatore; l'acquario il pH e il filtro.
+ *
+ * Qui ci sono i pezzi; li monta la scheda degli Animali, che li salva insieme
+ * al resto della voce con lo stesso 💾.
  */
 import {
   CAMBIO_OGNI_GIORNI,
-  CAMPI_IN_PIU,
-  CHIAVE_ACQUARIO,
-  GENERI,
   MISURE,
-  acquarioDiCasa,
-  comeStaLAcquario,
-  conIlCambio,
-  conLaRiga,
   disegnoDelGenere,
   forcellaDiSerie,
   genereDelSensore,
   genereValido,
+  generiDelTipo,
   righeDaImportare,
-  righeDichiarate,
+  tipoValido,
 } from "../core/l-acquario-di-casa.js";
-import { ACQUARIO_TAB, renderAcquario } from "./acquario-section.js";
-import { costruisciSchedaDichiarata } from "./scheda-dichiarata-section.js";
-import { allStates, clean, esc, formatNumber, readJson, t, writeJsonIfChanged, senzaCadere } from "./shared.js";
+import { allStates, clean, disegnoDiCasa, esc, formatNumber, installStyle, t } from "./shared.js";
 import { nomeDaHomeAssistant } from "./editor-slots-section.js";
-
-export const ACQUARIO_EDITOR_TAB = ACQUARIO_TAB;
-
-/* I disegni: la vasca per prima, poi quelli di ogni genere. */
-export const DISEGNI_DELL_ACQUARIO = Object.freeze([
-  "aquarium",
-  "thermometer",
-  "gauge",
-  "water",
-  "lights",
-  "pump",
-  "flame",
-  "toggle",
-]);
 
 /* I numeri di ogni genere: quelli che la riga tiene, gli altri se ne vanno
  * quando il genere cambia. */
-const CAMPI_DEL_GENERE = Object.freeze({
-  temperatura: ["minimo", "massimo"],
-  ph: ["minimo", "massimo"],
-  misura: ["minimo", "massimo"],
-  livello: ["soglia"],
-  luci: [],
-  filtro: [],
-  riscaldatore: [],
-  comando: [],
-});
-
 const NUMERI = Object.freeze(["minimo", "massimo", "soglia"]);
 
-function nomiDeiGeneri() {
-  return {
-    temperatura: t("Temperatura dell'acqua", "Water temperature"),
-    ph: "pH",
-    misura: t("Altro valore dell'acqua", "Other water reading"),
-    livello: t("Livello dell'acqua", "Water level"),
-    luci: t("Luci", "Lights"),
-    filtro: t("Filtro o pompa", "Filter or pump"),
-    riscaldatore: t("Riscaldatore", "Heater"),
-    comando: t("Altro comando", "Other switch"),
-  };
+function numeriDelGenere(genere, entity = "") {
+  if (MISURE.includes(genere)) return ["minimo", "massimo"];
+  if (genere === "livello" && !clean(entity).startsWith("binary_sensor.")) return ["soglia"];
+  return [];
+}
+
+/** Come si chiama ogni genere nella tendina, per questo tipo. */
+export function nomeDelGenere(genere, tipo = "acquario") {
+  const terrario = tipoValido(tipo) === "terrario";
+  switch (genere) {
+    case "temperatura":
+      return terrario
+        ? t("Temperatura (lato caldo)", "Temperature (warm side)")
+        : t("Temperatura dell'acqua", "Water temperature");
+    case "temperatura_fresca":
+      return t("Temperatura (lato fresco)", "Temperature (cool side)");
+    case "umidita":
+      return t("Umidità", "Humidity");
+    case "ph":
+      return "pH";
+    case "misura":
+      return terrario
+        ? t("Altra misura", "Other reading")
+        : t("Altro valore dell'acqua", "Other water reading");
+    case "livello":
+      return terrario
+        ? t("Livello del serbatoio", "Reservoir level")
+        : t("Livello dell'acqua", "Water level");
+    case "luci":
+      return t("Luci", "Lights");
+    case "lampada":
+      return t("Lampada calda o riscaldamento", "Heat lamp or heating");
+    case "uvb":
+      return t("Lampada UVB", "UVB lamp");
+    case "nebulizzatore":
+      return t("Nebulizzatore", "Mister");
+    case "filtro":
+      return t("Filtro o pompa", "Filter or pump");
+    case "riscaldatore":
+      return t("Riscaldatore", "Heater");
+    default:
+      return t("Altro comando", "Other switch");
+  }
 }
 
 /* Il genere di una riga: quello scritto, o quello che dice l'entità. */
-function genereDellaRiga(riga, states = allStates()) {
-  return (
-    genereValido(riga?.genere) ||
-    genereDelSensore(riga?.entity, states?.[riga?.entity]) ||
-    "temperatura"
-  );
+function genereDellaRiga(riga, tipo, states = allStates()) {
+  const generi = generiDelTipo(tipo);
+  const scritto = genereValido(riga?.genere);
+  if (scritto && generi.includes(scritto)) return scritto;
+  const letto = genereDelSensore(riga?.entity, states?.[riga?.entity], tipo);
+  return generi.includes(letto) ? letto : generi[0];
 }
 
 /* ── la vasca, in cima ────────────────────────────────────────────────── */
 
-function configurazione() {
-  return readJson(CHIAVE_ACQUARIO, {}) || {};
-}
-
-/* La data del cambio, per la casella del calendario: il giorno di casa, non
- * quello di Greenwich. */
-function giornoDelCambio(config) {
-  const quando = Date.parse(clean(config?.cambio));
+/* La data, per la casella del calendario: il giorno di casa, non quello di
+ * Greenwich. */
+function giornoDi(valore) {
+  const quando = Date.parse(clean(valore));
   if (!Number.isFinite(quando)) return "";
   const giorno = new Date(quando);
   const due = (n) => String(n).padStart(2, "0");
   return `${giorno.getFullYear()}-${due(giorno.getMonth() + 1)}-${due(giorno.getDate())}`;
 }
 
-function salvaLaVasca(campo, valore) {
-  const prima = configurazione();
-  if (campo === "cambio") {
-    /* A mezzogiorno del giorno scelto: lontano dalla mezzanotte, così nessun
-     * fuso orario lo sposta a ieri. */
-    const [anno, mese, giorno] = clean(valore).split("-").map(Number);
-    const quando =
-      anno && mese && giorno ? new Date(anno, mese - 1, giorno, 12, 0, 0).getTime() : "";
-    writeJsonIfChanged(CHIAVE_ACQUARIO, conIlCambio(prima, quando));
-  } else writeJsonIfChanged(CHIAVE_ACQUARIO, { ...prima, [campo]: clean(valore) });
-  renderAcquario();
+/* A mezzogiorno del giorno scelto: lontano dalla mezzanotte, così nessun fuso
+ * orario lo sposta a ieri. */
+function istanteDi(giorno) {
+  const [anno, mese, di] = clean(giorno).split("-").map(Number);
+  if (!anno || !mese || !di) return "";
+  return new Date(anno, mese - 1, di, 12, 0, 0).toISOString();
 }
 
-function campoDellaVasca(campo, etichetta, valore, esempio, { tipo = "text", aiuto = "" } = {}) {
-  return `<label class="ed-slot dm-dich-campo"><span class="ed-slot-lbl">${esc(etichetta)}</span>
-    <span class="ed-form-row"><input class="ed-input${tipo === "text" ? "" : " mono"}" type="${esc(tipo)}"
-      data-dm-acq-vasca="${esc(campo)}" value="${esc(valore)}" placeholder="${esc(esempio)}"
-      ${tipo === "text" ? "" : 'inputmode="numeric"'} autocomplete="off" spellcheck="false"></span>
+function campoDellaVasca(indice, campo, etichetta, valore, esempio, { tipo = "text", aiuto = "" } = {}) {
+  return `<label class="ed-slot dm-animale-field"><span class="ed-slot-lbl">${esc(etichetta)}</span>
+    <span class="ed-form-row"><input id="dm-animale-${indice}-vasca-${esc(campo)}" class="ed-input${tipo === "text" ? "" : " mono"}" type="${esc(tipo)}"
+      data-vasca-dato="${esc(campo)}" value="${esc(valore)}" placeholder="${esc(esempio)}"
+      ${tipo === "number" ? 'inputmode="numeric" min="1" step="1"' : ""} autocomplete="off" spellcheck="false"></span>
     ${aiuto ? `<small>${esc(aiuto)}</small>` : ""}</label>`;
 }
 
-function vascaMarkup() {
-  const config = configurazione();
-  return `${campoDellaVasca("vasca", t("Nome della vasca", "Tank name"), clean(config.vasca), t("Vasca tropicale", "Tropical tank"))}
-    ${campoDellaVasca("litri", t("Litri", "Litres"), clean(config.litri), "240")}
+function vascaInTestaMarkup(animale, indice) {
+  if (tipoValido(animale.specie) === "terrario")
+    return `<div class="dm-animale-gruppo">
+      <span class="dm-animale-gruppo-lbl">${esc(t("🧽 Pulizia", "🧽 Cleaning"))}</span>
+      ${campoDellaVasca(indice, "ogni", t("Pulizia ogni (giorni)", "Clean every (days)"), clean(animale.ogni), "30", {
+        tipo: "number",
+        aiuto: t(
+          "Facoltativo: vuoto, il terrario non ricorda la pulizia a nessuno. Con un numero la scheda dice quando tocca.",
+          "Optional: left empty, the terrarium reminds nobody to clean it. With a number the card says when it is due.",
+        ),
+      })}
+      ${campoDellaVasca(indice, "pulizia", t("Ultima pulizia", "Last cleaning"), giornoDi(animale.pulizia), "", {
+        tipo: "date",
+        aiuto: t(
+          "Si segna dalla pagina con «Fatto oggi»; qui si corregge.",
+          "It is recorded from the page with “Done today”; here you can correct it.",
+        ),
+      })}
+    </div>`;
+  return `<div class="dm-animale-gruppo">
+    <span class="dm-animale-gruppo-lbl">${esc(t("🪣 La vasca", "🪣 The tank"))}</span>
+    ${campoDellaVasca(indice, "litri", t("Litri", "Litres"), clean(animale.litri), "240", { tipo: "number" })}
     ${campoDellaVasca(
+      indice,
       "ogni",
       t("Cambio d'acqua ogni (giorni)", "Water change every (days)"),
-      clean(config.ogni),
+      clean(animale.ogni),
       String(CAMBIO_OGNI_GIORNI),
       {
         tipo: "number",
@@ -137,238 +153,205 @@ function vascaMarkup() {
         ),
       },
     )}
-    ${campoDellaVasca(
-      "cambio",
-      t("Ultimo cambio d'acqua", "Last water change"),
-      giornoDelCambio(config),
-      "",
-      {
-        tipo: "date",
-        aiuto: t(
-          "Si segna dalla pagina con «Fatto oggi»; qui si corregge.",
-          "It is recorded from the page with “Done today”; here you can correct it.",
-        ),
-      },
-    )}`;
-}
-
-/* ── i campi della riga ───────────────────────────────────────────────── */
-
-function campoNumerico(nome, indice, riga, etichetta, esempio, aiuto = "") {
-  return `<label class="ed-slot dm-dich-campo"><span class="ed-slot-lbl">${esc(etichetta)}</span>
-    <span class="ed-form-row"><input class="ed-input mono" data-dm-dich-campo="${esc(nome)}"
-      data-dm-dich-riga="${indice}" value="${esc(clean(riga[nome]))}" placeholder="${esc(esempio)}"
-      inputmode="decimal" autocomplete="off" spellcheck="false"></span>
-    ${aiuto ? `<small>${esc(aiuto)}</small>` : ""}</label>`;
-}
-
-function campiDellaRiga(riga, indice) {
-  const states = allStates();
-  const genere = genereDellaRiga(riga, states);
-  const nomi = nomiDeiGeneri();
-  const scelta = `<label class="ed-slot dm-dich-campo"><span class="ed-slot-lbl">${esc(t("Cosa è", "What it is"))}</span>
-    <span class="ed-form-row"><select class="ed-input" data-dm-acq-genere="${indice}">${GENERI.map(
-      (voce) =>
-        `<option value="${esc(voce)}"${voce === genere ? " selected" : ""}>${esc(nomi[voce])}</option>`,
-    ).join("")}</select></span>
-    <small>${esc(
-      t(
-        "Le misure si guardano sulla loro forcella, il livello conta i giorni al rabbocco, e i comandi diventano mattonelle che si accendono e si spengono.",
-        "Readings are shown on their ideal range, the level counts the days to the top-up, and switches become tiles that turn on and off.",
+    ${campoDellaVasca(indice, "cambio", t("Ultimo cambio d'acqua", "Last water change"), giornoDi(animale.cambio), "", {
+      tipo: "date",
+      aiuto: t(
+        "Si segna dalla pagina con «Fatto oggi»; qui si corregge.",
+        "It is recorded from the page with “Done today”; here you can correct it.",
       ),
-    )}</small></label>`;
-  if (MISURE.includes(genere)) {
-    const unita = clean(states?.[riga?.entity]?.attributes?.unit_of_measurement);
-    const serie = forcellaDiSerie(genere, unita);
-    const esempio = (quale) => (serie ? formatNumber(serie[quale], 1) : "");
-    return (
-      scelta +
-      campoNumerico("minimo", indice, riga, t("Ideale da", "Ideal from"), esempio("minimo")) +
-      campoNumerico(
-        "massimo",
-        indice,
-        riga,
-        t("Ideale fino a", "Ideal up to"),
-        esempio("massimo"),
-        t(
-          "Nella stessa unità del sensore. Vuote, la temperatura sta fra 24 e 27 gradi e il pH fra 6,5 e 7,5: i numeri di una vasca tropicale d'acqua dolce.",
-          "In the same unit as the sensor. Left empty, temperature stays between 24 and 27 degrees and pH between 6.5 and 7.5: the numbers of a tropical freshwater tank.",
-        ),
-      )
-    );
-  }
-  if (genere === "livello" && !clean(riga?.entity).startsWith("binary_sensor."))
-    return (
-      scelta +
-      campoNumerico(
-        "soglia",
-        indice,
-        riga,
-        t("Da rabboccare sotto", "Top up below"),
-        "",
-        t(
-          "Nella stessa unità del sensore, percento o centimetri: sotto questo livello va rabboccata, e la pagina conta i giorni che mancano. Un galleggiante non ne ha bisogno.",
-          "In the same unit as the sensor, percent or centimetres: below this level it needs topping up, and the page counts the days left. A float switch does not need it.",
-        ),
-      )
-    );
-  return scelta;
+    })}
+  </div>`;
 }
 
-/* Quello che la riga aperta ha nelle sue caselle adesso: il genere dalla
- * tendina, i numeri di quel genere, e nient'altro. */
-function conICampiDellaRiga(bozza, body, indice) {
-  const tendina = body.querySelector(`[data-dm-acq-genere="${indice}"]`);
-  const genere = genereValido(tendina?.value) || genereDellaRiga(bozza);
-  const fuori = { ...bozza, genere };
-  for (const nome of NUMERI) {
-    const casella = body.querySelector(
-      `[data-dm-dich-campo="${nome}"][data-dm-dich-riga="${indice}"]`,
-    );
-    if (casella) fuori[nome] = clean(casella.value);
-    if (!CAMPI_DEL_GENERE[genere].includes(nome)) delete fuori[nome];
+/* ── le righe ─────────────────────────────────────────────────────────── */
+
+function campoNumerico(indice, posto, nome, riga, etichetta, esempio) {
+  return `<label class="ed-slot dm-animale-field"><span class="ed-slot-lbl">${esc(etichetta)}</span>
+    <span class="ed-form-row"><input id="dm-animale-${indice}-riga-${posto}-${nome}" class="ed-input mono"
+      data-vasca-campo="${esc(nome)}" value="${esc(clean(riga[nome]))}" placeholder="${esc(esempio)}"
+      inputmode="decimal" autocomplete="off" spellcheck="false"></span></label>`;
+}
+
+function rigaMarkup(riga, posto, indice, tipo, states) {
+  const genere = genereDellaRiga(riga, tipo, states);
+  const numeri = numeriDelGenere(genere, riga.entity);
+  const unita = clean(states?.[riga?.entity]?.attributes?.unit_of_measurement);
+  const serie = forcellaDiSerie(genere, unita, tipo);
+  const esempio = (quale) => (serie ? formatNumber(serie[quale], 1) : "");
+  const id = `dm-animale-${indice}-riga-${posto}-entity`;
+  const valore = states?.[riga.entity];
+  const adesso =
+    valore && clean(valore.state) && !/^(unknown|unavailable)$/i.test(clean(valore.state))
+      ? `${clean(valore.state)}${unita ? ` ${unita}` : ""}`
+      : "";
+  return `<div class="dm-vasca-ed-riga" data-vasca-riga="${posto}" data-vasca-genere="${esc(genere)}">
+    <div class="dm-vasca-ed-testa">
+      <span class="dm-vasca-ed-ic" aria-hidden="true">${disegnoDiCasa(clean(riga.icon) || disegnoDelGenere(genere, tipo), { misura: 28, ripiego: disegnoDelGenere(genere, tipo) })}</span>
+      <span class="dm-vasca-ed-nome"><strong>${esc(clean(riga.name) || nomeDelGenere(genere, tipo))}</strong><small class="mono">${esc(clean(riga.entity) || t("nessuna entità", "no entity"))}</small></span>
+      ${adesso ? `<b class="dm-vasca-ed-val">${esc(adesso)}</b>` : ""}
+      <button type="button" class="ed-del" data-vasca-togli="${posto}" aria-label="${esc(t("Elimina", "Remove"))}">🗑️</button>
+    </div>
+    <div class="dm-vasca-ed-campi">
+      <label class="ed-slot dm-animale-field dm-vasca-ed-largo"><span class="ed-slot-lbl">${esc(t("Entità", "Entity"))}</span>
+        <span class="ed-form-row"><input id="${id}" class="ed-input mono" data-vasca-campo="entity" value="${esc(clean(riga.entity))}"
+          placeholder="${esc(tipoValido(tipo) === "terrario" ? "sensor.terrario_temperatura" : "sensor.acquario_temperatura")}" autocomplete="off" spellcheck="false"><button type="button" class="dm-animale-pick" data-animale-pick="${id}" aria-label="${esc(t("Scegli entità", "Choose entity"))}">🔍</button></span></label>
+      <label class="ed-slot dm-animale-field"><span class="ed-slot-lbl">${esc(t("Nome", "Name"))}</span>
+        <span class="ed-form-row"><input id="dm-animale-${indice}-riga-${posto}-name" class="ed-input" data-vasca-campo="name" value="${esc(clean(riga.name))}" placeholder="${esc(nomeDelGenere(genere, tipo))}"></span></label>
+      <label class="ed-slot dm-animale-field"><span class="ed-slot-lbl">${esc(t("Cosa è", "What it is"))}</span>
+        <span class="ed-form-row"><select id="dm-animale-${indice}-riga-${posto}-genere" class="ed-input" data-vasca-campo="genere">${generiDelTipo(tipo)
+          .map(
+            (voce) =>
+              `<option value="${esc(voce)}"${voce === genere ? " selected" : ""}>${esc(nomeDelGenere(voce, tipo))}</option>`,
+          )
+          .join("")}</select></span></label>
+      ${numeri.includes("minimo") ? campoNumerico(indice, posto, "minimo", riga, t("Ideale da", "Ideal from"), esempio("minimo")) : ""}
+      ${numeri.includes("massimo") ? campoNumerico(indice, posto, "massimo", riga, t("Ideale fino a", "Ideal up to"), esempio("massimo")) : ""}
+      ${numeri.includes("soglia") ? campoNumerico(indice, posto, "soglia", riga, t("Da rabboccare sotto", "Top up below"), "") : ""}
+      <input type="hidden" data-vasca-campo="icon" value="${esc(clean(riga.icon))}">
+    </div>
+  </div>`;
+}
+
+/** Le righe che Home Assistant propone per questa vasca, meno quelle già prese da un'altra. */
+export function daPrendereNellaVasca(animale, esclusi = []) {
+  const states = allStates();
+  return righeDaImportare(
+    states,
+    { righe: animale?.righe || [] },
+    (entity) => nomeDaHomeAssistant(entity, states),
+    { tipo: tipoValido(animale?.specie), esclusi },
+  );
+}
+
+/**
+ * Il corpo di una voce che è una vasca: la vasca in cima, le righe sotto, e i
+ * tasti per aggiungerne. `esclusi` sono le entità che stanno già in un'altra
+ * vasca: non si ripropongono.
+ */
+export function vascaEditorMarkup(animale, indice, { esclusi = [] } = {}) {
+  const tipo = tipoValido(animale.specie);
+  const states = allStates();
+  const righe = Array.isArray(animale.righe) ? animale.righe : [];
+  const mancano = daPrendereNellaVasca(animale, esclusi);
+  const quante = mancano.length;
+  const terrario = tipo === "terrario";
+  return `${vascaInTestaMarkup(animale, indice)}
+    <div class="dm-animale-gruppo dm-vasca-ed">
+      <span class="dm-animale-gruppo-lbl">${esc(terrario ? t("🦎 Le entità del terrario", "🦎 The terrarium's entities") : t("🐠 Le entità dell'acquario", "🐠 The aquarium's entities"))}</span>
+      <small class="dm-vasca-ed-intro">${esc(
+        terrario
+          ? t(
+              "Una riga per entità: le temperature del lato caldo e del lato fresco, l'umidità, le luci, la lampada calda, l'UVB, il nebulizzatore. Le forcelle vuote valgono quelle di serie: 28–35 °C sul lato caldo, 22–28 °C sul fresco, umidità 40–80 %.",
+              "One row per entity: warm-side and cool-side temperatures, humidity, lights, heat lamp, UVB, mister. Empty ranges use the defaults: 28–35 °C on the warm side, 22–28 °C on the cool side, humidity 40–80 %.",
+            )
+          : t(
+              "Una riga per entità: la temperatura e il pH con la loro forcella, il livello dell'acqua, le luci, il filtro e il riscaldatore. Le forcelle vuote valgono quelle di serie: 24–27 °C e pH 6,5–7,5.",
+              "One row per entity: temperature and pH with their ideal range, the water level, the lights, the filter and the heater. Empty ranges use the defaults: 24–27 °C and pH 6.5–7.5.",
+            ),
+      )}</small>
+      ${
+        righe.length
+          ? righe.map((riga, posto) => rigaMarkup(riga, posto, indice, tipo, states)).join("")
+          : `<div class="ed-empty">${esc(t("Nessuna entità", "No entity"))}</div>`
+      }
+      <button type="button" class="ed-btn-add" data-vasca-aggiungi>＋ ${esc(t("Aggiungi entità", "Add entity"))}</button>
+      ${
+        mancano.length
+          ? `<button type="button" class="ed-btn-add dm-vasca-ed-prendi" data-vasca-prendi>⤓ ${esc(
+              terrario
+                ? t(
+                    `Prendi le ${quante} entità del terrario che Home Assistant ha trovato`,
+                    `Take the ${quante} terrarium entities Home Assistant found`,
+                  )
+                : t(
+                    `Prendi le ${quante} entità dell'acquario che Home Assistant ha trovato`,
+                    `Take the ${quante} aquarium entities Home Assistant found`,
+                  ),
+            )}</button>`
+          : ""
+      }
+    </div>`;
+}
+
+/**
+ * Quello che la riga aperta ha nelle sue caselle adesso: i dati della vasca e
+ * le righe, ognuna col genere dalla tendina e solo i numeri di quel genere.
+ */
+export function leggiLaVasca(nodo, animale) {
+  const fuori = { ...animale };
+  const tipo = tipoValido(animale.specie);
+  for (const casella of nodo.querySelectorAll("[data-vasca-dato]")) {
+    const campo = clean(casella.dataset.vascaDato);
+    const valore = clean(casella.value);
+    const scritto = campo === "cambio" || campo === "pulizia" ? istanteDi(valore) : valore;
+    if (scritto) fuori[campo] = scritto;
+    else delete fuori[campo];
   }
+  const righe = [];
+  for (const blocco of nodo.querySelectorAll("[data-vasca-riga]")) {
+    const posto = Number(blocco.dataset.vascaRiga);
+    const prima = (Array.isArray(animale.righe) ? animale.righe : [])[posto] || {};
+    const riga = { ...prima };
+    for (const casella of blocco.querySelectorAll("[data-vasca-campo]"))
+      riga[clean(casella.dataset.vascaCampo)] = clean(casella.value);
+    const generi = generiDelTipo(tipo);
+    riga.genere = generi.includes(riga.genere) ? riga.genere : genereDellaRiga(riga, tipo);
+    /* Il disegno di serie segue il genere, se era quello di serie del genere
+     * di prima: chi l'ha scelto a mano se lo tiene. */
+    const diPrima = genereValido(prima.genere);
+    if (!riga.icon || (diPrima && riga.icon === disegnoDelGenere(diPrima, tipo)))
+      riga.icon = disegnoDelGenere(riga.genere, tipo);
+    const tiene = numeriDelGenere(riga.genere, riga.entity);
+    for (const nome of NUMERI) if (!tiene.includes(nome) || riga[nome] === "") delete riga[nome];
+    righe.push(riga);
+  }
+  if (nodo.querySelector("[data-vasca-riga]") || Array.isArray(animale.righe)) fuori.righe = righe;
   return fuori;
 }
 
-/* ── la scheda ────────────────────────────────────────────────────────── */
-
-const scheda = costruisciSchedaDichiarata({
-  nome: "acquario",
-  chiave: CHIAVE_ACQUARIO,
-  tab: ACQUARIO_EDITOR_TAB,
-  disegni: DISEGNI_DELL_ACQUARIO,
-  ripiego: "aquarium",
-  ridisegnaPagina: renderAcquario,
-  inPiu: CAMPI_IN_PIU,
-  rigaNuova: { genere: "temperatura", icon: "thermometer" },
-
-  campiInPiu: campiDellaRiga,
-  bozzaInPiu: conICampiDellaRiga,
-
-  parole: {
-    linguetta: `🐠 ${t("Acquario", "Aquarium")}`,
-    intro: t(
-      "L'acquario di casa. In cima la vasca: il nome, i litri e ogni quanti giorni si cambia l'acqua. Sotto un'entità per riga: la temperatura e il pH con la loro forcella, il livello dell'acqua, le luci, il filtro e il riscaldatore.",
-      "The aquarium at home. At the top, the tank: its name, the litres and how often the water is changed. Below, one entity per row: temperature and pH with their ideal range, the water level, the lights, the filter and the heater.",
-    ),
-    vuoto: t("Nessuna entità dell'acquario", "No aquarium entity"),
-    aggiungi: t("Aggiungi entità", "Add entity"),
-    nuovo: t("Entità nuova", "New entity"),
-    senzaNome: t("Entità senza nome", "Unnamed entity"),
-    salva: t("Salva entità", "Save entity"),
-    salvato: `🐠 ${t("Entità salvata", "Entity saved")}`,
-    etichettaEntita: t("Entità", "Entity"),
-    segnaposto: "sensor.acquario_temperatura",
-    aiutoEntita: t(
-      "Il sensore o il comando dell'acquario: la temperatura, il pH, il livello, la luce, il filtro, il riscaldatore.",
-      "The aquarium sensor or switch: temperature, pH, level, light, filter, heater.",
-    ),
-    segnapostoNome: t("Temperatura", "Temperature"),
-    aiutoNome: t(
-      "Come si chiama per te: è questo che si legge nella pagina.",
-      "What you call it: this is what the page reads.",
-    ),
-    muta: t(
-      "Finché non scegli l'entità questa riga non si vede: né nella pagina, né nella tessera in Home.",
-      "Until you pick the entity this row is nowhere: not on the page, not on the Home tile.",
-    ),
-    importa: (quante) =>
-      t(
-        `Prendi le ${quante} entità dell'acquario che Home Assistant ha trovato`,
-        `Take the ${quante} aquarium entities Home Assistant found`,
-      ),
-    presi: (quante) => t(`🐠 ${quante} entità aggiunte`, `🐠 ${quante} entities added`),
-    notaImporta: t(
-      "Li mette qui come righe, una volta sola: da lì in poi sono tue — le rinomini, gli dai il disegno, e quelle che elimini non tornano più.",
-      "It puts them here as rows, once: from then on they are yours — rename them, give them a drawing, and the ones you remove do not come back.",
-    ),
-  },
-
-  /* La vasca sta in cima, perché vale per tutte le righe: dentro una riga
-   * direbbe che è di quella entità, e non lo è. */
-  inTesta: vascaMarkup,
-
-  /* Come stanno adesso le righe scritte: la pagina e la scheda le leggono
-   * dalla stessa funzione, e il giudizio è quello della pagina. */
-  leggi(elenco) {
-    const states = allStates();
-    const letture = acquarioDiCasa(states, { righe: elenco }, (entity) =>
-      nomeDaHomeAssistant(entity, states),
-    );
-    const come = comeStaLAcquario(letture, { config: configurazione(), adesso: Date.now() });
-    const male = new Set([
-      ...come.fuori.map((voce) => voce.lettura.entity),
-      ...come.bassi.map((voce) => voce.lettura.entity),
-    ]);
-    return new Map(
-      letture.map((lettura) => [lettura.entity, { ...lettura, male: male.has(lettura.entity) }]),
-    );
-  },
-
-  daImportare(config) {
-    const states = allStates();
-    return righeDaImportare(states, config, (entity) => nomeDaHomeAssistant(entity, states));
-  },
-
-  statoDellaRiga: (letta) => (letta?.muto ? "muta" : letta?.male ? "male" : "bene"),
-  didascalia: (letta) => (letta ? nomiDeiGeneri()[letta.genere] || "" : ""),
-  accanto: (letta) => {
-    if (!letta || letta.muto) return "—";
-    if (letta.acceso !== undefined && letta.acceso !== null)
-      return letta.acceso ? t("acceso", "on") : t("spento", "off");
-    if (letta.binario)
-      return letta.basso ? t("da rabboccare", "to top up") : t("nella norma", "in range");
-    if (letta.valore === null || letta.valore === undefined) return "—";
-    return `${formatNumber(letta.valore, Math.abs(letta.valore) < 100 ? 1 : 0)}${letta.unita ? ` ${letta.unita}` : ""}`;
-  },
-
-  /* Le caselle della vasca si salvano da sé, mentre si scrivono: non sono di
-   * una riga, e aspettare il 💾 di una riga vorrebbe dire un tasto che salva
-   * quello che non ha davanti. Cambiare il genere di una riga cambia le sue
-   * caselle: si salva e si ridisegna, come nell'Acqua e gas, e il disegno di
-   * serie segue il genere se era quello di serie del genere di prima. */
-  inPiuAllInstallazione(documento, { ridisegna, configurazione: config, salva }) {
-    documento.addEventListener("change", (evento) => {
-      const vasca = evento.target?.closest?.("[data-dm-acq-vasca]");
-      if (vasca) {
-        salvaLaVasca(clean(vasca.dataset.dmAcqVasca), vasca.value);
-        return;
-      }
-      const tendina = evento.target?.closest?.("[data-dm-acq-genere]");
-      if (!tendina) return;
-      const body = documento.getElementById("ed-body");
-      if (!body?.contains(tendina)) return;
-      const indice = Number(tendina.dataset.dmAcqGenere);
-      if (!Number.isInteger(indice)) return;
-      const prima = (righeDichiarate(config(), CAMPI_IN_PIU) || [])[indice] || {};
-      const campo = (nome) =>
-        body.querySelector(`[data-dm-dich-campo="${nome}"][data-dm-dich-riga="${indice}"]`)?.value;
-      const bozza = {
-        ...prima,
-        entity: clean(campo("entity") ?? prima.entity),
-        name: clean(campo("name") ?? prima.name),
-        icon: clean(campo("icon") ?? prima.icon),
-      };
-      const riga = conICampiDellaRiga(bozza, body, indice);
-      if (!bozza.icon || bozza.icon === disegnoDelGenere(genereDellaRiga(prima)))
-        riga.icon = disegnoDelGenere(riga.genere);
-      salva(conLaRiga(config(), indice, riga, CAMPI_IN_PIU));
-      ridisegna();
-    });
-  },
-});
-
-/* I tre nomi con cui il resto della plancia chiama questa scheda. Sono
- * funzioni dichiarate: il pacchetto si prova cercando `function install...`. */
-export function ensureAcquarioEditor() {
-  return scheda.disegnaScheda();
-}
-export function ensureAcquarioEditorTab() {
-  return scheda.disegnaLinguetta();
-}
-export function installAcquarioEditor() {
-  return scheda.installa();
+/** La riga nuova che «＋ Aggiungi entità» mette in fondo. */
+export function rigaNuovaDellaVasca(tipo) {
+  const [genere] = generiDelTipo(tipo);
+  return {
+    entity: "",
+    name: t("Entità nuova", "New entity"),
+    icon: disegnoDelGenere(genere, tipo),
+    genere,
+  };
 }
 
-senzaCadere(installAcquarioEditor);
+let stileMesso = false;
+
+/** Il foglio delle righe della vasca, una volta sola. */
+export function installaStileDellaVasca() {
+  if (stileMesso) return false;
+  stileMesso = true;
+  installStyle(
+    "dm-vasca-editor-style",
+    `
+      #ed-body .dm-vasca-ed{gap:8px}
+      #ed-body .dm-vasca-ed-intro{font-size:11px;line-height:1.45;color:var(--text-dim,#64748b);font-weight:600}
+      #ed-body .dm-vasca-ed-riga{display:grid;gap:8px;padding:9px 10px;border:1px solid var(--card-border,#dbe4ee);
+        border-left:4px solid var(--dm-vasca-ed,#0ea5e9);border-radius:12px;background:var(--card-bg,#fff)}
+      #ed-body .dm-vasca-ed-riga[data-vasca-genere="lampada"],
+      #ed-body .dm-vasca-ed-riga[data-vasca-genere="riscaldatore"]{--dm-vasca-ed:#f97316}
+      #ed-body .dm-vasca-ed-riga[data-vasca-genere="uvb"]{--dm-vasca-ed:#a855f7}
+      #ed-body .dm-vasca-ed-riga[data-vasca-genere="luci"]{--dm-vasca-ed:#f59e0b}
+      #ed-body .dm-vasca-ed-riga[data-vasca-genere="umidita"],
+      #ed-body .dm-vasca-ed-riga[data-vasca-genere="nebulizzatore"]{--dm-vasca-ed:#06b6d4}
+      #ed-body .dm-vasca-ed-riga[data-vasca-genere="temperatura"]{--dm-vasca-ed:#ef4444}
+      #ed-body .dm-vasca-ed-riga[data-vasca-genere="temperatura_fresca"]{--dm-vasca-ed:#3b82f6}
+      #ed-body .dm-vasca-ed-testa{display:flex;align-items:center;gap:9px;min-width:0}
+      #ed-body .dm-vasca-ed-ic{flex:0 0 28px;display:grid;place-items:center;line-height:0}
+      #ed-body .dm-vasca-ed-ic svg{display:block;width:28px;height:28px}
+      #ed-body .dm-vasca-ed-nome{display:grid;gap:1px;min-width:0;flex:1 1 auto}
+      #ed-body .dm-vasca-ed-nome strong{font-size:13px;font-weight:900;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+      #ed-body .dm-vasca-ed-nome small{font-size:10.5px;opacity:.72;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+      #ed-body .dm-vasca-ed-val{flex:0 0 auto;font-size:12.5px;font-weight:900}
+      #ed-body .dm-vasca-ed-campi{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+      #ed-body .dm-vasca-ed-largo{grid-column:1/-1}
+      #ed-body .dm-vasca-ed-prendi{background:transparent!important;border:1px dashed var(--card-border,#dbe4ee)!important;color:var(--text-dim,#64748b)!important}
+    `,
+  );
+  return true;
+}

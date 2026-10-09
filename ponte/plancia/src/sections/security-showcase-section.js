@@ -396,7 +396,11 @@ function passaAllAreaAllarme(id) {
  * non lo vede — lì si comanda l'area in pagina, come sempre. */
 const ATTESA_DELLA_PRESSIONE = 550;
 const insieme = new Set();
-let premutaALungo = false;
+/* Quando e' scattata l'ultima pressione lunga: il tocco che la chiude non
+ * deve anche cambiare area. Un'ora e non un si'/no, perche' dopo il menu del
+ * tocco lungo di Android il tocco non sempre arriva, e un si' rimasto appeso
+ * si mangerebbe il tocco vero dopo. */
+let premutaALungoIl = 0;
 let pressione = null;
 
 function areeInsieme() {
@@ -430,14 +434,21 @@ function iniziaLaPressione(event) {
     y: event.clientY,
     timer: setTimeout(() => {
       pressione = null;
-      premutaALungo = true;
-      nelGruppo(id);
-      root.navigator?.vibrate?.(15);
-      try {
-        renderSecurity();
-      } catch (_error) {}
+      pressioneLunga(id);
     }, ATTESA_DELLA_PRESSIONE),
   };
+}
+
+function pressioneLunga(id) {
+  /* Due strade arrivano qui per lo stesso dito — il nostro orologio e il
+   * menu del tocco lungo del telefono —: conta la prima. */
+  if (Date.now() - premutaALungoIl < 1000) return;
+  premutaALungoIl = Date.now();
+  nelGruppo(id);
+  root.navigator?.vibrate?.(15);
+  try {
+    renderSecurity();
+  } catch (_error) {}
 }
 
 function seSiMuove(event) {
@@ -1086,9 +1097,9 @@ function onShellClick(event) {
     return;
   }
   const area = target?.closest?.("[data-dm-area]");
-  if (area && premutaALungo) {
+  if (area && Date.now() - premutaALungoIl < 1500) {
     /* Il dito si alza dopo la pressione lunga: quel tocco l'ha gia' fatta lei. */
-    premutaALungo = false;
+    premutaALungoIl = 0;
     event.preventDefault();
     return;
   }
@@ -1469,9 +1480,16 @@ export function installSecurityShowcaseSection() {
     doc.addEventListener("pointermove", seSiMuove, { passive: true });
     doc.addEventListener("pointerup", fermaLaPressione, { passive: true });
     doc.addEventListener("pointercancel", fermaLaPressione, { passive: true });
-    /* La pressione lunga sul telefono apre il menu del testo: sull'area no. */
+    /* Il tocco lungo del telefono: il browser a volte annulla il dito
+     * (`pointercancel`) e apre il suo menu. Sull'area il menu non si apre, e
+     * quel tocco lungo e' la pressione lunga — anche se il nostro orologio e'
+     * stato fermato dall'annullamento. */
     doc.addEventListener("contextmenu", (event) => {
-      if (event.target?.closest?.("[data-dm-area]")) event.preventDefault();
+      const area = event.target?.closest?.("[data-dm-area]");
+      if (!area) return;
+      event.preventDefault();
+      fermaLaPressione();
+      pressioneLunga(clean(area.dataset.dmArea));
     });
     doc.addEventListener("keydown", onShellKeydown);
     for (const eventName of [
@@ -1703,7 +1721,7 @@ function securityCss() {
   box-shadow:0 0 0 1px var(--primary-color,#0ea5e9) inset
 }
 /* Le aree del gruppo: piene del colore, e la spunta in alto. */
-.dm-sec-area{position:relative;-webkit-touch-callout:none;user-select:none}
+.dm-sec-area{position:relative;-webkit-touch-callout:none;user-select:none;touch-action:manipulation}
 .dm-sec-area[data-scelta="true"]{
   border-color:var(--primary-color,#0ea5e9);
   background:color-mix(in srgb,var(--primary-color,#0ea5e9) 14%,var(--surface-2,#f8fafc));
