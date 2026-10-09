@@ -29,8 +29,8 @@
         <rect x="13.5" y="13.5" width="7" height="7" rx="1.5" />
       </symbol>
       <symbol id="ic-browser" viewBox="0 0 24 24">
-        <circle cx="12" cy="12" r="9" />
-        <path d="M3.2 9.5h17.6M3.2 14.5h17.6M12 3a15 15 0 0 1 0 18M12 3a15 15 0 0 0 0 18" />
+        <rect x="3" y="4" width="18" height="16" rx="2.5" />
+        <path d="M3 9h18M7 6.5h.01M10 6.5h.01" />
       </symbol>
       <symbol id="ic-chiave" viewBox="0 0 24 24">
         <path d="M14.7 6.3a4 4 0 1 0 3 6.9l5.2 5.2-2.8 2.8-5.2-5.2a4 4 0 0 1-6.9-3" />
@@ -53,319 +53,445 @@
       <symbol id="ic-onde" viewBox="0 0 24 24">
         <path d="M3 12h3l2.5-7 3.5 14 3-9 2 4h4" />
       </symbol>
+      <symbol id="ic-casa" viewBox="0 0 24 24">
+        <path d="M3 10.5 12 3l9 7.5" />
+        <path d="M5 9.5V20h14V9.5" />
+        <path d="M10 20v-6h4v6" />
+      </symbol>
+      <symbol id="ic-ha" viewBox="0 0 24 24">
+        <path d="M12 3 3 11v10h18V11z" />
+        <circle cx="12" cy="14" r="2.5" />
+        <path d="M12 16.5V21" />
+      </symbol>
+      <symbol id="ic-segnale" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="2" />
+        <path
+          d="M8.5 15.5a5 5 0 0 1 0-7M15.5 8.5a5 5 0 0 1 0 7M5.6 18.4a9 9 0 0 1 0-12.8M18.4 5.6a9 9 0 0 1 0 12.8"
+        />
+      </symbol>
+      <symbol id="ic-installatore" viewBox="0 0 24 24">
+        <path
+          d="M14.5 6.5a4 4 0 0 0-5.3 5.3L3.5 17.5l3 3 5.7-5.7a4 4 0 0 0 5.3-5.3l-2.6 2.6-2.4-.6-.6-2.4z"
+        />
+      </symbol>
+      <symbol id="ic-avanzate" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="3" />
+        <path
+          d="M12 2v3M12 19v3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M2 12h3M19 12h3M4.9 19.1 7 17M17 7l2.1-2.1"
+        />
+      </symbol>
+      <symbol id="ic-versione" viewBox="0 0 24 24">
+        <path d="M12 3v12M7 10l5 5 5-5" />
+        <path d="M4 20h16" />
+      </symbol>
+      <symbol id="ic-prova" viewBox="0 0 24 24">
+        <path d="M9 3h6M10 3v6l-5 9a2 2 0 0 0 1.7 3h10.6a2 2 0 0 0 1.7-3l-5-9V3" />
+        <path d="M7.5 15h9" />
+      </symbol>
+      <symbol id="ic-freccia" viewBox="0 0 24 24">
+        <path d="m9 6 6 6-6 6" />
+      </symbol>
     </svg>
 
-    <!-- La pagina di gdahome dentro Home Assistant.
-         È fatta per tre domande, in quest'ordine: **come sta la casa** (la
-         striscia in cima, tre pastiglie, si legge in un secondo), **cosa devo
-         fare** (abbinare un telefono: è il motivo per cui questa pagina si
-         apre, e sta tutta di seguito), e **cosa c'è dentro** (i telefoni, le
-         plance, il link per il browser).
-         Tutto il resto — le spiegazioni, i numeri, i rimedi — sta in «Se
-         qualcosa non torna», chiuso: c'è quando serve, e non si mette in mezzo
-         quando non serve. -->
-    <main>
-      <header class="testata">
+    <!-- La pagina di gdahome dentro Home Assistant, divisa in sezioni.
+
+         Prima era una pagina sola con quindici schede in fila, e la domanda di
+         chi la apriva — «come sta la mia casa?» — non aveva un posto dove
+         leggerla: le risposte stavano sparse fra tre pastiglie in cima, una
+         scheda a meta' e un cassetto in fondo. Adesso le sezioni sono sei, e
+         la prima risponde a quella domanda da sola:
+
+           Panoramica    come sta la casa, una riga per ogni cosa che conta;
+           Telefoni      abbinarne uno, e chi e' gia' abbinato;
+           Plance        le plance, e chi vede quale;
+           Licenza       Base o Premium, il codice regalo, la matricola;
+           Installatore  chi ti ha fatto l'impianto e cosa vede (se c'e');
+           Avanzate      le cose che servono di rado.
+
+         La sezione si sceglie dalle linguette in cima e resta scritta
+         nell'indirizzo (`#telefoni`): una pagina che si ricarica torna dov'era.
+         Le sezioni che non riguardano questa casa — la licenza dove le licenze
+         sono spente, l'installatore dove non c'e' — non hanno la linguetta. -->
+    <header class="testata">
+      <div class="riga-testata">
         <!-- Lo stesso marchio dell'app: chi apre questa pagina dal pannello di
              Home Assistant deve riconoscere al primo sguardo che è la stessa
              cosa che ha sul telefono. -->
         <img class="marchio" src="marchio.png" alt="" width="44" height="44" />
         <div class="chi">
           <h1>gdahome</h1>
-          <p class="sottotitolo" data-en="Your home on your phone">La tua casa sul telefono</p>
+          <p class="sottotitolo" data-en="Set up your home and the phones that use it">
+            Configura la tua casa e i telefoni che la usano
+          </p>
         </div>
         <span class="targhetta" id="targhetta" hidden></span>
-      </header>
-
-      <!-- Come sta, in tre pastiglie. Sono le tre cose che si guardano quando
-           qualcosa non va, e prima stavano come testo grigio sparso in tre
-           schede diverse — una delle quali in fondo alla pagina. -->
-      <div class="striscia">
-        <span class="pastiglia" id="pas-casa" data-come="attesa">
-          <i class="pallino"></i>
-          <span><b>Home Assistant</b> <span id="stato-casa" data-corto>…</span></span>
-        </span>
-        <span class="pastiglia" id="pas-fuori" data-come="attesa">
-          <i class="pallino"></i>
-          <span
-            ><b data-en="From away">Da fuori casa</b>
-            <span id="stato-centralino" data-corto>…</span></span
-          >
-        </span>
-        <span class="pastiglia" id="pas-plancia" data-come="attesa" hidden>
-          <i class="pallino"></i>
-          <span
-            ><b data-en="The dashboard">La plancia</b>
-            <span id="provenienza-riga" data-corto>…</span></span
-          >
-        </span>
       </div>
+      <nav class="sezioni" aria-label="Sezioni" data-en-aria-label="Sections">
+        <button type="button" data-vai="panoramica" aria-current="page">
+          <svg class="ic" aria-hidden="true"><use href="#ic-casa" /></svg
+          ><span data-en="Overview">Panoramica</span
+          ><span class="quanti giallo" id="quanti-panoramica" hidden></span>
+        </button>
+        <button type="button" data-vai="telefoni">
+          <svg class="ic" aria-hidden="true"><use href="#ic-telefono" /></svg
+          ><span data-en="Phones">Telefoni</span
+          ><span class="quanti" id="quanti-telefoni" hidden></span>
+        </button>
+        <button type="button" data-vai="plance">
+          <svg class="ic" aria-hidden="true"><use href="#ic-plance" /></svg
+          ><span data-en="Dashboards">Plance</span
+          ><span class="quanti" id="quanti-plance" hidden></span>
+        </button>
+        <button type="button" data-vai="licenza" id="linguetta-licenza" hidden>
+          <svg class="ic" aria-hidden="true"><use href="#ic-stella" /></svg
+          ><span data-en="Licence">Licenza</span>
+        </button>
+        <button type="button" data-vai="installatore" id="linguetta-installatore" hidden>
+          <svg class="ic" aria-hidden="true"><use href="#ic-installatore" /></svg
+          ><span data-en="Installer">Installatore</span>
+        </button>
+        <button type="button" data-vai="avanzate">
+          <svg class="ic" aria-hidden="true"><use href="#ic-avanzate" /></svg
+          ><span data-en="Advanced">Avanzate</span>
+        </button>
+      </nav>
+    </header>
 
-      <!-- ① Abbinare un telefono: il motivo per cui questa pagina esiste. -->
-      <section class="scheda grossa">
-        <div class="testa-di-scheda">
-          <h2>
-            <svg class="ic" aria-hidden="true"><use href="#ic-qr" /></svg
-            ><span data-en="Pair a phone">Abbina un telefono</span>
-          </h2>
-          <span class="conta" id="conteggio"></span>
+    <main>
+      <!-- ─── Panoramica ─────────────────────────────────────────────────────
+           Una riga per ogni cosa che conta, e ognuna dice come sta in una
+           parola colorata. Quando qualcosa non va, sotto la sua riga c'e' il
+           perche' e cosa fare: non in un cassetto da aprire, ma li', dove si
+           sta gia' guardando. -->
+      <section class="sezione" id="sezione-panoramica" data-sezione="panoramica">
+        <div class="capo-sezione">
+          <h2 data-en="How your home is doing">Come sta la casa</h2>
+          <p data-en="Everything that matters, on one page. Tap a row to go to its section.">
+            Tutto quello che conta, in una pagina. Tocca una riga per andare alla sua sezione.
+          </p>
         </div>
-        <div class="abbinamento">
-          <div class="qr-suo" id="codice-vivo" hidden>
-            <!-- Il disegno lo fa gdahome: la console non scarica niente da
-                 nessuna parte, e il codice non passa mai per un indirizzo. -->
-            <img id="qr" class="qr" alt="Codice di abbinamento" data-en-alt="Pairing code" />
-            <p class="scadenza" id="scadenza"></p>
-          </div>
-          <div class="qr-suo sagoma" id="senza-codice">
-            <svg class="sagoma-segno" aria-hidden="true"><use href="#ic-qr" /></svg>
-            <p class="minuta" data-en="The QR code appears here.">Il QR code compare qui.</p>
-          </div>
-          <div class="parole">
-            <!-- Il contenuto di ogni passo sta dentro **un** elemento: la riga e'
-                 una griglia di due colonne — il numero e il testo — e due pezzi
-                 sciolti diventerebbero due caselle, una sopra l'altra. -->
-            <ol class="passi">
-              <li><span data-en="Open gdahome on your phone.">Apri gdahome sul telefono.</span></li>
-              <li>
-                <span data-en="Press &lt;b&gt;Generate the QR code&lt;/b&gt;, and scan it."
-                  >Premi <b>Genera QR code</b>, e inquadralo.</span
+        <section class="scheda">
+          <ul class="righe riepilogo">
+            <li>
+              <span class="faccia attesa" id="faccia-casa"
+                ><svg class="ic" aria-hidden="true"><use href="#ic-ha" /></svg
+              ></span>
+              <div class="testo">
+                <strong>Home Assistant</strong>
+                <span id="riga-casa">…</span>
+              </div>
+              <div class="fine">
+                <span class="stato" id="pas-casa" data-come="attesa"
+                  ><span id="stato-casa" data-corto>…</span></span
                 >
-              </li>
-            </ol>
-            <!-- Per chi e' il codice.
-                 Il QR abbina un **telefono**, e il telefono eredita l'utente
-                 di chi ha fatto il codice: da li' in poi vede le plance che
-                 vede lui. Chi amministra la casa spesso fabbrica il codice
-                 **per un altro** — lo fa lui e passa il telefono — e allora
-                 lo deve poter dire, se no quel telefono resta intestato a lui
-                 e vede tutto. Si vede solo dove c'e' piu' di un utente: in
-                 una casa con un utente solo non c'e' niente da scegliere. -->
-            <div class="riga-di-tasti" id="per-chi-riga" hidden>
-              <label class="etichetta" for="per-chi" data-en="Who it's for">Per chi è</label>
-              <select id="per-chi"></select>
-            </div>
-            <div class="bottoni">
-              <button id="fabbrica" type="button" data-en="Generate the QR code">
-                Genera QR code
-              </button>
-              <button id="annulla" type="button" class="tenue" data-en="Cancel" hidden>
-                Annulla
-              </button>
-            </div>
-            <p class="minuta" data-en="Good once only, and for a few minutes.">
-              Vale una volta sola, e per pochi minuti.
-            </p>
-            <details class="apribile" id="a-mano" hidden>
-              <summary data-en="Can't scan it?">Non riesci a inquadrarlo?</summary>
-              <p
-                class="spiegazione"
-                data-en="In the app tap &#8220;Enter the code&#8221; and type these letters. There are sixteen: copy them one group at a time."
+              </div>
+              <p class="rimedio" id="rimedio-casa" hidden></p>
+            </li>
+            <li>
+              <span class="faccia attesa" id="faccia-fuori"
+                ><svg class="ic" aria-hidden="true"><use href="#ic-segnale" /></svg
+              ></span>
+              <div class="testo">
+                <strong data-en="From away">Da fuori casa</strong>
+                <span id="riga-fuori">…</span>
+              </div>
+              <div class="fine">
+                <span class="stato" id="pas-fuori" data-come="attesa"
+                  ><span id="stato-centralino" data-corto>…</span></span
+                >
+              </div>
+              <p class="rimedio" id="rimedio-fuori" hidden></p>
+            </li>
+            <li class="si-tocca" data-vai="licenza" tabindex="0" id="voce-licenza" hidden>
+              <span class="faccia"
+                ><svg class="ic" aria-hidden="true"><use href="#ic-stella" /></svg
+              ></span>
+              <div class="testo">
+                <strong data-en="Licence">Licenza</strong>
+                <span id="riepilogo-licenza">…</span>
+              </div>
+              <div class="fine">
+                <span class="bollino" id="bollino-licenza"></span
+                ><svg class="ic freccia" aria-hidden="true"><use href="#ic-freccia" /></svg>
+              </div>
+            </li>
+            <li class="si-tocca" data-vai="telefoni" tabindex="0">
+              <span class="faccia"
+                ><svg class="ic" aria-hidden="true"><use href="#ic-telefono" /></svg
+              ></span>
+              <div class="testo">
+                <strong data-en="Phones">Telefoni</strong>
+                <span id="riepilogo-telefoni">…</span>
+              </div>
+              <div class="fine">
+                <svg class="ic freccia" aria-hidden="true"><use href="#ic-freccia" /></svg>
+              </div>
+            </li>
+            <li class="si-tocca" data-vai="plance" tabindex="0">
+              <span class="faccia"
+                ><svg class="ic" aria-hidden="true"><use href="#ic-plance" /></svg
+              ></span>
+              <div class="testo">
+                <strong data-en="Dashboards">Plance</strong>
+                <span id="riepilogo-plance">…</span>
+              </div>
+              <div class="fine">
+                <svg class="ic freccia" aria-hidden="true"><use href="#ic-freccia" /></svg>
+              </div>
+            </li>
+            <li class="si-tocca" data-vai="installatore" tabindex="0" id="voce-installatore" hidden>
+              <span class="faccia"
+                ><svg class="ic" aria-hidden="true"><use href="#ic-installatore" /></svg
+              ></span>
+              <div class="testo">
+                <strong data-en="Installer">Installatore</strong>
+                <span id="riepilogo-installatore">…</span>
+              </div>
+              <div class="fine">
+                <svg class="ic freccia" aria-hidden="true"><use href="#ic-freccia" /></svg>
+              </div>
+            </li>
+            <!-- La versione, e da dove viene la plancia: «questa e' quella
+                 vera?» si legge qui, accanto al numero dell'add-on. -->
+            <li>
+              <span class="faccia spenta" id="faccia-versione"
+                ><svg class="ic" aria-hidden="true"><use href="#ic-versione" /></svg
+              ></span>
+              <div class="testo">
+                <strong data-en="Version">Versione</strong>
+                <span id="riepilogo-versione">…</span>
+              </div>
+              <div class="fine">
+                <span class="stato" id="pas-plancia" data-come="attesa" hidden
+                  ><span id="provenienza-riga" data-corto>…</span></span
+                >
+              </div>
+              <p class="rimedio" id="rimedio-plancia" hidden></p>
+            </li>
+          </ul>
+        </section>
+
+        <div class="griglia due">
+          <section class="scheda azione">
+            <span class="faccia grande"
+              ><svg class="ic" aria-hidden="true"><use href="#ic-qr" /></svg
+            ></span>
+            <div class="testo">
+              <strong data-en="Pair a phone">Abbina un telefono</strong>
+              <span data-en="Generate the QR code and scan it with the app."
+                >Genera il QR code e inquadralo con l'app.</span
               >
-                Nell'app tocca «Inserisci il codice» e digita queste lettere. Sono sedici: si
-                copiano un gruppo per volta.
-              </p>
-              <p class="codice" id="codice"></p>
-            </details>
-            <p class="avviso" id="avviso" hidden></p>
-          </div>
+            </div>
+            <button type="button" data-vai="telefoni" data-en="Pair">Abbina</button>
+          </section>
+          <section class="scheda azione" id="azione-browser" hidden>
+            <span class="faccia grande"
+              ><svg class="ic" aria-hidden="true"><use href="#ic-browser" /></svg
+            ></span>
+            <div class="testo">
+              <strong data-en="gdahome in a browser">gdahome nel browser</strong>
+              <span id="azione-browser-riga"></span>
+            </div>
+            <a
+              class="tenue"
+              id="azione-browser-apri"
+              href="#"
+              target="_blank"
+              rel="noopener"
+              data-en="Open"
+              >Apri</a
+            >
+          </section>
         </div>
       </section>
 
-      <div class="due">
-        <!-- La colonna di sinistra: chi entra in casa, e da dove si apre. -->
-        <div class="colonna">
-          <!-- ② Chi è abbinato. Prima stava sesta, ed è la seconda cosa che si
-               guarda: chi entra in casa mia. -->
-          <section class="scheda">
-            <div class="testa-di-scheda">
-              <h2>
-                <svg class="ic" aria-hidden="true"><use href="#ic-telefono" /></svg
-                ><span data-en="Paired phones">Telefoni abbinati</span>
-              </h2>
-            </div>
-            <ul id="elenco" class="elenco"></ul>
-          </section>
-
-          <!-- ④ Il link. Chi ha l'add-on acceso ha già gdahome: non c'è niente da
-               scaricare. La scheda si vede solo se l'app c'è davvero dentro questo
-               add-on — un link che porta a un 404 è peggio di nessun link. -->
-          <section class="scheda" id="scheda-app" hidden>
-            <div class="testa-di-scheda">
-              <h2>
-                <svg class="ic" aria-hidden="true"><use href="#ic-browser" /></svg
-                ><span data-en="Open it in a browser">Aprila in un browser</span>
-              </h2>
-            </div>
-            <!-- Un tasto solo, e non due.
-                 Prima ce n'erano due: «Qui dentro», che apriva l'app dentro la
-                 pagina di Home Assistant, e «Da fuori casa» con un secondo tasto
-                 pallido accanto a un indirizzo. Due tasti per la stessa cosa,
-                 con due nomi che nessuno deve imparare: chi guardava non capiva
-                 quale premere, e «da fuori casa» sembrava una cosa da fare solo
-                 quando si è fuori. Invece quell'indirizzo funziona da casa
-                 esattamente come funziona da fuori — è la casa che chiama il
-                 centralino e ci resta in attesa, non il contrario.
-                 
-                 E «Qui dentro» non serviva: la plancia in Home Assistant c'è
-                 già, fra le Dashboard, e quel tasto apriva l'app dentro una
-                 scheda che non è sua — con la sessione dell'ingress che scade e
-                 risponde «401» a chi la lascia aperta. -->
-            <ul class="righe">
-              <li id="link-di-fuori" hidden>
-                <span class="che-cosa">
-                  <b data-en="Outside Home Assistant">Fuori da Home Assistant</b>
-                  <span
-                    class="minuta"
-                    data-en="An address of its own: bookmark it, send it to someone. It works from home and from away."
-                    >Un indirizzo vero: si salva fra i preferiti, si può mandare. Funziona da casa e
-                    da fuori.</span
-                  >
-                  <code id="link-di-fuori-indirizzo"></code>
-                </span>
-                <a
-                  class="bottone"
-                  id="apri-di-fuori"
-                  href="#"
-                  target="_blank"
-                  rel="noopener"
-                  data-en="Open in a browser"
-                  >Apri nel browser</a
-                >
-              </li>
-            </ul>
-            <details class="apribile">
-              <summary data-en="Two things to know">Due cose da sapere</summary>
-              <p
-                class="spiegazione"
-                data-en="&lt;b&gt;That address is the app&#39;s&lt;/b&gt;, not your home&#39;s: it is the same for everyone, and whoever opens it without a pairing code gets into nobody&#39;s home."
-              >
-                <b>Quell'indirizzo è dell'app</b>, non della casa: è uguale per tutti, e chi lo apre
-                senza un codice di abbinamento non entra in casa di nessuno.
-              </p>
-              <!-- La terza riga, e l'ha scritta una fotografia arrivata su
-                   Messenger: una pagina rossa di Fortinet al posto dell'app,
-                   con scritto «Newly Registered Domain». Chi l'ha vista ha
-                   pensato che fosse rotto qualcosa, o peggio che gdahome fosse
-                   su una lista nera, e l'ha mandata a chiedere.
-                   Non era né l'una né l'altra: quella categoria guarda **la
-                   data di registrazione** del dominio, non cosa c'è dentro, e
-                   molti firewall aziendali la tengono chiusa di serie come
-                   euristica contro il phishing. Passa da sé, e intanto su
-                   quella rete la strada c'è già — due righe sopra.
-                   Sta qui e non fra i rimedi perché è qui che si legge quell'indirizzo:
-                   chi lo copia è chi ci sbatterà contro. -->
-              <p
-                class="spiegazione"
-                data-en="&lt;b&gt;At the office or at school&lt;/b&gt; that address may come up blocked, with &lt;i&gt;Newly Registered Domain&lt;/i&gt; written on it. Nothing is broken, and nothing is flagged against gdahome: that category looks at the domain&#39;s &lt;b&gt;age&lt;/b&gt;, not at what is inside, and it passes on its own. Meanwhile the dashboard is in Home Assistant anyway — among the Dashboards — and the app on the phone goes straight to the home over that Wi-Fi."
-              >
-                <b>In ufficio o a scuola</b> quell'indirizzo può uscire bloccato, con scritto
-                <i>Newly Registered Domain</i>. Non è rotto niente, e non c'è nessuna segnalazione
-                contro gdahome: quella categoria guarda l'<b>età</b> del dominio, non cosa c'è
-                dentro, e passa da sé. Intanto la plancia in Home Assistant c'è comunque — sta fra
-                le Dashboard — e l'app sul telefono su quel Wi-Fi va diretta alla casa.
-              </p>
-            </details>
-            <!-- Il tasto c'è, ma adesso non porta da nessuna parte.
-                 «In locale se premo apri da browser resta bloccato non si apre
-                 poi esce così»: l'app si apriva, girava venticinque secondi, e
-                 poi diceva «non trovo la casa». Il centralino aveva risposto
-                 benissimo — era la casa a non essergli attaccata — e quella
-                 notizia stava dentro il dettaglio più in basso, che nessuno
-                 apre PRIMA di premere un tasto. Adesso sta qui, accanto al
-                 tasto. Il testo lo scrive la pagina: dentro c'è il motivo, che
-                 cambia. -->
-            <p class="avviso giallo" id="avviso-casa-scollegata" hidden></p>
-            <p
-              class="avviso giallo"
-              id="avviso-sicuro"
-              data-en="This page is open on an &lt;b&gt;http&lt;/b&gt; address. Everything works except the dashboard: drawing it in a browser needs &lt;b&gt;https&lt;/b&gt; — that is a browser rule, not ours. On the phone the dashboard shows up all the same."
-              hidden
-            >
-              Questa pagina è aperta su un indirizzo <b>http</b>. Tutto funziona tranne la plancia:
-              per disegnarla nel browser serve <b>https</b> — è una regola dei browser, non nostra.
-              Sul telefono la plancia si vede comunque.
-            </p>
-          </section>
+      <!-- ─── Telefoni ─────────────────────────────────────────────────────── -->
+      <section class="sezione" id="sezione-telefoni" data-sezione="telefoni" hidden>
+        <div class="capo-sezione">
+          <h2 data-en="Phones">Telefoni</h2>
+          <p id="telefoni-spiega"></p>
         </div>
 
-        <!-- La colonna di destra: le plance, che sono la scheda alta. -->
-        <div class="colonna">
-          <!-- ③ Le plance. Nella dashboard una seconda plancia era una seconda
-               istanza dell'integrazione, da «Dispositivi e servizi». Qui
-               l'integrazione non c'è, e il posto è questo. -->
-          <section class="scheda" id="plance">
-            <div class="testa-di-scheda">
-              <h2>
-                <svg class="ic" aria-hidden="true"><use href="#ic-plance" /></svg
-                ><span data-en="Your dashboards">Le tue dashboard</span>
-              </h2>
+        <!-- Abbinare un telefono: il motivo per cui questa pagina si apre piu'
+             spesso, e per questo la prima scheda della sezione. -->
+        <section class="scheda grossa">
+          <div class="testa-di-scheda">
+            <h3>
+              <svg class="ic" aria-hidden="true"><use href="#ic-qr" /></svg
+              ><span data-en="Pair a new phone">Abbina un nuovo telefono</span>
+            </h3>
+          </div>
+          <div class="abbinamento">
+            <div class="qr-suo" id="codice-vivo" hidden>
+              <!-- Il disegno lo fa gdahome: la console non scarica niente da
+                   nessuna parte, e il codice non passa mai per un indirizzo. -->
+              <img id="qr" class="qr" alt="Codice di abbinamento" data-en-alt="Pairing code" />
+              <p class="scadenza" id="scadenza"></p>
             </div>
-            <ul id="elenco-plance" class="elenco"></ul>
-            <div class="riga-di-tasti">
-              <input
-                id="titolo-plancia"
-                type="text"
-                maxlength="40"
-                placeholder="Per esempio «Casa al mare»"
-                data-en-placeholder="For example &#8220;Beach house&#8221;"
-                aria-label="Come si chiama la plancia nuova"
-                data-en-aria-label="What the new dashboard is called"
-              />
-              <button id="aggiungi-plancia" type="button" data-en="Add">Aggiungi</button>
+            <div class="qr-suo sagoma" id="senza-codice">
+              <svg class="sagoma-segno" aria-hidden="true"><use href="#ic-qr" /></svg>
+              <p class="minuta" data-en="The QR code appears here.">Il QR code compare qui.</p>
             </div>
-            <p
-              class="minuta"
-              data-en="Each one has its own sections, its own cards, its own rooms — the files are the same. In the app you pick one from the menu; in Home Assistant they sit among the Dashboards."
-            >
-              Ognuna ha le sue sezioni, le sue tessere, le sue stanze — i file sono gli stessi.
-              Nell'app si scelgono dal menu; in Home Assistant stanno fra le Dashboard.
-            </p>
-            <p class="minuta" id="plance-premium" hidden>
-              <span
-                data-en="With gdahome Base there is one dashboard, the main one. With Premium, up to eight."
-                >Con gdahome Base la plancia è una, la principale. Con Premium, fino a otto.</span
-              >
-            </p>
-            <p class="avviso" id="avviso-plance" hidden></p>
-          </section>
-
-          <!-- ⑦ La licenza di questa casa: gdahome Base o Premium, e gdanav
-               che ci sta dentro. Si vede solo quando le licenze sono accese —
-               cioe' quando nel codice c'e' la chiave per verificarle — e
-               finche' non lo sono questa pagina e' quella di sempre. Qui non
-               si compra niente: si compra dall'app sul telefono. Qui si
-               guarda, si riscatta un codice regalo, che e' la cosa che
-               capita a chi ha l'impianto fatto da qualcuno, e si copia la
-               matricola della casa, che e' quello che serve a chi vuole
-               regalarle Premium dalla Gestione. -->
-          <section class="scheda" id="scheda-licenza" hidden>
-            <div class="testa-di-scheda">
-              <h2>
-                <svg class="ic" aria-hidden="true"><use href="#ic-stella" /></svg
-                ><span data-en="Licence">Licenza</span>
-              </h2>
-              <span class="conta" id="licenza-quando"></span>
-            </div>
-            <ul id="elenco-licenze" class="elenco"></ul>
-            <div class="matricola" id="matricola" hidden>
-              <span class="etichetta-della-matricola" data-en="This home's serial number"
-                >Matricola di questa casa</span
-              >
-              <div class="riga-di-tasti">
-                <code class="codice piccolo" id="licenza-casa"></code>
-                <button id="copia-matricola" type="button" class="tenue" data-en="Copy">
-                  Copia
+            <div class="parole">
+              <!-- Il contenuto di ogni passo sta dentro **un** elemento: la riga e'
+                   una griglia di due colonne — il numero e il testo — e due pezzi
+                   sciolti diventerebbero due caselle, una sopra l'altra. -->
+              <ol class="passi">
+                <li>
+                  <span data-en="Open gdahome on your phone.">Apri gdahome sul telefono.</span>
+                </li>
+                <li>
+                  <span data-en="Press &lt;b&gt;Generate the QR code&lt;/b&gt;, and scan it."
+                    >Premi <b>Genera QR code</b>, e inquadralo.</span
+                  >
+                </li>
+              </ol>
+              <!-- Per chi e' il codice.
+                   Il QR abbina un **telefono**, e il telefono eredita l'utente
+                   di chi ha fatto il codice: da li' in poi vede le plance che
+                   vede lui. Chi amministra la casa spesso fabbrica il codice
+                   **per un altro** — lo fa lui e passa il telefono — e allora
+                   lo deve poter dire, se no quel telefono resta intestato a lui
+                   e vede tutto. Si vede solo dove c'e' piu' di un utente: in
+                   una casa con un utente solo non c'e' niente da scegliere. -->
+              <div class="scelta-in-colonna" id="per-chi-riga" hidden>
+                <label class="etichetta" for="per-chi" data-en="Who it's for">Per chi è</label>
+                <select id="per-chi" class="scelta"></select>
+                <p class="minuta" id="per-chi-spiega"></p>
+              </div>
+              <div class="bottoni">
+                <button id="fabbrica" type="button">
+                  <svg class="ic" aria-hidden="true"><use href="#ic-qr" /></svg
+                  ><span data-en="Generate the QR code">Genera QR code</span>
+                </button>
+                <button id="annulla" type="button" class="tenue" data-en="Cancel" hidden>
+                  Annulla
                 </button>
               </div>
-              <p
-                class="minuta"
-                data-en="It's what whoever gives you gdahome Premium needs: send it to them, and the licence reaches this home."
-              >
-                Serve a chi ti regala gdahome Premium: gliela mandi, e la licenza arriva a questa
-                casa.
+              <p class="minuta" data-en="Good once only, and for a few minutes.">
+                Vale una volta sola, e per pochi minuti.
               </p>
+              <details class="apribile" id="a-mano" hidden>
+                <summary data-en="Can't scan it?">Non riesci a inquadrarlo?</summary>
+                <p
+                  class="spiegazione"
+                  data-en="In the app tap &#8220;Enter the code&#8221; and type these letters. There are sixteen: copy them one group at a time."
+                >
+                  Nell'app tocca «Inserisci il codice» e digita queste lettere. Sono sedici: si
+                  copiano un gruppo per volta.
+                </p>
+                <p class="codice" id="codice"></p>
+              </details>
+              <p class="avviso" id="avviso" hidden></p>
             </div>
+          </div>
+        </section>
+
+        <!-- Chi e' abbinato: chi entra in questa casa, e da dove. -->
+        <section class="scheda">
+          <div class="testa-di-scheda">
+            <h3>
+              <svg class="ic" aria-hidden="true"><use href="#ic-telefono" /></svg
+              ><span data-en="Paired phones">Telefoni abbinati</span>
+            </h3>
+            <span class="conta" id="conteggio"></span>
+          </div>
+          <ul id="elenco" class="elenco"></ul>
+          <p class="avviso" id="avviso-telefoni" hidden></p>
+        </section>
+      </section>
+
+      <!-- ─── Plance ──────────────────────────────────────────────────────────
+           Nella dashboard una seconda plancia era una seconda istanza
+           dell'integrazione, da «Dispositivi e servizi». Qui l'integrazione
+           non c'e', e il posto e' questo. -->
+      <section class="sezione" id="sezione-plance" data-sezione="plance" hidden>
+        <div class="capo-sezione">
+          <h2 data-en="Dashboards">Plance</h2>
+          <p
+            data-en="Each one has its own sections, its own cards, its own rooms. In the app you pick one from the menu; in Home Assistant they sit among the Dashboards."
+          >
+            Ognuna ha le sue sezioni, le sue tessere, le sue stanze. Nell'app si scelgono dal menu;
+            in Home Assistant stanno fra le Dashboard.
+          </p>
+        </div>
+        <section class="scheda" id="scheda-plance">
+          <div class="testa-di-scheda">
+            <h3>
+              <svg class="ic" aria-hidden="true"><use href="#ic-plance" /></svg
+              ><span data-en="Your dashboards">Le tue plance</span>
+            </h3>
+            <span class="conta" id="plance-conta"></span>
+          </div>
+          <ul id="elenco-plance" class="elenco"></ul>
+          <div class="riga-di-tasti">
+            <input
+              id="titolo-plancia"
+              type="text"
+              maxlength="40"
+              placeholder="Una plancia nuova, per esempio «Casa al mare»"
+              data-en-placeholder="A new dashboard, for example &#8220;Beach house&#8221;"
+              aria-label="Come si chiama la plancia nuova"
+              data-en-aria-label="What the new dashboard is called"
+            />
+            <button id="aggiungi-plancia" type="button" data-en="Add">Aggiungi</button>
+          </div>
+          <p class="minuta" id="plance-premium" hidden></p>
+          <p class="avviso" id="avviso-plance" hidden></p>
+        </section>
+      </section>
+
+      <!-- ─── Licenza ─────────────────────────────────────────────────────────
+           gdahome Base o Premium, e gdanav che ci sta dentro. La linguetta
+           c'e' solo quando le licenze sono accese — cioe' quando nel codice
+           c'e' la chiave per verificarle. Qui non si compra niente: si compra
+           dall'app sul telefono. Qui si guarda, si riscatta un codice regalo,
+           che e' la cosa che capita a chi ha l'impianto fatto da qualcuno, e
+           si copia la matricola della casa, che e' quello che serve a chi
+           vuole regalarle Premium dalla Gestione. -->
+      <section class="sezione" id="sezione-licenza" data-sezione="licenza" hidden>
+        <div class="capo-sezione">
+          <h2 data-en="Licence">Licenza</h2>
+          <p
+            data-en="gdahome Premium belongs to the home: it counts for every paired phone, and in the browser too."
+          >
+            gdahome Premium è della casa: vale per tutti i telefoni abbinati, e anche nel browser.
+          </p>
+        </div>
+        <section class="scheda" id="scheda-licenza">
+          <div class="testa-di-scheda">
+            <h3>
+              <svg class="ic" aria-hidden="true"><use href="#ic-stella" /></svg
+              ><span data-en="This home">Questa casa</span>
+            </h3>
+            <span class="conta" id="licenza-quando"></span>
+          </div>
+          <ul id="elenco-licenze" class="elenco"></ul>
+          <!-- «Ricontrolla adesso»: la casa chiede la licenza al quadro da
+               sola ogni sei ore, e senza questo tasto un regalo fatto dalla
+               Gestione, o il rinnovo di un abbonamento, qui si vedrebbero
+               fino a sei ore dopo. -->
+          <div class="riga-di-tasti">
+            <button id="ricontrolla" type="button" class="tenue" data-en="Check now">
+              Ricontrolla adesso
+            </button>
+            <span class="conta" data-en="The home checks it by itself every 6 hours"
+              >La casa la ricontrolla da sola ogni 6 ore</span
+            >
+          </div>
+          <p class="avviso" id="avviso-ricontrolla" hidden></p>
+        </section>
+
+        <div class="griglia due">
+          <section class="scheda">
+            <h3 data-en="Have a gift code?">Hai un codice regalo?</h3>
+            <p
+              class="sotto"
+              data-en="Whoever installed your home gives it to you, or you get it as a present. It works once, for this home and for every paired phone."
+            >
+              Te lo dà chi ha installato l'impianto, oppure lo ricevi in regalo. Si usa una volta
+              sola, e vale per questa casa e per tutti i telefoni abbinati.
+            </p>
             <div class="riga-di-tasti">
               <input
                 id="codice-regalo"
@@ -381,315 +507,398 @@
             </div>
             <p
               class="minuta"
-              data-en="A gift code comes from whoever installed your home, or with a present. It works once, for this home and for every phone paired with it. Premium itself is bought from the gdahome app, on iPhone or Android, and covers the whole home, in the browser too."
+              data-en="Premium itself is bought from the gdahome app, on iPhone or Android."
             >
-              Il codice regalo te lo dà chi ha installato l'impianto, oppure lo ricevi in regalo. Si
-              usa una volta sola e vale per questa casa e per tutti i telefoni abbinati. Premium si
-              acquista dall'app gdahome, su iPhone o su Android, e vale per tutta la casa, anche nel
-              browser.
+              Premium si compra dall'app gdahome, su iPhone o su Android.
             </p>
             <p class="avviso" id="avviso-licenza" hidden></p>
           </section>
-        </div>
-      </div>
 
-      <!-- ⑧ La casa di prova: il codice per chi rivede l'app — Apple, prima
-           di pubblicarla — che vale fino a sette giorni e per più telefoni,
-           entra come un utente che non amministra, e porta via con sé i
-           telefoni entrati quando scade o si revoca. Il perché sta in
-           `src/casa-di-prova.js`. Due facce: prima del codice le due scelte
-           e il tasto; dopo, il QR, le lettere e la revoca. -->
-      <section class="scheda" id="scheda-prova">
-        <div class="testa-di-scheda">
-          <h2>
-            <svg class="ic" aria-hidden="true"><use href="#ic-stella" /></svg
-            ><span data-en="Test home">Casa di prova</span>
-          </h2>
-          <span class="conta" id="prova-conta" data-en="for whoever reviews the app"
-            >per chi rivede l'app</span
-          >
+          <section class="scheda" id="matricola" hidden>
+            <h3><span data-en="This home's serial number">Matricola di questa casa</span></h3>
+            <p
+              class="sotto"
+              data-en="It's what whoever gives you gdahome Premium needs: send it to them, and the licence reaches this home."
+            >
+              Serve a chi ti regala gdahome Premium: gliela mandi, e la licenza arriva a questa
+              casa.
+            </p>
+            <div class="riga-di-tasti matricola-riga">
+              <code class="codice piccolo" id="licenza-casa"></code>
+              <button id="copia-matricola" type="button" class="tenue" data-en="Copy">Copia</button>
+            </div>
+          </section>
         </div>
-        <div id="prova-da-fare">
-          <p
-            class="minuta"
-            data-en="Before publishing the app, Apple tries it with a real home, sometimes for a few days. Here you make a code that works &lt;b&gt;for up to 7 days&lt;/b&gt; and &lt;b&gt;for more than one phone&lt;/b&gt;: you put it in the review notes, and whoever uses it comes in as the user you pick below. When the review is over you revoke it, and the phones that came in with it leave."
-          >
-            Prima di pubblicare l'app, Apple la prova con una casa vera, anche per qualche giorno.
-            Qui fai un codice che vale <b>fino a 7 giorni</b> e <b>per più telefoni</b>: lo metti
-            nelle note per la revisione, e chi lo usa entra come l'utente che scegli qui sotto.
-            Finita la revisione lo revochi, e i telefoni entrati con lui escono.
-          </p>
-          <div class="riga-di-tasti">
-            <label class="etichetta" for="prova-per-chi" data-en="Who it's for">Per chi è</label>
-            <select id="prova-per-chi" class="scelta"></select>
-          </div>
-          <div class="riga-di-tasti">
-            <label class="etichetta" for="prova-quanto" data-en="How long">Quanto dura</label>
-            <select id="prova-quanto" class="scelta">
-              <option value="7" data-en="7 days">7 giorni</option>
-              <option value="3" data-en="3 days">3 giorni</option>
-              <option value="1" data-en="1 day">1 giorno</option>
-            </select>
-          </div>
-          <div class="bottoni staccati">
-            <button id="prova-fai" type="button" data-en="Make the test code">
-              Fai il codice di prova
-            </button>
-          </div>
-          <p
-            class="minuta"
-            id="prova-chi-scegliere"
-            data-en="Pick a Home Assistant user who is not an administrator: whoever reviews the app will see only what that user sees."
-          >
-            Scegli un utente di Home Assistant che non amministra: chi rivede l'app vedrà solo
-            quello che vede lui.
+      </section>
+
+      <!-- ─── Installatore ────────────────────────────────────────────────────
+           Due schede, e di solito ce n'e' al massimo una.
+
+           «Il quadro di chi ti ha fatto l'impianto» si vede **solo** dove la
+           casa manda il suo rapporto a un installatore: e' l'unico posto in cui
+           chi ci abita legge cosa parte da casa sua — non «dei dati», ma il
+           testo, parola per parola — e ha il tasto per farlo smettere. Una
+           casella in una scheda di configurazione non e' un consenso: e' una
+           riga incollata.
+
+           «Gestione installatore» si vede solo sull'Home Assistant di chi
+           installa (l'opzione `installatore` accesa, con la sua chiave), e
+           apre la sua Gestione: le regole di cosa sia una casa offline o a
+           posto stanno in un posto solo (`quadro/src/controlli.js`), e la
+           pagina che le disegna e' una. Una copia qui sarebbe un terzo posto
+           dove stanno le stesse cose.
+
+           E la chiave di quella Gestione non passa di qui: da questa pagina
+           esce un biglietto che vale un minuto e una volta sola. -->
+      <section class="sezione" id="sezione-installatore" data-sezione="installatore" hidden>
+        <div class="capo-sezione">
+          <h2 data-en="Installer">Installatore</h2>
+          <p data-en="Who installed your home, and what they see of it.">
+            Chi ti ha fatto l'impianto, e cosa vede della tua casa.
           </p>
         </div>
-        <div class="abbinamento" id="prova-fatta" hidden>
-          <div class="qr-suo">
-            <img
-              id="prova-qr"
-              class="qr"
-              alt="Codice della casa di prova"
-              data-en-alt="Test home code"
-            />
-            <p class="scadenza" id="prova-scadenza"></p>
+
+        <section class="scheda" id="scheda-quadro" hidden>
+          <div class="testa-di-scheda">
+            <h3>
+              <svg class="ic" aria-hidden="true"><use href="#ic-installatore" /></svg
+              ><span id="quadro-chi">…</span>
+            </h3>
+            <span class="conta" id="quadro-esito"></span>
           </div>
-          <div class="parole">
+          <p class="spiegazione" id="quadro-dove">…</p>
+          <!-- Cosa vede e cosa non vede, in due elenchi.
+               Prima era un paragrafo di centotrenta parole, e non lo leggeva
+               nessuno. Le righe sono quelle che `rapporto.js` mette davvero nel
+               rapporto (la macchina e le altre macchine da `ferro.js`, gli
+               aggiornamenti col loro nome da `aggiornamenti.js`, chi non
+               risponde e le batterie da `salute.js`): se un giorno il rapporto
+               porta una cosa in piu', questo elenco cambia insieme. -->
+          <div class="griglia due stretta">
+            <div class="riquadro-tenue">
+              <strong data-en="What they see">Cosa vede</strong>
+              <ul class="elenco-semplice">
+                <li data-en="how the machine is doing: processor, memory, disk, temperature">
+                  come sta la macchina: processore, memoria, disco, temperatura
+                </li>
+                <li data-en="the other machines you connected, like a NAS, and how they are doing">
+                  le altre macchine che hai collegato, come un NAS, e come stanno
+                </li>
+                <li
+                  data-en="the network: whether there is internet, the address on your home network and the Wi-Fi signal"
+                >
+                  la rete: se c'è internet, l'indirizzo sulla rete di casa e il segnale del Wi-Fi
+                </li>
+                <li
+                  data-en="the versions, which add-ons you have, and the updates to install, with the name of what needs updating"
+                >
+                  le versioni, quali add-on hai, e gli aggiornamenti da fare, col nome di quello che
+                  va aggiornato
+                </li>
+                <li data-en="the titles of your dashboards, and how many phones are paired">
+                  i titoli delle tue plance, e quanti telefoni sono abbinati
+                </li>
+                <li data-en="how many devices are not answering, and their names">
+                  quanti dispositivi non rispondono, e il loro nome
+                </li>
+                <li data-en="the batteries running low, and how many days since the last backup">
+                  le batterie quasi scariche, e da quanti giorni non si fa un backup
+                </li>
+                <li
+                  id="quadro-vede-plancia"
+                  data-en="how your dashboard is laid out, and the list of rooms, devices and entities with their names, people included: you allowed it in the options"
+                  hidden
+                >
+                  com'è fatta la tua plancia, e l'elenco di stanze, dispositivi ed entità con i loro
+                  nomi, persone comprese: gliel'hai permesso nelle opzioni
+                </li>
+              </ul>
+            </div>
+            <div class="riquadro-tenue">
+              <strong data-en="What they don't see">Cosa non vede</strong>
+              <ul class="elenco-semplice">
+                <li data-en="whether the lights are on, the doors open, how warm it is at home">
+                  se le luci sono accese, le porte aperte, quanto fa caldo in casa
+                </li>
+                <li data-en="who is at home, and where people are">
+                  chi è in casa, e dove sono le persone
+                </li>
+                <li data-en="what the cameras show">cosa riprendono le telecamere</li>
+                <li data-en="your Wi-Fi name">il nome del tuo Wi-Fi</li>
+              </ul>
+            </div>
+          </div>
+          <p
+            class="minuta"
+            id="quadro-puo"
+            data-en="You also allowed them, in the options, to install the updates that are already waiting and to restart Home Assistant."
+            hidden
+          >
+            Nelle opzioni gli hai anche permesso di installare gli aggiornamenti già pronti e di
+            riavviare Home Assistant.
+          </p>
+          <details class="apribile" id="quadro-cosa">
+            <summary data-en="Read the last report, word for word">
+              Leggi l'ultimo rapporto, parola per parola
+            </summary>
             <p
               class="minuta"
-              data-en="In the review notes put the code, or the downloaded QR. In the app it is typed in &#8220;Enter the code&#8221;."
+              data-en="This is the last status report sent, exactly as it left. If something in here surprises you, that is what the button below is for."
             >
-              Nelle note per la revisione metti il codice, o il QR scaricato. Nell'app si scrive in
-              «Inserisci il codice».
+              Questo è l'ultimo rapporto spedito, esattamente com'è partito. Se qui dentro c'è
+              qualcosa che non ti aspettavi, il tasto qui sotto serve a questo.
             </p>
-            <p class="codice" id="prova-codice"></p>
-            <div class="bottoni staccati">
-              <a
-                class="bottone"
-                id="prova-scarica"
-                href="api/prova/qr.png"
-                download="gdahome-casa-di-prova.png"
-                data-en="Download the QR"
-                >Scarica il QR</a
-              >
-              <button id="prova-copia" type="button" class="tenue" data-en="Copy the code">
-                Copia il codice
-              </button>
-            </div>
-            <p class="minuta" id="prova-chi"></p>
-            <div class="bottoni staccati">
-              <button id="prova-revoca" type="button" class="toglie" data-en="Revoke now">
-                Revoca adesso
-              </button>
-            </div>
-            <p class="minuta" id="prova-revoca-spiega"></p>
-          </div>
-        </div>
-        <p class="avviso" id="avviso-prova" hidden></p>
-      </section>
-
-      <!-- ⑥ Il quadro di chi ha fatto l'impianto.
-           Si vede **solo** dove quella casella e' piena, cioe' quasi mai: una
-           casa che nessuno ha installato per mestiere non ha nessun motivo di
-           leggere questa roba. Dove invece c'e', e' l'unico posto in cui chi
-           ci abita legge cosa parte da casa sua — non «dei dati», ma il testo,
-           parola per parola — e ha il tasto per farlo smettere. Una casella in
-           una scheda di configurazione non e' un consenso: e' una riga
-           incollata. -->
-      <!--
-        IL CRUSCOTTO DI CHI INSTALLA.
-
-        Compare solo dove l'opzione `installatore` e' accesa, cioe' sull'Home
-        Assistant di chi monta impianti — non in casa di un cliente.
-
-        **Non rifà il cruscotto: apre quello che c'è.** Le regole di cosa sia
-        una casa offline, o a posto, o da guardare stanno in un posto solo
-        (`quadro/src/controlli.js`) e il cruscotto che le disegna è uno. Una
-        copia qui dentro sarebbe un terzo posto dove stanno le stesse cose, e
-        prima o poi i tre direbbero cose diverse della stessa casa.
-
-        **E il codice del cruscotto non passa di qui.** Nelle opzioni
-        dell'add-on adesso c'è — è quello che dice se questa sezione esiste —
-        ma da qui non esce: lo chiede quella pagina e resta nel suo browser.
-        Servirlo da questa risposta vorrebbe dire darlo a chiunque apra la
-        console in casa, e sapere **che** questa casa è di un installatore non
-        è la stessa cosa che avere in mano di che aprirgli il cruscotto.
-      -->
-      <section class="scheda" id="scheda-cruscotto" hidden>
-        <div class="testa-di-scheda">
-          <h2>
-            <svg class="ic" aria-hidden="true"><use href="#ic-quadro" /></svg
-            ><span data-en="Your panel">Il mio cruscotto</span>
-          </h2>
-        </div>
-        <p
-          class="spiegazione"
-          data-en="The systems you installed, all together: which ones are quiet, which need looking at, which are still to be signed off."
-        >
-          Gli impianti che hai montato, tutti insieme: quali tacciono, quali sono da guardare, quali
-          sono ancora da consegnare.
-        </p>
-        <div class="riga-di-tasti">
-          <a
-            id="cruscotto-vai"
-            class="bottone"
-            target="_blank"
-            rel="noopener"
-            data-en="Open the panel"
-            >Apri il cruscotto</a
-          >
-        </div>
-        <p
-          class="minuta"
-          data-en="It opens on gdahome's panel, already signed in: the tab gets a ticket that lasts one minute and works once, and the panel swaps it for your key, which stays in that browser. The key sits in this add-on's options and does not leave from here: only the ticket does. This section is here because this Home Assistant is marked as an installer's one."
-        >
-          Si apre sul cruscotto di gdahome, già aperto: la scheda riceve un biglietto che vale un
-          minuto e una volta sola, e il cruscotto lo cambia con la tua chiave, che resta in quel
-          browser. La chiave sta nelle opzioni di questo add-on e da qui non esce: esce solo il
-          biglietto. Questa sezione c'è perché questo Home Assistant è segnato come quello di chi
-          installa.
-        </p>
-      </section>
-
-      <section class="scheda" id="scheda-quadro" hidden>
-        <div class="testa-di-scheda">
-          <h2>
-            <svg class="ic" aria-hidden="true"><use href="#ic-quadro" /></svg
-            ><span data-en="The panel of whoever installed your home"
-              >Il cruscotto di chi ti ha fatto l'impianto</span
-            >
-          </h2>
-          <span class="conta" id="quadro-esito"></span>
-        </div>
-        <p class="spiegazione" id="quadro-dove">…</p>
-        <details class="apribile" id="quadro-cosa">
-          <summary data-en="What goes out from here">Cosa parte da qui</summary>
-          <p
-            class="minuta"
-            data-en="This is the last status report sent, exactly as it left. Numbers, versions, process names, and the names of the devices that are not answering right now. If something in here surprises you, that is what the button below is for."
-          >
-            Questo è l'ultimo rapporto spedito, esattamente com'è partito. Numeri, versioni, nomi di
-            processi, i titoli delle tue plance, e il nome dei dispositivi che in questo momento non
-            rispondono. Se qui dentro c'è qualcosa che non ti aspettavi, il tasto qui sotto serve a
-            questo.
-          </p>
-          <pre class="rapporto" id="quadro-testo">…</pre>
-        </details>
-        <p
-          class="minuta"
-          data-en="Two things in there are yours: the titles of your dashboards, and the name of the devices that are not answering right now — only those. The first is what lets the installer choose, from their dashboard, what to call them; the second is what tells the person who has to come and fix them what to bring. Nothing else: no sensor states, no people, no names of the devices that work, not your Wi-Fi name and not your public address. Only with the third switch on — «configure the dashboard from a distance» — does more leave, separately from the report and only when their dashboard asks: how your dashboard is laid out, and the inventory of what there is — rooms, devices, entities with what they can do — never what it is doing."
-        >
-          Lì dentro ci sono <b>due cose tue</b>: i titoli delle tue plance, e il nome dei
-          dispositivi che in questo momento non rispondono — solo quelli. I primi servono a chi ti
-          ha fatto l'impianto per scegliere, dal suo cruscotto, come chiamarle; il secondo dice a
-          chi deve venire a ripararli cosa portarsi dietro. Nient'altro: nessuno stato di nessun
-          sensore, nessuna persona, nessun nome dei dispositivi che funzionano; il nome del tuo
-          Wi-Fi no, e il tuo indirizzo pubblico nemmeno. Solo col terzo interruttore acceso —
-          «configuri la plancia da lontano» — parte di più, a parte dal rapporto e solo quando il
-          suo cruscotto lo chiede: com'è fatta la tua plancia, e l'inventario di cosa c'è — stanze,
-          dispositivi, entità con quello che sanno fare — mai cosa sta facendo.
-        </p>
-        <div class="riga-di-tasti">
-          <button id="quadro-smetti" type="button" class="toglie" data-en="Stop sending it">
-            Smetti di mandarlo
-          </button>
-        </div>
-        <p class="avviso" id="quadro-avviso" hidden></p>
-      </section>
-
-      <!-- ⑤ Tutto quello che serve **quando qualcosa non va**, in un posto solo
-           e chiuso. Qui dentro stanno le quattro schede che prima erano quattro
-           colonne di prosa: com'è il filo con Home Assistant, dov'è il
-           centralino, se le plance sono comparse nella barra laterale, da dove
-           viene la plancia, e che versione è questa. -->
-      <!-- Chiusa a chi ci abita, e aperta a chi risponde alle segnalazioni.
-           Era a schermo per tutti, ed era la cosa piu' confusionaria della
-           pagina: quattro etichette in maiuscolo, una colonna di prosa e, quando
-           qualcosa non tornava, sei righe rosse con dentro `lovelace: mode: yaml`
-           e un pezzo di `configuration.yaml`. Chi ha gdahome in casa non deve
-           leggere niente di tutto questo — e se qualcosa non va lo dice, e la
-           risposta gliela diamo noi guardando questa stessa pagina.
-           Non e' stata cancellata: e' l'unica riga che, da qui, dice dove sta il
-           pezzo che manca, ed e' quella che ha risolto tutti i difetti di questa
-           settimana. Ha solo lo stesso cancello dell'assistenza. -->
-      <details class="scheda cassetto di-chi-risponde" id="non-torna" hidden>
-        <summary>
-          <span class="testa-di-scheda">
-            <h2>
-              <svg class="ic" aria-hidden="true"><use href="#ic-chiave" /></svg
-              ><span data-en="If something isn&#39;t right">Se qualcosa non torna</span>
-            </h2>
-            <span class="minuta" data-en="The state in full, and the remedies"
-              >Lo stato per bene, e i rimedi</span
-            >
-          </span>
-        </summary>
-
-        <div class="blocco">
-          <p class="etichetta">Home Assistant</p>
-          <p class="spiegazione" id="spiega-casa">…</p>
-        </div>
-
-        <!-- Che rete Zigbee ha trovato, e cos'ha visto per dirlo.
-             Il blocco compare solo quando il ponte ha una risposta: su una
-             casa che non l'ha ancora chiesta non si scrive niente. -->
-        <div class="blocco" id="blocco-zigbee" hidden>
-          <p class="etichetta">Zigbee</p>
-          <p class="spiegazione" id="spiega-zigbee">…</p>
-        </div>
-
-        <div class="blocco">
-          <p class="etichetta" data-en="From away">Da fuori casa</p>
-          <p class="spiegazione" id="spiega-centralino">…</p>
-          <p
-            class="spiegazione"
-            data-en='At home the app finds gdahome by itself on port &lt;b id="porta"&gt;…&lt;/b&gt;. From away it is your home that calls a relay and waits there: no port to open on the router, no public address, nothing to install. The relay routes and can read nothing of what goes through. Whoever would rather not go through it turns &lt;b&gt;from away&lt;/b&gt; off in this add-on&#39;s options.'
-          >
-            In casa l'app trova gdahome da sola sulla porta <b id="porta">…</b>. Da fuori è la casa
-            che chiama un centralino e ci resta in attesa: nessuna porta da aprire sul router,
-            nessun indirizzo pubblico, niente da installare. Il centralino instrada e non può
-            leggere niente di quello che passa. Chi non vuole passarci spegne <b>da fuori casa</b>
-            nelle opzioni di questo add-on.
-          </p>
-        </div>
-
-        <!-- Cosa fare quando la plancia, aperta dalle «Plance», esce con
-             «Errore di configurazione». Quel messaggio lo scrive Home Assistant
-             e il motivo non lo mostra; qui invece si prova la cartina da questa
-             pagina — che sta sul suo stesso indirizzo — e si dice quale dei due
-             casi è. -->
-        <div class="blocco">
-          <p class="etichetta" data-en="The dashboards in Home Assistant">
-            Le plance in Home Assistant
-          </p>
-          <p class="spiegazione" id="stato-plance-in-casa">…</p>
-          <p class="avviso" id="avviso-cartina" hidden></p>
-          <div class="bottoni" id="ripara-cartina" hidden>
-            <button id="carica-la-cartina" type="button" data-en="Load the panel now">
-              Carica la cartina adesso
+            <pre class="rapporto" id="quadro-testo">…</pre>
+          </details>
+          <div class="riga-di-tasti">
+            <button id="quadro-smetti" type="button" class="toglie" data-en="Stop sending it">
+              Smetti di mandarlo
             </button>
           </div>
+          <p class="avviso" id="quadro-avviso" hidden></p>
+        </section>
+
+        <section class="scheda" id="scheda-cruscotto" hidden>
+          <div class="testa-di-scheda">
+            <h3>
+              <svg class="ic" aria-hidden="true"><use href="#ic-quadro" /></svg
+              ><span data-en="Installer management">Gestione installatore</span>
+            </h3>
+          </div>
+          <p
+            class="spiegazione"
+            data-en="The systems you installed, all together: which ones are quiet, which need looking at, which are still to be signed off."
+          >
+            Gli impianti che hai montato, tutti insieme: quali tacciono, quali sono da guardare,
+            quali sono ancora da consegnare.
+          </p>
+          <div class="riga-di-tasti">
+            <a
+              id="cruscotto-vai"
+              class="bottone"
+              target="_blank"
+              rel="noopener"
+              data-en="Open the Installer management"
+              >Apri la Gestione installatore</a
+            >
+          </div>
+          <p
+            class="minuta"
+            data-en="It opens already signed in: the tab gets a ticket that lasts one minute and works once, and swaps it for your key, which stays in that browser. The key sits in this add-on's options and does not leave from here. This section is here because this Home Assistant is marked as an installer's one."
+          >
+            Si apre già aperta: la scheda riceve un biglietto che vale un minuto e una volta sola, e
+            lo cambia con la tua chiave, che resta in quel browser. La chiave sta nelle opzioni di
+            questo add-on e da qui non esce. Questa sezione c'è perché questo Home Assistant è
+            segnato come quello di chi installa.
+          </p>
+        </section>
+      </section>
+
+      <!-- ─── Avanzate ────────────────────────────────────────────────────────
+           Le cose che servono di rado: il link per il browser, la casa di
+           prova (solo dal gestore), la versione, e — solo dove si risponde
+           alle segnalazioni — lo stato per bene e la diagnostica. -->
+      <section class="sezione" id="sezione-avanzate" data-sezione="avanzate" hidden>
+        <div class="capo-sezione">
+          <h2 data-en="Advanced">Avanzate</h2>
+          <p data-en="Things you need now and then.">Cose che servono di rado.</p>
         </div>
 
-        <!-- Da dove viene la plancia. È la risposta a «questa è quella
-             originale?». Una copia modificata non viene bloccata: viene detta. -->
-        <div class="blocco" id="provenienza" hidden>
-          <p class="etichetta" data-en="The dashboard">La plancia</p>
-          <p class="spiegazione" id="provenienza-spiega"></p>
-          <details class="apribile" id="provenienza-quali" hidden>
-            <summary data-en="Which files don&#39;t match">Quali file non tornano</summary>
-            <p class="codice piccolo" id="provenienza-elenco"></p>
+        <!-- Il link. Chi ha l'add-on acceso ha già gdahome: non c'è niente da
+             scaricare. La scheda si vede solo se l'app c'è davvero dentro questo
+             add-on — un link che porta a un 404 è peggio di nessun link.
+
+             Un tasto solo: quell'indirizzo funziona da casa esattamente come
+             da fuori — è la casa che chiama il centralino e ci resta in attesa,
+             non il contrario. E «aprila qui dentro» non serviva: la plancia in
+             Home Assistant c'è già, fra le Dashboard. -->
+        <section class="scheda" id="scheda-app" hidden>
+          <div class="testa-di-scheda">
+            <h3>
+              <svg class="ic" aria-hidden="true"><use href="#ic-browser" /></svg
+              ><span data-en="gdahome in a browser">gdahome nel browser</span>
+            </h3>
+          </div>
+          <ul class="righe">
+            <li id="link-di-fuori" hidden>
+              <span class="che-cosa">
+                <span class="minuta" id="link-di-fuori-riga"></span>
+                <code id="link-di-fuori-indirizzo"></code>
+              </span>
+              <a
+                class="bottone"
+                id="apri-di-fuori"
+                href="#"
+                target="_blank"
+                rel="noopener"
+                data-en="Open in a browser"
+                >Apri nel browser</a
+              >
+            </li>
+          </ul>
+          <details class="apribile">
+            <summary data-en="Two things to know">Due cose da sapere</summary>
+            <p
+              class="spiegazione"
+              data-en="&lt;b&gt;That address is the app&#39;s&lt;/b&gt;, not your home&#39;s: it is the same for everyone, and whoever opens it without a pairing code gets into nobody&#39;s home."
+            >
+              <b>Quell'indirizzo è dell'app</b>, non della casa: è uguale per tutti, e chi lo apre
+              senza un codice di abbinamento non entra in casa di nessuno.
+            </p>
+            <!-- La seconda riga, e l'ha scritta una fotografia arrivata su
+                 Messenger: una pagina rossa di Fortinet al posto dell'app, con
+                 scritto «Newly Registered Domain». Non era rotto niente:
+                 quella categoria guarda **la data di registrazione** del
+                 dominio, non cosa c'è dentro, e molti firewall aziendali la
+                 tengono chiusa di serie. Sta qui perché è qui che si legge
+                 quell'indirizzo: chi lo copia è chi ci sbatterà contro. -->
+            <p
+              class="spiegazione"
+              data-en="&lt;b&gt;At the office or at school&lt;/b&gt; that address may come up blocked, with &lt;i&gt;Newly Registered Domain&lt;/i&gt; written on it. Nothing is broken, and nothing is flagged against gdahome: that category looks at the domain&#39;s &lt;b&gt;age&lt;/b&gt;, not at what is inside, and it passes on its own. Meanwhile the dashboard is in Home Assistant anyway — among the Dashboards — and the app on the phone goes straight to the home over that Wi-Fi."
+            >
+              <b>In ufficio o a scuola</b> quell'indirizzo può uscire bloccato, con scritto
+              <i>Newly Registered Domain</i>. Non è rotto niente, e non c'è nessuna segnalazione
+              contro gdahome: quella categoria guarda l'<b>età</b> del dominio, non cosa c'è dentro,
+              e passa da sé. Intanto la plancia in Home Assistant c'è comunque — sta fra le
+              Dashboard — e l'app sul telefono su quel Wi-Fi va diretta alla casa.
+            </p>
           </details>
-        </div>
+          <!-- Il tasto c'è, ma adesso non porta da nessuna parte: la casa non
+               è attaccata al centralino. Si dice qui, accanto al tasto, e non
+               dentro un dettaglio che nessuno apre PRIMA di premerlo. Il testo
+               lo scrive la pagina: dentro c'è il motivo, che cambia. -->
+          <p class="avviso giallo" id="avviso-casa-scollegata" hidden></p>
+          <p
+            class="avviso giallo"
+            id="avviso-sicuro"
+            data-en="This page is open on an &lt;b&gt;http&lt;/b&gt; address. Everything works except the dashboard: drawing it in a browser needs &lt;b&gt;https&lt;/b&gt; — that is a browser rule, not ours. On the phone the dashboard shows up all the same."
+            hidden
+          >
+            Questa pagina è aperta su un indirizzo <b>http</b>. Tutto funziona tranne la plancia:
+            per disegnarla nel browser serve <b>https</b> — è una regola dei browser, non nostra.
+            Sul telefono la plancia si vede comunque.
+          </p>
+        </section>
+
+        <!-- La casa di prova: il codice per chi rivede l'app — Apple e Google,
+             prima di pubblicarla — che vale fino a sette giorni e per più
+             telefoni, entra come un utente che non amministra, e porta via con
+             sé i telefoni entrati quando scade o si revoca. Il perché sta in
+             `src/casa-di-prova.js`.
+
+             Si vede **solo nell'Home Assistant del gestore** (la chiave della
+             Gestione nelle opzioni): la casa che si fa provare ai negozi è una
+             sola, e su tutte le altre questa scheda sarebbe una porta in più.
+             Il ponte la rifiuta comunque da qualunque altra casa. Una casa di
+             prova già fatta invece si vede dappertutto, finché non scade o non
+             si revoca: deve potersi chiudere. -->
+        <section class="scheda" id="scheda-prova" hidden>
+          <div class="testa-di-scheda">
+            <h3>
+              <svg class="ic" aria-hidden="true"><use href="#ic-prova" /></svg
+              ><span data-en="Test home">Casa di prova</span>
+            </h3>
+            <span class="conta" id="prova-conta" data-en="for whoever reviews the app"
+              >per chi rivede l'app</span
+            >
+          </div>
+          <div id="prova-da-fare">
+            <p
+              class="spiegazione"
+              data-en="Before publishing the app, Apple and Google try it with a real home, sometimes for a few days. Here you make a code that works &lt;b&gt;for up to 7 days&lt;/b&gt; and &lt;b&gt;for more than one phone&lt;/b&gt;: you put it in the review notes, and whoever uses it comes in as the user you pick below. When the review is over you revoke it, and the phones that came in with it leave."
+            >
+              Prima di pubblicare l'app, Apple e Google la provano con una casa vera, anche per
+              qualche giorno. Qui fai un codice che vale <b>fino a 7 giorni</b> e
+              <b>per più telefoni</b>: lo metti nelle note per la revisione, e chi lo usa entra come
+              l'utente che scegli qui sotto. Finita la revisione lo revochi, e i telefoni entrati
+              con lui escono.
+            </p>
+            <div class="griglia due stretta">
+              <div class="scelta-in-colonna">
+                <label class="etichetta" for="prova-per-chi" data-en="Who it's for"
+                  >Per chi è</label
+                >
+                <select id="prova-per-chi" class="scelta"></select>
+              </div>
+              <div class="scelta-in-colonna">
+                <label class="etichetta" for="prova-quanto" data-en="How long">Quanto dura</label>
+                <select id="prova-quanto" class="scelta">
+                  <option value="7" data-en="7 days">7 giorni</option>
+                  <option value="3" data-en="3 days">3 giorni</option>
+                  <option value="1" data-en="1 day">1 giorno</option>
+                </select>
+              </div>
+            </div>
+            <div class="bottoni staccati">
+              <button id="prova-fai" type="button" data-en="Make the test code">
+                Fai il codice di prova
+              </button>
+            </div>
+            <p
+              class="minuta"
+              id="prova-chi-scegliere"
+              data-en="Pick a Home Assistant user who is not an administrator: whoever reviews the app will see only what that user sees."
+            >
+              Scegli un utente di Home Assistant che non amministra: chi rivede l'app vedrà solo
+              quello che vede lui.
+            </p>
+          </div>
+          <div class="abbinamento" id="prova-fatta" hidden>
+            <div class="qr-suo">
+              <img
+                id="prova-qr"
+                class="qr"
+                alt="Codice della casa di prova"
+                data-en-alt="Test home code"
+              />
+              <p class="scadenza" id="prova-scadenza"></p>
+            </div>
+            <div class="parole">
+              <p
+                class="minuta"
+                data-en="In the review notes put the code, or the downloaded QR. In the app it is typed in &#8220;Enter the code&#8221;."
+              >
+                Nelle note per la revisione metti il codice, o il QR scaricato. Nell'app si scrive
+                in «Inserisci il codice».
+              </p>
+              <p class="codice" id="prova-codice"></p>
+              <div class="bottoni staccati">
+                <a
+                  class="bottone"
+                  id="prova-scarica"
+                  href="api/prova/qr.png"
+                  download="gdahome-casa-di-prova.png"
+                  data-en="Download the QR"
+                  >Scarica il QR</a
+                >
+                <button id="prova-copia" type="button" class="tenue" data-en="Copy the code">
+                  Copia il codice
+                </button>
+              </div>
+              <p class="minuta" id="prova-chi"></p>
+              <div class="bottoni staccati">
+                <button id="prova-revoca" type="button" class="toglie" data-en="Revoke now">
+                  Revoca adesso
+                </button>
+              </div>
+              <p class="minuta" id="prova-revoca-spiega"></p>
+            </div>
+          </div>
+          <p class="avviso" id="avviso-prova" hidden></p>
+        </section>
 
         <!-- La versione, e da dove arrivano gli aggiornamenti: dal negozio di
              Home Assistant, come per ogni altro add-on. I due bottoni qui sotto
              servivano a chi teneva l'add-on copiato in `/addons/gdahome`, e si
              mostrano solo dove quella cartella si vede: il manifesto non la
              monta più, quindi in nessuna casa (vedi `config.yaml`). -->
-        <div class="blocco" id="aggiornamento" hidden>
-          <p class="etichetta" data-en="The version">La versione</p>
+        <section class="scheda" id="aggiornamento" hidden>
+          <div class="testa-di-scheda">
+            <h3>
+              <svg class="ic" aria-hidden="true"><use href="#ic-versione" /></svg
+              ><span data-en="Version">Versione</span>
+            </h3>
+          </div>
           <p class="spiegazione" id="aggiornamento-riga">…</p>
           <p class="spiegazione" id="aggiornamento-spiega"></p>
           <div class="bottoni">
@@ -701,58 +910,139 @@
             </button>
           </div>
           <p class="avviso" id="aggiornamento-avviso" hidden></p>
-        </div>
-      </details>
+        </section>
 
-      <!-- ⑥ Le due schede di chi risponde alle segnalazioni. Si vedono **solo**
-           dove la chiave della console c'è, cioè in una casa al mondo:
-           dappertutto altrove non compaiono, e non c'è niente da spiegare a chi
-           non le può usare. -->
-      <section class="scheda di-chi-risponde" id="assistenza" hidden>
-        <p class="etichetta" data-en="Only for whoever answers">Solo per chi risponde</p>
-        <div class="testa-di-scheda">
-          <h2>
-            <svg class="ic" aria-hidden="true"><use href="#ic-assistenza" /></svg
-            ><span data-en="Support">L'assistenza</span>
-          </h2>
-        </div>
-        <p class="spiegazione" id="stato-assistenza">…</p>
-        <p
-          class="minuta"
-          data-en="From this home you read the reports and the chats of every other one, and you answer. The queue is in the app, under &lt;b&gt;Console&lt;/b&gt;."
-        >
-          Da questa casa si leggono le segnalazioni e le chat di tutte le altre, e si risponde. La
-          coda sta nell'app, alla voce <b>Console</b>.
-        </p>
-      </section>
+        <!-- Tutto quello che serve **quando qualcosa non va**, in un posto solo
+             e chiuso: com'è il filo con Home Assistant, la rete Zigbee, dov'è
+             il centralino, se le plance sono comparse nella barra laterale, e
+             da dove viene la plancia.
 
-      <!-- «Chi parla di più»: nasce nascosta, e si accende con la stessa
-           condizione dell'assistenza. A chi ha gdahome in casa non serve, ed è
-           una scheda che spaventa più di quanto spieghi. -->
-      <section class="scheda di-chi-risponde" id="chiacchieroni" hidden>
-        <p class="etichetta" data-en="Only for whoever answers">Solo per chi risponde</p>
-        <div class="testa-di-scheda">
-          <h2>
-            <svg class="ic" aria-hidden="true"><use href="#ic-onde" /></svg
-            ><span data-en="Who talks the most">Chi parla di più</span>
-          </h2>
-          <span class="conta" id="stato-chiacchieroni">…</span>
-        </div>
-        <ul id="elenco-chiacchieroni" class="elenco"></ul>
-        <details class="apribile">
-          <summary data-en="What it&#39;s for">A cosa serve</summary>
-          <p
-            class="spiegazione"
-            data-en="Every change at home is an event, and every event reaches every connected phone. A home making hundreds a minute does not have hundreds of things changing: it has &lt;b&gt;two or three&lt;/b&gt; changing non-stop — a power meter, a consumption sensor — and the rest sit still. If the app stutters this is where you start: put a filter on those two or three in Home Assistant, and the traffic drops tenfold without touching anything else."
-          >
-            Ogni cambiamento in casa è un evento, e ogni evento arriva a tutti i telefoni collegati.
-            Una casa che ne fa centinaia al minuto non ha centinaia di cose che cambiano: ne ha
-            <b>due o tre</b> che cambiano di continuo — un contatore di potenza, un sensore di
-            consumo — e le altre stanno ferme. Se l'app va a scatti è da qui che si comincia: a
-            quelle due o tre si mette un filtro in Home Assistant, e il traffico cala di dieci volte
-            senza toccare niente.
-          </p>
+             Chiusa a chi ci abita, e aperta a chi risponde alle segnalazioni.
+             Chi ha gdahome in casa non deve leggere `lovelace: mode: yaml`: se
+             qualcosa non va lo dice, e la risposta gliela diamo noi guardando
+             questa stessa pagina. Non è stata cancellata perché è l'unica riga
+             che, da qui, dice dove sta il pezzo che manca. -->
+        <details class="scheda cassetto di-chi-risponde" id="non-torna" hidden>
+          <summary>
+            <span class="testa-di-scheda">
+              <h3>
+                <svg class="ic" aria-hidden="true"><use href="#ic-chiave" /></svg
+                ><span data-en="If something isn&#39;t right">Se qualcosa non torna</span>
+              </h3>
+              <span class="minuta" data-en="The state in full, and the remedies"
+                >Lo stato per bene, e i rimedi</span
+              >
+            </span>
+          </summary>
+
+          <div class="blocco">
+            <p class="etichetta">Home Assistant</p>
+            <p class="spiegazione" id="spiega-casa">…</p>
+          </div>
+
+          <!-- Che rete Zigbee ha trovato, e cos'ha visto per dirlo.
+               Il blocco compare solo quando il ponte ha una risposta: su una
+               casa che non l'ha ancora chiesta non si scrive niente. -->
+          <div class="blocco" id="blocco-zigbee" hidden>
+            <p class="etichetta">Zigbee</p>
+            <p class="spiegazione" id="spiega-zigbee">…</p>
+          </div>
+
+          <div class="blocco">
+            <p class="etichetta" data-en="From away">Da fuori casa</p>
+            <p class="spiegazione" id="spiega-centralino">…</p>
+            <p
+              class="spiegazione"
+              data-en='At home the app finds gdahome by itself on port &lt;b id="porta"&gt;…&lt;/b&gt;. From away it is your home that calls a relay and waits there: no port to open on the router, no public address, nothing to install. The relay routes and can read nothing of what goes through. Whoever would rather not go through it turns &lt;b&gt;from away&lt;/b&gt; off in this add-on&#39;s options.'
+            >
+              In casa l'app trova gdahome da sola sulla porta <b id="porta">…</b>. Da fuori è la
+              casa che chiama un centralino e ci resta in attesa: nessuna porta da aprire sul
+              router, nessun indirizzo pubblico, niente da installare. Il centralino instrada e non
+              può leggere niente di quello che passa. Chi non vuole passarci spegne
+              <b>da fuori casa</b> nelle opzioni di questo add-on.
+            </p>
+          </div>
+
+          <!-- Cosa fare quando la plancia, aperta dalle «Plance», esce con
+               «Errore di configurazione». Quel messaggio lo scrive Home Assistant
+               e il motivo non lo mostra; qui invece si prova la cartina da questa
+               pagina — che sta sul suo stesso indirizzo — e si dice quale dei due
+               casi è. -->
+          <div class="blocco">
+            <p class="etichetta" data-en="The dashboards in Home Assistant">
+              Le plance in Home Assistant
+            </p>
+            <p class="spiegazione" id="stato-plance-in-casa">…</p>
+            <p class="avviso" id="avviso-cartina" hidden></p>
+            <div class="bottoni" id="ripara-cartina" hidden>
+              <button id="carica-la-cartina" type="button" data-en="Load the panel now">
+                Carica la cartina adesso
+              </button>
+            </div>
+          </div>
+
+          <!-- Da dove viene la plancia. È la risposta a «questa è quella
+               originale?». Una copia modificata non viene bloccata: viene detta. -->
+          <div class="blocco" id="provenienza" hidden>
+            <p class="etichetta" data-en="The dashboard">La plancia</p>
+            <p class="spiegazione" id="provenienza-spiega"></p>
+            <details class="apribile" id="provenienza-quali" hidden>
+              <summary data-en="Which files don&#39;t match">Quali file non tornano</summary>
+              <p class="codice piccolo" id="provenienza-elenco"></p>
+            </details>
+          </div>
         </details>
+
+        <!-- Le due schede di chi risponde alle segnalazioni. Si vedono **solo**
+             dove la chiave della console c'è, cioè in una casa al mondo:
+             dappertutto altrove non compaiono, e non c'è niente da spiegare a
+             chi non le può usare. -->
+        <section class="scheda di-chi-risponde" id="assistenza" hidden>
+          <p class="etichetta" data-en="Only for whoever answers">Solo per chi risponde</p>
+          <div class="testa-di-scheda">
+            <h3>
+              <svg class="ic" aria-hidden="true"><use href="#ic-assistenza" /></svg
+              ><span data-en="Support">L'assistenza</span>
+            </h3>
+          </div>
+          <p class="spiegazione" id="stato-assistenza">…</p>
+          <p
+            class="minuta"
+            data-en="From this home you read the reports and the chats of every other one, and you answer. The queue is in the app, under &lt;b&gt;Console&lt;/b&gt;."
+          >
+            Da questa casa si leggono le segnalazioni e le chat di tutte le altre, e si risponde. La
+            coda sta nell'app, alla voce <b>Console</b>.
+          </p>
+        </section>
+
+        <!-- «Chi parla di più»: nasce nascosta, e si accende con la stessa
+             condizione dell'assistenza. A chi ha gdahome in casa non serve, ed è
+             una scheda che spaventa più di quanto spieghi. -->
+        <section class="scheda di-chi-risponde" id="chiacchieroni" hidden>
+          <p class="etichetta" data-en="Only for whoever answers">Solo per chi risponde</p>
+          <div class="testa-di-scheda">
+            <h3>
+              <svg class="ic" aria-hidden="true"><use href="#ic-onde" /></svg
+              ><span data-en="Who talks the most">Chi parla di più</span>
+            </h3>
+            <span class="conta" id="stato-chiacchieroni">…</span>
+          </div>
+          <ul id="elenco-chiacchieroni" class="elenco"></ul>
+          <details class="apribile">
+            <summary data-en="What it&#39;s for">A cosa serve</summary>
+            <p
+              class="spiegazione"
+              data-en="Every change at home is an event, and every event reaches every connected phone. A home making hundreds a minute does not have hundreds of things changing: it has &lt;b&gt;two or three&lt;/b&gt; changing non-stop — a power meter, a consumption sensor — and the rest sit still. If the app stutters this is where you start: put a filter on those two or three in Home Assistant, and the traffic drops tenfold without touching anything else."
+            >
+              Ogni cambiamento in casa è un evento, e ogni evento arriva a tutti i telefoni
+              collegati. Una casa che ne fa centinaia al minuto non ha centinaia di cose che
+              cambiano: ne ha <b>due o tre</b> che cambiano di continuo — un contatore di potenza,
+              un sensore di consumo — e le altre stanno ferme. Se l'app va a scatti è da qui che si
+              comincia: a quelle due o tre si mette un filtro in Home Assistant, e il traffico cala
+              di dieci volte senza toccare niente.
+            </p>
+          </details>
+        </section>
       </section>
     </main>
     <script src="console.js"></script>

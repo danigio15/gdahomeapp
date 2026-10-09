@@ -369,6 +369,14 @@ class Filo {
   /// Serve a dire a schermo se si sta passando da dentro casa o da fuori.
   Approdo? get approdoAdesso => _approdo;
 
+  /// Se la casa dice che questo filo arriva dalla sua rete (il `da_casa` del
+  /// `pronto`). `null` quando non lo dice — un ponte di prima — o quando il
+  /// filo non e' su.
+  bool? get daCasa {
+    final presa = _presa;
+    return presa is PresaCifrata ? presa.daCasa : null;
+  }
+
   /// Apre il filo e torna quando la stretta di mano e' andata.
   ///
   /// Tre esiti, e sono tre cose diverse per chi guarda lo schermo:

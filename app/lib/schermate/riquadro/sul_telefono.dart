@@ -51,6 +51,7 @@ WebViewController costruisciIlControllore({
   void Function()? quandoChiedeIlMenu,
   void Function()? quandoSiVede,
   void Function(String foto)? quandoFotografaLaCasa,
+  void Function(String persona)? quandoApreLaPersona,
 }) {
   final PlatformWebViewControllerCreationParams parametri;
   final iPhone = WebViewPlatform.instance is WebKitWebViewPlatform;
@@ -110,6 +111,20 @@ WebViewController costruisciIlControllore({
         'gdahomeAuto',
         onMessageReceived: (messaggio) =>
             quandoFotografaLaCasa(messaggio.message),
+      ),
+    );
+  }
+  /* «Apri in mappa» sulla scheda di una persona: dentro l'app la persona si
+   * apre nel navigatore. La pagina guarda se questo canale c'e' prima di
+   * mandarci qualcosa (`la-persona-nel-navigatore.js`): senza, il tocco apre
+   * la mappa di Home Assistant come sempre. Passa un JSON, `{nome, lat, lon,
+   * indirizzo}`. */
+  if (quandoApreLaPersona != null) {
+    unawaited(
+      controllore.addJavaScriptChannel(
+        'gdahomeNavigatore',
+        onMessageReceived: (messaggio) =>
+            quandoApreLaPersona(messaggio.message),
       ),
     );
   }

@@ -1517,8 +1517,10 @@ test("production graph is single-owner, acyclic and contains no facade pass-thro
   // «Cottura» dentro gli Elettrodomestici e la sua tessera in Home.
   // I segni del catalogo della 1.9.0 (due moduli) non ci sono piu': le icone
   // sono tornate le emoji della 1.8.0.
+  // 421 con «Apri in mappa» nell'app: `core/la-persona-nel-navigatore.js`,
+  // il messaggio che porta la persona al navigatore dell'app.
   assert.ok(
-    relative.length <= 420,
+    relative.length <= 421,
     `production graph unexpectedly grew to ${relative.length} modules`,
   );
   assertAcyclic(edges);

@@ -4227,4 +4227,9 @@ export default Object.freeze({
   "The word the stove shows on its display: ignition, working, brazier cleaning, shutdown… If the page does not know it, it shows it as it is.": "Het woord dat de kachel op zijn display toont: ontsteking, in bedrijf, branderpot reinigen, uitschakelen… Kent de pagina het niet, dan toont ze het zoals het is.",
   "Without it, the thermostat's own reading is used.": "Zonder wordt de meting van de thermostaat zelf gebruikt.",
   "Working": "In bedrijf",
+  "Air conditioners out of season": "Airco's buiten het seizoen",
+  "Radiators out of season": "Radiatoren buiten het seizoen",
+  "They show: ${periodo}. Switched on, they show anyway.": "Zichtbaar: ${periodo}. Aangezet verschijnen ze toch.",
+  "Each one has its months in the dashboard configuration. Switched on, they show anyway.": "Elk apparaat heeft zijn maanden in de dashboardconfiguratie. Aangezet verschijnen ze toch.",
+  "Show them anyway": "Toch tonen",
 });

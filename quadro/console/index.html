@@ -6063,7 +6063,7 @@
                       ? `<span class="pastiglia ${una.segnale < SEGNALE_DEBOLE ? "attenta" : ""}">segnale ${testo(una.segnale)}%</span>`
                       : ""
                   }
-                  <span class="dove">${una.su ? testo(una.ip) : "non attiva"}</span>
+                  <span class="dove">${una.su ? testo(una.ip || "senza indirizzo") : "non attiva"}</span>
                 </li>`,
                 )
                 .join("")}

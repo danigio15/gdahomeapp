@@ -365,6 +365,24 @@ export function ilTastoCentrale(lettura) {
   return lettura.suona ? "pausa" : "suona";
 }
 
+/* Quanto si sposta il volume a ogni tocco del meno e del piu': un punto.
+ *
+ * Il cursore va bene per arrivare lontano, e male per l'ultimo ritocco: col
+ * dito sopra, tra il 18 e il 22 non c'e' modo di fermarsi sul 20. I due tasti
+ * fanno quel pezzo, uno alla volta. */
+export const PASSO_DEL_VOLUME = 0.01;
+
+/**
+ * Il volume dopo un tocco: `verso` e' 1 per alzare, -1 per abbassare. Sempre
+ * fra 0 e 1, e arrotondato al punto: `0.07 + 0.01` in virgola mobile non fa
+ * `0.08`, e il numero scritto accanto al cursore direbbe 8 quando e' 7,999.
+ */
+export function volumeDopoIlPasso(volume, verso) {
+  const adesso = Number.isFinite(Number(volume)) ? Number(volume) : 0;
+  const dopo = adesso + Math.sign(Number(verso) || 0) * PASSO_DEL_VOLUME;
+  return Math.min(1, Math.max(0, Math.round(dopo * 100) / 100));
+}
+
 /**
  * Il servizio da chiamare per il comando chiesto.
  *

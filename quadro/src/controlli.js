@@ -304,7 +304,7 @@ export function loStato(casa, adesso = Date.now()) {
       segno: "■",
       parola: "offline",
       perché: c
-        ? `Nessun rapporto da ${daQuanto(c.quando, adesso)}: i dati qui sotto risalgono ad allora.`
+        ? `Ultimo rapporto ${daQuanto(c.quando, adesso)}: i dati qui sotto risalgono ad allora.`
         : "Nessun rapporto ancora ricevuto da questo impianto.",
     };
   }

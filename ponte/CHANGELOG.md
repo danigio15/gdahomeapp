@@ -7,9 +7,52 @@ disponibile»: prima di premere si legge cosa arriva.
 plancia che l'add-on ha dentro, e il quarto numero — `1.4.32.2` — erano le
 correzioni dell'add-on fra due plance. Ma gdahome è più della plancia che
 serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
-fuori. La plancia dentro continua a dire la sua, e si legge dov'è sempre
-stata: nella pastiglia «La plancia» della console. Sono due numeri perché
-sono due cose.
+fuori. La plancia dentro continua a dire la sua, e si legge nella console,
+alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
+
+## 1.10.6
+
+**La console in sei sezioni.** La pagina dell'add-on non è più una colonna di
+quindici schede: Panoramica, Telefoni, Plance, Licenza, Installatore e
+Avanzate, scelte dalle linguette in cima. La Panoramica dice «Come sta la
+casa», una riga per ogni cosa che conta, e sotto quello che non va c'è il
+perché. Telefoni e plance si rinominano dentro la riga.
+
+**«Ricontrolla adesso» nella Licenza.** Un regalo fatto dalla Gestione o un
+rinnovo si vedono subito, senza aspettare il giro delle sei ore. Nei giorni di
+margine la riga dice fino a quando resta Premium, non una data già passata.
+
+**La casa di prova si fa solo dal gestore.** Una casa di prova già fatta si
+vede e si revoca da qualunque casa.
+
+**In casa con l'indirizzo di fuori.** Aperta in casa con l'indirizzo esterno,
+la web app non dice più «Fuori casa serve Premium»: è l'add-on a dire se la
+connessione arriva dalla rete di casa, anche dietro un proxy (NGINX, Caddy,
+Cloudflare). Al contrario, un QR fatto con un indirizzo https pubblico non apre
+più una casa Base da fuori: l'abbinamento si fa da ovunque, poi da fuori serve
+Premium. Una VPN come Tailscale conta come fuori casa.
+
+**Il clima fuori stagione.** A ottobre, coi condizionatori di maggio-settembre,
+la pagina Clima diceva «Nessun condizionatore configurato». Adesso dice che
+sono fuori stagione, quando si vedono, e ha il tasto «Mostrali lo stesso»
+(#196).
+
+**Il volume un punto alla volta.** Nella Musica, accanto al cursore del volume,
+il meno e il più spostano il volume dell'1% a ogni tocco.
+
+**«Apri in mappa» porta dalla persona.** Nell'app, sulla scheda di una
+persona, «Apri in mappa» apre il navigatore con la strada fino a lei. Nel
+browser, o senza una posizione GPS, resta la mappa di Home Assistant.
+
+**In auto.**
+- I comandi della casa premuti in macchina — il cancello, le luci — partono
+  dal collegamento che l'app ha già aperto, invece di aprirne un altro da
+  capo: prima, se non ci riusciva in tempo, il comando si perdeva.
+- Da «Dispositivi» si torna al navigatore con la freccia indietro.
+- Senza una casa abbinata il navigatore in Android Auto parte, in versione
+  base; da quando c'è una casa vale il suo abbonamento.
+- Gli svincoli: il disegno dello svincolo esce dalla stessa parte della
+  freccia, del cartello e delle corsie.
 
 ## 1.10.5
 

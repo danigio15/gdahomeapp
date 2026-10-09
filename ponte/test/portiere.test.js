@@ -328,3 +328,26 @@ test("dopo, chi ha aperto la porta puo' mandare la casa intera", () => {
   assert.equal(arrivati.length, 2);
   assert.equal(arrivati[1].length, 3 * 1024 * 1024);
 });
+
+/* ─── Da casa o da fuori ─────────────────────────────────────────────────── */
+
+test("il pronto dice se il filo arriva dalla rete di casa", () => {
+  /* Con gdahome Base l'app chiude il filo che arriva da fuori, anche da un
+   * indirizzo che crede di casa: lo sa da qui (`da-casa.js`). */
+  const chiave = chiaveDelFiloNuova();
+  const dispositivi = dispositiviFinti({ chiavi: { dm_qui: chiave } });
+  const casi = [
+    [{ da: "192.168.1.20", daCasa: true }, true],
+    [{ da: "172.30.32.1", daCasa: false }, false],
+    [{ da: "centralino 93.40.1.2" }, false],
+    [{ da: "192.168.1.20" }, true],
+  ];
+  for (const [come, atteso] of casi) {
+    const { portiere, accolti } = unPortiere({ dispositivi });
+    const presa = presaFinta();
+    portiere.accogli(presa, come);
+    const telefono = unTelefono(presa, { chi: "dm_qui", chiaveDelFilo: chiave });
+    assert.equal(telefono.pronto?.da_casa, atteso, JSON.stringify(come));
+    assert.equal(accolti.length, 1, "la casa non chiude: lo dice e basta");
+  }
+});

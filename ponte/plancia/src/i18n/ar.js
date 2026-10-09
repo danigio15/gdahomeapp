@@ -4227,4 +4227,9 @@ export default Object.freeze({
   "The word the stove shows on its display: ignition, working, brazier cleaning, shutdown… If the page does not know it, it shows it as it is.": "الكلمة التي تكتبها المدفأة على شاشتها: إشعال، عمل، تنظيف المجمرة، إطفاء… إن لم تعرفها الصفحة تعرضها كما هي.",
   "Without it, the thermostat's own reading is used.": "بدونه تُستخدم قراءة منظِّم الحرارة نفسه.",
   "Working": "قيد العمل",
+  "Air conditioners out of season": "مكيفات خارج الموسم",
+  "Radiators out of season": "مشعات خارج الموسم",
+  "They show: ${periodo}. Switched on, they show anyway.": "تظهر: ${periodo}. عند تشغيلها تظهر على أي حال.",
+  "Each one has its months in the dashboard configuration. Switched on, they show anyway.": "لكل وحدة أشهرها في إعدادات اللوحة. عند تشغيلها تظهر على أي حال.",
+  "Show them anyway": "اعرضها على أي حال",
 });

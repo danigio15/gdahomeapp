@@ -12,7 +12,7 @@
  *
  *   telefono → casa   {v:1, chi:"dm_…", apertura:"…", mia:"…", gzip:true, mucchio:true, app:1061100}
  *   telefono → casa   {v:1, abbina:2, apertura:"…", mia:"…", app:1061100}   un telefono nuovo
- *   casa → telefono   {v:1, pronto:true, mia:"…", gzip:true, mucchio:true}
+ *   casa → telefono   {v:1, pronto:true, mia:"…", gzip:true, mucchio:true, da_casa:true}
  *   casa → telefono   {v:1, no:"…"}                          e basta
  *   casa → telefono   {v:1, no:"…", riabbina:true}           non ti conosco
  *   casa → telefono   {v:1, no:"…", motivo:"…"}              l'abbinamento non parte
@@ -169,14 +169,17 @@ export class Portiere {
    * strade dove un abbinamento non ha niente da fare (il filo di un telefono
    * gia' abbinato, passando dal centralino). Di difetto si', perche' in casa
    * l'abbinamento passa proprio da qui. */
-  accogli(presa, { da = "?", abbina = true } = {}) {
+  /* `daCasa` dice se la presa arriva dalla rete di casa (`da-casa.js`): va
+   * nel `pronto`, e con gdahome Base l'app chiude il filo che arriva da
+   * fuori. Dal centralino non si e' mai in casa. */
+  accogli(presa, { da = "?", abbina = true, daCasa = !String(da).startsWith("centralino") } = {}) {
     const timer = this._aTempo(presa, "la stretta di mano non e' arrivata");
     presa.onMessaggio = (testo) => {
       clearTimeout(timer);
       /* La prima parola si ascolta una volta sola: quello che arriva dopo, se
        * la stretta non e' andata, non e' affare di nessuno. */
       presa.onMessaggio = () => {};
-      this._laPrimaParola(presa, testo, { da, abbina });
+      this._laPrimaParola(presa, testo, { da, abbina, daCasa });
     };
     presa.onChiusa = () => clearTimeout(timer);
   }
@@ -195,7 +198,7 @@ export class Portiere {
     return timer;
   }
 
-  _laPrimaParola(presa, testo, { da, abbina }) {
+  _laPrimaParola(presa, testo, { da, abbina, daCasa = true }) {
     let detto;
     try {
       detto = JSON.parse(testo);
@@ -303,7 +306,7 @@ export class Portiere {
       return;
     }
 
-    presa.manda(JSON.stringify(this._pronto(mia)));
+    presa.manda(JSON.stringify(this._pronto(mia, { daCasa })));
     /* Da qui in poi il ponte vede una presa qualunque, e non sa niente di
      * tutto questo. */
     this.ponte.accogli(
@@ -316,7 +319,7 @@ export class Portiere {
 
   /* La risposta a chi ha stretto la mano: la mia chiave effimera, e che qui
    * il gzip si sa aprire. */
-  _pronto(mia, { gzip = true } = {}) {
+  _pronto(mia, { gzip = true, daCasa } = {}) {
     return {
       v: VERSIONE,
       pronto: true,
@@ -326,6 +329,10 @@ export class Portiere {
        * dirlo in diagnostica: quanti messaggi sono arrivati, e in quante
        * buste — che passando dal centralino e' il numero che si paga. */
       mucchio: true,
+      /* Se questo filo arriva dalla rete di casa. Lo legge l'app: con gdahome
+       * Base un filo che arriva da fuori lo chiude lei, anche quando l'ha
+       * aperto da un indirizzo che crede di casa (`da-casa.js`). */
+      ...(typeof daCasa === "boolean" ? { da_casa: daCasa } : {}),
     };
   }
 

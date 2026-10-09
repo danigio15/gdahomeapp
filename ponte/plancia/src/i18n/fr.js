@@ -4227,4 +4227,9 @@ export default Object.freeze({
   "The word the stove shows on its display: ignition, working, brazier cleaning, shutdown… If the page does not know it, it shows it as it is.": "Le mot que le poêle affiche sur son écran : allumage, travail, nettoyage du brasier, extinction… Si la page ne le connaît pas, elle l’affiche tel quel.",
   "Without it, the thermostat's own reading is used.": "Sans lui, c’est la mesure du thermostat qui est utilisée.",
   "Working": "Travail",
+  "Air conditioners out of season": "Climatiseurs hors saison",
+  "Radiators out of season": "Radiateurs hors saison",
+  "They show: ${periodo}. Switched on, they show anyway.": "Visibles : ${periodo}. Allumés, ils apparaissent quand même.",
+  "Each one has its months in the dashboard configuration. Switched on, they show anyway.": "Chacun a ses mois dans la configuration du tableau de bord. Allumés, ils apparaissent quand même.",
+  "Show them anyway": "Les afficher quand même",
 });

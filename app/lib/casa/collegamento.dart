@@ -80,7 +80,7 @@ class Collegamento {
     this.attesaPerLaRicevuta = const Duration(seconds: 20),
     this.ogniQuantoLaLicenza = const Duration(hours: 6),
     this.consegnaAlCentralino,
-  }) : _sonda = sonda ?? const Sonda(),
+  }) : _sonda = sonda ?? Sonda(),
        licenza = licenza ?? GestoreLicenza(),
        _licenzaMia = licenza == null {
     this.licenza.addListener(_avvisa);
@@ -463,9 +463,7 @@ class Collegamento {
     if (_filo != filo) return true;
     final adesso = archivio.quella(casa.id) ?? casa;
     _casa = adesso;
-    if (_daDove != null &&
-        _daDove != DaDove.daDentro &&
-        !licenza.stradeDaFuoriPer(adesso)) {
+    if (!_entratiDaCasa(filo) && !licenza.stradeDaFuoriPer(adesso)) {
       await apri(forza: true);
       return true;
     }
@@ -473,6 +471,17 @@ class Collegamento {
     _avvisa();
     return true;
   }
+
+  /// Se questo filo arriva dalla rete di casa.
+  ///
+  /// Lo dice la casa, nel `pronto` ([Filo.daCasa]): e' lei che vede da dove
+  /// arriva la presa. L'indirizzo da solo non basta, nei due versi: un
+  /// indirizzo `https` pubblico si apre anche dal divano — la web app aperta
+  /// in casa con l'indirizzo di fuori — e un indirizzo «di casa» scritto nel
+  /// QR, se e' pubblico, si apre anche dalla stazione. Un ponte di prima non
+  /// lo dice, e vale la strada da cui si e' entrati, come prima.
+  bool _entratiDaCasa(Filo filo) =>
+      filo.daCasa ?? (_daDove == null || _daDove == DaDove.daDentro);
 
   /// Richiede la licenza alla casa: dopo un acquisto, o dalla pagina Premium.
   Future<void> rileggiLaLicenza() async {
@@ -960,9 +969,17 @@ class Collegamento {
     final daFuori = licenza.stradeDaFuoriPer(adesso);
     final Approdo approdo;
     try {
-      approdo = await _sonda.dove(
-        daFuori ? adesso : adesso.soloLaStradaDiCasa(),
-      );
+      /* Senza Premium si bussa solo alle strade dirette, e vale quella da cui
+       * la casa dice di vederci arrivare da casa sua: anche l'indirizzo
+       * pubblico, quando dal divano si e' aperta la web app con quello. */
+      approdo = daFuori
+          ? await _sonda.dove(adesso)
+          : await _sonda.dove(_conLaPagina(adesso), soloDaCasa: true);
+    } on PremiumRichiesto {
+      /* La casa ha risposto, ma da fuori: la pagina Premium, non «non trovo
+       * la casa». */
+      _fuoriSenzaPremium = true;
+      rethrow;
     } on PonteIrraggiungibile {
       if (daFuori || !adesso.haStradeDaFuori) rethrow;
       _fuoriSenzaPremium = true;
@@ -974,6 +991,22 @@ class Collegamento {
     unawaited(archivio.segnaLApprodo(casa.id, approdo.da));
     _avvisa();
     return approdo;
+  }
+
+  /* La casa, con in piu' la strada della pagina che ha servito la web app
+   * ([indirizzoDellaPagina]), quando la casa non ne ha gia' una di fuori.
+   *
+   * Quella pagina l'ha servita un ponte, ma non e' detto che sia il ponte di
+   * questa casa: con piu' case nell'archivio la si prende solo per quella
+   * che la conosce gia', o non si saprebbe a quale porta si sta bussando. */
+  CasaConosciuta _conLaPagina(CasaConosciuta casa) {
+    final pagina = indirizzoDellaPagina;
+    if (pagina == null || casa.daFuoriCasa != null) return casa;
+    final sua =
+        archivio.tutte.length == 1 ||
+        (casa.inCasa?.casa == pagina.casa &&
+            casa.inCasa?.porta == pagina.porta);
+    return sua ? casa.con(daFuoriCasa: pagina) : casa;
   }
 
   /// Passa a un'altra casa: butta giu' il filo di questa e apre quello.

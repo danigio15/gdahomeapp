@@ -4227,4 +4227,9 @@ export default Object.freeze({
   "The word the stove shows on its display: ignition, working, brazier cleaning, shutdown… If the page does not know it, it shows it as it is.": "난로가 화면에 띄우는 말: 점화, 운전, 버너 포트 청소, 소화… 페이지가 모르는 말은 그대로 보여 줍니다.",
   "Without it, the thermostat's own reading is used.": "없으면 온도 조절기 자체의 측정값을 씁니다.",
   "Working": "운전 중",
+  "Air conditioners out of season": "시즌이 아닌 에어컨",
+  "Radiators out of season": "시즌이 아닌 라디에이터",
+  "They show: ${periodo}. Switched on, they show anyway.": "표시 기간: ${periodo}. 켜져 있으면 항상 표시됩니다.",
+  "Each one has its months in the dashboard configuration. Switched on, they show anyway.": "각 기기의 월은 대시보드 설정에 있습니다. 켜져 있으면 항상 표시됩니다.",
+  "Show them anyway": "그래도 표시",
 });

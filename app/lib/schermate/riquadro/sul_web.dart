@@ -26,7 +26,8 @@ import '../../plancia/premesse.dart' show ilMenuDalRiquadro;
 /// ragione c'e' `quandoFotografaLaCasa` e qui non si usa: quella fotografia
 /// la legge Android Auto, e in un browser Android Auto non c'e'. E cosi'
 /// `quandoSiVede`: la pagina che dice di essere in piedi serve a togliere il
-/// velo prima del `load`, e qui il velo si toglie subito.
+/// velo prima del `load`, e qui il velo si toglie subito. E
+/// `quandoApreLaPersona`: nel browser il navigatore non c'e'.
 WebViewController costruisciIlControllore({
   required void Function() quandoCaricata,
   required void Function(String perche) quandoFallisce,
@@ -39,6 +40,7 @@ WebViewController costruisciIlControllore({
   void Function()? quandoChiedeIlMenu,
   void Function()? quandoSiVede,
   void Function(String foto)? quandoFotografaLaCasa,
+  void Function(String persona)? quandoApreLaPersona,
 }) {
   final controllore = WebViewController();
   /* Chi va avvisato quando la pagina «arriva». Si tiene da parte perche'

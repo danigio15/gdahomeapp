@@ -74,6 +74,7 @@ class FabbricaDellaPlancia {
     void Function()? quandoChiedeIlMenu,
     VoidCallback? quandoSiVede,
     void Function(String foto)? quandoFotografaLaCasa,
+    void Function(String persona)? quandoApreLaPersona,
   }) => RiquadroDellaPlancia(
     key: chiave,
     pagina: pagina,
@@ -85,6 +86,7 @@ class FabbricaDellaPlancia {
     quandoChiedeIlMenu: quandoChiedeIlMenu,
     quandoSiVede: quandoSiVede,
     quandoFotografaLaCasa: quandoFotografaLaCasa,
+    quandoApreLaPersona: quandoApreLaPersona,
   );
 }
 
@@ -108,6 +110,7 @@ class PlanciaVera extends StatefulWidget {
     this.vaiAlleCase,
     this.quandoCambiaPagina,
     this.quandoChiedeIlMenu,
+    this.quandoApreLaPersona,
   });
 
   final Collegamento collegamento;
@@ -134,6 +137,10 @@ class PlanciaVera extends StatefulWidget {
   /// che dentro Home Assistant aprono la barra di chi la ospita e qui aprono
   /// la nostra (`plancia/premesse.dart`).
   final void Function()? quandoChiedeIlMenu;
+
+  /// «Apri in mappa» sulla scheda di una persona: la pagina manda dove sta,
+  /// `{nome, lat, lon, indirizzo}` in JSON, e l'app la apre nel navigatore.
+  final void Function(String persona)? quandoApreLaPersona;
 
   @override
   State<PlanciaVera> createState() => PlanciaVeraState();
@@ -690,6 +697,7 @@ class PlanciaVeraState extends State<PlanciaVera> {
               },
               quandoCambiaPagina: widget.quandoCambiaPagina,
               quandoChiedeIlMenu: widget.quandoChiedeIlMenu,
+              quandoApreLaPersona: widget.quandoApreLaPersona,
               /* La pagina e' in piedi, col velo della plancia davanti: il
                  nostro se ne va senza aspettare il `load`, che aspetta anche
                  i moduli delle sezioni e ogni immagine. */
@@ -763,6 +771,7 @@ class RiquadroDellaPlancia extends StatefulWidget {
     this.quandoChiedeIlMenu,
     this.quandoSiVede,
     this.quandoFotografaLaCasa,
+    this.quandoApreLaPersona,
     this.ibrido = false,
     this.margini = (alto: 0, basso: 0),
   });
@@ -794,6 +803,9 @@ class RiquadroDellaPlancia extends StatefulWidget {
   /// — e passando di qui diventa un file che l'auto legge. Senza questo, il
   /// canale non si registra affatto, e la plancia non prepara niente.
   final void Function(String foto)? quandoFotografaLaCasa;
+
+  /// La pagina apre una persona nel navigatore: vedi [PlanciaVera].
+  final void Function(String persona)? quandoApreLaPersona;
 
   @override
   State<RiquadroDellaPlancia> createState() => RiquadroDellaPlanciaState();
@@ -929,6 +941,7 @@ class RiquadroDellaPlanciaState extends State<RiquadroDellaPlancia> {
       quandoChiedeIlMenu: widget.quandoChiedeIlMenu,
       quandoSiVede: () => widget.quandoSiVede?.call(),
       quandoFotografaLaCasa: widget.quandoFotografaLaCasa,
+      quandoApreLaPersona: widget.quandoApreLaPersona,
       /* Lo stesso fondo dell'app: sotto la pagina, finche' non arriva, non
        * si vede un lampo di un altro colore. */
       sfondo: Theme.of(context).colorScheme.surface,

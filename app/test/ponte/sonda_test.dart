@@ -8,6 +8,7 @@ library;
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gdahome/casa/casa_conosciuta.dart';
+import 'package:gdahome/ponte/abbinamento.dart' show SaluteDetta;
 import 'package:gdahome/ponte/errori.dart';
 import 'package:gdahome/ponte/indirizzo.dart';
 import 'package:gdahome/ponte/sonda.dart';
@@ -455,4 +456,73 @@ void leProveDelChiaro() {
       expect(inChiaroNonSiPuo, isFalse);
     });
   });
+
+  group('solo da casa', () {
+    test(
+      'l\'indirizzo pubblico vale quando la casa dice che si è in casa',
+      () async {
+        final sonda = sondaDaCasa({daFuori.salute: (vivo: true, daCasa: true)});
+        final approdo = await sonda.dove(
+          casaCon(dentro: inRete, fuori: daFuori, centralino: ilCentralino),
+          soloDaCasa: true,
+        );
+        expect(approdo.salute, daFuori.salute);
+      },
+    );
+
+    test('l\'indirizzo «di casa» che arriva da fuori chiede Premium', () async {
+      /* Il QR con un indirizzo https pubblico come indirizzo di casa: da
+       * fuori risponde, ma la casa dice che non si è in casa. */
+      final sonda = sondaDaCasa({daFuori.salute: (vivo: true, daCasa: false)});
+      await expectLater(
+        sonda.dove(casaCon(dentro: daFuori), soloDaCasa: true),
+        throwsA(isA<PremiumRichiesto>()),
+      );
+    });
+
+    test('il centralino non si prova nemmeno', () async {
+      final sonda = sondaDaCasa({
+        ilCentralino.salute: (vivo: true, daCasa: null),
+      });
+      await expectLater(
+        sonda.dove(
+          casaCon(dentro: inRete, centralino: ilCentralino),
+          soloDaCasa: true,
+        ),
+        throwsA(isA<PonteIrraggiungibile>()),
+      );
+    });
+
+    test(
+      'un ponte di prima non lo dice: vale la strada di casa, come prima',
+      () async {
+        final sonda = sondaDaCasa({
+          inRete.salute: (vivo: true, daCasa: null),
+          daFuori.salute: (vivo: true, daCasa: null),
+        });
+        final approdo = await sonda.dove(
+          casaCon(dentro: inRete, fuori: daFuori),
+          soloDaCasa: true,
+        );
+        expect(approdo.da, DaDove.daDentro);
+      },
+    );
+
+    test('con un ponte di prima l\'indirizzo pubblico resta fuori', () async {
+      final sonda = sondaDaCasa({daFuori.salute: (vivo: true, daCasa: null)});
+      await expectLater(
+        sonda.dove(casaCon(dentro: inRete, fuori: daFuori), soloDaCasa: true),
+        throwsA(isA<PremiumRichiesto>()),
+      );
+    });
+  });
 }
+
+/// Con gdahome Base si entra solo da casa, e da dove si arriva lo dice la
+/// casa (`da_casa` nel `/salute`, vedi `ponte/src/da-casa.js`).
+
+Sonda sondaDaCasa(Map<Uri, SaluteDetta> risposte) => Sonda(
+  attesa: const Duration(milliseconds: 100),
+  bussaDaCasa: (salute) async =>
+      risposte[salute] ?? (vivo: false, daCasa: null),
+);

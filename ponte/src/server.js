@@ -18,6 +18,7 @@ import { createServer } from "node:http";
 import { extname, join, normalize, sep } from "node:path";
 
 import { invito } from "./invito.js";
+import { arrivaDaCasa } from "./da-casa.js";
 import { accetta, eUnaSalita, SaliteSenzaNome } from "./presa.js";
 import { BASE } from "./plancia.js";
 import { laVede, vedeQualcosa } from "./plance.js";
@@ -328,7 +329,11 @@ export function costruisciLaPortaDellApp({
      * collegati non sono affari di chi bussa a una porta esposta: l'app legge
      * solo `vivo`, e la console quei numeri li ha per conto suo. */
     if (metodo === "GET" && via === "/salute") {
-      json(risposta, { vivo: true });
+      /* `da_casa`: se chi chiede sta sulla rete di casa (`da-casa.js`). Dice a
+       * chi bussa una cosa di se', non della casa: con gdahome Base l'app
+       * prende l'indirizzo pubblico solo quando qui si arriva da casa — la
+       * web app aperta in casa con l'indirizzo di fuori. */
+      json(risposta, { vivo: true, da_casa: arrivaDaCasa(richiesta) });
       return;
     }
 
@@ -364,7 +369,7 @@ export function costruisciLaPortaDellApp({
     /* Anche in casa si passa dal portiere: la rete di casa non e' cifrata, e
      * chi ci sta sopra non deve poter leggere piu' di chi sta sul centralino.
      * E soprattutto: cosi' l'app ha **una strada sola** invece di due. */
-    if (presa) portiere.accogli(presa, { da });
+    if (presa) portiere.accogli(presa, { da, daCasa: arrivaDaCasa(richiesta) });
   });
   /* Un errore sulla presa di chi bussa e' suo, non del ponte. */
   server.on("clientError", (_errore, socket) => {
@@ -1164,6 +1169,19 @@ async function api({
     return;
   }
 
+  /* «Ricontrolla adesso»: la casa chiede subito i suoi gettoni al quadro, e
+   * risponde lo stato di dopo. Un quadro che non risponde non e' un errore di
+   * questa via: lo dice `ultima`, e restano i gettoni di prima. */
+  if (via === "/api/licenza/ricontrolla" && metodo === "POST") {
+    if (!licenze || !licenze.attive) {
+      json(risposta, { errore: "licenze-spente" }, 409);
+      return;
+    }
+    const { gettoni: _gettoni, ...stato } = await licenze.ricontrolla();
+    json(risposta, stato);
+    return;
+  }
+
   if (via === "/api/licenza/riscatta" && metodo === "POST") {
     if (!licenze || !licenze.attive) {
       json(risposta, { errore: "licenze-spente" }, 409);
@@ -1312,6 +1330,10 @@ async function api({
        * `api/prova` quando lo deve disegnare, come fa con quello di tutti i
        * giorni. */
       prova: laProvaInBreve(casaDiProva, dispositivi),
+      /* Se questo e' l'Home Assistant di chi tiene la Gestione: solo li' la
+       * console mostra la scheda per fare la casa di prova. Esce un si' o un
+       * no, mai la chiave. */
+      gestore: Boolean(opzioni.gestore),
       dispositivi: dispositivi
         .elenco()
         .map((uno) => ({ ...uno, collegati: collegati.get(uno.id) || 0 })),
@@ -1434,6 +1456,20 @@ async function api({
   if (via === "/api/prova" && metodo === "POST") {
     if (!casaDiProva) {
       male(risposta, 404, "questo add-on non sa fare la casa di prova");
+      return;
+    }
+    /* Solo nell'Home Assistant di chi tiene la Gestione.
+     *
+     * La casa di prova serve a chi pubblica l'app — Apple e Google la provano
+     * con una casa vera — e quella casa e' una sola. Su ogni altro Home
+     * Assistant un codice da sette giorni per piu' telefoni non serve a
+     * nessuno, ed e' una porta in piu' da lasciare aperta per sbaglio. Il
+     * segno e' la chiave della Gestione nelle opzioni: c'e' in una casa sola.
+     *
+     * Solo **farla**: guardarla e revocarla restano per tutti, perche' una
+     * casa di prova fatta prima di questa regola si deve poter chiudere. */
+    if (!opzioni.gestore) {
+      male(risposta, 403, "la casa di prova si fa solo dall'Home Assistant del gestore");
       return;
     }
     let detto = {};

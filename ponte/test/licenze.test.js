@@ -389,6 +389,68 @@ test("un rinnovo lento non scavalca un acquisto: le domande al quadro vanno in f
   );
 });
 
+test("«Ricontrolla adesso»: chiede subito, e premuto di fila bussa una volta sola", async () => {
+  /* Il caso vero: la casa ha in mano il gettone di un abbonamento di prova, e
+   * dalla Gestione le si regala Premium per sempre. Senza il tasto lo vede al
+   * giro delle sei ore; col tasto, subito. */
+  let ora = ADESSO;
+  let suo = unGettone(
+    { sog: CASA, origine: "negozio", scade: ADESSO + GIORNO },
+    { adesso: ADESSO },
+  );
+  const { licenze, quadro } = leLicenze({
+    adesso: () => ora,
+    risposte: { "/v1/licenze/casa": () => conGettoni({ gdahome: suo }) },
+  });
+  await licenze.rinnova();
+  assert.equal(licenze.stato().gdahome.origine, "negozio");
+
+  ora += 3 * 60 * 60 * 1000;
+  suo = unGettone({ sog: CASA, origine: "regalo", scade: null }, { adesso: ora });
+  const dopo = await licenze.ricontrolla();
+  assert.equal(quadro.chieste.length, 2);
+  assert.equal(dopo.gdahome.origine, "regalo");
+  assert.equal(dopo.gdahome.scade, null, "per sempre");
+  assert.deepEqual(dopo.ultima, { andata: true, quando: ora });
+
+  /* Premuto ancora, pochi secondi dopo: la risposta di prima vale ancora, e
+   * il quadro non sente niente. Il suo freno resta per il rinnovo vero. */
+  ora += 5_000;
+  assert.equal((await licenze.ricontrolla()).gdahome.origine, "regalo");
+  assert.equal(quadro.chieste.length, 2);
+  ora += 15_000;
+  await licenze.ricontrolla();
+  assert.equal(quadro.chieste.length, 3, "passati quindici secondi si bussa di nuovo");
+});
+
+test("«Ricontrolla adesso» con il quadro giu': restano i gettoni, e lo dice `ultima`", async () => {
+  let ora = ADESSO;
+  let giu = false;
+  const gettone = unGettone({ sog: CASA }, { adesso: ADESSO });
+  const { licenze, quadro } = leLicenze({
+    adesso: () => ora,
+    risposte: {
+      "/v1/licenze/casa": () =>
+        giu ? new TypeError("fetch failed") : conGettoni({ gdahome: gettone }),
+    },
+  });
+  await licenze.rinnova();
+  giu = true;
+  ora += 60_000;
+  const stato = await licenze.ricontrolla();
+  assert.equal(stato.gdahome.attiva, true, "un quadro giu' non toglie niente");
+  assert.equal(stato.ultima.andata, false);
+  /* Un no di pochi secondi fa vale come un si': riprovare subito non serve. */
+  ora += 2_000;
+  assert.equal((await licenze.ricontrolla()).ultima.andata, false);
+  assert.equal(quadro.chieste.length, 2);
+
+  /* E a licenze spente il tasto non bussa a nessuno. */
+  const { licenze: spente, quadro: nessuno } = leLicenze({ chiave: "" });
+  assert.equal((await spente.ricontrolla()).attive, false);
+  assert.equal(nessuno.chieste.length, 0);
+});
+
 test("un si' del quadro che non e' la sua risposta non toglie i gettoni", async () => {
   const gettone = unGettone({ sog: CASA }, { adesso: ADESSO });
   let giro = 0;

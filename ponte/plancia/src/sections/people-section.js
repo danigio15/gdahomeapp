@@ -15,6 +15,7 @@ import { VELO_DELLE_FINESTRE, tokenDelVelo } from "../core/il-velo-delle-finestr
 import { fermaRitrattiPersi, installAvatar3dStyle, ritrattoVivo } from "./person-avatar-section.js";
 import { normalizePeople, personViewModel } from "../core/person-model.js";
 import { apriLaSchedaDellEntita } from "./la-scheda-di-home-assistant.js";
+import { mandaLaPersonaAlNavigatore } from "../core/la-persona-nel-navigatore.js";
 import {
   allStates,
   clean,
@@ -233,6 +234,16 @@ function mappaDi(indirizzo) {
  * persona e la mappa che ci sta dietro. */
 export function apriLaMappaDiCasa(entity) {
   return apriLaSchedaDellEntita(entity);
+}
+
+/* La persona di questa entita', mandata al navigatore dell'app. */
+function allaPersonaNelNavigatore(entity) {
+  const cercata = clean(entity);
+  if (!cercata) return false;
+  const person = peopleInHome().find((entry) => clean(entry.entity) === cercata);
+  if (!person) return false;
+  const states = allStates();
+  return mandaLaPersonaAlNavigatore(personViewModel(person, states, Date.now()), states, root);
 }
 
 function indirizzoMarkup(view) {
@@ -747,6 +758,14 @@ export function installPeopleSection() {
          * nessuna Home Assistant intorno, il link porta al pannello Mappa. */
         const mappa = event.target?.closest?.("[data-person-mappa]");
         if (mappa) {
+          /* Dentro l'app la persona si apre nel navigatore, che porta la
+           * strada per arrivarci (`la-persona-nel-navigatore.js`); fuori,
+           * o senza un punto, la mappa di casa come prima. */
+          if (allaPersonaNelNavigatore(mappa.dataset.personMappa)) {
+            event.preventDefault();
+            closePersonPopup();
+            return;
+          }
           if (apriLaMappaDiCasa(mappa.dataset.personMappa)) event.preventDefault();
           return;
         }

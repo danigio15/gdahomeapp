@@ -57,6 +57,13 @@ export const OGNI = 6 * 60 * 60 * 1000;
  * aspetta, tranne quando si riscatta un codice: dieci secondi bastano. */
 const ATTESA = 10_000;
 
+/* Per quanto una domanda appena fatta vale ancora, per il tasto «Ricontrolla
+ * adesso» della console. Chi lo preme dieci volte di fila bussa al quadro una
+ * volta sola: il quadro tiene un freno per indirizzo (un gettone ogni quindici
+ * secondi), e un tasto premuto troppe volte non deve mai far dire di no al
+ * rinnovo vero. */
+export const ANCORA_FRESCA = 15_000;
+
 /* Le app di cui si tengono i gettoni. */
 export const APP = Object.freeze(["gdahome", "gdanav"]);
 
@@ -269,6 +276,19 @@ export class Licenze extends EventEmitter {
       return this.stato();
     })();
     return this._inCorso;
+  }
+
+  /** Il tasto «Ricontrolla adesso» della console: un giro subito, invece di
+   * aspettare quello delle sei ore. Serve dopo un regalo fatto dalla Gestione,
+   * e nei giorni del margine di un abbonamento: a ogni domanda il quadro
+   * chiede al negozio se e' stato rinnovato. Senza, la casa lo vede fino a
+   * sei ore dopo. Una domanda di pochi secondi fa vale ancora
+   * (`ANCORA_FRESCA`), andata bene o male. Come `rinnova`, non solleva mai:
+   * com'e' andata lo dice `ultima`. */
+  async ricontrolla() {
+    const ultima = this._esito;
+    if (ultima && this.adesso() - ultima.quando < ANCORA_FRESCA) return this.stato();
+    return this.rinnova();
   }
 
   /** Una ricevuta del negozio, girata al quadro che la controlla. */

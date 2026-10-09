@@ -170,7 +170,8 @@ c'è la **casa di prova** dell'add-on (dalla 1.10.1): un codice che vale fino a
    «Revisione», **senza** «Amministratore» e con l'accesso consentito.
 2. La casa deve avere l'add-on gdahome **1.10.4 o più nuovo**, restare accesa
    per tutta la revisione, ed essere **Premium**: dalla Gestione gdahome,
-   «Regala una licenza» alla casa, che duri più della revisione. Resta
+   nella scheda della casa (sezione «Case») si preme «Regala Premium», con una
+   durata più lunga della revisione. Resta
    Premium anche per Google, e a ogni versione non si cambia niente: sul
    telefono entrato col codice di prova la pagina Premium tiene in vista gli
    abbonamenti anche con la casa Premium (dall'app 1.10.4), e chi rivede per

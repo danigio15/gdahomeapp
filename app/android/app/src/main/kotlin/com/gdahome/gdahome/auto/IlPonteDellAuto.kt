@@ -30,6 +30,7 @@ package com.gdahome.gdahome.auto
 import android.content.Context
 import io.flutter.FlutterInjector
 import io.flutter.embedding.engine.FlutterEngine
+import io.flutter.embedding.engine.FlutterEngineCache
 import io.flutter.embedding.engine.dart.DartExecutor
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugins.GeneratedPluginRegistrant
@@ -56,6 +57,20 @@ object IlPonteDellAuto {
     @Synchronized
     fun sveglia(context: Context) {
         runCatching {
+            /* Il motore dell'app, se e' acceso: nella versione col navigatore
+             * in auto lo e' da quando si e' saliti (`IlNavigatoreInAuto`), e
+             * ha gia' il filo con la casa aperto. Accenderne un secondo voleva
+             * dire rifare tutto da capo — la casa, la stretta di mano, il
+             * centralino — e, se non bastavano dodici secondi, il comando si
+             * perdeva in silenzio dopo che l'auto aveva gia' detto «fatto».
+             * Se il messaggio arriva prima che il Dart lo ascolti, il comando
+             * resta nel file e lo esegue lui appena parte. */
+            val dellApp = FlutterEngineCache.getInstance().get(IlNavigatoreInAuto.MOTORE)
+            if (dellApp != null) {
+                MethodChannel(dellApp.dartExecutor.binaryMessenger, CANALE)
+                    .invokeMethod(GUARDA, null)
+                return
+            }
             val gia = motore
             if (gia != null) {
                 /* Il motore c'e' gia' e sta li' ad aspettare: gli si dice di

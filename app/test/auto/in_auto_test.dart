@@ -9,6 +9,9 @@ library;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gdahome/auto/in_auto.dart';
 import 'package:gdahome/auto/la_foto.dart';
+import 'package:gdahome/casa/archivio_delle_case.dart';
+import 'package:gdahome/casa/cassaforte.dart';
+import 'package:gdahome/casa/collegamento.dart';
 
 const _ricetta = RicettaDellAzione(
   id: '0|Cancello',
@@ -16,6 +19,19 @@ const _ricetta = RicettaDellAzione(
   servizio: 'toggle',
   entita: 'switch.cancello',
 );
+
+/// Un collegamento che non va da nessuna parte, e conta le chiusure.
+class _FiloFinto extends Collegamento {
+  _FiloFinto() : super(archivio: ArchivioDelleCase(CassaforteInMemoria()));
+  var aperture = 0;
+  var chiusure = 0;
+
+  @override
+  Future<void> apri({bool forza = false}) async => aperture += 1;
+
+  @override
+  Future<void> chiudi() async => chiusure += 1;
+}
 
 void main() {
   test('senza comando non si apre nessun filo', () async {
@@ -105,5 +121,45 @@ void main() {
     );
     expect(finita, ComeEFinitaInAuto.senzaPremium);
     expect(aperto, isFalse);
+  });
+
+  test(
+    'col filo dell\'app il comando passa di lì, e il filo resta aperto',
+    () async {
+      /* «Se clicco apri cancello non fa nulla, come se il comando non
+       arrivasse.» Nella versione col navigatore in auto il filo con la casa
+       e' gia' aperto nel motore dell'app: il comando lo usa, invece di
+       aprirne un altro da capo in un secondo motore — e non lo chiude. */
+      final dellApp = _FiloFinto();
+      var nuovo = false;
+      await eseguiIlComandoDellAuto(
+        prendiIlComando: () async => '0|Cancello',
+        leRicette: () async => const [_ricetta],
+        premium: () async => true,
+        laCasaDellApp: () => dellApp,
+        apriLaCasa: () {
+          nuovo = true;
+          return _FiloFinto();
+        },
+      );
+      expect(nuovo, isFalse, reason: 'nessun filo nuovo');
+      expect(
+        dellApp.aperture,
+        1,
+        reason: 'su un filo aperto apri non fa niente',
+      );
+      expect(dellApp.chiusure, 0, reason: 'il filo dell\'app non si chiude');
+    },
+  );
+
+  test('un filo aperto apposta si chiude dopo', () async {
+    final apposta = _FiloFinto();
+    await eseguiIlComandoDellAuto(
+      prendiIlComando: () async => '0|Cancello',
+      leRicette: () async => const [_ricetta],
+      premium: () async => true,
+      apriLaCasa: () => apposta,
+    );
+    expect(apposta.chiusure, 1);
   });
 }

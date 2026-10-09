@@ -43,7 +43,7 @@ name: gdahome
 #
 # Quello che non cambia: nel negozio «Aggiorna» compare **solo** se questo
 # numero si alza.
-version: "1.10.5"
+version: "1.10.6"
 slug: gdahome
 # Le virgolette non sono un vezzo: dentro c'e' un «due punti» seguito da uno
 # spazio, e in YAML quella e' la cosa che separa una chiave dal suo valore.
@@ -193,17 +193,19 @@ options:
     # non rispondono. Cosi' si accorge che qualcosa non va prima che tocchi a te
     # telefonargli.
     #
-    # Piu' **una cosa che numero non e'**, e te la diciamo prima: il **nome dei
-    # dispositivi che in quel momento non rispondono**. Solo quelli. Serve a chi
-    # deve venire a ripararli — un elenco di codici dice che qualcosa e' rotto e
-    # non dice cosa — e vuol dire che se la presa si chiama «Luce cucina», lui
-    # legge «Luce cucina».
+    # Piu' **due cose che numeri non sono**, e te le diciamo prima: il **nome
+    # dei dispositivi che in quel momento non rispondono** — serve a chi deve
+    # venire a ripararli: un elenco di codici dice che qualcosa e' rotto e non
+    # dice cosa, e se la presa si chiama «Luce cucina» lui legge «Luce cucina»
+    # — e il **nome delle cose che hanno un aggiornamento da fare**, che e' come
+    # Home Assistant le chiama nella sua pagina degli aggiornamenti.
     #
-    # Tutto il resto no: nessuno stato di nessun sensore, nessuna persona,
-    # nessun nome dei dispositivi che **funzionano**, nessuna stanza, il nome
-    # del tuo Wi-Fi no e il tuo indirizzo pubblico nemmeno. **Quello che parte
-    # lo puoi leggere**, parola per parola, nella scheda «Il quadro» di gdahome,
-    # dove c'e' anche il tasto per smettere.
+    # Tutto il resto no: se le luci sono accese o le porte aperte, le persone,
+    # le stanze, il nome del tuo Wi-Fi, il tuo indirizzo pubblico. (L'indirizzo
+    # della macchina **sulla rete di casa** si', e il segnale del Wi-Fi: a chi
+    # ripara servono.) **Quello che parte lo puoi leggere**, parola per parola,
+    # nella console di gdahome alla voce «Installatore», dove c'e' anche il
+    # tasto per smettere.
     #
     # Vuota vuol dire che non parte niente e non si apre nessuna connessione.
     quadro: ""

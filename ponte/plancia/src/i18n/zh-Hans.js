@@ -4227,4 +4227,9 @@ export default Object.freeze({
   "The word the stove shows on its display: ignition, working, brazier cleaning, shutdown… If the page does not know it, it shows it as it is.": "取暖炉在显示屏上写的词：点火、运行、燃烧盘清洁、熄火……页面不认识的词会原样显示。",
   "Without it, the thermostat's own reading is used.": "没有的话，就用温控器自己的读数。",
   "Working": "运行中",
+  "Air conditioners out of season": "非当季的空调",
+  "Radiators out of season": "非当季的暖气片",
+  "They show: ${periodo}. Switched on, they show anyway.": "显示时间：${periodo}。开启时始终显示。",
+  "Each one has its months in the dashboard configuration. Switched on, they show anyway.": "每台设备的月份在仪表板配置中设置。开启时始终显示。",
+  "Show them anyway": "仍然显示",
 });

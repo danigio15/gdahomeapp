@@ -4227,4 +4227,9 @@ export default Object.freeze({
   "The word the stove shows on its display: ignition, working, brazier cleaning, shutdown… If the page does not know it, it shows it as it is.": "Sobanın ekranında yazan kelime: ateşleme, çalışma, yanma haznesi temizliği, kapanma… Sayfa onu tanımıyorsa olduğu gibi gösterir.",
   "Without it, the thermostat's own reading is used.": "Yoksa termostatın kendi ölçümü kullanılır.",
   "Working": "Çalışıyor",
+  "Air conditioners out of season": "Sezon dışı klimalar",
+  "Radiators out of season": "Sezon dışı radyatörler",
+  "They show: ${periodo}. Switched on, they show anyway.": "Görünür: ${periodo}. Açık olanlar yine de görünür.",
+  "Each one has its months in the dashboard configuration. Switched on, they show anyway.": "Her birinin ayları panel yapılandırmasında. Açık olanlar yine de görünür.",
+  "Show them anyway": "Yine de göster",
 });
