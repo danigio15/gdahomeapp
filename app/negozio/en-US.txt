@@ -1,1 +1,1 @@
-From the app, Installer and gdahome management open without asking for the key. On a person's card the address is written properly, without "home". "Open in map" shows the person in the navigator without planning a route, and the map shows everyone at home. In your homes, the bin explains what it removes and the home disappears right away.
+In the car the navigator reads the battery from your Premium home again: no more "I don't know how much battery you have". Quick commands show up on the car screen without opening their page on the phone first.
