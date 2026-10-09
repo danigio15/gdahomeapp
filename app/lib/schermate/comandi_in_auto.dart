@@ -77,6 +77,34 @@ String laDistanza(int metri) {
   return '${km == km.roundToDouble() ? km.round() : km.toString().replaceAll('.', ',')} km';
 }
 
+/// I primi comandi scritti per l'auto anche senza aprire questa pagina.
+///
+/// Dal campo, sullo schermo dell'auto: «Nessun comando scelto», mentre sul
+/// telefono i comandi c'erano. Quelli che la pagina propone la prima volta —
+/// le azioni rapide della plancia — si scrivevano solo aprendola: chi non
+/// l'aveva mai aperta in auto non aveva niente. Adesso si scrivono appena la
+/// casa risponde. Solo se non c'e' gia' una scelta, e solo se c'e' qualcosa da
+/// proporre: un elenco vuoto scritto per sbaglio varrebbe «non voglio niente».
+Future<bool> proponiIComandiSeMancano(
+  Collegamento collegamento, {
+  Future<IComandiScelti?> Function() leggi = auto.leggiIComandiSeCi,
+  Future<bool> Function(IComandiScelti) scrivi = auto.scriviIComandi,
+  Future<AzioniDellaPlancia> Function()? azioni,
+}) async {
+  if (await leggi() != null) return false;
+  final dallaPlancia =
+      await (azioni?.call() ?? leAzioniDallaPlancia(collegamento));
+  final stato = collegamento.stato;
+  final scelti = iPrimiComandi(
+    azioni: dallaPlancia.comandi,
+    dellaCasa: stato == null ? const [] : iComandiDellaCasa(stato.tutte()),
+  );
+  if (scelti.comandi.isEmpty) return false;
+  /* Nel frattempo li ha scelti qualcuno sulla pagina: quelli restano. */
+  if (await leggi() != null) return false;
+  return scrivi(scelti);
+}
+
 /// Le azioni rapide della plancia, dalla sua configurazione nel ponte: tutte,
 /// non solo le sei della fotografia per l'auto. Senza casa collegata, quelle
 /// della fotografia.
