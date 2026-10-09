@@ -159,11 +159,38 @@ void _seguiLaCasa(Object chi, Collegamento? casa) {
   _filoDellaVettura = IlFiloDellaVettura(casa, _vettura, persone: _persone)
     ..avvia();
   _copiaIlPremium();
+  _proponiIComandiQuandoRisponde(casa);
+}
+
+/* I comandi rapidi per l'auto, la prima volta: appena la casa risponde
+ * (`proponiIComandiSeMancano`). Una volta per casa seguita. */
+StreamSubscription<void>? _attesaDeiComandi;
+
+void _proponiIComandiQuandoRisponde(Collegamento casa) {
+  unawaited(_attesaDeiComandi?.cancel());
+  _attesaDeiComandi = null;
+  var fatto = false;
+  Future<void> prova() async {
+    if (fatto || !casa.dentro) return;
+    fatto = true;
+    unawaited(_attesaDeiComandi?.cancel());
+    _attesaDeiComandi = null;
+    try {
+      await proponiIComandiSeMancano(casa);
+    } catch (_) {
+      /* Si riprova la prossima volta che si sale in macchina. */
+    }
+  }
+
+  _attesaDeiComandi = casa.cambiamenti.listen((_) => unawaited(prova()));
+  unawaited(prova());
 }
 
 /// [chi] non la segue piu': se era l'ultimo, il filo si ferma.
 void _lasciaLaCasa(Object chi) {
   if (!_chiLaSegue.remove(chi) || _chiLaSegue.isNotEmpty) return;
+  unawaited(_attesaDeiComandi?.cancel());
+  _attesaDeiComandi = null;
   _premiumDellaCasa?.removeListener(_copiaIlPremium);
   _premiumDellaCasa = null;
   _licenzaSeguita?.removeListener(_copiaIlPremium);

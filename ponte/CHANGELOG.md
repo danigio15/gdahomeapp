@@ -10,6 +10,17 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.10.8
+
+**In auto la batteria c'è.** Con la casa Premium il navigatore diceva «La
+batteria letta dall'auto fa parte di Premium» e in macchina «Non so quanta
+batteria hai», mentre gdahome la mostrava. Il Premium della casa arrivava
+mentre il navigatore si accendeva, e andava perso: adesso lo segue da subito.
+
+**I comandi rapidi in auto senza aprire la pagina.** Le azioni rapide della
+plancia arrivano sullo schermo dell'auto appena la casa risponde, anche se
+sul telefono non si è mai aperta «Comandi rapidi in auto».
+
 ## 1.10.7
 
 **I codici arrivano ai cruscotti.** Dall'app, «Gestione installatore» e

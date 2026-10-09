@@ -1,1 +1,1 @@
-Dall'app Gestione installatore e Gestione gdahome si aprono senza chiedere la chiave. Sulla card della persona l'indirizzo è scritto bene, senza «home». «Apri in mappa» mostra la persona nel navigatore senza calcolare il percorso, e sulla mappa ci sono tutte le persone di casa. Nelle tue case il cestino spiega cosa elimina e la casa sparisce subito.
+In auto il navigatore legge di nuovo la batteria dalla casa Premium: niente più «Non so quanta batteria hai». I comandi rapidi compaiono sullo schermo dell'auto anche senza aprire prima la pagina sul telefono.
