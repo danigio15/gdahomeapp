@@ -1123,6 +1123,12 @@ function percentualeDalDito(event, barra, verticale) {
 
 function onPointerDown(event) {
   tocco();
+  /* Un dito nuovo comincia da capo. La pressione lunga su una luce apre la
+   * finestra e lascia il segno, perché il tocco che segue non la spenga; ma
+   * il dito si alza sulla finestra, non sulla card, e quel tocco non arriva
+   * mai: il segno restava, e mangiava il primo tocco dopo — il clima o la
+   * tapparella non si aprivano. */
+  state.tenuto = false;
   const barra = event.target?.closest?.("[data-mu-cursore]");
   if (barra) {
     const verticale = barra.dataset.muCursore === "luce-alta";

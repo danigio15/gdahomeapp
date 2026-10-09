@@ -158,5 +158,10 @@ test.describe("la plancia a muro", () => {
       return parseFloat(getComputedStyle(n).fontSize) * zoom;
     });
     expect(corpo).toBeGreaterThanOrEqual(15);
+    /* Il dito si e' alzato sulla finestra, non sulla card: il tocco dopo la
+     * pressione lunga non va perso, e il clima si apre al primo tocco. */
+    await muro(page).locator('[data-mu-fa="chiudi"]').first().click();
+    await muro(page).locator('[data-mu-card][data-mu-entita="climate.soggiorno"]').click();
+    await expect(muro(page).locator(".mu-fin-clima")).toBeVisible();
   });
 });
