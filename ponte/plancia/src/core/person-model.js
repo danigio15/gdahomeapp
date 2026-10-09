@@ -300,7 +300,8 @@ function accorciaIndirizzo(riga, paese) {
     .map((parte) => clean(parte))
     .filter(Boolean);
   // Il paese in coda: quello scritto negli attributi, o l'ultima parte di tre o piu'.
-  if (parti.length > 1 && paese && parti.at(-1).toLowerCase() === paese.toLowerCase()) parti = parti.slice(0, -1);
+  if (parti.length > 1 && paese && parti.at(-1).toLowerCase() === paese.toLowerCase())
+    parti = parti.slice(0, -1);
   else if (parti.length >= 4 && !/\d/.test(parti.at(-1))) parti = parti.slice(0, -1);
   const pulite = [];
   for (const parte of parti) {
