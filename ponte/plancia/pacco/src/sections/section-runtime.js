@@ -13565,7 +13565,10 @@ var TINTE_CAPELLI = {
 };
 var TINTE_BARBA = {
   grigia: { rgb: [176, 178, 184], lift: 0.22 },
-  bionda: { rgb: [236, 190, 100], lift: 0.28 },
+  /* Piu' chiara e meno carica dei capelli biondi: la chioma bionda e' un
+   * render, la barba una tinta su pelo scuro, e con la stessa ricetta usciva
+   * color senape accanto a capelli color paglia. */
+  bionda: { rgb: [232, 206, 152], lift: 0.4 },
   rame: { rgb: [190, 92, 46], lift: 0.12 },
   castana: { rgb: [141, 92, 47], lift: 0.1 }
 };
@@ -13656,6 +13659,10 @@ var BARBA_DA_CAPELLI = Object.freeze({
   rame: "rame",
   castano: "castana"
 });
+function donatriceDellaBarba(scelte4, tintaBarba) {
+  const carnagione = tintaBarba ? "chiara" : scelte4.carnagione;
+  return AVATAR_TESTE[`${genereDi(scelte4.persona)}|barba|${carnagione}`] || null;
+}
 function coloreBarbaCoerente(scelte4) {
   if (scelte4.coloreBarba !== "naturale") return scelte4.coloreBarba;
   if (!personaHaCapelli(scelte4.persona)) return "naturale";
@@ -13671,7 +13678,8 @@ function testaEOperazioni(scelte4) {
       operazioni.push({
         tipo: "barba",
         foggia: scelte4.barba,
-        donatrice: AVATAR_TESTE[`${genereDi(scelte4.persona)}|barba|${scelte4.carnagione}`] || null,
+        donatrice: donatriceDellaBarba(scelte4, tintaBarba),
+        larga: genereDi(scelte4.persona) === "uomo",
         ...tintaBarba ? { rgb: tintaBarba.rgb, lift: tintaBarba.lift } : {}
       });
     return { testa: testa3, operazioni };
@@ -13699,7 +13707,11 @@ function testaEOperazioni(scelte4) {
         /* Sul render gia' barbuto la barba e' la sua: la maschera a
          * mandibola si calcola li'. Altrove arriva dal ritratto barbuto
          * della stessa carnagione, per genere. */
-        donatrice: barbaNativa ? null : AVATAR_TESTE[`${genereDi(scelte4.persona)}|barba|${scelte4.carnagione}`] || null,
+        donatrice: barbaNativa ? null : donatriceDellaBarba(scelte4, tintaBarba),
+        /* Il ritratto barbuto da uomo, ai lati del viso, ha solo barba: la
+         * maschera puo' arrivare fino al contorno. Quello da donna ha anche le
+         * ciocche lunghe, e li' resta stretta. */
+        larga: genereDi(scelte4.persona) === "uomo",
         ...tintaBarba ? { rgb: tintaBarba.rgb, lift: tintaBarba.lift } : {}
       });
   }
@@ -85580,13 +85592,13 @@ function immagine(nome) {
   return attesa;
 }
 var PELO = 110;
-function tingiPixel(dati, i, [tr, tg, tb], lift) {
+function tingiPixel(dati, i, [tr, tg, tb], lift, pieno = false) {
   const r = dati[i], g = dati[i + 1], b = dati[i + 2];
   const m = Math.max(r, g, b);
-  if (m >= PELO) return;
+  if (m >= PELO && !pieno) return;
   const lum = (r + g + b) / 3;
-  const k = 0.35 + lift + (0.65 - lift * 0.5) * (lum / PELO);
-  const peso = Math.min(1, (PELO - m) / 60);
+  const k = 0.35 + lift + (0.65 - lift * 0.5) * Math.min(1, lum / PELO);
+  const peso = pieno ? 1 : Math.min(1, (PELO - m) / 60);
   dati[i] = r + (Math.min(255, tr * k) - r) * peso;
   dati[i + 1] = g + (Math.min(255, tg * k) - g) * peso;
   dati[i + 2] = b + (Math.min(255, tb * k) - b) * peso;
@@ -85599,9 +85611,14 @@ function tintaCapelli(dati, lato, rgb, lift) {
     }
 }
 var confine = (x, lato, centro2 = 0.46, alzata = 0.14) => lato * (centro2 + alzata * ((x - lato / 2) / (lato / 2)) ** 2);
-function dentroLaCampana(x, y, lato) {
+function dentroLaCampana(x, y, lato, larga = false) {
   const dalCentro = Math.abs(x - lato / 2) / (lato / 2);
   const quota = y / lato;
+  if (larga) {
+    let semi = quota < 0.7 ? 0.8 : 0.8 - (quota - 0.7) / 0.27 * 0.42;
+    if (quota > 0.88) semi *= Math.max(0, 1 - (quota - 0.88) / 0.1);
+    return dalCentro <= semi;
+  }
   let semiLarghezza = quota < 0.68 ? 0.48 : 0.48 - (quota - 0.68) / 0.29 * 0.18;
   if (quota > 0.86) semiLarghezza *= Math.max(0, 1 - (quota - 0.86) / 0.11);
   return dalCentro <= semiLarghezza;
@@ -85621,13 +85638,18 @@ function pelleDelViso(dati, lato) {
   }
   return migliore;
 }
-function mascheraBarba(dati, lato) {
+var FINESTRE_DEGLI_OCCHI = Object.freeze([0.322, 0.672]);
+function negliOcchi(x, y, lato) {
+  if (y > lato * 0.585) return false;
+  return FINESTRE_DEGLI_OCCHI.some((cx) => Math.abs(x - lato * cx) < lato * 0.09);
+}
+function mascheraBarba(dati, lato, { cresci = true, larga = false } = {}) {
   const pelle = pelleDelViso(dati, lato);
   const soglia2 = pelle ? Math.max(40, Math.min(PELO, Math.round(pelle.m * 0.65))) : PELO;
   const maschera = new Uint8Array(lato * lato);
   const dentro3 = (x, y) => {
     const i = (y * lato + x) * 4;
-    return dati[i + 3] > 40 && y > confine(x, lato) && dentroLaCampana(x, y, lato);
+    return dati[i + 3] > 40 && y > confine(x, lato) && dentroLaCampana(x, y, lato, larga) && !negliOcchi(x, y, lato);
   };
   for (let y = Math.floor(lato * 0.36); y < lato * 0.97; y += 1)
     for (let x = 0; x < lato; x += 1) {
@@ -85636,7 +85658,7 @@ function mascheraBarba(dati, lato) {
         maschera[y * lato + x] = 1;
     }
   const rilassata = pelle ? Math.min(PELO, Math.round(pelle.m * 0.9)) : PELO;
-  if (rilassata > soglia2)
+  if (cresci && rilassata > soglia2)
     for (let giro = 0; giro < 4; giro += 1) {
       const orlo = [];
       for (let y = Math.floor(lato * 0.36); y < lato * 0.97; y += 1)
@@ -85652,6 +85674,21 @@ function mascheraBarba(dati, lato) {
       for (const p of orlo) maschera[p] = 1;
     }
   return maschera;
+}
+function sfumata(maschera, lato) {
+  let peso = Float32Array.from(maschera);
+  for (let passata = 0; passata < 3; passata += 1) {
+    const dopo = new Float32Array(peso.length);
+    for (let y = 2; y < lato - 2; y += 1)
+      for (let x = 2; x < lato - 2; x += 1) {
+        const p = y * lato + x;
+        let somma2 = 0;
+        for (let d = -2; d <= 2; d += 1) somma2 += peso[p + d] + peso[p + d * lato];
+        dopo[p] = somma2 / 10;
+      }
+    peso = dopo;
+  }
+  return peso;
 }
 function guancia(dati, lato) {
   const pelle = pelleDelViso(dati, lato);
@@ -85685,6 +85722,30 @@ function stratoBarba(dati, maschera, lato) {
   pennello.putImageData(uscita, 0, 0);
   return strato;
 }
+function lasciaLaBocca(strato, telaTesta) {
+  const lato = AVATAR_LATO;
+  const suo2 = strato.getContext("2d");
+  const barba = suo2.getImageData(0, 0, lato, lato);
+  const b = barba.data;
+  const viso = telaTesta.getContext("2d").getImageData(0, 0, lato, lato).data;
+  for (let y = Math.floor(lato * 0.55); y < lato * 0.86; y += 1)
+    for (let x = Math.floor(lato * 0.3); x < lato * 0.7; x += 1) {
+      const i = (y * lato + x) * 4;
+      const [r, g, bl] = [viso[i], viso[i + 1], viso[i + 2]];
+      if (viso[i + 3] > 40 && r > 100 && g < 90 && r - g > 70 && bl > 40 && r > bl)
+        b[i + 3] = 0;
+    }
+  suo2.putImageData(barba, 0, 0);
+  return strato;
+}
+function alSuoPosto(strato, innesto, telaTesta) {
+  const lato = AVATAR_LATO;
+  const { scala: scala2, x, y } = innesto || { scala: 1, x: 0, y: 0 };
+  const posato = doc.createElement("canvas");
+  posato.width = posato.height = lato;
+  posato.getContext("2d").drawImage(strato, x, y, lato * scala2, lato * scala2);
+  return lasciaLaBocca(posato, telaTesta);
+}
 function applicaBarba(telaTesta, op, donatrice) {
   const lato = AVATAR_LATO;
   const pennello = telaTesta.getContext("2d");
@@ -85698,19 +85759,22 @@ function applicaBarba(telaTesta, op, donatrice) {
   } else {
     dati = pennello.getImageData(0, 0, lato, lato).data;
   }
-  const maschera = mascheraBarba(dati, lato);
+  const maschera = mascheraBarba(dati, lato, { cresci: !op.rgb, larga: Boolean(op.larga) });
   if (op.rgb) {
     for (let p = 0; p < maschera.length; p += 1)
-      if (maschera[p]) tingiPixel(dati, p * 4, op.rgb, op.lift || 0);
+      if (maschera[p]) tingiPixel(dati, p * 4, op.rgb, op.lift || 0, true);
   }
   if (op.foggia === "rasata") {
-    const [sr, sg, sb] = guancia(dati, lato);
+    const [sr, sg, sb] = donatrice ? guancia(pennello.getImageData(0, 0, lato, lato).data, lato) : guancia(dati, lato);
+    const velo3 = sfumata(maschera, lato);
     for (let p = 0; p < maschera.length; p += 1)
-      if (maschera[p]) {
+      if (velo3[p] > 0) {
         const i = p * 4;
-        dati[i] += (sr - dati[i]) * 0.62;
-        dati[i + 1] += (sg - dati[i + 1]) * 0.62;
-        dati[i + 2] += (sb - dati[i + 2]) * 0.62;
+        if (dati[i + 3] < 40) continue;
+        const peso = 0.72 * velo3[p];
+        dati[i] += (sr - dati[i]) * peso;
+        dati[i + 1] += (sg - dati[i + 1]) * peso;
+        dati[i + 2] += (sb - dati[i + 2]) * peso;
       }
   }
   const coda = (destinazione, strato) => {
@@ -85790,13 +85854,13 @@ function applicaBarba(telaTesta, op, donatrice) {
       }
       pennello.save();
       pennello.globalCompositeOperation = "source-atop";
-      pennello.drawImage(strato, x, y, lato * scala2, lato * scala2);
+      pennello.drawImage(alSuoPosto(strato, op.innesto, telaTesta), 0, 0);
       pennello.restore();
       pennello.drawImage(pieno, x, y + alza, lato * scala2, pieno.height * scala2);
     } else {
       pennello.save();
       pennello.globalCompositeOperation = "source-atop";
-      pennello.drawImage(strato, x, y, lato * scala2, lato * scala2);
+      pennello.drawImage(alSuoPosto(strato, op.innesto, telaTesta), 0, 0);
       pennello.restore();
     }
   } else {

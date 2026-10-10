@@ -199,7 +199,7 @@ test("il sorteggio consegna una faccia completa dentro i cataloghi nuovi", () =>
 test("la barba «naturale» segue i capelli: bionda sui biondi, grigia sui bianchi", () => {
   /* Su una testa bionda una barba nera non e' naturale, e' un trucco. */
   for (const [coloreCapelli, atteso] of [
-    ["biondo", [236, 190, 100]],
+    ["biondo", [232, 206, 152]],
     ["bianco", [176, 178, 184]],
     ["rosso", [190, 92, 46]],
   ]) {
