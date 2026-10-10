@@ -1073,6 +1073,9 @@
     if (!elenco) return;
     var quante = plance ? plance.length : 0;
     trova("aggiungi-plancia").disabled = quante >= PLANCE_AL_MASSIMO || soloBase;
+    /* Modello e utenti servono solo a chi puo' aggiungerne una. */
+    trova("nuova-plancia").hidden = quante >= PLANCE_AL_MASSIMO || soloBase;
+    if (!trova("nuova-plancia").hidden) riempiGliUtentiDellaNuova();
     scriviIlNumerino("quanti-plance", quante);
     trova("plance-conta").textContent = due(
       quante + " di " + PLANCE_AL_MASSIMO,
@@ -1118,7 +1121,18 @@
           : due("aggiunta da te", "added by you")) +
         " · " +
         chi.join(" · ");
-      nome.appendChild(forte);
+      /* Una plancia a muro lo dice accanto al nome: chi la apre sul telefono
+       * e trova un pannello invece della plancia deve poterlo leggere qui. */
+      if (una.a_muro) {
+        var rigaDelTitolo = vediPagina.createElement("div");
+        rigaDelTitolo.className = "riga-del-nome";
+        var aMuro = vediPagina.createElement("span");
+        aMuro.className = "etichetta-muro";
+        aMuro.textContent = due("📟 a muro", "📟 on the wall");
+        rigaDelTitolo.appendChild(forte);
+        rigaDelTitolo.appendChild(aMuro);
+        nome.appendChild(rigaDelTitolo);
+      } else nome.appendChild(forte);
       nome.appendChild(sotto);
       riga.appendChild(nome);
 
@@ -2387,15 +2401,92 @@
     tasto.disabled = true;
     chiedi("api/plance", {
       method: "POST",
-      body: JSON.stringify({ titolo: casella.value }),
+      body: JSON.stringify({
+        titolo: casella.value,
+        modello: ilModelloScelto(),
+        utenti: gliUtentiScelti(),
+      }),
     })
       .then(function () {
         casella.value = "";
+        /* Si riparte dalla scelta di sempre: a muro, e la vedono tutti. */
+        var caselle = trova("nuova-plancia").querySelectorAll("input");
+        for (var i = 0; i < caselle.length; i += 1)
+          caselle[i].checked = caselle[i].type === "radio" && caselle[i].value === "muro";
         return aggiornaTutto();
       })
       .catch(function (errore) {
         tasto.disabled = false;
         avvisaLePlance(errore.message);
+      });
+  }
+
+  /* Il modello della plancia nuova: a muro o classica. */
+  function ilModelloScelto() {
+    var scelto = trova("nuova-plancia").querySelector('input[name="modello-plancia"]:checked');
+    return scelto ? scelto.value : "classica";
+  }
+
+  /* Gli utenti spuntati per la plancia nuova. Nessuno vuol dire tutti, come
+   * nel cassetto «Chi la vede» delle plance che ci sono gia'. */
+  function gliUtentiScelti() {
+    var scelti = [];
+    var caselle = trova("utenti-plancia-nuova").querySelectorAll("input[data-utente]");
+    for (var i = 0; i < caselle.length; i += 1) {
+      if (caselle[i].checked) scelti.push(caselle[i].getAttribute("data-utente"));
+    }
+    return scelti;
+  }
+
+  /* Le spunte di chi vede la plancia nuova: si disegnano una volta, e non a
+   * ogni giro della pagina, se no le spunte appena messe sparirebbero. */
+  function riempiGliUtentiDellaNuova() {
+    var dove = trova("utenti-plancia-nuova");
+    if (!dove || dove.getAttribute("data-pieno") === "1") return;
+    dove.setAttribute("data-pieno", "1");
+    chiediGliUtenti()
+      .then(function (utenti) {
+        dove.textContent = "";
+        var spiega = vediPagina.createElement("p");
+        spiega.className = "minuta";
+        spiega.textContent =
+          utenti.length === 0
+            ? due(
+                "In questa casa c'è un utente solo: la vede lui.",
+                "This home has a single user: they see it.",
+              )
+            : due(
+                "Nessuno spuntato: la vedono tutti. Per un tablet a muro, spunta l'utente con cui è entrato il tablet.",
+                "Nobody ticked: everyone sees it. For a wall tablet, tick the user the tablet signed in with.",
+              );
+        dove.appendChild(spiega);
+        utenti.forEach(function (uno) {
+          var riga = vediPagina.createElement("label");
+          riga.className = "spunta";
+          var casella = vediPagina.createElement("input");
+          casella.type = "checkbox";
+          casella.setAttribute("data-utente", uno.id);
+          var nome = vediPagina.createElement("span");
+          /* `textContent`: il nome di un utente l'ha scritto una persona. */
+          nome.textContent =
+            uno.nome + (uno.amministratore ? due(" · amministratore", " · admin") : "");
+          riga.appendChild(casella);
+          riga.appendChild(nome);
+          dove.appendChild(riga);
+        });
+      })
+      .catch(function () {
+        /* Senza utenti si aggiunge lo stesso: la vedono tutti, e si
+         * restringe dopo dal suo «Chi la vede». */
+        dove.removeAttribute("data-pieno");
+        dove.textContent = "";
+        var spiega = vediPagina.createElement("p");
+        spiega.className = "minuta";
+        spiega.textContent = due(
+          "Non riesco a chiedere gli utenti a Home Assistant: la vedranno tutti, e la restringi dopo da «Chi la vede».",
+          "I can't ask Home Assistant for the users: everyone will see it, and you can restrict it later from «Who sees it».",
+        );
+        dove.appendChild(spiega);
       });
   }
 

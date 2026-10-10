@@ -24,6 +24,7 @@ import { BASE } from "./plancia.js";
 import { laVede, vedeQualcosa } from "./plance.js";
 import { Cucitura } from "./cucitura.js";
 import { eConfigurata } from "./configurazione.js";
+import { aggiungiUnaPlancia, conIlModello } from "./plancia-nuova.js";
 import { conLePremesse, linguaPulita, paginaDellaLingua } from "./premesse.js";
 import { qrInPng, qrInSvg } from "./qr.js";
 import { impronta } from "./segreti.js";
@@ -1097,7 +1098,10 @@ async function api({
     if (metodo === "GET") {
       /* `limitata`: con gdahome Base la plancia e' una, e la console spegne
        * il tasto «Aggiungi» invece di farlo premere per un no. */
-      json(risposta, { plance: plance.elenco(), limitata: licenze?.limitata === true });
+      json(risposta, {
+        plance: conIlModello(plance.elenco(), configurazione),
+        limitata: licenze?.limitata === true,
+      });
       return;
     }
     let detto = {};
@@ -1111,8 +1115,13 @@ async function api({
     }
     try {
       if (metodo === "POST") {
-        const quale = plance.aggiungi(detto?.titolo);
-        json(risposta, { plance: plance.elenco(), quale }, 201);
+        /* Il modello — classica o a muro — e chi la vede si scelgono gia'
+         * qui, insieme al nome: una plancia a muro nasce accesa. */
+        const quale = aggiungiUnaPlancia(
+          { plance, configurazione, registro },
+          { titolo: detto?.titolo, modello: detto?.modello, utenti: detto?.utenti },
+        );
+        json(risposta, { plance: conIlModello(plance.elenco(), configurazione), quale }, 201);
         return;
       }
       if (metodo === "PATCH") {
@@ -1127,7 +1136,7 @@ async function api({
         else if (typeof detto?.solo_admin === "boolean")
           quale = plance.soloChiAmministra(detto?.profilo, detto.solo_admin);
         else quale = plance.rinomina(detto?.profilo, detto?.titolo);
-        json(risposta, { plance: plance.elenco(), quale });
+        json(risposta, { plance: conIlModello(plance.elenco(), configurazione), quale });
         return;
       }
       if (metodo === "DELETE") {
@@ -1312,7 +1321,7 @@ async function api({
        * Viaggiano insieme allo stato e non in una chiamata loro: questa pagina
        * lo stato lo chiede ogni dieci secondi, e un secondo giro per tre
        * righe sarebbe un giro per niente. */
-      plance: plance ? plance.elenco() : [],
+      plance: plance ? conIlModello(plance.elenco(), configurazione) : [],
       /* Se questa casa risponde alle chat di assistenza.
        *
        * E' l'unico segno che la chiave della console e' arrivata dov'e' andata

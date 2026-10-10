@@ -100,6 +100,8 @@ import { installAlberatura } from "./alberatura-del-config-section.js";
 import { installIlDitoScorreOTocca } from "./il-dito-scorre-o-tocca-section.js";
 import { installElencoDelleSezioni } from "./lelenco-delle-sezioni-section.js";
 import { installModoChiosco } from "./modo-chiosco-section.js";
+import { installPlanciaAMuro } from "./plancia-a-muro-section.js";
+import { installPlanciaAMuroEditor } from "./plancia-a-muro-editor-section.js";
 import { installTestaFissa } from "./testa-fissa-section.js";
 import { installBatterie } from "./batterie-section.js";
 import { installBatterieEditor } from "./batterie-editor-section.js";
@@ -1147,6 +1149,10 @@ export function installSectionRuntime() {
     senzaCadere(installAllerteEditor);
     senzaCadere(installRifiuti);
     senzaCadere(installRifiutiEditor);
+    /* La plancia a muro: il pannello per il tablet fisso, e la sua scheda nel
+     * config. Dopo il chiosco, che accende quando serve. */
+    senzaCadere(installPlanciaAMuro);
+    senzaCadere(installPlanciaAMuroEditor);
     senzaCadere(installVarchi);
     senzaCadere(installVarchiEditor);
     senzaCadere(installPresenza);
@@ -1292,6 +1298,8 @@ export function installSectionRuntime() {
         "allerte-editor",
         "rifiuti",
         "rifiuti-editor",
+        "plancia-a-muro",
+        "plancia-a-muro-editor",
         "varchi",
         "varchi-editor",
         "presenza",

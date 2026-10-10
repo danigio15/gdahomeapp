@@ -570,6 +570,49 @@ async function attendi(condizione, entro = 5000) {
   throw new Error("l'attesa e' scaduta");
 }
 
+test("dalla scheda dell'add-on una plancia nasce col suo modello e con chi la vede", async () => {
+  const b = await banco();
+  try {
+    /* «A muro» e un utente solo: un tablet in ingresso, entrato con l'utente
+     * dell'ospite. La plancia nasce gia' a muro, senza aprirne il config. */
+    const aggiunta = await prendi(`${b.consolle}/api/plance`, {
+      method: "POST",
+      body: JSON.stringify({ titolo: "Tablet ingresso", modello: "muro", utenti: [UN_OSPITE] }),
+    });
+    assert.equal(aggiunta.status, 201);
+    const { quale, plance } = await aggiunta.json();
+    assert.equal(quale.profilo, "tablet-ingresso");
+    assert.equal(quale.a_muro, true);
+    assert.deepEqual(quale.utenti, [UN_OSPITE]);
+    assert.deepEqual(
+      plance.map((una) => [una.profilo, una.a_muro]),
+      [
+        ["primary", false],
+        ["tablet-ingresso", true],
+      ],
+    );
+
+    /* La classica resta quella di prima: nasce vuota, e la vedono tutti. */
+    const classica = await (
+      await prendi(`${b.consolle}/api/plance`, {
+        method: "POST",
+        body: JSON.stringify({ titolo: "Casa al mare", modello: "classica" }),
+      })
+    ).json();
+    assert.equal(classica.quale.a_muro, false);
+    assert.deepEqual(classica.quale.utenti, []);
+
+    /* E l'elenco di dopo lo ricorda. */
+    const dopo = await (await prendi(`${b.consolle}/api/plance`)).json();
+    assert.deepEqual(
+      dopo.plance.map((una) => una.a_muro),
+      [false, true, false],
+    );
+  } finally {
+    await b.spegni();
+  }
+});
+
 test("le plance si aggiungono, si rinominano e si tolgono dalla scheda dell'add-on", async () => {
   const b = await banco();
   try {
@@ -585,6 +628,8 @@ test("le plance si aggiungono, si rinominano e si tolgono dalla scheda dell'add-
         /* Vuoto: la vedono tutti quelli che entrano in casa. */
         utenti: [],
         solo_admin: false,
+        /* Classica: nessuno l'ha fatta partire a muro. */
+        a_muro: false,
       },
     ]);
 

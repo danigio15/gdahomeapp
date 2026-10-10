@@ -47,6 +47,8 @@ const TAB_ICONS = Object.freeze({
   ups: "🔌",
   allerte: "⚠️",
   rifiuti: "♻️",
+  muro: "📟",
+  scollegati: "📡",
   /* Le due della beta.12: la Musica (#269) e le entita' che uno si aggiunge
    * (#271). Senza il loro simbolo qui la linguetta restava intera anche dove
    * la colonna si stringe, ed e' lo stesso difetto delle quattro sopra. */
@@ -94,6 +96,7 @@ const OGGETTO_DELLA_SCHEDA = Object.freeze({
   ups: "ups",
   allerte: "allerte",
   rifiuti: "rifiuti",
+  muro: "widget",
   runtime: "runtime",
   telecamere: "telecamere",
   /* Le sezioni che si fa l'utente (#262): questa colonna vuole un disegno per
@@ -114,6 +117,10 @@ const OGGETTO_DELLA_SCHEDA = Object.freeze({
    * questa tabella perche' non e' dove si lavora, ed e' la terza volta che la
    * prova la trova nuda. */
   varchi: "varchi",
+  /* I dispositivi che non rispondono: il disegno che porta la loro tessera.
+   * Il nome della scheda non e' il nome del disegno, e la prova l'ha trovata
+   * nuda per la quarta volta. */
+  scollegati: "nonrisponde",
 });
 
 const FLOW_LOADS = Object.freeze({
