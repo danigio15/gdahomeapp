@@ -192,6 +192,8 @@ jobs:
           set -euo pipefail
           apk=$(ls app/build/orologio/outputs/apk/release/*.apk | head -1)
           adb install -r "$apk"
+          # L'ora a 24 ore, come la vede chi la compra qui (e come l'Apple Watch).
+          adb shell settings put system time_12_24 24
           pacchetto=$(adb shell pm list packages | tr -d '\r' | sed -n 's/^package://p' | grep '^com\.gdahome\.gdahome' | head -1)
           mkdir -p vetrina/wear-os
           n=1
