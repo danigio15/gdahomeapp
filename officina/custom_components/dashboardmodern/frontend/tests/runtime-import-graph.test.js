@@ -1524,8 +1524,11 @@ test("production graph is single-owner, acyclic and contains no facade pass-thro
   // `sections/plancia-a-muro-section.js` e la sua scheda nel config.
   // 425 con `sections/ricordati-di-salvare-section.js`: un'entita' scritta nel
   // config e non salvata si chiede prima di cambiare scheda.
+  // 426 con `core/i-cerchi-delle-stanze.js`: i cerchi del flusso Energia per
+  // stanza, con dentro i loro elettrodomestici. 427 con
+  // `core/kwh-dalla-potenza.js`: i kilowattora di chi ha solo la potenza.
   assert.ok(
-    relative.length <= 425,
+    relative.length <= 427,
     `production graph unexpectedly grew to ${relative.length} modules`,
   );
   assertAcyclic(edges);

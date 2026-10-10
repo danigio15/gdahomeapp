@@ -169,6 +169,9 @@ for (const variant of PRIMARY) {
     await expect(profile.locator(".dm-vehicle-profile-icon")).not.toContainText("🚗");
 
     await openEditor(page, "sez2");
+    /* Coi veicoli salvati la scheda mostra l'elenco: marca e modello si
+     * aprono con la matita del veicolo. */
+    await page.locator("#ed-body [data-ev-edit]").first().click();
     const appearance = page.locator("#ed-body [data-ev-appearance]");
     await expect(appearance).toBeVisible();
     await expect(appearance.locator("select[data-brand]")).toHaveValue("Leapmotor");
