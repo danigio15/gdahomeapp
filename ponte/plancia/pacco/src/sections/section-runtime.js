@@ -16000,7 +16000,14 @@ function pillolaDellaCaldaia() {
 function spiegaLaCasellaCaldaia(corpo3) {
   const casella3 = corpo3?.querySelector?.('[data-ref="switch.caldaia"]');
   const riquadro = casella3?.closest?.(".ed-slot");
-  if (!riquadro || riquadro.querySelector("[data-dm-termico-aiuto]")) return false;
+  if (!riquadro) return false;
+  if (!clean(casella3.value)) {
+    const entita3 = caldaiaDelleVoci(
+      vociTermiche(leggiConfig(), allStates() || {}, root.cdCfg?.("cd_entity_overrides") || {})
+    );
+    if (entita3) casella3.value = entita3;
+  }
+  if (riquadro.querySelector("[data-dm-termico-aiuto]")) return false;
   const riga3 = doc.createElement("div");
   riga3.className = "ed-hint dm-termico-aiuto";
   riga3.dataset.dmTermicoAiuto = "";
@@ -16010,6 +16017,34 @@ function spiegaLaCasellaCaldaia(corpo3) {
   );
   riquadro.append(riga3);
   return true;
+}
+function conLaCaldaia(voci3, entita3) {
+  const scelta3 = clean(entita3);
+  const elenco9 = Array.isArray(voci3) ? voci3 : [];
+  if (!scelta3.includes(".")) return elenco9;
+  if (elenco9.some((voce2) => clean(voce2?.entity) === scelta3)) return elenco9;
+  return [{ name: t("Caldaia", "Boiler"), entity: scelta3, icon: "🔥" }, ...elenco9];
+}
+function caldaiaDelleVoci(voci3) {
+  const voce2 = voci3.find((una) => REGEX_CALDAIA.test(clean(una?.name))) || voci3.find((una) => clean(una?.entity) === "switch.caldaia");
+  return clean(voce2?.entity);
+}
+function laCaldaiaEntraFraLeVoci(evento) {
+  const casella3 = evento.target;
+  if (!casella3?.matches?.('[data-ref="switch.caldaia"]')) return;
+  const entita3 = clean(casella3.value);
+  if (!entita3.includes(".")) return;
+  const prima = vociTermiche(
+    leggiConfig(),
+    allStates() || {},
+    root.cdCfg?.("cd_entity_overrides") || {}
+  );
+  const dopo = conLaCaldaia(prima, entita3);
+  if (dopo === prima && Array.isArray(leggiConfig())) return;
+  scriviConfig(dopo);
+  doc?.querySelectorAll?.("#ed-body [data-dm-termico-caldo]").forEach((nodo2) => nodo2.remove());
+  montaEditor();
+  disegnaPannello();
 }
 function rigaEditor(voce2, indice) {
   const nodo2 = doc.createElement("div");
@@ -16133,6 +16168,7 @@ function installTermicoDelCaldo() {
       montaEditor();
     });
   }
+  doc.addEventListener("change", laCaldaiaEntraFraLeVoci);
   doc.addEventListener(
     "click",
     (evento) => {
