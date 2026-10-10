@@ -10,6 +10,25 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.10.10
+
+**La plancia a muro (Premium).** Una plancia può diventare un pannello per un
+tablet a muro o un NSPanel: una schermata sola, comandi grandi, niente menu.
+Fino a quattro pagine — Stanza, Scene, Ingresso — con le linguette in alto o
+lo swipe, in orizzontale e in verticale; sugli schermi piccoli la forma
+compatta, dove un tocco accende la luce e tenendo premuto si apre la sua
+finestra. Riposo con l'orologio, schermo nero di notte, risveglio da un
+sensore, uscita col PIN tenendo premuto l'orologio. Le stanze, le luci e le
+azioni le prende dalla plancia principale: non si configura niente due volte.
+
+**Una plancia nuova sceglie il modello e chi la vede.** In «Plance» si sceglie
+Classica o A muro e si spuntano gli utenti, insieme al nome. Quella a muro
+nasce già pronta, con le pagine prese dalla principale; l'elenco dice quali
+plance partono a muro.
+
+**Il config.** «Dispositivi non connessi» ha il suo disegno nella colonna del
+config.
+
 ## 1.10.9
 
 **Acquari e terrari negli Animali.** La sezione Animali tiene anche le vasche:
