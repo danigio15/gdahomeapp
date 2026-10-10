@@ -29,6 +29,9 @@ jobs:
   apple-watch:
     name: Apple Watch
     runs-on: macos-15
+    # Per scrivere il ramo della vetrina, e solo quello.
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
         with:
@@ -93,10 +96,27 @@ jobs:
           path: app/vetrina/apple-watch/*.png
           if-no-files-found: error
           retention-days: 30
+      # Anche in un ramo a parte, `vetrina/apple-watch`: dagli artefatti le schermate si
+      # scaricano solo passando da GitHub, da un ramo le legge chiunque possa
+      # leggere la repository (e le si apre una per una nel browser).
+      - name: Nel ramo della vetrina
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          cd app/vetrina/apple-watch
+          git init -q
+          git checkout -q -b vetrina
+          git add *.png
+          git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+            commit -q -m "La vetrina degli orologi, da ${GITHUB_SHA:0:7}"
+          git push -q -f "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" HEAD:refs/heads/vetrina/apple-watch
 
   wear-os:
     name: Wear OS
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
         with:
@@ -167,3 +187,18 @@ jobs:
           path: vetrina/wear-os/*.png
           if-no-files-found: error
           retention-days: 30
+      # Anche in un ramo a parte, `vetrina/wear-os`: dagli artefatti le schermate si
+      # scaricano solo passando da GitHub, da un ramo le legge chiunque possa
+      # leggere la repository (e le si apre una per una nel browser).
+      - name: Nel ramo della vetrina
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          cd vetrina/wear-os
+          git init -q
+          git checkout -q -b vetrina
+          git add *.png
+          git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+            commit -q -m "La vetrina degli orologi, da ${GITHUB_SHA:0:7}"
+          git push -q -f "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" HEAD:refs/heads/vetrina/wear-os
