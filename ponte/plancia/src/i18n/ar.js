@@ -1909,6 +1909,7 @@ export default Object.freeze({
   "Only with the soil below (%)": "فقط عندما تكون التربة أقل من (%)",
   "Open": "مفتوحة",
   "Open (as before)": "افتح (كما كان)",
+  "Open the menu": "افتح القائمة",
   "Open Assist": "افتح Assist",
   "Open GitHub": "فتح GitHub",
   "Open all": "فتح الكل",

@@ -284,4 +284,41 @@ test.describe("la plancia a muro", () => {
     await page.evaluate(() => document.getElementById("editor-modal").remove());
     await expect(muro(page)).toBeVisible();
   });
+
+  /* «Metti l'hamburger in alto come la dashboard main: in Home Assistant apre
+   * la barra laterale, nell'app il menu di gdahome.» Il ☰ del pannello preme
+   * quello della plancia, che fa l'una o l'altra cosa a seconda di chi la
+   * ospita; qui si guarda che lo prema, e che col blocco chieda il codice. */
+  test("il ☰ in cima apre il menu della plancia", async ({ page }, testInfo) => {
+    await apriLaCasaAMuro(page, testInfo, { muro: MURO_DI_PROVA });
+    const premuto = () =>
+      page.evaluate(() => {
+        window.__MENU_PREMUTO__ = 0;
+        const tasto = document.querySelector("body>header .ha-menu-btn");
+        tasto.onclick = () => (window.__MENU_PREMUTO__ += 1);
+      });
+    await premuto();
+    await muro(page).locator('[data-mu-fa="menu"]').click();
+    await expect.poll(() => page.evaluate(() => window.__MENU_PREMUTO__)).toBe(1);
+  });
+
+  test("col blocco il ☰ vuole il PIN", async ({ page }, testInfo) => {
+    await apriLaCasaAMuro(page, testInfo, {
+      muro: { ...MURO_DI_PROVA, blocco: { attivo: true, pin: "2468" } },
+    });
+    await page.evaluate(() => {
+      window.__MENU_PREMUTO__ = 0;
+      document.querySelector("body>header .ha-menu-btn").onclick = () =>
+        (window.__MENU_PREMUTO__ += 1);
+    });
+    await muro(page).locator('[data-mu-fa="menu"]').click();
+    await expect(muro(page).locator(".mu-fin-codice")).toBeVisible();
+    expect(await page.evaluate(() => window.__MENU_PREMUTO__)).toBe(0);
+    for (const k of ["2", "4", "6", "8", "✓"])
+      await muro(page).locator(`[data-mu-cifra="${k}"]`).click();
+    await expect.poll(() => page.evaluate(() => window.__MENU_PREMUTO__)).toBe(1);
+    /* Il pannello resta: il menu si apre sopra, non si esce dal muro. */
+    await expect(muro(page)).toBeVisible();
+    await expect(muro(page).locator(".mu-fin-codice")).toHaveCount(0);
+  });
 });

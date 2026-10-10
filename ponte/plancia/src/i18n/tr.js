@@ -1909,6 +1909,7 @@ export default Object.freeze({
   "Only with the soil below (%)": "Yalnızca toprak şunun altındayken (%)",
   "Open": "Açık",
   "Open (as before)": "Aç (eskisi gibi)",
+  "Open the menu": "Menüyü aç",
   "Open Assist": "Assist'i aç",
   "Open GitHub": "GitHub'ı aç",
   "Open all": "Tümünü aç",

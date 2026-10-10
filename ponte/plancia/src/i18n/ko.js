@@ -1909,6 +1909,7 @@ export default Object.freeze({
   "Only with the soil below (%)": "토양이 이 값 미만일 때만 (%)",
   "Open": "열림",
   "Open (as before)": "열기 (지금까지처럼)",
+  "Open the menu": "메뉴 열기",
   "Open Assist": "Assist 열기",
   "Open GitHub": "GitHub 열기",
   "Open all": "전체 열기",

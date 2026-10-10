@@ -1909,6 +1909,7 @@ export default Object.freeze({
   "Only with the soil below (%)": "土壌がこれ未満のときだけ (%)",
   "Open": "開",
   "Open (as before)": "開ける（これまでどおり）",
+  "Open the menu": "メニューを開く",
   "Open Assist": "Assist を開く",
   "Open GitHub": "GitHub を開く",
   "Open all": "すべて開く",

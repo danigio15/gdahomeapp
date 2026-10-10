@@ -1909,6 +1909,7 @@ export default Object.freeze({
   "Only with the soil below (%)": "केवल तब जब मिट्टी इससे कम हो (%)",
   "Open": "खुला",
   "Open (as before)": "खोलो (पहले जैसा)",
+  "Open the menu": "मेनू खोलें",
   "Open Assist": "Assist खोलें",
   "Open GitHub": "GitHub खोलें",
   "Open all": "सब खोलें",

@@ -750,6 +750,7 @@ export const SOURCE_INDEX = Object.freeze({
   "Apri il cruscotto": "Open the console",
   "apri il dettaglio": "open the detail",
   "Apri il gruppo ${nome}": "Open the ${nome} group",
+  "Apri il menu": "Open the menu",
   "Apri in mappa": "Open in map",
   "Apri l'accordion Rooms per modificare": "Open the Rooms accordion to edit",
   "Apri l'accordion Stanze per modificare": "Open the Rooms accordion to edit",

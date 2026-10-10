@@ -1909,6 +1909,7 @@ export default Object.freeze({
   "Only with the soil below (%)": "Seulement si le sol est en dessous (%)",
   "Open": "Ouvert",
   "Open (as before)": "Ouvrir (comme avant)",
+  "Open the menu": "Ouvrir le menu",
   "Open Assist": "Ouvrir Assist",
   "Open GitHub": "Ouvrir GitHub",
   "Open all": "Tout ouvrir",

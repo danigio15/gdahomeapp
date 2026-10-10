@@ -2262,6 +2262,7 @@ var SOURCE_INDEX = Object.freeze({
   "Apri il cruscotto": "Open the console",
   "apri il dettaglio": "open the detail",
   "Apri il gruppo ${nome}": "Open the ${nome} group",
+  "Apri il menu": "Open the menu",
   "Apri in mappa": "Open in map",
   "Apri l'accordion Rooms per modificare": "Open the Rooms accordion to edit",
   "Apri l'accordion Stanze per modificare": "Open the Rooms accordion to edit",
@@ -76990,17 +76991,24 @@ function fonteDiQui() {
 var stato = (id) => allStates()?.[id] || null;
 var attributi = (id) => stato(id)?.attributes || {};
 var dominio2 = (id) => String(id || "").split(".")[0];
-var acceso4 = (id) => ["on", "open", "opening", "heat", "cool", "heat_cool", "auto", "dry", "fan_only"].includes(String(stato(id)?.state));
+var acceso4 = (id) => ["on", "open", "opening", "heat", "cool", "heat_cool", "auto", "dry", "fan_only"].includes(
+  String(stato(id)?.state)
+);
 var numero39 = (valore3) => {
   const n = Number(valore3);
   return Number.isFinite(n) ? n : null;
 };
-var decimale = (valore3, cifre2 = 1) => numero39(valore3) === null ? "—" : Number(valore3).toLocaleString(locale(), { minimumFractionDigits: 0, maximumFractionDigits: cifre2 });
+var decimale = (valore3, cifre2 = 1) => numero39(valore3) === null ? "—" : Number(valore3).toLocaleString(locale(), {
+  minimumFractionDigits: 0,
+  maximumFractionDigits: cifre2
+});
 var nomeDi7 = (id, scelto = "", fonte = state107.fonte) => {
   if (clean(scelto)) return clean(scelto);
-  const dispositivo = [...fonte?.luci || [], ...fonte?.clima || [], ...fonte?.tapparelle || []].find(
-    (d) => d.entity === id
-  );
+  const dispositivo = [
+    ...fonte?.luci || [],
+    ...fonte?.clima || [],
+    ...fonte?.tapparelle || []
+  ].find((d) => d.entity === id);
   return clean(dispositivo?.name) || clean(attributi(id).friendly_name) || id;
 };
 var progressivo = 0;
@@ -77042,8 +77050,10 @@ function servizioDellAzione(azione) {
   if (!azione || !eUnaScena(azione)) return null;
   const id = clean(azione.entity);
   const d = dominio2(id);
-  if (d === "scene" || d === "script") return { domain: d, service: "turn_on", data: { entity_id: id } };
-  if (d === "button" || d === "input_button") return { domain: d, service: "press", data: { entity_id: id } };
+  if (d === "scene" || d === "script")
+    return { domain: d, service: "turn_on", data: { entity_id: id } };
+  if (d === "button" || d === "input_button")
+    return { domain: d, service: "press", data: { entity_id: id } };
   if ((d === "select" || d === "input_select") && azione.option)
     return { domain: d, service: "select_option", data: { entity_id: id, option: azione.option } };
   if (d === "lock") return { domain: d, service: "unlock", data: { entity_id: id } };
@@ -77163,7 +77173,8 @@ function statoInParole(id) {
     unavailable: t("Non disponibile", "Unavailable"),
     unknown: "—"
   };
-  if (dominio2(id) === "scene" || dominio2(id) === "button" || dominio2(id) === "input_button") return "";
+  if (dominio2(id) === "scene" || dominio2(id) === "button" || dominio2(id) === "input_button")
+    return "";
   return parole4[v] || v;
 }
 var MODELLI_SCRITTI = () => ({
@@ -77233,6 +77244,7 @@ function testa(pagina2, muro) {
     (p, i) => `<button type="button" role="tab" class="${i === state107.pagina ? "si" : ""}" style="--acc:${ACCENTO_DEL_MODELLO[p.modello]}" data-mu-pagina="${i}" aria-selected="${i === state107.pagina}">${disegno(clean(p.disegno) || DISEGNO_DEL_MODELLO[p.modello], 22, `ling-${p.id}`)}<span>${esc(titoloDi(p))}</span></button>`
   ).join("")}</div>` : "";
   return `<div class="mu-carta mu-testa" style="--acc:${accento}">
+    <button type="button" class="mu-menu" data-mu-fa="menu" aria-label="${esc(t("Apri il menu", "Open the menu"))}"><span></span><span></span><span></span></button>
     <div class="mu-titolo"><div class="mu-tit">${esc(titoloDi(pagina2))}</div><div class="mu-et mu-sot">${esc(SOTTO()[pagina2.modello])}</div></div>
     ${linguette3}
     <div class="mu-ora" data-mu-orologio>${m && numero39(m.temperatura) !== null ? `<div class="mu-meteo">${disegno("meteo", 44, "testa-meteo")}<div><b>${decimale(m.temperatura, 0)}°</b><div class="mu-et">${esc(PAROLE_DEL_METEO()[m.condizione] || "")}</div></div></div><span class="mu-sep"></span>` : ""}<div><div class="mu-h">${esc(o.ora)}</div><div class="mu-d">${esc(o.giorno)}</div></div></div>
@@ -77268,11 +77280,26 @@ function pillole(pagina2) {
   const luci = comandiDellaPagina(pagina2, state107.fonte).filter((c) => c.tipo === "luce");
   const accese = luci.filter((c) => acceso4(c.entita)).length;
   if (luci.length)
-    voci3.push(["luci", "#f59e0b", String(accese), accese === 1 ? t("luce accesa", "light on") : t("luci accese", "lights on")]);
+    voci3.push([
+      "luci",
+      "#f59e0b",
+      String(accese),
+      accese === 1 ? t("luce accesa", "light on") : t("luci accese", "lights on")
+    ]);
   if (riga3.clima !== false && stanza?.temp && numero39(stato(stanza.temp)?.state) !== null)
-    voci3.push(["temperatura", "#ef4444", `${decimale(stato(stanza.temp).state)}°`, t("in stanza", "in the room")]);
+    voci3.push([
+      "temperatura",
+      "#ef4444",
+      `${decimale(stato(stanza.temp).state)}°`,
+      t("in stanza", "in the room")
+    ]);
   if (riga3.clima !== false && stanza?.hum && numero39(stato(stanza.hum)?.state) !== null)
-    voci3.push(["umidita", "#0ea5e9", `${decimale(stato(stanza.hum).state, 0)}%`, t("umidità", "humidity")]);
+    voci3.push([
+      "umidita",
+      "#0ea5e9",
+      `${decimale(stato(stanza.hum).state, 0)}%`,
+      t("umidità", "humidity")
+    ]);
   const centrale = centraleDelMuro(pagina2);
   if (riga3.antifurto !== false && centrale && stato(centrale)) {
     const s = String(stato(centrale).state);
@@ -77285,7 +77312,8 @@ function pillole(pagina2) {
   }
   if (riga3.persone !== false) {
     const persone3 = personeInCasa();
-    if (persone3.tutte) voci3.push(["persone", "#2563eb", String(persone3.inCasa), t("in casa", "at home")]);
+    if (persone3.tutte)
+      voci3.push(["persone", "#2563eb", String(persone3.inCasa), t("in casa", "at home")]);
   }
   if (!voci3.length) return "";
   return `<div class="mu-carta mu-pillole">${voci3.map(
@@ -77309,7 +77337,9 @@ var dimmerabile = (id) => {
   if (Array.isArray(modi)) return modi.some((m) => m !== "onoff");
   return numero39(attributi(id).brightness) !== null;
 };
-var colorabile = (id) => (attributi(id).supported_color_modes || []).some((m) => ["hs", "rgb", "rgbw", "rgbww", "xy"].includes(m));
+var colorabile = (id) => (attributi(id).supported_color_modes || []).some(
+  (m) => ["hs", "rgb", "rgbw", "rgbww", "xy"].includes(m)
+);
 function cardLuce(c, i) {
   const id = c.entita;
   const on = acceso4(id);
@@ -77493,9 +77523,33 @@ function paginaIngressoCompatta(pagina2) {
       dati: `data-mu-fa="finestra-antifurto"`,
       dove: "c-allarme"
     }) : "",
-    ing.telecamera ? tessera({ chiave: "citofono", accento: "#2563eb", etichetta: t("Citofono", "Intercom"), titolo: nomeDi7(ing.telecamera), sotto: "", dati: `data-mu-fa="finestra-citofono"`, dove: "c-citofono" }) : "",
-    ing.apri ? tessera({ chiave: "varchi", accento: "#0ea5e9", etichetta: t("Apri", "Open"), titolo: nomeDi7(ing.apri, ing.nomeApri), sotto: "", dati: `data-mu-fa="apri" data-mu-entita="${esc(ing.apri)}"`, dove: "c-apri1" }) : "",
-    ing.apri2 ? tessera({ chiave: "aperture", accento: "#0ea5e9", etichetta: t("Apri", "Open"), titolo: nomeDi7(ing.apri2, ing.nomeApri2), sotto: "", dati: `data-mu-fa="apri" data-mu-entita="${esc(ing.apri2)}"`, dove: "c-apri2" }) : "",
+    ing.telecamera ? tessera({
+      chiave: "citofono",
+      accento: "#2563eb",
+      etichetta: t("Citofono", "Intercom"),
+      titolo: nomeDi7(ing.telecamera),
+      sotto: "",
+      dati: `data-mu-fa="finestra-citofono"`,
+      dove: "c-citofono"
+    }) : "",
+    ing.apri ? tessera({
+      chiave: "varchi",
+      accento: "#0ea5e9",
+      etichetta: t("Apri", "Open"),
+      titolo: nomeDi7(ing.apri, ing.nomeApri),
+      sotto: "",
+      dati: `data-mu-fa="apri" data-mu-entita="${esc(ing.apri)}"`,
+      dove: "c-apri1"
+    }) : "",
+    ing.apri2 ? tessera({
+      chiave: "aperture",
+      accento: "#0ea5e9",
+      etichetta: t("Apri", "Open"),
+      titolo: nomeDi7(ing.apri2, ing.nomeApri2),
+      sotto: "",
+      dati: `data-mu-fa="apri" data-mu-entita="${esc(ing.apri2)}"`,
+      dove: "c-apri2"
+    }) : "",
     uscita ? tessera({
       chiave: spento ? "aperture" : "home",
       accento: "#0ea5e9",
@@ -77505,7 +77559,14 @@ function paginaIngressoCompatta(pagina2) {
       dati: `data-mu-fa="azione" data-mu-azione="${esc(uscita.name)}" data-mu-conferma="${pagina2.confermaUscita ? 1 : ""}"`,
       dove: "c-uscita"
     }) : "",
-    ing.persone && persone3.tutte ? tessera({ chiave: "persone", accento: "#2563eb", etichetta: t("In casa", "At home"), titolo: String(persone3.inCasa), sotto: "", dove: "c-persone" }) : ""
+    ing.persone && persone3.tutte ? tessera({
+      chiave: "persone",
+      accento: "#2563eb",
+      etichetta: t("In casa", "At home"),
+      titolo: String(persone3.inCasa),
+      sotto: "",
+      dove: "c-persone"
+    }) : ""
   ].filter(Boolean);
   return `<div class="mu-g6">${tessere.join("")}</div>`;
 }
@@ -77532,7 +77593,9 @@ function paginaIngresso(pagina2) {
       ${modi.length ? `<div class="mu-seg mu-modi">${modi.map((m) => {
     const attivo = m.mode === "disarm" && spento || ALARM_MODES.find((x) => x.mode === m.mode)?.state === valore3;
     return `<button type="button" class="${attivo ? "si" : ""}" data-mu-fa="allarme" data-mu-modo="${esc(m.mode)}">${esc(PAROLE_DEI_MODI()[m.mode] || m.mode)}</button>`;
-  }).join("")}</div><div class="mu-et mu-nota">${esc(t("Il codice si chiede prima di inserire", "The code is asked before arming"))}</div>` : ""}
+  }).join(
+    ""
+  )}</div><div class="mu-et mu-nota">${esc(t("Il codice si chiede prima di inserire", "The code is asked before arming"))}</div>` : ""}
     </div>
     <div class="mu-carta mu-citofono">
       <div class="mu-video">${telecamera ? `<img data-mu-telecamera="${esc(telecamera)}" alt="">` : `<div class="mu-video-vuoto">${disegno("telecamere", 80, "tele-vuota")}</div>`}<span class="mu-live">${esc(telecamera ? nomeDi7(telecamera) : t("Nessuna telecamera", "No camera"))}</span></div>
@@ -77584,7 +77647,11 @@ function finestra4() {
         ${colorabile(id) || (attributi(id).supported_color_modes || []).includes("color_temp") ? `<div><span class="mu-et">${esc(t("Colore", "Colour"))}</span><div class="mu-colori">${COLORI2.map(
       ([c], i) => `<button type="button" style="background:${c}" data-mu-fa="colore" data-mu-colore="${i}" data-mu-entita="${esc(id)}" aria-label="${c}"></button>`
     ).join("")}</div></div>` : ""}
-        <div><span class="mu-et">${esc(t("Preferite", "Favourites"))}</span><div class="mu-seg">${[10, 60, 100].map(
+        <div><span class="mu-et">${esc(t("Preferite", "Favourites"))}</span><div class="mu-seg">${[
+      10,
+      60,
+      100
+    ].map(
       (p) => `<button type="button" class="${on && pct === p ? "si" : ""}" data-mu-fa="livello" data-mu-livello="${p}" data-mu-entita="${esc(id)}">${p}%</button>`
     ).join("")}</div></div>
         <div class="mu-due"><button type="button" class="mu-btn" data-mu-fa="spegni" data-mu-entita="${esc(id)}">${esc(t("Spegni", "Turn off"))}</button><button type="button" class="mu-btn pieno" data-mu-fa="chiudi">${esc(t("Fatto", "Done"))}</button></div>
@@ -77626,11 +77693,19 @@ function finestra4() {
     dentro3 = `<div class="mu-fin-conferma"><div class="mu-osw" style="font-size:40px">${esc(f.azione)}</div><div class="mu-sotto">${esc(t("Confermi?", "Confirm?"))}</div>
       <div class="mu-due"><button type="button" class="mu-btn" data-mu-fa="chiudi">${esc(t("Annulla", "Cancel"))}</button><button type="button" class="mu-btn pieno" data-mu-fa="azione" data-mu-azione="${esc(f.azione)}" data-mu-confermata="1">${esc(t("Sì, vai", "Yes, go"))}</button></div></div>`;
   } else if (f.tipo === "codice") {
-    const titolo = f.scopo === "uscita" ? t("Codice per uscire", "Code to exit") : t("Codice dell'antifurto", "Alarm code");
+    const titolo = f.scopo === "uscita" || f.scopo === "menu" ? t("Codice per uscire", "Code to exit") : t("Codice dell'antifurto", "Alarm code");
     dentro3 = `<div class="mu-fin-codice"><div class="mu-riga1"><div class="mu-nome"><div class="mu-n" style="font-size:24px">${esc(titolo)}</div><div class="mu-puntini">${"●".repeat((f.scritto || "").length) || "&nbsp;"}</div>${f.errore ? `<div class="mu-stato" style="--acc:#e11d48">${esc(t("Codice sbagliato", "Wrong code"))}</div>` : ""}</div><button type="button" class="mu-tondo" data-mu-fa="chiudi" aria-label="${esc(t("Chiudi", "Close"))}">✕</button></div>
-      <div class="mu-tasti">${["1", "2", "3", "4", "5", "6", "7", "8", "9", "⌫", "0", "✓"].map((k) => `<button type="button" class="mu-tondo ${k === "✓" ? "pieno" : ""}" data-mu-fa="cifra" data-mu-cifra="${k}">${k}</button>`).join("")}</div></div>`;
+      <div class="mu-tasti">${["1", "2", "3", "4", "5", "6", "7", "8", "9", "⌫", "0", "✓"].map(
+      (k) => `<button type="button" class="mu-tondo ${k === "✓" ? "pieno" : ""}" data-mu-fa="cifra" data-mu-cifra="${k}">${k}</button>`
+    ).join("")}</div></div>`;
   }
-  const accento = { clima: ACCENTI.clima, codice: "#6366f1", tapparella: ACCENTI.tapparella, antifurto: "#10b981", citofono: "#2563eb" }[f.tipo] || ACCENTI.luce;
+  const accento = {
+    clima: ACCENTI.clima,
+    codice: "#6366f1",
+    tapparella: ACCENTI.tapparella,
+    antifurto: "#10b981",
+    citofono: "#2563eb"
+  }[f.tipo] || ACCENTI.luce;
   return `<div class="mu-velo" data-mu-fa="fuori"><div class="mu-carta mu-accesa mu-finestra" style="--acc:${accento}">${dentro3}</div></div>`;
 }
 function apriFinestra(f) {
@@ -77687,6 +77762,18 @@ function configAperto() {
     });
   };
   guardaIlConfig = root.requestAnimationFrame?.(giro) || root.setTimeout?.(giro, 200);
+}
+function apriIlMenu2() {
+  const tasto2 = doc?.querySelector?.("body>header .ha-menu-btn") || doc?.querySelector?.(".ha-menu-btn");
+  if (tasto2) {
+    tasto2.click();
+    return true;
+  }
+  if (typeof root.apriMenuLaterale === "function") {
+    root.apriMenuLaterale();
+    return true;
+  }
+  return false;
 }
 function apriIlConfigDelMuro() {
   if (typeof root.apriConfigEntita !== "function") return false;
@@ -77785,7 +77872,10 @@ function disegna5() {
   const corpo2 = state107.riposo ? riposo(muro) : `<div class="mu-pagina mu-pag-${pagina2.modello}">${testa(pagina2, muro)}${pagina2.modello === "scene" ? paginaScene(pagina2) : pagina2.modello === "ingresso" ? paginaIngresso(pagina2) : paginaStanza(pagina2)}</div>${finestra4()}`;
   if (state107.trascina) return;
   const vecchie = new Map(
-    [...nodo2.querySelectorAll("img[data-mu-telecamera]")].map((img) => [img.dataset.muTelecamera, img])
+    [...nodo2.querySelectorAll("img[data-mu-telecamera]")].map((img) => [
+      img.dataset.muTelecamera,
+      img
+    ])
   );
   if (scriviSeCambia(nodo2.firstElementChild, corpo2)) caricaLeTelecamere(nodo2, vecchie);
 }
@@ -77805,8 +77895,9 @@ function rinfrescaLeTelecamere() {
   const nodo2 = doc?.getElementById(ID2);
   if (!nodo2 || state107.riposo) return;
   for (const img of nodo2.querySelectorAll("img[data-mu-telecamera]"))
-    if (!img.dataset.dmCameraStream) loadCameraFrame({ entity: img.dataset.muTelecamera }, img).catch(() => {
-    });
+    if (!img.dataset.dmCameraStream)
+      loadCameraFrame({ entity: img.dataset.muTelecamera }, img).catch(() => {
+      });
 }
 function tocco() {
   state107.toccato = Date.now();
@@ -77830,7 +77921,10 @@ function cambiaTemperatura(id, verso2) {
   attendi(id, "temperatura", nuova);
   disegna5();
   root.clearTimeout?.(timerClima);
-  timerClima = root.setTimeout?.(() => comanda2("climate", "set_temperature", { entity_id: id, temperature: nuova }), 700);
+  timerClima = root.setTimeout?.(
+    () => comanda2("climate", "set_temperature", { entity_id: id, temperature: nuova }),
+    700
+  );
 }
 function allarme(modo, codice = "") {
   const pagina2 = state107.muro?.pagine?.[state107.pagina];
@@ -77844,17 +77938,23 @@ function allarme(modo, codice = "") {
     return;
   }
   chiudiFinestra();
-  comanda2("alarm_control_panel", voce2.service, { entity_id: centrale, ...codice ? { code: codice } : {} });
+  comanda2("alarm_control_panel", voce2.service, {
+    entity_id: centrale,
+    ...codice ? { code: codice } : {}
+  });
 }
 function cifra(k) {
   const f = state107.finestra;
   if (!f || f.tipo !== "codice") return;
   if (k === "⌫") f.scritto = (f.scritto || "").slice(0, -1);
   else if (k === "✓") {
-    if (f.scopo === "uscita") {
+    if (f.scopo === "uscita" || f.scopo === "menu") {
       if (pinGiusto(state107.muro, f.scritto)) {
         state107.finestra = null;
-        apriIlConfigDelMuro();
+        if (f.scopo === "menu") {
+          disegna5();
+          apriIlMenu2();
+        } else apriIlConfigDelMuro();
         return;
       } else {
         f.errore = true;
@@ -77902,6 +78002,10 @@ function onClick23(event) {
   }
   event.stopPropagation();
   switch (fa) {
+    case "menu":
+      if (state107.muro?.blocco?.attivo) apriFinestra({ tipo: "codice", scopo: "menu", scritto: "" });
+      else apriIlMenu2();
+      return;
     case "sveglia":
       state107.riposo = false;
       disegna5();
@@ -77921,12 +78025,18 @@ function onClick23(event) {
       return;
     case "livello":
       attendi(id, "luminosita", Number(bersaglio.dataset.muLivello));
-      comanda2("light", "turn_on", { entity_id: id, brightness_pct: Number(bersaglio.dataset.muLivello) });
+      comanda2("light", "turn_on", {
+        entity_id: id,
+        brightness_pct: Number(bersaglio.dataset.muLivello)
+      });
       disegna5();
       return;
     case "colore": {
       const [, rgb, kelvin] = COLORI2[Number(bersaglio.dataset.muColore)] || [];
-      comanda2("light", "turn_on", { entity_id: id, ...rgb ? { rgb_color: rgb } : { color_temp_kelvin: kelvin } });
+      comanda2("light", "turn_on", {
+        entity_id: id,
+        ...rgb ? { rgb_color: rgb } : { color_temp_kelvin: kelvin }
+      });
       return;
     }
     case "meno":
@@ -77974,7 +78084,10 @@ function onClick23(event) {
         if (servizio) comanda2(servizio.domain, servizio.service, servizio.data);
         state107.attiva = nome;
         disegna5();
-      } else eseguiAzione(bersaglio.dataset.muAzione, { conferma: Boolean(bersaglio.dataset.muConferma) });
+      } else
+        eseguiAzione(bersaglio.dataset.muAzione, {
+          conferma: Boolean(bersaglio.dataset.muConferma)
+        });
       return;
     case "allarme":
       allarme(bersaglio.dataset.muModo);
@@ -78024,7 +78137,8 @@ function onPointerDown(event) {
     root.clearTimeout?.(state107.pressione);
     state107.pressione = root.setTimeout?.(() => {
       state107.pressione = null;
-      if (state107.muro?.blocco?.attivo) apriFinestra({ tipo: "codice", scopo: "uscita", scritto: "" });
+      if (state107.muro?.blocco?.attivo)
+        apriFinestra({ tipo: "codice", scopo: "uscita", scritto: "" });
       else apriIlConfigDelMuro();
     }, 2e3);
   }
@@ -78146,6 +78260,9 @@ ${MURO} .mu-stato{white-space:nowrap;font-size:12px;font-weight:900;letter-spaci
 ${MURO} .mu-stato.spento{color:var(--text-dim)}
 ${MURO} .mu-tag{font-size:10px;font-weight:900;letter-spacing:.08em;padding:3px 8px;border-radius:7px;border:1px solid color-mix(in srgb,var(--acc) 45%,transparent);color:color-mix(in srgb,var(--acc) 85%,var(--text));background:color-mix(in srgb,var(--acc) 10%,transparent)}
 ${MURO} .mu-testa{display:flex;align-items:center;padding:18px 26px;gap:22px}
+${MURO} .mu-menu{flex:0 0 auto;width:48px;height:48px;border-radius:16px;border:0;background:color-mix(in srgb,var(--text) 5%,var(--card-bg));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--text) 12%,transparent);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;padding:0;cursor:pointer;color:inherit}
+${MURO} .mu-menu span{display:block;width:20px;height:2px;border-radius:2px;background:var(--text)}
+${MURO}[data-compatto="1"] .mu-menu{width:40px;height:40px;border-radius:13px}
 ${MURO} .mu-testa::after{content:"";position:absolute;left:24px;right:24px;bottom:0;height:2px;border-radius:2px;background:linear-gradient(90deg,var(--acc),#0ea5e9 60%,transparent)}
 ${MURO} .mu-tit{font-family:Oswald,Inter,sans-serif;font-weight:500;font-size:40px;line-height:1;letter-spacing:.02em;color:var(--acc);text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:420px}
 ${MURO} .mu-sot{margin-top:8px}
