@@ -1,1 +1,1 @@
-Plancia a muro (Premium): un pannello per tablet a muro e NSPanel, con comandi grandi e pagine Stanza, Scene e Ingresso, in orizzontale e in verticale. Si crea da «Configura gdahome» → Plance: scegli Classica o A muro e chi la vede, e parte già pronta.
+Plancia a muro più tua: in ogni posto qualunque entità o azione, col nome e il disegno che vuoi; pagine nuove Personalizzata, Tutte le luci, Clima freddo e Clima caldo. Il pannello parte subito, senza mostrare prima la plancia classica. Il clima che scalda ha la fiamma, anche in Home.
