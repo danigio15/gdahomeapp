@@ -16711,6 +16711,20 @@ var SALVATAGGI = [
   "[onclick*='edSaveSezione']",
   "[onclick*='edSecSave']"
 ].join(",");
+var NON_SALVANO = "[data-ev-edit],[data-ev-add-new],.dm-section-switch";
+function eUnSalvataggio(bersaglio) {
+  const bottone = bersaglio?.closest?.(
+    "button,[role='button'],a,input[type='button'],input[type='submit']"
+  );
+  if (!bottone || bottone.matches(NON_SALVANO)) return false;
+  if (bottone.matches(SALVATAGGI) || bottone.matches(".ed-btn-add")) return true;
+  for (const attributo of bottone.attributes || []) {
+    if (attributo.name.startsWith("data-") && /sav|salv|submit/i.test(attributo.name)) return true;
+    if (attributo.name === "onclick" && /save|salva|add[A-Z(]|aggiungi/i.test(attributo.value))
+      return true;
+  }
+  return false;
+}
 var DIALOGO = "dm-ricordati-di-salvare";
 function sembraUnEntita(valore) {
   return /^[a-z_][a-z0-9_]*\.[a-z0-9_]+$/i.test(clean13(valore));
@@ -16830,7 +16844,7 @@ function mostraIlDialogo(bersaglio) {
 function onTocco(evento) {
   const bersaglio = evento.target;
   if (bersaglio?.closest?.(`#${DIALOGO}`)) return;
-  if (bersaglio?.closest?.(SALVATAGGI)) {
+  if (eUnSalvataggio(bersaglio)) {
     if (corpo()?.contains(bersaglio)) dimenticaLeModifiche();
     return;
   }

@@ -95,6 +95,8 @@ for (const variant of PRIMARY) {
     await expect(page.locator("#ed-body [data-ev-appearance]")).toHaveCount(0);
 
     await switchEditor(page, "sez2");
+    /* Coi veicoli salvati il modulo e' chiuso: si apre con la matita. */
+    await page.locator("#ed-body [data-ev-edit]").first().click();
     const appearance = page.locator("#ed-body [data-ev-appearance]");
     await expect(appearance).toHaveCount(1);
     await expect(appearance).toBeVisible();

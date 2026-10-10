@@ -55,6 +55,28 @@ const SALVATAGGI = [
   "[onclick*='edSecSave']",
 ].join(",");
 
+/* I tasti che salvano hanno nomi diversi in ogni sezione — `data-presa-save`,
+ * `data-dm-loads-save`, «Aggiungi» nelle schede a righe — e un elenco scritto
+ * a mano ne perde sempre qualcuno: l'avviso suonava dopo un salvataggio vero.
+ * Si guarda allora il segno che li accomuna: un attributo `data-*` che dice
+ * «save», «salva» o «submit», un `onclick` che salva o aggiunge, il tasto «Aggiungi»
+ * delle righe. La matita e ＋ dei veicoli non salvano: aprono il modulo. */
+const NON_SALVANO = "[data-ev-edit],[data-ev-add-new],.dm-section-switch";
+
+function eUnSalvataggio(bersaglio) {
+  const bottone = bersaglio?.closest?.(
+    "button,[role='button'],a,input[type='button'],input[type='submit']",
+  );
+  if (!bottone || bottone.matches(NON_SALVANO)) return false;
+  if (bottone.matches(SALVATAGGI) || bottone.matches(".ed-btn-add")) return true;
+  for (const attributo of bottone.attributes || []) {
+    if (attributo.name.startsWith("data-") && /sav|salv|submit/i.test(attributo.name)) return true;
+    if (attributo.name === "onclick" && /save|salva|add[A-Z(]|aggiungi/i.test(attributo.value))
+      return true;
+  }
+  return false;
+}
+
 const DIALOGO = "dm-ricordati-di-salvare";
 
 /** Un valore che ha la forma di un'entita' di Home Assistant: `dominio.oggetto`. */
@@ -191,7 +213,7 @@ function mostraIlDialogo(bersaglio) {
 function onTocco(evento) {
   const bersaglio = evento.target;
   if (bersaglio?.closest?.(`#${DIALOGO}`)) return;
-  if (bersaglio?.closest?.(SALVATAGGI)) {
+  if (eUnSalvataggio(bersaglio)) {
     /* Il salvataggio parte dopo di noi: la scheda si considera salvata. */
     if (corpo()?.contains(bersaglio)) dimenticaLeModifiche();
     return;

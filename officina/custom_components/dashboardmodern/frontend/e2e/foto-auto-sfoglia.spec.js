@@ -157,6 +157,8 @@ test.describe("foto dell'auto", () => {
       window.apriConfigEntita();
       window.editorSwitch("sez2");
     });
+    /* Coi veicoli salvati il modulo e' chiuso: si apre con la matita. */
+    await page.locator("#ed-body [data-ev-edit]").first().click();
 
     const sfoglia = page.locator('[data-ev-photo="idle"] [data-ev-photo-browse]');
     await expect(sfoglia).toHaveCount(1);
@@ -213,6 +215,8 @@ test.describe("foto dell'auto", () => {
       window.apriConfigEntita();
       window.editorSwitch("sez2");
     });
+    /* Coi veicoli salvati il modulo e' chiuso: si apre con la matita. */
+    await page.locator("#ed-body [data-ev-edit]").first().click();
 
     const sfoglia = page.locator('[data-ev-photo="idle"] [data-ev-photo-browse]');
     await expect(sfoglia).toHaveCount(1);
@@ -245,6 +249,8 @@ test.describe("foto dell'auto", () => {
       window.apriConfigEntita();
       window.editorSwitch("sez2");
     });
+    /* Coi veicoli salvati il modulo e' chiuso: si apre con la matita. */
+    await page.locator("#ed-body [data-ev-edit]").first().click();
     const campo = page.locator('[data-ev-photo="idle"] [data-ev-photo-input]');
     await expect(campo).toHaveCount(1);
     await campo.fill("/local/scritta-a-mano.png");

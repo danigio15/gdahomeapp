@@ -41,6 +41,8 @@ async function openEvEditor(page) {
     if (accordion) accordion.open = true;
   });
   await expect(page.locator("#editor-modal")).toBeVisible();
+  // With saved vehicles the form is closed: the pencil opens it.
+  await page.locator("#ed-body [data-ev-edit]").first().click();
   // The rows are decorated on the frame after the editor prints them.
   await expect(evBody(page).locator(".dm-slot").first()).toBeVisible();
 }

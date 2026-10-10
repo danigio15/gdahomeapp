@@ -119,6 +119,8 @@ for (const variant of PRIMARY) {
     test.setTimeout(testInfo.project.name === "webkit-ipad" ? 120_000 : 75_000);
     await boot(page, variant, testInfo);
     await openEditor(page, "sez2");
+    /* Coi veicoli salvati il modulo e' chiuso: si apre con la matita. */
+    await page.locator("#ed-body [data-ev-edit]").first().click();
 
     const panel = page.locator("#ed-body [data-ev-appearance]");
     const brand = panel.locator("select[data-brand]");

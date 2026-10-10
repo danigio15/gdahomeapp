@@ -44,6 +44,10 @@ for (const variant of PRIMARY) {
     await expect(page.locator('#ed-body input[placeholder*="Nome auto"]')).toBeVisible();
 
     const saveProfile = async (name, battery) => {
+      /* Dopo il primo salvataggio il modulo si chiude: la seconda auto si
+       * apre con ＋. */
+      const nuova = page.locator("#ed-body [data-ev-add-new]");
+      if (await nuova.isVisible()) await nuova.click();
       await page.evaluate((entity) => {
         const input = document.querySelector(
           '#ed-body .ed-slot-in[data-ref="dm.ev_batteria_auto"]',
