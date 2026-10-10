@@ -49,6 +49,20 @@ const OGGETTI = Object.freeze({
       <path d="m12.6 7.4 3.4 2.6 3.4-2.6M12.6 24.6l3.4-2.6 3.4 2.6"/></g>
     <circle cx="16" cy="16" r="2.4" fill="#fff" opacity=".9"/>`,
 
+  /* La fiamma: il clima che scalda. Il fiocco qui sopra e' quello che
+   * raffresca; un termosifone o una pompa in riscaldamento non e' ghiaccio. */
+  caldo: `<defs>
+      <linearGradient id="dmoCaldo" x1="0" y1="1" x2="0" y2="0">
+        <stop offset="0" stop-color="#dc2626"/><stop offset=".55" stop-color="#f97316"/>
+        <stop offset="1" stop-color="#fbbf24"/></linearGradient>
+      <radialGradient id="dmoCaldoC" cx=".5" cy=".8" r=".6">
+        <stop offset="0" stop-color="#fffbeb"/><stop offset=".6" stop-color="#fde68a"/>
+        <stop offset="1" stop-color="#fbbf24"/></radialGradient></defs>
+    ${OMBRA(16, 28.6, 6.8)}
+    <path d="M16.6 3.2c.6 3.4-.9 5.6-2.8 7.8-2 2.3-4.6 4.8-4.6 8.8a6.8 6.8 0 0 0 13.6 0c0-2.7-1.2-4.9-2.6-6.6-.3 1.6-1 2.7-2.1 3.3.6-4.6-.5-9.2-1.5-13.3Z" fill="url(#dmoCaldo)"/>
+    <path d="M16 15.6c1.9 1.8 3 3.5 3 5.2a3 3 0 0 1-6 0c0-1.1.5-2.1 1.3-2.9.1 1 .6 1.6 1.4 1.8-.3-1.5 0-2.9.3-4.1Z" fill="url(#dmoCaldoC)"/>
+    <path d="M13 9.6c-1.4 1.6-2.4 3.2-2.7 5" stroke="#fff" stroke-opacity=".55" stroke-width="1.4" fill="none" stroke-linecap="round"/>`,
+
   /* Il termometro: mercurio dentro il vetro, e le tacche della scala. */
   temperatura: `<defs>
       <linearGradient id="dmoMerc" x1="0" y1="0" x2="1" y2="0">

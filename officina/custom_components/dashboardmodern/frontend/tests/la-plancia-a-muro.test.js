@@ -8,8 +8,10 @@
  * stanza propone da sola i suoi comandi finche' nessuno li ha scelti. */
 import assert from "node:assert/strict";
 import test from "node:test";
+import { climaScalda } from "../src/core/device-model.js";
 import {
   comandiDellaPagina,
+  comandoPulito,
   comandiProposti,
   eNotte,
   fonteDaiValori,
@@ -265,4 +267,93 @@ test("i pannelli piccoli passano alla forma compatta, senza scritte da formica",
   assert.equal(eCompatto(1280, 800), false);
   assert.ok(scala("verticale", 375, 667) >= 0.75);
   assert.ok(scala("orizzontale", 480, 480) > 1);
+});
+
+test("un posto prende qualunque entita', col suo nome, la riga sotto e il disegno", () => {
+  /* La luce resta luce anche scelta a mano; una presa e' una card «entita'». */
+  assert.deepEqual(comandoPulito({ tipo: "entita", entita: "light.tavolo", nome: "Tavolo" }), {
+    tipo: "luce",
+    entita: "light.tavolo",
+    nome: "Tavolo",
+    sotto: "",
+    disegno: "",
+  });
+  assert.equal(comandoPulito({ tipo: "entita", entita: "switch.presa_tv" }).tipo, "entita");
+  assert.equal(comandoPulito({ tipo: "entita", entita: "non valida" }), null);
+  const pagina = muroPulito({
+    attiva: true,
+    pagine: [
+      {
+        modello: "personale",
+        comandi: [
+          { tipo: "entita", entita: "lock.portone", nome: "Portone", disegno: "varchi" },
+          { tipo: "vuoto" },
+          { tipo: "azione", azione: "Cinema", sotto: "Luci basse" },
+          { tipo: "vuoto" },
+        ],
+      },
+    ],
+  }).pagine[0];
+  /* Il vuoto in mezzo resta al suo posto; quello in fondo se ne va. */
+  assert.deepEqual(
+    pagina.comandi.map((c) => c.tipo),
+    ["entita", "vuoto", "azione"],
+  );
+  assert.equal(pagina.comandi[0].disegno, "varchi");
+  assert.deepEqual(comandiDellaPagina(pagina, {}), pagina.comandi);
+});
+
+test("le scene prendono anche un'entita' qualunque", () => {
+  const pagina = muroPulito({
+    attiva: true,
+    pagine: [
+      {
+        modello: "scene",
+        scene: [
+          { azione: "Cinema" },
+          { tipo: "entita", entita: "script.buonanotte", nome: "Notte" },
+          { tipo: "entita", entita: "light.salone" },
+        ],
+      },
+    ],
+  }).pagine[0];
+  assert.deepEqual(
+    pagina.scene.map((c) => [c.tipo, c.azione || c.entita]),
+    [
+      ["azione", "Cinema"],
+      ["entita", "script.buonanotte"],
+      ["entita", "light.salone"],
+    ],
+  );
+});
+
+test("le pagine elenco: tutte le luci, il clima che raffresca e quello che scalda", () => {
+  const fonte = fonteDaiValori({
+    ...VALORI,
+    cd_clima_units: JSON.stringify([
+      { entity: "climate.soggiorno", type: "clima" },
+      { entity: "climate.termostato", type: "termo" },
+      { entity: "climate.pompa", type: "pompa" },
+    ]),
+  });
+  const di = (modello) =>
+    comandiDellaPagina(muroPulito({ attiva: true, pagine: [{ modello }] }).pagine[0], fonte).map(
+      (c) => c.entita,
+    );
+  assert.deepEqual(di("luci"), ["light.soggiorno", "light.tavolo", "light.cucina"]);
+  assert.deepEqual(di("freddo"), ["climate.soggiorno", "climate.pompa"]);
+  assert.deepEqual(di("caldo"), ["climate.termostato", "climate.pompa"]);
+  assert.equal(nuovaPagina("personale", fonte).scelti, true);
+});
+
+test("caldo o freddo: comanda quello che fa, poi la pagina, poi il tipo", () => {
+  assert.equal(climaScalda({ stato: "heat_cool", azione: "heating" }), true);
+  assert.equal(climaScalda({ stato: "heat", tipo: "clima" }), true);
+  assert.equal(climaScalda({ stato: "cool", tipo: "termo" }), false);
+  /* Spenta: un termosifone resta caldo, un condizionatore freddo, e la pompa
+   * segue la pagina in cui sta. */
+  assert.equal(climaScalda({ stato: "off", tipo: "termo" }), true);
+  assert.equal(climaScalda({ stato: "off", tipo: "clima" }), false);
+  assert.equal(climaScalda({ stato: "off", tipo: "pompa", zona: "caldo" }), true);
+  assert.equal(climaScalda({ stato: "off", tipo: "pompa" }), false);
 });

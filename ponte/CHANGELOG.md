@@ -10,6 +10,23 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.10.11
+
+**La plancia a muro si fa come la vuoi.** In ogni posto delle pagine Stanza e
+Scene va qualunque entità di Home Assistant — una presa, una serratura, un
+sensore, uno script — o un'azione della plancia, col nome sul tablet, la riga
+sotto e il disegno scelti da te; un posto si può lasciare libero. Pagine nuove:
+Personalizzata (sei posti tuoi), Tutte le luci, Clima freddo e Clima caldo.
+Ogni pagina ha il suo nome, e i tasti dell'Ingresso anche. I campi entità sono
+quelli del resto del config.
+
+**Il pannello parte subito.** Il tablet si ricorda licenza e plancia di
+origine: niente più plancia classica prima del pannello.
+
+**Caldo e freddo.** Il clima che scalda ha la fiamma e non il fiocco, sul
+pannello a muro e nella tessera Clima in Home; il popup «Clima attivi» divide
+di nuovo chi raffresca da chi riscalda.
+
 ## 1.10.10
 
 **La plancia a muro (Premium).** Una plancia può diventare un pannello per un

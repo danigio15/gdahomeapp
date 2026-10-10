@@ -798,6 +798,17 @@ function installApplianceKpiPopups() {
 export const DIPINTA_KEY = "__DASHBOARDMODERN_PLANCIA_DIPINTA__";
 
 function dichiaraDipinta() {
+  /* La plancia a muro, quando il tablet sa gia' di esserlo, tiene il velo
+   * finche' il pannello non ha deciso: senza, sotto il velo che si toglie si
+   * vedeva la plancia classica e poi il pannello. Ha la sua scadenza. */
+  const attesa = root.__DM_MURO_DECIDE__;
+  if (attesa && typeof attesa.then === "function") {
+    attesa.then(
+      () => dichiaraDipinta(),
+      () => dichiaraDipinta(),
+    );
+    return;
+  }
   const alza = () => {
     root[DIPINTA_KEY] = true;
     try {

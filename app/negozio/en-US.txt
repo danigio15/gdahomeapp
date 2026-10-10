@@ -1,1 +1,1 @@
-Wall dashboard (Premium): a panel for wall tablets and NSPanels, with big controls and Room, Scenes and Entrance pages, in landscape and portrait. Create it from "Configure gdahome" → Dashboards: pick Classic or On the wall and who sees it, and it starts ready.
+A wall dashboard that is more yours: any entity or action in each slot, with the name and drawing you want; new Custom, All lights, Cooling and Heating pages. The panel starts right away, without showing the classic dashboard first. Heating climate shows the flame, in Home too.
