@@ -12,6 +12,12 @@ alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
 ## 1.10.12
 
+**gdahome anche al polso, su Apple Watch e Wear OS.** I comandi rapidi scelti
+per l'auto, i dispositivi, le azioni rapide e chi è in casa; e il navigatore,
+con la prossima manovra, l'arrivo e «Portami a casa». È la stessa app del
+telefono, che la porta sull'orologio, e fa parte di gdahome Premium. Le
+serrature chiedono «Sei sicuro?» prima di partire, al polso e in auto.
+
 **Il config del tablet, e solo quello.** Sul pannello a muro, tenendo premuto
 l'orologio (col PIN, se c'è) si apre soltanto la scheda «A muro»; chiusa, torna
 il pannello, senza passare dalla plancia classica. Un config aperto dal menu
