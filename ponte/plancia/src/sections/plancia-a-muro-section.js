@@ -31,6 +31,7 @@ import { oggettoWidget } from "../core/oggetti-widget.js";
 import {
   CHIAVE_MURO,
   avvisiAccesi,
+  derivaDelRiposo,
   comandiDellaPagina,
   eCompatto,
   eNotte,
@@ -54,6 +55,7 @@ import {
   doc,
   esc,
   installStyle,
+  lexicalGlobal,
   locale,
   readJson,
   root,
@@ -154,16 +156,21 @@ export async function premiumDellaCasa({ forza = false } = {}) {
   return premium;
 }
 
-const CINQUE_MINUTI = 5 * 60 * 1000;
+const UN_MINUTO = 60 * 1000;
 
 /** Le cose della plancia di origine, gia' pronte per il tablet. */
 export async function fonteDelMuro(muro, { forza = false } = {}) {
   const di = muro?.fonte || "primary";
+  /* La fonte che sta qui si legge sempre da capo: costa niente, e quello che
+   * si e' appena salvato nel config si vede subito. */
+  const quiDentro =
+    !root.__DM_MURO_FONTE__ && (di === currentProfile() || !root.__DASHBOARDMODERN_HOSTED__);
   if (
     !forza &&
+    !quiDentro &&
     state.fonte &&
     state.fonteDi === di &&
-    Date.now() - state.fonteLetta < CINQUE_MINUTI
+    Date.now() - state.fonteLetta < UN_MINUTO
   )
     return state.fonte;
   let fonte = null;
@@ -1140,8 +1147,12 @@ function riposo(muro) {
         `<div class="mu-carta mu-avviso ${a.grave ? "grave" : ""}" style="--acc:${a.grave ? ACCENTI.allarme : "#06b6d4"}"><span class="mu-chip mu-acc" style="--c:40px">${a.grave ? disegno("sicurezza", 24, "av-allarme") : disegno("avvisi", 24, `av-${esc(a.chiave)}`)}</span><b>${esc(a.grave ? t("Antifurto: allarme in corso", "Alarm: triggered") : a.testo)}</b></div>`,
     )
     .join("");
+  /* Il blocco si sposta ogni minuto (derivaDelRiposo): niente resta fermo
+   * nello stesso punto, nemmeno gli avvisi o la scritta in fondo. */
+  const d = derivaDelRiposo(Date.now());
+  const deriva = `style="--dx:${d.x.toFixed(3)};--dy:${d.y.toFixed(3)}"`;
   if (notte)
-    return `<div class="mu-riposo notte" data-mu-fa="sveglia">${chip ? `<div class="mu-avvisi">${chip}</div>` : ""}</div>`;
+    return `<div class="mu-riposo notte" data-mu-fa="sveglia">${chip ? `<div class="mu-deriva" ${deriva}><div class="mu-avvisi">${chip}</div></div>` : ""}</div>`;
   const m = meteo();
   const centrale = centraleDelMuro(pagina);
   const allarme = centrale && stato(centrale) ? STATI_DELL_ALLARME()[stato(centrale).state] : "";
@@ -1150,16 +1161,28 @@ function riposo(muro) {
     stanza?.temp && numero(stato(stanza.temp)?.state) !== null
       ? `${decimale(stato(stanza.temp).state)}°`
       : "";
-  return `<div class="mu-riposo" data-mu-fa="sveglia">
+  /* Quello che si vuole sapere passando davanti, senza toccare: fuori, dentro,
+   * chi c'e', cosa e' rimasto aperto, l'antifurto. Ognuna solo se c'e'. */
+  const persone = personeInCasa();
+  const chi =
+    persone.inCasa === 0
+      ? t("Nessuno in casa", "Nobody home")
+      : persone.nomi.length <= 2
+        ? persone.nomi.join(" · ")
+        : `${persone.inCasa} ${t("in casa", "at home")}`;
+  const aperte = finestreAperte().length;
+  return `<div class="mu-riposo" data-mu-fa="sveglia"><div class="mu-deriva" ${deriva}>
     ${chip ? `<div class="mu-avvisi">${chip}</div>` : ""}
     <div class="mu-osw mu-orologione">${esc(o.ora)}</div>
     <div class="mu-et mu-data">${esc(o.lungo)}</div>
     <div class="mu-riposo-riga">
       ${m && numero(m.temperatura) !== null ? `<span>${disegno("meteo", 34, "rip-meteo")}${decimale(m.temperatura, 0)}° ${esc(PAROLE_DEL_METEO()[m.condizione] || "")}</span>` : ""}
       ${dentro ? `<span>${disegno("temperatura", 30, "rip-temp")}${dentro} ${esc(t("in casa", "inside"))}</span>` : ""}
+      ${persone.tutte ? `<span data-mu-riposo="persone">${disegno("persone", 30, "rip-persone")}${esc(chi)}</span>` : ""}
+      ${aperte ? `<span data-mu-riposo="aperte" class="mu-attenzione">${disegno("aperture", 30, "rip-aperture")}${aperte} ${esc(aperte === 1 ? t("finestra aperta", "window open") : t("finestre aperte", "windows open"))}</span>` : ""}
       ${allarme ? `<span>${disegno("sicurezza", 30, "rip-allarme")}${esc(t("Antifurto", "Alarm"))} · ${esc(allarme)}</span>` : ""}
     </div>
-    <div class="mu-et mu-tocca">${esc(t("Tocca per i comandi", "Tap for controls"))}</div></div>`;
+    <div class="mu-et mu-tocca">${esc(t("Tocca per i comandi", "Tap for controls"))}</div></div></div>`;
 }
 
 /* ── la tela: dove sta, quanto e' grande, cosa mostra ────────────────────── */
@@ -1203,7 +1226,28 @@ function configAperto() {
  * nell'app.» Non si rifà niente: si preme il tasto della plancia, che c'e'
  * anche sotto il pannello. In Home Assistant apre la barra laterale; nell'app
  * lo intercetta chi la ospita (`premesse.dart`) e apre il menu di gdahome. */
+/* Il menu laterale di Home Assistant — e quello dell'app — si apre sotto il
+ * pannello, che sta sopra tutto: «l'icona hamburger non funziona, non si apre
+ * il menu laterale». Mentre il menu e' aperto il pannello scende sotto il
+ * cassetto; il primo tocco fuori dal ☰ lo rimette sopra. */
+function scendiSottoIlMenu() {
+  const tela = doc?.getElementById?.(ID);
+  if (!tela) return;
+  tela.dataset.muSottoIlMenu = "true";
+  const aperto = Date.now();
+  const risali = (evento) => {
+    if (Date.now() - aperto < 300) return;
+    if (evento?.target?.closest?.('[data-mu-fa="menu"]')) return;
+    doc.removeEventListener("pointerdown", risali, true);
+    /* Dopo il tocco, non durante: il tocco finisce su quello che c'e' sopra
+     * adesso — il velo del menu, che lo chiude — e non sul pannello. */
+    root.setTimeout?.(() => delete tela.dataset.muSottoIlMenu, 350);
+  };
+  doc.addEventListener("pointerdown", risali, true);
+}
+
 export function apriIlMenu() {
+  scendiSottoIlMenu();
   const tasto =
     doc?.querySelector?.("body>header .ha-menu-btn") || doc?.querySelector?.(".ha-menu-btn");
   if (tasto) {
@@ -1268,8 +1312,8 @@ function tela() {
 
 /* Il battito del tablet: uno solo, e solo mentre il pannello c'e'. Ogni
  * quindici secondi l'orologio e il riposo, la telecamera che non e' un video;
- * ogni dieci minuti la fonte, cosi' una luce aggiunta nella principale arriva
- * sul tablet senza doverlo riavviare. */
+ * ogni dieci minuti la fonte, come rete di sicurezza: il cambio vero arriva
+ * subito, dall'avviso sul bus di casa (`ascoltaLaFonte`). */
 function avviaIlBattito() {
   if (state.timer) return;
   let giri = 0;
@@ -1351,6 +1395,27 @@ export function disegna() {
     ]),
   );
   if (scriviSeCambia(nodo.firstElementChild, corpo)) caricaLeTelecamere(nodo, vecchie);
+  if (state.riposo) posizionaIlRiposo(nodo);
+}
+
+/* Il blocco del riposo va dove dice derivaDelRiposo, ma dentro lo spazio che
+ * resta libero: quanto, lo sa solo chi lo misura — l'orologio da 240 px non e'
+ * largo uguale alle 11:11 e alle 20:08, e un avviso acceso allarga tutto. */
+function posizionaIlRiposo(nodo) {
+  const blocco = nodo.querySelector(".mu-deriva");
+  const riquadro = blocco?.parentElement;
+  if (!blocco || !riquadro) return;
+  const libero = (tutto, suo) => Math.max(0, (tutto - suo) / 2 - 16);
+  const dx = Number(blocco.style.getPropertyValue("--dx")) || 0;
+  const dy = Number(blocco.style.getPropertyValue("--dy")) || 0;
+  blocco.style.setProperty(
+    "--sx",
+    `${Math.round(dx * libero(riquadro.clientWidth, blocco.offsetWidth))}px`,
+  );
+  blocco.style.setProperty(
+    "--sy",
+    `${Math.round(dy * libero(riquadro.clientHeight, blocco.offsetHeight))}px`,
+  );
 }
 
 function caricaLeTelecamere(nodo, vecchie = new Map()) {
@@ -1480,7 +1545,11 @@ function onClick(event) {
     if (entita && dominio(entita) === "light") {
       if (state.compatto) comanda("light", "toggle", { entity_id: entita });
       else apriFinestra({ tipo: "luce", entita });
-    } else if (entita && dominio(entita) === "climate")
+    } else if (entita && bersaglio.querySelector?.('[data-mu-fa="interruttore"]'))
+      /* Una presa nella card della luce: non ha una finestra sua, il tocco
+       * la accende e la spegne. */
+      comanda(dominio(entita), "toggle", { entity_id: entita });
+    else if (entita && dominio(entita) === "climate")
       apriFinestra({ tipo: "clima", entita, zona: zonaDiQui() });
     else if (entita && dominio(entita) === "cover") apriFinestra({ tipo: "tapparella", entita });
     return;
@@ -1504,7 +1573,9 @@ function onClick(event) {
       chiudiFinestra();
       return;
     case "interruttore":
-      comanda("light", "toggle", { entity_id: id });
+      /* Nella card della luce puo' esserci anche una presa: ognuno col suo
+       * dominio, `light.toggle` su uno `switch` non fa niente. */
+      comanda(dominio(id) || "light", "toggle", { entity_id: id });
       return;
     case "spegni":
       comanda(dominio(id) || "light", "turn_off", { entity_id: id });
@@ -1740,6 +1811,7 @@ export async function rileggi({ forza = false } = {}) {
       setKioskMode(true);
     } catch (_errore) {}
   }
+  ascoltaLaFonte();
   disegna();
   lasciaIlVelo();
 }
@@ -1756,6 +1828,7 @@ function stili() {
 html.dm-muro-acceso,html.dm-muro-acceso body{overflow:hidden!important}
 html.dm-solo-muro #editor-modal .ed-tabs,html.dm-solo-muro #editor-modal #dm-alberatura-famiglie,html.dm-solo-muro #editor-modal .dm-cerca-config,html.dm-solo-muro #editor-modal .dm-alberatura-titolo-famiglia{display:none!important}
 html.dm-solo-muro #editor-modal .ed-body,html.dm-solo-muro #editor-modal #ed-body{margin-left:0!important;max-width:none!important}
+${MURO}[data-mu-sotto-il-menu]{z-index:4!important}
 ${MURO}{position:fixed;inset:0;z-index:2147482000;overflow:hidden;color:var(--text);font-family:Inter,system-ui,sans-serif;
   -webkit-font-smoothing:antialiased;-webkit-user-select:none;user-select:none;touch-action:manipulation;
   background:radial-gradient(120% 80% at 50% -10%,color-mix(in srgb,var(--card-bg) 70%,transparent),transparent 60%),var(--bg-sculpted)}
@@ -1888,9 +1961,15 @@ ${MURO} .mu-tasti{display:grid;grid-template-columns:repeat(3,96px);gap:16px;jus
 ${MURO} .mu-tasti .mu-tondo{width:96px;height:96px;font-size:32px;font-weight:700}
 ${MURO} .mu-riposo{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:#05080f;color:#dbe4f3}
 ${MURO} .mu-riposo.notte{background:#000}
+${MURO} .mu-deriva{position:absolute;left:50%;top:50%;transform:translate(calc(-50% + var(--sx,0px)),calc(-50% + var(--sy,0px)));display:flex;flex-direction:column;align-items:center;gap:14px;width:max-content;max-width:96%;animation:mu-appari 1.8s ease both}
+@keyframes mu-appari{from{opacity:0}to{opacity:1}}
+@media (prefers-reduced-motion:reduce){${MURO} .mu-deriva{animation:none}}
+${MURO} .mu-deriva .mu-avvisi{position:static;padding:0;margin-bottom:10px}
+${MURO} .mu-deriva .mu-tocca{position:static;margin-top:14px}
+${MURO} .mu-riposo-riga .mu-attenzione{color:#fbbf24}
 ${MURO} .mu-orologione{font-size:240px;line-height:.9}
 ${MURO} .mu-data{font-size:18px;letter-spacing:.2em}
-${MURO} .mu-riposo-riga{display:flex;gap:40px;margin-top:22px;color:#92a4c2;font-weight:700;font-size:20px}
+${MURO} .mu-riposo-riga{display:flex;flex-wrap:wrap;justify-content:center;gap:16px 40px;margin-top:22px;color:#92a4c2;font-weight:700;font-size:20px}
 ${MURO} .mu-riposo-riga span{display:flex;align-items:center;gap:10px}
 ${MURO} .mu-tocca{position:absolute;bottom:28px;opacity:.6}
 ${MURO} .mu-avvisi{position:absolute;top:28px;left:0;right:0;display:flex;justify-content:center;gap:12px;flex-wrap:wrap;padding:0 20px}
@@ -1963,6 +2042,64 @@ ${MURO}[data-verso="verticale"] .mu-riposo-riga{flex-direction:column;gap:14px;a
   );
 }
 
+/* ─── In tempo reale: l'orecchio sul bus di casa ────────────────────────────
+ *
+ * «Gli aggiornamenti devono essere in tempo reale.» Quando una plancia salva
+ * la sua configurazione, il ponte lo dice sul bus di Home Assistant
+ * (`dashboardmodern_config`, col profilo). Il pannello ascolta con lo stesso
+ * socket del guscio, come la chat dell'assistenza, e se il profilo e' quello
+ * da cui legge rilegge subito la fonte. A ogni evento di stato si controlla
+ * che l'ascolto sia ancora attaccato: una riconnessione del guscio butta via
+ * i gestori in attesa. */
+export const EVENTO_DELLA_CONFIGURAZIONE = "dashboardmodern_config";
+const orecchio = { id: 0, socket: null, gestore: null, controllato: 0 };
+
+/** Se un messaggio del socket dice che la configurazione di `profilo` e' cambiata. */
+export function eCambiataLaFonte(messaggio, profilo) {
+  if (messaggio?.type !== "event") return false;
+  const evento = messaggio.event;
+  if (evento?.event_type !== EVENTO_DELLA_CONFIGURAZIONE) return false;
+  return clean(evento?.data?.profile || "primary") === clean(profilo || "primary");
+}
+
+function ascoltaLaFonte() {
+  const socket = lexicalGlobal("ws");
+  const pending = lexicalGlobal("pendingWsCallbacks");
+  if (!socket || socket.readyState !== 1 || !pending) return false;
+  if (orecchio.id && orecchio.socket === socket && pending[orecchio.id] === orecchio.gestore)
+    return true;
+  let id;
+  try {
+    id = root.eval("msgId++");
+  } catch (_errore) {
+    return false;
+  }
+  if (!Number.isFinite(Number(id))) return false;
+  const gestore = (messaggio) => {
+    if (state.muro?.attiva && eCambiataLaFonte(messaggio, state.muro.fonte))
+      rileggi({ forza: true }).catch(() => {});
+  };
+  gestore.keepAlive = true;
+  pending[id] = gestore;
+  try {
+    socket.send(
+      JSON.stringify({ id, type: "subscribe_events", event_type: EVENTO_DELLA_CONFIGURAZIONE }),
+    );
+  } catch (_errore) {
+    delete pending[id];
+    return false;
+  }
+  Object.assign(orecchio, { id, socket, gestore });
+  return true;
+}
+
+function controllaLOrecchio() {
+  const adesso = Date.now();
+  if (adesso - orecchio.controllato < 10000) return;
+  orecchio.controllato = adesso;
+  if (state.muro?.attiva) ascoltaLaFonte();
+}
+
 export function installPlanciaAMuro() {
   if (!doc || state.installed) return false;
   state.installed = true;
@@ -1979,10 +2116,21 @@ export function installPlanciaAMuro() {
     root.addEventListener?.(evento, ancora);
   root.addEventListener?.("dashboardmodern:states-ready", () => disegna());
   root.addEventListener?.("dashboardmodern:state-changed", (event) => {
+    controllaLOrecchio();
     svegliaSeServe(event);
     disegna();
   });
   root.addEventListener?.("resize", () => disegna());
+  /* Un salvataggio del config, e il tablet che torna acceso: la fonte si
+   * rilegge subito. */
+  for (const evento of ["dashboardmodern:persistence-saved", "dashboardmodern:store-user-write"])
+    root.addEventListener?.(evento, () => {
+      if (state.muro?.attiva) ancora();
+    });
+  doc.addEventListener?.("visibilitychange", () => {
+    if (doc.visibilityState === "visible" && state.muro?.attiva)
+      rileggi({ forza: true }).catch(() => {});
+  });
   root.addEventListener?.("storage", (event) => {
     if (String(event?.key || "").endsWith(CHIAVE_MURO)) ancora();
   });

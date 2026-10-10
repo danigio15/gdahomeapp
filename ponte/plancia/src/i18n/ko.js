@@ -1933,6 +1933,7 @@ export default Object.freeze({
   "The SOLAR ΔT box: the gap between collector and tank.": "태양열 ΔT 칸: 집열기와 탱크의 차이.",
   "The TOP box next to the tank.": "탱크 옆 위 칸.",
   "The VALVE button and the SOLAR KEY in the drawing: open or closed. Left empty, it stays valve.chiave_solare_termico.": "그림의 밸브 버튼과 태양열 키: 열림 또는 닫힘. 비워 두면 valve.chiave_solare_termico입니다.",
+  "Nobody home": "집에 아무도 없음",
   "Open Assist": "Assist 열기",
   "Open GitHub": "GitHub 열기",
   "Open all": "전체 열기",

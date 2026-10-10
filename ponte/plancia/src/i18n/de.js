@@ -1933,6 +1933,7 @@ export default Object.freeze({
   "The SOLAR ΔT box: the gap between collector and tank.": "Das Feld SOLAR-ΔT: der Unterschied zwischen Kollektor und Speicher.",
   "The TOP box next to the tank.": "Das Feld OBEN neben dem Speicher.",
   "The VALVE button and the SOLAR KEY in the drawing: open or closed. Left empty, it stays valve.chiave_solare_termico.": "Die Taste VENTIL und der SOLARSCHLÜSSEL in der Zeichnung: offen oder zu. Leer bleibt es valve.chiave_solare_termico.",
+  "Nobody home": "Niemand zu Hause",
   "Open Assist": "Assist öffnen",
   "Open GitHub": "GitHub öffnen",
   "Open all": "Alle öffnen",

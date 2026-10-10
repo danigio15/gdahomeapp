@@ -7,7 +7,12 @@
  * sveglia col tocco; l'antifurto chiede il codice; per uscire, con il blocco,
  * serve il PIN; in verticale la griglia diventa di due colonne. */
 import { expect, test } from "@playwright/test";
-import { MURO_DI_PROVA, STATI_A_MURO, apriLaCasaAMuro } from "./helpers/casa-a-muro.js";
+import {
+  MURO_DI_PROVA,
+  SEME_A_MURO,
+  STATI_A_MURO,
+  apriLaCasaAMuro,
+} from "./helpers/casa-a-muro.js";
 
 const muro = (page) => page.locator("#dm-muro");
 const servizi = (page) => page.evaluate(() => window.__SERVIZI__.slice());
@@ -94,6 +99,36 @@ test.describe("la plancia a muro", () => {
     /* Dal riposo si torna alla prima pagina, quella di casa per il tablet. */
     await expect(muro(page).locator(".mu-tit")).toHaveText(/Soggiorno/i);
     expect(await servizi(page)).toEqual([]);
+  });
+
+  /* «Orario e le altre info si muovono nello schermo per non restare sempre
+   * allo stesso punto.» Due minuti diversi, due posti diversi; e passando
+   * davanti si legge chi c'e' e cosa e' rimasto aperto. */
+  test("il riposo si sposta ogni minuto e dice chi c'e' e cosa e' aperto", async ({
+    page,
+  }, testInfo) => {
+    await page.clock.install({ time: new Date("2026-10-10T21:40:10") });
+    await apriLaCasaAMuro(page, testInfo, { muro: MURO_DI_PROVA });
+    await page.evaluate(() => window.dmMuro.riposa());
+    const blocco = muro(page).locator(".mu-deriva");
+    await expect(blocco).toBeVisible();
+    await expect(blocco.locator('[data-mu-riposo="persone"]')).toHaveText(/Anna · Marco/);
+    await expect(blocco.locator('[data-mu-riposo="aperte"]')).toHaveText(/1 finestra aperta/);
+    const dove = () => blocco.evaluate((n) => n.getAttribute("style"));
+    const prima = await dove();
+    await page.clock.runFor(4000);
+    await page.screenshot({ path: testInfo.outputPath("riposo-1.png") });
+    await page.clock.runFor(60_000);
+    await expect.poll(dove).not.toBe(prima);
+    await page.waitForTimeout(2000);
+    await page.screenshot({ path: testInfo.outputPath("riposo-2.png") });
+    /* Il blocco resta dentro lo schermo. */
+    const box = await blocco.boundingBox();
+    const vista = page.viewportSize();
+    expect(box.x).toBeGreaterThanOrEqual(0);
+    expect(box.y).toBeGreaterThanOrEqual(0);
+    expect(box.x + box.width).toBeLessThanOrEqual(vista.width);
+    expect(box.y + box.height).toBeLessThanOrEqual(vista.height);
   });
 
   test("col blocco, per uscire dal pannello serve il PIN", async ({ page }, testInfo) => {
@@ -272,6 +307,38 @@ test.describe("la plancia a muro", () => {
     );
   });
 
+  test("nella pagina Luci una presa ha la stessa card delle luci, e si comanda", async ({
+    page,
+  }, testInfo) => {
+    const seme = structuredClone(SEME_A_MURO);
+    seme.sections.lights.push({
+      id: "l4",
+      name: "Faretti cucina",
+      entity: "switch.faretti_cucina",
+      room_id: "cucina",
+      room: "Cucina",
+    });
+    await apriLaCasaAMuro(page, testInfo, {
+      seme,
+      stati: {
+        ...STATI_A_MURO,
+        "switch.faretti_cucina": { state: "on", attributes: { friendly_name: "Faretti cucina" } },
+      },
+      muro: { attiva: true, pagine: [{ id: "p1", modello: "luci" }] },
+    });
+    const presa = muro(page).locator('.mu-card[data-mu-entita="switch.faretti_cucina"]');
+    await expect(presa).toBeVisible();
+    /* La stessa card della luce: il disco, il nome, lo stato e l'interruttore. */
+    await expect(presa.locator(".mu-disco")).toHaveCount(1);
+    await expect(presa.locator(".mu-stato")).toHaveText(/Accesa/i);
+    await page.screenshot({ path: testInfo.outputPath("luci-a-muro.png") });
+    await presa.locator('[data-mu-fa="interruttore"]').click();
+    await presa.click({ position: { x: 40, y: 120 } });
+    await expect
+      .poll(() => servizi(page).then((s) => s.map((x) => `${x.domain}.${x.service}`)))
+      .toEqual(["switch.toggle", "switch.toggle"]);
+  });
+
   test("il config aperto col pannello sopra (dal menu dell'app) toglie il pannello subito", async ({
     page,
   }, testInfo) => {
@@ -300,6 +367,30 @@ test.describe("la plancia a muro", () => {
     await premuto();
     await muro(page).locator('[data-mu-fa="menu"]').click();
     await expect.poll(() => page.evaluate(() => window.__MENU_PREMUTO__)).toBe(1);
+  });
+
+  /* «L'icona hamburger non funziona, non si apre il menu laterale»: il menu si
+   * apriva, ma sotto il pannello, che sta sopra a tutto. */
+  test("il menu aperto dal ☰ si vede sopra il pannello", async ({ page }, testInfo) => {
+    await apriLaCasaAMuro(page, testInfo, { muro: MURO_DI_PROVA });
+    await muro(page).locator('[data-mu-fa="menu"]').click();
+    const menu = page.locator("#cd-app-menu");
+    await expect(menu).toBeVisible();
+    const inCima = () =>
+      page.evaluate(() => {
+        const sotto = document.elementFromPoint(innerWidth / 2, innerHeight - 30);
+        return sotto?.closest?.("#cd-app-menu")
+          ? "menu"
+          : sotto?.closest?.("#dm-muro")
+            ? "muro"
+            : "";
+      });
+    await expect.poll(inCima).toBe("menu");
+    /* Chiuso il menu, il primo tocco rimette il pannello sopra. */
+    await page.waitForTimeout(400);
+    await page.mouse.click(20, 20);
+    await expect(menu).toHaveCount(0);
+    await expect(muro(page)).not.toHaveAttribute("data-mu-sotto-il-menu", "true");
   });
 
   test("col blocco il ☰ vuole il PIN", async ({ page }, testInfo) => {

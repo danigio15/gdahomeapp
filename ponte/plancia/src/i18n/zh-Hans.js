@@ -1933,6 +1933,7 @@ export default Object.freeze({
   "The SOLAR ΔT box: the gap between collector and tank.": "太阳能 ΔT 框:集热器与水箱之差。",
   "The TOP box next to the tank.": "水箱旁的顶部框。",
   "The VALVE button and the SOLAR KEY in the drawing: open or closed. Left empty, it stays valve.chiave_solare_termico.": "图中的阀门按钮和太阳能钥匙:打开或关闭。留空则为 valve.chiave_solare_termico。",
+  "Nobody home": "无人在家",
   "Open Assist": "打开 Assist",
   "Open GitHub": "打开 GitHub",
   "Open all": "全部打开",

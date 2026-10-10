@@ -4250,6 +4250,7 @@ var SOURCE_INDEX = Object.freeze({
   "Nessuna zona configurata": "No zone configured",
   "Nessuno": "Nobody",
   "Nessuno ha ancora scritto niente.": "Nobody has written anything yet.",
+  "Nessuno in casa": "Nobody home",
   "Nessuno in riproduzione": "Nothing playing",
   "Nessuno scaldabagno configurato": "No water heater configured",
   "Nessuno scaldabagno configurato: aggiungilo dalla scheda Solare della configurazione.": "No water heater configured: add one from the Solar tab in settings.",
@@ -56705,6 +56706,24 @@ function bindNodeClick(element5, node, period) {
   } : null;
   if (click) element5.dataset.dmFlowClickPeriod = period;
 }
+var NOME_PIU_PICCOLO = 6;
+function adattaIlNome(cerchio, nome) {
+  const largo = cerchio?.clientWidth || 0;
+  if (!nome || !largo) return;
+  const chiave2 = `${nome.textContent}|${largo}`;
+  if (nome.dataset.dmAdattato === chiave2) return;
+  nome.style.removeProperty("font-size");
+  delete nome.dataset.dmNomeLungo;
+  const stile5 = doc.defaultView?.getComputedStyle?.(nome);
+  let misura7 = Number.parseFloat(stile5?.fontSize) || 0;
+  const troppo = () => nome.scrollWidth > nome.clientWidth + 1 || nome.scrollHeight > misura7 * 1.1 * 2 + 1;
+  while (misura7 > NOME_PIU_PICCOLO && troppo()) {
+    misura7 -= 0.5;
+    nome.style.setProperty("font-size", `${misura7}px`, "important");
+  }
+  if (troppo()) nome.dataset.dmNomeLungo = "true";
+  nome.dataset.dmAdattato = chiave2;
+}
 function ensureBubble(stage, node, period, scale) {
   let element5 = stage.querySelector(`[data-dm-flow-node="${cssEscape(node.id)}"]`);
   if (!element5) {
@@ -56731,6 +56750,7 @@ function ensureBubble(stage, node, period, scale) {
   setStyleProperty(element5, "--dm-flow-mobile-top", `${node.mobile.top}%`);
   const label = element5.querySelector(".node-label");
   scriviTestoSeCambia(label, node.name);
+  adattaIlNome(element5, label);
   writeIcon(element5.querySelector(".node-icon"), node.icon);
   const value = element5.querySelector(".dm-flow-value");
   scriviTestoSeCambia(value, node.text);
@@ -57208,6 +57228,10 @@ function installStyles24() {
        so a wallbox at 7 kW is visibly heavier than a fridge at 60 W. */
     .flow-stage .node.dm-flow-node{display:flex!important;visibility:visible!important;transform:translate(-50%,-50%) scale(var(--dm-flow-scale,1))!important;transition:left .28s ease,top .28s ease,transform .28s ease!important}
     .flow-stage .node.dm-flow-node[data-dm-flow-active="false"]{opacity:.62!important}
+    /* Il nome sta dentro il cerchio: largo quanto la corda in cima, al massimo
+       due righe; la misura la stringe adattaIlNome. */
+    .flow-stage .node.dm-flow-node .node-label{width:72%!important;white-space:normal!important;overflow:hidden!important;text-overflow:clip!important;line-height:1.1!important;max-height:2.25em;flex:0 0 auto!important;overflow-wrap:normal!important;word-break:normal!important}
+    .flow-stage .node.dm-flow-node .node-label[data-dm-nome-lungo]{white-space:nowrap!important;text-overflow:ellipsis!important}
     .flow-stage path.dm-flow-arc{stroke-width:var(--dm-flow-width,3px)!important;fill:none!important}
     .flow-stage path.dm-flow-arc.dm-energy-flow-active{animation-duration:var(--dm-flow-duration,.8s)!important}
     /* La soglia e' quella del guscio, 768, e non una nostra.
@@ -77151,6 +77175,14 @@ function avvisoAcceso(avviso, stati = {}) {
     return avviso.cond === "gt" ? numero45 > soglia2 : numero45 < soglia2;
   });
 }
+function derivaDelRiposo(adesso = Date.now()) {
+  const n = Math.floor(Number(adesso) / 6e4);
+  const parte = (v) => v - Math.floor(v);
+  return {
+    x: parte(0.5 + n * 0.7548776662466927) * 2 - 1,
+    y: parte(0.5 + n * 0.5698402909980532) * 2 - 1
+  };
+}
 function avvisiAccesi(fonte = {}, stati = {}, centrale = "") {
   const accesi = elenco5(fonte.avvisi).filter((a) => avvisoAcceso(a, stati)).map((a) => ({
     chiave: a.entita[0],
@@ -77191,7 +77223,10 @@ function comandiDellaPagina(pagina2, fonte = {}, zona = "") {
 }
 function comandiDellElenco(modello, fonte = {}) {
   if (modello === "luci")
-    return elenco5(fonte.luci).map((d) => comandoPulito({ tipo: "luce", entita: d.entity }));
+    return elenco5(fonte.luci).map((d) => {
+      const comando = comandoPulito({ tipo: "luce", entita: d.entity });
+      return comando && { ...comando, tipo: "luce" };
+    });
   if (modello === "freddo" || modello === "caldo")
     return elenco5(fonte.clima).filter((d) => zoneDelClima(d.tipo).includes(modello)).map((d) => comandoPulito({ tipo: "clima", entita: d.entity }));
   return [];
@@ -77327,10 +77362,11 @@ async function premiumDellaCasa({ forza = false } = {}) {
   ricorda({ premium });
   return premium;
 }
-var CINQUE_MINUTI = 5 * 60 * 1e3;
+var UN_MINUTO2 = 60 * 1e3;
 async function fonteDelMuro(muro, { forza = false } = {}) {
   const di = muro?.fonte || "primary";
-  if (!forza && state107.fonte && state107.fonteDi === di && Date.now() - state107.fonteLetta < CINQUE_MINUTI)
+  const quiDentro = !root.__DM_MURO_FONTE__ && (di === currentProfile() || !root.__DASHBOARDMODERN_HOSTED__);
+  if (!forza && !quiDentro && state107.fonte && state107.fonteDi === di && Date.now() - state107.fonteLetta < UN_MINUTO2)
     return state107.fonte;
   let fonte = null;
   if (root.__DM_MURO_FONTE__ && typeof root.__DM_MURO_FONTE__ === "object")
@@ -78106,23 +78142,30 @@ function riposo(muro) {
   const chip = avvisi.slice(0, 3).map(
     (a) => `<div class="mu-carta mu-avviso ${a.grave ? "grave" : ""}" style="--acc:${a.grave ? ACCENTI.allarme : "#06b6d4"}"><span class="mu-chip mu-acc" style="--c:40px">${a.grave ? disegno("sicurezza", 24, "av-allarme") : disegno("avvisi", 24, `av-${esc(a.chiave)}`)}</span><b>${esc(a.grave ? t("Antifurto: allarme in corso", "Alarm: triggered") : a.testo)}</b></div>`
   ).join("");
+  const d = derivaDelRiposo(Date.now());
+  const deriva = `style="--dx:${d.x.toFixed(3)};--dy:${d.y.toFixed(3)}"`;
   if (notte)
-    return `<div class="mu-riposo notte" data-mu-fa="sveglia">${chip ? `<div class="mu-avvisi">${chip}</div>` : ""}</div>`;
+    return `<div class="mu-riposo notte" data-mu-fa="sveglia">${chip ? `<div class="mu-deriva" ${deriva}><div class="mu-avvisi">${chip}</div></div>` : ""}</div>`;
   const m = meteo();
   const centrale = centraleDelMuro(pagina2);
   const allarme2 = centrale && stato(centrale) ? STATI_DELL_ALLARME()[stato(centrale).state] : "";
   const stanza = (state107.fonte?.stanze || []).find((s) => s.name === pagina2?.stanza);
   const dentro3 = stanza?.temp && numero40(stato(stanza.temp)?.state) !== null ? `${decimale(stato(stanza.temp).state)}°` : "";
-  return `<div class="mu-riposo" data-mu-fa="sveglia">
+  const persone3 = personeInCasa();
+  const chi = persone3.inCasa === 0 ? t("Nessuno in casa", "Nobody home") : persone3.nomi.length <= 2 ? persone3.nomi.join(" · ") : `${persone3.inCasa} ${t("in casa", "at home")}`;
+  const aperte = finestreAperte().length;
+  return `<div class="mu-riposo" data-mu-fa="sveglia"><div class="mu-deriva" ${deriva}>
     ${chip ? `<div class="mu-avvisi">${chip}</div>` : ""}
     <div class="mu-osw mu-orologione">${esc(o.ora)}</div>
     <div class="mu-et mu-data">${esc(o.lungo)}</div>
     <div class="mu-riposo-riga">
       ${m && numero40(m.temperatura) !== null ? `<span>${disegno("meteo", 34, "rip-meteo")}${decimale(m.temperatura, 0)}° ${esc(PAROLE_DEL_METEO()[m.condizione] || "")}</span>` : ""}
       ${dentro3 ? `<span>${disegno("temperatura", 30, "rip-temp")}${dentro3} ${esc(t("in casa", "inside"))}</span>` : ""}
+      ${persone3.tutte ? `<span data-mu-riposo="persone">${disegno("persone", 30, "rip-persone")}${esc(chi)}</span>` : ""}
+      ${aperte ? `<span data-mu-riposo="aperte" class="mu-attenzione">${disegno("aperture", 30, "rip-aperture")}${aperte} ${esc(aperte === 1 ? t("finestra aperta", "window open") : t("finestre aperte", "windows open"))}</span>` : ""}
       ${allarme2 ? `<span>${disegno("sicurezza", 30, "rip-allarme")}${esc(t("Antifurto", "Alarm"))} · ${esc(allarme2)}</span>` : ""}
     </div>
-    <div class="mu-et mu-tocca">${esc(t("Tocca per i comandi", "Tap for controls"))}</div></div>`;
+    <div class="mu-et mu-tocca">${esc(t("Tocca per i comandi", "Tap for controls"))}</div></div></div>`;
 }
 var SOLO_MURO = "dm-solo-muro";
 var guardaIlConfig = 0;
@@ -78144,7 +78187,21 @@ function configAperto() {
   };
   guardaIlConfig = root.requestAnimationFrame?.(giro) || root.setTimeout?.(giro, 200);
 }
+function scendiSottoIlMenu() {
+  const tela2 = doc?.getElementById?.(ID2);
+  if (!tela2) return;
+  tela2.dataset.muSottoIlMenu = "true";
+  const aperto2 = Date.now();
+  const risali = (evento) => {
+    if (Date.now() - aperto2 < 300) return;
+    if (evento?.target?.closest?.('[data-mu-fa="menu"]')) return;
+    doc.removeEventListener("pointerdown", risali, true);
+    root.setTimeout?.(() => delete tela2.dataset.muSottoIlMenu, 350);
+  };
+  doc.addEventListener("pointerdown", risali, true);
+}
 function apriIlMenu2() {
+  scendiSottoIlMenu();
   const tasto2 = doc?.querySelector?.("body>header .ha-menu-btn") || doc?.querySelector?.(".ha-menu-btn");
   if (tasto2) {
     tasto2.click();
@@ -78259,6 +78316,23 @@ function disegna5() {
     ])
   );
   if (scriviSeCambia(nodo2.firstElementChild, corpo2)) caricaLeTelecamere(nodo2, vecchie);
+  if (state107.riposo) posizionaIlRiposo(nodo2);
+}
+function posizionaIlRiposo(nodo2) {
+  const blocco3 = nodo2.querySelector(".mu-deriva");
+  const riquadro = blocco3?.parentElement;
+  if (!blocco3 || !riquadro) return;
+  const libero = (tutto, suo2) => Math.max(0, (tutto - suo2) / 2 - 16);
+  const dx = Number(blocco3.style.getPropertyValue("--dx")) || 0;
+  const dy = Number(blocco3.style.getPropertyValue("--dy")) || 0;
+  blocco3.style.setProperty(
+    "--sx",
+    `${Math.round(dx * libero(riquadro.clientWidth, blocco3.offsetWidth))}px`
+  );
+  blocco3.style.setProperty(
+    "--sy",
+    `${Math.round(dy * libero(riquadro.clientHeight, blocco3.offsetHeight))}px`
+  );
 }
 function caricaLeTelecamere(nodo2, vecchie = /* @__PURE__ */ new Map()) {
   for (const img of nodo2.querySelectorAll("img[data-mu-telecamera]")) {
@@ -78376,7 +78450,9 @@ function onClick23(event) {
     if (entita3 && dominio2(entita3) === "light") {
       if (state107.compatto) comanda2("light", "toggle", { entity_id: entita3 });
       else apriFinestra({ tipo: "luce", entita: entita3 });
-    } else if (entita3 && dominio2(entita3) === "climate")
+    } else if (entita3 && bersaglio.querySelector?.('[data-mu-fa="interruttore"]'))
+      comanda2(dominio2(entita3), "toggle", { entity_id: entita3 });
+    else if (entita3 && dominio2(entita3) === "climate")
       apriFinestra({ tipo: "clima", entita: entita3, zona: zonaDiQui() });
     else if (entita3 && dominio2(entita3) === "cover") apriFinestra({ tipo: "tapparella", entita: entita3 });
     return;
@@ -78398,7 +78474,7 @@ function onClick23(event) {
       chiudiFinestra();
       return;
     case "interruttore":
-      comanda2("light", "toggle", { entity_id: id });
+      comanda2(dominio2(id) || "light", "toggle", { entity_id: id });
       return;
     case "spegni":
       comanda2(dominio2(id) || "light", "turn_off", { entity_id: id });
@@ -78599,6 +78675,7 @@ async function rileggi3({ forza = false } = {}) {
     } catch (_errore) {
     }
   }
+  ascoltaLaFonte();
   disegna5();
   lasciaIlVelo();
 }
@@ -78611,6 +78688,7 @@ function stili() {
 html.dm-muro-acceso,html.dm-muro-acceso body{overflow:hidden!important}
 html.dm-solo-muro #editor-modal .ed-tabs,html.dm-solo-muro #editor-modal #dm-alberatura-famiglie,html.dm-solo-muro #editor-modal .dm-cerca-config,html.dm-solo-muro #editor-modal .dm-alberatura-titolo-famiglia{display:none!important}
 html.dm-solo-muro #editor-modal .ed-body,html.dm-solo-muro #editor-modal #ed-body{margin-left:0!important;max-width:none!important}
+${MURO}[data-mu-sotto-il-menu]{z-index:4!important}
 ${MURO}{position:fixed;inset:0;z-index:2147482000;overflow:hidden;color:var(--text);font-family:Inter,system-ui,sans-serif;
   -webkit-font-smoothing:antialiased;-webkit-user-select:none;user-select:none;touch-action:manipulation;
   background:radial-gradient(120% 80% at 50% -10%,color-mix(in srgb,var(--card-bg) 70%,transparent),transparent 60%),var(--bg-sculpted)}
@@ -78743,9 +78821,15 @@ ${MURO} .mu-tasti{display:grid;grid-template-columns:repeat(3,96px);gap:16px;jus
 ${MURO} .mu-tasti .mu-tondo{width:96px;height:96px;font-size:32px;font-weight:700}
 ${MURO} .mu-riposo{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:#05080f;color:#dbe4f3}
 ${MURO} .mu-riposo.notte{background:#000}
+${MURO} .mu-deriva{position:absolute;left:50%;top:50%;transform:translate(calc(-50% + var(--sx,0px)),calc(-50% + var(--sy,0px)));display:flex;flex-direction:column;align-items:center;gap:14px;width:max-content;max-width:96%;animation:mu-appari 1.8s ease both}
+@keyframes mu-appari{from{opacity:0}to{opacity:1}}
+@media (prefers-reduced-motion:reduce){${MURO} .mu-deriva{animation:none}}
+${MURO} .mu-deriva .mu-avvisi{position:static;padding:0;margin-bottom:10px}
+${MURO} .mu-deriva .mu-tocca{position:static;margin-top:14px}
+${MURO} .mu-riposo-riga .mu-attenzione{color:#fbbf24}
 ${MURO} .mu-orologione{font-size:240px;line-height:.9}
 ${MURO} .mu-data{font-size:18px;letter-spacing:.2em}
-${MURO} .mu-riposo-riga{display:flex;gap:40px;margin-top:22px;color:#92a4c2;font-weight:700;font-size:20px}
+${MURO} .mu-riposo-riga{display:flex;flex-wrap:wrap;justify-content:center;gap:16px 40px;margin-top:22px;color:#92a4c2;font-weight:700;font-size:20px}
 ${MURO} .mu-riposo-riga span{display:flex;align-items:center;gap:10px}
 ${MURO} .mu-tocca{position:absolute;bottom:28px;opacity:.6}
 ${MURO} .mu-avvisi{position:absolute;top:28px;left:0;right:0;display:flex;justify-content:center;gap:12px;flex-wrap:wrap;padding:0 20px}
@@ -78817,6 +78901,51 @@ ${MURO}[data-verso="verticale"] .mu-riposo-riga{flex-direction:column;gap:14px;a
 `
   );
 }
+var EVENTO_DELLA_CONFIGURAZIONE = "dashboardmodern_config";
+var orecchio = { id: 0, socket: null, gestore: null, controllato: 0 };
+function eCambiataLaFonte(messaggio, profilo2) {
+  if (messaggio?.type !== "event") return false;
+  const evento = messaggio.event;
+  if (evento?.event_type !== EVENTO_DELLA_CONFIGURAZIONE) return false;
+  return clean(evento?.data?.profile || "primary") === clean(profilo2 || "primary");
+}
+function ascoltaLaFonte() {
+  const socket = lexicalGlobal("ws");
+  const pending = lexicalGlobal("pendingWsCallbacks");
+  if (!socket || socket.readyState !== 1 || !pending) return false;
+  if (orecchio.id && orecchio.socket === socket && pending[orecchio.id] === orecchio.gestore)
+    return true;
+  let id;
+  try {
+    id = root.eval("msgId++");
+  } catch (_errore) {
+    return false;
+  }
+  if (!Number.isFinite(Number(id))) return false;
+  const gestore = (messaggio) => {
+    if (state107.muro?.attiva && eCambiataLaFonte(messaggio, state107.muro.fonte))
+      rileggi3({ forza: true }).catch(() => {
+      });
+  };
+  gestore.keepAlive = true;
+  pending[id] = gestore;
+  try {
+    socket.send(
+      JSON.stringify({ id, type: "subscribe_events", event_type: EVENTO_DELLA_CONFIGURAZIONE })
+    );
+  } catch (_errore) {
+    delete pending[id];
+    return false;
+  }
+  Object.assign(orecchio, { id, socket, gestore });
+  return true;
+}
+function controllaLOrecchio() {
+  const adesso = Date.now();
+  if (adesso - orecchio.controllato < 1e4) return;
+  orecchio.controllato = adesso;
+  if (state107.muro?.attiva) ascoltaLaFonte();
+}
 function installPlanciaAMuro() {
   if (!doc || state107.installed) return false;
   state107.installed = true;
@@ -78834,10 +78963,20 @@ function installPlanciaAMuro() {
     root.addEventListener?.(evento, ancora2);
   root.addEventListener?.("dashboardmodern:states-ready", () => disegna5());
   root.addEventListener?.("dashboardmodern:state-changed", (event) => {
+    controllaLOrecchio();
     svegliaSeServe(event);
     disegna5();
   });
   root.addEventListener?.("resize", () => disegna5());
+  for (const evento of ["dashboardmodern:persistence-saved", "dashboardmodern:store-user-write"])
+    root.addEventListener?.(evento, () => {
+      if (state107.muro?.attiva) ancora2();
+    });
+  doc.addEventListener?.("visibilitychange", () => {
+    if (doc.visibilityState === "visible" && state107.muro?.attiva)
+      rileggi3({ forza: true }).catch(() => {
+      });
+  });
   root.addEventListener?.("storage", (event) => {
     if (String(event?.key || "").endsWith(CHIAVE_MURO)) ancora2();
   });

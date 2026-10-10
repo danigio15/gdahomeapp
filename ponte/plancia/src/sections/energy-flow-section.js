@@ -598,6 +598,33 @@ function bindNodeClick(element, node, period) {
   if (click) element.dataset.dmFlowClickPeriod = period;
 }
 
+/* Il nome dentro il cerchio: «il testo non entra, deve essere adattato».
+ * In cima un cerchio e' piu' stretto che al centro, e «LOCALE TECNICO» usciva
+ * dai bordi anche coi puntini. Il nome va su due righe se serve, e la scritta
+ * scende di mezzo pixel alla volta finche' non entra — non sotto i 6 px. Si
+ * rifa' solo quando cambiano il nome o la misura del cerchio. */
+const NOME_PIU_PICCOLO = 6;
+
+function adattaIlNome(cerchio, nome) {
+  const largo = cerchio?.clientWidth || 0;
+  if (!nome || !largo) return;
+  const chiave = `${nome.textContent}|${largo}`;
+  if (nome.dataset.dmAdattato === chiave) return;
+  nome.style.removeProperty("font-size");
+  delete nome.dataset.dmNomeLungo;
+  const stile = doc.defaultView?.getComputedStyle?.(nome);
+  let misura = Number.parseFloat(stile?.fontSize) || 0;
+  const troppo = () =>
+    nome.scrollWidth > nome.clientWidth + 1 || nome.scrollHeight > misura * 1.1 * 2 + 1;
+  while (misura > NOME_PIU_PICCOLO && troppo()) {
+    misura -= 0.5;
+    nome.style.setProperty("font-size", `${misura}px`, "important");
+  }
+  /* Una parola sola che non entra nemmeno cosi': una riga, coi puntini. */
+  if (troppo()) nome.dataset.dmNomeLungo = "true";
+  nome.dataset.dmAdattato = chiave;
+}
+
 function ensureBubble(stage, node, period, scale) {
   let element = stage.querySelector(`[data-dm-flow-node="${cssEscape(node.id)}"]`);
   if (!element) {
@@ -624,6 +651,7 @@ function ensureBubble(stage, node, period, scale) {
   setStyleProperty(element, "--dm-flow-mobile-top", `${node.mobile.top}%`);
   const label = element.querySelector(".node-label");
   scriviTestoSeCambia(label, node.name);
+  adattaIlNome(element, label);
   writeIcon(element.querySelector(".node-icon"), node.icon);
   const value = element.querySelector(".dm-flow-value");
   scriviTestoSeCambia(value, node.text);
@@ -1396,6 +1424,10 @@ function installStyles() {
        so a wallbox at 7 kW is visibly heavier than a fridge at 60 W. */
     .flow-stage .node.dm-flow-node{display:flex!important;visibility:visible!important;transform:translate(-50%,-50%) scale(var(--dm-flow-scale,1))!important;transition:left .28s ease,top .28s ease,transform .28s ease!important}
     .flow-stage .node.dm-flow-node[data-dm-flow-active="false"]{opacity:.62!important}
+    /* Il nome sta dentro il cerchio: largo quanto la corda in cima, al massimo
+       due righe; la misura la stringe adattaIlNome. */
+    .flow-stage .node.dm-flow-node .node-label{width:72%!important;white-space:normal!important;overflow:hidden!important;text-overflow:clip!important;line-height:1.1!important;max-height:2.25em;flex:0 0 auto!important;overflow-wrap:normal!important;word-break:normal!important}
+    .flow-stage .node.dm-flow-node .node-label[data-dm-nome-lungo]{white-space:nowrap!important;text-overflow:ellipsis!important}
     .flow-stage path.dm-flow-arc{stroke-width:var(--dm-flow-width,3px)!important;fill:none!important}
     .flow-stage path.dm-flow-arc.dm-energy-flow-active{animation-duration:var(--dm-flow-duration,.8s)!important}
     /* La soglia e' quella del guscio, 768, e non una nostra.

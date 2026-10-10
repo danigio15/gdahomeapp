@@ -2735,6 +2735,7 @@ export const SOURCE_INDEX = Object.freeze({
   "Nessuna zona configurata": "No zone configured",
   "Nessuno": "Nobody",
   "Nessuno ha ancora scritto niente.": "Nobody has written anything yet.",
+  "Nessuno in casa": "Nobody home",
   "Nessuno in riproduzione": "Nothing playing",
   "Nessuno scaldabagno configurato": "No water heater configured",
   "Nessuno scaldabagno configurato: aggiungilo dalla scheda Solare della configurazione.": "No water heater configured: add one from the Solar tab in settings.",

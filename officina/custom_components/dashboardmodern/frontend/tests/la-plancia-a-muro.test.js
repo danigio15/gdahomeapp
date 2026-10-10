@@ -10,9 +10,11 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { climaScalda } from "../src/core/device-model.js";
 import {
+  comandiDellElenco,
   comandiDellaPagina,
   comandoPulito,
   comandiProposti,
+  derivaDelRiposo,
   eNotte,
   fonteDaiValori,
   ingressoProposto,
@@ -346,6 +348,19 @@ test("le pagine elenco: tutte le luci, il clima che raffresca e quello che scald
   assert.equal(nuovaPagina("personale", fonte).scelti, true);
 });
 
+test("nella pagina Luci anche una presa fa la card della luce", () => {
+  const comandi = comandiDellElenco("luci", {
+    luci: [{ entity: "light.lampadario" }, { entity: "switch.faretti_cucina" }],
+  });
+  assert.deepEqual(
+    comandi.map((c) => [c.entita, c.tipo]),
+    [
+      ["light.lampadario", "luce"],
+      ["switch.faretti_cucina", "luce"],
+    ],
+  );
+});
+
 test("caldo o freddo: comanda quello che fa, poi la pagina, poi il tipo", () => {
   assert.equal(climaScalda({ stato: "heat_cool", azione: "heating" }), true);
   assert.equal(climaScalda({ stato: "heat", tipo: "clima" }), true);
@@ -356,4 +371,17 @@ test("caldo o freddo: comanda quello che fa, poi la pagina, poi il tipo", () => 
   assert.equal(climaScalda({ stato: "off", tipo: "clima" }), false);
   assert.equal(climaScalda({ stato: "off", tipo: "pompa", zona: "caldo" }), true);
   assert.equal(climaScalda({ stato: "off", tipo: "pompa" }), false);
+});
+
+test("il riposo cambia posto ogni minuto, e mai vicino a quello di prima", () => {
+  const minuto = 60000;
+  const base = Date.UTC(2026, 9, 10, 21, 0, 0);
+  assert.deepEqual(derivaDelRiposo(base), derivaDelRiposo(base + 59000), "fermo dentro il minuto");
+  let prima = derivaDelRiposo(base);
+  for (let i = 1; i <= 240; i += 1) {
+    const ora = derivaDelRiposo(base + i * minuto);
+    assert.ok(Math.abs(ora.x) <= 1 && Math.abs(ora.y) <= 1, "dentro il riquadro");
+    assert.ok(Math.hypot(ora.x - prima.x, ora.y - prima.y) > 0.4, `minuto ${i}: troppo vicino`);
+    prima = ora;
+  }
 });

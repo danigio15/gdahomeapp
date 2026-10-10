@@ -1933,6 +1933,7 @@ export default Object.freeze({
   "The SOLAR ΔT box: the gap between collector and tank.": "GÜNEŞ ΔT kutusu: kolektör ile depo arasındaki fark.",
   "The TOP box next to the tank.": "Deponun yanındaki ÜST kutusu.",
   "The VALVE button and the SOLAR KEY in the drawing: open or closed. Left empty, it stays valve.chiave_solare_termico.": "Çizimdeki VANA düğmesi ve GÜNEŞ ANAHTARI: açık ya da kapalı. Boş kalırsa valve.chiave_solare_termico olur.",
+  "Nobody home": "Evde kimse yok",
   "Open Assist": "Assist'i aç",
   "Open GitHub": "GitHub'ı aç",
   "Open all": "Tümünü aç",

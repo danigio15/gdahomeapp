@@ -10,6 +10,25 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.11.1
+
+**Il pannello a muro si aggiorna subito.** Quando una plancia salva la sua
+configurazione, il pannello che legge da lei la rilegge all'istante, senza
+aspettare. Il ☰ in cima apre il menu laterale sopra il pannello, e nella
+pagina Luci le prese hanno la stessa card delle luci e si accendono davvero.
+A riposo l'orologio e le informazioni cambiano posto ogni minuto, così lo
+schermo non si segna; e passando davanti si legge anche chi è in casa e
+quante finestre sono rimaste aperte.
+
+**Energia:** i nomi lunghi delle stanze stanno dentro i cerchi del flusso,
+su due righe se serve.
+
+**Navigatore:** la freccia è come quella di Waze, e col traffico il celeste
+ai lati della coda si vede bene.
+
+**iPhone:** l'app con l'Apple Watch dentro si costruisce di nuovo per
+TestFlight.
+
 ## 1.11.0
 
 **gdahome anche al polso, su Apple Watch e Wear OS.** I comandi rapidi scelti
