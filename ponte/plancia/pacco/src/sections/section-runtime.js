@@ -44,6 +44,7 @@ import {
   EVENTO_VEICOLO_IN_SCHEDA,
   FASI_STUFA,
   FRONTALE,
+  GRUPPI_DEL_SOLARE,
   GRUPPO_PELLET,
   HomeAssistantBroker,
   ID_FOGLIO_OGGETTI,
@@ -488,7 +489,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-S6URWQYZ.js";
+} from "../../chunk-X4N3BPP2.js";
 
 // src/core/appliance-hero-artwork.js
 var FLOOR = (w = 150, id = "") => `<ellipse cx="120" cy="216" rx="${w / 2}" ry="11" fill="#0f172a" opacity=".14" filter="url(#dmh-blur-${id})"/>`;
@@ -1656,6 +1657,7 @@ var SOURCE_INDEX = Object.freeze({
   "⭐ Personalizzati": "⭐ Custom",
   "🌀 Ventole e livelli": "🌀 Fans and levels",
   "🌞 Impianto in pagina": "🌞 Plant on the page",
+  "🌡️ Le misure": "🌡️ Readings",
   "🌡️ Le quattro temperature": "🌡️ The four temperatures",
   "🌡️ Percepita": "🌡️ Feels like",
   "🌡️ Temperature": "🌡️ Temperatures",
@@ -1671,6 +1673,7 @@ var SOURCE_INDEX = Object.freeze({
   "🍽️ Lavastoviglie": "🍽️ Dishwasher",
   "🎉 Tutto pronto!": "🎉 All set!",
   "🎚️ Questa entità è un menu a tendina: il tasto apre un popup con le sue voci. Oppure fissane una qui.": "🎚️ This entity is a dropdown: the button opens a popup with its options. Or fix one here.",
+  "🎛️ I tasti": "🎛️ Buttons",
   "🎛️ La macchina": "🎛️ The machine",
   "🎛️ STATO E CONTROLLO": "🎛️ STATE AND CONTROL",
   "🏠 Casa": "🏠 Home",
@@ -2584,7 +2587,6 @@ var SOURCE_INDEX = Object.freeze({
   "Cena dai nonni": "Dinner at the grandparents",
   "Centrale allarme": "Alarm panel",
   "Centralina": "Controller",
-  "Centralina solare termico": "Solar controller",
   "Centrifuga": "Spin",
   "Centrifuga (select)": "Spin (select)",
   "Cerca (es. acqua, porta, fuoco)…": "Search (e.g. water, door, fire)…",
@@ -2947,6 +2949,7 @@ var SOURCE_INDEX = Object.freeze({
   "Diagnostica runtime": "Runtime diagnostics",
   "dice": "says",
   "dice se c'è qualcuno": "it tells whether someone is there",
+  "Dice se la pompa sta girando: accende il tasto POMPA SOL. e fa scorrere i tubi nel disegno. Se il comando qui sopra dice già acceso o spento, metti la stessa entità.": "Says whether the pump is running: lights the SOLAR PUMP button and makes the pipes flow in the drawing. If the command above already says on or off, use the same entity.",
   "dice se la stanza è occupata": "it tells whether the room is busy",
   "Dicembre": "December",
   "Difetti": "Bugs",
@@ -3476,7 +3479,12 @@ var SOURCE_INDEX = Object.freeze({
   "Il report e i periodi": "The report and the periods",
   "Il resto del popup": "The rest of the popup",
   "Il rilevamento aggiunge solo ciò che manca: niente doppioni.": "Detection only adds what is missing: no duplicates.",
+  "Il riquadro ALTO accanto all'accumulo.": "The TOP box next to the tank.",
+  "Il riquadro BASSO accanto all'accumulo.": "The BOTTOM box next to the tank.",
   "Il riquadro delle telecamere adesso non c'è. L'allarme e i varchi restano dove sono, e le telecamere configurate non sono state toccate.": "The camera panel is not there now. The alarm and the openings stay where they are, and the configured cameras have not been touched.",
+  "Il riquadro POTENZA BOILER.": "The BOILER POWER box.",
+  "Il riquadro PRESSIONE.": "The PRESSURE box.",
+  "Il riquadro ΔT SOLARE: la differenza fra pannello e accumulo.": "The SOLAR ΔT box: the gap between collector and tank.",
   "Il rischio delle graminacee preso da sé: da 1, molto basso, a 4, alto. Chi è allergico a una sola famiglia vede l'allerta anche quando la media della giornata è tranquilla.": "The grass risk on its own: from 1, very low, to 4, high. Whoever is allergic to one family only still sees the alert when the day's average is quiet.",
   "Il sensore che dice aperto o chiuso: binary_sensor.*, oppure un cover.* se l'infisso è motorizzato.": "The sensor that says open or closed: binary_sensor.*, or a cover.* if it is motorised.",
   "Il sensore che dice se c'è qualcuno: binary_sensor.* di classe motion, occupancy o presence.": "The sensor that says whether someone is there: a binary_sensor.* of class motion, occupancy or presence.",
@@ -3495,6 +3503,12 @@ var SOURCE_INDEX = Object.freeze({
   "Il sensore piantato nella terra, in percento: Ecowitt, Tuya, Xiaomi.": "The sensor stuck in the soil, in percent: Ecowitt, Tuya, Xiaomi.",
   "Il servizio dell'auto ha rifiutato le credenziali dell'integrazione: riprova, e se continua riconnetti l'integrazione in Impostazioni → Dispositivi e servizi.": "The car service refused the integration's credentials: try again, and if it keeps happening reconnect the integration in Settings → Devices & services.",
   "Il target è di sola lettura: collega evcc nella scheda Auto per cambiarlo.": "The target is read-only: connect evcc in the Car tab to change it.",
+  "Il tasto BOILER.": "The BOILER button.",
+  "Il tasto CENTRALINA.": "The CONTROLLER button.",
+  "Il tasto CTRL SOLARE; quando è acceso, nel disegno il pannello si illumina.": "The SOLAR CTRL button; when it is on, the panel lights up in the drawing.",
+  "Il tasto POMPA SOL.: toccandolo si accende o si spegne questa entità.": "The SOLAR PUMP button: tapping it switches this entity on or off.",
+  "Il tasto V. SICUREZZA: aperta quando la posizione è sopra zero.": "The SAFETY V. button: open when its position is above zero.",
+  "Il tasto VALVOLA e la CHIAVE SOLARE nel disegno: aperta o chiusa. Vuota, resta valve.chiave_solare_termico.": "The VALVE button and the SOLAR KEY in the drawing: open or closed. Left empty, it stays valve.chiave_solare_termico.",
   "Il tema e la barra": "The theme and the bar",
   "Il tempo è fermo finché non riprende": "The timer is stopped until it resumes",
   "Il testo della segnalazione": "The text of the report",
@@ -3643,12 +3657,10 @@ var SOURCE_INDEX = Object.freeze({
   "Interruttore": "Toggle",
   "Interruttore (accende e spegne)": "Switch (turns it on and off)",
   "Interruttore (se non c'è il termostato)": "Switch (when there is no thermostat)",
-  "Interruttore boiler": "Boiler switch",
   "Interruttore del dispositivo": "Device switch",
   "Interruttore della resistenza": "Heating element switch",
   "Interruttore di": "Switch for",
   "Interruttore di esclusione": "Bypass switch",
-  "Interruttore solare termico": "Solar switch",
   "Interruttore ventola": "Fan switch",
   "Interruttore, luce o scena da comandare — i popup non ne hanno bisogno": "Switch, light or scene to control — popups do not need one",
   "Intestazione": "Header",
@@ -3774,6 +3786,7 @@ var SOURCE_INDEX = Object.freeze({
   "La stessa stanza può essere selezionata più volte. Ogni associazione può avere un nome e sensori temperatura/umidità propri.": "The same room can be selected multiple times. Each association can have its own name, temperature entity and humidity entity.",
   "La stufa scalda la stanza in cui sta: la pagina disegna la fiamma, la potenza, il ventilatore, la canna fumaria e il serbatoio, e dà i tasti per accenderla, l'obiettivo, la potenza e il ventilatore. Nessuna casella è obbligatoria: col solo termostato la pagina ha già quasi tutto. Se ne hai più d'una aggiungile qui, e in pagina compare la fila per passare dall'una all'altra.": "The stove heats the room it stands in: the page draws the flame, the power, the fan, the flue and the hopper, and gives you the buttons for on and off, the target, the power and the fan. No field is required: with just the thermostat the page already has almost everything. With more than one, add them here and the page grows a row to switch between them.",
   "La sua configurazione": "Its settings",
+  "La temperatura del pannello, nel disegno accanto ai collettori.": "The collector temperature, next to the panels in the drawing.",
   "La tessera del muro mostra il flusso continuo invece di un'istantanea ogni quattro secondi — è quello che fa «camera_view: live». Tiene aperta una connessione mentre guardi la sezione Sicurezza: accendilo sulle telecamere che vuoi vedere muoversi.": "The wall tile shows the continuous stream instead of a still every four seconds — this is what “camera_view: live” does. It holds a connection open while you are looking at the Security section: turn it on for the cameras you want to see moving.",
   "La tua domanda": "Your question",
   "La vita che resta al filtro della fontanella, in percentuale: sotto soglia la scheda dice che è a fine corsa.": "The fountain filter's remaining life, as a percentage: below the threshold the card says it is worn out.",
@@ -4545,7 +4558,8 @@ var SOURCE_INDEX = Object.freeze({
   "Pompa filtrazione": "Filtration pump",
   "Pompa in funzione": "Pump running",
   "Pompa Solare": "Solar Pump",
-  "Pompa solare (manuale)": "Solar pump (manual)",
+  "Pompa solare — comando": "Solar pump — command",
+  "Pompa solare — se gira": "Solar pump — running",
   "Pompa termocamino": "Fireplace pump",
   "Pompiere": "Firefighter",
   "Porta": "Door",
@@ -5127,7 +5141,6 @@ var SOURCE_INDEX = Object.freeze({
   "Sensore giornaliero": "Daily sensor",
   "Sensore minuti, hh:mm o timestamp di fine: alimenta l'anello del conto alla rovescia.": "Minutes, hh:mm or end timestamp sensor: feeds the countdown ring.",
   "Sensore o calendario del ritiro": "Collection sensor or calendar",
-  "Sensore pompa solare": "Solar pump sensor",
   "Sensore probabilità pioggia": "Rain probability sensor",
   "Sensore temperatura": "Temperature sensor",
   "Sensore umidità": "Humidity sensor",
@@ -5259,9 +5272,6 @@ var SOURCE_INDEX = Object.freeze({
   "Sonda cloro / redox": "Chlorine / redox probe",
   "Sonda pannello solare (°C)": "Solar collector probe (°C)",
   "Sonda pH": "pH probe",
-  "Sonda temperatura 1 (°C)": "Temperature probe 1 (°C)",
-  "Sonda temperatura 2 (°C)": "Temperature probe 2 (°C)",
-  "Sonda temperatura 3 (°C)": "Temperature probe 3 (°C)",
   "Sono conteggiati solo sensori giornalieri o delta Recorder dei contatori cumulativi. I valori lifetime non vengono mai sommati direttamente.": "Only daily sensors or Recorder deltas from cumulative total meters are counted. Lifetime values are never added directly.",
   "Sono le card del popup che si apre cliccando il cerchio nel flusso, e la somma di cui il cerchio è il totale. Un elettrodomestico assegnato a questo carico dall'editor Elettrodomestici compare qui da solo.": "These are the cards of the popup opened by clicking the circle in the flow, and the total the circle shows. An appliance assigned to this load from the Appliances editor appears here on its own.",
   "Sono mostrate solo le stanze che contengono almeno una luce. Modifica apre tutti i dati della luce, non una finestra del browser. Le pastiglie dicono cosa sa fare ogni luce — RGB, bianco regolabile, dimmer o solo acceso/spento — ed è quello che comanda i controlli nel popup.": "Only rooms containing a light are shown. Edit opens all light fields, not a browser prompt. The pills say what each light can do — RGB, tunable white, dimmer or plain on/off — and that is what drives the controls in the popup.",
@@ -5355,7 +5365,6 @@ var SOURCE_INDEX = Object.freeze({
   "Stato non mappato": "State not mapped",
   "Stato o programma": "State or programme",
   "stato o valore a mano (es. heat, 23.5, open)": "manual state or value (e.g. heat, 23.5, open)",
-  "Stato pompa solare": "Solar pump state",
   "stato programma": "program state",
   "Stato termico (Caldo)": "Thermal status (Heat)",
   "stato/valore a mano": "manual state/value",
@@ -5750,6 +5759,7 @@ var SOURCE_INDEX = Object.freeze({
   "Valvola": "Valve",
   "Valvola della zona": "Zone valve",
   "Valvola di sicurezza (cover)": "Safety valve (cover)",
+  "Valvola solare (chiave)": "Solar valve (key)",
   "Valvola TRV (posizione %)": "TRV valve (position %)",
   "Vampiro": "Vampire",
   "vanno bene: le statistiche non coprono ancora il periodo chiesto": "both fine: statistics do not cover the requested period yet",
@@ -45931,7 +45941,8 @@ var CASELLE_SOLARE2 = Object.freeze([
   { ref: "dm.boiler_centralina_solare_termico", glyph: "🎛️", acceso: true },
   { ref: "dm.boiler_interruttore_solare_termico", glyph: "🔌", acceso: true },
   { ref: "dm.boiler_interruttore_boiler", glyph: "🔌", acceso: true },
-  { ref: "dm.boiler_valvola_di_sicurezza", glyph: "🛡️", acceso: true }
+  { ref: "dm.boiler_valvola_di_sicurezza", glyph: "🛡️", acceso: true },
+  { ref: "dm.boiler_chiave_solare", glyph: "🗝️", acceso: true }
 ]);
 var STATI_ACCESI2 = /^(on|true|1|running|attiva|attivo|open|aperta|heat|heating)$/i;
 var STATI_SPENTI = /^(off|false|0|idle|ferma|fermo|closed|chiusa|standby)$/i;
@@ -93554,14 +93565,18 @@ function salvaSolari(lista5, scelto) {
   }
 }
 function caselleSolare(index, voce2) {
-  return CASELLE_SOLARE.map(({ ref, it, en }) => {
-    const id = `dm-solare-${index}-${ref.replace(/\W+/g, "_")}`;
-    return `<label class="ed-slot dm-todo-ed-field"><span class="ed-slot-lbl">${esc(t(it, en))}</span>
+  return GRUPPI_DEL_SOLARE.map(
+    (gruppo) => `<div class="ed-sec-title dm-solare-gruppo">${esc(t(gruppo.it, gruppo.en))}</div>` + CASELLE_SOLARE.filter((riga3) => riga3.gruppo === gruppo.id).map(({ ref, it, en, aiutoIt, aiutoEn }) => {
+      const id = `dm-solare-${index}-${ref.replace(/\W+/g, "_")}`;
+      return `<label class="ed-slot dm-todo-ed-field"><span class="ed-slot-lbl">${esc(t(it, en))}</span>
       <span class="ed-form-row"><input id="${id}" class="ed-input mono" data-solare-field="${esc(ref)}"
         value="${esc(clean(voce2?.caselle?.[ref]))}" placeholder="sensor.qualcosa" autocomplete="off"
         spellcheck="false"><button type="button" class="dm-entity-picker" data-solare-pick="${id}"
-        aria-label="${t("Scegli entità", "Choose entity")}">🔍</button></span></label>`;
-  }).join("");
+        aria-label="${t("Scegli entità", "Choose entity")}">🔍</button></span><small class="dm-solare-aiuto">${esc(
+        t(aiutoIt, aiutoEn)
+      )}</small></label>`;
+    }).join("")
+  ).join("");
 }
 function rigaSolareMarkup(voce2, index) {
   const aperto2 = state139.solAperto === index;
@@ -93978,9 +93993,52 @@ function sistemaLeCaselleDelSolare(body, attiva2) {
     if (caselle2.parentElement !== posto) posto.prepend(caselle2);
     caselle2.hidden = false;
     caselle2.open = true;
+    ordinaLeCaselleDelSolare(caselle2);
     return true;
   }
   caselle2.hidden = true;
+  return true;
+}
+function ordinaLeCaselleDelSolare(caselle2) {
+  const corpo2 = caselle2.querySelector(".ed-acc-body");
+  if (!corpo2) return false;
+  const casella3 = (ref) => corpo2.querySelector(`.ed-slot-in[data-ref="${ref}"]`)?.closest(".ed-slot") || null;
+  const prima = CASELLE_SOLARE.map((riga3) => casella3(riga3.ref)).find(Boolean);
+  if (!prima || prima.parentElement !== corpo2) return false;
+  const voluti = [];
+  for (const gruppo of GRUPPI_DEL_SOLARE) {
+    const righe2 = CASELLE_SOLARE.filter((riga3) => riga3.gruppo === gruppo.id).map((riga3) => [riga3, casella3(riga3.ref)]).filter(([, nodo2]) => nodo2 && nodo2.parentElement === corpo2);
+    if (!righe2.length) continue;
+    let titolo = corpo2.querySelector(`:scope > [data-dm-solare-gruppo="${gruppo.id}"]`);
+    if (!titolo) {
+      titolo = doc.createElement("div");
+      titolo.className = "ed-sec-title dm-solare-gruppo";
+      titolo.dataset.dmSolareGruppo = gruppo.id;
+      titolo.textContent = t(gruppo.it, gruppo.en);
+    }
+    voluti.push(titolo);
+    for (const [riga3, nodo2] of righe2) {
+      const nome = nodo2.querySelector(".ed-slot-lbl input.wz-lbl-edit");
+      const nuovo = t(riga3.it, riga3.en);
+      if (nome && nome.value !== nuovo && (riga3.fabbrica || []).includes(clean(nome.value)))
+        nome.value = nuovo;
+      if (!nodo2.querySelector("[data-dm-solare-aiuto]")) {
+        const aiuto = doc.createElement("div");
+        aiuto.className = "ed-hint dm-solare-aiuto";
+        aiuto.dataset.dmSolareAiuto = "";
+        aiuto.textContent = t(riga3.aiutoIt, riga3.aiutoEn);
+        nodo2.append(aiuto);
+      }
+      voluti.push(nodo2);
+    }
+  }
+  if (!voluti.length) return false;
+  if (!voluti[0].isConnected) prima.before(voluti[0]);
+  let cursore = voluti[0];
+  for (const nodo2 of voluti.slice(1)) {
+    if (cursore.nextElementSibling !== nodo2) cursore.after(nodo2);
+    cursore = nodo2;
+  }
   return true;
 }
 function ridisegna15() {
@@ -94277,6 +94335,12 @@ function installStyles68() {
   installStyle(
     "dm-impianti-termici-editor-style",
     `
+      /* I due gruppi del solare e la riga che dice cosa muove ogni casella:
+         la voce di una nota, piccola e smorzata, come la spiegazione della
+         casella caldaia. */
+      #ed-body .dm-solare-gruppo{margin:18px 0 6px}
+      #ed-body .dm-solare-aiuto{display:block;margin:4px 0 2px;font-size:12px;line-height:1.4;
+        color:var(--secondary-text-color,#64748b)}
       #ed-body .dm-it-ed-sep{margin-top:24px;padding-top:16px;
         border-top:1px solid var(--card-border,#e2e8f0)}
       #ed-body .dm-it-ed-scelte{display:grid;gap:8px;margin-bottom:6px}

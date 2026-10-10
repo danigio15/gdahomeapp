@@ -2734,6 +2734,7 @@ const CASELLE_SOLARE = Object.freeze([
   { ref: "dm.boiler_interruttore_solare_termico", glyph: "🔌", acceso: true },
   { ref: "dm.boiler_interruttore_boiler", glyph: "🔌", acceso: true },
   { ref: "dm.boiler_valvola_di_sicurezza", glyph: "🛡️", acceso: true },
+  { ref: "dm.boiler_chiave_solare", glyph: "🗝️", acceso: true },
 ]);
 
 const STATI_ACCESI = /^(on|true|1|running|attiva|attivo|open|aperta|heat|heating)$/i;

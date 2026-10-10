@@ -1138,6 +1138,10 @@ async function connect() {
   ws.onclose = () => { document.getElementById('live-dot').classList.remove('connected'); setTxt('conn-text', 'Riconnessione...'); /* Le risposte di questa socket non arriveranno mai piu': i gestori in attesa (comprese le sottoscrizioni keepAlive del WebRTC) si buttano, o si accumulano a ogni riconnessione. */ try { pendingWsCallbacks = {}; } catch (e) {} setTimeout(connect, 5000); };
 }
 
+/* La valvola del solare (chiave) ha la sua casella, «Valvola solare (chiave)»:
+   finche' nessuno la compila resta l'entita' di sempre, valve.chiave_solare_termico. */
+function cdRefChiaveSolare() { return ENTITY_OVERRIDES['dm.boiler_chiave_solare'] ? 'dm.boiler_chiave_solare' : 'valve.chiave_solare_termico'; }
+
 function toggle(eid) {
   if(!ws) return;
   if(navigator.vibrate) navigator.vibrate(10);
@@ -3713,6 +3717,7 @@ const CD_SLOTS = {
         { ref: 'dm.boiler_delta_temperatura', lbl: 'Delta temperatura (°C)' },
         { ref: 'dm.boiler_pressione_acqua',             lbl: 'Pressione acqua (bar)' },
         { ref: 'dm.boiler_valvola_di_sicurezza',         lbl: 'Valvola di sicurezza (cover)' },
+        { ref: 'dm.boiler_chiave_solare',               lbl: 'Valvola solare (chiave)' },
         { ref: 'dm.boiler_sonda_temperatura_1', lbl: 'Sonda temperatura 1 (°C)' },
         { ref: 'dm.boiler_sonda_temperatura_2', lbl: 'Sonda temperatura 2 (°C)' },
         { ref: 'dm.boiler_sonda_temperatura_3', lbl: 'Sonda temperatura 3 (°C)' },
@@ -6907,7 +6912,7 @@ function render() {
       const isPompaSolActive = getRawState('dm.boiler_stato_pompa_solare') === 'on'; setActiveState('syn-p-solare', isPompaSolActive); updateBoilerBtn('b-c-pompasol', isPompaSolActive); const sun = document.getElementById('syn-sun'); if(sun) sun.classList.toggle('active', isPompaSolActive); setLine('flow-sol-hot', isPompaSolActive); setLine('flow-sol-cold', isPompaSolActive);
       const isPannelloSolActive = getRawState('dm.boiler_interruttore_solare_termico') === 'on'; const sPanel = document.querySelector('.syn-solar-panel'); if(sPanel) sPanel.classList.toggle('active', isPannelloSolActive);
       const isRicircoloActive = getRawState('dm.core_051') === 'on'; setActiveState('syn-p-ricircolo', isRicircoloActive); updateBoilerBtn('b-c-ricircolo', isRicircoloActive); setLine('flow-ricircolo', isRicircoloActive); 
-      const chiaveState = getRawState('valve.chiave_solare_termico'); const isChiaveOpen = chiaveState === 'open'; setActiveState('syn-v-chiave', isChiaveOpen); updateBoilerBtn('b-c-valvola', isChiaveOpen, 'APERTA', 'CHIUSA'); setTxt('txt-chiave', isChiaveOpen ? 'APERTA' : 'CHIUSA');
+      const chiaveState = getRawState(cdRefChiaveSolare()); const isChiaveOpen = chiaveState === 'open' || chiaveState === 'on'; setActiveState('syn-v-chiave', isChiaveOpen); updateBoilerBtn('b-c-valvola', isChiaveOpen, 'APERTA', 'CHIUSA'); setTxt('txt-chiave', isChiaveOpen ? 'APERTA' : 'CHIUSA');
       const isCtrlSolareActive = getRawState('dm.boiler_interruttore_solare_termico') === 'on'; updateBoilerBtn('b-c-solare', isCtrlSolareActive); 
       let isCoverOpen = false; let coverPos = 0; const coverObj = STATES['dm.boiler_valvola_di_sicurezza']; if(coverObj && coverObj.attributes) { coverPos = coverObj.attributes.current_position; if(coverPos !== undefined && coverPos > 0) isCoverOpen = true; } const synSafety = document.getElementById('syn-safety-icon'); if(synSafety) synSafety.classList.toggle('active', isCoverOpen); const synFaucet = document.getElementById('syn-faucet-wrap'); if(synFaucet) synFaucet.classList.toggle('open', isCoverOpen); const sBtn = document.getElementById('b-c-sicurezza'); if(sBtn) { sBtn.classList.toggle('active', isCoverOpen); const stNode = sBtn.querySelector('.state'); if(stNode) stNode.textContent = isCoverOpen ? `${coverPos}%` : 'CHIUSA'; }
       updateBoilerBtn('b-c-centralina', getRawState('dm.boiler_centralina_solare_termico') === 'on'); updateBoilerBtn('b-c-boiler', getRawState('dm.boiler_interruttore_boiler') === 'on'); updateBoilerBtn('b-c-pdc', getRawState('dm.core_050') === 'on'); updateBoilerBtn('b-c-boost', getRawState('dm.core_048') === 'on');

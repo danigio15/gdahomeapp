@@ -400,6 +400,31 @@ const SLOT_LABELS = Object.freeze({
     "Tank top probe (°C)",
     "Sonda temperatura 3 (°C)",
   ],
+  /* E i tasti del solare, col nome del tasto che comandano in pagina: «Ctrl
+   * Solare» si chiamava «Interruttore solare termico», e chi guardava la
+   * pagina non poteva sapere che erano la stessa cosa. */
+  "dm.boiler_pompa_solare": [
+    "Pompa solare — comando",
+    "Solar pump — command",
+    "Pompa solare (manuale)",
+  ],
+  "dm.boiler_stato_pompa_solare": [
+    "Pompa solare — se gira",
+    "Solar pump — running",
+    "Stato pompa solare",
+  ],
+  "dm.boiler_interruttore_solare_termico": [
+    "Ctrl Solare",
+    "Solar control",
+    "Interruttore solare termico",
+  ],
+  "dm.boiler_centralina_solare_termico": ["Centralina", "Controller", "Centralina solare termico"],
+  "dm.boiler_interruttore_boiler": ["Boiler", "Boiler", "Interruttore boiler"],
+  "dm.boiler_chiave_solare": [
+    "Valvola solare (chiave)",
+    "Solar valve (key)",
+    "Valvola solare (chiave)",
+  ],
 });
 
 /* L'etichetta di una riga che l'utente ha rinominato resta sua.

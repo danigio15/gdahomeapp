@@ -309,8 +309,12 @@ async function catalogPairs() {
   for (const module of modules) {
     for (const exported of Object.values(module)) {
       if (Array.isArray(exported)) {
-        /* A table of rows: `{ it, en, … }`. */
-        for (const row of exported) add(row?.it, row?.en);
+        /* A table of rows: `{ it, en, … }`, and the help under each row when it
+         * has one (`aiutoIt`, `aiutoEn`). */
+        for (const row of exported) {
+          add(row?.it, row?.en);
+          add(row?.aiutoIt, row?.aiutoEn);
+        }
       } else if (exported && typeof exported === "object") {
         /* A table keyed by state: `{ docked: ["Alla base", "Docked"] }`. */
         for (const value of Object.values(exported)) {

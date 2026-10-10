@@ -59,6 +59,7 @@ test("the two retired Home rows never reach the form", async () => {
   assert.deepEqual(RETIRED_EDITOR_SLOTS, [
     "dm.home_interruttore_antifurto",
     "dm.home_script_apertura_cancello",
+    "dm.boiler_sensore_pompa_solare",
   ]);
   assert.equal(isRetiredEditorSlot("dm.home_meteo"), false);
   assert.equal(isRetiredEditorSlot(" dm.home_script_apertura_cancello "), true);

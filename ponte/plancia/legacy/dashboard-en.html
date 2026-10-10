@@ -1354,7 +1354,7 @@ html[data-theme="dark"] #cd-boot-overlay b{color:#e2e8f0}
 
         <div class="syn-pump" id="syn-p-solare" style="left: 50%; top: 85%;" onclick="toggle('dm.boiler_pompa_solare')">
         </div>
-        <div class="syn-valve" id="syn-v-chiave" style="left: 50%; top: 21.5%;" onclick="toggle('valve.chiave_solare_termico')">
+        <div class="syn-valve" id="syn-v-chiave" style="left: 50%; top: 21.5%;" onclick="toggle(cdRefChiaveSolare())">
           <div class="icon valve-indicator" id="valve-indicator">
             <svg class="valve-svg" viewBox="0 0 36 36" width="30" height="30" xmlns="http://www.w3.org/2000/svg">
               <line x1="0" y1="18" x2="36" y2="18" stroke="#cbd5e1" stroke-width="4" stroke-linecap="round"/>
@@ -1393,7 +1393,7 @@ html[data-theme="dark"] #cd-boot-overlay b{color:#e2e8f0}
         <div class="b-btn" id="b-c-ricircolo" onclick="toggle('dm.core_051')" style="--c-rgb: 124,58,237;"><div class="icon"><span class="spin-active">🔁</span></div><div class="state">OFF</div></div>
         <div class="b-btn" id="b-c-centralina" onclick="toggle('dm.boiler_centralina_solare_termico')" style="--c-rgb: 245,158,11;"><div class="icon">⚙️</div><div class="lbl">Centralina</div><div class="state">OFF</div></div>
         <div class="b-btn" id="b-c-solare" onclick="toggle('dm.boiler_interruttore_solare_termico')" style="--c-rgb: 245,158,11;"><div class="icon">♨️</div><div class="lbl">Ctrl Solare</div><div class="state">OFF</div></div>
-        <div class="b-btn" id="b-c-valvola" onclick="toggle('valve.chiave_solare_termico')" style="--c-rgb: 6,182,212;"><div class="icon">🎛️</div><div class="lbl">Valvola</div><div class="state">CHIUSA</div></div>
+        <div class="b-btn" id="b-c-valvola" onclick="toggle(cdRefChiaveSolare())" style="--c-rgb: 6,182,212;"><div class="icon">🎛️</div><div class="lbl">Valvola</div><div class="state">CHIUSA</div></div>
         <div class="b-btn" id="b-c-boiler" onclick="toggle('dm.boiler_interruttore_boiler')" style="--c-rgb: 30,64,175;"><div class="icon">🌊</div><div class="lbl">Boiler</div><div class="state">OFF</div></div>
         <div class="b-btn" id="b-c-pdc" onclick="toggle('dm.core_050')" style="--c-rgb: 124,58,237;"><div class="icon">🌬️</div><div class="lbl">PdC</div><div class="state">OFF</div></div>
         <div class="b-btn" id="b-c-boost" onclick="toggle('dm.core_048')" style="--c-rgb: 236,72,153;"><div class="icon">🚀</div><div class="lbl">Boost</div><div class="state">OFF</div></div>

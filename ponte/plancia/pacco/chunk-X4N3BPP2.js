@@ -5924,7 +5924,11 @@ var EDITOR_SLOT_SECTIONS = Object.freeze({
 });
 var RETIRED_EDITOR_SLOTS = Object.freeze([
   "dm.home_interruttore_antifurto",
-  "dm.home_script_apertura_cancello"
+  "dm.home_script_apertura_cancello",
+  /* Il «Sensore pompa solare»: nessuno lo leggeva in pagina, e accanto al
+   * comando e allo stato della pompa era la terza casella uguale — chi
+   * configurava ci metteva la stessa entita' tre volte senza sapere perche'. */
+  "dm.boiler_sensore_pompa_solare"
 ]);
 var RETIRED = new Set(RETIRED_EDITOR_SLOTS);
 var isRetiredEditorSlot = (slot) => RETIRED.has(String(slot || "").trim());
@@ -18937,6 +18941,31 @@ var SLOT_LABELS = Object.freeze({
     "Sonda accumulo alto (°C)",
     "Tank top probe (°C)",
     "Sonda temperatura 3 (°C)"
+  ],
+  /* E i tasti del solare, col nome del tasto che comandano in pagina: «Ctrl
+   * Solare» si chiamava «Interruttore solare termico», e chi guardava la
+   * pagina non poteva sapere che erano la stessa cosa. */
+  "dm.boiler_pompa_solare": [
+    "Pompa solare — comando",
+    "Solar pump — command",
+    "Pompa solare (manuale)"
+  ],
+  "dm.boiler_stato_pompa_solare": [
+    "Pompa solare — se gira",
+    "Solar pump — running",
+    "Stato pompa solare"
+  ],
+  "dm.boiler_interruttore_solare_termico": [
+    "Ctrl Solare",
+    "Solar control",
+    "Interruttore solare termico"
+  ],
+  "dm.boiler_centralina_solare_termico": ["Centralina", "Controller", "Centralina solare termico"],
+  "dm.boiler_interruttore_boiler": ["Boiler", "Boiler", "Interruttore boiler"],
+  "dm.boiler_chiave_solare": [
+    "Valvola solare (chiave)",
+    "Solar valve (key)",
+    "Valvola solare (chiave)"
   ]
 });
 function relabelSlot(slot, input) {
@@ -21785,51 +21814,123 @@ function verdettoPressione(bar) {
 }
 var CHIAVE_SOLARI = "cd_solari";
 var CHIAVE_SOLARE_SCELTO = "cd_solare_scelto";
+var GRUPPI_DEL_SOLARE = Object.freeze([
+  { id: "misure", it: "🌡️ Le misure", en: "🌡️ Readings" },
+  { id: "tasti", it: "🎛️ I tasti", en: "🎛️ Buttons" }
+]);
 var CASELLE_SOLARE = Object.freeze([
   {
     ref: "dm.boiler_sonda_temperatura_1",
-    it: "Sonda temperatura 1 (°C)",
-    en: "Temperature probe 1 (°C)"
-  },
-  {
-    ref: "dm.boiler_sonda_temperatura_2",
-    it: "Sonda temperatura 2 (°C)",
-    en: "Temperature probe 2 (°C)"
+    fabbrica: ["Sonda temperatura 1 (°C)"],
+    gruppo: "misure",
+    it: "Sonda pannello solare (°C)",
+    en: "Solar collector probe (°C)",
+    aiutoIt: "La temperatura del pannello, nel disegno accanto ai collettori.",
+    aiutoEn: "The collector temperature, next to the panels in the drawing."
   },
   {
     ref: "dm.boiler_sonda_temperatura_3",
-    it: "Sonda temperatura 3 (°C)",
-    en: "Temperature probe 3 (°C)"
+    fabbrica: ["Sonda temperatura 3 (°C)"],
+    gruppo: "misure",
+    it: "Sonda accumulo alto (°C)",
+    en: "Tank top probe (°C)",
+    aiutoIt: "Il riquadro ALTO accanto all'accumulo.",
+    aiutoEn: "The TOP box next to the tank."
+  },
+  {
+    ref: "dm.boiler_sonda_temperatura_2",
+    fabbrica: ["Sonda temperatura 2 (°C)"],
+    gruppo: "misure",
+    it: "Sonda accumulo basso (°C)",
+    en: "Tank bottom probe (°C)",
+    aiutoIt: "Il riquadro BASSO accanto all'accumulo.",
+    aiutoEn: "The BOTTOM box next to the tank."
   },
   {
     ref: "dm.boiler_delta_temperatura",
+    gruppo: "misure",
     it: "Delta temperatura (°C)",
-    en: "Temperature delta (°C)"
+    en: "Temperature delta (°C)",
+    aiutoIt: "Il riquadro ΔT SOLARE: la differenza fra pannello e accumulo.",
+    aiutoEn: "The SOLAR ΔT box: the gap between collector and tank."
   },
-  { ref: "dm.boiler_pressione_acqua", it: "Pressione acqua (bar)", en: "Water pressure (bar)" },
+  {
+    ref: "dm.boiler_pressione_acqua",
+    gruppo: "misure",
+    it: "Pressione acqua (bar)",
+    en: "Water pressure (bar)",
+    aiutoIt: "Il riquadro PRESSIONE.",
+    aiutoEn: "The PRESSURE box."
+  },
   {
     ref: "dm.boiler_potenza_resistenza_boiler",
+    fabbrica: ["Power resistenza boiler (W)"],
+    gruppo: "misure",
     it: "Potenza resistenza boiler (W)",
-    en: "Boiler heater power (W)"
+    en: "Boiler heater power (W)",
+    aiutoIt: "Il riquadro POTENZA BOILER.",
+    aiutoEn: "The BOILER POWER box."
   },
-  { ref: "dm.boiler_pompa_solare", it: "Pompa solare (manuale)", en: "Solar pump (manual)" },
-  { ref: "dm.boiler_stato_pompa_solare", it: "Stato pompa solare", en: "Solar pump state" },
-  { ref: "dm.boiler_sensore_pompa_solare", it: "Sensore pompa solare", en: "Solar pump sensor" },
   {
-    ref: "dm.boiler_centralina_solare_termico",
-    it: "Centralina solare termico",
-    en: "Solar controller"
+    ref: "dm.boiler_pompa_solare",
+    fabbrica: ["Pompa solare (manuale)"],
+    gruppo: "tasti",
+    it: "Pompa solare — comando",
+    en: "Solar pump — command",
+    aiutoIt: "Il tasto POMPA SOL.: toccandolo si accende o si spegne questa entità.",
+    aiutoEn: "The SOLAR PUMP button: tapping it switches this entity on or off."
+  },
+  {
+    ref: "dm.boiler_stato_pompa_solare",
+    fabbrica: ["Stato pompa solare"],
+    gruppo: "tasti",
+    it: "Pompa solare — se gira",
+    en: "Solar pump — running",
+    aiutoIt: "Dice se la pompa sta girando: accende il tasto POMPA SOL. e fa scorrere i tubi nel disegno. Se il comando qui sopra dice già acceso o spento, metti la stessa entità.",
+    aiutoEn: "Says whether the pump is running: lights the SOLAR PUMP button and makes the pipes flow in the drawing. If the command above already says on or off, use the same entity."
   },
   {
     ref: "dm.boiler_interruttore_solare_termico",
-    it: "Interruttore solare termico",
-    en: "Solar switch"
+    fabbrica: ["Interruttore solare termico"],
+    gruppo: "tasti",
+    it: "Ctrl Solare",
+    en: "Solar control",
+    aiutoIt: "Il tasto CTRL SOLARE; quando è acceso, nel disegno il pannello si illumina.",
+    aiutoEn: "The SOLAR CTRL button; when it is on, the panel lights up in the drawing."
   },
-  { ref: "dm.boiler_interruttore_boiler", it: "Interruttore boiler", en: "Boiler switch" },
+  {
+    ref: "dm.boiler_centralina_solare_termico",
+    fabbrica: ["Centralina solare termico"],
+    gruppo: "tasti",
+    it: "Centralina",
+    en: "Controller",
+    aiutoIt: "Il tasto CENTRALINA.",
+    aiutoEn: "The CONTROLLER button."
+  },
+  {
+    ref: "dm.boiler_chiave_solare",
+    gruppo: "tasti",
+    it: "Valvola solare (chiave)",
+    en: "Solar valve (key)",
+    aiutoIt: "Il tasto VALVOLA e la CHIAVE SOLARE nel disegno: aperta o chiusa. Vuota, resta valve.chiave_solare_termico.",
+    aiutoEn: "The VALVE button and the SOLAR KEY in the drawing: open or closed. Left empty, it stays valve.chiave_solare_termico."
+  },
+  {
+    ref: "dm.boiler_interruttore_boiler",
+    fabbrica: ["Interruttore boiler"],
+    gruppo: "tasti",
+    it: "Boiler",
+    en: "Boiler",
+    aiutoIt: "Il tasto BOILER.",
+    aiutoEn: "The BOILER button."
+  },
   {
     ref: "dm.boiler_valvola_di_sicurezza",
+    gruppo: "tasti",
     it: "Valvola di sicurezza (cover)",
-    en: "Safety valve (cover)"
+    en: "Safety valve (cover)",
+    aiutoIt: "Il tasto V. SICUREZZA: aperta quando la posizione è sopra zero.",
+    aiutoEn: "The SAFETY V. button: open when its position is above zero."
   }
 ]);
 var REFS_SOLARE = Object.freeze(CASELLE_SOLARE.map((riga) => riga.ref));
@@ -36303,6 +36404,7 @@ export {
   verdettoPressione,
   CHIAVE_SOLARI,
   CHIAVE_SOLARE_SCELTO,
+  GRUPPI_DEL_SOLARE,
   CASELLE_SOLARE,
   caselleSolariDa,
   PRIMO_SOLARE,
