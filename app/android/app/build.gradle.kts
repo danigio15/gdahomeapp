@@ -166,4 +166,8 @@ flutter {
 dependencies {
     implementation("androidx.car.app:app:1.4.0")
     implementation("androidx.car.app:app-projected:1.4.0")
+
+    /* L'orologio Wear OS: il Data Layer, che porta la fotografia al polso e
+     * da li' riporta i tocchi (`orologio/IlTramiteDellOrologio.kt`). */
+    implementation("com.google.android.gms:play-services-wearable:19.0.0")
 }

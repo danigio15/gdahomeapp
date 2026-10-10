@@ -44,6 +44,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
 import com.gdahome.gdahome.R
+import com.gdahome.gdahome.orologio.IlTramiteDellOrologio
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.embedding.engine.FlutterEngineCache
 import io.flutter.embedding.engine.dart.DartExecutor
@@ -90,6 +91,8 @@ object IlNavigatoreInAuto {
     fun collega(motore: FlutterEngine, context: Context) {
         val messaggi = motore.dartExecutor.binaryMessenger
         PonteAuto.collega(messaggi, context.applicationContext)
+        /* L'orologio: la fotografia e la guida al polso. */
+        IlTramiteDellOrologio.collega(messaggi, context.applicationContext)
         canale = MethodChannel(messaggi, "gdahome/navigatore").also {
             it.setMethodCallHandler { chiamata, risposta ->
                 when (chiamata.method) {

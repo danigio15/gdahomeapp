@@ -3,6 +3,7 @@ package com.gdahome.gdahome
 import android.os.Bundle
 import android.view.WindowManager
 import com.gdahome.gdahome.auto.IlNavigatoreInAuto
+import com.gdahome.gdahome.orologio.IlTramiteDellOrologio
 import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
@@ -51,6 +52,9 @@ class MainActivity : FlutterFragmentActivity() {
      */
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
+        /* L'orologio Wear OS. Nella versione col navigatore in auto l'ha gia'
+         * collegato `IlNavigatoreInAuto`; rifarlo non fa danni. */
+        IlTramiteDellOrologio.collega(flutterEngine.dartExecutor.binaryMessenger, this)
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, FINESTRA)
             .setMethodCallHandler { chiamata, risposta ->
                 when (chiamata.method) {

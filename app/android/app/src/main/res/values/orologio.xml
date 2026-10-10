@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Il telefono si fa trovare dall'orologio Wear OS: l'app al polso cerca chi
+     ha questa capacita', e a lui manda i tocchi. Lo stesso nome sta in
+     `android/orologio`. -->
+<resources xmlns:tools="http://schemas.android.com/tools"
+    tools:keep="@array/android_wear_capabilities">
+    <string-array name="android_wear_capabilities">
+        <item>gdahome_telefono</item>
+    </string-array>
+</resources>
