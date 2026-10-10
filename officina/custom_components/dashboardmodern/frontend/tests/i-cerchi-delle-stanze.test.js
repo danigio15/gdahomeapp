@@ -136,3 +136,19 @@ test("le stanze in piu' dei cerchi finiscono in «Altro»", () => {
   const contati = cerchi.flatMap((cerchio) => subloadsOf(cerchio, loads, appliances));
   assert.equal(contati.length, apparecchi.length);
 });
+
+test("una stanza con tutto fermo dice zero, non un trattino", async () => {
+  const { readingFor } = await import("../src/core/energy-flow-topology.js");
+  const { loads, appliances } = cerchiDelleStanze({
+    loads: [WALLBOX, BOILER],
+    appliances: APPARECCHI,
+    rooms: STANZE,
+  });
+  const altro = flowStageLoads(loads).find((cerchio) => cerchio.id === CERCHIO_ALTRO);
+  const stati = {
+    "sensor.boiler_w": { state: "0", attributes: { unit_of_measurement: "W" } },
+    "sensor.tv_w": { state: "0", attributes: { unit_of_measurement: "W" } },
+  };
+  const lettura = readingFor(altro, subloadsOf(altro, loads, appliances), "instant", stati, null);
+  assert.equal(lettura.value, 0);
+});

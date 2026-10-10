@@ -510,7 +510,14 @@ export function readingFor(load, children, period, states, recorderValues) {
     if (value === null) continue;
     total = (total ?? 0) + value;
   }
-  if (total === null || total === 0) return { ...own, source: "direct", children: children.length };
+  if (total === null) return { ...own, source: "direct", children: children.length };
+  /* Tutti fermi e nessun sensore proprio: il cerchio dice zero, non un
+   * trattino. «Metti 0 W invece del trattino su Altro»: il trattino vuol dire
+   * «non so», e qui si sa — chi sta dentro risponde, e risponde zero. */
+  if (total === 0)
+    return own.value === null
+      ? { entity: own.entity, value: 0, source: "sum", children: children.length }
+      : { ...own, source: "direct", children: children.length };
   if (own.value !== null && !contatoreSottoIFigli(own.value, total))
     return { ...own, source: "direct", children: children.length };
   return { entity: own.entity, value: total, source: "sum", children: children.length };
