@@ -4150,14 +4150,16 @@ async function cdBakeDownload() {
 function edSaveSezione(btn) {
     const body = btn.closest('.ed-acc-body');
     if (!body) return;
-    let n = 0, bad = 0;
+    let n = 0, bad = 0; const accese = [];
     body.querySelectorAll('.ed-slot-in').forEach(inp => {
         const ref = inp.dataset.ref;
         const val = (inp.value || '').trim();
         if (!val || val === ref) { if (ENTITY_OVERRIDES[ref]) { delete ENTITY_OVERRIDES[ref]; n++; } }
-        else if (val.includes('.')) { if (ENTITY_OVERRIDES[ref] !== val) n++; ENTITY_OVERRIDES[ref] = val; }
+        else if (val.includes('.')) { if (ENTITY_OVERRIDES[ref] !== val) { n++; accese.push(ref); } ENTITY_OVERRIDES[ref] = val; }
         else bad++;
     });
+    /* Un'entita' nuova accende la sua sezione, come fa la casella salvata da sola. */
+    accese.forEach(function(ref){ try { cdSecShowByRef(ref); } catch(e){} });
     localStorage.setItem('cd_entity_overrides', JSON.stringify(ENTITY_OVERRIDES));
     try { cdMarkDirty(); cdSyncPush(); } catch(e){}
     try { cdAutoHide(); } catch(e){}

@@ -682,10 +682,10 @@ function declaredCoverKind(item = {}) {
   const declared = clean3(item.kind || item.cover_kind || item.type);
   return COVER_KINDS.includes(declared) ? declared : "";
 }
-function coverKind(item = {}, state34 = null) {
+function coverKind(item = {}, state35 = null) {
   const declared = declaredCoverKind(item);
   if (declared) return declared;
-  const deviceClass = clean3(state34?.attributes?.device_class);
+  const deviceClass = clean3(state35?.attributes?.device_class);
   return DA_DEVICE_CLASS[deviceClass] || "tapparella";
 }
 function coverKindLabel(kind, locale2 = getLocale()) {
@@ -874,8 +874,8 @@ function inferriataEntity(cover = {}) {
 }
 var APERTO = /^(on|open|opening|aperto|aperta|true|detected)$/i;
 var CHIUSO = /^(off|closed|closing|chiuso|chiusa|false|clear)$/i;
-function windowOpenFromState(state34) {
-  const value = clean4(state34);
+function windowOpenFromState(state35) {
+  const value = clean4(state35);
   if (APERTO.test(value)) return true;
   if (CHIUSO.test(value)) return false;
   return null;
@@ -3701,8 +3701,8 @@ function isCumulativeEnergyEntity(entityId2, states2 = {}, resolver = (value) =>
   const original = String(entityId2 || "").trim();
   if (!original) return false;
   const resolved3 = resolveEntity(original, resolver);
-  const state34 = states2?.[resolved3] || states2?.[original] || null;
-  const attributes = state34?.attributes || {};
+  const state35 = states2?.[resolved3] || states2?.[original] || null;
+  const attributes = state35?.attributes || {};
   const unita2 = String(attributes.unit_of_measurement || "").trim().toLowerCase();
   if (UNITA_DI_POTENZA.test(unita2)) return false;
   const classe2 = String(attributes.device_class || "").trim().toLowerCase();
@@ -3851,10 +3851,10 @@ function contatoreNatoDentro(prima, dentro, inizio) {
   return { start: new Date(inizio).toISOString(), sum: 0 };
 }
 function readDirectState(entity, states2 = {}) {
-  const state34 = states2?.[entity];
-  const value = finite(state34?.state);
+  const state35 = states2?.[entity];
+  const value = finite(state35?.state);
   if (value == null) return null;
-  const inKwh = inKilowattora(value, state34?.attributes?.unit_of_measurement);
+  const inKwh = inKilowattora(value, state35?.attributes?.unit_of_measurement);
   return inKwh == null ? null : Math.max(0, inKwh);
 }
 var TEMPO_MASSIMO_STATISTICHE = 6e4;
@@ -4016,10 +4016,10 @@ var HomeAssistantBroker = class {
     } catch (_error) {
     }
   }
-  ingestState(state34, { emitEvent = true } = {}) {
-    const id = String(state34?.entity_id || "").trim();
+  ingestState(state35, { emitEvent = true } = {}) {
+    const id = String(state35?.entity_id || "").trim();
     if (!id) return false;
-    const copy = { ...state34, attributes: { ...state34.attributes || {} } };
+    const copy = { ...state35, attributes: { ...state35.attributes || {} } };
     const registries = [];
     try {
       if (typeof _RAW_STATES !== "undefined" && _RAW_STATES) registries.push(_RAW_STATES);
@@ -4470,7 +4470,7 @@ var HomeAssistantBroker = class {
       TEMPO_PER_L_ISTANTANEA
     );
     (Array.isArray(states2) ? states2 : []).forEach(
-      (state34) => this.ingestState(state34, { emitEvent: false })
+      (state35) => this.ingestState(state35, { emitEvent: false })
     );
     return Array.isArray(states2) ? states2.length : 0;
   }
@@ -4845,8 +4845,8 @@ var ROBOT_STATES = Object.freeze({
   unavailable: ["Non raggiungibile", "Unavailable"],
   unknown: ["Sconosciuto", "Unknown"]
 });
-function robotStateLabel(state34, locale2 = getLocale()) {
-  const labels = ROBOT_STATES[clean10(state34).toLowerCase()] || ROBOT_STATES.unknown;
+function robotStateLabel(state35, locale2 = getLocale()) {
+  const labels = ROBOT_STATES[clean10(state35).toLowerCase()] || ROBOT_STATES.unknown;
   const code = locale2 === true ? "en" : locale2 === false ? SOURCE_LOCALE : locale2;
   return pick(labels[0], labels[1], code);
 }
@@ -5768,36 +5768,36 @@ function applicaIlVersoDellaBatteria(energy, stored) {
   return cambiato;
 }
 function migrateState(input = {}, legacy = {}) {
-  let state34 = cloneValue(input);
+  let state35 = cloneValue(input);
   const changes = [];
-  let version = +state34.schema_version || 0;
+  let version = +state35.schema_version || 0;
   const steps = [migrateV0ToV1, migrateV1ToV2, migrateV2ToV3];
   while (version < 3) {
-    state34 = steps[version](state34);
+    state35 = steps[version](state35);
     changes.push(`schema ${version} → ${version + 1}`);
     version++;
   }
   if (version === 3) {
-    state34 = migrateV3ToV4(state34, legacy);
+    state35 = migrateV3ToV4(state35, legacy);
     changes.push("schema 3 → 4");
   }
-  if (+state34.schema_version >= 4 && preserveEnergySemantics(state34.sections?.energy))
+  if (+state35.schema_version >= 4 && preserveEnergySemantics(state35.sections?.energy))
     changes.push("energy annual/lifetime semantics migrated");
-  if (+state34.schema_version >= 4) {
-    const energy = state34.sections.energy ||= migrateEnergy();
+  if (+state35.schema_version >= 4) {
+    const energy = state35.sections.energy ||= migrateEnergy();
     const loads = migrateLegacyEnergyLoads(
-      state34.sections.energyLoads,
-      { ...state34.sections.entityOverrides || {}, ...legacy.entityOverrides || {} },
+      state35.sections.energyLoads,
+      { ...state35.sections.entityOverrides || {}, ...legacy.entityOverrides || {} },
       energy
     );
     if (!energy.metadata?.energy_loads_migrated) {
-      state34.sections.energyLoads = loads;
+      state35.sections.energyLoads = loads;
       energy.metadata = { ...energy.metadata || {}, energy_loads_migrated: true };
       changes.push(`legacy energy flow loads migrated (${loads.length})`);
-    } else state34.sections.energyLoads = normalizeEnergyLoads(state34.sections.energyLoads);
+    } else state35.sections.energyLoads = normalizeEnergyLoads(state35.sections.energyLoads);
     if (!energy.metadata?.cooling_migrated) {
       const overrides = {
-        ...state34.sections.entityOverrides || {},
+        ...state35.sections.entityOverrides || {},
         ...legacy.entityOverrides || {}
       };
       const semina = {};
@@ -5815,7 +5815,7 @@ function migrateState(input = {}, legacy = {}) {
     if (applicaIlVersoDellaBatteria(energy, legacy.batteryDirection))
       changes.push("battery direction migrated from cd_batteria_verso");
   }
-  return { state: state34, changes };
+  return { state: state35, changes };
 }
 function versoGirato(stored) {
   if (stored === true || stored === "true" || stored === 1) return true;
@@ -6569,9 +6569,9 @@ var TRATTO_CHIARO = 'fill="none" stroke="#f8fafc" stroke-width="3" stroke-lineca
 var TRATTO_ACCENTO = 'fill="none" stroke="#0ea5e9" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"';
 var CALDO = 'fill="#fbbf24"';
 var VERDE = 'fill="#22c55e"';
-function guscio(chiave2, corpo, misura = 96) {
-  if (!corpo) return "";
-  return `<span class="dm-appliance-art dm-catalogo-art" data-dm-art="${chiave2}" data-dm-art-style="panel"><svg width="${misura}" height="${misura}" viewBox="0 0 96 96" role="img" aria-hidden="true" focusable="false">${corpo}</svg></span>`;
+function guscio(chiave2, corpo2, misura = 96) {
+  if (!corpo2) return "";
+  return `<span class="dm-appliance-art dm-catalogo-art" data-dm-art="${chiave2}" data-dm-art-style="panel"><svg width="${misura}" height="${misura}" viewBox="0 0 96 96" role="img" aria-hidden="true" focusable="false">${corpo2}</svg></span>`;
 }
 
 // src/core/catalogo-disegni.js
@@ -7642,7 +7642,7 @@ var ORDINE_IMPOSTAZIONI = Object.freeze({
   assist: 20,
   sezioni: 30
 });
-var dopoIGenerali = (corpo) => corpo?.querySelector?.('[onclick*="edSaveGeneral"]') || null;
+var dopoIGenerali = (corpo2) => corpo2?.querySelector?.('[onclick*="edSaveGeneral"]') || null;
 var ATTRIBUTO_ORDINE = "data-dm-ordine";
 function inserisciInOrdine(dentro, riga, ordine, ancora) {
   if (!dentro || !riga) return null;
@@ -7807,17 +7807,17 @@ function tieniIlBloccoNellaScheda(marker, disegna3) {
   };
   const aggancia = () => {
     onEditorRedraw(marker, richiama);
-    const corpo = doc?.getElementById?.("ed-body");
+    const corpo2 = doc?.getElementById?.("ed-body");
     const suo = registro.get(marker);
-    if (!corpo || suo?.corpo === corpo) return;
+    if (!corpo2 || suo?.corpo === corpo2) return;
     suo?.osservatore?.disconnect?.();
     if (typeof root2.MutationObserver !== "function") {
-      registro.set(marker, { corpo, osservatore: null });
+      registro.set(marker, { corpo: corpo2, osservatore: null });
       return;
     }
     const osservatore = new root2.MutationObserver(() => root2.queueMicrotask?.(richiama));
-    osservatore.observe(corpo, { childList: true });
-    registro.set(marker, { corpo, osservatore });
+    osservatore.observe(corpo2, { childList: true });
+    registro.set(marker, { corpo: corpo2, osservatore });
   };
   if (!registro.has(marker)) {
     registro.set(marker, { corpo: null, osservatore: null });
@@ -9172,12 +9172,12 @@ function brightnessToPercent(brightness) {
   if (value === null || value <= 0) return null;
   return clamp(Math.round(value / 255 * 100) || 1, 1, 100);
 }
-function lightView(id, { name = "", state: state34 = null, room = "", floor = "", comandabile = true } = {}) {
+function lightView(id, { name = "", state: state35 = null, room = "", floor = "", comandabile = true } = {}) {
   const entity = clean15(id);
   const domain = entityDomain(entity);
-  const attributes = state34?.attributes || {};
-  const status = clean15(state34?.state).toLowerCase();
-  const available = Boolean(state34) && status !== "unavailable" && status !== "unknown";
+  const attributes = state35?.attributes || {};
+  const status = clean15(state35?.state).toLowerCase();
+  const available = Boolean(state35) && status !== "unavailable" && status !== "unknown";
   const modes = colorModes(attributes);
   const features = Number(attributes.supported_features) || 0;
   const light = domain === "light";
@@ -14144,8 +14144,8 @@ function leggiModulo() {
   };
 }
 function ridisegnaScheda() {
-  const corpo = doc?.getElementById("ed-body");
-  if (corpo?.querySelector("[data-dm-prese-editor]")) renderPreseEditor(corpo);
+  const corpo2 = doc?.getElementById("ed-body");
+  if (corpo2?.querySelector("[data-dm-prese-editor]")) renderPreseEditor(corpo2);
 }
 function onEditorClick(event) {
   const pannello = event.target?.closest?.("[data-dm-prese-editor]");
@@ -14771,12 +14771,12 @@ function disegna() {
     "A private conversation with whoever maintains the dashboard"
   );
   modale.querySelector('[data-dm-chat="chiudi"]').textContent = t("Chiudi", "Close");
-  const corpo = modale.querySelector('[data-dm-chat="corpo"]');
+  const corpo2 = modale.querySelector('[data-dm-chat="corpo"]');
   const attivo = doc?.activeElement;
-  const dovEro = attivo?.id && corpo.contains(attivo) && typeof attivo.selectionStart === "number" ? { id: attivo.id, da: attivo.selectionStart, a: attivo.selectionEnd } : null;
+  const dovEro = attivo?.id && corpo2.contains(attivo) && typeof attivo.selectionStart === "number" ? { id: attivo.id, da: attivo.selectionStart, a: attivo.selectionEnd } : null;
   const dentro = state9.console && state9.tab === "coda" ? consoleMarkup() : miaMarkup();
-  corpo.innerHTML = schedeMarkup() + avvisoMarkup() + dentro;
-  agganciaEventi(corpo);
+  corpo2.innerHTML = schedeMarkup() + avvisoMarkup() + dentro;
+  agganciaEventi(corpo2);
   if (dovEro) {
     const tornato = doc.getElementById(dovEro.id);
     if (tornato) {
@@ -14787,11 +14787,11 @@ function disegna() {
       }
     }
   }
-  const filo = corpo.querySelector('[data-dm-chat="filo"]');
+  const filo = corpo2.querySelector('[data-dm-chat="filo"]');
   if (filo) filo.scrollTop = filo.scrollHeight;
 }
-function agganciaEventi(corpo) {
-  corpo.querySelectorAll("[data-dm-chat-tab]").forEach((bottone) => {
+function agganciaEventi(corpo2) {
+  corpo2.querySelectorAll("[data-dm-chat-tab]").forEach((bottone) => {
     bottone.addEventListener("click", () => {
       state9.tab = bottone.dataset.dmChatTab;
       state9.linea = "";
@@ -14800,30 +14800,30 @@ function agganciaEventi(corpo) {
       if (state9.tab === "coda") caricaCoda();
     });
   });
-  corpo.querySelectorAll("[data-dm-chat-linea]").forEach((bottone) => {
+  corpo2.querySelectorAll("[data-dm-chat-linea]").forEach((bottone) => {
     bottone.addEventListener("click", () => apriLinea(bottone.dataset.dmChatLinea));
   });
-  corpo.querySelectorAll("[data-dm-chat-butta]").forEach((bottone) => {
+  corpo2.querySelectorAll("[data-dm-chat-butta]").forEach((bottone) => {
     bottone.addEventListener("click", () => butta(bottone.dataset.dmChatButta));
   });
-  corpo.querySelector('[data-dm-chat="indietro"]')?.addEventListener("click", () => {
+  corpo2.querySelector('[data-dm-chat="indietro"]')?.addEventListener("click", () => {
     state9.linea = "";
     state9.filo = [];
     state9.daButtare = "";
     disegna();
     caricaCoda();
   });
-  corpo.querySelector('[data-dm-chat="manda"]')?.addEventListener("click", () => manda());
-  corpo.querySelector('[data-dm-chat="cancella"]')?.addEventListener("click", () => cancella());
-  const comeMiChiamo = corpo.querySelector("#dm-chat-comechiamo");
+  corpo2.querySelector('[data-dm-chat="manda"]')?.addEventListener("click", () => manda());
+  corpo2.querySelector('[data-dm-chat="cancella"]')?.addEventListener("click", () => cancella());
+  const comeMiChiamo = corpo2.querySelector("#dm-chat-comechiamo");
   if (comeMiChiamo) {
     comeMiChiamo.addEventListener("input", () => {
       state9.name = clean13(comeMiChiamo.value);
     });
   }
-  const pannello = corpo.querySelector('[data-dm-chat="emoji"]');
-  const apriEmoji = corpo.querySelector('[data-dm-chat="emoji-apri"]');
-  const campo = corpo.querySelector("textarea");
+  const pannello = corpo2.querySelector('[data-dm-chat="emoji"]');
+  const apriEmoji = corpo2.querySelector('[data-dm-chat="emoji-apri"]');
+  const campo = corpo2.querySelector("textarea");
   if (pannello && apriEmoji && campo) {
     apriEmoji.addEventListener("click", () => {
       const chiuso = pannello.hidden;
@@ -14854,7 +14854,7 @@ function agganciaEventi(corpo) {
   if (campo) {
     campo.addEventListener("input", () => {
       state9.bozza = campo.value;
-      const rimasti = corpo.querySelector('[data-dm-chat="rimasti"]');
+      const rimasti = corpo2.querySelector('[data-dm-chat="rimasti"]');
       if (rimasti) rimasti.textContent = String(MAX_TESTO - campo.value.length);
     });
     campo.addEventListener("keydown", (evento) => {
@@ -15224,12 +15224,12 @@ function conIlFotovoltaico(impianto, acceso2) {
 
 // src/core/renderers.js
 function metric(states2, entity, expectedUnit) {
-  const state34 = entity && states2[entity];
-  const value = Number(state34?.state);
+  const state35 = entity && states2[entity];
+  const value = Number(state35?.state);
   return {
     entity: entity || "",
     value: Number.isFinite(value) ? value : null,
-    unit: state34?.attributes?.unit_of_measurement || expectedUnit
+    unit: state35?.attributes?.unit_of_measurement || expectedUnit
   };
 }
 function createEnergyReportRows(appliances3 = [], states2 = {}, rooms3 = [], costPerKwh = 0, locale2 = "it") {
@@ -15472,7 +15472,7 @@ function createEntityPickerField(document2, {
   placeholder = "",
   label = "Entità",
   locale: locale2 = "it",
-  state: state34,
+  state: state35,
   unit: unit2 = "",
   onPick,
   onChange
@@ -15500,10 +15500,10 @@ function createEntityPickerField(document2, {
   input.addEventListener("change", () => onChange?.(input.value, input));
   row.append(input, picker);
   field.append(row);
-  if (value && state34 != null) {
+  if (value && state35 != null) {
     const preview = document2.createElement("output");
     preview.className = "ed-row-old dm-entity-preview";
-    preview.textContent = `${state34}${unit2 ? ` ${unit2}` : ""}`;
+    preview.textContent = `${state35}${unit2 ? ` ${unit2}` : ""}`;
     field.append(preview);
   }
   return { field, input, picker };
@@ -16683,6 +16683,197 @@ function installMediaPickerSection() {
   );
 }
 
+// src/sections/ricordati-di-salvare-section.js
+var KEY10 = "__DASHBOARDMODERN_RICORDATI_DI_SALVARE__";
+var state11 = root2[KEY10] ||= {
+  installed: false,
+  sporca: "",
+  nome: "",
+  lascia: false
+};
+var SENZA_SALVA = /* @__PURE__ */ new Set(["runtime", "visib", "export", "rileva", "backup", "scollegati"]);
+var USCITE = [
+  ".ed-tab",
+  "[data-dm-famiglia]",
+  "[data-dm-famiglia-tutte]",
+  ".ed-head-close[onclick*='remove']"
+].join(",");
+var SALVATAGGI = [
+  "[data-dm-save-all]",
+  ".ed-save-btn",
+  "[data-energy-save]",
+  "[data-report-save]",
+  "[data-dm-loads-save]",
+  "[onclick*='edSaveSezione']",
+  "[onclick*='edSecSave']"
+].join(",");
+var DIALOGO = "dm-ricordati-di-salvare";
+function sembraUnEntita(valore) {
+  return /^[a-z_][a-z0-9_]*\.[a-z0-9_]+$/i.test(clean13(valore));
+}
+function corpo() {
+  return doc?.getElementById?.("ed-body") || null;
+}
+function schedaAttiva() {
+  return doc?.querySelector?.(".ed-tab.active") || null;
+}
+function nomeDellaScheda(bottone) {
+  return clean13(bottone?.textContent).replace(/^[^\p{L}\p{N}]+/u, "") || "";
+}
+function dimenticaLeModifiche() {
+  state11.sporca = "";
+  state11.nome = "";
+}
+function campoDiRicerca(campo) {
+  if (campo.type === "search") return true;
+  const segni = `${campo.className || ""} ${campo.id || ""} ${campo.getAttribute?.("role") || ""}`;
+  return /search|cerca|filtr|filter|combobox/i.test(segni);
+}
+function onModifica(evento) {
+  const campo = evento.target;
+  if (!campo?.matches?.("input,select,textarea")) return;
+  const dentro = corpo();
+  if (!dentro || !dentro.contains(campo)) return;
+  if (campo.type === "hidden" || campoDiRicerca(campo)) return;
+  if (!sembraUnEntita(campo.value)) return;
+  const scheda = schedaAttiva();
+  const chiave2 = clean13(scheda?.dataset?.tab);
+  if (!chiave2 || SENZA_SALVA.has(chiave2)) return;
+  state11.sporca = chiave2;
+  state11.nome = nomeDellaScheda(scheda);
+}
+function premiSalva() {
+  const dentro = corpo();
+  if (!dentro) return false;
+  const piede = dentro.querySelector("[data-dm-save-all]");
+  if (piede) {
+    piede.click();
+    return true;
+  }
+  const bottoni = [...dentro.querySelectorAll(SALVATAGGI)];
+  for (const bottone of bottoni) {
+    try {
+      bottone.click();
+    } catch (_error) {
+    }
+  }
+  return bottoni.length > 0;
+}
+function chiudiIlDialogo() {
+  doc?.getElementById?.(DIALOGO)?.remove();
+}
+function prosegui(bersaglio) {
+  dimenticaLeModifiche();
+  chiudiIlDialogo();
+  if (!bersaglio?.isConnected) return;
+  state11.lascia = true;
+  try {
+    bersaglio.click();
+  } finally {
+    state11.lascia = false;
+  }
+}
+function mostraIlDialogo(bersaglio) {
+  chiudiIlDialogo();
+  const nome = state11.nome;
+  const scatola = doc.createElement("div");
+  scatola.id = DIALOGO;
+  scatola.className = "dm-rds-velo";
+  scatola.setAttribute("role", "alertdialog");
+  scatola.setAttribute("aria-modal", "true");
+  scatola.innerHTML = `<div class="dm-rds-card">
+    <div class="dm-rds-titolo">💾 ${esc(t("Non hai salvato", "You haven't saved"))}</div>
+    ${nome ? `<div class="dm-rds-scheda">${esc(nome)}</div>` : ""}
+    <div class="dm-rds-testo">${esc(
+    t(
+      "Hai inserito delle entità in questa sezione senza salvarle. Se esci adesso, andranno perse.",
+      "You entered entities in this section without saving them. If you leave now, they will be lost."
+    )
+  )}</div>
+    <div class="dm-rds-bottoni">
+      <button type="button" class="dm-rds-salva" data-dm-rds="salva">💾 ${esc(
+    t("Salva e continua", "Save and continue")
+  )}</button>
+      <button type="button" class="dm-rds-esci" data-dm-rds="esci">${esc(
+    t("Esci senza salvare", "Leave without saving")
+  )}</button>
+      <button type="button" class="dm-rds-resta" data-dm-rds="resta">${esc(
+    t("Resta qui", "Stay here")
+  )}</button>
+    </div>
+  </div>`;
+  scatola.addEventListener("click", (evento) => {
+    evento.stopPropagation();
+    const scelta = evento.target?.closest?.("[data-dm-rds]")?.dataset?.dmRds;
+    if (!scelta && evento.target !== scatola) return;
+    if (scelta === "salva") {
+      try {
+        premiSalva();
+      } catch (_error) {
+      }
+      prosegui(bersaglio);
+      return;
+    }
+    if (scelta === "esci") {
+      prosegui(bersaglio);
+      return;
+    }
+    chiudiIlDialogo();
+  });
+  (doc.getElementById("editor-modal") || doc.body).append(scatola);
+  scatola.querySelector("[data-dm-rds='salva']")?.focus?.();
+}
+function onTocco(evento) {
+  const bersaglio = evento.target;
+  if (bersaglio?.closest?.(`#${DIALOGO}`)) return;
+  if (bersaglio?.closest?.(SALVATAGGI)) {
+    if (corpo()?.contains(bersaglio)) dimenticaLeModifiche();
+    return;
+  }
+  if (state11.lascia || !state11.sporca) return;
+  const uscita = bersaglio?.closest?.(USCITE);
+  if (!uscita) return;
+  if (uscita.matches(".ed-tab") && clean13(uscita.dataset.tab) === state11.sporca) return;
+  if (!corpo()) {
+    dimenticaLeModifiche();
+    return;
+  }
+  evento.preventDefault();
+  evento.stopImmediatePropagation();
+  mostraIlDialogo(uscita);
+}
+function installStili() {
+  installStyle(
+    "dm-ricordati-di-salvare-style",
+    `
+.dm-rds-velo{position:fixed;inset:0;z-index:100000;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(0,0,0,.55)}
+.dm-rds-card{width:min(420px,100%);background:var(--surface-2,#1c1f26);color:var(--text,#fff);border:1px solid var(--divider-color,rgba(255,255,255,.12));border-radius:18px;padding:18px;box-shadow:0 18px 48px rgba(0,0,0,.45)}
+.dm-rds-titolo{font-weight:800;font-size:16px;margin-bottom:8px}
+.dm-rds-scheda{font-weight:700;font-size:13px;opacity:.75;margin-bottom:6px}
+.dm-rds-testo{font-size:14px;line-height:1.45;opacity:.9;margin-bottom:16px}
+.dm-rds-bottoni{display:flex;flex-direction:column;gap:8px}
+.dm-rds-bottoni button{width:100%;padding:12px 14px;border-radius:12px;border:none;font-weight:700;font-size:14px;cursor:pointer}
+.dm-rds-salva{background:var(--accent,#3b82f6);color:#fff}
+.dm-rds-esci{background:rgba(239,68,68,.16);color:#f87171}
+.dm-rds-resta{background:var(--surface-3,rgba(255,255,255,.08));color:var(--text,#fff)}
+`
+  );
+}
+function installRicordatiDiSalvare() {
+  if (!doc || state11.installed) return false;
+  state11.installed = true;
+  installStili();
+  doc.addEventListener("input", onModifica, true);
+  doc.addEventListener("change", onModifica, true);
+  doc.addEventListener("click", onTocco, true);
+  return true;
+}
+if (doc?.readyState === "loading") {
+  doc.addEventListener("DOMContentLoaded", installRicordatiDiSalvare, { once: true });
+} else {
+  senzaCadere(installRicordatiDiSalvare);
+}
+
 // src/core/foto-da-entita.js
 var clean22 = (value) => String(value ?? "").trim();
 var DOMINI_CON_FOTO = Object.freeze(["image", "camera"]);
@@ -17157,8 +17348,8 @@ function leCaselleDaAdottare(viva = {}, ov = {}) {
 
 // src/sections/ev-section.js
 globalThis.__DM_20260815C__ = true;
-var KEY10 = "__DASHBOARDMODERN_EV_SECTION__";
-var state11 = root2[KEY10] ||= {
+var KEY11 = "__DASHBOARDMODERN_EV_SECTION__";
+var state12 = root2[KEY11] ||= {
   installed: false,
   frame: 0,
   legacyRefreshSignature: "",
@@ -17251,23 +17442,23 @@ function vehiclePlugged() {
   const dichiarato = clean13(cavo?.state).toLowerCase();
   if (dichiarato && !HA_SILENT_STATES.test(dichiarato)) {
     if (/^(on|true|1|home|connected|plugged|collegato|attaccato)$/.test(dichiarato))
-      return state11.lastPlugged = true;
+      return state12.lastPlugged = true;
     if (/^(off|false|0|not_home|disconnected|unplugged|scollegato|staccato)$/.test(dichiarato))
-      return state11.lastPlugged = false;
+      return state12.lastPlugged = false;
   }
   const status = clean13(liveState("dm.ev_stato_ricarica")?.state);
   if (status && !HA_SILENT_STATES.test(status)) {
-    if (CODICE_STACCATO.test(status)) return state11.lastPlugged = false;
-    if (CODICE_ATTACCATO.test(status)) return state11.lastPlugged = true;
-    if (UNPLUGGED_STATES.test(status) || UNPLUGGED_WORDS.test(status)) return state11.lastPlugged = false;
-    if (PLUGGED_WORDS.test(status)) return state11.lastPlugged = true;
+    if (CODICE_STACCATO.test(status)) return state12.lastPlugged = false;
+    if (CODICE_ATTACCATO.test(status)) return state12.lastPlugged = true;
+    if (UNPLUGGED_STATES.test(status) || UNPLUGGED_WORDS.test(status)) return state12.lastPlugged = false;
+    if (PLUGGED_WORDS.test(status)) return state12.lastPlugged = true;
   }
   for (const reference of PLUG_REFS.slice(2)) {
     const raw = liveState(reference)?.state;
     const power = Number(raw);
-    if (Number.isFinite(power)) return state11.lastPlugged = power > 10;
+    if (Number.isFinite(power)) return state12.lastPlugged = power > 10;
   }
-  return state11.lastPlugged;
+  return state12.lastPlugged;
 }
 function activeVehiclePhoto(photos = configuredPhotos(), plugged = vehiclePlugged()) {
   const sua = vehiclePhoto(activeVehicle(), plugged);
@@ -17322,8 +17513,8 @@ function applyVehicleAsset() {
     hero.dataset.evImage = url ? "configured" : "missing";
     hero.dataset.evCable = plugged ? "plugged" : "unplugged";
   }
-  if (state11.ultimaFoto !== url) {
-    state11.ultimaFoto = url;
+  if (state12.ultimaFoto !== url) {
+    state12.ultimaFoto = url;
     try {
       root2.dispatchEvent?.(
         new CustomEvent("dashboardmodern:ev-foto", { detail: { url, riposo, plugged } })
@@ -17370,7 +17561,7 @@ function seedActiveProfileOverrides() {
 }
 function scriviNeiCampi(contenitore, quale) {
   let scritti = 0;
-  state11.dettandoICampi = true;
+  state12.dettandoICampi = true;
   try {
     for (const slot of contenitore.querySelectorAll('input.ed-slot-in[data-ref^="dm.ev_"]')) {
       const valore = quale(clean13(slot.dataset.ref));
@@ -17381,7 +17572,7 @@ function scriviNeiCampi(contenitore, quale) {
       scritti += 1;
     }
   } finally {
-    state11.dettandoICampi = false;
+    state12.dettandoICampi = false;
   }
   return scritti;
 }
@@ -17651,7 +17842,11 @@ function ensureVehiclePhotoEditor() {
 }
 function ensureCarListDecor() {
   const campoNome = doc?.getElementById("ed-evcar-name");
-  if (!campoNome) return false;
+  if (!campoNome) {
+    const corpo2 = doc?.getElementById("ed-body");
+    if (corpo2?.dataset?.evModulo) delete corpo2.dataset.evModulo;
+    return false;
+  }
   ensureCarKeys();
   const contenitore = doc.getElementById("ed-body");
   if (!contenitore) return false;
@@ -17714,8 +17909,10 @@ function ensureCarListDecor() {
         const auto = ensureCarKeys()[indice] || profiles()[indice];
         const nome = clean13(auto?.name);
         caricaCampiDaProfilo(auto);
+        dimenticaLeModifiche();
+        apriIlModulo(contenitore);
         setEditingKey(uidDi(auto || {}));
-        state11.evRenameArmed = true;
+        state12.evRenameArmed = true;
         const campo = doc.getElementById("ed-evcar-name");
         if (campo && nome) {
           campo.value = nome;
@@ -17749,7 +17946,7 @@ function ensureCarListDecor() {
         const campo = doc.getElementById("ed-evcar-name");
         if (!campo) return;
         setEditingKey("");
-        state11.evRenameArmed = false;
+        state12.evRenameArmed = false;
         campo.value = "";
         for (const slot of contenitore.querySelectorAll('input.ed-slot-in[data-ref^="dm.ev_"]'))
           slot.value = "";
@@ -17772,11 +17969,13 @@ function ensureCarListDecor() {
           if (dentro) dentro.value = "";
           paintPhotoPreview(casella);
         }
+        apriIlModulo(contenitore);
         campo.focus();
       });
       rigaNome.insertAdjacentElement("beforebegin", aggiungi);
     }
   }
+  segnaIlModulo(contenitore, salva);
   const intro = [...contenitore.querySelectorAll(".ed-intro")].find(
     (nodo) => /salvale come profilo|save them as a profile|Aggiungi auto per crearne/i.test(clean13(nodo.textContent))
   );
@@ -17788,6 +17987,48 @@ function ensureCarListDecor() {
     if (clean13(intro.textContent) !== clean13(testo2)) intro.textContent = testo2;
   }
   return true;
+}
+var PEZZO_DEL_MODULO = "dm-ev-modulo";
+function fisarmonicaDelModulo(contenitore) {
+  return [...contenitore.querySelectorAll("details.ed-acc")].find(
+    (nodo) => nodo.querySelector('.ed-slot-in[data-ref^="dm.ev_"]')
+  );
+}
+function segnaIlModulo(contenitore, salva) {
+  const pezzi = [
+    fisarmonicaDelModulo(contenitore),
+    salva?.parentElement,
+    contenitore.querySelector("[data-ev-mezzo-riga]"),
+    contenitore.querySelector("[data-ev-tipo-riga]"),
+    contenitore.querySelector("[data-ev-kwh-riga]")
+  ];
+  for (const pezzo of pezzi)
+    if (pezzo && pezzo !== contenitore) pezzo.classList.add(PEZZO_DEL_MODULO);
+  const segno2 = profiles().length > 0 && !state12.evModuloAperto ? "chiuso" : "aperto";
+  if (contenitore.dataset.evModulo !== segno2) contenitore.dataset.evModulo = segno2;
+  if (salva && !salva.dataset.evChiudeIlModulo) {
+    salva.dataset.evChiudeIlModulo = "true";
+    salva.addEventListener("click", () => {
+      if (!clean13(doc.getElementById("ed-evcar-name")?.value)) return;
+      root2.setTimeout?.(chiudiIlModulo, 0);
+    });
+  }
+}
+function apriIlModulo(contenitore) {
+  state12.evModuloAperto = true;
+  contenitore.dataset.evModulo = "aperto";
+  const fisarmonica = fisarmonicaDelModulo(contenitore);
+  if (!fisarmonica) return;
+  fisarmonica.open = true;
+  try {
+    fisarmonica.scrollIntoView?.({ block: "start", behavior: "smooth" });
+  } catch (_error) {
+  }
+}
+function chiudiIlModulo() {
+  state12.evModuloAperto = false;
+  const contenitore = doc?.getElementById("ed-body");
+  if (contenitore && profiles().length > 0) contenitore.dataset.evModulo = "chiuso";
 }
 function legacyProfiles() {
   const cars = readJson("cd_ev_cars", []);
@@ -17880,12 +18121,12 @@ function ensureCarKeys() {
   return salvaAuto(normalizzate);
 }
 function editingKey() {
-  return state11.evEditingUid ?? null;
+  return state12.evEditingUid ?? null;
 }
 var EVENTO_VEICOLO_IN_SCHEDA = "dashboardmodern:ev-card-subject";
 function setEditingKey(value) {
-  if (state11.evEditingUid === value) return;
-  state11.evEditingUid = value;
+  if (state12.evEditingUid === value) return;
+  state12.evEditingUid = value;
   root2.dispatchEvent?.(new CustomEvent(EVENTO_VEICOLO_IN_SCHEDA, { detail: { uid: value } }));
   if (typeof root2.queueMicrotask === "function") root2.queueMicrotask(scheduleEvSync);
   else scheduleEvSync();
@@ -18094,8 +18335,8 @@ function installLegacyWrappers() {
   if (typeof root2.cdEvCarsRefresh === "function" && !root2.cdEvCarsRefresh.__dmEvSection) {
     let refreshProfiles = function(...args) {
       const signature = legacyRefreshSignature();
-      if (signature === state11.legacyRefreshSignature) return void 0;
-      state11.legacyRefreshSignature = signature;
+      if (signature === state12.legacyRefreshSignature) return void 0;
+      state12.legacyRefreshSignature = signature;
       const result = previous.apply(this, args);
       root2.queueMicrotask?.(scheduleEvSync);
       return result;
@@ -18109,7 +18350,7 @@ function installLegacyWrappers() {
     let applyProfile = function(index, ...rest) {
       const car = legacyProfiles()[Number(index)] || {};
       setEditingKey(uidDi(car));
-      state11.evRenameArmed = false;
+      state12.evRenameArmed = false;
       if (uidDi(car) || clean13(car?.name)) {
         try {
           root2.localStorage?.setItem(VEHICLE_ACTIVE_KEY, String(index));
@@ -18123,7 +18364,7 @@ function installLegacyWrappers() {
       rimettiLaColonnina(colonnina);
       restoreProfilePhotos(car);
       applyVehicleAsset();
-      state11.legacyRefreshSignature = "";
+      state12.legacyRefreshSignature = "";
       root2.queueMicrotask?.(scheduleEvSync);
       return result;
     };
@@ -18176,8 +18417,8 @@ function installLegacyWrappers() {
       const marcaViva = clean13(pannello?.querySelector?.("select[data-brand]")?.value);
       const modelloVivo = clean13(pannello?.querySelector?.("select[data-model]")?.value);
       const perNome = nomeScritto ? elenco.find((car) => clean13(car?.name) === nomeScritto) || null : null;
-      const bersaglio = perNome || (sessioneEsplicita && state11.evRenameArmed && nomeScritto ? sessioneEsplicita : null) || (nomeScritto ? null : chiaveSessione === "" ? null : sessione);
-      const rinomina = sessioneEsplicita && state11.evRenameArmed && nomeScritto ? { name: nomeScritto } : {};
+      const bersaglio = perNome || (sessioneEsplicita && state12.evRenameArmed && nomeScritto ? sessioneEsplicita : null) || (nomeScritto ? null : chiaveSessione === "" ? null : sessione);
+      const rinomina = sessioneEsplicita && state12.evRenameArmed && nomeScritto ? { name: nomeScritto } : {};
       const vestito = marcaViva ? { brand: marcaViva, ...modelloVivo ? { model: modelloVivo } : {} } : {};
       const tendinaMotore = doc?.querySelector?.("#ed-body select[data-ev-tipo]");
       const motore = tendinaMotore ? { tipo: tipoMotore(tendinaMotore.value) } : {};
@@ -18218,7 +18459,7 @@ function installLegacyWrappers() {
         rimesse = salvaAuto([...elenco, nata]);
         salvata = rimesse.find((car) => uidDi(car) === nata[VEHICLE_KEY_FIELD]) || null;
       }
-      state11.evRenameArmed = false;
+      state12.evRenameArmed = false;
       if (salvata) setEditingKey(uidDi(salvata));
       if (elenco.length === 0 && salvata) {
         const posto = vehicleIndex(rimesse, uidDi(salvata));
@@ -18241,7 +18482,7 @@ function installLegacyWrappers() {
     }
   }
   function prendiLeCaselle(scritte) {
-    if (state11.dettandoICampi || state11.prendendoLeCaselle) return false;
+    if (state12.dettandoICampi || state12.prendendoLeCaselle) return false;
     if (!scritte || !Object.keys(scritte).length) {
       spiegaIlRifiuto("il salvataggio non ha raccolto nessuna casella dell'auto");
       return false;
@@ -18269,11 +18510,11 @@ function installLegacyWrappers() {
       (ref, valore) => eDellaWallbox(ref) || eTargetDiCasa(ref, valore)
     );
     if (!cambiato) return false;
-    state11.prendendoLeCaselle = true;
+    state12.prendendoLeCaselle = true;
     try {
       salvaAuto(cars);
     } finally {
-      state11.prendendoLeCaselle = false;
+      state12.prendendoLeCaselle = false;
     }
     return true;
   }
@@ -18335,16 +18576,16 @@ function scheduleEvSyncSettled() {
   for (const delay of [120, 420, 900, 1800]) root2.setTimeout?.(scheduleEvSync, delay);
 }
 function scheduleEvSync() {
-  if (state11.frame) return;
+  if (state12.frame) return;
   const run5 = () => {
-    state11.frame = 0;
+    state12.frame = 0;
     installLegacyWrappers();
     renderVehicleSelector();
     applyVehicleAsset();
     ensureVehiclePhotoEditor();
     ensureCarListDecor();
   };
-  state11.frame = root2.requestAnimationFrame?.(run5) || root2.setTimeout?.(run5, 0) || 0;
+  state12.frame = root2.requestAnimationFrame?.(run5) || root2.setTimeout?.(run5, 0) || 0;
 }
 function installStyles6() {
   installStyle("dm-ev-photos-style", `
@@ -18372,6 +18613,8 @@ function installStyles6() {
 #ed-body#ed-body .ed-slot[hidden]{display:none!important}
   `);
   installStyle("dm-ev-section-style", `
+#ed-body#ed-body[data-ev-modulo="chiuso"] .dm-ev-modulo,
+#ed-body#ed-body[data-ev-modulo="chiuso"] > .dm-save-footer{display:none!important}
 #ed-body .dm-ev-enabled{
   flex:0 0 42px;width:42px;height:24px;position:relative;margin-right:8px;border:0;border-radius:999px;
   cursor:pointer;background:color-mix(in srgb,var(--text-dim,#94a3b8) 32%,transparent);
@@ -18398,9 +18641,16 @@ function installStyles6() {
 }
 function bindEditorEntryPoints() {
   onEditorRedraw("__dmEvSection_editorSwitch", scheduleEvSyncSettled);
+  onEditorRedraw("__dmEvSection_modulo", () => {
+    if (clean13(doc?.querySelector?.(".ed-tab.active")?.dataset?.tab) !== "sez2")
+      state12.evModuloAperto = false;
+  });
+  wrapFunction("apriConfigEntita", "__dmEvSection_modulo_apri", () => {
+    state12.evModuloAperto = false;
+  });
   wrapFunction("apriConfigEntita", "__dmEvSection_apriConfigEntita", () => {
     setEditingKey(null);
-    state11.evRenameArmed = false;
+    state12.evRenameArmed = false;
     scheduleEvSyncSettled();
   });
 }
@@ -18415,8 +18665,8 @@ function installEvSection() {
   seedActiveProfilePhotos();
   seedActiveProfileOverrides();
   scheduleEvSync();
-  if (!state11.installed) {
-    state11.installed = true;
+  if (!state12.installed) {
+    state12.installed = true;
     doc.addEventListener("click", (event) => {
       if (event.target?.closest?.('[data-tab="ev"],[data-page="ev"],.ed-tab[data-tab="sez2"],.ed-acc-head')) root2.setTimeout?.(scheduleEvSync, 0);
     }, true);
@@ -18441,9 +18691,9 @@ if (doc?.readyState === "loading") doc.addEventListener("DOMContentLoaded", inst
 else senzaCadere(installEvSection);
 
 // src/sections/editor-slots-section.js
-var KEY11 = "__DASHBOARDMODERN_EDITOR_SLOTS__";
+var KEY12 = "__DASHBOARDMODERN_EDITOR_SLOTS__";
 var STYLE_ID3 = "dm-editor-slots-style";
-var state12 = root2[KEY11] ||= { installed: false, frame: 0, pending: 0, retries: 0 };
+var state13 = root2[KEY12] ||= { installed: false, frame: 0, pending: 0, retries: 0 };
 function nomeDaHomeAssistant(entity, states2 = root2._RAW_STATES || root2.STATES || {}) {
   const id = clean13(entity);
   if (!id) return "";
@@ -18919,15 +19169,15 @@ function decorateEditorSlots(scope = doc?.getElementById("ed-body")) {
   dropRetiredSlots(scope);
   let count = 0;
   for (const body of scope.querySelectorAll(".ed-acc-body")) if (decorateBody(body)) count += 1;
-  state12.pending = decorateEntityFields(scope);
+  state13.pending = decorateEntityFields(scope);
   rispettaTipoAzione(scope);
   return count;
 }
 var MAX_RETRIES = 6;
 function schedule3() {
-  if (state12.frame) return;
+  if (state13.frame) return;
   const run5 = () => {
-    state12.frame = 0;
+    state13.frame = 0;
     let pending = 0;
     for (const scope of [
       doc?.getElementById("ed-body"),
@@ -18936,16 +19186,16 @@ function schedule3() {
       ...doc?.querySelectorAll?.(".dm-section-modal") || []
     ].filter(Boolean)) {
       decorateEditorSlots(scope);
-      pending += state12.pending;
+      pending += state13.pending;
     }
-    if (pending && (state12.retries || 0) < MAX_RETRIES) {
-      state12.retries = (state12.retries || 0) + 1;
+    if (pending && (state13.retries || 0) < MAX_RETRIES) {
+      state13.retries = (state13.retries || 0) + 1;
       schedule3();
       return;
     }
-    state12.retries = 0;
+    state13.retries = 0;
   };
-  state12.frame = root2.requestAnimationFrame?.(run5) || root2.setTimeout?.(run5, 0);
+  state13.frame = root2.requestAnimationFrame?.(run5) || root2.setTimeout?.(run5, 0);
 }
 function installStyles7() {
   installStyle(
@@ -19242,8 +19492,8 @@ function bindLegacyEntryPoints() {
   });
 }
 function installEditorSlotsSection() {
-  if (!doc || state12.installed) return;
-  state12.installed = true;
+  if (!doc || state13.installed) return;
+  state13.installed = true;
   installStyles7();
   root2.__DASHBOARDMODERN_DECORATE_ENTITY_FIELDS__ = () => schedule3();
   for (const eventName of ["dashboardmodern:legacy-ready", "dashboardmodern:runtime-ready"]) {
@@ -19271,9 +19521,9 @@ if (doc?.readyState === "loading") {
 }
 
 // src/sections/minipc-showcase-section.js
-var KEY12 = "__DASHBOARDMODERN_MINIPC_SHOWCASE__";
+var KEY13 = "__DASHBOARDMODERN_MINIPC_SHOWCASE__";
 var STYLE_ID4 = "dm-minipc-showcase-style";
-var state13 = root2[KEY12] ||= {
+var state14 = root2[KEY13] ||= {
   installed: false,
   listeners: false,
   frame: 0,
@@ -19281,7 +19531,7 @@ var state13 = root2[KEY12] ||= {
   watched: null,
   observer: null
 };
-if (!Array.isArray(state13.trace)) state13.trace = [];
+if (!Array.isArray(state14.trace)) state14.trace = [];
 var WARN_LEVEL = 65;
 var ALERT_LEVEL = 85;
 var WARN_COLOUR = "#f59e0b";
@@ -19469,7 +19719,7 @@ function tracePaths(values, width = TRACE_WIDTH, height = TRACE_HEIGHT) {
   const line = smoothPath(points, height);
   return { line, area: `${line} L${width} ${height} L0 ${height} Z` };
 }
-function sampleCpu(scope = doc, samples = state13.trace) {
+function sampleCpu(scope = doc, samples = state14.trace) {
   const level = metricLevel("srv-fill-cpu", scope);
   if (level === null) return samples;
   samples.push(level);
@@ -19666,7 +19916,7 @@ function mountStatusIcons(page) {
 }
 function renderTrace(trace) {
   if (!trace) return;
-  const samples = state13.trace;
+  const samples = state14.trace;
   const mode = samples.length ? "on" : "empty";
   if (trace.dataset.dmSrvxTrace !== mode) trace.dataset.dmSrvxTrace = mode;
   if (!samples.length) return;
@@ -19772,23 +20022,23 @@ function raddrizzaLaRete(page = doc?.getElementById?.("page-server")) {
 }
 function bindAutoHide() {
   const page = doc?.getElementById?.("page-server");
-  if (!page || state13.watched === page) return;
+  if (!page || state14.watched === page) return;
   if (typeof root2.MutationObserver !== "function") return;
-  state13.observer?.disconnect?.();
-  state13.observer = new root2.MutationObserver(() => {
+  state14.observer?.disconnect?.();
+  state14.observer = new root2.MutationObserver(() => {
     if (pageVisible()) scheduleMinipcShowcase();
   });
-  state13.observer.observe(page, { attributes: true, attributeFilter: ["style"], subtree: true });
-  state13.watched = page;
+  state14.observer.observe(page, { attributes: true, attributeFilter: ["style"], subtree: true });
+  state14.watched = page;
 }
 function scheduleMinipcShowcase() {
-  if (state13.frame) return;
+  if (state14.frame) return;
   const run5 = () => {
-    state13.frame = 0;
+    state14.frame = 0;
     renderMinipcShowcase();
-    state13.observer?.takeRecords?.();
+    state14.observer?.takeRecords?.();
   };
-  state13.frame = root2.requestAnimationFrame?.(run5) || root2.setTimeout?.(run5, 0) || 0;
+  state14.frame = root2.requestAnimationFrame?.(run5) || root2.setTimeout?.(run5, 0) || 0;
 }
 function correggiDopoIlGuscio() {
   return wrapFunction("render", "__dmMinipcRete", () => {
@@ -19818,8 +20068,8 @@ function installMinipcShowcaseSection() {
   if (!doc) return;
   installStyle(STYLE_ID4, minipcShowcaseCss());
   portaAvantiLaCasella();
-  if (!state13.listeners) {
-    state13.listeners = true;
+  if (!state14.listeners) {
+    state14.listeners = true;
     for (const eventName of [
       "dashboardmodern:legacy-ready",
       "dashboardmodern:runtime-ready",
@@ -19849,7 +20099,7 @@ function installMinipcShowcaseSection() {
       true
     );
   }
-  state13.installed = true;
+  state14.installed = true;
   bindAutoHide();
   correggiDopoIlGuscio();
   ridisegnaQuandoCambiaLaMappatura();
@@ -20389,8 +20639,8 @@ if (doc?.readyState === "loading") {
 
 // src/sections/temperature-section.js
 root2.__DM_20260815C__ = true;
-var KEY13 = "__DASHBOARDMODERN_TEMPERATURE_SECTION__";
-var state14 = root2[KEY13] ||= {
+var KEY14 = "__DASHBOARDMODERN_TEMPERATURE_SECTION__";
+var state15 = root2[KEY14] ||= {
   installed: false,
   listeners: false,
   storeUnsubscribe: null,
@@ -20587,11 +20837,11 @@ function renderTemperatureCards({ force = false } = {}) {
   if (!grid) return false;
   const values = roomEntries();
   const signature = cardSignature(values);
-  if (!force && signature === state14.signature && grid.querySelectorAll(".temp-card[data-dm-temperature-canonical='true']").length === values.length) {
+  if (!force && signature === state15.signature && grid.querySelectorAll(".temp-card[data-dm-temperature-canonical='true']").length === values.length) {
     normalizeTemperatureCards();
     return values.length > 0;
   }
-  state14.signature = signature;
+  state15.signature = signature;
   if (!values.length) {
     const empty = doc.createElement("div");
     empty.className = "dm-temperature-empty";
@@ -20687,7 +20937,7 @@ function bindTemperatureRoomReassignment(form) {
         try {
           await store2?.replaceSection?.("rooms", next);
           resetTemperatureReassignment(form);
-          state14.signature = "";
+          state15.signature = "";
           renderTemperatureCards({ force: true });
           root2.setTimeout?.(() => root2.editorSwitch?.("sez7"), 0);
         } catch (error) {
@@ -20804,12 +21054,12 @@ function installOwners3() {
   installEditorNormalizerOwner();
 }
 function subscribeStore() {
-  if (state14.storeUnsubscribe) return;
+  if (state15.storeUnsubscribe) return;
   const store2 = dashboardStore();
   if (typeof store2?.subscribe !== "function") return;
-  state14.storeUnsubscribe = store2.subscribe((change) => {
+  state15.storeUnsubscribe = store2.subscribe((change) => {
     if (change?.section !== "rooms" && change?.section !== "snapshot") return;
-    state14.signature = "";
+    state15.signature = "";
     renderTemperatureCards({ force: true });
     root2.queueMicrotask?.(normalizeTemperatureConfiguredRows);
   });
@@ -20884,8 +21134,8 @@ function installTemperatureSection() {
   subscribeStore();
   renderTemperatureCards();
   normalizeTemperatureEditor();
-  if (!state14.listeners) {
-    state14.listeners = true;
+  if (!state15.listeners) {
+    state15.listeners = true;
     root2.addEventListener?.("dashboardmodern:state-changed", (event) => {
       if (stateChangeAffectsTemperature(event)) normalizeTemperatureCards();
     });
@@ -20898,13 +21148,13 @@ function installTemperatureSection() {
       root2.addEventListener?.(eventName, () => {
         installOwners3();
         subscribeStore();
-        state14.signature = "";
+        state15.signature = "";
         renderTemperatureCards({ force: true });
         normalizeTemperatureConfiguredRows();
       });
     }
     root2.addEventListener?.("dashboardmodern:config-reset", () => {
-      state14.signature = "";
+      state15.signature = "";
       renderTemperatureCards({ force: true });
     });
     doc.addEventListener(
@@ -20924,7 +21174,7 @@ function installTemperatureSection() {
       true
     );
   }
-  state14.installed = true;
+  state15.installed = true;
 }
 if (doc?.readyState === "loading")
   doc.addEventListener("DOMContentLoaded", installTemperatureSection, { once: true });
@@ -21380,8 +21630,8 @@ var PAROLE_SPENTE = [
 ];
 var ACCESI = new RegExp(`^(?:${PAROLE_ACCESE.join("|")})$`, "i");
 var SPENTI = new RegExp(`^(?:${PAROLE_SPENTE.join("|")})$`, "i");
-function accesoCaldaia(state34) {
-  const valore = clean26(state34).replace(/[\s_-]+/g, " ");
+function accesoCaldaia(state35) {
+  const valore = clean26(state35).replace(/[\s_-]+/g, " ");
   if (ACCESI.test(valore)) return true;
   if (SPENTI.test(valore)) return false;
   return null;
@@ -22153,9 +22403,9 @@ function sezioniPerFamiglia(elenco = SEZIONI) {
 }
 
 // src/sections/config-uniformity-section.js
-var KEY14 = "__DASHBOARDMODERN_CONFIG_UNIFORMITY__";
+var KEY15 = "__DASHBOARDMODERN_CONFIG_UNIFORMITY__";
 var STYLE_ID5 = "dm-config-uniformity-style";
-var state15 = root2[KEY14] ||= { installed: false, frame: 0, watched: null, observer: null };
+var state16 = root2[KEY15] ||= { installed: false, frame: 0, watched: null, observer: null };
 var TAB_SECTION_KEYS = CHIAVI_PER_SCHEDA;
 var NO_SAVE_TABS = /* @__PURE__ */ new Set(["runtime", "visib", "export", "rileva", "backup", "scollegati"]);
 var SAVE_SELECTOR = [
@@ -22274,11 +22524,11 @@ function accordionKey(details) {
   return clean13(clone.textContent).replace(/\s+/g, " ");
 }
 function accordionMemory(tab) {
-  const all = state15.accordions ||= {};
+  const all = state16.accordions ||= {};
   return all[tab] ||= {};
 }
 function rememberAccordion(event) {
-  if (state15.restoring) return;
+  if (state16.restoring) return;
   const details = event.target;
   if (!details?.classList?.contains?.("ed-acc") || !details.closest?.("#ed-body")) return;
   const key = accordionKey(details);
@@ -22288,10 +22538,10 @@ function rememberAccordion(event) {
 }
 function restoreAccordions(body = editorBody(), tab = activeTab()) {
   if (!body || !tab) return 0;
-  const memory = (state15.accordions || {})[tab];
+  const memory = (state16.accordions || {})[tab];
   if (!memory) return 0;
   let restored = 0;
-  state15.restoring = true;
+  state16.restoring = true;
   try {
     for (const details of body.querySelectorAll("details.ed-acc")) {
       const key = accordionKey(details);
@@ -22302,7 +22552,7 @@ function restoreAccordions(body = editorBody(), tab = activeTab()) {
       }
     }
   } finally {
-    state15.restoring = false;
+    state16.restoring = false;
   }
   return restored;
 }
@@ -22378,17 +22628,17 @@ function uniformConfiguration(body = editorBody(), tab = activeTab()) {
 var SETTLE_DELAYS = Object.freeze([120, 420, 900, 1800]);
 function watchEditorBody() {
   const body = editorBody();
-  if (!body || state15.watched === body) return;
+  if (!body || state16.watched === body) return;
   if (typeof root2.MutationObserver !== "function") return;
-  state15.observer?.disconnect?.();
-  state15.observer = new root2.MutationObserver(() => schedule4({ settle: false }));
-  state15.observer.observe(body, {
+  state16.observer?.disconnect?.();
+  state16.observer = new root2.MutationObserver(() => schedule4({ settle: false }));
+  state16.observer.observe(body, {
     childList: true,
     attributes: true,
     attributeFilter: ["style"],
     subtree: true
   });
-  state15.watched = body;
+  state16.watched = body;
 }
 function schedule4({ settle = true } = {}) {
   watchEditorBody();
@@ -22397,12 +22647,12 @@ function schedule4({ settle = true } = {}) {
       root2.setTimeout?.(() => schedule4({ settle: false }), delay);
     }
   }
-  if (state15.frame) return;
+  if (state16.frame) return;
   const run5 = () => {
-    state15.frame = 0;
+    state16.frame = 0;
     uniformConfiguration();
   };
-  state15.frame = root2.requestAnimationFrame?.(run5) || root2.setTimeout?.(run5, 0) || 0;
+  state16.frame = root2.requestAnimationFrame?.(run5) || root2.setTimeout?.(run5, 0) || 0;
 }
 function installStyles9() {
   installStyle(
@@ -22460,8 +22710,8 @@ function bindLegacyEntryPoints2() {
   wrapFunction("edFilterSez", "__dmConfigUniform_edFilterSez", schedule4);
 }
 function installConfigUniformitySection() {
-  if (!doc || state15.installed) return;
-  state15.installed = true;
+  if (!doc || state16.installed) return;
+  state16.installed = true;
   installStyles9();
   for (const eventName of ["dashboardmodern:legacy-ready", "dashboardmodern:runtime-ready"]) {
     root2.addEventListener?.(eventName, () => {
@@ -22490,8 +22740,8 @@ if (doc?.readyState === "loading") {
 
 // src/sections/beta17-final-icon-polish-section.js
 root2.__DM_20260815C__ = true;
-var KEY15 = "__DASHBOARDMODERN_BETA17_FINAL_ICON_POLISH__";
-var state16 = root2[KEY15] ||= {
+var KEY16 = "__DASHBOARDMODERN_BETA17_FINAL_ICON_POLISH__";
+var state17 = root2[KEY16] ||= {
   installed: false,
   temperaturePage: null,
   temperatureObserver: null,
@@ -22554,20 +22804,20 @@ function bindTemperatureProgressGuard() {
   const page = doc?.getElementById("page-temp");
   if (!page) return false;
   hideTemperatureProgressCopy();
-  if (state16.temperaturePage === page && state16.temperatureObserver) return true;
-  state16.temperatureObserver?.disconnect?.();
-  state16.temperaturePage = page;
+  if (state17.temperaturePage === page && state17.temperatureObserver) return true;
+  state17.temperatureObserver?.disconnect?.();
+  state17.temperaturePage = page;
   if (typeof root2.MutationObserver === "function") {
     const unGiroPerFotogramma = () => {
-      if (state16.temperatureFrame) return;
-      state16.temperatureFrame = root2.requestAnimationFrame?.(() => {
-        state16.temperatureFrame = 0;
+      if (state17.temperatureFrame) return;
+      state17.temperatureFrame = root2.requestAnimationFrame?.(() => {
+        state17.temperatureFrame = 0;
         hideTemperatureProgressCopy();
       }) || 0;
-      if (!state16.temperatureFrame) hideTemperatureProgressCopy();
+      if (!state17.temperatureFrame) hideTemperatureProgressCopy();
     };
-    state16.temperatureObserver = new root2.MutationObserver(unGiroPerFotogramma);
-    state16.temperatureObserver.observe(page, {
+    state17.temperatureObserver = new root2.MutationObserver(unGiroPerFotogramma);
+    state17.temperatureObserver.observe(page, {
       subtree: true,
       childList: true,
       characterData: true
@@ -22722,13 +22972,13 @@ function runTemperatureRepair() {
   repairTemperatureEditor();
 }
 function scheduleTemperatureRepair() {
-  if (state16.temperatureEditorFrame) return;
+  if (state17.temperatureEditorFrame) return;
   const run5 = () => {
-    state16.temperatureEditorFrame = 0;
+    state17.temperatureEditorFrame = 0;
     runTemperatureRepair();
     root2.requestAnimationFrame?.(runTemperatureRepair);
   };
-  state16.temperatureEditorFrame = root2.requestAnimationFrame?.(run5) || root2.setTimeout?.(run5, 0) || 0;
+  state17.temperatureEditorFrame = root2.requestAnimationFrame?.(run5) || root2.setTimeout?.(run5, 0) || 0;
 }
 function captureTemperatureLabels(event) {
   const form = event.target?.closest?.("[data-temperature-form]");
@@ -22736,25 +22986,25 @@ function captureTemperatureLabels(event) {
   const id = clean13(form.querySelector("#dm-temperature-room")?.value);
   const temp = clean13(form.querySelector("#ed-pl-temp")?.value);
   if (!id || !temp.includes(".")) return;
-  state16.pendingLabels.set(id, {
+  state17.pendingLabels.set(id, {
     temp_name: clean13(form.querySelector("#dm-temperature-name")?.value),
     hum_name: clean13(form.querySelector("#dm-humidity-name")?.value)
   });
 }
 async function flushPendingTemperatureLabels() {
-  if (state16.flushingLabels || !state16.pendingLabels.size) return;
+  if (state17.flushingLabels || !state17.pendingLabels.size) return;
   const store2 = dashboardStore();
   if (!store2?.updateItem) return;
-  state16.flushingLabels = true;
+  state17.flushingLabels = true;
   try {
-    for (const [id, labels] of [...state16.pendingLabels.entries()]) {
+    for (const [id, labels] of [...state17.pendingLabels.entries()]) {
       const room = temperatureRoom(id);
       if (!room || !clean13(room.temp) && !clean13(room.hum)) continue;
       const patch = {
         temp_name: clean13(labels.temp_name),
         hum_name: clean13(labels.hum_name)
       };
-      state16.pendingLabels.delete(id);
+      state17.pendingLabels.delete(id);
       if (clean13(room.temp_name) === patch.temp_name && clean13(room.hum_name) === patch.hum_name) {
         continue;
       }
@@ -22763,31 +23013,31 @@ async function flushPendingTemperatureLabels() {
   } catch (error) {
     root2.console?.error?.("[DashboardModern] temperature entity labels", error);
   } finally {
-    state16.flushingLabels = false;
+    state17.flushingLabels = false;
   }
 }
 async function clearOrphanTemperatureLabels() {
-  if (state16.clearingLabels) return;
+  if (state17.clearingLabels) return;
   const store2 = dashboardStore();
   if (!store2?.updateItem) return;
   const orphan = temperatureRooms().find(
     (room) => !clean13(room.temp) && !clean13(room.hum) && (clean13(room.temp_name) || clean13(room.hum_name))
   );
   if (!orphan) return;
-  state16.clearingLabels = true;
+  state17.clearingLabels = true;
   try {
     await store2.updateItem("rooms", orphan.id, { temp_name: "", hum_name: "" });
   } catch (error) {
     root2.console?.error?.("[DashboardModern] clear temperature entity labels", error);
   } finally {
-    state16.clearingLabels = false;
+    state17.clearingLabels = false;
   }
 }
 function subscribeTemperatureLabels() {
-  if (state16.storeUnsubscribe) return;
+  if (state17.storeUnsubscribe) return;
   const store2 = dashboardStore();
   if (typeof store2?.subscribe !== "function") return;
-  state16.storeUnsubscribe = store2.subscribe((change) => {
+  state17.storeUnsubscribe = store2.subscribe((change) => {
     if (change?.section !== "rooms" && change?.section !== "snapshot") return;
     flushPendingTemperatureLabels();
     clearOrphanTemperatureLabels();
@@ -22849,8 +23099,8 @@ function scheduleTemperatureRepairFromEvent(event) {
   }
 }
 function install() {
-  if (!doc || state16.installed) return;
-  state16.installed = true;
+  if (!doc || state17.installed) return;
+  state17.installed = true;
   for (const eventName of [
     "dashboardmodern:legacy-ready",
     "dashboardmodern:runtime-ready",
@@ -22865,12 +23115,12 @@ function install() {
   }
   root2.addEventListener?.("dashboardmodern:state-changed", () => {
     if (!doc?.getElementById("page-temp")?.classList.contains("active")) return;
-    if (state16.temperatureFrame) return;
-    state16.temperatureFrame = root2.requestAnimationFrame?.(() => {
-      state16.temperatureFrame = 0;
+    if (state17.temperatureFrame) return;
+    state17.temperatureFrame = root2.requestAnimationFrame?.(() => {
+      state17.temperatureFrame = 0;
       hideTemperatureProgressCopy();
     }) || 0;
-    if (!state16.temperatureFrame) hideTemperatureProgressCopy();
+    if (!state17.temperatureFrame) hideTemperatureProgressCopy();
   });
   root2.addEventListener?.("click", scheduleCanonicalModalClaim, true);
   doc.addEventListener("click", scheduleTemperatureRepairFromEvent, true);
@@ -22895,7 +23145,7 @@ function install() {
 senzaCadere(install);
 
 // src/sections/config-persistence-section.js
-var KEY16 = "__DASHBOARDMODERN_CONFIG_PERSISTENCE__";
+var KEY17 = "__DASHBOARDMODERN_CONFIG_PERSISTENCE__";
 var USER_DATA_VERSION = 1;
 var WRITER_GENERATION = 1;
 var PERSIST_META_KEY = "dm_persistence_meta";
@@ -22906,7 +23156,7 @@ var SHARED_RESTORE = "dashboardmodern/config/restore";
 var PRIMARY_PROFILE = "primary";
 var HYDRATE_RETRY_MS = Object.freeze([1500, 3e3, 6e3, 12e3, 3e4]);
 var PUSH_CONFLICT_RETRIES = 2;
-var state17 = root2[KEY16] ||= {
+var state18 = root2[KEY17] ||= {
   installed: false,
   dirtyAt: 0,
   dirtyMarkTimer: 0,
@@ -23279,41 +23529,41 @@ function sharedRestoreRevision(revision) {
 function chiaviInSospeso(meta = readMeta()) {
   const scritte = Array.isArray(meta.pending_keys) ? meta.pending_keys : [];
   const vive = new Set(scritte.filter((chiave2) => CONFIG_KEYS.includes(String(chiave2))));
-  for (const chiave2 of state17.dirtyKeys || []) vive.add(chiave2);
+  for (const chiave2 of state18.dirtyKeys || []) vive.add(chiave2);
   return [...vive];
 }
 function markPending({ schedule: schedule16 = true, key = "" } = {}) {
-  if (state17.resetting || state17.hydrating || root2.__DASHBOARDMODERN_PERSIST_RESTORE__ || root2.__DASHBOARDMODERN_CONFIG_RESETTING__)
-    return state17.dirtyAt;
+  if (state18.resetting || state18.hydrating || root2.__DASHBOARDMODERN_PERSIST_RESTORE__ || root2.__DASHBOARDMODERN_CONFIG_RESETTING__)
+    return state18.dirtyAt;
   const now = Date.now();
-  state17.dirtyAt = now;
-  if (!state17.dirtyKeys) state17.dirtyKeys = /* @__PURE__ */ new Set();
+  state18.dirtyAt = now;
+  if (!state18.dirtyKeys) state18.dirtyKeys = /* @__PURE__ */ new Set();
   const nome = String(key || "");
-  if (nome && CONFIG_KEYS.includes(nome)) state17.dirtyKeys.add(nome);
+  if (nome && CONFIG_KEYS.includes(nome)) state18.dirtyKeys.add(nome);
   writeMeta({ pending_at: now, pending_keys: chiaviInSospeso() });
-  if (schedule16 && state17.hydrated && hostedBridge()) schedulePush();
+  if (schedule16 && state18.hydrated && hostedBridge()) schedulePush();
   return now;
 }
 function queuePendingFromStorage(key = "") {
   const nome = String(key || "");
   if (nome && CONFIG_KEYS.includes(nome)) {
-    if (!state17.dirtyKeys) state17.dirtyKeys = /* @__PURE__ */ new Set();
-    state17.dirtyKeys.add(nome);
+    if (!state18.dirtyKeys) state18.dirtyKeys = /* @__PURE__ */ new Set();
+    state18.dirtyKeys.add(nome);
   }
-  if (state17.dirtyMarkTimer) return;
-  state17.dirtyMarkTimer = root2.setTimeout?.(() => {
-    state17.dirtyMarkTimer = 0;
+  if (state18.dirtyMarkTimer) return;
+  state18.dirtyMarkTimer = root2.setTimeout?.(() => {
+    state18.dirtyMarkTimer = 0;
     markPending();
   }, 0) || 0;
-  if (!state17.dirtyMarkTimer) markPending();
+  if (!state18.dirtyMarkTimer) markPending();
 }
 function rememberSynced(revision, updatedAt) {
-  state17.dirtyAt = 0;
-  state17.dirtyKeys = /* @__PURE__ */ new Set();
-  state17.remoteRevision = Number(revision) || 0;
+  state18.dirtyAt = 0;
+  state18.dirtyKeys = /* @__PURE__ */ new Set();
+  state18.remoteRevision = Number(revision) || 0;
   writeMeta({
     synced_at: Number(updatedAt) || Date.now(),
-    synced_revision: state17.remoteRevision,
+    synced_revision: state18.remoteRevision,
     pending_at: 0,
     pending_keys: []
   });
@@ -23321,7 +23571,7 @@ function rememberSynced(revision, updatedAt) {
 async function pushShared(attempt = 0) {
   const value = snapshot();
   const configured3 = meaningfulLocal(value.values);
-  if (!state17.resetting && !configured3 && state17.remoteConfigured) {
+  if (!state18.resetting && !configured3 && state18.remoteConfigured) {
     console.warn("[DashboardModern] empty local configuration not pushed; re-reading shared copy");
     await hydrateRemote({ force: true });
     return false;
@@ -23329,8 +23579,8 @@ async function pushShared(attempt = 0) {
   let result;
   try {
     result = await sharedSet(value, {
-      expectedRevision: state17.remoteRevision,
-      reset: state17.resetting
+      expectedRevision: state18.remoteRevision,
+      reset: state18.resetting
     });
   } catch (error) {
     console.warn("[DashboardModern] shared config sync failed; local copy kept", error);
@@ -23338,8 +23588,8 @@ async function pushShared(attempt = 0) {
   }
   const status = String(result?.status || "");
   if (status === "saved" || status === "unchanged") {
-    state17.localWasConfigured = configured3;
-    state17.remoteConfigured = meaningfulConfigValues(result?.snapshot?.values || value.values);
+    state18.localWasConfigured = configured3;
+    state18.remoteConfigured = meaningfulConfigValues(result?.snapshot?.values || value.values);
     rememberSynced(result?.snapshot?.revision, result?.snapshot?.updated_at);
     root2.dispatchEvent?.(new CustomEvent("dashboardmodern:persistence-saved", { detail: value }));
     return true;
@@ -23349,8 +23599,8 @@ async function pushShared(attempt = 0) {
     return applySharedSnapshot(result.snapshot);
   }
   if (status === "conflict") {
-    state17.remoteRevision = Number(result?.snapshot?.revision) || 0;
-    state17.remoteConfigured = meaningfulConfigValues(result?.snapshot?.values || {});
+    state18.remoteRevision = Number(result?.snapshot?.revision) || 0;
+    state18.remoteConfigured = meaningfulConfigValues(result?.snapshot?.values || {});
     if (attempt >= PUSH_CONFLICT_RETRIES) {
       const rimasto = normalizeSharedSnapshot(result?.snapshot);
       if (rimasto && rimasto.writer_generation < WRITER_GENERATION && configured3) {
@@ -23370,8 +23620,8 @@ async function pushLegacyUserData() {
   const value = snapshot();
   try {
     await bridgeRequest("frontend/set_user_data", { key: userDataKey(), value });
-    state17.dirtyAt = 0;
-    state17.localWasConfigured = meaningfulLocal(value.values);
+    state18.dirtyAt = 0;
+    state18.localWasConfigured = meaningfulLocal(value.values);
     writeMeta({ synced_at: value.updated_at, pending_at: 0 });
     root2.dispatchEvent?.(new CustomEvent("dashboardmodern:persistence-saved", { detail: value }));
     return true;
@@ -23383,30 +23633,30 @@ async function pushLegacyUserData() {
 async function pushNow() {
   if (!hostedBridge()) return true;
   if (!sharedStoreEnabled()) return pushLegacyUserData();
-  if (!state17.hydrated && !state17.resetting) {
+  if (!state18.hydrated && !state18.resetting) {
     scheduleHydrateRetry(0);
     return false;
   }
   return pushShared();
 }
 function schedulePush() {
-  state17.needsPush = true;
-  if (state17.pushPromise) return state17.pushPromise;
-  state17.pushPromise = new Promise((resolve2) => {
+  state18.needsPush = true;
+  if (state18.pushPromise) return state18.pushPromise;
+  state18.pushPromise = new Promise((resolve2) => {
     const run5 = async () => {
-      state17.pushTimer = 0;
+      state18.pushTimer = 0;
       let result = true;
       do {
-        state17.needsPush = false;
+        state18.needsPush = false;
         result = await pushNow() && result;
-      } while (state17.needsPush);
-      state17.pushPromise = null;
+      } while (state18.needsPush);
+      state18.pushPromise = null;
       resolve2(result);
     };
-    state17.pushTimer = root2.setTimeout?.(run5, 140) || 0;
-    if (!state17.pushTimer) run5();
+    state18.pushTimer = root2.setTimeout?.(run5, 140) || 0;
+    if (!state18.pushTimer) run5();
   });
-  return state17.pushPromise;
+  return state18.pushPromise;
 }
 function normalizeRestoredValues(values) {
   const restored = { ...values };
@@ -23497,9 +23747,9 @@ function applySharedSnapshot(rawSnapshot) {
   if (!normalized2) return false;
   const merged = mergeLegacyMissingConfig(normalized2, localValues());
   if (!restoreValues(merged.values)) return false;
-  state17.remoteRevision = normalized2.revision;
-  state17.remoteConfigured = meaningfulConfigValues(normalized2.values);
-  state17.localWasConfigured = meaningfulLocal(localValues());
+  state18.remoteRevision = normalized2.revision;
+  state18.remoteConfigured = meaningfulConfigValues(normalized2.values);
+  state18.localWasConfigured = meaningfulLocal(localValues());
   rememberSynced(normalized2.revision, normalized2.updated_at);
   refreshRuntimeAfterRestore(merged);
   return true;
@@ -23516,10 +23766,10 @@ async function readLegacyUserData() {
 }
 async function hydrateShared() {
   const response = await sharedGet();
-  state17.lastPullAt = Date.now();
+  state18.lastPullAt = Date.now();
   const local = localValues();
   const meta = readMeta();
-  const pendingAt = Math.max(Number(state17.dirtyAt) || 0, Number(meta.pending_at) || 0);
+  const pendingAt = Math.max(Number(state18.dirtyAt) || 0, Number(meta.pending_at) || 0);
   const syncedRevision = Number(meta.synced_revision) || 0;
   let stored = normalizeSharedSnapshot(response?.snapshot);
   const recoverable = Array.isArray(response?.recoverable) ? response.recoverable : [];
@@ -23538,9 +23788,9 @@ async function hydrateShared() {
       if (adopted) stored = adopted;
     }
   }
-  state17.remoteRevision = stored?.revision || 0;
-  state17.remoteConfigured = Boolean(stored && meaningfulConfigValues(stored.values));
-  const localConfigured = state17.hydrated ? meaningfulLocal(local) : state17.localWasConfigured;
+  state18.remoteRevision = stored?.revision || 0;
+  state18.remoteConfigured = Boolean(stored && meaningfulConfigValues(stored.values));
+  const localConfigured = state18.hydrated ? meaningfulLocal(local) : state18.localWasConfigured;
   const daTenere = chiaviInSospeso(meta);
   const action = sharedReconcileAction({
     snapshot: stored,
@@ -23564,7 +23814,7 @@ async function hydrateShared() {
     return applySharedSnapshot(restored?.snapshot);
   }
   if (action === "in-sync") {
-    state17.localWasConfigured = localConfigured;
+    state18.localWasConfigured = localConfigured;
     rememberSynced(stored.revision, stored.updated_at);
     if (Number(stored.keys_revision) < CONFIG_KEYS_REVISION || Number(stored.writer_generation) < WRITER_GENERATION)
       await pushShared();
@@ -23577,19 +23827,19 @@ async function hydrateLegacyUserData() {
     async (key) => (await bridgeRequest("frontend/get_user_data", { key }))?.value,
     (key, value) => bridgeRequest("frontend/set_user_data", { key, value })
   );
-  state17.lastPullAt = Date.now();
+  state18.lastPullAt = Date.now();
   const local = localValues();
   const normalizedRemote = normalizeRemoteSnapshot(rawRemote);
   const remote = mergeLegacyMissingConfig(normalizedRemote, local);
   const meta = readMeta();
-  const pendingAt = Math.max(Number(state17.dirtyAt) || 0, Number(meta.pending_at) || 0);
-  const localConfigured = state17.hydrated ? meaningfulLocal(local) : state17.localWasConfigured;
+  const pendingAt = Math.max(Number(state18.dirtyAt) || 0, Number(meta.pending_at) || 0);
+  const localConfigured = state18.hydrated ? meaningfulLocal(local) : state18.localWasConfigured;
   const action = persistenceReconcileAction({ remote, localConfigured, pendingAt, local });
   if (action === "push-local") return await pushLegacyUserData();
   if (action === "restore-remote" && remote) {
     if (!restoreValues(remote.values)) return false;
-    state17.dirtyAt = 0;
-    state17.localWasConfigured = meaningfulLocal(localValues());
+    state18.dirtyAt = 0;
+    state18.localWasConfigured = meaningfulLocal(localValues());
     writeMeta({ synced_at: Number(remote.updated_at) || Date.now(), pending_at: 0 });
     refreshRuntimeAfterRestore(remote);
     if (Number(remote.keys_revision) < CONFIG_KEYS_REVISION || remote.migrated_from === "legacy-flat" || !sameConfigValues(localValues(), remote.values))
@@ -23597,8 +23847,8 @@ async function hydrateLegacyUserData() {
     return true;
   }
   if (action === "in-sync" && remote) {
-    state17.dirtyAt = 0;
-    state17.localWasConfigured = localConfigured;
+    state18.dirtyAt = 0;
+    state18.localWasConfigured = localConfigured;
     writeMeta({ synced_at: Number(remote.updated_at) || Date.now(), pending_at: 0 });
     if (Number(remote.keys_revision) < CONFIG_KEYS_REVISION || remote.migrated_from === "legacy-flat")
       await pushLegacyUserData();
@@ -23608,11 +23858,11 @@ async function hydrateLegacyUserData() {
     console.warn("[DashboardModern] unsupported remote config snapshot retained without overwrite");
   return false;
 }
-function scheduleHydrateRetry(failures = state17.transportFailures) {
-  if (state17.resetting || !hostedBridge() || state17.hydrateRetryTimer) return;
+function scheduleHydrateRetry(failures = state18.transportFailures) {
+  if (state18.resetting || !hostedBridge() || state18.hydrateRetryTimer) return;
   const index = Math.min(Math.max(Number(failures) || 0, 0), HYDRATE_RETRY_MS.length - 1);
-  state17.hydrateRetryTimer = root2.setTimeout?.(() => {
-    state17.hydrateRetryTimer = 0;
+  state18.hydrateRetryTimer = root2.setTimeout?.(() => {
+    state18.hydrateRetryTimer = 0;
     hydrateRemote({ force: true }).catch(
       (error) => root2.console?.warn?.("[DashboardModern] config hydration retry failed", error)
     );
@@ -23620,41 +23870,41 @@ function scheduleHydrateRetry(failures = state17.transportFailures) {
 }
 async function hydrateRemote(options = {}) {
   const force = options?.force === true;
-  if (state17.hydrating || state17.resetting || !force && state17.hydrated || !hostedBridge())
+  if (state18.hydrating || state18.resetting || !force && state18.hydrated || !hostedBridge())
     return false;
-  state17.hydrating = true;
+  state18.hydrating = true;
   const shared = sharedStoreEnabled();
   try {
     const changed = shared ? await hydrateShared() : await hydrateLegacyUserData();
-    state17.hydrated = true;
-    state17.transportFailures = 0;
+    state18.hydrated = true;
+    state18.transportFailures = 0;
     return changed;
   } catch (error) {
     console.warn("[DashboardModern] config restore skipped", error);
     if (shared) {
-      state17.transportFailures += 1;
+      state18.transportFailures += 1;
       scheduleHydrateRetry();
     } else {
-      state17.hydrated = true;
+      state18.hydrated = true;
     }
     return false;
   } finally {
-    state17.hydrating = false;
+    state18.hydrating = false;
   }
 }
 function scheduleRemoteRefresh(delay = 0) {
-  if (state17.resetting || !hostedBridge()) return;
+  if (state18.resetting || !hostedBridge()) return;
   if (root2.document?.visibilityState === "hidden") return;
-  if (state17.refreshTimer) return;
-  const elapsed = Date.now() - (Number(state17.lastPullAt) || 0);
+  if (state18.refreshTimer) return;
+  const elapsed = Date.now() - (Number(state18.lastPullAt) || 0);
   const wait = Math.max(Number(delay) || 0, REMOTE_REFRESH_MIN_MS - elapsed, 0);
-  state17.refreshTimer = root2.setTimeout?.(() => {
-    state17.refreshTimer = 0;
+  state18.refreshTimer = root2.setTimeout?.(() => {
+    state18.refreshTimer = 0;
     hydrateRemote({ force: true }).catch(
       (error) => root2.console?.warn?.("[DashboardModern] cross-device refresh failed", error)
     );
   }, wait) || 0;
-  if (!state17.refreshTimer) hydrateRemote({ force: true });
+  if (!state18.refreshTimer) hydrateRemote({ force: true });
 }
 function installStorageMutationBridge() {
   const storage = root2.localStorage;
@@ -23666,7 +23916,7 @@ function installStorageMutationBridge() {
     const managed = CONFIG_KEYS.includes(String(key));
     const before = managed ? storage.getItem(key) : null;
     const result = originalSetItem(key, value);
-    if (managed && before !== String(value) && !storage.__dashboardStoreProjecting && !state17.hydrating && !state17.resetting && !root2.__DASHBOARDMODERN_PERSIST_RESTORE__ && !root2.__DASHBOARDMODERN_CONFIG_RESETTING__)
+    if (managed && before !== String(value) && !storage.__dashboardStoreProjecting && !state18.hydrating && !state18.resetting && !root2.__DASHBOARDMODERN_PERSIST_RESTORE__ && !root2.__DASHBOARDMODERN_CONFIG_RESETTING__)
       queuePendingFromStorage(key);
     return result;
   };
@@ -23674,12 +23924,12 @@ function installStorageMutationBridge() {
     const managed = CONFIG_KEYS.includes(String(key));
     const before = managed ? storage.getItem(key) : null;
     const result = originalRemoveItem(key);
-    if (managed && before !== null && !storage.__dashboardStoreProjecting && !state17.hydrating && !state17.resetting && !root2.__DASHBOARDMODERN_PERSIST_RESTORE__ && !root2.__DASHBOARDMODERN_CONFIG_RESETTING__)
+    if (managed && before !== null && !storage.__dashboardStoreProjecting && !state18.hydrating && !state18.resetting && !root2.__DASHBOARDMODERN_PERSIST_RESTORE__ && !root2.__DASHBOARDMODERN_CONFIG_RESETTING__)
       queuePendingFromStorage(key);
     return result;
   };
   storage.__dmPersistenceMutationBridge = true;
-  state17.mutationBridgeInstalled = true;
+  state18.mutationBridgeInstalled = true;
   return true;
 }
 function resetConfirmation() {
@@ -23713,21 +23963,21 @@ function clearOwnStorage(storage = root2.localStorage) {
   return true;
 }
 async function resetAllConfig({ skipConfirm = false, reload = true } = {}) {
-  if (state17.resetting) return false;
+  if (state18.resetting) return false;
   if (!skipConfirm && root2.confirm && !root2.confirm(resetConfirmation())) return false;
-  state17.resetting = true;
-  state17.hydrated = true;
-  state17.localWasConfigured = false;
+  state18.resetting = true;
+  state18.hydrated = true;
+  state18.localWasConfigured = false;
   root2.__DASHBOARDMODERN_CONFIG_RESETTING__ = true;
   try {
-    if (state17.pushPromise) await state17.pushPromise;
+    if (state18.pushPromise) await state18.pushPromise;
     await Promise.resolve();
   } catch (_error) {
   }
   try {
     clearOwnStorage();
   } catch (error) {
-    state17.resetting = false;
+    state18.resetting = false;
     delete root2.__DASHBOARDMODERN_CONFIG_RESETTING__;
     root2.console?.error?.("[DashboardModern] local reset failed", error);
     return false;
@@ -23740,16 +23990,16 @@ async function resetAllConfig({ skipConfirm = false, reload = true } = {}) {
   try {
     if (sharedStoreEnabled()) {
       await sharedSet(empty, { reset: true });
-      state17.remoteConfigured = false;
-      state17.remoteRevision = 0;
+      state18.remoteConfigured = false;
+      state18.remoteRevision = 0;
     } else if (hostedBridge()) {
       await bridgeRequest("frontend/set_user_data", { key: userDataKey(), value: empty });
     }
   } catch (error) {
     root2.console?.warn?.("[DashboardModern] remote reset deferred", error);
-    state17.dirtyAt = Date.now();
-    writeMeta({ pending_at: state17.dirtyAt });
-    state17.needsPush = true;
+    state18.dirtyAt = Date.now();
+    writeMeta({ pending_at: state18.dirtyAt });
+    state18.needsPush = true;
     schedulePush();
   }
   try {
@@ -23759,7 +24009,7 @@ async function resetAllConfig({ skipConfirm = false, reload = true } = {}) {
   root2.dispatchEvent?.(new CustomEvent("dashboardmodern:config-reset", { detail: empty }));
   if (reload) root2.setTimeout?.(() => reloadDashboard(), 40);
   else {
-    state17.resetting = false;
+    state18.resetting = false;
     delete root2.__DASHBOARDMODERN_CONFIG_RESETTING__;
   }
   return true;
@@ -23772,7 +24022,7 @@ function installResetOwner() {
   canonical.__dmCanonicalReset = true;
   canonical.__dmPrevious = root2.wzResetAll;
   root2.wzResetAll = canonical;
-  state17.resetOwnerInstalled = true;
+  state18.resetOwnerInstalled = true;
   return true;
 }
 function disableLegacySyncState() {
@@ -23789,25 +24039,25 @@ function disableLegacySyncState() {
   }
 }
 function installConfigPersistenceSection() {
-  if (state17.installed) {
+  if (state18.installed) {
     disableLegacySyncState();
     installResetOwner();
     installStorageMutationBridge();
     return;
   }
-  state17.installed = true;
-  state17.localWasConfigured = meaningfulLocal();
+  state18.installed = true;
+  state18.localWasConfigured = meaningfulLocal();
   const initialMeta = readMeta();
   const legacyPending = legacyPendingTimestamp();
-  state17.dirtyAt = Math.max(Number(initialMeta.pending_at) || 0, legacyPending);
-  state17.remoteRevision = Number(initialMeta.synced_revision) || 0;
-  if (legacyPending) writeMeta({ pending_at: state17.dirtyAt });
+  state18.dirtyAt = Math.max(Number(initialMeta.pending_at) || 0, legacyPending);
+  state18.remoteRevision = Number(initialMeta.synced_revision) || 0;
+  if (legacyPending) writeMeta({ pending_at: state18.dirtyAt });
   disableLegacySyncState();
   root2.cdMarkDirty = function dashboardModernMarkDirty() {
     return markPending();
   };
   root2.cdSyncPush = function dashboardModernSyncPush() {
-    if (!state17.hydrated || state17.hydrating) {
+    if (!state18.hydrated || state18.hydrating) {
       return hydrateRemote().then(() => true);
     }
     markPending({ schedule: false });
@@ -23840,8 +24090,8 @@ function installConfigPersistenceSection() {
 senzaCadere(installConfigPersistenceSection);
 
 // src/sections/beta-compat-section.js
-var KEY17 = "__DASHBOARDMODERN_BETA_COMPAT__";
-var state18 = root2[KEY17] ||= { installed: false };
+var KEY18 = "__DASHBOARDMODERN_BETA_COMPAT__";
+var state19 = root2[KEY18] ||= { installed: false };
 var ROOM_PICKER = Object.freeze([
   ["🏠", "casa home ingresso entrance"],
   ["🛏️", "camera bedroom letto bed matrimoniale"],
@@ -23888,8 +24138,8 @@ function preserveManualEvAppearanceEdit(event) {
   panel.dataset.dmBeta11ManualEdit = "true";
 }
 function install2() {
-  if (!doc || state18.installed) return;
-  state18.installed = true;
+  if (!doc || state19.installed) return;
+  state19.installed = true;
   if (typeof root2.consStimato === "undefined") root2.consStimato = false;
   doc.addEventListener("input", preserveManualEvAppearanceEdit, true);
   doc.addEventListener("change", preserveManualEvAppearanceEdit, true);
@@ -23955,8 +24205,8 @@ function install2() {
 senzaCadere(install2);
 
 // src/sections/entity-picker-guard-section.js
-var KEY18 = "__DASHBOARDMODERN_ENTITY_PICKER_GUARD__";
-var state19 = root2[KEY18] ||= { installed: false, frame: 0, subscribed: false };
+var KEY19 = "__DASHBOARDMODERN_ENTITY_PICKER_GUARD__";
+var state20 = root2[KEY19] ||= { installed: false, frame: 0, subscribed: false };
 var ENTITY_ID2 = /^[a-z_][a-z0-9_]*\.[a-z0-9_]+$/i;
 var PICKABLE_TYPES = /* @__PURE__ */ new Set(["text", "search", "url"]);
 var NON_ENTITY_IDS = /* @__PURE__ */ new Set([
@@ -24087,9 +24337,9 @@ function reconcileEntityPickers(scope = doc) {
 function schedule5() {
   const activeEditor = doc.getElementById("ed-body");
   if (activeEditor) reconcileEntityPickers(activeEditor);
-  if (state19.frame) return;
+  if (state20.frame) return;
   const run5 = () => {
-    state19.frame = 0;
+    state20.frame = 0;
     for (const scope of [doc.getElementById("ed-body"), doc.getElementById("editor-modal"), doc.getElementById("setup-wizard"), ...doc.querySelectorAll(".dm-section-modal")].filter(Boolean)) {
       reconcileEntityPickers(scope);
     }
@@ -24097,13 +24347,13 @@ function schedule5() {
     const duplicates = [...doc.querySelectorAll("#cd-entpick")];
     if (duplicates.length > 1) duplicates.slice(1).forEach((node) => node.remove());
   };
-  state19.frame = root2.requestAnimationFrame?.(run5) || root2.setTimeout?.(run5, 0);
+  state20.frame = root2.requestAnimationFrame?.(run5) || root2.setTimeout?.(run5, 0);
 }
 function subscribeStore2() {
-  if (state19.subscribed) return;
+  if (state20.subscribed) return;
   const store2 = root2.DashboardModernModules?.store;
   if (typeof store2?.subscribe !== "function") return;
-  state19.subscribed = true;
+  state20.subscribed = true;
   store2.subscribe(() => schedule5());
 }
 function installStyles10() {
@@ -24117,8 +24367,8 @@ function installStyles10() {
   `);
 }
 function installEntityPickerGuardSection() {
-  if (!doc || state19.installed) return;
-  state19.installed = true;
+  if (!doc || state20.installed) return;
+  state20.installed = true;
   installStyles10();
   root2.addEventListener?.("dashboardmodern:legacy-ready", () => {
     guardSingleDialog();
@@ -24922,10 +25172,10 @@ if (doc2?.readyState === "loading") doc2.addEventListener("DOMContentLoaded", in
 else senzaCadere(install3);
 
 // src/sections/energy-report-polish-section.js
-var KEY19 = "__DASHBOARDMODERN_ENERGY_REPORT_POLISH__";
-var state20 = root2[KEY19] ||= { installed: false, frame: 0, dailyChart: null, legacyDailyChart: null, subscribed: false, contoAFasce: null };
+var KEY20 = "__DASHBOARDMODERN_ENERGY_REPORT_POLISH__";
+var state21 = root2[KEY20] ||= { installed: false, frame: 0, dailyChart: null, legacyDailyChart: null, subscribed: false, contoAFasce: null };
 function registraIlContoAFasce(lettore) {
-  state20.contoAFasce = typeof lettore === "function" ? lettore : null;
+  state21.contoAFasce = typeof lettore === "function" ? lettore : null;
   registraIlContoDelleFasce(lettore);
   return true;
 }
@@ -24977,7 +25227,7 @@ function bucketMap(rows = [], daysInMonth = 31) {
   return values;
 }
 function barreDelleFasce(giorniDelMese, mese, anno) {
-  const conto = state20.contoAFasce?.();
+  const conto = state21.contoAFasce?.();
   const giorni = conto?.report?.giorni;
   if (!giorni?.length) return [];
   const quante = conto.report.fasce.length;
@@ -25041,10 +25291,10 @@ function destroyDailyChart(canvas) {
   } catch (_error) {
   }
   try {
-    state20.dailyChart?.destroy?.();
+    state21.dailyChart?.destroy?.();
   } catch (_error) {
   }
-  state20.dailyChart = null;
+  state21.dailyChart = null;
 }
 async function renderActualDailyChart(daysInMonth, selMonth, selYear) {
   const loading = doc?.getElementById("ed-chart-loading");
@@ -25092,7 +25342,7 @@ async function renderActualDailyChart(daysInMonth, selMonth, selYear) {
     canvas.style.display = "block";
     canvas.dataset.dmActualHistory = `${year}-${String(month).padStart(2, "0")}`;
     canvas.dataset.dmFasce = String(fasce.length);
-    state20.dailyChart = new root2.Chart(canvas.getContext("2d"), {
+    state21.dailyChart = new root2.Chart(canvas.getContext("2d"), {
       type: "line",
       data: {
         labels,
@@ -25125,12 +25375,12 @@ async function renderActualDailyChart(daysInMonth, selMonth, selYear) {
     return true;
   } catch (error) {
     root2.console?.warn?.("[DashboardModern] real daily chart unavailable", error);
-    if (typeof state20.legacyDailyChart === "function") {
+    if (typeof state21.legacyDailyChart === "function") {
       try {
         destroyDailyChart(canvas);
         loading.style.display = "none";
         canvas.style.display = "block";
-        await state20.legacyDailyChart(daysInMonth, selMonth, selYear);
+        await state21.legacyDailyChart(daysInMonth, selMonth, selYear);
         canvas.dataset.dmHistoryFallback = "legacy-compatible";
         return true;
       } catch (fallbackError) {
@@ -25144,7 +25394,7 @@ async function renderActualDailyChart(daysInMonth, selMonth, selYear) {
 function installDailyChartOverride() {
   const current = root2.renderEdDailyChart;
   if (typeof current !== "function" || current.__dmActualHistory) return false;
-  state20.legacyDailyChart = current;
+  state21.legacyDailyChart = current;
   const override = async (daysInMonth, selMonth, selYear) => renderActualDailyChart(daysInMonth, selMonth, selYear);
   override.__dmActualHistory = true;
   root2.renderEdDailyChart = override;
@@ -25210,7 +25460,7 @@ function applyFinancialOverview(bundle) {
   const importPrice = rateOrDefault("cd_costo_kwh", DEFAULT_IMPORT_RATE);
   const exportPrice = rateOrDefault("cd_prezzo_immissione", DEFAULT_EXPORT_RATE);
   const data = bundle.month;
-  const aFasce = state20.contoAFasce?.() || null;
+  const aFasce = state21.contoAFasce?.() || null;
   const importCost = aFasce ? Math.max(0, aFasce.euro) : Math.max(0, Number(data.gridImport) || 0) * importPrice;
   const withoutSolar = Math.max(0, Number(data.house) || 0) * importPrice;
   const exportIncome = Math.max(0, Number(data.gridExport) || 0) * exportPrice;
@@ -25282,9 +25532,9 @@ function removeWeeklyDash() {
   }
 }
 function schedule7() {
-  if (state20.frame) return;
-  state20.frame = root2.requestAnimationFrame?.(() => {
-    state20.frame = 0;
+  if (state21.frame) return;
+  state21.frame = root2.requestAnimationFrame?.(() => {
+    state21.frame = 0;
     removeWeeklyDash();
     applyReportArtwork();
     installDailyChartOverride();
@@ -25292,7 +25542,7 @@ function schedule7() {
     const bundle = root2.__DASHBOARDMODERN_RUNTIME_ROOT__?.bundle;
     if (bundle?.month) applyFinancialOverview(bundle);
   }) || root2.setTimeout?.(() => {
-    state20.frame = 0;
+    state21.frame = 0;
     removeWeeklyDash();
     applyReportArtwork();
     installDailyChartOverride();
@@ -25302,10 +25552,10 @@ function schedule7() {
   }, 0);
 }
 function subscribeStore3() {
-  if (state20.subscribed) return;
+  if (state21.subscribed) return;
   const store2 = root2.DashboardModernModules?.store;
   if (typeof store2?.subscribe !== "function") return;
-  state20.subscribed = true;
+  state21.subscribed = true;
   store2.subscribe((change) => {
     if (["appliances", "loads", "energy", "report", "snapshot"].includes(change?.section)) schedule7();
   });
@@ -25343,8 +25593,8 @@ function installStyles11() {
   `);
 }
 function installEnergyReportPolishSection() {
-  if (!doc || state20.installed) return;
-  state20.installed = true;
+  if (!doc || state21.installed) return;
+  state21.installed = true;
   installStyles11();
   installCostSettingsOwner();
   root2.addEventListener?.("dashboardmodern:legacy-ready", () => {
@@ -25378,8 +25628,8 @@ senzaCadere(installEnergyReportPolishSection);
 
 // src/sections/personalization-section.js
 globalThis.__DM_20260815C__ = true;
-var KEY20 = "__DASHBOARDMODERN_PERSONALIZATION_SECTION__";
-var state21 = root2[KEY20] ||= { installed: false, frame: 0, actionEditIndex: -1, subscribed: false, evHomeAttempts: 0 };
+var KEY21 = "__DASHBOARDMODERN_PERSONALIZATION_SECTION__";
+var state22 = root2[KEY21] ||= { installed: false, frame: 0, actionEditIndex: -1, subscribed: false, evHomeAttempts: 0 };
 var CAR_MODELS = Object.freeze({
   "Abarth": ["500e", "600e"],
   "Alfa Romeo": ["Junior Elettrica", "Junior Ibrida", "Tonale Plug-In Hybrid Q4"],
@@ -25871,21 +26121,21 @@ function ensureEvAppearanceEditor() {
     const home = evAccordionBody();
     if (home) {
       if (existing.parentElement !== home) home.prepend(existing);
-      state21.evHomeAttempts = 0;
-    } else if ((state21.evHomeAttempts || 0) < 20) {
-      state21.evHomeAttempts = (state21.evHomeAttempts || 0) + 1;
+      state22.evHomeAttempts = 0;
+    } else if ((state22.evHomeAttempts || 0) < 20) {
+      state22.evHomeAttempts = (state22.evHomeAttempts || 0) + 1;
       root2.setTimeout?.(schedule8, 120);
     }
     return;
   }
   if (!evAccordionBody()) {
-    if ((state21.evHomeAttempts || 0) < 20) {
-      state21.evHomeAttempts = (state21.evHomeAttempts || 0) + 1;
+    if ((state22.evHomeAttempts || 0) < 20) {
+      state22.evHomeAttempts = (state22.evHomeAttempts || 0) + 1;
       root2.setTimeout?.(schedule8, 120);
     }
     return;
   }
-  state21.evHomeAttempts = 0;
+  state22.evHomeAttempts = 0;
   const { current, fallback, bozza } = evVisual();
   const visual = bozza ? {} : current || fallback || {};
   const panel = doc.createElement("section");
@@ -25963,9 +26213,9 @@ function correctDisplayedVersion() {
   });
 }
 function schedule8() {
-  if (state21.frame) return;
+  if (state22.frame) return;
   const run5 = () => {
-    state21.frame = 0;
+    state22.frame = 0;
     decorateRoomModal();
     decorateActionModal();
     decorateLegacyIconPickers();
@@ -25977,13 +26227,13 @@ function schedule8() {
     applyEvAppearance();
     correctDisplayedVersion();
   };
-  state21.frame = root2.requestAnimationFrame?.(run5) || root2.setTimeout?.(run5, 0);
+  state22.frame = root2.requestAnimationFrame?.(run5) || root2.setTimeout?.(run5, 0);
 }
 function subscribeStore4() {
-  if (state21.subscribed) return;
+  if (state22.subscribed) return;
   const store2 = root2.DashboardModernModules?.store;
   if (typeof store2?.subscribe !== "function") return;
-  state21.subscribed = true;
+  state22.subscribed = true;
   store2.subscribe(() => schedule8());
 }
 function installStyles12() {
@@ -26022,12 +26272,12 @@ function installStyles12() {
   `);
 }
 function installPersonalizationSection() {
-  if (!doc || state21.installed) return;
-  state21.installed = true;
+  if (!doc || state22.installed) return;
+  state22.installed = true;
   installStyles12();
   doc.addEventListener("click", (event) => {
     const edit = event.target?.closest?.('[data-dm-edit-kind="action"]');
-    if (edit) state21.actionEditIndex = Number(edit.dataset.dmEditIndex);
+    if (edit) state22.actionEditIndex = Number(edit.dataset.dmEditIndex);
     const roomPicker = event.target?.closest?.('.dm-icon-picker[data-icon-category="rooms"],.dm-icon-picker[data-dm-room-catalog="true"],button[onclick*="dmIconPicker"][onclick*="rooms"]');
     if (roomPicker) {
       const targetId = roomPicker.dataset.iconTarget || roomPicker.closest(".dm-icon-field")?.querySelector("input")?.id || "ed-room-icon";
@@ -26063,8 +26313,8 @@ senzaCadere(installPersonalizationSection);
 
 // src/sections/editor-polish-section.js
 globalThis.__DM_20260815C__ = true;
-var KEY21 = "__DASHBOARDMODERN_EDITOR_POLISH__";
-var state22 = root2[KEY21] ||= { installed: false, frame: 0, subscribed: false };
+var KEY22 = "__DASHBOARDMODERN_EDITOR_POLISH__";
+var state23 = root2[KEY22] ||= { installed: false, frame: 0, subscribed: false };
 function activeTab2() {
   return clean13(doc?.querySelector?.(".ed-tab.active")?.dataset?.tab);
 }
@@ -26260,21 +26510,21 @@ function ensureActionPolish() {
   return true;
 }
 function schedule9() {
-  if (state22.frame) return;
+  if (state23.frame) return;
   const run5 = () => {
-    state22.frame = 0;
+    state23.frame = 0;
     polishCanonicalLights();
     polishLoadsEditor();
     ensureServerEditor();
     ensureActionPolish();
   };
-  state22.frame = root2.requestAnimationFrame?.(run5) || root2.setTimeout?.(run5, 0);
+  state23.frame = root2.requestAnimationFrame?.(run5) || root2.setTimeout?.(run5, 0);
 }
 function subscribeStore5() {
-  if (state22.subscribed) return;
+  if (state23.subscribed) return;
   const store2 = root2.DashboardModernModules?.store;
   if (typeof store2?.subscribe !== "function") return;
-  state22.subscribed = true;
+  state23.subscribed = true;
   store2.subscribe((change) => {
     if (["lights", "loads", "rooms", "entityOverrides", "snapshot"].includes(change?.section))
       schedule9();
@@ -26365,8 +26615,8 @@ function polishCss() {
   `;
 }
 function installEditorPolishSection() {
-  if (!doc || state22.installed) return;
-  state22.installed = true;
+  if (!doc || state23.installed) return;
+  state23.installed = true;
   installStyles13();
   root2.addEventListener?.("dashboardmodern:legacy-ready", () => {
     for (const name of ["editorSwitch", "editorRenderLuci"])
@@ -27491,8 +27741,8 @@ function foglioDegliOggetti() {
 
 // src/sections/beta4-mobile-polish-section.js
 globalThis.__DM_20260815C__ = true;
-var KEY22 = "__DASHBOARDMODERN_BETA5_ROOT_CAUSES__";
-var state23 = root2[KEY22] ||= { installed: false, frame: 0, listeners: false, dailyChart: null };
+var KEY23 = "__DASHBOARDMODERN_BETA5_ROOT_CAUSES__";
+var state24 = root2[KEY23] ||= { installed: false, frame: 0, listeners: false, dailyChart: null };
 var TAB_ICONS = Object.freeze({
   visib: "⚙️",
   sez0: "🏠",
@@ -27987,10 +28237,10 @@ function destroyDailyChart2(canvas) {
   } catch (_error) {
   }
   try {
-    state23.dailyChart?.destroy?.();
+    state24.dailyChart?.destroy?.();
   } catch (_error) {
   }
-  state23.dailyChart = null;
+  state24.dailyChart = null;
 }
 async function renderRealDailyChart(daysInMonth, selMonth, selYear) {
   const loading = doc?.getElementById("ed-chart-loading");
@@ -28055,7 +28305,7 @@ async function renderRealDailyChart(daysInMonth, selMonth, selYear) {
   canvas.style.display = "block";
   canvas.dataset.dmBeta5RealHistory = `${year}-${String(month).padStart(2, "0")}`;
   canvas.dataset.dmBeta5LastDay = String(visibleDays);
-  state23.dailyChart = new root2.Chart(canvas.getContext("2d"), {
+  state24.dailyChart = new root2.Chart(canvas.getContext("2d"), {
     type: "line",
     data: {
       labels,
@@ -28088,7 +28338,7 @@ function installRealDailyChartOwner() {
   return true;
 }
 function run() {
-  state23.frame = 0;
+  state24.frame = 0;
   syncConfigTabIcons();
   normalizeSectionRenameButtons();
   polishCarBrandMarks();
@@ -28100,8 +28350,8 @@ function run() {
   installRealDailyChartOwner();
 }
 function schedule10() {
-  if (state23.frame) return;
-  state23.frame = root2.requestAnimationFrame?.(run) || root2.setTimeout?.(run, 0);
+  if (state24.frame) return;
+  state24.frame = root2.requestAnimationFrame?.(run) || root2.setTimeout?.(run, 0);
 }
 function installStyles14() {
   installStyle("dm-beta5-root-causes-style", `
@@ -28298,8 +28548,8 @@ function installStyles14() {
   `);
 }
 function installBeta4MobilePolishSection() {
-  if (!doc || state23.installed) return;
-  state23.installed = true;
+  if (!doc || state24.installed) return;
+  state24.installed = true;
   installStyles14();
   const afterLegacy = () => {
     installRealDailyChartOwner();
@@ -28322,8 +28572,8 @@ function installBeta4MobilePolishSection() {
   });
   root2.addEventListener?.("dashboardmodern:period-bundle", schedule10);
   root2.addEventListener?.("dashboardmodern:energy-stable", schedule10);
-  if (!state23.listeners) {
-    state23.listeners = true;
+  if (!state24.listeners) {
+    state24.listeners = true;
     doc.addEventListener("click", (event) => {
       if (event.target?.closest?.(".ed-tab,.dm-inline-rename,[data-brand-preview],.dm-picker-option,.ed-btn-add,.dm-entity-picker,.sub-tab-btn")) root2.setTimeout?.(schedule10, 0);
     }, true);
@@ -28337,8 +28587,8 @@ function installBeta4MobilePolishSection() {
 senzaCadere(installBeta4MobilePolishSection);
 
 // src/sections/beta9-real-device-polish-section.js
-var KEY23 = "__DASHBOARDMODERN_BETA9_REAL_DEVICE_POLISH__";
-var state24 = root2[KEY23] ||= {
+var KEY24 = "__DASHBOARDMODERN_BETA9_REAL_DEVICE_POLISH__";
+var state25 = root2[KEY24] ||= {
   installed: false,
   frame: 0,
   storeUnsubscribe: null
@@ -28589,7 +28839,7 @@ function ensureStyleLast() {
   if (style && style.parentElement === doc.head && style !== doc.head.lastElementChild) doc.head.append(style);
 }
 function run2() {
-  state24.frame = 0;
+  state25.frame = 0;
   installOwners4();
   ensureStyleLast();
   polishQuickActions();
@@ -28601,8 +28851,8 @@ function run2() {
   polishLightAddForm();
 }
 function schedule11() {
-  if (state24.frame) return;
-  state24.frame = root2.requestAnimationFrame?.(run2) || root2.setTimeout?.(run2, 0) || 0;
+  if (state25.frame) return;
+  state25.frame = root2.requestAnimationFrame?.(run2) || root2.setTimeout?.(run2, 0) || 0;
 }
 function scheduleAfterLegacyWork() {
   schedule11();
@@ -28626,10 +28876,10 @@ function installOwners4() {
   ]) wrapFunction(name, "__dmBeta9RealDevicePolish", scheduleAfterLegacyWork);
 }
 function subscribeStore6() {
-  if (state24.storeUnsubscribe) return;
+  if (state25.storeUnsubscribe) return;
   const store2 = dashboardStore();
   if (typeof store2?.subscribe !== "function") return;
-  state24.storeUnsubscribe = store2.subscribe((change) => {
+  state25.storeUnsubscribe = store2.subscribe((change) => {
     if (["rooms", "ev", "lights", "covers", "snapshot"].includes(change?.section))
       scheduleAfterLegacyWork();
   });
@@ -28847,8 +29097,8 @@ function installStyles15() {
   `);
 }
 function installBeta9RealDevicePolishSection() {
-  if (!doc || state24.installed) return;
-  state24.installed = true;
+  if (!doc || state25.installed) return;
+  state25.installed = true;
   installStyles15();
   installOwners4();
   subscribeStore6();
@@ -29089,8 +29339,8 @@ if (typeof document !== "undefined") {
 }
 
 // src/sections/save-engine-section.js
-var KEY24 = "__DASHBOARDMODERN_SAVE_ENGINE__";
-var state25 = root2[KEY24] ||= {
+var KEY25 = "__DASHBOARDMODERN_SAVE_ENGINE__";
+var state26 = root2[KEY25] ||= {
   installed: false,
   saveOwner: null,
   visibilityRepairing: false
@@ -29165,9 +29415,9 @@ function entityReference(value) {
 }
 async function repairConfiguredVisibility() {
   const store2 = dashboardStore();
-  if (!store2?.getState || !store2?.getSection || !store2?.transact || state25.visibilityRepairing)
+  if (!store2?.getState || !store2?.getSection || !store2?.transact || state26.visibilityRepairing)
     return false;
-  state25.visibilityRepairing = true;
+  state26.visibilityRepairing = true;
   let changed = false;
   try {
     for (const section2 of Object.keys(SECTION_KEYS)) {
@@ -29191,7 +29441,7 @@ async function repairConfiguredVisibility() {
       changed = true;
     }
   } finally {
-    state25.visibilityRepairing = false;
+    state26.visibilityRepairing = false;
   }
   return changed;
 }
@@ -29216,7 +29466,7 @@ function installSectionSaveOwner() {
   const current = root2.edSecSave;
   if (typeof current !== "function") return false;
   if (current.__dmCanonicalSaveEngine) return true;
-  state25.saveOwner ||= current;
+  state26.saveOwner ||= current;
   async function canonicalSaveSection() {
     try {
       return await saveCurrentSection();
@@ -29249,8 +29499,8 @@ function synchronizeEnergyDraftBeforeSave(save) {
   editor.querySelectorAll('[data-energy-panel="flows"] input[name]').forEach((input) => input.dispatchEvent(new Event("change", { bubbles: true })));
 }
 function installDomContracts() {
-  if (!doc || state25.installed) return;
-  state25.installed = true;
+  if (!doc || state26.installed) return;
+  state26.installed = true;
   doc.addEventListener(
     "input",
     (event) => {
@@ -29298,8 +29548,8 @@ senzaCadere(installSaveEngineSection);
 
 // src/sections/beta11-real-device-polish-section.js
 globalThis.__DM_20260815C__ = true;
-var KEY25 = "__DASHBOARDMODERN_BETA11_REAL_DEVICE_POLISH__";
-var state26 = root2[KEY25] ||= {
+var KEY26 = "__DASHBOARDMODERN_BETA11_REAL_DEVICE_POLISH__";
+var state27 = root2[KEY26] ||= {
   installed: false,
   frame: 0,
   listeners: false,
@@ -29483,24 +29733,24 @@ function decorateAlertIconField() {
   return vestita;
 }
 function run3() {
-  state26.frame = 0;
+  state27.frame = 0;
   ensureOwners();
   decorateRoomRows();
   decorateAlertIconField();
 }
 function schedule12() {
-  if (state26.frame) return;
-  state26.frame = root2.requestAnimationFrame?.(run3) || root2.setTimeout?.(run3, 0) || 0;
+  if (state27.frame) return;
+  state27.frame = root2.requestAnimationFrame?.(run3) || root2.setTimeout?.(run3, 0) || 0;
 }
 function ensureOwners() {
   for (const name of ["editorSwitch", "cdEvApplyCar", "cdEvCarsRefresh"])
     wrapFunction(name, "__dmBeta11Compatibility", schedule12);
 }
 function subscribeStore7() {
-  if (state26.storeUnsubscribe) return;
+  if (state27.storeUnsubscribe) return;
   const store2 = dashboardStore();
   if (typeof store2?.subscribe !== "function") return;
-  state26.storeUnsubscribe = store2.subscribe((change) => {
+  state27.storeUnsubscribe = store2.subscribe((change) => {
     if (["rooms", "ev", "snapshot"].includes(change?.section)) schedule12();
   });
 }
@@ -29530,13 +29780,13 @@ function installStyles16() {
   );
 }
 function install4() {
-  if (!doc || state26.installed) return;
-  state26.installed = true;
+  if (!doc || state27.installed) return;
+  state27.installed = true;
   installStyles16();
   ensureOwners();
   subscribeStore7();
-  if (!state26.listeners) {
-    state26.listeners = true;
+  if (!state27.listeners) {
+    state27.listeners = true;
     doc.addEventListener(
       "click",
       (event) => {
@@ -29610,7 +29860,7 @@ function restoreDeclarations(element, prima = []) {
 }
 
 // src/sections/beta12-room-color-lock-section.js
-var KEY26 = "__DASHBOARDMODERN_BETA12_FINAL_LOCK__";
+var KEY27 = "__DASHBOARDMODERN_BETA12_FINAL_LOCK__";
 var KIOSK_ATTR = "data-dm-ios-kiosk";
 var KIOSK_STORE_KEY = "dm_kiosk";
 var KIOSK_KEYS = ["kiosk", "dm_kiosk"];
@@ -29626,23 +29876,23 @@ var TRAP_PROPERTIES = Object.freeze([
   "contain",
   "will-change"
 ]);
-var state27 = root2[KEY26] ||= {
+var state28 = root2[KEY27] ||= {
   listeners: false,
   gestureBound: false,
   kioskViewportBound: false
 };
-state27.active ||= false;
-state27.override ??= null;
-state27.kioskHost ||= null;
-state27.kioskHostCss ||= [];
-state27.kioskFrame ||= null;
-state27.kioskFrameCss ||= [];
-state27.ancestors ||= [];
-state27.scrollLock ||= [];
-state27.drawer ||= null;
-state27.drawerFrame ||= null;
-state27.drawerBound ||= false;
-state27.retratta ||= false;
+state28.active ||= false;
+state28.override ??= null;
+state28.kioskHost ||= null;
+state28.kioskHostCss ||= [];
+state28.kioskFrame ||= null;
+state28.kioskFrameCss ||= [];
+state28.ancestors ||= [];
+state28.scrollLock ||= [];
+state28.drawer ||= null;
+state28.drawerFrame ||= null;
+state28.drawerBound ||= false;
+state28.retratta ||= false;
 function isIosDevice(nav = root2.navigator) {
   const ua = clean13(nav?.userAgent);
   if (/iPhone|iPad|iPod/i.test(ua)) return true;
@@ -29767,7 +30017,7 @@ function kioskEnabled() {
   const explicit2 = explicitKioskRequest();
   if (explicit2 !== null && readStoredKiosk() !== explicit2) writeStoredKiosk(explicit2);
   return resolveKioskMode({
-    override: state27.override,
+    override: state28.override,
     explicit: explicit2,
     stored: readStoredKiosk(),
     ios: isIosDevice(),
@@ -29797,10 +30047,10 @@ function updateKioskViewport() {
   const width = Math.max(1, Math.round(viewport?.width || target.innerWidth || 0));
   doc?.documentElement?.style?.setProperty?.("--dm-ios-kiosk-height", `${height}px`);
   doc?.documentElement?.style?.setProperty?.("--dm-ios-kiosk-width", `${width}px`);
-  if (state27.active && state27.kioskHost?.style) {
+  if (state28.active && state28.kioskHost?.style) {
     const value = viewportHeightValue(height);
     for (const property of ["height", "min-height", "max-height"]) {
-      state27.kioskHost.style.setProperty(property, value, "important");
+      state28.kioskHost.style.setProperty(property, value, "important");
     }
   }
   return { height, width };
@@ -29847,11 +30097,11 @@ function kioskHostStyles({ height = 0, drawerOpen = false } = {}) {
   };
 }
 function releaseAncestors(host) {
-  if (host && state27.ancestorHost === host) return;
+  if (host && state28.ancestorHost === host) return;
   restoreAncestors();
   const view = ownerWindow();
   if (!host || typeof view.getComputedStyle !== "function") return;
-  state27.ancestorHost = host;
+  state28.ancestorHost = host;
   let node = host.parentNode || null;
   const touched = [];
   while (node && touched.length < 40) {
@@ -29882,23 +30132,23 @@ function releaseAncestors(host) {
     }
     node = node.parentNode;
   }
-  state27.ancestors = touched;
+  state28.ancestors = touched;
 }
 function restoreAncestors() {
-  for (const entry of state27.ancestors) {
+  for (const entry of state28.ancestors) {
     rimetti(entry?.element, entry?.prima);
   }
-  state27.ancestors = [];
-  state27.ancestorHost = null;
+  state28.ancestors = [];
+  state28.ancestorHost = null;
 }
 function lockOwnerDocument() {
-  if (state27.scrollLock.length) return;
+  if (state28.scrollLock.length) return;
   const view = parentWindow();
   const target = view?.document;
   if (!target) return;
   for (const element of [target.documentElement, target.body]) {
     if (!element?.style) continue;
-    state27.scrollLock.push({
+    state28.scrollLock.push({
       element,
       prima: ricordaEScrivi(element, [["overflow", "hidden", "important"]])
     });
@@ -29906,12 +30156,12 @@ function lockOwnerDocument() {
   }
 }
 function unlockOwnerDocument() {
-  for (const entry of state27.scrollLock) {
+  for (const entry of state28.scrollLock) {
     if (!entry?.element?.style) continue;
     rimetti(entry.element, entry.prima);
     entry.element.removeAttribute?.(KIOSK_ATTR);
   }
-  state27.scrollLock = [];
+  state28.scrollLock = [];
 }
 function haDrawer() {
   const view = parentWindow();
@@ -29925,8 +30175,8 @@ function haDrawer() {
   }
 }
 function applyDrawerRetraction(open) {
-  state27.retratta = Boolean(open);
-  const host = state27.kioskHost;
+  state28.retratta = Boolean(open);
+  const host = state28.kioskHost;
   if (!host?.style) return;
   host.style.setProperty("z-index", open ? "1" : KIOSK_Z_INDEX, "important");
 }
@@ -29942,28 +30192,28 @@ function nextFrame(callback) {
   return root2.setTimeout?.(callback, 100) ?? null;
 }
 function trackDrawer(frames = 20) {
-  state27.drawer ||= haDrawer();
-  if (!state27.drawer || state27.drawerFrame) return false;
+  state28.drawer ||= haDrawer();
+  if (!state28.drawer || state28.drawerFrame) return false;
   let visto = false;
   const step = () => {
-    const aperto = Boolean(state27.drawer?.hasAttribute?.("open"));
+    const aperto = Boolean(state28.drawer?.hasAttribute?.("open"));
     if (aperto) visto = true;
-    applyDrawerRetraction(retrazioneDopo(state27.retratta, "cassetto", { visto, aperto }));
+    applyDrawerRetraction(retrazioneDopo(state28.retratta, "cassetto", { visto, aperto }));
     frames -= 1;
-    state27.drawerFrame = state27.active && (aperto || frames > 0) ? nextFrame(step) : null;
+    state28.drawerFrame = state28.active && (aperto || frames > 0) ? nextFrame(step) : null;
   };
-  state27.drawerFrame = nextFrame(step);
+  state28.drawerFrame = nextFrame(step);
   return true;
 }
 function bindDrawerToggle() {
-  if (state27.drawerBound) return false;
+  if (state28.drawerBound) return false;
   const view = parentWindow();
   if (!view?.addEventListener) return false;
-  state27.drawerBound = true;
+  state28.drawerBound = true;
   view.addEventListener(
     "hass-toggle-menu",
     () => {
-      applyDrawerRetraction(retrazioneDopo(state27.retratta, "hamburger"));
+      applyDrawerRetraction(retrazioneDopo(state28.retratta, "hamburger"));
       trackDrawer();
     },
     true
@@ -29971,50 +30221,50 @@ function bindDrawerToggle() {
   doc?.addEventListener?.(
     "pointerdown",
     (event) => {
-      if (!state27.retratta) return;
+      if (!state28.retratta) return;
       if (event?.target?.closest?.(".ha-menu-btn")) return;
-      applyDrawerRetraction(retrazioneDopo(state27.retratta, "plancia"));
+      applyDrawerRetraction(retrazioneDopo(state28.retratta, "plancia"));
     },
     true
   );
   return true;
 }
 function releaseDrawer() {
-  state27.drawer = null;
-  state27.drawerFrame = null;
-  state27.retratta = false;
+  state28.drawer = null;
+  state28.drawerFrame = null;
+  state28.retratta = false;
 }
 function activateIosKiosk() {
   if (!doc) return false;
   doc.documentElement?.setAttribute?.(KIOSK_ATTR, "true");
   doc.body?.setAttribute?.(KIOSK_ATTR, "true");
   const { height } = updateKioskViewport();
-  if (!state27.kioskViewportBound) {
-    state27.kioskViewportBound = true;
+  if (!state28.kioskViewportBound) {
+    state28.kioskViewportBound = true;
     root2.visualViewport?.addEventListener?.("resize", updateKioskViewport, { passive: true });
     root2.visualViewport?.addEventListener?.("scroll", updateKioskViewport, { passive: true });
     root2.addEventListener?.("resize", updateKioskViewport, { passive: true });
     root2.addEventListener?.("orientationchange", updateKioskViewport, { passive: true });
   }
   const { frame, host } = hostForFrame();
-  if (host && state27.kioskHost !== host) {
-    rimetti(state27.kioskHost, state27.kioskHostCss);
-    state27.kioskHost = host;
-    state27.kioskHostCss = [];
+  if (host && state28.kioskHost !== host) {
+    rimetti(state28.kioskHost, state28.kioskHostCss);
+    state28.kioskHost = host;
+    state28.kioskHostCss = [];
   }
-  if (frame && state27.kioskFrame !== frame) {
-    rimetti(state27.kioskFrame, state27.kioskFrameCss);
-    state27.kioskFrame = frame;
-    state27.kioskFrameCss = [];
+  if (frame && state28.kioskFrame !== frame) {
+    rimetti(state28.kioskFrame, state28.kioskFrameCss);
+    state28.kioskFrame = frame;
+    state28.kioskFrameCss = [];
   }
   if (host) {
     host.dataset.dmIosKiosk = "true";
-    const styles = kioskHostStyles({ height, drawerOpen: Boolean(state27.retratta) });
+    const styles = kioskHostStyles({ height, drawerOpen: Boolean(state28.retratta) });
     const scritte = ricordaEScrivi(
       host,
       Object.entries(styles).map(([property, value]) => [property, value, "important"])
     );
-    if (!state27.kioskHostCss?.length) state27.kioskHostCss = scritte;
+    if (!state28.kioskHostCss?.length) state28.kioskHostCss = scritte;
     releaseAncestors(host);
     lockOwnerDocument();
     bindDrawerToggle();
@@ -30027,9 +30277,9 @@ function activateIosKiosk() {
       ["height", "100%", "important"],
       ["min-height", "100%", "important"]
     ]);
-    if (!state27.kioskFrameCss?.length) state27.kioskFrameCss = scritte;
+    if (!state28.kioskFrameCss?.length) state28.kioskFrameCss = scritte;
   }
-  state27.active = true;
+  state28.active = true;
   return true;
 }
 function deactivateIosKiosk() {
@@ -30038,35 +30288,35 @@ function deactivateIosKiosk() {
   releaseDrawer();
   unlockOwnerDocument();
   restoreAncestors();
-  if (state27.kioskHost) {
-    rimetti(state27.kioskHost, state27.kioskHostCss);
-    delete state27.kioskHost.dataset.dmIosKiosk;
-    state27.kioskHost = null;
-    state27.kioskHostCss = [];
+  if (state28.kioskHost) {
+    rimetti(state28.kioskHost, state28.kioskHostCss);
+    delete state28.kioskHost.dataset.dmIosKiosk;
+    state28.kioskHost = null;
+    state28.kioskHostCss = [];
   }
-  if (state27.kioskFrame) {
-    rimetti(state27.kioskFrame, state27.kioskFrameCss);
-    delete state27.kioskFrame.dataset.dmIosKiosk;
-    state27.kioskFrame = null;
-    state27.kioskFrameCss = [];
+  if (state28.kioskFrame) {
+    rimetti(state28.kioskFrame, state28.kioskFrameCss);
+    delete state28.kioskFrame.dataset.dmIosKiosk;
+    state28.kioskFrame = null;
+    state28.kioskFrameCss = [];
   }
-  state27.active = false;
+  state28.active = false;
 }
 function releaseOwnerDocument() {
   unlockOwnerDocument();
   restoreAncestors();
-  if (state27.kioskHost) {
-    rimetti(state27.kioskHost, state27.kioskHostCss);
-    delete state27.kioskHost.dataset?.dmIosKiosk;
-    state27.kioskHost = null;
-    state27.kioskHostCss = [];
+  if (state28.kioskHost) {
+    rimetti(state28.kioskHost, state28.kioskHostCss);
+    delete state28.kioskHost.dataset?.dmIosKiosk;
+    state28.kioskHost = null;
+    state28.kioskHostCss = [];
   }
 }
 function syncIosKiosk() {
   bindKioskGesture();
   if (kioskEnabled()) activateIosKiosk();
   else deactivateIosKiosk();
-  return state27.active;
+  return state28.active;
 }
 function kioskToast(message) {
   if (!doc?.body) return;
@@ -30078,28 +30328,28 @@ function kioskToast(message) {
   }
   toast.textContent = message;
   toast.dataset.visible = "true";
-  root2.clearTimeout?.(state27.toastTimer);
-  state27.toastTimer = root2.setTimeout?.(() => {
+  root2.clearTimeout?.(state28.toastTimer);
+  state28.toastTimer = root2.setTimeout?.(() => {
     toast.dataset.visible = "false";
   }, 2200);
 }
 function kioskAttivo() {
-  return Boolean(state27.active);
+  return Boolean(state28.active);
 }
 function setKioskMode(value) {
-  state27.override = Boolean(value);
-  writeStoredKiosk(state27.override);
+  state28.override = Boolean(value);
+  writeStoredKiosk(state28.override);
   syncIosKiosk();
   root2.dispatchEvent?.(
-    new CustomEvent("dashboardmodern:kiosk", { detail: { active: state27.active } })
+    new CustomEvent("dashboardmodern:kiosk", { detail: { active: state28.active } })
   );
-  return state27.active;
+  return state28.active;
 }
 function bindKioskGesture() {
-  if (state27.gestureBound) return false;
+  if (state28.gestureBound) return false;
   const button = doc?.querySelector?.(".ha-menu-btn");
   if (!button) return false;
-  state27.gestureBound = true;
+  state28.gestureBound = true;
   let timer = null;
   let fired = false;
   const cancel = () => {
@@ -30113,7 +30363,7 @@ function bindKioskGesture() {
       timer = null;
       fired = true;
       root2.navigator?.vibrate?.(15);
-      const active = setKioskMode(!state27.active);
+      const active = setKioskMode(!state28.active);
       kioskToast(
         active ? t("Modalità kiosk attiva", "Kiosk mode on") : t("Modalità kiosk disattivata", "Kiosk mode off")
       );
@@ -30139,8 +30389,8 @@ function bindKioskGesture() {
   );
   return true;
 }
-if (!state27.listeners) {
-  state27.listeners = true;
+if (!state28.listeners) {
+  state28.listeners = true;
   for (const eventName of ["popstate", "hashchange", "pageshow", "orientationchange"]) {
     root2.addEventListener?.(eventName, syncIosKiosk);
   }
@@ -30185,7 +30435,7 @@ senzaCadere(syncIosKiosk);
 
 // src/sections/beta14-real-device-hotfix-section.js
 var capturedRooms = readJson("cd_stanze", []);
-var state28 = root2.__DASHBOARDMODERN_BETA14_HOTFIX__ ||= { installed: false, queued: false, bootRecovered: false, reconcileWrites: 0 };
+var state29 = root2.__DASHBOARDMODERN_BETA14_HOTFIX__ ||= { installed: false, queued: false, bootRecovered: false, reconcileWrites: 0 };
 var same = (left, right) => JSON.stringify(left) === JSON.stringify(right);
 function matchingRoom(room, candidates2) {
   const id = clean13(room?.id);
@@ -30212,8 +30462,8 @@ function recoverRoomSnapshot(base, fallback, { appendMissing = false } = {}) {
   return result;
 }
 function resolvedRooms(canonical, current, captured = capturedRooms) {
-  if (!state28.bootRecovered) {
-    state28.bootRecovered = true;
+  if (!state29.bootRecovered) {
+    state29.bootRecovered = true;
     return recoverRoomSnapshot(canonical, captured, { appendMissing: !Array.isArray(canonical) || canonical.length === 0 });
   }
   if (!Array.isArray(current) || current.length === 0) return canonical;
@@ -30225,14 +30475,14 @@ function reconcileRooms() {
   const canonical = store2.getSection("rooms") || [];
   const next = resolvedRooms(canonical, readJson("cd_stanze", []));
   if (same(next, canonical)) {
-    state28.reconcileWrites = 0;
+    state29.reconcileWrites = 0;
     return next;
   }
-  if (state28.reconcileWrites >= 3) {
+  if (state29.reconcileWrites >= 3) {
     console.warn("[DashboardModern beta14] room reconciliation circuit breaker open");
     return next;
   }
-  state28.reconcileWrites += 1;
+  state29.reconcileWrites += 1;
   store2.replaceSection?.("rooms", next);
   return next;
 }
@@ -30366,10 +30616,10 @@ function installStyles17() {
   `);
 }
 function schedule13() {
-  if (state28.queued) return;
-  state28.queued = true;
+  if (state29.queued) return;
+  state29.queued = true;
   const run5 = () => {
-    state28.queued = false;
+    state29.queued = false;
     runUiRepairs();
   };
   if (typeof root2.requestAnimationFrame === "function") root2.requestAnimationFrame(run5);
@@ -30398,8 +30648,8 @@ function installOwners6() {
 function installBeta14RealDeviceHotfix() {
   installTemperatureCompatibleIconEngine();
   installOwners6();
-  if (state28.installed || !doc) return;
-  state28.installed = true;
+  if (state29.installed || !doc) return;
+  state29.installed = true;
   installStyles17();
   doc.addEventListener("click", (event) => {
     if (event.target?.closest?.("[data-dm-edit-kind]")) schedule13();
@@ -30411,8 +30661,8 @@ else senzaCadere(installBeta14RealDeviceHotfix);
 
 // src/sections/beta16-real-device-layout-section.js
 globalThis.__DM_20260815C__ = true;
-var KEY27 = "__DASHBOARDMODERN_BETA16_REAL_DEVICE_LAYOUT__";
-var state29 = root2[KEY27] ||= {
+var KEY28 = "__DASHBOARDMODERN_BETA16_REAL_DEVICE_LAYOUT__";
+var state30 = root2[KEY28] ||= {
   installed: false,
   frame: 0,
   listeners: false,
@@ -30463,8 +30713,8 @@ function climateRoomMigration() {
   });
   if (!changed) return false;
   const signature = JSON.stringify(next.map((item) => [item.entity, item.room]));
-  if (signature === state29.climateMigration) return false;
-  state29.climateMigration = signature;
+  if (signature === state30.climateMigration) return false;
+  state30.climateMigration = signature;
   writeJsonIfChanged("cd_clima_units", next, { sync: false });
   root2.cdMarkDirty?.();
   root2.cdSyncPush?.();
@@ -30645,7 +30895,7 @@ function repairClimateRoomHeadings() {
   return repaired;
 }
 function run4() {
-  state29.frame = 0;
+  state30.frame = 0;
   climateRoomMigration();
   repairQuickActionRows();
   repairClimateEditorRows();
@@ -30654,8 +30904,8 @@ function run4() {
   repairClimateRoomHeadings();
 }
 function schedule14() {
-  if (state29.frame) return;
-  state29.frame = root2.requestAnimationFrame?.(run4) || root2.setTimeout?.(run4, 0) || 0;
+  if (state30.frame) return;
+  state30.frame = root2.requestAnimationFrame?.(run4) || root2.setTimeout?.(run4, 0) || 0;
 }
 function installOwners7() {
   for (const name of [
@@ -30670,10 +30920,10 @@ function installOwners7() {
   ]) wrapFunction(name, `__dmBeta16_${name}`, schedule14);
 }
 function subscribeStore8() {
-  if (state29.storeUnsubscribe) return;
+  if (state30.storeUnsubscribe) return;
   const store2 = dashboardStore();
   if (typeof store2?.subscribe !== "function") return;
-  state29.storeUnsubscribe = store2.subscribe((change) => {
+  state30.storeUnsubscribe = store2.subscribe((change) => {
     if (["rooms", "snapshot"].includes(change?.section)) schedule14();
   });
 }
@@ -30712,8 +30962,8 @@ function installStyles18() {
 function installBeta16RealDeviceLayout() {
   installOwners7();
   subscribeStore8();
-  if (state29.installed || !doc) return;
-  state29.installed = true;
+  if (state30.installed || !doc) return;
+  state30.installed = true;
   installStyles18();
   for (const eventName of [
     "dashboardmodern:legacy-ready",
@@ -30794,9 +31044,9 @@ function captureBeforeMigration(storage) {
     retiredEnergyLoads: parseStorage(storage, "cd_energy_loads", [])
   };
 }
-function ensureEnergyShape(state34) {
-  state34.sections ||= {};
-  const current = objectValue(state34.sections.energy);
+function ensureEnergyShape(state35) {
+  state35.sections ||= {};
+  const current = objectValue(state35.sections.energy);
   const energy = {
     ...current,
     house: { ...objectValue(current.house) },
@@ -30814,16 +31064,16 @@ function ensureEnergyShape(state34) {
     cooling: { ...objectValue(current.cooling) },
     metadata: { ...objectValue(current.metadata) }
   };
-  state34.sections.energy = energy;
+  state35.sections.energy = energy;
   return energy;
 }
-function recoverEnergyConfiguration(state34, captured = {}) {
-  if (!state34 || typeof state34 !== "object") return 0;
-  const energy = ensureEnergyShape(state34);
+function recoverEnergyConfiguration(state35, captured = {}) {
+  if (!state35 || typeof state35 !== "object") return 0;
+  const energy = ensureEnergyShape(state35);
   const legacyEnergy = objectValue(captured.energy);
   const overrides = {
     ...objectValue(captured.overrides),
-    ...objectValue(state34.sections?.entityOverrides)
+    ...objectValue(state35.sections?.entityOverrides)
   };
   let recovered = 0;
   for (const group of ["house", "grid", "solar", "battery"]) {
@@ -30900,16 +31150,16 @@ function retiredLoadCandidate(item = {}, index = 0) {
     metadata: { ...item.metadata || {}, migrated_from_beta22_energy_loads: true }
   };
 }
-function recoverCanonicalLoads(state34, captured = {}) {
-  if (!state34 || typeof state34 !== "object") return 0;
-  state34.sections ||= {};
-  const rooms3 = Array.isArray(state34.sections.rooms) ? state34.sections.rooms : [];
-  const current = Array.isArray(state34.sections.loads) ? state34.sections.loads.slice() : [];
+function recoverCanonicalLoads(state35, captured = {}) {
+  if (!state35 || typeof state35 !== "object") return 0;
+  state35.sections ||= {};
+  const rooms3 = Array.isArray(state35.sections.rooms) ? state35.sections.rooms : [];
+  const current = Array.isArray(state35.sections.loads) ? state35.sections.loads.slice() : [];
   const candidates2 = [];
   if (Array.isArray(captured.loads)) candidates2.push(...captured.loads);
   const overrides = {
     ...objectValue(captured.overrides),
-    ...objectValue(state34.sections.entityOverrides)
+    ...objectValue(state35.sections.entityOverrides)
   };
   for (const definition of LEGACY_FIXED_LOADS) {
     const power = clean28(overrides[definition.powerSlot]);
@@ -30929,7 +31179,7 @@ function recoverCanonicalLoads(state34, captured = {}) {
     });
   }
   const retired = [
-    ...Array.isArray(state34.sections.energyLoads) ? state34.sections.energyLoads : [],
+    ...Array.isArray(state35.sections.energyLoads) ? state35.sections.energyLoads : [],
     ...Array.isArray(captured.retiredEnergyLoads) ? captured.retiredEnergyLoads : []
   ];
   retired.forEach((item, index) => candidates2.push(retiredLoadCandidate(item, index)));
@@ -30941,8 +31191,8 @@ function recoverCanonicalLoads(state34, captured = {}) {
     current.push(candidate);
     added += 1;
   }
-  state34.sections.loads = current.map((item, index) => normalizeLoad(item, rooms3, index));
-  state34.sections.energyLoads = [];
+  state35.sections.loads = current.map((item, index) => normalizeLoad(item, rooms3, index));
+  state35.sections.energyLoads = [];
   return added;
 }
 function markRecoveredConfigPending(storage, now = Date.now()) {
@@ -31006,8 +31256,8 @@ try {
 }
 
 // src/sections/beta25-real-device-fixes-section.js
-var KEY28 = "__DASHBOARDMODERN_BETA25_REAL_DEVICE_FIXES__";
-var state30 = root2[KEY28] ||= {
+var KEY29 = "__DASHBOARDMODERN_BETA25_REAL_DEVICE_FIXES__";
+var state31 = root2[KEY29] ||= {
   installed: false,
   listeners: false,
   storeUnsubscribe: null,
@@ -31195,7 +31445,7 @@ function preferredApplianceVisual(device = {}) {
   return kind ? { kind: "asset", value: selected, artwork: kind } : null;
 }
 async function repairStoredApplianceVisuals() {
-  if (state30.repairingAppliances) return false;
+  if (state31.repairingAppliances) return false;
   const store2 = dashboardStore();
   if (!store2?.getSection || !store2?.updateItem) return false;
   const repairs = store2.getSection("appliances").filter((device) => {
@@ -31203,13 +31453,13 @@ async function repairStoredApplianceVisuals() {
     return visual?.kind === "asset" && (clean13(device.image) || clean13(device.image_url));
   });
   if (!repairs.length) return false;
-  state30.repairingAppliances = true;
+  state31.repairingAppliances = true;
   try {
     for (const device of repairs)
       await store2.updateItem("appliances", device.id, { image: "", image_url: "" });
     return true;
   } finally {
-    state30.repairingAppliances = false;
+    state31.repairingAppliances = false;
   }
 }
 function repairApplianceCards() {
@@ -31235,8 +31485,8 @@ function installTemperatureOwners() {
   return false;
 }
 function subscribeStore9() {
-  if (state30.storeUnsubscribe || !dashboardStore()?.subscribe) return;
-  state30.storeUnsubscribe = dashboardStore().subscribe((change) => {
+  if (state31.storeUnsubscribe || !dashboardStore()?.subscribe) return;
+  state31.storeUnsubscribe = dashboardStore().subscribe((change) => {
     if (change?.section === "rooms" || change?.section === "snapshot") {
       installTemperatureOwners();
       renderBeta25TemperatureCards();
@@ -31266,8 +31516,8 @@ function installBeta25RealDeviceFixes() {
   repairStoredApplianceVisuals();
   repairApplianceCards();
   renderBeta25TemperatureCards();
-  if (!state30.listeners) {
-    state30.listeners = true;
+  if (!state31.listeners) {
+    state31.listeners = true;
     for (const name of [
       "dashboardmodern:legacy-ready",
       "dashboardmodern:runtime-ready",
@@ -31301,7 +31551,7 @@ function installBeta25RealDeviceFixes() {
       true
     );
   }
-  state30.installed = true;
+  state31.installed = true;
   return true;
 }
 if (doc?.readyState === "loading")
@@ -31309,8 +31559,8 @@ if (doc?.readyState === "loading")
 else senzaCadere(installBeta25RealDeviceFixes);
 
 // src/sections/beta25-compatibility-section.js
-var KEY29 = "__DASHBOARDMODERN_BETA25_COMPATIBILITY__";
-var state31 = root2[KEY29] ||= {
+var KEY30 = "__DASHBOARDMODERN_BETA25_COMPATIBILITY__";
+var state32 = root2[KEY30] ||= {
   installed: false,
   listeners: false,
   storeUnsubscribe: null,
@@ -31460,8 +31710,8 @@ function withVisualIntent(item = {}) {
 }
 function wrapApplianceStoreWrites() {
   const store2 = dashboardStore();
-  if (!store2 || state31.storeWritesWrapped) return false;
-  state31.storeWritesWrapped = true;
+  if (!store2 || state32.storeWritesWrapped) return false;
+  state32.storeWritesWrapped = true;
   const originalReplace = store2.replaceSection?.bind(store2);
   if (originalReplace)
     store2.replaceSection = (name, value) => originalReplace(
@@ -31619,8 +31869,8 @@ function bindRuntimeOwners() {
 }
 function subscribeStore10() {
   const store2 = dashboardStore();
-  if (state31.storeUnsubscribe || !store2?.subscribe) return;
-  state31.storeUnsubscribe = store2.subscribe((change) => {
+  if (state32.storeUnsubscribe || !store2?.subscribe) return;
+  state32.storeUnsubscribe = store2.subscribe((change) => {
     if (change?.section === "appliances" || change?.section === "snapshot") {
       protectLegacyCustomImages();
       schedule15(repairExplicitCatalogArtwork);
@@ -31660,8 +31910,8 @@ function installBeta25Compatibility() {
   protectLegacyCustomImages();
   schedule15(restoreEditorVisualContracts);
   schedule15(repairExplicitCatalogArtwork);
-  if (!state31.listeners) {
-    state31.listeners = true;
+  if (!state32.listeners) {
+    state32.listeners = true;
     for (const name of [
       "dashboardmodern:legacy-ready",
       "dashboardmodern:runtime-ready",
@@ -31710,7 +31960,7 @@ function installBeta25Compatibility() {
         schedule15(restoreTemperatureContracts);
     });
   }
-  state31.installed = true;
+  state32.installed = true;
   return true;
 }
 if (doc?.readyState === "loading")
@@ -32482,8 +32732,8 @@ function planciaGiaConfigurata(leggi) {
 }
 
 // src/sections/beta26-real-device-stability-section.js
-var KEY30 = "__DASHBOARDMODERN_BETA26_REAL_DEVICE_STABILITY__";
-var state32 = root2[KEY30] ||= {
+var KEY31 = "__DASHBOARDMODERN_BETA26_REAL_DEVICE_STABILITY__";
+var state33 = root2[KEY31] ||= {
   installed: false,
   listeners: false,
   storeUnsubscribe: null,
@@ -32499,7 +32749,7 @@ var state32 = root2[KEY30] ||= {
   popupGroup: "",
   managedRuntimeGroups: /* @__PURE__ */ new Set()
 };
-state32.managedRuntimeGroups ||= /* @__PURE__ */ new Set();
+state33.managedRuntimeGroups ||= /* @__PURE__ */ new Set();
 var FLOW_NODE_DEFAULTS = Object.freeze({
   lav: Object.freeze({
     label: "Carico 1",
@@ -32692,10 +32942,10 @@ function applyTemperatureRoomFilter() {
   const grid = doc?.getElementById?.("temp-grid");
   if (!grid) return false;
   const tabs = temperatureRoomTabsModel();
-  if (!tabs.some((tab) => tab.id === state32.activeTemperatureRoom))
-    state32.activeTemperatureRoom = "all";
+  if (!tabs.some((tab) => tab.id === state33.activeTemperatureRoom))
+    state33.activeTemperatureRoom = "all";
   grid.querySelectorAll(".temp-card[data-room-id]").forEach((card) => {
-    const visible = state32.activeTemperatureRoom === "all" || clean13(card.dataset.roomId) === state32.activeTemperatureRoom;
+    const visible = state33.activeTemperatureRoom === "all" || clean13(card.dataset.roomId) === state33.activeTemperatureRoom;
     card.hidden = !visible;
     if (visible) card.style?.removeProperty?.("display");
     else card.style?.setProperty?.("display", "none", "important");
@@ -32703,7 +32953,7 @@ function applyTemperatureRoomFilter() {
   });
   doc?.querySelectorAll?.("#dm-beta16-temperature-tabs [data-room-filter]").forEach(
     (button) => {
-      const active = button.dataset.roomFilter === state32.activeTemperatureRoom;
+      const active = button.dataset.roomFilter === state33.activeTemperatureRoom;
       button.classList.toggle("active", active);
       button.setAttribute("aria-pressed", active ? "true" : "false");
     }
@@ -32713,20 +32963,20 @@ function applyTemperatureRoomFilter() {
 function observeTemperatureGrid() {
   const grid = doc?.getElementById?.("temp-grid");
   if (!grid || typeof root2.MutationObserver !== "function") return false;
-  if (state32.temperatureGridObserved === grid) return true;
-  state32.temperatureGridObserver?.disconnect?.();
+  if (state33.temperatureGridObserved === grid) return true;
+  state33.temperatureGridObserver?.disconnect?.();
   const observer = new root2.MutationObserver(() => {
-    if (state32.temperatureFilterReentrant) return;
-    state32.temperatureFilterReentrant = true;
+    if (state33.temperatureFilterReentrant) return;
+    state33.temperatureFilterReentrant = true;
     try {
       applyTemperatureRoomFilter();
     } finally {
-      state32.temperatureFilterReentrant = false;
+      state33.temperatureFilterReentrant = false;
     }
   });
   observer.observe(grid, { childList: true });
-  state32.temperatureGridObserver = observer;
-  state32.temperatureGridObserved = grid;
+  state33.temperatureGridObserver = observer;
+  state33.temperatureGridObserved = grid;
   return true;
 }
 function ensureTemperatureRoomTabs() {
@@ -32758,7 +33008,7 @@ function ensureTemperatureRoomTabs() {
           kind: "room"
         });
         button.addEventListener("click", () => {
-          state32.activeTemperatureRoom = tab.id;
+          state33.activeTemperatureRoom = tab.id;
           applyTemperatureRoomFilter();
         });
         return button;
@@ -32776,9 +33026,9 @@ function renderStableBeta27Temperature() {
   const records = temperatureRecords2();
   const signature = temperatureSignature();
   const cards = grid.querySelectorAll(".temp-card[data-room-id]");
-  const needsStructure = signature !== state32.temperatureSignature || cards.length !== records.length;
+  const needsStructure = signature !== state33.temperatureSignature || cards.length !== records.length;
   if (needsStructure) {
-    state32.temperatureSignature = signature;
+    state33.temperatureSignature = signature;
     renderBeta25TemperatureCards();
   }
   if (records.length) {
@@ -32944,12 +33194,12 @@ function seedModernSectionVisibility() {
   return changed;
 }
 function scheduleVisibilityRepair(delay = 80, espressa = "") {
-  if (state32.visibilityTimer && !espressa) espressa = clean13(state32.visibilityEspressa);
-  state32.visibilityEspressa = espressa;
-  root2.clearTimeout?.(state32.visibilityTimer);
-  state32.visibilityTimer = root2.setTimeout?.(() => {
-    state32.visibilityTimer = 0;
-    state32.visibilityEspressa = "";
+  if (state33.visibilityTimer && !espressa) espressa = clean13(state33.visibilityEspressa);
+  state33.visibilityEspressa = espressa;
+  root2.clearTimeout?.(state33.visibilityTimer);
+  state33.visibilityTimer = root2.setTimeout?.(() => {
+    state33.visibilityTimer = 0;
+    state33.visibilityEspressa = "";
     ensureConfiguredSectionsVisible({ espressa, spegni: true });
   }, delay);
 }
@@ -33098,10 +33348,10 @@ function synchronizeLegacySubloadRuntime() {
   const extras = loadExtras();
   const groups = loadGroupsModel();
   const activeIds = new Set(groups.map((group) => group.id));
-  for (const groupId of state32.managedRuntimeGroups) {
+  for (const groupId of state33.managedRuntimeGroups) {
     if (!activeIds.has(groupId)) {
       delete runtime[groupId];
-      state32.managedRuntimeGroups.delete(groupId);
+      state33.managedRuntimeGroups.delete(groupId);
     }
   }
   for (const group of groups) {
@@ -33114,7 +33364,7 @@ function synchronizeLegacySubloadRuntime() {
     runtime[group.id].title = group.name;
     runtime[group.id].icon = group.icon || "🔌";
     runtime[group.id].items = Array.isArray(extras[group.id]) ? [...extras[group.id]] : [];
-    if (!group.builtin) state32.managedRuntimeGroups.add(group.id);
+    if (!group.builtin) state33.managedRuntimeGroups.add(group.id);
   }
   return true;
 }
@@ -33144,7 +33394,7 @@ function groupMarkup2(group) {
   return `<details class="ed-acc dm-beta27-load-group" data-beta27-group="${esc(group.id)}" open><summary class="ed-acc-head"><span>${esc(group.icon || "🔌")} ${esc(group.name)}</span><small>${children.length} ${t("carichi", "loads")}</small></summary><div class="ed-acc-body"><div class="ed-form-row dm-beta27-group-meta"><input class="ed-input" data-group-name value="${esc(group.name)}" aria-label="${t("Nome gruppo", "Group name")}"><input class="ed-input ed-icon-input" data-group-icon value="${esc(group.icon || "🔌")}" aria-label="${t("Icona gruppo", "Group icon")}"><input class="dm-beta27-color" data-group-color type="color" value="${esc(group.color || "#64748b")}" title="${t("Colore", "Color")}"><button type="button" class="ed-btn-secondary" data-beta27-group-save>💾</button>${group.builtin ? "" : `<button type="button" class="ed-del" data-beta27-group-delete>🗑️</button>`}</div><div class="ed-list dm-beta27-child-list">${rows || `<div class="ed-empty">${t("Nessun carico in questo gruppo.", "No loads in this group.")}</div>`}</div><button type="button" class="ed-btn-add" data-beta27-child-add>＋ ${t("Aggiungi carico", "Add load")}</button></div></details>`;
 }
 function childFormMarkup() {
-  const editing = state32.editingChild;
+  const editing = state33.editingChild;
   if (!editing) return "";
   const children = groupChildren(editing.groupId);
   const index = editing.id ? childIndexByIdentity(editing.groupId, editing.id, children) : -1;
@@ -33159,9 +33409,9 @@ function loadsPanelOwnedElsewhere() {
   return root2.__DM_20260817B__ === true;
 }
 function renderBeta27LoadsEditor(target) {
-  if (!target || state32.loadsRendering || loadsPanelOwnedElsewhere()) return false;
+  if (!target || state33.loadsRendering || loadsPanelOwnedElsewhere()) return false;
   if (!target.matches?.('[data-energy-panel="loads"]')) return false;
-  state32.loadsRendering = true;
+  state33.loadsRendering = true;
   try {
     const nodes = normalizeFlowNodesForEditor();
     const groups = loadGroupsModel();
@@ -33175,7 +33425,7 @@ function renderBeta27LoadsEditor(target) {
     host.innerHTML = `<div class="dm-beta27-load-editor"><div class="ed-intro dm-beta27-load-intro"><b>${t("Flow carichi Energia", "Energy load flow")}</b><br>${t("Prima configura i cerchi collegati a Casa. Ogni cerchio può usare un sensore di potenza diretto oppure sommare automaticamente tutti i carichi del gruppo collegato. Poi inserisci forno, frigo, lavastoviglie e gli altri dispositivi dentro il gruppo. I nodi vuoti o disabilitati non vengono forzati nel flow.", "First configure the circles connected to Home. Each circle can use a direct power sensor or automatically sum every child of a load group. Then create the appliances inside each group. Empty or disabled nodes are not forced into the flow.")}</div><section class="dm-beta27-load-section"><div class="ed-sec-title">① ${t("CERCHI SOTTO CASA", "CIRCLES UNDER HOME")}</div><div class="ed-intro">${t("Nome, icona, colore, visibilità, gruppo e potenza diretta sono indipendenti per ogni nodo del flow.", "Name, icon, color, visibility, group and direct power are independent for every flow node.")}</div>${Object.values(nodes).map(flowNodeMarkup).join("")}<button type="button" class="ed-save-btn" data-beta27-flow-save>💾 ${t("Salva cerchi flow", "Save flow circles")}</button></section><section class="dm-beta27-load-section"><div class="ed-sec-title">② ${t("GRUPPI E CARICHI INTERNI", "GROUPS AND CHILD LOADS")}</div><div class="ed-intro">${t("Il gruppo è il popup aperto dal cerchio del flow. I figli sono le card interne, per esempio Forno, Frigorifero o Lavastoviglie.", "Groups are the popup opened from a flow circle. Their children are the cards shown inside, such as Oven, Fridge or Dishwasher.")}</div>${groups.map(groupMarkup2).join("")}${newGroupMarkup()}${childFormMarkup()}</section></div>`;
     mountBeta27LoadsEditor(host, target);
   } finally {
-    state32.loadsRendering = false;
+    state33.loadsRendering = false;
   }
   return true;
 }
@@ -33215,7 +33465,7 @@ function deleteGroup(groupId) {
   writeJsonIfChanged("cd_flow_nodes", nodes);
   const runtime = legacySubloadsConfig();
   if (runtime) delete runtime[clean13(groupId)];
-  state32.managedRuntimeGroups.delete(clean13(groupId));
+  state33.managedRuntimeGroups.delete(clean13(groupId));
   synchronizeLegacySubloadRuntime();
   void removeCanonicalGroup(groupId).catch(
     (error) => console.error("[DashboardModern] unable to remove canonical load group", error)
@@ -33310,7 +33560,7 @@ function mountBeta27LoadsEditor(target, panel = target) {
     button.addEventListener("click", () => {
       const block = button.closest("[data-beta27-group]");
       deleteGroup(block.dataset.beta27Group);
-      state32.editingChild = null;
+      state33.editingChild = null;
       renderBeta27LoadsEditor(panel);
     });
   });
@@ -33331,7 +33581,7 @@ function mountBeta27LoadsEditor(target, panel = target) {
   target.querySelectorAll("[data-beta27-child-add]").forEach((button) => {
     button.addEventListener("click", () => {
       const groupId = button.closest("[data-beta27-group]").dataset.beta27Group;
-      state32.editingChild = { groupId, id: null };
+      state33.editingChild = { groupId, id: null };
       renderBeta27LoadsEditor(panel);
       panel.querySelector("[data-beta27-child-form]")?.scrollIntoView?.({
         behavior: "smooth",
@@ -33342,7 +33592,7 @@ function mountBeta27LoadsEditor(target, panel = target) {
   target.querySelectorAll("[data-beta27-child-edit]").forEach((button) => {
     button.addEventListener("click", () => {
       const row = button.closest("[data-beta27-child-group]");
-      state32.editingChild = {
+      state33.editingChild = {
         groupId: clean13(row.dataset.beta27ChildGroup),
         id: clean13(row.dataset.beta27ChildId)
       };
@@ -33367,7 +33617,7 @@ function mountBeta27LoadsEditor(target, panel = target) {
     });
   }
   target.querySelector("[data-beta27-child-cancel]")?.addEventListener("click", () => {
-    state32.editingChild = null;
+    state33.editingChild = null;
     renderBeta27LoadsEditor(panel);
   });
   target.querySelector("[data-beta27-child-save]")?.addEventListener("click", () => {
@@ -33379,7 +33629,7 @@ function mountBeta27LoadsEditor(target, panel = target) {
       return root2.alert?.(t("Scegli il gruppo e inserisci il nome del carico.", "Choose a group and enter the load name."));
     if (!power.includes("."))
       return root2.alert?.(t("Configura una entità valida per la potenza istantanea.", "Configure a valid instant power entity."));
-    const editingId = clean13(state32.editingChild?.id);
+    const editingId = clean13(state33.editingChild?.id);
     const child = {
       id: editingId,
       name,
@@ -33391,13 +33641,13 @@ function mountBeta27LoadsEditor(target, panel = target) {
       monthly: clean13(form.querySelector("#dm-beta27-child-monthly")?.value),
       total: clean13(form.querySelector("#dm-beta27-child-total")?.value)
     };
-    if (state32.editingChild?.groupId && state32.editingChild.groupId !== groupId && editingId) {
-      mutateChild(state32.editingChild.groupId, editingId, "delete", {
+    if (state33.editingChild?.groupId && state33.editingChild.groupId !== groupId && editingId) {
+      mutateChild(state33.editingChild.groupId, editingId, "delete", {
         removeCanonical: false
       });
     }
     saveChild(groupId, editingId, child);
-    state32.editingChild = null;
+    state33.editingChild = null;
     ensureConfiguredSectionsVisible({ render: false });
     renderBeta27LoadsEditor(panel);
   });
@@ -33457,7 +33707,7 @@ function applyFlowNodeCustomization() {
   }
   return true;
 }
-function patchSubloadPopup(groupId = state32.popupGroup) {
+function patchSubloadPopup(groupId = state33.popupGroup) {
   const id = clean13(groupId);
   if (!id) return false;
   if (doc?.getElementById?.("subloads-list")?.dataset?.dmSubloadOwner === "beta30") return false;
@@ -33475,7 +33725,7 @@ function installPopupOwner() {
   let installed = false;
   for (const name of ["apriSubLoads"]) {
     let beta27OpenSubLoads = function(type, ...args) {
-      state32.popupGroup = clean13(type);
+      state33.popupGroup = clean13(type);
       const result = current.call(this, type, ...args);
       root2.queueMicrotask?.(() => patchSubloadPopup(type));
       return result;
@@ -33491,13 +33741,13 @@ function installPopupOwner() {
   return installed;
 }
 function subscribeStore11() {
-  if (state32.storeUnsubscribe) return true;
+  if (state33.storeUnsubscribe) return true;
   const store2 = dashboardStore();
   if (typeof store2?.subscribe !== "function") return false;
-  state32.storeUnsubscribe = store2.subscribe((change) => {
+  state33.storeUnsubscribe = store2.subscribe((change) => {
     if (change?.status !== "optimistic" && change?.status !== "success") return;
     if (change?.section === "rooms" || change?.section === "snapshot") {
-      state32.temperatureSignature = "";
+      state33.temperatureSignature = "";
       renderStableBeta27Temperature();
     }
     if (change?.section === "loads" || change?.section === "energy") scheduleLoadsEditor();
@@ -33576,8 +33826,8 @@ function installBeta26RealDeviceStability() {
   renderStableBeta27Temperature();
   scheduleLoadsEditor();
   root2.queueMicrotask?.(applyFlowNodeCustomization);
-  if (!state32.listeners) {
-    state32.listeners = true;
+  if (!state33.listeners) {
+    state33.listeners = true;
     for (const eventName of [
       "dashboardmodern:legacy-ready",
       "dashboardmodern:runtime-ready",
@@ -33644,18 +33894,18 @@ function installBeta26RealDeviceStability() {
   });
   for (const eventName of ["dashboardmodern:states-ready", "dashboardmodern:state-changed"])
     root2.addEventListener?.(eventName, () => {
-      if (state32.treSeminate) return;
+      if (state33.treSeminate) return;
       try {
         const visibility = readJson("cd_sections", {});
         if (SEZIONI_CHE_LEGGONO_LA_CASA.every((chiave2) => chiave2 in (visibility || {}))) {
-          state32.treSeminate = true;
+          state33.treSeminate = true;
           return;
         }
         seedModernSectionVisibility();
       } catch (_error) {
       }
     });
-  state32.installed = true;
+  state33.installed = true;
   return true;
 }
 if (doc?.readyState === "loading")
@@ -33707,8 +33957,8 @@ function sezioniOfferte(voci) {
 }
 
 // src/sections/segnalazioni-section.js
-var KEY31 = "__DASHBOARDMODERN_SEGNALAZIONI__";
-var state33 = root2[KEY31] ||= {
+var KEY32 = "__DASHBOARDMODERN_SEGNALAZIONI__";
+var state34 = root2[KEY32] ||= {
   installed: false,
   tickets: [],
   delivery: false,
@@ -33863,7 +34113,7 @@ var TIPI = [
     )
   }
 ];
-function tipoAttivo(id = state33.tipo) {
+function tipoAttivo(id = state34.tipo) {
   return TIPI.find((voce) => voce.id === id) || TIPI[0];
 }
 var STATI = {
@@ -33912,14 +34162,14 @@ async function chiedi3(type, payload = {}) {
   return canale.request({ type, ...payload });
 }
 async function haVersion() {
-  if (state33.config) return state33.config;
+  if (state34.config) return state34.config;
   try {
     const config = await chiedi3("get_config");
-    state33.config = clean13(config?.version);
+    state34.config = clean13(config?.version);
   } catch (_error) {
-    state33.config = "";
+    state34.config = "";
   }
-  return state33.config;
+  return state34.config;
 }
 function versioneIntegrazione() {
   const info = root2.DashboardModernModules?.diagnostics?.BUILD_INFO;
@@ -33959,7 +34209,7 @@ function formaDellaTestata() {
   return parti.join(" ").slice(0, 190);
 }
 async function diagnostica() {
-  const sezione = clean13(state33.bozza.sezione);
+  const sezione = clean13(state34.bozza.sezione);
   const raccolta = {
     integration_version: versioneIntegrazione(),
     ha_version: await haVersion(),
@@ -33968,7 +34218,7 @@ async function diagnostica() {
     /* Le parole, non gli identificativi: la segnalazione la legge una persona,
      * e «Energia» si capisce dove `energia` va tradotto a mente. */
     sezione: nomeDellaSezione2(sezione),
-    funzione: state33.bozza.funzione ? nomeDellaParte(state33.bozza.funzione) : "",
+    funzione: state34.bozza.funzione ? nomeDellaParte(state34.bozza.funzione) : "",
     user_agent: clean13(root2.navigator?.userAgent).slice(0, 190),
     intestazione: formaDellaTestata()
   };
@@ -33979,9 +34229,9 @@ async function diagnostica() {
   );
 }
 function codiceMarkup() {
-  if (!state33.auth) return "";
-  const codice = clean13(state33.auth.user_code);
-  const dove = `${clean13(state33.auth.verification_uri) || "https://github.com/login/device"}?user_code=${encodeURIComponent(codice)}`;
+  if (!state34.auth) return "";
+  const codice = clean13(state34.auth.user_code);
+  const dove = `${clean13(state34.auth.verification_uri) || "https://github.com/login/device"}?user_code=${encodeURIComponent(codice)}`;
   return `
     <div class="dm-tkt-avviso dm-tkt-device">
       <div>${esc(
@@ -34001,11 +34251,11 @@ function codiceMarkup() {
     </div>`;
 }
 function contoMarkup() {
-  if (!state33.delivery) return "";
-  if (state33.account.connected) {
+  if (!state34.delivery) return "";
+  if (state34.account.connected) {
     return `
       <div class="dm-tkt-conto">
-        <span>${esc(t("Collegato come", "Connected as"))} <b>${esc(state33.account.login)}</b></span>
+        <span>${esc(t("Collegato come", "Connected as"))} <b>${esc(state34.account.login)}</b></span>
         <button type="button" class="dm-tkt-tolgi" data-dm-tkt="scollega">${esc(
       t("Scollega", "Disconnect")
     )}</button>
@@ -34025,29 +34275,29 @@ function contoMarkup() {
     </div>`;
 }
 async function collega({ salvata = false } = {}) {
-  if (!salvata) state33.avviso = "";
+  if (!salvata) state34.avviso = "";
   try {
     const avvio = await chiedi3(WS_AUTH_START);
-    state33.auth = avvio;
+    state34.auth = avvio;
     disegna2();
     attendiAutorizzazione(avvio);
   } catch (errore) {
     const guasto = clean13(errore?.message) || t("Non riuscita.", "It did not work.");
-    state33.avviso = salvata ? `!${t("Salvata, ma l'autorizzazione non e' partita:", "Saved, but the authorization did not start:")} ${guasto} ${t("Riprova da «Le mie».", "Try again from «Mine».")}` : `!${guasto}`;
+    state34.avviso = salvata ? `!${t("Salvata, ma l'autorizzazione non e' partita:", "Saved, but the authorization did not start:")} ${guasto} ${t("Riprova da «Le mie».", "Try again from «Mine».")}` : `!${guasto}`;
     disegna2();
   }
 }
 function fermaAttesa() {
-  if (state33.authTimer) root2.clearTimeout?.(state33.authTimer);
-  state33.authTimer = 0;
+  if (state34.authTimer) root2.clearTimeout?.(state34.authTimer);
+  state34.authTimer = 0;
 }
 function attendiAutorizzazione(avvio) {
   fermaAttesa();
   const scadenza = Date.now() + (Number(avvio.expires_in) || 900) * 1e3;
   const giro2 = async (attesa2) => {
-    if (!state33.auth || Date.now() > scadenza) {
-      state33.auth = null;
-      state33.avviso = `!${t("Il codice e' scaduto: riprova.", "The code expired: try again.")}`;
+    if (!state34.auth || Date.now() > scadenza) {
+      state34.auth = null;
+      state34.avviso = `!${t("Il codice e' scaduto: riprova.", "The code expired: try again.")}`;
       disegna2();
       return;
     }
@@ -34055,40 +34305,40 @@ function attendiAutorizzazione(avvio) {
       const risposta = await chiedi3(WS_AUTH_POLL, { device_code: avvio.device_code });
       if (risposta?.pending) {
         const prossima = Math.max(Number(risposta.interval) || attesa2, 1) * 1e3;
-        state33.authTimer = root2.setTimeout?.(() => giro2(prossima / 1e3), prossima);
+        state34.authTimer = root2.setTimeout?.(() => giro2(prossima / 1e3), prossima);
         return;
       }
-      state33.auth = null;
-      if (risposta?.account) state33.account = risposta.account;
-      state33.avviso = risposta?.delivered ? t(
+      state34.auth = null;
+      if (risposta?.account) state34.account = risposta.account;
+      state34.avviso = risposta?.delivered ? t(
         "Collegato. Le segnalazioni in attesa sono partite.",
         "Connected. Pending reports were sent."
       ) : t("Collegato.", "Connected.");
       await ricarica2();
     } catch (errore) {
-      state33.auth = null;
-      state33.avviso = `!${clean13(errore?.message) || t("Non riuscita.", "It did not work.")}`;
+      state34.auth = null;
+      state34.avviso = `!${clean13(errore?.message) || t("Non riuscita.", "It did not work.")}`;
       disegna2();
     }
   };
   const attesa = Math.max(Number(avvio.interval) || 5, 1);
-  state33.authTimer = root2.setTimeout?.(() => giro2(attesa), attesa * 1e3);
+  state34.authTimer = root2.setTimeout?.(() => giro2(attesa), attesa * 1e3);
 }
 function annullaCollegamento() {
   fermaAttesa();
-  state33.auth = null;
+  state34.auth = null;
   disegna2();
 }
 async function scollega() {
   fermaAttesa();
   try {
     await chiedi3(WS_AUTH_FORGET);
-    state33.avviso = t(
+    state34.avviso = t(
       "Scollegato da qui. Per revocare del tutto l'accesso, toglilo anche dalle applicazioni autorizzate su github.com.",
       "Disconnected here. To revoke access entirely, remove it from your authorized apps on github.com too."
     );
   } catch (errore) {
-    state33.avviso = `!${clean13(errore?.message) || t("Non riuscita.", "It did not work.")}`;
+    state34.avviso = `!${clean13(errore?.message) || t("Non riuscita.", "It did not work.")}`;
   }
   await ricarica2();
 }
@@ -34323,7 +34573,7 @@ a.dm-tkt-btn { text-decoration:none; display:inline-flex; align-items:center; }
 }
 `;
 function tesseraMarkup2() {
-  const daInviare = state33.tickets.filter((ticket) => ticket.state === "bozza").length;
+  const daInviare = state34.tickets.filter((ticket) => ticket.state === "bozza").length;
   const pallino = daInviare ? `<span class="dm-tkt-badge">${daInviare}</span>` : "";
   return `
     <div class="cfg-card-ico" style="--cc-rgb: 14,165,233;">🎫</div>
@@ -34383,8 +34633,8 @@ function finestra2() {
 function apri2(dove = "") {
   const modale = finestra2();
   if (!modale) return;
-  state33.avviso = "";
-  if (dove === "mie" || dove === "nuova") state33.tab = dove;
+  state34.avviso = "";
+  if (dove === "mie" || dove === "nuova") state34.tab = dove;
   modale.classList.add("show");
   disegna2();
   ricarica2();
@@ -34392,22 +34642,22 @@ function apri2(dove = "") {
 }
 function chiudi2() {
   fermaAttesa();
-  state33.auth = null;
-  state33.appena = null;
+  state34.auth = null;
+  state34.appena = null;
   doc?.getElementById?.("dm-tkt-modal")?.classList.remove("show");
 }
 var CODA_FRESCA = 10 * 60 * 1e3;
 function battitoDellaCoda() {
   fermaBattito();
-  state33.codaTimer = root2.setInterval?.(async () => {
-    if (!state33.console || doc?.hidden) return;
+  state34.codaTimer = root2.setInterval?.(async () => {
+    if (!state34.console || doc?.hidden) return;
     await caricaCoda2({ zitta: true });
     root2.dispatchEvent?.(new CustomEvent("dashboardmodern:segnalazioni-coda"));
   }, CODA_FRESCA);
 }
 function fermaBattito() {
-  if (state33.codaTimer) root2.clearInterval?.(state33.codaTimer);
-  state33.codaTimer = 0;
+  if (state34.codaTimer) root2.clearInterval?.(state34.codaTimer);
+  state34.codaTimer = 0;
 }
 var GIORNI_VECCHIA = 30;
 var TIPI_NOTI = ["bug", "feature", "assistenza"];
@@ -34419,14 +34669,14 @@ function giornoDi(istante2) {
   return `${quando2.getFullYear()}-${mese}-${giorno}`;
 }
 function sommarioConsole() {
-  if (!state33.console || !Array.isArray(state33.queue)) return null;
-  const daLavorare = state33.queue.filter((ticket) => !CHIUSA.includes(clean13(ticket.state)));
+  if (!state34.console || !Array.isArray(state34.queue)) return null;
+  const daLavorare = state34.queue.filter((ticket) => !CHIUSA.includes(clean13(ticket.state)));
   const perTipo = (tipo) => daLavorare.filter((ticket) => clean13(ticket.type) === tipo).length;
   const adesso3 = Date.now();
   const oggi = giornoDi(adesso3);
   const nate = (ticket) => Date.parse(clean13(ticket.created_at));
   const limite = adesso3 - GIORNI_VECCHIA * 864e5;
-  const diOggi = state33.queue.filter((ticket) => {
+  const diOggi = state34.queue.filter((ticket) => {
     const quando2 = nate(ticket);
     return Number.isFinite(quando2) && giornoDi(quando2) === oggi;
   });
@@ -34454,7 +34704,7 @@ function sommarioConsole() {
     quante: daLavorare.length,
     nuove: daLavorare.filter((ticket) => clean13(ticket.state) === "inviato").length,
     inLavorazione: daLavorare.filter((ticket) => clean13(ticket.state) === "in-carico").length,
-    chiuse: state33.queue.length - daLavorare.length,
+    chiuse: state34.queue.length - daLavorare.length,
     bug: perTipo("bug"),
     feature: perTipo("feature"),
     assistenza: perTipo("assistenza"),
@@ -34465,8 +34715,8 @@ function sommarioConsole() {
      *
      * Conversazioni, non messaggi: chi guarda vuole sapere quante porte ha da
      * aprire, non quante frasi ci sono dietro. Quante siano lo dice il filo. */
-    nonLetti: state33.nonLetti.length,
-    conversazioni: state33.nonLetti.map((voce) => ({
+    nonLetti: state34.nonLetti.length,
+    conversazioni: state34.nonLetti.map((voce) => ({
       number: Number(voce?.number) || 0,
       title: clean13(voce?.title),
       messages: Number(voce?.messages) || 1,
@@ -34477,15 +34727,15 @@ function sommarioConsole() {
 async function ricarica2() {
   try {
     const risposta = await chiedi3(WS_LIST);
-    state33.tickets = Array.isArray(risposta?.tickets) ? risposta.tickets : [];
-    state33.delivery = Boolean(risposta?.delivery);
-    state33.console = Boolean(risposta?.console);
-    if (risposta?.account) state33.account = risposta.account;
+    state34.tickets = Array.isArray(risposta?.tickets) ? risposta.tickets : [];
+    state34.delivery = Boolean(risposta?.delivery);
+    state34.console = Boolean(risposta?.console);
+    if (risposta?.account) state34.account = risposta.account;
     sistemaIlCruscotto();
-    if (state33.console) {
+    if (state34.console) {
       await caricaCoda2({ zitta: true });
       root2.dispatchEvent?.(new CustomEvent("dashboardmodern:segnalazioni-coda"));
-      if (!state33.codaTimer) battitoDellaCoda();
+      if (!state34.codaTimer) battitoDellaCoda();
     }
   } catch (_error) {
   }
@@ -34498,28 +34748,28 @@ function schede() {
     ["mie", t("Le mie", "Mine")]
   ];
   return `<div class="dm-tkt-tabs">${voci.map(
-    ([id, nome]) => `<button type="button" class="dm-tkt-tab${state33.tab === id ? " attiva" : ""}" data-dm-tab="${id}">${esc(nome)}</button>`
+    ([id, nome]) => `<button type="button" class="dm-tkt-tab${state34.tab === id ? " attiva" : ""}" data-dm-tab="${id}">${esc(nome)}</button>`
   ).join("")}</div>`;
 }
 function avvisoMarkup2() {
-  if (!state33.avviso) return "";
-  const male = state33.avviso.startsWith("!");
+  if (!state34.avviso) return "";
+  const male = state34.avviso.startsWith("!");
   return `<div class="dm-tkt-avviso${male ? " male" : ""}">${esc(
-    male ? state33.avviso.slice(1) : state33.avviso
+    male ? state34.avviso.slice(1) : state34.avviso
   )}</div>`;
 }
 function moduloMarkup() {
   const scelto = tipoAttivo();
   const tipi = TIPI.map(
     (tipo) => `
-      <button type="button" class="dm-tkt-tipo${state33.tipo === tipo.id ? " attivo" : ""}" data-dm-tipo="${tipo.id}" style="--tk-rgb:${tipo.rgb};"
-        aria-pressed="${state33.tipo === tipo.id}">
+      <button type="button" class="dm-tkt-tipo${state34.tipo === tipo.id ? " attivo" : ""}" data-dm-tipo="${tipo.id}" style="--tk-rgb:${tipo.rgb};"
+        aria-pressed="${state34.tipo === tipo.id}">
         <span class="dm-tkt-tipo-ico">${disegnoDelCatalogo(tipo.disegno, 30)}</span>
         <span class="dm-tkt-tipo-nm">${esc(tipo.nome())}</span>
         <span class="dm-tkt-tipo-ds">${esc(tipo.che())}</span>
       </button>`
   ).join("");
-  const nonConfigurato = state33.delivery ? "" : `<div class="dm-tkt-nota"><span class="dm-tkt-nota-ico" aria-hidden="true">💤</span><span>${esc(
+  const nonConfigurato = state34.delivery ? "" : `<div class="dm-tkt-nota"><span class="dm-tkt-nota-ico" aria-hidden="true">💤</span><span>${esc(
     t(
       "L'invio non e' configurato su questa plancia: la segnalazione resta qui e partira' da sola quando lo sara'.",
       "Sending is not configured on this dashboard: the report stays here and will be sent on its own once it is."
@@ -34535,13 +34785,13 @@ function moduloMarkup() {
       <label for="dm-tkt-campo-titolo">${esc(t("Titolo", "Title"))}</label>
       <input id="dm-tkt-campo-titolo" type="text" maxlength="${MAX_TITOLO}"
         autocomplete="off" placeholder="${esc(scelto.titolo())}"
-        value="${esc(state33.bozza.title)}">
+        value="${esc(state34.bozza.title)}">
     </div>
     <div class="dm-tkt-campo">
       <label for="dm-tkt-corpo">${esc(t("Descrizione", "Description"))}</label>
       <textarea id="dm-tkt-corpo" maxlength="${MAX_CORPO}"
-        placeholder="${esc(scelto.corpo())}">${esc(state33.bozza.body)}</textarea>
-      <div class="dm-tkt-conta" data-dm-tkt="conta">${state33.bozza.body.length} / ${MAX_CORPO}</div>
+        placeholder="${esc(scelto.corpo())}">${esc(state34.bozza.body)}</textarea>
+      <div class="dm-tkt-conta" data-dm-tkt="conta">${state34.bozza.body.length} / ${MAX_CORPO}</div>
     </div>
     <div class="dm-tkt-passo">${esc(t("4 · Cosa parte", "4 · What gets sent"))}</div>
     <details class="dm-tkt-diag">
@@ -34569,7 +34819,7 @@ function moduloMarkup() {
   )}</span>
     </div>
     <div class="dm-tkt-azioni">
-      <button type="button" class="dm-tkt-btn" data-dm-tkt="invia" ${state33.busy ? "disabled" : ""}>${esc(state33.busy ? t("Invio…", "Sending…") : t("Invia", "Send"))}</button>
+      <button type="button" class="dm-tkt-btn" data-dm-tkt="invia" ${state34.busy ? "disabled" : ""}>${esc(state34.busy ? t("Invio…", "Sending…") : t("Invia", "Send"))}</button>
     </div>`;
 }
 function nomeDellaParte(id) {
@@ -34637,10 +34887,10 @@ function sezioniDellaBarra() {
 function tendineMarkup() {
   const sezioni = sezioniDellaBarra();
   if (!sezioni.length) return "";
-  if (!state33.bozza.sezione && sezioni.some((voce) => voce.id === paginaAttiva()))
-    state33.bozza.sezione = paginaAttiva();
-  const scelta = clean13(state33.bozza.sezione);
-  const parte = parteValida(scelta, state33.bozza.funzione) ? clean13(state33.bozza.funzione) : "";
+  if (!state34.bozza.sezione && sezioni.some((voce) => voce.id === paginaAttiva()))
+    state34.bozza.sezione = paginaAttiva();
+  const scelta = clean13(state34.bozza.sezione);
+  const parte = parteValida(scelta, state34.bozza.funzione) ? clean13(state34.bozza.funzione) : "";
   const opzioniSezione = [
     `<option value="">${esc(t("Non lo so", "I do not know"))}</option>`,
     ...sezioni.map(
@@ -34671,8 +34921,8 @@ function statoMarkup(stato) {
   return `<span class="dm-tkt-stato" data-stato="${esc(stato)}">${voce.icona} ${esc(voce.nome())}</span>`;
 }
 function mioCampoMarkup(numero10) {
-  if (!numero10 || !state33.fili[numero10]) return "";
-  if (!state33.account.connected) {
+  if (!numero10 || !state34.fili[numero10]) return "";
+  if (!state34.account.connected) {
     return `<div class="dm-tkt-filo-attesa">${esc(
       t(
         "Collega GitHub per scrivere sotto questa segnalazione.",
@@ -34702,7 +34952,7 @@ function voceMarkup(ticket) {
   const risposta = ticket.reply ? `<div class="dm-tkt-risposta">${esc(ticket.reply)}</div>` : "";
   const errore = ticket.delivery_error ? `<div class="dm-tkt-voce-pie">⚠︎ ${esc(ticket.delivery_error)}</div>` : "";
   const numero10 = Number(ticket.remote_id) || 0;
-  const aperto = Boolean(state33.fili[numero10] || state33.filiInCorso[numero10]);
+  const aperto = Boolean(state34.fili[numero10] || state34.filiInCorso[numero10]);
   const issue = numero10 ? `<button type="button" class="dm-tkt-tolgi" data-dm-filo="${numero10}"
          aria-expanded="${aperto}">${esc(
     aperto ? t("Nascondi tutto", "Hide everything") : t("Vedi la discussione", "See the discussion")
@@ -34735,7 +34985,7 @@ function voceMarkup(ticket) {
       </div>
     </div>`;
 }
-function appenaApertaMarkup(appena = state33.appena) {
+function appenaApertaMarkup(appena = state34.appena) {
   if (!appena) return "";
   const numero10 = appena.numero ? `#${esc(appena.numero)}` : "";
   return `
@@ -34762,7 +35012,7 @@ function appenaApertaMarkup(appena = state33.appena) {
     </div>`;
 }
 function elencoMarkup() {
-  if (!state33.tickets.length) {
+  if (!state34.tickets.length) {
     return `
       <div class="dm-tkt-vuoto">
         <div class="dm-tkt-vuoto-ico" aria-hidden="true">🎫</div>
@@ -34777,16 +35027,16 @@ function elencoMarkup() {
   }
   const statiColConto = FILTRI_STATO.map((filtro) => ({
     ...filtro,
-    quante: perStato(state33.tickets, filtro.id).length
+    quante: perStato(state34.tickets, filtro.id).length
   }));
-  const mie = perStato(state33.tickets, state33.filtroMie);
+  const mie = perStato(state34.tickets, state34.filtroMie);
   return `
     ${appenaApertaMarkup()}
-    ${filaMarkup(statiColConto, state33.filtroMie, "data-dm-filtro-mie")}
+    ${filaMarkup(statiColConto, state34.filtroMie, "data-dm-filtro-mie")}
     <div class="dm-tkt-elenco">${mie.length ? mie.map(voceMarkup).join("") : `<div class="dm-tkt-vuoto"><div>${esc(t("Nessuna segnalazione in questo stato.", "No report in this state."))}</div></div>`}</div>
     ${contoMarkup()}
     <div class="dm-tkt-azioni">
-      <button type="button" class="dm-tkt-btn chiaro" data-dm-tkt="aggiorna" ${state33.busy ? "disabled" : ""}>${esc(t("Aggiorna", "Refresh"))}</button>
+      <button type="button" class="dm-tkt-btn chiaro" data-dm-tkt="aggiorna" ${state34.busy ? "disabled" : ""}>${esc(t("Aggiorna", "Refresh"))}</button>
     </div>`;
 }
 var FILTRI_STATO_ID = Object.freeze(["aperte", "in-carico", "chiuse", "tutte"]);
@@ -34852,14 +35102,14 @@ function filaMarkup(voci, scelto, attributo) {
   }).join("")}</div>`;
 }
 function filtriMarkup(coda) {
-  const dentroLoStato = perStato(coda, state33.filtro);
+  const dentroLoStato = perStato(coda, state34.filtro);
   const conIlConto = FILTRI_TIPO.map((filtro) => ({
     ...filtro,
     quante: filtro.id ? dentroLoStato.filter((ticket) => clean13(ticket.type) === filtro.id).length : dentroLoStato.length
   }));
-  return filaMarkup(FILTRI_STATO, state33.filtro, "data-dm-filtro") + filaMarkup(conIlConto, state33.tipoCoda, "data-dm-tipo-coda");
+  return filaMarkup(FILTRI_STATO, state34.filtro, "data-dm-filtro") + filaMarkup(conIlConto, state34.tipoCoda, "data-dm-tipo-coda");
 }
-function filtra(coda, filtro = state33.filtro, tipo = state33.tipoCoda) {
+function filtra(coda, filtro = state34.filtro, tipo = state34.tipoCoda) {
   const perLoStato = perStato(coda, filtro);
   if (!tipo) return perLoStato;
   return perLoStato.filter((ticket) => clean13(ticket.type) === tipo);
@@ -34930,15 +35180,15 @@ function quandoLeggibile(iso) {
   return Number.isFinite(quando2) ? new Date(quando2).toLocaleString() : "";
 }
 function filoMarkup2(numero10) {
-  if (state33.filiInCorso[numero10]) {
+  if (state34.filiInCorso[numero10]) {
     return `<div class="dm-tkt-filo-attesa">${esc(
       t("Leggo la segnalazione…", "Reading the report…")
     )}</div>`;
   }
-  const filo = state33.fili[numero10];
+  const filo = state34.fili[numero10];
   if (!filo) return "";
   const commenti = Array.isArray(filo.comments) ? filo.comments : [];
-  const corpo = `
+  const corpo2 = `
     <div class="dm-tkt-commento originale">
       <div class="dm-tkt-commento-testa">${esc(
     t("Il testo della segnalazione", "The text of the report")
@@ -34957,7 +35207,7 @@ function filoMarkup2(numero10) {
        * filo lo legge anche chi ha segnalato, quella
        * pastiglia gli diceva che la risposta del manutentore
        * l'aveva scritta lui. */
-      state33.console ? t("tu", "you") : t("manutentore", "maintainer")
+      state34.console ? t("tu", "you") : t("manutentore", "maintainer")
     )}</span>` : ""}
                 <span>${esc(quandoLeggibile(commento.at))}</span>
               </div>
@@ -34967,7 +35217,7 @@ function filoMarkup2(numero10) {
   ).join("") : `<div class="dm-tkt-filo-attesa">${esc(
     t("Nessuno ha ancora scritto niente.", "Nobody has written anything yet.")
   )}</div>`;
-  return `<div class="dm-tkt-filo">${corpo}${filaCommenti}</div>`;
+  return `<div class="dm-tkt-filo">${corpo2}${filaCommenti}</div>`;
 }
 function provenienzaMarkup(ticket) {
   if (clean13(ticket.origin) === "plancia") {
@@ -35039,7 +35289,7 @@ function codaVoceMarkup(ticket) {
   const numero10 = Number(ticket.number) || 0;
   const tipo = tipoInCoda(clean13(ticket.type));
   const chiusa = CHIUSA.includes(clean13(ticket.state));
-  const aperto = Boolean(state33.fili[numero10] || state33.filiInCorso[numero10]);
+  const aperto = Boolean(state34.fili[numero10] || state34.filiInCorso[numero10]);
   const scrive = ` data-dm-serve-testo="${numero10}" disabled`;
   const incaricati = Array.isArray(ticket.assignees) ? ticket.assignees.map(clean13) : [];
   const presa2 = incaricati.length > 0;
@@ -35104,28 +35354,28 @@ function codaVoceMarkup(ticket) {
     </div>`;
 }
 function vuotoMarkup2() {
-  if (state33.tipoCoda) {
+  if (state34.tipoCoda) {
     return t("Niente di questo tipo, qui.", "Nothing of this kind here.");
   }
-  if (state33.filtro === "aperte") {
+  if (state34.filtro === "aperte") {
     return t("Nessuna segnalazione da lavorare. Buon per te.", "Nothing to work on. Good for you.");
   }
-  if (state33.filtro === "nuove") {
+  if (state34.filtro === "nuove") {
     return t("Nessuna segnalazione ancora da prendere in carico.", "No report left to take on.");
   }
-  if (state33.filtro === "in-carico") {
+  if (state34.filtro === "in-carico") {
     return t("Non hai niente in lavorazione.", "You have nothing in progress.");
   }
-  if (state33.filtro === "chiuse") {
+  if (state34.filtro === "chiuse") {
     return t("Ancora niente di chiuso.", "Nothing closed yet.");
   }
   return t("Niente con questo filtro.", "Nothing under this filter.");
 }
 function consoleMarkup2() {
-  if (state33.queue === null) {
+  if (state34.queue === null) {
     return `<div class="dm-tkt-vuoto">${esc(t("Carico la coda…", "Loading the queue…"))}</div>`;
   }
-  const coda = state33.queue;
+  const coda = state34.queue;
   const scelte = filtra(coda);
   const elenco = scelte.length ? `<div class="dm-tkt-elenco">${scelte.map(codaVoceMarkup).join("")}</div>` : `<div class="dm-tkt-vuoto">${esc(vuotoMarkup2())}</div>`;
   return `
@@ -35133,7 +35383,7 @@ function consoleMarkup2() {
     ${filtriMarkup(coda)}
     ${elenco}
     <div class="dm-tkt-azioni">
-      <button type="button" class="dm-tkt-btn chiaro" data-dm-tkt="ricarica-coda" ${state33.busy ? "disabled" : ""}>${esc(t("Aggiorna", "Refresh"))}</button>
+      <button type="button" class="dm-tkt-btn chiaro" data-dm-tkt="ricarica-coda" ${state34.busy ? "disabled" : ""}>${esc(t("Aggiorna", "Refresh"))}</button>
     </div>`;
 }
 var CRUSCOTTO_TAB = "cruscotto";
@@ -35193,7 +35443,7 @@ function insegnaLaVisibilitaDelCruscotto() {
 }
 function sistemaIlCruscotto() {
   if (!doc) return;
-  if (!state33.console) {
+  if (!state34.console) {
     doc.querySelector(`.tab[data-tab="${CRUSCOTTO_TAB}"]`)?.remove();
     doc.getElementById(CRUSCOTTO_PAGE_ID)?.remove();
     return;
@@ -35205,19 +35455,19 @@ function sistemaIlCruscotto() {
   disegnaCruscotto();
 }
 function guastoDellaCoda() {
-  if (!state33.codaErrore) return "";
-  const cache = Array.isArray(state33.queue) ? ` ${t(
+  if (!state34.codaErrore) return "";
+  const cache = Array.isArray(state34.queue) ? ` ${t(
     "I numeri qui sotto sono quelli dell'ultima lettura riuscita.",
     "The numbers below are from the last successful read."
   )}` : "";
   return `<div class="dm-tkt-vuoto">${esc(
-    `${t("Non sono riuscito a leggere la coda:", "I could not read the queue:")} ${state33.codaErrore}${cache}`
+    `${t("Non sono riuscito a leggere la coda:", "I could not read the queue:")} ${state34.codaErrore}${cache}`
   )}</div>`;
 }
 function disegnaCruscotto() {
   const dentro = doc?.querySelector?.("[data-dm-cruscotto]");
   if (!dentro) return;
-  const quante = Array.isArray(state33.queue) ? state33.queue.length : 0;
+  const quante = Array.isArray(state34.queue) ? state34.queue.length : 0;
   dentro.innerHTML = `
     <div class="cfg-hero dm-tkt-hero">
       <div class="cfg-hero-ico" aria-hidden="true">🎫</div>
@@ -35230,12 +35480,12 @@ function disegnaCruscotto() {
     </div>
     ${avvisoMarkup2()}
     ${guastoDellaCoda()}
-    ${Array.isArray(state33.queue) ? consoleMarkup2() : state33.codaErrore ? "" : `<div class="dm-tkt-vuoto">${esc(t("Sto leggendo la coda…", "Reading the queue…"))}</div>`}`;
+    ${Array.isArray(state34.queue) ? consoleMarkup2() : state34.codaErrore ? "" : `<div class="dm-tkt-vuoto">${esc(t("Sto leggendo la coda…", "Reading the queue…"))}</div>`}`;
   agganciaEventi2(dentro);
 }
 function sottotitolo() {
-  if (state33.account.connected) {
-    return `${t("Le tue richieste", "Your requests")} · ${state33.account.login}`;
+  if (state34.account.connected) {
+    return `${t("Le tue richieste", "Your requests")} · ${state34.account.login}`;
   }
   return t(
     "Segnala un difetto, proponi un'idea, chiedi aiuto",
@@ -35248,18 +35498,18 @@ function disegnaLaFinestra() {
   modale.querySelector('[data-dm-tkt="titolo"]').textContent = t("Segnalazioni", "Reports");
   modale.querySelector('[data-dm-tkt="sottotitolo"]').textContent = sottotitolo();
   modale.querySelector('[data-dm-tkt="chiudi"]').textContent = t("Chiudi", "Close");
-  const corpo = modale.querySelector('[data-dm-tkt="corpo"]');
-  const pannello = state33.tab === "mie" ? elencoMarkup() : moduloMarkup();
-  corpo.innerHTML = schede() + avvisoMarkup2() + codiceMarkup() + pannello;
-  agganciaEventi2(corpo);
-  if (state33.tab === "nuova") mostraDiagnostica(corpo);
+  const corpo2 = modale.querySelector('[data-dm-tkt="corpo"]');
+  const pannello = state34.tab === "mie" ? elencoMarkup() : moduloMarkup();
+  corpo2.innerHTML = schede() + avvisoMarkup2() + codiceMarkup() + pannello;
+  agganciaEventi2(corpo2);
+  if (state34.tab === "nuova") mostraDiagnostica(corpo2);
 }
 function disegna2() {
   disegnaLaFinestra();
   disegnaCruscotto();
 }
-async function mostraDiagnostica(corpo) {
-  const lista = corpo.querySelector('[data-dm-tkt="diag"]');
+async function mostraDiagnostica(corpo2) {
+  const lista = corpo2.querySelector('[data-dm-tkt="diag"]');
   if (!lista) return;
   const voci = await diagnostica();
   const nomi = {
@@ -35276,7 +35526,7 @@ function raccogliBozza() {
   const modale = doc?.getElementById?.("dm-tkt-modal");
   if (!modale?.querySelector("#dm-tkt-campo-titolo")) return;
   const sezione = clean13(modale.querySelector("#dm-tkt-sezione")?.value);
-  state33.bozza = {
+  state34.bozza = {
     title: modale.querySelector("#dm-tkt-campo-titolo")?.value ?? "",
     body: modale.querySelector("#dm-tkt-corpo")?.value ?? "",
     sezione,
@@ -35285,43 +35535,43 @@ function raccogliBozza() {
     funzione: parteValida(sezione, modale.querySelector("#dm-tkt-funzione")?.value) ? clean13(modale.querySelector("#dm-tkt-funzione")?.value) : ""
   };
 }
-function agganciaEventi2(corpo) {
-  corpo.querySelectorAll("[data-dm-tab]").forEach((bottone) => {
+function agganciaEventi2(corpo2) {
+  corpo2.querySelectorAll("[data-dm-tab]").forEach((bottone) => {
     bottone.addEventListener("click", () => {
       raccogliBozza();
-      state33.tab = bottone.dataset.dmTab;
-      state33.avviso = "";
+      state34.tab = bottone.dataset.dmTab;
+      state34.avviso = "";
       disegna2();
     });
   });
-  corpo.querySelectorAll("[data-dm-tkt-dove]").forEach((tendina) => {
+  corpo2.querySelectorAll("[data-dm-tkt-dove]").forEach((tendina) => {
     tendina.addEventListener("change", () => {
       raccogliBozza();
       disegna2();
     });
   });
-  corpo.querySelectorAll("[data-dm-tipo]").forEach((bottone) => {
+  corpo2.querySelectorAll("[data-dm-tipo]").forEach((bottone) => {
     bottone.addEventListener("click", () => {
       raccogliBozza();
-      state33.tipo = bottone.dataset.dmTipo;
+      state34.tipo = bottone.dataset.dmTipo;
       disegna2();
     });
   });
-  corpo.querySelectorAll("[data-dm-filtro]").forEach((bottone) => {
+  corpo2.querySelectorAll("[data-dm-filtro]").forEach((bottone) => {
     bottone.addEventListener("click", () => {
-      state33.filtro = bottone.dataset.dmFiltro;
+      state34.filtro = bottone.dataset.dmFiltro;
       disegna2();
     });
   });
-  corpo.querySelectorAll("[data-dm-filtro-mie]").forEach((bottone) => {
+  corpo2.querySelectorAll("[data-dm-filtro-mie]").forEach((bottone) => {
     bottone.addEventListener("click", () => {
-      state33.filtroMie = bottone.dataset.dmFiltroMie;
+      state34.filtroMie = bottone.dataset.dmFiltroMie;
       disegna2();
     });
   });
-  corpo.querySelectorAll("[data-dm-serve-testo]").forEach((bottone) => {
+  corpo2.querySelectorAll("[data-dm-serve-testo]").forEach((bottone) => {
     const numero10 = bottone.dataset.dmServeTesto;
-    const campo = corpo.querySelector(`#${bottone.dataset.dmCampo || `dm-tkt-risposta-${numero10}`}`);
+    const campo = corpo2.querySelector(`#${bottone.dataset.dmCampo || `dm-tkt-risposta-${numero10}`}`);
     if (!campo) return;
     const aggiorna = () => {
       bottone.disabled = !clean13(campo.value);
@@ -35329,45 +35579,45 @@ function agganciaEventi2(corpo) {
     campo.addEventListener("input", aggiorna);
     aggiorna();
   });
-  corpo.querySelectorAll("[data-dm-tipo-coda]").forEach((bottone) => {
+  corpo2.querySelectorAll("[data-dm-tipo-coda]").forEach((bottone) => {
     bottone.addEventListener("click", () => {
-      state33.tipoCoda = bottone.dataset.dmTipoCoda;
+      state34.tipoCoda = bottone.dataset.dmTipoCoda;
       disegna2();
     });
   });
-  corpo.querySelector('[data-dm-tkt="invia"]')?.addEventListener("click", invia);
-  corpo.querySelector('[data-dm-tkt="aggiorna"]')?.addEventListener("click", () => sincronizza());
-  corpo.querySelector('[data-dm-tkt="ricarica-coda"]')?.addEventListener("click", () => caricaCoda2());
-  corpo.querySelectorAll("[data-dm-tolgi]").forEach((bottone) => {
+  corpo2.querySelector('[data-dm-tkt="invia"]')?.addEventListener("click", invia);
+  corpo2.querySelector('[data-dm-tkt="aggiorna"]')?.addEventListener("click", () => sincronizza());
+  corpo2.querySelector('[data-dm-tkt="ricarica-coda"]')?.addEventListener("click", () => caricaCoda2());
+  corpo2.querySelectorAll("[data-dm-tolgi]").forEach((bottone) => {
     bottone.addEventListener("click", () => elimina(bottone.dataset.dmTolgi));
   });
-  corpo.querySelectorAll("[data-dm-filo]").forEach((bottone) => {
+  corpo2.querySelectorAll("[data-dm-filo]").forEach((bottone) => {
     bottone.addEventListener("click", () => apriFilo(bottone.dataset.dmFilo));
   });
-  corpo.querySelectorAll("[data-dm-rispondi]").forEach((bottone) => {
+  corpo2.querySelectorAll("[data-dm-rispondi]").forEach((bottone) => {
     bottone.addEventListener(
       "click",
       () => rispondi(bottone.dataset.dmRispondi, bottone.dataset.dmChiudi)
     );
   });
-  corpo.querySelectorAll("[data-dm-scrivi]").forEach((bottone) => {
+  corpo2.querySelectorAll("[data-dm-scrivi]").forEach((bottone) => {
     bottone.addEventListener("click", () => scrivi(bottone.dataset.dmScrivi));
   });
-  corpo.querySelectorAll("[data-dm-carico]").forEach((bottone) => {
+  corpo2.querySelectorAll("[data-dm-carico]").forEach((bottone) => {
     bottone.addEventListener(
       "click",
       () => prendiInCarico(bottone.dataset.dmCarico, bottone.dataset.dmPrendi === "1")
     );
   });
-  corpo.querySelector('[data-dm-tkt="congeda"]')?.addEventListener("click", () => {
-    state33.appena = null;
+  corpo2.querySelector('[data-dm-tkt="congeda"]')?.addEventListener("click", () => {
+    state34.appena = null;
     disegna2();
   });
-  corpo.querySelector('[data-dm-tkt="collega"]')?.addEventListener("click", collega);
-  corpo.querySelector('[data-dm-tkt="annulla"]')?.addEventListener("click", annullaCollegamento);
-  corpo.querySelector('[data-dm-tkt="scollega"]')?.addEventListener("click", scollega);
-  const corpoTesto = corpo.querySelector("#dm-tkt-corpo");
-  const conta2 = corpo.querySelector('[data-dm-tkt="conta"]');
+  corpo2.querySelector('[data-dm-tkt="collega"]')?.addEventListener("click", collega);
+  corpo2.querySelector('[data-dm-tkt="annulla"]')?.addEventListener("click", annullaCollegamento);
+  corpo2.querySelector('[data-dm-tkt="scollega"]')?.addEventListener("click", scollega);
+  const corpoTesto = corpo2.querySelector("#dm-tkt-corpo");
+  const conta2 = corpo2.querySelector('[data-dm-tkt="conta"]');
   if (corpoTesto && conta2) {
     corpoTesto.addEventListener("input", () => {
       conta2.textContent = `${corpoTesto.value.length} / ${MAX_CORPO}`;
@@ -35376,74 +35626,74 @@ function agganciaEventi2(corpo) {
 }
 async function invia() {
   raccogliBozza();
-  const titolo = clean13(state33.bozza.title);
-  const corpo = clean13(state33.bozza.body);
+  const titolo = clean13(state34.bozza.title);
+  const corpo2 = clean13(state34.bozza.body);
   if (!titolo) {
-    state33.avviso = `!${t("Manca il titolo.", "The title is missing.")}`;
+    state34.avviso = `!${t("Manca il titolo.", "The title is missing.")}`;
     disegna2();
     return;
   }
-  if (!corpo) {
-    state33.avviso = `!${t("Manca la descrizione.", "The description is missing.")}`;
+  if (!corpo2) {
+    state34.avviso = `!${t("Manca la descrizione.", "The description is missing.")}`;
     disegna2();
     return;
   }
-  state33.busy = true;
-  state33.avviso = "";
+  state34.busy = true;
+  state34.avviso = "";
   let chiediAutorizzazione = false;
   disegna2();
   try {
     const risposta = await chiedi3(WS_CREATE, {
-      ticket_type: state33.tipo,
+      ticket_type: state34.tipo,
       title: titolo,
-      body: corpo,
+      body: corpo2,
       diagnostics: await diagnostica()
     });
-    state33.bozza = { title: "", body: "", sezione: "", funzione: "" };
+    state34.bozza = { title: "", body: "", sezione: "", funzione: "" };
     const aperta = risposta?.ticket || {};
-    state33.appena = risposta?.delivered && aperta.issue_url ? { numero: clean13(aperta.remote_id), url: clean13(aperta.issue_url) } : null;
+    state34.appena = risposta?.delivered && aperta.issue_url ? { numero: clean13(aperta.remote_id), url: clean13(aperta.issue_url) } : null;
     if (risposta?.delivered) {
-      state33.avviso = t("Inviata. Grazie.", "Sent. Thank you.");
-    } else if (state33.delivery && !state33.account.connected) {
-      state33.avviso = t(
+      state34.avviso = t("Inviata. Grazie.", "Sent. Thank you.");
+    } else if (state34.delivery && !state34.account.connected) {
+      state34.avviso = t(
         "Salvata. Manca solo la firma: autorizza GitHub e parte.",
         "Saved. Only the signature is missing: authorize GitHub and it goes."
       );
       chiediAutorizzazione = true;
     } else {
-      state33.avviso = t(
+      state34.avviso = t(
         "Salvata. Partira' da sola appena l'invio sara' configurato.",
         "Saved. It will be sent on its own once sending is configured."
       );
     }
-    state33.tab = "mie";
+    state34.tab = "mie";
   } catch (errore) {
-    state33.avviso = `!${clean13(errore?.message) || t("Non riuscita.", "It did not work.")}`;
+    state34.avviso = `!${clean13(errore?.message) || t("Non riuscita.", "It did not work.")}`;
   } finally {
-    state33.busy = false;
+    state34.busy = false;
     await ricarica2();
     if (chiediAutorizzazione) await collega({ salvata: true });
   }
 }
 var RISPOSTE_FRESCHE = 60 * 1e3;
 async function sincronizza({ zitta = false } = {}) {
-  if (zitta && Date.now() - state33.syncAt < RISPOSTE_FRESCHE) return;
+  if (zitta && Date.now() - state34.syncAt < RISPOSTE_FRESCHE) return;
   if (!zitta) {
-    state33.busy = true;
+    state34.busy = true;
     disegna2();
   }
   try {
     const risposta = await chiedi3(WS_SYNC);
-    state33.tickets = Array.isArray(risposta?.tickets) ? risposta.tickets : state33.tickets;
-    state33.delivery = Boolean(risposta?.delivery);
-    state33.syncAt = Date.now();
+    state34.tickets = Array.isArray(risposta?.tickets) ? risposta.tickets : state34.tickets;
+    state34.delivery = Boolean(risposta?.delivery);
+    state34.syncAt = Date.now();
     await caricaNonLetti();
   } catch (errore) {
     if (!zitta) {
-      state33.avviso = `!${clean13(errore?.message) || t("Non riuscita.", "It did not work.")}`;
+      state34.avviso = `!${clean13(errore?.message) || t("Non riuscita.", "It did not work.")}`;
     }
   } finally {
-    state33.busy = false;
+    state34.busy = false;
     installaTessera2();
     disegna2();
   }
@@ -35451,36 +35701,36 @@ async function sincronizza({ zitta = false } = {}) {
 async function caricaNonLetti() {
   try {
     const risposta = await chiedi3(WS_UNREAD);
-    state33.nonLetti = Array.isArray(risposta?.messages) ? risposta.messages : [];
+    state34.nonLetti = Array.isArray(risposta?.messages) ? risposta.messages : [];
   } catch {
   }
 }
 function nonLetto(numero10) {
-  return state33.nonLetti.some((voce) => Number(voce?.number) === Number(numero10));
+  return state34.nonLetti.some((voce) => Number(voce?.number) === Number(numero10));
 }
 async function elimina(id) {
   if (!id) return;
   try {
     await chiedi3(WS_DELETE, { ticket_id: id });
   } catch (errore) {
-    state33.avviso = `!${clean13(errore?.message) || t("Non riuscita.", "It did not work.")}`;
+    state34.avviso = `!${clean13(errore?.message) || t("Non riuscita.", "It did not work.")}`;
   }
   await ricarica2();
 }
 async function caricaCoda2({ zitta = false } = {}) {
-  if (zitta && Array.isArray(state33.queue) && Date.now() - state33.queueAt < CODA_FRESCA) return;
+  if (zitta && Array.isArray(state34.queue) && Date.now() - state34.queueAt < CODA_FRESCA) return;
   try {
     const risposta = await chiedi3(WS_QUEUE2);
-    state33.queue = Array.isArray(risposta?.tickets) ? risposta.tickets : [];
-    state33.queueAt = Date.now();
-    state33.codaErrore = "";
+    state34.queue = Array.isArray(risposta?.tickets) ? risposta.tickets : [];
+    state34.queueAt = Date.now();
+    state34.codaErrore = "";
     await caricaNonLetti();
   } catch (errore) {
     const motivo = clean13(errore?.message) || t("Coda non raggiungibile.", "Queue unreachable.");
-    state33.codaErrore = motivo;
+    state34.codaErrore = motivo;
     if (zitta) return;
-    state33.queue = [];
-    state33.avviso = `!${motivo}`;
+    state34.queue = [];
+    state34.avviso = `!${motivo}`;
   }
   if (zitta) aggiornaIlCruscotto();
   else disegna2();
@@ -35495,21 +35745,21 @@ function aggiornaIlCruscotto() {
 async function apriFilo(numero10) {
   const chiave2 = String(Number(numero10) || 0);
   if (chiave2 === "0") return;
-  if (state33.fili[chiave2]) {
-    delete state33.fili[chiave2];
+  if (state34.fili[chiave2]) {
+    delete state34.fili[chiave2];
     disegna2();
     return;
   }
-  if (state33.filiInCorso[chiave2]) return;
-  state33.filiInCorso[chiave2] = true;
+  if (state34.filiInCorso[chiave2]) return;
+  state34.filiInCorso[chiave2] = true;
   disegna2();
   try {
-    state33.fili[chiave2] = await chiedi3(WS_THREAD2, { number: Number(chiave2) });
-    state33.nonLetti = state33.nonLetti.filter((voce) => Number(voce?.number) !== Number(chiave2));
+    state34.fili[chiave2] = await chiedi3(WS_THREAD2, { number: Number(chiave2) });
+    state34.nonLetti = state34.nonLetti.filter((voce) => Number(voce?.number) !== Number(chiave2));
   } catch (errore) {
-    state33.avviso = `!${clean13(errore?.message) || t("Non riuscita.", "It did not work.")}`;
+    state34.avviso = `!${clean13(errore?.message) || t("Non riuscita.", "It did not work.")}`;
   } finally {
-    delete state33.filiInCorso[chiave2];
+    delete state34.filiInCorso[chiave2];
     disegna2();
   }
 }
@@ -35521,33 +35771,33 @@ async function scrivi(numero10) {
   if (!issue) return;
   const testo2 = campoDi2(`dm-tkt-mio-${issue}`);
   if (!testo2) return;
-  state33.busy = true;
+  state34.busy = true;
   disegna2();
   try {
     await chiedi3(WS_REPLY, { number: issue, message: testo2 });
-    state33.avviso = t("Messaggio mandato.", "Message sent.");
-    delete state33.fili[String(issue)];
+    state34.avviso = t("Messaggio mandato.", "Message sent.");
+    delete state34.fili[String(issue)];
   } catch (errore) {
-    state33.avviso = `!${clean13(errore?.message) || t("Non riuscita.", "It did not work.")}`;
+    state34.avviso = `!${clean13(errore?.message) || t("Non riuscita.", "It did not work.")}`;
   } finally {
-    state33.busy = false;
+    state34.busy = false;
     disegna2();
   }
 }
 async function prendiInCarico(numero10, prendi) {
   const issue = Number(numero10) || 0;
   if (!issue) return;
-  state33.busy = true;
+  state34.busy = true;
   disegna2();
   try {
     await chiedi3(WS_TAKE, { number: issue, take: Boolean(prendi) });
-    state33.avviso = prendi ? t("Presa in carico.", "Taken.") : t("Lasciata libera.", "Released.");
-    state33.queue = null;
+    state34.avviso = prendi ? t("Presa in carico.", "Taken.") : t("Lasciata libera.", "Released.");
+    state34.queue = null;
   } catch (errore) {
-    state33.avviso = `!${clean13(errore?.message) || t("Non riuscita.", "It did not work.")}`;
+    state34.avviso = `!${clean13(errore?.message) || t("Non riuscita.", "It did not work.")}`;
   } finally {
-    state33.busy = false;
-    if (state33.queue === null) await caricaCoda2();
+    state34.busy = false;
+    if (state34.queue === null) await caricaCoda2();
     else disegna2();
   }
 }
@@ -35556,24 +35806,24 @@ async function rispondi(numero10, chiusura) {
   if (!issue) return;
   const testo2 = campoDi2(`dm-tkt-risposta-${issue}`);
   if (!testo2 && !chiusura) return;
-  state33.busy = true;
+  state34.busy = true;
   disegna2();
   try {
     await chiedi3(WS_ANSWER2, { number: issue, reply: testo2, close: chiusura || "" });
-    state33.avviso = t("Risposta pubblicata.", "Reply published.");
-    delete state33.fili[String(issue)];
-    state33.queue = null;
+    state34.avviso = t("Risposta pubblicata.", "Reply published.");
+    delete state34.fili[String(issue)];
+    state34.queue = null;
   } catch (errore) {
-    state33.avviso = `!${clean13(errore?.message) || t("Non riuscita.", "It did not work.")}`;
+    state34.avviso = `!${clean13(errore?.message) || t("Non riuscita.", "It did not work.")}`;
   } finally {
-    state33.busy = false;
-    if (state33.queue === null) await caricaCoda2();
+    state34.busy = false;
+    if (state34.queue === null) await caricaCoda2();
     else disegna2();
   }
 }
 function installSegnalazioniSection() {
-  if (!doc || state33.installed) return state33;
-  state33.installed = true;
+  if (!doc || state34.installed) return state34;
+  state34.installed = true;
   installStyle("dm-tkt-style", CSS3);
   const prova = () => {
     if (installaTessera2()) ricarica2();
@@ -35600,7 +35850,7 @@ function installSegnalazioniSection() {
     // Serve al generatore delle anteprime: semina lo stato, poi chiede la pagina.
     sistema: sistemaIlCruscotto
   });
-  return state33;
+  return state34;
 }
 senzaCadere(installSegnalazioniSection);
 
@@ -35970,6 +36220,7 @@ export {
   ragioneDelRifiuto,
   pickMediaImage,
   installMediaPickerSection,
+  installRicordatiDiSalvare,
   liveState,
   mostraLeCaselleDellaColonnina,
   bozzaAperta,

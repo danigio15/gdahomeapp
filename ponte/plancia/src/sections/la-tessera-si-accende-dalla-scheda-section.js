@@ -104,13 +104,20 @@ export function ensureTesseraDallaScheda() {
     blocco?.remove();
     return false;
   }
+  /* In fondo, ma prima della fascia della sezione e del salvataggio: quei due
+   * si tengono in coda per conto loro (`config-uniformity-section.js`), e due
+   * blocchi che si dicono ultimi si spingono a vicenda a ogni passata — la
+   * scheda del MiniPC non stava mai ferma. */
+  let piede = corpo.querySelector(".dm-section-switch");
+  while (piede && piede.parentElement !== corpo) piede = piede.parentElement;
+  piede ||= corpo.querySelector(":scope > [data-dm-save-footer]");
   if (!blocco) {
     blocco = doc.createElement("section");
     blocco.id = BLOCK_ID;
     blocco.className = "dm-tessc";
-    corpo.append(blocco);
-  } else if (blocco.parentElement !== corpo || blocco.nextElementSibling) {
-    corpo.append(blocco);
+    corpo.insertBefore(blocco, piede);
+  } else if (blocco.parentElement !== corpo || blocco.nextElementSibling !== piede) {
+    corpo.insertBefore(blocco, piede);
   }
   const acceso = siVede();
   const firma = acceso ? "1" : "0";

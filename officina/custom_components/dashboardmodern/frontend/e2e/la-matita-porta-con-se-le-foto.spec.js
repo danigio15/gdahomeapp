@@ -183,6 +183,8 @@ test("salvare le foto della seconda auto non porta addosso quelle della prima", 
 test("un percorso battuto e non salvato non segue chi cambia auto", async ({ page }, testInfo) => {
   await avvia(page, testInfo);
   await apriLaScheda(page);
+  /* Le entita' e le foto si aprono con la matita. */
+  await page.locator("#ed-body [data-ev-edit]").nth(0).click();
 
   /* Si comincia a scrivere sulla B10 e poi ci si pente, aprendo la T03: il
    * segno «questo campo l'ha battuto una persona» appartiene alla B10, e con

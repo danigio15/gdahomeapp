@@ -22,6 +22,7 @@ import {
   vehiclePhotos,
 } from "../core/vehicle-model.js";
 import { pickMediaImage } from "./media-picker-section.js";
+import { dimenticaLeModifiche } from "./ricordati-di-salvare-section.js";
 import { allStates, clean, dashboardStore, doc, esc, installStyle, onEditorRedraw, readJson, root, section, setLexicalGlobal, t, wrapFunction, writeJsonIfChanged, senzaCadere } from "./shared.js";
 
 globalThis.__DM_20260815C__ = true;
@@ -899,7 +900,13 @@ export function ensureVehiclePhotoEditor() {
  * nuova, «💾 Salva auto» salva quella che si sta compilando. */
 function ensureCarListDecor() {
   const campoNome = doc?.getElementById("ed-evcar-name");
-  if (!campoNome) return false;
+  if (!campoNome) {
+    /* Fuori dalla scheda dei veicoli il segno non deve restare: piegherebbe
+     * il salvataggio delle altre schede. */
+    const corpo = doc?.getElementById("ed-body");
+    if (corpo?.dataset?.evModulo) delete corpo.dataset.evModulo;
+    return false;
+  }
   // La scheda e' aperta: da qui in poi ogni auto deve avere la sua chiave.
   ensureCarKeys();
   const contenitore = doc.getElementById("ed-body");
@@ -997,6 +1004,10 @@ function ensureCarListDecor() {
          * bottoni: qui si riempiono solo i campi con le entita' di QUELLA
          * auto, e niente esce da questa scheda. */
         caricaCampiDaProfilo(auto);
+        /* I campi li ha riempiti la matita, non chi configura: niente da
+         * ricordare di salvare finche' non cambia qualcosa lui. */
+        dimenticaLeModifiche();
+        apriIlModulo(contenitore);
         setEditingKey(uidDi(auto || {}));
         /* La matita e' l'unico gesto che dice «sto modificando LEI»: da qui
          * salvare con un nome diverso rinomina, invece di creare una riga. */
@@ -1093,11 +1104,14 @@ function ensureCarListDecor() {
           if (dentro) dentro.value = "";
           paintPhotoPreview(casella);
         }
+        apriIlModulo(contenitore);
         campo.focus();
       });
       rigaNome.insertAdjacentElement("beforebegin", aggiungi);
     }
   }
+
+  segnaIlModulo(contenitore, salva);
 
   const intro = [...contenitore.querySelectorAll(".ed-intro")].find((nodo) =>
     /salvale come profilo|save them as a profile|Aggiungi auto per crearne/i.test(clean(nodo.textContent)),
@@ -1110,6 +1124,66 @@ function ensureCarListDecor() {
     if (clean(intro.textContent) !== clean(testo)) intro.textContent = testo;
   }
   return true;
+}
+
+/* Con un veicolo gia' salvato, la scheda mostra i veicoli e basta.
+ *
+ * «Se e' gia' configurata una vettura non mi devi far vedere tutte le entita'
+ * sempre: solo quelle salvate e il tasto Aggiungi, e in quel momento escono le
+ * entita'; se devo modificarne una gia' creata premo la matita accanto al nome
+ * e compaiono.» Il modulo — marchio, entita', foto, nome, mezzo, motore — sta
+ * nel documento come prima, e lo si piega: ＋ Nuovo veicolo e la ✏️ lo aprono,
+ * il salvataggio lo richiude. Senza nessun veicolo resta sempre aperto: li'
+ * non c'e' niente da mostrare se non il modo di crearne uno.
+ *
+ * Si piega con un segno sul corpo e una classe sui pezzi, non spostandoli:
+ * l'ordine di questa scheda lo tengono gia' altri due moduli, e un terzo che
+ * sposta i nodi farebbe a spinte con loro. */
+const PEZZO_DEL_MODULO = "dm-ev-modulo";
+
+function fisarmonicaDelModulo(contenitore) {
+  return [...contenitore.querySelectorAll("details.ed-acc")].find((nodo) =>
+    nodo.querySelector('.ed-slot-in[data-ref^="dm.ev_"]'),
+  );
+}
+
+function segnaIlModulo(contenitore, salva) {
+  const pezzi = [
+    fisarmonicaDelModulo(contenitore),
+    salva?.parentElement,
+    contenitore.querySelector("[data-ev-mezzo-riga]"),
+    contenitore.querySelector("[data-ev-tipo-riga]"),
+    contenitore.querySelector("[data-ev-kwh-riga]"),
+  ];
+  for (const pezzo of pezzi)
+    if (pezzo && pezzo !== contenitore) pezzo.classList.add(PEZZO_DEL_MODULO);
+  const segno = profiles().length > 0 && !state.evModuloAperto ? "chiuso" : "aperto";
+  if (contenitore.dataset.evModulo !== segno) contenitore.dataset.evModulo = segno;
+  if (salva && !salva.dataset.evChiudeIlModulo) {
+    salva.dataset.evChiudeIlModulo = "true";
+    salva.addEventListener("click", () => {
+      /* Senza nome non si salva niente, e il modulo resta dov'e'. */
+      if (!clean(doc.getElementById("ed-evcar-name")?.value)) return;
+      root.setTimeout?.(chiudiIlModulo, 0);
+    });
+  }
+}
+
+function apriIlModulo(contenitore) {
+  state.evModuloAperto = true;
+  contenitore.dataset.evModulo = "aperto";
+  const fisarmonica = fisarmonicaDelModulo(contenitore);
+  if (!fisarmonica) return;
+  fisarmonica.open = true;
+  try {
+    fisarmonica.scrollIntoView?.({ block: "start", behavior: "smooth" });
+  } catch (_error) {}
+}
+
+function chiudiIlModulo() {
+  state.evModuloAperto = false;
+  const contenitore = doc?.getElementById("ed-body");
+  if (contenitore && profiles().length > 0) contenitore.dataset.evModulo = "chiuso";
 }
 
 function legacyProfiles() { const cars = readJson("cd_ev_cars", []); return Array.isArray(cars) ? cars : []; }
@@ -2087,6 +2161,8 @@ function installStyles() {
 #ed-body#ed-body .ed-slot[hidden]{display:none!important}
   `);
   installStyle("dm-ev-section-style",`
+#ed-body#ed-body[data-ev-modulo="chiuso"] .dm-ev-modulo,
+#ed-body#ed-body[data-ev-modulo="chiuso"] > .dm-save-footer{display:none!important}
 #ed-body .dm-ev-enabled{
   flex:0 0 42px;width:42px;height:24px;position:relative;margin-right:8px;border:0;border-radius:999px;
   cursor:pointer;background:color-mix(in srgb,var(--text-dim,#94a3b8) 32%,transparent);
@@ -2114,6 +2190,15 @@ function installStyles() {
 
 function bindEditorEntryPoints() {
   onEditorRedraw("__dmEvSection_editorSwitch", scheduleEvSyncSettled);
+  /* Il modulo aperto vale finche' si resta nella scheda dei veicoli: tornando
+   * da un'altra scheda, o riaprendo la configurazione, si riparte dall'elenco. */
+  onEditorRedraw("__dmEvSection_modulo", () => {
+    if (clean(doc?.querySelector?.(".ed-tab.active")?.dataset?.tab) !== "sez2")
+      state.evModuloAperto = false;
+  });
+  wrapFunction("apriConfigEntita", "__dmEvSection_modulo_apri", () => {
+    state.evModuloAperto = false;
+  });
   /* Riaprire la configurazione apre una seduta nuova.
    *
    * La seduta di scrittura vive in memoria e il guscio, chiudendo, la finestra

@@ -2294,42 +2294,42 @@
      "metti": []
     },
     {
-     "riga": 4163,
+     "riga": 4165,
      "via": 1,
      "metti": [
       "    edToast(bad ? ('⚠️ ' + bad + ' invalid entities skipped — the rest is saved') : (n ? '💾 Section saved (' + n + ' changes) — reload to apply' : '💾 Section saved'));"
      ]
     },
     {
-     "riga": 4171,
+     "riga": 4173,
      "via": 1,
      "metti": [
       "    if (!name || !temp.includes('.')) { alert('Enter a name and temperature sensor'); return; }"
      ]
     },
     {
-     "riga": 4179,
+     "riga": 4181,
      "via": 1,
      "metti": [
       "    edToast('Room added');"
      ]
     },
     {
-     "riga": 4217,
+     "riga": 4219,
      "via": 1,
      "metti": [
       "/* v254: mostra le card \"Editor Plancia\" e \"Configure Entities\" solo agli admin. */"
      ]
     },
     {
-     "riga": 4335,
+     "riga": 4337,
      "via": 1,
      "metti": [
       "    card.appendChild(mkItem('⚙️', 'Configuration / Editor', () => apriConfigEntita()));"
      ]
     },
     {
-     "riga": 4337,
+     "riga": 4339,
      "via": 2,
      "metti": [
       "    card.appendChild(mkItem('🔄', 'Full reset', () => wzResetAll(), '#dc2626'));",
@@ -2337,49 +2337,49 @@
      ]
     },
     {
-     "riga": 4390,
+     "riga": 4392,
      "via": 1,
      "metti": [
       "  document.querySelector('.confirm-btn-cancel').textContent = opts.cancelLabel || 'Cancel';"
      ]
     },
     {
-     "riga": 4431,
+     "riga": 4433,
      "via": 1,
      "metti": [
       "        const txt = isOn ? 'IN FUNZIONE' : 'OFF';"
      ]
     },
     {
-     "riga": 4464,
+     "riga": 4466,
      "via": 1,
      "metti": [
       "  document.getElementById('details-title').innerHTML = window._luciPopupTitle ? ('💡 ' + cdEsc(window._luciPopupTitle.toUpperCase())) : '💡 LIGHTS';"
      ]
     },
     {
-     "riga": 4466,
+     "riga": 4468,
      "via": 1,
      "metti": [
       "  // v255: raggruppo per stanza usando il pattern \"Room - Dettaglio\""
      ]
     },
     {
-     "riga": 4504,
+     "riga": 4506,
      "via": 0,
      "metti": [
       ""
      ]
     },
     {
-     "riga": 4515,
+     "riga": 4517,
      "via": 1,
      "metti": [
       "      <div class=\"lgx-state\">${l.isOn ? 'ON' : 'OFF'}</div>"
      ]
     },
     {
-     "riga": 4519,
+     "riga": 4521,
      "via": 2,
      "metti": [
       "      <div class=\"lgx-bar-l\"><span class=\"lgx-dot ${onCount>0?'active':''}\"></span>${onCount>0 ? '<b>'+onCount+'</b><span>'+(onCount===1?'on':'on')+'</span>' : '<span>All off</span>'}</div>",
@@ -2387,14 +2387,14 @@
      ]
     },
     {
-     "riga": 4544,
+     "riga": 4546,
      "via": 1,
      "metti": [
       "    html += `<div class=\"lgx-zona\">OTHER AREAS</div>`;"
      ]
     },
     {
-     "riga": 4553,
+     "riga": 4555,
      "via": 3,
      "metti": [
       "/* v0.9.7 (#8): incremental refresh of the lights popup — no more full innerHTML",
@@ -2403,33 +2403,33 @@
      ]
     },
     {
-     "riga": 4573,
+     "riga": 4575,
      "via": 1,
      "metti": [
       "    if (st) { const t = isOn ? 'ON' : 'OFF'; if (st.textContent !== t) st.textContent = t; }"
      ]
     },
     {
-     "riga": 4575,
+     "riga": 4577,
      "via": 1,
      "metti": []
     },
     {
-     "riga": 4578,
+     "riga": 4580,
      "via": 1,
      "metti": [
       "    const newBar = `<div class=\"lgx-bar-l\"><span class=\"lgx-dot ${onCount>0?'active':''}\"></span>${onCount>0 ? '<b>'+onCount+'</b><span>on</span>' : '<span>All off</span>'}</div>${onCount>0 ? '<div class=\"lgx-alloff\" onclick=\"event.stopPropagation(); luciTutteOff()\">Turn all off</div>' : ''}`;"
      ]
     },
     {
-     "riga": 4930,
+     "riga": 4932,
      "via": 1,
      "metti": [
       "    prese:     { name: 'Sockets', icon: '🔌', color: '#475569', fn: () => apriTuttePrese() },"
      ]
     },
     {
-     "riga": 5119,
+     "riga": 5121,
      "via": 3,
      "metti": [
       "/* v292: primo stato REALMENTE mappato di una lista di riferimenti — i \"ghost\"",
@@ -2437,26 +2437,26 @@
      ]
     },
     {
-     "riga": 5136,
+     "riga": 5138,
      "via": 3,
      "metti": []
     },
     {
-     "riga": 5148,
+     "riga": 5150,
      "via": 1,
      "metti": [
       "   L'utente collega i totali \"lifetime\" (gli stessi del tab Energy di HA);"
      ]
     },
     {
-     "riga": 5251,
+     "riga": 5253,
      "via": 1,
      "metti": [
       "                badge.textContent = 'OFF';"
      ]
     },
     {
-     "riga": 5305,
+     "riga": 5307,
      "via": 2,
      "metti": [
       "            if (!isNaN(pw)) { on = pw > 5; st = on ? 'Running' : (sw ? (sw.state === 'on' ? 'Ready' : 'Off') : 'Off'); }",
@@ -2464,28 +2464,28 @@
      ]
     },
     {
-     "riga": 5329,
+     "riga": 5331,
      "via": 1,
      "metti": [
       "function cdRoomFloorOf(roomName){ if(!roomName) return ''; var rs=(typeof getStanze==='function'?getStanze():[]); for(var i=0;i<rs.length;i++){ if(rs[i]&&rs[i].name===roomName) return rs[i].floor||''; } return ''; } function cdGroupCards(items, cardFn){ try { var anyRoom=false; items.forEach(function(u){ if(u&&u.room) anyRoom=true; }); if(!anyRoom) return items.map(cardFn).join(''); var floors=(typeof cdFloorNames==='function'?cdFloorNames():[]); function fIdx(f){ var i=floors.indexOf(f); return i<0?9999:i; } var sorted=items.slice().sort(function(a,b){ var fa=cdRoomFloorOf(a.room), fb=cdRoomFloorOf(b.room); if(fIdx(fa)!==fIdx(fb)) return fIdx(fa)-fIdx(fb); var ra=a.room||'zzzz', rb=b.room||'zzzz'; if(ra!==rb) return ra<rb?-1:1; return 0; }); var out=''; var lastKey=null; sorted.forEach(function(u){ var f=cdRoomFloorOf(u.room); var key=(f||'')+'|'+(u.room||''); if(key!==lastKey){ lastKey=key; var lbl = u.room ? ((f?('🏢 '+f+' · '):'')+'🏠 '+u.room) : '🏠 Senza stanza'; out += '<div style=\"grid-column:1/-1; font-weight:800; opacity:0.75; font-size:13px; letter-spacing:0.5px; padding:8px 2px 0;\">'+cdEsc(lbl)+'</div>'; } out += cardFn(u); }); return out; } catch(e){ return items.map(cardFn).join(''); } } function buildClimaCards() {"
      ]
     },
     {
-     "riga": 5340,
+     "riga": 5342,
      "via": 1,
      "metti": [
       "              <div class=\"cp-badge\">OFF</div>"
      ]
     },
     {
-     "riga": 5344,
+     "riga": 5346,
      "via": 1,
      "metti": [
       "              <div class=\"cp-temp-current-wrap\"><span class=\"cp-temp-current-lbl\">Room</span><span class=\"cp-temp-current\">--°</span></div>"
      ]
     },
     {
-     "riga": 5356,
+     "riga": 5358,
      "via": 3,
      "metti": [
       "    if (gF) gF.innerHTML = cdGroupCards(uFreddo, card) || '<div class=\"ed-empty\" style=\"grid-column:1/-1; justify-content:center; flex-wrap:wrap;\">No air conditioner configured</div>';",
@@ -2494,14 +2494,14 @@
      ]
     },
     {
-     "riga": 5378,
+     "riga": 5380,
      "via": 1,
      "metti": [
       "/* The veil lifts when the dashboard is the real one, not when the shell is done."
      ]
     },
     {
-     "riga": 5380,
+     "riga": 5382,
      "via": 7,
      "metti": [
       " * The shell paints its own Home — the big weather block in the middle of the",
@@ -2513,7 +2513,7 @@
      ]
     },
     {
-     "riga": 5388,
+     "riga": 5390,
      "via": 4,
      "metti": [
       " * Now it waits for the modules to take over. If they never do — a module that",
@@ -2522,42 +2522,42 @@
      ]
     },
     {
-     "riga": 5490,
+     "riga": 5492,
      "via": 1,
      "metti": [
       "            console.warn('[Dashboard] New version ' + target + ' but the cache is not updating. Clear the browser/app cache.');"
      ]
     },
     {
-     "riga": 5494,
+     "riga": 5496,
      "via": 1,
      "metti": [
       "        console.log('[Dashboard] Updating ' + DASHBOARD_VERSION + ' \\u2192 ' + target + ': reloading\\u2026');"
      ]
     },
     {
-     "riga": 5506,
+     "riga": 5508,
      "via": 1,
      "metti": [
       "    o.innerHTML = '<div style=\"width:46px; height:46px; border:4px solid ' + (dark ? 'rgba(56,189,248,0.22)' : 'rgba(14,165,233,0.22)') + '; border-top-color:#0ea5e9; border-radius:50%; animation:cdSpin 0.8s linear infinite;\"></div><div style=\"font-size:15px; font-weight:800; letter-spacing:1px; color:' + (dark ? '#7dd3fc' : '#0369a1') + '; text-transform:uppercase;\">Updating to v' + cdEsc(target) + '\\u2026</div>';"
      ]
     },
     {
-     "riga": 5509,
+     "riga": 5511,
      "via": 1,
      "metti": [
       "/* immediate check on open: content stays covered by the boot overlay until we know whether to update, so the change is never visible */"
      ]
     },
     {
-     "riga": 5524,
+     "riga": 5526,
      "via": 1,
      "metti": [
       "        /* v0.8.2: a ref is covered also when the period engine derives it from the twin field (day←month) */"
      ]
     },
     {
-     "riga": 5526,
+     "riga": 5528,
      "via": 3,
      "metti": [
       "        if (allUnmapped) {",
@@ -2567,26 +2567,26 @@
      ]
     },
     {
-     "riga": 5532,
+     "riga": 5534,
      "via": 1,
      "metti": []
     },
     {
-     "riga": 5549,
+     "riga": 5551,
      "via": 1,
      "metti": [
       "    b.innerHTML = '<b style=\"font-size:15px;\">👋 Your dashboard is almost ready!</b><br>You have not linked your entities yet, so the cards are hidden.<br><button onclick=\"(window.__DASHBOARDMODERN_HOSTED__ ? apriConfigEntita : apriSetupWizard)()\" style=\"margin-top:12px; width:100%; padding:13px; border:none; border-radius:14px; background:linear-gradient(135deg,#0ea5e9,#0369a1); color:#fff; font-weight:800; font-size:14px; letter-spacing:0.5px; cursor:pointer; box-shadow:0 6px 16px rgba(2,132,199,0.35);\">⚙️ Set up the dashboard</button><br><span style=\"opacity:0.75; font-size:12px; display:block; margin-top:8px;\"></span>';"
      ]
     },
     {
-     "riga": 5615,
+     "riga": 5617,
      "via": 1,
      "metti": [
       "    if (!cam) { list.innerHTML = '<div class=\"cam-popup-error\">⚠️ Camera not found</div>'; return; }"
      ]
     },
     {
-     "riga": 5619,
+     "riga": 5621,
      "via": 4,
      "metti": [
       "/* ═══ v0.9.8: MULTI-STRATEGY CAMERA ENGINE (from Casa Donato) ═══",
@@ -2596,7 +2596,7 @@
      ]
     },
     {
-     "riga": 5626,
+     "riga": 5628,
      "via": 3,
      "metti": [
       "/* The snapshots: how long to wait between one frame and the next, and after",
@@ -2606,119 +2606,119 @@
      ]
     },
     {
-     "riga": 5642,
+     "riga": 5644,
      "via": 1,
      "metti": [
       "const _DM_CAM_MOTIVI = { 'senza-nome-di-flusso': 'WebRTC: skipped \\u2014 fill in \\u201cgo2rtc stream name\\u201d in the Cameras tab (the camera name is not the lever)', 'browser-senza-webrtc': 'WebRTC: skipped, the browser does not support it', 'browser-senza-hls': 'HLS: skipped, hls.js not loaded', 'telecamera-che-dorme': 'MJPEG: skipped, the camera only streams on demand', 'go2rtc-fuori-portata': 'WebRTC: the go2rtc stream name only works with the dashboard opened outside Home Assistant \\u2014 in here the camera goes through its entity', 'appena-caduta': 'WebRTC: tried first with its full time, the video did not arrive', 'senza-flusso-dichiarato': 'HLS: skipped, Home Assistant declares no stream for this camera' };"
      ]
     },
     {
-     "riga": 5647,
+     "riga": 5649,
      "via": 1,
      "metti": [
       "    if (!cam || !cam.entity) { content.innerHTML = '<div class=\"cam-popup-error\">⚠️ Camera without an entity<br><span style=\"font-weight:500;opacity:.85;font-size:12px;text-transform:none;letter-spacing:0;\">The Home Assistant entity is missing in the Cameras tab</span></div>'; return; }"
      ]
     },
     {
-     "riga": 5650,
+     "riga": 5652,
      "via": 1,
      "metti": [
       "        content.innerHTML = `<div class=\"cam-popup-error\">⚠️ Camera offline<br><span style=\"font-weight:500;opacity:.85;font-size:12px;text-transform:none;letter-spacing:0;\">${cdEsc(cam.entity)} not responding (state: ${cdEsc(camState || 'unknown')})</span></div>`;"
      ]
     },
     {
-     "riga": 5686,
+     "riga": 5688,
      "via": 1,
      "metti": [
       "    content.innerHTML = '<div class=\"cam-popup-error\">⚠️ Unable to open the camera<br><span style=\"font-weight:500;opacity:.85;font-size:12px;text-transform:none;letter-spacing:0;\">' + righe.map(function (riga) { return cdEsc(riga); }).join('<br>') + '</span></div>';"
      ]
     },
     {
-     "riga": 5697,
+     "riga": 5699,
      "via": 1,
      "metti": [
       "    content.innerHTML = `<div class=\"cam-popup-body\"><div id=\"video-iframe-container\" class=\"cam-zoom-container\" style=\"position:relative; padding-top:56.25%;\"><video id=\"cam-video\" autoplay playsinline></video><div id=\"cam-audio-mini\" class=\"cam-audio-mini-banner\" onclick=\"dmUnlockAudioWebRTC()\">🔇 Tap per audio</div><div id=\"cam-video-loader\" class=\"cam-video-loader-overlay\"><div class=\"cam-popup-spinner\"></div><div>Connecting WebRTC…</div></div>${_DM_FS_BTNS}</div><button id=\"toggle-fs-main-btn\" class=\"cam-fs-btn\" onclick=\"toggleFullScreenCam()\">🔲 Fullscreen</button></div>`;"
      ]
     },
     {
-     "riga": 5706,
+     "riga": 5708,
      "via": 1,
      "metti": [
       "        setTimeout(() => { if (done) return; done = true; reject(new Error(`WebRTC: no frame within ${Math.round((attesa || 3000) / 1000)}s`)); }, attesa || 3000);"
      ]
     },
     {
-     "riga": 5713,
+     "riga": 5715,
      "via": 1,
      "metti": [
       "    if (!ws || ws.readyState !== WebSocket.OPEN) throw new Error('HA WebSocket not active');"
      ]
     },
     {
-     "riga": 5717,
+     "riga": 5719,
      "via": 1,
      "metti": [
       "        pendingWsCallbacks[reqId] = (m) => { clearTimeout(tid); if (m.success && m.result && m.result.url) resolve(m.result.url); else reject(new Error((m.error && m.error.message) || 'HLS not available')); };"
      ]
     },
     {
-     "riga": 5720,
+     "riga": 5722,
      "via": 1,
      "metti": [
       "    content.innerHTML = `<div class=\"cam-popup-body\"><div id=\"video-iframe-container\" class=\"cam-zoom-container\" style=\"position:relative; padding-top:56.25%;\"><video id=\"cam-hls\" autoplay playsinline controls></video><div id=\"cam-audio-mini\" class=\"cam-audio-mini-banner\" onclick=\"dmUnlockAudio()\">🔇 Tap per audio</div><div id=\"cam-video-loader\" class=\"cam-video-loader-overlay\"><div class=\"cam-popup-spinner\"></div><div>Connecting…</div></div>${_DM_FS_BTNS}</div><button id=\"toggle-fs-main-btn\" class=\"cam-fs-btn\" onclick=\"toggleFullScreenCam()\">🔲 Fullscreen</button><div id=\"cam-audio-panel\" class=\"cam-audio-panel\"><div class=\"cam-audio-panel-row\"><div id=\"cam-audio-status\" class=\"cam-audio-status muted\">🔊 Audio</div><button class=\"cam-audio-toggle-btn\" onclick=\"dmToggleAudio()\" title=\"Mute/unmute\">🔊</button><input id=\"cam-audio-volume\" class=\"cam-audio-volume\" type=\"range\" min=\"0\" max=\"100\" value=\"100\" oninput=\"dmSetVolume(this.value)\"><button class=\"cam-audio-info-btn\" onclick=\"dmToggleDiag(this)\" title=\"Diagnostics\">ℹ</button></div><div id=\"cam-audio-diag\" class=\"cam-audio-diag\">Waiting…</div></div></div>`;"
      ]
     },
     {
-     "riga": 5731,
+     "riga": 5733,
      "via": 1,
      "metti": [
       "    } else { throw new Error('HLS not supported and hls.js missing'); }"
      ]
     },
     {
-     "riga": 5740,
+     "riga": 5742,
      "via": 1,
      "metti": [
       "        setTimeout(() => { if (done) return; done = true; reject(new Error(`HLS: no frame within ${Math.round((attesa || 10000) / 1000)}s`)); }, attesa || 10000);"
      ]
     },
     {
-     "riga": 5752,
+     "riga": 5754,
      "via": 1,
      "metti": [
       "        catch (e) { throw new Error('No MJPEG URL: ' + (e.message || e)); }"
      ]
     },
     {
-     "riga": 5754,
+     "riga": 5756,
      "via": 1,
      "metti": [
       "    content.innerHTML = `<div class=\"cam-popup-body\"><div id=\"video-iframe-container\" class=\"cam-zoom-container\" style=\"position:relative; padding-top:56.25%;\"><img id=\"cam-mjpeg\" src=\"${cdUrl(streamUrl)}\" alt=\"${cdEsc(cam.entity)}\"><div id=\"cam-video-loader\" class=\"cam-video-loader-overlay\"><div class=\"cam-popup-spinner\"></div><div>Connecting stream…</div></div>${_DM_FS_BTNS}</div><button id=\"toggle-fs-main-btn\" class=\"cam-fs-btn\" onclick=\"toggleFullScreenCam()\">🔲 Fullscreen</button><div class=\"cam-popup-hint\"><span class=\"cam-mode-badge mjpeg\">MJPEG</span> Continuous live stream</div></div>`;"
      ]
     },
     {
-     "riga": 5761,
+     "riga": 5763,
      "via": 1,
      "metti": [
       "        setTimeout(() => { if (done) return; done = true; reject(new Error(`MJPEG: no frame within ${Math.round((attesa || 3000) / 1000)}s`)); }, attesa || 3000);"
      ]
     },
     {
-     "riga": 5772,
+     "riga": 5774,
      "via": 1,
      "metti": [
       "    if (!buildUrl()) { content.innerHTML = `<div class=\"cam-popup-error\">⚠️ Stream unavailable<br><span style=\"font-weight:500;opacity:.85;font-size:12px;text-transform:none;letter-spacing:0;\">Camera ${cdEsc(cam.entity)} does not expose snapshots</span></div>`; return; }"
      ]
     },
     {
-     "riga": 5774,
+     "riga": 5776,
      "via": 1,
      "metti": [
       "    content.innerHTML = `<div class=\"cam-popup-body\"><div id=\"video-iframe-container\" class=\"cam-zoom-container\" style=\"position:relative; padding-top:56.25%;\"><img id=\"cam-polling\" alt=\"${cdEsc(cam.entity)}\"><div id=\"cam-video-loader\" class=\"cam-video-loader-overlay\"><div class=\"cam-popup-spinner\"></div><div>Loading…</div></div>${_DM_FS_BTNS}</div><button id=\"toggle-fs-main-btn\" class=\"cam-fs-btn\" onclick=\"toggleFullScreenCam()\">🔲 Fullscreen</button><button id=\"cam-audio-activate-btn\" class=\"cam-audio-btn\" onclick=\"dmAttivaAudio()\">🔊 Attiva audio</button><div class=\"cam-popup-hint\"><span class=\"cam-mode-badge polling\">SNAPSHOT</span> Preview ~2 fps · Tap \"Enable audio\" for audio + video</div></div>`;"
      ]
     },
     {
-     "riga": 5779,
+     "riga": 5781,
      "via": 8,
      "metti": [
       "    /* Since when we have been trying without seeing anything. Time decides",
@@ -2732,7 +2732,7 @@
      ]
     },
     {
-     "riga": 5788,
+     "riga": 5790,
      "via": 4,
      "metti": [
       "    /* Whether this loop is still the popup being watched. Closing it, or",
@@ -2742,7 +2742,7 @@
      ]
     },
     {
-     "riga": 5798,
+     "riga": 5800,
      "via": 2,
      "metti": [
       "        /* The frame has arrived now, and by now the popup may already belong",
@@ -2750,14 +2750,14 @@
      ]
     },
     {
-     "riga": 5811,
+     "riga": 5813,
      "via": 1,
      "metti": [
       "                content.innerHTML = '<div class=\"cam-popup-error\">⚠️ Camera not responding<br><span style=\"font-weight:500;opacity:.85;font-size:12px;text-transform:none;letter-spacing:0;\">Twenty seconds with no image: it may be off, or just very slow</span><br><button id=\"cam-riprova\" class=\"cam-fs-btn\">↻ Retry</button></div>';"
      ]
     },
     {
-     "riga": 5817,
+     "riga": 5819,
      "via": 2,
      "metti": [
       "        /* The next frame is asked for once the previous one is back: one at a",
@@ -2765,28 +2765,28 @@
      ]
     },
     {
-     "riga": 5834,
+     "riga": 5836,
      "via": 1,
      "metti": [
       "    catch (e) { dmCleanupWebRTC(); throw new Error('Unable to sign WebRTC URL: ' + (e.message || e)); }"
      ]
     },
     {
-     "riga": 5842,
+     "riga": 5844,
      "via": 1,
      "metti": [
       "        const tid = setTimeout(() => fail(new Error('WebRTC timeout (10s)')), 10000);"
      ]
     },
     {
-     "riga": 5848,
+     "riga": 5850,
      "via": 1,
      "metti": [
       "            else if (msg.type === 'error') { fail(new Error(msg.value || 'WebRTC server error')); }"
      ]
     },
     {
-     "riga": 5850,
+     "riga": 5852,
      "via": 2,
      "metti": [
       "        camWs.onerror = () => fail(new Error('WebRTC WebSocket unreachable'));",
@@ -2794,14 +2794,14 @@
      ]
     },
     {
-     "riga": 5932,
+     "riga": 5934,
      "via": 1,
      "metti": [
       "        if (!ws || ws.readyState !== WebSocket.OPEN) { reject(new Error('HA WebSocket not active')); return; }"
      ]
     },
     {
-     "riga": 5934,
+     "riga": 5936,
      "via": 2,
      "metti": [
       "        const tid = setTimeout(() => { if (pendingWsCallbacks[reqId]) { delete pendingWsCallbacks[reqId]; reject(new Error('Sign path timeout')); } }, 4000);",
@@ -2809,66 +2809,66 @@
      ]
     },
     {
-     "riga": 5969,
+     "riga": 5971,
      "via": 1,
      "metti": [
       "    if (dg) dg.textContent = 'Tracks: ' + tracks + ' · muted=' + v.muted + ' · vol=' + vol + '% · state=' + v.readyState;"
      ]
     },
     {
-     "riga": 5983,
+     "riga": 5985,
      "via": 1,
      "metti": [
       "    content.innerHTML = '<div class=\"cam-popup-body\"><div class=\"cam-zoom-container\" style=\"position:relative;padding-top:56.25%;\"><div class=\"cam-video-loader-overlay\"><div class=\"cam-popup-spinner\"></div><div>Starting HLS audio…</div></div></div></div>';"
      ]
     },
     {
-     "riga": 5985,
+     "riga": 5987,
      "via": 1,
      "metti": [
       "    catch (e) { content.innerHTML = `<div class=\"cam-popup-error\">⚠️ Audio unavailable<br><span style=\"font-weight:500;opacity:.85;font-size:12px;text-transform:none;letter-spacing:0;\">${cdEsc(e.message || e)}</span></div>`; setTimeout(() => { const c = document.getElementById('details-list'); if (c) dmCamPolling(cam, c); }, 3500); }"
      ]
     },
     {
-     "riga": 6032,
+     "riga": 6034,
      "via": 2,
      "metti": []
     },
     {
-     "riga": 6037,
+     "riga": 6039,
      "via": 1,
      "metti": []
     },
     {
-     "riga": 6054,
+     "riga": 6056,
      "via": 1,
      "metti": [
       "                       var nfRadar = document.querySelector('.dm-radar-blocco') ? ' The radar above is a separate thing and works on its own.' : ''; list.innerHTML = `<div style=\"text-align:center; padding:20px; color:var(--text-dim,#64748b); line-height:1.5;\"><strong style=\"display:block; font-size:14px; font-weight:800; color:var(--text,#0f172a); margin-bottom:6px;\">This weather entity has no forecast</strong>It reports the weather right now, not the next days. To see the seven days pick another weather entity under Config › Sections › Weather.${nfRadar}<code style=\"display:block; margin-top:10px; font-size:11px; color:var(--text-dim,#64748b);\">${cdEsc(entityId)}</code></div>`;"
      ]
     },
     {
-     "riga": 6066,
+     "riga": 6068,
      "via": 1,
      "metti": [
       "  if(!forecasts || forecasts.length === 0) { var nfRadar = document.querySelector('.dm-radar-blocco') ? ' The radar above is a separate thing and works on its own.' : ''; list.innerHTML = `<div style=\"text-align:center; padding:20px; color:var(--text-dim,#64748b); line-height:1.5;\"><strong style=\"display:block; font-size:14px; font-weight:800; color:var(--text,#0f172a); margin-bottom:6px;\">This weather entity has no forecast</strong>It reports the weather right now, not the next days. To see the seven days pick another weather entity under Config › Sections › Weather.${nfRadar}<code style=\"display:block; margin-top:10px; font-size:11px; color:var(--text-dim,#64748b);\">${cdEsc(currentWeatherEntity || '')}</code></div>`; return; }"
      ]
     },
     {
-     "riga": 6181,
+     "riga": 6183,
      "via": 1,
      "metti": [
       "    if(tipo === 'luci' && st === 'on') items.push({ id, nm, st: 'ON', icon: '💡', canOff: true });"
      ]
     },
     {
-     "riga": 6187,
+     "riga": 6189,
      "via": 1,
      "metti": [
       "      items.push({ id, nm, st: 'OPEN', icon: winIcon, canOff: false });"
      ]
     },
     {
-     "riga": 6249,
+     "riga": 6251,
      "via": 2,
      "metti": [
       "    const labels = { 'alarm_arm_home': 'Arm Home', 'alarm_arm_away': 'Arm Away', 'alarm_arm_night': 'Arm Night', 'alarm_arm_vacation': 'Arm Vacation', 'alarm_arm_custom_bypass': 'Arm Partial', 'alarm_disarm': 'Disarm Alarm' };",
@@ -2876,14 +2876,14 @@
      ]
     },
     {
-     "riga": 6303,
+     "riga": 6305,
      "via": 1,
      "metti": [
       "/* ── The units of electricity ────────────────────────────────────────────"
      ]
     },
     {
-     "riga": 6305,
+     "riga": 6307,
      "via": 2,
      "metti": [
       " * «When it is 1000 W you then have to show it in kW; when it reaches 1000 kWh",
@@ -2891,7 +2891,7 @@
      ]
     },
     {
-     "riga": 6308,
+     "riga": 6310,
      "via": 5,
      "metti": [
       " * Same rule as the core (`src/core/le-unita-della-corrente.js`), repeated here",
@@ -2902,7 +2902,7 @@
      ]
     },
     {
-     "riga": 6314,
+     "riga": 6316,
      "via": 5,
      "metti": [
       " * It steps up at a thousand, and it looks at the number AS IT WILL BE SEEN:",
@@ -2913,14 +2913,14 @@
      ]
     },
     {
-     "riga": 6320,
+     "riga": 6322,
      "via": 2,
      "metti": [
       " * Comma or dot is decided by the page language, like everything else here. */"
      ]
     },
     {
-     "riga": 6324,
+     "riga": 6326,
      "via": 4,
      "metti": [
       "/* Declared as `function`, not arrows: something slices them out of the shell",
@@ -2930,14 +2930,14 @@
      ]
     },
     {
-     "riga": 6329,
+     "riga": 6331,
      "via": 1,
      "metti": [
       "  const lingua = typeof document !== 'undefined' && document.documentElement ? document.documentElement.lang : 'en';"
      ]
     },
     {
-     "riga": 6345,
+     "riga": 6347,
      "via": 2,
      "metti": [
       "/* Rounded with the same tool that then writes it: `toFixed` and `Intl` do not",
@@ -2945,28 +2945,28 @@
      ]
     },
     {
-     "riga": 6367,
+     "riga": 6369,
      "via": 1,
      "metti": [
       "/* The two shorthands used all over this file. */"
      ]
     },
     {
-     "riga": 6435,
+     "riga": 6437,
      "via": 1,
      "metti": [
       "              const rosa = ['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW'];"
      ]
     },
     {
-     "riga": 6582,
+     "riga": 6584,
      "via": 1,
      "metti": [
       "          el.textContent = items.length ? (on + ' active / ' + items.length) : 'empty — add loads';"
      ]
     },
     {
-     "riga": 6591,
+     "riga": 6593,
      "via": 4,
      "metti": [
       "      /* v0.8.4 (#6): HOME as in HA's Energy dashboard — balance of the displayed flows:",
@@ -2975,7 +2975,7 @@
      ]
     },
     {
-     "riga": 6607,
+     "riga": 6609,
      "via": 4,
      "metti": [
       "      /* v0.8.4 (#6): HOME as in HA's Energy dashboard — balance of the displayed flows:",
@@ -2984,19 +2984,19 @@
      ]
     },
     {
-     "riga": 6620,
+     "riga": 6622,
      "via": 1,
      "metti": []
     },
     {
-     "riga": 6774,
+     "riga": 6776,
      "via": 1,
      "metti": [
       "      // Cambia foto idle ↔ plugged"
      ]
     },
     {
-     "riga": 6810,
+     "riga": 6812,
      "via": 2,
      "metti": [
       "      /* v0.8.1: DYNAMIC RAM — % sensors show %, value sensors (MB/GB) show the value",
@@ -3004,63 +3004,63 @@
      ]
     },
     {
-     "riga": 6880,
+     "riga": 6882,
      "via": 1,
      "metti": [
       "              lavFase = lavPw > 5 ? '🌀 Running (' + Math.round(lavPw) + ' W)' : 'Off';"
      ]
     },
     {
-     "riga": 6895,
+     "riga": 6897,
      "via": 1,
      "metti": [
       "          if (btnMainPwr && mainPwrSwitch) { const isOn = mainPwrSwitch.state === 'on'; btnMainPwr.classList.toggle('active', isOn); txtMainPwr.textContent = isOn ? 'ON' : 'OFF'; btnMainPwr.querySelector('.icon').textContent = isOn ? '⚡' : '🔌'; if(isOn) { btnMainPwr.style.setProperty('--btn-col', '#0ea5e9'); btnMainPwr.style.setProperty('--btn-bg', '#e0f2fe'); } else { btnMainPwr.style.setProperty('--btn-col', '#64748b'); btnMainPwr.style.setProperty('--btn-bg', '#fff'); } }"
      ]
     },
     {
-     "riga": 6907,
+     "riga": 6909,
      "via": 1,
      "metti": [
       "      const chiaveState = getRawState('valve.chiave_solare_termico'); const isChiaveOpen = chiaveState === 'open'; setActiveState('syn-v-chiave', isChiaveOpen); updateBoilerBtn('b-c-valvola', isChiaveOpen, 'OPEN', 'CHIUSA'); setTxt('txt-chiave', isChiaveOpen ? 'OPEN' : 'CHIUSA');"
      ]
     },
     {
-     "riga": 6982,
+     "riga": 6984,
      "via": 1,
      "metti": [
       "              text = 'ARMED \\u00B7 ' + String(suMisura.label || '').toUpperCase();"
      ]
     },
     {
-     "riga": 7266,
+     "riga": 7268,
      "via": 1,
      "metti": [
       "      else if (stato === 'off')  { el.classList.add('off');     txt.textContent = 'OFF'; }"
      ]
     },
     {
-     "riga": 7353,
+     "riga": 7355,
      "via": 1,
      "metti": [
       "      show = true; icon = '🛡️'; text = 'Antifurto · Total'; rgb = '225,29,72';  textRgb = '157,23,53';"
      ]
     },
     {
-     "riga": 7481,
+     "riga": 7483,
      "via": 1,
      "metti": [
       "// Apre un popup con 3 bottoni (Total/Notte/Sblocca). Riusa promptPinAndSet"
      ]
     },
     {
-     "riga": 7575,
+     "riga": 7577,
      "via": 1,
      "metti": [
       "// Sensori dispositivi mese corrente → usati anche per mesi precedenti via History"
      ]
     },
     {
-     "riga": 7591,
+     "riga": 7593,
      "via": 4,
      "metti": [
       "/* v0.7.3 fix (#6): now a callable function — adding an entry from the editor",
@@ -3068,49 +3068,49 @@
      ]
     },
     {
-     "riga": 7616,
+     "riga": 7618,
      "via": 3,
      "metti": [
       "const COSTO_KWH  = 0.25;"
      ]
     },
     {
-     "riga": 7668,
+     "riga": 7670,
      "via": 1,
      "metti": [
       "    const guadagnoGSE = immesso * 0.10;                        // stima 0.10€/kWh per energia immessa (GSE)"
      ]
     },
     {
-     "riga": 7671,
+     "riga": 7673,
      "via": 1,
      "metti": [
       "    edSetText('ed-fin-pagato-sub', cons.toFixed(0) + ' kWh × 0.25€');"
      ]
     },
     {
-     "riga": 7673,
+     "riga": 7675,
      "via": 1,
      "metti": [
       "    edSetText('ed-fin-costo-sub', prelevato.toFixed(1) + ' kWh × 0.25€');"
      ]
     },
     {
-     "riga": 7677,
+     "riga": 7679,
      "via": 1,
      "metti": [
       "    edSetText('ed-fin-imm-sub', immesso.toFixed(1) + ' kWh × 0.10€');"
      ]
     },
     {
-     "riga": 7727,
+     "riga": 7729,
      "via": 1,
      "metti": [
       "        /* v0.8.1: all year sensors; if consumption is missing, estimate it from the energy balance */"
      ]
     },
     {
-     "riga": 7756,
+     "riga": 7758,
      "via": 2,
      "metti": [
       "    /* v0.8.1: if yearly statistics yield nothing but the current month does (period engine),",
@@ -3118,14 +3118,14 @@
      ]
     },
     {
-     "riga": 7788,
+     "riga": 7790,
      "via": 1,
      "metti": [
       "    // Mostra subito il prelevato (non richiede History)"
      ]
     },
     {
-     "riga": 7859,
+     "riga": 7861,
      "via": 2,
      "metti": [
       "    /* v0.7.5: \"this week / last week\" only makes sense in the current month —",
@@ -3133,14 +3133,14 @@
      ]
     },
     {
-     "riga": 7895,
+     "riga": 7897,
      "via": 1,
      "metti": [
       "    // Somma kWh di un periodo da History"
      ]
     },
     {
-     "riga": 8017,
+     "riga": 8019,
      "via": 4,
      "metti": [
       "        // ── CURRENT MONTH: period engine (delta from the 1st) ──",
@@ -3150,49 +3150,49 @@
      ]
     },
     {
-     "riga": 8061,
+     "riga": 8063,
      "via": 1,
      "metti": [
       "            // del giorno prima dell'inizio). È il metodo del pannello Energy di HA, esatto sui"
      ]
     },
     {
-     "riga": 8072,
+     "riga": 8074,
      "via": 1,
      "metti": [
       "               Questo è ESATTAMENTE come il pannello Energy di HA calcola i totali, e con contatori"
      ]
     },
     {
-     "riga": 8118,
+     "riga": 8120,
      "via": 1,
      "metti": [
       "               del cumulativo), lascio statsOk=false così parte il fallback History col delta. */"
      ]
     },
     {
-     "riga": 8125,
+     "riga": 8127,
      "via": 1,
      "metti": [
       "        // ── METODO 2: History API (fallback - max ultimi 10 giorni) ──"
      ]
     },
     {
-     "riga": 8151,
+     "riga": 8153,
      "via": 1,
      "metti": [
       "                    // la History può restituire i sensori in ordine diverso: mappo per entity_id"
      ]
     },
     {
-     "riga": 8164,
+     "riga": 8166,
      "via": 1,
      "metti": [
       "            } catch(e) { console.error('History fetch error:', e); }"
      ]
     },
     {
-     "riga": 8168,
+     "riga": 8170,
      "via": 5,
      "metti": [
       "    /* v0.9.5 DEFINITIVE FIX: HOME as HA's Energy panel and the Monthly map.",
@@ -3202,7 +3202,7 @@
      ]
     },
     {
-     "riga": 8180,
+     "riga": 8182,
      "via": 5,
      "metti": [
       "    /* v0.7.5 (#6): DATA COHERENCE — if total consumption is unavailable but the rest is,",
@@ -3213,21 +3213,21 @@
      ]
     },
     {
-     "riga": 8207,
+     "riga": 8209,
      "via": 1,
      "metti": [
       "    edSetText('ed-fin-pagato-sub', cons.toFixed(0) + ' kWh × 0.25€');"
      ]
     },
     {
-     "riga": 8209,
+     "riga": 8211,
      "via": 1,
      "metti": [
       "    edSetText('ed-fin-costo-sub', prelevato.toFixed(1) + ' kWh × 0.25€');"
      ]
     },
     {
-     "riga": 8212,
+     "riga": 8214,
      "via": 2,
      "metti": [
       "    edSetText('ed-fin-imm',    (immesso * 0.10).toFixed(2) + ' €');",
@@ -3235,49 +3235,49 @@
      ]
     },
     {
-     "riga": 8241,
+     "riga": 8243,
      "via": 1,
      "metti": [
       "        /* v0.8.1: past month with no statistics at all → honest note instead of confident zeros */"
      ]
     },
     {
-     "riga": 8243,
+     "riga": 8245,
      "via": 1,
      "metti": [
       "            badgesEl.innerHTML = '<span class=\"ed-badge\" style=\"background:rgba(245,158,11,0.14); color:#b45309;\">⚠️ No statistics available for this month</span>';"
      ]
     },
     {
-     "riga": 8258,
+     "riga": 8260,
      "via": 1,
      "metti": [
       "    // ── Confronto settimanale via History API ───────────────────"
      ]
     },
     {
-     "riga": 8292,
+     "riga": 8294,
      "via": 1,
      "metti": [
       "            list.innerHTML = '<div style=\"text-align:center; padding:26px; color:var(--text-dim); font-weight:800;\">📊 Aggiungi i tuoi dispositivi da ⚙️ → Configure Entities → Carichi → \"Report Analisi — voci\"<br><span style=\"font-weight:600; font-size:12px;\">You can use monthly entities or cumulative TOTALS: months are computed automatically.</span></div>';"
      ]
     },
     {
-     "riga": 8344,
+     "riga": 8346,
      "via": 1,
      "metti": [
       "        // ── METODO 2: History API (fallback - max 10 giorni) ──"
      ]
     },
     {
-     "riga": 8364,
+     "riga": 8366,
      "via": 1,
      "metti": [
       "                console.error('[ED Device List] History error:', e);"
      ]
     },
     {
-     "riga": 8386,
+     "riga": 8388,
      "via": 2,
      "metti": [
       "    /* v0.7.5: if the selected month has neither production nor main consumption but device",
@@ -3285,73 +3285,73 @@
      ]
     },
     {
-     "riga": 8389,
+     "riga": 8391,
      "via": 1,
      "metti": [
       "        ? '<div style=\"padding:10px 14px; margin-bottom:8px; border-radius:14px; background:rgba(245,158,11,0.12); color:#b45309; font-size:11.5px; font-weight:700;\">⚠️ Main production and consumption unavailable for this month: the values below come from meter history and may include earlier periods.</div>'"
      ]
     },
     {
-     "riga": 8410,
+     "riga": 8412,
      "via": 2,
      "metti": []
     },
     {
-     "riga": 8413,
+     "riga": 8415,
      "via": 1,
      "metti": [
       "        list.innerHTML += '<div style=\"padding:10px 14px; margin-top:8px; border-radius:14px; background:rgba(14,165,233,0.08); color:#0369a1; font-size:11.5px; font-weight:700;\">ℹ️ The Report reads Home Assistant <b>Long-Term Statistics</b>. If values stay at zero, make sure the entities have <code>state_class: total_increasing</code> (or <code>total</code>): Developer Tools → Statistics.</div>';"
      ]
     },
     {
-     "riga": 8423,
+     "riga": 8425,
      "via": 1,
      "metti": [
       "/* ═══ v0.8.0: PERIOD ENGINE ═══"
      ]
     },
     {
-     "riga": 8451,
+     "riga": 8453,
      "via": 1,
      "metti": [
       "    if (!service) return Promise.reject(new Error('Canonical Energy service unavailable'));"
      ]
     },
     {
-     "riga": 8507,
+     "riga": 8509,
      "via": 1,
      "metti": [
       "    // ── METODO 2: History API (fallback - solo ultimi 10 giorni di default) ──"
      ]
     },
     {
-     "riga": 8540,
+     "riga": 8542,
      "via": 1,
      "metti": [
       "            console.warn('History API non raggiungibile:', e.message);"
      ]
     },
     {
-     "riga": 8628,
+     "riga": 8630,
      "via": 1,
      "metti": []
     },
     {
-     "riga": 8663,
+     "riga": 8665,
      "via": 1,
      "metti": [
       "    if(!visible.length){ grid.innerHTML='<div style=\"text-align:center; padding:30px; color:var(--text-dim); font-weight:700;\">No room con sensore — aggiungila nel tab Temperatura dell&#39;editor</div>'; return; } grid.innerHTML = tabs + visible.map(r => {"
      ]
     },
     {
-     "riga": 8715,
+     "riga": 8717,
      "via": 1,
      "metti": [
       "    /* v0.7.4: average temperature of each floor in the tabs */"
      ]
     },
     {
-     "riga": 8893,
+     "riga": 8895,
      "via": 6,
      "metti": [
       "                'on':          { label: '🟢 On-Grid',     cls: 'ongrid',       col: '#10b981' },",
@@ -3363,21 +3363,21 @@
      ]
     },
     {
-     "riga": 8984,
+     "riga": 8986,
      "via": 1,
      "metti": [
       "                ${duration ? `<div class=\"srv-event-duration\">Duration: ${duration}</div>` : ''}"
      ]
     },
     {
-     "riga": 8993,
+     "riga": 8995,
      "via": 1,
      "metti": [
       "        timeline.innerHTML = `<div style=\"text-align:center;padding:24px;color:#ef4444;font-weight:800;font-size:12px;\">❌ History non disponibile<br><span style=\"color:var(--text-dim);font-size:10px;\">${cdEsc(e.message)}</span></div>`;"
      ]
     },
     {
-     "riga": 9022,
+     "riga": 9024,
      "via": 10,
      "metti": [
       "        'dm.core_005':                    ['❄️ Air conditioner','Salone'],",
@@ -3393,28 +3393,28 @@
      ]
     },
     {
-     "riga": 9054,
+     "riga": 9056,
      "via": 1,
      "metti": [
       "                          '4':'Vel.4', '5':'Vel.5', on:'On', off:'Off' };"
      ]
     },
     {
-     "riga": 9290,
+     "riga": 9292,
      "via": 1,
      "metti": [
       "    // ── History giornaliero del periodo selezionato ──"
      ]
     },
     {
-     "riga": 9328,
+     "riga": 9330,
      "via": 1,
      "metti": [
       "        // ── METODO 2: History API (fallback per ultimi 10 giorni) ──"
      ]
     },
     {
-     "riga": 9427,
+     "riga": 9429,
      "via": 2,
      "metti": [
       "        setTxt('ed-dkpi-picco-sub', 'History N/D');",
