@@ -68,15 +68,19 @@ const PELO = 110;
 /* La tinta a luminanza preservata: il colore pieno va sul pixel scalato
  * dalla sua luce (`k`, con `lift` che schiarisce la resa complessiva), e il
  * peso cresce quanto piu' il pixel e' scuro — cioe' quanto piu' e' pelo. */
-function tingiPixel(dati, i, [tr, tg, tb], lift) {
+function tingiPixel(dati, i, [tr, tg, tb], lift, pieno = false) {
   const r = dati[i],
     g = dati[i + 1],
     b = dati[i + 2];
   const m = Math.max(r, g, b);
-  if (m >= PELO) return;
+  if (m >= PELO && !pieno) return;
   const lum = (r + g + b) / 3;
-  const k = 0.35 + lift + (0.65 - lift * 0.5) * (lum / PELO);
-  const peso = Math.min(1, (PELO - m) / 60);
+  const k = 0.35 + lift + (0.65 - lift * 0.5) * Math.min(1, lum / PELO);
+  /* `pieno`: il pixel e' gia' pelo per certo (sta nella maschera della
+   * barba), e si tinge tutto. Col peso che cala vicino alla soglia, l'orlo
+   * della barba restava del colore della donatrice e la barba bionda usciva
+   * con un contorno scuro. */
+  const peso = pieno ? 1 : Math.min(1, (PELO - m) / 60);
   dati[i] = r + (Math.min(255, tr * k) - r) * peso;
   dati[i + 1] = g + (Math.min(255, tg * k) - g) * peso;
   dati[i + 2] = b + (Math.min(255, tb * k) - b) * peso;
@@ -106,9 +110,19 @@ const confine = (x, lato, centro = 0.46, alzata = 0.14) =>
  * limite le ciocche lunghe ai lati del viso (la donna, il neutro coi capelli
  * sciolti) finivano nella maschera e diventavano barba, e il pelo saliva
  * sulle guance fino agli occhi. */
-function dentroLaCampana(x, y, lato) {
+function dentroLaCampana(x, y, lato, larga = false) {
   const dalCentro = Math.abs(x - lato / 2) / (lato / 2);
   const quota = y / lato;
+  /* Sul ritratto barbuto da uomo la barba arriva al contorno del viso, e la
+   * campana stretta ne lasciava fuori i lati: trapiantata, la barba restava
+   * staccata dalle guance, con una fascia di pelle fino al bordo («la barba
+   * deve seguire bene il volto»). Li' ai lati non ci sono ciocche, e la
+   * campana si allarga fin dove arriva la mascella. */
+  if (larga) {
+    let semi = quota < 0.7 ? 0.8 : 0.8 - ((quota - 0.7) / 0.27) * 0.42;
+    if (quota > 0.88) semi *= Math.max(0, 1 - (quota - 0.88) / 0.1);
+    return dalCentro <= semi;
+  }
   /* La campana era larga 0.62: alla quota della bocca prendeva anche le
    * ciocche scure accanto alle orecchie della donatrice, e trapiantate su
    * una chioma d'altro colore diventavano una lastra piu' larga del viso —
@@ -142,7 +156,19 @@ function pelleDelViso(dati, lato) {
   return migliore;
 }
 
-function mascheraBarba(dati, lato) {
+/* Gli occhi e le sopracciglia stanno sopra il confine della barba ai due lati
+ * del naso, e sono scuri quanto il pelo: finivano nella maschera, e la barba
+ * bionda tingeva d'oro le iridi, la rasata metteva due macchie grigie sopra
+ * gli occhi («la barba non va bene»). Le due finestre sono quelle degli occhi
+ * misurati sui ritratti (centri a 62 e 129 su 192, a quota 100), allargate
+ * fin sopra le sopracciglia: li' dentro non c'e' barba. */
+const FINESTRE_DEGLI_OCCHI = Object.freeze([0.322, 0.672]);
+function negliOcchi(x, y, lato) {
+  if (y > lato * 0.585) return false;
+  return FINESTRE_DEGLI_OCCHI.some((cx) => Math.abs(x - lato * cx) < lato * 0.09);
+}
+
+function mascheraBarba(dati, lato, { cresci = true, larga = false } = {}) {
   /* Sulle carnagioni scure la soglia fissa annega: anche la pelle sta sotto
    * PELO, e la maschera allagava l'intero basso viso — il ritratto scuro
    * usciva con un lastrone squadrato al posto della barba. Il pelo e' scuro
@@ -154,7 +180,12 @@ function mascheraBarba(dati, lato) {
   const maschera = new Uint8Array(lato * lato);
   const dentro = (x, y) => {
     const i = (y * lato + x) * 4;
-    return dati[i + 3] > 40 && y > confine(x, lato) && dentroLaCampana(x, y, lato);
+    return (
+      dati[i + 3] > 40 &&
+      y > confine(x, lato) &&
+      dentroLaCampana(x, y, lato, larga) &&
+      !negliOcchi(x, y, lato)
+    );
   };
   for (let y = Math.floor(lato * 0.36); y < lato * 0.97; y += 1)
     for (let x = 0; x < lato; x += 1) {
@@ -170,7 +201,11 @@ function mascheraBarba(dati, lato) {
    * la guancia lontana no. Su medie e chiare la soglia rilassata coincide
    * con quella di laboratorio e la crescita non aggiunge nulla. */
   const rilassata = pelle ? Math.min(PELO, Math.round(pelle.m * 0.9)) : PELO;
-  if (rilassata > soglia)
+  /* Sulla barba tinta la crescita non si fa: i pixel presi per adiacenza sono
+   * pelle quanto pelo, e tinti di biondo sulla carnagione scura diventavano
+   * chiazze sulle guance. Un pelo piu' rado si legge come barba; una chiazza
+   * no. */
+  if (cresci && rilassata > soglia)
     for (let giro = 0; giro < 4; giro += 1) {
       const orlo = [];
       for (let y = Math.floor(lato * 0.36); y < lato * 0.97; y += 1)
@@ -186,6 +221,24 @@ function mascheraBarba(dati, lato) {
       for (const p of orlo) maschera[p] = 1;
     }
   return maschera;
+}
+
+/* La maschera della barba, sfumata: tre passate di media su una finestra di
+ * cinque pixel. Torna un peso fra 0 e 1 per pixel. */
+function sfumata(maschera, lato) {
+  let peso = Float32Array.from(maschera);
+  for (let passata = 0; passata < 3; passata += 1) {
+    const dopo = new Float32Array(peso.length);
+    for (let y = 2; y < lato - 2; y += 1)
+      for (let x = 2; x < lato - 2; x += 1) {
+        const p = y * lato + x;
+        let somma = 0;
+        for (let d = -2; d <= 2; d += 1) somma += peso[p + d] + peso[p + d * lato];
+        dopo[p] = somma / 10;
+      }
+    peso = dopo;
+  }
+  return peso;
 }
 
 /* Colore pelle per la rasata: lo stesso campione robusto del viso. */
@@ -227,6 +280,41 @@ function stratoBarba(dati, maschera, lato) {
   return strato;
 }
 
+/* La bocca del viso che riceve la barba resta sua.
+ *
+ * La barba trapiantata arriva da un altro ritratto, con la bocca un poco piu'
+ * in alto o in basso: sui visi coi ricci i baffi della donatrice coprivano le
+ * labbra. Sulla tela della barba, gia' messa al suo posto, si toglie ogni
+ * pixel dove il viso ha le labbra — rosso-magenta, nella fascia della bocca. */
+function lasciaLaBocca(strato, telaTesta) {
+  const lato = AVATAR_LATO;
+  const suo = strato.getContext("2d");
+  const barba = suo.getImageData(0, 0, lato, lato);
+  const b = barba.data;
+  const viso = telaTesta.getContext("2d").getImageData(0, 0, lato, lato).data;
+  for (let y = Math.floor(lato * 0.55); y < lato * 0.86; y += 1)
+    for (let x = Math.floor(lato * 0.3); x < lato * 0.7; x += 1) {
+      const i = (y * lato + x) * 4;
+      const [r, g, bl] = [viso[i], viso[i + 1], viso[i + 2]];
+      /* Il magenta delle labbra ha il verde basso; la pelle rosata del mento,
+       * anche la piu' chiara, no. */
+      if (viso[i + 3] > 40 && r > 100 && g < 90 && r - g > 70 && bl > 40 && r > bl)
+        b[i + 3] = 0;
+    }
+  suo.putImageData(barba, 0, 0);
+  return strato;
+}
+
+/* Lo strato della donatrice portato nelle misure del viso che lo riceve. */
+function alSuoPosto(strato, innesto, telaTesta) {
+  const lato = AVATAR_LATO;
+  const { scala, x, y } = innesto || { scala: 1, x: 0, y: 0 };
+  const posato = doc.createElement("canvas");
+  posato.width = posato.height = lato;
+  posato.getContext("2d").drawImage(strato, x, y, lato * scala, lato * scala);
+  return lasciaLaBocca(posato, telaTesta);
+}
+
 /* La barba, in tutte le sue vesti: tinta, rasata, corta, lunga; sulla testa
  * stessa quando il render la porta gia', trapiantata da una donatrice della
  * stessa carnagione quando no. `innesto` — scala e angolo con cui la tela
@@ -244,19 +332,32 @@ function applicaBarba(telaTesta, op, donatrice) {
   } else {
     dati = pennello.getImageData(0, 0, lato, lato).data;
   }
-  const maschera = mascheraBarba(dati, lato);
+  const maschera = mascheraBarba(dati, lato, { cresci: !op.rgb, larga: Boolean(op.larga) });
   if (op.rgb)
     for (let p = 0; p < maschera.length; p += 1)
-      if (maschera[p]) tingiPixel(dati, p * 4, op.rgb, op.lift || 0);
+      if (maschera[p]) tingiPixel(dati, p * 4, op.rgb, op.lift || 0, true);
   if (op.foggia === "rasata") {
-    /* Barba dissolta verso la pelle: l'ombra corta del rasato. */
-    const [sr, sg, sb] = guancia(dati, lato);
+    /* Barba dissolta verso la pelle: l'ombra corta del rasato. Il peso viene
+     * da una maschera sfumata, non da quella a pixel: col taglio netto la
+     * rasata usciva a gradini, un ritaglio grigio incollato sul viso invece
+     * di un'ombra. Dentro la barba resta un velo, sull'orlo sfuma nella
+     * pelle. */
+    /* La pelle verso cui si sfuma e' quella del viso che riceve la barba,
+     * non quella della donatrice: la forma della barba tinta arriva dal
+     * ritratto chiaro, e la rasata sfumata verso quella pelle lasciava una
+     * chiazza chiara sui visi scuri. */
+    const [sr, sg, sb] = donatrice
+      ? guancia(pennello.getImageData(0, 0, lato, lato).data, lato)
+      : guancia(dati, lato);
+    const velo = sfumata(maschera, lato);
     for (let p = 0; p < maschera.length; p += 1)
-      if (maschera[p]) {
+      if (velo[p] > 0) {
         const i = p * 4;
-        dati[i] += (sr - dati[i]) * 0.62;
-        dati[i + 1] += (sg - dati[i + 1]) * 0.62;
-        dati[i + 2] += (sb - dati[i + 2]) * 0.62;
+        if (dati[i + 3] < 40) continue;
+        const peso = 0.72 * velo[p];
+        dati[i] += (sr - dati[i]) * peso;
+        dati[i + 1] += (sg - dati[i + 1]) * peso;
+        dati[i + 2] += (sb - dati[i + 2]) * peso;
       }
   }
 
@@ -367,13 +468,13 @@ function applicaBarba(telaTesta, op, donatrice) {
        * della donatrice sopra la coda stessa — il fantasma nel pizzo. */
       pennello.save();
       pennello.globalCompositeOperation = "source-atop";
-      pennello.drawImage(strato, x, y, lato * scala, lato * scala);
+      pennello.drawImage(alSuoPosto(strato, op.innesto, telaTesta), 0, 0);
       pennello.restore();
       pennello.drawImage(pieno, x, y + alza, lato * scala, pieno.height * scala);
     } else {
       pennello.save();
       pennello.globalCompositeOperation = "source-atop";
-      pennello.drawImage(strato, x, y, lato * scala, lato * scala);
+      pennello.drawImage(alSuoPosto(strato, op.innesto, telaTesta), 0, 0);
       pennello.restore();
     }
   } else {

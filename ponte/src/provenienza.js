@@ -45,7 +45,7 @@ export const CHIAVE_DI_CHI_PUBBLICA = "";
 
 /* Quali cartelle fanno la plancia, e quali file dentro. Chi sigilla non ha un
  * elenco suo: chiama `leImpronte` qui sotto, e guarda esattamente questi. */
-export const CARTELLE = ["legacy", "src", "avatars", "brands"];
+export const CARTELLE = ["legacy", "src", "avatars", "brands", "pacco"];
 
 /* I suffissi sono un elenco di **quello che c'e' nella plancia**, non di
  * quello che il ponte serve: un file non servito che nessuno controlla e' un
@@ -58,9 +58,11 @@ export const CARTELLE = ["legacy", "src", "avatars", "brands"];
  *
  * Resta un elenco, e non «tutto», per una ragione sola: quello che si
  * costruisce accanto alla plancia e non si pubblica — le copie compresse
- * (`.gz`, `.br`), il pacco, i `.DS_Store` — non deve far dire «modificata» a
- * una plancia intatta. Un allarme che suona per niente si impara a non
- * sentirlo. */
+ * (`.gz`, `.br`), i `.DS_Store` — non deve far dire «modificata» a una
+ * plancia intatta. Un allarme che suona per niente si impara a non sentirlo.
+ *
+ * Il pacchetto in `pacco/` invece si pubblica, e il ponte lo serve al posto
+ * dei moduli sciolti (`pacco-della-plancia.js`): sta dentro il sigillo. */
 const SUFFISSI = new Set([
   ".js",
   ".css",

@@ -344,7 +344,7 @@ test("il calendario ha una pagina sua, non solo una tessera", async () => {
   assert.match(sezione, /pagina\.className = "page"/);
   assert.match(sezione, /voce\.addEventListener\("click"/);
   // Senza calendari scelti la voce non c'e': una pagina vuota non si offre.
-  assert.match(sezione, /const serve = calendarioConfigurato\(\) && sezioneAccesa\(\)/);
+  assert.match(sezione, /const serve = segnaContenuto\(CALENDARIO_TAB, calendarioConfigurato\(\)\) && sezioneAccesa\(\)/);
   /* E il `display` di quella voce ha un padrone solo: `cdApplyNavVis` non la
    * conosce, o gliela cancellerebbe ogni tre secondi. */
   assert.doesNotMatch(sezione, /cdNavVisMap/);

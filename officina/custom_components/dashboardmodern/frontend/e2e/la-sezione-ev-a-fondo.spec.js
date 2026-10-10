@@ -151,6 +151,8 @@ test("salvare le foto di un'auto non tocca mai l'altra", async ({ page }, testIn
     );
     if (accordion) accordion.open = true;
   });
+  /* Le entita' e le foto della T03 si aprono con la sua matita. */
+  await page.locator("#ed-body [data-ev-edit]").nth(1).click();
   const pannello = page.locator("#ed-body [data-ev-photos]");
   await expect(pannello).toHaveCount(1);
   await expect(page.locator("[data-ev-photos-title]")).toHaveText(/T03/);
@@ -320,6 +322,7 @@ test("il bottone verde della sezione salva anche le foto scritte", async ({ page
     window.apriConfigEntita();
     window.editorSwitch("sez2");
   });
+  await page.locator("#ed-body [data-ev-edit]").first().click();
   const campo = page.locator(
     '#ed-body [data-ev-photos] [data-ev-photo="idle"] [data-ev-photo-input]',
   );
@@ -350,6 +353,8 @@ test("il nome e' un dato: digitarlo non tocca i campi, e la rinomina conserva l'
     window.apriConfigEntita();
     window.editorSwitch("sez2");
   });
+  /* ＋ apre la bozza: il modulo si vede, e nessuna auto e' aperta. */
+  await page.locator("#ed-body [data-ev-add-new]").click();
   const nome = page.locator("#ed-evcar-name");
   await nome.waitFor({ timeout: 15_000 });
   const batteria = page.locator('#ed-body input.ed-slot-in[data-ref="dm.ev_batteria_auto"]');
@@ -416,9 +421,8 @@ test("la lista auto ha la matita, niente distintivo, e il + svuota la scheda", a
   const matite = page.locator("#ed-body [data-ev-edit]");
   await expect(matite).toHaveCount(2, { timeout: 15_000 });
   await expect(page.locator("#ed-body .ed-row .pool-badge")).toHaveCount(0);
-  await expect(page.locator('#ed-body button[onclick*="edEvCarAdd"]')).toHaveText(
-    /Salva (auto|le modifiche a|la nuova auto)/,
-  );
+  /* Coi veicoli salvati il modulo e' chiuso: si vede l'elenco. */
+  await expect(page.locator("#ed-evcar-name")).toBeHidden();
 
   /* La matita APRE quell'auto nella scheda — nome compreso — e non tocca
    * nient'altro: quale vettura la sezione stia mostrando non e' affare della
@@ -426,6 +430,9 @@ test("la lista auto ha la matita, niente distintivo, e il + svuota la scheda", a
   const inUsoPrima = await page.evaluate(() => localStorage.getItem("cd_ev_car_active"));
   await matite.nth(1).click();
   await expect(page.locator("#ed-evcar-name")).toHaveValue("T03", { timeout: 15_000 });
+  await expect(page.locator('#ed-body button[onclick*="edEvCarAdd"]')).toHaveText(
+    /Salva (auto|le modifiche a|la nuova auto)/,
+  );
   expect(await page.evaluate(() => localStorage.getItem("cd_ev_car_active"))).toBe(inUsoPrima);
   await expect(page.locator("#ed-evcar-name")).toHaveValue("T03", { timeout: 15_000 });
   await expect(

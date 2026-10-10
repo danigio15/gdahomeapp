@@ -14,6 +14,7 @@
 import { applianceArtwork } from "../core/appliance-artwork.js";
 import { subloadPopupModel } from "../core/subload-popup-model.js";
 import { flowStageModel, subloadsOf } from "../core/energy-flow-topology.js";
+import { carichiDelFlusso, kwhDelPeriodo } from "./energy-flow-section.js";
 import { onRunHoldExpiry } from "../core/appliance-view-model.js";
 import {
   allStates,
@@ -24,7 +25,6 @@ import {
   locale,
   readJson,
   root,
-  section,
   t,
   writeIconGlyph,
   senzaCadere,
@@ -35,11 +35,10 @@ const state = (root[KEY] ||= { installed: false, group: "" });
 const LIST = "subloads-list";
 const TITLE = "subloads-title";
 
+/* I carichi come li disegna il flusso: con gli elettrodomestici, i cerchi
+ * sono le stanze, e la finestra di un cerchio deve trovare la sua stanza. */
 function configuredLoads() {
-  const value = section("loads", null);
-  if (Array.isArray(value)) return value;
-  const stored = readJson("cd_loads", []);
-  return Array.isArray(stored) ? stored : [];
+  return carichiDelFlusso().loads;
 }
 
 /* The circle the popup was opened from. Legacy passes the group id, which for
@@ -385,7 +384,9 @@ function stageIdentity(load, loads, appliances) {
    * tutta la finestra. Si tiene da parte, con una chiave che comprende quello
    * che potrebbe cambiarli: la personalizzazione del cerchio e i campi del
    * carico. Cosi' un cerchio rinominato si vede subito lo stesso. */
-  const flowNodes = readJson("cd_flow_nodes", null);
+  /* Il cerchio di una stanza non ha ritocchi per posto: quelli sono dei
+   * carichi scritti a mano (vedi `stageModel` nel flusso). */
+  const flowNodes = load?.metadata?.cerchio_della_stanza ? null : readJson("cd_flow_nodes", null);
   let chiave = "";
   try {
     /* La personalizzazione puo' stare sotto lo slot storico («boiler») e non
@@ -420,17 +421,22 @@ export function renderSubloadPopup(groupId = state.group) {
   if (!list) return false;
   const load = loadForGroup(groupId);
   if (!load) return false;
-  const loads = configuredLoads();
-  const stored = section("appliances", null);
-  const appliances = Array.isArray(stored) ? stored : readJson("cd_appliances", []);
+  const { loads, appliances } = carichiDelFlusso();
+  const figli = subloadsOf(load, loads, Array.isArray(appliances) ? appliances : []);
   const model = subloadPopupModel({
     load: stageIdentity(load, loads, appliances),
-    children: subloadsOf(load, loads, Array.isArray(appliances) ? appliances : []),
+    children: figli,
     states: allStates(),
     locale: locale(),
     /* Il periodo in cui il cerchio e' stato toccato decide i numeri, non solo
      * la scritta in testata: vedi `subloadPopupModel`. */
     period: periodOf(groupId),
+    /* Gli stessi kilowattora del cerchio: il paniere del Recorder e, per chi
+     * ha solo la potenza, le sue medie orarie. Senza, la finestra di un
+     * elettrodomestico con la sola presa diceva un trattino mentre il cerchio
+     * lo contava. */
+    dailyValues: kwhDelPeriodo(figli, "day"),
+    monthlyValues: kwhDelPeriodo(figli, "month"),
   });
 
   /* La testata del modale — nome, icona, periodo — si riscrive solo quando c'e'

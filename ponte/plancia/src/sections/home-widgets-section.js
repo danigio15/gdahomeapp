@@ -1279,7 +1279,12 @@ function coversModel(states) {
         down: clean(voce.down),
       };
     })
-    .filter(Boolean);
+    .filter(Boolean)
+    /* Le aperte per prime: «mi mostri come prima entità quella aperta». Nella
+     * finestra si guarda l'elenco per trovare cosa e' rimasto aperto, e in
+     * fondo a nove righe chiuse non la trovava nessuno. Fra loro restano
+     * nell'ordine della configurazione. */
+    .sort((a, b) => Number(b.open) - Number(a.open));
   if (!rows.length) return null;
   /* Una tapparella alzata non e' una finestra aperta (#442).
    *
@@ -2734,6 +2739,7 @@ const CASELLE_SOLARE = Object.freeze([
   { ref: "dm.boiler_interruttore_solare_termico", glyph: "🔌", acceso: true },
   { ref: "dm.boiler_interruttore_boiler", glyph: "🔌", acceso: true },
   { ref: "dm.boiler_valvola_di_sicurezza", glyph: "🛡️", acceso: true },
+  { ref: "dm.boiler_chiave_solare", glyph: "🗝️", acceso: true },
 ]);
 
 const STATI_ACCESI = /^(on|true|1|running|attiva|attivo|open|aperta|heat|heating)$/i;
@@ -7027,7 +7033,11 @@ function summaryChips(widget) {
     ];
   if (widget.key === "tapparelle") {
     const posizioni = numeri("position");
-    const aperte = righe.filter((riga) => Number(riga?.position) > 0).length;
+    /* Aperta e' quello che la riga dice di se', come in cima alla finestra:
+     * contare le sole posizioni sopra zero lasciava fuori le finestre col
+     * solo sensore sull'anta, e si leggeva «1 aperte su 9» sopra e «0/9»
+     * sotto. */
+    const aperte = righe.filter((riga) => riga?.open).length;
     return [
       [t("aperte", "open"), `${aperte}/${righe.length}`],
       posizioni.length

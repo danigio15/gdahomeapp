@@ -97,6 +97,21 @@
                 <category android:name="androidx.car.app.category.IOT" />
             </intent-filter>
         </service>
+        <!-- L'orologio Wear OS: il telefono risponde ai tocchi dal polso anche
+             con l'app chiusa. Il percorso e' lo stesso dell'orologio
+             (`android/orologio`); vedi docs/OROLOGIO.md. -->
+        <service
+            android:name=".orologio.OrologioInAscolto"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="com.google.android.gms.wearable.REQUEST_RECEIVED" />
+                <action android:name="com.google.android.gms.wearable.MESSAGE_RECEIVED" />
+                <data
+                    android:scheme="wear"
+                    android:host="*"
+                    android:pathPrefix="/gdahome/tocco" />
+            </intent-filter>
+        </service>
         <meta-data
             android:name="com.google.android.gms.car.application"
             android:resource="@xml/automotive_app_desc" />

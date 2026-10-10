@@ -39,6 +39,7 @@ import {
   root,
   t,
   senzaCadere,
+  segnaContenuto,
 } from "./shared.js";
 import { disegnoDelCatalogo } from "../core/catalogo-disegni.js";
 
@@ -412,7 +413,9 @@ export function righeDellAllerta(lettura) {
       const spiega = (voce) =>
         [
           voce.categoria || (voce.indice != null ? parolaDelGradino(voce.indice) : ""),
-          voce.indice != null ? `${formatNumber(voce.indice, 0)}${voce.unita ? ` ${voce.unita}` : "/4"}` : "",
+          voce.indice != null
+            ? `${formatNumber(voce.indice, 0)}${voce.unita ? ` ${voce.unita}` : "/4"}`
+            : "",
         ]
           .filter(Boolean)
           .join(" · ");
@@ -422,9 +425,13 @@ export function righeDellAllerta(lettura) {
        * perche'. Quelle dei pollini singoli si dicono col loro nome davanti,
        * cosi' due consigli diversi non si confondono. */
       for (const voce of lettura.voci || []) {
-        if (voce.consiglio) metti(`${nomeDelPolline(voce.chiave)} · ${t("Consiglio", "Advice")}`, voce.consiglio);
+        if (voce.consiglio)
+          metti(`${nomeDelPolline(voce.chiave)} · ${t("Consiglio", "Advice")}`, voce.consiglio);
         if (voce.descrizione)
-          metti(`${nomeDelPolline(voce.chiave)} · ${t("Descrizione", "Description")}`, voce.descrizione);
+          metti(
+            `${nomeDelPolline(voce.chiave)} · ${t("Descrizione", "Description")}`,
+            voce.descrizione,
+          );
       }
       if (lettura.consiglio) metti(t("Consiglio", "Advice"), lettura.consiglio);
       if (lettura.descrizione) metti(t("Descrizione", "Description"), lettura.descrizione);
@@ -535,7 +542,7 @@ function sezioneAccesa() {
 function accendiLaVoce() {
   const voce = ensureAllerteTab();
   if (!voce) return;
-  const serve = allerteConfigurate() && sezioneAccesa();
+  const serve = segnaContenuto(ALLERTE_TAB, allerteConfigurate()) && sezioneAccesa();
   if (serve) voce.style.removeProperty("display");
   else voce.style.setProperty("display", "none", "important");
   /* Il livello piu' alto si porta sulla voce: un pallino rosso nella barra
@@ -644,9 +651,7 @@ function corpoDelDettaglio(lettura) {
     pezzi.push(`<p class="dm-allerta-dettaglio-frase">${esc(frase)}</p>`);
   const righe = righeDellAllerta(lettura);
   if (righe.length)
-    pezzi.push(
-      `<ul class="dm-allerta-righe">${righe.map(rigaDellaListaMarkup).join("")}</ul>`,
-    );
+    pezzi.push(`<ul class="dm-allerta-righe">${righe.map(rigaDellaListaMarkup).join("")}</ul>`);
   const voci = vociDelDettaglio(attributiDi(lettura.entity));
   if (voci.length)
     pezzi.push(

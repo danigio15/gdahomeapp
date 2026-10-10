@@ -119,6 +119,8 @@ for (const variant of PRIMARY) {
     test.setTimeout(testInfo.project.name === "webkit-ipad" ? 120_000 : 75_000);
     await boot(page, variant, testInfo);
     await openEditor(page, "sez2");
+    /* Coi veicoli salvati il modulo e' chiuso: si apre con la matita. */
+    await page.locator("#ed-body [data-ev-edit]").first().click();
 
     const panel = page.locator("#ed-body [data-ev-appearance]");
     const brand = panel.locator("select[data-brand]");
@@ -165,6 +167,9 @@ for (const variant of PRIMARY) {
        modulo le rimetta i valori a forza. Il contrassegno che quel secondo
        modulo lasciava sul pannello se n'e' andato con lui: quello che conta e'
        cosa dicono le tendine, ed e' quello che si guarda qui sotto. */
+    /* La matita apre un'auto e la tiene aperta finche' non se ne apre un'altra:
+       mettere in uso non cambia quella che si sta modificando. Si apre la MINI. */
+    await page.locator("#ed-body [data-ev-edit]").nth(1).click();
     await expect(brand).toHaveValue("MINI");
     await expect(model).toHaveValue("Cooper Electric");
     await expect(panel.locator("[data-brand-preview]")).toContainText("MINI");

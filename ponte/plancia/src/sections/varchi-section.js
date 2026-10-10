@@ -67,6 +67,7 @@ import {
   siComanda,
   t,
   senzaCadere,
+  segnaContenuto,
 } from "./shared.js";
 import { nomeDaHomeAssistant } from "./editor-slots-section.js";
 
@@ -191,7 +192,7 @@ function sezioneAccesa() {
 function accendiLaVoce() {
   const voce = ensureVarchiTab();
   if (!voce) return;
-  const serve = ciSonoVarchi() && sezioneAccesa();
+  const serve = segnaContenuto(VARCHI_TAB, ciSonoVarchi()) && sezioneAccesa();
   if (serve) voce.style.removeProperty("display");
   else voce.style.setProperty("display", "none", "important");
   const pagina = doc.getElementById(VARCHI_PAGE_ID);

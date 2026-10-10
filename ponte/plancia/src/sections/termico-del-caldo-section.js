@@ -268,7 +268,15 @@ export function pillolaDellaCaldaia() {
 function spiegaLaCasellaCaldaia(corpo) {
   const casella = corpo?.querySelector?.('[data-ref="switch.caldaia"]');
   const riquadro = casella?.closest?.(".ed-slot");
-  if (!riquadro || riquadro.querySelector("[data-dm-termico-aiuto]")) return false;
+  if (!riquadro) return false;
+  /* Vuota, ma con la caldaia fra le voci: la casella dice quale. */
+  if (!clean(casella.value)) {
+    const entita = caldaiaDelleVoci(
+      vociTermiche(leggiConfig(), allStates() || {}, root.cdCfg?.("cd_entity_overrides") || {}),
+    );
+    if (entita) casella.value = entita;
+  }
+  if (riquadro.querySelector("[data-dm-termico-aiuto]")) return false;
   const riga = doc.createElement("div");
   riga.className = "ed-hint dm-termico-aiuto";
   riga.dataset.dmTermicoAiuto = "";
@@ -278,6 +286,55 @@ function spiegaLaCasellaCaldaia(corpo) {
   );
   riquadro.append(riga);
   return true;
+}
+
+/* La caldaia scelta nella sua casella entra fra le voci del Caldo.
+ *
+ * «Inserisco l'entita' caldaia ma non la salva e non viene mostrata nella
+ * pagina.» Due cose insieme. La casella e' del guscio e si salva come
+ * sostituzione di `switch.caldaia`: chi ha un'entita' che si chiama proprio
+ * `switch.caldaia` scriveva il nome della casella in se' stessa, il guscio
+ * la leggeva come «nessuna scelta» e la casella tornava vuota. E la pagina
+ * mostra le voci dello Stato termico, non la casella: con una voce gia'
+ * scritta — un Termocamino — la caldaia non c'entrava mai.
+ *
+ * Adesso la caldaia scelta diventa una voce «Caldaia» in cima all'elenco, se
+ * li' non c'e' gia', ed e' quella che la pagina mostra; e la casella dice
+ * l'entita' della voce. Toglierla si fa dall'elenco, come per le altre. */
+export function conLaCaldaia(voci, entita) {
+  const scelta = clean(entita);
+  const elenco = Array.isArray(voci) ? voci : [];
+  if (!scelta.includes(".")) return elenco;
+  if (elenco.some((voce) => clean(voce?.entity) === scelta)) return elenco;
+  return [{ name: t("Caldaia", "Boiler"), entity: scelta, icon: "🔥" }, ...elenco];
+}
+
+/* L'entita' della caldaia fra le voci: la prima che si chiama come una caldaia,
+ * o quella su `switch.caldaia`. */
+function caldaiaDelleVoci(voci) {
+  const voce =
+    voci.find((una) => REGEX_CALDAIA.test(clean(una?.name))) ||
+    voci.find((una) => clean(una?.entity) === "switch.caldaia");
+  return clean(voce?.entity);
+}
+
+function laCaldaiaEntraFraLeVoci(evento) {
+  const casella = evento.target;
+  if (!casella?.matches?.('[data-ref="switch.caldaia"]')) return;
+  const entita = clean(casella.value);
+  if (!entita.includes(".")) return;
+  const prima = vociTermiche(
+    leggiConfig(),
+    allStates() || {},
+    root.cdCfg?.("cd_entity_overrides") || {},
+  );
+  const dopo = conLaCaldaia(prima, entita);
+  if (dopo === prima && Array.isArray(leggiConfig())) return;
+  scriviConfig(dopo);
+  /* Le righe dell'elenco si ridisegnano con la voce nuova. */
+  doc?.querySelectorAll?.("#ed-body [data-dm-termico-caldo]").forEach((nodo) => nodo.remove());
+  montaEditor();
+  disegnaPannello();
 }
 
 function rigaEditor(voce, indice) {
@@ -434,6 +491,7 @@ export function installTermicoDelCaldo() {
       montaEditor();
     });
   }
+  doc.addEventListener("change", laCaldaiaEntraFraLeVoci);
   doc.addEventListener(
     "click",
     (evento) => {

@@ -52,6 +52,8 @@ async function apriLaSchedaAuto(page, testInfo) {
     window.apriConfigEntita();
     window.editorSwitch("sez2");
   });
+  /* Coi veicoli salvati il modulo e' chiuso: si apre con la matita. */
+  await page.locator("#ed-body [data-ev-edit]").first().click();
 }
 
 test("l'entità immagine si scrive nel campo, e la foto è quella che pubblica", async ({

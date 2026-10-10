@@ -10,6 +10,39 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.11.0
+
+**gdahome anche al polso, su Apple Watch e Wear OS.** I comandi rapidi scelti
+per l'auto, i dispositivi, le azioni rapide e chi è in casa; e il navigatore,
+con la prossima manovra, l'arrivo e «Portami a casa». È la stessa app del
+telefono, che la porta sull'orologio, e fa parte di gdahome Premium. Le
+serrature chiedono «Sei sicuro?» prima di partire, al polso e in auto.
+
+**Il config del tablet, e solo quello.** Sul pannello a muro, tenendo premuto
+l'orologio (col PIN, se c'è) si apre soltanto la scheda «A muro»; chiusa, torna
+il pannello, senza passare dalla plancia classica. Un config aperto dal menu
+dell'app toglie subito il pannello e, chiuso, lo rimette.
+
+**Fino a 30 plance con Premium.** Erano otto: adesso una casa ne tiene trenta,
+una per ogni tablet e ogni stanza. Nell'app la tendina delle plance scorre.
+
+**Il config fa meno sorprese.** Dopo un azzeramento si vedono solo la Home e
+il Config: una sezione si accende quando ci si mette dentro un'entità. Se si
+cambia scheda con un'entità scritta e non salvata, la plancia lo chiede prima.
+Nella Batteria di accumulo il «Salva pacco» è tornato al suo posto, e
+«Aggiungi pacco» non butta più via quello che si stava scrivendo. In Energia
+la linguetta Batterie sta in fondo, dopo Temperature.
+
+**Più semplice da configurare.** Ogni pagina sta chiusa in una riga — icona,
+nome, tipo — e si apre con un tocco; dentro: nome sul tablet, icona, tipo di
+pagina, poi il resto. Orientamento, tema, riposo, notte e PIN stanno in «Altre
+impostazioni».
+
+**Una pagina Clima con Caldo e Freddo dentro.** Al posto di due pagine, una
+sola con le due linguette, come la sezione Clima; si sceglie su quale si apre.
+
+**Le pagine si cambiano dalle linguette.** Niente più swipe.
+
 ## 1.10.11
 
 **La plancia a muro si fa come la vuoi.** In ogni posto delle pagine Stanza e

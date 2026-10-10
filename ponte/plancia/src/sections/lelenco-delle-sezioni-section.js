@@ -28,12 +28,7 @@
  * si contraddice.
  */
 import { rememberManualVisibility } from "./beta26-real-device-stability-section.js";
-import {
-  SEZIONI,
-  quanteAccese,
-  sezioneAccesa,
-  sezioniPerFamiglia,
-} from "../core/lelenco-delle-sezioni.js";
+import { SEZIONI, sezioneAccesa, sezioniPerFamiglia } from "../core/lelenco-delle-sezioni.js";
 import {
   ORDINE_IMPOSTAZIONI,
   clean,
@@ -47,6 +42,7 @@ import {
   root,
   t,
   senzaCadere,
+  contenutoNoto,
 } from "./shared.js";
 
 const KEY = "__DASHBOARDMODERN_ELENCO_SEZIONI__";
@@ -66,8 +62,17 @@ function sezioniDiCasa() {
 
 /* ── il disegno ───────────────────────────────────────────────────────── */
 
+/* Accesa vuol dire: nessuno l'ha spenta, e ha qualcosa da mostrare. Le
+ * sezioni che decidono da sole se sono piene (UPS, Piante, Acqua e gas, Le
+ * tue sezioni…) lo dicono in `segnaContenuto`; vuote, nella barra non ci
+ * sono, e qui non devono risultare accese — era quello che dopo un reset
+ * totale le faceva vedere attive. */
+function accesaDavvero(sezioni, chiave) {
+  return sezioneAccesa(sezioni, chiave) && contenutoNoto(chiave) !== false;
+}
+
 function rigaMarkup(voce, sezioni) {
-  const accesa = sezioneAccesa(sezioni, voce.chiave);
+  const accesa = accesaDavvero(sezioni, voce.chiave);
   const nome = t(voce.it, voce.en);
   return `<div class="dm-elenco-riga" data-dm-sezione="${esc(voce.chiave)}">
     <button type="button" class="dm-elenco-int" role="switch" aria-checked="${accesa ? "true" : "false"}"
@@ -81,7 +86,8 @@ function rigaMarkup(voce, sezioni) {
 
 function corpoMarkup() {
   const sezioni = sezioniDiCasa();
-  const { accese, tutte } = quanteAccese(sezioni, SEZIONI);
+  const tutte = SEZIONI.length;
+  const accese = SEZIONI.filter((voce) => accesaDavvero(sezioni, voce.chiave)).length;
   const gruppi = sezioniPerFamiglia(SEZIONI)
     .map(
       (famiglia) => `<div class="dm-elenco-famiglia">

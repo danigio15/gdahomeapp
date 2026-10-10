@@ -50,6 +50,7 @@ import {
   root,
   t,
   senzaCadere,
+  segnaContenuto,
 } from "./shared.js";
 import { nomeDaHomeAssistant } from "./editor-slots-section.js";
 
@@ -286,7 +287,7 @@ function sezioneAccesa() {
 function accendiLaVoce() {
   const voce = ensurePianteTab();
   if (!voce) return;
-  const serve = ciSonoPiante() && sezioneAccesa();
+  const serve = segnaContenuto(PIANTE_TAB, ciSonoPiante()) && sezioneAccesa();
   if (serve) voce.style.removeProperty("display");
   else voce.style.setProperty("display", "none", "important");
   const pagina = doc.getElementById(PIANTE_PAGE_ID);

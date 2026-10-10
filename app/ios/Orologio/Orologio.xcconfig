@@ -1,0 +1,10 @@
+// Le impostazioni del target dell'Apple Watch (`gdahome Watch`).
+//
+// La versione e il numero devono essere quelli dell'app per iPhone, o l'App
+// Store rifiuta il pacchetto: si prendono dallo stesso posto, il file che
+// Flutter scrive a ogni costruzione. Opzionale (`#include?`): senza Flutter
+// davanti — la prova di compilazione del solo orologio — vale 1.0 (1).
+#include? "../Flutter/Generated.xcconfig"
+
+MARKETING_VERSION = $(FLUTTER_BUILD_NAME:default=1.0)
+CURRENT_PROJECT_VERSION = $(FLUTTER_BUILD_NUMBER:default=1)

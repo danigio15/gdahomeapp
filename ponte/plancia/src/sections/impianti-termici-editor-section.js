@@ -40,6 +40,7 @@ import {
   CHIAVE_SOLARI,
   CHIAVE_STUFE,
   ETICHETTE_TERMICHE,
+  GRUPPI_DEL_SOLARE,
   TIPI_TERMICI,
   PRIMO_SOLARE,
   caselleSolariDa,
@@ -382,14 +383,22 @@ function salvaSolari(lista, scelto) {
 }
 
 function caselleSolare(index, voce) {
-  return CASELLE_SOLARE.map(({ ref, it, en }) => {
-    const id = `dm-solare-${index}-${ref.replace(/\W+/g, "_")}`;
-    return `<label class="ed-slot dm-todo-ed-field"><span class="ed-slot-lbl">${esc(t(it, en))}</span>
+  return GRUPPI_DEL_SOLARE.map(
+    (gruppo) =>
+      `<div class="ed-sec-title dm-solare-gruppo">${esc(t(gruppo.it, gruppo.en))}</div>` +
+      CASELLE_SOLARE.filter((riga) => riga.gruppo === gruppo.id)
+        .map(({ ref, it, en, aiutoIt, aiutoEn }) => {
+          const id = `dm-solare-${index}-${ref.replace(/\W+/g, "_")}`;
+          return `<label class="ed-slot dm-todo-ed-field"><span class="ed-slot-lbl">${esc(t(it, en))}</span>
       <span class="ed-form-row"><input id="${id}" class="ed-input mono" data-solare-field="${esc(ref)}"
         value="${esc(clean(voce?.caselle?.[ref]))}" placeholder="sensor.qualcosa" autocomplete="off"
         spellcheck="false"><button type="button" class="dm-entity-picker" data-solare-pick="${id}"
-        aria-label="${t("Scegli entità", "Choose entity")}">🔍</button></span></label>`;
-  }).join("");
+        aria-label="${t("Scegli entità", "Choose entity")}">🔍</button></span><small class="dm-solare-aiuto">${esc(
+          t(aiutoIt, aiutoEn),
+        )}</small></label>`;
+        })
+        .join(""),
+  ).join("");
 }
 
 function rigaSolareMarkup(voce, index) {
@@ -989,9 +998,66 @@ function sistemaLeCaselleDelSolare(body, attiva) {
     if (caselle.parentElement !== posto) posto.prepend(caselle);
     caselle.hidden = false;
     caselle.open = true;
+    ordinaLeCaselleDelSolare(caselle);
     return true;
   }
   caselle.hidden = true;
+  return true;
+}
+
+/* Le caselle del guscio, in due gruppi e ognuna con la sua spiegazione.
+ *
+ * «Vedo un sacco di volte entità solare termico da configurare e non riesco a
+ * capire cosa va.» Il guscio le stampa nell'ordine in cui le ha scritte chi le
+ * ha inventate, col nome del dato. Qui si mettono nell'ordine della pagina —
+ * prima le misure, poi i tasti — con un titolo per gruppo e, sotto ogni
+ * casella, quale riquadro o tasto muove. Le caselle si spostano e non si
+ * copiano: sono del guscio, e dentro c'e' quello che si sta scrivendo. Si
+ * sposta solo cio' che non e' gia' al suo posto, cosi' un giro in piu' non
+ * tocca niente. */
+function ordinaLeCaselleDelSolare(caselle) {
+  const corpo = caselle.querySelector(".ed-acc-body");
+  if (!corpo) return false;
+  const casella = (ref) =>
+    corpo.querySelector(`.ed-slot-in[data-ref="${ref}"]`)?.closest(".ed-slot") || null;
+  const prima = CASELLE_SOLARE.map((riga) => casella(riga.ref)).find(Boolean);
+  if (!prima || prima.parentElement !== corpo) return false;
+  const voluti = [];
+  for (const gruppo of GRUPPI_DEL_SOLARE) {
+    const righe = CASELLE_SOLARE.filter((riga) => riga.gruppo === gruppo.id)
+      .map((riga) => [riga, casella(riga.ref)])
+      .filter(([, nodo]) => nodo && nodo.parentElement === corpo);
+    if (!righe.length) continue;
+    let titolo = corpo.querySelector(`:scope > [data-dm-solare-gruppo="${gruppo.id}"]`);
+    if (!titolo) {
+      titolo = doc.createElement("div");
+      titolo.className = "ed-sec-title dm-solare-gruppo";
+      titolo.dataset.dmSolareGruppo = gruppo.id;
+      titolo.textContent = t(gruppo.it, gruppo.en);
+    }
+    voluti.push(titolo);
+    for (const [riga, nodo] of righe) {
+      const nome = nodo.querySelector(".ed-slot-lbl input.wz-lbl-edit");
+      const nuovo = t(riga.it, riga.en);
+      if (nome && nome.value !== nuovo && (riga.fabbrica || []).includes(clean(nome.value)))
+        nome.value = nuovo;
+      if (!nodo.querySelector("[data-dm-solare-aiuto]")) {
+        const aiuto = doc.createElement("div");
+        aiuto.className = "ed-hint dm-solare-aiuto";
+        aiuto.dataset.dmSolareAiuto = "";
+        aiuto.textContent = t(riga.aiutoIt, riga.aiutoEn);
+        nodo.append(aiuto);
+      }
+      voluti.push(nodo);
+    }
+  }
+  if (!voluti.length) return false;
+  if (!voluti[0].isConnected) prima.before(voluti[0]);
+  let cursore = voluti[0];
+  for (const nodo of voluti.slice(1)) {
+    if (cursore.nextElementSibling !== nodo) cursore.after(nodo);
+    cursore = nodo;
+  }
   return true;
 }
 
@@ -1334,6 +1400,12 @@ function installStyles() {
   installStyle(
     "dm-impianti-termici-editor-style",
     `
+      /* I due gruppi del solare e la riga che dice cosa muove ogni casella:
+         la voce di una nota, piccola e smorzata, come la spiegazione della
+         casella caldaia. */
+      #ed-body .dm-solare-gruppo{margin:18px 0 6px}
+      #ed-body .dm-solare-aiuto{display:block;margin:4px 0 2px;font-size:12px;line-height:1.4;
+        color:var(--secondary-text-color,#64748b)}
       #ed-body .dm-it-ed-sep{margin-top:24px;padding-top:16px;
         border-top:1px solid var(--card-border,#e2e8f0)}
       #ed-body .dm-it-ed-scelte{display:grid;gap:8px;margin-bottom:6px}

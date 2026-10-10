@@ -28,18 +28,16 @@ export const CHIAVE_MURO = "cd_muro";
  * - `luci`: tutte le luci della casa;
  * - `freddo` e `caldo`: le unita' del clima che raffrescano o che scaldano
  *   (la pompa di calore sta in tutte e due, come nella pagina Clima). */
-export const MODELLI = Object.freeze([
-  "stanza",
-  "scene",
-  "ingresso",
-  "personale",
-  "luci",
-  "freddo",
-  "caldo",
-]);
+export const MODELLI = Object.freeze(["stanza", "scene", "ingresso", "personale", "luci", "clima"]);
 
 /** Le pagine che si riempiono da sole con un intero gruppo della casa. */
-export const MODELLI_ELENCO = Object.freeze(["luci", "freddo", "caldo"]);
+export const MODELLI_ELENCO = Object.freeze(["luci", "clima"]);
+
+/* «Clima caldo e freddo non devono essere due sezioni ma una che si chiama
+ * clima e dentro due tab caldo freddo, come la sezione clima.» Le pagine
+ * nate come «freddo» o «caldo» diventano una pagina Clima che si apre su
+ * quella linguetta. */
+export const ZONE_DEL_CLIMA = Object.freeze(["freddo", "caldo"]);
 export const PAGINE_AL_MASSIMO = 4;
 export const POSTI = 6;
 export const TIPI_DI_COMANDO = Object.freeze([
@@ -188,7 +186,8 @@ const nuovoId = () => `p${Date.now().toString(36)}${(contatore++).toString(36)}`
 /** Una pagina del tablet. */
 export function paginaPulita(input, indice = 0) {
   const dentro = input && typeof input === "object" ? input : {};
-  const modello = scelta(dentro.modello, MODELLI, "stanza");
+  const vecchia = ZONE_DEL_CLIMA.includes(dentro.modello) ? dentro.modello : "";
+  const modello = vecchia ? "clima" : scelta(dentro.modello, MODELLI, "stanza");
   const id = /^[a-z0-9-]{1,24}$/.test(String(dentro.id || "")) ? dentro.id : `p${indice + 1}`;
   const comandi = senzaVuotiInCoda(
     (Array.isArray(dentro.comandi) ? dentro.comandi : [])
@@ -210,6 +209,10 @@ export function paginaPulita(input, indice = 0) {
     id,
     modello,
     titolo: testo(dentro.titolo, 32),
+    /* Il disegno della linguetta: vuoto, quello del tipo di pagina. */
+    disegno: testo(dentro.disegno, 32),
+    /* Su quale linguetta si apre la pagina Clima. */
+    zona: scelta(vecchia || dentro.zona, ZONE_DEL_CLIMA, "freddo"),
     stanza: testo(dentro.stanza, 80),
     /* `scelti` dice se i comandi li ha scelti qualcuno. Finche' e' falso la
      * pagina segue la stanza: una luce aggiunta nella principale compare da
@@ -517,9 +520,10 @@ export function comandiProposti(fonte = {}, nomeStanza = "") {
 }
 
 /** I comandi che la pagina mostra adesso: quelli scelti, o quelli proposti. */
-export function comandiDellaPagina(pagina, fonte = {}) {
+export function comandiDellaPagina(pagina, fonte = {}, zona = "") {
   if (!pagina) return [];
   if (pagina.modello === "personale") return pagina.comandi;
+  if (pagina.modello === "clima") return comandiDellElenco(zona || pagina.zona || "freddo", fonte);
   if (MODELLI_ELENCO.includes(pagina.modello)) return comandiDellElenco(pagina.modello, fonte);
   return pagina.scelti ? pagina.comandi : comandiProposti(fonte, pagina.stanza);
 }

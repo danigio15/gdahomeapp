@@ -371,6 +371,13 @@ controllo e' spento (tutti passano, come oggi): si accende insieme alla chiave.
   c'e' una schermata sola che dice cosa serve e dove si fa (sul telefono). Il
   comando lasciato in macchina si ricontrolla anche nel motore che lo esegue
   (`lib/auto/in_auto.dart`), e senza Premium il filo con la casa non si apre.
+- **Al polso e' Premium**, tutto: la casa e il navigatore, su Apple Watch e
+  Wear OS (`docs/OROLOGIO.md`). Lo decide lo stesso biglietto dell'auto, letto
+  dal telefono (`LOrologio.swift`, `IlTramiteDellOrologio.kt`). Senza Premium
+  all'orologio arriva solo `{"v":1,"premium":false}` — nessun nome di casa,
+  nessuna guida — e lui mostra la schermata che dice dove si attiva; un tocco
+  rimasto da prima viene rifiutato dal telefono («Serve gdahome Premium»)
+  prima di scrivere il comando.
 
 ## Il giorno dei pagamenti: le app vecchie si fermano
 

@@ -55,6 +55,7 @@ import {
   root,
   t,
   senzaCadere,
+  segnaContenuto,
 } from "./shared.js";
 import { nomeDaHomeAssistant } from "./editor-slots-section.js";
 
@@ -348,7 +349,7 @@ function sezioneAccesa() {
 function accendiLaVoce() {
   const voce = ensureContatoriTab();
   if (!voce) return;
-  const serve = ciSonoContatori() && sezioneAccesa();
+  const serve = segnaContenuto(CONTATORI_TAB, ciSonoContatori()) && sezioneAccesa();
   if (serve) voce.style.removeProperty("display");
   else voce.style.setProperty("display", "none", "important");
   const pagina = doc.getElementById(CONTATORI_PAGE_ID);

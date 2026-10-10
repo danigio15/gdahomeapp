@@ -70,16 +70,16 @@ test("l'interruttore scrive dove il guscio legge, e la riga si spegne", async ({
 }, testInfo) => {
   await apriLeImpostazioni(page, testInfo);
 
-  const interruttore = page.locator('#dm-elenco-sezioni [data-dm-sezione-int="varchi"]');
+  const interruttore = page.locator('#dm-elenco-sezioni [data-dm-sezione-int="luci"]');
   await expect(interruttore).toHaveAttribute("aria-checked", "true");
   await interruttore.click();
 
   /* Quello che conta non è il colore: è che la preferenza finisca dove la
    * legge il guscio, che è `cd_sections`. Scriverne un'altra vorrebbe dire
    * una preferenza che nessuno legge — è già successo. */
-  const scritto = await page.evaluate(() => (window.cdCfg?.("cd_sections") || {}).varchi);
+  const scritto = await page.evaluate(() => (window.cdCfg?.("cd_sections") || {}).luci);
   expect(scritto).toBe(false);
-  await expect(page.locator('#dm-elenco-sezioni [data-dm-sezione-int="varchi"]')).toHaveAttribute(
+  await expect(page.locator('#dm-elenco-sezioni [data-dm-sezione-int="luci"]')).toHaveAttribute(
     "aria-checked",
     "false",
   );
@@ -104,7 +104,7 @@ test("il conto in cima segue gli interruttori", async ({ page }, testInfo) => {
   const [accese, tutte] = prima.split("/").map(Number);
   expect(tutte).toBe(QUANTE);
 
-  const interruttore = page.locator('#dm-elenco-sezioni [data-dm-sezione-int="rifiuti"]');
+  const interruttore = page.locator('#dm-elenco-sezioni [data-dm-sezione-int="luci"]');
   const eraAccesa = (await interruttore.getAttribute("aria-checked")) === "true";
   await interruttore.click();
 

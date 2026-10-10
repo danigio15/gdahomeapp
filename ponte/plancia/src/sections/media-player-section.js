@@ -62,6 +62,7 @@ import {
   readJson,
   root,
   t,
+  segnaContenuto,
 } from "./shared.js";
 
 const KEY = "__DASHBOARDMODERN_MEDIA_PLAYER__";
@@ -305,7 +306,12 @@ export function comandiMediaMarkup(riga) {
        * elencare la sua libreria E ricevere un brano: le due bandiere stanno
        * insieme in «puo.sfoglia», e il perche' e' scritto nel nucleo. */
       riga.puo.sfoglia
-        ? tastoMarkup(riga, "sfoglia", t("Scegli cosa suonare", "Choose what to play"), GLIFI.sfoglia)
+        ? tastoMarkup(
+            riga,
+            "sfoglia",
+            t("Scegli cosa suonare", "Choose what to play"),
+            GLIFI.sfoglia,
+          )
         : ""
     }
     ${riga.puo.spegni && !riga.spento ? tastoMarkup(riga, "spegni", t("Spegni", "Turn off"), GLIFI.spegni) : ""}
@@ -649,6 +655,7 @@ function paginaAperta() {
 export function renderMediaPlayer() {
   if (!doc) return false;
   const configurati = lettoriConfigurati(configurazione());
+  segnaContenuto(MEDIA_TAB, configurati.length > 0);
   const accesa = funzioneAccesa();
   const voce =
     configurati.length && accesa
@@ -934,8 +941,7 @@ async function chiediLaCartella() {
  * inventa l'attrezzo del socket invece non dicono niente a nessuno, e quelle
  * si traducono. */
 function parolaDelGuaio(guaio) {
-  if (guaio === "timeout")
-    return t("Il lettore non ha risposto.", "The player did not answer.");
+  if (guaio === "timeout") return t("Il lettore non ha risposto.", "The player did not answer.");
   if (guaio === "socket" || guaio === "msgId")
     return t("Manca il collegamento a Home Assistant.", "No connection to Home Assistant.");
   return guaio || t("Non si riesce a leggere la libreria.", "The library cannot be read.");
@@ -957,9 +963,7 @@ const CLASSI_CHE_TRASMETTONO = new Set(["channel", "podcast", "tv_show", "episod
 
 function segnoDellaVoce(voce) {
   if (voce.sfogliabile) return SEGNI_DELLE_VOCI.cartella;
-  return CLASSI_CHE_TRASMETTONO.has(voce.classe)
-    ? SEGNI_DELLE_VOCI.onde
-    : SEGNI_DELLE_VOCI.nota;
+  return CLASSI_CHE_TRASMETTONO.has(voce.classe) ? SEGNI_DELLE_VOCI.onde : SEGNI_DELLE_VOCI.nota;
 }
 
 /* Una miniatura dentro un «url()» di CSS, e non dentro un «img».
@@ -1011,8 +1015,8 @@ function filoMarkup(filo) {
       (passo, indice) =>
         `${indice ? `<i aria-hidden="true">›</i>` : ""}<button type="button" data-dm-sf="filo"
           data-dm-sf-passo="${indice}"${indice === filo.length - 1 ? ` aria-current="true"` : ""}>${esc(
-          passo.titolo || t("Da ascoltare", "To play"),
-        )}</button>`,
+            passo.titolo || t("Da ascoltare", "To play"),
+          )}</button>`,
     )
     .join("")}</nav>`;
 }
@@ -1020,8 +1024,7 @@ function filoMarkup(filo) {
 function corpoDelloSfoglio(suo) {
   if (suo.carica)
     return `<p class="dm-sf-nota" role="status">${esc(t("Sto guardando…", "Looking…"))}</p>`;
-  if (suo.errore)
-    return `<p class="dm-sf-nota dm-sf-guaio" role="alert">${esc(suo.errore)}</p>`;
+  if (suo.errore) return `<p class="dm-sf-nota dm-sf-guaio" role="alert">${esc(suo.errore)}</p>`;
   if (!suo.voci.length)
     return `<p class="dm-sf-nota">${esc(t("Qui non c'è niente.", "Nothing here."))}</p>`;
   const puoAccodare = letturaDiUnLettore(suo.entity)?.puo?.accoda === true;
@@ -1039,7 +1042,10 @@ function corpoDelloSfoglio(suo) {
  * un'informazione. */
 function quanteNeMancano(quante) {
   if (quante === 1)
-    return t("E un'altra che non sta in questo elenco.", "And one more that does not fit this list.");
+    return t(
+      "E un'altra che non sta in questo elenco.",
+      "And one more that does not fit this list.",
+    );
   return t(
     `E altre ${quante} che non stanno in questo elenco.`,
     `And ${quante} more that do not fit this list.`,

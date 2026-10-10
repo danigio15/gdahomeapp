@@ -186,6 +186,9 @@ test.describe("the configuration behaves the same on every tab", () => {
     await boot(page, testInfo);
     for (const tab of [...SECTION_TABS, ...PLAIN_TABS]) {
       await openTab(page, tab);
+      /* Coi veicoli gia' salvati la scheda mostra l'elenco, e il modulo — col
+       * suo salvataggio — si apre con ＋ o con la matita. */
+      if (tab === "sez2") await page.locator("#ed-body [data-ev-add-new]").click();
       /* Un salvataggio solo, e dice cosa salva.
        *
        * «＋ Aggiungi auto» apre una scheda nuova: e' un gesto del profilo, non

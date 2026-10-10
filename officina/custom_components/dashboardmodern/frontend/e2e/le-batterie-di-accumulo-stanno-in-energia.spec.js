@@ -6,7 +6,7 @@
  *
  *   · la scheda «Batteria di accumulo» del Config, sotto l'insegna Energia, che alla prima apertura si
  *     riempie da sola dei due pacchi, con le loro sedici celle;
- *   · la linguetta «Batterie» dentro Energia, accanto a Istantanea, con la
+ *   · la linguetta «Batterie» dentro Energia, in fondo dopo Temperature, con la
  *     risposta grande, l'avviso del pacco da bilanciare e una scheda per pacco;
  *   · la tessera «Accumulo» in Home, che chiede attenzione e porta alla
  *     linguetta.
@@ -196,6 +196,12 @@ test("la linguetta Batterie in Energia: due pacchi, uno da bilanciare", async ({
   const linguetta = page.locator('#page-energy [data-dm-energia-vista="accumulo"]');
   await expect(linguetta).toBeVisible();
   await expect(linguetta).toHaveText(/Batterie/);
+  /* In fondo alla fila, dopo Temperature. */
+  const fila = await page
+    .locator("#page-energy .sub-tabs-energy > .sub-tab-btn:visible")
+    .allTextContents();
+  expect(fila.at(-1)).toMatch(/Batterie/);
+  expect(fila.at(-2)).toMatch(/Temperature/);
   await linguetta.click();
 
   const vista = page.locator("#view-batterie");
@@ -256,5 +262,47 @@ test("la tessera Accumulo in Home chiede attenzione e porta alla linguetta", asy
   await expect(page.locator("#view-batterie")).toHaveClass(/active/);
   await expect(page.locator('#page-energy [data-dm-energia-vista="accumulo"]')).toHaveClass(
     /active/,
+  );
+});
+
+test("un pacco nuovo ha il suo «Salva», e «Aggiungi» non butta via quello scritto", async ({
+  page,
+}, testInfo) => {
+  /* «Quando inserisco le batterie non c'è un salva della nuova batteria, e se
+   * premo Aggiungi cancella tutto.» */
+  await avvia(page, testInfo);
+  await page.evaluate(() => window.apriConfigEntita());
+  await page.locator('#editor-modal .ed-tab[data-tab="accumulo"]').click();
+  const righe = page.locator('#ed-body [data-dm-dich-sezione="accumulo"] .dm-dich-riga');
+  await expect(righe).toHaveCount(2, { timeout: 15_000 });
+
+  await page.locator("#ed-body [data-dm-dich-aggiungi]").click();
+  await expect(righe).toHaveCount(3);
+  const nuovo = page.locator('#ed-body [data-dm-dich-indice="2"]');
+  /* Il salvataggio del pacco sta nel pacco, e si vede. */
+  await expect(nuovo.locator('[data-dm-dich-salva="2"]')).toBeVisible();
+
+  await nuovo.locator('[data-dm-dich-campo="name"]').fill("Pacco del garage");
+  await nuovo.locator('[data-dm-dich-campo="entity"]').evaluate((campo) => {
+    campo.value = "sensor.garage_bms_state_of_charge";
+    campo.dispatchEvent(new Event("input", { bubbles: true }));
+    campo.dispatchEvent(new Event("change", { bubbles: true }));
+  });
+
+  /* Senza salvare, un altro pacco: quello scritto resta. */
+  await page.locator("#ed-body [data-dm-dich-aggiungi]").click();
+  await expect(righe).toHaveCount(4);
+  await expect(righe.nth(2)).toContainText("Pacco del garage");
+  const salvati = await page.evaluate(() => JSON.parse(localStorage.getItem("cd_accumulo")));
+  expect(salvati.righe[2]).toMatchObject({
+    name: "Pacco del garage",
+    entity: "sensor.garage_bms_state_of_charge",
+  });
+
+  /* E il suo «Salva» chiude il pacco aperto. */
+  await page.locator('#ed-body [data-dm-dich-salva="3"]').click();
+  await expect(page.locator('#ed-body [data-dm-dich-indice="3"]')).toHaveAttribute(
+    "data-open",
+    "false",
   );
 });

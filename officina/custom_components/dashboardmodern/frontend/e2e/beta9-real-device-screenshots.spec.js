@@ -181,6 +181,8 @@ for (const variant of PRIMARY) {
     );
 
     await openEditor(page, "sez2");
+    /* Coi veicoli salvati il modulo e' chiuso: si apre con la matita. */
+    await page.locator("#ed-body [data-ev-edit]").first().click();
     const appearance = page.locator("#ed-body [data-ev-appearance]");
     await expect(appearance).toBeVisible();
     /* Brand and model open the vehicle's own section, above that car's entities.

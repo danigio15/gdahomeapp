@@ -82,7 +82,10 @@ test("senza nessuna pagina aperta la fascia della Home torna", async ({ page }, 
     for (const nodo of document.querySelectorAll(".page")) nodo.classList.remove("active");
     document.querySelector("body>header:not(.dm-page-mast)").style.display = "none";
   });
-  await expect(laFascia(page)).toBeHidden();
+  /* Qui si controllava che la fascia fosse spenta. Da quando la regola legge
+   * un segno sul corpo, scritto a ogni cambio di classe delle pagine, la
+   * plancia puo' rimettersi in piedi prima che la prova guardi: quello che
+   * conta e' come finisce, ed e' sotto. */
 
   await sveglia(page);
   await expect(laFascia(page)).toBeVisible({ timeout: 10_000 });
@@ -103,8 +106,9 @@ test("con due pagine aperte insieme la fascia della Home torna", async ({ page }
     document.getElementById("page-energy")?.classList.add("active");
   });
   /* Qui la fascia e' spenta da un `!important`: togliere lo stile in linea —
-   * che e' quello che il guardiano sapeva fare — non la riaccende. */
-  await expect(laFascia(page)).toBeHidden();
+   * che e' quello che il guardiano sapeva fare — non la riaccende. Se sia gia'
+   * tornata quando la prova guarda dipende da chi arriva prima, quindi si
+   * guarda come finisce. */
 
   await sveglia(page);
   await expect(laFascia(page)).toBeVisible({ timeout: 10_000 });

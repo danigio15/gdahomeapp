@@ -33,6 +33,8 @@ test.describe("la scheda a muro", () => {
     await expect(body.locator('[data-mu-ed-pagina="0"]')).toBeVisible();
     await expect(body.locator('[data-mu-ed-campo="pagine.0.stanza"]')).toHaveValue("Soggiorno");
     await body.locator('[data-mu-ed-nuova="scene"]').click();
+    /* Il tema sta nelle «Altre impostazioni», chiuse finche' non si aprono. */
+    await body.locator("[data-mu-ed-altro]").click();
     await body.locator('[data-mu-ed-metti="tema"][data-mu-ed-valore="scuro"]').click();
     await body.locator("[data-dm-save-all]").click();
     const muro = await salvato(page);
@@ -100,18 +102,28 @@ test.describe("la scheda a muro", () => {
     });
   });
 
-  test("le pagine nuove: personalizzata, tutte le luci, clima freddo e caldo", async ({
+  test("le pagine nuove: personalizzata, tutte le luci e il clima con caldo e freddo dentro", async ({
     page,
   }, testInfo) => {
     await apriLaCasaAMuro(page, testInfo, { muro: { attiva: true, pagine: [] } });
     await apriLaScheda(page);
     const body = page.locator("#ed-body");
-    for (const modello of ["personale", "luci", "freddo", "caldo"])
+    for (const modello of ["personale", "luci", "clima"])
       await body.locator(`[data-mu-ed-nuova="${modello}"]`).click();
     await expect(body.locator('[data-mu-ed-pagina="1"]')).toContainText(/luci/i);
+    /* L'ultima aggiunta e' quella aperta: nome, icona, e su quale linguetta
+     * si apre il clima. */
+    await body.locator('[data-mu-ed-campo="pagine.2.titolo"]').fill("Riscaldamento");
+    await body.locator('[data-mu-ed-campo="pagine.2.disegno"]').selectOption("caldo");
+    await body.locator('[data-mu-ed-metti="pagine.2.zona"][data-mu-ed-valore="caldo"]').click();
     await body.locator("[data-dm-save-all]").click();
     const muro = await salvato(page);
-    expect(muro.pagine.map((p) => p.modello)).toEqual(["personale", "luci", "freddo", "caldo"]);
+    expect(muro.pagine.map((p) => p.modello)).toEqual(["personale", "luci", "clima"]);
+    expect(muro.pagine[2]).toMatchObject({
+      titolo: "Riscaldamento",
+      disegno: "caldo",
+      zona: "caldo",
+    });
   });
 
   test("con Base la scheda e' chiusa e non salva", async ({ page }, testInfo) => {

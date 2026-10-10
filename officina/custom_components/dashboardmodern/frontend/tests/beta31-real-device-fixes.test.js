@@ -179,6 +179,7 @@ test("the retired Home rows are declared once and never rendered", async () => {
   assert.deepEqual(RETIRED_EDITOR_SLOTS, [
     "dm.home_interruttore_antifurto",
     "dm.home_script_apertura_cancello",
+    "dm.boiler_sensore_pompa_solare",
   ]);
   assert.equal(isRetiredEditorSlot("dm.home_meteo"), false);
 });

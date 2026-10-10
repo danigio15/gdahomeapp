@@ -37,6 +37,10 @@ export const EDITOR_SLOT_SECTIONS = Object.freeze({
 export const RETIRED_EDITOR_SLOTS = Object.freeze([
   "dm.home_interruttore_antifurto",
   "dm.home_script_apertura_cancello",
+  /* Il «Sensore pompa solare»: nessuno lo leggeva in pagina, e accanto al
+   * comando e allo stato della pompa era la terza casella uguale — chi
+   * configurava ci metteva la stessa entita' tre volte senza sapere perche'. */
+  "dm.boiler_sensore_pompa_solare",
 ]);
 
 const RETIRED = new Set(RETIRED_EDITOR_SLOTS);

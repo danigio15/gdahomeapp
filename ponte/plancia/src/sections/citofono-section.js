@@ -37,6 +37,7 @@ import {
   t,
   writeJsonIfChanged,
   senzaCadere,
+  segnaContenuto,
 } from "./shared.js";
 
 const KEY = "__DASHBOARDMODERN_CITOFONO__";
@@ -151,7 +152,7 @@ function sezioneAccesa() {
 function accendiLaVoce(letture) {
   const voce = ensureCitofonoTab();
   if (!voce) return;
-  const serve = ceQualcosaDaMostrare(letture) && sezioneAccesa();
+  const serve = segnaContenuto(CITOFONO_TAB, ceQualcosaDaMostrare(letture)) && sezioneAccesa();
   if (serve) voce.style.removeProperty("display");
   else voce.style.setProperty("display", "none", "important");
   const pagina = doc.getElementById(CITOFONO_PAGE_ID);

@@ -52,6 +52,8 @@ async function apriScheda(page, testInfo, tab) {
   });
   await page.evaluate(() => window.apriConfigEntita());
   await page.locator(`.ed-tab[data-tab="${tab}"]`).click();
+  /* Coi veicoli salvati il modulo e' chiuso: si apre con la matita. */
+  if (tab === "sez2") await page.locator("#ed-body [data-ev-edit]").first().click();
   await expect(page.locator("#ed-body .ed-slot").first()).toBeVisible();
 }
 

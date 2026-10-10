@@ -118,6 +118,9 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
     const detto = plancia.provenienzaInDueParole;
     if (plancia.provenienza.stato === "modificata") registro.attenzione(detto);
     else registro.info(detto);
+    /* E se parte impacchettata: una plancia lenta ad aprirsi si spiega spesso
+     * da qui. */
+    registro.info(`la plancia parte ${plancia.paccoInDueParole}`);
   } else {
     registro.attenzione("senza plancia: in ponte/plancia non c'e' niente da servire");
   }

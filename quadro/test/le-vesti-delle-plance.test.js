@@ -364,29 +364,30 @@ test("una plancia in piu' dal cruscotto: nasce in attesa, la casa la crea, e da 
   }
 });
 
-test("di plance se ne tengono otto, contando quelle in attesa; e serve il nome", async () => {
+test("di plance se ne tengono quante nel ponte, contando quelle in attesa; e serve il nome", async () => {
   const b = await banco();
   try {
     const codice = await b.unCodice();
-    const sei = {
+    /* In casa ce ne sono due meno del massimo: due si aggiungono, la terza no. */
+    const quasiPiena = Array.from({ length: PLANCE_AL_MASSIMO - 2 }, (_, i) =>
+      i === 0 ? "primary" : `p${i}`,
+    );
+    const quasi = {
       ...RAPPORTO,
       plance: {
-        quante: 6,
-        configurate: 6,
-        elenco: ["primary", "a", "b", "c", "d", "e"].map((profilo) => ({
-          profilo,
-          titolo: profilo,
-        })),
+        quante: quasiPiena.length,
+        configurate: quasiPiena.length,
+        elenco: quasiPiena.map((profilo) => ({ profilo, titolo: profilo })),
       },
     };
-    await b.deposita(UNA, codice, sei);
+    await b.deposita(UNA, codice, quasi);
     const aggiungi = (titolo) =>
       b.retro(`/casa/${UNA}/plance`, { method: "POST", body: JSON.stringify({ titolo }) });
-    assert.equal((await aggiungi("Sette")).status, 200);
-    assert.equal((await aggiungi("Otto")).status, 200);
-    const nona = await aggiungi("Nove");
-    assert.equal(nona.status, 409);
-    assert.match((await nona.json()).errore, /se ne tengono 8/);
+    assert.equal((await aggiungi("Penultima")).status, 200);
+    assert.equal((await aggiungi("Ultima")).status, 200);
+    const diTroppo = await aggiungi("Di troppo");
+    assert.equal(diTroppo.status, 409);
+    assert.match((await diTroppo.json()).errore, new RegExp(`se ne tengono ${PLANCE_AL_MASSIMO}`));
     const muta = await aggiungi("   ");
     assert.equal(muta.status, 400);
     assert.match((await muta.json()).errore, /serve il nome/);

@@ -20,8 +20,12 @@
  * (`ponte/test/provenienza.test.js`): se i file non tornano col sigillo, le
  * Prove si fermano prima che quella plancia esca di qui.
  *
- *     node strumenti/sigilla-la-plancia.mjs            risigilla com'e'
+ *     node strumenti/sigilla-la-plancia.mjs            rifa' il pacchetto e risigilla
  *     node strumenti/sigilla-la-plancia.mjs --dimmi    dice se tornerebbe
+ *
+ * Prima di sigillare rifa' il pacchetto della plancia
+ * (`impacchetta-la-plancia.mjs`): e' quello che il ponte serve, e deve
+ * essere fatto dai sorgenti che si stanno sigillando.
  *
  * Le impronte non le calcola questo programma: le chiede al ponte, che e' chi
  * poi le verifica. Due formule per la stessa cosa vorrebbero dire, il giorno
@@ -34,6 +38,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { leImpronte, sigilloDi } from "../ponte/src/provenienza.js";
+import { impacchetta } from "./impacchetta-la-plancia.mjs";
 
 const RADICE = dirname(dirname(fileURLToPath(import.meta.url)));
 const PLANCIA = join(RADICE, "ponte", "plancia");
@@ -120,6 +125,8 @@ if (process.argv[1] && process.argv[1].endsWith("sigilla-la-plancia.mjs")) {
     );
     process.exit(aPosto ? 0 : 1);
   }
+  const moduli = impacchetta(PLANCIA);
+  console.log(`pacchetto rifatto: ${moduli} moduli`);
   const nuovo = ilSigillo(PLANCIA, { prima, commit: ilCommit() });
   writeFileSync(ORIGINE, `${JSON.stringify(nuovo, null, 2)}\n`);
   const cambiato = !prima || prima.sigillo !== nuovo.sigillo;

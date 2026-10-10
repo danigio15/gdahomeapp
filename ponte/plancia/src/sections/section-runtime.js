@@ -97,6 +97,7 @@ import { installWeatherInMasthead } from "./weather-in-masthead-section.js";
 import { installShutterSceneSection } from "./shutter-scene-section.js";
 import { installClimatePowerSection } from "./climate-power-section.js";
 import { installAlberatura } from "./alberatura-del-config-section.js";
+import { installRicordatiDiSalvare } from "./ricordati-di-salvare-section.js";
 import { installIlDitoScorreOTocca } from "./il-dito-scorre-o-tocca-section.js";
 import { installElencoDelleSezioni } from "./lelenco-delle-sezioni-section.js";
 import { installModoChiosco } from "./modo-chiosco-section.js";
@@ -189,7 +190,16 @@ import { installStanzePerNome } from "./stanze-per-nome-section.js";
 import { installRadarMeteo } from "./radar-meteo-section.js";
 import { installMinipcShowcaseSection } from "./minipc-showcase-section.js";
 import { installLegacySections, LEGACY_SECTION_KEYS } from "./legacy-sections-registry.js";
-import { activeLocale, allStates, clean, english, section, senzaCadere, t, wrapFunction } from "./shared.js";
+import {
+  activeLocale,
+  allStates,
+  clean,
+  english,
+  section,
+  senzaCadere,
+  t,
+  wrapFunction,
+} from "./shared.js";
 
 const root = globalThis;
 const RUNTIME_KEY = "__DASHBOARDMODERN_SECTION_RUNTIME__";
@@ -1032,6 +1042,9 @@ export function installSectionRuntime() {
      * famiglia davanti a ognuna: si installa dopo tutti gli editor che una
      * linguetta se la aggiungono, cosi' al primo giro le trova gia' tutte. */
     senzaCadere(installAlberatura);
+    /* Un'entita' scritta e non salvata non si perde cambiando linguetta: prima
+     * di uscire dalla scheda, la plancia chiede se salvarla. */
+    senzaCadere(installRicordatiDiSalvare);
     /* Lo scorrimento col dito non deve azionare quello che sfiora (#397): la
      * guardia sta sul documento, in cattura, e vale per ogni elenco lungo —
      * comprese le sezioni che ancora non esistono. */

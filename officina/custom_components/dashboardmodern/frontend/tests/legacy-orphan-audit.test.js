@@ -8,6 +8,9 @@ const frontendRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), 
 const legacyRoot = path.join(frontendRoot, "legacy");
 const staticImportPattern = /(?:import|export)\s+(?:[^"']*?\s+from\s+)?["']([^"']+)["']/g;
 const dynamicImportPattern = /\bimport\s*\(\s*["']([^"']+)["']\s*\)/g;
+/* Uno script che si prende quando serve — hls.js, solo per le telecamere — lo
+ * nomina chi lo carica con `new URL("./…js", …)`: e' un riferimento vero. */
+const lazyScriptPattern = /\bnew URL\(\s*["'](\.[^"']+\.js)["']/g;
 const scriptPattern = /<script\b[^>]*\bsrc=["']([^"']+)["'][^>]*>/g;
 
 async function filesBelow(directory) {
@@ -47,6 +50,7 @@ function importSpecifiers(source) {
   return [
     ...[...source.matchAll(staticImportPattern)].map((match) => match[1]),
     ...[...source.matchAll(dynamicImportPattern)].map((match) => match[1]),
+    ...[...source.matchAll(lazyScriptPattern)].map((match) => match[1]),
   ];
 }
 

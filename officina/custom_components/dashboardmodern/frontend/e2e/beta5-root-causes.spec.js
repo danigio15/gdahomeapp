@@ -211,6 +211,8 @@ for (const variant of PRIMARY) {
     await expect(page.locator("#ed-body button", { hasText: /^⚡$/ })).toHaveCount(0);
 
     await openEditor(page, "sez2");
+    /* Coi veicoli salvati il modulo e' chiuso: si apre con la matita. */
+    await page.locator("#ed-body [data-ev-edit]").first().click();
     const brandPreview = page.locator("#ed-body [data-brand-preview]");
     await expect(brandPreview).toBeVisible();
     await brandPreview.click();

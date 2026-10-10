@@ -9,6 +9,8 @@ import {
   laQuadraturaNonTorna,
 } from "../core/energy-flow-truth.js";
 import { specchioDeiCerchi } from "../core/energy-loads-config.js";
+import { cerchiDelleStanze } from "../core/i-cerchi-delle-stanze.js";
+import { domandaDeiKwhDallaPotenza, kwhDallaPotenza } from "../core/kwh-dalla-potenza.js";
 import { applySignedSources, wattsFromState } from "../core/signed-energy.js";
 import { vehicleBatteryEntity } from "./ev-section.js";
 import {
@@ -244,8 +246,14 @@ function recorderValuesFor(loads, period) {
   const bundle = period === "day" ? state.bundle?.deviceDay : state.bundle?.deviceMonth;
   const devices = bundle?.devices || [];
   const values = bundle?.values;
-  if (!values?.get || !devices.length) return null;
   const resolved = {};
+  /* Chi ha solo la potenza: i suoi kilowattora vengono dalle medie orarie
+   * (`kwhDallaPotenzaPer`). Il paniere per lui non ha un contatore — nel mese
+   * leggerebbe lo stato dei watt come se fossero kilowattora — e la sua voce
+   * vince. */
+  const dallaPotenza = kwhDallaPotenzaPer(loads, period);
+  if (!values?.get || !devices.length)
+    return Object.keys(dallaPotenza).length ? dallaPotenza : null;
   for (const load of loads) {
     const device = devices.find(
       (item) =>
@@ -260,7 +268,87 @@ function recorderValuesFor(loads, period) {
     const value = Number(values.get(source));
     if (Number.isFinite(value)) resolved[clean(load.id) || clean(load.name)] = value;
   }
+  Object.assign(resolved, dallaPotenza);
   return Object.keys(resolved).length ? resolved : null;
+}
+
+/* ── i kilowattora di chi ha solo la potenza ─────────────────────────────
+ *
+ * Giornaliera e Mensile leggono un contatore: il suo stato del giorno o del
+ * mese, o la crescita del contatore di vita nel Recorder. Un elettrodomestico
+ * con la sola presa che misura i watt non ha niente di tutto questo, e nel
+ * cerchio della sua stanza contava zero. I suoi kilowattora si ricavano dalle
+ * medie orarie della potenza (`core/kwh-dalla-potenza.js`): si chiedono una
+ * volta ogni dieci minuti per periodo, e arrivati si ridisegna. */
+const ATTESA_DEI_KWH = 10 * 60 * 1000;
+const CAMPI_DEI_CONTATORI = Object.freeze([
+  "daily_energy_entity",
+  "daily",
+  "monthly_energy_entity",
+  "monthly",
+  "total_energy_entity",
+  "history_entity",
+  "energy_entity",
+]);
+
+function soloPotenza(voce) {
+  if (!clean(voce?.power_entity) && !clean(voce?.power)) return "";
+  if (CAMPI_DEI_CONTATORI.some((campo) => clean(voce?.[campo]))) return "";
+  return resolvedEntity(clean(voce.power_entity) || clean(voce.power));
+}
+
+function chiediIKwh(periodo, entita) {
+  const broker = root.DashboardModernEnergyService?.broker;
+  if (!broker?.request || !entita.length) return;
+  const memoria = (state.kwhDallaPotenza ||= {});
+  const voce = memoria[periodo];
+  const firma = entita.slice().sort().join("|");
+  if (voce && (voce.inCorso || (Date.now() - voce.quando < ATTESA_DEI_KWH && voce.firma === firma)))
+    return;
+  memoria[periodo] = { ...(voce || {}), inCorso: true, firma, quando: Date.now() };
+  const stati = allStates();
+  broker
+    .request(domandaDeiKwhDallaPotenza(entita, periodo, Date.now()), 15000)
+    .then((risposta) => {
+      const valori = new Map();
+      for (const id of entita) {
+        const kwh = kwhDallaPotenza(risposta, id, stati[id]?.attributes?.unit_of_measurement);
+        if (kwh !== null) valori.set(id, kwh);
+      }
+      memoria[periodo] = { inCorso: false, firma, quando: Date.now(), valori };
+      refreshEnergyFlows();
+    })
+    .catch(() => {
+      /* Niente Recorder, o la domanda e' scaduta: si riprova al prossimo giro
+       * dopo l'attesa, e intanto il cerchio dice quello che sa. */
+      memoria[periodo] = { inCorso: false, firma, quando: Date.now(), valori: voce?.valori };
+    });
+}
+
+/** I kilowattora del periodo per chi ha solo la potenza, per id della voce. */
+export function kwhDallaPotenzaPer(voci, periodo) {
+  if (periodo !== "day" && periodo !== "month") return {};
+  const perVoce = [];
+  for (const voce of voci || []) {
+    const entita = soloPotenza(voce);
+    if (entita) perVoce.push([clean(voce.id) || clean(voce.name), entita]);
+  }
+  chiediIKwh(periodo, [...new Set(perVoce.map(([, entita]) => entita))]);
+  const valori = state.kwhDallaPotenza?.[periodo]?.valori;
+  const fuori = {};
+  if (!valori) return fuori;
+  for (const [chiave, entita] of perVoce)
+    if (valori.has(entita)) fuori[chiave] = valori.get(entita);
+  return fuori;
+}
+
+/**
+ * I kilowattora del periodo per ogni voce, come li conta il cerchio: il
+ * paniere del Recorder, e per chi ha solo la potenza le sue medie orarie. La
+ * finestra di un cerchio li usa per dire gli stessi numeri del cerchio.
+ */
+export function kwhDelPeriodo(voci, periodo) {
+  return recorderValuesFor(voci || [], periodo) || {};
 }
 
 function configuredAppliances() {
@@ -268,6 +356,31 @@ function configuredAppliances() {
   if (Array.isArray(value)) return value;
   const stored = readJson("cd_appliances", []);
   return Array.isArray(stored) ? stored : [];
+}
+
+/* Gli elettrodomestici dell'impianto scelto: la stessa regola dei carichi. */
+function appliancesOfThePlant() {
+  const apparecchi = configuredAppliances();
+  const scelto = clean(root.localStorage?.getItem(IMPIANTO_SCELTO_KEY));
+  const { plant, index } = plantAt(section("energy", {}) || {}, scelto);
+  return plant ? plantLoads(apparecchi, plant, index) : apparecchi;
+}
+
+/**
+ * I carichi e gli elettrodomestici come li legge il flusso: per stanza, con la
+ * Wallbox a se' (`core/i-cerchi-delle-stanze.js`). Li legge anche la finestra
+ * che si apre toccando un cerchio, cosi' il cerchio e la sua finestra parlano
+ * della stessa stanza.
+ */
+export function carichiDelFlusso() {
+  const stanze = section("rooms", null);
+  return cerchiDelleStanze({
+    loads: configuredLoads(),
+    appliances: appliancesOfThePlant(),
+    rooms: Array.isArray(stanze) ? stanze : readJson("cd_stanze", []),
+    entitaDellaWallbox: WALLBOX_REFS.map(resolvedEntity).filter(Boolean),
+    altro: t("Altro", "Other"),
+  });
 }
 
 /* L'entita' vera dietro un riferimento della configurazione. */
@@ -316,12 +429,14 @@ function vehiclePopupTarget() {
 }
 
 function stageModel(period) {
-  const loads = configuredLoads();
-  const appliances = configuredAppliances();
+  const { loads, appliances, perStanza } = carichiDelFlusso();
   return flowStageModel({
     loads,
     appliances,
-    flowNodes: flowNodeOverrides(),
+    /* I ritocchi dei cerchi vecchi — nome, icona, colore per posto — valgono
+     * per i carichi scritti a mano: sui cerchi delle stanze il primo posto non
+     * e' piu' il «boiler» di una volta. */
+    flowNodes: perStanza ? null : flowNodeOverrides(),
     states: allStates(),
     period,
     /* Anche gli apparecchi, non solo i carichi: quando il cerchio di gruppo
@@ -889,7 +1004,8 @@ function directionalEndpointValue(kind, node, period) {
      * che il verso ce l'hanno. */
     const signed = potenzaViva(SORGENTI_ISTANTANEE[kind]);
     if (signed === null) return null;
-    if (kind === "grid") return id.includes("solar-grid") ? Math.max(0, -signed) : Math.max(0, signed);
+    if (kind === "grid")
+      return id.includes("solar-grid") ? Math.max(0, -signed) : Math.max(0, signed);
     if (kind === "battery")
       return id.includes("solar-battery") ? Math.max(0, -signed) : Math.max(0, signed);
     return Math.abs(signed);

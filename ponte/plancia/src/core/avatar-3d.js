@@ -138,7 +138,10 @@ const TINTE_CAPELLI = {
 };
 const TINTE_BARBA = {
   grigia: { rgb: [176, 178, 184], lift: 0.22 },
-  bionda: { rgb: [236, 190, 100], lift: 0.28 },
+  /* Piu' chiara e meno carica dei capelli biondi: la chioma bionda e' un
+   * render, la barba una tinta su pelo scuro, e con la stessa ricetta usciva
+   * color senape accanto a capelli color paglia. */
+  bionda: { rgb: [232, 206, 152], lift: 0.4 },
   rame: { rgb: [190, 92, 46], lift: 0.12 },
   castana: { rgb: [141, 92, 47], lift: 0.1 },
 };
@@ -259,6 +262,19 @@ const BARBA_DA_CAPELLI = Object.freeze({
   castano: "castana",
 });
 
+/* Da quale ritratto barbuto si prende la barba.
+ *
+ * Della stessa carnagione, quando la barba resta del suo colore: e' la sua
+ * barba, col suo pelo. Quando invece la si tinge, il colore lo mette la tinta
+ * e dalla donatrice serve solo la FORMA — e la forma si legge bene solo dove
+ * il pelo e' molto piu' scuro della pelle. Sulla carnagione scura pelo e pelle
+ * si confondono, e la barba bionda usciva a scaglie, con pezzi di guancia
+ * tinti. La forma si prende allora dal ritratto chiaro dello stesso genere. */
+function donatriceDellaBarba(scelte, tintaBarba) {
+  const carnagione = tintaBarba ? "chiara" : scelte.carnagione;
+  return AVATAR_TESTE[`${genereDi(scelte.persona)}|barba|${carnagione}`] || null;
+}
+
 export function coloreBarbaCoerente(scelte) {
   if (scelte.coloreBarba !== "naturale") return scelte.coloreBarba;
   if (!personaHaCapelli(scelte.persona)) return "naturale";
@@ -278,7 +294,8 @@ function testaEOperazioni(scelte) {
       operazioni.push({
         tipo: "barba",
         foggia: scelte.barba,
-        donatrice: AVATAR_TESTE[`${genereDi(scelte.persona)}|barba|${scelte.carnagione}`] || null,
+        donatrice: donatriceDellaBarba(scelte, tintaBarba),
+        larga: genereDi(scelte.persona) === "uomo",
         ...(tintaBarba ? { rgb: tintaBarba.rgb, lift: tintaBarba.lift } : {}),
       });
     return { testa, operazioni };
@@ -319,9 +336,11 @@ function testaEOperazioni(scelte) {
         /* Sul render gia' barbuto la barba e' la sua: la maschera a
          * mandibola si calcola li'. Altrove arriva dal ritratto barbuto
          * della stessa carnagione, per genere. */
-        donatrice: barbaNativa
-          ? null
-          : AVATAR_TESTE[`${genereDi(scelte.persona)}|barba|${scelte.carnagione}`] || null,
+        donatrice: barbaNativa ? null : donatriceDellaBarba(scelte, tintaBarba),
+        /* Il ritratto barbuto da uomo, ai lati del viso, ha solo barba: la
+         * maschera puo' arrivare fino al contorno. Quello da donna ha anche le
+         * ciocche lunghe, e li' resta stretta. */
+        larga: genereDi(scelte.persona) === "uomo",
         ...(tintaBarba ? { rgb: tintaBarba.rgb, lift: tintaBarba.lift } : {}),
       });
   }

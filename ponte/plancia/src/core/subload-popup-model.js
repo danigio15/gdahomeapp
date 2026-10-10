@@ -164,6 +164,7 @@ export function subloadPopupModel({
   states = {},
   locale = "it-IT",
   dailyValues = null,
+  monthlyValues = null,
   period = "instant",
 } = {}) {
   const periodo = period === "day" || period === "month" ? period : "instant";
@@ -172,7 +173,10 @@ export function subloadPopupModel({
     const power = wattDi(states, powerEntity);
     const status = subloadState(child, states);
     const id = clean(child.id) || `sub-${index + 1}`;
-    const monthly = energiaDi(child, states, "month");
+    const monthly =
+      finiteOrNull(
+        typeof monthlyValues?.get === "function" ? monthlyValues.get(id) : monthlyValues?.[id],
+      ) ?? energiaDi(child, states, "month");
     const daily =
       finiteOrNull(
         typeof dailyValues?.get === "function" ? dailyValues.get(id) : dailyValues?.[id],

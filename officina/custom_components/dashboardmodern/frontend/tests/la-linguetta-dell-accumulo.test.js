@@ -143,9 +143,11 @@ test("la tessera in Home: la carica, il verso e l'attenzione solo per le celle",
   assert.equal(tesseraDellAccumulo(null), null);
 });
 
-test("la linguetta sta dentro Energia, accanto a Istantanea, e c'è solo coi pacchi", () => {
+test("la linguetta sta dentro Energia, in fondo dopo Temperature, e c'è solo coi pacchi", () => {
   assert.match(montaggio, /\.sub-tabs-energy/);
-  assert.match(montaggio, /'ist'/);
+  /* «Batterie va in fondo dopo Temperature», e ci resta. */
+  assert.match(montaggio, /function inFondoAllaFila\(linguetta\)/);
+  assert.match(montaggio, /inFondoAllaFila\(linguetta\);\n\s+const serve = ciSonoPacchi\(\);/);
   assert.match(montaggio, /className = "flow-view"/);
   assert.match(montaggio, /ciSonoPacchi\(\)/);
   /* Nessuna voce nella barra in basso. */

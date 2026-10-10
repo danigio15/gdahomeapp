@@ -114,14 +114,17 @@ export function ensureLinguetta() {
     apriLAccumulo();
     root.scrollTo?.({ top: 0, behavior: "instant" });
   });
-  /* Accanto a Istantanea: è la stessa domanda — cosa sta succedendo adesso —
-   * fatta ai pacchi invece che alla casa. */
-  const istantanea = [...fila.querySelectorAll(".sub-tab-btn")].find((nodo) =>
-    /'ist'/.test(nodo.getAttribute("onclick") || ""),
-  );
-  if (istantanea) istantanea.after(linguetta);
-  else fila.append(linguetta);
+  fila.append(linguetta);
   return linguetta;
+}
+
+/* In fondo, dopo Temperature: «i tab nella sezione Energia: Batterie va in
+ * fondo dopo Temperature». Stava accanto a Istantanea e spingeva le viste di
+ * sempre fuori dal loro posto. Si rimette in coda anche quando qualcuno
+ * aggiunge una linguetta dopo di lei. */
+function inFondoAllaFila(linguetta) {
+  const fila = linguetta?.parentElement;
+  if (fila && fila.lastElementChild !== linguetta) fila.append(linguetta);
 }
 
 /* La linguetta c'è quando c'è un pacco. Se sparisce mentre è aperta — l'ultimo
@@ -130,6 +133,7 @@ function accendiLaLinguetta() {
   const linguetta = ensureLinguetta();
   const vista = ensureVista();
   if (!linguetta || !vista) return;
+  inFondoAllaFila(linguetta);
   const serve = ciSonoPacchi();
   linguetta.hidden = !serve;
   if (serve) linguetta.style.removeProperty("display");

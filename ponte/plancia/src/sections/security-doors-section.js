@@ -29,6 +29,7 @@ import {
   t,
   wrapFunction,
   senzaCadere,
+  segnaContenuto,
 } from "./shared.js";
 
 const KEY = "__DASHBOARDMODERN_SECURITY_DOORS__";
@@ -239,6 +240,7 @@ function ensureBlock(shell) {
 
 export function renderSecurityDoors() {
   const doors0 = configuredSecurityDoors();
+  segnaContenuto(APERTURE_TAB, doors0.length > 0);
   const accesa = funzioneAccesa();
   /* La voce e la pagina esistono finché ci sono aperture da comandare: senza,
    * sarebbe una voce nella barra che porta a una pagina vuota. */

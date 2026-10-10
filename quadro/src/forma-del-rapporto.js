@@ -216,7 +216,10 @@ const LA_FORMA = oggetto({
       /* Una plancia senza un profilo buono non e' una plancia: il profilo
        * finisce in un indirizzo, e un indirizzo storto non si compone. */
       return detta && detta.profilo ? detta : FUORI;
-    }, 16),
+      /* Tutte quelle che una casa puo' tenere: trenta, come nel ponte
+       * (`QUANTE_AL_MASSIMO`). A sedici, una casa con piu' plance le perdeva
+       * dal rapporto, e il cruscotto le contava meno di quante sono. */
+    }, 32),
   }),
   telefoni: oggetto({ abbinati: numero, visti7gg: numero }),
   fuori: oggetto({ acceso: siNo, filo: siNo }),

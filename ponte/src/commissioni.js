@@ -1860,7 +1860,14 @@ export class Commissioni {
        * volte non aggiunge niente a chi legge. */
       if (risposta.success !== true) return { ...risposta, id };
       const dentro = risposta.result;
-      quanto += typeof dentro?.corpo === "string" ? dentro.corpo.length : 0;
+      const pesa = typeof dentro?.corpo === "string" ? dentro.corpo.length : 0;
+      /* Un file che da solo riempie un pacco — il pacchetto della plancia,
+       * un megabyte compresso — non sale su un pacco che ha gia' dentro
+       * qualcosa: resta fuori, chi l'ha chiesto lo richiede, e al giro dopo
+       * viaggia da solo, spezzato dalla busta come ogni risposta grande
+       * (`portiere.js`). Cosi' un pacco di piu' file resta nel telaio. */
+      if (pesa >= UN_PACCO_PESA && quanto > 0) continue;
+      quanto += pesa;
       file[quale] = dentro;
       if (quanto >= UN_PACCO_PESA) break;
     }

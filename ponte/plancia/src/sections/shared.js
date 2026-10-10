@@ -693,6 +693,30 @@ export function isLifetimeMeter(entity) {
   return isCumulativeEnergyEntity(entity, allStates());
 }
 
+/* Le sezioni che decidono da sole se hanno qualcosa da mostrare.
+ *
+ * «Ho fatto un reset totale ma ci sono sezioni attive anche dopo: devono
+ * attivarsi solo se si inseriscono entità; da nuovo deve uscire tutto non
+ * visibile, solo Home e Config.» UPS, Piante, Acqua e gas, Le tue sezioni e
+ * le altre che si governano da sé mettono la loro voce nella barra solo se
+ * hanno contenuto; ma l'elenco del Config guardava solo `cd_sections`, dove
+ * «non scritto» vuol dire acceso, e dopo un reset le dava accese.
+ *
+ * Qui ognuna dice, ogni volta che decide la sua voce, se è piena: chi disegna
+ * l'elenco lo legge. `undefined` vuol dire «non lo so»: la sezione non ha
+ * ancora deciso, o non è di quelle che decidono da sole. */
+const SEZIONI_PIENE = "__DASHBOARDMODERN_SEZIONI_PIENE__";
+
+export function segnaContenuto(chiave, piena) {
+  const mappa = (root[SEZIONI_PIENE] ||= {});
+  mappa[String(chiave)] = Boolean(piena);
+  return Boolean(piena);
+}
+
+export function contenutoNoto(chiave) {
+  return root[SEZIONI_PIENE]?.[String(chiave)];
+}
+
 export function readJson(key, fallback) {
   try {
     return JSON.parse(root.localStorage?.getItem(key) || "") ?? fallback;
@@ -892,7 +916,8 @@ export const ORDINE_IMPOSTAZIONI = Object.freeze({
  * del blocco «Generali» del guscio, che si riconosce dal gestore e non dalla
  * scritta — quella cambia con la lingua. Il blocco pero' il guscio lo disegna
  * solo a chi puo' vederlo: dove non c'e', le righe si mettono in cima. */
-export const dopoIGenerali = (corpo) => corpo?.querySelector?.('[onclick*="edSaveGeneral"]') || null;
+export const dopoIGenerali = (corpo) =>
+  corpo?.querySelector?.('[onclick*="edSaveGeneral"]') || null;
 
 /* L'attributo che porta il posto di una riga aggiunta da un modulo. */
 export const ATTRIBUTO_ORDINE = "data-dm-ordine";

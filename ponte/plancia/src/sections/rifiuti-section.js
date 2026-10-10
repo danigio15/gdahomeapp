@@ -31,6 +31,7 @@ import {
   root,
   t,
   senzaCadere,
+  segnaContenuto,
 } from "./shared.js";
 import { disegnoDelBidone } from "../core/disegni-rifiuti.js";
 import { disegnoDelCatalogo } from "../core/catalogo-disegni.js";
@@ -52,7 +53,12 @@ export function rifiutiInPlancia() {
 }
 
 export function letturaDeiRifiuti(adesso = Date.now()) {
-  return letturaRifiuti(configurazione(), allStates(), root.resolveEntity || ((value) => value), adesso);
+  return letturaRifiuti(
+    configurazione(),
+    allStates(),
+    root.resolveEntity || ((value) => value),
+    adesso,
+  );
 }
 
 /* ── le parole ────────────────────────────────────────────────────────── */
@@ -154,7 +160,8 @@ export function ensureRifiutiTab() {
   /* Accanto all'Agenda: un ritiro e' un impegno con una data, e chi lo cerca
    * lo cerca dove stanno le date. */
   const dopo =
-    barra.querySelector('.tab[data-tab="calendario"]') || barra.querySelector('.tab[data-tab="home"]');
+    barra.querySelector('.tab[data-tab="calendario"]') ||
+    barra.querySelector('.tab[data-tab="home"]');
   voce = doc.createElement("button");
   voce.className = "tab";
   voce.dataset.tab = RIFIUTI_TAB;
@@ -185,7 +192,7 @@ function sezioneAccesa() {
 function accendiLaVoce() {
   const voce = ensureRifiutiTab();
   if (!voce) return;
-  const serve = rifiutiInPlancia() && sezioneAccesa();
+  const serve = segnaContenuto(RIFIUTI_TAB, rifiutiInPlancia()) && sezioneAccesa();
   if (serve) voce.style.removeProperty("display");
   else voce.style.setProperty("display", "none", "important");
   const pagina = doc.getElementById(RIFIUTI_PAGE_ID);
