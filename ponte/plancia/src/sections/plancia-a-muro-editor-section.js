@@ -49,6 +49,11 @@ const state = (root[KEY] ||= {
   premium: null,
   plance: null,
   chiedendo: false,
+  /* Quale pagina e' aperta nel config: una alla volta, le altre stanno
+   * chiuse in una riga. */
+  aperta: 0,
+  /* «Altre impostazioni» aperte o chiuse. */
+  altro: false,
 });
 
 export const MURO_EDITOR_TAB = "muro";
@@ -200,31 +205,41 @@ const MODELLI = () => [
   ["ingresso", t("Ingresso", "Entrance")],
   ["personale", t("Personalizzata", "Custom")],
   ["luci", t("Tutte le luci", "All lights")],
-  ["freddo", t("Clima freddo", "Cooling")],
-  ["caldo", t("Clima caldo", "Heating")],
+  ["clima", t("Clima", "Climate")],
 ];
+const DISEGNO_DI_SERIE = {
+  stanza: "stanze",
+  scene: "azioni",
+  ingresso: "sicurezza",
+  personale: "widget",
+  luci: "luci",
+  clima: "clima",
+};
 const NOME_DEL_MODELLO = (modello) => MODELLI().find(([v]) => v === modello)?.[1] || "";
 
 /* Cosa mette da sola una pagina elenco, detto prima di salvarla. */
-function elencoMarkup(p) {
+function elencoMarkup(p, i) {
   const comandi = comandiDellaPagina(p, state.fonte || {});
   const spiega = {
     luci: t(
       "Si riempie da sola con tutte le luci della plancia di origine: una luce aggiunta là compare anche qui.",
       "It fills itself with every light of the source dashboard: a light added there shows up here too.",
     ),
-    freddo: t(
-      "Si riempie da sola con il clima che raffresca: i condizionatori e le pompe di calore.",
-      "It fills itself with what cools: air conditioners and heat pumps.",
-    ),
-    caldo: t(
-      "Si riempie da sola con il clima che scalda: termostati, termosifoni e pompe di calore. Sul tablet hanno la fiamma.",
-      "It fills itself with what heats: thermostats, radiators and heat pumps. On the tablet they show the flame.",
+    clima: t(
+      "Si riempie da sola con il clima della plancia di origine, diviso nelle due linguette Freddo e Caldo come nella sezione Clima: i condizionatori nel freddo, termosifoni e termostati nel caldo, le pompe di calore in tutte e due.",
+      "It fills itself with the source dashboard's climate, split into the Cooling and Heating tabs like the Climate section: air conditioners in cooling, radiators and thermostats in heating, heat pumps in both.",
     ),
   }[p.modello];
-  const nomi = comandi.map((c) => nomeDi(c.entita));
+  const nomi = (
+    p.modello === "clima"
+      ? [...comandiDellaPagina(p, state.fonte || {}, "freddo"), ...comandiDellaPagina(p, state.fonte || {}, "caldo")]
+      : comandi
+  )
+    .map((c) => nomeDi(c.entita))
+    .filter((n, k, tutti) => tutti.indexOf(n) === k);
   return `<div class="mu-ed-nota">${esc(spiega)}</div>
-    <div class="mu-ed-riga"><div class="mu-ed-testo"><b>${comandi.length} ${esc(t("sul tablet", "on the tablet"))}</b><small>${esc(nomi.slice(0, 8).join(", ") + (nomi.length > 8 ? ` +${nomi.length - 8}` : "") || t("Per ora nessuna", "None yet"))}</small></div></div>`;
+    ${p.modello === "clima" ? riga(t("Si apre su", "Opens on"), "", scelte(`pagine.${i}.zona`, p.zona, [["freddo", `❄️ ${t("Freddo", "Cooling")}`], ["caldo", `🔥 ${t("Caldo", "Heating")}`]])) : ""}
+    <div class="mu-ed-riga"><div class="mu-ed-testo"><b>${nomi.length} ${esc(t("sul tablet", "on the tablet"))}</b><small>${esc(nomi.slice(0, 8).join(", ") + (nomi.length > 8 ? ` +${nomi.length - 8}` : "") || t("Per ora nessuna", "None yet"))}</small></div></div>`;
 }
 
 function paginaMarkup(p, i, tutte) {
@@ -276,7 +291,7 @@ function paginaMarkup(p, i, tutte) {
       ),
     )}</div>${postiMarkup(i, "comandi", p.comandi)}`;
   } else if (MODELLI_ELENCO.includes(p.modello)) {
-    dentro = elencoMarkup(p);
+    dentro = elencoMarkup(p, i);
   } else if (p.modello === "scene") {
     dentro = `<div class="mu-ed-nota">${esc(
       t(
@@ -300,12 +315,17 @@ function paginaMarkup(p, i, tutte) {
     ${riga(t("Chi è in casa", "Who is home"), "", interruttore(`${via}.ingresso.persone`, ing.persone, "persone"))}`;
   }
   const nomeDiSerie = (p.modello === "stanza" && clean(p.stanza)) || NOME_DEL_MODELLO(p.modello);
-  return `<div class="mu-ed-pagina" data-mu-ed-pagina="${i}">
-    <div class="mu-ed-pagina-testa">${disegno({ stanza: "stanze", scene: "azioni", ingresso: "sicurezza", personale: "widget", luci: "luci", freddo: "clima", caldo: "caldo" }[p.modello], 24, `pag-${i}`)}<b>${esc(t("Pagina", "Page"))} ${i + 1} · ${esc(clean(p.titolo) || nomeDiSerie)}</b>
+  const aperta = state.aperta === i;
+  /* Una riga per pagina: il disegno, il nome, il tipo. Un tocco la apre. */
+  const testa = `<div class="mu-ed-pagina-testa">
+      <button type="button" class="mu-ed-apri" data-mu-ed-apri="${i}" aria-expanded="${aperta}">${disegno(clean(p.disegno) || DISEGNO_DI_SERIE[p.modello], 26, `pag-${i}`)}<span class="mu-ed-apri-tx"><b>${esc(clean(p.titolo) || nomeDiSerie)}</b><small>${esc(t("Pagina", "Page"))} ${i + 1} · ${esc(NOME_DEL_MODELLO(p.modello))}</small></span><span class="mu-ed-freccia" aria-hidden="true">${aperta ? "▾" : "▸"}</span></button>
       <span class="mu-ed-frecce"><button type="button" data-mu-ed-pagina-su="${i}"${i === 0 ? " disabled" : ""} aria-label="▲">▲</button><button type="button" data-mu-ed-pagina-giu="${i}"${i === tutte - 1 ? " disabled" : ""} aria-label="▼">▼</button></span>
-      <button type="button" class="ed-del" data-mu-ed-togli="${i}" aria-label="${esc(t("Togli la pagina", "Remove page"))}">🗑️</button></div>
-    ${riga(t("Nome della pagina", "Page name"), t("Si legge in alto sul tablet e sulla sua linguetta", "Shown at the top of the tablet and on its tab"), campo(`${via}.titolo`, p.titolo, nomeDiSerie))}
-    ${riga(t("Modello", "Template"), "", scelte(`${via}.modello`, p.modello, MODELLI()))}
+      <button type="button" class="mu-ed-svuota" data-mu-ed-togli="${i}" aria-label="${esc(t("Togli la pagina", "Remove page"))}">🗑</button></div>`;
+  if (!aperta) return `<div class="mu-ed-pagina chiusa" data-mu-ed-pagina="${i}">${testa}</div>`;
+  return `<div class="mu-ed-pagina" data-mu-ed-pagina="${i}">${testa}
+    ${riga(t("Nome sul tablet", "Name on the tablet"), t("Si legge sulla linguetta in alto", "Shown on the tab at the top"), campo(`${via}.titolo`, p.titolo, nomeDiSerie))}
+    ${riga(t("Icona", "Icon"), "", tendina(`${via}.disegno`, p.disegno, DISEGNI(), null))}
+    ${riga(t("Tipo di pagina", "Page type"), "", tendina(`${via}.modello`, p.modello, MODELLI(), null))}
     ${dentro}</div>`;
 }
 
@@ -318,13 +338,15 @@ function corpoMarkup() {
   const contenuto = `
   <div class="ed-intro">${esc(
     t(
-      "Questa plancia diventa un pannello per un tablet a muro: una schermata sola, comandi grandi, niente menu. Le cose che mostra — stanze, luci, clima, antifurto, azioni — le prende da un'altra plancia della casa: qui si sceglie solo cosa mostrare e come si comporta. Il pannello compare chiudendo il config; per tornare alla plancia si tiene premuto l'orologio per due secondi.",
-      "This dashboard becomes a panel for a wall tablet: one screen, big controls, no menus. What it shows — rooms, lights, climate, alarm, actions — comes from another dashboard of the house: here you only choose what to show and how it behaves. The panel appears when the config is closed; to get back to the dashboard, hold the clock for two seconds.",
+      "Il pannello del tablet a muro. Scegli le pagine — le linguette in alto — e cosa c'è in ognuna. Sul tablet, tenendo premuto l'orologio per due secondi si torna qui.",
+      "The wall tablet's panel. Choose the pages — the tabs at the top — and what each one holds. On the tablet, holding the clock for two seconds brings you back here.",
     ),
   )} <span class="mu-ed-premium">PREMIUM</span></div>
   <div class="mu-ed-blocco">
     ${riga(t("Usa questa plancia a muro", "Use this dashboard on the wall"), t("Vale su ogni tablet che apre questa plancia", "Applies to every tablet that opens this dashboard"), interruttore("attiva", m.attiva, "attiva"))}
-    ${riga(
+    ${
+      altre.length > 1
+        ? riga(
       t("Prende le cose da", "Takes things from"),
       t(
         "Le stanze, le luci, le azioni e l'antifurto arrivano da qui",
@@ -339,7 +361,9 @@ function corpoMarkup() {
         ]),
         null,
       ),
-    )}
+    )
+        : ""
+    }
   </div>
   <div class="ed-sec-title">${esc(t("Le pagine di questo tablet", "This tablet's pages"))}</div>
   ${
@@ -358,8 +382,8 @@ function corpoMarkup() {
           .join("")}</div>`
       : ""
   }
-  <div class="ed-sec-title">${esc(t("Funzioni a muro", "Wall features"))}</div>
-  <div class="mu-ed-blocco">
+  <button type="button" class="mu-ed-altro" data-mu-ed-altro aria-expanded="${state.altro}"><span>⚙️ ${esc(t("Altre impostazioni", "More settings"))}</span><small>${esc(t("Orientamento, tema, riposo, notte, risveglio, PIN", "Orientation, theme, rest, night, wake-up, PIN"))}</small><span class="mu-ed-freccia" aria-hidden="true">${state.altro ? "▾" : "▸"}</span></button>
+  ${state.altro ? `<div class="mu-ed-blocco">
     ${riga(
       t("Orientamento", "Orientation"),
       t("Automatico segue come è montato il tablet", "Automatic follows how the tablet is mounted"),
@@ -407,7 +431,7 @@ function corpoMarkup() {
     )}
     ${riga(t("Blocca il tablet", "Lock the tablet"), t("Per uscire dal pannello serve il PIN, da 4 a 8 cifre", "Leaving the panel needs the PIN, 4 to 8 digits"), `${campo("blocco.pin", m.blocco.pin, "PIN", "password")}${interruttore("blocco.attivo", m.blocco.attivo, "blocco")}`)}
     ${riga(t("Antifurto e serrature chiedono il codice", "Alarm and locks ask for the code"), t("Sempre, quando la centrale ne ha uno", "Always, when the panel has one"), `<span class="mu-ed-int fermo" aria-checked="true"><i></i></span>`)}
-  </div>
+  </div>` : ""}
   <button type="button" class="ed-save-btn" data-mu-ed-salva>💾 ${esc(t("Salva", "Save"))}</button>`;
   if (premium || state.premium === null)
     return `<div class="mu-ed">${state.premium === null ? `<div class="mu-ed-nota">${esc(t("Controllo la licenza…", "Checking the licence…"))}</div>` : ""}${contenuto}</div>`;
@@ -499,7 +523,12 @@ function metti(via, valore) {
       return;
     }
     if (pezzi[2] === "modello" && p.modello !== valore) {
-      m.pagine[i] = { ...nuovaPagina(valore, state.fonte || {}, i), id: p.id, titolo: p.titolo };
+      m.pagine[i] = {
+        ...nuovaPagina(valore, state.fonte || {}, i),
+        id: p.id,
+        titolo: p.titolo,
+        disegno: p.disegno,
+      };
       state.bozza = muroPulito(m);
       return;
     }
@@ -534,7 +563,7 @@ function onClick(event) {
   const body = doc?.getElementById("ed-body");
   if (!body || schedaAttiva() !== MURO_EDITOR_TAB || !body.contains(event.target)) return;
   const el = event.target.closest(
-    "[data-mu-ed-alterna],[data-mu-ed-metti],[data-mu-ed-nuova],[data-mu-ed-togli],[data-mu-ed-pagina-su],[data-mu-ed-pagina-giu],[data-mu-ed-posto-su],[data-mu-ed-posto-giu],[data-mu-ed-salva],[data-mu-ed-pick],[data-mu-ed-svuota]",
+    "[data-mu-ed-alterna],[data-mu-ed-metti],[data-mu-ed-nuova],[data-mu-ed-togli],[data-mu-ed-pagina-su],[data-mu-ed-pagina-giu],[data-mu-ed-posto-su],[data-mu-ed-posto-giu],[data-mu-ed-salva],[data-mu-ed-pick],[data-mu-ed-svuota],[data-mu-ed-apri],[data-mu-ed-altro]",
   );
   if (!el || body.querySelector(".mu-ed-chiuso")) return;
   event.preventDefault();
@@ -544,6 +573,17 @@ function onClick(event) {
      * sotto passa per `onChange` come una scrittura a mano. */
     const casella = doc.getElementById(d.muEdPick);
     if (casella) root.wzPickEntity?.(casella);
+    return;
+  }
+  if (d.muEdApri !== undefined) {
+    const i = Number(d.muEdApri);
+    state.aperta = state.aperta === i ? -1 : i;
+    ridisegna();
+    return;
+  }
+  if (d.muEdAltro !== undefined) {
+    state.altro = !state.altro;
+    ridisegna();
     return;
   }
   if (d.muEdSvuota) {
@@ -562,14 +602,18 @@ function onClick(event) {
     const m = structuredClone(bozza());
     m.pagine.push(nuovaPagina(d.muEdNuova, state.fonte || {}, m.pagine.length));
     state.bozza = muroPulito(m);
+    state.aperta = state.bozza.pagine.length - 1;
   } else if (d.muEdTogli !== undefined) {
     const m = structuredClone(bozza());
     m.pagine.splice(Number(d.muEdTogli), 1);
     state.bozza = muroPulito(m);
+    state.aperta = -1;
   } else if (d.muEdPaginaSu !== undefined || d.muEdPaginaGiu !== undefined) {
     const m = structuredClone(bozza());
     const i = Number(d.muEdPaginaSu ?? d.muEdPaginaGiu);
-    m.pagine = sposta(m.pagine, i, d.muEdPaginaSu !== undefined ? i - 1 : i + 1);
+    const verso = d.muEdPaginaSu !== undefined ? i - 1 : i + 1;
+    m.pagine = sposta(m.pagine, i, verso);
+    if (state.aperta === i) state.aperta = verso;
     state.bozza = muroPulito(m);
   } else if (d.muEdPostoSu !== undefined || d.muEdPostoGiu !== undefined) {
     const [i, k] = String(d.muEdPostoSu ?? d.muEdPostoGiu)
@@ -656,6 +700,16 @@ function stili() {
 #ed-body .mu-ed-seg button.si{background:color-mix(in srgb,#0ea5e9 18%,transparent);color:#0369a1;box-shadow:inset 0 0 0 1px #0ea5e999}
 html[data-theme="dark"] #ed-body .mu-ed-seg button.si{color:#7dd3fc}
 #ed-body .mu-ed-pagina-testa{display:flex;align-items:center;gap:10px;font-size:14px}
+#ed-body .mu-ed-pagina.chiusa{padding:8px 12px}
+#ed-body .mu-ed-apri{flex:1;min-width:0;display:flex;align-items:center;gap:12px;border:0;background:none;padding:4px 0;text-align:left;color:inherit;cursor:pointer}
+#ed-body .mu-ed-apri-tx{display:grid;min-width:0}
+#ed-body .mu-ed-apri-tx b{font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#ed-body .mu-ed-apri-tx small{font-size:11.5px;color:var(--text-dim,#64748b)}
+#ed-body .mu-ed-freccia{margin-left:auto;font-size:14px;color:var(--text-dim,#64748b)}
+#ed-body .mu-ed-altro{display:grid;grid-template-columns:1fr auto;align-items:center;width:100%;margin:6px 0 14px;padding:14px 16px;border-radius:14px;border:1px solid var(--divider-color,#dbe4ee);background:color-mix(in srgb,var(--text,#0f172a) 2%,transparent);color:inherit;text-align:left;cursor:pointer}
+#ed-body .mu-ed-altro>span:first-child{font-weight:800;font-size:14px}
+#ed-body .mu-ed-altro small{grid-column:1;font-size:11.5px;color:var(--text-dim,#64748b)}
+#ed-body .mu-ed-altro .mu-ed-freccia{grid-row:1/span 2;grid-column:2}
 #ed-body .mu-ed-pagina-testa .ed-del{margin-left:6px}
 #ed-body .mu-ed-frecce{display:inline-flex;gap:4px;margin-left:auto}
 #ed-body .mu-ed-posto .mu-ed-frecce{margin-left:0}

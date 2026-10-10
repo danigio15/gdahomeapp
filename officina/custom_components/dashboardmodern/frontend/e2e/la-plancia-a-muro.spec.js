@@ -215,4 +215,73 @@ test.describe("la plancia a muro", () => {
       muro(page).locator('[data-mu-card][data-mu-entita="climate.soggiorno"]'),
     ).toHaveAttribute("data-mu-lato", "caldo");
   });
+
+  test("l'orologio tenuto apre solo il config del tablet, e chiuso torna il pannello", async ({
+    page,
+  }, testInfo) => {
+    await apriLaCasaAMuro(page, testInfo, { muro: MURO_DI_PROVA });
+    await expect(muro(page)).toBeVisible();
+    const orologio = muro(page).locator("[data-mu-orologio]");
+    const box = await orologio.boundingBox();
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    await page.mouse.down();
+    await page.waitForTimeout(2300);
+    await page.mouse.up();
+    /* Solo la scheda «A muro»: la colonna delle altre schede non si vede. */
+    await expect(page.locator("#editor-modal")).toBeVisible();
+    await expect(page.locator("#ed-body .mu-ed")).toBeVisible();
+    await expect(page.locator("#editor-modal .ed-tabs")).toBeHidden();
+    await expect(muro(page)).toHaveCount(0);
+    /* Chiuso il config, il pannello torna: la plancia classica non si vede. */
+    await page.locator("#editor-modal .ed-head-close").last().click();
+    await expect(muro(page)).toBeVisible();
+    await expect(page.locator("#editor-modal")).toHaveCount(0);
+  });
+
+  test("le pagine si cambiano solo dalle linguette, e il clima ha caldo e freddo dentro", async ({
+    page,
+  }, testInfo) => {
+    await apriLaCasaAMuro(page, testInfo, {
+      muro: {
+        attiva: true,
+        pagine: [
+          { id: "p1", modello: "luci" },
+          { id: "p2", modello: "clima" },
+        ],
+      },
+    });
+    /* Uno swipe non cambia pagina. */
+    await page.mouse.move(1000, 450);
+    await page.mouse.down();
+    await page.mouse.move(250, 460, { steps: 12 });
+    await page.mouse.up();
+    await expect(muro(page).locator(".mu-tit")).toHaveText(/Luci/i);
+    await muro(page).locator('[data-mu-pagina="1"]').click();
+    await expect(muro(page).locator(".mu-tit")).toHaveText(/Clima/i);
+    await expect(muro(page).locator('[data-mu-zona="freddo"]')).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+    await expect(
+      muro(page).locator('[data-mu-card][data-mu-entita="climate.soggiorno"]'),
+    ).toBeVisible();
+    await muro(page).locator('[data-mu-zona="caldo"]').click();
+    await expect(muro(page).locator('[data-mu-zona="caldo"]')).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+  });
+
+  test("il config aperto col pannello sopra (dal menu dell'app) toglie il pannello subito", async ({
+    page,
+  }, testInfo) => {
+    await apriLaCasaAMuro(page, testInfo, { muro: MURO_DI_PROVA });
+    await expect(muro(page)).toBeVisible();
+    await page.evaluate(() => window.apriConfigEntita());
+    await expect(muro(page)).toHaveCount(0, { timeout: 1500 });
+    await expect(page.locator("#editor-modal")).toBeVisible();
+    /* E chiuso, il pannello torna. */
+    await page.evaluate(() => document.getElementById("editor-modal").remove());
+    await expect(muro(page)).toBeVisible();
+  });
 });

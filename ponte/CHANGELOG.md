@@ -10,6 +10,23 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.10.12
+
+**Il config del tablet, e solo quello.** Sul pannello a muro, tenendo premuto
+l'orologio (col PIN, se c'è) si apre soltanto la scheda «A muro»; chiusa, torna
+il pannello, senza passare dalla plancia classica. Un config aperto dal menu
+dell'app toglie subito il pannello e, chiuso, lo rimette.
+
+**Più semplice da configurare.** Ogni pagina sta chiusa in una riga — icona,
+nome, tipo — e si apre con un tocco; dentro: nome sul tablet, icona, tipo di
+pagina, poi il resto. Orientamento, tema, riposo, notte e PIN stanno in «Altre
+impostazioni».
+
+**Una pagina Clima con Caldo e Freddo dentro.** Al posto di due pagine, una
+sola con le due linguette, come la sezione Clima; si sceglie su quale si apre.
+
+**Le pagine si cambiano dalle linguette.** Niente più swipe.
+
 ## 1.10.11
 
 **La plancia a muro si fa come la vuoi.** In ogni posto delle pagine Stanza e

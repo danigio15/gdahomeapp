@@ -55,6 +55,7 @@ import {
   root,
   scriviSeCambia,
   section,
+  wrapFunction,
   senzaCadere,
   t,
 } from "./shared.js";
@@ -411,8 +412,7 @@ const MODELLI_SCRITTI = () => ({
   ingresso: t("Ingresso", "Entrance"),
   personale: t("La mia pagina", "My page"),
   luci: t("Luci", "Lights"),
-  freddo: t("Clima freddo", "Cooling"),
-  caldo: t("Clima caldo", "Heating"),
+  clima: t("Clima", "Climate"),
 });
 const SOTTO = () => ({
   stanza: t("Luci · Clima · Tapparelle · Scene", "Lights · Climate · Blinds · Scenes"),
@@ -420,8 +420,7 @@ const SOTTO = () => ({
   ingresso: t("Antifurto · Citofono · Uscita", "Alarm · Intercom · Leaving"),
   personale: t("I comandi scelti da te", "Your own controls"),
   luci: t("Tutte le luci di casa", "Every light in the house"),
-  freddo: t("Chi raffresca", "What cools"),
-  caldo: t("Chi riscalda", "What heats"),
+  clima: t("Caldo · Freddo", "Heating · Cooling"),
 });
 const DISEGNO_DEL_MODELLO = {
   stanza: "stanze",
@@ -429,8 +428,7 @@ const DISEGNO_DEL_MODELLO = {
   ingresso: "sicurezza",
   personale: "widget",
   luci: "luci",
-  freddo: "clima",
-  caldo: "caldo",
+  clima: "clima",
 };
 const ACCENTO_DEL_MODELLO = {
   stanza: "#f59e0b",
@@ -438,8 +436,7 @@ const ACCENTO_DEL_MODELLO = {
   ingresso: "#10b981",
   personale: "#8b5cf6",
   luci: "#f59e0b",
-  freddo: "#0ea5e9",
-  caldo: "#f97316",
+  clima: "#0ea5e9",
 };
 
 const titoloDi = (pagina) =>
@@ -486,7 +483,7 @@ function testa(pagina, muro) {
       ? `<div class="mu-pagine" role="tablist">${muro.pagine
           .map(
             (p, i) =>
-              `<button type="button" role="tab" class="${i === state.pagina ? "si" : ""}" style="--acc:${ACCENTO_DEL_MODELLO[p.modello]}" data-mu-pagina="${i}" aria-selected="${i === state.pagina}">${disegno(DISEGNO_DEL_MODELLO[p.modello], 22, `ling-${p.id}`)}<span>${esc(titoloDi(p))}</span></button>`,
+              `<button type="button" role="tab" class="${i === state.pagina ? "si" : ""}" style="--acc:${ACCENTO_DEL_MODELLO[p.modello]}" data-mu-pagina="${i}" aria-selected="${i === state.pagina}">${disegno(clean(p.disegno) || DISEGNO_DEL_MODELLO[p.modello], 22, `ling-${p.id}`)}<span>${esc(titoloDi(p))}</span></button>`,
           )
           .join("")}</div>`
       : "";
@@ -638,10 +635,16 @@ function scalda(id, zona = "") {
 const facciaDelClima = (id, zona) =>
   scalda(id, zona) ? { chiave: "caldo", accento: "#f97316" } : { chiave: "clima", accento: ACCENTI.clima };
 
-/* La pagina del clima in cui si e', se si e' in una. */
+/* La linguetta aperta di una pagina Clima: quella toccata, o quella scelta
+ * nel config. */
+function zonaDellaPagina(pagina) {
+  return (state.zone ||= {})[pagina.id] || pagina.zona || "freddo";
+}
+
+/* La zona del clima in cui si e', se si e' in una pagina Clima. */
 function zonaDiQui() {
-  const modello = state.muro?.pagine?.[state.pagina]?.modello;
-  return modello === "freddo" || modello === "caldo" ? modello : "";
+  const pagina = state.muro?.pagine?.[state.pagina];
+  return pagina?.modello === "clima" ? zonaDellaPagina(pagina) : "";
 }
 
 function cardClima(c, i, zona = "") {
@@ -745,14 +748,27 @@ const vuoto = (i, perche = "") =>
   `<div class="mu-carta mu-card mu-vuoto" data-mu-card="${i}"><span class="mu-et">${esc(perche || t("Posto libero", "Empty slot"))}</span></div>`;
 
 function paginaStanza(pagina) {
-  const comandi = comandiDellaPagina(pagina, state.fonte);
+  const zona = pagina.modello === "clima" ? zonaDellaPagina(pagina) : "";
+  const comandi = comandiDellaPagina(pagina, state.fonte, zona);
   const elenco = MODELLI_ELENCO.includes(pagina.modello);
-  const zona = pagina.modello === "freddo" || pagina.modello === "caldo" ? pagina.modello : "";
+  /* La pagina Clima: le due linguette in cima, come nella sezione Clima. */
+  const linguette =
+    pagina.modello === "clima"
+      ? `<div class="mu-zone" role="tablist">${[
+          ["freddo", "clima", t("Freddo", "Cooling"), "#0ea5e9"],
+          ["caldo", "caldo", t("Caldo", "Heating"), "#f97316"],
+        ]
+          .map(
+            ([z, d, parola, acc]) =>
+              `<button type="button" role="tab" class="${z === zona ? "si" : ""}" style="--acc:${acc}" data-mu-zona="${z}" aria-selected="${z === zona}">${disegno(d, 22, `zona-${z}`)}${esc(parola)}</button>`,
+          )
+          .join("")}</div>`
+      : "";
   /* Le pagine elenco non hanno tetto: sei per volta a schermo, e la griglia
    * scorre col dito. Vuote, lo dicono. */
   const quante = elenco ? Math.max(comandi.length, 1) : 6;
   if (elenco && !comandi.length)
-    return `<div class="mu-g6">${vuoto(0, t("Niente da mostrare qui", "Nothing to show here"))}</div>`;
+    return `${linguette}<div class="mu-g6">${vuoto(0, t("Niente da mostrare qui", "Nothing to show here"))}</div>`;
   const carte = Array.from({ length: quante }, (_, i) => {
     const c = comandi[i];
     if (!c || c.tipo === "vuoto") return vuoto(i);
@@ -762,7 +778,7 @@ function paginaStanza(pagina) {
     if (c.tipo === "entita") return cardEntita(c, i);
     return cardAzione(c, i);
   });
-  const riga = pagina.modello === "stanza" ? pillole(pagina) : "";
+  const riga = pagina.modello === "stanza" ? pillole(pagina) : linguette;
   return `${riga}<div class="mu-g6${elenco && quante > 6 ? " mu-scorre" : ""}">${carte.join("")}</div>`;
 }
 
@@ -1043,6 +1059,66 @@ function riposo(muro) {
 
 /* ── la tela: dove sta, quanto e' grande, cosa mostra ────────────────────── */
 
+/* ── il config del tablet ──────────────────────────────────────────────────
+ *
+ * «Se premo config del dispositivo a muro mi deve aprire solo quello, non
+ * tutto il config; e quando esco dal config, esce cosi' e non si vede di nuovo
+ * la dashboard.» L'orologio tenuto (col PIN, se c'e') apre il config sulla
+ * scheda «A muro» e nasconde il resto; chiuso il config, torna il pannello.
+ * Qualunque config aperto sopra il pannello — dal menu dell'app — toglie il
+ * pannello subito, e chiuso lo rimette. */
+const SOLO_MURO = "dm-solo-muro";
+let guardaIlConfig = 0;
+
+function configAperto() {
+  togliLaTela();
+  if (guardaIlConfig) return;
+  /* Il config si chiude togliendo il suo riquadro, senza passare da nessuna
+   * funzione: lo si guarda un fotogramma alla volta, e solo finche' e'
+   * aperto. */
+  const giro = () => {
+    if (editorAperto()) {
+      guardaIlConfig = root.requestAnimationFrame?.(giro) || root.setTimeout?.(giro, 200);
+      return;
+    }
+    guardaIlConfig = 0;
+    doc?.documentElement?.classList?.remove(SOLO_MURO);
+    state.uscito = false;
+    state.riposo = false;
+    tocco();
+    rileggi().catch(() => {});
+  };
+  guardaIlConfig = root.requestAnimationFrame?.(giro) || root.setTimeout?.(giro, 200);
+}
+
+export function apriIlConfigDelMuro() {
+  if (typeof root.apriConfigEntita !== "function") return false;
+  doc?.documentElement?.classList?.add(SOLO_MURO);
+  root.apriConfigEntita();
+  /* La linguetta «A muro» la aggiunge la sua scheda subito dopo l'apertura:
+   * si aspetta che ci sia, qualche fotogramma al massimo, e poi la si apre. */
+  let giri = 0;
+  const vaiAlMuro = () => {
+    const linguetta = doc?.querySelector?.('#editor-modal .ed-tab[data-tab="muro"]');
+    if (linguetta) {
+      try {
+        root.editorSwitch?.("muro");
+      } catch (_errore) {}
+      return;
+    }
+    if (giri++ < 60) (root.requestAnimationFrame || root.setTimeout)?.(vaiAlMuro, 16);
+  };
+  vaiAlMuro();
+  configAperto();
+  return true;
+}
+
+function agganciaIlConfig() {
+  wrapFunction("apriConfigEntita", "__dmMuroConfig", () => {
+    if (editorAperto()) configAperto();
+  });
+}
+
 function editorAperto() {
   return Boolean(doc?.getElementById("editor-modal"));
 }
@@ -1213,8 +1289,9 @@ function cifra(k) {
   else if (k === "✓") {
     if (f.scopo === "uscita") {
       if (pinGiusto(state.muro, f.scritto)) {
-        state.uscito = true;
         state.finestra = null;
+        apriIlConfigDelMuro();
+        return;
       } else {
         f.errore = true;
         f.scritto = "";
@@ -1229,6 +1306,13 @@ function cifra(k) {
 
 function onClick(event) {
   tocco();
+  const linguettaClima = event.target?.closest?.("[data-mu-zona]");
+  if (linguettaClima) {
+    const pagina = state.muro?.pagine?.[state.pagina];
+    if (pagina) (state.zone ||= {})[pagina.id] = linguettaClima.dataset.muZona;
+    disegna();
+    return;
+  }
   const bersaglio = event.target?.closest?.("[data-mu-fa],[data-mu-pagina],[data-mu-card]");
   if (!bersaglio) return;
   if (bersaglio.dataset.muPagina !== undefined) {
@@ -1391,13 +1475,9 @@ function onPointerDown(event) {
     state.pressione = root.setTimeout?.(() => {
       state.pressione = null;
       if (state.muro?.blocco?.attivo) apriFinestra({ tipo: "codice", scopo: "uscita", scritto: "" });
-      else {
-        state.uscito = true;
-        disegna();
-      }
+      else apriIlConfigDelMuro();
     }, 2000);
   }
-  if (!state.finestra && !state.riposo) state.swipe = { x: event.clientX, y: event.clientY };
 }
 
 function onPointerMove(event) {
@@ -1426,16 +1506,8 @@ function onPointerUp(event) {
     disegna();
     return;
   }
-  const s = state.swipe;
-  state.swipe = null;
-  if (!s || !state.muro) return;
-  const dx = event.clientX - s.x;
-  const dy = event.clientY - s.y;
-  if (Math.abs(dx) > 90 && Math.abs(dx) > Math.abs(dy) * 1.5 && state.muro.pagine.length > 1) {
-    const n = state.muro.pagine.length;
-    state.pagina = (state.pagina + (dx < 0 ? 1 : -1) + n) % n;
-    disegna();
-  }
+  /* Niente swipe: «per cambiare sezione solo premere sul tab». Un dito che
+   * scorre su un tablet a muro spesso non voleva cambiare pagina. */
 }
 
 /* ── il tempo che passa ──────────────────────────────────────────────────── */
@@ -1511,6 +1583,8 @@ function stili() {
     "dm-muro-style",
     `
 html.dm-muro-acceso,html.dm-muro-acceso body{overflow:hidden!important}
+html.dm-solo-muro #editor-modal .ed-tabs,html.dm-solo-muro #editor-modal #dm-alberatura-famiglie,html.dm-solo-muro #editor-modal .dm-cerca-config,html.dm-solo-muro #editor-modal .dm-alberatura-titolo-famiglia{display:none!important}
+html.dm-solo-muro #editor-modal .ed-body,html.dm-solo-muro #editor-modal #ed-body{margin-left:0!important;max-width:none!important}
 ${MURO}{position:fixed;inset:0;z-index:2147482000;overflow:hidden;color:var(--text);font-family:Inter,system-ui,sans-serif;
   -webkit-font-smoothing:antialiased;-webkit-user-select:none;user-select:none;touch-action:manipulation;
   background:radial-gradient(120% 80% at 50% -10%,color-mix(in srgb,var(--card-bg) 70%,transparent),transparent 60%),var(--bg-sculpted)}
@@ -1520,7 +1594,10 @@ ${MURO} *{box-sizing:border-box}
 ${MURO} button{font:inherit;color:inherit;border:0;background:none;cursor:pointer;text-align:inherit;-webkit-tap-highlight-color:transparent}
 ${MURO} .mu-tela{position:relative;transform-origin:0 0}
 ${MURO} .mu-pagina{display:grid;grid-template-rows:auto auto 1fr;gap:16px;padding:22px;height:100%}
-${MURO} .mu-pag-scene,${MURO} .mu-pag-ingresso{grid-template-rows:auto 1fr}
+${MURO} .mu-pag-scene,${MURO} .mu-pag-ingresso,${MURO} .mu-pag-personale,${MURO} .mu-pag-luci{grid-template-rows:auto 1fr}
+${MURO} .mu-zone{display:flex;gap:8px;padding:6px;border-radius:18px;width:max-content;background:var(--dm-vetrino);border:1px solid color-mix(in srgb,var(--text) 10%,transparent)}
+${MURO} .mu-zone button{display:flex;align-items:center;gap:10px;padding:10px 22px;border:0;border-radius:13px;background:none;color:var(--text-dim);font:800 17px Inter,system-ui,sans-serif;cursor:pointer}
+${MURO} .mu-zone button.si{color:var(--text);background:color-mix(in srgb,var(--acc) 22%,transparent);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--acc) 55%,transparent)}
 ${MURO} .mu-carta{position:relative;overflow:hidden;border-radius:24px;background:${FONDO_DELLA_CARTA};box-shadow:${OMBRA_DELLA_CARTA}}
 ${MURO} .mu-carta::before{${GRANA_DELLA_CARTA}}
 ${MURO} .mu-carta>*{position:relative}
@@ -1646,6 +1723,8 @@ ${MURO} .mu-avvisi{position:absolute;top:28px;left:0;right:0;display:flex;justif
 ${MURO} .mu-avviso{display:flex;align-items:center;gap:12px;padding:12px 20px 12px 12px;border-radius:999px;font-size:16px}
 ${MURO} .mu-avviso.grave b{color:#fda4af}
 ${MURO}[data-compatto="1"] .mu-pagina{padding:10px;gap:10px;grid-template-rows:auto 1fr}
+${MURO}[data-compatto="1"] .mu-pag-clima{grid-template-rows:auto auto 1fr}
+${MURO}[data-compatto="1"] .mu-zone button{padding:8px 14px;font-size:14px}
 ${MURO}[data-compatto="1"] .mu-testa{padding:10px 14px;gap:10px;flex-wrap:nowrap}
 ${MURO}[data-compatto="1"] .mu-tit{font-size:26px;max-width:150px}
 ${MURO}[data-compatto="1"] .mu-sot,${MURO}[data-compatto="1"] .mu-meteo,${MURO}[data-compatto="1"] .mu-sep,${MURO}[data-compatto="1"] .mu-pillole,${MURO}[data-compatto="1"] .mu-d{display:none}
@@ -1715,7 +1794,9 @@ export function installPlanciaAMuro() {
   state.installed = true;
   stili();
   trattieniIlVelo();
+  agganciaIlConfig();
   const ancora = () => rileggi().catch(() => {});
+  root.addEventListener?.("dashboardmodern:legacy-ready", agganciaIlConfig);
   for (const evento of [
     "dashboardmodern:legacy-ready",
     "dashboardmodern:persistence-restored",
