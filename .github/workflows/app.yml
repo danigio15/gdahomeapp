@@ -392,14 +392,11 @@ jobs:
       # prima volta non e' passata.
       - name: L'orologio Wear OS
         if: vars.GDAHOME_OROLOGIO == 'si'
-        working-directory: app/android
-        env:
-          GDAHOME_OROLOGIO: si
         run: |
           # Senza chiave vera esce firmato di prova, `.prova`, come il telefono.
           compiti=(:orologio:assembleRelease)
-          if [ -f chiave.properties ]; then compiti+=(:orologio:bundleRelease); fi
-          java -classpath gradle/wrapper/gradle-wrapper.jar org.gradle.wrapper.GradleWrapperMain "${compiti[@]}"
+          if [ -f app/android/chiave.properties ]; then compiti+=(:orologio:bundleRelease); fi
+          strumenti/gradle-orologio.sh "${compiti[@]}"
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: vars.GDAHOME_OROLOGIO == 'si'
         with:

@@ -11,9 +11,12 @@ on:
   push:
     paths:
       - "app/ios/Orologio/**"
+      - "app/ios/Runner/LOrologio.swift"
+      - "app/android/app/src/main/kotlin/com/gdahome/gdahome/orologio/**"
       - "app/android/orologio/**"
       - "app/android/settings.gradle.kts"
       - "strumenti/orologio-in-xcode.rb"
+      - "strumenti/gradle-orologio.sh"
       - ".github/workflows/orologi.yml"
   workflow_dispatch:
 
@@ -37,6 +40,18 @@ jobs:
           xcode="$(ls -d /Applications/Xcode_*.app | grep -v -i beta | sort -V | tail -1)"
           sudo xcode-select -s "$xcode"
           xcodebuild -version | tee -a "$GITHUB_STEP_SUMMARY"
+      # Prima l'app per iPhone, com'e': prova anche il tramite
+      # (`Runner/LOrologio.swift`), e prepara quello che il progetto Xcode si
+      # aspetta di trovare — i pacchetti Swift dei plugin, Generated.xcconfig.
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+        working-directory: app
+      - name: L'app per iPhone
+        working-directory: app
+        run: flutter build ios --release --no-codesign
       # Il target si aggiunge con lo stesso script che usa l'app vera. La
       # gemma `xcodeproj` sui Mac di GitHub c'e' gia' (con CocoaPods); se un
       # giorno mancasse, la si mette.
@@ -44,8 +59,7 @@ jobs:
         run: |
           gem list -i xcodeproj > /dev/null || sudo gem install xcodeproj --no-document
           ruby strumenti/orologio-in-xcode.rb
-      # Solo l'orologio, per il simulatore: non vuole ne' Flutter ne' i Pods
-      # dell'iPhone, e non vuole firma.
+      # Solo l'orologio, per il simulatore, senza firma.
       - name: Compila
         working-directory: app
         run: |
@@ -76,13 +90,7 @@ jobs:
       # si parla col telefono di prova, quello degli artefatti di «L'app da
       # provare» costruita senza chiave vera.
       - name: Compila
-        working-directory: app/android
-        env:
-          GDAHOME_OROLOGIO: si
-        run: |
-          [ -f local.properties ] || echo "flutter.sdk=$FLUTTER_ROOT" > local.properties
-          java -classpath gradle/wrapper/gradle-wrapper.jar org.gradle.wrapper.GradleWrapperMain \
-            :orologio:assembleRelease
+        run: strumenti/gradle-orologio.sh :orologio:assembleRelease
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: gdahome-wear-os-prova
