@@ -180,7 +180,11 @@ c'è la **casa di prova** dell'add-on (dalla 1.10.1): un codice che vale fino a
    quanto dura «7 giorni», poi «Fai il codice di prova».
 4. Le lettere vanno nelle note qui sotto, al posto di `XXXX-XXXX-XXXX-XXXX`.
    Il QR («Scarica il QR», un PNG) si può mettere come allegato.
-5. Finita la revisione: «Revoca adesso». Il codice smette di valere e i
+5. Se la revisione dura più del codice: **«Allunga di 7 giorni»** (dalla
+   1.11.0.1), un giorno o due prima della scadenza. Il codice resta lo stesso,
+   e le note e i campi qui non si toccano: cambiarli farebbe ripartire la
+   revisione. I telefoni già entrati restano dentro.
+6. Finita la revisione: «Revoca adesso». Il codice smette di valere e i
    telefoni entrati con lui escono subito; alla scadenza succede da solo.
 
 Il link ai Termini d'uso e quello alla privacy vanno anche nei campi della
