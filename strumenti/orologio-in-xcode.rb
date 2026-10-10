@@ -84,6 +84,14 @@ dentro.dst_subfolder_spec = '16'
 dentro.dst_path = '$(CONTENTS_FOLDER_PATH)/Watch'
 file = dentro.add_file_reference(orologio.product_reference)
 file.settings = { 'ATTRIBUTES' => ['RemoveHeadersOnCopy'] }
+# Prima di «Thin Binary» di Flutter: in fondo, la copia dell'orologio e quella
+# fase si aspettavano a vicenda («Cycle inside Runner»), e l'archivio cadeva.
+# E' la stessa cosa che si fa a mano con le estensioni in un'app Flutter.
+sottile = runner.build_phases.find { |f| f.respond_to?(:name) && f.name == 'Thin Binary' }
+if sottile
+  runner.build_phases.delete(dentro)
+  runner.build_phases.insert(runner.build_phases.index(sottile), dentro)
+end
 
 progetto.save
 puts "Aggiunto #{NOME} (#{OROLOGIO}), dentro Runner.app/Watch."
