@@ -125,6 +125,11 @@ jobs:
           set -euo pipefail
           sdk="$ANDROID_HOME/cmdline-tools/latest/bin"
           yes | "$sdk/sdkmanager" --licenses > /dev/null || true
+          # adb sta negli strumenti della piattaforma, che sulle macchine di
+          # GitHub non sono nel PATH: qui e nei passi dopo.
+          "$sdk/sdkmanager" "platform-tools" > /dev/null
+          export PATH="$ANDROID_HOME/platform-tools:$PATH"
+          echo "$ANDROID_HOME/platform-tools" >> "$GITHUB_PATH"
           immagine=""
           for api in 34 33; do
             if "$sdk/sdkmanager" "emulator" "system-images;android-$api;android-wear;x86_64" > /dev/null; then
