@@ -150,6 +150,7 @@ class _HomeState extends State<Home> {
   @override
   void initState() {
     super.initState();
+    inMacchina.addListener(_inMacchinaECambiato);
     _seRisponde();
     _quantiAggiornamenti();
     _giroDegliAggiornamenti = Timer.periodic(
@@ -161,6 +162,7 @@ class _HomeState extends State<Home> {
   @override
   void dispose() {
     _giroDegliAggiornamenti?.cancel();
+    inMacchina.removeListener(_inMacchinaECambiato);
     _menuDiGdanav.dispose();
     super.dispose();
   }
@@ -304,7 +306,38 @@ class _HomeState extends State<Home> {
     return const {Sezione.configurazione, Sezione.zigbee};
   }
 
+  /* Con Android Auto acceso il navigatore e' sullo schermo dell'auto, e sul
+   * telefono si vede solo gdahome: la casa.
+   *
+   * «Quando Android Auto e' attivo, aprendo gdahome il navigatore non deve
+   * essere attivato: devo vedere solo gdahome.» Due navigatori accesi insieme
+   * — quello dell'auto e la mappa del telefono — erano anche meta' del
+   * calore del telefono nel supporto. Se si sale in macchina col navigatore
+   * aperto sul telefono, si torna alla plancia; e finche' si e' in macchina
+   * la sua voce del menu lo dice invece di aprirlo. */
+  void _inMacchinaECambiato() {
+    if (!mounted || !inMacchina.value) return;
+    if (_sezione == Sezione.navigatore) {
+      setState(() => _sezione = Sezione.plancia);
+    }
+  }
+
   void _vai(Sezione dove) {
+    if (dove == Sezione.navigatore && inMacchina.value) {
+      ScaffoldMessenger.maybeOf(context)
+        ?..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(
+            content: Text(
+              inLingua(
+                it: 'Il navigatore è sullo schermo dell\'auto',
+                en: 'The navigator is on the car screen',
+              ),
+            ),
+          ),
+        );
+      return;
+    }
     /* La pagina Premium non e' una sezione della fila: si apre sopra. E ci
      * portano anche le voci col lucchetto, con scritto perche'. */
     if (dove == Sezione.premium || _bloccate.contains(dove)) {
