@@ -52,6 +52,7 @@ import {
   eConfigurata,
   PROFILO_PRINCIPALE,
   ScattoTroppoGrande,
+  STATO,
 } from "./configurazione.js";
 import { DISPOSITIVI_MASSIMI, ENTITA_MASSIME } from "./catalogo.js";
 import { BASE_DELLE_FOTO, BASE_DI_CASA, FOTO_MASSIMA } from "./foto.js";
@@ -144,6 +145,7 @@ const LICENZA = new Map([
 
 const CONFIG_GET = "dashboardmodern/config/get";
 const CONFIG_SET = "dashboardmodern/config/set";
+const EVENTO_CONFIGURAZIONE = "dashboardmodern_config";
 const CONFIG_RESTORE = "dashboardmodern/config/restore";
 const CATALOGO = "dashboardmodern/integrations/catalog";
 const FOTO_ELENCO = "dashboardmodern/www/list";
@@ -1252,6 +1254,25 @@ export class Commissioni {
     }
   }
 
+  /* «Se aggiorno un'entita' nella plancia, nella plancia wall non si
+   * aggiorna. Gli aggiornamenti devono essere in tempo reale.» Una
+   * configurazione salvata davvero si dice sul bus di Home Assistant
+   * (`dashboardmodern_config`, col profilo): il pannello a muro che legge da
+   * quella plancia la rilegge subito. Lo dice e non aspetta: il salvataggio
+   * non dipende dall'avviso, e un avviso perso costa solo il giro successivo. */
+  _eCambiata(esito) {
+    if (esito?.status === STATO.salvato && typeof this.casa?.chiedi === "function") {
+      this.casa
+        .chiedi({
+          type: "fire_event",
+          event_type: EVENTO_CONFIGURAZIONE,
+          event_data: { profile: esito.profile },
+        })
+        .catch(() => {});
+    }
+    return esito;
+  }
+
   async _configurazione(detto) {
     const id = detto.id ?? null;
     const cassetta = this.configurazione;
@@ -1267,7 +1288,7 @@ export class Commissioni {
       if (detto.type === CONFIG_RESTORE) {
         const revisione = Number(detto.revision);
         if (!Number.isFinite(revisione)) return no(id, "invalid_format", "manca la revisione");
-        return si(id, cassetta.ripristina(profilo, revisione));
+        return si(id, this._eCambiata(cassetta.ripristina(profilo, revisione)));
       }
       const scatto = detto.snapshot;
       if (
@@ -1279,13 +1300,15 @@ export class Commissioni {
         return no(id, "invalid_format", "manca lo scatto");
       return si(
         id,
-        cassetta.scrivi(profilo, scatto.values, {
-          keys_revision: scatto.keys_revision ?? 0,
-          writer_generation: scatto.writer_generation ?? 0,
-          updated_at: scatto.updated_at ?? 0,
-          expected_revision: detto.expected_revision ?? null,
-          reset: detto.reset === true,
-        }),
+        this._eCambiata(
+          cassetta.scrivi(profilo, scatto.values, {
+            keys_revision: scatto.keys_revision ?? 0,
+            writer_generation: scatto.writer_generation ?? 0,
+            updated_at: scatto.updated_at ?? 0,
+            expected_revision: detto.expected_revision ?? null,
+            reset: detto.reset === true,
+          }),
+        ),
       );
     } catch (errore) {
       if (errore instanceof ScattoTroppoGrande) return no(id, "snapshot_too_large", errore.message);

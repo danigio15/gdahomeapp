@@ -77353,10 +77353,11 @@ async function premiumDellaCasa({ forza = false } = {}) {
   ricorda({ premium });
   return premium;
 }
-var CINQUE_MINUTI = 5 * 60 * 1e3;
+var UN_MINUTO2 = 60 * 1e3;
 async function fonteDelMuro(muro, { forza = false } = {}) {
   const di = muro?.fonte || "primary";
-  if (!forza && state107.fonte && state107.fonteDi === di && Date.now() - state107.fonteLetta < CINQUE_MINUTI)
+  const quiDentro = !root.__DM_MURO_FONTE__ && (di === currentProfile() || !root.__DASHBOARDMODERN_HOSTED__);
+  if (!forza && !quiDentro && state107.fonte && state107.fonteDi === di && Date.now() - state107.fonteLetta < UN_MINUTO2)
     return state107.fonte;
   let fonte = null;
   if (root.__DM_MURO_FONTE__ && typeof root.__DM_MURO_FONTE__ === "object")
@@ -78170,7 +78171,21 @@ function configAperto() {
   };
   guardaIlConfig = root.requestAnimationFrame?.(giro) || root.setTimeout?.(giro, 200);
 }
+function scendiSottoIlMenu() {
+  const tela2 = doc?.getElementById?.(ID2);
+  if (!tela2) return;
+  tela2.dataset.muSottoIlMenu = "true";
+  const aperto2 = Date.now();
+  const risali = (evento) => {
+    if (Date.now() - aperto2 < 300) return;
+    if (evento?.target?.closest?.('[data-mu-fa="menu"]')) return;
+    doc.removeEventListener("pointerdown", risali, true);
+    root.setTimeout?.(() => delete tela2.dataset.muSottoIlMenu, 350);
+  };
+  doc.addEventListener("pointerdown", risali, true);
+}
 function apriIlMenu2() {
+  scendiSottoIlMenu();
   const tasto2 = doc?.querySelector?.("body>header .ha-menu-btn") || doc?.querySelector?.(".ha-menu-btn");
   if (tasto2) {
     tasto2.click();
@@ -78627,6 +78642,7 @@ async function rileggi3({ forza = false } = {}) {
     } catch (_errore) {
     }
   }
+  ascoltaLaFonte();
   disegna5();
   lasciaIlVelo();
 }
@@ -78639,6 +78655,7 @@ function stili() {
 html.dm-muro-acceso,html.dm-muro-acceso body{overflow:hidden!important}
 html.dm-solo-muro #editor-modal .ed-tabs,html.dm-solo-muro #editor-modal #dm-alberatura-famiglie,html.dm-solo-muro #editor-modal .dm-cerca-config,html.dm-solo-muro #editor-modal .dm-alberatura-titolo-famiglia{display:none!important}
 html.dm-solo-muro #editor-modal .ed-body,html.dm-solo-muro #editor-modal #ed-body{margin-left:0!important;max-width:none!important}
+${MURO}[data-mu-sotto-il-menu]{z-index:4!important}
 ${MURO}{position:fixed;inset:0;z-index:2147482000;overflow:hidden;color:var(--text);font-family:Inter,system-ui,sans-serif;
   -webkit-font-smoothing:antialiased;-webkit-user-select:none;user-select:none;touch-action:manipulation;
   background:radial-gradient(120% 80% at 50% -10%,color-mix(in srgb,var(--card-bg) 70%,transparent),transparent 60%),var(--bg-sculpted)}
@@ -78845,6 +78862,51 @@ ${MURO}[data-verso="verticale"] .mu-riposo-riga{flex-direction:column;gap:14px;a
 `
   );
 }
+var EVENTO_DELLA_CONFIGURAZIONE = "dashboardmodern_config";
+var orecchio = { id: 0, socket: null, gestore: null, controllato: 0 };
+function eCambiataLaFonte(messaggio, profilo2) {
+  if (messaggio?.type !== "event") return false;
+  const evento = messaggio.event;
+  if (evento?.event_type !== EVENTO_DELLA_CONFIGURAZIONE) return false;
+  return clean(evento?.data?.profile || "primary") === clean(profilo2 || "primary");
+}
+function ascoltaLaFonte() {
+  const socket = lexicalGlobal("ws");
+  const pending = lexicalGlobal("pendingWsCallbacks");
+  if (!socket || socket.readyState !== 1 || !pending) return false;
+  if (orecchio.id && orecchio.socket === socket && pending[orecchio.id] === orecchio.gestore)
+    return true;
+  let id;
+  try {
+    id = root.eval("msgId++");
+  } catch (_errore) {
+    return false;
+  }
+  if (!Number.isFinite(Number(id))) return false;
+  const gestore = (messaggio) => {
+    if (state107.muro?.attiva && eCambiataLaFonte(messaggio, state107.muro.fonte))
+      rileggi3({ forza: true }).catch(() => {
+      });
+  };
+  gestore.keepAlive = true;
+  pending[id] = gestore;
+  try {
+    socket.send(
+      JSON.stringify({ id, type: "subscribe_events", event_type: EVENTO_DELLA_CONFIGURAZIONE })
+    );
+  } catch (_errore) {
+    delete pending[id];
+    return false;
+  }
+  Object.assign(orecchio, { id, socket, gestore });
+  return true;
+}
+function controllaLOrecchio() {
+  const adesso = Date.now();
+  if (adesso - orecchio.controllato < 1e4) return;
+  orecchio.controllato = adesso;
+  if (state107.muro?.attiva) ascoltaLaFonte();
+}
 function installPlanciaAMuro() {
   if (!doc || state107.installed) return false;
   state107.installed = true;
@@ -78862,10 +78924,20 @@ function installPlanciaAMuro() {
     root.addEventListener?.(evento, ancora2);
   root.addEventListener?.("dashboardmodern:states-ready", () => disegna5());
   root.addEventListener?.("dashboardmodern:state-changed", (event) => {
+    controllaLOrecchio();
     svegliaSeServe(event);
     disegna5();
   });
   root.addEventListener?.("resize", () => disegna5());
+  for (const evento of ["dashboardmodern:persistence-saved", "dashboardmodern:store-user-write"])
+    root.addEventListener?.(evento, () => {
+      if (state107.muro?.attiva) ancora2();
+    });
+  doc.addEventListener?.("visibilitychange", () => {
+    if (doc.visibilityState === "visible" && state107.muro?.attiva)
+      rileggi3({ forza: true }).catch(() => {
+      });
+  });
   root.addEventListener?.("storage", (event) => {
     if (String(event?.key || "").endsWith(CHIAVE_MURO)) ancora2();
   });

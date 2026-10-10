@@ -663,7 +663,12 @@ test("una plancia gia' configurata dall'app non viene coperta da quella dell'int
 
   const letta = await con.rispondi({ id: 2, type: "dashboardmodern/config/get" });
   assert.equal(letta.result.snapshot.values.cd_stanze, '[{"name":"Sala"}]');
-  assert.deepEqual(casa.chieste, [], "a Home Assistant non si chiede niente");
+  /* Se non l'avviso al pannello a muro, che e' un dire e non un chiedere. */
+  assert.deepEqual(
+    casa.chieste.filter((c) => c.type !== "fire_event"),
+    [],
+    "a Home Assistant non si chiede niente",
+  );
 
   rmSync(cartella, { recursive: true, force: true });
 });
@@ -717,6 +722,36 @@ test("se l'integrazione risponde una plancia vuota non si adotta niente, e il fi
   assert.equal(comunque.success, true, "una risposta, non un errore");
   assert.equal(comunque.result.snapshot, null);
 
+  rmSync(cartella, { recursive: true, force: true });
+});
+
+test("una configurazione salvata si dice sul bus, perche' il pannello a muro la rilegga subito", async () => {
+  const cartella = mkdtempSync(join(tmpdir(), "commissioni-config-"));
+  const casa = casaCheDice(null);
+  const con = new Commissioni({
+    casa,
+    registro: ZITTO,
+    configurazione: new Configurazione({ cartella, adesso: () => 5000 }),
+  });
+  const scatto = {
+    values: { cd_stanze: '[{"name":"Sala"}]' },
+    keys_revision: 1,
+    writer_generation: 2,
+    updated_at: 0,
+  };
+  const scrivi = (id) =>
+    con.rispondi(
+      { id, type: "dashboardmodern/config/set", profile: "muro-1", snapshot: scatto },
+      { puoAmministrare: true },
+    );
+  assert.equal((await scrivi(1)).result.status, "saved");
+  const avvisi = () => casa.chieste.filter((c) => c.type === "fire_event");
+  assert.deepEqual(avvisi(), [
+    { type: "fire_event", event_type: "dashboardmodern_config", event_data: { profile: "muro-1" } },
+  ]);
+  /* Uguale a prima: niente da dire. */
+  assert.equal((await scrivi(2)).result.status, "unchanged");
+  assert.equal(avvisi().length, 1);
   rmSync(cartella, { recursive: true, force: true });
 });
 
@@ -894,7 +929,9 @@ test("col ponte in mezzo: la configurazione non arriva in Home Assistant, le alt
   assert.deepEqual(detti.find((uno) => uno.id === 4).result, { value: null });
   /* In Home Assistant sono arrivate solo le cose sue. */
   assert.deepEqual(
-    ha.arrivate.filter((una) => una.filo).map((una) => una.filo.type),
+    ha.arrivate
+      .filter((una) => una.filo && una.filo.type !== "fire_event")
+      .map((una) => una.filo.type),
     ["frontend/get_user_data", "dashboardmodern/www/list"],
   );
   assert.equal(

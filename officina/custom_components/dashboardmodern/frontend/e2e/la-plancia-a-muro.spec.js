@@ -339,6 +339,30 @@ test.describe("la plancia a muro", () => {
     await expect.poll(() => page.evaluate(() => window.__MENU_PREMUTO__)).toBe(1);
   });
 
+  /* «L'icona hamburger non funziona, non si apre il menu laterale»: il menu si
+   * apriva, ma sotto il pannello, che sta sopra a tutto. */
+  test("il menu aperto dal ☰ si vede sopra il pannello", async ({ page }, testInfo) => {
+    await apriLaCasaAMuro(page, testInfo, { muro: MURO_DI_PROVA });
+    await muro(page).locator('[data-mu-fa="menu"]').click();
+    const menu = page.locator("#cd-app-menu");
+    await expect(menu).toBeVisible();
+    const inCima = () =>
+      page.evaluate(() => {
+        const sotto = document.elementFromPoint(innerWidth / 2, innerHeight - 30);
+        return sotto?.closest?.("#cd-app-menu")
+          ? "menu"
+          : sotto?.closest?.("#dm-muro")
+            ? "muro"
+            : "";
+      });
+    await expect.poll(inCima).toBe("menu");
+    /* Chiuso il menu, il primo tocco rimette il pannello sopra. */
+    await page.waitForTimeout(400);
+    await page.mouse.click(20, 20);
+    await expect(menu).toHaveCount(0);
+    await expect(muro(page)).not.toHaveAttribute("data-mu-sotto-il-menu", "true");
+  });
+
   test("col blocco il ☰ vuole il PIN", async ({ page }, testInfo) => {
     await apriLaCasaAMuro(page, testInfo, {
       muro: { ...MURO_DI_PROVA, blocco: { attivo: true, pin: "2468" } },

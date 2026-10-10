@@ -54,6 +54,7 @@ import {
   doc,
   esc,
   installStyle,
+  lexicalGlobal,
   locale,
   readJson,
   root,
@@ -154,16 +155,21 @@ export async function premiumDellaCasa({ forza = false } = {}) {
   return premium;
 }
 
-const CINQUE_MINUTI = 5 * 60 * 1000;
+const UN_MINUTO = 60 * 1000;
 
 /** Le cose della plancia di origine, gia' pronte per il tablet. */
 export async function fonteDelMuro(muro, { forza = false } = {}) {
   const di = muro?.fonte || "primary";
+  /* La fonte che sta qui si legge sempre da capo: costa niente, e quello che
+   * si e' appena salvato nel config si vede subito. */
+  const quiDentro =
+    !root.__DM_MURO_FONTE__ && (di === currentProfile() || !root.__DASHBOARDMODERN_HOSTED__);
   if (
     !forza &&
+    !quiDentro &&
     state.fonte &&
     state.fonteDi === di &&
-    Date.now() - state.fonteLetta < CINQUE_MINUTI
+    Date.now() - state.fonteLetta < UN_MINUTO
   )
     return state.fonte;
   let fonte = null;
@@ -1203,7 +1209,28 @@ function configAperto() {
  * nell'app.» Non si rifà niente: si preme il tasto della plancia, che c'e'
  * anche sotto il pannello. In Home Assistant apre la barra laterale; nell'app
  * lo intercetta chi la ospita (`premesse.dart`) e apre il menu di gdahome. */
+/* Il menu laterale di Home Assistant — e quello dell'app — si apre sotto il
+ * pannello, che sta sopra tutto: «l'icona hamburger non funziona, non si apre
+ * il menu laterale». Mentre il menu e' aperto il pannello scende sotto il
+ * cassetto; il primo tocco fuori dal ☰ lo rimette sopra. */
+function scendiSottoIlMenu() {
+  const tela = doc?.getElementById?.(ID);
+  if (!tela) return;
+  tela.dataset.muSottoIlMenu = "true";
+  const aperto = Date.now();
+  const risali = (evento) => {
+    if (Date.now() - aperto < 300) return;
+    if (evento?.target?.closest?.('[data-mu-fa="menu"]')) return;
+    doc.removeEventListener("pointerdown", risali, true);
+    /* Dopo il tocco, non durante: il tocco finisce su quello che c'e' sopra
+     * adesso — il velo del menu, che lo chiude — e non sul pannello. */
+    root.setTimeout?.(() => delete tela.dataset.muSottoIlMenu, 350);
+  };
+  doc.addEventListener("pointerdown", risali, true);
+}
+
 export function apriIlMenu() {
+  scendiSottoIlMenu();
   const tasto =
     doc?.querySelector?.("body>header .ha-menu-btn") || doc?.querySelector?.(".ha-menu-btn");
   if (tasto) {
@@ -1268,8 +1295,8 @@ function tela() {
 
 /* Il battito del tablet: uno solo, e solo mentre il pannello c'e'. Ogni
  * quindici secondi l'orologio e il riposo, la telecamera che non e' un video;
- * ogni dieci minuti la fonte, cosi' una luce aggiunta nella principale arriva
- * sul tablet senza doverlo riavviare. */
+ * ogni dieci minuti la fonte, come rete di sicurezza: il cambio vero arriva
+ * subito, dall'avviso sul bus di casa (`ascoltaLaFonte`). */
 function avviaIlBattito() {
   if (state.timer) return;
   let giri = 0;
@@ -1746,6 +1773,7 @@ export async function rileggi({ forza = false } = {}) {
       setKioskMode(true);
     } catch (_errore) {}
   }
+  ascoltaLaFonte();
   disegna();
   lasciaIlVelo();
 }
@@ -1762,6 +1790,7 @@ function stili() {
 html.dm-muro-acceso,html.dm-muro-acceso body{overflow:hidden!important}
 html.dm-solo-muro #editor-modal .ed-tabs,html.dm-solo-muro #editor-modal #dm-alberatura-famiglie,html.dm-solo-muro #editor-modal .dm-cerca-config,html.dm-solo-muro #editor-modal .dm-alberatura-titolo-famiglia{display:none!important}
 html.dm-solo-muro #editor-modal .ed-body,html.dm-solo-muro #editor-modal #ed-body{margin-left:0!important;max-width:none!important}
+${MURO}[data-mu-sotto-il-menu]{z-index:4!important}
 ${MURO}{position:fixed;inset:0;z-index:2147482000;overflow:hidden;color:var(--text);font-family:Inter,system-ui,sans-serif;
   -webkit-font-smoothing:antialiased;-webkit-user-select:none;user-select:none;touch-action:manipulation;
   background:radial-gradient(120% 80% at 50% -10%,color-mix(in srgb,var(--card-bg) 70%,transparent),transparent 60%),var(--bg-sculpted)}
@@ -1969,6 +1998,64 @@ ${MURO}[data-verso="verticale"] .mu-riposo-riga{flex-direction:column;gap:14px;a
   );
 }
 
+/* ─── In tempo reale: l'orecchio sul bus di casa ────────────────────────────
+ *
+ * «Gli aggiornamenti devono essere in tempo reale.» Quando una plancia salva
+ * la sua configurazione, il ponte lo dice sul bus di Home Assistant
+ * (`dashboardmodern_config`, col profilo). Il pannello ascolta con lo stesso
+ * socket del guscio, come la chat dell'assistenza, e se il profilo e' quello
+ * da cui legge rilegge subito la fonte. A ogni evento di stato si controlla
+ * che l'ascolto sia ancora attaccato: una riconnessione del guscio butta via
+ * i gestori in attesa. */
+export const EVENTO_DELLA_CONFIGURAZIONE = "dashboardmodern_config";
+const orecchio = { id: 0, socket: null, gestore: null, controllato: 0 };
+
+/** Se un messaggio del socket dice che la configurazione di `profilo` e' cambiata. */
+export function eCambiataLaFonte(messaggio, profilo) {
+  if (messaggio?.type !== "event") return false;
+  const evento = messaggio.event;
+  if (evento?.event_type !== EVENTO_DELLA_CONFIGURAZIONE) return false;
+  return clean(evento?.data?.profile || "primary") === clean(profilo || "primary");
+}
+
+function ascoltaLaFonte() {
+  const socket = lexicalGlobal("ws");
+  const pending = lexicalGlobal("pendingWsCallbacks");
+  if (!socket || socket.readyState !== 1 || !pending) return false;
+  if (orecchio.id && orecchio.socket === socket && pending[orecchio.id] === orecchio.gestore)
+    return true;
+  let id;
+  try {
+    id = root.eval("msgId++");
+  } catch (_errore) {
+    return false;
+  }
+  if (!Number.isFinite(Number(id))) return false;
+  const gestore = (messaggio) => {
+    if (state.muro?.attiva && eCambiataLaFonte(messaggio, state.muro.fonte))
+      rileggi({ forza: true }).catch(() => {});
+  };
+  gestore.keepAlive = true;
+  pending[id] = gestore;
+  try {
+    socket.send(
+      JSON.stringify({ id, type: "subscribe_events", event_type: EVENTO_DELLA_CONFIGURAZIONE }),
+    );
+  } catch (_errore) {
+    delete pending[id];
+    return false;
+  }
+  Object.assign(orecchio, { id, socket, gestore });
+  return true;
+}
+
+function controllaLOrecchio() {
+  const adesso = Date.now();
+  if (adesso - orecchio.controllato < 10000) return;
+  orecchio.controllato = adesso;
+  if (state.muro?.attiva) ascoltaLaFonte();
+}
+
 export function installPlanciaAMuro() {
   if (!doc || state.installed) return false;
   state.installed = true;
@@ -1985,10 +2072,21 @@ export function installPlanciaAMuro() {
     root.addEventListener?.(evento, ancora);
   root.addEventListener?.("dashboardmodern:states-ready", () => disegna());
   root.addEventListener?.("dashboardmodern:state-changed", (event) => {
+    controllaLOrecchio();
     svegliaSeServe(event);
     disegna();
   });
   root.addEventListener?.("resize", () => disegna());
+  /* Un salvataggio del config, e il tablet che torna acceso: la fonte si
+   * rilegge subito. */
+  for (const evento of ["dashboardmodern:persistence-saved", "dashboardmodern:store-user-write"])
+    root.addEventListener?.(evento, () => {
+      if (state.muro?.attiva) ancora();
+    });
+  doc.addEventListener?.("visibilitychange", () => {
+    if (doc.visibilityState === "visible" && state.muro?.attiva)
+      rileggi({ forza: true }).catch(() => {});
+  });
   root.addEventListener?.("storage", (event) => {
     if (String(event?.key || "").endsWith(CHIAVE_MURO)) ancora();
   });
