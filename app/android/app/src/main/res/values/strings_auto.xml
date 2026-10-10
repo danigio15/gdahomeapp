@@ -35,7 +35,7 @@
          navigatore (versione col navigatore in auto). -->
     <string name="auto_comandi">Comandi rapidi</string>
     <string name="auto_senza_comandi">Nessun comando scelto. Sul telefono: gdanav, menu, Comandi rapidi in auto.</string>
-    <string name="auto_conferma">%1$s: lo faccio?</string>
+    <string name="auto_conferma">%1$s: sei sicuro?</string>
     <string name="auto_conferma_si">Sì</string>
     <string name="auto_conferma_no">No</string>
     <!-- L'avviso a 500 m da casa. -->

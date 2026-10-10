@@ -50,7 +50,7 @@ struct LaCasa: View {
     }
     .navigationTitle(foto.casa.isEmpty ? "Casa" : foto.casa)
     .confirmationDialog(
-      daConfermare.map { "\($0.nome): lo faccio?" } ?? "",
+      daConfermare?.nome ?? "",
       isPresented: Binding(get: { daConfermare != nil }, set: { if !$0 { daConfermare = nil } }),
       titleVisibility: .visible
     ) {
@@ -59,6 +59,10 @@ struct LaCasa: View {
         daConfermare = nil
       }
       Button("No", role: .cancel) { daConfermare = nil }
+    } message: {
+      /* La stessa domanda della plancia e dell'impostazione sul telefono
+       * («Sei sicuro?» prima di farlo). */
+      Text("Sei sicuro?")
     }
   }
 }

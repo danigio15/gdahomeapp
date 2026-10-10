@@ -182,12 +182,13 @@ private fun LaCasa(foto: LaFoto, telefono: IlTelefono, nav: NavHostController) {
     }
 }
 
-/* Una serratura chiede «lo faccio?»: un tocco sbagliato non deve aprire la
+/* Una serratura chiede «Sei sicuro?», come la plancia: un tocco sbagliato non deve aprire la
  * porta di casa. */
 @Composable
 private fun Conferma(comando: Comando?, telefono: IlTelefono, nav: NavHostController) {
     Elenco {
-        item { ListHeader { Text("${comando?.nome ?: ""}: lo faccio?", textAlign = TextAlign.Center) } }
+        item { ListHeader { Text(comando?.nome ?: "", textAlign = TextAlign.Center) } }
+        item { Text("Sei sicuro?", fontSize = 14.sp, textAlign = TextAlign.Center) }
         item {
             Tasto("Sì", segno = "✔", acceso = true, attivo = comando != null) {
                 comando?.let { telefono.premi(it.id) }

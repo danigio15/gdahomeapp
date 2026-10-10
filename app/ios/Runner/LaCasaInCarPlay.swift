@@ -159,7 +159,7 @@ enum LaCasaInCarPlay {
   private static func premiIlComando(_ c: Comando, _ controllore: CPInterfaceController?) {
     guard c.conferma, let controllore else { return premi(c.id, c.nome, subito: true) }
     let conferma = CPAlertTemplate(
-      titleVariants: ["\(c.nome): lo faccio?"],
+      titleVariants: ["\(c.nome): sei sicuro?"],
       actions: [
         CPAlertAction(title: "Sì", style: .default) { [weak controllore] _ in
           controllore?.dismissTemplate(animated: true) { _, _ in premi(c.id, c.nome, subito: true) }

@@ -11,7 +11,7 @@ struct Comando: Identifiable, Hashable {
   let id: String
   let nome: String
   let disegno: String
-  /// Una serratura chiede «lo faccio?» prima di partire.
+  /// Una serratura chiede «Sei sicuro?» prima di partire.
   let conferma: Bool
 }
 
