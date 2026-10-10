@@ -61,6 +61,10 @@ orologio.build_configurations.each do |c|
   s['ASSETCATALOG_COMPILER_APPICON_NAME'] = 'AppIcon'
   s['ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME'] = 'AccentColor'
   s['SDKROOT'] = 'watchos'
+  # Il progetto di Flutter dice SUPPORTED_PLATFORMS = iphoneos per tutti, e
+  # l'orologio lo ereditava: nell'archivio dell'iPhone si compilava per
+  # l'iPhone, e `import WatchKit` non si trovava. Il suo e' watchOS.
+  s['SUPPORTED_PLATFORMS'] = 'watchos watchsimulator'
   s['WATCHOS_DEPLOYMENT_TARGET'] = '10.0'
   s['TARGETED_DEVICE_FAMILY'] = '4'
   s['SWIFT_VERSION'] = '5.0'
