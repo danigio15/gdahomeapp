@@ -14,6 +14,7 @@ import {
   comandiDellaPagina,
   comandoPulito,
   comandiProposti,
+  derivaDelRiposo,
   eNotte,
   fonteDaiValori,
   ingressoProposto,
@@ -370,4 +371,17 @@ test("caldo o freddo: comanda quello che fa, poi la pagina, poi il tipo", () => 
   assert.equal(climaScalda({ stato: "off", tipo: "clima" }), false);
   assert.equal(climaScalda({ stato: "off", tipo: "pompa", zona: "caldo" }), true);
   assert.equal(climaScalda({ stato: "off", tipo: "pompa" }), false);
+});
+
+test("il riposo cambia posto ogni minuto, e mai vicino a quello di prima", () => {
+  const minuto = 60000;
+  const base = Date.UTC(2026, 9, 10, 21, 0, 0);
+  assert.deepEqual(derivaDelRiposo(base), derivaDelRiposo(base + 59000), "fermo dentro il minuto");
+  let prima = derivaDelRiposo(base);
+  for (let i = 1; i <= 240; i += 1) {
+    const ora = derivaDelRiposo(base + i * minuto);
+    assert.ok(Math.abs(ora.x) <= 1 && Math.abs(ora.y) <= 1, "dentro il riquadro");
+    assert.ok(Math.hypot(ora.x - prima.x, ora.y - prima.y) > 0.4, `minuto ${i}: troppo vicino`);
+    prima = ora;
+  }
 });

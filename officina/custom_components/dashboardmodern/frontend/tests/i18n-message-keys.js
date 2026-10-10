@@ -2540,6 +2540,7 @@ export const MESSAGE_KEYS = Object.freeze([
   "Nobody around",
   "Nobody around · ${conto.liberi}",
   "Nobody has written anything yet.",
+  "Nobody home",
   "Nobody ticked: the calendar belongs to the house and everyone sees it. Tick one or more and the agenda shows it only to them — the others see the house calendars and their own.",
   "node",
   "Node",

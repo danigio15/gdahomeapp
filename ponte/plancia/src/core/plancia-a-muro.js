@@ -457,6 +457,24 @@ function avvisoAcceso(avviso, stati = {}) {
   });
 }
 
+/**
+ * Dove sta il riposo in questo minuto: uno spostamento fra -1 e 1, su x e y.
+ *
+ * «Orario e le altre info si muovono nello schermo per non restare sempre
+ * allo stesso punto»: un tablet acceso tutto il giorno si stampa addosso
+ * quello che non si muove mai. Ogni minuto il blocco va altrove, seguendo una
+ * sequenza a bassa discrepanza (R2): posti sempre diversi, sparsi su tutto il
+ * riquadro, e due minuti di fila non cadono mai vicini.
+ */
+export function derivaDelRiposo(adesso = Date.now()) {
+  const n = Math.floor(Number(adesso) / 60000);
+  const parte = (v) => v - Math.floor(v);
+  return {
+    x: parte(0.5 + n * 0.7548776662466927) * 2 - 1,
+    y: parte(0.5 + n * 0.5698402909980532) * 2 - 1,
+  };
+}
+
 /** Gli avvisi da mostrare sul riposo: quelli accesi, e l'antifurto che suona. */
 export function avvisiAccesi(fonte = {}, stati = {}, centrale = "") {
   const accesi = elenco(fonte.avvisi)

@@ -4250,6 +4250,7 @@ var SOURCE_INDEX = Object.freeze({
   "Nessuna zona configurata": "No zone configured",
   "Nessuno": "Nobody",
   "Nessuno ha ancora scritto niente.": "Nobody has written anything yet.",
+  "Nessuno in casa": "Nobody home",
   "Nessuno in riproduzione": "Nothing playing",
   "Nessuno scaldabagno configurato": "No water heater configured",
   "Nessuno scaldabagno configurato: aggiungilo dalla scheda Solare della configurazione.": "No water heater configured: add one from the Solar tab in settings.",
@@ -77174,6 +77175,14 @@ function avvisoAcceso(avviso, stati = {}) {
     return avviso.cond === "gt" ? numero45 > soglia2 : numero45 < soglia2;
   });
 }
+function derivaDelRiposo(adesso = Date.now()) {
+  const n = Math.floor(Number(adesso) / 6e4);
+  const parte = (v) => v - Math.floor(v);
+  return {
+    x: parte(0.5 + n * 0.7548776662466927) * 2 - 1,
+    y: parte(0.5 + n * 0.5698402909980532) * 2 - 1
+  };
+}
 function avvisiAccesi(fonte = {}, stati = {}, centrale = "") {
   const accesi = elenco5(fonte.avvisi).filter((a) => avvisoAcceso(a, stati)).map((a) => ({
     chiave: a.entita[0],
@@ -78133,23 +78142,30 @@ function riposo(muro) {
   const chip = avvisi.slice(0, 3).map(
     (a) => `<div class="mu-carta mu-avviso ${a.grave ? "grave" : ""}" style="--acc:${a.grave ? ACCENTI.allarme : "#06b6d4"}"><span class="mu-chip mu-acc" style="--c:40px">${a.grave ? disegno("sicurezza", 24, "av-allarme") : disegno("avvisi", 24, `av-${esc(a.chiave)}`)}</span><b>${esc(a.grave ? t("Antifurto: allarme in corso", "Alarm: triggered") : a.testo)}</b></div>`
   ).join("");
+  const d = derivaDelRiposo(Date.now());
+  const deriva = `style="--dx:${d.x.toFixed(3)};--dy:${d.y.toFixed(3)}"`;
   if (notte)
-    return `<div class="mu-riposo notte" data-mu-fa="sveglia">${chip ? `<div class="mu-avvisi">${chip}</div>` : ""}</div>`;
+    return `<div class="mu-riposo notte" data-mu-fa="sveglia">${chip ? `<div class="mu-deriva" ${deriva}><div class="mu-avvisi">${chip}</div></div>` : ""}</div>`;
   const m = meteo();
   const centrale = centraleDelMuro(pagina2);
   const allarme2 = centrale && stato(centrale) ? STATI_DELL_ALLARME()[stato(centrale).state] : "";
   const stanza = (state107.fonte?.stanze || []).find((s) => s.name === pagina2?.stanza);
   const dentro3 = stanza?.temp && numero40(stato(stanza.temp)?.state) !== null ? `${decimale(stato(stanza.temp).state)}°` : "";
-  return `<div class="mu-riposo" data-mu-fa="sveglia">
+  const persone3 = personeInCasa();
+  const chi = persone3.inCasa === 0 ? t("Nessuno in casa", "Nobody home") : persone3.nomi.length <= 2 ? persone3.nomi.join(" · ") : `${persone3.inCasa} ${t("in casa", "at home")}`;
+  const aperte = finestreAperte().length;
+  return `<div class="mu-riposo" data-mu-fa="sveglia"><div class="mu-deriva" ${deriva}>
     ${chip ? `<div class="mu-avvisi">${chip}</div>` : ""}
     <div class="mu-osw mu-orologione">${esc(o.ora)}</div>
     <div class="mu-et mu-data">${esc(o.lungo)}</div>
     <div class="mu-riposo-riga">
       ${m && numero40(m.temperatura) !== null ? `<span>${disegno("meteo", 34, "rip-meteo")}${decimale(m.temperatura, 0)}° ${esc(PAROLE_DEL_METEO()[m.condizione] || "")}</span>` : ""}
       ${dentro3 ? `<span>${disegno("temperatura", 30, "rip-temp")}${dentro3} ${esc(t("in casa", "inside"))}</span>` : ""}
+      ${persone3.tutte ? `<span data-mu-riposo="persone">${disegno("persone", 30, "rip-persone")}${esc(chi)}</span>` : ""}
+      ${aperte ? `<span data-mu-riposo="aperte" class="mu-attenzione">${disegno("aperture", 30, "rip-aperture")}${aperte} ${esc(aperte === 1 ? t("finestra aperta", "window open") : t("finestre aperte", "windows open"))}</span>` : ""}
       ${allarme2 ? `<span>${disegno("sicurezza", 30, "rip-allarme")}${esc(t("Antifurto", "Alarm"))} · ${esc(allarme2)}</span>` : ""}
     </div>
-    <div class="mu-et mu-tocca">${esc(t("Tocca per i comandi", "Tap for controls"))}</div></div>`;
+    <div class="mu-et mu-tocca">${esc(t("Tocca per i comandi", "Tap for controls"))}</div></div></div>`;
 }
 var SOLO_MURO = "dm-solo-muro";
 var guardaIlConfig = 0;
@@ -78300,6 +78316,23 @@ function disegna5() {
     ])
   );
   if (scriviSeCambia(nodo2.firstElementChild, corpo2)) caricaLeTelecamere(nodo2, vecchie);
+  if (state107.riposo) posizionaIlRiposo(nodo2);
+}
+function posizionaIlRiposo(nodo2) {
+  const blocco3 = nodo2.querySelector(".mu-deriva");
+  const riquadro = blocco3?.parentElement;
+  if (!blocco3 || !riquadro) return;
+  const libero = (tutto, suo2) => Math.max(0, (tutto - suo2) / 2 - 16);
+  const dx = Number(blocco3.style.getPropertyValue("--dx")) || 0;
+  const dy = Number(blocco3.style.getPropertyValue("--dy")) || 0;
+  blocco3.style.setProperty(
+    "--sx",
+    `${Math.round(dx * libero(riquadro.clientWidth, blocco3.offsetWidth))}px`
+  );
+  blocco3.style.setProperty(
+    "--sy",
+    `${Math.round(dy * libero(riquadro.clientHeight, blocco3.offsetHeight))}px`
+  );
 }
 function caricaLeTelecamere(nodo2, vecchie = /* @__PURE__ */ new Map()) {
   for (const img of nodo2.querySelectorAll("img[data-mu-telecamera]")) {
@@ -78788,9 +78821,15 @@ ${MURO} .mu-tasti{display:grid;grid-template-columns:repeat(3,96px);gap:16px;jus
 ${MURO} .mu-tasti .mu-tondo{width:96px;height:96px;font-size:32px;font-weight:700}
 ${MURO} .mu-riposo{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:#05080f;color:#dbe4f3}
 ${MURO} .mu-riposo.notte{background:#000}
+${MURO} .mu-deriva{position:absolute;left:50%;top:50%;transform:translate(calc(-50% + var(--sx,0px)),calc(-50% + var(--sy,0px)));display:flex;flex-direction:column;align-items:center;gap:14px;width:max-content;max-width:96%;animation:mu-appari 1.8s ease both}
+@keyframes mu-appari{from{opacity:0}to{opacity:1}}
+@media (prefers-reduced-motion:reduce){${MURO} .mu-deriva{animation:none}}
+${MURO} .mu-deriva .mu-avvisi{position:static;padding:0;margin-bottom:10px}
+${MURO} .mu-deriva .mu-tocca{position:static;margin-top:14px}
+${MURO} .mu-riposo-riga .mu-attenzione{color:#fbbf24}
 ${MURO} .mu-orologione{font-size:240px;line-height:.9}
 ${MURO} .mu-data{font-size:18px;letter-spacing:.2em}
-${MURO} .mu-riposo-riga{display:flex;gap:40px;margin-top:22px;color:#92a4c2;font-weight:700;font-size:20px}
+${MURO} .mu-riposo-riga{display:flex;flex-wrap:wrap;justify-content:center;gap:16px 40px;margin-top:22px;color:#92a4c2;font-weight:700;font-size:20px}
 ${MURO} .mu-riposo-riga span{display:flex;align-items:center;gap:10px}
 ${MURO} .mu-tocca{position:absolute;bottom:28px;opacity:.6}
 ${MURO} .mu-avvisi{position:absolute;top:28px;left:0;right:0;display:flex;justify-content:center;gap:12px;flex-wrap:wrap;padding:0 20px}

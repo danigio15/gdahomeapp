@@ -31,6 +31,7 @@ import { oggettoWidget } from "../core/oggetti-widget.js";
 import {
   CHIAVE_MURO,
   avvisiAccesi,
+  derivaDelRiposo,
   comandiDellaPagina,
   eCompatto,
   eNotte,
@@ -1146,8 +1147,12 @@ function riposo(muro) {
         `<div class="mu-carta mu-avviso ${a.grave ? "grave" : ""}" style="--acc:${a.grave ? ACCENTI.allarme : "#06b6d4"}"><span class="mu-chip mu-acc" style="--c:40px">${a.grave ? disegno("sicurezza", 24, "av-allarme") : disegno("avvisi", 24, `av-${esc(a.chiave)}`)}</span><b>${esc(a.grave ? t("Antifurto: allarme in corso", "Alarm: triggered") : a.testo)}</b></div>`,
     )
     .join("");
+  /* Il blocco si sposta ogni minuto (derivaDelRiposo): niente resta fermo
+   * nello stesso punto, nemmeno gli avvisi o la scritta in fondo. */
+  const d = derivaDelRiposo(Date.now());
+  const deriva = `style="--dx:${d.x.toFixed(3)};--dy:${d.y.toFixed(3)}"`;
   if (notte)
-    return `<div class="mu-riposo notte" data-mu-fa="sveglia">${chip ? `<div class="mu-avvisi">${chip}</div>` : ""}</div>`;
+    return `<div class="mu-riposo notte" data-mu-fa="sveglia">${chip ? `<div class="mu-deriva" ${deriva}><div class="mu-avvisi">${chip}</div></div>` : ""}</div>`;
   const m = meteo();
   const centrale = centraleDelMuro(pagina);
   const allarme = centrale && stato(centrale) ? STATI_DELL_ALLARME()[stato(centrale).state] : "";
@@ -1156,16 +1161,28 @@ function riposo(muro) {
     stanza?.temp && numero(stato(stanza.temp)?.state) !== null
       ? `${decimale(stato(stanza.temp).state)}°`
       : "";
-  return `<div class="mu-riposo" data-mu-fa="sveglia">
+  /* Quello che si vuole sapere passando davanti, senza toccare: fuori, dentro,
+   * chi c'e', cosa e' rimasto aperto, l'antifurto. Ognuna solo se c'e'. */
+  const persone = personeInCasa();
+  const chi =
+    persone.inCasa === 0
+      ? t("Nessuno in casa", "Nobody home")
+      : persone.nomi.length <= 2
+        ? persone.nomi.join(" · ")
+        : `${persone.inCasa} ${t("in casa", "at home")}`;
+  const aperte = finestreAperte().length;
+  return `<div class="mu-riposo" data-mu-fa="sveglia"><div class="mu-deriva" ${deriva}>
     ${chip ? `<div class="mu-avvisi">${chip}</div>` : ""}
     <div class="mu-osw mu-orologione">${esc(o.ora)}</div>
     <div class="mu-et mu-data">${esc(o.lungo)}</div>
     <div class="mu-riposo-riga">
       ${m && numero(m.temperatura) !== null ? `<span>${disegno("meteo", 34, "rip-meteo")}${decimale(m.temperatura, 0)}° ${esc(PAROLE_DEL_METEO()[m.condizione] || "")}</span>` : ""}
       ${dentro ? `<span>${disegno("temperatura", 30, "rip-temp")}${dentro} ${esc(t("in casa", "inside"))}</span>` : ""}
+      ${persone.tutte ? `<span data-mu-riposo="persone">${disegno("persone", 30, "rip-persone")}${esc(chi)}</span>` : ""}
+      ${aperte ? `<span data-mu-riposo="aperte" class="mu-attenzione">${disegno("aperture", 30, "rip-aperture")}${aperte} ${esc(aperte === 1 ? t("finestra aperta", "window open") : t("finestre aperte", "windows open"))}</span>` : ""}
       ${allarme ? `<span>${disegno("sicurezza", 30, "rip-allarme")}${esc(t("Antifurto", "Alarm"))} · ${esc(allarme)}</span>` : ""}
     </div>
-    <div class="mu-et mu-tocca">${esc(t("Tocca per i comandi", "Tap for controls"))}</div></div>`;
+    <div class="mu-et mu-tocca">${esc(t("Tocca per i comandi", "Tap for controls"))}</div></div></div>`;
 }
 
 /* ── la tela: dove sta, quanto e' grande, cosa mostra ────────────────────── */
@@ -1378,6 +1395,27 @@ export function disegna() {
     ]),
   );
   if (scriviSeCambia(nodo.firstElementChild, corpo)) caricaLeTelecamere(nodo, vecchie);
+  if (state.riposo) posizionaIlRiposo(nodo);
+}
+
+/* Il blocco del riposo va dove dice derivaDelRiposo, ma dentro lo spazio che
+ * resta libero: quanto, lo sa solo chi lo misura — l'orologio da 240 px non e'
+ * largo uguale alle 11:11 e alle 20:08, e un avviso acceso allarga tutto. */
+function posizionaIlRiposo(nodo) {
+  const blocco = nodo.querySelector(".mu-deriva");
+  const riquadro = blocco?.parentElement;
+  if (!blocco || !riquadro) return;
+  const libero = (tutto, suo) => Math.max(0, (tutto - suo) / 2 - 16);
+  const dx = Number(blocco.style.getPropertyValue("--dx")) || 0;
+  const dy = Number(blocco.style.getPropertyValue("--dy")) || 0;
+  blocco.style.setProperty(
+    "--sx",
+    `${Math.round(dx * libero(riquadro.clientWidth, blocco.offsetWidth))}px`,
+  );
+  blocco.style.setProperty(
+    "--sy",
+    `${Math.round(dy * libero(riquadro.clientHeight, blocco.offsetHeight))}px`,
+  );
 }
 
 function caricaLeTelecamere(nodo, vecchie = new Map()) {
@@ -1923,9 +1961,15 @@ ${MURO} .mu-tasti{display:grid;grid-template-columns:repeat(3,96px);gap:16px;jus
 ${MURO} .mu-tasti .mu-tondo{width:96px;height:96px;font-size:32px;font-weight:700}
 ${MURO} .mu-riposo{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:#05080f;color:#dbe4f3}
 ${MURO} .mu-riposo.notte{background:#000}
+${MURO} .mu-deriva{position:absolute;left:50%;top:50%;transform:translate(calc(-50% + var(--sx,0px)),calc(-50% + var(--sy,0px)));display:flex;flex-direction:column;align-items:center;gap:14px;width:max-content;max-width:96%;animation:mu-appari 1.8s ease both}
+@keyframes mu-appari{from{opacity:0}to{opacity:1}}
+@media (prefers-reduced-motion:reduce){${MURO} .mu-deriva{animation:none}}
+${MURO} .mu-deriva .mu-avvisi{position:static;padding:0;margin-bottom:10px}
+${MURO} .mu-deriva .mu-tocca{position:static;margin-top:14px}
+${MURO} .mu-riposo-riga .mu-attenzione{color:#fbbf24}
 ${MURO} .mu-orologione{font-size:240px;line-height:.9}
 ${MURO} .mu-data{font-size:18px;letter-spacing:.2em}
-${MURO} .mu-riposo-riga{display:flex;gap:40px;margin-top:22px;color:#92a4c2;font-weight:700;font-size:20px}
+${MURO} .mu-riposo-riga{display:flex;flex-wrap:wrap;justify-content:center;gap:16px 40px;margin-top:22px;color:#92a4c2;font-weight:700;font-size:20px}
 ${MURO} .mu-riposo-riga span{display:flex;align-items:center;gap:10px}
 ${MURO} .mu-tocca{position:absolute;bottom:28px;opacity:.6}
 ${MURO} .mu-avvisi{position:absolute;top:28px;left:0;right:0;display:flex;justify-content:center;gap:12px;flex-wrap:wrap;padding:0 20px}

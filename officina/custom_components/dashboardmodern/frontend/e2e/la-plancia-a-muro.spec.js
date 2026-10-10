@@ -101,6 +101,36 @@ test.describe("la plancia a muro", () => {
     expect(await servizi(page)).toEqual([]);
   });
 
+  /* «Orario e le altre info si muovono nello schermo per non restare sempre
+   * allo stesso punto.» Due minuti diversi, due posti diversi; e passando
+   * davanti si legge chi c'e' e cosa e' rimasto aperto. */
+  test("il riposo si sposta ogni minuto e dice chi c'e' e cosa e' aperto", async ({
+    page,
+  }, testInfo) => {
+    await page.clock.install({ time: new Date("2026-10-10T21:40:10") });
+    await apriLaCasaAMuro(page, testInfo, { muro: MURO_DI_PROVA });
+    await page.evaluate(() => window.dmMuro.riposa());
+    const blocco = muro(page).locator(".mu-deriva");
+    await expect(blocco).toBeVisible();
+    await expect(blocco.locator('[data-mu-riposo="persone"]')).toHaveText(/Anna · Marco/);
+    await expect(blocco.locator('[data-mu-riposo="aperte"]')).toHaveText(/1 finestra aperta/);
+    const dove = () => blocco.evaluate((n) => n.getAttribute("style"));
+    const prima = await dove();
+    await page.clock.runFor(4000);
+    await page.screenshot({ path: testInfo.outputPath("riposo-1.png") });
+    await page.clock.runFor(60_000);
+    await expect.poll(dove).not.toBe(prima);
+    await page.waitForTimeout(2000);
+    await page.screenshot({ path: testInfo.outputPath("riposo-2.png") });
+    /* Il blocco resta dentro lo schermo. */
+    const box = await blocco.boundingBox();
+    const vista = page.viewportSize();
+    expect(box.x).toBeGreaterThanOrEqual(0);
+    expect(box.y).toBeGreaterThanOrEqual(0);
+    expect(box.x + box.width).toBeLessThanOrEqual(vista.width);
+    expect(box.y + box.height).toBeLessThanOrEqual(vista.height);
+  });
+
   test("col blocco, per uscire dal pannello serve il PIN", async ({ page }, testInfo) => {
     await apriLaCasaAMuro(page, testInfo, {
       muro: { ...MURO_DI_PROVA, blocco: { attivo: true, pin: "2468" } },
