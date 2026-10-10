@@ -405,7 +405,7 @@ test("una plancia voluta dal cruscotto nasce una volta, gia' vestita, e se in ca
   }
 });
 
-test("dal cruscotto non nasce una plancia storta, senza nome, ne' la nona", () => {
+test("dal cruscotto non nasce una plancia storta, senza nome, ne' una di troppo", () => {
   const { cartella, via } = unPosto();
   try {
     const plance = lePlance(cartella);
@@ -420,8 +420,8 @@ test("dal cruscotto non nasce una plancia storta, senza nome, ne' la nona", () =
 
     for (let n = 2; n <= QUANTE_AL_MASSIMO; n += 1) plance.aggiungi(`Plancia ${n}`);
     assert.equal(plance.quante, QUANTE_AL_MASSIMO);
-    /* La scelta della prima resta nella mappa, come nella vita: e' la nona
-     * che non nasce, e non c'e' altro da scrivere. */
+    /* La scelta della prima resta nella mappa, come nella vita: e' quella
+     * oltre il massimo che non nasce, e non c'e' altro da scrivere. */
     assert.equal(
       plance.vesti({ primary: { titolo: "Casa Rossi" }, nona: { titolo: "Nona", nuova: true } }),
       false,

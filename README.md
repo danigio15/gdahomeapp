@@ -113,7 +113,7 @@ si perde.
 <tr>
 <td width="50%" valign="top">
 
-**📋 Le plance.** La plancia principale, e con Premium fino a **8 plance per
+**📋 Le plance.** La plancia principale, e con Premium fino a **30 plance per
 casa**: una per la famiglia, una per il piano di sopra, una per l'ufficio.
 Ognuna con le sue sezioni e le sue stanze, a un tocco l'una dall'altra.
 

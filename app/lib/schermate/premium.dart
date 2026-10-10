@@ -706,8 +706,8 @@ List<(IconData, String, String)> _funzioni(bool sulWeb) {
       Icons.dashboard_customize_outlined,
       inLingua(it: 'Più plance e più case', en: 'More dashboards and homes'),
       inLingua(
-        it: 'Fino a 8 plance per casa e 10 case nell\'app',
-        en: 'Up to 8 dashboards per home and 10 homes in the app',
+        it: 'Fino a 30 plance per casa e 10 case nell\'app',
+        en: 'Up to 30 dashboards per home and 10 homes in the app',
       ),
     ),
     (

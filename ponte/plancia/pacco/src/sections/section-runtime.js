@@ -99065,17 +99065,18 @@ function ensureLinguetta() {
     apriLAccumulo();
     root.scrollTo?.({ top: 0, behavior: "instant" });
   });
-  const istantanea = [...fila2.querySelectorAll(".sub-tab-btn")].find(
-    (nodo2) => /'ist'/.test(nodo2.getAttribute("onclick") || "")
-  );
-  if (istantanea) istantanea.after(linguetta);
-  else fila2.append(linguetta);
+  fila2.append(linguetta);
   return linguetta;
+}
+function inFondoAllaFila(linguetta) {
+  const fila2 = linguetta?.parentElement;
+  if (fila2 && fila2.lastElementChild !== linguetta) fila2.append(linguetta);
 }
 function accendiLaLinguetta() {
   const linguetta = ensureLinguetta();
   const vista2 = ensureVista();
   if (!linguetta || !vista2) return;
+  inFondoAllaFila(linguetta);
   const serve = ciSonoPacchi();
   linguetta.hidden = !serve;
   if (serve) linguetta.style.removeProperty("display");

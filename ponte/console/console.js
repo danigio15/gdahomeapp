@@ -1239,7 +1239,7 @@
   }
 
   /* «Casa e Ospiti», «Casa, Ospiti e Mare», «Casa, Ospiti, Mare e altre 2»:
-   * una riga sola, anche con otto plance. */
+   * una riga sola, anche con trenta plance. */
   function iNomiInFila(nomi) {
     if (nomi.length > 3) {
       var altre = nomi.length - 3;

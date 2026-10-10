@@ -53,7 +53,7 @@ function muroDallaPrincipale(configurazione) {
 /**
  * Aggiunge una plancia: il titolo, il modello, chi la vede.
  *
- * Il limite di Base e quello delle otto plance restano dove sono, in
+ * Il limite di Base e quello delle trenta plance restano dove sono, in
  * `plance.aggiungi`: questa funzione non aggiunge regole, mette insieme i
  * passi. Se scrivere il config a muro non riesce, la plancia resta — classica
  * — e lo dice il registro: toglierla di nascosto sarebbe peggio.

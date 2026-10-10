@@ -1134,8 +1134,9 @@ class _StatoDellaMattonella extends State<_Mattonella> {
 /// sua barra laterale. Nell'app non c'e' nessuna barra laterale di Home
 /// Assistant: la scelta sta sulla mattonella della plancia, dove la si cerca.
 ///
-/// Una tendina e non delle mattonelle: le plance sono al massimo otto, e otto
-/// mattonelle in cima al menu mangerebbero il posto delle sezioni.
+/// Una tendina e non delle mattonelle: con Premium le plance arrivano a trenta,
+/// e trenta mattonelle in cima al menu mangerebbero il posto delle sezioni. La
+/// tendina, quando sono tante, scorre.
 class _QualePlancia extends StatelessWidget {
   const _QualePlancia({
     required this.collegamento,

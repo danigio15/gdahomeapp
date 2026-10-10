@@ -113,11 +113,13 @@ export function vedeQualcosa(elenco, chi, amministra = null) {
 /* Quante se ne possono tenere.
  *
  * Non e' un limite tecnico — i profili starebbero in mille — e' il selettore:
- * una riga per plancia si legge finche' sono poche, e chi ne ha otto non sta
- * cercando una plancia, sta cercando un elenco. Nella dashboard il limite non
- * c'e' perche' ogni istanza e' una voce di Home Assistant, e li' l'elenco lo
- * fa lui. */
-export const QUANTE_AL_MASSIMO = 8;
+ * una riga per plancia si legge finche' sono poche. Erano otto; con Premium
+ * adesso sono trenta, «aumentami per la sezione Premium la possibilita' di
+ * gestire 30 plance»: chi le usa per ogni tablet e ogni stanza ne ha davvero
+ * tante, e il selettore le tiene in un elenco che scorre. Nella dashboard il
+ * limite non c'e' perche' ogni istanza e' una voce di Home Assistant, e li'
+ * l'elenco lo fa lui. */
+export const QUANTE_AL_MASSIMO = 30;
 
 /* Come si chiama la prima plancia, quella che c'e' sempre. */
 const TITOLO_DELLA_PRIMA = "gdahome";

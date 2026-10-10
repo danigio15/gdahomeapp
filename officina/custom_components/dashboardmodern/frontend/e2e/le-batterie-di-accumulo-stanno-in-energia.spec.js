@@ -6,7 +6,7 @@
  *
  *   · la scheda «Batteria di accumulo» del Config, sotto l'insegna Energia, che alla prima apertura si
  *     riempie da sola dei due pacchi, con le loro sedici celle;
- *   · la linguetta «Batterie» dentro Energia, accanto a Istantanea, con la
+ *   · la linguetta «Batterie» dentro Energia, in fondo dopo Temperature, con la
  *     risposta grande, l'avviso del pacco da bilanciare e una scheda per pacco;
  *   · la tessera «Accumulo» in Home, che chiede attenzione e porta alla
  *     linguetta.
@@ -196,6 +196,12 @@ test("la linguetta Batterie in Energia: due pacchi, uno da bilanciare", async ({
   const linguetta = page.locator('#page-energy [data-dm-energia-vista="accumulo"]');
   await expect(linguetta).toBeVisible();
   await expect(linguetta).toHaveText(/Batterie/);
+  /* In fondo alla fila, dopo Temperature. */
+  const fila = await page
+    .locator("#page-energy .sub-tabs-energy > .sub-tab-btn:visible")
+    .allTextContents();
+  expect(fila.at(-1)).toMatch(/Batterie/);
+  expect(fila.at(-2)).toMatch(/Temperature/);
   await linguetta.click();
 
   const vista = page.locator("#view-batterie");
