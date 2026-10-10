@@ -22,6 +22,7 @@
  * quella di sempre, e il config a muro resta scritto per il giorno dopo. */
 import { ALARM_DISARM, ALARM_MODES, alarmCodeNeeded, alarmModes } from "../core/alarm-panel.js";
 import { FONDO_DELLA_CARTA, GRANA_DELLA_CARTA, OMBRA_DELLA_CARTA } from "../core/le-vesti-della-carta.js";
+import { climaScalda } from "../core/device-model.js";
 import { oggettoWidget } from "../core/oggetti-widget.js";
 import {
   CHIAVE_MURO,
@@ -30,6 +31,7 @@ import {
   eCompatto,
   eNotte,
   eUnaScena,
+  MODELLI_ELENCO,
   fonteDaiValori,
   fonteDalleSezioni,
   muroPulito,
@@ -83,6 +85,48 @@ const state = (root[KEY] ||= {
 const MEZZ_ORA = 30 * 60 * 1000;
 
 /** La casa e' Premium? Si chiede al ponte, e la risposta vale mezz'ora. */
+/* ── l'avvio diretto ──────────────────────────────────────────────────────
+ *
+ * «Non ho capito perche' parte vuota, si vede la plancia classica e poi
+ * carica quella: devi togliere questa doppia cosa e partire direttamente con
+ * la plancia wall.» Il pannello aspettava due risposte del ponte — la licenza
+ * e la plancia di origine — e intanto il velo d'avvio si toglieva sulla
+ * plancia classica. Adesso:
+ * - quello che il tablet ha saputo l'ultima volta (la licenza, la fonte) si
+ *   tiene sul tablet, e il pannello si disegna subito con quello; le risposte
+ *   nuove arrivano dopo e lo aggiornano;
+ * - se il tablet sa gia' che questa plancia e' a muro, il velo d'avvio aspetta
+ *   che il pannello abbia deciso, al massimo quattro secondi. */
+const RICORDO = "dm_muro_ricordo";
+const ATTESA_DEL_VELO = 4000;
+
+function ricordo() {
+  return readJson(RICORDO, null) || {};
+}
+function ricorda(cosa) {
+  try {
+    root.localStorage?.setItem(RICORDO, JSON.stringify({ ...ricordo(), ...cosa }));
+  } catch (_errore) {}
+}
+
+/* Il velo d'avvio aspetta il pannello: la bandiera la guarda il guscio prima
+ * di dichiarare la plancia dipinta (`section-runtime.js`). */
+export const ATTESA_KEY = "__DM_MURO_DECIDE__";
+let decidi = null;
+function trattieniIlVelo() {
+  const muro = muroPulito(readJson(CHIAVE_MURO, null));
+  if (!muro.attiva || !muro.pagine.length || ricordo().premium === false) return;
+  root[ATTESA_KEY] = new Promise((fatto) => {
+    decidi = () => {
+      decidi = null;
+      root[ATTESA_KEY] = null;
+      fatto();
+    };
+    root.setTimeout?.(() => decidi?.(), ATTESA_DEL_VELO);
+  });
+}
+const lasciaIlVelo = () => decidi?.();
+
 export async function premiumDellaCasa({ forza = false } = {}) {
   /* Le prove e chi incolla la plancia fuori dal ponte lo dicono da se'. */
   if (typeof root.__GDAHOME_PREMIUM__ === "boolean") {
@@ -101,6 +145,7 @@ export async function premiumDellaCasa({ forza = false } = {}) {
   }
   state.premium = premium;
   state.premiumLetto = Date.now();
+  ricorda({ premium });
   return premium;
 }
 
@@ -126,6 +171,7 @@ export async function fonteDelMuro(muro, { forza = false } = {}) {
   state.fonte = fonte || fonteDiQui();
   state.fonteDi = di;
   state.fonteLetta = Date.now();
+  ricorda({ fonte: state.fonte, fonteDi: di });
   return state.fonte;
 }
 
@@ -145,6 +191,7 @@ function fonteDiQui() {
       centrali: readJson("cd_centrali", []),
       overrides: readJson("cd_entity_overrides", {}),
       avvisi: readJson("cd_avvisi_custom", []),
+      climaUnita: readJson("cd_clima_units", []),
     },
   );
 }
@@ -250,20 +297,150 @@ export function servizioDiApertura(id) {
   return { domain: "homeassistant", service: "turn_on" };
 }
 
+/* Il tocco su una card «entita'»: il gesto giusto per il suo dominio. Quello
+ * che non si comanda — un sensore, una persona, il meteo — non fa niente, e la
+ * card lo mostra e basta. */
+const SI_ACCENDONO = new Set([
+  "switch",
+  "input_boolean",
+  "fan",
+  "automation",
+  "humidifier",
+  "siren",
+  "light",
+  "group",
+  "cover",
+  "valve",
+  "water_heater",
+  "remote",
+]);
+export function servizioDellEntita(id, statoAttuale = "") {
+  const d = dominio(id);
+  if (d === "scene" || d === "script") return { domain: d, service: "turn_on" };
+  if (d === "button" || d === "input_button") return { domain: d, service: "press" };
+  if (d === "lock") return { domain: d, service: statoAttuale === "locked" ? "unlock" : "lock" };
+  if (d === "media_player") return { domain: d, service: "media_play_pause" };
+  if (d === "vacuum")
+    return { domain: d, service: statoAttuale === "cleaning" ? "return_to_base" : "start" };
+  if (SI_ACCENDONO.has(d)) return { domain: "homeassistant", service: "toggle" };
+  return null;
+}
+
+/* Il disegno di un'entita' quando nessuno ne ha scelto uno. */
+function disegnoDellEntita(id) {
+  const d = dominio(id);
+  const classe = String(attributi(id).device_class || "");
+  if (d === "sensor" || d === "binary_sensor") {
+    const perClasse = {
+      temperature: "temperatura",
+      humidity: "umidita",
+      power: "energia",
+      energy: "energia",
+      battery: "batterie",
+      window: "finestra",
+      door: "aperture",
+      garage_door: "aperture",
+      opening: "aperture",
+      motion: "presenza",
+      occupancy: "presenza",
+      presence: "presenza",
+      smoke: "fumo",
+      moisture: "allagamenti",
+    };
+    return perClasse[classe] || "widget";
+  }
+  return (
+    {
+      switch: "prese",
+      input_boolean: "custom",
+      fan: "aria",
+      lock: "varchi",
+      scene: "azioni",
+      script: "azioni",
+      button: "azioni",
+      input_button: "azioni",
+      automation: "azioni",
+      media_player: "media",
+      vacuum: "robot",
+      camera: "telecamere",
+      person: "persone",
+      water_heater: "scaldabagno",
+      humidifier: "umidita",
+      valve: "irrigazione",
+      weather: "meteo",
+      siren: "allerte",
+      alarm_control_panel: "sicurezza",
+    }[d] || "widget"
+  );
+}
+
+/* Lo stato di un'entita' in parole: «Accesa», «Chiusa», «21,5 °C». */
+function statoInParole(id) {
+  const s = stato(id);
+  if (!s) return t("Non trovata", "Not found");
+  const v = String(s.state);
+  const unita = clean(s.attributes?.unit_of_measurement);
+  if (numero(v) !== null && v.trim() !== "")
+    return `${decimale(numero(v), Number.isInteger(numero(v)) ? 0 : 1)}${unita ? ` ${unita}` : ""}`;
+  const parole = {
+    on: t("Acceso", "On"),
+    off: t("Spento", "Off"),
+    locked: t("Chiusa", "Locked"),
+    unlocked: t("Aperta", "Unlocked"),
+    open: t("Aperto", "Open"),
+    closed: t("Chiuso", "Closed"),
+    home: t("In casa", "Home"),
+    not_home: t("Fuori", "Away"),
+    playing: t("In riproduzione", "Playing"),
+    paused: t("In pausa", "Paused"),
+    idle: t("Fermo", "Idle"),
+    cleaning: t("Pulisce", "Cleaning"),
+    docked: t("Alla base", "Docked"),
+    unavailable: t("Non disponibile", "Unavailable"),
+    unknown: "—",
+  };
+  if (dominio(id) === "scene" || dominio(id) === "button" || dominio(id) === "input_button") return "";
+  return parole[v] || v;
+}
+
 /* ── il disegno ──────────────────────────────────────────────────────────── */
 
 const MODELLI_SCRITTI = () => ({
   stanza: t("Stanza", "Room"),
   scene: t("Scene", "Scenes"),
   ingresso: t("Ingresso", "Entrance"),
+  personale: t("La mia pagina", "My page"),
+  luci: t("Luci", "Lights"),
+  freddo: t("Clima freddo", "Cooling"),
+  caldo: t("Clima caldo", "Heating"),
 });
 const SOTTO = () => ({
   stanza: t("Luci · Clima · Tapparelle · Scene", "Lights · Climate · Blinds · Scenes"),
   scene: t("Un tocco · tutta la casa", "One tap · the whole house"),
   ingresso: t("Antifurto · Citofono · Uscita", "Alarm · Intercom · Leaving"),
+  personale: t("I comandi scelti da te", "Your own controls"),
+  luci: t("Tutte le luci di casa", "Every light in the house"),
+  freddo: t("Chi raffresca", "What cools"),
+  caldo: t("Chi riscalda", "What heats"),
 });
-const DISEGNO_DEL_MODELLO = { stanza: "stanze", scene: "azioni", ingresso: "sicurezza" };
-const ACCENTO_DEL_MODELLO = { stanza: "#f59e0b", scene: "#f59e0b", ingresso: "#10b981" };
+const DISEGNO_DEL_MODELLO = {
+  stanza: "stanze",
+  scene: "azioni",
+  ingresso: "sicurezza",
+  personale: "widget",
+  luci: "luci",
+  freddo: "clima",
+  caldo: "caldo",
+};
+const ACCENTO_DEL_MODELLO = {
+  stanza: "#f59e0b",
+  scene: "#f59e0b",
+  ingresso: "#10b981",
+  personale: "#8b5cf6",
+  luci: "#f59e0b",
+  freddo: "#0ea5e9",
+  caldo: "#f97316",
+};
 
 const titoloDi = (pagina) =>
   clean(pagina.titolo) || (pagina.modello === "stanza" && clean(pagina.stanza)) || MODELLI_SCRITTI()[pagina.modello];
@@ -450,15 +627,33 @@ function obiettivo(id) {
   return numero(attributi(id).temperature);
 }
 
-function cardClima(c, i) {
+/* Da che parte sta un'unita' del clima: «se e' inserita nel caldo, il
+ * simbolo caldo e non il ghiaccio». `zona` e' la pagina in cui si trova
+ * (Clima caldo, Clima freddo), che decide quando l'unita' e' spenta. */
+function scalda(id, zona = "") {
+  const a = attributi(id);
+  const tipo = (state.fonte?.clima || []).find((d) => d.entity === id)?.tipo || "clima";
+  return climaScalda({ stato: stato(id)?.state, azione: a.hvac_action, tipo, zona });
+}
+const facciaDelClima = (id, zona) =>
+  scalda(id, zona) ? { chiave: "caldo", accento: "#f97316" } : { chiave: "clima", accento: ACCENTI.clima };
+
+/* La pagina del clima in cui si e', se si e' in una. */
+function zonaDiQui() {
+  const modello = state.muro?.pagine?.[state.pagina]?.modello;
+  return modello === "freddo" || modello === "caldo" ? modello : "";
+}
+
+function cardClima(c, i, zona = "") {
   const id = c.entita;
   const a = attributi(id);
+  const faccia = facciaDelClima(id, zona);
   const s = String(stato(id)?.state || "");
   const on = s && s !== "off" && s !== "unavailable";
   const azione = a.hvac_action ? AZIONI_DEL_CLIMA()[a.hvac_action] : on ? PAROLE_DEL_CLIMA()[s] : t("Spento", "Off");
   const target = obiettivo(id);
-  return `<div class="mu-carta mu-card ${on ? "mu-accesa" : ""}" style="--acc:${ACCENTI.clima}" data-mu-card="${i}" data-mu-entita="${esc(id)}">
-    <div class="mu-riga1"><span class="mu-chip mu-acc" style="--c:46px">${disegno("clima", 26, `clima-${i}`)}</span>
+  return `<div class="mu-carta mu-card ${on ? "mu-accesa" : ""}" style="--acc:${faccia.accento}" data-mu-card="${i}" data-mu-entita="${esc(id)}" data-mu-lato="${faccia.chiave}">
+    <div class="mu-riga1"><span class="mu-chip mu-acc" style="--c:46px">${disegno(faccia.chiave, 26, `clima-${i}`)}</span>
       <div class="mu-nome"><div class="mu-n">${esc(nomeDi(id, c.nome))}</div><div class="mu-sotto">${esc(t("ora", "now"))} ${decimale(a.current_temperature)}°</div></div>
       ${azione ? `<span class="mu-pasti">${esc(azione)}</span>` : ""}</div>
     <div class="mu-target"><span class="mu-grande">${target === null ? "—" : `${decimale(target)}°`}</span><span class="mu-et">Target</span></div>
@@ -521,27 +716,63 @@ function cardAzione(c, i, grande = false) {
   });
 }
 
+/* La card di un'entita' qualunque: il suo disegno, il nome, lo stato; il
+ * tocco fa il gesto del dominio. Nelle Scene e' una tessera grande. */
+function cardEntita(c, i, grande = false) {
+  const id = c.entita;
+  const s = stato(id);
+  const servizio = servizioDellEntita(id, String(s?.state || ""));
+  const on = acceso(id) || ["unlocked", "playing", "cleaning"].includes(String(s?.state));
+  const parole = statoInParole(id);
+  return tessera({
+    chiave: clean(c.disegno) || disegnoDellEntita(id),
+    accento: on ? ACCENTI.luce : ACCENTI.azione,
+    /* Piccola: lo stato in alto. Grande: lo stato va sotto il nome, a meno
+     * che sotto non ci sia gia' la riga scelta. */
+    etichetta: !grande || clean(c.sotto) ? parole : "",
+    titolo: nomeDi(id, c.nome),
+    sotto: clean(c.sotto) || (grande ? parole : ""),
+    attiva: on,
+    grande,
+    dati: servizio
+      ? `data-mu-fa="entita" data-mu-entita="${esc(id)}"`
+      : `data-mu-entita="${esc(id)}" aria-disabled="true"`,
+    dove: `en-${i}-${grande ? "g" : "p"}`,
+  });
+}
+
 const vuoto = (i, perche = "") =>
   `<div class="mu-carta mu-card mu-vuoto" data-mu-card="${i}"><span class="mu-et">${esc(perche || t("Posto libero", "Empty slot"))}</span></div>`;
 
 function paginaStanza(pagina) {
   const comandi = comandiDellaPagina(pagina, state.fonte);
-  const carte = Array.from({ length: 6 }, (_, i) => {
+  const elenco = MODELLI_ELENCO.includes(pagina.modello);
+  const zona = pagina.modello === "freddo" || pagina.modello === "caldo" ? pagina.modello : "";
+  /* Le pagine elenco non hanno tetto: sei per volta a schermo, e la griglia
+   * scorre col dito. Vuote, lo dicono. */
+  const quante = elenco ? Math.max(comandi.length, 1) : 6;
+  if (elenco && !comandi.length)
+    return `<div class="mu-g6">${vuoto(0, t("Niente da mostrare qui", "Nothing to show here"))}</div>`;
+  const carte = Array.from({ length: quante }, (_, i) => {
     const c = comandi[i];
-    if (!c) return vuoto(i);
+    if (!c || c.tipo === "vuoto") return vuoto(i);
     if (c.tipo === "luce") return cardLuce(c, i);
-    if (c.tipo === "clima") return cardClima(c, i);
+    if (c.tipo === "clima") return cardClima(c, i, zona);
     if (c.tipo === "tapparella") return cardTapparella(c, i);
+    if (c.tipo === "entita") return cardEntita(c, i);
     return cardAzione(c, i);
   });
-  return `${pillole(pagina)}<div class="mu-g6">${carte.join("")}</div>`;
+  const riga = pagina.modello === "stanza" ? pillole(pagina) : "";
+  return `${riga}<div class="mu-g6${elenco && quante > 6 ? " mu-scorre" : ""}">${carte.join("")}</div>`;
 }
 
 function paginaScene(pagina) {
   const scene = pagina.scene.length ? pagina.scene : [];
-  const carte = Array.from({ length: 6 }, (_, i) =>
-    scene[i] ? cardAzione(scene[i], i, true) : vuoto(i),
-  );
+  const carte = Array.from({ length: 6 }, (_, i) => {
+    const c = scene[i];
+    if (!c || c.tipo === "vuoto") return vuoto(i);
+    return c.entita ? cardEntita(c, i, true) : cardAzione(c, i, true);
+  });
   return `<div class="mu-g6">${carte.join("")}</div>`;
 }
 
@@ -583,10 +814,10 @@ function paginaIngressoCompatta(pagina) {
       ? tessera({ chiave: "citofono", accento: "#2563eb", etichetta: t("Citofono", "Intercom"), titolo: nomeDi(ing.telecamera), sotto: "", dati: `data-mu-fa="finestra-citofono"`, dove: "c-citofono" })
       : "",
     ing.apri
-      ? tessera({ chiave: "varchi", accento: "#0ea5e9", etichetta: t("Apri", "Open"), titolo: nomeDi(ing.apri), sotto: "", dati: `data-mu-fa="apri" data-mu-entita="${esc(ing.apri)}"`, dove: "c-apri1" })
+      ? tessera({ chiave: "varchi", accento: "#0ea5e9", etichetta: t("Apri", "Open"), titolo: nomeDi(ing.apri, ing.nomeApri), sotto: "", dati: `data-mu-fa="apri" data-mu-entita="${esc(ing.apri)}"`, dove: "c-apri1" })
       : "",
     ing.apri2
-      ? tessera({ chiave: "aperture", accento: "#0ea5e9", etichetta: t("Apri", "Open"), titolo: nomeDi(ing.apri2), sotto: "", dati: `data-mu-fa="apri" data-mu-entita="${esc(ing.apri2)}"`, dove: "c-apri2" })
+      ? tessera({ chiave: "aperture", accento: "#0ea5e9", etichetta: t("Apri", "Open"), titolo: nomeDi(ing.apri2, ing.nomeApri2), sotto: "", dati: `data-mu-fa="apri" data-mu-entita="${esc(ing.apri2)}"`, dove: "c-apri2" })
       : "",
     uscita
       ? tessera({
@@ -642,7 +873,7 @@ function paginaIngresso(pagina) {
       <div class="mu-video">${telecamera ? `<img data-mu-telecamera="${esc(telecamera)}" alt="">` : `<div class="mu-video-vuoto">${disegno("telecamere", 80, "tele-vuota")}</div>`}<span class="mu-live">${esc(telecamera ? nomeDi(telecamera) : t("Nessuna telecamera", "No camera"))}</span></div>
       ${
         ing.apri || ing.apri2
-          ? `<div class="mu-due">${ing.apri ? `<button type="button" class="mu-btn pieno" data-mu-fa="apri" data-mu-entita="${esc(ing.apri)}">${disegno("varchi", 26, "apri1")}${esc(nomeDi(ing.apri))}</button>` : ""}${ing.apri2 ? `<button type="button" class="mu-btn" data-mu-fa="apri" data-mu-entita="${esc(ing.apri2)}">${disegno("aperture", 26, "apri2")}${esc(nomeDi(ing.apri2))}</button>` : ""}</div>`
+          ? `<div class="mu-due">${ing.apri ? `<button type="button" class="mu-btn pieno" data-mu-fa="apri" data-mu-entita="${esc(ing.apri)}">${disegno("varchi", 26, "apri1")}${esc(nomeDi(ing.apri, ing.nomeApri))}</button>` : ""}${ing.apri2 ? `<button type="button" class="mu-btn" data-mu-fa="apri" data-mu-entita="${esc(ing.apri2)}">${disegno("aperture", 26, "apri2")}${esc(nomeDi(ing.apri2, ing.nomeApri2))}</button>` : ""}</div>`
           : ""
       }
     </div>
@@ -721,7 +952,7 @@ function finestra() {
     const modi = (attributi(id).hvac_modes || []).filter(Boolean);
     const s = String(stato(id)?.state || "");
     dentro = `<div class="mu-fin-clima">
-      <div class="mu-riga1"><span class="mu-chip mu-acc" style="--c:52px">${disegno("clima", 30, "fin-clima")}</span><div class="mu-nome"><div class="mu-n" style="font-size:26px">${esc(nomeDi(id))}</div><div class="mu-sotto">${esc(t("Ambiente", "Room"))} ${decimale(attributi(id).current_temperature)}°</div></div><button type="button" class="mu-tondo" data-mu-fa="chiudi" aria-label="${esc(t("Chiudi", "Close"))}">✕</button></div>
+      <div class="mu-riga1"><span class="mu-chip mu-acc" style="--c:52px">${disegno(facciaDelClima(id, f.zona).chiave, 30, "fin-clima")}</span><div class="mu-nome"><div class="mu-n" style="font-size:26px">${esc(nomeDi(id))}</div><div class="mu-sotto">${esc(t("Ambiente", "Room"))} ${decimale(attributi(id).current_temperature)}°</div></div><button type="button" class="mu-tondo" data-mu-fa="chiudi" aria-label="${esc(t("Chiudi", "Close"))}">✕</button></div>
       <div class="mu-fin-temp"><button type="button" class="mu-tondo grande" data-mu-fa="meno" data-mu-entita="${esc(id)}">−</button><span class="mu-grande" style="font-size:96px">${obiettivo(id) === null ? "—" : `${decimale(obiettivo(id))}°`}</span><button type="button" class="mu-tondo grande" data-mu-fa="piu" data-mu-entita="${esc(id)}">+</button></div>
       <div class="mu-seg">${modi
         .map(
@@ -751,7 +982,7 @@ function finestra() {
     dentro = `<div class="mu-fin-clima">
       <div class="mu-riga1"><div class="mu-nome"><div class="mu-n" style="font-size:22px">${esc(nomeDi(ing.telecamera))}</div></div><button type="button" class="mu-tondo" data-mu-fa="chiudi" aria-label="${esc(t("Chiudi", "Close"))}">✕</button></div>
       <div class="mu-video mu-video-fin"><img data-mu-telecamera="${esc(ing.telecamera)}" alt=""></div>
-      ${ing.apri || ing.apri2 ? `<div class="mu-due">${ing.apri ? `<button type="button" class="mu-btn pieno" data-mu-fa="apri" data-mu-entita="${esc(ing.apri)}">${esc(nomeDi(ing.apri))}</button>` : ""}${ing.apri2 ? `<button type="button" class="mu-btn" data-mu-fa="apri" data-mu-entita="${esc(ing.apri2)}">${esc(nomeDi(ing.apri2))}</button>` : ""}</div>` : ""}</div>`;
+      ${ing.apri || ing.apri2 ? `<div class="mu-due">${ing.apri ? `<button type="button" class="mu-btn pieno" data-mu-fa="apri" data-mu-entita="${esc(ing.apri)}">${esc(nomeDi(ing.apri, ing.nomeApri))}</button>` : ""}${ing.apri2 ? `<button type="button" class="mu-btn" data-mu-fa="apri" data-mu-entita="${esc(ing.apri2)}">${esc(nomeDi(ing.apri2, ing.nomeApri2))}</button>` : ""}</div>` : ""}</div>`;
   } else if (f.tipo === "conferma") {
     dentro = `<div class="mu-fin-conferma"><div class="mu-osw" style="font-size:40px">${esc(f.azione)}</div><div class="mu-sotto">${esc(t("Confermi?", "Confirm?"))}</div>
       <div class="mu-due"><button type="button" class="mu-btn" data-mu-fa="chiudi">${esc(t("Annulla", "Cancel"))}</button><button type="button" class="mu-btn pieno" data-mu-fa="azione" data-mu-azione="${esc(f.azione)}" data-mu-confermata="1">${esc(t("Sì, vai", "Yes, go"))}</button></div></div>`;
@@ -883,6 +1114,7 @@ export function disegna() {
   }
   if (!state.fonte) return;
   const nodo = tela();
+  lasciaIlVelo();
   avviaIlBattito();
   doc.documentElement.classList.add("dm-muro-acceso");
   const temaPlancia = doc.documentElement.getAttribute("data-theme") || "dark";
@@ -1019,7 +1251,8 @@ function onClick(event) {
     if (entita && dominio(entita) === "light") {
       if (state.compatto) comanda("light", "toggle", { entity_id: entita });
       else apriFinestra({ tipo: "luce", entita });
-    } else if (entita && dominio(entita) === "climate") apriFinestra({ tipo: "clima", entita });
+    } else if (entita && dominio(entita) === "climate")
+      apriFinestra({ tipo: "clima", entita, zona: zonaDiQui() });
     else if (entita && dominio(entita) === "cover") apriFinestra({ tipo: "tapparella", entita });
     return;
   }
@@ -1069,7 +1302,7 @@ function onClick(event) {
       return;
     }
     case "modo":
-      apriFinestra({ tipo: "clima", entita: id });
+      apriFinestra({ tipo: "clima", entita: id, zona: zonaDiQui() });
       return;
     case "finestra-antifurto":
       apriFinestra({ tipo: "antifurto" });
@@ -1102,6 +1335,11 @@ function onClick(event) {
     case "allarme":
       allarme(bersaglio.dataset.muModo);
       return;
+    case "entita": {
+      const servizio = servizioDellEntita(id, String(stato(id)?.state || ""));
+      if (servizio) comanda(servizio.domain, servizio.service, { entity_id: id });
+      return;
+    }
     case "apri": {
       const s = servizioDiApertura(id);
       comanda(s.domain, s.service, { entity_id: id });
@@ -1241,8 +1479,17 @@ export async function rileggi({ forza = false } = {}) {
   state.muro = muro;
   if (!muro.attiva || !muro.pagine.length) {
     disegna();
+    lasciaIlVelo();
     return;
   }
+  /* Quello che si sapeva: il pannello si disegna subito, e le risposte del
+   * ponte qui sotto lo correggono se serve. */
+  const saputo = ricordo();
+  if (state.premium === null && saputo.premium === true && typeof root.__GDAHOME_PREMIUM__ !== "boolean")
+    state.premium = true;
+  if (!state.fonte && saputo.fonte && saputo.fonteDi === (muro.fonte || "primary") && !root.__DM_MURO_FONTE__)
+    state.fonte = saputo.fonte;
+  if (state.premium === true && state.fonte) disegna();
   await premiumDellaCasa({ forza });
   if (state.premium === true) await fonteDelMuro(muro, { forza });
   if (state.premium === true && !kioskAttivo()) {
@@ -1251,6 +1498,7 @@ export async function rileggi({ forza = false } = {}) {
     } catch (_errore) {}
   }
   disegna();
+  lasciaIlVelo();
 }
 
 function stili() {
@@ -1310,6 +1558,8 @@ ${MURO} .mu-pill .mu-chip{--c:38px}
 ${MURO} .mu-pill b{font-size:20px;font-weight:800;display:block;line-height:1}
 ${MURO} .mu-pill .mu-et{font-size:10.5px}
 ${MURO} .mu-g6{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:1fr 1fr;gap:16px;min-height:0}
+${MURO} .mu-g6.mu-scorre{grid-template-rows:none;grid-auto-rows:calc((100% - 16px) / 2);overflow-y:auto;scroll-snap-type:y proximity;overscroll-behavior:contain;scrollbar-width:none}
+${MURO} .mu-g6.mu-scorre>*{scroll-snap-align:start}
 ${MURO} .mu-card{padding:22px;display:flex;flex-direction:column;gap:14px;min-height:0;width:100%}
 ${MURO} .mu-tessera{text-align:left}
 ${MURO} .mu-tessera .mu-osw{margin-top:auto}
@@ -1444,6 +1694,7 @@ ${MURO}[data-compatto="1"] .mu-data{font-size:13px}
 ${MURO}[data-compatto="1"] .mu-riposo-riga{flex-direction:column;gap:10px;align-items:center;font-size:15px}
 ${MURO}[data-compatto="1"] .mu-avviso{font-size:13px}
 ${MURO}[data-verso="verticale"] .mu-g6{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(3,1fr)}
+${MURO}[data-verso="verticale"] .mu-g6.mu-scorre{grid-template-rows:none;grid-auto-rows:calc((100% - 32px) / 3)}
 ${MURO}[data-verso="verticale"] .mu-testa{flex-wrap:wrap}
 ${MURO}[data-verso="verticale"] .mu-pagine{order:3;width:100%;margin:6px 0 4px}
 ${MURO}[data-verso="verticale"] .mu-pagine button{flex:1;justify-content:center}
@@ -1463,6 +1714,7 @@ export function installPlanciaAMuro() {
   if (!doc || state.installed) return false;
   state.installed = true;
   stili();
+  trattieniIlVelo();
   const ancora = () => rileggi().catch(() => {});
   for (const evento of [
     "dashboardmodern:legacy-ready",

@@ -18,12 +18,60 @@
  * principale la rinomina anche sul tablet, e una luce tolta lascia il suo
  * posto vuoto invece di comandare un'entita' che non c'e' piu'. */
 
+import { canonicalClimateType } from "./device-model.js";
+
 export const CHIAVE_MURO = "cd_muro";
 
-export const MODELLI = Object.freeze(["stanza", "scene", "ingresso"]);
+/* «Dare la possibilita' di fare sezioni personalizzate, tipo luci con tutte le
+ * luci di casa, clima freddo e caldo.» Oltre alle tre di partenza:
+ * - `personale`: sei posti scelti a mano, di qualunque cosa, senza stanza;
+ * - `luci`: tutte le luci della casa;
+ * - `freddo` e `caldo`: le unita' del clima che raffrescano o che scaldano
+ *   (la pompa di calore sta in tutte e due, come nella pagina Clima). */
+export const MODELLI = Object.freeze([
+  "stanza",
+  "scene",
+  "ingresso",
+  "personale",
+  "luci",
+  "freddo",
+  "caldo",
+]);
+
+/** Le pagine che si riempiono da sole con un intero gruppo della casa. */
+export const MODELLI_ELENCO = Object.freeze(["luci", "freddo", "caldo"]);
 export const PAGINE_AL_MASSIMO = 4;
 export const POSTI = 6;
-export const TIPI_DI_COMANDO = Object.freeze(["luce", "clima", "tapparella", "azione"]);
+export const TIPI_DI_COMANDO = Object.freeze([
+  "luce",
+  "clima",
+  "tapparella",
+  "entita",
+  "azione",
+  "vuoto",
+]);
+
+/* Le entita' che hanno una card loro: la luce col cursore, il clima col meno e
+ * il piu', la tapparella coi tre tasti. Tutto il resto — una presa, una
+ * serratura, un sensore, uno script — e' una card «entita'» che fa la cosa
+ * giusta per il suo dominio. */
+const CARTE_DEDICATE = Object.freeze({ light: "luce", climate: "clima", cover: "tapparella" });
+
+/** Che card fa questa entita' sul tablet. */
+export function tipoDellEntita(id) {
+  return CARTE_DEDICATE[String(id || "").split(".")[0]] || "entita";
+}
+
+/* Un posto lasciato vuoto apposta in mezzo agli altri: «il quinto lo voglio
+ * libero». Senza, i posti dopo scivolerebbero avanti. */
+const POSTO_VUOTO = Object.freeze({ tipo: "vuoto" });
+
+/* Toglie i posti vuoti in coda: in mezzo contano, in fondo no. */
+function senzaVuotiInCoda(posti) {
+  const fuori = [...posti];
+  while (fuori.length && fuori[fuori.length - 1].tipo === "vuoto") fuori.pop();
+  return fuori;
+}
 export const ORIENTAMENTI = Object.freeze(["auto", "orizzontale", "verticale"]);
 export const TEMI = Object.freeze(["plancia", "scuro", "chiaro", "orario"]);
 export const MINUTI_DI_RIPOSO = Object.freeze([1, 2, 5, 10, 30]);
@@ -60,27 +108,45 @@ export function pinPulito(valore) {
   return cifre.length >= 4 && cifre.length <= 8 ? cifre : "";
 }
 
-/** Un comando di un posto: cosa comanda, e il nome scelto per il tablet. */
+/**
+ * Un comando di un posto: cosa comanda, e come si presenta sul tablet.
+ *
+ * «Devi dare la possibilita' di personalizzare le 6 card e scegliere a
+ * piacimento cosa inserire»: un posto prende qualunque entita' di Home
+ * Assistant o qualunque azione della plancia, e ognuno ha il suo nome, la sua
+ * riga sotto e il suo disegno. Il tipo lo decide l'entita' — una luce scelta
+ * a mano fa la card della luce — e non chi l'ha scritto.
+ */
 export function comandoPulito(input) {
   if (!input || typeof input !== "object") return null;
   const tipo = scelta(input.tipo, TIPI_DI_COMANDO, "");
   if (!tipo) return null;
+  if (tipo === "vuoto") return { ...POSTO_VUOTO };
+  const aspetto = {
+    nome: testo(input.nome, 40),
+    sotto: testo(input.sotto, 80),
+    disegno: testo(input.disegno, 32),
+  };
   if (tipo === "azione") {
     const azione = testo(input.azione, 80);
     if (!azione) return null;
-    return { tipo, azione, nome: testo(input.nome, 40), sotto: testo(input.sotto, 80) };
+    return { tipo, azione, ...aspetto };
   }
   const id = entita(input.entita);
   if (!id) return null;
-  return { tipo, entita: id, nome: testo(input.nome, 40) };
+  return { tipo: tipoDellEntita(id), entita: id, ...aspetto };
 }
 
-/* Una scena: un'azione della plancia di origine, col nome e il disegno da
- * mostrare sul tablet. */
+/* Una scena: un'azione della plancia di origine o un'entita' qualunque — una
+ * scena, uno script, un tasto — col nome, la riga sotto e il disegno. */
 function scenaPulita(input) {
-  const comando = comandoPulito({ ...input, tipo: "azione" });
+  if (!input || typeof input !== "object") return null;
+  const tipo = input.tipo || (input.entita && !input.azione ? "entita" : "azione");
+  const comando = comandoPulito({ ...input, tipo });
   if (!comando) return null;
-  return { ...comando, disegno: testo(input?.disegno, 32) };
+  /* Nelle scene un'entita' e' sempre una tessera grande: anche una luce qui
+   * e' «accendi», non il cursore. */
+  return comando.entita ? { ...comando, tipo: "entita" } : comando;
 }
 
 const INGRESSO_VUOTO = Object.freeze({
@@ -88,6 +154,8 @@ const INGRESSO_VUOTO = Object.freeze({
   telecamera: "",
   apri: "",
   apri2: "",
+  nomeApri: "",
+  nomeApri2: "",
   esco: "",
   rientro: "",
   persone: true,
@@ -101,6 +169,10 @@ function ingressoPulito(input = {}) {
     telecamera: entita(dentro.telecamera),
     apri: entita(dentro.apri),
     apri2: entita(dentro.apri2),
+    /* I nomi dei due tasti sul tablet: «Cancello», «Portoncino». Vuoti, il
+     * nome dell'entita'. */
+    nomeApri: testo(dentro.nomeApri, 32),
+    nomeApri2: testo(dentro.nomeApri2, 32),
     esco: testo(dentro.esco, 80),
     rientro: testo(dentro.rientro, 80),
     persone: vero(dentro.persone, INGRESSO_VUOTO.persone),
@@ -118,14 +190,18 @@ export function paginaPulita(input, indice = 0) {
   const dentro = input && typeof input === "object" ? input : {};
   const modello = scelta(dentro.modello, MODELLI, "stanza");
   const id = /^[a-z0-9-]{1,24}$/.test(String(dentro.id || "")) ? dentro.id : `p${indice + 1}`;
-  const comandi = (Array.isArray(dentro.comandi) ? dentro.comandi : [])
-    .map(comandoPulito)
-    .filter(Boolean)
-    .slice(0, POSTI);
-  const scene = (Array.isArray(dentro.scene) ? dentro.scene : [])
-    .map(scenaPulita)
-    .filter(Boolean)
-    .slice(0, POSTI);
+  const comandi = senzaVuotiInCoda(
+    (Array.isArray(dentro.comandi) ? dentro.comandi : [])
+      .slice(0, POSTI)
+      .map((c) => comandoPulito(c) || { ...POSTO_VUOTO }),
+  );
+  const scene = senzaVuotiInCoda(
+    (Array.isArray(dentro.scene) ? dentro.scene : [])
+      .slice(0, POSTI)
+      .map((c) =>
+        c?.tipo === "vuoto" ? { ...POSTO_VUOTO } : scenaPulita(c) || { ...POSTO_VUOTO },
+      ),
+  );
   const riga = { ...RIGA_PIENA };
   if (dentro.riga && typeof dentro.riga === "object")
     for (const chiave of Object.keys(RIGA_PIENA))
@@ -237,6 +313,8 @@ export function nuovaPagina(modello, fonte = {}, indice = 0) {
   if (pagina.modello === "stanza") pagina.stanza = fonte.stanze?.[0]?.name || "";
   if (pagina.modello === "scene") pagina.scene = scenePropose(fonte);
   if (pagina.modello === "ingresso") pagina.ingresso = ingressoProposto(fonte);
+  /* La pagina personale nasce coi sei posti vuoti: li riempie chi la fa. */
+  if (pagina.modello === "personale") pagina.scelti = true;
   return pagina;
 }
 
@@ -270,7 +348,39 @@ export function fonteDaiValori(valori = {}) {
     centrali: json(valori.cd_centrali, []),
     overrides: json(valori.cd_entity_overrides, {}),
     avvisi: json(valori.cd_avvisi_custom, []),
+    climaUnita: json(valori.cd_clima_units, []),
   });
+}
+
+/* Il clima con il suo tipo: `clima` raffresca, `termo` scalda, `pompa` fa
+ * tutte e due. Il tipo sta sull'unita' della sezione, o — nelle plance che le
+ * tengono a parte — nell'elenco `cd_clima_units`; quelle che ci sono solo li'
+ * si aggiungono. */
+function climaColTipo(sezione, unita) {
+  const altre = elenco(unita).filter((u) => u && entita(u.entity || u.entity_id));
+  const tipoDi = (id, proprio) =>
+    canonicalClimateType(
+      proprio || altre.find((u) => entita(u.entity || u.entity_id) === id)?.type,
+    );
+  const visti = new Set();
+  const fuori = sezione.map((d) => {
+    visti.add(d.entity);
+    return { ...d, tipo: tipoDi(d.entity, d.type) };
+  });
+  for (const u of altre) {
+    const id = entita(u.entity || u.entity_id);
+    if (visti.has(id) || u.enabled === false) continue;
+    visti.add(id);
+    fuori.push({ ...u, entity: id, tipo: canonicalClimateType(u.type) });
+  }
+  return fuori;
+}
+
+/** In quali pagine del clima sta un'unita' di questo tipo. */
+export function zoneDelClima(tipo) {
+  if (tipo === "termo") return ["caldo"];
+  if (tipo === "pompa") return ["freddo", "caldo"];
+  return ["freddo"];
 }
 
 /** La stessa fonte, quando le sezioni sono gia' in mano (la plancia stessa). */
@@ -293,7 +403,7 @@ export function fonteDalleSezioni(sezioni = {}, altro = {}) {
         hum: entita(s.hum),
       })),
     luci: dispositivi("lights"),
-    clima: dispositivi("climate"),
+    clima: climaColTipo(dispositivi("climate"), altro.climaUnita),
     tapparelle: dispositivi("covers"),
     telecamere: dispositivi("cameras"),
     azioni: elenco(altro.azioni)
@@ -409,7 +519,21 @@ export function comandiProposti(fonte = {}, nomeStanza = "") {
 /** I comandi che la pagina mostra adesso: quelli scelti, o quelli proposti. */
 export function comandiDellaPagina(pagina, fonte = {}) {
   if (!pagina) return [];
+  if (pagina.modello === "personale") return pagina.comandi;
+  if (MODELLI_ELENCO.includes(pagina.modello)) return comandiDellElenco(pagina.modello, fonte);
   return pagina.scelti ? pagina.comandi : comandiProposti(fonte, pagina.stanza);
+}
+
+/* Le pagine elenco: tutte le luci, il clima che raffresca, quello che scalda.
+ * Non hanno tetto di sei: sul tablet la griglia scorre. */
+export function comandiDellElenco(modello, fonte = {}) {
+  if (modello === "luci")
+    return elenco(fonte.luci).map((d) => comandoPulito({ tipo: "luce", entita: d.entity }));
+  if (modello === "freddo" || modello === "caldo")
+    return elenco(fonte.clima)
+      .filter((d) => zoneDelClima(d.tipo).includes(modello))
+      .map((d) => comandoPulito({ tipo: "clima", entita: d.entity }));
+  return [];
 }
 
 /* Un'azione che il tablet sa far partire da solo: le scene, gli script, i

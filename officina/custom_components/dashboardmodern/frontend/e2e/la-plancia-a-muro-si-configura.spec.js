@@ -62,25 +62,56 @@ test.describe("la scheda a muro", () => {
     await apriLaScheda(page);
     const body = page.locator("#ed-body");
     await body.locator('[data-mu-ed-alterna="pagine.0.segue"]').click();
-    await expect(body.locator('[data-mu-ed-campo="pagine.0.comandi.0"]')).toHaveValue(
-      "luce|light.soggiorno",
-    );
+    const entita = (k) => body.locator(`[data-mu-ed-campo="pagine.0.comandi.${k}.entita"]`);
+    await expect(entita(0)).toHaveValue("light.soggiorno");
     await body.locator('[data-mu-ed-posto-giu="0.0"]').click();
-    await expect(body.locator('[data-mu-ed-campo="pagine.0.comandi.0"]')).toHaveValue(
-      "luce|light.tavolo",
-    );
-    await body.locator('[data-mu-ed-campo="pagine.0.comandi.5"]').selectOption("luce|light.cucina");
+    await expect(entita(0)).toHaveValue("light.tavolo");
+    /* Il sesto posto si sceglie con la ricerca del config: la stessa lente,
+     * la stessa finestra, e qualunque entita' — qui la serratura. */
+    await body.locator('[data-mu-ed-posto="pagine.0.comandi.5"] [data-mu-ed-pick]').first().click();
+    await expect(page.locator("#cd-entpick")).toBeVisible();
+    await page.locator("#cd-ep-search").fill("lock.porta");
+    await page.locator("#cd-entpick").getByText("lock.porta").first().click();
+    await expect(entita(5)).toHaveValue("lock.porta");
+    /* E il suo aspetto: il nome sul tablet, la riga sotto, il disegno. */
+    await body.locator('[data-mu-ed-campo="pagine.0.comandi.5.nome"]').fill("Portone");
+    await body.locator('[data-mu-ed-campo="pagine.0.comandi.5.sotto"]').fill("Tocca per aprire");
+    await body.locator('[data-mu-ed-campo="pagine.0.comandi.5.disegno"]').selectOption("varchi");
+    /* Un posto si svuota e resta libero al suo posto. */
+    await body.locator('[data-mu-ed-svuota="pagine.0.comandi.4"]').click();
+    await body.locator('[data-mu-ed-campo="pagine.0.titolo"]').fill("Salone");
     await body.locator("[data-dm-save-all]").click();
     const muro = await salvato(page);
     expect(muro.pagine[0].scelti).toBe(true);
-    expect(muro.pagine[0].comandi.map((c) => c.entita || c.azione)).toEqual([
+    expect(muro.pagine[0].titolo).toBe("Salone");
+    expect(muro.pagine[0].comandi.map((c) => c.entita || c.azione || c.tipo)).toEqual([
       "light.tavolo",
       "light.soggiorno",
       "climate.soggiorno",
       "cover.soggiorno",
-      "Buongiorno",
-      "light.cucina",
+      "vuoto",
+      "lock.porta",
     ]);
+    expect(muro.pagine[0].comandi[5]).toMatchObject({
+      tipo: "entita",
+      nome: "Portone",
+      sotto: "Tocca per aprire",
+      disegno: "varchi",
+    });
+  });
+
+  test("le pagine nuove: personalizzata, tutte le luci, clima freddo e caldo", async ({
+    page,
+  }, testInfo) => {
+    await apriLaCasaAMuro(page, testInfo, { muro: { attiva: true, pagine: [] } });
+    await apriLaScheda(page);
+    const body = page.locator("#ed-body");
+    for (const modello of ["personale", "luci", "freddo", "caldo"])
+      await body.locator(`[data-mu-ed-nuova="${modello}"]`).click();
+    await expect(body.locator('[data-mu-ed-pagina="1"]')).toContainText(/luci/i);
+    await body.locator("[data-dm-save-all]").click();
+    const muro = await salvato(page);
+    expect(muro.pagine.map((p) => p.modello)).toEqual(["personale", "luci", "freddo", "caldo"]);
   });
 
   test("con Base la scheda e' chiusa e non salva", async ({ page }, testInfo) => {

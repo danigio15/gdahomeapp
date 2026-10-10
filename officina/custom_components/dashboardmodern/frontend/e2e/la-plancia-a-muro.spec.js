@@ -7,7 +7,7 @@
  * sveglia col tocco; l'antifurto chiede il codice; per uscire, con il blocco,
  * serve il PIN; in verticale la griglia diventa di due colonne. */
 import { expect, test } from "@playwright/test";
-import { MURO_DI_PROVA, apriLaCasaAMuro } from "./helpers/casa-a-muro.js";
+import { MURO_DI_PROVA, STATI_A_MURO, apriLaCasaAMuro } from "./helpers/casa-a-muro.js";
 
 const muro = (page) => page.locator("#dm-muro");
 const servizi = (page) => page.evaluate(() => window.__SERVIZI__.slice());
@@ -163,5 +163,56 @@ test.describe("la plancia a muro", () => {
     await muro(page).locator('[data-mu-fa="chiudi"]').first().click();
     await muro(page).locator('[data-mu-card][data-mu-entita="climate.soggiorno"]').click();
     await expect(muro(page).locator(".mu-fin-clima")).toBeVisible();
+  });
+
+  test("pagine scelte a mano: qualunque entita' col suo nome, e il clima che scalda ha la fiamma", async ({
+    page,
+  }, testInfo) => {
+    await apriLaCasaAMuro(page, testInfo, {
+      stati: {
+        ...STATI_A_MURO,
+        "switch.presa_tv": { state: "off", attributes: { friendly_name: "Presa TV" } },
+      },
+      muro: {
+        attiva: true,
+        pagine: [
+          {
+            id: "p1",
+            modello: "personale",
+            titolo: "Ingresso mio",
+            comandi: [
+              { tipo: "entita", entita: "lock.porta", nome: "Portone", disegno: "varchi" },
+              { tipo: "vuoto" },
+              { tipo: "entita", entita: "switch.presa_tv" },
+            ],
+          },
+          { id: "p2", modello: "caldo" },
+        ],
+      },
+    });
+    await expect(muro(page).locator(".mu-tit")).toHaveText(/Ingresso mio/i);
+    const portone = muro(page).locator('[data-mu-fa="entita"][data-mu-entita="lock.porta"]');
+    await expect(portone).toContainText("Portone");
+    /* Il secondo posto e' rimasto libero apposta. */
+    await expect(muro(page).locator(".mu-g6 > *").nth(1)).toHaveClass(/mu-vuoto/);
+    await portone.click();
+    await muro(page).locator('[data-mu-fa="entita"][data-mu-entita="switch.presa_tv"]').click();
+    expect(await servizi(page)).toEqual([
+      { domain: "lock", service: "unlock", data: { entity_id: "lock.porta" } },
+      { domain: "homeassistant", service: "toggle", data: { entity_id: "switch.presa_tv" } },
+    ]);
+    /* La pagina del caldo: il clima messo nel caldo (un termostato, nella
+     * scheda Clima) ci sta, e porta la fiamma. */
+    await page.evaluate(async () => {
+      localStorage.setItem(
+        "cd_clima_units",
+        JSON.stringify([{ entity: "climate.soggiorno", type: "termo", name: "Clima" }]),
+      );
+      await window.dmMuro.rileggi({ forza: true });
+    });
+    await muro(page).locator('[data-mu-pagina="1"]').click();
+    await expect(
+      muro(page).locator('[data-mu-card][data-mu-entita="climate.soggiorno"]'),
+    ).toHaveAttribute("data-mu-lato", "caldo");
   });
 });

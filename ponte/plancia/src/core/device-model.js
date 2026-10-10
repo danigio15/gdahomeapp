@@ -24,6 +24,27 @@ export const CLIMATE_PUMP_TOKENS = Object.freeze([
   "dual",
 ]);
 
+/**
+ * Se un'unita' del clima va disegnata col caldo (la fiamma) o col freddo (il
+ * fiocco).
+ *
+ * «Se l'entita' clima e' inserita nel caldo devi mettere il simbolo caldo, non
+ * ghiaccio.» Comanda quello che fa adesso — `hvac_action`, poi il modo — e,
+ * quando non fa niente (spenta, automatica, ferma), la pagina in cui sta
+ * (`zona`) e poi il tipo: un termosifone spento resta un termosifone.
+ */
+export function climaScalda({ stato = "", azione = "", tipo = "clima", zona = "" } = {}) {
+  const fa = String(azione || "").toLowerCase();
+  if (fa === "heating" || fa === "preheating") return true;
+  if (fa === "cooling" || fa === "drying" || fa === "fan") return false;
+  const modo = String(stato || "").toLowerCase();
+  if (modo === "heat") return true;
+  if (modo === "cool" || modo === "dry" || modo === "fan_only") return false;
+  if (zona === "caldo") return true;
+  if (zona === "freddo") return false;
+  return canonicalClimateType(tipo) === "termo";
+}
+
 export function canonicalClimateType(value) {
   const token = String(value ?? "")
     .trim()

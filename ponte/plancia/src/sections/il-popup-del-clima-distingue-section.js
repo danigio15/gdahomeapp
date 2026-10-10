@@ -33,8 +33,11 @@ function scaldaAdesso(stato) {
 /* L'entita' della riga sta solo negli onclick dei suoi tasti. */
 function entitaDellaRiga(riga) {
   for (const bottone of riga.querySelectorAll("button[onclick]")) {
-    const preso = (bottone.getAttribute("onclick") || "").match(/'([a-z_0-9]+\.[^']+)'/i);
-    if (preso) return preso[1];
+    /* Fra apici o fra virgolette: i tasti del guscio scrivono l'entita' con
+     * `jsArg`, cioe' in JSON, fra virgolette. Cercandola solo fra apici il
+     * popup non trovava piu' nessuno, e non distingueva piu' caldo e freddo. */
+    const preso = (bottone.getAttribute("onclick") || "").match(/(['"])([a-z_0-9]+\.[^'"]+)\1/i);
+    if (preso) return preso[2];
   }
   return "";
 }

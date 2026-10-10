@@ -31,7 +31,7 @@ import {
   tokenDellaCarta,
 } from "../core/le-vesti-della-carta.js";
 import { createApplianceViewModel, onRunHoldExpiry } from "../core/appliance-view-model.js";
-import { applianceVisualKey, canonicalClimateType } from "../core/device-model.js";
+import { applianceVisualKey, canonicalClimateType, climaScalda } from "../core/device-model.js";
 import { applianceArtwork } from "../core/appliance-artwork.js";
 import { applianceModelById, buildCardMarkup, cardLabels } from "./appliance-showcase-section.js";
 import { RIF_CENTRALE } from "../core/alarm-panel.js";
@@ -1117,10 +1117,22 @@ function climateModel(states) {
   /* L'unita' scelta al posto della media (#303). */
   const scelta = sorgenteDelWidget("clima");
   const sola = scelta ? rows.find((row) => row.entity === scelta) : null;
+  /* «Il widget della plancia non distingue caldo e freddo»: la faccia segue
+   * quello che fanno le unita'. Con qualcuna accesa vince chi e' di piu' fra
+   * chi scalda e chi raffresca; tutte spente, la fiamma se sono tutte
+   * termosifoni. */
+  const guardate = sola ? [sola] : on.length ? on : rows;
+  const scaldano = guardate.filter((row) =>
+    climaScalda({ stato: row.on ? row.mode : "off", azione: row.on ? row.azione : "", tipo: row.tipo }),
+  ).length;
+  const caldo = scaldano > guardate.length - scaldano;
   return {
     key: "clima",
-    accent: "#0ea5e9",
-    icon: "❄️",
+    accent: caldo ? "#f97316" : "#0ea5e9",
+    icon: caldo ? "🔥" : "❄️",
+    ...(caldo
+      ? { faccia: oggettoWidget("caldo", "", "tessera-clima"), facciaFirma: "caldo" }
+      : {}),
     label: t("Clima", "Climate"),
     value: sola
       ? sola.ambient == null
@@ -6393,8 +6405,13 @@ function lightsDetail(widget) {
  * tipo scelto in configurazione — lo stesso che le Stanze disegnano gia'. */
 const ICONE_CLIMA = Object.freeze({ termo: "🔥", pompa: "♨️", clima: "❄️" });
 
-function climateGlyph(mode, tipo = "clima") {
-  if (mode.includes("heat") && mode.includes("cool")) return ICONE_CLIMA[tipo] || "❄️";
+function climateGlyph(mode, tipo = "clima", azione = "") {
+  /* In automatico il modo non dice da che parte va: lo dice l'azione. */
+  if (mode.includes("heat") && mode.includes("cool")) {
+    if (azione === "heating") return "🔥";
+    if (azione === "cooling") return "❄️";
+    return ICONE_CLIMA[tipo] || "❄️";
+  }
   if (mode.includes("heat")) return "🔥";
   if (mode.includes("cool")) return "❄️";
   if (mode.includes("dry")) return "💧";
@@ -6612,7 +6629,7 @@ function climateDetail(widget) {
        * quanto gli serve. */
       return (
         rowShell(
-          `<span class="dm-w-glyph" data-on="${row.on}" aria-hidden="true">${climateGlyph(row.mode || "", row.tipo)}</span>
+          `<span class="dm-w-glyph" data-on="${row.on}" aria-hidden="true">${climateGlyph(row.mode || "", row.tipo, row.azione)}</span>
          <span class="dm-w-name">${esc(row.name)}<small>${
            row.ambient == null ? "" : `${formatNumber(row.ambient, 1)}°`
          }${row.on && row.target != null ? ` → ${formatNumber(row.target, 1)}°` : ""}</small></span>

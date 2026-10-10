@@ -13,13 +13,16 @@ import {
   CHIAVE_MURO,
   MINUTI_DI_RIPOSO,
   PAGINE_AL_MASSIMO,
+  MODELLI_ELENCO,
   POSTI,
+  comandiDellaPagina,
   comandiProposti,
   eUnaScena,
+  tipoDellEntita,
   muroPulito,
   nuovaPagina,
 } from "../core/plancia-a-muro.js";
-import { oggettoWidget } from "../core/oggetti-widget.js";
+import { CHIAVI_OGGETTI, oggettoWidget } from "../core/oggetti-widget.js";
 import { ensureTitoloDellaSezione, riordinaLeLinguette } from "./alberatura-del-config-section.js";
 import { bridgeRequest, currentProfile } from "./config-persistence-section.js";
 import { fonteDelMuro, premiumDellaCasa } from "./plancia-a-muro-section.js";
@@ -113,28 +116,116 @@ const nomeDi = (id) =>
   ) ||
   clean(allStates()?.[id]?.attributes?.friendly_name) ||
   id;
-const entitaDel = (dominio) =>
-  Object.keys(allStates() || {})
-    .filter((id) => id.startsWith(`${dominio}.`))
-    .sort();
 
-/* Le voci della tendina di un posto: tutto quello che il tablet sa comandare. */
-function vociDeiComandi() {
-  const f = state.fonte || {};
-  return [
-    ...(f.luci || []).map((d) => [`luce|${d.entity}`, `💡 ${nomeDi(d.entity)}`]),
-    ...(f.clima || []).map((d) => [`clima|${d.entity}`, `🌡️ ${nomeDi(d.entity)}`]),
-    ...(f.tapparelle || []).map((d) => [`tapparella|${d.entity}`, `🪟 ${nomeDi(d.entity)}`]),
-    ...(f.azioni || []).filter(eUnaScena).map((a) => [`azione|${a.name}`, `⚡ ${a.name}`]),
-  ];
+/* Un campo entita' come quelli del resto del config: la casella e la lente
+ * che apre la ricerca della plancia (`wzPickEntity`), con i suoi suggerimenti
+ * per dominio. «Ricerca entita' non omogenea con il config: usare la stessa
+ * modalita'.» La tendina di prima elencava tutto in ordine alfabetico. */
+let campiCerca = 0;
+function cerca(via, valore, { domini = "", segnaposto = "" } = {}) {
+  const id = `mu-ed-cerca-${campiCerca++}`;
+  /* `data-entity-input` e `data-entity-target` sono il patto dei campi
+   * entita' del config: con quelli la casella e il bottone diventano la riga
+   * «Scegli entità ›» con «Modifica» ed «Elimina», uguale alle altre schede
+   * (`editor-slots-section.js`). Il tocco lo apre questa scheda. */
+  return `<span class="ed-form-row mu-ed-cerca"><input id="${id}" class="ed-input mono mu-ed-campo" data-mu-ed-campo="${esc(via)}" data-entity-input="true" data-domain="${esc(domini)}" value="${esc(valore)}" placeholder="${esc(segnaposto || t("Entità", "Entity"))}" autocomplete="off" spellcheck="false"><button type="button" class="dm-entity-picker" data-entity-target="${id}" data-mu-ed-pick="${id}" aria-label="${esc(t("Scegli entità", "Choose entity"))}">🔍</button></span>`;
 }
-const chiaveDel = (c) => (c ? `${c.tipo}|${c.tipo === "azione" ? c.azione : c.entita}` : "");
+
+/* Le azioni della plancia di origine che il tablet sa far partire. */
+const azioniUsabili = () =>
+  (state.fonte?.azioni || []).filter(eUnaScena).map((a) => [a.name, `⚡ ${a.name}`]);
+
+/* I disegni che una card puo' portare: quelli di casa, gli stessi delle
+ * tessere in Home. Vuoto vuol dire «quello che le somiglia». */
+const DISEGNI = () => [
+  ["", t("Automatico", "Automatic")],
+  ...CHIAVI_OGGETTI.filter((k) => !/^pioggia/.test(k)).map((k) => [
+    k,
+    k.charAt(0).toUpperCase() + k.slice(1),
+  ]),
+];
+
+/* I domini che un posto propone per primi nella ricerca: tutto quello che il
+ * tablet sa comandare o mostrare. La ricerca trova lo stesso anche il resto. */
+const DOMINI_DEI_POSTI =
+  "light,switch,climate,cover,fan,lock,scene,script,button,input_button,input_boolean,media_player,vacuum,sensor,binary_sensor";
+
+/**
+ * Un posto: cosa c'e' dentro — un'entita' qualunque o un'azione della plancia
+ * — e come si presenta: il nome, la riga sotto, il disegno.
+ *
+ * «Devi dare la possibilita' di personalizzare le 6 card e scegliere a
+ * piacimento cosa inserire, non solo quelle che hai inserito tu.»
+ */
+function postoMarkup(i, lista, k, c) {
+  const via = `pagine.${i}.${lista}.${k}`;
+  const pieno = c && c.tipo !== "vuoto";
+  const azioni = azioniUsabili();
+  const descrizione = !pieno
+    ? t("Posto libero", "Empty slot")
+    : c.azione
+      ? `⚡ ${c.azione}`
+      : `${nomeDi(c.entita)} · ${c.entita}`;
+  return `<div class="mu-ed-posto${pieno ? " pieno" : ""}" data-mu-ed-posto="${esc(via)}">
+    <div class="mu-ed-posto-testa"><span class="mu-ed-num">${k + 1}</span>
+      <span class="mu-ed-frecce"><button type="button" data-mu-ed-posto-su="${i}.${k}" data-mu-ed-lista="${lista}"${k === 0 ? " disabled" : ""} aria-label="▲">▲</button><button type="button" data-mu-ed-posto-giu="${i}.${k}" data-mu-ed-lista="${lista}"${k === POSTI - 1 ? " disabled" : ""} aria-label="▼">▼</button></span>
+      <b class="mu-ed-cosa">${esc(descrizione)}</b>
+      ${pieno ? `<button type="button" class="mu-ed-svuota" data-mu-ed-svuota="${esc(via)}" aria-label="${esc(t("Svuota il posto", "Clear the slot"))}">✕</button>` : ""}</div>
+    <div class="mu-ed-posto-corpo">
+      <label class="mu-ed-voce" data-entity-field><span class="ed-slot-lbl">${esc(t("Entità", "Entity"))}</span>${cerca(`${via}.entita`, c?.entita || "", { domini: DOMINI_DEI_POSTI })}</label>
+      ${
+        azioni.length
+          ? `<label class="mu-ed-voce"><span>${esc(t("oppure un'azione", "or an action"))}</span>${tendina(`${via}.azione`, c?.azione || "", azioni, t("Nessuna", "None"))}</label>`
+          : ""
+      }
+      ${
+        pieno
+          ? `<label class="mu-ed-voce"><span>${esc(t("Nome sul tablet", "Name on the tablet"))}</span>${campo(`${via}.nome`, c.nome || "", c.azione || nomeDi(c.entita))}</label>
+      <label class="mu-ed-voce"><span>${esc(t("Riga sotto", "Line below"))}</span>${campo(`${via}.sotto`, c.sotto || "", t("Facoltativa", "Optional"))}</label>
+      <label class="mu-ed-voce"><span>${esc(t("Disegno", "Drawing"))}</span>${tendina(`${via}.disegno`, c.disegno || "", DISEGNI(), null)}</label>`
+          : ""
+      }
+    </div></div>`;
+}
+
+function postiMarkup(i, lista, posti) {
+  return `<div class="mu-ed-posti">${Array.from({ length: POSTI }, (_, k) =>
+    postoMarkup(i, lista, k, posti[k]),
+  ).join("")}</div>`;
+}
 
 const MODELLI = () => [
   ["stanza", t("Stanza", "Room")],
   ["scene", t("Scene", "Scenes")],
   ["ingresso", t("Ingresso", "Entrance")],
+  ["personale", t("Personalizzata", "Custom")],
+  ["luci", t("Tutte le luci", "All lights")],
+  ["freddo", t("Clima freddo", "Cooling")],
+  ["caldo", t("Clima caldo", "Heating")],
 ];
+const NOME_DEL_MODELLO = (modello) => MODELLI().find(([v]) => v === modello)?.[1] || "";
+
+/* Cosa mette da sola una pagina elenco, detto prima di salvarla. */
+function elencoMarkup(p) {
+  const comandi = comandiDellaPagina(p, state.fonte || {});
+  const spiega = {
+    luci: t(
+      "Si riempie da sola con tutte le luci della plancia di origine: una luce aggiunta là compare anche qui.",
+      "It fills itself with every light of the source dashboard: a light added there shows up here too.",
+    ),
+    freddo: t(
+      "Si riempie da sola con il clima che raffresca: i condizionatori e le pompe di calore.",
+      "It fills itself with what cools: air conditioners and heat pumps.",
+    ),
+    caldo: t(
+      "Si riempie da sola con il clima che scalda: termostati, termosifoni e pompe di calore. Sul tablet hanno la fiamma.",
+      "It fills itself with what heats: thermostats, radiators and heat pumps. On the tablet they show the flame.",
+    ),
+  }[p.modello];
+  const nomi = comandi.map((c) => nomeDi(c.entita));
+  return `<div class="mu-ed-nota">${esc(spiega)}</div>
+    <div class="mu-ed-riga"><div class="mu-ed-testo"><b>${comandi.length} ${esc(t("sul tablet", "on the tablet"))}</b><small>${esc(nomi.slice(0, 8).join(", ") + (nomi.length > 8 ? ` +${nomi.length - 8}` : "") || t("Per ora nessuna", "None yet"))}</small></div></div>`;
+}
 
 function paginaMarkup(p, i, tutte) {
   const f = state.fonte || {};
@@ -144,7 +235,7 @@ function paginaMarkup(p, i, tutte) {
     const comandi = p.scelti ? p.comandi : comandiProposti(f, p.stanza);
     dentro = `${riga(
       t("Stanza", "Room"),
-      t("Il nome compare in alto sul tablet", "The name shows at the top of the tablet"),
+      t("Da qui la pagina prende la temperatura e i comandi proposti", "The page takes its temperature and suggested controls from here"),
       tendina(
         `${via}.stanza`,
         p.stanza,
@@ -155,8 +246,8 @@ function paginaMarkup(p, i, tutte) {
     ${riga(
       t("I comandi seguono la stanza", "Controls follow the room"),
       t(
-        "Accesa, una luce aggiunta alla stanza nella plancia di origine compare da sola. Spenta, i sei posti si scelgono qui.",
-        "On, a light added to the room in the source dashboard shows up by itself. Off, the six slots are chosen here.",
+        "Accesa, una luce aggiunta alla stanza nella plancia di origine compare da sola. Spenta, i sei posti si scelgono qui: qualunque entità o azione, col nome e il disegno che vuoi.",
+        "On, a light added to the room in the source dashboard shows up by itself. Off, the six slots are chosen here: any entity or action, with the name and drawing you want.",
       ),
       interruttore(
         `${via}.segue`,
@@ -164,64 +255,57 @@ function paginaMarkup(p, i, tutte) {
         t("I comandi seguono la stanza", "Controls follow the room"),
       ),
     )}
-    <div class="mu-ed-posti">${Array.from({ length: POSTI }, (_, k) => {
-      const c = comandi[k];
-      return `<div class="mu-ed-posto"><span class="mu-ed-num">${k + 1}</span>${
-        p.scelti
-          ? `<span class="mu-ed-frecce"><button type="button" data-mu-ed-posto-su="${i}.${k}" aria-label="▲">▲</button><button type="button" data-mu-ed-posto-giu="${i}.${k}" aria-label="▼">▼</button></span>${tendina(`${via}.comandi.${k}`, chiaveDel(c), vociDeiComandi(), t("Posto libero", "Empty slot"))}`
-          : `<span class="mu-ed-proposto">${c ? esc(c.tipo === "azione" ? `⚡ ${c.azione}` : nomeDi(c.entita)) : esc(t("Posto libero", "Empty slot"))}</span>`
-      }</div>`;
-    }).join("")}</div>
+    ${
+      p.scelti
+        ? postiMarkup(i, "comandi", comandi)
+        : `<div class="mu-ed-posti">${Array.from({ length: POSTI }, (_, k) => {
+            const c = comandi[k];
+            return `<div class="mu-ed-posto"><div class="mu-ed-posto-testa"><span class="mu-ed-num">${k + 1}</span><span class="mu-ed-proposto">${c ? esc(c.azione ? `⚡ ${c.azione}` : nomeDi(c.entita)) : esc(t("Posto libero", "Empty slot"))}</span></div></div>`;
+          }).join("")}</div>`
+    }
     <div class="mu-ed-sotto-titolo">${esc(t("La riga in alto", "The top row"))}</div>
     ${riga(t("Temperatura e umidità della stanza", "Room temperature and humidity"), "", interruttore(`${via}.riga.clima`, p.riga.clima, "clima"))}
     ${riga(t("Stato dell'antifurto", "Alarm state"), "", interruttore(`${via}.riga.antifurto`, p.riga.antifurto, "antifurto"))}
     ${riga(t("Chi è in casa", "Who is home"), "", interruttore(`${via}.riga.persone`, p.riga.persone, "persone"))}
     ${riga(t("Meteo", "Weather"), "", interruttore(`${via}.riga.meteo`, p.riga.meteo, "meteo"))}`;
-  } else if (p.modello === "scene") {
-    const azioni = (f.azioni || []).filter(eUnaScena).map((a) => [a.name, a.name]);
+  } else if (p.modello === "personale") {
     dentro = `<div class="mu-ed-nota">${esc(
       t(
-        "Si scelgono fra le Azioni della plancia di origine: quello che fa ognuna si cambia lì. Qui si sceglie il nome che si legge sul tablet e la riga sotto.",
-        "They come from the source dashboard's Actions: what each one does is changed there. Here you choose the name shown on the tablet and the line below.",
+        "Sei posti tutti tuoi: in ognuno un'entità qualunque di Home Assistant — una luce, una presa, una serratura, un sensore — o un'azione della plancia, col nome e il disegno che vuoi.",
+        "Six slots of your own: in each one any Home Assistant entity — a light, a socket, a lock, a sensor — or a dashboard action, with the name and drawing you want.",
       ),
-    )}</div>
-    <div class="mu-ed-posti">${Array.from({ length: POSTI }, (_, k) => {
-      const s = p.scene[k];
-      return `<div class="mu-ed-posto"><span class="mu-ed-num">${k + 1}</span>${tendina(`${via}.scene.${k}.azione`, s?.azione || "", azioni, t("Posto libero", "Empty slot"))}${s ? `${campo(`${via}.scene.${k}.nome`, s.nome, t("Nome sul tablet", "Name on the tablet"))}${campo(`${via}.scene.${k}.sotto`, s.sotto, t("Riga sotto", "Line below"))}` : ""}</div>`;
-    }).join("")}</div>`;
+    )}</div>${postiMarkup(i, "comandi", p.comandi)}`;
+  } else if (MODELLI_ELENCO.includes(p.modello)) {
+    dentro = elencoMarkup(p);
+  } else if (p.modello === "scene") {
+    dentro = `<div class="mu-ed-nota">${esc(
+      t(
+        "Sei tasti grandi: un'azione della plancia o un'entità qualunque (una scena, uno script, un tasto). Per ognuno il nome sul tablet, la riga sotto e il disegno.",
+        "Six big buttons: a dashboard action or any entity (a scene, a script, a button). For each one the name on the tablet, the line below and the drawing.",
+      ),
+    )}</div>${postiMarkup(i, "scene", p.scene)}`;
   } else {
     const ing = p.ingresso;
-    const centrali = [...new Set([...(f.centrali || []), ...entitaDel("alarm_control_panel")])].map(
-      (id) => [id, nomeDi(id)],
-    );
     const azioni = (f.azioni || []).filter(eUnaScena).map((a) => [a.name, a.name]);
-    const apribili = ["button", "lock", "cover", "switch", "script", "input_button"]
-      .flatMap(entitaDel)
-      .map((id) => [id, `${nomeDi(id)} · ${id}`]);
-    dentro = `${riga(t("Centrale dell'antifurto", "Alarm panel"), t("I modi sono quelli che la centrale accetta", "The modes are the ones the panel accepts"), tendina(`${via}.ingresso.centrale`, ing.centrale, centrali))}
+    dentro = `${riga(t("Centrale dell'antifurto", "Alarm panel"), t("I modi sono quelli che la centrale accetta", "The modes are the ones the panel accepts"), cerca(`${via}.ingresso.centrale`, ing.centrale, { domini: "alarm_control_panel" }))}
     ${riga(t("Avvisa se restano finestre aperte", "Warn about open windows"), "", interruttore(`${via}.ingresso.finestre`, ing.finestre, "finestre"))}
-    ${riga(
-      t("Telecamera", "Camera"),
-      t("Il video del citofono", "The intercom video"),
-      tendina(
-        `${via}.ingresso.telecamera`,
-        ing.telecamera,
-        entitaDel("camera").map((id) => [id, nomeDi(id)]),
-      ),
-    )}
-    ${riga(t("Tasto grande", "Big button"), t("Per esempio: apri cancello", "For example: open the gate"), tendina(`${via}.ingresso.apri`, ing.apri, apribili))}
-    ${riga(t("Secondo tasto", "Second button"), t("Per esempio: apri porta", "For example: open the door"), tendina(`${via}.ingresso.apri2`, ing.apri2, apribili))}
+    ${riga(t("Telecamera", "Camera"), t("Il video del citofono", "The intercom video"), cerca(`${via}.ingresso.telecamera`, ing.telecamera, { domini: "camera" }))}
+    ${riga(t("Tasto grande", "Big button"), t("Per esempio: apri cancello", "For example: open the gate"), cerca(`${via}.ingresso.apri`, ing.apri, { domini: "button,lock,cover,switch,script,input_button" }))}
+    ${riga(t("Nome del tasto grande", "Big button name"), t("Vuoto: il nome dell'entità", "Empty: the entity name"), campo(`${via}.ingresso.nomeApri`, ing.nomeApri, ing.apri ? nomeDi(ing.apri) : t("Cancello", "Gate")))}
+    ${riga(t("Secondo tasto", "Second button"), t("Per esempio: apri porta", "For example: open the door"), cerca(`${via}.ingresso.apri2`, ing.apri2, { domini: "button,lock,cover,switch,script,input_button" }))}
+    ${riga(t("Nome del secondo tasto", "Second button name"), t("Vuoto: il nome dell'entità", "Empty: the entity name"), campo(`${via}.ingresso.nomeApri2`, ing.nomeApri2, ing.apri2 ? nomeDi(ing.apri2) : t("Portoncino", "Front door")))}
     ${riga(t("Esco", "Leaving"), t("L'azione del tasto in basso quando l'antifurto è spento", "The bottom button's action when the alarm is off"), tendina(`${via}.ingresso.esco`, ing.esco, azioni))}
     ${riga(t("Rientro", "I'm home"), t("Al posto di «Esco» quando l'antifurto è inserito", "Instead of «Leaving» when the alarm is armed"), tendina(`${via}.ingresso.rientro`, ing.rientro, azioni))}
     ${riga(t("Chiedi conferma prima di «Esco» e «Rientro»", "Confirm before «Leaving» and «I'm home»"), "", interruttore(`${via}.confermaUscita`, p.confermaUscita, "conferma"))}
     ${riga(t("Chi è in casa", "Who is home"), "", interruttore(`${via}.ingresso.persone`, ing.persone, "persone"))}`;
   }
+  const nomeDiSerie = (p.modello === "stanza" && clean(p.stanza)) || NOME_DEL_MODELLO(p.modello);
   return `<div class="mu-ed-pagina" data-mu-ed-pagina="${i}">
-    <div class="mu-ed-pagina-testa">${disegno({ stanza: "stanze", scene: "azioni", ingresso: "sicurezza" }[p.modello], 24, `pag-${i}`)}<b>${esc(t("Pagina", "Page"))} ${i + 1}</b>
+    <div class="mu-ed-pagina-testa">${disegno({ stanza: "stanze", scene: "azioni", ingresso: "sicurezza", personale: "widget", luci: "luci", freddo: "clima", caldo: "caldo" }[p.modello], 24, `pag-${i}`)}<b>${esc(t("Pagina", "Page"))} ${i + 1} · ${esc(clean(p.titolo) || nomeDiSerie)}</b>
       <span class="mu-ed-frecce"><button type="button" data-mu-ed-pagina-su="${i}"${i === 0 ? " disabled" : ""} aria-label="▲">▲</button><button type="button" data-mu-ed-pagina-giu="${i}"${i === tutte - 1 ? " disabled" : ""} aria-label="▼">▼</button></span>
       <button type="button" class="ed-del" data-mu-ed-togli="${i}" aria-label="${esc(t("Togli la pagina", "Remove page"))}">🗑️</button></div>
+    ${riga(t("Nome della pagina", "Page name"), t("Si legge in alto sul tablet e sulla sua linguetta", "Shown at the top of the tablet and on its tab"), campo(`${via}.titolo`, p.titolo, nomeDiSerie))}
     ${riga(t("Modello", "Template"), "", scelte(`${via}.modello`, p.modello, MODELLI()))}
-    ${riga(t("Nome della linguetta", "Tab name"), t("Vuoto: il nome della stanza o del modello", "Empty: the room or template name"), campo(`${via}.titolo`, p.titolo, ""))}
     ${dentro}</div>`;
 }
 
@@ -319,11 +403,7 @@ function corpoMarkup() {
         "Quando questo sensore si accende (per esempio una presenza)",
         "When this sensor turns on (for example a presence sensor)",
       ),
-      `${tendina(
-        "risveglio.entita",
-        m.risveglio.entita,
-        entitaDel("binary_sensor").map((id) => [id, nomeDi(id)]),
-      )}${interruttore("risveglio.attivo", m.risveglio.attivo, "risveglio")}`,
+      `${cerca("risveglio.entita", m.risveglio.entita, { domini: "binary_sensor" })}${interruttore("risveglio.attivo", m.risveglio.attivo, "risveglio")}`,
     )}
     ${riga(t("Blocca il tablet", "Lock the tablet"), t("Per uscire dal pannello serve il PIN, da 4 a 8 cifre", "Leaving the panel needs the PIN, 4 to 8 digits"), `${campo("blocco.pin", m.blocco.pin, "PIN", "password")}${interruttore("blocco.attivo", m.blocco.attivo, "blocco")}`)}
     ${riga(t("Antifurto e serrature chiedono il codice", "Alarm and locks ask for the code"), t("Sempre, quando la centrale ne ha uno", "Always, when the panel has one"), `<span class="mu-ed-int fermo" aria-checked="true"><i></i></span>`)}
@@ -392,29 +472,29 @@ function metti(via, valore) {
       state.bozza = muroPulito(m);
       return;
     }
-    if (pezzi[2] === "comandi") {
+    if (pezzi[2] === "comandi" || pezzi[2] === "scene") {
+      /* Un posto: l'entita' o l'azione che ci va dentro, poi il suo aspetto.
+       * Le due scelte si escludono: scrivere un'entita' toglie l'azione e
+       * viceversa, e svuotarle lascia il posto libero dov'e'. */
+      const lista = pezzi[2];
       const k = Number(pezzi[3]);
-      const [tipo, ...resto] = String(valore || "").split("|");
-      const dove = resto.join("|");
-      const comandi = Array.from({ length: POSTI }, (_, n) => p.comandi[n] || null);
-      comandi[k] = tipo
-        ? tipo === "azione"
-          ? { tipo, azione: dove }
-          : { tipo, entita: dove }
-        : null;
-      /* I posti vuoti in mezzo restano vuoti sul tablet: si tengono come
-       * comandi spenti, e la normalizzazione li toglie in coda. */
-      p.comandi = comandi.filter(Boolean);
-      p.scelti = true;
-      state.bozza = muroPulito(m);
-      return;
-    }
-    if (pezzi[2] === "scene") {
-      const k = Number(pezzi[3]);
-      const scene = Array.from({ length: POSTI }, (_, n) => p.scene[n] || null);
-      if (pezzi[4] === "azione") scene[k] = valore ? { ...(scene[k] || {}), azione: valore } : null;
-      else if (scene[k]) scene[k] = { ...scene[k], [pezzi[4]]: valore };
-      p.scene = scene.filter(Boolean);
+      const campo = pezzi[4];
+      const posti = Array.from({ length: POSTI }, (_, n) => p[lista][n] || { tipo: "vuoto" });
+      const ora = posti[k];
+      const aspetto = { nome: ora.nome || "", sotto: ora.sotto || "", disegno: ora.disegno || "" };
+      const scritto = clean(valore);
+      if (campo === "entita")
+        posti[k] = scritto
+          ? { ...aspetto, tipo: lista === "scene" ? "entita" : tipoDellEntita(scritto), entita: scritto }
+          : ora.azione
+            ? ora
+            : { tipo: "vuoto" };
+      else if (campo === "azione")
+        posti[k] = scritto ? { ...aspetto, tipo: "azione", azione: scritto } : ora.entita ? ora : { tipo: "vuoto" };
+      else if (campo === "svuota") posti[k] = { tipo: "vuoto" };
+      else if (ora.tipo !== "vuoto") posti[k] = { ...ora, [campo]: valore };
+      p[lista] = posti;
+      if (lista === "comandi") p.scelti = true;
       state.bozza = muroPulito(m);
       return;
     }
@@ -454,11 +534,23 @@ function onClick(event) {
   const body = doc?.getElementById("ed-body");
   if (!body || schedaAttiva() !== MURO_EDITOR_TAB || !body.contains(event.target)) return;
   const el = event.target.closest(
-    "[data-mu-ed-alterna],[data-mu-ed-metti],[data-mu-ed-nuova],[data-mu-ed-togli],[data-mu-ed-pagina-su],[data-mu-ed-pagina-giu],[data-mu-ed-posto-su],[data-mu-ed-posto-giu],[data-mu-ed-salva]",
+    "[data-mu-ed-alterna],[data-mu-ed-metti],[data-mu-ed-nuova],[data-mu-ed-togli],[data-mu-ed-pagina-su],[data-mu-ed-pagina-giu],[data-mu-ed-posto-su],[data-mu-ed-posto-giu],[data-mu-ed-salva],[data-mu-ed-pick],[data-mu-ed-svuota]",
   );
   if (!el || body.querySelector(".mu-ed-chiuso")) return;
   event.preventDefault();
   const d = el.dataset;
+  if (d.muEdPick) {
+    /* La ricerca del config: scrive nella casella e manda «change», che qui
+     * sotto passa per `onChange` come una scrittura a mano. */
+    const casella = doc.getElementById(d.muEdPick);
+    if (casella) root.wzPickEntity?.(casella);
+    return;
+  }
+  if (d.muEdSvuota) {
+    metti(`${d.muEdSvuota}.svuota`, "");
+    ridisegna();
+    return;
+  }
   if (d.muEdAlterna) {
     const via = d.muEdAlterna;
     const ora = via.endsWith(".segue")
@@ -485,7 +577,11 @@ function onClick(event) {
       .map(Number);
     const m = structuredClone(bozza());
     const p = m.pagine[i];
-    p.comandi = sposta(p.comandi, k, d.muEdPostoSu !== undefined ? k - 1 : k + 1);
+    const lista = d.muEdLista === "scene" ? "scene" : "comandi";
+    /* Anche i posti vuoti si spostano: «il quinto lo voglio libero». */
+    const posti = Array.from({ length: POSTI }, (_, n) => p[lista][n] || { tipo: "vuoto" });
+    p[lista] = sposta(posti, k, d.muEdPostoSu !== undefined ? k - 1 : k + 1);
+    if (lista === "comandi") p.scelti = true;
     state.bozza = muroPulito(m);
   } else if (d.muEdSalva !== undefined) {
     salva();
@@ -500,10 +596,13 @@ function onChange(event) {
   const via = event.target?.dataset?.muEdCampo;
   if (!via) return;
   metti(via, event.target.value);
-  /* Il PIN e le scritte si ridisegnano solo quando cambiano la forma: chi sta
-   * scrivendo non deve perdere il cursore. */
-  if (event.type === "change") ridisegna();
+  /* Le scritte — nomi, righe sotto, il PIN — si salvano lettera per lettera e
+   * non ridisegnano la scheda quando si lasciano. Ridisegnarla li' rifaceva i
+   * tasti proprio sotto il dito: si scriveva un nome, si toccava «svuota» o
+   * una freccia, e il tocco finiva su un tasto che non c'era piu'. */
+  if (event.type === "change" && !SCRITTE.test(via)) ridisegna();
 }
+const SCRITTE = /(\.nome|\.sotto|\.titolo|\.nomeApri2?|^blocco\.pin)$/;
 
 export function salva() {
   const m = muroPulito(bozza());
@@ -563,8 +662,19 @@ html[data-theme="dark"] #ed-body .mu-ed-seg button.si{color:#7dd3fc}
 #ed-body .mu-ed-frecce button{width:28px;height:28px;border-radius:50%;border:1px solid var(--divider-color,#dbe4ee);background:none;color:var(--text-dim,#64748b);font-size:10px;cursor:pointer}
 #ed-body .mu-ed-frecce button[disabled]{opacity:.35;cursor:default}
 #ed-body .mu-ed-posti{display:grid;gap:8px;margin-top:10px}
-#ed-body .mu-ed-posto{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:8px 10px;border-radius:12px;border:1px solid var(--divider-color,#dbe4ee);background:var(--card-background-color,var(--card-bg,#fff))}
-#ed-body .mu-ed-posto .ed-input{margin:0;flex:1 1 180px;min-width:0}
+#ed-body .mu-ed-posto{padding:8px 10px;border-radius:12px;border:1px solid var(--divider-color,#dbe4ee);background:var(--card-background-color,var(--card-bg,#fff))}
+#ed-body .mu-ed-posto.pieno{border-color:color-mix(in srgb,#0ea5e9 45%,var(--divider-color,#dbe4ee))}
+#ed-body .mu-ed-posto-testa{display:flex;align-items:center;gap:8px;min-height:30px}
+#ed-body .mu-ed-cosa{flex:1;min-width:0;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#ed-body .mu-ed-svuota{margin:0;width:30px;height:30px;border-radius:50%;border:1px solid color-mix(in srgb,#ef4444 40%,transparent);background:color-mix(in srgb,#ef4444 8%,transparent);color:#dc2626;font-weight:900;cursor:pointer}
+#ed-body .mu-ed-posto-corpo{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:8px 12px;margin-top:8px;align-items:start}
+#ed-body .mu-ed-posto-corpo:empty{display:none}
+#ed-body .mu-ed-voce{display:grid;gap:4px;min-width:0}
+#ed-body .mu-ed-voce>span{font-size:10.5px;font-weight:900;letter-spacing:.06em;text-transform:uppercase;color:var(--text-dim,#64748b)}
+#ed-body .mu-ed-voce .ed-input{margin:0;width:100%;max-width:none;min-width:0}
+#ed-body .mu-ed-cerca{display:flex;gap:6px;align-items:center;min-width:0}
+#ed-body .mu-ed-cerca .ed-input{flex:1;min-width:0;margin:0}
+#ed-body .mu-ed-dx .mu-ed-cerca{min-width:220px;max-width:340px;flex:1}
 #ed-body .mu-ed-num{width:24px;height:24px;border-radius:7px;display:grid;place-items:center;font-weight:900;font-size:11px;color:var(--text-dim,#64748b);background:color-mix(in srgb,var(--text,#0f172a) 8%,transparent)}
 #ed-body .mu-ed-proposto{font-weight:700;font-size:13px}
 #ed-body .mu-ed-sotto-titolo{margin:16px 2px 0;font-size:11px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;color:var(--text-dim,#64748b)}
