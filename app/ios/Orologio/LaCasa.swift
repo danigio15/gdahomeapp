@@ -29,7 +29,7 @@ struct LaCasa: View {
             Button {
               if c.conferma { daConfermare = c } else { telefono.premi(c.id) }
             } label: {
-              Label(c.nome, systemImage: simbolo(genere: c.disegno))
+              Segnato(c.nome, simbolo(genere: c.disegno))
             }
             .disabled(telefono.inCorso)
           }
@@ -39,17 +39,17 @@ struct LaCasa: View {
         NavigationLink {
           Dispositivi(foto: foto)
         } label: {
-          Label("Dispositivi", systemImage: "square.grid.2x2")
+          Segnato("Dispositivi", "square.grid.2x2")
         }
         NavigationLink {
           Azioni(foto: foto)
         } label: {
-          Label("Azioni rapide", systemImage: "bolt.circle")
+          Segnato("Azioni rapide", "bolt.circle")
         }
         NavigationLink {
           ComeStaLaCasa(foto: foto)
         } label: {
-          Label("Come sta la casa", systemImage: "house")
+          Segnato("Come sta la casa", "house")
         }
       }
     }
@@ -168,5 +168,25 @@ struct ComeStaLaCasa: View {
     let minuti = Int(Date().timeIntervalSince(allora) / 60)
     if minuti <= 30 { return "Aggiornato adesso" }
     return minuti >= 60 ? "Di \(minuti / 60) ore fa" : "Di \(minuti) minuti fa"
+  }
+}
+
+/// Una voce con il suo disegno in ambra, come nei dispositivi: in un elenco
+/// SwiftUI su watchOS un `Label` lo lascia bianco.
+struct Segnato: View {
+  let testo: String
+  let simbolo: String
+
+  init(_ testo: String, _ simbolo: String) {
+    self.testo = testo
+    self.simbolo = simbolo
+  }
+
+  var body: some View {
+    Label {
+      Text(testo)
+    } icon: {
+      Image(systemName: simbolo).foregroundStyle(Color.accentColor)
+    }
   }
 }

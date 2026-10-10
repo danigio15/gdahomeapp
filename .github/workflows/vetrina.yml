@@ -79,6 +79,12 @@ jobs:
           udid=$(xcrun simctl create vetrina "$tipo" "$runtime")
           xcrun simctl boot "$udid"
           xcrun simctl bootstatus "$udid" -b || sleep 60
+          # In italiano, con l'ora a 24 ore: come la vede chi la compra qui.
+          xcrun simctl spawn "$udid" defaults write -g AppleLanguages -array it
+          xcrun simctl spawn "$udid" defaults write -g AppleLocale -string it_IT
+          xcrun simctl shutdown "$udid"
+          xcrun simctl boot "$udid"
+          xcrun simctl bootstatus "$udid" -b || sleep 60
           xcrun simctl status_bar "$udid" override --time "9:41" || true
           xcrun simctl install "$udid" "build/vetrina/Release-watchsimulator/gdahome Watch.app"
           mkdir -p vetrina/apple-watch
@@ -158,11 +164,26 @@ jobs:
             fi
           done
           echo "Immagine: $immagine" | tee -a "$GITHUB_STEP_SUMMARY"
-          echo no | "$sdk/avdmanager" create avd -n polso -k "$immagine" -d wearos_large_round
+          # L'orologio virtuale in una cartella detta a tutti e due: senza,
+          # avdmanager lo scrive in un posto e l'emulatore lo cerca in un
+          # altro («Unknown AVD name [polso]»).
+          export ANDROID_AVD_HOME="$HOME/.android/avd"
+          mkdir -p "$ANDROID_AVD_HOME"
+          echo "ANDROID_AVD_HOME=$ANDROID_AVD_HOME" >> "$GITHUB_ENV"
+          echo no | "$sdk/avdmanager" create avd -n polso -k "$immagine" -d wearos_large_round \
+            -p "$ANDROID_AVD_HOME/polso.avd"
+          "$ANDROID_HOME/emulator/emulator" -list-avds
           nohup "$ANDROID_HOME/emulator/emulator" -avd polso -no-window -no-audio -no-boot-anim \
             -gpu swiftshader_indirect -no-snapshot > emulatore.log 2>&1 &
-          adb wait-for-device
-          until [ "$(adb shell getprop sys.boot_completed | tr -d '\r')" = "1" ]; do sleep 5; done
+          # Dieci minuti al massimo: un emulatore che non parte non parte, e
+          # restare ad aspettarlo vuol dire una corsa ferma per ore. Se non
+          # parte, il suo registro dice perche'.
+          if ! timeout 600 bash -c 'adb wait-for-device; until [ "$(adb shell getprop sys.boot_completed 2>/dev/null | tr -d "\r")" = "1" ]; do sleep 5; done'; then
+            echo "::error::L'emulatore di Wear OS non e' partito in dieci minuti."
+            ls -la /dev/kvm || true
+            tail -80 emulatore.log || true
+            exit 1
+          fi
           # Il quadrante e le prime schermate del sistema hanno bisogno di un
           # momento ancora dopo l'avvio.
           sleep 45
@@ -171,6 +192,8 @@ jobs:
           set -euo pipefail
           apk=$(ls app/build/orologio/outputs/apk/release/*.apk | head -1)
           adb install -r "$apk"
+          # L'ora a 24 ore, come la vede chi la compra qui (e come l'Apple Watch).
+          adb shell settings put system time_12_24 24
           pacchetto=$(adb shell pm list packages | tr -d '\r' | sed -n 's/^package://p' | grep '^com\.gdahome\.gdahome' | head -1)
           mkdir -p vetrina/wear-os
           n=1
