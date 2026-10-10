@@ -12,6 +12,11 @@ struct LaCasa: View {
   @EnvironmentObject private var telefono: IlTelefono
   @State private var daConfermare: Comando?
 
+  init(foto: LaFoto, daConfermareSubito: Comando? = nil) {
+    self.foto = foto
+    _daConfermare = State(initialValue: daConfermareSubito)
+  }
+
   var body: some View {
     List {
       if foto.comandi.isEmpty {

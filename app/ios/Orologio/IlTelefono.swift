@@ -20,6 +20,11 @@ final class IlTelefono: NSObject, ObservableObject {
   @Published private(set) var inCorso = false
 
   func accendi() {
+    /* La vetrina (`Vetrina.swift`): la casa d'esempio, e nessun filo. */
+    if Vetrina.schermata != nil {
+      foto = Vetrina.laFoto()
+      return
+    }
     guard WCSession.isSupported() else { return }
     WCSession.default.delegate = self
     WCSession.default.activate()
@@ -27,6 +32,7 @@ final class IlTelefono: NSObject, ObservableObject {
 
   /// Chiede la fotografia di adesso, invece di aspettare che cambi qualcosa.
   func aggiorna() {
+    guard Vetrina.schermata == nil else { return }
     guard WCSession.default.activationState == .activated, WCSession.default.isReachable else { return }
     WCSession.default.sendMessage(["cosa": "aggiorna"]) { [weak self] risposta in
       let testo = risposta["foto"] as? String
