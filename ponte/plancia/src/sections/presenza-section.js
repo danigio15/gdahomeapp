@@ -38,6 +38,7 @@ import {
   stanzaDiHomeAssistant,
   t,
   senzaCadere,
+  segnaContenuto,
 } from "./shared.js";
 import { nomeDaHomeAssistant } from "./editor-slots-section.js";
 
@@ -132,7 +133,7 @@ function sezioneAccesa() {
 function accendiLaVoce() {
   const voce = ensurePresenzaTab();
   if (!voce) return;
-  const serve = ciSonoRilevatori() && sezioneAccesa();
+  const serve = segnaContenuto(PRESENZA_TAB, ciSonoRilevatori()) && sezioneAccesa();
   if (serve) voce.style.removeProperty("display");
   else voce.style.setProperty("display", "none", "important");
   const pagina = doc.getElementById(PRESENZA_PAGE_ID);
@@ -302,10 +303,13 @@ function svegliamiQuandoCambia(righe) {
   const fra = prossimoCambioDelDaQuando(righe, Date.now());
   if (fra == null) return;
   state.sveglia =
-    root.setTimeout?.(() => {
-      state.sveglia = 0;
-      schedule();
-    }, Math.max(1000, fra)) || 0;
+    root.setTimeout?.(
+      () => {
+        state.sveglia = 0;
+        schedule();
+      },
+      Math.max(1000, fra),
+    ) || 0;
 }
 
 function schedule() {

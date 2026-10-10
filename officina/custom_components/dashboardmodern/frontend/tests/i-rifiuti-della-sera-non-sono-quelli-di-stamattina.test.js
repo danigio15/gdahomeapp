@@ -163,9 +163,7 @@ test("due righe che si leggono uguali sono una pastiglia sola (#Vetro OGGI due v
       { quando: "oggi", name: "VETRO", glyph: "🍾", entity: "sensor.vetro_2" },
     ],
   };
-  assert.deepEqual(nomiDeiRifiuti(pastiglieDellaCasa([maiuscole], { adesso: alle(9) })), [
-    "Vetro",
-  ]);
+  assert.deepEqual(nomiDeiRifiuti(pastiglieDellaCasa([maiuscole], { adesso: alle(9) })), ["Vetro"]);
 });
 
 test("il «Calendario dei ritiri» non ripete una riga nemmeno nell'elenco", () => {
@@ -207,4 +205,18 @@ test("la sezione porta l'orologio al nucleo, e la scelta arriva dalla casella", 
     /rifiutiDalleOre: clean\(pannello\.querySelector\("\[data-dm-casa-ritiro\]"\)\?\.value\)/,
   );
   assert.match(sezione, /writeJsonIfChanged\(CHIAVE_BARRA, normalizzaBarra\(detto\)\)/);
+});
+
+test("senza rifiuti configurati l'ora del ritiro non si chiede, ma non si perde", () => {
+  /* «Che ci fa questo parametro per i rifiuti nella sezione Home?» Senza la
+   * sezione Rifiuti la pastiglia del ritiro non c'e': il campo resta nascosto,
+   * e la scelta gia' fatta passa intatta al salvataggio. */
+  const sezione = readFileSync(
+    new URL("../src/sections/come-sta-la-casa-section.js", import.meta.url),
+    "utf8",
+  );
+  assert.match(
+    sezione,
+    /if \(!rifiutiInPlancia\(\)\) \{\n\s+return `<input type="hidden" data-dm-casa-ritiro value="\$\{esc\(scelta \|\| ""\)\}">`;/,
+  );
 });

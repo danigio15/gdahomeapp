@@ -7563,6 +7563,15 @@ function allStates() {
 function isLifetimeMeter(entity) {
   return isCumulativeEnergyEntity(entity, allStates());
 }
+var SEZIONI_PIENE = "__DASHBOARDMODERN_SEZIONI_PIENE__";
+function segnaContenuto(chiave2, piena) {
+  const mappa = root2[SEZIONI_PIENE] ||= {};
+  mappa[String(chiave2)] = Boolean(piena);
+  return Boolean(piena);
+}
+function contenutoNoto(chiave2) {
+  return root2[SEZIONI_PIENE]?.[String(chiave2)];
+}
 function readJson(key, fallback) {
   try {
     return JSON.parse(root2.localStorage?.getItem(key) || "") ?? fallback;
@@ -22128,10 +22137,6 @@ function nomeDellaSezione(chiave2) {
 function sezioneAccesa(sezioni, chiave2) {
   return sezioni?.[pulito15(chiave2)] !== false;
 }
-function quanteAccese(sezioni, elenco = SEZIONI) {
-  const tutte = elenco.length;
-  return { accese: elenco.filter((voce) => sezioneAccesa(sezioni, voce.chiave)).length, tutte };
-}
 function sezioniPerFamiglia(elenco = SEZIONI) {
   const perFamiglia = /* @__PURE__ */ new Map();
   for (const voce of elenco) {
@@ -22252,6 +22257,11 @@ function rinfrescaBanner(banner, key) {
   const chiave2 = fresco.getAttribute("data-key");
   if (chiave2 && banner.getAttribute("data-key") !== chiave2) {
     banner.setAttribute("data-key", chiave2);
+    cambiato = true;
+  }
+  const vuota = fresco.hasAttribute("disabled");
+  if (banner.hasAttribute("disabled") !== vuota) {
+    banner.toggleAttribute("disabled", vuota);
     cambiato = true;
   }
   return cambiato;
@@ -22416,6 +22426,9 @@ function installStyles9() {
      * buttons to display:flex — the Irrigazione one is
      * #editor-modal #ed-body:has(#ed-irr-ent) .ed-btn-add, three ids' worth.
      * Same element set, enough weight to be the one that decides. */
+    /* Il salvataggio della riga aperta di una scheda dichiarata resta: un
+     * pacco dell'accumulo ha piu' di quindici caselle, e il piede sta sotto
+     * tutte. «Non c'e' un salva della nuova batteria.» */
     #ed-body#ed-body#ed-body[data-dm-config-uniform]:not([data-dm-config-uniform="visib"]):not([data-dm-config-uniform="runtime"]) :is(
       .ed-save-btn,
       [data-energy-save],
@@ -22426,7 +22439,7 @@ function installStyles9() {
       [onclick*="edSaveCosti"],
       [onclick*="edPoolSaveCfg"],
       [onclick*="edIrrSaveCfg"]
-    ):not(.dm-save-footer-btn){display:none!important}
+    ):not(.dm-save-footer-btn):not([data-dm-dich-salva]){display:none!important}
     #ed-body > .dm-save-footer{
       display:flex!important;align-items:center!important;gap:12px!important;flex-wrap:wrap!important;
       box-sizing:border-box!important;width:100%!important;margin:18px 0 4px!important;padding:14px 0 0!important;
@@ -35820,6 +35833,8 @@ export {
   nomeDellEntita,
   allStates,
   isLifetimeMeter,
+  segnaContenuto,
+  contenutoNoto,
   readJson,
   quandoSiCambiaPagina,
   planciaVisibile,
@@ -36057,7 +36072,6 @@ export {
   SEZIONI,
   nomeDellaSezione,
   sezioneAccesa,
-  quanteAccese,
   sezioniPerFamiglia,
   installConfigUniformitySection,
   righeDichiarate,

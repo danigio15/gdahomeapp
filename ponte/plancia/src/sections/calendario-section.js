@@ -67,6 +67,7 @@ import {
   root,
   t,
   senzaCadere,
+  segnaContenuto,
 } from "./shared.js";
 
 const KEY = "__DASHBOARDMODERN_CALENDARIO_SECTION__";
@@ -179,7 +180,7 @@ function sezioneAccesa() {
 function accendiLaVoce() {
   const voce = ensureCalendarioTab();
   if (!voce) return;
-  const serve = calendarioConfigurato() && sezioneAccesa();
+  const serve = segnaContenuto(CALENDARIO_TAB, calendarioConfigurato()) && sezioneAccesa();
   if (serve) voce.style.removeProperty("display");
   else voce.style.setProperty("display", "none", "important");
   const pagina = doc.getElementById(CALENDARIO_PAGE_ID);
@@ -201,7 +202,6 @@ function paroleDelCalendario() {
     inRitardo: t("In ritardo", "Overdue"),
   };
 }
-
 
 /* Il colore fisso delle scadenze: non appartengono a un calendario, e dargli
  * quello del primo le farebbe sembrare roba sua. */
@@ -241,10 +241,7 @@ function fasciaMarkup(giorni, adesso, lingua, calendari) {
       eventi.length > 3
         ? `<b class="dm-calp-tanti">${eventi.length}</b>`
         : eventi
-            .map(
-              (evento) =>
-                `<i style="background:${esc(tintaDi(evento, calendari))}"></i>`,
-            )
+            .map((evento) => `<i style="background:${esc(tintaDi(evento, calendari))}"></i>`)
             .join("");
     celle.push(`<button type="button" class="dm-calp-cella" data-dm-calp-giorno="${esc(chiave)}"
       data-oggi="${passo === 0}" data-vuoto="${eventi.length === 0}"
@@ -277,7 +274,9 @@ function eventoMarkup(evento, adesso, lingua, calendari, piuCalendari) {
       ${azioneDellaScadenzaMarkup(evento)}
     </li>`;
   const ora = inCorso(evento, adesso);
-  const sotto = [piuCalendari ? evento.calendario : "", evento.location].filter(Boolean).join(" · ");
+  const sotto = [piuCalendari ? evento.calendario : "", evento.location]
+    .filter(Boolean)
+    .join(" · ");
   return `<li class="dm-calp-evento" data-adesso="${ora}"
       style="--dm-calp-tinta:${esc(tintaDi(evento, calendari))}">
     <span class="dm-calp-ora">${esc(oraDellEvento(evento, paroleDelCalendario(), lingua))}</span>

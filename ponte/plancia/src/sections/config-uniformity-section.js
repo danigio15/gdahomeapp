@@ -25,7 +25,16 @@
  * runtime's own `edSecTog` handler.
  */
 import { CHIAVI_PER_SCHEDA } from "../core/lelenco-delle-sezioni.js";
-import { clean, doc, installStyle, onEditorRedraw, root, t, wrapFunction, senzaCadere } from "./shared.js";
+import {
+  clean,
+  doc,
+  installStyle,
+  onEditorRedraw,
+  root,
+  t,
+  wrapFunction,
+  senzaCadere,
+} from "./shared.js";
 
 const KEY = "__DASHBOARDMODERN_CONFIG_UNIFORMITY__";
 const STYLE_ID = "dm-config-uniformity-style";
@@ -224,6 +233,13 @@ function rinfrescaBanner(banner, key) {
   const chiave = fresco.getAttribute("data-key");
   if (chiave && banner.getAttribute("data-key") !== chiave) {
     banner.setAttribute("data-key", chiave);
+    cambiato = true;
+  }
+  /* Una sezione vuota ha la fascia spenta: non si accende finche' non c'e'
+   * un'entita' da mostrare. Riempita, la fascia torna premibile. */
+  const vuota = fresco.hasAttribute("disabled");
+  if (banner.hasAttribute("disabled") !== vuota) {
+    banner.toggleAttribute("disabled", vuota);
     cambiato = true;
   }
   return cambiato;
@@ -473,6 +489,9 @@ function installStyles() {
      * buttons to display:flex — the Irrigazione one is
      * #editor-modal #ed-body:has(#ed-irr-ent) .ed-btn-add, three ids' worth.
      * Same element set, enough weight to be the one that decides. */
+    /* Il salvataggio della riga aperta di una scheda dichiarata resta: un
+     * pacco dell'accumulo ha piu' di quindici caselle, e il piede sta sotto
+     * tutte. «Non c'e' un salva della nuova batteria.» */
     #ed-body#ed-body#ed-body[data-dm-config-uniform]:not([data-dm-config-uniform="visib"]):not([data-dm-config-uniform="runtime"]) :is(
       .ed-save-btn,
       [data-energy-save],
@@ -483,7 +502,7 @@ function installStyles() {
       [onclick*="edSaveCosti"],
       [onclick*="edPoolSaveCfg"],
       [onclick*="edIrrSaveCfg"]
-    ):not(.dm-save-footer-btn){display:none!important}
+    ):not(.dm-save-footer-btn):not([data-dm-dich-salva]){display:none!important}
     #ed-body > .dm-save-footer{
       display:flex!important;align-items:center!important;gap:12px!important;flex-wrap:wrap!important;
       box-sizing:border-box!important;width:100%!important;margin:18px 0 4px!important;padding:14px 0 0!important;

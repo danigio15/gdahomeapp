@@ -38,6 +38,7 @@ import {
   root,
   t,
   senzaCadere,
+  segnaContenuto,
 } from "./shared.js";
 
 const KEY = "__DASHBOARDMODERN_STAMPANTI__";
@@ -126,7 +127,7 @@ function sezioneAccesa() {
 function accendiLaVoce() {
   const voce = ensureStampantiTab();
   if (!voce) return;
-  const serve = ciSonoStampanti() && sezioneAccesa();
+  const serve = segnaContenuto(STAMPANTI_TAB, ciSonoStampanti()) && sezioneAccesa();
   if (serve) voce.style.removeProperty("display");
   else voce.style.setProperty("display", "none", "important");
   const pagina = doc.getElementById(STAMPANTI_PAGE_ID);
@@ -154,22 +155,23 @@ export function titoloDelleStampanti(riassunto) {
   if (riassunto.verdetto === "ferma")
     return riassunto.ferme.length === 1
       ? t(`${riassunto.ferme[0].nome} è ferma`, `${riassunto.ferme[0].nome} is stopped`)
-      : t(`${riassunto.ferme.length} stampanti ferme`, `${riassunto.ferme.length} printers stopped`);
+      : t(
+          `${riassunto.ferme.length} stampanti ferme`,
+          `${riassunto.ferme.length} printers stopped`,
+        );
   if (riassunto.verdetto === "inchiostro") {
     const prima = riassunto.sgoccioli[0];
-    return t(
-      `${prima.piuScarica.nome} agli sgoccioli`,
-      `${prima.piuScarica.nome} almost out`,
-    );
+    return t(`${prima.piuScarica.nome} agli sgoccioli`, `${prima.piuScarica.nome} almost out`);
   }
   if (riassunto.verdetto === "stampa")
     return riassunto.stampano.length === 1
-      ? t(`${riassunto.stampano[0].nome} sta stampando`, `${riassunto.stampano[0].nome} is printing`)
+      ? t(
+          `${riassunto.stampano[0].nome} sta stampando`,
+          `${riassunto.stampano[0].nome} is printing`,
+        )
       : t(`${riassunto.stampano.length} stanno stampando`, `${riassunto.stampano.length} printing`);
   if (riassunto.verdetto === "muta") return t("Nessuna risponde", "None answering");
-  return riassunto.quante === 1
-    ? t("Pronta", "Ready")
-    : t("Tutte pronte", "All ready");
+  return riassunto.quante === 1 ? t("Pronta", "Ready") : t("Tutte pronte", "All ready");
 }
 
 /* ── il disegno ───────────────────────────────────────────────────────── */

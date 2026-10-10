@@ -42,6 +42,7 @@ import {
   root,
   siComanda,
   t,
+  segnaContenuto,
 } from "./shared.js";
 
 const KEY = "__DASHBOARDMODERN_SEZIONI_MIE__";
@@ -149,8 +150,7 @@ function scriviLaVoce(voce, sezione) {
   if (voce.dataset.dmMiaFirma === atteso) return;
   voce.dataset.dmMiaFirma = atteso;
   voce.innerHTML =
-    `<span class="icon">${esc(sezione.icona)}</span>` +
-    `<span class="text">${esc(titolo)}</span>`;
+    `<span class="icon">${esc(sezione.icona)}</span>` + `<span class="text">${esc(titolo)}</span>`;
 }
 
 /* Le voci e le pagine di sezioni che non esistono piu' se ne vanno: una
@@ -268,6 +268,7 @@ function paginaMarkup(letture, formato) {
 function dipingi() {
   if (!doc) return;
   const accesa = funzioneAccesa();
+  segnaContenuto(SEZIONI_MIE_TAB, sezioniMie().length > 0);
   const sezioni = accesa ? sezioniMie() : [];
   const vive = new Set(sezioni.map((sezione) => sezione.id));
   toglieteLeVecchie(vive);

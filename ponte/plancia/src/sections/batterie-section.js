@@ -45,6 +45,7 @@ import {
   root,
   t,
   senzaCadere,
+  segnaContenuto,
 } from "./shared.js";
 import {
   batterieSorvegliate,
@@ -153,7 +154,7 @@ function sezioneAccesa() {
 function accendiLaVoce() {
   const voce = ensureBatterieTab();
   if (!voce) return;
-  const serve = ciSonoBatterie() && sezioneAccesa();
+  const serve = segnaContenuto(BATTERIE_TAB, ciSonoBatterie()) && sezioneAccesa();
   if (serve) voce.style.removeProperty("display");
   else voce.style.setProperty("display", "none", "important");
   const pagina = doc.getElementById(BATTERIE_PAGE_ID);

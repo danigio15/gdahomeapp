@@ -24,12 +24,7 @@
  * diverso, e portarla qui dentro avrebbe voluto dire un `if` sul nome della
  * sezione, che e' il modo in cui una cosa condivisa torna a essere quattro.
  */
-import {
-  conLaRiga,
-  conLeRighe,
-  righeDichiarate,
-  senzaLaRiga,
-} from "../core/elenco-dichiarato.js";
+import { conLaRiga, conLeRighe, righeDichiarate, senzaLaRiga } from "../core/elenco-dichiarato.js";
 import {
   clean,
   disegnoDiCasa,
@@ -241,9 +236,7 @@ export function costruisciSchedaDichiarata(scheda) {
     const elenco = righe() || [];
     const riga = elenco[indice] || { entity: "", name: "", icon: "" };
     const campo = (quale) =>
-      body.querySelector(
-        `[data-dm-dich-campo="${quale}"][data-dm-dich-riga="${indice}"]`,
-      );
+      body.querySelector(`[data-dm-dich-campo="${quale}"][data-dm-dich-riga="${indice}"]`);
     const fuori = {
       entity: clean(campo("entity")?.value ?? riga.entity),
       name: clean(campo("name")?.value ?? riga.name),
@@ -253,6 +246,21 @@ export function costruisciSchedaDichiarata(scheda) {
      * legga uno dal documento: e' lei che sa dove li ha messi. */
     for (const nome of inPiu) if (riga[nome] !== undefined) fuori[nome] = riga[nome];
     return scheda.bozzaInPiu ? scheda.bozzaInPiu(fuori, body, indice) : fuori;
+  }
+
+  /* La riga aperta si tiene prima di ogni gesto che ridisegna la scheda.
+   *
+   * «Se premo Aggiungi cancella tutto»: aggiungere un pacco, aprirne un altro,
+   * toglierne uno o prendere quelli trovati ridisegnava la scheda da capo, e
+   * quello che si era scritto nella riga aperta — l'entita' scelta, il nome,
+   * le celle — non era ancora salvato da nessuna parte. Come chiudendo la
+   * riga con la matita: chi passa ad altro non ha detto «butta via». */
+  function tieniLaRigaAperta(body, tranne = -1) {
+    const aperta = stato.aperto;
+    if (!Number.isInteger(aperta) || aperta < 0 || aperta === tranne) return false;
+    if (!body.querySelector(`[data-dm-dich-riga="${aperta}"]`)) return false;
+    salva(conLaRiga(configurazione(), aperta, bozza(body, aperta), inPiu));
+    return true;
   }
 
   function onClick(event) {
@@ -299,7 +307,10 @@ export function costruisciSchedaDichiarata(scheda) {
       if (stato.aperto === indice) {
         salva(conLaRiga(configurazione(), indice, bozza(body, indice), inPiu));
         stato.aperto = -1;
-      } else stato.aperto = indice;
+      } else {
+        tieniLaRigaAperta(body);
+        stato.aperto = indice;
+      }
       ridisegna();
       return;
     }
@@ -309,6 +320,7 @@ export function costruisciSchedaDichiarata(scheda) {
       event.preventDefault();
       const indice = Number(elimina.dataset.dmDichElimina);
       if (!Number.isInteger(indice)) return;
+      tieniLaRigaAperta(body, indice);
       salva(senzaLaRiga(configurazione(), indice, inPiu));
       if (stato.aperto === indice) stato.aperto = -1;
       else if (stato.aperto > indice) stato.aperto -= 1;
@@ -330,6 +342,7 @@ export function costruisciSchedaDichiarata(scheda) {
 
     if (event.target.closest("[data-dm-dich-aggiungi]")) {
       event.preventDefault();
+      tieniLaRigaAperta(body);
       salva(
         conLaRiga(
           configurazione(),
@@ -347,6 +360,7 @@ export function costruisciSchedaDichiarata(scheda) {
       event.preventDefault();
       const mancano = daPrendere();
       if (!mancano.length) return;
+      tieniLaRigaAperta(body);
       salva(conLeRighe(configurazione(), mancano, inPiu));
       ridisegna();
       root.edToast?.(parole.presi(mancano.length));

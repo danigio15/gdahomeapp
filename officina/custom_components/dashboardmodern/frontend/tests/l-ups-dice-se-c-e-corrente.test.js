@@ -211,7 +211,7 @@ test("l'UPS ha una pagina sua, non solo una tessera", async () => {
   assert.match(sezione, /voce\.addEventListener\("click"/);
   /* Senza un UPS configurato la voce non c'e': portare a una pagina vuota e'
    * peggio che non offrirla. */
-  assert.match(sezione, /const serve = upsConfigurato\(\) && sezioneAccesa\(\)/);
+  assert.match(sezione, /const serve = segnaContenuto\(UPS_TAB, upsConfigurato\(\)\) && sezioneAccesa\(\)/);
   assert.match(sezione, /voce\.style\.setProperty\("display", "none", "important"\)/);
   /* E il `display` di quella voce ha un padrone solo. `cdApplyNavVis` del
    * guscio, per ogni voce che conosce, TOGLIE la riga di stile: insegnargli

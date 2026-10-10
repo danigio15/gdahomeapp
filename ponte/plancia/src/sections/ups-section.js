@@ -39,6 +39,7 @@ import {
   root,
   t,
   senzaCadere,
+  segnaContenuto,
 } from "./shared.js";
 import { laMisuraDallUnita } from "../core/le-unita-della-corrente.js";
 
@@ -144,7 +145,7 @@ function sezioneAccesa() {
 function accendiLaVoce() {
   const voce = ensureUpsTab();
   if (!voce) return;
-  const serve = upsConfigurato() && sezioneAccesa();
+  const serve = segnaContenuto(UPS_TAB, upsConfigurato()) && sezioneAccesa();
   if (serve) voce.style.removeProperty("display");
   else voce.style.setProperty("display", "none", "important");
   /* Se la pagina era aperta e l'UPS e' stato tolto, si torna in Home: restare

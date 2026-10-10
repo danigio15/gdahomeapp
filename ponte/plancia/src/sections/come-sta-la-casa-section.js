@@ -49,7 +49,7 @@ import { windowOpenFromState } from "../core/shutter-window.js";
 import { iconGlyphMarkup } from "./icon-engine-section.js";
 import { apriLaSchedaDellEntita } from "./la-scheda-di-home-assistant.js";
 import { CHIAVE_VERSI, apertaSecondoVerso, insiemeInvertiti } from "../core/verso-aperture.js";
-import { parolaDelQuando } from "./rifiuti-section.js";
+import { parolaDelQuando, rifiutiInPlancia } from "./rifiuti-section.js";
 import {
   allStates,
   clean,
@@ -350,8 +350,7 @@ function paroleDellaPastiglia(pastiglia) {
     /* La pioggia si scrive col decimo: fra zero e 0,4 mm all'ora c'e' la
      * differenza fra «piove» e «non piove», e arrotondare la cancella. */
     const testa = `${formatNumber(pastiglia.valore, 1)}${pastiglia.unita ? ` ${pastiglia.unita}` : ""}`;
-    const coda =
-      pastiglia.chiave === "pioggia" ? t("pioggia", "rain") : t("oggi", "today");
+    const coda = pastiglia.chiave === "pioggia" ? t("pioggia", "rain") : t("oggi", "today");
     return {
       testa,
       coda,
@@ -370,7 +369,11 @@ function paroleDellaPastiglia(pastiglia) {
         : t("umidità", "humidity");
     /* Il nome del sensore nel titolo: nella pastiglia non ci starebbe, e sapere
      * QUALE sensore e' l'unica cosa che il numero da solo non dice. */
-    return { testa, coda, titolo: pastiglia.nome ? `${pastiglia.nome} · ${testa}` : `${testa} ${coda}` };
+    return {
+      testa,
+      coda,
+      titolo: pastiglia.nome ? `${pastiglia.nome} · ${testa}` : `${testa} ${coda}`,
+    };
   }
   if (pastiglia.chiave === "mia") {
     /* Il numero si scrive come lo scrivono le misure: col decimo se ce l'ha,
@@ -1083,6 +1086,11 @@ function campoDellaMisura(chiave, valore) {
  * dire accettare «alle 8 di sera» e poi doverlo interpretare. La prima voce e'
  * quella di sempre, ed e' quella di serie. */
 function campoDellOraDelRitiro(scelta) {
+  /* Senza rifiuti la pastiglia del ritiro non c'e', e la domanda non ha senso:
+   * il campo resta nascosto, ma la scelta gia' fatta si salva com'era. */
+  if (!rifiutiInPlancia()) {
+    return `<input type="hidden" data-dm-casa-ritiro value="${esc(scelta || "")}">`;
+  }
   const ore = Array.from({ length: 24 }, (_, ora) => {
     const valore = String(ora);
     return `<option value="${valore}"${scelta === valore ? " selected" : ""}>${esc(
@@ -1188,8 +1196,7 @@ function mieMarkup(config) {
       ),
     )}</div>
     <div class="ed-list dm-casa-ed-mie">${
-      righe ||
-      `<div class="ed-empty">${esc(t("Nessuna entità aggiunta", "No entity added"))}</div>`
+      righe || `<div class="ed-empty">${esc(t("Nessuna entità aggiunta", "No entity added"))}</div>`
     }</div>
     ${
       config.mie.length >= QUANTE_MIE
@@ -1356,9 +1363,7 @@ function onClickPannello(event) {
   if (scegliMisura) {
     event.preventDefault();
     const chiave = clean(scegliMisura.dataset.dmCasaPickMisura);
-    root.wzPickEntity?.(
-      pannello.querySelector(`[data-dm-casa-misura="${CSS.escape(chiave)}"]`),
-    );
+    root.wzPickEntity?.(pannello.querySelector(`[data-dm-casa-misura="${CSS.escape(chiave)}"]`));
     return;
   }
   /* I due cercatori di una pastiglia scelta a mano: quello dell'entita' da
