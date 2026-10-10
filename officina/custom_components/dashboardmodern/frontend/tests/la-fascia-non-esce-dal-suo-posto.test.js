@@ -17,13 +17,16 @@ const sorgente = (nome) => readFile(new URL(`../src/sections/${nome}`, import.me
 
 test("la riga che spegne la fascia parla solo della fascia della plancia", async () => {
   const fascia = await sorgente("page-masthead-section.js");
-  /* Figlia diretta del corpo: `body:has(...)>header`. Scritto senza il `>`
-   * prendeva ogni intestazione del documento; scritto `body>header` dopo un
-   * `body:has(...)` chiederebbe un corpo dentro il corpo, e non prenderebbe
-   * piu' niente. */
-  assert.match(fascia, /body:has\(\.page\.active\)>\$\{fascia\}/);
-  assert.match(fascia, /body:has\(\.page\.active:not\(#page-home\)\)>\$\{fascia\}/);
-  assert.doesNotMatch(fascia, /body:has\([^)]*\)[^>]*\s\$\{fascia\}/);
+  /* Figlia diretta del corpo: `body[...]>header`. Scritto senza il `>`
+   * prendeva ogni intestazione del documento.
+   *
+   * E la regola guarda il segno della pagina sul corpo, non `:has`: su WebKit
+   * `:has(.page.active…)` non sempre si ricalcola cambiando pagina, e la
+   * fascia restava spenta tornando alla Home (la-testata-torna-dalle-batterie). */
+  assert.match(fascia, /body\[data-dm-pagina="page-home"\]>\$\{fascia\}/);
+  assert.match(fascia, /body\[data-dm-pagina\]:not\(\[data-dm-pagina="page-home"\]\)>\$\{fascia\}/);
+  assert.doesNotMatch(fascia, /body:has\(\.page\.active/);
+  assert.doesNotMatch(fascia, /body\[data-dm-pagina[^\]]*\][^>{]*\s\$\{fascia\}/);
 });
 
 test("chi cerca la fascia per metterci il meteo cerca quella della plancia", async () => {

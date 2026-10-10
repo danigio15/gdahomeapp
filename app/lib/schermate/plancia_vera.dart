@@ -383,6 +383,7 @@ class PlanciaVeraState extends State<PlanciaVera> {
         return _Stato(
           collegamento: collegamento,
           vaiAlleCase: widget.vaiAlleCase,
+          inCima: inCima,
           icona: Icons.home_outlined,
           titolo: inLingua(it: 'Nessuna casa', en: 'No homes yet'),
           sotto: inLingua(
@@ -394,6 +395,7 @@ class PlanciaVeraState extends State<PlanciaVera> {
         return _Stato(
           collegamento: collegamento,
           vaiAlleCase: widget.vaiAlleCase,
+          inCima: inCima,
           icona: Icons.link_off_rounded,
           titolo: inLingua(
             it: 'Questo telefono è stato staccato',
@@ -417,6 +419,7 @@ class PlanciaVeraState extends State<PlanciaVera> {
         return _Stato(
           collegamento: collegamento,
           vaiAlleCase: widget.vaiAlleCase,
+          inCima: inCima,
           icona: Icons.system_update_alt_rounded,
           titolo: inLingua(
             it: 'Aggiorna l\'add-on gdahome',
@@ -462,6 +465,7 @@ class PlanciaVeraState extends State<PlanciaVera> {
         return _Stato(
           collegamento: collegamento,
           vaiAlleCase: widget.vaiAlleCase,
+          inCima: inCima,
           icona: Icons.wifi_lock_rounded,
           titolo: inLingua(
             it: 'Fuori casa serve gdahome Premium',
@@ -502,6 +506,7 @@ class PlanciaVeraState extends State<PlanciaVera> {
         return _Stato(
           collegamento: collegamento,
           vaiAlleCase: widget.vaiAlleCase,
+          inCima: inCima,
           icona: Icons.cloud_off_rounded,
           titolo: inLingua(
             it: 'Non trovo la casa',
@@ -538,6 +543,7 @@ class PlanciaVeraState extends State<PlanciaVera> {
         return _Stato(
           collegamento: collegamento,
           vaiAlleCase: widget.vaiAlleCase,
+          inCima: inCima,
           icona: Icons.lock_person_rounded,
           titolo: inLingua(
             it: 'Non hai plance associate alla tua utenza',
@@ -560,6 +566,7 @@ class PlanciaVeraState extends State<PlanciaVera> {
       return _Stato(
         collegamento: collegamento,
         vaiAlleCase: widget.vaiAlleCase,
+        inCima: inCima,
         icona: Icons.dashboard_customize_rounded,
         titolo: inLingua(
           it: 'L\'add-on non ha la plancia',
@@ -601,6 +608,7 @@ class PlanciaVeraState extends State<PlanciaVera> {
       return _Stato(
         collegamento: collegamento,
         vaiAlleCase: widget.vaiAlleCase,
+        inCima: inCima,
         icona: Icons.lock_outline_rounded,
         titolo: kIsWeb
             ? inLingua(
@@ -1119,6 +1127,7 @@ class _Stato extends StatelessWidget {
     required this.sotto,
     this.vaiAlleCase,
     this.azione,
+    this.inCima = 0,
   });
 
   final Collegamento collegamento;
@@ -1128,13 +1137,22 @@ class _Stato extends StatelessWidget {
   final VoidCallback? vaiAlleCase;
   final Widget? azione;
 
+  /// Quanto prendono l'orologio e la tacca in cima, preso dalla finestra.
+  ///
+  /// Sulla plancia la barra del titolo non c'e', e questa schermata ne prende
+  /// il posto: senza lasciare questo spazio, la riga col nome della casa e il
+  /// tasto delle case finiva sotto l'orologio di iPhone, dove il dito tocca
+  /// la barra di stato e non il tasto («il simbolo della casa e' troppo su e
+  /// non si preme»).
+  final double inCima;
+
   @override
   Widget build(BuildContext context) {
     final testi = Theme.of(context).textTheme;
     return RefreshIndicator(
       onRefresh: () => collegamento.apri(forza: true),
       child: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 20, 16, 32),
+        padding: EdgeInsets.fromLTRB(16, 20 + inCima, 16, 32),
         children: [
           Row(
             children: [
@@ -1170,6 +1188,29 @@ class _Stato extends StatelessWidget {
             sotto: sotto,
             azione: azione,
           ),
+          /* Le case abbinate, a portata di dito: da un telefono staccato, o da
+           * una casa che non risponde, la prossima cosa da fare e' quasi
+           * sempre li' — riabbinarla, sceglierne un'altra, toglierla. */
+          if (vaiAlleCase != null) ...[
+            const SizedBox(height: 14),
+            Center(
+              child: OutlinedButton.icon(
+                key: const Key('stato-vai-alle-case'),
+                onPressed: vaiAlleCase,
+                style: OutlinedButton.styleFrom(
+                  minimumSize: const Size(0, 48),
+                  padding: const EdgeInsets.symmetric(horizontal: 22),
+                ),
+                icon: const Icon(Icons.home_work_rounded),
+                label: Text(
+                  inLingua(
+                    it: 'Vai alle case abbinate',
+                    en: 'Go to paired homes',
+                  ),
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );

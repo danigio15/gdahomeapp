@@ -23703,12 +23703,35 @@ function foldRules() {
     return `${rules.join(",\n    ")}{display:none!important}`;
   }).join("\n    ");
 }
+var SEGNO_DELLA_PAGINA = "dmPagina";
 function regolaDellaFascia() {
   const fascia2 = "header:not(.dm-page-mast)";
-  return `@supports selector(:has(*)){
-      body:has(.page.active)>${fascia2}{display:flex!important}
-      body:has(.page.active:not(#page-home))>${fascia2}{display:none!important}
-    }`;
+  return `
+      body[data-dm-pagina="page-home"]>${fascia2}{display:flex!important}
+      body[data-dm-pagina]:not([data-dm-pagina="page-home"])>${fascia2}{display:none!important}
+    `;
+}
+function paginaAperta() {
+  const aperte = [...doc?.querySelectorAll?.(".page.active") || []];
+  if (!aperte.length) return "";
+  return aperte.find((pagina2) => pagina2.id !== "page-home")?.id || "page-home";
+}
+var guardate = /* @__PURE__ */ new WeakSet();
+function segnaLaPagina() {
+  const corpo2 = doc?.body;
+  if (!corpo2) return "";
+  if (typeof root.MutationObserver === "function") {
+    state19.osservatore ||= new root.MutationObserver(() => segnaLaPagina());
+    for (const pagina2 of doc.querySelectorAll(".page")) {
+      if (guardate.has(pagina2)) continue;
+      guardate.add(pagina2);
+      state19.osservatore.observe(pagina2, { attributes: true, attributeFilter: ["class"] });
+    }
+  }
+  const aperta = paginaAperta();
+  if (!aperta) delete corpo2.dataset[SEGNO_DELLA_PAGINA];
+  else if (corpo2.dataset[SEGNO_DELLA_PAGINA] !== aperta) corpo2.dataset[SEGNO_DELLA_PAGINA] = aperta;
+  return aperta;
 }
 function installStyles6() {
   installStyle(
@@ -23832,7 +23855,11 @@ function installPageMastheadSection() {
     "pageshow"
   ]) {
     root.addEventListener?.(eventName, scheduleSettled);
+    root.addEventListener?.(eventName, segnaLaPagina);
   }
+  doc.addEventListener?.("visibilitychange", segnaLaPagina);
+  quandoSiCambiaPagina(segnaLaPagina);
+  segnaLaPagina();
   quandoSiCambiaPagina(scheduleSettled);
   schedule2();
 }
@@ -39132,14 +39159,14 @@ function ferma() {
 }
 function batti(righe2) {
   const aperta = state37.aperto ? letturaDiUnLettore(state37.aperto) : null;
-  const serve = paginaAperta() && righe2.some((riga3) => riga3.suona && posizioneOra(riga3)) || Boolean(aperta?.suona && posizioneOra(aperta));
+  const serve = paginaAperta2() && righe2.some((riga3) => riga3.suona && posizioneOra(riga3)) || Boolean(aperta?.suona && posizioneOra(aperta));
   if (!serve) {
     ferma();
     return;
   }
   if (state37.battito) return;
   state37.battito = root.setInterval?.(() => {
-    if (!paginaAperta() && !state37.aperto) {
+    if (!paginaAperta2() && !state37.aperto) {
       ferma();
       return;
     }
@@ -39171,7 +39198,7 @@ function avanzaLaBarra(dove, riga3) {
     if (avanza) avanza.style.transform = `scaleX(${punto2.quota.toFixed(4)})`;
   }
 }
-function paginaAperta() {
+function paginaAperta2() {
   return Boolean(doc?.getElementById?.(PAGINA_MEDIA)?.classList?.contains("active"));
 }
 function renderMediaPlayer() {
@@ -44906,11 +44933,11 @@ function climateModel(states) {
   const average = ambient.length ? ambient.reduce((sum, value) => sum + value, 0) / ambient.length : null;
   const scelta3 = sorgenteDelWidget("clima");
   const sola = scelta3 ? rows.find((row) => row.entity === scelta3) : null;
-  const guardate = sola ? [sola] : on.length ? on : rows;
-  const scaldano = guardate.filter(
+  const guardate2 = sola ? [sola] : on.length ? on : rows;
+  const scaldano = guardate2.filter(
     (row) => climaScalda({ stato: row.on ? row.mode : "off", azione: row.on ? row.azione : "", tipo: row.tipo })
   ).length;
-  const caldo = scaldano > guardate.length - scaldano;
+  const caldo = scaldano > guardate2.length - scaldano;
   return {
     key: "clima",
     accent: caldo ? "#f97316" : "#0ea5e9",

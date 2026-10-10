@@ -841,12 +841,55 @@ function foldRules() {
  * prende anche le intestazioni delle finestre di modifica, che stanno in fondo
  * al corpo dentro la loro scheda, e le spegneva tutte, croce di chiusura
  * compresa, ogni volta che la pagina aperta non era la Home. */
+/* La regola guarda un segno sul corpo del documento, e non piu' `:has`.
+ *
+ * «Dalla sezione Batterie premo Home in alto, e tornato alla Home
+ * l'intestazione e' sparita» — su iPhone, e solo li'. La regola chiedeva al
+ * browser «c'e' una pagina aperta che non e' la Home?» con `:has(.page.active
+ * …)`, e WebKit quella domanda non sempre la rifa' quando la classe passa da
+ * una pagina all'altra: la risposta di prima — «si', spegni» — restava
+ * appiccicata alla Home, e ci voleva chiudere l'app. Un attributo del corpo,
+ * invece, quando cambia rifa' lo stile del corpo e di cio' che gli sta sotto
+ * in tutti i browser. Lo scrive [segnaLaPagina]. */
+export const SEGNO_DELLA_PAGINA = "dmPagina";
+
 function regolaDellaFascia() {
   const fascia = "header:not(.dm-page-mast)";
-  return `@supports selector(:has(*)){
-      body:has(.page.active)>${fascia}{display:flex!important}
-      body:has(.page.active:not(#page-home))>${fascia}{display:none!important}
-    }`;
+  return `
+      body[data-dm-pagina="page-home"]>${fascia}{display:flex!important}
+      body[data-dm-pagina]:not([data-dm-pagina="page-home"])>${fascia}{display:none!important}
+    `;
+}
+
+/* Quale pagina e' aperta, come la diceva la regola di prima: nessuna, e il
+ * segno non c'e'; una che non e' la Home, e la fascia si spegne; solo la
+ * Home, e si accende. */
+function paginaAperta() {
+  const aperte = [...(doc?.querySelectorAll?.(".page.active") || [])];
+  if (!aperte.length) return "";
+  return aperte.find((pagina) => pagina.id !== "page-home")?.id || "page-home";
+}
+
+/* Le pagine gia' guardate: ognuna si osserva da sola, perche' stanno tutte
+ * direttamente nel corpo e il corpo intero non si osserva (costa a ogni
+ * riga che la plancia scrive). */
+const guardate = new WeakSet();
+
+export function segnaLaPagina() {
+  const corpo = doc?.body;
+  if (!corpo) return "";
+  if (typeof root.MutationObserver === "function") {
+    state.osservatore ||= new root.MutationObserver(() => segnaLaPagina());
+    for (const pagina of doc.querySelectorAll(".page")) {
+      if (guardate.has(pagina)) continue;
+      guardate.add(pagina);
+      state.osservatore.observe(pagina, { attributes: true, attributeFilter: ["class"] });
+    }
+  }
+  const aperta = paginaAperta();
+  if (!aperta) delete corpo.dataset[SEGNO_DELLA_PAGINA];
+  else if (corpo.dataset[SEGNO_DELLA_PAGINA] !== aperta) corpo.dataset[SEGNO_DELLA_PAGINA] = aperta;
+  return aperta;
 }
 
 function installStyles() {
@@ -976,7 +1019,11 @@ export function installPageMastheadSection() {
     "pageshow",
   ]) {
     root.addEventListener?.(eventName, scheduleSettled);
+    root.addEventListener?.(eventName, segnaLaPagina);
   }
+  doc.addEventListener?.("visibilitychange", segnaLaPagina);
+  quandoSiCambiaPagina(segnaLaPagina);
+  segnaLaPagina();
   /* Il tocco su una linguetta e' quello che porta in scena un'altra pagina, e
    * l'intestazione e' di chi arriva: la regola sta nell'aiutante condiviso. */
   quandoSiCambiaPagina(scheduleSettled);
