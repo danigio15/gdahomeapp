@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -50,8 +51,9 @@ class AlPolso : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        telefono = IlTelefono(this)
-        setContent { MaterialTheme { Radice(telefono) } }
+        val vetrina = intent?.getStringExtra("vetrina").orEmpty()
+        telefono = IlTelefono(this, vetrina = vetrina.isNotEmpty())
+        setContent { MaterialTheme { Radice(telefono, vetrina) } }
     }
 
     override fun onResume() {
@@ -66,8 +68,15 @@ class AlPolso : ComponentActivity() {
 }
 
 @Composable
-private fun Radice(telefono: IlTelefono) {
+private fun Radice(telefono: IlTelefono, vetrina: String = "") {
     val nav = rememberSwipeDismissableNavController()
+    /* Nella vetrina si va dritti alla schermata chiesta. */
+    val inVetrina = telefono.foto
+    LaunchedEffect(vetrina, inVetrina != null) {
+        if (vetrina.isNotEmpty() && inVetrina != null) {
+            Vetrina.destinazione(vetrina, inVetrina)?.let { nav.navigate(it) }
+        }
+    }
     Scaffold(timeText = { TimeText() }) {
         Box(Modifier.fillMaxSize()) {
             val foto = telefono.foto

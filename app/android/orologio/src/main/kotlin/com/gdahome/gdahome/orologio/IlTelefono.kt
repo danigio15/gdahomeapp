@@ -28,7 +28,7 @@ private const val FOTO = "/gdahome/foto"
 private const val TOCCO = "/gdahome/tocco"
 private const val TELEFONO = "gdahome_telefono"
 
-class IlTelefono(context: Context) {
+class IlTelefono(context: Context, private val vetrina: Boolean = false) {
     private val contesto = context.applicationContext
     private val principale = Handler(Looper.getMainLooper())
 
@@ -53,6 +53,11 @@ class IlTelefono(context: Context) {
     }
 
     fun accendi() {
+        /* La vetrina (`Vetrina.kt`): la casa d'esempio, e nessun filo. */
+        if (vetrina) {
+            foto = Vetrina.laFoto()
+            return
+        }
         Wearable.getDataClient(contesto).addListener(ascolto)
         /* L'ultima che il Data Layer ha tenuto: c'e' subito, anche col
          * telefono lontano. Poi se ne chiede una fresca. */
@@ -67,6 +72,7 @@ class IlTelefono(context: Context) {
     }
 
     fun spegni() {
+        if (vetrina) return
         Wearable.getDataClient(contesto).removeListener(ascolto)
     }
 
@@ -83,6 +89,7 @@ class IlTelefono(context: Context) {
     /* Al telefono vicino che ha gdahome: quello che si annuncia con la
      * capacita' `gdahome_telefono` (`app/src/main/res/values/orologio.xml`). */
     private fun chiedi(messaggio: JSONObject, zitto: Boolean = false) {
+        if (vetrina) return
         if (!zitto) inCorso = true
         Wearable.getCapabilityClient(contesto)
             .getCapability(TELEFONO, CapabilityClient.FILTER_REACHABLE)

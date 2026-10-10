@@ -26,7 +26,9 @@ struct Radice: View {
 
   var body: some View {
     Group {
-      if let foto = telefono.foto {
+      if let foto = telefono.foto, let vetrina = Vetrina.schermata {
+        LaVetrina(foto: foto, schermata: vetrina)
+      } else if let foto = telefono.foto {
         if foto.premium {
           TabView {
             NavigationStack { LaCasa(foto: foto) }
@@ -86,6 +88,23 @@ struct Spiegazione: View {
           .foregroundStyle(.secondary)
       }
       .padding(.top, 8)
+    }
+  }
+}
+
+/// Una schermata sola, per le fotografie dei negozi (`Vetrina.swift`).
+struct LaVetrina: View {
+  let foto: LaFoto
+  let schermata: String
+
+  var body: some View {
+    switch schermata {
+    case "navigatore": NavigationStack { IlNavigatore(guida: foto.guida) }
+    case "dispositivi": NavigationStack { Dispositivi(foto: foto) }
+    case "azioni": NavigationStack { Azioni(foto: foto) }
+    case "come": NavigationStack { ComeStaLaCasa(foto: foto) }
+    case "conferma": NavigationStack { LaCasa(foto: foto, daConfermareSubito: foto.comandi.first { $0.conferma }) }
+    default: NavigationStack { LaCasa(foto: foto) }
     }
   }
 }

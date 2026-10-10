@@ -1,0 +1,164 @@
+# Le schermate degli orologi per i negozi, fatte sui simulatori.
+#
+# App Store e Play Store vogliono le schermate dell'app al polso, e per farle
+# non serve un orologio: l'app si avvia in «vetrina» (`ios/Orologio/Vetrina.swift`,
+# `android/orologio/.../Vetrina.kt`), con una casa d'esempio, sul simulatore
+# dell'Apple Watch e sull'emulatore di Wear OS. Sono schermate dell'app vera.
+#
+# Escono fra gli artefatti della corsa: `vetrina-apple-watch` (si caricano in
+# App Store Connect, nella versione, sezione Apple Watch) e `vetrina-wear-os`
+# (Play Console, scheda dello Store, Wear OS).
+name: La vetrina degli orologi
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "app/ios/Orologio/**"
+      - "app/android/orologio/**"
+      - ".github/workflows/vetrina.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: vetrina-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  apple-watch:
+    name: Apple Watch
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          persist-credentials: false
+      - name: L'Xcode piu' recente
+        run: |
+          xcode="$(ls -d /Applications/Xcode_*.app | grep -v -i beta | sort -V | tail -1)"
+          sudo xcode-select -s "$xcode"
+          xcodebuild -version
+      # Il progetto Xcode vuole i pacchetti che prepara Flutter, anche per il
+      # solo orologio (vedi «Gli orologi»).
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+        working-directory: app
+      - name: L'app per iPhone
+        working-directory: app
+        run: flutter build ios --release --no-codesign
+      - name: L'orologio, per il simulatore
+        working-directory: app
+        run: |
+          gem list -i xcodeproj > /dev/null || sudo gem install xcodeproj --no-document
+          ruby ../strumenti/orologio-in-xcode.rb
+          xcodebuild -project ios/Runner.xcodeproj -target "gdahome Watch" \
+            -configuration Release -sdk watchsimulator \
+            CODE_SIGNING_ALLOWED=NO SYMROOT="$PWD/build/vetrina" build
+      # Il piu' grande degli Apple Watch che il simulatore ha: le schermate di
+      # quello vanno bene per tutti in App Store Connect.
+      - name: Le schermate
+        working-directory: app
+        run: |
+          set -euo pipefail
+          runtime=$(xcrun simctl list runtimes -j | python3 -c '
+          import json, sys
+          r = [x for x in json.load(sys.stdin)["runtimes"] if x["platform"] == "watchOS" and x["isAvailable"]]
+          print(sorted(r, key=lambda x: [int(n) for n in x["version"].split(".")])[-1]["identifier"])')
+          tipo=$(xcrun simctl list devicetypes -j | python3 -c '
+          import json, sys
+          nomi = [d["name"] for d in json.load(sys.stdin)["devicetypes"] if d["name"].startswith("Apple Watch")]
+          grandi = [n for n in nomi if "Ultra" in n] or [n for n in nomi if "46mm" in n or "45mm" in n] or nomi
+          print(grandi[-1])')
+          echo "Simulatore: $tipo, $runtime" | tee -a "$GITHUB_STEP_SUMMARY"
+          udid=$(xcrun simctl create vetrina "$tipo" "$runtime")
+          xcrun simctl boot "$udid"
+          xcrun simctl bootstatus "$udid" -b || sleep 60
+          xcrun simctl status_bar "$udid" override --time "9:41" || true
+          xcrun simctl install "$udid" "build/vetrina/Release-watchsimulator/gdahome Watch.app"
+          mkdir -p vetrina/apple-watch
+          n=1
+          for s in casa dispositivi navigatore conferma come azioni; do
+            xcrun simctl launch --terminate-running-process "$udid" com.gdahome.gdahome.watchkitapp -vetrina "$s"
+            sleep 8
+            xcrun simctl io "$udid" screenshot "vetrina/apple-watch/$n-$s.png"
+            n=$((n + 1))
+          done
+          ls -la vetrina/apple-watch
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: vetrina-apple-watch
+          path: app/vetrina/apple-watch/*.png
+          if-no-files-found: error
+          retention-days: 30
+
+  wear-os:
+    name: Wear OS
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          persist-credentials: false
+      # L'emulatore vuole la virtualizzazione: sulle macchine Linux di GitHub
+      # c'e', ma va aperta all'utente che lancia.
+      - name: KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4.9.1
+        with:
+          distribution: temurin
+          java-version: "21"
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+        working-directory: app
+      - name: L'orologio
+        run: strumenti/gradle-orologio.sh :orologio:assembleRelease
+      - name: L'emulatore di Wear OS
+        run: |
+          set -euo pipefail
+          sdk="$ANDROID_HOME/cmdline-tools/latest/bin"
+          yes | "$sdk/sdkmanager" --licenses > /dev/null || true
+          immagine=""
+          for api in 34 33; do
+            if "$sdk/sdkmanager" "emulator" "system-images;android-$api;android-wear;x86_64" > /dev/null; then
+              immagine="system-images;android-$api;android-wear;x86_64"
+              break
+            fi
+          done
+          echo "Immagine: $immagine" | tee -a "$GITHUB_STEP_SUMMARY"
+          echo no | "$sdk/avdmanager" create avd -n polso -k "$immagine" -d wearos_large_round
+          nohup "$ANDROID_HOME/emulator/emulator" -avd polso -no-window -no-audio -no-boot-anim \
+            -gpu swiftshader_indirect -no-snapshot > emulatore.log 2>&1 &
+          adb wait-for-device
+          until [ "$(adb shell getprop sys.boot_completed | tr -d '\r')" = "1" ]; do sleep 5; done
+          # Il quadrante e le prime schermate del sistema hanno bisogno di un
+          # momento ancora dopo l'avvio.
+          sleep 45
+      - name: Le schermate
+        run: |
+          set -euo pipefail
+          apk=$(ls app/build/orologio/outputs/apk/release/*.apk | head -1)
+          adb install -r "$apk"
+          pacchetto=$(adb shell pm list packages | tr -d '\r' | sed -n 's/^package://p' | grep '^com\.gdahome\.gdahome' | head -1)
+          mkdir -p vetrina/wear-os
+          n=1
+          for s in casa dispositivi navigatore conferma come azioni; do
+            adb shell am start -S -n "$pacchetto/com.gdahome.gdahome.orologio.AlPolso" --es vetrina "$s"
+            sleep 8
+            adb exec-out screencap -p > "vetrina/wear-os/$n-$s.png"
+            n=$((n + 1))
+          done
+          ls -la vetrina/wear-os
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: vetrina-wear-os
+          path: vetrina/wear-os/*.png
+          if-no-files-found: error
+          retention-days: 30
