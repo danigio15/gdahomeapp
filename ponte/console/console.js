@@ -81,7 +81,7 @@
   /* Quante plance si tengono: lo stesso numero che ha il ponte
    * (`plance.js`). Qui serve solo a spegnere il tasto quando si e' arrivati
    * al tetto, invece di farlo premere per sentirsi dire di no. */
-  var PLANCE_AL_MASSIMO = 8;
+  var PLANCE_AL_MASSIMO = 30;
 
   /* Se questa casa sta nei limiti di gdahome Base **dentro il ponte**. Lo
    * dice `api/licenza` (`limitata`), e il ponte di oggi non lo dice mai: i
@@ -109,8 +109,8 @@
    * spiegazione, e solo in fondo resta il codice nudo. */
   var I_NO = {
     troppe_plance: [
-      "Le plance sono già otto: per aggiungerne una, prima togline un'altra.",
-      "There are already eight dashboards: remove one before adding another.",
+      "Le plance sono già trenta: per aggiungerne una, prima togline un'altra.",
+      "There are already thirty dashboards: remove one before adding another.",
     ],
     "premium-richiesto": [
       "Con gdahome Base la plancia è una, la principale: le altre sono comprese in Premium.",

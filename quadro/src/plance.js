@@ -43,11 +43,11 @@ export const PROFILO_BUONO = /^[a-z0-9][a-z0-9-]{0,63}$/;
 export const PLANCIA_MASSIMA = 8 * 1024 * 1024;
 
 /** Quante plance si tengono per casa: come nel ponte. */
-export const PROFILI_AL_MASSIMO = 8;
+export const PROFILI_AL_MASSIMO = 30;
 
 /* Quanto pesa, al massimo, tutto quello che si tiene di una casa: gli scatti,
- * le configurazioni in attesa, l'inventario. Senza, otto plance da otto MiB
- * l'una facevano sessantaquattro MiB per casa, su disco e in memoria. Una
+ * le configurazioni in attesa, l'inventario. Senza, trenta plance da otto MiB
+ * l'una facevano duecentoquaranta MiB per casa, su disco e in memoria. Una
  * plancia vera sta nelle decine di KiB: questo tetto non lo tocca nessuno che
  * non lo stia cercando. */
 export const UNA_CASA_AL_MASSIMO = 16 * 1024 * 1024;

@@ -938,7 +938,7 @@ delle telecamere, non escono gli stati dei sensori, non esce niente di quello
 che succede in casa: il cruscotto configura la plancia, non la guarda. Sul
 filo cieco un comando a un dispositivo, un flusso, la storia di un sensore,
 una foto, un azzeramento della plancia si sentono dire di no per nome: non
-c'è nessun posto dove passare. Otto plance per casa e otto MiB per plancia
+c'è nessun posto dove passare. Trenta plance per casa e otto MiB per plancia
 sono i tetti, uguali nei due programmi.
 
 ## Cosa il quadro non può fare

@@ -72,7 +72,7 @@ const ilGiorno = (quando) => new Date(quando).toISOString().slice(0, 10);
 export const PROFILO_VALIDO = /^[a-z0-9][a-z0-9-]{0,40}$/;
 
 /** Quante plance si tengono per casa. La stessa misura del ponte (`QUANTE_AL_MASSIMO`). */
-export const PLANCE_AL_MASSIMO = 8;
+export const PLANCE_AL_MASSIMO = 30;
 
 /* Il nome del cassetto di una plancia nuova, dal titolo: la stessa regola con
  * cui lo fa il ponte (`nomeDelCassetto` in `plance.js`), rifatta qui perche'
