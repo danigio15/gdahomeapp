@@ -29,7 +29,15 @@ import {
   tipoDiFlusso,
   videoInPausa,
 } from "../core/telecamera-webrtc.js";
-import { allStates, chiediAHomeAssistant, clean, doc, lexicalGlobal, root, senzaCadere } from "./shared.js";
+import {
+  allStates,
+  chiediAHomeAssistant,
+  clean,
+  doc,
+  lexicalGlobal,
+  root,
+  senzaCadere,
+} from "./shared.js";
 import { capacitaDellaTelecamera, capacitaInArrivo } from "./telecamera-capacita-section.js";
 
 const KEY = "__DASHBOARDMODERN_TELECAMERA_WEBRTC__";
@@ -339,7 +347,7 @@ export async function avviaWebRtcNativo(
 }
 
 /* HLS: la playlist da `camera/stream`, nel video. Safari la legge da solo;
- * gli altri passano da hls.js, che il guscio porta con se'. */
+ * gli altri passano da hls.js, che il guscio prende quando serve. */
 export async function avviaHls(entity, video) {
   const risposta = await chiediAHomeAssistant(
     { type: "camera/stream", entity_id: entity, format: "hls" },
@@ -361,7 +369,10 @@ export async function avviaHls(entity, video) {
       },
     };
   }
-  const Hls = root.Hls;
+  /* hls.js non parte con la plancia: si prende adesso, la prima volta. */
+  const Hls =
+    root.Hls ||
+    (typeof root.__DM_CARICA_HLS__ === "function" ? await root.__DM_CARICA_HLS__() : null);
   if (!Hls || typeof Hls.isSupported !== "function" || !Hls.isSupported())
     throw new Error("hls-non-supportato");
   const lettore = new Hls({ lowLatencyMode: true, backBufferLength: 10, maxBufferLength: 8 });

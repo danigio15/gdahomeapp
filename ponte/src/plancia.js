@@ -24,6 +24,7 @@ import { fileURLToPath } from "node:url";
 import { gzipSync } from "node:zlib";
 
 import { dipendeDaChi, firmaDelVestito, NOME, vestiDiGdahome } from "./marchio.js";
+import { CARTELLA_DEL_PACCO, ilPaccoDi, laPaginaImpacchettata } from "./pacco-della-plancia.js";
 import { guardaLaPlancia, inDueParole } from "./provenienza.js";
 
 export const BASE = "/dashboardmodern_static";
@@ -51,8 +52,12 @@ const TIPI = Object.freeze({
   ".txt": "text/plain; charset=utf-8",
 });
 
-/* Quello che concorre all'impronta: la pagina e i moduli. */
-const CON_IMPRONTA = ["legacy", "src"];
+/* Quello che concorre all'impronta: la pagina, i moduli, e i moduli messi
+ * insieme in un pacchetto (`pacco-della-plancia.js`). */
+const CON_IMPRONTA = ["legacy", "src", CARTELLA_DEL_PACCO];
+
+/* Le pagine della plancia, quelle che si riscrivono col pacchetto. */
+const LA_PAGINA = /^legacy\/dashboard[^/]*\.html$/;
 
 /* Quello che sta fuori dall'impronta, e si serve com'e'. */
 const FISSE = new Set(["avatars", "brands"]);
@@ -120,6 +125,7 @@ export class Plancia {
     this.installatore = installatore;
     this._impronta = null;
     this._provenienza = null;
+    this._pacco = undefined;
     /* Quello che si e' gia' letto, vestito e stretto. Le chiavi sono percorsi
      * che portano l'impronta dentro: una voce di ieri non puo' rispondere per
      * un file di oggi, perche' di oggi cambia il percorso. */
@@ -151,6 +157,29 @@ export class Plancia {
   get provenienza() {
     if (!this._provenienza) this._provenienza = guardaLaPlancia(this.cartella);
     return this._provenienza;
+  }
+
+  /* Il pacchetto, se c'e' ed e' fatto da questi sorgenti: `{ pacco, perche }`.
+   *
+   * Si guarda una volta, come la provenienza: i file non cambiano mentre il
+   * ponte e' acceso. `PONTE_PLANCIA_SCIOLTA=1` lo lascia da parte, per chi
+   * deve capire se un difetto sta nel pacchetto o nella plancia. */
+  get pacco() {
+    if (this._pacco === undefined) {
+      this._pacco =
+        process.env.PONTE_PLANCIA_SCIOLTA === "1"
+          ? { pacco: null, perche: "lasciato da parte apposta" }
+          : ilPaccoDi(this.cartella);
+    }
+    return this._pacco;
+  }
+
+  /* Come parte la plancia, in una riga, per il registro all'avvio. */
+  get paccoInDueParole() {
+    const { pacco, perche } = this.pacco;
+    return pacco
+      ? `impacchettata (${pacco.file.length} moduli)`
+      : `moduli sciolti — il pacchetto ${perche}`;
   }
 
   /* Il verdetto in una riga, per il registro all'avvio. */
@@ -304,9 +333,14 @@ export class Plancia {
        * non si vedono subito. Vestirla qui vuol dire che la versione dopo, e
        * quella dell'anno prossimo, arrivano vestite senza che nessuno
        * rifaccia niente. Vedi `marchio.js`. */
+      let corpo = readFileSync(dove);
+      /* La pagina, coi moduli del pacchetto al posto dei sorgenti sciolti:
+       * da quattrocento file a una ventina. Vedi `pacco-della-plancia.js`. */
+      const { pacco } = LA_PAGINA.test(relativo) ? this.pacco : { pacco: null };
+      if (pacco) corpo = Buffer.from(laPaginaImpacchettata(corpo.toString("utf8"), pacco.file));
       const vestito = vestiDiGdahome(
         relativo,
-        readFileSync(dove),
+        corpo,
         tipo,
         this.installatore?.(quale?.profilo || ""),
         /* E il numero di versione: la plancia ne dichiara uno suo, scritto

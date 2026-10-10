@@ -5602,7 +5602,7 @@ async function dmCamOpen(cam, title, content) {
     const stato = STATES[cam.entity] || { entity_id: cam.entity };
     const strade = api ? api.strategieDellaTelecamera(cam, stato, {
         webrtcNelBrowser: dmIsWebRTC(),
-        hlsNelBrowser: typeof Hls !== 'undefined' || document.createElement('video').canPlayType('application/vnd.apple.mpegurl') !== '',
+        hlsNelBrowser: typeof Hls !== 'undefined' || typeof window.__DM_CARICA_HLS__ === 'function' || document.createElement('video').canPlayType('application/vnd.apple.mpegurl') !== '',
     }) : [
         { nome: 'WebRTC', salta: dmIsWebRTC() && cam.stream ? null : 'senza-nome-di-flusso', attesa: 3000, flusso: cam.stream },
         { nome: 'HLS', attesa: 25000 },
@@ -5671,7 +5671,7 @@ async function dmCamHLS(cam, content, attesa) {
     videoEl.volume = 1.0; videoEl.muted = false;
     const supportsNative = videoEl.canPlayType('application/vnd.apple.mpegurl') !== '';
     if (supportsNative) { videoEl.src = hlsUrl; }
-    else if (typeof Hls !== 'undefined' && Hls.isSupported()) {
+    else if ((typeof Hls !== 'undefined' || (window.__DM_CARICA_HLS__ && await window.__DM_CARICA_HLS__())) && Hls.isSupported()) {
         _dmHls = new Hls({ lowLatencyMode: true, backBufferLength: 10, maxBufferLength: 8 });
         _dmHls.loadSource(hlsUrl); _dmHls.attachMedia(videoEl);
         _dmHls.on(Hls.Events.MANIFEST_PARSED, () => dmTryPlayUnmuted(videoEl));

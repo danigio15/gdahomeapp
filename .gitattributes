@@ -11,3 +11,6 @@ ponte/plancia/legacy/vendor/fonts/*.woff2 binary
 # da una macchina (officina/scripts/vendor_legacy.py). Un `git diff` che prova a
 # mostrarle riempie lo schermo e non dice niente.
 ponte/plancia/legacy/patches/*.diff -diff
+
+# Il pacchetto della plancia: costruito da strumenti/impacchetta-la-plancia.mjs.
+ponte/plancia/pacco/** linguist-generated=true -diff

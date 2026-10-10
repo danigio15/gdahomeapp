@@ -24,7 +24,7 @@
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { mkdtempSync, rmSync } from "node:fs";
+import { mkdtempSync, readdirSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { gunzipSync } from "node:zlib";
@@ -50,16 +50,18 @@ const plancia = new Plancia();
 const con = new Commissioni({ registro: ZITTO, plancia });
 const dove = (relativo) => `${plancia.base}/${relativo}`;
 
-/* I moduli che la pagina precarica: e' l'elenco vero, quello che il servitore
- * legge dalla pagina per riempire i pacchi. */
+/* Dei moduli della plancia, quanti se ne chiedono. Erano quelli che la pagina
+ * precarica; da quando la pagina parte impacchettata ne precarica tre
+ * (`pacco-della-plancia.js`), quindi si prendono i sorgenti — sono gli stessi
+ * file, e la strada del pacco e' la stessa. */
 function iModuliDellaPagina(quanti) {
-  const pagina = plancia.leggi(dove("legacy/dashboard.html")).corpo.toString("utf8");
   const fuori = [];
-  for (const riga of pagina.match(/rel="modulepreload"\s+href="[^"]+"/g) || []) {
-    const quale = riga.match(/href="([^"]+)"/)[1];
-    if (!quale.startsWith("../")) continue;
-    fuori.push(dove(quale.replace(/^\.\.\//, "")));
-    if (fuori.length >= quanti) break;
+  for (const cartella of ["src/core", "src/sections"]) {
+    for (const nome of readdirSync(join(plancia.cartella, cartella)).sort()) {
+      if (!nome.endsWith(".js")) continue;
+      fuori.push(dove(`${cartella}/${nome}`));
+      if (fuori.length >= quanti) return fuori;
+    }
   }
   return fuori;
 }
@@ -182,6 +184,29 @@ test("il pacco si ferma quando e' pieno, e resta dentro il telaio", async (t) =>
   for (const quale of percorsi.slice(quanti)) {
     assert.equal(pacco.result.file[quale], undefined, quale);
   }
+});
+
+test("un file grosso quanto un pacco viaggia da solo, al giro dopo", async (t) => {
+  if (!plancia.cE || !plancia.pacco.pacco) return t.skip("senza pacchetto non c'e' un file cosi'");
+  /* Il pacchetto della plancia: un megabyte e passa, compresso. In un pacco
+   * che ha gia' dentro qualcosa non sale — il pacco uscirebbe dal telaio — e
+   * gli altri file ci salgono lo stesso. */
+  const grosso = dove("pacco/src/sections/section-runtime.js");
+  const piccoli = iModuliDellaPagina(3);
+  const primo = await con.rispondi({
+    id: 1,
+    type: TIPO_MOLTI,
+    percorsi: [piccoli[0], grosso, ...piccoli.slice(1)],
+  });
+  assert.equal(primo.success, true);
+  assert.deepEqual(Object.keys(primo.result.file), piccoli);
+  assert.ok(Buffer.byteLength(JSON.stringify(primo), "utf8") < TELAIO);
+  /* Chiesto per primo, torna: da solo, come tornerebbe con una richiesta
+   * sola, e la busta lo spezza. */
+  const dopo = await con.rispondi({ id: 2, type: TIPO_MOLTI, percorsi: [grosso, ...piccoli] });
+  assert.deepEqual(Object.keys(dopo.result.file), [grosso]);
+  const solo = await con.rispondi({ id: 3, type: TIPO, percorso: grosso });
+  assert.deepEqual(dopo.result.file[grosso], solo.result);
 });
 
 test("anche un pacco pieno di file piccoli sta nel telaio", async (t) => {

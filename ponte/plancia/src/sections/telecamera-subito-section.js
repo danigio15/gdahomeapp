@@ -253,6 +253,7 @@ function stradeDiAdesso(cam) {
   try {
     hlsNelBrowser =
       typeof root.Hls !== "undefined" ||
+      typeof root.__DM_CARICA_HLS__ === "function" ||
       doc?.createElement?.("video")?.canPlayType?.("application/vnd.apple.mpegurl") !== "";
   } catch (_error) {}
   return strategieDellaTelecamera(cam || {}, stato, {

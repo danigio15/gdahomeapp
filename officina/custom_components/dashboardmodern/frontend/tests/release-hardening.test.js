@@ -31,13 +31,19 @@ test("the dashboard head asks the internet for nothing", async () => {
   ]) {
     const source = await read(file);
     const testata = source.slice(0, source.indexOf("</head>"));
-    assert.doesNotMatch(testata, /(?:src|href)="https?:\/\//, `${file}: la testata scarica ancora da fuori`);
+    assert.doesNotMatch(
+      testata,
+      /(?:src|href)="https?:\/\//,
+      `${file}: la testata scarica ancora da fuori`,
+    );
     assert.match(source, /<script src="\.\/vendor\/chart\.umd\.min\.js"><\/script>/);
     // panzoom non l'ha mai chiamato nessuno: la mappa del robot si sposta con
     // le sue trasformazioni. hls.js pesa mezzo mega e serve solo quando si
     // apre una telecamera, quindi non deve fermare la lettura della pagina.
     assert.doesNotMatch(source, /panzoom/);
-    assert.match(source, /<script defer src="\.\/vendor\/hls\.min\.js"><\/script>/);
+    // E adesso non si legge nemmeno all'apertura: si prende quando serve.
+    assert.doesNotMatch(source, /<script[^>]*src="\.\/vendor\/hls\.min\.js"/);
+    assert.match(source, /<script defer src="\.\/carica-hls\.js"><\/script>/);
     /* Il foglio dei caratteri si carica senza bloccare la prima dipintura:
      * media="print" finche' non e' arrivato, poi torna per tutti. E' sicuro
      * perche' il velo d'avvio copre la pagina finche' il runtime non e'
@@ -78,7 +84,8 @@ test("future re-vendoring keeps serving those assets from the integration", asyn
   assert.match(source, /PANZOOM_LOCAL = ""|PANZOOM_LOCAL = ''/);
   assert.match(source, /FONTS_LOCAL/);
   const giro = await read("scripts/porta-in-casa-le-librerie.mjs");
-  for (const attesa of Object.values(IMPRONTE)) assert.match(giro, new RegExp(attesa.replace(/[+/]/g, "\\$&")));
+  for (const attesa of Object.values(IMPRONTE))
+    assert.match(giro, new RegExp(attesa.replace(/[+/]/g, "\\$&")));
 });
 
 test("frontend registration hashes off-loop once and exposes only explicit runtime assets", async () => {
@@ -91,7 +98,9 @@ test("frontend registration hashes off-loop once and exposes only explicit runti
 });
 
 test("build provenance is canonical and bridge message types are unique", async () => {
-  const energy = await read("custom_components/dashboardmodern/frontend/src/sections/energy-section.js");
+  const energy = await read(
+    "custom_components/dashboardmodern/frontend/src/sections/energy-section.js",
+  );
   assert.match(energy, /BUILD_INFO/);
   assert.doesNotMatch(energy, /const VERSION = ["']0\.15\.12["']/);
   const { ALLOWED_MESSAGE_TYPES } = await import("../src/legacy/bridge-socket.js");
