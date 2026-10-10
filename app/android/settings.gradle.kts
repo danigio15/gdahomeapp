@@ -24,3 +24,11 @@ plugins {
 }
 
 include(":app")
+
+// L'app per l'orologio Wear OS (`orologio/`), che si costruisce a parte:
+// `GDAHOME_OROLOGIO=si ./gradlew :orologio:assembleRelease`. Senza quella
+// variabile non entra nemmeno nella configurazione, e `flutter build` del
+// telefono resta quello di sempre. Vedi docs/OROLOGIO.md.
+if (System.getenv("GDAHOME_OROLOGIO") == "si") {
+    include(":orologio")
+}

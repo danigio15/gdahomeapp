@@ -13,8 +13,10 @@
 /// sull'iPhone e' `Library/Application Support`, e Swift guarda li'.
 library;
 
+import 'dart:async' show unawaited;
 import 'dart:io';
 
+import 'package:flutter/services.dart' show MethodChannel;
 import 'package:path_provider/path_provider.dart';
 
 import 'i_comandi.dart';
@@ -43,6 +45,7 @@ Future<bool> lasciaLaFotoAllAuto(
      * nessuna — niente parte da solo, e una ricetta che nessuno eseguira' e'
      * solo un elenco di entita' in piu' sul disco. */
     await _leRicette(cartella, daSola ? leRicetteDaScrivere(detto) : const []);
+    _diciloAllOrologio();
     return true;
   } catch (_) {
     /* Il disco pieno, un permesso, la cartella che non c'e': in macchina si
@@ -142,6 +145,7 @@ Future<bool> scriviIComandi(IComandiScelti scelti) async {
     final mezzo = File('${cartella.path}/$nomeDeiComandi.mezzo');
     await mezzo.writeAsString(scelti.comeSiScrive, flush: true);
     await mezzo.rename('${cartella.path}/$nomeDeiComandi');
+    _diciloAllOrologio();
     return true;
   } catch (_) {
     return false;
@@ -166,6 +170,7 @@ Future<bool> diciLaLicenzaAllAuto({
       flush: true,
     );
     await mezzo.rename('${cartella.path}/$nomeDellaLicenza');
+    _diciloAllOrologio();
     return true;
   } catch (_) {
     return false;
@@ -202,4 +207,26 @@ Future<List<ComandoRapido>> leAzioniRapide() async {
   } catch (_) {
     return const [];
   }
+}
+
+/// Dove si dice all'orologio che i file dell'auto sono cambiati.
+///
+/// L'orologio — Apple Watch e Wear OS — legge gli stessi tre file dell'auto
+/// (la fotografia, i comandi scelti, il biglietto di Premium), ma non dal
+/// disco: glieli porta il telefono, che li rilegge quando qui gli si dice che
+/// sono cambiati (`ios/Runner/LOrologio.swift`,
+/// `android/.../orologio/IlTramiteDellOrologio.kt`). Lo stesso nome nei tre
+/// posti; vedi `docs/OROLOGIO.md`.
+const String canaleDellOrologio = 'gdahome/orologio';
+
+/// Un colpetto e basta: non si aspetta e non solleva. Senza orologio — o
+/// nelle prove, dove il canale non c'e' — non succede niente.
+void _diciloAllOrologio() {
+  try {
+    unawaited(
+      const MethodChannel(canaleDellOrologio)
+          .invokeMethod<void>('aggiorna')
+          .catchError((Object _) {}),
+    );
+  } catch (_) {}
 }

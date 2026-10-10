@@ -23,6 +23,8 @@ import gdanav_app
     collegaIlNavigatore()
     collegaLaFinestra()
     fuoriDalleCopie()
+    /* L'Apple Watch: la fotografia al polso, e i tocchi da li'. */
+    LOrologio.shared.accendi(motore: motore)
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
 

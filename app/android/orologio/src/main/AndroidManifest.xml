@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- gdahome al polso, per Wear OS.
+
+     Non e' un'app che sta in piedi da sola (`standalone=false`): senza il
+     telefono non sa niente, perche' le chiavi di casa stanno li' e solo li'.
+     Il Play Store la propone a chi ha gia' gdahome sul telefono. -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <uses-feature android:name="android.hardware.type.watch" />
+
+    <!-- Un colpetto al polso quando il comando e' partito, o non e' partito. -->
+    <uses-permission android:name="android.permission.VIBRATE" />
+
+    <application
+        android:label="gdahome"
+        android:icon="@mipmap/ic_launcher"
+        android:allowBackup="false"
+        android:supportsRtl="true"
+        android:theme="@android:style/Theme.DeviceDefault">
+
+        <uses-library
+            android:name="com.google.android.wearable"
+            android:required="false" />
+
+        <meta-data
+            android:name="com.google.android.wearable.standalone"
+            android:value="false" />
+
+        <activity
+            android:name=".AlPolso"
+            android:exported="true"
+            android:taskAffinity="">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+</manifest>

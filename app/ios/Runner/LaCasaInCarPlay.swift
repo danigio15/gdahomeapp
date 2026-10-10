@@ -96,7 +96,7 @@ enum LaCasaInCarPlay {
 
   /// La fotografia della casa scritta dalla plancia: dispositivi, azioni,
   /// fotovoltaico, persone.
-  private static func laFoto() -> [String: Any]? { leggi("gdahome-auto.json") }
+  static func laFoto() -> [String: Any]? { leggi("gdahome-auto.json") }
 
   // MARK: - Premium
 
@@ -130,6 +130,18 @@ enum LaCasaInCarPlay {
       GdanavCarPlay.mostra("\(nome): serve gdahome Premium")
       return
     }
+    let scritto = lascia(id)
+    GdanavCarPlay.mostra(
+      !scritto
+        ? "\(nome): non sono riuscito a scriverlo"
+        : subito ? "\(nome): fatto" : "\(nome): parte appena apri gdahome sul telefono, entro due minuti"
+    )
+  }
+
+  /// Lascia scritto il comando e da' il colpetto al Dart, che lo esegue col
+  /// filo dell'app. Torna `false` se non si e' potuto scrivere. Lo usa anche
+  /// l'orologio (`LOrologio.swift`): un posto solo che sa premere.
+  static func lascia(_ id: String) -> Bool {
     var scritto = false
     if let cartella {
       try? FileManager.default.createDirectory(at: cartella, withIntermediateDirectories: true)
@@ -139,11 +151,7 @@ enum LaCasaInCarPlay {
       }
     }
     if scritto { guarda?.invokeMethod("guarda", arguments: nil) }
-    GdanavCarPlay.mostra(
-      !scritto
-        ? "\(nome): non sono riuscito a scriverlo"
-        : subito ? "\(nome): fatto" : "\(nome): parte appena apri gdahome sul telefono, entro due minuti"
-    )
+    return scritto
   }
 
   /// Una serratura chiede prima conferma: un tocco sbagliato guidando non

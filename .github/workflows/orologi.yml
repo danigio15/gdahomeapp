@@ -1,0 +1,91 @@
+# Gli orologi: Apple Watch e Wear OS, compilati per davvero.
+#
+# Le due app al polso non entrano nell'app del telefono finche' non si accende
+# la variabile GDAHOME_OROLOGIO (docs/OROLOGIO.md): fino ad allora nessuno le
+# costruirebbe, e un errore ci resterebbe dentro senza che lo sappia nessuno.
+# Qui si compilano a ogni modifica che le tocca, senza firma e senza negozio:
+# verde vuol dire che stanno in piedi.
+name: Gli orologi
+
+on:
+  push:
+    paths:
+      - "app/ios/Orologio/**"
+      - "app/android/orologio/**"
+      - "app/android/settings.gradle.kts"
+      - "strumenti/orologio-in-xcode.rb"
+      - ".github/workflows/orologi.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: orologi-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  apple-watch:
+    name: Apple Watch
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          persist-credentials: false
+      - name: L'Xcode piu' recente
+        run: |
+          xcode="$(ls -d /Applications/Xcode_*.app | grep -v -i beta | sort -V | tail -1)"
+          sudo xcode-select -s "$xcode"
+          xcodebuild -version | tee -a "$GITHUB_STEP_SUMMARY"
+      # Il target si aggiunge con lo stesso script che usa l'app vera. La
+      # gemma `xcodeproj` sui Mac di GitHub c'e' gia' (con CocoaPods); se un
+      # giorno mancasse, la si mette.
+      - name: Il target dell'orologio
+        run: |
+          gem list -i xcodeproj > /dev/null || sudo gem install xcodeproj --no-document
+          ruby strumenti/orologio-in-xcode.rb
+      # Solo l'orologio, per il simulatore: non vuole ne' Flutter ne' i Pods
+      # dell'iPhone, e non vuole firma.
+      - name: Compila
+        working-directory: app
+        run: |
+          xcodebuild -project ios/Runner.xcodeproj -target "gdahome Watch" \
+            -configuration Release -sdk watchsimulator \
+            CODE_SIGNING_ALLOWED=NO build
+
+  wear-os:
+    name: Wear OS
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4.9.1
+        with:
+          distribution: temurin
+          java-version: "21"
+      # Flutter serve anche qui: il progetto Gradle e' quello del telefono, e
+      # per configurarsi vuole sapere dov'e' Flutter e quali plugin ci sono.
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+        working-directory: app
+      # Firmato con la chiave di prova, e quindi `com.gdahome.gdahome.prova`:
+      # si parla col telefono di prova, quello degli artefatti di «L'app da
+      # provare» costruita senza chiave vera.
+      - name: Compila
+        working-directory: app/android
+        env:
+          GDAHOME_OROLOGIO: si
+        run: |
+          [ -f local.properties ] || echo "flutter.sdk=$FLUTTER_ROOT" > local.properties
+          java -classpath gradle/wrapper/gradle-wrapper.jar org.gradle.wrapper.GradleWrapperMain \
+            :orologio:assembleRelease
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: gdahome-wear-os-prova
+          path: app/build/orologio/outputs/apk/release/*.apk
+          if-no-files-found: error
+          retention-days: 30

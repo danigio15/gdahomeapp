@@ -385,6 +385,31 @@ jobs:
           if-no-files-found: error
           retention-days: 90
 
+      # L'orologio Wear OS, quando e' acceso (variabile GDAHOME_OROLOGIO = si,
+      # vedi docs/OROLOGIO.md). Stesso nome e stessa chiave del telefono: e'
+      # quello che li fa parlare. Il suo `.aab` sta fra gli artefatti e si
+      # carica nel Play Console nella pista «Wear OS», a mano, finche' la
+      # prima volta non e' passata.
+      - name: L'orologio Wear OS
+        if: vars.GDAHOME_OROLOGIO == 'si'
+        working-directory: app/android
+        env:
+          GDAHOME_OROLOGIO: si
+        run: |
+          # Senza chiave vera esce firmato di prova, `.prova`, come il telefono.
+          compiti=(:orologio:assembleRelease)
+          if [ -f chiave.properties ]; then compiti+=(:orologio:bundleRelease); fi
+          java -classpath gradle/wrapper/gradle-wrapper.jar org.gradle.wrapper.GradleWrapperMain "${compiti[@]}"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: vars.GDAHOME_OROLOGIO == 'si'
+        with:
+          name: gdahome-wear-os
+          path: |
+            app/build/orologio/outputs/apk/release/*.apk
+            app/build/orologio/outputs/bundle/release/*.aab
+          if-no-files-found: error
+          retention-days: 90
+
       # E il pacchetto sul Play Console, senza passare da nessuno.
       #
       # Prima erano cinque passaggi a mano a ogni versione — scaricare
@@ -616,10 +641,19 @@ jobs:
         working-directory: app
         run: cp ios/Runner/RunnerCarPlay.entitlements ios/Runner/Runner.entitlements
 
+      # L'Apple Watch, quando e' acceso (variabile GDAHOME_OROLOGIO = si, vedi
+      # docs/OROLOGIO.md): il target si aggiunge al progetto adesso, e
+      # l'orologio viaggia dentro l'app per iPhone. Spento, l'archivio e'
+      # quello di sempre.
+      - name: L'Apple Watch
+        if: vars.GDAHOME_OROLOGIO == 'si'
+        run: ruby strumenti/orologio-in-xcode.rb
+
       - name: L'archivio firmato
         if: steps.chiavi.outputs.ci-sono == 'si'
         working-directory: app
         env:
+          OROLOGIO: ${{ vars.GDAHOME_OROLOGIO }}
           CHIAVE: ${{ secrets.APPLE_CHIAVE_P8 }}
           CHIAVE_ID: ${{ secrets.APPLE_CHIAVE_ID }}
           EMITTENTE: ${{ secrets.APPLE_EMITTENTE }}
@@ -635,8 +669,12 @@ jobs:
           # `-allowProvisioningUpdates` e la chiave: certificato e profilo li
           # tiene Apple. E' il solo modo per chi non ha un Mac di firmare
           # senza toccare un Mac. Cosi' e' andata su TestFlight gdanav.
+          # Con l'orologio dentro non si dice `-sdk iphoneos`: varrebbe anche
+          # per lui, che e' watchOS. Si dice dove va a finire, e ogni target
+          # prende il suo.
+          if [ "$OROLOGIO" = "si" ]; then dove=(-destination "generic/platform=iOS"); else dove=(-sdk iphoneos); fi
           xcodebuild -workspace ios/Runner.xcworkspace \
-            -scheme Runner -configuration Release -sdk iphoneos \
+            -scheme Runner -configuration Release "${dove[@]}" \
             -archivePath build/gdahome.xcarchive archive \
             DEVELOPMENT_TEAM="$SQUADRA" \
             CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY=""
