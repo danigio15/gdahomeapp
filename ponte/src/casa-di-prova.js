@@ -132,6 +132,27 @@ export class CasaDiProva {
     return this.viva();
   }
 
+  /* Piu' tempo allo stesso codice. Il codice e' scritto nelle note per chi
+   * rivede l'app (App Store Connect, Play Console), e cambiarlo li' vuol dire
+   * far ripartire la revisione da capo: se la revisione va per le lunghe,
+   * il codice deve poter restare quello e durare di piu'.
+   *
+   * Le regole sono quelle di `nuova`: al massimo sette giorni **da adesso**,
+   * mai di piu' tutti insieme; si puo' allungare ancora quando servira'. E
+   * non accorcia mai: un allungamento piu' corto di quello che resta lascia
+   * la scadenza dov'e'. Codice, utente e nascita restano gli stessi. Uno
+   * scaduto non si allunga (`NonCe`): e' gia' una porta chiusa, e la si
+   * riapre facendone una nuova. */
+  allunga({ giorni = GIORNI_AL_MASSIMO } = {}) {
+    const viva = this.viva();
+    if (!viva) throw new NonCe("non c'e' una casa di prova da allungare");
+    const detti = Math.round(Number(giorni));
+    const quanti = detti >= 1 ? Math.min(GIORNI_AL_MASSIMO, detti) : GIORNI_AL_MASSIMO;
+    this.archivio.dati.prova.scadeIl = Math.max(viva.scadeIl, this.adesso() + quanti * GIORNO);
+    this.archivio.salva();
+    return this.viva();
+  }
+
   /* Via il codice, valido o scaduto. Torna se c'era. I telefoni entrati con
    * lui li toglie chi chiama, che ha in mano anche i fili da chiudere. */
   togli() {
@@ -146,3 +167,5 @@ export class CasaDiProva {
 export class SenzaUtente extends Error {}
 
 export class InUso extends Error {}
+
+export class NonCe extends Error {}
