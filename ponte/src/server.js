@@ -28,7 +28,7 @@ import { aggiungiUnaPlancia, conIlModello } from "./plancia-nuova.js";
 import { conLePremesse, linguaPulita, paginaDellaLingua } from "./premesse.js";
 import { qrInPng, qrInSvg } from "./qr.js";
 import { impronta } from "./segreti.js";
-import { InUso, TELEFONI_DI_PROVA } from "./casa-di-prova.js";
+import { InUso, NonCe, TELEFONI_DI_PROVA } from "./casa-di-prova.js";
 
 /* Un corpo piu' grande di cosi' non e' una richiesta della console. */
 const CORPO_MASSIMO = 4 * 1024;
@@ -1532,6 +1532,43 @@ async function api({
      * codice li' non arriva mai. */
     chiamata?.apriLaProva(impronta(prova.codice), prova.scadeIl);
     registro.info("casa di prova fatta dalla console");
+    json(risposta, laProvaPerLaConsole(casaDiProva, dispositivi));
+    return;
+  }
+
+  /* Allungare: lo stesso codice, piu' tempo. Il codice sta nelle note di chi
+   * rivede l'app, e cambiarlo li' fa ripartire la revisione: cosi' resta
+   * quello. I telefoni gia' entrati restano dentro fino alla nuova scadenza,
+   * e il centralino riceve la stessa impronta con il tempo nuovo (riapre la
+   * prova al posto di quella di prima). Solo dove la si puo' fare. */
+  if (via === "/api/prova" && metodo === "PATCH") {
+    if (!casaDiProva) {
+      male(risposta, 404, "questo add-on non sa fare la casa di prova");
+      return;
+    }
+    if (!opzioni.gestore) {
+      male(risposta, 403, "la casa di prova si fa solo dall'Home Assistant del gestore");
+      return;
+    }
+    let detto = {};
+    try {
+      detto = await corpoDiJson(richiesta);
+    } catch (_errore) {
+      detto = {};
+    }
+    let prova;
+    try {
+      prova = casaDiProva.allunga({ giorni: detto?.giorni });
+    } catch (errore) {
+      if (errore instanceof NonCe) {
+        male(risposta, 404, "non c'è una casa di prova da allungare");
+        return;
+      }
+      throw errore;
+    }
+    const telefoni = dispositivi.allungaQuelliDiProva?.(prova.scadeIl) ?? 0;
+    chiamata?.apriLaProva(impronta(prova.codice), prova.scadeIl);
+    registro.info(`casa di prova allungata dalla console: ${telefoni} telefoni restano dentro`);
     json(risposta, laProvaPerLaConsole(casaDiProva, dispositivi));
     return;
   }

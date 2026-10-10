@@ -2515,6 +2515,9 @@
     /* Il tasto per farne una nuova, solo al gestore: altrove la scheda c'e'
      * solo per guardare e revocare quella che c'e'. */
     trova("prova-fai").hidden = !gestore;
+    /* Allungarla, lo stesso: e' come farla di nuovo, per piu' tempo. */
+    trova("prova-allunga").hidden = !gestore;
+    trova("prova-allunga-spiega").hidden = !gestore;
     if (si && gestore && !gliUtentiDellaProva) {
       gliUtentiDellaProva = true;
       riempiIlPerChiDellaProva();
@@ -2742,6 +2745,25 @@
       return;
     }
     appunti.writeText(testo).then(fatto, aMano);
+  });
+
+  /* «Allunga di 7 giorni»: lo stesso codice, che sta gia' nelle note di chi
+   * rivede l'app, vale per altri sette giorni da adesso. Il QR e le lettere
+   * non cambiano; cambia la data. */
+  trova("prova-allunga").addEventListener("click", function () {
+    var tasto = trova("prova-allunga");
+    avvisaLaProva("");
+    tasto.disabled = true;
+    chiedi("api/prova", { method: "PATCH", body: JSON.stringify({ giorni: 7 }) })
+      .then(function (allungata) {
+        tasto.disabled = false;
+        disegnaLaProva(allungata);
+        return aggiornaTutto();
+      })
+      .catch(function (errore) {
+        tasto.disabled = false;
+        avvisaLaProva(errore.message);
+      });
   });
 
   trova("prova-revoca").addEventListener("click", function () {

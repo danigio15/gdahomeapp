@@ -126,7 +126,9 @@ e lì non compra niente. Entra col codice della **casa di prova** (la scheda
 regalata dalla Gestione gdahome: così vede tutto. È lo stesso codice delle note
 per Apple (`app-store.md`): ne esiste uno solo alla volta, dura 7 giorni, e
 entrano fino a cinque telefoni. Quando si rifà, va cambiato in tutti e due i
-posti.
+posti, e la revisione riparte: per questo, se sta per scadere, non si rifà ma
+si **allunga** («Allunga di 7 giorni», dalla 1.11.0.1), e il codice resta
+quello.
 
 Si scrive in Play Console → Monitor and improve → Policy and programs → App
 content → Actioned → **Sign in details** → Manage: nome «Demo home», nome

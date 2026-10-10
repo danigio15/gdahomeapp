@@ -10,6 +10,16 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.11.0.1
+
+**La casa di prova si allunga, con lo stesso codice.** Nella scheda «Casa di
+prova» della console c'è «Allunga di 7 giorni»: il codice resta quello, e vale
+per altri sette giorni da adesso. I telefoni già entrati restano dentro fino
+alla nuova scadenza. Serve quando una revisione dura più del codice: il codice
+sta nelle note per Apple e per Google, e cambiarlo lì fa ripartire la
+revisione. Si può allungare più volte, e solo dall'Home Assistant del gestore,
+come farla.
+
 ## 1.11.0
 
 **gdahome anche al polso, su Apple Watch e Wear OS.** I comandi rapidi scelti
