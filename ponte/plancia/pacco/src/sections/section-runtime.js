@@ -45093,7 +45093,7 @@ function coversModel(states) {
       relay: isRelayEntity(entity2),
       down: clean(voce2.down)
     };
-  }).filter(Boolean);
+  }).filter(Boolean).sort((a, b) => Number(b.open) - Number(a.open));
   if (!rows.length) return null;
   const { alzate, aperte, soloMotori, miste, insieme: insieme3, contate, tutte } = contoDelleAperture(rows);
   const stanzeDiCasa4 = root.getStanze?.() || readJson("cd_stanze", []);
@@ -48470,7 +48470,7 @@ function summaryChips(widget) {
     ];
   if (widget.key === "tapparelle") {
     const posizioni = numeri("position");
-    const aperte = righe2.filter((riga3) => Number(riga3?.position) > 0).length;
+    const aperte = righe2.filter((riga3) => riga3?.open).length;
     return [
       [t("aperte", "open"), `${aperte}/${righe2.length}`],
       posizioni.length ? [t("apertura media", "average"), `${Math.round(media2(posizioni))}%`] : null
