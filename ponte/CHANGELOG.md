@@ -10,7 +10,7 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
-## 1.10.12
+## 1.11.0
 
 **gdahome anche al polso, su Apple Watch e Wear OS.** I comandi rapidi scelti
 per l'auto, i dispositivi, le azioni rapide e chi è in casa; e il navigatore,
