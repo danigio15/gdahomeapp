@@ -531,8 +531,14 @@ export function comandiDellaPagina(pagina, fonte = {}, zona = "") {
 /* Le pagine elenco: tutte le luci, il clima che raffresca, quello che scalda.
  * Non hanno tetto di sei: sul tablet la griglia scorre. */
 export function comandiDellElenco(modello, fonte = {}) {
+  /* Tutto quello che la plancia chiama luce fa la card della luce, anche una
+   * presa o un interruttore (`switch.*`): «nel wall le luci si vedono
+   * diverse». Come nelle stanze, dove le luci proposte sono gia' tutte uguali. */
   if (modello === "luci")
-    return elenco(fonte.luci).map((d) => comandoPulito({ tipo: "luce", entita: d.entity }));
+    return elenco(fonte.luci).map((d) => {
+      const comando = comandoPulito({ tipo: "luce", entita: d.entity });
+      return comando && { ...comando, tipo: "luce" };
+    });
   if (modello === "freddo" || modello === "caldo")
     return elenco(fonte.clima)
       .filter((d) => zoneDelClima(d.tipo).includes(modello))

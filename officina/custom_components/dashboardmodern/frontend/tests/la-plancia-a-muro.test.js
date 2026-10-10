@@ -10,6 +10,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { climaScalda } from "../src/core/device-model.js";
 import {
+  comandiDellElenco,
   comandiDellaPagina,
   comandoPulito,
   comandiProposti,
@@ -344,6 +345,19 @@ test("le pagine elenco: tutte le luci, il clima che raffresca e quello che scald
   assert.deepEqual(di("freddo"), ["climate.soggiorno", "climate.pompa"]);
   assert.deepEqual(di("caldo"), ["climate.termostato", "climate.pompa"]);
   assert.equal(nuovaPagina("personale", fonte).scelti, true);
+});
+
+test("nella pagina Luci anche una presa fa la card della luce", () => {
+  const comandi = comandiDellElenco("luci", {
+    luci: [{ entity: "light.lampadario" }, { entity: "switch.faretti_cucina" }],
+  });
+  assert.deepEqual(
+    comandi.map((c) => [c.entita, c.tipo]),
+    [
+      ["light.lampadario", "luce"],
+      ["switch.faretti_cucina", "luce"],
+    ],
+  );
 });
 
 test("caldo o freddo: comanda quello che fa, poi la pagina, poi il tipo", () => {

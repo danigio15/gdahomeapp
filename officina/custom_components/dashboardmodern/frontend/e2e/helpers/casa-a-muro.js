@@ -143,14 +143,14 @@ export const STATI_A_MURO = {
 export async function apriLaCasaAMuro(
   page,
   testInfo,
-  { premium = true, muro = null, stati = STATI_A_MURO } = {},
+  { premium = true, muro = null, stati = STATI_A_MURO, seme = SEME_A_MURO } = {},
 ) {
   await page.route("https://**", (route) => route.fulfill({ status: 200, body: "" }));
   await page.addInitScript((p) => {
     window.__GDAHOME_PREMIUM__ = p;
     window.__SERVIZI__ = [];
   }, premium);
-  await bootNamespacedDashboard(page, "dashboard.html", testInfo, SEME_A_MURO);
+  await bootNamespacedDashboard(page, "dashboard.html", testInfo, seme);
   await page.evaluate(
     ({ letture, azioni, muro }) => {
       const raw = eval("_RAW_STATES");

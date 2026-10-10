@@ -1480,7 +1480,11 @@ function onClick(event) {
     if (entita && dominio(entita) === "light") {
       if (state.compatto) comanda("light", "toggle", { entity_id: entita });
       else apriFinestra({ tipo: "luce", entita });
-    } else if (entita && dominio(entita) === "climate")
+    } else if (entita && bersaglio.querySelector?.('[data-mu-fa="interruttore"]'))
+      /* Una presa nella card della luce: non ha una finestra sua, il tocco
+       * la accende e la spegne. */
+      comanda(dominio(entita), "toggle", { entity_id: entita });
+    else if (entita && dominio(entita) === "climate")
       apriFinestra({ tipo: "clima", entita, zona: zonaDiQui() });
     else if (entita && dominio(entita) === "cover") apriFinestra({ tipo: "tapparella", entita });
     return;
@@ -1504,7 +1508,9 @@ function onClick(event) {
       chiudiFinestra();
       return;
     case "interruttore":
-      comanda("light", "toggle", { entity_id: id });
+      /* Nella card della luce puo' esserci anche una presa: ognuno col suo
+       * dominio, `light.toggle` su uno `switch` non fa niente. */
+      comanda(dominio(id) || "light", "toggle", { entity_id: id });
       return;
     case "spegni":
       comanda(dominio(id) || "light", "turn_off", { entity_id: id });

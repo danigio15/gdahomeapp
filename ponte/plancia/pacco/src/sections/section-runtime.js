@@ -56705,6 +56705,24 @@ function bindNodeClick(element5, node, period) {
   } : null;
   if (click) element5.dataset.dmFlowClickPeriod = period;
 }
+var NOME_PIU_PICCOLO = 6;
+function adattaIlNome(cerchio, nome) {
+  const largo = cerchio?.clientWidth || 0;
+  if (!nome || !largo) return;
+  const chiave2 = `${nome.textContent}|${largo}`;
+  if (nome.dataset.dmAdattato === chiave2) return;
+  nome.style.removeProperty("font-size");
+  delete nome.dataset.dmNomeLungo;
+  const stile5 = doc.defaultView?.getComputedStyle?.(nome);
+  let misura7 = Number.parseFloat(stile5?.fontSize) || 0;
+  const troppo = () => nome.scrollWidth > nome.clientWidth + 1 || nome.scrollHeight > misura7 * 1.1 * 2 + 1;
+  while (misura7 > NOME_PIU_PICCOLO && troppo()) {
+    misura7 -= 0.5;
+    nome.style.setProperty("font-size", `${misura7}px`, "important");
+  }
+  if (troppo()) nome.dataset.dmNomeLungo = "true";
+  nome.dataset.dmAdattato = chiave2;
+}
 function ensureBubble(stage, node, period, scale) {
   let element5 = stage.querySelector(`[data-dm-flow-node="${cssEscape(node.id)}"]`);
   if (!element5) {
@@ -56731,6 +56749,7 @@ function ensureBubble(stage, node, period, scale) {
   setStyleProperty(element5, "--dm-flow-mobile-top", `${node.mobile.top}%`);
   const label = element5.querySelector(".node-label");
   scriviTestoSeCambia(label, node.name);
+  adattaIlNome(element5, label);
   writeIcon(element5.querySelector(".node-icon"), node.icon);
   const value = element5.querySelector(".dm-flow-value");
   scriviTestoSeCambia(value, node.text);
@@ -57208,6 +57227,10 @@ function installStyles24() {
        so a wallbox at 7 kW is visibly heavier than a fridge at 60 W. */
     .flow-stage .node.dm-flow-node{display:flex!important;visibility:visible!important;transform:translate(-50%,-50%) scale(var(--dm-flow-scale,1))!important;transition:left .28s ease,top .28s ease,transform .28s ease!important}
     .flow-stage .node.dm-flow-node[data-dm-flow-active="false"]{opacity:.62!important}
+    /* Il nome sta dentro il cerchio: largo quanto la corda in cima, al massimo
+       due righe; la misura la stringe adattaIlNome. */
+    .flow-stage .node.dm-flow-node .node-label{width:72%!important;white-space:normal!important;overflow:hidden!important;text-overflow:clip!important;line-height:1.1!important;max-height:2.25em;flex:0 0 auto!important;overflow-wrap:normal!important;word-break:normal!important}
+    .flow-stage .node.dm-flow-node .node-label[data-dm-nome-lungo]{white-space:nowrap!important;text-overflow:ellipsis!important}
     .flow-stage path.dm-flow-arc{stroke-width:var(--dm-flow-width,3px)!important;fill:none!important}
     .flow-stage path.dm-flow-arc.dm-energy-flow-active{animation-duration:var(--dm-flow-duration,.8s)!important}
     /* La soglia e' quella del guscio, 768, e non una nostra.
@@ -77191,7 +77214,10 @@ function comandiDellaPagina(pagina2, fonte = {}, zona = "") {
 }
 function comandiDellElenco(modello, fonte = {}) {
   if (modello === "luci")
-    return elenco5(fonte.luci).map((d) => comandoPulito({ tipo: "luce", entita: d.entity }));
+    return elenco5(fonte.luci).map((d) => {
+      const comando = comandoPulito({ tipo: "luce", entita: d.entity });
+      return comando && { ...comando, tipo: "luce" };
+    });
   if (modello === "freddo" || modello === "caldo")
     return elenco5(fonte.clima).filter((d) => zoneDelClima(d.tipo).includes(modello)).map((d) => comandoPulito({ tipo: "clima", entita: d.entity }));
   return [];
@@ -78376,7 +78402,9 @@ function onClick23(event) {
     if (entita3 && dominio2(entita3) === "light") {
       if (state107.compatto) comanda2("light", "toggle", { entity_id: entita3 });
       else apriFinestra({ tipo: "luce", entita: entita3 });
-    } else if (entita3 && dominio2(entita3) === "climate")
+    } else if (entita3 && bersaglio.querySelector?.('[data-mu-fa="interruttore"]'))
+      comanda2(dominio2(entita3), "toggle", { entity_id: entita3 });
+    else if (entita3 && dominio2(entita3) === "climate")
       apriFinestra({ tipo: "clima", entita: entita3, zona: zonaDiQui() });
     else if (entita3 && dominio2(entita3) === "cover") apriFinestra({ tipo: "tapparella", entita: entita3 });
     return;
@@ -78398,7 +78426,7 @@ function onClick23(event) {
       chiudiFinestra();
       return;
     case "interruttore":
-      comanda2("light", "toggle", { entity_id: id });
+      comanda2(dominio2(id) || "light", "toggle", { entity_id: id });
       return;
     case "spegni":
       comanda2(dominio2(id) || "light", "turn_off", { entity_id: id });

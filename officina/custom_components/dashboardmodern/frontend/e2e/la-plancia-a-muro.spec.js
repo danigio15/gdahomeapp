@@ -7,7 +7,12 @@
  * sveglia col tocco; l'antifurto chiede il codice; per uscire, con il blocco,
  * serve il PIN; in verticale la griglia diventa di due colonne. */
 import { expect, test } from "@playwright/test";
-import { MURO_DI_PROVA, STATI_A_MURO, apriLaCasaAMuro } from "./helpers/casa-a-muro.js";
+import {
+  MURO_DI_PROVA,
+  SEME_A_MURO,
+  STATI_A_MURO,
+  apriLaCasaAMuro,
+} from "./helpers/casa-a-muro.js";
 
 const muro = (page) => page.locator("#dm-muro");
 const servizi = (page) => page.evaluate(() => window.__SERVIZI__.slice());
@@ -270,6 +275,38 @@ test.describe("la plancia a muro", () => {
       "aria-selected",
       "true",
     );
+  });
+
+  test("nella pagina Luci una presa ha la stessa card delle luci, e si comanda", async ({
+    page,
+  }, testInfo) => {
+    const seme = structuredClone(SEME_A_MURO);
+    seme.sections.lights.push({
+      id: "l4",
+      name: "Faretti cucina",
+      entity: "switch.faretti_cucina",
+      room_id: "cucina",
+      room: "Cucina",
+    });
+    await apriLaCasaAMuro(page, testInfo, {
+      seme,
+      stati: {
+        ...STATI_A_MURO,
+        "switch.faretti_cucina": { state: "on", attributes: { friendly_name: "Faretti cucina" } },
+      },
+      muro: { attiva: true, pagine: [{ id: "p1", modello: "luci" }] },
+    });
+    const presa = muro(page).locator('.mu-card[data-mu-entita="switch.faretti_cucina"]');
+    await expect(presa).toBeVisible();
+    /* La stessa card della luce: il disco, il nome, lo stato e l'interruttore. */
+    await expect(presa.locator(".mu-disco")).toHaveCount(1);
+    await expect(presa.locator(".mu-stato")).toHaveText(/Accesa/i);
+    await page.screenshot({ path: testInfo.outputPath("luci-a-muro.png") });
+    await presa.locator('[data-mu-fa="interruttore"]').click();
+    await presa.click({ position: { x: 40, y: 120 } });
+    await expect
+      .poll(() => servizi(page).then((s) => s.map((x) => `${x.domain}.${x.service}`)))
+      .toEqual(["switch.toggle", "switch.toggle"]);
   });
 
   test("il config aperto col pannello sopra (dal menu dell'app) toglie il pannello subito", async ({
