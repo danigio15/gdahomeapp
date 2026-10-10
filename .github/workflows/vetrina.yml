@@ -164,7 +164,15 @@ jobs:
             fi
           done
           echo "Immagine: $immagine" | tee -a "$GITHUB_STEP_SUMMARY"
-          echo no | "$sdk/avdmanager" create avd -n polso -k "$immagine" -d wearos_large_round
+          # L'orologio virtuale in una cartella detta a tutti e due: senza,
+          # avdmanager lo scrive in un posto e l'emulatore lo cerca in un
+          # altro («Unknown AVD name [polso]»).
+          export ANDROID_AVD_HOME="$HOME/.android/avd"
+          mkdir -p "$ANDROID_AVD_HOME"
+          echo "ANDROID_AVD_HOME=$ANDROID_AVD_HOME" >> "$GITHUB_ENV"
+          echo no | "$sdk/avdmanager" create avd -n polso -k "$immagine" -d wearos_large_round \
+            -p "$ANDROID_AVD_HOME/polso.avd"
+          "$ANDROID_HOME/emulator/emulator" -list-avds
           nohup "$ANDROID_HOME/emulator/emulator" -avd polso -no-window -no-audio -no-boot-anim \
             -gpu swiftshader_indirect -no-snapshot > emulatore.log 2>&1 &
           # Dieci minuti al massimo: un emulatore che non parte non parte, e
