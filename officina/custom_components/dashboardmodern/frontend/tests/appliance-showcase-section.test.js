@@ -314,3 +314,30 @@ test("the power icon's CSS size matches its markup, so neither shrinks the other
   assert.equal(rule[1], markup[1]);
   assert.equal(rule[2], markup[2]);
 });
+
+test("il numero accanto a stanza e stato e' quello che si vede toccandolo", async () => {
+  /* «In lavanderia ci sono 2 elettrodomestici ma ne mostra 1»: Lavanderia 2
+   * e Spenti 2 promettevano due card, e con tutti e due scelti ne usciva una. */
+  const { conteggiDelleVoci, filterShowcaseModels } = await loadSection();
+  const lav = { id: "lav", name: "Lavanderia" };
+  const cuc = { id: "cuc", name: "Cucina" };
+  const modelli = [
+    { name: "Lavatrice", mode: "off", room: lav },
+    { name: "Asciugatrice", mode: "standby", room: lav },
+    { name: "Forno", mode: "off", room: cuc },
+    { name: "Frigo", mode: "running", room: cuc },
+  ];
+  const ui = { room: "lav", filter: "off" };
+  const { stanze, stati } = conteggiDelleVoci(modelli, ui);
+  /* Gli stati contano nella stanza scelta... */
+  assert.equal(stati.off, 1);
+  assert.equal(stati.standby, 1);
+  assert.equal(stati.running, 0);
+  /* ...e le stanze con lo stato scelto. */
+  assert.equal(stanze.rooms.get("lav"), 1);
+  assert.equal(stanze.rooms.get("cuc"), 1);
+  assert.equal(stanze.total, 2);
+  /* E il numero e' proprio quello delle card che escono. */
+  assert.equal(filterShowcaseModels(modelli, ui).length, stati.off);
+  assert.equal(filterShowcaseModels(modelli, ui).length, stanze.rooms.get("lav"));
+});

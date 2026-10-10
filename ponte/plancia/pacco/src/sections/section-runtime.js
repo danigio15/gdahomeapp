@@ -18843,7 +18843,14 @@ function sideItem({ key, kind, icon: icon2, label, count, active, dotClass }) {
       <b class="dm-side-count">${count}</b>
     </button>`;
 }
+function conteggiDelleVoci(models = [], ui = {}) {
+  return {
+    stanze: showcaseCounts(filterShowcaseModels(models, { filter: ui.filter || "all" })),
+    stati: showcaseCounts(filterShowcaseModels(models, { room: ui.room || "all" }))
+  };
+}
 function renderSidebar(shell, models, counts, rooms2, labels) {
+  const { stanze: stanze3, stati } = conteggiDelleVoci(models, state17.ui);
   const roomsHost = shell.querySelector("[data-dm-rooms]");
   if (roomsHost) {
     const items = [
@@ -18852,7 +18859,7 @@ function renderSidebar(shell, models, counts, rooms2, labels) {
         kind: "room",
         icon: ICONS.grid,
         label: labels.allRooms,
-        count: counts.total,
+        count: stanze3.total,
         active: state17.ui.room === "all"
       }),
       ...rooms2.filter((room) => counts.rooms.get(room.id)).map(
@@ -18861,7 +18868,7 @@ function renderSidebar(shell, models, counts, rooms2, labels) {
           kind: "room",
           icon: iconGlyphMarkup("room", room.icon || "mdi:home", { size: 17 }),
           label: room.name,
-          count: counts.rooms.get(room.id) || 0,
+          count: stanze3.rooms.get(room.id) || 0,
           active: state17.ui.room === room.id
         })
       )
@@ -18873,7 +18880,7 @@ function renderSidebar(shell, models, counts, rooms2, labels) {
           kind: "room",
           icon: ICONS.senzaStanza,
           label: labels.noRoom,
-          count: counts.unassigned,
+          count: stanze3.unassigned,
           active: state17.ui.room === "unassigned"
         })
       );
@@ -18889,7 +18896,7 @@ function renderSidebar(shell, models, counts, rooms2, labels) {
           kind: "state",
           dotClass: "run",
           label: labels.running,
-          count: counts.running,
+          count: stati.running,
           active: state17.ui.filter === "running"
         }),
         sideItem({
@@ -18897,7 +18904,7 @@ function renderSidebar(shell, models, counts, rooms2, labels) {
           kind: "state",
           dotClass: "standby",
           label: labels.standby,
-          count: counts.standby,
+          count: stati.standby,
           active: state17.ui.filter === "standby"
         }),
         sideItem({
@@ -18905,7 +18912,7 @@ function renderSidebar(shell, models, counts, rooms2, labels) {
           kind: "state",
           dotClass: "off",
           label: labels.off,
-          count: counts.off,
+          count: stati.off,
           active: state17.ui.filter === "off"
         }),
         sideItem({
@@ -18913,7 +18920,7 @@ function renderSidebar(shell, models, counts, rooms2, labels) {
           kind: "state",
           dotClass: "alarm",
           label: labels.alarm,
-          count: counts.alarm,
+          count: stati.alarm,
           active: state17.ui.filter === "alarm"
         })
       ].join("")
