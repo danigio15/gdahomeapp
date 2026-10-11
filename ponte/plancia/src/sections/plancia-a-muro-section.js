@@ -1370,7 +1370,25 @@ function fermaIlBattito() {
   state.timer = null;
 }
 
+/* Lo schermo, dentro l'app: «lo spegni schermo toglie l'orologio, ma lascia
+ * acceso l'Android con le icone sotto e la barra sopra». Le barre del sistema
+ * e la luminosita' le comanda l'app (`app/lib/casa/lo_schermo.dart`): le si
+ * dice se il pannello c'e' e se e' notte, solo quando cambia. Fuori dall'app
+ * il canale non c'e' e non succede niente. */
+const detto = { muro: "", spento: "" };
+function diciAlloSchermo(chiave, si) {
+  const canale = root.gdahomeSchermo;
+  const valore = si ? "si" : "no";
+  if (!canale?.postMessage || detto[chiave] === valore) return;
+  detto[chiave] = valore;
+  try {
+    canale.postMessage(`${chiave}:${valore}`);
+  } catch (_errore) {}
+}
+
 function togliLaTela() {
+  diciAlloSchermo("spento", false);
+  diciAlloSchermo("muro", false);
   fermaIlBattito();
   doc?.getElementById(ID)?.remove();
   doc?.documentElement?.classList?.remove("dm-muro-acceso");
@@ -1436,6 +1454,8 @@ export function disegna() {
   );
   if (scriviSeCambia(nodo.firstElementChild, corpo)) caricaLeTelecamere(nodo, vecchie);
   if (state.riposo) posizionaIlRiposo(nodo);
+  diciAlloSchermo("muro", true);
+  diciAlloSchermo("spento", Boolean(state.riposo && eNotte(muro)));
 }
 
 /* Il blocco del riposo va dove dice derivaDelRiposo, ma dentro lo spazio che

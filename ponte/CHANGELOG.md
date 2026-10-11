@@ -23,7 +23,9 @@ quante finestre sono rimaste aperte.
 Ogni pagina del pannello può avere 6, 8 o 12 riquadri, e le pagine sono fino
 a otto. Sul telefono i riquadri hanno un'altezza loro invece di riempire lo
 schermo. Il meteo è quello scelto nella config della plancia, e dal config
-del tablet si passa a tutto il config con «Tutto il config».
+del tablet si passa a tutto il config con «Tutto il config». Nell'app il
+pannello è a schermo intero, senza le barre di Android, e di notte lo schermo
+si abbassa al minimo invece di restare acceso.
 
 **Energia:** i nomi lunghi delle stanze stanno dentro i cerchi del flusso,
 su due righe se serve.

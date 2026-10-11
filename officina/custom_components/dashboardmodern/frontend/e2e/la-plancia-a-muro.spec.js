@@ -275,6 +275,28 @@ test.describe("la plancia a muro", () => {
 
   /* «Se uno volesse andare nella config generale, lo deve fare col pc su
    * un'altra plancia?» No: «Tutto il config» toglie il recinto. */
+  /* Dentro l'app le barre di Android e la luminosita' le comanda l'app: il
+   * pannello le dice se c'e' e se e' notte, e solo quando cambia. */
+  test("nell'app il pannello chiede lo schermo intero, e di notte lo spegne", async ({
+    page,
+  }, testInfo) => {
+    await page.addInitScript(() => {
+      window.__SCHERMO__ = [];
+      window.gdahomeSchermo = { postMessage: (m) => window.__SCHERMO__.push(m) };
+    });
+    await apriLaCasaAMuro(page, testInfo, {
+      muro: { ...MURO_DI_PROVA, notte: { attiva: true, da: "00:00", a: "23:59" } },
+    });
+    const detti = () => page.evaluate(() => window.__SCHERMO__.slice());
+    await expect.poll(detti).toContain("muro:si");
+    await page.evaluate(() => window.dmMuro.riposa());
+    await expect.poll(detti).toContain("spento:si");
+    await muro(page).locator(".mu-riposo").click();
+    await expect.poll(detti).toContain("spento:no");
+    const tutti = await detti();
+    expect(tutti.filter((d) => d === "muro:si")).toHaveLength(1);
+  });
+
   test("dal config del tablet si passa a tutto il config", async ({ page }, testInfo) => {
     await apriLaCasaAMuro(page, testInfo, { muro: MURO_DI_PROVA });
     await page.evaluate(() => window.dmMuro.configDelMuro?.());

@@ -8759,14 +8759,14 @@ function comEMessoIlSensore(entity2, states) {
       "both fine: statistics do not cover the requested period yet"
     )})`;
   const vuota = t("vuota", "empty");
-  const detto = [
+  const detto2 = [
     classeOk ? "" : `${t("state_class è", "state_class is")} «${classe2 || vuota}», ${t(
       "serve total o total_increasing",
       "it needs total or total_increasing"
     )}`,
     unitaOk ? "" : `${t("l'unità è", "the unit is")} «${unita2 || vuota}», ${t("serve kWh", "it needs kWh")}`
   ].filter(Boolean);
-  return `${entity2} (${detto.join("; ")})`;
+  return `${entity2} (${detto2.join("; ")})`;
 }
 function spiegazioneDellErrore(testo2, states = allStates()) {
   const grezzo = clean(testo2);
@@ -16361,11 +16361,11 @@ function createCycleTracker({
               continue;
             }
             delete record2.sospeso;
-            const detto = finiteOrNull2(entry.iniziatoIl);
-            const sensato = detto != null && detto <= timestamp && timestamp - detto <= UN_GIORNO_MS;
+            const detto2 = finiteOrNull2(entry.iniziatoIl);
+            const sensato = detto2 != null && detto2 <= timestamp && timestamp - detto2 <= UN_GIORNO_MS;
             const guardatoDaPoco = timestamp - (finiteOrNull2(vistoPrima) ?? -Infinity) <= GUARDATO_DA_POCO_MS;
             record2.active = {
-              startMs: sensato ? detto : timestamp,
+              startMs: sensato ? detto2 : timestamp,
               /* `true` quando l'ora dell'avvio e' una supposizione: chi la
                * mostra lo dice, invece di far passare per un orario una cosa
                * che orario non e'. */
@@ -22589,8 +22589,8 @@ var CHIAVE_SEZIONI_MIE = "cd_sezioni_mie";
 var PREFISSO = "mia-";
 var FORMATI_SEZIONE = Object.freeze(["righe", "piccole"]);
 function formatoDellaSezione(valore3) {
-  const detto = pulito19(valore3);
-  return FORMATI_SEZIONE.includes(detto) ? detto : FORMATI_SEZIONE[0];
+  const detto2 = pulito19(valore3);
+  return FORMATI_SEZIONE.includes(detto2) ? detto2 : FORMATI_SEZIONE[0];
 }
 var chiaveDellaSezione = (id) => `${PREFISSO}${pulito19(id)}`;
 var eUnaSezioneMia = (chiave2) => pulito19(chiave2).startsWith(PREFISSO);
@@ -31907,10 +31907,10 @@ function quelloCheDiceIlPannello(pannello) {
     ...misure
   };
 }
-function salvaLaBarra(detto) {
+function salvaLaBarra(detto2) {
   const prima = configurazione4();
-  writeJsonIfChanged(CHIAVE_BARRA, normalizzaBarra(detto));
-  if (clean(detto.posta) !== prima.posta) writeJsonIfChanged(CHIAVE_POSTA, {}, { sync: false });
+  writeJsonIfChanged(CHIAVE_BARRA, normalizzaBarra(detto2));
+  if (clean(detto2.posta) !== prima.posta) writeJsonIfChanged(CHIAVE_POSTA, {}, { sync: false });
   ensurePannelloDellaBarra();
 }
 function onClickPannello(event) {
@@ -31939,9 +31939,9 @@ function onClickPannello(event) {
   }
   if (event.target.closest("[data-dm-casa-mia-piu]")) {
     event.preventDefault();
-    const detto = quelloCheDiceIlPannello(pannello);
-    detto.mie.push({ tinta: TINTA_MIA });
-    salvaLaBarra(detto);
+    const detto2 = quelloCheDiceIlPannello(pannello);
+    detto2.mie.push({ tinta: TINTA_MIA });
+    salvaLaBarra(detto2);
     return;
   }
   const togliMia = event.target.closest("[data-dm-casa-mia-via]");
@@ -31949,10 +31949,10 @@ function onClickPannello(event) {
     event.preventDefault();
     const riga3 = togliMia.closest("[data-dm-casa-mia]");
     const quale = Number(riga3?.dataset.dmCasaMia);
-    const detto = quelloCheDiceIlPannello(pannello);
-    if (Number.isInteger(quale) && quale >= 0 && quale < detto.mie.length) {
-      detto.mie.splice(quale, 1);
-      salvaLaBarra(detto);
+    const detto2 = quelloCheDiceIlPannello(pannello);
+    if (Number.isInteger(quale) && quale >= 0 && quale < detto2.mie.length) {
+      detto2.mie.splice(quale, 1);
+      salvaLaBarra(detto2);
     }
     return;
   }
@@ -56879,15 +56879,15 @@ function instantSourceFlows() {
   });
 }
 function loSbilancioDaDire() {
-  const detto = laQuadraturaNonTorna({
+  const detto2 = laQuadraturaNonTorna({
     solar: potenzaViva(SORGENTI_ISTANTANEE.solar),
     grid: potenzaViva(SORGENTI_ISTANTANEE.grid),
     battery: potenzaViva(SORGENTI_ISTANTANEE.battery),
     home: potenzaViva(SORGENTI_ISTANTANEE.home)
   });
   const cera = state52.sbilancioDiPrima;
-  state52.sbilancioDiPrima = Boolean(detto);
-  return cera && detto ? detto : null;
+  state52.sbilancioDiPrima = Boolean(detto2);
+  return cera && detto2 ? detto2 : null;
 }
 var BOLLE_SOSPETTABILI = Object.freeze([
   ["battery", "n-battery"],
@@ -56896,16 +56896,16 @@ var BOLLE_SOSPETTABILI = Object.freeze([
 function disegnaLoSbilancio() {
   const scope = scopeFor("");
   if (!scope) return false;
-  const detto = loSbilancioDaDire();
+  const detto2 = loSbilancioDaDire();
   for (const [quale, id] of BOLLE_SOSPETTABILI) {
     const bolla = scope.querySelector(`#${id}`);
     if (!bolla) continue;
-    const suo2 = Boolean(detto) && detto.chi === quale;
+    const suo2 = Boolean(detto2) && detto2.chi === quale;
     if (bolla.hasAttribute("data-dm-sbilancio") !== suo2)
       bolla.toggleAttribute("data-dm-sbilancio", suo2);
   }
   let nota = scope.querySelector("[data-dm-flow-sbilancio]");
-  if (!detto) {
+  if (!detto2) {
     nota?.remove();
     return false;
   }
@@ -56918,8 +56918,8 @@ function disegnaLoSbilancio() {
   scriviTestoSeCambia(
     nota,
     `⚠️ ${t("I conti non tornano", "The numbers do not add up")} · ${Math.round(
-      detto.entra
-    )} W → ${Math.round(detto.esce)} W. ${t(
+      detto2.entra
+    )} W → ${Math.round(detto2.esce)} W. ${t(
       "Esce più corrente di quanta ne entra: di solito è il verso di un sensore al contrario, e si cambia nella scheda Energia.",
       "More power is going out than coming in: usually a sensor's direction is reversed, and it is changed in the Energy tab."
     )}`
@@ -60470,10 +60470,10 @@ function allaTastiera(evento) {
 }
 function ilMessaggioDellOspite(evento) {
   if (evento.source !== root.parent || evento.source === root) return;
-  const detto = evento.data;
-  if (!detto || typeof detto !== "object") return;
-  if (detto.source !== DALL_OSPITE || detto.action !== "dove-lo-metto") return;
-  apriIlPopupDelDispositivo(detto.dispositivo || {});
+  const detto2 = evento.data;
+  if (!detto2 || typeof detto2 !== "object") return;
+  if (detto2.source !== DALL_OSPITE || detto2.action !== "dove-lo-metto") return;
+  apriIlPopupDelDispositivo(detto2.dispositivo || {});
 }
 function foglio() {
   installStyle(
@@ -67528,8 +67528,8 @@ function valore2(id) {
 function nomeProposto(entity2, states = allStates()) {
   const id = clean(entity2);
   if (!ENTITA_INTERA.test(id)) return "";
-  const detto = clean(nomeDaHomeAssistant(id, states));
-  return !detto || detto === id ? "" : detto;
+  const detto2 = clean(nomeDaHomeAssistant(id, states));
+  return !detto2 || detto2 === id ? "" : detto2;
 }
 function cosaMancaAlClima({ nome, entita: entita3, proposto } = {}) {
   if (!ENTITA_INTERA.test(clean(entita3))) return "entita";
@@ -67538,7 +67538,7 @@ function cosaMancaAlClima({ nome, entita: entita3, proposto } = {}) {
 }
 function avvisa(quale) {
   const dove = quale === "entita" ? CAMPO_ENTITA : CAMPO_NOME;
-  const detto = quale === "entita" ? t(
+  const detto2 = quale === "entita" ? t(
     "Scegli l'entità del clima: è quella che comincia per climate.",
     "Choose the climate entity: it is the one starting with climate."
   ) : t("Dai un nome all'unità: è quello che si legge sulla card.", "Name the unit: it is what the card shows.");
@@ -67546,8 +67546,8 @@ function avvisa(quale) {
     campo2(dove)?.focus?.();
   } catch (_errore) {
   }
-  if (typeof root.edToast === "function") root.edToast(`⚠️ ${detto}`);
-  else root.alert?.(detto);
+  if (typeof root.edToast === "function") root.edToast(`⚠️ ${detto2}`);
+  else root.alert?.(detto2);
 }
 function proponiIlNome() {
   const casella3 = campo2(CAMPO_NOME);
@@ -75530,8 +75530,8 @@ function statoVisibile(view) {
 var cosaE = (view) => view?.soloInfisso ? INFISSO : view?.kind || "";
 function statusLabel(view) {
   const stato2 = statoVisibile(view);
-  const detto = coverStateLabel(cosaE(view), stato2);
-  if (detto) return detto;
+  const detto2 = coverStateLabel(cosaE(view), stato2);
+  if (detto2) return detto2;
   if (view.down) return t("Ferma", "Stopped");
   return t("Sconosciuta", "Unknown");
 }
@@ -78313,7 +78313,20 @@ function fermaIlBattito() {
   if (state107.timer) root.clearInterval?.(state107.timer);
   state107.timer = null;
 }
+var detto = { muro: "", spento: "" };
+function diciAlloSchermo(chiave2, si) {
+  const canale = root.gdahomeSchermo;
+  const valore3 = si ? "si" : "no";
+  if (!canale?.postMessage || detto[chiave2] === valore3) return;
+  detto[chiave2] = valore3;
+  try {
+    canale.postMessage(`${chiave2}:${valore3}`);
+  } catch (_errore) {
+  }
+}
 function togliLaTela() {
+  diciAlloSchermo("spento", false);
+  diciAlloSchermo("muro", false);
   fermaIlBattito();
   doc?.getElementById(ID2)?.remove();
   doc?.documentElement?.classList?.remove("dm-muro-acceso");
@@ -78358,6 +78371,8 @@ function disegna5() {
   );
   if (scriviSeCambia(nodo2.firstElementChild, corpo2)) caricaLeTelecamere(nodo2, vecchie);
   if (state107.riposo) posizionaIlRiposo(nodo2);
+  diciAlloSchermo("muro", true);
+  diciAlloSchermo("spento", Boolean(state107.riposo && eNotte(muro)));
 }
 function posizionaIlRiposo(nodo2) {
   const blocco3 = nodo2.querySelector(".mu-deriva");
@@ -80847,11 +80862,11 @@ async function aspettaCheSiMuova(video, opzioni = {}) {
     if (Number.isFinite(adesso)) prima = adesso;
   }
   if (ceUnaFotoFerma(video)) return true;
-  const detto = t(
+  const detto2 = t(
     "HLS: l'intestazione arriva ma le immagini no",
     "HLS: the header arrives but the pictures do not"
   );
-  throw new Error(`${detto} (${Math.round(attesa / 1e3)}s)`);
+  throw new Error(`${detto2} (${Math.round(attesa / 1e3)}s)`);
 }
 function mettiIlPoster(video, entity2, states) {
   if (!video || typeof video.setAttribute !== "function") return "";
@@ -81376,7 +81391,7 @@ function stanzeConIgrometro() {
   return Array.isArray(stanze3) ? stanze3.filter((stanza) => clean(stanza?.hum)) : [];
 }
 function frasiDiCosaManca(mancanze) {
-  const detto = {
+  const detto2 = {
     "soglia-spenta": t(
       "Adesso è spento: scrivi una quota fra 30 e 95 per accenderlo, zero lo rispegne.",
       "Right now it is off: write a level between 30 and 95 to turn it on, zero turns it back off."
@@ -81390,7 +81405,7 @@ function frasiDiCosaManca(mancanze) {
       "No window sits in a room that has a hygrometer: pick the room in the window's row, below."
     )
   };
-  return mancanze.map((codice) => detto[codice]).filter(Boolean);
+  return mancanze.map((codice) => detto2[codice]).filter(Boolean);
 }
 function aggiornaCosaManca(riquadro) {
   const nota = riquadro?.querySelector("[data-dm-umidita-manca]");
@@ -85702,10 +85717,10 @@ function chiediAlPonte2(messaggio, attesa = ATTESA) {
       delete appese[id];
       rifiuta(new Error("il ponte non risponde"));
     }, attesa);
-    appese[id] = (detto) => {
+    appese[id] = (detto2) => {
       root.clearTimeout?.(sveglia);
-      if (detto?.success === false) rifiuta(new Error(clean(detto?.error?.code) || "no"));
-      else risolvi2(detto?.result);
+      if (detto2?.success === false) rifiuta(new Error(clean(detto2?.error?.code) || "no"));
+      else risolvi2(detto2?.result);
       delete appese[id];
     };
     try {
@@ -85727,11 +85742,11 @@ function lessicale(nome) {
 async function chiediIDispositiviAlPonte() {
   if (!ilPonteCE()) return false;
   try {
-    const detto = await chiediAlPonte2({ type: IL_COMANDO });
-    if (!detto || typeof detto !== "object") return false;
+    const detto2 = await chiediAlPonte2({ type: IL_COMANDO });
+    if (!detto2 || typeof detto2 !== "object") return false;
     return ricordaIDispositivi({
-      di: detto.di && typeof detto.di === "object" ? detto.di : {},
-      nomi: detto.nomi && typeof detto.nomi === "object" ? detto.nomi : {}
+      di: detto2.di && typeof detto2.di === "object" ? detto2.di : {},
+      nomi: detto2.nomi && typeof detto2.nomi === "object" ? detto2.nomi : {}
     });
   } catch (_errore) {
     return false;
@@ -90755,13 +90770,13 @@ var state135 = root[KEY139] ||= {
 };
 var SCADENZA_MS = 15 * 6e4;
 var soldi2 = (valore3) => `${formatNumber(valore3, 2)} €`;
-function ilBloccoDelDispositivo(detto, config, nome = "") {
-  if (!detto || !config?.voci?.length) return "";
+function ilBloccoDelDispositivo(detto2, config, nome = "") {
+  if (!detto2 || !config?.voci?.length) return "";
   const quante2 = config.voci.length;
-  const barra = detto.fasce.filter((fascia2) => fascia2.quota > 0.05).map(
+  const barra = detto2.fasce.filter((fascia2) => fascia2.quota > 0.05).map(
     (fascia2) => `<span class="dm-fasce-fetta" style="width:${fascia2.quota.toFixed(2)}%;background:${tintaDellaFascia(quante2, fascia2.indice)}" title="${esc(nomeDellaFascia(fascia2.indice))} ${fascia2.quota.toFixed(0)}%"></span>`
   ).join("");
-  const righe2 = detto.fasce.map((fascia2) => {
+  const righe2 = detto2.fasce.map((fascia2) => {
     const ripiego = fascia2.suo ? "" : `<small class="dm-fasce-ripiego">${esc(t("prezzo unico", "single rate"))}</small>`;
     const soloRete = fascia2.kwh - fascia2.rete < 0.05;
     const dallaRete = soloRete ? "" : `<small class="dm-fasce-dalla-rete">${formatNumber(fascia2.rete, 1)} ${esc(t("dalla rete", "from grid"))}</small>`;
@@ -90775,29 +90790,29 @@ function ilBloccoDelDispositivo(detto, config, nome = "") {
           <span class="dm-fasce-euro">${soldi2(fascia2.euro)}</span>
         </div>`;
   }).join("");
-  const meglio = detto.risparmio !== null && detto.risparmio > 5e-3;
-  const peggio = detto.risparmio !== null && detto.risparmio < -5e-3;
+  const meglio = detto2.risparmio !== null && detto2.risparmio > 5e-3;
+  const peggio = detto2.risparmio !== null && detto2.risparmio < -5e-3;
   const verso2 = meglio ? t("in meno di una tariffa unica", "less than a single rate") : peggio ? t("in più di una tariffa unica", "more than a single rate") : t("come una tariffa unica", "the same as a single rate");
-  const confronto = detto.unico ? `<small><b>${esc(meglio || peggio ? soldi2(Math.abs(detto.risparmio)) : "")}</b> ${esc(verso2)} — ${formatNumber(detto.unico.prezzo, 3)} €/kWh → ${soldi2(detto.unico.euro)}</small>` : "";
+  const confronto = detto2.unico ? `<small><b>${esc(meglio || peggio ? soldi2(Math.abs(detto2.risparmio)) : "")}</b> ${esc(verso2)} — ${formatNumber(detto2.unico.prezzo, 3)} €/kWh → ${soldi2(detto2.unico.euro)}</small>` : "";
   const punta = `
     <div class="dm-fasce-confronto" data-verso="${meglio ? "meglio" : peggio ? "peggio" : "pari"}">
       <span aria-hidden="true">${meglio ? "💰" : peggio ? "⚠️" : "🕐"}</span>
-      <span>${esc(t("La fascia in cui assorbe di più:", "The band it draws most in:"))} <b>${esc(nomeDellaFascia(detto.punta.indice))}</b> · <b>${formatNumber(detto.punta.quota, 0)}%</b>${confronto}</span>
+      <span>${esc(t("La fascia in cui assorbe di più:", "The band it draws most in:"))} <b>${esc(nomeDellaFascia(detto2.punta.indice))}</b> · <b>${formatNumber(detto2.punta.quota, 0)}%</b>${confronto}</span>
     </div>`;
-  const massimo = detto.ore.reduce((alto, ora2) => Math.max(alto, ora2.kwh), 0);
-  const colonne = massimo ? detto.ore.map((ora2) => {
+  const massimo = detto2.ore.reduce((alto, ora2) => Math.max(alto, ora2.kwh), 0);
+  const colonne = massimo ? detto2.ore.map((ora2) => {
     const alta = ora2.kwh > 0 ? Math.max(3, Math.round(ora2.kwh / massimo * 100)) : 2;
     const tinta = ora2.fascia >= 0 ? tintaDellaFascia(quante2, ora2.fascia) : "#94a3b8";
     return `<span class="dm-profilo-colonna" style="height:${alta}%;background:${tinta}${ora2.kwh > 0 ? "" : ";opacity:.28"}" title="${String(ora2.ora).padStart(2, "0")}:00 · ${formatNumber(ora2.kwh, 2)} kWh"></span>`;
   }).join("") : "";
   const tacche2 = [0, 3, 6, 9, 12, 15, 18, 21].map((ora2) => `<span>${String(ora2).padStart(2, "0")}</span>`).join("");
-  const dalSole = detto.sole > 0.05 ? `<span aria-hidden="true">☀️</span> ${esc(t("Dal sole:", "From the sun:"))} <b>${formatNumber(detto.sole, 1)} kWh</b> · ${esc(t("dalla rete", "from grid"))}: <b>${formatNumber(detto.rete, 1)} kWh</b>. ${esc(t("Non costano niente a nessun'ora, e gli euro qui sopra sono solo su quello che ha preso dalla rete.", "They cost nothing at any hour, and the euros above are only on what it took from the grid."))}` : "";
-  const spartito = detto.tuttoSpartito ? "" : `<span aria-hidden="true">ℹ️</span> ${esc(t("Non spartiti:", "Not split:"))} <b>${formatNumber(detto.spartito.senza, 1)} kWh</b>. ${esc(t("Per quelle ore Home Assistant non tiene il consumo della casa, e non si sa quanto venisse dal sole. La fascia però è quella giusta.", "For those hours Home Assistant doesn't keep the house consumption, so we can't tell how much came from the sun. The band is right all the same."))}`;
+  const dalSole = detto2.sole > 0.05 ? `<span aria-hidden="true">☀️</span> ${esc(t("Dal sole:", "From the sun:"))} <b>${formatNumber(detto2.sole, 1)} kWh</b> · ${esc(t("dalla rete", "from grid"))}: <b>${formatNumber(detto2.rete, 1)} kWh</b>. ${esc(t("Non costano niente a nessun'ora, e gli euro qui sopra sono solo su quello che ha preso dalla rete.", "They cost nothing at any hour, and the euros above are only on what it took from the grid."))}` : "";
+  const spartito = detto2.tuttoSpartito ? "" : `<span aria-hidden="true">ℹ️</span> ${esc(t("Non spartiti:", "Not split:"))} <b>${formatNumber(detto2.spartito.senza, 1)} kWh</b>. ${esc(t("Per quelle ore Home Assistant non tiene il consumo della casa, e non si sa quanto venisse dal sole. La fascia però è quella giusta.", "For those hours Home Assistant doesn't keep the house consumption, so we can't tell how much came from the sun. The band is right all the same."))}`;
   const nota = [dalSole, spartito].filter(Boolean).join("<br>");
   return `
     <div class="dm-fasce-testata">
       <div class="dm-fasce-titolo">🕐 ${esc(t("In quale fascia consuma", "Which band it draws in"))}</div>
-      <div class="dm-fasce-totale"><b>${soldi2(detto.euro)}</b> <small>${formatNumber(detto.kwh, 1)} kWh${nome ? ` · ${esc(nome)}` : ""}</small></div>
+      <div class="dm-fasce-totale"><b>${soldi2(detto2.euro)}</b> <small>${formatNumber(detto2.kwh, 1)} kWh${nome ? ` · ${esc(nome)}` : ""}</small></div>
     </div>
     <div class="dm-fasce-barra">${barra}</div>
     <div class="dm-fasce-griglia">${righe2}</div>
@@ -90841,8 +90856,8 @@ function nomeDelDispositivo(selettore) {
 function chiaveDelConto2(entita3, periodo, unico) {
   return `${entita3}~${periodo.year}-${periodo.month}~${unico}`;
 }
-function disegna6(detto, config, nome) {
-  const markup7 = detto ? ilBloccoDelDispositivo(detto, config, nome) : "";
+function disegna6(detto2, config, nome) {
+  const markup7 = detto2 ? ilBloccoDelDispositivo(detto2, config, nome) : "";
   const riquadro = ilRiquadro(Boolean(markup7));
   if (!riquadro) return false;
   if (!markup7) {
@@ -90893,7 +90908,7 @@ async function aggiornaLeFasceDelDispositivo({ forza = false } = {}) {
     const pezzo = { ...arco3, kind: "month", period: "hour" };
     const righe2 = await leOreDalRecorder([scelto, casa, rete], pezzo, unita2);
     if (giro !== state135.giro) return false;
-    const detto = leFasceDelDispositivo(
+    const detto2 = leFasceDelDispositivo(
       {
         dispositivo: secchielliNellArco(righe2?.[scelto], pezzo),
         casa: secchielliNellArco(righe2?.[casa], pezzo),
@@ -90902,15 +90917,15 @@ async function aggiornaLeFasceDelDispositivo({ forza = false } = {}) {
       config,
       { prezzoUnico: unico }
     );
-    state135.detto = detto;
+    state135.detto = detto2;
     state135.chiave = chiave2;
     state135.letto = Date.now();
     if (clean(doc.getElementById("ed-dev-selector")?.value) !== scelto) return false;
-    const fatto = disegna6(detto, config, nome);
-    if (detto)
+    const fatto = disegna6(detto2, config, nome);
+    if (detto2)
       segnaIlContoMisurato(scelto, periodo, {
-        euro: detto.euro,
-        valoreDelSole: detto.valoreDelSole
+        euro: detto2.euro,
+        valoreDelSole: detto2.valoreDelSole
       });
     return fatto;
   } catch (errore) {
@@ -91075,12 +91090,12 @@ function perche2(motivo, entita3) {
   )}`;
 }
 function accendiOSpegniLaVentola() {
-  const detto = ilComandoDellaVentola(entitaDellaVentola());
-  if (!detto.si) {
-    avvisa2(perche2(detto.perche, detto.entita));
+  const detto2 = ilComandoDellaVentola(entitaDellaVentola());
+  if (!detto2.si) {
+    avvisa2(perche2(detto2.perche, detto2.entita));
     return false;
   }
-  if (chiama5(detto.chiamata)) return true;
+  if (chiama5(detto2.chiamata)) return true;
   avvisa2(
     t(
       "Home Assistant non ha preso il comando della ventola: riprova fra un momento.",
@@ -103998,9 +104013,9 @@ async function aggiornaFotogramma(servizio) {
     try {
       const risposta = await root.fetch(dichiarato.elenco, { cache: "no-store" });
       if (risposta?.ok) {
-        const detto = await risposta.json();
-        fotogramma2 = leggi2(detto);
-        elenco9 = ELENCHI2[servizio]?.(detto) || [];
+        const detto2 = await risposta.json();
+        fotogramma2 = leggi2(detto2);
+        elenco9 = ELENCHI2[servizio]?.(detto2) || [];
       }
     } catch (_errore) {
       fotogramma2 = null;

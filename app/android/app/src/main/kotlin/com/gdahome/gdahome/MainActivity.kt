@@ -66,6 +66,18 @@ class MainActivity : FlutterFragmentActivity() {
                         }
                         risposta.success(null)
                     }
+                    /* Il tablet a muro di notte (`lib/casa/lo_schermo.dart`):
+                     * la luminosita' della sola finestra, da 0 (la piu'
+                     * bassa) a 1; -1 torna a quella del sistema. */
+                    "luminosita" -> {
+                        val valore = (chiamata.arguments as? Number)?.toFloat() ?: -1f
+                        val attributi = window.attributes
+                        attributi.screenBrightness =
+                            if (valore < 0f) WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_NONE
+                            else valore.coerceIn(0f, 1f)
+                        window.attributes = attributi
+                        risposta.success(null)
+                    }
                     else -> risposta.notImplemented()
                 }
             }
