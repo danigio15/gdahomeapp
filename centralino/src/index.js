@@ -65,10 +65,9 @@ export async function alzaIlCentralino({
    * provano la strada da fuori, non la licenza. */
   chiaveLicenze = undefined,
   /* Cosa si fa dei gettoni: `spento`, `registra` o `impone`
-   * (`modo-delle-licenze.js`). Vuoto vuol dire `spento` con la chiave vuota
-   * e `registra` con la chiave scritta: per chiudere il fuori casa a chi non
-   * e' Premium bisogna scrivere `impone`, e con una chiave vuota o storta non
-   * si impone comunque. */
+   * (`modo-delle-licenze.js`). Vuoto vuol dire quello di sempre: `spento`
+   * con la chiave vuota, `impone` con la chiave scritta. `registra` conta
+   * senza chiudere; con una chiave vuota o storta non si impone comunque. */
   modoLicenze = process.env.MODO_LICENZE || "",
   /* Dove chiedere al quadro le licenze tolte (`revoche.js`), per esempio
    * `https://quadro.gdahome.org/v1/licenze/revocate`. Vuoto: non si chiede,

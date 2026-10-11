@@ -31,12 +31,12 @@ fuori casa uguale.
 
 E' la parte importante, ed e' scritta anche in cima al codice.
 
-* **Non verifica niente che sia un segreto.** Il codice di abbinamento non lo
+- **Non verifica niente che sia un segreto.** Il codice di abbinamento non lo
   vede mai: la casa gliene registra l'**impronta**, il telefono arriva con la
   stessa impronta, e il centralino instrada. Il codice vero viaggia dentro il
   filo, fino alla casa, che e' l'unica che lo puo' verificare.
-* **Non verifica i segni dei telefoni.** Li passa alla casa.
-* **Non guarda dentro ai messaggi.** Sono byte, e li sposta.
+- **Non verifica i segni dei telefoni.** Li passa alla casa.
+- **Non guarda dentro ai messaggi.** Sono byte, e li sposta.
 
 L'unica cosa che difende e' che una casa non possa spacciarsi per un'altra —
 perche' se ci riuscisse raccoglierebbe i segni dei telefoni che bussano. La
@@ -47,16 +47,16 @@ Sul disco finisce l'**impronta** del segreto di ogni casa, mai il segreto.
 
 ## Le vie
 
-| | | |
-|---|---|---|
-| `GET /` | — | la soglia: una pagina che dice cos'e' questo indirizzo e dove si va |
-| `GET /salute` | — | da fuori dice solo che e' vivo e da quanto; da dentro la macchina anche quante case ci sono |
-| `GET /versioni` | — | `{"gdahome": {"minima": N}}`: da quale numero di costruzione in su l'app si puo' usare (`VERSIONE_MINIMA_APP`) |
-| `GET /console/` | la chiave, per leggere | la console della chat dell'assistenza |
-| `POST /contatto` | — | il modulo «Contatti» del sito: Caddy lo passa qui, e parte una mail |
-| `WS /casa` | il segreto della casa, dentro il filo | la casa che chiama fuori |
-| `WS /telefono/<casa_…>` | — | un telefono che va alla sua casa |
-| `WS /abbinamento/<impronta>` | — | un telefono che si sta abbinando |
+|                              |                                       |                                                                                                                |
+| ---------------------------- | ------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| `GET /`                      | —                                     | la soglia: una pagina che dice cos'e' questo indirizzo e dove si va                                            |
+| `GET /salute`                | —                                     | da fuori dice solo che e' vivo e da quanto; da dentro la macchina anche quante case ci sono                    |
+| `GET /versioni`              | —                                     | `{"gdahome": {"minima": N}}`: da quale numero di costruzione in su l'app si puo' usare (`VERSIONE_MINIMA_APP`) |
+| `GET /console/`              | la chiave, per leggere                | la console della chat dell'assistenza                                                                          |
+| `POST /contatto`             | —                                     | il modulo «Contatti» del sito: Caddy lo passa qui, e parte una mail                                            |
+| `WS /casa`                   | il segreto della casa, dentro il filo | la casa che chiama fuori                                                                                       |
+| `WS /telefono/<casa_…>`      | —                                     | un telefono che va alla sua casa                                                                               |
+| `WS /abbinamento/<impronta>` | —                                     | un telefono che si sta abbinando                                                                               |
 
 L'identificativo della casa sta nell'indirizzo, e non e' un segreto: serve a
 instradare, come un numero di telefono. Quello che fa entrare e' il segno, che
@@ -101,23 +101,23 @@ npm run avvia
 Non ha dipendenze: la presa WebSocket e' scritta qui dentro, e il resto viene
 da Node. Le variabili che legge:
 
-| | |
-|---|---|
-| `CENTRALINO_PORTA` | su quale porta ascoltare (difetto: 8099) |
-| `CENTRALINO_INDIRIZZO` | su quale indirizzo ascoltare (difetto: `127.0.0.1`; davanti c'e' Caddy) |
-| `CENTRALINO_DATI` | dove tenere l'elenco delle case (difetto: `./dati`) |
-| `CENTRALINO_SILENZIO` | dopo quanti giorni si dimentica una casa sparita (difetto: 180) |
-| `CENTRALINO_REGISTRO` | `debug`, `info`, `attenzione`, `errore` |
-| `CENTRALINO_CASE_NUOVE_PER_INDIRIZZO`, `…_IN_TUTTO` | quante case possono nascere in un'ora (difetto: 20 e 500) |
-| `CENTRALINO_SCRITTURE_PER_INDIRIZZO`, `…_IN_TUTTO` | quante scritture verso GitHub in un'ora (difetto: 90 e 600; il tetto in tutto non vale per le case nate da piu' di una settimana) |
-| `GITHUB_RAMO_ALLEGATI` | il ramo dove si committano foto e video (`accendi.sh` scrive `allegati`) |
-| `CHIAVE_CONSOLE` | la chiave della console: almeno 32 caratteri, se no la console resta chiusa |
-| `CHAT_SOLO_CASE_CONOSCIUTE` | `1`: una linea della chat nasce solo con nome e segreto di una casa del filo |
-| `VERSIONE_MINIMA_APP` | il numero di costruzione piu' piccolo dell'app che si puo' ancora usare, detto a tutti su `GET /versioni` (difetto: 0, nessuno si ferma; vedi `docs/LICENZE.md`) |
-| `MODO_LICENZE` | `spento`, `registra` o `impone`: cosa si fa dei gettoni delle licenze (difetto: `spento` con la chiave vuota, com'e' oggi; `registra` con la chiave scritta). Sotto, «Le licenze» |
-| `QUADRO_REVOCHE` | dove chiedere al quadro le licenze tolte, per esempio `https://quadro.gdahome.org/v1/licenze/revocate` (difetto: vuoto, non si chiedono). Si chiedono ogni dieci minuti, e solo con `registra` o `impone` |
-| `CONTATTO_ORIGINI` | da quali origini si manda il modulo (difetto: `https://<sito>` e `https://www.<sito>`) |
-| `POSTA_SERVER`, `POSTA_PORTA`, … | la posta del modulo dei contatti del sito: sotto |
+|                                                     |                                                                                                                                                                                                           |
+| --------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `CENTRALINO_PORTA`                                  | su quale porta ascoltare (difetto: 8099)                                                                                                                                                                  |
+| `CENTRALINO_INDIRIZZO`                              | su quale indirizzo ascoltare (difetto: `127.0.0.1`; davanti c'e' Caddy)                                                                                                                                   |
+| `CENTRALINO_DATI`                                   | dove tenere l'elenco delle case (difetto: `./dati`)                                                                                                                                                       |
+| `CENTRALINO_SILENZIO`                               | dopo quanti giorni si dimentica una casa sparita (difetto: 180)                                                                                                                                           |
+| `CENTRALINO_REGISTRO`                               | `debug`, `info`, `attenzione`, `errore`                                                                                                                                                                   |
+| `CENTRALINO_CASE_NUOVE_PER_INDIRIZZO`, `…_IN_TUTTO` | quante case possono nascere in un'ora (difetto: 20 e 500)                                                                                                                                                 |
+| `CENTRALINO_SCRITTURE_PER_INDIRIZZO`, `…_IN_TUTTO`  | quante scritture verso GitHub in un'ora (difetto: 90 e 600; il tetto in tutto non vale per le case nate da piu' di una settimana)                                                                         |
+| `GITHUB_RAMO_ALLEGATI`                              | il ramo dove si committano foto e video (`accendi.sh` scrive `allegati`)                                                                                                                                  |
+| `CHIAVE_CONSOLE`                                    | la chiave della console: almeno 32 caratteri, se no la console resta chiusa                                                                                                                               |
+| `CHAT_SOLO_CASE_CONOSCIUTE`                         | `1`: una linea della chat nasce solo con nome e segreto di una casa del filo                                                                                                                              |
+| `VERSIONE_MINIMA_APP`                               | il numero di costruzione piu' piccolo dell'app che si puo' ancora usare, detto a tutti su `GET /versioni` (difetto: 0, nessuno si ferma; vedi `docs/LICENZE.md`)                                          |
+| `MODO_LICENZE`                                      | `spento`, `registra` o `impone`: cosa si fa dei gettoni delle licenze (difetto: quello di sempre, `spento` con la chiave vuota e `impone` con la chiave scritta). Sotto, «Le licenze»                     |
+| `QUADRO_REVOCHE`                                    | dove chiedere al quadro le licenze tolte, per esempio `https://quadro.gdahome.org/v1/licenze/revocate` (difetto: vuoto, non si chiedono). Si chiedono ogni dieci minuti, e solo con `registra` o `impone` |
+| `CONTATTO_ORIGINI`                                  | da quali origini si manda il modulo (difetto: `https://<sito>` e `https://www.<sito>`)                                                                                                                    |
+| `POSTA_SERVER`, `POSTA_PORTA`, …                    | la posta del modulo dei contatti del sito: sotto                                                                                                                                                          |
 
 Davanti ci va un proxy che parla in cifrato — il centralino sta su internet, e
 sopra ci passano i fili delle case.
@@ -129,15 +129,15 @@ tiene in uno di tre modi, scritti in `MODO_LICENZE` dentro
 `/etc/tramite/ambiente` (lo script `accendi.sh` lo rilegge e lo riscrive a
 ogni giro, come gli altri):
 
-| | |
-|---|---|
-| `spento` | nessuno guarda i gettoni, entrano tutti. Di serie con la chiave vuota, cioe' oggi |
-| `registra` | i gettoni si verificano e si conta chi resterebbe fuori, ma entrano tutti. Di serie con la chiave scritta |
-| `impone` | da fuori si entra con Premium: `4402` a chi non ce l'ha, `4426` a chi ha l'add-on di prima |
+|            |                                                                                                                                                 |
+| ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| `spento`   | nessuno guarda i gettoni, entrano tutti. Di serie con la chiave vuota, cioe' oggi                                                               |
+| `registra` | i gettoni si verificano e si conta chi resterebbe fuori, ma entrano tutti                                                                       |
+| `impone`   | da fuori si entra con Premium: `4402` a chi non ce l'ha, `4426` a chi ha l'add-on di prima. Di serie con la chiave scritta, com'e' sempre stato |
 
-Scrivere la chiave pubblica non chiude piu' niente da solo: per chiudere
-serve `MODO_LICENZE=impone`, e con una chiave vuota o storta `impone` non si
-accende comunque — il registro lo dice, e il centralino resta `spento`. Si
+Con la chiave scritta si impone, come prima; `MODO_LICENZE=registra` serve a
+guardare prima di chiudere, o a riaprire senza un rilascio. Con una chiave
+vuota o storta `impone` non si accende comunque — il registro lo dice, e il centralino resta `spento`. Si
 torna indietro togliendo la riga e riavviando (`systemctl restart tramite`).
 
 Prima di passare a `impone` si guarda `/salute` chiesto dalla macchina
@@ -181,14 +181,14 @@ pigrizia: una mail che arrivi davvero vuol dire SPF, DKIM e una reputazione da
 difendere, e quelle sono della casella. Chi ha scritto sta nel `Reply-To`, cosi'
 «Rispondi» risponde a lui.
 
-| | |
-|---|---|
-| `POSTA_SERVER` | il server di posta (es. `smtp.mail.me.com`). Vuoto: il modulo e' spento |
-| `POSTA_PORTA` | 587 (STARTTLS) o 465 (TLS). Difetto: 587 |
-| `POSTA_SICUREZZA` | `starttls`, `tls` o `nessuna`; si ricava dalla porta, e `nessuna` vale solo verso `127.0.0.1` |
-| `POSTA_UTENTE`, `POSTA_PASSWORD` | la casella con cui si entra |
-| `POSTA_DA` | il mittente, che di norma e' la casella stessa. Difetto: `POSTA_UTENTE` |
-| `POSTA_A` | a chi arriva: `assistenza@gdahome.org` |
+|                                  |                                                                                               |
+| -------------------------------- | --------------------------------------------------------------------------------------------- |
+| `POSTA_SERVER`                   | il server di posta (es. `smtp.mail.me.com`). Vuoto: il modulo e' spento                       |
+| `POSTA_PORTA`                    | 587 (STARTTLS) o 465 (TLS). Difetto: 587                                                      |
+| `POSTA_SICUREZZA`                | `starttls`, `tls` o `nessuna`; si ricava dalla porta, e `nessuna` vale solo verso `127.0.0.1` |
+| `POSTA_UTENTE`, `POSTA_PASSWORD` | la casella con cui si entra                                                                   |
+| `POSTA_DA`                       | il mittente, che di norma e' la casella stessa. Difetto: `POSTA_UTENTE`                       |
+| `POSTA_A`                        | a chi arriva: `assistenza@gdahome.org`                                                        |
 
 `accendi.sh` li chiede, e si possono lasciare vuoti: il modulo allora **non fa
 finta** — risponde che non e' configurato e dice a chi scrive l'indirizzo a cui
@@ -228,7 +228,7 @@ non c'e' ancora, e resta lo scambio effimero. Chi guarda passare due chiavi
 pubbliche non ricava niente.
 
 **Il limite, detto perche' vada scritto e non scoperto.** Un centralino
-riscritto per *attaccare* — non che guarda, ma che si mette in mezzo — potrebbe
+riscritto per _attaccare_ — non che guarda, ma che si mette in mezzo — potrebbe
 intromettersi nell'abbinamento di un telefono nuovo, perche' li' non c'e'
 ancora niente di condiviso da cui riconoscersi. I telefoni gia' abbinati
 restano al sicuro comunque: la loro chiave non e' mai passata di qui, e senza

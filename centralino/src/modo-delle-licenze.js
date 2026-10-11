@@ -18,11 +18,11 @@
  *
  * ─── Di serie, e quello che non si puo' fare per sbaglio ──────────────────
  *
- * Senza `MODO_LICENZE`: `spento` con la chiave vuota, `registra` con la
- * chiave scritta. Scrivere la chiave, quindi, **non chiude piu' niente** da
- * solo: comincia a contare. Per chiudere serve dirlo, `MODO_LICENZE=impone`,
- * in `/etc/tramite/ambiente`, e si torna indietro togliendo la riga e
- * riavviando — un minuto, senza rilasciare niente.
+ * Senza `MODO_LICENZE` si fa quello che si e' sempre fatto: `spento` con la
+ * chiave vuota, `impone` con la chiave scritta. Chi vuole guardare prima di
+ * chiudere scrive `MODO_LICENZE=registra` in `/etc/tramite/ambiente`; chi
+ * vuole riaprire senza rilasciare niente scrive `spento`. Un riavvio, e un
+ * minuto.
  *
  * E non si impone mai senza una chiave buona. Con la chiave vuota, o storta,
  * nessun gettone potrebbe valere: imporre vorrebbe dire chiudere fuori tutte
@@ -52,7 +52,7 @@ export function ilModoDelleLicenze(chiesto, { chiave = "", registro } = {}) {
   const dice = registro ?? { info() {}, attenzione() {}, errore() {} };
   const buona = chiaveBuona(chiave);
   const scritta = String(chiave ?? "") !== "";
-  const diSerie = buona ? "registra" : "spento";
+  const diSerie = buona ? "impone" : "spento";
   const parola = String(chiesto ?? "")
     .trim()
     .toLowerCase();
@@ -60,11 +60,13 @@ export function ilModoDelleLicenze(chiesto, { chiave = "", registro } = {}) {
   if (!parola) return diSerie;
 
   if (!MODI_DELLE_LICENZE.includes(parola)) {
+    /* Un errore di battitura non chiude: si conta e basta. */
+    const prudente = buona ? "registra" : "spento";
     dice.errore(
       `MODO_LICENZE=«${chiesto}» non e' un modo che conosco (spento, registra, impone): ` +
-        `resto «${diSerie}», e da fuori entrano tutti`,
+        `resto «${prudente}», e da fuori entrano tutti`,
     );
-    return diSerie;
+    return prudente;
   }
 
   if (parola !== "spento" && !buona) {

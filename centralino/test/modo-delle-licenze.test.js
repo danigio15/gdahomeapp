@@ -167,9 +167,9 @@ test("oggi: la chiave e' vuota, e il modo di serie e' spento", () => {
   assert.equal(ilModoDelleLicenze("", { chiave: CHIAVE_PUBBLICA_LICENZE }), "spento");
 });
 
-test("con la chiave scritta e nessun modo detto si registra, non si impone", () => {
-  assert.equal(ilModoDelleLicenze("", { chiave: PUBBLICA_DI_PROVA }), "registra");
-  assert.equal(ilModoDelleLicenze(undefined, { chiave: PUBBLICA_DI_PROVA }), "registra");
+test("con la chiave scritta e nessun modo detto si impone, come si e' sempre fatto", () => {
+  assert.equal(ilModoDelleLicenze("", { chiave: PUBBLICA_DI_PROVA }), "impone");
+  assert.equal(ilModoDelleLicenze(undefined, { chiave: PUBBLICA_DI_PROVA }), "impone");
 });
 
 test("i tre modi, detti come si vuole, con una chiave buona", () => {
@@ -222,12 +222,13 @@ test("la classe, senza modo detto, fa quello che faceva: con la chiave impone, s
   }
 });
 
-test("il centralino vero, acceso come in produzione: spento di serie, e impone solo con la chiave", async () => {
+test("il centralino vero, acceso come in produzione: spento senza chiave, impone con la chiave", async () => {
   for (const [opzioni, atteso] of [
     [{}, "spento"],
     [{ modoLicenze: "impone" }, "spento"],
     [{ modoLicenze: "registra" }, "spento"],
-    [{ chiaveLicenze: PUBBLICA_DI_PROVA }, "registra"],
+    [{ chiaveLicenze: PUBBLICA_DI_PROVA }, "impone"],
+    [{ chiaveLicenze: PUBBLICA_DI_PROVA, modoLicenze: "registra" }, "registra"],
     [{ chiaveLicenze: PUBBLICA_DI_PROVA, modoLicenze: "impone" }, "impone"],
     [{ chiaveLicenze: PUBBLICA_DI_PROVA, modoLicenze: "spento" }, "spento"],
   ]) {

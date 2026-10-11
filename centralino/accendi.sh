@@ -331,10 +331,10 @@ POSTA_A="${POSTA_A:-$(gia_scritto "$CONFIGURAZIONE/ambiente" POSTA_A)}"
 # un giro dopo resta com'era: vuoto o zero, non si ferma nessuno.
 VERSIONE_MINIMA_APP="${VERSIONE_MINIMA_APP:-$(gia_scritto "$CONFIGURAZIONE/ambiente" VERSIONE_MINIMA_APP)}"
 # Il modo delle licenze (centralino/src/modo-delle-licenze.js): `spento`,
-# `registra` o `impone`. Vuoto vuol dire spento con la chiave vuota e registra
-# con la chiave scritta: il fuori casa si chiude a chi non e' Premium solo con
-# `impone`, scritto apposta (MODO_LICENZE=impone bash accendi.sh, o a mano in
-# `ambiente` e un riavvio). E dove chiedere al quadro le licenze tolte: vuoto,
+# `registra` o `impone`. Vuoto vuol dire quello di sempre: spento con la
+# chiave vuota, impone con la chiave scritta. `registra` conta senza chiudere
+# (MODO_LICENZE=registra bash accendi.sh, o a mano in `ambiente` e un
+# riavvio). E dove chiedere al quadro le licenze tolte: vuoto,
 # non si chiedono. Tutti e due si rileggono da `ambiente`, come gli altri:
 # rilanciare lo script non li porta via.
 MODO_LICENZE="${MODO_LICENZE:-$(gia_scritto "$CONFIGURAZIONE/ambiente" MODO_LICENZE)}"
