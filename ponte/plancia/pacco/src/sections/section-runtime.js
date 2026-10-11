@@ -5116,6 +5116,7 @@ var SOURCE_INDEX = Object.freeze({
   "Questa luce dichiara solo acceso e spento: Home Assistant non espone né luminosità né colore.": "This light only reports on and off: Home Assistant exposes neither brightness nor colour.",
   "Questa luce è collegata a uno switch: accende e spegne soltanto.": "This light is wired to a switch: it only turns on and off.",
   "Questa mappa c'è già.": "That map is already there.",
+  "questa plancia": "this dashboard",
   "Questa presa è configurata come «si vede ma non si comanda»: la finestra la racconta, ma non la accende né la spegne.": "This socket is configured as shown but not controllable: this window reports it, it never switches it.",
   "Questa ricarica": "This charge",
   "Questa serratura sa fare tutte e due le cose, e sono diverse: «sblocca» gira la chiave, «apri» tira lo scrocco e la porta si apre. Lasciandola com'è il tocco apre, come ha sempre fatto.": "This lock can do both, and they are not the same: “unlock” turns the key, “open” pulls the latch and the door opens. Left as it is, a tap opens, as it always has.",
@@ -85190,7 +85191,11 @@ function fonteDalleSezioni(sezioni2 = {}, altro = {}) {
       batteria: misura7("stato_carica_batteria")
     },
     /* I lettori della sezione Musica, per la pagina Musica. */
-    lettori: lettoriConfigurati(elenco5(altro.lettori)).filter((l) => entita2(l.entity)).map((l) => ({ entity: entita2(l.entity), nome: testo(l.nome) })),
+    lettori: lettoriConfigurati(elenco5(altro.lettori)).filter((l) => entita2(l.entity)).map((l) => ({
+      entity: entita2(l.entity),
+      nome: testo(l.nome),
+      comandi: elenco5(l.comandi).map(entita2).filter(Boolean)
+    })),
     stanze: elenco5(sezioni2.rooms).filter((s) => s && testo(s.name)).map((s) => ({
       id: testo(s.id, 80),
       name: testo(s.name),
@@ -86242,7 +86247,19 @@ function lettoreGrande(l) {
     ${l.puo.sorgente && l.sorgenti.length && !l.spento ? `<div class="mu-mp-sorgenti">${l.sorgenti.slice(0, 8).map(
     (sorgente) => `<button type="button" class="${sorgente === l.sorgente ? "si" : ""}" data-mu-fa="mp-sorgente" data-mu-sorgente="${esc(sorgente)}" data-mu-entita="${esc(l.entity)}">${esc(sorgente)}</button>`
   ).join("")}</div>` : ""}
+    ${comandiDelLettore(l.entity)}
   </div>`;
+}
+function comandiDelLettore(entity2) {
+  const voce2 = (state109.fonte?.lettori || []).find((l) => l.entity === entity2);
+  const comandi = (voce2?.comandi || []).filter((id) => stato2(id));
+  if (!comandi.length) return "";
+  return `<div class="mu-mp-sorgenti mu-mp-comandi">${comandi.map((id) => {
+    const s = stato2(id);
+    const servizio = servizioDellEntita(id, String(s?.state || ""));
+    const parole4 = statoInParole2(id);
+    return `<button type="button" class="${acceso4(id) ? "si" : ""}" ${servizio ? `data-mu-fa="entita" data-mu-entita="${esc(id)}"` : `data-mu-entita="${esc(id)}" aria-disabled="true"`}>${esc(nomeDi7(id))}${parole4 ? ` <small>${esc(parole4)}</small>` : ""}</button>`;
+  }).join("")}</div>`;
 }
 var lettoriDiQui = [];
 function bottoneDelGruppo(l) {
@@ -87662,6 +87679,7 @@ ${MURO} .mu-mp-volume{display:flex;align-items:center;gap:14px}
 ${MURO} .mu-mp-cursore{flex:1}
 ${MURO} .mu-mp-pct{min-width:52px;text-align:right;font-size:18px;font-weight:800;font-variant-numeric:tabular-nums}
 ${MURO} .mu-mp-sorgenti{display:flex;gap:8px;flex-wrap:wrap}
+${MURO} .mu-mp-comandi button small{margin-left:4px;font-weight:700;opacity:.75}
 ${MURO} .mu-mp-sorgenti button{padding:10px 16px;border-radius:999px;font-weight:800;font-size:14px;color:var(--text-dim);background:color-mix(in srgb,var(--text) 5%,var(--card-bg));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--text) 10%,transparent)}
 ${MURO} .mu-mp-sorgenti button.si{color:color-mix(in srgb,var(--acc) 85%,var(--text));background:color-mix(in srgb,var(--acc) 16%,var(--card-bg));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--acc) 45%,transparent)}
 ${MURO} .mu-mp-elenco{display:flex;flex-direction:column;gap:12px;min-height:0;overflow-y:auto;scrollbar-width:none}
@@ -88150,10 +88168,30 @@ function elencoMarkup(p, i) {
       "It fills itself with the source dashboard's climate, split into the Cooling and Heating tabs like the Climate section: air conditioners in cooling, radiators and thermostats in heating, heat pumps in both."
     )
   }[p.modello];
-  const nomi = (p.modello === "clima" ? [...comandiDellaPagina(p, state110.fonte || {}, "freddo"), ...comandiDellaPagina(p, state110.fonte || {}, "caldo")] : comandi).map((c) => nomeDi8(c.entita)).filter((n, k, tutti) => tutti.indexOf(n) === k);
+  const nomi = (p.modello === "clima" ? [
+    ...comandiDellaPagina(p, state110.fonte || {}, "freddo"),
+    ...comandiDellaPagina(p, state110.fonte || {}, "caldo")
+  ] : comandi).map((c) => nomeDi8(c.entita)).filter((n, k, tutti) => tutti.indexOf(n) === k);
   return `<div class="mu-ed-nota">${esc(spiega)}</div>
-    ${p.modello === "clima" ? riga2(t("Si apre su", "Opens on"), "", scelte3(`pagine.${i}.zona`, p.zona, [["freddo", `❄️ ${t("Freddo", "Cooling")}`], ["caldo", `🔥 ${t("Caldo", "Heating")}`]])) : ""}
-    ${p.modello === "clima" ? riga2(t("Il tasto ⏻ accende con", "The ⏻ button turns on with"), t("Il comando rapido della plancia: modalità, gradi e ventola scelti per ogni stanza nella scheda Clima. Premuto di nuovo, spegne.", "The dashboard quick command: mode, degrees and fan chosen for each room in the Climate tab. Pressed again, it turns off."), scelte3(`pagine.${i}.accensione`, p.accensione, [["rapido", `⚡ ${t("Comando rapido", "Quick command")}`], ["ultima", t("Ultima modalità", "Last mode")]])) : ""}
+    ${p.modello === "clima" ? riga2(
+    t("Si apre su", "Opens on"),
+    "",
+    scelte3(`pagine.${i}.zona`, p.zona, [
+      ["freddo", `❄️ ${t("Freddo", "Cooling")}`],
+      ["caldo", `🔥 ${t("Caldo", "Heating")}`]
+    ])
+  ) : ""}
+    ${p.modello === "clima" ? riga2(
+    t("Il tasto ⏻ accende con", "The ⏻ button turns on with"),
+    t(
+      "Il comando rapido della plancia: modalità, gradi e ventola scelti per ogni stanza nella scheda Clima. Premuto di nuovo, spegne.",
+      "The dashboard quick command: mode, degrees and fan chosen for each room in the Climate tab. Pressed again, it turns off."
+    ),
+    scelte3(`pagine.${i}.accensione`, p.accensione, [
+      ["rapido", `⚡ ${t("Comando rapido", "Quick command")}`],
+      ["ultima", t("Ultima modalità", "Last mode")]
+    ])
+  ) : ""}
     <div class="mu-ed-riga"><div class="mu-ed-testo"><b>${nomi.length} ${esc(t("sul tablet", "on the tablet"))}</b><small>${esc(nomi.slice(0, 8).join(", ") + (nomi.length > 8 ? ` +${nomi.length - 8}` : "") || t("Per ora nessuna", "None yet"))}</small></div></div>`;
 }
 function paginaMarkup(p, i, tutte) {
@@ -88165,7 +88203,10 @@ function paginaMarkup(p, i, tutte) {
     const comandi = p.scelti ? p.comandi : comandiProposti2(f, p.stanza, quanti2);
     dentro3 = `${riga2(
       t("Stanza", "Room"),
-      t("Da qui la pagina prende la temperatura e i comandi proposti", "The page takes its temperature and suggested controls from here"),
+      t(
+        "Da qui la pagina prende la temperatura e i comandi proposti",
+        "The page takes its temperature and suggested controls from here"
+      ),
       tendina2(
         `${via}.stanza`,
         p.stanza,
@@ -88292,7 +88333,13 @@ function paginaMarkup(p, i, tutte) {
     ${riga2(t("Tipo di pagina", "Page type"), "", tendina2(`${via}.modello`, p.modello, MODELLI2(), null))}
     ${SENZA_GRIGLIA.includes(p.modello) ? "" : riga2(
     t("Griglia", "Grid"),
-    MODELLI_ELENCO.includes(p.modello) || p.modello === "ambienti" || p.modello === "telecamere" ? t("Quante card a schermo; le altre scorrono", "How many cards on screen; the rest scroll") : t("Quanti posti, e quanto grandi. In verticale colonne e righe si scambiano", "How many slots, and how big. In portrait columns and rows swap"),
+    MODELLI_ELENCO.includes(p.modello) || p.modello === "ambienti" || p.modello === "telecamere" ? t(
+      "Quante card a schermo; le altre scorrono",
+      "How many cards on screen; the rest scroll"
+    ) : t(
+      "Quanti posti, e quanto grandi. In verticale colonne e righe si scambiano",
+      "How many slots, and how big. In portrait columns and rows swap"
+    ),
     scelte3(`${via}.griglia`, p.griglia, GRIGLIE_SCRITTE())
   )}
     ${riga2(t("Colore", "Colour"), t("Della linguetta e del titolo", "Of the tab and the title"), colori(`${via}.colore`, p.colore, p.modello))}
@@ -88312,7 +88359,7 @@ function corpoMarkup7() {
   const premium = state110.premium === true;
   const plance = state110.plance?.length ? state110.plance : [{ profilo: "primary", titolo: "gdahome" }];
   const qui = currentProfile();
-  const altre = plance.filter((p) => p.profilo !== qui || p.profilo === m.fonte);
+  const altre = plance;
   const sporca = bozzaSporca();
   const contenuto = `
   ${sporca ? `<div class="mu-ed-sporca" role="status">● ${esc(t("Modifiche non salvate: il tablet le vede dopo «Salva».", "Unsaved changes: the tablet sees them after «Save»."))}</div>` : ""}
@@ -88335,7 +88382,7 @@ function corpoMarkup7() {
       m.fonte,
       altre.map((p) => [
         p.profilo,
-        p.profilo === "primary" ? `${p.titolo} (${t("principale", "main")})` : p.titolo
+        p.profilo === qui ? `${p.titolo} (${t("questa plancia", "this dashboard")})` : p.profilo === "primary" ? `${p.titolo} (${t("principale", "main")})` : p.titolo
       ]),
       null
     )
@@ -88372,7 +88419,10 @@ function corpoMarkup7() {
   )}
     ${riga2(
     t("Meteo", "Weather"),
-    t("In alto e sul riposo. Vuoto: il primo che Home Assistant ha", "At the top and on the rest screen. Empty: the first one Home Assistant has"),
+    t(
+      "In alto e sul riposo. Vuoto: il primo che Home Assistant ha",
+      "At the top and on the rest screen. Empty: the first one Home Assistant has"
+    ),
     cerca("meteo", m.meteo, { domini: "weather" })
   )}
     ${riga2(
@@ -88494,7 +88544,11 @@ function metti3(via, valore3) {
       const aspetto = { nome: ora3.nome || "", sotto: ora3.sotto || "", disegno: ora3.disegno || "" };
       const scritto = clean(valore3);
       if (campo5 === "entita")
-        posti[k] = scritto ? { ...aspetto, tipo: lista5 === "scene" ? "entita" : tipoDellEntita(scritto), entita: scritto } : ora3.azione ? ora3 : { tipo: "vuoto" };
+        posti[k] = scritto ? {
+          ...aspetto,
+          tipo: lista5 === "scene" ? "entita" : tipoDellEntita(scritto),
+          entita: scritto
+        } : ora3.azione ? ora3 : { tipo: "vuoto" };
       else if (campo5 === "azione")
         posti[k] = scritto ? { ...aspetto, tipo: "azione", azione: scritto } : ora3.entita ? ora3 : { tipo: "vuoto" };
       else if (campo5 === "svuota") posti[k] = { tipo: "vuoto" };

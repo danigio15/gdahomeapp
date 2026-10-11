@@ -2631,6 +2631,7 @@ export default Object.freeze({
   "Only applies in Smart: not in effect here": "केवल स्मार्ट में लागू: यहाँ प्रभावी नहीं",
   "ENDS AT ${ora}": "${ora} बजे समाप्त",
   "ENDS TOMORROW AT ${ora}": "कल ${ora} बजे समाप्त",
+  "this dashboard": "यह डैशबोर्ड",
   "Open Assist": "Assist खोलें",
   "Open GitHub": "GitHub खोलें",
   "Open all": "सब खोलें",

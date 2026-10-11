@@ -1233,7 +1233,25 @@ function lettoreGrande(l) {
             .join("")}</div>`
         : ""
     }
+    ${comandiDelLettore(l.entity)}
   </div>`;
+}
+
+/* Gli «altri comandi» del lettore, quelli scelti nella sezione Musica: le
+ * stesse pastiglie della plancia, col loro stato, e il tocco che fa il gesto
+ * del loro dominio. */
+function comandiDelLettore(entity) {
+  const voce = (state.fonte?.lettori || []).find((l) => l.entity === entity);
+  const comandi = (voce?.comandi || []).filter((id) => stato(id));
+  if (!comandi.length) return "";
+  return `<div class="mu-mp-sorgenti mu-mp-comandi">${comandi
+    .map((id) => {
+      const s = stato(id);
+      const servizio = servizioDellEntita(id, String(s?.state || ""));
+      const parole = statoInParole(id);
+      return `<button type="button" class="${acceso(id) ? "si" : ""}" ${servizio ? `data-mu-fa="entita" data-mu-entita="${esc(id)}"` : `data-mu-entita="${esc(id)}" aria-disabled="true"`}>${esc(nomeDi(id))}${parole ? ` <small>${esc(parole)}</small>` : ""}</button>`;
+    })
+    .join("")}</div>`;
 }
 
 /* I lettori della pagina che sanno mettersi in gruppo, letti adesso. */
@@ -2998,6 +3016,7 @@ ${MURO} .mu-mp-volume{display:flex;align-items:center;gap:14px}
 ${MURO} .mu-mp-cursore{flex:1}
 ${MURO} .mu-mp-pct{min-width:52px;text-align:right;font-size:18px;font-weight:800;font-variant-numeric:tabular-nums}
 ${MURO} .mu-mp-sorgenti{display:flex;gap:8px;flex-wrap:wrap}
+${MURO} .mu-mp-comandi button small{margin-left:4px;font-weight:700;opacity:.75}
 ${MURO} .mu-mp-sorgenti button{padding:10px 16px;border-radius:999px;font-weight:800;font-size:14px;color:var(--text-dim);background:color-mix(in srgb,var(--text) 5%,var(--card-bg));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--text) 10%,transparent)}
 ${MURO} .mu-mp-sorgenti button.si{color:color-mix(in srgb,var(--acc) 85%,var(--text));background:color-mix(in srgb,var(--acc) 16%,var(--card-bg));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--acc) 45%,transparent)}
 ${MURO} .mu-mp-elenco{display:flex;flex-direction:column;gap:12px;min-height:0;overflow-y:auto;scrollbar-width:none}

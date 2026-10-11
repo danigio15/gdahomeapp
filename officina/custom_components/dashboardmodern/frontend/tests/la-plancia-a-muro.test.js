@@ -532,8 +532,8 @@ test("la pagina Musica prende i lettori della plancia, o quelli scelti", async (
     ]),
   });
   assert.deepEqual(fonte.lettori, [
-    { entity: "media_player.sonos_cucina", nome: "Cucina" },
-    { entity: "media_player.tv_sala", nome: "" },
+    { entity: "media_player.sonos_cucina", nome: "Cucina", comandi: [] },
+    { entity: "media_player.tv_sala", nome: "", comandi: [] },
   ]);
   const pagina = muroPulito({ pagine: [{ modello: "musica" }] }).pagine[0];
   assert.deepEqual(

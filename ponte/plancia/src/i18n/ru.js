@@ -2649,6 +2649,7 @@ export default Object.freeze({
     "Действует только в режиме «Умный»: здесь не применяется",
   "ENDS AT ${ora}": "ЗАКОНЧИТ В ${ora}",
   "ENDS TOMORROW AT ${ora}": "ЗАКОНЧИТ ЗАВТРА В ${ora}",
+  "this dashboard": "эта панель",
   "Open Assist": "Открыть Assist",
   "Open GitHub": "Открыть GitHub",
   "Open all": "Открыть все",

@@ -2598,6 +2598,7 @@ export default Object.freeze({
   "Only applies in Smart: not in effect here": "仅在智能模式下生效：此处不适用",
   "ENDS AT ${ora}": "${ora} 结束",
   "ENDS TOMORROW AT ${ora}": "明天 ${ora} 结束",
+  "this dashboard": "此仪表板",
   "Open Assist": "打开 Assist",
   "Open GitHub": "打开 GitHub",
   "Open all": "全部打开",

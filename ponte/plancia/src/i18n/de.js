@@ -2656,6 +2656,7 @@ export default Object.freeze({
   "Only applies in Smart: not in effect here": "Gilt nur in Smart: hier ohne Wirkung",
   "ENDS AT ${ora}": "ENDE UM ${ora}",
   "ENDS TOMORROW AT ${ora}": "ENDE MORGEN UM ${ora}",
+  "this dashboard": "dieses Dashboard",
   "Open Assist": "Assist öffnen",
   "Open GitHub": "GitHub öffnen",
   "Open all": "Alle öffnen",

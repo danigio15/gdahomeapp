@@ -2650,6 +2650,7 @@ export default Object.freeze({
   "Only applies in Smart: not in effect here": "Geldt alleen in Slim: hier niet van toepassing",
   "ENDS AT ${ora}": "KLAAR OM ${ora}",
   "ENDS TOMORROW AT ${ora}": "MORGEN KLAAR OM ${ora}",
+  "this dashboard": "dit dashboard",
   "Open Assist": "Assist openen",
   "Open GitHub": "GitHub openen",
   "Open all": "Alles openen",

@@ -552,7 +552,13 @@ export function fonteDalleSezioni(sezioni = {}, altro = {}) {
     /* I lettori della sezione Musica, per la pagina Musica. */
     lettori: lettoriConfigurati(elenco(altro.lettori))
       .filter((l) => entita(l.entity))
-      .map((l) => ({ entity: entita(l.entity), nome: testo(l.nome) })),
+      /* Con gli «altri comandi» scelti accanto al lettore: «quelli che ho
+       * abilitato nella plancia li vedo, nel pannello no». */
+      .map((l) => ({
+        entity: entita(l.entity),
+        nome: testo(l.nome),
+        comandi: elenco(l.comandi).map(entita).filter(Boolean),
+      })),
     stanze: elenco(sezioni.rooms)
       .filter((s) => s && testo(s.name))
       .map((s) => ({

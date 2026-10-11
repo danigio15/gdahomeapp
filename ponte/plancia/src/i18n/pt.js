@@ -2653,6 +2653,7 @@ export default Object.freeze({
   "Only applies in Smart: not in effect here": "Só vale no Inteligente: aqui não conta",
   "ENDS AT ${ora}": "TERMINA ÀS ${ora}",
   "ENDS TOMORROW AT ${ora}": "TERMINA AMANHÃ ÀS ${ora}",
+  "this dashboard": "este painel",
   "Open Assist": "Abrir o Assist",
   "Open GitHub": "Abrir o GitHub",
   "Open all": "Abrir todas",

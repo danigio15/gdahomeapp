@@ -2638,6 +2638,7 @@ export default Object.freeze({
   "Only applies in Smart: not in effect here": "スマートでのみ有効：ここでは無効",
   "ENDS AT ${ora}": "${ora} に終了",
   "ENDS TOMORROW AT ${ora}": "明日 ${ora} に終了",
+  "this dashboard": "このダッシュボード",
   "Open Assist": "Assist を開く",
   "Open GitHub": "GitHub を開く",
   "Open all": "すべて開く",

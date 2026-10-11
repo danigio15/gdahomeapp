@@ -2647,6 +2647,7 @@ export default Object.freeze({
     "Działa tylko w trybie Inteligentnym: tu nie obowiązuje",
   "ENDS AT ${ora}": "KONIEC O ${ora}",
   "ENDS TOMORROW AT ${ora}": "KONIEC JUTRO O ${ora}",
+  "this dashboard": "ten panel",
   "Open Assist": "Otwórz Assist",
   "Open GitHub": "Otwórz GitHuba",
   "Open all": "Otwórz wszystkie",
