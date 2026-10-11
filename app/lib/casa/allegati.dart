@@ -6,6 +6,11 @@
 /// 1600 punti sul lato lungo bastano per capire cosa si vede, e pesano
 /// qualche centinaio di chilobyte invece di dieci megabyte.
 ///
+/// Ridotta pero' non vuol dire pulita: il selettore ricopia nella foto
+/// ridotta le note di quella vera, posizione compresa, e un video non lo
+/// tocca nemmeno. Le note si tolgono qui, appena scelto il file, con
+/// [senzaPosizione]: l'allegato finisce in una repository pubblica.
+///
 /// Chi disegna le schermate riceve una funzione, non questo modulo: nelle
 /// prove al suo posto c'e' una funzione che torna un file finto.
 library;
@@ -14,6 +19,7 @@ import 'package:image_picker/image_picker.dart';
 
 import '../parole.dart';
 import 'segnalazioni.dart';
+import 'senza_posizione.dart';
 
 /// Da dove viene.
 enum DaDoveLAllegato {
@@ -72,7 +78,7 @@ Future<Allegato?> scegliDalTelefono(DaDoveLAllegato daDove) async {
     ),
   };
   if (file == null) return null;
-  final byte = await file.readAsBytes();
+  final byte = senzaPosizione(await file.readAsBytes());
   if (byte.isEmpty) {
     throw AllegatoNonBuono(
       inLingua(it: 'Il file è vuoto.', en: 'The file is empty.'),
