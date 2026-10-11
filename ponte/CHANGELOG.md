@@ -34,6 +34,12 @@ mano, con gli stessi nomi e lo stesso tasto acceso — e come «Aperte» gli
 ingressi dichiarati per la centrale, non più ogni sensore finestra di casa
 (i «Stato finestra» dei termosifoni).
 
+**L'Agenda in Home si riempie da sola.** All'apertura di Home Assistant la
+tessera restava col trattino finché non si apriva la sezione Agenda: la prima
+domanda degli eventi partiva prima che il collegamento fosse pronto, e il
+tentativo dopo aspettava che la Home si ridisegnasse. Adesso riprova da sola,
+dopo tre secondi, poi sei, poi dodici.
+
 ## 1.11.2
 
 **La barra in basso sul telefono, fissa, torna al suo posto.** Con la barra

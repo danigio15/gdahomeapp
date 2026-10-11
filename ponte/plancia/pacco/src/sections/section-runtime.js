@@ -50596,6 +50596,22 @@ function ancoraInVolo(scheda8, adesso = Date.now()) {
   const da = Number(scheda8.inVoloDa) || 0;
   return da > 0 && adesso - da < IN_VOLO_MS;
 }
+var tentativiInFila = /* @__PURE__ */ new Map();
+function attesaDopoIFallimenti(quanti2) {
+  const n = Math.max(1, Number(quanti2) || 1);
+  return Math.min(RETRY_MS, 3e3 * 2 ** (n - 1));
+}
+function riprovaFra(chiave2, quanto, cosa) {
+  if (tentativiInFila.has(chiave2)) return;
+  const timer = root.setTimeout?.(() => {
+    tentativiInFila.delete(chiave2);
+    try {
+      cosa();
+    } catch (_error) {
+    }
+  }, quanto);
+  if (timer) tentativiInFila.set(chiave2, timer);
+}
 var CALENDARIO_STALE_MS = 3e5;
 var GIORNI_NEL_PANNELLO = 14;
 var MAX_VISIBLE_ITEMS = 8;
@@ -50729,7 +50745,8 @@ async function fetchItems(entity2, { force = false } = {}) {
   const now = Date.now();
   if (ancoraInVolo(cache, now)) return;
   if (!force && cache.items && now - cache.fetchedAt < STALE_MS) return;
-  if (!force && !cache.items && now - cache.failedAt < RETRY_MS) return;
+  if (!force && !cache.items && now - cache.failedAt < attesaDopoIFallimenti(cache.fallimenti))
+    return;
   cache.inflight = true;
   cache.inVoloDa = now;
   let riuscita = false;
@@ -50744,10 +50761,17 @@ async function fetchItems(entity2, { force = false } = {}) {
     cache.items = parseTodoItemsResponse(result, entity2);
     cache.fetchedAt = Date.now();
     cache.failedAt = 0;
+    cache.fallimenti = 0;
     riuscita = true;
   } catch (error) {
     cache.failedAt = Date.now();
+    cache.fallimenti = (cache.fallimenti || 0) + 1;
     root.console?.warn?.("[DashboardModern] todo items", error);
+    riprovaFra(
+      `lista:${entity2}`,
+      attesaDopoIFallimenti(cache.fallimenti) + 50,
+      () => fetchItems(entity2)
+    );
   }
   cache.inflight = false;
   if (riuscita) {
@@ -50803,7 +50827,8 @@ async function fetchEventi(entity2, { force = false } = {}) {
   const adesso = Date.now();
   if (ancoraInVolo(scheda8, adesso)) return;
   if (!force && scheda8.eventi && adesso - scheda8.fetchedAt < CALENDARIO_STALE_MS) return;
-  if (!force && !scheda8.eventi && adesso - scheda8.failedAt < RETRY_MS) return;
+  if (!force && !scheda8.eventi && adesso - scheda8.failedAt < attesaDopoIFallimenti(scheda8.fallimenti))
+    return;
   scheda8.inflight = true;
   scheda8.inVoloDa = adesso;
   let riuscita = false;
@@ -50832,10 +50857,17 @@ async function fetchEventi(entity2, { force = false } = {}) {
     scheda8.eventi = letti;
     scheda8.fetchedAt = Date.now();
     scheda8.failedAt = 0;
+    scheda8.fallimenti = 0;
     riuscita = true;
   } catch (error) {
     scheda8.failedAt = Date.now();
+    scheda8.fallimenti = (scheda8.fallimenti || 0) + 1;
     root.console?.warn?.("[DashboardModern] calendar events", error);
+    riprovaFra(
+      `calendario:${entity2}`,
+      attesaDopoIFallimenti(scheda8.fallimenti) + 50,
+      () => fetchEventi(entity2)
+    );
   }
   scheda8.inflight = false;
   if (riuscita) {

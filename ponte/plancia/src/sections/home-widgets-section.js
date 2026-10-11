@@ -404,6 +404,37 @@ export function ancoraInVolo(scheda, adesso = Date.now()) {
   const da = Number(scheda.inVoloDa) || 0;
   return da > 0 && adesso - da < IN_VOLO_MS;
 }
+/* Un nuovo tentativo, programmato e non sperato.
+ *
+ * «Ad ogni apertura di HA bisogna aprire la sezione agenda per vedere gli
+ * eventi dei widget, altrimenti mette il trattino.» All'avvio la prima
+ * domanda parte quando la presa con Home Assistant non e' ancora pronta, e
+ * fallisce. Dopo un fallimento si aspettava venti secondi, e il tentativo
+ * successivo partiva solo al disegno dopo: se in casa non cambia niente la
+ * Home non si ridisegna, e la tessera restava col trattino finche' qualcuno
+ * non apriva la sezione, che chiede di nuovo a forza. Adesso il tentativo si
+ * mette in fila da solo, uno per entita'. */
+const tentativiInFila = new Map();
+
+/* Quanto aspettare dopo il fallimento numero `quanti`: tre secondi, poi sei,
+ * dodici, e da li' i venti di sempre. All'avvio la presa si apre in un attimo,
+ * e venti secondi di trattino erano venti secondi di «non funziona». */
+export function attesaDopoIFallimenti(quanti) {
+  const n = Math.max(1, Number(quanti) || 1);
+  return Math.min(RETRY_MS, 3000 * 2 ** (n - 1));
+}
+
+function riprovaFra(chiave, quanto, cosa) {
+  if (tentativiInFila.has(chiave)) return;
+  const timer = root.setTimeout?.(() => {
+    tentativiInFila.delete(chiave);
+    try {
+      cosa();
+    } catch (_error) {}
+  }, quanto);
+  if (timer) tentativiInFila.set(chiave, timer);
+}
+
 /* Un appuntamento non cambia ogni mezzo minuto come una lista della spesa:
  * cinque minuti bastano, e sono cinque richieste l'ora invece di centoventi. */
 const CALENDARIO_STALE_MS = 300000;
@@ -600,7 +631,8 @@ async function fetchItems(entity, { force = false } = {}) {
    * scaduto non ferma nessuno: col socket giu' il disegno richiedeva, la
    * richiesta falliva, il fallimento faceva ridisegnare, e il giro ripartiva
    * a ogni fotogramma. Dopo un errore si aspetta prima di riprovare. */
-  if (!force && !cache.items && now - cache.failedAt < RETRY_MS) return;
+  if (!force && !cache.items && now - cache.failedAt < attesaDopoIFallimenti(cache.fallimenti))
+    return;
   cache.inflight = true;
   cache.inVoloDa = now;
   let riuscita = false;
@@ -615,10 +647,15 @@ async function fetchItems(entity, { force = false } = {}) {
     cache.items = parseTodoItemsResponse(result, entity);
     cache.fetchedAt = Date.now();
     cache.failedAt = 0;
+    cache.fallimenti = 0;
     riuscita = true;
   } catch (error) {
     cache.failedAt = Date.now();
+    cache.fallimenti = (cache.fallimenti || 0) + 1;
     root.console?.warn?.("[DashboardModern] todo items", error);
+    riprovaFra(`lista:${entity}`, attesaDopoIFallimenti(cache.fallimenti) + 50, () =>
+      fetchItems(entity),
+    );
   }
   cache.inflight = false;
   // Un fallimento non ha cambiato niente da disegnare: ridisegnare lo stesso
@@ -721,7 +758,12 @@ async function fetchEventi(entity, { force = false } = {}) {
   /* Come per le liste: dopo un errore si aspetta, o col socket giu' il disegno
    * chiederebbe, la richiesta fallirebbe, il fallimento farebbe ridisegnare, e
    * il giro ripartirebbe a ogni fotogramma. */
-  if (!force && !scheda.eventi && adesso - scheda.failedAt < RETRY_MS) return;
+  if (
+    !force &&
+    !scheda.eventi &&
+    adesso - scheda.failedAt < attesaDopoIFallimenti(scheda.fallimenti)
+  )
+    return;
   scheda.inflight = true;
   scheda.inVoloDa = adesso;
   let riuscita = false;
@@ -750,10 +792,15 @@ async function fetchEventi(entity, { force = false } = {}) {
     scheda.eventi = letti;
     scheda.fetchedAt = Date.now();
     scheda.failedAt = 0;
+    scheda.fallimenti = 0;
     riuscita = true;
   } catch (error) {
     scheda.failedAt = Date.now();
+    scheda.fallimenti = (scheda.fallimenti || 0) + 1;
     root.console?.warn?.("[DashboardModern] calendar events", error);
+    riprovaFra(`calendario:${entity}`, attesaDopoIFallimenti(scheda.fallimenti) + 50, () =>
+      fetchEventi(entity),
+    );
   }
   scheda.inflight = false;
   if (riuscita) {
