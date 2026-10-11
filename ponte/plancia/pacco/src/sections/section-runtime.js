@@ -48769,6 +48769,7 @@ function lightsDetail(widget) {
     spegnibili.map((row) => clean(row.entity)).filter(Boolean).join(" ")
   )}" aria-label="${esc(t("Spegni tutte le luci", "Turn all lights off"))}">
           <span aria-hidden="true">🌙</span>${esc(t("Spegni tutte", "Turn all off"))}
+          <b>${spegnibili.length}</b>
         </button>` : "";
   const accese = rows.filter((row) => row.on).length;
   const scheda8 = (row) => {
