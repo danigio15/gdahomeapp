@@ -34,7 +34,9 @@ l'app da qualche giorno.
 
 **Energia:** i nomi lunghi delle stanze stanno dentro i cerchi del flusso,
 su due righe se serve, e sul telefono i cerchi stanno più distanti da Casa:
-quello subito sotto non tocca più l'anello.
+quello subito sotto non tocca più l'anello. Nella vista giornaliera e mensile
+il cerchio di un carico che misura solo i watt (il boiler) non mostra più «—»
+per qualche istante prima del numero.
 
 **Navigatore:** la freccia è come quella di Waze, e col traffico il celeste
 ai lati della coda si vede bene.

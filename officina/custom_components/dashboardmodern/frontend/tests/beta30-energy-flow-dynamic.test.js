@@ -525,3 +525,39 @@ test("a load metered only by its lifetime counter reads today and this month fro
   assert.equal(textOf(bubbles(views.month)[0], ".dm-flow-value"), "7,8 kWh");
   assert.equal(textOf(bubbles(views.instant)[0], ".dm-flow-value"), "1,50 kW");
 });
+
+/* «Improvvisamente esce il trattino, poi si aggiorna»: il flusso chiede i kWh
+ * di tutti i carichi, la finestra di una stanza solo dei suoi figli. Con una
+ * memoria sola per elenco, la seconda domanda buttava via la risposta della
+ * prima e il cerchio del boiler restava a «—». Ogni entita' tiene il suo. */
+test("due elenchi diversi non si rubano i kilowattora", async () => {
+  const domande = [];
+  const vecchioServizio = globalThis.DashboardModernEnergyService;
+  globalThis.DashboardModernEnergyService = {
+    broker: {
+      request(domanda) {
+        domande.push(domanda.statistic_ids);
+        return Promise.resolve(
+          Object.fromEntries(domanda.statistic_ids.map((id) => [id, [{ mean: 1000 }]])),
+        );
+      },
+    },
+  };
+  globalThis.__HASS__ = { states: {} };
+  const boiler = { id: "boiler_t", power_entity: "sensor.boiler_t_w" };
+  const forno = { id: "forno_t", power_entity: "sensor.forno_t_w" };
+  try {
+    section.kwhDallaPotenzaPer([boiler, forno], "month");
+    await new Promise((fatto) => setTimeout(fatto, 0));
+    /* La finestra della stanza chiede solo il forno: niente di nuovo da
+     * chiedere, e il boiler resta dov'era. */
+    assert.deepEqual(section.kwhDallaPotenzaPer([forno], "month"), { forno_t: 1 });
+    assert.deepEqual(section.kwhDallaPotenzaPer([boiler, forno], "month"), {
+      boiler_t: 1,
+      forno_t: 1,
+    });
+    assert.deepEqual(domande, [["sensor.boiler_t_w", "sensor.forno_t_w"]]);
+  } finally {
+    globalThis.DashboardModernEnergyService = vecchioServizio;
+  }
+});

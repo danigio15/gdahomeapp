@@ -297,32 +297,44 @@ function soloPotenza(voce) {
   return resolvedEntity(clean(voce.power_entity) || clean(voce.power));
 }
 
+/* La memoria e' per entita', non per elenco. Era una sola voce per periodo,
+ * firmata dall'elenco di chi l'aveva chiesta: il flusso chiede tutti i
+ * carichi, la finestra di una stanza solo i suoi figli, e ogni elenco diverso
+ * buttava via i valori dell'altro. Il cerchio del boiler restava senza numero
+ * — «—» — finche' il giro dopo non lo richiedeva. Adesso ogni entita' tiene il
+ * suo valore e la sua ora: si chiede solo chi manca o e' vecchio, e quello
+ * che arriva si aggiunge a quello che c'era. */
 function chiediIKwh(periodo, entita) {
   const broker = root.DashboardModernEnergyService?.broker;
   if (!broker?.request || !entita.length) return;
   const memoria = (state.kwhDallaPotenza ||= {});
-  const voce = memoria[periodo];
-  const firma = entita.slice().sort().join("|");
-  if (voce && (voce.inCorso || (Date.now() - voce.quando < ATTESA_DEI_KWH && voce.firma === firma)))
-    return;
-  memoria[periodo] = { ...(voce || {}), inCorso: true, firma, quando: Date.now() };
+  const voce = (memoria[periodo] ||= { valori: new Map(), quando: new Map(), inCorso: new Set() });
+  const adesso = Date.now();
+  const daChiedere = entita.filter(
+    (id) => !voce.inCorso.has(id) && !(adesso - (voce.quando.get(id) ?? -Infinity) < ATTESA_DEI_KWH),
+  );
+  if (!daChiedere.length) return;
+  for (const id of daChiedere) voce.inCorso.add(id);
   const stati = allStates();
+  const chiudi = () => {
+    for (const id of daChiedere) {
+      voce.inCorso.delete(id);
+      voce.quando.set(id, Date.now());
+    }
+  };
   broker
-    .request(domandaDeiKwhDallaPotenza(entita, periodo, Date.now()), 15000)
+    .request(domandaDeiKwhDallaPotenza(daChiedere, periodo, adesso), 15000)
     .then((risposta) => {
-      const valori = new Map();
-      for (const id of entita) {
+      for (const id of daChiedere) {
         const kwh = kwhDallaPotenza(risposta, id, stati[id]?.attributes?.unit_of_measurement);
-        if (kwh !== null) valori.set(id, kwh);
+        if (kwh !== null) voce.valori.set(id, kwh);
       }
-      memoria[periodo] = { inCorso: false, firma, quando: Date.now(), valori };
+      chiudi();
       refreshEnergyFlows();
     })
-    .catch(() => {
-      /* Niente Recorder, o la domanda e' scaduta: si riprova al prossimo giro
-       * dopo l'attesa, e intanto il cerchio dice quello che sa. */
-      memoria[periodo] = { inCorso: false, firma, quando: Date.now(), valori: voce?.valori };
-    });
+    /* Niente Recorder, o la domanda e' scaduta: si riprova dopo l'attesa, e
+     * intanto il cerchio tiene il numero che aveva. */
+    .catch(chiudi);
 }
 
 /** I kilowattora del periodo per chi ha solo la potenza, per id della voce. */

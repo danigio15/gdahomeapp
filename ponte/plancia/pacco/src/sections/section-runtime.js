@@ -56500,23 +56500,28 @@ function chiediIKwh(periodo, entita3) {
   const broker2 = root.DashboardModernEnergyService?.broker;
   if (!broker2?.request || !entita3.length) return;
   const memoria = state52.kwhDallaPotenza ||= {};
-  const voce2 = memoria[periodo];
-  const firma2 = entita3.slice().sort().join("|");
-  if (voce2 && (voce2.inCorso || Date.now() - voce2.quando < ATTESA_DEI_KWH && voce2.firma === firma2))
-    return;
-  memoria[periodo] = { ...voce2 || {}, inCorso: true, firma: firma2, quando: Date.now() };
+  const voce2 = memoria[periodo] ||= { valori: /* @__PURE__ */ new Map(), quando: /* @__PURE__ */ new Map(), inCorso: /* @__PURE__ */ new Set() };
+  const adesso = Date.now();
+  const daChiedere = entita3.filter(
+    (id) => !voce2.inCorso.has(id) && !(adesso - (voce2.quando.get(id) ?? -Infinity) < ATTESA_DEI_KWH)
+  );
+  if (!daChiedere.length) return;
+  for (const id of daChiedere) voce2.inCorso.add(id);
   const stati = allStates();
-  broker2.request(domandaDeiKwhDallaPotenza(entita3, periodo, Date.now()), 15e3).then((risposta) => {
-    const valori = /* @__PURE__ */ new Map();
-    for (const id of entita3) {
-      const kwh2 = kwhDallaPotenza(risposta, id, stati[id]?.attributes?.unit_of_measurement);
-      if (kwh2 !== null) valori.set(id, kwh2);
+  const chiudi3 = () => {
+    for (const id of daChiedere) {
+      voce2.inCorso.delete(id);
+      voce2.quando.set(id, Date.now());
     }
-    memoria[periodo] = { inCorso: false, firma: firma2, quando: Date.now(), valori };
+  };
+  broker2.request(domandaDeiKwhDallaPotenza(daChiedere, periodo, adesso), 15e3).then((risposta) => {
+    for (const id of daChiedere) {
+      const kwh2 = kwhDallaPotenza(risposta, id, stati[id]?.attributes?.unit_of_measurement);
+      if (kwh2 !== null) voce2.valori.set(id, kwh2);
+    }
+    chiudi3();
     refreshEnergyFlows();
-  }).catch(() => {
-    memoria[periodo] = { inCorso: false, firma: firma2, quando: Date.now(), valori: voce2?.valori };
-  });
+  }).catch(chiudi3);
 }
 function kwhDallaPotenzaPer(voci3, periodo) {
   if (periodo !== "day" && periodo !== "month") return {};
