@@ -509,9 +509,42 @@ function exposeConnector(node, active) {
   }
 }
 
+/* Il binario sotto la linea.
+ *
+ * La linea accesa adesso e' fatta di puntini che scorrono: belli, ma da soli
+ * non dicono dove vanno — fra un puntino e l'altro c'e' il vuoto. Sotto ci va
+ * il suo binario, la stessa strada in tinta tenue e continua: si vede il
+ * percorso intero, e i puntini ci corrono sopra. E' una copia della linea —
+ * stessa forma, stesso colore — che sta un gradino sotto di lei e non si
+ * tocca. Si rifa' la forma solo se la linea l'ha cambiata. */
+const FORME = ["d", "x1", "y1", "x2", "y2", "points"];
+
+function binario(node, color, active) {
+  const madre = node.parentNode;
+  if (!madre || !/^(path|line|polyline)$/i.test(node.tagName)) return;
+  let sotto = node.__dmBinario;
+  if (!sotto || sotto.parentNode !== madre) {
+    sotto = doc.createElementNS(SVG_NS, node.tagName.toLowerCase());
+    sotto.classList.add("dm-flow-binario");
+    sotto.setAttribute("aria-hidden", "true");
+    madre.insertBefore(sotto, node);
+    node.__dmBinario = sotto;
+  }
+  for (const nome of FORME) {
+    const valore = node.getAttribute(nome);
+    if (valore === null) continue;
+    if (sotto.getAttribute(nome) !== valore) sotto.setAttribute(nome, valore);
+  }
+  setStyleProperty(sotto, "--dm-flow-color", color);
+  const larghezza = node.style?.getPropertyValue?.("--dm-flow-width");
+  if (larghezza) setStyleProperty(sotto, "--dm-flow-width", larghezza);
+  scriviDatoSeCambia(sotto, "acceso", active ? "true" : "false");
+}
+
 function colorNode(node, color, active) {
   if (!node) return;
   exposeConnector(node, active);
+  binario(node, color, active);
   node.classList.toggle("active", active);
   node.classList.toggle("dm-energy-flow-active", active);
   node.classList.toggle("dm-energy-flow-idle", !active);
@@ -1443,8 +1476,25 @@ function installStyles() {
        nostra riga di stile non deve poter cancellare il disegno di chi c'era
        prima: se non stiamo guidando noi, si vede quello che dice il guscio. */
     [data-dm-energy-flows] .flow-line:not(.active):not(.dm-energy-flow-active){opacity:0!important}
-    .flow-line.dm-energy-flow-active,path.dm-energy-flow-active,line.dm-energy-flow-active,polyline.dm-energy-flow-active{stroke:var(--dm-flow-color)!important;stroke-dasharray:12 9!important;stroke-linecap:round!important;animation-name:dmEnergyFlowDash!important;animation-duration:.8s!important;animation-timing-function:linear!important;animation-iteration-count:infinite!important;animation-play-state:running!important;will-change:stroke-dashoffset!important}
+    .flow-line.dm-energy-flow-active,path.dm-energy-flow-active,line.dm-energy-flow-active,polyline.dm-energy-flow-active{stroke:var(--dm-flow-color)!important;stroke-dasharray:.1 13.9!important;stroke-linecap:round!important;animation-name:dmEnergyFlowDash!important;animation-duration:.8s!important;animation-timing-function:linear!important;animation-iteration-count:infinite!important;animation-play-state:running!important;will-change:stroke-dashoffset!important}
     @keyframes dmEnergyFlowDash{from{stroke-dashoffset:0}to{stroke-dashoffset:-42}}
+    /* I flussi rifiniti: un binario tenue e continuo, e sopra i puntini
+       luminosi che scorrono. Il binario e' la strada, i puntini l'energia. */
+    .dm-flow-binario{fill:none!important;stroke:var(--dm-flow-color)!important;stroke-opacity:.24!important;stroke-width:var(--dm-flow-width,3px)!important;stroke-linecap:round!important;stroke-dasharray:none!important;animation:none!important;filter:none!important;pointer-events:none!important;opacity:1!important}
+    .dm-flow-binario[data-acceso="false"]{display:none!important}
+    #page-energy .flow-line.dm-energy-flow-active,#page-energy path.dm-energy-flow-active{stroke-width:calc(var(--dm-flow-width,3px) + 3px)!important;filter:drop-shadow(0 0 4px var(--dm-flow-color)) drop-shadow(0 0 10px color-mix(in srgb,var(--dm-flow-color) 60%,transparent))!important}
+    /* I cerchi rifiniti: niente ombra grigia a rilievo, un fondo appena
+       tinto del loro colore, il bordo piu' sottile e, quando sono accesi,
+       un alone del loro colore. Il tema resta il suo: il fondo parte dalla
+       carta della plancia, chiara o scura che sia. */
+    #page-energy .flow-stage .node{
+      background:radial-gradient(circle at 35% 28%,color-mix(in srgb,var(--n-color,#64748b) 16%,var(--card-bg,#fff)),var(--card-bg,#fff) 72%)!important;
+      border-width:3px!important;
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 8px 22px rgba(0,0,0,.18)!important}
+    #page-energy .flow-stage .node.active,#page-energy .flow-stage .node.dm-flow-node[data-dm-flow-active="true"]{
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.1),0 0 0 4px color-mix(in srgb,var(--n-color,#3b82f6) 14%,transparent),0 0 28px color-mix(in srgb,var(--n-color,#3b82f6) 42%,transparent)!important}
+    #page-energy .flow-stage .node::after{inset:-9px!important;border-width:1.5px!important;border-color:color-mix(in srgb,var(--n-color,#64748b) 45%,transparent)!important}
+    #page-energy .flow-stage .n-home{border-color:#3b82f6!important;--n-color:#3b82f6}
     /* Nessuna eccezione per "riduci movimento": il tratteggio che scorre non e'
        una decorazione ma l'unico segnale che l'energia sta passando, e la
        plancia deve mostrare le stesse linee su ogni schermo. Quella preferenza
