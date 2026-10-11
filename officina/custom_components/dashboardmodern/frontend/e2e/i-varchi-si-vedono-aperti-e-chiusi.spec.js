@@ -78,12 +78,17 @@ test("la tessera dice quanti sono aperti, e quali", async ({ page }, testInfo) =
   /* Rossa in cima, perché qualcosa è aperto. */
   await expect(tessera).toHaveAttribute("data-alert", "true");
 
-  /* Aprendola, le pastiglie: rossa l'aperta, verde la chiusa. */
+  /* Aprendola: l'aperta in cima come scheda rossa, la chiusa nella griglia
+   * col pallino verde. Prima erano pastiglie della finestra generica; la
+   * finestra disegnata apposta (`finestre/sicurezza.js`) dice le stesse due
+   * cose con le sue schede. */
   await tessera.click();
-  const aperta = page.locator("#dm-widget-popup .dm-w-pillola", { hasText: "Porta ingresso" });
-  const chiusa = page.locator("#dm-widget-popup .dm-w-pillola", { hasText: "Finestra cucina" });
-  await expect(aperta).toHaveAttribute("data-tono", "allarme");
-  await expect(chiusa).toHaveAttribute("data-tono", "quiete");
+  const aperta = page.locator("#dm-widget-popup .dm-f-varchi-aperto", {
+    hasText: "Porta ingresso",
+  });
+  const chiusa = page.locator("#dm-widget-popup .dm-f-varchi-ch", { hasText: "Finestra cucina" });
+  await expect(aperta).toBeVisible();
+  await expect(chiusa).toBeVisible();
 });
 
 test("la pagina Varchi elenca i contatti col loro colore", async ({ page }, testInfo) => {

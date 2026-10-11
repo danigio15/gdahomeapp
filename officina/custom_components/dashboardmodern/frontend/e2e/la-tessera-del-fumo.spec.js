@@ -118,9 +118,12 @@ test("quando uno suona la tessera lo dice per nome e lampeggia", async ({ page }
   await tessera.click();
   const finestra = page.locator("#dm-widget-popup");
   await expect(finestra).toBeVisible();
-  /* Chi suona sta in cima, e la sua riga lo dice a parole. */
-  const righe = finestra.locator(".dm-w-name");
-  await expect(righe.first()).toHaveText("Gas garage");
+  /* Chi suona lo dice l'eroe, per nome, e la sua riga lo dice a parole. La
+   * finestra disegnata apposta (`finestre/sicurezza.js`) raggruppa per tipo
+   * — il fumo, poi gas e monossido — quindi «in cima» adesso e' l'eroe rosso
+   * col nome, non la prima riga dell'elenco. */
+  await expect(finestra.locator(".dm-f-fumo-eroe")).toContainText("Gas garage");
+  await expect(finestra.locator('.dm-f-fumo-ril[data-come="allarme"]')).toContainText("Gas garage");
   await expect(finestra).toContainText("Allarme");
   await expect(finestra).toContainText("Tranquillo");
 });

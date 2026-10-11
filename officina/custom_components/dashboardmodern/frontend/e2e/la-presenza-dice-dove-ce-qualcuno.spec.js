@@ -92,13 +92,20 @@ test("la tessera dice in quante stanze c'è qualcuno, e quali", async ({ page },
   await expect(tessera).not.toHaveAttribute("data-alert", "true");
 
   await tessera.click();
-  const occupata = page.locator("#dm-widget-popup .dm-w-pillola", { hasText: "Salone" });
-  const libera = page.locator("#dm-widget-popup .dm-w-pillola", { hasText: "Cucina" });
-  await expect(occupata).toHaveAttribute("data-tono", "acceso");
-  await expect(libera).toHaveAttribute("data-tono", "quiete");
-  /* Un'occupazione stabile e un movimento non dicono la stessa cosa. */
+  /* La finestra adesso e' quella disegnata apposta (`finestre/sicurezza.js`):
+   * le stanze sono piastrelle, accese le occupate e spente le libere, al
+   * posto delle pastiglie della finestra generica. Le stesse due domande di
+   * prima — chi e' occupato, chi e' libero — sulle piastrelle. */
+  const occupata = page.locator("#dm-widget-popup .dm-f-presenza-st", { hasText: "Salone" });
+  const libera = page.locator("#dm-widget-popup .dm-f-presenza-st", { hasText: "Cucina" });
+  await expect(occupata).toHaveAttribute("data-on", "true");
+  await expect(libera).toHaveAttribute("data-on", "false");
+  /* Un'occupazione stabile si dice «Occupato»; una stanza vuota si dice
+   * «Libero» — «Fermo» per una stanza vuota era la parola strana che la
+   * bozza approvata ha tolto. */
   await expect(occupata).toContainText("Occupato");
-  await expect(libera).toContainText("Fermo");
+  await expect(libera).toContainText("Libero");
+  await expect(libera).not.toContainText("Fermo");
   await page.locator("#dm-widget-popup").screenshot({
     path: testInfo.outputPath("tessera-presenza.png"),
   });

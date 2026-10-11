@@ -39,7 +39,7 @@ import { createApplianceViewModel, onRunHoldExpiry } from "../core/appliance-vie
 import { applianceVisualKey, canonicalClimateType, climaScalda } from "../core/device-model.js";
 import { applianceArtwork } from "../core/appliance-artwork.js";
 import { applianceModelById, buildCardMarkup, cardLabels } from "./appliance-showcase-section.js";
-import { RIF_CENTRALE } from "../core/alarm-panel.js";
+import { RIF_CENTRALE, alarmCodeNeeded } from "../core/alarm-panel.js";
 import {
   alarmActiveButton,
   alarmModeButtons,
@@ -1505,7 +1505,33 @@ function securityModel(states) {
     armed,
     triggered,
     mode: raw || mioAcceso,
+    /* Per la finestra (`finestre/sicurezza.js`): i modi come li disegna la
+     * pagina Sicurezza — stessi tasti, stessi nomi, stesso tasto acceso — e se
+     * chiedono il codice; da quando la centrale sta cosi'; e cosa c'e' da
+     * sapere prima di inserire, cioe' i varchi aperti o esclusi. */
+    modi: modiDellaFinestra(alarm),
+    dalle: Date.parse(clean(alarm?.last_changed)) || null,
+    daSapere: (varchiModel(states)?.rows || []).filter(
+      (riga) => riga.stato === "aperto" || riga.escluso,
+    ),
   };
+}
+
+function modiDellaFinestra(centrale) {
+  try {
+    const acceso = alarmActiveButton(centrale);
+    return alarmModeButtons(centrale).map((voce) => ({
+      mode: voce.mode,
+      service: voce.service,
+      label: clean(voce.label),
+      hint: clean(voce.hint),
+      disegno: disegnoDelTastoAntifurto(voce, 20),
+      on: voce.mode === acceso,
+      codice: alarmCodeNeeded(centrale, voce.service),
+    }));
+  } catch (_errore) {
+    return [];
+  }
 }
 
 /* Le porte e i cancelli, con la loro tessera (#457).
@@ -4212,6 +4238,7 @@ function batteriesModel(states) {
     attiva: scariche,
     rows,
     low,
+    soglia,
   };
 }
 
@@ -4391,6 +4418,12 @@ function varchiModel(states) {
       name: riga.name,
       glyph: riga.glifo,
       on: riga.stato === "aperto",
+      /* Per la finestra: che varco e', come sta, da quando, e se e' escluso
+       * dall'antifurto. `glyph` resta il nome del disegno. */
+      tipo: riga.tipo,
+      stato: riga.stato,
+      da: riga.da,
+      escluso: Boolean(riga.esclusione) && riga.escluso === "escluso",
       /* Il tono dice il colore della pastiglia senza sapere di cosa parla:
        * aperto e' una cosa da guardare, chiuso e' la buona notizia. */
       tono: riga.stato === "aperto" ? "allarme" : riga.stato === "chiuso" ? "quiete" : "",
@@ -4448,6 +4481,11 @@ function presenzaModel(states) {
        * (#74): `glyph` qui dentro si stampa com'e'. */
       glyph: disegnoDiCasa(riga.glifo, { misura: 20, ripiego: "motion" }),
       on: riga.stato === "attivo",
+      /* Per la finestra: il posto, come sta e da quando. */
+      stanza: riga.stanza,
+      stato: riga.stato,
+      stabile: riga.stabile,
+      da: riga.da,
       /* Il tono dice il colore della pastiglia senza sapere di cosa parla: chi
        * rileva qualcuno è una cosa che sta succedendo — non un allarme, che è
        * il rosso — e una stanza libera è la quiete. */
@@ -4799,6 +4837,21 @@ function floodModel(states) {
     ring: wet.length ? 100 : 0,
     attiva: wet.length > 0,
     rows: wet.length ? [...wet, ...rows.filter((row) => !row.on)] : rows,
+    /* Le valvole dell'acqua che Home Assistant dichiara (`valve.*` di classe
+     * `water`): la finestra le mette a portata di mano, perche' con una
+     * perdita la cosa da fare e' chiudere l'acqua. Senza, non compaiono. */
+    valvole: Object.entries(states || {})
+      .filter(
+        ([entity, stato]) =>
+          entity.startsWith("valve.") &&
+          clean(stato?.attributes?.device_class) === "water" &&
+          widgetIncludes(entity, fuori),
+      )
+      .map(([entity, stato]) => ({
+        entity,
+        name: friendlyName(states, entity),
+        state: clean(stato?.state).toLowerCase(),
+      })),
   };
 }
 
@@ -5445,6 +5498,10 @@ function nonRispondeModel(states) {
       entity: una.entity,
       tono: "allarme",
       value: daQuandoTace(una.da),
+      /* Per la finestra: da quando, e le entita' dietro la riga (il tasto
+       * «Riprova» le aggiorna tutte). */
+      da: una.da || null,
+      entita: Array.isArray(una.entita) && una.entita.length ? una.entita : [una.entity],
     })),
   };
 }
@@ -9696,6 +9753,31 @@ function onClick(event) {
     // Stessa strada della pagina Sicurezza: il tastierino PIN dell'antifurto
     // chiede il codice e poi chiama lui il servizio scelto.
     root.promptPinAndSet?.(clean(alarm.dataset.dmWAlarm));
+    return;
+  }
+  /* La telecamera dal vivo, a tutto schermo: la apre il guscio, come dalla
+   * pagina Sicurezza e dalle Stanze. Questa finestra si chiude prima, perche'
+   * le due stanno sullo stesso piano e la piu' giovane coprirebbe l'altra. */
+  const diretta = event.target?.closest?.("[data-dm-w-apri-cam]");
+  if (diretta) {
+    event.preventDefault();
+    const entita = clean(diretta.dataset.dmWApriCam);
+    let lista = [];
+    try {
+      lista = root.getCameras?.() || [];
+    } catch (_error) {}
+    const indice = (Array.isArray(lista) ? lista : []).findIndex(
+      (camera) => clean(camera?.entity) === entita,
+    );
+    if (indice < 0 || typeof root.apriCamera !== "function" || typeof root.camSlug !== "function")
+      return;
+    chiudiPopup();
+    try {
+      root.apriCamera(
+        root.camSlug(lista[indice], indice),
+        clean(lista[indice]?.name) || entita.split(".")[1] || entita,
+      );
+    } catch (_error) {}
     return;
   }
   const aggiornamento = event.target?.closest?.("[data-dm-w-update]");
