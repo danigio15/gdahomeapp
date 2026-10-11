@@ -15,6 +15,7 @@ import {
   comandoPulito,
   comandiProposti,
   derivaDelRiposo,
+  GRIGLIE,
   eNotte,
   fonteDaiValori,
   ingressoProposto,
@@ -118,10 +119,10 @@ test("finche' nessuno li sceglie, i comandi seguono la stanza", () => {
   );
 });
 
-test("sei posti, quattro pagine, e un comando senza entita' vera non entra", () => {
+test("sei posti di serie, otto pagine, e un comando senza entita' vera non entra", () => {
   const troppi = Array.from({ length: 9 }, (_, i) => ({ tipo: "luce", entita: `light.l${i}` }));
   const muro = muroPulito({
-    pagine: Array.from({ length: 6 }, () => ({
+    pagine: Array.from({ length: 10 }, () => ({
       modello: "stanza",
       comandi: [
         ...troppi,
@@ -384,4 +385,26 @@ test("il riposo cambia posto ogni minuto, e mai vicino a quello di prima", () =>
     assert.ok(Math.hypot(ora.x - prima.x, ora.y - prima.y) > 0.4, `minuto ${i}: troppo vicino`);
     prima = ora;
   }
+});
+
+test("una pagina ha 6, 8 o 12 riquadri, e le pagine sono fino a otto", () => {
+  assert.deepEqual([...GRIGLIE], [6, 8, 12]);
+  assert.equal(PAGINE_AL_MASSIMO, 8);
+  const comandi = Array.from({ length: 12 }, (_, n) => ({ tipo: "luce", entita: `light.l${n}` }));
+  const di = (posti) =>
+    muroPulito({ attiva: true, pagine: [{ modello: "personale", posti, comandi }] }).pagine[0];
+  assert.equal(di(8).posti, 8);
+  assert.equal(di(8).comandi.length, 8);
+  assert.equal(di(12).comandi.length, 12);
+  assert.equal(di(7).posti, 6, "un numero che non e' fra quelli si rimette a sei");
+  assert.equal(di(undefined).comandi.length, 6);
+});
+
+test("il meteo del tablet e' quello scelto nella config della plancia", () => {
+  const fonte = fonteDaiValori({
+    ...VALORI,
+    cd_entity_overrides: JSON.stringify({ "dm.home_meteo": "weather.openweathermap" }),
+  });
+  assert.equal(fonte.meteo, "weather.openweathermap");
+  assert.equal(fonteDaiValori(VALORI).meteo, "");
 });

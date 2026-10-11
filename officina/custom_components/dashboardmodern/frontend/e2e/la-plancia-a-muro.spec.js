@@ -273,6 +273,19 @@ test.describe("la plancia a muro", () => {
     await expect(page.locator("#editor-modal")).toHaveCount(0);
   });
 
+  /* «Se uno volesse andare nella config generale, lo deve fare col pc su
+   * un'altra plancia?» No: «Tutto il config» toglie il recinto. */
+  test("dal config del tablet si passa a tutto il config", async ({ page }, testInfo) => {
+    await apriLaCasaAMuro(page, testInfo, { muro: MURO_DI_PROVA });
+    await page.evaluate(() => window.dmMuro.configDelMuro?.());
+    await expect(page.locator("#editor-modal .ed-tabs")).toBeHidden();
+    const tutto = page.locator("#editor-modal [data-mu-tutto-il-config]");
+    await expect(tutto).toBeVisible();
+    await tutto.click();
+    await expect(page.locator("#editor-modal .ed-tabs")).toBeVisible();
+    await expect(tutto).toHaveCount(0);
+  });
+
   test("le pagine si cambiano solo dalle linguette, e il clima ha caldo e freddo dentro", async ({
     page,
   }, testInfo) => {

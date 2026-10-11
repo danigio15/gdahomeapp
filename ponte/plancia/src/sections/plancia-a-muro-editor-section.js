@@ -12,6 +12,7 @@
 import {
   CHIAVE_MURO,
   MINUTI_DI_RIPOSO,
+  GRIGLIE,
   PAGINE_AL_MASSIMO,
   MODELLI_ELENCO,
   POSTI,
@@ -162,7 +163,7 @@ const DOMINI_DEI_POSTI =
  * «Devi dare la possibilita' di personalizzare le 6 card e scegliere a
  * piacimento cosa inserire, non solo quelle che hai inserito tu.»
  */
-function postoMarkup(i, lista, k, c) {
+function postoMarkup(i, lista, k, c, quanti = POSTI) {
   const via = `pagine.${i}.${lista}.${k}`;
   const pieno = c && c.tipo !== "vuoto";
   const azioni = azioniUsabili();
@@ -173,7 +174,7 @@ function postoMarkup(i, lista, k, c) {
       : `${nomeDi(c.entita)} · ${c.entita}`;
   return `<div class="mu-ed-posto${pieno ? " pieno" : ""}" data-mu-ed-posto="${esc(via)}">
     <div class="mu-ed-posto-testa"><span class="mu-ed-num">${k + 1}</span>
-      <span class="mu-ed-frecce"><button type="button" data-mu-ed-posto-su="${i}.${k}" data-mu-ed-lista="${lista}"${k === 0 ? " disabled" : ""} aria-label="▲">▲</button><button type="button" data-mu-ed-posto-giu="${i}.${k}" data-mu-ed-lista="${lista}"${k === POSTI - 1 ? " disabled" : ""} aria-label="▼">▼</button></span>
+      <span class="mu-ed-frecce"><button type="button" data-mu-ed-posto-su="${i}.${k}" data-mu-ed-lista="${lista}"${k === 0 ? " disabled" : ""} aria-label="▲">▲</button><button type="button" data-mu-ed-posto-giu="${i}.${k}" data-mu-ed-lista="${lista}"${k === quanti - 1 ? " disabled" : ""} aria-label="▼">▼</button></span>
       <b class="mu-ed-cosa">${esc(descrizione)}</b>
       ${pieno ? `<button type="button" class="mu-ed-svuota" data-mu-ed-svuota="${esc(via)}" aria-label="${esc(t("Svuota il posto", "Clear the slot"))}">✕</button>` : ""}</div>
     <div class="mu-ed-posto-corpo">
@@ -193,9 +194,9 @@ function postoMarkup(i, lista, k, c) {
     </div></div>`;
 }
 
-function postiMarkup(i, lista, posti) {
-  return `<div class="mu-ed-posti">${Array.from({ length: POSTI }, (_, k) =>
-    postoMarkup(i, lista, k, posti[k]),
+function postiMarkup(i, lista, posti, quanti = POSTI) {
+  return `<div class="mu-ed-posti">${Array.from({ length: quanti }, (_, k) =>
+    postoMarkup(i, lista, k, posti[k], quanti),
   ).join("")}</div>`;
 }
 
@@ -232,13 +233,27 @@ function elencoMarkup(p, i) {
   }[p.modello];
   const nomi = (
     p.modello === "clima"
-      ? [...comandiDellaPagina(p, state.fonte || {}, "freddo"), ...comandiDellaPagina(p, state.fonte || {}, "caldo")]
+      ? [
+          ...comandiDellaPagina(p, state.fonte || {}, "freddo"),
+          ...comandiDellaPagina(p, state.fonte || {}, "caldo"),
+        ]
       : comandi
   )
     .map((c) => nomeDi(c.entita))
     .filter((n, k, tutti) => tutti.indexOf(n) === k);
   return `<div class="mu-ed-nota">${esc(spiega)}</div>
-    ${p.modello === "clima" ? riga(t("Si apre su", "Opens on"), "", scelte(`pagine.${i}.zona`, p.zona, [["freddo", `❄️ ${t("Freddo", "Cooling")}`], ["caldo", `🔥 ${t("Caldo", "Heating")}`]])) : ""}
+    ${
+      p.modello === "clima"
+        ? riga(
+            t("Si apre su", "Opens on"),
+            "",
+            scelte(`pagine.${i}.zona`, p.zona, [
+              ["freddo", `❄️ ${t("Freddo", "Cooling")}`],
+              ["caldo", `🔥 ${t("Caldo", "Heating")}`],
+            ]),
+          )
+        : ""
+    }
     <div class="mu-ed-riga"><div class="mu-ed-testo"><b>${nomi.length} ${esc(t("sul tablet", "on the tablet"))}</b><small>${esc(nomi.slice(0, 8).join(", ") + (nomi.length > 8 ? ` +${nomi.length - 8}` : "") || t("Per ora nessuna", "None yet"))}</small></div></div>`;
 }
 
@@ -247,10 +262,13 @@ function paginaMarkup(p, i, tutte) {
   const via = `pagine.${i}`;
   let dentro = "";
   if (p.modello === "stanza") {
-    const comandi = p.scelti ? p.comandi : comandiProposti(f, p.stanza);
+    const comandi = p.scelti ? p.comandi : comandiProposti(f, p.stanza, p.posti);
     dentro = `${riga(
       t("Stanza", "Room"),
-      t("Da qui la pagina prende la temperatura e i comandi proposti", "The page takes its temperature and suggested controls from here"),
+      t(
+        "Da qui la pagina prende la temperatura e i comandi proposti",
+        "The page takes its temperature and suggested controls from here",
+      ),
       tendina(
         `${via}.stanza`,
         p.stanza,
@@ -261,8 +279,8 @@ function paginaMarkup(p, i, tutte) {
     ${riga(
       t("I comandi seguono la stanza", "Controls follow the room"),
       t(
-        "Accesa, una luce aggiunta alla stanza nella plancia di origine compare da sola. Spenta, i sei posti si scelgono qui: qualunque entità o azione, col nome e il disegno che vuoi.",
-        "On, a light added to the room in the source dashboard shows up by itself. Off, the six slots are chosen here: any entity or action, with the name and drawing you want.",
+        "Accesa, una luce aggiunta alla stanza nella plancia di origine compare da sola. Spenta, i posti si scelgono qui: qualunque entità o azione, col nome e il disegno che vuoi.",
+        "On, a light added to the room in the source dashboard shows up by itself. Off, the slots are chosen here: any entity or action, with the name and drawing you want.",
       ),
       interruttore(
         `${via}.segue`,
@@ -272,8 +290,8 @@ function paginaMarkup(p, i, tutte) {
     )}
     ${
       p.scelti
-        ? postiMarkup(i, "comandi", comandi)
-        : `<div class="mu-ed-posti">${Array.from({ length: POSTI }, (_, k) => {
+        ? postiMarkup(i, "comandi", comandi, p.posti)
+        : `<div class="mu-ed-posti">${Array.from({ length: p.posti }, (_, k) => {
             const c = comandi[k];
             return `<div class="mu-ed-posto"><div class="mu-ed-posto-testa"><span class="mu-ed-num">${k + 1}</span><span class="mu-ed-proposto">${c ? esc(c.azione ? `⚡ ${c.azione}` : nomeDi(c.entita)) : esc(t("Posto libero", "Empty slot"))}</span></div></div>`;
           }).join("")}</div>`
@@ -286,19 +304,19 @@ function paginaMarkup(p, i, tutte) {
   } else if (p.modello === "personale") {
     dentro = `<div class="mu-ed-nota">${esc(
       t(
-        "Sei posti tutti tuoi: in ognuno un'entità qualunque di Home Assistant — una luce, una presa, una serratura, un sensore — o un'azione della plancia, col nome e il disegno che vuoi.",
-        "Six slots of your own: in each one any Home Assistant entity — a light, a socket, a lock, a sensor — or a dashboard action, with the name and drawing you want.",
+        "Posti tutti tuoi: in ognuno un'entità qualunque di Home Assistant — una luce, una presa, una serratura, un sensore — o un'azione della plancia, col nome e il disegno che vuoi.",
+        "Slots of your own: in each one any Home Assistant entity — a light, a socket, a lock, a sensor — or a dashboard action, with the name and drawing you want.",
       ),
-    )}</div>${postiMarkup(i, "comandi", p.comandi)}`;
+    )}</div>${postiMarkup(i, "comandi", p.comandi, p.posti)}`;
   } else if (MODELLI_ELENCO.includes(p.modello)) {
     dentro = elencoMarkup(p, i);
   } else if (p.modello === "scene") {
     dentro = `<div class="mu-ed-nota">${esc(
       t(
-        "Sei tasti grandi: un'azione della plancia o un'entità qualunque (una scena, uno script, un tasto). Per ognuno il nome sul tablet, la riga sotto e il disegno.",
-        "Six big buttons: a dashboard action or any entity (a scene, a script, a button). For each one the name on the tablet, the line below and the drawing.",
+        "Tasti grandi: un'azione della plancia o un'entità qualunque (una scena, uno script, un tasto). Per ognuno il nome sul tablet, la riga sotto e il disegno.",
+        "Big buttons: a dashboard action or any entity (a scene, a script, a button). For each one the name on the tablet, the line below and the drawing.",
       ),
-    )}</div>${postiMarkup(i, "scene", p.scene)}`;
+    )}</div>${postiMarkup(i, "scene", p.scene, p.posti)}`;
   } else {
     const ing = p.ingresso;
     const azioni = (f.azioni || []).filter(eUnaScena).map((a) => [a.name, a.name]);
@@ -326,6 +344,23 @@ function paginaMarkup(p, i, tutte) {
     ${riga(t("Nome sul tablet", "Name on the tablet"), t("Si legge sulla linguetta in alto", "Shown on the tab at the top"), campo(`${via}.titolo`, p.titolo, nomeDiSerie))}
     ${riga(t("Icona", "Icon"), "", tendina(`${via}.disegno`, p.disegno, DISEGNI(), null))}
     ${riga(t("Tipo di pagina", "Page type"), "", tendina(`${via}.modello`, p.modello, MODELLI(), null))}
+    ${
+      p.modello === "ingresso"
+        ? ""
+        : riga(
+            t("Riquadri nella pagina", "Tiles on the page"),
+            t(
+              "Sei di serie. Otto stanno bene anche su un pannello piccolo in orizzontale; dodici su un tablet da 10 pollici.",
+              "Six by default. Eight still fit a small panel in landscape; twelve suit a 10-inch tablet.",
+            ),
+            tendina(
+              `${via}.posti`,
+              String(p.posti),
+              GRIGLIE.map((n) => [String(n), String(n)]),
+              null,
+            ),
+          )
+    }
     ${dentro}</div>`;
 }
 
@@ -347,21 +382,21 @@ function corpoMarkup() {
     ${
       altre.length > 1
         ? riga(
-      t("Prende le cose da", "Takes things from"),
-      t(
-        "Le stanze, le luci, le azioni e l'antifurto arrivano da qui",
-        "Rooms, lights, actions and the alarm come from here",
-      ),
-      tendina(
-        "fonte",
-        m.fonte,
-        altre.map((p) => [
-          p.profilo,
-          p.profilo === "primary" ? `${p.titolo} (${t("principale", "main")})` : p.titolo,
-        ]),
-        null,
-      ),
-    )
+            t("Prende le cose da", "Takes things from"),
+            t(
+              "Le stanze, le luci, le azioni e l'antifurto arrivano da qui",
+              "Rooms, lights, actions and the alarm come from here",
+            ),
+            tendina(
+              "fonte",
+              m.fonte,
+              altre.map((p) => [
+                p.profilo,
+                p.profilo === "primary" ? `${p.titolo} (${t("principale", "main")})` : p.titolo,
+              ]),
+              null,
+            ),
+          )
         : ""
     }
   </div>
@@ -383,7 +418,9 @@ function corpoMarkup() {
       : ""
   }
   <button type="button" class="mu-ed-altro" data-mu-ed-altro aria-expanded="${state.altro}"><span>⚙️ ${esc(t("Altre impostazioni", "More settings"))}</span><small>${esc(t("Orientamento, tema, riposo, notte, risveglio, PIN", "Orientation, theme, rest, night, wake-up, PIN"))}</small><span class="mu-ed-freccia" aria-hidden="true">${state.altro ? "▾" : "▸"}</span></button>
-  ${state.altro ? `<div class="mu-ed-blocco">
+  ${
+    state.altro
+      ? `<div class="mu-ed-blocco">
     ${riga(
       t("Orientamento", "Orientation"),
       t("Automatico segue come è montato il tablet", "Automatic follows how the tablet is mounted"),
@@ -431,7 +468,9 @@ function corpoMarkup() {
     )}
     ${riga(t("Blocca il tablet", "Lock the tablet"), t("Per uscire dal pannello serve il PIN, da 4 a 8 cifre", "Leaving the panel needs the PIN, 4 to 8 digits"), `${campo("blocco.pin", m.blocco.pin, "PIN", "password")}${interruttore("blocco.attivo", m.blocco.attivo, "blocco")}`)}
     ${riga(t("Antifurto e serrature chiedono il codice", "Alarm and locks ask for the code"), t("Sempre, quando la centrale ne ha uno", "Always, when the panel has one"), `<span class="mu-ed-int fermo" aria-checked="true"><i></i></span>`)}
-  </div>` : ""}
+  </div>`
+      : ""
+  }
   <button type="button" class="ed-save-btn" data-mu-ed-salva>💾 ${esc(t("Salva", "Save"))}</button>`;
   if (premium || state.premium === null)
     return `<div class="mu-ed">${state.premium === null ? `<div class="mu-ed-nota">${esc(t("Controllo la licenza…", "Checking the licence…"))}</div>` : ""}${contenuto}</div>`;
@@ -492,7 +531,8 @@ function metti(via, valore) {
     if (!p) return;
     if (pezzi[2] === "segue") {
       p.scelti = !valore;
-      if (p.scelti && !p.comandi.length) p.comandi = comandiProposti(state.fonte || {}, p.stanza);
+      if (p.scelti && !p.comandi.length)
+        p.comandi = comandiProposti(state.fonte || {}, p.stanza, p.posti);
       state.bozza = muroPulito(m);
       return;
     }
@@ -503,18 +543,29 @@ function metti(via, valore) {
       const lista = pezzi[2];
       const k = Number(pezzi[3]);
       const campo = pezzi[4];
-      const posti = Array.from({ length: POSTI }, (_, n) => p[lista][n] || { tipo: "vuoto" });
+      const posti = Array.from(
+        { length: p.posti || POSTI },
+        (_, n) => p[lista][n] || { tipo: "vuoto" },
+      );
       const ora = posti[k];
       const aspetto = { nome: ora.nome || "", sotto: ora.sotto || "", disegno: ora.disegno || "" };
       const scritto = clean(valore);
       if (campo === "entita")
         posti[k] = scritto
-          ? { ...aspetto, tipo: lista === "scene" ? "entita" : tipoDellEntita(scritto), entita: scritto }
+          ? {
+              ...aspetto,
+              tipo: lista === "scene" ? "entita" : tipoDellEntita(scritto),
+              entita: scritto,
+            }
           : ora.azione
             ? ora
             : { tipo: "vuoto" };
       else if (campo === "azione")
-        posti[k] = scritto ? { ...aspetto, tipo: "azione", azione: scritto } : ora.entita ? ora : { tipo: "vuoto" };
+        posti[k] = scritto
+          ? { ...aspetto, tipo: "azione", azione: scritto }
+          : ora.entita
+            ? ora
+            : { tipo: "vuoto" };
       else if (campo === "svuota") posti[k] = { tipo: "vuoto" };
       else if (ora.tipo !== "vuoto") posti[k] = { ...ora, [campo]: valore };
       p[lista] = posti;
@@ -623,7 +674,10 @@ function onClick(event) {
     const p = m.pagine[i];
     const lista = d.muEdLista === "scene" ? "scene" : "comandi";
     /* Anche i posti vuoti si spostano: «il quinto lo voglio libero». */
-    const posti = Array.from({ length: POSTI }, (_, n) => p[lista][n] || { tipo: "vuoto" });
+    const posti = Array.from(
+      { length: p.posti || POSTI },
+      (_, n) => p[lista][n] || { tipo: "vuoto" },
+    );
     p[lista] = sposta(posti, k, d.muEdPostoSu !== undefined ? k - 1 : k + 1);
     if (lista === "comandi") p.scelti = true;
     state.bozza = muroPulito(m);

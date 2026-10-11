@@ -38,8 +38,14 @@ export const MODELLI_ELENCO = Object.freeze(["luci", "clima"]);
  * nate come «freddo» o «caldo» diventano una pagina Clima che si apre su
  * quella linguetta. */
 export const ZONE_DEL_CLIMA = Object.freeze(["freddo", "caldo"]);
-export const PAGINE_AL_MASSIMO = 4;
+/* «Ma le pagine possibili sono al massimo 4?» Erano quattro: adesso otto. */
+export const PAGINE_AL_MASSIMO = 8;
+/* I riquadri di una pagina: sei di serie. «Sarebbe carino poter decidere che
+ * i riquadri massimi siano 6 o piu': nell'NSPanel in orizzontale, se fossero
+ * solo luci, anche 8 ci starebbero; nel 10 pollici anche di piu'.» */
 export const POSTI = 6;
+export const GRIGLIE = Object.freeze([6, 8, 12]);
+const postiDi = (valore) => (GRIGLIE.includes(Number(valore)) ? Number(valore) : POSTI);
 export const TIPI_DI_COMANDO = Object.freeze([
   "luce",
   "clima",
@@ -189,14 +195,15 @@ export function paginaPulita(input, indice = 0) {
   const vecchia = ZONE_DEL_CLIMA.includes(dentro.modello) ? dentro.modello : "";
   const modello = vecchia ? "clima" : scelta(dentro.modello, MODELLI, "stanza");
   const id = /^[a-z0-9-]{1,24}$/.test(String(dentro.id || "")) ? dentro.id : `p${indice + 1}`;
+  const posti = postiDi(dentro.posti);
   const comandi = senzaVuotiInCoda(
     (Array.isArray(dentro.comandi) ? dentro.comandi : [])
-      .slice(0, POSTI)
+      .slice(0, posti)
       .map((c) => comandoPulito(c) || { ...POSTO_VUOTO }),
   );
   const scene = senzaVuotiInCoda(
     (Array.isArray(dentro.scene) ? dentro.scene : [])
-      .slice(0, POSTI)
+      .slice(0, posti)
       .map((c) =>
         c?.tipo === "vuoto" ? { ...POSTO_VUOTO } : scenaPulita(c) || { ...POSTO_VUOTO },
       ),
@@ -214,6 +221,8 @@ export function paginaPulita(input, indice = 0) {
     /* Su quale linguetta si apre la pagina Clima. */
     zona: scelta(vecchia || dentro.zona, ZONE_DEL_CLIMA, "freddo"),
     stanza: testo(dentro.stanza, 80),
+    /* Quanti riquadri ha la pagina: 6, 8 o 12. */
+    posti,
     /* `scelti` dice se i comandi li ha scelti qualcuno. Finche' e' falso la
      * pagina segue la stanza: una luce aggiunta nella principale compare da
      * sola sul tablet. */
@@ -420,6 +429,10 @@ export function fonteDalleSezioni(sezioni = {}, altro = {}) {
         confirm: a.confirm === true,
         option: testo(a.option, 80),
       })),
+    /* Il meteo scelto nella config della plancia (la casella della Home),
+     * come lo legge la plancia: «il meteo non ridice con quello che e' messo
+     * nella config». Vuoto, il tablet fa come la plancia senza scelta. */
+    meteo: entita(overrides["dm.home_meteo"]) || entita(overrides["dm.core_055"]),
     persone: elenco(altro.persone)
       .filter((p) => p && entita(p.entity) && p.nascosta !== true)
       .map((p) => ({ entity: entita(p.entity), name: testo(p.name) })),
@@ -511,7 +524,7 @@ function azioniDellaStanza(fonte, stanza) {
  * I comandi che una stanza propone da sola: prima le luci, poi il clima e le
  * tapparelle, poi le sue azioni. Sei posti, come la griglia.
  */
-export function comandiProposti(fonte = {}, nomeStanza = "") {
+export function comandiProposti(fonte = {}, nomeStanza = "", posti = POSTI) {
   const stanza =
     elenco(fonte.stanze).find((s) => s.name === nomeStanza || s.id === nomeStanza) || null;
   if (!stanza) return [];
@@ -527,14 +540,14 @@ export function comandiProposti(fonte = {}, nomeStanza = "") {
       .map((d) => ({ tipo: "tapparella", entita: d.entity, nome: "" })),
   ];
   /* Le azioni riempiono i posti che restano, almeno due se ci stanno. */
-  const liberi = Math.max(POSTI - proposti.length, Math.min(2, POSTI));
+  const liberi = Math.max(posti - proposti.length, Math.min(2, posti));
   const azioni = azioniDellaStanza(fonte, stanza)
     .slice(0, liberi)
     .map((a) => ({ tipo: "azione", azione: a.name, nome: "", sotto: "" }));
-  return [...proposti.slice(0, POSTI - azioni.length), ...azioni]
+  return [...proposti.slice(0, posti - azioni.length), ...azioni]
     .map(comandoPulito)
     .filter(Boolean)
-    .slice(0, POSTI);
+    .slice(0, posti);
 }
 
 /** I comandi che la pagina mostra adesso: quelli scelti, o quelli proposti. */
@@ -543,7 +556,9 @@ export function comandiDellaPagina(pagina, fonte = {}, zona = "") {
   if (pagina.modello === "personale") return pagina.comandi;
   if (pagina.modello === "clima") return comandiDellElenco(zona || pagina.zona || "freddo", fonte);
   if (MODELLI_ELENCO.includes(pagina.modello)) return comandiDellElenco(pagina.modello, fonte);
-  return pagina.scelti ? pagina.comandi : comandiProposti(fonte, pagina.stanza);
+  return pagina.scelti
+    ? pagina.comandi
+    : comandiProposti(fonte, pagina.stanza, postiDi(pagina.posti));
 }
 
 /* Le pagine elenco: tutte le luci, il clima che raffresca, quello che scalda.
@@ -575,10 +590,10 @@ export function eUnaScena(azione) {
 }
 
 /* Le scene proposte: le azioni che il tablet sa far partire. */
-export function scenePropose(fonte = {}) {
+export function scenePropose(fonte = {}, posti = POSTI) {
   return elenco(fonte.azioni)
     .filter(eUnaScena)
-    .slice(0, POSTI)
+    .slice(0, postiDi(posti))
     .map((a) => scenaPulita({ azione: a.name }))
     .filter(Boolean);
 }

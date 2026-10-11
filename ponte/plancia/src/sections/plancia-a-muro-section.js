@@ -484,7 +484,14 @@ function orologio(adesso = new Date()) {
 }
 
 function meteo() {
-  const id = Object.keys(allStates() || {}).find((k) => k.startsWith("weather."));
+  /* Prima quello scelto nella config della plancia di origine, poi
+   * `weather.home` come fa la plancia, e solo alla fine il primo che c'e'. */
+  const stati = allStates() || {};
+  const scelto = state.fonte?.meteo;
+  const id =
+    (scelto && stati[scelto] && scelto) ||
+    (stati["weather.home"] && "weather.home") ||
+    Object.keys(stati).find((k) => k.startsWith("weather."));
   if (!id) return null;
   const s = stato(id);
   return { temperatura: s?.attributes?.temperature, condizione: s?.state };
@@ -821,9 +828,11 @@ function paginaStanza(pagina) {
       : "";
   /* Le pagine elenco non hanno tetto: sei per volta a schermo, e la griglia
    * scorre col dito. Vuote, lo dicono. */
-  const quante = elenco ? Math.max(comandi.length, 1) : 6;
+  /* Quanti riquadri per schermata: 6, 8 o 12, come la pagina. */
+  const posti = pagina.posti || 6;
+  const quante = elenco ? Math.max(comandi.length, 1) : posti;
   if (elenco && !comandi.length)
-    return `${linguette}<div class="mu-g6">${vuoto(0, t("Niente da mostrare qui", "Nothing to show here"))}</div>`;
+    return `${linguette}<div class="mu-g6" data-posti="${posti}">${vuoto(0, t("Niente da mostrare qui", "Nothing to show here"))}</div>`;
   const carte = Array.from({ length: quante }, (_, i) => {
     const c = comandi[i];
     if (!c || c.tipo === "vuoto") return vuoto(i);
@@ -834,17 +843,18 @@ function paginaStanza(pagina) {
     return cardAzione(c, i);
   });
   const riga = pagina.modello === "stanza" ? pillole(pagina) : linguette;
-  return `${riga}<div class="mu-g6${elenco && quante > 6 ? " mu-scorre" : ""}">${carte.join("")}</div>`;
+  return `${riga}<div class="mu-g6${elenco && quante > posti ? " mu-scorre" : ""}" data-posti="${posti}">${carte.join("")}</div>`;
 }
 
 function paginaScene(pagina) {
   const scene = pagina.scene.length ? pagina.scene : [];
-  const carte = Array.from({ length: 6 }, (_, i) => {
+  const posti = pagina.posti || 6;
+  const carte = Array.from({ length: posti }, (_, i) => {
     const c = scene[i];
     if (!c || c.tipo === "vuoto") return vuoto(i);
     return c.entita ? cardEntita(c, i, true) : cardAzione(c, i, true);
   });
-  return `<div class="mu-g6">${carte.join("")}</div>`;
+  return `<div class="mu-g6" data-posti="${posti}">${carte.join("")}</div>`;
 }
 
 function finestreAperte() {
@@ -1279,8 +1289,38 @@ export function apriIlConfigDelMuro() {
     if (giri++ < 60) (root.requestAnimationFrame || root.setTimeout)?.(vaiAlMuro, 16);
   };
   vaiAlMuro();
+  tastoTuttoIlConfig();
   configAperto();
   return true;
+}
+
+/* «Tenendo premuto si va diretti al config muro: ma se uno volesse andare
+ * nella config generale, lo deve fare dal pc su un'altra plancia?» No: in
+ * cima al config del tablet c'e' «Tutto il config», che toglie il recinto e
+ * lascia il config intero, con le sue schede. */
+function tastoTuttoIlConfig() {
+  let giri = 0;
+  const metti = () => {
+    const testa = doc?.querySelector?.("#editor-modal .ed-head");
+    if (!testa) {
+      if (giri++ < 60) (root.requestAnimationFrame || root.setTimeout)?.(metti, 16);
+      return;
+    }
+    if (testa.querySelector("[data-mu-tutto-il-config]")) return;
+    const tasto = doc.createElement("button");
+    tasto.type = "button";
+    tasto.className = "mu-tutto-il-config";
+    tasto.dataset.muTuttoIlConfig = "true";
+    tasto.textContent = `⚙️ ${t("Tutto il config", "Full config")}`;
+    tasto.addEventListener("click", () => {
+      doc.documentElement.classList.remove(SOLO_MURO);
+      tasto.remove();
+    });
+    const chiudi = testa.querySelector(".ed-head-close");
+    if (chiudi) chiudi.before(tasto);
+    else testa.append(tasto);
+  };
+  metti();
 }
 
 function agganciaIlConfig() {
@@ -1827,6 +1867,8 @@ function stili() {
     `
 html.dm-muro-acceso,html.dm-muro-acceso body{overflow:hidden!important}
 html.dm-solo-muro #editor-modal .ed-tabs,html.dm-solo-muro #editor-modal #dm-alberatura-famiglie,html.dm-solo-muro #editor-modal .dm-cerca-config,html.dm-solo-muro #editor-modal .dm-alberatura-titolo-famiglia{display:none!important}
+#editor-modal .mu-tutto-il-config{display:none}
+html.dm-solo-muro #editor-modal .mu-tutto-il-config{display:inline-flex;align-items:center;gap:6px;margin-right:8px;padding:8px 14px;border-radius:12px;border:none;background:var(--accent,#3b82f6);color:#fff;font-weight:800;font-size:13px;cursor:pointer}
 html.dm-solo-muro #editor-modal .ed-body,html.dm-solo-muro #editor-modal #ed-body{margin-left:0!important;max-width:none!important}
 ${MURO}[data-mu-sotto-il-menu]{z-index:4!important}
 ${MURO}{position:fixed;inset:0;z-index:2147482000;overflow:hidden;color:var(--text);font-family:Inter,system-ui,sans-serif;
@@ -1884,6 +1926,18 @@ ${MURO} .mu-pill .mu-et{font-size:10.5px}
 ${MURO} .mu-g6{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:1fr 1fr;gap:16px;min-height:0}
 ${MURO} .mu-g6.mu-scorre{grid-template-rows:none;grid-auto-rows:calc((100% - 16px) / 2);overflow-y:auto;scroll-snap-type:y proximity;overscroll-behavior:contain;scrollbar-width:none}
 ${MURO} .mu-g6.mu-scorre>*{scroll-snap-align:start}
+${MURO} .mu-g6[data-posti="8"]{grid-template-columns:repeat(4,minmax(0,1fr))}
+${MURO} .mu-g6[data-posti="12"]{grid-template-columns:repeat(4,minmax(0,1fr));grid-template-rows:repeat(3,1fr)}
+${MURO} .mu-g6[data-posti="12"].mu-scorre{grid-template-rows:none;grid-auto-rows:calc((100% - 32px) / 3)}
+${MURO} .mu-g6[data-posti="8"],${MURO} .mu-g6[data-posti="12"]{gap:12px}
+${MURO} .mu-g6[data-posti="8"] .mu-n,${MURO} .mu-g6[data-posti="12"] .mu-n{font-size:17px;white-space:normal;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
+${MURO} .mu-g6[data-posti="8"] .mu-stato,${MURO} .mu-g6[data-posti="12"] .mu-stato{font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+${MURO} .mu-g6[data-posti="8"] .mu-tag,${MURO} .mu-g6[data-posti="12"] .mu-tag{display:none}
+${MURO}[data-compatto="1"] .mu-g6[data-posti="8"] .mu-n,${MURO}[data-compatto="1"] .mu-g6[data-posti="12"] .mu-n{font-size:14px}
+/* Sul telefono i riquadri non si allungano a riempire lo schermo: «li trovo
+   troppo grandi». Hanno un'altezza loro, e la pagina scorre se servono. */
+${MURO}[data-compatto="1"][data-verso="verticale"] .mu-g6{grid-template-rows:none!important;grid-auto-rows:minmax(0,var(--mu-alto,150px))!important;align-content:start;overflow-y:auto;scrollbar-width:none}
+${MURO}[data-compatto="1"][data-verso="verticale"] .mu-g6[data-posti="12"]{--mu-alto:120px}
 ${MURO} .mu-card{padding:22px;display:flex;flex-direction:column;gap:14px;min-height:0;width:100%}
 ${MURO} .mu-tessera{text-align:left}
 ${MURO} .mu-tessera .mu-osw{margin-top:auto}
@@ -2027,6 +2081,10 @@ ${MURO}[data-compatto="1"] .mu-riposo-riga{flex-direction:column;gap:10px;align-
 ${MURO}[data-compatto="1"] .mu-avviso{font-size:13px}
 ${MURO}[data-verso="verticale"] .mu-g6{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(3,1fr)}
 ${MURO}[data-verso="verticale"] .mu-g6.mu-scorre{grid-template-rows:none;grid-auto-rows:calc((100% - 32px) / 3)}
+${MURO}[data-verso="verticale"] .mu-g6[data-posti="8"]{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(4,1fr)}
+${MURO}[data-verso="verticale"] .mu-g6[data-posti="8"].mu-scorre{grid-template-rows:none;grid-auto-rows:calc((100% - 36px) / 4)}
+${MURO}[data-verso="verticale"] .mu-g6[data-posti="12"]{grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:repeat(4,1fr)}
+${MURO}[data-verso="verticale"] .mu-g6[data-posti="12"].mu-scorre{grid-template-rows:none;grid-auto-rows:calc((100% - 36px) / 4)}
 ${MURO}[data-verso="verticale"] .mu-testa{flex-wrap:wrap}
 ${MURO}[data-verso="verticale"] .mu-pagine{order:3;width:100%;margin:6px 0 4px}
 ${MURO}[data-verso="verticale"] .mu-pagine button{flex:1;justify-content:center}
@@ -2136,6 +2194,7 @@ export function installPlanciaAMuro() {
   });
   root.dmMuro = {
     rileggi: (opzioni) => rileggi(opzioni),
+    configDelMuro: () => apriIlConfigDelMuro(),
     esci: () => {
       state.uscito = true;
       disegna();
