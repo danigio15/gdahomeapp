@@ -14574,6 +14574,9 @@ function elapsedParts(sinceMs, nowMs) {
   if (hours < 24) return { unit: "hour", value: hours };
   return { unit: "day", value: Math.floor(hours / 24) };
 }
+function nomeDellaPersona(person, states = {}) {
+  return clean3(person?.name) || clean3(states?.[clean3(person?.entity)]?.attributes?.friendly_name) || clean3(person?.entity);
+}
 function personViewModel(person, states = {}, nowMs = null) {
   const entityState = states?.[person.entity];
   const rawState = clean3(entityState?.state);
@@ -14590,7 +14593,7 @@ function personViewModel(person, states = {}, nowMs = null) {
      * si tocca e si apre la mappa di casa su QUESTA persona (#438), e per
      * chiederla bisogna saperla nominare. */
     entity: clean3(person.entity),
-    name: person.name || clean3(entityState?.attributes?.friendly_name) || person.entity,
+    name: nomeDellaPersona(person, states),
     photo,
     initials: personInitials(person.name || clean3(entityState?.attributes?.friendly_name)),
     avatar: person.avatar,
@@ -77112,6 +77115,23 @@ function cimaDiSistema(proprio, ospite3, giaLasciatoSopra2 = 0) {
   const suo2 = Math.max(0, numero42(ospite3) - numero42(giaLasciatoSopra2));
   return Math.min(CIMA_MASSIMA, Math.max(mio, suo2));
 }
+function laCorniceNellaCima(finestra7) {
+  try {
+    let sopra = 0;
+    let altezza = null;
+    let w = finestra7;
+    while (w && w !== w.parent && w.frameElement) {
+      const riquadro = w.frameElement.getBoundingClientRect();
+      if (altezza === null) altezza = riquadro.height;
+      sopra += riquadro.top;
+      w = w.parent;
+    }
+    if (altezza === null) return null;
+    return { sopra, sotto: sopra + altezza };
+  } catch (_error) {
+    return null;
+  }
+}
 
 // src/sections/navigation-section.js
 var KEY96 = "__DASHBOARDMODERN_NAVIGATION_SECTION__";
@@ -78066,10 +78086,9 @@ function insetDi(documento, lato = "bottom") {
 }
 function giaLasciatoSotto(cima) {
   try {
-    const cornice = root.frameElement;
-    if (!cornice || !cima?.documentElement) return 0;
-    const suo2 = cornice.getBoundingClientRect();
-    return cima.documentElement.clientHeight - suo2.bottom;
+    const dove = laCorniceNellaCima(root);
+    if (!dove || !cima?.documentElement) return 0;
+    return Math.max(0, cima.documentElement.clientHeight - dove.sotto);
   } catch (_error) {
     return 0;
   }
@@ -78092,13 +78111,8 @@ function misuraIlFondoDiSistema() {
   return valore3;
 }
 function giaLasciatoSopra() {
-  try {
-    const cornice = root.frameElement;
-    if (!cornice) return 0;
-    return Math.max(0, cornice.getBoundingClientRect().top);
-  } catch (_error) {
-    return 0;
-  }
+  const dove = laCorniceNellaCima(root);
+  return dove ? Math.max(0, dove.sopra) : 0;
 }
 var CIMA_DI_SISTEMA = "--dm-cima-di-sistema";
 function misuraLaCimaDiSistema() {
@@ -78121,6 +78135,30 @@ function misuraLaCimaDiSistema() {
 function misuraLeFasceDiSistema() {
   misuraIlFondoDiSistema();
   misuraLaCimaDiSistema();
+}
+function tieniLeFasceMisurate() {
+  const misura7 = () => misuraLeFasceDiSistema();
+  const finestre = [root];
+  try {
+    for (let w = root; w && w !== w.parent; w = w.parent) finestre.push(w.parent);
+  } catch (_error) {
+  }
+  for (const w of finestre) {
+    for (const evento of ["resize", "orientationchange", "pageshow"]) {
+      try {
+        w.addEventListener?.(evento, misura7);
+      } catch (_error) {
+      }
+    }
+    try {
+      w.visualViewport?.addEventListener?.("resize", misura7);
+    } catch (_error) {
+    }
+  }
+  doc.addEventListener?.("visibilitychange", () => {
+    if (doc.visibilityState === "visible") misura7();
+  });
+  for (const attesa of [100, 400, 1500, 3e3, 6e3]) root.setTimeout?.(misura7, attesa);
 }
 function installaLaCima() {
   installStyle(
@@ -78162,9 +78200,7 @@ function installNavigationSection() {
   state92.installed = true;
   installaLaCima();
   misuraLeFasceDiSistema();
-  for (const evento of ["resize", "orientationchange", "pageshow"])
-    root.addEventListener?.(evento, () => misuraLeFasceDiSistema());
-  for (const attesa of [400, 1500]) root.setTimeout?.(() => misuraLeFasceDiSistema(), attesa);
+  tieniLeFasceMisurate();
   installStyles39();
   applyNavbarMode();
   installaLAttesaDellaBarra();
@@ -85260,6 +85296,21 @@ function fonteDalleSezioni(sezioni2 = {}, altro = {}) {
     })).filter((a) => a.entita.length)
   };
 }
+function personeDelMuro(fonte = {}, stati = {}) {
+  const configurate2 = elenco5(fonte?.persone).filter((p) => p && entita2(p.entity));
+  const elencoDelMuro = configurate2.length ? configurate2 : Object.keys(stati || {}).filter((id) => id.startsWith("person.")).map((entity2) => ({ entity: entity2, name: "" }));
+  const inCasa = elencoDelMuro.map((p) => personViewModel(p, stati, 0)).filter((vista2) => vista2.presence === "home");
+  return {
+    entita: elencoDelMuro.map((p) => p.entity),
+    tutte: elencoDelMuro.length,
+    inCasa: inCasa.length,
+    nomi: inCasa.map((vista2) => vista2.name)
+  };
+}
+function nomeDellaPersonaDelMuro(id, fonte = {}, stati = {}) {
+  const persona = elenco5(fonte?.persone).find((p) => p && p.entity === id);
+  return persona ? nomeDellaPersona(persona, stati) : "";
+}
 var ACCESI4 = /* @__PURE__ */ new Set(["on", "open", "opening", "unlocked", "detected", "wet", "home", "true"]);
 function avvisoAcceso(avviso, stati = {}) {
   return avviso.entita.some((id) => {
@@ -85564,7 +85615,9 @@ var nomeDi7 = (id, scelto = "", fonte = state109.fonte) => {
     ...fonte?.clima || [],
     ...fonte?.tapparelle || []
   ].find((d) => d.entity === id);
-  return clean(dispositivo?.name) || clean(attributi(id).friendly_name) || id;
+  if (clean(dispositivo?.name)) return clean(dispositivo.name);
+  const ha = attributi(id);
+  return nomeDellaPersonaDelMuro(id, fonte, allStates() || {}) || clean(ha.friendly_name) || id;
 };
 var progressivo = 0;
 var disegno = (chiave2, misura7, dove) => oggettoWidget(chiave2, "", `muro-${dove || progressivo++}`).replace(
@@ -85921,9 +85974,9 @@ function pillole(pagina2) {
   ).join("")}</div>`;
 }
 function personeInCasa() {
-  const elenco9 = state109.fonte?.persone?.length ? state109.fonte.persone.map((p) => p.entity) : Object.keys(allStates() || {}).filter((k) => k.startsWith("person."));
-  const inCasa = elenco9.filter((id) => String(stato2(id)?.state) === "home");
-  return { tutte: elenco9.length, inCasa: inCasa.length, nomi: inCasa.map((id) => nomeDi7(id)) };
+  const persone3 = personeDelMuro(state109.fonte, allStates() || {});
+  persone3.entita.forEach(segna);
+  return persone3;
 }
 var bulbo = (colore) => `<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="${colore}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2z"/></svg>`;
 function luminosita(id) {

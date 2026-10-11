@@ -10,6 +10,44 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.11.6
+
+**Sicurezza: le plance riservate restano riservate.** La configurazione di
+una plancia riservata a qualcuno non si legge più chiedendola per nome, e una
+telecamera messa solo in una plancia riservata non si apre dai telefoni di chi
+quella plancia non la vede. Chi amministra, e le telecamere che stanno anche
+in una plancia di tutti, restano come prima.
+
+**Sicurezza: chi non c'è più non entra.** Il telefono di un utente tolto o
+disattivato in Home Assistant non entra, e se era collegato esce entro un
+minuto. Un amministratore tolto smette di esserlo anche sui collegamenti già
+aperti. Un telefono staccato mentre entra non passa, e il segno di un telefono
+vale solo sul collegamento fatto con la sua chiave.
+
+**Sicurezza: la stretta di mano firma anche quello che dice in chiaro.** Con
+l'app nuova, chi sta in mezzo non può cambiare le opzioni del collegamento
+senza romperlo. App e add-on di prima continuano a parlarsi come sempre.
+
+**Abbinamento: chi sbaglia il codice non blocca gli altri.**
+
+**Segnalazioni: foto e video senza posizione.** L'avviso che foto e video
+saranno pubblici sta accanto ai bottoni, la prima volta si conferma, e la
+posizione GPS si toglie da foto e video prima di mandarli.
+
+**iPhone, nell'app di Home Assistant: niente più striscia vuota sotto
+l'orologio.** La plancia sta in due cornici una dentro l'altra, e lo spazio
+dell'orologio lo lasciava due volte: una Home Assistant, una lei. Adesso la
+posizione si misura fino allo schermo vero, e si rimisura da sola quando lo
+schermo cambia — si gira il telefono, si torna nell'app, Home Assistant
+sposta la sua tessera.
+
+**Pannello a muro: le persone col loro nome.** Il muro mostrava il nome
+dell'account di Home Assistant invece di quello dato nella sezione Persone;
+adesso usa lo stesso della plancia, anche in «in casa» e nel riposo.
+
+**Le foto di `/local` non seguono collegamenti che portano fuori da `www`.**
+Tolto l'aggiornamento da sé dell'add-on, che non poteva più partire.
+
 ## 1.11.5
 
 **Pannello a muro col Fold aperto: il ☰ apre la barra di Home Assistant.**

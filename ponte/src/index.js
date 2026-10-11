@@ -10,7 +10,6 @@ import { pathToFileURL } from "node:url";
 import { join } from "node:path";
 
 import { Abbinamento } from "./abbinamento.js";
-import { Aggiornamento } from "./aggiornamento.js";
 import { fabbricaIlRapporto, Postino, QUADRO_DI_DIFETTO } from "./rapporto.js";
 import { Segni } from "./segni.js";
 import { Casa } from "./casa.js";
@@ -250,6 +249,10 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
     licenze,
   });
   const ponte = new Ponte({ casa, dispositivi, registro, commissioni, utenti });
+  /* L'elenco degli utenti si rinfresca da se', ogni minuto: un amministratore
+   * tolto, o un utente cancellato, non resta dentro sui fili gia' aperti
+   * (`utenti.js`, `ponte.js`). */
+  utenti.tieniAggiornato();
 
   /* Le plance fra le «Plance» di Home Assistant, una voce per ognuna.
    *
@@ -283,25 +286,16 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
     porta: opzioni.portaDellApp,
     registro,
   });
-  /* L'aggiornamento da se', che oggi dorme.
+  /* Da dove arrivano gli aggiornamenti, per la console.
    *
-   * Serviva a chi teneva l'add-on copiato in `/addons/gdahome`, che non ha un
-   * negozio dietro. Il manifesto quella cartella non la monta piu' — il perche'
-   * sta in `config.yaml` — quindi qui `locale()` dice di no, e la console dice
-   * da dove arrivano gli aggiornamenti invece di mostrare un bottone. Resta per
-   * chi nella sua copia si rimette la cartella. */
-  const aggiornamento = new Aggiornamento({
-    mia: opzioni.versione,
-    gettone: opzioni.gettone,
-    registro,
-  });
-  if (aggiornamento.locale()) {
-    registro.info(
-      aggiornamento.gettone
-        ? "questo ponte si sa aggiornare da se': il bottone sta nella console"
-        : "questo ponte si aggiornerebbe da se', ma nella scheda dell'add-on non c'e' nessun gettone",
-    );
-  }
+   * Un tempo il ponte si sapeva anche aggiornare da se', per chi teneva
+   * l'add-on copiato in `/addons/gdahome`. Il manifesto quella cartella non la
+   * monta piu', e quel codice non poteva piu' partire: e' stato tolto, perche'
+   * un codice che scarica e installa e che nessuno usa e' solo una porta in
+   * piu'. La console continua a dire la versione e da dove si aggiorna. */
+  const aggiornamento = {
+    stato: async () => ({ mia: opzioni.versione, locale: false }),
+  };
 
   /* E lo stesso Ritorno risponde al telefono che lo chiede sul filo, invece
    * che solo a chi si sta abbinando: un indirizzo di casa detto una volta

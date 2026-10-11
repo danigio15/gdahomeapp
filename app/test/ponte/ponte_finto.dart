@@ -82,6 +82,14 @@ class PonteFinto {
   /// stretta di mano non dice di saper aprire il gzip, e non comprime.
   bool conosceIlGzip = true;
 
+  /// Quando e' `false`, e' un ponte di prima del legame: non ripete il
+  /// `lega` del telefono, e la chiave si fa come sempre.
+  bool conosceIlLegame = true;
+
+  /// Quando c'e', e' chi sta in mezzo: riscrive la risposta della casa dopo
+  /// che la casa l'ha scritta — e l'ha messa nella sua chiave com'era.
+  String Function(String pronto)? perStradaIlPronto;
+
   /// Quando c'e', chiude appena qualcuno si collega, dicendo questo: e' il
   /// centralino che accetta il filo e lo chiude subito perche' la casa non gli
   /// e' attaccata. Da fuori e' identico a un ponte vero che chiude in faccia.
@@ -1361,7 +1369,7 @@ class TelefonoCollegato {
     }
 
     if (detto.containsKey('abbina')) {
-      await _perAbbinare(detto);
+      await _perAbbinare(detto, testo);
       return;
     }
 
@@ -1383,6 +1391,16 @@ class TelefonoCollegato {
 
     final mia = await coppiaEffimera();
     final sua = base64.decode(detto['mia'] as String);
+    /* Come il portiere: la risposta si scrive prima della chiave, perche'
+     * col legame la chiave dipende da com'e' scritta. */
+    final lega = _legaCon(detto);
+    final pronto = jsonEncode({
+      'v': versioneDelProtocollo,
+      'pronto': true,
+      'mia': mia.inBase64,
+      if (_ponte.conosceIlGzip) 'gzip': true,
+      if (lega) 'lega': versioneDelLegame,
+    });
     final chiave = await chiaveDiSessione(
       miaPrivata: mia.privata,
       suaPubblica: sua,
@@ -1390,15 +1408,9 @@ class TelefonoCollegato {
       dellaCasa: mia.pubblica,
       apertura: base64.decode(detto['apertura'] as String),
       chiaveDelFilo: chiaveBuona,
+      stretta: lega ? await improntaDellaStretta(testo, pronto) : null,
     );
-    _presa.add(
-      jsonEncode({
-        'v': versioneDelProtocollo,
-        'pronto': true,
-        'mia': mia.inBase64,
-        if (_ponte.conosceIlGzip) 'gzip': true,
-      }),
-    );
+    _mandaIlPronto(pronto);
     /* Come il ponte vero: si comprime verso chi ha detto di saper aprire. */
     _busta = Busta(
       chiave,
@@ -1423,11 +1435,17 @@ class TelefonoCollegato {
    * coda vorrebbe dire aspettare se stessi. Si chiude senza aspettare, e la
    * chiusura parte comunque dopo quello che si e' messo in coda. */
 
+  bool _legaCon(Map<String, dynamic> detto) =>
+      _ponte.conosceIlLegame && detto['lega'] == versioneDelLegame;
+
+  void _mandaIlPronto(String pronto) =>
+      _presa.add(_ponte.perStradaIlPronto?.call(pronto) ?? pronto);
+
   bool _abbinando = false;
   String _telefono = '';
   String _casa = '';
 
-  Future<void> _perAbbinare(Map<String, dynamic> detto) async {
+  Future<void> _perAbbinare(Map<String, dynamic> detto, String ciao) async {
     void no(String perche, String motivo) {
       _presa.add(
         jsonEncode({
@@ -1450,6 +1468,13 @@ class TelefonoCollegato {
     }
     final mia = await coppiaEffimera();
     final sua = base64.decode(detto['mia'] as String);
+    final lega = _legaCon(detto);
+    final pronto = jsonEncode({
+      'v': versioneDelProtocollo,
+      'pronto': true,
+      'mia': mia.inBase64,
+      if (lega) 'lega': versioneDelLegame,
+    });
     final chiave = await chiaveDiSessione(
       miaPrivata: mia.privata,
       suaPubblica: sua,
@@ -1457,17 +1482,12 @@ class TelefonoCollegato {
       dellaCasa: mia.pubblica,
       apertura: base64.decode(detto['apertura'] as String),
       codice: codice,
+      stretta: lega ? await improntaDellaStretta(ciao, pronto) : null,
     );
     _abbinando = true;
     _telefono = detto['mia'] as String;
     _casa = mia.inBase64;
-    _presa.add(
-      jsonEncode({
-        'v': versioneDelProtocollo,
-        'pronto': true,
-        'mia': mia.inBase64,
-      }),
-    );
+    _mandaIlPronto(pronto);
     _busta = Busta(chiave, io: DaChi.casa);
   }
 

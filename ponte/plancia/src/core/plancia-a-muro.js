@@ -22,6 +22,7 @@ import { alarmHiddenModes, centraliAllarme, entitaDellaCentrale } from "./alarm-
 import { canonicalClimateType } from "./device-model.js";
 import { ingressiScritti } from "./le-zone-della-centrale.js";
 import { lettoriConfigurati } from "./media-player.js";
+import { nomeDellaPersona, personViewModel } from "./person-model.js";
 
 export const CHIAVE_MURO = "cd_muro";
 
@@ -631,6 +632,38 @@ export function fonteDalleSezioni(sezioni = {}, altro = {}) {
       }))
       .filter((a) => a.entita.length),
   };
+}
+
+/**
+ * Chi e' in casa, per la riga in alto, l'ingresso e il riposo del tablet.
+ *
+ * Le persone sono quelle della scheda Persone della plancia di origine, coi
+ * loro nomi di casa; senza nessuna in elenco, tutte le `person.*` che Home
+ * Assistant conosce. Il nome e la presenza si decidono come nella card della
+ * Home (`personViewModel`): il tablet non chiama nessuno in un altro modo.
+ */
+export function personeDelMuro(fonte = {}, stati = {}) {
+  const configurate = elenco(fonte?.persone).filter((p) => p && entita(p.entity));
+  const elencoDelMuro = configurate.length
+    ? configurate
+    : Object.keys(stati || {})
+        .filter((id) => id.startsWith("person."))
+        .map((entity) => ({ entity, name: "" }));
+  const inCasa = elencoDelMuro
+    .map((p) => personViewModel(p, stati, 0))
+    .filter((vista) => vista.presence === "home");
+  return {
+    entita: elencoDelMuro.map((p) => p.entity),
+    tutte: elencoDelMuro.length,
+    inCasa: inCasa.length,
+    nomi: inCasa.map((vista) => vista.name),
+  };
+}
+
+/** Il nome di casa di una persona della plancia di origine, se e' in elenco. */
+export function nomeDellaPersonaDelMuro(id, fonte = {}, stati = {}) {
+  const persona = elenco(fonte?.persone).find((p) => p && p.entity === id);
+  return persona ? nomeDellaPersona(persona, stati) : "";
 }
 
 const ACCESI = new Set(["on", "open", "opening", "unlocked", "detected", "wet", "home", "true"]);

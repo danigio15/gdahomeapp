@@ -30,15 +30,15 @@ Premium si vende nell'app gdahome, sull'iPhone e su Android, e vale per tutta
 la casa: anche sugli altri telefoni abbinati e nel browser. Si accende in due
 passi.
 
-| | spento (fino alla 1.9.2) | primo passo (dalla 1.10.0) | secondo passo |
-|---|---|---|---|
-| chiave nell'add-on e nell'app | vuota | **sì** | sì |
-| chiave nel centralino | vuota | vuota | **sì** |
-| la casa chiede i gettoni e gira le ricevute | no | sì | sì |
-| la casa si limita | no | no | no |
-| lucchetti di Base nell'app e nel browser | no | sì | sì |
-| si compra nell'app, sull'iPhone e su Android | no | sì | sì |
-| il fuori casa vuole Premium | no | no | **sì** |
+|                                              | spento (fino alla 1.9.2) | primo passo (dalla 1.10.0) | secondo passo |
+| -------------------------------------------- | ------------------------ | -------------------------- | ------------- |
+| chiave nell'add-on e nell'app                | vuota                    | **sì**                     | sì            |
+| chiave nel centralino                        | vuota                    | vuota                      | **sì**        |
+| la casa chiede i gettoni e gira le ricevute  | no                       | sì                         | sì            |
+| la casa si limita                            | no                       | no                         | no            |
+| lucchetti di Base nell'app e nel browser     | no                       | sì                         | sì            |
+| si compra nell'app, sull'iPhone e su Android | no                       | sì                         | sì            |
+| il fuori casa vuole Premium                  | no                       | no                         | **sì**        |
 
 **La casa non limita mai niente.** Tiene la licenza, gira le ricevute e dice
 com'è messa; i lucchetti di Base li mettono l'app e il browser, e il fuori
@@ -55,20 +55,20 @@ strumento che la fa (`quadro/le-licenze.mjs`, che sul quadro sta in
     node le-licenze.mjs chiave
     systemctl restart quadro
 
-1. Lo strumento fa la coppia, scrive la privata in `/etc/quadro/ambiente` e
-   stampa **solo la pubblica**: «La pubblica: …». La privata non la stampa
-   mai.
-2. Se la chiave c'è già, non la cambia: ne ridice la pubblica. È anche il modo
-   di ritrovarla quando serve.
-3. Dopo il riavvio, il registro del quadro deve dire «le licenze sono accese:
-   la pubblica è …», la stessa:
+1.  Lo strumento fa la coppia, scrive la privata in `/etc/quadro/ambiente` e
+    stampa **solo la pubblica**: «La pubblica: …». La privata non la stampa
+    mai.
+2.  Se la chiave c'è già, non la cambia: ne ridice la pubblica. È anche il modo
+    di ritrovarla quando serve.
+3.  Dopo il riavvio, il registro del quadro deve dire «le licenze sono accese:
+    la pubblica è …», la stessa:
 
-       journalctl -u quadro -b --no-pager | grep -iE "licenze|ricevute"
+        journalctl -u quadro -b --no-pager | grep -iE "licenze|ricevute"
 
-4. Di lì esce **solo la pubblica**: è quella che serve qui, e si può mandare
-   in chat. La privata non va in nessun file della repository, in nessun
-   commit, in nessun segreto di GitHub, in nessuna chat. Chi ce l'ha fa
-   Premium chiunque.
+4.  Di lì esce **solo la pubblica**: è quella che serve qui, e si può mandare
+    in chat. La privata non va in nessun file della repository, in nessun
+    commit, in nessun segreto di GitHub, in nessuna chat. Chi ce l'ha fa
+    Premium chiunque.
 
 Lo strumento arriva sul quadro col rilascio che lo contiene: il quadro segue
 l'etichetta `tramite` e si aggiorna da solo entro dieci minuti.
@@ -175,14 +175,14 @@ repository, né su GitHub, né in chat.
 1. **I prodotti nei negozi, attivi.** Nella Play Console l'abbonamento
    `gdahome_premium` con i piani base `mensile` e `annuale`; in App Store
    Connect i prodotti `gdahome_premium_mensile` e `gdahome_premium_annuale`
-   nel gruppo «gdahome Premium». Tutti con la prova di 14 giorni. *Perché
-   prima:* una casa che diventa Base senza un prodotto da comprare ha un
+   nel gruppo «gdahome Premium». Tutti con la prova di 14 giorni. _Perché
+   prima:_ una casa che diventa Base senza un prodotto da comprare ha un
    lucchetto e nessuna chiave.
 2. **Il rilascio che porta lo strumento sul quadro.** Con lui arriva anche
    l'app che sa vendere su Android: spenta finché non c'è la chiave.
 3. **Le credenziali dei negozi sul quadro**, come sopra.
 4. **Le licenze regalate a chi deve tenerle** — le tue case, chi prova, gli
-   installatori. *Perché prima:* dopo vuol dire che per un po' sono Base.
+   installatori. _Perché prima:_ dopo vuol dire che per un po' sono Base.
 
 ### La chiave, e dopo
 
@@ -199,6 +199,21 @@ repository, né su GitHub, né in chat.
    negozi per tutti: `--fallo`, poi si rilascia il centralino col bottone «Il
    tramite» su Actions, e si alza la versione minima delle app (sotto).
 
+## Il terzo interruttore: `MODO_LICENZE`
+
+Dalla chiave nel centralino in poi c'è un interruttore in più, sulla macchina
+del tramite: `MODO_LICENZE` in `/etc/tramite/ambiente`
+([`centralino/README.md`](../centralino/README.md#le-licenze)). Senza, si fa
+quello di sempre: con la chiave scritta il fuori casa si chiude a chi non è
+Premium. Con `MODO_LICENZE=registra` e un riavvio (`systemctl restart tramite`)
+il centralino verifica i gettoni e conta in `GET /salute` chi resterebbe
+fuori, ma lascia entrare tutti: serve a guardare prima, o a riaprire senza un
+rilascio. Con la
+chiave vuota `impone` non si accende: il registro lo dice e resta tutto aperto.
+
+Per accorciare gli otto giorni di una licenza tolta, sulla stessa macchina:
+`QUADRO_REVOCHE=https://quadro.gdahome.org/v1/licenze/revocate`.
+
 ## Il secondo passo è quello che fa male
 
 Là il controllo si accende **per tutti insieme**. Una casa con l'add-on
@@ -214,9 +229,9 @@ oggi, se no il numero arriverebbe il giorno dopo averne avuto bisogno. Si
 legge in `GET /salute` del centralino, chiesto dalla macchina stessa
 (`curl http://127.0.0.1:8099/salute`): da fuori quei numeri non si vedono.
 
-| | |
-|---|---|
-| `pronte_alla_licenza` = `case` | si può accendere il centralino |
+|                                |                                                                           |
+| ------------------------------ | ------------------------------------------------------------------------- |
+| `pronte_alla_licenza` = `case` | si può accendere il centralino                                            |
 | `pronte_alla_licenza` < `case` | accendere chiude il fuori casa a quella differenza, finché non aggiornano |
 
 Non c'è una soglia giusta scritta da nessuna parte: è una scelta, ed è tua.
@@ -255,8 +270,9 @@ massimo tre giorni in più.
   rilascia tutto: i gettoni vecchi smettono di valere entro otto giorni, e le
   case li rinnovano da sole.
 - **Si è acceso troppo presto.** Si rimette la chiave vuota e si rilascia:
-  tutti tornano come prima. Sul centralino basta togliere la chiave e
-  riavviare — quello è il pezzo che si rimette a posto in un minuto.
+  tutti tornano come prima. Sul centralino basta scrivere `MODO_LICENZE=registra`
+  in `/etc/tramite/ambiente` e riavviare: da fuori entrano tutti, senza
+  rilasciare niente.
 - **Una casa pagante è rimasta fuori.** Dalla pagina del gestore le si regala
   una licenza subito; il gettone le arriva al prossimo giro (sei ore, o al
   riavvio dell'add-on).

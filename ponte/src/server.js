@@ -1046,38 +1046,11 @@ async function api({
     return;
   }
 
-  /* «Portati dentro la versione nuova.»
-   *
-   * Si risponde **prima** di chiedere la ricostruzione, perche' la
-   * ricostruzione ammazza questo stesso programma: una risposta che non arriva
-   * mai, a chi guarda, e' un guasto. Cosi' invece la console sa che e' andata,
-   * e sa anche che fra un minuto la pagina torna.
-   */
+  /* «Portati dentro la versione nuova» non c'e' piu': il ponte si aggiorna
+   * da Home Assistant, come ogni altro add-on. Chi lo chiede ancora — una
+   * console vecchia rimasta aperta — si sente dire perche'. */
   if (via === "/api/aggiornamento" && metodo === "POST") {
-    if (!aggiornamento) {
-      male(risposta, 409, "questo ponte non si sa aggiornare da se'");
-      return;
-    }
-    let versione;
-    try {
-      versione = await aggiornamento.porta();
-    } catch (errore) {
-      registro.attenzione(`l'aggiornamento non e' andato: ${errore?.message || errore}`);
-      male(risposta, 409, String(errore?.message || errore));
-      return;
-    }
-    json(risposta, { versione, ricostruisco: true });
-    /* Dopo la risposta, e non prima. Il mezzo secondo e' perche' la risposta
-     * arrivi davvero a destinazione e non resti in un buffer di un processo
-     * che sta per morire. */
-    setTimeout(() => {
-      aggiornamento
-        .rifalla()
-        .then((esito) => {
-          if (!esito.chiesto) registro.attenzione(esito.perche);
-        })
-        .catch((errore) => registro.attenzione(`ricostruzione: ${errore?.message || errore}`));
-    }, 500);
+    male(risposta, 409, "questo ponte si aggiorna da Home Assistant");
     return;
   }
 

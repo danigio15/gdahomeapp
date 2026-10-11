@@ -706,6 +706,7 @@ class _HomeState extends State<Home> {
                                   SchermataDelleSegnalazioni(
                                     collegamento: collegamento,
                                     diagnostica: _diagnostica,
+                                    impostazioni: widget.impostazioni,
                                   ),
                                 Sezione.assistenza => SchermataDellAssistenza(
                                   collegamento: collegamento,

@@ -500,6 +500,22 @@ export function elapsedParts(sinceMs, nowMs) {
 }
 
 /**
+ * Il nome con cui si chiama una persona, ovunque la plancia la mostri: quello
+ * scritto nella scheda Persone, poi il `friendly_name` che Home Assistant le
+ * da', e solo per ultimo l'entita'. La card della Home e il pannello a muro
+ * passano tutti e due di qui: «sul muro le persone non prendono il nome
+ * corretto» — il muro leggeva soltanto Home Assistant, e chi aveva dato un
+ * nome di casa alla persona sul tablet trovava quello dell'account.
+ */
+export function nomeDellaPersona(person, states = {}) {
+  return (
+    clean(person?.name) ||
+    clean(states?.[clean(person?.entity)]?.attributes?.friendly_name) ||
+    clean(person?.entity)
+  );
+}
+
+/**
  * Tutto quello che serve per disegnare la card di una persona, gia' deciso.
  *
  * `presence` distingue tre situazioni, non due: a casa, fuori, o in una zona
@@ -540,7 +556,7 @@ export function personViewModel(person, states = {}, nowMs = null) {
      * si tocca e si apre la mappa di casa su QUESTA persona (#438), e per
      * chiederla bisogna saperla nominare. */
     entity: clean(person.entity),
-    name: person.name || clean(entityState?.attributes?.friendly_name) || person.entity,
+    name: nomeDellaPersona(person, states),
     photo,
     initials: personInitials(person.name || clean(entityState?.attributes?.friendly_name)),
     avatar: person.avatar,

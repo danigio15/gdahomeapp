@@ -23,6 +23,8 @@
  * testa, invisibile su GitHub; gli altri sono del manutentore.
  */
 
+import { jpegSenzaPosizione } from "./senza-posizione.js";
+
 export const TIPI = Object.freeze(["problema", "idea", "domanda"]);
 
 /* Da dove arriva una segnalazione, e come si chiama la sua etichetta.
@@ -613,17 +615,20 @@ export class Segnalazioni {
         "Si possono allegare solo foto e video.",
         415,
       );
+    /* Una foto finisce in una repository pubblica, e ci resta: via le note
+     * che dicono dove e' stata fatta. Vedi `senza-posizione.js`. */
+    const daMettere = vero === "image/jpeg" ? jpegSenzaPosizione(byte) : byte;
     const pulito = nomeColSuoTipo(nome, vero);
     const via = `allegati/${numero}/${new Date(this.adesso()).toISOString().replace(/[:.]/g, "-")}-${pulito}`;
     const messo = await this.github.mettiFile({
       via,
-      byte,
+      byte: daMettere,
       messaggio: `Allegato alla #${numero}: ${pulito}`,
     });
     const foto = vero.startsWith("image/");
     await this.github.commenta(
       numero,
-      `${MARCATORE_CASA}\n${foto ? "📷" : "🎬"} ${pulito} (${pesoLeggibile(byte.length)})\n${messo.url}`,
+      `${MARCATORE_CASA}\n${foto ? "📷" : "🎬"} ${pulito} (${pesoLeggibile(daMettere.length)})\n${messo.url}`,
     );
     return messo;
   }

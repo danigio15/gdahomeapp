@@ -34,6 +34,7 @@ class Impostazioni {
    * chi aggiorna l'app si trova davanti una richiesta che non ha chiesto, su
    * un telefono che magari il volto non ce l'ha nemmeno registrato. */
   IlLucchetto _lucchetto = IlLucchetto.spento;
+  bool _allegatiPubbliciCapiti = false;
 
   /* Il tema, la tavolozza e la barra della plancia qui non ci sono, e ci
    * sono stati.
@@ -64,6 +65,12 @@ class Impostazioni {
   /// Il volto e l'impronta davanti all'app: cosa e' acceso.
   IlLucchetto get lucchetto => _lucchetto;
 
+  /// Se chi ha il telefono in mano ha gia' letto, e accettato, che le foto e
+  /// i video di una segnalazione diventano pubblici su GitHub. Si chiede una
+  /// volta sola, al primo allegato (`schermate/segnalazioni.dart`), e poi
+  /// resta l'avviso accanto ai bottoni.
+  bool get allegatiPubbliciCapiti => _allegatiPubbliciCapiti;
+
   bool get sulTelefono => _sulTelefono;
   bool get android => _android;
   bool get caricate => _caricate;
@@ -87,6 +94,9 @@ class Impostazioni {
           if (letto['lucchetto'] != null) {
             _lucchetto = IlLucchetto.daQuelloCheCEra(letto['lucchetto']);
           }
+          if (letto['allegati_pubblici_capiti'] is bool) {
+            _allegatiPubbliciCapiti = letto['allegati_pubblici_capiti'] as bool;
+          }
         }
       }
     } catch (_) {
@@ -100,6 +110,7 @@ class Impostazioni {
     bool? planciaLeggera,
     bool? composizioneIbrida,
     IlLucchetto? lucchetto,
+    bool? allegatiPubbliciCapiti,
   }) async {
     var cambiato = false;
     if (lucchetto != null) {
@@ -115,6 +126,11 @@ class Impostazioni {
       _composizioneIbrida = composizioneIbrida;
       cambiato = true;
     }
+    if (allegatiPubbliciCapiti != null &&
+        allegatiPubbliciCapiti != _allegatiPubbliciCapiti) {
+      _allegatiPubbliciCapiti = allegatiPubbliciCapiti;
+      cambiato = true;
+    }
     if (!cambiato) return;
     _avvisa();
     await _dispensa.scrivi(
@@ -122,6 +138,7 @@ class Impostazioni {
         'plancia_leggera': _planciaLeggera,
         'composizione_ibrida': _composizioneIbrida,
         'lucchetto': _lucchetto.comeSiScrive,
+        'allegati_pubblici_capiti': _allegatiPubbliciCapiti,
       }),
     );
   }

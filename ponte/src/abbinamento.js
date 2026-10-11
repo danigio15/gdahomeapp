@@ -27,10 +27,33 @@ const MINUTO = 60 * 1000;
  *
  * Il tetto di tutti insieme resta, ma alto: e' una rete sotto la rete. Il
  * codice e' di ottanta bit e vive cinque minuti, e non e' il tetto a
- * renderlo difficile da indovinare. */
+ * renderlo difficile da indovinare: anche a mille tentativi ogni quarto
+ * d'ora, la probabilita' di azzeccarlo prima che scada e' di una su un
+ * miliardo di miliardi. Quello che il tetto deve fare e' un'altra cosa — che
+ * chi bussa da tante parti insieme, dopo aver sbagliato, non abbia piu' cinque
+ * tentativi a testa ma nessuno — e lo deve fare **senza** dare a degli
+ * estranei un modo di chiudere la porta a chi ha il codice.
+ *
+ * Era cinquanta, e cinquanta li fanno dieci indirizzi: dieci estranei, o uno
+ * con dieci indirizzi, bastavano a far aspettare un quarto d'ora chi aveva
+ * gia' sbagliato una volta — un QR vecchio inquadrato da uno schermo non
+ * ricaricato — o chi esce su internet dallo stesso indirizzo di altri, come
+ * tutti i telefoni dietro lo stesso operatore. A mille ne servono duecento.
+ *
+ * E vale sempre e solo per chi ha gia' sbagliato di recente: chi non ha mai
+ * provato passa comunque, e chi presenta il codice giusto entra comunque
+ * (`consuma` guarda solo il tetto suo). Cosi' da fuori nessuno puo' chiudere
+ * l'abbinamento a chi sta davanti allo schermo. */
 const TENTATIVI_PER_CHI = 5;
-const TENTATIVI_MASSIMI = 50;
+const TENTATIVI_MASSIMI = 1000;
 const FINESTRA_DEI_TENTATIVI = 15 * MINUTO;
+
+/* Chi arriva dal centralino **senza** un indirizzo — un centralino che non lo
+ * dice — non e' una persona: e' tutti quelli che passano da li', in un mucchio
+ * solo. Col tetto di uno, cinque estranei qualunque chiudevano l'abbinamento
+ * da fuori casa a tutti. Il suo tetto e' quello di un gruppo, non di uno. */
+const SENZA_INDIRIZZO = new Set(["centralino"]);
+const TENTATIVI_SENZA_INDIRIZZO = 50;
 
 /* Quanti «chi» diversi si ricordano al massimo. Chi bussa puo' dire di essere
  * chiunque — passando dal centralino l'indirizzo lo dice il centralino — e
@@ -167,9 +190,19 @@ export class Abbinamento {
   sbagliato(da = "?") {
     const ora = this.adesso();
     this._sbagliati.push(ora);
+    /* Del mucchio di tutti insieme servono solo gli ultimi: quanti ne bastano
+     * per il tetto. Il resto e' memoria spesa per chi bussa a raffica. */
+    if (this._sbagliati.length > TENTATIVI_MASSIMI) {
+      this._sbagliati.splice(0, this._sbagliati.length - TENTATIVI_MASSIMI);
+    }
     const chi = gruppoDellIndirizzo(da);
     const suoi = this._perChi.get(chi) ?? [];
     suoi.push(ora);
+    /* Anche per uno solo bastano gli ultimi: il tetto piu' alto e' quello del
+     * mucchio senza indirizzo. */
+    if (suoi.length > TENTATIVI_SENZA_INDIRIZZO) {
+      suoi.splice(0, suoi.length - TENTATIVI_SENZA_INDIRIZZO);
+    }
     /* Tolto e rimesso: cosi' l'ordine della mappa e' quello dell'ultimo
      * tentativo, e quando e' piena se ne va chi non si fa vivo da piu' tempo. */
     this._perChi.delete(chi);
@@ -202,7 +235,11 @@ export class Abbinamento {
     );
     if (suoi.length) this._perChi.set(chi, suoi);
     else this._perChi.delete(chi);
-    return suoi.length >= TENTATIVI_PER_CHI ? suoi[0] + FINESTRA_DEI_TENTATIVI : null;
+    const tetto = SENZA_INDIRIZZO.has(chi) ? TENTATIVI_SENZA_INDIRIZZO : TENTATIVI_PER_CHI;
+    /* Il blocco dura un quarto d'ora dal tentativo che ha riempito il tetto:
+     * con il tetto di uno e' il primo, con quello del mucchio e' il primo
+     * degli ultimi cinquanta. */
+    return suoi.length >= tetto ? suoi[suoi.length - tetto] + FINESTRA_DEI_TENTATIVI : null;
   }
 
   _scadenza() {

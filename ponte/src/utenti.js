@@ -22,7 +22,9 @@
  * com'e'. Non e' pigrizia: l'alternativa e' che un singolo singhiozzo di Home
  * Assistant chiuda la plancia in faccia anche a chi la amministra. Una risposta
  * di un minuto fa e' quasi sempre la stessa; nessuna risposta non e' mai
- * giusta.
+ * giusta. Ma non per sempre: oltre dieci minuti l'elenco vecchio non vale piu'
+ * (`DURATA_MASSIMA`), e da li' in poi chi amministra torna a esserlo quando
+ * Home Assistant lo ridice.
  */
 
 /* Quanto vale una risposta prima di richiederla. Un minuto: abbastanza per non
@@ -30,15 +32,33 @@
  * perche' un utente appena aggiunto compaia subito nelle spunte. */
 const QUANTO_VALE = 60 * 1000;
 
+/* Quanto puo' invecchiare l'ultima risposta buona prima di non valere piu'
+ * niente. Un riavvio di Home Assistant sta largamente sotto i dieci minuti:
+ * fin li' si tiene l'elenco di prima, come sempre. Oltre, tenerlo voleva dire
+ * che un amministratore tolto restava amministratore finche' Home Assistant
+ * non tornava a rispondere — anche per giorni. */
+const DURATA_MASSIMA = 10 * 60 * 1000;
+
 /* Il gruppo degli amministratori, come lo chiama Home Assistant. */
 const CHI_AMMINISTRA = "system-admin";
 
 export class UtentiDiCasa {
-  constructor({ casa, registro, adesso = () => Date.now(), quantoVale = QUANTO_VALE } = {}) {
+  constructor({
+    casa,
+    registro,
+    adesso = () => Date.now(),
+    quantoVale = QUANTO_VALE,
+    durataMassima = DURATA_MASSIMA,
+  } = {}) {
     this.casa = casa;
     this.registro = registro ?? { info() {}, attenzione() {}, errore() {} };
     this.adesso = adesso;
     this.quantoVale = quantoVale;
+    this.durataMassima = durataMassima;
+    /* Chi vuole sapere quando l'elenco e' stato richiesto: il ponte, che
+     * chiude i fili dei telefoni di chi non c'e' piu'. */
+    this._chiAscolta = new Set();
+    this._giro = null;
     /* L'ultima risposta buona, e quando e' arrivata. `null` vuol dire «non ne
      * ho mai avuta una», che non e' la stessa cosa di «ne ho una vecchia». */
     this._ultimi = null;
@@ -83,6 +103,13 @@ export class UtentiDiCasa {
         .filter((uno) => uno.id);
       this._quando = this.adesso();
       this._dettoIlGuaio = false;
+      for (const ascolta of this._chiAscolta) {
+        try {
+          ascolta(this._ultimi);
+        } catch (_errore) {
+          /* Chi ascolta non fa cadere chi chiede. */
+        }
+      }
       return this._ultimi;
     } catch (errore) {
       if (!this._dettoIlGuaio) {
@@ -94,9 +121,50 @@ export class UtentiDiCasa {
       /* Si tiene l'ultima buona, vecchia com'e'. Se non ce n'e' mai stata una,
        * il guaio esce di qui: chi ha chiamato deve sapere che non lo sa
        * nessuno, e decidere lui cosa farne. */
-      if (this._ultimi) return this._ultimi;
+      if (this._ultimi && !this._troppoVecchi()) return this._ultimi;
       throw errore;
     }
+  }
+
+  /* Se l'ultima risposta buona e' passata da troppo per valere ancora. */
+  _troppoVecchi() {
+    return Boolean(this._ultimi) && this.adesso() - this._quando > this.durataMassima;
+  }
+
+  /* L'elenco richiesto da se', ogni minuto, senza aspettare che qualcuno lo
+   * chieda. Senza, un telefono gia' entrato guardava solo la memoria
+   * (`amministratoreSubito`), e la memoria si rinfrescava solo quando un
+   * altro telefono entrava o qualcuno apriva la console: un amministratore
+   * tolto in Home Assistant restava amministratore sui fili gia' aperti. */
+  tieniAggiornato({ ogni = this.quantoVale } = {}) {
+    if (this._giro) return;
+    const fai = () => {
+      this.elenco().catch(() => {
+        /* Detto gia' una volta da `_chiedi`. */
+      });
+    };
+    this._giro = setInterval(fai, ogni);
+    this._giro.unref?.();
+  }
+
+  smetti() {
+    if (this._giro) clearInterval(this._giro);
+    this._giro = null;
+  }
+
+  /* `ascolta(elenco)` a ogni elenco nuovo. Torna la funzione che smette. */
+  quandoCambia(ascolta) {
+    this._chiAscolta.add(ascolta);
+    return () => this._chiAscolta.delete(ascolta);
+  }
+
+  /* Se questo utente c'e' ancora ed e' attivo. Chiede a Home Assistant se
+   * serve; se Home Assistant non lo sa dire, solleva. */
+  async eVivo(chi) {
+    const cercato = String(chi || "").trim();
+    if (!cercato) return false;
+    const elenco = await this.elenco();
+    return elenco.some((uno) => uno.id === cercato && uno.attivo !== false);
   }
 
   /* Se questo utente amministra la casa. `false` anche per un utente che non
@@ -119,6 +187,9 @@ export class UtentiDiCasa {
     const cercato = String(chi || "").trim();
     if (!cercato) return false;
     if (!this._ultimi) return null;
+    /* Una memoria troppo vecchia non dice piu' di si': un no si', perche'
+     * togliere un permesso per prudenza non apre niente a nessuno. */
+    if (this._troppoVecchi()) return false;
     return this._ultimi.some(
       (uno) => uno.id === cercato && uno.amministratore && uno.attivo !== false,
     );

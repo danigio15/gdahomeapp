@@ -97,8 +97,11 @@ class Filo {
     this.attesaDellApertura = const Duration(seconds: 20),
     this.attesaAFreddo = const Duration(milliseconds: 400),
     this.quantiTentativiAFreddo = 6,
+    bool legameGiaVisto = false,
+    this.quandoLega,
   }) : _trovaLApprodo = approdo,
-       _apri = apri ?? PresaSuWebSocket.apri;
+       _apri = apri ?? PresaSuWebSocket.apri,
+       _legameVisto = legameGiaVisto;
 
   /// Un filo verso un indirizzo solo, che non cambia mai. Serve alle prove.
   Filo.fisso({
@@ -115,6 +118,8 @@ class Filo {
     Duration attesaDellApertura = const Duration(seconds: 20),
     Duration attesaAFreddo = const Duration(milliseconds: 400),
     int quantiTentativiAFreddo = 6,
+    bool legameGiaVisto = false,
+    void Function()? quandoLega,
   }) : this(
          approdo: (() async => Approdo.diretto(DaDove.daDentro, indirizzo)),
          segno: segno,
@@ -129,6 +134,8 @@ class Filo {
          attesaDellApertura: attesaDellApertura,
          attesaAFreddo: attesaAFreddo,
          quantiTentativiAFreddo: quantiTentativiAFreddo,
+         legameGiaVisto: legameGiaVisto,
+         quandoLega: quandoLega,
        );
 
   final TrovaLApprodo _trovaLApprodo;
@@ -146,6 +153,23 @@ class Filo {
   final String chiave;
 
   final ApriLaPresa _apri;
+
+  /* Se questa casa il legame (`lega`, vedi `stretta.dart`) l'ha gia'
+   * ripetuto, con una busta aperta a provarlo. Da li' in poi una risposta
+   * senza non si accetta: una casa non lo dimentica da sola. Parte da quello
+   * che chi crea il filo dice di sapere gia' (`legameGiaVisto`), e si
+   * accende durante la vita del filo: cosi' tiene, finche' l'app e' aperta,
+   * anche senza che nessuno se lo scriva da nessuna parte. */
+  bool _legameVisto;
+
+  /// Chi va avvisato la prima volta che questa casa si vede legare: e' chi
+  /// se lo vorra' scrivere, per la prossima volta che l'app si apre. Oggi
+  /// non lo passa nessuno, e il ricordo vive quanto il filo.
+  final void Function()? quandoLega;
+
+  /// Se questa casa il legame l'ha gia' ripetuto, con una busta aperta a
+  /// provarlo: da qui in poi lo si pretende.
+  bool get legameVisto => _legameVisto;
 
   /// Oltre questa non si aspetta di piu' fra un tentativo e l'altro.
   final Duration attesaMassima;
@@ -489,7 +513,12 @@ class Filo {
        * nell'ultimo `catch` come ogni altro intoppo — si dice, e si riprova.
        * Spegnere il filo per sempre lo puo' solo `auth_invalid`, che arriva
        * dentro il cifrato: vedi `_arrivato`, e in cima a `stretta.dart`. */
-      presa = await stringiLaMano(sotto, chi: chi, chiaveDelFilo: chiave);
+      presa = await stringiLaMano(
+        sotto,
+        chi: chi,
+        chiaveDelFilo: chiave,
+        pretendiIlLegame: _legameVisto,
+      );
     } on TimeoutException {
       if (mia != _bussate) return;
       /* Una presa che non si apre e non fallisce e' un silenzio, non una
@@ -735,6 +764,21 @@ class Filo {
      * riparte da zero, cosi' il prossimo risveglio ha di nuovo tutti i suoi
      * tentativi veloci prima di parlare di cadute. */
     _aFreddo = 0;
+    /* Dentro vuol dire che una busta della casa si e' aperta — `auth_ok` e'
+     * arrivato in una busta — e se la chiave era legata, il legame e'
+     * provato: da adesso questa casa lo deve ripetere sempre. Prima no: un
+     * `lega` aggiunto per strada alla risposta di una casa di prima non deve
+     * poterla chiudere fuori per sempre. */
+    final presa = _presa;
+    if (!_legameVisto && presa is PresaCifrata && presa.legataEProvata) {
+      _legameVisto = true;
+      try {
+        quandoLega?.call();
+      } catch (_) {
+        /* Chi se lo scrive ha inciampato: il filo e' dentro lo stesso, e
+         * fino alla prossima apertura dell'app se lo ricorda lui. */
+      }
+    }
     _cambia(StatoDelFilo.dentro);
     if (_stretta != null && !_stretta!.isCompleted) _stretta!.complete();
     _rifaiLeSottoscrizioni();

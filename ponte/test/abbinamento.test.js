@@ -122,13 +122,72 @@ test("tanti estranei insieme chiudono la porta a chi prova, non a chi ha il codi
    * codice lo presenta giusto entra. */
   const a = new Abbinamento({ adesso: orologio().adesso });
   const { codice } = a.nuovo();
-  for (let i = 0; i < 49; i += 1) a.sbagliato(`estraneo ${i}`);
+  for (let i = 0; i < 999; i += 1) a.sbagliato(`estraneo ${i % 200}`);
   a.sbagliato("192.168.1.30");
   assert.notEqual(a.stato().bloccatoFinoA, null);
   assert.notEqual(a.bloccato("192.168.1.30"), null, "chi ha gia' sbagliato aspetta");
   assert.notEqual(a.bloccato("estraneo 3"), null);
   assert.equal(a.bloccato("192.168.1.20"), null, "chi non ha provato no");
   assert.ok(a.consuma(codice, { da: "192.168.1.30" }), "e il codice giusto entra");
+});
+
+test("dieci estranei non bastano piu' a far aspettare chi ha sbagliato una volta", () => {
+  /* Col tetto di tutti insieme a cinquanta, dieci indirizzi da cinque
+   * tentativi l'uno facevano aspettare un quarto d'ora chi aveva inquadrato
+   * un QR vecchio: adesso ne servirebbero duecento. */
+  const a = new Abbinamento({ adesso: orologio().adesso });
+  const { codice } = a.nuovo();
+  for (let i = 0; i < 10; i += 1) {
+    for (let j = 0; j < 5; j += 1) a.sbagliato(`93.40.1.${i}`);
+  }
+  a.sbagliato("192.168.1.30");
+  assert.equal(a.stato().bloccatoFinoA, null);
+  assert.equal(a.bloccato("192.168.1.30"), null, "chi ha sbagliato una volta riprova");
+  assert.notEqual(a.bloccato("93.40.1.4"), null, "chi ha sbagliato cinque volte no");
+  assert.ok(a.consuma(codice, { da: "192.168.1.30" }), "e il codice giusto entra");
+});
+
+test("tutti gli estranei del mondo non fermano chi presenta il codice giusto", () => {
+  const a = new Abbinamento({ adesso: orologio().adesso });
+  const { codice } = a.nuovo();
+  for (let i = 0; i < 5000; i += 1) a.sbagliato(`estraneo ${i}`);
+  assert.notEqual(a.stato().bloccatoFinoA, null, "il tetto di tutti insieme e' pieno");
+  assert.equal(a.bloccato("192.168.1.20"), null, "ma chi non ha provato non aspetta");
+  assert.ok(a._sbagliati.length <= 1000, "e il mucchio non cresce senza fondo");
+  assert.ok(a.consuma(codice, { da: "192.168.1.20" }), "e il codice giusto entra");
+});
+
+test("dal centralino senza indirizzo si conta come un gruppo, non come uno", () => {
+  /* Un centralino che non dice l'indirizzo mette tutti in un mucchio solo:
+   * col tetto di uno, cinque estranei chiudevano l'abbinamento da fuori casa
+   * a tutti. */
+  const tempo = orologio();
+  const a = new Abbinamento({ adesso: tempo.adesso });
+  a.nuovo();
+  for (let i = 0; i < 49; i += 1) a.sbagliato("centralino");
+  assert.equal(a.bloccato("centralino"), null);
+  a.sbagliato("centralino");
+  assert.notEqual(a.bloccato("centralino"), null, "ma un tetto ce l'ha anche lui");
+  /* Chi arriva dal centralino con l'indirizzo e' uno, come sempre. */
+  for (let i = 0; i < 5; i += 1) a.sbagliato("centralino 93.40.1.2");
+  assert.notEqual(a.bloccato("centralino 93.40.1.2"), null);
+  assert.equal(a.bloccato("centralino 93.40.1.3"), null);
+  tempo.avanti(15 * MINUTO + 1);
+  assert.equal(a.bloccato("centralino"), null, "e il tempo lo riapre");
+});
+
+test("chi continua a sbagliare aspetta dall'ultimo che ha riempito il tetto", () => {
+  const tempo = orologio();
+  const a = new Abbinamento({ adesso: tempo.adesso });
+  a.nuovo();
+  for (let i = 0; i < 5; i += 1) {
+    a.sbagliato("93.40.1.9");
+    tempo.avanti(MINUTO);
+  }
+  const finoA = a.bloccato("93.40.1.9");
+  assert.notEqual(finoA, null);
+  tempo.avanti(10 * MINUTO + 1);
+  assert.equal(a.bloccato("93.40.1.9"), null, "il primo tentativo e' scaduto: ne restano quattro");
 });
 
 test("un IPv6 conta per la sua rete /64, non per il singolo indirizzo", () => {

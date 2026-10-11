@@ -10,9 +10,9 @@
  * Un messaggio per parte, in chiaro. E' l'unico pezzo che il centralino vede,
  * e non c'e' niente dentro che gli serva.
  *
- *   telefono → casa   {v:1, chi:"dm_…", apertura:"…", mia:"…", gzip:true, mucchio:true, app:1061100}
- *   telefono → casa   {v:1, abbina:2, apertura:"…", mia:"…", app:1061100}   un telefono nuovo
- *   casa → telefono   {v:1, pronto:true, mia:"…", gzip:true, mucchio:true, da_casa:true}
+ *   telefono → casa   {v:1, chi:"dm_…", apertura:"…", mia:"…", gzip:true, mucchio:true, app:1061100, lega:1}
+ *   telefono → casa   {v:1, abbina:2, apertura:"…", mia:"…", app:1061100, lega:1}   un telefono nuovo
+ *   casa → telefono   {v:1, pronto:true, mia:"…", gzip:true, lega:1, mucchio:true, da_casa:true}
  *   casa → telefono   {v:1, no:"…"}                          e basta
  *   casa → telefono   {v:1, no:"…", riabbina:true}           non ti conosco
  *   casa → telefono   {v:1, no:"…", motivo:"…"}              l'abbinamento non parte
@@ -32,6 +32,12 @@
  * o dice un numero piu' piccolo si ferma con `aggiorna-l-app`. E' scritto in
  * `versione-minima.js`. Un campo in piu' in un oggetto: un ponte di prima lo
  * ignora, un'app di prima non lo manda.
+ *
+ * `lega: 1` dice «lega la chiave a queste due righe»: se il telefono lo dice
+ * e la casa lo ripete, le due righe intere, cosi' come sono passate, entrano
+ * nella chiave, e chi le ritoccasse per strada — un `da_casa` girato, un
+ * `gzip` tolto — fa si' che la prima busta non si apra. Chi non lo dice, o
+ * non lo ripete, si parla come prima. E' scritto in `cifra.js`.
  *
  * Dopo, ogni messaggio e' una busta.
  *
@@ -79,7 +85,9 @@ import {
   BustaGuasta,
   chiaveDiSessione,
   coppiaEffimera,
+  improntaDellaStretta,
   VERSIONE,
+  VERSIONE_DEL_LEGAME,
   VERSIONE_DELL_ABBINAMENTO,
 } from "./cifra.js";
 import { CodiceSbagliato, TroppiTentativi } from "./abbinamento.js";
@@ -220,6 +228,7 @@ export class Portiere {
       this._no(presa, "apertura sbagliata");
       return;
     }
+    const legame = this._ilLegame(testo, detto);
 
     /* ─── L'app troppo vecchia ────────────────────────────────────────────
      *
@@ -240,7 +249,7 @@ export class Portiere {
     /* Un telefono nuovo: nessuna chiave del filo, ancora. Quella la ricevera'
      * dentro questa stessa conversazione. */
     if (detto.abbina != null && detto.abbina !== false) {
-      this._perAbbinare(presa, { detto, apertura, da, abbina });
+      this._perAbbinare(presa, { detto, apertura, da, abbina, legame });
       return;
     }
 
@@ -274,7 +283,7 @@ export class Portiere {
        * dice dentro il cifrato, dove l'app ci puo' credere. */
       const revocata = this.dispositivi.chiaveRevocataDi?.(chi);
       if (revocata) {
-        this._diCheEStaccato(presa, { detto, apertura, chiave: revocata });
+        this._diCheEStaccato(presa, { detto, apertura, chiave: revocata, legame });
         return;
       }
       /* Detto senza dire *perche'*: un telefono che non c'e' e uno abbinato
@@ -291,6 +300,9 @@ export class Portiere {
     }
 
     const mia = coppiaEffimera();
+    /* La risposta si scrive **prima** della chiave: col legame, la chiave
+     * dipende proprio da com'e' scritta. */
+    const pronto = JSON.stringify(this._pronto(mia, { daCasa, lega: Boolean(legame) }));
     let chiaveDiQuestoFilo;
     try {
       chiaveDiQuestoFilo = chiaveDiSessione({
@@ -300,31 +312,52 @@ export class Portiere {
         dellaCasa: mia.pubblica,
         apertura,
         chiaveDelFilo: chiave,
+        stretta: legame ? improntaDellaStretta(legame.ciao, pronto) : null,
       });
     } catch (_errore) {
       this._no(presa, "stretta di mano sbagliata");
       return;
     }
 
-    presa.manda(JSON.stringify(this._pronto(mia, { daCasa })));
+    presa.manda(pronto);
     /* Da qui in poi il ponte vede una presa qualunque, e non sa niente di
      * tutto questo. */
     this.ponte.accogli(
       new PresaCifrata(presa, chiaveDiQuestoFilo, { comprime: detto.gzip === true }),
       /* `mucchio: true` dice «so spacchettare un mucchio di eventi». Come il
-       * gzip: chi non lo dice riceve un messaggio per evento, come prima. */
-      { da, mucchio: detto.mucchio === true },
+       * gzip: chi non lo dice riceve un messaggio per evento, come prima.
+       *
+       * `chi` e' il telefono con la cui chiave del filo si e' appena fatta la
+       * chiave di questo collegamento: chi riesce ad aprire le buste e' lui, e
+       * non un altro che dica di esserlo. */
+      { da, mucchio: detto.mucchio === true, chi },
     );
+  }
+
+  /* Il legame con le due righe in chiaro (`cifra.js`), se il telefono l'ha
+   * chiesto nella sua: torna la sua riga, cosi' com'e' arrivata, da mettere
+   * nell'impronta insieme alla risposta. `null` vuol dire la chiave di
+   * sempre — un'app di prima non lo chiede, e non se ne accorge.
+   *
+   * La riga si prende com'e' arrivata e non riscritta dal JSON letto: e' il
+   * telefono a decidere com'e' scritta, e l'impronta deve venire uguale di
+   * qua e di la'. */
+  _ilLegame(testo, detto) {
+    if (detto.lega !== VERSIONE_DEL_LEGAME) return null;
+    return { ciao: Buffer.isBuffer(testo) ? testo : Buffer.from(String(testo), "utf8") };
   }
 
   /* La risposta a chi ha stretto la mano: la mia chiave effimera, e che qui
    * il gzip si sa aprire. */
-  _pronto(mia, { gzip = true, daCasa } = {}) {
+  _pronto(mia, { gzip = true, daCasa, lega = false } = {}) {
     return {
       v: VERSIONE,
       pronto: true,
       mia: mia.pubblica.toString("base64"),
       ...(gzip ? { gzip: true } : {}),
+      /* Che la chiave di questo filo e' legata alle due righe in chiaro: lo
+       * si ripete solo a chi l'ha chiesto. */
+      ...(lega ? { lega: VERSIONE_DEL_LEGAME } : {}),
       /* Che di qua gli eventi si sanno raggruppare. Al telefono serve per
        * dirlo in diagnostica: quanti messaggi sono arrivati, e in quante
        * buste — che passando dal centralino e' il numero che si paga. */
@@ -342,8 +375,9 @@ export class Portiere {
    * prima busta gli si dice quello che gli direbbe il ponte a un segno che
    * non vale piu'. L'app vecchia e quella nuova lo capiscono allo stesso
    * modo, perche' e' la stessa frase di Home Assistant. */
-  _diCheEStaccato(presa, { detto, apertura, chiave }) {
+  _diCheEStaccato(presa, { detto, apertura, chiave, legame = null }) {
     const mia = coppiaEffimera();
+    const pronto = JSON.stringify(this._pronto(mia, { gzip: false, lega: Boolean(legame) }));
     let chiaveDiQuestoFilo;
     try {
       chiaveDiQuestoFilo = chiaveDiSessione({
@@ -353,12 +387,13 @@ export class Portiere {
         dellaCasa: mia.pubblica,
         apertura,
         chiaveDelFilo: chiave,
+        stretta: legame ? improntaDellaStretta(legame.ciao, pronto) : null,
       });
     } catch (_errore) {
       this._no(presa, "stretta di mano sbagliata");
       return;
     }
-    presa.manda(JSON.stringify(this._pronto(mia, { gzip: false })));
+    presa.manda(pronto);
     const cifrata = new PresaCifrata(presa, chiaveDiQuestoFilo);
     cifrata.manda(
       JSON.stringify({
@@ -371,7 +406,7 @@ export class Portiere {
 
   /* ─── L'abbinamento, dentro il cifrato ───────────────────────────────── */
 
-  _perAbbinare(presa, { detto, apertura, da, abbina }) {
+  _perAbbinare(presa, { detto, apertura, da, abbina, legame = null }) {
     /* Prima di tutto quello che non costa niente, e che non dice niente a chi
      * bussa oltre a quello che vede gia'. */
     if (!abbina) {
@@ -410,6 +445,11 @@ export class Portiere {
     /* Una chiave per codice, con la stessa chiave effimera: il `pronto` e'
      * uno solo, e il telefono ricava la sua dal codice che ha. */
     const mia = coppiaEffimera();
+    /* Niente gzip, in nessuno dei due versi: qui passano il segno e la
+     * chiave, e una busta che si accorcia secondo quello che c'e' dentro non
+     * serve a niente per quattro righe. */
+    const pronto = JSON.stringify(this._pronto(mia, { gzip: false, lega: Boolean(legame) }));
+    const stretta = legame ? improntaDellaStretta(legame.ciao, pronto) : null;
     let chiavi;
     try {
       chiavi = codici.map(({ codice }) =>
@@ -420,6 +460,7 @@ export class Portiere {
           dellaCasa: mia.pubblica,
           apertura,
           codice,
+          stretta,
         }),
       );
     } catch (_errore) {
@@ -427,10 +468,7 @@ export class Portiere {
       return;
     }
 
-    /* Niente gzip, in nessuno dei due versi: qui passano il segno e la
-     * chiave, e una busta che si accorcia secondo quello che c'e' dentro non
-     * serve a niente per quattro righe. */
-    presa.manda(JSON.stringify(this._pronto(mia, { gzip: false })));
+    presa.manda(pronto);
 
     const pubbliche = {
       telefono: String(detto.mia),

@@ -62,6 +62,19 @@ class RifiutoNonFirmato extends StrettaRifiutata {
   const RifiutoNonFirmato(super.spiegazione);
 }
 
+/// La casa ha risposto senza ripetere il legame (`lega`), e questa casa
+/// l'aveva gia' ripetuto un'altra volta.
+///
+/// Una casa non dimentica il legame da sola: o qualcuno in mezzo ha tolto il
+/// `lega` dalla prima riga per riportare tutti alla chiave di prima — dove le
+/// righe in chiaro si possono ritoccare senza che nessuno se ne accorga — o
+/// sulla casa e' stato rimesso un gdahome di prima. Nel dubbio non si entra,
+/// e si riprova come per ogni intoppo: la cura del secondo caso e' aggiornare
+/// gdahome, o riabbinare il telefono. Vedi `stretta.dart`.
+class LegameMancato extends StrettaRifiutata {
+  const LegameMancato(super.spiegazione);
+}
+
 /// La casa ha detto che quest'app e' troppo vecchia per entrare
 /// (`motivo: "aggiorna-l-app"`, vedi `ponte/src/versione-minima.js`).
 ///

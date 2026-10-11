@@ -12,6 +12,7 @@ import 'package:flutter/material.dart';
 
 import '../casa/allegati.dart';
 import '../casa/collegamento.dart';
+import '../casa/impostazioni.dart';
 import '../casa/segnalazioni.dart';
 import '../parole.dart';
 import '../ponte/filo.dart';
@@ -24,9 +25,14 @@ class SchermataDelleSegnalazioni extends StatefulWidget {
     required this.collegamento,
     required this.diagnostica,
     this.scegli = scegliDalTelefono,
+    this.impostazioni,
   });
 
   final Collegamento collegamento;
+
+  /// Dove si ricorda che l'avviso degli allegati pubblici e' stato letto.
+  /// Senza, si chiede a ogni allegato. Vedi [sapendoCheSarannoPubblici].
+  final Impostazioni? impostazioni;
 
   /// Come si sceglie una foto o un video da allegare. Nelle prove e' una
   /// funzione finta: il selettore del sistema li' non c'e'.
@@ -118,6 +124,7 @@ class _SchermataDelleSegnalazioniState
           diagnostica: widget.diagnostica(),
           quandoMandata: _mandata,
           scegli: widget.scegli,
+          impostazioni: widget.impostazioni,
         ),
       ),
     );
@@ -135,6 +142,7 @@ class _SchermataDelleSegnalazioniState
           segnalazioni: Segnalazioni(filo),
           iniziale: aperta,
           scegli: widget.scegli,
+          impostazioni: widget.impostazioni,
         ),
       ),
     );
@@ -150,6 +158,7 @@ class _SchermataDelleSegnalazioniState
           segnalazioni: Segnalazioni(filo),
           iniziale: quale,
           scegli: widget.scegli,
+          impostazioni: widget.impostazioni,
         ),
       ),
     );
@@ -516,6 +525,7 @@ class NuovaSegnalazione extends StatefulWidget {
     required this.diagnostica,
     required this.quandoMandata,
     this.scegli = scegliDalTelefono,
+    this.impostazioni,
   });
 
   final Segnalazioni segnalazioni;
@@ -527,6 +537,9 @@ class NuovaSegnalazione extends StatefulWidget {
 
   /// Come si sceglie una foto o un video. Nelle prove e' una funzione finta.
   final ScegliUnAllegato scegli;
+
+  /// Dove si ricorda che l'avviso degli allegati pubblici e' stato letto.
+  final Impostazioni? impostazioni;
 
   @override
   State<NuovaSegnalazione> createState() => _NuovaSegnalazioneState();
@@ -557,6 +570,10 @@ class _NuovaSegnalazioneState extends State<NuovaSegnalazione> {
 
   Future<void> _scegli(DaDoveLAllegato daDove) async {
     if (_scegliendo) return;
+    /* La prima volta, prima del selettore: «Annulla» vuol dire niente
+     * allegato, e il selettore non si apre nemmeno. */
+    if (!await sapendoCheSarannoPubblici(context, widget.impostazioni)) return;
+    if (!mounted || _scegliendo) return;
     setState(() {
       _scegliendo = true;
       _perche = null;
@@ -853,6 +870,24 @@ class GliAllegati extends StatelessWidget {
           ),
         ],
         const SizedBox(height: 10),
+        /* L'avviso sta qui, attaccato ai bottoni, e non solo nella scheda
+         * «Sarà pubblica» piu' giu': chi sceglie una foto lo legge prima di
+         * sceglierla. */
+        Row(
+          key: const ValueKey('allegati-pubblici'),
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(Icons.public_rounded, size: 18, color: colori.primary),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                avvisoDegliAllegatiPubblici(),
+                style: testi.bodySmall?.copyWith(color: colori.onSurface),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
         Wrap(
           spacing: 8,
           runSpacing: 6,
@@ -892,6 +927,63 @@ class GliAllegati extends StatelessWidget {
       ],
     );
   }
+}
+
+/// Cosa succede a una foto o a un video allegati, detto prima di sceglierli.
+///
+/// Gli allegati si **committano** nella repository delle segnalazioni
+/// (`centralino/src/segnalazioni.js`, `mettiFile`): chiudere la segnalazione
+/// non li toglie, restano nella storia di git. Le note della foto le toglie
+/// l'app (`casa/senza_posizione.dart`), ma quello che si vede nella foto no.
+String avvisoDegliAllegatiPubblici() => inLingua(
+  it:
+      'Foto e video saranno pubblici su GitHub e restano visibili anche dopo '
+      'la chiusura. Non inquadrare persone, documenti, codici QR o l\'esterno '
+      'di casa. I video possono contenere la posizione.',
+  en:
+      'Photos and videos will be public on GitHub and stay visible after the '
+      'report is closed. Don\'t show people, documents, QR codes or the '
+      'outside of your home. Videos may contain location data.',
+);
+
+/// Prima del primo allegato, una finestra con l'avviso: si va avanti solo
+/// con «Ho capito». Torna `false` se si annulla, e allora non si allega
+/// niente.
+///
+/// Si chiede **una volta**: la risposta resta nelle [Impostazioni], e dopo
+/// basta l'avviso accanto ai bottoni. Senza impostazioni si chiede ogni
+/// volta, che e' il verso sicuro.
+Future<bool> sapendoCheSarannoPubblici(
+  BuildContext context,
+  Impostazioni? impostazioni,
+) async {
+  if (impostazioni?.allegatiPubbliciCapiti ?? false) return true;
+  final si = await showDialog<bool>(
+    context: context,
+    builder: (contesto) => AlertDialog(
+      icon: const Icon(Icons.public_rounded),
+      title: Text(
+        inLingua(
+          it: 'Foto e video saranno pubblici',
+          en: 'Photos and videos will be public',
+        ),
+      ),
+      content: Text(avvisoDegliAllegatiPubblici()),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(contesto).pop(false),
+          child: Text(inLingua(it: 'Annulla', en: 'Cancel')),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.of(contesto).pop(true),
+          child: Text(inLingua(it: 'Ho capito', en: 'I understand')),
+        ),
+      ],
+    ),
+  );
+  if (si != true) return false;
+  await impostazioni?.metti(allegatiPubbliciCapiti: true);
+  return true;
 }
 
 /// Quello che parte insieme alle parole, scritto per intero prima di mandare.
@@ -1007,11 +1099,13 @@ class FiloDellaSegnalazione extends StatefulWidget {
     required this.segnalazioni,
     required this.iniziale,
     this.scegli = scegliDalTelefono,
+    this.impostazioni,
   });
 
   final Segnalazioni segnalazioni;
   final Segnalazione iniziale;
   final ScegliUnAllegato scegli;
+  final Impostazioni? impostazioni;
 
   @override
   State<FiloDellaSegnalazione> createState() => _FiloDellaSegnalazioneState();
@@ -1093,6 +1187,7 @@ class _FiloDellaSegnalazioneState extends State<FiloDellaSegnalazione> {
           if (mounted) setState(() => _filo = aggiornato);
         },
         scegli: widget.scegli,
+        impostazioni: widget.impostazioni,
         rileggi: _rileggi,
       ),
     );
@@ -1115,6 +1210,7 @@ class Conversazione extends StatefulWidget {
     this.laltro,
     this.allega,
     this.scegli = scegliDalTelefono,
+    this.impostazioni,
   });
 
   final List<Messaggio> messaggi;
@@ -1124,6 +1220,10 @@ class Conversazione extends StatefulWidget {
   /// Come si allega una foto o un video, se da qui si puo'.
   final Future<void> Function(Allegato allegato)? allega;
   final ScegliUnAllegato scegli;
+
+  /// Dove si ricorda che l'avviso degli allegati pubblici e' stato letto.
+  /// Conta solo con [allega].
+  final Impostazioni? impostazioni;
   final Widget? intestazione;
   final String? perche;
 
@@ -1181,6 +1281,8 @@ class _ConversazioneState extends State<Conversazione> {
   Future<void> _allega() async {
     final allega = widget.allega;
     if (allega == null || _mandando) return;
+    if (!await sapendoCheSarannoPubblici(context, widget.impostazioni)) return;
+    if (!mounted) return;
     final daDove = await showModalBottomSheet<DaDoveLAllegato>(
       context: context,
       builder: (contesto) => SafeArea(

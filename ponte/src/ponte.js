@@ -121,11 +121,37 @@ export class Ponte {
      * al minuto vede il numero e non i nomi, e i nomi sono tutto il rimedio.
      * Vedi `chiacchieroni.js`. */
     this.chiacchieroni = new Chiacchieroni();
+    /* Ogni volta che l'elenco degli utenti si rinfresca, i telefoni di chi in
+     * Home Assistant non c'e' piu' — o c'e' ma e' stato spento — si staccano
+     * dal filo: vedi `_fuoriChiNonCE`. */
+    this._smettiDiGuardare = this.utenti?.quandoCambia?.((elenco) => this._fuoriChiNonCE(elenco));
+  }
+
+  /* I fili aperti dai telefoni di un utente tolto o spento.
+   *
+   * Il telefono resta abbinato: se l'utente torna attivo, il telefono rientra
+   * da se'. Ma finche' non c'e', non entra — e quello che era gia' dentro non
+   * resta dentro. Un elenco vuoto non vuol dire «non c'e' piu' nessuno»: in
+   * una casa c'e' sempre almeno chi l'ha fatta, e un elenco vuoto e' una
+   * risposta strana, non una sentenza. */
+  _fuoriChiNonCE(elenco) {
+    if (!Array.isArray(elenco) || elenco.length === 0) return;
+    const vivi = new Set(elenco.filter((uno) => uno.attivo !== false).map((uno) => uno.id));
+    for (const uno of [...this.collegamenti]) {
+      const utente = uno.dispositivo?.utente;
+      if (!utente || vivi.has(utente)) continue;
+      this.registro?.attenzione?.(
+        `${uno.dispositivo.nome}: l'utente di Home Assistant a cui e' intestato non c'e' piu'`,
+      );
+      uno.chiudi(1008, "l'utente di questo telefono non c'e' piu'");
+    }
   }
 
   /* Un telefono ha appena aperto una presa. */
-  accogli(presa, { da = "?", mucchio = false } = {}) {
-    const collegamento = new Collegamento(this, presa, da, { mucchio });
+  /* `chi` e' il telefono con cui la stretta di mano ha fatto la chiave di
+   * questo filo (`portiere.js`): da li' in poi su questo filo entra solo lui. */
+  accogli(presa, { da = "?", mucchio = false, chi = null } = {}) {
+    const collegamento = new Collegamento(this, presa, da, { mucchio, chi });
     this.collegamenti.add(collegamento);
     collegamento.avvia();
     return collegamento;
@@ -171,10 +197,11 @@ function leggi(testo) {
 }
 
 class Collegamento {
-  constructor(ponte, presa, da, { mucchio = false } = {}) {
+  constructor(ponte, presa, da, { mucchio = false, chi = null } = {}) {
     this.ponte = ponte;
     this.presa = presa;
     this.da = da;
+    this.chi = typeof chi === "string" && chi ? chi : null;
     this.dispositivo = null;
     this.filo = null;
     this.chiuso = false;
@@ -261,7 +288,18 @@ class Collegamento {
         }
       }
       /* Tutto il resto va a Home Assistant, passando dalla dogana. */
-      const { passa, rifiuti } = passaLaDogana(testo, { amministra: this._amministra() });
+      const amministra = this._amministra();
+      /* Le telecamere delle plance riservate a un altro (`commissioni.js`):
+       * si chiedono solo se il messaggio parla di telecamere, e solo per chi
+       * non amministra. */
+      const telecamereChiuse =
+        !amministra && testo.includes("camera")
+          ? (this.ponte.commissioni?.telecamereChiuse?.(
+              this.dispositivo.utente || "",
+              this.ponte.utenti?.amministratoreSubito?.(this.dispositivo.utente || "") ?? null,
+            ) ?? null)
+          : null;
+      const { passa, rifiuti } = passaLaDogana(testo, { amministra, telecamereChiuse });
       for (const no of rifiuti) this.presa.manda(JSON.stringify(no));
       for (const uno of passa) {
         if (!this.filo?.manda(uno)) {
@@ -333,6 +371,40 @@ class Collegamento {
       this._rifiuta("segno non valido");
       return;
     }
+    /* Il segno deve essere dello stesso telefono che ha stretto la mano.
+     *
+     * La chiave del filo nasce dal segreto di un telefono (`chi`), il segno
+     * che entra qui e' di un telefono: senza questa riga potevano essere due
+     * telefoni diversi, e chi avesse avuto in mano la chiave di uno e il segno
+     * di un altro entrava coi permessi del secondo — e staccare il primo non
+     * lo buttava fuori. Un'app vera i due li ha sempre dello stesso
+     * abbinamento: per lei non cambia niente. */
+    if (this.chi && dispositivo.id !== this.chi) {
+      this.ponte.registro?.attenzione?.(
+        `abbinamento rifiutato da ${this.da}: il segno non e' del telefono della stretta di mano`,
+      );
+      this._rifiuta("segno non valido");
+      return;
+    }
+    /* Il telefono di un utente che in Home Assistant non c'e' piu', o e'
+     * stato spento, non entra. Se Home Assistant non sa rispondere si entra
+     * come prima: un singhiozzo della casa non chiude fuori nessuno, e il
+     * giro di `utenti.js` lo butta fuori comunque appena l'elenco torna. */
+    if (dispositivo.utente && this.ponte.utenti?.eVivo) {
+      let vivo = true;
+      try {
+        vivo = await this.ponte.utenti.eVivo(dispositivo.utente);
+      } catch (_errore) {
+        vivo = true;
+      }
+      if (!vivo) {
+        this.ponte.registro?.attenzione?.(
+          `${dispositivo.nome}: l'utente di Home Assistant a cui e' intestato non c'e' piu'`,
+        );
+        this._rifiuta("segno non valido");
+        return;
+      }
+    }
 
     try {
       this.filo = await this.ponte.casa.apriIlFilo({
@@ -371,6 +443,14 @@ class Collegamento {
     /* Fra l'`await` e qui il telefono puo' essersene andato. */
     if (this.chiuso) {
       this.filo.chiudi();
+      return;
+    }
+    /* O puo' essere stato staccato dalla console mentre il ponte aspettava
+     * Home Assistant: `scollega` guarda solo i fili che hanno gia' un
+     * telefono addosso, e questo non l'aveva ancora. */
+    if (!this.ponte.dispositivi.riconosci(segno)) {
+      this.filo.chiudi();
+      this._rifiuta("segno non valido");
       return;
     }
 

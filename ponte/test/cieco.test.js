@@ -194,6 +194,51 @@ test("dal centralino non passa niente di leggibile: ne' il segno, ne' i comandi"
   }
 });
 
+test("il legame passa dal centralino com'e': le due righe arrivano byte per byte", async () => {
+  /* Il legame mette nella chiave le due righe in chiaro intere. Se il
+   * centralino, portandole, le riscrivesse anche solo di uno spazio, un
+   * telefono legato non entrerebbe piu' da fuori: questa e' la prova che non
+   * succede. */
+  const c = await catena();
+  try {
+    const { segno, chiave, dispositivo } = c.dispositivi.abbina({ nome: "telefono" });
+    const telefono = telefonoCifrato(`${c.doveIlCentralino}/telefono/${c.identita.casa}`, {
+      chi: dispositivo.id,
+      chiave,
+      gzip: true,
+      lega: true,
+    });
+    await telefono.dentro;
+    assert.equal(telefono.legata, true);
+    await telefono.aspetta("auth_required");
+    telefono.manda({ type: "auth", access_token: segno });
+    await telefono.aspetta("auth_ok");
+    telefono.chiudi();
+  } finally {
+    await c.spegni();
+  }
+});
+
+test("un da_casa girato da chi sta in mezzo, col legame, chiude il filo alla prima busta", async () => {
+  const c = await catena();
+  try {
+    const { chiave, dispositivo } = c.dispositivi.abbina({ nome: "telefono" });
+    const telefono = telefonoCifrato(`${c.doveIlCentralino}/telefono/${c.identita.casa}`, {
+      chi: dispositivo.id,
+      chiave,
+      lega: true,
+      perStrada: { pronto: (riga) => riga.replace('"da_casa":false', '"da_casa":true') },
+    });
+    await telefono.dentro;
+    assert.equal(telefono.inChiaro[0].da_casa, true, "il ritocco e' arrivato");
+    await telefono.chiusa;
+    assert.match(String(telefono.guasta), /non si apre/);
+    assert.equal(telefono.detti.length, 0);
+  } finally {
+    await c.spegni();
+  }
+});
+
 test("nemmeno l'abbinamento passa in chiaro: ne' il codice, ne' il segno consegnato", async () => {
   const c = await catena();
   try {

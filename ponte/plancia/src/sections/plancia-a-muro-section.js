@@ -72,6 +72,8 @@ import {
   telecamereDellaFonte,
   fonteDalleSezioni,
   muroPulito,
+  nomeDellaPersonaDelMuro,
+  personeDelMuro,
   pinGiusto,
   scala,
   temaDelMomento,
@@ -312,7 +314,10 @@ const nomeDi = (id, scelto = "", fonte = state.fonte) => {
     ...(fonte?.clima || []),
     ...(fonte?.tapparelle || []),
   ].find((d) => d.entity === id);
-  return clean(dispositivo?.name) || clean(attributi(id).friendly_name) || id;
+  if (clean(dispositivo?.name)) return clean(dispositivo.name);
+  /* Una persona si chiama col nome che ha nella scheda Persone, come in Home. */
+  const ha = attributi(id);
+  return nomeDellaPersonaDelMuro(id, fonte, allStates() || {}) || clean(ha.friendly_name) || id;
 };
 let progressivo = 0;
 const disegno = (chiave, misura, dove) =>
@@ -741,12 +746,11 @@ function pillole(pagina) {
     .join("")}</div>`;
 }
 
+/* Chi e' in casa, coi nomi che la card Persone della plancia gli da'. */
 function personeInCasa() {
-  const elenco = state.fonte?.persone?.length
-    ? state.fonte.persone.map((p) => p.entity)
-    : Object.keys(allStates() || {}).filter((k) => k.startsWith("person."));
-  const inCasa = elenco.filter((id) => String(stato(id)?.state) === "home");
-  return { tutte: elenco.length, inCasa: inCasa.length, nomi: inCasa.map((id) => nomeDi(id)) };
+  const persone = personeDelMuro(state.fonte, allStates() || {});
+  persone.entita.forEach(segna);
+  return persone;
 }
 
 const bulbo = (colore) =>

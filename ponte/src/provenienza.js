@@ -39,8 +39,9 @@ import { extname, join, relative } from "node:path";
 /* La chiave pubblica di chi pubblica l'add-on, in formato SPKI PEM.
  *
  * Vuota finche' non c'e' una chiave: allora la verifica dice «non firmata» e
- * si ferma alle impronte, invece di far finta che vada tutto bene. Si mette
- * qui con `strumenti/firma-la-plancia.mjs --chiave-pubblica`. */
+ * si ferma alle impronte, invece di far finta che vada tutto bene. La si
+ * fabbrica con `strumenti/firma-la-plancia.mjs --fabbrica`, che stampa la
+ * riga da incollare qui. */
 export const CHIAVE_DI_CHI_PUBBLICA = "";
 
 /* Quali cartelle fanno la plancia, e quali file dentro. Chi sigilla non ha un

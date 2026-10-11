@@ -220,6 +220,12 @@ export function costruisciIlServer({
          * sotto `case`, accendere toglie l'accesso da fuori alla differenza
          * (`centralino.js`, `quantePronteAllaLicenza`). */
         pronte_alla_licenza: centralino.quantePronteAllaLicenza?.() ?? null,
+        /* E in che modo si tengono le licenze (`MODO_LICENZE`), con chi
+         * resterebbe fuori: `senza_premium` e `da_aggiornare` sono le case
+         * collegate adesso che con `impone` sentirebbero 4402 e 4426. Sono i
+         * numeri da guardare con `registra`, prima di passare a `impone`
+         * (`centralino.js`, `statoDelleLicenze`). */
+        licenze: centralino.statoDelleLicenze?.() ?? null,
         segnalazioni: Boolean(sportello?.pronto),
         chat: chat ? { linee: chat.archivio.quanteLinee(), console: chat.consoleAperta } : false,
         posta: Boolean(contatti?.pronto),

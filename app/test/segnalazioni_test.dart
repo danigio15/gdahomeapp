@@ -10,6 +10,8 @@ import 'package:gdahome/casa/allegati.dart';
 import 'package:gdahome/casa/archivio_delle_case.dart';
 import 'package:gdahome/casa/cassaforte.dart';
 import 'package:gdahome/casa/collegamento.dart';
+import 'package:gdahome/casa/dispensa/dispensa.dart';
+import 'package:gdahome/casa/impostazioni.dart';
 import 'package:gdahome/casa/segnalazioni.dart';
 import 'package:gdahome/parole.dart';
 import 'package:gdahome/ponte/sonda.dart';
@@ -94,9 +96,6 @@ void main() {
 
     await tester.tap(find.text('Nuova segnalazione'));
     await tester.pumpAndSettle();
-    /* Quello che parte da solo si vede prima di mandare. */
-    expect(find.text('Parte anche questo, da solo'), findsOneWidget);
-    expect(find.text('app: 10·prova'), findsOneWidget);
 
     await tester.tap(find.text('Idea'));
     await tester.pumpAndSettle();
@@ -111,6 +110,9 @@ void main() {
     /* Il bottone sta in fondo a una pagina piu' alta della finestra di
      * prova: si scorre fin li', come farebbe un dito. */
     await _scorriFinoA(tester, find.text('Manda'));
+    /* Quello che parte da solo si vede prima di mandare. */
+    expect(find.text('Parte anche questo, da solo'), findsOneWidget);
+    expect(find.text('app: 10·prova'), findsOneWidget);
     await tester.tap(find.text('Manda'));
     await tester.runAsync(
       () => Future<void>.delayed(const Duration(milliseconds: 300)),
@@ -198,12 +200,20 @@ void main() {
       );
     }
 
+    final impostazioni = Impostazioni(
+      sulTelefono: true,
+      android: true,
+      dispensa: DispensaInMemoria(),
+    );
+    await tester.runAsync(impostazioni.carica);
+
     await tester.pumpWidget(
       MaterialApp(
         home: SchermataDelleSegnalazioni(
           collegamento: collegamento,
           diagnostica: _diagnostica,
           scegli: scegliFinto,
+          impostazioni: impostazioni,
         ),
       ),
     );
@@ -225,6 +235,10 @@ void main() {
     /* Si sceglie una foto: compare fra gli allegati, col suo peso. */
     await _scorriFinoA(tester, find.text('Foto'));
     await tester.tap(find.text('Foto'));
+    await tester.pumpAndSettle();
+    /* La prima volta, prima del selettore, la finestra dell'avviso. */
+    expect(chieste, isEmpty);
+    await tester.tap(find.text('Ho capito'));
     await tester.pumpAndSettle();
     expect(chieste, [DaDoveLAllegato.galleria]);
     expect(find.text('cucina.jpg · 300 B'), findsOneWidget);
@@ -248,9 +262,11 @@ void main() {
     expect(ponte.allegati.single['byte'], 300);
     expect(find.text('📷 cucina.jpg (300 B)'), findsOneWidget);
 
-    /* Dal filo si allega ancora, dalla graffetta. */
+    /* Dal filo si allega ancora, dalla graffetta: l'avviso e' gia' stato
+     * letto, e la finestra non torna. */
     await tester.tap(find.byTooltip('Allega'));
     await tester.pumpAndSettle();
+    expect(find.text('Ho capito'), findsNothing);
     await tester.tap(find.text('Un video dalla galleria'));
     await _lasciaFare(tester);
     expect(ponte.allegati, hasLength(2));
@@ -488,6 +504,112 @@ void main() {
     });
   });
 
+  /* Le foto e i video finiscono su GitHub, e ci restano anche dopo la
+   * chiusura: l'avviso sta attaccato ai bottoni che li scelgono, e la prima
+   * volta c'e' una finestra da accettare. «Annulla» vuol dire niente
+   * allegato. */
+  testWidgets('accanto ai bottoni l\'avviso, e la finestra una volta sola', (
+    tester,
+  ) async {
+    late PonteFinto ponte;
+    late Collegamento collegamento;
+    await tester.runAsync(() async {
+      ponte = await PonteFinto.alza();
+      collegamento = await _casaCollegata(ponte);
+      for (var volta = 0; volta < 40 && collegamento.filo == null; volta++) {
+        await Future<void>.delayed(const Duration(milliseconds: 50));
+      }
+    });
+    final dispensa = DispensaInMemoria();
+    final impostazioni = Impostazioni(
+      sulTelefono: true,
+      android: true,
+      dispensa: dispensa,
+    );
+    await tester.runAsync(impostazioni.carica);
+    var scelte = 0;
+    Future<Allegato?> scegliFinto(DaDoveLAllegato daDove) async {
+      scelte += 1;
+      return Allegato(
+        nome: 'cucina-$scelte.jpg',
+        tipo: 'image/jpeg',
+        byte: Uint8List.fromList(List.filled(300, 7)),
+      );
+    }
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: NuovaSegnalazione(
+          segnalazioni: Segnalazioni(collegamento.filo!),
+          diagnostica: _diagnostica(),
+          quandoMandata: (_) async {},
+          scegli: scegliFinto,
+          impostazioni: impostazioni,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await _scorriFinoA(tester, find.text('Video'));
+
+    /* L'avviso, per intero, dentro il pezzo degli allegati e subito sopra
+     * i bottoni: non nella scheda «Sarà pubblica» piu' giu'. */
+    final avviso = find.descendant(
+      of: find.byType(GliAllegati),
+      matching: find.text(
+        'Foto e video saranno pubblici su GitHub e restano visibili anche '
+        'dopo la chiusura. Non inquadrare persone, documenti, codici QR o '
+        'l\'esterno di casa. I video possono contenere la posizione.',
+      ),
+    );
+    expect(avviso, findsOneWidget);
+    final sottoLAvviso = tester.getBottomLeft(avviso).dy;
+    for (final bottone in ['Foto', 'Scatta', 'Video']) {
+      final sopra = tester.getTopLeft(find.text(bottone)).dy;
+      expect(sopra, greaterThan(sottoLAvviso));
+      expect(sopra - sottoLAvviso, lessThan(40));
+    }
+
+    /* La prima volta la finestra; «Annulla», e non si allega niente. */
+    await tester.tap(find.text('Foto'));
+    await tester.pumpAndSettle();
+    expect(find.text('Foto e video saranno pubblici'), findsOneWidget);
+    await tester.tap(find.text('Annulla'));
+    await tester.pumpAndSettle();
+    expect(scelte, 0);
+    expect(find.byType(InputChip), findsNothing);
+    expect(impostazioni.allegatiPubbliciCapiti, isFalse);
+
+    /* Annullata, torna alla prossima; accettata, si sceglie. */
+    await tester.tap(find.text('Scatta'));
+    await tester.pumpAndSettle();
+    expect(find.text('Foto e video saranno pubblici'), findsOneWidget);
+    await tester.tap(find.text('Ho capito'));
+    await tester.pumpAndSettle();
+    expect(scelte, 1);
+    expect(find.text('cucina-1.jpg · 300 B'), findsOneWidget);
+
+    /* E poi non torna piu'. */
+    await tester.tap(find.text('Video'));
+    await tester.pumpAndSettle();
+    expect(find.text('Foto e video saranno pubblici'), findsNothing);
+    expect(scelte, 2);
+
+    /* Nemmeno la volta dopo che si apre l'app: la risposta e' scritta. */
+    expect(impostazioni.allegatiPubbliciCapiti, isTrue);
+    final riaperte = Impostazioni(
+      sulTelefono: true,
+      android: true,
+      dispensa: dispensa,
+    );
+    await tester.runAsync(riaperte.carica);
+    expect(riaperte.allegatiPubbliciCapiti, isTrue);
+
+    await tester.runAsync(() async {
+      await collegamento.chiudi();
+      await ponte.spegni();
+    });
+  });
+
   /* In inglese la schermata nuova e' tutta in inglese: «Foto e video» era
    * rimasto in italiano. */
   testWidgets('in inglese la segnalazione nuova parla inglese', (tester) async {
@@ -515,6 +637,11 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Photos and videos'), findsOneWidget);
     expect(find.text('Foto e video'), findsNothing);
+    expect(
+      find.textContaining('Photos and videos will be public on GitHub'),
+      findsOneWidget,
+    );
+    expect(find.textContaining('Videos may contain location data.'), findsOne);
 
     await _scorriFinoA(tester, find.text('Send'));
     expect(find.text('It will be public'), findsOneWidget);
