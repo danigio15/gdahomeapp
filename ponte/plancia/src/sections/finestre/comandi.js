@@ -138,7 +138,8 @@ export function posizioneInParole(riga) {
     if (tapparella) return riga.open ? t("Su", "Up") : t("Giù", "Down");
     return riga.open ? t("Aperta", "Open") : t("Chiusa", "Closed");
   }
-  if (riga.position >= 100) return tapparella ? t("Tutta su", "All the way up") : t("Aperta", "Open");
+  if (riga.position >= 100)
+    return tapparella ? t("Tutta su", "All the way up") : t("Aperta", "Open");
   if (riga.position <= 0) return tapparella ? t("Giù", "Down") : t("Chiusa", "Closed");
   return `${riga.position}% ${tapparella ? t("su", "up") : t("aperta", "open")}`;
 }
@@ -317,11 +318,7 @@ function finestraTapparelle(widget) {
         <small>${esc(t("Finestre aperte", "Open windows"))}</small>
         <b class="dm-f-num">${aperte.length}<span>${esc(t("su", "of"))} ${ante.length}</span></b>
         <em>${
-          aperte.length
-            ? prima
-              ? esc(daQuanto(prima))
-              : ""
-            : esc(t("Tutte chiuse", "All closed"))
+          aperte.length ? (prima ? esc(daQuanto(prima)) : "") : esc(t("Tutte chiuse", "All closed"))
         }</em>
         ${stanzeAperte ? `<span class="dm-f-tapparelle-chips">${stanzeAperte}</span>` : ""}
       </span>
@@ -366,7 +363,8 @@ function finestraTapparelle(widget) {
       : "";
   /* Prima le stanze con qualcosa aperto o su, poi le altre. */
   const stanze = stanzeDelleFinestre(righe).sort(
-    (a, b) => Number(b.aperta || b.su) - Number(a.aperta || a.su) || Number(b.aperta) - Number(a.aperta),
+    (a, b) =>
+      Number(b.aperta || b.su) - Number(a.aperta || a.su) || Number(b.aperta) - Number(a.aperta),
   );
   return `<div class="dm-f-tapparelle">
     <div class="dm-f-tapparelle-eroi" data-quanti="${eroi.length}">${eroi.join("")}</div>
@@ -381,7 +379,12 @@ function finestraTapparelle(widget) {
 function presaMarkup(riga) {
   const watt = riga.on && Number.isFinite(riga.watt) ? `${formatNumber(riga.watt, 0)} W` : "";
   const sotto = !riga.disponibile
-    ? [riga.stanza, riga.da ? `${t("Non risponde", "Not responding")} ${daQuanto(riga.da)}` : t("Non risponde", "Not responding")]
+    ? [
+        riga.stanza,
+        riga.da
+          ? `${t("Non risponde", "Not responding")} ${daQuanto(riga.da)}`
+          : t("Non risponde", "Not responding"),
+      ]
     : riga.on
       ? [riga.stanza, watt]
       : [riga.stanza, riga.da ? `${t("spenta", "off")} ${daQuanto(riga.da)}` : ""];
@@ -451,9 +454,7 @@ export function tastiDellaPorta(riga) {
     const adesso = riga.aperta
       ? gesti.find((voce) => voce.gesto === "blocca")
       : gesti.find((voce) => voce.gesto !== "blocca");
-    return gesti
-      .map((voce) => tastoPorta(riga, voce.gesto, voce.parola, voce !== adesso))
-      .join("");
+    return gesti.map((voce) => tastoPorta(riga, voce.gesto, voce.parola, voce !== adesso)).join("");
   }
   /* Un impulso — pulsante, rele', script — non ha uno stato da invertire: il
    * tasto e' piu' leggero, perche' non dice «adesso e' chiuso». */
@@ -484,7 +485,10 @@ function finestraPorte(widget) {
           (riga) => `<div class="dm-f-porte-avviso" data-tono="ko">
         <span class="dm-f-porte-avviso-ic" aria-hidden="true">${riga.icona}</span>
         <span><b>${esc(riga.name)} · ${esc(riga.parola || t("Aperta", "Open"))}</b><small>${esc(
-          [daQuanto(riga.da), aperte.length === 1 ? t("l'unica cosa aperta", "the only thing open") : ""]
+          [
+            daQuanto(riga.da),
+            aperte.length === 1 ? t("l'unica cosa aperta", "the only thing open") : "",
+          ]
             .filter(Boolean)
             .join(" · "),
         )}</small></span>
@@ -508,7 +512,9 @@ function finestraPorte(widget) {
     })
     .join("");
   const nota = [
-    widget.conferma ? t("Chiede conferma prima di aprire", "Asks for confirmation before opening") : "",
+    widget.conferma
+      ? t("Chiede conferma prima di aprire", "Asks for confirmation before opening")
+      : "",
     righe.some((riga) => riga.pin) ? `🔐 ${t("chiede il PIN", "asks for the PIN")}` : "",
   ]
     .filter(Boolean)
@@ -724,7 +730,9 @@ function finestraCitofono(widget) {
               quando: voce.ritirata,
               ic: "📭",
               cosa: t("Posta ritirata", "Mail collected"),
-              dove: voce.ritiroAMano ? t("Segnata a mano", "Marked by hand") : t("Cassetta aperta", "Mailbox opened"),
+              dove: voce.ritiroAMano
+                ? t("Segnata a mano", "Marked by hand")
+                : t("Cassetta aperta", "Mailbox opened"),
             },
           ]
         : []),
@@ -732,7 +740,9 @@ function finestraCitofono(widget) {
   ]
     .sort((a, b) => b.quando - a.quando)
     .slice(0, 4);
-  const cancelli = quieti.map((voce) => citofonoMarkup(voce, citofoni.length === 1)).filter(Boolean);
+  const cancelli = quieti
+    .map((voce) => citofonoMarkup(voce, citofoni.length === 1))
+    .filter(Boolean);
   return `<div class="dm-f-citofono">
     ${suonano.map((voce) => citofonoMarkup(voce, citofoni.length === 1)).join("")}
     ${cassette.map((voce) => cassettaMarkup(voce, cassette.length === 1)).join("")}
@@ -764,7 +774,12 @@ function tastoRobot(riga, azione, testo, classe) {
 const saFare = (riga, azione) => robotActions(riga).some((voce) => voce.act === azione);
 
 function disegnoDelRobot(riga, misura) {
-  return disegnoDelCatalogo(riga.species === "lawn_mower" ? "mower" : riga.cleaning ? "broom" : "robot", misura) || "🤖";
+  return (
+    disegnoDelCatalogo(
+      riga.species === "lawn_mower" ? "mower" : riga.cleaning ? "broom" : "robot",
+      misura,
+    ) || "🤖"
+  );
 }
 
 function eroeRobot(riga) {
@@ -776,7 +791,12 @@ function eroeRobot(riga) {
   ].filter(Boolean);
   const tasti = [
     saFare(riga, "pause")
-      ? tastoRobot(riga, "pause", `${GLIFI_MP.pausa} ${esc(t("Pausa", "Pause"))}`, "dm-f-tasto dm-f-pieno")
+      ? tastoRobot(
+          riga,
+          "pause",
+          `${GLIFI_MP.pausa} ${esc(t("Pausa", "Pause"))}`,
+          "dm-f-tasto dm-f-pieno",
+        )
       : "",
     saFare(riga, "return")
       ? tastoRobot(riga, "return", `${CASA} ${esc(t("Alla base", "Dock"))}`, "dm-f-tasto")
@@ -812,7 +832,12 @@ function robotMarkup(riga) {
     .join(" · ");
   const avvia =
     riga.available && saFare(riga, "start")
-      ? tastoRobot(riga, "start", `${GLIFI_MP.suona} ${esc(t("Avvia", "Start"))}`, "dm-f-robot-avvia")
+      ? tastoRobot(
+          riga,
+          "start",
+          `${GLIFI_MP.suona} ${esc(t("Avvia", "Start"))}`,
+          "dm-f-robot-avvia",
+        )
       : "";
   return `<article class="dm-f-robot-robot">
     <span class="dm-f-robot-ic" aria-hidden="true">${disegnoDelRobot(riga, 24)}</span>

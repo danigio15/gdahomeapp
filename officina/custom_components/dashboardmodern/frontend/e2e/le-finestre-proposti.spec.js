@@ -266,3 +266,52 @@ test("Solare termico: pannello e boiler, la frase, lo stato coi nomi dei tasti",
   await expect(finestra.locator(".dm-f-solare-st[data-on='true']")).toContainText(/Boiler/);
   await fotografa(page, "solare", testInfo);
 });
+
+test("Auto: i tasti delle modalita' di evcc e la fila del «sempre» si comandano dalla finestra", async ({
+  page,
+}, testInfo) => {
+  await avvia(page, testInfo);
+  await page.evaluate(() => {
+    const mappa = {
+      ...JSON.parse(localStorage.getItem("cd_entity_overrides") || "{}"),
+      "dm.ev_modalita_ricarica_evcc": "select.evcc_lektrico_mode",
+      "dm.ev_ricarica_sempre_evcc": "select.evcc_lektrico_always_charge",
+    };
+    localStorage.setItem("cd_entity_overrides", JSON.stringify(mappa));
+    window.cdApplyCanonicalOverrides?.(mappa);
+    const metti = (entity, state, options, nome) => {
+      const voce = {
+        entity_id: entity,
+        state,
+        last_changed: new Date().toISOString(),
+        last_updated: new Date().toISOString(),
+        attributes: { friendly_name: nome, options },
+      };
+      _RAW_STATES[entity] = structuredClone(voce);
+      STATES[entity] = structuredClone(voce);
+    };
+    metti("select.evcc_lektrico_mode", "Smart", ["Off", "Smart", "Fast"], "evcc Lektrico Mode");
+    metti("select.evcc_lektrico_always_charge", "Off", ["Off", "On", "Once"], "evcc Always charge");
+    window.__chiamate = [];
+    window.callHa = (dominio, servizio, dati) => {
+      window.__chiamate.push({ dominio, servizio, dati });
+      return Promise.resolve();
+    };
+    window.dispatchEvent(new CustomEvent("dashboardmodern:state-changed", { detail: {} }));
+  });
+  const finestra = await apri(page, "ev");
+  const modi = finestra.locator(".dm-f-evcc-modo");
+  await expect(modi).toHaveCount(3);
+  await expect(modi.nth(1)).toHaveAttribute("aria-pressed", "true");
+  await expect(modi.nth(1)).toContainText(/Intelligente|Smart/);
+  await expect(finestra.locator(".dm-f-evcc-sempre-btn")).toHaveCount(3);
+  await expect(finestra.locator(".dm-f-evcc-sempre")).toHaveAttribute("data-vigore", "true");
+  await page.waitForTimeout(1200);
+  await fotografa(page, "ev-evcc", testInfo);
+  const comando = JSON.parse(await modi.nth(2).getAttribute("data-dm-w-servizio"));
+  expect(comando).toEqual({
+    domain: "select",
+    service: "select_option",
+    data: { entity_id: "select.evcc_lektrico_mode", option: "Fast" },
+  });
+});

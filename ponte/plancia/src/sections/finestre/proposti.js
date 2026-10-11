@@ -19,9 +19,14 @@
  * La regola di tutte: si mostra solo quello che la casa sa. Un numero che non
  * c'e' non si inventa — la sezione che lo conterrebbe non compare.
  */
-import { registraFinestra } from "../finestre-dei-widget.js";
+import { registraFinestra, tastoServizio } from "../finestre-dei-widget.js";
 import { clean, disegnoDiCasa, esc, formatNumber, locale, t } from "../shared.js";
-import { puntiDi } from "../storico-condiviso-section.js";
+import {
+  casellaDellaPressione,
+  PRESSIONE_NORMA,
+  comeStaLaPressione,
+  storiaDellaPressione,
+} from "./la-pressione.js";
 import { lEnergiaInParole, laPotenzaInParole } from "../../core/le-unita-della-corrente.js";
 import { inKilowatt } from "../../core/il-tempo-della-ricarica.js";
 import { roomGlyph } from "../../core/personalization-catalog.js";
@@ -126,8 +131,7 @@ function disegnaEnergia(widget) {
         quote.map((q) => `${nomeDellaFonte(q.fonte)} ${Math.round(q.quota)}%`).join(", "),
       )}">${quote
         .map(
-          (q) =>
-            `<i style="width:${q.quota.toFixed(1)}%;background:${COLORE_FONTE[q.fonte]}"></i>`,
+          (q) => `<i style="width:${q.quota.toFixed(1)}%;background:${COLORE_FONTE[q.fonte]}"></i>`,
         )
         .join("")}</div>
       <div class="dm-f-energia-leg">${quote
@@ -179,7 +183,11 @@ function disegnaEnergia(widget) {
         : "",
     ].filter(Boolean);
     const verso =
-      rete > 10 ? t("Prelevata oggi", "Imported today") : rete < -10 ? t("Immessa oggi", "Exported today") : "";
+      rete > 10
+        ? t("Prelevata oggi", "Imported today")
+        : rete < -10
+          ? t("Immessa oggi", "Exported today")
+          : "";
     fonti.push(`<div class="dm-f-energia-fonte" data-fonte="grid">
         <span class="dm-f-energia-ic" aria-hidden="true">🔌</span>
         <span class="dm-f-num">${esc(watt(Math.abs(rete)))}</span>
@@ -223,11 +231,7 @@ function disegnaEnergia(widget) {
         <span class="dm-f-num">${esc(piena != null ? `${piena}%` : watt(Math.abs(battW ?? 0)))}</span>
         <span class="dm-f-energia-nome">${esc(t("Batteria", "Battery"))}</span>
         ${come ? `<span class="dm-f-energia-sotto">${esc(come)}</span>` : ""}
-        ${
-          verso.length
-            ? `<span class="dm-f-energia-sotto">${verso.join(" · ")} kWh</span>`
-            : ""
-        }
+        ${verso.length ? `<span class="dm-f-energia-sotto">${verso.join(" · ")} kWh</span>` : ""}
       </div>`);
   }
 
@@ -350,7 +354,8 @@ function disegnaTemperatura(widget) {
     </section>`;
   const elenco = stanze
     .map((riga) => {
-      const larga = ampiezza > 0 ? 10 + (90 * (riga.temperature - fredda.temperature)) / ampiezza : 60;
+      const larga =
+        ampiezza > 0 ? 10 + (90 * (riga.temperature - fredda.temperature)) / ampiezza : 60;
       const umidita = numero(riga.humidity);
       return `<div class="dm-f-temperatura-stanza">
         <span class="dm-f-temperatura-ic" aria-hidden="true">${esc(roomGlyph(riga.icon || riga.name))}</span>
@@ -559,7 +564,9 @@ function disegnaUnAuto(vettura, righe, conNome) {
     foto = "";
   }
   const misure = [
-    kw != null && kw > 0 ? ["power", `${formatNumber(kw, 1)} kW`, t("potenza ora", "power now")] : null,
+    kw != null && kw > 0
+      ? ["power", `${formatNumber(kw, 1)} kW`, t("potenza ora", "power now")]
+      : null,
     clean(vettura.fine)
       ? [
           "timer",
@@ -581,7 +588,9 @@ function disegnaUnAuto(vettura, righe, conNome) {
   const barra =
     percentuale != null
       ? `<span class="dm-f-ev-barra" aria-hidden="true"><i style="width:${Math.max(0, Math.min(100, Math.round(percentuale)))}%"></i>${
-          target != null ? `<u style="left:${Math.max(0, Math.min(100, Math.round(target)))}%"></u>` : ""
+          target != null
+            ? `<u style="left:${Math.max(0, Math.min(100, Math.round(target)))}%"></u>`
+            : ""
         }</span>`
       : "";
   const eroe = foto
@@ -632,7 +641,9 @@ function disegnaUnAuto(vettura, righe, conNome) {
       casella(
         t("Contachilometri", "Odometer"),
         esc(contachilometri.value),
-        dallaCarica ? `${dallaCarica.value} ${t("dall'ultima carica", "since the last charge")}` : "",
+        dallaCarica
+          ? `${dallaCarica.value} ${t("dall'ultima carica", "since the last charge")}`
+          : "",
         "gauge",
       ),
     );
@@ -688,19 +699,91 @@ function disegnaEv(widget) {
   const piu = vetture.length > 1;
   /* Le tre righe di testa sono gia' nell'anello e nel chip: qui restano le
    * caselle, divise per auto. Quelle della colonnina sono della casa. */
-  const caselle = righe.filter((riga) => !["carica", "autonomia", "ricarica"].includes(riga?.ruolo));
+  const caselle = righe.filter(
+    (riga) => !["carica", "autonomia", "ricarica"].includes(riga?.ruolo),
+  );
   const dellAuto = (nome) =>
     caselle.filter((riga) => !riga.diCasa && (!piu || clean(riga.vettura) === clean(nome)));
   const auto = vetture.length
     ? vetture.map((vettura) => disegnaUnAuto(vettura, dellAuto(vettura.nome), piu)).join("")
     : "";
-  const wallbox = caselle.filter((riga) => riga.diCasa && clean(riga.value));
+  const evcc =
+    widget?.evcc && Array.isArray(widget.evcc.voci) && widget.evcc.voci.length ? widget.evcc : null;
+  /* Con i tasti, la casella «Modalita'» fra quelle della wallbox e' un doppione. */
+  const wallbox = caselle.filter(
+    (riga) => riga.diCasa && clean(riga.value) && !(evcc && COMANDATE_DA_EVCC.has(clean(riga.rif))),
+  );
   const wallboxMarkup = wallbox.length
     ? `${titoletto(t("La wallbox", "The wallbox"))}<div class="dm-f-ev-due">${wallbox
         .map((riga) => casella(nomeSenzaAuto(riga), esc(riga.value)))
         .join("")}</div>`
     : "";
-  return `<div class="dm-f dm-f-ev">${auto}${wallboxMarkup}</div>`;
+  return `<div class="dm-f dm-f-ev">${auto}${evcc ? tastiDiEvcc(evcc) : ""}${wallboxMarkup}</div>`;
+}
+
+const COMANDATE_DA_EVCC = new Set(["dm.ev_modalita_ricarica_evcc", "dm.ev_ricarica_sempre_evcc"]);
+
+/* La parola di una modalita' nella lingua di chi guarda: evcc la da' in due. */
+const parolaDi = (voce) => (String(locale()).toLowerCase().startsWith("it") ? voce.it : voce.en);
+
+/* «Widget auto mi deve dare la possibilità di cambiare modalità evcc.»
+ *
+ * I tasti sono quelli della pagina Auto — i modi che evcc dichiara, con le
+ * loro icone e i loro colori — e sotto la fila del «sempre», che vale solo in
+ * Intelligente e lo dice invece di sparire. */
+function tastiDiEvcc(evcc) {
+  const modi = evcc.voci
+    .map((voce) => {
+      const acceso = voce.id === evcc.acceso;
+      return tastoServizio(
+        {
+          domain: evcc.entity.split(".")[0],
+          service: "select_option",
+          data: { entity_id: evcc.entity, option: voce.id },
+        },
+        {
+          classe: "dm-f-evcc-modo",
+          testo: `<span class="dm-f-evcc-ic" aria-hidden="true">${esc(voce.icona)}</span><span>${esc(parolaDi(voce))}</span>`,
+          attributi: `aria-pressed="${acceso}" style="--modo:${esc(voce.colore)};--modo-bg:${esc(voce.sfondo)}"`,
+        },
+      );
+    })
+    .join("");
+  const sempre = evcc.sempre;
+  const fila = sempre
+    ? `<div class="dm-f-evcc-sempre" data-vigore="${sempre.inVigore ? "true" : "false"}">
+        <span class="dm-f-evcc-sempre-cap"><b>${esc(t("Carica anche senza sole", "Charge without sun too"))}</b><small>${esc(
+          sempre.inVigore
+            ? t(
+                "Tiene il minimo quando il fotovoltaico non basta",
+                "Keeps the minimum when solar is not enough",
+              )
+            : t(
+                "Vale solo in Intelligente: qui non conta",
+                "Only applies in Smart: not in effect here",
+              ),
+        )}</small></span>
+        <span class="dm-f-evcc-sempre-righe">${sempre.voci
+          .map((voce) =>
+            tastoServizio(
+              {
+                domain: sempre.entity.split(".")[0],
+                service: "select_option",
+                data: { entity_id: sempre.entity, option: voce.id },
+              },
+              {
+                classe: "dm-f-evcc-sempre-btn",
+                testo: esc(parolaDi(voce)),
+                attributi: `aria-pressed="${voce.id === sempre.scelto}"`,
+              },
+            ),
+          )
+          .join("")}</span>
+      </div>`
+    : "";
+  return `${titoletto(t("Come carica", "How it charges"))}<div class="dm-f-evcc" data-acceso="${esc(evcc.acceso)}">
+    <div class="dm-f-evcc-modi" style="--quanti:${evcc.voci.length}">${modi}</div>${fila}
+  </div>`;
 }
 
 const STILE_EV = `
@@ -772,6 +855,29 @@ ${P} .dm-f-ev-misure>span{display:flex;align-items:center;gap:9px;padding:9px 11
 ${P} .dm-f-ev-misure>span>span{display:flex;flex-direction:column;min-width:0}
 ${P} .dm-f-ev-misure .dm-f-num{font-size:17px;line-height:1.15;overflow-wrap:anywhere}
 ${P} .dm-f-ev-misure small{font-size:11px;font-weight:750;color:var(--text-dim,#64748b)}
+${P} .dm-f-evcc{display:grid;gap:10px}
+${P} .dm-f-evcc-modi{display:grid;grid-template-columns:repeat(var(--quanti,3),minmax(0,1fr));gap:8px}
+${P} .dm-f-evcc-modo{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;min-height:76px;padding:10px 6px;
+  border-radius:20px;border:1.5px solid color-mix(in srgb,var(--modo,#64748b) 22%,transparent);background:var(--card-bg,#fff);
+  color:var(--modo,#64748b);font:inherit;font-size:12px;font-weight:900;letter-spacing:.04em;text-transform:uppercase;cursor:pointer;
+  transition:transform .15s ease,background .2s ease,box-shadow .2s ease}
+${P} .dm-f-evcc-modo:active{transform:scale(.96)}
+${P} .dm-f-evcc-ic{display:grid;place-items:center;width:38px;height:38px;border-radius:14px;font-size:21px;line-height:1;
+  background:var(--modo-bg,#f1f5f9)}
+${P} .dm-f-evcc-modo[aria-pressed="true"]{background:var(--modo,#0f172a);border-color:var(--modo,#0f172a);color:#fff;
+  box-shadow:0 10px 22px -10px var(--modo,#0f172a)}
+${P} .dm-f-evcc-modo[aria-pressed="true"] .dm-f-evcc-ic{background:rgba(255,255,255,.22)}
+${P} .dm-f-evcc-sempre{display:grid;gap:8px;padding:12px 14px;border-radius:18px;background:var(--card-bg,#fff);
+  border:1px solid color-mix(in srgb,var(--text-dim,#94a3b8) 22%,transparent)}
+${P} .dm-f-evcc-sempre-cap{display:grid;gap:1px}
+${P} .dm-f-evcc-sempre-cap b{font-size:13px;font-weight:850;color:var(--text,#0f172a)}
+${P} .dm-f-evcc-sempre-cap small{font-size:11px;font-weight:700;color:var(--text-dim,#64748b)}
+${P} .dm-f-evcc-sempre[data-vigore="false"] .dm-f-evcc-sempre-cap small{font-style:italic}
+${P} .dm-f-evcc-sempre-righe{display:flex;gap:6px;flex-wrap:wrap}
+${P} .dm-f-evcc-sempre-btn{flex:1 1 auto;min-width:72px;min-height:38px;padding:7px 10px;border-radius:999px;cursor:pointer;font:inherit;
+  font-size:12px;font-weight:850;color:var(--text,#0f172a);background:transparent;border:1.5px solid color-mix(in srgb,var(--text-dim,#94a3b8) 35%,transparent)}
+${P} .dm-f-evcc-sempre-btn[aria-pressed="true"]{border-color:#059669;color:#047857;background:color-mix(in srgb,#059669 12%,transparent)}
+${P} .dm-f-evcc-sempre[data-vigore="false"] .dm-f-evcc-sempre-btn[aria-pressed="true"]{border-color:#94a3b8;color:#475569;background:color-mix(in srgb,#94a3b8 14%,transparent)}
 @media (max-width:360px){${P} .dm-f-ev-eroe{flex-direction:column;align-items:flex-start}}
 `;
 
@@ -846,99 +952,6 @@ const MISURE_SOLARE = Object.freeze([
   { ref: "dm.boiler_potenza", nome: () => t("Potenza boiler", "Boiler power") },
 ]);
 
-/* La pressione «nella norma» di un circuito solare chiuso: sotto un bar e
- * mezzo il circuito ha perso liquido (o il vaso d'espansione si e' scaricato),
- * sopra i quattro si avvicina alla valvola di sicurezza, che di solito apre a
- * sei. Il quadrante va da zero a sei, come quello del manometro vero. */
-export const PRESSIONE_NORMA = Object.freeze({ min: 1.5, max: 4, fondo: 6 });
-
-/** Com'e' la pressione: `"bassa"`, `"norma"`, `"alta"`, o `""` se non c'e'. */
-export function comeStaLaPressione(bar, norma = PRESSIONE_NORMA) {
-  const valore = numero(bar);
-  if (valore == null) return "";
-  if (valore < norma.min) return "bassa";
-  if (valore > norma.max) return "alta";
-  return "norma";
-}
-
-/* Il manometro disegnato: l'arco di 240 gradi da zero al fondo scala, la
- * fascia verde della norma, le due rosa fuori, e la lancetta sul valore. */
-function manometro(bar, norma = PRESSIONE_NORMA) {
-  const fondo = Math.max(norma.fondo, Math.ceil(Number(bar) || 0));
-  const angolo = (valore) => -210 + (240 * Math.max(0, Math.min(fondo, valore))) / fondo;
-  const punto = (gradi, raggio) => {
-    const r = (gradi * Math.PI) / 180;
-    return [32 + raggio * Math.cos(r), 32 + raggio * Math.sin(r)].map((n) => n.toFixed(2));
-  };
-  const arco = (da, a, colore) => {
-    const [x1, y1] = punto(angolo(da), 22);
-    const [x2, y2] = punto(angolo(a), 22);
-    const grande = angolo(a) - angolo(da) > 180 ? 1 : 0;
-    return `<path d="M${x1} ${y1}A22 22 0 ${grande} 1 ${x2} ${y2}" fill="none" stroke="${colore}" stroke-width="6"/>`;
-  };
-  const [lx, ly] = punto(angolo(Number(bar) || 0), 17);
-  return `<svg class="dm-f-solare-manometro" viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="29" fill="var(--card-bg,#fff)" stroke="color-mix(in srgb,var(--text-dim,#94a3b8) 45%,transparent)" stroke-width="3.5"/>${arco(
-    0,
-    norma.min,
-    "#fca5a5",
-  )}${arco(norma.min, norma.max, "#86efac")}${arco(norma.max, fondo, "#fca5a5")}<path d="M32 32L${lx} ${ly}" stroke="var(--text,#0f172a)" stroke-width="4" stroke-linecap="round"/><circle cx="32" cy="32" r="4.5" fill="var(--text,#0f172a)"/></svg>`;
-}
-
-/* La linea delle ultime ventiquattr'ore, con la fascia della norma dietro.
- *
- * «Pressione: mostra un grafico, qualcosa di più bello oltre a un dato così
- * statico.» Un numero solo non dice se la pressione e' ferma o se sta
- * calando da ieri, che e' la cosa che fa chiamare il tecnico. Lo storico
- * arriva da Recorder (`storico-condiviso-section.js`, lo stesso padrone del
- * grafico delle temperature): finche' non c'e' — o se la casa Recorder non
- * ce l'ha — la linea non compare e resta il manometro. */
-function lineaDellaPressione(punti, norma = PRESSIONE_NORMA) {
-  if (!Array.isArray(punti) || punti.length < 2) return "";
-  const valori = punti.map((punto) => punto.valore);
-  const basso = Math.min(...valori, norma.min) - 0.2;
-  const alto = Math.max(...valori, norma.max) + 0.2;
-  const inizio = punti[0].quando;
-  const fine = punti[punti.length - 1].quando;
-  const durata = Math.max(1, fine - inizio);
-  const x = (quando) => ((200 * (quando - inizio)) / durata).toFixed(1);
-  const y = (valore) => (4 + (40 * (alto - valore)) / (alto - basso)).toFixed(1);
-  /* A gradini: Recorder scrive quando lo stato cambia, e fra due letture la
-   * pressione e' rimasta quella di prima. */
-  let tratto = `M${x(punti[0].quando)} ${y(punti[0].valore)}`;
-  for (let i = 1; i < punti.length; i += 1)
-    tratto += `H${x(punti[i].quando)}V${y(punti[i].valore)}`;
-  const ultimo = punti[punti.length - 1];
-  return `<div class="dm-f-solare-linea"><svg viewBox="0 0 200 48" preserveAspectRatio="none" aria-hidden="true"><rect x="0" y="${y(
-    norma.max,
-  )}" width="200" height="${(Number(y(norma.min)) - Number(y(norma.max))).toFixed(1)}" fill="color-mix(in srgb,#16a34a 12%,transparent)"/><path d="${tratto}" fill="none" stroke="var(--dm-widget-accent,#ea580c)" stroke-width="2.4" stroke-linejoin="round" vector-effect="non-scaling-stroke"/><circle cx="${x(
-    ultimo.quando,
-  )}" cy="${y(ultimo.valore)}" r="3" fill="var(--dm-widget-accent,#ea580c)" vector-effect="non-scaling-stroke"/></svg><span class="dm-f-solare-asse"><small>${esc(
-    t("24 h fa", "24 h ago"),
-  )}</small><small>${esc(t("adesso", "now"))}</small></span></div>`;
-}
-
-/* La casella della pressione: il manometro, il numero, se e' nella norma, e
- * sotto la sua giornata. */
-function casellaDellaPressione(riga, storia) {
-  const bar = numero(riga?.raw);
-  if (bar == null) return "";
-  const come = comeStaLaPressione(bar);
-  const fascia = `(${formatNumber(PRESSIONE_NORMA.min, 1)}–${formatNumber(PRESSIONE_NORMA.max, 0)})`;
-  const parola =
-    come === "bassa"
-      ? t("bassa", "low")
-      : come === "alta"
-        ? t("alta", "high")
-        : t("nella norma", "normal");
-  return `<div class="dm-f-solare-gr dm-f-solare-pressione" data-come="${come}">
-      <small class="dm-f-solare-gr-tit"><i aria-hidden="true">${disegnoDiCasa("gauge", { misura: 22 })}</i>${esc(t("Pressione", "Pressure"))}</small>
-      <div class="dm-f-solare-pr">${manometro(bar)}<div><span class="dm-f-num">${esc(unito(clean(riga.value) || `${formatNumber(bar, 1)} bar`))}</span><em><i aria-hidden="true"></i>${esc(
-        parola,
-      )} ${esc(fascia)}</em></div></div>
-      ${lineaDellaPressione(storia)}
-    </div>`;
-}
-
 /* La casella della resistenza: i watt, la barra fino alla potenza piena, e
  * in una riga che cosa vuol dire. */
 const RESISTENZA_PIENA = 2000;
@@ -985,24 +998,6 @@ export function fraseDelSolare(pannello, boiler, pompa) {
     "Il pannello è più caldo dell'acqua, ma la pompa è ferma.",
     "The panel is warmer than the water, but the pump is idle.",
   );
-}
-
-/* Le ventiquattr'ore della pressione, se lo storico le ha gia' date. Non si
- * aspetta: la finestra si apre col manometro, e quando la risposta arriva la
- * Home ridisegna (`quandoArrivaLoStorico`). */
-function storiaDellaPressione(riga) {
-  const entita = clean(riga?.entity);
-  if (!entita) return null;
-  const vivo = numero(riga?.raw);
-  try {
-    return puntiDi(
-      entita,
-      24,
-      vivo != null ? { adesso: { quando: Date.now(), valore: vivo } } : {},
-    );
-  } catch (_errore) {
-    return null;
-  }
 }
 
 function disegnaSolare(widget) {
@@ -1074,7 +1069,11 @@ function disegnaSolare(widget) {
     );
   /* Il boiler letto due volte — la sonda in alto e la sua temperatura — sono
    * due numeri veri: quello che non sta nello schema va fra le misure. */
-  if (alto != null && delBoiler != null && daRif("dm.boiler_temperatura")?.entity !== daRif("dm.boiler_sonda_temperatura_3")?.entity)
+  if (
+    alto != null &&
+    delBoiler != null &&
+    daRif("dm.boiler_temperatura")?.entity !== daRif("dm.boiler_sonda_temperatura_3")?.entity
+  )
     misure.unshift(
       `<div class="dm-f-solare-cas"><small>${esc(t("Temperatura del boiler", "Tank temperature"))}</small><span class="dm-f-num">${esc(gradi(delBoiler))}</span></div>`,
     );
@@ -1190,3 +1189,5 @@ registraFinestra("ev", { disegna: disegnaEv, stile: STILE_EV });
 registraFinestra("solare", { disegna: disegnaSolare, stile: STILE_SOLARE });
 
 export const FINESTRE_PROPOSTI = Object.freeze(["energia", "temperatura", "ev", "solare"]);
+
+export { PRESSIONE_NORMA, comeStaLaPressione };

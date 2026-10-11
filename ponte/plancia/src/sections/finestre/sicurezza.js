@@ -1244,7 +1244,6 @@ ${P} .dm-f-batterie-pila[data-tono="giu"],${P} .dm-f-batterie-pila[data-tono="pr
   background:color-mix(in srgb,var(--c) 6%,var(--card-bg,#fff))}
 ${P} .dm-f-batterie-pila[data-tono="critica"]{border-color:color-mix(in srgb,${ROSSO} 45%,transparent);background:color-mix(in srgb,${ROSSO} 6%,var(--card-bg,#fff))}`;
 
-
 /* ── la registrazione ─────────────────────────────────────────────────── */
 
 registraFinestra("sicurezza", { disegna: disegnaSicurezza, stile: STILE_SICUREZZA });

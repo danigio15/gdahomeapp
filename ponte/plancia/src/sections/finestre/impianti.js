@@ -16,6 +16,7 @@ import { registraFinestra, tastoServizio } from "../finestre-dei-widget.js";
 import { clean, esc, formatNumber, root, section, siComanda, t } from "../shared.js";
 import { quantoTempoInParole } from "../../core/da-quanto.js";
 import { importRateEntity, resolveRate } from "../../core/energy-calculations.js";
+import { casellaDellaPressione, storiaDellaPressione } from "./la-pressione.js";
 
 const P = ":is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)";
 
@@ -767,23 +768,28 @@ function disegnaContatori(widget) {
               : "",
       }),
     );
-  for (const voce of come.pressioni || []) {
-    if (num(voce.bar) == null) continue;
-    caselle.push(
-      casella({
-        chiave: "pressione",
-        etichetta: t("Pressione", "Pressure"),
-        valore: `${formatNumber(voce.bar, 1)} bar`,
-        sotto:
-          voce.verdetto === "low"
-            ? t("bassa", "too low")
-            : voce.verdetto === "high"
-              ? t("alta", "too high")
-              : t("regolare", "normal"),
-        tono: voce.verdetto === "low" || voce.verdetto === "high" ? "occhio" : "bene",
-      }),
-    );
-  }
+  /* La pressione non sta in una casella fra le altre: ha il manometro con la
+   * sua forcella e la linea delle ultime ventiquattr'ore, come nel solare
+   * termico. «Pressione ancora senza grafico.» Va per tutta la larghezza,
+   * sopra le caselle. */
+  const pressioni = (come.pressioni || [])
+    .filter((voce) => num(voce.bar) != null)
+    .map((voce) => {
+      const minimo = num(voce.minimo);
+      const massimo = num(voce.massimo);
+      const norma =
+        minimo != null && massimo != null
+          ? { min: minimo, max: massimo, fondo: Math.max(6, Math.ceil(massimo * 1.5)) }
+          : undefined;
+      const riga = {
+        entity: voce.lettura?.entity,
+        raw: voce.bar,
+        value: `${formatNumber(voce.bar, 1)} bar`,
+      };
+      const disegno = casellaDellaPressione(riga, storiaDellaPressione(riga), norma);
+      return disegno && `<div data-dm-f-casella="pressione">${disegno}</div>`;
+    })
+    .filter(Boolean);
   for (const voce of come.portate || []) {
     const lettura = voce.lettura || {};
     if (lettura.muto) continue;
@@ -832,7 +838,9 @@ function disegnaContatori(widget) {
   return guscio(
     "contatori",
     `${eroe}${rigaDellaPerdita(come)}
-    ${caselle.length ? `${titoletto(t("Adesso", "Now"))}${griglia(caselle, "tre")}` : ""}
+    ${pressioni.length || caselle.length ? titoletto(t("Adesso", "Now")) : ""}${
+      pressioni.length ? `<div class="dm-f-contatori-pressioni">${pressioni.join("")}</div>` : ""
+    }${caselle.length ? griglia(caselle, "tre") : ""}
     ${contatori.length ? `<div class="dm-f-contatori-letture">${contatori.join("")}</div>` : ""}`,
   );
 }
@@ -1350,6 +1358,7 @@ ${P} .dm-f-contatori-perdita{display:flex;align-items:center;gap:10px;border-rad
   background:color-mix(in srgb,#16a34a 9%,var(--card-bg,#fff));border:1px solid color-mix(in srgb,#16a34a 28%,transparent);color:#166534}
 ${P} .dm-f-contatori-perdita[data-tono="male"]{background:color-mix(in srgb,#dc2626 9%,var(--card-bg,#fff));border-color:color-mix(in srgb,#dc2626 30%,transparent);color:#b91c1c}
 ${P} .dm-f-contatori-perdita>span{font-size:17px}
+${P} .dm-f-contatori-pressioni{display:grid;gap:8px;margin-bottom:8px}
 ${P} .dm-f-contatori-letture{display:flex;flex-wrap:wrap;justify-content:space-between;gap:6px 14px;padding:10px 13px;border-radius:16px;
   background:color-mix(in srgb,var(--text-dim,#94a3b8) 8%,var(--card-bg,#fff));border:1px solid var(--card-border,#e2e8f0);
   font-size:12px;font-weight:750;color:var(--text-dim,#64748b)}

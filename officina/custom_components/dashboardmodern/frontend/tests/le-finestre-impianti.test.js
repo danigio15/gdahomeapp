@@ -220,7 +220,8 @@ test("acqua e gas: senza storico la lettura del contatore, con lo storico i litr
     },
   });
   assert.match(senzaStorico, /data-dm-f-oggi>412,873 m³/);
-  assert.match(senzaStorico, /3,1 bar[\s\S]*regolare/);
+  /* La pressione col manometro e la sua forcella, come nel solare termico. */
+  assert.match(senzaStorico, /dm-f-solare-manometro[\s\S]*3,1\sbar[\s\S]*nella norma/);
   assert.match(senzaStorico, /dm-f-contatori-letture/);
   /* Senza la storia della portata non si giura che non ci sono perdite. */
   assert.doesNotMatch(senzaStorico, /data-dm-f-perdita/);
@@ -380,6 +381,8 @@ test("il modulo importa solo il registro, shared e il nucleo", () => {
   for (const percorso of da)
     assert.match(
       percorso,
-      /^(\.\.\/finestre-dei-widget\.js|\.\.\/shared\.js|\.\.\/\.\.\/core\/.+)$/,
+      /* `./la-pressione.js` e' solo un disegno, condiviso col solare: non
+       * registra finestre. */
+      /^(\.\.\/finestre-dei-widget\.js|\.\.\/shared\.js|\.\.\/\.\.\/core\/.+|\.\/la-pressione\.js)$/,
     );
 });
