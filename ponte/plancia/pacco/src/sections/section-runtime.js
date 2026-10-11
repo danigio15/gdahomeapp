@@ -37986,6 +37986,15 @@ body .dm-testata-riga .w-detail{
  * meta' in larghezza e non costa niente in altezza, perche' la fascia e' gia'
  * alta quanto il tasto del menu. */
 @media(max-width:768px){
+  /* Tutta la fascia, non solo sotto i 480: «iPhone Duo aperto», 626 pixel in
+     piedi, prendeva la testata centrata dei tablet — il menu da solo in alto,
+     l'ingranaggio in mezzo sotto il titolo, l'orologio piccolo al centro.
+     Fino ai 768 la testata e' quella del telefono: menu, nome, pallino e
+     ingranaggio su una riga, sotto la fascia del meteo e dell'ora. */
+  header.dm-testata-col-meteo{flex-direction:row;align-items:center;justify-content:flex-start}
+  header.dm-testata-col-meteo>.dm-testata-riga{flex:1 1 100%}
+  header.dm-testata-col-meteo>.dm-editor-entry{margin-left:6px;flex:0 0 auto}
+  header.dm-testata-col-meteo>.header-left-wrap{width:auto!important;flex:1 1 0!important;min-width:0}
   header.dm-testata-col-meteo{flex-wrap:wrap;gap:7px;row-gap:6px;padding:10px 12px;text-align:left}
   header.dm-testata-col-meteo .header-left-wrap{flex:1 1 auto;min-width:0;gap:7px}
   header.dm-testata-col-meteo .ha-menu-btn{
