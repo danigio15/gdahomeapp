@@ -45052,6 +45052,33 @@ if (doc?.readyState === "loading") {
   senzaCadere(installLiveUiSection);
 }
 
+// src/sections/finestre-dei-widget.js
+var FINESTRE = /* @__PURE__ */ new Map();
+function finestraDi(chiave2) {
+  return FINESTRE.get(String(chiave2 ?? "").trim()) || null;
+}
+function stiliDelleFinestre() {
+  return [...FINESTRE.values()].map((finestra7) => finestra7.stile).filter(Boolean).join("\n");
+}
+
+// src/sections/finestre/proposti.js
+var FINESTRE_PROPOSTI = Object.freeze([]);
+
+// src/sections/finestre/comandi.js
+var FINESTRE_COMANDI = Object.freeze([]);
+
+// src/sections/finestre/sicurezza.js
+var FINESTRE_SICUREZZA = Object.freeze([]);
+
+// src/sections/finestre/impianti.js
+var FINESTRE_IMPIANTI = Object.freeze([]);
+
+// src/sections/finestre/servizi.js
+var FINESTRE_SERVIZI = Object.freeze([]);
+
+// src/sections/finestre/sistema.js
+var FINESTRE_SISTEMA = Object.freeze([]);
+
 // src/sections/home-widgets-section.js
 var KEY51 = "__DASHBOARDMODERN_HOME_WIDGETS__";
 var STYLE_ID11 = "dm-widgets-style";
@@ -49594,6 +49621,8 @@ function detailBody(widget, states) {
     )}</button>`;
   }
   const comandi = detailRows(widget, states);
+  const disegnata = finestraDi(widget.key) || finestraDi(famigliaDellaTessera(widget.key));
+  if (disegnata) return disegnata.disegna(widget, states);
   if (SOLO_COMANDI.has(widget.key)) return comandi || "";
   return `${verdettoEFrase(widget)}
     ${caselleDelleMisure(widget)}
@@ -50310,7 +50339,42 @@ function onKeydown(event) {
   const lista5 = listaTodo(casella3.dataset.dmTodoNew);
   if (lista5) addItem(lista5, casella3.value);
 }
+function suTastoServizio(event) {
+  const tasto2 = event.target?.closest?.("[data-dm-w-servizio]");
+  if (!tasto2 || tasto2.disabled) return false;
+  event.preventDefault();
+  let comando = null;
+  try {
+    comando = JSON.parse(tasto2.dataset.dmWServizio || "null");
+  } catch (_error) {
+    return true;
+  }
+  const entita3 = [comando?.data?.entity_id].flat().map(clean).filter(Boolean);
+  if (!comando?.domain || !comando?.service || entita3.some((id) => !siComanda(id))) return true;
+  const conferma = clean(tasto2.dataset.dmWConferma);
+  if (conferma && tasto2.dataset.dmWArmato !== "true") {
+    tasto2.dataset.dmWArmato = "true";
+    tasto2.dataset.dmWTesto = tasto2.innerHTML;
+    tasto2.textContent = conferma;
+    root.setTimeout?.(() => {
+      if (tasto2.dataset.dmWArmato !== "true") return;
+      tasto2.dataset.dmWArmato = "false";
+      tasto2.innerHTML = tasto2.dataset.dmWTesto || tasto2.innerHTML;
+    }, 4e3);
+    return true;
+  }
+  if (conferma) {
+    tasto2.dataset.dmWArmato = "false";
+    tasto2.innerHTML = tasto2.dataset.dmWTesto || tasto2.innerHTML;
+  }
+  tasto2.dataset.dmWInCorso = "true";
+  Promise.resolve(callHa(comando.domain, comando.service, comando.data || {})).finally(() => {
+    root.setTimeout?.(() => delete tasto2.dataset.dmWInCorso, 1200);
+  });
+  return true;
+}
 function onClick7(event) {
+  if (suTastoServizio(event)) return;
   const aggiungi4 = event.target?.closest?.("[data-dm-todo-add]");
   if (aggiungi4) {
     event.preventDefault();
@@ -50548,9 +50612,13 @@ function ilCambioTocaUnCalendario(event) {
   return calendariConfigurati().some((voce2) => cambiate.has(voce2.entity));
 }
 function installStyles21() {
+  root.queueMicrotask?.(() => installStyle("dm-finestre-style", stiliDelleFinestre()));
   installStyle(
     STYLE_ID11,
     `
+/* Il tasto di una finestra che sta chiamando il suo servizio. */
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) [data-dm-w-in-corso="true"]{opacity:.6;pointer-events:none}
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) [data-dm-w-armato="true"]{outline:2px solid currentColor;outline-offset:2px}
 /* ── il popup del dettaglio ───────────────────────────────────────────────
  *
  * Le stesse forme dei popup che la plancia ha gia': il velo chiaro sfocato

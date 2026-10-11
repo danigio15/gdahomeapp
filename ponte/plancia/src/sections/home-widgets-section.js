@@ -340,6 +340,13 @@ import { disegnaComeStaLaCasa } from "./come-sta-la-casa-section.js";
 import { disegnoDelCatalogo } from "../core/catalogo-disegni.js";
 import { laMisuraDallUnita, lEnergiaInParole, laPotenzaInParole } from "../core/le-unita-della-corrente.js";
 import { tintaDellaPagina } from "./page-masthead-section.js";
+import { finestraDi, stiliDelleFinestre } from "./finestre-dei-widget.js";
+import "./finestre/proposti.js";
+import "./finestre/comandi.js";
+import "./finestre/sicurezza.js";
+import "./finestre/impianti.js";
+import "./finestre/servizi.js";
+import "./finestre/sistema.js";
 
 const KEY = "__DASHBOARDMODERN_HOME_WIDGETS__";
 const STYLE_ID = "dm-widgets-style";
@@ -7956,6 +7963,10 @@ function detailBody(widget, states) {
       )}</button>`;
   }
   const comandi = detailRows(widget, states);
+  /* Le finestre disegnate una per una (vedi `finestre-dei-widget.js`): se la
+   * tessera ne ha una, e' quella. */
+  const disegnata = finestraDi(widget.key) || finestraDi(famigliaDellaTessera(widget.key));
+  if (disegnata) return disegnata.disegna(widget, states);
   /* Luci e Clima: solo l'elenco che si comanda (vedi `lightsDetail`). */
   if (SOLO_COMANDI.has(widget.key)) return comandi || "";
   return `${verdettoEFrase(widget)}
@@ -9185,7 +9196,46 @@ function onKeydown(event) {
   if (lista) addItem(lista, casella.value);
 }
 
+/* Il tasto di una finestra che chiama un servizio (`tastoServizio`). Col
+ * permesso: un'entita' protetta non si comanda da qui come da nessun'altra
+ * parte. Con la conferma, il primo tocco arma e il secondo esegue. */
+function suTastoServizio(event) {
+  const tasto = event.target?.closest?.("[data-dm-w-servizio]");
+  if (!tasto || tasto.disabled) return false;
+  event.preventDefault();
+  let comando = null;
+  try {
+    comando = JSON.parse(tasto.dataset.dmWServizio || "null");
+  } catch (_error) {
+    return true;
+  }
+  const entita = [comando?.data?.entity_id].flat().map(clean).filter(Boolean);
+  if (!comando?.domain || !comando?.service || entita.some((id) => !siComanda(id))) return true;
+  const conferma = clean(tasto.dataset.dmWConferma);
+  if (conferma && tasto.dataset.dmWArmato !== "true") {
+    tasto.dataset.dmWArmato = "true";
+    tasto.dataset.dmWTesto = tasto.innerHTML;
+    tasto.textContent = conferma;
+    root.setTimeout?.(() => {
+      if (tasto.dataset.dmWArmato !== "true") return;
+      tasto.dataset.dmWArmato = "false";
+      tasto.innerHTML = tasto.dataset.dmWTesto || tasto.innerHTML;
+    }, 4000);
+    return true;
+  }
+  if (conferma) {
+    tasto.dataset.dmWArmato = "false";
+    tasto.innerHTML = tasto.dataset.dmWTesto || tasto.innerHTML;
+  }
+  tasto.dataset.dmWInCorso = "true";
+  Promise.resolve(callHa(comando.domain, comando.service, comando.data || {})).finally(() => {
+    root.setTimeout?.(() => delete tasto.dataset.dmWInCorso, 1200);
+  });
+  return true;
+}
+
 function onClick(event) {
+  if (suTastoServizio(event)) return;
   const aggiungi = event.target?.closest?.("[data-dm-todo-add]");
   if (aggiungi) {
     event.preventDefault();
@@ -9491,9 +9541,15 @@ function ilCambioTocaUnCalendario(event) {
 /* ── stile ────────────────────────────────────────────────────────────── */
 
 function installStyles() {
+  /* Le finestre disegnate una per una portano il loro stile, dopo questo:
+   * a parita' di selettore vince il loro. */
+  root.queueMicrotask?.(() => installStyle("dm-finestre-style", stiliDelleFinestre()));
   installStyle(
     STYLE_ID,
     `
+/* Il tasto di una finestra che sta chiamando il suo servizio. */
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) [data-dm-w-in-corso="true"]{opacity:.6;pointer-events:none}
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) [data-dm-w-armato="true"]{outline:2px solid currentColor;outline-offset:2px}
 /* ── il popup del dettaglio ───────────────────────────────────────────────
  *
  * Le stesse forme dei popup che la plancia ha gia': il velo chiaro sfocato

@@ -1527,11 +1527,13 @@ test("production graph is single-owner, acyclic and contains no facade pass-thro
   // 426 con `core/i-cerchi-delle-stanze.js`: i cerchi del flusso Energia per
   // stanza, con dentro i loro elettrodomestici. 427 con
   // `core/kwh-dalla-potenza.js`: i kilowattora di chi ha solo la potenza.
+  // 446 con le finestre dei widget disegnate una per una: il registro e i
+  // sei gruppi (437), e un po' di margine per i loro nuclei puri.
   // 430 con i deumidificatori nel Clima (#205): il nucleo
   // `core/deumidificatori.js`, la fascia `sections/deumidificatori-section.js`
   // che dipinge il padrone della pagina, e la sua scheda nel config.
   assert.ok(
-    relative.length <= 430,
+    relative.length <= 446,
     `production graph unexpectedly grew to ${relative.length} modules`,
   );
   assertAcyclic(edges);
