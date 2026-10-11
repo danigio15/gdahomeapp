@@ -20,7 +20,9 @@ import 'package:webview_flutter_wkwebview/webview_flutter_wkwebview.dart';
 import '../../casa/fuori.dart';
 import '../../casa/lo_schermo.dart';
 import '../../plancia/premesse.dart' show ilMenuDalTelefono, laPlanciaSiVede;
+import '../../parole.dart';
 import 'biglietto.dart';
+import 'gli_errori.dart';
 
 /// Un controllore pronto a caricare la plancia.
 ///
@@ -66,6 +68,7 @@ WebViewController costruisciIlControllore({
   }
   /* `late`: il delegato qui sotto, a pagina caricata, gli parla. */
   late final WebViewController controllore;
+  final ricariche = LeRicariche();
   controllore = WebViewController.fromPlatformCreationParams(parametri)
     ..setJavaScriptMode(JavaScriptMode.unrestricted)
     ..setBackgroundColor(sfondo.withValues(alpha: 1))
@@ -76,8 +79,33 @@ WebViewController costruisciIlControllore({
           quandoCaricata();
         },
         onWebResourceError: (errore) {
-          /* Un'immagine che non arriva non e' la pagina che non arriva. */
-          if (errore.isForMainFrame ?? true) quandoFallisce(errore.description);
+          /* Un'immagine che non arriva non e' la pagina che non arriva; una
+           * pagina che iOS ha chiuso mentre l'app stava dietro si rifa' da
+           * sola (gli_errori.dart). */
+          switch (cosaFareDellErrore(errore)) {
+            case DopoLErrore.niente:
+              return;
+            case DopoLErrore.ricarica:
+              if (ricariche.unAltraVolta()) {
+                unawaited(controllore.reload());
+                return;
+              }
+              quandoFallisce(
+                inLingua(
+                  it: 'La pagina si è chiusa più volte di fila.',
+                  en: 'The page closed several times in a row.',
+                ),
+              );
+            case DopoLErrore.mostra:
+              quandoFallisce(
+                errore.description.isNotEmpty
+                    ? errore.description
+                    : inLingua(
+                        it: 'Errore ${errore.errorCode}.',
+                        en: 'Error ${errore.errorCode}.',
+                      ),
+              );
+          }
         },
         onNavigationRequest: (richiesta) {
           if (siPuoAndare(richiesta.url)) return NavigationDecision.navigate;

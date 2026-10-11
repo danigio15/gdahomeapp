@@ -10,6 +10,19 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.11.3
+
+**Nell'app su iPhone la testata non finisce più sotto l'orologio.** Su Luci e
+sulle altre pagine il menu, il nome della pagina e l'ora stavano sotto
+l'orologio e la batteria del telefono: l'app diceva alla plancia quanto spazio
+lasciare in cima, ma una regola per gli iPhone a tutto schermo, più pesante,
+rimetteva zero. Adesso vince il più grande dei due.
+
+**«La plancia non è arrivata» tornando nell'app.** Quando l'app resta dietro,
+iOS si riprende la memoria chiudendo la pagina; al ritorno l'app lo prendeva
+per un errore e chiedeva di riprovare. Adesso la pagina si ricarica da sola,
+come fa Safari con una scheda.
+
 ## 1.11.2
 
 **La barra in basso sul telefono, fissa, torna al suo posto.** Con la barra
