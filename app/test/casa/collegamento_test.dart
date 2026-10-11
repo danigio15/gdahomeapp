@@ -156,10 +156,13 @@ void main() {
 
     /* Adesso: la domanda sul filo, la bussata all'indirizzo che la casa ha
      * detto, e il filo riaperto da dentro. */
+    /* Anche `dentro`: il filo lo segna un soffio dopo essersi aperto, e
+     * sulle macchine di GitHub quel soffio a volte arrivava dopo la domanda. */
     await _finoA(
       () =>
           collegamento.daDove == DaDove.daDentro &&
-          collegamento.comeVa == ComeVa.aperta,
+          collegamento.comeVa == ComeVa.aperta &&
+          collegamento.dentro,
     );
     expect(
       archivio.quella(casa.id)!.inCasa?.toString(),
